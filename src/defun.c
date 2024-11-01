@@ -63,7 +63,6 @@ int on_target = 1;
 void set_buffer_environ(struct Buffer *);
 
 struct TabBuffer;
-static void _followForm(int);
 static void followTab(struct TabBuffer *tab);
 static void _nextA(int);
 static void _prevA(int);
@@ -71,6 +70,324 @@ static int check_target = true;
 #define PREC_NUM (prec_num ? prec_num : 1)
 #define PREC_LIMIT 10000
 static int searchKeyNum(void);
+
+static void query_from_followform(Str *query, struct FormItemList *fi,
+                                  int multipart) {
+  struct FormItemList *f2;
+  FILE *body = NULL;
+
+  if (multipart) {
+    *query = tmpfname(TMPF_DFL, NULL);
+    body = fopen((*query)->ptr, "w");
+    if (body == NULL) {
+      return;
+    }
+    fi->parent->body = (*query)->ptr;
+    fi->parent->boundary =
+        Sprintf("------------------------------%d%ld%ld%ld", getCurrentPid(),
+                fi->parent, fi->parent->body, fi->parent->boundary)
+            ->ptr;
+  }
+  *query = Strnew();
+  for (f2 = fi->parent->item; f2; f2 = f2->next) {
+    if (f2->name == NULL)
+      continue;
+    /* <ISINDEX> is translated into single text form */
+    if (f2->name->length == 0 && (multipart || f2->type != FORM_INPUT_TEXT))
+      continue;
+    switch (f2->type) {
+    case FORM_INPUT_RESET:
+      /* do nothing */
+      continue;
+    case FORM_INPUT_SUBMIT:
+    case FORM_INPUT_IMAGE:
+      if (f2 != fi || f2->value == NULL)
+        continue;
+      break;
+    case FORM_INPUT_RADIO:
+    case FORM_INPUT_CHECKBOX:
+      if (!f2->checked)
+        continue;
+    default:
+      break;
+    }
+    if (multipart) {
+      if (f2->type == FORM_INPUT_IMAGE) {
+        int x = 0, y = 0;
+        *query = Strdup(f2->name);
+        Strcat_charp(*query, ".x");
+        form_write_data(body, fi->parent->boundary, (*query)->ptr,
+                        Sprintf("%d", x)->ptr);
+        *query = Strdup(f2->name);
+        Strcat_charp(*query, ".y");
+        form_write_data(body, fi->parent->boundary, (*query)->ptr,
+                        Sprintf("%d", y)->ptr);
+      } else if (f2->name && f2->name->length > 0 && f2->value != NULL) {
+        /* not IMAGE */
+        *query = f2->value;
+        if (f2->type == FORM_INPUT_FILE)
+          form_write_from_file(body, fi->parent->boundary, f2->name->ptr,
+                               (*query)->ptr, f2->value->ptr);
+        else
+          form_write_data(body, fi->parent->boundary, f2->name->ptr,
+                          (*query)->ptr);
+      }
+    } else {
+      /* not multipart */
+      if (f2->type == FORM_INPUT_IMAGE) {
+        int x = 0, y = 0;
+        Strcat(*query, Str_form_quote(f2->name));
+        Strcat(*query, Sprintf(".x=%d&", x));
+        Strcat(*query, Str_form_quote(f2->name));
+        Strcat(*query, Sprintf(".y=%d", y));
+      } else {
+        /* not IMAGE */
+        if (f2->name && f2->name->length > 0) {
+          Strcat(*query, Str_form_quote(f2->name));
+          Strcat_char(*query, '=');
+        }
+        if (f2->value != NULL) {
+          if (fi->parent->method == FORM_METHOD_INTERNAL)
+            Strcat(*query, Str_form_quote(f2->value));
+          else {
+            Strcat(*query, Str_form_quote(f2->value));
+          }
+        }
+      }
+      if (f2->next)
+        Strcat_char(*query, '&');
+    }
+  }
+  if (multipart) {
+    fprintf(body, "--%s--\r\n", fi->parent->boundary);
+    fclose(body);
+  } else {
+    /* remove trailing & */
+    while (Strlastchar(*query) == '&')
+      Strshrink(*query, 1);
+  }
+}
+
+static struct FormItemList *save_submit_formlist(struct FormItemList *src) {
+  struct FormList *list;
+  struct FormList *srclist;
+  struct FormItemList *srcitem;
+  struct FormItemList *item;
+  struct FormItemList *ret = NULL;
+
+  if (src == NULL)
+    return NULL;
+  srclist = src->parent;
+  list = New(struct FormList);
+  list->method = srclist->method;
+  list->action = Strdup(srclist->action);
+  list->enctype = srclist->enctype;
+  list->nitems = srclist->nitems;
+  list->body = srclist->body;
+  list->boundary = srclist->boundary;
+  list->length = srclist->length;
+
+  for (srcitem = srclist->item; srcitem; srcitem = srcitem->next) {
+    item = New(struct FormItemList);
+    item->type = srcitem->type;
+    item->name = Strdup(srcitem->name);
+    item->value = Strdup(srcitem->value);
+    item->checked = srcitem->checked;
+    item->accept = srcitem->accept;
+    item->size = srcitem->size;
+    item->rows = srcitem->rows;
+    item->maxlength = srcitem->maxlength;
+    item->readonly = srcitem->readonly;
+    item->parent = list;
+    item->next = NULL;
+
+    if (list->lastitem == NULL) {
+      list->item = list->lastitem = item;
+    } else {
+      list->lastitem->next = item;
+      list->lastitem = item;
+    }
+
+    if (srcitem == src)
+      ret = item;
+  }
+
+  return ret;
+}
+
+static struct Buffer *_followForm(bool submit) {
+  if (Currentbuf->document->firstLine == NULL)
+    return nullptr;
+
+  auto a = retrieveCurrentForm(Currentbuf->document);
+  if (a == NULL)
+    return nullptr;
+
+  auto fi = (struct FormItemList *)a->url;
+
+  switch (fi->type) {
+  case FORM_INPUT_TEXT: {
+    if (submit)
+      goto do_submit;
+    if (fi->readonly)
+      message_push("Read only field!");
+    auto p = inputStrHist(Currentbuf->document,
+                          "TEXT:", fi->value ? fi->value->ptr : NULL, TextHist);
+    if (p == NULL || fi->readonly)
+      break;
+    fi->value = Strnew_charp(p);
+    formUpdateBuffer(Currentbuf->document, a, fi);
+    if (fi->accept || fi->parent->nitems == 1)
+      goto do_submit;
+    break;
+  }
+
+  case FORM_INPUT_FILE: {
+    if (submit)
+      goto do_submit;
+    if (fi->readonly)
+      message_push("Read only field!");
+    auto p =
+        inputFilenameHist(Currentbuf->document,
+                          "Filename:", fi->value ? fi->value->ptr : NULL, NULL);
+    if (p == NULL || fi->readonly)
+      break;
+    fi->value = Strnew_charp(p);
+    formUpdateBuffer(Currentbuf->document, a, fi);
+    if (fi->accept || fi->parent->nitems == 1)
+      goto do_submit;
+    break;
+  }
+
+  case FORM_INPUT_PASSWORD: {
+    if (submit)
+      goto do_submit;
+    if (fi->readonly) {
+      message_push("Read only field!");
+      break;
+    }
+    auto p =
+        inputLine(Currentbuf->document,
+                  "Password:", fi->value ? fi->value->ptr : NULL, IN_PASSWORD);
+    if (p == NULL)
+      break;
+    fi->value = Strnew_charp(p);
+    formUpdateBuffer(Currentbuf->document, a, fi);
+    if (fi->accept)
+      goto do_submit;
+    break;
+  }
+
+  case FORM_TEXTAREA:
+    if (submit)
+      goto do_submit;
+    if (fi->readonly)
+      message_push("Read only field!");
+    input_textarea(fi);
+    formUpdateBuffer(Currentbuf->document, a, fi);
+    break;
+
+  case FORM_INPUT_RADIO:
+    if (submit)
+      goto do_submit;
+    if (fi->readonly) {
+      message_push("Read only field!");
+      break;
+    }
+    formRecheckRadio(Currentbuf->document, a, fi);
+    break;
+
+  case FORM_INPUT_CHECKBOX:
+    if (submit)
+      goto do_submit;
+    if (fi->readonly) {
+      message_push("Read only field!");
+      break;
+    }
+    fi->checked = !fi->checked;
+    formUpdateBuffer(Currentbuf->document, a, fi);
+    break;
+
+  case FORM_INPUT_IMAGE:
+  case FORM_INPUT_SUBMIT:
+  case FORM_INPUT_BUTTON: {
+  do_submit:
+    auto tmp = Strnew();
+    auto multipart = (fi->parent->method == FORM_METHOD_POST &&
+                      fi->parent->enctype == FORM_ENCTYPE_MULTIPART);
+    query_from_followform(&tmp, fi, multipart);
+
+    auto tmp2 = Strdup(fi->parent->action);
+    if (!Strcmp_charp(tmp2, "!CURRENT_URL!")) {
+      /* It means "current URL" */
+      tmp2 = parsedURL2Str(&Currentbuf->document->url);
+      char *p;
+      if ((p = strchr(tmp2->ptr, '?')) != NULL)
+        Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
+    }
+
+    if (fi->parent->method == FORM_METHOD_GET) {
+      char *p;
+      if ((p = strchr(tmp2->ptr, '?')) != NULL)
+        Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
+      Strcat_charp(tmp2, "?");
+      Strcat(tmp2, tmp);
+      return loadLink(Currentbuf->document, tmp2->ptr, a->target, NULL, NULL);
+    } else if (fi->parent->method == FORM_METHOD_POST) {
+      if (multipart) {
+        struct stat st;
+        stat(fi->parent->body, &st);
+        fi->parent->length = st.st_size;
+      } else {
+        fi->parent->body = tmp->ptr;
+        fi->parent->length = tmp->length;
+      }
+      auto buf = loadLink(Currentbuf->document, tmp2->ptr, a->target, NULL,
+                          fi->parent);
+      if (multipart) {
+        unlink(fi->parent->body);
+      }
+      if (buf && !(buf->document->bufferprop &
+                   BP_REDIRECTED)) { /* buf must be Currentbuf */
+        /* BP_REDIRECTED means that the buffer is obtained through
+         * Location: header. In this case, buf->form_submit must not be set
+         * because the page is not loaded by POST method but GET method.
+         */
+        buf->document->form_submit = save_submit_formlist(fi);
+      }
+
+      return buf;
+    } else if ((fi->parent->method == FORM_METHOD_INTERNAL &&
+                (!Strcmp_charp(fi->parent->action, "map") ||
+                 !Strcmp_charp(fi->parent->action, "none"))) ||
+               Currentbuf->document->bufferprop & BP_INTERNAL) { /* internal */
+      do_internal(tmp2->ptr, tmp->ptr);
+    } else {
+      message_push("Can't send form because of illegal method.");
+    }
+    break;
+  }
+
+  case FORM_INPUT_RESET:
+    for (int i = 0; i < Currentbuf->document->formitem->nanchor; i++) {
+      auto a2 = &Currentbuf->document->formitem->anchors[i];
+      auto f2 = (struct FormItemList *)a2->url;
+      if (f2->parent == fi->parent && f2->name && f2->value &&
+          f2->type != FORM_INPUT_SUBMIT && f2->type != FORM_INPUT_HIDDEN &&
+          f2->type != FORM_INPUT_RESET) {
+        f2->value = f2->init_value;
+        f2->checked = f2->init_checked;
+        formUpdateBuffer(Currentbuf->document, a2, f2);
+      }
+    }
+    break;
+  case FORM_INPUT_HIDDEN:
+  default:
+    break;
+  }
+
+  return nullptr;
+}
 
 void mainloop() {
 
@@ -573,7 +890,9 @@ DEFUN(ldhelp, HELP, "Show help panel") {
       Sprintf("file:///$LIB/" HELP_CGI CGI_EXTENSION "?version=%s&lang=%s",
               Str_form_quote(Strnew_charp(w3m_version))->ptr,
               Str_form_quote(Strnew_charp_n(lang, n))->ptr);
-  cmd_loadURL(CurrentTab, tmp->ptr, NULL, NO_REFERER, NULL);
+  auto buf = loadGeneralFile(INIT_BUFFER_WIDTH, tmp->ptr, NULL, NO_REFERER,
+                             false, NULL);
+  pushBuffer(CurrentTab, buf);
 }
 
 /* Move cursor left */
@@ -956,51 +1275,6 @@ static struct Buffer *loadNormalBuf(struct Buffer *buf) {
   return buf;
 }
 
-static struct Buffer *loadLink(const char *url, const char *target,
-                               const char *referer, struct FormList *form) {
-  scr_message(Sprintf("loading %s", url)->ptr, 0, 0);
-  term_refresh();
-
-  auto no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->document->url);
-  auto base = baseURL(Currentbuf->document);
-  if ((no_referer_ptr && *no_referer_ptr) || base == NULL ||
-      base->scheme == SCM_LOCAL || base->scheme == SCM_LOCAL_CGI ||
-      base->scheme == SCM_DATA)
-    referer = NO_REFERER;
-  if (referer == NULL)
-    referer = parsedURL2RefererStr(&Currentbuf->document->url)->ptr;
-  int flag = 0;
-  auto buf =
-      loadGeneralFile(INIT_BUFFER_WIDTH, url, baseURL(Currentbuf->document),
-                      referer, flag, form);
-  if (buf == NULL) {
-    char *emsg = Sprintf("Can't load %s", url)->ptr;
-    message_push(emsg);
-    return NULL;
-  }
-
-  auto pu = parseURL2(url, base);
-  pushHashHist(URLHist, parsedURL2Str(&pu)->ptr);
-
-  if (buf == NO_BUFFER) {
-    return NULL;
-  }
-  if (!on_target) /* open link as an indivisual page */
-    return loadNormalBuf(buf);
-
-  if (target == NULL || /* no target specified (that means this page is not a
-                           frame page) */
-      !strcmp(target, "_top") || /* this link is specified to be opened as an
-                                    indivisual * page */
-      !(Currentbuf->document->bufferprop &
-        BP_FRAME) /* This page is not a frame page */
-  ) {
-    return loadNormalBuf(buf);
-  }
-  /* original page (that contains <frameset> tag) doesn't exist */
-  return loadNormalBuf(buf);
-}
-
 static void gotoLabel(const char *label) {
   auto al = searchURLLabel(Currentbuf->document, label);
   if (!al) {
@@ -1029,26 +1303,23 @@ static void gotoLabel(const char *label) {
   return;
 }
 
-/* follow HREF link */
-DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer") {
+struct Buffer *_followA() {
   if (Currentbuf->document->firstLine == NULL)
-    return;
+    return nullptr;
 
   auto a = retrieveCurrentMap(Currentbuf->document);
   if (a) {
-    _followForm(false);
-    return;
+    return _followForm(false);
   }
 
   a = retrieveCurrentAnchor(Currentbuf->document);
   if (a == NULL) {
-    _followForm(false);
-    return;
+    return _followForm(false);
   }
 
   if (*a->url == '#') { /* index within this buffer */
     gotoLabel(a->url + 1);
-    return;
+    return nullptr;
   }
 
   auto u = parseURL2(a->url, baseURL(Currentbuf->document));
@@ -1057,27 +1328,26 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer") {
     /* index within this buffer */
     if (u.label) {
       gotoLabel(u.label);
-      return;
+      return nullptr;
     }
   }
   if (handleMailto(a->url))
-    return;
+    return nullptr;
   auto url = a->url;
 
-  if (check_target && open_tab_blank && a->target &&
-      (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
-    struct Buffer *buf;
+  return loadLink(Currentbuf->document, url, a->target, a->referer, NULL);
+  // if (check_target && open_tab_blank && a->target &&
+  //     (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
+  //   _newT(buf);
+  // } else {
+  //   pushBuffer(CurrentTab, buf);
+  // }
+}
 
-    _newT();
-    buf = Currentbuf;
-    loadLink(url, a->target, a->referer, NULL);
-    if (buf != Currentbuf)
-      delBuffer(buf);
-    else
-      deleteTab(CurrentTab);
-    return;
-  }
-  loadLink(url, a->target, a->referer, NULL);
+/* follow HREF link */
+DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer") {
+  auto buf = _followA();
+  pushBuffer(CurrentTab, buf);
 }
 
 /* follow HREF link in the buffer */
@@ -1107,333 +1377,18 @@ DEFUN(followI, VIEW_IMAGE, "Display image in viewer") {
   }
 }
 
-static struct FormItemList *save_submit_formlist(struct FormItemList *src) {
-  struct FormList *list;
-  struct FormList *srclist;
-  struct FormItemList *srcitem;
-  struct FormItemList *item;
-  struct FormItemList *ret = NULL;
-
-  if (src == NULL)
-    return NULL;
-  srclist = src->parent;
-  list = New(struct FormList);
-  list->method = srclist->method;
-  list->action = Strdup(srclist->action);
-  list->enctype = srclist->enctype;
-  list->nitems = srclist->nitems;
-  list->body = srclist->body;
-  list->boundary = srclist->boundary;
-  list->length = srclist->length;
-
-  for (srcitem = srclist->item; srcitem; srcitem = srcitem->next) {
-    item = New(struct FormItemList);
-    item->type = srcitem->type;
-    item->name = Strdup(srcitem->name);
-    item->value = Strdup(srcitem->value);
-    item->checked = srcitem->checked;
-    item->accept = srcitem->accept;
-    item->size = srcitem->size;
-    item->rows = srcitem->rows;
-    item->maxlength = srcitem->maxlength;
-    item->readonly = srcitem->readonly;
-    item->parent = list;
-    item->next = NULL;
-
-    if (list->lastitem == NULL) {
-      list->item = list->lastitem = item;
-    } else {
-      list->lastitem->next = item;
-      list->lastitem = item;
-    }
-
-    if (srcitem == src)
-      ret = item;
-  }
-
-  return ret;
-}
-
 #define conv_form_encoding(val, fi, buf) (val)
 
-static void query_from_followform(Str *query, struct FormItemList *fi,
-                                  int multipart) {
-  struct FormItemList *f2;
-  FILE *body = NULL;
-
-  if (multipart) {
-    *query = tmpfname(TMPF_DFL, NULL);
-    body = fopen((*query)->ptr, "w");
-    if (body == NULL) {
-      return;
-    }
-    fi->parent->body = (*query)->ptr;
-    fi->parent->boundary =
-        Sprintf("------------------------------%d%ld%ld%ld", getCurrentPid(),
-                fi->parent, fi->parent->body, fi->parent->boundary)
-            ->ptr;
-  }
-  *query = Strnew();
-  for (f2 = fi->parent->item; f2; f2 = f2->next) {
-    if (f2->name == NULL)
-      continue;
-    /* <ISINDEX> is translated into single text form */
-    if (f2->name->length == 0 && (multipart || f2->type != FORM_INPUT_TEXT))
-      continue;
-    switch (f2->type) {
-    case FORM_INPUT_RESET:
-      /* do nothing */
-      continue;
-    case FORM_INPUT_SUBMIT:
-    case FORM_INPUT_IMAGE:
-      if (f2 != fi || f2->value == NULL)
-        continue;
-      break;
-    case FORM_INPUT_RADIO:
-    case FORM_INPUT_CHECKBOX:
-      if (!f2->checked)
-        continue;
-    default:
-      break;
-    }
-    if (multipart) {
-      if (f2->type == FORM_INPUT_IMAGE) {
-        int x = 0, y = 0;
-        *query = Strdup(conv_form_encoding(f2->name, fi, Currentbuf));
-        Strcat_charp(*query, ".x");
-        form_write_data(body, fi->parent->boundary, (*query)->ptr,
-                        Sprintf("%d", x)->ptr);
-        *query = Strdup(conv_form_encoding(f2->name, fi, Currentbuf));
-        Strcat_charp(*query, ".y");
-        form_write_data(body, fi->parent->boundary, (*query)->ptr,
-                        Sprintf("%d", y)->ptr);
-      } else if (f2->name && f2->name->length > 0 && f2->value != NULL) {
-        /* not IMAGE */
-        *query = conv_form_encoding(f2->value, fi, Currentbuf);
-        if (f2->type == FORM_INPUT_FILE)
-          form_write_from_file(
-              body, fi->parent->boundary,
-              conv_form_encoding(f2->name, fi, Currentbuf)->ptr, (*query)->ptr,
-              f2->value->ptr);
-        else
-          form_write_data(body, fi->parent->boundary,
-                          conv_form_encoding(f2->name, fi, Currentbuf)->ptr,
-                          (*query)->ptr);
-      }
-    } else {
-      /* not multipart */
-      if (f2->type == FORM_INPUT_IMAGE) {
-        int x = 0, y = 0;
-        Strcat(*query,
-               Str_form_quote(conv_form_encoding(f2->name, fi, Currentbuf)));
-        Strcat(*query, Sprintf(".x=%d&", x));
-        Strcat(*query,
-               Str_form_quote(conv_form_encoding(f2->name, fi, Currentbuf)));
-        Strcat(*query, Sprintf(".y=%d", y));
-      } else {
-        /* not IMAGE */
-        if (f2->name && f2->name->length > 0) {
-          Strcat(*query,
-                 Str_form_quote(conv_form_encoding(f2->name, fi, Currentbuf)));
-          Strcat_char(*query, '=');
-        }
-        if (f2->value != NULL) {
-          if (fi->parent->method == FORM_METHOD_INTERNAL)
-            Strcat(*query, Str_form_quote(f2->value));
-          else {
-            Strcat(*query, Str_form_quote(
-                               conv_form_encoding(f2->value, fi, Currentbuf)));
-          }
-        }
-      }
-      if (f2->next)
-        Strcat_char(*query, '&');
-    }
-  }
-  if (multipart) {
-    fprintf(body, "--%s--\r\n", fi->parent->boundary);
-    fclose(body);
-  } else {
-    /* remove trailing & */
-    while (Strlastchar(*query) == '&')
-      Strshrink(*query, 1);
-  }
+/* submit form */
+DEFUN(submitForm, SUBMIT, "Submit form") {
+  auto buf = _followForm(true);
+  pushBuffer(CurrentTab, buf);
 }
 
-/* submit form */
-DEFUN(submitForm, SUBMIT, "Submit form") { _followForm(true); }
-
 /* process form */
-void followForm(void) { _followForm(false); }
-
-static void _followForm(int submit) {
-  if (Currentbuf->document->firstLine == NULL)
-    return;
-
-  auto a = retrieveCurrentForm(Currentbuf->document);
-  if (a == NULL)
-    return;
-
-  auto fi = (struct FormItemList *)a->url;
-
-  switch (fi->type) {
-  case FORM_INPUT_TEXT: {
-    if (submit)
-      goto do_submit;
-    if (fi->readonly)
-      message_push("Read only field!");
-    auto p = inputStrHist(Currentbuf->document,
-                          "TEXT:", fi->value ? fi->value->ptr : NULL, TextHist);
-    if (p == NULL || fi->readonly)
-      break;
-    fi->value = Strnew_charp(p);
-    formUpdateBuffer(Currentbuf->document, a, fi);
-    if (fi->accept || fi->parent->nitems == 1)
-      goto do_submit;
-    break;
-  }
-
-  case FORM_INPUT_FILE: {
-    if (submit)
-      goto do_submit;
-    if (fi->readonly)
-      message_push("Read only field!");
-    auto p =
-        inputFilenameHist(Currentbuf->document,
-                          "Filename:", fi->value ? fi->value->ptr : NULL, NULL);
-    if (p == NULL || fi->readonly)
-      break;
-    fi->value = Strnew_charp(p);
-    formUpdateBuffer(Currentbuf->document, a, fi);
-    if (fi->accept || fi->parent->nitems == 1)
-      goto do_submit;
-    break;
-  }
-
-  case FORM_INPUT_PASSWORD: {
-    if (submit)
-      goto do_submit;
-    if (fi->readonly) {
-      message_push("Read only field!");
-      break;
-    }
-    auto p =
-        inputLine(Currentbuf->document,
-                  "Password:", fi->value ? fi->value->ptr : NULL, IN_PASSWORD);
-    if (p == NULL)
-      break;
-    fi->value = Strnew_charp(p);
-    formUpdateBuffer(Currentbuf->document, a, fi);
-    if (fi->accept)
-      goto do_submit;
-    break;
-  }
-
-  case FORM_TEXTAREA:
-    if (submit)
-      goto do_submit;
-    if (fi->readonly)
-      message_push("Read only field!");
-    input_textarea(fi);
-    formUpdateBuffer(Currentbuf->document, a, fi);
-    break;
-
-  case FORM_INPUT_RADIO:
-    if (submit)
-      goto do_submit;
-    if (fi->readonly) {
-      message_push("Read only field!");
-      break;
-    }
-    formRecheckRadio(Currentbuf->document, a, fi);
-    break;
-
-  case FORM_INPUT_CHECKBOX:
-    if (submit)
-      goto do_submit;
-    if (fi->readonly) {
-      message_push("Read only field!");
-      break;
-    }
-    fi->checked = !fi->checked;
-    formUpdateBuffer(Currentbuf->document, a, fi);
-    break;
-
-  case FORM_INPUT_IMAGE:
-  case FORM_INPUT_SUBMIT:
-  case FORM_INPUT_BUTTON: {
-  do_submit:
-    auto tmp = Strnew();
-    auto multipart = (fi->parent->method == FORM_METHOD_POST &&
-                      fi->parent->enctype == FORM_ENCTYPE_MULTIPART);
-    query_from_followform(&tmp, fi, multipart);
-
-    auto tmp2 = Strdup(fi->parent->action);
-    if (!Strcmp_charp(tmp2, "!CURRENT_URL!")) {
-      /* It means "current URL" */
-      tmp2 = parsedURL2Str(&Currentbuf->document->url);
-      char *p;
-      if ((p = strchr(tmp2->ptr, '?')) != NULL)
-        Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
-    }
-
-    if (fi->parent->method == FORM_METHOD_GET) {
-      char *p;
-      if ((p = strchr(tmp2->ptr, '?')) != NULL)
-        Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
-      Strcat_charp(tmp2, "?");
-      Strcat(tmp2, tmp);
-      loadLink(tmp2->ptr, a->target, NULL, NULL);
-    } else if (fi->parent->method == FORM_METHOD_POST) {
-      struct Buffer *buf;
-      if (multipart) {
-        struct stat st;
-        stat(fi->parent->body, &st);
-        fi->parent->length = st.st_size;
-      } else {
-        fi->parent->body = tmp->ptr;
-        fi->parent->length = tmp->length;
-      }
-      buf = loadLink(tmp2->ptr, a->target, NULL, fi->parent);
-      if (multipart) {
-        unlink(fi->parent->body);
-      }
-      if (buf && !(buf->document->bufferprop &
-                   BP_REDIRECTED)) { /* buf must be Currentbuf */
-        /* BP_REDIRECTED means that the buffer is obtained through
-         * Location: header. In this case, buf->form_submit must not be set
-         * because the page is not loaded by POST method but GET method.
-         */
-        buf->document->form_submit = save_submit_formlist(fi);
-      }
-    } else if ((fi->parent->method == FORM_METHOD_INTERNAL &&
-                (!Strcmp_charp(fi->parent->action, "map") ||
-                 !Strcmp_charp(fi->parent->action, "none"))) ||
-               Currentbuf->document->bufferprop & BP_INTERNAL) { /* internal */
-      do_internal(tmp2->ptr, tmp->ptr);
-    } else {
-      message_push("Can't send form because of illegal method.");
-    }
-    break;
-  }
-
-  case FORM_INPUT_RESET:
-    for (int i = 0; i < Currentbuf->document->formitem->nanchor; i++) {
-      auto a2 = &Currentbuf->document->formitem->anchors[i];
-      auto f2 = (struct FormItemList *)a2->url;
-      if (f2->parent == fi->parent && f2->name && f2->value &&
-          f2->type != FORM_INPUT_SUBMIT && f2->type != FORM_INPUT_HIDDEN &&
-          f2->type != FORM_INPUT_RESET) {
-        f2->value = f2->init_value;
-        f2->checked = f2->init_checked;
-        formUpdateBuffer(Currentbuf->document, a2, f2);
-      }
-    }
-    break;
-  case FORM_INPUT_HIDDEN:
-  default:
-    break;
-  }
+void followForm(void) {
+  auto buf = _followForm(false);
+  pushBuffer(CurrentTab, buf);
 }
 
 /* go to the top anchor */
@@ -1876,16 +1831,16 @@ DEFUN(deletePrevBuf, DELETE_PREVBUF,
 }
 
 /* go to specified URL */
-static void goURL0(char *prompt, int relative) {
-  const char *url, *referer;
+static struct Buffer *goURL0(char *prompt, int relative) {
+  const char *referer;
   struct Url *current;
   struct Buffer *cur_buf = Currentbuf;
   const int *no_referer_ptr;
 
-  url = searchKeyData();
+  auto url = searchKeyData();
   if (url == NULL) {
     struct Hist *hist = copyHist(URLHist);
-    current = baseURL(Currentbuf->document);
+    auto current = baseURL(Currentbuf->document);
     if (current) {
       char *c_url = parsedURL2Str(current)->ptr;
       if (DefaultURLString == DEFAULT_URL_CURRENT)
@@ -1922,17 +1877,21 @@ static void goURL0(char *prompt, int relative) {
     url = url_quote(url);
   }
   if (url == NULL || *url == '\0') {
-    return;
+    return nullptr;
   }
   if (*url == '#') {
     gotoLabel(url + 1);
-    return;
+    return nullptr;
   }
+
   auto p_url = parseURL2(url, current);
   pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
-  cmd_loadURL(CurrentTab, url, current, referer, NULL);
-  if (Currentbuf != cur_buf) /* success */
+  auto buf =
+      loadGeneralFile(INIT_BUFFER_WIDTH, url, current, referer, false, NULL);
+  if (buf) { /* success */
     pushHashHist(URLHist, parsedURL2Str(&Currentbuf->document->url)->ptr);
+  }
+  return buf;
 }
 
 DEFUN(goURL, GOTO, "Open specified document in a new buffer") {
@@ -1948,9 +1907,11 @@ DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer") {
     url = url_quote(url);
     auto p_url = parseURL2(url, NULL);
     pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
-    cmd_loadURL(CurrentTab, url, NULL, NULL, NULL);
-    if (Currentbuf != cur_buf) /* success */
+    auto buf = loadGeneralFile(INIT_BUFFER_WIDTH, url, NULL, NULL, false, NULL);
+    if (buf) { /* success */
       pushHashHist(URLHist, parsedURL2Str(&Currentbuf->document->url)->ptr);
+      pushBuffer(CurrentTab, buf);
+    }
   }
 }
 
@@ -1960,7 +1921,9 @@ DEFUN(gorURL, GOTO_RELATIVE, "Go to relative address") {
 
 /* load bookmark */
 DEFUN(ldBmark, BOOKMARK VIEW_BOOKMARK, "View bookmarks") {
-  cmd_loadURL(CurrentTab, BookmarkFile, NULL, NO_REFERER, NULL);
+  auto buf = loadGeneralFile(INIT_BUFFER_WIDTH, BookmarkFile, NULL, NO_REFERER,
+                             false, NULL);
+  pushBuffer(CurrentTab, buf);
 }
 
 /* Add current to bookmark */
@@ -1974,8 +1937,10 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks") {
   auto form = newFormList(NULL, "post", NULL, NULL, NULL, NULL, NULL);
   form->body = tmp->ptr;
   form->length = tmp->length;
-  cmd_loadURL(CurrentTab, "file:///$LIB/" W3MBOOKMARK_CMDNAME, NULL, NO_REFERER,
-              form);
+  auto buf =
+      loadGeneralFile(INIT_BUFFER_WIDTH, "file:///$LIB/" W3MBOOKMARK_CMDNAME,
+                      NULL, NO_REFERER, false, form);
+  pushBuffer(CurrentTab, buf);
 }
 
 static void cmd_loadBuffer(struct Buffer *buf, int prop, int linkid) {
@@ -2078,22 +2043,16 @@ void follow_map(struct LocalCgiHtml *arg) {
   }
   auto p_url = parseURL2(a->url, baseURL(Currentbuf->document));
   pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
+
+  auto buf = loadGeneralFile(
+      INIT_BUFFER_WIDTH, a->url, baseURL(Currentbuf->document),
+      parsedURL2Str(&Currentbuf->document->url)->ptr, false, NULL);
   if (check_target && open_tab_blank && a->target &&
       (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
-    struct Buffer *buf;
-
-    _newT();
-    buf = Currentbuf;
-    cmd_loadURL(CurrentTab, a->url, baseURL(Currentbuf->document),
-                parsedURL2Str(&Currentbuf->document->url)->ptr, NULL);
-    if (buf != Currentbuf)
-      delBuffer(buf);
-    else
-      deleteTab(CurrentTab);
-    return;
+    _newT(buf);
+  } else {
+    pushBuffer(CurrentTab, buf);
   }
-  cmd_loadURL(CurrentTab, a->url, baseURL(Currentbuf->document),
-              parsedURL2Str(&Currentbuf->document->url)->ptr, NULL);
 #endif
 }
 
@@ -2798,7 +2757,11 @@ DEFUN(defKey, DEFINE_KEY,
   setKeymap(allocStr(data, -1), -1);
 }
 
-DEFUN(newT, NEW_TAB, "Open a new tab (with current document)") { _newT(); }
+DEFUN(newT, NEW_TAB, "Open a new tab (with current document)") {
+  auto buf = newBuffer();
+  copyBuffer(buf->document, Currentbuf->document);
+  _newT(buf);
+}
 
 DEFUN(closeT, CLOSE_TAB, "Close tab") {
   struct TabBuffer *tab;
@@ -2840,10 +2803,7 @@ DEFUN(prevT, PREV_TAB, "Switch to the previous tab") {
 }
 
 static void followTab(struct TabBuffer *tab) {
-  struct Buffer *buf;
-  struct Anchor *a;
-
-  a = retrieveCurrentAnchor(Currentbuf->document);
+  auto a = retrieveCurrentAnchor(Currentbuf->document);
   if (a == NULL)
     return;
 
@@ -2853,31 +2813,9 @@ static void followTab(struct TabBuffer *tab) {
     check_target = true;
     return;
   }
-  _newT();
-  buf = Currentbuf;
-  check_target = false;
-  followA();
-  check_target = true;
-  if (tab == NULL) {
-    if (buf != Currentbuf)
-      delBuffer(buf);
-    else
-      deleteTab(CurrentTab);
-  } else if (buf != Currentbuf) {
-    /* buf <- p <- ... <- Currentbuf = c */
-    struct Buffer *c, *p;
 
-    c = Currentbuf;
-    p = prevBuffer(c, buf);
-    p->nextBuffer = NULL;
-    Firstbuf = buf;
-    deleteTab(CurrentTab);
-    CurrentTab = tab;
-    for (buf = p; buf; buf = p) {
-      p = prevBuffer(c, buf);
-      pushBuffer(CurrentTab, buf);
-    }
-  }
+  auto buf = _followA();
+  _newT(buf);
 }
 
 DEFUN(tabA, TAB_LINK, "Follow current hyperlink in a new tab") {
@@ -2885,35 +2823,8 @@ DEFUN(tabA, TAB_LINK, "Follow current hyperlink in a new tab") {
 }
 
 static void tabURL0(struct TabBuffer *tab, char *prompt, int relative) {
-  struct Buffer *buf;
-
-  if (tab == CurrentTab) {
-    goURL0(prompt, relative);
-    return;
-  }
-  _newT();
-  buf = Currentbuf;
-  goURL0(prompt, relative);
-  if (tab == NULL) {
-    if (buf != Currentbuf)
-      delBuffer(buf);
-    else
-      deleteTab(CurrentTab);
-  } else if (buf != Currentbuf) {
-    /* buf <- p <- ... <- Currentbuf = c */
-    struct Buffer *c, *p;
-
-    c = Currentbuf;
-    p = prevBuffer(c, buf);
-    p->nextBuffer = NULL;
-    Firstbuf = buf;
-    deleteTab(CurrentTab);
-    CurrentTab = tab;
-    for (buf = p; buf; buf = p) {
-      p = prevBuffer(c, buf);
-      pushBuffer(CurrentTab, buf);
-    }
-  }
+  auto buf = goURL0(prompt, relative);
+  pushBuffer(tab, buf);
 }
 
 DEFUN(tabURL, TAB_GOTO, "Open specified document in a new tab") {

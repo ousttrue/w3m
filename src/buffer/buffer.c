@@ -1,4 +1,5 @@
 #include "buffer/buffer.h"
+#include "history.h"
 #include "alloc.h"
 #include "buffer/document.h"
 #include "file/file.h"
@@ -8,7 +9,9 @@
 #include "html/map.h"
 #include "input/http.h"
 #include "input/istream.h"
+#include "input/loader.h"
 #include "input/url.h"
+#include "siteconf.h"
 #include "term/scr.h"
 #include "term/terms.h"
 #include "term/termsize.h"
@@ -468,4 +471,48 @@ struct Document *link_list_panel(struct Buffer *buf) {
 
   struct Url url;
   return renderHTML(INIT_BUFFER_WIDTH, tmp->ptr, url, CHARSET_UTF8);
+}
+
+struct Buffer *loadLink(struct Document *doc, const char *url,
+                        const char *target, const char *referer,
+                        struct FormList *form) {
+  // scr_message(Sprintf("loading %s", url)->ptr, 0, 0);
+  // term_refresh();
+  auto no_referer_ptr = query_SCONF_NO_REFERER_FROM(&doc->url);
+  auto base = baseURL(doc);
+  if ((no_referer_ptr && *no_referer_ptr) || base == NULL ||
+      base->scheme == SCM_LOCAL || base->scheme == SCM_LOCAL_CGI ||
+      base->scheme == SCM_DATA)
+    referer = NO_REFERER;
+  if (referer == NULL)
+    referer = parsedURL2RefererStr(&doc->url)->ptr;
+  int flag = 0;
+  auto buf = loadGeneralFile(INIT_BUFFER_WIDTH, url, baseURL(doc), referer,
+                             flag, form);
+  if (buf == NULL) {
+    // char *emsg = Sprintf("Can't load %s", url)->ptr;
+    // message_push(emsg);
+    return NULL;
+  }
+
+  auto pu = parseURL2(url, base);
+  pushHashHist(URLHist, parsedURL2Str(&pu)->ptr);
+
+  if (buf == NO_BUFFER) {
+    return NULL;
+  }
+  // if (!on_target) /* open link as an indivisual page */
+  //   return loadNormalBuf(buf);
+  return buf;
+
+  // if (target == NULL || /* no target specified (that means this page is not a
+  //                          frame page) */
+  //     !strcmp(target, "_top") ||    /* this link is specified to be opened as an
+  //                                      indivisual * page */
+  //     !(doc->bufferprop & BP_FRAME) /* This page is not a frame page */
+  // ) {
+  //   return loadNormalBuf(buf);
+  // }
+  // /* original page (that contains <frameset> tag) doesn't exist */
+  // return loadNormalBuf(buf);
 }

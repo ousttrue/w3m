@@ -30,10 +30,11 @@ void tabInitialize(struct Buffer *newbuf) {
   }
 }
 
-void _newT() {
+void _newT(struct Buffer *buf) {
+  if (!buf) {
+    return;
+  }
   auto tag = newTab();
-  auto buf = newBuffer();
-  copyBuffer(buf->document, Currentbuf->document);
   buf->nextBuffer = NULL;
   for (int i = 0; i < MAX_LB; i++)
     buf->linkBuffer[i] = NULL;
@@ -185,24 +186,6 @@ bool handleMailto(const char *url) {
   // return 1;
 }
 
-void cmd_loadURL(struct TabBuffer *tab, const char *url, struct Url *current,
-                 const char *referer, struct FormList *form) {
-  if (handleMailto(url))
-    return;
-
-  // term_refresh();
-  auto buf = loadGeneralFile(INIT_BUFFER_WIDTH, url, current, referer, 0, form);
-  if (buf == NULL) {
-    const char *emsg = Sprintf("Can't load %s", url)->ptr;
-    message_push(emsg);
-    return;
-  }
-
-  if (buf != NO_BUFFER) {
-    pushBuffer(tab, buf);
-  }
-}
-
 void moveTab(struct TabBuffer *t, struct TabBuffer *t2, int right) {
   if (t2 == NO_TABBUFFER)
     t2 = FirstTab;
@@ -237,5 +220,3 @@ void moveTab(struct TabBuffer *t, struct TabBuffer *t2, int right) {
   }
   // displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
-
-

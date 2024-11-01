@@ -49,20 +49,23 @@ struct Line;
 char *last_modified(struct Buffer *buf);
 struct HtmlTag;
 
-extern void saveBuffer(struct Buffer *buf, FILE *f, int cont);
-extern void saveBufferBody(struct Buffer *buf, FILE *f, int cont);
-extern struct Buffer *newBuffer();
-extern struct Buffer *nullBuffer(void);
-extern void discardBuffer(struct Buffer *buf);
-extern struct Buffer *namedBuffer(struct Buffer *first, char *name);
-extern struct Buffer *deleteBuffer(struct Buffer *first, struct Buffer *delbuf);
-extern struct Buffer *replaceBuffer(struct Buffer *first, struct Buffer *delbuf,
-                                    struct Buffer *newbuf);
-extern struct Buffer *nthBuffer(struct Buffer *firstbuf, int n);
-extern struct Buffer *selectBuffer(struct Buffer *firstbuf,
-                                   struct Buffer *currentbuf, char *selectchar);
-extern struct Buffer *prevBuffer(struct Buffer *first, struct Buffer *buf);
+void saveBuffer(struct Buffer *buf, FILE *f, int cont);
+void saveBufferBody(struct Buffer *buf, FILE *f, int cont);
+struct Buffer *newBuffer();
+struct Buffer *nullBuffer(void);
+void discardBuffer(struct Buffer *buf);
+struct Buffer *namedBuffer(struct Buffer *first, char *name);
+struct Buffer *deleteBuffer(struct Buffer *first, struct Buffer *delbuf);
+struct Buffer *replaceBuffer(struct Buffer *first, struct Buffer *delbuf,
+                             struct Buffer *newbuf);
+struct Buffer *nthBuffer(struct Buffer *firstbuf, int n);
+struct Buffer *selectBuffer(struct Buffer *firstbuf, struct Buffer *currentbuf,
+                            char *selectchar);
+struct Buffer *prevBuffer(struct Buffer *first, struct Buffer *buf);
 
-extern struct Document *page_info_panel(struct Buffer *buf);
-extern void saveBufferInfo(void);
-extern struct Document *link_list_panel(struct Buffer *buf);
+struct Document *page_info_panel(struct Buffer *buf);
+void saveBufferInfo(void);
+struct Document *link_list_panel(struct Buffer *buf);
+struct Buffer *loadLink(struct Document *doc, const char *url,
+                        const char *target, const char *referer,
+                        struct FormList *form);

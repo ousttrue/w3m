@@ -24,14 +24,11 @@ extern struct TabBuffer *FirstTab;
 extern struct TabBuffer *LastTab;
 
 void tabInitialize(struct Buffer *newbuf);
-void _newT();
+void _newT(struct Buffer *buf);
 struct TabBuffer *numTab(int n);
 void calcTabPos();
 struct TabBuffer *deleteTab(struct TabBuffer *tab);
 void pushBuffer(struct TabBuffer *tab, struct Buffer *buf);
 struct FormList;
-struct Url;
-void cmd_loadURL(struct TabBuffer *tab, const char *url, struct Url *current,
-                 const char *referer, struct FormList *form);
 bool handleMailto(const char *url);
-void moveTab(struct TabBuffer *t, struct TabBuffer *t2, int right) ;
+void moveTab(struct TabBuffer *t, struct TabBuffer *t2, int right);

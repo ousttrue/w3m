@@ -2,10 +2,13 @@
 #include "alloc.h"
 #include "buffer/message.h"
 #include "file/tmpfile.h"
+#include "history.h"
 #include "html/anchor.h"
 #include "html/form.h"
 #include "html/html_readbuffer.h"
 #include "input/istream.h"
+#include "input/loader.h"
+#include "siteconf.h"
 #include "term/termsize.h"
 #include "text/text.h"
 #include <string.h>
