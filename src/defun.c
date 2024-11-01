@@ -984,7 +984,7 @@ static struct Buffer *loadLink(const char *url, const char *target,
   term_refresh();
 
   auto no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->document->url);
-  auto base = baseURL(Currentbuf);
+  auto base = baseURL(Currentbuf->document);
   if ((no_referer_ptr && *no_referer_ptr) || base == NULL ||
       base->scheme == SCM_LOCAL || base->scheme == SCM_LOCAL_CGI ||
       base->scheme == SCM_DATA)
@@ -992,7 +992,7 @@ static struct Buffer *loadLink(const char *url, const char *target,
   if (referer == NULL)
     referer = parsedURL2RefererStr(&Currentbuf->document->url)->ptr;
   int flag = 0;
-  auto buf = loadGeneralFile(INIT_BUFFER_WIDTH, url, baseURL(Currentbuf),
+  auto buf = loadGeneralFile(INIT_BUFFER_WIDTH, url, baseURL(Currentbuf->document),
                              referer, flag, form);
   if (buf == NULL) {
     char *emsg = Sprintf("Can't load %s", url)->ptr;
@@ -1073,7 +1073,7 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer") {
     return;
   }
 
-  auto u = parseURL2(a->url, baseURL(Currentbuf));
+  auto u = parseURL2(a->url, baseURL(Currentbuf->document));
   if (Strcmp(parsedURL2Str(&u), parsedURL2Str(&Currentbuf->document->url)) ==
       0) {
     /* index within this buffer */
@@ -1121,7 +1121,7 @@ DEFUN(followI, VIEW_IMAGE, "Display image in viewer") {
     return;
   scr_message(Sprintf("loading %s", a->url)->ptr, 0, 0);
   term_refresh();
-  auto buf = loadGeneralFile(INIT_BUFFER_WIDTH, a->url, baseURL(Currentbuf),
+  auto buf = loadGeneralFile(INIT_BUFFER_WIDTH, a->url, baseURL(Currentbuf->document),
                              NULL, 0, NULL);
   if (!buf) {
     char *emsg = Sprintf("Can't load %s", a->url)->ptr;
@@ -1611,7 +1611,7 @@ static void _nextA(int visited) {
               retrieveAnchor(Currentbuf->document->formitem, po->line, po->pos);
         hseq++;
         if (visited == true && an) {
-          auto url = parseURL2(an->url, baseURL(Currentbuf));
+          auto url = parseURL2(an->url, baseURL(Currentbuf->document));
           if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
             goto _end;
           }
@@ -1630,7 +1630,7 @@ static void _nextA(int visited) {
       x = an->start.pos;
       y = an->start.line;
       if (visited == true) {
-        auto url = parseURL2(an->url, baseURL(Currentbuf));
+        auto url = parseURL2(an->url, baseURL(Currentbuf->document));
         if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
           goto _end;
         }
@@ -1689,7 +1689,7 @@ static void _prevA(int visited) {
               retrieveAnchor(Currentbuf->document->formitem, po->line, po->pos);
         hseq--;
         if (visited == true && an) {
-          auto url = parseURL2(an->url, baseURL(Currentbuf));
+          auto url = parseURL2(an->url, baseURL(Currentbuf->document));
           if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
             goto _end;
           }
@@ -1708,7 +1708,7 @@ static void _prevA(int visited) {
       x = an->start.pos;
       y = an->start.line;
       if (visited == true && an) {
-        auto url = parseURL2(an->url, baseURL(Currentbuf));
+        auto url = parseURL2(an->url, baseURL(Currentbuf->document));
         if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
           goto _end;
         }
@@ -1923,7 +1923,7 @@ static void goURL0(char *prompt, int relative) {
   url = searchKeyData();
   if (url == NULL) {
     struct Hist *hist = copyHist(URLHist);
-    current = baseURL(Currentbuf);
+    current = baseURL(Currentbuf->document);
     if (current) {
       char *c_url = parsedURL2Str(current)->ptr;
       if (DefaultURLString == DEFAULT_URL_CURRENT)
@@ -1946,7 +1946,7 @@ static void goURL0(char *prompt, int relative) {
   }
   if (relative) {
     no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->document->url);
-    current = baseURL(Currentbuf);
+    current = baseURL(Currentbuf->document);
     if ((no_referer_ptr && *no_referer_ptr) || current == NULL ||
         current->scheme == SCM_LOCAL || current->scheme == SCM_LOCAL_CGI ||
         current->scheme == SCM_DATA)
@@ -2119,7 +2119,7 @@ void follow_map(struct LocalCgiHtml *arg) {
     gotoLabel(a->url + 1);
     return;
   }
-  auto p_url = parseURL2(a->url, baseURL(Currentbuf));
+  auto p_url = parseURL2(a->url, baseURL(Currentbuf->document));
   pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
   if (check_target && open_tab_blank && a->target &&
       (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
@@ -2127,7 +2127,7 @@ void follow_map(struct LocalCgiHtml *arg) {
 
     _newT();
     buf = Currentbuf;
-    cmd_loadURL(CurrentTab, a->url, baseURL(Currentbuf),
+    cmd_loadURL(CurrentTab, a->url, baseURL(Currentbuf->document),
                 parsedURL2Str(&Currentbuf->document->url)->ptr, NULL);
     if (buf != Currentbuf)
       delBuffer(buf);
@@ -2136,7 +2136,7 @@ void follow_map(struct LocalCgiHtml *arg) {
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
     return;
   }
-  cmd_loadURL(CurrentTab, a->url, baseURL(Currentbuf),
+  cmd_loadURL(CurrentTab, a->url, baseURL(Currentbuf->document),
               parsedURL2Str(&Currentbuf->document->url)->ptr, NULL);
 #endif
 }
@@ -2269,7 +2269,7 @@ static void _peekURL(int only_img) {
       s = Strnew_charp(form2str((struct FormItemList *)a->url));
   }
   if (s == NULL) {
-    auto pu = parseURL2(a->url, baseURL(Currentbuf));
+    auto pu = parseURL2(a->url, baseURL(Currentbuf->document));
     s = parsedURL2Str(&pu);
   }
   if (DecodeURL)
@@ -2551,7 +2551,7 @@ DEFUN(linkbrz, EXTERN_LINK, "Display target using an external browser") {
   auto a = retrieveCurrentAnchor(Currentbuf->document);
   if (a == NULL)
     return;
-  auto pu = parseURL2(a->url, baseURL(Currentbuf));
+  auto pu = parseURL2(a->url, baseURL(Currentbuf->document));
   invoke_browser(parsedURL2Str(&pu)->ptr);
 }
 
@@ -2691,13 +2691,13 @@ void set_buffer_environ(struct Buffer *buf) {
     set_environ("W3M_CURRENT_WORD", s ? s : "");
     auto a = retrieveCurrentAnchor(buf->document);
     if (a) {
-      auto pu = parseURL2(a->url, baseURL(buf));
+      auto pu = parseURL2(a->url, baseURL(buf->document));
       set_environ("W3M_CURRENT_LINK", parsedURL2Str(&pu)->ptr);
     } else
       set_environ("W3M_CURRENT_LINK", "");
     a = retrieveCurrentImg(buf->document);
     if (a) {
-      auto pu = parseURL2(a->url, baseURL(buf));
+      auto pu = parseURL2(a->url, baseURL(buf->document));
       set_environ("W3M_CURRENT_IMG", parsedURL2Str(&pu)->ptr);
     } else
       set_environ("W3M_CURRENT_IMG", "");

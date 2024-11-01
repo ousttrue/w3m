@@ -818,3 +818,19 @@ int prev_nonnull_line(struct Document *doc, struct Line *line) {
     doc->viewport.pos = doc->currentLine->len;
   return 0;
 }
+
+struct Url *baseURL(struct Document *doc) {
+  if (doc->bufferprop & BP_NO_URL) {
+    /* no URL is defined for the buffer */
+    return NULL;
+  }
+
+  // if (doc->baseURL != NULL) {
+  //   /* <BASE> tag is defined in the document */
+  //   return doc->baseURL;
+  // } else
+  if (IS_EMPTY_PARSED_URL(&doc->url))
+    return NULL;
+  else
+    return &doc->url;
+}

@@ -45,7 +45,6 @@ struct Buffer {
 
 #define NO_BUFFER ((struct Buffer *)1)
 
-struct Url *baseURL(struct Buffer *buf);
 struct Line;
 char *last_modified(struct Buffer *buf);
 struct HtmlTag;

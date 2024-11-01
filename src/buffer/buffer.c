@@ -361,7 +361,7 @@ struct Document *link_list_panel(struct Buffer *buf) {
       const char *p;
       const char *u;
       if (l->url) {
-        auto pu = parseURL2(l->url, baseURL(buf));
+        auto pu = parseURL2(l->url, baseURL(buf->document));
         p = parsedURL2Str(&pu)->ptr;
         u = html_quote(p);
         if (DecodeURL)
@@ -393,7 +393,7 @@ struct Document *link_list_panel(struct Buffer *buf) {
       auto a = &al->anchors[i];
       if (a->hseq < 0 || a->slave)
         continue;
-      auto pu = parseURL2(a->url, baseURL(buf));
+      auto pu = parseURL2(a->url, baseURL(buf->document));
       const char *p = parsedURL2Str(&pu)->ptr;
       auto u = html_quote(p);
       if (DecodeURL)
@@ -415,7 +415,7 @@ struct Document *link_list_panel(struct Buffer *buf) {
       auto a = &al->anchors[i];
       if (a->slave)
         continue;
-      auto pu = parseURL2(a->url, baseURL(buf));
+      auto pu = parseURL2(a->url, baseURL(buf->document));
       const char *p = parsedURL2Str(&pu)->ptr;
       auto u = html_quote(p);
       if (DecodeURL)
@@ -446,7 +446,7 @@ struct Document *link_list_panel(struct Buffer *buf) {
           m = (struct MapArea *)mi->ptr;
           if (!m)
             continue;
-          pu = parseURL2(m->url, baseURL(buf));
+          pu = parseURL2(m->url, baseURL(buf->document));
           p = parsedURL2Str(&pu)->ptr;
           u = html_quote(p);
           if (DecodeURL)

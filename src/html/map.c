@@ -72,7 +72,7 @@ struct Document *follow_map_panel(struct Buffer *buf, const char *name) {
     if (!a)
       continue;
 
-    auto pu = parseURL2(a->url, baseURL(buf));
+    auto pu = parseURL2(a->url, baseURL(buf->document));
     const char *p = parsedURL2Str(&pu)->ptr;
     const char *q = html_quote(p);
     if (DecodeURL)
@@ -113,7 +113,7 @@ static void append_map_info(struct Buffer *buf, Str tmp,
     auto a = (struct MapArea *)al->ptr;
     if (!a)
       continue;
-    struct Url pu = parseURL2(a->url, baseURL(buf));
+    struct Url pu = parseURL2(a->url, baseURL(buf->document));
     const char *q = html_quote(parsedURL2Str(&pu)->ptr);
     const char *p = html_quote(url_decode0(a->url));
     Strcat_m_charp(tmp, "<tr valign=top><td>&nbsp;&nbsp;<td><a href=\"", q,
@@ -133,7 +133,7 @@ static void append_link_info(struct Buffer *buf, Str html,
   for (auto l = link; l; l = l->next) {
     const char *url;
     if (l->url) {
-      struct Url pu = parseURL2(l->url, baseURL(buf));
+      struct Url pu = parseURL2(l->url, baseURL(buf->document));
       url = html_quote(parsedURL2Str(&pu)->ptr);
     } else {
       url = "(empty)";
@@ -186,7 +186,7 @@ struct Document *page_info_panel(struct Buffer *buf) {
 
   auto a = retrieveCurrentAnchor(buf->document);
   if (a != NULL) {
-    auto pu = parseURL2(a->url, baseURL(buf));
+    auto pu = parseURL2(a->url, baseURL(buf->document));
     const char *p = parsedURL2Str(&pu)->ptr;
     const char *q = html_quote(p);
     if (DecodeURL)
@@ -199,7 +199,7 @@ struct Document *page_info_panel(struct Buffer *buf) {
   }
   a = retrieveCurrentImg(buf->document);
   if (a != NULL) {
-    auto pu = parseURL2(a->url, baseURL(buf));
+    auto pu = parseURL2(a->url, baseURL(buf->document));
     const char *p = parsedURL2Str(&pu)->ptr;
     const char *q = html_quote(p);
     if (DecodeURL)

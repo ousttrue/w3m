@@ -76,7 +76,7 @@ static Str make_lastline_message(struct Buffer *buf) {
           p = a_img->title;
       }
       if (p || a)
-        s = make_lastline_link(baseURL(buf), p, a ? a->url : NULL);
+        s = make_lastline_link(baseURL(buf->document), p, a ? a->url : NULL);
     }
     if (s) {
       sl = utf8str_width((const uint8_t *)s->ptr);
