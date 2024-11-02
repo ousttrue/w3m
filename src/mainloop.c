@@ -9,6 +9,7 @@
 #include "func.h"
 #include "funcname1.h"
 #include "html/form.h"
+#include "input/content.h"
 #include "input/localcgi.h"
 #include "linein.h"
 #include "term/terms.h"
@@ -25,7 +26,7 @@ int prev_key = -1;
 #define PREC_NUM (prec_num ? prec_num : 1)
 #define PREC_LIMIT 10000
 
-static struct Current makeCurrent(){
+static struct Current makeCurrent() {
   struct Current current = {
       CurrentTab,
   };
@@ -148,12 +149,13 @@ void set_buffer_environ(struct Buffer *buf) {
     return;
 
   if (buf != prev_buf) {
-    set_environ("W3M_SOURCEFILE", buf->document->sourcefile);
-    set_environ("W3M_FILENAME", buf->document->filename);
+    set_environ("W3M_SOURCEFILE", buf->content->sourcefile);
+    set_environ("W3M_FILENAME", buf->content->filename);
     set_environ("W3M_TITLE", buf->buffername);
-    set_environ("W3M_URL", parsedURL2Str(&buf->document->url)->ptr);
-    set_environ("W3M_TYPE",
-                buf->document->type ? buf->document->type : "unknown");
+    set_environ("W3M_URL", parsedURL2Str(&buf->content->url)->ptr);
+    set_environ("W3M_TYPE", buf->content->content_type
+                                ? buf->content->content_type
+                                : "unknown");
   }
   auto l = buf->document->currentLine;
   if (l && (buf != prev_buf || l != prev_line ||
@@ -162,13 +164,13 @@ void set_buffer_environ(struct Buffer *buf) {
     set_environ("W3M_CURRENT_WORD", s ? s : "");
     auto a = retrieveCurrentAnchor(buf->document);
     if (a) {
-      auto pu = parseURL2(a->url, baseURL(buf->document));
+      auto pu = parseURL2(a->url, baseURL(buf));
       set_environ("W3M_CURRENT_LINK", parsedURL2Str(&pu)->ptr);
     } else
       set_environ("W3M_CURRENT_LINK", "");
     a = retrieveCurrentImg(buf->document);
     if (a) {
-      auto pu = parseURL2(a->url, baseURL(buf->document));
+      auto pu = parseURL2(a->url, baseURL(buf));
       set_environ("W3M_CURRENT_IMG", parsedURL2Str(&pu)->ptr);
     } else
       set_environ("W3M_CURRENT_IMG", "");
@@ -203,8 +205,8 @@ void mainloop() {
       Currentbuf->document->submit = NULL;
       gotoLine(Currentbuf->document, a->start.line);
       Currentbuf->document->viewport.pos = a->start.pos;
-      auto buf = _followForm(Currentbuf->document, true, makeCurrent());
-      pushBuffer(CurrentTab, buf);
+      auto content = _followForm(Currentbuf, true, makeCurrent());
+      pushContent(CurrentTab, content);
       continue;
     }
     /* event processing */
@@ -244,6 +246,8 @@ void mainloop() {
     prev_key = CurrentKey;
     CurrentKey = -1;
     CurrentKeyData = NULL;
+
+    reshapeBuffer(Currentbuf);
     display(Currentbuf->document);
     term_refresh();
   }

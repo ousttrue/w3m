@@ -1,5 +1,6 @@
 #pragma once
+#include "text/Str.h"
 
 void message_push(const char *s);
 
-const char *message_list_panel(int cols);
+Str message_list_panel(int cols);

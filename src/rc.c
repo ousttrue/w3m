@@ -886,7 +886,7 @@ static const char *to_str(struct param_ptr *p) {
   return NULL;
 }
 
-struct Document *load_option_panel() {
+Str load_option_panel() {
   if (optionpanel_str == NULL) {
     optionpanel_str = Sprintf(optionpanel_src1, w3m_version,
                               html_quote(localCookie()->ptr), _(CMT_HELPER));
@@ -938,8 +938,7 @@ struct Document *load_option_panel() {
     Strcat_charp(src, "</table><hr width=50%>");
   }
   Strcat_charp(src, "</table></form></body></html>");
-  struct Url url;
-  return renderHTML(INIT_BUFFER_WIDTH, src->ptr, url, CHARSET_UTF8);
+  return src;
 }
 
 void panel_set_option(struct InternalAction *arg, struct Current current) {

@@ -25,15 +25,15 @@ extern struct TabBuffer *CurrentTab;
 extern struct TabBuffer *FirstTab;
 extern struct TabBuffer *LastTab;
 
-struct Document;
-void tabInitialize(struct Document *doc);
-void _newT(struct Buffer *buf);
+struct Content;
+void tabInitialize(struct Content *content);
+void _newT(struct Content *doc);
 struct TabBuffer *numTab(int n);
 void calcTabPos();
 struct TabBuffer *deleteTab(struct TabBuffer *tab);
-void pushBuffer(struct TabBuffer *tab, struct Buffer *buf);
+void pushContent(struct TabBuffer *tab, struct Content *content);
 void pushCheckTarget(struct TabBuffer *tab, const char *anchor_target,
-                     struct Buffer *buf, bool check_target);
+                     struct Content *content, bool check_target);
 struct FormList;
 bool handleMailto(const char *url);
 void moveTab(struct TabBuffer *t, struct TabBuffer *t2, int right);

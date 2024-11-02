@@ -60,22 +60,22 @@ static Str make_lastline_link(struct Url *base, const char *title,
   return s;
 }
 
-static Str make_lastline_message(struct Document *doc) {
+static Str make_lastline_message(struct Buffer *buf) {
   Str s = NULL;
   int sl = 0;
   if (displayLink) {
     {
-      struct Anchor *a = retrieveCurrentAnchor(doc);
+      struct Anchor *a = retrieveCurrentAnchor(buf->document);
       const char *p = NULL;
       if (a && a->title && *a->title)
         p = a->title;
       else {
-        struct Anchor *a_img = retrieveCurrentImg(doc);
+        struct Anchor *a_img = retrieveCurrentImg(buf->document);
         if (a_img && a_img->title && *a_img->title)
           p = a_img->title;
       }
       if (p || a)
-        s = make_lastline_link(baseURL(doc), p, a ? a->url : NULL);
+        s = make_lastline_link(baseURL(buf), p, a ? a->url : NULL);
     }
     if (s) {
       sl = utf8str_width((const uint8_t *)s->ptr);
@@ -85,10 +85,10 @@ static Str make_lastline_message(struct Document *doc) {
   }
 
   auto msg = Strnew();
-  if (displayLineInfo && doc->currentLine != NULL &&
-      doc->lastLine != NULL) {
-    int cl = doc->currentLine->real_linenumber;
-    int ll = doc->lastLine->real_linenumber;
+  if (displayLineInfo && buf->document->currentLine != NULL &&
+      buf->document->lastLine != NULL) {
+    int cl = buf->document->currentLine->real_linenumber;
+    int ll = buf->document->lastLine->real_linenumber;
     int r = (int)((double)cl * 100.0 / (double)(ll ? ll : 1) + 0.5);
     Strcat(msg, Sprintf("%d/%d (%d%%)", cl, ll, r));
   } else

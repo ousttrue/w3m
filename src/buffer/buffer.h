@@ -34,16 +34,14 @@ struct Document;
 struct Buffer {
   const char *buffername;
   struct Buffer *nextBuffer;
-  struct Buffer *linkBuffer[MAX_LB];
+  struct Content *content;
   struct Document *document;
-  int *clone;
   struct HttpResponse *http_response;
   const char *edit;
   char image_flag;
   char image_loaded;
+  int *clone;
 };
-
-#define NO_BUFFER ((struct Buffer *)1)
 
 struct Line;
 char *last_modified(struct Buffer *buf);
@@ -63,11 +61,13 @@ struct Buffer *selectBuffer(struct Buffer *firstbuf, struct Buffer *currentbuf,
                             char *selectchar);
 struct Buffer *prevBuffer(struct Buffer *first, struct Buffer *buf);
 
-struct Document *page_info_panel(struct Buffer *buf);
+Str page_info_panel(struct Buffer *buf);
 void saveBufferInfo(void);
-struct Document *link_list_panel(struct Buffer *buf);
-struct Buffer *loadLink(struct Document *doc, const char *url,
-                        const char *target, const char *referer,
-                        struct FormList *form);
-struct Buffer *_followForm(struct Document *doc, bool submit,
-                           struct Current current);
+Str link_list_panel(struct Buffer *buf);
+struct Content *loadLink(struct Buffer *src,
+                         const char *url, const char *target,
+                         const char *referer, struct FormList *form);
+struct Content *_followForm(struct Buffer *doc, bool submit,
+                            struct Current current);
+void reshapeBuffer(struct Buffer *buf);
+struct Url *baseURL(struct Buffer *buf);

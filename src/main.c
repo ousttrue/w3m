@@ -8,6 +8,7 @@
 #include "defun.h"
 #include "fm.h"
 #include "history.h"
+#include "input/content.h"
 #include "input/http.h"
 #include "input/http_cookie.h"
 #include "input/loader.h"
@@ -366,35 +367,32 @@ int main(int argc, char **argv) {
   //   request = NULL;
   // }
 
-  struct FormList *form = nullptr;
-  auto doc =
-      loadGeneralFile(INIT_BUFFER_WIDTH, url, NULL, NO_REFERER, 0, form);
-
-  if (doc == NULL) {
+  auto content = loadGeneralFile(url, NULL, NO_REFERER, 0, nullptr);
+  if (!content) {
     /* FIXME: gettextize? */
     Strcat(err_msg, Sprintf("w3m: Can't load %s.\n", url));
     return 1;
-  } 
+  }
   // else if (newbuf == NO_BUFFER) {
   //   return 1;
   // }
 
-  switch (doc->real_scheme) {
+  switch (content->real_scheme) {
   case SCM_MAILTO:
     break;
   case SCM_LOCAL:
   case SCM_LOCAL_CGI:
     unshiftHist(LoadHist, url);
   default:
-    pushHashHist(URLHist, parsedURL2Str(&doc->url)->ptr);
+    pushHashHist(URLHist, parsedURL2Str(&content->url)->ptr);
     break;
   }
 
-  tabInitialize(doc);
+  tabInitialize(content);
   saveBufferInfo();
   CurrentTab = FirstTab;
 
-  if (!FirstTab || !Firstbuf || Firstbuf == NO_BUFFER) {
+  if (!FirstTab || !Firstbuf) {
     // if (newbuf == NO_BUFFER) {
     //   term_input("Hit any key to quit w3m:");
     // }

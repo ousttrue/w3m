@@ -1,5 +1,6 @@
 #pragma once
 #include "current.h"
+#include "text/Str.h"
 
 extern bool no_rc_dir;
 extern const char *rc_dir;
@@ -18,7 +19,7 @@ int set_param_option(const char *option);
 bool str_to_bool(const char *value, bool old);
 
 void init_rc(void);
-struct Document *load_option_panel(void);
+Str load_option_panel();
 struct InternalAction;
 void panel_set_option(struct InternalAction *, struct Current);
 void sync_with_option(void);

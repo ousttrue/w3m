@@ -21,7 +21,6 @@ bool MarkAllPages = false;
 
 struct Document *newDocument(int width) {
   struct Document *doc = New(struct Document);
-  doc->url.scheme = SCM_UNKNOWN;
   doc->need_reshape = true; /* always reshape new buffers to mark URLs */
   doc->bufferprop = BP_NORMAL;
   doc->baseTarget = NULL;
@@ -661,92 +660,6 @@ void chkURLBuffer(struct Document *doc) {
   doc->check_url |= CHK_URL;
 }
 
-/*
- * Reshape HTML buffer
- */
-struct Document *reshapeBuffer(struct Document *doc,
-                               enum CharSet content_charset) {
-  if (!doc->need_reshape) {
-    return doc;
-  }
-  doc->need_reshape = false;
-
-  doc->width = INIT_BUFFER_WIDTH;
-  if (doc->sourcefile == NULL) {
-    return doc;
-  }
-
-  auto stream = examineFile(doc->sourcefile);
-  if (stream == NULL) {
-    return doc;
-  }
-
-  Str html = Strnew();
-  Str line;
-  while ((line = StrmyISgets(stream))->length) {
-    Strcat(html, line);
-  }
-
-  struct Document sbuf;
-  copyBuffer(&sbuf, doc);
-  clearBuffer(doc);
-
-  doc->href = NULL;
-  doc->name = NULL;
-  doc->img = NULL;
-  doc->formitem = NULL;
-  doc->formlist = NULL;
-  doc->linklist = NULL;
-  doc->maplist = NULL;
-  if (doc->hmarklist)
-    doc->hmarklist->nmark = 0;
-  if (doc->imarklist)
-    doc->imarklist->nmark = 0;
-
-  struct Document *newDoc;
-  if (is_html_type(doc->type)) {
-    newDoc =
-        renderHTML(doc->viewport.COLS, html->ptr, doc->url, content_charset);
-  } else {
-    newDoc = loadText(doc->viewport.COLS, html->ptr);
-  }
-  ISclose(stream);
-
-  newDoc->height = LASTLINE + 1;
-  if (newDoc->firstLine && sbuf.firstLine) {
-    struct Line *cur = sbuf.currentLine;
-    int n;
-
-    newDoc->viewport.pos = sbuf.viewport.pos + cur->bpos;
-    while (cur->bpos && cur->prev)
-      cur = cur->prev;
-    if (cur->real_linenumber > 0)
-      gotoRealLine(newDoc, cur->real_linenumber);
-    else
-      gotoLine(newDoc, cur->linenumber);
-    n = (newDoc->currentLine->linenumber - newDoc->topLine->linenumber) -
-        (cur->linenumber - sbuf.topLine->linenumber);
-    if (n) {
-      newDoc->topLine = lineSkip(&newDoc->viewport, newDoc->topLine,
-                                 newDoc->lastLine, n, false);
-      if (cur->real_linenumber > 0)
-        gotoRealLine(newDoc, cur->real_linenumber);
-      else
-        gotoLine(newDoc, cur->linenumber);
-    }
-    newDoc->viewport.pos -= newDoc->currentLine->bpos;
-    if (FoldLine && !is_html_type(newDoc->type))
-      newDoc->viewport.currentColumn = 0;
-    else
-      newDoc->viewport.currentColumn = sbuf.viewport.currentColumn;
-    arrangeCursor(newDoc);
-  }
-  if (newDoc->check_url & CHK_URL)
-    chkURLBuffer(newDoc);
-  formResetBuffer(newDoc, sbuf.formitem);
-  return newDoc;
-}
-
 /* Go to specified line */
 void _goLine(struct Document *doc, const char *l) {
   if (l == NULL || *l == '\0' || doc->currentLine == NULL) {
@@ -821,22 +734,6 @@ int prev_nonnull_line(struct Document *doc, struct Line *line) {
   if (l != line)
     doc->viewport.pos = doc->currentLine->len;
   return 0;
-}
-
-struct Url *baseURL(struct Document *doc) {
-  if (doc->bufferprop & BP_NO_URL) {
-    /* no URL is defined for the buffer */
-    return NULL;
-  }
-
-  // if (doc->baseURL != NULL) {
-  //   /* <BASE> tag is defined in the document */
-  //   return doc->baseURL;
-  // } else
-  if (IS_EMPTY_PARSED_URL(&doc->url))
-    return NULL;
-  else
-    return &doc->url;
 }
 
 bool is_wordchar(int c) { return IS_ALNUM(c); }

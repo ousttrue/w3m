@@ -3,5 +3,5 @@
 extern bool UseDictCommand;
 extern const char *DictCommand;
 
-struct Document;
-struct Document *execdict(const char *word);
+struct Content;
+struct Content *execdict(const char *word);

@@ -17,7 +17,7 @@ struct Hist *URLHist;
 struct Hist *ShellHist;
 struct Hist *TextHist;
 
-struct Document *historyDocument(int cols, struct Hist *hist) {
+Str historyDocument(int cols, struct Hist *hist) {
   Str src = Strnew();
   Strcat_charp(src, "<html>\n<head><title>History Page</title></head>\n");
   Strcat_charp(src, "<body>\n<h1>History Page</h1>\n<hr>\n");
@@ -38,8 +38,7 @@ struct Document *historyDocument(int cols, struct Hist *hist) {
     }
   }
   Strcat_charp(src, "</ol>\n</body>\n</html>");
-  struct Url url;
-  return renderHTML(cols, src->ptr, url, CHARSET_UTF8);
+  return src;
 }
 
 void loadHistory(struct Hist *hist) {

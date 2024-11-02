@@ -703,7 +703,7 @@ void loadPreForm(void) {
   fclose(fp);
 }
 
-void preFormUpdateBuffer(struct Document *doc) {
+void preFormUpdateBuffer(struct Url doc_url, struct Document *doc) {
   struct pre_form *pf;
   struct pre_form_item *pi;
   int i;
@@ -716,11 +716,11 @@ void preFormUpdateBuffer(struct Document *doc) {
 
   for (pf = PreForm; pf; pf = pf->next) {
     if (pf->re_url) {
-      Str url = parsedURL2Str(&doc->url);
+      Str url = parsedURL2Str(&doc_url);
       if (!RegexMatch(pf->re_url, url->ptr, url->length, 1))
         continue;
     } else if (pf->url) {
-      if (Strcmp_charp(parsedURL2Str(&doc->url), pf->url))
+      if (Strcmp_charp(parsedURL2Str(&doc_url), pf->url))
         continue;
     } else
       continue;

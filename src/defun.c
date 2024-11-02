@@ -18,8 +18,8 @@
 #include "func.h"
 #include "funcname1.h"
 #include "history.h"
-#include "html/html_readbuffer.h"
 #include "html/map.h"
+#include "input/content.h"
 #include "input/ext_mime.h"
 #include "input/ftp.h"
 #include "input/http.h"
@@ -389,15 +389,14 @@ DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output") {
   }
 }
 
-static void cmd_loadfile(int cols, const char *fn) {
-  struct Buffer *buf =
-      loadGeneralFile(cols, file_to_url(fn), NULL, NO_REFERER, 0, NULL);
-  if (buf == NULL) {
+static void cmd_loadfile(const char *fn) {
+  auto content = loadGeneralFile(file_to_url(fn), NULL, NO_REFERER, 0, NULL);
+  if (!content) {
     const char *emsg = Sprintf("%s not found", fn)->ptr;
     message_push(emsg);
-  } else if (buf != NO_BUFFER) {
-    pushBuffer(CurrentTab, buf);
+    return;
   }
+  pushContent(CurrentTab, content);
 }
 
 /* Load file */
@@ -410,7 +409,7 @@ DEFUN(ldfile, LOAD, "Open local file in a new buffer") {
   if (fn == NULL || *fn == '\0') {
     return;
   }
-  cmd_loadfile(INIT_BUFFER_WIDTH, fn);
+  cmd_loadfile(fn);
 }
 
 /* Load help file */
@@ -422,9 +421,8 @@ DEFUN(ldhelp, HELP, "Show help panel") {
       Sprintf("file:///$LIB/" HELP_CGI CGI_EXTENSION "?version=%s&lang=%s",
               Str_form_quote(Strnew_charp(w3m_version))->ptr,
               Str_form_quote(Strnew_charp_n(lang, n))->ptr);
-  auto buf = loadGeneralFile(INIT_BUFFER_WIDTH, tmp->ptr, NULL, NO_REFERER,
-                             false, NULL);
-  pushBuffer(CurrentTab, buf);
+  auto content = loadGeneralFile(tmp->ptr, NULL, NO_REFERER, false, NULL);
+  pushContent(CurrentTab, content);
 }
 
 /* Move cursor left */
@@ -752,13 +750,12 @@ static int cur_real_linenumber(struct Buffer *buf) {
 
 /* Run editor on the current buffer */
 DEFUN(editBf, EDIT, "Edit local source") {
-  const char *fn = Currentbuf->document->filename;
-
-  if (fn == NULL ||
-      (Currentbuf->document->type == NULL &&
+  auto fn = Currentbuf->content->filename;
+  if (!fn ||
+      (Currentbuf->content->content_type == NULL &&
        Currentbuf->edit == NULL) || /* Reading shell */
-      Currentbuf->document->real_scheme != SCM_LOCAL ||
-      !strcmp(Currentbuf->document->url.file, "-") || /* file is std input  */
+      Currentbuf->content->real_scheme != SCM_LOCAL ||
+      !strcmp(Currentbuf->content->url.file, "-") || /* file is std input  */
       Currentbuf->document->bufferprop & BP_FRAME) {  /* Frame */
     message_push("Can't edit other than local file");
     return;
@@ -794,26 +791,14 @@ DEFUN(editScr, EDIT_SCREEN, "Edit rendered copy of document") {
   unlink(tmpf);
 }
 
-static struct Buffer *loadNormalBuf(struct Buffer *buf) {
-  pushBuffer(CurrentTab, buf);
-  return buf;
-}
-
-static void gotoLabel(const char *label) {
-  auto al = searchURLLabel(Currentbuf->document, label);
+static void gotoLabel(struct Buffer *buf, const char *label) {
+  auto al = searchURLLabel(buf->document, label);
   if (!al) {
     message_push(Sprintf("%s is not found", label)->ptr);
     return;
   }
 
-  auto buf = newBuffer();
-  copyBuffer(buf->document, Currentbuf->document);
-  for (int i = 0; i < MAX_LB; i++)
-    buf->linkBuffer[i] = NULL;
-  buf->document->url.label = allocStr(label, -1);
-  pushHashHist(URLHist, parsedURL2Str(&buf->document->url)->ptr);
-  (*buf->clone)++;
-  pushBuffer(CurrentTab, buf);
+  pushContent(CurrentTab, buf->content);
   gotoLine(Currentbuf->document, al->start.line);
   if (label_topline)
     Currentbuf->document->topLine =
@@ -827,31 +812,31 @@ static void gotoLabel(const char *label) {
   return;
 }
 
-struct Buffer *_followA(struct Current current) {
+struct Content *_followA(struct Current current) {
   if (Currentbuf->document->firstLine == NULL)
     return nullptr;
 
   auto a = retrieveCurrentMap(Currentbuf->document);
   if (a) {
-    return _followForm(Currentbuf->document, false, current);
+    return _followForm(Currentbuf, false, current);
   }
 
   a = retrieveCurrentAnchor(Currentbuf->document);
   if (a == NULL) {
-    return _followForm(Currentbuf->document, false, current);
+    return _followForm(Currentbuf, false, current);
   }
 
   if (*a->url == '#') { /* index within this buffer */
-    gotoLabel(a->url + 1);
+    gotoLabel(Currentbuf, a->url + 1);
     return nullptr;
   }
 
-  auto u = parseURL2(a->url, baseURL(Currentbuf->document));
-  if (Strcmp(parsedURL2Str(&u), parsedURL2Str(&Currentbuf->document->url)) ==
+  auto u = parseURL2(a->url, baseURL(Currentbuf));
+  if (Strcmp(parsedURL2Str(&u), parsedURL2Str(&Currentbuf->content->url)) ==
       0) {
     /* index within this buffer */
     if (u.label) {
-      gotoLabel(u.label);
+      gotoLabel(Currentbuf, u.label);
       return nullptr;
     }
   }
@@ -859,13 +844,13 @@ struct Buffer *_followA(struct Current current) {
     return nullptr;
   auto url = a->url;
 
-  return loadLink(Currentbuf->document, url, a->target, a->referer, NULL);
+  return loadLink(Currentbuf, url, a->target, a->referer, NULL);
 }
 
 /* follow HREF link */
 DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer") {
-  auto buf = _followA(current);
-  pushBuffer(CurrentTab, buf);
+  auto content = _followA(current);
+  pushContent(CurrentTab, content);
 }
 
 /* view inline image */
@@ -874,32 +859,33 @@ DEFUN(followI, VIEW_IMAGE, "Display image in viewer") {
     return;
 
   auto a = retrieveCurrentImg(Currentbuf->document);
-  if (a == NULL)
+  if (!a)
     return;
+
   scr_message(Sprintf("loading %s", a->url)->ptr, 0, 0);
   term_refresh();
-  auto buf = loadGeneralFile(INIT_BUFFER_WIDTH, a->url,
-                             baseURL(Currentbuf->document), NULL, 0, NULL);
-  if (!buf) {
+  auto content =
+      loadGeneralFile(a->url, baseURL(Currentbuf), NULL, 0, NULL);
+  if (!content) {
     char *emsg = Sprintf("Can't load %s", a->url)->ptr;
     message_push(emsg);
-  } else if (buf != NO_BUFFER) {
-    pushBuffer(CurrentTab, buf);
+    return;
   }
+  pushContent(CurrentTab, content);
 }
 
 #define conv_form_encoding(val, fi, buf) (val)
 
 /* submit form */
 DEFUN(submitForm, SUBMIT, "Submit form") {
-  auto buf = _followForm(Currentbuf->document, true, current);
-  pushBuffer(CurrentTab, buf);
+  auto content = _followForm(Currentbuf, true, current);
+  pushContent(CurrentTab, content);
 }
 
 /* process form */
 void followForm(struct Current current) {
-  auto buf = _followForm(Currentbuf->document, false, current);
-  pushBuffer(CurrentTab, buf);
+  auto content = _followForm(Currentbuf, false, current);
+  pushContent(CurrentTab, content);
 }
 
 /* go to the top anchor */
@@ -1023,7 +1009,7 @@ static void _nextA(bool visited) {
               retrieveAnchor(Currentbuf->document->formitem, po->line, po->pos);
         hseq++;
         if (visited == true && an) {
-          auto url = parseURL2(an->url, baseURL(Currentbuf->document));
+          auto url = parseURL2(an->url, baseURL(Currentbuf));
           if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
             goto _end;
           }
@@ -1042,7 +1028,7 @@ static void _nextA(bool visited) {
       x = an->start.pos;
       y = an->start.line;
       if (visited == true) {
-        auto url = parseURL2(an->url, baseURL(Currentbuf->document));
+        auto url = parseURL2(an->url, baseURL(Currentbuf));
         if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
           goto _end;
         }
@@ -1102,7 +1088,7 @@ static void _prevA(int visited) {
               retrieveAnchor(Currentbuf->document->formitem, po->line, po->pos);
         hseq--;
         if (visited == true && an) {
-          auto url = parseURL2(an->url, baseURL(Currentbuf->document));
+          auto url = parseURL2(an->url, baseURL(Currentbuf));
           if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
             goto _end;
           }
@@ -1121,7 +1107,7 @@ static void _prevA(int visited) {
       x = an->start.pos;
       y = an->start.line;
       if (visited == true && an) {
-        auto url = parseURL2(an->url, baseURL(Currentbuf->document));
+        auto url = parseURL2(an->url, baseURL(Currentbuf));
         if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
           goto _end;
         }
@@ -1313,7 +1299,7 @@ DEFUN(deletePrevBuf, DELETE_PREVBUF,
 }
 
 /* go to specified URL */
-static struct Buffer *goURL0(char *prompt, int relative) {
+static struct Content *goURL0(char *prompt, int relative) {
   const char *referer;
   struct Url *current;
   struct Buffer *cur_buf = Currentbuf;
@@ -1322,7 +1308,7 @@ static struct Buffer *goURL0(char *prompt, int relative) {
   auto url = searchKeyData();
   if (url == NULL) {
     struct Hist *hist = copyHist(URLHist);
-    auto current = baseURL(Currentbuf->document);
+    auto current = baseURL(Currentbuf);
     if (current) {
       char *c_url = parsedURL2Str(current)->ptr;
       if (DefaultURLString == DEFAULT_URL_CURRENT)
@@ -1344,14 +1330,14 @@ static struct Buffer *goURL0(char *prompt, int relative) {
       SKIP_BLANKS(url);
   }
   if (relative) {
-    no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->document->url);
-    current = baseURL(Currentbuf->document);
+    no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->content->url);
+    current = baseURL(Currentbuf);
     if ((no_referer_ptr && *no_referer_ptr) || current == NULL ||
         current->scheme == SCM_LOCAL || current->scheme == SCM_LOCAL_CGI ||
         current->scheme == SCM_DATA)
       referer = NO_REFERER;
     else
-      referer = parsedURL2RefererStr(&Currentbuf->document->url)->ptr;
+      referer = parsedURL2RefererStr(&Currentbuf->content->url)->ptr;
     url = url_quote(url);
   } else {
     current = NULL;
@@ -1362,18 +1348,17 @@ static struct Buffer *goURL0(char *prompt, int relative) {
     return nullptr;
   }
   if (*url == '#') {
-    gotoLabel(url + 1);
+    gotoLabel(Currentbuf, url + 1);
     return nullptr;
   }
 
   auto p_url = parseURL2(url, current);
   pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
-  auto buf =
-      loadGeneralFile(INIT_BUFFER_WIDTH, url, current, referer, false, NULL);
-  if (buf) { /* success */
-    pushHashHist(URLHist, parsedURL2Str(&Currentbuf->document->url)->ptr);
+  auto content = loadGeneralFile(url, current, referer, false, NULL);
+  if (content) { /* success */
+    pushHashHist(URLHist, parsedURL2Str(&content->url)->ptr);
   }
-  return buf;
+  return content;
 }
 
 DEFUN(goURL, GOTO, "Open specified document in a new buffer") {
@@ -1389,10 +1374,10 @@ DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer") {
     url = url_quote(url);
     auto p_url = parseURL2(url, NULL);
     pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
-    auto buf = loadGeneralFile(INIT_BUFFER_WIDTH, url, NULL, NULL, false, NULL);
-    if (buf) { /* success */
-      pushHashHist(URLHist, parsedURL2Str(&Currentbuf->document->url)->ptr);
-      pushBuffer(CurrentTab, buf);
+    auto content = loadGeneralFile(url, NULL, NULL, false, NULL);
+    if (content) { /* success */
+      pushHashHist(URLHist, parsedURL2Str(&content->url)->ptr);
+      pushContent(CurrentTab, content);
     }
   }
 }
@@ -1403,9 +1388,8 @@ DEFUN(gorURL, GOTO_RELATIVE, "Go to relative address") {
 
 /* load bookmark */
 DEFUN(ldBmark, BOOKMARK VIEW_BOOKMARK, "View bookmarks") {
-  auto buf = loadGeneralFile(INIT_BUFFER_WIDTH, BookmarkFile, NULL, NO_REFERER,
-                             false, NULL);
-  pushBuffer(CurrentTab, buf);
+  auto content = loadGeneralFile(BookmarkFile, NULL, NO_REFERER, false, NULL);
+  pushContent(CurrentTab, content);
 }
 
 /* Add current to bookmark */
@@ -1414,49 +1398,25 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks") {
       Sprintf("mode=panel&cookie=%s&bmark=%s&url=%s&title=%s",
               (Str_form_quote(localCookie()))->ptr,
               (Str_form_quote(Strnew_charp(BookmarkFile)))->ptr,
-              (Str_form_quote(parsedURL2Str(&Currentbuf->document->url)))->ptr,
+              (Str_form_quote(parsedURL2Str(&Currentbuf->content->url)))->ptr,
               (Str_form_quote(Strnew_charp(Currentbuf->buffername)))->ptr);
   auto form = newFormList(NULL, "post", NULL, NULL, NULL, NULL, NULL);
   form->body = tmp->ptr;
   form->length = tmp->length;
-  auto buf =
-      loadGeneralFile(INIT_BUFFER_WIDTH, "file:///$LIB/" W3MBOOKMARK_CMDNAME,
-                      NULL, NO_REFERER, false, form);
-  pushBuffer(CurrentTab, buf);
-}
-
-static void cmd_loadBuffer(struct Buffer *buf, int prop, int linkid) {
-  if (buf == NULL) {
-    message_push("Can't load string");
-  } else if (buf != NO_BUFFER) {
-    buf->document->bufferprop |= (BP_INTERNAL | prop);
-    if (!(buf->document->bufferprop & BP_NO_URL))
-      copyParsedURL(&buf->document->url, &Currentbuf->document->url);
-    if (linkid != LB_NOLINK) {
-      buf->linkBuffer[REV_LB[linkid]] = Currentbuf;
-      Currentbuf->linkBuffer[linkid] = buf;
-    }
-    pushBuffer(CurrentTab, buf);
-  }
-}
-
-static void cmd_loadDocument(struct Document *doc, int prop, int linkid) {
-  auto buf = newBuffer();
-  buf->document = doc;
-  cmd_loadBuffer(buf, prop, linkid);
-}
-
-static void cmd_loadHtml(const char *html, int cols, enum BufferProperty prop,
-                         enum LinkBuffer linkid) {
-  auto buf = newBuffer();
-  struct Url url;
-  buf->document = renderHTML(cols, html, url, CHARSET_UTF8);
-  cmd_loadBuffer(buf, prop, linkid);
+  auto content = loadGeneralFile("file:///$LIB/" W3MBOOKMARK_CMDNAME, NULL,
+                                 NO_REFERER, false, form);
+  pushContent(CurrentTab, content);
 }
 
 /* option setting */
 DEFUN(ldOpt, OPTIONS, "Display options setting panel") {
-  cmd_loadDocument(load_option_panel(), BP_NO_URL, LB_NOLINK);
+  auto html = load_option_panel();
+
+  struct Url url;
+  // return renderHTML(INIT_BUFFER_WIDTH, src->ptr, url, CHARSET_UTF8);
+  auto content =
+      newContent(url, html->ptr, html->length, "text/html", CHARSET_UTF8);
+  pushContent(CurrentTab, content);
 }
 
 /* set an option */
@@ -1480,23 +1440,20 @@ DEFUN(setOpt, SET_OPTION, "Set option") {
 /* error message list */
 DEFUN(msgs, MSGS, "Display error messages") {
   auto html = message_list_panel(INIT_BUFFER_WIDTH);
-  cmd_loadHtml(html, INIT_BUFFER_WIDTH, BP_NO_URL, LB_NOLINK);
+  struct Url url;
+  // auto doc = renderHTML(INIT_BUFFER_WIDTH, html, url, CHARSET_UTF8);
+  auto content =
+      newContent(url, html->ptr, html->length, "text/html", CHARSET_UTF8);
+  pushContent(CurrentTab, content);
 }
 
 /* page info */
 DEFUN(pginfo, INFO, "Display information about the current document") {
-  struct Buffer *buf = Currentbuf->linkBuffer[LB_N_INFO];
-  if (buf) {
-    Currentbuf = buf;
-    return;
-  }
-
-  buf = Currentbuf->linkBuffer[LB_INFO];
-  if (buf) {
-    delBuffer(CurrentTab, buf);
-  }
-  auto doc = page_info_panel(Currentbuf);
-  cmd_loadDocument(doc, BP_NORMAL, LB_INFO);
+  auto html = page_info_panel(Currentbuf);
+  struct Url url;
+  auto content =
+      newContent(url, html->ptr, html->length, "text/html", CHARSET_UTF8);
+  pushContent(CurrentTab, content);
 }
 
 void follow_map(struct InternalAction *arg, struct Current) {
@@ -1511,49 +1468,63 @@ void follow_map(struct InternalAction *arg, struct Current) {
   auto a = follow_map_menu(Currentbuf->document, name, an, x, y);
   if (a == NULL || a->url == NULL || *(a->url) == '\0') {
 #endif
-    auto doc = follow_map_panel(Currentbuf, name);
-    if (doc) {
-      cmd_loadDocument(doc, BP_NORMAL, LB_NOLINK);
+    auto html = follow_map_panel(Currentbuf->document, name);
+    if (html) {
+      struct Url url;
+      auto content =
+          newContent(url, html->ptr, html->length, "text/html", CHARSET_UTF8);
+      pushContent(CurrentTab, content);
     }
 
 #if defined(MENU_MAP) || defined(USE_IMAGE)
     return;
   }
   if (*(a->url) == '#') {
-    gotoLabel(a->url + 1);
+    gotoLabel(Currentbuf, a->url + 1);
     return;
   }
-  auto p_url = parseURL2(a->url, baseURL(Currentbuf->document));
+  auto p_url = parseURL2(a->url, baseURL(Currentbuf));
   pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
 
-  auto buf = loadGeneralFile(
-      INIT_BUFFER_WIDTH, a->url, baseURL(Currentbuf->document),
-      parsedURL2Str(&Currentbuf->document->url)->ptr, false, NULL);
+  auto content = loadGeneralFile(a->url, baseURL(Currentbuf),
+                                 parsedURL2Str(&Currentbuf->content->url)->ptr,
+                                 false, NULL);
 
-  pushCheckTarget(CurrentTab, a->target, buf, true);
+  pushCheckTarget(CurrentTab, a->target, content, true);
 #endif
 }
 
 /* link,anchor,image list */
 DEFUN(linkLst, LIST, "Show all URLs referenced") {
-  auto doc = link_list_panel(Currentbuf);
-  if (doc) {
-    cmd_loadDocument(doc, BP_NORMAL, LB_NOLINK);
+  auto html = link_list_panel(Currentbuf);
+  if (html) {
+    struct Url url;
+    auto content =
+        newContent(url, html->ptr, html->length, "text/html", CHARSET_UTF8);
+    pushContent(CurrentTab, content);
   }
 }
 
 /* cookie list */
 DEFUN(cooLst, COOKIE, "View cookie list") {
-  auto doc = cookie_list_panel(INIT_BUFFER_WIDTH);
-  if (doc) {
-    cmd_loadDocument(doc, BP_NO_URL, LB_NOLINK);
+  auto html = cookie_list_panel(INIT_BUFFER_WIDTH);
+  if (html) {
+    struct Url url;
+    auto content =
+        newContent(url, html->ptr, html->length, "text/html", CHARSET_UTF8);
+    pushContent(CurrentTab, content);
   }
 }
 
 /* History page */
 DEFUN(ldHist, HISTORY, "Show browsing history") {
-  cmd_loadDocument(historyDocument(INIT_BUFFER_WIDTH, URLHist), BP_NO_URL,
-                   LB_NOLINK);
+  auto html = historyDocument(INIT_BUFFER_WIDTH, URLHist);
+  if (html) {
+    struct Url url;
+    auto content =
+        newContent(url, html->ptr, html->length, "text/html", CHARSET_UTF8);
+    pushContent(CurrentTab, content);
+  }
 }
 
 /* download HREF link */
@@ -1617,18 +1588,18 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document") {
 
 /* save source */
 DEFUN(svSrc, DOWNLOAD SAVE, "Save document source") {
-  if (Currentbuf->document->sourcefile == NULL)
+  if (Currentbuf->content->sourcefile == NULL)
     return;
 
   clearKeyData(); /* not allowed in w3m-control: */
   PermitSaveToPipe = true;
   const char *file;
-  if (Currentbuf->document->real_scheme == SCM_LOCAL)
-    file = guess_save_name(NULL, Currentbuf->document->url.real_file);
+  if (Currentbuf->content->real_scheme == SCM_LOCAL)
+    file = guess_save_name(NULL, Currentbuf->content->url.real_file);
   else
     file = guess_save_name(Currentbuf->http_response,
-                           Currentbuf->document->url.file);
-  doFileCopy(Currentbuf->document->sourcefile, file);
+                           Currentbuf->content->url.file);
+  doFileCopy(Currentbuf->content->sourcefile, file);
   PermitSaveToPipe = false;
 }
 
@@ -1679,9 +1650,12 @@ DEFUN(peekIMG, PEEK_IMG, "Show image address") { _peekURL(1); }
 
 /* show current URL */
 static Str currentURL(void) {
-  if (Currentbuf->document->bufferprop & BP_INTERNAL)
-    return Strnew_size(0);
-  return parsedURL2Str(&Currentbuf->document->url);
+  if (Currentbuf->document) {
+    if (Currentbuf->document->bufferprop & BP_INTERNAL)
+      return Strnew_size(0);
+    return parsedURL2Str(&Currentbuf->content->url);
+  }
+  return Strnew_size(0);
 }
 
 DEFUN(curURL, PEEK, "Show current address") {
@@ -1709,56 +1683,56 @@ DEFUN(curURL, PEEK, "Show current address") {
 /* view HTML source */
 
 DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
-  struct Buffer *buf;
-
-  if (Currentbuf->document->type == NULL ||
-      Currentbuf->document->bufferprop & BP_FRAME)
-    return;
-  if ((buf = Currentbuf->linkBuffer[LB_SOURCE]) != NULL ||
-      (buf = Currentbuf->linkBuffer[LB_N_SOURCE]) != NULL) {
-    Currentbuf = buf;
-    return;
-  }
-  if (Currentbuf->document->sourcefile == NULL) {
-    return;
-  }
-
-  buf = newBuffer();
-
-  if (is_html_type(Currentbuf->document->type)) {
-    buf->document->type = "text/plain";
-    // if (Currentbuf->document->real_type &&
-    //     is_html_type(Currentbuf->document->real_type))
-    //   buf->document->real_type = "text/plain";
-    // else
-    //   buf->document->real_type = Currentbuf->document->real_type;
-    buf->buffername = Sprintf("source of %s", Currentbuf->buffername)->ptr;
-    buf->linkBuffer[LB_N_SOURCE] = Currentbuf;
-    Currentbuf->linkBuffer[LB_SOURCE] = buf;
-  } else if (!strcasecmp(Currentbuf->document->type, "text/plain")) {
-    buf->document->type = "text/html";
-    // if (Currentbuf->document->real_type &&
-    //     !strcasecmp(Currentbuf->document->real_type, "text/plain"))
-    //   buf->document->real_type = "text/html";
-    // else
-    //   buf->document->real_type = Currentbuf->document->real_type;
-    buf->buffername = Sprintf("HTML view of %s", Currentbuf->buffername)->ptr;
-    buf->linkBuffer[LB_SOURCE] = Currentbuf;
-    Currentbuf->linkBuffer[LB_N_SOURCE] = buf;
-  } else {
-    return;
-  }
-  buf->document->url = Currentbuf->document->url;
-  buf->document->real_scheme = Currentbuf->document->real_scheme;
-  buf->document->filename = Currentbuf->document->filename;
-  buf->document->sourcefile = Currentbuf->document->sourcefile;
-  buf->clone = Currentbuf->clone;
-  (*buf->clone)++;
-
-  buf->document->need_reshape = true;
-  buf->document =
-      reshapeBuffer(buf->document, buf->http_response->content_charset);
-  pushBuffer(CurrentTab, buf);
+  // struct Buffer *buf;
+  //
+  // if (Currentbuf->document->type == NULL ||
+  //     Currentbuf->document->bufferprop & BP_FRAME)
+  //   return;
+  // if ((buf = Currentbuf->linkBuffer[LB_SOURCE]) != NULL ||
+  //     (buf = Currentbuf->linkBuffer[LB_N_SOURCE]) != NULL) {
+  //   Currentbuf = buf;
+  //   return;
+  // }
+  // if (Currentbuf->document->sourcefile == NULL) {
+  //   return;
+  // }
+  //
+  // buf = newBuffer();
+  //
+  // if (is_html_type(Currentbuf->document->type)) {
+  //   buf->document->type = "text/plain";
+  //   // if (Currentbuf->document->real_type &&
+  //   //     is_html_type(Currentbuf->document->real_type))
+  //   //   buf->document->real_type = "text/plain";
+  //   // else
+  //   //   buf->document->real_type = Currentbuf->document->real_type;
+  //   buf->buffername = Sprintf("source of %s", Currentbuf->buffername)->ptr;
+  //   buf->linkBuffer[LB_N_SOURCE] = Currentbuf;
+  //   Currentbuf->linkBuffer[LB_SOURCE] = buf;
+  // } else if (!strcasecmp(Currentbuf->document->type, "text/plain")) {
+  //   buf->document->type = "text/html";
+  //   // if (Currentbuf->document->real_type &&
+  //   //     !strcasecmp(Currentbuf->document->real_type, "text/plain"))
+  //   //   buf->document->real_type = "text/html";
+  //   // else
+  //   //   buf->document->real_type = Currentbuf->document->real_type;
+  //   buf->buffername = Sprintf("HTML view of %s",
+  //   Currentbuf->buffername)->ptr; buf->linkBuffer[LB_SOURCE] = Currentbuf;
+  //   Currentbuf->linkBuffer[LB_N_SOURCE] = buf;
+  // } else {
+  //   return;
+  // }
+  // buf->content->url = Currentbuf->document->url;
+  // buf->document->real_scheme = Currentbuf->document->real_scheme;
+  // buf->document->filename = Currentbuf->document->filename;
+  // buf->document->sourcefile = Currentbuf->document->sourcefile;
+  // buf->clone = Currentbuf->clone;
+  // (*buf->clone)++;
+  //
+  // buf->document->need_reshape = true;
+  // buf->document =
+  //     reshapeBuffer(buf->document, buf->http_response->content_charset);
+  // pushBuffer(CurrentTab, buf);
 }
 
 /* reload */
@@ -1772,8 +1746,8 @@ DEFUN(reload, RELOAD, "Load current document anew") {
     return;
   }
 
-  if (Currentbuf->document->url.scheme == SCM_LOCAL &&
-      !strcmp(Currentbuf->document->url.file, "-")) {
+  if (Currentbuf->content->url.scheme == SCM_LOCAL &&
+      !strcmp(Currentbuf->content->url.file, "-")) {
     /* file is std input */
     message_push("Can't reload stdin");
     return;
@@ -1781,7 +1755,7 @@ DEFUN(reload, RELOAD, "Load current document anew") {
   struct Document sbuf;
   copyBuffer(&sbuf, Currentbuf->document);
 
-  struct Buffer *buf, *fbuf = NULL;
+  struct Buffer *fbuf = NULL;
   Str url;
   struct FormList *form;
   bool multipart = 0;
@@ -1800,26 +1774,24 @@ DEFUN(reload, RELOAD, "Load current document anew") {
   } else {
     form = NULL;
   }
-  url = parsedURL2Str(&Currentbuf->document->url);
+  url = parsedURL2Str(&Currentbuf->content->url);
   scr_message("Reloading...", 0, 0);
   term_refresh();
-  buf = loadGeneralFile(INIT_BUFFER_WIDTH, url->ptr, NULL, NO_REFERER, true,
-                        form);
+  auto content = loadGeneralFile(url->ptr, NULL, NO_REFERER, true, form);
 
   if (multipart)
     unlink(form->body);
-  if (buf == NULL) {
+  if (!content) {
     message_push("Can't reload...");
-    return;
-  } else if (buf == NO_BUFFER) {
     return;
   }
   if (fbuf != NULL)
     Firstbuf = deleteBuffer(Firstbuf, fbuf);
-  repBuffer(Currentbuf, buf);
+  // repBuffer(Currentbuf, buf);
   // if ((buf->type != NULL) && (sbuf.type != NULL) &&
   //     ((!strcasecmp(buf->type, "text/plain") && is_html_type(sbuf.type)) ||
-  //      (is_html_type(buf->type) && !strcasecmp(sbuf.type, "text/plain")))) {
+  //      (is_html_type(buf->type) && !strcasecmp(sbuf.type, "text/plain"))))
+  //      {
   //   vwSrc();
   //   if (Currentbuf != buf)
   //     Firstbuf = deleteBuffer(Firstbuf, buf);
@@ -1835,8 +1807,7 @@ DEFUN(reload, RELOAD, "Load current document anew") {
 /* reshape */
 DEFUN(reshape, RESHAPE, "Re-render document") {
   Currentbuf->document->need_reshape = true;
-  Currentbuf->document = reshapeBuffer(
-      Currentbuf->document, Currentbuf->http_response->content_charset);
+  reshapeBuffer(Currentbuf);
 }
 
 DEFUN(chkURL, MARK_URL, "Turn URL-like strings into hyperlinks") {
@@ -1916,13 +1887,13 @@ DEFUN(extbrz, EXTERN, "Display using an external browser") {
     message_push("Can't browse...");
     return;
   }
-  if (Currentbuf->document->url.scheme == SCM_LOCAL &&
-      !strcmp(Currentbuf->document->url.file, "-")) {
+  if (Currentbuf->content->url.scheme == SCM_LOCAL &&
+      !strcmp(Currentbuf->content->url.file, "-")) {
     /* file is std input */
     message_push("Can't browse stdin");
     return;
   }
-  invoke_browser(parsedURL2Str(&Currentbuf->document->url)->ptr);
+  invoke_browser(parsedURL2Str(&Currentbuf->content->url)->ptr);
 }
 
 DEFUN(linkbrz, EXTERN_LINK, "Display target using an external browser") {
@@ -1931,7 +1902,7 @@ DEFUN(linkbrz, EXTERN_LINK, "Display target using an external browser") {
   auto a = retrieveCurrentAnchor(Currentbuf->document);
   if (a == NULL)
     return;
-  auto pu = parseURL2(a->url, baseURL(Currentbuf->document));
+  auto pu = parseURL2(a->url, baseURL(Currentbuf));
   invoke_browser(parsedURL2Str(&pu)->ptr);
 }
 
@@ -1975,19 +1946,19 @@ DEFUN(wrapToggle, WRAP_TOGGLE, "Toggle wrapping mode in searches") {
 }
 
 DEFUN(dictword, DICT_WORD, "Execute dictionary command (see README.dict)") {
-  auto buf = execdict(inputStr(Currentbuf->document, "(dictionary)!", ""));
-  pushBuffer(CurrentTab, buf);
+  auto content = execdict(inputStr(Currentbuf->document, "(dictionary)!", ""));
+  pushContent(CurrentTab, content);
 }
 
 DEFUN(dictwordat, DICT_WORD_AT,
       "Execute dictionary command for word at cursor") {
-  auto buf = execdict(GetWord(Currentbuf->document));
-  pushBuffer(CurrentTab, buf);
+  auto content = execdict(GetWord(Currentbuf->document));
+  pushContent(CurrentTab, content);
 }
 
 void deleteFiles() {
   for (CurrentTab = FirstTab; CurrentTab; CurrentTab = CurrentTab->nextTab) {
-    while (Firstbuf && Firstbuf != NO_BUFFER) {
+    while (Firstbuf) {
       auto buf = Firstbuf->nextBuffer;
       discardBuffer(Firstbuf);
       Firstbuf = buf;
@@ -2094,9 +2065,7 @@ DEFUN(defKey, DEFINE_KEY,
 }
 
 DEFUN(newT, NEW_TAB, "Open a new tab (with current document)") {
-  auto buf = newBuffer();
-  copyBuffer(buf->document, Currentbuf->document);
-  _newT(buf);
+  _newT(Currentbuf->content);
 }
 
 DEFUN(closeT, CLOSE_TAB, "Close tab") {
@@ -2146,10 +2115,10 @@ DEFUN(tabA, TAB_LINK, "Follow current hyperlink in a new tab") {
   // _newT(buf);
 }
 
-static void tabURL0(struct TabBuffer *tab, char *prompt, int relative) {
-  auto buf = goURL0(prompt, relative);
-  pushBuffer(tab, buf);
-}
+// static void tabURL0(struct TabBuffer *tab, char *prompt, int relative) {
+//   auto content = goURL0(prompt, relative);
+//   pushDocument(tab, doc);
+// }
 
 DEFUN(tabURL, TAB_GOTO, "Open specified document in a new tab") {
   // tabURL0(prec_num ? numTab(PREC_NUM) : NULL, "Goto URL on new tab: ",
@@ -2157,7 +2126,8 @@ DEFUN(tabURL, TAB_GOTO, "Open specified document in a new tab") {
 }
 
 DEFUN(tabrURL, TAB_GOTO_RELATIVE, "Open relative address in a new tab") {
-  // tabURL0(prec_num ? numTab(PREC_NUM) : NULL, "Goto relative URL on new tab:
+  // tabURL0(prec_num ? numTab(PREC_NUM) : NULL, "Goto relative URL on new
+  // tab:
   // ", true);
 }
 

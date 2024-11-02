@@ -23,9 +23,9 @@ struct TabBuffer *newTab(void) {
   return n;
 }
 
-void tabInitialize(struct Document *doc) {
+void tabInitialize(struct Content *content) {
   auto buf = newBuffer();
-  buf->document = doc;
+  buf->content = content;
   if (!CurrentTab) {
     FirstTab = LastTab = CurrentTab = newTab();
     nTab = 1;
@@ -36,15 +36,13 @@ void tabInitialize(struct Document *doc) {
   }
 }
 
-void _newT(struct Buffer *buf) {
-  if (!buf) {
+void _newT(struct Content *content) {
+  if (!content) {
     return;
   }
   auto tag = newTab();
-  buf->nextBuffer = NULL;
-  for (int i = 0; i < MAX_LB; i++)
-    buf->linkBuffer[i] = NULL;
-  (*buf->clone)++;
+  auto buf = newBuffer();
+  buf->content = content;
   tag->firstBuffer = tag->currentBuffer = buf;
 
   tag->nextTab = CurrentTab->nextTab;
@@ -142,7 +140,7 @@ struct TabBuffer *deleteTab(struct TabBuffer *tab) {
 
   nTab--;
   auto buf = tab->firstBuffer;
-  while (buf && buf != NO_BUFFER) {
+  while (buf) {
     auto next = buf->nextBuffer;
     discardBuffer(buf);
     buf = next;
@@ -150,7 +148,13 @@ struct TabBuffer *deleteTab(struct TabBuffer *tab) {
   return FirstTab;
 }
 
-void pushBuffer(struct TabBuffer *tab, struct Buffer *buf) {
+void pushContent(struct TabBuffer *tab, struct Content *content) {
+  if (!content) {
+    return;
+  }
+  auto buf = newBuffer();
+  buf->content = content;
+
   if (clear_buffer)
     tmpClearBuffer(tab->currentBuffer->document);
 
@@ -167,13 +171,13 @@ void pushBuffer(struct TabBuffer *tab, struct Buffer *buf) {
 }
 
 void pushCheckTarget(struct TabBuffer *tab, const char *anchor_target,
-                     struct Buffer *buf, bool check_target) {
+                     struct Content *cntent, bool check_target) {
   if (check_target && open_tab_blank && anchor_target &&
       (!strcasecmp(anchor_target, "_new") ||
        !strcasecmp(anchor_target, "_blank"))) {
-    _newT(buf);
+    _newT(cntent);
   } else {
-    pushBuffer(tab, buf);
+    pushContent(tab, cntent);
   }
 }
 

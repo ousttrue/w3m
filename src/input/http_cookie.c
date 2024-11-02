@@ -587,7 +587,7 @@ void initCookie(void) {
   check_expired_cookies();
 }
 
-struct Document *cookie_list_panel(int cols) {
+Str cookie_list_panel(int cols) {
   /* FIXME: gettextize? */
   Str src = Strnew_charp("<html><head><title>Cookies</title></head>"
                          "<body><center><b>Cookies</b></center>"
@@ -689,8 +689,7 @@ struct Document *cookie_list_panel(int cols) {
         src, "</td></tr><tr><td><input type=submit value=\"OK\"></table><p>");
   }
   Strcat_charp(src, "</ol></form></body></html>");
-  struct Url url;
-  return renderHTML(cols, src->ptr, url, CHARSET_UTF8);
+  return src;
 }
 
 void set_cookie_flag(struct InternalAction *arg, struct Current current) {

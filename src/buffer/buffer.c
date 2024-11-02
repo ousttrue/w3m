@@ -7,6 +7,7 @@
 #include "html/html_readbuffer.h"
 #include "html/html_text.h"
 #include "html/map.h"
+#include "input/content.h"
 #include "input/http.h"
 #include "input/istream.h"
 #include "input/loader.h"
@@ -58,23 +59,18 @@ struct Buffer *nullBuffer(void) {
  */
 void discardBuffer(struct Buffer *buf) {
   clearBuffer(buf->document);
-  for (int i = 0; i < MAX_LB; i++) {
-    auto b = buf->linkBuffer[i];
-    if (b == NULL)
-      continue;
-    b->linkBuffer[REV_LB[i]] = NULL;
-  }
 
   if (buf->document->savecache)
     unlink(buf->document->savecache);
   if (--(*buf->clone))
     return;
 
-  if (buf->document->sourcefile &&
-      (!buf->document->type || strncasecmp(buf->document->type, "image/", 6))) {
-    if (buf->document->real_scheme != SCM_LOCAL ||
+  if (buf->content->sourcefile &&
+      (!buf->content->content_type ||
+       strncasecmp(buf->content->content_type, "image/", 6))) {
+    if (buf->content->real_scheme != SCM_LOCAL ||
         buf->document->bufferprop & BP_FRAME)
-      unlink(buf->document->sourcefile);
+      unlink(buf->content->sourcefile);
   }
 }
 
@@ -158,13 +154,13 @@ static void writeBufferName(struct Buffer *buf, int n) {
     all = buf->document->lastLine->linenumber;
   scr_move(n, 0);
   auto msg = Sprintf("<%s> [%d lines]", buf->buffername, all);
-  if (buf->document->filename != NULL) {
-    switch (buf->document->url.scheme) {
+  if (buf->content->filename != NULL) {
+    switch (buf->content->url.scheme) {
     case SCM_LOCAL:
     case SCM_LOCAL_CGI:
-      if (strcmp(buf->document->url.file, "-")) {
+      if (strcmp(buf->content->url.file, "-")) {
         Strcat_char(msg, ' ');
-        Strcat_charp(msg, buf->document->url.real_file);
+        Strcat_charp(msg, buf->content->url.real_file);
       }
       break;
     case SCM_UNKNOWN:
@@ -172,7 +168,7 @@ static void writeBufferName(struct Buffer *buf, int n) {
       break;
     default:
       Strcat_char(msg, ' ');
-      Strcat(msg, parsedURL2Str(&buf->document->url));
+      Strcat(msg, parsedURL2Str(&buf->content->url));
       break;
     }
   }
@@ -342,15 +338,15 @@ char *last_modified(struct Buffer *buf) {
       }
     }
     return "unknown";
-  } else if (buf->document->url.scheme == SCM_LOCAL) {
-    if (stat(buf->document->url.file, &st) < 0)
+  } else if (buf->content->url.scheme == SCM_LOCAL) {
+    if (stat(buf->content->url.file, &st) < 0)
       return "unknown";
     return ctime(&st.st_mtime);
   }
   return "unknown";
 }
 
-struct Document *link_list_panel(struct Buffer *buf) {
+Str link_list_panel(struct Buffer *buf) {
   Str tmp =
       Strnew_charp("<title>Link List</title><h1 align=center>Link List</h1>\n");
 
@@ -366,7 +362,7 @@ struct Document *link_list_panel(struct Buffer *buf) {
       const char *p;
       const char *u;
       if (l->url) {
-        auto pu = parseURL2(l->url, baseURL(buf->document));
+        auto pu = parseURL2(l->url, baseURL(buf));
         p = parsedURL2Str(&pu)->ptr;
         u = html_quote(p);
         if (DecodeURL)
@@ -398,7 +394,7 @@ struct Document *link_list_panel(struct Buffer *buf) {
       auto a = &al->anchors[i];
       if (a->hseq < 0 || a->slave)
         continue;
-      auto pu = parseURL2(a->url, baseURL(buf->document));
+      auto pu = parseURL2(a->url, baseURL(buf));
       const char *p = parsedURL2Str(&pu)->ptr;
       auto u = html_quote(p);
       if (DecodeURL)
@@ -420,7 +416,7 @@ struct Document *link_list_panel(struct Buffer *buf) {
       auto a = &al->anchors[i];
       if (a->slave)
         continue;
-      auto pu = parseURL2(a->url, baseURL(buf->document));
+      auto pu = parseURL2(a->url, baseURL(buf));
       const char *p = parsedURL2Str(&pu)->ptr;
       auto u = html_quote(p);
       if (DecodeURL)
@@ -451,7 +447,7 @@ struct Document *link_list_panel(struct Buffer *buf) {
           m = (struct MapArea *)mi->ptr;
           if (!m)
             continue;
-          pu = parseURL2(m->url, baseURL(buf->document));
+          pu = parseURL2(m->url, baseURL(buf));
           p = parsedURL2Str(&pu)->ptr;
           u = html_quote(p);
           if (DecodeURL)
@@ -470,40 +466,37 @@ struct Document *link_list_panel(struct Buffer *buf) {
     }
     Strcat_charp(tmp, "</ol>\n");
   }
-
-  struct Url url;
-  return renderHTML(INIT_BUFFER_WIDTH, tmp->ptr, url, CHARSET_UTF8);
+  return tmp;
 }
 
-struct Buffer *loadLink(struct Document *doc, const char *url,
-                        const char *target, const char *referer,
-                        struct FormList *form) {
+struct Content *loadLink(struct Buffer *src, const char *url,
+                         const char *target, const char *referer,
+                         struct FormList *form) {
   // scr_message(Sprintf("loading %s", url)->ptr, 0, 0);
   // term_refresh();
-  auto no_referer_ptr = query_SCONF_NO_REFERER_FROM(&doc->url);
-  auto base = baseURL(doc);
+  auto no_referer_ptr = query_SCONF_NO_REFERER_FROM(&src->content->url);
+  auto base = baseURL(src);
   if ((no_referer_ptr && *no_referer_ptr) || base == NULL ||
       base->scheme == SCM_LOCAL || base->scheme == SCM_LOCAL_CGI ||
       base->scheme == SCM_DATA)
     referer = NO_REFERER;
   if (referer == NULL)
-    referer = parsedURL2RefererStr(&doc->url)->ptr;
+    referer = parsedURL2RefererStr(&src->content->url)->ptr;
   int flag = 0;
-  auto buf = loadGeneralFile(INIT_BUFFER_WIDTH, url, baseURL(doc), referer,
-                             flag, form);
-  if (buf == NULL) {
+  auto content = loadGeneralFile(url, baseURL(src), referer, flag, form);
+  if (!content) {
     // char *emsg = Sprintf("Can't load %s", url)->ptr;
     // message_push(emsg);
-    return NULL;
+    return nullptr;
   }
 
   auto pu = parseURL2(url, base);
   pushHashHist(URLHist, parsedURL2Str(&pu)->ptr);
 
-  if (buf == NO_BUFFER) {
-    return NULL;
-  }
-  return buf;
+  // if (doc == NO_BUFFER) {
+  //   return NULL;
+  // }
+  return content;
 
   // if (target == NULL || /* no target specified (that means this page is not a
   //                          frame page) */
@@ -565,11 +558,12 @@ static struct FormItemList *save_submit_formlist(struct FormItemList *src) {
   return ret;
 }
 
-struct Buffer *_followForm(struct Document *doc, bool submit, struct Current current) {
-  if (doc->firstLine == NULL)
+struct Content *_followForm(struct Buffer *src, bool submit,
+                            struct Current current) {
+  if (src->document->firstLine == NULL)
     return nullptr;
 
-  auto a = retrieveCurrentForm(doc);
+  auto a = retrieveCurrentForm(src->document);
   if (a == NULL)
     return nullptr;
 
@@ -582,12 +576,12 @@ struct Buffer *_followForm(struct Document *doc, bool submit, struct Current cur
     if (fi->readonly) {
       message_push("Read only field!");
     }
-    auto p =
-        inputStrHist(doc, "TEXT:", fi->value ? fi->value->ptr : NULL, TextHist);
+    auto p = inputStrHist(src->document,
+                          "TEXT:", fi->value ? fi->value->ptr : NULL, TextHist);
     if (p == NULL || fi->readonly)
       break;
     fi->value = Strnew_charp(p);
-    formUpdateBuffer(doc, a, fi);
+    formUpdateBuffer(src->document, a, fi);
     if (fi->accept || fi->parent->nitems == 1)
       goto do_submit;
     break;
@@ -599,11 +593,11 @@ struct Buffer *_followForm(struct Document *doc, bool submit, struct Current cur
     if (fi->readonly)
       message_push("Read only field!");
     auto p = inputFilenameHist(
-        doc, "Filename:", fi->value ? fi->value->ptr : NULL, NULL);
+        src->document, "Filename:", fi->value ? fi->value->ptr : NULL, NULL);
     if (p == NULL || fi->readonly)
       break;
     fi->value = Strnew_charp(p);
-    formUpdateBuffer(doc, a, fi);
+    formUpdateBuffer(src->document, a, fi);
     if (fi->accept || fi->parent->nitems == 1)
       goto do_submit;
     break;
@@ -616,12 +610,13 @@ struct Buffer *_followForm(struct Document *doc, bool submit, struct Current cur
       message_push("Read only field!");
       break;
     }
-    auto p = inputLine(doc, "Password:", fi->value ? fi->value->ptr : NULL,
-                       IN_PASSWORD);
+    auto p =
+        inputLine(src->document, "Password:", fi->value ? fi->value->ptr : NULL,
+                  IN_PASSWORD);
     if (p == NULL)
       break;
     fi->value = Strnew_charp(p);
-    formUpdateBuffer(doc, a, fi);
+    formUpdateBuffer(src->document, a, fi);
     if (fi->accept)
       goto do_submit;
     break;
@@ -633,7 +628,7 @@ struct Buffer *_followForm(struct Document *doc, bool submit, struct Current cur
     if (fi->readonly)
       message_push("Read only field!");
     input_textarea(fi);
-    formUpdateBuffer(doc, a, fi);
+    formUpdateBuffer(src->document, a, fi);
     break;
 
   case FORM_INPUT_RADIO:
@@ -643,7 +638,7 @@ struct Buffer *_followForm(struct Document *doc, bool submit, struct Current cur
       message_push("Read only field!");
       break;
     }
-    formRecheckRadio(doc, a, fi);
+    formRecheckRadio(src->document, a, fi);
     break;
 
   case FORM_INPUT_CHECKBOX:
@@ -654,7 +649,7 @@ struct Buffer *_followForm(struct Document *doc, bool submit, struct Current cur
       break;
     }
     fi->checked = !fi->checked;
-    formUpdateBuffer(doc, a, fi);
+    formUpdateBuffer(src->document, a, fi);
     break;
 
   case FORM_INPUT_IMAGE:
@@ -669,7 +664,7 @@ struct Buffer *_followForm(struct Document *doc, bool submit, struct Current cur
     auto tmp2 = Strdup(fi->parent->action);
     if (!Strcmp_charp(tmp2, "!CURRENT_URL!")) {
       /* It means "current URL" */
-      tmp2 = parsedURL2Str(&doc->url);
+      tmp2 = parsedURL2Str(&src->content->url);
       char *p;
       if ((p = strchr(tmp2->ptr, '?')) != NULL)
         Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
@@ -681,7 +676,7 @@ struct Buffer *_followForm(struct Document *doc, bool submit, struct Current cur
         Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
       Strcat_charp(tmp2, "?");
       Strcat(tmp2, tmp);
-      return loadLink(doc, tmp2->ptr, a->target, NULL, NULL);
+      return loadLink(src, tmp2->ptr, a->target, NULL, NULL);
     } else if (fi->parent->method == FORM_METHOD_POST) {
       if (multipart) {
         struct stat st;
@@ -691,24 +686,24 @@ struct Buffer *_followForm(struct Document *doc, bool submit, struct Current cur
         fi->parent->body = tmp->ptr;
         fi->parent->length = tmp->length;
       }
-      auto buf = loadLink(doc, tmp2->ptr, a->target, NULL, fi->parent);
+      auto content = loadLink(src, tmp2->ptr, a->target, NULL, fi->parent);
       if (multipart) {
         unlink(fi->parent->body);
       }
-      if (buf && !(buf->document->bufferprop &
-                   BP_REDIRECTED)) { /* buf must be Currentbuf */
-        /* BP_REDIRECTED means that the buffer is obtained through
-         * Location: header. In this case, buf->form_submit must not be set
-         * because the page is not loaded by POST method but GET method.
-         */
-        buf->document->form_submit = save_submit_formlist(fi);
-      }
+      // if (content &&
+      //     !(buf->bufferprop & BP_REDIRECTED)) { /* buf must be Currentbuf */
+      //   /* BP_REDIRECTED means that the buffer is obtained through
+      //    * Location: header. In this case, buf->form_submit must not be set
+      //    * because the page is not loaded by POST method but GET method.
+      //    */
+      //   doc->form_submit = save_submit_formlist(fi);
+      // }
 
-      return buf;
+      return content;
     } else if ((fi->parent->method == FORM_METHOD_INTERNAL &&
                 (!Strcmp_charp(fi->parent->action, "map") ||
                  !Strcmp_charp(fi->parent->action, "none"))) ||
-               doc->bufferprop & BP_INTERNAL) { /* internal */
+               src->document->bufferprop & BP_INTERNAL) { /* internal */
       do_internal(tmp2->ptr, tmp->ptr, current);
     } else {
       message_push("Can't send form because of illegal method.");
@@ -717,15 +712,15 @@ struct Buffer *_followForm(struct Document *doc, bool submit, struct Current cur
   }
 
   case FORM_INPUT_RESET:
-    for (int i = 0; i < doc->formitem->nanchor; i++) {
-      auto a2 = &doc->formitem->anchors[i];
+    for (int i = 0; i < src->document->formitem->nanchor; i++) {
+      auto a2 = &src->document->formitem->anchors[i];
       auto f2 = (struct FormItemList *)a2->url;
       if (f2->parent == fi->parent && f2->name && f2->value &&
           f2->type != FORM_INPUT_SUBMIT && f2->type != FORM_INPUT_HIDDEN &&
           f2->type != FORM_INPUT_RESET) {
         f2->value = f2->init_value;
         f2->checked = f2->init_checked;
-        formUpdateBuffer(doc, a2, f2);
+        formUpdateBuffer(src->document, a2, f2);
       }
     }
     break;
@@ -735,4 +730,106 @@ struct Buffer *_followForm(struct Document *doc, bool submit, struct Current cur
   }
 
   return nullptr;
+}
+
+/*
+ * Reshape HTML buffer
+ */
+void reshapeBuffer(struct Buffer *buf) {
+  if (buf->document) {
+    if (!buf->document->need_reshape) {
+      return;
+    }
+    buf->document->need_reshape = false;
+  }
+
+  buf->document->width = INIT_BUFFER_WIDTH;
+  if (buf->content->sourcefile == NULL) {
+    return;
+  }
+
+  auto stream = examineFile(buf->content->sourcefile);
+  if (!stream) {
+    return;
+  }
+
+  Str html = Strnew();
+  Str line;
+  while ((line = StrmyISgets(stream))->length) {
+    Strcat(html, line);
+  }
+
+  struct Document sbuf;
+  copyBuffer(&sbuf, buf->document);
+  clearBuffer(buf->document);
+  buf->document->href = NULL;
+  buf->document->name = NULL;
+  buf->document->img = NULL;
+  buf->document->formitem = NULL;
+  buf->document->formlist = NULL;
+  buf->document->linklist = NULL;
+  buf->document->maplist = NULL;
+  if (buf->document->hmarklist)
+    buf->document->hmarklist->nmark = 0;
+  if (buf->document->imarklist)
+    buf->document->imarklist->nmark = 0;
+
+  if (is_html_type(buf->content->content_type)) {
+    buf->document = renderHTML(buf->document->viewport.COLS, html->ptr,
+                               buf->content->url, buf->content->charset);
+  } else {
+    buf->document = loadText(buf->document->viewport.COLS, html->ptr);
+  }
+  ISclose(stream);
+
+  buf->document->height = LASTLINE + 1;
+  if (buf->document->firstLine && sbuf.firstLine) {
+    struct Line *cur = sbuf.currentLine;
+    int n;
+
+    buf->document->viewport.pos = sbuf.viewport.pos + cur->bpos;
+    while (cur->bpos && cur->prev)
+      cur = cur->prev;
+    if (cur->real_linenumber > 0)
+      gotoRealLine(buf->document, cur->real_linenumber);
+    else
+      gotoLine(buf->document, cur->linenumber);
+    n = (buf->document->currentLine->linenumber -
+         buf->document->topLine->linenumber) -
+        (cur->linenumber - sbuf.topLine->linenumber);
+    if (n) {
+      buf->document->topLine =
+          lineSkip(&buf->document->viewport, buf->document->topLine,
+                   buf->document->lastLine, n, false);
+      if (cur->real_linenumber > 0)
+        gotoRealLine(buf->document, cur->real_linenumber);
+      else
+        gotoLine(buf->document, cur->linenumber);
+    }
+    buf->document->viewport.pos -= buf->document->currentLine->bpos;
+    if (FoldLine && !is_html_type(buf->content->content_type))
+      buf->document->viewport.currentColumn = 0;
+    else
+      buf->document->viewport.currentColumn = sbuf.viewport.currentColumn;
+    arrangeCursor(buf->document);
+  }
+  if (buf->document->check_url & CHK_URL)
+    chkURLBuffer(buf->document);
+  formResetBuffer(buf->document, sbuf.formitem);
+}
+
+struct Url *baseURL(struct Buffer *buf) {
+  if (buf->document->bufferprop & BP_NO_URL) {
+    /* no URL is defined for the buffer */
+    return NULL;
+  }
+
+  // if (doc->baseURL != NULL) {
+  //   /* <BASE> tag is defined in the document */
+  //   return doc->baseURL;
+  // } else
+  if (IS_EMPTY_PARSED_URL(&buf->content->url))
+    return NULL;
+  else
+    return &buf->content->url;
 }

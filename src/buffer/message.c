@@ -28,14 +28,14 @@ static const char *term_message_to_html() {
   return tmp->ptr;
 }
 
-const char *message_list_panel(int cols) {
+Str message_list_panel(int cols) {
   Str tmp = Strnew_size(LINES * COLS);
   Strcat_charp(tmp,
                "<html><head><title>List of error messages</title></head><body>"
                "<h1>List of error messages</h1><table cellpadding=0>\n");
   Strcat_m_charp(tmp, term_message_to_html());
   Strcat_charp(tmp, "</table></body></html>");
-  return tmp->ptr;
+  return tmp;
 }
 
 // void disp_err_message(const char *s, int redraw_current);

@@ -6,6 +6,7 @@
 #include "file/file.h"
 #include "fm.h"
 #include "html/html_renderer.h"
+#include "input/content.h"
 #include "input/http.h"
 #include "input/istream.h"
 #include "input/loader.h"
@@ -141,11 +142,10 @@ static Str conv_symbol(struct Line *l) {
  * saveBuffer: write buffer to file
  */
 static void _saveBuffer(struct Buffer *buf, struct Line *l, FILE *f, int cont) {
+
+  auto is_html = is_html_type(buf->content->content_type);
+
   Str tmp;
-  int is_html = false;
-
-  is_html = is_html_type(buf->document->type);
-
   for (; l != NULL; l = l->next) {
     if (is_html)
       tmp = conv_symbol(l);

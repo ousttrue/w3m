@@ -8,6 +8,7 @@
 #include "file/file.h"
 #include "html/html_readbuffer.h"
 #include "html/html_text.h"
+#include "input/content.h"
 #include "input/http.h"
 #include "input/istream.h"
 #include "input/url.h"
@@ -61,10 +62,11 @@ const char *map1 = "<HTML><HEAD><TITLE>Image map links</TITLE></HEAD>\
 <BODY><H1>Image map links</H1>\
 <table>";
 
-struct Document *follow_map_panel(struct Buffer *buf, const char *name) {
+Str follow_map_panel(struct Buffer *buf, const char *name) {
   auto ml = searchMapList(buf->document, name);
-  if (ml == NULL)
+  if (ml == NULL){
     return NULL;
+  }
 
   auto mappage = Strnew_charp(map1);
   for (auto al = ml->area->first; al != NULL; al = al->next) {
@@ -72,7 +74,7 @@ struct Document *follow_map_panel(struct Buffer *buf, const char *name) {
     if (!a)
       continue;
 
-    auto pu = parseURL2(a->url, baseURL(buf->document));
+    auto pu = parseURL2(a->url, baseURL(buf));
     const char *p = parsedURL2Str(&pu)->ptr;
     const char *q = html_quote(p);
     if (DecodeURL)
@@ -84,10 +86,7 @@ struct Document *follow_map_panel(struct Buffer *buf, const char *name) {
                    "</a><td>", p, NULL);
   }
   Strcat_charp(mappage, "</table></body></html>");
-
-  struct Url url;
-  return renderHTML(buf->document->viewport.COLS, mappage->ptr, url,
-                    CHARSET_UTF8);
+  return mappage;
 }
 
 struct MapArea *newMapArea(const char *url, const char *target, const char *alt,
@@ -113,7 +112,7 @@ static void append_map_info(struct Buffer *buf, Str tmp,
     auto a = (struct MapArea *)al->ptr;
     if (!a)
       continue;
-    struct Url pu = parseURL2(a->url, baseURL(buf->document));
+    struct Url pu = parseURL2(a->url, baseURL(buf));
     const char *q = html_quote(parsedURL2Str(&pu)->ptr);
     const char *p = html_quote(url_decode0(a->url));
     Strcat_m_charp(tmp, "<tr valign=top><td>&nbsp;&nbsp;<td><a href=\"", q,
@@ -133,7 +132,7 @@ static void append_link_info(struct Buffer *buf, Str html,
   for (auto l = link; l; l = l->next) {
     const char *url;
     if (l->url) {
-      struct Url pu = parseURL2(l->url, baseURL(buf->document));
+      struct Url pu = parseURL2(l->url, baseURL(buf));
       url = html_quote(parsedURL2Str(&pu)->ptr);
     } else {
       url = "(empty)";
@@ -160,7 +159,7 @@ static void append_link_info(struct Buffer *buf, Str html,
 /*
  * information of current page and link
  */
-struct Document *page_info_panel(struct Buffer *buf) {
+Str page_info_panel(struct Buffer *buf) {
   Str tmp = Strnew_size(1024);
   Strcat_charp(tmp, "<html><head>\
 <title>Information about current page</title>\
@@ -173,20 +172,21 @@ struct Document *page_info_panel(struct Buffer *buf) {
     auto all = buf->document->allLine;
     if (all == 0 && buf->document->lastLine)
       all = buf->document->lastLine->linenumber;
-    const char *p = url_decode0(parsedURL2Str(&buf->document->url)->ptr);
+    const char *p = url_decode0(parsedURL2Str(&buf->content->url)->ptr);
     Strcat_m_charp(
         tmp, "<table cellpadding=0>", "<tr valign=top><td nowrap>Title<td>",
         html_quote(buf->buffername),
         "<tr valign=top><td nowrap>Current URL<td>", html_quote(p),
         "<tr valign=top><td nowrap>Document Type<td>",
-        buf->document->type ? html_quote(buf->document->type) : "unknown",
+        buf->content->content_type ? html_quote(buf->content->content_type)
+                                   : "unknown",
         "<tr valign=top><td nowrap>Last Modified<td>",
         html_quote(last_modified(buf)), NULL);
   }
 
   auto a = retrieveCurrentAnchor(buf->document);
   if (a != NULL) {
-    auto pu = parseURL2(a->url, baseURL(buf->document));
+    auto pu = parseURL2(a->url, baseURL(buf));
     const char *p = parsedURL2Str(&pu)->ptr;
     const char *q = html_quote(p);
     if (DecodeURL)
@@ -199,7 +199,7 @@ struct Document *page_info_panel(struct Buffer *buf) {
   }
   a = retrieveCurrentImg(buf->document);
   if (a != NULL) {
-    auto pu = parseURL2(a->url, baseURL(buf->document));
+    auto pu = parseURL2(a->url, baseURL(buf));
     const char *p = parsedURL2Str(&pu)->ptr;
     const char *q = html_quote(p);
     if (DecodeURL)
@@ -242,6 +242,5 @@ struct Document *page_info_panel(struct Buffer *buf) {
   }
 end:
   Strcat_charp(tmp, "</body></html>");
-  struct Url url;
-  return renderHTML(buf->document->viewport.COLS, tmp->ptr, url, CHARSET_UTF8);
+  return tmp;
 }

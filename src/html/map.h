@@ -26,6 +26,6 @@ struct MapArea *newMapArea(const char *url, const char *target, const char *alt,
 struct MapList *searchMapList(struct Document *doc, const char *name);
 struct InternalAction;
 struct Current;
-extern void follow_map(struct InternalAction *arg, struct Current );
-extern struct Document *follow_map_panel(struct Buffer *buf, const char *name);
-extern struct Anchor *retrieveCurrentMap(struct Document *doc);
+void follow_map(struct InternalAction *arg, struct Current );
+Str follow_map_panel(struct Buffer *buf, const char *name);
+struct Anchor *retrieveCurrentMap(struct Document *doc);

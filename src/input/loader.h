@@ -7,7 +7,7 @@ extern const char *DirBufferCommand;
 
 struct Url;
 struct FormList;
-struct Document;
-struct Document *loadGeneralFile(int cols, const char *path, struct Url *current,
-                               const char *referer, bool no_cache,
-                               struct FormList *form);
+struct Content;
+struct Content *loadGeneralFile(const char *path, struct Url *current,
+                                const char *referer, bool no_cache,
+                                struct FormList *form);

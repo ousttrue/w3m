@@ -1,6 +1,7 @@
 #pragma once
 #include "current.h"
 #include "text/Str.h"
+#include "input/url.h"
 
 enum FormItemType {
   FORM_UNKNOWN = -1,
@@ -78,7 +79,7 @@ void formRecheckRadio(struct Document *doc, struct Anchor *a,
 void formResetBuffer(struct Document *doc, struct AnchorList *formitem);
 void formUpdateBuffer(struct Document *doc, struct Anchor *a,
                       struct FormItemList *form);
-void preFormUpdateBuffer(struct Document *doc);
+void preFormUpdateBuffer(struct Url url, struct Document *doc);
 Str textfieldrep(Str s, int width);
 void input_textarea(struct FormItemList *fi);
 void do_internal(const char *action, const char *data, struct Current current);

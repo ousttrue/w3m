@@ -39,11 +39,6 @@ struct Document {
   struct FormItemList *form_submit;
   struct Anchor *submit;
   bool need_reshape;
-  const char *sourcefile;
-  struct Url url;
-  enum URL_SCHEME_TYPE real_scheme;
-  const char *type;
-  const char *filename;
   enum BufferProperty bufferprop;
   const char *savecache;
   const char *title;
@@ -104,13 +99,10 @@ int currentLn(struct Document *doc);
 void gotoRealLine(struct Document *buf, int n);
 void clearBuffer(struct Document *buf);
 void chkURLBuffer(struct Document *buf);
-struct Document *reshapeBuffer(struct Document *buf,
-                               enum CharSet content_charset);
 void _goLine(struct Document *doc, const char *l);
 void save_buffer_position(struct Document *doc);
 void resetPos(struct Document *doc, struct BufferPos *b);
 int prev_nonnull_line(struct Document *doc, struct Line *line);
-struct Url *baseURL(struct Document *buf);
 const char *getCurWord(struct Document *doc, int *spos, int *epos);
 bool is_wordchar(int c);
 char *GetWord(struct Document *doc);
