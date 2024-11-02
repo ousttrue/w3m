@@ -73,7 +73,7 @@ global char *mailcap_files init(USER_MAILCAP ", " SYS_MAILCAP);
 global int UseHistory init(true);
 global int URLHistSize init(100);
 global int SaveURLHist init(true);
-global int multicolList init(false);
+// global int multicolList init(false);
 global char UseAltEntity init(false);
 global const char *config_file init(nullptr);
 

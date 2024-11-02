@@ -3248,8 +3248,7 @@ struct Document *loadText(int cols, const char *text) {
     Strchop(lineBuf2);
     Lineprop *propBuffer = NULL;
     lineBuf2 = checkType(lineBuf2, &propBuffer);
-    addnewline(doc, lineBuf2->ptr, propBuffer, lineBuf2->length,
-               FOLD_BUFFER_WIDTH(), nlines);
+    addnewline(doc, lineBuf2->ptr, propBuffer, lineBuf2->length, nlines);
   }
 
 _end:

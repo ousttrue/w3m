@@ -587,7 +587,7 @@ void initCookie(void) {
   check_expired_cookies();
 }
 
-Str cookie_list_panel(int cols) {
+Str cookie_list_panel() {
   /* FIXME: gettextize? */
   Str src = Strnew_charp("<html><head><title>Cookies</title></head>"
                          "<body><center><b>Cookies</b></center>"

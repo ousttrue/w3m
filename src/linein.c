@@ -136,10 +136,6 @@ static void ins_char(char c);
 const char *inputLineHistSearch(struct Document *doc, const char *prompt,
                                 const char *def_str, enum InputlineFlags flag,
                                 struct Hist *hist, IncFunc incrfunc) {
-  int opos, x, y, lpos, rpos, epos;
-  unsigned char c;
-  char *p;
-
   is_passwd = false;
   move_word = true;
 
@@ -162,12 +158,12 @@ const char *inputLineHistSearch(struct Document *doc, const char *prompt,
     cm_mode = CPL_ON;
   else
     cm_mode = CPL_OFF;
-  opos = utf8str_width((const uint8_t *)prompt);
-  epos = CLEN - opos;
+  int opos = utf8str_width((const uint8_t *)prompt);
+  int epos = term_size().cols - 2 - opos;
   if (epos < 0)
     epos = 0;
-  lpos = epos / 3;
-  rpos = epos * 2 / 3;
+  int lpos = epos / 3;
+  int rpos = epos * 2 / 3;
   offset = 0;
 
   if (def_str) {
@@ -185,10 +181,11 @@ const char *inputLineHistSearch(struct Document *doc, const char *prompt,
   cm_disp_next = -1;
   need_redraw = false;
 
+  auto size = term_size();
   do {
-    x = calcPosition(strBuf->ptr, strProp, CLen, CPos, CP_FORCE);
+    int x = calcPosition(strBuf->ptr, strProp, CLen, CPos, CP_FORCE);
     if (x - rpos > offset) {
-      y = calcPosition(strBuf->ptr, strProp, CLen, CLen, CP_AUTO);
+      int y = calcPosition(strBuf->ptr, strProp, CLen, CLen, CP_AUTO);
       if (y - epos > x - rpos)
         offset = x - rpos;
       else if (y - epos > 0)
@@ -199,18 +196,18 @@ const char *inputLineHistSearch(struct Document *doc, const char *prompt,
       else
         offset = 0;
     }
-    scr_move(LINES - 1, 0);
+    scr_move(size.lines - 1, 0);
     scr_addstr(prompt);
     if (is_passwd)
-      addPasswd(strBuf->ptr, strProp, CLen, offset, COLS - opos);
+      addPasswd(strBuf->ptr, strProp, CLen, offset, size.cols - opos);
     else
-      addStr(strBuf->ptr, strProp, CLen, offset, COLS - opos);
+      addStr(strBuf->ptr, strProp, CLen, offset, size.cols - opos);
     scr_clrtoeolx();
-    scr_move(LINES - 1, opos + x - offset);
+    scr_move(size.lines - 1, opos + x - offset);
     term_refresh();
 
   next_char:
-    c = tty_getch();
+    uint8_t c = tty_getch();
     cm_clear = true;
     cm_disp_clear = true;
     if (!i_quote && (((cm_mode & CPL_ALWAYS) &&
@@ -266,9 +263,9 @@ const char *inputLineHistSearch(struct Document *doc, const char *prompt,
   if (i_broken)
     return NULL;
 
-  scr_move(LINES - 1, 0);
+  scr_move(term_size().lines - 1, 0);
   term_refresh();
-  p = strBuf->ptr;
+  auto p = strBuf->ptr;
   if (flag & (IN_FILENAME | IN_COMMAND)) {
     SKIP_BLANKS(p);
   }
@@ -551,12 +548,13 @@ static void next_dcompl(int next) {
   if (cm_mode == CPL_NEVER || cm_mode & CPL_OFF)
     return;
   cm_disp_clear = false;
-  if (LINES - 1 >= 3) {
+  auto size = term_size();
+  if (size.lines - 1 >= 3) {
     comment = true;
-    nline = LINES - 1 - 2;
-  } else if (LINES - 1) {
+    nline = size.lines - 1 - 2;
+  } else if (size.lines - 1) {
     comment = false;
-    nline = LINES - 1;
+    nline = size.lines - 1;
   } else {
     return;
   }
@@ -601,8 +599,8 @@ static void next_dcompl(int next) {
     if (len < n)
       len = n;
   }
-  if (len > 0 && COLS > len)
-    col = COLS / len;
+  if (len > 0 && term_size().cols > len)
+    col = term_size().cols / len;
   else
     col = 1;
   row = (NCFileBuf + col - 1) / col;
@@ -649,7 +647,7 @@ disp_next:
     }
     y++;
   }
-  if (comment && y == LINES - 1 - 1) {
+  if (comment && y == term_size().lines - 1 - 1) {
     scr_move(y, 0);
     scr_clrtoeolx();
     scr_bold();

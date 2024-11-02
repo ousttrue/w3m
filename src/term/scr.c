@@ -1,10 +1,9 @@
 #include "term/scr.h"
 #include "alloc.h"
-#include "term/termsize.h"
 #include "text/Str.h"
+#include "text/ctrlcode.h"
 #include "text/myctype.h"
 #include "text/symbol.h"
-#include "text/ctrlcode.h"
 
 static int tab_step = 8;
 
@@ -24,14 +23,14 @@ struct Screen *scr_get() { return &g_scr; }
 
 void scr_setup(int LINES, int COLS) {
 
-  if (LINES + 1 > max_LINES) {
-    max_LINES = LINES + 1;
+  if (LINES > max_LINES) {
+    max_LINES = LINES;
     max_COLS = 0;
     ScreenElem = New_N(struct ScreenLine, max_LINES);
     g_scr.ScreenImage = New_N(struct ScreenLine *, max_LINES);
   }
-  if (COLS + 1 > max_COLS) {
-    max_COLS = COLS + 1;
+  if (COLS > max_COLS) {
+    max_COLS = COLS;
     for (int i = 0; i < max_LINES; i++) {
       ScreenElem[i].lineimage = New_N(struct Utf8, max_COLS);
       ScreenElem[i].lineprop = New_N(l_prop, max_COLS);
@@ -55,10 +54,10 @@ void scr_setup(int LINES, int COLS) {
 
 void scr_clear(void) {
   scr_move(0, 0);
-  for (int i = 0; i < LINES; i++) {
+  for (int i = 0; i < max_LINES; i++) {
     g_scr.ScreenImage[i]->isdirty = 0;
     auto p = g_scr.ScreenImage[i]->lineprop;
-    for (int j = 0; j < COLS; j++) {
+    for (int j = 0; j < max_COLS; j++) {
       p[j] = SCREEN_EOL;
     }
   }
@@ -66,28 +65,28 @@ void scr_clear(void) {
 }
 
 void scr_move(int line, int column) {
-  if (line >= 0 && line < LINES)
+  if (line >= 0 && line < max_LINES)
     g_scr.CurLine = line;
-  if (column >= 0 && column < COLS)
+  if (column >= 0 && column < max_COLS)
     g_scr.CurColumn = column;
 }
 
 void scr_touch_line(void) {
   if (!(g_scr.ScreenImage[g_scr.CurLine]->isdirty & L_DIRTY)) {
     int i;
-    for (i = 0; i < COLS; i++)
+    for (i = 0; i < max_COLS; i++)
       g_scr.ScreenImage[g_scr.CurLine]->lineprop[i] &= ~SCREEN_DIRTY;
     g_scr.ScreenImage[g_scr.CurLine]->isdirty |= L_DIRTY;
   }
 }
 
 void scr_touch_column(int col) {
-  if (col >= 0 && col < COLS)
+  if (col >= 0 && col < max_COLS)
     g_scr.ScreenImage[g_scr.CurLine]->lineprop[col] |= SCREEN_DIRTY;
 }
 
 void scr_wrap(void) {
-  if (g_scr.CurLine == LINES-1)
+  if (g_scr.CurLine == max_LINES - 1)
     return;
   g_scr.CurLine++;
   g_scr.CurColumn = 0;
@@ -99,7 +98,7 @@ static void scr_clrtobot_eol(void (*clrtoeol)()) {
   (*clrtoeol)();
   g_scr.CurColumn = 0;
   g_scr.CurLine++;
-  for (; g_scr.CurLine < LINES; g_scr.CurLine++)
+  for (; g_scr.CurLine < max_LINES; g_scr.CurLine++)
     (*clrtoeol)();
   g_scr.CurLine = l;
   g_scr.CurColumn = c;
@@ -119,7 +118,7 @@ void scr_clrtoeol(void) { /* Clear to the end of line */
 
   g_scr.ScreenImage[g_scr.CurLine]->isdirty |= L_CLRTOEOL;
   scr_touch_line();
-  for (i = g_scr.CurColumn; i < COLS && !(lprop[i] & SCREEN_EOL); i++) {
+  for (i = g_scr.CurColumn; i < max_COLS && !(lprop[i] & SCREEN_EOL); i++) {
     lprop[i] = SCREEN_EOL | SCREEN_DIRTY;
   }
 }
@@ -154,9 +153,9 @@ void scr_addutf8(const uint8_t *utf8) {
     tmp = Strnew();
   Strcopy_charp_n(tmp, (char *)utf8, len);
 
-  if (g_scr.CurColumn == COLS)
+  if (g_scr.CurColumn == max_COLS)
     scr_wrap();
-  if (g_scr.CurColumn >= COLS)
+  if (g_scr.CurColumn >= max_COLS)
     return;
   auto p = g_scr.ScreenImage[g_scr.CurLine]->lineimage;
   auto pr = g_scr.ScreenImage[g_scr.CurLine]->lineprop;
@@ -184,33 +183,33 @@ void scr_addutf8(const uint8_t *utf8) {
   /* Required to erase bold or underlined character for some * terminal
    * emulators. */
   int i = g_scr.CurColumn + width - 1;
-  if (i < COLS &&
+  if (i < max_COLS &&
       (((pr[i] & SCREEN_BOLD) &&
         scr_need_redraw(p[i], pr[i], pc, CurrentMode)) ||
        ((pr[i] & SCREEN_UNDERLINE) && !(CurrentMode & SCREEN_UNDERLINE)))) {
     scr_touch_line();
     i++;
-    if (i < COLS) {
+    if (i < max_COLS) {
       scr_touch_column(i);
       if (pr[i] & SCREEN_EOL) {
         p[i] = SPACE;
         SETPROP(pr[i], (pr[i] & M_CEOL) | C_ASCII);
       } else {
-        for (i++; i < COLS && CHMODE(pr[i]) == C_WCHAR2; i++)
+        for (i++; i < max_COLS && CHMODE(pr[i]) == C_WCHAR2; i++)
           scr_touch_column(i);
       }
     }
   }
 
-  if (g_scr.CurColumn + width > COLS) {
+  if (g_scr.CurColumn + width > max_COLS) {
     scr_touch_line();
-    for (i = g_scr.CurColumn; i < COLS; i++) {
+    for (i = g_scr.CurColumn; i < max_COLS; i++) {
       p[i] = SPACE;
       SETPROP(pr[i], (pr[i] & ~C_WHICHCHAR) | C_ASCII);
       scr_touch_column(i);
     }
     scr_wrap();
-    if (g_scr.CurColumn + width > COLS)
+    if (g_scr.CurColumn + width > max_COLS)
       return;
     p = g_scr.ScreenImage[g_scr.CurLine]->lineimage;
     pr = g_scr.ScreenImage[g_scr.CurLine]->lineprop;
@@ -241,7 +240,7 @@ void scr_addutf8(const uint8_t *utf8) {
         SETPROP(pr[i], (pr[g_scr.CurColumn] & ~C_WHICHCHAR) | C_WCHAR2);
         scr_touch_column(i);
       }
-      for (; i < COLS && CHMODE(pr[i]) == C_WCHAR2; i++) {
+      for (; i < max_COLS && CHMODE(pr[i]) == C_WCHAR2; i++) {
         p[i] = SPACE;
         SETPROP(pr[i], (pr[i] & ~C_WHICHCHAR) | C_ASCII);
         scr_touch_column(i);
@@ -250,7 +249,7 @@ void scr_addutf8(const uint8_t *utf8) {
     g_scr.CurColumn += width;
   } else if (c == '\t') {
     int dest = (g_scr.CurColumn + tab_step) / tab_step * tab_step;
-    if (dest >= COLS) {
+    if (dest >= max_COLS) {
       scr_wrap();
       scr_touch_line();
       dest = tab_step;
@@ -369,8 +368,8 @@ void scr_graphend(void) {
 }
 
 void scr_message(const char *s, int return_x, int return_y) {
-  scr_move(LINES-1, 0);
-  scr_addnstr(s, COLS - 1);
+  scr_move(max_LINES - 1, 0);
+  scr_addnstr(s, max_COLS - 1);
   scr_clrtoeolx();
   scr_move(return_y, return_x);
 }

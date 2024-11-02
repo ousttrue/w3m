@@ -12,7 +12,6 @@
 #include "os.h"
 #include "rand48.h"
 #include "rc.h"
-#include "term/termsize.h"
 #include "trap_jmp.h"
 #include "version.h"
 #include <dirent.h>
@@ -113,12 +112,12 @@ Str loadLocalDir(const char *dname) {
       nfile_max *= 2;
       flist = New_Reuse(char *, flist, nfile_max);
     }
-    if (multicolList) {
-      l = strlen(name);
-      if (l > maxlen)
-        maxlen = l;
-      n++;
-    }
+    // if (multicolList) {
+    //   l = strlen(name);
+    //   if (l > maxlen)
+    //     maxlen = l;
+    //   n++;
+    // }
   }
 #ifdef _WIN32
   FindClose(hFind);
@@ -126,14 +125,14 @@ Str loadLocalDir(const char *dname) {
   closedir(d);
 #endif
 
-  if (multicolList) {
-    l = COLS / (maxlen + 2);
-    if (!l)
-      l = 1;
-    nrow = (n + l - 1) / l;
-    n = 1;
-    Strcat_charp(tmp, "<TABLE CELLPADDING=0>\n<TR VALIGN=TOP>\n");
-  }
+  // if (multicolList) {
+  //   l = COLS / (maxlen + 2);
+  //   if (!l)
+  //     l = 1;
+  //   nrow = (n + l - 1) / l;
+  //   n = 1;
+  //   Strcat_charp(tmp, "<TABLE CELLPADDING=0>\n<TR VALIGN=TOP>\n");
+  // }
   qsort((void *)flist, nfile, sizeof(char *), strCmp);
   for (i = 0; i < nfile; i++) {
     p = flist[i];
@@ -149,10 +148,11 @@ Str loadLocalDir(const char *dname) {
 #endif /* HAVE_LSTAT */
     if (stat(fbuf->ptr, &st) < 0)
       continue;
-    if (multicolList) {
-      if (n == 1)
-        Strcat_charp(tmp, "<TD><NOBR>");
-    } else {
+    // if (multicolList) {
+    //   if (n == 1)
+    //     Strcat_charp(tmp, "<TD><NOBR>");
+    // } else 
+    {
 #ifndef _WIN32
       if (S_ISLNK(lst.st_mode))
         Strcat_charp(tmp, "[LINK] ");
@@ -170,14 +170,15 @@ Str loadLocalDir(const char *dname) {
     if (S_ISDIR(st.st_mode))
       Strcat_char(tmp, '/');
     Strcat_charp(tmp, "</A>");
-    if (multicolList) {
-      if (n++ == nrow) {
-        Strcat_charp(tmp, "</NOBR></TD>\n");
-        n = 1;
-      } else {
-        Strcat_charp(tmp, "<BR>\n");
-      }
-    } else {
+    // if (multicolList) {
+    //   if (n++ == nrow) {
+    //     Strcat_charp(tmp, "</NOBR></TD>\n");
+    //     n = 1;
+    //   } else {
+    //     Strcat_charp(tmp, "<BR>\n");
+    //   }
+    // } else 
+    {
 #ifndef _WIN32
       if (S_ISLNK(lst.st_mode)) {
         if ((l = readlink(fbuf->ptr, lbuf, sizeof(lbuf) - 1)) > 0) {
@@ -191,9 +192,9 @@ Str loadLocalDir(const char *dname) {
       Strcat_charp(tmp, "<br>\n");
     }
   }
-  if (multicolList) {
-    Strcat_charp(tmp, "</TR>\n</TABLE>\n");
-  }
+  // if (multicolList) {
+  //   Strcat_charp(tmp, "</TR>\n</TABLE>\n");
+  // }
   Strcat_charp(tmp, "</BODY>\n</HTML>\n");
 
   return tmp;

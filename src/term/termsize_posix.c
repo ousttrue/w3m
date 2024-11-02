@@ -1,13 +1,11 @@
 #include "termsize.h"
-#include <sys/ioctl.h>
 #include <stdlib.h>
+#include <sys/ioctl.h>
 
 static int need_resize_screen = false;
 
 #define MAX_LINE 200
 #define MAX_COLUMN 400
-int LINES = -1;
-int COLS = -1;
 
 // Try to get the number of columns in the current terminal. If the ioctl()
 // call fails the function will try to query the terminal itself.
@@ -24,24 +22,25 @@ static bool get_term_lines_cols(int *rows, int *cols) {
   return false;
 }
 
-void term_setlinescols() {
-  if (get_term_lines_cols(&LINES, &COLS)) {
-    return;
+struct TermSize term_setlinescols() {
+  if (get_term_lines_cols(&SIZE.lines, &SIZE.cols)) {
+    return SIZE;
   }
 
   // fallback
   char *p;
   int i;
-  if (LINES <= 0 && (p = getenv("LINES")) != NULL && (i = atoi(p)) >= 0)
-    LINES = i;
-  if (COLS <= 0 && (p = getenv("COLUMNS")) != NULL && (i = atoi(p)) >= 0)
-    COLS = i;
+  if ((p = getenv("LINES")) != NULL && (i = atoi(p)) >= 0)
+    SIZE.lines = i;
+  if ((p = getenv("COLUMNS")) != NULL && (i = atoi(p)) >= 0)
+    SIZE.cols = i;
   // if (LINES <= 0)
   //   LINES = tgetnum("li");
   // if (COLS <= 0)
   //   COLS = tgetnum("co");
-  if (COLS > MAX_COLUMN)
-    COLS = MAX_COLUMN;
-  if (LINES > MAX_LINE)
-    LINES = MAX_LINE;
+  // if (COLS > MAX_COLUMN)
+  //   COLS = MAX_COLUMN;
+  // if (LINES > MAX_LINE)
+  //   LINES = MAX_LINE;
+  return SIZE;
 }

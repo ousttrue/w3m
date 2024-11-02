@@ -71,21 +71,21 @@ struct TabBuffer *numTab(int n) {
   return tab;
 }
 
-void calcTabPos(void) {
+void calcTabPos(struct TermSize size) {
   if (nTab <= 0)
     return;
 
   int lcol = 0;
   int rcol = 0;
   int n2, ny;
-  int n1 = (COLS - rcol - lcol) / TabCols;
+  int n1 = (size.cols - rcol - lcol) / TabCols;
   if (n1 >= nTab) {
     n2 = 1;
     ny = 1;
   } else {
     if (n1 < 0)
       n1 = 0;
-    n2 = COLS / TabCols;
+    n2 = size.cols / TabCols;
     if (n2 == 0)
       n2 = 1;
     ny = (nTab - n1 - 1) / n2 + 2;
@@ -103,10 +103,10 @@ void calcTabPos(void) {
     int col;
     if (iy == 0) {
       nx = n1;
-      col = COLS - rcol - lcol;
+      col = size.cols - rcol - lcol;
     } else {
       nx = n2 - (na - nTab + (iy - 1)) / (ny - 1);
-      col = COLS;
+      col = size.cols;
     }
     for (int ix = 0; ix < nx && tab; ix++, tab = tab->nextTab) {
       tab->x1 = col * ix / nx;

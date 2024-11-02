@@ -312,8 +312,8 @@ static char *reAnchorAny(struct Document *doc, char *re,
 
   char *p = nullptr;
   for (auto l = MarkAllPages ? doc->firstLine : doc->topLine;
-       l != NULL &&
-       (MarkAllPages || l->linenumber < doc->topLine->linenumber + LINES-1);
+       l != NULL && (MarkAllPages || l->linenumber < doc->topLine->linenumber +
+                                                         term_size().lines - 1);
        l = l->next) {
     if (p && l->bpos) {
       continue;

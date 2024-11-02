@@ -1,15 +1,10 @@
-// rendererd document
 #pragma once
-#include "input/charset.h"
-#include "input/url.h"
 #include "line.h"
 #include "viewport.h"
 
 extern bool showLineNum;
-#define _INIT_BUFFER_WIDTH (COLS - (showLineNum ? 6 : 1))
-#define INIT_BUFFER_WIDTH ((_INIT_BUFFER_WIDTH > 0) ? _INIT_BUFFER_WIDTH : 0)
 extern bool FoldLine;
-int FOLD_BUFFER_WIDTH();
+// int FOLD_BUFFER_WIDTH();
 extern bool MarkAllPages;
 
 struct AnchorList;
@@ -35,6 +30,7 @@ enum CheckUrlFlags {
   CHK_NMID = 2,
 };
 
+// rendererd lines
 struct Document {
   struct FormItemList *form_submit;
   struct Anchor *submit;
@@ -66,13 +62,10 @@ struct Document {
 };
 
 struct Document *newDocument(int width);
-
-#define TOP_LINENUMBER(doc) (doc->topLine ? doc->topLine->linenumber : 1)
-#define CUR_LINENUMBER(doc)                                                    \
-  (doc->currentLine ? doc->currentLine->linenumber : 1)
-
-void addnewline(struct Document *doc, char *line, Lineprop *prop, int pos,
-                int width, int nlines);
+int TOP_LINENUMBER(struct Document *doc);
+int CUR_LINENUMBER(struct Document *doc);
+void addnewline(struct Document *doc, const char *line, Lineprop *prop, int pos,
+                int nlines);
 void gotoLine(struct Document *doc, int n);
 void arrangeCursor(struct Document *doc);
 void cursorUp0(struct Document *doc, int n);

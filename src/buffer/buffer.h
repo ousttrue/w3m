@@ -1,9 +1,7 @@
 #pragma once
-#include "buffer/line.h"
 #include "html/anchor.h"
 #include "html/form.h"
 #include "input/url.h"
-#include "text/textlist.h"
 
 /* Link Buffer */
 enum LinkBuffer {
@@ -32,7 +30,6 @@ struct LinkList {
 struct HttpResponse;
 struct Document;
 struct Buffer {
-  const char *buffername;
   struct Buffer *nextBuffer;
   struct Content *content;
   struct Document *document;
@@ -50,15 +47,13 @@ struct HtmlTag;
 void saveBuffer(struct Buffer *buf, FILE *f, int cont);
 void saveBufferBody(struct Buffer *buf, FILE *f, int cont);
 struct Buffer *newBuffer();
-struct Buffer *nullBuffer(void);
+// struct Buffer *nullBuffer(void);
 void discardBuffer(struct Buffer *buf);
-struct Buffer *namedBuffer(struct Buffer *first, char *name);
+// struct Buffer *namedBuffer(struct Buffer *first, char *name);
 struct Buffer *deleteBuffer(struct Buffer *first, struct Buffer *delbuf);
 struct Buffer *replaceBuffer(struct Buffer *first, struct Buffer *delbuf,
                              struct Buffer *newbuf);
 struct Buffer *nthBuffer(struct Buffer *firstbuf, int n);
-struct Buffer *selectBuffer(struct Buffer *firstbuf, struct Buffer *currentbuf,
-                            char *selectchar);
 struct Buffer *prevBuffer(struct Buffer *first, struct Buffer *buf);
 
 Str page_info_panel(struct Buffer *buf);
@@ -69,5 +64,4 @@ struct Content *loadLink(struct Buffer *src,
                          const char *referer, struct FormList *form);
 struct Content *_followForm(struct Buffer *doc, bool submit,
                             struct Current current);
-void reshapeBuffer(struct Buffer *buf);
 struct Url *baseURL(struct Buffer *buf);

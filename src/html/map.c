@@ -6,12 +6,12 @@
 #include "buffer/buffer.h"
 #include "buffer/document.h"
 #include "file/file.h"
-#include "html/html_readbuffer.h"
 #include "html/html_text.h"
 #include "input/content.h"
 #include "input/http.h"
 #include "input/istream.h"
 #include "input/url.h"
+#include "text/textlist.h"
 #include <math.h>
 #include <string.h>
 
@@ -64,7 +64,7 @@ const char *map1 = "<HTML><HEAD><TITLE>Image map links</TITLE></HEAD>\
 
 Str follow_map_panel(struct Buffer *buf, const char *name) {
   auto ml = searchMapList(buf->document, name);
-  if (ml == NULL){
+  if (ml == NULL) {
     return NULL;
   }
 
@@ -175,7 +175,7 @@ Str page_info_panel(struct Buffer *buf) {
     const char *p = url_decode0(parsedURL2Str(&buf->content->url)->ptr);
     Strcat_m_charp(
         tmp, "<table cellpadding=0>", "<tr valign=top><td nowrap>Title<td>",
-        html_quote(buf->buffername),
+        html_quote(buf->document->title),
         "<tr valign=top><td nowrap>Current URL<td>", html_quote(p),
         "<tr valign=top><td nowrap>Document Type<td>",
         buf->content->content_type ? html_quote(buf->content->content_type)

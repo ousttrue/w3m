@@ -2,21 +2,14 @@
 #include "alloc.h"
 #include "buffer/message.h"
 #include "file/tmpfile.h"
-#include "history.h"
 #include "html/anchor.h"
 #include "html/form.h"
-#include "html/html_readbuffer.h"
-#include "input/istream.h"
-#include "input/loader.h"
-#include "siteconf.h"
 #include "term/termsize.h"
 #include "text/myctype.h"
-#include "text/text.h"
 #include <string.h>
 
 bool showLineNum = false;
 bool FoldLine = false;
-int FOLD_BUFFER_WIDTH() { return (FoldLine ? (INIT_BUFFER_WIDTH + 1) : -1); }
 bool MarkAllPages = false;
 
 struct Document *newDocument(int width) {
@@ -42,8 +35,7 @@ struct Document *newDocument(int width) {
   doc->maplist = nullptr;
   doc->hmarklist = nullptr;
   doc->imarklist = nullptr;
-  doc->viewport.COLS = COLS;
-  doc->viewport.LINES = LINES;
+  doc->viewport.COLS = width;
   doc->viewport.currentColumn = 0;
   doc->viewport.cursorX = 0;
   doc->viewport.cursorY = 0;
@@ -55,6 +47,14 @@ struct Document *newDocument(int width) {
   doc->check_url = MarkAllPages; /* use default from -o mark_all_pages */
 
   return doc;
+}
+
+int TOP_LINENUMBER(struct Document *doc) {
+  return doc->topLine ? doc->topLine->linenumber : 1;
+}
+
+int CUR_LINENUMBER(struct Document *doc) {
+  return doc->currentLine ? doc->currentLine->linenumber : 1;
 }
 
 static void addnewline2(struct Document *doc, char *line, Lineprop *prop,
@@ -92,12 +92,10 @@ static void addnewline2(struct Document *doc, char *line, Lineprop *prop,
 char *NullLine = "";
 Lineprop NullProp[] = {0};
 
-void addnewline(struct Document *doc, char *line, Lineprop *prop, int pos,
-                int width, int nlines) {
+void addnewline(struct Document *doc, const char *line, Lineprop *prop, int pos,
+                 int nlines) {
   char *s;
   Lineprop *p;
-  // int i, bpos, bwidth;
-
   if (pos > 0) {
     s = allocStr(line, pos);
     p = NewAtom_N(Lineprop, pos);
@@ -106,16 +104,18 @@ void addnewline(struct Document *doc, char *line, Lineprop *prop, int pos,
     s = NullLine;
     p = NullProp;
   }
+
   addnewline2(doc, s, p, pos, nlines);
-  if (pos <= 0 || width <= 0)
+  if (pos <= 0)
     return;
+
   int bpos = 0;
   int bwidth = 0;
   while (1) {
     auto l = doc->currentLine;
     l->bpos = bpos;
     l->bwidth = bwidth;
-    int i = columnLen(l, width);
+    int i = columnLen(l, doc->width);
     if (i == 0) {
       i++;
     }

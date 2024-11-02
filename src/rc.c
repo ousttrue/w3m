@@ -322,7 +322,7 @@ struct param_ptr params1[] = {
      CMT_USE_DICTCOMMAND, NULL},
     {"dictcommand", P_STRING, PI_TEXT, (void *)&DictCommand, CMT_DICTCOMMAND,
      NULL},
-    {"multicol", P_INT, PI_ONOFF, (void *)&multicolList, CMT_MULTICOL, NULL},
+    // {"multicol", P_INT, PI_ONOFF, (void *)&multicolList, CMT_MULTICOL, NULL},
     {"alt_entity", P_CHARINT, PI_ONOFF, (void *)&UseAltEntity, CMT_ALT_ENTITY,
      NULL},
     {"graphic_char", P_CHARINT, PI_SEL_C, (void *)&UseGraphicChar,

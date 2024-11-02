@@ -1,4 +1,5 @@
 #pragma once
+#include "term/termsize.h"
 
 extern bool clear_buffer;
 extern bool close_tab_back;
@@ -29,7 +30,7 @@ struct Content;
 void tabInitialize(struct Content *content);
 void _newT(struct Content *doc);
 struct TabBuffer *numTab(int n);
-void calcTabPos();
+void calcTabPos(struct TermSize size);
 struct TabBuffer *deleteTab(struct TabBuffer *tab);
 void pushContent(struct TabBuffer *tab, struct Content *content);
 void pushCheckTarget(struct TabBuffer *tab, const char *anchor_target,

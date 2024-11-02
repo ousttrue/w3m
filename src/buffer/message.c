@@ -1,7 +1,6 @@
 #include "message.h"
 #include "alloc.h"
 #include "html/html_text.h"
-#include "term/termsize.h"
 #include "text/Str.h"
 #include "text/textlist.h"
 
@@ -11,7 +10,7 @@ static struct GeneralList *message_list = NULL;
 void message_push(const char *s) {
   if (!message_list)
     message_list = newGeneralList();
-  if (message_list->nitem >= LINES)
+  if (message_list->nitem >= 256)
     popValue(message_list);
   pushValue(message_list, allocStr(s, -1));
 }
@@ -28,8 +27,8 @@ static const char *term_message_to_html() {
   return tmp->ptr;
 }
 
-Str message_list_panel(int cols) {
-  Str tmp = Strnew_size(LINES * COLS);
+Str message_list_panel() {
+  Str tmp = Strnew_size(0);
   Strcat_charp(tmp,
                "<html><head><title>List of error messages</title></head><body>"
                "<h1>List of error messages</h1><table cellpadding=0>\n");

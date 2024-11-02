@@ -1,6 +1,9 @@
 #pragma once
-#include <stdbool.h>
 
-extern int LINES, COLS;
-void term_setlinescols();
-void resize_screen_if_updated();
+struct TermSize {
+  int lines;
+  int cols;
+};
+
+struct TermSize term_size();
+struct TermSize term_setlinescols();

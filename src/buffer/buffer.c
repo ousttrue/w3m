@@ -15,7 +15,6 @@
 #include "siteconf.h"
 #include "term/scr.h"
 #include "term/terms.h"
-#include "term/termsize.h"
 #include "term/tty.h"
 #include "text/ctrlcode.h"
 #include "text/text.h"
@@ -36,8 +35,6 @@ int REV_LB[MAX_LB] = {
 struct Buffer *newBuffer() {
   struct Buffer *n = New(struct Buffer);
   memset((void *)n, 0, sizeof(struct Buffer));
-  n->document = newDocument(INIT_BUFFER_WIDTH);
-  n->buffername = "";
   n->clone = New(int);
   *n->clone = 1;
   return n;
@@ -46,11 +43,11 @@ struct Buffer *newBuffer() {
 /*
  * Create null buffer
  */
-struct Buffer *nullBuffer(void) {
-  auto b = newBuffer();
-  b->buffername = "*Null*";
-  return b;
-}
+// struct Buffer *nullBuffer(void) {
+//   auto b = newBuffer();
+//   b->buffername = "*Null*";
+//   return b;
+// }
 
 /*
  * discardBuffer: free buffer structure
@@ -75,17 +72,17 @@ void discardBuffer(struct Buffer *buf) {
 /*
  * namedBuffer: Select buffer which have specified name
  */
-struct Buffer *namedBuffer(struct Buffer *first, char *name) {
-  if (!strcmp(first->buffername, name)) {
-    return first;
-  }
-  for (auto buf = first; buf->nextBuffer != NULL; buf = buf->nextBuffer) {
-    if (!strcmp(buf->nextBuffer->buffername, name)) {
-      return buf->nextBuffer;
-    }
-  }
-  return NULL;
-}
+// struct Buffer *namedBuffer(struct Buffer *first, char *name) {
+//   if (!strcmp(first->buffername, name)) {
+//     return first;
+//   }
+//   for (auto buf = first; buf->nextBuffer != NULL; buf = buf->nextBuffer) {
+//     if (!strcmp(buf->nextBuffer->buffername, name)) {
+//       return buf->nextBuffer;
+//     }
+//   }
+//   return NULL;
+// }
 
 /*
  * deleteBuffer: delete buffer
@@ -144,175 +141,6 @@ struct Buffer *nthBuffer(struct Buffer *firstbuf, int n) {
     buf = buf->nextBuffer;
   }
   return buf;
-}
-
-static void writeBufferName(struct Buffer *buf, int n) {
-  auto all = buf->document->allLine;
-  if (all == 0 && buf->document->lastLine != NULL)
-    all = buf->document->lastLine->linenumber;
-  scr_move(n, 0);
-  auto msg = Sprintf("<%s> [%d lines]", buf->buffername, all);
-  if (buf->content->filename != NULL) {
-    switch (buf->content->url.scheme) {
-    case SCM_LOCAL:
-    case SCM_LOCAL_CGI:
-      if (strcmp(buf->content->url.file, "-")) {
-        Strcat_char(msg, ' ');
-        Strcat_charp(msg, buf->content->url.real_file);
-      }
-      break;
-    case SCM_UNKNOWN:
-    case SCM_MISSING:
-      break;
-    default:
-      Strcat_char(msg, ' ');
-      Strcat(msg, parsedURL2Str(&buf->content->url));
-      break;
-    }
-  }
-  scr_addnstr_sup(msg->ptr, COLS - 1);
-}
-
-static struct Buffer *listBuffer(struct Buffer *top, struct Buffer *current) {
-  int i, c = 0;
-  struct Buffer *buf = top;
-
-  scr_move(0, 0);
-  scr_clrtobotx();
-  for (i = 0; i < LINES - 1; i++) {
-    if (buf == current) {
-      c = i;
-      scr_standout();
-    }
-    writeBufferName(buf, i);
-    if (buf == current) {
-      scr_standend();
-      scr_clrtoeolx();
-      scr_move(i, 0);
-      scr_toggle_stand();
-    } else
-      scr_clrtoeolx();
-    if (buf->nextBuffer == NULL) {
-      scr_move(i + 1, 0);
-      scr_clrtobotx();
-      break;
-    }
-    buf = buf->nextBuffer;
-  }
-  scr_standout();
-  /* FIXME: gettextize? */
-  scr_message("Buffer selection mode: SPC for select / D for delete buffer", 0,
-              0);
-  scr_standend();
-  /*
-   * scr_move(LASTLINE, COLS - 1); */
-  scr_move(c, 0);
-  term_refresh();
-  return buf->nextBuffer;
-}
-
-/*
- * Select buffer visually
- */
-struct Buffer *selectBuffer(struct Buffer *firstbuf, struct Buffer *currentbuf,
-                            char *selectchar) {
-  int i = 0;
-  /* Current Buffer Number */
-  int cpoint = 0;
-  for (auto buf = firstbuf; buf != NULL; buf = buf->nextBuffer, ++i) {
-    if (buf == currentbuf)
-      cpoint = i;
-    i++;
-  }
-  int maxbuf = i;
-
-  struct Buffer *topbuf;
-  int spoint;              /* Current Line on Screen */
-  int sclimit = LINES - 1; /* Upper limit of line * number in the * screen */
-  if (cpoint >= sclimit) {
-    spoint = sclimit / 2;
-    topbuf = nthBuffer(firstbuf, cpoint - spoint);
-  } else {
-    topbuf = firstbuf;
-    spoint = cpoint;
-  }
-  listBuffer(topbuf, currentbuf);
-
-  for (;;) {
-    char c;
-    if ((c = tty_getch()) == ESC_CODE) {
-      if ((c = tty_getch()) == '[' || c == 'O') {
-        switch (c = tty_getch()) {
-        case 'A':
-          c = 'k';
-          break;
-        case 'B':
-          c = 'j';
-          break;
-        case 'C':
-          c = ' ';
-          break;
-        case 'D':
-          c = 'B';
-          break;
-        }
-      }
-    }
-    switch (c) {
-    case CTRL_N:
-    case 'j':
-      if (spoint < sclimit - 1) {
-        if (currentbuf->nextBuffer == NULL)
-          continue;
-        writeBufferName(currentbuf, spoint);
-        currentbuf = currentbuf->nextBuffer;
-        cpoint++;
-        spoint++;
-        scr_standout();
-        writeBufferName(currentbuf, spoint);
-        scr_standend();
-        scr_move(spoint, 0);
-        scr_toggle_stand();
-      } else if (cpoint < maxbuf - 1) {
-        topbuf = currentbuf;
-        currentbuf = currentbuf->nextBuffer;
-        cpoint++;
-        spoint = 1;
-        listBuffer(topbuf, currentbuf);
-      }
-      break;
-    case CTRL_P:
-    case 'k':
-      if (spoint > 0) {
-        writeBufferName(currentbuf, spoint);
-        currentbuf = nthBuffer(topbuf, --spoint);
-        cpoint--;
-        scr_standout();
-        writeBufferName(currentbuf, spoint);
-        scr_standend();
-        scr_move(spoint, 0);
-        scr_toggle_stand();
-      } else if (cpoint > 0) {
-        i = cpoint - sclimit;
-        if (i < 0)
-          i = 0;
-        cpoint--;
-        spoint = cpoint - i;
-        currentbuf = nthBuffer(firstbuf, cpoint);
-        topbuf = nthBuffer(firstbuf, i);
-        listBuffer(topbuf, currentbuf);
-      }
-      break;
-    default:
-      *selectchar = c;
-      return currentbuf;
-    }
-    /*
-     * scr_move(LASTLINE, COLS - 1);
-     */
-    scr_move(spoint, 0);
-    term_refresh();
-  }
 }
 
 struct Buffer *prevBuffer(struct Buffer *first, struct Buffer *buf) {
@@ -727,92 +555,6 @@ struct Content *_followForm(struct Buffer *src, bool submit,
   }
 
   return nullptr;
-}
-
-/*
- * Reshape HTML buffer
- */
-void reshapeBuffer(struct Buffer *buf) {
-  if (buf->document) {
-    if (!buf->document->need_reshape) {
-      return;
-    }
-    buf->document->need_reshape = false;
-  }
-
-  buf->document->width = INIT_BUFFER_WIDTH;
-  if (buf->content->sourcefile == NULL) {
-    return;
-  }
-
-  auto stream = examineFile(buf->content->sourcefile);
-  if (!stream) {
-    return;
-  }
-
-  Str html = Strnew();
-  Str line;
-  while ((line = StrmyISgets(stream))->length) {
-    Strcat(html, line);
-  }
-
-  struct Document sbuf;
-  copyBuffer(&sbuf, buf->document);
-  clearBuffer(buf->document);
-  buf->document->href = NULL;
-  buf->document->name = NULL;
-  buf->document->img = NULL;
-  buf->document->formitem = NULL;
-  buf->document->formlist = NULL;
-  buf->document->linklist = NULL;
-  buf->document->maplist = NULL;
-  if (buf->document->hmarklist)
-    buf->document->hmarklist->nmark = 0;
-  if (buf->document->imarklist)
-    buf->document->imarklist->nmark = 0;
-
-  if (is_html_type(buf->content->content_type)) {
-    buf->document = renderHTML(buf->document->viewport.COLS, html->ptr,
-                               buf->content->url, buf->content->charset);
-  } else {
-    buf->document = loadText(buf->document->viewport.COLS, html->ptr);
-  }
-  ISclose(stream);
-
-  buf->document->height = LINES-1 + 1;
-  if (buf->document->firstLine && sbuf.firstLine) {
-    struct Line *cur = sbuf.currentLine;
-    int n;
-
-    buf->document->viewport.pos = sbuf.viewport.pos + cur->bpos;
-    while (cur->bpos && cur->prev)
-      cur = cur->prev;
-    if (cur->real_linenumber > 0)
-      gotoRealLine(buf->document, cur->real_linenumber);
-    else
-      gotoLine(buf->document, cur->linenumber);
-    n = (buf->document->currentLine->linenumber -
-         buf->document->topLine->linenumber) -
-        (cur->linenumber - sbuf.topLine->linenumber);
-    if (n) {
-      buf->document->topLine =
-          lineSkip(&buf->document->viewport, buf->document->topLine,
-                   buf->document->lastLine, n, false);
-      if (cur->real_linenumber > 0)
-        gotoRealLine(buf->document, cur->real_linenumber);
-      else
-        gotoLine(buf->document, cur->linenumber);
-    }
-    buf->document->viewport.pos -= buf->document->currentLine->bpos;
-    if (FoldLine && !is_html_type(buf->content->content_type))
-      buf->document->viewport.currentColumn = 0;
-    else
-      buf->document->viewport.currentColumn = sbuf.viewport.currentColumn;
-    arrangeCursor(buf->document);
-  }
-  if (buf->document->check_url & CHK_URL)
-    chkURLBuffer(buf->document);
-  formResetBuffer(buf->document, sbuf.formitem);
 }
 
 struct Url *baseURL(struct Buffer *buf) {

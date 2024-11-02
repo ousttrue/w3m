@@ -13,6 +13,7 @@
 
 #include <fcntl.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -137,9 +138,8 @@ int term_init() {
   term_setgraphchar();
   termcon_initialize();
 
-  LINES = COLS = 0;
-  term_setlinescols();
-  scr_setup(LINES, COLS);
+  auto size = term_setlinescols();
+  scr_setup(size.lines, size.cols);
   return 0;
 }
 
@@ -180,13 +180,14 @@ void term_refresh() {
   l_prop color = COL_FTERM;
   short *dirty;
 
-  for (line = 0; line <= LINES-1; line++) {
+  auto size = term_size();
+  for (line = 0; line <= size.lines - 1; line++) {
     dirty = &scr->ScreenImage[line]->isdirty;
     if (*dirty & L_DIRTY) {
       *dirty &= ~L_DIRTY;
       pc = scr->ScreenImage[line]->lineimage;
       pr = scr->ScreenImage[line]->lineprop;
-      for (col = 0; col < COLS && !(pr[col] & SCREEN_EOL); col++) {
+      for (col = 0; col < size.cols && !(pr[col] & SCREEN_EOL); col++) {
         if (*dirty & L_NEED_CE && col >= scr->ScreenImage[line]->eol) {
           if (scr_need_redraw(pc[col], pr[col], SPACE, 0))
             break;
@@ -197,14 +198,14 @@ void term_refresh() {
       }
       if (*dirty & (L_NEED_CE | L_CLRTOEOL)) {
         pcol = scr->ScreenImage[line]->eol;
-        if (pcol >= COLS) {
+        if (pcol >= size.cols) {
           *dirty &= ~(L_NEED_CE | L_CLRTOEOL);
           pcol = col;
         }
       } else {
         pcol = col;
       }
-      if (line < LINES - 2 && pline == line - 1 && pcol == 0) {
+      if (line < size.lines - 2 && pline == line - 1 && pcol == 0) {
         switch (moved) {
         case RF_NEED_TO_MOVE:
           termcon_cursor_move(line, 0);
@@ -229,7 +230,7 @@ void term_refresh() {
       }
       pline = line;
       pcol = col;
-      for (; col < COLS; col++) {
+      for (; col < size.cols; col++) {
         if (pr[col] & SCREEN_EOL)
           break;
 
@@ -243,7 +244,7 @@ void term_refresh() {
          * avoid the scroll, I prohibit to draw character on
          * (COLS-1,LINES-1).
          */
-        if (line == LINES - 1 && col == COLS - 1)
+        if (line == size.lines - 1 && col == size.cols - 1)
           break;
         if ((!(pr[col] & SCREEN_STANDOUT) && (mode & SCREEN_STANDOUT)) ||
             (!(pr[col] & SCREEN_UNDERLINE) && (mode & SCREEN_UNDERLINE)) ||
@@ -299,9 +300,9 @@ void term_refresh() {
           pcol = col + 1;
         }
       }
-      if (col == COLS)
+      if (col == size.cols)
         moved = RF_NEED_TO_MOVE;
-      for (; col < COLS && !(pr[col] & SCREEN_EOL); col++)
+      for (; col < size.cols && !(pr[col] & SCREEN_EOL); col++)
         pr[col] |= SCREEN_EOL;
     }
     *dirty &= ~(L_NEED_CE | L_CLRTOEOL);
@@ -332,7 +333,7 @@ bool term_is_initialized() { return fmInitialized; }
 
 void term_fmTerm() {
   if (fmInitialized) {
-    scr_move(LINES-1, 0);
+    scr_move(term_size().lines - 1, 0);
     scr_clrtoeolx();
     term_refresh();
     term_reset();
@@ -415,7 +416,7 @@ void term_showProgress(int64_t *linelen, int64_t *trbyte,
     double ratio;
     cur_time = time(0);
     if (*trbyte == 0) {
-      scr_move(LINES-1, 0);
+      scr_move(term_size().lines - 1, 0);
       scr_clrtoeolx();
       start_time = cur_time;
     }
@@ -424,7 +425,7 @@ void term_showProgress(int64_t *linelen, int64_t *trbyte,
     if (cur_time == last_time)
       return;
     last_time = cur_time;
-    scr_move(LINES-1, 0);
+    scr_move(term_size().lines - 1, 0);
     ratio = 100.0 * (*trbyte) / current_content_length;
     fmtrbyte = convert_size2(*trbyte, current_content_length, 1);
     duration = cur_time - start_time;
@@ -443,8 +444,8 @@ void term_showProgress(int64_t *linelen, int64_t *trbyte,
     }
     scr_addstr(messages->ptr);
     pos = 42;
-    i = pos + (COLS - pos - 1) * (*trbyte) / current_content_length;
-    scr_move(LINES-1, pos);
+    i = pos + (term_size().cols - pos - 1) * (*trbyte) / current_content_length;
+    scr_move(term_size().lines - 1, pos);
     scr_standout();
     scr_addch(' ');
     for (j = pos + 1; j <= i; j++)
@@ -455,7 +456,7 @@ void term_showProgress(int64_t *linelen, int64_t *trbyte,
   } else {
     cur_time = time(0);
     if (*trbyte == 0) {
-      scr_move(LINES-1, 0);
+      scr_move(term_size().lines - 1, 0);
       scr_clrtoeolx();
       start_time = cur_time;
     }
@@ -464,7 +465,7 @@ void term_showProgress(int64_t *linelen, int64_t *trbyte,
     if (cur_time == last_time)
       return;
     last_time = cur_time;
-    scr_move(LINES-1, 0);
+    scr_move(term_size().lines - 1, 0);
     fmtrbyte = convert_size(*trbyte, 1);
     duration = cur_time - start_time;
     if (duration) {
@@ -526,5 +527,27 @@ bool term_inputAuth(const char *realm, bool proxy, Str *uname, Str *pwd) {
 }
 #endif
 
-
-
+void term_suspend() {
+#ifndef SIGSTOP
+  const char *shell;
+#endif /* not SIGSTOP */
+  scr_move(term_size().lines - 1, 0);
+  scr_clrtoeolx();
+  term_refresh();
+  term_fmTerm();
+#ifndef SIGSTOP
+  shell = getenv("SHELL");
+  if (shell == NULL)
+    shell = "/bin/sh";
+  system(shell);
+#else  /* SIGSTOP */
+  signal(SIGTSTP, SIG_DFL); /* just in case */
+  /*
+   * Note: If susp() was called from SIGTSTP handler,
+   * unblocking SIGTSTP would be required here.
+   * Currently not.
+   */
+  kill(0, SIGTSTP); /* stop whole job, not a single process */
+#endif /* SIGSTOP */
+  term_fmInit();
+}

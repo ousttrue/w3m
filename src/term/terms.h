@@ -32,3 +32,5 @@ void term_showProgress(int64_t *linelen, int64_t *trbyte,
 #ifndef _WIN32
 bool term_inputAuth(const char *realm, bool proxy, Str *uname, Str *pwd);
 #endif
+
+void term_suspend();

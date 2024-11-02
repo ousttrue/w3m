@@ -1,5 +1,4 @@
 #include "input/loader.h"
-#include "buffer/buffer.h"
 #include "buffer/document.h"
 #include "buffer/message.h"
 #include "file/tmpfile.h"
@@ -12,6 +11,7 @@
 #include "os.h"
 #include "rc.h"
 #include "siteconf.h"
+#include "text/textlist.h"
 #include <assert.h>
 #include <stdio.h>
 #include <sys/stat.h>

@@ -6,6 +6,7 @@
 #include "os.h"
 #include "term/terms.h"
 #include "text/myctype.h"
+#include "text/textlist.h"
 #include <sys/stat.h>
 
 #define PASSWD_FILE RC_DIR "/passwd"

@@ -89,6 +89,9 @@ int columnPos(struct Line *line, int column) {
   int j = 0;
   for (; i < line->len;) {
     auto len = utf8sequence_len((const uint8_t *)&line->lineBuf[i]);
+    if(len==0){
+      break;
+    }
     auto col = utf8sequence_width((const uint8_t *)&line->lineBuf[i]);
     if (j + col > column) {
       break;

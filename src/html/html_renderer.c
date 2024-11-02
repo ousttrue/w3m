@@ -13,6 +13,7 @@
 #include "html/map.h"
 #include "text/myctype.h"
 #include "text/text.h"
+#include "text/textlist.h"
 #include "text/utf8.h"
 #include <string.h>
 
@@ -501,7 +502,7 @@ void proc_wrapped_line(struct LineProcStatus *st, struct Url currentURL,
 
   /* end of processing for one line */
   if (!st->internal) {
-    addnewline(st->doc, (char *)st->outc, st->outp, pos, -1, st->nlines);
+    addnewline(st->doc, (const char *)st->outc, st->outp, pos, st->nlines);
   }
   if (st->internal == HTML_N_INTERNAL) {
     st->internal = 0;

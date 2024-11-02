@@ -44,6 +44,7 @@ pub const SRCS = [_][]const u8{
     "src/buffer/line.c",
     "src/buffer/search.c",
     "src/buffer/message.c",
+    "src/buffer/bufferlist.c",
 
     "src/term/scr.c",
     "src/term/terms.c",

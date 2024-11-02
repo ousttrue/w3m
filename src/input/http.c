@@ -1,6 +1,7 @@
 #include "http.h"
 #include "alloc.h"
 #include "buffer/buffer.h"
+#include "buffer/line.h"
 #include "buffer/message.h"
 #include "core.h"
 #include "file/file.h"
@@ -589,8 +590,8 @@ static void httpReadHeader(struct HttpResponse *res, union input_stream *stream,
           Str msg = Sprintf(
               "Accept bad cookie from %s for %s?", res->request->url.host,
               ((domain && domain->ptr) ? domain->ptr : "<localdomain>"));
-          if (msg->length > COLS - 10)
-            Strshrink(msg, msg->length - (COLS - 10));
+          if (msg->length > term_size().cols - 10)
+            Strshrink(msg, msg->length - (term_size().cols - 10));
           Strcat_charp(msg, " (y/n)");
           ans = term_inputAnswer(msg->ptr);
         }

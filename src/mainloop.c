@@ -146,7 +146,7 @@ void set_buffer_environ(struct Buffer *buf) {
   if (buf != prev_buf) {
     set_environ("W3M_SOURCEFILE", buf->content->sourcefile);
     set_environ("W3M_FILENAME", buf->content->filename);
-    set_environ("W3M_TITLE", buf->buffername);
+    set_environ("W3M_TITLE", buf->document->title);
     set_environ("W3M_URL", parsedURL2Str(&buf->content->url)->ptr);
     set_environ("W3M_TYPE", buf->content->content_type
                                 ? buf->content->content_type
@@ -195,7 +195,7 @@ void set_buffer_environ(struct Buffer *buf) {
 void mainloop() {
   for (;;) {
     download_update(makeCurrent());
-    if (Currentbuf->document->submit) {
+    if (Currentbuf->document && Currentbuf->document->submit) {
       struct Anchor *a = Currentbuf->document->submit;
       Currentbuf->document->submit = NULL;
       gotoLine(Currentbuf->document, a->start.line);
@@ -220,7 +220,7 @@ void mainloop() {
 #endif
     {
       // do {
-      resize_screen_if_updated();
+      // resize_screen_if_updated();
       // }
       // while (tty_sleep_till_anykey(1, 0) <= 0);
     }
@@ -245,8 +245,9 @@ void mainloop() {
       }
     }
 
-    reshapeBuffer(Currentbuf);
-    display(Currentbuf->document);
+    auto size = term_size();
+    reshapeBuffer(Currentbuf, size);
+    display(Currentbuf, size);
     term_refresh();
   }
 }

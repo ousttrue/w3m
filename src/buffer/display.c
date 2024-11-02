@@ -2,11 +2,14 @@
 #include "buffer/buffer.h"
 #include "buffer/document.h"
 #include "buffer/tabbuffer.h"
-#include "html/html_renderer.h"
+#include "html/html_readbuffer.h"
 #include "html/map.h"
+#include "input/content.h"
+#include "input/istream.h"
 #include "term/scr.h"
 #include "term/termsize.h"
 #include "text/ctrlcode.h"
+#include "text/text.h"
 #include "text/utf8.h"
 #include <math.h>
 
@@ -19,7 +22,8 @@ static int ccolumn = -1;
 
 static Str make_lastline_link(struct Url *base, const char *title,
                               const char *url) {
-  int l = COLS - 1;
+  auto size = term_size();
+  int l = size.cols - 1;
   Str s = NULL;
   if (title && *title) {
     s = Strnew_m_charp("[", title, "]", NULL);
@@ -46,17 +50,17 @@ static Str make_lastline_link(struct Url *base, const char *title,
     return s;
   }
   if (!s)
-    s = Strnew_size(COLS);
+    s = Strnew_size(size.cols);
   int i = (l - 2) / 2;
   Strcat_charp_n(s, u->ptr, i);
   Strcat_charp(s, "..");
   i = utf8str_width((const uint8_t *)u->ptr) -
-      (COLS - 1 - utf8str_width((const uint8_t *)s->ptr));
+      (size.cols - 1 - utf8str_width((const uint8_t *)s->ptr));
   Strcat_charp(s, &u->ptr[i]);
   return s;
 }
 
-static Str make_lastline_message(struct Buffer *buf) {
+static Str make_lastline_message(struct Buffer *buf, struct TermSize size) {
   Str s = NULL;
   int sl = 0;
   if (displayLink) {
@@ -75,7 +79,7 @@ static Str make_lastline_message(struct Buffer *buf) {
     }
     if (s) {
       sl = utf8str_width((const uint8_t *)s->ptr);
-      if (sl >= COLS - 3)
+      if (sl >= size.cols - 3)
         return s;
     }
   }
@@ -97,7 +101,7 @@ static Str make_lastline_message(struct Buffer *buf) {
   // Strcat_charp(msg, buf->buffername);
 
   if (s) {
-    int l = COLS - 3 - sl;
+    int l = size.cols - 3 - sl;
     if (utf8str_width((const uint8_t *)msg->ptr) > l) {
       Strtruncate(msg, l);
     }
@@ -197,14 +201,14 @@ static void render_document(struct Document *doc) {
         scr_bold();
       scr_addch('[');
       int l = t->x2 - t->x1 - 1 -
-              utf8str_width((const uint8_t *)t->currentBuffer->buffername);
+              utf8str_width((const uint8_t *)t->currentBuffer->document->title);
       if (l < 0)
         l = 0;
       if (l / 2 > 0)
         scr_addnstr_sup(" ", l / 2);
       if (t == CurrentTab)
         scr_bold();
-      scr_addnstr(t->currentBuffer->buffername, t->x2 - t->x1 - l);
+      scr_addnstr(t->currentBuffer->document->title, t->x2 - t->x1 - l);
       if (t == CurrentTab)
         scr_boldend();
       if ((l + 1) / 2 > 0)
@@ -215,14 +219,15 @@ static void render_document(struct Document *doc) {
         scr_boldend();
     }
     scr_move(LastTab->y + 1, 0);
-    for (int i = 0; i < COLS; i++)
+    for (int i = 0; i < term_size().cols; i++)
       scr_addch('~');
   }
 
   struct Line *l = doc->topLine;
   int i = 0;
   for (; i < doc->viewport.LINES; i++, l = l->next) {
-    if (i >= doc->viewport.LINES - LINES - 1 || i < -(LINES - 1)) {
+    if (i >= doc->viewport.LINES - term_size().lines - 1 ||
+        i < -(term_size().lines - 1)) {
       // l = redrawLine(doc, l, i + doc->viewport.rootY);
       if (l) {
         scr_move(i, 0);
@@ -235,9 +240,9 @@ static void render_document(struct Document *doc) {
                   2;
             if (doc->viewport.rootX < 5)
               doc->viewport.rootX = 5;
-            if (doc->viewport.rootX > COLS)
-              doc->viewport.rootX = COLS;
-            doc->viewport.COLS = COLS - doc->viewport.rootX;
+            if (doc->viewport.rootX > term_size().cols)
+              doc->viewport.rootX = term_size().cols;
+            doc->viewport.COLS = term_size().cols - doc->viewport.rootX;
           }
           if (l->real_linenumber && !l->bpos)
             sprintf(tmp, "%*ld:", doc->viewport.rootX - 1, l->real_linenumber);
@@ -251,7 +256,7 @@ static void render_document(struct Document *doc) {
     if (l == NULL)
       break;
   }
-  if (LINES-1 > 0) {
+  if (term_size().lines - 1 > 0) {
     scr_move(i + doc->viewport.rootY, 0);
     scr_clrtobotx();
   }
@@ -263,17 +268,17 @@ static void render_document(struct Document *doc) {
 // document
 // status(standout)
 // msg
-void display(struct Document *doc) {
-  if (!doc)
+void display(struct Buffer *buf, struct TermSize size) {
+  if (!buf)
     return;
+  auto doc = buf->document;
+  if (!doc) {
+    return;
+  }
 
   if (doc->topLine == NULL && readBufferCache(doc) == 0) { /* clear_buffer */
   }
 
-  if (doc->width == 0)
-    doc->width = INIT_BUFFER_WIDTH;
-  if (doc->height == 0)
-    doc->height = LINES-1 + 1;
   // if ((buf->document->width != INIT_BUFFER_WIDTH &&
   //      (is_html_type(buf->document->type) || FoldLine)) ||
   //     buf->document->need_reshape) {
@@ -288,33 +293,30 @@ void display(struct Document *doc) {
           (int)(log(doc->lastLine->real_linenumber + 0.1) / log(10)) + 2;
     if (doc->viewport.rootX < 5)
       doc->viewport.rootX = 5;
-    if (doc->viewport.rootX > COLS)
-      doc->viewport.rootX = COLS;
+    if (doc->viewport.rootX > size.cols)
+      doc->viewport.rootX = size.cols;
   } else
     doc->viewport.rootX = 0;
-  doc->viewport.COLS = COLS - doc->viewport.rootX;
+  doc->viewport.COLS = size.cols - doc->viewport.rootX;
 
   int ny = 0;
   if (nTab > 1) {
     // if (mode == B_FORCE_REDRAW || mode == B_REDRAW_IMAGE)
-    calcTabPos();
+    calcTabPos(size);
     ny = LastTab->y + 2;
-    if (ny > LINES-1)
-      ny = LINES-1;
+    if (ny > size.lines - 1)
+      ny = size.lines - 1;
   }
-  if (doc->viewport.rootY != ny || doc->viewport.LINES != LINES-1 - ny) {
+  if (doc->viewport.rootY != ny || doc->viewport.LINES != size.lines - 1 - ny) {
     doc->viewport.rootY = ny;
-    doc->viewport.LINES = LINES-1 - ny;
+    doc->viewport.LINES = size.lines - 1 - ny;
     arrangeCursor(doc);
-    // mode = B_REDRAW_IMAGE;
   }
-  // if (mode == B_FORCE_REDRAW || mode == B_SCROLL || mode == B_REDRAW_IMAGE ||
-  //     cline != doc->topLine || ccolumn != doc->viewport.currentColumn)
-  {
-    { render_document(doc); }
-    cline = doc->topLine;
-    ccolumn = doc->viewport.currentColumn;
-  }
+
+  render_document(doc);
+  cline = doc->topLine;
+  ccolumn = doc->viewport.currentColumn;
+
   if (doc->topLine == NULL) {
     doc->topLine = doc->firstLine;
   }
@@ -322,7 +324,7 @@ void display(struct Document *doc) {
   drawAnchorCursor(doc);
 
   // message
-  auto msg = make_lastline_message(doc);
+  auto msg = make_lastline_message(buf, size);
   if (doc->firstLine == NULL) {
     Strcat_charp(msg, "\tNo Line");
   }
@@ -331,4 +333,100 @@ void display(struct Document *doc) {
   scr_message(msg->ptr, doc->viewport.cursorX + doc->viewport.rootX,
               doc->viewport.cursorY + doc->viewport.rootY);
   scr_standend();
+}
+
+#define _INIT_BUFFER_WIDTH ()
+#define INIT_BUFFER_WIDTH ((_INIT_BUFFER_WIDTH > 0) ? _INIT_BUFFER_WIDTH : 0)
+
+/*
+ * Reshape HTML buffer
+ */
+void reshapeBuffer(struct Buffer *buf, struct TermSize size) {
+  if (buf->content->sourcefile == NULL) {
+    return;
+  }
+
+  if (buf->document) {
+    if (!buf->document->need_reshape) {
+      return;
+    }
+    buf->document->need_reshape = false;
+  }
+
+  auto stream = examineFile(buf->content->sourcefile);
+  if (!stream) {
+    return;
+  }
+
+  Str html = Strnew();
+  Str line;
+  while ((line = StrmyISgets(stream))->length) {
+    Strcat(html, line);
+  }
+  ISclose(stream);
+
+  auto doc = buf->document;
+  if (is_html_type(buf->content->content_type)) {
+    buf->document = renderHTML(size.cols, html->ptr, buf->content->url,
+                               buf->content->charset);
+  } else {
+    buf->document = loadText(size.cols, html->ptr);
+  }
+  buf->document->height = size.lines;
+
+  // buf->document->width = size.cols - (showLineNum ? 6 : 1);
+  // if (buf->document->width < 0) {
+  //   buf->document->width = 0;
+  // }
+  // buf->document->height = size.lines;
+  // struct Document sbuf;
+  // copyBuffer(&sbuf, buf->document);
+  // clearBuffer(buf->document);
+  // buf->document->href = NULL;
+  // buf->document->name = NULL;
+  // buf->document->img = NULL;
+  // buf->document->formitem = NULL;
+  // buf->document->formlist = NULL;
+  // buf->document->linklist = NULL;
+  // buf->document->maplist = NULL;
+  // if (buf->document->hmarklist)
+  //   buf->document->hmarklist->nmark = 0;
+  // if (buf->document->imarklist)
+  //   buf->document->imarklist->nmark = 0;
+
+  if (doc) {
+    buf->document->viewport = doc->viewport;
+    if (buf->document->firstLine && doc->firstLine) {
+      struct Line *cur = doc->currentLine;
+
+      buf->document->viewport.pos = doc->viewport.pos + cur->bpos;
+      while (cur->bpos && cur->prev)
+        cur = cur->prev;
+      if (cur->real_linenumber > 0)
+        gotoRealLine(buf->document, cur->real_linenumber);
+      else
+        gotoLine(buf->document, cur->linenumber);
+      int n = (buf->document->currentLine->linenumber -
+           buf->document->topLine->linenumber) -
+          (cur->linenumber - doc->topLine->linenumber);
+      if (n) {
+        buf->document->topLine =
+            lineSkip(&buf->document->viewport, buf->document->topLine,
+                     buf->document->lastLine, n, false);
+        if (cur->real_linenumber > 0)
+          gotoRealLine(buf->document, cur->real_linenumber);
+        else
+          gotoLine(buf->document, cur->linenumber);
+      }
+      buf->document->viewport.pos -= buf->document->currentLine->bpos;
+      if (FoldLine && !is_html_type(buf->content->content_type))
+        buf->document->viewport.currentColumn = 0;
+      else
+        buf->document->viewport.currentColumn = doc->viewport.currentColumn;
+      arrangeCursor(buf->document);
+    }
+    if (buf->document->check_url & CHK_URL)
+      chkURLBuffer(buf->document);
+    formResetBuffer(buf->document, doc->formitem);
+  }
 }

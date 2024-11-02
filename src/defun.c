@@ -2,6 +2,7 @@
 #include "defun.h"
 #include "alloc.h"
 #include "buffer/buffer.h"
+#include "buffer/bufferlist.h"
 #include "buffer/display.h"
 #include "buffer/document.h"
 #include "buffer/downloadlist.h"
@@ -35,7 +36,6 @@
 #include "siteconf.h"
 #include "term/scr.h"
 #include "term/terms.h"
-#include "term/termsize.h"
 #include "term/tty.h"
 #include "text/myctype.h"
 #include "text/regex.h"
@@ -629,13 +629,11 @@ DEFUN(qquitfm, QUIT, "Quit with confirmation request") {
 
 /* Select buffer */
 DEFUN(selBuf, SELECT, "Display buffer-stack panel") {
-  struct Buffer *buf;
-  int ok;
-  char cmd;
-
-  ok = false;
+  auto ok = false;
   do {
-    buf = selectBuffer(Firstbuf, Currentbuf, &cmd);
+    char cmd;
+    auto buf = selectBuffer(Firstbuf, Currentbuf, term_size(), &cmd);
+    term_refresh();
     switch (cmd) {
     case 'B':
       ok = true;
@@ -647,11 +645,11 @@ DEFUN(selBuf, SELECT, "Display buffer-stack panel") {
       break;
     case 'D':
       delBuffer(CurrentTab, buf);
-      if (Firstbuf == NULL) {
-        /* No more buffer */
-        Firstbuf = nullBuffer();
-        Currentbuf = Firstbuf;
-      }
+      // if (Firstbuf == NULL) {
+      //   /* No more buffer */
+      //   Firstbuf = nullBuffer();
+      //   Currentbuf = Firstbuf;
+      // }
       break;
 
     case 'q':
@@ -664,7 +662,7 @@ DEFUN(selBuf, SELECT, "Display buffer-stack panel") {
     }
   } while (!ok);
 
-  for (buf = Firstbuf; buf != NULL; buf = buf->nextBuffer) {
+  for (auto buf = Firstbuf; buf != NULL; buf = buf->nextBuffer) {
     if (buf == Currentbuf)
       continue;
     if (clear_buffer)
@@ -673,30 +671,7 @@ DEFUN(selBuf, SELECT, "Display buffer-stack panel") {
 }
 
 /* Suspend (on BSD), or run interactive shell (on SysV) */
-DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background") {
-#ifndef SIGSTOP
-  const char *shell;
-#endif /* not SIGSTOP */
-  scr_move(LINES-1, 0);
-  scr_clrtoeolx();
-  term_refresh();
-  term_fmTerm();
-#ifndef SIGSTOP
-  shell = getenv("SHELL");
-  if (shell == NULL)
-    shell = "/bin/sh";
-  system(shell);
-#else  /* SIGSTOP */
-  signal(SIGTSTP, SIG_DFL); /* just in case */
-  /*
-   * Note: If susp() was called from SIGTSTP handler,
-   * unblocking SIGTSTP would be required here.
-   * Currently not.
-   */
-  kill(0, SIGTSTP); /* stop whole job, not a single process */
-#endif /* SIGSTOP */
-  term_fmInit();
-}
+DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background") { term_suspend(); }
 
 DEFUN(goLine, GOTO_LINE, "Go to the specified line") {
   _goLine(Currentbuf->document, goLineStr());
@@ -756,7 +731,7 @@ DEFUN(editBf, EDIT, "Edit local source") {
        Currentbuf->edit == NULL) || /* Reading shell */
       Currentbuf->content->real_scheme != SCM_LOCAL ||
       !strcmp(Currentbuf->content->url.file, "-") || /* file is std input  */
-      Currentbuf->document->bufferprop & BP_FRAME) {  /* Frame */
+      Currentbuf->document->bufferprop & BP_FRAME) { /* Frame */
     message_push("Can't edit other than local file");
     return;
   }
@@ -864,8 +839,7 @@ DEFUN(followI, VIEW_IMAGE, "Display image in viewer") {
 
   scr_message(Sprintf("loading %s", a->url)->ptr, 0, 0);
   term_refresh();
-  auto content =
-      loadGeneralFile(a->url, baseURL(Currentbuf), NULL, 0, NULL);
+  auto content = loadGeneralFile(a->url, baseURL(Currentbuf), NULL, 0, NULL);
   if (!content) {
     char *emsg = Sprintf("Can't load %s", a->url)->ptr;
     message_push(emsg);
@@ -1399,7 +1373,7 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks") {
               (Str_form_quote(localCookie()))->ptr,
               (Str_form_quote(Strnew_charp(BookmarkFile)))->ptr,
               (Str_form_quote(parsedURL2Str(&Currentbuf->content->url)))->ptr,
-              (Str_form_quote(Strnew_charp(Currentbuf->buffername)))->ptr);
+              (Str_form_quote(Strnew_charp(Currentbuf->document->title)))->ptr);
   auto form = newFormList(NULL, "post", NULL, NULL, NULL, NULL, NULL);
   form->body = tmp->ptr;
   form->length = tmp->length;
@@ -1439,7 +1413,7 @@ DEFUN(setOpt, SET_OPTION, "Set option") {
 
 /* error message list */
 DEFUN(msgs, MSGS, "Display error messages") {
-  auto html = message_list_panel(INIT_BUFFER_WIDTH);
+  auto html = message_list_panel();
   struct Url url;
   // auto doc = renderHTML(INIT_BUFFER_WIDTH, html, url, CHARSET_UTF8);
   auto content =
@@ -1468,7 +1442,7 @@ void follow_map(struct InternalAction *arg, struct Current) {
   auto a = follow_map_menu(Currentbuf->document, name, an, x, y);
   if (a == NULL || a->url == NULL || *(a->url) == '\0') {
 #endif
-    auto html = follow_map_panel(Currentbuf->document, name);
+    auto html = follow_map_panel(Currentbuf, name);
     if (html) {
       struct Url url;
       auto content =
@@ -1507,7 +1481,7 @@ DEFUN(linkLst, LIST, "Show all URLs referenced") {
 
 /* cookie list */
 DEFUN(cooLst, COOKIE, "View cookie list") {
-  auto html = cookie_list_panel(INIT_BUFFER_WIDTH);
+  auto html = cookie_list_panel();
   if (html) {
     struct Url url;
     auto content =
@@ -1518,7 +1492,7 @@ DEFUN(cooLst, COOKIE, "View cookie list") {
 
 /* History page */
 DEFUN(ldHist, HISTORY, "Show browsing history") {
-  auto html = historyDocument(INIT_BUFFER_WIDTH, URLHist);
+  auto html = historyDocument(URLHist);
   if (html) {
     struct Url url;
     auto content =
@@ -1738,7 +1712,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
 /* reload */
 DEFUN(reload, RELOAD, "Load current document anew") {
   if (Currentbuf->document->bufferprop & BP_INTERNAL) {
-    if (!strcmp(Currentbuf->buffername, DOWNLOAD_LIST_TITLE)) {
+    if (!strcmp(Currentbuf->document->title, DOWNLOAD_LIST_TITLE)) {
       ldDL(current);
       return;
     }
@@ -1807,7 +1781,6 @@ DEFUN(reload, RELOAD, "Load current document anew") {
 /* reshape */
 DEFUN(reshape, RESHAPE, "Re-render document") {
   Currentbuf->document->need_reshape = true;
-  reshapeBuffer(Currentbuf);
 }
 
 DEFUN(chkURL, MARK_URL, "Turn URL-like strings into hyperlinks") {
