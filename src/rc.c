@@ -12,6 +12,7 @@
 #include "buffer/tabbuffer.h"
 #include "buffer/w3mhelperpanel.h"
 #include "core.h"
+#include "dict.h"
 #include "mainloop.h"
 #include "version.h"
 // #include "file/file.h"
@@ -54,7 +55,6 @@ int DefaultURLString = DEFAULT_URL_CURRENT;
 
 #define W3MCONFIG "w3mconfig"
 #define CONFIG_FILE "config"
-const char *DictCommand = "file:///$LIB/w3mdict" CGI_EXTENSION;
 
 enum ParamType {
   P_INT = 0,

@@ -10,6 +10,7 @@
 #include "buffer/tabbuffer.h"
 #include "buffer/w3mbookmark.h"
 #include "core.h"
+#include "dict.h"
 #include "file/file.h"
 #include "file/shell.h"
 #include "file/tmpfile.h"
@@ -47,15 +48,9 @@
 #include <time.h>
 #include <unistd.h>
 
-#define HELP_CGI "w3mhelp"
-
-#define DICTBUFFERNAME "*dictionary*"
 #define DSTR_LEN 256
 
 static void keyPressEventProc(int c);
-
-static int display_ok = false;
-int on_target = 1;
 
 struct TabBuffer;
 static void _nextA(int);
@@ -433,6 +428,7 @@ DEFUN(ldfile, LOAD, "Open local file in a new buffer") {
 }
 
 /* Load help file */
+#define HELP_CGI "w3mhelp"
 DEFUN(ldhelp, HELP, "Show help panel") {
   auto lang = AcceptLang;
   int n = strcspn(lang, ";, \t");
@@ -890,13 +886,6 @@ struct Buffer *_followA(struct Current current) {
 DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer") {
   auto buf = _followA(current);
   pushBuffer(CurrentTab, buf);
-}
-
-/* follow HREF link in the buffer */
-void bufferA(struct Current current) {
-  on_target = false;
-  followA(current);
-  on_target = true;
 }
 
 /* view inline image */
@@ -2010,37 +1999,15 @@ DEFUN(wrapToggle, WRAP_TOGGLE, "Toggle wrapping mode in searches") {
   }
 }
 
-static void execdict(const char *word) {
-  if (!UseDictCommand || word == NULL || *word == '\0') {
-    return;
-  }
-  const char *w = word;
-  if (*w == '\0') {
-    return;
-  }
-  auto dictcmd =
-      Sprintf("%s?%s", DictCommand, Str_form_quote(Strnew_charp(w))->ptr)->ptr;
-  auto buf =
-      loadGeneralFile(INIT_BUFFER_WIDTH, dictcmd, NULL, NO_REFERER, 0, NULL);
-  if (buf == NULL) {
-    message_push("Execution failed");
-    return;
-  } else if (buf != NO_BUFFER) {
-    buf->document->filename = w;
-    buf->buffername = Sprintf("%s %s", DICTBUFFERNAME, word)->ptr;
-    if (buf->document->type == NULL)
-      buf->document->type = "text/plain";
-    pushBuffer(CurrentTab, buf);
-  }
-}
-
 DEFUN(dictword, DICT_WORD, "Execute dictionary command (see README.dict)") {
-  execdict(inputStr(Currentbuf->document, "(dictionary)!", ""));
+  auto buf = execdict(inputStr(Currentbuf->document, "(dictionary)!", ""));
+  pushBuffer(CurrentTab, buf);
 }
 
 DEFUN(dictwordat, DICT_WORD_AT,
       "Execute dictionary command for word at cursor") {
-  execdict(GetWord(Currentbuf->document));
+  auto buf = execdict(GetWord(Currentbuf->document));
+  pushBuffer(CurrentTab, buf);
 }
 
 void deleteFiles() {

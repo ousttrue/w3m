@@ -2,6 +2,7 @@ pub const SRCS = [_][]const u8{
     "src/main.c",
     "src/mainloop.c",
     "src/keybind.c",
+    "src/dict.c",
     "src/trap_jmp.c",
     "src/siteconf.c",
     "src/alloc.c",

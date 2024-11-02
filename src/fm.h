@@ -68,7 +68,6 @@ global char *ftppasswd init(nullptr);
 global int ftppass_hostnamegen init(true);
 global int WrapDefault init(false);
 global const char *BookmarkFile init(nullptr);
-global int UseDictCommand init(true);
 global int FoldTextarea init(false);
 global struct auth_cookie *Auth_cookie init(nullptr);
 global char *mailcap_files init(USER_MAILCAP ", " SYS_MAILCAP);

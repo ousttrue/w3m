@@ -1,6 +1,8 @@
 #pragma once
 #include "text/Str.h"
 
+#define CGI_EXTENSION ".cgi"
+
 // #define HAVE_DIRENT_H 1
 #include <sys/types.h>
 #ifdef _WIN32

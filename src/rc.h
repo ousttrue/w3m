@@ -1,11 +1,8 @@
 #pragma once
 #include "current.h"
 
-#define CGI_EXTENSION ".cgi"
-
 extern bool no_rc_dir;
 extern const char *rc_dir;
-extern const char *DictCommand;
 
 #define MAILTO_OPTIONS_IGNORE 1
 #define MAILTO_OPTIONS_USE_MAILTO_URL 2

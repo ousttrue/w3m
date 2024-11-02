@@ -503,8 +503,6 @@ struct Buffer *loadLink(struct Document *doc, const char *url,
   if (buf == NO_BUFFER) {
     return NULL;
   }
-  // if (!on_target) /* open link as an indivisual page */
-  //   return loadNormalBuf(buf);
   return buf;
 
   // if (target == NULL || /* no target specified (that means this page is not a
