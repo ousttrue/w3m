@@ -677,7 +677,7 @@ DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background") {
 #ifndef SIGSTOP
   const char *shell;
 #endif /* not SIGSTOP */
-  scr_move(LASTLINE, 0);
+  scr_move(LINES-1, 0);
   scr_clrtoeolx();
   term_refresh();
   term_fmTerm();

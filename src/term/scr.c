@@ -87,7 +87,7 @@ void scr_touch_column(int col) {
 }
 
 void scr_wrap(void) {
-  if (g_scr.CurLine == LASTLINE)
+  if (g_scr.CurLine == LINES-1)
     return;
   g_scr.CurLine++;
   g_scr.CurColumn = 0;
@@ -369,7 +369,7 @@ void scr_graphend(void) {
 }
 
 void scr_message(const char *s, int return_x, int return_y) {
-  scr_move(LASTLINE, 0);
+  scr_move(LINES-1, 0);
   scr_addnstr(s, COLS - 1);
   scr_clrtoeolx();
   scr_move(return_y, return_x);

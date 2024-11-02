@@ -4,13 +4,9 @@
 #include "buffer/tabbuffer.h"
 #include "html/html_renderer.h"
 #include "html/map.h"
-#include "input/http.h"
-#include "input/istream.h"
 #include "term/scr.h"
-#include "term/terms.h"
 #include "term/termsize.h"
 #include "text/ctrlcode.h"
-#include "text/text.h"
 #include "text/utf8.h"
 #include <math.h>
 
@@ -226,7 +222,7 @@ static void render_document(struct Document *doc) {
   struct Line *l = doc->topLine;
   int i = 0;
   for (; i < doc->viewport.LINES; i++, l = l->next) {
-    if (i >= doc->viewport.LINES - LASTLINE || i < -LASTLINE) {
+    if (i >= doc->viewport.LINES - LINES - 1 || i < -(LINES - 1)) {
       // l = redrawLine(doc, l, i + doc->viewport.rootY);
       if (l) {
         scr_move(i, 0);
@@ -255,7 +251,7 @@ static void render_document(struct Document *doc) {
     if (l == NULL)
       break;
   }
-  if (LASTLINE > 0) {
+  if (LINES-1 > 0) {
     scr_move(i + doc->viewport.rootY, 0);
     scr_clrtobotx();
   }
@@ -277,7 +273,7 @@ void display(struct Document *doc) {
   if (doc->width == 0)
     doc->width = INIT_BUFFER_WIDTH;
   if (doc->height == 0)
-    doc->height = LASTLINE + 1;
+    doc->height = LINES-1 + 1;
   // if ((buf->document->width != INIT_BUFFER_WIDTH &&
   //      (is_html_type(buf->document->type) || FoldLine)) ||
   //     buf->document->need_reshape) {
@@ -301,23 +297,21 @@ void display(struct Document *doc) {
   int ny = 0;
   if (nTab > 1) {
     // if (mode == B_FORCE_REDRAW || mode == B_REDRAW_IMAGE)
-      calcTabPos();
+    calcTabPos();
     ny = LastTab->y + 2;
-    if (ny > LASTLINE)
-      ny = LASTLINE;
+    if (ny > LINES-1)
+      ny = LINES-1;
   }
-  if (doc->viewport.rootY != ny || doc->viewport.LINES != LASTLINE - ny) {
+  if (doc->viewport.rootY != ny || doc->viewport.LINES != LINES-1 - ny) {
     doc->viewport.rootY = ny;
-    doc->viewport.LINES = LASTLINE - ny;
+    doc->viewport.LINES = LINES-1 - ny;
     arrangeCursor(doc);
     // mode = B_REDRAW_IMAGE;
   }
   // if (mode == B_FORCE_REDRAW || mode == B_SCROLL || mode == B_REDRAW_IMAGE ||
-  //     cline != doc->topLine || ccolumn != doc->viewport.currentColumn) 
+  //     cline != doc->topLine || ccolumn != doc->viewport.currentColumn)
   {
-    {
-      render_document(doc);
-    }
+    { render_document(doc); }
     cline = doc->topLine;
     ccolumn = doc->viewport.currentColumn;
   }

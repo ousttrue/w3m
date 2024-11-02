@@ -1,8 +1,6 @@
 #include "linein.h"
 #include "alloc.h"
 #include "buffer/display.h"
-#include "buffer/tabbuffer.h"
-#include "buffer/viewport.h"
 #include "core.h"
 #include "file/file.h"
 #include "fm.h"
@@ -201,14 +199,14 @@ const char *inputLineHistSearch(struct Document *doc, const char *prompt,
       else
         offset = 0;
     }
-    scr_move(LASTLINE, 0);
+    scr_move(LINES - 1, 0);
     scr_addstr(prompt);
     if (is_passwd)
       addPasswd(strBuf->ptr, strProp, CLen, offset, COLS - opos);
     else
       addStr(strBuf->ptr, strProp, CLen, offset, COLS - opos);
     scr_clrtoeolx();
-    scr_move(LASTLINE, opos + x - offset);
+    scr_move(LINES - 1, opos + x - offset);
     term_refresh();
 
   next_char:
@@ -268,7 +266,7 @@ const char *inputLineHistSearch(struct Document *doc, const char *prompt,
   if (i_broken)
     return NULL;
 
-  scr_move(LASTLINE, 0);
+  scr_move(LINES - 1, 0);
   term_refresh();
   p = strBuf->ptr;
   if (flag & (IN_FILENAME | IN_COMMAND)) {
@@ -553,12 +551,12 @@ static void next_dcompl(int next) {
   if (cm_mode == CPL_NEVER || cm_mode & CPL_OFF)
     return;
   cm_disp_clear = false;
-  if (LASTLINE >= 3) {
+  if (LINES - 1 >= 3) {
     comment = true;
-    nline = LASTLINE - 2;
-  } else if (LASTLINE) {
+    nline = LINES - 1 - 2;
+  } else if (LINES - 1) {
     comment = false;
-    nline = LASTLINE;
+    nline = LINES - 1;
   } else {
     return;
   }
@@ -651,7 +649,7 @@ disp_next:
     }
     y++;
   }
-  if (comment && y == LASTLINE - 1) {
+  if (comment && y == LINES - 1 - 1) {
     scr_move(y, 0);
     scr_clrtoeolx();
     scr_bold();

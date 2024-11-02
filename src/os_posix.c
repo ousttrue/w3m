@@ -1,7 +1,6 @@
 #include "alloc.h"
 #include "app.h"
 #include "buffer.h"
-// #include "compression.h"
 #include "config.h"
 #include "ctrlcode.h"
 #include "downloadlist.h"

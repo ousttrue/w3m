@@ -43,7 +43,7 @@ struct Document *newDocument(int width) {
   doc->hmarklist = nullptr;
   doc->imarklist = nullptr;
   doc->viewport.COLS = COLS;
-  doc->viewport.LINES = LASTLINE;
+  doc->viewport.LINES = LINES;
   doc->viewport.currentColumn = 0;
   doc->viewport.cursorX = 0;
   doc->viewport.cursorY = 0;

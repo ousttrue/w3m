@@ -1,8 +1,6 @@
 #include "buffer/downloadlist.h"
 #include "alloc.h"
 #include "core.h"
-#include "file/file.h"
-#include "fm.h"
 #include "html/html_readbuffer.h"
 #include "html/html_text.h"
 #include "input/localcgi.h"

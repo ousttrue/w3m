@@ -1,4 +1,3 @@
-#include "fm.h"
 #include "buffer.h"
 #include "http_request.h"
 #include "termsize.h"
@@ -12,7 +11,6 @@
 #include <unistd.h>
 #endif /* HAVE_READLINK */
 #include "localcgi.h"
-#include "hash.h"
 
 void set_environ(const char *var, const char *value) {
   if (var != NULL && value != NULL) {

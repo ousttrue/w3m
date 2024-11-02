@@ -1,7 +1,6 @@
 #include "html/anchor.h"
 #include "alloc.h"
 #include "buffer/document.h"
-#include "fm.h"
 #include "html/form.h"
 #include "html/html_readbuffer.h"
 #include "html/map.h"
@@ -314,7 +313,7 @@ static char *reAnchorAny(struct Document *doc, char *re,
   char *p = nullptr;
   for (auto l = MarkAllPages ? doc->firstLine : doc->topLine;
        l != NULL &&
-       (MarkAllPages || l->linenumber < doc->topLine->linenumber + LASTLINE);
+       (MarkAllPages || l->linenumber < doc->topLine->linenumber + LINES-1);
        l = l->next) {
     if (p && l->bpos) {
       continue;

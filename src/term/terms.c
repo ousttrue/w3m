@@ -3,14 +3,7 @@
  * revised by Akinori ITO, January 1995
  */
 #include "term/terms.h"
-#include "alloc.h"
-#include "buffer/buffer.h"
-#include "buffer/display.h"
-#include "buffer/document.h"
-#include "buffer/tabbuffer.h"
-#include "html/html_text.h"
 #include "linein.h"
-#include "rc.h"
 #include "term/scr.h"
 #include "term/termcon.h"
 #include "term/termsize.h"
@@ -187,7 +180,7 @@ void term_refresh() {
   l_prop color = COL_FTERM;
   short *dirty;
 
-  for (line = 0; line <= LASTLINE; line++) {
+  for (line = 0; line <= LINES-1; line++) {
     dirty = &scr->ScreenImage[line]->isdirty;
     if (*dirty & L_DIRTY) {
       *dirty &= ~L_DIRTY;
@@ -339,7 +332,7 @@ bool term_is_initialized() { return fmInitialized; }
 
 void term_fmTerm() {
   if (fmInitialized) {
-    scr_move(LASTLINE, 0);
+    scr_move(LINES-1, 0);
     scr_clrtoeolx();
     term_refresh();
     term_reset();
@@ -422,7 +415,7 @@ void term_showProgress(int64_t *linelen, int64_t *trbyte,
     double ratio;
     cur_time = time(0);
     if (*trbyte == 0) {
-      scr_move(LASTLINE, 0);
+      scr_move(LINES-1, 0);
       scr_clrtoeolx();
       start_time = cur_time;
     }
@@ -431,7 +424,7 @@ void term_showProgress(int64_t *linelen, int64_t *trbyte,
     if (cur_time == last_time)
       return;
     last_time = cur_time;
-    scr_move(LASTLINE, 0);
+    scr_move(LINES-1, 0);
     ratio = 100.0 * (*trbyte) / current_content_length;
     fmtrbyte = convert_size2(*trbyte, current_content_length, 1);
     duration = cur_time - start_time;
@@ -451,7 +444,7 @@ void term_showProgress(int64_t *linelen, int64_t *trbyte,
     scr_addstr(messages->ptr);
     pos = 42;
     i = pos + (COLS - pos - 1) * (*trbyte) / current_content_length;
-    scr_move(LASTLINE, pos);
+    scr_move(LINES-1, pos);
     scr_standout();
     scr_addch(' ');
     for (j = pos + 1; j <= i; j++)
@@ -462,7 +455,7 @@ void term_showProgress(int64_t *linelen, int64_t *trbyte,
   } else {
     cur_time = time(0);
     if (*trbyte == 0) {
-      scr_move(LASTLINE, 0);
+      scr_move(LINES-1, 0);
       scr_clrtoeolx();
       start_time = cur_time;
     }
@@ -471,7 +464,7 @@ void term_showProgress(int64_t *linelen, int64_t *trbyte,
     if (cur_time == last_time)
       return;
     last_time = cur_time;
-    scr_move(LASTLINE, 0);
+    scr_move(LINES-1, 0);
     fmtrbyte = convert_size(*trbyte, 1);
     duration = cur_time - start_time;
     if (duration) {

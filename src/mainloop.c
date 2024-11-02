@@ -100,11 +100,6 @@ int scrollNum() {
   }
 }
 
-static void keyPressEventProc(int c) {
-  CurrentKey = c;
-  w3mFuncList[(int)GlobalKeymap[c]].func(makeCurrent());
-}
-
 void multiKeyProc() {
   char c = tty_getch();
   if (IS_ASCII(c)) {
@@ -239,13 +234,16 @@ void mainloop() {
       } else {
         set_buffer_environ(Currentbuf);
         save_buffer_position(Currentbuf->document);
-        keyPressEventProc((int)c);
+        // keyPressEventProc((int)c);
+        CurrentKey = c;
+        w3mFuncList[(int)GlobalKeymap[c]].func(makeCurrent());
+
         prec_num = 0;
+        prev_key = CurrentKey;
+        CurrentKey = -1;
+        CurrentKeyData = NULL;
       }
     }
-    prev_key = CurrentKey;
-    CurrentKey = -1;
-    CurrentKeyData = NULL;
 
     reshapeBuffer(Currentbuf);
     display(Currentbuf->document);

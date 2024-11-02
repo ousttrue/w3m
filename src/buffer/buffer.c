@@ -1,8 +1,6 @@
 #include "buffer/buffer.h"
 #include "alloc.h"
 #include "buffer/document.h"
-#include "file/file.h"
-#include "fm.h"
 #include "history.h"
 #include "html/html_readbuffer.h"
 #include "html/html_text.h"
@@ -181,7 +179,7 @@ static struct Buffer *listBuffer(struct Buffer *top, struct Buffer *current) {
 
   scr_move(0, 0);
   scr_clrtobotx();
-  for (i = 0; i < LASTLINE; i++) {
+  for (i = 0; i < LINES - 1; i++) {
     if (buf == current) {
       c = i;
       scr_standout();
@@ -218,21 +216,19 @@ static struct Buffer *listBuffer(struct Buffer *top, struct Buffer *current) {
  */
 struct Buffer *selectBuffer(struct Buffer *firstbuf, struct Buffer *currentbuf,
                             char *selectchar) {
-  int i, cpoint,                  /* Current Buffer Number */
-      spoint,                     /* Current Line on Screen */
-      maxbuf, sclimit = LASTLINE; /* Upper limit of line * number in
-                                   * the * screen */
-  struct Buffer *buf, *topbuf;
-  char c;
-
-  i = cpoint = 0;
-  for (buf = firstbuf; buf != NULL; buf = buf->nextBuffer) {
+  int i = 0;
+  /* Current Buffer Number */
+  int cpoint = 0;
+  for (auto buf = firstbuf; buf != NULL; buf = buf->nextBuffer, ++i) {
     if (buf == currentbuf)
       cpoint = i;
     i++;
   }
-  maxbuf = i;
+  int maxbuf = i;
 
+  struct Buffer *topbuf;
+  int spoint;              /* Current Line on Screen */
+  int sclimit = LINES - 1; /* Upper limit of line * number in the * screen */
   if (cpoint >= sclimit) {
     spoint = sclimit / 2;
     topbuf = nthBuffer(firstbuf, cpoint - spoint);
@@ -243,6 +239,7 @@ struct Buffer *selectBuffer(struct Buffer *firstbuf, struct Buffer *currentbuf,
   listBuffer(topbuf, currentbuf);
 
   for (;;) {
+    char c;
     if ((c = tty_getch()) == ESC_CODE) {
       if ((c = tty_getch()) == '[' || c == 'O') {
         switch (c = tty_getch()) {
@@ -782,7 +779,7 @@ void reshapeBuffer(struct Buffer *buf) {
   }
   ISclose(stream);
 
-  buf->document->height = LASTLINE + 1;
+  buf->document->height = LINES-1 + 1;
   if (buf->document->firstLine && sbuf.firstLine) {
     struct Line *cur = sbuf.currentLine;
     int n;
