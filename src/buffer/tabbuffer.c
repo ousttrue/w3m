@@ -5,9 +5,12 @@
 #include "document.h"
 #include "input/loader.h"
 #include "term/termsize.h"
+#include "text/text.h"
+#include <string.h>
 
 bool clear_buffer = true;
 bool close_tab_back = false;
+bool open_tab_blank = false;
 
 int nTab = 0;
 int TabCols = 10;
@@ -159,6 +162,17 @@ void pushBuffer(struct TabBuffer *tab, struct Buffer *buf) {
     tab->currentBuffer = buf;
   }
   saveBufferInfo();
+}
+
+void pushCheckTarget(struct TabBuffer *tab, const char *anchor_target,
+                     struct Buffer *buf, bool check_target) {
+  if (check_target && open_tab_blank && anchor_target &&
+      (!strcasecmp(anchor_target, "_new") ||
+       !strcasecmp(anchor_target, "_blank"))) {
+    _newT(buf);
+  } else {
+    pushBuffer(tab, buf);
+  }
 }
 
 bool handleMailto(const char *url) {

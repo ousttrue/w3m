@@ -2,6 +2,7 @@
 
 extern bool clear_buffer;
 extern bool close_tab_back;
+extern bool open_tab_blank;
 
 extern int nTab;
 extern int TabCols;
@@ -30,6 +31,8 @@ struct TabBuffer *numTab(int n);
 void calcTabPos();
 struct TabBuffer *deleteTab(struct TabBuffer *tab);
 void pushBuffer(struct TabBuffer *tab, struct Buffer *buf);
+void pushCheckTarget(struct TabBuffer *tab, const char *anchor_target,
+                     struct Buffer *buf, bool check_target);
 struct FormList;
 bool handleMailto(const char *url);
 void moveTab(struct TabBuffer *t, struct TabBuffer *t2, int right);

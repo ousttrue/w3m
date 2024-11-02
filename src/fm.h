@@ -43,7 +43,6 @@ global char *cgi_bin init(nullptr);
 #if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
 global char *MyProgramName init("w3m");
 #endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
-global int open_tab_blank init(false);
 global int open_tab_dl_list init(false);
 global int w3m_debug;
 global int confirm_on_quit init(true);

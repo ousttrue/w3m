@@ -48,20 +48,6 @@
 #include <time.h>
 #include <unistd.h>
 
-#define DSTR_LEN 256
-
-static void keyPressEventProc(int c);
-
-struct TabBuffer;
-static void _nextA(int);
-static void _prevA(int);
-static int check_target = true;
-
-static int cmp_anchor_hseq(const void *a, const void *b) {
-  return (*((const struct Anchor **)a))->hseq -
-         (*((const struct Anchor **)b))->hseq;
-}
-
 DEFUN(nulcmd, NOTHING NULL @ @ @, "Do nothing") { /* do nothing */ }
 
 DEFUN(escmap, ESCMAP, "ESC map") {
@@ -874,12 +860,6 @@ struct Buffer *_followA(struct Current current) {
   auto url = a->url;
 
   return loadLink(Currentbuf->document, url, a->target, a->referer, NULL);
-  // if (check_target && open_tab_blank && a->target &&
-  //     (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
-  //   _newT(buf);
-  // } else {
-  //   pushBuffer(CurrentTab, buf);
-  // }
 }
 
 /* follow HREF link */
@@ -1004,24 +984,8 @@ DEFUN(nthA, LINK_N, "Go to the nth link") {
   arrangeCursor(Currentbuf->document);
 }
 
-/* go to the next anchor */
-DEFUN(nextA, NEXT_LINK, "Move to the next hyperlink") { _nextA(false); }
-
-/* go to the previous anchor */
-DEFUN(prevA, PREV_LINK, "Move to the previous hyperlink") { _prevA(false); }
-
-/* go to the next visited anchor */
-DEFUN(nextVA, NEXT_VISITED, "Move to the next visited hyperlink") {
-  _nextA(true);
-}
-
-/* go to the previous visited anchor */
-DEFUN(prevVA, PREV_VISITED, "Move to the previous visited hyperlink") {
-  _prevA(true);
-}
-
 /* go to the next [visited] anchor */
-static void _nextA(int visited) {
+static void _nextA(bool visited) {
   struct HmarkerList *hl = Currentbuf->document->hmarklist;
 
   if (Currentbuf->document->firstLine == NULL)
@@ -1096,6 +1060,8 @@ _end:
   Currentbuf->document->viewport.pos = po->pos;
   arrangeCursor(Currentbuf->document);
 }
+/* go to the next anchor */
+DEFUN(nextA, NEXT_LINK, "Move to the next hyperlink") { _nextA(false); }
 
 /* go to the previous anchor */
 static void _prevA(int visited) {
@@ -1172,6 +1138,19 @@ _end:
   gotoLine(Currentbuf->document, po->line);
   Currentbuf->document->viewport.pos = po->pos;
   arrangeCursor(Currentbuf->document);
+}
+
+/* go to the previous anchor */
+DEFUN(prevA, PREV_LINK, "Move to the previous hyperlink") { _prevA(false); }
+
+/* go to the next visited anchor */
+DEFUN(nextVA, NEXT_VISITED, "Move to the next visited hyperlink") {
+  _nextA(true);
+}
+
+/* go to the previous visited anchor */
+DEFUN(prevVA, PREV_VISITED, "Move to the previous visited hyperlink") {
+  _prevA(true);
 }
 
 /* go to the next left/right anchor */
@@ -1550,12 +1529,8 @@ void follow_map(struct InternalAction *arg, struct Current) {
   auto buf = loadGeneralFile(
       INIT_BUFFER_WIDTH, a->url, baseURL(Currentbuf->document),
       parsedURL2Str(&Currentbuf->document->url)->ptr, false, NULL);
-  if (check_target && open_tab_blank && a->target &&
-      (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
-    _newT(buf);
-  } else {
-    pushBuffer(CurrentTab, buf);
-  }
+
+  pushCheckTarget(CurrentTab, a->target, buf, true);
 #endif
 }
 
