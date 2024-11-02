@@ -374,7 +374,7 @@ FILE *localcgi_request(struct HttpRequest *hr) {
   exit(1);
 }
 
-const char *tag_get_value(struct LocalCgiHtml *t, const char *arg) {
+const char *tag_get_value(struct InternalAction *t, const char *arg) {
   for (; t; t = t->next) {
     if (!strcasecmp(t->arg, arg))
       return t->value;
@@ -382,7 +382,7 @@ const char *tag_get_value(struct LocalCgiHtml *t, const char *arg) {
   return NULL;
 }
 
-bool tag_exists(struct LocalCgiHtml *t, const char *arg) {
+bool tag_exists(struct InternalAction *t, const char *arg) {
   for (; t; t = t->next) {
     if (!strcasecmp(t->arg, arg))
       return 1;
@@ -390,11 +390,11 @@ bool tag_exists(struct LocalCgiHtml *t, const char *arg) {
   return 0;
 }
 
-struct LocalCgiHtml *cgistr2tagarg(const char *cgistr) {
-  struct LocalCgiHtml *t0 = nullptr;
-  struct LocalCgiHtml *t = nullptr;
+struct InternalAction *cgistr2tagarg(const char *cgistr) {
+  struct InternalAction *t0 = nullptr;
+  struct InternalAction *t = nullptr;
   do {
-    t = New(struct LocalCgiHtml);
+    t = New(struct InternalAction);
     t->next = t0;
     t0 = t;
     auto tag = Strnew();

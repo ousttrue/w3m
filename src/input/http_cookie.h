@@ -1,4 +1,5 @@
 #pragma once
+#include "current.h"
 #include "input/url.h"
 #include "text/Str.h"
 #include <time.h>
@@ -75,6 +76,6 @@ void save_cookies(void);
 void load_cookies(void);
 void initCookie(void);
 struct Document *cookie_list_panel(int cols);
-struct LocalCgiHtml;
-void set_cookie_flag(struct LocalCgiHtml *arg);
+struct InternalAction;
+void set_cookie_flag(struct InternalAction *arg, struct Current current);
 int check_cookie_accept_domain(char *domain);

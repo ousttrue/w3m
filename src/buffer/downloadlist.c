@@ -39,10 +39,10 @@ struct DownloadList {
 
 static bool add_download_list = false;
 
-void download_update() {
+void download_update(struct Current current) {
   if (add_download_list) {
     add_download_list = false;
-    ldDL();
+    ldDL(current);
   }
 }
 
@@ -204,7 +204,7 @@ BOOL kill(DWORD dwProcessId, UINT uExitCode) {
 }
 #endif
 
-void download_action(struct LocalCgiHtml *arg) {
+void download_action(struct InternalAction *arg, struct Current current) {
 
   for (; arg; arg = arg->next) {
     pid_t pid;
@@ -236,7 +236,7 @@ void download_action(struct LocalCgiHtml *arg) {
     }
   }
 
-  ldDL();
+  ldDL(current);
 }
 
 void stopDownload(void) {

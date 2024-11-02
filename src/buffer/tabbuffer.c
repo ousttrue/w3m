@@ -7,6 +7,7 @@
 #include "term/termsize.h"
 
 bool clear_buffer = true;
+bool close_tab_back = false;
 
 int nTab = 0;
 int TabCols = 10;
@@ -219,4 +220,38 @@ void moveTab(struct TabBuffer *t, struct TabBuffer *t2, int right) {
     t2->prevTab = t;
   }
   // displayBuffer(Currentbuf, B_FORCE_REDRAW);
+}
+
+static int checkBackBuffer(struct Buffer *buf) {
+  if (buf->nextBuffer)
+    return true;
+
+  return false;
+}
+
+void _backBf(struct TabBuffer *tab) {
+  if (!checkBackBuffer(tab->currentBuffer)) {
+    // last buffer. close tab
+    if (close_tab_back && nTab >= 1) {
+      deleteTab(CurrentTab);
+    } else {
+      message_push("Can't go back...");
+    }
+    return;
+  }
+
+  delBuffer(tab, Currentbuf);
+}
+
+void delBuffer(struct TabBuffer *tab, struct Buffer *buf) {
+  if (!buf) {
+    return;
+  }
+  if (tab->currentBuffer == buf) {
+    tab->currentBuffer = buf->nextBuffer;
+  }
+  tab->firstBuffer = deleteBuffer(Firstbuf, buf);
+  if (!tab->currentBuffer) {
+    tab->currentBuffer = tab->firstBuffer;
+  }
 }

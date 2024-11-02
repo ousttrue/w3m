@@ -25,6 +25,13 @@ int prev_key = -1;
 #define PREC_NUM (prec_num ? prec_num : 1)
 #define PREC_LIMIT 10000
 
+static struct Current makeCurrent(){
+  struct Current current = {
+      CurrentTab,
+  };
+  return current;
+}
+
 void clearKeyData() { CurrentKeyData = NULL; /* not allowed in w3m-control: */ }
 
 const char *searchKeyData(void) {
@@ -94,7 +101,7 @@ int scrollNum() {
 
 static void keyPressEventProc(int c) {
   CurrentKey = c;
-  w3mFuncList[(int)GlobalKeymap[c]].func();
+  w3mFuncList[(int)GlobalKeymap[c]].func(makeCurrent());
 }
 
 void multiKeyProc() {
@@ -128,7 +135,8 @@ void escKeyProc(int c, int esc, unsigned char *map) {
     esc |= (CurrentKey & ~0xFFFF);
   }
   CurrentKey = esc | c;
-  w3mFuncList[(int)map[c]].func();
+  struct Current current;
+  w3mFuncList[(int)map[c]].func(current);
 }
 
 void set_buffer_environ(struct Buffer *buf) {
@@ -189,13 +197,13 @@ void set_buffer_environ(struct Buffer *buf) {
 
 void mainloop() {
   for (;;) {
-    download_update();
+    download_update(makeCurrent());
     if (Currentbuf->document->submit) {
       struct Anchor *a = Currentbuf->document->submit;
       Currentbuf->document->submit = NULL;
       gotoLine(Currentbuf->document, a->start.line);
       Currentbuf->document->viewport.pos = a->start.pos;
-      auto buf = _followForm(Currentbuf->document, true);
+      auto buf = _followForm(Currentbuf->document, true, makeCurrent());
       pushBuffer(CurrentTab, buf);
       continue;
     }
@@ -204,7 +212,7 @@ void mainloop() {
       CurrentKey = -1;
       CurrentKeyData = NULL;
       CurrentCmdData = (char *)CurrentEvent->data;
-      w3mFuncList[CurrentEvent->cmd].func();
+      w3mFuncList[CurrentEvent->cmd].func(makeCurrent());
       CurrentCmdData = NULL;
       CurrentEvent = CurrentEvent->next;
       continue;

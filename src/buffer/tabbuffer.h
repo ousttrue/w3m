@@ -1,6 +1,7 @@
 #pragma once
 
 extern bool clear_buffer;
+extern bool close_tab_back;
 
 extern int nTab;
 extern int TabCols;
@@ -32,3 +33,5 @@ void pushBuffer(struct TabBuffer *tab, struct Buffer *buf);
 struct FormList;
 bool handleMailto(const char *url);
 void moveTab(struct TabBuffer *t, struct TabBuffer *t2, int right);
+void _backBf(struct TabBuffer *tab);
+void delBuffer(struct TabBuffer *tab, struct Buffer *buf);

@@ -44,12 +44,12 @@ struct HttpRequest;
 FILE *localcgi_request(struct HttpRequest *hr);
 extern Str loadLocalDir(const char *dirname);
 
-struct LocalCgiHtml {
+struct InternalAction {
   const char *arg;
   const char *value;
-  struct LocalCgiHtml *next;
+  struct InternalAction *next;
 };
 
-const char *tag_get_value(struct LocalCgiHtml *t, const char *arg);
-bool tag_exists(struct LocalCgiHtml *t, const char *arg);
-struct LocalCgiHtml *cgistr2tagarg(const char *cgistr);
+const char *tag_get_value(struct InternalAction *t, const char *arg);
+bool tag_exists(struct InternalAction *t, const char *arg);
+struct InternalAction *cgistr2tagarg(const char *cgistr);

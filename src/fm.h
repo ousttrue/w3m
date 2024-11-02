@@ -31,7 +31,7 @@
 #define init(x)
 #endif /* not MAINPROGRAM */
 
-#define DEFUN(funcname, macroname, docstring) void funcname(void)
+#define DEFUN(funcname, macroname, docstring) void funcname(struct Current current)
 
 global char TargetSelf init(false);
 global char PermitSaveToPipe init(false);
@@ -45,7 +45,6 @@ global char *MyProgramName init("w3m");
 #endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
 global int open_tab_blank init(false);
 global int open_tab_dl_list init(false);
-global int close_tab_back init(false);
 global int w3m_debug;
 global int confirm_on_quit init(true);
 global int emacs_like_lineedit init(false);

@@ -8,6 +8,7 @@
 #include "file/file.h"
 #include "file/tmpfile.h"
 #include "fm.h"
+#include "func.h"
 #include "html/html_tag.h"
 #include "html/map.h"
 #include "input/http_auth.h"
@@ -28,10 +29,9 @@
 extern Str *textarea_str;
 extern int max_textarea;
 
-/* *INDENT-OFF* */
 struct {
   char *action;
-  void (*rout)(struct LocalCgiHtml *);
+  void (*rout)(struct InternalAction *, struct Current current);
 } internal_action[] = {
     {"map", follow_map},
     {"option", panel_set_option},
@@ -40,7 +40,6 @@ struct {
     {"none", NULL},
     {NULL, NULL},
 };
-/* *INDENT-ON* */
 
 struct FormList *newFormList(const char *action, const char *method,
                              const char *charset, const char *enctype,
@@ -504,11 +503,11 @@ input_end:
   unlink(tmpf);
 }
 
-void do_internal(char *action, char *data) {
+void do_internal(const char *action, const char *data, struct Current current) {
   for (int i = 0; internal_action[i].action; i++) {
     if (strcasecmp(internal_action[i].action, action) == 0) {
       if (internal_action[i].rout)
-        internal_action[i].rout(cgistr2tagarg(data));
+        internal_action[i].rout(cgistr2tagarg(data), current);
       return;
     }
   }

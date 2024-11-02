@@ -693,7 +693,7 @@ struct Document *cookie_list_panel(int cols) {
   return renderHTML(cols, src->ptr, url, CHARSET_UTF8);
 }
 
-void set_cookie_flag(struct LocalCgiHtml *arg) {
+void set_cookie_flag(struct InternalAction *arg, struct Current current) {
   int n, v;
   struct cookie *p;
 
@@ -712,7 +712,8 @@ void set_cookie_flag(struct LocalCgiHtml *arg) {
     }
     arg = arg->next;
   }
-  backBf();
+
+  backBf(current);
 }
 
 int check_cookie_accept_domain(char *domain) {

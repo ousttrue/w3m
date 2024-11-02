@@ -1,4 +1,5 @@
 #pragma once
+#include "current.h"
 
 #define KEY_HASH_SIZE 127
 
@@ -9,8 +10,8 @@
 #define MULTI_KEY(c) (((c) >> 16) & 0x77F)
 
 typedef struct _FuncList {
-  char *id;
-  void (*func)();
+  const char *id;
+  void (*func)(struct Current);
 } FuncList;
 extern FuncList w3mFuncList[];
 
@@ -23,11 +24,11 @@ int getFuncList(const char *id);
 void setKeymap(const char *p, int lineno);
 int getKey(const char *s);
 
-void pcmap(void);
-void escmap(void);
-void escbmap(void);
+void pcmap(struct Current);
+void escmap(struct Current);
+void escbmap(struct Current);
 void escdmap(char c);
-void multimap(void);
+void multimap(struct Current);
 void initKeymap(int force);
 
 char *getKeyData(int key);

@@ -1,5 +1,6 @@
 #pragma once
 #include "text/Str.h"
+#include "current.h"
 
 struct MapArea {
   const char *url;
@@ -23,7 +24,8 @@ struct MapArea *newMapArea(const char *url, const char *target, const char *alt,
                            const char *shape, const char *coords);
 
 struct MapList *searchMapList(struct Document *doc, const char *name);
-struct LocalCgiHtml;
-extern void follow_map(struct LocalCgiHtml *arg);
+struct InternalAction;
+struct Current;
+extern void follow_map(struct InternalAction *arg, struct Current );
 extern struct Document *follow_map_panel(struct Buffer *buf, const char *name);
 extern struct Anchor *retrieveCurrentMap(struct Document *doc);

@@ -1,4 +1,5 @@
 #pragma once
+#include "current.h"
 #include "text/Str.h"
 
 enum FormItemType {
@@ -80,7 +81,7 @@ void formUpdateBuffer(struct Document *doc, struct Anchor *a,
 void preFormUpdateBuffer(struct Document *doc);
 Str textfieldrep(Str s, int width);
 void input_textarea(struct FormItemList *fi);
-void do_internal(char *action, char *data);
+void do_internal(const char *action, const char *data, struct Current current);
 void form_write_data(FILE *f, const char *boundary, const char *name,
                      const char *value);
 void form_write_from_file(FILE *f, const char *boundary, const char *name,

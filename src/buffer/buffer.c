@@ -566,7 +566,8 @@ static struct FormItemList *save_submit_formlist(struct FormItemList *src) {
 
   return ret;
 }
-struct Buffer *_followForm(struct Document *doc, bool submit) {
+
+struct Buffer *_followForm(struct Document *doc, bool submit, struct Current current) {
   if (doc->firstLine == NULL)
     return nullptr;
 
@@ -710,7 +711,7 @@ struct Buffer *_followForm(struct Document *doc, bool submit) {
                 (!Strcmp_charp(fi->parent->action, "map") ||
                  !Strcmp_charp(fi->parent->action, "none"))) ||
                doc->bufferprop & BP_INTERNAL) { /* internal */
-      do_internal(tmp2->ptr, tmp->ptr);
+      do_internal(tmp2->ptr, tmp->ptr, current);
     } else {
       message_push("Can't send form because of illegal method.");
     }

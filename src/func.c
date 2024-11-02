@@ -173,8 +173,8 @@ char *getKeyData(int key) {
   return (char *)getHash_iv(keyData, key, NULL);
 }
 
-static int getKey2(char **str) {
-  char *s = *str;
+static int getKey2(const char **str) {
+  auto s = *str;
   int c, esc = 0, ctrl = 0;
 
   if (s == NULL || *s == '\0')
@@ -301,18 +301,18 @@ static int getKey2(char **str) {
 }
 
 int getKey(const char *s) {
-  int c, c2;
-
-  c = getKey2(&s);
+  int c = getKey2(&s);
   if (c < 0)
     return -1;
   if (*s == ' ' || *s == '-')
     s++;
   if (*s) {
-    c2 = getKey2(&s);
+    int c2 = getKey2(&s);
     if (c2 < 0)
       return -1;
     c = K_MULTI | (c << 16) | c2;
   }
   return c;
 }
+
+void pcmap(struct Current) {}

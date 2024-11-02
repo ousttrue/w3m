@@ -942,8 +942,7 @@ struct Document *load_option_panel() {
   return renderHTML(INIT_BUFFER_WIDTH, src->ptr, url, CHARSET_UTF8);
 }
 
-void panel_set_option(struct LocalCgiHtml *arg) {
-
+void panel_set_option(struct InternalAction *arg, struct Current current) {
   FILE *f = NULL;
   if (config_file == NULL) {
     message_push("There's no config file... config not saved");
@@ -956,7 +955,6 @@ void panel_set_option(struct LocalCgiHtml *arg) {
 
   Str s = Strnew();
   while (arg) {
-    /*  InnerCharset -> SystemCharset */
     if (arg->value) {
       auto p = arg->value;
       if (set_param(arg->arg, p)) {
@@ -972,7 +970,7 @@ void panel_set_option(struct LocalCgiHtml *arg) {
     fclose(f);
   }
   sync_with_option();
-  backBf();
+  backBf(current);
 }
 
 const char *rcFile(const char *base) {

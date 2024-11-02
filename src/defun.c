@@ -58,7 +58,6 @@ static int display_ok = false;
 int on_target = 1;
 
 struct TabBuffer;
-static void followTab(struct TabBuffer *tab);
 static void _nextA(int);
 static void _prevA(int);
 static int check_target = true;
@@ -69,8 +68,6 @@ static int cmp_anchor_hseq(const void *a, const void *b) {
 }
 
 DEFUN(nulcmd, NOTHING NULL @ @ @, "Do nothing") { /* do nothing */ }
-
-void pcmap(void) {}
 
 DEFUN(escmap, ESCMAP, "ESC map") {
   char c = tty_getch();
@@ -109,16 +106,6 @@ void saveBufferInfo() {
     fprintf(fp, "%s\n", currentURL()->ptr);
     fclose(fp);
   }
-}
-
-void delBuffer(struct Buffer *buf) {
-  if (buf == NULL)
-    return;
-  if (Currentbuf == buf)
-    Currentbuf = buf->nextBuffer;
-  Firstbuf = deleteBuffer(Firstbuf, buf);
-  if (!Currentbuf)
-    Currentbuf = Firstbuf;
 }
 
 static void repBuffer(struct Buffer *oldbuf, struct Buffer *buf) {
@@ -679,18 +666,20 @@ DEFUN(selBuf, SELECT, "Display buffer-stack panel") {
       ok = true;
       break;
     case 'D':
-      delBuffer(buf);
+      delBuffer(CurrentTab, buf);
       if (Firstbuf == NULL) {
         /* No more buffer */
         Firstbuf = nullBuffer();
         Currentbuf = Firstbuf;
       }
       break;
+
     case 'q':
-      qquitfm();
+      _quitfm(true);
       break;
+
     case 'Q':
-      quitfm();
+      _quitfm(false);
       break;
     }
   } while (!ok);
@@ -803,7 +792,7 @@ DEFUN(editBf, EDIT, "Edit local source") {
   system(cmd);
   term_fmInit();
 
-  reload();
+  reload(current);
 }
 
 /* Run editor on the current screen */
@@ -856,18 +845,18 @@ static void gotoLabel(const char *label) {
   return;
 }
 
-struct Buffer *_followA() {
+struct Buffer *_followA(struct Current current) {
   if (Currentbuf->document->firstLine == NULL)
     return nullptr;
 
   auto a = retrieveCurrentMap(Currentbuf->document);
   if (a) {
-    return _followForm(Currentbuf->document, false);
+    return _followForm(Currentbuf->document, false, current);
   }
 
   a = retrieveCurrentAnchor(Currentbuf->document);
   if (a == NULL) {
-    return _followForm(Currentbuf->document, false);
+    return _followForm(Currentbuf->document, false, current);
   }
 
   if (*a->url == '#') { /* index within this buffer */
@@ -899,14 +888,14 @@ struct Buffer *_followA() {
 
 /* follow HREF link */
 DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer") {
-  auto buf = _followA();
+  auto buf = _followA(current);
   pushBuffer(CurrentTab, buf);
 }
 
 /* follow HREF link in the buffer */
-void bufferA(void) {
+void bufferA(struct Current current) {
   on_target = false;
-  followA();
+  followA(current);
   on_target = true;
 }
 
@@ -934,13 +923,13 @@ DEFUN(followI, VIEW_IMAGE, "Display image in viewer") {
 
 /* submit form */
 DEFUN(submitForm, SUBMIT, "Submit form") {
-  auto buf = _followForm(Currentbuf->document, true);
+  auto buf = _followForm(Currentbuf->document, true, current);
   pushBuffer(CurrentTab, buf);
 }
 
 /* process form */
-void followForm(void) {
-  auto buf = _followForm(Currentbuf->document, false);
+void followForm(struct Current current) {
+  auto buf = _followForm(Currentbuf->document, false, current);
   pushBuffer(CurrentTab, buf);
 }
 
@@ -1340,32 +1329,19 @@ DEFUN(prevBf, PREV, "Switch to the previous buffer") {
   }
 }
 
-static int checkBackBuffer(struct Buffer *buf) {
-  if (buf->nextBuffer)
-    return true;
-
-  return false;
-}
-
 /* delete current buffer and back to the previous buffer */
 DEFUN(backBf, BACK,
       "Close current buffer and return to the one below in stack") {
-  if (!checkBackBuffer(Currentbuf)) {
-    if (close_tab_back && nTab >= 1) {
-      deleteTab(CurrentTab);
-    } else
-      message_push("Can't go back...");
-    return;
-  }
-
-  delBuffer(Currentbuf);
+  _backBf(CurrentTab);
 }
 
 DEFUN(deletePrevBuf, DELETE_PREVBUF,
       "Delete previous buffer (mainly for local CGI-scripts)") {
+  // nextBuffer が history prev であることに注意！
   struct Buffer *buf = Currentbuf->nextBuffer;
-  if (buf)
-    delBuffer(buf);
+  if (buf) {
+    delBuffer(CurrentTab, buf);
+  }
 }
 
 /* go to specified URL */
@@ -1549,13 +1525,13 @@ DEFUN(pginfo, INFO, "Display information about the current document") {
 
   buf = Currentbuf->linkBuffer[LB_INFO];
   if (buf) {
-    delBuffer(buf);
+    delBuffer(CurrentTab, buf);
   }
   auto doc = page_info_panel(Currentbuf);
   cmd_loadDocument(doc, BP_NORMAL, LB_INFO);
 }
 
-void follow_map(struct LocalCgiHtml *arg) {
+void follow_map(struct InternalAction *arg, struct Current) {
   auto name = tag_get_value(arg, "link");
 
 #if defined(MENU_MAP) || defined(USE_IMAGE)
@@ -1825,7 +1801,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
 DEFUN(reload, RELOAD, "Load current document anew") {
   if (Currentbuf->document->bufferprop & BP_INTERNAL) {
     if (!strcmp(Currentbuf->buffername, DOWNLOAD_LIST_TITLE)) {
-      ldDL();
+      ldDL(current);
       return;
     }
     message_push("Can't reload...");
@@ -2210,24 +2186,22 @@ DEFUN(prevT, PREV_TAB, "Switch to the previous tab") {
   }
 }
 
-static void followTab(struct TabBuffer *tab) {
-  auto a = retrieveCurrentAnchor(Currentbuf->document);
-  if (a == NULL)
-    return;
-
-  if (tab == CurrentTab) {
-    check_target = false;
-    followA();
-    check_target = true;
-    return;
-  }
-
-  auto buf = _followA();
-  _newT(buf);
-}
-
 DEFUN(tabA, TAB_LINK, "Follow current hyperlink in a new tab") {
   // followTab(prec_num ? numTab(PREC_NUM) : NULL);
+  // auto a = retrieveCurrentAnchor(Currentbuf->document);
+  // if (a == NULL)
+  //   return;
+  //
+  // if (tab == CurrentTab) {
+  //   check_target = false;
+  //   auto buf = _followA();
+  //   pushBuffer(tab, buf);
+  //   check_target = true;
+  //   return;
+  // }
+  //
+  // auto buf = _followA();
+  // _newT(buf);
 }
 
 static void tabURL0(struct TabBuffer *tab, char *prompt, int relative) {

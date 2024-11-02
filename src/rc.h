@@ -1,4 +1,5 @@
 #pragma once
+#include "current.h"
 
 #define CGI_EXTENSION ".cgi"
 
@@ -21,8 +22,8 @@ bool str_to_bool(const char *value, bool old);
 
 void init_rc(void);
 struct Document *load_option_panel(void);
-struct LocalCgiHtml;
-void panel_set_option(struct LocalCgiHtml *);
+struct InternalAction;
+void panel_set_option(struct InternalAction *, struct Current);
 void sync_with_option(void);
 struct Url;
 const char *rcFile(const char *base);

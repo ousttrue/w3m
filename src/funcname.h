@@ -1,4 +1,3 @@
-#include "func.h"
 #include "proto.h"
 
 FuncList w3mFuncList[] = {
