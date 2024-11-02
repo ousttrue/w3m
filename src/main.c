@@ -367,48 +367,45 @@ int main(int argc, char **argv) {
   // }
 
   struct FormList *form = nullptr;
-  auto newbuf =
+  auto doc =
       loadGeneralFile(INIT_BUFFER_WIDTH, url, NULL, NO_REFERER, 0, form);
 
-  if (newbuf == NULL) {
+  if (doc == NULL) {
     /* FIXME: gettextize? */
     Strcat(err_msg, Sprintf("w3m: Can't load %s.\n", url));
     return 1;
-  } else if (newbuf == NO_BUFFER) {
-    return 1;
-  }
+  } 
+  // else if (newbuf == NO_BUFFER) {
+  //   return 1;
+  // }
 
-  switch (newbuf->document->real_scheme) {
+  switch (doc->real_scheme) {
   case SCM_MAILTO:
     break;
   case SCM_LOCAL:
   case SCM_LOCAL_CGI:
     unshiftHist(LoadHist, url);
   default:
-    pushHashHist(URLHist, parsedURL2Str(&newbuf->document->url)->ptr);
+    pushHashHist(URLHist, parsedURL2Str(&doc->url)->ptr);
     break;
   }
 
-  if (newbuf == NO_BUFFER)
-    return 1;
-
-  tabInitialize(newbuf);
-  Currentbuf = newbuf;
+  tabInitialize(doc);
   saveBufferInfo();
   CurrentTab = FirstTab;
 
   if (!FirstTab || !Firstbuf || Firstbuf == NO_BUFFER) {
-    if (newbuf == NO_BUFFER) {
-      term_input("Hit any key to quit w3m:");
-    }
+    // if (newbuf == NO_BUFFER) {
+    //   term_input("Hit any key to quit w3m:");
+    // }
     term_fmTerm();
     if (err_msg->length)
       fprintf(stderr, "%s", err_msg->ptr);
-    if (newbuf == NO_BUFFER) {
-      save_cookies();
-      if (!err_msg->length)
-        w3m_exit(0);
-    }
+    // if (newbuf == NO_BUFFER) {
+    //   save_cookies();
+    //   if (!err_msg->length)
+    //     w3m_exit(0);
+    // }
     w3m_exit(2);
   }
 

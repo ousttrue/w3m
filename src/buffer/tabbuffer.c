@@ -23,14 +23,16 @@ struct TabBuffer *newTab(void) {
   return n;
 }
 
-void tabInitialize(struct Buffer *newbuf) {
+void tabInitialize(struct Document *doc) {
+  auto buf = newBuffer();
+  buf->document = doc;
   if (!CurrentTab) {
     FirstTab = LastTab = CurrentTab = newTab();
     nTab = 1;
-    Firstbuf = Currentbuf = newbuf;
+    Firstbuf = Currentbuf = buf;
   } else {
-    Currentbuf->nextBuffer = newbuf;
-    Currentbuf = newbuf;
+    Currentbuf->nextBuffer = buf;
+    Currentbuf = buf;
   }
 }
 

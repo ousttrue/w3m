@@ -64,7 +64,7 @@ static struct Document *get_document(int cols,
   return document;
 }
 
-struct Buffer *loadGeneralFile(int cols, const char *path, struct Url *current,
+struct Document *loadGeneralFile(int cols, const char *path, struct Url *current,
                                const char *referer, bool no_cahce,
                                struct FormList *form) {
   clearRedirection();
@@ -79,12 +79,12 @@ struct Buffer *loadGeneralFile(int cols, const char *path, struct Url *current,
     if (S_ISDIR(st.st_mode)) {
       if (UseExternalDirBuffer) {
         Str cmd = Sprintf("%s?dir=%s#current", DirBufferCommand, url.file);
-        auto b = loadGeneralFile(cols, cmd->ptr, NULL, NO_REFERER, 0, NULL);
-        if (b != NULL && b != NO_BUFFER) {
-          copyParsedURL(&b->document->url, &url);
-          b->document->filename = b->document->url.real_file;
-        }
-        return b;
+        return loadGeneralFile(cols, cmd->ptr, NULL, NO_REFERER, 0, NULL);
+        // if (b != NULL && b != NO_BUFFER) {
+        //   copyParsedURL(&b->document->url, &url);
+        //   b->document->filename = b->document->url.real_file;
+        // }
+        // return b;
       } else {
         auto page = loadLocalDir(url.real_file);
         auto t = "local:directory";
@@ -220,7 +220,7 @@ struct Buffer *loadGeneralFile(int cols, const char *path, struct Url *current,
     copyParsedURL(&b->document->url, &res->request->url);
     b->document->filename = url.real_file ? url.real_file : url.file;
 
-    return b;
+    return b->document;
   }
   }
 }

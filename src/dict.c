@@ -13,7 +13,7 @@ bool UseDictCommand = true;
 const char *DictCommand = "file:///$LIB/w3mdict" CGI_EXTENSION;
 #define DICTBUFFERNAME "*dictionary*"
 
-struct Buffer *execdict(const char *word) {
+struct Document *execdict(const char *word) {
   if (!UseDictCommand || !word || *word == '\0') {
     return nullptr;
   }
@@ -25,18 +25,19 @@ struct Buffer *execdict(const char *word) {
 
   auto dictcmd =
       Sprintf("%s?%s", DictCommand, Str_form_quote(Strnew_charp(w))->ptr)->ptr;
-  auto buf =
+  auto doc =
       loadGeneralFile(INIT_BUFFER_WIDTH, dictcmd, NULL, NO_REFERER, 0, NULL);
-  if (buf == NULL) {
+  if (doc == NULL) {
     message_push("Execution failed");
     return nullptr;
-  } else if (buf == NO_BUFFER) {
-    return nullptr;
-  }
+  } 
+  // else if (buf == NO_BUFFER) {
+  //   return nullptr;
+  // }
 
-  buf->document->filename = w;
-  buf->buffername = Sprintf("%s %s", DICTBUFFERNAME, word)->ptr;
-  if (buf->document->type == NULL)
-    buf->document->type = "text/plain";
-  return buf;
+  doc->filename = w;
+  // buf->buffername = Sprintf("%s %s", DICTBUFFERNAME, word)->ptr;
+  if (doc->type == NULL)
+    doc->type = "text/plain";
+  return doc;
 }

@@ -25,7 +25,8 @@ extern struct TabBuffer *CurrentTab;
 extern struct TabBuffer *FirstTab;
 extern struct TabBuffer *LastTab;
 
-void tabInitialize(struct Buffer *newbuf);
+struct Document;
+void tabInitialize(struct Document *doc);
 void _newT(struct Buffer *buf);
 struct TabBuffer *numTab(int n);
 void calcTabPos();
