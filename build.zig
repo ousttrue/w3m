@@ -81,7 +81,7 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
         .name = "w3m",
         .link_libc = true,
-        // .root_source_file = b.path("main.zig"),
+        .root_source_file = b.path("src/main.zig"),
     });
     const lib = b.addStaticLibrary(.{
         .target = target,

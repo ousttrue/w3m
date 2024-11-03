@@ -161,7 +161,7 @@ static MySignalHandler SigPipe(SIGNAL_ARG) { mySignal(SIGPIPE, SigPipe); }
 WSADATA wsaData;
 #endif
 
-int main(int argc, char **argv) {
+int main2(int argc, char **argv) {
   if (argc < 2) {
     return 1;
   }
