@@ -2,6 +2,7 @@
 
 extern bool IgnoreCase;
 extern bool WrapSearch;
+extern bool WrapDefault;
 extern bool show_srch_str;
 
 enum SearchResult {

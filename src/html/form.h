@@ -1,7 +1,11 @@
 #pragma once
 #include "current.h"
-#include "text/Str.h"
 #include "input/url.h"
+#include "text/Str.h"
+
+extern bool FoldTextarea;
+extern const char *pre_form_file;
+extern const char *Editor;
 
 enum FormItemType {
   FORM_UNKNOWN = -1,

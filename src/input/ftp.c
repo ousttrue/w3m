@@ -1,7 +1,6 @@
 #include "input/ftp.h"
 #include "alloc.h"
 #include "file/file.h"
-#include "fm.h"
 #include "html/html_text.h"
 #include "input/http_auth.h"
 #include "input/isocket.h"
@@ -22,6 +21,9 @@
 #ifdef DEBUG
 #include <malloc.h>
 #endif /* DEBUG */
+
+const char *ftppasswd = nullptr;
+bool ftppass_hostnamegen = true;
 
 #define HAVE_SOCKLEN_T 1
 
@@ -363,7 +365,7 @@ union input_stream *openFTPStream(struct Url *pu) {
     pwd = NULL;
     find_auth_user_passwd(pu, NULL, &uname, &pwd, 0);
     if (pwd == NULL) {
-      pwd = term_inputpwd();
+      // pwd = term_inputpwd();
       add_auth_cookie_flag = true;
     }
     pass = pwd->ptr;

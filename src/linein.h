@@ -2,7 +2,8 @@
 #include "buffer/line.h"
 #include "text/Str.h"
 
-struct Hist;
+extern bool space_autocomplete;
+extern bool emacs_like_lineedit;
 
 struct Document;
 typedef int (*IncFunc)(struct Document *doc, int ch, Str buf, Lineprop *prop);
@@ -17,6 +18,7 @@ enum InputlineFlags {
   IN_CHAR = 0x200,
 };
 
+struct Hist;
 const char *inputLineHistSearch(struct Document *doc, const char *prompt,
                                 const char *def_str, enum InputlineFlags flag,
                                 struct Hist *hist, IncFunc incfunc);

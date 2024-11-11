@@ -5,6 +5,10 @@
 #include <stdlib.h>
 #include <unwind.h>
 
+const char *personal_document_root = nullptr;
+bool PreserveTimestamp = true;
+bool PermitSaveToPipe = false;
+
 void myExec(char *command) {
   signal_int_default();
   execl("/bin/sh", "sh", "-c", command, NULL);

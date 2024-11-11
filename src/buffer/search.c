@@ -9,7 +9,6 @@
 #include "html/anchor.h"
 #include "linein.h"
 #include "term/scr.h"
-#include "term/terms.h"
 #include "term/tty.h"
 #include "text/regex.h"
 #include "trap_jmp.h"
@@ -18,6 +17,8 @@
 static const char *SearchString = NULL;
 SearchRoutine searchRoutine = nullptr;
 bool IgnoreCase = true;
+
+bool WrapDefault =false;
 bool WrapSearch = false;
 bool show_srch_str = true;
 

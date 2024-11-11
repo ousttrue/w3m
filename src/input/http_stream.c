@@ -25,6 +25,7 @@
 #include <sys/socket.h>
 #endif
 
+bool ArgvIsURL = true;
 bool LocalhostOnly = false;
 const char *index_file = nullptr;
 const char *document_root = nullptr;

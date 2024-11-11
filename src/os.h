@@ -10,6 +10,10 @@ typedef long long pid_t;
 #include <unistd.h>
 #endif
 
+extern const char *personal_document_root;
+extern bool PreserveTimestamp;
+extern bool PermitSaveToPipe;
+
 struct Buffer;
 struct URLFile;
 

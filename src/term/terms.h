@@ -1,7 +1,8 @@
 #pragma once
-#include "text/Str.h"
 #include <stdbool.h>
 #include <stdint.h>
+
+extern const char *displayTitleTerm;
 
 enum GraphicCharType {
   GRAPHIC_CHAR_ASCII = 2,
@@ -24,8 +25,6 @@ void term_title(const char *s);
 void term_bell();
 void term_refresh();
 void term_message(const char *msg);
-Str term_inputpwd();
-void term_input(const char *msg);
 const char *term_inputAnswer(const char *prompt);
 void term_showProgress(int64_t *linelen, int64_t *trbyte,
                        int64_t current_content_length);

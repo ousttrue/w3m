@@ -3,6 +3,7 @@
 extern bool LocalhostOnly;
 extern const char *index_file;
 extern const char *document_root;
+extern bool ArgvIsURL;
 
 struct FormList;
 struct TextList;

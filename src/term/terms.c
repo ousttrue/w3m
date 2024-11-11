@@ -27,8 +27,7 @@
 #include <unistd.h>
 #endif
 
-#include "fm.h"
-
+const char *displayTitleTerm = nullptr;
 enum GraphicCharType UseGraphicChar = GRAPHIC_CHAR_CHARSET;
 
 bool QuietMessage = false;
@@ -361,26 +360,26 @@ void term_message(const char *msg) {
   }
 }
 
-Str term_inputpwd() {
-  Str pwd = nullptr;
-  if (fmInitialized) {
-    tty_raw();
-    pwd = Strnew_charp(inputLine(nullptr, "Password: ", NULL, IN_PASSWORD));
-    tty_cbreak();
-  }
-#ifndef _WIN32
-  else {
-    pwd = Strnew_charp((char *)getpass("Password: "));
-  }
-#endif
-  return pwd;
-}
+// Str term_inputpwd() {
+//   Str pwd = nullptr;
+//   if (fmInitialized) {
+//     tty_raw();
+//     pwd = Strnew_charp(inputLine(nullptr, "Password: ", NULL, IN_PASSWORD));
+//     tty_cbreak();
+//   }
+// #ifndef _WIN32
+//   else {
+//     pwd = Strnew_charp((char *)getpass("Password: "));
+//   }
+// #endif
+//   return pwd;
+// }
 
-void term_input(const char *msg) {
-  if (fmInitialized) {
-    inputChar(nullptr, msg);
-  }
-}
+// void term_input(const char *msg) {
+//   if (fmInitialized) {
+//     inputChar(nullptr, msg);
+//   }
+// }
 
 const char *term_inputAnswer(const char *prompt) {
 

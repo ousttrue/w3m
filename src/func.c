@@ -5,13 +5,10 @@
 #include "alloc.h"
 #include "buffer/message.h"
 #include "core.h"
-#include "fm.h"
 #include "funcname.h"
 #include "functable.h"
-#include "history.h"
 #include "proto.h"
 #include "rc.h"
-#include "term/terms.h"
 #include "text/ctrlcode.h"
 #include "text/myctype.h"
 #include "text/regex.h"
@@ -25,6 +22,9 @@ static Hash_iv *keyData = NULL;
 static char keymap_initialized = false;
 static struct stat sys_current_keymap_file;
 static struct stat current_keymap_file;
+
+#define KEYMAP_FILE "keymap"
+const char *keymap_file = KEYMAP_FILE;
 
 void setKeymap(const char *p, int lineno) {
   unsigned char *map = NULL;

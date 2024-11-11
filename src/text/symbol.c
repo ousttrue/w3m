@@ -1,5 +1,4 @@
 #include "symbol.h"
-#include "fm.h"
 #include "ctrlcode.h"
 #include "symbols/alt.sym"
 #include "symbols/graph.sym"

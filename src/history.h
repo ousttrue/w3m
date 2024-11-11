@@ -2,6 +2,10 @@
 #include "hash.h"
 #include "text/textlist.h"
 
+extern bool UseHistory;
+extern int URLHistSize;
+extern bool SaveURLHist;
+
 typedef struct ListItem HistItem;
 typedef struct GeneralList HistList;
 struct Hist {

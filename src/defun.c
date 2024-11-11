@@ -1,6 +1,7 @@
 #define MAINPROGRAM
 #include "defun.h"
 #include "alloc.h"
+#include "bookmark.h"
 #include "buffer/buffer.h"
 #include "buffer/bufferlist.h"
 #include "buffer/display.h"
@@ -15,7 +16,6 @@
 #include "file/file.h"
 #include "file/shell.h"
 #include "file/tmpfile.h"
-#include "fm.h"
 #include "func.h"
 #include "funcname1.h"
 #include "history.h"
@@ -47,6 +47,8 @@
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
+
+bool confirm_on_quit = true;
 
 DEFUN(nulcmd, NOTHING NULL @ @ @, "Do nothing") { /* do nothing */ }
 

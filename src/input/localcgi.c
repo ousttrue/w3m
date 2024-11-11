@@ -3,7 +3,6 @@
 #include "core.h"
 #include "file/file.h"
 #include "file/tmpfile.h"
-#include "fm.h"
 #include "html/form.h"
 #include "html/html_text.h"
 #include "input/http.h"
@@ -23,6 +22,8 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
+
+const char *cgi_bin = nullptr;
 
 static char *Local_cookie_file = NULL;
 static Str Local_cookie = NULL;
@@ -151,7 +152,7 @@ Str loadLocalDir(const char *dname) {
     // if (multicolList) {
     //   if (n == 1)
     //     Strcat_charp(tmp, "<TD><NOBR>");
-    // } else 
+    // } else
     {
 #ifndef _WIN32
       if (S_ISLNK(lst.st_mode))
@@ -177,7 +178,7 @@ Str loadLocalDir(const char *dname) {
     //   } else {
     //     Strcat_charp(tmp, "<BR>\n");
     //   }
-    // } else 
+    // } else
     {
 #ifndef _WIN32
       if (S_ISLNK(lst.st_mode)) {

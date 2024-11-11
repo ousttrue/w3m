@@ -1,8 +1,8 @@
 #include "trap_jmp.h"
 #include "term/terms.h"
+#include <fcntl.h>
 #include <setjmp.h>
 #include <signal.h>
-#include <fcntl.h>
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -49,10 +49,10 @@ static MySignalHandler error_dump(SIGNAL_ARG) {
 // }
 
 static MySignalHandler resize_hook(SIGNAL_ARG) {
-//   need_resize_screen = true;
-// #ifndef _WIN32
-//   mySignal(SIGWINCH, resize_hook);
-// #endif
+  //   need_resize_screen = true;
+  // #ifndef _WIN32
+  //   mySignal(SIGWINCH, resize_hook);
+  // #endif
 }
 
 // static MySignalHandler SigAlarm(SIGNAL_ARG);
@@ -168,6 +168,7 @@ void trap_off() { TRAP_OFF; }
 #endif
 
 static void close_all_fds_except(int i, int f) {
+#ifndef _WIN32
   switch (i) { /* fall through */
   case 0:
     dup2(open(DEV_NULL_PATH, O_RDONLY), 0);
@@ -181,6 +182,7 @@ static void close_all_fds_except(int i, int f) {
     if (i != f)
       close(i);
   }
+#endif
 }
 
 void setup_child(int child, int i, int f) {

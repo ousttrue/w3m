@@ -1,9 +1,7 @@
 #include "linein.h"
 #include "alloc.h"
-#include "buffer/display.h"
 #include "core.h"
 #include "file/file.h"
-#include "fm.h"
 #include "history.h"
 #include "html/form.h"
 #include "input/localcgi.h"
@@ -31,6 +29,9 @@
 
 #define STR_LEN 1024
 #define CLEN (COLS - 2)
+
+bool space_autocomplete = false;
+bool emacs_like_lineedit = false;
 
 static Str strBuf;
 static Lineprop strProp[STR_LEN];

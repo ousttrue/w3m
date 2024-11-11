@@ -3,8 +3,8 @@
 #define NBSP " "
 #define UseAltEntity 1
 #undef USE_M17N
-#else /* DUMMY */
-#include "fm.h"
+#else  /* DUMMY */
+bool UseAltEntity = false;
 #endif /* DUMMY */
 #include "ctrlcode.h"
 

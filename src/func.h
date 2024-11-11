@@ -1,6 +1,8 @@
 #pragma once
 #include "current.h"
 
+extern const char *keymap_file;
+
 #define KEY_HASH_SIZE 127
 
 #define K_ESC 0x100

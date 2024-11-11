@@ -1,15 +1,17 @@
 #include "alloc.h"
+#include "bookmark.h"
 #include "buffer/buffer.h"
 #include "buffer/document.h"
 #include "buffer/message.h"
 #include "buffer/tabbuffer.h"
 #include "core.h"
 #include "defun.h"
-#include "fm.h"
 #include "history.h"
+#include "html/form.h"
 #include "input/content.h"
 #include "input/http.h"
 #include "input/http_cookie.h"
+#include "input/http_stream.h"
 #include "input/loader.h"
 #include "input/localcgi.h"
 #include "input/proxy.h"
@@ -213,9 +215,6 @@ int main2(int argc, char **argv) {
   // char **load_argv = New_N(char *, argc - 1);
   // int load_argc = 0;
 
-  BookmarkFile = NULL;
-  config_file = NULL;
-
   {
     char hostname[HOST_NAME_MAX + 2];
     if (gethostname(hostname, HOST_NAME_MAX + 2) == 0) {
@@ -259,15 +258,15 @@ int main2(int argc, char **argv) {
 
   if (!non_null(Editor) && (p = getenv("EDITOR")) != NULL)
     Editor = p;
-  if (!non_null(Mailer) && (p = getenv("MAILER")) != NULL)
-    Mailer = p;
+  // if (!non_null(Mailer) && (p = getenv("MAILER")) != NULL)
+  //   Mailer = p;
 
   FirstTab = NULL;
   LastTab = NULL;
   nTab = 0;
   CurrentTab = NULL;
-  if (BookmarkFile == NULL)
-    BookmarkFile = rcFile(BOOKMARK);
+
+  init_bookmark();
 
   term_fmInit();
 #ifndef _WIN32

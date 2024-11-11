@@ -1,5 +1,6 @@
 pub const SRCS = [_][]const u8{
     "src/main.c",
+    "src/bookmark.c",
     "src/mainloop.c",
     "src/keybind.c",
     "src/dict.c",

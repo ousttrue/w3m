@@ -2,12 +2,11 @@
 #include "alloc.h"
 #include "buffer/message.h"
 #include "file/tmpfile.h"
-#include "fm.h"
-#include "html/html_readbuffer.h"
 #include "html/html_text.h"
 #include "input/url.h"
 #include "rc.h"
 
+#define HISTORY_FILE "history"
 #define HIST_LIST_MAX GENERAL_LIST_MAX
 #define HIST_HASH_SIZE 127
 
@@ -16,6 +15,10 @@ struct Hist *SaveHist;
 struct Hist *URLHist;
 struct Hist *ShellHist;
 struct Hist *TextHist;
+
+bool UseHistory = true;
+int URLHistSize = 100;
+bool SaveURLHist = true;
 
 Str historyDocument(struct Hist *hist) {
   Str src = Strnew();

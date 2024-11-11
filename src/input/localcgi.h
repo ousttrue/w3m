@@ -3,6 +3,8 @@
 
 #define CGI_EXTENSION ".cgi"
 
+extern const char *cgi_bin;
+
 // #define HAVE_DIRENT_H 1
 #include <sys/types.h>
 #ifdef _WIN32

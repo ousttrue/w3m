@@ -11,15 +11,17 @@
 #include "buffer/tabbuffer.h"
 #include "buffer/w3mhelperpanel.h"
 #include "core.h"
+#include "defun.h"
 #include "dict.h"
 #include "file/tmpfile.h"
-#include "fm.h"
 #include "func.h"
+#include "history.h"
 #include "html/form.h"
 #include "html/html_readbuffer.h"
 #include "html/html_renderer.h"
 #include "html/html_text.h"
 #include "input/ext_mime.h"
+#include "input/ftp.h"
 #include "input/http_auth.h"
 #include "input/http_cookie.h"
 #include "input/http_stream.h"
@@ -29,10 +31,13 @@
 #include "input/localcgi.h"
 #include "input/proxy.h"
 #include "input/url.h"
+#include "linein.h"
 #include "mainloop.h"
+#include "os.h"
 #include "proto.h"
 #include "siteconf.h"
 #include "term/terms.h"
+#include "text/entity.h"
 #include "text/myctype.h"
 #include "text/regex.h"
 #include "text/text.h"
@@ -46,12 +51,26 @@
 bool no_rc_dir = false;
 const char *rc_dir = nullptr;
 
+const char *config_file = nullptr;
+
 int MailtoOptions = MAILTO_OPTIONS_IGNORE;
 
 int DefaultURLString = DEFAULT_URL_CURRENT;
 
 #define W3MCONFIG "w3mconfig"
 #define CONFIG_FILE "config"
+
+#define USE_IMAGE 1
+#define MENU_FILE "menu"
+#define MOUSE_FILE "mouse"
+#define USER_MAILCAP RC_DIR "/mailcap"
+#define SYS_MAILCAP CONF_DIR "/mailcap"
+#define USER_URIMETHODMAP RC_DIR "/urimethodmap"
+#define SYS_URIMETHODMAP CONF_DIR "/urimethodmap"
+#define DEF_MAILER "/usr/bin/mail"
+#define DEF_EXT_BROWSER "/usr/bin/firefox"
+#define DEF_IMAGE_VIEWER "display"
+#define DEF_AUDIO_PLAYER "showaudio"
 
 enum ParamType {
   P_INT = 0,
@@ -296,6 +315,15 @@ static struct sel_c graphic_char_str[] = {
     {N_S(GRAPHIC_CHAR_DEC), N_("DEC special graphics")},
     {0, NULL, NULL}};
 
+// global char TargetSelf init(false);
+// global char DecodeCTE init(false);
+// #if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
+// global char *MyProgramName init("w3m");
+// #endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
+// global int open_tab_dl_list init(false);
+// global int displayImage init(false); /* XXX: emacs-w3m use display_image=off
+// */
+
 struct param_ptr params1[] = {
     {"tabstop", P_NZINT, PI_TEXT, (void *)&Tabstop, CMT_TABSTOP, NULL},
     {"indent_incr", P_NZINT, PI_TEXT, (void *)&IndentIncr, CMT_INDENT_INCR,
@@ -303,11 +331,12 @@ struct param_ptr params1[] = {
     {"pixel_per_char", P_PIXELS, PI_TEXT, (void *)&pixel_per_char,
      CMT_PIXEL_PER_CHAR, NULL},
     // {"frame", P_CHARINT, PI_ONOFF, (void *)&RenderFrame, CMT_FRAME, NULL},
-    {"target_self", P_CHARINT, PI_ONOFF, (void *)&TargetSelf, CMT_TSELF, NULL},
+    // {"target_self", P_CHARINT, PI_ONOFF, (void *)&TargetSelf, CMT_TSELF,
+    // NULL},
     {"open_tab_blank", P_INT, PI_ONOFF, (void *)&open_tab_blank,
      CMT_OPEN_TAB_BLANK, NULL},
-    {"open_tab_dl_list", P_INT, PI_ONOFF, (void *)&open_tab_dl_list,
-     CMT_OPEN_TAB_DL_LIST, NULL},
+    // {"open_tab_dl_list", P_INT, PI_ONOFF, (void *)&open_tab_dl_list,
+    // CMT_OPEN_TAB_DL_LIST, NULL},
     {"display_link", P_INT, PI_ONOFF, (void *)&displayLink, CMT_DISPLINK, NULL},
     {"display_link_number", P_INT, PI_ONOFF, (void *)&displayLinkNumber,
      CMT_DISPLINKNUMBER, NULL},
@@ -340,8 +369,8 @@ struct param_ptr params1[] = {
     {"view_unseenobject", P_INT, PI_ONOFF, (void *)&view_unseenobject,
      CMT_VIEW_UNSEENOBJECTS, NULL},
     /* XXX: emacs-w3m force to off display_image even if image options off */
-    {"display_image", P_INT, PI_ONOFF, (void *)&displayImage, CMT_DISP_IMAGE,
-     NULL},
+    // {"display_image", P_INT, PI_ONOFF, (void *)&displayImage, CMT_DISP_IMAGE,
+    // NULL},
     {"pseudo_inlines", P_INT, PI_ONOFF, (void *)&pseudoInlines,
      CMT_PSEUDO_INLINES, NULL},
     {"fold_line", P_INT, PI_ONOFF, (void *)&FoldLine, CMT_FOLD_LINE, NULL},
@@ -376,8 +405,8 @@ struct param_ptr params3[] = {
      NULL},
     {"clear_buffer", P_INT, PI_ONOFF, (void *)&clear_buffer, CMT_CLEAR_BUF,
      NULL},
-    {"decode_cte", P_CHARINT, PI_ONOFF, (void *)&DecodeCTE, CMT_DECODE_CTE,
-     NULL},
+    // {"decode_cte", P_CHARINT, PI_ONOFF, (void *)&DecodeCTE, CMT_DECODE_CTE,
+    // NULL},
     {"auto_uncompress", P_CHARINT, PI_ONOFF, (void *)&AutoUncompress,
      CMT_AUTO_UNCOMPRESS, NULL},
     {"preserve_timestamp", P_CHARINT, PI_ONOFF, (void *)&PreserveTimestamp,
@@ -412,27 +441,50 @@ struct param_ptr params5[] = {
     {NULL, 0, 0, NULL, NULL, NULL},
 };
 
+// global char *Mailer init(DEF_MAILER);
+// global char *ExtBrowser init(DEF_EXT_BROWSER);
+// global char *ExtBrowser2 init(nullptr);
+// global char *ExtBrowser3 init(nullptr);
+// global char *ExtBrowser4 init(nullptr);
+// global char *ExtBrowser5 init(nullptr);
+// global char *ExtBrowser6 init(nullptr);
+// global char *ExtBrowser7 init(nullptr);
+// global char *ExtBrowser8 init(nullptr);
+// global char *ExtBrowser9 init(nullptr);
+// global int BackgroundExtViewer init(true);
+// global struct auth_cookie *Auth_cookie init(nullptr);
+// global char *mailcap_files init(USER_MAILCAP ", " SYS_MAILCAP);
+
 struct param_ptr params6[] = {
     {"mime_types", P_STRING, PI_TEXT, (void *)&mimetypes_files, CMT_MIMETYPES,
      NULL},
-    {"mailcap", P_STRING, PI_TEXT, (void *)&mailcap_files, CMT_MAILCAP, NULL},
+    // {"mailcap", P_STRING, PI_TEXT, (void *)&mailcap_files, CMT_MAILCAP,
+    // NULL},
     {"editor", P_STRING, PI_TEXT, (void *)&Editor, CMT_EDITOR, NULL},
     {"mailto_options", P_INT, PI_SEL_C, (void *)&MailtoOptions,
      CMT_MAILTO_OPTIONS, (void *)mailtooptionsstr},
-    {"mailer", P_STRING, PI_TEXT, (void *)&Mailer, CMT_MAILER, NULL},
-    {"extbrowser", P_STRING, PI_TEXT, (void *)&ExtBrowser, CMT_EXTBRZ, NULL},
-    {"extbrowser2", P_STRING, PI_TEXT, (void *)&ExtBrowser2, CMT_EXTBRZ2, NULL},
-    {"extbrowser3", P_STRING, PI_TEXT, (void *)&ExtBrowser3, CMT_EXTBRZ3, NULL},
-    {"extbrowser4", P_STRING, PI_TEXT, (void *)&ExtBrowser4, CMT_EXTBRZ4, NULL},
-    {"extbrowser5", P_STRING, PI_TEXT, (void *)&ExtBrowser5, CMT_EXTBRZ5, NULL},
-    {"extbrowser6", P_STRING, PI_TEXT, (void *)&ExtBrowser6, CMT_EXTBRZ6, NULL},
-    {"extbrowser7", P_STRING, PI_TEXT, (void *)&ExtBrowser7, CMT_EXTBRZ7, NULL},
-    {"extbrowser8", P_STRING, PI_TEXT, (void *)&ExtBrowser8, CMT_EXTBRZ8, NULL},
-    {"extbrowser9", P_STRING, PI_TEXT, (void *)&ExtBrowser9, CMT_EXTBRZ9, NULL},
-    {"bgextviewer", P_INT, PI_ONOFF, (void *)&BackgroundExtViewer,
-     CMT_BGEXTVIEW, NULL},
-    {"use_lessopen", P_INT, PI_ONOFF, (void *)&use_lessopen, CMT_USE_LESSOPEN,
-     NULL},
+    // {"mailer", P_STRING, PI_TEXT, (void *)&Mailer, CMT_MAILER, NULL},
+    // {"extbrowser", P_STRING, PI_TEXT, (void *)&ExtBrowser, CMT_EXTBRZ, NULL},
+    // {"extbrowser2", P_STRING, PI_TEXT, (void *)&ExtBrowser2, CMT_EXTBRZ2,
+    // NULL},
+    // {"extbrowser3", P_STRING, PI_TEXT, (void *)&ExtBrowser3, CMT_EXTBRZ3,
+    // NULL},
+    // {"extbrowser4", P_STRING, PI_TEXT, (void *)&ExtBrowser4, CMT_EXTBRZ4,
+    // NULL},
+    // {"extbrowser5", P_STRING, PI_TEXT, (void *)&ExtBrowser5, CMT_EXTBRZ5,
+    // NULL},
+    // {"extbrowser6", P_STRING, PI_TEXT, (void *)&ExtBrowser6, CMT_EXTBRZ6,
+    // NULL},
+    // {"extbrowser7", P_STRING, PI_TEXT, (void *)&ExtBrowser7, CMT_EXTBRZ7,
+    // NULL},
+    // {"extbrowser8", P_STRING, PI_TEXT, (void *)&ExtBrowser8, CMT_EXTBRZ8,
+    // NULL},
+    // {"extbrowser9", P_STRING, PI_TEXT, (void *)&ExtBrowser9, CMT_EXTBRZ9,
+    // NULL},
+    // {"bgextviewer", P_INT, PI_ONOFF, (void *)&BackgroundExtViewer,
+    // CMT_BGEXTVIEW, NULL},
+    // {"use_lessopen", P_INT, PI_ONOFF, (void *)&use_lessopen,
+    // CMT_USE_LESSOPEN, NULL},
     {NULL, 0, 0, NULL, NULL, NULL},
 };
 
@@ -824,7 +876,7 @@ void sync_with_option(void) {
   parse_proxy();
   parse_cookie();
   initMimeTypes();
-  displayImage = false; /* XXX */
+  // displayImage = false; /* XXX */
   loadPasswd();
   loadPreForm();
   loadSiteconf();

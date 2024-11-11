@@ -4,7 +4,6 @@
 #include "buffer/document.h"
 #include "buffer/line.h"
 #include "file/file.h"
-#include "fm.h"
 #include "html/html_renderer.h"
 #include "input/content.h"
 #include "input/istream.h"

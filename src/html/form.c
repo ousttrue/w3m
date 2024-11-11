@@ -7,7 +7,6 @@
 #include "core.h"
 #include "file/file.h"
 #include "file/tmpfile.h"
-#include "fm.h"
 #include "func.h"
 #include "html/html_tag.h"
 #include "html/map.h"
@@ -26,6 +25,12 @@
 #define FORM_I_SELECT_DEFAULT_SIZE 40
 #define FORM_I_TEXTAREA_DEFAULT_WIDTH 40
 
+#define PRE_FORM_FILE RC_DIR "/pre_form"
+const char *pre_form_file = PRE_FORM_FILE;
+#define DEF_EDITOR "/usr/bin/vi"
+const char *Editor = DEF_EDITOR;
+
+bool FoldTextarea = false;
 extern Str *textarea_str;
 extern int max_textarea;
 
