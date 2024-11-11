@@ -41,7 +41,7 @@ static Str CFileName;
 static Str CBeforeBuf;
 static Str CAfterBuf;
 static Str CDirBuf;
-static char **CFileBuf = NULL;
+static char **CFileBuf = nullptr;
 static int NCFileBuf;
 static int NCFileOffset;
 
@@ -134,16 +134,42 @@ static Str strCurrentBuf;
 static int use_hist;
 static void ins_char(char c);
 
+static void draw_current(struct TermSize size, const char *prompt, int lpos,
+                         int rpos, int opos, int epos) {
+  int x = calcPosition(strBuf->ptr, strProp, CLen, CPos, CP_FORCE);
+  if (x - rpos > offset) {
+    int y = calcPosition(strBuf->ptr, strProp, CLen, CLen, CP_AUTO);
+    if (y - epos > x - rpos)
+      offset = x - rpos;
+    else if (y - epos > 0)
+      offset = y - epos;
+  } else if (x - lpos < offset) {
+    if (x - lpos > 0)
+      offset = x - lpos;
+    else
+      offset = 0;
+  }
+  scr_move(size.lines - 1, 0);
+  scr_addstr(prompt);
+  if (is_passwd)
+    addPasswd(strBuf->ptr, strProp, CLen, offset, size.cols - opos);
+  else
+    addStr(strBuf->ptr, strProp, CLen, offset, size.cols - opos);
+  scr_clrtoeolx();
+  scr_move(size.lines - 1, opos + x - offset);
+}
+
 const char *inputLineHistSearch(struct Document *doc, const char *prompt,
                                 const char *def_str, enum InputlineFlags flag,
-                                struct Hist *hist, IncFunc incrfunc) {
+                                struct Hist *hist, IncrFunc incrfunc,
+                                ResultFunc onResult) {
   is_passwd = false;
   move_word = true;
 
   CurrentHist = hist;
-  if (hist != NULL) {
+  if (hist != nullptr) {
     use_hist = true;
-    strCurrentBuf = NULL;
+    strCurrentBuf = nullptr;
   } else {
     use_hist = false;
   }
@@ -183,28 +209,8 @@ const char *inputLineHistSearch(struct Document *doc, const char *prompt,
   need_redraw = false;
 
   auto size = term_size();
-  do {
-    int x = calcPosition(strBuf->ptr, strProp, CLen, CPos, CP_FORCE);
-    if (x - rpos > offset) {
-      int y = calcPosition(strBuf->ptr, strProp, CLen, CLen, CP_AUTO);
-      if (y - epos > x - rpos)
-        offset = x - rpos;
-      else if (y - epos > 0)
-        offset = y - epos;
-    } else if (x - lpos < offset) {
-      if (x - lpos > 0)
-        offset = x - lpos;
-      else
-        offset = 0;
-    }
-    scr_move(size.lines - 1, 0);
-    scr_addstr(prompt);
-    if (is_passwd)
-      addPasswd(strBuf->ptr, strProp, CLen, offset, size.cols - opos);
-    else
-      addStr(strBuf->ptr, strProp, CLen, offset, size.cols - opos);
-    scr_clrtoeolx();
-    scr_move(size.lines - 1, opos + x - offset);
+  for (; i_cont;) {
+    draw_current(size, prompt, lpos, rpos, opos, epos);
     term_refresh();
 
   next_char:
@@ -232,7 +238,7 @@ const char *inputLineHistSearch(struct Document *doc, const char *prompt,
       cm_next = false;
       cm_disp_next = -1;
     } else if (!i_quote && c < 0x20) { /* Control code */
-      if (incrfunc == NULL ||
+      if (incrfunc == nullptr ||
           (c = incrfunc(nullptr, (int)c, strBuf, strProp)) < 0x20)
         (*InputKeymap[(int)c])(c);
       if (incrfunc && c != (unsigned char)-1 && c != CTRL_J)
@@ -259,26 +265,35 @@ const char *inputLineHistSearch(struct Document *doc, const char *prompt,
     }
     if (CLen && (flag & IN_CHAR))
       break;
-  } while (i_cont);
-
-  if (i_broken)
-    return NULL;
-
-  scr_move(term_size().lines - 1, 0);
-  term_refresh();
-  auto p = strBuf->ptr;
-  if (flag & (IN_FILENAME | IN_COMMAND)) {
-    SKIP_BLANKS(p);
   }
-  if (use_hist && !(flag & IN_URL) && *p != '\0') {
-    char *q = lastHist(hist);
-    if (!q || strcmp(q, p))
-      pushHist(hist, p);
+
+  const char *result = nullptr;
+
+  if (i_broken) {
+    result = nullptr;
+  } else {
+    scr_move(term_size().lines - 1, 0);
+    term_refresh();
+    auto p = strBuf->ptr;
+    if (flag & (IN_FILENAME | IN_COMMAND)) {
+      SKIP_BLANKS(p);
+    }
+    if (use_hist && !(flag & IN_URL) && *p != '\0') {
+      char *q = lastHist(hist);
+      if (!q || strcmp(q, p))
+        pushHist(hist, p);
+    }
+    if (flag & IN_FILENAME)
+      result = expandPath(p);
+    else
+      result = allocStr(p, -1);
   }
-  if (flag & IN_FILENAME)
-    return expandPath(p);
-  else
-    return allocStr(p, -1);
+
+  if (onResult) {
+    onResult(result);
+  }
+
+  return result;
 }
 
 static void addPasswd(char *p, Lineprop *pr, int len, int offset, int limit) {
@@ -525,7 +540,7 @@ static void next_compl(int next) {
   if (status == CPL_FAIL)
     return;
 
-  strBuf = Strnew_m_charp(CBeforeBuf->ptr, s->ptr, CAfterBuf->ptr, NULL);
+  strBuf = Strnew_m_charp(CBeforeBuf->ptr, s->ptr, CAfterBuf->ptr, nullptr);
   CLen = setStrType(strBuf, strProp);
   CPos = CBeforeBuf->length + s->length;
   if (CPos > CLen)
@@ -535,6 +550,65 @@ static void next_compl(int next) {
 static void _dcompl(void) { next_dcompl(1); }
 
 static void _rdcompl(void) { next_dcompl(-1); }
+
+static void disp_next(bool comment, int nline, int row, int col, int len,
+                      Str d) {
+  int y;
+  if (comment) {
+    if (row > nline) {
+      row = nline;
+      y = 0;
+    } else
+      y = nline - row + 1;
+  } else {
+    if (row >= nline) {
+      row = nline;
+      y = 0;
+    } else
+      y = nline - row - 1;
+  }
+  if (y) {
+    scr_move(y - 1, 0);
+    scr_clrtoeolx();
+  }
+  if (comment) {
+    scr_move(y, 0);
+    scr_clrtoeolx();
+    scr_bold();
+    /* FIXME: gettextize? */
+    scr_addstr("----- Completion list -----");
+    scr_boldend();
+    y++;
+  }
+  for (int i = 0; i < row; i++) {
+    for (int j = 0; j < col; j++) {
+      int n = cm_disp_next + j * row + i;
+      if (n >= NCFileBuf)
+        break;
+      scr_move(y, j * len);
+      scr_clrtoeolx();
+      auto f = Strdup(d);
+      Strcat_charp(f, CFileBuf[n]);
+      scr_addstr(CFileBuf[n]);
+      struct stat st;
+      if (stat(expandPath(f->ptr), &st) != -1 && S_ISDIR(st.st_mode))
+        scr_addstr("/");
+    }
+    y++;
+  }
+  if (comment && y == term_size().lines - 1 - 1) {
+    scr_move(y, 0);
+    scr_clrtoeolx();
+    scr_bold();
+    if (emacs_like_lineedit)
+      /* FIXME: gettextize? */
+      scr_addstr("----- Press TAB to continue -----");
+    else
+      /* FIXME: gettextize? */
+      scr_addstr("----- Press CTRL-D to continue -----");
+    scr_boldend();
+  }
+}
 
 static void next_dcompl(int next) {
   static int col, row;
@@ -571,7 +645,8 @@ static void next_dcompl(int next) {
         cm_disp_next = 0;
     }
     row = (NCFileBuf - cm_disp_next + col - 1) / col;
-    goto disp_next;
+    disp_next(comment, nline, row, col, len, d);
+    return;
   }
 
   cm_next = false;
@@ -606,71 +681,18 @@ static void next_dcompl(int next) {
     col = 1;
   row = (NCFileBuf + col - 1) / col;
 
-disp_next:
-  if (comment) {
-    if (row > nline) {
-      row = nline;
-      y = 0;
-    } else
-      y = nline - row + 1;
-  } else {
-    if (row >= nline) {
-      row = nline;
-      y = 0;
-    } else
-      y = nline - row - 1;
-  }
-  if (y) {
-    scr_move(y - 1, 0);
-    scr_clrtoeolx();
-  }
-  if (comment) {
-    scr_move(y, 0);
-    scr_clrtoeolx();
-    scr_bold();
-    /* FIXME: gettextize? */
-    scr_addstr("----- Completion list -----");
-    scr_boldend();
-    y++;
-  }
-  for (i = 0; i < row; i++) {
-    for (j = 0; j < col; j++) {
-      n = cm_disp_next + j * row + i;
-      if (n >= NCFileBuf)
-        break;
-      scr_move(y, j * len);
-      scr_clrtoeolx();
-      f = Strdup(d);
-      Strcat_charp(f, CFileBuf[n]);
-      scr_addstr(CFileBuf[n]);
-      if (stat(expandPath(f->ptr), &st) != -1 && S_ISDIR(st.st_mode))
-        scr_addstr("/");
-    }
-    y++;
-  }
-  if (comment && y == term_size().lines - 1 - 1) {
-    scr_move(y, 0);
-    scr_clrtoeolx();
-    scr_bold();
-    if (emacs_like_lineedit)
-      /* FIXME: gettextize? */
-      scr_addstr("----- Press TAB to continue -----");
-    else
-      /* FIXME: gettextize? */
-      scr_addstr("----- Press CTRL-D to continue -----");
-    scr_boldend();
-  }
+  disp_next(comment, nline, row, col, len, d);
 }
 
 Str escape_spaces(Str s) {
-  Str tmp = NULL;
+  Str tmp = nullptr;
   char *p;
 
-  if (s == NULL)
+  if (s == nullptr)
     return s;
   for (p = s->ptr; *p; p++) {
     if (*p == ' ' || *p == CTRL_I) {
-      if (tmp == NULL)
+      if (tmp == nullptr)
         tmp = Strnew_charp_n(s->ptr, (int)(p - s->ptr));
       Strcat_char(tmp, '\\');
     }
@@ -690,7 +712,6 @@ static Str doComplete(Str ifn, int *status, int next) {
   int fl, i;
   const char *fn;
   char *p;
-  DIR *d;
   struct stat st;
 
   if (!cm_next) {
@@ -721,7 +742,8 @@ static Str doComplete(Str ifn, int *status, int next) {
     if (Strlastchar(CompleteBuf) == '/' && CompleteBuf->length > 1) {
       Strshrink(CompleteBuf, 1);
     }
-    if ((d = opendir(expandPath(CompleteBuf->ptr))) == NULL) {
+    DIR *d;
+    if ((d = opendir(expandPath(CompleteBuf->ptr))) == nullptr) {
       CompleteBuf = Strdup(ifn);
       *status = CPL_FAIL;
       if (cm_mode & CPL_ON)
@@ -733,7 +755,7 @@ static Str doComplete(Str ifn, int *status, int next) {
     CFileName = Strnew();
     for (;;) {
       auto dir = readdir(d);
-      if (dir == NULL)
+      if (dir == nullptr)
         break;
       if (fl == 0 && (!strcmp(dir->d_name, ".") || !strcmp(dir->d_name, "..")))
         continue;
@@ -802,11 +824,11 @@ static void _prev(int) {
   const char *p;
   if (strCurrentBuf) {
     p = prevHist(hist);
-    if (p == NULL)
+    if (p == nullptr)
       return;
   } else {
     p = lastHist(hist);
-    if (p == NULL)
+    if (p == nullptr)
       return;
     strCurrentBuf = strBuf;
   }
@@ -823,7 +845,7 @@ static void _next(int) {
 
   struct Hist *hist = CurrentHist;
   const char *p;
-  if (strCurrentBuf == NULL)
+  if (strCurrentBuf == nullptr)
     return;
   p = nextHist(hist);
   if (p) {
@@ -832,7 +854,7 @@ static void _next(int) {
     strBuf = Strnew_charp(p);
   } else {
     strBuf = strCurrentBuf;
-    strCurrentBuf = NULL;
+    strCurrentBuf = nullptr;
   }
   CLen = CPos = setStrType(strBuf, strProp);
   offset = 0;
@@ -893,12 +915,12 @@ static void _editor(int) {
 
 const char *inputLineHist(struct Document *doc, const char *p, const char *d,
                           enum InputlineFlags f, struct Hist *h) {
-  return inputLineHistSearch(doc, p, d, f, h, NULL);
+  return inputLineHistSearch(doc, p, d, f, h, nullptr, nullptr);
 }
 
 const char *inputLine(struct Document *doc, const char *p, const char *d,
                       enum InputlineFlags f) {
-  return inputLineHist(doc, p, d, f, NULL);
+  return inputLineHist(doc, p, d, f, nullptr);
 }
 
 const char *inputStr(struct Document *doc, const char *p, const char *d) {

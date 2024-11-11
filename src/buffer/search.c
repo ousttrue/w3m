@@ -18,7 +18,7 @@ static const char *SearchString = NULL;
 SearchRoutine searchRoutine = nullptr;
 bool IgnoreCase = true;
 
-bool WrapDefault =false;
+bool WrapDefault = false;
 bool WrapSearch = false;
 bool show_srch_str = true;
 
@@ -278,8 +278,8 @@ void isrch(struct Document *doc, SearchRoutine func, const char *prompt) {
   COPY_BUFPOSITION(&sbuf, Currentbuf->document);
   dispincsrch(doc, 0, NULL, NULL); /* initialize incremental search state */
   searchRoutine = func;
-  auto str =
-      inputLineHistSearch(doc, prompt, NULL, IN_STRING, TextHist, dispincsrch);
+  auto str = inputLineHistSearch(doc, prompt, NULL, IN_STRING, TextHist,
+                                 dispincsrch, nullptr);
   if (!str) {
     COPY_BUFPOSITION(Currentbuf->document, &sbuf);
   }

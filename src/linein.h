@@ -6,7 +6,9 @@ extern bool space_autocomplete;
 extern bool emacs_like_lineedit;
 
 struct Document;
-typedef int (*IncFunc)(struct Document *doc, int ch, Str buf, Lineprop *prop);
+typedef int (*IncrFunc)(struct Document *doc, int ch, Str buf, Lineprop *prop);
+
+typedef void (*ResultFunc)(const char *result);
 
 /* Flags for inputLine() */
 enum InputlineFlags {
@@ -21,7 +23,8 @@ enum InputlineFlags {
 struct Hist;
 const char *inputLineHistSearch(struct Document *doc, const char *prompt,
                                 const char *def_str, enum InputlineFlags flag,
-                                struct Hist *hist, IncFunc incfunc);
+                                struct Hist *hist, IncrFunc incrfunc,
+                                ResultFunc result);
 const char *inputLineHist(struct Document *doc, const char *p, const char *d,
                           enum InputlineFlags f, struct Hist *h);
 const char *inputLine(struct Document *doc, const char *p, const char *d,
