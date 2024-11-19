@@ -2593,20 +2593,14 @@ DEFUN(movRW, NEXT_WORD, "Move to the next word")
 }
 
 static void
-_quitfm(int confirm)
+_quitfm(int ask)
 {
-    const char *ans = "y";
-
-    if (checkDownloadList())
-	/* FIXME: gettextize? */
-	ans = inputChar("Download process retains. "
-			"Do you want to exit w3m? (y/n)");
-    else if (confirm)
-	ans = inputChar(_("Do you want to exit w3m? (y/n)"));
-    if (!(ans && TOLOWER(*ans) == 'y')) {
-	displayBuffer(Currentbuf, B_NORMAL);
-	return;
-    }
+    if (checkDownloadList()
+	&& !confirm(Strnew_charp(_("Download process retains."
+				   "Do you want to exit w3m?"))))
+	goto nope;
+    else if (ask && !confirm(Strnew_charp(_("Do you want to exit w3m?"))))
+	goto nope;
 
     term_title("");		/* XXX */
 #ifdef USE_IMAGE
@@ -2627,6 +2621,9 @@ _quitfm(int confirm)
 		"-H is deprecated and will be removed in the future.",
 		"Use -o highIntensityColors=true instead.");
     w3m_exit(0);
+
+nope:
+    displayBuffer(Currentbuf, B_NORMAL);
 }
 
 /* Quit */
