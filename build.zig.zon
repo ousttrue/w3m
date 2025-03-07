@@ -19,6 +19,10 @@
         //     .url = "git+https://github.com/xxxbrian/zig-compile-commands.git#dd40e0ca2b453684f2e34410ec4b69ef3c568bd7",
         //     .hash = "12205f1bd27373077104440e39cbc388b2ebbc8938378cc261506588feed29fedf35",
         // },
+        .compile_commands = .{
+            .url = "https://github.com/the-argus/zig-compile-commands/archive/b73e8bdeb1266ea01b249387cabb39aad49f35d1.tar.gz",
+            .hash = "1220b92b277b33762a10b4f239edddfbe9aadd53af88c678f94443b0d2312d9526fa",
+        },
         .zig_uv = .{
             .url = "git+https://github.com/ousttrue/zig_uv.git#b8ec41a6c0eff17fd5eba83a113f0ebe2cdab136",
             .hash = "zig_uv-0.0.0-kepZdTuIdwB1cwrGPK1lqorqXJLfFLr_e2kjYO1ltSa1",
