@@ -179,8 +179,8 @@ pub fn build(b: *std.Build) void {
 
     // add a step called "zcc" (Compile commands DataBase) for making
     // compile_commands.json. could be named anything. cdb is just quick to type
-    const zcc = @import("compile_commands");
-    zcc.createStep(b, "zcc", .{
-        .targets = targets.toOwnedSlice() catch @panic("OOM"),
-    });
+    // const zcc = @import("compile_commands");
+    // zcc.createStep(b, "zcc", .{
+    //     .targets = targets.toOwnedSlice() catch @panic("OOM"),
+    // });
 }

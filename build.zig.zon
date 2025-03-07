@@ -1,10 +1,11 @@
 .{
-    .name = "w3m",
+    .name = .w3m,
+    .fingerprint = 0x6997df12f9200187,
     .version = "0.5.3",
     .dependencies = .{
         .gc = .{
-            .url = "git+https://github.com/ivmai/bdwgc.git#c3c44d85081044707eb8fa4f0db39e1fe6834853",
-            .hash = "1220487dbde9952d0f112b0cf6e3dd36332077e61c0cdbae20f9bf8631b7108cfcd3",
+            .url = "git+https://github.com/ivmai/bdwgc.git#b435e76287dbf275d922a0a3c432efc913c8460e",
+            .hash = "N-V-__8AAA6HLgBHHAFqNsBemf3G_KDCkELY_RAlLFldtcaC",
         },
         .openssl = .{
             .url = "git+https://github.com/allyourcodebase/openssl.git#cfb071de062624d8acbfad4c995e8092f4f6bc7a",
@@ -14,13 +15,13 @@
         .openssl_prebuilt = .{
             .path = "../openssl_prebuilt",
         },
-        .compile_commands = .{
-            .url = "git+https://github.com/xxxbrian/zig-compile-commands.git#dd40e0ca2b453684f2e34410ec4b69ef3c568bd7",
-            .hash = "12205f1bd27373077104440e39cbc388b2ebbc8938378cc261506588feed29fedf35",
-        },
+        // .compile_commands = .{
+        //     .url = "git+https://github.com/xxxbrian/zig-compile-commands.git#dd40e0ca2b453684f2e34410ec4b69ef3c568bd7",
+        //     .hash = "12205f1bd27373077104440e39cbc388b2ebbc8938378cc261506588feed29fedf35",
+        // },
         .zig_uv = .{
-            .url = "git+https://github.com/ousttrue/zig_uv.git#c438d486a7f0ad846fb82a89beb5112f8868b088",
-            .hash = "1220bd9d55670a492bd4f852ffd26fcdabc025b29c76d6a94e2ab12a8705eb575ca6",
+            .url = "git+https://github.com/ousttrue/zig_uv.git#b8ec41a6c0eff17fd5eba83a113f0ebe2cdab136",
+            .hash = "zig_uv-0.0.0-kepZdTuIdwB1cwrGPK1lqorqXJLfFLr_e2kjYO1ltSa1",
         },
         .widecharwidth = .{
             .url = "git+https://github.com/ridiculousfish/widecharwidth.git#533e50efb0b9b122a08f2273337dbf6b44b03cc7",
