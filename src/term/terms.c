@@ -322,8 +322,8 @@ void term_refresh() {
 void term_fmInit() {
   if (!fmInitialized) {
     term_init();
-    tty_raw();
-    tty_noecho();
+    // tty_raw();
+    // tty_noecho();
   }
   fmInitialized = true;
 }
@@ -341,13 +341,15 @@ void term_fmTerm() {
 }
 
 void term_raw() {
-  if (fmInitialized)
-    tty_raw();
+  if (fmInitialized) {
+    // tty_raw();
+  }
 }
 
 void term_cbreak() {
-  if (fmInitialized)
-    tty_cbreak();
+  if (fmInitialized) {
+    // tty_cbreak();
+  }
 }
 
 void term_message(const char *msg) {
@@ -388,7 +390,7 @@ const char *term_inputAnswer(const char *prompt) {
 
   const char *ans;
   if (fmInitialized) {
-    tty_raw();
+    // tty_raw();
     ans = inputChar(nullptr, prompt);
   } else {
     printf("%s", prompt);

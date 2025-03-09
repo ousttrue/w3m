@@ -74,6 +74,7 @@ pub fn build(b: *std.Build) void {
         b.fmt("-DCONF_DIR=\"{s}\"", .{CONF_DIR}),
         b.fmt("-DRC_DIR=\"{s}\"", .{RC_DIR}),
         b.fmt("-DLOCALEDIR=\"{s}\"", .{localedir}),
+        "-DGC_THREADS",
     };
 
     const exe = b.addExecutable(.{

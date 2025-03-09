@@ -12,3 +12,4 @@ const char *goLineStr();
 int getHseq(int nmark);
 int getLastHseq(int nmark);
 int precNum();
+char tty_getch();

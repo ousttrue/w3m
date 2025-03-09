@@ -17,6 +17,14 @@
 #include "term/tty.h"
 #include "text/myctype.h"
 
+#ifdef _WIN32
+#include <winsock2.h>
+#endif
+
+#include <assert.h>
+#include <gc.h>
+#include <uv.h>
+
 bool vi_prec_num = false;
 int CurrentKey = -1;
 const char *CurrentKeyData = nullptr;
@@ -192,7 +200,17 @@ void set_buffer_environ(struct Buffer *buf) {
   prev_pos = buf->document->viewport.pos;
 }
 
-void mainloop() {
+void frame(void *) {
+  // https://stackoverflow.com/questions/20968114/boehm-gc-with-c11s-thread-library
+  struct GC_stack_base sb;
+  GC_get_stack_base(&sb);
+  GC_register_my_thread(&sb);
+
+  auto size = term_size();
+  reshapeBuffer(Currentbuf, size);
+  display(Currentbuf, size);
+  term_refresh();
+
   for (;;) {
     download_update(makeCurrent());
     if (Currentbuf->document && Currentbuf->document->submit) {
@@ -250,4 +268,72 @@ void mainloop() {
     display(Currentbuf, size);
     term_refresh();
   }
+}
+
+uv_tty_t tty;
+
+void alloc_buffer(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) {
+  *buf = uv_buf_init((char *)malloc(suggested_size), suggested_size);
+}
+
+static char input_buffer[1024];
+static int input_buffer_used = 0;
+static uv_mutex_t mutex;
+static uv_cond_t cond;
+
+void read_tty(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
+  if (nread < 0) {
+    if (nread == UV_EOF) {
+      // end of file
+      uv_close((uv_handle_t *)&tty, NULL);
+    }
+  } else if (nread > 0) {
+    uv_mutex_lock(&mutex);
+
+    memmove(input_buffer + nread, input_buffer, 1024 - nread);
+    memcpy(input_buffer, buf->base, nread);
+    input_buffer_used += nread;
+
+    uv_cond_signal(&cond);
+    uv_mutex_unlock(&mutex);
+  }
+
+  // OK to free buffer as write_data copies it.
+  if (buf->base) {
+    free(buf->base);
+  }
+}
+
+char tty_getch() {
+  uv_mutex_lock(&mutex);
+  while (input_buffer_used == 0) {
+    uv_cond_wait(&cond, &mutex);
+  }
+  auto ch = input_buffer[0];
+  memmove(input_buffer, input_buffer + 1, 1023);
+  --input_buffer_used;
+  uv_mutex_unlock(&mutex);
+  return ch;
+}
+
+void mainloop() {
+  assert(0 == uv_mutex_init(&mutex));
+  assert(0 == uv_cond_init(&cond));
+
+  // tty
+  uv_tty_init(uv_default_loop(), &tty, 0, 1);
+  uv_tty_set_mode(&tty, UV_TTY_MODE_RAW_VT);
+  uv_read_start((uv_stream_t *)&tty, alloc_buffer, read_tty);
+
+  // run consumer thread
+  uv_thread_t pthread;
+  assert(0 == uv_thread_create(&pthread, frame, NULL));
+
+  // run
+  uv_run(uv_default_loop(), UV_RUN_DEFAULT);
+  uv_tty_reset_mode();
+
+  assert(0 == uv_thread_join(&pthread));
+  uv_cond_destroy(&cond);
+  uv_mutex_destroy(&mutex);
 }

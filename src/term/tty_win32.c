@@ -60,55 +60,55 @@ void tty_raw() {
 }
 
 void tty_cooked() { SetConsoleMode(g_hStdin, g_fdwSaveOldMode); }
-char tty_getch() {
-  if (g_current >= g_cNumRead) {
-    g_current = 0;
-    if (!ReadConsoleInput(g_hStdin,       // input buffer handle
-                          g_irInBuf,      // buffer to read into
-                          128,            // size of read buffer
-                          &g_cNumRead)) { // number of records read
-      return 0;
-      // ErrorExit("ReadConsoleInput");
-    }
-  }
+// char tty_getch() {
+//   if (g_current >= g_cNumRead) {
+//     g_current = 0;
+//     if (!ReadConsoleInput(g_hStdin,       // input buffer handle
+//                           g_irInBuf,      // buffer to read into
+//                           128,            // size of read buffer
+//                           &g_cNumRead)) { // number of records read
+//       return 0;
+//       // ErrorExit("ReadConsoleInput");
+//     }
+//   }
+//
+//   // Dispatch the events to the appropriate handler.
+//   for (; g_current < g_cNumRead;) {
+//     auto record = g_irInBuf[g_current++];
+//     switch (record.EventType) {
+//     case KEY_EVENT: // keyboard input
+//       // KeyEventProc(irInBuf[i].Event.KeyEvent);
+//       {
+//         auto e = record.Event.KeyEvent;
+//         if (e.bKeyDown) {
+//           return e.uChar.AsciiChar;
+//         }
+//       }
+//       break;
+//
+//     case MOUSE_EVENT: // mouse input
+//       // MouseEventProc(irInBuf[i].Event.MouseEvent);
+//       break;
+//
+//     case WINDOW_BUFFER_SIZE_EVENT: // scrn buf. resizing
+//       // ResizeEventProc(irInBuf[i].Event.WindowBufferSizeEvent);
+//       break;
+//
+//     case FOCUS_EVENT: // disregard focus events
+//
+//     case MENU_EVENT: // disregard menu events
+//       break;
+//
+//     default:
+//       // ErrorExit("Unknown event type");
+//       break;
+//     }
+//   }
+//
+//   return 0;
+// }
 
-  // Dispatch the events to the appropriate handler.
-  for (; g_current < g_cNumRead;) {
-    auto record = g_irInBuf[g_current++];
-    switch (record.EventType) {
-    case KEY_EVENT: // keyboard input
-      // KeyEventProc(irInBuf[i].Event.KeyEvent);
-      {
-        auto e = record.Event.KeyEvent;
-        if (e.bKeyDown) {
-          return e.uChar.AsciiChar;
-        }
-      }
-      break;
-
-    case MOUSE_EVENT: // mouse input
-      // MouseEventProc(irInBuf[i].Event.MouseEvent);
-      break;
-
-    case WINDOW_BUFFER_SIZE_EVENT: // scrn buf. resizing
-      // ResizeEventProc(irInBuf[i].Event.WindowBufferSizeEvent);
-      break;
-
-    case FOCUS_EVENT: // disregard focus events
-
-    case MENU_EVENT: // disregard menu events
-      break;
-
-    default:
-      // ErrorExit("Unknown event type");
-      break;
-    }
-  }
-
-  return 0;
-}
-
-int tty_sleep_till_anykey(int sec, bool purge) { return tty_getch(); }
+// int tty_sleep_till_anykey(int sec, bool purge) { return tty_getch(); }
 
 //
 // output

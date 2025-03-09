@@ -12,6 +12,15 @@ w3m を改造する(5週目くらいw)。
   - [x] 文字のカラム幅
   - [WIP] SJIS, entity
 
+## libuv
+
+```
++-tty input thread-+
+| tty_input();     |
+|     uv_cond_wait |
++------------------+
+```
+
 ## dependencies
 
 [dependencies](./build.zig.zon)

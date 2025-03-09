@@ -195,13 +195,13 @@ static enum SearchResult srchcore(struct Document *doc, const char *str,
 
   auto result = SR_NOTFOUND;
   str = SearchString;
-  tty_crmode();
+  // tty_crmode();
   if (from_jmp()) {
     result = func(doc, str);
     // if (i < PREC_NUM - 1 && result & SR_FOUND)
     clear_mark(doc->currentLine);
   }
-  tty_raw();
+  // tty_raw();
   return result;
 }
 

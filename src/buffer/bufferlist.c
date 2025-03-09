@@ -2,8 +2,8 @@
 #include "buffer/buffer.h"
 #include "buffer/document.h"
 #include "input/content.h"
+#include "mainloop.h"
 #include "term/scr.h"
-#include "term/tty.h"
 #include "text/ctrlcode.h"
 #include <string.h>
 

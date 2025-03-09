@@ -24,8 +24,8 @@
             .hash = "1220b92b277b33762a10b4f239edddfbe9aadd53af88c678f94443b0d2312d9526fa",
         },
         .zig_uv = .{
-            .url = "git+https://github.com/ousttrue/zig_uv.git#b8ec41a6c0eff17fd5eba83a113f0ebe2cdab136",
-            .hash = "zig_uv-0.0.0-kepZdTuIdwB1cwrGPK1lqorqXJLfFLr_e2kjYO1ltSa1",
+            .url = "git+https://github.com/ousttrue/zig_uv.git#5875d72f272f8b68438c90540187c280de70ebd0",
+            .hash = "zig_uv-0.0.0-kepZdYkveQBlS38dl5SMdFswwr6uEN-YsyWsRB-8fO3R",
         },
         .widecharwidth = .{
             .url = "git+https://github.com/ridiculousfish/widecharwidth.git#533e50efb0b9b122a08f2273337dbf6b44b03cc7",

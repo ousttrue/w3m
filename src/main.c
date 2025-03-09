@@ -415,5 +415,6 @@ int main2(int argc, char **argv) {
     _goLine(Currentbuf->document, line_str);
   }
 
+  auto x = CurrentTab;
   mainloop();
 }

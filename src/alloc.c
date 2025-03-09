@@ -97,6 +97,8 @@ static void *die_oom(size_t bytes) {
 
 void _GC_INIT() {
   GC_INIT();
+  GC_allow_register_threads();
+
 #if (GC_VERSION_MAJOR > 7) ||                                                  \
     ((GC_VERSION_MAJOR == 7) && (GC_VERSION_MINOR >= 2))
   GC_set_oom_fn(die_oom);
