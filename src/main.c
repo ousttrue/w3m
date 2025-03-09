@@ -22,6 +22,7 @@
 #include "text/text.h"
 #include "version.h"
 #include <fcntl.h>
+#include <assert.h>
 #ifdef _WIN32
 #else
 #include <sys/wait.h>
@@ -386,6 +387,7 @@ int main2(int argc, char **argv) {
   }
 
   tabInitialize(content);
+  assert(Currentbuf->content);
   saveBufferInfo();
   CurrentTab = FirstTab;
 

@@ -93,7 +93,7 @@ char *NullLine = "";
 Lineprop NullProp[] = {0};
 
 void addnewline(struct Document *doc, const char *line, Lineprop *prop, int pos,
-                 int nlines) {
+                int nlines) {
   char *s;
   Lineprop *p;
   if (pos > 0) {
@@ -684,6 +684,9 @@ void _goLine(struct Document *doc, const char *l) {
 }
 
 void save_buffer_position(struct Document *doc) {
+  if (!doc) {
+    return;
+  }
   if (!doc->firstLine)
     return;
 

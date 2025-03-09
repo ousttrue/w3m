@@ -150,6 +150,8 @@ void set_buffer_environ(struct Buffer *buf) {
 
   if (buf == NULL)
     return;
+  if (!buf->document)
+    return;
 
   if (buf != prev_buf) {
     set_environ("W3M_SOURCEFILE", buf->content->sourcefile);
@@ -200,16 +202,18 @@ void set_buffer_environ(struct Buffer *buf) {
   prev_pos = buf->document->viewport.pos;
 }
 
+static uv_tty_t tty;
+static char input_buffer[1024];
+static int input_buffer_used = 0;
+static uv_mutex_t mutex;
+static uv_cond_t cond;
+static uv_async_t async;
+
 void frame(void *) {
   // https://stackoverflow.com/questions/20968114/boehm-gc-with-c11s-thread-library
   struct GC_stack_base sb;
   GC_get_stack_base(&sb);
   GC_register_my_thread(&sb);
-
-  auto size = term_size();
-  reshapeBuffer(Currentbuf, size);
-  display(Currentbuf, size);
-  term_refresh();
 
   for (;;) {
     download_update(makeCurrent());
@@ -263,23 +267,13 @@ void frame(void *) {
       }
     }
 
-    auto size = term_size();
-    reshapeBuffer(Currentbuf, size);
-    display(Currentbuf, size);
-    term_refresh();
+    uv_async_send(&async);
   }
 }
-
-uv_tty_t tty;
 
 void alloc_buffer(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) {
   *buf = uv_buf_init((char *)malloc(suggested_size), suggested_size);
 }
-
-static char input_buffer[1024];
-static int input_buffer_used = 0;
-static uv_mutex_t mutex;
-static uv_cond_t cond;
 
 void read_tty(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
   if (nread < 0) {
@@ -316,7 +310,18 @@ char tty_getch() {
   return ch;
 }
 
+void render(uv_async_t *handle) {
+  auto size = term_size();
+  reshapeBuffer(Currentbuf, size);
+  display(Currentbuf, size);
+  term_refresh();
+}
+
 void mainloop() {
+  auto size = term_size();
+  reshapeBuffer(Currentbuf, size);
+  assert(Currentbuf->document);
+
   assert(0 == uv_mutex_init(&mutex));
   assert(0 == uv_cond_init(&cond));
 
@@ -325,14 +330,19 @@ void mainloop() {
   uv_tty_set_mode(&tty, UV_TTY_MODE_RAW_VT);
   uv_read_start((uv_stream_t *)&tty, alloc_buffer, read_tty);
 
+  // render
+  assert(0 == uv_async_init(uv_default_loop(), &async, render));
+  uv_async_send(&async);
+
   // run consumer thread
   uv_thread_t pthread;
   assert(0 == uv_thread_create(&pthread, frame, NULL));
 
+  //
   // run
+  //
   uv_run(uv_default_loop(), UV_RUN_DEFAULT);
   uv_tty_reset_mode();
-
   assert(0 == uv_thread_join(&pthread));
   uv_cond_destroy(&cond);
   uv_mutex_destroy(&mutex);
