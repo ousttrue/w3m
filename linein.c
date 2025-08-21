@@ -208,7 +208,7 @@ inputLineHistSearch(char *prompt, char *def_str, int flag, Hist *hist,
 	else if (!i_quote && c < 0x20) {	/* Control code */
 	    if (incrfunc == NULL
 		|| (c = incrfunc((int)c, strBuf, strProp)) < 0x20)
-		(*InputKeymap[(int)c]) (c);
+		((int(*)(int))*InputKeymap[(int)c]) (c);
 	    if (incrfunc && c != (unsigned char)-1 && c != CTRL_J)
 		incrfunc(-1, strBuf, strProp);
 	    if (cm_clear)

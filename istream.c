@@ -102,8 +102,8 @@ newInputStream(int des)
     stream->base.type = IST_BASIC;
     stream->base.handle = NewWithoutGC(int);
     *(int *)stream->base.handle = des;
-    stream->base.read = (int (*)())basic_read;
-    stream->base.close = (void (*)())basic_close;
+    stream->base.read = (int (*)(void*,void*,int))basic_read;
+    stream->base.close = (void (*)(void*))basic_close;
     return stream;
 }
 
@@ -119,9 +119,9 @@ newFileStream(FILE * f, void (*closep) ())
     stream->file.handle = NewWithoutGC(struct io_file_handle);
     stream->file.handle->f = f;
     if (closep)
-	stream->file.handle->close = closep;
+	stream->file.handle->close = (void(*)(void*))closep;
     else
-	stream->file.handle->close = (void (*)())fclose;
+	stream->file.handle->close = (void (*)(void*))fclose;
     stream->file.read = (int (*)())file_read;
     stream->file.close = (void (*)())file_close;
     return stream;
@@ -184,7 +184,7 @@ newEncodedStream(InputStream is, char encoding)
 int
 ISclose(InputStream stream)
 {
-    MySignalHandler(*prevtrap) ();
+    void(*prevtrap) (int);
     if (stream == NULL)
         return -1;
     if (stream->base.close != NULL) {

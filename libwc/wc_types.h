@@ -46,7 +46,7 @@ typedef struct {
     wc_ccs       ccs;
     size_t       n;
     wc_map      *map;
-    wc_wchar_t (*conv)();
+    wc_wchar_t (*conv)(wc_ccs, wc_uint16);
 } wc_table;
 
 typedef struct {
@@ -61,9 +61,9 @@ typedef struct {
     char     *desc;
     wc_gset  *gset;
     wc_uchar *gset_ext;
-    Str     (*conv_from)();
-    void    (*push_to)();
-    Str     (*char_conv)();
+    Str     (*conv_from)(Str is, wc_ces f_ces);
+    void    (*push_to)(Str os, wc_wchar_t, void*);
+    Str     (*char_conv)(wc_uchar, void*);
 } wc_ces_info;
 
 typedef struct {

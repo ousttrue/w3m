@@ -2360,7 +2360,7 @@ do_getch()
     if (is_xterm || !gpm_handler)
 	return getch();
     else
-	return Gpm_Getch();
+	return Gpm_Wgetch();
 }
 #endif				/* USE_GPM */
 

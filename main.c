@@ -1790,7 +1790,6 @@ clear_mark(Line *l)
 static int
 srchcore(char *volatile str, int (*func) (Buffer *, char *))
 {
-    MySignalHandler(*prevtrap) ();
     volatile int i, result = SR_NOTFOUND;
 
     if (str != NULL && str != SearchString)
@@ -1799,7 +1798,7 @@ srchcore(char *volatile str, int (*func) (Buffer *, char *))
 	return SR_NOTFOUND;
 
     str = conv_search_string(SearchString, DisplayCharset);
-    prevtrap = mySignal(SIGINT, intTrap);
+    auto prevtrap = mySignal(SIGINT, intTrap);
     crmode();
     if (SETJMP(IntReturn) == 0) {
 	for (i = 0; i < PREC_NUM; i++) {
@@ -2195,7 +2194,6 @@ DEFUN(pipesh, PIPE_SHELL, "Execute shell command and display output")
 DEFUN(readsh, READ_SHELL, "Execute shell command and display output")
 {
     Buffer *buf;
-    MySignalHandler(*prevtrap) ();
     char *cmd;
 
     CurrentKeyData = NULL;	/* not allowed in w3m-control: */
@@ -2209,7 +2207,7 @@ DEFUN(readsh, READ_SHELL, "Execute shell command and display output")
 	displayBuffer(Currentbuf, B_NORMAL);
 	return;
     }
-    prevtrap = mySignal(SIGINT, intTrap);
+    auto prevtrap = mySignal(SIGINT, intTrap);
     crmode();
     buf = getshell(cmd);
     mySignal(SIGINT, prevtrap);

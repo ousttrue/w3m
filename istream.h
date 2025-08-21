@@ -22,7 +22,7 @@ typedef struct stream_buffer *StreamBuffer;
 
 struct io_file_handle {
     FILE *f;
-    void (*close) ();
+    void (*close) (void*);
 };
 
 #ifdef USE_SSL
@@ -47,8 +47,8 @@ struct base_stream {
     void *handle;
     char type;
     char iseos;
-    int (*read) ();
-    void (*close) ();
+    int (*read) (void*, void*, int);
+    void (*close) (void*);
 };
 
 struct file_stream {
