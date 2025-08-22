@@ -13,28 +13,28 @@ typedef ListItem HistItem;
 typedef GeneralList HistList;
 
 typedef struct {
-    HistList *list;
-    HistItem *current;
-    Hash_sv *hash;
+    HistList* list;
+    HistItem* current;
+    Hash_sv* hash;
     long long mtime;
 } Hist;
 
-extern Hist *newHist(void);
-extern Hist *copyHist(Hist *hist);
-extern HistItem *unshiftHist(Hist *hist, char *ptr);
-extern HistItem *pushHist(Hist *hist, char *ptr);
-extern HistItem *pushHashHist(Hist *hist, char *ptr);
-extern HistItem *getHashHist(Hist *hist, char *ptr);
-extern char *lastHist(Hist *hist);
-extern char *nextHist(Hist *hist);
-extern char *prevHist(Hist *hist);
+extern Hist* newHist(void);
+extern Hist* copyHist(Hist* hist);
+extern HistItem* unshiftHist(Hist* hist, char* ptr);
+extern HistItem* pushHist(Hist* hist, char* ptr);
+extern HistItem* pushHashHist(Hist* hist, char* ptr);
+extern HistItem* getHashHist(Hist* hist, char* ptr);
+extern char* lastHist(Hist* hist);
+extern char* nextHist(Hist* hist);
+extern char* prevHist(Hist* hist);
 
 #ifdef USE_HISTORY
-extern int loadHistory(Hist *hist);
-extern void saveHistory(Hist *hist, size_t size);
+extern int loadHistory(Hist* hist);
+extern void saveHistory(Hist* hist, size_t size);
 extern void ldHist(void);
-#else				/* not USE_HISTORY */
+#else /* not USE_HISTORY */
 #define ldHist nulcmd
-#endif				/* not USE_HISTORY */
+#endif /* not USE_HISTORY */
 
-#endif				/* HISTORY_H */
+#endif /* HISTORY_H */

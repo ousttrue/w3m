@@ -6,19 +6,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int
-exec_cmd(char *cmd)
+int exec_cmd(char* cmd)
 {
     int rv;
 
     fmTerm();
     if ((rv = system(cmd))) {
-	printf("\n[Hit any key]");
-	fflush(stdout);
-	fmInit();
-	getch();
+        printf("\n[Hit any key]");
+        fflush(stdout);
+        fmInit();
+        getch();
 
-	return rv;
+        return rv;
     }
     fmInit();
 

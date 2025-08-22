@@ -36,11 +36,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-int
-main(void)
+int main(void)
 {
-    char *cp;
-    Display *dpy;
+    char* cp;
+    Display* dpy;
     Window window;
     XWindowAttributes win_attributes;
     XSizeHints hints;
@@ -50,27 +49,26 @@ main(void)
     _scrsize(dst);
     cp = getenv("WINDOWID");
     if (cp) {
-	dpy = XOpenDisplay(NULL);
-	if (dpy) {
-	    if (XGetWindowAttributes(dpy, window = atol(cp), &win_attributes))
-		if (XGetWMNormalHints(dpy, window, &hints, &longjunk))
-		    if (hints.flags & PResizeInc && hints.width_inc
-			&& hints.height_inc) {
-			if (hints.flags & (PBaseSize | PMinSize)) {
-			    if (hints.flags & PBaseSize) {
-				win_attributes.width -= hints.base_width;
-				win_attributes.height -= hints.base_height;
-			    }
-			    else {
-				win_attributes.width -= hints.min_width;
-				win_attributes.height -= hints.min_height;
-			    }
-			}
-			dst[0] = win_attributes.width / hints.width_inc;
-			dst[1] = win_attributes.height / hints.height_inc;
-		    }
-	    XCloseDisplay(dpy);
-	}
+        dpy = XOpenDisplay(NULL);
+        if (dpy) {
+            if (XGetWindowAttributes(dpy, window = atol(cp), &win_attributes))
+                if (XGetWMNormalHints(dpy, window, &hints, &longjunk))
+                    if (hints.flags & PResizeInc && hints.width_inc
+                        && hints.height_inc) {
+                        if (hints.flags & (PBaseSize | PMinSize)) {
+                            if (hints.flags & PBaseSize) {
+                                win_attributes.width -= hints.base_width;
+                                win_attributes.height -= hints.base_height;
+                            } else {
+                                win_attributes.width -= hints.min_width;
+                                win_attributes.height -= hints.min_height;
+                            }
+                        }
+                        dst[0] = win_attributes.width / hints.width_inc;
+                        dst[1] = win_attributes.height / hints.height_inc;
+                    }
+            XCloseDisplay(dpy);
+        }
     }
     printf("%i %i\n", dst[0], dst[1]);
     return 0;
