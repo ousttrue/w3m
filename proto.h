@@ -465,7 +465,6 @@ extern void term_raw(void);
 extern void term_cooked(void);
 extern void term_cbreak(void);
 extern void term_title(char* s);
-extern void flush_tty(void);
 extern void toggle_stand(void);
 extern void bell(void);
 extern int sleep_till_anykey(int sec, int purge);
