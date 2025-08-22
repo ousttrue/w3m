@@ -1,7 +1,7 @@
 const std = @import("std");
 
 const system_libs = [_][]const u8{
-    "gc", "gpm", "ssl", "ncurses", "crypto",
+    "gc", "ssl", "ncurses", "crypto",
 };
 
 const w3m_srcs = [_][]const u8{

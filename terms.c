@@ -18,28 +18,6 @@
 #include <sys/select.h>
 #endif
 #include <sys/ioctl.h>
-#ifdef USE_MOUSE
-#ifdef USE_GPM
-#include <gpm.h>
-#endif /* USE_GPM */
-#ifdef USE_SYSMOUSE
-#include <osreldate.h>
-#if (__FreeBSD_version >= 400017) || (__FreeBSD_kernel_version >= 400017)
-#include <sys/consio.h>
-#include <sys/fbio.h>
-#else
-#include <machine/console.h>
-#endif
-int (*sysm_handler)(int x, int y, int nbs, int obs);
-static int cwidth = 8, cheight = 16;
-static int xpix, ypix, nbs, obs = 0;
-#endif /* use_SYSMOUSE */
-
-static int is_xterm = 0;
-
-void mouse_init(void), mouse_end(void);
-int mouseActive = 0;
-#endif /* USE_MOUSE */
 
 static char* title_str = NULL;
 
@@ -839,13 +817,7 @@ int get_pixel_per_cell(int* ppc, int* ppl)
 }
 #endif /* USE_IMAGE */
 
-#ifdef USE_MOUSE
-#define W3M_TERM_INFO(name, title, mouse) name, title, mouse
-#define NEED_XTERM_ON (1)
-#define NEED_XTERM_OFF (1 << 1)
-#else
 #define W3M_TERM_INFO(name, title, mouse) name, title
-#endif
 
 static char XTERM_TITLE[] = "\033]0;w3m: %s\007";
 static char SCREEN_TITLE[] = "\033k%s\033\134";
@@ -854,9 +826,6 @@ static char SCREEN_TITLE[] = "\033k%s\033\134";
 static struct w3m_term_info {
     char* term;
     char* title_str;
-#ifdef USE_MOUSE
-    int mouse_flag;
-#endif
 } w3m_term_info_list[] = {
     { W3M_TERM_INFO("xterm", XTERM_TITLE, (NEED_XTERM_ON | NEED_XTERM_OFF)) },
     { W3M_TERM_INFO("kterm", XTERM_TITLE, (NEED_XTERM_ON | NEED_XTERM_OFF)) },
@@ -893,20 +862,6 @@ int set_tty(void)
             }
         }
     }
-#ifdef USE_MOUSE
-    {
-        char* term = getenv("TERM");
-        if (term != NULL) {
-            struct w3m_term_info* p;
-            for (p = w3m_term_info_list; p->term != NULL; p++) {
-                if (!strncmp(term, p->term, strlen(p->term))) {
-                    is_xterm = p->mouse_flag;
-                    break;
-                }
-            }
-        }
-    }
-#endif
     return 0;
 }
 
@@ -993,10 +948,6 @@ void reset_tty(void)
 static MySignalHandler
 reset_exit_with_value(SIGNAL_ARG, int rval)
 {
-#ifdef USE_MOUSE
-    if (mouseActive)
-        mouse_end();
-#endif /* USE_MOUSE */
     reset_tty();
     w3m_exit(rval);
     SIGNAL_RETURN;
@@ -2112,80 +2063,6 @@ char getch(void)
     return c;
 }
 
-#ifdef USE_MOUSE
-#ifdef USE_GPM
-char wgetch(void* p)
-{
-    char c;
-
-    /* read(tty, &c, 1); */
-    while (read(tty, &c, 1) < (ssize_t)1) {
-        if (errno == EINTR || errno == EAGAIN)
-            continue;
-        /* error happend on read(2) */
-        quitfm();
-        break; /* unreachable */
-    }
-    return c;
-}
-
-int do_getch()
-{
-    if (is_xterm || !gpm_handler)
-        return getch();
-    else
-        return Gpm_Wgetch();
-}
-#endif /* USE_GPM */
-
-#ifdef USE_SYSMOUSE
-int sysm_getch()
-{
-    fd_set rfd;
-    int key, x, y;
-
-    FD_ZERO(&rfd);
-    FD_SET(tty, &rfd);
-    while (select(tty + 1, &rfd, NULL, NULL, NULL) <= 0) {
-        if (errno == EINTR) {
-            x = xpix / cwidth;
-            y = ypix / cheight;
-            key = (*sysm_handler)(x, y, nbs, obs);
-            if (key != 0)
-                return key;
-        }
-    }
-    return getch();
-}
-
-int do_getch()
-{
-    if (is_xterm || !sysm_handler)
-        return getch();
-    else
-        return sysm_getch();
-}
-
-MySignalHandler
-sysmouse(SIGNAL_ARG)
-{
-    struct mouse_info mi;
-
-    mi.operation = MOUSE_GETINFO;
-    if (ioctl(tty, CONS_MOUSECTL, &mi) == -1)
-        return;
-    xpix = mi.u.data.x;
-    ypix = mi.u.data.y;
-    obs = nbs;
-    nbs = mi.u.data.buttons & 0x7;
-    /* for cosmetic bug in syscons.c on FreeBSD 3.[34] */
-    mi.operation = MOUSE_HIDE;
-    ioctl(tty, CONS_MOUSECTL, &mi);
-    mi.operation = MOUSE_SHOW;
-    ioctl(tty, CONS_MOUSECTL, &mi);
-}
-#endif /* USE_SYSMOUSE */
-#endif /* USE_MOUSE */
 
 void bell(void)
 {
@@ -2200,17 +2077,6 @@ skip_escseq(void)
     c = getch();
     if (c == '[' || c == 'O') {
         c = getch();
-#ifdef USE_MOUSE
-        if (is_xterm && c == 'M') {
-            getch();
-            getch();
-            getch();
-        } else if (is_xterm && c == '<') {
-            c = getch();
-            while (IS_DIGIT(c) || c == ';')
-                c = getch();
-        } else
-#endif
             while (IS_DIGIT(c))
                 c = getch();
     }
@@ -2246,172 +2112,6 @@ int sleep_till_anykey(int sec, int purge)
     return ret;
 }
 
-#ifdef USE_MOUSE
-
-#define XTERM_ON                                          \
-    {                                                     \
-        fputs("\033[?1001s\033[?1000h\033[?1006h", ttyf); \
-        flush_tty();                                      \
-    }
-#define XTERM_OFF                                         \
-    {                                                     \
-        fputs("\033[?1006l\033[?1000l\033[?1001r", ttyf); \
-        flush_tty();                                      \
-    }
-#define CYGWIN_ON                   \
-    {                               \
-        fputs("\033[?1000h", ttyf); \
-        flush_tty();                \
-    }
-#define CYGWIN_OFF                  \
-    {                               \
-        fputs("\033[?1000l", ttyf); \
-        flush_tty();                \
-    }
-
-#ifdef USE_GPM
-/* Linux console with GPM support */
-
-void mouse_init()
-{
-    Gpm_Connect conn;
-    extern int gpm_process_mouse(Gpm_Event*, void*);
-    int r;
-
-    if (mouseActive)
-        return;
-    conn.eventMask = ~0;
-    conn.defaultMask = 0;
-    conn.maxMod = 0;
-    conn.minMod = 0;
-
-    gpm_handler = NULL;
-    r = Gpm_Open(&conn, 0);
-    if (r == -2) {
-        /*
-         * If Gpm_Open() success, returns >= 0
-         * Gpm_Open() returns -2 in case of xterm.
-         * Gpm_Close() is necessary here. Otherwise,
-         * xterm is being left in the mode where the mouse clicks are
-         * passed through to the application.
-         */
-        Gpm_Close();
-        is_xterm = (NEED_XTERM_ON | NEED_XTERM_OFF);
-    } else if (r >= 0) {
-        gpm_handler = gpm_process_mouse;
-        is_xterm = 0;
-    }
-    if (is_xterm) {
-        XTERM_ON;
-    }
-    mouseActive = 1;
-}
-
-void mouse_end()
-{
-    if (mouseActive == 0)
-        return;
-    if (is_xterm) {
-        XTERM_OFF;
-    } else
-        Gpm_Close();
-    mouseActive = 0;
-}
-
-#elif defined(USE_SYSMOUSE)
-/* *BSD console with sysmouse support */
-void mouse_init()
-{
-    mouse_info_t mi;
-    extern int sysm_process_mouse();
-
-    if (mouseActive)
-        return;
-    if (is_xterm) {
-        XTERM_ON;
-    } else {
-#if defined(FBIO_MODEINFO) || defined(CONS_MODEINFO) /* FreeBSD > 2.x */
-#ifndef FBIO_GETMODE /* FreeBSD 3.x */
-#define FBIO_GETMODE CONS_GET
-#define FBIO_MODEINFO CONS_MODEINFO
-#endif /* FBIO_GETMODE */
-        video_info_t vi;
-
-        if (ioctl(tty, FBIO_GETMODE, &vi.vi_mode) != -1 && ioctl(tty, FBIO_MODEINFO, &vi) != -1) {
-            cwidth = vi.vi_cwidth;
-            cheight = vi.vi_cheight;
-        }
-#endif /* defined(FBIO_MODEINFO) || \
-        * defined(CONS_MODEINFO) */
-        mySignal(SIGUSR2, SIG_IGN);
-        mi.operation = MOUSE_MODE;
-        mi.u.mode.mode = 0;
-        mi.u.mode.signal = SIGUSR2;
-        sysm_handler = NULL;
-        if (ioctl(tty, CONS_MOUSECTL, &mi) != -1) {
-            mySignal(SIGUSR2, sysmouse);
-            mi.operation = MOUSE_SHOW;
-            ioctl(tty, CONS_MOUSECTL, &mi);
-            sysm_handler = sysm_process_mouse;
-        }
-    }
-    mouseActive = 1;
-}
-
-void mouse_end()
-{
-    if (mouseActive == 0)
-        return;
-    if (is_xterm) {
-        XTERM_OFF;
-    } else {
-        mouse_info_t mi;
-        mi.operation = MOUSE_MODE;
-        mi.u.mode.mode = 0;
-        mi.u.mode.signal = 0;
-        ioctl(tty, CONS_MOUSECTL, &mi);
-    }
-    mouseActive = 0;
-}
-
-#else
-/* not GPM nor SYSMOUSE, but use mouse with xterm */
-
-void mouse_init()
-{
-    if (mouseActive)
-        return;
-    if (is_xterm & NEED_XTERM_ON) {
-        XTERM_ON;
-    }
-    mouseActive = 1;
-}
-
-void mouse_end()
-{
-    if (mouseActive == 0)
-        return;
-    if (is_xterm & NEED_XTERM_OFF) {
-        XTERM_OFF;
-    }
-    mouseActive = 0;
-}
-
-#endif /* not USE_GPM nor USE_SYSMOUSE */
-
-void mouse_active()
-{
-    if (!mouseActive)
-        mouse_init();
-}
-
-void mouse_inactive()
-{
-    if (mouseActive && is_xterm)
-        mouse_end();
-}
-
-#endif /* USE_MOUSE */
 
 void flush_tty(void)
 {

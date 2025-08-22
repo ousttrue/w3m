@@ -275,9 +275,6 @@ int backend(void)
     w3m_dump = 0;
     if (COLS == 0)
         COLS = DEFAULT_COLS;
-#ifdef USE_MOUSE
-    use_mouse = FALSE;
-#endif /* USE_MOUSE */
 
     if (backend_batch_commands) {
         while ((str = popText(backend_batch_commands)))

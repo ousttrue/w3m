@@ -173,10 +173,6 @@ void fmTerm(void)
         if (activeImage)
             loadImage(NULL, IMG_FLAG_STOP);
 #endif
-#ifdef USE_MOUSE
-        if (use_mouse)
-            mouse_end();
-#endif /* USE_MOUSE */
         reset_tty();
         fmInitialized = FALSE;
     }
@@ -320,11 +316,6 @@ make_lastline_message(Buffer* buf)
         }
     }
 
-#ifdef USE_MOUSE
-    if (use_mouse && mouse_action.lastline_str)
-        msg = Strnew_charp(mouse_action.lastline_str);
-    else
-#endif /* not USE_MOUSE */
         msg = Strnew();
     if (displayLineInfo && buf->currentLine != NULL && buf->lastLine != NULL) {
         int cl = buf->currentLine->real_linenumber;
@@ -394,9 +385,6 @@ void displayBuffer(Buffer* buf, int mode)
         buf->rootX = 0;
     buf->COLS = COLS - buf->rootX;
     if (nTab > 1
-#ifdef USE_MOUSE
-        || mouse_action.menu_str
-#endif
     ) {
         if (mode == B_FORCE_REDRAW || mode == B_REDRAW_IMAGE)
             calcTabPos();
@@ -590,18 +578,11 @@ redrawNLine(Buffer* buf, int n)
     }
 #endif /* USE_COLOR */
     if (nTab > 1
-#ifdef USE_MOUSE
-        || mouse_action.menu_str
-#endif
     ) {
         TabBuffer* t;
         int l;
 
         move(0, 0);
-#ifdef USE_MOUSE
-        if (mouse_action.menu_str)
-            addstr(mouse_action.menu_str);
-#endif
         clrtoeolx();
         for (t = FirstTab; t; t = t->nextTab) {
             move(t->y, t->x1);
@@ -1225,15 +1206,7 @@ void disp_message_nsec(char* s, int redraw_current, int sec, int purge, int mous
     else
         message(s, LASTLINE, 0);
     refresh();
-#ifdef USE_MOUSE
-    if (mouse && use_mouse)
-        mouse_active();
-#endif
     sleep_till_anykey(sec, purge);
-#ifdef USE_MOUSE
-    if (mouse && use_mouse)
-        mouse_inactive();
-#endif
     if (CurrentTab != NULL && Currentbuf != NULL && redraw_current)
         displayBuffer(Currentbuf, B_NORMAL);
 }
@@ -1242,12 +1215,6 @@ void disp_message(char* s, int redraw_current)
 {
     disp_message_nsec(s, redraw_current, 10, FALSE, TRUE);
 }
-#ifdef USE_MOUSE
-void disp_message_nomouse(char* s, int redraw_current)
-{
-    disp_message_nsec(s, redraw_current, 10, FALSE, FALSE);
-}
-#endif
 
 void set_delayed_message(char* s)
 {
