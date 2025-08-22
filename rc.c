@@ -338,9 +338,6 @@ static struct sel_c dnsorders[] = {
 #ifdef USE_COOKIE
 static struct sel_c badcookiestr[] = {
     { N_S(ACCEPT_BAD_COOKIE_DISCARD), N_("discard") },
-#if 0
-    {N_S(ACCEPT_BAD_COOKIE_ACCEPT), N_("accept")},
-#endif
     { N_S(ACCEPT_BAD_COOKIE_ASK), N_("ask") },
     { 0, NULL, NULL }
 };

@@ -636,10 +636,6 @@ redrawNLine(Buffer* buf, int n)
             if (t == CurrentTab)
                 boldend();
         }
-#if 0
-	move(0, COLS - 2);
-	addstr(" x");
-#endif
         move(LastTab->y + 1, 0);
         for (i = 0; i < COLS; i++)
             addch('~');
