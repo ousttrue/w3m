@@ -159,11 +159,6 @@ extern void cursorBottom(void);
 extern int currentLn(Buffer* buf);
 extern void tmpClearBuffer(Buffer* buf);
 extern char* filename_extension(char* patch, int is_url);
-#ifdef USE_EXTERNAL_URI_LOADER
-extern void initURIMethods(void);
-extern Str searchURIMethods(ParsedURL* pu);
-extern void chkExternalURIBuffer(Buffer* buf);
-#endif
 extern ParsedURL* schemeToProxy(int scheme);
 #ifdef USE_M17N
 extern wc_ces url_to_charset(const char* url, const ParsedURL* base,
@@ -375,9 +370,7 @@ extern void multimap(void);
 extern char* inputLineHistSearch(char* prompt, char* def_str, int flag,
     Hist* hist, int (*incfunc)(int ch, Str buf, Lineprop* prop));
 extern Str unescape_spaces(Str s);
-#ifdef USE_HISTORY
 extern Buffer* historyBuffer(Hist* hist);
-#endif /* not USE_HISTORY */
 extern double log_like(int x);
 extern struct table* newTable(void);
 extern void pushdata(struct table* t, int row, int col, char* data);
@@ -778,19 +771,12 @@ extern void initMenu(void);
 #define tabMn nulcmd
 #endif /* not USE_MENU */
 
-#ifdef USE_DICT
 extern void dictword(void);
 extern void dictwordat(void);
-#else /* not USE_DICT */
-#define dictword nulcmd
-#define dictwordat nulcmd
-#endif /* not USE_DICT */
 extern char* guess_save_name(Buffer* buf, char* file);
 
 extern void wrapToggle(void);
-#ifdef USE_BUFINFO
 extern void saveBufferInfo(void);
-#endif
 
 extern Str getLinkNumberStr(int correction);
 

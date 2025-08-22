@@ -100,11 +100,6 @@ define_effect(EFFECT_ANCHOR_START, EFFECT_ANCHOR_END, EFFECT_ANCHOR_START_C,
 {
     if (useColor) {
         if (useActiveColor) {
-#ifdef __EMX__
-            if (!getenv("WINDOWID"))
-                setfcolor(active_color);
-            else
-#endif
             {
                 EFFECT_ACTIVE_START_C;
             }
@@ -217,9 +212,7 @@ static int anch_mode = 0, emph_mode = 0, imag_mode = 0, form_mode = 0,
 static Linecolor color_mode = 0;
 #endif
 
-#ifdef USE_BUFINFO
 static Buffer* save_current_buf = NULL;
-#endif
 
 static char* delayed_msg = NULL;
 
@@ -489,12 +482,10 @@ void displayBuffer(Buffer* buf, int mode)
         drawImage();
     }
 #endif
-#ifdef USE_BUFINFO
     if (buf != save_current_buf) {
         saveBufferInfo();
         save_current_buf = buf;
     }
-#endif
     if (mode == B_FORCE_REDRAW && (buf->check_url & CHK_URL)) {
         chkURLBuffer(buf);
         displayBuffer(buf, B_NORMAL);

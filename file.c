@@ -1548,15 +1548,8 @@ getAuthCookie(struct http_auth* hauth, char* auth_header,
             *pwd = Strnew_charp((char*)
                     getpassphrase(proxy ? "Proxy Password: " : "Password: "));
 #else
-#ifndef __MINGW32_VERSION
             *pwd = Strnew_charp((char*)
                     getpass(proxy ? "Proxy Password: " : "Password: "));
-#else
-            term_raw();
-            *pwd = Strnew_charp((char*)
-                    inputLine(proxy ? "Proxy Password: " : "Password: ", NULL, IN_PASSWORD));
-            term_cbreak();
-#endif /* __MINGW32_VERSION */
 #endif
         }
     }
@@ -1723,15 +1716,6 @@ load_doc: {
             break;
 #endif
         case SCM_UNKNOWN:
-#ifdef USE_EXTERNAL_URI_LOADER
-            tmp = searchURIMethods(&pu);
-            if (tmp != NULL) {
-                b = loadGeneralFile(tmp->ptr, current, referer, flag, request);
-                if (b != NULL && b != NO_BUFFER)
-                    copyParsedURL(&b->currentURL, &pu);
-                return b;
-            }
-#endif
             /* FIXME: gettextize? */
             disp_err_message(Sprintf("Unknown URI: %s",
                                  parsedURL2Str(&pu)->ptr)
@@ -7939,12 +7923,10 @@ doExternal(URLFile uf, char* type, Buffer* defaultbuf)
     if (header)
         header = conv_to_system(header);
     command = unquote_mailcap(mcap->viewer, type, tmpf->ptr, header, &mc_stat);
-#ifndef __EMX__
     if (!(mc_stat & MCSTAT_REPNAME)) {
         Str tmp = Sprintf("(%s) < %s", command->ptr, shell_quote(tmpf->ptr));
         command = tmp;
     }
-#endif
 
 #ifdef HAVE_SETPGRP
     if (!(mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)) && !(mcap->flags & MAILCAP_NEEDSTERMINAL) && BackgroundExtViewer) {
@@ -8051,7 +8033,6 @@ _MoveFile(char* path1, char* path2)
 
 int _doFileCopy(char* tmpf, char* defstr, int download)
 {
-#ifndef __MINGW32_VERSION
     Str msg;
     Str filen;
     char *p, *q = NULL;
@@ -8157,7 +8138,6 @@ int _doFileCopy(char* tmpf, char* defstr, int download)
         if (PreserveTimestamp && !is_pipe && !stat(tmpf, &st))
             setModtime(p, st.st_mtime);
     }
-#endif /* __MINGW32_VERSION */
     return 0;
 }
 
@@ -8170,7 +8150,6 @@ int doFileMove(char* tmpf, char* defstr)
 
 int doFileSave(URLFile uf, char* defstr)
 {
-#ifndef __MINGW32_VERSION
     Str msg;
     Str filen;
     char *p, *q;
@@ -8271,7 +8250,6 @@ int doFileSave(URLFile uf, char* defstr)
         if (PreserveTimestamp && uf.modtime != -1)
             setModtime(p, uf.modtime);
     }
-#endif /* __MINGW32_VERSION */
     return 0;
 }
 
@@ -8337,7 +8315,6 @@ char* inputAnswer(char* prompt)
 static void
 uncompress_stream(URLFile* uf, char** src)
 {
-#ifndef __MINGW32_VERSION
     pid_t pid1;
     FILE* f1;
     char* expand_cmd = GUNZIP_CMDNAME;
@@ -8428,7 +8405,6 @@ uncompress_stream(URLFile* uf, char** src)
     }
     UFhalfclose(uf);
     uf->stream = newFileStream(f1, (void (*)())fclose);
-#endif /* __MINGW32_VERSION */
 }
 
 static FILE*

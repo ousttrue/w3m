@@ -82,9 +82,6 @@ typedef int wc_ces; /* XXX: not used */
 void bcopy(const void*, void*, int);
 void bzero(void*, int);
 #endif /* HAVE_BCOPY */
-#ifdef __EMX__
-#include <strings.h> /* for bzero() and bcopy() */
-#endif
 
 #ifdef MAINPROGRAM
 #define global
@@ -131,9 +128,7 @@ void bzero(void*, int);
 #define SHELLBUFFERNAME "*Shellout*"
 #define PIPEBUFFERNAME "*stream*"
 #define CPIPEBUFFERNAME "*stream(closed)*"
-#ifdef USE_DICT
 #define DICTBUFFERNAME "*dictionary*"
-#endif /* USE_DICT */
 
 #ifndef HOST_NAME_MAX
 #define HOST_NAME_MAX 255
@@ -298,11 +293,6 @@ extern int REV_LB[];
 #define inputFilenameHist(p, d, h) inputLineHist(p, d, IN_FILENAME, h)
 #define inputChar(p) inputLine(p, "", IN_CHAR)
 
-#ifdef __EMX__
-#define HAVE_STRCASECMP
-#define strcasecmp stricmp
-#define strncasecmp strnicmp
-#endif /* __EMX__ */
 
 #define SKIP_BLANKS(p)                 \
     {                                  \
@@ -878,9 +868,6 @@ extern unsigned char GlobalKeymap[];
 extern unsigned char EscKeymap[];
 extern unsigned char EscBKeymap[];
 extern unsigned char EscDKeymap[];
-#ifdef __EMX__
-extern unsigned char PcKeymap[];
-#endif
 extern FuncList w3mFuncList[];
 
 global char* HTTP_proxy init(NULL);
@@ -1055,10 +1042,8 @@ global int squeezeBlankLine init(FALSE);
 global char* BookmarkFile init(NULL);
 global int UseExternalDirBuffer init(TRUE);
 global char* DirBufferCommand init("file:///$LIB/dirlist" CGI_EXTENSION);
-#ifdef USE_DICT
 global int UseDictCommand init(TRUE);
 global char* DictCommand init("file:///$LIB/w3mdict" CGI_EXTENSION);
-#endif /* USE_DICT */
 global int ignore_null_img_alt init(TRUE);
 #define DISPLAY_INS_DEL_SIMPLE 0
 #define DISPLAY_INS_DEL_NORMAL 1
@@ -1083,9 +1068,6 @@ global struct cookie* First_cookie init(NULL);
 
 global char* mailcap_files init(USER_MAILCAP ", " SYS_MAILCAP);
 global char* mimetypes_files init(USER_MIMETYPES ", " SYS_MIMETYPES);
-#ifdef USE_EXTERNAL_URI_LOADER
-global char* urimethodmap_files init(USER_URIMETHODMAP ", " SYS_URIMETHODMAP);
-#endif
 
 global TextList* fileToDelete;
 
@@ -1094,11 +1076,9 @@ extern Hist* SaveHist;
 extern Hist* URLHist;
 extern Hist* ShellHist;
 extern Hist* TextHist;
-#ifdef USE_HISTORY
 global int UseHistory init(TRUE);
 global int URLHistSize init(100);
 global int SaveURLHist init(TRUE);
-#endif /* USE_HISTORY */
 global int multicolList init(FALSE);
 
 #ifdef USE_M17N

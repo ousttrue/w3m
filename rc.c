@@ -170,17 +170,11 @@ static int OptionEncode = FALSE;
 #define CMT_WRAP N_("Wrap search")
 #define CMT_VIEW_UNSEENOBJECTS N_("Display unseen objects (e.g. bgimage tag)")
 #define CMT_AUTO_UNCOMPRESS N_("Uncompress compressed data automatically when downloading")
-#ifdef __EMX__
-#define CMT_BGEXTVIEW N_("Run external viewer in a separate session")
-#else
 #define CMT_BGEXTVIEW N_("Run external viewer in the background")
-#endif
 #define CMT_EXT_DIRLIST N_("Use external program for directory listing")
 #define CMT_DIRLIST_CMD N_("URL of directory listing command")
-#ifdef USE_DICT
 #define CMT_USE_DICTCOMMAND N_("Enable dictionary lookup through CGI")
 #define CMT_DICTCOMMAND N_("URL of dictionary lookup command")
-#endif /* USE_DICT */
 #define CMT_IGNORE_NULL_IMG_ALT N_("Display link name for images lacking ALT")
 #define CMT_IFILE N_("Index file for directories")
 #define CMT_RETRY_HTTP N_("Prepend http:// to URL automatically")
@@ -399,12 +393,10 @@ struct param_ptr params1[] = {
         CMT_EXT_DIRLIST, NULL },
     { "dirlist_cmd", P_STRING, PI_TEXT, (void*)&DirBufferCommand,
         CMT_DIRLIST_CMD, NULL },
-#ifdef USE_DICT
     { "use_dictcommand", P_INT, PI_ONOFF, (void*)&UseDictCommand,
         CMT_USE_DICTCOMMAND, NULL },
     { "dictcommand", P_STRING, PI_TEXT, (void*)&DictCommand,
         CMT_DICTCOMMAND, NULL },
-#endif /* USE_DICT */
     { "multicol", P_INT, PI_ONOFF, (void*)&multicolList, CMT_MULTICOL, NULL },
     { "alt_entity", P_CHARINT, PI_ONOFF, (void*)&UseAltEntity, CMT_ALT_ENTITY,
         NULL },
@@ -485,11 +477,9 @@ struct param_ptr params2[] = {
 
 struct param_ptr params3[] = {
     { "pagerline", P_NZINT, PI_TEXT, (void*)&PagerMax, CMT_PAGERLINE, NULL },
-#ifdef USE_HISTORY
     { "use_history", P_INT, PI_ONOFF, (void*)&UseHistory, CMT_HISTORY, NULL },
     { "history", P_INT, PI_TEXT, (void*)&URLHistSize, CMT_HISTSIZE, NULL },
     { "save_hist", P_INT, PI_ONOFF, (void*)&SaveURLHist, CMT_SAVEHIST, NULL },
-#endif /* USE_HISTORY */
     { "confirm_qq", P_INT, PI_ONOFF, (void*)&confirm_on_quit, CMT_CONFIRM_QQ,
         NULL },
     { "close_tab_back", P_INT, PI_ONOFF, (void*)&close_tab_back,
@@ -575,10 +565,6 @@ struct param_ptr params6[] = {
     { "mime_types", P_STRING, PI_TEXT, (void*)&mimetypes_files, CMT_MIMETYPES,
         NULL },
     { "mailcap", P_STRING, PI_TEXT, (void*)&mailcap_files, CMT_MAILCAP, NULL },
-#ifdef USE_EXTERNAL_URI_LOADER
-    { "urimethodmap", P_STRING, PI_TEXT, (void*)&urimethodmap_files,
-        CMT_URIMETHODMAP, NULL },
-#endif
     { "editor", P_STRING, PI_TEXT, (void*)&Editor, CMT_EDITOR, NULL },
     { "mailto_options", P_INT, PI_SEL_C, (void*)&MailtoOptions,
         CMT_MAILTO_OPTIONS, (void*)mailtooptionsstr },
@@ -1181,30 +1167,7 @@ parse_cookie(void)
             = make_domain_list(cookie_avoid_wrong_number_of_dots);
 }
 
-#ifdef __EMX__
-static int
-do_mkdir(const char* dir, long mode)
-{
-    char *r, abs[_MAX_PATH];
-    size_t n;
-
-    _abspath(abs, rc_dir, _MAX_PATH); /* Translate '\\' to '/' */
-
-    if (!(n = strlen(abs)))
-        return -1;
-
-    if (*(r = abs + n - 1) == '/') /* Ignore tailing slash if it is */
-        *r = 0;
-
-    return mkdir(abs, mode);
-}
-#else /* not __EMX__ */
-#ifdef __MINGW32_VERSION
-#define do_mkdir(dir, mode) mkdir(dir)
-#else
 #define do_mkdir(dir, mode) mkdir(dir, mode)
-#endif /* not __MINW32_VERSION */
-#endif /* not __EMX__ */
 
 static int
 do_recursive_mkdir(const char* dir)
@@ -1266,9 +1229,6 @@ void sync_with_option(void)
     parse_cookie();
     initMailcap();
     initMimeTypes();
-#ifdef USE_EXTERNAL_URI_LOADER
-    initURIMethods();
-#endif
 #ifdef USE_MIGEMO
     init_migemo();
 #endif
@@ -1646,12 +1606,6 @@ char* confFile(char* base)
     return expandPath(Strnew_m_charp(w3m_conf_dir(), "/", base, NULL)->ptr);
 }
 
-#ifndef USE_HELP_CGI
-char* helpFile(char* base)
-{
-    return expandPath(Strnew_m_charp(w3m_help_dir(), "/", base, NULL)->ptr);
-}
-#endif
 
 /* siteconf */
 /*

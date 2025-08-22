@@ -17,11 +17,7 @@
 #ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
-#ifndef __MINGW32_VERSION
 #include <sys/ioctl.h>
-#else
-#include <winsock.h>
-#endif /* __MINGW32_VERSION */
 #ifdef USE_MOUSE
 #ifdef USE_GPM
 #include <gpm.h>
@@ -53,10 +49,6 @@ static int tty;
 #include "fm.h"
 #include "myctype.h"
 
-#ifdef __EMX__
-#define INCL_DOSNLS
-#include <os2.h>
-#endif /* __EMX__ */
 
 #if defined(__CYGWIN__)
 #include <windows.h>
@@ -239,12 +231,6 @@ check_cygwin_console(void)
         if (((ctype = getenv("LC_ALL")) || (ctype = getenv("LC_CTYPE")) || (ctype = getenv("LANG"))) && strncmp(ctype, "ja", 2) == 0) {
             isWinConsole = TERM_CYGWIN_RESERVE_IME;
         }
-#ifdef SUPPORT_WIN9X_CONSOLE_MBCS
-        check_win9x();
-        if (isWin95 && ttyslot() != -1) {
-            isLocalConsole = 0;
-        }
-#endif
     }
 #if CYGWIN_VERSION_DLL_MAJOR < 1005 && defined(USE_MOUSE)
     if (cygwin_version() <= 1003015) {
@@ -291,40 +277,6 @@ typedef struct sgttyb TerminalMode;
 #define MODEFLAG(d) ((d).sg_flags)
 #endif /* HAVE_SGTTY_H */
 
-#ifdef __MINGW32_VERSION
-/* dummy struct */
-typedef unsigned char cc_t;
-typedef unsigned int speed_t;
-typedef unsigned int tcflag_t;
-
-#define NCCS 32
-struct termios {
-    tcflag_t c_iflag; /* input mode flags */
-    tcflag_t c_oflag; /* output mode flags */
-    tcflag_t c_cflag; /* control mode flags */
-    tcflag_t c_lflag; /* local mode flags */
-    cc_t c_line; /* line discipline */
-    cc_t c_cc[NCCS]; /* control characters */
-    speed_t c_ispeed; /* input speed */
-    speed_t c_ospeed; /* output speed */
-};
-typedef struct termios TerminalMode;
-#define TerminalSet(fd, x) (0)
-#define TerminalGet(fd, x) (0)
-#define MODEFLAG(d) (0)
-
-/* dummy defines */
-#define SIGHUP (0)
-#define SIGQUIT (0)
-#define ECHO (0)
-#define ISIG (0)
-#define VEOF (0)
-#define ICANON (0)
-#define IXON (0)
-#define IXOFF (0)
-
-char* ttyname(int);
-#endif /* __MINGW32_VERSION */
 
 #define MAX_LINE 200
 #define MAX_COLUMN 400
@@ -891,19 +843,12 @@ int get_pixel_per_cell(int* ppc, int* ppl)
 #define W3M_TERM_INFO(name, title, mouse) name, title, mouse
 #define NEED_XTERM_ON (1)
 #define NEED_XTERM_OFF (1 << 1)
-#ifdef __CYGWIN__
-#define NEED_CYGWIN_ON (1 << 2)
-#define NEED_CYGWIN_OFF (1 << 3)
-#endif
 #else
 #define W3M_TERM_INFO(name, title, mouse) name, title
 #endif
 
 static char XTERM_TITLE[] = "\033]0;w3m: %s\007";
 static char SCREEN_TITLE[] = "\033k%s\033\134";
-#ifdef __CYGWIN__
-static char CYGWIN_TITLE[] = "w3m: %s";
-#endif
 
 /* *INDENT-OFF* */
 static struct w3m_term_info {
@@ -919,9 +864,6 @@ static struct w3m_term_info {
     { W3M_TERM_INFO("Eterm", XTERM_TITLE, (NEED_XTERM_ON | NEED_XTERM_OFF)) },
     { W3M_TERM_INFO("mlterm", XTERM_TITLE, (NEED_XTERM_ON | NEED_XTERM_OFF)) },
     { W3M_TERM_INFO("screen", SCREEN_TITLE, 0) },
-#ifdef __CYGWIN__
-    { W3M_TERM_INFO("cygwin", CYGWIN_TITLE, (NEED_CYGWIN_ON | NEED_CYGWIN_OFF)) },
-#endif
     { W3M_TERM_INFO(NULL, NULL, 0) }
 };
 #undef W3M_TERM_INFO
@@ -941,9 +883,6 @@ int set_tty(void)
         tty = 2;
     }
     ttyf = fdopen(tty, "w");
-#ifdef __CYGWIN__
-    check_cygwin_console();
-#endif
     TerminalGet(tty, &d_ioval);
     if (displayTitleTerm != NULL) {
         struct w3m_term_info* p;
@@ -973,7 +912,6 @@ int set_tty(void)
 
 void ttymode_set(int mode, int imode)
 {
-#ifndef __MINGW32_VERSION
     TerminalMode ioval;
 
     TerminalGet(tty, &ioval);
@@ -988,12 +926,10 @@ void ttymode_set(int mode, int imode)
         printf("Error occurred while set %x: errno=%d\n", mode, errno);
         reset_error_exit(SIGNAL_ARGLIST);
     }
-#endif
 }
 
 void ttymode_reset(int mode, int imode)
 {
-#ifndef __MINGW32_VERSION
     TerminalMode ioval;
 
     TerminalGet(tty, &ioval);
@@ -1008,7 +944,6 @@ void ttymode_reset(int mode, int imode)
         printf("Error occurred while reset %x: errno=%d\n", mode, errno);
         reset_error_exit(SIGNAL_ARGLIST);
     }
-#endif /* __MINGW32_VERSION */
 }
 
 #ifndef HAVE_SGTTY_H
@@ -1206,22 +1141,7 @@ void setlinescols(void)
 {
     char* p;
     int i;
-#ifdef __EMX__
-    {
-        int s[2];
-        _scrsize(s);
-        COLS = s[0];
-        LINES = s[1];
-
-        if (getenv("WINDOWID")) {
-            FILE* fd = popen("scrsize", "rt");
-            if (fd) {
-                fscanf(fd, "%i %i", &COLS, &LINES);
-                pclose(fd);
-            }
-        }
-    }
-#elif defined(HAVE_TERMIOS_H) && defined(TIOCGWINSZ)
+#if defined(HAVE_TERMIOS_H) && defined(TIOCGWINSZ)
     struct winsize wins;
 
     i = ioctl(tty, TIOCGWINSZ, &wins);
@@ -1730,9 +1650,6 @@ void refresh(void)
                  * (COLS-1,LINES-1).
                  */
 #if !defined(USE_BG_COLOR) || defined(__CYGWIN__)
-#ifdef __CYGWIN__
-                if (isWinConsole)
-#endif
                     if (line == LINES - 1 && col == COLS - 1)
                         break;
 #endif /* !defined(USE_BG_COLOR) || defined(__CYGWIN__) */
@@ -2151,14 +2068,7 @@ void term_raw(void)
 void term_cooked(void)
 #ifndef HAVE_SGTTY_H
 {
-#ifdef __EMX__
-    /* On XFree86/OS2, some scrambled characters
-     * will appear when asserting IEXTEN flag.
-     */
-    ttymode_set((TTY_MODE) & ~IEXTEN, 0);
-#else
     ttymode_set(TTY_MODE, 0);
-#endif
 #ifdef HAVE_TERMIOS_H
     set_cc(VMIN, 4);
 #else /* not HAVE_TERMIOS_H */
@@ -2182,16 +2092,6 @@ void term_title(char* s)
     if (!fmInitialized)
         return;
     if (title_str != NULL) {
-#ifdef __CYGWIN__
-        if (isLocalConsole && title_str == CYGWIN_TITLE) {
-            Str buff;
-            buff = Sprintf(title_str, s);
-            if (buff->length > 1024) {
-                Strtruncate(buff, 1024);
-            }
-            SetConsoleTitle(buff->ptr);
-        } else if (isLocalConsole || !isWinConsole)
-#endif
             fprintf(ttyf, title_str, s);
     }
 }
@@ -2201,11 +2101,7 @@ char getch(void)
     char c;
 
     while (
-#ifdef SUPPORT_WIN9X_CONSOLE_MBCS
-        read_win32_console(&c, 1)
-#else
         read(tty, &c, 1)
-#endif
         < (int)1) {
         if (errno == EINTR || errno == EAGAIN)
             continue;
@@ -2488,11 +2384,6 @@ void mouse_init()
     if (is_xterm & NEED_XTERM_ON) {
         XTERM_ON;
     }
-#ifdef __CYGWIN__
-    else if (is_xterm & NEED_CYGWIN_ON) {
-        CYGWIN_ON;
-    }
-#endif
     mouseActive = 1;
 }
 
@@ -2503,11 +2394,6 @@ void mouse_end()
     if (is_xterm & NEED_XTERM_OFF) {
         XTERM_OFF;
     }
-#ifdef __CYGWIN__
-    else if (is_xterm & NEED_CYGWIN_OFF) {
-        CYGWIN_OFF;
-    }
-#endif
     mouseActive = 0;
 }
 
@@ -2557,39 +2443,3 @@ void touch_cursor(void)
 }
 #endif
 
-#ifdef __MINGW32_VERSION
-
-int tgetent(char* bp, char* name)
-{
-    return 0;
-}
-
-int tgetnum(char* id)
-{
-    return -1;
-}
-
-int tgetflag(char* id)
-{
-    return 0;
-}
-
-char* tgetstr(char* id, char** area)
-{
-    id = "";
-}
-
-char* tgoto(char* cap, int col, int row)
-{
-}
-
-int tputs(char* str, int affcnt, int (*putc)(char))
-{
-}
-
-char* ttyname(int tty)
-{
-    return "CON";
-}
-
-#endif /* __MINGW32_VERSION */

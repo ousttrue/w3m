@@ -39,11 +39,6 @@ extern int do_getch();
 
 #include "util.h"
 
-#ifdef __MINGW32_VERSION
-#include <winsock.h>
-
-WSADATA WSAData;
-#endif
 
 #define DSTR_LEN 256
 
@@ -79,11 +74,7 @@ static char* MarkString = NULL;
 static char* SearchString = NULL;
 int (*searchRoutine)(Buffer*, char*);
 
-#ifndef __MINGW32_VERSION
 JMP_BUF IntReturn;
-#else
-_JBTYPE IntReturn[_JBLEN];
-#endif /* __MINGW32_VERSION */
 
 static void delBuffer(Buffer* buf);
 static void cmd_loadfile(char* path);
@@ -159,9 +150,6 @@ fversion(FILE* f)
         ",cookie"
         ",ssl"
         ",ssl-verify"
-#ifdef USE_EXTERNAL_URI_LOADER
-        ",external-uri-loader"
-#endif
 #ifdef USE_W3MMAILER
         ",w3mmailer"
 #endif
@@ -268,9 +256,6 @@ fusage(FILE* f, int err)
 }
 
 #ifdef USE_M17N
-#ifdef __EMX__
-static char* getCodePage(void);
-#endif
 #endif
 
 static GC_warn_proc orig_GC_warn_proc = NULL;
@@ -406,9 +391,6 @@ int main(int argc, char** argv)
 #ifdef USE_M17N
     char* Locale = NULL;
     wc_uint8 auto_detect;
-#ifdef __EMX__
-    wc_ces CodePage;
-#endif
 #endif
 #if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
     char** getimage_args = NULL;
@@ -480,11 +462,6 @@ int main(int argc, char** argv)
         DocumentCharset = wc_guess_locale_charset(Locale, DocumentCharset);
         SystemCharset = wc_guess_locale_charset(Locale, SystemCharset);
     }
-#ifdef __EMX__
-    CodePage = wc_guess_charset(getCodePage(), 0);
-    if (CodePage)
-        DisplayCharset = DocumentCharset = SystemCharset = CodePage;
-#endif
 #endif
 
     /* initializations */
@@ -779,27 +756,7 @@ int main(int argc, char** argv)
         i++;
     }
 
-#ifdef __WATT32__
-    if (w3m_debug)
-        dbug_init();
-    sock_init();
-#endif
 
-#ifdef __MINGW32_VERSION
-    {
-        int err;
-        WORD wVerReq;
-
-        wVerReq = MAKEWORD(1, 1);
-
-        err = WSAStartup(wVerReq, &WSAData);
-        if (err != 0) {
-            fprintf(stderr, "Can't find winsock\n");
-            return 1;
-        }
-        _fmode = _O_BINARY;
-    }
-#endif
 
     FirstTab = NULL;
     LastTab = NULL;
@@ -818,9 +775,6 @@ int main(int argc, char** argv)
             COLS = DEFAULT_COLS;
     }
 
-#ifdef USE_BINMODE_STREAM
-    setmode(fileno(stdout), O_BINARY);
-#endif
     if (!w3m_dump && !w3m_backend) {
         fmInit();
         mySignal(SIGWINCH, resize_hook);
@@ -832,10 +786,8 @@ int main(int argc, char** argv)
 
     sync_with_option();
     initCookie();
-#ifdef USE_HISTORY
     if (UseHistory)
         loadHistory(URLHist);
-#endif /* not USE_HISTORY */
 
 #ifdef USE_M17N
     /*  if (w3m_dump)
@@ -1021,9 +973,7 @@ int main(int argc, char** argv)
             do_dump(Currentbuf);
         else {
             Currentbuf = newbuf;
-#ifdef USE_BUFINFO
             saveBufferInfo();
-#endif
         }
     }
     if (w3m_dump) {
@@ -1313,16 +1263,9 @@ DEFUN(nulcmd, NOTHING NULL @ @ @, "Do nothing")
 { /* do nothing */
 }
 
-#ifdef __EMX__
-DEFUN(pcmap, PCMAP, "pcmap")
-{
-    w3mFuncList[(int)PcKeymap[(int)getch()]].func();
-}
-#else /* not __EMX__ */
 void pcmap(void)
 {
 }
-#endif
 
 static void
 escKeyProc(int c, int esc, unsigned char* map)
@@ -1408,7 +1351,6 @@ void tmpClearBuffer(Buffer* buf)
 
 static Str currentURL(void);
 
-#ifdef USE_BUFINFO
 void saveBufferInfo()
 {
     FILE* fp;
@@ -1421,7 +1363,6 @@ void saveBufferInfo()
     fprintf(fp, "%s\n", currentURL()->ptr);
     fclose(fp);
 }
-#endif
 
 static void
 pushBuffer(Buffer* buf)
@@ -1441,9 +1382,7 @@ pushBuffer(Buffer* buf)
         buf->nextBuffer = Currentbuf;
         Currentbuf = buf;
     }
-#ifdef USE_BUFINFO
     saveBufferInfo();
-#endif
 }
 
 static void
@@ -2123,7 +2062,6 @@ DEFUN(ldfile, LOAD, "Open local file in a new buffer")
 /* Load help file */
 DEFUN(ldhelp, HELP, "Show help panel")
 {
-#ifdef USE_HELP_CGI
     char* lang;
     int n;
     Str tmp;
@@ -2134,9 +2072,6 @@ DEFUN(ldhelp, HELP, "Show help panel")
         Str_form_quote(Strnew_charp(w3m_version))->ptr,
         Str_form_quote(Strnew_charp_n(lang, n))->ptr);
     cmd_loadURL(tmp->ptr, NULL, NO_REFERER, NULL);
-#else
-    cmd_loadURL(helpFile(HELP_FILE), NULL, NO_REFERER, NULL);
-#endif
 }
 
 static void
@@ -2434,10 +2369,8 @@ _quitfm(int confirm)
 #endif
     fmTerm();
     save_cookies();
-#ifdef USE_HISTORY
     if (UseHistory && SaveURLHist)
         saveHistory(URLHist, URLHistSize);
-#endif /* USE_HISTORY */
     w3m_exit(0);
 }
 
@@ -4344,13 +4277,11 @@ DEFUN(cooLst, COOKIE, "View cookie list")
         cmd_loadBuffer(buf, BP_NO_URL, LB_NOLINK);
 }
 
-#ifdef USE_HISTORY
 /* History page */
 DEFUN(ldHist, HISTORY, "Show browsing history")
 {
     cmd_loadBuffer(historyBuffer(URLHist), BP_NO_URL, LB_NOLINK);
 }
-#endif /* USE_HISTORY */
 
 /* download HREF link */
 DEFUN(svA, SAVE_LINK, "Save hyperlink target")
@@ -4855,9 +4786,6 @@ void chkURLBuffer(Buffer* buf)
     for (i = 0; url_like_pat[i]; i++) {
         reAnchor(buf, url_like_pat[i]);
     }
-#ifdef USE_EXTERNAL_URI_LOADER
-    chkExternalURIBuffer(buf);
-#endif
     buf->check_url |= CHK_URL;
 }
 
@@ -5556,7 +5484,6 @@ GetWord(Buffer* buf)
     return NULL;
 }
 
-#ifdef USE_DICT
 static void
 execdict(char* word)
 {
@@ -5599,7 +5526,6 @@ DEFUN(dictwordat, DICT_WORD_AT,
 {
     execdict(GetWord(Currentbuf));
 }
-#endif /* USE_DICT */
 
 void set_buffer_environ(Buffer* buf)
 {
@@ -5687,19 +5613,6 @@ searchKeyNum(void)
     return n * PREC_NUM;
 }
 
-#ifdef __EMX__
-#ifdef USE_M17N
-static char*
-getCodePage(void)
-{
-    unsigned long CpList[8], CpSize;
-
-    if (!getenv("WINDOWID") && !DosQueryCp(sizeof(CpList), CpList, &CpSize))
-        return Sprintf("CP%d", *CpList)->ptr;
-    return NULL;
-}
-#endif
-#endif
 
 void deleteFiles()
 {
@@ -5734,9 +5647,6 @@ void w3m_exit(int i)
     disconnectFTP();
 #ifdef USE_NNTP
     disconnectNews();
-#endif
-#ifdef __MINGW32_VERSION
-    WSACleanup();
 #endif
 #ifdef HAVE_MKDTEMP
     if (mkd_tmp_dir)
@@ -5928,12 +5838,6 @@ DEFUN(reinit, REINIT, "Reload configuration file")
         return;
     }
 
-#ifdef USE_EXTERNAL_URI_LOADER
-    if (!strcasecmp(resource, "URIMETHODS")) {
-        initURIMethods();
-        return;
-    }
-#endif
 
     disp_err_message(Sprintf("Don't know how to reinitialize '%s'", resource)->ptr, FALSE);
 }
@@ -6452,9 +6356,7 @@ void download_action(struct parsed_tagarg* arg)
     for (; arg; arg = arg->next) {
         if (!strncmp(arg->arg, "stop", 4)) {
             pid = (pid_t)atoi(&arg->arg[4]);
-#ifndef __MINGW32_VERSION
             kill(pid, SIGKILL);
-#endif
         } else if (!strncmp(arg->arg, "ok", 2))
             pid = (pid_t)atoi(&arg->arg[2]);
         else
@@ -6486,9 +6388,7 @@ void stopDownload(void)
     for (d = FirstDL; d != NULL; d = d->next) {
         if (!d->running)
             continue;
-#ifndef __MINGW32_VERSION
         kill(d->pid, SIGKILL);
-#endif
         unlink(d->lock);
     }
 }
