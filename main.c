@@ -26,7 +26,6 @@
 
 #include "util.h"
 
-
 #define DSTR_LEN 256
 
 Hist* LoadHist;
@@ -85,7 +84,7 @@ void set_buffer_environ(Buffer*);
 static void save_buffer_position(Buffer* buf);
 
 static void _followForm(int);
-static void _goLine(char*);
+static void _goLine(const char*);
 static void _newT(void);
 static void followTab(TabBuffer* tab);
 static void moveTab(TabBuffer* t, TabBuffer* t2, int right);
@@ -226,7 +225,6 @@ fusage(FILE* f, int err)
     exit(err);
 }
 
-
 static GC_warn_proc orig_GC_warn_proc = NULL;
 #define GC_WARN_KEEP_MAX (20)
 
@@ -340,7 +338,7 @@ die_oom(size_t bytes)
     return NULL;
 }
 
-int main(int argc, char** argv)
+const char* parseArgs(int argc, char** argv)
 {
     Buffer* newbuf = NULL;
     char* p;
@@ -514,8 +512,7 @@ int main(int argc, char** argv)
                     p = argv[i];
                 }
                 DisplayCharset = wc_guess_charset_short(p, DisplayCharset);
-            }
-            else if (!strcmp("-graph", argv[i]))
+            } else if (!strcmp("-graph", argv[i]))
                 UseGraphicChar = GRAPHIC_CHAR_DEC;
             else if (!strcmp("-no-graph", argv[i]))
                 UseGraphicChar = GRAPHIC_CHAR_ASCII;
@@ -639,8 +636,7 @@ int main(int argc, char** argv)
                     argv[i][0] = '\0';
                     argv[i]++;
                 }
-            }
-            else if (!strcmp("-no-cookie", argv[i])) {
+            } else if (!strcmp("-no-cookie", argv[i])) {
                 use_cookie = FALSE;
                 accept_cookie = FALSE;
             } else if (!strcmp("-cookie", argv[i])) {
@@ -670,8 +666,7 @@ int main(int argc, char** argv)
 #endif
                 set_param_option("ssl_forbid_method=");
                 set_param_option("ssl_verify_server=0");
-            }
-            else if (!strcmp("-o", argv[i]) || !strcmp("-show-option", argv[i])) {
+            } else if (!strcmp("-o", argv[i]) || !strcmp("-show-option", argv[i])) {
                 if (!strcmp("-show-option", argv[i]) || ++i >= argc || !strcmp(argv[i], "?")) {
                     show_params(stdout);
                     exit(0);
@@ -709,8 +704,6 @@ int main(int argc, char** argv)
         }
         i++;
     }
-
-
 
     FirstTab = NULL;
     LastTab = NULL;
@@ -977,10 +970,18 @@ int main(int argc, char** argv)
     WcOption.auto_detect = auto_detect;
 
     Currentbuf = Firstbuf;
+
+    return line_str;
+}
+
+int main(int argc, char** argv)
+{
+    const char* line_str = parseArgs(argc, argv);
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
     if (line_str) {
         _goLine(line_str);
     }
+
     for (;;) {
         if (add_download_list) {
             add_download_list = FALSE;
@@ -1034,8 +1035,7 @@ int main(int argc, char** argv)
                     resize_screen();
                 loadImage(Currentbuf, IMG_FLAG_NEXT);
             } while (sleep_till_anykey(1, 0) <= 0);
-        }
-        else
+        } else
 #endif
         {
             do {
@@ -1043,7 +1043,7 @@ int main(int argc, char** argv)
                     resize_screen();
             } while (sleep_till_anykey(1, 0) <= 0);
         }
-        c = getch();
+        int c = getch();
         if (CurrentAlarm->sec > 0) {
             alarm(0);
         }
@@ -2399,7 +2399,7 @@ DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background")
 
 /* Go to specified line */
 static void
-_goLine(char* l)
+_goLine(const char* l)
 {
     if (l == NULL || *l == '\0' || Currentbuf->currentLine == NULL) {
         displayBuffer(Currentbuf, B_FORCE_REDRAW);
@@ -4002,8 +4002,7 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
     FormList* request;
 
     tmp = Sprintf("mode=panel&cookie=%s&bmark=%s&url=%s&title=%s"
-                  "&charset=%s"
-        ,
+                  "&charset=%s",
         (Str_form_quote(localCookie()))->ptr,
         (Str_form_quote(Strnew_charp(BookmarkFile)))->ptr,
         (Str_form_quote(parsedURL2Str(&Currentbuf->currentURL)))->ptr,
@@ -4911,7 +4910,6 @@ DEFUN(stopI, STOP_IMAGE, "Stop loading and drawing of images")
 }
 #endif
 
-
 DEFUN(dispVer, VERSION, "Display the version of w3m")
 {
     disp_message(Sprintf("w3m version %s", w3m_version)->ptr, TRUE);
@@ -5101,7 +5099,6 @@ searchKeyNum(void)
     return n * PREC_NUM;
 }
 
-
 void deleteFiles()
 {
     Buffer* buf;
@@ -5290,7 +5287,6 @@ DEFUN(reinit, REINIT, "Reload configuration file")
         return;
     }
 
-
 #ifdef USE_MENU
     if (!strcasecmp(resource, "MENU")) {
         initMenu();
@@ -5302,7 +5298,6 @@ DEFUN(reinit, REINIT, "Reload configuration file")
         initMimeTypes();
         return;
     }
-
 
     disp_err_message(Sprintf("Don't know how to reinitialize '%s'", resource)->ptr, FALSE);
 }
@@ -5396,7 +5391,6 @@ void calcTabPos(void)
     TabBuffer* tab;
     int lcol = 0, rcol = 0, col;
     int n1, n2, na, nx, ny, ix, iy;
-
 
     if (nTab <= 0)
         return;
