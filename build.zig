@@ -218,7 +218,7 @@ fn build_mktable(
     exe.addCSourceFiles(.{
         .files = &.{
             "funcname/mktable.c",
-            "entity.c",
+            // "entity.c",
             "Str.c",
             "hash.c",
             "myctype.c",

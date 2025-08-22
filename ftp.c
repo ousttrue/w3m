@@ -450,11 +450,7 @@ ftp_dir:
     return NULL;
 }
 
-#ifdef USE_M17N
 Str loadFTPDir(ParsedURL* pu, wc_ces* charset)
-#else
-Str loadFTPDir0(ParsedURL* pu)
-#endif
 {
     Str FTPDIRtmp;
     Str tmp;
@@ -464,11 +460,9 @@ Str loadFTPDir0(ParsedURL* pu)
     char** flist;
     int i, nfile, nfile_max;
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
-#ifdef USE_M17N
     wc_ces doc_charset = DocumentCharset;
 
     *charset = WC_CES_US_ASCII;
-#endif
     if (current_ftp.data == NULL)
         return NULL;
     tmp = ftp_command(&current_ftp, "SYST", NULL, &status);

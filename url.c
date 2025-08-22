@@ -2124,7 +2124,6 @@ schemeToProxy(int scheme)
     return pu;
 }
 
-#ifdef USE_M17N
 wc_ces
 url_to_charset(const char* url, const ParsedURL* base, wc_ces doc_charset)
 {
@@ -2172,12 +2171,3 @@ char* url_decode2(const char* url, const Buffer* buf)
     return url_unquote_conv((char*)url, url_charset);
 }
 
-#else /* !defined(USE_M17N) */
-
-char* url_decode0(const char* url)
-{
-    if (!DecodeURL)
-        return (char*)url;
-    return url_unquote_conv((char*)url, 0);
-}
-#endif /* !defined(USE_M17N) */

@@ -55,9 +55,7 @@ static struct table_mode table_mode[MAX_TABLE];
 #if defined(USE_M17N) || defined(USE_IMAGE)
 static ParsedURL* cur_baseURL = NULL;
 #endif
-#ifdef USE_M17N
 static wc_ces cur_document_charset = 0;
-#endif
 
 static Str cur_title;
 static Str pre_title;
@@ -89,12 +87,10 @@ int max_textarea = MAX_TEXTAREA;
 
 static int http_response_code;
 
-#ifdef USE_M17N
 static wc_ces content_charset = 0;
 static wc_ces meta_charset = 0;
 static char* check_charset(char* p);
 static char* check_accept_charset(char* p);
-#endif
 
 #define set_prevchar(x, y, n) Strcopy_charp_n((x), (y), (n))
 #define set_space_to_prevchar(x) Strcopy_charp_n((x), " ", 1)
@@ -463,16 +459,10 @@ char* acceptableEncoding(void)
 /*
  * convert line
  */
-#ifdef USE_M17N
 Str convertLine(URLFile* uf, Str line, int mode, wc_ces* charset,
     wc_ces doc_charset)
-#else
-Str convertLine0(URLFile* uf, Str line, int mode)
-#endif
 {
-#ifdef USE_M17N
     line = wc_Str_conv_with_detect(line, charset, doc_charset, InnerCharset);
-#endif
     if (mode != RAW_MODE)
         cleanup_line(line, mode);
 #ifdef USE_NNTP
@@ -564,9 +554,7 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
     Str lineBuf2 = NULL;
     Str tmp;
     TextList* headerlist;
-#ifdef USE_M17N
     wc_ces charset = WC_CES_US_ASCII, mime_charset;
-#endif
     char* tmpf;
     FILE* src = NULL;
     Lineprop* propBuffer;
@@ -662,18 +650,14 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
                 if (src) {
                     URLFile f;
                     Line* l;
-#ifdef USE_M17N
                     wc_ces old_charset = newBuf->document_charset;
-#endif
                     init_stream(&f, SCM_LOCAL, newStrStream(src));
                     loadHTMLstream(&f, newBuf, NULL, TRUE);
                     UFclose(&f);
                     for (l = newBuf->lastLine; l && l->real_linenumber;
                         l = l->prev)
                         l->real_linenumber = 0;
-#ifdef USE_M17N
                     newBuf->document_charset = old_charset;
-#endif
                 }
             }
 #endif
@@ -904,7 +888,6 @@ checkContentType(Buffer* buf)
     r = Strnew();
     while (*p && *p != ';' && !IS_SPACE(*p))
         Strcat_char(r, *p++);
-#ifdef USE_M17N
     if ((p = strcasestr(p, "charset")) != NULL) {
         p += 7;
         SKIP_BLANKS(p);
@@ -916,7 +899,6 @@ checkContentType(Buffer* buf)
             content_charset = wc_guess_charset(p, 0);
         }
     }
-#endif
     return r->ptr;
 }
 
@@ -1644,9 +1626,7 @@ loadGeneralFile(char* path, ParsedURL* volatile current, char* referer,
 #ifdef USE_GOPHER
     int gopher_download = FALSE;
 #endif
-#ifdef USE_M17N
     wc_ces charset = WC_CES_US_ASCII;
-#endif
     HRequest hr;
     ParsedURL* volatile auth_pu;
 
@@ -1676,9 +1656,7 @@ load_doc: {
     f = openURL(tpath, &pu, current, &url_option, request, extra_header, of,
         &hr, &status);
     of = NULL;
-#ifdef USE_M17N
     content_charset = 0;
-#endif
     if (f.stream == NULL) {
         switch (f.scheme) {
         case SCM_LOCAL: {
@@ -1699,9 +1677,7 @@ load_doc: {
                 } else {
                     page = loadLocalDir(pu.real_file);
                     t = "local:directory";
-#ifdef USE_M17N
                     charset = SystemCharset;
-#endif
                 }
             }
         } break;
@@ -2036,9 +2012,7 @@ page_loaded:
             b->real_type = t;
             if (src)
                 b->sourcefile = tmp->ptr;
-#ifdef USE_M17N
             b->document_charset = charset;
-#endif
         }
         return b;
     }
@@ -2276,15 +2250,10 @@ is_word_char(unsigned char* ch)
 {
     Lineprop ctype = get_mctype(ch);
 
-#ifdef USE_M17N
     if (ctype & (PC_CTRL | PC_KANJI | PC_UNKNOWN))
         return 0;
     if (ctype & (PC_WCHAR1 | PC_WCHAR2))
         return 1;
-#else
-    if (ctype == PC_CTRL)
-        return 0;
-#endif
 
     if (IS_ALNUM(*ch))
         return 1;
@@ -2305,19 +2274,11 @@ is_word_char(unsigned char* ch)
     case '_':
         return 1;
     }
-#ifdef USE_M17N
     if (*ch == NBSP_CODE)
         return 1;
-#else
-    if (*ch == TIMES_CODE || *ch == DIVIDE_CODE || *ch == ANSP_CODE)
-        return 0;
-    if (*ch >= AGRAVE_CODE || *ch == NBSP_CODE)
-        return 1;
-#endif
     return 0;
 }
 
-#ifdef USE_M17N
 static int
 is_combining_char(unsigned char* ch)
 {
@@ -2327,7 +2288,6 @@ is_combining_char(unsigned char* ch)
         return 1;
     return 0;
 }
-#endif
 
 int is_boundary(unsigned char* ch1, unsigned char* ch2)
 {
@@ -2343,10 +2303,8 @@ int is_boundary(unsigned char* ch1, unsigned char* ch2)
     if (*ch2 != ' ' && is_beginning_char(ch1))
         return 0;
 
-#ifdef USE_M17N
     if (is_combining_char(ch2))
         return 0;
-#endif
     if (is_word_char(ch1) && is_word_char(ch2))
         return 0;
 
@@ -3992,7 +3950,6 @@ process_hr(struct parsed_tag* tag, int width, int indent_width)
     return tmp;
 }
 
-#ifdef USE_M17N
 static char*
 check_charset(char* p)
 {
@@ -4018,7 +3975,6 @@ check_accept_charset(char* ac)
     }
     return NULL;
 }
-#endif
 
 static Str
 process_form_int(struct parsed_tag* tag, int fid)
@@ -4031,12 +3987,10 @@ process_form_int(struct parsed_tag* tag, int fid)
     parsedtag_get_value(tag, ATTR_ACTION, &q);
     q = url_encode(remove_space(q), cur_baseURL, cur_document_charset);
     r = NULL;
-#ifdef USE_M17N
     if (parsedtag_get_value(tag, ATTR_ACCEPT_CHARSET, &r))
         r = check_accept_charset(r);
     if (!r && parsedtag_get_value(tag, ATTR_CHARSET, &r))
         r = check_charset(r);
-#endif
     s = NULL;
     parsedtag_get_value(tag, ATTR_ENCTYPE, &s);
     tg = NULL;
@@ -4074,10 +4028,8 @@ process_form_int(struct parsed_tag* tag, int fid)
             Strcat(tmp, Sprintf(" target=\"%s\"", html_quote(tg)));
         if (n)
             Strcat(tmp, Sprintf(" name=\"%s\"", html_quote(n)));
-#ifdef USE_M17N
         if (r)
             Strcat(tmp, Sprintf(" accept-charset=\"%s\"", html_quote(r)));
-#endif
         Strcat_charp(tmp, ">");
         return tmp;
     }
@@ -4358,25 +4310,17 @@ int HTMLtagproc1(struct parsed_tag* tag, struct html_feed_environ* h_env)
         HTMLlineproc1("</b>", h_env);
         return 1;
     case HTML_Q:
-#ifdef USE_M17N
-#ifdef USE_UNICODE
         if (DisplayCharset != WC_CES_US_ASCII) {
             HTMLlineproc1((obuf->q_level & 1 ? "&lsquo;" : "&ldquo;"), h_env);
             obuf->q_level += 1;
         } else
-#endif
-#endif
             HTMLlineproc1("`", h_env);
         return 1;
     case HTML_N_Q:
-#ifdef USE_M17N
-#ifdef USE_UNICODE
         if (DisplayCharset != WC_CES_US_ASCII) {
             obuf->q_level -= 1;
             HTMLlineproc1((obuf->q_level & 1 ? "&rsquo;" : "&rdquo;"), h_env);
         } else
-#endif
-#endif
             HTMLlineproc1("'", h_env);
         return 1;
     case HTML_FIGURE:
@@ -5084,7 +5028,6 @@ int HTMLtagproc1(struct parsed_tag* tag, struct html_feed_environ* h_env)
         p = q = r = NULL;
         parsedtag_get_value(tag, ATTR_HTTP_EQUIV, &p);
         parsedtag_get_value(tag, ATTR_CONTENT, &q);
-#ifdef USE_M17N
         parsedtag_get_value(tag, ATTR_CHARSET, &r);
         if (r) {
             /* <meta charset=""> */
@@ -5099,7 +5042,6 @@ int HTMLtagproc1(struct parsed_tag* tag, struct html_feed_environ* h_env)
                 meta_charset = wc_guess_charset(q, 0);
             }
         } else
-#endif
             if (p && q && !strcasecmp(p, "refresh")) {
             int refresh_interval;
             tmp = NULL;
@@ -5395,10 +5337,8 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
 #if defined(USE_M17N) || defined(USE_IMAGE)
     ParsedURL* base = baseURL(buf);
 #endif
-#ifdef USE_M17N
     wc_ces name_charset = url_to_charset(NULL, &buf->currentURL,
         buf->document_charset);
-#endif
 
     if (out_size == 0) {
         out_size = LINELEN;
@@ -5453,7 +5393,6 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
             PSIZE;
             mode = get_mctype(str);
             if ((effect | ex_efct(ex_effect)) & PC_SYMBOL && *str != '<') {
-#ifdef USE_M17N
                 char** buf = set_symbol(symbol_width0);
                 int len;
 
@@ -5468,31 +5407,19 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                         PPUSH(mode | effect | ex_efct(ex_effect), *(p++));
                     }
                 }
-#else
-                PPUSH(PC_ASCII | effect | ex_efct(ex_effect), SYMBOL_BASE + symbol);
-#endif
                 str += symbol_width;
             }
-#ifdef USE_M17N
             else if (mode == PC_CTRL || mode == PC_UNDEF) {
-#else
-            else if (mode == PC_CTRL || IS_INTSPACE(*str)) {
-#endif
                 PPUSH(PC_ASCII | effect | ex_efct(ex_effect), ' ');
                 str++;
             }
-#ifdef USE_M17N
             else if (mode & PC_UNKNOWN) {
                 PPUSH(PC_ASCII | effect | ex_efct(ex_effect), ' ');
                 str += get_mclen(str);
             }
-#endif
             else if (*str != '<' && *str != '&') {
-#ifdef USE_M17N
                 int len = get_mclen(str);
-#endif
                 PPUSH(mode | effect | ex_efct(ex_effect), *(str++));
-#ifdef USE_M17N
                 if (--len) {
                     mode = (mode & ~PC_WCHAR1) | PC_WCHAR2;
                     while (len--) {
@@ -5500,7 +5427,6 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                         PPUSH(mode | effect | ex_efct(ex_effect), *(str++));
                     }
                 }
-#endif
             } else if (*str == '&') {
                 /*
                  * & escape processing
@@ -5509,26 +5435,17 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                 while (*p) {
                     PSIZE;
                     mode = get_mctype((unsigned char*)p);
-#ifdef USE_M17N
                     if (mode == PC_CTRL || mode == PC_UNDEF) {
-#else
-                    if (mode == PC_CTRL || IS_INTSPACE(*str)) {
-#endif
                         PPUSH(PC_ASCII | effect | ex_efct(ex_effect), ' ');
                         p++;
                     }
-#ifdef USE_M17N
                     else if (mode & PC_UNKNOWN) {
                         PPUSH(PC_ASCII | effect | ex_efct(ex_effect), ' ');
                         p += get_mclen(p);
                     }
-#endif
                     else {
-#ifdef USE_M17N
                         int len = get_mclen(p);
-#endif
                         PPUSH(mode | effect | ex_efct(ex_effect), *(p++));
-#ifdef USE_M17N
                         if (--len) {
                             mode = (mode & ~PC_WCHAR1) | PC_WCHAR2;
                             while (len--) {
@@ -5536,7 +5453,6 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                                 PPUSH(mode | effect | ex_efct(ex_effect), *(p++));
                             }
                         }
-#endif
                     }
                 }
             } else {
@@ -6166,9 +6082,7 @@ void HTMLlineproc0(char* line, struct html_feed_environ* h_env, int internal)
     struct table* tbl = NULL;
     struct table_mode* tbl_mode = NULL;
     int tbl_width = 0;
-#ifdef USE_M17N
     int is_hangul, prev_is_hangul = 0;
-#endif
 
 #ifdef DEBUG
     if (w3m_debug) {
@@ -6428,7 +6342,6 @@ table_start:
                     }
                     str++;
                 } else {
-#ifdef USE_M17N
                     if (mode == PC_KANJI1)
                         is_hangul = wtf_is_hangul((wc_uchar*)str);
                     else
@@ -6445,7 +6358,6 @@ table_start:
                         }
                     }
                     prev_is_hangul = is_hangul;
-#endif
                     if (*str == '&')
                         proc_escape(obuf, &str);
                     else
@@ -6591,10 +6503,8 @@ addnewline(Buffer* buf, char* line, Lineprop* prop, Linecolor* color, int pos,
         i = columnLen(l, width);
         if (i == 0) {
             i++;
-#ifdef USE_M17N
             while (i < l->len && p[i] & PC_WCHAR2)
                 i++;
-#endif
         }
         l->len = i;
         l->width = COLPOS(l, l->len);
@@ -6931,10 +6841,8 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
     clen_t linelen = 0;
     clen_t trbyte = 0;
     Str lineBuf2 = Strnew();
-#ifdef USE_M17N
     wc_ces charset = WC_CES_US_ASCII;
     wc_ces volatile doc_charset = DocumentCharset;
-#endif
     struct html_feed_environ htmlenv1;
     struct readbuffer obuf;
 #ifdef USE_IMAGE
@@ -6942,7 +6850,6 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
 #endif
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
 
-#ifdef USE_M17N
     if (fmInitialized && graph_ok()) {
         symbol_width = symbol_width0 = 1;
     } else {
@@ -6950,9 +6857,6 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
         get_symbol(DisplayCharset, &symbol_width0);
         symbol_width = WcOption.use_wide ? symbol_width0 : 1;
     }
-#else
-    symbol_width = symbol_width0 = 1;
-#endif
 
     cur_title = NULL;
     pre_title = NULL;
@@ -6983,9 +6887,7 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
 
     if (w3m_halfload) {
         newBuf->buffername = "---";
-#ifdef USE_M17N
         newBuf->document_charset = InnerCharset;
-#endif
         max_textarea = 0;
 #ifdef MENU_SELECT
         max_select = 0;
@@ -7011,7 +6913,6 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
     }
     TRAP_ON;
 
-#ifdef USE_M17N
     if (newBuf != NULL) {
         if (newBuf->bufferprop & BP_FRAME)
             charset = InnerCharset;
@@ -7023,7 +6924,6 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
     else if (f->guess_type && !strcasecmp(f->guess_type, "application/xhtml+xml"))
         doc_charset = WC_CES_UTF_8;
     meta_charset = 0;
-#endif
     if (IStype(f->stream) != IST_ENCODED)
         f->stream = newEncodedStream(f->stream, f->encoding);
     while ((lineBuf2 = StrmyUFgets(f)) && lineBuf2->length) {
@@ -7050,7 +6950,6 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
          * if (frame_source)
          * continue;
          */
-#ifdef USE_M17N
         if (meta_charset) { /* <META> */
             if (content_charset == 0 && UseContentCharset) {
                 doc_charset = meta_charset;
@@ -7058,11 +6957,8 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
             }
             meta_charset = 0;
         }
-#endif
         lineBuf2 = convertLine(f, lineBuf2, HTML_MODE, &charset, doc_charset);
-#ifdef USE_M17N
         cur_document_charset = charset;
-#endif
         HTMLlineproc0(lineBuf2->ptr, &htmlenv1, internal);
     }
     if (obuf.status != R_ST_NORMAL) {
@@ -7074,9 +6970,7 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
 #if defined(USE_M17N) || defined(USE_IMAGE)
     cur_baseURL = NULL;
 #endif
-#ifdef USE_M17N
     cur_document_charset = 0;
-#endif
     if (htmlenv1.title)
         newBuf->buffername = htmlenv1.title;
     if (w3m_halfdump) {
@@ -7093,10 +6987,8 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
 phase2:
     newBuf->trbyte = trbyte + linelen;
     TRAP_OFF;
-#ifdef USE_M17N
     if (!(newBuf->bufferprop & BP_FRAME))
         newBuf->document_charset = charset;
-#endif
 #ifdef USE_IMAGE
     newBuf->image_flag = image_flag;
 #endif
@@ -7124,13 +7016,9 @@ loadHTMLString(Str page)
     }
     TRAP_ON;
 
-#ifdef USE_M17N
     newBuf->document_charset = InnerCharset;
-#endif
     loadHTMLstream(&f, newBuf, NULL, TRUE);
-#ifdef USE_M17N
     newBuf->document_charset = WC_CES_US_ASCII;
-#endif
 
     TRAP_OFF;
     UFclose(&f);
@@ -7149,20 +7037,14 @@ loadHTMLString(Str page)
 /*
  * loadGopherDir: get gopher directory
  */
-#ifdef USE_M17N
 Str loadGopherDir(URLFile* uf, ParsedURL* pu, wc_ces* charset)
-#else
-Str loadGopherDir0(URLFile* uf, ParsedURL* pu)
-#endif
 {
     Str volatile tmp;
     Str lbuf, name, file, host, port, type;
     char* volatile p, * volatile q;
     int link, pre;
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
-#ifdef USE_M17N
     wc_ces doc_charset = DocumentCharset;
-#endif
 
     tmp = parsedURL2Str(pu);
     p = html_quote(tmp->ptr);
@@ -7275,17 +7157,11 @@ gopher_end:
     return tmp;
 }
 
-#ifdef USE_M17N
 Str loadGopherSearch(URLFile* uf, ParsedURL* pu, wc_ces* charset)
-#else
-Str loadGopherSearch0(URLFile* uf, ParsedURL* pu)
-#endif
 {
     Str tmp;
     char* volatile p, * volatile q;
-#ifdef USE_M17N
     wc_ces doc_charset = DocumentCharset;
-#endif
 
     tmp = parsedURL2Str(pu);
     p = html_quote(tmp->ptr);
@@ -7310,10 +7186,8 @@ Buffer*
 loadBuffer(URLFile* uf, Buffer* volatile newBuf)
 {
     FILE* volatile src = NULL;
-#ifdef USE_M17N
     wc_ces charset = WC_CES_US_ASCII;
     wc_ces volatile doc_charset = DocumentCharset;
-#endif
     Str lineBuf2;
     volatile char pre_lbuf = '\0';
     int nlines;
@@ -7339,12 +7213,10 @@ loadBuffer(URLFile* uf, Buffer* volatile newBuf)
         if (src)
             newBuf->sourcefile = tmpf->ptr;
     }
-#ifdef USE_M17N
     if (newBuf->document_charset)
         charset = doc_charset = newBuf->document_charset;
     if (content_charset && UseContentCharset)
         doc_charset = content_charset;
-#endif
 
     nlines = 0;
     if (IStype(uf->stream) != IST_ENCODED)
@@ -7391,9 +7263,7 @@ _end:
     newBuf->lastLine = newBuf->currentLine;
     newBuf->currentLine = newBuf->firstLine;
     newBuf->trbyte = trbyte + linelen;
-#ifdef USE_M17N
     newBuf->document_charset = charset;
-#endif
     if (src)
         fclose(src);
 
@@ -7469,34 +7339,22 @@ conv_symbol(Line* l)
     Str tmp = NULL;
     char *p = l->lineBuf, *ep = p + l->len;
     Lineprop* pr = l->propBuf;
-#ifdef USE_M17N
     int w;
     char** symbol = NULL;
-#else
-    char** symbol = get_symbol();
-#endif
 
     for (; p < ep; p++, pr++) {
         if (*pr & PC_SYMBOL) {
-#ifdef USE_M17N
             char c = ((char)wtf_get_code((wc_uchar*)p) & 0x7f) - SYMBOL_BASE;
             int len = get_mclen(p);
-#else
-            char c = *p - SYMBOL_BASE;
-#endif
             if (tmp == NULL) {
                 tmp = Strnew_size(l->len);
                 Strcopy_charp_n(tmp, l->lineBuf, p - l->lineBuf);
-#ifdef USE_M17N
                 w = (*pr & PC_KANJI) ? 2 : 1;
                 symbol = get_symbol(DisplayCharset, &w);
-#endif
             }
             Strcat_charp(tmp, symbol[(unsigned char)c % N_SYMBOL]);
-#ifdef USE_M17N
             p += len - 1;
             pr += len - 1;
-#endif
         } else if (tmp != NULL)
             Strcat_char(tmp, *p);
     }
@@ -7514,10 +7372,8 @@ _saveBuffer(Buffer* buf, Line* l, FILE* f, int cont)
 {
     Str tmp;
     int is_html = FALSE;
-#ifdef USE_M17N
     int set_charset = !DisplayCharset;
     wc_ces charset = DisplayCharset ? DisplayCharset : WC_CES_US_ASCII;
-#endif
 
     is_html = is_html_type(buf->type);
 
@@ -7534,10 +7390,8 @@ pager_next:
     }
     if (buf->pagerSource && !(buf->bufferprop & BP_CLOSE)) {
         l = getNextPage(buf, PagerMax);
-#ifdef USE_M17N
         if (set_charset)
             charset = buf->document_charset;
-#endif
         goto pager_next;
     }
 }
@@ -7614,9 +7468,7 @@ getpipe(char* cmd)
         conv_from_system(cmd))
                           ->ptr;
     buf->bufferprop |= BP_PIPE;
-#ifdef USE_M17N
     buf->document_charset = WC_CES_US_ASCII;
-#endif
     return buf;
 }
 
@@ -7636,12 +7488,10 @@ openPagerBuffer(InputStream stream, Buffer* buf)
     else
         buf->buffername = conv_from_system(buf->buffername);
     buf->bufferprop |= BP_PIPE;
-#ifdef USE_M17N
     if (content_charset && UseContentCharset)
         buf->document_charset = content_charset;
     else
         buf->document_charset = WC_CES_US_ASCII;
-#endif
     buf->currentLine = buf->firstLine;
 
     return buf;
@@ -7657,9 +7507,7 @@ openGeneralPagerBuffer(InputStream stream)
 
     init_stream(&uf, SCM_UNKNOWN, stream);
 
-#ifdef USE_M17N
     content_charset = 0;
-#endif
     t_buf = newBuffer(INIT_BUFFER_WIDTH);
     copyParsedURL(&t_buf->currentURL, NULL);
     t_buf->currentURL.scheme = SCM_LOCAL;
@@ -7719,11 +7567,9 @@ Line* getNextPage(Buffer* buf, int plen)
     Str lineBuf2;
     char volatile pre_lbuf = '\0';
     URLFile uf;
-#ifdef USE_M17N
     wc_ces charset;
     wc_ces volatile doc_charset = DocumentCharset;
     wc_uint8 old_auto_detect = WcOption.auto_detect;
-#endif
     int volatile squeeze_flag = FALSE;
     Lineprop* propBuffer = NULL;
 
@@ -7743,7 +7589,6 @@ Line* getNextPage(Buffer* buf, int plen)
         buf->currentLine = last;
     }
 
-#ifdef USE_M17N
     charset = buf->document_charset;
     if (buf->document_charset != WC_CES_US_ASCII)
         doc_charset = buf->document_charset;
@@ -7754,7 +7599,6 @@ Line* getNextPage(Buffer* buf, int plen)
             doc_charset = content_charset;
     }
     WcOption.auto_detect = buf->auto_detect;
-#endif
 
     if (SETJMP(AbortLoading) != 0) {
         goto pager_end;
@@ -7820,10 +7664,8 @@ pager_end:
     TRAP_OFF;
 
     buf->trbyte = trbyte + linelen;
-#ifdef USE_M17N
     buf->document_charset = charset;
     WcOption.auto_detect = old_auto_detect;
-#endif
     buf->topLine = top;
     buf->currentLine = cur;
     if (!last)

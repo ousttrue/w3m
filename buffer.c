@@ -29,9 +29,7 @@ newBuffer(int width)
     *n->clone = 1;
     n->trbyte = 0;
     n->ssl_certificate = NULL;
-#ifdef USE_M17N
     n->auto_detect = WcOption.auto_detect;
-#endif
     n->check_url = MarkAllPages; /* use default from -o mark_all_pages */
     n->need_reshape = 1; /* always reshape new buffers to mark URLs */
     return n;
@@ -461,9 +459,7 @@ void reshapeBuffer(Buffer* buf)
 {
     URLFile f;
     Buffer sbuf;
-#ifdef USE_M17N
     wc_uint8 old_auto_detect = WcOption.auto_detect;
-#endif
 
     if (!buf->need_reshape)
         return;
@@ -508,19 +504,15 @@ void reshapeBuffer(Buffer* buf)
             readHeader(&f, buf, TRUE, NULL);
     }
 
-#ifdef USE_M17N
     WcOption.auto_detect = WC_OPT_DETECT_OFF;
     UseContentCharset = FALSE;
-#endif
     if (is_html_type(buf->type))
         loadHTMLBuffer(&f, buf);
     else
         loadBuffer(&f, buf);
     UFclose(&f);
-#ifdef USE_M17N
     WcOption.auto_detect = old_auto_detect;
     UseContentCharset = TRUE;
-#endif
 
     buf->height = LASTLINE + 1;
     if (buf->firstLine && sbuf.firstLine) {

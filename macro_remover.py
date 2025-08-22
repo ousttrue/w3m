@@ -35,9 +35,11 @@ CONTEXT = {
     "__EMX__": False,
     "__WATT32__": False,
     "USE_BINMODE_STREAM": False,
-    # "USE_M17N": False,
-    # "USE_UNICODE": False,
-    # "ENABLE_NLS": False,
+    #
+    "USE_M17N": True,
+    "USE_UNICODE": True,
+    "ENABLE_NLS": True,
+    #
     # "USE_COLOR": False,
     # "USE_ANSI_COLOR": False,
     # "USE_BG_COLOR": False,

@@ -80,7 +80,6 @@ err:
 }
 #endif /* USE_MIGEMO */
 
-#ifdef USE_M17N
 /* normalize search string */
 char* conv_search_string(char* str, wc_ces f_ces)
 {
@@ -88,7 +87,6 @@ char* conv_search_string(char* str, wc_ces f_ces)
         str = wtf_conv_fit(str, Currentbuf->document_charset);
     return str;
 }
-#endif
 
 int forwardSearch(Buffer* buf, char* str)
 {
@@ -121,10 +119,8 @@ int forwardSearch(Buffer* buf, char* str)
             l = l->prev;
     }
     begin = l;
-#ifdef USE_M17N
     while (pos < l->size && l->propBuf[pos] & PC_WCHAR2)
         pos++;
-#endif
     if (pos < l->size && regexMatch(&l->lineBuf[pos], l->size - pos, 0) == 1) {
         matchedPosition(&first, &last);
         pos = first - l->lineBuf;
@@ -213,10 +209,8 @@ int backwardSearch(Buffer* buf, char* str)
     begin = l;
     if (pos > 0) {
         pos--;
-#ifdef USE_M17N
         while (pos > 0 && l->propBuf[pos] & PC_WCHAR2)
             pos--;
-#endif
         p = &l->lineBuf[pos];
         found = NULL;
         found_last = NULL;
@@ -230,11 +224,9 @@ int backwardSearch(Buffer* buf, char* str)
             if (q - l->lineBuf >= l->size)
                 break;
             q++;
-#ifdef USE_M17N
             while (q - l->lineBuf < l->size
                 && l->propBuf[q - l->lineBuf] & PC_WCHAR2)
                 q++;
-#endif
             if (q > p)
                 break;
         }
@@ -271,11 +263,9 @@ int backwardSearch(Buffer* buf, char* str)
             if (q - l->lineBuf >= l->size)
                 break;
             q++;
-#ifdef USE_M17N
             while (q - l->lineBuf < l->size
                 && l->propBuf[q - l->lineBuf] & PC_WCHAR2)
                 q++;
-#endif
         }
         if (found) {
             pos = found - l->lineBuf;

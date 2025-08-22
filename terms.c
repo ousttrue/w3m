@@ -270,20 +270,14 @@ typedef struct sgttyb TerminalMode;
 /* Sort of Character */
 #define C_WHICHCHAR 0xc0
 #define C_ASCII 0x00
-#ifdef USE_M17N
 #define C_WCHAR1 0x40
 #define C_WCHAR2 0x80
-#endif
 #define C_CTRL 0xc0
 
 #define CHMODE(c) ((c) & C_WHICHCHAR)
 #define SETCHMODE(var, mode) ((var) = (((var) & ~C_WHICHCHAR) | mode))
-#ifdef USE_M17N
 #define SETCH(var, ch, len) ((var) = New_Reuse(char, (var), (len) + 1), \
     strncpy((var), (ch), (len + 1)))
-#else
-#define SETCH(var, ch, len) ((var) = (ch))
-#endif
 
 /* Charactor Color */
 #define COL_FCOLOR 0xf00
@@ -334,11 +328,7 @@ typedef struct sgttyb TerminalMode;
 typedef unsigned short l_prop;
 
 typedef struct scline {
-#ifdef USE_M17N
     char** lineimage;
-#else
-    char* lineimage;
-#endif
     l_prop* lineprop;
     short isdirty;
     short eol;
@@ -1131,12 +1121,8 @@ void setupscreen(void)
     if (COLS + 1 > max_COLS) {
         max_COLS = COLS + 1;
         for (i = 0; i < max_LINES; i++) {
-#ifdef USE_M17N
             ScreenElem[i].lineimage = New_N(char*, max_COLS);
             bzero((void*)ScreenElem[i].lineimage, max_COLS * sizeof(char*));
-#else
-            ScreenElem[i].lineimage = New_N(char, max_COLS);
-#endif
             ScreenElem[i].lineprop = New_N(l_prop, max_COLS);
         }
     }
@@ -1192,19 +1178,11 @@ void move(int line, int column)
 #endif /* not USE_BG_COLOR */
 
 static int
-#ifdef USE_M17N
 need_redraw(char* c1, l_prop pr1, char* c2, l_prop pr2)
 {
     if (!c1 || !c2 || strcmp(c1, c2))
         return 1;
     if (*c1 == ' ')
-#else
-need_redraw(char c1, l_prop pr1, char c2, l_prop pr2)
-{
-    if (c1 != c2)
-        return 1;
-    if (c1 == ' ')
-#endif
         return (pr1 ^ pr2) & M_SPACE & ~S_DIRTY;
 
     if ((pr1 ^ pr2) & ~S_DIRTY)
@@ -1215,26 +1193,17 @@ need_redraw(char c1, l_prop pr1, char c2, l_prop pr2)
 
 #define M_CEOL (~(M_SPACE | C_WHICHCHAR))
 
-#ifdef USE_M17N
 #define SPACE " "
-#else
-#define SPACE ' '
-#endif
 
-#ifdef USE_M17N
 void addch(char c)
 {
     addmch(&c, 1);
 }
 
 void addmch(char* pc, size_t len)
-#else
-void addch(char pc)
-#endif
 {
     l_prop* pr;
     int dest, i;
-#ifdef USE_M17N
     static Str tmp = NULL;
     char** p;
     char c = *pc;
@@ -1244,10 +1213,6 @@ void addch(char pc)
         tmp = Strnew();
     Strcopy_charp_n(tmp, pc, len);
     pc = tmp->ptr;
-#else
-    char* p;
-    char c = pc;
-#endif
 
     if (CurColumn == COLS)
         wrap();
@@ -1256,12 +1221,6 @@ void addch(char pc)
     p = ScreenImage[CurLine]->lineimage;
     pr = ScreenImage[CurLine]->lineprop;
 
-#ifndef USE_M17N
-    /* Eliminate unprintables according to * iso-8859-*.
-     * Particularly 0x96 messes up T.Dickey's * (xfree-)xterm */
-    if (IS_INTSPACE(c))
-        c = ' ';
-#endif
 
     if (pr[CurColumn] & S_EOL) {
         if (c == ' ' && !(CurrentMode & M_SPACE)) {
@@ -1276,10 +1235,8 @@ void addch(char pc)
 
     if (c == '\t' || c == '\n' || c == '\r' || c == '\b')
         SETCHMODE(CurrentMode, C_CTRL);
-#ifdef USE_M17N
     else if (len > 1)
         SETCHMODE(CurrentMode, C_WCHAR1);
-#endif
     else if (!IS_CNTRL(c))
         SETCHMODE(CurrentMode, C_ASCII);
     else
@@ -1287,11 +1244,7 @@ void addch(char pc)
 
     /* Required to erase bold or underlined character for some * terminal
      * emulators. */
-#ifdef USE_M17N
     i = CurColumn + width - 1;
-#else
-    i = CurColumn;
-#endif
     if (i < COLS && (((pr[i] & S_BOLD) && need_redraw(p[i], pr[i], pc, CurrentMode)) || ((pr[i] & S_UNDERLINE) && !(CurrentMode & S_UNDERLINE)))) {
         touch_line();
         i++;
@@ -1301,16 +1254,13 @@ void addch(char pc)
                 SETCH(p[i], SPACE, 1);
                 SETPROP(pr[i], (pr[i] & M_CEOL) | C_ASCII);
             }
-#ifdef USE_M17N
             else {
                 for (i++; i < COLS && CHMODE(pr[i]) == C_WCHAR2; i++)
                     touch_column(i);
             }
-#endif
         }
     }
 
-#ifdef USE_M17N
     if (CurColumn + width > COLS) {
         touch_line();
         for (i = CurColumn; i < COLS; i++) {
@@ -1335,14 +1285,12 @@ void addch(char pc)
                 break;
         }
     }
-#endif
     if (CHMODE(CurrentMode) != C_CTRL) {
         if (need_redraw(p[CurColumn], pr[CurColumn], pc, CurrentMode)) {
             SETCH(p[CurColumn], pc, len);
             SETPROP(pr[CurColumn], CurrentMode);
             touch_line();
             touch_column(CurColumn);
-#ifdef USE_M17N
             SETCHMODE(CurrentMode, C_WCHAR2);
             for (i = CurColumn + 1; i < CurColumn + width; i++) {
                 SETCH(p[i], SPACE, 1);
@@ -1356,10 +1304,6 @@ void addch(char pc)
             }
         }
         CurColumn += width;
-#else
-        }
-        CurColumn++;
-#endif
     } else if (c == '\t') {
         dest = (CurColumn + tab_step) / tab_step * tab_step;
         if (dest >= COLS) {
@@ -1384,10 +1328,8 @@ void addch(char pc)
         CurColumn = 0;
     } else if (c == '\b' && CurColumn > 0) { /* Backspace */
         CurColumn--;
-#ifdef USE_M17N
         while (CurColumn > 0 && CHMODE(pr[CurColumn]) == C_WCHAR2)
             CurColumn--;
-#endif
     }
 }
 
@@ -1427,17 +1369,13 @@ void standend(void)
 
 void toggle_stand(void)
 {
-#ifdef USE_M17N
     int i;
-#endif
     l_prop* pr = ScreenImage[CurLine]->lineprop;
     pr[CurColumn] ^= S_STANDOUT;
-#ifdef USE_M17N
     if (CHMODE(pr[CurColumn]) != C_WCHAR2) {
         for (i = CurColumn + 1; CHMODE(pr[i]) == C_WCHAR2; i++)
             pr[i] ^= S_STANDOUT;
     }
-#endif
 }
 
 void bold(void)
@@ -1522,11 +1460,7 @@ void refresh(void)
     int line, col, pcol;
     int pline = CurLine;
     int moved = RF_NEED_TO_MOVE;
-#ifdef USE_M17N
     char** pc;
-#else
-    char* pc;
-#endif
     l_prop *pr, mode = 0;
     l_prop color = COL_FTERM;
 #ifdef USE_BG_COLOR
@@ -1534,9 +1468,7 @@ void refresh(void)
 #endif /* USE_BG_COLOR */
     short* dirty;
 
-#ifdef USE_M17N
     wc_putc_init(InnerCharset, DisplayCharset);
-#endif
     for (line = 0; line <= LASTLINE; line++) {
         dirty = &ScreenImage[line]->isdirty;
         if (*dirty & L_DIRTY) {
@@ -1654,9 +1586,7 @@ void refresh(void)
                     }
 #endif /* USE_BG_COLOR */
                     if ((pr[col] & S_GRAPHICS) && !(mode & S_GRAPHICS)) {
-#ifdef USE_M17N
                         wc_putc_end(ttyf);
-#endif
                         if (!graph_enabled) {
                             graph_enabled = 1;
                             writestr(T_eA);
@@ -1664,14 +1594,10 @@ void refresh(void)
                         writestr(T_as);
                         mode |= S_GRAPHICS;
                     }
-#ifdef USE_M17N
                     if (pr[col] & S_GRAPHICS)
                         write1(graphchar(*pc[col]));
                     else if (CHMODE(pr[col]) != C_WCHAR2)
                         wc_putc(pc[col], ttyf);
-#else
-                    write1((pr[col] & S_GRAPHICS) ? graphchar(pc[col]) : pc[col]);
-#endif
                     pcol = col + 1;
                 }
             }
@@ -1690,17 +1616,13 @@ void refresh(void)
                 writestr(T_op);
             if (mode & S_GRAPHICS) {
                 writestr(T_ae);
-#ifdef USE_M17N
                 wc_putc_clear_status();
-#endif
             }
             writestr(T_me);
             mode &= ~M_MEND;
         }
     }
-#ifdef USE_M17N
     wc_putc_end(ttyf);
-#endif
     MOVE(CurLine, CurColumn);
     flush_tty();
 }
@@ -1894,7 +1816,6 @@ void clrtobotx(void)
 
 void addstr(char* s)
 {
-#ifdef USE_M17N
     int len;
 
     while (*s != '\0') {
@@ -1902,16 +1823,11 @@ void addstr(char* s)
         addmch(s, len);
         s += len;
     }
-#else
-    while (*s != '\0')
-        addch(*(s++));
-#endif
 }
 
 void addnstr(char* s, int n)
 {
     int i;
-#ifdef USE_M17N
     int len, width;
 
     for (i = 0; *s != '\0';) {
@@ -1923,16 +1839,11 @@ void addnstr(char* s, int n)
         s += len;
         i += width;
     }
-#else
-    for (i = 0; i < n && *s != '\0'; i++)
-        addch(*(s++));
-#endif
 }
 
 void addnstr_sup(char* s, int n)
 {
     int i;
-#ifdef USE_M17N
     int len, width;
 
     for (i = 0; *s != '\0';) {
@@ -1944,10 +1855,6 @@ void addnstr_sup(char* s, int n)
         s += len;
         i += width;
     }
-#else
-    for (i = 0; i < n && *s != '\0'; i++)
-        addch(*(s++));
-#endif
     for (; i < n; i++)
         addch(' ');
 }
@@ -2122,11 +2029,8 @@ void flush_tty(void)
 #ifdef USE_IMAGE
 void touch_cursor(void)
 {
-#ifdef USE_M17N
     int i;
-#endif
     touch_line();
-#ifdef USE_M17N
     for (i = CurColumn; i >= 0; i--) {
         touch_column(i);
         if (CHMODE(ScreenImage[CurLine]->lineprop[i]) != C_WCHAR2)
@@ -2137,9 +2041,6 @@ void touch_cursor(void)
             break;
         touch_column(i);
     }
-#else
-    touch_column(CurColumn);
-#endif
 }
 #endif
 

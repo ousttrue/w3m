@@ -406,11 +406,7 @@ suspend_or_pushdata(struct table* tbl, char* line)
     }
 }
 
-#ifdef USE_M17N
 #define PUSH_TAG(str, n) Strcat_charp_n(tagbuf, str, n)
-#else
-#define PUSH_TAG(str, n) Strcat_char(tagbuf, *str), (void)n
-#endif
 
 int visible_length_offset = 0;
 int visible_length(char* str)
@@ -425,16 +421,11 @@ int visible_length(char* str)
     while (*str) {
         prev_status = status;
         if (next_status(*str, &status)) {
-#ifdef USE_M17N
             len += get_mcwidth(str);
             n = get_mclen(str);
         } else {
             n = 1;
         }
-#else
-            len++;
-        }
-#endif
         if (status == R_ST_TAG0) {
             Strclear(tagbuf);
             PUSH_TAG(str, n);
@@ -474,11 +465,7 @@ int visible_length(char* str)
                 max_len = len;
             len = 0;
         }
-#ifdef USE_M17N
         str += n;
-#else
-        str++;
-#endif
     }
     if (status == R_ST_AMP) {
         r2 = tagbuf->ptr;
@@ -506,13 +493,8 @@ visible_length_plain(char* str)
             len = 0;
             str++;
         } else {
-#ifdef USE_M17N
             len += get_mcwidth(str);
             str += get_mclen(str);
-#else
-            len++;
-            str++;
-#endif
         }
     }
     return len > max_len ? len : max_len;
@@ -2266,11 +2248,9 @@ skip_space(struct table* t, char* line, struct table_linfo* linfo,
                 w += len;
             }
             if (s > 0) {
-#ifdef USE_M17N
                 if (!SimplePreserveSpace && ctype == PC_KANJI1 && prev_ctype == PC_KANJI1)
                     skip += s;
                 else
-#endif
                     skip += s - 1;
             }
             s = 0;
