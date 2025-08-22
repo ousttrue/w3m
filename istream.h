@@ -4,11 +4,9 @@
 
 #include "indep.h"
 #include <stdio.h>
-#ifdef USE_SSL
 #include <openssl/bio.h>
 #include <openssl/x509.h>
 #include <openssl/ssl.h>
-#endif
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -25,12 +23,10 @@ struct io_file_handle {
     void (*close)(void*);
 };
 
-#ifdef USE_SSL
 struct ssl_handle {
     SSL* ssl;
     int sock;
 };
-#endif
 
 union input_stream;
 
@@ -68,7 +64,6 @@ struct str_stream {
     void (*close)();
 };
 
-#ifdef USE_SSL
 struct ssl_stream {
     struct stream_buffer stream;
     struct ssl_handle* handle;
@@ -77,7 +72,6 @@ struct ssl_stream {
     int (*read)();
     void (*close)();
 };
-#endif /* USE_SSL */
 
 struct encoded_stream {
     struct stream_buffer stream;
@@ -92,18 +86,14 @@ union input_stream {
     struct base_stream base;
     struct file_stream file;
     struct str_stream str;
-#ifdef USE_SSL
     struct ssl_stream ssl;
-#endif /* USE_SSL */
     struct encoded_stream ens;
 };
 
 typedef struct base_stream* BaseStream;
 typedef struct file_stream* FileStream;
 typedef struct str_stream* StrStream;
-#ifdef USE_SSL
 typedef struct ssl_stream* SSLStream;
-#endif /* USE_SSL */
 typedef struct encoded_stream* EncodedStrStream;
 
 typedef union input_stream* InputStream;
@@ -111,9 +101,7 @@ typedef union input_stream* InputStream;
 extern InputStream newInputStream(int des);
 extern InputStream newFileStream(FILE* f, void (*closep)());
 extern InputStream newStrStream(Str s);
-#ifdef USE_SSL
 extern InputStream newSSLStream(SSL* ssl, int sock);
-#endif
 extern InputStream newEncodedStream(InputStream is, char encoding);
 extern int ISclose(InputStream stream);
 extern int ISgetc(InputStream stream);
@@ -128,10 +116,8 @@ extern int ISread(InputStream stream, Str buf, int count);
 int ISread_n(InputStream stream, char* dst, int bufsize);
 extern int ISfileno(InputStream stream);
 extern int ISeos(InputStream stream);
-#ifdef USE_SSL
 extern void ssl_accept_this_site(char* hostname);
 extern Str ssl_get_certificate(SSL* ssl, char* hostname);
-#endif
 
 #define IST_BASIC 0
 #define IST_FILE 1
@@ -146,10 +132,8 @@ extern Str ssl_get_certificate(SSL* ssl, char* hostname);
 #define file_of(stream) ((stream)->file.handle->f)
 #define set_close(stream, closep) ((IStype(stream) == IST_FILE) ? ((stream)->file.handle->close = (closep)) : 0)
 #define str_of(stream) ((stream)->str.handle)
-#ifdef USE_SSL
 #define ssl_socket_of(stream) ((stream)->ssl.handle->sock)
 #define ssl_of(stream) ((stream)->ssl.handle->ssl)
-#endif
 
 #ifdef USE_BINMODE_STREAM
 #define openIS(path) newInputStream(open((path), O_RDONLY | O_BINARY))

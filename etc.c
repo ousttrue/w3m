@@ -1321,12 +1321,8 @@ reset_signals(void)
 #ifdef SIGBUS
     mySignal(SIGBUS, SIG_DFL); /* create core image */
 #endif /* SIGBUS */
-#ifdef SIGCHLD
     mySignal(SIGCHLD, SIG_IGN);
-#endif
-#ifdef SIGPIPE
     mySignal(SIGPIPE, SIG_IGN);
-#endif
 }
 
 #ifndef FOPEN_MAX
@@ -1913,7 +1909,6 @@ mymktime(char* timestr)
     return (time_t)((day * 60 * 60 * 24) + (hour * 60 * 60) + (min * 60) + sec);
 }
 
-#ifdef USE_COOKIE
 #ifdef INET6
 #include <sys/socket.h>
 #endif /* INET6 */
@@ -1986,7 +1981,6 @@ char* FQDN(char* host)
 #endif /* INET6 */
 }
 
-#endif /* USE_COOKIE */
 
 void (*mySignal(int signal_number, void (*action)(int)))(int)
 {

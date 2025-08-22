@@ -25,12 +25,10 @@
 #include "myctype.h"
 #include "regex.h"
 
-#ifdef USE_SSL
 #ifndef SSLEAY_VERSION_NUMBER
 #include <openssl/crypto.h> /* SSLEAY_VERSION_NUMBER may be here */
 #endif
 #include <openssl/err.h>
-#endif
 
 #ifdef __WATT32__
 #define write(a, b, c) write_s(a, b, c)
@@ -73,9 +71,7 @@ static int
           119, /* news group */
           0, /* data - not defined */
           0, /* mailto - not defined */
-#ifdef USE_SSL
           443, /* https */
-#endif /* USE_SSL */
       };
 
 struct cmdtable schemetable[] = {
@@ -93,9 +89,7 @@ struct cmdtable schemetable[] = {
 #ifndef USE_W3MMAILER
     { "mailto", SCM_MAILTO },
 #endif
-#ifdef USE_SSL
     { "https", SCM_HTTPS },
-#endif /* USE_SSL */
     { NULL, SCM_UNKNOWN },
 };
 
@@ -223,9 +217,7 @@ DefaultFile(int scheme)
 {
     switch (scheme) {
     case SCM_HTTP:
-#ifdef USE_SSL
     case SCM_HTTPS:
-#endif /* USE_SSL */
         return allocStr(HTTP_DEFAULT_FILE, -1);
 #ifdef USE_GOPHER
     case SCM_GOPHER:
@@ -247,7 +239,6 @@ KeyAbort(SIGNAL_ARG)
     SIGNAL_RETURN;
 }
 
-#ifdef USE_SSL
 SSL_CTX* ssl_ctx = NULL;
 
 void free_ssl_ctx(void)
@@ -325,20 +316,13 @@ openSSLHandle(int sock, char* hostname, char** p_cert)
 {
     SSL* handle = NULL;
     static char* old_ssl_forbid_method = NULL;
-#ifdef USE_SSL_VERIFY
     static int old_ssl_verify_server = -1;
-#endif
 
     if (old_ssl_forbid_method != ssl_forbid_method
         && (!old_ssl_forbid_method || !ssl_forbid_method || strcmp(old_ssl_forbid_method, ssl_forbid_method))) {
         old_ssl_forbid_method = ssl_forbid_method;
-#ifdef USE_SSL_VERIFY
         ssl_path_modified = 1;
-#else
-        free_ssl_ctx();
-#endif
     }
-#ifdef USE_SSL_VERIFY
     if (old_ssl_verify_server != ssl_verify_server) {
         old_ssl_verify_server = ssl_verify_server;
         ssl_path_modified = 1;
@@ -347,7 +331,6 @@ openSSLHandle(int sock, char* hostname, char** p_cert)
         free_ssl_ctx();
         ssl_path_modified = 0;
     }
-#endif /* defined(USE_SSL_VERIFY) */
     if (ssl_ctx == NULL) {
         int option;
 #if OPENSSL_VERSION_NUMBER < 0x0800
@@ -412,7 +395,6 @@ openSSLHandle(int sock, char* hostname, char** p_cert)
         SSL_CTX_set_mode(ssl_ctx, SSL_MODE_RELEASE_BUFFERS);
 #endif
 
-#ifdef USE_SSL_VERIFY
         /* derived from openssl-0.9.5/apps/s_{client,cb}.c */
 #if 1 /* use SSL_get_verify_result() to verify cert */
         SSL_CTX_set_verify(ssl_ctx, SSL_VERIFY_NONE, NULL);
@@ -450,7 +432,6 @@ openSSLHandle(int sock, char* hostname, char** p_cert)
             if (ssl_ca_default)
                 SSL_CTX_set_default_verify_paths(ssl_ctx);
         }
-#endif /* defined(USE_SSL_VERIFY) */
 #endif /* SSLEAY_VERSION_NUMBER >= 0x0800 */
     }
     handle = SSL_new(ssl_ctx);
@@ -499,7 +480,6 @@ SSL_write_from_file(SSL* ssl, char* file)
     }
 }
 
-#endif /* USE_SSL */
 
 static void
 write_from_file(int sock, char* file)
@@ -1185,9 +1165,7 @@ void parseURL2(char* url, ParsedURL* pu, ParsedURL* current)
         }
 #endif
         else if (pu->scheme == SCM_HTTP
-#ifdef USE_SSL
             || pu->scheme == SCM_HTTPS
-#endif
         ) {
             if (relative_uri) {
                 /* In this case, pu->file is created by [process 1] above.
@@ -1244,9 +1222,7 @@ _parsedURL2Str(ParsedURL* pu, int pass, int user, int label)
         "news",
         "data",
         "mailto",
-#ifdef USE_SSL
         "https",
-#endif /* USE_SSL */
     };
 
     if (pu->scheme == SCM_MISSING) {
@@ -1429,11 +1405,9 @@ otherinfo(ParsedURL* target, ParsedURL* current, char* referer)
         int cross_origin = FALSE;
         if (CrossOriginReferer && current && current->host && (!target || !target->host || strcasecmp(current->host, target->host) != 0 || current->port != target->port || current->scheme != target->scheme))
             cross_origin = TRUE;
-#ifdef USE_SSL
         if (current && current->scheme == SCM_HTTPS && target->scheme != SCM_HTTPS) {
             /* Don't send Referer: if https:// -> http:// */
         } else
-#endif
             if (referer == NULL && current && current->scheme != SCM_LOCAL && current->scheme != SCM_LOCAL_CGI && current->scheme != SCM_DATA && (current->scheme != SCM_FTP || (current->user == NULL && current->pass == NULL))) {
             Strcat_charp(s, "Referer: ");
             if (cross_origin)
@@ -1493,9 +1467,7 @@ HTTPrequest(ParsedURL* pu, ParsedURL* current, HRequest* hr, TextList* extra)
 {
     Str tmp;
     TextListItem* i;
-#ifdef USE_COOKIE
     Str cookie;
-#endif /* USE_COOKIE */
     tmp = HTTPrequestMethod(hr);
     Strcat_charp(tmp, " ");
     Strcat_charp(tmp, HTTPrequestURI(pu, hr)->ptr);
@@ -1509,24 +1481,19 @@ HTTPrequest(ParsedURL* pu, ParsedURL* current, HRequest* hr, TextList* extra)
             if (strncasecmp(i->ptr, "Authorization:",
                     sizeof("Authorization:") - 1)
                 == 0) {
-#ifdef USE_SSL
                 if (hr->command == HR_COMMAND_CONNECT)
                     continue;
-#endif
             }
             if (strncasecmp(i->ptr, "Proxy-Authorization:",
                     sizeof("Proxy-Authorization:") - 1)
                 == 0) {
-#ifdef USE_SSL
                 if (pu->scheme == SCM_HTTPS
                     && hr->command != HR_COMMAND_CONNECT)
                     continue;
-#endif
             }
             Strcat_charp(tmp, i->ptr);
         }
 
-#ifdef USE_COOKIE
     if (hr->command != HR_COMMAND_CONNECT && use_cookie && (cookie = find_cookie(pu))) {
         Strcat_charp(tmp, "Cookie: ");
         Strcat(tmp, cookie);
@@ -1535,7 +1502,6 @@ HTTPrequest(ParsedURL* pu, ParsedURL* current, HRequest* hr, TextList* extra)
         if (cookie->ptr[0] != '$')
             Strcat_charp(tmp, "Cookie2: $Version=\"1\"\r\n");
     }
-#endif /* USE_COOKIE */
     if (hr->command == HR_COMMAND_POST) {
         if (hr->request->enctype == FORM_ENCTYPE_MULTIPART) {
             Strcat_charp(tmp, "Content-Type: multipart/form-data; boundary=");
@@ -1597,9 +1563,7 @@ openURL(char* url, ParsedURL* pu, ParsedURL* current,
 #endif
     URLFile uf;
     HRequest hr0;
-#ifdef USE_SSL
     SSL* sslh = NULL;
-#endif /* USE_SSL */
 
     if (hr == NULL)
         hr = &hr0;
@@ -1724,9 +1688,7 @@ retry:
         }
         break;
     case SCM_HTTP:
-#ifdef USE_SSL
     case SCM_HTTPS:
-#endif /* USE_SSL */
         if (pu->file == NULL)
             pu->file = allocStr("/", -1);
         if (request && request->method == FORM_METHOD_POST && request->body)
@@ -1734,13 +1696,10 @@ retry:
         if (request && request->method == FORM_METHOD_HEAD)
             hr->command = HR_COMMAND_HEAD;
         if ((
-#ifdef USE_SSL
                 (pu->scheme == SCM_HTTPS) ? non_null(HTTPS_proxy) :
-#endif /* USE_SSL */
                                           non_null(HTTP_proxy))
             && !Do_not_use_proxy && pu->host != NULL && !check_no_proxy(pu->host)) {
             hr->flag |= HR_FLAG_PROXY;
-#ifdef USE_SSL
             if (pu->scheme == SCM_HTTPS && *status == HTST_CONNECT) {
                 sock = ssl_socket_of(ouf->stream);
                 if (!(sslh = openSSLHandle(sock, pu->host,
@@ -1754,21 +1713,17 @@ retry:
                     HTTPS_proxy_parsed.port);
                 sslh = NULL;
             } else {
-#endif /* USE_SSL */
                 sock = openSocket(HTTP_proxy_parsed.host,
                     schemeNumToName(HTTP_proxy_parsed.scheme),
                     HTTP_proxy_parsed.port);
-#ifdef USE_SSL
                 sslh = NULL;
             }
-#endif /* USE_SSL */
             if (sock < 0) {
 #ifdef SOCK_DEBUG
                 sock_log("Can't open socket\n");
 #endif
                 return uf;
             }
-#ifdef USE_SSL
             if (pu->scheme == SCM_HTTPS) {
                 if (*status == HTST_NORMAL) {
                     hr->command = HR_COMMAND_CONNECT;
@@ -1780,7 +1735,6 @@ retry:
                     *status = HTST_NORMAL;
                 }
             } else
-#endif /* USE_SSL */
             {
                 tmp = HTTPrequest(pu, current, hr, extra_header);
                 *status = HTST_NORMAL;
@@ -1791,7 +1745,6 @@ retry:
                 *status = HTST_MISSING;
                 return uf;
             }
-#ifdef USE_SSL
             if (pu->scheme == SCM_HTTPS) {
                 if (!(sslh = openSSLHandle(sock, pu->host,
                           &uf.ssl_certificate))) {
@@ -1799,12 +1752,10 @@ retry:
                     return uf;
                 }
             }
-#endif /* USE_SSL */
             hr->flag |= HR_FLAG_LOCAL;
             tmp = HTTPrequest(pu, current, hr, extra_header);
             *status = HTST_NORMAL;
         }
-#ifdef USE_SSL
         if (pu->scheme == SCM_HTTPS) {
             uf.stream = newSSLStream(sslh, sock);
             if (sslh)
@@ -1830,7 +1781,6 @@ retry:
             }
             return uf;
         } else
-#endif /* USE_SSL */
         {
             write(sock, tmp->ptr, tmp->length);
             if (w3m_reqlog) {
@@ -2339,11 +2289,9 @@ schemeToProxy(int scheme)
     case SCM_HTTP:
         pu = &HTTP_proxy_parsed;
         break;
-#ifdef USE_SSL
     case SCM_HTTPS:
         pu = &HTTPS_proxy_parsed;
         break;
-#endif
     case SCM_FTP:
         pu = &FTP_proxy_parsed;
         break;
