@@ -1,52 +1,195 @@
 const std = @import("std");
 
+const system_libs = [_][]const u8{
+    "gc", "gpm", "ssl", "ncurses", "crypto",
+};
+
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
+    // const SHELL = "/bin/bash";
+    const PACKAGE = "w3m";
+    // const VERSION = "0.5.3";
+    const prefix = "/usr/local";
+    const exec_prefix = prefix;
+    const datarootdir = b.fmt("{s}/share", .{prefix});
+    // const bindir = b.fmt("{s}/bin", .{exec_prefix});
+    const datadir = datarootdir;
+    const localedir = b.fmt("{s}/locale", .{datadir});
+    // const libdir = b.fmt("{s}/lib", .{exec_prefix});
+    // const includedir = b.fmt("{s}/include", .{prefix});
+    // const infodir = b.fmt("{s}/info", .{datarootdir});
+    const libexecdir = b.fmt("{s}/libexec", .{exec_prefix});
+    // const localstatedir = b.fmt("{s}/var", .{prefix});
+    // const mandir = b.fmt("{s}/man", .{datarootdir});
+    // const oldincludedir = "/usr/include";
+    // const sbindir = b.fmt("{s}/sbin", .{exec_prefix});
+    // const sharedstatedir = b.fmt("{s}/com", .{prefix});
+    const sysconfdir = b.fmt("{s}/etc", .{prefix});
+    const CGIBIN_DIR = b.fmt("{s}/{s}/cgi-bin", .{ libexecdir, PACKAGE });
+    const AUXBIN_DIR = b.fmt("{s}/{s}", .{ libexecdir, PACKAGE });
+    const HELP_DIR = b.fmt("{s}/w3m", .{datarootdir});
+    const RC_DIR = "~/.w3m";
+    const ETC_DIR = sysconfdir;
+    const CONF_DIR = b.fmt("{s}/{s}", .{ sysconfdir, PACKAGE });
+
+    const wf = gen_functable(b);
+    {
+        const install = b.addInstallDirectory(.{
+            .source_dir = wf.getDirectory(),
+            .install_dir = .header,
+            .install_subdir = "",
+        });
+        b.getInstallStep().dependOn(&install.step);
+    }
+
+    {
+        const mktable = build_mktable(b, b.graph.host, .ReleaseSafe, &.{"gc"});
+        // {
+        //     b.installArtifact(mktable);
+        // }
+        var run_mktable = b.addRunArtifact(mktable);
+        run_mktable.setCwd(wf.getDirectory());
+        run_mktable.addArg("100");
+        // run_mktable.addFileArg(functable_tab.output);
+        run_mktable.addArg("functable.tab");
+        const install = b.addInstallFile(run_mktable.captureStdOut(), "include/functable.c");
+        b.getInstallStep().dependOn(&install.step);
+    }
+
+    const mod = b.addModule("w3m", .{
+        .target = target,
+        .optimize = optimize,
+    });
+    const exe = b.addExecutable(.{
+        .name = "w3m",
+        .root_module = mod,
+    });
+    b.installArtifact(exe);
+    exe.linkLibC();
+    exe.addIncludePath(b.path("libwc"));
+    exe.addIncludePath(b.path("."));
+
+    const flags = [_][]const u8{
+        "-Wno-implicit-int",
+        "-Wno-int-conversion",
+        "-DHAVE_CONFIG_H",
+        b.fmt("-DAUXBIN_DIR=\"{s}\"", .{AUXBIN_DIR}),
+        b.fmt("-DCGIBIN_DIR=\"{s}\"", .{CGIBIN_DIR}),
+        b.fmt("-DHELP_DIR=\"{s}\"", .{HELP_DIR}),
+        b.fmt("-DETC_DIR=\"{s}\"", .{ETC_DIR}),
+        b.fmt("-DCONF_DIR=\"{s}\"", .{CONF_DIR}),
+        b.fmt("-DRC_DIR=\"{s}\"", .{RC_DIR}),
+        b.fmt("-DLOCALEDIR=\"{s}\"", .{localedir}),
+    };
+    exe.addCSourceFiles(.{
+        .files = &.{
+            "keybind.c",
+            "util.c",
+
+            "main.c",
+            "file.c",
+            "buffer.c",
+            "display.c",
+            "etc.c",
+            "search.c",
+            "linein.c",
+            "table.c",
+            "local.c",
+            "form.c",
+            "map.c",
+            "frame.c",
+            "rc.c",
+            "menu.c",
+            "mailcap.c",
+            "image.c",
+            "symbol.c",
+            "entity.c",
+            "terms.c",
+            "url.c",
+            "ftp.c",
+            "mimehead.c",
+            "regex.c",
+            "news.c",
+            "func.c",
+            "cookie.c",
+            "history.c",
+            "backend.c",
+
+            "anchor.c",
+            "parsetagx.c",
+            "tagtable.c",
+            "istream.c",
+
+            "Str.c",
+            "indep.c",
+            "textlist.c",
+            "parsetag.c",
+            "myctype.c",
+            "hash.c",
+
+            "version.c",
+        },
+        .flags = &flags,
+    });
+    exe.addCSourceFiles(.{
+        .root = b.path("libwc"),
+        .files = &.{
+            "big5.c",
+            "ces.c",
+            "char_conv.c",
+            "charset.c",
+            "combining.c",
+            "conv.c",
+            "detect.c",
+            "gb18030.c",
+            "gbk.c",
+            "hkscs.c",
+            "hz.c",
+            "iso2022.c",
+            "jis.c",
+            "johab.c",
+            "priv.c",
+            "putc.c",
+            "search.c",
+            "sjis.c",
+            "status.c",
+            "ucs.c",
+            "uhc.c",
+            "utf7.c",
+            "utf8.c",
+            "viet.c",
+            "wtf.c",
+        },
+        .flags = &.{
+            "-DHAVE_CONFIG_H",
+            "-DUSE_UNICODE",
+        },
+    });
+    for (system_libs) |lib| {
+        exe.linkSystemLibrary(lib);
+    }
+}
+
+fn gen_functable(b: *std.Build) *std.Build.Step.WriteFile {
+    const wf = b.addWriteFiles();
 
     const funcname_tab = gen_funcname_tab(b);
-    {
-        const install = b.addInstallFile(funcname_tab.output, "gen/funcname.tab");
-        b.getInstallStep().dependOn(&install.step);
-    }
+    _ = wf.addCopyFile(funcname_tab.output, "funcname.tab");
 
     const funcname_c = gen_funcname(b, funcname_tab.output, b.path("funcname0.awk"));
-    {
-        const install = b.addInstallFile(funcname_c.output, "gen/funcname.c");
-        b.getInstallStep().dependOn(&install.step);
-    }
+    _ = wf.addCopyFile(funcname_c.output, "funcname.c");
 
     const funcname1_h = gen_funcname(b, funcname_tab.output, b.path("funcname1.awk"));
-    {
-        const install = b.addInstallFile(funcname1_h.output, "gen/funcname1.h");
-        b.getInstallStep().dependOn(&install.step);
-    }
+    _ = wf.addCopyFile(funcname1_h.output, "funcname1.h");
 
     const funcname2_h = gen_funcname(b, funcname_tab.output, b.path("funcname2.awk"));
-    {
-        const install = b.addInstallFile(funcname2_h.output, "gen/funcname2.h");
-        b.getInstallStep().dependOn(&install.step);
-    }
+    _ = wf.addCopyFile(funcname2_h.output, "funcname2.h");
 
     const functable_tab = gen_funcname(b, funcname_tab.output, b.path("functable.awk"));
-    {
-        const install = b.addInstallFile(functable_tab.output, "gen/functable.tab");
-        b.getInstallStep().dependOn(&install.step);
-    }
+    _ = wf.addCopyFile(functable_tab.output, "functable.tab");
 
-    const mktable = build_mktable(b, target, optimize, &.{"gc"});
-    {
-        b.installArtifact(mktable);
-    }
-    var run_mktable = b.addRunArtifact(mktable);
-    run_mktable.setCwd(b.path("zig-out/gen"));
-    run_mktable.addArg("100");
-    // run_mktable.addFileArg(functable_tab.output);
-    run_mktable.addArg("functable.tab");
-    {
-        const install = b.addInstallFile(run_mktable.captureStdOut(), "gen/functable.c");
-        b.getInstallStep().dependOn(&install.step);
-    }
+    return wf;
 }
 
 fn build_mktable(
