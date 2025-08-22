@@ -4,6 +4,82 @@ const system_libs = [_][]const u8{
     "gc", "gpm", "ssl", "ncurses", "crypto",
 };
 
+const w3m_srcs = [_][]const u8{
+    "keybind.c",
+    "util.c",
+
+    "main.c",
+    "file.c",
+    "buffer.c",
+    "display.c",
+    "etc.c",
+    "search.c",
+    "linein.c",
+    "table.c",
+    "local.c",
+    "form.c",
+    "map.c",
+    "frame.c",
+    "rc.c",
+    "menu.c",
+    "mailcap.c",
+    "image.c",
+    "symbol.c",
+    "entity.c",
+    "terms.c",
+    "url.c",
+    "ftp.c",
+    "mimehead.c",
+    "regex.c",
+    "news.c",
+    "func.c",
+    "cookie.c",
+    "history.c",
+    "backend.c",
+
+    "anchor.c",
+    "parsetagx.c",
+    "tagtable.c",
+    "istream.c",
+
+    "Str.c",
+    "indep.c",
+    "textlist.c",
+    "parsetag.c",
+    "myctype.c",
+    "hash.c",
+
+    "version.c",
+};
+
+const libwc_srcs = [_][]const u8{
+    "big5.c",
+    "ces.c",
+    "char_conv.c",
+    "charset.c",
+    "combining.c",
+    "conv.c",
+    "detect.c",
+    "gb18030.c",
+    "gbk.c",
+    "hkscs.c",
+    "hz.c",
+    "iso2022.c",
+    "jis.c",
+    "johab.c",
+    "priv.c",
+    "putc.c",
+    "search.c",
+    "sjis.c",
+    "status.c",
+    "ucs.c",
+    "uhc.c",
+    "utf7.c",
+    "utf8.c",
+    "viet.c",
+    "wtf.c",
+};
+
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
@@ -33,30 +109,6 @@ pub fn build(b: *std.Build) void {
     const ETC_DIR = sysconfdir;
     const CONF_DIR = b.fmt("{s}/{s}", .{ sysconfdir, PACKAGE });
 
-    const wf = gen_functable(b);
-    {
-        const install = b.addInstallDirectory(.{
-            .source_dir = wf.getDirectory(),
-            .install_dir = .header,
-            .install_subdir = "",
-        });
-        b.getInstallStep().dependOn(&install.step);
-    }
-
-    {
-        const mktable = build_mktable(b, b.graph.host, .ReleaseSafe, &.{"gc"});
-        // {
-        //     b.installArtifact(mktable);
-        // }
-        var run_mktable = b.addRunArtifact(mktable);
-        run_mktable.setCwd(wf.getDirectory());
-        run_mktable.addArg("100");
-        // run_mktable.addFileArg(functable_tab.output);
-        run_mktable.addArg("functable.tab");
-        const install = b.addInstallFile(run_mktable.captureStdOut(), "include/functable.c");
-        b.getInstallStep().dependOn(&install.step);
-    }
-
     const mod = b.addModule("w3m", .{
         .target = target,
         .optimize = optimize,
@@ -83,84 +135,12 @@ pub fn build(b: *std.Build) void {
         b.fmt("-DLOCALEDIR=\"{s}\"", .{localedir}),
     };
     exe.addCSourceFiles(.{
-        .files = &.{
-            "keybind.c",
-            "util.c",
-
-            "main.c",
-            "file.c",
-            "buffer.c",
-            "display.c",
-            "etc.c",
-            "search.c",
-            "linein.c",
-            "table.c",
-            "local.c",
-            "form.c",
-            "map.c",
-            "frame.c",
-            "rc.c",
-            "menu.c",
-            "mailcap.c",
-            "image.c",
-            "symbol.c",
-            "entity.c",
-            "terms.c",
-            "url.c",
-            "ftp.c",
-            "mimehead.c",
-            "regex.c",
-            "news.c",
-            "func.c",
-            "cookie.c",
-            "history.c",
-            "backend.c",
-
-            "anchor.c",
-            "parsetagx.c",
-            "tagtable.c",
-            "istream.c",
-
-            "Str.c",
-            "indep.c",
-            "textlist.c",
-            "parsetag.c",
-            "myctype.c",
-            "hash.c",
-
-            "version.c",
-        },
+        .files = &w3m_srcs,
         .flags = &flags,
     });
     exe.addCSourceFiles(.{
         .root = b.path("libwc"),
-        .files = &.{
-            "big5.c",
-            "ces.c",
-            "char_conv.c",
-            "charset.c",
-            "combining.c",
-            "conv.c",
-            "detect.c",
-            "gb18030.c",
-            "gbk.c",
-            "hkscs.c",
-            "hz.c",
-            "iso2022.c",
-            "jis.c",
-            "johab.c",
-            "priv.c",
-            "putc.c",
-            "search.c",
-            "sjis.c",
-            "status.c",
-            "ucs.c",
-            "uhc.c",
-            "utf7.c",
-            "utf8.c",
-            "viet.c",
-            "wtf.c",
-        },
+        .files = &libwc_srcs,
         .flags = &.{
             "-DHAVE_CONFIG_H",
             "-DUSE_UNICODE",
@@ -168,6 +148,35 @@ pub fn build(b: *std.Build) void {
     });
     for (system_libs) |lib| {
         exe.linkSystemLibrary(lib);
+    }
+
+    const wf = gen_functable(b);
+    {
+        const install = b.addInstallDirectory(.{
+            .source_dir = wf.getDirectory(),
+            .install_dir = .header,
+            .install_subdir = "",
+        });
+        b.getInstallStep().dependOn(&install.step);
+
+        exe.step.dependOn(&install.step);
+        exe.addIncludePath(b.path("zig-out/include"));
+    }
+
+    {
+        const mktable = build_mktable(b, b.graph.host, .ReleaseSafe, &.{"gc"});
+        // {
+        //     b.installArtifact(mktable);
+        // }
+        var run_mktable = b.addRunArtifact(mktable);
+        run_mktable.setCwd(wf.getDirectory());
+        run_mktable.addArg("100");
+        // run_mktable.addFileArg(functable_tab.output);
+        run_mktable.addArg("functable.tab");
+        const install = b.addInstallFile(run_mktable.captureStdOut(), "include/functable.c");
+        b.getInstallStep().dependOn(&install.step);
+
+        exe.step.dependOn(&install.step);
     }
 }
 
