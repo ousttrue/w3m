@@ -23,7 +23,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include "config.h"
-#include "history.h"
+#include "linein.h"
 
 #ifdef USE_MENU
 #define MENU_SELECT
@@ -262,14 +262,6 @@ extern int REV_LB[];
  * Macros.
  */
 
-#define inputLineHist(p, d, f, h) inputLineHistSearch(p, d, f, h, NULL)
-#define inputLine(p, d, f) inputLineHist(p, d, f, NULL)
-#define inputStr(p, d) inputLine(p, d, IN_STRING)
-#define inputStrHist(p, d, h) inputLineHist(p, d, IN_STRING, h)
-#define inputFilename(p, d) inputLine(p, d, IN_FILENAME)
-#define inputFilenameHist(p, d, h) inputLineHist(p, d, IN_FILENAME, h)
-#define inputChar(p) inputLine(p, "", IN_CHAR)
-
 
 #define SKIP_BLANKS(p)                 \
     {                                  \
@@ -303,7 +295,6 @@ extern int REV_LB[];
  * Types.
  */
 
-typedef unsigned short Lineprop;
 typedef unsigned char Linecolor;
 
 typedef struct _MapArea {

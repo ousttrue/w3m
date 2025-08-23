@@ -1,9 +1,9 @@
-/* $Id: linein.c,v 1.35 2007/05/23 12:14:24 inu Exp $ */
+#include "linein.h"
 #include "fm.h"
 #include "local.h"
 #include "myctype.h"
 #include "tty.h"
-
+#include <stdbool.h>
 
 #define STR_LEN 1024
 #define CLEN (COLS - 2)
@@ -82,7 +82,8 @@ static void addStr(char* p, Lineprop* pr, int len, int pos, int limit);
 static int CPos, CLen, offset;
 static int i_cont, i_broken, i_quote;
 static int cm_mode, cm_next, cm_clear, cm_disp_next, cm_disp_clear;
-static int need_redraw, is_passwd;
+static int need_redraw;
+static bool g_is_passwd = false;
 static int move_word;
 
 static Hist* CurrentHist;
@@ -90,15 +91,14 @@ static Str strCurrentBuf;
 static int use_hist;
 static void ins_char(Str str);
 
-char* inputLineHistSearch(char* prompt, char* def_str, int flag, Hist* hist,
-    int (*incrfunc)(int ch, Str str, Lineprop* prop))
+char* inputLineHistSearch(char* prompt, char* def_str, int flag, Hist* hist, IncFunc incrfunc)
 {
     int opos, x, y, lpos, rpos, epos;
     unsigned char c;
     char* p;
     Str tmp;
 
-    is_passwd = FALSE;
+    g_is_passwd = false;
     move_word = TRUE;
 
     CurrentHist = hist;
@@ -114,7 +114,7 @@ char* inputLineHistSearch(char* prompt, char* def_str, int flag, Hist* hist,
         cm_mode = CPL_ALWAYS;
     } else if (flag & IN_PASSWORD) {
         cm_mode = CPL_NEVER;
-        is_passwd = TRUE;
+        g_is_passwd = true;
         move_word = FALSE;
     } else if (flag & IN_COMMAND)
         cm_mode = CPL_ON;
@@ -160,7 +160,7 @@ char* inputLineHistSearch(char* prompt, char* def_str, int flag, Hist* hist,
         }
         move(LASTLINE, 0);
         addstr(prompt);
-        if (is_passwd)
+        if (g_is_passwd)
             addPasswd(strBuf->ptr, strProp, CLen, offset, COLS - opos);
         else
             addStr(strBuf->ptr, strProp, CLen, offset, COLS - opos);
@@ -199,8 +199,7 @@ char* inputLineHistSearch(char* prompt, char* def_str, int flag, Hist* hist,
                 cm_next = FALSE;
             if (cm_disp_clear)
                 cm_disp_next = -1;
-        }
-        else {
+        } else {
             tmp = wc_char_conv(c);
             if (tmp == NULL) {
                 i_quote = TRUE;
@@ -224,7 +223,6 @@ char* inputLineHistSearch(char* prompt, char* def_str, int flag, Hist* hist,
             displayBuffer(Currentbuf, B_FORCE_REDRAW);
     }
 
-
     if (i_broken)
         return NULL;
 
@@ -244,7 +242,6 @@ char* inputLineHistSearch(char* prompt, char* def_str, int flag, Hist* hist,
     else
         return allocStr(p, -1);
 }
-
 
 static void
 addPasswd(char* p, Lineprop* pr, int len, int offset, int limit)
@@ -310,7 +307,7 @@ ins_char(Str str)
     while (p < ep) {
         len = get_mclen(p);
         ctype = get_mctype(p);
-        if (is_passwd) {
+        if (g_is_passwd) {
             if (ctype & PC_CTRL)
                 ctype = PC_ASCII;
             if (ctype & PC_UNKNOWN)
@@ -495,7 +492,7 @@ insertself(char c)
         return;
     insC();
     strBuf->ptr[CPos] = c;
-    strProp[CPos] = (is_passwd) ? PC_ASCII : PC_CTRL;
+    strProp[CPos] = (g_is_passwd) ? PC_ASCII : PC_CTRL;
     CPos++;
 }
 
@@ -958,7 +955,7 @@ setStrType(Str str, Lineprop* prop)
         if (i + len > STR_LEN)
             break;
         ctype = get_mctype(p);
-        if (is_passwd) {
+        if (g_is_passwd) {
             if (ctype & PC_CTRL)
                 ctype = PC_ASCII;
             if (ctype & PC_UNKNOWN)
@@ -996,7 +993,7 @@ _editor(void)
     FormItemList fi;
     char* p;
 
-    if (is_passwd)
+    if (g_is_passwd)
         return;
 
     fi.readonly = FALSE;
