@@ -12,6 +12,11 @@
 #include "ctrlcode.h"
 
 static int g_tty = -1;
+int get_tty_fd()
+{
+    return g_tty;
+}
+
 static FILE* g_ttyf = NULL;
 FILE* get_ttyf()
 {
@@ -400,4 +405,3 @@ void term_title(const char* s)
         fprintf(g_ttyf, title_str, s);
     }
 }
-

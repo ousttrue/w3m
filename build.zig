@@ -8,6 +8,7 @@ const w3m_srcs = [_][]const u8{
     "tty.c",
     "keybind.c",
     "util.c",
+    "event_poller.c",
 
     "main.c",
     "file.c",

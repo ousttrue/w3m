@@ -2,6 +2,7 @@
 #define MAINPROGRAM
 #include "fm.h"
 #include "tty.h"
+#include "event_poller.h"
 #include <stdio.h>
 #include <signal.h>
 #include <setjmp.h>
@@ -24,8 +25,9 @@
 #include "wc.h"
 #include "wtf.h"
 #include "ucs.h"
-
 #include "util.h"
+#include <sys/epoll.h>
+#include <assert.h>
 
 #define DSTR_LEN 256
 
@@ -983,6 +985,11 @@ int main(int argc, char** argv)
         _goLine(line_str);
     }
 
+    event_init();
+    int tty = get_tty_fd();
+    assert(tty > 2);
+    event_listen_tty(tty);
+
     for (;;) {
         if (add_download_list) {
             add_download_list = FALSE;
@@ -1044,7 +1051,17 @@ int main(int argc, char** argv)
                     resize_screen();
             } while (sleep_till_anykey(1, 0) <= 0);
         }
-        int c = getch();
+
+        struct EventValue event = event_wait(-1);
+        if (event.type == EVT_ERROR) {
+            break;
+        }
+        if (event.type == EVT_TIMEOUT) {
+            continue;
+        }
+
+        // int c = getch();
+        int c = event.data.ch;
         if (CurrentAlarm->sec > 0) {
             alarm(0);
         }
@@ -1064,6 +1081,9 @@ int main(int argc, char** argv)
         CurrentKey = -1;
         CurrentKeyData = NULL;
     }
+
+    event_deinit();
+    fmTerm();
 }
 
 static void
