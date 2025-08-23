@@ -41,9 +41,6 @@ static FILE* lessopen_stream(char* path);
 static Buffer* loadcmdout(char* cmd,
     Buffer* (*loadproc)(URLFile*, Buffer*),
     Buffer* defaultbuf);
-#ifndef USE_ANSI_COLOR
-#define addnewline(a, b, c, d, e, f, g) _addnewline(a, b, c, e, f, g)
-#endif
 static void addnewline(Buffer* buf, char* line, Lineprop* prop,
     Linecolor* color, int pos, int width, int nlines);
 static void addLink(Buffer* buf, struct parsed_tag* tag);
@@ -123,9 +120,7 @@ static int form_sp = 0;
 static clen_t current_content_length;
 
 static int cur_hseq;
-#ifdef USE_IMAGE
 static int cur_iseq;
-#endif
 
 #define MAX_UL_LEVEL 9
 #define UL_SYMBOL(x) (N_GRAPH_SYMBOL + (x))
@@ -236,9 +231,7 @@ loadSomething(URLFile* f,
     if (f->scheme == SCM_LOCAL && buf->sourcefile == NULL)
         buf->sourcefile = buf->filename;
     if (loadproc == loadHTMLBuffer
-#ifdef USE_IMAGE
         || loadproc == loadImageBuffer
-#endif
     )
         buf->type = "text/html";
     else
@@ -509,7 +502,6 @@ int matchattr(char* p, char* attr, int len, Str* value)
     return 0;
 }
 
-#ifdef USE_IMAGE
 #ifdef USE_XFACE
 static char*
 xface2xpm(char* xface)
@@ -545,7 +537,6 @@ xface2xpm(char* xface)
     return cache->file;
 }
 #endif
-#endif
 
 void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
 {
@@ -569,9 +560,7 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
         http_response_code = 0;
 
     if (thru && !newBuf->header_source
-#ifdef USE_IMAGE
         && !image_source
-#endif
     ) {
         tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
         src = fopen(tmpf, "w");
@@ -629,7 +618,6 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
                 for (; *q && (*q == '\r' || *q == '\n'); q++)
                     ;
             }
-#ifdef USE_IMAGE
             if (thru && activeImage && displayImage) {
                 Str src = NULL;
                 if (!strncasecmp(tmp->ptr, "X-Image-URL:", 12)) {
@@ -661,7 +649,6 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
                     newBuf->document_charset = old_charset;
                 }
             }
-#endif
             lineBuf2 = tmp;
         } else {
             lineBuf2 = tmp;
@@ -1974,10 +1961,8 @@ load_doc: {
 page_loaded:
     if (page) {
         FILE* src;
-#ifdef USE_IMAGE
         if (image_source)
             return NULL;
-#endif
         tmp = tmpfname(TMPF_SRC, ".html");
         src = fopen(tmp->ptr, "w");
         if (src) {
@@ -2063,7 +2048,6 @@ page_loaded:
             f.compression = CMP_NOCOMPRESS;
         }
     }
-#ifdef USE_IMAGE
     if (image_source) {
         Buffer* b = NULL;
         if (IStype(f.stream) != IST_ENCODED)
@@ -2077,16 +2061,13 @@ page_loaded:
         TRAP_OFF;
         return b;
     }
-#endif
 
     if (is_html_type(t))
         proc = loadHTMLBuffer;
     else if (is_plain_text_type(t))
         proc = loadBuffer;
-#ifdef USE_IMAGE
     else if (activeImage && displayImage && !useExtImageViewer && !(w3m_dump & ~DUMP_FRAME) && !strncasecmp(t, "image/", 6))
         proc = loadImageBuffer;
-#endif
     else if (w3m_backend)
         ;
     else if (!(w3m_dump & ~DUMP_FRAME) || is_dump_text_type(t)) {
@@ -3072,13 +3053,9 @@ feed_title(char* str)
 Str process_img(struct parsed_tag* tag, int width)
 {
     char *p, *q, *r, *r2 = NULL, *s, *t;
-#ifdef USE_IMAGE
     int w, i, nw, ni = 1, n, w0 = -1, i0 = -1;
     int align, xoffset, yoffset, top, bottom, ismap = 0;
     int use_image = activeImage && displayImage;
-#else
-    int w, i, nw, n;
-#endif
     int pre_int = FALSE, ext_pre_int = FALSE;
     Str tmp = Strnew();
 
@@ -3099,7 +3076,6 @@ Str process_img(struct parsed_tag* tag, int width)
             else
                 w = -1;
         }
-#ifdef USE_IMAGE
         if (use_image) {
             if (w > 0) {
                 w = (int)(w * image_scale / 100 + 0.5);
@@ -3109,10 +3085,8 @@ Str process_img(struct parsed_tag* tag, int width)
                     w = MAX_IMAGE_SIZE;
             }
         }
-#endif
     }
     i = -1;
-#ifdef USE_IMAGE
     if (use_image) {
         if (parsedtag_get_value(tag, ATTR_HEIGHT, &i)) {
             if (i > 0) {
@@ -3131,7 +3105,6 @@ Str process_img(struct parsed_tag* tag, int width)
         if (parsedtag_exists(tag, ATTR_ISMAP))
             ismap = 1;
     } else
-#endif
         parsedtag_get_value(tag, ATTR_HEIGHT, &i);
     r = NULL;
     parsedtag_get_value(tag, ATTR_USEMAP, &r);
@@ -3139,7 +3112,6 @@ Str process_img(struct parsed_tag* tag, int width)
         ext_pre_int = TRUE;
 
     tmp = Strnew_size(128);
-#ifdef USE_IMAGE
     if (use_image) {
         switch (align) {
         case ALIGN_LEFT:
@@ -3153,7 +3125,6 @@ Str process_img(struct parsed_tag* tag, int width)
             break;
         }
     }
-#endif
     if (r) {
         Str tmp2;
         r2 = strchr(r, '#');
@@ -3169,7 +3140,6 @@ Str process_img(struct parsed_tag* tag, int width)
                             "type=submit no_effect=true>",
                         cur_hseq++, cur_form_id));
     }
-#ifdef USE_IMAGE
     if (use_image) {
         w0 = w;
         i0 = i;
@@ -3206,7 +3176,6 @@ Str process_img(struct parsed_tag* tag, int width)
             Sprintf("<pre_int><img_alt hseq=\"%d\" src=\"", cur_iseq++));
         pre_int = TRUE;
     } else
-#endif
     {
         if (w < 0)
             w = 12 * pixel_per_char;
@@ -3224,7 +3193,6 @@ Str process_img(struct parsed_tag* tag, int width)
         Strcat_charp(tmp, html_quote(t));
         Strcat_charp(tmp, "\"");
     }
-#ifdef USE_IMAGE
     if (use_image) {
         if (w0 >= 0)
             Strcat(tmp, Sprintf(" width=%d", w0));
@@ -3285,13 +3253,11 @@ Str process_img(struct parsed_tag* tag, int width)
         if (ismap)
             Strcat_charp(tmp, " ismap");
     }
-#endif
     Strcat_charp(tmp, ">");
     if (q != NULL && *q == '\0' && ignore_null_img_alt)
         q = NULL;
     if (q != NULL) {
         n = get_strwidth(q);
-#ifdef USE_IMAGE
         if (use_image) {
             if (n > nw) {
                 char* r;
@@ -3303,7 +3269,6 @@ Str process_img(struct parsed_tag* tag, int width)
             } else
                 Strcat_charp(tmp, html_quote(q));
         } else
-#endif
             Strcat_charp(tmp, html_quote(q));
         goto img_end;
     }
@@ -3363,12 +3328,10 @@ Str process_img(struct parsed_tag* tag, int width)
     Strcat_char(tmp, ']');
     n++;
 img_end:
-#ifdef USE_IMAGE
     if (use_image) {
         for (; n < nw; n++)
             Strcat_char(tmp, ' ');
     }
-#endif
     Strcat_charp(tmp, "</img_alt>");
     if (pre_int && !ext_pre_int)
         Strcat_charp(tmp, "</pre_int>");
@@ -3376,7 +3339,6 @@ img_end:
         Strcat_charp(tmp, "</input_alt>");
         process_n_form();
     }
-#ifdef USE_IMAGE
     if (use_image) {
         switch (align) {
         case ALIGN_RIGHT:
@@ -3386,7 +3348,6 @@ img_end:
             break;
         }
     }
-#endif
     return tmp;
 }
 
@@ -4773,7 +4734,6 @@ int HTMLtagproc1(struct parsed_tag* tag, struct html_feed_environ* h_env)
     case HTML_IMG_ALT:
         if (parsedtag_get_value(tag, ATTR_SRC, &p))
             obuf->img_alt = Strnew_charp(p);
-#ifdef USE_IMAGE
         i = 0;
         if (parsedtag_get_value(tag, ATTR_TOP_MARGIN, &i)) {
             if ((short)i > obuf->top_margin)
@@ -4784,7 +4744,6 @@ int HTMLtagproc1(struct parsed_tag* tag, struct html_feed_environ* h_env)
             if ((short)i > obuf->bottom_margin)
                 obuf->bottom_margin = (short)i;
         }
-#endif
         return 0;
     case HTML_N_IMG_ALT:
         if (obuf->img_alt) {
@@ -5565,7 +5524,6 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
 
                 case HTML_IMG_ALT:
                     if (parsedtag_get_value(tag, ATTR_SRC, &p)) {
-#ifdef USE_IMAGE
                         int w = -1, h = -1, iseq = 0, ismap = 0;
                         int xoffset = 0, yoffset = 0, top = 0, bottom = 0;
                         parsedtag_get_value(tag, ATTR_HSEQ, &iseq);
@@ -5584,13 +5542,11 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                                 currentLn(buf), pos,
                                 iseq - 1);
                         }
-#endif
                         s = NULL;
                         parsedtag_get_value(tag, ATTR_TITLE, &s);
                         p = url_quote_conv(remove_space(p),
                             buf->document_charset);
                         a_img = registerImg(buf, p, s, currentLn(buf), pos);
-#ifdef USE_IMAGE
                         a_img->hseq = iseq;
                         a_img->image = NULL;
                         if (iseq > 0) {
@@ -5627,7 +5583,6 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                                 a_img->image = a->image;
                             }
                         }
-#endif
                     }
                     effect |= PE_IMAGE;
                     break;
@@ -5749,10 +5704,8 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                         parsedtag_get_value(tag, ATTR_ALT, &q);
                         r = NULL;
                         s = NULL;
-#ifdef USE_IMAGE
                         parsedtag_get_value(tag, ATTR_SHAPE, &r);
                         parsedtag_get_value(tag, ATTR_COORDS, &s);
-#endif
                         a = newMapArea(p, t, q, r, s);
                         pushValue(buf->maplist->area, (void*)a);
                     }
@@ -5932,9 +5885,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
     buf->formlist = (form_max >= 0) ? forms[form_max] : NULL;
     if (n_textarea)
         addMultirowsForm(buf, buf->formitem);
-#ifdef USE_IMAGE
     addMultirowsImg(buf, buf->img);
-#endif
 }
 
 static void
@@ -6423,9 +6374,6 @@ table_start:
 extern char* NullLine;
 extern Lineprop NullProp[];
 
-#ifndef USE_ANSI_COLOR
-#define addnewline2(a, b, c, d, e, f) _addnewline2(a, b, c, e, f)
-#endif
 static void
 addnewline2(Buffer* buf, char* line, Lineprop* prop, Linecolor* color, int pos,
     int nlines)
@@ -6435,9 +6383,7 @@ addnewline2(Buffer* buf, char* line, Lineprop* prop, Linecolor* color, int pos,
     l->next = NULL;
     l->lineBuf = line;
     l->propBuf = prop;
-#ifdef USE_ANSI_COLOR
     l->colorBuf = color;
-#endif
     l->len = pos;
     l->width = -1;
     l->size = pos;
@@ -6470,9 +6416,7 @@ addnewline(Buffer* buf, char* line, Lineprop* prop, Linecolor* color, int pos,
 {
     char* s;
     Lineprop* p;
-#ifdef USE_ANSI_COLOR
     Linecolor* c;
-#endif
     Line* l;
     int i, bpos, bwidth;
 
@@ -6484,14 +6428,12 @@ addnewline(Buffer* buf, char* line, Lineprop* prop, Linecolor* color, int pos,
         s = NullLine;
         p = NullProp;
     }
-#ifdef USE_ANSI_COLOR
     if (pos > 0 && color) {
         c = NewAtom_N(Linecolor, pos);
         bcopy((void*)color, (void*)c, pos * sizeof(Linecolor));
     } else {
         c = NULL;
     }
-#endif
     addnewline2(buf, s, p, c, pos, nlines);
     if (pos <= 0 || width <= 0)
         return;
@@ -6515,10 +6457,8 @@ addnewline(Buffer* buf, char* line, Lineprop* prop, Linecolor* color, int pos,
         bwidth += l->width;
         s += i;
         p += i;
-#ifdef USE_ANSI_COLOR
         if (c)
             c += i;
-#endif
         pos -= i;
         addnewline2(buf, s, p, c, pos, nlines);
     }
@@ -6846,9 +6786,7 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
     wc_ces volatile doc_charset = DocumentCharset;
     struct html_feed_environ htmlenv1;
     struct readbuffer obuf;
-#ifdef USE_IMAGE
     int volatile image_flag;
-#endif
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
 
     if (fmInitialized && graph_ok()) {
@@ -6876,7 +6814,6 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
     forms_size = 0;
     forms = NULL;
     cur_hseq = 1;
-#ifdef USE_IMAGE
     cur_iseq = 1;
     if (newBuf->image_flag)
         image_flag = newBuf->image_flag;
@@ -6884,7 +6821,6 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
         image_flag = IMG_FLAG_AUTO;
     else
         image_flag = IMG_FLAG_SKIP;
-#endif
 
     if (w3m_halfload) {
         newBuf->buffername = "---";
@@ -6990,9 +6926,7 @@ phase2:
     TRAP_OFF;
     if (!(newBuf->bufferprop & BP_FRAME))
         newBuf->document_charset = charset;
-#ifdef USE_IMAGE
     newBuf->image_flag = image_flag;
-#endif
     HTMLlineproc2(newBuf, htmlenv1.buf);
 }
 
@@ -7195,9 +7129,7 @@ loadBuffer(URLFile* uf, Buffer* volatile newBuf)
     Str tmpf;
     clen_t linelen = 0, trbyte = 0;
     Lineprop* propBuffer = NULL;
-#ifdef USE_ANSI_COLOR
     Linecolor* colorBuffer = NULL;
-#endif
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
 
     if (newBuf == NULL)
@@ -7271,7 +7203,6 @@ _end:
     return newBuf;
 }
 
-#ifdef USE_IMAGE
 Buffer*
 loadImageBuffer(URLFile* uf, Buffer* newBuf)
 {
@@ -7332,7 +7263,6 @@ image_buffer:
     newBuf->image_flag = IMG_FLAG_AUTO;
     return newBuf;
 }
-#endif
 
 static Str
 conv_symbol(Line* l)
@@ -7536,12 +7466,10 @@ openGeneralPagerBuffer(InputStream stream)
         buf = openPagerBuffer(stream, t_buf);
         buf->type = "text/plain";
     }
-#ifdef USE_IMAGE
     else if (activeImage && displayImage && !useExtImageViewer && !(w3m_dump & ~DUMP_FRAME) && !strncasecmp(t, "image/", 6)) {
         buf = loadImageBuffer(&uf, t_buf);
         buf->type = "text/html";
     }
-#endif
     else {
         if (searchExtViewer(t)) {
             buf = doExternal(uf, t, t_buf);
@@ -7574,9 +7502,7 @@ Line* getNextPage(Buffer* buf, int plen)
     int volatile squeeze_flag = FALSE;
     Lineprop* propBuffer = NULL;
 
-#ifdef USE_ANSI_COLOR
     Linecolor* colorBuffer = NULL;
-#endif
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
 
     if (buf->pagerSource == NULL)
@@ -8186,9 +8112,7 @@ uncompress_stream(URLFile* uf, char** src)
     uf->compression = CMP_NOCOMPRESS;
 
     if (uf->scheme != SCM_LOCAL
-#ifdef USE_IMAGE
         && !image_source
-#endif
     ) {
         tmpf = tmpfname(TMPF_DFL, ext)->ptr;
     }

@@ -88,15 +88,11 @@ void bzero(void*, int);
 #define MAXIMUM_COLS 1024
 #define DEFAULT_COLS 80
 
-#ifdef USE_IMAGE
 #define MAX_IMAGE 1000
 #define MAX_IMAGE_SIZE 2048
 
 #define DEFAULT_PIXEL_PER_CHAR 7.0 /* arbitrary */
 #define DEFAULT_PIXEL_PER_LINE 14.0 /* arbitrary */
-#else
-#define DEFAULT_PIXEL_PER_CHAR 8.0 /* arbitrary */
-#endif
 #define MINIMUM_PIXEL_PER_CHAR 4.0
 #define MAXIMUM_PIXEL_PER_CHAR 32.0
 
@@ -308,21 +304,17 @@ extern int REV_LB[];
  */
 
 typedef unsigned short Lineprop;
-#ifdef USE_ANSI_COLOR
 typedef unsigned char Linecolor;
-#endif
 
 typedef struct _MapArea {
     char* url;
     char* target;
     char* alt;
-#ifdef USE_IMAGE
     char shape;
     short* coords;
     int ncoords;
     short center_x;
     short center_y;
-#endif
 } MapArea;
 
 typedef struct _MapList {
@@ -334,9 +326,7 @@ typedef struct _MapList {
 typedef struct _Line {
     char* lineBuf;
     Lineprop* propBuf;
-#ifdef USE_ANSI_COLOR
     Linecolor* colorBuf;
-#endif
     struct _Line* next;
     struct _Line* prev;
     int len;
@@ -355,7 +345,6 @@ typedef struct {
     int invalid;
 } BufferPoint;
 
-#ifdef USE_IMAGE
 typedef struct _imageCache {
     char* url;
     ParsedURL* current;
@@ -384,7 +373,6 @@ typedef struct _image {
     int touch;
     ImageCache* cache;
 } Image;
-#endif
 
 typedef struct _anchor {
     char* url;
@@ -398,9 +386,7 @@ typedef struct _anchor {
     char slave;
     short y;
     short rows;
-#ifdef USE_IMAGE
     Image* image;
-#endif
 } Anchor;
 
 #define NO_REFERER ((char*)-1)
@@ -963,7 +949,6 @@ global int DecodeURL init(FALSE);
 global int retryAsHttp init(TRUE);
 global int showLineNum init(FALSE);
 global int show_srch_str init(TRUE);
-#ifdef USE_IMAGE
 global char* Imgdisplay init(IMGDISPLAY);
 global int activeImage init(FALSE);
 global int displayImage init(TRUE);
@@ -971,9 +956,6 @@ global int autoImage init(TRUE);
 global int useExtImageViewer init(TRUE);
 global int maxLoadImage init(4);
 global int image_map_list init(TRUE);
-#else
-global int displayImage init(FALSE); /* XXX: emacs-w3m use display_image=off */
-#endif
 global int pseudoInlines init(TRUE);
 global char* Editor init(DEF_EDITOR);
 #ifdef USE_W3MMAILER
@@ -1004,9 +986,7 @@ global char* siteconf_file init(SITECONF_FILE);
 global char* ftppasswd init(NULL);
 global int ftppass_hostnamegen init(TRUE);
 global int do_download init(FALSE);
-#ifdef USE_IMAGE
 global char* image_source init(NULL);
-#endif
 global char* UserAgent init(NULL);
 global int NoSendReferer init(FALSE);
 global int CrossOriginReferer init(TRUE);
@@ -1114,11 +1094,7 @@ global TextList* Cookie_reject_domains;
 global TextList* Cookie_accept_domains;
 global TextList* Cookie_avoid_wrong_number_of_dots_domains;
 
-#ifdef USE_IMAGE
 global int view_unseenobject init(FALSE);
-#else
-global int view_unseenobject init(TRUE);
-#endif
 
 #if defined(USE_SSL) && defined(USE_SSL_VERIFY)
 global int ssl_verify_server init(TRUE);
@@ -1145,12 +1121,10 @@ global int clear_buffer init(TRUE);
 global double pixel_per_char init(DEFAULT_PIXEL_PER_CHAR);
 global int pixel_per_char_i init(DEFAULT_PIXEL_PER_CHAR);
 global int set_pixel_per_char init(FALSE);
-#ifdef USE_IMAGE
 global double pixel_per_line init(DEFAULT_PIXEL_PER_LINE);
 global int pixel_per_line_i init(DEFAULT_PIXEL_PER_LINE);
 global int set_pixel_per_line init(FALSE);
 global double image_scale init(100);
-#endif
 global int use_lessopen init(FALSE);
 
 global char* keymap_file init(KEYMAP_FILE);

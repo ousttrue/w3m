@@ -170,10 +170,8 @@ void fmTerm(void)
         move(LASTLINE, 0);
         clrtoeolx();
         refresh();
-#ifdef USE_IMAGE
         if (activeImage)
             loadImage(NULL, IMG_FLAG_STOP);
-#endif
         reset_tty();
         fmInitialized = FALSE;
     }
@@ -188,10 +186,8 @@ void fmInit(void)
         initscr();
         term_raw();
         term_noecho();
-#ifdef USE_IMAGE
         if (displayImage)
             initImage();
-#endif
     }
     fmInitialized = TRUE;
 }
@@ -205,9 +201,7 @@ static int ccolumn = -1;
 static int ulmode = 0, somode = 0, bomode = 0;
 static int anch_mode = 0, emph_mode = 0, imag_mode = 0, form_mode = 0,
            active_mode = 0, visited_mode = 0, mark_mode = 0, graph_mode = 0;
-#ifdef USE_ANSI_COLOR
 static Linecolor color_mode = 0;
-#endif
 
 static Buffer* save_current_buf = NULL;
 
@@ -217,16 +211,12 @@ static void drawAnchorCursor(Buffer* buf);
 #define redrawBuffer(buf) redrawNLine(buf, LASTLINE)
 static void redrawNLine(Buffer* buf, int n);
 static Line* redrawLine(Buffer* buf, Line* l, int i);
-#ifdef USE_IMAGE
 static int image_touch = 0;
 static int draw_image_flag = FALSE;
 static Line* redrawLineImage(Buffer* buf, Line* l, int i);
-#endif
 static int redrawLineRegion(Buffer* buf, Line* l, int i, int bpos, int epos);
 static void do_effects(Lineprop m);
-#ifdef USE_ANSI_COLOR
 static void do_color(Linecolor c);
-#endif
 
 static Str
 make_lastline_link(Buffer* buf, char* title, char* url)
@@ -283,12 +273,10 @@ make_lastline_message(Buffer* buf)
     int sl = 0;
 
     if (displayLink) {
-#ifdef USE_IMAGE
         MapArea* a = retrieveCurrentMapArea(buf);
         if (a)
             s = make_lastline_link(buf, a->alt, a->url);
         else
-#endif
         {
             Anchor* a = retrieveCurrentAnchor(buf);
             char* p = NULL;
@@ -392,9 +380,7 @@ void displayBuffer(Buffer* buf, int mode)
     if (mode == B_FORCE_REDRAW || mode == B_SCROLL || mode == B_REDRAW_IMAGE || cline != buf->topLine || ccolumn != buf->currentColumn) {
 #ifdef USE_RAW_SCROLL
         if (
-#ifdef USE_IMAGE
             !(activeImage && displayImage && draw_image_flag) &&
-#endif
             mode == B_SCROLL && cline && buf->currentColumn == ccolumn) {
             int n = buf->topLine->linenumber - cline->linenumber;
             if (n > 0 && n < buf->LINES) {
@@ -414,7 +400,6 @@ void displayBuffer(Buffer* buf, int mode)
         } else
 #endif
         {
-#ifdef USE_IMAGE
             if (activeImage && (mode == B_REDRAW_IMAGE || cline != buf->topLine || ccolumn != buf->currentColumn)) {
                 if (draw_image_flag)
                     clear();
@@ -423,7 +408,6 @@ void displayBuffer(Buffer* buf, int mode)
                 image_touch++;
                 draw_image_flag = FALSE;
             }
-#endif
             redrawBuffer(buf);
         }
         cline = buf->topLine;
@@ -432,12 +416,10 @@ void displayBuffer(Buffer* buf, int mode)
     if (buf->topLine == NULL)
         buf->topLine = buf->firstLine;
 
-#ifdef USE_IMAGE
     if (buf->need_reshape) {
         displayBuffer(buf, B_FORCE_REDRAW);
         return;
     }
-#endif
 
     drawAnchorCursor(buf);
 
@@ -456,11 +438,9 @@ void displayBuffer(Buffer* buf, int mode)
     standend();
     term_title(conv_to_system(buf->buffername));
     refresh();
-#ifdef USE_IMAGE
     if (activeImage && displayImage && buf->img && buf->image_loaded) {
         drawImage();
     }
-#endif
     if (buf != save_current_buf) {
         saveBufferInfo();
         save_current_buf = buf;
@@ -612,7 +592,6 @@ redrawNLine(Buffer* buf, int n)
         clrtobotx();
     }
 
-#ifdef USE_IMAGE
     if (!(activeImage && displayImage && buf->img))
         return;
     move(buf->cursorY + buf->rootY, buf->cursorX + buf->rootX);
@@ -621,7 +600,6 @@ redrawNLine(Buffer* buf, int n)
             redrawLineImage(buf, l, i + buf->rootY);
     }
     getAllImage(buf);
-#endif
 }
 
 static Line*
@@ -631,9 +609,7 @@ redrawLine(Buffer* buf, Line* l, int i)
     int column = buf->currentColumn;
     char* p;
     Lineprop* pr;
-#ifdef USE_ANSI_COLOR
     Linecolor* pc;
-#endif
 #ifdef USE_COLOR
     Anchor* a;
     ParsedURL url;
@@ -679,12 +655,10 @@ redrawLine(Buffer* buf, Line* l, int i)
     pos = columnPos(l, column);
     p = &(l->lineBuf[pos]);
     pr = &(l->propBuf[pos]);
-#ifdef USE_ANSI_COLOR
     if (useColor && l->colorBuf)
         pc = &(l->colorBuf[pos]);
     else
         pc = NULL;
-#endif
     rcol = COLPOS(l, pos);
 
     for (j = 0; rcol - column < buf->COLS && pos + j < l->len; j += delta) {
@@ -705,10 +679,8 @@ redrawLine(Buffer* buf, Line* l, int i)
         ncol = COLPOS(l, pos + j + delta);
         if (ncol - column > buf->COLS)
             break;
-#ifdef USE_ANSI_COLOR
         if (pc)
             do_color(pc[j]);
-#endif
         if (rcol < column) {
             for (rcol = column; rcol < ncol; rcol++)
                 addChar(' ', 0);
@@ -767,16 +739,13 @@ redrawLine(Buffer* buf, Line* l, int i)
         graph_mode = FALSE;
         graphend();
     }
-#ifdef USE_ANSI_COLOR
     if (color_mode)
         do_color(0);
-#endif
     if (rcol - column < buf->COLS)
         clrtoeolx();
     return l;
 }
 
-#ifdef USE_IMAGE
 static Line*
 redrawLineImage(Buffer* buf, Line* l, int i)
 {
@@ -846,7 +815,6 @@ redrawLineImage(Buffer* buf, Line* l, int i)
     }
     return l;
 }
-#endif
 
 static int
 redrawLineRegion(Buffer* buf, Line* l, int i, int bpos, int epos)
@@ -855,9 +823,7 @@ redrawLineRegion(Buffer* buf, Line* l, int i, int bpos, int epos)
     int column = buf->currentColumn;
     char* p;
     Lineprop* pr;
-#ifdef USE_ANSI_COLOR
     Linecolor* pc;
-#endif
     int bcol, ecol;
 #ifdef USE_COLOR
     Anchor* a;
@@ -870,12 +836,10 @@ redrawLineRegion(Buffer* buf, Line* l, int i, int bpos, int epos)
     pos = columnPos(l, column);
     p = &(l->lineBuf[pos]);
     pr = &(l->propBuf[pos]);
-#ifdef USE_ANSI_COLOR
     if (useColor && l->colorBuf)
         pc = &(l->colorBuf[pos]);
     else
         pc = NULL;
-#endif
     rcol = COLPOS(l, pos);
     bcol = bpos - pos;
     ecol = epos - pos;
@@ -898,10 +862,8 @@ redrawLineRegion(Buffer* buf, Line* l, int i, int bpos, int epos)
         ncol = COLPOS(l, pos + j + delta);
         if (ncol - column > buf->COLS)
             break;
-#ifdef USE_ANSI_COLOR
         if (pc)
             do_color(pc[j]);
-#endif
         if (j >= bcol && j < ecol) {
             if (rcol < column) {
                 move(i, buf->rootX);
@@ -963,10 +925,8 @@ redrawLineRegion(Buffer* buf, Line* l, int i, int bpos, int epos)
         graph_mode = FALSE;
         graphend();
     }
-#ifdef USE_ANSI_COLOR
     if (color_mode)
         do_color(0);
-#endif
     return rcol - column;
 }
 
@@ -1018,7 +978,6 @@ do_effects(Lineprop m)
     do_effect1(PE_MARK, mark_mode, EFFECT_MARK_START, EFFECT_MARK_END);
 }
 
-#ifdef USE_ANSI_COLOR
 static void
 do_color(Linecolor c)
 {
@@ -1034,7 +993,6 @@ do_color(Linecolor c)
 #endif
     color_mode = c;
 }
-#endif
 
 void addChar(char c, Lineprop mode)
 {

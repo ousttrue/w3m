@@ -155,7 +155,6 @@ void clrtoeol(void); /* conflicts with curs_clear(3)? */
 
 #define MOVE(line, column) writestr(tgoto(T_cm, column, line));
 
-#ifdef USE_IMAGE
 void put_image_osc5379(char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh)
 {
     Str buf;
@@ -528,7 +527,6 @@ void put_image_sixel(char* url, int x, int y, int w, int h, int sx, int sy, int 
     MOVE(Currentbuf->cursorY, Currentbuf->cursorX);
 }
 
-#endif /* USE_IMAGE */
 
 #ifndef HAVE_SGTTY_H
 
@@ -1459,7 +1457,6 @@ void bell(void)
     write1(7);
 }
 
-#ifdef USE_IMAGE
 void touch_cursor(void)
 {
     int i;
@@ -1475,4 +1472,3 @@ void touch_cursor(void)
         touch_column(i);
     }
 }
-#endif

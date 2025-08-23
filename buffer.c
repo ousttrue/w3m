@@ -66,9 +66,7 @@ void discardBuffer(Buffer* buf)
     int i;
     Buffer* b;
 
-#ifdef USE_IMAGE
     deleteImage(buf);
-#endif
     clearBuffer(buf);
     for (i = 0; i < MAX_LB; i++) {
         b = buf->linkBuffer[i];
@@ -578,9 +576,7 @@ int writeBufferCache(Buffer* buf)
     Str tmp;
     FILE* cache = NULL;
     Line* l;
-#ifdef USE_ANSI_COLOR
     int colorflag;
-#endif
 
     if (buf->savecache)
         return -1;
@@ -604,7 +600,6 @@ int writeBufferCache(Buffer* buf)
             if (fwrite(l->lineBuf, 1, l->size, cache) < l->size || fwrite(l->propBuf, sizeof(Lineprop), l->size, cache) < l->size)
                 goto _error;
         }
-#ifdef USE_ANSI_COLOR
         colorflag = l->colorBuf ? 1 : 0;
         if (fwrite1(colorflag, cache))
             goto _error;
@@ -614,7 +609,6 @@ int writeBufferCache(Buffer* buf)
                     goto _error;
             }
         }
-#endif
     }
 
     fclose(cache);
@@ -632,9 +626,7 @@ int readBufferCache(Buffer* buf)
     FILE* cache;
     Line *l = NULL, *prevl = NULL, *basel = NULL;
     long lnum = 0, clnum, tlnum;
-#ifdef USE_ANSI_COLOR
     int colorflag;
-#endif
 
     if (buf->savecache == NULL)
         return -1;
@@ -675,7 +667,6 @@ int readBufferCache(Buffer* buf)
             l->propBuf = basel->propBuf + l->bpos;
         } else
             break;
-#ifdef USE_ANSI_COLOR
         if (fread1(colorflag, cache))
             break;
         if (colorflag) {
@@ -687,7 +678,6 @@ int readBufferCache(Buffer* buf)
         } else {
             l->colorBuf = NULL;
         }
-#endif
     }
     if (prevl) {
         buf->lastLine = prevl;

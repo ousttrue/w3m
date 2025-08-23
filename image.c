@@ -12,7 +12,6 @@
 #include <sys/wait.h>
 #endif
 
-#ifdef USE_IMAGE
 
 static int image_index = 0;
 
@@ -752,4 +751,3 @@ got_image_size:
     putHash_sv(image_hash, tmp->ptr, (void*)cache);
     return TRUE;
 }
-#endif

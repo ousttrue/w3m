@@ -76,7 +76,6 @@ static int OptionEncode = FALSE;
 #define CMT_DISPLINEINFO N_("Display current line number")
 #define CMT_DISP_IMAGE N_("Display inline images")
 #define CMT_PSEUDO_INLINES N_("Display pseudo-ALTs for inline images with no ALT or TITLE string")
-#ifdef USE_IMAGE
 #define CMT_AUTO_IMAGE N_("Load inline images automatically")
 #define CMT_MAX_LOAD_IMAGE N_("Maximum processes for parallel image loading")
 #define CMT_EXT_IMAGE_VIEWER N_("Use external image viewer")
@@ -84,7 +83,6 @@ static int OptionEncode = FALSE;
 #define CMT_IMGDISPLAY N_("External command to display image")
 #define CMT_IMAGE_MAP_LIST N_("Use link list of image map")
 #define CMT_INLINE_IMG_PROTOCOL N_("Inline image display method")
-#endif
 #define CMT_MULTICOL N_("Display file names in multi-column format")
 #define CMT_ALT_ENTITY N_("Use ASCII equivalents to display entities")
 #define CMT_GRAPHIC_CHAR N_("Character type for border of table and menu")
@@ -331,7 +329,6 @@ static struct sel_c graphic_char_str[] = {
     { 0, NULL, NULL }
 };
 
-#ifdef USE_IMAGE
 static struct sel_c inlineimgstr[] = {
     { N_S(INLINE_IMG_NONE), N_("external command") },
     { N_S(INLINE_IMG_OSC5379), N_("OSC 5379 (mlterm)") },
@@ -340,7 +337,6 @@ static struct sel_c inlineimgstr[] = {
     { N_S(INLINE_IMG_KITTY), N_("kitty (ImageMagick)") },
     { 0, NULL, NULL }
 };
-#endif /* USE_IMAGE */
 
 struct param_ptr params1[] = {
     { "tabstop", P_NZINT, PI_TEXT, (void*)&Tabstop, CMT_TABSTOP, NULL },
@@ -348,10 +344,8 @@ struct param_ptr params1[] = {
         NULL },
     { "pixel_per_char", P_PIXELS, PI_TEXT, (void*)&pixel_per_char,
         CMT_PIXEL_PER_CHAR, NULL },
-#ifdef USE_IMAGE
     { "pixel_per_line", P_PIXELS, PI_TEXT, (void*)&pixel_per_line,
         CMT_PIXEL_PER_LINE, NULL },
-#endif
     { "frame", P_CHARINT, PI_ONOFF, (void*)&RenderFrame, CMT_FRAME, NULL },
     { "target_self", P_CHARINT, PI_ONOFF, (void*)&TargetSelf, CMT_TSELF, NULL },
     { "open_tab_blank", P_INT, PI_ONOFF, (void*)&open_tab_blank,
@@ -395,7 +389,6 @@ struct param_ptr params1[] = {
         NULL },
     { "pseudo_inlines", P_INT, PI_ONOFF, (void*)&pseudoInlines,
         CMT_PSEUDO_INLINES, NULL },
-#ifdef USE_IMAGE
     { "auto_image", P_INT, PI_ONOFF, (void*)&autoImage, CMT_AUTO_IMAGE, NULL },
     { "max_load_image", P_INT, PI_TEXT, (void*)&maxLoadImage,
         CMT_MAX_LOAD_IMAGE, NULL },
@@ -409,7 +402,6 @@ struct param_ptr params1[] = {
         NULL },
     { "image_map_list", P_INT, PI_ONOFF, (void*)&image_map_list,
         CMT_IMAGE_MAP_LIST, NULL },
-#endif
     { "fold_line", P_INT, PI_ONOFF, (void*)&FoldLine, CMT_FOLD_LINE, NULL },
     { "show_lnum", P_INT, PI_ONOFF, (void*)&showLineNum, CMT_SHOW_NUM, NULL },
     { "show_srch_str", P_INT, PI_ONOFF, (void*)&show_srch_str,
@@ -1173,12 +1165,8 @@ void sync_with_option(void)
 #ifdef USE_MIGEMO
     init_migemo();
 #endif
-#ifdef USE_IMAGE
     if (fmInitialized && (displayImage || enable_inline_image))
         initImage();
-#else
-    displayImage = FALSE; /* XXX */
-#endif
     loadPasswd();
     loadPreForm();
     loadSiteconf();

@@ -1527,9 +1527,7 @@ smChBuf(void)
     for (buf = Firstbuf; buf != NULL; buf = buf->nextBuffer) {
         if (buf == Currentbuf)
             continue;
-#ifdef USE_IMAGE
         deleteImage(buf);
-#endif
         if (clear_buffer)
             tmpClearBuffer(buf);
     }
@@ -1673,9 +1671,7 @@ smChTab(void)
         if (tab == CurrentTab)
             continue;
         buf = tab->currentBuffer;
-#ifdef USE_IMAGE
         deleteImage(buf);
-#endif
         if (clear_buffer)
             tmpClearBuffer(buf);
     }
