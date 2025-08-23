@@ -2,7 +2,7 @@
 #include "fm.h"
 #include "local.h"
 #include "myctype.h"
-
+#include "tty.h"
 
 
 #define STR_LEN 1024

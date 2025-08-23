@@ -956,7 +956,6 @@ global int space_autocomplete init(FALSE);
 global int vi_prec_num init(FALSE);
 global int label_topline init(FALSE);
 global int nextpage_topline init(FALSE);
-global char* displayTitleTerm init(NULL);
 global int displayLink init(FALSE);
 global int displayLinkNumber init(FALSE);
 global int displayLineInfo init(FALSE);

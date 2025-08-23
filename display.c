@@ -3,6 +3,7 @@
 
 #include <signal.h>
 #include "fm.h"
+#include "tty.h"
 
 /* *INDENT-OFF* */
 #ifdef USE_COLOR

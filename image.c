@@ -2,6 +2,7 @@
 
 #include "image.h"
 #include "fm.h"
+#include "tty.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <signal.h>

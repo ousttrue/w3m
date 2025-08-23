@@ -2,6 +2,7 @@
 
 #include "display.h"
 #include "terms.h"
+#include "tty.h"
 
 #include <stdio.h>
 #include <stdlib.h>

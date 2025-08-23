@@ -9,6 +9,7 @@
 #include "func.h"
 #include "myctype.h"
 #include "regex.h"
+#include "tty.h"
 
 
 #ifdef USE_MENU

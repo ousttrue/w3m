@@ -2,6 +2,7 @@
 #include "fm.h"
 #include "parsetagx.h"
 #include "myctype.h"
+#include "tty.h"
 #include <signal.h>
 #include <setjmp.h>
 

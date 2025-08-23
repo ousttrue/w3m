@@ -9,6 +9,7 @@
 #include "fm.h"
 #include "html.h"
 #include "myctype.h"
+#include "tty.h"
 
 #ifdef DEBUG
 #include <malloc.h>
