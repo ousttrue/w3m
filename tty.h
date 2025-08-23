@@ -21,8 +21,7 @@ void term_noecho(void);
 void term_cooked(void);
 void term_cbreak(void);
 
-char getch(void);
-int sleep_till_anykey(int sec, int purge);
+int sleep_till_anykey(int timeout_ms, int purge);
 int write1(int);
 void writestr(char* s);
 void flush_tty(void);

@@ -1,6 +1,6 @@
 /* $Id: buffer.c,v 1.30 2010/07/18 14:10:09 htrb Exp $ */
 #include "fm.h"
-#include "tty.h"
+#include "event_poller.h"
 
 char* NullLine = "";
 Lineprop NullProp[] = { 0 };
@@ -374,6 +374,7 @@ selectBuffer(Buffer* firstbuf, Buffer* currentbuf, char* selectchar)
     }
     listBuffer(topbuf, currentbuf);
 
+    GetChFunc getch = event_begin_input(-1);
     for (;;) {
         if ((c = getch()) == ESC_CODE) {
             if ((c = getch()) == '[' || c == 'O') {
@@ -440,7 +441,7 @@ selectBuffer(Buffer* firstbuf, Buffer* currentbuf, char* selectchar)
             break;
         default:
             *selectchar = c;
-            return currentbuf;
+            goto end;
         }
         /*
          * move(LASTLINE, COLS - 1);
@@ -448,6 +449,9 @@ selectBuffer(Buffer* firstbuf, Buffer* currentbuf, char* selectchar)
         move(spoint, 0);
         refresh();
     }
+end:
+    event_end_input(getch);
+    return currentbuf;
 }
 
 /*

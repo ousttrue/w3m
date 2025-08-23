@@ -10,6 +10,7 @@
 #include "config.h"
 #include "tty.h"
 #include "ctrlcode.h"
+#include "event_poller.h"
 
 static int g_tty = -1;
 int get_tty_fd()
@@ -267,11 +268,9 @@ void term_cbreak(void)
 }
 
 static void
-skip_escseq(void)
+skip_escseq(GetChFunc getch)
 {
-    int c;
-
-    c = getch();
+    int c = getch();
     if (c == '[' || c == 'O') {
         c = getch();
         while (IS_DIGIT(c))
@@ -279,51 +278,25 @@ skip_escseq(void)
     }
 }
 
-char getch(void)
+int sleep_till_anykey(int timeout_ms, int purge)
 {
-    char c;
-
-    while (
-        read(g_tty, &c, 1)
-        < (int)1) {
-        if (errno == EINTR || errno == EAGAIN)
-            continue;
-        /* error happend on read(2) */
-        // quitfm();
-        exit(9);
-        break; /* unreachable */
-    }
-    return c;
-}
-
-int sleep_till_anykey(int sec, int purge)
-{
-    fd_set rfd;
-    struct timeval tim;
     TerminalMode ioval;
-
     _TerminalGet(g_tty, &ioval);
     term_raw();
 
-    tim.tv_sec = sec;
-    tim.tv_usec = 0;
+    GetChFunc getch = event_begin_input(timeout_ms);
+    int c = getch();
+    if (c == ESC_CODE)
+        skip_escseq(getch);
+    event_end_input(getch);
 
-    FD_ZERO(&rfd);
-    FD_SET(g_tty, &rfd);
-
-    int ret = select(g_tty + 1, &rfd, 0, 0, &tim);
-    if (ret > 0 && purge) {
-        int c = getch();
-        if (c == ESC_CODE)
-            skip_escseq();
-    }
     int er = _TerminalSet(g_tty, &ioval);
     if (er == -1) {
         printf("Error occurred: errno=%d\n", errno);
         // reset_error_exit(SIGNAL_ARGLIST);
         exit(9);
     }
-    return ret;
+    return c;
 }
 
 int write1(int c)

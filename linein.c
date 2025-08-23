@@ -1,8 +1,7 @@
 #include "linein.h"
 #include "fm.h"
 #include "local.h"
-#include "myctype.h"
-#include "tty.h"
+#include "event_poller.h"
 #include <stdbool.h>
 
 #define STR_LEN 1024
@@ -23,7 +22,7 @@ static int NCFileOffset;
 static void insertself(char c),
     _mvR(void), _mvL(void), _mvRw(void), _mvLw(void), delC(void), insC(void),
     _mvB(void), _mvE(void), _enter(void), _quo(void), _bs(void), _bsw(void),
-    killn(void), killb(void), _inbrk(void), _esc(void), _editor(void),
+    killn(void), killb(void), _inbrk(void), _editor(void),
     _prev(void), _next(void), _compl(void), _tcompl(void),
     _dcompl(void), _rdcompl(void), _rcompl(void);
 
@@ -67,7 +66,7 @@ void (*InputKeymap[32])() = {
     _tcompl,
     _mvRw,
     iself,
-    _esc,
+    iself,
     iself,
     iself,
     iself,
@@ -144,6 +143,7 @@ char* inputLineHistSearch(char* prompt, char* def_str, int flag, Hist* hist, Inc
     need_redraw = FALSE;
 
     wc_char_conv_init(wc_guess_8bit_charset(DisplayCharset), InnerCharset);
+    GetChFunc getch = event_begin_input(-1);
     do {
         x = calcPosition(strBuf->ptr, strProp, CLen, CPos, 0, CP_FORCE);
         if (x - rpos > offset) {
@@ -217,6 +217,7 @@ char* inputLineHistSearch(char* prompt, char* def_str, int flag, Hist* hist, Inc
         if (CLen && (flag & IN_CHAR))
             break;
     } while (i_cont);
+    event_end_input(getch);
 
     if (CurrentTab) {
         if (need_redraw)
@@ -326,61 +327,6 @@ ins_char(Str str)
                 CPos++;
             }
         }
-    }
-}
-
-static void
-_esc(void)
-{
-    char c;
-
-    switch (c = getch()) {
-    case '[':
-    case 'O':
-        switch (c = getch()) {
-        case 'A':
-            _prev();
-            break;
-        case 'B':
-            _next();
-            break;
-        case 'C':
-            _mvR();
-            break;
-        case 'D':
-            _mvL();
-            break;
-        }
-        break;
-    case CTRL_I:
-    case ' ':
-        if (emacs_like_lineedit) {
-            _rdcompl();
-            cm_clear = FALSE;
-            need_redraw = TRUE;
-        } else
-            _rcompl();
-        break;
-    case CTRL_D:
-        if (!emacs_like_lineedit)
-            _rdcompl();
-        need_redraw = TRUE;
-        break;
-    case 'f':
-        if (emacs_like_lineedit)
-            _mvRw();
-        break;
-    case 'b':
-        if (emacs_like_lineedit)
-            _mvLw();
-        break;
-    case CTRL_H:
-        if (emacs_like_lineedit)
-            _bsw();
-        break;
-    default:
-        if (wc_char_conv(ESC_CODE) == NULL && wc_char_conv(c) == NULL)
-            i_quote = TRUE;
     }
 }
 

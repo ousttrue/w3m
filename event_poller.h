@@ -21,6 +21,10 @@ struct EventValue {
     } data;
 };
 
-bool event_init(struct EventThreadArgs *args);
+bool event_init(struct EventThreadArgs* args);
 bool event_deinit(const char** err_msg);
 const char* msgrcv_error_msg();
+
+typedef int (*GetChFunc)(void);
+GetChFunc event_begin_input(int timeout_ms);
+void event_end_input(GetChFunc);

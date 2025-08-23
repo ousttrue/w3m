@@ -1119,7 +1119,7 @@ void disp_message_nsec(char* s, int redraw_current, int sec, int purge, int mous
     else
         message(s, LASTLINE, 0);
     refresh();
-    sleep_till_anykey(sec, purge);
+    sleep_till_anykey(sec * 1000, purge);
     if (CurrentTab != NULL && Currentbuf != NULL && redraw_current)
         displayBuffer(Currentbuf, B_NORMAL);
 }

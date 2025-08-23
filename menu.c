@@ -9,8 +9,7 @@
 #include "func.h"
 #include "myctype.h"
 #include "regex.h"
-#include "tty.h"
-
+#include "event_poller.h"
 
 #ifdef USE_MENU
 
@@ -28,9 +27,6 @@ static int graph_mode = FALSE;
             graphend(); \
     }
 
-static int mEsc(char c);
-static int mEscB(char c);
-static int mEscD(char c);
 static int mNull(char c);
 static int mSelect(char c);
 static int mDown(char c);
@@ -56,7 +52,7 @@ static int mSrchP(char c);
 
 /* *INDENT-OFF* */
 static int (*MenuKeymap[128])(char c) = {
-/*  C-@     C-a     C-b     C-c     C-d     C-e     C-f     C-g      */
+    /*  C-@     C-a     C-b     C-c     C-d     C-e     C-f     C-g      */
     mNull,
     mTop,
     mPrev,
@@ -87,7 +83,7 @@ static int (*MenuKeymap[128])(char c) = {
     mNull,
     mNull,
     mSusp,
-    mEsc,
+    mNull,
     mNull,
     mNull,
     mNull,
@@ -284,7 +280,7 @@ static int (*MenuEscKeymap[128])(char c) = {
     mNull,
     mNull,
     mNull,
-    mEscB,
+    mNull,
     mNull,
     mNull,
     mNull,
@@ -297,7 +293,7 @@ static int (*MenuEscKeymap[128])(char c) = {
     mNull,
     mNull,
     mNull,
-    mEscB,
+    mNull,
     mNull,
     mNull,
     mNull,
@@ -916,6 +912,7 @@ int action_menu(Menu* menu)
     draw_all_menu(menu);
     select_menu(menu, menu->select);
 
+    GetChFunc getch = event_begin_input(-1);
     while (1) {
         c = getch();
         if (IS_ASCII(c)) { /* Ascii */
@@ -924,6 +921,8 @@ int action_menu(Menu* menu)
                 break;
         }
     }
+    event_end_input(getch);
+
     if (mselect >= 0 && mselect < menu->nitem) {
         item = menu->item[mselect];
         if (item.type & MENU_POPUP) {
@@ -1037,41 +1036,6 @@ set_menu_frame(void)
 }
 
 /* --- MenuFunctions --- */
-
-
-static int
-mEsc(char c)
-{
-    c = getch();
-    return (MenuEscKeymap[(int)c](c));
-}
-
-static int
-mEscB(char c)
-{
-    c = getch();
-    if (IS_DIGIT(c))
-        return (mEscD(c));
-    else
-        return (MenuEscBKeymap[(int)c](c));
-}
-
-static int
-mEscD(char c)
-{
-    int d;
-
-    d = (int)c - (int)'0';
-    c = getch();
-    if (IS_DIGIT(c)) {
-        d = d * 10 + (int)c - (int)'0';
-        c = getch();
-    }
-    if (c == '~')
-        return (MenuEscDKeymap[d](c));
-    else
-        return (MENU_NOTHING);
-}
 
 static int
 mNull(char c)
@@ -1779,8 +1743,7 @@ interpret_menu(FILE* mf)
             item = w3mMenuList[nmenu].item;
             nitem = 0;
             item[nitem].type = MENU_END;
-        }
-        else if (!strcmp(s, "charset") || !strcmp(s, "encoding")) {
+        } else if (!strcmp(s, "charset") || !strcmp(s, "encoding")) {
             s = getQWord(&p);
             if (*s == '\0') /* error */
                 continue;

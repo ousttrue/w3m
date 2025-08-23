@@ -14,6 +14,10 @@
 pthread_t g_thread;
 struct EventThreadArgs* g_args = 0;
 
+void* g_queue_buffer[100];
+queue_t g_queue = QUEUE_INITIALIZER(g_queue_buffer);
+bool g_use_input = false;
+
 static const char* err_msg(int no);
 
 int create_signalfd(void)
@@ -99,7 +103,11 @@ void* thread_func(void* param)
                         struct EventValue* msg = (struct EventValue*)GC_MALLOC(sizeof(struct EventValue));
                         msg->type = EVT_TTY_CHAR;
                         msg->data.ch = c;
-                        queue_enqueue(&g_args->queue, msg);
+                        if (g_use_input) {
+                            queue_enqueue(&g_queue, msg);
+                        } else {
+                            queue_enqueue(&g_args->queue, msg);
+                        }
                     }
                 }
             } else if (event->data.fd == signal_fd) {
@@ -174,4 +182,22 @@ const char* msgrcv_error_msg()
         return "The queue does not contain a message of the desired type and (msgflg & IPC_NOWAIT) is non-zero.";
     }
     return "unknown";
+}
+
+int getch(void)
+{
+    struct EventValue* event = queue_dequeue(&g_queue);
+    assert(event->type == EVT_TTY_CHAR);
+    return event->data.ch;
+}
+
+GetChFunc event_begin_input(int timeout_ms)
+{
+    g_use_input = true;
+    return getch;
+}
+
+void event_end_input(GetChFunc)
+{
+    g_use_input = false;
 }

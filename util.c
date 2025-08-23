@@ -1,22 +1,22 @@
 #include "util.h"
-
 #include "display.h"
-#include "terms.h"
-#include "tty.h"
-
+#include "event_poller.h"
 #include <stdio.h>
 #include <stdlib.h>
 
 int exec_cmd(char* cmd)
 {
-    int rv;
-
     fmTerm();
-    if ((rv = system(cmd))) {
+    int rv = system(cmd);
+    if (rv) {
         printf("\n[Hit any key]");
         fflush(stdout);
         fmInit();
-        getch();
+        {
+            GetChFunc getch = event_begin_input(-1);
+            getch();
+            event_end_input(getch);
+        }
 
         return rv;
     }

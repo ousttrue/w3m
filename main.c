@@ -257,7 +257,7 @@ wrap_GC_warn_proc(char* msg, GC_word arg)
                 i %= sizeof(msg_ring) / sizeof(msg_ring[0]);
 
                 printf(msg_ring[i].msg, (unsigned long)msg_ring[i].arg);
-                sleep_till_anykey(1, 1);
+                sleep_till_anykey(1000, 1);
             }
 
             lock = 0;
@@ -591,8 +591,7 @@ const char* parseArgs(int argc, char** argv)
                     pixel_per_char = ppc;
                     set_pixel_per_char = TRUE;
                 }
-            }
-            else if (!strcmp("-ppl", argv[i])) {
+            } else if (!strcmp("-ppl", argv[i])) {
                 double ppc;
                 if (++i >= argc)
                     usage();
@@ -601,8 +600,7 @@ const char* parseArgs(int argc, char** argv)
                     pixel_per_line = ppc;
                     set_pixel_per_line = TRUE;
                 }
-            }
-            else if (!strcmp("-ri", argv[i])) {
+            } else if (!strcmp("-ri", argv[i])) {
                 enable_inline_image = INLINE_IMG_OSC5379;
             } else if (!strcmp("-sixel", argv[i])) {
                 enable_inline_image = INLINE_IMG_SIXEL;
@@ -721,8 +719,7 @@ const char* parseArgs(int argc, char** argv)
     if (!w3m_dump && !w3m_backend) {
         fmInit();
         mySignal(SIGWINCH, resize_hook);
-    }
-    else if (w3m_halfdump && displayImage)
+    } else if (w3m_halfdump && displayImage)
         activeImage = TRUE;
 
     sync_with_option();
@@ -1033,17 +1030,12 @@ int main(int argc, char** argv)
 
         mySignal(SIGWINCH, resize_hook);
         if (activeImage && displayImage && Currentbuf->img && !Currentbuf->image_loaded) {
-            do {
-                if (need_resize_screen)
-                    resize_screen();
-                loadImage(Currentbuf, IMG_FLAG_NEXT);
-            } while (sleep_till_anykey(1, 0) <= 0);
-        } else
-        {
-            do {
-                if (need_resize_screen)
-                    resize_screen();
-            } while (sleep_till_anykey(1, 0) <= 0);
+            loadImage(Currentbuf, IMG_FLAG_NEXT);
+            // continue;
+        }
+        if (need_resize_screen) {
+            resize_screen();
+            // continue;
         }
 
         struct EventValue* event = queue_dequeue(&event_args.queue);
@@ -1253,49 +1245,6 @@ escKeyProc(int c, int esc, unsigned char* map)
     CurrentKey = esc | c;
     if (map)
         w3mFuncList[(int)map[c]].func();
-}
-
-DEFUN(escmap, ESCMAP, "ESC map")
-{
-    char c;
-    c = getch();
-    if (IS_ASCII(c))
-        escKeyProc((int)c, K_ESC, EscKeymap);
-}
-
-DEFUN(escbmap, ESCBMAP, "ESC [ map")
-{
-    char c;
-    c = getch();
-    if (IS_DIGIT(c)) {
-        escdmap(c);
-        return;
-    }
-    if (IS_ASCII(c))
-        escKeyProc((int)c, K_ESCB, EscBKeymap);
-}
-
-void escdmap(char c)
-{
-    int d;
-    d = (int)c - (int)'0';
-    c = getch();
-    if (IS_DIGIT(c)) {
-        d = d * 10 + (int)c - (int)'0';
-        c = getch();
-    }
-    if (c == '~')
-        escKeyProc((int)d, K_ESCD, EscDKeymap);
-}
-
-DEFUN(multimap, MULTIMAP, "multimap")
-{
-    char c;
-    c = getch();
-    if (IS_ASCII(c)) {
-        CurrentKey = K_MULTI | (CurrentKey << 16) | c;
-        escKeyProc((int)c, 0, NULL);
-    }
 }
 
 void tmpClearBuffer(Buffer* buf)
@@ -1992,7 +1941,7 @@ DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output")
         printf("\n[Hit any key]");
         fflush(stdout);
         fmInit();
-        getch();
+        // getch();
     }
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
