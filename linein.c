@@ -2,6 +2,7 @@
 #include "fm.h"
 #include "local.h"
 #include "event_poller.h"
+#include "display.h"
 #include <stdbool.h>
 
 #define STR_LEN 1024

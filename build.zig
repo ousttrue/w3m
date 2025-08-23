@@ -10,6 +10,7 @@ const w3m_srcs = [_][]const u8{
     "util.c",
     "event_poller.c",
     "queue.c",
+    "w3m.c",
 
     "main.c",
     "file.c",
@@ -271,7 +272,7 @@ fn gen_funcname_tab(b: *std.Build) struct {
         "-ne",
         "/^DEFUN/{p;n;/^[ \t]/p;}",
     });
-    sed.addFileArg(b.path("main.c"));
+    sed.addFileArg(b.path("w3m.c"));
     sed.addFileArg(b.path("menu.c"));
     // {
     //     const install = b.addInstallFile(sed.captureStdOut(), "01_sed.txt");

@@ -1,6 +1,4 @@
-/* $Id: display.c,v 1.71 2010/07/18 14:10:09 htrb Exp $ */
 #include "display.h"
-
 #include <signal.h>
 #include "fm.h"
 #include "tty.h"
@@ -276,8 +274,7 @@ make_lastline_message(Buffer* buf)
         MapArea* a = retrieveCurrentMapArea(buf);
         if (a)
             s = make_lastline_link(buf, a->alt, a->url);
-        else
-        {
+        else {
             Anchor* a = retrieveCurrentAnchor(buf);
             char* p = NULL;
             if (a && a->title && *a->title)
@@ -297,7 +294,7 @@ make_lastline_message(Buffer* buf)
         }
     }
 
-        msg = Strnew();
+    msg = Strnew();
     if (displayLineInfo && buf->currentLine != NULL && buf->lastLine != NULL) {
         int cl = buf->currentLine->real_linenumber;
         int ll = buf->lastLine->real_linenumber;
@@ -363,8 +360,7 @@ void displayBuffer(Buffer* buf, int mode)
     } else
         buf->rootX = 0;
     buf->COLS = COLS - buf->rootX;
-    if (nTab > 1
-    ) {
+    if (nTab > 1) {
         if (mode == B_FORCE_REDRAW || mode == B_REDRAW_IMAGE)
             calcTabPos();
         ny = LastTab->y + 2;
@@ -380,8 +376,7 @@ void displayBuffer(Buffer* buf, int mode)
     if (mode == B_FORCE_REDRAW || mode == B_SCROLL || mode == B_REDRAW_IMAGE || cline != buf->topLine || ccolumn != buf->currentColumn) {
 #ifdef USE_RAW_SCROLL
         if (
-            !(activeImage && displayImage && draw_image_flag) &&
-            mode == B_SCROLL && cline && buf->currentColumn == ccolumn) {
+            !(activeImage && displayImage && draw_image_flag) && mode == B_SCROLL && cline && buf->currentColumn == ccolumn) {
             int n = buf->topLine->linenumber - cline->linenumber;
             if (n > 0 && n < buf->LINES) {
                 move(LASTLINE, 0);
@@ -548,8 +543,7 @@ redrawNLine(Buffer* buf, int n)
 #endif /* USE_BG_COLOR */
     }
 #endif /* USE_COLOR */
-    if (nTab > 1
-    ) {
+    if (nTab > 1) {
         TabBuffer* t;
         int l;
 
@@ -1043,8 +1037,7 @@ void addMChar(char* p, Lineprop mode, size_t len)
             addch(c + '@');
             break;
         }
-    }
-    else if (mode & PC_UNKNOWN) {
+    } else if (mode & PC_UNKNOWN) {
         char buf[5];
         sprintf(buf, "[%.2X]",
             (unsigned char)wtf_get_code((wc_uchar*)p) | 0x80);

@@ -274,7 +274,6 @@ extern void copyBuffer(Buffer* a, Buffer* b);
 extern Buffer* prevBuffer(Buffer* first, Buffer* buf);
 extern int writeBufferCache(Buffer* buf);
 extern int readBufferCache(Buffer* buf);
-extern void displayBuffer(Buffer* buf, int mode);
 extern void addChar(char c, Lineprop mode);
 extern void addMChar(char* c, Lineprop mode, size_t len);
 extern void record_err_message(char* s);

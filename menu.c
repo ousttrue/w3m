@@ -3,7 +3,7 @@
  * w3m menu.c
  */
 #include <stdio.h>
-
+#include "display.h"
 #include "fm.h"
 #include "menu.h"
 #include "func.h"

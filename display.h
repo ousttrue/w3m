@@ -1,7 +1,7 @@
-#ifndef W3M_DISPLAY_H
-#define W3M_DISPLAY_H
+#pragma once
 
+struct _Buffer;
+void displayBuffer(struct _Buffer* buf, int mode);
 void fmInit(void);
 void fmTerm(void);
 
-#endif
