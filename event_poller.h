@@ -1,4 +1,11 @@
 #pragma once
+#include <stdbool.h>
+#include "queue.h"
+
+struct EventThreadArgs {
+    int tty_fd;
+    queue_t queue;
+};
 
 enum EventType {
     EVT_TIMEOUT,
@@ -14,7 +21,6 @@ struct EventValue {
     } data;
 };
 
-void event_init();
-void event_deinit();
-void event_listen_tty(int fd);
-struct EventValue event_wait(int timeout_ms);
+bool event_init(struct EventThreadArgs *args);
+bool event_deinit(const char** err_msg);
+const char* msgrcv_error_msg();

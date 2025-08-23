@@ -28,6 +28,7 @@
 #include "util.h"
 #include <sys/epoll.h>
 #include <assert.h>
+#include <sys/signalfd.h>
 
 #define DSTR_LEN 256
 
@@ -985,10 +986,14 @@ int main(int argc, char** argv)
         _goLine(line_str);
     }
 
-    event_init();
-    int tty = get_tty_fd();
-    assert(tty > 2);
-    event_listen_tty(tty);
+    void* queue_buffer[100];
+    struct EventThreadArgs event_args = {
+        .queue = QUEUE_INITIALIZER(queue_buffer),
+        .tty_fd = get_tty_fd()
+    };
+    if (!event_init(&event_args)) {
+        return 2;
+    }
 
     for (;;) {
         if (add_download_list) {
@@ -1035,6 +1040,7 @@ int main(int argc, char** argv)
             mySignal(SIGALRM, SigAlarm);
             alarm(CurrentAlarm->sec);
         }
+
         mySignal(SIGWINCH, resize_hook);
 #ifdef USE_IMAGE
         if (activeImage && displayImage && Currentbuf->img && !Currentbuf->image_loaded) {
@@ -1052,16 +1058,21 @@ int main(int argc, char** argv)
             } while (sleep_till_anykey(1, 0) <= 0);
         }
 
-        struct EventValue event = event_wait(-1);
-        if (event.type == EVT_ERROR) {
+        struct EventValue* event = queue_dequeue(&event_args.queue);
+        // fprintf(stderr, "%d, %s", msgret, msgrcv_error_msg());
+        // perror("msgrcv");
+        // exit(4);
+        // if (msgret < 0) {
+        //     break;
+        // }
+        if (event->type == EVT_ERROR) {
             break;
         }
-        if (event.type == EVT_TIMEOUT) {
+        if (event->type == EVT_TIMEOUT) {
             continue;
         }
 
-        // int c = getch();
-        int c = event.data.ch;
+        int c = event->data.ch;
         if (CurrentAlarm->sec > 0) {
             alarm(0);
         }
@@ -1082,8 +1093,12 @@ int main(int argc, char** argv)
         CurrentKeyData = NULL;
     }
 
-    event_deinit();
     fmTerm();
+
+    const char* err_msg;
+    if (!event_deinit(&err_msg)) {
+        fprintf(stderr, "\n%s\n", err_msg);
+    }
 }
 
 static void
