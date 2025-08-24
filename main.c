@@ -1,6 +1,7 @@
 #include "w3m.h"
 #include "display.h"
 #include "fm.h"
+#include "parseArgs.h"
 
 int main(int argc, char** argv)
 {

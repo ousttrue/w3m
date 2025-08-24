@@ -12,6 +12,7 @@ const w3m_srcs = [_][]const u8{
     "event_poller.c",
     "queue.c",
     "w3m.c",
+    "parseArgs.c",
 
     "main.c",
     "file.c",
