@@ -160,35 +160,6 @@ static void EFFECT_VISITED_END
 #define EFFECT_MARK_START standout()
 #define EFFECT_MARK_END standend()
 #endif /* not USE_COLOR */
-/* *INDENT-ON* */
-
-void fmTerm(void)
-{
-    if (fmInitialized) {
-        move(LASTLINE, 0);
-        clrtoeolx();
-        refresh();
-        if (activeImage)
-            loadImage(NULL, IMG_FLAG_STOP);
-        reset_tty();
-        fmInitialized = FALSE;
-    }
-}
-
-/*
- * Initialize routine.
- */
-void fmInit(void)
-{
-    if (!fmInitialized) {
-        initscr();
-        term_raw();
-        term_noecho();
-        if (displayImage)
-            initImage();
-    }
-    fmInitialized = TRUE;
-}
 
 /*
  * Display some lines.
@@ -328,7 +299,7 @@ make_lastline_message(Buffer* buf)
     return msg;
 }
 
-void displayBuffer(Buffer* buf, int mode)
+void displayBuffer(Buffer* buf, enum DisplayMode mode)
 {
     Str msg;
     int ny = 0;

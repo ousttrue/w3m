@@ -91,6 +91,34 @@ static int searchKeyNum(void);
 
 int enable_inline_image;
 
+void fmTerm(void)
+{
+    if (fmInitialized) {
+        move(LASTLINE, 0);
+        clrtoeolx();
+        refresh();
+        if (activeImage)
+            loadImage(NULL, IMG_FLAG_STOP);
+        reset_tty();
+        fmInitialized = FALSE;
+    }
+}
+
+/*
+ * Initialize routine.
+ */
+void fmInit(void)
+{
+    if (!fmInitialized) {
+        initscr();
+        term_raw();
+        term_noecho();
+        if (displayImage)
+            initImage();
+    }
+    fmInitialized = TRUE;
+}
+
 int main_loop()
 {
     void* queue_buffer[100];
