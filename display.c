@@ -299,16 +299,17 @@ make_lastline_message(Buffer* buf)
     return msg;
 }
 
-void displayBuffer(Buffer* buf, enum DisplayMode mode)
+void displayBuffer()
 {
     Str msg;
     int ny = 0;
 
+    Buffer* buf = Currentbuf;
     if (!buf)
         return;
-    if (buf->topLine == NULL && readBufferCache(buf) == 0) { /* clear_buffer */
-        mode = B_FORCE_REDRAW;
-    }
+    // if (buf->topLine == NULL && readBufferCache(buf) == 0) { /* clear_buffer */
+    //     mode = B_FORCE_REDRAW;
+    // }
 
     if (buf->width == 0)
         buf->width = INIT_BUFFER_WIDTH;
@@ -335,11 +336,10 @@ void displayBuffer(Buffer* buf, enum DisplayMode mode)
         buf->rootY = ny;
         buf->LINES = LASTLINE - ny;
         arrangeCursor(buf);
-        mode = B_REDRAW_IMAGE;
     }
-    if (mode == B_FORCE_REDRAW || mode == B_SCROLL || mode == B_REDRAW_IMAGE || cline != buf->topLine || ccolumn != buf->currentColumn) {
+    if (cline != buf->topLine || ccolumn != buf->currentColumn) {
         {
-            if (activeImage && (mode == B_REDRAW_IMAGE || cline != buf->topLine || ccolumn != buf->currentColumn)) {
+            if (activeImage && (cline != buf->topLine || ccolumn != buf->currentColumn)) {
                 if (draw_image_flag)
                     clear();
                 clearImage();
@@ -354,11 +354,6 @@ void displayBuffer(Buffer* buf, enum DisplayMode mode)
     }
     if (buf->topLine == NULL)
         buf->topLine = buf->firstLine;
-
-    if (buf->need_reshape) {
-        displayBuffer(buf, B_FORCE_REDRAW);
-        return;
-    }
 
     drawAnchorCursor(buf);
 
@@ -384,9 +379,9 @@ void displayBuffer(Buffer* buf, enum DisplayMode mode)
         saveBufferInfo();
         save_current_buf = buf;
     }
-    if (mode == B_FORCE_REDRAW && (buf->check_url & CHK_URL)) {
+    if ((buf->check_url & CHK_URL)) {
         chkURLBuffer(buf);
-        displayBuffer(buf, B_NORMAL);
+        displayBuffer(buf);
     }
 }
 
@@ -1026,8 +1021,6 @@ void disp_message_nsec(char* s, int redraw_current, int sec, int purge, int mous
         message(s, LASTLINE, 0);
     refresh();
     sleep_till_anykey(sec * 1000, purge);
-    if (Currentbuf != NULL && redraw_current)
-        displayBuffer(Currentbuf, B_NORMAL);
 }
 
 void disp_message(char* s, int redraw_current)

@@ -956,7 +956,6 @@ void popup_menu(Menu* parent, Menu* menu)
     CurrentMenu = menu;
     while (active) {
         active = action_menu(CurrentMenu);
-        displayBuffer(Currentbuf, B_FORCE_REDRAW);
     }
     menu->active = 0;
     CurrentMenu = parent;
@@ -1518,7 +1517,6 @@ smDelBuf(char c)
     CurrentMenu->select = (mselect <= CurrentMenu->nitem - 2) ? mselect
                                                               : (CurrentMenu->nitem - 2);
 
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
     draw_all_menu(CurrentMenu);
     select_menu(CurrentMenu, CurrentMenu->select);
     return (MENU_NOTHING);

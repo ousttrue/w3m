@@ -7373,8 +7373,6 @@ doExternal(URLFile uf, char* type, Buffer* defaultbuf)
             fmTerm();
             mySystem(command->ptr, 0);
             fmInit();
-            if (Currentbuf)
-                displayBuffer(Currentbuf, B_FORCE_REDRAW);
         } else {
             mySystem(command->ptr, 1);
         }
