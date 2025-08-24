@@ -148,7 +148,6 @@ fusage(FILE* f, int err)
 #endif /* USE_COLOR */
     fprintf(f,
         "    -N               open URL of command line on each new tab\n");
-    fprintf(f, "    -F               automatically render frames\n");
     fprintf(f, "    -ppc count       specify the number of pixels per character (4.0...32.0)\n");
     fprintf(f, "    -ppl count       specify the number of pixels per line (4.0...64.0)\n");
     fprintf(f, "    -post file       use POST method with file content\n");
@@ -438,9 +437,7 @@ const char* parseArgs(int argc, char** argv)
                     Strcat_charp(tmp, BookmarkFile);
                     BookmarkFile = cleanupName(tmp->ptr);
                 }
-            } else if (!strcmp("-F", argv[i]))
-                RenderFrame = TRUE;
-            else if (!strcmp("-W", argv[i])) {
+            } else if (!strcmp("-W", argv[i])) {
                 if (WrapDefault)
                     WrapDefault = FALSE;
                 else

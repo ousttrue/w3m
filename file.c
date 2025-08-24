@@ -32,7 +32,6 @@
 
 #define MAX_INPUT_SIZE 80 /* TODO - max should be screen line length */
 
-static int frame_source = 0;
 static int need_number = 0;
 
 static char* guess_filename(char* file);
@@ -2064,18 +2063,13 @@ page_loaded:
     copyParsedURL(&t_buf->currentURL, &pu);
     t_buf->filename = pu.real_file ? pu.real_file : pu.file ? conv_to_system(pu.file)
                                                             : NULL;
-    if (flag & RG_FRAME) {
-        t_buf->bufferprop |= BP_FRAME;
-    }
     t_buf->ssl_certificate = f.ssl_certificate;
-    frame_source = flag & RG_FRAME_SRC;
     if (proc == DO_EXTERNAL) {
         b = doExternal(f, t, t_buf);
     } else {
         b = loadSomething(&f, proc, t_buf);
     }
     UFclose(&f);
-    frame_source = 0;
     if (b && b != NO_BUFFER) {
         b->real_scheme = f.scheme;
         b->real_type = real_type;
@@ -4959,10 +4953,6 @@ int HTMLtagproc1(struct parsed_tag* tag, struct html_feed_environ* h_env)
                 HTMLlineproc1(tmp->ptr, h_env);
                 do_blankline(h_env, obuf, envs[h_env->envc].indent, 0,
                     h_env->limit);
-                if (!is_redisplay && !((obuf->flag & RB_NOFRAMES) && RenderFrame)) {
-                    tag->need_reconstruct = TRUE;
-                    return 0;
-                }
             }
         }
         return 1;
@@ -5224,9 +5214,6 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
 #ifdef DEBUG
     FILE* debug = NULL;
 #endif
-    struct frameset* frameset_s[FRAMESTACK_SIZE];
-    int frameset_sp = -1;
-    union frameset_element* idFrame = NULL;
     char* id = NULL;
     int hseq, form_id;
     Str line;
@@ -5390,14 +5377,6 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                     ex_effect &= ~PE_EX_STRIKE;
                     break;
                 case HTML_A:
-                    if (renderFrameSet && parsedtag_get_value(tag, ATTR_FRAMENAME, &p)) {
-                        p = url_quote_conv(p, buf->document_charset);
-                        if (!idFrame || strcmp(idFrame->body->name, p)) {
-                            idFrame = search_frame(renderFrameSet, p);
-                            if (idFrame && idFrame->body->attr != F_BODY)
-                                idFrame = NULL;
-                        }
-                    }
                     p = r = s = NULL;
                     q = buf->baseTarget;
                     t = "";
@@ -5430,10 +5409,6 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                             hseq = -hseq;
                         }
                     }
-                    if (id && idFrame)
-                        idFrame->body->nameList = putAnchor(idFrame->body->nameList, id, NULL,
-                            (Anchor**)NULL, NULL, NULL, '\0',
-                            currentLn(buf), pos);
                     if (p) {
                         effect |= PE_ANCHOR;
                         a_href = registerHref(buf, p, q, r, s,
@@ -5649,33 +5624,10 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                     }
                     break;
                 case HTML_FRAMESET:
-                    frameset_sp++;
-                    if (frameset_sp >= FRAMESTACK_SIZE)
-                        break;
-                    frameset_s[frameset_sp] = newFrameSet(tag);
-                    if (frameset_s[frameset_sp] == NULL)
-                        break;
-                    if (frameset_sp == 0) {
-                        if (buf->frameset == NULL) {
-                            buf->frameset = frameset_s[frameset_sp];
-                        } else
-                            pushFrameTree(&(buf->frameQ),
-                                frameset_s[frameset_sp], NULL);
-                    } else
-                        addFrameSetElement(frameset_s[frameset_sp - 1],
-                            *(union frameset_element*)&frameset_s[frameset_sp]);
                     break;
                 case HTML_N_FRAMESET:
-                    if (frameset_sp >= 0)
-                        frameset_sp--;
                     break;
                 case HTML_FRAME:
-                    if (frameset_sp >= 0 && frameset_sp < FRAMESTACK_SIZE) {
-                        union frameset_element element;
-
-                        element.body = newFrame(tag, buf);
-                        addFrameSetElement(frameset_s[frameset_sp], element);
-                    }
                     break;
                 case HTML_BASE:
                     if (parsedtag_get_value(tag, ATTR_HREF, &p)) {
@@ -5788,18 +5740,6 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                     id = url_quote_conv(id, name_charset);
                     registerName(buf, id, currentLn(buf), pos);
                 }
-                if (renderFrameSet && parsedtag_get_value(tag, ATTR_FRAMENAME, &p)) {
-                    p = url_quote_conv(p, buf->document_charset);
-                    if (!idFrame || strcmp(idFrame->body->name, p)) {
-                        idFrame = search_frame(renderFrameSet, p);
-                        if (idFrame && idFrame->body->attr != F_BODY)
-                            idFrame = NULL;
-                    }
-                }
-                if (id && idFrame)
-                    idFrame->body->nameList = putAnchor(idFrame->body->nameList, id, NULL,
-                        (Anchor**)NULL, NULL, NULL, '\0',
-                        currentLn(buf), pos);
 #endif /* ID_EXT */
             }
         }
@@ -6420,7 +6360,7 @@ loadHTMLBuffer(URLFile* f, Buffer* newBuf)
             newBuf->sourcefile = tmp->ptr;
     }
 
-    loadHTMLstream(f, newBuf, src, newBuf->bufferprop & BP_FRAME);
+    loadHTMLstream(f, newBuf, src, FALSE);
 
     newBuf->topLine = newBuf->firstLine;
     newBuf->lastLine = newBuf->currentLine;
@@ -6774,9 +6714,7 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
     TRAP_ON;
 
     if (newBuf != NULL) {
-        if (newBuf->bufferprop & BP_FRAME)
-            charset = InnerCharset;
-        else if (newBuf->document_charset)
+        if (newBuf->document_charset)
             charset = doc_charset = newBuf->document_charset;
     }
     if (content_charset && UseContentCharset)
@@ -6802,10 +6740,6 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
             Strfputs(lineBuf2, src);
         linelen += lineBuf2->length;
         showProgress(&linelen, &trbyte);
-        /*
-         * if (frame_source)
-         * continue;
-         */
         if (meta_charset) { /* <META> */
             if (content_charset == 0 && UseContentCharset) {
                 doc_charset = meta_charset;
@@ -6832,8 +6766,7 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
 phase2:
     newBuf->trbyte = trbyte + linelen;
     TRAP_OFF;
-    if (!(newBuf->bufferprop & BP_FRAME))
-        newBuf->document_charset = charset;
+    newBuf->document_charset = charset;
     newBuf->image_flag = image_flag;
     HTMLlineproc2(newBuf, htmlenv1.buf);
 }
@@ -7078,8 +7011,6 @@ loadBuffer(URLFile* uf, Buffer* volatile newBuf)
             Strfputs(lineBuf2, src);
         linelen += lineBuf2->length;
         showProgress(&linelen, &trbyte);
-        if (frame_source)
-            continue;
         lineBuf2 = convertLine(uf, lineBuf2, PAGER_MODE, &charset, doc_charset);
         if (squeezeBlankLine) {
             if (lineBuf2->ptr[0] == '\n' && pre_lbuf == '\n') {

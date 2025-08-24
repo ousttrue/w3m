@@ -25,7 +25,6 @@ const w3m_srcs = [_][]const u8{
     "local.c",
     "form.c",
     "map.c",
-    "frame.c",
     "rc.c",
     "menu.c",
     "mailcap.c",

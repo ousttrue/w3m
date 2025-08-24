@@ -81,17 +81,13 @@ void discardBuffer(Buffer* buf)
     if (buf->pagerSource)
         ISclose(buf->pagerSource);
     if (buf->sourcefile && (!buf->real_type || strncasecmp(buf->real_type, "image/", 6))) {
-        if (buf->real_scheme != SCM_LOCAL || buf->bufferprop & BP_FRAME)
+        if (buf->real_scheme != SCM_LOCAL)
             unlink(buf->sourcefile);
     }
     if (buf->header_source)
         unlink(buf->header_source);
     if (buf->mailcap_source)
         unlink(buf->mailcap_source);
-    while (buf->frameset) {
-        deleteFrameSet(buf->frameset);
-        buf->frameset = popFrameTree(&(buf->frameQ));
-    }
 }
 
 /*
@@ -476,10 +472,6 @@ void reshapeBuffer(Buffer* buf)
         return;
     copyBuffer(&sbuf, buf);
     clearBuffer(buf);
-    while (buf->frameset) {
-        deleteFrameSet(buf->frameset);
-        buf->frameset = popFrameTree(&(buf->frameQ));
-    }
 
     buf->href = NULL;
     buf->name = NULL;

@@ -81,7 +81,7 @@ unsigned char GlobalKeymap[128] = {
     nulcmd,
     ldDL,
     editBf,
-    rFrame,
+    nulcmd,
     goLineL,
     /*  H       I       J       K       L       M       N       O        */
     ldhelp,

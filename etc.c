@@ -14,7 +14,6 @@
 #endif
 #include <signal.h>
 
-
 struct auth_pass {
     int bad;
     int is_proxy;
@@ -268,8 +267,7 @@ Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor)
             }
         }
         if ((bs != NULL)
-            || (es != NULL)
-        ) {
+            || (es != NULL)) {
             char *sp = str, *ep;
             s = Strnew_size(s->length);
             do_copy = TRUE;
@@ -306,8 +304,7 @@ Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor)
                 if (str < endp)
                     bs = memchr(str, '\b', endp - str);
                 continue;
-            } else
-                if (str == bs - 1 && *str == '_') {
+            } else if (str == bs - 1 && *str == '_') {
                 str += 2;
                 effect = PE_UNDER;
                 if (str < endp)
@@ -322,8 +319,7 @@ Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor)
                     } else {
                         str++;
                     }
-                }
-                else if (!strncmp(str + 1, "\b__", 3)) {
+                } else if (!strncmp(str + 1, "\b__", 3)) {
                     if (s->length) {
                         str += (plen == 1) ? 3 : 4;
                         for (i = 1; i <= plen; i++)
@@ -352,8 +348,7 @@ Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor)
                     } else {
                         str += 2;
                     }
-                }
-                else {
+                } else {
                     if (s->length) {
                         clen = get_mclen(str + 1);
                         if (plen == clen && !strncmp(str - plen, str + 1, plen)) {
@@ -378,8 +373,7 @@ Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor)
                 if (str < endp)
                     bs = memchr(str, '\b', endp - str);
                 continue;
-            }
-            else if (str > bs)
+            } else if (str > bs)
                 bs = memchr(str, '\b', endp - str);
         }
         if (es != NULL) {
@@ -416,8 +410,7 @@ Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor)
             if (do_copy)
                 Strcat_charp_n(s, (char*)str, plen);
             str += plen;
-        } else
-        {
+        } else {
             if (do_copy)
                 Strcat_char(s, (char)*str);
             str++;
@@ -1529,18 +1522,16 @@ char* url_unquote_conv(char* url, wc_ces charset)
     return tmp->ptr;
 }
 
-static char* tmpf_base[MAX_TMPF_TYPE] = {
-    "tmp",
-    "src",
-    "frame",
-    "cache",
-    "cookie",
-    "hist",
-};
-static unsigned int tmpf_seq[MAX_TMPF_TYPE];
-
 Str tmpfname(int type, char* ext)
 {
+    static char* tmpf_base[MAX_TMPF_TYPE] = {
+        "tmp",
+        "src",
+        "cache",
+        "cookie",
+        "hist",
+    };
+    static unsigned int tmpf_seq[MAX_TMPF_TYPE];
     Str tmpf;
     char* dir;
 
@@ -1551,7 +1542,6 @@ Str tmpfname(int type, char* ext)
     case TMPF_DFL:
     case TMPF_COOKIE:
     case TMPF_SRC:
-    case TMPF_FRAME:
     case TMPF_CACHE:
     default:
         dir = tmp_dir;
@@ -1868,7 +1858,6 @@ char* FQDN(char* host)
     return NULL;
 #endif /* INET6 */
 }
-
 
 void (*mySignal(int signal_number, void (*action)(int)))(int)
 {

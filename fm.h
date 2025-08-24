@@ -54,7 +54,6 @@
 #define N_(String) (String)
 
 #include "form.h"
-#include "frame.h"
 #include "parsetag.h"
 #include "parsetagx.h"
 #include "func.h"
@@ -164,7 +163,6 @@ void bzero(void*, int);
 enum BufferProperty {
     BP_NORMAL = 0x0,
     BP_PIPE = 0x1,
-    BP_FRAME = 0x2,
     BP_INTERNAL = 0x8,
     BP_NO_URL = 0x10,
     BP_REDIRECTED = 0x20,
@@ -173,13 +171,11 @@ enum BufferProperty {
 
 /* Link Buffer */
 #define LB_NOLINK -1
-#define LB_FRAME 0 /* rFrame() */
-#define LB_N_FRAME 1
-#define LB_INFO 2 /* pginfo() */
-#define LB_N_INFO 3
-#define LB_SOURCE 4 /* vwSrc() */
+#define LB_INFO 1 /* pginfo() */
+#define LB_N_INFO 2
+#define LB_SOURCE 3 /* vwSrc() */
 #define LB_N_SOURCE LB_SOURCE
-#define MAX_LB 5
+#define MAX_LB 3
 
 /* Search Result */
 #define SR_FOUND 0x1
@@ -188,8 +184,6 @@ enum BufferProperty {
 
 #ifdef MAINPROGRAM
 int REV_LB[MAX_LB] = {
-    LB_N_FRAME,
-    LB_FRAME,
     LB_N_INFO,
     LB_INFO,
     LB_N_SOURCE,
@@ -439,8 +433,6 @@ typedef struct _Buffer {
     char* baseTarget;
     int real_scheme;
     char* sourcefile;
-    struct frameset* frameset;
-    struct frameset_queue* frameQ;
     int* clone;
     size_t trbyte;
     char check_url;
@@ -655,8 +647,6 @@ struct readbuffer {
 
 /* flags for loadGeneralFile */
 #define RG_NOCACHE 1
-#define RG_FRAME 2
-#define RG_FRAME_SRC 4
 
 struct html_feed_environ {
     struct readbuffer* obuf;
@@ -749,11 +739,10 @@ typedef struct http_request {
 
 #define TMPF_DFL 0
 #define TMPF_SRC 1
-#define TMPF_FRAME 2
-#define TMPF_CACHE 3
-#define TMPF_COOKIE 4
-#define TMPF_HIST 5
-#define MAX_TMPF_TYPE 6
+#define TMPF_CACHE 2
+#define TMPF_COOKIE 3
+#define TMPF_HIST 4
+#define MAX_TMPF_TYPE 5
 
 #define set_no_proxy(domains) (NO_proxy_domains = make_domain_list(domains))
 
@@ -775,7 +764,6 @@ global int PagerMax init(PAGER_MAX_LINE);
 
 global char SearchHeader init(FALSE);
 global char* DefaultType init(NULL);
-global char RenderFrame init(FALSE);
 global char TargetSelf init(FALSE);
 global char PermitSaveToPipe init(FALSE);
 global char DecodeCTE init(FALSE);

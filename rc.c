@@ -346,7 +346,6 @@ struct param_ptr params1[] = {
         CMT_PIXEL_PER_CHAR, NULL },
     { "pixel_per_line", P_PIXELS, PI_TEXT, (void*)&pixel_per_line,
         CMT_PIXEL_PER_LINE, NULL },
-    { "frame", P_CHARINT, PI_ONOFF, (void*)&RenderFrame, CMT_FRAME, NULL },
     { "target_self", P_CHARINT, PI_ONOFF, (void*)&TargetSelf, CMT_TSELF, NULL },
     { "display_link", P_INT, PI_ONOFF, (void*)&displayLink, CMT_DISPLINK,
         NULL },

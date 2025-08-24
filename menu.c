@@ -638,7 +638,6 @@ static MenuItem MainMenuItem[] = {
     { MENU_FUNC, N_(" Save Link    (A) "), NULL, 0, svA, NULL, "A", NULL },
     { MENU_FUNC, N_(" View Image   (i) "), NULL, 0, followI, NULL, "i", NULL },
     { MENU_FUNC, N_(" Save Image   (I) "), NULL, 0, svI, NULL, "I", NULL },
-    { MENU_FUNC, N_(" View Frame   (f) "), NULL, 0, rFrame, NULL, "fF", NULL },
     { MENU_NOP, N_(" ---------------- "), NULL, 0, nulcmd, NULL, "", NULL },
     { MENU_FUNC, N_(" Bookmark     (B) "), NULL, 0, ldBmark, NULL, "B", NULL },
     { MENU_FUNC, N_(" Help         (h) "), NULL, 0, ldhelp, NULL, "hH", NULL },
