@@ -83,7 +83,6 @@ typedef struct sgttyb TerminalMode;
 
 #define S_COLORED 0xf00
 
-#ifdef USE_BG_COLOR
 /* Background Color */
 #define COL_BCOLOR 0xf000
 #define COL_BBLACK 0x8000
@@ -97,7 +96,6 @@ typedef struct sgttyb TerminalMode;
 #define COL_BTERM 0x0000
 
 #define S_BCOLORED 0xf000
-#endif /* USE_BG_COLOR */
 
 #define S_GRAPHICS 0x10
 
@@ -768,11 +766,7 @@ void move(int line, int column)
         CurColumn = column;
 }
 
-#ifdef USE_BG_COLOR
 #define M_SPACE (S_SCREENPROP | S_COLORED | S_BCOLORED | S_GRAPHICS)
-#else /* not USE_BG_COLOR */
-#define M_SPACE (S_SCREENPROP | S_COLORED | S_GRAPHICS)
-#endif /* not USE_BG_COLOR */
 
 static int
 need_redraw(char* c1, l_prop pr1, char* c2, l_prop pr2)
@@ -1025,7 +1019,6 @@ color_seq(int colmode)
     return seqbuf;
 }
 
-#ifdef USE_BG_COLOR
 void setbcolor(int color)
 {
     CurrentMode &= ~COL_BCOLOR;
@@ -1040,16 +1033,11 @@ bcolor_seq(int colmode)
     sprintf(seqbuf, "\033[%dm", ((colmode >> 12) & 7) + 40);
     return seqbuf;
 }
-#endif /* USE_BG_COLOR */
 
 #define RF_NEED_TO_MOVE 0
 #define RF_CR_OK 1
 #define RF_NONEED_TO_MOVE 2
-#ifdef USE_BG_COLOR
 #define M_MEND (S_STANDOUT | S_UNDERLINE | S_BOLD | S_COLORED | S_BCOLORED | S_GRAPHICS)
-#else /* not USE_BG_COLOR */
-#define M_MEND (S_STANDOUT | S_UNDERLINE | S_BOLD | S_COLORED | S_GRAPHICS)
-#endif /* not USE_BG_COLOR */
 void refresh(void)
 {
     int line, col, pcol;
@@ -1058,9 +1046,7 @@ void refresh(void)
     char** pc;
     l_prop *pr, mode = 0;
     l_prop color = COL_FTERM;
-#ifdef USE_BG_COLOR
     l_prop bcolor = COL_BTERM;
-#endif /* USE_BG_COLOR */
     short* dirty;
 
     wc_putc_init(InnerCharset, DisplayCharset);
@@ -1132,14 +1118,10 @@ void refresh(void)
                     break;
 #endif /* !defined(USE_BG_COLOR) || defined(__CYGWIN__) */
                 if ((!(pr[col] & S_STANDOUT) && (mode & S_STANDOUT)) || (!(pr[col] & S_UNDERLINE) && (mode & S_UNDERLINE)) || (!(pr[col] & S_BOLD) && (mode & S_BOLD)) || (!(pr[col] & S_COLORED) && (mode & S_COLORED))
-#ifdef USE_BG_COLOR
                     || (!(pr[col] & S_BCOLORED) && (mode & S_BCOLORED))
-#endif /* USE_BG_COLOR */
                     || (!(pr[col] & S_GRAPHICS) && (mode & S_GRAPHICS))) {
                     if ((mode & S_COLORED)
-#ifdef USE_BG_COLOR
                         || (mode & S_BCOLORED)
-#endif /* USE_BG_COLOR */
                     )
                         writestr(T_op);
                     if (mode & S_GRAPHICS)
@@ -1172,14 +1154,12 @@ void refresh(void)
                         mode = ((mode & ~COL_FCOLOR) | color);
                         writestr(color_seq(color));
                     }
-#ifdef USE_BG_COLOR
                     if ((pr[col] & S_BCOLORED)
                         && (pr[col] ^ mode) & COL_BCOLOR) {
                         bcolor = (pr[col] & COL_BCOLOR);
                         mode = ((mode & ~COL_BCOLOR) | bcolor);
                         writestr(bcolor_seq(bcolor));
                     }
-#endif /* USE_BG_COLOR */
                     if ((pr[col] & S_GRAPHICS) && !(mode & S_GRAPHICS)) {
                         wc_putc_end(get_ttyf());
                         if (!graph_enabled) {
@@ -1204,9 +1184,7 @@ void refresh(void)
         *dirty &= ~(L_NEED_CE | L_CLRTOEOL);
         if (mode & M_MEND) {
             if (mode & (S_COLORED
-#ifdef USE_BG_COLOR
                     | S_BCOLORED
-#endif /* USE_BG_COLOR */
                     ))
                 writestr(T_op);
             if (mode & S_GRAPHICS) {
@@ -1258,7 +1236,6 @@ void clrtoeol(void)
     }
 }
 
-#ifdef USE_BG_COLOR
 static void
 clrtoeol_with_bcolor(void)
 {
@@ -1283,13 +1260,6 @@ void clrtoeolx(void)
 {
     clrtoeol_with_bcolor();
 }
-#else /* not USE_BG_COLOR */
-
-void clrtoeolx(void)
-{
-    clrtoeol();
-}
-#endif /* not USE_BG_COLOR */
 
 static void
 clrtobot_eol(void (*clrtoeol)())

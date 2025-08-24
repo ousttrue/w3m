@@ -89,10 +89,8 @@ fversion(FILE* f)
 #endif
         ",m17n"
         ",image"
-#ifdef USE_COLOR
         ",color"
         ",ansi-color"
-#endif
 #ifdef USE_MENU
         ",menu"
 #endif
@@ -142,10 +140,8 @@ fusage(FILE* f, int err)
     fprintf(f, "    -T type          specify content-type\n");
     fprintf(f, "    -m               internet message mode\n");
     fprintf(f, "    -v               visual startup mode\n");
-#ifdef USE_COLOR
     fprintf(f, "    -M               monochrome display\n");
     fprintf(f, "    -H               use high-intensity colors\n");
-#endif /* USE_COLOR */
     fprintf(f,
         "    -N               open URL of command line on each new tab\n");
     fprintf(f, "    -ppc count       specify the number of pixels per character (4.0...32.0)\n");

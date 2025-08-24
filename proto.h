@@ -374,12 +374,8 @@ extern void underlineend(void);
 extern void graphstart(void);
 extern void graphend(void);
 extern int graph_ok(void);
-#ifdef USE_COLOR
 extern void setfcolor(int color);
-#ifdef USE_BG_COLOR
 extern void setbcolor(int color);
-#endif /* USE_BG_COLOR */
-#endif /* USE_COLOR */
 extern void refresh(void);
 extern void clear(void);
 extern void clrtoeol(void);

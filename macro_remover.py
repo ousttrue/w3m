@@ -41,8 +41,8 @@ CONTEXT = {
     "ENABLE_NLS": True,
     #
     "USE_ANSI_COLOR": True,
-    # "USE_COLOR": False,
-    # "USE_BG_COLOR": False,
+    "USE_COLOR": True,
+    "USE_BG_COLOR": True,
     "USE_RAW_SCROLL": False,
     # "USE_MENU": False,
     # "MENU_MAP": False,

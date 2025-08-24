@@ -299,14 +299,10 @@ listBuffer(Buffer* top, Buffer* current)
     Buffer* buf = top;
 
     move(0, 0);
-#ifdef USE_COLOR
     if (useColor) {
         setfcolor(basic_color);
-#ifdef USE_BG_COLOR
         setbcolor(bg_color);
-#endif /* USE_BG_COLOR */
     }
-#endif /* USE_COLOR */
     clrtobotx();
     for (i = 0; i < LASTLINE; i++) {
         if (buf == current) {

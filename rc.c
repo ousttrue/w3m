@@ -44,9 +44,7 @@ static int RC_table_size;
 #if defined(USE_SSL) && defined(USE_SSL_VERIFY)
 #define P_SSLPATH 5
 #endif
-#ifdef USE_COLOR
 #define P_COLOR 6
-#endif
 #define P_CODE 7
 #define P_PIXELS 8
 #define P_NZINT 9
@@ -244,7 +242,6 @@ struct sel_c {
     char* text;
 };
 
-#ifdef USE_COLOR
 static struct sel_c colorstr[] = {
     { 0, "black", N_("black") },
     { 1, "red", N_("red") },
@@ -257,7 +254,6 @@ static struct sel_c colorstr[] = {
     { 8, "terminal", N_("terminal") },
     { 0, NULL, NULL }
 };
-#endif /* USE_COLOR */
 
 #if 1 /* ANSI-C ? */
 #define N_STR(x) #x
@@ -408,7 +404,6 @@ struct param_ptr params1[] = {
     { NULL, 0, 0, NULL, NULL, NULL },
 };
 
-#ifdef USE_COLOR
 struct param_ptr params2[] = {
     { "color", P_INT, PI_ONOFF, (void*)&useColor, CMT_COLOR, NULL },
     { "high-intensity", P_INT, PI_ONOFF, (void*)&highIntensityColors, CMT_HINTENSITY_COLOR, NULL },
@@ -420,12 +415,10 @@ struct param_ptr params2[] = {
         (void*)colorstr },
     { "form_color", P_COLOR, PI_SEL_C, (void*)&form_color, CMT_F_COLOR,
         (void*)colorstr },
-#ifdef USE_BG_COLOR
     { "mark_color", P_COLOR, PI_SEL_C, (void*)&mark_color, CMT_MARK_COLOR,
         (void*)colorstr },
     { "bg_color", P_COLOR, PI_SEL_C, (void*)&bg_color, CMT_BG_COLOR,
         (void*)colorstr },
-#endif /* USE_BG_COLOR */
     { "active_style", P_INT, PI_ONOFF, (void*)&useActiveColor,
         CMT_ACTIVE_STYLE, NULL },
     { "active_color", P_COLOR, PI_SEL_C, (void*)&active_color, CMT_C_COLOR,
@@ -436,7 +429,6 @@ struct param_ptr params2[] = {
         (void*)colorstr },
     { NULL, 0, 0, NULL, NULL, NULL },
 };
-#endif /* USE_COLOR */
 
 struct param_ptr params3[] = {
     { "pagerline", P_NZINT, PI_TEXT, (void*)&PagerMax, CMT_PAGERLINE, NULL },
@@ -685,9 +677,7 @@ struct param_ptr params10[] = {
 
 struct param_section sections[] = {
     { N_("Display Settings"), params1 },
-#ifdef USE_COLOR
     { N_("Color Settings"), params2 },
-#endif /* USE_COLOR */
     { N_("Miscellaneous Settings"), params3 },
     { N_("Directory Settings"), params5 },
     { N_("External Program Settings"), params6 },
@@ -826,11 +816,9 @@ void show_params(FILE* fp)
                 t = "path";
                 break;
 #endif
-#ifdef USE_COLOR
             case P_COLOR:
                 t = "color";
                 break;
-#endif
             case P_CODE:
                 t = "charset";
                 break;
@@ -884,7 +872,6 @@ int str_to_bool(char* value, int old)
     return 1;
 }
 
-#ifdef USE_COLOR
 static int
 str_to_color(char* value)
 {
@@ -924,7 +911,6 @@ str_to_color(char* value)
     }
     return 8; /* terminal */
 }
-#endif
 
 static int
 set_param(char* name, char* value)
@@ -973,11 +959,9 @@ set_param(char* name, char* value)
         ssl_path_modified = 1;
         break;
 #endif
-#ifdef USE_COLOR
     case P_COLOR:
         *(int*)p->varptr = str_to_color(value);
         break;
-#endif
     case P_CODE:
         *(wc_ces*)p->varptr = wc_guess_charset_short(value, *(wc_ces*)p->varptr);
         break;
@@ -1301,9 +1285,7 @@ to_str(struct param_ptr* p)
 {
     switch (p->type) {
     case P_INT:
-#ifdef USE_COLOR
     case P_COLOR:
-#endif
     case P_CODE:
         return Sprintf("%d", (int)(*(wc_ces*)p->varptr));
     case P_NZINT:
@@ -1354,9 +1336,7 @@ load_option_panel(void)
                     InnerCharset)
                                  ->ptr;
                 if (p->inputtype == PI_SEL_C
-#ifdef USE_COLOR
                     && p->select != colorstr
-#endif
                 ) {
                     for (s = (struct sel_c*)p->select; s->text != NULL; s++) {
                         s->text = wc_conv(_(s->text), OptionCharset,
@@ -1366,12 +1346,10 @@ load_option_panel(void)
                 }
             }
         }
-#ifdef USE_COLOR
         for (s = colorstr; s->text; s++)
             s->text = wc_conv(_(s->text), OptionCharset,
                 InnerCharset)
                           ->ptr;
-#endif
         OptionEncode = TRUE;
     }
     src = Strdup(optionpanel_str);

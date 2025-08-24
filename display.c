@@ -4,7 +4,6 @@
 #include "tty.h"
 
 /* *INDENT-OFF* */
-#ifdef USE_COLOR
 
 #define EFFECT_ANCHOR_START effect_anchor_start()
 #define EFFECT_ANCHOR_END effect_anchor_end()
@@ -36,22 +35,14 @@
 #define EFFECT_FORM_START_C setfcolor(form_color)
 #define EFFECT_ACTIVE_START_C (setfcolor(active_color), underline())
 #define EFFECT_VISITED_START_C setfcolor(visited_color)
-#ifdef USE_BG_COLOR
 #define EFFECT_MARK_START_C setbcolor(mark_color)
-#else
-#define EFFECT_MARK_START_C standout()
-#endif
 
 #define EFFECT_IMAGE_END_C setfcolor(basic_color)
 #define EFFECT_ANCHOR_END_C setfcolor(basic_color)
 #define EFFECT_FORM_END_C setfcolor(basic_color)
 #define EFFECT_ACTIVE_END_C (setfcolor(basic_color), underlineend())
 #define EFFECT_VISITED_END_C setfcolor(basic_color)
-#ifdef USE_BG_COLOR
 #define EFFECT_MARK_END_C setbcolor(bg_color)
-#else
-#define EFFECT_MARK_END_C standend()
-#endif
 
 #define EFFECT_ANCHOR_START_M underline()
 #define EFFECT_ANCHOR_END_M underlineend()
@@ -145,21 +136,6 @@ static void EFFECT_VISITED_END
     }
 }
 
-#else /* not USE_COLOR */
-
-#define EFFECT_ANCHOR_START underline()
-#define EFFECT_ANCHOR_END underlineend()
-#define EFFECT_IMAGE_START standout()
-#define EFFECT_IMAGE_END standend()
-#define EFFECT_FORM_START standout()
-#define EFFECT_FORM_END standend()
-#define EFFECT_ACTIVE_START bold()
-#define EFFECT_ACTIVE_END boldend()
-#define EFFECT_VISITED_START /**/
-#define EFFECT_VISITED_END /**/
-#define EFFECT_MARK_START standout()
-#define EFFECT_MARK_END standend()
-#endif /* not USE_COLOR */
 
 /*
  * Display some lines.
@@ -177,7 +153,6 @@ static Buffer* save_current_buf = NULL;
 static char* delayed_msg = NULL;
 
 static void drawAnchorCursor(Buffer* buf);
-#define redrawBuffer(buf) redrawNLine(buf, LASTLINE)
 static void redrawNLine(Buffer* buf, int n);
 static Line* redrawLine(Buffer* buf, Line* l, int i);
 static int image_touch = 0;
@@ -347,7 +322,7 @@ void displayBuffer()
                 image_touch++;
                 draw_image_flag = FALSE;
             }
-            redrawBuffer(buf);
+            redrawNLine(buf, LASTLINE);
         }
         cline = buf->topLine;
         ccolumn = buf->currentColumn;
@@ -474,14 +449,10 @@ redrawNLine(Buffer* buf, int n)
     Line* l;
     int i;
 
-#ifdef USE_COLOR
     if (useColor) {
         EFFECT_ANCHOR_END_C;
-#ifdef USE_BG_COLOR
         setbcolor(bg_color);
-#endif /* USE_BG_COLOR */
     }
-#endif /* USE_COLOR */
 
     for (i = 0, l = buf->topLine; i < buf->LINES; i++, l = l->next) {
         if (i >= buf->LINES - n || i < -n)
@@ -512,11 +483,9 @@ redrawLine(Buffer* buf, Line* l, int i)
     char* p;
     Lineprop* pr;
     Linecolor* pc;
-#ifdef USE_COLOR
     Anchor* a;
     ParsedURL url;
     int k, vpos = -1;
-#endif
 
     if (l == NULL) {
         if (buf->pagerSource) {
@@ -564,7 +533,6 @@ redrawLine(Buffer* buf, Line* l, int i)
     rcol = COLPOS(l, pos);
 
     for (j = 0; rcol - column < buf->COLS && pos + j < l->len; j += delta) {
-#ifdef USE_COLOR
         if (useVisitedColor && vpos <= pos + j && !(pr[j] & PE_VISITED)) {
             a = retrieveAnchor(buf->href, l->linenumber, pos + j);
             if (a) {
@@ -576,7 +544,6 @@ redrawLine(Buffer* buf, Line* l, int i)
                 vpos = a->end.pos;
             }
         }
-#endif
         delta = wtf_len((wc_uchar*)&p[j]);
         ncol = COLPOS(l, pos + j + delta);
         if (ncol - column > buf->COLS)
@@ -727,11 +694,9 @@ redrawLineRegion(Buffer* buf, Line* l, int i, int bpos, int epos)
     Lineprop* pr;
     Linecolor* pc;
     int bcol, ecol;
-#ifdef USE_COLOR
     Anchor* a;
     ParsedURL url;
     int k, vpos = -1;
-#endif
 
     if (l == NULL)
         return 0;
@@ -747,7 +712,6 @@ redrawLineRegion(Buffer* buf, Line* l, int i, int bpos, int epos)
     ecol = epos - pos;
 
     for (j = 0; rcol - column < buf->COLS && pos + j < l->len; j += delta) {
-#ifdef USE_COLOR
         if (useVisitedColor && vpos <= pos + j && !(pr[j] & PE_VISITED)) {
             a = retrieveAnchor(buf->href, l->linenumber, pos + j);
             if (a) {
@@ -759,7 +723,6 @@ redrawLineRegion(Buffer* buf, Line* l, int i, int bpos, int epos)
                 vpos = a->end.pos;
             }
         }
-#endif
         delta = wtf_len((wc_uchar*)&p[j]);
         ncol = COLPOS(l, pos + j + delta);
         if (ncol - column > buf->COLS)
@@ -887,12 +850,10 @@ do_color(Linecolor c)
         setfcolor(c & 0x7);
     else if (color_mode & 0x8)
         setfcolor(basic_color);
-#ifdef USE_BG_COLOR
     if (c & 0x80)
         setbcolor((c >> 4) & 0x7);
     else if (color_mode & 0x80)
         setbcolor(bg_color);
-#endif
     color_mode = c;
 }
 
