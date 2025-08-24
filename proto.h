@@ -382,10 +382,6 @@ extern void setbcolor(int color);
 #endif /* USE_COLOR */
 extern void refresh(void);
 extern void clear(void);
-#ifdef USE_RAW_SCROLL
-extern void scroll(int);
-extern void rscroll(int);
-#endif
 extern void clrtoeol(void);
 extern void clrtoeolx(void);
 extern void clrtobot(void);

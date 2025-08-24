@@ -43,7 +43,7 @@ CONTEXT = {
     "USE_ANSI_COLOR": True,
     # "USE_COLOR": False,
     # "USE_BG_COLOR": False,
-    # "USE_RAW_SCROLL": False,
+    "USE_RAW_SCROLL": False,
     # "USE_MENU": False,
     # "MENU_MAP": False,
     # "MENU_SELECT": False,
