@@ -161,14 +161,15 @@ void bzero(void*, int);
 
 #define COLPOS(l, c) calcPosition(l->lineBuf, l->propBuf, l->len, c, 0, CP_AUTO)
 
-/* Buffer Property */
-#define BP_NORMAL 0x0
-#define BP_PIPE 0x1
-#define BP_FRAME 0x2
-#define BP_INTERNAL 0x8
-#define BP_NO_URL 0x10
-#define BP_REDIRECTED 0x20
-#define BP_CLOSE 0x40
+enum BufferProperty {
+    BP_NORMAL = 0x0,
+    BP_PIPE = 0x1,
+    BP_FRAME = 0x2,
+    BP_INTERNAL = 0x8,
+    BP_NO_URL = 0x10,
+    BP_REDIRECTED = 0x20,
+    BP_CLOSE = 0x40,
+};
 
 /* Link Buffer */
 #define LB_NOLINK -1
@@ -254,7 +255,6 @@ extern int REV_LB[];
 /*
  * Macros.
  */
-
 
 #define SKIP_BLANKS(p)                 \
     {                                  \
@@ -414,7 +414,7 @@ typedef struct _Buffer {
     char* type;
     char* real_type;
     int allLine;
-    short bufferprop;
+    enum BufferProperty bufferprop;
     int currentColumn;
     short cursorX;
     short cursorY;
@@ -854,8 +854,8 @@ global int CurrentPid;
 global char* MyProgramName init("w3m");
 #endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
 
-global Buffer *Currentbuf;
-global Buffer *Firstbuf;
+global Buffer* Currentbuf;
+global Buffer* Firstbuf;
 
 global DownloadList* FirstDL init(NULL);
 global DownloadList* LastDL init(NULL);
@@ -1030,7 +1030,6 @@ global char* param_tmp_dir init(NULL);
 global char* mkd_tmp_dir init(NULL);
 #endif
 global char* config_file init(NULL);
-
 
 global int default_use_cookie init(TRUE);
 global int use_cookie init(TRUE);
