@@ -14,7 +14,7 @@ const w3m_srcs = [_][]const u8{
     "w3m.c",
     "parseArgs.c",
 
-    "main.c",
+    // "main.c",
     "file.c",
     "buffer.c",
     "display.c",
@@ -117,6 +117,7 @@ pub fn build(b: *std.Build) void {
     const mod = b.addModule("w3m", .{
         .target = target,
         .optimize = optimize,
+        .root_source_file = b.path("main.zig"),
     });
     const exe = b.addExecutable(.{
         .name = "w3m",

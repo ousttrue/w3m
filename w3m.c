@@ -119,8 +119,13 @@ void fmInit(void)
     fmInitialized = TRUE;
 }
 
-int main_loop()
+int main_loop(const char* line_str)
 {
+    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    if (line_str) {
+        _goLine(line_str);
+    }
+
     void* queue_buffer[100];
     struct EventThreadArgs event_args = {
         .queue = QUEUE_INITIALIZER(queue_buffer),
