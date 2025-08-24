@@ -360,13 +360,6 @@ void displayBuffer(Buffer* buf, int mode)
     } else
         buf->rootX = 0;
     buf->COLS = COLS - buf->rootX;
-    if (nTab > 1) {
-        if (mode == B_FORCE_REDRAW || mode == B_REDRAW_IMAGE)
-            calcTabPos();
-        ny = LastTab->y + 2;
-        if (ny > LASTLINE)
-            ny = LASTLINE;
-    }
     if (buf->rootY != ny || buf->LINES != LASTLINE - ny) {
         buf->rootY = ny;
         buf->LINES = LASTLINE - ny;
@@ -543,38 +536,7 @@ redrawNLine(Buffer* buf, int n)
 #endif /* USE_BG_COLOR */
     }
 #endif /* USE_COLOR */
-    if (nTab > 1) {
-        TabBuffer* t;
-        int l;
 
-        move(0, 0);
-        clrtoeolx();
-        for (t = FirstTab; t; t = t->nextTab) {
-            move(t->y, t->x1);
-            if (t == CurrentTab)
-                bold();
-            addch('[');
-            l = t->x2 - t->x1 - 1 - get_strwidth(t->currentBuffer->buffername);
-            if (l < 0)
-                l = 0;
-            if (l / 2 > 0)
-                addnstr_sup(" ", l / 2);
-            if (t == CurrentTab)
-                EFFECT_ACTIVE_START;
-            addnstr(t->currentBuffer->buffername, t->x2 - t->x1 - l);
-            if (t == CurrentTab)
-                EFFECT_ACTIVE_END;
-            if ((l + 1) / 2 > 0)
-                addnstr_sup(" ", (l + 1) / 2);
-            move(t->y, t->x2);
-            addch(']');
-            if (t == CurrentTab)
-                boldend();
-        }
-        move(LastTab->y + 1, 0);
-        for (i = 0; i < COLS; i++)
-            addch('~');
-    }
     for (i = 0, l = buf->topLine; i < buf->LINES; i++, l = l->next) {
         if (i >= buf->LINES - n || i < -n)
             l = redrawLine(buf, l, i + buf->rootY);
@@ -1106,14 +1068,14 @@ void disp_message_nsec(char* s, int redraw_current, int sec, int purge, int mous
         fprintf(stderr, "%s\n", conv_to_system(s));
         return;
     }
-    if (CurrentTab != NULL && Currentbuf != NULL)
+    if (Currentbuf != NULL)
         message(s, Currentbuf->cursorX + Currentbuf->rootX,
             Currentbuf->cursorY + Currentbuf->rootY);
     else
         message(s, LASTLINE, 0);
     refresh();
     sleep_till_anykey(sec * 1000, purge);
-    if (CurrentTab != NULL && Currentbuf != NULL && redraw_current)
+    if (Currentbuf != NULL && redraw_current)
         displayBuffer(Currentbuf, B_NORMAL);
 }
 

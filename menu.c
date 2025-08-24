@@ -617,16 +617,6 @@ static int smDelBuf(char c);
 
 /* --- SelectMenu (END) --- */
 
-/* --- SelTabMenu --- */
-
-static Menu SelTabMenu;
-static int SelTabV = 0;
-static void initSelTabMenu(void);
-static void smChTab(void);
-static int smDelTab(char c);
-
-/* --- SelTabMenu (END) --- */
-
 /* --- MainMenu --- */
 
 static Menu MainMenu;
@@ -639,15 +629,12 @@ static MenuItem MainMenuItem[] = {
     { MENU_FUNC, N_(" Back         (b) "), NULL, 0, backBf, NULL, "b", NULL },
     { MENU_POPUP, N_(" Select Buffer(s) "), NULL, 0, NULL, &SelectMenu, "s",
         NULL },
-    { MENU_POPUP, N_(" Select Tab   (t) "), NULL, 0, NULL, &SelTabMenu, "tT",
-        NULL },
     { MENU_FUNC, N_(" View Source  (v) "), NULL, 0, vwSrc, NULL, "vV", NULL },
     { MENU_FUNC, N_(" Edit Source  (e) "), NULL, 0, editBf, NULL, "eE", NULL },
     { MENU_FUNC, N_(" Save Source  (S) "), NULL, 0, svSrc, NULL, "S", NULL },
     { MENU_FUNC, N_(" Reload       (r) "), NULL, 0, reload, NULL, "rR", NULL },
     { MENU_NOP, N_(" ---------------- "), NULL, 0, nulcmd, NULL, "", NULL },
     { MENU_FUNC, N_(" Go Link      (a) "), NULL, 0, followA, NULL, "a", NULL },
-    { MENU_FUNC, N_("   on New Tab (n) "), NULL, 0, tabA, NULL, "nN", NULL },
     { MENU_FUNC, N_(" Save Link    (A) "), NULL, 0, svA, NULL, "A", NULL },
     { MENU_FUNC, N_(" View Image   (i) "), NULL, 0, followI, NULL, "i", NULL },
     { MENU_FUNC, N_(" Save Image   (I) "), NULL, 0, svI, NULL, "I", NULL },
@@ -1366,7 +1353,6 @@ void popupMenu(int x, int y, Menu* menu)
     set_menu_frame();
 
     initSelectMenu();
-    initSelTabMenu();
 
     menu->cursorX = Currentbuf->cursorX + Currentbuf->rootX;
     menu->cursorY = Currentbuf->cursorY + Currentbuf->rootY;
@@ -1541,141 +1527,6 @@ smDelBuf(char c)
 
 /* --- SelectMenu (END) --- */
 
-/* --- SelTabMenu --- */
-
-DEFUN(tabMn, TAB_MENU, "Pop up tab selection menu")
-{
-    int x = Currentbuf->cursorX + Currentbuf->rootX,
-        y = Currentbuf->cursorY + Currentbuf->rootY;
-
-    popupMenu(x, y, &SelTabMenu);
-}
-
-static void
-initSelTabMenu(void)
-{
-    int i, nitem, len = 0, l;
-    TabBuffer* tab;
-    Buffer* buf;
-    Str str;
-    char** label;
-    char* p;
-    static char* comment = " SPC for select / D for delete tab ";
-
-    SelTabV = -1;
-    for (i = 0, tab = LastTab; tab != NULL; i++, tab = tab->prevTab) {
-        if (tab == CurrentTab)
-            SelTabV = i;
-    }
-    nitem = i;
-
-    label = New_N(char*, nitem + 2);
-    for (i = 0, tab = LastTab; i < nitem; i++, tab = tab->prevTab) {
-        buf = tab->currentBuffer;
-        str = Sprintf("<%s>", buf->buffername);
-        if (buf->filename != NULL) {
-            switch (buf->currentURL.scheme) {
-            case SCM_LOCAL:
-                if (strcmp(buf->currentURL.file, "-")) {
-                    Strcat_char(str, ' ');
-                    Strcat_charp(str,
-                        conv_from_system(buf->currentURL.real_file));
-                }
-                break;
-                /* case SCM_UNKNOWN: */
-            case SCM_MISSING:
-                break;
-            default:
-                p = url_decode2(parsedURL2Str(&buf->currentURL)->ptr, NULL);
-                Strcat_charp(str, p);
-                break;
-            }
-        }
-        label[i] = str->ptr;
-        if (len < str->length)
-            len = str->length;
-    }
-    l = strlen(comment);
-    if (len < l + 4)
-        len = l + 4;
-    if (len > COLS - 2 * FRAME_WIDTH)
-        len = COLS - 2 * FRAME_WIDTH;
-    len = (len > 1) ? ((len - l + 1) / 2) : 0;
-    str = Strnew();
-    for (i = 0; i < len; i++)
-        Strcat_char(str, '-');
-    Strcat_charp(str, comment);
-    for (i = 0; i < len; i++)
-        Strcat_char(str, '-');
-    label[nitem] = str->ptr;
-    label[nitem + 1] = NULL;
-
-    new_option_menu(&SelTabMenu, label, &SelTabV, smChTab);
-    SelTabMenu.initial = SelTabV;
-    SelTabMenu.cursorX = Currentbuf->cursorX + Currentbuf->rootX;
-    SelTabMenu.cursorY = Currentbuf->cursorY + Currentbuf->rootY;
-    SelTabMenu.keymap['D'] = smDelTab;
-    SelTabMenu.item[nitem].type = MENU_NOP;
-}
-
-static void
-smChTab(void)
-{
-    int i;
-    TabBuffer* tab;
-    Buffer* buf;
-
-    if (SelTabV < 0 || SelTabV >= SelTabMenu.nitem)
-        return;
-    for (i = 0, tab = LastTab; i < SelTabV && tab != NULL;
-        i++, tab = tab->prevTab)
-        ;
-    CurrentTab = tab;
-    for (tab = LastTab; tab != NULL; tab = tab->prevTab) {
-        if (tab == CurrentTab)
-            continue;
-        buf = tab->currentBuffer;
-        deleteImage(buf);
-        if (clear_buffer)
-            tmpClearBuffer(buf);
-    }
-}
-
-static int
-smDelTab(char c)
-{
-    int i, x, y, mselect;
-    TabBuffer* tab;
-
-    if (CurrentMenu->select < 0 || CurrentMenu->select >= SelTabMenu.nitem)
-        return (MENU_NOTHING);
-    for (i = 0, tab = LastTab; i < CurrentMenu->select && tab != NULL;
-        i++, tab = tab->prevTab)
-        ;
-    deleteTab(tab);
-
-    x = CurrentMenu->x;
-    y = CurrentMenu->y;
-    mselect = CurrentMenu->select;
-
-    initSelTabMenu();
-
-    CurrentMenu->x = x;
-    CurrentMenu->y = y;
-
-    geom_menu(CurrentMenu, x, y, 0);
-
-    CurrentMenu->select = (mselect <= CurrentMenu->nitem - 2) ? mselect
-                                                              : (CurrentMenu->nitem - 2);
-
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
-    draw_all_menu(CurrentMenu);
-    select_menu(CurrentMenu, CurrentMenu->select);
-    return (MENU_NOTHING);
-}
-
-/* --- SelectMenu (END) --- */
-
 /* --- OptionMenu --- */
 
 void optionMenu(int x, int y, char** label, int* variable, int initial,
@@ -1757,17 +1608,14 @@ void initMenu(void)
     FILE* mf;
     MenuList* list;
 
-    w3mMenuList = New_N(MenuList, 4);
+    w3mMenuList = New_N(MenuList, 3);
     w3mMenuList[0].id = "Main";
     w3mMenuList[0].menu = &MainMenu;
     w3mMenuList[0].item = MainMenuItem;
     w3mMenuList[1].id = "Select";
     w3mMenuList[1].menu = &SelectMenu;
     w3mMenuList[1].item = NULL;
-    w3mMenuList[2].id = "SelectTab";
-    w3mMenuList[2].menu = &SelTabMenu;
-    w3mMenuList[2].item = NULL;
-    w3mMenuList[3].id = NULL;
+    w3mMenuList[2].id = NULL;
 
     if (!MainMenuEncode) {
         MenuItem* item;

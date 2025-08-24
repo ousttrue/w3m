@@ -220,10 +220,8 @@ char* inputLineHistSearch(char* prompt, char* def_str, int flag, Hist* hist, Inc
     } while (i_cont);
     event_end_input(getch);
 
-    if (CurrentTab) {
-        if (need_redraw)
-            displayBuffer(Currentbuf, B_FORCE_REDRAW);
-    }
+    if (need_redraw)
+        displayBuffer(Currentbuf, B_FORCE_REDRAW);
 
     if (i_broken)
         return NULL;
@@ -574,8 +572,7 @@ next_dcompl(int next)
     if (cm_mode == CPL_NEVER || cm_mode & CPL_OFF)
         return;
     cm_disp_clear = FALSE;
-    if (CurrentTab)
-        displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(Currentbuf, B_FORCE_REDRAW);
     if (LASTLINE >= 3) {
         comment = TRUE;
         nline = LASTLINE - 2;
@@ -956,6 +953,5 @@ _editor(void)
         Strcat_char(strBuf, *p);
     }
     CLen = CPos = setStrType(strBuf, strProp);
-    if (CurrentTab)
-        displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }

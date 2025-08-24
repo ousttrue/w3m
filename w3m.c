@@ -82,8 +82,6 @@ void set_buffer_environ(Buffer*);
 static void save_buffer_position(Buffer* buf);
 
 static void _followForm(int);
-static void followTab(TabBuffer* tab);
-static void moveTab(TabBuffer* t, TabBuffer* t2, int right);
 static void _nextA(int);
 static void _prevA(int);
 static int check_target = TRUE;
@@ -343,8 +341,7 @@ resize_screen(void)
     need_resize_screen = FALSE;
     setlinescols();
     setupscreen();
-    if (CurrentTab)
-        displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
 /*
@@ -1832,19 +1829,6 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
     if (map)
         url = Sprintf("%s?%d,%d", a->url, x, y)->ptr;
 
-    if (check_target && open_tab_blank && a->target && (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
-        Buffer* buf;
-
-        _newT();
-        buf = Currentbuf;
-        loadLink(url, a->target, a->referer, NULL);
-        if (buf != Currentbuf)
-            delBuffer(buf);
-        else
-            deleteTab(CurrentTab);
-        displayBuffer(Currentbuf, B_FORCE_REDRAW);
-        return;
-    }
     loadLink(url, a->target, a->referer, NULL);
     displayBuffer(Currentbuf, B_NORMAL);
 }
@@ -2762,12 +2746,8 @@ DEFUN(backBf, BACK, "Close current buffer and return to the one below in stack")
     Buffer* buf = Currentbuf->linkBuffer[LB_N_FRAME];
 
     if (!checkBackBuffer(Currentbuf)) {
-        if (close_tab_back && nTab >= 1) {
-            deleteTab(CurrentTab);
-            displayBuffer(Currentbuf, B_FORCE_REDRAW);
-        } else
-            /* FIXME: gettextize? */
-            disp_message("Can't go back...", TRUE);
+        /* FIXME: gettextize? */
+        disp_message("Can't go back...", TRUE);
         return;
     }
 
@@ -3051,20 +3031,6 @@ void follow_map(struct parsed_tagarg* arg)
     }
     parseURL2(a->url, &p_url, baseURL(Currentbuf));
     pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
-    if (check_target && open_tab_blank && a->target && (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
-        Buffer* buf;
-
-        _newT();
-        buf = Currentbuf;
-        cmd_loadURL(a->url, baseURL(Currentbuf),
-            parsedURL2Str(&Currentbuf->currentURL)->ptr, NULL);
-        if (buf != Currentbuf)
-            delBuffer(buf);
-        else
-            deleteTab(CurrentTab);
-        displayBuffer(Currentbuf, B_FORCE_REDRAW);
-        return;
-    }
     cmd_loadURL(a->url, baseURL(Currentbuf),
         parsedURL2Str(&Currentbuf->currentURL)->ptr, NULL);
 #endif
@@ -4054,12 +4020,10 @@ void deleteFiles()
     Buffer* buf;
     char* f;
 
-    for (CurrentTab = FirstTab; CurrentTab; CurrentTab = CurrentTab->nextTab) {
-        while (Firstbuf && Firstbuf != NO_BUFFER) {
-            buf = Firstbuf->nextBuffer;
-            discardBuffer(Firstbuf);
-            Firstbuf = buf;
-        }
+    while (Firstbuf && Firstbuf != NO_BUFFER) {
+        buf = Firstbuf->nextBuffer;
+        discardBuffer(Firstbuf);
+        Firstbuf = buf;
     }
     while ((f = popText(fileToDelete)) != NULL) {
         unlink(f);
@@ -4269,351 +4233,6 @@ DEFUN(defKey, DEFINE_KEY, "Define a binding between a key stroke combination and
     displayBuffer(Currentbuf, B_NORMAL);
 }
 
-TabBuffer*
-newTab(void)
-{
-    TabBuffer* n;
-
-    n = New(TabBuffer);
-    if (n == NULL)
-        return NULL;
-    n->nextTab = NULL;
-    n->currentBuffer = NULL;
-    n->firstBuffer = NULL;
-    return n;
-}
-
-void _newT(void)
-{
-    TabBuffer* tag;
-    Buffer* buf;
-    int i;
-
-    tag = newTab();
-    if (!tag)
-        return;
-
-    buf = newBuffer(Currentbuf->width);
-    copyBuffer(buf, Currentbuf);
-    buf->nextBuffer = NULL;
-    for (i = 0; i < MAX_LB; i++)
-        buf->linkBuffer[i] = NULL;
-    (*buf->clone)++;
-    tag->firstBuffer = tag->currentBuffer = buf;
-
-    tag->nextTab = CurrentTab->nextTab;
-    tag->prevTab = CurrentTab;
-    if (CurrentTab->nextTab)
-        CurrentTab->nextTab->prevTab = tag;
-    else
-        LastTab = tag;
-    CurrentTab->nextTab = tag;
-    CurrentTab = tag;
-    nTab++;
-}
-
-DEFUN(newT, NEW_TAB, "Open a new tab (with current document)")
-{
-    _newT();
-    displayBuffer(Currentbuf, B_REDRAW_IMAGE);
-}
-
-static TabBuffer*
-numTab(int n)
-{
-    TabBuffer* tab;
-    int i;
-
-    if (n == 0)
-        return CurrentTab;
-    if (n == 1)
-        return FirstTab;
-    if (nTab <= 1)
-        return NULL;
-    for (tab = FirstTab, i = 1; tab && i < n; tab = tab->nextTab, i++)
-        ;
-    return tab;
-}
-
-void calcTabPos(void)
-{
-    TabBuffer* tab;
-    int lcol = 0, rcol = 0, col;
-    int n1, n2, na, nx, ny, ix, iy;
-
-    if (nTab <= 0)
-        return;
-    n1 = (COLS - rcol - lcol) / TabCols;
-    if (n1 >= nTab) {
-        n2 = 1;
-        ny = 1;
-    } else {
-        if (n1 < 0)
-            n1 = 0;
-        n2 = COLS / TabCols;
-        if (n2 == 0)
-            n2 = 1;
-        ny = (nTab - n1 - 1) / n2 + 2;
-    }
-    na = n1 + n2 * (ny - 1);
-    n1 -= (na - nTab) / ny;
-    if (n1 < 0)
-        n1 = 0;
-    na = n1 + n2 * (ny - 1);
-    tab = FirstTab;
-    for (iy = 0; iy < ny && tab; iy++) {
-        if (iy == 0) {
-            nx = n1;
-            col = COLS - rcol - lcol;
-        } else {
-            nx = n2 - (na - nTab + (iy - 1)) / (ny - 1);
-            col = COLS;
-        }
-        for (ix = 0; ix < nx && tab; ix++, tab = tab->nextTab) {
-            tab->x1 = col * ix / nx;
-            tab->x2 = col * (ix + 1) / nx - 1;
-            tab->y = iy;
-            if (iy == 0) {
-                tab->x1 += lcol;
-                tab->x2 += lcol;
-            }
-        }
-    }
-}
-
-TabBuffer*
-deleteTab(TabBuffer* tab)
-{
-    Buffer *buf, *next;
-
-    if (nTab <= 1)
-        return FirstTab;
-    if (tab->prevTab) {
-        if (tab->nextTab)
-            tab->nextTab->prevTab = tab->prevTab;
-        else
-            LastTab = tab->prevTab;
-        tab->prevTab->nextTab = tab->nextTab;
-        if (tab == CurrentTab)
-            CurrentTab = tab->prevTab;
-    } else { /* tab == FirstTab */
-        tab->nextTab->prevTab = NULL;
-        FirstTab = tab->nextTab;
-        if (tab == CurrentTab)
-            CurrentTab = tab->nextTab;
-    }
-    nTab--;
-    buf = tab->firstBuffer;
-    while (buf && buf != NO_BUFFER) {
-        next = buf->nextBuffer;
-        discardBuffer(buf);
-        buf = next;
-    }
-    return FirstTab;
-}
-
-DEFUN(closeT, CLOSE_TAB, "Close tab")
-{
-    TabBuffer* tab;
-
-    if (nTab <= 1)
-        return;
-    if (prec_num)
-        tab = numTab(PREC_NUM);
-    else
-        tab = CurrentTab;
-    if (tab)
-        deleteTab(tab);
-    displayBuffer(Currentbuf, B_REDRAW_IMAGE);
-}
-
-DEFUN(nextT, NEXT_TAB, "Switch to the next tab")
-{
-    int i;
-
-    if (nTab <= 1)
-        return;
-    for (i = 0; i < PREC_NUM; i++) {
-        if (CurrentTab->nextTab)
-            CurrentTab = CurrentTab->nextTab;
-        else
-            CurrentTab = FirstTab;
-    }
-    displayBuffer(Currentbuf, B_REDRAW_IMAGE);
-}
-
-DEFUN(prevT, PREV_TAB, "Switch to the previous tab")
-{
-    int i;
-
-    if (nTab <= 1)
-        return;
-    for (i = 0; i < PREC_NUM; i++) {
-        if (CurrentTab->prevTab)
-            CurrentTab = CurrentTab->prevTab;
-        else
-            CurrentTab = LastTab;
-    }
-    displayBuffer(Currentbuf, B_REDRAW_IMAGE);
-}
-
-static void
-followTab(TabBuffer* tab)
-{
-    Buffer* buf;
-    Anchor* a;
-
-    a = retrieveCurrentImg(Currentbuf);
-    if (!(a && a->image && a->image->map))
-        a = retrieveCurrentAnchor(Currentbuf);
-    if (a == NULL)
-        return;
-
-    if (tab == CurrentTab) {
-        check_target = FALSE;
-        followA();
-        check_target = TRUE;
-        return;
-    }
-    _newT();
-    buf = Currentbuf;
-    check_target = FALSE;
-    followA();
-    check_target = TRUE;
-    if (tab == NULL) {
-        if (buf != Currentbuf)
-            delBuffer(buf);
-        else
-            deleteTab(CurrentTab);
-    } else if (buf != Currentbuf) {
-        /* buf <- p <- ... <- Currentbuf = c */
-        Buffer *c, *p;
-
-        c = Currentbuf;
-        if ((p = prevBuffer(c, buf)))
-            p->nextBuffer = NULL;
-        Firstbuf = buf;
-        deleteTab(CurrentTab);
-        CurrentTab = tab;
-        for (buf = p; buf; buf = p) {
-            p = prevBuffer(c, buf);
-            pushBuffer(buf);
-        }
-    }
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
-}
-
-DEFUN(tabA, TAB_LINK, "Follow current hyperlink in a new tab")
-{
-    followTab(prec_num ? numTab(PREC_NUM) : NULL);
-}
-
-static void
-tabURL0(TabBuffer* tab, char* prompt, int relative)
-{
-    Buffer* buf;
-
-    if (tab == CurrentTab) {
-        goURL0(prompt, relative);
-        return;
-    }
-    _newT();
-    buf = Currentbuf;
-    goURL0(prompt, relative);
-    if (tab == NULL) {
-        if (buf != Currentbuf)
-            delBuffer(buf);
-        else
-            deleteTab(CurrentTab);
-    } else if (buf != Currentbuf) {
-        /* buf <- p <- ... <- Currentbuf = c */
-        Buffer *c, *p;
-
-        c = Currentbuf;
-        if ((p = prevBuffer(c, buf)))
-            p->nextBuffer = NULL;
-        Firstbuf = buf;
-        deleteTab(CurrentTab);
-        CurrentTab = tab;
-        for (buf = p; buf; buf = p) {
-            p = prevBuffer(c, buf);
-            pushBuffer(buf);
-        }
-    }
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
-}
-
-DEFUN(tabURL, TAB_GOTO, "Open specified document in a new tab")
-{
-    tabURL0(prec_num ? numTab(PREC_NUM) : NULL,
-        "Goto URL on new tab: ", FALSE);
-}
-
-DEFUN(tabrURL, TAB_GOTO_RELATIVE, "Open relative address in a new tab")
-{
-    tabURL0(prec_num ? numTab(PREC_NUM) : NULL,
-        "Goto relative URL on new tab: ", TRUE);
-}
-
-static void
-moveTab(TabBuffer* t, TabBuffer* t2, int right)
-{
-    if (t2 == NO_TABBUFFER)
-        t2 = FirstTab;
-    if (!t || !t2 || t == t2 || t == NO_TABBUFFER)
-        return;
-    if (t->prevTab) {
-        if (t->nextTab)
-            t->nextTab->prevTab = t->prevTab;
-        else
-            LastTab = t->prevTab;
-        t->prevTab->nextTab = t->nextTab;
-    } else {
-        t->nextTab->prevTab = NULL;
-        FirstTab = t->nextTab;
-    }
-    if (right) {
-        t->nextTab = t2->nextTab;
-        t->prevTab = t2;
-        if (t2->nextTab)
-            t2->nextTab->prevTab = t;
-        else
-            LastTab = t;
-        t2->nextTab = t;
-    } else {
-        t->prevTab = t2->prevTab;
-        t->nextTab = t2;
-        if (t2->prevTab)
-            t2->prevTab->nextTab = t;
-        else
-            FirstTab = t;
-        t2->prevTab = t;
-    }
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
-}
-
-DEFUN(tabR, TAB_RIGHT, "Move right along the tab bar")
-{
-    TabBuffer* tab;
-    int i;
-
-    for (tab = CurrentTab, i = 0; tab && i < PREC_NUM;
-        tab = tab->nextTab, i++)
-        ;
-    moveTab(CurrentTab, tab ? tab : LastTab, TRUE);
-}
-
-DEFUN(tabL, TAB_LEFT, "Move left along the tab bar")
-{
-    TabBuffer* tab;
-    int i;
-
-    for (tab = CurrentTab, i = 0; tab && i < PREC_NUM;
-        tab = tab->prevTab, i++)
-        ;
-    moveTab(CurrentTab, tab ? tab : FirstTab, FALSE);
-}
-
 void addDownloadList(pid_t pid, char* url, char* save, char* lock, clen_t size)
 {
     DownloadList* d;
@@ -4808,8 +4427,6 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
     if (!FirstDL) {
         if (replace) {
             if (Currentbuf == Firstbuf && Currentbuf->nextBuffer == NULL) {
-                if (nTab > 1)
-                    deleteTab(CurrentTab);
             } else
                 delBuffer(Currentbuf);
             displayBuffer(Currentbuf, B_FORCE_REDRAW);
@@ -4827,12 +4444,8 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
         COPY_BUFROOT(buf, Currentbuf);
         restorePosition(buf, Currentbuf);
     }
-    if (!replace && open_tab_dl_list) {
-        _newT();
-        new_tab = TRUE;
-    }
     pushBuffer(buf);
-    if (replace || new_tab)
+    if (replace)
         deletePrevBuf();
     if (reload)
         Currentbuf->event = setAlarmEvent(Currentbuf->event, 1, AL_IMPLICIT,

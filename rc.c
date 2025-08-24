@@ -348,10 +348,6 @@ struct param_ptr params1[] = {
         CMT_PIXEL_PER_LINE, NULL },
     { "frame", P_CHARINT, PI_ONOFF, (void*)&RenderFrame, CMT_FRAME, NULL },
     { "target_self", P_CHARINT, PI_ONOFF, (void*)&TargetSelf, CMT_TSELF, NULL },
-    { "open_tab_blank", P_INT, PI_ONOFF, (void*)&open_tab_blank,
-        CMT_OPEN_TAB_BLANK, NULL },
-    { "open_tab_dl_list", P_INT, PI_ONOFF, (void*)&open_tab_dl_list,
-        CMT_OPEN_TAB_DL_LIST, NULL },
     { "display_link", P_INT, PI_ONOFF, (void*)&displayLink, CMT_DISPLINK,
         NULL },
     { "display_link_number", P_INT, PI_ONOFF, (void*)&displayLinkNumber,
@@ -450,8 +446,6 @@ struct param_ptr params3[] = {
     { "save_hist", P_INT, PI_ONOFF, (void*)&SaveURLHist, CMT_SAVEHIST, NULL },
     { "confirm_qq", P_INT, PI_ONOFF, (void*)&confirm_on_quit, CMT_CONFIRM_QQ,
         NULL },
-    { "close_tab_back", P_INT, PI_ONOFF, (void*)&close_tab_back,
-        CMT_CLOSE_TAB_BACK, NULL },
 #ifdef USE_MARK
     { "mark", P_INT, PI_ONOFF, (void*)&use_mark, CMT_USE_MARK, NULL },
 #endif

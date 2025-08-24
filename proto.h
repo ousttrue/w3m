@@ -124,11 +124,6 @@ extern void newT(void);
 extern void closeT(void);
 extern void nextT(void);
 extern void prevT(void);
-extern void tabA(void);
-extern void tabURL(void);
-extern void tabrURL(void);
-extern void tabR(void);
-extern void tabL(void);
 extern void ldDL(void);
 extern void linkLst(void);
 #ifdef USE_MENU
@@ -249,9 +244,6 @@ extern char* inputAnswer(char* prompt);
 extern int matchattr(char* p, char* attr, int len, Str* value);
 extern void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu);
 extern char* checkHeader(Buffer* buf, char* field);
-extern TabBuffer* newTab(void);
-extern void calcTabPos(void);
-extern TabBuffer* deleteTab(TabBuffer* tab);
 extern void addDownloadList(pid_t pid, char* url, char* save, char* lock,
     clen_t size);
 extern void stopDownload(void);

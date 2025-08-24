@@ -560,10 +560,6 @@ const char* parseArgs(int argc, char** argv)
         i++;
     }
 
-    FirstTab = NULL;
-    LastTab = NULL;
-    nTab = 0;
-    CurrentTab = NULL;
     CurrentKey = -1;
     if (BookmarkFile == NULL)
         BookmarkFile = rcFile(BOOKMARK);
@@ -719,18 +715,8 @@ const char* parseArgs(int argc, char** argv)
             continue;
         if (newbuf->pagerSource || (newbuf->real_scheme == SCM_LOCAL && newbuf->header_source && newbuf->currentURL.file && strcmp(newbuf->currentURL.file, "-")))
             newbuf->search_header = search_header;
-        if (CurrentTab == NULL) {
-            FirstTab = LastTab = CurrentTab = newTab();
-            if (!FirstTab) {
-                fprintf(stderr, "%s\n", "Can't allocated memory");
-                exit(1);
-            }
-            nTab = 1;
+        if (Currentbuf == NULL) {
             Firstbuf = Currentbuf = newbuf;
-        } else if (open_new_tab) {
-            _newT();
-            Currentbuf->nextBuffer = newbuf;
-            delBuffer(Currentbuf);
         } else {
             Currentbuf->nextBuffer = newbuf;
             Currentbuf = newbuf;
@@ -755,8 +741,7 @@ const char* parseArgs(int argc, char** argv)
     //         Currentbuf = Firstbuf;
     //     ldDL();
     // } else
-    CurrentTab = FirstTab;
-    if (!FirstTab || !Firstbuf || Firstbuf == NO_BUFFER) {
+    if (!Firstbuf || Firstbuf == NO_BUFFER) {
         if (newbuf == NO_BUFFER) {
             if (fmInitialized)
                 /* FIXME: gettextize? */
