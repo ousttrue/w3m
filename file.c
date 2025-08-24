@@ -2068,8 +2068,6 @@ page_loaded:
         proc = loadBuffer;
     else if (activeImage && displayImage && !useExtImageViewer && !(w3m_dump & ~DUMP_FRAME) && !strncasecmp(t, "image/", 6))
         proc = loadImageBuffer;
-    else if (w3m_backend)
-        ;
     else if (!(w3m_dump & ~DUMP_FRAME) || is_dump_text_type(t)) {
         if (!do_download &&
 #ifdef USE_GOPHER
@@ -2116,8 +2114,6 @@ page_loaded:
     if (b && b != NO_BUFFER) {
         b->real_scheme = f.scheme;
         b->real_type = real_type;
-        if (w3m_backend)
-            b->type = allocStr(t, -1);
         if (pu.label) {
             if (proc == loadHTMLBuffer) {
                 Anchor* a;
@@ -6913,12 +6909,6 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
     if (w3m_halfdump) {
         TRAP_OFF;
         print_internal_information(&htmlenv1);
-        return;
-    }
-    if (w3m_backend) {
-        TRAP_OFF;
-        print_internal_information(&htmlenv1);
-        backend_halfdump_buf = htmlenv1.buf;
         return;
     }
 phase2:

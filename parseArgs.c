@@ -574,15 +574,6 @@ const char* parseArgs(int argc, char** argv)
                 w3m_dump = 0;
                 w3m_halfload = TRUE;
                 DefaultType = default_type = "text/html";
-            } else if (!strcmp("-backend", argv[i])) {
-                w3m_backend = TRUE;
-            } else if (!strcmp("-backend_batch", argv[i])) {
-                w3m_backend = TRUE;
-                if (++i >= argc)
-                    usage();
-                if (!backend_batch_commands)
-                    backend_batch_commands = newTextList();
-                pushText(backend_batch_commands, argv[i]);
             } else if (!strcmp("-cols", argv[i])) {
                 if (++i >= argc)
                     usage();
@@ -717,7 +708,7 @@ const char* parseArgs(int argc, char** argv)
             COLS = DEFAULT_COLS;
     }
 
-    if (!w3m_dump && !w3m_backend) {
+    if (!w3m_dump) {
         fmInit();
         mySignal(SIGWINCH, resize_hook);
     } else if (w3m_halfdump && displayImage)
@@ -728,12 +719,6 @@ const char* parseArgs(int argc, char** argv)
     if (UseHistory)
         loadHistory(URLHist);
 
-    /*  if (w3m_dump)
-     *    WcOption.pre_conv = WC_TRUE;
-     */
-
-    if (w3m_backend)
-        backend();
 #if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
     if (getimage_args) {
         char* image_url = conv_from_system(getimage_args[0]);
@@ -932,7 +917,7 @@ const char* parseArgs(int argc, char** argv)
     //         Currentbuf = Firstbuf;
     //     ldDL();
     // } else
-        CurrentTab = FirstTab;
+    CurrentTab = FirstTab;
     if (!FirstTab || !Firstbuf || Firstbuf == NO_BUFFER) {
         if (newbuf == NO_BUFFER) {
             if (fmInitialized)
