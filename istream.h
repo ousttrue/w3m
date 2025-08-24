@@ -1,7 +1,5 @@
-/* $Id: istream.h,v 1.12 2003/10/20 16:41:56 ukai Exp $ */
-#ifndef IO_STREAM_H
-#define IO_STREAM_H
-
+#pragma once
+#include "url.h"
 #include "indep.h"
 #include <stdio.h>
 #include <openssl/bio.h>
@@ -136,4 +134,30 @@ extern Str ssl_get_certificate(SSL* ssl, char* hostname);
 #define ssl_of(stream) ((stream)->ssl.handle->ssl)
 
 #define openIS(path) newInputStream(open((path), O_RDONLY))
-#endif
+
+typedef struct {
+    enum UrlScheme scheme;
+    char is_cgi;
+    char encoding;
+    union input_stream* stream;
+    char* ext;
+    int compression;
+    int content_encoding;
+    char* guess_type;
+    char* ssl_certificate;
+    char* url;
+    time_t modtime;
+} URLFile;
+
+void examineFile(char* path, URLFile* uf);
+Str convertLine(URLFile* uf, Str line, int mode, wc_ces* charset, wc_ces doc_charset);
+struct _Buffer;
+struct _Buffer* loadHTMLBuffer(URLFile* f, struct _Buffer* newBuf);
+void loadHTMLstream(URLFile* f, struct _Buffer* newBuf, FILE* src, int internal);
+struct _Buffer* loadBuffer(URLFile* uf, struct _Buffer* newBuf);
+struct _Buffer* loadImageBuffer(URLFile* uf, struct _Buffer* newBuf);
+int save2tmp(URLFile uf, char* tmpf);
+struct _Buffer* doExternal(URLFile uf, char* type, struct _Buffer* defaultbuf);
+int doFileSave(URLFile uf, char* defstr);
+void readHeader(URLFile* uf, struct _Buffer* newBuf, int thru, ParsedURL* pu);
+void init_stream(URLFile* uf, int scheme, InputStream stream);

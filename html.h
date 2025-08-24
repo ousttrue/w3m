@@ -2,6 +2,7 @@
 #ifndef _HTML_H
 #define _HTML_H
 #include "config.h"
+#include "url.h"
 #include <openssl/bio.h>
 #include <openssl/x509.h>
 #include <openssl/ssl.h>
@@ -50,33 +51,7 @@ typedef struct {
     int flag;
 } URLOption;
 
-typedef struct _ParsedURL {
-    int scheme;
-    char* user;
-    char* pass;
-    char* host;
-    int port;
-    char* file;
-    char* real_file;
-    char* query;
-    char* label;
-    int is_nocache;
-} ParsedURL;
-
 union input_stream;
-typedef struct {
-    unsigned char scheme;
-    char is_cgi;
-    char encoding;
-    union input_stream* stream;
-    char* ext;
-    int compression;
-    int content_encoding;
-    char* guess_type;
-    char* ssl_certificate;
-    char* url;
-    time_t modtime;
-} URLFile;
 
 #define CMP_NOCOMPRESS 0
 #define CMP_COMPRESS 1
@@ -399,22 +374,5 @@ struct environment {
 #define MAX_INDENT_LEVEL 10
 
 #define INDENT_INCR IndentIncr
-
-#define SCM_UNKNOWN 255
-#define SCM_MISSING 254
-#define SCM_HTTP 0
-#define SCM_GOPHER 1
-#define SCM_FTP 2
-#define SCM_FTPDIR 3
-#define SCM_LOCAL 4
-#define SCM_LOCAL_CGI 5
-#define SCM_EXEC 6
-#define SCM_NNTP 7
-#define SCM_NNTP_GROUP 8
-#define SCM_NEWS 9
-#define SCM_NEWS_GROUP 10
-#define SCM_DATA 11
-#define SCM_MAILTO 12
-#define SCM_HTTPS 13
 
 #endif /* _HTML_H */

@@ -149,23 +149,17 @@ extern int currentLn(Buffer* buf);
 extern void tmpClearBuffer(Buffer* buf);
 extern char* filename_extension(char* patch, int is_url);
 extern ParsedURL* schemeToProxy(int scheme);
-extern wc_ces url_to_charset(const char* url, const ParsedURL* base,
-    wc_ces doc_charset);
-extern char* url_encode(const char* url, const ParsedURL* base,
-    wc_ces doc_charset);
+extern wc_ces url_to_charset(const char* url, const ParsedURL* base, wc_ces doc_charset);
+extern char* url_encode(const char* url, const ParsedURL* base, wc_ces doc_charset);
 extern char* url_decode2(const char* url, const Buffer* buf);
-extern void examineFile(char* path, URLFile* uf);
 extern char* acceptableEncoding(void);
 extern int dir_exist(char* path);
 extern int is_html_type(char* type);
 extern char** get_symbol(wc_ces charset, int* width);
 extern char** set_symbol(int width);
-extern Str convertLine(URLFile* uf, Str line, int mode, wc_ces* charset,
-    wc_ces doc_charset);
 extern void push_symbol(Str str, char symbol, int width, int n);
 extern void update_utf8_symbol(void);
-extern Buffer* loadGeneralFile(char* path, ParsedURL* current, char* referer,
-    int flag, FormList* request);
+extern Buffer* loadGeneralFile(char* path, ParsedURL* current, char* referer, int flag, FormList* request);
 extern int is_boundary(unsigned char*, unsigned char*);
 extern int is_blank_line(char* line, int indent);
 extern void push_render_image(Str str, int width, int limit,
@@ -206,7 +200,6 @@ extern void HTMLlineproc2(Buffer* buf, TextLineList* tl);
 extern void HTMLlineproc0(char* istr, struct html_feed_environ* h_env,
     int internal);
 #define HTMLlineproc1(x, y) HTMLlineproc0(x, y, TRUE)
-extern Buffer* loadHTMLBuffer(URLFile* f, Buffer* newBuf);
 extern char* convert_size(clen_t size, int usefloat);
 extern char* convert_size2(clen_t size1, clen_t size2, int usefloat);
 extern void showProgress(clen_t* linelen, clen_t* trbyte);
@@ -214,15 +207,7 @@ extern void init_henv(struct html_feed_environ*, struct readbuffer*,
     struct environment*, int, TextLineList*, int, int);
 extern void completeHTMLstream(struct html_feed_environ*,
     struct readbuffer*);
-extern void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src,
-    int internal);
 extern Buffer* loadHTMLString(Str page);
-#ifdef USE_GOPHER
-extern Str loadGopherDir(URLFile* uf, ParsedURL* pu, wc_ces* charset);
-extern Str loadGopherSearch(URLFile* uf, ParsedURL* pu, wc_ces* charset);
-#endif /* USE_GOPHER */
-extern Buffer* loadBuffer(URLFile* uf, Buffer* newBuf);
-extern Buffer* loadImageBuffer(URLFile* uf, Buffer* newBuf);
 extern void saveBuffer(Buffer* buf, FILE* f, int cont);
 extern void saveBufferBody(Buffer* buf, FILE* f, int cont);
 extern Buffer* getshell(char* cmd);
@@ -230,18 +215,14 @@ extern Buffer* getpipe(char* cmd);
 extern Buffer* openPagerBuffer(InputStream stream, Buffer* buf);
 extern Buffer* openGeneralPagerBuffer(InputStream stream);
 extern Line* getNextPage(Buffer* buf, int plen);
-extern int save2tmp(URLFile uf, char* tmpf);
-extern Buffer* doExternal(URLFile uf, char* type, Buffer* defaultbuf);
 extern int _doFileCopy(char* tmpf, char* defstr, int download);
 #define doFileCopy(tmpf, defstr) _doFileCopy(tmpf, defstr, FALSE);
 extern int doFileMove(char* tmpf, char* defstr);
-extern int doFileSave(URLFile uf, char* defstr);
 extern int checkCopyFile(char* path1, char* path2);
 extern int checkSaveFile(InputStream stream, char* path);
 extern int checkOverWrite(char* path);
 extern char* inputAnswer(char* prompt);
 extern int matchattr(char* p, char* attr, int len, Str* value);
-extern void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu);
 extern char* checkHeader(Buffer* buf, char* field);
 extern void addDownloadList(pid_t pid, char* url, char* save, char* lock,
     clen_t size);
@@ -421,13 +402,7 @@ extern void free_ssl_ctx(void);
 extern ParsedURL* baseURL(Buffer* buf);
 extern int openSocket(char* hostname, char* remoteport_name,
     unsigned short remoteport_num);
-extern void parseURL(char* url, ParsedURL* p_url, ParsedURL* current);
-extern void copyParsedURL(ParsedURL* p, const ParsedURL* q);
-extern void parseURL2(char* url, ParsedURL* pu, ParsedURL* current);
-extern Str parsedURL2Str(ParsedURL* pu);
-extern Str parsedURL2RefererStr(ParsedURL* pu);
-extern int getURLScheme(char** url);
-extern void init_stream(URLFile* uf, int scheme, InputStream stream);
+
 Str HTTPrequestMethod(HRequest* hr);
 Str HTTPrequestURI(ParsedURL* pu, HRequest* hr);
 extern URLFile openURL(char* url, ParsedURL* pu, ParsedURL* current,

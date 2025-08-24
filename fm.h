@@ -24,6 +24,7 @@
 #include <unistd.h>
 #include "config.h"
 #include "linein.h"
+#include "url.h"
 
 #ifdef USE_MENU
 #define MENU_SELECT
