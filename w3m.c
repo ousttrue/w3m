@@ -365,9 +365,7 @@ const char* parseArgs(int argc, char** argv)
 #else
     GC_oom_fn = die_oom;
 #endif
-#if defined(ENABLE_NLS) || (defined(USE_M17N) && defined(HAVE_LANGINFO_CODESET))
     setlocale(LC_ALL, "");
-#endif
     bindtextdomain(PACKAGE, LOCALEDIR);
     textdomain(PACKAGE);
 
@@ -481,14 +479,6 @@ const char* parseArgs(int argc, char** argv)
                 if (atoi(argv[i]) > 0)
                     PagerMax = atoi(argv[i]);
             }
-#if 0 /* use -O{s|j|e} instead */
-	    else if (!strcmp("-s", argv[i]))
-		DisplayCharset = WC_CES_SHIFT_JIS;
-	    else if (!strcmp("-j", argv[i]))
-		DisplayCharset = WC_CES_ISO_2022_JP;
-	    else if (!strcmp("-e", argv[i]))
-		DisplayCharset = WC_CES_EUC_JP;
-#endif
             else if (!strncmp("-I", argv[i], 2)) {
                 if (argv[i][2] != '\0')
                     p = argv[i] + 2;
@@ -523,12 +513,10 @@ const char* parseArgs(int argc, char** argv)
                 visual_start = TRUE;
             else if (!strcmp("-N", argv[i]))
                 open_new_tab = TRUE;
-#ifdef USE_COLOR
             else if (!strcmp("-M", argv[i]))
                 useColor = FALSE;
             else if (!strcmp("-H", argv[i]))
                 highIntensityColors = TRUE;
-#endif /* USE_COLOR */
             else if (!strcmp("-B", argv[i]))
                 load_bookmark = TRUE;
             else if (!strcmp("-bookmark", argv[i])) {
@@ -607,10 +595,8 @@ const char* parseArgs(int argc, char** argv)
                 showLineNum = TRUE;
             else if (!strcmp("-no-proxy", argv[i]))
                 use_proxy = FALSE;
-#ifdef INET6
             else if (!strcmp("-4", argv[i]) || !strcmp("-6", argv[i]))
                 set_param_option(Sprintf("dns_order=%c", argv[i][1])->ptr);
-#endif
             else if (!strcmp("-post", argv[i])) {
                 if (++i >= argc)
                     usage();
@@ -636,11 +622,7 @@ const char* parseArgs(int argc, char** argv)
                 use_cookie = TRUE;
                 accept_cookie = TRUE;
             }
-#if 1 /* pager requires -s */
             else if (!strcmp("-s", argv[i]))
-#else
-            else if (!strcmp("-S", argv[i]))
-#endif
                 squeezeBlankLine = TRUE;
             else if (!strcmp("-X", argv[i]))
                 Do_not_use_ti_te = TRUE;
