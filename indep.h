@@ -20,11 +20,6 @@ struct growbuf {
     void (*free_proc)(void*);
 };
 
-#define RAW_MODE 0
-#define PAGER_MODE 1
-#define HTML_MODE 2
-#define HEADER_MODE 3
-
 extern unsigned char QUOTE_MAP[];
 extern char* HTML_QUOTE_MAP[];
 #define HTML_QUOTE_MASK 0x07 /* &, <, >, ", ' */
@@ -63,7 +58,6 @@ extern int strcasemstr(char* str, char* srch[], char** ret_ptr);
 int strmatchlen(const char* s1, const char* s2, int maxlen);
 extern char* remove_space(char* str);
 extern int non_null(char* s);
-extern void cleanup_line(Str s, int mode);
 extern char* html_quote(char* str);
 extern char* html_unquote(char* str);
 extern char* file_quote(char* str);

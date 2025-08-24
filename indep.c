@@ -464,11 +464,10 @@ char* expandPath(char* name)
             if (!passent)
                 goto rest;
             extpath = Strnew_charp(passent->pw_dir);
+        } else if (*p == '/' || *p == '\0') { /* ~/dir... or ~ */
+            extpath = Strnew_charp(getenv("HOME"));
         } else
-            if (*p == '/' || *p == '\0') { /* ~/dir... or ~ */
-                extpath = Strnew_charp(getenv("HOME"));
-            } else
-                goto rest;
+            goto rest;
         if (Strcmp_charp(extpath, "/") == 0 && *p == '/')
             p++;
         Strcat_charp(extpath, p);
@@ -613,7 +612,7 @@ int non_null(char* s)
     return FALSE;
 }
 
-void cleanup_line(Str s, int mode)
+void cleanup_line(Str s, enum ConvertLineMode mode)
 {
     if (s->length >= 2 && s->ptr[s->length - 2] == '\r' && s->ptr[s->length - 1] == '\n') {
         Strshrink(s, 2);
@@ -622,12 +621,11 @@ void cleanup_line(Str s, int mode)
         s->ptr[s->length - 1] = '\n';
     else if (Strlastchar(s) != '\n')
         Strcat_char(s, '\n');
-    if (mode != PAGER_MODE) {
-        int i;
-        for (i = 0; i < s->length; i++) {
-            if (s->ptr[i] == '\0')
-                s->ptr[i] = ' ';
-        }
+
+    int i;
+    for (i = 0; i < s->length; i++) {
+        if (s->ptr[i] == '\0')
+            s->ptr[i] = ' ';
     }
 }
 

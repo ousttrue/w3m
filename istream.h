@@ -150,7 +150,15 @@ typedef struct {
 } URLFile;
 
 void examineFile(char* path, URLFile* uf);
-Str convertLine(URLFile* uf, Str line, int mode, wc_ces* charset, wc_ces doc_charset);
+
+enum ConvertLineMode {
+    RAW_MODE = 0,
+    HTML_MODE = 1,
+    HEADER_MODE = 2,
+};
+void cleanup_line(Str s, enum ConvertLineMode mode);
+Str convertLine(URLFile* uf, Str line, enum ConvertLineMode mode, wc_ces* charset, wc_ces doc_charset);
+
 struct _Buffer;
 struct _Buffer* loadHTMLBuffer(URLFile* f, struct _Buffer* newBuf);
 void loadHTMLstream(URLFile* f, struct _Buffer* newBuf, FILE* src, int internal);

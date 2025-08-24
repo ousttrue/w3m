@@ -87,10 +87,6 @@ Line* currentLineSkip(Buffer* buf, Line* line, int offset, int last)
 
     if (buf->pagerSource && !(buf->bufferprop & BP_CLOSE)) {
         n = line->linenumber + offset + buf->LINES;
-        if (buf->lastLine->linenumber < n)
-            getNextPage(buf, n - buf->lastLine->linenumber);
-        while ((last || (buf->lastLine->linenumber < n)) && (getNextPage(buf, 1) != NULL))
-            ;
         if (last)
             l = buf->lastLine;
     }

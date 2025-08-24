@@ -213,15 +213,8 @@ void gotoLine(Buffer* buf, int n)
 {
     char msg[36];
     Line* l = buf->firstLine;
-
     if (l == NULL)
         return;
-    if (buf->pagerSource && !(buf->bufferprop & BP_CLOSE)) {
-        if (buf->lastLine->linenumber < n)
-            getNextPage(buf, n - buf->lastLine->linenumber);
-        while ((buf->lastLine->linenumber < n) && (getNextPage(buf, 1) != NULL))
-            ;
-    }
     if (l->linenumber > n) {
         /* FIXME: gettextize? */
         sprintf(msg, "First line is #%ld", l->linenumber);
@@ -259,12 +252,6 @@ void gotoRealLine(Buffer* buf, int n)
 
     if (l == NULL)
         return;
-    if (buf->pagerSource && !(buf->bufferprop & BP_CLOSE)) {
-        if (buf->lastLine->real_linenumber < n)
-            getNextPage(buf, n - buf->lastLine->real_linenumber);
-        while ((buf->lastLine->real_linenumber < n) && (getNextPage(buf, 1) != NULL))
-            ;
-    }
     if (l->real_linenumber > n) {
         /* FIXME: gettextize? */
         sprintf(msg, "First line is #%ld", l->real_linenumber);

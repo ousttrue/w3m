@@ -136,7 +136,6 @@ static void EFFECT_VISITED_END
     }
 }
 
-
 /*
  * Display some lines.
  */
@@ -356,7 +355,7 @@ void displayBuffer()
     }
     if ((buf->check_url & CHK_URL)) {
         chkURLBuffer(buf);
-        displayBuffer(buf);
+        displayBuffer();
     }
 }
 
@@ -488,12 +487,7 @@ redrawLine(Buffer* buf, Line* l, int i)
     int k, vpos = -1;
 
     if (l == NULL) {
-        if (buf->pagerSource) {
-            l = getNextPage(buf, buf->LINES + buf->rootY - i);
-            if (l == NULL)
-                return NULL;
-        } else
-            return NULL;
+        return NULL;
     }
     move(i, 0);
     if (showLineNum) {

@@ -452,16 +452,12 @@ char* acceptableEncoding(void)
 /*
  * convert line
  */
-Str convertLine(URLFile* uf, Str line, int mode, wc_ces* charset,
+Str convertLine(URLFile* uf, Str line, enum ConvertLineMode mode, wc_ces* charset,
     wc_ces doc_charset)
 {
     line = wc_Str_conv_with_detect(line, charset, doc_charset, InnerCharset);
     if (mode != RAW_MODE)
         cleanup_line(line, mode);
-#ifdef USE_NNTP
-    if (uf && uf->scheme == SCM_NEWS)
-        Strchop(line);
-#endif /* USE_NNTP */
     return line;
 }
 
@@ -1815,8 +1811,7 @@ load_doc: {
         }
 
         f.modtime = mymktime(checkHeader(t_buf, "Last-Modified:"));
-    }
-    else if (pu.scheme == SCM_FTP) {
+    } else if (pu.scheme == SCM_FTP) {
         check_compression(path, &f);
         if (f.compression != CMP_NOCOMPRESS) {
             char* t1 = uncompressed_file_type(pu.file, NULL);
@@ -6792,22 +6787,11 @@ loadBuffer(URLFile* uf, Buffer* volatile newBuf)
     if (IStype(uf->stream) != IST_ENCODED)
         uf->stream = newEncodedStream(uf->stream, uf->encoding);
     while ((lineBuf2 = StrmyISgets(uf->stream)) && lineBuf2->length) {
-#ifdef USE_NNTP
-        if (uf->scheme == SCM_NEWS && lineBuf2->ptr[0] == '.') {
-            Strshrinkfirst(lineBuf2, 1);
-            if (lineBuf2->ptr[0] == '\n' || lineBuf2->ptr[0] == '\r' || lineBuf2->ptr[0] == '\0') {
-                /*
-                 * iseos(uf->stream) = TRUE;
-                 */
-                break;
-            }
-        }
-#endif /* USE_NNTP */
         if (src)
             Strfputs(lineBuf2, src);
         linelen += lineBuf2->length;
         showProgress(&linelen, &trbyte);
-        lineBuf2 = convertLine(uf, lineBuf2, PAGER_MODE, &charset, doc_charset);
+        lineBuf2 = convertLine(uf, lineBuf2, HEADER_MODE, &charset, doc_charset);
         if (squeezeBlankLine) {
             if (lineBuf2->ptr[0] == '\n' && pre_lbuf == '\n') {
                 ++nlines;
@@ -6938,24 +6922,6 @@ _saveBuffer(Buffer* buf, Line* l, FILE* f, int cont)
     wc_ces charset = DisplayCharset ? DisplayCharset : WC_CES_US_ASCII;
 
     is_html = is_html_type(buf->type);
-
-pager_next:
-    for (; l != NULL; l = l->next) {
-        if (is_html)
-            tmp = conv_symbol(l);
-        else
-            tmp = Strnew_charp_n(l->lineBuf, l->len);
-        tmp = wc_Str_conv(tmp, InnerCharset, charset);
-        Strfputs(tmp, f);
-        if (Strlastchar(tmp) != '\n' && !(cont && l->next && l->next->bpos))
-            putc('\n', f);
-    }
-    if (buf->pagerSource && !(buf->bufferprop & BP_CLOSE)) {
-        l = getNextPage(buf, PagerMax);
-        if (set_charset)
-            charset = buf->document_charset;
-        goto pager_next;
-    }
 }
 
 void saveBuffer(Buffer* buf, FILE* f, int cont)
@@ -7114,121 +7080,6 @@ openGeneralPagerBuffer(InputStream stream)
     }
     buf->real_type = t;
     return buf;
-}
-
-Line* getNextPage(Buffer* buf, int plen)
-{
-    Line* volatile top = buf->topLine, * volatile last = buf->lastLine, * volatile cur = buf->currentLine;
-    int i;
-    int volatile nlines = 0;
-    clen_t linelen = 0, trbyte = buf->trbyte;
-    Str lineBuf2;
-    char volatile pre_lbuf = '\0';
-    URLFile uf;
-    wc_ces charset;
-    wc_ces volatile doc_charset = DocumentCharset;
-    wc_uint8 old_auto_detect = WcOption.auto_detect;
-    int volatile squeeze_flag = FALSE;
-    Lineprop* propBuffer = NULL;
-
-    Linecolor* colorBuffer = NULL;
-    MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
-
-    if (buf->pagerSource == NULL)
-        return NULL;
-
-    if (last != NULL) {
-        nlines = last->real_linenumber;
-        pre_lbuf = *(last->lineBuf);
-        if (pre_lbuf == '\0')
-            pre_lbuf = '\n';
-        buf->currentLine = last;
-    }
-
-    charset = buf->document_charset;
-    if (buf->document_charset != WC_CES_US_ASCII)
-        doc_charset = buf->document_charset;
-    else if (UseContentCharset) {
-        content_charset = 0;
-        checkContentType(buf);
-        if (content_charset)
-            doc_charset = content_charset;
-    }
-    WcOption.auto_detect = buf->auto_detect;
-
-    if (SETJMP(AbortLoading) != 0) {
-        goto pager_end;
-    }
-    TRAP_ON;
-
-    init_stream(&uf, SCM_UNKNOWN, NULL);
-    for (i = 0; i < plen; i++) {
-        if (!(lineBuf2 = StrmyISgets(buf->pagerSource)))
-            return NULL;
-        if (lineBuf2->length == 0) {
-            /* Assume that `cmd == buf->filename' */
-            if (buf->filename)
-                buf->buffername = Sprintf("%s %s",
-                    CPIPEBUFFERNAME,
-                    conv_from_system(buf->filename))
-                                      ->ptr;
-            else if (getenv("MAN_PN") == NULL)
-                buf->buffername = CPIPEBUFFERNAME;
-            buf->bufferprop |= BP_CLOSE;
-            break;
-        }
-        linelen += lineBuf2->length;
-        showProgress(&linelen, &trbyte);
-        lineBuf2 = convertLine(&uf, lineBuf2, PAGER_MODE, &charset, doc_charset);
-        if (squeezeBlankLine) {
-            squeeze_flag = FALSE;
-            if (lineBuf2->ptr[0] == '\n' && pre_lbuf == '\n') {
-                ++nlines;
-                --i;
-                squeeze_flag = TRUE;
-                continue;
-            }
-            pre_lbuf = lineBuf2->ptr[0];
-        }
-        ++nlines;
-        Strchop(lineBuf2);
-        lineBuf2 = checkType(lineBuf2, &propBuffer, &colorBuffer);
-        addnewline(buf, lineBuf2->ptr, propBuffer, colorBuffer,
-            lineBuf2->length, FOLD_BUFFER_WIDTH, nlines);
-        if (!top) {
-            top = buf->firstLine;
-            cur = top;
-        }
-        if (buf->lastLine->real_linenumber - buf->firstLine->real_linenumber
-            >= PagerMax) {
-            Line* l = buf->firstLine;
-            do {
-                if (top == l)
-                    top = l->next;
-                if (cur == l)
-                    cur = l->next;
-                if (last == l)
-                    last = NULL;
-                l = l->next;
-            } while (l && l->bpos);
-            buf->firstLine = l;
-            if (l)
-                buf->firstLine->prev = NULL;
-        }
-    }
-pager_end:
-    TRAP_OFF;
-
-    buf->trbyte = trbyte + linelen;
-    buf->document_charset = charset;
-    WcOption.auto_detect = old_auto_detect;
-    buf->topLine = top;
-    buf->currentLine = cur;
-    if (!last)
-        last = buf->firstLine;
-    else if (last && (last->next || !squeeze_flag))
-        last = last->next;
-    return last;
 }
 
 int save2tmp(URLFile uf, char* tmpf)
