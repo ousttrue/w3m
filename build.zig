@@ -1,4 +1,5 @@
 const std = @import("std");
+const zcc = @import("compile_commands.zig");
 
 const system_libs = [_][]const u8{
     "gc", "ssl", "ncurses", "crypto",
@@ -85,6 +86,7 @@ const libwc_srcs = [_][]const u8{
 };
 
 pub fn build(b: *std.Build) void {
+    var targets = std.array_list.Managed(*std.Build.Step.Compile).init(b.allocator);
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
     // const SHELL = "/bin/bash";
@@ -122,6 +124,7 @@ pub fn build(b: *std.Build) void {
         .root_module = mod,
     });
     b.installArtifact(exe);
+    targets.append(exe) catch @panic("OOM");
     exe.linkLibC();
     exe.addIncludePath(b.path("libwc"));
     exe.addIncludePath(b.path("."));
@@ -182,6 +185,8 @@ pub fn build(b: *std.Build) void {
 
         exe.step.dependOn(&install.step);
     }
+
+    _ = zcc.createStep(b, "cdb", targets.toOwnedSlice() catch @panic("OOM"));
 }
 
 fn gen_functable(b: *std.Build) *std.Build.Step.WriteFile {

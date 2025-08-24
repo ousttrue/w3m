@@ -34,3 +34,5 @@ Makefile
 /scripts/w3mman/w3mman*.1
 .zig-cache
 zig-out
+compile_commands.json
+.cache/clangd/index
