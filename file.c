@@ -231,8 +231,7 @@ loadSomething(URLFile* f,
     if (f->scheme == SCM_LOCAL && buf->sourcefile == NULL)
         buf->sourcefile = buf->filename;
     if (loadproc == loadHTMLBuffer
-        || loadproc == loadImageBuffer
-    )
+        || loadproc == loadImageBuffer)
         buf->type = "text/html";
     else
         buf->type = "text/plain";
@@ -553,15 +552,13 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
 
     headerlist = newBuf->document_header = newTextList();
     if (uf->scheme == SCM_HTTP
-        || uf->scheme == SCM_HTTPS
-    )
+        || uf->scheme == SCM_HTTPS)
         http_response_code = -1;
     else
         http_response_code = 0;
 
     if (thru && !newBuf->header_source
-        && !image_source
-    ) {
+        && !image_source) {
         tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
         src = fopen(tmpf, "w");
         if (src)
@@ -588,7 +585,7 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
                 /* there is no header */
                 break;
             /* last header */
-        } else if (!(w3m_dump & DUMP_HEAD)) {
+        } else {
             if (lineBuf2) {
                 Strcat(lineBuf2, tmp);
             } else {
@@ -650,12 +647,9 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
                 }
             }
             lineBuf2 = tmp;
-        } else {
-            lineBuf2 = tmp;
         }
         if ((uf->scheme == SCM_HTTP
-                || uf->scheme == SCM_HTTPS
-                )
+                || uf->scheme == SCM_HTTPS)
             && http_response_code == -1) {
             p = lineBuf2->ptr;
             while (*p && !IS_SPACE(*p))
@@ -698,8 +692,7 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
                     break;
             }
             uf->content_encoding = uf->compression;
-        }
-        else if (use_cookie && accept_cookie && pu && check_cookie_accept_domain(pu->host) && (!strncasecmp(lineBuf2->ptr, "Set-Cookie:", 11) || !strncasecmp(lineBuf2->ptr, "Set-Cookie2:", 12))) {
+        } else if (use_cookie && accept_cookie && pu && check_cookie_accept_domain(pu->host) && (!strncasecmp(lineBuf2->ptr, "Set-Cookie:", 11) || !strncasecmp(lineBuf2->ptr, "Set-Cookie2:", 12))) {
             Str name = Strnew(), value = Strnew(), domain = NULL, path = NULL,
                 comment = NULL, commentURL = NULL, port = NULL, tmp2;
             int version, quoted, flag = 0;
@@ -819,8 +812,7 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
                             1, TRUE, FALSE);
                 }
             }
-        }
-        else if (!strncasecmp(lineBuf2->ptr, "w3m-control:", 12) && uf->scheme == SCM_LOCAL_CGI) {
+        } else if (!strncasecmp(lineBuf2->ptr, "w3m-control:", 12) && uf->scheme == SCM_LOCAL_CGI) {
             Str funcname = Strnew();
             int f;
 
@@ -1717,13 +1709,11 @@ load_doc: {
     if (header_string)
         header_string = NULL;
     TRAP_ON;
-    if (pu.scheme == SCM_HTTP ||
-        pu.scheme == SCM_HTTPS ||
-        ((
+    if (pu.scheme == SCM_HTTP || pu.scheme == SCM_HTTPS || ((
 #ifdef USE_GOPHER
-             (pu.scheme == SCM_GOPHER && non_null(GOPHER_proxy)) ||
+                                                                (pu.scheme == SCM_GOPHER && non_null(GOPHER_proxy)) ||
 #endif /* USE_GOPHER */
-             (pu.scheme == SCM_FTP && non_null(FTP_proxy)))
+                                                                (pu.scheme == SCM_FTP && non_null(FTP_proxy)))
             && !Do_not_use_proxy && !check_no_proxy(pu.host))) {
 
         if (fmInitialized) {
@@ -2034,11 +2024,10 @@ page_loaded:
         return NO_BUFFER;
     }
 
-    if ((f.content_encoding != CMP_NOCOMPRESS) && AutoUncompress
-        && !(w3m_dump & DUMP_EXTRA)) {
+    if ((f.content_encoding != CMP_NOCOMPRESS) && AutoUncompress) {
         uncompress_stream(&f, &pu.real_file);
     } else if (f.compression != CMP_NOCOMPRESS) {
-        if (!(w3m_dump & DUMP_SOURCE) && (w3m_dump & ~DUMP_FRAME || is_text_type(t) || searchExtViewer(t))) {
+        if (is_text_type(t) || searchExtViewer(t)) {
             if (t_buf == NULL)
                 t_buf = newBuffer(INIT_BUFFER_WIDTH);
             uncompress_stream(&f, &t_buf->sourcefile);
@@ -2066,33 +2055,8 @@ page_loaded:
         proc = loadHTMLBuffer;
     else if (is_plain_text_type(t))
         proc = loadBuffer;
-    else if (activeImage && displayImage && !useExtImageViewer && !(w3m_dump & ~DUMP_FRAME) && !strncasecmp(t, "image/", 6))
+    else if (activeImage && displayImage && !useExtImageViewer && !strncasecmp(t, "image/", 6))
         proc = loadImageBuffer;
-    else if (!(w3m_dump & ~DUMP_FRAME) || is_dump_text_type(t)) {
-        if (!do_download &&
-#ifdef USE_GOPHER
-            !gopher_download &&
-#endif
-            searchExtViewer(t) != NULL) {
-            proc = DO_EXTERNAL;
-        } else {
-            TRAP_OFF;
-            if (pu.scheme == SCM_LOCAL) {
-                UFclose(&f);
-                _doFileCopy(pu.real_file,
-                    conv_from_system(guess_save_name(NULL, pu.real_file)), TRUE);
-            } else {
-                if (DecodeCTE && IStype(f.stream) != IST_ENCODED)
-                    f.stream = newEncodedStream(f.stream, f.encoding);
-                if (doFileSave(f, guess_save_name(t_buf, pu.file)) == 0)
-                    UFhalfclose(&f);
-                else
-                    UFclose(&f);
-            }
-            return NO_BUFFER;
-        }
-    } else if (w3m_dump & DUMP_FRAME)
-        return NULL;
 
     if (t_buf == NULL)
         t_buf = newBuffer(INIT_BUFFER_WIDTH);
@@ -2529,7 +2493,6 @@ passthrough(struct readbuffer* obuf, char* str, int back)
         }
     }
 }
-
 
 static void
 fillline(struct readbuffer* obuf, int indent)
@@ -3171,8 +3134,7 @@ Str process_img(struct parsed_tag* tag, int width)
         Strcat(tmp,
             Sprintf("<pre_int><img_alt hseq=\"%d\" src=\"", cur_iseq++));
         pre_int = TRUE;
-    } else
-    {
+    } else {
         if (w < 0)
             w = 12 * pixel_per_char;
         nw = w ? (int)((w - 1) / pixel_per_char + 1) : 1;
@@ -3976,21 +3938,6 @@ process_form_int(struct parsed_tag* tag, int fid)
         form_stack = New_Reuse(int, form_stack, forms_size);
     }
     form_stack[form_sp] = fid;
-
-    if (w3m_halfdump) {
-        Str tmp = Sprintf("<form_int fid=\"%d\" action=\"%s\" method=\"%s\"",
-            fid, html_quote(q), html_quote(p));
-        if (s)
-            Strcat(tmp, Sprintf(" enctype=\"%s\"", html_quote(s)));
-        if (tg)
-            Strcat(tmp, Sprintf(" target=\"%s\"", html_quote(tg)));
-        if (n)
-            Strcat(tmp, Sprintf(" name=\"%s\"", html_quote(n)));
-        if (r)
-            Strcat(tmp, Sprintf(" accept-charset=\"%s\"", html_quote(r)));
-        Strcat_charp(tmp, ">");
-        return tmp;
-    }
 
     forms[fid] = newFormList(q, p, r, s, tg, n, NULL);
     return NULL;
@@ -4997,8 +4944,7 @@ int HTMLtagproc1(struct parsed_tag* tag, struct html_feed_environ* h_env)
                 SKIP_BLANKS(q);
                 meta_charset = wc_guess_charset(q, 0);
             }
-        } else
-            if (p && q && !strcasecmp(p, "refresh")) {
+        } else if (p && q && !strcasecmp(p, "refresh")) {
             int refresh_interval;
             tmp = NULL;
             refresh_interval = getMetaRefreshParam(q, &tmp);
@@ -5364,16 +5310,13 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                     }
                 }
                 str += symbol_width;
-            }
-            else if (mode == PC_CTRL || mode == PC_UNDEF) {
+            } else if (mode == PC_CTRL || mode == PC_UNDEF) {
                 PPUSH(PC_ASCII | effect | ex_efct(ex_effect), ' ');
                 str++;
-            }
-            else if (mode & PC_UNKNOWN) {
+            } else if (mode & PC_UNKNOWN) {
                 PPUSH(PC_ASCII | effect | ex_efct(ex_effect), ' ');
                 str += get_mclen(str);
-            }
-            else if (*str != '<' && *str != '&') {
+            } else if (*str != '<' && *str != '&') {
                 int len = get_mclen(str);
                 PPUSH(mode | effect | ex_efct(ex_effect), *(str++));
                 if (--len) {
@@ -5394,12 +5337,10 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                     if (mode == PC_CTRL || mode == PC_UNDEF) {
                         PPUSH(PC_ASCII | effect | ex_efct(ex_effect), ' ');
                         p++;
-                    }
-                    else if (mode & PC_UNKNOWN) {
+                    } else if (mode & PC_UNKNOWN) {
                         PPUSH(PC_ASCII | effect | ex_efct(ex_effect), ' ');
                         p += get_mclen(p);
-                    }
-                    else {
+                    } else {
                         int len = get_mclen(p);
                         PPUSH(mode | effect | ex_efct(ex_effect), *(p++));
                         if (--len) {
@@ -6818,24 +6759,9 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
     else
         image_flag = IMG_FLAG_SKIP;
 
-    if (w3m_halfload) {
-        newBuf->buffername = "---";
-        newBuf->document_charset = InnerCharset;
-        max_textarea = 0;
-#ifdef MENU_SELECT
-        max_select = 0;
-#endif
-        HTMLlineproc3(newBuf, f->stream);
-        w3m_halfload = FALSE;
-        return;
-    }
-
     init_henv(&htmlenv1, &obuf, envs, MAX_ENV_LEVEL, NULL, newBuf->width, 0);
 
-    if (w3m_halfdump)
-        htmlenv1.f = stdout;
-    else
-        htmlenv1.buf = newTextLineList();
+    htmlenv1.buf = newTextLineList();
 #if defined(USE_M17N) || defined(USE_IMAGE)
     cur_baseURL = baseURL(newBuf);
 #endif
@@ -6874,10 +6800,6 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
         if (src)
             Strfputs(lineBuf2, src);
         linelen += lineBuf2->length;
-        if (w3m_dump & DUMP_EXTRA)
-            printf("W3m-in-progress: %s\n", convert_size2(linelen, current_content_length, TRUE));
-        if (w3m_dump & DUMP_SOURCE)
-            continue;
         showProgress(&linelen, &trbyte);
         /*
          * if (frame_source)
@@ -6906,11 +6828,6 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
     cur_document_charset = 0;
     if (htmlenv1.title)
         newBuf->buffername = htmlenv1.title;
-    if (w3m_halfdump) {
-        TRAP_OFF;
-        print_internal_information(&htmlenv1);
-        return;
-    }
 phase2:
     newBuf->trbyte = trbyte + linelen;
     TRAP_OFF;
@@ -7159,10 +7076,6 @@ loadBuffer(URLFile* uf, Buffer* volatile newBuf)
         if (src)
             Strfputs(lineBuf2, src);
         linelen += lineBuf2->length;
-        if (w3m_dump & DUMP_EXTRA)
-            printf("W3m-in-progress: %s\n", convert_size2(linelen, current_content_length, TRUE));
-        if (w3m_dump & DUMP_SOURCE)
-            continue;
         showProgress(&linelen, &trbyte);
         if (frame_source)
             continue;
@@ -7455,12 +7368,10 @@ openGeneralPagerBuffer(InputStream stream)
             stream = newEncodedStream(stream, uf.encoding);
         buf = openPagerBuffer(stream, t_buf);
         buf->type = "text/plain";
-    }
-    else if (activeImage && displayImage && !useExtImageViewer && !(w3m_dump & ~DUMP_FRAME) && !strncasecmp(t, "image/", 6)) {
+    } else if (activeImage && displayImage && !useExtImageViewer && !strncasecmp(t, "image/", 6)) {
         buf = loadImageBuffer(&uf, t_buf);
         buf->type = "text/html";
-    }
-    else {
+    } else {
         if (searchExtViewer(t)) {
             buf = doExternal(uf, t, t_buf);
             UFclose(&uf);
@@ -8102,8 +8013,7 @@ uncompress_stream(URLFile* uf, char** src)
     uf->compression = CMP_NOCOMPRESS;
 
     if (uf->scheme != SCM_LOCAL
-        && !image_source
-    ) {
+        && !image_source) {
         tmpf = tmpfname(TMPF_DFL, ext)->ptr;
     }
 
@@ -8211,7 +8121,6 @@ lessopen_stream(char* path)
     ungetc(c, fp);
     return fp;
 }
-
 
 static char*
 guess_filename(char* file)
