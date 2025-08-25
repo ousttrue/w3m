@@ -18,6 +18,8 @@
 #include "fm.h"
 #include "myctype.h"
 
+int Do_not_use_ti_te = 0;
+
 #ifndef SIGIOT
 #define SIGIOT SIGABRT
 #endif /* not SIGIOT */
@@ -125,7 +127,6 @@ static int CurLine, CurColumn;
 static Screen *ScreenElem = NULL, **ScreenImage = NULL;
 static l_prop CurrentMode = 0;
 static int graph_enabled = 0;
-
 
 // extern int tgetent(char*, char*);
 // extern int tgetnum(char*);
@@ -254,15 +255,33 @@ int initscr(void)
 {
     set_tty();
     set_int();
-    struct TermEntry *t = initTerm();
-    if(!t){
+    struct TermEntry* t = initTerm();
+
+    if (!t) {
         abort();
+    }
+    if (t->ti && !Do_not_use_ti_te) {
+        writestr(t->ti);
     }
     setgraphchar(t);
     LINES = COLS = 0;
     setlinescols();
     setupscreen();
     return 0;
+}
+
+void resetTerm(void)
+{
+    struct TermEntry* t = getTermEntry();
+    writestr(t->op); /* turn off */
+    writestr(t->me);
+    if (!Do_not_use_ti_te) {
+        if (t->te && *t->te)
+            writestr(t->te);
+        else
+            writestr(t->cl);
+    }
+    writestr(t->se); /* reset terminal */
 }
 
 void move(int line, int column)

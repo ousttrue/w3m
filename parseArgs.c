@@ -1,10 +1,9 @@
 #include "parseArgs.h"
-#include "term_entry.h"
+#include "screen.h"
 #include "graphicchar.h"
 #include "fm.h"
 #include "rc.h"
 #include "tty.h"
-#include "display.h"
 #include "w3m.h"
 #include "config.h"
 #include <setjmp.h>

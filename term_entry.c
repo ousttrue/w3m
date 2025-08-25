@@ -4,8 +4,6 @@
 #include <string.h>
 #include <term.h>
 
-int Do_not_use_ti_te = 0;
-
 struct TermEntry T = { 0 };
 struct TermEntry* getTermEntry()
 {
@@ -68,23 +66,7 @@ struct TermEntry* initTerm()
     T.ac = tgetstr("ac", &pt); /* graphics charset pairs */
     T.op = tgetstr("op", &pt); /* set default color pair to its original value */
 
-    if (T.ti && !Do_not_use_ti_te)
-        writestr(T.ti);
-
     return &T;
-}
-
-void resetTerm(void)
-{
-    writestr(T.op); /* turn off */
-    writestr(T.me);
-    if (!Do_not_use_ti_te) {
-        if (T.te && *T.te)
-            writestr(T.te);
-        else
-            writestr(T.cl);
-    }
-    writestr(T.se); /* reset terminal */
 }
 
 void write_T_op() { writestr(T.op); }
