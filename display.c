@@ -276,12 +276,10 @@ make_lastline_message(Buffer* buf)
 
 void displayBuffer()
 {
-    Str msg;
-    int ny = 0;
-
     Buffer* buf = Currentbuf;
     if (!buf)
         return;
+
     // if (buf->topLine == NULL && readBufferCache(buf) == 0) { /* clear_buffer */
     //     mode = B_FORCE_REDRAW;
     // }
@@ -307,31 +305,32 @@ void displayBuffer()
     } else
         buf->rootX = 0;
     buf->COLS = COLS - buf->rootX;
+
+    int ny = 0;
     if (buf->rootY != ny || buf->LINES != LASTLINE - ny) {
         buf->rootY = ny;
         buf->LINES = LASTLINE - ny;
         arrangeCursor(buf);
     }
-    if (cline != buf->topLine || ccolumn != buf->currentColumn) {
-        {
-            if (activeImage && (cline != buf->topLine || ccolumn != buf->currentColumn)) {
-                if (draw_image_flag)
-                    clear();
-                clearImage();
-                loadImage(buf, IMG_FLAG_STOP);
-                image_touch++;
-                draw_image_flag = FALSE;
-            }
-            redrawNLine(buf, LASTLINE);
+    // if (cline != buf->topLine || ccolumn != buf->currentColumn) {
+        if (activeImage && (cline != buf->topLine || ccolumn != buf->currentColumn)) {
+            if (draw_image_flag)
+                clear();
+            clearImage();
+            loadImage(buf, IMG_FLAG_STOP);
+            image_touch++;
+            draw_image_flag = FALSE;
         }
+        redrawNLine(buf, LASTLINE);
         cline = buf->topLine;
         ccolumn = buf->currentColumn;
-    }
+    // }
     if (buf->topLine == NULL)
         buf->topLine = buf->firstLine;
 
     drawAnchorCursor(buf);
 
+    Str msg;
     msg = make_lastline_message(buf);
     if (buf->firstLine == NULL) {
         /* FIXME: gettextize? */
