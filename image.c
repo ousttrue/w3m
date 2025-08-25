@@ -754,6 +754,11 @@ got_image_size:
     return TRUE;
 }
 
+static void MOVE(int line, int column)
+{
+    writestr(getMoveXY(column, line));
+}
+
 void put_image_osc5379(int cursorX, int cursorY,
     char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh)
 {

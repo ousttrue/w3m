@@ -1,5 +1,5 @@
 #include "term_entry.h"
-#include "tty.h"
+#include <stdio.h>
 #include <stdlib.h> // getenv
 #include <string.h>
 #include <term.h>
@@ -69,19 +69,7 @@ struct TermEntry* initTerm()
     return &T;
 }
 
-void write_T_op() { writestr(T.op); }
-void write_T_ce() { writestr(T.ce); }
-void write_T_ae() { writestr(T.ae); }
-void write_T_me() { writestr(T.me); }
-void write_T_nd() { writestr(T.nd); }
-void write_T_so() { writestr(T.so); }
-void write_T_us() { writestr(T.us); }
-void write_T_md() { writestr(T.md); }
-void write_T_eA() { writestr(T.eA); }
-void write_T_as() { writestr(T.as); }
-void write_T_cl() { writestr(T.cl); }
-
-void MOVE(int line, int column)
+const char* getMoveXY(int x, int y)
 {
-    writestr(tgoto(T.cm, column, line));
+    return tgoto(T.cm, x, y);
 }

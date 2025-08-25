@@ -4,15 +4,10 @@
 extern int Do_not_use_ti_te;
 extern int LINES, COLS;
 
-int initscr();
-void resetTerm();
-
 // screen to tty
 void refresh();
 
-void setlinescols();
 void getTCstr();
-void setlinescols();
 void setupscreen();
 void move(int line, int column);
 void addmch(char* p, size_t len);

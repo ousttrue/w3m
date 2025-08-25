@@ -351,7 +351,6 @@ extern Buffer* page_info_panel(Buffer* buf);
 
 extern MySignalHandler reset_exit(SIGNAL_ARG);
 extern MySignalHandler error_dump(SIGNAL_ARG);
-extern void set_int(void);
 extern pid_t open_pipe_rw(FILE** fr, FILE** fw);
 
 extern void initMimeTypes(void);

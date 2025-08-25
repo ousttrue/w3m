@@ -1,6 +1,7 @@
 #include "w3m.h"
 #define MAINPROGRAM
 #include "fm.h"
+#include "graphicchar.h"
 #include "tty.h"
 #include "term_entry.h"
 #include "event_poller.h"
@@ -92,6 +93,48 @@ static int searchKeyNum(void);
 
 int enable_inline_image;
 
+#define MAX_LINE 200
+#define MAX_COLUMN 400
+int LINES, COLS;
+void setlinescols(void)
+{
+    int row = 0;
+    int col = 0;
+    int i = get_rowcol_tty(&row, &col);
+    if (i >= 0 && row != 0 && col != 0) {
+        LINES = row;
+        COLS = col;
+    }
+
+    char* p;
+    if (LINES <= 0 && (p = getenv("LINES")) != NULL && (i = atoi(p)) >= 0)
+        LINES = i;
+    if (COLS <= 0 && (p = getenv("COLUMNS")) != NULL && (i = atoi(p)) >= 0)
+        COLS = i;
+    // if (LINES <= 0)
+    //     LINES = tgetnum("li"); /* number of line */
+    // if (COLS <= 0)
+    //     COLS = tgetnum("co"); /* number of column */
+    if (COLS > MAX_COLUMN)
+        COLS = MAX_COLUMN;
+    if (LINES > MAX_LINE)
+        LINES = MAX_LINE;
+}
+
+void resetTerm(void)
+{
+    struct TermEntry* t = getTermEntry();
+    writestr(t->op); /* turn off */
+    writestr(t->me);
+    if (!Do_not_use_ti_te) {
+        if (t->te && *t->te)
+            writestr(t->te);
+        else
+            writestr(t->cl);
+    }
+    writestr(t->se); /* reset terminal */
+}
+
 void fmTerm(void)
 {
     if (fmInitialized) {
@@ -109,13 +152,87 @@ void fmTerm(void)
     }
 }
 
+static MySignalHandler
+reset_exit_with_value(SIGNAL_ARG, int rval)
+{
+    resetTerm();
+    flush_tty();
+    TerminalSet(NULL);
+    close_tty();
+
+    w3m_exit(rval);
+    SIGNAL_RETURN;
+}
+
+MySignalHandler
+reset_error_exit(SIGNAL_ARG)
+{
+    reset_exit_with_value(SIGNAL_ARGLIST, 1);
+}
+
+MySignalHandler
+reset_exit(SIGNAL_ARG)
+{
+    reset_exit_with_value(SIGNAL_ARGLIST, 0);
+}
+
+MySignalHandler
+error_dump(SIGNAL_ARG)
+{
+    mySignal(SIGIOT, SIG_DFL);
+    resetTerm();
+    flush_tty();
+    TerminalSet(NULL);
+    close_tty();
+
+    abort();
+    SIGNAL_RETURN;
+}
+
+void set_int(void)
+{
+    mySignal(SIGHUP, reset_exit);
+    mySignal(SIGINT, reset_exit);
+    mySignal(SIGQUIT, reset_exit);
+    mySignal(SIGTERM, reset_exit);
+    mySignal(SIGILL, error_dump);
+    mySignal(SIGIOT, error_dump);
+    mySignal(SIGFPE, error_dump);
+#ifdef SIGBUS
+    mySignal(SIGBUS, error_dump);
+#endif /* SIGBUS */
+    /* mySignal(SIGSEGV, error_dump); */
+}
+
+/*
+ * Screen initialize
+ */
+int initscr(void)
+{
+    struct TermEntry* t = initTerm();
+
+    if (!t) {
+        abort();
+    }
+    if (t->ti && !Do_not_use_ti_te) {
+        writestr(t->ti);
+    }
+    setgraphchar(t);
+    LINES = COLS = 0;
+    setlinescols();
+    return 0;
+}
+
 /*
  * Initialize routine.
  */
 void fmInit(void)
 {
     if (!fmInitialized) {
+        set_tty();
+        set_int();
         initscr();
+        setupscreen();
         term_raw();
         term_noecho();
         if (displayImage)

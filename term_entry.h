@@ -1,7 +1,6 @@
 #pragma once
 #include <stdbool.h>
 
-
 struct TermEntry {
     char funcstr[256];
     char* cd;
@@ -35,16 +34,4 @@ struct TermEntry {
 
 struct TermEntry* initTerm();
 struct TermEntry* getTermEntry();
-
-void write_T_op();
-void write_T_ce();
-void write_T_ae();
-void write_T_me();
-void write_T_nd();
-void write_T_so();
-void write_T_us();
-void write_T_md();
-void write_T_eA();
-void write_T_as();
-void write_T_cl();
-void MOVE(int line, int column);
+const char* getMoveXY(int x, int y);
