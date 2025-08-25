@@ -1,6 +1,7 @@
 #include "w3m.h"
 #define MAINPROGRAM
 #include "buffer.h"
+#include "etc.h"
 #include "fm.h"
 #include "term_size.h"
 #include "graphicchar.h"
@@ -627,7 +628,7 @@ srchcore(char* volatile str, int (*func)(Buffer*, char*))
         return SR_NOTFOUND;
 
     str = conv_search_string(SearchString, DisplayCharset);
-    auto prevtrap = mySignal(SIGINT, intTrap);
+    MySignalFunc prevtrap = mySignal(SIGINT, intTrap);
     crmode();
     if (SETJMP(IntReturn) == 0) {
         for (i = 0; i < PREC_NUM; i++) {
@@ -1025,7 +1026,7 @@ DEFUN(readsh, READ_SHELL, "Execute shell command and display output")
 
         return;
     }
-    auto prevtrap = mySignal(SIGINT, intTrap);
+    MySignalFunc prevtrap = mySignal(SIGINT, intTrap);
     crmode();
     buf = getshell(cmd);
     mySignal(SIGINT, prevtrap);

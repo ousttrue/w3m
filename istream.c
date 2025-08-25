@@ -1,4 +1,5 @@
 #include "fm.h"
+#include "etc.h"
 #include "myctype.h"
 #include "istream.h"
 #include "term_size.h"
@@ -172,7 +173,7 @@ newEncodedStream(InputStream is, char encoding)
 
 int ISclose(InputStream stream)
 {
-    void (*prevtrap)(int);
+    MySignalFunc prevtrap = 0;
     if (stream == NULL)
         return -1;
     if (stream->base.close != NULL) {

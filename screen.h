@@ -1,5 +1,6 @@
 #pragma once
 #include <stddef.h>
+#include <stdbool.h>
 #include "writer.h"
 
 extern int Do_not_use_ti_te;
@@ -27,6 +28,17 @@ struct VirtualTerm {
     Screen** ScreenImage; // = NULL;
     l_prop CurrentMode; // = 0;
     int graph_enabled; // = 0;
+};
+
+struct Cell {
+    char str[8];
+    l_prop prop;
+};
+// static_assert(sizeof(struct Cell) == 16, "Cell");
+struct Frame {
+    int lines;
+    int cols;
+    struct Cell* cells;
 };
 
 struct VirtualTerm* getScreen();

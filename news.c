@@ -1,4 +1,5 @@
 #include "fm.h"
+#include "etc.h"
 #include "term_size.h"
 #include "buffer.h"
 #include "myctype.h"
@@ -27,7 +28,7 @@ static News current_news = { NULL, 0, NULL, NULL, NULL };
 
 static JMP_BUF AbortLoading;
 
-static MySignalHandler
+static void
 KeyAbort(SIGNAL_ARG)
 {
     LONGJMP(AbortLoading, 1);

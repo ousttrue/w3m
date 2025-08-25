@@ -894,7 +894,7 @@ void addMChar(char* p, Lineprop mode, size_t len)
             if (w == 2 && WcOption.use_wide)
                 addstr(vt, graph2_symbol[(unsigned char)c % N_GRAPH_SYMBOL]);
             else
-                addch(vt, graph_symbol[(unsigned char)c % N_GRAPH_SYMBOL]);
+                addstr(vt, graph_symbol[(unsigned char)c % N_GRAPH_SYMBOL]);
         } else {
             symbol = get_symbol(DisplayCharset, &w);
             addstr(vt, symbol[(unsigned char)c % N_SYMBOL]);

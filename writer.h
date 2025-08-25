@@ -13,3 +13,10 @@ void writeWriter(const struct Writer* writer, const char* str, int len);
 void putsWriter(const struct Writer* writer, const char* str);
 void putWriter(const struct Writer* writer, char ch);
 void flushWriter(const struct Writer* writer);
+
+struct ArrayInfo {
+    char* buf;
+    int len;
+    int pos;
+};
+void makeArrayWriter(struct Writer* writer, struct ArrayInfo *info);

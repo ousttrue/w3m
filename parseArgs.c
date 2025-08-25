@@ -1,4 +1,5 @@
 #include "parseArgs.h"
+#include "etc.h"
 #include "screen.h"
 #include "graphicchar.h"
 #include "fm.h"
@@ -17,7 +18,7 @@ extern JMP_BUF IntReturn;
 #define help() fusage(stdout, 0)
 #define usage() fusage(stderr, 1)
 
-static MySignalHandler
+static void
 SigPipe(SIGNAL_ARG)
 {
 #ifdef USE_MIGEMO
