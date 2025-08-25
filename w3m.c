@@ -138,7 +138,7 @@ void resetTerm(void)
 void fmTerm(void)
 {
     if (fmInitialized) {
-        move(LASTLINE, 0);
+        move(LINES - 1, 0);
         clrtoeolx();
         refresh();
         if (activeImage)
@@ -1475,7 +1475,7 @@ DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background")
 #ifndef SIGSTOP
     char* shell;
 #endif /* not SIGSTOP */
-    move(LASTLINE, 0);
+    move(LINES - 1, 0);
     clrtoeolx();
     refresh();
     fmTerm();

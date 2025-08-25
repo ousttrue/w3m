@@ -288,7 +288,7 @@ void displayBuffer()
     if (buf->width == 0)
         buf->width = INIT_BUFFER_WIDTH;
     if (buf->height == 0)
-        buf->height = LASTLINE + 1;
+        buf->height = LINES;
     if ((buf->width != INIT_BUFFER_WIDTH && (is_html_type(buf->type) || FoldLine))
         || buf->need_reshape) {
         buf->need_reshape = TRUE;
@@ -308,23 +308,23 @@ void displayBuffer()
     buf->COLS = COLS - buf->rootX;
 
     int ny = 0;
-    if (buf->rootY != ny || buf->LINES != LASTLINE - ny) {
+    if (buf->rootY != ny || buf->LINES != LINES - 1 - ny) {
         buf->rootY = ny;
-        buf->LINES = LASTLINE - ny;
+        buf->LINES = LINES - 1 - ny;
         arrangeCursor(buf);
     }
     // if (cline != buf->topLine || ccolumn != buf->currentColumn) {
-        if (activeImage && (cline != buf->topLine || ccolumn != buf->currentColumn)) {
-            if (draw_image_flag)
-                clear();
-            clearImage();
-            loadImage(buf, IMG_FLAG_STOP);
-            image_touch++;
-            draw_image_flag = FALSE;
-        }
-        redrawNLine(buf, LASTLINE);
-        cline = buf->topLine;
-        ccolumn = buf->currentColumn;
+    if (activeImage && (cline != buf->topLine || ccolumn != buf->currentColumn)) {
+        if (draw_image_flag)
+            clear();
+        clearImage();
+        loadImage(buf, IMG_FLAG_STOP);
+        image_touch++;
+        draw_image_flag = FALSE;
+    }
+    redrawNLine(buf, LINES - 1);
+    cline = buf->topLine;
+    ccolumn = buf->currentColumn;
     // }
     if (buf->topLine == NULL)
         buf->topLine = buf->firstLine;
@@ -668,8 +668,8 @@ redrawLineImage(Buffer* buf, Line* l, int i)
                     h = (int)(pixel_per_line - sy);
                 if (w > (int)((buf->rootX + buf->COLS) * pixel_per_char - x))
                     w = (int)((buf->rootX + buf->COLS) * pixel_per_char - x);
-                if (h > (int)(LASTLINE * pixel_per_line - y))
-                    h = (int)(LASTLINE * pixel_per_line - y);
+                if (h > (int)((LINES - 1) * pixel_per_line - y))
+                    h = (int)((LINES - 1) * pixel_per_line - y);
                 addImage(cache, x, y, sx, sy, w, h);
                 image->touch = image_touch;
                 draw_image_flag = TRUE;
@@ -859,7 +859,7 @@ void addChar(char c, Lineprop mode)
 
 void addMChar(char* p, Lineprop mode, size_t len)
 {
-    struct TermEntry *t = getTermEntry();
+    struct TermEntry* t = getTermEntry();
     Lineprop m = CharEffect(mode);
     char c = *p;
 
@@ -951,7 +951,7 @@ void message(char* s, int return_x, int return_y)
 {
     if (!fmInitialized)
         return;
-    move(LASTLINE, 0);
+    move(LINES - 1, 0);
     addnstr(s, COLS - 1);
     clrtoeolx();
     move(return_y, return_x);
@@ -975,7 +975,7 @@ void disp_message_nsec(char* s, int redraw_current, int sec, int purge, int mous
         message(s, Currentbuf->cursorX + Currentbuf->rootX,
             Currentbuf->cursorY + Currentbuf->rootY);
     else
-        message(s, LASTLINE, 0);
+        message(s, LINES - 1, 0);
     refresh();
     sleep_till_anykey(sec * 1000, purge);
 }

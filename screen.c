@@ -81,7 +81,6 @@ typedef struct scline {
     short eol;
 } Screen;
 
-
 static int max_LINES = 0, max_COLS = 0;
 static int tab_step = 8;
 static int CurLine, CurColumn;
@@ -290,7 +289,7 @@ void addmch(char* pc, size_t len)
 
 void wrap(void)
 {
-    if (CurLine == LASTLINE)
+    if (CurLine == LINES - 1)
         return;
     CurLine++;
     CurColumn = 0;
@@ -551,7 +550,7 @@ void refreshLine(int line, Screen* l)
 void refresh(void)
 {
     wc_putc_init(InnerCharset, DisplayCharset);
-    for (int line = 0; line <= LASTLINE; line++) {
+    for (int line = 0; line <= LINES - 1; line++) {
         refreshLine(line, ScreenImage[line]);
     }
     wc_putc_end(get_ttyf());
