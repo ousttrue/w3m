@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include "screen.h"
 #include "term_entry.h"
+#include "graphicchar.h"
 #include "fm.h"
 #include "menu.h"
 #include "func.h"
@@ -1007,7 +1008,8 @@ void new_option_menu(Menu* menu, char** label, int* variable, void (*func)())
 static void
 set_menu_frame(void)
 {
-    if (graph_ok()) {
+    struct TermEntry *t = getTermEntry();
+    if (graph_ok(t)) {
         graph_mode = TRUE;
         FRAME_WIDTH = 1;
         FRAME = graph_symbol;

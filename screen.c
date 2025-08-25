@@ -1,6 +1,7 @@
 #include "screen.h"
 #include "tty.h"
 #include "term_entry.h"
+#include "graphicchar.h"
 #include <stdio.h>
 #include <signal.h>
 #include <sys/types.h>
@@ -253,7 +254,11 @@ int initscr(void)
 {
     set_tty();
     set_int();
-    initTerm();
+    struct TermEntry *t = initTerm();
+    if(!t){
+        abort();
+    }
+    setgraphchar(t);
     LINES = COLS = 0;
     setlinescols();
     setupscreen();

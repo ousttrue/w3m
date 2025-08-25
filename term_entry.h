@@ -1,13 +1,6 @@
 #pragma once
 #include <stdbool.h>
 
-enum GrahicCharType {
-    GRAPHIC_CHAR_CHARSET = 0,
-    GRAPHIC_CHAR_DEC = 1,
-    GRAPHIC_CHAR_ASCII = 2,
-};
-
-extern enum GrahicCharType UseGraphicChar;
 extern int Do_not_use_ti_te;
 
 struct TermEntry {
@@ -41,12 +34,9 @@ struct TermEntry {
     char* op;
 };
 
-void initTerm();
+struct TermEntry* initTerm();
 void resetTerm();
 struct TermEntry* getTermEntry();
-
-bool graph_ok();
-char graphchar(char c);
 
 void write_T_op();
 void write_T_ce();

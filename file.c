@@ -2,6 +2,7 @@
 #include "etc.h"
 #include "fm.h"
 #include "term_entry.h"
+#include "graphicchar.h"
 #include "w3m.h"
 #include "tty.h"
 #include "screen.h"
@@ -6591,6 +6592,7 @@ print_internal_information(struct html_feed_environ* henv)
 
 void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
 {
+    struct TermEntry *t = getTermEntry();
     struct environment envs[MAX_ENV_LEVEL];
     clen_t linelen = 0;
     clen_t trbyte = 0;
@@ -6602,7 +6604,7 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
     int volatile image_flag;
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
 
-    if (fmInitialized && graph_ok()) {
+    if (fmInitialized && graph_ok(t)) {
         symbol_width = symbol_width0 = 1;
     } else {
         symbol_width0 = 0;

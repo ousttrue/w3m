@@ -1,6 +1,7 @@
 #include "display.h"
-#include "screen.h"
 #include "term_entry.h"
+#include "graphicchar.h"
+#include "screen.h"
 #include "tty.h"
 #include "fm.h"
 
@@ -858,6 +859,7 @@ void addChar(char c, Lineprop mode)
 
 void addMChar(char* p, Lineprop mode, size_t len)
 {
+    struct TermEntry *t = getTermEntry();
     Lineprop m = CharEffect(mode);
     char c = *p;
 
@@ -869,7 +871,7 @@ void addMChar(char* p, Lineprop mode, size_t len)
         int w = (mode & PC_KANJI) ? 2 : 1;
 
         c = ((char)wtf_get_code((wc_uchar*)p) & 0x7f) - SYMBOL_BASE;
-        if (graph_ok() && c < N_GRAPH_SYMBOL) {
+        if (graph_ok(t) && c < N_GRAPH_SYMBOL) {
             if (!graph_mode) {
                 graphstart();
                 graph_mode = TRUE;

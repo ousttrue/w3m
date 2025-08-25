@@ -1,5 +1,6 @@
 #pragma once
 #include <stdio.h>
+#include <assert.h>
 
 extern const char* displayTitleTerm;
 
@@ -26,9 +27,9 @@ int write1(int);
 // void writestr(char* s);
 static void writestr(const char* s)
 {
+    assert(s);
     // tputs(s, 1, &write1);
-    for(; *s; ++s)
-    {
+    for (; *s; ++s) {
         write1(*s);
     }
 }

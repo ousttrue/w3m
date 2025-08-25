@@ -4,7 +4,6 @@
 #include <string.h>
 #include <term.h>
 
-enum GrahicCharType UseGraphicChar = GRAPHIC_CHAR_CHARSET;
 int Do_not_use_ti_te = 0;
 
 struct TermEntry T = { 0 };
@@ -13,39 +12,7 @@ struct TermEntry* getTermEntry()
     return &T;
 }
 
-static char gcmap[96];
-
-char graphchar(char c)
-{
-    return (((unsigned)(c) >= ' ' && (unsigned)(c) < 128) ? gcmap[(c) - ' '] : (c));
-}
-
-static void
-setgraphchar(void)
-{
-    int c;
-    for (c = 0; c < 96; c++)
-        gcmap[c] = (char)(c + ' ');
-
-    if (!T.ac)
-        return;
-
-    int n = strlen(T.ac);
-    for (int i = 0; i < n - 1; i += 2) {
-        c = (unsigned)T.ac[i] - ' ';
-        if (c >= 0 && c < 96)
-            gcmap[c] = T.ac[i + 1];
-    }
-}
-
-bool graph_ok()
-{
-    if (UseGraphicChar != GRAPHIC_CHAR_DEC)
-        return 0;
-    return T.as[0] != 0 && T.ae[0] != 0 && T.ac[0] != 0;
-}
-
-void initTerm()
+struct TermEntry* initTerm()
 {
     const char* ent = getenv("TERM");
     if (ent == NULL) {
@@ -101,9 +68,10 @@ void initTerm()
     T.ac = tgetstr("ac", &pt); /* graphics charset pairs */
     T.op = tgetstr("op", &pt); /* set default color pair to its original value */
 
-    setgraphchar();
     if (T.ti && !Do_not_use_ti_te)
         writestr(T.ti);
+
+    return &T;
 }
 
 void resetTerm(void)

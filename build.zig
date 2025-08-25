@@ -15,6 +15,7 @@ const w3m_srcs = [_][]const u8{
     "parseArgs.c",
     "screen.c",
     "term_entry.c",
+    "graphicchar.c",
 
     "file.c",
     "buffer.c",

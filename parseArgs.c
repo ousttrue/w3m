@@ -1,5 +1,6 @@
 #include "parseArgs.h"
 #include "term_entry.h"
+#include "graphicchar.h"
 #include "fm.h"
 #include "rc.h"
 #include "tty.h"

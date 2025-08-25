@@ -1,5 +1,5 @@
 #include "fm.h"
-#include "term_entry.h"
+#include "graphicchar.h"
 
 #include "Symbols/alt.sym"
 #include "Symbols/graph.sym"
