@@ -10,8 +10,41 @@ enum GrahicCharType {
 extern enum GrahicCharType UseGraphicChar;
 extern int Do_not_use_ti_te;
 
+struct TermEntry {
+    char funcstr[256];
+    char* cd;
+    char* ce;
+    char* kr;
+    char* kl;
+    char* cr;
+    char* bt;
+    char* ta;
+    char* sc;
+    char* rc;
+    char* so;
+    char* se;
+    char* us;
+    char* ue;
+    char* cl;
+    char* cm;
+    char* al;
+    char* sr;
+    char* md;
+    char* me;
+    char* ti;
+    char* te;
+    char* nd;
+    char* as;
+    char* ae;
+    char* eA;
+    char* ac;
+    char* op;
+};
+
 void initTerm();
 void resetTerm();
+struct TermEntry* getTermEntry();
+
 bool graph_ok();
 char graphchar(char c);
 
