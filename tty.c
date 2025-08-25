@@ -10,16 +10,59 @@
 #include "ctrlcode.h"
 #include "event_poller.h"
 
+//
+// input
+//
 static int g_tty = -1;
 int get_tty_fd()
 {
     return g_tty;
 }
 
+//
+// output
+//
 static FILE* g_ttyf = NULL;
 FILE* get_ttyf()
 {
     return g_ttyf;
+}
+void flush_tty(void)
+{
+    if (g_ttyf) {
+        fflush(g_ttyf);
+    }
+}
+int write1(int c)
+{
+    putc(c, g_ttyf);
+    return 0;
+}
+void writestr(const char* s)
+{
+    assert(s);
+    // tputs(s, 1, &write1);
+    for (; *s; ++s) {
+        write1(*s);
+    }
+}
+
+static void _ttyWriterFunc(const char* p, int len, void* user)
+{
+    fwrite(p, len, 1, g_ttyf);
+}
+static void _ttyFlushFunc(void* user)
+{
+    fflush(g_ttyf);
+}
+static struct Writer g_writer = {
+    .user = 0,
+    .write = &_ttyWriterFunc,
+    .flush = &_ttyFlushFunc,
+};
+const struct Writer* ttyWriter()
+{
+    return &g_writer;
 }
 
 #ifdef HAVE_TERMIO_H
@@ -284,21 +327,6 @@ int sleep_till_anykey(int timeout_ms, int purge)
         exit(9);
     }
     return c;
-}
-
-int write1(int c)
-{
-    putc(c, g_ttyf);
-#ifdef SCREEN_DEBUG
-    flush_tty();
-#endif /* SCREEN_DEBUG */
-    return 0;
-}
-
-void flush_tty(void)
-{
-    if (g_ttyf)
-        fflush(g_ttyf);
 }
 
 int get_pixel_per_cell(int* ppc, int* ppl)

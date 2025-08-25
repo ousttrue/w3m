@@ -1,4 +1,5 @@
 #include "linein.h"
+#include "tty.h"
 #include "term_size.h"
 #include "fm.h"
 #include "local.h"
@@ -168,7 +169,7 @@ char* inputLineHistSearch(char* prompt, char* def_str, int flag, Hist* hist, Inc
             addStr(strBuf->ptr, strProp, CLen, offset, getCols() - opos);
         clrtoeolx();
         move(getLines() - 1, opos + x - offset);
-        refresh();
+        refresh(ttyWriter());
 
     next_char:
         c = getch();
@@ -225,7 +226,7 @@ char* inputLineHistSearch(char* prompt, char* def_str, int flag, Hist* hist, Inc
         return NULL;
 
     move(getLines() - 1, 0);
-    refresh();
+    refresh(ttyWriter());
     p = strBuf->ptr;
     if (flag & (IN_FILENAME | IN_COMMAND)) {
         SKIP_BLANKS(p);
@@ -532,7 +533,7 @@ next_compl(int next)
         return;
 
     if (status != CPL_OK && status != CPL_MENU)
-        bell();
+        bell(ttyWriter());
     if (status == CPL_FAIL)
         return;
 

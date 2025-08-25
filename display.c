@@ -318,7 +318,7 @@ void displayBuffer()
     // if (cline != buf->topLine || ccolumn != buf->currentColumn) {
     if (activeImage && (cline != buf->topLine || ccolumn != buf->currentColumn)) {
         if (draw_image_flag)
-            clear();
+            clear(ttyWriter());
         clearImage();
         loadImage(buf, IMG_FLAG_STOP);
         image_touch++;
@@ -342,13 +342,13 @@ void displayBuffer()
     if (delayed_msg != NULL) {
         disp_message(delayed_msg, FALSE);
         delayed_msg = NULL;
-        refresh();
+        refresh(ttyWriter());
     }
     standout();
     message(msg->ptr, buf->cursorX + buf->rootX, buf->cursorY + buf->rootY);
     standend();
     term_title(conv_to_system(buf->buffername));
-    refresh();
+    refresh(ttyWriter());
     if (activeImage && displayImage && buf->img && buf->image_loaded) {
         drawImage();
     }
@@ -978,7 +978,7 @@ void disp_message_nsec(char* s, int redraw_current, int sec, int purge, int mous
             Currentbuf->cursorY + Currentbuf->rootY);
     else
         message(s, getLines() - 1, 0);
-    refresh();
+    refresh(ttyWriter());
     sleep_till_anykey(sec * 1000, purge);
 }
 

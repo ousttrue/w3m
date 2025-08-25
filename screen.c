@@ -1,5 +1,4 @@
 #include "screen.h"
-#include "tty.h"
 #include "term_size.h"
 #include "term_entry.h"
 #include "graphicchar.h"
@@ -114,8 +113,6 @@ void setupscreen(void)
     for (; i < max_LINES; i++) {
         ScreenElem[i].isdirty = L_UNUSED;
     }
-
-    clear();
 }
 
 void move(int line, int column)
@@ -387,9 +384,9 @@ bcolor_seq(int colmode)
     return seqbuf;
 }
 
-static void MOVE(int line, int column)
+static void MOVE(const struct Writer *writer, int line, int column)
 {
-    writestr(getMoveXY(column, line));
+    putsWriter(writer, getMoveXY(column, line));
 }
 
 enum RF_MODE {
@@ -398,7 +395,7 @@ enum RF_MODE {
     RF_NONEED_TO_MOVE = 2,
 };
 #define M_MEND (S_STANDOUT | S_UNDERLINE | S_BOLD | S_COLORED | S_BCOLORED | S_GRAPHICS)
-void refreshLine(int line, Screen* l)
+void refreshLine(const struct Writer *writer, int line, Screen* l)
 {
     struct TermEntry* t = getTermEntry();
     int pline = CurLine;
@@ -406,7 +403,7 @@ void refreshLine(int line, Screen* l)
     l_prop mode = 0;
     l_prop color = COL_FTERM;
     l_prop bcolor = COL_BTERM;
-    short* dirty = &l->isdirty;
+    enum LineStatus* dirty = &l->isdirty;
     if (*dirty & L_DIRTY) {
         *dirty &= ~L_DIRTY;
         char** pc = l->lineimage;
@@ -435,25 +432,25 @@ void refreshLine(int line, Screen* l)
         if (line < getLines() - 2 && pline == line - 1 && pcol == 0) {
             switch (moved) {
             case RF_NEED_TO_MOVE:
-                MOVE(line, 0);
+                MOVE(writer, line, 0);
                 moved = RF_CR_OK;
                 break;
             case RF_CR_OK:
-                write1('\n');
-                write1('\r');
+                putWriter(writer, '\n');
+                putWriter(writer, '\r');
                 break;
             case RF_NONEED_TO_MOVE:
                 moved = RF_CR_OK;
                 break;
             }
         } else {
-            MOVE(line, pcol);
+            MOVE(writer, line, pcol);
             moved = RF_CR_OK;
         }
         if (*dirty & (L_NEED_CE | L_CLRTOEOL)) {
-            writestr(t->ce);
+            putsWriter(writer, t->ce);
             if (col != pcol)
-                MOVE(line, col);
+                MOVE(writer, line, col);
         }
         pline = line;
         pcol = col;
@@ -476,56 +473,57 @@ void refreshLine(int line, Screen* l)
                 || (!(pr[col] & S_GRAPHICS) && (mode & S_GRAPHICS))) {
                 if ((mode & S_COLORED)
                     || (mode & S_BCOLORED))
-                    writestr(t->op);
+                    putsWriter(writer, t->op);
                 if (mode & S_GRAPHICS)
-                    writestr(t->ae);
-                writestr(t->me);
+                    putsWriter(writer, t->ae);
+                putsWriter(writer, t->me);
                 mode &= ~M_MEND;
             }
             if ((*dirty & L_NEED_CE && col >= l->eol) ? need_redraw(pc[col], pr[col], SPACE,
                                                             0)
                                                       : (pr[col] & S_DIRTY)) {
                 if (pcol == col - 1)
-                    writestr(t->nd);
+                    putsWriter(writer, t->nd);
                 else if (pcol != col)
-                    MOVE(line, col);
+                    MOVE(writer, line, col);
 
                 if ((pr[col] & S_STANDOUT) && !(mode & S_STANDOUT)) {
-                    writestr(t->so);
+                    putsWriter(writer, t->so);
                     mode |= S_STANDOUT;
                 }
                 if ((pr[col] & S_UNDERLINE) && !(mode & S_UNDERLINE)) {
-                    writestr(t->us);
+                    putsWriter(writer, t->us);
                     mode |= S_UNDERLINE;
                 }
                 if ((pr[col] & S_BOLD) && !(mode & S_BOLD)) {
-                    writestr(t->md);
+                    putsWriter(writer, t->md);
                     mode |= S_BOLD;
                 }
                 if ((pr[col] & S_COLORED) && (pr[col] ^ mode) & COL_FCOLOR) {
                     color = (pr[col] & COL_FCOLOR);
                     mode = ((mode & ~COL_FCOLOR) | color);
-                    writestr(color_seq(color));
+                    putsWriter(writer, color_seq(color));
                 }
                 if ((pr[col] & S_BCOLORED)
                     && (pr[col] ^ mode) & COL_BCOLOR) {
                     bcolor = (pr[col] & COL_BCOLOR);
                     mode = ((mode & ~COL_BCOLOR) | bcolor);
-                    writestr(bcolor_seq(bcolor));
+                    putsWriter(writer, bcolor_seq(bcolor));
                 }
                 if ((pr[col] & S_GRAPHICS) && !(mode & S_GRAPHICS)) {
-                    wc_putc_end(get_ttyf());
+                    wc_putc_end(writer);
                     if (!graph_enabled) {
                         graph_enabled = 1;
-                        writestr(t->eA);
+                        putsWriter(writer, t->eA);
                     }
-                    writestr(t->as);
+                    putsWriter(writer, t->as);
                     mode |= S_GRAPHICS;
                 }
                 if (pr[col] & S_GRAPHICS)
-                    write1(graphchar(*pc[col]));
-                else if (CHMODE(pr[col]) != C_WCHAR2)
-                    wc_putc(pc[col], get_ttyf());
+                    putWriter(writer, graphchar(*pc[col]));
+                else if (CHMODE(pr[col]) != C_WCHAR2){
+                    wc_putc(writer, pc[col]);
+                }
                 pcol = col + 1;
             }
         }
@@ -537,34 +535,34 @@ void refreshLine(int line, Screen* l)
     *dirty &= ~(L_NEED_CE | L_CLRTOEOL);
     if (mode & M_MEND) {
         if (mode & (S_COLORED | S_BCOLORED))
-            writestr(t->op);
+            putsWriter(writer, t->op);
         if (mode & S_GRAPHICS) {
-            writestr(t->ae);
+            putsWriter(writer, t->ae);
             wc_putc_clear_status();
         }
-        writestr(t->me);
+        putsWriter(writer, t->me);
         mode &= ~M_MEND;
     }
 }
 
 // Screen to STDOUT
-void refresh(void)
+void refresh(const struct Writer *writer)
 {
     wc_putc_init(InnerCharset, DisplayCharset);
     for (int line = 0; line <= getLines() - 1; line++) {
-        refreshLine(line, ScreenImage[line]);
+        refreshLine(writer, line, ScreenImage[line]);
     }
-    wc_putc_end(get_ttyf());
-    MOVE(CurLine, CurColumn);
-    flush_tty();
+    wc_putc_end(writer);
+    MOVE(writer, CurLine, CurColumn);
+    flushWriter(writer);
 }
 
-void clear(void)
+void clear(const struct Writer *writer)
 {
     struct TermEntry* t = getTermEntry();
     int i, j;
     l_prop* p;
-    writestr(t->cl);
+    putsWriter(writer, t->cl);
     move(0, 0);
     for (i = 0; i < getLines(); i++) {
         ScreenImage[i]->isdirty = 0;
@@ -691,9 +689,9 @@ void addnstr_sup(char* s, int n)
         addch(' ');
 }
 
-void bell(void)
+void bell(const struct Writer *writer)
 {
-    write1(7);
+    putWriter(writer, 7);
 }
 
 void touch_cursor(void)

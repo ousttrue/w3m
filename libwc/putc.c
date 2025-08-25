@@ -16,7 +16,7 @@ wc_putc_init(wc_ces f_ces, wc_ces t_ces)
 }
 
 void
-wc_putc(char *c, FILE *f)
+wc_putc(const struct Writer* writer, const char *c)
 {
     wc_uchar *p;
 
@@ -28,16 +28,16 @@ wc_putc(char *c, FILE *f)
     Strclear(putc_str);
     while (*p)
 	(*putc_st.ces_info->push_to)(putc_str, wtf_parse(&p), &putc_st);
-    fwrite(putc_str->ptr, 1, putc_str->length, f);
+    writeWriter(writer, putc_str->ptr, putc_str->length);
 }
 
 void
-wc_putc_end(FILE *f)
+wc_putc_end(const const struct Writer* writer)
 {
     Strclear(putc_str);
     wc_push_end(putc_str, &putc_st);
     if (putc_str->length)
-	fwrite(putc_str->ptr, 1, putc_str->length, f);
+        writeWriter(writer, putc_str->ptr, putc_str->length);
 }
 
 void

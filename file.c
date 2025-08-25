@@ -655,7 +655,7 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
             http_response_code = atoi(p);
             if (fmInitialized) {
                 message(lineBuf2->ptr, 0, 0);
-                refresh();
+                refresh(ttyWriter());
             }
         }
         if (!strncasecmp(lineBuf2->ptr, "content-transfer-encoding:", 26)) {
@@ -1446,7 +1446,7 @@ getAuthCookie(struct http_auth* hauth, char* auth_header,
          */
         if (fmInitialized) {
             message("Wrong username or password", 0, 0);
-            refresh();
+            refresh(ttyWriter());
         } else
             fprintf(stderr, "Wrong username or password\n");
         sleep(1);
@@ -1716,7 +1716,7 @@ load_doc: {
             term_cbreak();
             /* FIXME: gettextize? */
             message(Sprintf("%s contacted. Waiting for reply...", pu.host)->ptr, 0, 0);
-            refresh();
+            refresh(ttyWriter());
         }
         if (t_buf == NULL)
             t_buf = newBuffer(INIT_BUFFER_WIDTH);
@@ -6402,7 +6402,7 @@ void showProgress(clen_t* linelen, clen_t* trbyte)
             addch('|');
         standend();
         /* no_clrtoeol(); */
-        refresh();
+        refresh(ttyWriter());
     } else {
         cur_time = time(0);
         if (*trbyte == 0) {
@@ -6425,7 +6425,7 @@ void showProgress(clen_t* linelen, clen_t* trbyte)
             messages = Sprintf("%7s loaded", fmtrbyte);
         }
         message(messages->ptr, 0, 0);
-        refresh();
+        refresh(ttyWriter());
     }
 }
 

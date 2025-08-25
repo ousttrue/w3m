@@ -1,4 +1,5 @@
 #include "menu.h"
+#include "tty.h"
 #include "term_size.h"
 #include "screen.h"
 #include "term_entry.h"
@@ -828,7 +829,7 @@ int select_menu(Menu* menu, int mselect)
      * move(menu->cursorY, menu->cursorX); */
     move(menu->y + mselect - menu->offset, menu->x);
     toggle_stand();
-    refresh();
+    refresh(ttyWriter());
 
     return (menu->select);
 }

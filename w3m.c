@@ -114,7 +114,7 @@ void fmTerm(void)
     if (fmInitialized) {
         move(getLines() - 1, 0);
         clrtoeolx();
-        refresh();
+        refresh(ttyWriter());
         if (activeImage)
             loadImage(NULL, IMG_FLAG_STOP);
         resetTerm();
@@ -206,6 +206,7 @@ void fmInit(void)
         set_int();
         initscr();
         setupscreen();
+        clear(ttyWriter());
         term_raw();
         term_noecho();
         if (displayImage)
@@ -473,6 +474,7 @@ resize_screen(void)
     need_resize_screen = FALSE;
     setlinescols(get_tty_fd());
     setupscreen();
+    clear(ttyWriter());
 }
 
 /*
@@ -597,7 +599,7 @@ DEFUN(ctrCsrH, CENTER_H, "Center on cursor column")
 /* Redraw screen */
 DEFUN(rdrwSc, REDRAW, "Draw the screen anew")
 {
-    clear();
+    clear(ttyWriter());
     arrangeCursor(Currentbuf);
 }
 
@@ -1450,7 +1452,7 @@ DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background")
 #endif /* not SIGSTOP */
     move(getLines() - 1, 0);
     clrtoeolx();
-    refresh();
+    refresh(ttyWriter());
     fmTerm();
 #ifndef SIGSTOP
     shell = getenv("SHELL");
@@ -1733,7 +1735,7 @@ loadLink(char* url, char* target, char* referer, FormList* request)
     const int* no_referer_ptr;
 
     message(Sprintf("loading %s", url)->ptr, 0, 0);
-    refresh();
+    refresh(ttyWriter());
 
     no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->currentURL);
     base = baseURL(Currentbuf);
@@ -1905,7 +1907,7 @@ DEFUN(followI, VIEW_IMAGE, "Display image in viewer")
         return;
     /* FIXME: gettextize? */
     message(Sprintf("loading %s", a->url)->ptr, 0, 0);
-    refresh();
+    refresh(ttyWriter());
     buf = loadGeneralFile(a->url, baseURL(Currentbuf), NULL, 0, NULL);
     if (buf == NULL) {
         /* FIXME: gettextize? */
@@ -2791,7 +2793,7 @@ cmd_loadURL(char* url, ParsedURL* current, char* referer, FormList* request)
     if (handleMailto(url))
         return;
 
-    refresh();
+    refresh(ttyWriter());
     buf = loadGeneralFile(url, current, referer, 0, request);
     if (buf == NULL) {
         /* FIXME: gettextize? */
@@ -3414,7 +3416,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
     url = parsedURL2Str(&Currentbuf->currentURL);
     /* FIXME: gettextize? */
     message("Reloading...", 0, 0);
-    refresh();
+    refresh(ttyWriter());
     old_charset = DocumentCharset;
     if (Currentbuf->document_charset != WC_CES_US_ASCII)
         DocumentCharset = Currentbuf->document_charset;

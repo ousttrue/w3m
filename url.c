@@ -523,7 +523,7 @@ int openSocket(char* const hostname,
     if (fmInitialized) {
         /* FIXME: gettextize? */
         message(Sprintf("Opening socket...")->ptr, 0, 0);
-        refresh();
+        refresh(ttyWriter());
     }
     if (SETJMP(AbortLoading) != 0) {
 #ifdef SOCK_DEBUG
@@ -619,7 +619,7 @@ int openSocket(char* const hostname,
         hostaddr.sin_port = s_port;
         if (fmInitialized) {
             message(Sprintf("Connecting to %s", hostname)->ptr, 0, 0);
-            refresh();
+            refresh(ttyWriter());
         }
         if (connect(sock, (struct sockaddr*)&hostaddr,
                 sizeof(struct sockaddr_in))
@@ -636,7 +636,7 @@ int openSocket(char* const hostname,
         if (fmInitialized) {
             message(Sprintf("Performing hostname lookup on %s", hostname)->ptr,
                 0, 0);
-            refresh();
+            refresh(ttyWriter());
         }
         if ((entry = gethostbyname(hostname)) == NULL) {
 #ifdef SOCK_DEBUG
@@ -658,7 +658,7 @@ int openSocket(char* const hostname,
 #endif
             if (fmInitialized) {
                 message(Sprintf("Connecting to %s", hostname)->ptr, 0, 0);
-                refresh();
+                refresh(ttyWriter());
             }
             if ((result = connect(sock, (struct sockaddr*)&hostaddr,
                      sizeof(struct sockaddr_in)))

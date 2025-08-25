@@ -1,10 +1,11 @@
 #pragma once
 #include <stddef.h>
+#include "writer.h"
 
 extern int Do_not_use_ti_te;
 
 // screen to tty
-void refresh();
+void refresh(const struct Writer *writer);
 
 void getTCstr();
 void setupscreen();
@@ -23,7 +24,7 @@ void graphstart();
 void graphend();
 void setfcolor(int color);
 void setbcolor(int color);
-void clear();
+void clear(const struct Writer *writer);
 void clrtoeol();
 void clrtoeolx();
 void clrtobot();
@@ -33,5 +34,5 @@ void addstr(char* s);
 void addnstr(char* s, int n);
 void addnstr_sup(char* s, int n);
 void toggle_stand();
-void bell();
+void bell(const struct Writer *writer);
 void touch_cursor();

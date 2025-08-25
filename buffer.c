@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "tty.h"
 #include "term_size.h"
 #include "fm.h"
 #include "event_poller.h"
@@ -316,7 +317,7 @@ listBuffer(Buffer* top, Buffer* current)
         0);
     standend();
     move(c, 0);
-    refresh();
+    refresh(ttyWriter());
     return buf->nextBuffer;
 }
 
@@ -420,7 +421,7 @@ selectBuffer(Buffer* firstbuf, Buffer* currentbuf, char* selectchar)
             goto end;
         }
         move(spoint, 0);
-        refresh();
+        refresh(ttyWriter());
     }
 end:
     event_end_input(getch);
