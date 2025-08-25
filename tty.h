@@ -23,7 +23,15 @@ void term_cbreak(void);
 
 int sleep_till_anykey(int timeout_ms, int purge);
 int write1(int);
-void writestr(char* s);
+// void writestr(char* s);
+static void writestr(const char* s)
+{
+    // tputs(s, 1, &write1);
+    for(; *s; ++s)
+    {
+        write1(*s);
+    }
+}
 void flush_tty(void);
 
 char* ttyname_tty(void);

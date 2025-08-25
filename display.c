@@ -353,7 +353,7 @@ void displayBuffer()
         saveBufferInfo();
         save_current_buf = buf;
     }
-    if ((buf->check_url & CHK_URL)) {
+    if (buf->check_url & CHK_URL) {
         chkURLBuffer(buf);
         displayBuffer();
     }

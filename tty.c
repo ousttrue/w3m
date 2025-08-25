@@ -308,11 +308,6 @@ int write1(int c)
     return 0;
 }
 
-void writestr(char* s)
-{
-    tputs(s, 1, &write1);
-}
-
 void flush_tty(void)
 {
     if (g_ttyf)
