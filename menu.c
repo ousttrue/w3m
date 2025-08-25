@@ -16,15 +16,15 @@
 static char** FRAME;
 static int FRAME_WIDTH;
 static int graph_mode = FALSE;
-#define G_start           \
+#define G_start             \
+    {                       \
+        if (graph_mode)     \
+            graphstart(vt); \
+    }
+#define G_end             \
     {                     \
         if (graph_mode)   \
-            graphstart(); \
-    }
-#define G_end           \
-    {                   \
-        if (graph_mode) \
-            graphend(); \
+            graphend(vt); \
     }
 
 static int mNull(char c);
@@ -653,9 +653,9 @@ static MenuList* w3mMenuList;
 
 static Menu* CurrentMenu = NULL;
 
-#define mvaddch(y, x, c) (move(y, x), addch(c))
-#define mvaddstr(y, x, str) (move(y, x), addstr(str))
-#define mvaddnstr(y, x, str, n) (move(y, x), addnstr_sup(str, n))
+#define mvaddch(vt, y, x, c) (move(vt, y, x), addch(vt, c))
+#define mvaddstr(vt, y, x, str) (move(vt, y, x), addstr(vt, str))
+#define mvaddnstr(vt, y, x, str, n) (move(vt, y, x), addnstr_sup(vt, str, n))
 
 void new_menu(Menu* menu, MenuItem* item)
 {
@@ -745,6 +745,7 @@ void draw_all_menu(Menu* menu)
 
 void draw_menu(Menu* menu)
 {
+    struct VirtualTerm* vt = getScreen();
     int x, y, w;
     int i, j;
 
@@ -754,64 +755,66 @@ void draw_menu(Menu* menu)
 
     if (menu->offset == 0) {
         G_start;
-        mvaddstr(y, x, FRAME[3]);
+        mvaddstr(vt, y, x, FRAME[3]);
         for (i = FRAME_WIDTH; i < w - FRAME_WIDTH; i += FRAME_WIDTH)
-            mvaddstr(y, x + i, FRAME[10]);
-        mvaddstr(y, x + i, FRAME[6]);
+            mvaddstr(vt, y, x + i, FRAME[10]);
+        mvaddstr(vt, y, x + i, FRAME[6]);
         G_end;
     } else {
         G_start;
-        mvaddstr(y, x, FRAME[5]);
+        mvaddstr(vt, y, x, FRAME[5]);
         G_end;
         for (i = FRAME_WIDTH; i < w - FRAME_WIDTH; i++)
-            mvaddstr(y, x + i, " ");
+            mvaddstr(vt, y, x + i, " ");
         G_start;
-        mvaddstr(y, x + i, FRAME[5]);
+        mvaddstr(vt, y, x + i, FRAME[5]);
         G_end;
         i = (w / 2 - 1) / FRAME_WIDTH * FRAME_WIDTH;
-        mvaddstr(y, x + i, ":");
+        mvaddstr(vt, y, x + i, ":");
     }
 
     for (j = 0; j < menu->height; j++) {
         y++;
         G_start;
-        mvaddstr(y, x, FRAME[5]);
+        mvaddstr(vt, y, x, FRAME[5]);
         G_end;
         draw_menu_item(menu, menu->offset + j);
         G_start;
-        mvaddstr(y, x + w - FRAME_WIDTH, FRAME[5]);
+        mvaddstr(vt, y, x + w - FRAME_WIDTH, FRAME[5]);
         G_end;
     }
     y++;
     if (menu->offset + menu->height == menu->nitem) {
         G_start;
-        mvaddstr(y, x, FRAME[9]);
+        mvaddstr(vt, y, x, FRAME[9]);
         for (i = FRAME_WIDTH; i < w - FRAME_WIDTH; i += FRAME_WIDTH)
-            mvaddstr(y, x + i, FRAME[10]);
-        mvaddstr(y, x + i, FRAME[12]);
+            mvaddstr(vt, y, x + i, FRAME[10]);
+        mvaddstr(vt, y, x + i, FRAME[12]);
         G_end;
     } else {
         G_start;
-        mvaddstr(y, x, FRAME[5]);
+        mvaddstr(vt, y, x, FRAME[5]);
         G_end;
         for (i = FRAME_WIDTH; i < w - FRAME_WIDTH; i++)
-            mvaddstr(y, x + i, " ");
+            mvaddstr(vt, y, x + i, " ");
         G_start;
-        mvaddstr(y, x + i, FRAME[5]);
+        mvaddstr(vt, y, x + i, FRAME[5]);
         G_end;
         i = (w / 2 - 1) / FRAME_WIDTH * FRAME_WIDTH;
-        mvaddstr(y, x + i, ":");
+        mvaddstr(vt, y, x + i, ":");
     }
 }
 
 void draw_menu_item(Menu* menu, int mselect)
 {
-    mvaddnstr(menu->y + mselect - menu->offset, menu->x,
+    struct VirtualTerm *vt = getScreen();
+    mvaddnstr(vt, menu->y + mselect - menu->offset, menu->x,
         menu->item[mselect].label, menu->width);
 }
 
 int select_menu(Menu* menu, int mselect)
 {
+    struct VirtualTerm *vt = getScreen();
     if (mselect < 0 || mselect >= menu->nitem)
         return (MENU_NOTHING);
     if (mselect < menu->offset)
@@ -822,13 +825,13 @@ int select_menu(Menu* menu, int mselect)
     if (menu->select >= menu->offset && menu->select < menu->offset + menu->height)
         draw_menu_item(menu, menu->select);
     menu->select = mselect;
-    standout();
+    standout(vt);
     draw_menu_item(menu, menu->select);
-    standend();
+    standend(vt);
     /*
      * move(menu->cursorY, menu->cursorX); */
-    move(menu->y + mselect - menu->offset, menu->x);
-    toggle_stand();
+    move(vt, menu->y + mselect - menu->offset, menu->x);
+    toggle_stand(vt);
     refresh(ttyWriter());
 
     return (menu->select);

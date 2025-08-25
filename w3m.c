@@ -112,8 +112,9 @@ void resetTerm(void)
 void fmTerm(void)
 {
     if (fmInitialized) {
-        move(getLines() - 1, 0);
-        clrtoeolx();
+        struct VirtualTerm* vt = getScreen();
+        move(vt, getLines() - 1, 0);
+        clrtoeolx(vt);
         refresh(ttyWriter());
         if (activeImage)
             loadImage(NULL, IMG_FLAG_STOP);
@@ -205,7 +206,8 @@ void fmInit(void)
         set_tty();
         set_int();
         initscr();
-        setupscreen();
+        struct VirtualTerm *vt = getScreen();
+        setupscreen(vt);
         clear(ttyWriter());
         term_raw();
         term_noecho();
@@ -473,7 +475,7 @@ resize_screen(void)
 {
     need_resize_screen = FALSE;
     setlinescols(get_tty_fd());
-    setupscreen();
+    setupscreen(getScreen());
     clear(ttyWriter());
 }
 
@@ -1447,11 +1449,12 @@ DEFUN(selBuf, SELECT, "Display buffer-stack panel")
 /* Suspend (on BSD), or run interactive shell (on SysV) */
 DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background")
 {
+    struct VirtualTerm *vt = getScreen();
 #ifndef SIGSTOP
     char* shell;
 #endif /* not SIGSTOP */
-    move(getLines() - 1, 0);
-    clrtoeolx();
+    move(vt, getLines() - 1, 0);
+    clrtoeolx(vt);
     refresh(ttyWriter());
     fmTerm();
 #ifndef SIGSTOP

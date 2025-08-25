@@ -182,7 +182,7 @@ writeBufferName(Buffer* buf, int n)
     int all = buf->allLine;
     if (all == 0 && buf->lastLine != NULL)
         all = buf->lastLine->linenumber;
-    move(n, 0);
+    move(getScreen(), n, 0);
 
     Str msg = Sprintf("<%s> [%d lines]", buf->buffername, all);
     if (buf->filename != NULL) {
@@ -203,7 +203,7 @@ writeBufferName(Buffer* buf, int n)
             break;
         }
     }
-    addnstr_sup(msg->ptr, getCols() - 1);
+    addnstr_sup(getScreen(), msg->ptr, getCols() - 1);
 }
 
 /*
@@ -282,41 +282,42 @@ void gotoRealLine(Buffer* buf, int n)
 static Buffer*
 listBuffer(Buffer* top, Buffer* current)
 {
+    struct VirtualTerm* vt = getScreen();
     int i, c = 0;
     Buffer* buf = top;
 
-    move(0, 0);
+    move(vt, 0, 0);
     if (useColor) {
-        setfcolor(basic_color);
-        setbcolor(bg_color);
+        setfcolor(vt, basic_color);
+        setbcolor(vt, bg_color);
     }
-    clrtobotx();
+    clrtobotx(vt);
     for (i = 0; i < getLines() - 1; i++) {
         if (buf == current) {
             c = i;
-            standout();
+            standout(vt);
         }
         writeBufferName(buf, i);
         if (buf == current) {
-            standend();
-            clrtoeolx();
-            move(i, 0);
-            toggle_stand();
+            standend(vt);
+            clrtoeolx(vt);
+            move(vt, i, 0);
+            toggle_stand(vt);
         } else
-            clrtoeolx();
+            clrtoeolx(vt);
         if (buf->nextBuffer == NULL) {
-            move(i + 1, 0);
-            clrtobotx();
+            move(vt, i + 1, 0);
+            clrtobotx(vt);
             break;
         }
         buf = buf->nextBuffer;
     }
-    standout();
+    standout(vt);
     /* FIXME: gettextize? */
     message("Buffer selection mode: SPC for select / D for delete buffer", 0,
         0);
-    standend();
-    move(c, 0);
+    standend(vt);
+    move(vt, c, 0);
     refresh(ttyWriter());
     return buf->nextBuffer;
 }
@@ -327,6 +328,7 @@ listBuffer(Buffer* top, Buffer* current)
 Buffer*
 selectBuffer(Buffer* firstbuf, Buffer* currentbuf, char* selectchar)
 {
+    struct VirtualTerm* vt = getScreen();
     int i, cpoint, /* Current Buffer Number */
         spoint, /* Current Line on Screen */
         maxbuf, sclimit = getLines() - 1; /* Upper limit of line * number in
@@ -381,11 +383,11 @@ selectBuffer(Buffer* firstbuf, Buffer* currentbuf, char* selectchar)
                 currentbuf = currentbuf->nextBuffer;
                 cpoint++;
                 spoint++;
-                standout();
+                standout(vt);
                 writeBufferName(currentbuf, spoint);
-                standend();
-                move(spoint, 0);
-                toggle_stand();
+                standend(vt);
+                move(vt, spoint, 0);
+                toggle_stand(vt);
             } else if (cpoint < maxbuf - 1) {
                 topbuf = currentbuf;
                 currentbuf = currentbuf->nextBuffer;
@@ -400,11 +402,11 @@ selectBuffer(Buffer* firstbuf, Buffer* currentbuf, char* selectchar)
                 writeBufferName(currentbuf, spoint);
                 currentbuf = nthBuffer(topbuf, --spoint);
                 cpoint--;
-                standout();
+                standout(vt);
                 writeBufferName(currentbuf, spoint);
-                standend();
-                move(spoint, 0);
-                toggle_stand();
+                standend(vt);
+                move(vt, spoint, 0);
+                toggle_stand(vt);
             } else if (cpoint > 0) {
                 i = cpoint - sclimit;
                 if (i < 0)
@@ -420,7 +422,7 @@ selectBuffer(Buffer* firstbuf, Buffer* currentbuf, char* selectchar)
             *selectchar = c;
             goto end;
         }
-        move(spoint, 0);
+        move(vt, spoint, 0);
         refresh(ttyWriter());
     }
 end:

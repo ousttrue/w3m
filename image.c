@@ -196,6 +196,7 @@ err:
 
 void drawImage(void)
 {
+    struct VirtualTerm *vt = getScreen();
     static char buf[64];
     int j, draw = FALSE;
     TerminalImage* i;
@@ -282,7 +283,7 @@ void drawImage(void)
     } else
         n_terminal_image = 0;
 
-    touch_cursor();
+    touch_cursor(vt);
     refresh(ttyWriter());
 }
 

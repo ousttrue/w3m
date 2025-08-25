@@ -4,35 +4,62 @@
 
 extern int Do_not_use_ti_te;
 
-// screen to tty
-void refresh(const struct Writer *writer);
+typedef unsigned short l_prop;
+enum LineStatus {
+    L_DIRTY = 0x01,
+    L_UNUSED = 0x02,
+    L_NEED_CE = 0x04,
+    L_CLRTOEOL = 0x08,
+};
+typedef struct scline {
+    char** lineimage;
+    l_prop* lineprop;
+    enum LineStatus isdirty;
+    short eol;
+} Screen;
+struct VirtualTerm {
+    int max_LINES; // = 0;
+    int max_COLS; // = 0;
+    int tab_step; // = 8;
+    int CurLine;
+    int CurColumn;
+    Screen* ScreenElem; // = NULL,
+    Screen** ScreenImage; // = NULL;
+    l_prop CurrentMode; // = 0;
+    int graph_enabled; // = 0;
+};
 
-void getTCstr();
-void setupscreen();
-void move(int line, int column);
-void addmch(char* p, size_t len);
-void addch(char c);
-void wrap();
-void touch_line();
-void standout();
-void standend();
-void bold();
-void boldend();
-void underline();
-void underlineend();
-void graphstart();
-void graphend();
-void setfcolor(int color);
-void setbcolor(int color);
-void clear(const struct Writer *writer);
-void clrtoeol();
-void clrtoeolx();
-void clrtobot();
-void clrtobotx();
-void no_clrtoeol();
-void addstr(char* s);
-void addnstr(char* s, int n);
-void addnstr_sup(char* s, int n);
-void toggle_stand();
-void bell(const struct Writer *writer);
-void touch_cursor();
+struct VirtualTerm* getScreen();
+
+// screen to tty
+void refresh(const struct Writer* writer);
+void bell(const struct Writer* writer);
+void clear(const struct Writer* writer);
+
+void getTCstr(struct VirtualTerm* vt);
+void setupscreen(struct VirtualTerm* vt);
+void move(struct VirtualTerm* vt, int line, int column);
+void addmch(struct VirtualTerm* vt, char* p, size_t len);
+void addch(struct VirtualTerm* vt, char c);
+void wrap(struct VirtualTerm* vt);
+void touch_line(struct VirtualTerm* vt);
+void standout(struct VirtualTerm* vt);
+void standend(struct VirtualTerm* vt);
+void bold(struct VirtualTerm* vt);
+void boldend(struct VirtualTerm* vt);
+void underline(struct VirtualTerm* vt);
+void underlineend(struct VirtualTerm* vt);
+void graphstart(struct VirtualTerm* vt);
+void graphend(struct VirtualTerm* vt);
+void setfcolor(struct VirtualTerm* vt, int color);
+void setbcolor(struct VirtualTerm* vt, int color);
+void clrtoeol(struct VirtualTerm* vt);
+void clrtoeolx(struct VirtualTerm* vt);
+void clrtobot(struct VirtualTerm* vt);
+void clrtobotx(struct VirtualTerm* vt);
+void no_clrtoeol(struct VirtualTerm* vt);
+void addstr(struct VirtualTerm* vt, char* s);
+void addnstr(struct VirtualTerm* vt, char* s, int n);
+void addnstr_sup(struct VirtualTerm* vt, char* s, int n);
+void toggle_stand(struct VirtualTerm* vt);
+void touch_cursor(struct VirtualTerm* vt);

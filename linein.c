@@ -1,4 +1,5 @@
 #include "linein.h"
+#include "screen.h"
 #include "tty.h"
 #include "term_size.h"
 #include "fm.h"
@@ -95,6 +96,7 @@ static void ins_char(Str str);
 
 char* inputLineHistSearch(char* prompt, char* def_str, int flag, Hist* hist, IncFunc incrfunc)
 {
+    struct VirtualTerm* vt = getScreen();
     int opos, x, y, lpos, rpos, epos;
     unsigned char c;
     char* p;
@@ -161,14 +163,14 @@ char* inputLineHistSearch(char* prompt, char* def_str, int flag, Hist* hist, Inc
             else
                 offset = 0;
         }
-        move(getLines() - 1, 0);
-        addstr(prompt);
+        move(vt, getLines() - 1, 0);
+        addstr(vt, prompt);
         if (g_is_passwd)
             addPasswd(strBuf->ptr, strProp, CLen, offset, getCols() - opos);
         else
             addStr(strBuf->ptr, strProp, CLen, offset, getCols() - opos);
-        clrtoeolx();
-        move(getLines() - 1, opos + x - offset);
+        clrtoeolx(vt);
+        move(vt, getLines() - 1, opos + x - offset);
         refresh(ttyWriter());
 
     next_char:
@@ -225,7 +227,7 @@ char* inputLineHistSearch(char* prompt, char* def_str, int flag, Hist* hist, Inc
     if (i_broken)
         return NULL;
 
-    move(getLines() - 1, 0);
+    move(getScreen(), getLines() - 1, 0);
     refresh(ttyWriter());
     p = strBuf->ptr;
     if (flag & (IN_FILENAME | IN_COMMAND)) {
@@ -559,6 +561,7 @@ _rdcompl(void)
 static void
 next_dcompl(int next)
 {
+    struct VirtualTerm* vt = getScreen();
     static int col, row;
     static unsigned int len;
     static Str d;
@@ -642,16 +645,16 @@ disp_next:
             y = nline - row - 1;
     }
     if (y) {
-        move(y - 1, 0);
-        clrtoeolx();
+        move(vt, y - 1, 0);
+        clrtoeolx(vt);
     }
     if (comment) {
-        move(y, 0);
-        clrtoeolx();
-        bold();
+        move(vt, y, 0);
+        clrtoeolx(vt);
+        bold(vt);
         /* FIXME: gettextize? */
-        addstr("----- Completion list -----");
-        boldend();
+        addstr(vt, "----- Completion list -----");
+        boldend(vt);
         y++;
     }
     for (i = 0; i < row; i++) {
@@ -659,27 +662,27 @@ disp_next:
             n = cm_disp_next + j * row + i;
             if (n >= NCFileBuf)
                 break;
-            move(y, j * len);
-            clrtoeolx();
+            move(vt, y, j * len);
+            clrtoeolx(vt);
             f = Strdup(d);
             Strcat_charp(f, CFileBuf[n]);
-            addstr(conv_from_system(CFileBuf[n]));
+            addstr(vt, conv_from_system(CFileBuf[n]));
             if (stat(expandPath(f->ptr), &st) != -1 && S_ISDIR(st.st_mode))
-                addstr("/");
+                addstr(vt, "/");
         }
         y++;
     }
     if (comment && y == getLines() - 1 - 1) {
-        move(y, 0);
-        clrtoeolx();
-        bold();
+        move(vt, y, 0);
+        clrtoeolx(vt);
+        bold(vt);
         if (emacs_like_lineedit)
             /* FIXME: gettextize? */
-            addstr("----- Press TAB to continue -----");
+            addstr(vt, "----- Press TAB to continue -----");
         else
             /* FIXME: gettextize? */
-            addstr("----- Press CTRL-D to continue -----");
-        boldend();
+            addstr(vt, "----- Press CTRL-D to continue -----");
+        boldend(vt);
     }
 }
 

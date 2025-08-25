@@ -6350,6 +6350,7 @@ char* convert_size2(clen_t size1, clen_t size2, int usefloat)
 
 void showProgress(clen_t* linelen, clen_t* trbyte)
 {
+    struct VirtualTerm* vt = getScreen();
     int i, j, rate, duration, eta, pos;
     static time_t last_time, start_time;
     time_t cur_time;
@@ -6365,8 +6366,8 @@ void showProgress(clen_t* linelen, clen_t* trbyte)
         double ratio;
         cur_time = time(0);
         if (*trbyte == 0) {
-            move(getLines() - 1, 0);
-            clrtoeolx();
+            move(vt, getLines() - 1, 0);
+            clrtoeolx(vt);
             start_time = cur_time;
         }
         *trbyte += *linelen;
@@ -6374,7 +6375,7 @@ void showProgress(clen_t* linelen, clen_t* trbyte)
         if (cur_time == last_time)
             return;
         last_time = cur_time;
-        move(getLines() - 1, 0);
+        move(vt, getLines() - 1, 0);
         ratio = 100.0 * (*trbyte) / current_content_length;
         fmtrbyte = convert_size2(*trbyte, current_content_length, 1);
         duration = cur_time - start_time;
@@ -6392,22 +6393,22 @@ void showProgress(clen_t* linelen, clen_t* trbyte)
             messages = Sprintf("%11s %3.0f%%                          ",
                 fmtrbyte, ratio);
         }
-        addstr(messages->ptr);
+        addstr(vt, messages->ptr);
         pos = 42;
         i = pos + (getCols() - pos - 1) * (*trbyte) / current_content_length;
-        move(getLines() - 1, pos);
-        standout();
-        addch(' ');
+        move(vt, getLines() - 1, pos);
+        standout(vt);
+        addch(vt, ' ');
         for (j = pos + 1; j <= i; j++)
-            addch('|');
-        standend();
+            addch(vt, '|');
+        standend(vt);
         /* no_clrtoeol(); */
         refresh(ttyWriter());
     } else {
         cur_time = time(0);
         if (*trbyte == 0) {
-            move(getLines() - 1, 0);
-            clrtoeolx();
+            move(vt, getLines() - 1, 0);
+            clrtoeolx(vt);
             start_time = cur_time;
         }
         *trbyte += *linelen;
@@ -6415,7 +6416,7 @@ void showProgress(clen_t* linelen, clen_t* trbyte)
         if (cur_time == last_time)
             return;
         last_time = cur_time;
-        move(getLines() - 1, 0);
+        move(vt, getLines() - 1, 0);
         fmtrbyte = convert_size(*trbyte, 1);
         duration = cur_time - start_time;
         if (duration) {
