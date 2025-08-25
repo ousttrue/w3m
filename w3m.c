@@ -2,6 +2,7 @@
 #define MAINPROGRAM
 #include "fm.h"
 #include "tty.h"
+#include "term_entry.h"
 #include "event_poller.h"
 #include "screen.h"
 #include <stdio.h>
@@ -99,7 +100,11 @@ void fmTerm(void)
         refresh();
         if (activeImage)
             loadImage(NULL, IMG_FLAG_STOP);
-        reset_tty();
+        resetTerm();
+        flush_tty();
+        TerminalSet(NULL);
+        close_tty();
+
         fmInitialized = FALSE;
     }
 }

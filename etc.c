@@ -1,3 +1,5 @@
+#include "etc.h"
+#include "rc.h"
 #include "fm.h"
 #include "myctype.h"
 #include "html.h"

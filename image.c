@@ -1,6 +1,5 @@
-/* $Id: image.c,v 1.37 2010/12/21 10:13:55 htrb Exp $ */
-
 #include "image.h"
+#include "term_entry.h"
 #include "fm.h"
 #include "screen.h"
 #include "tty.h"
@@ -11,7 +10,6 @@
 #ifdef HAVE_WAITPID
 #include <sys/wait.h>
 #endif
-
 
 static int image_index = 0;
 
@@ -232,17 +230,20 @@ void drawImage(void)
             int sw = (i->width + i->sx % pixel_per_char_i + pixel_per_char_i - 1) / pixel_per_char_i;
             int sh = (i->height + i->sy % pixel_per_line_i + pixel_per_line_i - 1) / pixel_per_line_i;
 
-
             if (enable_inline_image == INLINE_IMG_SIXEL) {
                 w = i->cache->a_width > 0 ? i->width : 0;
                 h = i->cache->a_height > 0 ? i->height : 0;
-                put_image_sixel(url, x, y, w, h, i->sx, i->sy, sw * pixel_per_char, sh * pixel_per_line_i, n_terminal_image);
+                put_image_sixel(Currentbuf->cursorX, Currentbuf->cursorY,
+                    url, x, y, w, h, i->sx, i->sy, sw * pixel_per_char, sh * pixel_per_line_i, n_terminal_image);
             } else if (enable_inline_image == INLINE_IMG_OSC5379) {
-                put_image_osc5379(url, x, y, w, h, sx, sy, sw, sh);
+                put_image_osc5379(Currentbuf->cursorX, Currentbuf->cursorY,
+                    url, x, y, w, h, sx, sy, sw, sh);
             } else if (enable_inline_image == INLINE_IMG_ITERM2) {
-                put_image_iterm2(url, x, y, sw, sh);
+                put_image_iterm2(Currentbuf->cursorX, Currentbuf->cursorY,
+                    url, x, y, sw, sh);
             } else if (enable_inline_image == INLINE_IMG_KITTY) {
-                put_image_kitty(url, x, y, i->width, i->height, i->sx, i->sy, sw * pixel_per_char, sh * pixel_per_line_i, sw, sh);
+                put_image_kitty(Currentbuf->cursorX, Currentbuf->cursorY,
+                    url, x, y, i->width, i->height, i->sx, i->sy, sw * pixel_per_char, sh * pixel_per_line_i, sw, sh);
             }
 
             continue;

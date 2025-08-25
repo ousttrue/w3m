@@ -1,7 +1,8 @@
 #include "display.h"
-#include "fm.h"
 #include "screen.h"
+#include "term_entry.h"
 #include "tty.h"
+#include "fm.h"
 
 /* *INDENT-OFF* */
 

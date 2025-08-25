@@ -9,6 +9,7 @@
 #include "myctype.h"
 #include "tty.h"
 #include "screen.h"
+#include "etc.h"
 
 #ifdef DEBUG
 #include <malloc.h>

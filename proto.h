@@ -278,7 +278,6 @@ extern Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor);
 extern int calcPosition(char* l, Lineprop* pr, int len, int pos, int bpos,
     int mode);
 extern char* lastFileName(char* path);
-extern char* mybasename(char* s);
 extern char* mydirname(char* s);
 extern int next_status(char c, int* status);
 extern int read_token(Str buf, char** instr, int* status, int pre, int append);
@@ -350,7 +349,6 @@ extern MapArea* newMapArea(char* url, char* target, char* alt, char* shape,
     char* coords);
 extern Buffer* page_info_panel(Buffer* buf);
 
-extern void reset_tty(void);
 extern MySignalHandler reset_exit(SIGNAL_ARG);
 extern MySignalHandler error_dump(SIGNAL_ARG);
 extern void set_int(void);
@@ -375,7 +373,6 @@ extern char* acceptableMimeTypes(void);
 extern struct mailcap* searchExtViewer(char* type);
 extern Str unquote_mailcap(char* qstr, char* type, char* name, char* attr,
     int* mc_stat);
-extern char* guessContentType(char* filename);
 extern TextList* make_domain_list(char* domain_list);
 extern int check_no_proxy(char* domain);
 extern InputStream openFTPStream(ParsedURL* pu, URLFile* uf);
@@ -580,4 +577,3 @@ void srand48(long);
 long lrand48(void);
 #endif
 
-extern Str base64_encode(const char* src, size_t len);

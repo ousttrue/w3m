@@ -23,7 +23,6 @@ extern void underline(void);
 extern void underlineend(void);
 extern void graphstart(void);
 extern void graphend(void);
-extern int graph_ok(void);
 extern void setfcolor(int color);
 extern void setbcolor(int color);
 extern void clear(void);

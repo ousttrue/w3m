@@ -39,3 +39,4 @@ void parseURL2(char* url, ParsedURL* pu, ParsedURL* current);
 Str parsedURL2Str(ParsedURL* pu);
 Str parsedURL2RefererStr(ParsedURL* pu);
 int getURLScheme(char** url);
+char* guessContentType(char* filename);

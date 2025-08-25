@@ -2,7 +2,9 @@
 /*
  * Initialization file etc.
  */
+#include "rc.h"
 #include "fm.h"
+#include "term_entry.h"
 #include "myctype.h"
 #include "proto.h"
 #include <stdio.h>
@@ -13,6 +15,8 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include "rc.h"
+
+char* tmp_dir = 0;
 
 struct param_ptr {
     char* name;

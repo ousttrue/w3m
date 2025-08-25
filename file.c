@@ -1,5 +1,7 @@
 #include "display.h"
+#include "etc.h"
 #include "fm.h"
+#include "term_entry.h"
 #include "w3m.h"
 #include "tty.h"
 #include "screen.h"

@@ -5,8 +5,6 @@
 #include <unistd.h>
 #include <errno.h>
 #include <sys/ioctl.h>
-// tput
-#include <term.h>
 #include "config.h"
 #include "tty.h"
 #include "ctrlcode.h"

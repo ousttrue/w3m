@@ -820,7 +820,6 @@ global TextList* NO_proxy_domains;
 global char NoCache init(FALSE);
 global char use_proxy init(TRUE);
 #define Do_not_use_proxy (!use_proxy)
-global int Do_not_use_ti_te init(FALSE);
 #ifdef USE_NNTP
 global char* NNTP_server init(NULL);
 global char* NNTP_mode init(NULL);
@@ -989,10 +988,6 @@ global char SimplePreserveSpace init(FALSE);
 #define conv_to_system(x) wc_conv_strict((x), InnerCharset, SystemCharset)->ptr
 #define url_quote_conv(x, c) url_quote(wc_conv_strict((x), InnerCharset, (c))->ptr)
 global char UseAltEntity init(FALSE);
-#define GRAPHIC_CHAR_ASCII 2
-#define GRAPHIC_CHAR_DEC 1
-#define GRAPHIC_CHAR_CHARSET 0
-global char UseGraphicChar init(GRAPHIC_CHAR_CHARSET);
 global char DisplayBorders init(FALSE);
 global char DisableCenter init(FALSE);
 extern char* graph_symbol[];
@@ -1004,7 +999,6 @@ extern int symbol_width0;
 #define SYMBOL_BASE 0x20
 global int no_rc_dir init(FALSE);
 global char* rc_dir init(NULL);
-global char* tmp_dir;
 global char* param_tmp_dir init(NULL);
 #ifdef HAVE_MKDTEMP
 global char* mkd_tmp_dir init(NULL);
