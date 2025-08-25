@@ -8,7 +8,6 @@ void set_tty(void);
 void close_tty(void);
 FILE* get_ttyf();
 int get_tty_fd();
-int get_rowcol_tty(int* row, int* col);
 
 void ttymode_set(int mode, int imode);
 void ttymode_reset(int mode, int imode);

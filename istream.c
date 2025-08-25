@@ -1,7 +1,7 @@
-/* $Id: istream.c,v 1.27 2010/07/18 13:43:23 htrb Exp $ */
 #include "fm.h"
 #include "myctype.h"
 #include "istream.h"
+#include "term_size.h"
 #include <signal.h>
 #include <openssl/x509v3.h>
 
@@ -553,8 +553,8 @@ Str ssl_get_certificate(SSL* ssl, char* hostname)
             ans = "y";
         else {
             Str ep = Strdup(emsg);
-            if (ep->length > COLS - 16)
-                Strshrink(ep, ep->length - (COLS - 16));
+            if (ep->length > getCols() - 16)
+                Strshrink(ep, ep->length - (getCols() - 16));
             Strcat_charp(ep, ": accept? (y/n)");
             ans = inputAnswer(ep->ptr);
         }

@@ -1,3 +1,5 @@
+#include "buffer.h"
+#include "term_size.h"
 #include "fm.h"
 #include "event_poller.h"
 #include "screen.h"
@@ -18,8 +20,8 @@ newBuffer(int width)
         exit(3);
     bzero((void*)n, sizeof(Buffer));
     n->width = width;
-    n->COLS = COLS;
-    n->LINES = LINES-1;
+    n->COLS = getCols();
+    n->LINES = getLines() - 1;
     n->currentURL.scheme = SCM_UNKNOWN;
     n->baseURL = NULL;
     n->baseTarget = NULL;
@@ -43,7 +45,7 @@ nullBuffer(void)
 {
     Buffer* b;
 
-    b = newBuffer(COLS);
+    b = newBuffer(getCols());
     b->buffername = "*Null*";
     return b;
 }
@@ -200,7 +202,7 @@ writeBufferName(Buffer* buf, int n)
             break;
         }
     }
-    addnstr_sup(msg->ptr, COLS - 1);
+    addnstr_sup(msg->ptr, getCols() - 1);
 }
 
 /*
@@ -288,7 +290,7 @@ listBuffer(Buffer* top, Buffer* current)
         setbcolor(bg_color);
     }
     clrtobotx();
-    for (i = 0; i < LINES-1; i++) {
+    for (i = 0; i < getLines() - 1; i++) {
         if (buf == current) {
             c = i;
             standout();
@@ -326,8 +328,8 @@ selectBuffer(Buffer* firstbuf, Buffer* currentbuf, char* selectchar)
 {
     int i, cpoint, /* Current Buffer Number */
         spoint, /* Current Line on Screen */
-        maxbuf, sclimit = LINES-1; /* Upper limit of line * number in
-                                     * the * screen */
+        maxbuf, sclimit = getLines() - 1; /* Upper limit of line * number in
+                                           * the * screen */
     Buffer *buf, *topbuf;
     char c;
 
@@ -483,7 +485,7 @@ void reshapeBuffer(Buffer* buf)
     WcOption.auto_detect = old_auto_detect;
     UseContentCharset = TRUE;
 
-    buf->height = LINES-1 + 1;
+    buf->height = getLines() - 1 + 1;
     if (buf->firstLine && sbuf.firstLine) {
         Line* cur = sbuf.currentLine;
         int n;

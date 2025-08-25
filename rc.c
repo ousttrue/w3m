@@ -5,6 +5,7 @@
 #include "rc.h"
 #include "fm.h"
 #include "term_entry.h"
+#include "term_size.h"
 #include "myctype.h"
 #include "proto.h"
 #include <stdio.h>
@@ -1137,8 +1138,8 @@ static void loadSiteconf(void);
 void sync_with_option(void)
 {
     init_tmp();
-    if (PagerMax < LINES)
-        PagerMax = LINES;
+    if (PagerMax < getLines())
+        PagerMax = getLines();
     WrapSearch = WrapDefault;
     parse_proxy();
     parse_cookie();

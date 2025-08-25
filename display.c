@@ -1,4 +1,6 @@
 #include "display.h"
+#include "buffer.h"
+#include "term_size.h"
 #include "term_entry.h"
 #include "graphicchar.h"
 #include "screen.h"
@@ -170,7 +172,7 @@ make_lastline_link(Buffer* buf, char* title, char* url)
     Lineprop* pr;
     ParsedURL pu;
     char* p;
-    int l = COLS - 1, i;
+    int l = getCols() - 1, i;
 
     if (title && *title) {
         s = Strnew_m_charp("[", title, "]", NULL);
@@ -198,13 +200,13 @@ make_lastline_link(Buffer* buf, char* title, char* url)
         return s;
     }
     if (!s)
-        s = Strnew_size(COLS);
+        s = Strnew_size(getCols());
     i = (l - 2) / 2;
     while (i && pr[i] & PC_WCHAR2)
         i--;
     Strcat_charp_n(s, u->ptr, i);
     Strcat_charp(s, "..");
-    i = get_Str_strwidth(u) - (COLS - 1 - get_Str_strwidth(s));
+    i = get_Str_strwidth(u) - (getCols() - 1 - get_Str_strwidth(s));
     while (i < u->length && pr[i] & PC_WCHAR2)
         i++;
     Strcat_charp(s, &u->ptr[i]);
@@ -236,7 +238,7 @@ make_lastline_message(Buffer* buf)
         }
         if (s) {
             sl = get_Str_strwidth(s);
-            if (sl >= COLS - 3)
+            if (sl >= getCols() - 3)
                 return s;
         }
     }
@@ -256,7 +258,7 @@ make_lastline_message(Buffer* buf)
     Strcat_charp(msg, buf->buffername);
 
     if (s) {
-        int l = COLS - 3 - sl;
+        int l = getCols() - 3 - sl;
         if (get_Str_strwidth(msg) > l) {
             char* p;
             for (p = msg->ptr; *p; p += get_mclen(p)) {
@@ -288,7 +290,7 @@ void displayBuffer()
     if (buf->width == 0)
         buf->width = INIT_BUFFER_WIDTH;
     if (buf->height == 0)
-        buf->height = LINES;
+        buf->height = getLines();
     if ((buf->width != INIT_BUFFER_WIDTH && (is_html_type(buf->type) || FoldLine))
         || buf->need_reshape) {
         buf->need_reshape = TRUE;
@@ -301,16 +303,16 @@ void displayBuffer()
                 + 2;
         if (buf->rootX < 5)
             buf->rootX = 5;
-        if (buf->rootX > COLS)
-            buf->rootX = COLS;
+        if (buf->rootX > getCols())
+            buf->rootX = getCols();
     } else
         buf->rootX = 0;
-    buf->COLS = COLS - buf->rootX;
+    buf->COLS = getCols() - buf->rootX;
 
     int ny = 0;
-    if (buf->rootY != ny || buf->LINES != LINES - 1 - ny) {
+    if (buf->rootY != ny || buf->LINES != getLines() - 1 - ny) {
         buf->rootY = ny;
-        buf->LINES = LINES - 1 - ny;
+        buf->LINES = getLines() - 1 - ny;
         arrangeCursor(buf);
     }
     // if (cline != buf->topLine || ccolumn != buf->currentColumn) {
@@ -322,7 +324,7 @@ void displayBuffer()
         image_touch++;
         draw_image_flag = FALSE;
     }
-    redrawNLine(buf, LINES - 1);
+    redrawNLine(buf, getLines() - 1);
     cline = buf->topLine;
     ccolumn = buf->currentColumn;
     // }
@@ -500,9 +502,9 @@ redrawLine(Buffer* buf, Line* l, int i)
                     + 2;
             if (buf->rootX < 5)
                 buf->rootX = 5;
-            if (buf->rootX > COLS)
-                buf->rootX = COLS;
-            buf->COLS = COLS - buf->rootX;
+            if (buf->rootX > getCols())
+                buf->rootX = getCols();
+            buf->COLS = getCols() - buf->rootX;
         }
         if (l->real_linenumber && !l->bpos)
             sprintf(tmp, "%*ld:", buf->rootX - 1, l->real_linenumber);
@@ -668,8 +670,8 @@ redrawLineImage(Buffer* buf, Line* l, int i)
                     h = (int)(pixel_per_line - sy);
                 if (w > (int)((buf->rootX + buf->COLS) * pixel_per_char - x))
                     w = (int)((buf->rootX + buf->COLS) * pixel_per_char - x);
-                if (h > (int)((LINES - 1) * pixel_per_line - y))
-                    h = (int)((LINES - 1) * pixel_per_line - y);
+                if (h > (int)((getLines() - 1) * pixel_per_line - y))
+                    h = (int)((getLines() - 1) * pixel_per_line - y);
                 addImage(cache, x, y, sx, sy, w, h);
                 image->touch = image_touch;
                 draw_image_flag = TRUE;
@@ -918,7 +920,7 @@ void record_err_message(char* s)
     if (fmInitialized) {
         if (!message_list)
             message_list = newGeneralList();
-        if (message_list->nitem >= LINES)
+        if (message_list->nitem >= getLines())
             popValue(message_list);
         pushValue(message_list, allocStr(s, -1));
     }
@@ -930,7 +932,7 @@ void record_err_message(char* s)
 Buffer*
 message_list_panel(void)
 {
-    Str tmp = Strnew_size(LINES * COLS);
+    Str tmp = Strnew_size(getLines() * getCols());
     ListItem* p;
 
     /* FIXME: gettextize? */
@@ -951,8 +953,8 @@ void message(char* s, int return_x, int return_y)
 {
     if (!fmInitialized)
         return;
-    move(LINES - 1, 0);
-    addnstr(s, COLS - 1);
+    move(getLines() - 1, 0);
+    addnstr(s, getCols() - 1);
     clrtoeolx();
     move(return_y, return_x);
 }
@@ -975,7 +977,7 @@ void disp_message_nsec(char* s, int redraw_current, int sec, int purge, int mous
         message(s, Currentbuf->cursorX + Currentbuf->rootX,
             Currentbuf->cursorY + Currentbuf->rootY);
     else
-        message(s, LINES - 1, 0);
+        message(s, getLines() - 1, 0);
     refresh();
     sleep_till_anykey(sec * 1000, purge);
 }

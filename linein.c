@@ -1,4 +1,5 @@
 #include "linein.h"
+#include "term_size.h"
 #include "fm.h"
 #include "local.h"
 #include "event_poller.h"
@@ -6,7 +7,7 @@
 #include <stdbool.h>
 
 #define STR_LEN 1024
-#define CLEN (COLS - 2)
+#define CLEN (getLines() - 2)
 
 static Str strBuf;
 static Lineprop strProp[STR_LEN];
@@ -159,14 +160,14 @@ char* inputLineHistSearch(char* prompt, char* def_str, int flag, Hist* hist, Inc
             else
                 offset = 0;
         }
-        move(LINES - 1, 0);
+        move(getLines() - 1, 0);
         addstr(prompt);
         if (g_is_passwd)
-            addPasswd(strBuf->ptr, strProp, CLen, offset, COLS - opos);
+            addPasswd(strBuf->ptr, strProp, CLen, offset, getCols() - opos);
         else
-            addStr(strBuf->ptr, strProp, CLen, offset, COLS - opos);
+            addStr(strBuf->ptr, strProp, CLen, offset, getCols() - opos);
         clrtoeolx();
-        move(LINES - 1, opos + x - offset);
+        move(getLines() - 1, opos + x - offset);
         refresh();
 
     next_char:
@@ -223,7 +224,7 @@ char* inputLineHistSearch(char* prompt, char* def_str, int flag, Hist* hist, Inc
     if (i_broken)
         return NULL;
 
-    move(LINES - 1, 0);
+    move(getLines() - 1, 0);
     refresh();
     p = strBuf->ptr;
     if (flag & (IN_FILENAME | IN_COMMAND)) {
@@ -569,12 +570,12 @@ next_dcompl(int next)
     if (cm_mode == CPL_NEVER || cm_mode & CPL_OFF)
         return;
     cm_disp_clear = FALSE;
-    if (LINES - 1 >= 3) {
+    if (getLines() - 1 >= 3) {
         comment = TRUE;
-        nline = LINES - 1 - 2;
-    } else if (LINES - 1) {
+        nline = getLines() - 1 - 2;
+    } else if (getLines() - 1) {
         comment = FALSE;
-        nline = LINES - 1;
+        nline = getLines() - 1;
     } else {
         return;
     }
@@ -619,8 +620,8 @@ next_dcompl(int next)
         if (len < n)
             len = n;
     }
-    if (len > 0 && COLS > len)
-        col = COLS / len;
+    if (len > 0 && getCols() > len)
+        col = getCols() / len;
     else
         col = 1;
     row = (NCFileBuf + col - 1) / col;
@@ -667,7 +668,7 @@ disp_next:
         }
         y++;
     }
-    if (comment && y == LINES - 1 - 1) {
+    if (comment && y == getLines() - 1 - 1) {
         move(y, 0);
         clrtoeolx();
         bold();

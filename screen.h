@@ -2,7 +2,6 @@
 #include <stddef.h>
 
 extern int Do_not_use_ti_te;
-extern int LINES, COLS;
 
 // screen to tty
 void refresh();

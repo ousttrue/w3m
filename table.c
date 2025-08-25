@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include "term_size.h"
 #include "fm.h"
 #include "html.h"
 #include "parsetagx.h"
@@ -70,16 +71,16 @@ static double
 weight(int x)
 {
 
-    if (x < COLS)
+    if (x < getCols())
         return (double)x;
     else
-        return COLS * (log((double)x / COLS) + 1.);
+        return getCols() * (log((double)x / getCols()) + 1.);
 }
 
 static double
 weight2(int a)
 {
-    return (double)a / COLS * 4 + 1.;
+    return (double)a / getCols() * 4 + 1.;
 }
 
 #define sigma_td(a) (0.5 * weight2(a)) /* <td width=...> */

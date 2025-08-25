@@ -118,17 +118,6 @@ char* ttyname_tty(void)
     return ttyname(g_tty);
 }
 
-int get_rowcol_tty(int* row, int* col)
-{
-    struct winsize wins;
-    int i = ioctl(g_tty, TIOCGWINSZ, &wins);
-    if (i >= 0) {
-        *row = wins.ws_row;
-        *col = wins.ws_col;
-    }
-    return i;
-}
-
 void term_raw(void)
 #ifndef HAVE_SGTTY_H
 #ifdef IEXTEN

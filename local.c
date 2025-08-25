@@ -1,5 +1,6 @@
 #include "fm.h"
 #include "etc.h"
+#include "term_size.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -99,7 +100,7 @@ Str loadLocalDir(char* dname)
     closedir(d);
 
     if (multicolList) {
-        l = COLS / (maxlen + 2);
+        l = getCols() / (maxlen + 2);
         if (!l)
             l = 1;
         nrow = (n + l - 1) / l;

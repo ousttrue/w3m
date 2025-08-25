@@ -1,6 +1,8 @@
 #include "w3m.h"
 #define MAINPROGRAM
+#include "buffer.h"
 #include "fm.h"
+#include "term_size.h"
 #include "graphicchar.h"
 #include "tty.h"
 #include "term_entry.h"
@@ -93,34 +95,6 @@ static int searchKeyNum(void);
 
 int enable_inline_image;
 
-#define MAX_LINE 200
-#define MAX_COLUMN 400
-int LINES, COLS;
-void setlinescols(void)
-{
-    int row = 0;
-    int col = 0;
-    int i = get_rowcol_tty(&row, &col);
-    if (i >= 0 && row != 0 && col != 0) {
-        LINES = row;
-        COLS = col;
-    }
-
-    char* p;
-    if (LINES <= 0 && (p = getenv("LINES")) != NULL && (i = atoi(p)) >= 0)
-        LINES = i;
-    if (COLS <= 0 && (p = getenv("COLUMNS")) != NULL && (i = atoi(p)) >= 0)
-        COLS = i;
-    // if (LINES <= 0)
-    //     LINES = tgetnum("li"); /* number of line */
-    // if (COLS <= 0)
-    //     COLS = tgetnum("co"); /* number of column */
-    if (COLS > MAX_COLUMN)
-        COLS = MAX_COLUMN;
-    if (LINES > MAX_LINE)
-        LINES = MAX_LINE;
-}
-
 void resetTerm(void)
 {
     struct TermEntry* t = getTermEntry();
@@ -138,7 +112,7 @@ void resetTerm(void)
 void fmTerm(void)
 {
     if (fmInitialized) {
-        move(LINES - 1, 0);
+        move(getLines() - 1, 0);
         clrtoeolx();
         refresh();
         if (activeImage)
@@ -218,8 +192,7 @@ int initscr(void)
         writestr(t->ti);
     }
     setgraphchar(t);
-    LINES = COLS = 0;
-    setlinescols();
+    setlinescols(get_tty_fd());
     return 0;
 }
 
@@ -498,7 +471,7 @@ static void
 resize_screen(void)
 {
     need_resize_screen = FALSE;
-    setlinescols();
+    setlinescols(get_tty_fd());
     setupscreen();
 }
 
@@ -1475,7 +1448,7 @@ DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background")
 #ifndef SIGSTOP
     char* shell;
 #endif /* not SIGSTOP */
-    move(LINES - 1, 0);
+    move(getLines() - 1, 0);
     clrtoeolx();
     refresh();
     fmTerm();
@@ -3232,7 +3205,7 @@ _peekURL(int only_img)
     if (Currentbuf->firstLine == NULL)
         return;
     if (CurrentKey == prev_key && s != NULL) {
-        if (s->length - offset >= COLS)
+        if (s->length - offset >= getCols())
             offset++;
         else if (s->length <= offset) /* bug ? */
             offset = 0;
@@ -3262,8 +3235,8 @@ _peekURL(int only_img)
     bcopy((void*)pp, (void*)p, s->length * sizeof(Lineprop));
 disp:
     n = searchKeyNum();
-    if (n > 1 && s->length > (n - 1) * (COLS - 1))
-        offset = (n - 1) * (COLS - 1);
+    if (n > 1 && s->length > (n - 1) * (getCols() - 1))
+        offset = (n - 1) * (getCols() - 1);
     while (offset < s->length && p[offset] & PC_WCHAR2)
         offset++;
     disp_message_nomouse(&s->ptr[offset], TRUE);
@@ -3300,7 +3273,7 @@ DEFUN(curURL, PEEK, "Show current address")
     if (Currentbuf->bufferprop & BP_INTERNAL)
         return;
     if (CurrentKey == prev_key && s != NULL) {
-        if (s->length - offset >= COLS)
+        if (s->length - offset >= getCols())
             offset++;
         else if (s->length <= offset) /* bug ? */
             offset = 0;
@@ -3314,8 +3287,8 @@ DEFUN(curURL, PEEK, "Show current address")
         bcopy((void*)pp, (void*)p, s->length * sizeof(Lineprop));
     }
     n = searchKeyNum();
-    if (n > 1 && s->length > (n - 1) * (COLS - 1))
-        offset = (n - 1) * (COLS - 1);
+    if (n > 1 && s->length > (n - 1) * (getCols() - 1))
+        offset = (n - 1) * (getCols() - 1);
     while (offset < s->length && p[offset] & PC_WCHAR2)
         offset++;
     disp_message_nomouse(&s->ptr[offset], TRUE);
@@ -4257,7 +4230,7 @@ DownloadListBuffer(void)
         } else
             size = 0;
         if (d->size) {
-            int i, l = COLS - 6;
+            int i, l = getCols() - 6;
             if (size < d->size)
                 i = 1.0 * l * size / d->size;
             else

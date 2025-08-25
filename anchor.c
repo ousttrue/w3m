@@ -1,5 +1,5 @@
-/* $Id: anchor.c,v 1.33 2006/04/08 11:33:16 inu Exp $ */
 #include "fm.h"
+#include "term_size.h"
 #include "myctype.h"
 #include "regex.h"
 
@@ -352,7 +352,7 @@ reAnchorAny(Buffer* buf, char* re,
     if ((re = regexCompile(re, 1)) != NULL) {
         return re;
     }
-    for (l = MarkAllPages ? buf->firstLine : buf->topLine; l != NULL && (MarkAllPages || l->linenumber < buf->topLine->linenumber + LINES - 1);
+    for (l = MarkAllPages ? buf->firstLine : buf->topLine; l != NULL && (MarkAllPages || l->linenumber < buf->topLine->linenumber + getLines() - 1);
         l = l->next) {
         if (p && l->bpos)
             continue;

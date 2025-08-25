@@ -1,4 +1,5 @@
 #include "image.h"
+#include "term_size.h"
 #include "rc.h"
 #include "term_entry.h"
 #include "fm.h"
@@ -88,9 +89,9 @@ getCharSize(void)
     if (!(w > 0 && h > 0))
         return FALSE;
     if (!set_pixel_per_char)
-        pixel_per_char = (int)(1.0 * w / COLS + 0.5);
+        pixel_per_char = (int)(1.0 * w / getCols() + 0.5);
     if (!set_pixel_per_line)
-        pixel_per_line = (int)(1.0 * h / LINES + 0.5);
+        pixel_per_line = (int)(1.0 * h / getLines() + 0.5);
     return TRUE;
 }
 

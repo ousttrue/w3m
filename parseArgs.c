@@ -439,14 +439,8 @@ const char* parseArgs(int argc, char** argv)
                     WrapDefault = FALSE;
                 else
                     WrapDefault = TRUE;
-            } else if (!strcmp("-cols", argv[i])) {
-                if (++i >= argc)
-                    usage();
-                COLS = atoi(argv[i]);
-                if (COLS > MAXIMUM_COLS) {
-                    COLS = MAXIMUM_COLS;
-                }
-            } else if (!strcmp("-ppc", argv[i])) {
+            } 
+            else if (!strcmp("-ppc", argv[i])) {
                 double ppc;
                 if (++i >= argc)
                     usage();
