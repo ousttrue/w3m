@@ -1,13 +1,12 @@
 /* $Id: image.c,v 1.37 2010/12/21 10:13:55 htrb Exp $ */
 
 #include "image.h"
-#include "display.h"
 #include "fm.h"
+#include "screen.h"
 #include "tty.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <signal.h>
-#include <errno.h>
 #include <unistd.h>
 #ifdef HAVE_WAITPID
 #include <sys/wait.h>

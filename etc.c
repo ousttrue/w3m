@@ -1,11 +1,10 @@
-/* $Id: etc.c,v 1.81 2007/05/23 15:06:05 inu Exp $ */
 #include "fm.h"
-#include <pwd.h>
 #include "myctype.h"
 #include "html.h"
-#include "local.h"
+#include "screen.h"
 #include "hash.h"
-
+#include "tty.h"
+#include <pwd.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <time.h>

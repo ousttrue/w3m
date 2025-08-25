@@ -3,6 +3,7 @@
 #include "fm.h"
 #include "tty.h"
 #include "event_poller.h"
+#include "screen.h"
 #include <stdio.h>
 #include <signal.h>
 #include <setjmp.h>
@@ -18,7 +19,6 @@
 #include <io.h>
 #endif
 #include "display.h"
-#include "terms.h"
 #include "myctype.h"
 #include "regex.h"
 #include "rc.h"

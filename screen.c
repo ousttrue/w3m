@@ -1,8 +1,4 @@
-/* $Id: terms.c,v 1.63 2010/08/20 09:34:47 htrb Exp $ */
-/*
- * An original curses library for EUC-kanji by Akinori ITO,     December 1989
- * revised by Akinori ITO, January 1995
- */
+#include "screen.h"
 #include "tty.h"
 #include <stdio.h>
 #include <signal.h>
@@ -15,12 +11,8 @@
 #include "config.h"
 #include <string.h>
 #include <sys/wait.h>
-#ifdef HAVE_SYS_SELECT_H
-#include <sys/select.h>
-#endif
 #include <sys/ioctl.h>
 
-#include "terms.h"
 #include "fm.h"
 #include "myctype.h"
 

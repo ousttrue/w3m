@@ -1,27 +1,22 @@
-/* $Id: file.c,v 1.266 2012/05/22 09:45:56 inu Exp $ */
-/* vi: set sw=4 ts=8 ai sm noet : */
 #include "display.h"
 #include "fm.h"
 #include "w3m.h"
 #include "tty.h"
-#include <sys/types.h>
+#include "screen.h"
+#include "html.h"
+#include "parsetagx.h"
+#include "local.h"
+#include "regex.h"
 #include "myctype.h"
+#include <sys/types.h>
 #include <signal.h>
 #include <setjmp.h>
-#if defined(HAVE_WAITPID) || defined(HAVE_WAIT3)
 #include <sys/wait.h>
-#endif
 #include <stdio.h>
 #include <time.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <utime.h>
-/* foo */
-
-#include "html.h"
-#include "parsetagx.h"
-#include "local.h"
-#include "regex.h"
 
 #ifndef max
 #define max(a, b) ((a) > (b) ? (a) : (b))

@@ -1,6 +1,6 @@
-/* $Id: buffer.c,v 1.30 2010/07/18 14:10:09 htrb Exp $ */
 #include "fm.h"
 #include "event_poller.h"
+#include "screen.h"
 
 char* NullLine = "";
 Lineprop NullProp[] = { 0 };
@@ -176,15 +176,12 @@ nthBuffer(Buffer* firstbuf, int n)
 static void
 writeBufferName(Buffer* buf, int n)
 {
-    Str msg;
-    int all;
-
-    all = buf->allLine;
+    int all = buf->allLine;
     if (all == 0 && buf->lastLine != NULL)
         all = buf->lastLine->linenumber;
     move(n, 0);
-    /* FIXME: gettextize? */
-    msg = Sprintf("<%s> [%d lines]", buf->buffername, all);
+
+    Str msg = Sprintf("<%s> [%d lines]", buf->buffername, all);
     if (buf->filename != NULL) {
         switch (buf->currentURL.scheme) {
         case SCM_LOCAL:

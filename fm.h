@@ -57,7 +57,6 @@
 #include "menu.h"
 #include "textlist.h"
 #include "funcname1.h"
-#include "terms.h"
 #include "istream.h"
 
 #ifndef HAVE_BCOPY

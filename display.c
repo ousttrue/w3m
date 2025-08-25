@@ -1,6 +1,6 @@
 #include "display.h"
-#include <signal.h>
 #include "fm.h"
+#include "screen.h"
 #include "tty.h"
 
 /* *INDENT-OFF* */

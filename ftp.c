@@ -5,11 +5,10 @@
 #include <signal.h>
 #include <setjmp.h>
 #include <time.h>
-
 #include "fm.h"
-#include "html.h"
 #include "myctype.h"
 #include "tty.h"
+#include "screen.h"
 
 #ifdef DEBUG
 #include <malloc.h>

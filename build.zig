@@ -13,8 +13,8 @@ const w3m_srcs = [_][]const u8{
     "queue.c",
     "w3m.c",
     "parseArgs.c",
+    "screen.c",
 
-    // "main.c",
     "file.c",
     "buffer.c",
     "display.c",
@@ -31,7 +31,6 @@ const w3m_srcs = [_][]const u8{
     "image.c",
     "symbol.c",
     "entity.c",
-    "terms.c",
     "url.c",
     "ftp.c",
     "mimehead.c",
