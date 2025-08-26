@@ -9,7 +9,7 @@
 #include <sys/signalfd.h>
 #include <unistd.h>
 #include <assert.h>
-#include <gc.h>
+// #include <gc.h>
 
 pthread_t g_thread;
 struct EventThreadArgs* g_args = 0;
@@ -71,6 +71,10 @@ void* thread_func(void* param)
         }
     }
 
+#define POOL_SIZE 1024
+    struct EventValue pool[POOL_SIZE];
+    int pool_index = 0;
+
     while (true) {
         struct epoll_event list[32];
         int ret = epoll_wait(epoll, list, sizeof(list) / sizeof(list[0]), -1);
@@ -100,7 +104,7 @@ void* thread_func(void* param)
                         break;
                     } else {
                         assert(ret == 1);
-                        struct EventValue* msg = (struct EventValue*)GC_MALLOC(sizeof(struct EventValue));
+                        struct EventValue* msg = &pool[pool_index++ % POOL_SIZE];
                         msg->type = EVT_TTY_CHAR;
                         msg->data.ch = c;
                         if (g_use_input) {

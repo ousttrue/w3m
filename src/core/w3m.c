@@ -7,7 +7,6 @@
 #include "graphicchar.h"
 #include "tty.h"
 #include "term_entry.h"
-#include "event_poller.h"
 #include "screen.h"
 #include <stdio.h>
 #include <signal.h>
@@ -34,6 +33,8 @@
 #include <sys/epoll.h>
 #include <assert.h>
 #include <sys/signalfd.h>
+
+#include <event_poller.h>
 
 #define DSTR_LEN 256
 

@@ -12,8 +12,6 @@ const w3m_srcs = [_][]const u8{
     "tty.c",
     "keybind.c",
     "util.c",
-    "event_poller.c",
-    "queue.c",
     "w3m.c",
     "parseArgs.c",
     "screen.c",
@@ -135,7 +133,7 @@ pub fn build(b: *std.Build) void {
     const mod = b.addModule("w3m", .{
         .target = target,
         .optimize = optimize,
-        .root_source_file = b.path("main.zig"),
+        .root_source_file = b.path("src/main.zig"),
     });
     const exe = b.addExecutable(.{
         .name = "w3m",
@@ -212,7 +210,36 @@ pub fn build(b: *std.Build) void {
         exe.step.dependOn(&install.step);
     }
 
+    const input = build_input(b, target, optimize);
+    exe.linkLibrary(input);
+
     _ = zcc.createStep(b, "cdb", targets.toOwnedSlice() catch @panic("OOM"));
+}
+
+pub fn build_input(
+    b: *std.Build,
+    target: std.Build.ResolvedTarget,
+    optimize: std.builtin.OptimizeMode,
+) *std.Build.Step.Compile {
+    const mod = b.addModule("input", .{
+        .target = target,
+        .optimize = optimize,
+    });
+    const lib = b.addLibrary(.{
+        .name = "input",
+        .root_module = mod,
+    });
+    lib.addCSourceFiles(.{
+        .root = b.path("src/input"),
+        .files = &.{
+            "event_poller.c",
+            "queue.c",
+        },
+    });
+    lib.linkLibC();
+    lib.installHeader(b.path("src/input/event_poller.h"), "event_poller.h");
+    lib.installHeader(b.path("src/input/queue.h"), "queue.h");
+    return lib;
 }
 
 fn gen_functable(b: *std.Build) *std.Build.Step.WriteFile {
