@@ -50,7 +50,6 @@ sig_chld(int signo)
         }
     }
     mySignal(SIGCHLD, sig_chld);
-    return;
 }
 
 static Str
@@ -245,7 +244,7 @@ cmp_anchor_hseq(const void* a, const void* b)
     return (*((const Anchor**)a))->hseq - (*((const Anchor**)b))->hseq;
 }
 
-const char* parseArgs(int argc, char** argv)
+void parseArgs(int argc, char** argv)
 {
     Buffer* newbuf = NULL;
     char* p;
@@ -440,8 +439,7 @@ const char* parseArgs(int argc, char** argv)
                     WrapDefault = FALSE;
                 else
                     WrapDefault = TRUE;
-            } 
-            else if (!strcmp("-ppc", argv[i])) {
+            } else if (!strcmp("-ppc", argv[i])) {
                 double ppc;
                 if (++i >= argc)
                     usage();
@@ -757,5 +755,7 @@ const char* parseArgs(int argc, char** argv)
 
     Currentbuf = Firstbuf;
 
-    return line_str;
+    if (line_str) {
+        _goLine(line_str);
+    }
 }

@@ -1,3 +1,3 @@
 #pragma once
 
-const char* parseArgs(int argc, char** argv);
+void parseArgs(int argc, char** argv);

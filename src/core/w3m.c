@@ -208,7 +208,7 @@ void fmInit(void)
         set_tty();
         set_int();
         initscr();
-        struct VirtualTerm *vt = getScreen();
+        struct VirtualTerm* vt = getScreen();
         setupscreen(vt);
         clear(ttyWriter());
         term_raw();
@@ -219,124 +219,92 @@ void fmInit(void)
     fmInitialized = TRUE;
 }
 
-int main_loop(const char* line_str)
+bool onFrame()
 {
-    if (line_str) {
-        _goLine(line_str);
+
+    if (add_download_list) {
+        add_download_list = FALSE;
+        ldDL();
     }
-
-    void* queue_buffer[100];
-    struct EventThreadArgs event_args = {
-        .queue = QUEUE_INITIALIZER(queue_buffer),
-        .tty_fd = get_tty_fd()
-    };
-    if (!event_init(&event_args)) {
-        return 2;
+    if (Currentbuf->submit) {
+        Anchor* a = Currentbuf->submit;
+        Currentbuf->submit = NULL;
+        gotoLine(Currentbuf, a->start.line);
+        Currentbuf->pos = a->start.pos;
+        _followForm(TRUE);
+        return false;
     }
-
-    for (;;) {
-        if (add_download_list) {
-            add_download_list = FALSE;
-            ldDL();
-        }
-        if (Currentbuf->submit) {
-            Anchor* a = Currentbuf->submit;
-            Currentbuf->submit = NULL;
-            gotoLine(Currentbuf, a->start.line);
-            Currentbuf->pos = a->start.pos;
-            _followForm(TRUE);
-            continue;
-        }
-        /* event processing */
-        if (CurrentEvent) {
-            CurrentKey = -1;
-            CurrentKeyData = NULL;
-            CurrentCmdData = (char*)CurrentEvent->data;
-            w3mFuncList[CurrentEvent->cmd].func();
-            displayBuffer();
-            CurrentCmdData = NULL;
-            CurrentEvent = CurrentEvent->next;
-            continue;
-        }
-        /* get keypress event */
-        if (Currentbuf->event) {
-            if (Currentbuf->event->status != AL_UNSET) {
-                CurrentAlarm = Currentbuf->event;
-                if (CurrentAlarm->sec == 0) { /* refresh (0sec) */
-                    Currentbuf->event = NULL;
-                    CurrentKey = -1;
-                    CurrentKeyData = NULL;
-                    CurrentCmdData = (char*)CurrentAlarm->data;
-                    w3mFuncList[CurrentAlarm->cmd].func();
-                    displayBuffer();
-                    CurrentCmdData = NULL;
-                    continue;
-                }
-            } else
-                Currentbuf->event = NULL;
-        }
-        if (!Currentbuf->event)
-            CurrentAlarm = &DefaultAlarm;
-        if (CurrentAlarm->sec > 0) {
-            mySignal(SIGALRM, SigAlarm);
-            alarm(CurrentAlarm->sec);
-        }
-
-        mySignal(SIGWINCH, resize_hook);
-        if (activeImage && displayImage && Currentbuf->img && !Currentbuf->image_loaded) {
-            loadImage(Currentbuf, IMG_FLAG_NEXT);
-            displayBuffer();
-            // continue;
-        }
-        if (need_resize_screen) {
-            resize_screen();
-            displayBuffer();
-            // continue;
-        }
-
-        struct EventValue* event = queue_dequeue(&event_args.queue);
-        // fprintf(stderr, "%d, %s", msgret, msgrcv_error_msg());
-        // perror("msgrcv");
-        // exit(4);
-        // if (msgret < 0) {
-        //     break;
-        // }
-        if (event->type == EVT_ERROR) {
-            break;
-        }
-        if (event->type == EVT_TIMEOUT) {
-            continue;
-        }
-
-        int c = event->data.ch;
-        if (CurrentAlarm->sec > 0) {
-            alarm(0);
-        }
-        if (IS_ASCII(c)) { /* Ascii */
-            if (('0' <= c) && (c <= '9') && (prec_num || (GlobalKeymap[c] == FUNCNAME_nulcmd))) {
-                prec_num = prec_num * 10 + (int)(c - '0');
-                if (prec_num > PREC_LIMIT)
-                    prec_num = PREC_LIMIT;
-            } else {
-                set_buffer_environ(Currentbuf);
-                save_buffer_position(Currentbuf);
-                keyPressEventProc((int)c);
-                displayBuffer();
-                prec_num = 0;
-            }
-        }
-        prev_key = CurrentKey;
+    /* event processing */
+    if (CurrentEvent) {
         CurrentKey = -1;
         CurrentKeyData = NULL;
+        CurrentCmdData = (char*)CurrentEvent->data;
+        w3mFuncList[CurrentEvent->cmd].func();
+        displayBuffer();
+        CurrentCmdData = NULL;
+        CurrentEvent = CurrentEvent->next;
+        return false;
+    }
+    /* get keypress event */
+    if (Currentbuf->event) {
+        if (Currentbuf->event->status != AL_UNSET) {
+            CurrentAlarm = Currentbuf->event;
+            if (CurrentAlarm->sec == 0) { /* refresh (0sec) */
+                Currentbuf->event = NULL;
+                CurrentKey = -1;
+                CurrentKeyData = NULL;
+                CurrentCmdData = (char*)CurrentAlarm->data;
+                w3mFuncList[CurrentAlarm->cmd].func();
+                displayBuffer();
+                CurrentCmdData = NULL;
+                return false;
+            }
+        } else
+            Currentbuf->event = NULL;
+    }
+    if (!Currentbuf->event)
+        CurrentAlarm = &DefaultAlarm;
+    if (CurrentAlarm->sec > 0) {
+        mySignal(SIGALRM, SigAlarm);
+        alarm(CurrentAlarm->sec);
     }
 
-    fmTerm();
-
-    const char* err_msg;
-    if (!event_deinit(&err_msg)) {
-        fprintf(stderr, "\n%s\n", err_msg);
+    mySignal(SIGWINCH, resize_hook);
+    if (activeImage && displayImage && Currentbuf->img && !Currentbuf->image_loaded) {
+        loadImage(Currentbuf, IMG_FLAG_NEXT);
+        displayBuffer();
+        // continue;
     }
-    return 0;
+    if (need_resize_screen) {
+        resize_screen();
+        displayBuffer();
+        // continue;
+    }
+
+    return true;
+}
+
+void onKeyInput(char c)
+{
+    if (CurrentAlarm->sec > 0) {
+        alarm(0);
+    }
+    if (IS_ASCII(c)) { /* Ascii */
+        if (('0' <= c) && (c <= '9') && (prec_num || (GlobalKeymap[c] == FUNCNAME_nulcmd))) {
+            prec_num = prec_num * 10 + (int)(c - '0');
+            if (prec_num > PREC_LIMIT)
+                prec_num = PREC_LIMIT;
+        } else {
+            set_buffer_environ(Currentbuf);
+            save_buffer_position(Currentbuf);
+            keyPressEventProc((int)c);
+            displayBuffer();
+            prec_num = 0;
+        }
+    }
+    prev_key = CurrentKey;
+    CurrentKey = -1;
+    CurrentKeyData = NULL;
 }
 
 static void
@@ -1451,7 +1419,7 @@ DEFUN(selBuf, SELECT, "Display buffer-stack panel")
 /* Suspend (on BSD), or run interactive shell (on SysV) */
 DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background")
 {
-    struct VirtualTerm *vt = getScreen();
+    struct VirtualTerm* vt = getScreen();
 #ifndef SIGSTOP
     char* shell;
 #endif /* not SIGSTOP */

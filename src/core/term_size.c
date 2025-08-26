@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <sys/ioctl.h>
 
+#include <term.h>
+
 #define MAX_LINE 200
 #define MAX_COLUMN 400
 static int LINES, COLS;
@@ -42,10 +44,13 @@ void setlinescols(int tty)
         LINES = i;
     if (COLS <= 0 && (p = getenv("COLUMNS")) != NULL && (i = atoi(p)) >= 0)
         COLS = i;
-    // if (LINES <= 0)
-    //     LINES = tgetnum("li"); /* number of line */
-    // if (COLS <= 0)
-    //     COLS = tgetnum("co"); /* number of column */
+
+    // term.h
+    if (LINES <= 0)
+        LINES = tgetnum("li"); /* number of line */
+    if (COLS <= 0)
+        COLS = tgetnum("co"); /* number of column */
+
     if (COLS > MAX_COLUMN)
         COLS = MAX_COLUMN;
     if (LINES > MAX_LINE)

@@ -210,36 +210,7 @@ pub fn build(b: *std.Build) void {
         exe.step.dependOn(&install.step);
     }
 
-    const input = build_input(b, target, optimize);
-    exe.linkLibrary(input);
-
     _ = zcc.createStep(b, "cdb", targets.toOwnedSlice() catch @panic("OOM"));
-}
-
-pub fn build_input(
-    b: *std.Build,
-    target: std.Build.ResolvedTarget,
-    optimize: std.builtin.OptimizeMode,
-) *std.Build.Step.Compile {
-    const mod = b.addModule("input", .{
-        .target = target,
-        .optimize = optimize,
-    });
-    const lib = b.addLibrary(.{
-        .name = "input",
-        .root_module = mod,
-    });
-    lib.addCSourceFiles(.{
-        .root = b.path("src/input"),
-        .files = &.{
-            "event_poller.c",
-            "queue.c",
-        },
-    });
-    lib.linkLibC();
-    lib.installHeader(b.path("src/input/event_poller.h"), "event_poller.h");
-    lib.installHeader(b.path("src/input/queue.h"), "queue.h");
-    return lib;
 }
 
 fn gen_functable(b: *std.Build) *std.Build.Step.WriteFile {
