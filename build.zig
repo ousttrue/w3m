@@ -145,7 +145,7 @@ pub fn build(b: *std.Build) void {
     targets.append(exe) catch @panic("OOM");
     exe.linkLibC();
     exe.addIncludePath(b.path("libwc"));
-    exe.addIncludePath(b.path("."));
+    // exe.addIncludePath(b.path("."));
 
     const flags = [_][]const u8{
         // "-Wno-implicit-int",
@@ -160,6 +160,7 @@ pub fn build(b: *std.Build) void {
         b.fmt("-DLOCALEDIR=\"{s}\"", .{localedir}),
     };
     exe.addCSourceFiles(.{
+        .root = b.path("src/core"),
         .files = &w3m_srcs,
         .flags = &flags,
     });
@@ -171,6 +172,7 @@ pub fn build(b: *std.Build) void {
             "-DUSE_UNICODE",
         },
     });
+    exe.addIncludePath(b.path("src/core"));
     for (system_libs) |lib| {
         exe.linkSystemLibrary(lib);
     }
@@ -249,17 +251,19 @@ fn build_mktable(
         .root_module = mod,
     });
     exe.addCSourceFiles(.{
+        .root = b.path("src"),
         .files = &.{
             "funcname/mktable.c",
             // "entity.c",
-            "Str.c",
-            "hash.c",
-            "myctype.c",
+            "core/Str.c",
+            "core/hash.c",
+            "core/myctype.c",
         },
         .flags = &.{
             "-DDUMMY",
         },
     });
+    exe.addIncludePath(b.path("src/core"));
     exe.linkLibC();
     for (libs) |lib| {
         exe.linkSystemLibrary(lib);
@@ -301,8 +305,8 @@ fn gen_funcname_tab(b: *std.Build) struct {
         "-ne",
         "/^DEFUN/{p;n;/^[ \t]/p;}",
     });
-    sed.addFileArg(b.path("w3m.c"));
-    sed.addFileArg(b.path("menu.c"));
+    sed.addFileArg(b.path("src/core/w3m.c"));
+    sed.addFileArg(b.path("src/core/menu.c"));
     // {
     //     const install = b.addInstallFile(sed.captureStdOut(), "01_sed.txt");
     //     b.getInstallStep().dependOn(&install.step);

@@ -1,6 +1,6 @@
 
 #include <string.h>
-#include "../alloc.h"
+#include "alloc.h"
 
 #include "wc.h"
 #include "ucs.h"

@@ -5,7 +5,7 @@
 #include <Str.h>
 #include "wc_types.h"
 #include "ces.h"
-#include "../writer.h"
+#include "writer.h"
 
 #define WC_FALSE 0
 #define WC_TRUE 1
