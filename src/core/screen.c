@@ -1,9 +1,10 @@
 #include "screen.h"
+#include "Str.h"
 #include "term_size.h"
-#include "term_entry.h"
-#include "graphicchar.h"
-#include "term_renderer.h"
-#include "fm.h"
+#include "alloc.h"
+#include "myctype.h"
+#include <wc.h>
+#include <wtf.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -14,7 +15,6 @@ struct VirtualTerm* getScreen()
 {
     return &g_screen;
 }
-
 
 #define SETPROP(var, prop) (var = (((var) & S_DIRTY) | prop))
 
@@ -58,7 +58,6 @@ void move(struct VirtualTerm* vt, int line, int column)
     if (column >= 0 && column < getCols())
         vt->CurColumn = column;
 }
-
 
 static int
 need_redraw(char* c1, l_prop pr1, char* c2, l_prop pr2)
@@ -301,64 +300,13 @@ void setbcolor(struct VirtualTerm* vt, int color)
         vt->CurrentMode |= (((color & 7) | 8) << 12);
 }
 
-static void MOVE(const struct Writer* writer, int line, int column)
+void clear(struct VirtualTerm* vt)
 {
-    putsWriter(writer, getMoveXY(column, line));
-}
-
-// Screen to STDOUT
-void refresh(const struct Writer* writer)
-{
-    struct VirtualTerm* vt = getScreen();
-    struct Frame* frame = New(struct Frame);
-    frame->lines = getLines();
-    frame->cols = getCols();
-    frame->cells = New_N(struct Cell, frame->lines * frame->cols);
-    struct Cell* cell = frame->cells;
-    wc_putc_init(InnerCharset, DisplayCharset);
-    for (int y = 0; y < frame->lines; ++y) {
-        Screen* l = vt->ScreenImage[y];
-        for (int x = 0; x < frame->cols; ++x, ++cell) {
-            cell->prop = l->lineprop[x];
-            if (cell->prop & S_EOL || CHMODE(cell->prop) == C_WCHAR2) {
-                memset(cell->str, 0, sizeof(cell->str));
-            } else {
-                struct ArrayInfo info = {
-                    .buf = cell->str,
-                    .len = sizeof(cell->str),
-                    .pos = 0,
-                };
-                struct Writer w;
-                makeArrayWriter(&w, &info);
-                wc_putc(&w, l->lineimage[x]);
-            }
-        }
-    }
-    wc_putc_end(writer);
-
-    wc_putc_init(InnerCharset, DisplayCharset);
-    // for (int line = 0; line <= getLines() - 1; line++) {
-    //     refreshLine(writer, vt, line);
-    // }
-    refreshFrame(writer, frame);
-    wc_putc_end(writer);
-
-    MOVE(writer, vt->CurLine, vt->CurColumn);
-    flushWriter(writer);
-}
-
-void clear(const struct Writer* writer)
-{
-    struct VirtualTerm* vt = getScreen();
-    struct TermEntry* t = getTermEntry();
-    int i, j;
-    l_prop* p;
-    putsWriter(writer, t->cl);
     move(vt, 0, 0);
-    for (i = 0; i < getLines(); i++) {
+    for (int i = 0; i < vt->max_LINES; i++) {
         vt->ScreenImage[i]->isdirty = 0;
-        p = vt->ScreenImage[i]->lineprop;
-        for (j = 0; j < getCols(); j++) {
+        l_prop* p = vt->ScreenImage[i]->lineprop;
+        for (int j = 0; j < vt->max_COLS; j++) {
             p[j] = S_EOL;
         }
     }
@@ -468,11 +416,6 @@ void addnstr_sup(struct VirtualTerm* vt, char* s, int n)
     }
     for (; i < n; i++)
         addch(vt, ' ');
-}
-
-void bell(const struct Writer* writer)
-{
-    putWriter(writer, 7);
 }
 
 void touch_cursor(struct VirtualTerm* vt)

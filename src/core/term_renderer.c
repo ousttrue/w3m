@@ -3,6 +3,8 @@
 #include "term_size.h"
 #include "screen.h"
 #include "graphicchar.h"
+#include "alloc.h"
+#include "fm.h"
 #include <wc.h>
 #include <stdio.h>
 #include <string.h>
@@ -14,6 +16,16 @@ enum RF_MODE {
     RF_CR_OK = 1,
     RF_NONEED_TO_MOVE = 2,
 };
+
+void termBell(const struct Writer* writer)
+{
+    putWriter(writer, 7);
+}
+
+void termClear(const struct Writer* writer)
+{
+    putsWriter(writer, getTermEntry()->cl);
+}
 
 static void MOVE(const struct Writer* writer, int line, int column)
 {
@@ -305,4 +317,50 @@ void refreshLine(const struct Writer* writer, struct VirtualTerm* vt, int line)
         putsWriter(writer, t->me);
         mode &= ~M_MEND;
     }
+}
+
+// Screen to STDOUT
+void refresh(const struct Writer* writer)
+{
+    struct VirtualTerm* vt = getScreen();
+    struct Frame* frame = New(struct Frame);
+    frame->lines = getLines();
+    frame->cols = getCols();
+    frame->cells = New_N(struct Cell, frame->lines * frame->cols);
+    struct Cell* cell = frame->cells;
+    wc_putc_init(InnerCharset, DisplayCharset);
+    for (int y = 0; y < frame->lines; ++y) {
+        Screen* l = vt->ScreenImage[y];
+        for (int x = 0; x < frame->cols; ++x, ++cell) {
+            cell->prop = l->lineprop[x];
+            if (cell->prop & S_EOL || CHMODE(cell->prop) == C_WCHAR2) {
+                memset(cell->str, 0, sizeof(cell->str));
+            } else {
+                struct ArrayInfo info = {
+                    .buf = cell->str,
+                    .len = sizeof(cell->str),
+                    .pos = 0,
+                };
+                struct Writer w;
+                makeArrayWriter(&w, &info);
+                const char* str = l->lineimage[x];
+                if (str) {
+                    wc_putc(&w, str);
+                } else {
+                    wc_putc(&w, " ");
+                }
+            }
+        }
+    }
+    wc_putc_end(writer);
+
+    wc_putc_init(InnerCharset, DisplayCharset);
+    // for (int line = 0; line <= getLines() - 1; line++) {
+    //     refreshLine(writer, vt, line);
+    // }
+    refreshFrame(writer, frame);
+    wc_putc_end(writer);
+
+    MOVE(writer, vt->CurLine, vt->CurColumn);
+    flushWriter(writer);
 }

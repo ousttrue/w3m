@@ -2,6 +2,7 @@
 #include "buffer.h"
 #include "term_size.h"
 #include "term_entry.h"
+#include "term_renderer.h"
 #include "graphicchar.h"
 #include "screen.h"
 #include "tty.h"
@@ -324,8 +325,10 @@ void displayBuffer()
     }
     // if (cline != buf->topLine || ccolumn != buf->currentColumn) {
     if (activeImage && (cline != buf->topLine || ccolumn != buf->currentColumn)) {
-        if (draw_image_flag)
-            clear(ttyWriter());
+        if (draw_image_flag) {
+            clear(getScreen());
+            termClear(ttyWriter());
+        }
         clearImage();
         loadImage(buf, IMG_FLAG_STOP);
         image_touch++;
@@ -966,7 +969,7 @@ void message(char* s, int return_x, int return_y)
 {
     if (!fmInitialized)
         return;
-    struct VirtualTerm *vt = getScreen();
+    struct VirtualTerm* vt = getScreen();
     move(vt, getLines() - 1, 0);
     addnstr(vt, s, getCols() - 1);
     clrtoeolx(vt);

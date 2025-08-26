@@ -1,4 +1,5 @@
 #include "etc.h"
+#include "term_renderer.h"
 #include "rc.h"
 #include "fm.h"
 #include "myctype.h"

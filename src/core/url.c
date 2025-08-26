@@ -1,4 +1,5 @@
 #include "url.h"
+#include "term_renderer.h"
 #include "fm.h"
 #include "etc.h"
 #include "screen.h"

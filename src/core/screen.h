@@ -1,7 +1,6 @@
 #pragma once
 #include <stddef.h>
 #include <stdbool.h>
-#include "writer.h"
 #include "line_prop.h"
 
 extern int Do_not_use_ti_te;
@@ -25,12 +24,7 @@ struct VirtualTerm {
 };
 
 struct VirtualTerm* getScreen();
-
-// screen to tty
-void refresh(const struct Writer* writer);
-void bell(const struct Writer* writer);
-void clear(const struct Writer* writer);
-
+void clear(struct VirtualTerm* vt);
 void getTCstr(struct VirtualTerm* vt);
 void setupscreen(struct VirtualTerm* vt);
 void move(struct VirtualTerm* vt, int line, int column);

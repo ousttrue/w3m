@@ -1,4 +1,5 @@
 #include "display.h"
+#include "term_renderer.h"
 #include "buffer.h"
 #include "term_size.h"
 #include "etc.h"

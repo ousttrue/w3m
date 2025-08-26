@@ -1,6 +1,7 @@
 #include "w3m.h"
 #define MAINPROGRAM
 #include "buffer.h"
+#include "term_renderer.h"
 #include "etc.h"
 #include "fm.h"
 #include "term_size.h"
@@ -210,7 +211,7 @@ void fmInit(void)
         initscr();
         struct VirtualTerm* vt = getScreen();
         setupscreen(vt);
-        clear(ttyWriter());
+        termClear(ttyWriter());
         term_raw();
         term_noecho();
         if (displayImage)

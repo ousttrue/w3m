@@ -16,3 +16,6 @@ struct Frame {
 };
 
 void refreshFrame(const struct Writer* writer, struct Frame* frame);
+void refresh(const struct Writer* writer);
+void termBell(const struct Writer* writer);
+void termClear(const struct Writer* writer);

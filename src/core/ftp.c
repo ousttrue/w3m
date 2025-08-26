@@ -1,15 +1,15 @@
-/* $Id: ftp.c,v 1.42 2010/12/15 10:50:24 htrb Exp $ */
+#include "fm.h"
+#include "myctype.h"
+#include "tty.h"
+#include "screen.h"
+#include "etc.h"
+#include "term_renderer.h"
 #include <stdio.h>
 #include <pwd.h>
 #include <Str.h>
 #include <signal.h>
 #include <setjmp.h>
 #include <time.h>
-#include "fm.h"
-#include "myctype.h"
-#include "tty.h"
-#include "screen.h"
-#include "etc.h"
 
 #ifdef DEBUG
 #include <malloc.h>
