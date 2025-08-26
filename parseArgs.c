@@ -589,7 +589,7 @@ const char* parseArgs(int argc, char** argv)
     mySignal(SIGPIPE, SigPipe);
 
     orig_GC_warn_proc = GC_get_warn_proc();
-    GC_set_warn_proc(wrap_GC_warn_proc);
+    GC_set_warn_proc((void*)wrap_GC_warn_proc);
 
     err_msg = Strnew();
     if (load_argc == 0) {

@@ -2,7 +2,10 @@ const std = @import("std");
 const zcc = @import("compile_commands.zig");
 
 const system_libs = [_][]const u8{
-    "gc", "ssl", "ncurses", "crypto",
+    // "gc",
+    "ssl",
+    "ncurses",
+    "crypto",
 };
 
 const w3m_srcs = [_][]const u8{
@@ -91,6 +94,18 @@ pub fn build(b: *std.Build) void {
     var targets = std.array_list.Managed(*std.Build.Step.Compile).init(b.allocator);
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
+
+    const gc_dep = b.dependency("gc", .{
+        .target = target,
+        .optimize = optimize,
+    });
+    const gc = gc_dep.artifact("gc");
+    // const gc_include_dir = gc.installed_headers_include_tree orelse {
+    //     @panic("no gc header");
+    // };
+    const gc_include_dir = gc_dep.path("include");
+    // std.log.debug("{s}", .{gc_include_dir.getDisplayName()});
+
     // const SHELL = "/bin/bash";
     const PACKAGE = "w3m";
     // const VERSION = "0.5.3";
@@ -160,6 +175,9 @@ pub fn build(b: *std.Build) void {
         exe.linkSystemLibrary(lib);
     }
 
+    exe.linkLibrary(gc);
+    exe.addIncludePath(gc_include_dir);
+
     const wf = gen_functable(b);
     {
         const install = b.addInstallDirectory(.{
@@ -174,7 +192,10 @@ pub fn build(b: *std.Build) void {
     }
 
     {
-        const mktable = build_mktable(b, b.graph.host, .ReleaseSafe, &.{"gc"});
+        const mktable = build_mktable(b, b.graph.host, .ReleaseSafe, &.{});
+        mktable.linkLibrary(gc);
+        mktable.addIncludePath(gc_include_dir);
+
         // {
         //     b.installArtifact(mktable);
         // }
