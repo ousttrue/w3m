@@ -2,16 +2,10 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "writer.h"
+#include "line_prop.h"
 
 extern int Do_not_use_ti_te;
 
-typedef unsigned short l_prop;
-enum LineStatus {
-    L_DIRTY = 0x01,
-    L_UNUSED = 0x02,
-    L_NEED_CE = 0x04,
-    L_CLRTOEOL = 0x08,
-};
 typedef struct scline {
     char** lineimage;
     l_prop* lineprop;
@@ -28,17 +22,6 @@ struct VirtualTerm {
     Screen** ScreenImage; // = NULL;
     l_prop CurrentMode; // = 0;
     int graph_enabled; // = 0;
-};
-
-struct Cell {
-    char str[8];
-    l_prop prop;
-};
-// static_assert(sizeof(struct Cell) == 16, "Cell");
-struct Frame {
-    int lines;
-    int cols;
-    struct Cell* cells;
 };
 
 struct VirtualTerm* getScreen();

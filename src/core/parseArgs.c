@@ -1,4 +1,5 @@
 #include "parseArgs.h"
+#include "term_renderer.h"
 #include "etc.h"
 #include "screen.h"
 #include "graphicchar.h"

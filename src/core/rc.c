@@ -6,6 +6,7 @@
 #include "fm.h"
 #include "term_entry.h"
 #include "term_size.h"
+#include "term_renderer.h"
 #include "myctype.h"
 #include "proto.h"
 #include <stdio.h>
