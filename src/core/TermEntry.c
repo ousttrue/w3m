@@ -1,4 +1,4 @@
-#include "term_entry.h"
+#include "TermEntry.h"
 #include <stdio.h>
 #include <stdlib.h> // getenv
 #include <string.h>

@@ -1,5 +1,5 @@
 #include "term_renderer.h"
-#include "term_entry.h"
+#include "TermEntry.h"
 #include "frame.h"
 #include "graphicchar.h"
 #include <stdio.h>

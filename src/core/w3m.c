@@ -9,7 +9,7 @@
 #include "term_size.h"
 #include "graphicchar.h"
 #include "tty.h"
-#include "term_entry.h"
+#include "TermEntry.h"
 #include "screen.h"
 #include <stdio.h>
 #include <signal.h>

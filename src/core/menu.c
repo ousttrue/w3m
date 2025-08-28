@@ -1,7 +1,7 @@
 #include "menu.h"
 #include "term_size.h"
 #include "screen.h"
-#include "term_entry.h"
+#include "TermEntry.h"
 #include "graphicchar.h"
 #include "fm.h"
 #include "func.h"

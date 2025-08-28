@@ -1,7 +1,7 @@
 #include "display.h"
 #include "buffer.h"
 #include "term_size.h"
-#include "term_entry.h"
+#include "TermEntry.h"
 #include "term_renderer.h"
 #include "graphicchar.h"
 #include "screen.h"

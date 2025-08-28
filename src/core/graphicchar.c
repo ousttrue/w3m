@@ -1,5 +1,5 @@
 #include "graphicchar.h"
-#include "term_entry.h"
+#include "TermEntry.h"
 #include <string.h>
 
 enum GrahicCharType UseGraphicChar = GRAPHIC_CHAR_CHARSET;

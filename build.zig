@@ -22,7 +22,7 @@ const w3m_srcs = [_][]const u8{
     "w3m.c",
     "parseArgs.c",
     "screen.c",
-    "term_entry.c",
+    "TermEntry.c",
     "graphicchar.c",
     "term_size.c",
     "term_renderer.c",
