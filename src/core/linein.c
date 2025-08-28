@@ -1,6 +1,7 @@
 #include "linein.h"
 #include "screen.h"
 #include "term_renderer.h"
+#include "frame.h"
 #include "tty.h"
 #include "term_size.h"
 #include "fm.h"
@@ -172,7 +173,10 @@ char* inputLineHistSearch(char* prompt, char* def_str, int flag, Hist* hist, Inc
             addStr(strBuf->ptr, strProp, CLen, offset, getCols() - opos);
         clrtoeolx(vt);
         move(vt, getLines() - 1, opos + x - offset);
-        refresh(getScreen(), ttyWriter());
+        struct Frame* frame = screenToFrame(getScreen());
+        refreshFrame(ttyWriter(), frame);
+        MOVE(ttyWriter(), getScreen()->CurLine, getScreen()->CurColumn);
+        flushWriter(ttyWriter());
 
     next_char:
         c = getch();
@@ -229,7 +233,11 @@ char* inputLineHistSearch(char* prompt, char* def_str, int flag, Hist* hist, Inc
         return NULL;
 
     move(getScreen(), getLines() - 1, 0);
-    refresh(getScreen(), ttyWriter());
+    struct Frame* frame = screenToFrame(getScreen());
+    refreshFrame(ttyWriter(), frame);
+    MOVE(ttyWriter(), getScreen()->CurLine, getScreen()->CurColumn);
+    flushWriter(ttyWriter());
+
     p = strBuf->ptr;
     if (flag & (IN_FILENAME | IN_COMMAND)) {
         SKIP_BLANKS(p);

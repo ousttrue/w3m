@@ -5,8 +5,10 @@
 #include "term_renderer.h"
 #include "graphicchar.h"
 #include "screen.h"
+#include "frame.h"
 #include "tty.h"
 #include "fm.h"
+#include <assert.h>
 
 /* *INDENT-OFF* */
 
@@ -284,12 +286,11 @@ make_lastline_message(Buffer* buf)
     return msg;
 }
 
-void displayBuffer()
+struct Frame* displayBuffer()
 {
     struct VirtualTerm* vt = getScreen();
     Buffer* buf = Currentbuf;
-    if (!buf)
-        return;
+    assert(buf);
 
     // if (buf->topLine == NULL && readBufferCache(buf) == 0) { /* clear_buffer */
     //     mode = B_FORCE_REDRAW;
@@ -370,6 +371,8 @@ void displayBuffer()
         chkURLBuffer(buf);
         displayBuffer();
     }
+
+    return screenToFrame(getScreen());
 }
 
 static void

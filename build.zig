@@ -20,6 +20,7 @@ const w3m_srcs = [_][]const u8{
     "term_size.c",
     "writer.c",
     "term_renderer.c",
+    "frame.c",
 
     "file.c",
     "buffer.c",

@@ -757,26 +757,19 @@ got_image_size:
     return TRUE;
 }
 
-static void MOVE(int line, int column)
-{
-    writestr(getMoveXY(column, line));
-}
-
 void put_image_osc5379(int cursorX, int cursorY,
     char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh)
 {
-    Str buf;
     char* size;
-
     if (w > 0 && h > 0)
         size = Sprintf("%dx%d", w, h)->ptr;
     else
         size = "";
 
-    MOVE(y, x);
-    buf = Sprintf("\x1b]5379;show_picture %s %s %dx%d+%d+%d\x07", url, size, sw, sh, sx, sy);
+    MOVE(ttyWriter(), y, x);
+    Str buf = Sprintf("\x1b]5379;show_picture %s %s %dx%d+%d+%d\x07", url, size, sw, sh, sx, sy);
     writestr(buf->ptr);
-    MOVE(cursorY, cursorX);
+    MOVE(ttyWriter(), cursorY, cursorX);
 }
 
 void put_image_iterm2(int cursorX, int cursorY,
@@ -806,7 +799,7 @@ void put_image_iterm2(int cursorX, int cursorY,
                   ":",
         url, st.st_size, w, h);
 
-    MOVE(y, x);
+    MOVE(ttyWriter(), y, x);
 
     writestr(buf->ptr);
 
@@ -831,7 +824,7 @@ void put_image_iterm2(int cursorX, int cursorY,
 cleanup:
     fclose(fp);
     writestr("\a");
-    MOVE(cursorY, cursorX);
+    MOVE(ttyWriter(), cursorY, cursorX);
 }
 
 void put_image_kitty(int cursorX, int cursorY,
@@ -917,7 +910,7 @@ void put_image_kitty(int cursorX, int cursorY,
     if (!fp)
         return;
 
-    MOVE(y, x);
+    MOVE(ttyWriter(), y, x);
 
     cbuf = GC_MALLOC_ATOMIC(3072); /* base64-encoded chunks of 4096 bytes */
     if (!cbuf)
@@ -962,7 +955,7 @@ void put_image_kitty(int cursorX, int cursorY,
     }
 cleanup:
     fclose(fp);
-    MOVE(cursorY, cursorX);
+    MOVE(ttyWriter(), cursorY, cursorX);
 }
 
 static void
@@ -1063,7 +1056,7 @@ void put_image_sixel(int cursorX, int cursorY,
     MySignalHandler (*volatile prevquit)(SIGNAL_ARG);
     MySignalHandler (*volatile prevstop)(SIGNAL_ARG);
 
-    MOVE(y, x);
+    MOVE(ttyWriter(), y, x);
     flush_tty();
 
     do_anim = (n_terminal_image == 1 && x == 0 && y == 0 && sx == 0 && sy == 0);
@@ -1134,5 +1127,5 @@ void put_image_sixel(int cursorX, int cursorY,
         }
     }
 
-    MOVE(cursorY, cursorX);
+    MOVE(ttyWriter(), cursorY, cursorX);
 }

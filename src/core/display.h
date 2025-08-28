@@ -1,4 +1,4 @@
 #pragma once
 
-// buffer to screen
-void displayBuffer();
+struct Frame;
+struct Frame* displayBuffer();

@@ -1,6 +1,7 @@
 #include "w3m.h"
 #define MAINPROGRAM
 #include "buffer.h"
+#include "frame.h"
 #include "term_renderer.h"
 #include "etc.h"
 #include "fm.h"
@@ -242,7 +243,10 @@ bool onFrame()
         CurrentCmdData = (char*)CurrentEvent->data;
         w3mFuncList[CurrentEvent->cmd].func();
         displayBuffer();
-        refresh(getScreen(), ttyWriter());
+        struct Frame* frame = screenToFrame(getScreen());
+        refreshFrame(ttyWriter(), frame);
+        MOVE(ttyWriter(), getScreen()->CurLine, getScreen()->CurColumn);
+        flushWriter(ttyWriter());
         CurrentCmdData = NULL;
         CurrentEvent = CurrentEvent->next;
         return false;
@@ -257,8 +261,12 @@ bool onFrame()
                 CurrentKeyData = NULL;
                 CurrentCmdData = (char*)CurrentAlarm->data;
                 w3mFuncList[CurrentAlarm->cmd].func();
-                displayBuffer();
-                refresh(getScreen(), ttyWriter());
+
+                struct Frame* frame = displayBuffer();
+                refreshFrame(ttyWriter(), frame);
+                MOVE(ttyWriter(), getScreen()->CurLine, getScreen()->CurColumn);
+                flushWriter(ttyWriter());
+
                 CurrentCmdData = NULL;
                 return false;
             }
@@ -275,15 +283,18 @@ bool onFrame()
     mySignal(SIGWINCH, resize_hook);
     if (activeImage && displayImage && Currentbuf->img && !Currentbuf->image_loaded) {
         loadImage(Currentbuf, IMG_FLAG_NEXT);
-        displayBuffer();
-        refresh(getScreen(), ttyWriter());
+        struct Frame* frame = displayBuffer();
+        refreshFrame(ttyWriter(), frame);
+        MOVE(ttyWriter(), getScreen()->CurLine, getScreen()->CurColumn);
+        flushWriter(ttyWriter());
         // continue;
     }
     if (need_resize_screen) {
         resize_screen();
-        displayBuffer();
-        refresh(getScreen(), ttyWriter());
-        // continue;
+        struct Frame* frame = displayBuffer();
+        refreshFrame(ttyWriter(), frame);
+        MOVE(ttyWriter(), getScreen()->CurLine, getScreen()->CurColumn);
+        flushWriter(ttyWriter()); // continue;
     }
 
     return true;
@@ -303,9 +314,10 @@ void onKeyInput(char c)
             set_buffer_environ(Currentbuf);
             save_buffer_position(Currentbuf);
             keyPressEventProc((int)c);
-            displayBuffer();
-            refresh(getScreen(), ttyWriter());
-            prec_num = 0;
+            struct Frame* frame = displayBuffer();
+            refreshFrame(ttyWriter(), frame);
+            MOVE(ttyWriter(), getScreen()->CurLine, getScreen()->CurColumn);
+            flushWriter(ttyWriter()); // continue;            prec_num = 0;
         }
     }
     prev_key = CurrentKey;
