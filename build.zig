@@ -8,6 +8,13 @@ const system_libs = [_][]const u8{
     "crypto",
 };
 
+const output_public_headers = [_][]const u8{
+    "writer.h",
+};
+const output_srcs = [_][]const u8{
+    "writer.c",
+};
+
 const w3m_srcs = [_][]const u8{
     "tty.c",
     "keybind.c",
@@ -18,7 +25,6 @@ const w3m_srcs = [_][]const u8{
     "term_entry.c",
     "graphicchar.c",
     "term_size.c",
-    "writer.c",
     "term_renderer.c",
     "frame.c",
     "putc.c",
@@ -144,6 +150,9 @@ pub fn build(b: *std.Build) void {
     });
     exe.linkLibrary(wc_dep.artifact(("wc")));
 
+    const output = build_output(b, target, optimize);
+    exe.linkLibrary(output);
+
     exe.linkLibrary(gc);
     exe.addIncludePath(gc_include_dir);
 
@@ -180,6 +189,31 @@ pub fn build(b: *std.Build) void {
     }
 
     _ = zcc.createStep(b, "cdb", targets.toOwnedSlice() catch @panic("OOM"));
+}
+
+fn build_output(
+    b: *std.Build,
+    target: std.Build.ResolvedTarget,
+    optimize: std.builtin.OptimizeMode,
+) *std.Build.Step.Compile {
+    const mod = b.addModule("output", .{
+        .target = target,
+        .optimize = optimize,
+    });
+    const lib = b.addLibrary(.{
+        .name = "output",
+        .root_module = mod,
+    });
+    lib.linkLibC();
+    lib.addCSourceFiles(.{
+        .root = b.path("src/output"),
+        .files = &output_srcs,
+        // .flags = &flags,
+    });
+    for (output_public_headers) |header| {
+        lib.installHeader(b.path("src/output").path(b, header), header);
+    }
+    return lib;
 }
 
 fn gen_functable(b: *std.Build) *std.Build.Step.WriteFile {
