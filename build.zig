@@ -10,9 +10,15 @@ const system_libs = [_][]const u8{
 
 const output_public_headers = [_][]const u8{
     "writer.h",
+    "TermEntry.h",
+    "graphicchar.h",
+    "frame.h",
+    "line_prop.h",
 };
 const output_srcs = [_][]const u8{
     "writer.c",
+    "TermEntry.c",
+    "graphicchar.c",
 };
 
 const w3m_srcs = [_][]const u8{
@@ -22,11 +28,8 @@ const w3m_srcs = [_][]const u8{
     "w3m.c",
     "parseArgs.c",
     "screen.c",
-    "TermEntry.c",
-    "graphicchar.c",
     "term_size.c",
     "term_renderer.c",
-    "frame.c",
     "putc.c",
 
     "file.c",

@@ -1,7 +1,7 @@
 #include "linein.h"
 #include "screen.h"
 #include "term_renderer.h"
-#include "frame.h"
+#include "display.h"
 #include "tty.h"
 #include "term_size.h"
 #include "fm.h"
