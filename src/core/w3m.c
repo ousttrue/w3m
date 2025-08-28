@@ -95,6 +95,201 @@ static int searchKeyNum(void);
 
 int enable_inline_image;
 
+static void*
+die_oom(size_t bytes)
+{
+    fprintf(stderr, "Out of memory: %lu bytes unavailable!\n", (unsigned long)bytes);
+    exit(1);
+    /*
+     * Suppress compiler warning: function might return no value
+     * This code is never reached.
+     */
+    return NULL;
+}
+
+static void
+sig_chld(int signo)
+{
+    int p_stat;
+    pid_t pid;
+
+    while ((pid = waitpid(-1, &p_stat, WNOHANG)) > 0) {
+        DownloadList* d;
+
+        if (WIFEXITED(p_stat)) {
+            for (d = FirstDL; d != NULL; d = d->next) {
+                if (d->pid == pid) {
+                    d->err = WEXITSTATUS(p_stat);
+                    break;
+                }
+            }
+        }
+    }
+    mySignal(SIGCHLD, sig_chld);
+}
+
+static void
+SigPipe(SIGNAL_ARG)
+{
+#ifdef USE_MIGEMO
+    init_migemo();
+#endif
+    mySignal(SIGPIPE, SigPipe);
+    SIGNAL_RETURN;
+}
+
+static GC_warn_proc orig_GC_warn_proc = NULL;
+#define GC_WARN_KEEP_MAX (20)
+
+static void
+wrap_GC_warn_proc(char* msg, GC_word arg)
+{
+    if (fmInitialized) {
+        /* *INDENT-OFF* */
+        static struct {
+            char* msg;
+            GC_word arg;
+        } msg_ring[GC_WARN_KEEP_MAX];
+        /* *INDENT-ON* */
+        static int i = 0;
+        static int n = 0;
+        static int lock = 0;
+        int j;
+
+        j = (i + n) % (sizeof(msg_ring) / sizeof(msg_ring[0]));
+        msg_ring[j].msg = msg;
+        msg_ring[j].arg = arg;
+
+        if (n < sizeof(msg_ring) / sizeof(msg_ring[0]))
+            ++n;
+        else
+            ++i;
+
+        if (!lock) {
+            lock = 1;
+
+            for (; n > 0; --n, ++i) {
+                i %= sizeof(msg_ring) / sizeof(msg_ring[0]);
+
+                printf(msg_ring[i].msg, (unsigned long)msg_ring[i].arg);
+                sleep_till_anykey(1000, 1);
+            }
+
+            lock = 0;
+        }
+    } else if (orig_GC_warn_proc)
+        orig_GC_warn_proc(msg, arg);
+    else
+        fprintf(stderr, msg, (unsigned long)arg);
+}
+
+void initialize()
+{
+    wc_uint8 auto_detect;
+#if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
+    char** getimage_args = NULL;
+#endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
+    if (!getenv("GC_LARGE_ALLOC_WARN_INTERVAL"))
+        set_environ("GC_LARGE_ALLOC_WARN_INTERVAL", "30000");
+    GC_INIT();
+    GC_set_oom_fn(die_oom);
+    setlocale(LC_ALL, "");
+    bindtextdomain(PACKAGE, LOCALEDIR);
+    textdomain(PACKAGE);
+
+    NO_proxy_domains = newTextList();
+    fileToDelete = newTextList();
+
+    CurrentDir = currentdir();
+    CurrentPid = (int)getpid();
+#if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
+    if (argv[0] && *argv[0])
+        MyProgramName = argv[0];
+#endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
+    BookmarkFile = NULL;
+    config_file = NULL;
+
+    {
+        char hostname[HOST_NAME_MAX + 2];
+        if (gethostname(hostname, HOST_NAME_MAX + 2) == 0) {
+            size_t hostname_len;
+            /* Don't use hostname if it is truncated.  */
+            hostname[HOST_NAME_MAX + 1] = '\0';
+            hostname_len = strlen(hostname);
+            if (hostname_len <= HOST_NAME_MAX && hostname_len < STR_SIZE_MAX)
+                HostName = allocStr(hostname, (int)hostname_len);
+        }
+    }
+
+    char* Locale = NULL;
+    if (non_null(Locale = getenv("LC_ALL")) || non_null(Locale = getenv("LC_CTYPE")) || non_null(Locale = getenv("LANG"))) {
+        DisplayCharset = wc_guess_locale_charset(Locale, DisplayCharset);
+        DocumentCharset = wc_guess_locale_charset(Locale, DocumentCharset);
+        SystemCharset = wc_guess_locale_charset(Locale, SystemCharset);
+    }
+
+    /* initializations */
+    init_rc();
+
+    LoadHist = newHist();
+    SaveHist = newHist();
+    ShellHist = newHist();
+    TextHist = newHist();
+    URLHist = newHist();
+
+    if (FollowLocale && Locale) {
+        DisplayCharset = wc_guess_locale_charset(Locale, DisplayCharset);
+        SystemCharset = wc_guess_locale_charset(Locale, SystemCharset);
+    }
+    // auto_detect = WcOption.auto_detect;
+    BookmarkCharset = DocumentCharset;
+
+    char* p;
+    if (!non_null(HTTP_proxy) && ((p = getenv("HTTP_PROXY")) || (p = getenv("http_proxy")) || (p = getenv("HTTP_proxy"))))
+        HTTP_proxy = p;
+    if (!non_null(HTTPS_proxy) && ((p = getenv("HTTPS_PROXY")) || (p = getenv("https_proxy")) || (p = getenv("HTTPS_proxy"))))
+        HTTPS_proxy = p;
+    if (HTTPS_proxy == NULL && non_null(HTTP_proxy))
+        HTTPS_proxy = HTTP_proxy;
+#ifdef USE_GOPHER
+    if (!non_null(GOPHER_proxy) && ((p = getenv("GOPHER_PROXY")) || (p = getenv("gopher_proxy")) || (p = getenv("GOPHER_proxy"))))
+        GOPHER_proxy = p;
+#endif /* USE_GOPHER */
+    if (!non_null(FTP_proxy) && ((p = getenv("FTP_PROXY")) || (p = getenv("ftp_proxy")) || (p = getenv("FTP_proxy"))))
+        FTP_proxy = p;
+    if (!non_null(NO_proxy) && ((p = getenv("NO_PROXY")) || (p = getenv("no_proxy")) || (p = getenv("NO_proxy"))))
+        NO_proxy = p;
+#ifdef USE_NNTP
+    if (!non_null(NNTP_server) && (p = getenv("NNTPSERVER")) != NULL)
+        NNTP_server = p;
+    if (!non_null(NNTP_mode) && (p = getenv("NNTPMODE")) != NULL)
+        NNTP_mode = p;
+#endif
+
+    if (!non_null(Editor) && (p = getenv("EDITOR")) != NULL)
+        Editor = p;
+    if (!non_null(Mailer) && (p = getenv("MAILER")) != NULL)
+        Mailer = p;
+
+    CurrentKey = -1;
+    if (BookmarkFile == NULL)
+        BookmarkFile = rcFile(BOOKMARK);
+
+    fmInit();
+    mySignal(SIGWINCH, resize_hook);
+
+    sync_with_option();
+    initCookie();
+    if (UseHistory)
+        loadHistory(URLHist);
+
+    mySignal(SIGCHLD, sig_chld);
+    mySignal(SIGPIPE, SigPipe);
+
+    orig_GC_warn_proc = GC_get_warn_proc();
+    GC_set_warn_proc((void*)wrap_GC_warn_proc);
+}
+
 void resetTerm(void)
 {
     struct TermEntry* t = getTermEntry();

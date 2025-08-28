@@ -43,6 +43,7 @@ export fn event_end_input(_: *const GetChFunc) void {
 }
 
 pub fn main() !void {
+    c.initialize();
     c.parseArgs(
         @intCast(std.os.argv.len),
         @ptrCast(std.os.argv),

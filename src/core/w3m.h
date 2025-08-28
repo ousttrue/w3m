@@ -1,6 +1,7 @@
 #pragma once
 #include <stdbool.h>
 
+void initialize();
 void fmInit();
 void fmTerm();
 
