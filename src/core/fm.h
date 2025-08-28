@@ -949,11 +949,11 @@ global char* mimetypes_files init(USER_MIMETYPES ", " SYS_MIMETYPES);
 
 global TextList* fileToDelete;
 
-extern Hist* LoadHist;
-extern Hist* SaveHist;
-extern Hist* URLHist;
-extern Hist* ShellHist;
-extern Hist* TextHist;
+extern struct Hist* LoadHist;
+extern struct Hist* SaveHist;
+extern struct Hist* URLHist;
+extern struct Hist* ShellHist;
+extern struct Hist* TextHist;
 global int UseHistory init(TRUE);
 global int URLHistSize init(100);
 global int SaveURLHist init(TRUE);

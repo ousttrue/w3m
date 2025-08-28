@@ -40,11 +40,11 @@
 
 #define DSTR_LEN 256
 
-Hist* LoadHist;
-Hist* SaveHist;
-Hist* URLHist;
-Hist* ShellHist;
-Hist* TextHist;
+struct Hist* LoadHist;
+struct Hist* SaveHist;
+struct Hist* URLHist;
+struct Hist* ShellHist;
+struct Hist* TextHist;
 
 typedef struct _Event {
     int cmd;
@@ -2806,7 +2806,7 @@ goURL0(char* prompt, int relative)
 
     url = searchKeyData();
     if (url == NULL) {
-        Hist* hist = copyHist(URLHist);
+        struct Hist* hist = copyHist(URLHist);
         Anchor* a;
 
         current = baseURL(Currentbuf);

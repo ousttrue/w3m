@@ -1,4 +1,3 @@
-/* $Id: hash.h,v 1.6 2003/09/24 18:48:59 ukai Exp $ */
 #ifndef HASH_H
 #define HASH_H
 

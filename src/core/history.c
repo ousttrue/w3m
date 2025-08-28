@@ -1,9 +1,17 @@
-/* $Id: history.c,v 1.11 2003/09/26 17:59:51 ukai Exp $ */
+#include "history.h"
+#include "hash.h"
 #include "fm.h"
+
+struct Hist {
+    HistList* list;
+    HistItem* current;
+    Hash_sv* hash;
+    long long mtime;
+};
 
 /* Merge entries from their history into ours */
 static int
-mergeHistory(Hist* ours, Hist* theirs)
+mergeHistory(struct Hist* ours, struct Hist* theirs)
 {
     HistItem* item;
 
@@ -15,7 +23,7 @@ mergeHistory(Hist* ours, Hist* theirs)
 }
 
 Buffer*
-historyBuffer(Hist* hist)
+historyBuffer(struct Hist* hist)
 {
     Str src = Strnew();
     HistItem* item;
@@ -43,7 +51,7 @@ historyBuffer(Hist* hist)
     return loadHTMLString(src);
 }
 
-int loadHistory(Hist* hist)
+int loadHistory(struct Hist* hist)
 {
     FILE* f;
     Str line;
@@ -73,10 +81,10 @@ int loadHistory(Hist* hist)
     return 0;
 }
 
-void saveHistory(Hist* hist, size_t size)
+void saveHistory(struct Hist* hist, size_t size)
 {
     FILE* f;
-    Hist* fhist;
+    struct Hist* fhist;
     HistItem* item;
     char* histf;
     char* tmpf;
@@ -123,20 +131,20 @@ fail:
  * if history is used or not.
  */
 
-Hist* newHist(void)
+struct Hist* newHist(void)
 {
-    Hist* hist;
+    struct Hist* hist;
 
-    hist = New(Hist);
+    hist = New(struct Hist);
     hist->list = (HistList*)newGeneralList();
     hist->current = NULL;
     hist->hash = NULL;
     return hist;
 }
 
-Hist* copyHist(Hist* hist)
+struct Hist* copyHist(struct Hist* hist)
 {
-    Hist* new;
+    struct Hist* new;
     HistItem* item;
 
     if (hist == NULL)
@@ -148,7 +156,7 @@ Hist* copyHist(Hist* hist)
 }
 
 HistItem*
-unshiftHist(Hist* hist, char* ptr)
+unshiftHist(struct Hist* hist, char* ptr)
 {
     HistItem* item;
 
@@ -166,7 +174,7 @@ unshiftHist(Hist* hist, char* ptr)
 }
 
 HistItem*
-pushHist(Hist* hist, char* ptr)
+pushHist(struct Hist* hist, char* ptr)
 {
     HistItem* item;
 
@@ -186,7 +194,7 @@ pushHist(Hist* hist, char* ptr)
 /* Don't mix pushHashHist() and pushHist()/unshiftHist(). */
 
 HistItem*
-pushHashHist(Hist* hist, char* ptr)
+pushHashHist(struct Hist* hist, char* ptr)
 {
     HistItem* item;
 
@@ -210,7 +218,7 @@ pushHashHist(Hist* hist, char* ptr)
 }
 
 HistItem*
-getHashHist(Hist* hist, char* ptr)
+getHashHist(struct Hist* hist, char* ptr)
 {
     HistItem* item;
 
@@ -224,7 +232,7 @@ getHashHist(Hist* hist, char* ptr)
     return (HistItem*)getHash_sv(hist->hash, ptr, NULL);
 }
 
-char* lastHist(Hist* hist)
+char* lastHist(struct Hist* hist)
 {
     if (hist == NULL || hist->list == NULL)
         return NULL;
@@ -235,7 +243,7 @@ char* lastHist(Hist* hist)
     return NULL;
 }
 
-char* nextHist(Hist* hist)
+char* nextHist(struct Hist* hist)
 {
     if (hist == NULL || hist->list == NULL)
         return NULL;
@@ -246,7 +254,7 @@ char* nextHist(Hist* hist)
     return NULL;
 }
 
-char* prevHist(Hist* hist)
+char* prevHist(struct Hist* hist)
 {
     if (hist == NULL || hist->list == NULL)
         return NULL;

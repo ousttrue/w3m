@@ -294,7 +294,7 @@ extern void escbmap(void);
 extern void escdmap(char c);
 extern void multimap(void);
 extern Str unescape_spaces(Str s);
-extern Buffer* historyBuffer(Hist* hist);
+extern Buffer* historyBuffer(struct Hist* hist);
 extern double log_like(int x);
 extern struct table* newTable(void);
 extern void pushdata(struct table* t, int row, int col, char* data);

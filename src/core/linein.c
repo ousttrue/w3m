@@ -91,12 +91,12 @@ static int need_redraw;
 static bool g_is_passwd = false;
 static int move_word;
 
-static Hist* CurrentHist;
+static struct Hist* CurrentHist;
 static Str strCurrentBuf;
 static int use_hist;
 static void ins_char(Str str);
 
-char* inputLineHistSearch(char* prompt, char* def_str, int flag, Hist* hist, IncFunc incrfunc)
+char* inputLineHistSearch(char* prompt, char* def_str, int flag, struct Hist* hist, IncFunc incrfunc)
 {
     struct VirtualTerm* vt = getScreen();
     int opos, x, y, lpos, rpos, epos;
@@ -852,7 +852,7 @@ doComplete(Str ifn, int* status, int next)
 static void
 _prev(void)
 {
-    Hist* hist = CurrentHist;
+    struct Hist* hist = CurrentHist;
     char* p;
 
     if (!use_hist)
@@ -877,7 +877,7 @@ _prev(void)
 static void
 _next(void)
 {
-    Hist* hist = CurrentHist;
+    struct Hist* hist = CurrentHist;
     char* p;
 
     if (!use_hist)
