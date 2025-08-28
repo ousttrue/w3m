@@ -59,7 +59,7 @@ void refreshFrame(const struct Writer* writer, struct Frame* frame)
     l_prop color = COL_FTERM;
     l_prop bcolor = COL_BTERM;
     struct Cell* cell = frame->cells;
-    for (int line = 0; line < frame->lines; ++line) {
+    for (int line = 0; line < frame->rows; ++line) {
         MOVE(writer, line, 0);
         // moved = RF_CR_OK;
         for (int col = 0; col < frame->cols; ++col, ++cell) {

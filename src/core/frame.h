@@ -7,7 +7,7 @@ struct Cell {
 };
 // static_assert(sizeof(struct Cell) == 16, "Cell");
 struct Frame {
-    int lines;
+    int rows;
     int cols;
     struct Cell* cells;
 };

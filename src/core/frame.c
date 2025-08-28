@@ -12,11 +12,11 @@ struct Frame* screenToFrame(const struct VirtualTerm* vt)
 {
     // struct VirtualTerm* vt = getScreen();
     struct Frame* frame = New(struct Frame);
-    frame->lines = getLines();
+    frame->rows = getLines();
     frame->cols = getCols();
-    frame->cells = New_N(struct Cell, frame->lines * frame->cols);
+    frame->cells = New_N(struct Cell, frame->rows * frame->cols);
     struct Cell* cell = frame->cells;
-    for (int y = 0; y < frame->lines; ++y) {
+    for (int y = 0; y < frame->rows; ++y) {
         Screen* l = vt->ScreenImage[y];
         for (int x = 0; x < frame->cols; ++x, ++cell) {
             cell->prop = l->lineprop[x];
