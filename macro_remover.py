@@ -56,6 +56,7 @@ CONTEXT = {
     # "ID_EXT": False,
     # "MATRIX": True,
     # "FORMAT_NICE": True,
+    'DONT_CALL_GC_AFTER_FORK': False, 
 }
 
 MACRO_PATTERN = re.compile(r"^#\s*(\S+)\s*(\S.*)?")

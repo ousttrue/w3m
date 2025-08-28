@@ -187,9 +187,6 @@ wrap_GC_warn_proc(char* msg, GC_word arg)
 void initialize()
 {
     wc_uint8 auto_detect;
-#if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
-    char** getimage_args = NULL;
-#endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
     if (!getenv("GC_LARGE_ALLOC_WARN_INTERVAL"))
         set_environ("GC_LARGE_ALLOC_WARN_INTERVAL", "30000");
     GC_INIT();
@@ -203,10 +200,6 @@ void initialize()
 
     CurrentDir = currentdir();
     CurrentPid = (int)getpid();
-#if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
-    if (argv[0] && *argv[0])
-        MyProgramName = argv[0];
-#endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
     BookmarkFile = NULL;
     config_file = NULL;
 

@@ -208,10 +208,6 @@ typedef RETSIGTYPE MySignalHandler;
 #define SUPPORT_WIN9X_CONSOLE_MBCS 1
 #endif
 
-#if defined(__CYGWIN__) && defined(__x86_64__)
-#define DONT_CALL_GC_AFTER_FORK
-#endif
-
 #if defined(__EMX__) /* use $extension? */
 #define GUNZIP_CMDNAME "gzip"
 #define BUNZIP2_CMDNAME "bzip2"

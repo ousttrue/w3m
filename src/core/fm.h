@@ -785,9 +785,6 @@ global char* index_file init(NULL);
 
 global char* CurrentDir;
 global int CurrentPid;
-#if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
-global char* MyProgramName init("w3m");
-#endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
 
 global Buffer* Currentbuf;
 global Buffer* Firstbuf;
