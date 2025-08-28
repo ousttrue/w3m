@@ -9,6 +9,7 @@
 #include "funcname1.h"
 #include "menu.h"
 #include "myctype.h"
+#include "linein.h"
 #include "regex.h"
 
 #include <stdio.h>

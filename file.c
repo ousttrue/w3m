@@ -19,8 +19,9 @@
 #include "cookie.h"
 #include "funcname1.h"
 #include "html.h"
-#include "parsetagx.h"
+#include "linein.h"
 #include "local.h"
+#include "parsetagx.h"
 #include "regex.h"
 
 #include <strings.h>

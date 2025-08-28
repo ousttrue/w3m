@@ -42,6 +42,7 @@ extern int do_getch(void);
 #include "buffer.h"
 #include "cookie.h"
 #include "funcname1.h"
+#include "linein.h"
 #include "util.h"
 
 #ifdef __MINGW32_VERSION

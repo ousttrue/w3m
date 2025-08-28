@@ -10,6 +10,7 @@
 
 #include "fm.h"
 #include "html.h"
+#include "linein.h"
 #include "myctype.h"
 
 #ifdef DEBUG

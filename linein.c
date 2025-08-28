@@ -1,8 +1,25 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
+#include "linein.h"
+
+#include "alloc.h"
 #include "buffer.h"
+#include "config.h"
+#include "ctrlcode.h"
 #include "fm.h"
+#include "indep.h"
 #include "local.h"
-#include "myctype.h"
+#include "terms.h"
+
+#ifdef USE_M17N
+#include "wc.h"
+#include "wc_types.h"
+#include "wtf.h"
+#endif
+
+#include <dirent.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
 
 #ifdef USE_MOUSE
 #ifdef USE_GPM
@@ -88,6 +105,7 @@ void (*InputKeymap[32]) (void) = {
 };
 /* *INDENT-ON* */
 
+static Str escape_spaces(Str s);
 static int setStrType(Str str, Lineprop *prop);
 static void addPasswd(char *p, Lineprop *pr, int len, int pos, int limit);
 static void addStr(char *p, Lineprop *pr, int len, int pos, int limit);
@@ -334,7 +352,7 @@ getcntrl(void)
 }
 #endif
 
-static void
+void
 addPasswd(char *p, Lineprop *pr, int len, int offset, int limit)
 {
     int rcol = 0, ncol;
@@ -350,7 +368,7 @@ addPasswd(char *p, Lineprop *pr, int len, int offset, int limit)
 	addChar('*', 0);
 }
 
-static void
+void
 addStr(char *p, Lineprop *pr, int len, int offset, int limit)
 {
     int i = 0, rcol = 0, ncol, delta = 1;
@@ -395,7 +413,7 @@ addStr(char *p, Lineprop *pr, int len, int offset, int limit)
     }
 }
 
-static void
+void
 ins_char(Str str)
 {
 #ifdef USE_M17N
@@ -445,7 +463,7 @@ ins_char(Str str)
 #endif
 }
 
-static void
+void
 _esc(void)
 {
     char c;
@@ -503,7 +521,7 @@ _esc(void)
     }
 }
 
-static void
+void
 insC(void)
 {
     int i;
@@ -515,7 +533,7 @@ insC(void)
     }
 }
 
-static void
+void
 delC(void)
 {
     int delta = 1;
@@ -541,7 +559,7 @@ delC(void)
     CLen -= delta;
 }
 
-static void
+void
 _cy(void)
 {
     if (rl_paste)
@@ -550,7 +568,7 @@ _cy(void)
 	_mvRw();
 }
 
-static void
+void
 _paste(void)
 {
     if (!ynkBuf) return;
@@ -558,7 +576,7 @@ _paste(void)
     ynkCon = 0;
 }
 
-static void
+void
 _mvL(void)
 {
     if (CPos > 0)
@@ -570,7 +588,7 @@ _mvL(void)
     ynkCon = 0;
 }
 
-static void
+void
 _mvLw(void)
 {
     int first = 1;
@@ -587,7 +605,7 @@ _mvLw(void)
     ynkCon = 0;
 }
 
-static void
+void
 _mvRw(void)
 {
     int first = 1;
@@ -604,7 +622,7 @@ _mvRw(void)
     ynkCon = 0;
 }
 
-static void
+void
 _mvR(void)
 {
     if (CPos < CLen)
@@ -616,7 +634,7 @@ _mvR(void)
     ynkCon = 0;
 }
 
-static void
+void
 _bs(void)
 {
     int y;
@@ -629,7 +647,7 @@ _bs(void)
     }
 }
 
-static void
+void
 _bsw(void)
 {
     int t = 0, y;
@@ -643,86 +661,86 @@ _bsw(void)
     }
 }
 
-static void
+void
 _enter(void)
 {
     i_cont = FALSE;
 }
 
-static void
+void
 _iword(void)
 {
     ins_char(Strnew_charp(GetWord(Currentbuf)));
 }
 
-static void
+void
 _noop(void)
 {
     return;
 }
 
 extern const char *SearchString; /* TODO(rkta): No forward decl here, but menu.c has it also as static. */
-static void
+void
 _isrch(void)
 {
     ins_char(Strnew_charp(SearchString));
     ynkCon = 0;
 }
 
-static void
+void
 _quo(void)
 {
     i_quote = TRUE;
 }
 
-static void
+void
 _mvB(void)
 {
     CPos = 0;
     ynkCon = 0;
 }
 
-static void
+void
 _mvE(void)
 {
     CPos = CLen;
     ynkCon = 0;
 }
 
-static void
+void
 killn(void)
 {
     CLen = CPos;
     Strtruncate(strBuf, CLen);
 }
 
-static void
+void
 killb(void)
 {
     while (CPos > 0)
 	_bs();
 }
 
-static void
+void
 _inbrk(void)
 {
     i_cont = FALSE;
     i_broken = TRUE;
 }
 
-static void
+void
 _compl(void)
 {
     next_compl(1);
 }
 
-static void
+void
 _rcompl(void)
 {
     next_compl(-1);
 }
 
-static void
+void
 _tcompl(void)
 {
     if (cm_mode & CPL_OFF)
@@ -731,7 +749,7 @@ _tcompl(void)
 	cm_mode = CPL_OFF;
 }
 
-static void
+void
 next_compl(int next)
 {
     int status;
@@ -778,19 +796,19 @@ next_compl(int next)
 	CPos = CLen;
 }
 
-static void
+void
 _dcompl(void)
 {
     next_dcompl(1);
 }
 
-static void
+void
 _rdcompl(void)
 {
     next_dcompl(-1);
 }
 
-static void
+void
 next_dcompl(int next)
 {
     static int col, row;
@@ -923,7 +941,7 @@ next_dcompl(int next)
 }
 
 
-static Str
+Str
 escape_spaces(Str s)
 {
     Str tmp = NULL;
@@ -969,7 +987,7 @@ unescape_spaces(Str s)
     return s;
 }
 
-static Str
+Str
 doComplete(Str ifn, int *status, int next)
 {
     int fl, i;
@@ -1084,7 +1102,7 @@ doComplete(Str ifn, int *status, int next)
     return Str_conv_from_system(CompleteBuf);
 }
 
-static void
+void
 _prev(void)
 {
     Hist *hist = CurrentHist;
@@ -1110,7 +1128,7 @@ _prev(void)
     offset = 0;
 }
 
-static void
+void
 _next(void)
 {
     Hist *hist = CurrentHist;
@@ -1134,7 +1152,7 @@ _next(void)
     offset = 0;
 }
 
-static int
+int
 setStrType(Str str, Lineprop *prop)
 {
     Lineprop ctype;
@@ -1171,7 +1189,7 @@ setStrType(Str str, Lineprop *prop)
     return i;
 }
 
-static int
+int
 terminated(const unsigned char c)
 {
     int termchar[] = { '/', '&', '?', ' ', -1 };
@@ -1186,7 +1204,7 @@ terminated(const unsigned char c)
     return 0;
 }
 
-static void
+void
 _editor(void)
 {
     FormItemList fi;
