@@ -9,7 +9,9 @@ void writeWriter(const struct Writer* writer, const char* str, int len)
 
 void putsWriter(const struct Writer* writer, const char* str)
 {
-    writer->write(str, strlen(str), writer->user);
+    if(str){
+        writer->write(str, strlen(str), writer->user);
+    }
 }
 
 void putWriter(const struct Writer* writer, char ch)

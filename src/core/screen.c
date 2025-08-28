@@ -46,6 +46,8 @@ void setupscreen(struct VirtualTerm* vt)
             vt->ScreenImage[i]->isdirty = 0;
         }
         for (; i < vt->max_LINES; i++) {
+            vt->ScreenImage[i] = &vt->ScreenElem[i];
+            vt->ScreenImage[i]->lineprop[0] = S_EOL;
             vt->ScreenElem[i].isdirty = L_UNUSED;
         }
     }
@@ -303,11 +305,12 @@ void setbcolor(struct VirtualTerm* vt, int color)
 void clear(struct VirtualTerm* vt)
 {
     move(vt, 0, 0);
-    for (int i = 0; i < vt->max_LINES; i++) {
-        vt->ScreenImage[i]->isdirty = 0;
-        l_prop* p = vt->ScreenImage[i]->lineprop;
-        for (int j = 0; j < vt->max_COLS; j++) {
-            p[j] = S_EOL;
+    struct scline** l = vt->ScreenImage;
+    for (int i = 0; i < vt->max_LINES; ++i, ++l) {
+        (*l)->isdirty = 0;
+        l_prop* p = (*l)->lineprop;
+        for (int j = 0; j < vt->max_COLS; ++j, ++p) {
+            *p = S_EOL;
         }
     }
     vt->CurrentMode = C_ASCII;

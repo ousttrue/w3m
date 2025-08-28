@@ -5,20 +5,20 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "lldb",
             "type": "lldb-dap",
             "request": "launch",
-            "name": "Launch",
             "program": "${workspaceFolder}/zig-out/bin/w3m",
             "args": [
                 "www.google.com"
             ],
             "env": [
-                "TERM=vt100",
+                // "TERM=vt100"
             ],
             "cwd": "${workspaceRoot}"
         },
         {
-            "name": "(gdb) Launch",
+            "name": "gdb",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/zig-out/bin/w3m",
@@ -27,7 +27,12 @@
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
-            "environment": [],
+            "environment": [
+                // {
+                //     "name": "TERM",
+                //     "value": "vt100"
+                // },
+            ],
             "externalConsole": false,
             "MIMode": "gdb",
             "setupCommands": [

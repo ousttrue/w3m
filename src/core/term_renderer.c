@@ -328,7 +328,6 @@ void refresh(const struct Writer* writer)
     frame->cols = getCols();
     frame->cells = New_N(struct Cell, frame->lines * frame->cols);
     struct Cell* cell = frame->cells;
-    wc_putc_init(InnerCharset, DisplayCharset);
     for (int y = 0; y < frame->lines; ++y) {
         Screen* l = vt->ScreenImage[y];
         for (int x = 0; x < frame->cols; ++x, ++cell) {
@@ -343,16 +342,17 @@ void refresh(const struct Writer* writer)
                 };
                 struct Writer w;
                 makeArrayWriter(&w, &info);
+                wc_putc_init(InnerCharset, DisplayCharset);
                 const char* str = l->lineimage[x];
                 if (str) {
                     wc_putc(&w, str);
                 } else {
                     wc_putc(&w, " ");
                 }
+                wc_putc_end(&w);
             }
         }
     }
-    wc_putc_end(writer);
 
     wc_putc_init(InnerCharset, DisplayCharset);
     // for (int line = 0; line <= getLines() - 1; line++) {
