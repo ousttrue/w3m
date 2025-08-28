@@ -1,6 +1,5 @@
 #include "fm.h"
 #include "etc.h"
-#include "term_renderer.h"
 #include "term_size.h"
 #include "buffer.h"
 #include "myctype.h"

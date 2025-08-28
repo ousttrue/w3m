@@ -1,9 +1,7 @@
 #include "fm.h"
 #include "myctype.h"
 #include "tty.h"
-#include "screen.h"
 #include "etc.h"
-#include "term_renderer.h"
 #include <stdio.h>
 #include <pwd.h>
 #include <Str.h>

@@ -1,6 +1,4 @@
 #include "buffer.h"
-#include "tty.h"
-#include "term_renderer.h"
 #include "term_size.h"
 #include "fm.h"
 #include "event_poller.h"

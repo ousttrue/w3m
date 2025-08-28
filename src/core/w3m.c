@@ -1,6 +1,7 @@
 #include "w3m.h"
 #define MAINPROGRAM
 #include "buffer.h"
+#include "putc.h"
 #include "frame.h"
 #include "term_renderer.h"
 #include "etc.h"
@@ -17,13 +18,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <fcntl.h>
-#if defined(HAVE_WAITPID) || defined(HAVE_WAIT3)
 #include <sys/wait.h>
-#endif
 #include <time.h>
-#if defined(__CYGWIN__) && defined(USE_BINMODE_STREAM)
-#include <io.h>
-#endif
 #include "display.h"
 #include "myctype.h"
 #include "regex.h"
@@ -244,7 +240,11 @@ bool onFrame()
         w3mFuncList[CurrentEvent->cmd].func();
         displayBuffer();
         struct Frame* frame = screenToFrame(getScreen());
+
+        wc_putc_init(InnerCharset, DisplayCharset);
         refreshFrame(ttyWriter(), frame);
+        wc_putc_end(ttyWriter());
+
         MOVE(ttyWriter(), getScreen()->CurLine, getScreen()->CurColumn);
         flushWriter(ttyWriter());
         CurrentCmdData = NULL;
@@ -263,7 +263,11 @@ bool onFrame()
                 w3mFuncList[CurrentAlarm->cmd].func();
 
                 struct Frame* frame = displayBuffer();
+
+                wc_putc_init(InnerCharset, DisplayCharset);
                 refreshFrame(ttyWriter(), frame);
+                wc_putc_end(ttyWriter());
+
                 MOVE(ttyWriter(), getScreen()->CurLine, getScreen()->CurColumn);
                 flushWriter(ttyWriter());
 
@@ -284,7 +288,11 @@ bool onFrame()
     if (activeImage && displayImage && Currentbuf->img && !Currentbuf->image_loaded) {
         loadImage(Currentbuf, IMG_FLAG_NEXT);
         struct Frame* frame = displayBuffer();
+
+        wc_putc_init(InnerCharset, DisplayCharset);
         refreshFrame(ttyWriter(), frame);
+        wc_putc_end(ttyWriter());
+
         MOVE(ttyWriter(), getScreen()->CurLine, getScreen()->CurColumn);
         flushWriter(ttyWriter());
         // continue;
@@ -292,7 +300,11 @@ bool onFrame()
     if (need_resize_screen) {
         resize_screen();
         struct Frame* frame = displayBuffer();
+
+        wc_putc_init(InnerCharset, DisplayCharset);
         refreshFrame(ttyWriter(), frame);
+        wc_putc_end(ttyWriter());
+
         MOVE(ttyWriter(), getScreen()->CurLine, getScreen()->CurColumn);
         flushWriter(ttyWriter()); // continue;
     }
@@ -315,7 +327,11 @@ void onKeyInput(char c)
             save_buffer_position(Currentbuf);
             keyPressEventProc((int)c);
             struct Frame* frame = displayBuffer();
+
+            wc_putc_init(InnerCharset, DisplayCharset);
             refreshFrame(ttyWriter(), frame);
+            wc_putc_end(ttyWriter());
+
             MOVE(ttyWriter(), getScreen()->CurLine, getScreen()->CurColumn);
             flushWriter(ttyWriter()); // continue;            prec_num = 0;
         }

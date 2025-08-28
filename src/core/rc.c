@@ -4,7 +4,6 @@
  */
 #include "rc.h"
 #include "fm.h"
-#include "term_entry.h"
 #include "term_size.h"
 #include "term_renderer.h"
 #include "myctype.h"
@@ -13,7 +12,6 @@
 #include <errno.h>
 #include "parsetag.h"
 #include "graphicchar.h"
-#include "local.h"
 #include "regex.h"
 #include <stdlib.h>
 #include <stddef.h>

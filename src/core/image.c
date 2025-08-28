@@ -2,7 +2,6 @@
 #include "term_size.h"
 #include "term_renderer.h"
 #include "rc.h"
-#include "term_entry.h"
 #include "fm.h"
 #include "etc.h"
 #include "screen.h"

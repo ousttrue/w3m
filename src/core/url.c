@@ -1,8 +1,6 @@
 #include "url.h"
-#include "term_renderer.h"
 #include "fm.h"
 #include "etc.h"
-#include "screen.h"
 #include "tty.h"
 #include <unistd.h>
 #include <sys/types.h>

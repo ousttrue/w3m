@@ -1,6 +1,4 @@
 #include "menu.h"
-#include "tty.h"
-#include "term_renderer.h"
 #include "term_size.h"
 #include "screen.h"
 #include "term_entry.h"

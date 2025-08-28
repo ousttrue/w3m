@@ -1,15 +1,8 @@
 #include "term_renderer.h"
 #include "term_entry.h"
-#include "term_size.h"
 #include "frame.h"
-#include "screen.h"
 #include "graphicchar.h"
-#include "alloc.h"
-#include "fm.h"
-#include "putc.h"
-#include <wc.h>
 #include <stdio.h>
-#include <string.h>
 
 int highIntensityColors = 0;
 
@@ -52,7 +45,6 @@ bcolor_seq(int colmode)
 
 void refreshFrame(const struct Writer* writer, struct Frame* frame)
 {
-    wc_putc_init(InnerCharset, DisplayCharset);
     struct TermEntry* t = getTermEntry();
     // enum RF_MODE moved = RF_NEED_TO_MOVE;
     l_prop mode = 0;
@@ -155,7 +147,6 @@ void refreshFrame(const struct Writer* writer, struct Frame* frame)
     //     putsWriter(writer, t->me);
     //     mode &= ~M_MEND;
     // }
-    wc_putc_end(writer);
 }
 
 // static int

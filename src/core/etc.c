@@ -1,10 +1,8 @@
 #include "etc.h"
-#include "term_renderer.h"
 #include "rc.h"
 #include "fm.h"
 #include "myctype.h"
 #include "html.h"
-#include "screen.h"
 #include "hash.h"
 #include "tty.h"
 #include <pwd.h>

@@ -8,6 +8,7 @@
 #include "local.h"
 #include "event_poller.h"
 #include "screen.h"
+#include "putc.h"
 #include <stdbool.h>
 
 #define STR_LEN 1024
@@ -174,7 +175,11 @@ char* inputLineHistSearch(char* prompt, char* def_str, int flag, struct Hist* hi
         clrtoeolx(vt);
         move(vt, getLines() - 1, opos + x - offset);
         struct Frame* frame = screenToFrame(getScreen());
+
+        wc_putc_init(InnerCharset, DisplayCharset);
         refreshFrame(ttyWriter(), frame);
+        wc_putc_end(ttyWriter());
+
         MOVE(ttyWriter(), getScreen()->CurLine, getScreen()->CurColumn);
         flushWriter(ttyWriter());
 
@@ -234,7 +239,11 @@ char* inputLineHistSearch(char* prompt, char* def_str, int flag, struct Hist* hi
 
     move(getScreen(), getLines() - 1, 0);
     struct Frame* frame = screenToFrame(getScreen());
+
+    wc_putc_init(InnerCharset, DisplayCharset);
     refreshFrame(ttyWriter(), frame);
+    wc_putc_end(ttyWriter());
+
     MOVE(ttyWriter(), getScreen()->CurLine, getScreen()->CurColumn);
     flushWriter(ttyWriter());
 
