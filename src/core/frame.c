@@ -4,6 +4,7 @@
 #include "term_size.h"
 #include "writer.h"
 #include "fm.h"
+#include "putc.h"
 #include <wc.h>
 #include <string.h>
 

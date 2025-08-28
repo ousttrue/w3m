@@ -3,7 +3,6 @@
 #define _WC_TYPES_H
 
 #include <Str.h>
-#include <config.h>
 #if defined(HAVE_STDINT_H)
 # include <stdint.h>
 #elif defined(HAVE_INTTYPES_H)

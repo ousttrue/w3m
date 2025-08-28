@@ -21,6 +21,7 @@ const w3m_srcs = [_][]const u8{
     "writer.c",
     "term_renderer.c",
     "frame.c",
+    "putc.c",
 
     "file.c",
     "buffer.c",
@@ -52,17 +53,17 @@ const w3m_srcs = [_][]const u8{
     "tagtable.c",
     "istream.c",
 
-    "Str.c",
     "indep.c",
     "textlist.c",
     "parsetag.c",
-    "myctype.c",
     "hash.c",
 
     "version.c",
 };
 
 const libwc_srcs = [_][]const u8{
+    "Str.c",
+    "myctype.c",
     "big5.c",
     "ces.c",
     "char_conv.c",
@@ -78,7 +79,6 @@ const libwc_srcs = [_][]const u8{
     "jis.c",
     "johab.c",
     "priv.c",
-    "putc.c",
     "search.c",
     "sjis.c",
     "status.c",
@@ -255,15 +255,16 @@ fn build_mktable(
         .files = &.{
             "funcname/mktable.c",
             // "entity.c",
-            "core/Str.c",
             "core/hash.c",
-            "core/myctype.c",
+            "../libwc/Str.c",
+            "../libwc/myctype.c",
         },
         .flags = &.{
             "-DDUMMY",
         },
     });
     exe.addIncludePath(b.path("src/core"));
+    exe.addIncludePath(b.path("libwc"));
     exe.linkLibC();
     for (libs) |lib| {
         exe.linkSystemLibrary(lib);

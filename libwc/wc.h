@@ -5,7 +5,6 @@
 #include <Str.h>
 #include "wc_types.h"
 #include "ces.h"
-#include "writer.h"
 
 #define WC_FALSE 0
 #define WC_TRUE 1
@@ -54,11 +53,6 @@ extern wc_bool wc_ces_has_ccs(wc_ccs ccs, wc_status *st);
 
 extern void wc_char_conv_init(wc_ces f_ces, wc_ces t_ces);
 extern Str  wc_char_conv(char c);
-
-extern void wc_putc_init(wc_ces f_ces, wc_ces t_ces);
-extern void wc_putc(const struct Writer *writer, const char* c);
-extern void wc_putc_end(const struct Writer *writer);
-extern void wc_putc_clear_status(void);
 
 extern void   wc_create_detect_map(wc_ces ces, wc_bool esc);
 extern wc_ces wc_auto_detect(char *is, size_t len, wc_ces hint);

@@ -13,6 +13,7 @@
  * limited to warranty of fitness of purpose, or merchantability, or
  * results obtained from use of this software.
  */
+#include "Str.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <gc.h>
@@ -21,7 +22,6 @@
 #ifdef __EMX__ /* or include "fm.h" for HAVE_BCOPY? */
 #include <strings.h>
 #endif
-#include "Str.h"
 #include "myctype.h"
 
 #define INITIAL_STR_SIZE 32

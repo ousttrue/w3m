@@ -6,6 +6,7 @@
 #include "graphicchar.h"
 #include "alloc.h"
 #include "fm.h"
+#include "putc.h"
 #include <wc.h>
 #include <stdio.h>
 #include <string.h>
