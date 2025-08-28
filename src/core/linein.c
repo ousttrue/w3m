@@ -97,7 +97,7 @@ static Str strCurrentBuf;
 static int use_hist;
 static void ins_char(Str str);
 
-char* inputLineHistSearch(char* prompt, char* def_str, int flag, struct Hist* hist, IncFunc incrfunc)
+char* inputLineHistSearch(const char* prompt, const char* def_str, enum InputLineFlags flag, struct Hist* hist, IncFunc incrfunc)
 {
     struct VirtualTerm* vt = getScreen();
     int opos, x, y, lpos, rpos, epos;

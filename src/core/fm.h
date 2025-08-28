@@ -208,14 +208,6 @@ extern int REV_LB[];
 #define CPL_ALWAYS 0x4
 #define CPL_URL 0x8
 
-/* Flags for inputLine() */
-#define IN_STRING 0x10
-#define IN_FILENAME 0x20
-#define IN_PASSWORD 0x40
-#define IN_COMMAND 0x80
-#define IN_URL 0x100
-#define IN_CHAR 0x200
-
 #define IMG_FLAG_SKIP 1
 #define IMG_FLAG_AUTO 2
 
