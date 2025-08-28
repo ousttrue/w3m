@@ -833,7 +833,7 @@ int select_menu(Menu* menu, int mselect)
      * move(menu->cursorY, menu->cursorX); */
     move(vt, menu->y + mselect - menu->offset, menu->x);
     toggle_stand(vt);
-    refresh(ttyWriter());
+    // refresh(ttyWriter());
 
     return (menu->select);
 }

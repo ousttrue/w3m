@@ -114,7 +114,7 @@ fn producer() !void {
                 for (0..@as(usize, @intCast(ready_read_size))) |_| {
                     var ch: u8 = undefined;
                     const ret = std.os.linux.read(ev.data.fd, @ptrCast(&ch), 1);
-                    std.log.debug("ret {}", .{ret});
+                    // std.log.debug("ret {}", .{ret});
                     if (ret < 0) {
                         ctx.queue.enqueue(.{
                             .err = 1,

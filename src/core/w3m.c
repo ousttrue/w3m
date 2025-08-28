@@ -118,7 +118,7 @@ void fmTerm(void)
         struct VirtualTerm* vt = getScreen();
         move(vt, getLines() - 1, 0);
         clrtoeolx(vt);
-        refresh(ttyWriter());
+        // refresh(ttyWriter());
         if (activeImage)
             loadImage(NULL, IMG_FLAG_STOP);
         resetTerm();
@@ -242,6 +242,7 @@ bool onFrame()
         CurrentCmdData = (char*)CurrentEvent->data;
         w3mFuncList[CurrentEvent->cmd].func();
         displayBuffer();
+        refresh(getScreen(), ttyWriter());
         CurrentCmdData = NULL;
         CurrentEvent = CurrentEvent->next;
         return false;
@@ -257,6 +258,7 @@ bool onFrame()
                 CurrentCmdData = (char*)CurrentAlarm->data;
                 w3mFuncList[CurrentAlarm->cmd].func();
                 displayBuffer();
+                refresh(getScreen(), ttyWriter());
                 CurrentCmdData = NULL;
                 return false;
             }
@@ -274,11 +276,13 @@ bool onFrame()
     if (activeImage && displayImage && Currentbuf->img && !Currentbuf->image_loaded) {
         loadImage(Currentbuf, IMG_FLAG_NEXT);
         displayBuffer();
+        refresh(getScreen(), ttyWriter());
         // continue;
     }
     if (need_resize_screen) {
         resize_screen();
         displayBuffer();
+        refresh(getScreen(), ttyWriter());
         // continue;
     }
 
@@ -300,6 +304,7 @@ void onKeyInput(char c)
             save_buffer_position(Currentbuf);
             keyPressEventProc((int)c);
             displayBuffer();
+            refresh(getScreen(), ttyWriter());
             prec_num = 0;
         }
     }
@@ -447,7 +452,7 @@ resize_screen(void)
     need_resize_screen = FALSE;
     setlinescols(get_tty_fd());
     setupscreen(getScreen());
-    clear(ttyWriter());
+    clear(getScreen());
 }
 
 /*
@@ -572,7 +577,7 @@ DEFUN(ctrCsrH, CENTER_H, "Center on cursor column")
 /* Redraw screen */
 DEFUN(rdrwSc, REDRAW, "Draw the screen anew")
 {
-    clear(ttyWriter());
+    clear(getScreen());
     arrangeCursor(Currentbuf);
 }
 
@@ -1426,7 +1431,7 @@ DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background")
 #endif /* not SIGSTOP */
     move(vt, getLines() - 1, 0);
     clrtoeolx(vt);
-    refresh(ttyWriter());
+    // refresh(ttyWriter());
     fmTerm();
 #ifndef SIGSTOP
     shell = getenv("SHELL");
@@ -1709,7 +1714,7 @@ loadLink(char* url, char* target, char* referer, FormList* request)
     const int* no_referer_ptr;
 
     message(Sprintf("loading %s", url)->ptr, 0, 0);
-    refresh(ttyWriter());
+    // refresh(ttyWriter());
 
     no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->currentURL);
     base = baseURL(Currentbuf);
@@ -1881,7 +1886,7 @@ DEFUN(followI, VIEW_IMAGE, "Display image in viewer")
         return;
     /* FIXME: gettextize? */
     message(Sprintf("loading %s", a->url)->ptr, 0, 0);
-    refresh(ttyWriter());
+    // refresh(ttyWriter());
     buf = loadGeneralFile(a->url, baseURL(Currentbuf), NULL, 0, NULL);
     if (buf == NULL) {
         /* FIXME: gettextize? */
@@ -2767,7 +2772,7 @@ cmd_loadURL(char* url, ParsedURL* current, char* referer, FormList* request)
     if (handleMailto(url))
         return;
 
-    refresh(ttyWriter());
+    // refresh(ttyWriter());
     buf = loadGeneralFile(url, current, referer, 0, request);
     if (buf == NULL) {
         /* FIXME: gettextize? */
@@ -3390,7 +3395,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
     url = parsedURL2Str(&Currentbuf->currentURL);
     /* FIXME: gettextize? */
     message("Reloading...", 0, 0);
-    refresh(ttyWriter());
+    // refresh(ttyWriter());
     old_charset = DocumentCharset;
     if (Currentbuf->document_charset != WC_CES_US_ASCII)
         DocumentCharset = Currentbuf->document_charset;

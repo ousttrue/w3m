@@ -319,7 +319,7 @@ listBuffer(Buffer* top, Buffer* current)
         0);
     standend(vt);
     move(vt, c, 0);
-    refresh(ttyWriter());
+    // refresh(ttyWriter());
     return buf->nextBuffer;
 }
 
@@ -424,7 +424,7 @@ selectBuffer(Buffer* firstbuf, Buffer* currentbuf, char* selectchar)
             goto end;
         }
         move(vt, spoint, 0);
-        refresh(ttyWriter());
+        // refresh(ttyWriter());
     }
 end:
     event_end_input(getch);

@@ -352,13 +352,13 @@ void displayBuffer()
     if (delayed_msg != NULL) {
         disp_message(delayed_msg, FALSE);
         delayed_msg = NULL;
-        refresh(ttyWriter());
+        // refresh(ttyWriter());
     }
     standout(vt);
     message(msg->ptr, buf->cursorX + buf->rootX, buf->cursorY + buf->rootY);
     standend(vt);
     term_title(conv_to_system(buf->buffername));
-    refresh(ttyWriter());
+    // refresh(ttyWriter());
     if (activeImage && displayImage && buf->img && buf->image_loaded) {
         drawImage();
     }
@@ -995,7 +995,7 @@ void disp_message_nsec(char* s, int redraw_current, int sec, int purge, int mous
             Currentbuf->cursorY + Currentbuf->rootY);
     else
         message(s, getLines() - 1, 0);
-    refresh(ttyWriter());
+    // refresh(ttyWriter());
     sleep_till_anykey(sec * 1000, purge);
 }
 

@@ -320,9 +320,9 @@ void refreshLine(const struct Writer* writer, struct VirtualTerm* vt, int line)
 }
 
 // Screen to STDOUT
-void refresh(const struct Writer* writer)
+void refresh(const struct VirtualTerm* vt, const struct Writer* writer)
 {
-    struct VirtualTerm* vt = getScreen();
+    // struct VirtualTerm* vt = getScreen();
     struct Frame* frame = New(struct Frame);
     frame->lines = getLines();
     frame->cols = getCols();

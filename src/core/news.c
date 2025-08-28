@@ -323,7 +323,7 @@ Str loadNewsgroup(ParsedURL* pu, wc_ces* charset)
     }
     if (fmInitialized) {
         message(Sprintf("Reading newsgroup %s...", group)->ptr, 0, 0);
-        refresh(ttyWriter());
+        // refresh(ttyWriter());
     }
     qgroup = html_quote(group);
     group = file_unquote(group);
