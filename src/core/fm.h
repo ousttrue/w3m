@@ -167,9 +167,9 @@ enum BufferProperty {
 
 /* Link Buffer */
 #define LB_NOLINK -1
-#define LB_INFO 1 /* pginfo() */
-#define LB_N_INFO 2
-#define LB_SOURCE 3 /* vwSrc() */
+#define LB_INFO 0 /* pginfo() */
+#define LB_N_INFO 1
+#define LB_SOURCE 2 /* vwSrc() */
 #define LB_N_SOURCE LB_SOURCE
 #define MAX_LB 3
 
