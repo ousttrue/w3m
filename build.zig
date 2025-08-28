@@ -61,35 +61,6 @@ const w3m_srcs = [_][]const u8{
     "version.c",
 };
 
-const libwc_srcs = [_][]const u8{
-    "Str.c",
-    "myctype.c",
-    "big5.c",
-    "ces.c",
-    "char_conv.c",
-    "charset.c",
-    "combining.c",
-    "conv.c",
-    "detect.c",
-    "gb18030.c",
-    "gbk.c",
-    "hkscs.c",
-    "hz.c",
-    "iso2022.c",
-    "jis.c",
-    "johab.c",
-    "priv.c",
-    "search.c",
-    "sjis.c",
-    "status.c",
-    "ucs.c",
-    "uhc.c",
-    "utf7.c",
-    "utf8.c",
-    "viet.c",
-    "wtf.c",
-};
-
 pub fn build(b: *std.Build) void {
     var targets = std.array_list.Managed(*std.Build.Step.Compile).init(b.allocator);
     const target = b.standardTargetOptions(.{});
@@ -144,8 +115,6 @@ pub fn build(b: *std.Build) void {
     b.installArtifact(exe);
     targets.append(exe) catch @panic("OOM");
     exe.linkLibC();
-    exe.addIncludePath(b.path("libwc"));
-    // exe.addIncludePath(b.path("."));
 
     const flags = [_][]const u8{
         // "-Wno-implicit-int",
@@ -164,18 +133,16 @@ pub fn build(b: *std.Build) void {
         .files = &w3m_srcs,
         .flags = &flags,
     });
-    exe.addCSourceFiles(.{
-        .root = b.path("libwc"),
-        .files = &libwc_srcs,
-        .flags = &.{
-            "-DHAVE_CONFIG_H",
-            "-DUSE_UNICODE",
-        },
-    });
     exe.addIncludePath(b.path("src/core"));
     for (system_libs) |lib| {
         exe.linkSystemLibrary(lib);
     }
+
+    const wc_dep = b.dependency("wc", .{
+        .target = target,
+        .optimize = optimize,
+    });
+    exe.linkLibrary(wc_dep.artifact(("wc")));
 
     exe.linkLibrary(gc);
     exe.addIncludePath(gc_include_dir);
@@ -251,13 +218,12 @@ fn build_mktable(
         .root_module = mod,
     });
     exe.addCSourceFiles(.{
-        .root = b.path("src"),
+        // .root = b.path("src"),
         .files = &.{
-            "funcname/mktable.c",
-            // "entity.c",
-            "core/hash.c",
-            "../libwc/Str.c",
-            "../libwc/myctype.c",
+            "src/funcname/mktable.c",
+            "src/core/hash.c",
+            "libwc/Str.c",
+            "libwc/myctype.c",
         },
         .flags = &.{
             "-DDUMMY",

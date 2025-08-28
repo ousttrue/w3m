@@ -35,9 +35,9 @@
 #include "ctrlcode.h"
 #include "html.h"
 #include <gc.h>
-#include "Str.h"
-#include "wc.h"
-#include "wtf.h"
+#include <Str.h>
+#include <wc.h>
+#include <wtf.h>
 
 #ifdef HAVE_LOCALE_H
 #include <locale.h>

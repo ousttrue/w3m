@@ -1,24 +1,13 @@
-
 #ifndef _WC_TYPES_H
 #define _WC_TYPES_H
 
 #include <Str.h>
-#if defined(HAVE_STDINT_H)
 # include <stdint.h>
-#elif defined(HAVE_INTTYPES_H)
-# include <inttypes.h>
-#endif
 
 typedef unsigned char  wc_uchar;
-#if defined(HAVE_STDINT_H) || defined(HAVE_INTTYPES_H)
 typedef uint8_t wc_uint8;
 typedef uint16_t wc_uint16;
 typedef uint32_t wc_uint32;
-#else
-typedef unsigned char  wc_uint8;
-typedef unsigned short wc_uint16;
-typedef unsigned long  wc_uint32;
-#endif
 
 typedef wc_uint32 wc_ccs;
 typedef wc_uint32 wc_ces;
