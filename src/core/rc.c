@@ -3,6 +3,7 @@
  * Initialization file etc.
  */
 #include "rc.h"
+#include "image.h"
 #include "fm.h"
 #include "term_size.h"
 #include "term_renderer.h"

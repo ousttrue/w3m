@@ -1,5 +1,6 @@
 #include "buffer.h"
 #include "term_size.h"
+#include "image.h"
 #include "etc.h"
 #include "fm.h"
 #include "TermEntry.h"

@@ -1,4 +1,5 @@
 #include "fm.h"
+#include "image.h"
 #include "term_size.h"
 #include "myctype.h"
 #include "regex.h"

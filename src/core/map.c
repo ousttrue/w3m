@@ -2,6 +2,7 @@
  * client-side image maps
  */
 #include "fm.h"
+#include "image.h"
 #include "etc.h"
 #include <math.h>
 

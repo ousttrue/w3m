@@ -1,4 +1,5 @@
 #include "menu.h"
+#include "image.h"
 #include "term_size.h"
 #include "screen.h"
 #include "TermEntry.h"

@@ -311,35 +311,6 @@ typedef struct {
     int invalid;
 } BufferPoint;
 
-typedef struct _imageCache {
-    char* url;
-    ParsedURL* current;
-    char* file;
-    char* touch;
-    pid_t pid;
-    char loaded;
-    int index;
-    short width;
-    short height;
-    short a_width;
-    short a_height;
-} ImageCache;
-
-typedef struct _image {
-    char* url;
-    char* ext;
-    short width;
-    short height;
-    short xoffset;
-    short yoffset;
-    short y;
-    short rows;
-    char* map;
-    char ismap;
-    int touch;
-    ImageCache* cache;
-} Image;
-
 typedef struct _anchor {
     char* url;
     char* target;
@@ -352,7 +323,7 @@ typedef struct _anchor {
     char slave;
     short y;
     short rows;
-    Image* image;
+    struct _image* image;
 } Anchor;
 
 #define NO_REFERER ((char*)-1)

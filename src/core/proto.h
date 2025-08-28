@@ -174,11 +174,7 @@ extern void save_fonteffect(struct html_feed_environ* h_env,
     struct readbuffer* obuf);
 extern void restore_fonteffect(struct html_feed_environ* h_env,
     struct readbuffer* obuf);
-extern void deleteImage(Buffer* buf);
-extern void getAllImage(Buffer* buf);
-extern void loadImage(Buffer* buf, int flag);
-extern ImageCache* getImage(Image* image, ParsedURL* current, int flag);
-extern int getImageSize(ImageCache* cache);
+
 extern Str process_img(struct parsed_tag* tag, int width);
 extern Str process_anchor(struct parsed_tag* tag, char* tagbuf);
 extern Str process_input(struct parsed_tag* tag);
@@ -505,13 +501,6 @@ extern void reMark(void);
 #define menuMs nulcmd
 #define tabMs nulcmd
 #define closeTMs nulcmd
-
-extern void initImage(void);
-extern void termImage(void);
-extern void addImage(ImageCache* cache, int x, int y, int sx, int sy, int w,
-    int h);
-extern void drawImage(void);
-extern void clearImage(void);
 
 extern char* searchKeyData(void);
 

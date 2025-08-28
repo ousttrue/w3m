@@ -47,15 +47,9 @@ void initImage()
         activeImage = TRUE;
 }
 
-int get_pixel_per_cell(int* ppc, int* ppl);
-
 static int
 getCharSize(void)
 {
-    FILE* f;
-    Str tmp;
-    int w = 0, h = 0;
-
     set_environ("W3M_TTY", ttyname_tty());
 
     if (enable_inline_image) {
@@ -74,13 +68,16 @@ getCharSize(void)
         return TRUE;
     }
 
-    tmp = Strnew();
+    Str tmp = Strnew();
     if (!strchr(Imgdisplay, '/'))
         Strcat_m_charp(tmp, w3m_auxbin_dir(), "/", NULL);
     Strcat_m_charp(tmp, Imgdisplay, " -test 2>/dev/null", NULL);
-    f = popen(tmp->ptr, "r");
+
+    FILE* f = popen(tmp->ptr, "r");
     if (!f)
         return FALSE;
+
+    int w = 0, h = 0;
     while (fscanf(f, "%d %d", &w, &h) < 0) {
         if (feof(f))
             break;
@@ -153,8 +150,6 @@ closeImgdisplay(void)
 
 void addImage(ImageCache* cache, int x, int y, int sx, int sy, int w, int h)
 {
-    TerminalImage* i;
-
     if (!activeImage)
         return;
     if (n_terminal_image >= max_terminal_image) {
@@ -162,7 +157,8 @@ void addImage(ImageCache* cache, int x, int y, int sx, int sy, int w, int h)
         terminal_image = New_Reuse(TerminalImage, terminal_image,
             max_terminal_image);
     }
-    i = &terminal_image[n_terminal_image];
+
+    TerminalImage* i = &terminal_image[n_terminal_image];
     i->cache = cache;
     i->x = x;
     i->y = y;
@@ -197,7 +193,7 @@ err:
 
 void drawImage(void)
 {
-    struct VirtualTerm *vt = getScreen();
+    struct VirtualTerm* vt = getScreen();
     static char buf[64];
     int j, draw = FALSE;
     TerminalImage* i;
@@ -327,15 +323,15 @@ static Buffer* image_buffer = NULL;
 
 void deleteImage(Buffer* buf)
 {
-    AnchorList* al;
-    Anchor* a;
-    int i;
-
     if (!buf)
         return;
-    al = buf->img;
+
+    AnchorList* al = buf->img;
     if (!al)
         return;
+
+    Anchor* a;
+    int i;
     for (i = 0, a = al->anchors; i < al->nanchor; i++, a++) {
         if (a->image && a->image->cache && a->image->cache->loaded != IMG_FLAG_UNLOADED && !(a->image->cache->loaded & IMG_FLAG_DONT_REMOVE) && a->image->cache->index < 0)
             unlink(a->image->cache->file);
@@ -345,19 +341,18 @@ void deleteImage(Buffer* buf)
 
 void getAllImage(Buffer* buf)
 {
-    AnchorList* al;
-    Anchor* a;
-    ParsedURL* current;
-    int i;
-
     image_buffer = buf;
     if (!buf)
         return;
     buf->image_loaded = TRUE;
-    al = buf->img;
+
+    AnchorList* al = buf->img;
     if (!al)
         return;
-    current = baseURL(buf);
+
+    ParsedURL* current = baseURL(buf);
+    int i;
+    Anchor* a;
     for (i = 0, a = al->anchors; i < al->nanchor; i++, a++) {
         if (a->image) {
             a->image->cache = getImage(a->image, current, buf->image_flag);
