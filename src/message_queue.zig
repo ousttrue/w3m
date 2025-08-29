@@ -35,13 +35,12 @@ pub fn MessageQueue(T: type) type {
             self.mutex.lock();
             defer self.mutex.unlock();
 
-            while (self.produced_index <= self.consumed_index) {
+            if (self.produced_index <= self.consumed_index) {
                 self.condition.wait(&self.mutex);
-                defer self.consumed_index += 1;
-                return self.buffer[self.consumed_index % self.buffer.len];
             }
 
-            unreachable;
+            defer self.consumed_index += 1;
+            return self.buffer[self.consumed_index % self.buffer.len];
         }
     };
 }
