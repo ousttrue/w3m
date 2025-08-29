@@ -26,8 +26,6 @@
 #endif
 #include <openssl/err.h>
 
-
-
 #ifdef INET6
 /* see rc.c, "dns_order" and dnsorders[] */
 int ai_family_order_table[7][3] = {
@@ -42,45 +40,6 @@ int ai_family_order_table[7][3] = {
 #endif /* INET6 */
 
 static sigjmp_buf AbortLoading;
-
-/* XXX: note html.h SCM_ */
-static int
-    DefaultPort[]
-    = {
-          80, /* http */
-          70, /* gopher */
-          21, /* ftp */
-          21, /* ftpdir */
-          0, /* local - not defined */
-          0, /* local-CGI - not defined? */
-          0, /* exec - not defined? */
-          119, /* nntp */
-          119, /* nntp group */
-          119, /* news */
-          119, /* news group */
-          0, /* data - not defined */
-          0, /* mailto - not defined */
-          443, /* https */
-      };
-
-struct cmdtable schemetable[] = {
-    { "http", SCM_HTTP },
-    { "gopher", SCM_GOPHER },
-    { "ftp", SCM_FTP },
-    { "local", SCM_LOCAL },
-    { "file", SCM_LOCAL },
-    /*  {"exec", SCM_EXEC}, */
-    { "nntp", SCM_NNTP },
-    /*  {"nntp", SCM_NNTP_GROUP}, */
-    { "news", SCM_NEWS },
-    /*  {"news", SCM_NEWS_GROUP}, */
-    { "data", SCM_DATA },
-#ifndef USE_W3MMAILER
-    { "mailto", SCM_MAILTO },
-#endif
-    { "https", SCM_HTTPS },
-    { NULL, SCM_UNKNOWN },
-};
 
 static struct table2 DefaultGuess[] = {
     { "html", "text/html" },
@@ -467,7 +426,6 @@ SSL_write_from_file(SSL* ssl, char* file)
         fclose(fd);
     }
 }
-
 
 static void
 write_from_file(int sock, char* file)
@@ -1064,16 +1022,16 @@ void parseURL2(char* url, ParsedURL* pu, ParsedURL* current)
         pu->host = current->host;
         pu->port = current->port;
         if (pu->file && *pu->file) {
-                if (
+            if (
 #ifdef USE_GOPHER
-                    pu->scheme != SCM_GOPHER &&
+                pu->scheme != SCM_GOPHER &&
 #endif /* USE_GOPHER */
-                    pu->file[0] != '/'
+                pu->file[0] != '/'
 #ifdef SUPPORT_DOS_DRIVE_PREFIX
-                    && !(pu->scheme == SCM_LOCAL && IS_ALPHA(pu->file[0])
-                        && pu->file[1] == ':')
+                && !(pu->scheme == SCM_LOCAL && IS_ALPHA(pu->file[0])
+                    && pu->file[1] == ':')
 #endif
-                ) {
+            ) {
                 /* file is relative [process 1] */
                 p = pu->file;
                 if (current->file) {
@@ -1114,10 +1072,8 @@ void parseURL2(char* url, ParsedURL* pu, ParsedURL* current)
                 Strcat_char(tmp, '/');
             Strcat_charp(tmp, file_unquote(pu->file));
             pu->file = file_quote(cleanupName(tmp->ptr));
-        }
-        else if (pu->scheme == SCM_HTTP
-            || pu->scheme == SCM_HTTPS
-        ) {
+        } else if (pu->scheme == SCM_HTTP
+            || pu->scheme == SCM_HTTPS) {
             if (relative_uri) {
                 /* In this case, pu->file is created by [process 1] above.
                  * pu->file may contain relative path (for example,
@@ -1273,40 +1229,6 @@ Str parsedURL2RefererStr(ParsedURL* pu)
     return _parsedURL2Str(pu, FALSE, FALSE, FALSE);
 }
 
-int getURLScheme(char** url)
-{
-    char *p = *url, *q;
-    int i;
-    int scheme = SCM_MISSING;
-
-    while (*p && (IS_ALNUM(*p) || *p == '.' || *p == '+' || *p == '-'))
-        p++;
-    if (*p == ':') { /* scheme found */
-        scheme = SCM_UNKNOWN;
-        for (i = 0; (q = schemetable[i].cmdname) != NULL; i++) {
-            int len = strlen(q);
-            if (!strncasecmp(q, *url, len) && (*url)[len] == ':') {
-                scheme = schemetable[i].cmd;
-                *url = p + 1;
-                break;
-            }
-        }
-    }
-    return scheme;
-}
-
-static char*
-schemeNumToName(int scheme)
-{
-    int i;
-
-    for (i = 0; schemetable[i].cmdname != NULL; i++) {
-        if (schemetable[i].cmd == scheme)
-            return schemetable[i].cmdname;
-    }
-    return NULL;
-}
-
 static char*
 otherinfo(ParsedURL* target, ParsedURL* current, char* referer)
 {
@@ -1352,8 +1274,7 @@ otherinfo(ParsedURL* target, ParsedURL* current, char* referer)
             cross_origin = TRUE;
         if (current && current->scheme == SCM_HTTPS && target->scheme != SCM_HTTPS) {
             /* Don't send Referer: if https:// -> http:// */
-        } else
-            if (referer == NULL && current && current->scheme != SCM_LOCAL && current->scheme != SCM_LOCAL_CGI && current->scheme != SCM_DATA && (current->scheme != SCM_FTP || (current->user == NULL && current->pass == NULL))) {
+        } else if (referer == NULL && current && current->scheme != SCM_LOCAL && current->scheme != SCM_LOCAL_CGI && current->scheme != SCM_DATA && (current->scheme != SCM_FTP || (current->user == NULL && current->pass == NULL))) {
             Strcat_charp(s, "Referer: ");
             if (cross_origin)
                 Strcat(s, parsedURL2RefererOriginStr(current));
@@ -1641,8 +1562,7 @@ retry:
         if (request && request->method == FORM_METHOD_HEAD)
             hr->command = HR_COMMAND_HEAD;
         if ((
-                (pu->scheme == SCM_HTTPS) ? non_null(HTTPS_proxy) :
-                                          non_null(HTTP_proxy))
+                (pu->scheme == SCM_HTTPS) ? non_null(HTTPS_proxy) : non_null(HTTP_proxy))
             && !Do_not_use_proxy && pu->host != NULL && !check_no_proxy(pu->host)) {
             hr->flag |= HR_FLAG_PROXY;
             if (pu->scheme == SCM_HTTPS && *status == HTST_CONNECT) {
@@ -1679,8 +1599,7 @@ retry:
                     tmp = HTTPrequest(pu, current, hr, extra_header);
                     *status = HTST_NORMAL;
                 }
-            } else
-            {
+            } else {
                 tmp = HTTPrequest(pu, current, hr, extra_header);
                 *status = HTST_NORMAL;
             }
@@ -1725,8 +1644,7 @@ retry:
                     write_from_file(sock, request->body);
             }
             return uf;
-        } else
-        {
+        } else {
             write(sock, tmp->ptr, tmp->length);
             if (w3m_reqlog) {
                 FILE* ff = fopen(w3m_reqlog, "a");
@@ -2070,7 +1988,6 @@ char* filename_extension(char* path, int is_url)
         return last_dot;
 }
 
-
 ParsedURL*
 schemeToProxy(int scheme)
 {
@@ -2124,17 +2041,6 @@ char* url_encode(const char* url, const ParsedURL* base, wc_ces doc_charset)
         url_to_charset(url, base, doc_charset));
 }
 
-#if 0 /* unused */
-char *
-url_decode(const char *url, const ParsedURL *base, wc_ces doc_charset)
-{
-    if (!DecodeURL)
-	return (char *)url;
-    return url_unquote_conv((char *)url,
-			    url_to_charset(url, base, doc_charset));
-}
-#endif
-
 char* url_decode2(const char* url, const Buffer* buf)
 {
     wc_ces url_charset;
@@ -2144,4 +2050,3 @@ char* url_decode2(const char* url, const Buffer* buf)
     url_charset = buf ? url_to_charset(url, baseURL((Buffer*)buf), buf->document_charset) : url_to_charset(url, NULL, 0);
     return url_unquote_conv((char*)url, url_charset);
 }
-
