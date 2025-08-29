@@ -720,11 +720,6 @@ global TextList* NO_proxy_domains;
 global char NoCache init(FALSE);
 global char use_proxy init(TRUE);
 #define Do_not_use_proxy (!use_proxy)
-#ifdef USE_NNTP
-global char* NNTP_server init(NULL);
-global char* NNTP_mode init(NULL);
-global int MaxNewsMessage init(50);
-#endif
 
 global char* document_root init(NULL);
 global char* personal_document_root init(NULL);

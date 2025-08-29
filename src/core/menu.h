@@ -51,4 +51,7 @@ typedef struct _MenuList {
     MenuItem* item;
 } MenuList;
 
+struct _Buffer;
+struct _LinkList* link_menu(struct _Buffer* buf);
+
 #endif /* not MENU_H */

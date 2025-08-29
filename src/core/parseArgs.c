@@ -64,17 +64,12 @@ fversion(FILE* f)
         ",image"
         ",color"
         ",ansi-color"
-#ifdef USE_MENU
         ",menu"
-#endif
         ",cookie"
         ",ssl"
         ",ssl-verify"
 #ifdef USE_W3MMAILER
         ",w3mmailer"
-#endif
-#ifdef USE_NNTP
-        ",nntp"
 #endif
 #ifdef USE_GOPHER
         ",gopher"

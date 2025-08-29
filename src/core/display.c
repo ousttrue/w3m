@@ -1,5 +1,6 @@
 #include "display.h"
 #include "image.h"
+#include "w3m.h"
 #include "history.h"
 #include "ctrlcode.h"
 #include "buffer.h"

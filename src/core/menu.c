@@ -12,7 +12,6 @@
 #include <stdio.h>
 #include <wtf.h>
 
-#ifdef USE_MENU
 
 static char** FRAME;
 static int FRAME_WIDTH;
@@ -1974,4 +1973,3 @@ list_menu(Buffer* buf)
     return (key >= 0) ? ap[key] : NULL;
 }
 
-#endif /* USE_MENU */

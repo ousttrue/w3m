@@ -249,12 +249,6 @@ void initialize()
         FTP_proxy = p;
     if (!non_null(NO_proxy) && ((p = getenv("NO_PROXY")) || (p = getenv("no_proxy")) || (p = getenv("NO_proxy"))))
         NO_proxy = p;
-#ifdef USE_NNTP
-    if (!non_null(NNTP_server) && (p = getenv("NNTPSERVER")) != NULL)
-        NNTP_server = p;
-    if (!non_null(NNTP_mode) && (p = getenv("NNTPMODE")) != NULL)
-        NNTP_mode = p;
-#endif
 
     if (!non_null(Editor) && (p = getenv("EDITOR")) != NULL)
         Editor = p;
@@ -3137,7 +3131,6 @@ void follow_map(struct parsed_tagarg* arg)
 #endif
 }
 
-#ifdef USE_MENU
 /* link menu */
 DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
 {
@@ -3192,7 +3185,6 @@ DEFUN(movlistMn, MOVE_LIST_MENU, "Pop up menu to navigate between hyperlinks")
 {
     anchorMn(list_menu, FALSE);
 }
-#endif
 
 /* link,anchor,image list */
 DEFUN(linkLst, LIST, "Show all URLs referenced")
@@ -3647,10 +3639,6 @@ void chkURLBuffer(Buffer* buf)
         "gopher://[a-zA-Z0-9][a-zA-Z0-9:%\\-\\./_]*",
 #endif /* USE_GOPHER */
         "ftp://[a-zA-Z0-9][a-zA-Z0-9:%\\-\\./=_+@#,\\$]*[a-zA-Z0-9_/]",
-#ifdef USE_NNTP
-        "news:[^<> 	][^<> 	]*",
-        "nntp://[a-zA-Z0-9][a-zA-Z0-9:%\\-\\./_]*",
-#endif /* USE_NNTP */
 #ifndef USE_W3MMAILER /* see also chkExternalURIBuffer() */
         "mailto:[^<> 	][^<> 	]*@[a-zA-Z0-9][a-zA-Z0-9\\-\\._]*[a-zA-Z0-9]",
 #endif
@@ -3682,26 +3670,6 @@ DEFUN(chkWORD, MARK_WORD, "Turn current word into hyperlink")
     reAnchorWord(Currentbuf, Currentbuf->currentLine, spos, epos);
 }
 
-#ifdef USE_NNTP
-/* mark Message-ID-like patterns as NEWS anchors */
-void chkNMIDBuffer(Buffer* buf)
-{
-    static char* url_like_pat[] = {
-        "<[!-;=?-~]+@[a-zA-Z0-9\\.\\-_]+>",
-        NULL,
-    };
-    int i;
-    for (i = 0; url_like_pat[i]; i++) {
-        reAnchorNews(buf, url_like_pat[i]);
-    }
-    buf->check_url |= CHK_NMID;
-}
-
-DEFUN(chkNMID, MARK_MID, "Turn Message-ID-like strings into hyperlinks")
-{
-    chkNMIDBuffer(Currentbuf);
-}
-#endif /* USE_NNTP */
 
 /* spawn external browser */
 static void
@@ -4040,9 +4008,6 @@ void w3m_exit(int i)
     deleteFiles();
     free_ssl_ctx();
     disconnectFTP();
-#ifdef USE_NNTP
-    disconnectNews();
-#endif
 #ifdef HAVE_MKDTEMP
     if (mkd_tmp_dir)
         if (rmdir(mkd_tmp_dir) != 0) {
@@ -4194,12 +4159,10 @@ DEFUN(reinit, REINIT, "Reload configuration file")
         return;
     }
 
-#ifdef USE_MENU
     if (!strcasecmp(resource, "MENU")) {
         initMenu();
         return;
     }
-#endif
 
     if (!strcasecmp(resource, "MIMETYPES")) {
         initMimeTypes();

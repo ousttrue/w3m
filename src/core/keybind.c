@@ -215,7 +215,7 @@ unsigned char EscKeymap[128] = {
     /*  8       9       :       ;       <       =       >       ?        */
     nulcmd,
     nulcmd,
-    chkNMID,
+    nulcmd,
     nulcmd,
     goLineF,
     nulcmd,
