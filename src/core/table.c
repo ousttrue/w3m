@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include "readbuffer.h"
 #include "term_size.h"
 #include "symbol.h"
 #include "fm.h"
