@@ -1,9 +1,8 @@
 #pragma once
 #include <Str.h>
+#include "line.h"
 
 struct Hist;
-
-typedef unsigned short Lineprop;
 
 typedef int (*IncFunc)(int ch, Str buf, Lineprop* prop);
 

@@ -235,7 +235,6 @@ extern int REV_LB[];
  * Types.
  */
 
-typedef unsigned char Linecolor;
 
 typedef struct _MapArea {
     char* url;
@@ -253,22 +252,6 @@ typedef struct _MapList {
     GeneralList* area;
     struct _MapList* next;
 } MapList;
-
-typedef struct _Line {
-    char* lineBuf;
-    Lineprop* propBuf;
-    Linecolor* colorBuf;
-    struct _Line* next;
-    struct _Line* prev;
-    int len;
-    int width;
-    long linenumber; /* on buffer */
-    long real_linenumber; /* on file */
-    unsigned short usrflags;
-    int size;
-    int bpos;
-    int bwidth;
-} Line;
 
 typedef struct {
     int line;
