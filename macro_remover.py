@@ -53,7 +53,7 @@ CONTEXT = {
     "USE_MOUSE": False,
     "USE_GPM": False,
     "USE_NNTP": False,
-    # "USE_GOPHER": False,
+    "USE_GOPHER": False,
     # "ID_EXT": False,
     # "MATRIX": True,
     # "FORMAT_NICE": True,

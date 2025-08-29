@@ -167,10 +167,6 @@ DefaultFile(int scheme)
     case SCM_HTTP:
     case SCM_HTTPS:
         return allocStr(HTTP_DEFAULT_FILE, -1);
-#ifdef USE_GOPHER
-    case SCM_GOPHER:
-        return allocStr("1", -1);
-#endif /* USE_GOPHER */
     case SCM_LOCAL:
     case SCM_LOCAL_CGI:
     case SCM_FTP:
@@ -862,36 +858,12 @@ analyze_file:
 #endif
 
     q = p;
-#ifdef USE_GOPHER
-    if (p_url->scheme == SCM_GOPHER) {
-        if (*q == '/')
-            q++;
-        if (*q && q[0] != '/' && q[1] != '/' && q[2] == '/')
-            q++;
-    }
-#endif /* USE_GOPHER */
     if (*p == '/')
         p++;
     if (*p == '\0' || *p == '#' || *p == '?') { /* scheme://host[:port]/ */
         p_url->file = DefaultFile(p_url->scheme);
         goto do_query;
     }
-#ifdef USE_GOPHER
-    if (p_url->scheme == SCM_GOPHER && *p == 'R') {
-        if (!*++p) {
-            p_url->file = "";
-            goto do_query;
-        }
-        tmp = Strnew();
-        Strcat_char(tmp, *(p++));
-        while (*p && *p != '/')
-            p++;
-        Strcat_charp(tmp, p);
-        while (*p)
-            p++;
-        p_url->file = copyPath(tmp->ptr, -1, COPYPATH_SPC_IGNORE);
-    } else
-#endif /* USE_GOPHER */
     {
         char* cgi = strchr(p, '?');
     again:
@@ -1023,9 +995,6 @@ void parseURL2(char* url, ParsedURL* pu, ParsedURL* current)
         pu->port = current->port;
         if (pu->file && *pu->file) {
             if (
-#ifdef USE_GOPHER
-                pu->scheme != SCM_GOPHER &&
-#endif /* USE_GOPHER */
                 pu->file[0] != '/'
 #ifdef SUPPORT_DOS_DRIVE_PREFIX
                 && !(pu->scheme == SCM_LOCAL && IS_ALPHA(pu->file[0])
@@ -1046,12 +1015,6 @@ void parseURL2(char* url, ParsedURL* pu, ParsedURL* current)
                     relative_uri = TRUE;
                 }
             }
-#ifdef USE_GOPHER
-            else if (pu->scheme == SCM_GOPHER && pu->file[0] == '/') {
-                p = pu->file;
-                pu->file = allocStr(p + 1, -1);
-            }
-#endif /* USE_GOPHER */
         } else { /* scheme:[?query][#label] */
             pu->file = current->file;
             if (!pu->query)
@@ -1085,9 +1048,6 @@ void parseURL2(char* url, ParsedURL* pu, ParsedURL* current)
                 pu->file = cleanupName(pu->file);
             }
         } else if (
-#ifdef USE_GOPHER
-            pu->scheme != SCM_GOPHER &&
-#endif /* USE_GOPHER */
             pu->file[0] == '/') {
             /*
              * this happens on the following conditions:
@@ -1422,11 +1382,6 @@ openURL(char* url, ParsedURL* pu, ParsedURL* current,
     Str tmp;
     int sock, scheme;
     char *p, *q, *u;
-#ifdef USE_GOPHER
-    Str gophertmp;
-    char type;
-    int n;
-#endif
     URLFile uf;
     HRequest hr0;
     SSL* sslh = NULL;
@@ -1533,26 +1488,6 @@ retry:
             }
         }
         return uf;
-    case SCM_FTP:
-    case SCM_FTPDIR:
-        if (pu->file == NULL)
-            pu->file = allocStr("/", -1);
-        if (non_null(FTP_proxy) && !Do_not_use_proxy && pu->host != NULL && !check_no_proxy(pu->host)) {
-            hr->flag |= HR_FLAG_PROXY;
-            sock = openSocket(FTP_proxy_parsed.host,
-                schemeNumToName(FTP_proxy_parsed.scheme),
-                FTP_proxy_parsed.port);
-            if (sock < 0)
-                return uf;
-            uf.scheme = SCM_HTTP;
-            tmp = HTTPrequest(pu, current, hr, extra_header);
-            write(sock, tmp->ptr, tmp->length);
-        } else {
-            uf.stream = openFTPStream(pu, &uf);
-            uf.scheme = pu->scheme;
-            return uf;
-        }
-        break;
     case SCM_HTTP:
     case SCM_HTTPS:
         if (pu->file == NULL)
@@ -1657,69 +1592,6 @@ retry:
                 write_from_file(sock, request->body);
         }
         break;
-#ifdef USE_GOPHER
-    case SCM_GOPHER:
-        p = pu->file;
-        n = 0;
-        while (*p == '/') {
-            ++p;
-            ++n;
-        }
-        if (*p != '\0') {
-            type = pu->file[n];
-            switch (type) {
-            case '0':
-            case '1':
-            case 'm':
-            case 's':
-            case 'g':
-            case 'h':
-            case 'I':
-            case '5':
-            case '7':
-            case '9':
-                tmp = Strnew_charp(pu->file);
-                gophertmp = Strdup(tmp);
-                Strdelete(tmp, n, 1);
-                pu->file = tmp->ptr;
-                break;
-            default:
-                type = '\0';
-                break;
-            }
-        } else {
-            type = '\0';
-        }
-        if (pu->query != NULL) {
-            tmp = Strnew_charp(pu->file);
-            Strcat_char(tmp, '\t');
-            Strcat_charp(tmp, pu->query);
-            pu->file = tmp->ptr;
-        }
-        if (non_null(GOPHER_proxy) && !Do_not_use_proxy && pu->host != NULL && !check_no_proxy(pu->host)) {
-            hr->flag |= HR_FLAG_PROXY;
-            sock = openSocket(GOPHER_proxy_parsed.host,
-                schemeNumToName(GOPHER_proxy_parsed.scheme),
-                GOPHER_proxy_parsed.port);
-            if (sock < 0)
-                return uf;
-            uf.scheme = SCM_HTTP;
-            tmp = HTTPrequest(pu, current, hr, extra_header);
-        } else {
-            sock = openSocket(pu->host, schemeNumToName(pu->scheme), pu->port);
-            if (sock < 0)
-                return uf;
-            if (pu->file == NULL)
-                pu->file = "1";
-            tmp = Strnew_charp(file_unquote(pu->file));
-            Strcat_char(tmp, '\n');
-        }
-        write(sock, tmp->ptr, tmp->length);
-        if (type != '\0') {
-            pu->file = gophertmp->ptr;
-        }
-        break;
-#endif /* USE_GOPHER */
     case SCM_DATA:
         if (pu->file == NULL)
             return uf;
@@ -1999,14 +1871,6 @@ schemeToProxy(int scheme)
     case SCM_HTTPS:
         pu = &HTTPS_proxy_parsed;
         break;
-    case SCM_FTP:
-        pu = &FTP_proxy_parsed;
-        break;
-#ifdef USE_GOPHER
-    case SCM_GOPHER:
-        pu = &GOPHER_proxy_parsed;
-        break;
-#endif
 #ifdef DEBUG
     default:
         abort();

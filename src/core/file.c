@@ -109,7 +109,6 @@ static struct link_stack* link_stack = NULL;
 #define FORMSTACK_SIZE 10
 #define FRAMESTACK_SIZE 10
 
-
 #define INITIAL_FORM_SIZE 10
 static FormList** forms;
 static int* form_stack;
@@ -189,7 +188,6 @@ UFhalfclose(URLFile* f)
 {
     switch (f->scheme) {
     case SCM_FTP:
-        closeFTP();
         break;
     default:
         UFclose(f);
@@ -1204,9 +1202,6 @@ loadGeneralFile(char* path, ParsedURL* volatile current, char* referer,
     URLOption url_option;
     Str tmp;
     Str volatile page = NULL;
-#ifdef USE_GOPHER
-    int gopher_download = FALSE;
-#endif
     wc_ces charset = WC_CES_US_ASCII;
     HRequest hr;
     ParsedURL* volatile auth_pu;
@@ -1262,10 +1257,6 @@ load_doc: {
                 }
             }
         } break;
-        case SCM_FTPDIR:
-            page = loadFTPDir(&pu, &charset);
-            t = "ftp:directory";
-            break;
         case SCM_UNKNOWN:
             /* FIXME: gettextize? */
             disp_err_message(Sprintf("Unknown URI: %s",
@@ -1307,12 +1298,7 @@ load_doc: {
     if (header_string)
         header_string = NULL;
     TRAP_ON;
-    if (pu.scheme == SCM_HTTP || pu.scheme == SCM_HTTPS || ((
-#ifdef USE_GOPHER
-                                                                (pu.scheme == SCM_GOPHER && non_null(GOPHER_proxy)) ||
-#endif /* USE_GOPHER */
-                                                                (pu.scheme == SCM_FTP && non_null(FTP_proxy)))
-            && !Do_not_use_proxy && !check_no_proxy(pu.host))) {
+    if (pu.scheme == SCM_HTTP || pu.scheme == SCM_HTTPS) {
 
         if (fmInitialized) {
             term_cbreak();
@@ -1322,15 +1308,6 @@ load_doc: {
         }
         if (t_buf == NULL)
             t_buf = newBuffer(INIT_BUFFER_WIDTH);
-#if 0 /* USE_SSL */
-	if (IStype(f.stream) == IST_SSL) {
-	    Str s = ssl_get_certificate(f.stream, pu.host);
-	    if (s == NULL)
-		return NULL;
-	    else
-		t_buf->ssl_certificate = s->ptr;
-	}
-#endif
         readHeader(&f, t_buf, FALSE, &pu);
         if (((http_response_code >= 301 && http_response_code <= 303)
                 || http_response_code == 307)
@@ -1501,19 +1478,11 @@ page_loaded:
             Strfputs(s, src);
             fclose(src);
         }
-#ifdef USE_GOPHER
-        if (do_download || gopher_download) {
-#else
         if (do_download) {
-#endif
             char* file;
             if (!src)
                 return NULL;
             file = guess_filename(pu.file);
-#ifdef USE_GOPHER
-            if (f.scheme == SCM_GOPHER)
-                file = Sprintf("%s.html", file)->ptr;
-#endif
             doFileMove(tmp->ptr, file);
             return NO_BUFFER;
         }
@@ -1536,11 +1505,7 @@ page_loaded:
     current_content_length = 0;
     if ((p = checkHeader(t_buf, "Content-Length:")) != NULL)
         current_content_length = strtoclen(p);
-#ifdef USE_GOPHER
-    if (do_download || gopher_download) {
-#else
     if (do_download) {
-#endif
         /* download only */
         char* file;
         TRAP_OFF;

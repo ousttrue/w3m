@@ -111,9 +111,6 @@ static int OptionEncode = FALSE;
 #define CMT_USE_PROXY N_("Use proxy")
 #define CMT_HTTP_PROXY N_("URL of HTTP proxy host")
 #define CMT_HTTPS_PROXY N_("URL of HTTPS proxy host")
-#ifdef USE_GOPHER
-#define CMT_GOPHER_PROXY N_("URL of GOPHER proxy host")
-#endif /* USE_GOPHER */
 #define CMT_FTP_PROXY N_("URL of FTP proxy host")
 #define CMT_NO_PROXY N_("Domains to be accessed directly (no proxy)")
 #define CMT_NOPROXY_NETADDR N_("Check noproxy by network address")
@@ -468,11 +465,6 @@ struct param_ptr params4[] = {
         NULL },
     { "https_proxy", P_STRING, PI_TEXT, (void*)&HTTPS_proxy, CMT_HTTPS_PROXY,
         NULL },
-#ifdef USE_GOPHER
-    { "gopher_proxy", P_STRING, PI_TEXT, (void*)&GOPHER_proxy,
-        CMT_GOPHER_PROXY, NULL },
-#endif /* USE_GOPHER */
-    { "ftp_proxy", P_STRING, PI_TEXT, (void*)&FTP_proxy, CMT_FTP_PROXY, NULL },
     { "no_proxy", P_STRING, PI_TEXT, (void*)&NO_proxy, CMT_NO_PROXY, NULL },
     { "noproxy_netaddr", P_INT, PI_ONOFF, (void*)&NOproxy_netaddr,
         CMT_NOPROXY_NETADDR, NULL },
@@ -572,9 +564,6 @@ struct param_ptr params9[] = {
     { "disable_secret_security_check", P_INT, PI_ONOFF,
         (void*)&disable_secret_security_check, CMT_DISABLE_SECRET_SECURITY_CHECK,
         NULL },
-    { "ftppasswd", P_STRING, PI_TEXT, (void*)&ftppasswd, CMT_FTPPASS, NULL },
-    { "ftppass_hostnamegen", P_INT, PI_ONOFF, (void*)&ftppass_hostnamegen,
-        CMT_FTPPASS_HOSTNAMEGEN, NULL },
     { "pre_form_file", P_STRING, PI_TEXT, (void*)&pre_form_file,
         CMT_PRE_FORM_FILE, NULL },
     { "siteconf_file", P_STRING, PI_TEXT, (void*)&siteconf_file,
@@ -1040,12 +1029,6 @@ parse_proxy(void)
         parseURL(HTTP_proxy, &HTTP_proxy_parsed, NULL);
     if (non_null(HTTPS_proxy))
         parseURL(HTTPS_proxy, &HTTPS_proxy_parsed, NULL);
-#ifdef USE_GOPHER
-    if (non_null(GOPHER_proxy))
-        parseURL(GOPHER_proxy, &GOPHER_proxy_parsed, NULL);
-#endif
-    if (non_null(FTP_proxy))
-        parseURL(FTP_proxy, &FTP_proxy_parsed, NULL);
     if (non_null(NO_proxy))
         set_no_proxy(NO_proxy);
 }

@@ -333,10 +333,6 @@ extern Str unquote_mailcap(char* qstr, char* type, char* name, char* attr,
     int* mc_stat);
 extern TextList* make_domain_list(char* domain_list);
 extern int check_no_proxy(char* domain);
-extern InputStream openFTPStream(ParsedURL* pu, URLFile* uf);
-extern Str loadFTPDir(ParsedURL* pu, wc_ces* charset);
-extern void closeFTP(void);
-extern void disconnectFTP(void);
 extern AnchorList* putAnchor(AnchorList* al, char* url, char* target,
     Anchor** anchor_return, char* referer,
     char* title, unsigned char key, int line,

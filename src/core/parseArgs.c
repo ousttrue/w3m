@@ -71,9 +71,6 @@ fversion(FILE* f)
 #ifdef USE_W3MMAILER
         ",w3mmailer"
 #endif
-#ifdef USE_GOPHER
-        ",gopher"
-#endif
 #ifdef INET6
         ",ipv6"
 #endif

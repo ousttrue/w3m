@@ -52,7 +52,6 @@ const w3m_srcs = [_][]const u8{
     "symbol.c",
     "entity.c",
     "url.c",
-    "ftp.c",
     "mimehead.c",
     "regex.c",
     "news.c",
