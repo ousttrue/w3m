@@ -1,6 +1,7 @@
 #include "w3m.h"
 #define MAINPROGRAM
 #include "buffer.h"
+#include "str_util.h"
 #include "file.h"
 #include "history.h"
 #include "image.h"

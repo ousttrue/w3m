@@ -250,7 +250,6 @@ extern void escmap(void);
 extern void escbmap(void);
 extern void escdmap(char c);
 extern void multimap(void);
-extern Str unescape_spaces(Str s);
 extern Buffer* historyBuffer(struct Hist* hist);
 extern double log_like(int x);
 extern struct table* newTable(void);

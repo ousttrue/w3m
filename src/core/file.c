@@ -1,5 +1,6 @@
 #include "file.h"
 #include "buffer.h"
+#include "str_util.h"
 #include "display.h"
 #include "readbuffer.h"
 #include "symbol.h"

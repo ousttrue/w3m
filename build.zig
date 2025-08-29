@@ -33,9 +33,11 @@ const w3m_srcs = [_][]const u8{
     "putc.c",
     "auth.c",
     "ui.c",
+    "LineEditor.c",
 
     "url_scheme.c",
     "ssl_util.c",
+    "str_util.c",
 
     "file.c",
     "buffer.c",
