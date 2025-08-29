@@ -5,6 +5,7 @@
 #include "myctype.h"
 #include "tty.h"
 #include "screen.h"
+#include <wtf.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>

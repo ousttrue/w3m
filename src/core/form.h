@@ -6,6 +6,7 @@
 #define FORM_H
 
 #include "Str.h"
+#include <wc.h>
 
 #define FORM_UNKNOWN -1
 #define FORM_INPUT_TEXT 0

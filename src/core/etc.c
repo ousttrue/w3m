@@ -7,6 +7,7 @@
 #include "hash.h"
 #include "tty.h"
 #include <pwd.h>
+#include <wtf.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <time.h>

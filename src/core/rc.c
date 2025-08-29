@@ -16,7 +16,7 @@
 #include "regex.h"
 #include <stdlib.h>
 #include <stddef.h>
-#include "rc.h"
+#include <wtf.h>
 
 char* tmp_dir = 0;
 
@@ -241,6 +241,10 @@ struct sel_c {
     char* cvalue;
     char* text;
 };
+
+#include <libintl.h>
+#define _(String) gettext(String)
+#define N_(String) (String)
 
 static struct sel_c colorstr[] = {
     { 0, "black", N_("black") },

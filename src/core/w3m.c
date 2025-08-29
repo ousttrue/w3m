@@ -176,6 +176,10 @@ wrap_GC_warn_proc(char* msg, GC_word arg)
         fprintf(stderr, msg, (unsigned long)arg);
 }
 
+#include <libintl.h>
+#define _(String) gettext(String)
+#define N_(String) (String)
+
 void initialize()
 {
     wc_uint8 auto_detect;

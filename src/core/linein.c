@@ -12,6 +12,7 @@
 #include "screen.h"
 #include "putc.h"
 #include <stdbool.h>
+#include <wtf.h>
 
 #define STR_LEN 1024
 #define CLEN (getLines() - 2)

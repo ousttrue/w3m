@@ -10,6 +10,7 @@
 #include "regex.h"
 #include "event_poller.h"
 #include <stdio.h>
+#include <wtf.h>
 
 #ifdef USE_MENU
 
@@ -623,6 +624,10 @@ static Menu MainMenu;
 /* FIXME: gettextize here */
 static wc_ces MainMenuCharset = WC_CES_US_ASCII; /* FIXME: charset of source code */
 static int MainMenuEncode = FALSE;
+
+#include <libintl.h>
+#define _(String) gettext(String)
+#define N_(String) (String)
 
 static MenuItem MainMenuItem[] = {
     /* type        label           variable value func     popup keys data  */

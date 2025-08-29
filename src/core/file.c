@@ -24,6 +24,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <utime.h>
+#include <wtf.h>
 
 #ifndef max
 #define max(a, b) ((a) > (b) ? (a) : (b))

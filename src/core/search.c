@@ -4,6 +4,7 @@
 #include <signal.h>
 #include <errno.h>
 #include <unistd.h>
+#include <wtf.h>
 
 static void
 set_mark(Line* l, int pos, int epos)

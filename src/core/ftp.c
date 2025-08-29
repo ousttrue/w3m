@@ -8,6 +8,7 @@
 #include <signal.h>
 #include <setjmp.h>
 #include <time.h>
+#include <wtf.h>
 
 #ifdef DEBUG
 #include <malloc.h>

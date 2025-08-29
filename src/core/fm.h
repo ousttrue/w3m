@@ -1,4 +1,3 @@
-/* $Id: fm.h,v 1.149 2010/08/20 09:47:09 htrb Exp $ */
 /*
  * w3m: WWW wo Miru utility
  *
@@ -14,26 +13,9 @@
 #define _GNU_SOURCE /* strcasestr() */
 #endif
 
-#include <unistd.h>
 #include "config.h"
 #include "linein.h"
 #include "url.h"
-#include <gc.h>
-#include <Str.h>
-#include <wc.h>
-#include <wtf.h>
-
-#ifdef HAVE_LOCALE_H
-#include <locale.h>
-#endif
-#if !HAVE_SETLOCALE
-#define setlocale(category, locale) /* empty */
-#endif
-
-#include <libintl.h>
-#define _(String) gettext(String)
-#define N_(String) (String)
-
 #include "form.h"
 #include "parsetag.h"
 #include "parsetagx.h"
@@ -42,11 +24,10 @@
 #include "textlist.h"
 #include "funcname1.h"
 #include "istream.h"
-
-#ifndef HAVE_BCOPY
-void bcopy(const void*, void*, int);
-void bzero(void*, int);
-#endif /* HAVE_BCOPY */
+#include <unistd.h>
+#include <gc.h>
+#include <Str.h>
+#include <locale.h>
 
 #ifdef MAINPROGRAM
 #define global

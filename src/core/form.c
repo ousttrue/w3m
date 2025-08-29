@@ -10,6 +10,7 @@
 #include "local.h"
 #include "regex.h"
 #include "util.h"
+#include <wtf.h>
 
 extern Str* textarea_str;
 extern int max_textarea;

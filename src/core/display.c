@@ -13,6 +13,7 @@
 #include "putc.h"
 #include "fm.h"
 #include <assert.h>
+#include <wtf.h>
 
 /* *INDENT-OFF* */
 
