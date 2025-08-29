@@ -26,7 +26,7 @@ typedef struct _News {
 
 static News current_news = { NULL, 0, NULL, NULL, NULL };
 
-static JMP_BUF AbortLoading;
+static sigjmp_buf AbortLoading;
 
 static void
 KeyAbort(SIGNAL_ARG)

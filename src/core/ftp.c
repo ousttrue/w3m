@@ -36,7 +36,7 @@ static struct _FTP current_ftp = {
     NULL, 0, NULL, NULL, NULL, NULL, NULL
 };
 
-static JMP_BUF AbortLoading;
+static sigjmp_buf AbortLoading;
 
 static MySignalHandler
 KeyAbort(SIGNAL_ARG)

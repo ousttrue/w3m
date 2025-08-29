@@ -68,7 +68,7 @@ static char* MarkString = NULL;
 static char* SearchString = NULL;
 int (*searchRoutine)(Buffer*, char*);
 
-JMP_BUF IntReturn;
+sigjmp_buf IntReturn;
 
 static void cmd_loadfile(char* path);
 static void cmd_loadURL(char* url, ParsedURL* current, char* referer,

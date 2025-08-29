@@ -40,7 +40,7 @@ int ai_family_order_table[7][3] = {
 };
 #endif /* INET6 */
 
-static JMP_BUF AbortLoading;
+static sigjmp_buf AbortLoading;
 
 /* XXX: note html.h SCM_ */
 static int

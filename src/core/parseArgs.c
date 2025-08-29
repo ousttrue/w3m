@@ -15,7 +15,7 @@
 #include <gc.h>
 
 static int show_params_p = 0;
-extern JMP_BUF IntReturn;
+extern sigjmp_buf IntReturn;
 
 #define help() fusage(stdout, 0)
 #define usage() fusage(stderr, 1)

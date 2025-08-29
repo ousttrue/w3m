@@ -45,7 +45,7 @@ static void addnewline(Buffer* buf, char* line, Lineprop* prop,
     Linecolor* color, int pos, int width, int nlines);
 static void addLink(Buffer* buf, struct parsed_tag* tag);
 
-static JMP_BUF AbortLoading;
+static sigjmp_buf AbortLoading;
 
 static struct table* tables[MAX_TABLE];
 static struct table_mode table_mode[MAX_TABLE];
@@ -7089,7 +7089,7 @@ int save2tmp(URLFile uf, char* tmpf)
     FILE* ff;
     clen_t linelen = 0, trbyte = 0;
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
-    static JMP_BUF env_bak;
+    static sigjmp_buf env_bak;
     volatile int retval = 0;
     char* volatile buf = NULL;
 
@@ -7098,7 +7098,7 @@ int save2tmp(URLFile uf, char* tmpf)
         /* fclose(f); */
         return -1;
     }
-    bcopy(AbortLoading, env_bak, sizeof(JMP_BUF));
+    bcopy(AbortLoading, env_bak, sizeof(sigjmp_buf));
     if (SETJMP(AbortLoading) != 0) {
         goto _end;
     }
@@ -7141,7 +7141,7 @@ int save2tmp(URLFile uf, char* tmpf)
         }
     }
 _end:
-    bcopy(env_bak, AbortLoading, sizeof(JMP_BUF));
+    bcopy(env_bak, AbortLoading, sizeof(sigjmp_buf));
     TRAP_OFF;
     xfree(buf);
     fclose(ff);
