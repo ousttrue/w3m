@@ -82,9 +82,7 @@ fversion(FILE* f)
         ",ipv6"
 #endif
         ",alarm"
-#ifdef USE_MARK
         ",mark"
-#endif
     );
 }
 

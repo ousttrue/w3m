@@ -814,9 +814,7 @@ global int active_color init(6); /* cyan */
 global int useVisitedColor init(FALSE);
 global int visited_color init(5); /* magenta  */
 global int confirm_on_quit init(TRUE);
-#ifdef USE_MARK
 global int use_mark init(FALSE);
-#endif
 global int emacs_like_lineedit init(FALSE);
 global int space_autocomplete init(FALSE);
 global int vi_prec_num init(FALSE);

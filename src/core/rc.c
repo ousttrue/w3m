@@ -128,9 +128,7 @@ static int OptionEncode = FALSE;
 #define CMT_TMP N_("Directory for temporary files")
 #define CMT_CONFIRM_QQ N_("Confirm when quitting with q")
 #define CMT_CLOSE_TAB_BACK N_("Close tab if buffer is last when back")
-#ifdef USE_MARK
 #define CMT_USE_MARK N_("Enable mark operations")
-#endif
 #define CMT_EMACS_LIKE_LINEEDIT N_("Enable Emacs-style line editing")
 #define CMT_SPACE_AUTOCOMPLETE N_("Space key triggers file completion while editing URLs")
 #define CMT_VI_PREC_NUM N_("Enable vi-like numeric prefix")
@@ -439,9 +437,7 @@ struct param_ptr params3[] = {
     { "save_hist", P_INT, PI_ONOFF, (void*)&SaveURLHist, CMT_SAVEHIST, NULL },
     { "confirm_qq", P_INT, PI_ONOFF, (void*)&confirm_on_quit, CMT_CONFIRM_QQ,
         NULL },
-#ifdef USE_MARK
     { "mark", P_INT, PI_ONOFF, (void*)&use_mark, CMT_USE_MARK, NULL },
-#endif
     { "emacs_like_lineedit", P_INT, PI_ONOFF, (void*)&emacs_like_lineedit,
         CMT_EMACS_LIKE_LINEEDIT, NULL },
     { "space_autocomplete", P_INT, PI_ONOFF, (void*)&space_autocomplete,

@@ -479,17 +479,10 @@ extern void docCSet(void);
 extern void defCSet(void);
 extern void change_charset(struct parsed_tagarg* arg);
 
-#ifdef USE_MARK
 extern void _mark(void);
 extern void nextMk(void);
 extern void prevMk(void);
 extern void reMark(void);
-#else /* not USE_MARK */
-#define _mark nulcmd
-#define nextMk nulcmd
-#define prevMk nulcmd
-#define reMark nulcmd
-#endif /* not USE_MARK */
 
 #define mouse nulcmd
 #define sgrmouse nulcmd

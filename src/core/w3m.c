@@ -62,9 +62,7 @@ static int need_resize_screen = FALSE;
 MySignalHandler resize_hook(SIGNAL_ARG);
 static void resize_screen(void);
 
-#ifdef USE_MARK
 static char* MarkString = NULL;
-#endif
 static char* SearchString = NULL;
 int (*searchRoutine)(Buffer*, char*);
 
@@ -1779,7 +1777,6 @@ DEFUN(editScr, EDIT_SCREEN, "Edit rendered copy of document")
     unlink(tmpf);
 }
 
-#ifdef USE_MARK
 
 /* Set / unset mark */
 DEFUN(_mark, MARK, "Set/unset mark")
@@ -1896,7 +1893,6 @@ DEFUN(reMark, REG_MARK, "Mark all occurences of a pattern")
         }
     }
 }
-#endif /* USE_MARK */
 
 static Buffer*
 loadNormalBuf(Buffer* buf)
