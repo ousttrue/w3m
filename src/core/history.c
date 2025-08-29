@@ -1,5 +1,6 @@
 #include "history.h"
 #include "hash.h"
+#include "display.h"
 #include "fm.h"
 
 struct Hist {

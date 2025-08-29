@@ -1,4 +1,5 @@
 #include "etc.h"
+#include "display.h"
 #include "rc.h"
 #include "fm.h"
 #include "ctrlcode.h"

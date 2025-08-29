@@ -185,7 +185,6 @@ extern int doFileMove(char* tmpf, char* defstr);
 extern int checkCopyFile(char* path1, char* path2);
 extern int checkSaveFile(InputStream stream, char* path);
 extern int checkOverWrite(char* path);
-extern char* inputAnswer(char* prompt);
 extern int matchattr(char* p, char* attr, int len, Str* value);
 extern char* checkHeader(Buffer* buf, char* field);
 extern void addDownloadList(pid_t pid, char* url, char* save, char* lock,
@@ -214,11 +213,7 @@ extern void addChar(char c, Lineprop mode);
 extern void addMChar(char* c, Lineprop mode, size_t len);
 extern void record_err_message(char* s);
 extern Buffer* message_list_panel(void);
-extern void message(char* s, int return_x, int return_y);
-extern void disp_err_message(char* s, int redraw_current);
-extern void disp_message_nsec(char* s, int redraw_current, int sec, int purge,
-    int mouse);
-extern void disp_message(char* s, int redraw_current);
+
 #define disp_message_nomouse disp_message
 extern void set_delayed_message(char* s);
 extern void cursorUp0(Buffer* buf, int n);

@@ -115,7 +115,6 @@ int ISread_n(InputStream stream, char* dst, int bufsize);
 extern int ISfileno(InputStream stream);
 extern int ISeos(InputStream stream);
 extern void ssl_accept_this_site(char* hostname);
-extern Str ssl_get_certificate(SSL* ssl, char* hostname);
 
 #define IST_BASIC 0
 #define IST_FILE 1

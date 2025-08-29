@@ -3,7 +3,9 @@
  * Initialization file etc.
  */
 #include "rc.h"
+#include "display.h"
 #include "image.h"
+#include "ssl_util.h"
 #include "symbol.h"
 #include "file.h"
 #include "fm.h"

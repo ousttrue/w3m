@@ -1,4 +1,5 @@
 #include "auth.h"
+#include "display.h"
 #include "url.h"
 #include "fm.h"
 #include "ctrlcode.h"

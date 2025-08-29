@@ -1,4 +1,5 @@
 #include "image.h"
+#include "display.h"
 #include "term_size.h"
 #include "term_renderer.h"
 #include "rc.h"

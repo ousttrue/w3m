@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "display.h"
 #include "w3m.h"
 #include "file.h"
 #include "image.h"
