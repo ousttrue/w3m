@@ -9,6 +9,7 @@ from enum import Enum, auto
 HERE = pathlib.Path(__file__).absolute().parent
 
 CONTEXT = {
+    "HAVE_SIGSETJMP": True,
     "SIGWINCH": True,
     "SIGPIPE": True,
     "SIGCHLD": True,
@@ -56,7 +57,7 @@ CONTEXT = {
     # "ID_EXT": False,
     # "MATRIX": True,
     # "FORMAT_NICE": True,
-    'DONT_CALL_GC_AFTER_FORK': False, 
+    "DONT_CALL_GC_AFTER_FORK": False,
 }
 
 MACRO_PATTERN = re.compile(r"^#\s*(\S+)\s*(\S.*)?")
