@@ -11,16 +11,17 @@ typedef struct scline {
     enum LineStatus isdirty;
     short eol;
 } Screen;
+
 struct VirtualTerm {
-    int max_LINES; // = 0;
-    int max_COLS; // = 0;
-    int tab_step; // = 8;
+    int ROWS;
+    int COLS;
+    int tab_step;
     int CurLine;
     int CurColumn;
-    Screen* ScreenElem; // = NULL,
-    Screen** ScreenImage; // = NULL;
-    l_prop CurrentMode; // = 0;
-    int graph_enabled; // = 0;
+    Screen* ScreenElem;
+    Screen** ScreenImage;
+    l_prop CurrentMode;
+    int graph_enabled;
 };
 
 struct VirtualTerm* getScreen();

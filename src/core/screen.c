@@ -24,18 +24,18 @@ static bool NEED_CE(enum LineStatus d) { return d & L_NEED_CE; }
 
 void setupscreen(struct VirtualTerm* vt)
 {
-    if (getLines() + 1 > vt->max_LINES) {
-        vt->max_LINES = getLines() + 1;
-        vt->max_COLS = 0;
-        vt->ScreenElem = New_N(Screen, vt->max_LINES);
-        vt->ScreenImage = New_N(Screen*, vt->max_LINES);
+    if (getLines() > vt->ROWS) {
+        vt->ROWS = getLines();
+        vt->COLS = 0;
+        vt->ScreenElem = New_N(Screen, vt->ROWS);
+        vt->ScreenImage = New_N(Screen*, vt->ROWS);
     }
-    if (getCols() + 1 > vt->max_COLS) {
-        vt->max_COLS = getCols() + 1;
-        for (int i = 0; i < vt->max_LINES; i++) {
-            vt->ScreenElem[i].lineimage = New_N(char*, vt->max_COLS);
-            bzero((void*)vt->ScreenElem[i].lineimage, vt->max_COLS * sizeof(char*));
-            vt->ScreenElem[i].lineprop = New_N(l_prop, vt->max_COLS);
+    if (getCols() > vt->COLS) {
+        vt->COLS = getCols();
+        for (int i = 0; i < vt->ROWS; i++) {
+            vt->ScreenElem[i].lineimage = New_N(char*, vt->COLS);
+            bzero((void*)vt->ScreenElem[i].lineimage, vt->COLS * sizeof(char*));
+            vt->ScreenElem[i].lineprop = New_N(l_prop, vt->COLS);
         }
     }
     {
@@ -45,7 +45,7 @@ void setupscreen(struct VirtualTerm* vt)
             vt->ScreenImage[i]->lineprop[0] = S_EOL;
             vt->ScreenImage[i]->isdirty = 0;
         }
-        for (; i < vt->max_LINES; i++) {
+        for (; i < vt->ROWS; i++) {
             vt->ScreenImage[i] = &vt->ScreenElem[i];
             vt->ScreenImage[i]->lineprop[0] = S_EOL;
             vt->ScreenElem[i].isdirty = L_UNUSED;
@@ -306,10 +306,10 @@ void clear(struct VirtualTerm* vt)
 {
     move(vt, 0, 0);
     struct scline** l = vt->ScreenImage;
-    for (int i = 0; i < vt->max_LINES; ++i, ++l) {
+    for (int i = 0; i < vt->ROWS; ++i, ++l) {
         (*l)->isdirty = 0;
         l_prop* p = (*l)->lineprop;
-        for (int j = 0; j < vt->max_COLS; ++j, ++p) {
+        for (int j = 0; j < vt->COLS; ++j, ++p) {
             *p = S_EOL;
         }
     }
