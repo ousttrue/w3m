@@ -77,7 +77,6 @@ static void keyPressEventProc(int c);
 static char* getCurWord(Buffer* buf, int* spos, int* epos);
 
 static int display_ok = FALSE;
-int prec_num = 0;
 int prev_key = -1;
 int on_target = 1;
 static int add_download_list = FALSE;
@@ -89,8 +88,6 @@ static void _followForm(int);
 static void _nextA(int);
 static void _prevA(int);
 static int check_target = TRUE;
-#define PREC_NUM (prec_num ? prec_num : 1)
-#define PREC_LIMIT 10000
 static int searchKeyNum(void);
 
 int enable_inline_image;
@@ -503,23 +500,17 @@ void onKeyInput(char c)
         alarm(0);
     }
     if (IS_ASCII(c)) { /* Ascii */
-        if (('0' <= c) && (c <= '9') && (prec_num || (GlobalKeymap[c] == FUNCNAME_nulcmd))) {
-            prec_num = prec_num * 10 + (int)(c - '0');
-            if (prec_num > PREC_LIMIT)
-                prec_num = PREC_LIMIT;
-        } else {
-            set_buffer_environ(Currentbuf);
-            save_buffer_position(Currentbuf);
-            keyPressEventProc((int)c);
-            struct Frame* frame = displayBuffer();
+        set_buffer_environ(Currentbuf);
+        save_buffer_position(Currentbuf);
+        keyPressEventProc((int)c);
+        struct Frame* frame = displayBuffer();
 
-            wc_putc_init(InnerCharset, DisplayCharset);
-            refreshFrame(ttyWriter(), frame);
-            wc_putc_end(ttyWriter());
+        wc_putc_init(InnerCharset, DisplayCharset);
+        refreshFrame(ttyWriter(), frame);
+        wc_putc_end(ttyWriter());
 
-            MOVE(ttyWriter(), getScreen()->CurLine, getScreen()->CurColumn);
-            flushWriter(ttyWriter()); // continue;            prec_num = 0;
-        }
+        MOVE(ttyWriter(), getScreen()->CurLine, getScreen()->CurColumn);
+        flushWriter(ttyWriter()); // continue;
     }
     prev_key = CurrentKey;
     CurrentKey = -1;
@@ -723,25 +714,19 @@ nscroll(int n)
 /* Move page forward */
 DEFUN(pgFore, NEXT_PAGE, "Scroll down one page")
 {
-    if (vi_prec_num)
-        nscroll(searchKeyNum() * (Currentbuf->LINES - 1));
-    else
-        nscroll(prec_num ? searchKeyNum() : searchKeyNum() * (Currentbuf->LINES - 1));
+    nscroll(searchKeyNum() * (Currentbuf->LINES - 1));
 }
 
 /* Move page backward */
 DEFUN(pgBack, PREV_PAGE, "Scroll up one page")
 {
-    if (vi_prec_num)
-        nscroll(-searchKeyNum() * (Currentbuf->LINES - 1));
-    else
-        nscroll(-(prec_num ? searchKeyNum() : searchKeyNum() * (Currentbuf->LINES - 1)));
+    nscroll(searchKeyNum() * (Currentbuf->LINES - 1));
 }
 
 /* Move half page forward */
 DEFUN(hpgFore, NEXT_HALF_PAGE, "Scroll down half a page")
 {
-    nscroll(searchKeyNum() * (Currentbuf->LINES / 2 - 1));
+    nscroll(-searchKeyNum() * (Currentbuf->LINES / 2 - 1));
 }
 
 /* Move half page backward */
@@ -819,11 +804,10 @@ srchcore(char* volatile str, int (*func)(Buffer*, char*))
     MySignalFunc prevtrap = mySignal(SIGINT, intTrap);
     crmode();
     if (SETJMP(IntReturn) == 0) {
-        for (i = 0; i < PREC_NUM; i++) {
-            result = func(Currentbuf, str);
-            if (i < PREC_NUM - 1 && result & SR_FOUND)
-                clear_mark(Currentbuf->currentLine);
-        }
+
+        result = func(Currentbuf, str);
+        if (result & SR_FOUND)
+            clear_mark(Currentbuf->currentLine);
     }
     mySignal(SIGINT, prevtrap);
     term_raw();
@@ -865,7 +849,6 @@ dispincsrch(int ch, Str buf, Lineprop* prop)
         searchRoutine = forwardSearch;
         do_next_search = TRUE;
         break;
-
 
     default:
         if (ch >= 0)
@@ -1657,9 +1640,7 @@ void _goLine(const char* l)
         return;
     }
     Currentbuf->pos = 0;
-    if (((*l == '^') || (*l == '$')) && prec_num) {
-        gotoRealLine(Currentbuf, prec_num);
-    } else if (*l == '^') {
+    if (*l == '^') {
         Currentbuf->topLine = Currentbuf->currentLine = Currentbuf->firstLine;
     } else if (*l == '$') {
         Currentbuf->topLine = lineSkip(Currentbuf, Currentbuf->lastLine,
@@ -1674,9 +1655,7 @@ DEFUN(goLine, GOTO_LINE, "Go to the specified line")
 {
 
     char* str = searchKeyData();
-    if (prec_num)
-        _goLine("^");
-    else if (str)
+    if (str)
         _goLine(str);
     else
         /* FIXME: gettextize? */
@@ -1776,7 +1755,6 @@ DEFUN(editScr, EDIT_SCREEN, "Edit rendered copy of document")
             ->ptr);
     unlink(tmpf);
 }
-
 
 /* Set / unset mark */
 DEFUN(_mark, MARK, "Set/unset mark")
@@ -2494,10 +2472,6 @@ DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink")
     if (!hl || hl->nmark == 0)
         return;
 
-    if (prec_num > hl->nmark)
-        hseq = hl->nmark - 1;
-    else if (prec_num > 0)
-        hseq = prec_num - 1;
     do {
         if (hseq >= hl->nmark)
             return;
@@ -2526,12 +2500,7 @@ DEFUN(lastA, LINK_END, "Move to the last hyperlink")
     if (!hl || hl->nmark == 0)
         return;
 
-    if (prec_num >= hl->nmark)
-        hseq = 0;
-    else if (prec_num > 0)
-        hseq = hl->nmark - prec_num;
-    else
-        hseq = hl->nmark - 1;
+    hseq = hl->nmark - 1;
     do {
         if (hseq < 0)
             return;
@@ -2902,35 +2871,17 @@ DEFUN(nextU, NEXT_UP, "Move upward to the next hyperlink")
 /* go to the next bufferr */
 DEFUN(nextBf, NEXT, "Switch to the next buffer")
 {
-    Buffer* buf;
-    int i;
-
-    for (i = 0; i < PREC_NUM; i++) {
-        buf = prevBuffer(Firstbuf, Currentbuf);
-        if (!buf) {
-            if (i == 0)
-                return;
-            break;
-        }
-        Currentbuf = buf;
-    }
+    Currentbuf = prevBuffer(Firstbuf, Currentbuf);
 }
 
 /* go to the previous bufferr */
 DEFUN(prevBf, PREV, "Switch to the previous buffer")
 {
-    Buffer* buf;
-    int i;
-
-    for (i = 0; i < PREC_NUM; i++) {
-        buf = Currentbuf->nextBuffer;
-        if (!buf) {
-            if (i == 0)
-                return;
-            break;
-        }
-        Currentbuf = buf;
+    Buffer* buf = Currentbuf->nextBuffer;
+    if (!buf) {
+        return;
     }
+    Currentbuf = buf;
 }
 
 static int
@@ -3778,36 +3729,7 @@ invoke_browser(char* url)
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
     browser = searchKeyData();
     if (browser == NULL || *browser == '\0') {
-        switch (prec_num) {
-        case 0:
-        case 1:
-            browser = ExtBrowser;
-            break;
-        case 2:
-            browser = ExtBrowser2;
-            break;
-        case 3:
-            browser = ExtBrowser3;
-            break;
-        case 4:
-            browser = ExtBrowser4;
-            break;
-        case 5:
-            browser = ExtBrowser5;
-            break;
-        case 6:
-            browser = ExtBrowser6;
-            break;
-        case 7:
-            browser = ExtBrowser7;
-            break;
-        case 8:
-            browser = ExtBrowser8;
-            break;
-        case 9:
-            browser = ExtBrowser9;
-            break;
-        }
+        browser = ExtBrowser;
         if (browser == NULL || *browser == '\0') {
             browser = inputStr("Browse command: ", NULL);
             if (browser != NULL)
@@ -4104,7 +4026,7 @@ searchKeyNum(void)
     d = searchKeyData();
     if (d != NULL)
         n = atoi(d);
-    return n * PREC_NUM;
+    return n;
 }
 
 void deleteFiles()
@@ -4585,8 +4507,7 @@ DEFUN(undoPos, UNDO, "Cancel the last cursor movement")
         return;
     if (!b || !b->prev)
         return;
-    for (i = 0; i < PREC_NUM && b->prev; i++, b = b->prev)
-        ;
+
     resetPos(b);
 }
 
@@ -4599,8 +4520,7 @@ DEFUN(redoPos, REDO, "Cancel the last undo")
         return;
     if (!b || !b->next)
         return;
-    for (i = 0; i < PREC_NUM && b->next; i++, b = b->next)
-        ;
+
     resetPos(b);
 }
 
