@@ -3,6 +3,7 @@
  */
 #include "fm.h"
 #include "image.h"
+#include "ctrlcode.h"
 #include "etc.h"
 #include <math.h>
 

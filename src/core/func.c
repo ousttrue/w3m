@@ -9,6 +9,7 @@
 #include "myctype.h"
 #include "regex.h"
 #include "rc.h"
+#include "ctrlcode.h"
 
 #include "history.h"
 #include "funcname.c"

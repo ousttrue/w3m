@@ -4,6 +4,7 @@
 #include "fm.h"
 #include "event_poller.h"
 #include "screen.h"
+#include "ctrlcode.h"
 
 char* NullLine = "";
 Lineprop NullProp[] = { 0 };

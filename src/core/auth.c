@@ -1,6 +1,7 @@
 #include "auth.h"
 #include "url.h"
 #include "fm.h"
+#include "ctrlcode.h"
 #include "tty.h"
 
 #include <openssl/md5.h>

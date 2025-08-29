@@ -2,6 +2,7 @@
 #include "history.h"
 #include "screen.h"
 #include "term_renderer.h"
+#include "ctrlcode.h"
 #include "display.h"
 #include "tty.h"
 #include "term_size.h"

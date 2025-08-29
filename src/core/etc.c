@@ -1,6 +1,7 @@
 #include "etc.h"
 #include "rc.h"
 #include "fm.h"
+#include "ctrlcode.h"
 #include "myctype.h"
 #include "html.h"
 #include "hash.h"

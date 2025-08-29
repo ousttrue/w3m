@@ -14,26 +14,14 @@
 #define _GNU_SOURCE /* strcasestr() */
 #endif
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <limits.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <unistd.h>
 #include "config.h"
 #include "linein.h"
 #include "url.h"
 
-#ifdef USE_MENU
 #define MENU_SELECT
 #define MENU_MAP
-#endif /* USE_MENU */
 
-
-#include "ctrlcode.h"
-#include "html.h"
 #include <gc.h>
 #include <Str.h>
 #include <wc.h>
@@ -891,7 +879,6 @@ global int FoldLine init(FALSE);
 #define DEFAULT_URL_LINK 2
 global int DefaultURLString init(DEFAULT_URL_CURRENT);
 global int MarkAllPages init(FALSE);
-
 
 global struct auth_cookie* Auth_cookie init(NULL);
 global struct cookie* First_cookie init(NULL);

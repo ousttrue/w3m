@@ -1,6 +1,7 @@
 #include "display.h"
 #include "image.h"
 #include "history.h"
+#include "ctrlcode.h"
 #include "buffer.h"
 #include "term_size.h"
 #include "TermEntry.h"
