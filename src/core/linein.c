@@ -72,7 +72,9 @@ char* inputLineHistSearch(struct UI ui,
     unsigned char c;
     wc_char_conv_init(wc_guess_8bit_charset(DisplayCharset), InnerCharset);
     GetChFunc getch = event_begin_input(-1);
-    do {
+
+    while (g_editor.i_cont) {
+        // update offset
         int x = calcPosition(g_editor.strBuf->ptr, g_editor.strProp, g_editor.CLen, g_editor.CPos, 0, CP_FORCE);
         if (x - rpos > g_editor.offset) {
             int y = calcPosition(g_editor.strBuf->ptr, g_editor.strProp, g_editor.CLen, g_editor.CLen, 0, CP_AUTO);
@@ -86,18 +88,25 @@ char* inputLineHistSearch(struct UI ui,
             else
                 g_editor.offset = 0;
         }
+
+        // show prompt
         move(ui.vt, ui.rows - 1, 0);
         addstr(ui.vt, prompt);
+
+        // show current
         if (g_editor.is_passwd)
             addPasswd(&g_editor,
                 g_editor.strBuf->ptr, g_editor.strProp, g_editor.CLen, g_editor.offset, ui.cols - opos);
         else
             addStr(&g_editor,
                 g_editor.strBuf->ptr, g_editor.strProp, g_editor.CLen, g_editor.offset, ui.cols - opos);
+
+        // cursor
         clrtoeolx(ui.vt);
         move(ui.vt, ui.rows - 1, opos + x - g_editor.offset);
-        struct Frame* frame = screenToFrame(getScreen());
 
+        // draw frame
+        struct Frame* frame = screenToFrame(getScreen());
         wc_putc_init(InnerCharset, DisplayCharset);
         refreshFrame(ttyWriter(), frame);
         wc_putc_end(ttyWriter());
@@ -157,7 +166,7 @@ char* inputLineHistSearch(struct UI ui,
         }
         if (g_editor.CLen && (flag & IN_CHAR))
             break;
-    } while (g_editor.i_cont);
+    }
     event_end_input(getch);
 
     if (g_editor.i_broken)
