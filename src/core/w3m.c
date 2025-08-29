@@ -133,9 +133,6 @@ sig_chld(int signo)
 static void
 SigPipe(SIGNAL_ARG)
 {
-#ifdef USE_MIGEMO
-    init_migemo();
-#endif
     mySignal(SIGPIPE, SigPipe);
     SIGNAL_RETURN;
 }
@@ -871,11 +868,6 @@ dispincsrch(int ch, Str buf, Lineprop* prop)
         do_next_search = TRUE;
         break;
 
-#ifdef USE_MIGEMO
-    case 034:
-        migemo_active = -migemo_active;
-        goto done;
-#endif
 
     default:
         if (ch >= 0)
@@ -906,15 +898,6 @@ dispincsrch(int ch, Str buf, Lineprop* prop)
     }
 
     clear_mark(Currentbuf->currentLine);
-#ifdef USE_MIGEMO
-done:
-    while (*str++ != '\0') {
-        if (migemo_active > 0)
-            *prop++ |= PE_UNDER;
-        else
-            *prop++ &= ~PE_UNDER;
-    }
-#endif
     return -1;
 }
 
@@ -4150,9 +4133,6 @@ void deleteFiles()
 
 void w3m_exit(int i)
 {
-#ifdef USE_MIGEMO
-    init_migemo(); /* close pipe to migemo */
-#endif
     stopDownload();
     deleteFiles();
     free_ssl_ctx();

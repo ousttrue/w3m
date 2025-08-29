@@ -206,10 +206,6 @@ static int OptionEncode = FALSE;
 #define CMT_META_REFRESH N_("Enable processing of meta-refresh tag")
 #define CMT_LOCALHOST_ONLY N_("Restrict connections only to localhost")
 
-#ifdef USE_MIGEMO
-#define CMT_USE_MIGEMO N_("Enable Migemo (Roma-ji search)")
-#define CMT_MIGEMO_COMMAND N_("Migemo command")
-#endif /* USE_MIGEMO */
 
 #define CMT_DISPLAY_CHARSET N_("Display charset")
 #define CMT_DOCUMENT_CHARSET N_("Default document charset")
@@ -457,12 +453,6 @@ struct param_ptr params3[] = {
     { "wrap_search", P_INT, PI_ONOFF, (void*)&WrapDefault, CMT_WRAP, NULL },
     { "ignorecase_search", P_INT, PI_ONOFF, (void*)&IgnoreCase,
         CMT_IGNORE_CASE, NULL },
-#ifdef USE_MIGEMO
-    { "use_migemo", P_INT, PI_ONOFF, (void*)&use_migemo, CMT_USE_MIGEMO,
-        NULL },
-    { "migemo_command", P_STRING, PI_TEXT, (void*)&migemo_command,
-        CMT_MIGEMO_COMMAND, NULL },
-#endif /* USE_MIGEMO */
     { "clear_buffer", P_INT, PI_ONOFF, (void*)&clear_buffer, CMT_CLEAR_BUF,
         NULL },
     { "decode_cte", P_CHARINT, PI_ONOFF, (void*)&DecodeCTE, CMT_DECODE_CTE,
@@ -1145,9 +1135,6 @@ void sync_with_option(void)
     parse_cookie();
     initMailcap();
     initMimeTypes();
-#ifdef USE_MIGEMO
-    init_migemo();
-#endif
     if (fmInitialized && (displayImage || enable_inline_image))
         initImage();
     loadPasswd();

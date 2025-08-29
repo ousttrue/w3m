@@ -27,7 +27,7 @@ CONTEXT = {
     # 'HAVE_WAITPID': True,
     #
     # 'USE_INCLUDED_SRAND48': False,
-    # "USE_MIGEMO": False,
+    "USE_MIGEMO": False,
     # "USE_W3MMAILER": False,
     # "USE_MARK": False,
     "__CYGWIN__": False,

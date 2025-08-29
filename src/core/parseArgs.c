@@ -85,9 +85,6 @@ fversion(FILE* f)
 #ifdef USE_MARK
         ",mark"
 #endif
-#ifdef USE_MIGEMO
-        ",migemo"
-#endif
     );
 }
 

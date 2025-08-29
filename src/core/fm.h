@@ -895,11 +895,6 @@ global int FoldLine init(FALSE);
 global int DefaultURLString init(DEFAULT_URL_CURRENT);
 global int MarkAllPages init(FALSE);
 
-#ifdef USE_MIGEMO
-global int use_migemo init(FALSE);
-global int migemo_active init(0);
-global char* migemo_command init(DEF_MIGEMO_COMMAND);
-#endif /* USE_MIGEMO */
 
 global struct auth_cookie* Auth_cookie init(NULL);
 global struct cookie* First_cookie init(NULL);
