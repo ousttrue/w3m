@@ -28,6 +28,50 @@ terminated(unsigned char c)
     return 0;
 }
 
+void le_initialize(struct LineEditor* e, struct Hist* hist, enum InputLineFlags flag,
+    const char* def_str)
+{
+    e->offset = 0;
+
+    e->is_passwd = false;
+    e->move_word = true;
+    e->CurrentHist = hist;
+    if (hist != NULL) {
+        e->use_hist = true;
+        e->strCurrentBuf = NULL;
+    } else {
+        e->use_hist = false;
+    }
+
+    if (flag & IN_URL) {
+        e->cm_mode = CPL_ALWAYS | CPL_URL;
+    } else if (flag & IN_FILENAME) {
+        e->cm_mode = CPL_ALWAYS;
+    } else if (flag & IN_PASSWORD) {
+        e->cm_mode = CPL_NEVER;
+        e->is_passwd = true;
+        e->move_word = FALSE;
+    } else if (flag & IN_COMMAND)
+        e->cm_mode = CPL_ON;
+    else
+        e->cm_mode = CPL_OFF;
+
+    if (def_str) {
+        e->strBuf = Strnew_charp(def_str);
+        e->CLen = e->CPos = setStrType(e, e->strBuf, e->strProp);
+    } else {
+        e->strBuf = Strnew();
+        e->CLen = e->CPos = 0;
+    }
+
+    e->i_cont = TRUE;
+    e->i_broken = FALSE;
+    e->i_quote = FALSE;
+    e->cm_next = FALSE;
+    e->cm_disp_next = -1;
+    e->need_redraw = FALSE;
+}
+
 void next_compl(struct LineEditor* e, int next)
 {
     if (e->cm_mode == CPL_NEVER || e->cm_mode & CPL_OFF)

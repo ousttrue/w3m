@@ -10,6 +10,8 @@
 struct VirtualTerm;
 struct UI {
     struct VirtualTerm* vt;
+    int rows;
+    int cols;
 };
 
 struct UI getUI();

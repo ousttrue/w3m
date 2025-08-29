@@ -5,7 +5,6 @@
 #include "ctrlcode.h"
 #include "display.h"
 #include "tty.h"
-#include "term_size.h"
 #include "fm.h"
 #include "local.h"
 #include "event_poller.h"
@@ -61,51 +60,14 @@ static struct LineEditor g_editor;
 char* inputLineHistSearch(struct UI ui,
     const char* prompt, const char* def_str, enum InputLineFlags flag, struct Hist* hist, IncFunc incrfunc)
 {
-    g_editor.is_passwd = false;
-    g_editor.move_word = TRUE;
-
-    g_editor.CurrentHist = hist;
-    if (hist != NULL) {
-        g_editor.use_hist = TRUE;
-        g_editor.strCurrentBuf = NULL;
-    } else {
-        g_editor.use_hist = FALSE;
-    }
-    if (flag & IN_URL) {
-        g_editor.cm_mode = CPL_ALWAYS | CPL_URL;
-    } else if (flag & IN_FILENAME) {
-        g_editor.cm_mode = CPL_ALWAYS;
-    } else if (flag & IN_PASSWORD) {
-        g_editor.cm_mode = CPL_NEVER;
-        g_editor.is_passwd = true;
-        g_editor.move_word = FALSE;
-    } else if (flag & IN_COMMAND)
-        g_editor.cm_mode = CPL_ON;
-    else
-        g_editor.cm_mode = CPL_OFF;
+    le_initialize(&g_editor, hist, flag, def_str);
 
     int opos = get_strwidth(prompt);
-    int epos = getLines() - 2 - opos;
+    int epos = ui.rows - 2 - opos;
     if (epos < 0)
         epos = 0;
     int lpos = epos / 3;
     int rpos = epos * 2 / 3;
-    g_editor.offset = 0;
-
-    if (def_str) {
-        g_editor.strBuf = Strnew_charp(def_str);
-        g_editor.CLen = g_editor.CPos = setStrType(&g_editor, g_editor.strBuf, g_editor.strProp);
-    } else {
-        g_editor.strBuf = Strnew();
-        g_editor.CLen = g_editor.CPos = 0;
-    }
-
-    g_editor.i_cont = TRUE;
-    g_editor.i_broken = FALSE;
-    g_editor.i_quote = FALSE;
-    g_editor.cm_next = FALSE;
-    g_editor.cm_disp_next = -1;
-    g_editor.need_redraw = FALSE;
 
     unsigned char c;
     wc_char_conv_init(wc_guess_8bit_charset(DisplayCharset), InnerCharset);
@@ -124,14 +86,16 @@ char* inputLineHistSearch(struct UI ui,
             else
                 g_editor.offset = 0;
         }
-        move(ui.vt, getLines() - 1, 0);
+        move(ui.vt, ui.rows - 1, 0);
         addstr(ui.vt, prompt);
         if (g_editor.is_passwd)
-            addPasswd(&g_editor, g_editor.strBuf->ptr, g_editor.strProp, g_editor.CLen, g_editor.offset, getCols() - opos);
+            addPasswd(&g_editor,
+                g_editor.strBuf->ptr, g_editor.strProp, g_editor.CLen, g_editor.offset, ui.cols - opos);
         else
-            addStr(&g_editor, g_editor.strBuf->ptr, g_editor.strProp, g_editor.CLen, g_editor.offset, getCols() - opos);
+            addStr(&g_editor,
+                g_editor.strBuf->ptr, g_editor.strProp, g_editor.CLen, g_editor.offset, ui.cols - opos);
         clrtoeolx(ui.vt);
-        move(ui.vt, getLines() - 1, opos + x - g_editor.offset);
+        move(ui.vt, ui.rows - 1, opos + x - g_editor.offset);
         struct Frame* frame = screenToFrame(getScreen());
 
         wc_putc_init(InnerCharset, DisplayCharset);
@@ -199,7 +163,7 @@ char* inputLineHistSearch(struct UI ui,
     if (g_editor.i_broken)
         return NULL;
 
-    move(getScreen(), getLines() - 1, 0);
+    move(getScreen(), ui.rows - 1, 0);
     struct Frame* frame = screenToFrame(getScreen());
 
     wc_putc_init(InnerCharset, DisplayCharset);

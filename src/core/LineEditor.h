@@ -18,6 +18,15 @@ enum CompletionStatus {
     CPL_MENU = 3,
 };
 
+enum InputLineFlags {
+    IN_STRING = 0x10,
+    IN_FILENAME = 0x20,
+    IN_PASSWORD = 0x40,
+    IN_COMMAND = 0x80,
+    IN_URL = 0x100,
+    IN_CHAR = 0x200,
+};
+
 #define STR_LEN 1024
 
 struct LineEditor {
@@ -35,11 +44,12 @@ struct LineEditor {
 
     // completion
     enum CompletionMode cm_mode;
-    int cm_next;
+    bool cm_next;
     bool cm_clear;
-    int cm_disp_next, cm_disp_clear;
+    int cm_disp_next;
+    int cm_disp_clear;
 
-    int need_redraw;
+    bool need_redraw;
     bool move_word;
 
     Str strBuf;
@@ -56,6 +66,8 @@ struct LineEditor {
     int NCFileOffset;
 };
 
+void le_initialize(struct LineEditor* e, struct Hist*, enum InputLineFlags flag,
+    const char* def_str);
 void insertself(struct LineEditor* e, char c);
 #define iself ((void (*)())insertself)
 void next_compl(struct LineEditor* e, int next);
