@@ -3,7 +3,6 @@
 #include "symbol.h"
 #include "w3m.h"
 #include "image.h"
-#include "term_size.h"
 #include "screen.h"
 #include "TermEntry.h"
 #include "graphicchar.h"
@@ -715,12 +714,12 @@ void geom_menu(Menu* menu, int x, int y, int mselect)
         menu->width = (menu->width / FRAME_WIDTH + 1) * FRAME_WIDTH;
     win_x = menu->x - FRAME_WIDTH;
     win_w = menu->width + 2 * FRAME_WIDTH;
-    if (win_x + win_w > getCols())
-        win_x = getCols() - win_w;
+    if (win_x + win_w > getScreen()->COLS)
+        win_x = getScreen()->COLS - win_w;
     if (win_x < 0) {
         win_x = 0;
-        if (win_w > getCols()) {
-            menu->width = getCols() - 2 * FRAME_WIDTH;
+        if (win_w > getScreen()->COLS) {
+            menu->width = getScreen()->COLS - 2 * FRAME_WIDTH;
             menu->width -= menu->width % FRAME_WIDTH;
         }
     }
@@ -728,12 +727,12 @@ void geom_menu(Menu* menu, int x, int y, int mselect)
 
     win_y = menu->y - mselect - 1;
     win_h = menu->height + 2;
-    if (win_y + win_h > getLines() - 1)
-        win_y = getLines() - 1 - win_h;
+    if (win_y + win_h > getScreen()->ROWS - 1)
+        win_y = getScreen()->ROWS - 1 - win_h;
     if (win_y < 0) {
         win_y = 0;
-        if (win_y + win_h > getLines() - 1) {
-            win_h = getLines() - 1 - win_y;
+        if (win_y + win_h > getScreen()->ROWS - 1) {
+            win_h = getScreen()->ROWS - 1 - win_y;
             menu->height = win_h - 2;
             if (menu->height <= mselect)
                 menu->offset = mselect - menu->height + 1;
@@ -973,9 +972,9 @@ void popup_menu(Menu* parent, Menu* menu)
 void guess_menu_xy(Menu* parent, int width, int* x, int* y)
 {
     *x = parent->x + parent->width + FRAME_WIDTH - 1;
-    if (*x + width + FRAME_WIDTH > getCols()) {
-        *x = getCols() - width - FRAME_WIDTH;
-        if ((parent->x + parent->width / 2 > *x) && (parent->x + parent->width / 2 > getCols() / 2))
+    if (*x + width + FRAME_WIDTH > getScreen()->COLS) {
+        *x = getScreen()->COLS - width - FRAME_WIDTH;
+        if ((parent->x + parent->width / 2 > *x) && (parent->x + parent->width / 2 > getScreen()->COLS / 2))
             *x = parent->x - width - FRAME_WIDTH + 1;
     }
     *y = parent->y + parent->select - parent->offset;
@@ -1451,8 +1450,8 @@ initSelectMenu(void)
     l = get_strwidth(comment);
     if (len < l + 4)
         len = l + 4;
-    if (len > getCols() - 2 * FRAME_WIDTH)
-        len = getCols() - 2 * FRAME_WIDTH;
+    if (len > getScreen()->COLS - 2 * FRAME_WIDTH)
+        len = getScreen()->COLS - 2 * FRAME_WIDTH;
     len = (len > 1) ? ((len - l + 1) / 2) : 0;
     str = Strnew();
     for (i = 0; i < len; i++)
@@ -1544,8 +1543,8 @@ void optionMenu(int x, int y, char** label, int* variable, int initial,
     set_menu_frame();
 
     new_option_menu(&menu, label, variable, func);
-    menu.cursorX = getCols() - 1;
-    menu.cursorY = getLines() - 1;
+    menu.cursorX = getScreen()->COLS - 1;
+    menu.cursorY = getScreen()->ROWS - 1;
     menu.x = x;
     menu.y = y;
     menu.initial = initial;

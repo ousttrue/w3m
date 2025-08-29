@@ -7,13 +7,13 @@
 #include <string.h>
 #include <math.h>
 #include "readbuffer.h"
-#include "term_size.h"
 #include "symbol.h"
 #include "fm.h"
 #include "html.h"
 #include "parsetagx.h"
 #include "Str.h"
 #include "myctype.h"
+#include "screen.h"
 #include <wtf.h>
 
 int symbol_width = 0;
@@ -74,16 +74,16 @@ static double
 weight(int x)
 {
 
-    if (x < getCols())
+    if (x < getScreen()->COLS)
         return (double)x;
     else
-        return getCols() * (log((double)x / getCols()) + 1.);
+        return getScreen()->COLS * (log((double)x / getScreen()->COLS) + 1.);
 }
 
 static double
 weight2(int a)
 {
-    return (double)a / getCols() * 4 + 1.;
+    return (double)a / getScreen()->COLS * 4 + 1.;
 }
 
 #define sigma_td(a) (0.5 * weight2(a)) /* <td width=...> */

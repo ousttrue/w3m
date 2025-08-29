@@ -6,7 +6,6 @@
 #include "symbol.h"
 #include "ctrlcode.h"
 #include "auth.h"
-#include "term_size.h"
 #include "image.h"
 #include "etc.h"
 #include "fm.h"
@@ -597,7 +596,7 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
                 Strcat(tmp, lineBuf2);
                 if (thru)
                     addnewline(newBuf, lineBuf2->ptr, propBuffer, NULL,
-                        lineBuf2->length, FOLD_BUFFER_WIDTH, -1);
+                        lineBuf2->length, -1, -1);
                 for (; *q && (*q == '\r' || *q == '\n'); q++)
                     ;
             }
@@ -772,8 +771,8 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
                             ((domain && domain->ptr)
                                     ? domain->ptr
                                     : "<localdomain>"));
-                        if (msg->length > getCols() - 10)
-                            Strshrink(msg, msg->length - (getCols() - 10));
+                        if (msg->length > getScreen()->COLS - 10)
+                            Strshrink(msg, msg->length - (getScreen()->COLS - 10));
                         Strcat_charp(msg, " (y/n)");
                         ans = inputAnswer(msg->ptr);
                     }
@@ -1307,7 +1306,7 @@ load_doc: {
         // refresh(ttyWriter());
 
         if (t_buf == NULL)
-            t_buf = newBuffer(INIT_BUFFER_WIDTH);
+            t_buf = newBuffer();
         readHeader(&f, t_buf, FALSE, &pu);
         if (((http_response_code >= 301 && http_response_code <= 303)
                 || http_response_code == 307)
@@ -1323,7 +1322,7 @@ load_doc: {
             UFclose(&f);
             current = New(ParsedURL);
             copyParsedURL(current, &pu);
-            t_buf = newBuffer(INIT_BUFFER_WIDTH);
+            t_buf = newBuffer();
             t_buf->bufferprop |= BP_REDIRECTED;
             status = HTST_NORMAL;
             goto load_doc;
@@ -1410,7 +1409,7 @@ load_doc: {
     } else if (searchHeader) {
         searchHeader = SearchHeader = FALSE;
         if (t_buf == NULL)
-            t_buf = newBuffer(INIT_BUFFER_WIDTH);
+            t_buf = newBuffer();
         readHeader(&f, t_buf, searchHeader_through, &pu);
         if (f.is_cgi && (p = checkHeader(t_buf, "Location:")) != NULL && checkRedirection(&pu)) {
             /* document moved */
@@ -1420,7 +1419,7 @@ load_doc: {
             add_auth_cookie_flag = 0;
             current = New(ParsedURL);
             copyParsedURL(current, &pu);
-            t_buf = newBuffer(INIT_BUFFER_WIDTH);
+            t_buf = newBuffer();
             t_buf->bufferprop |= BP_REDIRECTED;
             status = HTST_NORMAL;
             goto load_doc;
@@ -1530,7 +1529,7 @@ page_loaded:
     } else if (f.compression != CMP_NOCOMPRESS) {
         if (is_text_type(t) || searchExtViewer(t)) {
             if (t_buf == NULL)
-                t_buf = newBuffer(INIT_BUFFER_WIDTH);
+                t_buf = newBuffer();
             uncompress_stream(&f, &t_buf->sourcefile);
             uncompressed_file_type(pu.file, &f.ext);
         } else {
@@ -1543,7 +1542,7 @@ page_loaded:
         if (IStype(f.stream) != IST_ENCODED)
             f.stream = newEncodedStream(f.stream, f.encoding);
         if (save2tmp(f, image_source) == 0) {
-            b = newBuffer(INIT_BUFFER_WIDTH);
+            b = newBuffer();
             b->sourcefile = image_source;
             b->real_type = t;
         }
@@ -1560,7 +1559,7 @@ page_loaded:
         proc = loadImageBuffer;
 
     if (t_buf == NULL)
-        t_buf = newBuffer(INIT_BUFFER_WIDTH);
+        t_buf = newBuffer();
     copyParsedURL(&t_buf->currentURL, &pu);
     t_buf->filename = pu.real_file ? pu.real_file : pu.file ? conv_to_system(pu.file)
                                                             : NULL;
@@ -5831,7 +5830,7 @@ loadHTMLBuffer(URLFile* f, Buffer* newBuf)
     Str tmp;
 
     if (newBuf == NULL)
-        newBuf = newBuffer(INIT_BUFFER_WIDTH);
+        newBuf = newBuffer();
     if (newBuf->sourcefile == NULL && (f->scheme != SCM_LOCAL || newBuf->mailcap)) {
         tmp = tmpfname(TMPF_SRC, ".html");
         src = fopen(tmp->ptr, "w");
@@ -5904,7 +5903,7 @@ void showProgress(clen_t* linelen, clen_t* trbyte)
         double ratio;
         cur_time = time(0);
         if (*trbyte == 0) {
-            move(vt, getLines() - 1, 0);
+            move(vt, getScreen()->ROWS - 1, 0);
             clrtoeolx(vt);
             start_time = cur_time;
         }
@@ -5913,7 +5912,7 @@ void showProgress(clen_t* linelen, clen_t* trbyte)
         if (cur_time == last_time)
             return;
         last_time = cur_time;
-        move(vt, getLines() - 1, 0);
+        move(vt, getScreen()->ROWS - 1, 0);
         ratio = 100.0 * (*trbyte) / current_content_length;
         fmtrbyte = convert_size2(*trbyte, current_content_length, 1);
         duration = cur_time - start_time;
@@ -5933,8 +5932,8 @@ void showProgress(clen_t* linelen, clen_t* trbyte)
         }
         addstr(vt, messages->ptr);
         pos = 42;
-        i = pos + (getCols() - pos - 1) * (*trbyte) / current_content_length;
-        move(vt, getLines() - 1, pos);
+        i = pos + (getScreen()->COLS - pos - 1) * (*trbyte) / current_content_length;
+        move(vt, getScreen()->ROWS - 1, pos);
         standout(vt);
         addch(vt, ' ');
         for (j = pos + 1; j <= i; j++)
@@ -5945,7 +5944,7 @@ void showProgress(clen_t* linelen, clen_t* trbyte)
     } else {
         cur_time = time(0);
         if (*trbyte == 0) {
-            move(vt, getLines() - 1, 0);
+            move(vt, getScreen()->ROWS - 1, 0);
             clrtoeolx(vt);
             start_time = cur_time;
         }
@@ -5954,7 +5953,7 @@ void showProgress(clen_t* linelen, clen_t* trbyte)
         if (cur_time == last_time)
             return;
         last_time = cur_time;
-        move(vt, getLines() - 1, 0);
+        move(vt, getScreen()->ROWS - 1, 0);
         fmtrbyte = convert_size(*trbyte, 1);
         duration = cur_time - start_time;
         if (duration) {
@@ -6246,7 +6245,7 @@ loadHTMLString(Str page)
 
     init_stream(&f, SCM_LOCAL, newStrStream(page));
 
-    newBuf = newBuffer(INIT_BUFFER_WIDTH);
+    newBuf = newBuffer();
     if (sigsetjmp(AbortLoading, 1) != 0) {
         TRAP_OFF;
         discardBuffer(newBuf);
@@ -6290,7 +6289,7 @@ loadBuffer(URLFile* uf, Buffer* volatile newBuf)
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
 
     if (newBuf == NULL)
-        newBuf = newBuffer(INIT_BUFFER_WIDTH);
+        newBuf = newBuffer();
 
     if (sigsetjmp(AbortLoading, 1) != 0) {
         goto _end;
@@ -6328,7 +6327,7 @@ loadBuffer(URLFile* uf, Buffer* volatile newBuf)
         Strchop(lineBuf2);
         lineBuf2 = checkType(lineBuf2, &propBuffer, NULL);
         addnewline(newBuf, lineBuf2->ptr, propBuffer, colorBuffer,
-            lineBuf2->length, FOLD_BUFFER_WIDTH, nlines);
+            lineBuf2->length, -1, nlines);
     }
 _end:
     TRAP_OFF;
@@ -6379,7 +6378,7 @@ loadImageBuffer(URLFile* uf, Buffer* newBuf)
 
 image_buffer:
     if (newBuf == NULL)
-        newBuf = newBuffer(INIT_BUFFER_WIDTH);
+        newBuf = newBuffer();
     cache->loaded |= IMG_FLAG_DONT_REMOVE;
     if (newBuf->sourcefile == NULL && uf->scheme != SCM_LOCAL)
         newBuf->sourcefile = cache->file;
@@ -6514,7 +6513,7 @@ getpipe(char* cmd)
     f = popen(cmd, "r");
     if (f == NULL)
         return NULL;
-    buf = newBuffer(INIT_BUFFER_WIDTH);
+    buf = newBuffer();
     buf->pagerSource = newFileStream(f, (void (*)())pclose);
     buf->filename = cmd;
     buf->buffername = Sprintf("%s %s", PIPEBUFFERNAME,
@@ -6533,7 +6532,7 @@ openPagerBuffer(InputStream stream, Buffer* buf)
 {
 
     if (buf == NULL)
-        buf = newBuffer(INIT_BUFFER_WIDTH);
+        buf = newBuffer();
     buf->pagerSource = stream;
     buf->buffername = getenv("MAN_PN");
     if (buf->buffername == NULL)
@@ -6561,7 +6560,7 @@ openGeneralPagerBuffer(InputStream stream)
     init_stream(&uf, SCM_UNKNOWN, stream);
 
     content_charset = 0;
-    t_buf = newBuffer(INIT_BUFFER_WIDTH);
+    t_buf = newBuffer();
     copyParsedURL(&t_buf->currentURL, NULL);
     t_buf->currentURL.scheme = SCM_LOCAL;
     t_buf->currentURL.file = "-";
@@ -6698,7 +6697,7 @@ doExternal(URLFile uf, char* type, Buffer* defaultbuf)
     }
     if (mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)) {
         if (defaultbuf == NULL)
-            defaultbuf = newBuffer(INIT_BUFFER_WIDTH);
+            defaultbuf = newBuffer();
         if (defaultbuf->sourcefile)
             src = defaultbuf->sourcefile;
         else

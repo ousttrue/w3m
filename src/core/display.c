@@ -6,7 +6,6 @@
 #include "history.h"
 #include "ctrlcode.h"
 #include "buffer.h"
-#include "term_size.h"
 #include "TermEntry.h"
 #include "term_renderer.h"
 #include "graphicchar.h"
@@ -189,7 +188,7 @@ make_lastline_link(Buffer* buf, char* title, char* url)
     Lineprop* pr;
     ParsedURL pu;
     char* p;
-    int l = getCols() - 1, i;
+    int l = getScreen()->COLS - 1, i;
 
     if (title && *title) {
         s = Strnew_m_charp("[", title, "]", NULL);
@@ -217,13 +216,13 @@ make_lastline_link(Buffer* buf, char* title, char* url)
         return s;
     }
     if (!s)
-        s = Strnew_size(getCols());
+        s = Strnew_size(getScreen()->COLS);
     i = (l - 2) / 2;
     while (i && pr[i] & PC_WCHAR2)
         i--;
     Strcat_charp_n(s, u->ptr, i);
     Strcat_charp(s, "..");
-    i = get_Str_strwidth(u) - (getCols() - 1 - get_Str_strwidth(s));
+    i = get_Str_strwidth(u) - (getScreen()->COLS - 1 - get_Str_strwidth(s));
     while (i < u->length && pr[i] & PC_WCHAR2)
         i++;
     Strcat_charp(s, &u->ptr[i]);
@@ -255,7 +254,7 @@ make_lastline_message(Buffer* buf)
         }
         if (s) {
             sl = get_Str_strwidth(s);
-            if (sl >= getCols() - 3)
+            if (sl >= getScreen()->COLS - 3)
                 return s;
         }
     }
@@ -275,7 +274,7 @@ make_lastline_message(Buffer* buf)
     Strcat_charp(msg, buf->buffername);
 
     if (s) {
-        int l = getCols() - 3 - sl;
+        int l = getScreen()->COLS - 3 - sl;
         if (get_Str_strwidth(msg) > l) {
             char* p;
             for (p = msg->ptr; *p; p += get_mclen(p)) {
@@ -298,8 +297,8 @@ struct Frame* screenToFrame(const struct VirtualTerm* vt)
 {
     // struct VirtualTerm* vt = getScreen();
     struct Frame* frame = New(struct Frame);
-    frame->rows = getLines();
-    frame->cols = getCols();
+    frame->rows = getScreen()->ROWS;
+    frame->cols = getScreen()->COLS;
     frame->cells = New_N(struct Cell, frame->rows * frame->cols);
     struct Cell* cell = frame->cells;
     for (int y = 0; y < frame->rows; ++y) {
@@ -342,10 +341,10 @@ struct Frame* displayBuffer()
     // }
 
     if (buf->width == 0)
-        buf->width = INIT_BUFFER_WIDTH;
+        buf->width = getScreen()->COLS;
     if (buf->height == 0)
-        buf->height = getLines();
-    if ((buf->width != INIT_BUFFER_WIDTH && (is_html_type(buf->type) || FoldLine))
+        buf->height = getScreen()->ROWS;
+    if ((buf->width != getScreen()->COLS && (is_html_type(buf->type) || FoldLine))
         || buf->need_reshape) {
         buf->need_reshape = TRUE;
         reshapeBuffer(buf);
@@ -357,16 +356,16 @@ struct Frame* displayBuffer()
                 + 2;
         if (buf->rootX < 5)
             buf->rootX = 5;
-        if (buf->rootX > getCols())
-            buf->rootX = getCols();
+        if (buf->rootX > getScreen()->COLS)
+            buf->rootX = getScreen()->COLS;
     } else
         buf->rootX = 0;
-    buf->COLS = getCols() - buf->rootX;
+    buf->COLS = getScreen()->COLS - buf->rootX;
 
     int ny = 0;
-    if (buf->rootY != ny || buf->LINES != getLines() - 1 - ny) {
+    if (buf->rootY != ny || buf->LINES != getScreen()->ROWS - 1 - ny) {
         buf->rootY = ny;
-        buf->LINES = getLines() - 1 - ny;
+        buf->LINES = getScreen()->ROWS - 1 - ny;
         arrangeCursor(buf);
     }
     // if (cline != buf->topLine || ccolumn != buf->currentColumn) {
@@ -380,7 +379,7 @@ struct Frame* displayBuffer()
         image_touch++;
         draw_image_flag = FALSE;
     }
-    redrawNLine(buf, getLines() - 1);
+    redrawNLine(buf, getScreen()->ROWS - 1);
     cline = buf->topLine;
     ccolumn = buf->currentColumn;
     // }
@@ -562,9 +561,9 @@ redrawLine(Buffer* buf, Line* l, int i)
                     + 2;
             if (buf->rootX < 5)
                 buf->rootX = 5;
-            if (buf->rootX > getCols())
-                buf->rootX = getCols();
-            buf->COLS = getCols() - buf->rootX;
+            if (buf->rootX > getScreen()->COLS)
+                buf->rootX = getScreen()->COLS;
+            buf->COLS = getScreen()->COLS - buf->rootX;
         }
         if (l->real_linenumber && !l->bpos)
             sprintf(tmp, "%*ld:", buf->rootX - 1, l->real_linenumber);
@@ -730,8 +729,8 @@ redrawLineImage(Buffer* buf, Line* l, int i)
                     h = (int)(pixel_per_line - sy);
                 if (w > (int)((buf->rootX + buf->COLS) * pixel_per_char - x))
                     w = (int)((buf->rootX + buf->COLS) * pixel_per_char - x);
-                if (h > (int)((getLines() - 1) * pixel_per_line - y))
-                    h = (int)((getLines() - 1) * pixel_per_line - y);
+                if (h > (int)((getScreen()->ROWS - 1) * pixel_per_line - y))
+                    h = (int)((getScreen()->ROWS - 1) * pixel_per_line - y);
                 addImage(cache, x, y, sx, sy, w, h);
                 image->touch = image_touch;
                 draw_image_flag = TRUE;
@@ -983,7 +982,7 @@ void record_err_message(char* s)
 {
     if (!message_list)
         message_list = newGeneralList();
-    if (message_list->nitem >= getLines())
+    if (message_list->nitem >= getScreen()->ROWS)
         popValue(message_list);
     pushValue(message_list, allocStr(s, -1));
 }
@@ -994,7 +993,7 @@ void record_err_message(char* s)
 Buffer*
 message_list_panel(void)
 {
-    Str tmp = Strnew_size(getLines() * getCols());
+    Str tmp = Strnew_size(getScreen()->ROWS * getScreen()->COLS);
     ListItem* p;
 
     /* FIXME: gettextize? */
@@ -1014,8 +1013,8 @@ message_list_panel(void)
 void message(char* s, int return_x, int return_y)
 {
     struct VirtualTerm* vt = getScreen();
-    move(vt, getLines() - 1, 0);
-    addnstr(vt, s, getCols() - 1);
+    move(vt, getScreen()->ROWS - 1, 0);
+    addnstr(vt, s, getScreen()->COLS - 1);
     clrtoeolx(vt);
     move(vt, return_y, return_x);
 }
@@ -1034,7 +1033,7 @@ void disp_message_nsec(char* s, int redraw_current, int sec, int purge, int mous
         message(s, Currentbuf->cursorX + Currentbuf->rootX,
             Currentbuf->cursorY + Currentbuf->rootY);
     else
-        message(s, getLines() - 1, 0);
+        message(s, getScreen()->ROWS - 1, 0);
     // refresh(ttyWriter());
     sleep_till_anykey(sec * 1000, purge);
 }
