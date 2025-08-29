@@ -60,7 +60,7 @@ static struct LineEditor g_editor;
 char* inputLineHistSearch(struct UI ui,
     const char* prompt, const char* def_str, enum InputLineFlags flag, struct Hist* hist, IncFunc incrfunc)
 {
-    le_initialize(&g_editor, hist, flag, def_str);
+    le_initialize(&g_editor, ui, hist, flag, def_str);
 
     int opos = get_strwidth(prompt);
     int epos = ui.rows - 2 - opos;

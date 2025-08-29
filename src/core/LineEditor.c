@@ -7,11 +7,8 @@
 #include "fm.h"
 #include "history.h"
 #include "screen.h"
-#include "term_size.h"
 #include <dirent.h>
 #include <wtf.h>
-
-// #define CLEN (getLines() - 2)
 
 static int
 terminated(unsigned char c)
@@ -28,9 +25,10 @@ terminated(unsigned char c)
     return 0;
 }
 
-void le_initialize(struct LineEditor* e, struct Hist* hist, enum InputLineFlags flag,
+void le_initialize(struct LineEditor* e, struct UI ui, struct Hist* hist, enum InputLineFlags flag,
     const char* def_str)
 {
+    e->ui = ui;
     e->offset = 0;
 
     e->is_passwd = false;
@@ -362,12 +360,12 @@ void next_dcompl(struct LineEditor* e, int next)
     if (e->cm_mode == CPL_NEVER || e->cm_mode & CPL_OFF)
         return;
     e->cm_disp_clear = FALSE;
-    if (getLines() - 1 >= 3) {
+    if (e->ui.rows - 1 >= 3) {
         comment = TRUE;
-        nline = getLines() - 1 - 2;
-    } else if (getLines() - 1) {
+        nline = e->ui.rows - 1 - 2;
+    } else if (e->ui.rows - 1) {
         comment = FALSE;
-        nline = getLines() - 1;
+        nline = e->ui.rows - 1;
     } else {
         return;
     }
@@ -412,8 +410,8 @@ void next_dcompl(struct LineEditor* e, int next)
         if (len < n)
             len = n;
     }
-    if (len > 0 && getCols() > len)
-        col = getCols() / len;
+    if (len > 0 && e->ui.cols > len)
+        col = e->ui.cols / len;
     else
         col = 1;
     row = (e->NCFileBuf + col - 1) / col;
@@ -460,7 +458,7 @@ disp_next:
         }
         y++;
     }
-    if (comment && y == getLines() - 1 - 1) {
+    if (comment && y == e->ui.rows - 1 - 1) {
         move(vt, y, 0);
         clrtoeolx(vt);
         bold(vt);

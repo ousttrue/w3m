@@ -1,5 +1,6 @@
 #pragma once
 #include "line.h"
+#include "ui.h"
 #include <Str.h>
 #include <stdbool.h>
 
@@ -31,6 +32,7 @@ enum InputLineFlags {
 
 struct LineEditor {
     Lineprop strProp[STR_LEN];
+    struct UI ui;
 
     bool is_passwd;
 
@@ -66,7 +68,7 @@ struct LineEditor {
     int NCFileOffset;
 };
 
-void le_initialize(struct LineEditor* e, struct Hist*, enum InputLineFlags flag,
+void le_initialize(struct LineEditor* e, struct UI ui, struct Hist*, enum InputLineFlags flag,
     const char* def_str);
 void insertself(struct LineEditor* e, char c);
 #define iself ((void (*)())insertself)
