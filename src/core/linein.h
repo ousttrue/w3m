@@ -1,5 +1,7 @@
 #pragma once
-#include "history.h"
+#include <Str.h>
+
+struct Hist;
 
 typedef unsigned short Lineprop;
 

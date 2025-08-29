@@ -383,7 +383,7 @@ void clrtobotx(struct VirtualTerm* vt)
     clrtobot_eol(vt, clrtoeolx);
 }
 
-void addstr(struct VirtualTerm* vt, char* s)
+void addstr(struct VirtualTerm* vt, const char* s)
 {
     while (*s != '\0') {
         int len = wtf_len((wc_uchar*)s);

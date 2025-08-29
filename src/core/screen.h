@@ -47,7 +47,7 @@ void clrtoeolx(struct VirtualTerm* vt);
 void clrtobot(struct VirtualTerm* vt);
 void clrtobotx(struct VirtualTerm* vt);
 void no_clrtoeol(struct VirtualTerm* vt);
-void addstr(struct VirtualTerm* vt, char* s);
+void addstr(struct VirtualTerm* vt, const char* s);
 void addnstr(struct VirtualTerm* vt, char* s, int n);
 void addnstr_sup(struct VirtualTerm* vt, char* s, int n);
 void toggle_stand(struct VirtualTerm* vt);

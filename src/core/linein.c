@@ -1,4 +1,5 @@
 #include "linein.h"
+#include "history.h"
 #include "screen.h"
 #include "term_renderer.h"
 #include "display.h"
