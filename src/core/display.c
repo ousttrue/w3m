@@ -981,13 +981,11 @@ static GeneralList* message_list = NULL;
 
 void record_err_message(char* s)
 {
-    if (fmInitialized) {
-        if (!message_list)
-            message_list = newGeneralList();
-        if (message_list->nitem >= getLines())
-            popValue(message_list);
-        pushValue(message_list, allocStr(s, -1));
-    }
+    if (!message_list)
+        message_list = newGeneralList();
+    if (message_list->nitem >= getLines())
+        popValue(message_list);
+    pushValue(message_list, allocStr(s, -1));
 }
 
 /*
@@ -1015,8 +1013,6 @@ message_list_panel(void)
 
 void message(char* s, int return_x, int return_y)
 {
-    if (!fmInitialized)
-        return;
     struct VirtualTerm* vt = getScreen();
     move(vt, getLines() - 1, 0);
     addnstr(vt, s, getCols() - 1);
@@ -1034,10 +1030,6 @@ void disp_message_nsec(char* s, int redraw_current, int sec, int purge, int mous
 {
     if (QuietMessage)
         return;
-    if (!fmInitialized) {
-        fprintf(stderr, "%s\n", conv_to_system(s));
-        return;
-    }
     if (Currentbuf != NULL)
         message(s, Currentbuf->cursorX + Currentbuf->rootX,
             Currentbuf->cursorY + Currentbuf->rootY);

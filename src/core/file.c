@@ -643,10 +643,9 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
             while (*p && IS_SPACE(*p))
                 p++;
             http_response_code = atoi(p);
-            if (fmInitialized) {
-                message(lineBuf2->ptr, 0, 0);
-                // refresh(ttyWriter());
-            }
+
+            message(lineBuf2->ptr, 0, 0);
+            // refresh(ttyWriter());
         }
         if (!strncasecmp(lineBuf2->ptr, "content-transfer-encoding:", 26)) {
             p = lineBuf2->ptr + 26;
@@ -767,7 +766,7 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
                     char* ans = (accept_bad_cookie == ACCEPT_BAD_COOKIE_ACCEPT)
                         ? "y"
                         : NULL;
-                    if (fmInitialized && (err & COO_OVERRIDE_OK) && accept_bad_cookie == ACCEPT_BAD_COOKIE_ASK) {
+                    if ((err & COO_OVERRIDE_OK) && accept_bad_cookie == ACCEPT_BAD_COOKIE_ASK) {
                         Str msg = Sprintf("Accept bad cookie from %s for %s?",
                             pu->host,
                             ((domain && domain->ptr)
@@ -1302,12 +1301,11 @@ load_doc: {
     TRAP_ON;
     if (pu.scheme == SCM_HTTP || pu.scheme == SCM_HTTPS) {
 
-        if (fmInitialized) {
-            term_cbreak();
-            /* FIXME: gettextize? */
-            message(Sprintf("%s contacted. Waiting for reply...", pu.host)->ptr, 0, 0);
-            // refresh(ttyWriter());
-        }
+        term_cbreak();
+        /* FIXME: gettextize? */
+        message(Sprintf("%s contacted. Waiting for reply...", pu.host)->ptr, 0, 0);
+        // refresh(ttyWriter());
+
         if (t_buf == NULL)
             t_buf = newBuffer(INIT_BUFFER_WIDTH);
         readHeader(&f, t_buf, FALSE, &pu);
@@ -5900,9 +5898,6 @@ void showProgress(clen_t* linelen, clen_t* trbyte)
     Str messages;
     char *fmtrbyte, *fmrate;
 
-    if (!fmInitialized)
-        return;
-
     if (*linelen < 1024)
         return;
     if (current_content_length > 0) {
@@ -6148,7 +6143,7 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
     int volatile image_flag;
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
 
-    if (fmInitialized && graph_ok(t)) {
+    if (graph_ok(t)) {
         symbol_width = symbol_width0 = 1;
     } else {
         symbol_width0 = 0;
@@ -6798,7 +6793,8 @@ int _doFileCopy(char* tmpf, char* defstr, int download)
     clen_t size = 0;
     int is_pipe = FALSE;
 
-    if (fmInitialized) {
+    // if (fmInitialized) 
+    {
         p = searchKeyData();
         if (p == NULL || *p == '\0') {
             /* FIXME: gettextize? */
@@ -6854,43 +6850,44 @@ int _doFileCopy(char* tmpf, char* defstr, int download)
         if (!stat(tmpf, &st))
             size = st.st_size;
         addDownloadList(pid, conv_from_system(tmpf), p, lock, size);
-    } else {
-        q = searchKeyData();
-        if (q == NULL || *q == '\0') {
-            /* FIXME: gettextize? */
-            printf("(Download)Save file to: ");
-            fflush(stdout);
-            filen = Strfgets(stdin);
-            if (filen->length == 0)
-                return -1;
-            q = filen->ptr;
-        }
-        for (p = q + strlen(q) - 1; IS_SPACE(*p); p--)
-            ;
-        *(p + 1) = '\0';
-        if (*q == '\0')
-            return -1;
-        p = q;
-        if (*p == '|' && PermitSaveToPipe)
-            is_pipe = TRUE;
-        else {
-            p = expandPath(p);
-            if (checkOverWrite(p) < 0)
-                return -1;
-        }
-        if (checkCopyFile(tmpf, p) < 0) {
-            /* FIXME: gettextize? */
-            printf("Can't copy. %s and %s are identical.", tmpf, p);
-            return -1;
-        }
-        if (_MoveFile(tmpf, p) < 0) {
-            /* FIXME: gettextize? */
-            printf("Can't save to %s\n", p);
-            return -1;
-        }
-        if (PreserveTimestamp && !is_pipe && !stat(tmpf, &st))
-            setModtime(p, st.st_mtime);
-    }
+    } 
+    // else {
+    //     q = searchKeyData();
+    //     if (q == NULL || *q == '\0') {
+    //         /* FIXME: gettextize? */
+    //         printf("(Download)Save file to: ");
+    //         fflush(stdout);
+    //         filen = Strfgets(stdin);
+    //         if (filen->length == 0)
+    //             return -1;
+    //         q = filen->ptr;
+    //     }
+    //     for (p = q + strlen(q) - 1; IS_SPACE(*p); p--)
+    //         ;
+    //     *(p + 1) = '\0';
+    //     if (*q == '\0')
+    //         return -1;
+    //     p = q;
+    //     if (*p == '|' && PermitSaveToPipe)
+    //         is_pipe = TRUE;
+    //     else {
+    //         p = expandPath(p);
+    //         if (checkOverWrite(p) < 0)
+    //             return -1;
+    //     }
+    //     if (checkCopyFile(tmpf, p) < 0) {
+    //         /* FIXME: gettextize? */
+    //         printf("Can't copy. %s and %s are identical.", tmpf, p);
+    //         return -1;
+    //     }
+    //     if (_MoveFile(tmpf, p) < 0) {
+    //         /* FIXME: gettextize? */
+    //         printf("Can't save to %s\n", p);
+    //         return -1;
+    //     }
+    //     if (PreserveTimestamp && !is_pipe && !stat(tmpf, &st))
+    //         setModtime(p, st.st_mtime);
+    // }
     return 0;
 }
 
@@ -6913,7 +6910,8 @@ int doFileSave(URLFile uf, char* defstr)
     FILE* f;
 #endif
 
-    if (fmInitialized) {
+    // if (fmInitialized) 
+    {
         p = searchKeyData();
         if (p == NULL || *p == '\0') {
             /* FIXME: gettextize? */
@@ -6966,43 +6964,44 @@ int doFileSave(URLFile uf, char* defstr)
             exit(0);
         }
         addDownloadList(pid, uf.url, p, lock, current_content_length);
-    } else {
-        q = searchKeyData();
-        if (q == NULL || *q == '\0') {
-            /* FIXME: gettextize? */
-            printf("(Download)Save file to: ");
-            fflush(stdout);
-            filen = Strfgets(stdin);
-            if (filen->length == 0)
-                return -1;
-            q = filen->ptr;
-        }
-        for (p = q + strlen(q) - 1; IS_SPACE(*p); p--)
-            ;
-        *(p + 1) = '\0';
-        if (*q == '\0')
-            return -1;
-        p = expandPath(q);
-        if (checkOverWrite(p) < 0)
-            return -1;
-        if (checkSaveFile(uf.stream, p) < 0) {
-            /* FIXME: gettextize? */
-            printf("Can't save. Load file and %s are identical.", p);
-            return -1;
-        }
-        if (uf.content_encoding != CMP_NOCOMPRESS && AutoUncompress) {
-            uncompress_stream(&uf, &tmpf);
-            if (tmpf)
-                unlink(tmpf);
-        }
-        if (save2tmp(uf, p) < 0) {
-            /* FIXME: gettextize? */
-            printf("Can't save to %s\n", p);
-            return -1;
-        }
-        if (PreserveTimestamp && uf.modtime != -1)
-            setModtime(p, uf.modtime);
-    }
+    } 
+    // else {
+    //     q = searchKeyData();
+    //     if (q == NULL || *q == '\0') {
+    //         /* FIXME: gettextize? */
+    //         printf("(Download)Save file to: ");
+    //         fflush(stdout);
+    //         filen = Strfgets(stdin);
+    //         if (filen->length == 0)
+    //             return -1;
+    //         q = filen->ptr;
+    //     }
+    //     for (p = q + strlen(q) - 1; IS_SPACE(*p); p--)
+    //         ;
+    //     *(p + 1) = '\0';
+    //     if (*q == '\0')
+    //         return -1;
+    //     p = expandPath(q);
+    //     if (checkOverWrite(p) < 0)
+    //         return -1;
+    //     if (checkSaveFile(uf.stream, p) < 0) {
+    //         /* FIXME: gettextize? */
+    //         printf("Can't save. Load file and %s are identical.", p);
+    //         return -1;
+    //     }
+    //     if (uf.content_encoding != CMP_NOCOMPRESS && AutoUncompress) {
+    //         uncompress_stream(&uf, &tmpf);
+    //         if (tmpf)
+    //             unlink(tmpf);
+    //     }
+    //     if (save2tmp(uf, p) < 0) {
+    //         /* FIXME: gettextize? */
+    //         printf("Can't save to %s\n", p);
+    //         return -1;
+    //     }
+    //     if (PreserveTimestamp && uf.modtime != -1)
+    //         setModtime(p, uf.modtime);
+    // }
     return 0;
 }
 
@@ -7054,14 +7053,16 @@ char* inputAnswer(char* prompt)
 
     if (QuietMessage)
         return "n";
-    if (fmInitialized) {
+    // if (fmInitialized) 
+    {
         term_raw();
         ans = inputChar(getUI(), prompt);
-    } else {
-        printf("%s", prompt);
-        fflush(stdout);
-        ans = Strfgets(stdin)->ptr;
-    }
+    } 
+    // else {
+    //     printf("%s", prompt);
+    //     fflush(stdout);
+    //     ans = Strfgets(stdin)->ptr;
+    // }
     return ans;
 }
 

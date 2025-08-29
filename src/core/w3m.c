@@ -139,43 +139,39 @@ static GC_warn_proc orig_GC_warn_proc = NULL;
 static void
 wrap_GC_warn_proc(char* msg, GC_word arg)
 {
-    if (fmInitialized) {
-        /* *INDENT-OFF* */
-        static struct {
-            char* msg;
-            GC_word arg;
-        } msg_ring[GC_WARN_KEEP_MAX];
-        /* *INDENT-ON* */
-        static int i = 0;
-        static int n = 0;
-        static int lock = 0;
-        int j;
 
-        j = (i + n) % (sizeof(msg_ring) / sizeof(msg_ring[0]));
-        msg_ring[j].msg = msg;
-        msg_ring[j].arg = arg;
+    /* *INDENT-OFF* */
+    static struct {
+        char* msg;
+        GC_word arg;
+    } msg_ring[GC_WARN_KEEP_MAX];
+    /* *INDENT-ON* */
+    static int i = 0;
+    static int n = 0;
+    static int lock = 0;
+    int j;
 
-        if (n < sizeof(msg_ring) / sizeof(msg_ring[0]))
-            ++n;
-        else
-            ++i;
+    j = (i + n) % (sizeof(msg_ring) / sizeof(msg_ring[0]));
+    msg_ring[j].msg = msg;
+    msg_ring[j].arg = arg;
 
-        if (!lock) {
-            lock = 1;
-
-            for (; n > 0; --n, ++i) {
-                i %= sizeof(msg_ring) / sizeof(msg_ring[0]);
-
-                printf(msg_ring[i].msg, (unsigned long)msg_ring[i].arg);
-                sleep_till_anykey(1000, 1);
-            }
-
-            lock = 0;
-        }
-    } else if (orig_GC_warn_proc)
-        orig_GC_warn_proc(msg, arg);
+    if (n < sizeof(msg_ring) / sizeof(msg_ring[0]))
+        ++n;
     else
-        fprintf(stderr, msg, (unsigned long)arg);
+        ++i;
+
+    if (!lock) {
+        lock = 1;
+
+        for (; n > 0; --n, ++i) {
+            i %= sizeof(msg_ring) / sizeof(msg_ring[0]);
+
+            printf(msg_ring[i].msg, (unsigned long)msg_ring[i].arg);
+            sleep_till_anykey(1000, 1);
+        }
+
+        lock = 0;
+    }
 }
 
 #include <libintl.h>
@@ -286,20 +282,16 @@ void resetTerm(void)
 
 void fmTerm(void)
 {
-    if (fmInitialized) {
-        struct VirtualTerm* vt = getScreen();
-        move(vt, getLines() - 1, 0);
-        clrtoeolx(vt);
-        // refresh(ttyWriter());
-        if (activeImage)
-            loadImage(NULL, IMG_FLAG_STOP);
-        resetTerm();
-        flush_tty();
-        TerminalSet(NULL);
-        close_tty();
-
-        fmInitialized = FALSE;
-    }
+    struct VirtualTerm* vt = getScreen();
+    move(vt, getLines() - 1, 0);
+    clrtoeolx(vt);
+    // refresh(ttyWriter());
+    if (activeImage)
+        loadImage(NULL, IMG_FLAG_STOP);
+    resetTerm();
+    flush_tty();
+    TerminalSet(NULL);
+    close_tty();
 }
 
 static MySignalHandler
@@ -375,19 +367,16 @@ int initscr(void)
  */
 void fmInit(void)
 {
-    if (!fmInitialized) {
-        set_tty();
-        set_int();
-        initscr();
-        struct VirtualTerm* vt = getScreen();
-        setupscreen(vt);
-        termClear(ttyWriter());
-        term_raw();
-        term_noecho();
-        if (displayImage)
-            initImage();
-    }
-    fmInitialized = TRUE;
+    set_tty();
+    set_int();
+    initscr();
+    struct VirtualTerm* vt = getScreen();
+    setupscreen(vt);
+    termClear(ttyWriter());
+    term_raw();
+    term_noecho();
+    if (displayImage)
+        initImage();
 }
 
 bool onFrame()
@@ -1517,7 +1506,7 @@ _quitfm(int confirm)
     if (checkDownloadList())
         /* FIXME: gettextize? */
         ans = inputChar(getUI(), "Download process retains. "
-                        "Do you want to exit w3m? (y/n)");
+                                 "Do you want to exit w3m? (y/n)");
     else if (confirm)
         /* FIXME: gettextize? */
         ans = inputChar(getUI(), "Do you want to exit w3m? (y/n)");

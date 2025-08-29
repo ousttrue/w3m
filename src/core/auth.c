@@ -70,11 +70,8 @@ void getAuthCookie(struct http_auth* hauth, char* auth_header,
         /* This means that *-Authenticate: header is received after
          * Authorization: header is sent to the server.
          */
-        if (fmInitialized) {
-            message("Wrong username or password", 0, 0);
-            // refresh(ttyWriter());
-        } else
-            fprintf(stderr, "Wrong username or password\n");
+        message("Wrong username or password", 0, 0);
+        // refresh(ttyWriter());
         sleep(1);
         /* delete Authenticate: header from extra_header */
         delText(extra_header, i);
@@ -90,52 +87,23 @@ void getAuthCookie(struct http_auth* hauth, char* auth_header,
             return;
         /* input username and password */
         sleep(2);
-        if (fmInitialized) {
-            char* pp;
-            term_raw();
-            /* FIXME: gettextize? */
-            if ((pp = inputStr(getUI(), Sprintf("Username for %s: ", realm)->ptr,
-                     NULL))
-                == NULL)
-                return;
-            *uname = Str_conv_to_system(Strnew_charp(pp));
-            if ((pp = inputLine(getUI(), Sprintf("Password for %s: ", realm)->ptr, NULL,
-                     IN_PASSWORD))
-                == NULL) {
-                *uname = NULL;
-                return;
-            }
-            *pwd = Str_conv_to_system(Strnew_charp(pp));
-            term_cbreak();
-        } else {
-            /*
-             * If post file is specified as '-', stdin is closed at this
-             * point.
-             * In this case, w3m cannot read username from stdin.
-             * So exit with error message.
-             * (This is same behavior as lwp-request.)
-             */
-            if (feof(stdin) || ferror(stdin)) {
-                /* FIXME: gettextize? */
-                fprintf(stderr, "w3m: Authorization required for %s\n",
-                    realm);
-                exit(1);
-            }
 
-            /* FIXME: gettextize? */
-            printf(proxy ? "Proxy Username for %s: " : "Username for %s: ",
-                realm);
-            fflush(stdout);
-            *uname = Strfgets(stdin);
-            Strchop(*uname);
-#ifdef HAVE_GETPASSPHRASE
-            *pwd = Strnew_charp((char*)
-                    getpassphrase(proxy ? "Proxy Password: " : "Password: "));
-#else
-            *pwd = Strnew_charp((char*)
-                    getpass(proxy ? "Proxy Password: " : "Password: "));
-#endif
+        char* pp;
+        term_raw();
+        /* FIXME: gettextize? */
+        if ((pp = inputStr(getUI(), Sprintf("Username for %s: ", realm)->ptr,
+                 NULL))
+            == NULL)
+            return;
+        *uname = Str_conv_to_system(Strnew_charp(pp));
+        if ((pp = inputLine(getUI(), Sprintf("Password for %s: ", realm)->ptr, NULL,
+                 IN_PASSWORD))
+            == NULL) {
+            *uname = NULL;
+            return;
         }
+        *pwd = Str_conv_to_system(Strnew_charp(pp));
+        term_cbreak();
     }
     ss = hauth->cred(hauth, *uname, *pwd, pu, hr, request);
     if (ss) {

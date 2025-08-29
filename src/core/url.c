@@ -180,8 +180,6 @@ KeyAbort(SIGNAL_ARG)
     siglongjmp(AbortLoading, 1);
 }
 
-
-
 static void
 write_from_file(int sock, char* file)
 {
@@ -233,11 +231,10 @@ int openSocket(char* const hostname,
 #endif /* not INET6 */
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
 
-    if (fmInitialized) {
-        /* FIXME: gettextize? */
-        message(Sprintf("Opening socket...")->ptr, 0, 0);
-        // refresh(ttyWriter());
-    }
+    /* FIXME: gettextize? */
+    message(Sprintf("Opening socket...")->ptr, 0, 0);
+    // refresh(ttyWriter());
+
     if (sigsetjmp(AbortLoading, 1) != 0) {
 #ifdef SOCK_DEBUG
         sock_log("openSocket() failed. reason: user abort\n");
@@ -330,10 +327,10 @@ int openSocket(char* const hostname,
         bcopy((void*)&adr, (void*)&hostaddr.sin_addr, sizeof(long));
         hostaddr.sin_family = AF_INET;
         hostaddr.sin_port = s_port;
-        if (fmInitialized) {
-            message(Sprintf("Connecting to %s", hostname)->ptr, 0, 0);
-            refresh(ttyWriter());
-        }
+
+        message(Sprintf("Connecting to %s", hostname)->ptr, 0, 0);
+        refresh(ttyWriter());
+
         if (connect(sock, (struct sockaddr*)&hostaddr,
                 sizeof(struct sockaddr_in))
             < 0) {
@@ -346,11 +343,11 @@ int openSocket(char* const hostname,
     } else {
         char** h_addr_list;
         int result = -1;
-        if (fmInitialized) {
-            message(Sprintf("Performing hostname lookup on %s", hostname)->ptr,
-                0, 0);
-            refresh(ttyWriter());
-        }
+
+        message(Sprintf("Performing hostname lookup on %s", hostname)->ptr,
+            0, 0);
+        refresh(ttyWriter());
+
         if ((entry = gethostbyname(hostname)) == NULL) {
 #ifdef SOCK_DEBUG
             sock_log("openSocket: gethostbyname() failed. reason: %s\n",
@@ -369,10 +366,10 @@ int openSocket(char* const hostname,
                 (adr >> 24) & 0xff,
                 (adr >> 16) & 0xff, (adr >> 8) & 0xff, adr & 0xff);
 #endif
-            if (fmInitialized) {
-                message(Sprintf("Connecting to %s", hostname)->ptr, 0, 0);
-                refresh(ttyWriter());
-            }
+
+            message(Sprintf("Connecting to %s", hostname)->ptr, 0, 0);
+            refresh(ttyWriter());
+
             if ((result = connect(sock, (struct sockaddr*)&hostaddr,
                      sizeof(struct sockaddr_in)))
                 == 0) {

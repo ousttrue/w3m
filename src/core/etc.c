@@ -1071,13 +1071,8 @@ FILE* openSecretFile(char* fname)
     if (disable_secret_security_check)
         /* do nothing */;
     else if ((st.st_mode & (S_IRWXG | S_IRWXO)) != 0) {
-        if (fmInitialized) {
-            message(Sprintf(FILE_IS_READABLE_MSG, fname)->ptr, 0, 0);
-            // refresh(ttyWriter());
-        } else {
-            fputs(Sprintf(FILE_IS_READABLE_MSG, fname)->ptr, stderr);
-            fputc('\n', stderr);
-        }
+        message(Sprintf(FILE_IS_READABLE_MSG, fname)->ptr, 0, 0);
+        // refresh(ttyWriter());
         sleep(2);
         return NULL;
     }
@@ -1270,7 +1265,6 @@ void setup_child(int child, int i, int f)
      */
     close_all_fds_except(i, f);
     QuietMessage = TRUE;
-    fmInitialized = FALSE;
     TrapSignal = FALSE;
 }
 
