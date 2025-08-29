@@ -31,8 +31,7 @@ static sigjmp_buf AbortLoading;
 static void
 KeyAbort(SIGNAL_ARG)
 {
-    LONGJMP(AbortLoading, 1);
-    SIGNAL_RETURN;
+    siglongjmp(AbortLoading, 1);
 }
 
 static Str
@@ -331,7 +330,7 @@ Str loadNewsgroup(ParsedURL* pu, wc_ces* charset)
         qgroup, "</title>\n</head>\n<body>\n<h1>Newsgroup: ",
         qgroup, "</h1>\n<hr>\n", NULL);
 
-    if (SETJMP(AbortLoading) != 0) {
+    if (sigsetjmp(AbortLoading, 1) != 0) {
         news_close(&current_news);
         Strcat_charp(page, "</table>\n<p>Transfer Interrupted!\n");
         goto news_end;

@@ -41,8 +41,7 @@ static sigjmp_buf AbortLoading;
 static MySignalHandler
 KeyAbort(SIGNAL_ARG)
 {
-    LONGJMP(AbortLoading, 1);
-    SIGNAL_RETURN;
+    siglongjmp(AbortLoading, 1);
 }
 
 static Str
@@ -503,7 +502,7 @@ Str loadFTPDir(ParsedURL* pu, wc_ces* charset)
         "</title>\n</head>\n<body>\n<h1>Index of ", q,
         "</h1>\n", NULL);
 
-    if (SETJMP(AbortLoading) != 0) {
+    if (sigsetjmp(AbortLoading, 1) != 0) {
         if (sv_type == UNIXLIKE_SERVER)
             Strcat_charp(FTPDIRtmp, "</a></pre>\n");
         else

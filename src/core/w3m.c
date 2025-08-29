@@ -129,7 +129,6 @@ static void
 SigPipe(SIGNAL_ARG)
 {
     mySignal(SIGPIPE, SigPipe);
-    SIGNAL_RETURN;
 }
 
 static GC_warn_proc orig_GC_warn_proc = NULL;
@@ -318,7 +317,6 @@ reset_exit_with_value(SIGNAL_ARG, int rval)
     close_tty();
 
     w3m_exit(rval);
-    SIGNAL_RETURN;
 }
 
 MySignalHandler
@@ -343,7 +341,6 @@ error_dump(SIGNAL_ARG)
     close_tty();
 
     abort();
-    SIGNAL_RETURN;
 }
 
 void set_int(void)
@@ -638,8 +635,7 @@ repBuffer(Buffer* oldbuf, Buffer* buf)
 MySignalHandler
 intTrap(SIGNAL_ARG)
 { /* Interrupt catcher */
-    LONGJMP(IntReturn, 0);
-    SIGNAL_RETURN;
+    siglongjmp(IntReturn, 0);
 }
 
 MySignalHandler
@@ -647,7 +643,6 @@ resize_hook(SIGNAL_ARG)
 {
     need_resize_screen = TRUE;
     mySignal(SIGWINCH, resize_hook);
-    SIGNAL_RETURN;
 }
 
 static void
@@ -803,7 +798,7 @@ srchcore(char* volatile str, int (*func)(Buffer*, char*))
     str = conv_search_string(SearchString, DisplayCharset);
     MySignalFunc prevtrap = mySignal(SIGINT, intTrap);
     crmode();
-    if (SETJMP(IntReturn) == 0) {
+    if (sigsetjmp(IntReturn, 1) == 0) {
 
         result = func(Currentbuf, str);
         if (result & SR_FOUND)
@@ -4130,7 +4125,6 @@ SigAlarm(SIGNAL_ARG)
             alarm(CurrentAlarm->sec);
         }
     }
-    SIGNAL_RETURN;
 }
 
 DEFUN(setAlarm, ALARM, "Set alarm")

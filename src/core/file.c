@@ -180,8 +180,7 @@ static struct compression_decoder {
 static MySignalHandler
 KeyAbort(SIGNAL_ARG)
 {
-    LONGJMP(AbortLoading, 1);
-    SIGNAL_RETURN;
+    siglongjmp(AbortLoading, 1);
 }
 
 static void
@@ -1687,7 +1686,7 @@ load_doc: {
     }
 
     /* openURL() succeeded */
-    if (SETJMP(AbortLoading) != 0) {
+    if (sigsetjmp(AbortLoading, 1) != 0) {
         /* transfer interrupted */
         TRAP_OFF;
         if (b)
@@ -6647,7 +6646,7 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
     cur_baseURL = baseURL(newBuf);
 #endif
 
-    if (SETJMP(AbortLoading) != 0) {
+    if (sigsetjmp(AbortLoading, 1) != 0) {
         HTMLlineproc1("<br>Transfer Interrupted!<br>", &htmlenv1);
         goto phase2;
     }
@@ -6724,7 +6723,7 @@ loadHTMLString(Str page)
     init_stream(&f, SCM_LOCAL, newStrStream(page));
 
     newBuf = newBuffer(INIT_BUFFER_WIDTH);
-    if (SETJMP(AbortLoading) != 0) {
+    if (sigsetjmp(AbortLoading, 1) != 0) {
         TRAP_OFF;
         discardBuffer(newBuf);
         UFclose(&f);
@@ -6769,7 +6768,7 @@ loadBuffer(URLFile* uf, Buffer* volatile newBuf)
     if (newBuf == NULL)
         newBuf = newBuffer(INIT_BUFFER_WIDTH);
 
-    if (SETJMP(AbortLoading) != 0) {
+    if (sigsetjmp(AbortLoading, 1) != 0) {
         goto _end;
     }
     TRAP_ON;
@@ -7099,7 +7098,7 @@ int save2tmp(URLFile uf, char* tmpf)
         return -1;
     }
     bcopy(AbortLoading, env_bak, sizeof(sigjmp_buf));
-    if (SETJMP(AbortLoading) != 0) {
+    if (sigsetjmp(AbortLoading, 1) != 0) {
         goto _end;
     }
     TRAP_ON;

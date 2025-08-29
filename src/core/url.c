@@ -223,8 +223,7 @@ DefaultFile(int scheme)
 static MySignalHandler
 KeyAbort(SIGNAL_ARG)
 {
-    LONGJMP(AbortLoading, 1);
-    SIGNAL_RETURN;
+    siglongjmp(AbortLoading, 1);
 }
 
 SSL_CTX* ssl_ctx = NULL;
@@ -525,7 +524,7 @@ int openSocket(char* const hostname,
         message(Sprintf("Opening socket...")->ptr, 0, 0);
         // refresh(ttyWriter());
     }
-    if (SETJMP(AbortLoading) != 0) {
+    if (sigsetjmp(AbortLoading, 1) != 0) {
 #ifdef SOCK_DEBUG
         sock_log("openSocket() failed. reason: user abort\n");
 #endif
@@ -1989,7 +1988,7 @@ int check_no_proxy(char* domain)
     /*
      * to check noproxy by network addr
      */
-    if (SETJMP(AbortLoading) != 0) {
+    if (sigsetjmp(AbortLoading, 1) != 0) {
         ret = 0;
         goto end;
     }
