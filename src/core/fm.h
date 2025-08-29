@@ -18,10 +18,6 @@
 #include "config.h"
 #include "linein.h"
 #include "url.h"
-
-#define MENU_SELECT
-#define MENU_MAP
-
 #include <gc.h>
 #include <Str.h>
 #include <wc.h>

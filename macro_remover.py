@@ -46,8 +46,8 @@ CONTEXT = {
     "USE_BG_COLOR": True,
     "USE_RAW_SCROLL": False,
     # "USE_MENU": False,
-    # "MENU_MAP": False,
-    # "MENU_SELECT": False,
+    "MENU_MAP": True,
+    "MENU_SELECT": True,
     "USE_IMAGE": True,
     #
     "USE_MOUSE": False,
