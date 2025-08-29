@@ -879,7 +879,7 @@ isrch(int (*func)(Buffer*, char*), char* prompt)
     dispincsrch(0, NULL, NULL); /* initialize incremental search state */
 
     searchRoutine = func;
-    str = inputLineHistSearch(prompt, NULL, IN_STRING, TextHist, dispincsrch);
+    str = inputLineHistSearch(getUI(), prompt, NULL, IN_STRING, TextHist, dispincsrch);
     if (str == NULL) {
         RESTORE_BUFPOSITION(&sbuf);
     }
@@ -895,7 +895,7 @@ srch(int (*func)(Buffer*, char*), char* prompt)
 
     str = searchKeyData();
     if (str == NULL || *str == '\0') {
-        str = inputStrHist(prompt, NULL, TextHist);
+        str = inputStrHist(getUI(), prompt, NULL, TextHist);
         if (str != NULL && *str == '\0')
             str = SearchString;
         if (str == NULL) {
@@ -1068,7 +1068,7 @@ DEFUN(setEnv, SETENV, "Set environment variable")
     if (env == NULL || *env == '\0' || strchr(env, '=') == NULL) {
         if (env != NULL && *env != '\0')
             env = Sprintf("%s=", env)->ptr;
-        env = inputStrHist("Set environ: ", env, TextHist);
+        env = inputStrHist(getUI(), "Set environ: ", env, TextHist);
         if (env == NULL || *env == '\0') {
 
             return;
@@ -1091,7 +1091,7 @@ DEFUN(pipeBuf, PIPE_BUF, "Pipe current buffer through a shell command and displa
     cmd = searchKeyData();
     if (cmd == NULL || *cmd == '\0') {
         /* FIXME: gettextize? */
-        cmd = inputLineHist("Pipe buffer to: ", "", IN_COMMAND, ShellHist);
+        cmd = inputLineHist(getUI(), "Pipe buffer to: ", "", IN_COMMAND, ShellHist);
     }
     if (cmd != NULL)
         cmd = conv_to_system(cmd);
@@ -1134,7 +1134,7 @@ DEFUN(pipesh, PIPE_SHELL, "Execute shell command and display output")
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
     cmd = searchKeyData();
     if (cmd == NULL || *cmd == '\0') {
-        cmd = inputLineHist("(read shell[pipe])!", "", IN_COMMAND, ShellHist);
+        cmd = inputLineHist(getUI(), "(read shell[pipe])!", "", IN_COMMAND, ShellHist);
     }
     if (cmd != NULL)
         cmd = conv_to_system(cmd);
@@ -1163,7 +1163,7 @@ DEFUN(readsh, READ_SHELL, "Execute shell command and display output")
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
     cmd = searchKeyData();
     if (cmd == NULL || *cmd == '\0') {
-        cmd = inputLineHist("(read shell)!", "", IN_COMMAND, ShellHist);
+        cmd = inputLineHist(getUI(), "(read shell)!", "", IN_COMMAND, ShellHist);
     }
     if (cmd != NULL)
         cmd = conv_to_system(cmd);
@@ -1196,7 +1196,7 @@ DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output")
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
     cmd = searchKeyData();
     if (cmd == NULL || *cmd == '\0') {
-        cmd = inputLineHist("(exec shell)!", "", IN_COMMAND, ShellHist);
+        cmd = inputLineHist(getUI(), "(exec shell)!", "", IN_COMMAND, ShellHist);
     }
     if (cmd != NULL)
         cmd = conv_to_system(cmd);
@@ -1220,7 +1220,7 @@ DEFUN(ldfile, LOAD, "Open local file in a new buffer")
     fn = searchKeyData();
     if (fn == NULL || *fn == '\0') {
         /* FIXME: gettextize? */
-        fn = inputFilenameHist("(Load)Filename? ", NULL, LoadHist);
+        fn = inputFilenameHist(getUI(), "(Load)Filename? ", NULL, LoadHist);
     }
     if (fn != NULL)
         fn = conv_to_system(fn);
@@ -1515,11 +1515,11 @@ _quitfm(int confirm)
 
     if (checkDownloadList())
         /* FIXME: gettextize? */
-        ans = inputChar("Download process retains. "
+        ans = inputChar(getUI(), "Download process retains. "
                         "Do you want to exit w3m? (y/n)");
     else if (confirm)
         /* FIXME: gettextize? */
-        ans = inputChar("Do you want to exit w3m? (y/n)");
+        ans = inputChar(getUI(), "Do you want to exit w3m? (y/n)");
     if (!(ans && TOLOWER(*ans) == 'y')) {
 
         return;
@@ -1647,7 +1647,7 @@ DEFUN(goLine, GOTO_LINE, "Go to the specified line")
         _goLine(str);
     else
         /* FIXME: gettextize? */
-        _goLine(inputStr("Goto line: ", ""));
+        _goLine(inputStr(getUI(), "Goto line: ", ""));
 }
 
 DEFUN(goLineF, BEGIN, "Go to the first line")
@@ -1835,7 +1835,7 @@ DEFUN(reMark, REG_MARK, "Mark all occurences of a pattern")
         return;
     str = searchKeyData();
     if (str == NULL || *str == '\0') {
-        str = inputStrHist("(Mark)Regexp: ", MarkString, TextHist);
+        str = inputStrHist(getUI(), "(Mark)Regexp: ", MarkString, TextHist);
         if (str == NULL || *str == '\0') {
 
             return;
@@ -2287,7 +2287,7 @@ _followForm(int submit)
             /* FIXME: gettextize? */
             disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
         /* FIXME: gettextize? */
-        p = inputStrHist("TEXT:", fi->value ? fi->value->ptr : NULL, TextHist);
+        p = inputStrHist(getUI(), "TEXT:", fi->value ? fi->value->ptr : NULL, TextHist);
         if (p == NULL || fi->readonly)
             break;
         fi->value = Strnew_charp(p);
@@ -2302,7 +2302,7 @@ _followForm(int submit)
             /* FIXME: gettextize? */
             disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
         /* FIXME: gettextize? */
-        p = inputFilenameHist("Filename:", fi->value ? fi->value->ptr : NULL,
+        p = inputFilenameHist(getUI(), "Filename:", fi->value ? fi->value->ptr : NULL,
             NULL);
         if (p == NULL || fi->readonly)
             break;
@@ -2320,7 +2320,7 @@ _followForm(int submit)
             break;
         }
         /* FIXME: gettextize? */
-        p = inputLine("Password:", fi->value ? fi->value->ptr : NULL,
+        p = inputLine(getUI(), "Password:", fi->value ? fi->value->ptr : NULL,
             IN_PASSWORD);
         if (p == NULL)
             break;
@@ -2943,7 +2943,7 @@ goURL0(char* prompt, int relative)
             else
                 pushHist(hist, a_url);
         }
-        url = inputLineHist(prompt, url, IN_URL, hist);
+        url = inputLineHist(getUI(), prompt, url, IN_URL, hist);
         if (url != NULL)
             SKIP_BLANKS(url);
     }
@@ -3065,7 +3065,7 @@ DEFUN(setOpt, SET_OPTION, "Set option")
             char* v = get_param_option(opt);
             opt = Sprintf("%s=%s", opt, v ? v : "")->ptr;
         }
-        opt = inputStrHist("Set option: ", opt, TextHist);
+        opt = inputStrHist(getUI(), "Set option: ", opt, TextHist);
         if (opt == NULL || *opt == '\0') {
 
             return;
@@ -3238,7 +3238,7 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document")
     file = searchKeyData();
     if (file == NULL || *file == '\0') {
         /* FIXME: gettextize? */
-        qfile = inputLineHist("Save buffer to: ", NULL, IN_COMMAND, SaveHist);
+        qfile = inputLineHist(getUI(), "Save buffer to: ", NULL, IN_COMMAND, SaveHist);
         if (qfile == NULL || *qfile == '\0') {
 
             return;
@@ -3599,7 +3599,7 @@ DEFUN(docCSet, CHARSET, "Change the character encoding for the current document"
     cs = searchKeyData();
     if (cs == NULL || *cs == '\0')
         /* FIXME: gettextize? */
-        cs = inputStr("Document charset: ",
+        cs = inputStr(getUI(), "Document charset: ",
             wc_ces_to_charset(Currentbuf->document_charset));
     charset = wc_guess_charset_short(cs, 0);
     if (charset == 0) {
@@ -3617,7 +3617,7 @@ DEFUN(defCSet, DEFAULT_CHARSET, "Change the default character encoding")
     cs = searchKeyData();
     if (cs == NULL || *cs == '\0')
         /* FIXME: gettextize? */
-        cs = inputStr("Default document charset: ",
+        cs = inputStr(getUI(), "Default document charset: ",
             wc_ces_to_charset(DocumentCharset));
     charset = wc_guess_charset_short(cs, 0);
     if (charset != 0)
@@ -3662,7 +3662,6 @@ DEFUN(chkWORD, MARK_WORD, "Turn current word into hyperlink")
     reAnchorWord(Currentbuf, Currentbuf->currentLine, spos, epos);
 }
 
-
 /* spawn external browser */
 static void
 invoke_browser(char* url)
@@ -3676,7 +3675,7 @@ invoke_browser(char* url)
     if (browser == NULL || *browser == '\0') {
         browser = ExtBrowser;
         if (browser == NULL || *browser == '\0') {
-            browser = inputStr("Browse command: ", NULL);
+            browser = inputStr(getUI(), "Browse command: ", NULL);
             if (browser != NULL)
                 browser = conv_to_system(browser);
         }
@@ -3881,7 +3880,7 @@ execdict(char* word)
 
 DEFUN(dictword, DICT_WORD, "Execute dictionary command (see README.dict)")
 {
-    execdict(inputStr("(dictionary)!", ""));
+    execdict(inputStr(getUI(), "(dictionary)!", ""));
 }
 
 DEFUN(dictwordat, DICT_WORD_AT,
@@ -4017,7 +4016,7 @@ DEFUN(execCmd, COMMAND, "Invoke w3m function(s)")
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
     data = searchKeyData();
     if (data == NULL || *data == '\0') {
-        data = inputStrHist("command [; ...]: ", "", TextHist);
+        data = inputStrHist(getUI(), "command [; ...]: ", "", TextHist);
         if (data == NULL) {
 
             return;
@@ -4081,7 +4080,7 @@ DEFUN(setAlarm, ALARM, "Set alarm")
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
     data = searchKeyData();
     if (data == NULL || *data == '\0') {
-        data = inputStrHist("(Alarm)sec command: ", "", TextHist);
+        data = inputStrHist(getUI(), "(Alarm)sec command: ", "", TextHist);
         if (data == NULL) {
 
             return;
@@ -4170,7 +4169,7 @@ DEFUN(defKey, DEFINE_KEY, "Define a binding between a key stroke combination and
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
     data = searchKeyData();
     if (data == NULL || *data == '\0') {
-        data = inputStrHist("Key definition: ", "", TextHist);
+        data = inputStrHist(getUI(), "Key definition: ", "", TextHist);
         if (data == NULL || *data == '\0') {
 
             return;

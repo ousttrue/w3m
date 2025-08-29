@@ -6801,7 +6801,7 @@ int _doFileCopy(char* tmpf, char* defstr, int download)
         p = searchKeyData();
         if (p == NULL || *p == '\0') {
             /* FIXME: gettextize? */
-            q = inputLineHist("(Download)Save file to: ",
+            q = inputLineHist(getUI(), "(Download)Save file to: ",
                 defstr, IN_COMMAND, SaveHist);
             if (q == NULL || *q == '\0')
                 return FALSE;
@@ -6916,7 +6916,7 @@ int doFileSave(URLFile uf, char* defstr)
         p = searchKeyData();
         if (p == NULL || *p == '\0') {
             /* FIXME: gettextize? */
-            p = inputLineHist("(Download)Save file to: ",
+            p = inputLineHist(getUI(), "(Download)Save file to: ",
                 defstr, IN_FILENAME, SaveHist);
             if (p == NULL || *p == '\0')
                 return -1;
@@ -7055,7 +7055,7 @@ char* inputAnswer(char* prompt)
         return "n";
     if (fmInitialized) {
         term_raw();
-        ans = inputChar(prompt);
+        ans = inputChar(getUI(), prompt);
     } else {
         printf("%s", prompt);
         fflush(stdout);

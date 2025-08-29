@@ -94,12 +94,12 @@ void getAuthCookie(struct http_auth* hauth, char* auth_header,
             char* pp;
             term_raw();
             /* FIXME: gettextize? */
-            if ((pp = inputStr(Sprintf("Username for %s: ", realm)->ptr,
+            if ((pp = inputStr(getUI(), Sprintf("Username for %s: ", realm)->ptr,
                      NULL))
                 == NULL)
                 return;
             *uname = Str_conv_to_system(Strnew_charp(pp));
-            if ((pp = inputLine(Sprintf("Password for %s: ", realm)->ptr, NULL,
+            if ((pp = inputLine(getUI(), Sprintf("Password for %s: ", realm)->ptr, NULL,
                      IN_PASSWORD))
                 == NULL) {
                 *uname = NULL;

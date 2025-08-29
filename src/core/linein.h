@@ -1,6 +1,7 @@
 #pragma once
 #include <Str.h>
 #include "line.h"
+#include "ui.h"
 
 struct Hist;
 
@@ -15,29 +16,48 @@ enum InputLineFlags {
     IN_CHAR = 0x200,
 };
 
-char* inputLineHistSearch(const char* prompt, const char* def_str, enum InputLineFlags flag,
+char* inputLineHistSearch(struct UI ui,
+    const char* prompt, const char* def_str, enum InputLineFlags flag,
     struct Hist* hist, IncFunc incfunc);
 
-static inline char* inputLineHist(const char* p, const char* d, enum InputLineFlags f, struct Hist* h)
+static inline char* inputLineHist(struct UI ui,
+    const char* p, const char* d, enum InputLineFlags f, struct Hist* h)
 {
-    return inputLineHistSearch(p, d, f, h, NULL);
+    return inputLineHistSearch(ui, p, d, f, h, NULL);
 }
 
-static inline char* inputLine(const char* p, const char* d, enum InputLineFlags f)
+static inline char* inputLine(struct UI ui,
+    const char* p, const char* d, enum InputLineFlags f)
 {
-    return inputLineHist(p, d, f, NULL);
+    return inputLineHist(ui, p, d, f, NULL);
 }
 
-static inline char* inputStr(const char* p, const char* d)
+static inline char* inputStr(struct UI ui,
+    const char* p, const char* d)
 {
-    return inputLine(p, d, IN_STRING);
+    return inputLine(ui, p, d, IN_STRING);
 }
 
-static inline char* inputStrHist(const char* p, const char* d, struct Hist* h)
+static inline char* inputStrHist(struct UI ui,
+    const char* p, const char* d, struct Hist* h)
 {
-    return inputLineHist(p, d, IN_STRING, h);
+    return inputLineHist(ui, p, d, IN_STRING, h);
 }
 
-static inline char* inputFilename(const char* p, const char* d) { return inputLine(p, d, IN_FILENAME); }
-static inline char* inputFilenameHist(const char* p, const char* d, struct Hist* h) { return inputLineHist(p, d, IN_FILENAME, h); }
-static inline char* inputChar(const char* p) { return inputLine(p, "", IN_CHAR); }
+static inline char* inputFilename(struct UI ui,
+    const char* p, const char* d)
+{
+    return inputLine(ui, p, d, IN_FILENAME);
+}
+
+static inline char* inputFilenameHist(struct UI ui,
+    const char* p, const char* d, struct Hist* h)
+{
+    return inputLineHist(ui, p, d, IN_FILENAME, h);
+}
+
+static inline char* inputChar(struct UI ui,
+    const char* p)
+{
+    return inputLine(ui, p, "", IN_CHAR);
+}

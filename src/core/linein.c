@@ -88,7 +88,13 @@ static int setStrType(Str str, Lineprop* prop);
 static void addPasswd(char* p, Lineprop* pr, int len, int pos, int limit);
 static void addStr(char* p, Lineprop* pr, int len, int pos, int limit);
 
-static int CPos, CLen, offset;
+struct LineEditor {
+    int CPos;
+    int CLen;
+    int offset;
+};
+static struct LineEditor g_editor;
+
 static int i_cont, i_broken, i_quote;
 static int cm_mode, cm_next, cm_clear, cm_disp_next, cm_disp_clear;
 static int need_redraw;
@@ -100,14 +106,8 @@ static Str strCurrentBuf;
 static int use_hist;
 static void ins_char(Str str);
 
-char* inputLineHistSearch(const char* prompt, const char* def_str, enum InputLineFlags flag, struct Hist* hist, IncFunc incrfunc)
+char* inputLineHistSearch(struct UI ui, const char* prompt, const char* def_str, enum InputLineFlags flag, struct Hist* hist, IncFunc incrfunc)
 {
-    struct VirtualTerm* vt = getScreen();
-    int opos, x, y, lpos, rpos, epos;
-    unsigned char c;
-    char* p;
-    Str tmp;
-
     g_is_passwd = false;
     move_word = TRUE;
 
@@ -130,20 +130,21 @@ char* inputLineHistSearch(const char* prompt, const char* def_str, enum InputLin
         cm_mode = CPL_ON;
     else
         cm_mode = CPL_OFF;
-    opos = get_strwidth(prompt);
-    epos = CLEN - opos;
+
+    int opos = get_strwidth(prompt);
+    int epos = CLEN - opos;
     if (epos < 0)
         epos = 0;
-    lpos = epos / 3;
-    rpos = epos * 2 / 3;
-    offset = 0;
+    int lpos = epos / 3;
+    int rpos = epos * 2 / 3;
+    g_editor.offset = 0;
 
     if (def_str) {
         strBuf = Strnew_charp(def_str);
-        CLen = CPos = setStrType(strBuf, strProp);
+        g_editor.CLen = g_editor.CPos = setStrType(strBuf, strProp);
     } else {
         strBuf = Strnew();
-        CLen = CPos = 0;
+        g_editor.CLen = g_editor.CPos = 0;
     }
 
     i_cont = TRUE;
@@ -153,30 +154,31 @@ char* inputLineHistSearch(const char* prompt, const char* def_str, enum InputLin
     cm_disp_next = -1;
     need_redraw = FALSE;
 
+    unsigned char c;
     wc_char_conv_init(wc_guess_8bit_charset(DisplayCharset), InnerCharset);
     GetChFunc getch = event_begin_input(-1);
     do {
-        x = calcPosition(strBuf->ptr, strProp, CLen, CPos, 0, CP_FORCE);
-        if (x - rpos > offset) {
-            y = calcPosition(strBuf->ptr, strProp, CLen, CLen, 0, CP_AUTO);
+        int x = calcPosition(strBuf->ptr, strProp, g_editor.CLen, g_editor.CPos, 0, CP_FORCE);
+        if (x - rpos > g_editor.offset) {
+            int y = calcPosition(strBuf->ptr, strProp, g_editor.CLen, g_editor.CLen, 0, CP_AUTO);
             if (y - epos > x - rpos)
-                offset = x - rpos;
+                g_editor.offset = x - rpos;
             else if (y - epos > 0)
-                offset = y - epos;
-        } else if (x - lpos < offset) {
+                g_editor.offset = y - epos;
+        } else if (x - lpos < g_editor.offset) {
             if (x - lpos > 0)
-                offset = x - lpos;
+                g_editor.offset = x - lpos;
             else
-                offset = 0;
+                g_editor.offset = 0;
         }
-        move(vt, getLines() - 1, 0);
-        addstr(vt, prompt);
+        move(ui.vt, getLines() - 1, 0);
+        addstr(ui.vt, prompt);
         if (g_is_passwd)
-            addPasswd(strBuf->ptr, strProp, CLen, offset, getCols() - opos);
+            addPasswd(strBuf->ptr, strProp, g_editor.CLen, g_editor.offset, getCols() - opos);
         else
-            addStr(strBuf->ptr, strProp, CLen, offset, getCols() - opos);
-        clrtoeolx(vt);
-        move(vt, getLines() - 1, opos + x - offset);
+            addStr(strBuf->ptr, strProp, g_editor.CLen, g_editor.offset, getCols() - opos);
+        clrtoeolx(ui.vt);
+        move(ui.vt, getLines() - 1, opos + x - g_editor.offset);
         struct Frame* frame = screenToFrame(getScreen());
 
         wc_putc_init(InnerCharset, DisplayCharset);
@@ -198,7 +200,7 @@ char* inputLineHistSearch(const char* prompt, const char* def_str, enum InputLin
                 _compl();
                 cm_disp_next = -1;
             }
-        } else if (!i_quote && CLen == CPos && (cm_mode & CPL_ALWAYS || cm_mode & CPL_ON) && c == CTRL_D) {
+        } else if (!i_quote && g_editor.CLen == g_editor.CPos && (cm_mode & CPL_ALWAYS || cm_mode & CPL_ON) && c == CTRL_D) {
             if (!emacs_like_lineedit) {
                 _dcompl();
                 need_redraw = TRUE;
@@ -218,7 +220,7 @@ char* inputLineHistSearch(const char* prompt, const char* def_str, enum InputLin
             if (cm_disp_clear)
                 cm_disp_next = -1;
         } else {
-            tmp = wc_char_conv(c);
+            Str tmp = wc_char_conv(c);
             if (tmp == NULL) {
                 i_quote = TRUE;
                 goto next_char;
@@ -226,13 +228,13 @@ char* inputLineHistSearch(const char* prompt, const char* def_str, enum InputLin
             i_quote = FALSE;
             cm_next = FALSE;
             cm_disp_next = -1;
-            if (CLen + tmp->length > STR_LEN || !tmp->length)
+            if (g_editor.CLen + tmp->length > STR_LEN || !tmp->length)
                 goto next_char;
             ins_char(tmp);
             if (incrfunc)
                 incrfunc(-1, strBuf, strProp);
         }
-        if (CLen && (flag & IN_CHAR))
+        if (g_editor.CLen && (flag & IN_CHAR))
             break;
     } while (i_cont);
     event_end_input(getch);
@@ -250,7 +252,7 @@ char* inputLineHistSearch(const char* prompt, const char* def_str, enum InputLin
     MOVE(ttyWriter(), getScreen()->CurLine, getScreen()->CurColumn);
     flushWriter(ttyWriter());
 
-    p = strBuf->ptr;
+    char* p = strBuf->ptr;
     if (flag & (IN_FILENAME | IN_COMMAND)) {
         SKIP_BLANKS(p);
     }
@@ -324,7 +326,7 @@ ins_char(Str str)
     Lineprop ctype;
     int len;
 
-    if (CLen + str->length >= STR_LEN)
+    if (g_editor.CLen + str->length >= STR_LEN)
         return;
     while (p < ep) {
         len = get_mclen(p);
@@ -336,16 +338,16 @@ ins_char(Str str)
                 ctype = PC_WCHAR1;
         }
         insC();
-        strBuf->ptr[CPos] = *(p++);
-        strProp[CPos] = ctype;
-        CPos++;
+        strBuf->ptr[g_editor.CPos] = *(p++);
+        strProp[g_editor.CPos] = ctype;
+        g_editor.CPos++;
         if (--len) {
             ctype = (ctype & ~PC_WCHAR1) | PC_WCHAR2;
             while (len--) {
                 insC();
-                strBuf->ptr[CPos] = *(p++);
-                strProp[CPos] = ctype;
-                CPos++;
+                strBuf->ptr[g_editor.CPos] = *(p++);
+                strProp[g_editor.CPos] = ctype;
+                g_editor.CPos++;
             }
         }
     }
@@ -356,9 +358,9 @@ insC(void)
 {
     int i;
 
-    Strinsert_char(strBuf, CPos, ' ');
-    CLen = strBuf->length;
-    for (i = CLen; i > CPos; i--) {
+    Strinsert_char(strBuf, g_editor.CPos, ' ');
+    g_editor.CLen = strBuf->length;
+    for (i = g_editor.CLen; i > g_editor.CPos; i--) {
         strProp[i] = strProp[i - 1];
     }
 }
@@ -366,38 +368,38 @@ insC(void)
 static void
 delC(void)
 {
-    int i = CPos;
+    int i = g_editor.CPos;
     int delta = 1;
 
-    if (CLen == CPos)
+    if (g_editor.CLen == g_editor.CPos)
         return;
-    while (i + delta < CLen && strProp[i + delta] & PC_WCHAR2)
+    while (i + delta < g_editor.CLen && strProp[i + delta] & PC_WCHAR2)
         delta++;
-    for (i = CPos; i < CLen; i++) {
+    for (i = g_editor.CPos; i < g_editor.CLen; i++) {
         strProp[i] = strProp[i + delta];
     }
-    Strdelete(strBuf, CPos, delta);
-    CLen -= delta;
+    Strdelete(strBuf, g_editor.CPos, delta);
+    g_editor.CLen -= delta;
 }
 
 static void
 _mvL(void)
 {
-    if (CPos > 0)
-        CPos--;
-    while (CPos > 0 && strProp[CPos] & PC_WCHAR2)
-        CPos--;
+    if (g_editor.CPos > 0)
+        g_editor.CPos--;
+    while (g_editor.CPos > 0 && strProp[g_editor.CPos] & PC_WCHAR2)
+        g_editor.CPos--;
 }
 
 static void
 _mvLw(void)
 {
     int first = 1;
-    while (CPos > 0 && (first || !terminated(strBuf->ptr[CPos - 1]))) {
-        CPos--;
+    while (g_editor.CPos > 0 && (first || !terminated(strBuf->ptr[g_editor.CPos - 1]))) {
+        g_editor.CPos--;
         first = 0;
-        if (CPos > 0 && strProp[CPos] & PC_WCHAR2)
-            CPos--;
+        if (g_editor.CPos > 0 && strProp[g_editor.CPos] & PC_WCHAR2)
+            g_editor.CPos--;
         if (!move_word)
             break;
     }
@@ -407,11 +409,11 @@ static void
 _mvRw(void)
 {
     int first = 1;
-    while (CPos < CLen && (first || !terminated(strBuf->ptr[CPos - 1]))) {
-        CPos++;
+    while (g_editor.CPos < g_editor.CLen && (first || !terminated(strBuf->ptr[g_editor.CPos - 1]))) {
+        g_editor.CPos++;
         first = 0;
-        if (CPos < CLen && strProp[CPos] & PC_WCHAR2)
-            CPos++;
+        if (g_editor.CPos < g_editor.CLen && strProp[g_editor.CPos] & PC_WCHAR2)
+            g_editor.CPos++;
         if (!move_word)
             break;
     }
@@ -420,16 +422,16 @@ _mvRw(void)
 static void
 _mvR(void)
 {
-    if (CPos < CLen)
-        CPos++;
-    while (CPos < CLen && strProp[CPos] & PC_WCHAR2)
-        CPos++;
+    if (g_editor.CPos < g_editor.CLen)
+        g_editor.CPos++;
+    while (g_editor.CPos < g_editor.CLen && strProp[g_editor.CPos] & PC_WCHAR2)
+        g_editor.CPos++;
 }
 
 static void
 _bs(void)
 {
-    if (CPos > 0) {
+    if (g_editor.CPos > 0) {
         _mvL();
         delC();
     }
@@ -439,9 +441,9 @@ static void
 _bsw(void)
 {
     int t = 0;
-    while (CPos > 0 && !t) {
+    while (g_editor.CPos > 0 && !t) {
         _mvL();
-        t = (move_word && terminated(strBuf->ptr[CPos - 1]));
+        t = (move_word && terminated(strBuf->ptr[g_editor.CPos - 1]));
         delC();
     }
 }
@@ -455,12 +457,12 @@ _enter(void)
 static void
 insertself(char c)
 {
-    if (CLen >= STR_LEN)
+    if (g_editor.CLen >= STR_LEN)
         return;
     insC();
-    strBuf->ptr[CPos] = c;
-    strProp[CPos] = (g_is_passwd) ? PC_ASCII : PC_CTRL;
-    CPos++;
+    strBuf->ptr[g_editor.CPos] = c;
+    strProp[g_editor.CPos] = (g_is_passwd) ? PC_ASCII : PC_CTRL;
+    g_editor.CPos++;
 }
 
 static void
@@ -472,26 +474,26 @@ _quo(void)
 static void
 _mvB(void)
 {
-    CPos = 0;
+    g_editor.CPos = 0;
 }
 
 static void
 _mvE(void)
 {
-    CPos = CLen;
+    g_editor.CPos = g_editor.CLen;
 }
 
 static void
 killn(void)
 {
-    CLen = CPos;
-    Strtruncate(strBuf, CLen);
+    g_editor.CLen = g_editor.CPos;
+    Strtruncate(strBuf, g_editor.CLen);
 }
 
 static void
 killb(void)
 {
-    while (CPos > 0)
+    while (g_editor.CPos > 0)
         _bs();
 }
 
@@ -538,13 +540,13 @@ next_compl(int next)
         if (cm_mode & CPL_ALWAYS) {
             b = 0;
         } else {
-            for (b = CPos - 1; b >= 0; b--) {
+            for (b = g_editor.CPos - 1; b >= 0; b--) {
                 if ((strBuf->ptr[b] == ' ' || strBuf->ptr[b] == CTRL_I) && !((b > 0) && strBuf->ptr[b - 1] == '\\'))
                     break;
             }
             b++;
         }
-        a = CPos;
+        a = g_editor.CPos;
         CBeforeBuf = Strsubstr(strBuf, 0, b);
         buf = Strsubstr(strBuf, b, a - b);
         CAfterBuf = Strsubstr(strBuf, a, strBuf->length - a);
@@ -561,10 +563,10 @@ next_compl(int next)
         return;
 
     strBuf = Strnew_m_charp(CBeforeBuf->ptr, s->ptr, CAfterBuf->ptr, NULL);
-    CLen = setStrType(strBuf, strProp);
-    CPos = CBeforeBuf->length + s->length;
-    if (CPos > CLen)
-        CPos = CLen;
+    g_editor.CLen = setStrType(strBuf, strProp);
+    g_editor.CPos = CBeforeBuf->length + s->length;
+    if (g_editor.CPos > g_editor.CLen)
+        g_editor.CPos = g_editor.CLen;
 }
 
 static void
@@ -882,8 +884,8 @@ _prev(void)
     if (DecodeURL && (cm_mode & CPL_URL))
         p = url_decode2(p, NULL);
     strBuf = Strnew_charp(p);
-    CLen = CPos = setStrType(strBuf, strProp);
-    offset = 0;
+    g_editor.CLen = g_editor.CPos = setStrType(strBuf, strProp);
+    g_editor.offset = 0;
 }
 
 static void
@@ -905,8 +907,8 @@ _next(void)
         strBuf = strCurrentBuf;
         strCurrentBuf = NULL;
     }
-    CLen = CPos = setStrType(strBuf, strProp);
-    offset = 0;
+    g_editor.CLen = g_editor.CPos = setStrType(strBuf, strProp);
+    g_editor.offset = 0;
 }
 
 static int
@@ -974,5 +976,5 @@ _editor(void)
             continue;
         Strcat_char(strBuf, *p);
     }
-    CLen = CPos = setStrType(strBuf, strProp);
+    g_editor.CLen = g_editor.CPos = setStrType(strBuf, strProp);
 }

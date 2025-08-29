@@ -15,7 +15,6 @@
 #include <stdio.h>
 #include <wtf.h>
 
-
 static char** FRAME;
 static int FRAME_WIDTH;
 static int graph_mode = FALSE;
@@ -814,14 +813,14 @@ void draw_menu(Menu* menu)
 
 void draw_menu_item(Menu* menu, int mselect)
 {
-    struct VirtualTerm *vt = getScreen();
+    struct VirtualTerm* vt = getScreen();
     mvaddnstr(vt, menu->y + mselect - menu->offset, menu->x,
         menu->item[mselect].label, menu->width);
 }
 
 int select_menu(Menu* menu, int mselect)
 {
-    struct VirtualTerm *vt = getScreen();
+    struct VirtualTerm* vt = getScreen();
     if (mselect < 0 || mselect >= menu->nitem)
         return (MENU_NOTHING);
     if (mselect < menu->offset)
@@ -1217,7 +1216,7 @@ menu_search_forward(Menu* menu, int from)
 {
     char* str;
     int found;
-    str = inputStrHist("Forward: ", NULL, TextHist);
+    str = inputStrHist(getUI(), "Forward: ", NULL, TextHist);
     if (str != NULL && *str == '\0')
         str = SearchString;
     if (str == NULL || *str == '\0')
@@ -1266,7 +1265,7 @@ menu_search_backward(Menu* menu, int from)
 {
     char* str;
     int found;
-    str = inputStrHist("Backward: ", NULL, TextHist);
+    str = inputStrHist(getUI(), "Backward: ", NULL, TextHist);
     if (str != NULL && *str == '\0')
         str = SearchString;
     if (str == NULL || *str == '\0')
@@ -1975,4 +1974,3 @@ list_menu(Buffer* buf)
 
     return (key >= 0) ? ap[key] : NULL;
 }
-
