@@ -1,5 +1,5 @@
 #pragma once
-#include <openssl/crypto.h>
+#include <openssl/types.h>
 
 extern int ssl_verify_server;
 extern char* ssl_cert_file;
@@ -14,3 +14,10 @@ extern char* ssl_cipher;
 
 SSL* openSSLHandle(int sock, char* hostname, char** p_cert);
 void SSL_write_from_file(SSL* ssl, char* file);
+
+struct ssl_handle {
+    SSL* ssl;
+    int sock;
+};
+void ssl_close(struct ssl_handle* handle);
+int ssl_read(struct ssl_handle* handle, char* buf, int len);

@@ -3,9 +3,6 @@
 #define _HTML_H
 #include "config.h"
 #include "url.h"
-#include <openssl/bio.h>
-#include <openssl/x509.h>
-#include <openssl/ssl.h>
 
 #include <time.h>
 

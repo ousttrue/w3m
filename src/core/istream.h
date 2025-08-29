@@ -2,12 +2,10 @@
 #include "url.h"
 #include "indep.h"
 #include <stdio.h>
-#include <openssl/bio.h>
-#include <openssl/x509.h>
-#include <openssl/ssl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <openssl/types.h>
 
 struct stream_buffer {
     unsigned char* buf;
@@ -19,11 +17,6 @@ typedef struct stream_buffer* StreamBuffer;
 struct io_file_handle {
     FILE* f;
     void (*close)(void*);
-};
-
-struct ssl_handle {
-    SSL* ssl;
-    int sock;
 };
 
 union input_stream;

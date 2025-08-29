@@ -1,10 +1,10 @@
 #include "fm.h"
+#include "ssl_util.h"
 #include "etc.h"
 #include "myctype.h"
 #include "istream.h"
 #include "term_size.h"
 #include <signal.h>
-#include <openssl/x509v3.h>
 
 #define uchar unsigned char
 
@@ -22,9 +22,6 @@ static void file_close(struct io_file_handle* handle);
 static int file_read(struct io_file_handle* handle, char* buf, int len);
 
 static int str_read(Str handle, char* buf, int len);
-
-static void ssl_close(struct ssl_handle* handle);
-static int ssl_read(struct ssl_handle* handle, char* buf, int len);
 
 static int ens_read(struct ens_handle* handle, char* buf, int len);
 static void ens_close(struct ens_handle* handle);
@@ -360,38 +357,6 @@ static int
 str_read(Str handle, char* buf, int len)
 {
     return 0;
-}
-
-static void
-ssl_close(struct ssl_handle* handle)
-{
-    close(handle->sock);
-    if (handle->ssl)
-        SSL_free(handle->ssl);
-    xfree(handle);
-}
-
-static int
-ssl_read(struct ssl_handle* handle, char* buf, int len)
-{
-    int status;
-    if (handle->ssl) {
-        for (;;) {
-            status = SSL_read(handle->ssl, buf, len);
-            if (status > 0)
-                break;
-            switch (SSL_get_error(handle->ssl, status)) {
-            case SSL_ERROR_WANT_READ:
-            case SSL_ERROR_WANT_WRITE: /* reads can trigger write errors; see SSL_get_error(3) */
-                continue;
-            default:
-                break;
-            }
-            break;
-        }
-    } else
-        status = read(handle->sock, buf, len);
-    return status;
 }
 
 static void

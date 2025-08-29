@@ -1,6 +1,7 @@
 #include "ssl_util.h"
 #include "file.h"
 #include "display.h"
+#include "indep.h"
 #include "term_size.h"
 #include "gc/gc.h"
 #include <myctype.h>
@@ -534,4 +535,34 @@ void SSL_write_from_file(SSL* ssl, char* file)
         }
         fclose(fd);
     }
+}
+
+void ssl_close(struct ssl_handle* handle)
+{
+    close(handle->sock);
+    if (handle->ssl)
+        SSL_free(handle->ssl);
+    xfree(handle);
+}
+
+int ssl_read(struct ssl_handle* handle, char* buf, int len)
+{
+    int status;
+    if (handle->ssl) {
+        for (;;) {
+            status = SSL_read(handle->ssl, buf, len);
+            if (status > 0)
+                break;
+            switch (SSL_get_error(handle->ssl, status)) {
+            case SSL_ERROR_WANT_READ:
+            case SSL_ERROR_WANT_WRITE: /* reads can trigger write errors; see SSL_get_error(3) */
+                continue;
+            default:
+                break;
+            }
+            break;
+        }
+    } else
+        status = read(handle->sock, buf, len);
+    return status;
 }

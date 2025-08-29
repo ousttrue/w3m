@@ -5,6 +5,7 @@
 #include "file.h"
 #include "etc.h"
 #include "tty.h"
+#include <openssl/ssl.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
