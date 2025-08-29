@@ -38,6 +38,7 @@ const w3m_srcs = [_][]const u8{
     "url_scheme.c",
     "ssl_util.c",
     "str_util.c",
+    "line.c",
 
     "file.c",
     "buffer.c",

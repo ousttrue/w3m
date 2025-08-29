@@ -76,4 +76,10 @@ extern wc_bool    wtf_is_hangul(wc_uchar *p);
 
 extern char      *wtf_conv_fit(char *s, wc_ces ces);
 
+#define get_mctype(c) ((Lineprop)wtf_type((wc_uchar*)(c)) << 8)
+#define get_mclen(c) wtf_len1((wc_uchar*)(c))
+#define get_mcwidth(c) wtf_width((wc_uchar*)(c))
+#define get_strwidth(c) wtf_strwidth((wc_uchar*)(c))
+#define get_Str_strwidth(c) wtf_strwidth((wc_uchar*)((c)->ptr))
+
 #endif

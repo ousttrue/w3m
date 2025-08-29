@@ -1,18 +1,21 @@
 #include "linein.h"
 #include "history.h"
 #include "screen.h"
-#include "term_renderer.h"
 #include "ctrlcode.h"
 #include "display.h"
-#include "tty.h"
-#include "fm.h"
 #include "local.h"
 #include "event_poller.h"
 #include "screen.h"
 #include "putc.h"
 #include "LineEditor.h"
+#include "w3m.h"
+#include "indep.h"
+#include "fm.h"
 #include <stdbool.h>
 #include <wtf.h>
+
+int space_autocomplete = false;
+int emacs_like_lineedit = false;
 
 typedef void (*LineEditorFunc)(struct LineEditor* e);
 
@@ -106,18 +109,13 @@ char* inputLineHistSearch(struct UI ui,
         move(ui.vt, ui.vt->ROWS - 1, opos + x - g_editor.offset);
 
         // draw frame
-        struct Frame* frame = screenToFrame(getScreen());
-        wc_putc_init(InnerCharset, DisplayCharset);
-        refreshFrame(ttyWriter(), frame);
-        wc_putc_end(ttyWriter());
-
-        MOVE(ttyWriter(), getScreen()->CurLine, getScreen()->CurColumn);
-        flushWriter(ttyWriter());
+        struct Frame* frame = screenToFrame(ui.vt);
+        renderFrame(frame, ui.vt->CurLine, ui.vt->CurColumn);
 
     next_char:
         c = getch();
-        g_editor.cm_clear = TRUE;
-        g_editor.cm_disp_clear = TRUE;
+        g_editor.cm_clear = true;
+        g_editor.cm_disp_clear = true;
         if (!g_editor.i_quote
             && ((
                     (g_editor.cm_mode & CPL_ALWAYS)
@@ -125,7 +123,7 @@ char* inputLineHistSearch(struct UI ui,
                 || ((g_editor.cm_mode & CPL_ON) && (c == CTRL_I)))) {
             if (emacs_like_lineedit && g_editor.cm_next) {
                 _dcompl(&g_editor);
-                g_editor.need_redraw = TRUE;
+                g_editor.need_redraw = true;
             } else {
                 _compl(&g_editor);
                 g_editor.cm_disp_next = -1;
@@ -133,11 +131,11 @@ char* inputLineHistSearch(struct UI ui,
         } else if (!g_editor.i_quote && g_editor.CLen == g_editor.CPos && (g_editor.cm_mode & CPL_ALWAYS || g_editor.cm_mode & CPL_ON) && c == CTRL_D) {
             if (!emacs_like_lineedit) {
                 _dcompl(&g_editor);
-                g_editor.need_redraw = TRUE;
+                g_editor.need_redraw = true;
             }
         } else if (!g_editor.i_quote && c == DEL_CODE) {
             _bs(&g_editor);
-            g_editor.cm_next = FALSE;
+            g_editor.cm_next = false;
             g_editor.cm_disp_next = -1;
         } else if (!g_editor.i_quote && c < 0x20) { /* Control code */
             if (incrfunc == NULL
@@ -146,17 +144,17 @@ char* inputLineHistSearch(struct UI ui,
             if (incrfunc && c != (unsigned char)-1 && c != CTRL_J)
                 incrfunc(-1, g_editor.strBuf, g_editor.strProp);
             if (g_editor.cm_clear)
-                g_editor.cm_next = FALSE;
+                g_editor.cm_next = false;
             if (g_editor.cm_disp_clear)
                 g_editor.cm_disp_next = -1;
         } else {
             Str tmp = wc_char_conv(c);
             if (tmp == NULL) {
-                g_editor.i_quote = TRUE;
+                g_editor.i_quote = true;
                 goto next_char;
             }
-            g_editor.i_quote = FALSE;
-            g_editor.cm_next = FALSE;
+            g_editor.i_quote = false;
+            g_editor.cm_next = false;
             g_editor.cm_disp_next = -1;
             if (g_editor.CLen + tmp->length > STR_LEN || !tmp->length)
                 goto next_char;
@@ -174,13 +172,7 @@ char* inputLineHistSearch(struct UI ui,
 
     move(getScreen(), ui.vt->ROWS - 1, 0);
     struct Frame* frame = screenToFrame(getScreen());
-
-    wc_putc_init(InnerCharset, DisplayCharset);
-    refreshFrame(ttyWriter(), frame);
-    wc_putc_end(ttyWriter());
-
-    MOVE(ttyWriter(), getScreen()->CurLine, getScreen()->CurColumn);
-    flushWriter(ttyWriter());
+    renderFrame(frame, ui.vt->CurLine, ui.vt->CurColumn);
 
     char* p = g_editor.strBuf->ptr;
     if (flag & (IN_FILENAME | IN_COMMAND)) {

@@ -2,6 +2,9 @@
 #include "LineEditor.h"
 #include "ui.h"
 
+extern int space_autocomplete;
+extern int emacs_like_lineedit;
+
 struct Hist;
 
 typedef int (*IncFunc)(int ch, Str buf, Lineprop* prop);

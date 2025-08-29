@@ -13,8 +13,11 @@ void delBuffer(struct _Buffer* buf);
 
 bool onFrame();
 void onKeyInput(char c);
+struct Frame;
+void renderFrame(struct Frame *frame, int cursorRow, int cursorCol);
 
 void pushEvent(int cmd, void* data);
 void chkURLBuffer(struct _Buffer* buf);
 struct _AlarmEvent* setAlarmEvent(struct _AlarmEvent* event, int sec, short status, int cmd, void* data);
 void tmpClearBuffer(struct _Buffer* buf);
+

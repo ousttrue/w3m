@@ -381,7 +381,6 @@ void fmInit(void)
 
 bool onFrame()
 {
-
     if (add_download_list) {
         add_download_list = FALSE;
         ldDL();
@@ -517,6 +516,15 @@ void pushEvent(int cmd, void* data)
     else
         CurrentEvent = event;
     LastEvent = event;
+}
+
+void renderFrame(struct Frame* frame, int cursorRow, int cursorCol)
+{
+    wc_putc_init(InnerCharset, DisplayCharset);
+    refreshFrame(ttyWriter(), frame);
+    wc_putc_end(ttyWriter());
+    MOVE(ttyWriter(), cursorRow, cursorCol);
+    flushWriter(ttyWriter());
 }
 
 DEFUN(nulcmd, NOTHING NULL @ @ @, "Do nothing")

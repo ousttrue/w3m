@@ -229,14 +229,10 @@ extern void arrangeLine(Buffer* buf);
 extern void cursorXY(Buffer* buf, int x, int y);
 extern void restorePosition(Buffer* buf, Buffer* orig);
 extern int columnSkip(Buffer* buf, int offset);
-extern int columnPos(Line* line, int column);
-extern int columnLen(Line* line, int column);
 extern Line* lineSkip(Buffer* buf, Line* line, int offset, int last);
 extern Line* currentLineSkip(Buffer* buf, Line* line, int offset, int last);
 extern int gethtmlcmd(char** s);
 extern Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor);
-extern int calcPosition(char* l, Lineprop* pr, int len, int pos, int bpos,
-    int mode);
 extern char* lastFileName(char* path);
 extern char* mydirname(char* s);
 extern int next_status(char c, int* status);
