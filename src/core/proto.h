@@ -117,30 +117,17 @@ extern void ldDL(void);
 extern void linkLst(void);
 extern void linkMn(void);
 extern void accessKey(void);
-extern Anchor* accesskey_menu(Buffer* buf);
 extern void listMn(void);
 extern void movlistMn(void);
-extern Anchor* list_menu(Buffer* buf);
 extern void undoPos(void);
 extern void redoPos(void);
 extern void cursorTop(void);
 extern void cursorMiddle(void);
 extern void cursorBottom(void);
 
-extern int currentLn(Buffer* buf);
-extern void tmpClearBuffer(Buffer* buf);
-extern char* filename_extension(char* patch, int is_url);
-extern ParsedURL* schemeToProxy(int scheme);
-extern wc_ces url_to_charset(const char* url, const ParsedURL* base, wc_ces doc_charset);
-extern char* url_encode(const char* url, const ParsedURL* base, wc_ces doc_charset);
-extern char* url_decode2(const char* url, const Buffer* buf);
-extern char* acceptableEncoding(void);
-extern int dir_exist(char* path);
-extern int is_html_type(char* type);
-extern char** get_symbol(wc_ces charset, int* width);
-extern char** set_symbol(int width);
-extern void push_symbol(Str str, char symbol, int width, int n);
-extern void update_utf8_symbol(void);
+//
+//
+//
 extern Buffer* loadGeneralFile(char* path, ParsedURL* current, char* referer, int flag, FormList* request);
 extern int is_boundary(unsigned char*, unsigned char*);
 extern int is_blank_line(char* line, int indent);
@@ -511,4 +498,3 @@ extern void saveBufferInfo(void);
 extern Str getLinkNumberStr(int correction);
 
 extern void dispVer(void);
-

@@ -17,3 +17,4 @@ void onKeyInput(char c);
 void pushEvent(int cmd, void* data);
 void chkURLBuffer(struct _Buffer* buf);
 struct _AlarmEvent* setAlarmEvent(struct _AlarmEvent* event, int sec, short status, int cmd, void* data);
+void tmpClearBuffer(struct _Buffer* buf);

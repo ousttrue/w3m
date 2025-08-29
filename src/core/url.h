@@ -1,5 +1,6 @@
 #pragma once
 #include "Str.h"
+#include <wc.h>
 
 enum UrlScheme {
     SCM_UNKNOWN = 255,
@@ -40,3 +41,9 @@ Str parsedURL2Str(ParsedURL* pu);
 Str parsedURL2RefererStr(ParsedURL* pu);
 int getURLScheme(char** url);
 char* guessContentType(char* filename);
+char* filename_extension(char* path, int is_url);
+struct _ParsedURL* schemeToProxy(int scheme);
+wc_ces url_to_charset(const char* url, const ParsedURL* base, wc_ces doc_charset);
+char* url_encode(const char* url, const ParsedURL* base, wc_ces doc_charset);
+struct _Buffer;
+char* url_decode2(const char* url, const struct _Buffer* buf);

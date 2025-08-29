@@ -4,6 +4,8 @@
  */
 #include "rc.h"
 #include "image.h"
+#include "symbol.h"
+#include "file.h"
 #include "fm.h"
 #include "term_size.h"
 #include "term_renderer.h"

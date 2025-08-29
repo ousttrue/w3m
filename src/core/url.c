@@ -1,5 +1,6 @@
 #include "url.h"
 #include "fm.h"
+#include "file.h"
 #include "etc.h"
 #include "tty.h"
 #include <unistd.h>

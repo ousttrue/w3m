@@ -1,4 +1,6 @@
+#include "file.h"
 #include "buffer.h"
+#include "symbol.h"
 #include "ctrlcode.h"
 #include "auth.h"
 #include "term_size.h"

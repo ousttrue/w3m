@@ -1,5 +1,6 @@
 #include "buffer.h"
 #include "w3m.h"
+#include "file.h"
 #include "image.h"
 #include "term_size.h"
 #include "fm.h"

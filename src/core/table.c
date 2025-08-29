@@ -7,6 +7,7 @@
 #include <string.h>
 #include <math.h>
 #include "term_size.h"
+#include "symbol.h"
 #include "fm.h"
 #include "html.h"
 #include "parsetagx.h"

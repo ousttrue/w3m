@@ -1,10 +1,7 @@
-/* $Id: menu.h,v 1.2 2001/11/20 17:49:23 ukai Exp $ */
 /*
  * w3m menu.h
  */
-
-#ifndef MENU_H
-#define MENU_H
+#pragma once
 
 #define MENU_END 0
 #define MENU_NOP 1
@@ -53,5 +50,5 @@ typedef struct _MenuList {
 
 struct _Buffer;
 struct _LinkList* link_menu(struct _Buffer* buf);
-
-#endif /* not MENU_H */
+struct _anchor* accesskey_menu(struct _Buffer* buf);
+struct _anchor* list_menu(struct _Buffer* buf);

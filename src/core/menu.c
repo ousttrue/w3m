@@ -1,4 +1,6 @@
 #include "menu.h"
+#include "symbol.h"
+#include "w3m.h"
 #include "image.h"
 #include "term_size.h"
 #include "screen.h"

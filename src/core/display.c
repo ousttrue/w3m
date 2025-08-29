@@ -1,5 +1,7 @@
 #include "display.h"
 #include "image.h"
+#include "symbol.h"
+#include "file.h"
 #include "w3m.h"
 #include "history.h"
 #include "ctrlcode.h"
