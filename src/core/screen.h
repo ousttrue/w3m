@@ -27,7 +27,7 @@ struct VirtualTerm {
 struct VirtualTerm* getScreen();
 void clear(struct VirtualTerm* vt);
 void getTCstr(struct VirtualTerm* vt);
-void setupscreen(struct VirtualTerm* vt);
+void setupscreen(struct VirtualTerm* vt, int rows, int cols);
 void move(struct VirtualTerm* vt, int line, int column);
 void addmch(struct VirtualTerm* vt, char* p, size_t len);
 void addch(struct VirtualTerm* vt, char c);

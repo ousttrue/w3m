@@ -4,12 +4,12 @@
  */
 #include "rc.h"
 #include "display.h"
+#include "screen.h"
 #include "image.h"
 #include "ssl_util.h"
 #include "symbol.h"
 #include "file.h"
 #include "fm.h"
-#include "term_size.h"
 #include "term_renderer.h"
 #include "myctype.h"
 #include "proto.h"
@@ -1100,8 +1100,8 @@ static void loadSiteconf(void);
 void sync_with_option(void)
 {
     init_tmp();
-    if (PagerMax < getLines())
-        PagerMax = getLines();
+    if (PagerMax < getScreen()->ROWS)
+        PagerMax = getScreen()->ROWS;
     WrapSearch = WrapDefault;
     parse_proxy();
     parse_cookie();

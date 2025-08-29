@@ -371,7 +371,7 @@ void fmInit(void)
     set_int();
     initscr();
     struct VirtualTerm* vt = getScreen();
-    setupscreen(vt);
+    setupscreen(vt, getLines(), getCols());
     termClear(ttyWriter());
     term_raw();
     term_noecho();
@@ -633,7 +633,7 @@ resize_screen(void)
 {
     need_resize_screen = FALSE;
     setlinescols(get_tty_fd());
-    setupscreen(getScreen());
+    setupscreen(getScreen(), getLines(), getCols());
     clear(getScreen());
 }
 

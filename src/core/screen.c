@@ -1,6 +1,5 @@
 #include "screen.h"
 #include "Str.h"
-#include "term_size.h"
 #include "alloc.h"
 #include "myctype.h"
 #include <wc.h>
@@ -22,25 +21,27 @@ static bool ISDIRTY(enum LineStatus d) { return d & L_DIRTY; }
 static bool ISUNUSED(enum LineStatus d) { return d & L_UNUSED; }
 static bool NEED_CE(enum LineStatus d) { return d & L_NEED_CE; }
 
-void setupscreen(struct VirtualTerm* vt)
+void setupscreen(struct VirtualTerm* vt, int rows, int cols)
 {
-    if (getLines() > vt->ROWS) {
-        vt->ROWS = getLines();
+    if (rows > vt->ROWS) {
         vt->COLS = 0;
-        vt->ScreenElem = New_N(Screen, vt->ROWS);
-        vt->ScreenImage = New_N(Screen*, vt->ROWS);
+        vt->ScreenElem = New_N(Screen, rows);
+        vt->ScreenImage = New_N(Screen*, rows);
     }
-    if (getCols() > vt->COLS) {
-        vt->COLS = getCols();
+    vt->ROWS = rows;
+
+    if (cols > vt->COLS) {
         for (int i = 0; i < vt->ROWS; i++) {
-            vt->ScreenElem[i].lineimage = New_N(char*, vt->COLS);
-            bzero((void*)vt->ScreenElem[i].lineimage, vt->COLS * sizeof(char*));
-            vt->ScreenElem[i].lineprop = New_N(l_prop, vt->COLS);
+            vt->ScreenElem[i].lineimage = New_N(char*, cols);
+            memset((void*)vt->ScreenElem[i].lineimage, 0, cols * sizeof(char*));
+            vt->ScreenElem[i].lineprop = New_N(l_prop, cols);
         }
     }
+    vt->COLS = cols;
+
     {
         int i = 0;
-        for (; i < getLines(); i++) {
+        for (; i < rows; i++) {
             vt->ScreenImage[i] = &vt->ScreenElem[i];
             vt->ScreenImage[i]->lineprop[0] = S_EOL;
             vt->ScreenImage[i]->isdirty = 0;
@@ -55,9 +56,9 @@ void setupscreen(struct VirtualTerm* vt)
 
 void move(struct VirtualTerm* vt, int line, int column)
 {
-    if (line >= 0 && line < getLines())
+    if (line >= 0 && line < vt->ROWS)
         vt->CurLine = line;
-    if (column >= 0 && column < getCols())
+    if (column >= 0 && column < vt->COLS)
         vt->CurColumn = column;
 }
 
@@ -77,7 +78,7 @@ need_redraw(char* c1, l_prop pr1, char* c2, l_prop pr2)
 
 void touch_column(struct VirtualTerm* vt, int col)
 {
-    if (col >= 0 && col < getCols())
+    if (col >= 0 && col < vt->COLS)
         vt->ScreenImage[vt->CurLine]->lineprop[col] |= S_DIRTY;
 }
 
@@ -102,9 +103,9 @@ void addmch(struct VirtualTerm* vt, char* pc, size_t len)
     Strcopy_charp_n(tmp, pc, len);
     pc = tmp->ptr;
 
-    if (vt->CurColumn == getCols())
+    if (vt->CurColumn == vt->COLS)
         wrap(vt);
-    if (vt->CurColumn >= getCols())
+    if (vt->CurColumn >= vt->COLS)
         return;
     p = vt->ScreenImage[vt->CurLine]->lineimage;
     pr = vt->ScreenImage[vt->CurLine]->lineprop;
@@ -132,30 +133,30 @@ void addmch(struct VirtualTerm* vt, char* pc, size_t len)
     /* Required to erase bold or underlined character for some * terminal
      * emulators. */
     i = vt->CurColumn + width - 1;
-    if (i < getCols() && (((pr[i] & S_BOLD) && need_redraw(p[i], pr[i], pc, vt->CurrentMode)) || ((pr[i] & S_UNDERLINE) && !(vt->CurrentMode & S_UNDERLINE)))) {
+    if (i < vt->COLS && (((pr[i] & S_BOLD) && need_redraw(p[i], pr[i], pc, vt->CurrentMode)) || ((pr[i] & S_UNDERLINE) && !(vt->CurrentMode & S_UNDERLINE)))) {
         touch_line(vt);
         i++;
-        if (i < getCols()) {
+        if (i < vt->COLS) {
             touch_column(vt, i);
             if (pr[i] & S_EOL) {
                 SETCH(p[i], SPACE, 1);
                 SETPROP(pr[i], (pr[i] & M_CEOL) | C_ASCII);
             } else {
-                for (i++; i < getCols() && CHMODE(pr[i]) == C_WCHAR2; i++)
+                for (i++; i < vt->COLS && CHMODE(pr[i]) == C_WCHAR2; i++)
                     touch_column(vt, i);
             }
         }
     }
 
-    if (vt->CurColumn + width > getCols()) {
+    if (vt->CurColumn + width > vt->COLS) {
         touch_line(vt);
-        for (i = vt->CurColumn; i < getCols(); i++) {
+        for (i = vt->CurColumn; i < vt->COLS; i++) {
             SETCH(p[i], SPACE, 1);
             SETPROP(pr[i], (pr[i] & ~C_WHICHCHAR) | C_ASCII);
             touch_column(vt, i);
         }
         wrap(vt);
-        if (vt->CurColumn + width > getCols())
+        if (vt->CurColumn + width > vt->COLS)
             return;
         p = vt->ScreenImage[vt->CurLine]->lineimage;
         pr = vt->ScreenImage[vt->CurLine]->lineprop;
@@ -183,7 +184,7 @@ void addmch(struct VirtualTerm* vt, char* pc, size_t len)
                 SETPROP(pr[i], (pr[vt->CurColumn] & ~C_WHICHCHAR) | C_WCHAR2);
                 touch_column(vt, i);
             }
-            for (; i < getCols() && CHMODE(pr[i]) == C_WCHAR2; i++) {
+            for (; i < vt->COLS && CHMODE(pr[i]) == C_WCHAR2; i++) {
                 SETCH(p[i], SPACE, 1);
                 SETPROP(pr[i], (pr[i] & ~C_WHICHCHAR) | C_ASCII);
                 touch_column(vt, i);
@@ -192,7 +193,7 @@ void addmch(struct VirtualTerm* vt, char* pc, size_t len)
         vt->CurColumn += width;
     } else if (c == '\t') {
         dest = (vt->CurColumn + vt->tab_step) / vt->tab_step * vt->tab_step;
-        if (dest >= getCols()) {
+        if (dest >= vt->COLS) {
             wrap(vt);
             touch_line(vt);
             dest = vt->tab_step;
@@ -221,7 +222,7 @@ void addmch(struct VirtualTerm* vt, char* pc, size_t len)
 
 void wrap(struct VirtualTerm* vt)
 {
-    if (vt->CurLine == getLines() - 1)
+    if (vt->CurLine == vt->ROWS - 1)
         return;
     vt->CurLine++;
     vt->CurColumn = 0;
@@ -231,7 +232,7 @@ void touch_line(struct VirtualTerm* vt)
 {
     if (!(vt->ScreenImage[vt->CurLine]->isdirty & L_DIRTY)) {
         int i;
-        for (i = 0; i < getCols(); i++)
+        for (i = 0; i < vt->COLS; i++)
             vt->ScreenImage[vt->CurLine]->lineprop[i] &= ~S_DIRTY;
         vt->ScreenImage[vt->CurLine]->isdirty |= L_DIRTY;
     }
@@ -330,7 +331,7 @@ void clrtoeol(struct VirtualTerm* vt)
 
     vt->ScreenImage[vt->CurLine]->isdirty |= L_CLRTOEOL;
     touch_line(vt);
-    for (i = vt->CurColumn; i < getCols() && !(lprop[i] & S_EOL); i++) {
+    for (i = vt->CurColumn; i < vt->COLS && !(lprop[i] & S_EOL); i++) {
         lprop[i] = S_EOL | S_DIRTY;
     }
 }
@@ -346,7 +347,7 @@ clrtoeol_with_bcolor(struct VirtualTerm* vt)
     int cco = vt->CurColumn;
     l_prop pr = vt->CurrentMode;
     vt->CurrentMode = (vt->CurrentMode & (M_CEOL | S_BCOLORED)) | C_ASCII;
-    for (int i = vt->CurColumn; i < getCols(); i++)
+    for (int i = vt->CurColumn; i < vt->COLS; i++)
         addch(vt, ' ');
     move(vt, cli, cco);
     vt->CurrentMode = pr;
@@ -367,7 +368,7 @@ clrtobot_eol(struct VirtualTerm* vt, ClearFunc clrtoeol)
     (*clrtoeol)(vt);
     vt->CurColumn = 0;
     vt->CurLine++;
-    for (; vt->CurLine < getLines(); vt->CurLine++)
+    for (; vt->CurLine < vt->ROWS; vt->CurLine++)
         (*clrtoeol)(vt);
     vt->CurLine = l;
     vt->CurColumn = c;
@@ -430,7 +431,7 @@ void touch_cursor(struct VirtualTerm* vt)
         if (CHMODE(vt->ScreenImage[vt->CurLine]->lineprop[i]) != C_WCHAR2)
             break;
     }
-    for (i = vt->CurColumn + 1; i < getCols(); i++) {
+    for (i = vt->CurColumn + 1; i < vt->COLS; i++) {
         if (CHMODE(vt->ScreenImage[vt->CurLine]->lineprop[i]) != C_WCHAR2)
             break;
         touch_column(vt, i);

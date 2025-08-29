@@ -3,7 +3,6 @@
 #include "w3m.h"
 #include "file.h"
 #include "image.h"
-#include "term_size.h"
 #include "fm.h"
 #include "event_poller.h"
 #include "screen.h"
@@ -16,7 +15,7 @@ Lineprop NullProp[] = { 0 };
  * Buffer creation
  */
 Buffer*
-newBuffer(int width)
+newBuffer()
 {
     Buffer* n;
 
@@ -24,9 +23,9 @@ newBuffer(int width)
     if (n == NULL)
         exit(3);
     bzero((void*)n, sizeof(Buffer));
-    n->width = width;
-    n->COLS = getCols();
-    n->LINES = getLines() - 1;
+    n->width = getScreen()->COLS;
+    n->COLS = getScreen()->COLS;
+    n->LINES = getScreen()->ROWS - 1;
     n->currentURL.scheme = SCM_UNKNOWN;
     n->baseURL = NULL;
     n->baseTarget = NULL;
@@ -50,7 +49,7 @@ nullBuffer(void)
 {
     Buffer* b;
 
-    b = newBuffer(getCols());
+    b = newBuffer();
     b->buffername = "*Null*";
     return b;
 }
@@ -207,7 +206,7 @@ writeBufferName(Buffer* buf, int n)
             break;
         }
     }
-    addnstr_sup(getScreen(), msg->ptr, getCols() - 1);
+    addnstr_sup(getScreen(), msg->ptr, getScreen()->COLS - 1);
 }
 
 /*
@@ -296,7 +295,7 @@ listBuffer(Buffer* top, Buffer* current)
         setbcolor(vt, bg_color);
     }
     clrtobotx(vt);
-    for (i = 0; i < getLines() - 1; i++) {
+    for (i = 0; i < getScreen()->ROWS - 1; i++) {
         if (buf == current) {
             c = i;
             standout(vt);
@@ -335,7 +334,7 @@ selectBuffer(Buffer* firstbuf, Buffer* currentbuf, char* selectchar)
     struct VirtualTerm* vt = getScreen();
     int i, cpoint, /* Current Buffer Number */
         spoint, /* Current Line on Screen */
-        maxbuf, sclimit = getLines() - 1; /* Upper limit of line * number in
+        maxbuf, sclimit = getScreen()->ROWS - 1; /* Upper limit of line * number in
                                            * the * screen */
     Buffer *buf, *topbuf;
     char c;
@@ -446,7 +445,7 @@ void reshapeBuffer(Buffer* buf)
     if (!buf->need_reshape)
         return;
     buf->need_reshape = FALSE;
-    buf->width = INIT_BUFFER_WIDTH;
+    buf->width = getScreen()->COLS;
     if (buf->sourcefile == NULL)
         return;
     init_stream(&f, SCM_LOCAL, NULL);
@@ -492,7 +491,7 @@ void reshapeBuffer(Buffer* buf)
     WcOption.auto_detect = old_auto_detect;
     UseContentCharset = TRUE;
 
-    buf->height = getLines() - 1 + 1;
+    buf->height = getScreen()->ROWS - 1 + 1;
     if (buf->firstLine && sbuf.firstLine) {
         Line* cur = sbuf.currentLine;
         int n;

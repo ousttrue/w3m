@@ -1,8 +1,8 @@
 #include "ssl_util.h"
 #include "file.h"
 #include "display.h"
+#include "screen.h"
 #include "indep.h"
-#include "term_size.h"
 #include "gc/gc.h"
 #include <myctype.h>
 #include <Str.h>
@@ -325,8 +325,8 @@ Str ssl_get_certificate(SSL* ssl, char* hostname)
             ans = "y";
         else {
             Str ep = Strdup(emsg);
-            if (ep->length > getCols() - 16)
-                Strshrink(ep, ep->length - (getCols() - 16));
+            if (ep->length > getScreen()->COLS - 16)
+                Strshrink(ep, ep->length - (getScreen()->COLS - 16));
             Strcat_charp(ep, ": accept? (y/n)");
             ans = inputAnswer(ep->ptr);
         }

@@ -3,7 +3,6 @@
 #include "etc.h"
 #include "myctype.h"
 #include "istream.h"
-#include "term_size.h"
 #include <signal.h>
 
 #define uchar unsigned char

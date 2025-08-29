@@ -192,7 +192,7 @@ extern void addDownloadList(pid_t pid, char* url, char* save, char* lock,
 extern void stopDownload(void);
 extern int checkDownloadList(void);
 extern void download_action(struct parsed_tagarg* arg);
-extern Buffer* newBuffer(int width);
+extern Buffer* newBuffer();
 extern Buffer* nullBuffer(void);
 extern void clearBuffer(Buffer* buf);
 extern void discardBuffer(Buffer* buf);

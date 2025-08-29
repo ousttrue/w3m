@@ -63,7 +63,7 @@ char* inputLineHistSearch(struct UI ui,
     le_initialize(&g_editor, ui, hist, flag, def_str);
 
     int opos = get_strwidth(prompt);
-    int epos = ui.rows - 2 - opos;
+    int epos = ui.vt->ROWS - 2 - opos;
     if (epos < 0)
         epos = 0;
     int lpos = epos / 3;
@@ -90,20 +90,20 @@ char* inputLineHistSearch(struct UI ui,
         }
 
         // show prompt
-        move(ui.vt, ui.rows - 1, 0);
+        move(ui.vt, ui.vt->ROWS - 1, 0);
         addstr(ui.vt, prompt);
 
         // show current
         if (g_editor.is_passwd)
             addPasswd(&g_editor,
-                g_editor.strBuf->ptr, g_editor.strProp, g_editor.CLen, g_editor.offset, ui.cols - opos);
+                g_editor.strBuf->ptr, g_editor.strProp, g_editor.CLen, g_editor.offset, ui.vt->COLS - opos);
         else
             addStr(&g_editor,
-                g_editor.strBuf->ptr, g_editor.strProp, g_editor.CLen, g_editor.offset, ui.cols - opos);
+                g_editor.strBuf->ptr, g_editor.strProp, g_editor.CLen, g_editor.offset, ui.vt->COLS - opos);
 
         // cursor
         clrtoeolx(ui.vt);
-        move(ui.vt, ui.rows - 1, opos + x - g_editor.offset);
+        move(ui.vt, ui.vt->ROWS - 1, opos + x - g_editor.offset);
 
         // draw frame
         struct Frame* frame = screenToFrame(getScreen());
@@ -172,7 +172,7 @@ char* inputLineHistSearch(struct UI ui,
     if (g_editor.i_broken)
         return NULL;
 
-    move(getScreen(), ui.rows - 1, 0);
+    move(getScreen(), ui.vt->ROWS - 1, 0);
     struct Frame* frame = screenToFrame(getScreen());
 
     wc_putc_init(InnerCharset, DisplayCharset);

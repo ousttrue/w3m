@@ -360,12 +360,12 @@ void next_dcompl(struct LineEditor* e, int next)
     if (e->cm_mode == CPL_NEVER || e->cm_mode & CPL_OFF)
         return;
     e->cm_disp_clear = FALSE;
-    if (e->ui.rows - 1 >= 3) {
+    if (e->ui.vt->ROWS - 1 >= 3) {
         comment = TRUE;
-        nline = e->ui.rows - 1 - 2;
-    } else if (e->ui.rows - 1) {
+        nline = e->ui.vt->ROWS - 1 - 2;
+    } else if (e->ui.vt->ROWS - 1) {
         comment = FALSE;
-        nline = e->ui.rows - 1;
+        nline = e->ui.vt->ROWS - 1;
     } else {
         return;
     }
@@ -410,8 +410,8 @@ void next_dcompl(struct LineEditor* e, int next)
         if (len < n)
             len = n;
     }
-    if (len > 0 && e->ui.cols > len)
-        col = e->ui.cols / len;
+    if (len > 0 && e->ui.vt->COLS > len)
+        col = e->ui.vt->COLS / len;
     else
         col = 1;
     row = (e->NCFileBuf + col - 1) / col;
@@ -458,7 +458,7 @@ disp_next:
         }
         y++;
     }
-    if (comment && y == e->ui.rows - 1 - 1) {
+    if (comment && y == e->ui.vt->ROWS - 1 - 1) {
         move(vt, y, 0);
         clrtoeolx(vt);
         bold(vt);
