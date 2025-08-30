@@ -17,6 +17,7 @@
 #include "fm.h"
 #include <assert.h>
 #include <wtf.h>
+#include <math.h>
 
 /* *INDENT-OFF* */
 
