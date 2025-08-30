@@ -3,6 +3,7 @@
  */
 #include "file.h"
 #include "readbuffer.h"
+#include "etc.h"
 #include "symbol.h"
 #include "fm.h"
 #include "html.h"

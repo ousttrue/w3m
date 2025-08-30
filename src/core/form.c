@@ -3,6 +3,8 @@
  */
 #include "form.h"
 #include "ui.h"
+#include "buffer.h"
+#include "display.h"
 #include "etc.h"
 #include "fm.h"
 #include "parsetag.h"
@@ -11,6 +13,7 @@
 #include "local.h"
 #include "regex.h"
 #include "util.h"
+#include "w3m.h"
 #include <wtf.h>
 
 extern Str* textarea_str;

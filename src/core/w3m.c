@@ -2,6 +2,7 @@
 #define MAINPROGRAM
 #include "buffer.h"
 #include "ui.h"
+#include "search.h"
 #include "str_util.h"
 #include "file.h"
 #include "history.h"

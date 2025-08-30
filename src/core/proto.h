@@ -8,58 +8,6 @@
 // extern void FUNC_NAME(void) from DEFUN
 #include "defun.h"
 
-extern void addDownloadList(pid_t pid, char* url, char* save, char* lock, long long size);
-extern void stopDownload(void);
-extern int checkDownloadList(void);
-extern void download_action(struct parsed_tagarg* arg);
-extern Buffer* newBuffer();
-extern Buffer* nullBuffer(void);
-extern void clearBuffer(Buffer* buf);
-extern void discardBuffer(Buffer* buf);
-extern Buffer* namedBuffer(Buffer* first, char* name);
-extern Buffer* deleteBuffer(Buffer* first, Buffer* delbuf);
-extern Buffer* replaceBuffer(Buffer* first, Buffer* delbuf, Buffer* newbuf);
-extern Buffer* nthBuffer(Buffer* firstbuf, int n);
-extern void gotoRealLine(Buffer* buf, int n);
-extern void gotoLine(Buffer* buf, int n);
-extern Buffer* selectBuffer(Buffer* firstbuf, Buffer* currentbuf,
-    char* selectchar);
-extern void reshapeBuffer(Buffer* buf);
-extern void copyBuffer(Buffer* a, Buffer* b);
-extern Buffer* prevBuffer(Buffer* first, Buffer* buf);
-extern int writeBufferCache(Buffer* buf);
-extern int readBufferCache(Buffer* buf);
-extern void addChar(char c, Lineprop mode);
-extern void addMChar(char* c, Lineprop mode, size_t len);
-extern Buffer* message_list_panel(void);
-
-#define disp_message_nomouse disp_message
-extern void set_delayed_message(char* s);
-extern void cursorUp0(Buffer* buf, int n);
-extern void cursorUp(Buffer* buf, int n);
-extern void cursorDown0(Buffer* buf, int n);
-extern void cursorDown(Buffer* buf, int n);
-extern void cursorUpDown(Buffer* buf, int n);
-extern void cursorRight(Buffer* buf, int n);
-extern void cursorLeft(Buffer* buf, int n);
-extern void cursorHome(Buffer* buf);
-extern void arrangeCursor(Buffer* buf);
-extern void arrangeLine(Buffer* buf);
-extern void cursorXY(Buffer* buf, int x, int y);
-extern void restorePosition(Buffer* buf, Buffer* orig);
-extern int columnSkip(Buffer* buf, int offset);
-extern Line* lineSkip(Buffer* buf, Line* line, int offset, int last);
-extern Line* currentLineSkip(Buffer* buf, Line* line, int offset, int last);
-extern int gethtmlcmd(char** s);
-extern Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor);
-extern char* lastFileName(char* path);
-extern char* mydirname(char* s);
-extern int next_status(char c, int* status);
-extern int read_token(Str buf, char** instr, int* status, int pre, int append);
-extern Str correct_irrtag(int status);
-extern char* conv_search_string(char* str, wc_ces f_ces);
-extern int forwardSearch(Buffer* buf, char* str);
-extern int backwardSearch(Buffer* buf, char* str);
 extern void escdmap(char c);
 extern Buffer* historyBuffer(struct Hist* hist);
 extern double log_like(int x);

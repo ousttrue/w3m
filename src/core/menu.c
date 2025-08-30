@@ -1,5 +1,7 @@
 #include "menu.h"
 #include "display.h"
+#include "search.h"
+#include "buffer.h"
 #include "ui.h"
 #include "symbol.h"
 #include "w3m.h"

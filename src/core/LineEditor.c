@@ -1,5 +1,7 @@
 #include "LineEditor.h"
 #include "str_util.h"
+#include "display.h"
+#include "etc.h"
 #include "ctrlcode.h"
 #include "local.h"
 #include "term_renderer.h"
