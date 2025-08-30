@@ -184,8 +184,7 @@ static struct compression_decoder {
 
 #define SAVE_BUF_SIZE 1536
 
-static MySignalHandler
-KeyAbort(SIGNAL_ARG)
+static MySignalHandler KeyAbort(int _dummy)
 {
     siglongjmp(AbortLoading, 1);
 }
@@ -1189,7 +1188,7 @@ loadGeneralFile(char* path, ParsedURL* volatile current, char* referer,
     Buffer* volatile t_buf = NULL;
     int volatile searchHeader = SearchHeader;
     int volatile searchHeader_through = TRUE;
-    MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
+    MySignalHandler (*volatile prevtrap)(int _dummy) = NULL;
     TextList* extra_header = newTextList();
     volatile Str uname = NULL;
     volatile Str pwd = NULL;
@@ -6134,7 +6133,7 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
     struct html_feed_environ htmlenv1;
     struct readbuffer obuf;
     int volatile image_flag;
-    MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
+    MySignalHandler (*volatile prevtrap)(int _dummy) = NULL;
 
     if (graph_ok(t)) {
         symbol_width = symbol_width0 = 1;
@@ -6234,7 +6233,7 @@ Buffer*
 loadHTMLString(Str page)
 {
     URLFile f;
-    MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
+    MySignalHandler (*volatile prevtrap)(int _dummy) = NULL;
     Buffer* newBuf;
 
     init_stream(&f, SCM_LOCAL, newStrStream(page));
@@ -6280,7 +6279,7 @@ loadBuffer(URLFile* uf, Buffer* volatile newBuf)
     long long linelen = 0, trbyte = 0;
     Lineprop* propBuffer = NULL;
     Linecolor* colorBuffer = NULL;
-    MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
+    MySignalHandler (*volatile prevtrap)(int _dummy) = NULL;
 
     if (newBuf == NULL)
         newBuf = newBuffer();
@@ -6344,7 +6343,7 @@ loadImageBuffer(URLFile* uf, Buffer* newBuf)
     Str tmp, tmpf;
     FILE* src = NULL;
     URLFile f;
-    MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
+    MySignalHandler (*volatile prevtrap)(int _dummy) = NULL;
     struct stat st;
     const ParsedURL* pu = newBuf ? &newBuf->currentURL : NULL;
 
@@ -6604,7 +6603,7 @@ int save2tmp(URLFile uf, char* tmpf)
 {
     FILE* ff;
     long long linelen = 0, trbyte = 0;
-    MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
+    MySignalHandler (*volatile prevtrap)(int _dummy) = NULL;
     static sigjmp_buf env_bak;
     volatile int retval = 0;
     char* volatile buf = NULL;

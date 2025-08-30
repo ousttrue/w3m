@@ -66,10 +66,10 @@ static AlarmEvent DefaultAlarm = {
     0, AL_UNSET, FUNCNAME_nulcmd, NULL
 };
 static AlarmEvent* CurrentAlarm = &DefaultAlarm;
-static MySignalHandler SigAlarm(SIGNAL_ARG);
+static MySignalHandler SigAlarm(int _dummy);
 
 static int need_resize_screen = FALSE;
-MySignalHandler resize_hook(SIGNAL_ARG);
+MySignalHandler resize_hook(int _dummy);
 static void resize_screen(void);
 
 static char* MarkString = NULL;
@@ -136,7 +136,7 @@ sig_chld(int signo)
 }
 
 static void
-SigPipe(SIGNAL_ARG)
+SigPipe(int _dummy)
 {
     mySignal(SIGPIPE, SigPipe);
 }
@@ -303,7 +303,7 @@ void fmTerm(void)
 }
 
 static MySignalHandler
-reset_exit_with_value(SIGNAL_ARG, int rval)
+reset_exit_with_value(int _dummy, int rval)
 {
     resetTerm();
     flush_tty();
@@ -314,19 +314,19 @@ reset_exit_with_value(SIGNAL_ARG, int rval)
 }
 
 MySignalHandler
-reset_error_exit(SIGNAL_ARG)
+reset_error_exit(int _dummy)
 {
     reset_exit_with_value(SIGNAL_ARGLIST, 1);
 }
 
 MySignalHandler
-reset_exit(SIGNAL_ARG)
+reset_exit(int _dummy)
 {
     reset_exit_with_value(SIGNAL_ARGLIST, 0);
 }
 
 MySignalHandler
-error_dump(SIGNAL_ARG)
+error_dump(int _dummy)
 {
     mySignal(SIGIOT, SIG_DFL);
     resetTerm();
@@ -623,13 +623,13 @@ repBuffer(Buffer* oldbuf, Buffer* buf)
 }
 
 MySignalHandler
-intTrap(SIGNAL_ARG)
+intTrap(int _dummy)
 { /* Interrupt catcher */
     siglongjmp(IntReturn, 0);
 }
 
 MySignalHandler
-resize_hook(SIGNAL_ARG)
+resize_hook(int _dummy)
 {
     need_resize_screen = TRUE;
     mySignal(SIGWINCH, resize_hook);
@@ -4037,7 +4037,7 @@ DEFUN(execCmd, COMMAND, "Invoke w3m function(s)")
 }
 
 static MySignalHandler
-SigAlarm(SIGNAL_ARG)
+SigAlarm(int _dummy)
 {
     char* data;
 

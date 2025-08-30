@@ -813,9 +813,9 @@ void put_image_kitty(int cursorX, int cursorY,
     int c, i, j, m, t, is_anim;
     struct stat st;
     pid_t pid;
-    MySignalHandler (*volatile previntr)(SIGNAL_ARG);
-    MySignalHandler (*volatile prevquit)(SIGNAL_ARG);
-    MySignalHandler (*volatile prevstop)(SIGNAL_ARG);
+    MySignalHandler (*volatile previntr)(int _dummy);
+    MySignalHandler (*volatile prevquit)(int _dummy);
+    MySignalHandler (*volatile prevstop)(int _dummy);
 
     if (!url)
         return;
@@ -1028,9 +1028,9 @@ void put_image_sixel(int cursorX, int cursorY,
 {
     pid_t pid;
     int do_anim;
-    MySignalHandler (*volatile previntr)(SIGNAL_ARG);
-    MySignalHandler (*volatile prevquit)(SIGNAL_ARG);
-    MySignalHandler (*volatile prevstop)(SIGNAL_ARG);
+    MySignalHandler (*volatile previntr)(int _dummy);
+    MySignalHandler (*volatile prevquit)(int _dummy);
+    MySignalHandler (*volatile prevstop)(int _dummy);
 
     MOVE(ttyWriter(), y, x);
     flush_tty();

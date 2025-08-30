@@ -180,7 +180,7 @@ DefaultFile(int scheme)
 }
 
 static MySignalHandler
-KeyAbort(SIGNAL_ARG)
+KeyAbort(int _dummy)
 {
     siglongjmp(AbortLoading, 1);
 }
@@ -234,7 +234,7 @@ int openSocket(char* const hostname,
     int a1, a2, a3, a4;
     unsigned long adr;
 #endif /* not INET6 */
-    MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
+    MySignalHandler (*volatile prevtrap)(int _dummy) = NULL;
 
     /* FIXME: gettextize? */
     message(getUI(), MSG_INFO, Sprintf("Opening socket...")->ptr);
@@ -1498,7 +1498,7 @@ int check_no_proxy(char* domain)
 {
     TextListItem* tl;
     volatile int ret = 0;
-    MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
+    MySignalHandler (*volatile prevtrap)(int _dummy) = NULL;
 
     if (NO_proxy_domains == NULL || NO_proxy_domains->nitem == 0 || domain == NULL)
         return 0;
