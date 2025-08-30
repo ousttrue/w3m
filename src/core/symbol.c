@@ -2,6 +2,8 @@
 #include "fm.h"
 #include "graphicchar.h"
 #include "ctrlcode.h"
+#include "istream.h"
+#include "linein.h"
 #include <wtf.h>
 
 #include "Symbols/alt.sym"

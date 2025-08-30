@@ -1,12 +1,15 @@
 #include "mailcap.h"
 #include "fm.h"
 #include "file.h"
+#include "indep.h"
 #include "myctype.h"
 #include "parsetag.h"
 #include "local.h"
 #include "hash.h"
+#include "html.h"
 #include <stdio.h>
 #include <errno.h>
+#include <stdlib.h>
 
 static struct mailcap DefaultMailcap[] = {
     { "image/*", DEF_IMAGE_VIEWER " %s", 0, NULL, NULL, NULL }, /* */

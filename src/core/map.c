@@ -2,7 +2,10 @@
  * client-side image maps
  */
 #include "map.h"
+#include "form.h"
+#include "ui.h"
 #include "fm.h"
+#include "menu.h"
 #include "image.h"
 #include "ctrlcode.h"
 #include "etc.h"
@@ -23,6 +26,12 @@ searchMapList(Buffer* buf, char* name)
     }
     return ml;
 }
+
+#define SHAPE_UNKNOWN 0
+#define SHAPE_DEFAULT 1
+#define SHAPE_RECT 2
+#define SHAPE_CIRCLE 3
+#define SHAPE_POLY 4
 
 static int
 inMapArea(MapArea* a, int x, int y)

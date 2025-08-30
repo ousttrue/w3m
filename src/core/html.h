@@ -34,14 +34,6 @@ struct table2 {
     char* item2;
 };
 
-/* flags for loadGeneralFile */
-#define RG_NOCACHE 1
-
-struct URLOption {
-    const char* referer;
-    int flag;
-};
-
 union input_stream;
 
 #define CMP_NOCOMPRESS 0
@@ -50,11 +42,6 @@ union input_stream;
 #define CMP_BZIP2 3
 #define CMP_DEFLATE 4
 #define CMP_BROTLI 5
-
-#define ENC_7BIT 0
-#define ENC_BASE64 1
-#define ENC_QUOTE 2
-#define ENC_UUENCODE 3
 
 #define HTML_UNKNOWN 0
 #define HTML_A 1
@@ -344,12 +331,6 @@ typedef struct tag_attribute_info {
 #define VTYPE_METHOD 8
 #define VTYPE_MLENGTH 9
 #define VTYPE_TYPE 10
-
-#define SHAPE_UNKNOWN 0
-#define SHAPE_DEFAULT 1
-#define SHAPE_RECT 2
-#define SHAPE_CIRCLE 3
-#define SHAPE_POLY 4
 
 extern TagInfo TagMAP[];
 extern TagAttrInfo AttrMAP[];

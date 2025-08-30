@@ -2,7 +2,13 @@
 #include "version.h"
 #define MAINPROGRAM
 #include "buffer.h"
+#include "parsetag.h"
+#include "linein.h"
+#include "menu.h"
+#include "func.h"
 #include "downloadlist.h"
+#include "funcname1.h"
+#include "form.h"
 #include "http.h"
 #include "mysignal.h"
 #include "proxy.h"
@@ -47,6 +53,7 @@
 #include <sys/epoll.h>
 #include <assert.h>
 #include <sys/signalfd.h>
+#include <locale.h>
 
 #include <event_poller.h>
 
@@ -102,8 +109,6 @@ sigjmp_buf IntReturn;
     }
 
 static void cmd_loadfile(char* path);
-static void cmd_loadURL(char* url, ParsedURL* current, char* referer,
-    FormList* request);
 static void cmd_loadBuffer(Buffer* buf, int prop, int linkid);
 static void keyPressEventProc(int c);
 
@@ -1003,6 +1008,60 @@ DEFUN(srchprv, SEARCH_PREV, "Continue search backward")
     srch_nxtprv(1);
 }
 
+static int
+handleMailto(char* url)
+{
+    Str to;
+    char* pos;
+
+    if (strncasecmp(url, "mailto:", 7))
+        return 0;
+#ifdef USE_W3MMAILER
+    if (!non_null(Mailer) || MailtoOptions == MAILTO_OPTIONS_USE_W3MMAILER)
+        return 0;
+#else
+    if (!non_null(Mailer)) {
+        /* FIXME: gettextize? */
+        message(getUI(), MSG_ERR, "no mailer is specified");
+        return 1;
+    }
+#endif
+
+    /* invoke external mailer */
+    if (MailtoOptions == MAILTO_OPTIONS_USE_MAILTO_URL) {
+        to = Strnew_charp(html_unquote(url));
+    } else {
+        to = Strnew_charp(url + 7);
+        if ((pos = strchr(to->ptr, '?')) != NULL)
+            Strtruncate(to, pos - to->ptr);
+    }
+    exec_cmd(myExtCommand(Mailer, shell_quote(file_unquote(to->ptr)),
+        FALSE)
+            ->ptr);
+
+    pushHashHist(URLHist, url);
+    return 1;
+}
+
+static void
+cmd_loadURL(char* url, ParsedURL* current, const char* referer, FormList* request)
+{
+    Buffer* buf;
+
+    if (handleMailto(url))
+        return;
+
+    // refresh(ttyWriter());
+    buf = loadGeneralFile(url, current, referer, 0, request);
+    if (buf == NULL) {
+        /* FIXME: gettextize? */
+        char* emsg = Sprintf("Can't load %s", conv_from_system(url))->ptr;
+        message(getUI(), MSG_ERR, emsg);
+    } else if (buf != NO_BUFFER) {
+        pushBuffer(buf);
+    }
+}
+
 static void
 shiftvisualpos(Buffer* buf, int shift)
 {
@@ -1884,7 +1943,7 @@ loadNormalBuf(Buffer* buf)
 }
 
 static Buffer*
-loadLink(char* url, char* target, char* referer, FormList* request)
+loadLink(char* url, char* target, const char* referer, FormList* request)
 {
     Buffer *buf, *nfbuf;
     union frameset_element* f_element = NULL;
@@ -1939,7 +1998,7 @@ gotoLabel(char* label)
         return;
     }
 
-    Buffer *buf = newBuffer();
+    Buffer* buf = newBuffer();
     copyBuffer(buf, Currentbuf);
     int i;
     for (i = 0; i < MAX_LB; i++)
@@ -1958,41 +2017,6 @@ gotoLabel(char* label)
     arrangeCursor(Currentbuf);
 
     return;
-}
-
-static int
-handleMailto(char* url)
-{
-    Str to;
-    char* pos;
-
-    if (strncasecmp(url, "mailto:", 7))
-        return 0;
-#ifdef USE_W3MMAILER
-    if (!non_null(Mailer) || MailtoOptions == MAILTO_OPTIONS_USE_W3MMAILER)
-        return 0;
-#else
-    if (!non_null(Mailer)) {
-        /* FIXME: gettextize? */
-        message(getUI(), MSG_ERR, "no mailer is specified");
-        return 1;
-    }
-#endif
-
-    /* invoke external mailer */
-    if (MailtoOptions == MAILTO_OPTIONS_USE_MAILTO_URL) {
-        to = Strnew_charp(html_unquote(url));
-    } else {
-        to = Strnew_charp(url + 7);
-        if ((pos = strchr(to->ptr, '?')) != NULL)
-            Strtruncate(to, pos - to->ptr);
-    }
-    exec_cmd(myExtCommand(Mailer, shell_quote(file_unquote(to->ptr)),
-        FALSE)
-            ->ptr);
-
-    pushHashHist(URLHist, url);
-    return 1;
 }
 
 /* follow HREF link */
@@ -2905,30 +2929,12 @@ DEFUN(deletePrevBuf, DELETE_PREVBUF, "Delete previous buffer (mainly for local C
         delBuffer(buf);
 }
 
-static void
-cmd_loadURL(char* url, ParsedURL* current, char* referer, FormList* request)
-{
-    Buffer* buf;
-
-    if (handleMailto(url))
-        return;
-
-    // refresh(ttyWriter());
-    buf = loadGeneralFile(url, current, referer, 0, request);
-    if (buf == NULL) {
-        /* FIXME: gettextize? */
-        char* emsg = Sprintf("Can't load %s", conv_from_system(url))->ptr;
-        message(getUI(), MSG_ERR, emsg);
-    } else if (buf != NO_BUFFER) {
-        pushBuffer(buf);
-    }
-}
-
 /* go to specified URL */
 static void
 goURL0(char* prompt, int relative)
 {
-    char *url, *referer;
+    char* url;
+    const char* referer;
     ParsedURL p_url, *current;
     Buffer* cur_buf = Currentbuf;
     const int* no_referer_ptr;
@@ -4107,7 +4113,7 @@ DEFUN(setAlarm, ALARM, "Set alarm")
     if (cmd >= 0) {
         data = getQWord(&data);
         setAlarmEvent(&DefaultAlarm, sec, AL_EXPLICIT, cmd, data);
-        message(getUI(), MSG_INFO, Sprintf("%dsec %s %s", sec, w3mFuncList[cmd].id, data) ->ptr);
+        message(getUI(), MSG_INFO, Sprintf("%dsec %s %s", sec, w3mFuncList[cmd].id, data)->ptr);
     } else {
         setAlarmEvent(&DefaultAlarm, 0, AL_UNSET, FUNCNAME_nulcmd, NULL);
     }

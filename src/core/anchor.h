@@ -1,4 +1,5 @@
 #pragma once
+#include "line.h"
 
 typedef struct {
     int line;

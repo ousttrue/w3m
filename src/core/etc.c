@@ -1,4 +1,6 @@
 #include "etc.h"
+#include "auth.h"
+#include "local.h"
 #include "display.h"
 #include "buffer.h"
 #include "mysignal.h"
@@ -18,6 +20,7 @@
 #include <sys/wait.h>
 #endif
 #include <signal.h>
+#include <unistd.h>
 
 struct auth_pass {
     int bad;
@@ -1424,7 +1427,7 @@ char* url_unquote_conv(char* url, wc_ces charset)
     return tmp->ptr;
 }
 
-Str tmpfname(int type, char* ext)
+Str tmpfname(enum TmpFileType type, char* ext)
 {
     static char* tmpf_base[MAX_TMPF_TYPE] = {
         "tmp",

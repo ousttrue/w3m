@@ -11,7 +11,9 @@
 #include "rc.h"
 #include "ctrlcode.h"
 #include "ui.h"
+#include "istream.h"
 
+#include "funcname1.h"
 #include "history.h"
 #include "funcname.c"
 #include "functable.c"

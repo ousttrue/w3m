@@ -1,7 +1,11 @@
 #include "file.h"
+#include "funcname1.h"
 #include "http.h"
+#include "linein.h"
 #include "downloadlist.h"
+#include "func.h"
 #include "ui.h"
+#include "form.h"
 #include "mysignal.h"
 #include "map.h"
 #include "buffer.h"
@@ -38,6 +42,7 @@
 #include <fcntl.h>
 #include <utime.h>
 #include <wtf.h>
+#include <unistd.h>
 
 #ifndef max
 #define max(a, b) ((a) > (b) ? (a) : (b))

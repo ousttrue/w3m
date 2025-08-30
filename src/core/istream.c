@@ -1,9 +1,9 @@
-#include "fm.h"
 #include "ssl_util.h"
 #include "mysignal.h"
 #include "mimehead.h"
 #include "istream.h"
 #include <signal.h>
+#include <unistd.h>
 
 #define uchar unsigned char
 
@@ -149,7 +149,7 @@ newSSLStream(SSL* ssl, int sock)
 }
 
 InputStream
-newEncodedStream(InputStream is, char encoding)
+newEncodedStream(InputStream is, enum StreamEncoding encoding)
 {
     InputStream stream;
     if (is == NULL || (encoding != ENC_QUOTE && encoding != ENC_BASE64 && encoding != ENC_UUENCODE))

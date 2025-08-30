@@ -2,6 +2,8 @@
 #include <Str.h>
 #include "textlist.h"
 
+extern char QuietMessage;
+
 struct _ParsedURL;
 struct HttpRequest;
 struct form_list;

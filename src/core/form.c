@@ -5,6 +5,7 @@
 #include "rc.h"
 #include "downloadlist.h"
 #include "ui.h"
+#include "func.h"
 #include "cookie.h"
 #include "buffer.h"
 #include "display.h"
@@ -19,6 +20,7 @@
 #include "w3m.h"
 #include "map.h"
 #include <wtf.h>
+#include <unistd.h>
 
 extern Str* textarea_str;
 extern int max_textarea;

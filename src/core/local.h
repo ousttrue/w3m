@@ -39,6 +39,11 @@ typedef struct direct Directory;
 #endif /* not S_ISLNK */
 #endif /* not HAVE_READLINK */
 
+extern char* HostName;
+extern int multicolList;
+extern char* cgi_bin;
+extern char* personal_document_root;
+
 Str localCookie(void);
 Str loadLocalDir(char* dirname);
 void set_environ(char* var, char* value);

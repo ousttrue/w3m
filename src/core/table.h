@@ -1,4 +1,5 @@
 #pragma once
+#include "line.h"
 
 #if (defined(MESCHACH) && !defined(MATRIX))
 #define MATRIX

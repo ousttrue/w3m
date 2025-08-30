@@ -1,8 +1,12 @@
-#include "fm.h"
 #include "version.h"
+#include "form.h"
+#include "url.h"
+#include "ui.h"
+#include <alloc.h>
 #include "etc.h"
 #include "http.h"
 #include "screen.h"
+#include "indep.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,6 +20,10 @@
 #include "local.h"
 #include "hash.h"
 
+char* HostName = (NULL);
+int multicolList = (false);
+char* cgi_bin = (NULL);
+char* personal_document_root = (NULL);
 
 #define CGIFN_NORMAL 0
 #define CGIFN_LIBDIR 1

@@ -3,6 +3,10 @@
  */
 #include "rc.h"
 #include "url.h"
+#include "linein.h"
+#include "form.h"
+#include "func.h"
+#include "menu.h"
 #include "version.h"
 #include "buffer.h"
 #include "etc.h"
@@ -29,6 +33,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <wtf.h>
+#include <unistd.h>
 
 char* tmp_dir = 0;
 

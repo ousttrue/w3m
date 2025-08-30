@@ -15,6 +15,8 @@ typedef struct _FuncList {
     CommandFunc func;
 } FuncList;
 
+extern FuncList w3mFuncList[];
+
 extern char* searchKeyData(void);
 extern void setKeymap(char* p, int lineno);
 extern void initKeymap(int force);

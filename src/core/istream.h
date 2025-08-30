@@ -21,11 +21,17 @@ struct io_file_handle {
 
 union input_stream;
 
+enum StreamEncoding {
+    ENC_7BIT = 0,
+    ENC_BASE64 = 1,
+    ENC_QUOTE = 2,
+    ENC_UUENCODE = 3,
+};
 struct ens_handle {
     union input_stream* is;
     struct growbuf gb;
     int pos;
-    char encoding;
+    enum StreamEncoding encoding;
 };
 
 struct base_stream {
@@ -93,7 +99,7 @@ extern InputStream newInputStream(int des);
 extern InputStream newFileStream(FILE* f, void (*closep)());
 extern InputStream newStrStream(Str s);
 extern InputStream newSSLStream(SSL* ssl, int sock);
-extern InputStream newEncodedStream(InputStream is, char encoding);
+extern InputStream newEncodedStream(InputStream is, enum StreamEncoding encoding);
 extern int ISclose(InputStream stream);
 extern int ISgetc(InputStream stream);
 extern int ISundogetc(InputStream stream);
@@ -165,8 +171,15 @@ struct _Buffer* openPagerBuffer(InputStream stream, struct _Buffer* buf);
 struct _Buffer* openGeneralPagerBuffer(InputStream stream);
 int checkSaveFile(InputStream stream, char* path);
 
+/* flags for loadGeneralFile */
+#define RG_NOCACHE 1
+
+struct URLOption {
+    const char* referer;
+    int flag;
+};
+
 struct HttpRequest;
-struct URLOption;
 struct form_list;
 URLFile openURL(char* url, ParsedURL* pu, ParsedURL* current,
     struct URLOption* option, struct form_list* request,

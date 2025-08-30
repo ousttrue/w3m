@@ -1,12 +1,20 @@
 #include "auth.h"
+#include "fm.h"
+#include "textlist.h"
+#include "form.h"
 #include "http.h"
+#include "linein.h"
 #include "ui.h"
 #include "etc.h"
 #include "url.h"
-#include "fm.h"
 #include "ctrlcode.h"
-
+#include "istream.h"
 #include <openssl/md5.h>
+#include <stdbool.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+char QuietMessage = (false);
 
 Str get_auth_param(struct auth_param* auth, char* name)
 {
@@ -58,10 +66,10 @@ void getAuthCookie(struct http_auth* hauth, char* auth_header,
     if (!realm)
         return;
 
-    a_found = FALSE;
+    a_found = false;
     for (i = extra_header->first; i != NULL; i = i->next) {
         if (!strncasecmp(i->ptr, auth_header, auth_header_len)) {
-            a_found = TRUE;
+            a_found = true;
             break;
         }
     }

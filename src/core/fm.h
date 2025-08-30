@@ -14,21 +14,10 @@
 #endif
 
 #include "config.h"
-#include "linein.h"
-#include "url.h"
-#include "form.h"
-#include "parsetag.h"
-#include "parsetagx.h"
-#include "func.h"
-#include "menu.h"
 #include "textlist.h"
-#include "funcname1.h"
 #include "istream.h"
-#include "anchor.h"
-#include <unistd.h>
-#include <gc.h>
+#include <wc.h>
 #include <Str.h>
-#include <locale.h>
 
 #ifdef MAINPROGRAM
 #define global
@@ -229,13 +218,6 @@ extern int REV_LB[];
 #define VALIGN_TOP 1
 #define VALIGN_BOTTOM 2
 
-#define TMPF_DFL 0
-#define TMPF_SRC 1
-#define TMPF_CACHE 2
-#define TMPF_COOKIE 3
-#define TMPF_HIST 4
-#define MAX_TMPF_TYPE 5
-
 /*
  * Globals.
  */
@@ -252,18 +234,13 @@ global char DecodeCTE init(FALSE);
 global char AutoUncompress init(FALSE);
 global char PreserveTimestamp init(TRUE);
 global char MetaRefresh init(FALSE);
-global char* HostName init(NULL);
 
-global char QuietMessage init(FALSE);
 
 extern unsigned char GlobalKeymap[];
 extern unsigned char EscKeymap[];
 extern unsigned char EscBKeymap[];
 extern unsigned char EscDKeymap[];
-extern FuncList w3mFuncList[];
 
-global char* personal_document_root init(NULL);
-global char* cgi_bin init(NULL);
 
 global int CurrentKey;
 global char* CurrentKeyData;
@@ -363,7 +340,6 @@ extern struct Hist* TextHist;
 global int UseHistory init(TRUE);
 global int URLHistSize init(100);
 global int SaveURLHist init(TRUE);
-global int multicolList init(FALSE);
 
 global wc_ces BookmarkCharset init(SYSTEM_CHARSET);
 global char ExtHalfdump init(FALSE);

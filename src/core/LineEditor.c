@@ -1,12 +1,16 @@
 #include "LineEditor.h"
+#include "indep.h"
 #include "str_util.h"
+#include "linein.h"
 #include "display.h"
+#include "form.h"
 #include "etc.h"
 #include "ctrlcode.h"
 #include "local.h"
 #include "fm.h"
 #include "history.h"
 #include "screen.h"
+#include "url.h"
 #include <dirent.h>
 #include <wtf.h>
 

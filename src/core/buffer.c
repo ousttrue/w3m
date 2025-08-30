@@ -1,6 +1,8 @@
 #include "buffer.h"
 #include "display.h"
+#include "form.h"
 #include "ui.h"
+#include "html.h"
 #include "etc.h"
 #include "w3m.h"
 #include "file.h"
@@ -9,6 +11,7 @@
 #include "event_poller.h"
 #include "screen.h"
 #include "ctrlcode.h"
+#include <unistd.h>
 
 char* NullLine = "";
 Lineprop NullProp[] = { 0 };
