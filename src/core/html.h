@@ -35,7 +35,7 @@ struct table2 {
 };
 
 struct URLOption {
-    char* referer;
+    const char* referer;
     int flag;
 };
 

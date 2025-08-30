@@ -2,6 +2,7 @@
 #include "version.h"
 #define MAINPROGRAM
 #include "buffer.h"
+#include "downloadlist.h"
 #include "http.h"
 #include "mysignal.h"
 #include "proxy.h"
@@ -92,7 +93,6 @@ static char* getCurWord(Buffer* buf, int* spos, int* epos);
 static int display_ok = FALSE;
 int prev_key = -1;
 int on_target = 1;
-static int add_download_list = FALSE;
 
 void set_buffer_environ(Buffer*);
 static void save_buffer_position(Buffer* buf);
@@ -392,10 +392,7 @@ void fmInit(void)
 
 bool onFrame()
 {
-    if (add_download_list) {
-        add_download_list = FALSE;
-        ldDL();
-    }
+    updateDownload();
     if (Currentbuf->submit) {
         Anchor* a = Currentbuf->submit;
         Currentbuf->submit = NULL;
@@ -4170,45 +4167,6 @@ DEFUN(defKey, DEFINE_KEY, "Define a binding between a key stroke combination and
         }
     }
     setKeymap(allocStr(data, -1), -1);
-}
-
-void addDownloadList(pid_t pid, char* url, char* save, char* lock, long long size)
-{
-    DownloadList* d;
-
-    d = New(DownloadList);
-    d->pid = pid;
-    d->url = url;
-    if (save[0] != '/' && save[0] != '~')
-        save = Strnew_m_charp(CurrentDir, "/", save, NULL)->ptr;
-    d->save = expandPath(save);
-    d->lock = lock;
-    d->size = size;
-    d->time = time(0);
-    d->running = TRUE;
-    d->err = 0;
-    d->next = NULL;
-    d->prev = LastDL;
-    if (LastDL)
-        LastDL->next = d;
-    else
-        FirstDL = d;
-    LastDL = d;
-    add_download_list = TRUE;
-}
-
-int checkDownloadList(void)
-{
-    DownloadList* d;
-    struct stat st;
-
-    if (!FirstDL)
-        return FALSE;
-    for (d = FirstDL; d != NULL; d = d->next) {
-        if (d->running && !lstat(d->lock, &st))
-            return TRUE;
-    }
-    return FALSE;
 }
 
 static char*

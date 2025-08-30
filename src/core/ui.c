@@ -8,6 +8,9 @@
 #include <wc.h>
 #include <wtf.h>
 
+char* CurrentDir;
+int CurrentPid;
+
 wc_ces InnerCharset = WC_CES_WTF; /* Don't change */
 #define DISPLAY_CHARSET WC_CES_UTF_8
 wc_ces DisplayCharset = DISPLAY_CHARSET;

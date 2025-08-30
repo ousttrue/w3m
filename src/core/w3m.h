@@ -23,10 +23,5 @@ void chkURLBuffer(struct _Buffer* buf);
 struct _AlarmEvent* setAlarmEvent(struct _AlarmEvent* event, int sec, short status, int cmd, void* data);
 void tmpClearBuffer(struct _Buffer* buf);
 
-void addDownloadList(pid_t pid, char* url, char* save, char* lock, long long size);
-void stopDownload(void);
-int checkDownloadList(void);
-void download_action(struct parsed_tagarg* arg);
-
 void change_charset(struct parsed_tagarg* arg);
 void saveBufferInfo(void);

@@ -3,6 +3,7 @@
  */
 #include "form.h"
 #include "rc.h"
+#include "downloadlist.h"
 #include "ui.h"
 #include "cookie.h"
 #include "buffer.h"

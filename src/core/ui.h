@@ -2,6 +2,8 @@
 #include <Str.h>
 #include <wc.h>
 
+extern char* CurrentDir;
+extern int CurrentPid;
 extern wc_ces InnerCharset;
 extern wc_ces DisplayCharset;
 struct _Buffer;

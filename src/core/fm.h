@@ -113,7 +113,6 @@ extern int REV_LB[];
  * Macros.
  */
 
-
 #define bpcmp(a, b) \
     (((a).line - (b).line) ? ((a).line - (b).line) : ((a).pos - (b).pos))
 
@@ -132,31 +131,6 @@ extern int REV_LB[];
 /*
  * Types.
  */
-
-
-typedef struct _BufferPos {
-    long top_linenumber;
-    long cur_linenumber;
-    int currentColumn;
-    int pos;
-    int bpos;
-    struct _BufferPos* next;
-    struct _BufferPos* prev;
-} BufferPos;
-
-typedef struct _DownloadList {
-    pid_t pid;
-    char* url;
-    char* save;
-    char* lock;
-    long long size;
-    time_t time;
-    int running;
-    int err;
-    struct _DownloadList* next;
-    struct _DownloadList* prev;
-} DownloadList;
-#define DOWNLOAD_LIST_TITLE "Download List Panel"
 
 #define COPY_BUFROOT(dstbuf, srcbuf)       \
     {                                      \
@@ -345,7 +319,6 @@ struct cookie {
 #define TMPF_HIST 4
 #define MAX_TMPF_TYPE 5
 
-
 /*
  * Globals.
  */
@@ -384,23 +357,16 @@ global int DNS_order init(DNS_ORDER_UNSPEC);
 extern int ai_family_order_table[7][3]; /* XXX */
 #endif /* INET6 */
 
-
 global char* document_root init(NULL);
 global char* personal_document_root init(NULL);
 global char* cgi_bin init(NULL);
 global char* index_file init(NULL);
 
-global char* CurrentDir;
-global int CurrentPid;
-
-global DownloadList* FirstDL init(NULL);
-global DownloadList* LastDL init(NULL);
 global int CurrentKey;
 global char* CurrentKeyData;
 global char* CurrentCmdData;
 global char* w3m_reqlog;
 extern int enable_inline_image;
-
 
 global int useColor init(TRUE);
 global int basic_color init(8); /* don't change */

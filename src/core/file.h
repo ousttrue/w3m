@@ -14,7 +14,7 @@ char* acceptableEncoding(void);
 int dir_exist(char* path);
 int is_html_type(char* type);
 char* inputAnswer(char* prompt);
-struct _Buffer* loadGeneralFile(char* path, struct _ParsedURL* current, char* referer, int flag, struct form_list* request);
+struct _Buffer* loadGeneralFile(char* path, struct _ParsedURL* current, const char* referer, int flag, struct form_list* request);
 int is_boundary(unsigned char*, unsigned char*);
 void push_render_image(Str str, int width, int limit, struct html_feed_environ* h_env);
 void flushline(struct html_feed_environ* h_env, struct readbuffer* obuf,

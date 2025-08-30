@@ -1,5 +1,6 @@
 #include "file.h"
 #include "http.h"
+#include "downloadlist.h"
 #include "ui.h"
 #include "mysignal.h"
 #include "map.h"
@@ -1178,7 +1179,7 @@ Str getLinkNumberStr(int correction)
  */
 #define DO_EXTERNAL ((Buffer * (*)(URLFile*, Buffer*)) doExternal)
 Buffer*
-loadGeneralFile(char* path, ParsedURL* volatile current, char* referer,
+loadGeneralFile(char* path, ParsedURL* volatile current, const char* referer,
     int flag, FormList* volatile request)
 {
     URLFile f, *volatile of = NULL;
