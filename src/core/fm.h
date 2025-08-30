@@ -676,8 +676,6 @@ global int URLHistSize init(100);
 global int SaveURLHist init(TRUE);
 global int multicolList init(FALSE);
 
-global wc_ces InnerCharset init(WC_CES_WTF); /* Don't change */
-global wc_ces DisplayCharset init(DISPLAY_CHARSET);
 global wc_ces DocumentCharset init(DOCUMENT_CHARSET);
 global wc_ces SystemCharset init(SYSTEM_CHARSET);
 global wc_ces BookmarkCharset init(SYSTEM_CHARSET);

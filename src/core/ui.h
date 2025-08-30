@@ -1,5 +1,9 @@
 #pragma once
 #include <Str.h>
+#include <wc.h>
+
+extern wc_ces InnerCharset;
+extern wc_ces DisplayCharset;
 
 // key input(blocking) or draw require UI
 //
@@ -27,3 +31,5 @@ void message(struct UI ui, enum MessageSeverity, const char* s);
 // extern void disp_message(char* s, int redraw_current);
 
 void concatMessageList(Str tmp);
+
+void renderFrame(struct UI ui);

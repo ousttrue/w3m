@@ -519,15 +519,6 @@ void pushEvent(int cmd, void* data)
     LastEvent = event;
 }
 
-void renderFrame(struct Frame* frame, int cursorRow, int cursorCol)
-{
-    wc_putc_init(InnerCharset, DisplayCharset);
-    refreshFrame(ttyWriter(), frame);
-    wc_putc_end(ttyWriter());
-    MOVE(ttyWriter(), cursorRow, cursorCol);
-    flushWriter(ttyWriter());
-}
-
 DEFUN(nulcmd, NOTHING NULL @ @ @, "Do nothing")
 { /* do nothing */
 }
@@ -4467,10 +4458,9 @@ DEFUN(cursorTop, CURSOR_TOP, "Move cursor to the top of the screen")
 
 DEFUN(cursorMiddle, CURSOR_MIDDLE, "Move cursor to the middle of the screen")
 {
-    int offsety;
     if (Currentbuf->firstLine == NULL)
         return;
-    offsety = (Currentbuf->LINES - 1) / 2;
+    int offsety = (Currentbuf->LINES - 1) / 2;
     Currentbuf->currentLine = currentLineSkip(Currentbuf, Currentbuf->topLine,
         offsety, FALSE);
     arrangeLine(Currentbuf);
@@ -4478,10 +4468,9 @@ DEFUN(cursorMiddle, CURSOR_MIDDLE, "Move cursor to the middle of the screen")
 
 DEFUN(cursorBottom, CURSOR_BOTTOM, "Move cursor to the bottom of the screen")
 {
-    int offsety;
     if (Currentbuf->firstLine == NULL)
         return;
-    offsety = Currentbuf->LINES - 1;
+    int offsety = Currentbuf->LINES - 1;
     Currentbuf->currentLine = currentLineSkip(Currentbuf, Currentbuf->topLine,
         offsety, FALSE);
     arrangeLine(Currentbuf);

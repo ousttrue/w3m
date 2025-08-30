@@ -393,7 +393,7 @@ void addstr(struct VirtualTerm* vt, const char* s)
     }
 }
 
-void addnstr(struct VirtualTerm* vt, char* s, int n)
+void addnstr(struct VirtualTerm* vt, const char* s, int n)
 {
     for (int i = 0; *s != '\0';) {
         int width = wtf_width((wc_uchar*)s);
@@ -406,7 +406,7 @@ void addnstr(struct VirtualTerm* vt, char* s, int n)
     }
 }
 
-void addnstr_sup(struct VirtualTerm* vt, char* s, int n)
+void addnstr_sup(struct VirtualTerm* vt, const char* s, int n)
 {
     int i = 0;
     for (; *s != '\0';) {

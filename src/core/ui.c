@@ -1,5 +1,16 @@
 #include "ui.h"
 #include "screen.h"
+#include "putc.h"
+#include "term_renderer.h"
+#include "tty.h"
+#include "display.h"
+#include <wc.h>
+#include <wtf.h>
+
+wc_ces InnerCharset = WC_CES_WTF; /* Don't change */
+
+#define DISPLAY_CHARSET WC_CES_UTF_8
+wc_ces DisplayCharset = DISPLAY_CHARSET;
 
 struct UI getUI()
 {
@@ -64,3 +75,15 @@ void message(struct UI ui, enum MessageSeverity severity, const char* s)
 // {
 //     disp_message_nsec(s, redraw_current, 10, FALSE, TRUE);
 // }
+
+void renderFrame(struct UI ui)
+{
+    int cursorRow = ui.vt->CurLine;
+    int cursorCol = ui.vt->CurColumn;
+    struct Frame* frame = screenToFrame(ui.vt);
+    wc_putc_init(InnerCharset, DisplayCharset);
+    refreshFrame(ttyWriter(), frame);
+    wc_putc_end(ttyWriter());
+    MOVE(ttyWriter(), cursorRow, cursorCol);
+    flushWriter(ttyWriter());
+}

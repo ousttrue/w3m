@@ -6,7 +6,6 @@
 #include "local.h"
 #include "event_poller.h"
 #include "screen.h"
-#include "putc.h"
 #include "LineEditor.h"
 #include "w3m.h"
 #include "indep.h"
@@ -109,8 +108,7 @@ char* inputLineHistSearch(struct UI ui,
         move(ui.vt, ui.vt->ROWS - 1, opos + x - g_editor.offset);
 
         // draw frame
-        struct Frame* frame = screenToFrame(ui.vt);
-        renderFrame(frame, ui.vt->CurLine, ui.vt->CurColumn);
+        renderFrame(ui);
 
     next_char:
         c = getch();
@@ -171,8 +169,7 @@ char* inputLineHistSearch(struct UI ui,
         return NULL;
 
     move(getScreen(), ui.vt->ROWS - 1, 0);
-    struct Frame* frame = screenToFrame(getScreen());
-    renderFrame(frame, ui.vt->CurLine, ui.vt->CurColumn);
+    renderFrame(ui);
 
     char* p = g_editor.strBuf->ptr;
     if (flag & (IN_FILENAME | IN_COMMAND)) {
