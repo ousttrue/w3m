@@ -1,5 +1,7 @@
+#include "alloc.h"
 #include "fm.h"
 #include "screen.h"
+#include "indep.h"
 #include "form.h"
 #include "buffer.h"
 #include "http.h"
@@ -13,7 +15,7 @@
 
 AnchorList*
 putAnchor(AnchorList* al, char* url, char* target, Anchor** anchor_return,
-    char* referer, char* title, unsigned char key, int line, int pos)
+    const char* referer, char* title, unsigned char key, int line, int pos)
 {
     int n, i, j;
     Anchor* a;
@@ -62,7 +64,7 @@ putAnchor(AnchorList* al, char* url, char* target, Anchor** anchor_return,
 }
 
 Anchor*
-registerHref(Buffer* buf, char* url, char* target, char* referer, char* title,
+registerHref(Buffer* buf, char* url, char* target, const char* referer, char* title,
     unsigned char key, int line, int pos)
 {
     Anchor* a;

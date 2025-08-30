@@ -5,6 +5,7 @@
 #include "file.h"
 #include "display.h"
 #include "term_renderer.h"
+#include "indep.h"
 #include "mysignal.h"
 #include "rc.h"
 #include "fm.h"

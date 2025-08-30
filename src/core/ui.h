@@ -8,6 +8,7 @@ extern wc_ces InnerCharset;
 extern wc_ces DisplayCharset;
 extern wc_ces SystemCharset;
 extern wc_ces DocumentCharset;
+extern wc_ces BookmarkCharset;
 
 #define Str_conv_from_system(x) wc_Str_conv((x), SystemCharset, InnerCharset)
 #define Str_conv_to_system(x) wc_Str_conv_strict((x), InnerCharset, SystemCharset)

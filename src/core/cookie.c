@@ -10,6 +10,7 @@
 #include "cookie.h"
 #include "fm.h"
 #include "parsetag.h"
+#include <alloc.h>
 #include "http.h"
 #include "etc.h"
 #include "html.h"
@@ -19,6 +20,8 @@
 #include "regex.h"
 #include "myctype.h"
 #include "buffer.h"
+#include "defun.h"
+#include "indep.h"
 #include <time.h>
 
 static int is_saved = 1;

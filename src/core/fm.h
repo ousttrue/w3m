@@ -15,7 +15,6 @@
 
 #include "config.h"
 #include "textlist.h"
-#include "istream.h"
 #include <wc.h>
 #include <Str.h>
 
@@ -341,7 +340,6 @@ global int UseHistory init(TRUE);
 global int URLHistSize init(100);
 global int SaveURLHist init(TRUE);
 
-global wc_ces BookmarkCharset init(SYSTEM_CHARSET);
 global char ExtHalfdump init(FALSE);
 global char FollowLocale init(TRUE);
 global char UseContentCharset init(TRUE);
@@ -411,11 +409,5 @@ typedef struct _AlarmEvent {
     int cmd;
     void* data;
 } AlarmEvent;
-
-/*
- * Externals
- */
-
-#include "proto.h"
 
 #endif /* not FM_H */

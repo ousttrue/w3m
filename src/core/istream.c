@@ -1,3 +1,4 @@
+#include "indep.h"
 #include "ssl_util.h"
 #include "mysignal.h"
 #include "mimehead.h"
@@ -34,7 +35,7 @@ do_update(BaseStream base)
     base->stream.cur = base->stream.next = 0;
     len = (*base->read)(base->handle, base->stream.buf, base->stream.size);
     if (len <= 0)
-        base->iseos = TRUE;
+        base->iseos = true;
     else
         base->stream.next += len;
 }
@@ -418,3 +419,21 @@ memchop(char* p, int* len)
     *len = q - p;
     return;
 }
+
+void cleanup_line(Str s, enum ConvertLineMode mode)
+{
+    if (s->length >= 2 && s->ptr[s->length - 2] == '\r' && s->ptr[s->length - 1] == '\n') {
+        Strshrink(s, 2);
+        Strcat_char(s, '\n');
+    } else if (Strlastchar(s) == '\r')
+        s->ptr[s->length - 1] = '\n';
+    else if (Strlastchar(s) != '\n')
+        Strcat_char(s, '\n');
+
+    int i;
+    for (i = 0; i < s->length; i++) {
+        if (s->ptr[i] == '\0')
+            s->ptr[i] = ' ';
+    }
+}
+

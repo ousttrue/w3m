@@ -1,6 +1,6 @@
 #pragma once
 #include "url.h"
-#include "indep.h"
+#include "growbuf.h"
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>

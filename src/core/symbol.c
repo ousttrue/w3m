@@ -2,7 +2,7 @@
 #include "fm.h"
 #include "graphicchar.h"
 #include "ctrlcode.h"
-#include "istream.h"
+#include "indep.h"
 #include "linein.h"
 #include <wtf.h>
 

@@ -15,6 +15,7 @@
 #include "config.h"
 #include <setjmp.h>
 #include <signal.h>
+#include <stdlib.h>
 #include <sys/wait.h>
 #include <gc.h>
 

@@ -4,6 +4,7 @@
 #include "etc.h"
 #include "ui.h"
 #include "file.h"
+#include "indep.h"
 #include "fm.h"
 #include "buffer.h"
 

@@ -3,6 +3,7 @@
 #include "display.h"
 #include "buffer.h"
 #include "http.h"
+#include "indep.h"
 #include "mysignal.h"
 #include "local.h"
 #include "proxy.h"

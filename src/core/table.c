@@ -4,6 +4,7 @@
 #include "table.h"
 #include "file.h"
 #include "readbuffer.h"
+#include "indep.h"
 #include "etc.h"
 #include "symbol.h"
 #include "fm.h"

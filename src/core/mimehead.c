@@ -6,7 +6,7 @@
 #include "fm.h"
 #include "myctype.h"
 #include "Str.h"
-#include "istream.h"
+#include "growbuf.h"
 #include <sys/types.h>
 
 #define MIME_ENCODED_LINE_LIMIT 80

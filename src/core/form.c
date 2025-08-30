@@ -2,6 +2,7 @@
  * HTML forms
  */
 #include "form.h"
+#include "alloc.h"
 #include "rc.h"
 #include "downloadlist.h"
 #include "ui.h"

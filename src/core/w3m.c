@@ -1,8 +1,12 @@
 #include "w3m.h"
+#include "indep.h"
 #include "version.h"
+#include <gc/gc.h>
+#include <stdlib.h>
 #define MAINPROGRAM
 #include "buffer.h"
 #include "parsetag.h"
+#include "defun.h"
 #include "linein.h"
 #include "menu.h"
 #include "func.h"

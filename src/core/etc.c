@@ -1,5 +1,6 @@
 #include "etc.h"
 #include "auth.h"
+#include "indep.h"
 #include "local.h"
 #include "display.h"
 #include "buffer.h"
@@ -12,6 +13,7 @@
 #include "html.h"
 #include "hash.h"
 #include <pwd.h>
+#include <stdlib.h>
 #include <wtf.h>
 #include <fcntl.h>
 #include <sys/types.h>

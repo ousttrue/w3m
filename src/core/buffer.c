@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "alloc.h"
 #include "display.h"
 #include "form.h"
 #include "ui.h"

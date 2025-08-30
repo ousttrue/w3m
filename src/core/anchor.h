@@ -10,7 +10,7 @@ typedef struct {
 typedef struct _anchor {
     char* url;
     char* target;
-    char* referer;
+    const char* referer;
     char* title;
     unsigned char accesskey;
     BufferPoint start;
@@ -41,11 +41,11 @@ struct form_list;
 struct parsed_tag;
 
 AnchorList* putAnchor(AnchorList* al, char* url, char* target,
-    Anchor** anchor_return, char* referer,
+    Anchor** anchor_return, const char* referer,
     char* title, unsigned char key, int line,
     int pos);
 Anchor* registerHref(struct _Buffer* buf, char* url, char* target,
-    char* referer, char* title, unsigned char key,
+    const char* referer, char* title, unsigned char key,
     int line, int pos);
 Anchor* registerName(struct _Buffer* buf, char* url, int line, int pos);
 Anchor* registerImg(struct _Buffer* buf, char* url, char* title, int line,

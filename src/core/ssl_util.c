@@ -1,4 +1,5 @@
 #include "ssl_util.h"
+#include "growbuf.h"
 #include "file.h"
 #include "display.h"
 #include "ui.h"

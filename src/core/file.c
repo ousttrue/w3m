@@ -1,5 +1,6 @@
 #include "file.h"
 #include "funcname1.h"
+#include "indep.h"
 #include "table.h"
 #include "http.h"
 #include "linein.h"
@@ -33,6 +34,7 @@
 #include "local.h"
 #include "regex.h"
 #include "myctype.h"
+#include <stdlib.h>
 #include <sys/types.h>
 #include <signal.h>
 #include <setjmp.h>

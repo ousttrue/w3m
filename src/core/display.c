@@ -1,4 +1,6 @@
 #include "display.h"
+#include "alloc.h"
+#include "indep.h"
 #include "image.h"
 #include "etc.h"
 #include "map.h"

@@ -1,6 +1,7 @@
 #include "auth.h"
 #include "fm.h"
 #include "textlist.h"
+#include "indep.h"
 #include "form.h"
 #include "http.h"
 #include "linein.h"

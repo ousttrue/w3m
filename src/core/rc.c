@@ -2,6 +2,8 @@
  * Initialization file etc.
  */
 #include "rc.h"
+#include "indep.h"
+#include "alloc.h"
 #include "url.h"
 #include "linein.h"
 #include "form.h"

@@ -11,7 +11,10 @@
 #include "rc.h"
 #include "ctrlcode.h"
 #include "ui.h"
+#include "indep.h"
 #include "istream.h"
+
+#include "defun.h"
 
 #include "funcname1.h"
 #include "history.h"
