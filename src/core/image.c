@@ -1,5 +1,6 @@
 #include "image.h"
 #include "ui.h"
+#include "file.h"
 #include "display.h"
 #include "term_renderer.h"
 #include "rc.h"

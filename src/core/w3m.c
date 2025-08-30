@@ -1906,18 +1906,16 @@ loadLink(char* url, char* target, char* referer, FormList* request)
 static void
 gotoLabel(char* label)
 {
-    Buffer* buf;
-    Anchor* al;
-    int i;
-
-    al = searchURLLabel(Currentbuf, label);
+    Anchor* al = searchURLLabel(Currentbuf, label);
     if (al == NULL) {
         /* FIXME: gettextize? */
         message(getUI(), MSG_INFO, Sprintf("%s is not found", label)->ptr);
         return;
     }
-    buf = newBuffer(Currentbuf->width);
+
+    Buffer *buf = newBuffer();
     copyBuffer(buf, Currentbuf);
+    int i;
     for (i = 0; i < MAX_LB; i++)
         buf->linkBuffer[i] = NULL;
     buf->currentURL.label = allocStr(label, -1);
@@ -4164,7 +4162,7 @@ DEFUN(defKey, DEFINE_KEY, "Define a binding between a key stroke combination and
     setKeymap(allocStr(data, -1), -1);
 }
 
-void addDownloadList(pid_t pid, char* url, char* save, char* lock, clen_t size)
+void addDownloadList(pid_t pid, char* url, char* save, char* lock, long long size)
 {
     DownloadList* d;
 
@@ -4204,7 +4202,7 @@ int checkDownloadList(void)
 }
 
 static char*
-convert_size3(clen_t size)
+convert_size3(long long size)
 {
     Str tmp = Strnew();
     int n;

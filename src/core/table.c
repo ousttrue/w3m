@@ -1,11 +1,7 @@
-/* $Id: table.c,v 1.58 2010/08/09 11:59:19 htrb Exp $ */
 /*
  * HTML table
  */
-#include <sys/types.h>
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
+#include "file.h"
 #include "readbuffer.h"
 #include "symbol.h"
 #include "fm.h"
@@ -15,6 +11,10 @@
 #include "myctype.h"
 #include "screen.h"
 #include <wtf.h>
+#include <math.h>
+#include <string.h>
+#include <stdio.h>
+#include <sys/types.h>
 
 int symbol_width = 0;
 int symbol_width0 = 0;

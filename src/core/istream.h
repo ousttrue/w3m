@@ -161,3 +161,6 @@ struct _Buffer* doExternal(URLFile uf, char* type, struct _Buffer* defaultbuf);
 int doFileSave(URLFile uf, char* defstr);
 void readHeader(URLFile* uf, struct _Buffer* newBuf, int thru, ParsedURL* pu);
 void init_stream(URLFile* uf, int scheme, InputStream stream);
+struct _Buffer* openPagerBuffer(InputStream stream, struct _Buffer* buf);
+struct _Buffer* openGeneralPagerBuffer(InputStream stream);
+int checkSaveFile(InputStream stream, char* path);

@@ -1,5 +1,3 @@
-/* $Id: cookie.c,v 1.11 2010/07/26 11:38:53 htrb Exp $ */
-
 /*
  * References for version 0 cookie:
  *   [NETACAPE] http://www.netscape.com/newsref/std/cookie_spec.html
@@ -11,11 +9,11 @@
 
 #include "fm.h"
 #include "html.h"
-
-#include <time.h>
+#include "file.h"
 #include "local.h"
 #include "regex.h"
 #include "myctype.h"
+#include <time.h>
 
 static int is_saved = 1;
 

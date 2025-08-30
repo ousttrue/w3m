@@ -5,6 +5,7 @@
 #include "image.h"
 #include "ctrlcode.h"
 #include "etc.h"
+#include "file.h"
 #include <math.h>
 
 MapList*

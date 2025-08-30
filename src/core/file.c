@@ -119,7 +119,7 @@ static int forms_size = 0;
 #define cur_form_id ((form_sp >= 0) ? form_stack[form_sp] : -1)
 static int form_sp = 0;
 
-static clen_t current_content_length;
+static long long current_content_length;
 
 static int cur_hseq;
 static int cur_iseq;
@@ -5843,7 +5843,7 @@ loadHTMLBuffer(URLFile* f, Buffer* newBuf)
 static char* _size_unit[] = { "b", "kb", "Mb", "Gb", "Tb",
     "Pb", "Eb", "Zb", "Bb", "Yb", NULL };
 
-char* convert_size(clen_t size, int usefloat)
+char* convert_size(long long size, int usefloat)
 {
     float csize;
     int sizepos = 0;
@@ -5859,7 +5859,7 @@ char* convert_size(clen_t size, int usefloat)
         ->ptr;
 }
 
-char* convert_size2(clen_t size1, clen_t size2, int usefloat)
+char* convert_size2(long long size1, long long size2, int usefloat)
 {
     char** sizes = _size_unit;
     float csize, factor = 1;
@@ -5877,7 +5877,7 @@ char* convert_size2(clen_t size1, clen_t size2, int usefloat)
         ->ptr;
 }
 
-void showProgress(clen_t* linelen, clen_t* trbyte)
+void showProgress(long long* linelen, long long* trbyte)
 {
     struct VirtualTerm* vt = getScreen();
     int i, j, rate, duration, eta, pos;
@@ -6121,8 +6121,8 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
 {
     struct TermEntry* t = getTermEntry();
     struct environment envs[MAX_ENV_LEVEL];
-    clen_t linelen = 0;
-    clen_t trbyte = 0;
+    long long linelen = 0;
+    long long trbyte = 0;
     Str lineBuf2 = Strnew();
     wc_ces charset = WC_CES_US_ASCII;
     wc_ces volatile doc_charset = DocumentCharset;
@@ -6272,7 +6272,7 @@ loadBuffer(URLFile* uf, Buffer* volatile newBuf)
     volatile char pre_lbuf = '\0';
     int nlines;
     Str tmpf;
-    clen_t linelen = 0, trbyte = 0;
+    long long linelen = 0, trbyte = 0;
     Lineprop* propBuffer = NULL;
     Linecolor* colorBuffer = NULL;
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
@@ -6598,7 +6598,7 @@ openGeneralPagerBuffer(InputStream stream)
 int save2tmp(URLFile uf, char* tmpf)
 {
     FILE* ff;
-    clen_t linelen = 0, trbyte = 0;
+    long long linelen = 0, trbyte = 0;
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
     static sigjmp_buf env_bak;
     volatile int retval = 0;
@@ -6733,7 +6733,7 @@ _MoveFile(char* path1, char* path2)
     InputStream f1;
     FILE* f2;
     int is_pipe;
-    clen_t linelen = 0, trbyte = 0;
+    long long linelen = 0, trbyte = 0;
     char* buf = NULL;
     int count;
 
@@ -6778,7 +6778,7 @@ int _doFileCopy(char* tmpf, char* defstr, int download)
     FILE* f;
 #endif
     struct stat st;
-    clen_t size = 0;
+    long long size = 0;
     int is_pipe = FALSE;
 
     // if (fmInitialized)

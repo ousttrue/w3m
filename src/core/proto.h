@@ -8,67 +8,7 @@
 // extern void FUNC_NAME(void) from DEFUN
 #include "defun.h"
 
-extern Buffer* loadGeneralFile(char* path, ParsedURL* current, char* referer, int flag, FormList* request);
-extern int is_boundary(unsigned char*, unsigned char*);
-extern int is_blank_line(char* line, int indent);
-extern void push_render_image(Str str, int width, int limit,
-    struct html_feed_environ* h_env);
-extern void flushline(struct html_feed_environ* h_env, struct readbuffer* obuf,
-    int indent, int force, int width);
-extern void do_blankline(struct html_feed_environ* h_env,
-    struct readbuffer* obuf, int indent, int indent_incr,
-    int width);
-extern void purgeline(struct html_feed_environ* h_env);
-extern void save_fonteffect(struct html_feed_environ* h_env,
-    struct readbuffer* obuf);
-extern void restore_fonteffect(struct html_feed_environ* h_env,
-    struct readbuffer* obuf);
-
-extern Str process_img(struct parsed_tag* tag, int width);
-extern Str process_anchor(struct parsed_tag* tag, char* tagbuf);
-extern Str process_input(struct parsed_tag* tag);
-extern Str process_button(struct parsed_tag* tag);
-extern Str process_n_button(void);
-extern Str process_select(struct parsed_tag* tag);
-extern Str process_n_select(void);
-extern void feed_select(char* str);
-extern void process_option(void);
-extern Str process_textarea(struct parsed_tag* tag, int width);
-extern Str process_n_textarea(void);
-extern void feed_textarea(char* str);
-extern Str process_form(struct parsed_tag* tag);
-extern Str process_n_form(void);
-extern int getMetaRefreshParam(char* q, Str* refresh_uri);
-extern int HTMLtagproc1(struct parsed_tag* tag,
-    struct html_feed_environ* h_env);
-extern void HTMLlineproc2(Buffer* buf, TextLineList* tl);
-extern void HTMLlineproc0(char* istr, struct html_feed_environ* h_env,
-    int internal);
-#define HTMLlineproc1(x, y) HTMLlineproc0(x, y, TRUE)
-extern char* convert_size(clen_t size, int usefloat);
-extern char* convert_size2(clen_t size1, clen_t size2, int usefloat);
-extern void showProgress(clen_t* linelen, clen_t* trbyte);
-extern void init_henv(struct html_feed_environ*, struct readbuffer*,
-    struct environment*, int, TextLineList*, int, int);
-extern void completeHTMLstream(struct html_feed_environ*,
-    struct readbuffer*);
-extern Buffer* loadHTMLString(Str page);
-extern void saveBuffer(Buffer* buf, FILE* f, int cont);
-extern void saveBufferBody(Buffer* buf, FILE* f, int cont);
-extern Buffer* getshell(char* cmd);
-extern Buffer* getpipe(char* cmd);
-extern Buffer* openPagerBuffer(InputStream stream, Buffer* buf);
-extern Buffer* openGeneralPagerBuffer(InputStream stream);
-extern int _doFileCopy(char* tmpf, char* defstr, int download);
-#define doFileCopy(tmpf, defstr) _doFileCopy(tmpf, defstr, FALSE);
-extern int doFileMove(char* tmpf, char* defstr);
-extern int checkCopyFile(char* path1, char* path2);
-extern int checkSaveFile(InputStream stream, char* path);
-extern int checkOverWrite(char* path);
-extern int matchattr(char* p, char* attr, int len, Str* value);
-extern char* checkHeader(Buffer* buf, char* field);
-extern void addDownloadList(pid_t pid, char* url, char* save, char* lock,
-    clen_t size);
+extern void addDownloadList(pid_t pid, char* url, char* save, char* lock, long long size);
 extern void stopDownload(void);
 extern int checkDownloadList(void);
 extern void download_action(struct parsed_tagarg* arg);

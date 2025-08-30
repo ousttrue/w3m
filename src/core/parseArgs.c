@@ -1,5 +1,6 @@
 #include "parseArgs.h"
 #include "ctrlcode.h"
+#include "file.h"
 #include "history.h"
 #include "term_renderer.h"
 #include "etc.h"
