@@ -226,11 +226,56 @@ fn build_output(
     return lib;
 }
 
+// 0. gcc -E
+//   nulcmd NOTHING NULL @ @ @
+//
+// 1.
+//   awk "$1 ~ /^[_A-Za-z]/ { for (i=2;i<=NF;i++) { print $i, $1} }" > funcname.tab
+//   NOTHING nulcmd
+//   NULL nulcmd
+//   @ nulcmd
+//   @ nulcmd
+//   @ nulcmd
+//
+// 2.
+//   awk -f funcname0.awk > funcname.c => func.c
+//   FuncList w3mFuncList[] = { /*0*/ {"@",nulcmd},};
+//
+//   awk -f funcname1.awk > funcname1.h => fm.1
+//   #define FUNCNAME_nulcmd 0
+//
+//   awk -f funcname2.awk > funcname2.h => keybind.h
+//   #define nulcmd 0
+//
+//   awk -f functable.awk > functable.tab
+//   @ FUNCNAME_nulcmd
+//
+//   awk -f defun.awk > defun.h
+//   void nulcmd();
+//
+// 3.
+//   mktable 100 functable.tab > functable.c => func.c
+//   static HashItem_si MyHashItem[] = { /* 0 */ {"SUSPEND", FUNCNAME_susp, &MyHashItem[1]}, };
+//
 fn gen_functable(b: *std.Build) *std.Build.Step.WriteFile {
     const wf = b.addWriteFiles();
 
-    const funcname_tab = gen_funcname_tab(b);
+    const gcc_e = gen_gcc_e(b);
+    _ = wf.addCopyFile(gcc_e.output, "gcc_e.txt");
+
+    const funcname_tab = run_awk_cmd(
+        b,
+        gcc_e.output,
+        "$1 ~ /^[_A-Za-z]/ { for (i=2;i<=NF;i++) { print $i, $1} }",
+    );
     _ = wf.addCopyFile(funcname_tab.output, "funcname.tab");
+
+    const defun_h = run_awk_cmd(
+        b,
+        gcc_e.output,
+        "$1 ~ /^[_A-Za-z]/ { print \"void \" $1 \"();\" }",
+    );
+    _ = wf.addCopyFile(defun_h.output, "defun.h");
 
     const funcname_c = gen_funcname(b, funcname_tab.output, b.path("funcname0.awk"));
     _ = wf.addCopyFile(funcname_c.output, "funcname.c");
@@ -305,7 +350,25 @@ fn gen_funcname(
     };
 }
 
-fn gen_funcname_tab(b: *std.Build) struct {
+// txt > awk
+fn run_awk_cmd(
+    b: *std.Build,
+    src: std.Build.LazyPath,
+    script: []const u8,
+) struct {
+    step: *std.Build.Step.Run,
+    output: std.Build.LazyPath,
+} {
+    var awk = b.addSystemCommand(&.{ "awk", script });
+    awk.setStdIn(.{ .lazy_path = src });
+    return .{
+        .step = awk,
+        .output = awk.captureStdOut(),
+    };
+}
+
+// sed > gcc _e > txt
+fn gen_gcc_e(b: *std.Build) struct {
     step: *std.Build.Step.Run,
     output: std.Build.LazyPath,
 } {
@@ -330,18 +393,10 @@ fn gen_funcname_tab(b: *std.Build) struct {
     // {
     //     const install = b.addInstallFile(cpp.captureStdOut(), "02_gcc_e.txt");
     //     b.getInstallStep().dependOn(&install.step);
-    // }
-
-    var awk = b.addSystemCommand(&.{
-        "awk",
-        "$1 ~ /^[_A-Za-z]/ { for (i=2;i<=NF;i++) { print $i, $1} }",
-    });
-    awk.setStdIn(.{
-        .lazy_path = cpp.captureStdOut(),
-    });
+    // }}
 
     return .{
-        .step = awk,
-        .output = awk.captureStdOut(),
+        .step = cpp,
+        .output = cpp.captureStdOut(),
     };
 }

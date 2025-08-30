@@ -6,128 +6,8 @@
  */
 
 // extern void FUNC_NAME(void) from DEFUN
+#include "defun.h"
 
-extern void nulcmd(void);
-extern void pgFore(void);
-extern void pgBack(void);
-extern void hpgFore(void);
-extern void hpgBack(void);
-extern void lup1(void);
-extern void ldown1(void);
-extern void ctrCsrV(void);
-extern void ctrCsrH(void);
-extern void rdrwSc(void);
-extern void srchfor(void);
-extern void isrchfor(void);
-extern void srchbak(void);
-extern void isrchbak(void);
-extern void srchnxt(void);
-extern void srchprv(void);
-extern void shiftl(void);
-extern void shiftr(void);
-extern void col1R(void);
-extern void col1L(void);
-extern void setEnv(void);
-extern void pipeBuf(void);
-extern void pipesh(void);
-extern void readsh(void);
-extern void execsh(void);
-extern void ldfile(void);
-extern void ldhelp(void);
-extern void movL(void);
-extern void movL1(void);
-extern void movD(void);
-extern void movD1(void);
-extern void movU(void);
-extern void movU1(void);
-extern void movR(void);
-extern void movR1(void);
-extern void movLW(void);
-extern void movRW(void);
-extern void qquitfm(void);
-extern void quitfm(void);
-extern void selBuf(void);
-extern void susp(void);
-extern void goLine(void);
-extern void goLineF(void);
-extern void goLineL(void);
-extern void linbeg(void);
-extern void linend(void);
-extern void editBf(void);
-extern void editScr(void);
-extern void followA(void);
-extern void bufferA(void);
-extern void followI(void);
-extern void submitForm(void);
-extern void followForm(void);
-extern void topA(void);
-extern void lastA(void);
-extern void nthA(void);
-extern void onA(void);
-
-extern void nextA(void);
-extern void prevA(void);
-extern void nextVA(void);
-extern void prevVA(void);
-extern void nextL(void);
-extern void nextLU(void);
-extern void nextR(void);
-extern void nextRD(void);
-extern void nextD(void);
-extern void nextU(void);
-extern void nextBf(void);
-extern void prevBf(void);
-extern void backBf(void);
-extern void deletePrevBuf(void);
-extern void goURL(void);
-extern void goHome(void);
-extern void gorURL(void);
-extern void ldBmark(void);
-extern void adBmark(void);
-extern void ldOpt(void);
-extern void setOpt(void);
-extern void pginfo(void);
-extern void msgs(void);
-extern void svA(void);
-extern void svI(void);
-extern void svBuf(void);
-extern void svSrc(void);
-extern void peekURL(void);
-extern void peekIMG(void);
-extern void curURL(void);
-extern void vwSrc(void);
-extern void reload(void);
-extern void reshape(void);
-extern void chkURL(void);
-extern void chkWORD(void);
-extern void extbrz(void);
-extern void linkbrz(void);
-extern void curlno(void);
-extern void execCmd(void);
-extern void dispI(void);
-extern void stopI(void);
-extern void setAlarm(void);
-extern void reinit(void);
-extern void defKey(void);
-extern void newT(void);
-extern void closeT(void);
-extern void nextT(void);
-extern void prevT(void);
-extern void ldDL(void);
-extern void linkLst(void);
-extern void linkMn(void);
-extern void accessKey(void);
-extern void listMn(void);
-extern void movlistMn(void);
-extern void undoPos(void);
-extern void redoPos(void);
-extern void cursorTop(void);
-extern void cursorMiddle(void);
-extern void cursorBottom(void);
-
-//
-//
-//
 extern Buffer* loadGeneralFile(char* path, ParsedURL* current, char* referer, int flag, FormList* request);
 extern int is_boundary(unsigned char*, unsigned char*);
 extern int is_blank_line(char* line, int indent);
@@ -240,11 +120,7 @@ extern Str correct_irrtag(int status);
 extern char* conv_search_string(char* str, wc_ces f_ces);
 extern int forwardSearch(Buffer* buf, char* str);
 extern int backwardSearch(Buffer* buf, char* str);
-extern void pcmap(void);
-extern void escmap(void);
-extern void escbmap(void);
 extern void escdmap(char c);
-extern void multimap(void);
 extern Buffer* historyBuffer(struct Hist* hist);
 extern double log_like(int x);
 extern struct table* newTable(void);
@@ -412,26 +288,10 @@ extern int add_cookie(ParsedURL* pu, Str name, Str value, time_t expires,
 extern void save_cookies(void);
 extern void load_cookies(void);
 extern void initCookie(void);
-extern void cooLst(void);
 extern Buffer* cookie_list_panel(void);
 extern void set_cookie_flag(struct parsed_tagarg* arg);
 extern int check_cookie_accept_domain(char* domain);
-extern void docCSet(void);
-extern void defCSet(void);
 extern void change_charset(struct parsed_tagarg* arg);
-
-extern void _mark(void);
-extern void nextMk(void);
-extern void prevMk(void);
-extern void reMark(void);
-
-#define mouse nulcmd
-#define sgrmouse nulcmd
-#define msToggle nulcmd
-#define movMs nulcmd
-#define menuMs nulcmd
-#define tabMs nulcmd
-#define closeTMs nulcmd
 
 extern void new_menu(Menu* menu, MenuItem* item);
 extern void geom_menu(Menu* menu, int x, int y, int mselect);
@@ -454,20 +314,12 @@ extern int getMenuN(MenuList* list, char* id);
 
 extern void popupMenu(int x, int y, Menu* menu);
 extern void mainMenu(int x, int y);
-extern void mainMn(void);
-extern void selMn(void);
-extern void tabMn(void);
 extern void optionMenu(int x, int y, char** label, int* variable, int initial,
     void (*func)());
 extern void initMenu(void);
 
-extern void dictword(void);
-extern void dictwordat(void);
 extern char* guess_save_name(Buffer* buf, char* file);
 
-extern void wrapToggle(void);
 extern void saveBufferInfo(void);
 
 extern Str getLinkNumberStr(int correction);
-
-extern void dispVer(void);
