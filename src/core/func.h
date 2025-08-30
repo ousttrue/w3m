@@ -1,7 +1,4 @@
-#ifndef FUNC_H
-#define FUNC_H
-
-#include "textlist.h"
+#pragma once
 
 #define KEY_HASH_SIZE 127
 
@@ -11,9 +8,11 @@
 #define K_MULTI 0x10000000
 #define MULTI_KEY(c) (((c) >> 16) & 0x77F)
 
+typedef void (*CommandFunc)();
+
 typedef struct _FuncList {
-    char* id;
-    void (*func)();
+    const char* id;
+    CommandFunc func;
 } FuncList;
 
 extern char* searchKeyData(void);
@@ -26,5 +25,3 @@ extern char* getWord(char** str);
 extern char* getQWord(char** str);
 struct regex;
 extern char* getRegexWord(const char** str, struct regex** regex_ret);
-
-#endif /* not FUNC_H */
