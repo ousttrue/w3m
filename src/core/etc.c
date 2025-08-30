@@ -8,7 +8,6 @@
 #include "myctype.h"
 #include "html.h"
 #include "hash.h"
-#include "tty.h"
 #include <pwd.h>
 #include <wtf.h>
 #include <fcntl.h>
@@ -1188,7 +1187,7 @@ pid_t open_pipe_rw(FILE** fr, FILE** fw)
     if (fw && pipe(fdw) < 0)
         goto err1;
 
-    flush_tty();
+    // flush_tty();
     pid = fork();
     if (pid < 0)
         goto err2;
@@ -1243,7 +1242,7 @@ void myExec(char* command)
 void mySystem(char* command, int background)
 {
     if (background) {
-        flush_tty();
+        // flush_tty();
         if (!fork()) {
             setup_child(FALSE, 0, -1);
             myExec(command);

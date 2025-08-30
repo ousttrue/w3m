@@ -4,8 +4,6 @@
 #include "etc.h"
 #include "ctrlcode.h"
 #include "local.h"
-#include "term_renderer.h"
-#include "tty.h"
 #include "fm.h"
 #include "history.h"
 #include "screen.h"
@@ -102,8 +100,9 @@ void next_compl(struct LineEditor* e, int next)
     if (next == 0)
         return;
 
-    if (status != CPL_OK && status != CPL_MENU)
-        termBell(ttyWriter());
+    if (status != CPL_OK && status != CPL_MENU){
+        ui_bell();
+    }
     if (status == CPL_FAIL)
         return;
 

@@ -87,3 +87,8 @@ void renderFrame(struct UI ui)
     MOVE(ttyWriter(), cursorRow, cursorCol);
     flushWriter(ttyWriter());
 }
+
+void ui_bell()
+{
+    termBell(ttyWriter());
+}

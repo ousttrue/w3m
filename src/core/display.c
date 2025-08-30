@@ -10,11 +10,9 @@
 #include "ctrlcode.h"
 #include "buffer.h"
 #include "TermEntry.h"
-#include "term_renderer.h"
 #include "graphicchar.h"
 #include "screen.h"
 #include "frame.h"
-#include "tty.h"
 #include "putc.h"
 #include "fm.h"
 #include <assert.h>
@@ -375,7 +373,7 @@ struct Frame* displayBuffer()
     if (activeImage && (cline != buf->topLine || ccolumn != buf->currentColumn)) {
         if (draw_image_flag) {
             clear(getScreen());
-            termClear(ttyWriter());
+            // termClear(ttyWriter());
         }
         clearImage();
         loadImage(buf, IMG_FLAG_STOP);
@@ -405,7 +403,7 @@ struct Frame* displayBuffer()
     standout(vt);
     message(getUI(), MSG_INFO, msg->ptr);
     standend(vt);
-    term_title(conv_to_system(buf->buffername));
+    // term_title(conv_to_system(buf->buffername));
     // refresh(ttyWriter());
     if (activeImage && displayImage && buf->img && buf->image_loaded) {
         drawImage();
