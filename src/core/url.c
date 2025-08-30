@@ -1,5 +1,6 @@
 #include "url.h"
 #include "display.h"
+#include "mysignal.h"
 #include "local.h"
 #include "proxy.h"
 #include "rc.h"

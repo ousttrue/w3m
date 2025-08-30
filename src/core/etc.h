@@ -6,9 +6,6 @@
 struct _Buffer;
 struct _ParsedURL;
 
-typedef void (*MySignalFunc)(int);
-MySignalFunc mySignal(int signal_number, MySignalFunc action);
-
 Str base64_encode(const char* src, size_t len);
 char* mybasename(char* s);
 int columnSkip(struct _Buffer* buf, int offset);

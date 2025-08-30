@@ -477,18 +477,6 @@ global char LocalhostOnly init(FALSE);
 global char* HostName init(NULL);
 
 global char QuietMessage init(FALSE);
-global char TrapSignal init(TRUE);
-#define TRAP_ON                                \
-    if (TrapSignal) {                          \
-        prevtrap = mySignal(SIGINT, KeyAbort); \
-            term_cbreak();                     \
-    }
-#define TRAP_OFF                        \
-    if (TrapSignal) {                   \
-            term_raw();                 \
-        if (prevtrap)                   \
-            mySignal(SIGINT, prevtrap); \
-    }
 
 extern unsigned char GlobalKeymap[];
 extern unsigned char EscKeymap[];

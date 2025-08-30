@@ -1,5 +1,6 @@
 #include "etc.h"
 #include "display.h"
+#include "mysignal.h"
 #include "ui.h"
 #include "rc.h"
 #include "fm.h"
@@ -1139,27 +1140,6 @@ Str romanAlphabet(int n)
 #define SIGIOT SIGABRT
 #endif /* not SIGIOT */
 
-static void
-reset_signals(void)
-{
-#ifdef SIGHUP
-    mySignal(SIGHUP, SIG_DFL); /* terminate process */
-#endif
-    mySignal(SIGINT, SIG_DFL); /* terminate process */
-#ifdef SIGQUIT
-    mySignal(SIGQUIT, SIG_DFL); /* terminate process */
-#endif
-    mySignal(SIGTERM, SIG_DFL); /* terminate process */
-    mySignal(SIGILL, SIG_DFL); /* create core image */
-    mySignal(SIGIOT, SIG_DFL); /* create core image */
-    mySignal(SIGFPE, SIG_DFL); /* create core image */
-#ifdef SIGBUS
-    mySignal(SIGBUS, SIG_DFL); /* create core image */
-#endif /* SIGBUS */
-    mySignal(SIGCHLD, SIG_IGN);
-    mySignal(SIGPIPE, SIG_IGN);
-}
-
 #ifndef FOPEN_MAX
 #define FOPEN_MAX 1024 /* XXX */
 #endif
@@ -1194,7 +1174,7 @@ void setup_child(int child, int i, int f)
      */
     close_all_fds_except(i, f);
     QuietMessage = TRUE;
-    TrapSignal = FALSE;
+    TrapSignal = false;
 }
 
 pid_t open_pipe_rw(FILE** fr, FILE** fw)
@@ -1781,28 +1761,7 @@ char* FQDN(char* host)
 #endif /* INET6 */
 }
 
-void (*mySignal(int signal_number, void (*action)(int)))(int)
-{
-#ifdef SA_RESTART
-    struct sigaction new_action, old_action;
 
-    sigemptyset(&new_action.sa_mask);
-    new_action.sa_handler = action;
-    if (signal_number == SIGALRM) {
-#ifdef SA_INTERRUPT
-        new_action.sa_flags = SA_INTERRUPT;
-#else
-        new_action.sa_flags = 0;
-#endif
-    } else {
-        new_action.sa_flags = SA_RESTART;
-    }
-    sigaction(signal_number, &new_action, &old_action);
-    return (old_action.sa_handler);
-#else
-    return (signal(signal_number, action));
-#endif
-}
 
 static char Base64Table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 

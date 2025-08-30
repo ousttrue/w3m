@@ -33,6 +33,7 @@ const w3m_srcs = [_][]const u8{
     "putc.c",
     "auth.c",
     "proxy.c",
+    "mysignal.c",
 
     "ui.c",
     "LineEditor.c",

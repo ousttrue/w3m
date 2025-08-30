@@ -1,5 +1,6 @@
 #include "file.h"
 #include "ui.h"
+#include "mysignal.h"
 #include "map.h"
 #include "buffer.h"
 #include "rc.h"
