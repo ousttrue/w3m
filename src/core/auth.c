@@ -1,4 +1,5 @@
 #include "auth.h"
+#include "http.h"
 #include "ui.h"
 #include "etc.h"
 #include "url.h"
@@ -39,7 +40,7 @@ Str qstr_unquote(Str s)
 }
 
 void getAuthCookie(struct http_auth* hauth, char* auth_header,
-    TextList* extra_header, ParsedURL* pu, HRequest* hr,
+    TextList* extra_header, ParsedURL* pu, struct HttpRequest* hr,
     FormList* request,
     volatile Str* uname, volatile Str* pwd)
 {
@@ -162,7 +163,7 @@ enum {
 };
 
 Str AuthDigestCred(struct http_auth* ha, Str uname, Str pw, ParsedURL* pu,
-    HRequest* hr, FormList* request)
+    struct HttpRequest* hr, FormList* request)
 {
     Str tmp, a1buf, a2buf, rd, s;
     unsigned char md5[MD5_DIGEST_LENGTH + 1];

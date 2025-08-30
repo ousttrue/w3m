@@ -1,6 +1,8 @@
 #include "w3m.h"
+#include "version.h"
 #define MAINPROGRAM
 #include "buffer.h"
+#include "http.h"
 #include "mysignal.h"
 #include "proxy.h"
 #include "map.h"

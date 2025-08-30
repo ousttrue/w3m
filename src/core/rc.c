@@ -2,7 +2,9 @@
  * Initialization file etc.
  */
 #include "rc.h"
+#include "version.h"
 #include "etc.h"
+#include "http.h"
 #include "proxy.h"
 #include "display.h"
 #include "mailcap.h"

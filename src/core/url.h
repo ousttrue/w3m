@@ -20,15 +20,9 @@ typedef struct _ParsedURL {
 
 struct form_list;
 
-typedef struct http_request {
-    char command;
-    char flag;
-    char* referer;
-    struct form_list* request;
-} HRequest;
-
 struct _Buffer;
 
+Str _parsedURL2Str(ParsedURL* pu, int pass, int user, int label);
 void parseURL(char* url, ParsedURL* p_url, ParsedURL* current);
 void copyParsedURL(ParsedURL* p, const ParsedURL* q);
 void parseURL2(char* url, ParsedURL* pu, ParsedURL* current);
@@ -44,8 +38,7 @@ char* url_decode2(const char* url, const struct _Buffer* buf);
 ParsedURL* baseURL(struct _Buffer* buf);
 int openSocket(char* hostname, char* remoteport_name,
     unsigned short remoteport_num);
-Str HTTPrequestMethod(HRequest* hr);
-Str HTTPrequestURI(ParsedURL* pu, HRequest* hr);
+
 void initMimeTypes(void);
 TextList* make_domain_list(char* domain_list);
 int check_no_proxy(char* domain);

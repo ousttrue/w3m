@@ -3,7 +3,7 @@
 #include "textlist.h"
 
 struct _ParsedURL;
-struct http_request;
+struct HttpRequest;
 struct form_list;
 
 enum {
@@ -23,13 +23,13 @@ struct http_auth {
     char* scheme;
     struct auth_param* param;
     Str (*cred)(struct http_auth* ha, Str uname, Str pw, struct _ParsedURL* pu,
-        struct http_request* hr, struct form_list* request);
+        struct HttpRequest* hr, struct form_list* request);
 };
 void getAuthCookie(struct http_auth* hauth, char* auth_header,
-    TextList* extra_header, struct _ParsedURL* pu, struct http_request* hr,
+    TextList* extra_header, struct _ParsedURL* pu, struct HttpRequest* hr,
     struct form_list* request,
     volatile Str* uname, volatile Str* pwd);
 
 Str AuthDigestCred(struct http_auth* ha, Str uname, Str pw,
-    struct _ParsedURL* pu, struct http_request* hr, struct form_list* request);
+    struct _ParsedURL* pu, struct HttpRequest* hr, struct form_list* request);
 Str qstr_unquote(Str s);

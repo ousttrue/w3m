@@ -1,4 +1,5 @@
 #include "file.h"
+#include "http.h"
 #include "ui.h"
 #include "mysignal.h"
 #include "map.h"
@@ -1016,7 +1017,7 @@ extract_auth_param(char* q, struct auth_param* auth)
 
 static Str
 AuthBasicCred(struct http_auth* ha, Str uname, Str pw, ParsedURL* pu,
-    HRequest* hr, FormList* request)
+    struct HttpRequest* hr, FormList* request)
 {
     Str s = Strdup(uname);
     Strcat_char(s, ':');
@@ -1200,7 +1201,7 @@ loadGeneralFile(char* path, ParsedURL* volatile current, char* referer,
     Str tmp;
     Str volatile page = NULL;
     wc_ces charset = WC_CES_US_ASCII;
-    HRequest hr;
+    struct HttpRequest hr;
     ParsedURL* volatile auth_pu;
 
     tpath = path;

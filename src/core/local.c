@@ -1,5 +1,7 @@
 #include "fm.h"
+#include "version.h"
 #include "etc.h"
+#include "http.h"
 #include "screen.h"
 #include <string.h>
 #include <stdio.h>

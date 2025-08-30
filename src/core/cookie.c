@@ -9,6 +9,7 @@
 
 #include "cookie.h"
 #include "fm.h"
+#include "http.h"
 #include "etc.h"
 #include "html.h"
 #include "rc.h"
