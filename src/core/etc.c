@@ -1,5 +1,6 @@
 #include "etc.h"
 #include "display.h"
+#include "message.h"
 #include "rc.h"
 #include "fm.h"
 #include "ctrlcode.h"
@@ -999,7 +1000,7 @@ FILE* openSecretFile(char* fname)
     if (disable_secret_security_check)
         /* do nothing */;
     else if ((st.st_mode & (S_IRWXG | S_IRWXO)) != 0) {
-        message(Sprintf(FILE_IS_READABLE_MSG, fname)->ptr, 0, 0);
+        message(MSG_INFO, Sprintf(FILE_IS_READABLE_MSG, fname)->ptr);
         // refresh(ttyWriter());
         sleep(2);
         return NULL;

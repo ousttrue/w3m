@@ -10,7 +10,7 @@
 #include "regex.h"
 #include "rc.h"
 #include "ctrlcode.h"
-#include "display.h"
+#include "message.h"
 
 #include "history.h"
 #include "funcname.c"
@@ -22,7 +22,7 @@ static char keymap_initialized = FALSE;
 static struct stat sys_current_keymap_file;
 static struct stat current_keymap_file;
 
-void setKeymap(char* p, int lineno, int verbose)
+void setKeymap(char* p, int lineno)
 {
     unsigned char* map = NULL;
     char *s, *emsg;
@@ -37,9 +37,7 @@ void setKeymap(char* p, int lineno, int verbose)
         else
             /* FIXME: gettextize? */
             emsg = Sprintf("defkey: unknown key '%s'", s)->ptr;
-        record_err_message(emsg);
-        if (verbose)
-            disp_message_nsec(emsg, FALSE, 1, TRUE, FALSE);
+        message(MSG_ERR, emsg);
         return;
     }
     s = getWord(&p);
@@ -51,9 +49,7 @@ void setKeymap(char* p, int lineno, int verbose)
         else
             /* FIXME: gettextize? */
             emsg = Sprintf("defkey: invalid command '%s'", s)->ptr;
-        record_err_message(emsg);
-        if (verbose)
-            disp_message_nsec(emsg, FALSE, 1, TRUE, FALSE);
+        message(MSG_ERR, emsg);
         return;
     }
     if (c & K_MULTI) {
@@ -150,20 +146,18 @@ interpret_keymap(FILE* kf, struct stat* current, int force)
             if (*s)
                 charset = wc_guess_charset(s, charset);
             continue;
-        }
-        else if (!strcmp(s, "verbose")) {
+        } else if (!strcmp(s, "verbose")) {
             s = getWord(&p);
             if (*s)
                 verbose = str_to_bool(s, verbose);
             continue;
         } else { /* error */
             emsg = Sprintf("line %d: syntax error '%s'", lineno, s)->ptr;
-            record_err_message(emsg);
             if (verbose)
-                disp_message_nsec(emsg, FALSE, 1, TRUE, FALSE);
+                message(MSG_ERR, emsg);
             continue;
         }
-        setKeymap(p, lineno, verbose);
+        setKeymap(p, lineno);
     }
 }
 
@@ -485,4 +479,3 @@ last:
     *str = p;
     return word;
 }
-

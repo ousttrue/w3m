@@ -211,7 +211,6 @@ extern int writeBufferCache(Buffer* buf);
 extern int readBufferCache(Buffer* buf);
 extern void addChar(char c, Lineprop mode);
 extern void addMChar(char* c, Lineprop mode, size_t len);
-extern void record_err_message(char* s);
 extern Buffer* message_list_panel(void);
 
 #define disp_message_nomouse disp_message
@@ -433,18 +432,6 @@ extern void reMark(void);
 #define menuMs nulcmd
 #define tabMs nulcmd
 #define closeTMs nulcmd
-
-extern char* searchKeyData(void);
-
-extern void setKeymap(char* p, int lineno, int verbose);
-extern void initKeymap(int force);
-extern int getFuncList(char* id);
-extern int getKey(char* s);
-extern char* getKeyData(int key);
-extern char* getWord(char** str);
-extern char* getQWord(char** str);
-struct regex;
-extern char* getRegexWord(const char** str, struct regex** regex_ret);
 
 extern void new_menu(Menu* menu, MenuItem* item);
 extern void geom_menu(Menu* menu, int x, int y, int mselect);

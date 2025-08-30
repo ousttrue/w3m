@@ -1,4 +1,5 @@
 #include "search.h"
+#include "message.h"
 #include "fm.h"
 #include "display.h"
 #include "regex.h"
@@ -31,7 +32,7 @@ int forwardSearch(Buffer* buf, char* str)
     int pos;
 
         if ((p = regexCompile(str, IgnoreCase)) != NULL) {
-        message(p, 0, 0);
+        message(MSG_INFO, p);
         return SR_NOTFOUND;
     }
     l = buf->currentLine;
@@ -100,7 +101,7 @@ int backwardSearch(Buffer* buf, char* str)
     int pos;
 
         if ((p = regexCompile(str, IgnoreCase)) != NULL) {
-        message(p, 0, 0);
+        message(MSG_INFO, p);
         return SR_NOTFOUND;
     }
     l = buf->currentLine;

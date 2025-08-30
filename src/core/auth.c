@@ -1,9 +1,8 @@
 #include "auth.h"
-#include "display.h"
+#include "message.h"
 #include "url.h"
 #include "fm.h"
 #include "ctrlcode.h"
-#include "tty.h"
 
 #include <openssl/md5.h>
 
@@ -70,7 +69,7 @@ void getAuthCookie(struct http_auth* hauth, char* auth_header,
         /* This means that *-Authenticate: header is received after
          * Authorization: header is sent to the server.
          */
-        message("Wrong username or password", 0, 0);
+        message(MSG_INFO, "Wrong username or password");
         // refresh(ttyWriter());
         sleep(1);
         /* delete Authenticate: header from extra_header */
@@ -89,7 +88,7 @@ void getAuthCookie(struct http_auth* hauth, char* auth_header,
         sleep(2);
 
         char* pp;
-        term_raw();
+        // term_raw();
         /* FIXME: gettextize? */
         if ((pp = inputStr(getUI(), Sprintf("Username for %s: ", realm)->ptr,
                  NULL))
@@ -103,7 +102,7 @@ void getAuthCookie(struct http_auth* hauth, char* auth_header,
             return;
         }
         *pwd = Str_conv_to_system(Strnew_charp(pp));
-        term_cbreak();
+        // term_cbreak();
     }
     ss = hauth->cred(hauth, *uname, *pwd, pu, hr, request);
     if (ss) {

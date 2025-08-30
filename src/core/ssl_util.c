@@ -1,6 +1,7 @@
 #include "ssl_util.h"
 #include "file.h"
 #include "display.h"
+#include "message.h"
 #include "screen.h"
 #include "indep.h"
 #include "gc/gc.h"
@@ -276,12 +277,12 @@ Str ssl_get_certificate(SSL* ssl, char* hostname)
             /* FIXME: gettextize? */
             char* e = "This SSL session was rejected "
                       "to prevent security violation: no peer certificate";
-            disp_err_message(e, false);
+            message(MSG_ERR, e);
             free_ssl_ctx();
             return NULL;
         }
         if (amsg)
-            disp_err_message(amsg->ptr, false);
+            message(MSG_ERR, amsg->ptr);
         ssl_accept_this_site(hostname);
         /* FIXME: gettextize? */
         s = amsg ? amsg : Strnew_charp("valid certificate");
@@ -312,7 +313,7 @@ Str ssl_get_certificate(SSL* ssl, char* hostname)
             } else {
                 /* FIXME: gettextize? */
                 char* e = Sprintf("This SSL session was rejected: %s", em)->ptr;
-                disp_err_message(e, false);
+                message(MSG_ERR, e);
                 free_ssl_ctx();
                 return NULL;
             }
@@ -338,13 +339,13 @@ Str ssl_get_certificate(SSL* ssl, char* hostname)
             /* FIXME: gettextize? */
             char* e = "This SSL session was rejected "
                       "to prevent security violation";
-            disp_err_message(e, false);
+            message(MSG_ERR, e);
             free_ssl_ctx();
             return NULL;
         }
     }
     if (amsg)
-        disp_err_message(amsg->ptr, false);
+        message(MSG_ERR, amsg->ptr);
     ssl_accept_this_site(hostname);
     /* FIXME: gettextize? */
     s = amsg ? amsg : Strnew_charp("valid certificate");
@@ -515,10 +516,7 @@ eend:
     if (handle)
         SSL_free(handle);
     /* FIXME: gettextize? */
-    disp_err_message(Sprintf("SSL error: %s, a workaround might be: w3m -insecure",
-                         ERR_error_string(ERR_get_error(), NULL))
-                         ->ptr,
-        false);
+    message(MSG_ERR, Sprintf("SSL error: %s, a workaround might be: w3m -insecure", ERR_error_string(ERR_get_error(), NULL)) ->ptr);
     return NULL;
 }
 

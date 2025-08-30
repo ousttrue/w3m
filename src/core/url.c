@@ -1,5 +1,6 @@
 #include "url.h"
 #include "display.h"
+#include "message.h"
 #include "fm.h"
 #include "ssl_util.h"
 #include "file.h"
@@ -232,7 +233,7 @@ int openSocket(char* const hostname,
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
 
     /* FIXME: gettextize? */
-    message(Sprintf("Opening socket...")->ptr, 0, 0);
+    message(MSG_INFO, Sprintf("Opening socket...")->ptr);
     // refresh(ttyWriter());
 
     if (sigsetjmp(AbortLoading, 1) != 0) {
@@ -328,7 +329,7 @@ int openSocket(char* const hostname,
         hostaddr.sin_family = AF_INET;
         hostaddr.sin_port = s_port;
 
-        message(Sprintf("Connecting to %s", hostname)->ptr, 0, 0);
+        message(MSG_INFO, Sprintf("Connecting to %s", hostname)->ptr);
         refresh(ttyWriter());
 
         if (connect(sock, (struct sockaddr*)&hostaddr,
@@ -367,7 +368,7 @@ int openSocket(char* const hostname,
                 (adr >> 16) & 0xff, (adr >> 8) & 0xff, adr & 0xff);
 #endif
 
-            message(Sprintf("Connecting to %s", hostname)->ptr, 0, 0);
+            message(MSG_INFO, Sprintf("Connecting to %s", hostname)->ptr);
             refresh(ttyWriter());
 
             if ((result = connect(sock, (struct sockaddr*)&hostaddr,

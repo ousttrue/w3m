@@ -1,4 +1,5 @@
 #include "image.h"
+#include "message.h"
 #include "display.h"
 #include "term_renderer.h"
 #include "rc.h"
@@ -384,8 +385,7 @@ showImageProgress(Buffer* buf)
     if (n) {
         if (enable_inline_image && n == l)
             drawImage();
-        message(Sprintf("%d/%d images loaded", l, n)->ptr,
-            buf->cursorX + buf->rootX, buf->cursorY + buf->rootY);
+        message(MSG_INFO, Sprintf("%d/%d images loaded", l, n)->ptr);
         // refresh(ttyWriter());
     }
 }

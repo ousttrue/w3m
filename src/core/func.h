@@ -16,4 +16,15 @@ typedef struct _FuncList {
     void (*func)();
 } FuncList;
 
+extern char* searchKeyData(void);
+extern void setKeymap(char* p, int lineno);
+extern void initKeymap(int force);
+extern int getFuncList(char* id);
+extern int getKey(char* s);
+extern char* getKeyData(int key);
+extern char* getWord(char** str);
+extern char* getQWord(char** str);
+struct regex;
+extern char* getRegexWord(const char** str, struct regex** regex_ret);
+
 #endif /* not FUNC_H */

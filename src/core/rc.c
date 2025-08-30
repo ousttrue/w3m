@@ -4,6 +4,7 @@
  */
 #include "rc.h"
 #include "display.h"
+#include "message.h"
 #include "screen.h"
 #include "image.h"
 #include "ssl_util.h"
@@ -1388,11 +1389,11 @@ void panel_set_option(struct parsed_tagarg* arg)
     Str s = Strnew(), tmp;
 
     if (config_file == NULL) {
-        disp_message("There's no config file... config not saved", FALSE);
+        message(MSG_INFO, "There's no config file... config not saved");
     } else {
         f = fopen(config_file, "wt");
         if (f == NULL) {
-            disp_message("Can't write option!", FALSE);
+            message(MSG_INFO, "Can't write option!");
         }
     }
     while (arg) {

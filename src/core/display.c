@@ -1,5 +1,6 @@
 #include "display.h"
 #include "image.h"
+#include "message.h"
 #include "symbol.h"
 #include "file.h"
 #include "w3m.h"
@@ -395,12 +396,12 @@ struct Frame* displayBuffer()
         Strcat_charp(msg, "\tNo Line");
     }
     if (delayed_msg != NULL) {
-        disp_message(delayed_msg, FALSE);
+        message(MSG_INFO, delayed_msg);
         delayed_msg = NULL;
         // refresh(ttyWriter());
     }
     standout(vt);
-    message(msg->ptr, buf->cursorX + buf->rootX, buf->cursorY + buf->rootY);
+    message(MSG_INFO, msg->ptr);
     standend(vt);
     term_title(conv_to_system(buf->buffername));
     // refresh(ttyWriter());
@@ -976,17 +977,6 @@ void addMChar(char* p, Lineprop mode, size_t len)
         addmch(vt, p, len);
 }
 
-static GeneralList* message_list = NULL;
-
-void record_err_message(char* s)
-{
-    if (!message_list)
-        message_list = newGeneralList();
-    if (message_list->nitem >= getScreen()->ROWS)
-        popValue(message_list);
-    pushValue(message_list, allocStr(s, -1));
-}
-
 /*
  * List of error messages
  */
@@ -1000,47 +990,11 @@ message_list_panel(void)
     Strcat_charp(tmp,
         "<html><head><title>List of error messages</title></head><body>"
         "<h1>List of error messages</h1><table cellpadding=0>\n");
-    if (message_list)
-        for (p = message_list->last; p; p = p->prev)
-            Strcat_m_charp(tmp, "<tr><td><pre>", html_quote(p->ptr),
-                "</pre></td></tr>\n", NULL);
-    else
-        Strcat_charp(tmp, "<tr><td>(no message recorded)</td></tr>\n");
+
+    concatMessageList(tmp);
+
     Strcat_charp(tmp, "</table></body></html>");
     return loadHTMLString(tmp);
-}
-
-void message(char* s, int return_x, int return_y)
-{
-    struct VirtualTerm* vt = getScreen();
-    move(vt, getScreen()->ROWS - 1, 0);
-    addnstr(vt, s, getScreen()->COLS - 1);
-    clrtoeolx(vt);
-    move(vt, return_y, return_x);
-}
-
-void disp_err_message(char* s, int redraw_current)
-{
-    record_err_message(s);
-    disp_message(s, redraw_current);
-}
-
-void disp_message_nsec(char* s, int redraw_current, int sec, int purge, int mouse)
-{
-    if (QuietMessage)
-        return;
-    if (Currentbuf != NULL)
-        message(s, Currentbuf->cursorX + Currentbuf->rootX,
-            Currentbuf->cursorY + Currentbuf->rootY);
-    else
-        message(s, getScreen()->ROWS - 1, 0);
-    // refresh(ttyWriter());
-    sleep_till_anykey(sec * 1000, purge);
-}
-
-void disp_message(char* s, int redraw_current)
-{
-    disp_message_nsec(s, redraw_current, 10, FALSE, TRUE);
 }
 
 void set_delayed_message(char* s)
