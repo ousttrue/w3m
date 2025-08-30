@@ -1,5 +1,5 @@
 #include "file.h"
-#include "message.h"
+#include "ui.h"
 #include "buffer.h"
 #include "str_util.h"
 #include "display.h"
@@ -644,7 +644,7 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
                 p++;
             http_response_code = atoi(p);
 
-            message(MSG_INFO, lineBuf2->ptr);
+            message(getUI(), MSG_INFO, lineBuf2->ptr);
             // refresh(ttyWriter());
         }
         if (!strncasecmp(lineBuf2->ptr, "content-transfer-encoding:", 26)) {
@@ -752,9 +752,9 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
                 int err;
                 if (show_cookie) {
                     if (flag & COO_SECURE)
-                        message(MSG_INFO, "Received a secured cookie");
+                        message(getUI(), MSG_INFO, "Received a secured cookie");
                     else
-                        message(MSG_INFO, Sprintf("Received cookie: %s=%s", name->ptr, value->ptr)->ptr);
+                        message(getUI(), MSG_INFO, Sprintf("Received cookie: %s=%s", name->ptr, value->ptr)->ptr);
                 }
                 err = add_cookie(pu, name, value, expires, domain, path, flag,
                     comment, version, port, commentURL);
@@ -783,9 +783,9 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
                         else
                             emsg = "This cookie was rejected to prevent security violation.";
                         if (show_cookie)
-                            message(MSG_ERR, emsg);
+                            message(getUI(), MSG_ERR, emsg);
                     } else if (show_cookie)
-                        message(MSG_INFO, Sprintf("Accepting invalid cookie: %s=%s", name->ptr, value->ptr)->ptr);
+                        message(getUI(), MSG_INFO, Sprintf("Accepting invalid cookie: %s=%s", name->ptr, value->ptr)->ptr);
                 }
             }
         } else if (!strncasecmp(lineBuf2->ptr, "w3m-control:", 12) && uf->scheme == SCM_LOCAL_CGI) {
@@ -1143,13 +1143,13 @@ checkRedirection(ParsedURL* pu)
         /* FIXME: gettextize? */
         tmp = Sprintf("Number of redirections exceeded %d at %s",
             FollowRedirection, parsedURL2Str(pu)->ptr);
-        message(MSG_ERR, tmp->ptr);
+        message(getUI(), MSG_ERR, tmp->ptr);
         return FALSE;
     } else if (nredir_size > 0 && (same_url_p(pu, &puv[(nredir - 1) % nredir_size]) || (!(nredir % 2) && same_url_p(pu, &puv[(nredir / 2) % nredir_size])))) {
         /* FIXME: gettextize? */
         tmp = Sprintf("Redirection loop detected (%s)",
             parsedURL2Str(pu)->ptr);
-        message(MSG_ERR, tmp->ptr);
+        message(getUI(), MSG_ERR, tmp->ptr);
         return FALSE;
     }
     if (!puv) {
@@ -1251,7 +1251,7 @@ load_doc: {
         } break;
         case SCM_UNKNOWN:
             /* FIXME: gettextize? */
-            message(MSG_ERR, Sprintf("Unknown URI: %s", parsedURL2Str(&pu)->ptr)->ptr);
+            message(getUI(), MSG_ERR, Sprintf("Unknown URI: %s", parsedURL2Str(&pu)->ptr)->ptr);
             break;
 
         default:
@@ -1291,7 +1291,7 @@ load_doc: {
 
         term_cbreak();
         /* FIXME: gettextize? */
-        message(MSG_INFO, Sprintf("%s contacted. Waiting for reply...", pu.host)->ptr);
+        message(getUI(), MSG_INFO, Sprintf("%s contacted. Waiting for reply...", pu.host)->ptr);
         // refresh(ttyWriter());
 
         if (t_buf == NULL)
@@ -5951,7 +5951,7 @@ void showProgress(clen_t* linelen, clen_t* trbyte)
         } else {
             messages = Sprintf("%7s loaded", fmtrbyte);
         }
-        message(MSG_INFO, messages->ptr);
+        message(getUI(), MSG_INFO, messages->ptr);
         // refresh(ttyWriter());
     }
 }
@@ -6807,14 +6807,14 @@ int _doFileCopy(char* tmpf, char* defstr, int download)
             /* FIXME: gettextize? */
             msg = Sprintf("Can't copy. %s and %s are identical.",
                 conv_from_system(tmpf), conv_from_system(p));
-            message(MSG_ERR, msg->ptr);
+            message(getUI(), MSG_ERR, msg->ptr);
             return -1;
         }
         if (!download) {
             if (_MoveFile(tmpf, p) < 0) {
                 /* FIXME: gettextize? */
                 msg = Sprintf("Can't save to %s", conv_from_system(p));
-                message(MSG_ERR, msg->ptr);
+                message(getUI(), MSG_ERR, msg->ptr);
             }
             return -1;
         }
@@ -6915,13 +6915,13 @@ int doFileSave(URLFile uf, char* defstr)
             /* FIXME: gettextize? */
             msg = Sprintf("Can't save. Load file and %s are identical.",
                 conv_from_system(p));
-            message(MSG_ERR, msg->ptr);
+            message(getUI(), MSG_ERR, msg->ptr);
             return -1;
         }
         /*
          * if (save2tmp(uf, p) < 0) {
          * msg = Sprintf("Can't save to %s", conv_from_system(p));
-         * message(MSG_ERR, msg->ptr);
+         * message(getUI(), MSG_ERR, msg->ptr);
          * }
          */
         lock = tmpfname(TMPF_DFL, ".lock")->ptr;

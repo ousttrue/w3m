@@ -1,6 +1,6 @@
 #include "display.h"
 #include "image.h"
-#include "message.h"
+#include "ui.h"
 #include "symbol.h"
 #include "file.h"
 #include "w3m.h"
@@ -396,12 +396,12 @@ struct Frame* displayBuffer()
         Strcat_charp(msg, "\tNo Line");
     }
     if (delayed_msg != NULL) {
-        message(MSG_INFO, delayed_msg);
+        message(getUI(), MSG_INFO, delayed_msg);
         delayed_msg = NULL;
         // refresh(ttyWriter());
     }
     standout(vt);
-    message(MSG_INFO, msg->ptr);
+    message(getUI(), MSG_INFO, msg->ptr);
     standend(vt);
     term_title(conv_to_system(buf->buffername));
     // refresh(ttyWriter());

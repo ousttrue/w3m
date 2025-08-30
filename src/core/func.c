@@ -10,7 +10,7 @@
 #include "regex.h"
 #include "rc.h"
 #include "ctrlcode.h"
-#include "message.h"
+#include "ui.h"
 
 #include "history.h"
 #include "funcname.c"
@@ -37,7 +37,7 @@ void setKeymap(char* p, int lineno)
         else
             /* FIXME: gettextize? */
             emsg = Sprintf("defkey: unknown key '%s'", s)->ptr;
-        message(MSG_ERR, emsg);
+        message(getUI(), MSG_ERR, emsg);
         return;
     }
     s = getWord(&p);
@@ -49,7 +49,7 @@ void setKeymap(char* p, int lineno)
         else
             /* FIXME: gettextize? */
             emsg = Sprintf("defkey: invalid command '%s'", s)->ptr;
-        message(MSG_ERR, emsg);
+        message(getUI(), MSG_ERR, emsg);
         return;
     }
     if (c & K_MULTI) {
@@ -154,7 +154,7 @@ interpret_keymap(FILE* kf, struct stat* current, int force)
         } else { /* error */
             emsg = Sprintf("line %d: syntax error '%s'", lineno, s)->ptr;
             if (verbose)
-                message(MSG_ERR, emsg);
+                message(getUI(), MSG_ERR, emsg);
             continue;
         }
         setKeymap(p, lineno);

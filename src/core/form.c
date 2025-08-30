@@ -1,7 +1,8 @@
 /*
  * HTML forms
  */
-#include "message.h"
+#include "form.h"
+#include "ui.h"
 #include "etc.h"
 #include "fm.h"
 #include "parsetag.h"
@@ -528,7 +529,7 @@ void input_textarea(FormItemList* fi)
     f = fopen(tmpf, "w");
     if (f == NULL) {
         /* FIXME: gettextize? */
-        message(MSG_ERR, "Can't open temporary file");
+        message(getUI(), MSG_ERR, "Can't open temporary file");
         return;
     }
     if (fi->value)
@@ -543,7 +544,7 @@ void input_textarea(FormItemList* fi)
     f = fopen(tmpf, "r");
     if (f == NULL) {
         /* FIXME: gettextize? */
-        message(MSG_ERR, "Can't open temporary file");
+        message(getUI(), MSG_ERR, "Can't open temporary file");
         goto input_end;
     }
     fi->value = Strnew();

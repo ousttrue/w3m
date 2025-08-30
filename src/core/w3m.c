@@ -1,7 +1,7 @@
 #include "w3m.h"
 #define MAINPROGRAM
 #include "buffer.h"
-#include "message.h"
+#include "ui.h"
 #include "str_util.h"
 #include "file.h"
 #include "history.h"
@@ -807,11 +807,11 @@ disp_srchresult(int result, char* prompt, char* str)
     if (str == NULL)
         str = "";
     if (result & SR_NOTFOUND)
-        message(MSG_INFO, Sprintf("Not found: %s", str)->ptr);
+        message(getUI(), MSG_INFO, Sprintf("Not found: %s", str)->ptr);
     else if (result & SR_WRAPPED)
-        message(MSG_INFO, Sprintf("Search wrapped: %s", str)->ptr);
+        message(getUI(), MSG_INFO, Sprintf("Search wrapped: %s", str)->ptr);
     else if (show_srch_str)
-        message(MSG_INFO, Sprintf("%s%s", prompt, str)->ptr);
+        message(getUI(), MSG_INFO, Sprintf("%s%s", prompt, str)->ptr);
 }
 
 static int
@@ -953,7 +953,7 @@ srch_nxtprv(int reverse)
 
     if (searchRoutine == NULL) {
         /* FIXME: gettextize? */
-        message(MSG_INFO, "No previous regular expression");
+        message(getUI(), MSG_INFO, "No previous regular expression");
         return;
     }
     if (reverse != 0)
@@ -1102,14 +1102,14 @@ DEFUN(pipeBuf, PIPE_BUF, "Pipe current buffer through a shell command and displa
     f = fopen(tmpf, "w");
     if (f == NULL) {
         /* FIXME: gettextize? */
-        message(MSG_INFO, Sprintf("Can't save buffer to %s", cmd)->ptr);
+        message(getUI(), MSG_INFO, Sprintf("Can't save buffer to %s", cmd)->ptr);
         return;
     }
     saveBuffer(Currentbuf, f, TRUE);
     fclose(f);
     buf = getpipe(myExtCommand(cmd, shell_quote(tmpf), TRUE)->ptr);
     if (buf == NULL) {
-        message(MSG_INFO, "Execution failed");
+        message(getUI(), MSG_INFO, "Execution failed");
         return;
     } else {
         buf->filename = cmd;
@@ -1143,7 +1143,7 @@ DEFUN(pipesh, PIPE_SHELL, "Execute shell command and display output")
     }
     buf = getpipe(cmd);
     if (buf == NULL) {
-        message(MSG_INFO, "Execution failed");
+        message(getUI(), MSG_INFO, "Execution failed");
         return;
     } else {
         buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
@@ -1177,7 +1177,7 @@ DEFUN(readsh, READ_SHELL, "Execute shell command and display output")
     term_raw();
     if (buf == NULL) {
         /* FIXME: gettextize? */
-        message(MSG_INFO, "Execution failed");
+        message(getUI(), MSG_INFO, "Execution failed");
         return;
     } else {
         buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
@@ -1254,7 +1254,7 @@ cmd_loadfile(char* fn)
     if (buf == NULL) {
         /* FIXME: gettextize? */
         char* emsg = Sprintf("%s not found", conv_from_system(fn))->ptr;
-        message(MSG_ERR, emsg);
+        message(getUI(), MSG_ERR, emsg);
     } else if (buf != NO_BUFFER) {
         pushBuffer(buf);
     }
@@ -1708,7 +1708,7 @@ DEFUN(editBf, EDIT, "Edit local source")
         (Currentbuf->type == NULL && Currentbuf->edit == NULL) || /* Reading shell */
         Currentbuf->real_scheme != SCM_LOCAL || !strcmp(Currentbuf->currentURL.file, "-") /* file is std input  */
     ) {
-        message(MSG_ERR, "Can't edit other than local file");
+        message(getUI(), MSG_ERR, "Can't edit other than local file");
         return;
     }
     if (Currentbuf->edit)
@@ -1732,7 +1732,7 @@ DEFUN(editScr, EDIT_SCREEN, "Edit rendered copy of document")
     f = fopen(tmpf, "w");
     if (f == NULL) {
         /* FIXME: gettextize? */
-        message(MSG_ERR, Sprintf("Can't open %s", tmpf)->ptr);
+        message(getUI(), MSG_ERR, Sprintf("Can't open %s", tmpf)->ptr);
         return;
     }
     saveBuffer(Currentbuf, f, TRUE);
@@ -1785,7 +1785,7 @@ DEFUN(nextMk, NEXT_MARK, "Go to the next mark")
         i = 0;
     }
     /* FIXME: gettextize? */
-    message(MSG_INFO, "No mark exist after here");
+    message(getUI(), MSG_INFO, "No mark exist after here");
 }
 
 /* Go to previous mark */
@@ -1820,7 +1820,7 @@ DEFUN(prevMk, PREV_MARK, "Go to the previous mark")
             i = l->len - 1;
     }
     /* FIXME: gettextize? */
-    message(MSG_INFO, "No mark exist before here");
+    message(getUI(), MSG_INFO, "No mark exist before here");
 }
 
 /* Mark place to which the regular expression matches */
@@ -1842,7 +1842,7 @@ DEFUN(reMark, REG_MARK, "Mark all occurences of a pattern")
     }
     str = conv_search_string(str, DisplayCharset);
     if ((str = regexCompile(str, 1)) != NULL) {
-        message(MSG_INFO, str);
+        message(getUI(), MSG_INFO, str);
         return;
     }
     MarkString = str;
@@ -1875,7 +1875,7 @@ loadLink(char* url, char* target, char* referer, FormList* request)
     ParsedURL *base, pu;
     const int* no_referer_ptr;
 
-    message(MSG_INFO, Sprintf("loading %s", url)->ptr);
+    message(getUI(), MSG_INFO, Sprintf("loading %s", url)->ptr);
     // refresh(ttyWriter());
 
     no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->currentURL);
@@ -1887,7 +1887,7 @@ loadLink(char* url, char* target, char* referer, FormList* request)
     buf = loadGeneralFile(url, baseURL(Currentbuf), referer, flag, request);
     if (buf == NULL) {
         char* emsg = Sprintf("Can't load %s", url)->ptr;
-        message(MSG_ERR, emsg);
+        message(getUI(), MSG_ERR, emsg);
         return NULL;
     }
 
@@ -1922,7 +1922,7 @@ gotoLabel(char* label)
     al = searchURLLabel(Currentbuf, label);
     if (al == NULL) {
         /* FIXME: gettextize? */
-        message(MSG_INFO, Sprintf("%s is not found", label)->ptr);
+        message(getUI(), MSG_INFO, Sprintf("%s is not found", label)->ptr);
         return;
     }
     buf = newBuffer(Currentbuf->width);
@@ -1959,7 +1959,7 @@ handleMailto(char* url)
 #else
     if (!non_null(Mailer)) {
         /* FIXME: gettextize? */
-        message(MSG_ERR, "no mailer is specified");
+        message(getUI(), MSG_ERR, "no mailer is specified");
         return 1;
     }
 #endif
@@ -2047,13 +2047,13 @@ DEFUN(followI, VIEW_IMAGE, "Display image in viewer")
     if (a == NULL)
         return;
     /* FIXME: gettextize? */
-    message(MSG_INFO, Sprintf("loading %s", a->url)->ptr);
+    message(getUI(), MSG_INFO, Sprintf("loading %s", a->url)->ptr);
     // refresh(ttyWriter());
     buf = loadGeneralFile(a->url, baseURL(Currentbuf), NULL, 0, NULL);
     if (buf == NULL) {
         /* FIXME: gettextize? */
         char* emsg = Sprintf("Can't load %s", a->url)->ptr;
-        message(MSG_ERR, emsg);
+        message(getUI(), MSG_ERR, emsg);
     } else if (buf != NO_BUFFER) {
         pushBuffer(buf);
     }
@@ -2284,7 +2284,7 @@ _followForm(int submit)
             goto do_submit;
         if (fi->readonly)
             /* FIXME: gettextize? */
-            message(MSG_INFO, "Read only field!");
+            message(getUI(), MSG_INFO, "Read only field!");
         /* FIXME: gettextize? */
         p = inputStrHist(getUI(), "TEXT:", fi->value ? fi->value->ptr : NULL, TextHist);
         if (p == NULL || fi->readonly)
@@ -2299,7 +2299,7 @@ _followForm(int submit)
             goto do_submit;
         if (fi->readonly)
             /* FIXME: gettextize? */
-            message(MSG_INFO, "Read only field!");
+            message(getUI(), MSG_INFO, "Read only field!");
         /* FIXME: gettextize? */
         p = inputFilenameHist(getUI(), "Filename:", fi->value ? fi->value->ptr : NULL,
             NULL);
@@ -2315,7 +2315,7 @@ _followForm(int submit)
             goto do_submit;
         if (fi->readonly) {
             /* FIXME: gettextize? */
-            message(MSG_INFO, "Read only field!");
+            message(getUI(), MSG_INFO, "Read only field!");
             break;
         }
         /* FIXME: gettextize? */
@@ -2333,7 +2333,7 @@ _followForm(int submit)
             goto do_submit;
         if (fi->readonly)
             /* FIXME: gettextize? */
-            message(MSG_INFO, "Read only field!");
+            message(getUI(), MSG_INFO, "Read only field!");
         input_textarea(fi);
         formUpdateBuffer(a, Currentbuf, fi);
         break;
@@ -2342,7 +2342,7 @@ _followForm(int submit)
             goto do_submit;
         if (fi->readonly) {
             /* FIXME: gettextize? */
-            message(MSG_INFO, "Read only field!");
+            message(getUI(), MSG_INFO, "Read only field!");
             break;
         }
         formRecheckRadio(a, Currentbuf, fi);
@@ -2352,7 +2352,7 @@ _followForm(int submit)
             goto do_submit;
         if (fi->readonly) {
             /* FIXME: gettextize? */
-            message(MSG_INFO, "Read only field!");
+            message(getUI(), MSG_INFO, "Read only field!");
             break;
         }
         fi->checked = !fi->checked;
@@ -2415,7 +2415,7 @@ _followForm(int submit)
         } else if ((fi->parent->method == FORM_METHOD_INTERNAL && (!Strcmp_charp(fi->parent->action, "map") || !Strcmp_charp(fi->parent->action, "none"))) || Currentbuf->bufferprop & BP_INTERNAL) { /* internal */
             do_internal(tmp2->ptr, tmp->ptr);
         } else {
-            message(MSG_ERR, "Can't send form because of illegal method.");
+            message(getUI(), MSG_ERR, "Can't send form because of illegal method.");
         }
         break;
     case FORM_INPUT_RESET:
@@ -2876,7 +2876,7 @@ DEFUN(backBf, BACK, "Close current buffer and return to the one below in stack")
 {
     if (!checkBackBuffer(Currentbuf)) {
         /* FIXME: gettextize? */
-        message(MSG_INFO, "Can't go back...");
+        message(getUI(), MSG_INFO, "Can't go back...");
         return;
     }
 
@@ -2903,7 +2903,7 @@ cmd_loadURL(char* url, ParsedURL* current, char* referer, FormList* request)
     if (buf == NULL) {
         /* FIXME: gettextize? */
         char* emsg = Sprintf("Can't load %s", conv_from_system(url))->ptr;
-        message(MSG_ERR, emsg);
+        message(getUI(), MSG_ERR, emsg);
     } else if (buf != NO_BUFFER) {
         pushBuffer(buf);
     }
@@ -3003,7 +3003,7 @@ static void
 cmd_loadBuffer(Buffer* buf, int prop, int linkid)
 {
     if (buf == NULL) {
-        message(MSG_ERR, "Can't load string");
+        message(getUI(), MSG_ERR, "Can't load string");
     } else if (buf != NO_BUFFER) {
         buf->bufferprop |= (BP_INTERNAL | prop);
         if (!(buf->bufferprop & BP_NO_URL))
@@ -3262,7 +3262,7 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document")
     if (f == NULL) {
         /* FIXME: gettextize? */
         char* emsg = Sprintf("Can't open %s", conv_from_system(file))->ptr;
-        message(MSG_ERR, emsg);
+        message(getUI(), MSG_ERR, emsg);
         return;
     }
     saveBuffer(Currentbuf, f, TRUE);
@@ -3338,7 +3338,7 @@ disp:
         offset = (n - 1) * (getCols() - 1);
     while (offset < s->length && p[offset] & PC_WCHAR2)
         offset++;
-    message(MSG_INFO, &s->ptr[offset]);
+    message(getUI(), MSG_INFO, &s->ptr[offset]);
 }
 
 /* peek URL */
@@ -3390,7 +3390,7 @@ DEFUN(curURL, PEEK, "Show current address")
         offset = (n - 1) * (getCols() - 1);
     while (offset < s->length && p[offset] & PC_WCHAR2)
         offset++;
-    message(MSG_INFO, &s->ptr[offset]);
+    message(getUI(), MSG_INFO, &s->ptr[offset]);
 }
 /* view HTML source */
 
@@ -3485,13 +3485,13 @@ DEFUN(reload, RELOAD, "Load current document anew")
             return;
         }
         /* FIXME: gettextize? */
-        message(MSG_ERR, "Can't reload...");
+        message(getUI(), MSG_ERR, "Can't reload...");
         return;
     }
     if (Currentbuf->currentURL.scheme == SCM_LOCAL && !strcmp(Currentbuf->currentURL.file, "-")) {
         /* file is std input */
         /* FIXME: gettextize? */
-        message(MSG_ERR, "Can't reload stdin");
+        message(getUI(), MSG_ERR, "Can't reload stdin");
         return;
     }
     copyBuffer(&sbuf, Currentbuf);
@@ -3512,7 +3512,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
     }
     url = parsedURL2Str(&Currentbuf->currentURL);
     /* FIXME: gettextize? */
-    message(MSG_INFO, "Reloading...");
+    message(getUI(), MSG_INFO, "Reloading...");
     // refresh(ttyWriter());
     old_charset = DocumentCharset;
     if (Currentbuf->document_charset != WC_CES_US_ASCII)
@@ -3528,7 +3528,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
         unlink(request->body);
     if (buf == NULL) {
         /* FIXME: gettextize? */
-        message(MSG_ERR, "Can't reload...");
+        message(getUI(), MSG_ERR, "Can't reload...");
         return;
     } else if (buf == NO_BUFFER) {
 
@@ -3563,7 +3563,7 @@ _docCSet(wc_ces charset)
     if (Currentbuf->bufferprop & BP_INTERNAL)
         return;
     if (Currentbuf->sourcefile == NULL) {
-        message(MSG_INFO, "Can't reload...");
+        message(getUI(), MSG_INFO, "Can't reload...");
         return;
     }
     Currentbuf->document_charset = charset;
@@ -3700,13 +3700,13 @@ DEFUN(extbrz, EXTERN, "Display using an external browser")
 {
     if (Currentbuf->bufferprop & BP_INTERNAL) {
         /* FIXME: gettextize? */
-        message(MSG_ERR, "Can't browse...");
+        message(getUI(), MSG_ERR, "Can't browse...");
         return;
     }
     if (Currentbuf->currentURL.scheme == SCM_LOCAL && !strcmp(Currentbuf->currentURL.file, "-")) {
         /* file is std input */
         /* FIXME: gettextize? */
-        message(MSG_ERR, "Can't browse stdin");
+        message(getUI(), MSG_ERR, "Can't browse stdin");
         return;
     }
     invoke_browser(parsedURL2Str(&Currentbuf->currentURL)->ptr);
@@ -3754,7 +3754,7 @@ DEFUN(curlno, LINE_INFO, "Display current position in document")
     Strcat_charp(tmp, "  ");
     Strcat_charp(tmp, wc_ces_to_charset_desc(Currentbuf->document_charset));
 
-    message(MSG_INFO, tmp->ptr);
+    message(getUI(), MSG_INFO, tmp->ptr);
 }
 
 DEFUN(dispI, DISPLAY_IMAGE, "Restart loading and drawing of images")
@@ -3785,7 +3785,7 @@ DEFUN(stopI, STOP_IMAGE, "Stop loading and drawing of images")
 
 DEFUN(dispVer, VERSION, "Display the version of w3m")
 {
-    message(MSG_INFO, Sprintf("w3m version %s", w3m_version)->ptr);
+    message(getUI(), MSG_INFO, Sprintf("w3m version %s", w3m_version)->ptr);
 }
 
 DEFUN(wrapToggle, WRAP_TOGGLE, "Toggle wrapping mode in searches")
@@ -3793,11 +3793,11 @@ DEFUN(wrapToggle, WRAP_TOGGLE, "Toggle wrapping mode in searches")
     if (WrapSearch) {
         WrapSearch = FALSE;
         /* FIXME: gettextize? */
-        message(MSG_INFO, "Wrap search off");
+        message(getUI(), MSG_INFO, "Wrap search off");
     } else {
         WrapSearch = TRUE;
         /* FIXME: gettextize? */
-        message(MSG_INFO, "Wrap search on");
+        message(getUI(), MSG_INFO, "Wrap search on");
     }
 }
 
@@ -3865,7 +3865,7 @@ execdict(char* word)
                   ->ptr;
     buf = loadGeneralFile(dictcmd, NULL, NO_REFERER, 0, NULL);
     if (buf == NULL) {
-        message(MSG_INFO, "Execution failed");
+        message(getUI(), MSG_INFO, "Execution failed");
         return;
     } else if (buf != NO_BUFFER) {
         buf->filename = w;
@@ -4092,7 +4092,7 @@ DEFUN(setAlarm, ALARM, "Set alarm")
     if (cmd >= 0) {
         data = getQWord(&data);
         setAlarmEvent(&DefaultAlarm, sec, AL_EXPLICIT, cmd, data);
-        message(MSG_INFO, Sprintf("%dsec %s %s", sec, w3mFuncList[cmd].id, data) ->ptr);
+        message(getUI(), MSG_INFO, Sprintf("%dsec %s %s", sec, w3mFuncList[cmd].id, data) ->ptr);
     } else {
         setAlarmEvent(&DefaultAlarm, 0, AL_UNSET, FUNCNAME_nulcmd, NULL);
     }
@@ -4154,7 +4154,7 @@ DEFUN(reinit, REINIT, "Reload configuration file")
         return;
     }
 
-    message(MSG_ERR, Sprintf("Don't know how to reinitialize '%s'", resource)->ptr);
+    message(getUI(), MSG_ERR, Sprintf("Don't know how to reinitialize '%s'", resource)->ptr);
 }
 
 DEFUN(defKey, DEFINE_KEY, "Define a binding between a key stroke combination and a command")

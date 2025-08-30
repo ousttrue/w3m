@@ -1,5 +1,5 @@
 #include "auth.h"
-#include "message.h"
+#include "ui.h"
 #include "url.h"
 #include "fm.h"
 #include "ctrlcode.h"
@@ -69,7 +69,7 @@ void getAuthCookie(struct http_auth* hauth, char* auth_header,
         /* This means that *-Authenticate: header is received after
          * Authorization: header is sent to the server.
          */
-        message(MSG_INFO, "Wrong username or password");
+        message(getUI(), MSG_INFO, "Wrong username or password");
         // refresh(ttyWriter());
         sleep(1);
         /* delete Authenticate: header from extra_header */

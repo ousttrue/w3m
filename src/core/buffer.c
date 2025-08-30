@@ -1,6 +1,6 @@
 #include "buffer.h"
 #include "display.h"
-#include "message.h"
+#include "ui.h"
 #include "w3m.h"
 #include "file.h"
 #include "image.h"
@@ -318,7 +318,7 @@ listBuffer(Buffer* top, Buffer* current)
     }
     standout(vt);
     /* FIXME: gettextize? */
-    message(MSG_INFO, "Buffer selection mode: SPC for select / D for delete buffer");
+    message(getUI(), MSG_INFO, "Buffer selection mode: SPC for select / D for delete buffer");
     standend(vt);
     move(vt, c, 0);
     // refresh(ttyWriter());

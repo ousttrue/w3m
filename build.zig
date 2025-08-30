@@ -35,7 +35,6 @@ const w3m_srcs = [_][]const u8{
 
     "ui.c",
     "LineEditor.c",
-    "message.c",
 
     "url_scheme.c",
     "ssl_util.c",

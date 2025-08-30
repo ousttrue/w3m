@@ -1,6 +1,6 @@
 #include "menu.h"
 #include "display.h"
-#include "message.h"
+#include "ui.h"
 #include "symbol.h"
 #include "w3m.h"
 #include "image.h"
@@ -1200,7 +1200,7 @@ menuForwardSearch(Menu* menu, char* str, int from)
     int i;
     char* p;
     if ((p = regexCompile(str, IgnoreCase)) != NULL) {
-        message(MSG_INFO, p);
+        message(getUI(), MSG_INFO, p);
         return -1;
     }
     if (from < 0)
@@ -1229,7 +1229,7 @@ menu_search_forward(Menu* menu, int from)
         found = menuForwardSearch(menu, str, 0);
     if (found >= 0)
         return found;
-    message(MSG_INFO, "Not found");
+    message(getUI(), MSG_INFO, "Not found");
     return -1;
 }
 
@@ -1249,7 +1249,7 @@ menuBackwardSearch(Menu* menu, char* str, int from)
     int i;
     char* p;
     if ((p = regexCompile(str, IgnoreCase)) != NULL) {
-        message(MSG_INFO, p);
+        message(getUI(), MSG_INFO, p);
         return -1;
     }
     if (from >= menu->nitem)
@@ -1278,7 +1278,7 @@ menu_search_backward(Menu* menu, int from)
         found = menuBackwardSearch(menu, str, menu->nitem);
     if (found >= 0)
         return found;
-    message(MSG_INFO, "Not found");
+    message(getUI(), MSG_INFO, "Not found");
     return -1;
 }
 
@@ -1302,7 +1302,7 @@ menu_search_next_previous(Menu* menu, int from, int reverse)
     char* str;
 
     if (menuSearchRoutine == NULL) {
-        message(MSG_INFO, "No previous regular expression");
+        message(getUI(), MSG_INFO, "No previous regular expression");
         return -1;
     }
     str = conv_search_string(SearchString, DisplayCharset);
@@ -1316,7 +1316,7 @@ menu_search_next_previous(Menu* menu, int from, int reverse)
         found = (*routine[reverse])(menu, str, reverse * menu->nitem);
     if (found >= 0)
         return found;
-    message(MSG_INFO, "Not found");
+    message(getUI(), MSG_INFO, "Not found");
     return -1;
 }
 

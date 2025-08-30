@@ -1,6 +1,6 @@
 #include "history.h"
 #include "hash.h"
-#include "message.h"
+#include "ui.h"
 #include "fm.h"
 
 struct Hist {
@@ -101,7 +101,7 @@ void saveHistory(struct Hist* hist, size_t size)
     if (hist->mtime != (long long)st.st_mtime) {
         fhist = newHist();
         if (loadHistory(fhist) || mergeHistory(fhist, hist))
-            message(MSG_ERR, "Can't merge history");
+            message(getUI(), MSG_ERR, "Can't merge history");
         else
             hist = fhist;
     }
@@ -123,7 +123,7 @@ void saveHistory(struct Hist* hist, size_t size)
     return;
 
 fail:
-    message(MSG_ERR, "Can't open history");
+    message(getUI(), MSG_ERR, "Can't open history");
     return;
 }
 
