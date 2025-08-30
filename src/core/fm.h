@@ -162,31 +162,7 @@ extern int REV_LB[];
  * Types.
  */
 
-typedef struct _MapArea {
-    char* url;
-    char* target;
-    char* alt;
-    char shape;
-    short* coords;
-    int ncoords;
-    short center_x;
-    short center_y;
-} MapArea;
-
-typedef struct _MapList {
-    Str name;
-    GeneralList* area;
-    struct _MapList* next;
-} MapList;
-
 #define NO_REFERER ((char*)-1)
-
-typedef struct {
-    BufferPoint* marks;
-    int nmark;
-    int markmax;
-    int prevhseq;
-} HmarkerList;
 
 #define LINK_TYPE_NONE 0
 #define LINK_TYPE_REL 1
@@ -230,7 +206,7 @@ typedef struct _Buffer {
     AnchorList* formitem;
     LinkList* linklist;
     FormList* formlist;
-    MapList* maplist;
+    struct _MapList* maplist;
     HmarkerList* hmarklist;
     HmarkerList* imarklist;
     ParsedURL currentURL;
@@ -458,13 +434,6 @@ struct cookie {
 #define VALIGN_MIDDLE 0
 #define VALIGN_TOP 1
 #define VALIGN_BOTTOM 2
-
-typedef struct http_request {
-    char command;
-    char flag;
-    char* referer;
-    FormList* request;
-} HRequest;
 
 #define HR_COMMAND_GET 0
 #define HR_COMMAND_POST 1

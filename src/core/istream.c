@@ -1,6 +1,7 @@
 #include "fm.h"
 #include "ssl_util.h"
 #include "etc.h"
+#include "mimehead.h"
 #include "myctype.h"
 #include "istream.h"
 #include <signal.h>

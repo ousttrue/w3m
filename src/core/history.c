@@ -1,5 +1,7 @@
 #include "history.h"
 #include "hash.h"
+#include "rc.h"
+#include "etc.h"
 #include "ui.h"
 #include "file.h"
 #include "fm.h"

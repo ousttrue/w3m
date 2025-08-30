@@ -61,3 +61,5 @@ int checkCopyFile(char* path1, char* path2);
 int checkOverWrite(char* path);
 int matchattr(char* p, char* attr, int len, Str* value);
 char* checkHeader(struct _Buffer* buf, char* field);
+char* guess_save_name(struct _Buffer* buf, char* file);
+Str getLinkNumberStr(int correction);

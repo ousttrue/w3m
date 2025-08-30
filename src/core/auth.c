@@ -1,5 +1,6 @@
 #include "auth.h"
 #include "ui.h"
+#include "etc.h"
 #include "url.h"
 #include "fm.h"
 #include "ctrlcode.h"

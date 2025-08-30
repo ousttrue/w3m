@@ -1,10 +1,12 @@
-/* $Id: rc.c,v 1.116 2010/08/20 09:47:09 htrb Exp $ */
 /*
  * Initialization file etc.
  */
 #include "rc.h"
+#include "etc.h"
 #include "display.h"
+#include "mailcap.h"
 #include "ui.h"
+#include "local.h"
 #include "screen.h"
 #include "image.h"
 #include "ssl_util.h"

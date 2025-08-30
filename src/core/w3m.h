@@ -27,3 +27,9 @@ void addDownloadList(pid_t pid, char* url, char* save, char* lock, long long siz
 void stopDownload(void);
 int checkDownloadList(void);
 void download_action(struct parsed_tagarg* arg);
+
+// MySignalHandler reset_exit(SIGNAL_ARG);
+// MySignalHandler error_dump(SIGNAL_ARG);
+
+void change_charset(struct parsed_tagarg* arg);
+void saveBufferInfo(void);

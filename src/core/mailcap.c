@@ -1,3 +1,4 @@
+#include "mailcap.h"
 #include "fm.h"
 #include "file.h"
 #include "myctype.h"

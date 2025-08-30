@@ -1,6 +1,7 @@
 /*
  * client-side image maps
  */
+#include "map.h"
 #include "fm.h"
 #include "image.h"
 #include "ctrlcode.h"

@@ -164,3 +164,8 @@ void init_stream(URLFile* uf, int scheme, InputStream stream);
 struct _Buffer* openPagerBuffer(InputStream stream, struct _Buffer* buf);
 struct _Buffer* openGeneralPagerBuffer(InputStream stream);
 int checkSaveFile(InputStream stream, char* path);
+
+URLFile openURL(char* url, ParsedURL* pu, ParsedURL* current,
+    URLOption* option, FormList* request,
+    TextList* extra_header, URLFile* ouf,
+    HRequest* hr, unsigned char* status);

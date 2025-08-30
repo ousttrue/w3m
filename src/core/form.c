@@ -2,7 +2,9 @@
  * HTML forms
  */
 #include "form.h"
+#include "rc.h"
 #include "ui.h"
+#include "cookie.h"
 #include "buffer.h"
 #include "display.h"
 #include "etc.h"
@@ -14,6 +16,7 @@
 #include "regex.h"
 #include "util.h"
 #include "w3m.h"
+#include "map.h"
 #include <wtf.h>
 
 extern Str* textarea_str;

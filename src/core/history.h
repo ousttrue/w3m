@@ -5,20 +5,21 @@
 #define HIST_HASH_SIZE 127
 
 typedef ListItem HistItem;
-
 typedef GeneralList HistList;
 
 struct Hist;
-extern struct Hist* newHist(void);
-extern struct Hist* copyHist(struct Hist* hist);
-extern HistItem* unshiftHist(struct Hist* hist, char* ptr);
-extern HistItem* pushHist(struct Hist* hist, char* ptr);
-extern HistItem* pushHashHist(struct Hist* hist, char* ptr);
-extern HistItem* getHashHist(struct Hist* hist, char* ptr);
-extern char* lastHist(struct Hist* hist);
-extern char* nextHist(struct Hist* hist);
-extern char* prevHist(struct Hist* hist);
+struct _Buffer;
 
-extern int loadHistory(struct Hist* hist);
-extern void saveHistory(struct Hist* hist, size_t size);
-extern void ldHist(void);
+struct Hist* newHist(void);
+struct Hist* copyHist(struct Hist* hist);
+HistItem* unshiftHist(struct Hist* hist, char* ptr);
+HistItem* pushHist(struct Hist* hist, char* ptr);
+HistItem* pushHashHist(struct Hist* hist, char* ptr);
+HistItem* getHashHist(struct Hist* hist, char* ptr);
+char* lastHist(struct Hist* hist);
+char* nextHist(struct Hist* hist);
+char* prevHist(struct Hist* hist);
+int loadHistory(struct Hist* hist);
+void saveHistory(struct Hist* hist, size_t size);
+void ldHist(void);
+struct _Buffer* historyBuffer(struct Hist* hist);

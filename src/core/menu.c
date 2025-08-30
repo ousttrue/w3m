@@ -1,5 +1,6 @@
 #include "menu.h"
 #include "display.h"
+#include "rc.h"
 #include "search.h"
 #include "buffer.h"
 #include "ui.h"

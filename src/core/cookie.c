@@ -7,8 +7,11 @@
  *   [DRAFT 12] http://www.ics.uci.edu/pub/ietf/http/draft-ietf-http-state-man-mec-12.txt
  */
 
+#include "cookie.h"
 #include "fm.h"
+#include "etc.h"
 #include "html.h"
+#include "rc.h"
 #include "file.h"
 #include "local.h"
 #include "regex.h"

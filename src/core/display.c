@@ -1,6 +1,7 @@
 #include "display.h"
 #include "image.h"
 #include "etc.h"
+#include "map.h"
 #include "ui.h"
 #include "symbol.h"
 #include "file.h"

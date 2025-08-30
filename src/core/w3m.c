@@ -1,6 +1,11 @@
 #include "w3m.h"
 #define MAINPROGRAM
 #include "buffer.h"
+#include "map.h"
+#include "ssl_util.h"
+#include "mailcap.h"
+#include "local.h"
+#include "cookie.h"
 #include "ui.h"
 #include "search.h"
 #include "str_util.h"

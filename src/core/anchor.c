@@ -1,5 +1,6 @@
 #include "fm.h"
 #include "screen.h"
+#include "map.h"
 #include "image.h"
 #include "myctype.h"
 #include "regex.h"

@@ -1,4 +1,5 @@
-/* $Id: table.h,v 1.12 2003/09/22 21:02:21 ukai Exp $ */
+#pragma once
+
 #if (defined(MESCHACH) && !defined(MATRIX))
 #define MATRIX
 #endif /* (defined(MESCHACH) && !defined(MATRIX)) */
@@ -138,7 +139,22 @@ struct table_mode {
     unsigned char end_tag;
 };
 
-/* Local Variables:    */
-/* c-basic-offset: 4   */
-/* tab-width: 8        */
-/* End:                */
+struct table* newTable(void);
+void pushdata(struct table* t, int row, int col, char* data);
+int visible_length(char* str);
+void align(TextLine* lbuf, int width, int mode);
+void print_item(struct table* t, int row, int col, int width, Str buf);
+void print_sep(struct table* t, int row, int type, int maxcol, Str buf);
+void do_refill(struct table* tbl, int row, int col, int maxlimit);
+void initRenderTable(void);
+void renderTable(struct table* t, int max_width,
+    struct html_feed_environ* h_env);
+struct table* begin_table(int border, int spacing, int padding,
+    int vspace);
+void end_table(struct table* tbl);
+void check_rowcol(struct table* tbl, struct table_mode* mode);
+int feed_table(struct table* tbl, char* line, struct table_mode* mode,
+    int width, int internal);
+void feed_table1(struct table* tbl, Str tok, struct table_mode* mode,
+    int width);
+void pushTable(struct table*, struct table*);
