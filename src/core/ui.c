@@ -8,12 +8,15 @@
 #include <wc.h>
 #include <wtf.h>
 
-char* CurrentDir;
-int CurrentPid;
+char* CurrentDir = 0;
+int CurrentPid = -1;
 
 wc_ces InnerCharset = WC_CES_WTF; /* Don't change */
 #define DISPLAY_CHARSET WC_CES_UTF_8
 wc_ces DisplayCharset = DISPLAY_CHARSET;
+// filesystem charset
+wc_ces SystemCharset = SYSTEM_CHARSET;
+wc_ces DocumentCharset = (DOCUMENT_CHARSET);
 
 Buffer* Currentbuf = 0;
 Buffer* Firstbuf = 0;

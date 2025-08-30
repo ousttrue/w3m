@@ -2,6 +2,7 @@
  * Initialization file etc.
  */
 #include "rc.h"
+#include "url.h"
 #include "version.h"
 #include "buffer.h"
 #include "etc.h"

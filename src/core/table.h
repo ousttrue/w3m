@@ -147,6 +147,7 @@ void print_item(struct table* t, int row, int col, int width, Str buf);
 void print_sep(struct table* t, int row, int type, int maxcol, Str buf);
 void do_refill(struct table* tbl, int row, int col, int maxlimit);
 void initRenderTable(void);
+struct html_feed_environ;
 void renderTable(struct table* t, int max_width,
     struct html_feed_environ* h_env);
 struct table* begin_table(int border, int spacing, int padding,

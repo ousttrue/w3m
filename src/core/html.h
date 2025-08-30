@@ -34,6 +34,9 @@ struct table2 {
     char* item2;
 };
 
+/* flags for loadGeneralFile */
+#define RG_NOCACHE 1
+
 struct URLOption {
     const char* referer;
     int flag;

@@ -5,6 +5,30 @@
 
 #include <wc.h>
 
+extern char* mimetypes_files;
+
+#define IS_EMPTY_PARSED_URL(pu) ((pu)->scheme == SCM_UNKNOWN && !(pu)->file)
+
+#define DNS_ORDER_UNSPEC 0
+#define DNS_ORDER_INET_INET6 1
+#define DNS_ORDER_INET6_INET 2
+#define DNS_ORDER_INET_ONLY 4
+#define DNS_ORDER_INET6_ONLY 6
+extern int DNS_order;
+extern int ai_family_order_table[7][3]; /* XXX */
+extern char ArgvIsURL;
+extern char LocalhostOnly;
+extern char* document_root;
+extern int retryAsHttp;
+extern char* w3m_reqlog;
+extern char* index_file;
+extern int DecodeURL;
+
+#define HTST_UNKNOWN 255
+#define HTST_MISSING 254
+#define HTST_NORMAL 0
+#define HTST_CONNECT 1
+
 typedef struct _ParsedURL {
     enum UrlScheme scheme;
     char* user;

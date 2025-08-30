@@ -1,4 +1,5 @@
 #include "url.h"
+#include "form.h"
 #include "display.h"
 #include "buffer.h"
 #include "http.h"
@@ -7,7 +8,6 @@
 #include "proxy.h"
 #include "rc.h"
 #include "ui.h"
-#include "fm.h"
 #include "cookie.h"
 #include "ssl_util.h"
 #include "file.h"
@@ -31,6 +31,16 @@
 #include "Str.h"
 #include "myctype.h"
 #include "regex.h"
+
+char* mimetypes_files = (USER_MIMETYPES ", " SYS_MIMETYPES);
+int DNS_order = DNS_ORDER_UNSPEC;
+char ArgvIsURL = true;
+char LocalhostOnly = false;
+char* document_root = NULL;
+int retryAsHttp = true;
+char* w3m_reqlog = 0;
+char* index_file = NULL;
+int DecodeURL = false;
 
 #ifdef INET6
 /* see rc.c, "dns_order" and dnsorders[] */
@@ -1461,8 +1471,6 @@ url_to_charset(const char* url, const ParsedURL* base, wc_ces doc_charset)
 {
     const ParsedURL* pu;
     ParsedURL pu_buf;
-    const wc_ces* csptr;
-
     if (url && *url && *url != '#') {
         parseURL2((char*)url, &pu_buf, (ParsedURL*)base);
         pu = &pu_buf;
@@ -1471,7 +1479,10 @@ url_to_charset(const char* url, const ParsedURL* base, wc_ces doc_charset)
     }
     if (pu && (pu->scheme == SCM_LOCAL || pu->scheme == SCM_LOCAL_CGI))
         return SystemCharset;
+
+    const wc_ces* csptr;
     csptr = query_SCONF_URL_CHARSET(pu);
+
     return (csptr && *csptr) ? *csptr : doc_charset ? doc_charset
                                                     : DocumentCharset;
 }

@@ -107,7 +107,6 @@ extern int REV_LB[];
 #define IMG_FLAG_ERROR 2
 #define IMG_FLAG_DONT_REMOVE 4
 
-#define IS_EMPTY_PARSED_URL(pu) ((pu)->scheme == SCM_UNKNOWN && !(pu)->file)
 
 /*
  * Macros.
@@ -217,9 +216,6 @@ extern int REV_LB[];
 #define REALLY_THE_BEGINNING_OF_A_TAG(p) \
     (IS_ALPHA(p[1]) || p[1] == '/' || p[1] == '!' || p[1] == '?' || p[1] == '\0' || p[1] == '_')
 
-/* flags for loadGeneralFile */
-#define RG_NOCACHE 1
-
 /* modes for align() */
 
 #define ALIGN_CENTER 0
@@ -232,11 +228,6 @@ extern int REV_LB[];
 #define VALIGN_MIDDLE 0
 #define VALIGN_TOP 1
 #define VALIGN_BOTTOM 2
-
-#define HTST_UNKNOWN 255
-#define HTST_MISSING 254
-#define HTST_NORMAL 0
-#define HTST_CONNECT 1
 
 #define TMPF_DFL 0
 #define TMPF_SRC 1
@@ -260,9 +251,7 @@ global char PermitSaveToPipe init(FALSE);
 global char DecodeCTE init(FALSE);
 global char AutoUncompress init(FALSE);
 global char PreserveTimestamp init(TRUE);
-global char ArgvIsURL init(TRUE);
 global char MetaRefresh init(FALSE);
-global char LocalhostOnly init(FALSE);
 global char* HostName init(NULL);
 
 global char QuietMessage init(FALSE);
@@ -273,25 +262,12 @@ extern unsigned char EscBKeymap[];
 extern unsigned char EscDKeymap[];
 extern FuncList w3mFuncList[];
 
-#ifdef INET6
-#define DNS_ORDER_UNSPEC 0
-#define DNS_ORDER_INET_INET6 1
-#define DNS_ORDER_INET6_INET 2
-#define DNS_ORDER_INET_ONLY 4
-#define DNS_ORDER_INET6_ONLY 6
-global int DNS_order init(DNS_ORDER_UNSPEC);
-extern int ai_family_order_table[7][3]; /* XXX */
-#endif /* INET6 */
-
-global char* document_root init(NULL);
 global char* personal_document_root init(NULL);
 global char* cgi_bin init(NULL);
-global char* index_file init(NULL);
 
 global int CurrentKey;
 global char* CurrentKeyData;
 global char* CurrentCmdData;
-global char* w3m_reqlog;
 extern int enable_inline_image;
 
 global int useColor init(TRUE);
@@ -312,8 +288,6 @@ global int nextpage_topline init(FALSE);
 global int displayLink init(FALSE);
 global int displayLinkNumber init(FALSE);
 global int displayLineInfo init(FALSE);
-global int DecodeURL init(FALSE);
-global int retryAsHttp init(TRUE);
 global int showLineNum init(FALSE);
 global int show_srch_str init(TRUE);
 global char* Imgdisplay init(IMGDISPLAY);
@@ -378,7 +352,6 @@ global struct auth_cookie* Auth_cookie init(NULL);
 global struct cookie* First_cookie init(NULL);
 
 global char* mailcap_files init(USER_MAILCAP ", " SYS_MAILCAP);
-global char* mimetypes_files init(USER_MIMETYPES ", " SYS_MIMETYPES);
 
 global TextList* fileToDelete;
 
@@ -392,20 +365,13 @@ global int URLHistSize init(100);
 global int SaveURLHist init(TRUE);
 global int multicolList init(FALSE);
 
-global wc_ces DocumentCharset init(DOCUMENT_CHARSET);
-global wc_ces SystemCharset init(SYSTEM_CHARSET);
 global wc_ces BookmarkCharset init(SYSTEM_CHARSET);
 global char ExtHalfdump init(FALSE);
 global char FollowLocale init(TRUE);
 global char UseContentCharset init(TRUE);
 global char SearchConv init(TRUE);
 global char SimplePreserveSpace init(FALSE);
-#define Str_conv_from_system(x) wc_Str_conv((x), SystemCharset, InnerCharset)
-#define Str_conv_to_system(x) wc_Str_conv_strict((x), InnerCharset, SystemCharset)
-#define Str_conv_to_halfdump(x) (ExtHalfdump ? wc_Str_conv((x), InnerCharset, DisplayCharset) : (x))
-#define conv_from_system(x) wc_conv((x), SystemCharset, InnerCharset)->ptr
-#define conv_to_system(x) wc_conv_strict((x), InnerCharset, SystemCharset)->ptr
-#define url_quote_conv(x, c) url_quote(wc_conv_strict((x), InnerCharset, (c))->ptr)
+
 global char UseAltEntity init(FALSE);
 global char DisplayBorders init(FALSE);
 global char DisableCenter init(FALSE);
