@@ -10,6 +10,22 @@ struct readbuffer;
 struct parsed_tag;
 struct environment;
 
+struct html_feed_environ {
+    struct readbuffer* obuf;
+    TextLineList* buf;
+    FILE* f;
+    Str tagbuf;
+    int limit;
+    int maxlimit;
+    struct environment* envs;
+    int nenv;
+    int envc;
+    int envc_real;
+    char* title;
+    int blank_lines;
+};
+
+
 char* acceptableEncoding(void);
 int dir_exist(char* path);
 int is_html_type(char* type);

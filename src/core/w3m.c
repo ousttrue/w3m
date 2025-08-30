@@ -82,6 +82,25 @@ int (*searchRoutine)(Buffer*, char*);
 
 sigjmp_buf IntReturn;
 
+#define COPY_BUFROOT(dstbuf, srcbuf)       \
+    {                                      \
+        (dstbuf)->rootX = (srcbuf)->rootX; \
+        (dstbuf)->rootY = (srcbuf)->rootY; \
+        (dstbuf)->COLS = (srcbuf)->COLS;   \
+        (dstbuf)->LINES = (srcbuf)->LINES; \
+    }
+
+#define COPY_BUFPOSITION(dstbuf, srcbuf)                   \
+    {                                                      \
+        (dstbuf)->topLine = (srcbuf)->topLine;             \
+        (dstbuf)->currentLine = (srcbuf)->currentLine;     \
+        (dstbuf)->pos = (srcbuf)->pos;                     \
+        (dstbuf)->cursorX = (srcbuf)->cursorX;             \
+        (dstbuf)->cursorY = (srcbuf)->cursorY;             \
+        (dstbuf)->visualpos = (srcbuf)->visualpos;         \
+        (dstbuf)->currentColumn = (srcbuf)->currentColumn; \
+    }
+
 static void cmd_loadfile(char* path);
 static void cmd_loadURL(char* url, ParsedURL* current, char* referer,
     FormList* request);
