@@ -1,9 +1,17 @@
 #pragma once
 #include "buffer.h"
+#include <stdbool.h>
+
+enum SearchResultFlags {
+    SR_FOUND = 0x1,
+    SR_NOTFOUND = 0x2,
+    SR_WRAPPED = 0x4,
+};
+typedef enum SearchResultFlags (*SearchFunc)(Buffer*, char*);
 
 char* conv_search_string(char* str, wc_ces f_ces);
-int forwardSearch(struct _Buffer* buf, char* str);
-int backwardSearch(struct _Buffer* buf, char* str);
-void isrch(int (*func)(Buffer*, char*), char* prompt);
-void srch(int (*func)(Buffer*, char*), char* prompt);
-void srch_nxtprv(int reverse);
+enum SearchResultFlags forwardSearch(struct _Buffer* buf, char* str);
+enum SearchResultFlags backwardSearch(struct _Buffer* buf, char* str);
+void isrch(SearchFunc func, char* prompt);
+void srch(SearchFunc func, char* prompt);
+void srch_nxtprv(bool reverse);

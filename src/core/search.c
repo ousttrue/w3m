@@ -20,7 +20,7 @@ static MySignalHandler intTrap(int _dummy)
 }
 
 static char* SearchString = NULL;
-int (*searchRoutine)(Buffer*, char*);
+static SearchFunc searchRoutine;
 
 static void
 set_mark(Line* l, int pos, int epos)
@@ -37,7 +37,7 @@ char* conv_search_string(char* str, wc_ces f_ces)
     return str;
 }
 
-int forwardSearch(Buffer* buf, char* str)
+enum SearchResultFlags forwardSearch(Buffer* buf, char* str)
 {
     char *p, *first, *last;
     Line *l, *begin;
@@ -106,7 +106,7 @@ int forwardSearch(Buffer* buf, char* str)
     return SR_NOTFOUND;
 }
 
-int backwardSearch(Buffer* buf, char* str)
+enum SearchResultFlags backwardSearch(Buffer* buf, char* str)
 {
     char *p, *q, *found, *found_last, *first, *last;
     Line *l, *begin;
@@ -217,8 +217,7 @@ clear_mark(Line* l)
 }
 
 /* search by regular expression */
-static int
-srchcore(char* volatile str, int (*func)(Buffer*, char*))
+static int srchcore(char* str, SearchFunc func)
 {
     volatile int i, result = SR_NOTFOUND;
 
@@ -309,7 +308,7 @@ dispincsrch(int ch, Str buf, Lineprop* prop)
     return -1;
 }
 
-void isrch(int (*func)(Buffer*, char*), char* prompt)
+void isrch(SearchFunc func, char* prompt)
 {
     char* str;
     Buffer sbuf;
@@ -323,7 +322,7 @@ void isrch(int (*func)(Buffer*, char*), char* prompt)
     }
 }
 
-void srch(int (*func)(Buffer*, char*), char* prompt)
+void srch(SearchFunc func, char* prompt)
 {
     char* str;
     int result;
@@ -355,35 +354,31 @@ void srch(int (*func)(Buffer*, char*), char* prompt)
     searchRoutine = func;
 }
 
-void srch_nxtprv(int reverse)
+void srch_nxtprv(bool reverse)
 {
-    int result;
-    /* *INDENT-OFF* */
-    static int (*routine[2])(Buffer*, char*) = {
+    static SearchFunc routine[2] = {
         forwardSearch, backwardSearch
     };
-    /* *INDENT-ON* */
 
     if (searchRoutine == NULL) {
-        /* FIXME: gettextize? */
         message(getUI(), MSG_INFO, "No previous regular expression");
         return;
     }
-    if (reverse != 0)
-        reverse = 1;
+
+    if (reverse)
+        reverse = true;
     if (searchRoutine == backwardSearch)
-        reverse ^= 1;
-    if (reverse == 0)
+        reverse = !reverse;
+    if (!reverse)
         Currentbuf->pos += 1;
-    result = srchcore(SearchString, routine[reverse]);
+
+    enum SearchResultFlags result = srchcore(SearchString, routine[reverse]);
     if (result & SR_FOUND)
         clear_mark(Currentbuf->currentLine);
     else {
-        if (reverse == 0)
+        if (!reverse)
             Currentbuf->pos -= 1;
     }
 
-    disp_srchresult(result, (reverse ? "Backward: " : "Forward: "),
-        SearchString);
+    disp_srchresult(result, (reverse ? "Backward: " : "Forward: "), SearchString);
 }
-

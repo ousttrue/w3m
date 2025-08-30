@@ -64,11 +64,6 @@
 #define HOST_NAME_MAX 255
 #endif
 
-/* Search Result */
-#define SR_FOUND 0x1
-#define SR_NOTFOUND 0x2
-#define SR_WRAPPED 0x4
-
 #ifdef MAINPROGRAM
 int REV_LB[MAX_LB] = {
     LB_N_INFO,
