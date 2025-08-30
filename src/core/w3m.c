@@ -87,30 +87,6 @@ static int need_resize_screen = FALSE;
 MySignalHandler resize_hook(int _dummy);
 static void resize_screen(void);
 
-static char* MarkString = NULL;
-static char* SearchString = NULL;
-int (*searchRoutine)(Buffer*, char*);
-
-sigjmp_buf IntReturn;
-
-#define COPY_BUFROOT(dstbuf, srcbuf)       \
-    {                                      \
-        (dstbuf)->rootX = (srcbuf)->rootX; \
-        (dstbuf)->rootY = (srcbuf)->rootY; \
-        (dstbuf)->COLS = (srcbuf)->COLS;   \
-        (dstbuf)->LINES = (srcbuf)->LINES; \
-    }
-
-#define COPY_BUFPOSITION(dstbuf, srcbuf)                   \
-    {                                                      \
-        (dstbuf)->topLine = (srcbuf)->topLine;             \
-        (dstbuf)->currentLine = (srcbuf)->currentLine;     \
-        (dstbuf)->pos = (srcbuf)->pos;                     \
-        (dstbuf)->cursorX = (srcbuf)->cursorX;             \
-        (dstbuf)->cursorY = (srcbuf)->cursorY;             \
-        (dstbuf)->visualpos = (srcbuf)->visualpos;         \
-        (dstbuf)->currentColumn = (srcbuf)->currentColumn; \
-    }
 
 static void cmd_loadfile(char* path);
 static void cmd_loadBuffer(Buffer* buf, int prop, int linkid);
@@ -650,8 +626,8 @@ repBuffer(Buffer* oldbuf, Buffer* buf)
     Currentbuf = buf;
 }
 
-MySignalHandler
-intTrap(int _dummy)
+static sigjmp_buf IntReturn;
+static MySignalHandler intTrap(int _dummy)
 { /* Interrupt catcher */
     siglongjmp(IntReturn, 0);
 }
@@ -792,157 +768,6 @@ DEFUN(rdrwSc, REDRAW, "Draw the screen anew")
     arrangeCursor(Currentbuf);
 }
 
-static void
-clear_mark(Line* l)
-{
-    int pos;
-    if (!l)
-        return;
-    for (pos = 0; pos < l->size; pos++)
-        l->propBuf[pos] &= ~PE_MARK;
-}
-
-/* search by regular expression */
-static int
-srchcore(char* volatile str, int (*func)(Buffer*, char*))
-{
-    volatile int i, result = SR_NOTFOUND;
-
-    if (str != NULL && str != SearchString)
-        SearchString = str;
-    if (SearchString == NULL || *SearchString == '\0')
-        return SR_NOTFOUND;
-
-    str = conv_search_string(SearchString, DisplayCharset);
-    MySignalFunc prevtrap = mySignal(SIGINT, intTrap);
-    crmode();
-    if (sigsetjmp(IntReturn, 1) == 0) {
-
-        result = func(Currentbuf, str);
-        if (result & SR_FOUND)
-            clear_mark(Currentbuf->currentLine);
-    }
-    mySignal(SIGINT, prevtrap);
-    term_raw();
-    return result;
-}
-
-static void
-disp_srchresult(int result, char* prompt, char* str)
-{
-    if (str == NULL)
-        str = "";
-    if (result & SR_NOTFOUND)
-        message(getUI(), MSG_INFO, Sprintf("Not found: %s", str)->ptr);
-    else if (result & SR_WRAPPED)
-        message(getUI(), MSG_INFO, Sprintf("Search wrapped: %s", str)->ptr);
-    else if (show_srch_str)
-        message(getUI(), MSG_INFO, Sprintf("%s%s", prompt, str)->ptr);
-}
-
-static int
-dispincsrch(int ch, Str buf, Lineprop* prop)
-{
-    static Buffer sbuf;
-    char* str;
-    int do_next_search = FALSE;
-
-    if (ch == 0 && buf == NULL) {
-        SAVE_BUFPOSITION(&sbuf); /* search starting point */
-        return -1;
-    }
-
-    str = buf->ptr;
-    switch (ch) {
-    case 022: /* C-r */
-        searchRoutine = backwardSearch;
-        do_next_search = TRUE;
-        break;
-    case 023: /* C-s */
-        searchRoutine = forwardSearch;
-        do_next_search = TRUE;
-        break;
-
-    default:
-        if (ch >= 0)
-            return ch; /* use InputKeymap */
-    }
-
-    if (do_next_search) {
-        if (*str) {
-            if (searchRoutine == forwardSearch)
-                Currentbuf->pos += 1;
-            SAVE_BUFPOSITION(&sbuf);
-            if (srchcore(str, searchRoutine) == SR_NOTFOUND
-                && searchRoutine == forwardSearch) {
-                Currentbuf->pos -= 1;
-                SAVE_BUFPOSITION(&sbuf);
-            }
-            arrangeCursor(Currentbuf);
-
-            clear_mark(Currentbuf->currentLine);
-            return -1;
-        } else
-            return 020; /* _prev completion for C-s C-s */
-    } else if (*str) {
-        RESTORE_BUFPOSITION(&sbuf);
-        arrangeCursor(Currentbuf);
-        srchcore(str, searchRoutine);
-        arrangeCursor(Currentbuf);
-    }
-
-    clear_mark(Currentbuf->currentLine);
-    return -1;
-}
-
-static void
-isrch(int (*func)(Buffer*, char*), char* prompt)
-{
-    char* str;
-    Buffer sbuf;
-    SAVE_BUFPOSITION(&sbuf);
-    dispincsrch(0, NULL, NULL); /* initialize incremental search state */
-
-    searchRoutine = func;
-    str = inputLineHistSearch(getUI(), prompt, NULL, IN_STRING, TextHist, dispincsrch);
-    if (str == NULL) {
-        RESTORE_BUFPOSITION(&sbuf);
-    }
-}
-
-static void
-srch(int (*func)(Buffer*, char*), char* prompt)
-{
-    char* str;
-    int result;
-    int disp = FALSE;
-    int pos;
-
-    str = searchKeyData();
-    if (str == NULL || *str == '\0') {
-        str = inputStrHist(getUI(), prompt, NULL, TextHist);
-        if (str != NULL && *str == '\0')
-            str = SearchString;
-        if (str == NULL) {
-
-            return;
-        }
-        disp = TRUE;
-    }
-    pos = Currentbuf->pos;
-    if (func == forwardSearch)
-        Currentbuf->pos += 1;
-    result = srchcore(str, func);
-    if (result & SR_FOUND)
-        clear_mark(Currentbuf->currentLine);
-    else
-        Currentbuf->pos = pos;
-
-    if (disp)
-        disp_srchresult(result, prompt, str);
-    searchRoutine = func;
-}
-
 /* Search regular expression forward */
 
 DEFUN(srchfor, SEARCH SEARCH_FORE WHEREIS, "Search forward")
@@ -965,39 +790,6 @@ DEFUN(srchbak, SEARCH_BACK, "Search backward")
 DEFUN(isrchbak, ISEARCH_BACK, "Incremental search backward")
 {
     isrch(backwardSearch, "I-search backward: ");
-}
-
-static void
-srch_nxtprv(int reverse)
-{
-    int result;
-    /* *INDENT-OFF* */
-    static int (*routine[2])(Buffer*, char*) = {
-        forwardSearch, backwardSearch
-    };
-    /* *INDENT-ON* */
-
-    if (searchRoutine == NULL) {
-        /* FIXME: gettextize? */
-        message(getUI(), MSG_INFO, "No previous regular expression");
-        return;
-    }
-    if (reverse != 0)
-        reverse = 1;
-    if (searchRoutine == backwardSearch)
-        reverse ^= 1;
-    if (reverse == 0)
-        Currentbuf->pos += 1;
-    result = srchcore(SearchString, routine[reverse]);
-    if (result & SR_FOUND)
-        clear_mark(Currentbuf->currentLine);
-    else {
-        if (reverse == 0)
-            Currentbuf->pos -= 1;
-    }
-
-    disp_srchresult(result, (reverse ? "Backward: " : "Forward: "),
-        SearchString);
 }
 
 /* Search next matching */
@@ -1902,6 +1694,8 @@ DEFUN(prevMk, PREV_MARK, "Go to the previous mark")
     /* FIXME: gettextize? */
     message(getUI(), MSG_INFO, "No mark exist before here");
 }
+
+static char* MarkString = NULL;
 
 /* Mark place to which the regular expression matches */
 DEFUN(reMark, REG_MARK, "Mark all occurences of a pattern")
