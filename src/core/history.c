@@ -5,6 +5,7 @@
 #include "ui.h"
 #include "file.h"
 #include "fm.h"
+#include "buffer.h"
 
 struct Hist {
     HistList* list;

@@ -1,5 +1,6 @@
 #include "url.h"
 #include "display.h"
+#include "buffer.h"
 #include "http.h"
 #include "mysignal.h"
 #include "local.h"
@@ -952,7 +953,7 @@ void init_stream(URLFile* uf, int scheme, InputStream stream)
 
 URLFile
 openURL(char* url, ParsedURL* pu, ParsedURL* current,
-    URLOption* option, FormList* request, TextList* extra_header,
+    struct URLOption* option, FormList* request, TextList* extra_header,
     URLFile* ouf, struct HttpRequest* hr, unsigned char* status)
 {
     Str tmp;

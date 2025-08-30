@@ -1,5 +1,6 @@
 #include "fm.h"
 #include "screen.h"
+#include "buffer.h"
 #include "http.h"
 #include "map.h"
 #include "image.h"

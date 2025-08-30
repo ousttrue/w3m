@@ -3,6 +3,7 @@
  */
 #include "rc.h"
 #include "version.h"
+#include "buffer.h"
 #include "etc.h"
 #include "http.h"
 #include "proxy.h"

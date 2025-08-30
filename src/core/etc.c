@@ -1,5 +1,6 @@
 #include "etc.h"
 #include "display.h"
+#include "buffer.h"
 #include "mysignal.h"
 #include "ui.h"
 #include "rc.h"

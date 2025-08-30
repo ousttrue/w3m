@@ -166,7 +166,9 @@ struct _Buffer* openGeneralPagerBuffer(InputStream stream);
 int checkSaveFile(InputStream stream, char* path);
 
 struct HttpRequest;
+struct URLOption;
+struct form_list;
 URLFile openURL(char* url, ParsedURL* pu, ParsedURL* current,
-    URLOption* option, FormList* request,
+    struct URLOption* option, struct form_list* request,
     TextList* extra_header, URLFile* ouf,
     struct HttpRequest* hr, unsigned char* status);

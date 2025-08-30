@@ -4,13 +4,16 @@
 #include "term_renderer.h"
 #include "tty.h"
 #include "display.h"
+#include "buffer.h"
 #include <wc.h>
 #include <wtf.h>
 
 wc_ces InnerCharset = WC_CES_WTF; /* Don't change */
-
 #define DISPLAY_CHARSET WC_CES_UTF_8
 wc_ces DisplayCharset = DISPLAY_CHARSET;
+
+Buffer* Currentbuf = 0;
+Buffer* Firstbuf = 0;
 
 struct UI getUI()
 {

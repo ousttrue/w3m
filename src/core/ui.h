@@ -4,6 +4,9 @@
 
 extern wc_ces InnerCharset;
 extern wc_ces DisplayCharset;
+struct _Buffer;
+extern struct _Buffer* Currentbuf;
+extern struct _Buffer* Firstbuf;
 
 // key input(blocking) or draw require UI or query tty
 //

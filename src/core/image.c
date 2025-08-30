@@ -1,5 +1,6 @@
 #include "image.h"
 #include "ui.h"
+#include "buffer.h"
 #include "local.h"
 #include "file.h"
 #include "display.h"

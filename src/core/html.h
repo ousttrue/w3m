@@ -34,10 +34,10 @@ struct table2 {
     char* item2;
 };
 
-typedef struct {
+struct URLOption {
     char* referer;
     int flag;
-} URLOption;
+};
 
 union input_stream;
 

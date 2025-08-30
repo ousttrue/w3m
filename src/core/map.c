@@ -7,6 +7,7 @@
 #include "ctrlcode.h"
 #include "etc.h"
 #include "file.h"
+#include "buffer.h"
 #include <math.h>
 
 MapList*

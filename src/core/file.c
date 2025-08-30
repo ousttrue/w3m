@@ -1197,7 +1197,7 @@ loadGeneralFile(char* path, ParsedURL* volatile current, char* referer,
     volatile Str realm = NULL;
     int volatile add_auth_cookie_flag;
     unsigned char status = HTST_NORMAL;
-    URLOption url_option;
+    struct URLOption url_option;
     Str tmp;
     Str volatile page = NULL;
     wc_ces charset = WC_CES_US_ASCII;

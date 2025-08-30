@@ -37,6 +37,7 @@ typedef struct {
 
 struct _Buffer;
 struct form_list;
+struct parsed_tag;
 
 AnchorList* putAnchor(AnchorList* al, char* url, char* target,
     Anchor** anchor_return, char* referer,

@@ -17,6 +17,7 @@
 #include "local.h"
 #include "regex.h"
 #include "myctype.h"
+#include "buffer.h"
 #include <time.h>
 
 static int is_saved = 1;

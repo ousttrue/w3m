@@ -76,23 +76,6 @@
 #define HOST_NAME_MAX 255
 #endif
 
-enum BufferProperty {
-    BP_NORMAL = 0x0,
-    BP_PIPE = 0x1,
-    BP_INTERNAL = 0x8,
-    BP_NO_URL = 0x10,
-    BP_REDIRECTED = 0x20,
-    BP_CLOSE = 0x40,
-};
-
-/* Link Buffer */
-#define LB_NOLINK -1
-#define LB_INFO 0 /* pginfo() */
-#define LB_N_INFO 1
-#define LB_SOURCE 2 /* vwSrc() */
-#define LB_N_SOURCE LB_SOURCE
-#define MAX_LB 3
-
 /* Search Result */
 #define SR_FOUND 0x1
 #define SR_NOTFOUND 0x2
@@ -150,78 +133,6 @@ extern int REV_LB[];
  * Types.
  */
 
-
-#define LINK_TYPE_NONE 0
-#define LINK_TYPE_REL 1
-#define LINK_TYPE_REV 2
-typedef struct _LinkList {
-    char* url;
-    char* title; /* Next, Contents, ... */
-    char* ctype; /* Content-Type */
-    char type; /* Rel, Rev */
-    struct _LinkList* next;
-} LinkList;
-
-typedef struct _Buffer {
-    char* filename;
-    char* buffername;
-    Line* firstLine;
-    Line* topLine;
-    Line* currentLine;
-    Line* lastLine;
-    struct _Buffer* nextBuffer;
-    struct _Buffer* linkBuffer[MAX_LB];
-    short width;
-    short height;
-    char* type;
-    char* real_type;
-    int allLine;
-    enum BufferProperty bufferprop;
-    int currentColumn;
-    short cursorX;
-    short cursorY;
-    int pos;
-    int visualpos;
-    short rootX;
-    short rootY;
-    short COLS;
-    short LINES;
-    InputStream pagerSource;
-    AnchorList* href;
-    AnchorList* name;
-    AnchorList* img;
-    AnchorList* formitem;
-    LinkList* linklist;
-    FormList* formlist;
-    struct _MapList* maplist;
-    HmarkerList* hmarklist;
-    HmarkerList* imarklist;
-    ParsedURL currentURL;
-    ParsedURL* baseURL;
-    char* baseTarget;
-    int real_scheme;
-    char* sourcefile;
-    int* clone;
-    size_t trbyte;
-    char check_url;
-    wc_ces document_charset;
-    wc_uint8 auto_detect;
-    TextList* document_header;
-    FormItemList* form_submit;
-    char* savecache;
-    char* edit;
-    struct mailcap* mailcap;
-    char* mailcap_source;
-    char* header_source;
-    char search_header;
-    char* ssl_certificate;
-    char image_flag;
-    char image_loaded;
-    char need_reshape;
-    Anchor* submit;
-    struct _BufferPos* undo;
-    struct _AlarmEvent* event;
-} Buffer;
 
 typedef struct _BufferPos {
     long top_linenumber;
@@ -481,9 +392,6 @@ global char* index_file init(NULL);
 
 global char* CurrentDir;
 global int CurrentPid;
-
-global Buffer* Currentbuf;
-global Buffer* Firstbuf;
 
 global DownloadList* FirstDL init(NULL);
 global DownloadList* LastDL init(NULL);
