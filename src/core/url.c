@@ -1,6 +1,7 @@
 #include "url.h"
 #include "display.h"
 #include "local.h"
+#include "proxy.h"
 #include "rc.h"
 #include "ui.h"
 #include "fm.h"
@@ -1258,7 +1259,7 @@ retry:
             hr->command = HR_COMMAND_HEAD;
         if ((
                 (pu->scheme == SCM_HTTPS) ? non_null(HTTPS_proxy) : non_null(HTTP_proxy))
-            && !Do_not_use_proxy && pu->host != NULL && !check_no_proxy(pu->host)) {
+            && use_proxy && pu->host != NULL && !check_no_proxy(pu->host)) {
             hr->flag |= HR_FLAG_PROXY;
             if (pu->scheme == SCM_HTTPS && *status == HTST_CONNECT) {
                 sock = ssl_socket_of(ouf->stream);

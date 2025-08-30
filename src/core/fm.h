@@ -455,7 +455,6 @@ struct cookie {
 #define TMPF_HIST 4
 #define MAX_TMPF_TYPE 5
 
-#define set_no_proxy(domains) (NO_proxy_domains = make_domain_list(domains))
 
 /*
  * Globals.
@@ -497,12 +496,6 @@ extern unsigned char EscBKeymap[];
 extern unsigned char EscDKeymap[];
 extern FuncList w3mFuncList[];
 
-global char* HTTP_proxy init(NULL);
-global char* HTTPS_proxy init(NULL);
-global ParsedURL HTTP_proxy_parsed;
-global ParsedURL HTTPS_proxy_parsed;
-global char* NO_proxy init(NULL);
-global int NOproxy_netaddr init(TRUE);
 #ifdef INET6
 #define DNS_ORDER_UNSPEC 0
 #define DNS_ORDER_INET_INET6 1
@@ -512,10 +505,8 @@ global int NOproxy_netaddr init(TRUE);
 global int DNS_order init(DNS_ORDER_UNSPEC);
 extern int ai_family_order_table[7][3]; /* XXX */
 #endif /* INET6 */
-global TextList* NO_proxy_domains;
+
 global char NoCache init(FALSE);
-global char use_proxy init(TRUE);
-#define Do_not_use_proxy (!use_proxy)
 
 global char* document_root init(NULL);
 global char* personal_document_root init(NULL);

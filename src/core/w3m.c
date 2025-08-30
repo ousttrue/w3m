@@ -1,6 +1,7 @@
 #include "w3m.h"
 #define MAINPROGRAM
 #include "buffer.h"
+#include "proxy.h"
 #include "map.h"
 #include "ssl_util.h"
 #include "mailcap.h"

@@ -3,6 +3,7 @@
  */
 #include "rc.h"
 #include "etc.h"
+#include "proxy.h"
 #include "display.h"
 #include "mailcap.h"
 #include "ui.h"
