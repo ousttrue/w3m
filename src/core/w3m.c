@@ -94,7 +94,6 @@ static void resize_screen(void);
 
 static void cmd_loadfile(char* path);
 static void cmd_loadBuffer(Buffer* buf, int prop, int linkid);
-static void keyPressEventProc(int c);
 
 static char* getCurWord(Buffer* buf, int* spos, int* epos);
 
@@ -491,31 +490,44 @@ bool onFrame()
     return true;
 }
 
-void onKeyInput(char c)
+void onKeyInput(unsigned char c)
 {
+    static unsigned char g_keylog[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+    static int g_i = 0;
+
     if (CurrentAlarm->sec > 0) {
         alarm(0);
     }
+
+    g_keylog[g_i % sizeof(g_keylog)] = c;
     if (IS_ASCII(c)) { /* Ascii */
+        ui_printStatus("STATUS: key=[%02x > %02x > %02x > %02x > %02x > %02x > %02x > %02x]",
+            g_keylog[(g_i - 0) % sizeof(g_keylog)],
+            g_keylog[(g_i - 1) % sizeof(g_keylog)],
+            g_keylog[(g_i - 2) % sizeof(g_keylog)],
+            g_keylog[(g_i - 3) % sizeof(g_keylog)],
+            g_keylog[(g_i - 4) % sizeof(g_keylog)],
+            g_keylog[(g_i - 5) % sizeof(g_keylog)],
+            g_keylog[(g_i - 6) % sizeof(g_keylog)],
+            g_keylog[(g_i - 7) % sizeof(g_keylog)]);
+
         set_buffer_environ(Currentbuf);
         save_buffer_position(Currentbuf);
-        keyPressEventProc((int)c);
+        {
+            CurrentKey = c;
+            unsigned char prev = g_keylog[(g_i - 1) % sizeof(g_keylog)];
+            CommandFunc func = (prev == 0x1b) ? EscKeymap[c]
+                                              : GlobalKeymap[c];
+            func();
+        }
         bufToScreen(getScreen(), Currentbuf);
         renderFrame(getUI());
     }
+    ++g_i;
+
     prev_key = CurrentKey;
     CurrentKey = -1;
     CurrentKeyData = NULL;
-}
-
-static void
-keyPressEventProc(int c)
-{
-    CurrentKey = c;
-    ui_printStatus("STATUS: key=%x", c);
-
-    CommandFunc func = GlobalKeymap[c];
-    func();
 }
 
 void pushEvent(int cmd, void* data)

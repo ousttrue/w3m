@@ -16,7 +16,7 @@ void _goLine(const char* l);
 void delBuffer(struct _Buffer* buf);
 
 bool onFrame();
-void onKeyInput(char c);
+void onKeyInput(unsigned char c);
 
 void pushEvent(int cmd, void* data);
 void chkURLBuffer(struct _Buffer* buf);
