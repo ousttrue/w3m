@@ -118,6 +118,10 @@ void next_compl(struct LineEditor* e, int next)
         e->CPos = e->CLen;
 }
 
+void _nop(struct LineEditor* e)
+{
+}
+
 void _compl(struct LineEditor* e)
 {
     next_compl(e, 1);

@@ -30,10 +30,10 @@ LineEditorFunc InputKeymap[32] = {
     _inbrk,
     /*  C-h     C-i     C-j     C-k     C-l     C-m     C-n     C-o     */
     _bs,
-    iself,
+    _nop,
     _enter,
     killn,
-    iself,
+    _nop,
     _enter,
     _next,
     _editor,
@@ -41,7 +41,7 @@ LineEditorFunc InputKeymap[32] = {
     _prev,
     _quo,
     _bsw,
-    iself,
+    _nop,
     _mvLw,
     killb,
     _quo,
@@ -49,12 +49,12 @@ LineEditorFunc InputKeymap[32] = {
     /*  C-x     C-y     C-z     C-[     C-\     C-]     C-^     C-_     */
     _tcompl,
     _mvRw,
-    iself,
-    iself,
-    iself,
-    iself,
-    iself,
-    iself,
+    _nop,
+    _nop,
+    _nop,
+    _nop,
+    _nop,
+    _nop,
 };
 
 static struct LineEditor g_editor;

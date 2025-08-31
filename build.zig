@@ -121,6 +121,7 @@ pub fn build(b: *std.Build) void {
     exe.linkLibC();
 
     const flags = [_][]const u8{
+        "-std=c2x",
         // "-Wno-implicit-int",
         // "-Wno-int-conversion",
         "-DHAVE_CONFIG_H",

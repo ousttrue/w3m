@@ -80,6 +80,7 @@ void ins_char(struct LineEditor* e, Str str);
 void addPasswd(struct LineEditor* e, char* p, Lineprop* pr, int len, int offset, int limit);
 void addStr(struct LineEditor* e, char* p, Lineprop* pr, int len, int offset, int limit);
 
+void _nop(struct LineEditor* e);
 void _compl(struct LineEditor* e);
 void _mvB(struct LineEditor* e);
 void _mvL(struct LineEditor* e);
