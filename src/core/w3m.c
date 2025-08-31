@@ -510,14 +510,11 @@ void onKeyInput(char c)
 static void
 keyPressEventProc(int c)
 {
-    int id = (int)GlobalKeymap[c];
-
     CurrentKey = c;
-    FuncList cmd = w3mFuncList[id];
+    ui_printStatus("STATUS: key=%x", c);
 
-    ui_printStatus("STATUS: key=%x, id=%x => %s", c, id, cmd.id);
-
-    cmd.func();
+    CommandFunc func = GlobalKeymap[c];
+    func();
 }
 
 void pushEvent(int cmd, void* data)
@@ -3832,11 +3829,8 @@ void w3m_exit(int i)
 
 DEFUN(execCmd, COMMAND, "Invoke w3m function(s)")
 {
-    char *data, *p;
-    int cmd;
-
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    data = searchKeyData();
+    char* data = searchKeyData();
     if (data == NULL || *data == '\0') {
         data = inputStrHist(getUI(), "command [; ...]: ", "", TextHist);
         if (data == NULL) {
@@ -3851,15 +3845,13 @@ DEFUN(execCmd, COMMAND, "Invoke w3m function(s)")
             data++;
             continue;
         }
-        p = getWord(&data);
-        cmd = getFuncList(p);
-        if (cmd < 0)
-            break;
+        char* p = getWord(&data);
+        CommandFunc func = getFunc(p);
         p = getQWord(&data);
         CurrentKey = -1;
         CurrentKeyData = NULL;
         CurrentCmdData = *p ? p : NULL;
-        w3mFuncList[cmd].func();
+        func();
         CurrentCmdData = NULL;
     }
 }
@@ -3896,11 +3888,8 @@ SigAlarm(int _dummy)
 
 DEFUN(setAlarm, ALARM, "Set alarm")
 {
-    char* data;
-    int sec = 0, cmd = -1;
-
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    data = searchKeyData();
+    char* data = searchKeyData();
     if (data == NULL || *data == '\0') {
         data = inputStrHist(getUI(), "(Alarm)sec command: ", "", TextHist);
         if (data == NULL) {
@@ -3908,18 +3897,23 @@ DEFUN(setAlarm, ALARM, "Set alarm")
             return;
         }
     }
-    if (*data != '\0') {
+    CommandFunc cmd = NULL;
+    int sec = 0;
+    if (*data) {
         sec = atoi(getWord(&data));
         if (sec > 0)
-            cmd = getFuncList(getWord(&data));
+            cmd = getFunc(getWord(&data));
     }
-    if (cmd >= 0) {
+    // if (cmd >= 0)
+    {
         data = getQWord(&data);
-        setAlarmEvent(&DefaultAlarm, sec, AL_EXPLICIT, cmd, data);
-        message(getUI(), MSG_INFO, Sprintf("%dsec %s %s", sec, w3mFuncList[cmd].id, data)->ptr);
-    } else {
-        setAlarmEvent(&DefaultAlarm, 0, AL_UNSET, FUNCNAME_nulcmd, NULL);
+        // TODO:
+        // setAlarmEvent(&DefaultAlarm, sec, AL_EXPLICIT, cmd, data);
+        // message(getUI(), MSG_INFO, Sprintf("%dsec %s %s", sec, w3mFuncList[cmd].id, data)->ptr);
     }
+    // else {
+    //     setAlarmEvent(&DefaultAlarm, 0, AL_UNSET, FUNCNAME_nulcmd, NULL);
+    // }
 }
 
 AlarmEvent*

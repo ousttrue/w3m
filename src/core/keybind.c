@@ -1,7 +1,7 @@
-/* $Id: keybind.c,v 1.10 2006/05/29 12:17:25 inu Exp $ */
-#include "funcname2.h"
+#include "func.h"
+#include "defun.h"
 
-unsigned char GlobalKeymap[128] = {
+CommandFunc GlobalKeymap[128] = {
 /*  C-@     C-a     C-b     C-c     C-d     C-e     C-f     C-g      */
     _mark,
     linbeg,
@@ -148,7 +148,7 @@ unsigned char GlobalKeymap[128] = {
     nulcmd,
 };
 
-unsigned char EscKeymap[128] = {
+CommandFunc EscKeymap[128] = {
     /*  C-@     C-a     C-b     C-c     C-d     C-e     C-f     C-g      */
     nulcmd,
     nulcmd,
@@ -295,7 +295,7 @@ unsigned char EscKeymap[128] = {
     nulcmd,
 };
 
-unsigned char EscBKeymap[128] = {
+CommandFunc EscBKeymap[128] = {
     /*  C-@     C-a     C-b     C-c     C-d     C-e     C-f     C-g      */
     nulcmd,
     nulcmd,
@@ -442,7 +442,7 @@ unsigned char EscBKeymap[128] = {
     nulcmd,
 };
 
-unsigned char EscDKeymap[128] = {
+CommandFunc EscDKeymap[128] = {
     /*  0       1       INS     3       4       PgUp,   PgDn    7        */
     nulcmd,
     goLineF,

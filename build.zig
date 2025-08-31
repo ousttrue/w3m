@@ -178,21 +178,21 @@ pub fn build(b: *std.Build) void {
         exe.addIncludePath(b.path("zig-out/include"));
     }
 
-    {
-        const mktable = build_mktable(b, b.graph.host, optimize, &.{});
-        // {
-        //     b.installArtifact(mktable);
-        // }
-        var run_mktable = b.addRunArtifact(mktable);
-        run_mktable.setCwd(wf.getDirectory());
-        run_mktable.addArg("100");
-        // run_mktable.addFileArg(functable_tab.output);
-        run_mktable.addArg("functable.tab");
-        const install = b.addInstallFile(run_mktable.captureStdOut(), "include/functable.c");
-        b.getInstallStep().dependOn(&install.step);
-
-        exe.step.dependOn(&install.step);
-    }
+    // {
+    //     const mktable = build_mktable(b, b.graph.host, optimize, &.{});
+    //     // {
+    //     //     b.installArtifact(mktable);
+    //     // }
+    //     var run_mktable = b.addRunArtifact(mktable);
+    //     run_mktable.setCwd(wf.getDirectory());
+    //     run_mktable.addArg("100");
+    //     // run_mktable.addFileArg(functable_tab.output);
+    //     run_mktable.addArg("functable.tab");
+    //     const install = b.addInstallFile(run_mktable.captureStdOut(), "include/functable.c");
+    //     b.getInstallStep().dependOn(&install.step);
+    //
+    //     exe.step.dependOn(&install.step);
+    // }
 
     _ = zcc.createStep(b, "cdb", targets.toOwnedSlice() catch @panic("OOM"));
 }
@@ -273,17 +273,20 @@ fn gen_functable(b: *std.Build) *std.Build.Step.WriteFile {
     );
     _ = wf.addCopyFile(defun_h.output, "defun.h");
 
-    const funcname_c = gen_funcname(b, funcname_tab.output, b.path("funcname0.awk"));
-    _ = wf.addCopyFile(funcname_c.output, "funcname.c");
+    const funcname_c = gen_funcname(b, funcname_tab.output, b.path("funcnamemap.awk"));
+    _ = wf.addCopyFile(funcname_c.output, "funcnamemap.h");
 
-    const funcname1_h = gen_funcname(b, funcname_tab.output, b.path("funcname1.awk"));
-    _ = wf.addCopyFile(funcname1_h.output, "funcname1.h");
+    // const funcname_c = gen_funcname(b, funcname_tab.output, b.path("funcname0.awk"));
+    // _ = wf.addCopyFile(funcname_c.output, "funcname.c");
 
-    const funcname2_h = gen_funcname(b, funcname_tab.output, b.path("funcname2.awk"));
-    _ = wf.addCopyFile(funcname2_h.output, "funcname2.h");
-
-    const functable_tab = gen_funcname(b, funcname_tab.output, b.path("functable.awk"));
-    _ = wf.addCopyFile(functable_tab.output, "functable.tab");
+    // const funcname1_h = gen_funcname(b, funcname_tab.output, b.path("funcname1.awk"));
+    // _ = wf.addCopyFile(funcname1_h.output, "funcname1.h");
+    //
+    // const funcname2_h = gen_funcname(b, funcname_tab.output, b.path("funcname2.awk"));
+    // _ = wf.addCopyFile(funcname2_h.output, "funcname2.h");
+    //
+    // const functable_tab = gen_funcname(b, funcname_tab.output, b.path("functable.awk"));
+    // _ = wf.addCopyFile(functable_tab.output, "functable.tab");
 
     return wf;
 }

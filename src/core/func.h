@@ -9,6 +9,10 @@
 #define MULTI_KEY(c) (((c) >> 16) & 0x77F)
 
 typedef void (*CommandFunc)();
+extern CommandFunc GlobalKeymap[];
+extern CommandFunc EscKeymap[];
+extern CommandFunc EscBKeymap[];
+extern CommandFunc EscDKeymap[];
 
 typedef struct _FuncList {
     const char* id;
@@ -20,7 +24,7 @@ extern FuncList w3mFuncList[];
 extern char* searchKeyData(void);
 extern void setKeymap(char* p, int lineno);
 extern void initKeymap(int force);
-extern int getFuncList(char* id);
+extern CommandFunc getFunc(const char* id);
 extern int getKey(char* s);
 extern char* getKeyData(int key);
 extern char* getWord(char** str);

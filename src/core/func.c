@@ -3,7 +3,6 @@
  */
 
 #include <stdio.h>
-
 #include "fm.h"
 #include "func.h"
 #include "myctype.h"
@@ -13,13 +12,18 @@
 #include "ui.h"
 #include "indep.h"
 #include "istream.h"
+#include "history.h"
+#include <Str.h>
 
 #include "defun.h"
 
-#include "funcname1.h"
-#include "history.h"
-#include "funcname.c"
-#include "functable.c"
+FuncList w3mFuncList[] = {
+    // #embed "../../zig-out/include/funcnamemap.h"
+};
+
+// #include "funcname1.h"
+// #include "funcname.c"
+// #include "functable.c"
 
 #define KEYDATA_HASH_SIZE 16
 static Hash_iv* keyData = NULL;
@@ -29,13 +33,10 @@ static struct stat current_keymap_file;
 
 void setKeymap(char* p, int lineno)
 {
-    unsigned char* map = NULL;
-    char *s, *emsg;
-    int c, f;
-
-    s = getQWord(&p);
-    c = getKey(s);
+    char* s = getQWord(&p);
+    int c = getKey(s);
     if (c < 0) { /* error */
+        char* emsg;
         if (lineno > 0)
             /* FIXME: gettextize? */
             emsg = Sprintf("line %d: unknown key '%s'", lineno, s)->ptr;
@@ -46,8 +47,9 @@ void setKeymap(char* p, int lineno)
         return;
     }
     s = getWord(&p);
-    f = getFuncList(s);
-    if (f < 0) {
+    CommandFunc f = getFunc(s);
+    if (f == NULL) {
+        char* emsg;
         if (lineno > 0)
             /* FIXME: gettextize? */
             emsg = Sprintf("line %d: invalid command '%s'", lineno, s)->ptr;
@@ -57,45 +59,48 @@ void setKeymap(char* p, int lineno)
         message(getUI(), MSG_ERR, emsg);
         return;
     }
-    if (c & K_MULTI) {
-        unsigned char** mmap = NULL;
-        int i, j, m = MULTI_KEY(c);
 
-        if (m & K_ESCD)
-            map = EscDKeymap;
-        else if (m & K_ESCB)
-            map = EscBKeymap;
-        else if (m & K_ESC)
-            map = EscKeymap;
-        else
-            map = GlobalKeymap;
-        if (map[m & 0x7F] == FUNCNAME_multimap)
-            mmap = (unsigned char**)getKeyData(m);
-        else
-            map[m & 0x7F] = FUNCNAME_multimap;
-        if (!mmap) {
-            mmap = New_N(unsigned char*, 4);
-            for (i = 0; i < 4; i++) {
-                mmap[i] = New_N(unsigned char, 128);
-                for (j = 0; j < 128; j++)
-                    mmap[i][j] = FUNCNAME_nulcmd;
-            }
-            mmap[0][ESC_CODE] = FUNCNAME_escmap;
-            mmap[1]['['] = FUNCNAME_escbmap;
-            mmap[1]['O'] = FUNCNAME_escbmap;
-        }
-        if (keyData == NULL)
-            keyData = newHash_iv(KEYDATA_HASH_SIZE);
-        putHash_iv(keyData, m, (void*)mmap);
-        if (c & K_ESCD)
-            map = mmap[3];
-        else if (c & K_ESCB)
-            map = mmap[2];
-        else if (c & K_ESC)
-            map = mmap[1];
-        else
-            map = mmap[0];
-    } else {
+    CommandFunc* map = NULL;
+    // if (c & K_MULTI) {
+    //     unsigned char** mmap = NULL;
+    //     int i, j, m = MULTI_KEY(c);
+    //
+    //     if (m & K_ESCD)
+    //         map = EscDKeymap;
+    //     else if (m & K_ESCB)
+    //         map = EscBKeymap;
+    //     else if (m & K_ESC)
+    //         map = EscKeymap;
+    //     else
+    //         map = GlobalKeymap;
+    //     if (map[m & 0x7F] == FUNCNAME_multimap)
+    //         mmap = (unsigned char**)getKeyData(m);
+    //     else
+    //         map[m & 0x7F] = FUNCNAME_multimap;
+    //     if (!mmap) {
+    //         mmap = New_N(unsigned char*, 4);
+    //         for (i = 0; i < 4; i++) {
+    //             mmap[i] = New_N(unsigned char, 128);
+    //             for (j = 0; j < 128; j++)
+    //                 mmap[i][j] = FUNCNAME_nulcmd;
+    //         }
+    //         mmap[0][ESC_CODE] = FUNCNAME_escmap;
+    //         mmap[1]['['] = FUNCNAME_escbmap;
+    //         mmap[1]['O'] = FUNCNAME_escbmap;
+    //     }
+    //     if (keyData == NULL)
+    //         keyData = newHash_iv(KEYDATA_HASH_SIZE);
+    //     putHash_iv(keyData, m, (void*)mmap);
+    //     if (c & K_ESCD)
+    //         map = mmap[3];
+    //     else if (c & K_ESCB)
+    //         map = mmap[2];
+    //     else if (c & K_ESC)
+    //         map = mmap[1];
+    //     else
+    //         map = mmap[0];
+    // } else
+    {
         if (c & K_ESCD)
             map = EscDKeymap;
         else if (c & K_ESCB)
@@ -105,7 +110,7 @@ void setKeymap(char* p, int lineno)
         else
             map = GlobalKeymap;
     }
-    map[c & 0x7F] = f;
+    // map[c & 0x7F] = f;
     s = getQWord(&p);
     if (*s) {
         if (keyData == NULL)
@@ -183,9 +188,14 @@ void initKeymap(int force)
     keymap_initialized = TRUE;
 }
 
-int getFuncList(char* id)
+CommandFunc getFunc(const char* id)
 {
-    return getHash_si(&functable, id, -1);
+    for (int i = 0; i < sizeof(w3mFuncList) / sizeof(w3mFuncList[0]); ++i) {
+        if (strcmp(w3mFuncList[i].id, id) == 0) {
+            return w3mFuncList[i].func;
+        }
+    }
+    return &nulcmd;
 }
 
 char* getKeyData(int key)

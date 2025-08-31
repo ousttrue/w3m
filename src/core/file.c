@@ -814,19 +814,17 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
             }
         } else if (!strncasecmp(lineBuf2->ptr, "w3m-control:", 12) && uf->scheme == SCM_LOCAL_CGI) {
             Str funcname = Strnew();
-            int f;
 
             p = lineBuf2->ptr + 12;
             SKIP_BLANKS(p);
             while (*p && !IS_SPACE(*p))
                 Strcat_char(funcname, *(p++));
             SKIP_BLANKS(p);
-            f = getFuncList(funcname->ptr);
-            if (f >= 0) {
-                tmp = Strnew_charp(p);
-                Strchop(tmp);
-                pushEvent(f, tmp->ptr);
-            }
+            CommandFunc f = getFunc(funcname->ptr);
+            tmp = Strnew_charp(p);
+            Strchop(tmp);
+            // TODO:
+            // pushEvent(f, tmp->ptr);
         }
         if (headerlist)
             pushText(headerlist, lineBuf2->ptr);
@@ -5566,8 +5564,7 @@ table_start:
                 if (parsedtag_need_reconstruct(tag))
                     h_env->tagbuf = parsedtag2str(tag);
                 push_tag(obuf, h_env->tagbuf->ptr, cmd);
-            }
-            else {
+            } else {
                 process_idattr(obuf, cmd, tag);
             }
             obuf->bp.init_flag = 1;

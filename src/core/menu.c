@@ -1660,12 +1660,9 @@ void initMenu(void)
 
 int setMenuItem(MenuItem* item, char* type, char* line)
 {
-    char *label, *func, *popup, *keys, *data;
-    int f;
-    int n;
-
     if (type == NULL || *type == '\0') /* error */
         return -1;
+
     if (strcmp(type, "end") == 0) {
         item->type = MENU_END;
         return MENU_END;
@@ -1674,27 +1671,27 @@ int setMenuItem(MenuItem* item, char* type, char* line)
         item->label = getQWord(&line);
         return MENU_NOP;
     } else if (strcmp(type, "func") == 0) {
-        label = getQWord(&line);
-        func = getWord(&line);
-        keys = getQWord(&line);
-        data = getQWord(&line);
+        char *label = getQWord(&line);
+        char *func = getWord(&line);
+        char *keys = getQWord(&line);
+        char *data = getQWord(&line);
         if (*func == '\0') /* error */
             return -1;
         item->type = MENU_FUNC;
         item->label = label;
-        f = getFuncList(func);
-        item->func = w3mFuncList[(f >= 0) ? f : FUNCNAME_nulcmd].func;
+        item->func = getFunc(func);
         item->keys = keys;
         item->data = data;
         return MENU_FUNC;
     } else if (strcmp(type, "popup") == 0) {
-        label = getQWord(&line);
-        popup = getQWord(&line);
-        keys = getQWord(&line);
+        char *label = getQWord(&line);
+        char *popup = getQWord(&line);
+        char *keys = getQWord(&line);
         if (*popup == '\0') /* error */
             return -1;
         item->type = MENU_POPUP;
         item->label = label;
+        int n;
         if ((n = getMenuN(w3mMenuList, popup)) == -1)
             n = addMenuList(&w3mMenuList, popup);
         item->popup = w3mMenuList[n].menu;

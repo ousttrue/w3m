@@ -104,11 +104,6 @@ global char AutoUncompress init(FALSE);
 global char PreserveTimestamp init(TRUE);
 global char MetaRefresh init(FALSE);
 
-extern unsigned char GlobalKeymap[];
-extern unsigned char EscKeymap[];
-extern unsigned char EscBKeymap[];
-extern unsigned char EscDKeymap[];
-
 global int CurrentKey;
 global char* CurrentKeyData;
 global char* CurrentCmdData;
