@@ -1,13 +1,26 @@
 #pragma once
 #include <sys/types.h>
 
+#define INLINE_IMG_NONE 0
+#define INLINE_IMG_OSC5379 1
+#define INLINE_IMG_SIXEL 2
+#define INLINE_IMG_ITERM2 3
+#define INLINE_IMG_KITTY 4
+
+enum ImageCacheFlags {
+    IMG_FLAG_UNLOADED = 0,
+    IMG_FLAG_LOADED = 1,
+    IMG_FLAG_ERROR = 2,
+    IMG_FLAG_DONT_REMOVE = 4,
+};
+
 typedef struct _imageCache {
     char* url;
     struct _ParsedURL* current;
     char* file;
     char* touch;
     pid_t pid;
-    char loaded;
+    enum ImageCacheFlags loaded;
     int index;
     short width;
     short height;
@@ -39,8 +52,20 @@ void clearImage();
 struct _Buffer;
 void deleteImage(struct _Buffer* buf);
 void getAllImage(struct _Buffer* buf);
-void loadImage(struct _Buffer* buf, int flag);
-ImageCache* getImage(Image* image, struct _ParsedURL* current, int flag);
+
+enum ImageLoadFlag {
+    IMG_FLAG_START = 0,
+    IMG_FLAG_STOP = 1,
+    IMG_FLAG_NEXT = 2,
+};
+void loadImage(struct _Buffer* buf, enum ImageLoadFlag flag);
+
+enum ImageGetFlag {
+    IMG_FLAG_SKIP = 1,
+    IMG_FLAG_AUTO = 2,
+};
+ImageCache* getImage(Image* image, struct _ParsedURL* current, enum ImageGetFlag flag);
+
 int getImageSize(ImageCache* cache);
 
 void put_image_osc5379(int cursorX, int cursorY,

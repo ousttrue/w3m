@@ -48,6 +48,13 @@
 #include <wtf.h>
 #include <unistd.h>
 
+#define in_bold fontstat[0]
+#define in_under fontstat[1]
+#define in_italic fontstat[2]
+#define in_strike fontstat[3]
+#define in_ins fontstat[4]
+#define in_stand fontstat[5]
+
 #ifndef max
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #endif /* not max */

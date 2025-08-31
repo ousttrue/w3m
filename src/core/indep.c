@@ -1,4 +1,7 @@
-/* $Id: indep.c,v 1.38 2007/05/23 15:06:05 inu Exp $ */
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE /* strcasestr() */
+#endif
+
 #include "fm.h"
 #include <stdio.h>
 #include <pwd.h>

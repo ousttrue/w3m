@@ -61,6 +61,10 @@
 
 #include <event_poller.h>
 
+#ifndef HOST_NAME_MAX
+#define HOST_NAME_MAX 255
+#endif
+
 #define DSTR_LEN 256
 
 struct Hist* LoadHist;

@@ -11,6 +11,9 @@
 #include "regex.h"
 #include "file.h"
 
+#define bpcmp(a, b) \
+    (((a).line - (b).line) ? ((a).line - (b).line) : ((a).pos - (b).pos))
+
 #define FIRST_ANCHOR_SIZE 30
 
 AnchorList*

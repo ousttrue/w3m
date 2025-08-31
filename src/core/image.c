@@ -395,7 +395,7 @@ showImageProgress(Buffer* buf)
     }
 }
 
-void loadImage(Buffer* buf, int flag)
+void loadImage(Buffer* buf, enum ImageLoadFlag flag)
 {
     ImageCache* cache;
     struct stat st;
@@ -533,7 +533,7 @@ void loadImage(Buffer* buf, int flag)
 }
 
 ImageCache*
-getImage(Image* image, ParsedURL* current, int flag)
+getImage(Image* image, ParsedURL* current, enum ImageGetFlag flag)
 {
     Str key = NULL;
     ImageCache* cache;

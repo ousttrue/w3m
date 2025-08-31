@@ -4,6 +4,15 @@
 #include "anchor.h"
 #include "linklist.h"
 
+#define SHELLBUFFERNAME "*Shellout*"
+#define PIPEBUFFERNAME "*stream*"
+#define CPIPEBUFFERNAME "*stream(closed)*"
+#define DICTBUFFERNAME "*dictionary*"
+
+/* mark URL, Message-ID */
+#define CHK_URL 1
+#define CHK_NMID 2
+
 #define COPY_BUFROOT(dstbuf, srcbuf)       \
     {                                      \
         (dstbuf)->rootX = (srcbuf)->rootX; \

@@ -1,17 +1,4 @@
-/*
- * w3m: WWW wo Miru utility
- *
- * by A.ITO  Feb. 1995
- *
- * You can use,copy,modify and distribute this program without any permission.
- */
-
-#ifndef FM_H
-#define FM_H
-
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE /* strcasestr() */
-#endif
+#pragma once
 
 #include "config.h"
 #include "textlist.h"
@@ -28,14 +15,6 @@
 
 #define DEFUN(funcname, macroname, docstring) void funcname(void)
 
-/*
- * Constants.
- */
-#define PAGER_MAX_LINE 10000 /* Maximum line kept as pager */
-
-#define MAXIMUM_COLS 1024
-#define DEFAULT_COLS 80
-
 #define MAX_IMAGE 1000
 #define MAX_IMAGE_SIZE 2048
 
@@ -47,22 +26,11 @@
 #ifdef FALSE
 #undef FALSE
 #endif
-
 #ifdef TRUE
 #undef TRUE
 #endif
-
 #define FALSE 0
 #define TRUE 1
-
-#define SHELLBUFFERNAME "*Shellout*"
-#define PIPEBUFFERNAME "*stream*"
-#define CPIPEBUFFERNAME "*stream(closed)*"
-#define DICTBUFFERNAME "*dictionary*"
-
-#ifndef HOST_NAME_MAX
-#define HOST_NAME_MAX 255
-#endif
 
 #ifdef MAINPROGRAM
 int REV_LB[MAX_LB] = {
@@ -74,99 +42,12 @@ int REV_LB[MAX_LB] = {
 extern int REV_LB[];
 #endif /* not MAINPROGRAM */
 
-/* mark URL, Message-ID */
-#define CHK_URL 1
-#define CHK_NMID 2
-
-#define IMG_FLAG_SKIP 1
-#define IMG_FLAG_AUTO 2
-
-#define IMG_FLAG_START 0
-#define IMG_FLAG_STOP 1
-#define IMG_FLAG_NEXT 2
-
-#define IMG_FLAG_UNLOADED 0
-#define IMG_FLAG_LOADED 1
-#define IMG_FLAG_ERROR 2
-#define IMG_FLAG_DONT_REMOVE 4
-
-
 /*
  * Macros.
  */
 
-#define bpcmp(a, b) \
-    (((a).line - (b).line) ? ((a).line - (b).line) : ((a).pos - (b).pos))
-
 #define RELATIVE_WIDTH(w) (((w) >= 0) ? (int)((w) / pixel_per_char) : (w))
 #define REAL_WIDTH(w, limit) (((w) >= 0) ? (int)((w) / pixel_per_char) : -(w) * (limit) / 100)
-
-#define EOL(l) (&(l)->ptr[(l)->length])
-#define IS_EOL(p, l) ((p) == &(l)->ptr[(l)->length])
-
-#define INLINE_IMG_NONE 0
-#define INLINE_IMG_OSC5379 1
-#define INLINE_IMG_SIXEL 2
-#define INLINE_IMG_ITERM2 3
-#define INLINE_IMG_KITTY 4
-
-/*
- * Types.
- */
-
-#define in_bold fontstat[0]
-#define in_under fontstat[1]
-#define in_italic fontstat[2]
-#define in_strike fontstat[3]
-#define in_ins fontstat[4]
-#define in_stand fontstat[5]
-
-#define RB_PRE 0x01
-#define RB_SCRIPT 0x02
-#define RB_STYLE 0x04
-#define RB_PLAIN 0x08
-#define RB_LEFT 0x10
-#define RB_CENTER 0x20
-#define RB_RIGHT 0x40
-#define RB_ALIGN (RB_LEFT | RB_CENTER | RB_RIGHT)
-#define RB_NOBR 0x80
-#define RB_P 0x100
-#define RB_PRE_INT 0x200
-#define RB_IN_DT 0x400
-#define RB_INTXTA 0x800
-#define RB_INSELECT 0x1000
-#define RB_IGNORE_P 0x2000
-#define RB_TITLE 0x4000
-#define RB_NFLUSHED 0x8000
-#define RB_NOFRAMES 0x10000
-#define RB_INTABLE 0x20000
-#define RB_PREMODE (RB_PRE | RB_PRE_INT | RB_SCRIPT | RB_STYLE | RB_PLAIN | RB_INTXTA)
-#define RB_SPECIAL (RB_PRE | RB_PRE_INT | RB_SCRIPT | RB_STYLE | RB_PLAIN | RB_NOBR)
-#define RB_PLAIN_PRE 0x40000
-
-#ifdef FORMAT_NICE
-#define RB_FILL 0x80000
-#endif /* FORMAT_NICE */
-#define RB_DEL 0x100000
-#define RB_S 0x200000
-#define RB_HTML5 0x400000
-
-#define RB_GET_ALIGN(obuf) ((obuf)->flag & RB_ALIGN)
-#define RB_SET_ALIGN(obuf, align)  \
-    do {                           \
-        (obuf)->flag &= ~RB_ALIGN; \
-        (obuf)->flag |= (align);   \
-    } while (0)
-#define RB_SAVE_FLAG(obuf)                                              \
-    {                                                                   \
-        if ((obuf)->flag_sp < RB_STACK_SIZE)                            \
-            (obuf)->flag_stack[(obuf)->flag_sp++] = RB_GET_ALIGN(obuf); \
-    }
-#define RB_RESTORE_FLAG(obuf)                                          \
-    {                                                                  \
-        if ((obuf)->flag_sp > 0)                                       \
-            RB_SET_ALIGN(obuf, (obuf)->flag_stack[--(obuf)->flag_sp]); \
-    }
 
 /* state of token scanning finite state machine */
 #define R_ST_NORMAL 0 /* normal */
@@ -211,6 +92,7 @@ extern int REV_LB[];
 
 global int IndentIncr init(4);
 global int ShowEffect init(TRUE);
+#define PAGER_MAX_LINE 10000 /* Maximum line kept as pager */
 global int PagerMax init(PAGER_MAX_LINE);
 
 global char SearchHeader init(FALSE);
@@ -222,12 +104,10 @@ global char AutoUncompress init(FALSE);
 global char PreserveTimestamp init(TRUE);
 global char MetaRefresh init(FALSE);
 
-
 extern unsigned char GlobalKeymap[];
 extern unsigned char EscKeymap[];
 extern unsigned char EscBKeymap[];
 extern unsigned char EscDKeymap[];
-
 
 global int CurrentKey;
 global char* CurrentKeyData;
@@ -388,5 +268,3 @@ typedef struct _AlarmEvent {
     int cmd;
     void* data;
 } AlarmEvent;
-
-#endif /* not FM_H */
