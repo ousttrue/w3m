@@ -108,6 +108,26 @@ static int searchKeyNum(void);
 
 int enable_inline_image;
 
+/*
+ * List of error messages
+ */
+Buffer*
+message_list_panel(void)
+{
+    Str tmp = Strnew_size(getScreen()->ROWS * getScreen()->COLS);
+    ListItem* p;
+
+    /* FIXME: gettextize? */
+    Strcat_charp(tmp,
+        "<html><head><title>List of error messages</title></head><body>"
+        "<h1>List of error messages</h1><table cellpadding=0>\n");
+
+    concatMessageList(tmp);
+
+    Strcat_charp(tmp, "</table></body></html>");
+    return loadHTMLString(tmp);
+}
+
 static void*
 die_oom(size_t bytes)
 {

@@ -12,7 +12,3 @@ Str make_lastline_message(struct _Buffer* buf);
 
 void addChar(char c, Lineprop mode);
 void addMChar(char* c, Lineprop mode, size_t len);
-struct _Buffer* message_list_panel(void);
-
-void set_delayed_message(char* s);
-

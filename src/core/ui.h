@@ -42,7 +42,8 @@ struct UI {
 
 struct UI getUI();
 void message(struct UI ui, enum MessageSeverity, const char* s);
+void set_delayed_message(char* s);
 void concatMessageList(Str tmp);
 void renderFrame(struct UI ui);
 void ui_bell();
-void ui_printStatus(const char *fmt, ...);
+void ui_printStatus(const char* fmt, ...);

@@ -173,8 +173,6 @@ static Linecolor color_mode = 0;
 
 static Buffer* save_current_buf = NULL;
 
-static char* delayed_msg = NULL;
-
 static void redrawNLine(Buffer* buf, int n);
 static Line* redrawLine(Buffer* buf, Line* l, int i);
 static int image_touch = 0;
@@ -387,7 +385,6 @@ void renderToScreen()
     // }
     if (buf->topLine == NULL)
         buf->topLine = buf->firstLine;
-
 }
 
 static void
@@ -439,8 +436,7 @@ drawAnchorCursor0(Buffer* buf, AnchorList* al, int hseq, int prevhseq,
     }
 }
 
-void
-drawAnchorCursor(Buffer* buf)
+void drawAnchorCursor(Buffer* buf)
 {
     Anchor* an;
     int hseq, prevhseq;
@@ -946,29 +942,3 @@ void addMChar(char* p, Lineprop mode, size_t len)
     } else
         addmch(vt, p, len);
 }
-
-/*
- * List of error messages
- */
-Buffer*
-message_list_panel(void)
-{
-    Str tmp = Strnew_size(getScreen()->ROWS * getScreen()->COLS);
-    ListItem* p;
-
-    /* FIXME: gettextize? */
-    Strcat_charp(tmp,
-        "<html><head><title>List of error messages</title></head><body>"
-        "<h1>List of error messages</h1><table cellpadding=0>\n");
-
-    concatMessageList(tmp);
-
-    Strcat_charp(tmp, "</table></body></html>");
-    return loadHTMLString(tmp);
-}
-
-void set_delayed_message(char* s)
-{
-    delayed_msg = allocStr(s, -1);
-}
-

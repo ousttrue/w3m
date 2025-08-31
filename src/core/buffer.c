@@ -340,7 +340,7 @@ selectBuffer(Buffer* firstbuf, Buffer* currentbuf, char* selectchar)
     int i, cpoint, /* Current Buffer Number */
         spoint, /* Current Line on Screen */
         maxbuf, sclimit = getScreen()->ROWS - 1; /* Upper limit of line * number in
-                                           * the * screen */
+                                                  * the * screen */
     Buffer *buf, *topbuf;
     char c;
 

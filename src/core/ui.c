@@ -1,4 +1,5 @@
 #include "ui.h"
+#include "indep.h"
 #include "screen.h"
 #include "putc.h"
 #include "term_renderer.h"
@@ -74,6 +75,12 @@ void message(struct UI ui, enum MessageSeverity severity, const char* s)
     addnstr(vt, s, vt->COLS - 1);
     clrtoeolx(vt);
     move(vt, row, col);
+}
+
+static char* delayed_msg = NULL;
+void set_delayed_message(char* s)
+{
+    delayed_msg = allocStr(s, -1);
 }
 
 // void disp_err_message(char* s, int redraw_current)
