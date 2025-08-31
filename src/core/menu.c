@@ -2,6 +2,7 @@
 #include "alloc.h"
 #include "display.h"
 #include "rc.h"
+#include "quote.h"
 #include "linein.h"
 #include "defun.h"
 #include "search.h"

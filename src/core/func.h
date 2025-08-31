@@ -27,7 +27,4 @@ extern void initKeymap(int force);
 extern CommandFunc getFunc(const char* id);
 extern int getKey(char* s);
 extern char* getKeyData(int key);
-extern char* getWord(char** str);
-extern char* getQWord(char** str);
-struct regex;
-extern char* getRegexWord(const char** str, struct regex** regex_ret);
+

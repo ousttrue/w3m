@@ -3,6 +3,7 @@
  */
 #include "rc.h"
 #include "indep.h"
+#include "quote.h"
 #include "screen_effects.h"
 #include "history.h"
 #include "alloc.h"

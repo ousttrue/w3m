@@ -1,6 +1,7 @@
 #include "w3m.h"
 #include "indep.h"
 #include "version.h"
+#include "quote.h"
 #include <gc/gc.h>
 #include <stdlib.h>
 #define MAINPROGRAM
