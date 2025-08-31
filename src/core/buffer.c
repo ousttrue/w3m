@@ -28,7 +28,7 @@ newBuffer()
     n = New(Buffer);
     if (n == NULL)
         exit(3);
-    bzero((void*)n, sizeof(Buffer));
+    memset((void*)n, 0, sizeof(Buffer));
     n->width = getScreen()->COLS;
     n->COLS = getScreen()->COLS;
     n->LINES = getScreen()->ROWS - 1;
