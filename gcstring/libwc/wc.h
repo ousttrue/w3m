@@ -1,8 +1,7 @@
-
 #ifndef _WC_WC_H
 #define _WC_WC_H
 
-#include <Str.h>
+#include "Str.h"
 #include "wc_types.h"
 #include "ces.h"
 

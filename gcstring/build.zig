@@ -48,19 +48,19 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    const mod = b.addModule("wc", .{
+    const mod = b.addModule("gcstring", .{
         .target = target,
         .optimize = optimize,
     });
     const lib = b.addLibrary(.{
-        .name = "wc",
+        .name = "gcstring",
         .root_module = mod,
     });
     b.installArtifact(lib);
     lib.linkLibC();
     lib.addIncludePath(b.path(""));
     lib.addCSourceFiles(.{
-        // .root = b.path("libwc"),
+        .root = b.path("libwc"),
         .files = &srcs,
         .flags = &.{
             "-DUSE_UNICODE",
@@ -68,6 +68,19 @@ pub fn build(b: *std.Build) void {
     });
 
     for (public_headers) |header| {
-        lib.installHeader(b.path(header), header);
+        lib.installHeader(b.path("libwc").path(b, header), header);
     }
+
+    const gc_dep = b.dependency("gc", .{
+        .target = target,
+        .optimize = optimize,
+        .BUILD_SHARED_LIBS = false,
+    });
+    const gc = gc_dep.artifact("gc");
+    // const gc_include_dir = gc.installed_headers_include_tree orelse {
+    //     @panic("no gc header");
+    // };
+    // const gc_include_dir = gc_dep.path("include");
+    // std.log.debug("{s}", .{gc_include_dir.getDisplayName()});
+    lib.linkLibrary(gc);
 }

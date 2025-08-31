@@ -1,0 +1,17 @@
+.{
+    .name = .gcstring,
+    .version = "0.0.0",
+    .fingerprint = 0x2a2e33b90cd4403f, // Changing this has security and trust implications.
+    .minimum_zig_version = "0.15.1",
+    .dependencies = .{
+        .gc = .{
+            .url = "git+https://github.com/bdwgc/bdwgc.git#6d068ea3fa8191f252a8ca4910e0bd3cbb877d0f",
+            .hash = "N-V-__8AAErMLQAwjbOfoyLuc13gMqoO5Th7H6d6MkA9X6Uy",
+        },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+    },
+}

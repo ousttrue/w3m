@@ -81,18 +81,6 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    const gc_dep = b.dependency("gc", .{
-        .target = target,
-        .optimize = optimize,
-        .BUILD_SHARED_LIBS = false,
-    });
-    const gc = gc_dep.artifact("gc");
-    // const gc_include_dir = gc.installed_headers_include_tree orelse {
-    //     @panic("no gc header");
-    // };
-    const gc_include_dir = gc_dep.path("include");
-    // std.log.debug("{s}", .{gc_include_dir.getDisplayName()});
-
     // const SHELL = "/bin/bash";
     const PACKAGE = "w3m";
     // const VERSION = "0.5.3";
@@ -166,19 +154,15 @@ pub fn build(b: *std.Build) void {
         }
     }
 
-    const wc_dep = b.dependency("wc", .{
+    const gcs_dep = b.dependency("gcstring", .{
         .target = target,
         .optimize = optimize,
     });
-    const wc = wc_dep.artifact("wc");
-    wc.addIncludePath(gc_include_dir);
-    exe.linkLibrary(wc);
+    const gcs = gcs_dep.artifact("gcstring");
+    exe.linkLibrary(gcs);
 
     const output = build_output(b, target, optimize);
     exe.linkLibrary(output);
-
-    exe.linkLibrary(gc);
-    exe.addIncludePath(gc_include_dir);
 
     const wf = gen_functable(b);
     {
@@ -195,8 +179,6 @@ pub fn build(b: *std.Build) void {
 
     {
         const mktable = build_mktable(b, b.graph.host, optimize, &.{});
-        mktable.addIncludePath(gc_include_dir);
-
         // {
         //     b.installArtifact(mktable);
         // }
@@ -324,15 +306,15 @@ fn build_mktable(
         .files = &.{
             "src/funcname/mktable.c",
             "src/core/hash.c",
-            "libwc/Str.c",
-            "libwc/myctype.c",
+            "gcstring/libwc/Str.c",
+            "gcstring/libwc/myctype.c",
         },
         .flags = &.{
             "-DDUMMY",
         },
     });
     exe.addIncludePath(b.path("src/core"));
-    exe.addIncludePath(b.path("libwc"));
+    exe.addIncludePath(b.path("gcstring/libwc"));
     exe.linkLibC();
     exe.linkLibCpp();
     for (libs) |lib| {
