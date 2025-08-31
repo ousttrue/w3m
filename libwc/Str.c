@@ -19,9 +19,6 @@
 #include <gc.h>
 #include <stdarg.h>
 #include <string.h>
-#ifdef __EMX__ /* or include "fm.h" for HAVE_BCOPY? */
-#include <strings.h>
-#endif
 #include "myctype.h"
 
 #define INITIAL_STR_SIZE 32
@@ -88,7 +85,7 @@ Str Strnew_charp(const char* p)
         exit(1);
     x->area_size = n;
     x->length = len;
-    bcopy((void*)p, (void*)x->ptr, len);
+    memcpy(x->ptr, p, len);
     x->ptr[x->length] = '\0';
     return x;
 }
@@ -127,7 +124,7 @@ Str Strnew_charp_n(const char* p, int n)
         exit(1);
     x->area_size = n + 1;
     x->length = len;
-    bcopy((void*)p, (void*)x->ptr, len);
+    memcpy(x->ptr, p, len);
     x->ptr[x->length] = '\0';
     return x;
 }
@@ -162,7 +159,7 @@ void Strcopy(Str x, Str y)
             exit(1);
         x->area_size = y->length + 1;
     }
-    bcopy((void*)y->ptr, (void*)x->ptr, y->length + 1);
+    memcpy(x->ptr, y->ptr, y->length + 1);
     x->length = y->length;
 }
 
@@ -185,7 +182,7 @@ void Strcopy_charp(Str x, const char* y)
             exit(1);
         x->area_size = len + 1;
     }
-    bcopy((void*)y, (void*)x->ptr, len);
+    memcpy(x->ptr, y, len);
     x->ptr[len] = '\0';
     x->length = len;
 }
@@ -208,7 +205,7 @@ void Strcopy_charp_n(Str x, const char* y, int n)
             exit(1);
         x->area_size = len + 1;
     }
-    bcopy((void*)y, (void*)x->ptr, len);
+    memcpy(x->ptr, y, len);
     x->ptr[len] = '\0';
     x->length = len;
 }
@@ -238,7 +235,7 @@ void Strcat_charp_n(Str x, const char* y, int n)
             exit(1);
         x->area_size = newlen;
     }
-    bcopy((void*)y, (void*)&x->ptr[x->length], n);
+    memcpy(&x->ptr[x->length], y, n);
     x->length += n;
     x->ptr[x->length] = '\0';
 }

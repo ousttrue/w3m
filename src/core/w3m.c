@@ -3150,7 +3150,7 @@ _peekURL(int only_img)
         s = Strnew_charp(url_decode2(s->ptr, Currentbuf));
     s = checkType(s, &pp, NULL);
     p = NewAtom_N(Lineprop, s->length);
-    bcopy((void*)pp, (void*)p, s->length * sizeof(Lineprop));
+    memcpy((void*)p, (void*)pp, s->length * sizeof(Lineprop));
 disp:
     n = searchKeyNum();
     if (n > 1 && s->length > (n - 1) * (getCols() - 1))
@@ -3202,7 +3202,7 @@ DEFUN(curURL, PEEK, "Show current address")
             s = Strnew_charp(url_decode2(s->ptr, NULL));
         s = checkType(s, &pp, NULL);
         p = NewAtom_N(Lineprop, s->length);
-        bcopy((void*)pp, (void*)p, s->length * sizeof(Lineprop));
+        memcpy(p, pp, s->length * sizeof(Lineprop));
     }
     n = searchKeyNum();
     if (n > 1 && s->length > (n - 1) * (getCols() - 1))

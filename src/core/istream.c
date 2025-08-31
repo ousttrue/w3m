@@ -47,7 +47,7 @@ buffer_read(StreamBuffer sb, char* obuf, int count)
     if (len > 0) {
         if (len > count)
             len = count;
-        bcopy((const void*)&sb->buf[sb->cur], obuf, len);
+        memcpy(obuf, &sb->buf[sb->cur], len);
         sb->cur += len;
     }
     return len;

@@ -188,7 +188,7 @@ ssl_check_cert_ident(X509* x, char* hostname)
                     char* asn = GC_MALLOC(sl + 1);
                     if (!asn)
                         exit(1);
-                    bcopy(sn, asn, sl);
+                    memcpy(asn, sn, sl);
                     asn[sl] = '\0';
 
                     if (!seen_dnsname)
