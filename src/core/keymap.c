@@ -14,8 +14,8 @@
 
 #include "defun.h"
 
-FuncList w3mFuncList[] = {
-    // #embed "../../zig-out/include/funcnamemap.h"
+struct FuncList w3mFuncList[] = {
+#include "funcnamemap.h"
 };
 
 #define KEYDATA_HASH_SIZE 16
@@ -103,7 +103,7 @@ void setKeymap(char* p, int lineno)
         else
             map = GlobalKeymap;
     }
-    // map[c & 0x7F] = f;
+    map[c & 0x7F] = f;
     s = getQWord(&p);
     if (*s) {
         if (keyData == NULL)
@@ -116,51 +116,48 @@ void setKeymap(char* p, int lineno)
 static void
 interpret_keymap(FILE* kf, struct stat* current, int force)
 {
-    int fd;
+    int fd = fileno(kf);
     struct stat kstat;
-    Str line;
-    char *p, *s, *emsg;
-    int lineno;
-    wc_ces charset = SystemCharset;
-    int verbose = 1;
-    extern int str_to_bool(char* value, int old);
-
-    if ((fd = fileno(kf)) < 0 || fstat(fd, &kstat) || (!force && kstat.st_mtime == current->st_mtime && kstat.st_dev == current->st_dev && kstat.st_ino == current->st_ino && kstat.st_size == current->st_size))
+    if (fd < 0
+        || fstat(fd, &kstat)
+        || (!force && kstat.st_mtime == current->st_mtime && kstat.st_dev == current->st_dev && kstat.st_ino == current->st_ino && kstat.st_size == current->st_size)) {
         return;
+    }
     *current = kstat;
 
-    lineno = 0;
-    while (!feof(kf)) {
-        line = Strfgets(kf);
-        lineno++;
+    wc_ces charset = SystemCharset;
+    bool verbose = true;
+
+    for (int lineno = 1; !feof(kf); ++lineno) {
+        Str line = Strfgets(kf);
         Strchop(line);
         Strremovefirstspaces(line);
         if (line->length == 0)
             continue;
         line = wc_Str_conv(line, charset, InnerCharset);
-        p = line->ptr;
-        s = getWord(&p);
-        if (*s == '#') /* comment */
-            continue;
-        if (!strcmp(s, "keymap"))
-            ;
-        else if (!strcmp(s, "charset") || !strcmp(s, "encoding")) {
-            s = getQWord(&p);
-            if (*s)
-                charset = wc_guess_charset(s, charset);
-            continue;
-        } else if (!strcmp(s, "verbose")) {
-            s = getWord(&p);
-            if (*s)
-                verbose = str_to_bool(s, verbose);
-            continue;
-        } else { /* error */
-            emsg = Sprintf("line %d: syntax error '%s'", lineno, s)->ptr;
-            if (verbose)
-                message(getUI(), MSG_ERR, emsg);
+
+        char* p = line->ptr;
+
+        char* s = getWord(&p);
+        if (*s == '#') {
+            // comment
             continue;
         }
-        setKeymap(p, lineno);
+        if (!strcmp(s, "keymap")) {
+            setKeymap(p, lineno);
+        } else if (!strcmp(s, "charset") || !strcmp(s, "encoding")) {
+            char* q = getQWord(&p);
+            if (*q)
+                charset = wc_guess_charset(q, charset);
+        } else if (!strcmp(s, "verbose")) {
+            char* q = getWord(&p);
+            if (*q)
+                verbose = str_to_bool(q, verbose);
+        } else { /* error */
+            char* emsg = Sprintf("line %d: syntax error '%s'", lineno, s)->ptr;
+            if (verbose)
+                message(getUI(), MSG_ERR, emsg);
+        }
     }
 }
 

@@ -14,12 +14,11 @@ extern CommandFunc EscKeymap[];
 extern CommandFunc EscBKeymap[];
 extern CommandFunc EscDKeymap[];
 
-typedef struct _FuncList {
+struct FuncList {
     const char* id;
     CommandFunc func;
-} FuncList;
-
-extern FuncList w3mFuncList[];
+};
+extern struct FuncList w3mFuncList[];
 
 extern char* searchKeyData(void);
 extern void setKeymap(char* p, int lineno);
