@@ -319,15 +319,6 @@ global char* mailcap_files init(USER_MAILCAP ", " SYS_MAILCAP);
 
 global TextList* fileToDelete;
 
-extern struct Hist* LoadHist;
-extern struct Hist* SaveHist;
-extern struct Hist* URLHist;
-extern struct Hist* ShellHist;
-extern struct Hist* TextHist;
-global int UseHistory init(TRUE);
-global int URLHistSize init(100);
-global int SaveURLHist init(TRUE);
-
 global char ExtHalfdump init(FALSE);
 global char FollowLocale init(TRUE);
 global char UseContentCharset init(TRUE);

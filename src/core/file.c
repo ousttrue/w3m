@@ -4,6 +4,7 @@
 #include "table.h"
 #include "http.h"
 #include "linein.h"
+#include "history.h"
 #include "downloadlist.h"
 #include "func.h"
 #include "ui.h"

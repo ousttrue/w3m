@@ -8,12 +8,9 @@
 #include "fm.h"
 #include "buffer.h"
 
-struct Hist {
-    HistList* list;
-    HistItem* current;
-    Hash_sv* hash;
-    long long mtime;
-};
+int UseHistory = (TRUE);
+int URLHistSize = (100);
+int SaveURLHist = (TRUE);
 
 /* Merge entries from their history into ours */
 static int

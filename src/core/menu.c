@@ -5,6 +5,7 @@
 #include "linein.h"
 #include "defun.h"
 #include "search.h"
+#include "history.h"
 #include "buffer.h"
 #include "ui.h"
 #include "funcname1.h"

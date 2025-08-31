@@ -1,13 +1,28 @@
 #pragma once
 #include "textlist.h"
+#include "hash.h"
+
+typedef ListItem HistItem;
+typedef GeneralList HistList;
+struct Hist {
+    HistList* list;
+    HistItem* current;
+    Hash_sv* hash;
+    long long mtime;
+};
+
+extern struct Hist* LoadHist;
+extern struct Hist* SaveHist;
+extern struct Hist* URLHist;
+extern struct Hist* ShellHist;
+extern struct Hist* TextHist;
+extern int UseHistory;
+extern int URLHistSize;
+extern int SaveURLHist;
 
 #define HIST_LIST_MAX GENERAL_LIST_MAX
 #define HIST_HASH_SIZE 127
 
-typedef ListItem HistItem;
-typedef GeneralList HistList;
-
-struct Hist;
 struct _Buffer;
 
 struct Hist* newHist(void);

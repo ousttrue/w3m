@@ -8,6 +8,7 @@
 #include "mysignal.h"
 #include "linein.h"
 #include "func.h"
+#include "history.h"
 #include <setjmp.h>
 #include <signal.h>
 #include <unistd.h>

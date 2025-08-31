@@ -3,6 +3,7 @@
  */
 #include "rc.h"
 #include "indep.h"
+#include "history.h"
 #include "alloc.h"
 #include "url.h"
 #include "linein.h"
