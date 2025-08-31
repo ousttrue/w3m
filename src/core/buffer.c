@@ -666,3 +666,267 @@ int readBufferCache(Buffer* buf)
     buf->savecache = NULL;
     return 0;
 }
+
+void cursorUp0(Buffer* buf, int n)
+{
+    if (buf->cursorY > 0)
+        cursorUpDown(buf, -1);
+    else {
+        buf->topLine = lineSkip(buf, buf->topLine, -n, FALSE);
+        if (buf->currentLine->prev != NULL)
+            buf->currentLine = buf->currentLine->prev;
+        arrangeLine(buf);
+    }
+}
+
+void cursorUp(Buffer* buf, int n)
+{
+    Line* l = buf->currentLine;
+    if (buf->firstLine == NULL)
+        return;
+    while (buf->currentLine->prev && buf->currentLine->bpos)
+        cursorUp0(buf, n);
+    if (buf->currentLine == buf->firstLine) {
+        gotoLine(buf, l->linenumber);
+        arrangeLine(buf);
+        return;
+    }
+    cursorUp0(buf, n);
+    while (buf->currentLine->prev && buf->currentLine->bpos && buf->currentLine->bwidth >= buf->currentColumn + buf->visualpos)
+        cursorUp0(buf, n);
+}
+
+void cursorDown0(Buffer* buf, int n)
+{
+    if (buf->cursorY < buf->LINES - 1)
+        cursorUpDown(buf, 1);
+    else {
+        buf->topLine = lineSkip(buf, buf->topLine, n, FALSE);
+        if (buf->currentLine->next != NULL)
+            buf->currentLine = buf->currentLine->next;
+        arrangeLine(buf);
+    }
+}
+
+void cursorDown(Buffer* buf, int n)
+{
+    Line* l = buf->currentLine;
+    if (buf->firstLine == NULL)
+        return;
+    while (buf->currentLine->next && buf->currentLine->next->bpos)
+        cursorDown0(buf, n);
+    if (buf->currentLine == buf->lastLine) {
+        gotoLine(buf, l->linenumber);
+        arrangeLine(buf);
+        return;
+    }
+    cursorDown0(buf, n);
+    while (buf->currentLine->next && buf->currentLine->next->bpos && buf->currentLine->bwidth + buf->currentLine->width < buf->currentColumn + buf->visualpos)
+        cursorDown0(buf, n);
+}
+
+void cursorUpDown(Buffer* buf, int n)
+{
+    Line* cl = buf->currentLine;
+
+    if (buf->firstLine == NULL)
+        return;
+    if ((buf->currentLine = currentLineSkip(buf, cl, n, FALSE)) == cl)
+        return;
+    arrangeLine(buf);
+}
+
+void cursorRight(Buffer* buf, int n)
+{
+    int i, delta = 1, cpos, vpos2;
+    Line* l = buf->currentLine;
+
+    if (buf->firstLine == NULL)
+        return;
+    if (buf->pos == l->len && !(l->next && l->next->bpos))
+        return;
+    i = buf->pos;
+    Lineprop* p = l->propBuf;
+    while (i + delta < l->len && p[i + delta] & PC_WCHAR2)
+        delta++;
+    if (i + delta < l->len) {
+        buf->pos = i + delta;
+    } else if (l->len == 0) {
+        buf->pos = 0;
+    } else if (l->next && l->next->bpos) {
+        cursorDown0(buf, 1);
+        buf->pos = 0;
+        arrangeCursor(buf);
+        return;
+    } else {
+        buf->pos = l->len - 1;
+        while (buf->pos && p[buf->pos] & PC_WCHAR2)
+            buf->pos--;
+    }
+    cpos = COLPOS(l, buf->pos);
+    buf->visualpos = l->bwidth + cpos - buf->currentColumn;
+    delta = 1;
+    while (buf->pos + delta < l->len && p[buf->pos + delta] & PC_WCHAR2)
+        delta++;
+    vpos2 = COLPOS(l, buf->pos + delta) - buf->currentColumn - 1;
+    if (vpos2 >= buf->COLS && n) {
+        columnSkip(buf, n + (vpos2 - buf->COLS) - (vpos2 - buf->COLS) % n);
+        buf->visualpos = l->bwidth + cpos - buf->currentColumn;
+    }
+    buf->cursorX = buf->visualpos - l->bwidth;
+}
+
+void cursorLeft(Buffer* buf, int n)
+{
+    int i, delta = 1, cpos;
+    Line* l = buf->currentLine;
+
+    if (buf->firstLine == NULL)
+        return;
+    i = buf->pos;
+    Lineprop* p = l->propBuf;
+    while (i - delta > 0 && p[i - delta] & PC_WCHAR2)
+        delta++;
+    if (i >= delta)
+        buf->pos = i - delta;
+    else if (l->prev && l->bpos) {
+        cursorUp0(buf, -1);
+        buf->pos = buf->currentLine->len - 1;
+        arrangeCursor(buf);
+        return;
+    } else
+        buf->pos = 0;
+    cpos = COLPOS(l, buf->pos);
+    buf->visualpos = l->bwidth + cpos - buf->currentColumn;
+    if (buf->visualpos - l->bwidth < 0 && n) {
+        columnSkip(buf,
+            -n + buf->visualpos - l->bwidth - (buf->visualpos - l->bwidth) % n);
+        buf->visualpos = l->bwidth + cpos - buf->currentColumn;
+    }
+    buf->cursorX = buf->visualpos - l->bwidth;
+}
+
+void cursorHome(Buffer* buf)
+{
+    buf->visualpos = 0;
+    buf->cursorX = buf->cursorY = 0;
+}
+
+/*
+ * Arrange line,column and cursor position according to current line and
+ * current position.
+ */
+void arrangeCursor(Buffer* buf)
+{
+    int col, col2, pos;
+    int delta = 1;
+    if (buf == NULL || buf->currentLine == NULL)
+        return;
+    /* Arrange line */
+    if (buf->currentLine->linenumber - buf->topLine->linenumber >= buf->LINES
+        || buf->currentLine->linenumber < buf->topLine->linenumber) {
+        /*
+         * buf->topLine = buf->currentLine;
+         */
+        buf->topLine = lineSkip(buf, buf->currentLine, 0, FALSE);
+    }
+    /* Arrange column */
+    while (buf->pos < 0 && buf->currentLine->prev && buf->currentLine->bpos) {
+        pos = buf->pos + buf->currentLine->prev->len;
+        cursorUp0(buf, 1);
+        buf->pos = pos;
+    }
+    while (buf->pos >= buf->currentLine->len && buf->currentLine->next && buf->currentLine->next->bpos) {
+        pos = buf->pos - buf->currentLine->len;
+        cursorDown0(buf, 1);
+        buf->pos = pos;
+    }
+    if (buf->currentLine->len == 0 || buf->pos < 0)
+        buf->pos = 0;
+    else if (buf->pos >= buf->currentLine->len)
+        buf->pos = buf->currentLine->len - 1;
+    while (buf->pos > 0 && buf->currentLine->propBuf[buf->pos] & PC_WCHAR2)
+        buf->pos--;
+    col = COLPOS(buf->currentLine, buf->pos);
+    while (buf->pos + delta < buf->currentLine->len && buf->currentLine->propBuf[buf->pos + delta] & PC_WCHAR2)
+        delta++;
+    col2 = COLPOS(buf->currentLine, buf->pos + delta);
+    if (col < buf->currentColumn || col2 > buf->COLS + buf->currentColumn) {
+        buf->currentColumn = 0;
+        if (col2 > buf->COLS)
+            columnSkip(buf, col);
+    }
+    /* Arrange cursor */
+    buf->cursorY = buf->currentLine->linenumber - buf->topLine->linenumber;
+    buf->visualpos = buf->currentLine->bwidth + COLPOS(buf->currentLine, buf->pos) - buf->currentColumn;
+    buf->cursorX = buf->visualpos - buf->currentLine->bwidth;
+#ifdef DISPLAY_DEBUG
+    fprintf(stderr,
+        "arrangeCursor: column=%d, cursorX=%d, visualpos=%d, pos=%d, len=%d\n",
+        buf->currentColumn, buf->cursorX, buf->visualpos, buf->pos,
+        buf->currentLine->len);
+#endif
+}
+
+void arrangeLine(Buffer* buf)
+{
+    int i, cpos;
+
+    if (buf->firstLine == NULL)
+        return;
+    buf->cursorY = buf->currentLine->linenumber - buf->topLine->linenumber;
+    i = columnPos(buf->currentLine, buf->currentColumn + buf->visualpos - buf->currentLine->bwidth);
+    cpos = COLPOS(buf->currentLine, i) - buf->currentColumn;
+    if (cpos >= 0) {
+        buf->cursorX = cpos;
+        buf->pos = i;
+    } else if (buf->currentLine->len > i) {
+        buf->cursorX = 0;
+        buf->pos = i + 1;
+    } else {
+        buf->cursorX = 0;
+        buf->pos = 0;
+    }
+#ifdef DISPLAY_DEBUG
+    fprintf(stderr,
+        "arrangeLine: column=%d, cursorX=%d, visualpos=%d, pos=%d, len=%d\n",
+        buf->currentColumn, buf->cursorX, buf->visualpos, buf->pos,
+        buf->currentLine->len);
+#endif
+}
+
+void cursorXY(Buffer* buf, int x, int y)
+{
+    int oldX;
+
+    cursorUpDown(buf, y - buf->cursorY);
+
+    if (buf->cursorX > x) {
+        while (buf->cursorX > x)
+            cursorLeft(buf, buf->COLS / 2);
+    } else if (buf->cursorX < x) {
+        while (buf->cursorX < x) {
+            oldX = buf->cursorX;
+
+            cursorRight(buf, buf->COLS / 2);
+
+            if (oldX == buf->cursorX)
+                break;
+        }
+        if (buf->cursorX > x)
+            cursorLeft(buf, buf->COLS / 2);
+    }
+}
+
+void restorePosition(Buffer* buf, Buffer* orig)
+{
+    buf->topLine = lineSkip(buf, buf->firstLine, TOP_LINENUMBER(orig) - 1,
+        FALSE);
+    gotoLine(buf, CUR_LINENUMBER(orig));
+    buf->pos = orig->pos;
+    if (buf->currentLine && orig->currentLine)
+        buf->pos += orig->currentLine->bpos - buf->currentLine->bpos;
+    buf->currentColumn = orig->currentColumn;
+    arrangeCursor(buf);
+}
+
