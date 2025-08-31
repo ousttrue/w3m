@@ -53,6 +53,17 @@ void concatMessageList(Str tmp)
     //     Strcat_charp(tmp, "<tr><td>(no message recorded)</td></tr>\n");
 }
 
+void status(struct UI ui, const char* s)
+{
+    struct VirtualTerm* vt = ui.vt;
+    int row = vt->CurLine;
+    int col = vt->CurColumn;
+    move(vt, vt->ROWS - 2, 0);
+    addnstr(vt, s, vt->COLS - 1);
+    clrtoeolx(vt);
+    move(vt, row, col);
+}
+
 void message(struct UI ui, enum MessageSeverity severity, const char* s)
 {
     struct VirtualTerm* vt = ui.vt;
@@ -92,6 +103,37 @@ void renderFrame(struct UI ui)
 {
     int cursorRow = ui.vt->CurLine;
     int cursorCol = ui.vt->CurColumn;
+
+    Buffer *buf = Currentbuf;
+    drawAnchorCursor(buf);
+
+    Str msg = make_lastline_message(buf);
+    if (buf->firstLine == NULL) {
+        /* FIXME: gettextize? */
+        Strcat_charp(msg, "\tNo Line");
+    }
+    // if (delayed_msg != NULL) {
+    //     message(getUI(), MSG_INFO, delayed_msg);
+    //     delayed_msg = NULL;
+    //     // refresh(ttyWriter());
+    // }
+    standout(ui.vt);
+    message(getUI(), MSG_INFO, msg->ptr);
+    standend(ui.vt);
+    // term_title(conv_to_system(buf->buffername));
+    // refresh(ttyWriter());
+    // if (activeImage && displayImage && buf->img && buf->image_loaded) {
+    //     drawImage();
+    // }
+    // if (buf != save_current_buf) {
+    //     saveBufferInfo();
+    //     save_current_buf = buf;
+    // }
+    // if (buf->check_url & CHK_URL) {
+    //     chkURLBuffer(buf);
+    //     renderToScreen();
+    // }
+
     struct Frame* frame = screenToFrame(ui.vt);
     wc_putc_init(InnerCharset, DisplayCharset);
     refreshFrame(ttyWriter(), frame);

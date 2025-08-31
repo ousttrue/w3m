@@ -87,7 +87,6 @@ static int need_resize_screen = FALSE;
 MySignalHandler resize_hook(int _dummy);
 static void resize_screen(void);
 
-
 static void cmd_loadfile(char* path);
 static void cmd_loadBuffer(Buffer* buf, int prop, int linkid);
 static void keyPressEventProc(int c);
@@ -411,7 +410,7 @@ bool onFrame()
         CurrentKeyData = NULL;
         CurrentCmdData = (char*)CurrentEvent->data;
         w3mFuncList[CurrentEvent->cmd].func();
-        displayBuffer();
+        renderToScreen();
         struct Frame* frame = screenToFrame(getScreen());
 
         wc_putc_init(InnerCharset, DisplayCharset);
@@ -435,14 +434,8 @@ bool onFrame()
                 CurrentCmdData = (char*)CurrentAlarm->data;
                 w3mFuncList[CurrentAlarm->cmd].func();
 
-                struct Frame* frame = displayBuffer();
-
-                wc_putc_init(InnerCharset, DisplayCharset);
-                refreshFrame(ttyWriter(), frame);
-                wc_putc_end(ttyWriter());
-
-                MOVE(ttyWriter(), getScreen()->CurLine, getScreen()->CurColumn);
-                flushWriter(ttyWriter());
+                renderToScreen();
+                renderFrame(getUI());
 
                 CurrentCmdData = NULL;
                 return false;
@@ -460,26 +453,14 @@ bool onFrame()
     mySignal(SIGWINCH, resize_hook);
     if (activeImage && displayImage && Currentbuf->img && !Currentbuf->image_loaded) {
         loadImage(Currentbuf, IMG_FLAG_NEXT);
-        struct Frame* frame = displayBuffer();
-
-        wc_putc_init(InnerCharset, DisplayCharset);
-        refreshFrame(ttyWriter(), frame);
-        wc_putc_end(ttyWriter());
-
-        MOVE(ttyWriter(), getScreen()->CurLine, getScreen()->CurColumn);
-        flushWriter(ttyWriter());
+        renderToScreen();
+        renderFrame(getUI());
         // continue;
     }
     if (need_resize_screen) {
         resize_screen();
-        struct Frame* frame = displayBuffer();
-
-        wc_putc_init(InnerCharset, DisplayCharset);
-        refreshFrame(ttyWriter(), frame);
-        wc_putc_end(ttyWriter());
-
-        MOVE(ttyWriter(), getScreen()->CurLine, getScreen()->CurColumn);
-        flushWriter(ttyWriter()); // continue;
+        renderToScreen();
+        renderFrame(getUI());
     }
 
     return true;
@@ -494,14 +475,8 @@ void onKeyInput(char c)
         set_buffer_environ(Currentbuf);
         save_buffer_position(Currentbuf);
         keyPressEventProc((int)c);
-        struct Frame* frame = displayBuffer();
-
-        wc_putc_init(InnerCharset, DisplayCharset);
-        refreshFrame(ttyWriter(), frame);
-        wc_putc_end(ttyWriter());
-
-        MOVE(ttyWriter(), getScreen()->CurLine, getScreen()->CurColumn);
-        flushWriter(ttyWriter()); // continue;
+        renderToScreen();
+        renderFrame(getUI());
     }
     prev_key = CurrentKey;
     CurrentKey = -1;

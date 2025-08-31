@@ -175,7 +175,6 @@ static Buffer* save_current_buf = NULL;
 
 static char* delayed_msg = NULL;
 
-static void drawAnchorCursor(Buffer* buf);
 static void redrawNLine(Buffer* buf, int n);
 static Line* redrawLine(Buffer* buf, Line* l, int i);
 static int image_touch = 0;
@@ -233,8 +232,7 @@ make_lastline_link(Buffer* buf, char* title, char* url)
     return s;
 }
 
-static Str
-make_lastline_message(Buffer* buf)
+Str make_lastline_message(Buffer* buf)
 {
     Str msg, s = NULL;
     int sl = 0;
@@ -334,7 +332,7 @@ struct Frame* screenToFrame(const struct VirtualTerm* vt)
     return frame;
 }
 
-struct Frame* displayBuffer()
+void renderToScreen()
 {
     struct VirtualTerm* vt = getScreen();
     Buffer* buf = Currentbuf;
@@ -390,37 +388,6 @@ struct Frame* displayBuffer()
     if (buf->topLine == NULL)
         buf->topLine = buf->firstLine;
 
-    drawAnchorCursor(buf);
-
-    Str msg;
-    msg = make_lastline_message(buf);
-    if (buf->firstLine == NULL) {
-        /* FIXME: gettextize? */
-        Strcat_charp(msg, "\tNo Line");
-    }
-    if (delayed_msg != NULL) {
-        message(getUI(), MSG_INFO, delayed_msg);
-        delayed_msg = NULL;
-        // refresh(ttyWriter());
-    }
-    standout(vt);
-    message(getUI(), MSG_INFO, msg->ptr);
-    standend(vt);
-    // term_title(conv_to_system(buf->buffername));
-    // refresh(ttyWriter());
-    if (activeImage && displayImage && buf->img && buf->image_loaded) {
-        drawImage();
-    }
-    if (buf != save_current_buf) {
-        saveBufferInfo();
-        save_current_buf = buf;
-    }
-    if (buf->check_url & CHK_URL) {
-        chkURLBuffer(buf);
-        displayBuffer();
-    }
-
-    return screenToFrame(getScreen());
 }
 
 static void
@@ -472,7 +439,7 @@ drawAnchorCursor0(Buffer* buf, AnchorList* al, int hseq, int prevhseq,
     }
 }
 
-static void
+void
 drawAnchorCursor(Buffer* buf)
 {
     Anchor* an;
@@ -1267,8 +1234,3 @@ void restorePosition(Buffer* buf, Buffer* orig)
     buf->currentColumn = orig->currentColumn;
     arrangeCursor(buf);
 }
-
-/* Local Variables:    */
-/* c-basic-offset: 4   */
-/* tab-width: 8        */
-/* End:                */
