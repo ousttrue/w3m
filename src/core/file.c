@@ -21,6 +21,7 @@
 #include "readbuffer.h"
 #include "symbol.h"
 #include "ctrlcode.h"
+#include "screen_effects.h"
 #include "auth.h"
 #include "image.h"
 #include "etc.h"

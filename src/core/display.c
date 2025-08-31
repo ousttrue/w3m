@@ -1,5 +1,6 @@
 #include "display.h"
 #include "alloc.h"
+#include "screen_effects.h"
 #include "indep.h"
 #include "image.h"
 #include "etc.h"
@@ -21,166 +22,10 @@
 #include <wtf.h>
 #include <math.h>
 
-/* *INDENT-OFF* */
-
-#define EFFECT_ANCHOR_START effect_anchor_start()
-#define EFFECT_ANCHOR_END effect_anchor_end()
-#define EFFECT_IMAGE_START effect_image_start()
-#define EFFECT_IMAGE_END effect_image_end()
-#define EFFECT_FORM_START effect_form_start()
-#define EFFECT_FORM_END effect_form_end()
-#define EFFECT_ACTIVE_START effect_active_start()
-#define EFFECT_ACTIVE_END effect_active_end()
-#define EFFECT_VISITED_START effect_visited_start()
-#define EFFECT_VISITED_END effect_visited_end()
-#define EFFECT_MARK_START effect_mark_start()
-#define EFFECT_MARK_END effect_mark_end()
-
-/*-
- * color:
- *     0  black
- *     1  red
- *     2  green
- *     3  yellow
- *     4  blue
- *     5  magenta
- *     6  cyan
- *     7  white
- */
-
-#define EFFECT_ANCHOR_START_C setfcolor(vt, anchor_color)
-#define EFFECT_IMAGE_START_C setfcolor(vt, image_color)
-#define EFFECT_FORM_START_C setfcolor(vt, form_color)
-#define EFFECT_ACTIVE_START_C (setfcolor(vt, active_color), underline(vt))
-#define EFFECT_VISITED_START_C setfcolor(vt, visited_color)
-#define EFFECT_MARK_START_C setbcolor(vt, mark_color)
-
-#define EFFECT_IMAGE_END_C setfcolor(vt, basic_color)
-#define EFFECT_ANCHOR_END_C setfcolor(vt, basic_color)
-#define EFFECT_FORM_END_C setfcolor(vt, basic_color)
-#define EFFECT_ACTIVE_END_C (setfcolor(vt, basic_color), underlineend(vt))
-#define EFFECT_VISITED_END_C setfcolor(vt, basic_color)
-#define EFFECT_MARK_END_C setbcolor(vt, bg_color)
-
-#define EFFECT_ANCHOR_START_M underline(vt)
-#define EFFECT_ANCHOR_END_M underlineend(vt)
-#define EFFECT_IMAGE_START_M standout(vt)
-#define EFFECT_IMAGE_END_M standend(vt)
-#define EFFECT_FORM_START_M standout(vt)
-#define EFFECT_FORM_END_M standend(vt)
-#define EFFECT_ACTIVE_START_NC underline(vt)
-#define EFFECT_ACTIVE_END_NC underlineend(vt)
-#define EFFECT_ACTIVE_START_M bold(vt)
-#define EFFECT_ACTIVE_END_M boldend(vt)
-#define EFFECT_VISITED_START_M /**/
-#define EFFECT_VISITED_END_M /**/
-#define EFFECT_MARK_START_M standout(vt)
-#define EFFECT_MARK_END_M standend(vt)
-#define define_effect(name_start, name_end, color_start, color_end, mono_start, mono_end) \
-    static void name_start                                                                \
-    {                                                                                     \
-        struct VirtualTerm* vt = getScreen();                                             \
-        if (useColor) {                                                                   \
-            color_start;                                                                  \
-        } else {                                                                          \
-            mono_start;                                                                   \
-        }                                                                                 \
-    }                                                                                     \
-    static void name_end                                                                  \
-    {                                                                                     \
-        struct VirtualTerm* vt = getScreen();                                             \
-        if (useColor) {                                                                   \
-            color_end;                                                                    \
-        } else {                                                                          \
-            mono_end;                                                                     \
-        }                                                                                 \
-    }
-
-define_effect(EFFECT_ANCHOR_START, EFFECT_ANCHOR_END, EFFECT_ANCHOR_START_C,
-    EFFECT_ANCHOR_END_C, EFFECT_ANCHOR_START_M, EFFECT_ANCHOR_END_M)
-    define_effect(EFFECT_IMAGE_START, EFFECT_IMAGE_END, EFFECT_IMAGE_START_C,
-        EFFECT_IMAGE_END_C, EFFECT_IMAGE_START_M, EFFECT_IMAGE_END_M)
-        define_effect(EFFECT_FORM_START, EFFECT_FORM_END, EFFECT_FORM_START_C,
-            EFFECT_FORM_END_C, EFFECT_FORM_START_M, EFFECT_FORM_END_M)
-            define_effect(EFFECT_MARK_START, EFFECT_MARK_END, EFFECT_MARK_START_C,
-                EFFECT_MARK_END_C, EFFECT_MARK_START_M, EFFECT_MARK_END_M)
-
-    /*****************/
-    static void EFFECT_ACTIVE_START
-{
-    struct VirtualTerm* vt = getScreen();
-    if (useColor) {
-        if (useActiveColor) {
-            {
-                EFFECT_ACTIVE_START_C;
-            }
-        } else {
-            EFFECT_ACTIVE_START_NC;
-        }
-    } else {
-        EFFECT_ACTIVE_START_M;
-    }
-}
-
-static void EFFECT_ACTIVE_END
-{
-    struct VirtualTerm* vt = getScreen();
-    if (useColor) {
-        if (useActiveColor) {
-            EFFECT_ACTIVE_END_C;
-        } else {
-            EFFECT_ACTIVE_END_NC;
-        }
-    } else {
-        EFFECT_ACTIVE_END_M;
-    }
-}
-
-static void EFFECT_VISITED_START
-{
-    struct VirtualTerm* vt = getScreen();
-    if (useVisitedColor) {
-        if (useColor) {
-            EFFECT_VISITED_START_C;
-        } else {
-            EFFECT_VISITED_START_M;
-        }
-    }
-}
-
-static void EFFECT_VISITED_END
-{
-    struct VirtualTerm* vt = getScreen();
-    if (useVisitedColor) {
-        if (useColor) {
-            EFFECT_VISITED_END_C;
-        } else {
-            EFFECT_VISITED_END_M;
-        }
-    }
-}
-
-/*
- * Display some lines.
- */
 static Line* cline = NULL;
 static int ccolumn = -1;
-
-static int ulmode = 0, somode = 0, bomode = 0;
-static int anch_mode = 0, emph_mode = 0, imag_mode = 0, form_mode = 0,
-           active_mode = 0, visited_mode = 0, mark_mode = 0, graph_mode = 0;
-static Linecolor color_mode = 0;
-
-static Buffer* save_current_buf = NULL;
-
-static void redrawNLine(Buffer* buf, int n);
-static Line* redrawLine(Buffer* buf, Line* l, int i);
 static int image_touch = 0;
-static int draw_image_flag = FALSE;
-static Line* redrawLineImage(Buffer* buf, Line* l, int i);
-static int redrawLineRegion(Buffer* buf, Line* l, int i, int bpos, int epos);
-static void do_effects(Lineprop m);
-static void do_color(Linecolor c);
+static bool draw_image_flag = FALSE;
 
 static Str
 make_lastline_link(Buffer* buf, char* title, char* url)
@@ -330,16 +175,8 @@ struct Frame* screenToFrame(const struct VirtualTerm* vt)
     return frame;
 }
 
-void renderToScreen()
+void bufToScreen(struct VirtualTerm* vt, Buffer* buf)
 {
-    struct VirtualTerm* vt = getScreen();
-    Buffer* buf = Currentbuf;
-    assert(buf);
-
-    // if (buf->topLine == NULL && readBufferCache(buf) == 0) { /* clear_buffer */
-    //     mode = B_FORCE_REDRAW;
-    // }
-
     if (buf->width == 0)
         buf->width = getScreen()->COLS;
     if (buf->height == 0)
@@ -469,15 +306,14 @@ void drawAnchorCursor(Buffer* buf)
     buf->hmarklist->prevhseq = hseq;
 }
 
-static void
-redrawNLine(Buffer* buf, int n)
+void redrawNLine(Buffer* buf, int n)
 {
     struct VirtualTerm* vt = getScreen();
     Line* l;
     int i;
 
     if (useColor) {
-        EFFECT_ANCHOR_END_C;
+        EFFECT_ANCHOR_END_C(vt);
         setbcolor(vt, bg_color);
     }
 
@@ -502,8 +338,7 @@ redrawNLine(Buffer* buf, int n)
     getAllImage(buf);
 }
 
-static Line*
-redrawLine(Buffer* buf, Line* l, int i)
+Line* redrawLine(Buffer* buf, Line* l, int i)
 {
     struct VirtualTerm* vt = getScreen();
     int j, pos, rcol, ncol, delta = 1;
@@ -572,7 +407,7 @@ redrawLine(Buffer* buf, Line* l, int i)
         if (ncol - column > buf->COLS)
             break;
         if (pc)
-            do_color(pc[j]);
+            do_color(vt, pc[j]);
         if (rcol < column) {
             for (rcol = column; rcol < ncol; rcol++)
                 addChar(' ', 0);
@@ -586,60 +421,14 @@ redrawLine(Buffer* buf, Line* l, int i)
         }
         rcol = ncol;
     }
-    if (somode) {
-        somode = FALSE;
-        standend(vt);
-    }
-    if (ulmode) {
-        ulmode = FALSE;
-        underlineend(vt);
-    }
-    if (bomode) {
-        bomode = FALSE;
-        boldend(vt);
-    }
-    if (emph_mode) {
-        emph_mode = FALSE;
-        boldend(vt);
-    }
 
-    if (anch_mode) {
-        anch_mode = FALSE;
-        EFFECT_ANCHOR_END;
-    }
-    if (imag_mode) {
-        imag_mode = FALSE;
-        EFFECT_IMAGE_END;
-    }
-    if (form_mode) {
-        form_mode = FALSE;
-        EFFECT_FORM_END;
-    }
-    if (visited_mode) {
-        visited_mode = FALSE;
-        EFFECT_VISITED_END;
-    }
-    if (active_mode) {
-        active_mode = FALSE;
-        EFFECT_ACTIVE_END;
-    }
-    if (mark_mode) {
-        mark_mode = FALSE;
-        EFFECT_MARK_END;
-    }
-    if (graph_mode) {
-        graph_mode = FALSE;
-        graphend(vt);
-    }
-    if (color_mode)
-        do_color(0);
+    line_end(vt);
     if (rcol - column < buf->COLS)
         clrtoeolx(vt);
     return l;
 }
 
-static Line*
-redrawLineImage(Buffer* buf, Line* l, int i)
+Line* redrawLineImage(Buffer* buf, Line* l, int i)
 {
     int j, pos, rcol;
     int column = buf->currentColumn;
@@ -708,8 +497,7 @@ redrawLineImage(Buffer* buf, Line* l, int i)
     return l;
 }
 
-static int
-redrawLineRegion(Buffer* buf, Line* l, int i, int bpos, int epos)
+int redrawLineRegion(Buffer* buf, Line* l, int i, int bpos, int epos)
 {
     struct VirtualTerm* vt = getScreen();
     int j, pos, rcol, ncol, delta = 1;
@@ -752,7 +540,7 @@ redrawLineRegion(Buffer* buf, Line* l, int i, int bpos, int epos)
         if (ncol - column > buf->COLS)
             break;
         if (pc)
-            do_color(pc[j]);
+            do_color(vt, pc[j]);
         if (j >= bcol && j < ecol) {
             if (rcol < column) {
                 move(vt, i, buf->rootX);
@@ -769,118 +557,9 @@ redrawLineRegion(Buffer* buf, Line* l, int i, int bpos, int epos)
         }
         rcol = ncol;
     }
-    if (somode) {
-        somode = FALSE;
-        standend(vt);
-    }
-    if (ulmode) {
-        ulmode = FALSE;
-        underlineend(vt);
-    }
-    if (bomode) {
-        bomode = FALSE;
-        boldend(vt);
-    }
-    if (emph_mode) {
-        emph_mode = FALSE;
-        boldend(vt);
-    }
 
-    if (anch_mode) {
-        anch_mode = FALSE;
-        EFFECT_ANCHOR_END;
-    }
-    if (imag_mode) {
-        imag_mode = FALSE;
-        EFFECT_IMAGE_END;
-    }
-    if (form_mode) {
-        form_mode = FALSE;
-        EFFECT_FORM_END;
-    }
-    if (visited_mode) {
-        visited_mode = FALSE;
-        EFFECT_VISITED_END;
-    }
-    if (active_mode) {
-        active_mode = FALSE;
-        EFFECT_ACTIVE_END;
-    }
-    if (mark_mode) {
-        mark_mode = FALSE;
-        EFFECT_MARK_END;
-    }
-    if (graph_mode) {
-        graph_mode = FALSE;
-        graphend(vt);
-    }
-    if (color_mode)
-        do_color(0);
+    line_end(vt);
     return rcol - column;
-}
-
-#define do_effect1(effect, modeflag, action_start, action_end) \
-    if (m & effect) {                                          \
-        if (!modeflag) {                                       \
-            action_start;                                      \
-            modeflag = TRUE;                                   \
-        }                                                      \
-    }
-
-#define do_effect2(effect, modeflag, action_start, action_end) \
-    if (modeflag) {                                            \
-        action_end;                                            \
-        modeflag = FALSE;                                      \
-    }
-
-static void
-do_effects(Lineprop m)
-{
-    struct VirtualTerm* vt = getScreen();
-    /* effect end */
-    do_effect2(PE_UNDER, ulmode, underline(vt), underlineend(vt));
-    do_effect2(PE_STAND, somode, standout(vt), standend(vt));
-    do_effect2(PE_BOLD, bomode, bold(vt), boldend(vt));
-    do_effect2(PE_EMPH, emph_mode, bold(vt), boldend(vt));
-    do_effect2(PE_ANCHOR, anch_mode, EFFECT_ANCHOR_START, EFFECT_ANCHOR_END);
-    do_effect2(PE_IMAGE, imag_mode, EFFECT_IMAGE_START, EFFECT_IMAGE_END);
-    do_effect2(PE_FORM, form_mode, EFFECT_FORM_START, EFFECT_FORM_END);
-    do_effect2(PE_VISITED, visited_mode, EFFECT_VISITED_START,
-        EFFECT_VISITED_END);
-    do_effect2(PE_ACTIVE, active_mode, EFFECT_ACTIVE_START, EFFECT_ACTIVE_END);
-    do_effect2(PE_MARK, mark_mode, EFFECT_MARK_START, EFFECT_MARK_END);
-    if (graph_mode) {
-        graphend(vt);
-        graph_mode = FALSE;
-    }
-
-    /* effect start */
-    do_effect1(PE_UNDER, ulmode, underline(vt), underlineend(vt));
-    do_effect1(PE_STAND, somode, standout(vt), standend(vt));
-    do_effect1(PE_BOLD, bomode, bold(vt), boldend(vt));
-    do_effect1(PE_EMPH, emph_mode, bold(vt), boldend(vt));
-    do_effect1(PE_ANCHOR, anch_mode, EFFECT_ANCHOR_START, EFFECT_ANCHOR_END);
-    do_effect1(PE_IMAGE, imag_mode, EFFECT_IMAGE_START, EFFECT_IMAGE_END);
-    do_effect1(PE_FORM, form_mode, EFFECT_FORM_START, EFFECT_FORM_END);
-    do_effect1(PE_VISITED, visited_mode, EFFECT_VISITED_START,
-        EFFECT_VISITED_END);
-    do_effect1(PE_ACTIVE, active_mode, EFFECT_ACTIVE_START, EFFECT_ACTIVE_END);
-    do_effect1(PE_MARK, mark_mode, EFFECT_MARK_START, EFFECT_MARK_END);
-}
-
-static void
-do_color(Linecolor c)
-{
-    struct VirtualTerm* vt = getScreen();
-    if (c & 0x8)
-        setfcolor(vt, c & 0x7);
-    else if (color_mode & 0x8)
-        setfcolor(vt, basic_color);
-    if (c & 0x80)
-        setbcolor(vt, (c >> 4) & 0x7);
-    else if (color_mode & 0x80)
-        setbcolor(vt, bg_color);
-    color_mode = c;
 }
 
 void addChar(char c, Lineprop mode)
@@ -897,7 +576,7 @@ void addMChar(char* p, Lineprop mode, size_t len)
 
     if (mode & PC_WCHAR2)
         return;
-    do_effects(m);
+    do_effects(m, vt);
     if (mode & PC_SYMBOL) {
         char** symbol;
         int w = (mode & PC_KANJI) ? 2 : 1;

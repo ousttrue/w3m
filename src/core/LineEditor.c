@@ -10,6 +10,7 @@
 #include "fm.h"
 #include "history.h"
 #include "screen.h"
+#include "screen_effects.h"
 #include "url.h"
 #include <dirent.h>
 #include <wtf.h>

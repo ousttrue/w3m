@@ -114,17 +114,6 @@ global char* CurrentKeyData;
 global char* CurrentCmdData;
 extern int enable_inline_image;
 
-global int useColor init(TRUE);
-global int basic_color init(8); /* don't change */
-global int anchor_color init(4); /* blue  */
-global int image_color init(2); /* green */
-global int form_color init(1); /* red   */
-global int bg_color init(8); /* don't change */
-global int mark_color init(6); /* cyan */
-global int useActiveColor init(FALSE);
-global int active_color init(6); /* cyan */
-global int useVisitedColor init(FALSE);
-global int visited_color init(5); /* magenta  */
 global int confirm_on_quit init(TRUE);
 global int use_mark init(FALSE);
 global int label_topline init(FALSE);

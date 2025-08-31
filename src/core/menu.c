@@ -13,6 +13,7 @@
 #include "w3m.h"
 #include "image.h"
 #include "screen.h"
+#include "screen_effects.h"
 #include "TermEntry.h"
 #include "graphicchar.h"
 #include "fm.h"
@@ -25,7 +26,6 @@
 
 static char** FRAME;
 static int FRAME_WIDTH;
-static int graph_mode = FALSE;
 #define G_start             \
     {                       \
         if (graph_mode)     \

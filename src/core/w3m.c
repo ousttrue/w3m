@@ -434,7 +434,7 @@ bool onFrame()
         CurrentKeyData = NULL;
         CurrentCmdData = (char*)CurrentEvent->data;
         w3mFuncList[CurrentEvent->cmd].func();
-        renderToScreen();
+        bufToScreen(getScreen(), Currentbuf);
         struct Frame* frame = screenToFrame(getScreen());
 
         wc_putc_init(InnerCharset, DisplayCharset);
@@ -458,7 +458,7 @@ bool onFrame()
                 CurrentCmdData = (char*)CurrentAlarm->data;
                 w3mFuncList[CurrentAlarm->cmd].func();
 
-                renderToScreen();
+                bufToScreen(getScreen(), Currentbuf);
                 renderFrame(getUI());
 
                 CurrentCmdData = NULL;
@@ -477,13 +477,13 @@ bool onFrame()
     mySignal(SIGWINCH, resize_hook);
     if (activeImage && displayImage && Currentbuf->img && !Currentbuf->image_loaded) {
         loadImage(Currentbuf, IMG_FLAG_NEXT);
-        renderToScreen();
+        bufToScreen(getScreen(), Currentbuf);
         renderFrame(getUI());
         // continue;
     }
     if (need_resize_screen) {
         resize_screen();
-        renderToScreen();
+        bufToScreen(getScreen(), Currentbuf);
         renderFrame(getUI());
     }
 
@@ -499,7 +499,7 @@ void onKeyInput(char c)
         set_buffer_environ(Currentbuf);
         save_buffer_position(Currentbuf);
         keyPressEventProc((int)c);
-        renderToScreen();
+        bufToScreen(getScreen(), Currentbuf);
         renderFrame(getUI());
     }
     prev_key = CurrentKey;

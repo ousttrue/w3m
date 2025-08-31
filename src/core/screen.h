@@ -33,16 +33,7 @@ void addmch(struct VirtualTerm* vt, char* p, size_t len);
 void addch(struct VirtualTerm* vt, char c);
 void wrap(struct VirtualTerm* vt);
 void touch_line(struct VirtualTerm* vt);
-void standout(struct VirtualTerm* vt);
-void standend(struct VirtualTerm* vt);
-void bold(struct VirtualTerm* vt);
-void boldend(struct VirtualTerm* vt);
-void underline(struct VirtualTerm* vt);
-void underlineend(struct VirtualTerm* vt);
-void graphstart(struct VirtualTerm* vt);
-void graphend(struct VirtualTerm* vt);
-void setfcolor(struct VirtualTerm* vt, int color);
-void setbcolor(struct VirtualTerm* vt, int color);
+
 void clrtoeol(struct VirtualTerm* vt);
 void clrtoeolx(struct VirtualTerm* vt);
 void clrtobot(struct VirtualTerm* vt);

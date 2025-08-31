@@ -1,6 +1,7 @@
 #include "ui.h"
 #include "indep.h"
 #include "screen.h"
+#include "screen_effects.h"
 #include "putc.h"
 #include "term_renderer.h"
 #include "tty.h"
