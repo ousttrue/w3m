@@ -5,6 +5,7 @@
 #include "tty.h"
 #include "display.h"
 #include "buffer.h"
+#include <stdarg.h>
 #include <wc.h>
 #include <wtf.h>
 
@@ -58,7 +59,7 @@ void status(struct UI ui, const char* s)
     struct VirtualTerm* vt = ui.vt;
     int row = vt->CurLine;
     int col = vt->CurColumn;
-    move(vt, vt->ROWS - 2, 0);
+    move(vt, vt->ROWS - 3, 0);
     addnstr(vt, s, vt->COLS - 1);
     clrtoeolx(vt);
     move(vt, row, col);
@@ -69,7 +70,7 @@ void message(struct UI ui, enum MessageSeverity severity, const char* s)
     struct VirtualTerm* vt = ui.vt;
     int row = vt->CurLine;
     int col = vt->CurColumn;
-    move(vt, vt->ROWS - 1, 0);
+    move(vt, vt->ROWS - 2, 0);
     addnstr(vt, s, vt->COLS - 1);
     clrtoeolx(vt);
     move(vt, row, col);
@@ -99,12 +100,22 @@ void message(struct UI ui, enum MessageSeverity severity, const char* s)
 //     disp_message_nsec(s, redraw_current, 10, FALSE, TRUE);
 // }
 
+static char g_status[512];
+
+void ui_printStatus(const char* fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(g_status, sizeof(g_status), fmt, args);
+    va_end(args);
+}
+
 void renderFrame(struct UI ui)
 {
     int cursorRow = ui.vt->CurLine;
     int cursorCol = ui.vt->CurColumn;
 
-    Buffer *buf = Currentbuf;
+    Buffer* buf = Currentbuf;
     drawAnchorCursor(buf);
 
     Str msg = make_lastline_message(buf);
@@ -118,6 +129,7 @@ void renderFrame(struct UI ui)
     //     // refresh(ttyWriter());
     // }
     standout(ui.vt);
+    status(getUI(), g_status);
     message(getUI(), MSG_INFO, msg->ptr);
     standend(ui.vt);
     // term_title(conv_to_system(buf->buffername));

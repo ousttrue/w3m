@@ -486,8 +486,14 @@ void onKeyInput(char c)
 static void
 keyPressEventProc(int c)
 {
+    int id = (int)GlobalKeymap[c];
+
     CurrentKey = c;
-    w3mFuncList[(int)GlobalKeymap[c]].func();
+    FuncList cmd = w3mFuncList[id];
+
+    ui_printStatus("STATUS: key=%x, id=%x => %s", c, id, cmd.id);
+
+    cmd.func();
 }
 
 void pushEvent(int cmd, void* data)
