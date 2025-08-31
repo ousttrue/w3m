@@ -1,4 +1,4 @@
-#include "func.h"
+#include "keymap.h"
 #include "defun.h"
 
 CommandFunc GlobalKeymap[128] = {

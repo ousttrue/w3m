@@ -7,7 +7,7 @@
 #include "rc.h"
 #include "downloadlist.h"
 #include "ui.h"
-#include "func.h"
+#include "keymap.h"
 #include "cookie.h"
 #include "buffer.h"
 #include "display.h"

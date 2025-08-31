@@ -1,10 +1,5 @@
-/*
- * w3m func.c
- */
-
-#include <stdio.h>
+#include "keymap.h"
 #include "fm.h"
-#include "func.h"
 #include "myctype.h"
 #include "rc.h"
 #include "ctrlcode.h"
@@ -13,7 +8,9 @@
 #include "istream.h"
 #include "history.h"
 #include "quote.h"
+
 #include <Str.h>
+#include <stdio.h>
 
 #include "defun.h"
 
@@ -21,13 +18,9 @@ FuncList w3mFuncList[] = {
     // #embed "../../zig-out/include/funcnamemap.h"
 };
 
-// #include "funcname1.h"
-// #include "funcname.c"
-// #include "functable.c"
-
 #define KEYDATA_HASH_SIZE 16
 static Hash_iv* keyData = NULL;
-static char keymap_initialized = FALSE;
+static bool keymap_initialized = false;
 static struct stat sys_current_keymap_file;
 static struct stat current_keymap_file;
 
@@ -173,18 +166,22 @@ interpret_keymap(FILE* kf, struct stat* current, int force)
 
 void initKeymap(int force)
 {
-    FILE* kf;
+    {
+        FILE* kf = fopen(confFile(KEYMAP_FILE), "rt");
+        if (kf) {
+            interpret_keymap(kf, &sys_current_keymap_file, force || !keymap_initialized);
+            fclose(kf);
+        }
+    }
 
-    if ((kf = fopen(confFile(KEYMAP_FILE), "rt")) != NULL) {
-        interpret_keymap(kf, &sys_current_keymap_file,
-            force || !keymap_initialized);
-        fclose(kf);
+    {
+        FILE* kf = fopen(rcFile(keymap_file), "rt");
+        if (kf) {
+            interpret_keymap(kf, &current_keymap_file, force || !keymap_initialized);
+            fclose(kf);
+        }
     }
-    if ((kf = fopen(rcFile(keymap_file), "rt")) != NULL) {
-        interpret_keymap(kf, &current_keymap_file,
-            force || !keymap_initialized);
-        fclose(kf);
-    }
+
     keymap_initialized = TRUE;
 }
 
@@ -349,7 +346,3 @@ int getKey(char* s)
     }
     return c;
 }
-
-
-
-

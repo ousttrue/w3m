@@ -6,7 +6,7 @@
 #include "linein.h"
 #include "history.h"
 #include "downloadlist.h"
-#include "func.h"
+#include "keymap.h"
 #include "ui.h"
 #include "form.h"
 #include "mysignal.h"
@@ -2281,7 +2281,7 @@ void flushline(struct html_feed_environ* h_env, struct readbuffer* obuf, int ind
         }
         if (obuf->anchor.referer) {
             Strcat_charp(tmp, "\" REFERER=\"");
-            Strcat_charp(tmp, html_quote(obuf->anchor.referer));
+            Strcat_charp(tmp, html_quote((char*)obuf->anchor.referer));
         }
         if (obuf->anchor.title) {
             Strcat_charp(tmp, "\" TITLE=\"");

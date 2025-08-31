@@ -10,7 +10,7 @@
 #include "url.h"
 #include "linein.h"
 #include "form.h"
-#include "func.h"
+#include "keymap.h"
 #include "menu.h"
 #include "version.h"
 #include "buffer.h"

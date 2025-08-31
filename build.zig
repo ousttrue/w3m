@@ -32,6 +32,7 @@ const w3m_srcs = [_][]const u8{
     "downloadlist.c",
     "growbuf.c",
     "quote.c",
+    "keymap.c",
 
     "ui.c",
     "LineEditor.c",
@@ -60,7 +61,6 @@ const w3m_srcs = [_][]const u8{
     "url.c",
     "mimehead.c",
     "regex.c",
-    "func.c",
     "cookie.c",
     "history.c",
 

@@ -10,7 +10,7 @@
 #include "defun.h"
 #include "linein.h"
 #include "menu.h"
-#include "func.h"
+#include "keymap.h"
 #include "downloadlist.h"
 #include "funcname1.h"
 #include "form.h"
