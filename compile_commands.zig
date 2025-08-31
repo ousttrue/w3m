@@ -36,7 +36,11 @@ pub fn createStep(b: *std.Build, name: []const u8, targets: []*std.Build.Step.Co
     return step;
 }
 
-fn extractIncludeDirsFromCompileStepInner(b: *std.Build, step: *std.Build.Step.Compile, lazy_path_output: *std.array_list.Managed(std.Build.LazyPath)) void {
+fn extractIncludeDirsFromCompileStepInner(
+    b: *std.Build,
+    step: *std.Build.Step.Compile,
+    lazy_path_output: *std.array_list.Managed(std.Build.LazyPath),
+) void {
     for (step.root_module.include_dirs.items) |include_dir| {
         switch (include_dir) {
             .other_step => |other_step| {
@@ -47,7 +51,7 @@ fn extractIncludeDirsFromCompileStepInner(b: *std.Build, step: *std.Build.Step.C
                     // if the directory has exclude patterns set, we will ignore those.
                     // TODO: switch this to include the output directory instead of the source directory, so
                     // that include / exclude patterns are respected
-                    lazy_path_output.append(header_step.getSource()) catch @panic("OOM");
+                    lazy_path_output.append(header_step.getSource().dirname()) catch @panic("OOM");
                 }
                 // recurse- this step may have included child dependencies
                 var local_lazy_path_output = std.array_list.Managed(std.Build.LazyPath).init(b.allocator);
@@ -92,7 +96,14 @@ pub fn extractIncludeDirsFromCompileStep(b: *std.Build, step: *std.Build.Step.Co
 
     // resolve lazy paths all at once
     for (dirs.items) |lazy_path| {
-        dirs_as_strings.append(lazy_path.getPath(b)) catch @panic("OOM");
+        const path = lazy_path.getPath(b);
+        const item_index = for (dirs_as_strings.items, 0..) |dir, i| {
+            if (std.mem.eql(u8, dir, path)) break i;
+        } else null;
+        if (item_index == null) {
+            // std.mem.fin
+            dirs_as_strings.append(path) catch @panic("OOM");
+        }
     }
 
     return dirs_as_strings.toOwnedSlice() catch @panic("OOM");
