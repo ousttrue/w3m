@@ -4,13 +4,12 @@
 
 struct form_list;
 
-#ifdef HAVE_DIRENT_H
+#ifdef _WIN32
+#else /* not HAVE_DIRENT_H */
 #include <dirent.h>
 typedef struct dirent Directory;
-#else /* not HAVE_DIRENT_H */
-#include <sys/dir.h>
-typedef struct direct Directory;
 #endif /* not HAVE_DIRENT_H */
+
 #include <sys/stat.h>
 
 #ifndef S_IFMT

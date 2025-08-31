@@ -13,11 +13,14 @@
 #include <unistd.h>
 #include <wtf.h>
 
+#ifdef _WIN32
+#else
 static sigjmp_buf IntReturn;
 static MySignalHandler intTrap(int _dummy)
 { /* Interrupt catcher */
     siglongjmp(IntReturn, 0);
 }
+#endif
 
 static char* SearchString = NULL;
 static SearchFunc searchRoutine;

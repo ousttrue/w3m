@@ -28,6 +28,8 @@ MySignalFunc mySignal(int signal_number, MySignalFunc action)
 
 void reset_signals(void)
 {
+#ifdef WIN32
+#else
 #ifdef SIGHUP
     mySignal(SIGHUP, SIG_DFL); /* terminate process */
 #endif
@@ -44,4 +46,5 @@ void reset_signals(void)
 #endif /* SIGBUS */
     mySignal(SIGCHLD, SIG_IGN);
     mySignal(SIGPIPE, SIG_IGN);
+#endif
 }

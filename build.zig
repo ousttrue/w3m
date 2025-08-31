@@ -1,13 +1,6 @@
 const std = @import("std");
 const zcc = @import("compile_commands.zig");
 
-const system_libs = [_][]const u8{
-    // "gc",
-    "ssl",
-    "ncurses",
-    "crypto",
-};
-
 const output_public_headers = [_][]const u8{
     "writer.h",
     "TermEntry.h",
@@ -90,6 +83,7 @@ pub fn build(b: *std.Build) void {
     const gc_dep = b.dependency("gc", .{
         .target = target,
         .optimize = optimize,
+        .BUILD_SHARED_LIBS = false,
     });
     const gc = gc_dep.artifact("gc");
     // const gc_include_dir = gc.installed_headers_include_tree orelse {
@@ -155,15 +149,29 @@ pub fn build(b: *std.Build) void {
         .flags = &flags,
     });
     exe.addIncludePath(b.path("src/core"));
-    for (system_libs) |lib| {
-        exe.linkSystemLibrary(lib);
+
+    if (target.result.os.tag == .windows) {
+        const ssl = b.dependency("ssl_prebuilt", .{});
+        exe.addLibraryPath(ssl.path("x64/lib"));
+        exe.addIncludePath(ssl.path("x64/include"));
+    } else {
+        const system_libs = [_][]const u8{
+            "ncurses",
+            "ssl",
+            "crypto",
+        };
+        for (system_libs) |lib| {
+            exe.linkSystemLibrary(lib);
+        }
     }
 
     const wc_dep = b.dependency("wc", .{
         .target = target,
         .optimize = optimize,
     });
-    exe.linkLibrary(wc_dep.artifact(("wc")));
+    const wc = wc_dep.artifact("wc");
+    wc.addIncludePath(gc_include_dir);
+    exe.linkLibrary(wc);
 
     const output = build_output(b, target, optimize);
     exe.linkLibrary(output);
@@ -185,8 +193,7 @@ pub fn build(b: *std.Build) void {
     }
 
     {
-        const mktable = build_mktable(b, b.graph.host, .ReleaseSafe, &.{});
-        mktable.linkLibrary(gc);
+        const mktable = build_mktable(b, b.graph.host, optimize, &.{});
         mktable.addIncludePath(gc_include_dir);
 
         // {
@@ -326,9 +333,21 @@ fn build_mktable(
     exe.addIncludePath(b.path("src/core"));
     exe.addIncludePath(b.path("libwc"));
     exe.linkLibC();
+    exe.linkLibCpp();
     for (libs) |lib| {
         exe.linkSystemLibrary(lib);
     }
+
+    // build for mktable
+    const gc_dep = b.dependency("gc", .{
+        .target = target,
+        .optimize = optimize,
+        .BUILD_SHARED_LIBS = false,
+    });
+    const gc = gc_dep.artifact("gc");
+    exe.linkLibrary(gc);
+    exe.addIncludePath(gc_dep.path("include"));
+
     return exe;
 }
 
