@@ -2,7 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h> // getenv
 #include <string.h>
+#ifndef _WIN32
 #include <term.h>
+#endif
 
 struct TermEntry T = { 0 };
 struct TermEntry* getTermEntry()
@@ -12,6 +14,8 @@ struct TermEntry* getTermEntry()
 
 struct TermEntry* initTerm()
 {
+#ifdef _WIN32
+#else
     const char* ent = getenv("TERM");
     if (ent == NULL) {
         fprintf(stderr, "TERM is not set\n");
@@ -65,11 +69,17 @@ struct TermEntry* initTerm()
     T.ae = tgetstr("ae", &pt); /* alternative (graphic) charset end */
     T.ac = tgetstr("ac", &pt); /* graphics charset pairs */
     T.op = tgetstr("op", &pt); /* set default color pair to its original value */
+#endif
 
     return &T;
 }
 
 const char* getMoveXY(int x, int y)
 {
+#ifdef _WIN32
+    static char buf[32];
+    return buf;
+#else
     return tgoto(T.cm, x, y);
+#endif
 }
