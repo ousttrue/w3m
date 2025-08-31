@@ -391,7 +391,8 @@ fn gen_gcc_e(b: *std.Build) struct {
     //     b.getInstallStep().dependOn(&install.step);
     // }
 
-    var cpp = b.addSystemCommand(&.{ "gcc", "-E", "-" });
+    // var cpp = b.addSystemCommand(&.{ "gcc", "-E", "-" });
+    var cpp = b.addSystemCommand(&.{ "zig", "cc", "-E", "-" });
     cpp.setStdIn(.{
         .lazy_path = sed.captureStdOut(),
     });
