@@ -33,6 +33,7 @@ void vt_setupscreen(struct VirtualTerm* vt, int rows, int cols)
         vt->ScreenImage = New_N(Screen*, rows);
     }
     vt->ROWS = rows;
+    vt->tab_step = 8;
 
     if (cols > vt->COLS) {
         for (int i = 0; i < vt->ROWS; i++) {
