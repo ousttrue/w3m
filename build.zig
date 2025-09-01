@@ -33,6 +33,7 @@ const w3m_srcs = [_][]const u8{
     "growbuf.c",
     "quote.c",
     "keymap.c",
+    "progress.c",
 
     "ui.c",
     "LineEditor.c",

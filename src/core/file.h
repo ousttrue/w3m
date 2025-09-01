@@ -58,9 +58,6 @@ int HTMLtagproc1(struct parsed_tag* tag, struct html_feed_environ* h_env);
 void HTMLlineproc2(struct _Buffer* buf, TextLineList* tl);
 void HTMLlineproc0(char* istr, struct html_feed_environ* h_env, int internal);
 #define HTMLlineproc1(x, y) HTMLlineproc0(x, y, TRUE)
-char* convert_size(long long size, int usefloat);
-char* convert_size2(long long size1, long long size2, int usefloat);
-void showProgress(long long* linelen, long long* trbyte);
 void init_henv(struct html_feed_environ*, struct readbuffer*,
     struct environment*, int, TextLineList*, int, int);
 void completeHTMLstream(struct html_feed_environ*,

@@ -1,5 +1,6 @@
 #include "w3m.h"
 #include "indep.h"
+#include "progress.h"
 #include "version.h"
 #include "quote.h"
 #include <gc/gc.h>
