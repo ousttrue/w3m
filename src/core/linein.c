@@ -92,7 +92,7 @@ char* inputLineHistSearch(struct UI ui,
         }
 
         // show prompt
-        move(ui.vt, ui.vt->ROWS - 1, 0);
+        vt_move(ui.vt, ui.vt->ROWS - 1, 0);
         addstr(ui.vt, prompt);
 
         // show current
@@ -105,7 +105,7 @@ char* inputLineHistSearch(struct UI ui,
 
         // cursor
         clrtoeolx(ui.vt);
-        move(ui.vt, ui.vt->ROWS - 1, opos + x - g_editor.offset);
+        vt_move(ui.vt, ui.vt->ROWS - 1, opos + x - g_editor.offset);
 
         // draw frame
         renderFrame(ui);
@@ -168,7 +168,7 @@ char* inputLineHistSearch(struct UI ui,
     if (g_editor.i_broken)
         return NULL;
 
-    move(getScreen(), ui.vt->ROWS - 1, 0);
+    vt_move(getScreen(), ui.vt->ROWS - 1, 0);
     renderFrame(ui);
 
     char* p = g_editor.strBuf->ptr;

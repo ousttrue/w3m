@@ -61,10 +61,10 @@ void status(struct UI ui, const char* s)
     struct VirtualTerm* vt = ui.vt;
     int row = vt->CurLine;
     int col = vt->CurColumn;
-    move(vt, vt->ROWS - 3, 0);
+    vt_move(vt, vt->ROWS - 3, 0);
     addnstr(vt, s, vt->COLS - 1);
     clrtoeolx(vt);
-    move(vt, row, col);
+    vt_move(vt, row, col);
 }
 
 void message(struct UI ui, enum MessageSeverity severity, const char* s)
@@ -72,10 +72,10 @@ void message(struct UI ui, enum MessageSeverity severity, const char* s)
     struct VirtualTerm* vt = ui.vt;
     int row = vt->CurLine;
     int col = vt->CurColumn;
-    move(vt, vt->ROWS - 2, 0);
+    vt_move(vt, vt->ROWS - 2, 0);
     addnstr(vt, s, vt->COLS - 1);
     clrtoeolx(vt);
-    move(vt, row, col);
+    vt_move(vt, row, col);
 }
 
 static char* delayed_msg = NULL;

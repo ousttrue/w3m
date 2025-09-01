@@ -321,7 +321,7 @@ void resetTerm(void)
 void fmTerm(void)
 {
     struct VirtualTerm* vt = getScreen();
-    move(vt, getLines() - 1, 0);
+    vt_move(vt, getLines() - 1, 0);
     clrtoeolx(vt);
     // refresh(ttyWriter());
     if (activeImage)
@@ -1485,7 +1485,7 @@ DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background")
 #ifndef SIGSTOP
     char* shell;
 #endif /* not SIGSTOP */
-    move(vt, getLines() - 1, 0);
+    vt_move(vt, getLines() - 1, 0);
     clrtoeolx(vt);
     // refresh(ttyWriter());
     fmTerm();

@@ -54,7 +54,7 @@ void setupscreen(struct VirtualTerm* vt, int rows, int cols)
     }
 }
 
-void move(struct VirtualTerm* vt, int line, int column)
+void vt_move(struct VirtualTerm* vt, int line, int column)
 {
     if (line >= 0 && line < vt->ROWS)
         vt->CurLine = line;
@@ -240,7 +240,7 @@ void touch_line(struct VirtualTerm* vt)
 
 void clear(struct VirtualTerm* vt)
 {
-    move(vt, 0, 0);
+    vt_move(vt, 0, 0);
     struct scline** l = vt->ScreenImage;
     for (int i = 0; i < vt->ROWS; ++i, ++l) {
         (*l)->isdirty = 0;
@@ -284,7 +284,7 @@ clrtoeol_with_bcolor(struct VirtualTerm* vt)
     vt->CurrentMode = (vt->CurrentMode & (M_CEOL | S_BCOLORED)) | C_ASCII;
     for (int i = vt->CurColumn; i < vt->COLS; i++)
         addch(vt, ' ');
-    move(vt, cli, cco);
+    vt_move(vt, cli, cco);
     vt->CurrentMode = pr;
 }
 

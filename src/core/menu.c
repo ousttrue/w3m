@@ -668,10 +668,6 @@ static MenuList* w3mMenuList;
 
 static Menu* CurrentMenu = NULL;
 
-#define mvaddch(vt, y, x, c) (move(vt, y, x), addch(vt, c))
-#define mvaddstr(vt, y, x, str) (move(vt, y, x), addstr(vt, str))
-#define mvaddnstr(vt, y, x, str, n) (move(vt, y, x), addnstr_sup(vt, str, n))
-
 void new_menu(Menu* menu, MenuItem* item)
 {
     int i, l;
@@ -770,60 +766,60 @@ void draw_menu(Menu* menu)
 
     if (menu->offset == 0) {
         G_start;
-        mvaddstr(vt, y, x, FRAME[3]);
+        vt_mvaddstr(vt, y, x, FRAME[3]);
         for (i = FRAME_WIDTH; i < w - FRAME_WIDTH; i += FRAME_WIDTH)
-            mvaddstr(vt, y, x + i, FRAME[10]);
-        mvaddstr(vt, y, x + i, FRAME[6]);
+            vt_mvaddstr(vt, y, x + i, FRAME[10]);
+        vt_mvaddstr(vt, y, x + i, FRAME[6]);
         G_end;
     } else {
         G_start;
-        mvaddstr(vt, y, x, FRAME[5]);
+        vt_mvaddstr(vt, y, x, FRAME[5]);
         G_end;
         for (i = FRAME_WIDTH; i < w - FRAME_WIDTH; i++)
-            mvaddstr(vt, y, x + i, " ");
+            vt_mvaddstr(vt, y, x + i, " ");
         G_start;
-        mvaddstr(vt, y, x + i, FRAME[5]);
+        vt_mvaddstr(vt, y, x + i, FRAME[5]);
         G_end;
         i = (w / 2 - 1) / FRAME_WIDTH * FRAME_WIDTH;
-        mvaddstr(vt, y, x + i, ":");
+        vt_mvaddstr(vt, y, x + i, ":");
     }
 
     for (j = 0; j < menu->height; j++) {
         y++;
         G_start;
-        mvaddstr(vt, y, x, FRAME[5]);
+        vt_mvaddstr(vt, y, x, FRAME[5]);
         G_end;
         draw_menu_item(menu, menu->offset + j);
         G_start;
-        mvaddstr(vt, y, x + w - FRAME_WIDTH, FRAME[5]);
+        vt_mvaddstr(vt, y, x + w - FRAME_WIDTH, FRAME[5]);
         G_end;
     }
     y++;
     if (menu->offset + menu->height == menu->nitem) {
         G_start;
-        mvaddstr(vt, y, x, FRAME[9]);
+        vt_mvaddstr(vt, y, x, FRAME[9]);
         for (i = FRAME_WIDTH; i < w - FRAME_WIDTH; i += FRAME_WIDTH)
-            mvaddstr(vt, y, x + i, FRAME[10]);
-        mvaddstr(vt, y, x + i, FRAME[12]);
+            vt_mvaddstr(vt, y, x + i, FRAME[10]);
+        vt_mvaddstr(vt, y, x + i, FRAME[12]);
         G_end;
     } else {
         G_start;
-        mvaddstr(vt, y, x, FRAME[5]);
+        vt_mvaddstr(vt, y, x, FRAME[5]);
         G_end;
         for (i = FRAME_WIDTH; i < w - FRAME_WIDTH; i++)
-            mvaddstr(vt, y, x + i, " ");
+            vt_mvaddstr(vt, y, x + i, " ");
         G_start;
-        mvaddstr(vt, y, x + i, FRAME[5]);
+        vt_mvaddstr(vt, y, x + i, FRAME[5]);
         G_end;
         i = (w / 2 - 1) / FRAME_WIDTH * FRAME_WIDTH;
-        mvaddstr(vt, y, x + i, ":");
+        vt_mvaddstr(vt, y, x + i, ":");
     }
 }
 
 void draw_menu_item(Menu* menu, int mselect)
 {
     struct VirtualTerm* vt = getScreen();
-    mvaddnstr(vt, menu->y + mselect - menu->offset, menu->x,
+    vt_mvaddnstr(vt, menu->y + mselect - menu->offset, menu->x,
         menu->item[mselect].label, menu->width);
 }
 
@@ -845,7 +841,7 @@ int select_menu(Menu* menu, int mselect)
     standend(vt);
     /*
      * move(menu->cursorY, menu->cursorX); */
-    move(vt, menu->y + mselect - menu->offset, menu->x);
+    vt_move(vt, menu->y + mselect - menu->offset, menu->x);
     toggle_stand(vt);
     // refresh(ttyWriter());
 
@@ -1672,10 +1668,10 @@ int setMenuItem(MenuItem* item, char* type, char* line)
         item->label = getQWord(&line);
         return MENU_NOP;
     } else if (strcmp(type, "func") == 0) {
-        char *label = getQWord(&line);
-        char *func = getWord(&line);
-        char *keys = getQWord(&line);
-        char *data = getQWord(&line);
+        char* label = getQWord(&line);
+        char* func = getWord(&line);
+        char* keys = getQWord(&line);
+        char* data = getQWord(&line);
         if (*func == '\0') /* error */
             return -1;
         item->type = MENU_FUNC;
@@ -1685,9 +1681,9 @@ int setMenuItem(MenuItem* item, char* type, char* line)
         item->data = data;
         return MENU_FUNC;
     } else if (strcmp(type, "popup") == 0) {
-        char *label = getQWord(&line);
-        char *popup = getQWord(&line);
-        char *keys = getQWord(&line);
+        char* label = getQWord(&line);
+        char* popup = getQWord(&line);
+        char* keys = getQWord(&line);
         if (*popup == '\0') /* error */
             return -1;
         item->type = MENU_POPUP;

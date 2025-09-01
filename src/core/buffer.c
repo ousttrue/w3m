@@ -192,7 +192,7 @@ writeBufferName(Buffer* buf, int n)
     int all = buf->allLine;
     if (all == 0 && buf->lastLine != NULL)
         all = buf->lastLine->linenumber;
-    move(getScreen(), n, 0);
+    vt_move(getScreen(), n, 0);
 
     Str msg = Sprintf("<%s> [%d lines]", buf->buffername, all);
     if (buf->filename != NULL) {
@@ -296,7 +296,7 @@ listBuffer(Buffer* top, Buffer* current)
     int i, c = 0;
     Buffer* buf = top;
 
-    move(vt, 0, 0);
+    vt_move(vt, 0, 0);
     if (useColor) {
         setfcolor(vt, basic_color);
         setbcolor(vt, bg_color);
@@ -311,12 +311,12 @@ listBuffer(Buffer* top, Buffer* current)
         if (buf == current) {
             standend(vt);
             clrtoeolx(vt);
-            move(vt, i, 0);
+            vt_move(vt, i, 0);
             toggle_stand(vt);
         } else
             clrtoeolx(vt);
         if (buf->nextBuffer == NULL) {
-            move(vt, i + 1, 0);
+            vt_move(vt, i + 1, 0);
             clrtobotx(vt);
             break;
         }
@@ -326,7 +326,7 @@ listBuffer(Buffer* top, Buffer* current)
     /* FIXME: gettextize? */
     message(getUI(), MSG_INFO, "Buffer selection mode: SPC for select / D for delete buffer");
     standend(vt);
-    move(vt, c, 0);
+    vt_move(vt, c, 0);
     // refresh(ttyWriter());
     return buf->nextBuffer;
 }
@@ -395,7 +395,7 @@ selectBuffer(Buffer* firstbuf, Buffer* currentbuf, char* selectchar)
                 standout(vt);
                 writeBufferName(currentbuf, spoint);
                 standend(vt);
-                move(vt, spoint, 0);
+                vt_move(vt, spoint, 0);
                 toggle_stand(vt);
             } else if (cpoint < maxbuf - 1) {
                 topbuf = currentbuf;
@@ -414,7 +414,7 @@ selectBuffer(Buffer* firstbuf, Buffer* currentbuf, char* selectchar)
                 standout(vt);
                 writeBufferName(currentbuf, spoint);
                 standend(vt);
-                move(vt, spoint, 0);
+                vt_move(vt, spoint, 0);
                 toggle_stand(vt);
             } else if (cpoint > 0) {
                 i = cpoint - sclimit;
@@ -431,7 +431,7 @@ selectBuffer(Buffer* firstbuf, Buffer* currentbuf, char* selectchar)
             *selectchar = c;
             goto end;
         }
-        move(vt, spoint, 0);
+        vt_move(vt, spoint, 0);
         // refresh(ttyWriter());
     }
 end:

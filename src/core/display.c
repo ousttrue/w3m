@@ -324,13 +324,13 @@ void redrawNLine(Buffer* buf, int n)
             break;
     }
     if (n > 0) {
-        move(vt, i + buf->rootY, 0);
+        vt_move(vt, i + buf->rootY, 0);
         clrtobotx(vt);
     }
 
     if (!(activeImage && displayImage && buf->img))
         return;
-    move(vt, buf->cursorY + buf->rootY, buf->cursorX + buf->rootX);
+    vt_move(vt, buf->cursorY + buf->rootY, buf->cursorX + buf->rootX);
     for (i = 0, l = buf->topLine; i < buf->LINES && l; i++, l = l->next) {
         if (i >= buf->LINES - n || i < -n)
             redrawLineImage(buf, l, i + buf->rootY);
@@ -353,7 +353,7 @@ Line* redrawLine(Buffer* buf, Line* l, int i)
     if (l == NULL) {
         return NULL;
     }
-    move(vt, i, 0);
+    vt_move(vt, i, 0);
     if (showLineNum) {
         char tmp[16];
         if (!buf->rootX) {
@@ -373,7 +373,7 @@ Line* redrawLine(Buffer* buf, Line* l, int i)
             sprintf(tmp, "%*s ", buf->rootX - 1, "");
         addstr(vt, tmp);
     }
-    move(vt, i, buf->rootX);
+    vt_move(vt, i, buf->rootX);
     if (l->width < 0)
         l->width = COLPOS(l, l->len);
     if (l->len == 0 || l->width - 1 < column) {
@@ -410,14 +410,14 @@ Line* redrawLine(Buffer* buf, Line* l, int i)
             do_color(vt, pc[j]);
         if (rcol < column) {
             for (rcol = column; rcol < ncol; rcol++)
-                addChar(' ', 0);
+                vt_addChar(vt, ' ', 0);
             continue;
         }
         if (p[j] == '\t') {
             for (; rcol < ncol; rcol++)
-                addChar(' ', 0);
+                vt_addChar(vt, ' ', 0);
         } else {
-            addMChar(&p[j], pr[j], delta);
+            vt_addMChar(vt, &p[j], pr[j], delta);
         }
         rcol = ncol;
     }
@@ -543,17 +543,17 @@ int redrawLineRegion(Buffer* buf, Line* l, int i, int bpos, int epos)
             do_color(vt, pc[j]);
         if (j >= bcol && j < ecol) {
             if (rcol < column) {
-                move(vt, i, buf->rootX);
+                vt_move(vt, i, buf->rootX);
                 for (rcol = column; rcol < ncol; rcol++)
-                    addChar(' ', 0);
+                    vt_addChar(vt, ' ', 0);
                 continue;
             }
-            move(vt, i, rcol - column + buf->rootX);
+            vt_move(vt, i, rcol - column + buf->rootX);
             if (p[j] == '\t') {
                 for (; rcol < ncol; rcol++)
-                    addChar(' ', 0);
+                    vt_addChar(vt, ' ', 0);
             } else
-                addMChar(&p[j], pr[j], delta);
+                vt_addMChar(vt, &p[j], pr[j], delta);
         }
         rcol = ncol;
     }
@@ -562,14 +562,9 @@ int redrawLineRegion(Buffer* buf, Line* l, int i, int bpos, int epos)
     return rcol - column;
 }
 
-void addChar(char c, Lineprop mode)
+void vt_addMChar(struct VirtualTerm *vt, char* p, Lineprop mode, size_t len)
 {
-    addMChar(&c, mode, 1);
-}
-
-void addMChar(char* p, Lineprop mode, size_t len)
-{
-    struct VirtualTerm* vt = getScreen();
+    // struct VirtualTerm* vt = getScreen();
     struct TermEntry* t = getTermEntry();
     Lineprop m = CharEffect(mode);
     char c = *p;

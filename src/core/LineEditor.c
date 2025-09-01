@@ -441,11 +441,11 @@ disp_next:
             y = nline - row - 1;
     }
     if (y) {
-        move(vt, y - 1, 0);
+        vt_move(vt, y - 1, 0);
         clrtoeolx(vt);
     }
     if (comment) {
-        move(vt, y, 0);
+        vt_move(vt, y, 0);
         clrtoeolx(vt);
         bold(vt);
         /* FIXME: gettextize? */
@@ -458,7 +458,7 @@ disp_next:
             n = e->cm_disp_next + j * row + i;
             if (n >= e->NCFileBuf)
                 break;
-            move(vt, y, j * len);
+            vt_move(vt, y, j * len);
             clrtoeolx(vt);
             f = Strdup(d);
             Strcat_charp(f, e->CFileBuf[n]);
@@ -469,7 +469,7 @@ disp_next:
         y++;
     }
     if (comment && y == e->ui.vt->ROWS - 1 - 1) {
-        move(vt, y, 0);
+        vt_move(vt, y, 0);
         clrtoeolx(vt);
         bold(vt);
         if (emacs_like_lineedit)
@@ -662,11 +662,11 @@ void le_addPasswd(struct LineEditor* e, char* p, Lineprop* pr, int len, int offs
     if (ncol > offset + limit)
         ncol = offset + limit;
     if (offset) {
-        addChar('{', 0);
+        vt_addChar(e->ui.vt, '{', 0);
         rcol = offset + 1;
     }
     for (; rcol < ncol; rcol++)
-        addChar('*', 0);
+        vt_addChar(e->ui.vt, '*', 0);
 }
 
 void le_addStr(struct LineEditor* e, char* p, Lineprop* pr, int len, int offset, int limit)
@@ -682,11 +682,11 @@ void le_addStr(struct LineEditor* e, char* p, Lineprop* pr, int len, int offset,
             return;
         while (pr[i] & PC_WCHAR2)
             i++;
-        addChar('{', 0);
+        vt_addChar(e->ui.vt, '{', 0);
         rcol = offset + 1;
         ncol = calcPosition(p, pr, len, i, 0, CP_AUTO);
         for (; rcol < ncol; rcol++)
-            addChar(' ', 0);
+            vt_addChar(e->ui.vt, ' ', 0);
     }
     for (; i < len; i += delta) {
         delta = wtf_len((wc_uchar*)&p[i]);
@@ -695,10 +695,10 @@ void le_addStr(struct LineEditor* e, char* p, Lineprop* pr, int len, int offset,
             break;
         if (p[i] == '\t') {
             for (; rcol < ncol; rcol++)
-                addChar(' ', 0);
+                vt_addChar(e->ui.vt, ' ', 0);
             continue;
         } else {
-            addMChar(&p[i], pr[i], delta);
+            vt_addMChar(e->ui.vt, &p[i], pr[i], delta);
         }
         rcol = ncol;
     }

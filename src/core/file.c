@@ -5895,7 +5895,7 @@ void showProgress(long long* linelen, long long* trbyte)
         double ratio;
         cur_time = time(0);
         if (*trbyte == 0) {
-            move(vt, getScreen()->ROWS - 1, 0);
+            vt_move(vt, getScreen()->ROWS - 1, 0);
             clrtoeolx(vt);
             start_time = cur_time;
         }
@@ -5904,7 +5904,7 @@ void showProgress(long long* linelen, long long* trbyte)
         if (cur_time == last_time)
             return;
         last_time = cur_time;
-        move(vt, getScreen()->ROWS - 1, 0);
+        vt_move(vt, getScreen()->ROWS - 1, 0);
         ratio = 100.0 * (*trbyte) / current_content_length;
         fmtrbyte = convert_size2(*trbyte, current_content_length, 1);
         duration = cur_time - start_time;
@@ -5925,7 +5925,7 @@ void showProgress(long long* linelen, long long* trbyte)
         addstr(vt, messages->ptr);
         pos = 42;
         i = pos + (getScreen()->COLS - pos - 1) * (*trbyte) / current_content_length;
-        move(vt, getScreen()->ROWS - 1, pos);
+        vt_move(vt, getScreen()->ROWS - 1, pos);
         standout(vt);
         addch(vt, ' ');
         for (j = pos + 1; j <= i; j++)
@@ -5936,7 +5936,7 @@ void showProgress(long long* linelen, long long* trbyte)
     } else {
         cur_time = time(0);
         if (*trbyte == 0) {
-            move(vt, getScreen()->ROWS - 1, 0);
+            vt_move(vt, getScreen()->ROWS - 1, 0);
             clrtoeolx(vt);
             start_time = cur_time;
         }
@@ -5945,7 +5945,7 @@ void showProgress(long long* linelen, long long* trbyte)
         if (cur_time == last_time)
             return;
         last_time = cur_time;
-        move(vt, getScreen()->ROWS - 1, 0);
+        vt_move(vt, getScreen()->ROWS - 1, 0);
         fmtrbyte = convert_size(*trbyte, 1);
         duration = cur_time - start_time;
         if (duration) {
