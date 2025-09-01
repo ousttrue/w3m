@@ -4,9 +4,11 @@
 #include "screen_effects.h"
 #include "putc.h"
 #include "term_renderer.h"
+#include "TermEntry.h"
 #include "tty.h"
 #include "display.h"
 #include "buffer.h"
+#include "graphicchar.h"
 #include <stdarg.h>
 #include <wc.h>
 #include <wtf.h>
@@ -29,8 +31,10 @@ Buffer* Firstbuf = 0;
 
 struct UI getUI()
 {
+    struct TermEntry* t = getTermEntry();
     struct UI ui = {
         .vt = getScreen(),
+        .use_graphic = graph_ok(t),
     };
     return ui;
 }
@@ -120,11 +124,14 @@ void ui_printStatus(const char* fmt, ...)
 
 void renderFrame(struct UI ui)
 {
+    struct TermEntry* t = getTermEntry();
+    bool use_graphic = graph_ok(t);
+
     int cursorRow = ui.vt->CurLine;
     int cursorCol = ui.vt->CurColumn;
 
     Buffer* buf = Currentbuf;
-    drawAnchorCursor(buf);
+    drawAnchorCursor(buf, use_graphic);
 
     Str msg = make_lastline_message(buf);
     if (buf->firstLine == NULL) {

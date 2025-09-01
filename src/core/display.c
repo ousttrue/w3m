@@ -1,7 +1,6 @@
 #include "display.h"
 #include "alloc.h"
 #include "screen_effects.h"
-#include "indep.h"
 #include "image.h"
 #include "etc.h"
 #include "map.h"
@@ -12,20 +11,30 @@
 #include "history.h"
 #include "ctrlcode.h"
 #include "buffer.h"
-#include "TermEntry.h"
-#include "graphicchar.h"
 #include "screen.h"
 #include "frame.h"
 #include "putc.h"
-#include "fm.h"
 #include <assert.h>
-#include <wtf.h>
 #include <math.h>
+
+int displayLink = (false);
+int displayLineInfo = (false);
+int FoldLine = (false);
+int showLineNum = (false);
+int enable_inline_image = false;
+int displayImage = (true);
+
+double pixel_per_char = (DEFAULT_PIXEL_PER_CHAR);
+int pixel_per_char_i = (DEFAULT_PIXEL_PER_CHAR);
+int set_pixel_per_char = (false);
+double pixel_per_line = (DEFAULT_PIXEL_PER_LINE);
+int pixel_per_line_i = (DEFAULT_PIXEL_PER_LINE);
+int set_pixel_per_line = (false);
 
 static Line* cline = NULL;
 static int ccolumn = -1;
 static int image_touch = 0;
-static bool draw_image_flag = FALSE;
+static bool draw_image_flag = false;
 
 static Str
 make_lastline_link(Buffer* buf, char* title, char* url)
@@ -175,7 +184,7 @@ struct Frame* screenToFrame(const struct VirtualTerm* vt)
     return frame;
 }
 
-void bufToScreen(struct VirtualTerm* vt, Buffer* buf)
+void bufToScreen(struct VirtualTerm* vt, Buffer* buf, bool use_graphic)
 {
     if (buf->width == 0)
         buf->width = getScreen()->COLS;
@@ -183,7 +192,7 @@ void bufToScreen(struct VirtualTerm* vt, Buffer* buf)
         buf->height = getScreen()->ROWS;
     if ((buf->width != getScreen()->COLS && (is_html_type(buf->type) || FoldLine))
         || buf->need_reshape) {
-        buf->need_reshape = TRUE;
+        buf->need_reshape = true;
         reshapeBuffer(buf);
     }
     if (showLineNum) {
@@ -214,9 +223,9 @@ void bufToScreen(struct VirtualTerm* vt, Buffer* buf)
         clearImage();
         loadImage(buf, IMG_FLAG_STOP);
         image_touch++;
-        draw_image_flag = FALSE;
+        draw_image_flag = false;
     }
-    redrawNLine(buf, getScreen()->ROWS - 1);
+    redrawNLine(buf, getScreen()->ROWS - 1, use_graphic);
     cline = buf->topLine;
     ccolumn = buf->currentColumn;
     // }
@@ -226,7 +235,7 @@ void bufToScreen(struct VirtualTerm* vt, Buffer* buf)
 
 static void
 drawAnchorCursor0(Buffer* buf, AnchorList* al, int hseq, int prevhseq,
-    int tline, int eline, int active)
+    int tline, int eline, int active, bool use_graphic)
 {
     int i, j;
     Line* l;
@@ -264,16 +273,19 @@ drawAnchorCursor0(Buffer* buf, AnchorList* al, int hseq, int prevhseq,
             }
             if (active && start_pos < end_pos)
                 redrawLineRegion(buf, l, l->linenumber - tline + buf->rootY,
-                    start_pos, end_pos);
+                    start_pos, end_pos, use_graphic);
         } else if (prevhseq >= 0 && an->hseq == prevhseq) {
             if (active)
                 redrawLineRegion(buf, l, l->linenumber - tline + buf->rootY,
-                    an->start.pos, an->end.pos);
+                    an->start.pos, an->end.pos, use_graphic);
         }
     }
 }
 
-void drawAnchorCursor(Buffer* buf)
+// struct TermEntry* t = getTermEntry();
+// bool use_graphic = graph_ok(t);
+
+void drawAnchorCursor(Buffer* buf, bool use_graphic)
 {
     Anchor* an;
     int hseq, prevhseq;
@@ -296,17 +308,17 @@ void drawAnchorCursor(Buffer* buf)
     prevhseq = buf->hmarklist->prevhseq;
 
     if (buf->href) {
-        drawAnchorCursor0(buf, buf->href, hseq, prevhseq, tline, eline, 1);
-        drawAnchorCursor0(buf, buf->href, hseq, -1, tline, eline, 0);
+        drawAnchorCursor0(buf, buf->href, hseq, prevhseq, tline, eline, 1, use_graphic);
+        drawAnchorCursor0(buf, buf->href, hseq, -1, tline, eline, 0, use_graphic);
     }
     if (buf->formitem) {
-        drawAnchorCursor0(buf, buf->formitem, hseq, prevhseq, tline, eline, 1);
-        drawAnchorCursor0(buf, buf->formitem, hseq, -1, tline, eline, 0);
+        drawAnchorCursor0(buf, buf->formitem, hseq, prevhseq, tline, eline, 1, use_graphic);
+        drawAnchorCursor0(buf, buf->formitem, hseq, -1, tline, eline, 0, use_graphic);
     }
     buf->hmarklist->prevhseq = hseq;
 }
 
-void redrawNLine(Buffer* buf, int n)
+void redrawNLine(Buffer* buf, int n, bool use_graphic)
 {
     struct VirtualTerm* vt = getScreen();
     Line* l;
@@ -319,7 +331,7 @@ void redrawNLine(Buffer* buf, int n)
 
     for (i = 0, l = buf->topLine; i < buf->LINES; i++, l = l->next) {
         if (i >= buf->LINES - n || i < -n)
-            l = redrawLine(buf, l, i + buf->rootY);
+            l = redrawLine(buf, l, i + buf->rootY, use_graphic);
         if (l == NULL)
             break;
     }
@@ -338,7 +350,7 @@ void redrawNLine(Buffer* buf, int n)
     getAllImage(buf);
 }
 
-Line* redrawLine(Buffer* buf, Line* l, int i)
+Line* redrawLine(Buffer* buf, Line* l, int i, bool use_graphic)
 {
     struct VirtualTerm* vt = getScreen();
     int j, pos, rcol, ncol, delta = 1;
@@ -410,14 +422,14 @@ Line* redrawLine(Buffer* buf, Line* l, int i)
             vt_do_color(vt, pc[j]);
         if (rcol < column) {
             for (rcol = column; rcol < ncol; rcol++)
-                vt_addChar(vt, ' ', 0);
+                vt_addChar(vt, ' ', 0, use_graphic);
             continue;
         }
         if (p[j] == '\t') {
             for (; rcol < ncol; rcol++)
-                vt_addChar(vt, ' ', 0);
+                vt_addChar(vt, ' ', 0, use_graphic);
         } else {
-            vt_addMChar(vt, &p[j], pr[j], delta);
+            vt_addMChar(vt, &p[j], pr[j], delta, use_graphic);
         }
         rcol = ncol;
     }
@@ -459,7 +471,7 @@ Line* redrawLineImage(Buffer* buf, Line* l, int i)
                 if ((image->width < 0 && cache->width > 0) || (image->height < 0 && cache->height > 0)) {
                     image->width = cache->width;
                     image->height = cache->height;
-                    buf->need_reshape = TRUE;
+                    buf->need_reshape = true;
                 }
                 x = (int)((rcol - column + buf->rootX) * pixel_per_char);
                 y = (int)(i * pixel_per_line);
@@ -489,7 +501,7 @@ Line* redrawLineImage(Buffer* buf, Line* l, int i)
                     h = (int)((getScreen()->ROWS - 1) * pixel_per_line - y);
                 addImage(cache, x, y, sx, sy, w, h);
                 image->touch = image_touch;
-                draw_image_flag = TRUE;
+                draw_image_flag = true;
             }
         }
         rcol = COLPOS(l, pos + j + 1);
@@ -497,7 +509,7 @@ Line* redrawLineImage(Buffer* buf, Line* l, int i)
     return l;
 }
 
-int redrawLineRegion(Buffer* buf, Line* l, int i, int bpos, int epos)
+int redrawLineRegion(Buffer* buf, Line* l, int i, int bpos, int epos, bool use_graphic)
 {
     struct VirtualTerm* vt = getScreen();
     int j, pos, rcol, ncol, delta = 1;
@@ -545,74 +557,19 @@ int redrawLineRegion(Buffer* buf, Line* l, int i, int bpos, int epos)
             if (rcol < column) {
                 vt_move(vt, i, buf->rootX);
                 for (rcol = column; rcol < ncol; rcol++)
-                    vt_addChar(vt, ' ', 0);
+                    vt_addChar(vt, ' ', 0, use_graphic);
                 continue;
             }
             vt_move(vt, i, rcol - column + buf->rootX);
             if (p[j] == '\t') {
                 for (; rcol < ncol; rcol++)
-                    vt_addChar(vt, ' ', 0);
+                    vt_addChar(vt, ' ', 0, use_graphic);
             } else
-                vt_addMChar(vt, &p[j], pr[j], delta);
+                vt_addMChar(vt, &p[j], pr[j], delta, use_graphic);
         }
         rcol = ncol;
     }
 
     vt_line_end(vt);
     return rcol - column;
-}
-
-void vt_addMChar(struct VirtualTerm *vt, char* p, Lineprop mode, size_t len)
-{
-    // struct VirtualTerm* vt = getScreen();
-    struct TermEntry* t = getTermEntry();
-    Lineprop m = CharEffect(mode);
-    char c = *p;
-
-    if (mode & PC_WCHAR2)
-        return;
-    vt_do_effects(vt, m);
-    if (mode & PC_SYMBOL) {
-        char** symbol;
-        int w = (mode & PC_KANJI) ? 2 : 1;
-
-        c = ((char)wtf_get_code((wc_uchar*)p) & 0x7f) - SYMBOL_BASE;
-        if (graph_ok(t) && c < N_GRAPH_SYMBOL) {
-            if (!graph_mode) {
-                vt_graphstart(vt);
-                graph_mode = TRUE;
-            }
-            if (w == 2 && WcOption.use_wide)
-                vt_addstr(vt, graph2_symbol[(unsigned char)c % N_GRAPH_SYMBOL]);
-            else
-                vt_addstr(vt, graph_symbol[(unsigned char)c % N_GRAPH_SYMBOL]);
-        } else {
-            symbol = get_symbol(DisplayCharset, &w);
-            vt_addstr(vt, symbol[(unsigned char)c % N_SYMBOL]);
-        }
-    } else if (mode & PC_CTRL) {
-        switch (c) {
-        case '\t':
-            vt_addch(vt, c);
-            break;
-        case '\n':
-            vt_addch(vt, ' ');
-            break;
-        case '\r':
-            break;
-        case DEL_CODE:
-            vt_addstr(vt, "^?");
-            break;
-        default:
-            vt_addch(vt, '^');
-            vt_addch(vt, c + '@');
-            break;
-        }
-    } else if (mode & PC_UNKNOWN) {
-        char buf[5];
-        sprintf(buf, "[%.2X]",
-            (unsigned char)wtf_get_code((wc_uchar*)p) | 0x80);
-        vt_addstr(vt, buf);
-    } else
-        vt_addmch(vt, p, len);
 }

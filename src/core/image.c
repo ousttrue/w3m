@@ -22,6 +22,8 @@
 #include <sys/wait.h>
 #endif
 
+int activeImage = (FALSE);
+
 static int image_index = 0;
 
 /* display image */

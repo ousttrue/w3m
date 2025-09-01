@@ -111,8 +111,6 @@ static void _prevA(int);
 static int check_target = TRUE;
 static int searchKeyNum(void);
 
-int enable_inline_image;
-
 /*
  * List of error messages
  */
@@ -420,6 +418,9 @@ void fmInit(void)
 
 bool onFrame()
 {
+    struct TermEntry* t = getTermEntry();
+    bool use_graphic = graph_ok(t);
+
     updateDownload();
     if (Currentbuf->submit) {
         Anchor* a = Currentbuf->submit;
@@ -435,15 +436,10 @@ bool onFrame()
         CurrentKeyData = NULL;
         CurrentCmdData = (char*)CurrentEvent->data;
         w3mFuncList[CurrentEvent->cmd].func();
-        bufToScreen(getScreen(), Currentbuf);
-        struct Frame* frame = screenToFrame(getScreen());
 
-        wc_putc_init(InnerCharset, DisplayCharset);
-        refreshFrame(ttyWriter(), frame);
-        wc_putc_end(ttyWriter());
+        bufToScreen(getScreen(), Currentbuf, use_graphic);
+        renderFrame(getUI());
 
-        MOVE(ttyWriter(), getScreen()->CurLine, getScreen()->CurColumn);
-        flushWriter(ttyWriter());
         CurrentCmdData = NULL;
         CurrentEvent = CurrentEvent->next;
         return false;
@@ -459,7 +455,7 @@ bool onFrame()
                 CurrentCmdData = (char*)CurrentAlarm->data;
                 w3mFuncList[CurrentAlarm->cmd].func();
 
-                bufToScreen(getScreen(), Currentbuf);
+                bufToScreen(getScreen(), Currentbuf, use_graphic);
                 renderFrame(getUI());
 
                 CurrentCmdData = NULL;
@@ -478,13 +474,13 @@ bool onFrame()
     mySignal(SIGWINCH, resize_hook);
     if (activeImage && displayImage && Currentbuf->img && !Currentbuf->image_loaded) {
         loadImage(Currentbuf, IMG_FLAG_NEXT);
-        bufToScreen(getScreen(), Currentbuf);
+        bufToScreen(getScreen(), Currentbuf, use_graphic);
         renderFrame(getUI());
         // continue;
     }
     if (need_resize_screen) {
         resize_screen();
-        bufToScreen(getScreen(), Currentbuf);
+        bufToScreen(getScreen(), Currentbuf, use_graphic);
         renderFrame(getUI());
     }
 
@@ -493,6 +489,9 @@ bool onFrame()
 
 void onKeyInput(unsigned char c)
 {
+    struct TermEntry* t = getTermEntry();
+    bool use_graphic = graph_ok(t);
+
     static unsigned char g_keylog[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
     static int g_i = 0;
 
@@ -521,7 +520,7 @@ void onKeyInput(unsigned char c)
                                               : GlobalKeymap[c];
             func();
         }
-        bufToScreen(getScreen(), Currentbuf);
+        bufToScreen(getScreen(), Currentbuf, use_graphic);
         renderFrame(getUI());
     }
     ++g_i;

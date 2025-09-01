@@ -1,7 +1,11 @@
 #include "screen.h"
+#include "screen_effects.h"
 #include "Str.h"
 #include "alloc.h"
 #include "myctype.h"
+#include "symbol.h"
+#include "ui.h"
+#include "ctrlcode.h"
 #include <wc.h>
 #include <wtf.h>
 #include <stdio.h>
@@ -371,3 +375,57 @@ void vt_touch_cursor(struct VirtualTerm* vt)
         vt_touch_column(vt, i);
     }
 }
+
+void vt_addMChar(struct VirtualTerm* vt, char* p, Lineprop mode, size_t len, bool use_graphic)
+{
+    Lineprop m = CharEffect(mode);
+    char c = *p;
+
+    if (mode & PC_WCHAR2)
+        return;
+    vt_do_effects(vt, m);
+    if (mode & PC_SYMBOL) {
+        char** symbol;
+        int w = (mode & PC_KANJI) ? 2 : 1;
+
+        c = ((char)wtf_get_code((wc_uchar*)p) & 0x7f) - SYMBOL_BASE;
+        if (use_graphic && c < N_GRAPH_SYMBOL) {
+            if (!graph_mode) {
+                vt_graphstart(vt);
+                graph_mode = true;
+            }
+            if (w == 2 && WcOption.use_wide)
+                vt_addstr(vt, graph2_symbol[(unsigned char)c % N_GRAPH_SYMBOL]);
+            else
+                vt_addstr(vt, graph_symbol[(unsigned char)c % N_GRAPH_SYMBOL]);
+        } else {
+            symbol = get_symbol(DisplayCharset, &w);
+            vt_addstr(vt, symbol[(unsigned char)c % N_SYMBOL]);
+        }
+    } else if (mode & PC_CTRL) {
+        switch (c) {
+        case '\t':
+            vt_addch(vt, c);
+            break;
+        case '\n':
+            vt_addch(vt, ' ');
+            break;
+        case '\r':
+            break;
+        case DEL_CODE:
+            vt_addstr(vt, "^?");
+            break;
+        default:
+            vt_addch(vt, '^');
+            vt_addch(vt, c + '@');
+            break;
+        }
+    } else if (mode & PC_UNKNOWN) {
+        char buf[5];
+        sprintf(buf, "[%.2X]",
+            (unsigned char)wtf_get_code((wc_uchar*)p) | 0x80);
+        vt_addstr(vt, buf);
+    } else
+        vt_addmch(vt, p, len);
+}
+

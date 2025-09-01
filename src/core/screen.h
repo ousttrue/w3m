@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "line_prop.h"
+#include "line.h"
 
 extern int Do_not_use_ti_te;
 
@@ -33,6 +34,12 @@ void vt_addmch(struct VirtualTerm* vt, const char* p, size_t len);
 void vt_addch(struct VirtualTerm* vt, char c);
 void vt_wrap(struct VirtualTerm* vt);
 void vt_touch_line(struct VirtualTerm* vt);
+
+void vt_addMChar(struct VirtualTerm* vt, char* c, Lineprop mode, size_t len, bool use_graphic);
+inline static void vt_addChar(struct VirtualTerm* vt, char c, Lineprop mode, bool use_graphic)
+{
+    vt_addMChar(vt, &c, mode, 1, use_graphic);
+}
 
 void vt_clrtoeol(struct VirtualTerm* vt);
 void vt_clrtoeolx(struct VirtualTerm* vt);

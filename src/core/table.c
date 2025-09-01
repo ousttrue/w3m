@@ -3,6 +3,7 @@
  */
 #include "table.h"
 #include "file.h"
+#include "display.h"
 #include "readbuffer.h"
 #include "indep.h"
 #include "etc.h"

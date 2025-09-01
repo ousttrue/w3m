@@ -38,6 +38,7 @@ enum MessageSeverity {
 struct VirtualTerm;
 struct UI {
     struct VirtualTerm* vt;
+    bool use_graphic;
 };
 
 struct UI getUI();

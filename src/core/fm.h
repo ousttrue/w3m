@@ -18,11 +18,6 @@
 #define MAX_IMAGE 1000
 #define MAX_IMAGE_SIZE 2048
 
-#define DEFAULT_PIXEL_PER_CHAR 7.0 /* arbitrary */
-#define DEFAULT_PIXEL_PER_LINE 14.0 /* arbitrary */
-#define MINIMUM_PIXEL_PER_CHAR 4.0
-#define MAXIMUM_PIXEL_PER_CHAR 32.0
-
 #ifdef FALSE
 #undef FALSE
 #endif
@@ -107,20 +102,14 @@ global char MetaRefresh init(FALSE);
 global int CurrentKey;
 global char* CurrentKeyData;
 global char* CurrentCmdData;
-extern int enable_inline_image;
 
 global int confirm_on_quit init(TRUE);
 global int use_mark init(FALSE);
 global int label_topline init(FALSE);
 global int nextpage_topline init(FALSE);
-global int displayLink init(FALSE);
 global int displayLinkNumber init(FALSE);
-global int displayLineInfo init(FALSE);
-global int showLineNum init(FALSE);
 global int show_srch_str init(TRUE);
 global char* Imgdisplay init(IMGDISPLAY);
-global int activeImage init(FALSE);
-global int displayImage init(TRUE);
 global int autoImage init(TRUE);
 global int useExtImageViewer init(TRUE);
 global int maxLoadImage init(4);
@@ -169,7 +158,6 @@ global int ignore_null_img_alt init(TRUE);
 #define DISPLAY_INS_DEL_FONTIFY 2
 global int displayInsDel init(DISPLAY_INS_DEL_NORMAL);
 global int FoldTextarea init(FALSE);
-global int FoldLine init(FALSE);
 #define DEFAULT_URL_EMPTY 0
 #define DEFAULT_URL_CURRENT 1
 #define DEFAULT_URL_LINK 2
@@ -192,13 +180,8 @@ global char SimplePreserveSpace init(FALSE);
 global char UseAltEntity init(FALSE);
 global char DisplayBorders init(FALSE);
 global char DisableCenter init(FALSE);
-extern char* graph_symbol[];
-extern char* graph2_symbol[];
 extern int symbol_width;
 extern int symbol_width0;
-#define N_GRAPH_SYMBOL 32
-#define N_SYMBOL (N_GRAPH_SYMBOL + 14)
-#define SYMBOL_BASE 0x20
 global int no_rc_dir init(FALSE);
 global char* rc_dir init(NULL);
 global char* param_tmp_dir init(NULL);
@@ -225,12 +208,6 @@ global int view_unseenobject init(FALSE);
 
 global int is_redisplay init(FALSE);
 global int clear_buffer init(TRUE);
-global double pixel_per_char init(DEFAULT_PIXEL_PER_CHAR);
-global int pixel_per_char_i init(DEFAULT_PIXEL_PER_CHAR);
-global int set_pixel_per_char init(FALSE);
-global double pixel_per_line init(DEFAULT_PIXEL_PER_LINE);
-global int pixel_per_line_i init(DEFAULT_PIXEL_PER_LINE);
-global int set_pixel_per_line init(FALSE);
 global double image_scale init(100);
 global int use_lessopen init(FALSE);
 

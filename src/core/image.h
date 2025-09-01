@@ -1,6 +1,8 @@
 #pragma once
 #include <sys/types.h>
 
+extern int activeImage;
+
 #define INLINE_IMG_NONE 0
 #define INLINE_IMG_OSC5379 1
 #define INLINE_IMG_SIXEL 2
