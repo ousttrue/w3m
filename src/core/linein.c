@@ -97,10 +97,10 @@ char* inputLineHistSearch(struct UI ui,
 
         // show current
         if (g_editor.is_passwd)
-            addPasswd(&g_editor,
+            le_addPasswd(&g_editor,
                 g_editor.strBuf->ptr, g_editor.strProp, g_editor.CLen, g_editor.offset, ui.vt->COLS - opos);
         else
-            addStr(&g_editor,
+            le_addStr(&g_editor,
                 g_editor.strBuf->ptr, g_editor.strProp, g_editor.CLen, g_editor.offset, ui.vt->COLS - opos);
 
         // cursor
@@ -156,7 +156,7 @@ char* inputLineHistSearch(struct UI ui,
             g_editor.cm_disp_next = -1;
             if (g_editor.CLen + tmp->length > STR_LEN || !tmp->length)
                 goto next_char;
-            ins_char(&g_editor, tmp);
+            le_ins_char(&g_editor, tmp);
             if (incrfunc)
                 incrfunc(-1, g_editor.strBuf, g_editor.strProp);
         }

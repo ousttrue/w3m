@@ -70,15 +70,15 @@ struct LineEditor {
 
 void le_initialize(struct LineEditor* e, struct UI ui, struct Hist*, enum InputLineFlags flag,
     const char* def_str);
-void insertself(struct LineEditor* e, char c);
+void le_insertself(struct LineEditor* e, char c);
 #define iself ((void (*)())insertself)
-void next_compl(struct LineEditor* e, int next);
-void next_dcompl(struct LineEditor* e, int next);
-Str doComplete(struct LineEditor* e, Str ifn, enum CompletionStatus* status, int next);
-int setStrType(struct LineEditor* e, Str str, Lineprop* prop);
-void ins_char(struct LineEditor* e, Str str);
-void addPasswd(struct LineEditor* e, char* p, Lineprop* pr, int len, int offset, int limit);
-void addStr(struct LineEditor* e, char* p, Lineprop* pr, int len, int offset, int limit);
+void le_next_compl(struct LineEditor* e, int next);
+void le_next_dcompl(struct LineEditor* e, int next);
+Str le_doComplete(struct LineEditor* e, Str ifn, enum CompletionStatus* status, int next);
+int le_setStrType(struct LineEditor* e, Str str, Lineprop* prop);
+void le_ins_char(struct LineEditor* e, Str str);
+void le_addPasswd(struct LineEditor* e, char* p, Lineprop* pr, int len, int offset, int limit);
+void le_addStr(struct LineEditor* e, char* p, Lineprop* pr, int len, int offset, int limit);
 
 void _nop(struct LineEditor* e);
 void _compl(struct LineEditor* e);

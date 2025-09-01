@@ -61,7 +61,7 @@ void le_initialize(struct LineEditor* e, struct UI ui, struct Hist* hist, enum I
 
     if (def_str) {
         e->strBuf = Strnew_charp(def_str);
-        e->CLen = e->CPos = setStrType(e, e->strBuf, e->strProp);
+        e->CLen = e->CPos = le_setStrType(e, e->strBuf, e->strProp);
     } else {
         e->strBuf = Strnew();
         e->CLen = e->CPos = 0;
@@ -98,9 +98,9 @@ void next_compl(struct LineEditor* e, int next)
         e->CBeforeBuf = Strsubstr(e->strBuf, 0, b);
         Str buf = Strsubstr(e->strBuf, b, a - b);
         e->CAfterBuf = Strsubstr(e->strBuf, a, e->strBuf->length - a);
-        s = doComplete(e, buf, &status, next);
+        s = le_doComplete(e, buf, &status, next);
     } else {
-        s = doComplete(e, e->strBuf, &status, next);
+        s = le_doComplete(e, e->strBuf, &status, next);
     }
     if (next == 0)
         return;
@@ -112,7 +112,7 @@ void next_compl(struct LineEditor* e, int next)
         return;
 
     e->strBuf = Strnew_m_charp(e->CBeforeBuf->ptr, s->ptr, e->CAfterBuf->ptr, NULL);
-    e->CLen = setStrType(e, e->strBuf, e->strProp);
+    e->CLen = le_setStrType(e, e->strBuf, e->strProp);
     e->CPos = e->CBeforeBuf->length + s->length;
     if (e->CPos > e->CLen)
         e->CPos = e->CLen;
@@ -212,7 +212,7 @@ void _next(struct LineEditor* e)
         e->strBuf = e->strCurrentBuf;
         e->strCurrentBuf = NULL;
     }
-    e->CLen = e->CPos = setStrType(e, e->strBuf, e->strProp);
+    e->CLen = e->CPos = le_setStrType(e, e->strBuf, e->strProp);
     e->offset = 0;
 }
 
@@ -236,7 +236,7 @@ void _editor(struct LineEditor* e)
             continue;
         Strcat_char(e->strBuf, *p);
     }
-    e->CLen = e->CPos = setStrType(e, e->strBuf, e->strProp);
+    e->CLen = e->CPos = le_setStrType(e, e->strBuf, e->strProp);
 }
 
 void _prev(struct LineEditor* e)
@@ -259,7 +259,7 @@ void _prev(struct LineEditor* e)
     if (DecodeURL && (e->cm_mode & CPL_URL))
         p = url_decode2(p, NULL);
     e->strBuf = Strnew_charp(p);
-    e->CLen = e->CPos = setStrType(e, e->strBuf, e->strProp);
+    e->CLen = e->CPos = le_setStrType(e, e->strBuf, e->strProp);
     e->offset = 0;
 }
 
@@ -320,7 +320,7 @@ void _mvRw(struct LineEditor* e)
 
 void _dcompl(struct LineEditor* e)
 {
-    next_dcompl(e, 1);
+    le_next_dcompl(e, 1);
 }
 
 void insC(struct LineEditor* e)
@@ -346,7 +346,7 @@ void insertself(struct LineEditor* e, char c)
 
 void _rdcompl(struct LineEditor* e)
 {
-    next_dcompl(e, -1);
+    le_next_dcompl(e, -1);
 }
 
 void _rcompl(struct LineEditor* e)
@@ -354,7 +354,7 @@ void _rcompl(struct LineEditor* e)
     next_compl(e, -1);
 }
 
-void next_dcompl(struct LineEditor* e, int next)
+void le_next_dcompl(struct LineEditor* e, int next)
 {
     struct VirtualTerm* vt = getScreen();
     static int col, row;
@@ -482,7 +482,7 @@ disp_next:
     }
 }
 
-Str doComplete(struct LineEditor* e, Str ifn, enum CompletionStatus* status, int next)
+Str le_doComplete(struct LineEditor* e, Str ifn, enum CompletionStatus* status, int next)
 {
     int fl, i;
     char *fn, *p;
@@ -592,7 +592,7 @@ Str doComplete(struct LineEditor* e, Str ifn, enum CompletionStatus* status, int
     return Str_conv_from_system(e->CompleteBuf);
 }
 
-int setStrType(struct LineEditor* e, Str str, Lineprop* prop)
+int le_setStrType(struct LineEditor* e, Str str, Lineprop* prop)
 {
     Lineprop ctype;
     char *p = str->ptr, *ep = p + str->length;
@@ -620,7 +620,7 @@ int setStrType(struct LineEditor* e, Str str, Lineprop* prop)
     return i;
 }
 
-void ins_char(struct LineEditor* e, Str str)
+void le_ins_char(struct LineEditor* e, Str str)
 {
     if (e->CLen + str->length >= STR_LEN)
         return;
@@ -654,7 +654,7 @@ void ins_char(struct LineEditor* e, Str str)
     }
 }
 
-void addPasswd(struct LineEditor* e, char* p, Lineprop* pr, int len, int offset, int limit)
+void le_addPasswd(struct LineEditor* e, char* p, Lineprop* pr, int len, int offset, int limit)
 {
     int rcol = 0, ncol;
 
@@ -669,7 +669,7 @@ void addPasswd(struct LineEditor* e, char* p, Lineprop* pr, int len, int offset,
         addChar('*', 0);
 }
 
-void addStr(struct LineEditor* e, char* p, Lineprop* pr, int len, int offset, int limit)
+void le_addStr(struct LineEditor* e, char* p, Lineprop* pr, int len, int offset, int limit)
 {
     int i = 0, rcol = 0, ncol, delta = 1;
 
