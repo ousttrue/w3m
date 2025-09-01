@@ -47,3 +47,4 @@ void concatMessageList(Str tmp);
 void renderFrame(struct UI ui);
 void ui_bell();
 void ui_printStatus(const char* fmt, ...);
+void ui_cursor_set_x(int x);

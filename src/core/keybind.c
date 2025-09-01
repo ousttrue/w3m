@@ -1,5 +1,6 @@
 #include "keymap.h"
 #include "defun.h"
+#include "../defun.h"
 
 CommandFunc GlobalKeymap[128] = {
 /*  C-@     C-a     C-b     C-c     C-d     C-e     C-f     C-g      */
@@ -57,7 +58,7 @@ CommandFunc GlobalKeymap[128] = {
     col1R,
     srchfor,
     /*  0       1       2       3       4       5       6       7        */
-    nulcmd,
+    linbeg,
     nulcmd,
     nulcmd,
     nulcmd,

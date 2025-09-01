@@ -166,3 +166,13 @@ void ui_bell()
 {
     termBell(ttyWriter());
 }
+
+void ui_cursor_set_x(int x)
+{
+    if (Currentbuf->firstLine == NULL)
+        return;
+    while (Currentbuf->currentLine->prev && Currentbuf->currentLine->bpos)
+        cursorUp0(Currentbuf, 1);
+    Currentbuf->pos = 0;
+    arrangeCursor(Currentbuf);
+}

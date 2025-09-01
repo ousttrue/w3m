@@ -20,10 +20,10 @@ struct FuncList {
 };
 extern struct FuncList w3mFuncList[];
 
-extern char* searchKeyData(void);
-extern void setKeymap(char* p, int lineno);
-extern void initKeymap(int force);
-extern CommandFunc getFunc(const char* id);
-extern int getKey(char* s);
-extern char* getKeyData(int key);
-
+char* searchKeyData(void);
+void setKeymap(char* p, int lineno);
+void initKeymap(int force);
+CommandFunc getFunc(const char* id);
+int getKey(char* s);
+char* getKeyData(int key);
+void addFunc(CommandFunc func, const char *name, const char *desc); 

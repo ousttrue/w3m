@@ -1536,25 +1536,9 @@ DEFUN(goLine, GOTO_LINE, "Go to the specified line")
         _goLine(inputStr(getUI(), "Goto line: ", ""));
 }
 
-DEFUN(goLineF, BEGIN, "Go to the first line")
-{
-    _goLine("^");
-}
-
 DEFUN(goLineL, END, "Go to the last line")
 {
     _goLine("$");
-}
-
-/* Go to the beginning of the line */
-DEFUN(linbeg, LINE_BEGIN, "Go to the beginning of the line")
-{
-    if (Currentbuf->firstLine == NULL)
-        return;
-    while (Currentbuf->currentLine->prev && Currentbuf->currentLine->bpos)
-        cursorUp0(Currentbuf, 1);
-    Currentbuf->pos = 0;
-    arrangeCursor(Currentbuf);
 }
 
 /* Go to the bottom of the line */

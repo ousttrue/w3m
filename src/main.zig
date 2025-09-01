@@ -2,8 +2,10 @@ const std = @import("std");
 const c = @cImport({
     @cInclude("w3m.h");
     @cInclude("parseArgs.h");
+    @cInclude("keymap.h");
 });
 const message_queue = @import("message_queue.zig");
+const defun = @import("defun.zig");
 
 const InputEvent = union(enum) {
     timeout,
@@ -42,8 +44,15 @@ export fn event_end_input(_: *const GetChFunc) void {
     ctx.use_modal = false;
 }
 
+fn addFunc(f: *const defun.CommandFunc, name: []const u8, desc: []const u8) void {
+    _ = f;
+    _ = name;
+    _ = desc;
+}
+
 pub fn main() !void {
     c.initialize();
+    defun.init(addFunc);
     c.parseArgs(
         @intCast(std.os.argv.len),
         @ptrCast(std.os.argv),
