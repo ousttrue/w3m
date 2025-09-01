@@ -12,6 +12,7 @@
 #include "myctype.h"
 #include "html.h"
 #include "hash.h"
+#include "screen.h"
 #include <pwd.h>
 #include <stdlib.h>
 #include <wtf.h>
@@ -42,7 +43,7 @@ int columnSkip(Buffer* buf, int offset)
 {
     int i, maxColumn;
     int column = buf->currentColumn + offset;
-    int nlines = buf->LINES + 1;
+    int nlines = getScreen()->ROWS + 1;
     Line* l;
 
     maxColumn = 0;
@@ -52,7 +53,7 @@ int columnSkip(Buffer* buf, int offset)
         if (l->width - 1 > maxColumn)
             maxColumn = l->width - 1;
     }
-    maxColumn -= buf->COLS - 1;
+    maxColumn -= getScreen()->COLS - 1;
     if (column < maxColumn)
         maxColumn = column;
     if (maxColumn < 0)
@@ -84,7 +85,7 @@ Line* lineSkip(Buffer* buf, Line* line, int offset, int last)
 
     l = currentLineSkip(buf, line, offset, last);
     if (!nextpage_topline)
-        for (i = buf->LINES - 1 - (buf->lastLine->linenumber - l->linenumber);
+        for (i = getScreen()->ROWS - 1 - (buf->lastLine->linenumber - l->linenumber);
             i > 0 && l->prev != NULL; i--, l = l->prev)
             ;
     return l;
@@ -96,7 +97,7 @@ Line* currentLineSkip(Buffer* buf, Line* line, int offset, int last)
     Line* l = line;
 
     if (buf->pagerSource && !(buf->bufferprop & BP_CLOSE)) {
-        n = line->linenumber + offset + buf->LINES;
+        n = line->linenumber + offset + getScreen()->ROWS;
         if (last)
             l = buf->lastLine;
     }
@@ -1765,8 +1766,6 @@ char* FQDN(char* host)
     return NULL;
 #endif /* INET6 */
 }
-
-
 
 static char Base64Table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 

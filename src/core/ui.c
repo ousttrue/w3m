@@ -1,5 +1,6 @@
 #include "ui.h"
 #include "indep.h"
+#include "map.h"
 #include "screen.h"
 #include "screen_effects.h"
 #include "putc.h"
@@ -9,12 +10,16 @@
 #include "display.h"
 #include "buffer.h"
 #include "graphicchar.h"
+#include <etc.h>
+#include <myctype.h>
+#include <math.h>
 #include <stdarg.h>
 #include <wc.h>
 #include <wtf.h>
 
 char* CurrentDir = 0;
 int CurrentPid = -1;
+int showLineNum = (false);
 
 #define DISPLAY_CHARSET WC_CES_UTF_8
 #define SYSTEM_CHARSET WC_CES_UTF_8
@@ -31,10 +36,30 @@ Buffer* Firstbuf = 0;
 
 struct UI getUI()
 {
+    int rootX = 0;
+    if (showLineNum) {
+        if (Currentbuf->lastLine && Currentbuf->lastLine->real_linenumber > 0)
+            rootX = (int)(log(Currentbuf->lastLine->real_linenumber + 0.1)
+                        / log(10))
+                + 2;
+        if (rootX < 5)
+            rootX = 5;
+        if (rootX > getScreen()->COLS)
+            rootX = getScreen()->COLS;
+    }
+    int rootY = 0;
+
+    struct VirtualTerm* vt = getScreen();
     struct TermEntry* t = getTermEntry();
     struct UI ui = {
-        .vt = getScreen(),
+        .vt = vt,
         .use_graphic = graph_ok(t),
+        .viewport = {
+            .x = rootX,
+            .y = rootY,
+            .cols = vt->COLS - rootX,
+            .rows = vt->ROWS - rootY,
+        },
     };
     return ui;
 }
@@ -122,6 +147,116 @@ void ui_printStatus(const char* fmt, ...)
     va_end(args);
 }
 
+static Str make_lastline_link(Buffer* buf, char* title, char* url)
+{
+    Str s = NULL, u;
+    Lineprop* pr;
+    ParsedURL pu;
+    char* p;
+    int l = getScreen()->COLS - 1, i;
+
+    if (title && *title) {
+        s = Strnew_m_charp("[", title, "]", NULL);
+        for (p = s->ptr; *p; p++) {
+            if (IS_CNTRL(*p) || IS_SPACE(*p))
+                *p = ' ';
+        }
+        if (url)
+            Strcat_charp(s, " ");
+        l -= get_Str_strwidth(s);
+        if (l <= 0)
+            return s;
+    }
+    if (!url)
+        return s;
+    parseURL2(url, &pu, baseURL(buf));
+    u = parsedURL2Str(&pu);
+    if (DecodeURL)
+        u = Strnew_charp(url_decode2(u->ptr, buf));
+    u = checkType(u, &pr, NULL);
+    if (l <= 4 || l >= get_Str_strwidth(u)) {
+        if (!s)
+            return u;
+        Strcat(s, u);
+        return s;
+    }
+    if (!s)
+        s = Strnew_size(getScreen()->COLS);
+    i = (l - 2) / 2;
+    while (i && pr[i] & PC_WCHAR2)
+        i--;
+    Strcat_charp_n(s, u->ptr, i);
+    Strcat_charp(s, "..");
+    i = get_Str_strwidth(u) - (getScreen()->COLS - 1 - get_Str_strwidth(s));
+    while (i < u->length && pr[i] & PC_WCHAR2)
+        i++;
+    Strcat_charp(s, &u->ptr[i]);
+    return s;
+}
+
+static Str make_lastline_message(Buffer* buf)
+{
+    Str msg, s = NULL;
+    int sl = 0;
+
+    if (displayLink) {
+        MapArea* a = retrieveCurrentMapArea(buf);
+        if (a)
+            s = make_lastline_link(buf, a->alt, a->url);
+        else {
+            Anchor* a = retrieveCurrentAnchor(buf);
+            char* p = NULL;
+            if (a && a->title && *a->title)
+                p = a->title;
+            else {
+                Anchor* a_img = retrieveCurrentImg(buf);
+                if (a_img && a_img->title && *a_img->title)
+                    p = a_img->title;
+            }
+            if (p || a)
+                s = make_lastline_link(buf, p, a ? a->url : NULL);
+        }
+        if (s) {
+            sl = get_Str_strwidth(s);
+            if (sl >= getScreen()->COLS - 3)
+                return s;
+        }
+    }
+
+    msg = Strnew();
+    if (displayLineInfo && buf->currentLine != NULL && buf->lastLine != NULL) {
+        int cl = buf->currentLine->real_linenumber;
+        int ll = buf->lastLine->real_linenumber;
+        int r = (int)((double)cl * 100.0 / (double)(ll ? ll : 1) + 0.5);
+        Strcat(msg, Sprintf("%d/%d (%d%%)", cl, ll, r));
+    } else
+        /* FIXME: gettextize? */
+        Strcat_charp(msg, "Viewing");
+    if (buf->ssl_certificate)
+        Strcat_charp(msg, "[SSL]");
+    Strcat_charp(msg, " <");
+    Strcat_charp(msg, buf->buffername);
+
+    if (s) {
+        int l = getScreen()->COLS - 3 - sl;
+        if (get_Str_strwidth(msg) > l) {
+            char* p;
+            for (p = msg->ptr; *p; p += get_mclen(p)) {
+                l -= get_mcwidth(p);
+                if (l < 0)
+                    break;
+            }
+            l = p - msg->ptr;
+            Strtruncate(msg, l);
+        }
+        Strcat_charp(msg, "> ");
+        Strcat(msg, s);
+    } else {
+        Strcat_charp(msg, ">");
+    }
+    return msg;
+}
+
 void renderFrame(struct UI ui)
 {
     struct TermEntry* t = getTermEntry();
@@ -131,7 +266,7 @@ void renderFrame(struct UI ui)
     int cursorCol = ui.vt->CurColumn;
 
     Buffer* buf = Currentbuf;
-    drawAnchorCursor(buf, use_graphic);
+    drawAnchorCursor(ui, buf);
 
     Str msg = make_lastline_message(buf);
     if (buf->firstLine == NULL) {

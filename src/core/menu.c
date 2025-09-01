@@ -1367,17 +1367,12 @@ void popupMenu(int x, int y, Menu* menu)
 
     initSelectMenu();
 
-    menu->cursorX = Currentbuf->cursorX + Currentbuf->rootX;
-    menu->cursorY = Currentbuf->cursorY + Currentbuf->rootY;
+    menu->cursorX = Currentbuf->cursorX;
+    menu->cursorY = Currentbuf->cursorY;
     menu->x = x + FRAME_WIDTH + 1;
     menu->y = y + 2;
 
     popup_menu(NULL, menu);
-}
-
-void mainMenu(int x, int y)
-{
-    popupMenu(x, y, &MainMenu);
 }
 
 DEFUN(mainMn, MAIN_MENU MENU, "Pop up menu")
@@ -1385,8 +1380,8 @@ DEFUN(mainMn, MAIN_MENU MENU, "Pop up menu")
     Menu* menu = &MainMenu;
     char* data;
     int n;
-    int x = Currentbuf->cursorX + Currentbuf->rootX,
-        y = Currentbuf->cursorY + Currentbuf->rootY;
+    int x = Currentbuf->cursorX,
+        y = Currentbuf->cursorY;
 
     data = searchKeyData();
     if (data != NULL) {
@@ -1404,8 +1399,8 @@ DEFUN(mainMn, MAIN_MENU MENU, "Pop up menu")
 
 DEFUN(selMn, SELECT_MENU, "Pop up buffer-stack menu")
 {
-    int x = Currentbuf->cursorX + Currentbuf->rootX,
-        y = Currentbuf->cursorY + Currentbuf->rootY;
+    int x = Currentbuf->cursorX,
+        y = Currentbuf->cursorY;
 
     popupMenu(x, y, &SelectMenu);
 }
@@ -1470,8 +1465,8 @@ initSelectMenu(void)
 
     new_option_menu(&SelectMenu, label, &SelectV, smChBuf);
     SelectMenu.initial = SelectV;
-    SelectMenu.cursorX = Currentbuf->cursorX + Currentbuf->rootX;
-    SelectMenu.cursorY = Currentbuf->cursorY + Currentbuf->rootY;
+    SelectMenu.cursorX = Currentbuf->cursorX;
+    SelectMenu.cursorY = Currentbuf->cursorY;
     SelectMenu.keymap['D'] = smDelBuf;
     SelectMenu.item[nitem].type = MENU_NOP;
 }
@@ -1768,8 +1763,8 @@ link_menu(Buffer* buf)
     new_option_menu(&menu, label, &linkV, NULL);
 
     menu.initial = 0;
-    menu.cursorX = buf->cursorX + buf->rootX;
-    menu.cursorY = buf->cursorY + buf->rootY;
+    menu.cursorX = buf->cursorX;
+    menu.cursorY = buf->cursorY;
     menu.x = menu.cursorX + FRAME_WIDTH + 1;
     menu.y = menu.cursorY + 2;
 
@@ -1825,8 +1820,8 @@ accesskey_menu(Buffer* buf)
     new_option_menu(&menu, label, &key, NULL);
 
     menu.initial = 0;
-    menu.cursorX = buf->cursorX + buf->rootX;
-    menu.cursorY = buf->cursorY + buf->rootY;
+    menu.cursorX = buf->cursorX;
+    menu.cursorY = buf->cursorY;
     menu.x = menu.cursorX + FRAME_WIDTH + 1;
     menu.y = menu.cursorY + 2;
     for (i = 0; i < 128; i++)
@@ -1937,8 +1932,8 @@ list_menu(Buffer* buf)
     new_option_menu(&menu, label, &key, NULL);
 
     menu.initial = 0;
-    menu.cursorX = buf->cursorX + buf->rootX;
-    menu.cursorY = buf->cursorY + buf->rootY;
+    menu.cursorX = buf->cursorX;
+    menu.cursorY = buf->cursorY;
     menu.x = menu.cursorX + FRAME_WIDTH + 1;
     menu.y = menu.cursorY + 2;
     for (i = 0; i < 128; i++)

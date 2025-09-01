@@ -9,6 +9,7 @@ extern wc_ces DisplayCharset;
 extern wc_ces SystemCharset;
 extern wc_ces DocumentCharset;
 extern wc_ces BookmarkCharset;
+extern int showLineNum;
 
 #define Str_conv_from_system(x) wc_Str_conv((x), SystemCharset, InnerCharset)
 #define Str_conv_to_system(x) wc_Str_conv_strict((x), InnerCharset, SystemCharset)
@@ -36,9 +37,17 @@ enum MessageSeverity {
 };
 
 struct VirtualTerm;
+struct Rect
+{
+    int x;
+    int y;
+    int cols;
+    int rows;
+};
 struct UI {
     struct VirtualTerm* vt;
     bool use_graphic;
+    struct Rect viewport;
 };
 
 struct UI getUI();

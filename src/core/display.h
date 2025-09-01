@@ -1,11 +1,11 @@
 #pragma once
 #include "line.h"
+#include "ui.h"
 #include <Str.h>
 
 extern int displayLink;
 extern int displayLineInfo;
 extern int FoldLine;
-extern int showLineNum;
 extern int enable_inline_image;
 extern int displayImage;
 
@@ -22,16 +22,9 @@ extern int pixel_per_line_i;
 extern int set_pixel_per_line;
 
 struct _Buffer;
+void bufToScreen(struct UI ui, struct _Buffer* buf);
+void drawAnchorCursor(struct UI ui, struct _Buffer* buf);
+
 struct Frame;
 struct VirtualTerm;
-
-void bufToScreen(struct VirtualTerm* vt, struct _Buffer* buf, bool use_graphic);
 struct Frame* screenToFrame(const struct VirtualTerm* vt);
-
-void drawAnchorCursor(struct _Buffer* buf, bool use_graphic);
-Str make_lastline_message(struct _Buffer* buf);
-
-void redrawNLine(struct _Buffer* buf, int n, bool use_graphic);
-Line* redrawLine(struct _Buffer* buf, Line* l, int i, bool use_graphic);
-Line* redrawLineImage(struct _Buffer* buf, Line* l, int i);
-int redrawLineRegion(struct _Buffer* buf, Line* l, int i, int bpos, int epos, bool use_graphic);

@@ -27,8 +27,6 @@ newBuffer()
     Buffer *n = New(Buffer);
     memset(n, 0, sizeof(Buffer));
     n->width = 0;
-    n->COLS = 0;
-    n->LINES = 0;
     n->currentURL.scheme = SCM_UNKNOWN;
     n->baseURL = NULL;
     n->baseTarget = NULL;
@@ -233,15 +231,15 @@ void gotoLine(Buffer* buf, int n)
         sprintf(msg, "Last line is #%ld", buf->lastLine->linenumber);
         set_delayed_message(msg);
         buf->currentLine = l;
-        buf->topLine = lineSkip(buf, buf->currentLine, -(buf->LINES - 1),
+        buf->topLine = lineSkip(buf, buf->currentLine, -(getScreen()->ROWS - 1),
             FALSE);
         return;
     }
     for (; l != NULL; l = l->next) {
         if (l->linenumber >= n) {
             buf->currentLine = l;
-            if (n < buf->topLine->linenumber || buf->topLine->linenumber + buf->LINES <= n)
-                buf->topLine = lineSkip(buf, l, -(buf->LINES + 1) / 2, FALSE);
+            if (n < buf->topLine->linenumber || buf->topLine->linenumber + getScreen()->ROWS <= n)
+                buf->topLine = lineSkip(buf, l, -(getScreen()->ROWS + 1) / 2, FALSE);
             break;
         }
     }
@@ -270,15 +268,15 @@ void gotoRealLine(Buffer* buf, int n)
         sprintf(msg, "Last line is #%ld", buf->lastLine->real_linenumber);
         set_delayed_message(msg);
         buf->currentLine = l;
-        buf->topLine = lineSkip(buf, buf->currentLine, -(buf->LINES - 1),
+        buf->topLine = lineSkip(buf, buf->currentLine, -(getScreen()->ROWS - 1),
             FALSE);
         return;
     }
     for (; l != NULL; l = l->next) {
         if (l->real_linenumber >= n) {
             buf->currentLine = l;
-            if (n < buf->topLine->real_linenumber || buf->topLine->real_linenumber + buf->LINES <= n)
-                buf->topLine = lineSkip(buf, l, -(buf->LINES + 1) / 2, FALSE);
+            if (n < buf->topLine->real_linenumber || buf->topLine->real_linenumber + getScreen()->ROWS <= n)
+                buf->topLine = lineSkip(buf, l, -(getScreen()->ROWS + 1) / 2, FALSE);
             break;
         }
     }
@@ -437,20 +435,19 @@ end:
 /*
  * Reshape HTML buffer
  */
-void reshapeBuffer(Buffer* buf)
+void reshapeBuffer(Buffer* buf, int cols)
 {
-    URLFile f;
-    Buffer sbuf;
-    wc_uint8 old_auto_detect = WcOption.auto_detect;
-
-    buf->width = getScreen()->COLS;
+    buf->width = cols;
     if (buf->sourcefile == NULL)
         return;
+    URLFile f;
     init_stream(&f, SCM_LOCAL, NULL);
     examineFile(buf->mailcap_source ? buf->mailcap_source : buf->sourcefile,
         &f);
     if (f.stream == NULL)
         return;
+
+    Buffer sbuf;
     copyBuffer(&sbuf, buf);
     clearBuffer(buf);
 
@@ -486,10 +483,11 @@ void reshapeBuffer(Buffer* buf)
     else
         loadBuffer(&f, buf);
     UFclose(&f);
+    wc_uint8 old_auto_detect = WcOption.auto_detect;
     WcOption.auto_detect = old_auto_detect;
     UseContentCharset = TRUE;
 
-    buf->height = getScreen()->ROWS - 1 + 1;
+    // buf->height = getScreen()->ROWS - 1 + 1;
     if (buf->firstLine && sbuf.firstLine) {
         Line* cur = sbuf.currentLine;
         int n;
@@ -691,7 +689,7 @@ void cursorUp(Buffer* buf, int n)
 
 void cursorDown0(Buffer* buf, int n)
 {
-    if (buf->cursorY < buf->LINES - 1)
+    if (buf->cursorY < getScreen()->ROWS - 1)
         cursorUpDown(buf, 1);
     else {
         buf->topLine = lineSkip(buf, buf->topLine, n, FALSE);
@@ -762,8 +760,8 @@ void cursorRight(Buffer* buf, int n)
     while (buf->pos + delta < l->len && p[buf->pos + delta] & PC_WCHAR2)
         delta++;
     vpos2 = COLPOS(l, buf->pos + delta) - buf->currentColumn - 1;
-    if (vpos2 >= buf->COLS && n) {
-        columnSkip(buf, n + (vpos2 - buf->COLS) - (vpos2 - buf->COLS) % n);
+    if (vpos2 >= getScreen()->COLS && n) {
+        columnSkip(buf, n + (vpos2 - getScreen()->COLS) - (vpos2 - getScreen()->COLS) % n);
         buf->visualpos = l->bwidth + cpos - buf->currentColumn;
     }
     buf->cursorX = buf->visualpos - l->bwidth;
@@ -816,7 +814,7 @@ void arrangeCursor(Buffer* buf)
     if (buf == NULL || buf->currentLine == NULL)
         return;
     /* Arrange line */
-    if (buf->currentLine->linenumber - buf->topLine->linenumber >= buf->LINES
+    if (buf->currentLine->linenumber - buf->topLine->linenumber >= getScreen()->ROWS
         || buf->currentLine->linenumber < buf->topLine->linenumber) {
         /*
          * buf->topLine = buf->currentLine;
@@ -844,9 +842,9 @@ void arrangeCursor(Buffer* buf)
     while (buf->pos + delta < buf->currentLine->len && buf->currentLine->propBuf[buf->pos + delta] & PC_WCHAR2)
         delta++;
     col2 = COLPOS(buf->currentLine, buf->pos + delta);
-    if (col < buf->currentColumn || col2 > buf->COLS + buf->currentColumn) {
+    if (col < buf->currentColumn || col2 > getScreen()->COLS + buf->currentColumn) {
         buf->currentColumn = 0;
-        if (col2 > buf->COLS)
+        if (col2 > getScreen()->COLS)
             columnSkip(buf, col);
     }
     /* Arrange cursor */
@@ -896,18 +894,18 @@ void cursorXY(Buffer* buf, int x, int y)
 
     if (buf->cursorX > x) {
         while (buf->cursorX > x)
-            cursorLeft(buf, buf->COLS / 2);
+            cursorLeft(buf, getScreen()->COLS / 2);
     } else if (buf->cursorX < x) {
         while (buf->cursorX < x) {
             oldX = buf->cursorX;
 
-            cursorRight(buf, buf->COLS / 2);
+            cursorRight(buf, getScreen()->COLS / 2);
 
             if (oldX == buf->cursorX)
                 break;
         }
         if (buf->cursorX > x)
-            cursorLeft(buf, buf->COLS / 2);
+            cursorLeft(buf, getScreen()->COLS / 2);
     }
 }
 

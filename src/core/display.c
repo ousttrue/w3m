@@ -20,7 +20,6 @@
 int displayLink = (false);
 int displayLineInfo = (false);
 int FoldLine = (false);
-int showLineNum = (false);
 int enable_inline_image = false;
 int displayImage = (true);
 
@@ -35,117 +34,6 @@ static Line* cline = NULL;
 static int ccolumn = -1;
 static int image_touch = 0;
 static bool draw_image_flag = false;
-
-static Str
-make_lastline_link(Buffer* buf, char* title, char* url)
-{
-    Str s = NULL, u;
-    Lineprop* pr;
-    ParsedURL pu;
-    char* p;
-    int l = getScreen()->COLS - 1, i;
-
-    if (title && *title) {
-        s = Strnew_m_charp("[", title, "]", NULL);
-        for (p = s->ptr; *p; p++) {
-            if (IS_CNTRL(*p) || IS_SPACE(*p))
-                *p = ' ';
-        }
-        if (url)
-            Strcat_charp(s, " ");
-        l -= get_Str_strwidth(s);
-        if (l <= 0)
-            return s;
-    }
-    if (!url)
-        return s;
-    parseURL2(url, &pu, baseURL(buf));
-    u = parsedURL2Str(&pu);
-    if (DecodeURL)
-        u = Strnew_charp(url_decode2(u->ptr, buf));
-    u = checkType(u, &pr, NULL);
-    if (l <= 4 || l >= get_Str_strwidth(u)) {
-        if (!s)
-            return u;
-        Strcat(s, u);
-        return s;
-    }
-    if (!s)
-        s = Strnew_size(getScreen()->COLS);
-    i = (l - 2) / 2;
-    while (i && pr[i] & PC_WCHAR2)
-        i--;
-    Strcat_charp_n(s, u->ptr, i);
-    Strcat_charp(s, "..");
-    i = get_Str_strwidth(u) - (getScreen()->COLS - 1 - get_Str_strwidth(s));
-    while (i < u->length && pr[i] & PC_WCHAR2)
-        i++;
-    Strcat_charp(s, &u->ptr[i]);
-    return s;
-}
-
-Str make_lastline_message(Buffer* buf)
-{
-    Str msg, s = NULL;
-    int sl = 0;
-
-    if (displayLink) {
-        MapArea* a = retrieveCurrentMapArea(buf);
-        if (a)
-            s = make_lastline_link(buf, a->alt, a->url);
-        else {
-            Anchor* a = retrieveCurrentAnchor(buf);
-            char* p = NULL;
-            if (a && a->title && *a->title)
-                p = a->title;
-            else {
-                Anchor* a_img = retrieveCurrentImg(buf);
-                if (a_img && a_img->title && *a_img->title)
-                    p = a_img->title;
-            }
-            if (p || a)
-                s = make_lastline_link(buf, p, a ? a->url : NULL);
-        }
-        if (s) {
-            sl = get_Str_strwidth(s);
-            if (sl >= getScreen()->COLS - 3)
-                return s;
-        }
-    }
-
-    msg = Strnew();
-    if (displayLineInfo && buf->currentLine != NULL && buf->lastLine != NULL) {
-        int cl = buf->currentLine->real_linenumber;
-        int ll = buf->lastLine->real_linenumber;
-        int r = (int)((double)cl * 100.0 / (double)(ll ? ll : 1) + 0.5);
-        Strcat(msg, Sprintf("%d/%d (%d%%)", cl, ll, r));
-    } else
-        /* FIXME: gettextize? */
-        Strcat_charp(msg, "Viewing");
-    if (buf->ssl_certificate)
-        Strcat_charp(msg, "[SSL]");
-    Strcat_charp(msg, " <");
-    Strcat_charp(msg, buf->buffername);
-
-    if (s) {
-        int l = getScreen()->COLS - 3 - sl;
-        if (get_Str_strwidth(msg) > l) {
-            char* p;
-            for (p = msg->ptr; *p; p += get_mclen(p)) {
-                l -= get_mcwidth(p);
-                if (l < 0)
-                    break;
-            }
-            l = p - msg->ptr;
-            Strtruncate(msg, l);
-        }
-        Strcat_charp(msg, "> ");
-        Strcat(msg, s);
-    } else {
-        Strcat_charp(msg, ">");
-    }
-    return msg;
-}
 
 struct Frame* screenToFrame(const struct VirtualTerm* vt)
 {
@@ -184,165 +72,8 @@ struct Frame* screenToFrame(const struct VirtualTerm* vt)
     return frame;
 }
 
-void bufToScreen(struct VirtualTerm* vt, Buffer* buf, bool use_graphic)
+static Line* redrawLine(struct UI ui, Buffer* buf, Line* l, int i)
 {
-    if (buf->width == 0) {
-        reshapeBuffer(buf);
-    }
-
-    if (showLineNum) {
-        if (buf->lastLine && buf->lastLine->real_linenumber > 0)
-            buf->rootX = (int)(log(buf->lastLine->real_linenumber + 0.1)
-                             / log(10))
-                + 2;
-        if (buf->rootX < 5)
-            buf->rootX = 5;
-        if (buf->rootX > getScreen()->COLS)
-            buf->rootX = getScreen()->COLS;
-    } else
-        buf->rootX = 0;
-    buf->COLS = getScreen()->COLS - buf->rootX;
-
-    int ny = 0;
-    if (buf->rootY != ny || buf->LINES != getScreen()->ROWS - 1 - ny) {
-        buf->rootY = ny;
-        buf->LINES = getScreen()->ROWS - 1 - ny;
-        arrangeCursor(buf);
-    }
-    // if (cline != buf->topLine || ccolumn != buf->currentColumn) {
-    if (activeImage && (cline != buf->topLine || ccolumn != buf->currentColumn)) {
-        if (draw_image_flag) {
-            vt_clear(getScreen());
-            // termClear(ttyWriter());
-        }
-        clearImage();
-        loadImage(buf, IMG_FLAG_STOP);
-        image_touch++;
-        draw_image_flag = false;
-    }
-    redrawNLine(buf, getScreen()->ROWS - 1, use_graphic);
-    cline = buf->topLine;
-    ccolumn = buf->currentColumn;
-    // }
-    if (buf->topLine == NULL)
-        buf->topLine = buf->firstLine;
-}
-
-static void
-drawAnchorCursor0(Buffer* buf, AnchorList* al, int hseq, int prevhseq,
-    int tline, int eline, int active, bool use_graphic)
-{
-    int i;
-
-    Line* l = buf->topLine;
-    for (int j = 0; j < al->nanchor; j++) {
-        Anchor* an = &al->anchors[j];
-        if (an->start.line < tline)
-            continue;
-        if (an->start.line >= eline)
-            return;
-        for (;; l = l->next) {
-            if (l == NULL)
-                return;
-            if (l->linenumber == an->start.line)
-                break;
-        }
-        if (hseq >= 0 && an->hseq == hseq) {
-            int start_pos = an->start.pos;
-            int end_pos = an->end.pos;
-            for (i = an->start.pos; i < an->end.pos; i++) {
-                if (enable_inline_image && (l->propBuf[i] & PE_IMAGE)) {
-                    if (start_pos == i)
-                        start_pos = i + 1;
-                    else if (end_pos == an->end.pos)
-                        end_pos = i - 1;
-                }
-                if (l->propBuf[i] & (PE_IMAGE | PE_ANCHOR | PE_FORM)) {
-                    if (active)
-                        l->propBuf[i] |= PE_ACTIVE;
-                    else
-                        l->propBuf[i] &= ~PE_ACTIVE;
-                }
-            }
-            if (active && start_pos < end_pos)
-                redrawLineRegion(buf, l, l->linenumber - tline + buf->rootY,
-                    start_pos, end_pos, use_graphic);
-        } else if (prevhseq >= 0 && an->hseq == prevhseq) {
-            if (active)
-                redrawLineRegion(buf, l, l->linenumber - tline + buf->rootY,
-                    an->start.pos, an->end.pos, use_graphic);
-        }
-    }
-}
-
-void drawAnchorCursor(Buffer* buf, bool use_graphic)
-{
-    Anchor* an;
-    int hseq, prevhseq;
-    int tline, eline;
-
-    if (!buf->firstLine || !buf->hmarklist)
-        return;
-    if (!buf->href && !buf->formitem)
-        return;
-
-    an = retrieveCurrentAnchor(buf);
-    if (!an)
-        an = retrieveCurrentMap(buf);
-    if (an)
-        hseq = an->hseq;
-    else
-        hseq = -1;
-    tline = buf->topLine->linenumber;
-    eline = tline + buf->LINES;
-    prevhseq = buf->hmarklist->prevhseq;
-
-    if (buf->href) {
-        drawAnchorCursor0(buf, buf->href, hseq, prevhseq, tline, eline, 1, use_graphic);
-        drawAnchorCursor0(buf, buf->href, hseq, -1, tline, eline, 0, use_graphic);
-    }
-    if (buf->formitem) {
-        drawAnchorCursor0(buf, buf->formitem, hseq, prevhseq, tline, eline, 1, use_graphic);
-        drawAnchorCursor0(buf, buf->formitem, hseq, -1, tline, eline, 0, use_graphic);
-    }
-    buf->hmarklist->prevhseq = hseq;
-}
-
-void redrawNLine(Buffer* buf, int n, bool use_graphic)
-{
-    struct VirtualTerm* vt = getScreen();
-    Line* l;
-    int i;
-
-    if (useColor) {
-        EFFECT_ANCHOR_END_C(vt);
-        vt_setbcolor(vt, bg_color);
-    }
-
-    for (i = 0, l = buf->topLine; i < buf->LINES; i++, l = l->next) {
-        if (i >= buf->LINES - n || i < -n)
-            l = redrawLine(buf, l, i + buf->rootY, use_graphic);
-        if (l == NULL)
-            break;
-    }
-    if (n > 0) {
-        vt_move(vt, i + buf->rootY, 0);
-        vt_clrtobotx(vt);
-    }
-
-    if (!(activeImage && displayImage && buf->img))
-        return;
-    vt_move(vt, buf->cursorY + buf->rootY, buf->cursorX + buf->rootX);
-    for (i = 0, l = buf->topLine; i < buf->LINES && l; i++, l = l->next) {
-        if (i >= buf->LINES - n || i < -n)
-            redrawLineImage(buf, l, i + buf->rootY);
-    }
-    getAllImage(buf);
-}
-
-Line* redrawLine(Buffer* buf, Line* l, int i, bool use_graphic)
-{
-    struct VirtualTerm* vt = getScreen();
     int j, pos, rcol, ncol, delta = 1;
     int column = buf->currentColumn;
     char* p;
@@ -355,31 +86,13 @@ Line* redrawLine(Buffer* buf, Line* l, int i, bool use_graphic)
     if (l == NULL) {
         return NULL;
     }
-    vt_move(vt, i, 0);
-    if (showLineNum) {
-        char tmp[16];
-        if (!buf->rootX) {
-            if (buf->lastLine->real_linenumber > 0)
-                buf->rootX = (int)(log(buf->lastLine->real_linenumber + 0.1)
-                                 / log(10))
-                    + 2;
-            if (buf->rootX < 5)
-                buf->rootX = 5;
-            if (buf->rootX > getScreen()->COLS)
-                buf->rootX = getScreen()->COLS;
-            buf->COLS = getScreen()->COLS - buf->rootX;
-        }
-        if (l->real_linenumber && !l->bpos)
-            sprintf(tmp, "%*ld:", buf->rootX - 1, l->real_linenumber);
-        else
-            sprintf(tmp, "%*s ", buf->rootX - 1, "");
-        vt_addstr(vt, tmp);
-    }
-    vt_move(vt, i, buf->rootX);
+    vt_move(ui.vt, i, 0);
+
+    vt_move(ui.vt, i, ui.viewport.x);
     if (l->width < 0)
         l->width = COLPOS(l, l->len);
     if (l->len == 0 || l->width - 1 < column) {
-        vt_clrtoeolx(vt);
+        vt_clrtoeolx(ui.vt);
         return l;
     }
     /* need_clrtoeol(); */
@@ -392,7 +105,7 @@ Line* redrawLine(Buffer* buf, Line* l, int i, bool use_graphic)
         pc = NULL;
     rcol = COLPOS(l, pos);
 
-    for (j = 0; rcol - column < buf->COLS && pos + j < l->len; j += delta) {
+    for (j = 0; rcol - column < buf->width && pos + j < l->len; j += delta) {
         if (useVisitedColor && vpos <= pos + j && !(pr[j] & PE_VISITED)) {
             a = retrieveAnchor(buf->href, l->linenumber, pos + j);
             if (a) {
@@ -406,31 +119,31 @@ Line* redrawLine(Buffer* buf, Line* l, int i, bool use_graphic)
         }
         delta = wtf_len((wc_uchar*)&p[j]);
         ncol = COLPOS(l, pos + j + delta);
-        if (ncol - column > buf->COLS)
+        if (ncol - column > buf->width)
             break;
         if (pc)
-            vt_do_color(vt, pc[j]);
+            vt_do_color(ui.vt, pc[j]);
         if (rcol < column) {
             for (rcol = column; rcol < ncol; rcol++)
-                vt_addChar(vt, ' ', 0, use_graphic);
+                vt_addChar(ui.vt, ' ', 0, ui.use_graphic);
             continue;
         }
         if (p[j] == '\t') {
             for (; rcol < ncol; rcol++)
-                vt_addChar(vt, ' ', 0, use_graphic);
+                vt_addChar(ui.vt, ' ', 0, ui.use_graphic);
         } else {
-            vt_addMChar(vt, &p[j], pr[j], delta, use_graphic);
+            vt_addMChar(ui.vt, &p[j], pr[j], delta, ui.use_graphic);
         }
         rcol = ncol;
     }
 
-    vt_line_end(vt);
-    if (rcol - column < buf->COLS)
-        vt_clrtoeolx(vt);
+    vt_line_end(ui.vt);
+    if (rcol - column < ui.viewport.cols)
+        vt_clrtoeolx(ui.vt);
     return l;
 }
 
-Line* redrawLineImage(Buffer* buf, Line* l, int i)
+static Line* redrawLineImage(struct UI ui, Buffer* buf, Line* l, int i)
 {
     int j, pos, rcol;
     int column = buf->currentColumn;
@@ -445,7 +158,7 @@ Line* redrawLineImage(Buffer* buf, Line* l, int i)
         return l;
     pos = columnPos(l, column);
     rcol = COLPOS(l, pos);
-    for (j = 0; rcol - column < buf->COLS && pos + j < l->len; j++) {
+    for (j = 0; rcol - column < ui.viewport.cols && pos + j < l->len; j++) {
         if (rcol - column < 0) {
             rcol = COLPOS(l, pos + j + 1);
             continue;
@@ -462,7 +175,7 @@ Line* redrawLineImage(Buffer* buf, Line* l, int i)
                     image->width = cache->width;
                     image->height = cache->height;
                 }
-                x = (int)((rcol - column + buf->rootX) * pixel_per_char);
+                x = (int)((rcol - column + ui.viewport.x) * pixel_per_char);
                 y = (int)(i * pixel_per_line);
                 sx = (int)((rcol - COLPOS(l, a->start.pos)) * pixel_per_char);
                 sy = (int)((l->linenumber - image->y) * pixel_per_line);
@@ -484,10 +197,10 @@ Line* redrawLineImage(Buffer* buf, Line* l, int i)
                     h = image->height - sy;
                 else
                     h = (int)(pixel_per_line - sy);
-                if (w > (int)((buf->rootX + buf->COLS) * pixel_per_char - x))
-                    w = (int)((buf->rootX + buf->COLS) * pixel_per_char - x);
-                if (h > (int)((getScreen()->ROWS - 1) * pixel_per_line - y))
-                    h = (int)((getScreen()->ROWS - 1) * pixel_per_line - y);
+                if (w > (int)((ui.viewport.x + ui.viewport.cols) * pixel_per_char - x))
+                    w = (int)((ui.viewport.x + ui.viewport.cols) * pixel_per_char - x);
+                if (h > (int)((ui.vt->ROWS - 1) * pixel_per_line - y))
+                    h = (int)((ui.vt->ROWS - 1) * pixel_per_line - y);
                 addImage(cache, x, y, sx, sy, w, h);
                 image->touch = image_touch;
                 draw_image_flag = true;
@@ -498,9 +211,62 @@ Line* redrawLineImage(Buffer* buf, Line* l, int i)
     return l;
 }
 
-int redrawLineRegion(Buffer* buf, Line* l, int i, int bpos, int epos, bool use_graphic)
+static void redrawNLine(struct UI ui, Buffer* buf, int n)
 {
-    struct VirtualTerm* vt = getScreen();
+    if (useColor) {
+        EFFECT_ANCHOR_END_C(ui.vt);
+        vt_setbcolor(ui.vt, bg_color);
+    }
+
+    Line* l;
+    int i;
+    for (i = 0, l = buf->topLine; i < ui.viewport.rows; i++, l = l->next) {
+        if (i >= ui.viewport.rows - n || i < -n)
+            l = redrawLine(ui, buf, l, i + ui.viewport.y);
+        if (l == NULL)
+            break;
+    }
+    if (n > 0) {
+        vt_move(ui.vt, i + ui.viewport.y, 0);
+        vt_clrtobotx(ui.vt);
+    }
+
+    if (!(activeImage && displayImage && buf->img))
+        return;
+    vt_move(ui.vt, buf->cursorY + ui.viewport.y, buf->cursorX + ui.viewport.x);
+    for (i = 0, l = buf->topLine; i < ui.viewport.rows && l; i++, l = l->next) {
+        if (i >= ui.viewport.rows - n || i < -n)
+            redrawLineImage(ui, buf, l, i + ui.viewport.y);
+    }
+    getAllImage(buf);
+}
+
+void bufToScreen(struct UI ui, Buffer* buf)
+{
+    if (buf->width == 0) {
+        reshapeBuffer(buf, ui.viewport.cols);
+    }
+
+    if (activeImage && (cline != buf->topLine || ccolumn != buf->currentColumn)) {
+        if (draw_image_flag) {
+            vt_clear(getScreen());
+            // termClear(ttyWriter());
+        }
+        clearImage();
+        loadImage(buf, IMG_FLAG_STOP);
+        image_touch++;
+        draw_image_flag = false;
+    }
+    redrawNLine(ui, buf, getScreen()->ROWS - 1);
+    cline = buf->topLine;
+    ccolumn = buf->currentColumn;
+
+    if (buf->topLine == NULL)
+        buf->topLine = buf->firstLine;
+}
+
+static int redrawLineRegion(struct UI ui, Buffer* buf, Line* l, int i, int bpos, int epos)
+{
     int j, pos, rcol, ncol, delta = 1;
     int column = buf->currentColumn;
     char* p;
@@ -524,7 +290,7 @@ int redrawLineRegion(Buffer* buf, Line* l, int i, int bpos, int epos, bool use_g
     bcol = bpos - pos;
     ecol = epos - pos;
 
-    for (j = 0; rcol - column < buf->COLS && pos + j < l->len; j += delta) {
+    for (j = 0; rcol - column < ui.viewport.cols && pos + j < l->len; j += delta) {
         if (useVisitedColor && vpos <= pos + j && !(pr[j] & PE_VISITED)) {
             a = retrieveAnchor(buf->href, l->linenumber, pos + j);
             if (a) {
@@ -538,27 +304,102 @@ int redrawLineRegion(Buffer* buf, Line* l, int i, int bpos, int epos, bool use_g
         }
         delta = wtf_len((wc_uchar*)&p[j]);
         ncol = COLPOS(l, pos + j + delta);
-        if (ncol - column > buf->COLS)
+        if (ncol - column > ui.viewport.cols)
             break;
         if (pc)
-            vt_do_color(vt, pc[j]);
+            vt_do_color(ui.vt, pc[j]);
         if (j >= bcol && j < ecol) {
             if (rcol < column) {
-                vt_move(vt, i, buf->rootX);
+                vt_move(ui.vt, i, ui.viewport.x);
                 for (rcol = column; rcol < ncol; rcol++)
-                    vt_addChar(vt, ' ', 0, use_graphic);
+                    vt_addChar(ui.vt, ' ', 0, ui.use_graphic);
                 continue;
             }
-            vt_move(vt, i, rcol - column + buf->rootX);
+            vt_move(ui.vt, i, rcol - column + ui.viewport.x);
             if (p[j] == '\t') {
                 for (; rcol < ncol; rcol++)
-                    vt_addChar(vt, ' ', 0, use_graphic);
+                    vt_addChar(ui.vt, ' ', 0, ui.use_graphic);
             } else
-                vt_addMChar(vt, &p[j], pr[j], delta, use_graphic);
+                vt_addMChar(ui.vt, &p[j], pr[j], delta, ui.use_graphic);
         }
         rcol = ncol;
     }
 
-    vt_line_end(vt);
+    vt_line_end(ui.vt);
     return rcol - column;
+}
+
+static void
+drawAnchorCursor0(struct UI ui, Buffer* buf,
+    AnchorList* al, int hseq, int prevhseq, int tline, int eline, int active)
+{
+    Line* l = buf->topLine;
+    for (int j = 0; j < al->nanchor; j++) {
+        Anchor* an = &al->anchors[j];
+        if (an->start.line < tline)
+            continue;
+        if (an->start.line >= eline)
+            return;
+        for (;; l = l->next) {
+            if (l == NULL)
+                return;
+            if (l->linenumber == an->start.line)
+                break;
+        }
+        if (hseq >= 0 && an->hseq == hseq) {
+            int start_pos = an->start.pos;
+            int end_pos = an->end.pos;
+            for (int i = an->start.pos; i < an->end.pos; i++) {
+                if (enable_inline_image && (l->propBuf[i] & PE_IMAGE)) {
+                    if (start_pos == i)
+                        start_pos = i + 1;
+                    else if (end_pos == an->end.pos)
+                        end_pos = i - 1;
+                }
+                if (l->propBuf[i] & (PE_IMAGE | PE_ANCHOR | PE_FORM)) {
+                    if (active)
+                        l->propBuf[i] |= PE_ACTIVE;
+                    else
+                        l->propBuf[i] &= ~PE_ACTIVE;
+                }
+            }
+            if (active && start_pos < end_pos)
+                redrawLineRegion(ui, buf, l, l->linenumber - tline + ui.viewport.y, start_pos, end_pos);
+        } else if (prevhseq >= 0 && an->hseq == prevhseq) {
+            if (active)
+                redrawLineRegion(ui, buf, l, l->linenumber - tline + ui.viewport.y, an->start.pos, an->end.pos);
+        }
+    }
+}
+
+void drawAnchorCursor(struct UI ui, Buffer* buf)
+{
+    if (!buf->firstLine || !buf->hmarklist)
+        return;
+    if (!buf->href && !buf->formitem)
+        return;
+
+    Anchor* an = retrieveCurrentAnchor(buf);
+    if (!an)
+        an = retrieveCurrentMap(buf);
+
+    int hseq, prevhseq;
+    int tline, eline;
+    if (an)
+        hseq = an->hseq;
+    else
+        hseq = -1;
+    tline = buf->topLine->linenumber;
+    eline = tline + ui.viewport.rows;
+    prevhseq = buf->hmarklist->prevhseq;
+
+    if (buf->href) {
+        drawAnchorCursor0(ui, buf, buf->href, hseq, prevhseq, tline, eline, 1);
+        drawAnchorCursor0(ui, buf, buf->href, hseq, -1, tline, eline, 0);
+    }
+    if (buf->formitem) {
+        drawAnchorCursor0(ui, buf, buf->formitem, hseq, prevhseq, tline, eline, 1);
+        drawAnchorCursor0(ui, buf, buf->formitem, hseq, -1, tline, eline, 0);
+    }
+    buf->hmarklist->prevhseq = hseq;
 }

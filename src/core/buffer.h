@@ -13,14 +13,6 @@
 #define CHK_URL 1
 #define CHK_NMID 2
 
-#define COPY_BUFROOT(dstbuf, srcbuf)       \
-    {                                      \
-        (dstbuf)->rootX = (srcbuf)->rootX; \
-        (dstbuf)->rootY = (srcbuf)->rootY; \
-        (dstbuf)->COLS = (srcbuf)->COLS;   \
-        (dstbuf)->LINES = (srcbuf)->LINES; \
-    }
-
 #define COPY_BUFPOSITION(dstbuf, srcbuf)                   \
     {                                                      \
         (dstbuf)->topLine = (srcbuf)->topLine;             \
@@ -77,7 +69,6 @@ typedef struct _Buffer {
     struct _Buffer* nextBuffer;
     struct _Buffer* linkBuffer[MAX_LB];
     short width;
-    short height;
     char* type;
     char* real_type;
     int allLine;
@@ -87,10 +78,6 @@ typedef struct _Buffer {
     short cursorY;
     int pos;
     int visualpos;
-    short rootX;
-    short rootY;
-    short COLS;
-    short LINES;
     InputStream pagerSource;
     AnchorList* href;
     AnchorList* name;
@@ -142,7 +129,7 @@ struct _Buffer* nthBuffer(struct _Buffer* firstbuf, int n);
 void gotoRealLine(struct _Buffer* buf, int n);
 void gotoLine(struct _Buffer* buf, int n);
 struct _Buffer* selectBuffer(struct _Buffer* firstbuf, struct _Buffer* currentbuf, char* selectchar);
-void reshapeBuffer(struct _Buffer* buf);
+void reshapeBuffer(struct _Buffer* buf, int cols);
 void copyBuffer(struct _Buffer* a, struct _Buffer* b);
 struct _Buffer* prevBuffer(struct _Buffer* first, struct _Buffer* buf);
 int writeBufferCache(struct _Buffer* buf);
