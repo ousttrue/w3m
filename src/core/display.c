@@ -186,15 +186,10 @@ struct Frame* screenToFrame(const struct VirtualTerm* vt)
 
 void bufToScreen(struct VirtualTerm* vt, Buffer* buf, bool use_graphic)
 {
-    if (buf->width == 0)
-        buf->width = getScreen()->COLS;
-    if (buf->height == 0)
-        buf->height = getScreen()->ROWS;
-    if ((buf->width != getScreen()->COLS && (is_html_type(buf->type) || FoldLine))
-        || buf->need_reshape) {
-        buf->need_reshape = true;
+    if (buf->width == 0) {
         reshapeBuffer(buf);
     }
+
     if (showLineNum) {
         if (buf->lastLine && buf->lastLine->real_linenumber > 0)
             buf->rootX = (int)(log(buf->lastLine->real_linenumber + 0.1)
@@ -237,13 +232,11 @@ static void
 drawAnchorCursor0(Buffer* buf, AnchorList* al, int hseq, int prevhseq,
     int tline, int eline, int active, bool use_graphic)
 {
-    int i, j;
-    Line* l;
-    Anchor* an;
+    int i;
 
-    l = buf->topLine;
-    for (j = 0; j < al->nanchor; j++) {
-        an = &al->anchors[j];
+    Line* l = buf->topLine;
+    for (int j = 0; j < al->nanchor; j++) {
+        Anchor* an = &al->anchors[j];
         if (an->start.line < tline)
             continue;
         if (an->start.line >= eline)
@@ -281,9 +274,6 @@ drawAnchorCursor0(Buffer* buf, AnchorList* al, int hseq, int prevhseq,
         }
     }
 }
-
-// struct TermEntry* t = getTermEntry();
-// bool use_graphic = graph_ok(t);
 
 void drawAnchorCursor(Buffer* buf, bool use_graphic)
 {
@@ -471,7 +461,6 @@ Line* redrawLineImage(Buffer* buf, Line* l, int i)
                 if ((image->width < 0 && cache->width > 0) || (image->height < 0 && cache->height > 0)) {
                     image->width = cache->width;
                     image->height = cache->height;
-                    buf->need_reshape = true;
                 }
                 x = (int)((rcol - column + buf->rootX) * pixel_per_char);
                 y = (int)(i * pixel_per_line);

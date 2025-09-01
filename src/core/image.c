@@ -433,13 +433,11 @@ void loadImage(Buffer* buf, enum ImageLoadFlag flag)
         }
         if (!stat(cache->file, &st)) {
             cache->loaded = IMG_FLAG_LOADED;
-            if (getImageSize(cache)) {
-                if (image_buffer)
-                    image_buffer->need_reshape = TRUE;
-            }
+            getImageSize(cache);
             draw = TRUE;
-        } else
+        } else {
             cache->loaded = IMG_FLAG_ERROR;
+        }
         unlink(cache->touch);
         image_cache[i] = NULL;
     }

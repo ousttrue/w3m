@@ -108,7 +108,7 @@ typedef struct _Buffer {
     char* sourcefile;
     int* clone;
     size_t trbyte;
-    char check_url;
+    bool check_url;
     wc_ces document_charset;
     wc_uint8 auto_detect;
     TextList* document_header;
@@ -122,7 +122,6 @@ typedef struct _Buffer {
     char* ssl_certificate;
     char image_flag;
     char image_loaded;
-    char need_reshape;
     Anchor* submit;
     struct _BufferPos* undo;
     struct _AlarmEvent* event;

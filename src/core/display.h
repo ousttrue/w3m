@@ -1,7 +1,6 @@
 #pragma once
-struct _Buffer;
-struct Frame;
-struct VirtualTerm;
+#include "line.h"
+#include <Str.h>
 
 extern int displayLink;
 extern int displayLineInfo;
@@ -21,6 +20,10 @@ extern int set_pixel_per_char;
 extern double pixel_per_line;
 extern int pixel_per_line_i;
 extern int set_pixel_per_line;
+
+struct _Buffer;
+struct Frame;
+struct VirtualTerm;
 
 void bufToScreen(struct VirtualTerm* vt, struct _Buffer* buf, bool use_graphic);
 struct Frame* screenToFrame(const struct VirtualTerm* vt);

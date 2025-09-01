@@ -24,15 +24,11 @@ Lineprop NullProp[] = { 0 };
 Buffer*
 newBuffer()
 {
-    Buffer* n;
-
-    n = New(Buffer);
-    if (n == NULL)
-        exit(3);
-    memset((void*)n, 0, sizeof(Buffer));
-    n->width = getScreen()->COLS;
-    n->COLS = getScreen()->COLS;
-    n->LINES = getScreen()->ROWS - 1;
+    Buffer *n = New(Buffer);
+    memset(n, 0, sizeof(Buffer));
+    n->width = 0;
+    n->COLS = 0;
+    n->LINES = 0;
     n->currentURL.scheme = SCM_UNKNOWN;
     n->baseURL = NULL;
     n->baseTarget = NULL;
@@ -43,8 +39,7 @@ newBuffer()
     n->trbyte = 0;
     n->ssl_certificate = NULL;
     n->auto_detect = WcOption.auto_detect;
-    n->check_url = MarkAllPages; /* use default from -o mark_all_pages */
-    n->need_reshape = 1; /* always reshape new buffers to mark URLs */
+    n->check_url = MarkAllPages;
     return n;
 }
 
@@ -448,9 +443,6 @@ void reshapeBuffer(Buffer* buf)
     Buffer sbuf;
     wc_uint8 old_auto_detect = WcOption.auto_detect;
 
-    if (!buf->need_reshape)
-        return;
-    buf->need_reshape = FALSE;
     buf->width = getScreen()->COLS;
     if (buf->sourcefile == NULL)
         return;
@@ -930,4 +922,3 @@ void restorePosition(Buffer* buf, Buffer* orig)
     buf->currentColumn = orig->currentColumn;
     arrangeCursor(buf);
 }
-
