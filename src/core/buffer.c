@@ -213,7 +213,7 @@ writeBufferName(Buffer* buf, int n)
             break;
         }
     }
-    addnstr_sup(getScreen(), msg->ptr, getScreen()->COLS - 1);
+    vt_addnstr_sup(getScreen(), msg->ptr, getScreen()->COLS - 1);
 }
 
 /*
@@ -298,34 +298,34 @@ listBuffer(Buffer* top, Buffer* current)
 
     vt_move(vt, 0, 0);
     if (useColor) {
-        setfcolor(vt, basic_color);
-        setbcolor(vt, bg_color);
+        vt_setfcolor(vt, basic_color);
+        vt_setbcolor(vt, bg_color);
     }
-    clrtobotx(vt);
+    vt_clrtobotx(vt);
     for (i = 0; i < getScreen()->ROWS - 1; i++) {
         if (buf == current) {
             c = i;
-            standout(vt);
+            vt_standout(vt);
         }
         writeBufferName(buf, i);
         if (buf == current) {
-            standend(vt);
-            clrtoeolx(vt);
+            vt_standend(vt);
+            vt_clrtoeolx(vt);
             vt_move(vt, i, 0);
-            toggle_stand(vt);
+            vt_toggle_stand(vt);
         } else
-            clrtoeolx(vt);
+            vt_clrtoeolx(vt);
         if (buf->nextBuffer == NULL) {
             vt_move(vt, i + 1, 0);
-            clrtobotx(vt);
+            vt_clrtobotx(vt);
             break;
         }
         buf = buf->nextBuffer;
     }
-    standout(vt);
+    vt_standout(vt);
     /* FIXME: gettextize? */
     message(getUI(), MSG_INFO, "Buffer selection mode: SPC for select / D for delete buffer");
-    standend(vt);
+    vt_standend(vt);
     vt_move(vt, c, 0);
     // refresh(ttyWriter());
     return buf->nextBuffer;
@@ -392,11 +392,11 @@ selectBuffer(Buffer* firstbuf, Buffer* currentbuf, char* selectchar)
                 currentbuf = currentbuf->nextBuffer;
                 cpoint++;
                 spoint++;
-                standout(vt);
+                vt_standout(vt);
                 writeBufferName(currentbuf, spoint);
-                standend(vt);
+                vt_standend(vt);
                 vt_move(vt, spoint, 0);
-                toggle_stand(vt);
+                vt_toggle_stand(vt);
             } else if (cpoint < maxbuf - 1) {
                 topbuf = currentbuf;
                 currentbuf = currentbuf->nextBuffer;
@@ -411,11 +411,11 @@ selectBuffer(Buffer* firstbuf, Buffer* currentbuf, char* selectchar)
                 writeBufferName(currentbuf, spoint);
                 currentbuf = nthBuffer(topbuf, --spoint);
                 cpoint--;
-                standout(vt);
+                vt_standout(vt);
                 writeBufferName(currentbuf, spoint);
-                standend(vt);
+                vt_standend(vt);
                 vt_move(vt, spoint, 0);
-                toggle_stand(vt);
+                vt_toggle_stand(vt);
             } else if (cpoint > 0) {
                 i = cpoint - sclimit;
                 if (i < 0)

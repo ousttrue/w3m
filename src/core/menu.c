@@ -30,12 +30,12 @@ static int FRAME_WIDTH;
 #define G_start             \
     {                       \
         if (graph_mode)     \
-            graphstart(vt); \
+            vt_graphstart(vt); \
     }
 #define G_end             \
     {                     \
         if (graph_mode)   \
-            graphend(vt); \
+            vt_graphend(vt); \
     }
 
 static int mNull(char c);
@@ -836,13 +836,13 @@ int select_menu(Menu* menu, int mselect)
     if (menu->select >= menu->offset && menu->select < menu->offset + menu->height)
         draw_menu_item(menu, menu->select);
     menu->select = mselect;
-    standout(vt);
+    vt_standout(vt);
     draw_menu_item(menu, menu->select);
-    standend(vt);
+    vt_standend(vt);
     /*
      * move(menu->cursorY, menu->cursorX); */
     vt_move(vt, menu->y + mselect - menu->offset, menu->x);
-    toggle_stand(vt);
+    vt_toggle_stand(vt);
     // refresh(ttyWriter());
 
     return (menu->select);

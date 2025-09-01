@@ -93,7 +93,7 @@ char* inputLineHistSearch(struct UI ui,
 
         // show prompt
         vt_move(ui.vt, ui.vt->ROWS - 1, 0);
-        addstr(ui.vt, prompt);
+        vt_addstr(ui.vt, prompt);
 
         // show current
         if (g_editor.is_passwd)
@@ -104,7 +104,7 @@ char* inputLineHistSearch(struct UI ui,
                 g_editor.strBuf->ptr, g_editor.strProp, g_editor.CLen, g_editor.offset, ui.vt->COLS - opos);
 
         // cursor
-        clrtoeolx(ui.vt);
+        vt_clrtoeolx(ui.vt);
         vt_move(ui.vt, ui.vt->ROWS - 1, opos + x - g_editor.offset);
 
         // draw frame

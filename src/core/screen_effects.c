@@ -21,16 +21,16 @@ static int anch_mode = 0, emph_mode = 0, imag_mode = 0, form_mode = 0,
 int graph_mode = 0;
 static Linecolor color_mode = 0;
 
-void do_color(struct VirtualTerm* vt, Linecolor c)
+void vt_do_color(struct VirtualTerm* vt, Linecolor c)
 {
     if (c & 0x8)
-        setfcolor(vt, c & 0x7);
+        vt_setfcolor(vt, c & 0x7);
     else if (color_mode & 0x8)
-        setfcolor(vt, basic_color);
+        vt_setfcolor(vt, basic_color);
     if (c & 0x80)
-        setbcolor(vt, (c >> 4) & 0x7);
+        vt_setbcolor(vt, (c >> 4) & 0x7);
     else if (color_mode & 0x80)
-        setbcolor(vt, bg_color);
+        vt_setbcolor(vt, bg_color);
     color_mode = c;
 }
 
@@ -46,34 +46,34 @@ void do_color(struct VirtualTerm* vt, Linecolor c)
  *     7  white
  */
 
-static void EFFECT_ANCHOR_START_C(struct VirtualTerm* vt) { setfcolor(vt, anchor_color); }
-static void EFFECT_IMAGE_START_C(struct VirtualTerm* vt) { setfcolor(vt, image_color); }
-static void EFFECT_FORM_START_C(struct VirtualTerm* vt) { setfcolor(vt, form_color); }
-static void EFFECT_ACTIVE_START_C(struct VirtualTerm* vt) { (setfcolor(vt, active_color), underline(vt)); }
-static void EFFECT_VISITED_START_C(struct VirtualTerm* vt) { setfcolor(vt, visited_color); }
-static void EFFECT_MARK_START_C(struct VirtualTerm* vt) { setbcolor(vt, mark_color); }
+static void EFFECT_ANCHOR_START_C(struct VirtualTerm* vt) { vt_setfcolor(vt, anchor_color); }
+static void EFFECT_IMAGE_START_C(struct VirtualTerm* vt) { vt_setfcolor(vt, image_color); }
+static void EFFECT_FORM_START_C(struct VirtualTerm* vt) { vt_setfcolor(vt, form_color); }
+static void EFFECT_ACTIVE_START_C(struct VirtualTerm* vt) { (vt_setfcolor(vt, active_color), vt_underline(vt)); }
+static void EFFECT_VISITED_START_C(struct VirtualTerm* vt) { vt_setfcolor(vt, visited_color); }
+static void EFFECT_MARK_START_C(struct VirtualTerm* vt) { vt_setbcolor(vt, mark_color); }
 
-static void EFFECT_IMAGE_END_C(struct VirtualTerm* vt) { setfcolor(vt, basic_color); }
-void EFFECT_ANCHOR_END_C(struct VirtualTerm* vt) { setfcolor(vt, basic_color); }
-static void EFFECT_FORM_END_C(struct VirtualTerm* vt) { setfcolor(vt, basic_color); }
-static void EFFECT_ACTIVE_END_C(struct VirtualTerm* vt) { (setfcolor(vt, basic_color), underlineend(vt)); }
-static void EFFECT_VISITED_END_C(struct VirtualTerm* vt) { setfcolor(vt, basic_color); }
-static void EFFECT_MARK_END_C(struct VirtualTerm* vt) { setbcolor(vt, bg_color); }
+static void EFFECT_IMAGE_END_C(struct VirtualTerm* vt) { vt_setfcolor(vt, basic_color); }
+void EFFECT_ANCHOR_END_C(struct VirtualTerm* vt) { vt_setfcolor(vt, basic_color); }
+static void EFFECT_FORM_END_C(struct VirtualTerm* vt) { vt_setfcolor(vt, basic_color); }
+static void EFFECT_ACTIVE_END_C(struct VirtualTerm* vt) { (vt_setfcolor(vt, basic_color), vt_underlineend(vt)); }
+static void EFFECT_VISITED_END_C(struct VirtualTerm* vt) { vt_setfcolor(vt, basic_color); }
+static void EFFECT_MARK_END_C(struct VirtualTerm* vt) { vt_setbcolor(vt, bg_color); }
 
-static void EFFECT_ANCHOR_START_M(struct VirtualTerm* vt) { underline(vt); }
-static void EFFECT_ANCHOR_END_M(struct VirtualTerm* vt) { underlineend(vt); }
-static void EFFECT_IMAGE_START_M(struct VirtualTerm* vt) { standout(vt); }
-static void EFFECT_IMAGE_END_M(struct VirtualTerm* vt) { standend(vt); }
-static void EFFECT_FORM_START_M(struct VirtualTerm* vt) { standout(vt); }
-static void EFFECT_FORM_END_M(struct VirtualTerm* vt) { standend(vt); }
-static void EFFECT_ACTIVE_START_NC(struct VirtualTerm* vt) { underline(vt); }
-static void EFFECT_ACTIVE_END_NC(struct VirtualTerm* vt) { underlineend(vt); }
-static void EFFECT_ACTIVE_START_M(struct VirtualTerm* vt) { bold(vt); }
-static void EFFECT_ACTIVE_END_M(struct VirtualTerm* vt) { boldend(vt); }
+static void EFFECT_ANCHOR_START_M(struct VirtualTerm* vt) { vt_underline(vt); }
+static void EFFECT_ANCHOR_END_M(struct VirtualTerm* vt) { vt_underlineend(vt); }
+static void EFFECT_IMAGE_START_M(struct VirtualTerm* vt) { vt_standout(vt); }
+static void EFFECT_IMAGE_END_M(struct VirtualTerm* vt) { vt_standend(vt); }
+static void EFFECT_FORM_START_M(struct VirtualTerm* vt) { vt_standout(vt); }
+static void EFFECT_FORM_END_M(struct VirtualTerm* vt) { vt_standend(vt); }
+static void EFFECT_ACTIVE_START_NC(struct VirtualTerm* vt) { vt_underline(vt); }
+static void EFFECT_ACTIVE_END_NC(struct VirtualTerm* vt) { vt_underlineend(vt); }
+static void EFFECT_ACTIVE_START_M(struct VirtualTerm* vt) { vt_bold(vt); }
+static void EFFECT_ACTIVE_END_M(struct VirtualTerm* vt) { vt_boldend(vt); }
 static void EFFECT_VISITED_START_M(struct VirtualTerm* vt) { /**/ ; }
 static void EFFECT_VISITED_END_M(struct VirtualTerm* vt) { /**/ ; }
-static void EFFECT_MARK_START_M(struct VirtualTerm* vt) { standout(vt); }
-static void EFFECT_MARK_END_M(struct VirtualTerm* vt) { standend(vt); }
+static void EFFECT_MARK_START_M(struct VirtualTerm* vt) { vt_standout(vt); }
+static void EFFECT_MARK_END_M(struct VirtualTerm* vt) { vt_standend(vt); }
 
 #define define_effect(name_start, name_end, color_start, color_end, mono_start, mono_end) \
     static void name_start(struct VirtualTerm* vt)                                        \
@@ -156,17 +156,17 @@ static void effect_visited_end(struct VirtualTerm* vt)
     }
 }
 
-void standout(struct VirtualTerm* vt)
+void vt_standout(struct VirtualTerm* vt)
 {
     vt->CurrentMode |= S_STANDOUT;
 }
 
-void standend(struct VirtualTerm* vt)
+void vt_standend(struct VirtualTerm* vt)
 {
     vt->CurrentMode &= ~S_STANDOUT;
 }
 
-void toggle_stand(struct VirtualTerm* vt)
+void vt_toggle_stand(struct VirtualTerm* vt)
 {
     int i;
     l_prop* pr = vt->ScreenImage[vt->CurLine]->lineprop;
@@ -177,44 +177,44 @@ void toggle_stand(struct VirtualTerm* vt)
     }
 }
 
-void bold(struct VirtualTerm* vt)
+void vt_bold(struct VirtualTerm* vt)
 {
     vt->CurrentMode |= S_BOLD;
 }
 
-void boldend(struct VirtualTerm* vt)
+void vt_boldend(struct VirtualTerm* vt)
 {
     vt->CurrentMode &= ~S_BOLD;
 }
 
-void underline(struct VirtualTerm* vt)
+void vt_underline(struct VirtualTerm* vt)
 {
     vt->CurrentMode |= S_UNDERLINE;
 }
 
-void underlineend(struct VirtualTerm* vt)
+void vt_underlineend(struct VirtualTerm* vt)
 {
     vt->CurrentMode &= ~S_UNDERLINE;
 }
 
-void graphstart(struct VirtualTerm* vt)
+void vt_graphstart(struct VirtualTerm* vt)
 {
     vt->CurrentMode |= S_GRAPHICS;
 }
 
-void graphend(struct VirtualTerm* vt)
+void vt_graphend(struct VirtualTerm* vt)
 {
     vt->CurrentMode &= ~S_GRAPHICS;
 }
 
-void setfcolor(struct VirtualTerm* vt, int color)
+void vt_setfcolor(struct VirtualTerm* vt, int color)
 {
     vt->CurrentMode &= ~COL_FCOLOR;
     if ((color & 0xf) <= 7)
         vt->CurrentMode |= (((color & 7) | 8) << 8);
 }
 
-void setbcolor(struct VirtualTerm* vt, int color)
+void vt_setbcolor(struct VirtualTerm* vt, int color)
 {
     vt->CurrentMode &= ~COL_BCOLOR;
     if ((color & 0xf) <= 7)
@@ -235,13 +235,13 @@ void setbcolor(struct VirtualTerm* vt, int color)
         modeflag = false;                                      \
     }
 
-void do_effects(Lineprop m, struct VirtualTerm* vt)
+void vt_do_effects(struct VirtualTerm* vt, Lineprop m)
 {
     /* effect end */
-    do_effect2(PE_UNDER, ulmode, underline, underlineend);
-    do_effect2(PE_STAND, somode, standout, standend);
-    do_effect2(PE_BOLD, bomode, bold, boldend);
-    do_effect2(PE_EMPH, emph_mode, bold, boldend);
+    do_effect2(PE_UNDER, ulmode, vt_underline, vt_underlineend);
+    do_effect2(PE_STAND, somode, vt_standout, vt_standend);
+    do_effect2(PE_BOLD, bomode, vt_bold, vt_boldend);
+    do_effect2(PE_EMPH, emph_mode, vt_bold, vt_boldend);
     do_effect2(PE_ANCHOR, anch_mode, effect_anchor_start, effect_anchor_end);
     do_effect2(PE_IMAGE, imag_mode, effect_image_start, effect_image_end);
     do_effect2(PE_FORM, form_mode, effect_form_start, effect_form_end);
@@ -249,15 +249,15 @@ void do_effects(Lineprop m, struct VirtualTerm* vt)
     do_effect2(PE_ACTIVE, active_mode, effect_active_start, effect_active_end);
     do_effect2(PE_MARK, mark_mode, effect_mark_start, effect_mark_end);
     if (graph_mode) {
-        graphend(vt);
+        vt_graphend(vt);
         graph_mode = false;
     }
 
     /* effect start */
-    do_effect1(PE_UNDER, ulmode, underline, underlineend);
-    do_effect1(PE_STAND, somode, standout, standend);
-    do_effect1(PE_BOLD, bomode, bold, boldend);
-    do_effect1(PE_EMPH, emph_mode, bold, boldend);
+    do_effect1(PE_UNDER, ulmode, vt_underline, vt_underlineend);
+    do_effect1(PE_STAND, somode, vt_standout, vt_standend);
+    do_effect1(PE_BOLD, bomode, vt_bold, vt_boldend);
+    do_effect1(PE_EMPH, emph_mode, vt_bold, vt_boldend);
     do_effect1(PE_ANCHOR, anch_mode, effect_anchor_start, effect_anchor_end);
     do_effect1(PE_IMAGE, imag_mode, effect_image_start, effect_image_end);
     do_effect1(PE_FORM, form_mode, effect_form_start, effect_form_end);
@@ -266,23 +266,23 @@ void do_effects(Lineprop m, struct VirtualTerm* vt)
     do_effect1(PE_MARK, mark_mode, effect_mark_start, effect_mark_end);
 }
 
-void line_end(struct VirtualTerm* vt)
+void vt_line_end(struct VirtualTerm* vt)
 {
     if (somode) {
         somode = false;
-        standend(vt);
+        vt_standend(vt);
     }
     if (ulmode) {
         ulmode = false;
-        underlineend(vt);
+        vt_underlineend(vt);
     }
     if (bomode) {
         bomode = false;
-        boldend(vt);
+        vt_boldend(vt);
     }
     if (emph_mode) {
         emph_mode = false;
-        boldend(vt);
+        vt_boldend(vt);
     }
 
     if (anch_mode) {
@@ -311,10 +311,10 @@ void line_end(struct VirtualTerm* vt)
     }
     if (graph_mode) {
         graph_mode = false;
-        graphend(vt);
+        vt_graphend(vt);
     }
     if (color_mode)
-        do_color(vt, 0);
+        vt_do_color(vt, 0);
 }
 // if (somode) {
 //     somode = FALSE;

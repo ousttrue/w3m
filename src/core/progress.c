@@ -71,7 +71,7 @@ void showProgress(long long current_content_length, long long* linelen, long lon
         cur_time = time(0);
         if (*trbyte == 0) {
             vt_move(vt, getScreen()->ROWS - 1, 0);
-            clrtoeolx(vt);
+            vt_clrtoeolx(vt);
             start_time = cur_time;
         }
         *trbyte += *linelen;
@@ -97,22 +97,22 @@ void showProgress(long long current_content_length, long long* linelen, long lon
             messages = Sprintf("%11s %3.0f%%                          ",
                 fmtrbyte, ratio);
         }
-        addstr(vt, messages->ptr);
+        vt_addstr(vt, messages->ptr);
         pos = 42;
         i = pos + (getScreen()->COLS - pos - 1) * (*trbyte) / current_content_length;
         vt_move(vt, getScreen()->ROWS - 1, pos);
-        standout(vt);
-        addch(vt, ' ');
+        vt_standout(vt);
+        vt_addch(vt, ' ');
         for (j = pos + 1; j <= i; j++)
-            addch(vt, '|');
-        standend(vt);
+            vt_addch(vt, '|');
+        vt_standend(vt);
         /* no_clrtoeol(); */
         // refresh(ttyWriter());
     } else {
         cur_time = time(0);
         if (*trbyte == 0) {
             vt_move(vt, getScreen()->ROWS - 1, 0);
-            clrtoeolx(vt);
+            vt_clrtoeolx(vt);
             start_time = cur_time;
         }
         *trbyte += *linelen;

@@ -62,8 +62,8 @@ void status(struct UI ui, const char* s)
     int row = vt->CurLine;
     int col = vt->CurColumn;
     vt_move(vt, vt->ROWS - 3, 0);
-    addnstr(vt, s, vt->COLS - 1);
-    clrtoeolx(vt);
+    vt_addnstr(vt, s, vt->COLS - 1);
+    vt_clrtoeolx(vt);
     vt_move(vt, row, col);
 }
 
@@ -73,8 +73,8 @@ void message(struct UI ui, enum MessageSeverity severity, const char* s)
     int row = vt->CurLine;
     int col = vt->CurColumn;
     vt_move(vt, vt->ROWS - 2, 0);
-    addnstr(vt, s, vt->COLS - 1);
-    clrtoeolx(vt);
+    vt_addnstr(vt, s, vt->COLS - 1);
+    vt_clrtoeolx(vt);
     vt_move(vt, row, col);
 }
 
@@ -136,10 +136,10 @@ void renderFrame(struct UI ui)
     //     delayed_msg = NULL;
     //     // refresh(ttyWriter());
     // }
-    standout(ui.vt);
+    vt_standout(ui.vt);
     status(getUI(), g_status);
     message(getUI(), MSG_INFO, msg->ptr);
-    standend(ui.vt);
+    vt_standend(ui.vt);
     // term_title(conv_to_system(buf->buffername));
     // refresh(ttyWriter());
     // if (activeImage && displayImage && buf->img && buf->image_loaded) {

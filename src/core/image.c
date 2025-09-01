@@ -286,7 +286,7 @@ void drawImage(void)
     } else
         n_terminal_image = 0;
 
-    touch_cursor(vt);
+    vt_touch_cursor(vt);
     // refresh(ttyWriter());
 }
 

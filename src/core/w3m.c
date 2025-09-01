@@ -323,7 +323,7 @@ void fmTerm(void)
 {
     struct VirtualTerm* vt = getScreen();
     vt_move(vt, getLines() - 1, 0);
-    clrtoeolx(vt);
+    vt_clrtoeolx(vt);
     // refresh(ttyWriter());
     if (activeImage)
         loadImage(NULL, IMG_FLAG_STOP);
@@ -410,7 +410,7 @@ void fmInit(void)
     set_int();
     initscr();
     struct VirtualTerm* vt = getScreen();
-    setupscreen(vt, getLines(), getCols());
+    vt_setupscreen(vt, getLines(), getCols());
     termClear(ttyWriter());
     term_raw();
     term_noecho();
@@ -660,8 +660,8 @@ resize_screen(void)
 {
     need_resize_screen = FALSE;
     setlinescols(get_tty_fd());
-    setupscreen(getScreen(), getLines(), getCols());
-    clear(getScreen());
+    vt_setupscreen(getScreen(), getLines(), getCols());
+    vt_clear(getScreen());
 }
 
 /*
@@ -780,7 +780,7 @@ DEFUN(ctrCsrH, CENTER_H, "Center on cursor column")
 /* Redraw screen */
 DEFUN(rdrwSc, REDRAW, "Draw the screen anew")
 {
-    clear(getScreen());
+    vt_clear(getScreen());
     arrangeCursor(Currentbuf);
 }
 
@@ -1487,7 +1487,7 @@ DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background")
     char* shell;
 #endif /* not SIGSTOP */
     vt_move(vt, getLines() - 1, 0);
-    clrtoeolx(vt);
+    vt_clrtoeolx(vt);
     // refresh(ttyWriter());
     fmTerm();
 #ifndef SIGSTOP

@@ -442,15 +442,15 @@ disp_next:
     }
     if (y) {
         vt_move(vt, y - 1, 0);
-        clrtoeolx(vt);
+        vt_clrtoeolx(vt);
     }
     if (comment) {
         vt_move(vt, y, 0);
-        clrtoeolx(vt);
-        bold(vt);
+        vt_clrtoeolx(vt);
+        vt_bold(vt);
         /* FIXME: gettextize? */
-        addstr(vt, "----- Completion list -----");
-        boldend(vt);
+        vt_addstr(vt, "----- Completion list -----");
+        vt_boldend(vt);
         y++;
     }
     for (i = 0; i < row; i++) {
@@ -459,26 +459,26 @@ disp_next:
             if (n >= e->NCFileBuf)
                 break;
             vt_move(vt, y, j * len);
-            clrtoeolx(vt);
+            vt_clrtoeolx(vt);
             f = Strdup(d);
             Strcat_charp(f, e->CFileBuf[n]);
-            addstr(vt, conv_from_system(e->CFileBuf[n]));
+            vt_addstr(vt, conv_from_system(e->CFileBuf[n]));
             if (stat(expandPath(f->ptr), &st) != -1 && S_ISDIR(st.st_mode))
-                addstr(vt, "/");
+                vt_addstr(vt, "/");
         }
         y++;
     }
     if (comment && y == e->ui.vt->ROWS - 1 - 1) {
         vt_move(vt, y, 0);
-        clrtoeolx(vt);
-        bold(vt);
+        vt_clrtoeolx(vt);
+        vt_bold(vt);
         if (emacs_like_lineedit)
             /* FIXME: gettextize? */
-            addstr(vt, "----- Press TAB to continue -----");
+            vt_addstr(vt, "----- Press TAB to continue -----");
         else
             /* FIXME: gettextize? */
-            addstr(vt, "----- Press CTRL-D to continue -----");
-        boldend(vt);
+            vt_addstr(vt, "----- Press CTRL-D to continue -----");
+        vt_boldend(vt);
     }
 }
 

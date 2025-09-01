@@ -208,7 +208,7 @@ void bufToScreen(struct VirtualTerm* vt, Buffer* buf)
     // if (cline != buf->topLine || ccolumn != buf->currentColumn) {
     if (activeImage && (cline != buf->topLine || ccolumn != buf->currentColumn)) {
         if (draw_image_flag) {
-            clear(getScreen());
+            vt_clear(getScreen());
             // termClear(ttyWriter());
         }
         clearImage();
@@ -314,7 +314,7 @@ void redrawNLine(Buffer* buf, int n)
 
     if (useColor) {
         EFFECT_ANCHOR_END_C(vt);
-        setbcolor(vt, bg_color);
+        vt_setbcolor(vt, bg_color);
     }
 
     for (i = 0, l = buf->topLine; i < buf->LINES; i++, l = l->next) {
@@ -325,7 +325,7 @@ void redrawNLine(Buffer* buf, int n)
     }
     if (n > 0) {
         vt_move(vt, i + buf->rootY, 0);
-        clrtobotx(vt);
+        vt_clrtobotx(vt);
     }
 
     if (!(activeImage && displayImage && buf->img))
@@ -371,13 +371,13 @@ Line* redrawLine(Buffer* buf, Line* l, int i)
             sprintf(tmp, "%*ld:", buf->rootX - 1, l->real_linenumber);
         else
             sprintf(tmp, "%*s ", buf->rootX - 1, "");
-        addstr(vt, tmp);
+        vt_addstr(vt, tmp);
     }
     vt_move(vt, i, buf->rootX);
     if (l->width < 0)
         l->width = COLPOS(l, l->len);
     if (l->len == 0 || l->width - 1 < column) {
-        clrtoeolx(vt);
+        vt_clrtoeolx(vt);
         return l;
     }
     /* need_clrtoeol(); */
@@ -407,7 +407,7 @@ Line* redrawLine(Buffer* buf, Line* l, int i)
         if (ncol - column > buf->COLS)
             break;
         if (pc)
-            do_color(vt, pc[j]);
+            vt_do_color(vt, pc[j]);
         if (rcol < column) {
             for (rcol = column; rcol < ncol; rcol++)
                 vt_addChar(vt, ' ', 0);
@@ -422,9 +422,9 @@ Line* redrawLine(Buffer* buf, Line* l, int i)
         rcol = ncol;
     }
 
-    line_end(vt);
+    vt_line_end(vt);
     if (rcol - column < buf->COLS)
-        clrtoeolx(vt);
+        vt_clrtoeolx(vt);
     return l;
 }
 
@@ -540,7 +540,7 @@ int redrawLineRegion(Buffer* buf, Line* l, int i, int bpos, int epos)
         if (ncol - column > buf->COLS)
             break;
         if (pc)
-            do_color(vt, pc[j]);
+            vt_do_color(vt, pc[j]);
         if (j >= bcol && j < ecol) {
             if (rcol < column) {
                 vt_move(vt, i, buf->rootX);
@@ -558,7 +558,7 @@ int redrawLineRegion(Buffer* buf, Line* l, int i, int bpos, int epos)
         rcol = ncol;
     }
 
-    line_end(vt);
+    vt_line_end(vt);
     return rcol - column;
 }
 
@@ -571,7 +571,7 @@ void vt_addMChar(struct VirtualTerm *vt, char* p, Lineprop mode, size_t len)
 
     if (mode & PC_WCHAR2)
         return;
-    do_effects(m, vt);
+    vt_do_effects(vt, m);
     if (mode & PC_SYMBOL) {
         char** symbol;
         int w = (mode & PC_KANJI) ? 2 : 1;
@@ -579,40 +579,40 @@ void vt_addMChar(struct VirtualTerm *vt, char* p, Lineprop mode, size_t len)
         c = ((char)wtf_get_code((wc_uchar*)p) & 0x7f) - SYMBOL_BASE;
         if (graph_ok(t) && c < N_GRAPH_SYMBOL) {
             if (!graph_mode) {
-                graphstart(vt);
+                vt_graphstart(vt);
                 graph_mode = TRUE;
             }
             if (w == 2 && WcOption.use_wide)
-                addstr(vt, graph2_symbol[(unsigned char)c % N_GRAPH_SYMBOL]);
+                vt_addstr(vt, graph2_symbol[(unsigned char)c % N_GRAPH_SYMBOL]);
             else
-                addstr(vt, graph_symbol[(unsigned char)c % N_GRAPH_SYMBOL]);
+                vt_addstr(vt, graph_symbol[(unsigned char)c % N_GRAPH_SYMBOL]);
         } else {
             symbol = get_symbol(DisplayCharset, &w);
-            addstr(vt, symbol[(unsigned char)c % N_SYMBOL]);
+            vt_addstr(vt, symbol[(unsigned char)c % N_SYMBOL]);
         }
     } else if (mode & PC_CTRL) {
         switch (c) {
         case '\t':
-            addch(vt, c);
+            vt_addch(vt, c);
             break;
         case '\n':
-            addch(vt, ' ');
+            vt_addch(vt, ' ');
             break;
         case '\r':
             break;
         case DEL_CODE:
-            addstr(vt, "^?");
+            vt_addstr(vt, "^?");
             break;
         default:
-            addch(vt, '^');
-            addch(vt, c + '@');
+            vt_addch(vt, '^');
+            vt_addch(vt, c + '@');
             break;
         }
     } else if (mode & PC_UNKNOWN) {
         char buf[5];
         sprintf(buf, "[%.2X]",
             (unsigned char)wtf_get_code((wc_uchar*)p) | 0x80);
-        addstr(vt, buf);
+        vt_addstr(vt, buf);
     } else
-        addmch(vt, p, len);
+        vt_addmch(vt, p, len);
 }

@@ -17,19 +17,19 @@ extern int visited_color; /* magenta  */
 
 struct VirtualTerm;
 
-void standout(struct VirtualTerm* vt);
-void standend(struct VirtualTerm* vt);
-void bold(struct VirtualTerm* vt);
-void boldend(struct VirtualTerm* vt);
-void underline(struct VirtualTerm* vt);
-void underlineend(struct VirtualTerm* vt);
-void graphstart(struct VirtualTerm* vt);
-void graphend(struct VirtualTerm* vt);
-void setfcolor(struct VirtualTerm* vt, int color);
-void setbcolor(struct VirtualTerm* vt, int color);
+void vt_standout(struct VirtualTerm* vt);
+void vt_standend(struct VirtualTerm* vt);
+void vt_bold(struct VirtualTerm* vt);
+void vt_boldend(struct VirtualTerm* vt);
+void vt_underline(struct VirtualTerm* vt);
+void vt_underlineend(struct VirtualTerm* vt);
+void vt_graphstart(struct VirtualTerm* vt);
+void vt_graphend(struct VirtualTerm* vt);
+void vt_setfcolor(struct VirtualTerm* vt, int color);
+void vt_setbcolor(struct VirtualTerm* vt, int color);
 
-void do_effects(Lineprop m, struct VirtualTerm* vt);
+void vt_do_effects(struct VirtualTerm* vt, Lineprop m);
 
 void EFFECT_ANCHOR_END_C(struct VirtualTerm* vt);
-void do_color(struct VirtualTerm* vt, Linecolor c);
-void line_end(struct VirtualTerm* vt);
+void vt_do_color(struct VirtualTerm* vt, Linecolor c);
+void vt_line_end(struct VirtualTerm* vt);
