@@ -198,7 +198,6 @@ searchURLLabel(Buffer* buf, char* url)
     return searchAnchor(buf->name, url);
 }
 
-
 static Anchor*
 _put_anchor_all(Buffer* buf, char* p1, char* p2, int line, int pos)
 {
@@ -365,7 +364,6 @@ char* reAnchor(Buffer* buf, char* re)
 {
     return reAnchorAny(buf, re, _put_anchor_all);
 }
-
 
 #define FIRST_MARKER_SIZE 30
 HmarkerList*
@@ -639,6 +637,10 @@ char* getAnchorText(Buffer* buf, AnchorList* al, Anchor* a)
 Buffer*
 link_list_panel(Buffer* buf)
 {
+    if (buf->bufferprop & BP_INTERNAL || (buf->linklist == NULL && buf->href == NULL && buf->img == NULL)) {
+        return NULL;
+    }
+
     LinkList* l;
     AnchorList* al;
     Anchor* a;
@@ -649,10 +651,6 @@ link_list_panel(Buffer* buf)
     /* FIXME: gettextize? */
     Str tmp = Strnew_charp("<title>Link List</title>\
 <h1 align=center>Link List</h1>\n");
-
-    if (buf->bufferprop & BP_INTERNAL || (buf->linklist == NULL && buf->href == NULL && buf->img == NULL)) {
-        return NULL;
-    }
 
     if (buf->linklist) {
         Strcat_charp(tmp, "<hr><h2>Links</h2>\n<ol>\n");
@@ -759,5 +757,7 @@ link_list_panel(Buffer* buf)
         Strcat_charp(tmp, "</ol>\n");
     }
 
-    return loadHTMLString(tmp);
+    Buffer* newBuf = loadHTMLString(tmp);
+    newBuf->document_charset = buf->document_charset;
+    return newBuf;
 }

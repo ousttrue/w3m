@@ -13,9 +13,10 @@
                 "www.google.com"
             ],
             "env": [
-                // "TERM=vt100"
+                "TERM=xterm-256color"
             ],
-            "cwd": "${workspaceRoot}"
+            "cwd": "${workspaceRoot}",
+            "console": "integratedTerminal"
         },
         {
             "name": "gdb",

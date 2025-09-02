@@ -35,7 +35,7 @@ pub fn MessageQueue(T: type) type {
             self.mutex.lock();
             defer self.mutex.unlock();
 
-            if (self.produced_index <= self.consumed_index) {
+            while (self.produced_index <= self.consumed_index) {
                 self.condition.wait(&self.mutex);
             }
 

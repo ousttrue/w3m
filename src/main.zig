@@ -112,6 +112,11 @@ fn producer() !void {
             events.len,
             -1,
         );
+        if (event_count > events.len) {
+            std.log.info("{}:epoll_wait", .{event_count});
+            continue;
+        }
+
         if (event_count == 0) {
             std.log.info("{d}:timeout", .{std.time.milliTimestamp()});
             continue;

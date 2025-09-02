@@ -3000,11 +3000,8 @@ DEFUN(movlistMn, MOVE_LIST_MENU, "Pop up menu to navigate between hyperlinks")
 /* link,anchor,image list */
 DEFUN(linkLst, LIST, "Show all URLs referenced")
 {
-    Buffer* buf;
-
-    buf = link_list_panel(Currentbuf);
-    if (buf != NULL) {
-        buf->document_charset = Currentbuf->document_charset;
+    Buffer* buf = link_list_panel(Currentbuf);
+    if (buf) {
         cmd_loadBuffer(buf, BP_NORMAL, LB_NOLINK);
     }
 }
