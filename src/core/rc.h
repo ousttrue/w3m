@@ -3,6 +3,7 @@
 #include <wc.h>
 
 extern char* tmp_dir;
+extern char* rc_dir;
 
 struct _Buffer;
 struct KeyValue;

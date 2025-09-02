@@ -1,4 +1,5 @@
 #include "image.h"
+#include "tmpfile.h"
 #include "ui.h"
 #include "buffer.h"
 #include "local.h"
@@ -877,7 +878,7 @@ void put_image_kitty(int cursorX, int cursorY,
                 // mySignal(SIGTSTP, prevstop);
             }
 
-            pushText(fileToDelete, tmpf);
+            pushDeleteFile(tmpf);
         }
         url = tmpf;
     }

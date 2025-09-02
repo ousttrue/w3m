@@ -10,6 +10,8 @@ extern char* image_source;
 #define INLINE_IMG_ITERM2 3
 #define INLINE_IMG_KITTY 4
 
+extern int enable_inline_image;
+
 enum ImageCacheFlags {
     IMG_FLAG_UNLOADED = 0,
     IMG_FLAG_LOADED = 1,

@@ -1,9 +1,10 @@
 #include "version.h"
+#include "etc.h"
 #include "form.h"
 #include "url.h"
 #include "ui.h"
 #include <alloc.h>
-#include "etc.h"
+#include "tmpfile.h"
 #include "http.h"
 #include "screen.h"
 #include "indep.h"
@@ -14,6 +15,7 @@
 #include <sys/stat.h>
 #include <signal.h>
 #include <errno.h>
+#include <time.h>
 #ifdef HAVE_READLINK
 #include <unistd.h>
 #endif /* HAVE_READLINK */

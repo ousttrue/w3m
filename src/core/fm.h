@@ -156,7 +156,6 @@ global struct cookie* First_cookie init(NULL);
 
 global char* mailcap_files init(USER_MAILCAP ", " SYS_MAILCAP);
 
-global TextList* fileToDelete;
 
 global char ExtHalfdump init(FALSE);
 global char FollowLocale init(TRUE);
@@ -166,7 +165,6 @@ global char SimplePreserveSpace init(FALSE);
 
 global char UseAltEntity init(FALSE);
 global int no_rc_dir init(FALSE);
-global char* rc_dir init(NULL);
 global char* param_tmp_dir init(NULL);
 #ifdef HAVE_MKDTEMP
 global char* mkd_tmp_dir init(NULL);
@@ -197,7 +195,6 @@ global char* keymap_file init(KEYMAP_FILE);
 
 global int FollowRedirection init(10);
 
-extern void deleteFiles(void);
 void w3m_exit(int i);
 
 #define AL_UNSET 0

@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "tmpfile.h"
 #include "screen_effects.h"
 #include "alloc.h"
 #include "display.h"

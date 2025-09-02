@@ -1,7 +1,7 @@
 #include "history.h"
+#include "tmpfile.h"
 #include "hash.h"
 #include "rc.h"
-#include "etc.h"
 #include "ui.h"
 #include "file.h"
 #include "indep.h"
@@ -91,7 +91,6 @@ void saveHistory(struct Hist* hist, size_t size)
     struct Hist* fhist;
     HistItem* item;
     char* histf;
-    char* tmpf;
     int rename_ret;
     struct stat st;
 
@@ -109,7 +108,7 @@ void saveHistory(struct Hist* hist, size_t size)
             hist = fhist;
     }
 
-    tmpf = tmpfname(TMPF_HIST, NULL)->ptr;
+    char* tmpf = tmpfname(TMPF_HIST, NULL)->ptr;
     if ((f = fopen(tmpf, "w")) == NULL)
         goto fail;
     for (item = hist->list->first; item && hist->list->nitem > size;

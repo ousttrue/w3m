@@ -41,6 +41,7 @@
 #include <fcntl.h>
 
 char* tmp_dir = 0;
+char* rc_dir = (NULL);
 
 struct param_ptr {
     char* name;

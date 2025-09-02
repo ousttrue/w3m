@@ -34,16 +34,6 @@ char* file_to_url(char* file);
 char* url_unquote_conv(char* url, wc_ces charset);
 char* expandName(char* name);
 
-enum TmpFileType {
-    TMPF_DFL = 0,
-    TMPF_SRC = 1,
-    TMPF_CACHE = 2,
-    TMPF_COOKIE = 3,
-    TMPF_HIST = 4,
-    MAX_TMPF_TYPE = 5,
-};
-Str tmpfname(enum TmpFileType type, char* ext);
-
 time_t mymktime(char* timestr);
 char* FQDN(char* host);
 pid_t open_pipe_rw(FILE** fr, FILE** fw);

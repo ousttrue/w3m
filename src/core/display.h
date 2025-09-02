@@ -6,7 +6,6 @@
 extern int displayLink;
 extern int displayLineInfo;
 extern int FoldLine;
-extern int enable_inline_image;
 extern int displayImage;
 
 #define DEFAULT_PIXEL_PER_CHAR 7.0 /* arbitrary */

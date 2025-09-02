@@ -1,5 +1,6 @@
 #include "w3m.h"
 #include "indep.h"
+#include "tmpfile.h"
 #include "istream.h"
 #include "progress.h"
 #include "version.h"
@@ -228,8 +229,7 @@ void initialize()
     textdomain(PACKAGE);
 
     NO_proxy_domains = newTextList();
-    fileToDelete = newTextList();
-
+    initDeleteFile();
     CurrentDir = currentdir();
     CurrentPid = (int)getpid();
     BookmarkFile = NULL;
@@ -1523,11 +1523,8 @@ DEFUN(editBf, EDIT, "Edit local source")
 /* Run editor on the current screen */
 DEFUN(editScr, EDIT_SCREEN, "Edit rendered copy of document")
 {
-    char* tmpf;
-    FILE* f;
-
-    tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
-    f = fopen(tmpf, "w");
+    char* tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
+    FILE* f = fopen(tmpf, "w");
     if (f == NULL) {
         /* FIXME: gettextize? */
         message(getUI(), MSG_ERR, Sprintf("Can't open %s", tmpf)->ptr);
@@ -3684,22 +3681,13 @@ searchKeyNum(void)
 
 void deleteFiles()
 {
-    Buffer* buf;
-    char* f;
-
     while (Firstbuf && Firstbuf != NO_BUFFER) {
-        buf = Firstbuf->nextBuffer;
+        Buffer* buf = Firstbuf->nextBuffer;
         discardBuffer(Firstbuf);
         Firstbuf = buf;
     }
-    while ((f = popText(fileToDelete)) != NULL) {
-        unlink(f);
-        if (enable_inline_image == INLINE_IMG_SIXEL && strcmp(f + strlen(f) - 4, ".gif") == 0) {
-            Str firstframe = Strnew_charp(f);
-            Strcat_charp(firstframe, "-1");
-            unlink(firstframe->ptr);
-        }
-    }
+
+    deinitDeleteFile();
 }
 
 void w3m_exit(int i)

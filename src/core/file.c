@@ -1,4 +1,5 @@
 #include "file.h"
+#include "tmpfile.h"
 #include "compression.h"
 #include "istream.h"
 #include "HtmlTagParsed.h"
