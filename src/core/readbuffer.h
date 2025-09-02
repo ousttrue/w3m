@@ -2,6 +2,7 @@
 #include <Str.h>
 #include "line.h"
 #include "anchor.h"
+#include "textlist.h"
 
 #define RB_STACK_SIZE 10
 #define FONTSTAT_SIZE 7
@@ -32,9 +33,7 @@
 #define RB_SPECIAL (RB_PRE | RB_PRE_INT | RB_SCRIPT | RB_STYLE | RB_PLAIN | RB_NOBR)
 #define RB_PLAIN_PRE 0x40000
 
-#ifdef FORMAT_NICE
 #define RB_FILL 0x80000
-#endif /* FORMAT_NICE */
 #define RB_DEL 0x100000
 #define RB_S 0x200000
 #define RB_HTML5 0x400000
@@ -86,6 +85,8 @@ typedef struct {
 #define in_ins fontstat[4]
 #define in_stand fontstat[5]
 
+void push_link(int cmd, int offset, int pos);
+
 struct readbuffer {
     Str line;
     Lineprop cprop;
@@ -113,10 +114,31 @@ struct readbuffer {
     short bottom_margin;
 };
 
-struct html_feed_environ;
-
-void push_link(int cmd, int offset, int pos);
 char* has_hidden_link(struct readbuffer* obuf, int cmd);
 void passthrough(struct readbuffer* obuf, char* str, int back);
+void set_breakpoint(struct readbuffer* obuf, int tag_length);
+
+struct environment {
+    unsigned char env;
+    int type;
+    int count;
+    char indent;
+};
+
+struct html_feed_environ {
+    struct readbuffer* obuf;
+    TextLineList* buf;
+    FILE* f;
+    Str tagbuf;
+    int limit;
+    int maxlimit;
+    struct environment* envs;
+    int nenv;
+    int envc;
+    int envc_real;
+    char* title;
+    int blank_lines;
+};
+
 void flushline(struct html_feed_environ* h_env, struct readbuffer* obuf, int indent, int force, int width);
 void purgeline(struct html_feed_environ* h_env);

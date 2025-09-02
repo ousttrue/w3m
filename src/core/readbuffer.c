@@ -3,6 +3,7 @@
 #include "etc.h"
 #include "file.h"
 #include "html.h"
+#include "myctype.h"
 #include "table.h"
 #include "ui.h"
 #include "indep.h"
@@ -238,7 +239,6 @@ void flushline(struct html_feed_environ* h_env, struct readbuffer* obuf, int ind
         } else if (RB_GET_ALIGN(obuf) == RB_LEFT && obuf->flag & RB_INTABLE) {
             align(lbuf, width, ALIGN_LEFT);
         }
-#ifdef FORMAT_NICE
         else if (obuf->flag & RB_FILL) {
             char* p;
             int rest, rrest;
@@ -278,7 +278,6 @@ void flushline(struct html_feed_environ* h_env, struct readbuffer* obuf, int ind
                 }
             }
         }
-#endif /* FORMAT_NICE */
 #ifdef TABLE_DEBUG
         if (w3m_debug) {
             FILE* f = fopen("zzzproc1", "a");
@@ -448,5 +447,31 @@ void purgeline(struct html_feed_environ* h_env)
     }
     appendTextLine(h_env->buf, tmp, 0);
     h_env->blank_lines--;
+}
+
+void set_breakpoint(struct readbuffer* obuf, int tag_length)
+{
+    obuf->bp.len = obuf->line->length;
+    obuf->bp.pos = obuf->pos;
+    obuf->bp.tlen = tag_length;
+    obuf->bp.flag = obuf->flag;
+    obuf->bp.flag &= ~RB_FILL;
+    obuf->bp.top_margin = obuf->top_margin;
+    obuf->bp.bottom_margin = obuf->bottom_margin;
+
+    if (!obuf->bp.init_flag)
+        return;
+
+    memcpy((void*)&obuf->bp.anchor, (void*)&obuf->anchor, sizeof(obuf->anchor));
+    obuf->bp.img_alt = obuf->img_alt;
+    obuf->bp.input_alt = obuf->input_alt;
+    obuf->bp.in_bold = obuf->in_bold;
+    obuf->bp.in_italic = obuf->in_italic;
+    obuf->bp.in_under = obuf->in_under;
+    obuf->bp.in_strike = obuf->in_strike;
+    obuf->bp.in_ins = obuf->in_ins;
+    obuf->bp.nobr_level = obuf->nobr_level;
+    obuf->bp.prev_ctype = obuf->prev_ctype;
+    obuf->bp.init_flag = 0;
 }
 

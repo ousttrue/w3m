@@ -56,7 +56,7 @@ CONTEXT = {
     "USE_GOPHER": False,
     "ID_EXT": True,
     "MATRIX": True,
-    # "FORMAT_NICE": True,
+    "FORMAT_NICE": True,
     "DONT_CALL_GC_AFTER_FORK": False,
 }
 

@@ -1699,34 +1699,6 @@ int is_boundary(unsigned char* ch1, unsigned char* ch2)
     return 1;
 }
 
-void set_breakpoint(struct readbuffer* obuf, int tag_length)
-{
-    obuf->bp.len = obuf->line->length;
-    obuf->bp.pos = obuf->pos;
-    obuf->bp.tlen = tag_length;
-    obuf->bp.flag = obuf->flag;
-#ifdef FORMAT_NICE
-    obuf->bp.flag &= ~RB_FILL;
-#endif /* FORMAT_NICE */
-    obuf->bp.top_margin = obuf->top_margin;
-    obuf->bp.bottom_margin = obuf->bottom_margin;
-
-    if (!obuf->bp.init_flag)
-        return;
-
-    memcpy((void*)&obuf->bp.anchor, (void*)&obuf->anchor, sizeof(obuf->anchor));
-    obuf->bp.img_alt = obuf->img_alt;
-    obuf->bp.input_alt = obuf->input_alt;
-    obuf->bp.in_bold = obuf->in_bold;
-    obuf->bp.in_italic = obuf->in_italic;
-    obuf->bp.in_under = obuf->in_under;
-    obuf->bp.in_strike = obuf->in_strike;
-    obuf->bp.in_ins = obuf->in_ins;
-    obuf->bp.nobr_level = obuf->nobr_level;
-    obuf->bp.prev_ctype = obuf->prev_ctype;
-    obuf->bp.init_flag = 0;
-}
-
 static void
 back_to_breakpoint(struct readbuffer* obuf)
 {
@@ -5170,15 +5142,11 @@ table_start:
                     bp = obuf->line->ptr + obuf->bp.len;
                     line = Strnew_charp(bp);
                     Strshrink(obuf->line, obuf->line->length - obuf->bp.len);
-#ifdef FORMAT_NICE
                     if (obuf->pos - i > h_env->limit)
                         obuf->flag |= RB_FILL;
-#endif /* FORMAT_NICE */
                     back_to_breakpoint(obuf);
                     flushline(h_env, obuf, indent, 0, h_env->limit);
-#ifdef FORMAT_NICE
                     obuf->flag &= ~RB_FILL;
-#endif /* FORMAT_NICE */
                     HTMLlineproc1(line->ptr, h_env);
                 }
             }
@@ -5198,13 +5166,9 @@ table_start:
             i = 1;
         indent = h_env->envs[h_env->envc].indent;
         if (obuf->pos - i > h_env->limit) {
-#ifdef FORMAT_NICE
             obuf->flag |= RB_FILL;
-#endif /* FORMAT_NICE */
             flushline(h_env, obuf, indent, 0, h_env->limit);
-#ifdef FORMAT_NICE
             obuf->flag &= ~RB_FILL;
-#endif /* FORMAT_NICE */
         }
     }
 }

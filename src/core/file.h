@@ -14,23 +14,7 @@ struct readbuffer;
 struct parsed_tag;
 struct environment;
 
-struct html_feed_environ {
-    struct readbuffer* obuf;
-    TextLineList* buf;
-    FILE* f;
-    Str tagbuf;
-    int limit;
-    int maxlimit;
-    struct environment* envs;
-    int nenv;
-    int envc;
-    int envc_real;
-    char* title;
-    int blank_lines;
-};
-
 void fillline(struct readbuffer* obuf, int indent);
-void set_breakpoint(struct readbuffer* obuf, int tag_length);
 void append_tags(struct readbuffer* obuf);
 void push_tag(struct readbuffer* obuf, char* cmdname, int cmd);
 void push_nchars(struct readbuffer* obuf, int width, char* str, int len, Lineprop mode);
