@@ -1,5 +1,6 @@
 #include "file.h"
 #include "compression.h"
+#include "istream.h"
 #include "HtmlTagParsed.h"
 #include "readbuffer.h"
 #include "HtmlTagAttribute.h"
@@ -223,8 +224,7 @@ void examineFile(char* path, struct URLFile* uf)
 /*
  * convert line
  */
-Str convertLine(struct URLFile* uf, Str line, enum ConvertLineMode mode, wc_ces* charset,
-    wc_ces doc_charset)
+Str convertLine(struct URLFile* uf, Str line, enum ConvertLineMode mode, wc_ces* charset, wc_ces doc_charset)
 {
     line = wc_Str_conv_with_detect(line, charset, doc_charset, InnerCharset);
     if (mode != RAW_MODE)
@@ -2705,8 +2705,6 @@ void init_henv(struct html_feed_environ* h_env, struct readbuffer* obuf,
     h_env->blank_lines = 0;
 }
 
-
-
 static void
 print_internal_information(struct html_feed_environ* henv)
 {
@@ -3112,113 +3110,6 @@ getshell(char* cmd)
     buf->buffername = Sprintf("%s %s", SHELLBUFFERNAME,
         conv_from_system(cmd))
                           ->ptr;
-    return buf;
-}
-
-/*
- * getpipe: execute shell command and connect pipe to the buffer
- */
-Buffer*
-getpipe(char* cmd)
-{
-    FILE *f, *popen(const char*, const char*);
-    Buffer* buf;
-
-    if (cmd == NULL || *cmd == '\0')
-        return NULL;
-    f = popen(cmd, "r");
-    if (f == NULL)
-        return NULL;
-    buf = newBuffer();
-    buf->pagerSource = newFileStream(f, (void (*)())pclose);
-    buf->filename = cmd;
-    buf->buffername = Sprintf("%s %s", PIPEBUFFERNAME,
-        conv_from_system(cmd))
-                          ->ptr;
-    buf->bufferprop |= BP_PIPE;
-    buf->document_charset = WC_CES_US_ASCII;
-    return buf;
-}
-
-/*
- * Open pager buffer
- */
-Buffer*
-openPagerBuffer(InputStream stream, Buffer* buf)
-{
-
-    if (buf == NULL)
-        buf = newBuffer();
-    buf->pagerSource = stream;
-    buf->buffername = getenv("MAN_PN");
-    if (buf->buffername == NULL)
-        buf->buffername = PIPEBUFFERNAME;
-    else
-        buf->buffername = conv_from_system(buf->buffername);
-    buf->bufferprop |= BP_PIPE;
-    if (content_charset && UseContentCharset)
-        buf->document_charset = content_charset;
-    else
-        buf->document_charset = WC_CES_US_ASCII;
-    buf->currentLine = buf->firstLine;
-
-    return buf;
-}
-
-Buffer*
-openGeneralPagerBuffer(InputStream stream)
-{
-    Buffer* buf;
-    char* t = "text/plain";
-    Buffer* t_buf = NULL;
-    struct URLFile uf;
-
-    init_stream(&uf, SCM_UNKNOWN, stream);
-
-    content_charset = 0;
-    t_buf = newBuffer();
-    copyParsedURL(&t_buf->currentURL, NULL);
-    t_buf->currentURL.scheme = SCM_LOCAL;
-    t_buf->currentURL.file = "-";
-    if (SearchHeader) {
-        readHeader(&uf, t_buf, TRUE, NULL);
-        t = checkContentType(t_buf);
-        if (t == NULL)
-            t = "text/plain";
-        if (t_buf) {
-            t_buf->topLine = t_buf->firstLine;
-            t_buf->currentLine = t_buf->lastLine;
-        }
-        SearchHeader = FALSE;
-    } else if (DefaultType) {
-        t = DefaultType;
-        DefaultType = NULL;
-    }
-    if (is_html_type(t)) {
-        buf = loadHTMLBuffer(&uf, t_buf);
-        buf->type = "text/html";
-    } else if (is_plain_text_type(t)) {
-        if (IStype(stream) != IST_ENCODED)
-            stream = newEncodedStream(stream, uf.encoding);
-        buf = openPagerBuffer(stream, t_buf);
-        buf->type = "text/plain";
-    } else if (activeImage && displayImage && !useExtImageViewer && !strncasecmp(t, "image/", 6)) {
-        buf = loadImageBuffer(&uf, t_buf);
-        buf->type = "text/html";
-    } else {
-        if (searchExtViewer(t)) {
-            buf = doExternal(uf, t, t_buf);
-            UFclose(&uf);
-            if (buf == NULL || buf == NO_BUFFER)
-                return buf;
-        } else { /* unknown type is regarded as text/plain */
-            if (IStype(stream) != IST_ENCODED)
-                stream = newEncodedStream(stream, uf.encoding);
-            buf = openPagerBuffer(stream, t_buf);
-            buf->type = "text/plain";
-        }
-    }
-    buf->real_type = t;
     return buf;
 }
 

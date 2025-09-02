@@ -1,4 +1,5 @@
 #include "etc.h"
+#include "istream.h"
 #include "auth.h"
 #include "indep.h"
 #include "local.h"
@@ -95,12 +96,6 @@ Line* currentLineSkip(Buffer* buf, Line* line, int offset, int last)
 {
     int i, n;
     Line* l = line;
-
-    if (buf->pagerSource && !(buf->bufferprop & BP_CLOSE)) {
-        n = line->linenumber + offset + getScreen()->ROWS;
-        if (last)
-            l = buf->lastLine;
-    }
 
     if (offset == 0)
         return l;

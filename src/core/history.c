@@ -7,6 +7,7 @@
 #include "indep.h"
 #include "fm.h"
 #include "buffer.h"
+#include <sys/stat.h>
 
 int UseHistory = (TRUE);
 int URLHistSize = (100);

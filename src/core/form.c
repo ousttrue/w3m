@@ -1,4 +1,5 @@
 #include "form.h"
+#include "istream.h"
 #include "HtmlTagParsed.h"
 #include "KeyValue.h"
 #include "HtmlTagAttribute.h"

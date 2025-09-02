@@ -18,9 +18,8 @@
 #include <signal.h>
 #include <termios.h>
 #include <unistd.h>
-#ifdef HAVE_WAITPID
 #include <sys/wait.h>
-#endif
+#include <fcntl.h>
 
 int activeImage = (FALSE);
 char* image_source = (NULL);
@@ -941,9 +940,8 @@ cleanup:
 static void
 save_gif(const char* path, u_char* header, size_t header_size, u_char* body, size_t body_size)
 {
-    int fd;
-
-    if ((fd = open(path, O_WRONLY | O_CREAT, 0600)) >= 0) {
+    int fd = open(path, O_WRONLY | O_CREAT, 0600);
+    if (fd >= 0) {
         write(fd, header, header_size);
         write(fd, body, body_size);
         write(fd, "\x3b", 1);

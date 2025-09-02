@@ -1,5 +1,6 @@
 #include "w3m.h"
 #include "indep.h"
+#include "istream.h"
 #include "progress.h"
 #include "version.h"
 #include "quote.h"
@@ -584,7 +585,7 @@ escKeyProc(int c, int esc, unsigned char* map)
 
 void tmpClearBuffer(Buffer* buf)
 {
-    if (buf->pagerSource == NULL && writeBufferCache(buf) == 0) {
+    if (writeBufferCache(buf) == 0) {
         buf->firstLine = NULL;
         buf->topLine = NULL;
         buf->currentLine = NULL;
@@ -964,79 +965,6 @@ DEFUN(setEnv, SETENV, "Set environment variable")
         var = allocStr(env, value - env);
         value++;
         set_environ(var, value);
-    }
-}
-
-DEFUN(pipeBuf, PIPE_BUF, "Pipe current buffer through a shell command and display output")
-{
-    Buffer* buf;
-    char *cmd, *tmpf;
-    FILE* f;
-
-    CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    cmd = searchKeyData();
-    if (cmd == NULL || *cmd == '\0') {
-        /* FIXME: gettextize? */
-        cmd = inputLineHist(getUI(), "Pipe buffer to: ", "", IN_COMMAND, ShellHist);
-    }
-    if (cmd != NULL)
-        cmd = conv_to_system(cmd);
-    if (cmd == NULL || *cmd == '\0') {
-
-        return;
-    }
-    tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
-    f = fopen(tmpf, "w");
-    if (f == NULL) {
-        /* FIXME: gettextize? */
-        message(getUI(), MSG_INFO, Sprintf("Can't save buffer to %s", cmd)->ptr);
-        return;
-    }
-    saveBuffer(Currentbuf, f, TRUE);
-    fclose(f);
-    buf = getpipe(myExtCommand(cmd, shell_quote(tmpf), TRUE)->ptr);
-    if (buf == NULL) {
-        message(getUI(), MSG_INFO, "Execution failed");
-        return;
-    } else {
-        buf->filename = cmd;
-        buf->buffername = Sprintf("%s %s", PIPEBUFFERNAME,
-            conv_from_system(cmd))
-                              ->ptr;
-        buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
-        if (buf->type == NULL)
-            buf->type = "text/plain";
-        buf->currentURL.file = "-";
-        pushBuffer(buf);
-    }
-}
-
-/* Execute shell command and read output ac pipe. */
-DEFUN(pipesh, PIPE_SHELL, "Execute shell command and display output")
-{
-    Buffer* buf;
-    char* cmd;
-
-    CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    cmd = searchKeyData();
-    if (cmd == NULL || *cmd == '\0') {
-        cmd = inputLineHist(getUI(), "(read shell[pipe])!", "", IN_COMMAND, ShellHist);
-    }
-    if (cmd != NULL)
-        cmd = conv_to_system(cmd);
-    if (cmd == NULL || *cmd == '\0') {
-
-        return;
-    }
-    buf = getpipe(cmd);
-    if (buf == NULL) {
-        message(getUI(), MSG_INFO, "Execution failed");
-        return;
-    } else {
-        buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
-        if (buf->type == NULL)
-            buf->type = "text/plain";
-        pushBuffer(buf);
     }
 }
 
@@ -1575,8 +1503,7 @@ DEFUN(editBf, EDIT, "Edit local source")
     char* fn = Currentbuf->filename;
     Str cmd;
 
-    if (fn == NULL || Currentbuf->pagerSource != NULL || /* Behaving as a pager */
-        (Currentbuf->type == NULL && Currentbuf->edit == NULL) || /* Reading shell */
+    if (fn == NULL || (Currentbuf->type == NULL && Currentbuf->edit == NULL) || /* Reading shell */
         Currentbuf->real_scheme != SCM_LOCAL || !strcmp(Currentbuf->currentURL.file, "-") /* file is std input  */
     ) {
         message(getUI(), MSG_ERR, "Can't edit other than local file");
@@ -2840,6 +2767,9 @@ DEFUN(ldBmark, BOOKMARK VIEW_BOOKMARK, "View bookmarks")
     cmd_loadURL(BookmarkFile, NULL, NO_REFERER, NULL);
 }
 
+#define W3MBOOKMARK_CMDNAME "w3mbookmark"
+// #define W3MBOOKMARK_CMDNAME "w3mbookmark.exe"
+
 /* Add current to bookmark */
 DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
 {
@@ -2859,8 +2789,7 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
     request = newFormList(NULL, "post", NULL, NULL, NULL, NULL, NULL);
     request->body = tmp->ptr;
     request->length = tmp->length;
-    cmd_loadURL("file:///$LIB/" W3MBOOKMARK_CMDNAME, NULL, NO_REFERER,
-        request);
+    cmd_loadURL("file:///$LIB/" W3MBOOKMARK_CMDNAME, NULL, NO_REFERER, request);
 }
 
 /* option setting */
@@ -2915,8 +2844,7 @@ DEFUN(pginfo, INFO, "Display information about the current document")
 
 void follow_map(struct KeyValue* arg)
 {
-    char* name = tag_get_value(arg, "link");
-#if defined(MENU_MAP) || defined(USE_IMAGE)
+    const char* name = tag_get_value(arg, "link");
     Anchor* an;
     MapArea* a;
     int x, y;
@@ -2925,10 +2853,8 @@ void follow_map(struct KeyValue* arg)
     an = retrieveCurrentImg(Currentbuf);
     x = Currentbuf->cursorX;
     y = Currentbuf->cursorY;
-    a = follow_map_menu(Currentbuf, name, an, x, y);
+    a = follow_map_menu(Currentbuf, (char*)name, an, x, y);
     if (a == NULL || a->url == NULL || *(a->url) == '\0') {
-#endif
-#if defined(MENU_MAP) || defined(USE_IMAGE)
         return;
     }
     if (*(a->url) == '#') {
@@ -2939,7 +2865,6 @@ void follow_map(struct KeyValue* arg)
     pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
     cmd_loadURL(a->url, baseURL(Currentbuf),
         parsedURL2Str(&Currentbuf->currentURL)->ptr, NULL);
-#endif
 }
 
 /* link menu */
@@ -3221,28 +3146,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
         return;
     }
     if (Currentbuf->sourcefile == NULL) {
-        if (Currentbuf->pagerSource && !strcasecmp(Currentbuf->type, "text/plain")) {
-            wc_ces old_charset;
-            wc_bool old_fix_width_conv;
-            FILE* f;
-            Str tmpf = tmpfname(TMPF_SRC, NULL);
-            f = fopen(tmpf->ptr, "w");
-            if (f == NULL)
-                return;
-            old_charset = DisplayCharset;
-            old_fix_width_conv = WcOption.fix_width_conv;
-            DisplayCharset = (Currentbuf->document_charset != WC_CES_US_ASCII)
-                ? Currentbuf->document_charset
-                : 0;
-            WcOption.fix_width_conv = WC_FALSE;
-            saveBufferBody(Currentbuf, f, TRUE);
-            DisplayCharset = old_charset;
-            WcOption.fix_width_conv = old_fix_width_conv;
-            fclose(f);
-            Currentbuf->sourcefile = tmpf->ptr;
-        } else {
-            return;
-        }
+        return;
     }
 
     buf = newBuffer();
@@ -3555,13 +3459,10 @@ DEFUN(curlno, LINE_INFO, "Display current position in document")
     }
     if (Currentbuf->lastLine)
         all = Currentbuf->lastLine->real_linenumber;
-    if (Currentbuf->pagerSource && !(Currentbuf->bufferprop & BP_CLOSE))
-        tmp = Sprintf("line %d col %d/%d", cur, col, len);
-    else
-        tmp = Sprintf("line %d/%d (%d%%) col %d/%d", cur, all,
-            (int)((double)cur * 100.0 / (double)(all ? all : 1)
-                + 0.5),
-            col, len);
+    tmp = Sprintf("line %d/%d (%d%%) col %d/%d", cur, all,
+        (int)((double)cur * 100.0 / (double)(all ? all : 1)
+            + 0.5),
+        col, len);
     Strcat_charp(tmp, "  ");
     Strcat_charp(tmp, wc_ces_to_charset_desc(Currentbuf->document_charset));
 

@@ -12,6 +12,8 @@
 #include "event_poller.h"
 #include "screen.h"
 #include "ctrlcode.h"
+#include "istream.h"
+#include <strings.h>
 #include <unistd.h>
 
 char* NullLine = "";
@@ -23,7 +25,7 @@ Lineprop NullProp[] = { 0 };
 Buffer*
 newBuffer()
 {
-    Buffer *n = New(Buffer);
+    Buffer* n = New(Buffer);
     memset(n, 0, sizeof(Buffer));
     n->width = 0;
     n->currentURL.scheme = SCM_UNKNOWN;
@@ -68,13 +70,10 @@ void clearBuffer(Buffer* buf)
 
 void discardBuffer(Buffer* buf)
 {
-    int i;
-    Buffer* b;
-
     deleteImage(buf);
     clearBuffer(buf);
-    for (i = 0; i < MAX_LB; i++) {
-        b = buf->linkBuffer[i];
+    for (int i = 0; i < MAX_LB; i++) {
+        Buffer* b = buf->linkBuffer[i];
         if (b == NULL)
             continue;
         b->linkBuffer[REV_LB[i]] = NULL;
@@ -83,8 +82,6 @@ void discardBuffer(Buffer* buf)
         unlink(buf->savecache);
     if (--(*buf->clone))
         return;
-    if (buf->pagerSource)
-        ISclose(buf->pagerSource);
     if (buf->sourcefile && (!buf->real_type || strncasecmp(buf->real_type, "image/", 6))) {
         if (buf->real_scheme != SCM_LOCAL)
             unlink(buf->sourcefile);

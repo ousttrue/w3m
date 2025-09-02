@@ -166,6 +166,7 @@ enum ConvertLineMode {
     HEADER_MODE = 2,
 };
 void cleanup_line(Str s, enum ConvertLineMode mode);
+
 Str convertLine(struct URLFile* uf, Str line, enum ConvertLineMode mode, wc_ces* charset, wc_ces doc_charset);
 
 struct _Buffer;
@@ -178,8 +179,6 @@ struct _Buffer* doExternal(struct URLFile uf, char* type, struct _Buffer* defaul
 int doFileSave(struct URLFile uf, char* defstr);
 void readHeader(struct URLFile* uf, struct _Buffer* newBuf, int thru, ParsedURL* pu);
 void init_stream(struct URLFile* uf, int scheme, InputStream stream);
-struct _Buffer* openPagerBuffer(InputStream stream, struct _Buffer* buf);
-struct _Buffer* openGeneralPagerBuffer(InputStream stream);
 int checkSaveFile(InputStream stream, char* path);
 
 /* flags for loadGeneralFile */

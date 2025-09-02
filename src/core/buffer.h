@@ -1,8 +1,8 @@
 #pragma once
 #include "line.h"
-#include "istream.h"
 #include "anchor.h"
 #include "linklist.h"
+#include "url.h"
 
 #define SHELLBUFFERNAME "*Shellout*"
 #define PIPEBUFFERNAME "*stream*"
@@ -78,7 +78,6 @@ typedef struct _Buffer {
     short cursorY;
     int pos;
     int visualpos;
-    InputStream pagerSource;
     AnchorList* href;
     AnchorList* name;
     AnchorList* img;

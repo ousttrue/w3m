@@ -137,6 +137,9 @@ global int WrapSearch init(FALSE);
 global int squeezeBlankLine init(FALSE);
 global char* BookmarkFile init(NULL);
 global int UseExternalDirBuffer init(TRUE);
+
+#define CGI_EXTENSION ".cgi"
+// #define CGI_EXTENSION ".cmd"
 global char* DirBufferCommand init("file:///$LIB/dirlist" CGI_EXTENSION);
 global int UseDictCommand init(TRUE);
 global char* DictCommand init("file:///$LIB/w3mdict" CGI_EXTENSION);

@@ -1,5 +1,6 @@
 #include "url.h"
 #include "form.h"
+#include "istream.h"
 #include "display.h"
 #include "buffer.h"
 #include "http.h"

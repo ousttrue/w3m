@@ -4,17 +4,13 @@
 #define GUNZIP_CMDNAME "gzip"
 #define BUNZIP2_CMDNAME "bzip2"
 #define INFLATE_CMDNAME "inflate.exe"
-#define W3MBOOKMARK_CMDNAME "w3mbookmark.exe"
 #define W3MHELPERPANEL_CMDNAME "w3mhelperpanel.exe"
-#define CGI_EXTENSION ".cmd"
 #define USE_PATH_ENVVAR
 #else
 #define GUNZIP_CMDNAME "gunzip"
 #define BUNZIP2_CMDNAME "bunzip2"
 #define INFLATE_CMDNAME "inflate"
-#define W3MBOOKMARK_CMDNAME "w3mbookmark"
 #define W3MHELPERPANEL_CMDNAME "w3mhelperpanel"
-#define CGI_EXTENSION ".cgi"
 #endif
 
 enum CompressionTyep {
