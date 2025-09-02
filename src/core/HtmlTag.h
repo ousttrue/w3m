@@ -181,17 +181,3 @@ enum HtmlTag {
     HTML_N_DIV_INT = 184,
     MAX_HTMLTAG = 185,
 };
-
-enum HtmlTagFlag {
-    TFLG_NONE = 0,
-    TFLG_END = 1,
-    TFLG_INT = 2,
-};
-
-typedef struct html_tag_info {
-    const char* name;
-    enum HtmlTagAttribute* accept_attribute;
-    int max_attribute;
-    enum HtmlTagFlag flag;
-} TagInfo;
-extern TagInfo TagMAP[];

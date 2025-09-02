@@ -17,8 +17,6 @@ struct readbuffer;
 struct parsed_tag;
 struct environment;
 
-void fillline(struct readbuffer* obuf, int indent);
-void push_nchars(struct readbuffer* obuf, int width, char* str, int len, Lineprop mode);
 char* acceptableEncoding(void);
 int dir_exist(char* path);
 int is_html_type(char* type);

@@ -1,4 +1,5 @@
 #include "file.h"
+#include "readbuffer.h"
 #include "HtmlTagAttribute.h"
 #include "html_title.h"
 #include "progress.h"
@@ -21,7 +22,6 @@
 #include "str_util.h"
 #include "cookie.h"
 #include "display.h"
-#include "readbuffer.h"
 #include "symbol.h"
 #include "ctrlcode.h"
 #include "screen_effects.h"
@@ -1699,104 +1699,6 @@ int is_boundary(unsigned char* ch1, unsigned char* ch2)
     return 1;
 }
 
-static void
-back_to_breakpoint(struct readbuffer* obuf)
-{
-    obuf->flag = obuf->bp.flag;
-    memcpy(&obuf->anchor, &obuf->bp.anchor, sizeof(obuf->anchor));
-    obuf->img_alt = obuf->bp.img_alt;
-    obuf->input_alt = obuf->bp.input_alt;
-    obuf->in_bold = obuf->bp.in_bold;
-    obuf->in_italic = obuf->bp.in_italic;
-    obuf->in_under = obuf->bp.in_under;
-    obuf->in_strike = obuf->bp.in_strike;
-    obuf->in_ins = obuf->bp.in_ins;
-    obuf->prev_ctype = obuf->bp.prev_ctype;
-    obuf->pos = obuf->bp.pos;
-    obuf->top_margin = obuf->bp.top_margin;
-    obuf->bottom_margin = obuf->bp.bottom_margin;
-    if (obuf->flag & RB_NOBR)
-        obuf->nobr_level = obuf->bp.nobr_level;
-}
-
-void push_nchars(struct readbuffer* obuf, int width, char* str, int len, Lineprop mode)
-{
-    append_tags(obuf);
-    Strcat_charp_n(obuf->line, str, len);
-    obuf->pos += width;
-    if (width > 0) {
-        set_prevchar(obuf->prevchar, str, len);
-        obuf->prev_ctype = mode;
-    }
-    obuf->flag |= RB_NFLUSHED;
-}
-
-#define push_charp(obuf, width, str, mode) \
-    push_nchars(obuf, width, str, strlen(str), mode)
-
-#define push_str(obuf, width, str, mode) \
-    push_nchars(obuf, width, str->ptr, str->length, mode)
-
-static void
-check_breakpoint(struct readbuffer* obuf, int pre_mode, char* ch)
-{
-    int tlen, len = obuf->line->length;
-
-    append_tags(obuf);
-    if (pre_mode)
-        return;
-    tlen = obuf->line->length - len;
-    if (tlen > 0
-        || is_boundary((unsigned char*)obuf->prevchar->ptr,
-            (unsigned char*)ch))
-        set_breakpoint(obuf, tlen);
-}
-
-static void
-push_char(struct readbuffer* obuf, int pre_mode, char ch)
-{
-    check_breakpoint(obuf, pre_mode, &ch);
-    Strcat_char(obuf->line, ch);
-    obuf->pos++;
-    set_prevchar(obuf->prevchar, &ch, 1);
-    if (ch != ' ')
-        obuf->prev_ctype = PC_ASCII;
-    obuf->flag |= RB_NFLUSHED;
-}
-
-#define PUSH(c) push_char(obuf, obuf->flag& RB_SPECIAL, c)
-
-static void
-push_spaces(struct readbuffer* obuf, int pre_mode, int width)
-{
-    int i;
-
-    if (width <= 0)
-        return;
-    check_breakpoint(obuf, pre_mode, " ");
-    for (i = 0; i < width; i++)
-        Strcat_char(obuf->line, ' ');
-    obuf->pos += width;
-    set_space_to_prevchar(obuf->prevchar);
-    obuf->flag |= RB_NFLUSHED;
-}
-
-static void
-proc_mchar(struct readbuffer* obuf, int pre_mode,
-    int width, char** str, Lineprop mode)
-{
-    check_breakpoint(obuf, pre_mode, *str);
-    obuf->pos += width;
-    Strcat_charp_n(obuf->line, *str, get_mclen(*str));
-    if (width > 0) {
-        set_prevchar(obuf->prevchar, *str, 1);
-        if (**str != ' ')
-            obuf->prev_ctype = mode;
-    }
-    (*str) += get_mclen(*str);
-    obuf->flag |= RB_NFLUSHED;
-}
-
 void push_render_image(Str str, int width, int limit,
     struct html_feed_environ* h_env)
 {
@@ -1810,38 +1712,11 @@ void push_render_image(Str str, int width, int limit,
         flushline(h_env, obuf, indent, 0, h_env->limit);
 }
 
-void fillline(struct readbuffer* obuf, int indent)
-{
-    push_spaces(obuf, 1, indent - obuf->pos);
-    obuf->flag &= ~RB_NFLUSHED;
-}
-
 void do_blankline(struct html_feed_environ* h_env, struct readbuffer* obuf,
     int indent, int indent_incr, int width)
 {
     if (h_env->blank_lines == 0)
         flushline(h_env, obuf, indent, 1, width);
-}
-
-static int
-close_effect0(struct readbuffer* obuf, int cmd)
-{
-    int i;
-    char* p;
-
-    for (i = obuf->tag_sp - 1; i >= 0; i--) {
-        if (obuf->tag_stack[i]->cmd == cmd)
-            break;
-    }
-    if (i >= 0) {
-        obuf->tag_sp--;
-        memcpy(&obuf->tag_stack[i], &obuf->tag_stack[i + 1], (obuf->tag_sp - i) * sizeof(struct cmdtable*));
-        return 1;
-    } else if ((p = has_hidden_link(obuf, cmd)) != NULL) {
-        passthrough(obuf, p, 1);
-        return 1;
-    }
-    return 0;
 }
 
 static void
@@ -2865,48 +2740,7 @@ Str process_n_form(void)
     return NULL;
 }
 
-static void
-clear_ignore_p_flag(int cmd, struct readbuffer* obuf)
-{
-    static int clear_flag_cmd[] = {
-        HTML_HR, HTML_UNKNOWN
-    };
-    int i;
 
-    for (i = 0; clear_flag_cmd[i] != HTML_UNKNOWN; i++) {
-        if (cmd == clear_flag_cmd[i]) {
-            obuf->flag &= ~RB_IGNORE_P;
-            return;
-        }
-    }
-}
-
-static void
-set_alignment(struct readbuffer* obuf, struct parsed_tag* tag)
-{
-    long flag = -1;
-    int align;
-
-    if (parsedtag_get_value(tag, ATTR_ALIGN, &align)) {
-        switch (align) {
-        case ALIGN_CENTER:
-            if (DisableCenter)
-                flag = RB_LEFT;
-            else
-                flag = RB_CENTER;
-            break;
-        case ALIGN_RIGHT:
-            flag = RB_RIGHT;
-            break;
-        case ALIGN_LEFT:
-            flag = RB_LEFT;
-        }
-    }
-    RB_SAVE_FLAG(obuf);
-    if (flag != -1) {
-        RB_SET_ALIGN(obuf, flag);
-    }
-}
 
 static void
 process_idattr(struct readbuffer* obuf, int cmd, struct parsed_tag* tag)
@@ -4988,7 +4822,7 @@ table_start:
                 process_idattr(obuf, cmd, tag);
             }
             obuf->bp.init_flag = 1;
-            clear_ignore_p_flag(cmd, obuf);
+            clear_ignore_p_flag(obuf, cmd);
             if (cmd == HTML_TABLE)
                 goto table_start;
             else {
@@ -5026,13 +4860,13 @@ table_start:
                         continue;
                     }
                     if (obuf->flag & RB_PRE_INT)
-                        PUSH(' ');
+                        PUSH(obuf, ' ');
                     else
                         flushline(h_env, obuf, h_env->envs[h_env->envc].indent,
                             1, h_env->limit);
                 } else if (ch == '\t') {
                     do {
-                        PUSH(' ');
+                        PUSH(obuf, ' ');
                     } while ((h_env->envs[h_env->envc].indent + obuf->pos)
                             % Tabstop
                         != 0);
@@ -5058,7 +4892,7 @@ table_start:
                     obuf->flag &= ~RB_IGNORE_P;
                 if ((mode == PC_ASCII || mode == PC_CTRL) && IS_SPACE(*str)) {
                     if (*obuf->prevchar->ptr != ' ') {
-                        PUSH(' ');
+                        PUSH(obuf, ' ');
                     }
                     str++;
                 } else {

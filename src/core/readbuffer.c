@@ -6,6 +6,9 @@
 #include "table.h"
 #include "ui.h"
 #include "indep.h"
+#include "parsetagx.h"
+
+char DisableCenter = (false);
 
 struct link_stack {
     int cmd;
@@ -51,11 +54,9 @@ char* has_hidden_link(struct readbuffer* obuf, enum HtmlTag cmd)
 
 void append_tags(struct readbuffer* obuf)
 {
-    int i;
     int len = obuf->line->length;
     int set_bp = 0;
-
-    for (i = 0; i < obuf->tag_sp; i++) {
+    for (int i = 0; i < obuf->tag_sp; i++) {
         switch (obuf->tag_stack[i]->cmd) {
         case HTML_A:
         case HTML_IMG_ALT:
@@ -64,6 +65,8 @@ void append_tags(struct readbuffer* obuf)
         case HTML_I:
         case HTML_S:
             push_link(obuf->tag_stack[i]->cmd, obuf->line->length, obuf->pos);
+            break;
+        default:
             break;
         }
         Strcat_charp(obuf->line, obuf->tag_stack[i]->cmdname);
@@ -74,11 +77,161 @@ void append_tags(struct readbuffer* obuf)
         case HTML_WBR:
             set_bp = 1;
             break;
+        default:
+            break;
         }
     }
     obuf->tag_sp = 0;
     if (set_bp)
         set_breakpoint(obuf, obuf->line->length - len);
+}
+
+void back_to_breakpoint(struct readbuffer* obuf)
+{
+    obuf->flag = obuf->bp.flag;
+    memcpy(&obuf->anchor, &obuf->bp.anchor, sizeof(obuf->anchor));
+    obuf->img_alt = obuf->bp.img_alt;
+    obuf->input_alt = obuf->bp.input_alt;
+    obuf->in_bold = obuf->bp.in_bold;
+    obuf->in_italic = obuf->bp.in_italic;
+    obuf->in_under = obuf->bp.in_under;
+    obuf->in_strike = obuf->bp.in_strike;
+    obuf->in_ins = obuf->bp.in_ins;
+    obuf->prev_ctype = obuf->bp.prev_ctype;
+    obuf->pos = obuf->bp.pos;
+    obuf->top_margin = obuf->bp.top_margin;
+    obuf->bottom_margin = obuf->bp.bottom_margin;
+    if (obuf->flag & RB_NOBR)
+        obuf->nobr_level = obuf->bp.nobr_level;
+}
+
+void fillline(struct readbuffer* obuf, int indent)
+{
+    push_spaces(obuf, 1, indent - obuf->pos);
+    obuf->flag &= ~RB_NFLUSHED;
+}
+
+void push_nchars(struct readbuffer* obuf, int width, const char* str, int len, Lineprop mode)
+{
+    append_tags(obuf);
+    Strcat_charp_n(obuf->line, str, len);
+    obuf->pos += width;
+    if (width > 0) {
+        set_prevchar(obuf->prevchar, str, len);
+        obuf->prev_ctype = mode;
+    }
+    obuf->flag |= RB_NFLUSHED;
+}
+
+void check_breakpoint(struct readbuffer* obuf, bool pre_mode, char* ch)
+{
+    int len = obuf->line->length;
+    append_tags(obuf);
+    if (pre_mode)
+        return;
+
+    int tlen = obuf->line->length - len;
+    if (tlen > 0
+        || is_boundary((unsigned char*)obuf->prevchar->ptr,
+            (unsigned char*)ch))
+        set_breakpoint(obuf, tlen);
+}
+
+void push_char(struct readbuffer* obuf, int pre_mode, char ch)
+{
+    check_breakpoint(obuf, pre_mode, &ch);
+    Strcat_char(obuf->line, ch);
+    obuf->pos++;
+    set_prevchar(obuf->prevchar, &ch, 1);
+    if (ch != ' ')
+        obuf->prev_ctype = PC_ASCII;
+    obuf->flag |= RB_NFLUSHED;
+}
+
+void proc_mchar(struct readbuffer* obuf, bool pre_mode, int width, char** str, Lineprop mode)
+{
+    check_breakpoint(obuf, pre_mode, *str);
+    obuf->pos += width;
+    Strcat_charp_n(obuf->line, *str, get_mclen(*str));
+    if (width > 0) {
+        set_prevchar(obuf->prevchar, *str, 1);
+        if (**str != ' ')
+            obuf->prev_ctype = mode;
+    }
+    (*str) += get_mclen(*str);
+    obuf->flag |= RB_NFLUSHED;
+}
+
+void set_alignment(struct readbuffer* obuf, struct parsed_tag* tag)
+{
+    long flag = -1;
+    int align;
+    if (parsedtag_get_value(tag, ATTR_ALIGN, &align)) {
+        switch (align) {
+        case ALIGN_CENTER:
+            if (DisableCenter)
+                flag = RB_LEFT;
+            else
+                flag = RB_CENTER;
+            break;
+        case ALIGN_RIGHT:
+            flag = RB_RIGHT;
+            break;
+        case ALIGN_LEFT:
+            flag = RB_LEFT;
+        }
+    }
+    RB_SAVE_FLAG(obuf);
+    if (flag != -1) {
+        RB_SET_ALIGN(obuf, flag);
+    }
+}
+
+void clear_ignore_p_flag(struct readbuffer* obuf, int cmd)
+{
+    static int clear_flag_cmd[] = {
+        HTML_HR, HTML_UNKNOWN
+    };
+    int i;
+
+    for (i = 0; clear_flag_cmd[i] != HTML_UNKNOWN; i++) {
+        if (cmd == clear_flag_cmd[i]) {
+            obuf->flag &= ~RB_IGNORE_P;
+            return;
+        }
+    }
+}
+
+int close_effect0(struct readbuffer* obuf, enum HtmlTag cmd)
+{
+    int i;
+    for (i = obuf->tag_sp - 1; i >= 0; i--) {
+        if (obuf->tag_stack[i]->cmd == cmd)
+            break;
+    }
+
+    char* p;
+    if (i >= 0) {
+        obuf->tag_sp--;
+        memcpy(&obuf->tag_stack[i], &obuf->tag_stack[i + 1], (obuf->tag_sp - i) * sizeof(struct cmdtable*));
+        return 1;
+    } else if ((p = has_hidden_link(obuf, cmd)) != NULL) {
+        passthrough(obuf, p, 1);
+        return 1;
+    }
+    return 0;
+}
+
+void push_spaces(struct readbuffer* obuf, bool pre_mode, int width)
+{
+    if (width <= 0)
+        return;
+    check_breakpoint(obuf, pre_mode, " ");
+    for (int i = 0; i < width; i++)
+        Strcat_char(obuf->line, ' ');
+    obuf->pos += width;
+    set_space_to_prevchar(obuf->prevchar);
+    obuf->flag |= RB_NFLUSHED;
 }
 
 void push_tag(struct readbuffer* obuf, const char* cmdname, enum HtmlTag cmd)

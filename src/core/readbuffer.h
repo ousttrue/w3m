@@ -5,6 +5,8 @@
 #include "textlist.h"
 #include "HtmlTag.h"
 
+extern char DisableCenter;
+
 struct cmdtable {
     const char* cmdname;
     enum HtmlTag cmd;
@@ -119,6 +121,28 @@ struct readbuffer {
     short bottom_margin;
 };
 
+void back_to_breakpoint(struct readbuffer* obuf);
+void push_nchars(struct readbuffer* obuf, int width, const char* str, int len, Lineprop mode);
+inline static void push_charp(struct readbuffer* obuf, int width, const char* str, Lineprop mode)
+{
+    push_nchars(obuf, width, str, strlen(str), mode);
+}
+inline static void push_str(struct readbuffer* obuf, int width, Str str, Lineprop mode)
+{
+    push_nchars(obuf, width, str->ptr, str->length, mode);
+}
+void fillline(struct readbuffer* obuf, int indent);
+void check_breakpoint(struct readbuffer* obuf, bool pre_mode, char* ch);
+void push_char(struct readbuffer* obuf, int pre_mode, char ch);
+inline static void PUSH(struct readbuffer* obuf, char c)
+{
+    push_char(obuf, obuf->flag & RB_SPECIAL, c);
+}
+void proc_mchar(struct readbuffer* obuf, bool pre_mode, int width, char** str, Lineprop mode);
+int close_effect0(struct readbuffer* obuf, enum HtmlTag cmd);
+void push_spaces(struct readbuffer* obuf, bool pre_mode, int width);
+void clear_ignore_p_flag(struct readbuffer* obuf, int cmd);
+void set_alignment(struct readbuffer* obuf, struct parsed_tag* tag);
 void append_tags(struct readbuffer* obuf);
 void push_tag(struct readbuffer* obuf, const char* cmdname, enum HtmlTag cmd);
 char* has_hidden_link(struct readbuffer* obuf, enum HtmlTag cmd);

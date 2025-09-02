@@ -36,6 +36,8 @@ const w3m_srcs = [_][]const u8{
     "progress.c",
     "html_title.c",
     "readbuffer.c",
+    "html_tag_info.c",
+    "html_tag_attribute_info.c",
 
     "ui.c",
     "LineEditor.c",

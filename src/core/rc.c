@@ -1,8 +1,6 @@
-/*
- * Initialization file etc.
- */
 #include "rc.h"
 #include "indep.h"
+#include "readbuffer.h"
 #include "quote.h"
 #include "screen_effects.h"
 #include "history.h"

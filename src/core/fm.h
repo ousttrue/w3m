@@ -172,7 +172,6 @@ global char SimplePreserveSpace init(FALSE);
 
 global char UseAltEntity init(FALSE);
 global char DisplayBorders init(FALSE);
-global char DisableCenter init(FALSE);
 extern int symbol_width;
 extern int symbol_width0;
 global int no_rc_dir init(FALSE);
