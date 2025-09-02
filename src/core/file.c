@@ -1,4 +1,5 @@
 #include "file.h"
+#include "html_title.h"
 #include "progress.h"
 #include "funcname1.h"
 #include "indep.h"
@@ -89,8 +90,6 @@ static ParsedURL* cur_baseURL = NULL;
 #endif
 static wc_ces cur_document_charset = 0;
 
-static Str cur_title;
-static Str pre_title;
 static Str cur_select;
 static Str select_str;
 static int select_is_multiple;
@@ -2459,51 +2458,6 @@ void restore_fonteffect(struct html_feed_environ* h_env, struct readbuffer* obuf
         push_tag(obuf, "<s>", HTML_S);
     if (obuf->in_ins)
         push_tag(obuf, "<ins>", HTML_INS);
-}
-
-static Str
-process_title(struct parsed_tag* tag)
-{
-    if (pre_title)
-        return NULL;
-    cur_title = Strnew();
-    return NULL;
-}
-
-static Str
-process_n_title(struct parsed_tag* tag)
-{
-    Str tmp;
-
-    if (pre_title)
-        return NULL;
-    if (!cur_title)
-        return NULL;
-    Strremovefirstspaces(cur_title);
-    Strremovetrailingspaces(cur_title);
-    tmp = Strnew_m_charp("<title_alt title=\"",
-        html_quote(cur_title->ptr), "\">", NULL);
-    pre_title = cur_title;
-    cur_title = NULL;
-    return tmp;
-}
-
-static void
-feed_title(char* str)
-{
-    if (pre_title)
-        return;
-    if (!cur_title)
-        return;
-    while (*str) {
-        if (*str == '&')
-            Strcat_charp(cur_title, getescapecmd(&str));
-        else if (*str == '\n' || *str == '\r') {
-            Strcat_char(cur_title, ' ');
-            str++;
-        } else
-            Strcat_char(cur_title, *(str++));
-    }
 }
 
 Str process_img(struct parsed_tag* tag, int width)
@@ -6027,8 +5981,7 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
         symbol_width = WcOption.use_wide ? symbol_width0 : 1;
     }
 
-    cur_title = NULL;
-    pre_title = NULL;
+    init_title();
     n_textarea = 0;
     cur_textarea = NULL;
     max_textarea = MAX_TEXTAREA;
