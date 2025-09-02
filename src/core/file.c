@@ -1,4 +1,5 @@
 #include "file.h"
+#include "HtmlTagAttribute.h"
 #include "html_title.h"
 #include "progress.h"
 #include "funcname1.h"
@@ -33,7 +34,6 @@
 #include "w3m.h"
 #include "tty.h"
 #include "screen.h"
-#include "html.h"
 #include "parsetagx.h"
 #include "local.h"
 #include "regex.h"
@@ -1719,48 +1719,6 @@ back_to_breakpoint(struct readbuffer* obuf)
         obuf->nobr_level = obuf->bp.nobr_level;
 }
 
-void append_tags(struct readbuffer* obuf)
-{
-    int i;
-    int len = obuf->line->length;
-    int set_bp = 0;
-
-    for (i = 0; i < obuf->tag_sp; i++) {
-        switch (obuf->tag_stack[i]->cmd) {
-        case HTML_A:
-        case HTML_IMG_ALT:
-        case HTML_B:
-        case HTML_U:
-        case HTML_I:
-        case HTML_S:
-            push_link(obuf->tag_stack[i]->cmd, obuf->line->length, obuf->pos);
-            break;
-        }
-        Strcat_charp(obuf->line, obuf->tag_stack[i]->cmdname);
-        switch (obuf->tag_stack[i]->cmd) {
-        case HTML_NOBR:
-            if (obuf->nobr_level > 1)
-                break;
-        case HTML_WBR:
-            set_bp = 1;
-            break;
-        }
-    }
-    obuf->tag_sp = 0;
-    if (set_bp)
-        set_breakpoint(obuf, obuf->line->length - len);
-}
-
-void push_tag(struct readbuffer* obuf, char* cmdname, int cmd)
-{
-    obuf->tag_stack[obuf->tag_sp] = New(struct cmdtable);
-    obuf->tag_stack[obuf->tag_sp]->cmdname = allocStr(cmdname, -1);
-    obuf->tag_stack[obuf->tag_sp]->cmd = cmd;
-    obuf->tag_sp++;
-    if (obuf->tag_sp >= TAG_STACK_SIZE || obuf->flag & (RB_SPECIAL & ~RB_NOBR))
-        append_tags(obuf);
-}
-
 void push_nchars(struct readbuffer* obuf, int width, char* str, int len, Lineprop mode)
 {
     append_tags(obuf);
@@ -3002,15 +2960,15 @@ process_idattr(struct readbuffer* obuf, int cmd, struct parsed_tag* tag)
         HTMLlineproc1("</b>", h_env); \
     }
 
-#define PUSH_ENV(cmd)                                                              \
-    if (++h_env->envc_real < h_env->nenv) {                                        \
-        ++h_env->envc;                                                             \
-        envs[h_env->envc].env = cmd;                                               \
-        envs[h_env->envc].count = 0;                                               \
-        if (h_env->envc <= MAX_INDENT_LEVEL)                                       \
-            envs[h_env->envc].indent = envs[h_env->envc - 1].indent + INDENT_INCR; \
-        else                                                                       \
-            envs[h_env->envc].indent = envs[h_env->envc - 1].indent;               \
+#define PUSH_ENV(cmd)                                                             \
+    if (++h_env->envc_real < h_env->nenv) {                                       \
+        ++h_env->envc;                                                            \
+        envs[h_env->envc].env = cmd;                                              \
+        envs[h_env->envc].count = 0;                                              \
+        if (h_env->envc <= MAX_INDENT_LEVEL)                                      \
+            envs[h_env->envc].indent = envs[h_env->envc - 1].indent + IndentIncr; \
+        else                                                                      \
+            envs[h_env->envc].indent = envs[h_env->envc - 1].indent;              \
     }
 
 #define PUSH_ENV_NOINDENT(cmd)                                   \
@@ -3257,7 +3215,7 @@ int HTMLtagproc1(struct parsed_tag* tag, struct html_feed_environ* h_env)
             if (!(obuf->flag & RB_PREMODE) && (h_env->envc == 0 || cmd == HTML_N_BLQ)) {
                 do_blankline(h_env, obuf,
                     envs[h_env->envc].indent,
-                    INDENT_INCR, h_env->limit);
+                    IndentIncr, h_env->limit);
                 obuf->flag |= RB_IGNORE_P;
             }
         }
@@ -3296,7 +3254,7 @@ int HTMLtagproc1(struct parsed_tag* tag, struct html_feed_environ* h_env)
             switch (envs[h_env->envc].env) {
             case HTML_UL:
                 envs[h_env->envc].type = ul_type(tag, envs[h_env->envc].type);
-                for (i = 0; i < INDENT_INCR - 3; i++)
+                for (i = 0; i < IndentIncr - 3; i++)
                     push_charp(obuf, 1, NBSP, PC_ASCII);
                 tmp = Strnew();
                 switch (envs[h_env->envc].type) {
@@ -3343,17 +3301,17 @@ int HTMLtagproc1(struct parsed_tag* tag, struct html_feed_environ* h_env)
                     num = Sprintf("%d", envs[h_env->envc].count);
                     break;
                 }
-                if (INDENT_INCR >= 4)
+                if (IndentIncr >= 4)
                     Strcat_charp(num, ". ");
                 else
                     Strcat_char(num, '.');
-                push_spaces(obuf, 1, INDENT_INCR - num->length);
+                push_spaces(obuf, 1, IndentIncr - num->length);
                 push_str(obuf, num->length, num, PC_ASCII);
-                if (INDENT_INCR >= 4)
+                if (IndentIncr >= 4)
                     set_space_to_prevchar(obuf->prevchar);
                 break;
             default:
-                push_spaces(obuf, 1, INDENT_INCR);
+                push_spaces(obuf, 1, IndentIncr);
                 break;
             }
         } else {

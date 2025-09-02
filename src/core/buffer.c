@@ -4,7 +4,6 @@
 #include "display.h"
 #include "form.h"
 #include "ui.h"
-#include "html.h"
 #include "etc.h"
 #include "w3m.h"
 #include "file.h"

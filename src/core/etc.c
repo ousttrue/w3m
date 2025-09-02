@@ -10,7 +10,7 @@
 #include "fm.h"
 #include "ctrlcode.h"
 #include "myctype.h"
-#include "html.h"
+#include "HtmlTag.h"
 #include "hash.h"
 #include "screen.h"
 #include <pwd.h>

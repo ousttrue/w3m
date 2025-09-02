@@ -1,6 +1,14 @@
 #pragma once
 #include <Str.h>
 
+#define MAILCAP_NEEDSTERMINAL 0x01
+#define MAILCAP_COPIOUSOUTPUT 0x02
+#define MAILCAP_HTMLOUTPUT 0x04
+
+#define MCSTAT_REPNAME 0x01
+#define MCSTAT_REPTYPE 0x02
+#define MCSTAT_REPPARAM 0x04
+
 struct mailcap {
     char* type;
     char* viewer;

@@ -6,7 +6,7 @@
 #include "parsetag.h"
 #include "local.h"
 #include "hash.h"
-#include "html.h"
+#include "url.h"
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>

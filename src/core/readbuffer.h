@@ -3,7 +3,12 @@
 #include "line.h"
 #include "anchor.h"
 #include "textlist.h"
+#include "HtmlTag.h"
 
+struct cmdtable {
+    const char* cmdname;
+    enum HtmlTag cmd;
+};
 #define RB_STACK_SIZE 10
 #define FONTSTAT_SIZE 7
 #define FONTSTAT_MAX 127
@@ -114,7 +119,9 @@ struct readbuffer {
     short bottom_margin;
 };
 
-char* has_hidden_link(struct readbuffer* obuf, int cmd);
+void append_tags(struct readbuffer* obuf);
+void push_tag(struct readbuffer* obuf, const char* cmdname, enum HtmlTag cmd);
+char* has_hidden_link(struct readbuffer* obuf, enum HtmlTag cmd);
 void passthrough(struct readbuffer* obuf, char* str, int back);
 void set_breakpoint(struct readbuffer* obuf, int tag_length);
 

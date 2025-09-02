@@ -13,7 +13,6 @@
 #include <alloc.h>
 #include "http.h"
 #include "etc.h"
-#include "html.h"
 #include "rc.h"
 #include "file.h"
 #include "local.h"

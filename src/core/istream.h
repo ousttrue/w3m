@@ -7,6 +7,13 @@
 #include <fcntl.h>
 #include <openssl/types.h>
 
+#define CMP_NOCOMPRESS 0
+#define CMP_COMPRESS 1
+#define CMP_GZIP 2
+#define CMP_BZIP2 3
+#define CMP_DEFLATE 4
+#define CMP_BROTLI 5
+
 struct stream_buffer {
     unsigned char* buf;
     int size, cur, next;
@@ -132,6 +139,16 @@ extern void ssl_accept_this_site(char* hostname);
 #define ssl_of(stream) ((stream)->ssl.handle->ssl)
 
 #define openIS(path) newInputStream(open((path), O_RDONLY))
+
+#define StrUFgets(f) StrISgets((f)->stream)
+#define StrmyUFgets(f) StrmyISgets((f)->stream)
+#define UFgetc(f) ISgetc((f)->stream)
+#define UFundogetc(f) ISundogetc((f)->stream)
+#define UFclose(f)                   \
+    if (ISclose((f)->stream) == 0) { \
+        (f)->stream = NULL;          \
+    }
+#define UFfileno(f) ISfileno((f)->stream)
 
 typedef struct {
     enum UrlScheme scheme;

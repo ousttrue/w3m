@@ -3,6 +3,9 @@
 #include "textlist.h"
 #include "line.h"
 
+#define MAX_ENV_LEVEL 20
+#define MAX_INDENT_LEVEL 10
+
 #define set_prevchar(x, y, n) Strcopy_charp_n((x), (y), (n))
 #define set_space_to_prevchar(x) Strcopy_charp_n((x), " ", 1)
 
@@ -15,8 +18,6 @@ struct parsed_tag;
 struct environment;
 
 void fillline(struct readbuffer* obuf, int indent);
-void append_tags(struct readbuffer* obuf);
-void push_tag(struct readbuffer* obuf, char* cmdname, int cmd);
 void push_nchars(struct readbuffer* obuf, int width, char* str, int len, Lineprop mode);
 char* acceptableEncoding(void);
 int dir_exist(char* path);

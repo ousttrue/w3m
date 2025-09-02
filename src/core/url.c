@@ -28,7 +28,6 @@
 
 #include <sys/stat.h>
 
-#include "html.h"
 #include "Str.h"
 #include "myctype.h"
 #include "regex.h"
@@ -57,6 +56,12 @@ int ai_family_order_table[7][3] = {
 #endif /* INET6 */
 
 static sigjmp_buf AbortLoading;
+
+struct table2 {
+    char* item1;
+    char* item2;
+};
+
 
 static struct table2 DefaultGuess[] = {
     { "html", "text/html" },
