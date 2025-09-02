@@ -18,10 +18,10 @@ typedef struct _DownloadList {
 extern DownloadList* FirstDL;
 extern DownloadList* LastDL;
 
-struct parsed_tagarg;
+struct KeyValue;
 
 void updateDownload();
 void addDownloadList(pid_t pid, char* url, char* save, char* lock, long long size);
 void stopDownload(void);
 int checkDownloadList(void);
-void download_action(struct parsed_tagarg* arg);
+void download_action(struct KeyValue* arg);

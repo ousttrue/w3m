@@ -1,7 +1,6 @@
-/*
- * HTML forms
- */
 #include "form.h"
+#include "KeyValue.h"
+#include "parsetagx.h"
 #include "HtmlTagAttribute.h"
 #include "quote.h"
 #include "alloc.h"
@@ -14,8 +13,6 @@
 #include "display.h"
 #include "etc.h"
 #include "fm.h"
-#include "parsetag.h"
-#include "parsetagx.h"
 #include "myctype.h"
 #include "local.h"
 #include "regex.h"
@@ -34,7 +31,7 @@ extern int max_select;
 /* *INDENT-OFF* */
 struct {
     char* action;
-    void (*rout)(struct parsed_tagarg*);
+    void (*rout)(struct KeyValue*);
 } internal_action[] = {
     { "map", follow_map },
     { "option", panel_set_option },

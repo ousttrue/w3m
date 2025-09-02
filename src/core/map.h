@@ -20,11 +20,11 @@ typedef struct _MapArea {
 } MapArea;
 
 struct _Buffer;
-struct parsed_tagarg;
+struct KeyValue;
 struct _anchor;
 
 MapList* searchMapList(struct _Buffer* buf, char* name);
-void follow_map(struct parsed_tagarg* arg);
+void follow_map(struct KeyValue* arg);
 MapArea* follow_map_menu(struct _Buffer* buf, char* name, struct _anchor* a_img, int x, int y);
 int getMapXY(struct _Buffer* buf, struct _anchor* a, int* x, int* y);
 MapArea* retrieveCurrentMapArea(struct _Buffer* buf);

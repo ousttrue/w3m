@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #define MAINPROGRAM
 #include "buffer.h"
-#include "parsetag.h"
+#include "KeyValue.h"
 #include "defun.h"
 #include "linein.h"
 #include "menu.h"
@@ -2913,7 +2913,7 @@ DEFUN(pginfo, INFO, "Display information about the current document")
     cmd_loadBuffer(buf, BP_NORMAL, LB_INFO);
 }
 
-void follow_map(struct parsed_tagarg* arg)
+void follow_map(struct KeyValue* arg)
 {
     char* name = tag_get_value(arg, "link");
 #if defined(MENU_MAP) || defined(USE_IMAGE)
@@ -3381,7 +3381,7 @@ _docCSet(wc_ces charset)
     Currentbuf->document_charset = charset;
 }
 
-void change_charset(struct parsed_tagarg* arg)
+void change_charset(struct KeyValue* arg)
 {
     Buffer* buf = Currentbuf->linkBuffer[LB_N_INFO];
     wc_ces charset;
@@ -4078,7 +4078,7 @@ DownloadListBuffer(void)
     return loadHTMLString(src);
 }
 
-void download_action(struct parsed_tagarg* arg)
+void download_action(struct KeyValue* arg)
 {
     DownloadList* d;
     pid_t pid;

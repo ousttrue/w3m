@@ -2,7 +2,7 @@
 #include <stdbool.h>
 #include <sys/types.h>
 
-struct parsed_tagarg;
+struct KeyValue;
 struct _Buffer;
 struct Frame;
 
@@ -23,5 +23,5 @@ void chkURLBuffer(struct _Buffer* buf);
 struct _AlarmEvent* setAlarmEvent(struct _AlarmEvent* event, int sec, short status, int cmd, void* data);
 void tmpClearBuffer(struct _Buffer* buf);
 
-void change_charset(struct parsed_tagarg* arg);
+void change_charset(struct KeyValue* arg);
 void saveBufferInfo(void);

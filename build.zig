@@ -38,6 +38,7 @@ const w3m_srcs = [_][]const u8{
     "readbuffer.c",
     "html_tag_info.c",
     "html_tag_attribute_info.c",
+    "KeyValue.c",
 
     "ui.c",
     "LineEditor.c",
@@ -76,7 +77,6 @@ const w3m_srcs = [_][]const u8{
 
     "indep.c",
     "textlist.c",
-    "parsetag.c",
     "hash.c",
 
     "version.c",

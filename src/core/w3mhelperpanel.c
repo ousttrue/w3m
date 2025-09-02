@@ -120,14 +120,14 @@ printMailcapPanel(char* mailcap)
 }
 
 static void
-editMailcap(char* mailcap, struct parsed_tagarg* args)
+editMailcap(char* mailcap, struct KeyValue* args)
 {
     TextList* t = newTextList();
     TextListItem* ti;
     FILE* f;
     Str tmp;
     char *type, *viewer;
-    struct parsed_tagarg* a;
+    struct KeyValue* a;
     int delete_it;
 
     if ((f = fopen(mailcap, "rt")) == NULL)
@@ -171,7 +171,7 @@ int main(void)
     char* p;
     int length;
     Str qs = NULL;
-    struct parsed_tagarg* cgiarg;
+    struct KeyValue* cgiarg;
     char* mode;
     char* sent_cookie;
 

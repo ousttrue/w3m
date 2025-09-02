@@ -3,7 +3,6 @@
 #include "file.h"
 #include "indep.h"
 #include "myctype.h"
-#include "parsetag.h"
 #include "local.h"
 #include "hash.h"
 #include "url.h"

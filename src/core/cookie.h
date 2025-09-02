@@ -46,7 +46,7 @@ struct cookie {
 
 struct _ParsedURL;
 struct _Buffer;
-struct parsed_tagarg;
+struct KeyValue;
 
 Str find_cookie(struct _ParsedURL* pu);
 int add_cookie(struct _ParsedURL* pu, Str name, Str value, time_t expires,
@@ -56,5 +56,5 @@ void save_cookies(void);
 void load_cookies(void);
 void initCookie(void);
 struct _Buffer* cookie_list_panel(void);
-void set_cookie_flag(struct parsed_tagarg* arg);
+void set_cookie_flag(struct KeyValue* arg);
 int check_cookie_accept_domain(char* domain);

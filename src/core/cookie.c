@@ -9,7 +9,7 @@
 
 #include "cookie.h"
 #include "fm.h"
-#include "parsetag.h"
+#include "KeyValue.h"
 #include <alloc.h>
 #include "http.h"
 #include "etc.h"
@@ -654,7 +654,7 @@ cookie_list_panel(void)
     return loadHTMLString(src);
 }
 
-void set_cookie_flag(struct parsed_tagarg* arg)
+void set_cookie_flag(struct KeyValue* arg)
 {
     int n, v;
     struct cookie* p;

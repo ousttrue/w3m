@@ -1,4 +1,5 @@
 #include "rc.h"
+#include "KeyValue.h"
 #include "indep.h"
 #include "readbuffer.h"
 #include "quote.h"
@@ -30,7 +31,6 @@
 #include "proto.h"
 #include <stdio.h>
 #include <errno.h>
-#include "parsetag.h"
 #include "graphicchar.h"
 #include "regex.h"
 #include <stdlib.h>
@@ -1397,7 +1397,7 @@ load_option_panel(void)
     return buf;
 }
 
-void panel_set_option(struct parsed_tagarg* arg)
+void panel_set_option(struct KeyValue* arg)
 {
     FILE* f = NULL;
     char* p;

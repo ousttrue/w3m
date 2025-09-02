@@ -5,7 +5,7 @@
 extern char* tmp_dir;
 
 struct _Buffer;
-struct parsed_tagarg;
+struct KeyValue;
 struct _ParsedURL;
 
 void show_params(FILE* fp);
@@ -15,7 +15,7 @@ char* get_param_option(char* name);
 void init_rc(void);
 void init_tmp(void);
 struct _Buffer* load_option_panel(void);
-void panel_set_option(struct parsed_tagarg*);
+void panel_set_option(struct KeyValue*);
 void sync_with_option(void);
 char* rcFile(char* base);
 char* etcFile(char* base);

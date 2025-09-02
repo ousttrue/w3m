@@ -1,9 +1,10 @@
-#include "parsetag.h"
+#include "KeyValue.h"
 #include <myctype.h>
 #include <Str.h>
+#include <strings.h>
 #include "indep.h"
 
-char* tag_get_value(struct parsed_tagarg* t, char* arg)
+const char* tag_get_value(struct KeyValue* t, const char* arg)
 {
     for (; t; t = t->next) {
         if (!strcasecmp(t->arg, arg))
@@ -12,7 +13,7 @@ char* tag_get_value(struct parsed_tagarg* t, char* arg)
     return NULL;
 }
 
-int tag_exists(struct parsed_tagarg* t, char* arg)
+bool tag_exists(struct KeyValue* t, const char* arg)
 {
     for (; t; t = t->next) {
         if (!strcasecmp(t->arg, arg))
@@ -21,16 +22,15 @@ int tag_exists(struct parsed_tagarg* t, char* arg)
     return 0;
 }
 
-struct parsed_tagarg*
-cgistr2tagarg(char* cgistr)
+struct KeyValue* cgistr2tagarg(const char* cgistr)
 {
     Str tag;
     Str value;
-    struct parsed_tagarg *t0, *t;
+    struct KeyValue *t0, *t;
 
     t = t0 = NULL;
     do {
-        t = New(struct parsed_tagarg);
+        t = New(struct KeyValue);
         t->next = t0;
         t0 = t;
         tag = Strnew();
