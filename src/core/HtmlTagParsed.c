@@ -1,4 +1,6 @@
 #include "HtmlTagParsed.h"
+#include "HtmlTag.h"
+#include "HtmlTagAttribute.h"
 #include "fm.h"
 #include "myctype.h"
 #include "indep.h"
@@ -124,13 +126,20 @@ struct HtmlTagParsed* parse_tag(char** s, bool internal)
 
     int nattr = TagMAP[tag_id].max_attribute;
     if (nattr > 0) {
-        tag->attrid = NewAtom_N(unsigned char, nattr);
-        tag->value = New_N(char*, nattr);
         tag->map = NewAtom_N(unsigned char, MAX_TAGATTR);
-        memset(tag->map, MAX_TAGATTR, MAX_TAGATTR);
-        memset(tag->attrid, ATTR_UNKNOWN, nattr);
-        for (int i = 0; i < nattr; i++)
+        for (int i = 0; i < MAX_TAGATTR; i++) {
+            tag->map[i] = MAX_TAGATTR;
+        }
+        for (int i = 0; i < nattr; i++) {
             tag->map[TagMAP[tag_id].accept_attribute[i]] = i;
+        }
+
+        tag->attrid = NewAtom_N(enum HtmlTagAttribute, nattr);
+        for (int i = 0; i < nattr; i++) {
+            tag->attrid[i] = ATTR_UNKNOWN;
+        }
+
+        tag->value = New_N(char*, nattr);
     }
 
     /* Parse tag arguments */
@@ -187,9 +196,12 @@ struct HtmlTagParsed* parse_tag(char** s, bool internal)
         int attr_id = 0;
         int i = 0;
         for (; i < nattr; i++) {
-            if ((tag)->attrid[i] == ATTR_UNKNOWN && strcmp(AttrMAP[TagMAP[tag_id].accept_attribute[i]].name, attrname) == 0) {
-                attr_id = TagMAP[tag_id].accept_attribute[i];
-                break;
+            enum HtmlTagAttribute attr = tag->attrid[i];
+            if (attr == ATTR_UNKNOWN) {
+                if (strcmp(AttrMAP[TagMAP[tag_id].accept_attribute[i]].name, attrname) == 0) {
+                    attr_id = TagMAP[tag_id].accept_attribute[i];
+                    break;
+                }
             }
         }
 
@@ -263,16 +275,17 @@ bool parsedtag_get_value(struct HtmlTagParsed* tag, enum HtmlTagAttribute id, vo
 
 Str parsedtag2str(struct HtmlTagParsed* tag)
 {
-    int i;
-    int tag_id = tag->tagid;
-    int nattr = TagMAP[tag_id].max_attribute;
+    enum HtmlTag tag_id = tag->tagid;
+    TagInfo tag_info = TagMAP[tag_id];
     Str tagstr = Strnew();
     Strcat_char(tagstr, '<');
-    Strcat_charp(tagstr, TagMAP[tag_id].name);
-    for (i = 0; i < nattr; i++) {
-        if (tag->attrid[i] != ATTR_UNKNOWN) {
+    Strcat_charp(tagstr, tag_info.name);
+    for (int i = 0; i < tag_info.max_attribute; i++) {
+        enum HtmlTagAttribute attr = tag->attrid[i];
+        if (attr != ATTR_UNKNOWN) {
             Strcat_char(tagstr, ' ');
-            Strcat_charp(tagstr, AttrMAP[tag->attrid[i]].name);
+            TagAttrInfo attr_info = AttrMAP[attr];
+            Strcat_charp(tagstr, attr_info.name);
             if (tag->value[i])
                 Strcat(tagstr, Sprintf("=\"%s\"", html_quote(tag->value[i])));
         }

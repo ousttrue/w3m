@@ -86,7 +86,7 @@ static struct table2 DefaultGuess[] = {
     { NULL, NULL }
 };
 
-static void add_index_file(ParsedURL* pu, URLFile* uf);
+static void add_index_file(ParsedURL* pu, struct URLFile* uf);
 static char* schemeNumToName(int scheme);
 
 /* #define HTTP_DEFAULT_FILE    "/index.html" */
@@ -952,9 +952,9 @@ Str parsedURL2RefererStr(ParsedURL* pu)
     return _parsedURL2Str(pu, FALSE, FALSE, FALSE);
 }
 
-void init_stream(URLFile* uf, int scheme, InputStream stream)
+void init_stream(struct URLFile* uf, int scheme, InputStream stream)
 {
-    memset(uf, 0, sizeof(URLFile));
+    memset(uf, 0, sizeof(struct URLFile));
     uf->stream = stream;
     uf->scheme = scheme;
     uf->encoding = ENC_7BIT;
@@ -966,15 +966,15 @@ void init_stream(URLFile* uf, int scheme, InputStream stream)
     uf->modtime = -1;
 }
 
-URLFile
+struct URLFile
 openURL(char* url, ParsedURL* pu, ParsedURL* current,
     struct URLOption* option, FormList* request, TextList* extra_header,
-    URLFile* ouf, struct HttpRequest* hr, unsigned char* status)
+    struct URLFile* ouf, struct HttpRequest* hr, unsigned char* status)
 {
     Str tmp;
     int sock, scheme;
     char *p, *q, *u;
-    URLFile uf;
+    struct URLFile uf;
     struct HttpRequest hr0;
     SSL* sslh = NULL;
 
@@ -1212,7 +1212,7 @@ retry:
 
 /* add index_file if exists */
 static void
-add_index_file(ParsedURL* pu, URLFile* uf)
+add_index_file(ParsedURL* pu, struct URLFile* uf)
 {
     char *p, *q;
     TextList* index_file_list = NULL;

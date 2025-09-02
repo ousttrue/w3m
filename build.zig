@@ -40,6 +40,7 @@ const w3m_srcs = [_][]const u8{
     "html_tag_attribute_info.c",
     "KeyValue.c",
     "HtmlTagParsed.c",
+    "compression.c",
 
     "ui.c",
     "LineEditor.c",

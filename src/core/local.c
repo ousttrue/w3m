@@ -199,7 +199,7 @@ check_local_cgi(char* file, int status)
     return -1;
 }
 
-void set_environ(char* var, char* value)
+void set_environ(const char* var, const char* value)
 {
 #ifdef HAVE_SETENV
     if (var != NULL && value != NULL)

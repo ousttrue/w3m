@@ -1,4 +1,5 @@
 #include "file.h"
+#include "compression.h"
 #include "HtmlTagParsed.h"
 #include "readbuffer.h"
 #include "HtmlTagAttribute.h"
@@ -64,10 +65,9 @@ static int need_number = 0;
 
 static char* guess_filename(char* file);
 static int _MoveFile(char* path1, char* path2);
-static void uncompress_stream(URLFile* uf, char** src);
 static FILE* lessopen_stream(char* path);
 static Buffer* loadcmdout(char* cmd,
-    Buffer* (*loadproc)(URLFile*, Buffer*),
+    Buffer* (*loadproc)(struct URLFile*, Buffer*),
     Buffer* defaultbuf);
 static void addnewline(Buffer* buf, char* line, Lineprop* prop,
     Linecolor* color, int pos, int width, int nlines);
@@ -152,35 +152,7 @@ char* violations[COO_EMAX] = {
     "RFC XXXX 4.3.2 rule 5"
 };
 
-/* *INDENT-OFF* */
-static struct compression_decoder {
-    int type;
-    char* ext;
-    char* mime_type;
-    int auxbin_p;
-    char* cmd;
-    char* name;
-    char* encoding;
-    char* encodings[4];
-    int use_d_arg;
-} compression_decoders[] = {
-    { CMP_COMPRESS, ".gz", "application/x-gzip",
-        0, GUNZIP_CMDNAME, GUNZIP_NAME, "gzip",
-        { "gzip", "x-gzip", NULL }, 0 },
-    { CMP_COMPRESS, ".Z", "application/x-compress",
-        0, GUNZIP_CMDNAME, GUNZIP_NAME, "compress",
-        { "compress", "x-compress", NULL }, 0 },
-    { CMP_BZIP2, ".bz2", "application/x-bzip",
-        0, BUNZIP2_CMDNAME, BUNZIP2_NAME, "bzip, bzip2",
-        { "x-bzip", "bzip", "bzip2", NULL }, 0 },
-    { CMP_DEFLATE, ".deflate", "application/x-deflate",
-        1, INFLATE_CMDNAME, INFLATE_NAME, "deflate",
-        { "deflate", "x-deflate", NULL }, 0 },
-    { CMP_BROTLI, ".br", "application/x-br",
-        0, BROTLI_CMDNAME, BROTLI_NAME, "br",
-        { "br", "x-br", NULL }, 1 },
-    { CMP_NOCOMPRESS, NULL, NULL, 0, NULL, NULL, NULL, { NULL }, 0 },
-};
+;
 /* *INDENT-ON* */
 
 #define SAVE_BUF_SIZE 1536
@@ -188,18 +160,6 @@ static struct compression_decoder {
 static MySignalHandler KeyAbort(int _dummy)
 {
     siglongjmp(AbortLoading, 1);
-}
-
-static void
-UFhalfclose(URLFile* f)
-{
-    switch (f->scheme) {
-    case SCM_FTP:
-        break;
-    default:
-        UFclose(f);
-        break;
-    }
 }
 
 int currentLn(Buffer* buf)
@@ -212,8 +172,8 @@ int currentLn(Buffer* buf)
 }
 
 static Buffer*
-loadSomething(URLFile* f,
-    Buffer* (*loadproc)(URLFile*, Buffer*), Buffer* defaultbuf)
+loadSomething(struct URLFile* f,
+    Buffer* (*loadproc)(struct URLFile*, Buffer*), Buffer* defaultbuf)
 {
     Buffer* buf;
 
@@ -272,75 +232,6 @@ int is_html_type(char* type)
     return (type && (strcasecmp(type, "text/html") == 0 || strcasecmp(type, "application/xhtml+xml") == 0));
 }
 
-static void
-check_compression(char* path, URLFile* uf)
-{
-    int len;
-    struct compression_decoder* d;
-
-    if (path == NULL)
-        return;
-
-    len = strlen(path);
-    uf->compression = CMP_NOCOMPRESS;
-    for (d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
-        int elen;
-        if (d->ext == NULL)
-            continue;
-        elen = strlen(d->ext);
-        if (len > elen && strcasecmp(&path[len - elen], d->ext) == 0) {
-            uf->compression = d->type;
-            uf->guess_type = d->mime_type;
-            break;
-        }
-    }
-}
-
-static char*
-compress_application_type(int compression)
-{
-    struct compression_decoder* d;
-
-    for (d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
-        if (d->type == compression)
-            return d->mime_type;
-    }
-    return NULL;
-}
-
-static char*
-uncompressed_file_type(char* path, char** ext)
-{
-    int len, slen;
-    Str fn;
-    char* t0;
-    struct compression_decoder* d;
-
-    if (path == NULL)
-        return NULL;
-
-    slen = 0;
-    len = strlen(path);
-    for (d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
-        if (d->ext == NULL)
-            continue;
-        slen = strlen(d->ext);
-        if (len > slen && strcasecmp(&path[len - slen], d->ext) == 0)
-            break;
-    }
-    if (d->type == CMP_NOCOMPRESS)
-        return NULL;
-
-    fn = Strnew_charp(path);
-    Strshrink(fn, slen);
-    if (ext)
-        *ext = filename_extension(fn->ptr, 0);
-    t0 = guessContentType(fn->ptr);
-    if (t0 == NULL)
-        t0 = "text/plain";
-    return t0;
-}
-
 static int
 setModtime(char* path, time_t modtime)
 {
@@ -355,7 +246,7 @@ setModtime(char* path, time_t modtime)
     return utime(path, &t);
 }
 
-void examineFile(char* path, URLFile* uf)
+void examineFile(char* path, struct URLFile* uf)
 {
     struct stat stbuf;
 
@@ -380,11 +271,11 @@ void examineFile(char* path, URLFile* uf)
                 return;
             }
         }
-        check_compression(path, uf);
+        check_compression(uf, path);
         if (uf->compression != CMP_NOCOMPRESS) {
             char* ext = uf->ext;
-            char* t0 = uncompressed_file_type(path, &ext);
-            uf->guess_type = t0;
+            const char* t0 = uncompressed_file_type(path, &ext);
+            uf->guess_type = (char*)t0;
             uf->ext = ext;
             uncompress_stream(uf, NULL);
             return;
@@ -392,66 +283,10 @@ void examineFile(char* path, URLFile* uf)
     }
 }
 
-#define S_IXANY (S_IXUSR | S_IXGRP | S_IXOTH)
-
-static int
-check_command(char* cmd, int auxbin_p)
-{
-    static char* path = NULL;
-    Str dirs;
-    char *p, *np;
-    Str pathname;
-    struct stat st;
-
-    if (path == NULL)
-        path = getenv("PATH");
-    if (auxbin_p)
-        dirs = Strnew_charp(w3m_auxbin_dir());
-    else
-        dirs = Strnew_charp(path);
-    for (p = dirs->ptr; p != NULL; p = np) {
-        np = strchr(p, PATH_SEPARATOR);
-        if (np)
-            *np++ = '\0';
-        pathname = Strnew();
-        Strcat_charp(pathname, p);
-        Strcat_char(pathname, '/');
-        Strcat_charp(pathname, cmd);
-        if (stat(pathname->ptr, &st) == 0 && S_ISREG(st.st_mode)
-            && (st.st_mode & S_IXANY) != 0)
-            return 1;
-    }
-    return 0;
-}
-
-char* acceptableEncoding(void)
-{
-    static Str encodings = NULL;
-    struct compression_decoder* d;
-    TextList* l;
-    char* p;
-
-    if (encodings != NULL)
-        return encodings->ptr;
-    l = newTextList();
-    for (d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
-        if (check_command(d->cmd, d->auxbin_p)) {
-            pushText(l, d->encoding);
-        }
-    }
-    encodings = Strnew();
-    while ((p = popText(l)) != NULL) {
-        if (encodings->length)
-            Strcat_charp(encodings, ", ");
-        Strcat_charp(encodings, p);
-    }
-    return encodings->ptr;
-}
-
 /*
  * convert line
  */
-Str convertLine(URLFile* uf, Str line, enum ConvertLineMode mode, wc_ces* charset,
+Str convertLine(struct URLFile* uf, Str line, enum ConvertLineMode mode, wc_ces* charset,
     wc_ces doc_charset)
 {
     line = wc_Str_conv_with_detect(line, charset, doc_charset, InnerCharset);
@@ -532,7 +367,7 @@ xface2xpm(char* xface)
 }
 #endif
 
-void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
+void readHeader(struct URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
 {
     char *p, *q;
     char* emsg;
@@ -625,7 +460,7 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
                 }
 #endif
                 if (src) {
-                    URLFile f;
+                    struct URLFile f;
                     Line* l;
                     wc_ces old_charset = newBuf->document_charset;
                     init_stream(&f, SCM_LOCAL, newStrStream(src));
@@ -669,18 +504,7 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
             p = lineBuf2->ptr + 17;
             while (IS_SPACE(*p))
                 p++;
-            uf->compression = CMP_NOCOMPRESS;
-            for (d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
-                char** e;
-                for (e = d->encodings; *e != NULL; e++) {
-                    if (strncasecmp(p, *e, strlen(*e)) == 0) {
-                        uf->compression = d->type;
-                        break;
-                    }
-                }
-                if (uf->compression != CMP_NOCOMPRESS)
-                    break;
-            }
+            set_compression(uf, p);
             uf->content_encoding = uf->compression;
         } else if (use_cookie && accept_cookie && pu && check_cookie_accept_domain(pu->host) && (!strncasecmp(lineBuf2->ptr, "Set-Cookie:", 11) || !strncasecmp(lineBuf2->ptr, "Set-Cookie2:", 12))) {
             Str name = Strnew(), value = Strnew(), domain = NULL, path = NULL,
@@ -1173,15 +997,15 @@ Str getLinkNumberStr(int correction)
 /*
  * loadGeneralFile: load file to buffer
  */
-#define DO_EXTERNAL ((Buffer * (*)(URLFile*, Buffer*)) doExternal)
+#define DO_EXTERNAL ((Buffer * (*)(struct URLFile*, Buffer*)) doExternal)
 Buffer*
 loadGeneralFile(char* path, ParsedURL* volatile current, const char* referer,
     int flag, FormList* volatile request)
 {
-    URLFile f, *volatile of = NULL;
+    struct URLFile f, *volatile of = NULL;
     ParsedURL pu;
     Buffer* b = NULL;
-    Buffer* (*volatile proc)(URLFile*, Buffer*) = loadBuffer;
+    Buffer* (*volatile proc)(struct URLFile*, Buffer*) = loadBuffer;
     char* volatile tpath;
     char* volatile t = "text/plain", *p, * volatile real_type = NULL;
     Buffer* volatile t_buf = NULL;
@@ -5060,7 +4884,7 @@ addnewline(Buffer* buf, char* line, Lineprop* prop, Linecolor* color, int pos,
  * loadHTMLBuffer: read file and make new buffer
  */
 Buffer*
-loadHTMLBuffer(URLFile* f, Buffer* newBuf)
+loadHTMLBuffer(struct URLFile* f, Buffer* newBuf)
 {
     FILE* src = NULL;
     Str tmp;
@@ -5248,7 +5072,7 @@ print_internal_information(struct html_feed_environ* henv)
     }
 }
 
-void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
+void loadHTMLstream(struct URLFile* f, Buffer* newBuf, FILE* src, int internal)
 {
     struct TermEntry* t = getTermEntry();
     struct environment envs[MAX_ENV_LEVEL];
@@ -5358,7 +5182,7 @@ phase2:
 Buffer*
 loadHTMLString(Str page)
 {
-    URLFile f;
+    struct URLFile f;
     MySignalHandler (*volatile prevtrap)(int _dummy) = NULL;
     Buffer* newBuf;
 
@@ -5393,7 +5217,7 @@ loadHTMLString(Str page)
  * loadBuffer: read file and make new buffer
  */
 Buffer*
-loadBuffer(URLFile* uf, Buffer* volatile newBuf)
+loadBuffer(struct URLFile* uf, Buffer* volatile newBuf)
 {
     FILE* volatile src = NULL;
     wc_ces charset = WC_CES_US_ASCII;
@@ -5462,13 +5286,13 @@ _end:
 }
 
 Buffer*
-loadImageBuffer(URLFile* uf, Buffer* newBuf)
+loadImageBuffer(struct URLFile* uf, Buffer* newBuf)
 {
     Image image;
     ImageCache* cache;
     Str tmp, tmpf;
     FILE* src = NULL;
-    URLFile f;
+    struct URLFile f;
     MySignalHandler (*volatile prevtrap)(int _dummy) = NULL;
     struct stat st;
     const ParsedURL* pu = newBuf ? &newBuf->currentURL : NULL;
@@ -5583,11 +5407,11 @@ void saveBufferBody(Buffer* buf, FILE* f, int cont)
 
 static Buffer*
 loadcmdout(char* cmd,
-    Buffer* (*loadproc)(URLFile*, Buffer*), Buffer* defaultbuf)
+    Buffer* (*loadproc)(struct URLFile*, Buffer*), Buffer* defaultbuf)
 {
     FILE *f, *popen(const char*, const char*);
     Buffer* buf;
-    URLFile uf;
+    struct URLFile uf;
 
     if (cmd == NULL || *cmd == '\0')
         return NULL;
@@ -5674,7 +5498,7 @@ openGeneralPagerBuffer(InputStream stream)
     Buffer* buf;
     char* t = "text/plain";
     Buffer* t_buf = NULL;
-    URLFile uf;
+    struct URLFile uf;
 
     init_stream(&uf, SCM_UNKNOWN, stream);
 
@@ -5725,7 +5549,7 @@ openGeneralPagerBuffer(InputStream stream)
     return buf;
 }
 
-int save2tmp(URLFile uf, char* tmpf)
+int save2tmp(struct URLFile uf, char* tmpf)
 {
     FILE* ff;
     long long linelen = 0, trbyte = 0;
@@ -5767,7 +5591,7 @@ _end:
 }
 
 Buffer*
-doExternal(URLFile uf, char* type, Buffer* defaultbuf)
+doExternal(struct URLFile uf, char* type, Buffer* defaultbuf)
 {
     Str tmpf, command;
     struct mailcap* mcap;
@@ -6016,7 +5840,7 @@ int doFileMove(char* tmpf, char* defstr)
     return ret;
 }
 
-int doFileSave(URLFile uf, char* defstr)
+int doFileSave(struct URLFile uf, char* defstr)
 {
     Str msg;
     Str filen;
@@ -6182,98 +6006,6 @@ char* inputAnswer(char* prompt)
     //     ans = Strfgets(stdin)->ptr;
     // }
     return ans;
-}
-
-static void
-uncompress_stream(URLFile* uf, char** src)
-{
-    pid_t pid1;
-    FILE* f1;
-    char* expand_cmd = GUNZIP_CMDNAME;
-    char* expand_name = GUNZIP_NAME;
-    char* tmpf = NULL;
-    char* ext = NULL;
-    struct compression_decoder* d;
-    int use_d_arg = 0;
-
-    if (IStype(uf->stream) != IST_ENCODED) {
-        uf->stream = newEncodedStream(uf->stream, uf->encoding);
-        uf->encoding = ENC_7BIT;
-    }
-    for (d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
-        if (uf->compression == d->type) {
-            if (d->auxbin_p)
-                expand_cmd = auxbinFile(d->cmd);
-            else
-                expand_cmd = d->cmd;
-            expand_name = d->name;
-            ext = d->ext;
-            use_d_arg = d->use_d_arg;
-            break;
-        }
-    }
-    uf->compression = CMP_NOCOMPRESS;
-
-    if (uf->scheme != SCM_LOCAL
-        && !image_source) {
-        tmpf = tmpfname(TMPF_DFL, ext)->ptr;
-    }
-
-    /* child1 -- stdout|f1=uf -> parent */
-    pid1 = open_pipe_rw(&f1, NULL);
-    if (pid1 < 0) {
-        UFclose(uf);
-        return;
-    }
-    if (pid1 == 0) {
-        /* child */
-        pid_t pid2;
-        FILE* f2 = stdin;
-
-        /* uf -> child2 -- stdout|stdin -> child1 */
-        pid2 = open_pipe_rw(&f2, NULL);
-        if (pid2 < 0) {
-            UFclose(uf);
-            exit(1);
-        }
-        if (pid2 == 0) {
-            /* child2 */
-            char* buf = NewWithoutGC_N(char, SAVE_BUF_SIZE);
-            int count;
-            FILE* f = NULL;
-
-            setup_child(TRUE, 2, UFfileno(uf));
-            if (tmpf)
-                f = fopen(tmpf, "wb");
-            while ((count = ISread_n(uf->stream, buf, SAVE_BUF_SIZE)) > 0) {
-                if (fwrite(buf, 1, count, stdout) != count)
-                    break;
-                if (f && fwrite(buf, 1, count, f) != count)
-                    break;
-            }
-            UFclose(uf);
-            if (f)
-                fclose(f);
-            xfree(buf);
-            exit(0);
-        }
-        /* child1 */
-        dup2(1, 2); /* stderr>&stdout */
-        setup_child(TRUE, -1, -1);
-        if (use_d_arg)
-            execlp(expand_cmd, expand_name, "-d", NULL);
-        else
-            execlp(expand_cmd, expand_name, NULL);
-        exit(1);
-    }
-    if (tmpf) {
-        if (src)
-            *src = tmpf;
-        else
-            uf->scheme = SCM_LOCAL;
-    }
-    UFhalfclose(uf);
-    uf->stream = newFileStream(f1, (void (*)())fclose);
 }
 
 static FILE*

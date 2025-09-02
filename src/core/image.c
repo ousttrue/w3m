@@ -23,6 +23,7 @@
 #endif
 
 int activeImage = (FALSE);
+char* image_source = (NULL);
 
 static int image_index = 0;
 

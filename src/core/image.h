@@ -2,6 +2,7 @@
 #include <sys/types.h>
 
 extern int activeImage;
+extern char* image_source;
 
 #define INLINE_IMG_NONE 0
 #define INLINE_IMG_OSC5379 1

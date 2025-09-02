@@ -4,6 +4,9 @@
 
 struct form_list;
 
+// #define DEV_NULL_PATH "nul"
+#define DEV_NULL_PATH "/dev/null"
+
 #ifdef _WIN32
 #else /* not HAVE_DIRENT_H */
 #include <dirent.h>
@@ -45,7 +48,7 @@ extern char* personal_document_root;
 
 Str localCookie(void);
 Str loadLocalDir(char* dirname);
-void set_environ(char* var, char* value);
+void set_environ(const char* var, const char* value);
 
 FILE* localcgi_post(char*, char*, struct form_list*, const char*);
 

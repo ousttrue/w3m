@@ -437,3 +437,14 @@ void cleanup_line(Str s, enum ConvertLineMode mode)
     }
 }
 
+void UFhalfclose(struct URLFile* f)
+{
+    switch (f->scheme) {
+    case SCM_FTP:
+        break;
+    default:
+        UFclose(f);
+        break;
+    }
+}
+

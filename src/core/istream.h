@@ -1,4 +1,5 @@
 #pragma once
+#include "compression.h"
 #include "url.h"
 #include "growbuf.h"
 #include <stdio.h>
@@ -6,13 +7,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <openssl/types.h>
-
-#define CMP_NOCOMPRESS 0
-#define CMP_COMPRESS 1
-#define CMP_GZIP 2
-#define CMP_BZIP2 3
-#define CMP_DEFLATE 4
-#define CMP_BROTLI 5
 
 struct stream_buffer {
     unsigned char* buf;
@@ -150,21 +144,21 @@ extern void ssl_accept_this_site(char* hostname);
     }
 #define UFfileno(f) ISfileno((f)->stream)
 
-typedef struct {
+struct URLFile {
     enum UrlScheme scheme;
     char is_cgi;
     char encoding;
     union input_stream* stream;
     char* ext;
-    int compression;
+    enum CompressionTyep compression;
     int content_encoding;
     char* guess_type;
     char* ssl_certificate;
     char* url;
     time_t modtime;
-} URLFile;
+};
 
-void examineFile(char* path, URLFile* uf);
+void examineFile(char* path, struct URLFile* uf);
 
 enum ConvertLineMode {
     RAW_MODE = 0,
@@ -172,18 +166,18 @@ enum ConvertLineMode {
     HEADER_MODE = 2,
 };
 void cleanup_line(Str s, enum ConvertLineMode mode);
-Str convertLine(URLFile* uf, Str line, enum ConvertLineMode mode, wc_ces* charset, wc_ces doc_charset);
+Str convertLine(struct URLFile* uf, Str line, enum ConvertLineMode mode, wc_ces* charset, wc_ces doc_charset);
 
 struct _Buffer;
-struct _Buffer* loadHTMLBuffer(URLFile* f, struct _Buffer* newBuf);
-void loadHTMLstream(URLFile* f, struct _Buffer* newBuf, FILE* src, int internal);
-struct _Buffer* loadBuffer(URLFile* uf, struct _Buffer* newBuf);
-struct _Buffer* loadImageBuffer(URLFile* uf, struct _Buffer* newBuf);
-int save2tmp(URLFile uf, char* tmpf);
-struct _Buffer* doExternal(URLFile uf, char* type, struct _Buffer* defaultbuf);
-int doFileSave(URLFile uf, char* defstr);
-void readHeader(URLFile* uf, struct _Buffer* newBuf, int thru, ParsedURL* pu);
-void init_stream(URLFile* uf, int scheme, InputStream stream);
+struct _Buffer* loadHTMLBuffer(struct URLFile* f, struct _Buffer* newBuf);
+void loadHTMLstream(struct URLFile* f, struct _Buffer* newBuf, FILE* src, int internal);
+struct _Buffer* loadBuffer(struct URLFile* uf, struct _Buffer* newBuf);
+struct _Buffer* loadImageBuffer(struct URLFile* uf, struct _Buffer* newBuf);
+int save2tmp(struct URLFile uf, char* tmpf);
+struct _Buffer* doExternal(struct URLFile uf, char* type, struct _Buffer* defaultbuf);
+int doFileSave(struct URLFile uf, char* defstr);
+void readHeader(struct URLFile* uf, struct _Buffer* newBuf, int thru, ParsedURL* pu);
+void init_stream(struct URLFile* uf, int scheme, InputStream stream);
 struct _Buffer* openPagerBuffer(InputStream stream, struct _Buffer* buf);
 struct _Buffer* openGeneralPagerBuffer(InputStream stream);
 int checkSaveFile(InputStream stream, char* path);
@@ -198,7 +192,8 @@ struct URLOption {
 
 struct HttpRequest;
 struct form_list;
-URLFile openURL(char* url, ParsedURL* pu, ParsedURL* current,
+struct URLFile openURL(char* url, ParsedURL* pu, ParsedURL* current,
     struct URLOption* option, struct form_list* request,
-    TextList* extra_header, URLFile* ouf,
+    TextList* extra_header, struct URLFile* ouf,
     struct HttpRequest* hr, unsigned char* status);
+void UFhalfclose(struct URLFile* f);

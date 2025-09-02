@@ -5,6 +5,9 @@
 
 extern const char* displayTitleTerm;
 
+#define DEV_TTY_PATH "/dev/tty"
+// #define DEV_TTY_PATH "con"
+
 int write1(int);
 // void writestr(char* s);
 void writestr(const char* s);
