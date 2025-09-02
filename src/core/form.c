@@ -1,6 +1,6 @@
 #include "form.h"
+#include "HtmlTagParsed.h"
 #include "KeyValue.h"
-#include "parsetagx.h"
 #include "HtmlTagAttribute.h"
 #include "quote.h"
 #include "alloc.h"
@@ -87,7 +87,7 @@ newFormList(char* action, char* method, char* charset, char* enctype,
  * add <input> element to form_list
  */
 struct form_item_list*
-formList_addInput(struct form_list* fl, struct parsed_tag* tag)
+formList_addInput(struct form_list* fl, struct HtmlTagParsed* tag)
 {
     struct form_item_list* item;
     char* p;

@@ -38,7 +38,7 @@ typedef struct {
 
 struct _Buffer;
 struct form_list;
-struct parsed_tag;
+struct HtmlTagParsed;
 
 AnchorList* putAnchor(AnchorList* al, char* url, char* target,
     Anchor** anchor_return, const char* referer,
@@ -51,7 +51,7 @@ Anchor* registerName(struct _Buffer* buf, char* url, int line, int pos);
 Anchor* registerImg(struct _Buffer* buf, char* url, char* title, int line,
     int pos);
 Anchor* registerForm(struct _Buffer* buf, struct form_list* flist,
-    struct parsed_tag* tag, int line, int pos);
+    struct HtmlTagParsed* tag, int line, int pos);
 int onAnchor(Anchor* a, int line, int pos);
 Anchor* retrieveAnchor(AnchorList* al, int line, int pos);
 Anchor* retrieveCurrentAnchor(struct _Buffer* buf);

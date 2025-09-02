@@ -85,14 +85,14 @@ typedef struct form_item_list {
 
 struct _anchor;
 struct _Buffer;
-struct parsed_tag;
+struct HtmlTagParsed;
 struct _anchorList;
 
 struct form_list* newFormList(char* action, char* method, char* charset,
     char* enctype, char* target, char* name,
     struct form_list* _next);
 struct form_item_list* formList_addInput(struct form_list* fl,
-    struct parsed_tag* tag);
+    struct HtmlTagParsed* tag);
 char* form2str(FormItemList* fi);
 int formtype(char* typestr);
 void formRecheckRadio(struct _anchor* a, struct _Buffer* buf, FormItemList* form);

@@ -1,4 +1,5 @@
 #include "readbuffer.h"
+#include "HtmlTagParsed.h"
 #include "alloc.h"
 #include "etc.h"
 #include "file.h"
@@ -6,7 +7,6 @@
 #include "table.h"
 #include "ui.h"
 #include "indep.h"
-#include "parsetagx.h"
 
 char DisableCenter = (false);
 
@@ -162,7 +162,7 @@ void proc_mchar(struct readbuffer* obuf, bool pre_mode, int width, char** str, L
     obuf->flag |= RB_NFLUSHED;
 }
 
-void set_alignment(struct readbuffer* obuf, struct parsed_tag* tag)
+void set_alignment(struct readbuffer* obuf, struct HtmlTagParsed* tag)
 {
     long flag = -1;
     int align;

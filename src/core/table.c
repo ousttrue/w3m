@@ -2,6 +2,7 @@
  * HTML table
  */
 #include "table.h"
+#include "HtmlTagParsed.h"
 #include "file.h"
 #include "display.h"
 #include "readbuffer.h"
@@ -10,7 +11,6 @@
 #include "symbol.h"
 #include "fm.h"
 #include "HtmlTagAttribute.h"
-#include "parsetagx.h"
 #include "Str.h"
 #include "myctype.h"
 #include "screen.h"
@@ -161,7 +161,6 @@ floor_at_intervals(int x, int step)
 }
 
 #define round(x) ((int)floor((x) + 0.5))
-
 
 static int
 table_colspan(struct table* t, int row, int col)
@@ -648,7 +647,7 @@ void do_refill(struct table* tbl, int row, int col, int maxlimit)
         if (TAG_IS(l->ptr, "<table_alt", 10)) {
             int id = -1;
             char* p = l->ptr;
-            struct parsed_tag* tag;
+            struct HtmlTagParsed* tag;
             if ((tag = parse_tag(&p, TRUE)) != NULL)
                 parsedtag_get_value(tag, ATTR_TID, &id);
             if (id >= 0 && id < tbl->ntable && tbl->tables[id].ptr) {
@@ -1245,7 +1244,6 @@ check_table_width(struct table* t, double* newwidth, MAT* minv, int itr)
     else
         return corr;
 }
-
 
 static void
 check_table_height(struct table* t)
@@ -2177,7 +2175,7 @@ table_close_anchor0(struct table* tbl, struct table_mode* mode)
 
 static int
 feed_table_tag(struct table* tbl, char* line, struct table_mode* mode,
-    int width, struct parsed_tag* tag)
+    int width, struct HtmlTagParsed* tag)
 {
     int cmd;
     char* p;
@@ -2868,7 +2866,7 @@ int feed_table(struct table* tbl, char* line, struct table_mode* mode,
     struct table_linfo* linfo = &tbl->linfo;
 
     if (*line == '<' && line[1] && REALLY_THE_BEGINNING_OF_A_TAG(line)) {
-        struct parsed_tag* tag;
+        struct HtmlTagParsed* tag;
         p = line;
         tag = parse_tag(&p, internal);
         if (tag) {
@@ -2883,7 +2881,7 @@ int feed_table(struct table* tbl, char* line, struct table_mode* mode,
                 break;
             case TAG_ACTION_FEED:
             default:
-                if (parsedtag_need_reconstruct(tag))
+                if (tag->need_reconstruct)
                     line = parsedtag2str(tag)->ptr;
             }
         } else {

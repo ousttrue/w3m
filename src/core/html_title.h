@@ -1,8 +1,8 @@
 #pragma once
 #include <Str.h>
 
-struct parsed_tag;
+struct HtmlTagParsed;
 void init_title();
-Str process_title(struct parsed_tag* tag);
-Str process_n_title(struct parsed_tag* tag);
+Str process_title(struct HtmlTagParsed* tag);
+Str process_n_title(struct HtmlTagParsed* tag);
 void feed_title(char* str);

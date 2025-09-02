@@ -10,7 +10,7 @@ void init_title()
     pre_title = NULL;
 }
 
-Str process_title(struct parsed_tag* tag)
+Str process_title(struct HtmlTagParsed* tag)
 {
     if (pre_title)
         return 0;
@@ -18,7 +18,7 @@ Str process_title(struct parsed_tag* tag)
     return NULL;
 }
 
-Str process_n_title(struct parsed_tag* tag)
+Str process_n_title(struct HtmlTagParsed* tag)
 {
     Str tmp;
 

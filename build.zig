@@ -39,6 +39,7 @@ const w3m_srcs = [_][]const u8{
     "html_tag_info.c",
     "html_tag_attribute_info.c",
     "KeyValue.c",
+    "HtmlTagParsed.c",
 
     "ui.c",
     "LineEditor.c",
@@ -71,7 +72,6 @@ const w3m_srcs = [_][]const u8{
     "history.c",
 
     "anchor.c",
-    "parsetagx.c",
     "tagtable.c",
     "istream.c",
 
