@@ -684,11 +684,11 @@ void do_refill(struct table* tbl, int row, int col, int maxlimit)
                 }
             }
         } else
-            HTMLlineproc1(l->ptr, &h_env);
+            HTMLlineproc0(l->ptr, &h_env, true);
     }
     if (obuf.status != R_ST_NORMAL) {
         obuf.status = R_ST_EOL;
-        HTMLlineproc1("\n", &h_env);
+        HTMLlineproc0("\n", &h_env, true);
     }
     completeHTMLstream(&h_env, &obuf);
     flushline(&h_env, &obuf, 0, 2, h_env.limit);
@@ -1460,17 +1460,17 @@ make_caption(struct table* t, struct html_feed_environ* h_env)
         limit = h_env->limit;
     init_henv(&henv, &obuf, envs, MAX_ENV_LEVEL, newTextLineList(),
         limit, h_env->envs[h_env->envc].indent);
-    HTMLlineproc1("<center>", &henv);
-    HTMLlineproc0(t->caption->ptr, &henv, FALSE);
-    HTMLlineproc1("</center>", &henv);
+    HTMLlineproc0("<center>", &henv, true);
+    HTMLlineproc0(t->caption->ptr, &henv, false);
+    HTMLlineproc0("</center>", &henv, true);
 
     if (t->total_width < henv.maxlimit)
         t->total_width = henv.maxlimit;
     limit = h_env->limit;
     h_env->limit = t->total_width;
-    HTMLlineproc1("<center>", h_env);
+    HTMLlineproc0("<center>", h_env, true);
     HTMLlineproc0(t->caption->ptr, h_env, FALSE);
-    HTMLlineproc1("</center>", h_env);
+    HTMLlineproc0("</center>", h_env, true);
     h_env->limit = limit;
 }
 
@@ -1629,10 +1629,10 @@ void renderTable(struct table* t, int max_width, struct html_feed_environ* h_env
 
     make_caption(t, h_env);
 
-    HTMLlineproc1("<pre for_table>", h_env);
+    HTMLlineproc0("<pre for_table>", h_env, true);
     if (t->id != NULL) {
         idtag = Sprintf("<_id id=\"%s\">", html_quote((t->id)->ptr));
-        HTMLlineproc1(idtag->ptr, h_env);
+        HTMLlineproc0(idtag->ptr, h_env, true);
     }
     switch (t->border_mode) {
     case BORDER_THIN:
@@ -1732,7 +1732,7 @@ void renderTable(struct table* t, int max_width, struct html_feed_environ* h_env
         t->total_width = 1;
         push_render_image(renderbuf, 1, t->total_width, h_env);
     }
-    HTMLlineproc1("</pre>", h_env);
+    HTMLlineproc0("</pre>", h_env, true);
 }
 
 #ifdef TABLE_NO_COMPACT

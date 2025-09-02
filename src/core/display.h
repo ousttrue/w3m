@@ -21,6 +21,9 @@ extern double pixel_per_line;
 extern int pixel_per_line_i;
 extern int set_pixel_per_line;
 
+#define REAL_WIDTH(w, limit) (((w) >= 0) ? (int)((w) / pixel_per_char) : -(w) * (limit) / 100)
+#define RELATIVE_WIDTH(w) (((w) >= 0) ? (int)((w) / pixel_per_char) : (w))
+
 struct _Buffer;
 void bufToScreen(struct UI ui, struct _Buffer* buf);
 void drawAnchorCursor(struct UI ui, struct _Buffer* buf);

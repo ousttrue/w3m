@@ -41,9 +41,6 @@ extern int REV_LB[];
  * Macros.
  */
 
-#define RELATIVE_WIDTH(w) (((w) >= 0) ? (int)((w) / pixel_per_char) : (w))
-#define REAL_WIDTH(w, limit) (((w) >= 0) ? (int)((w) / pixel_per_char) : -(w) * (limit) / 100)
-
 /* state of token scanning finite state machine */
 #define R_ST_NORMAL 0 /* normal */
 #define R_ST_TAG0 1 /* within tag, just after < */
@@ -78,7 +75,6 @@ extern int REV_LB[];
  * Globals.
  */
 
-global int IndentIncr init(4);
 global int ShowEffect init(TRUE);
 #define PAGER_MAX_LINE 10000 /* Maximum line kept as pager */
 global int PagerMax init(PAGER_MAX_LINE);
@@ -145,10 +141,6 @@ global char* DirBufferCommand init("file:///$LIB/dirlist" CGI_EXTENSION);
 global int UseDictCommand init(TRUE);
 global char* DictCommand init("file:///$LIB/w3mdict" CGI_EXTENSION);
 global int ignore_null_img_alt init(TRUE);
-#define DISPLAY_INS_DEL_SIMPLE 0
-#define DISPLAY_INS_DEL_NORMAL 1
-#define DISPLAY_INS_DEL_FONTIFY 2
-global int displayInsDel init(DISPLAY_INS_DEL_NORMAL);
 global int FoldTextarea init(FALSE);
 #define DEFAULT_URL_EMPTY 0
 #define DEFAULT_URL_CURRENT 1
@@ -170,9 +162,6 @@ global char SearchConv init(TRUE);
 global char SimplePreserveSpace init(FALSE);
 
 global char UseAltEntity init(FALSE);
-global char DisplayBorders init(FALSE);
-extern int symbol_width;
-extern int symbol_width0;
 global int no_rc_dir init(FALSE);
 global char* rc_dir init(NULL);
 global char* param_tmp_dir init(NULL);
@@ -195,7 +184,6 @@ global TextList* Cookie_reject_domains;
 global TextList* Cookie_accept_domains;
 global TextList* Cookie_avoid_wrong_number_of_dots_domains;
 
-global int view_unseenobject init(FALSE);
 
 global int is_redisplay init(FALSE);
 global int clear_buffer init(TRUE);

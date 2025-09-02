@@ -2,6 +2,9 @@
 #include "line.h"
 #include "textlist.h"
 
+extern int symbol_width;
+extern int symbol_width0;
+
 #if (defined(MESCHACH) && !defined(MATRIX))
 #define MATRIX
 #endif /* (defined(MESCHACH) && !defined(MATRIX)) */
@@ -17,6 +20,18 @@
 #define MAX_TABLE 20 /* maximum nest level of table */
 #define MAX_TABLE_N_LIMIT 2000
 #define MAX_TABLE_N 20 /* maximum number of table in same level */
+extern struct table* tables[MAX_TABLE];
+
+struct table_mode {
+    unsigned int pre_mode;
+    char indent_level;
+    char caption;
+    short nobr_offset;
+    char nobr_level;
+    short anchor_offset;
+    unsigned char end_tag;
+};
+extern struct table_mode table_mode[MAX_TABLE];
 
 #define MAXROW_LIMIT 32767
 #define MAXROW 50
@@ -120,16 +135,6 @@ struct table {
 #define TBLM_DEL RB_DEL
 #define TBLM_S RB_S
 #define TBLM_ANCHOR 0x1000000
-
-struct table_mode {
-    unsigned int pre_mode;
-    char indent_level;
-    char caption;
-    short nobr_offset;
-    char nobr_level;
-    short anchor_offset;
-    unsigned char end_tag;
-};
 
 struct table* newTable(void);
 void pushdata(struct table* t, int row, int col, char* data);

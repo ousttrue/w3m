@@ -6,6 +6,33 @@
 #include "HtmlTag.h"
 
 extern char DisableCenter;
+extern int IndentIncr;
+extern char DisplayBorders;
+extern int view_unseenobject;
+
+#define DISPLAY_INS_DEL_SIMPLE 0
+#define DISPLAY_INS_DEL_NORMAL 1
+#define DISPLAY_INS_DEL_FONTIFY 2
+extern int displayInsDel;
+struct html_feed_environ;
+int table_width(struct html_feed_environ* h_env, int table_level);
+extern int need_number;
+extern wc_ces meta_charset;
+
+// TODO
+extern int cur_hseq;
+extern int cur_iseq;
+Str getLinkNumberStr(int correction);
+extern wc_ces content_charset;
+char* checkContentType(struct _Buffer* buf);
+
+#define MAX_UL_LEVEL 9
+#define UL_SYMBOL(x) (N_GRAPH_SYMBOL + (x))
+#define UL_SYMBOL_DISC UL_SYMBOL(9)
+#define UL_SYMBOL_CIRCLE UL_SYMBOL(10)
+#define UL_SYMBOL_SQUARE UL_SYMBOL(11)
+#define HR_SYMBOL 26
+#define IMG_SYMBOL UL_SYMBOL(12)
 
 struct cmdtable {
     const char* cmdname;
@@ -173,3 +200,12 @@ struct html_feed_environ {
 
 void flushline(struct html_feed_environ* h_env, struct readbuffer* obuf, int indent, int force, int width);
 void purgeline(struct html_feed_environ* h_env);
+void push_render_image(Str str, int width, int limit, struct html_feed_environ* h_env);
+void do_blankline(struct html_feed_environ* h_env, struct readbuffer* obuf, int indent, int indent_incr, int width);
+void save_fonteffect(struct html_feed_environ* h_env, struct readbuffer* obuf);
+void restore_fonteffect(struct html_feed_environ* h_env, struct readbuffer* obuf);
+int HTMLtagproc1(struct HtmlTagParsed* tag, struct html_feed_environ* h_env);
+void HTMLlineproc0(char* istr, struct html_feed_environ* h_env, bool internal);
+void init_henv(struct html_feed_environ*, struct readbuffer*, struct environment*, int, TextLineList*, int, int);
+void completeHTMLstream(struct html_feed_environ*, struct readbuffer*);
+void process_idattr(struct readbuffer* obuf, int cmd, struct HtmlTagParsed* tag);
