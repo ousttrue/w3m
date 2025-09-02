@@ -56,7 +56,6 @@
             RB_SET_ALIGN(obuf, (obuf)->flag_stack[--(obuf)->flag_sp]); \
     }
 
-
 struct input_alt_attr {
     int hseq;
     int fid;
@@ -79,6 +78,13 @@ typedef struct {
     short top_margin;
     short bottom_margin;
 } Breakpoint;
+
+#define in_bold fontstat[0]
+#define in_under fontstat[1]
+#define in_italic fontstat[2]
+#define in_strike fontstat[3]
+#define in_ins fontstat[4]
+#define in_stand fontstat[5]
 
 struct readbuffer {
     Str line;
@@ -106,3 +112,11 @@ struct readbuffer {
     short top_margin;
     short bottom_margin;
 };
+
+struct html_feed_environ;
+
+void push_link(int cmd, int offset, int pos);
+char* has_hidden_link(struct readbuffer* obuf, int cmd);
+void passthrough(struct readbuffer* obuf, char* str, int back);
+void flushline(struct html_feed_environ* h_env, struct readbuffer* obuf, int indent, int force, int width);
+void purgeline(struct html_feed_environ* h_env);

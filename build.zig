@@ -35,6 +35,7 @@ const w3m_srcs = [_][]const u8{
     "keymap.c",
     "progress.c",
     "html_title.c",
+    "readbuffer.c",
 
     "ui.c",
     "LineEditor.c",

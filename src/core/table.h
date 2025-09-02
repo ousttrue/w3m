@@ -134,7 +134,15 @@ struct table_mode {
 struct table* newTable(void);
 void pushdata(struct table* t, int row, int col, char* data);
 int visible_length(char* str);
+
+#define ALIGN_CENTER 0
+#define ALIGN_LEFT 1
+#define ALIGN_RIGHT 2
+#define ALIGN_MIDDLE 4
+#define ALIGN_TOP 5
+#define ALIGN_BOTTOM 6
 void align(TextLine* lbuf, int width, int mode);
+
 void print_item(struct table* t, int row, int col, int width, Str buf);
 void print_sep(struct table* t, int row, int type, int maxcol, Str buf);
 void do_refill(struct table* tbl, int row, int col, int maxlimit);

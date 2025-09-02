@@ -1,6 +1,10 @@
 #pragma aonce
 #include <Str.h>
 #include "textlist.h"
+#include "line.h"
+
+#define set_prevchar(x, y, n) Strcopy_charp_n((x), (y), (n))
+#define set_space_to_prevchar(x) Strcopy_charp_n((x), " ", 1)
 
 struct _Buffer;
 struct _ParsedURL;
@@ -25,7 +29,11 @@ struct html_feed_environ {
     int blank_lines;
 };
 
-
+void fillline(struct readbuffer* obuf, int indent);
+void set_breakpoint(struct readbuffer* obuf, int tag_length);
+void append_tags(struct readbuffer* obuf);
+void push_tag(struct readbuffer* obuf, char* cmdname, int cmd);
+void push_nchars(struct readbuffer* obuf, int width, char* str, int len, Lineprop mode);
 char* acceptableEncoding(void);
 int dir_exist(char* path);
 int is_html_type(char* type);
@@ -33,10 +41,7 @@ char* inputAnswer(char* prompt);
 struct _Buffer* loadGeneralFile(char* path, struct _ParsedURL* current, const char* referer, int flag, struct form_list* request);
 int is_boundary(unsigned char*, unsigned char*);
 void push_render_image(Str str, int width, int limit, struct html_feed_environ* h_env);
-void flushline(struct html_feed_environ* h_env, struct readbuffer* obuf,
-    int indent, int force, int width);
 void do_blankline(struct html_feed_environ* h_env, struct readbuffer* obuf, int indent, int indent_incr, int width);
-void purgeline(struct html_feed_environ* h_env);
 void save_fonteffect(struct html_feed_environ* h_env, struct readbuffer* obuf);
 void restore_fonteffect(struct html_feed_environ* h_env, struct readbuffer* obuf);
 Str process_img(struct parsed_tag* tag, int width);

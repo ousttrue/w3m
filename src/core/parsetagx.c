@@ -1,11 +1,10 @@
-/* $Id: parsetagx.c,v 1.18 2006/06/07 03:52:03 inu Exp $ */
 #include "fm.h"
 #include "myctype.h"
 #include "indep.h"
 #include "Str.h"
 #include "parsetagx.h"
 #include "hash.h"
-
+#include "table.h"
 #include "html.c"
 
 /* parse HTML tag */

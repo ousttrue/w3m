@@ -70,13 +70,6 @@ extern int REV_LB[];
 
 /* modes for align() */
 
-#define ALIGN_CENTER 0
-#define ALIGN_LEFT 1
-#define ALIGN_RIGHT 2
-#define ALIGN_MIDDLE 4
-#define ALIGN_TOP 5
-#define ALIGN_BOTTOM 6
-
 #define VALIGN_MIDDLE 0
 #define VALIGN_TOP 1
 #define VALIGN_BOTTOM 2
