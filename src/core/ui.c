@@ -260,10 +260,12 @@ void renderFrame(struct UI ui)
     struct TermEntry* t = getTermEntry();
     bool use_graphic = graph_ok(t);
 
-    int cursorRow = ui.vt->CurLine;
-    int cursorCol = ui.vt->CurColumn;
+    // int cursorRow = ui.vt->CurLine;
+    // int cursorCol = ui.vt->CurColumn;
 
     Buffer* buf = Currentbuf;
+    int cursorRow = buf->cursorY;
+    int cursorCol = buf->cursorX;
     drawAnchorCursor(ui, buf);
 
     Str msg = make_lastline_message(buf);
