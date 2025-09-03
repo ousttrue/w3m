@@ -68,9 +68,6 @@
 static char* guess_filename(char* file);
 static int _MoveFile(char* path1, char* path2);
 static FILE* lessopen_stream(char* path);
-static Buffer* loadcmdout(char* cmd,
-    Buffer* (*loadproc)(struct URLFile*, Buffer*),
-    Buffer* defaultbuf);
 
 static sigjmp_buf AbortLoading;
 
@@ -1967,25 +1964,6 @@ void saveBufferBody(Buffer* buf, FILE* f, int cont)
     while (l != NULL && l->real_linenumber == 0)
         l = l->next;
     _saveBuffer(buf, l, f, cont);
-}
-
-static Buffer*
-loadcmdout(char* cmd,
-    Buffer* (*loadproc)(struct URLFile*, Buffer*), Buffer* defaultbuf)
-{
-    FILE *f, *popen(const char*, const char*);
-    Buffer* buf;
-    struct URLFile uf;
-
-    if (cmd == NULL || *cmd == '\0')
-        return NULL;
-    f = popen(cmd, "r");
-    if (f == NULL)
-        return NULL;
-    init_stream(&uf, SCM_UNKNOWN, newFileStream(f, (void (*)())pclose));
-    buf = loadproc(&uf, defaultbuf);
-    UFclose(&uf);
-    return buf;
 }
 
 int save2tmp(struct URLFile uf, char* tmpf)
