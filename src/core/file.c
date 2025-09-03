@@ -295,7 +295,7 @@ xface2xpm(char* xface)
 }
 #endif
 
-void readHeader(struct URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
+void readHeader(struct URLFile* uf, Buffer* newBuf, ParsedURL* pu)
 {
     char *p, *q;
     char* emsg;
@@ -315,13 +315,6 @@ void readHeader(struct URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
     else
         http_response_code = 0;
 
-    if (thru && !newBuf->header_source
-        && !image_source) {
-        tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
-        src = fopen(tmpf, "w");
-        if (src)
-            newBuf->header_source = tmpf;
-    }
     while ((tmp = StrmyUFgets(uf)) && tmp->length) {
         if (w3m_reqlog) {
             FILE* ff;
@@ -363,42 +356,8 @@ void readHeader(struct URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
                 lineBuf2 = checkType(Strnew_charp_n(p, q - p), &propBuffer,
                     NULL);
                 Strcat(tmp, lineBuf2);
-                if (thru)
-                    addnewline(newBuf, lineBuf2->ptr, propBuffer, NULL,
-                        lineBuf2->length, -1, -1);
                 for (; *q && (*q == '\r' || *q == '\n'); q++)
                     ;
-            }
-            if (thru && activeImage && displayImage) {
-                Str src = NULL;
-                if (!strncasecmp(tmp->ptr, "X-Image-URL:", 12)) {
-                    tmpf = &tmp->ptr[12];
-                    SKIP_BLANKS(tmpf);
-                    src = Strnew_m_charp("<img src=\"", html_quote(tmpf),
-                        "\" alt=\"X-Image-URL\">", NULL);
-                }
-#ifdef USE_XFACE
-                else if (!strncasecmp(tmp->ptr, "X-Face:", 7)) {
-                    tmpf = xface2xpm(&tmp->ptr[7]);
-                    if (tmpf)
-                        src = Strnew_m_charp("<img src=\"file:",
-                            html_quote(tmpf),
-                            "\" alt=\"X-Face\"",
-                            " width=48 height=48>", NULL);
-                }
-#endif
-                if (src) {
-                    struct URLFile f;
-                    Line* l;
-                    wc_ces old_charset = newBuf->document_charset;
-                    init_stream(&f, SCM_LOCAL, newStrStream(src));
-                    loadHTMLstream(&f, newBuf, NULL, TRUE);
-                    UFclose(&f);
-                    for (l = newBuf->lastLine; l && l->real_linenumber;
-                        l = l->prev)
-                        l->real_linenumber = 0;
-                    newBuf->document_charset = old_charset;
-                }
             }
             lineBuf2 = tmp;
         }
@@ -564,8 +523,6 @@ void readHeader(struct URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
         Strfree(lineBuf2);
         lineBuf2 = NULL;
     }
-    if (thru)
-        addnewline(newBuf, "", propBuffer, NULL, 0, -1, -1);
     if (src)
         fclose(src);
 }
@@ -907,8 +864,7 @@ loadGeneralFile(char* path, ParsedURL* volatile current, const char* referer,
     char* volatile tpath;
     char* volatile t = "text/plain", *p, * volatile real_type = NULL;
     Buffer* volatile t_buf = NULL;
-    int volatile searchHeader = SearchHeader;
-    int volatile searchHeader_through = TRUE;
+    // int volatile searchHeader = SearchHeader;
     MySignalHandler (*volatile prevtrap)(int _dummy) = NULL;
     TextList* extra_header = newTextList();
     volatile Str uname = NULL;
@@ -1006,8 +962,7 @@ load_doc: {
     b = NULL;
     if (f.is_cgi) {
         /* local CGI */
-        searchHeader = TRUE;
-        searchHeader_through = FALSE;
+        // searchHeader = TRUE;
     }
     if (header_string)
         header_string = NULL;
@@ -1021,7 +976,7 @@ load_doc: {
 
         if (t_buf == NULL)
             t_buf = newBuffer();
-        readHeader(&f, t_buf, FALSE, &pu);
+        readHeader(&f, t_buf, &pu);
         if (((http_response_code >= 301 && http_response_code <= 303)
                 || http_response_code == 307)
             && (p = checkHeader(t_buf, "Location:")) != NULL
@@ -1120,49 +1075,51 @@ load_doc: {
         }
     } else if (pu.scheme == SCM_DATA) {
         t = f.guess_type;
-    } else if (searchHeader) {
-        searchHeader = SearchHeader = FALSE;
-        if (t_buf == NULL)
-            t_buf = newBuffer();
-        readHeader(&f, t_buf, searchHeader_through, &pu);
-        if (f.is_cgi && (p = checkHeader(t_buf, "Location:")) != NULL && checkRedirection(&pu)) {
-            /* document moved */
-            tpath = url_encode(remove_space(p), NULL, 0);
-            request = NULL;
-            UFclose(&f);
-            add_auth_cookie_flag = 0;
-            current = New(ParsedURL);
-            copyParsedURL(current, &pu);
-            t_buf = newBuffer();
-            t_buf->bufferprop |= BP_REDIRECTED;
-            status = HTST_NORMAL;
-            goto load_doc;
-        }
-#ifdef AUTH_DEBUG
-        if ((p = checkHeader(t_buf, "WWW-Authenticate:")) != NULL) {
-            /* Authentication needed */
-            struct http_auth hauth;
-            if (findAuthentication(&hauth, t_buf, "WWW-Authenticate:") != NULL
-                && (realm = get_auth_param(hauth.param, "realm")) != NULL) {
-                auth_pu = &pu;
-                getAuthCookie(&hauth, "Authorization:", extra_header,
-                    auth_pu, &hr, request, &uname, &pwd);
-                if (uname == NULL) {
-                    /* abort */
-                    TRAP_OFF;
-                    goto page_loaded;
-                }
-                UFclose(&f);
-                add_auth_cookie_flag = 1;
-                status = HTST_NORMAL;
-                goto load_doc;
-            }
-        }
-#endif /* defined(AUTH_DEBUG) */
-        t = checkContentType(t_buf);
-        if (t == NULL)
-            t = "text/plain";
-    } else if (DefaultType) {
+    } 
+//     else if (searchHeader) {
+//         searchHeader = SearchHeader = FALSE;
+//         if (t_buf == NULL)
+//             t_buf = newBuffer();
+//         readHeader(&f, t_buf, searchHeader_through, &pu);
+//         if (f.is_cgi && (p = checkHeader(t_buf, "Location:")) != NULL && checkRedirection(&pu)) {
+//             /* document moved */
+//             tpath = url_encode(remove_space(p), NULL, 0);
+//             request = NULL;
+//             UFclose(&f);
+//             add_auth_cookie_flag = 0;
+//             current = New(ParsedURL);
+//             copyParsedURL(current, &pu);
+//             t_buf = newBuffer();
+//             t_buf->bufferprop |= BP_REDIRECTED;
+//             status = HTST_NORMAL;
+//             goto load_doc;
+//         }
+// #ifdef AUTH_DEBUG
+//         if ((p = checkHeader(t_buf, "WWW-Authenticate:")) != NULL) {
+//             /* Authentication needed */
+//             struct http_auth hauth;
+//             if (findAuthentication(&hauth, t_buf, "WWW-Authenticate:") != NULL
+//                 && (realm = get_auth_param(hauth.param, "realm")) != NULL) {
+//                 auth_pu = &pu;
+//                 getAuthCookie(&hauth, "Authorization:", extra_header,
+//                     auth_pu, &hr, request, &uname, &pwd);
+//                 if (uname == NULL) {
+//                     /* abort */
+//                     TRAP_OFF;
+//                     goto page_loaded;
+//                 }
+//                 UFclose(&f);
+//                 add_auth_cookie_flag = 1;
+//                 status = HTST_NORMAL;
+//                 goto load_doc;
+//             }
+//         }
+// #endif /* defined(AUTH_DEBUG) */
+//         t = checkContentType(t_buf);
+//         if (t == NULL)
+//             t = "text/plain";
+//     } 
+    else if (DefaultType) {
         t = DefaultType;
         DefaultType = NULL;
     } else {
@@ -1989,7 +1946,7 @@ void loadHTMLstream(struct URLFile* f, Buffer* newBuf, FILE* src, int internal)
     }
 
     struct UI ui = getUI();
-    loadHTML(html, WC_CES_SHIFT_JIS/*WC_CES_US_ASCII*/, ui.vt->COLS, ui.use_graphic, internal, newBuf);
+    loadHTML(html, WC_CES_SHIFT_JIS /*WC_CES_US_ASCII*/, ui.vt->COLS, ui.use_graphic, internal, newBuf);
     //     struct TermEntry* t = getTermEntry();
     //     struct environment envs[MAX_ENV_LEVEL];
     //     long long linelen = 0;

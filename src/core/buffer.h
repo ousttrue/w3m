@@ -103,8 +103,6 @@ typedef struct _Buffer {
     char* edit;
     struct mailcap* mailcap;
     char* mailcap_source;
-    char* header_source;
-    char search_header;
     char* ssl_certificate;
     char image_flag;
     char image_loaded;

@@ -3178,8 +3178,6 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
     buf->real_scheme = Currentbuf->real_scheme;
     buf->filename = Currentbuf->filename;
     buf->sourcefile = Currentbuf->sourcefile;
-    buf->header_source = Currentbuf->header_source;
-    buf->search_header = Currentbuf->search_header;
     buf->document_charset = Currentbuf->document_charset;
     buf->clone = Currentbuf->clone;
     (*buf->clone)++;
@@ -3234,11 +3232,11 @@ DEFUN(reload, RELOAD, "Load current document anew")
     old_charset = DocumentCharset;
     if (Currentbuf->document_charset != WC_CES_US_ASCII)
         DocumentCharset = Currentbuf->document_charset;
-    SearchHeader = Currentbuf->search_header;
+    // SearchHeader = Currentbuf->search_header;
     DefaultType = Currentbuf->real_type;
     buf = loadGeneralFile(url->ptr, NULL, NO_REFERER, RG_NOCACHE, request);
     DocumentCharset = old_charset;
-    SearchHeader = FALSE;
+    // SearchHeader = FALSE;
     DefaultType = NULL;
 
     if (multipart)
@@ -3259,7 +3257,6 @@ DEFUN(reload, RELOAD, "Load current document anew")
         if (Currentbuf != buf)
             Firstbuf = deleteBuffer(Firstbuf, buf);
     }
-    Currentbuf->search_header = sbuf.search_header;
     Currentbuf->form_submit = sbuf.form_submit;
     if (Currentbuf->firstLine) {
         // COPY_BUFROOT(Currentbuf, &sbuf);

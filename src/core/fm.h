@@ -56,7 +56,7 @@ global int ShowEffect init(TRUE);
 #define PAGER_MAX_LINE 10000 /* Maximum line kept as pager */
 global int PagerMax init(PAGER_MAX_LINE);
 
-global char SearchHeader init(FALSE);
+// global char SearchHeader init(FALSE);
 global char* DefaultType init(NULL);
 global char TargetSelf init(FALSE);
 global char PermitSaveToPipe init(FALSE);

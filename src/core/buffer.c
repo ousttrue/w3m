@@ -85,8 +85,6 @@ void discardBuffer(Buffer* buf)
         if (buf->real_scheme != SCM_LOCAL)
             unlink(buf->sourcefile);
     }
-    if (buf->header_source)
-        unlink(buf->header_source);
     if (buf->mailcap_source)
         unlink(buf->mailcap_source);
 }
@@ -457,19 +455,6 @@ void reshapeBuffer(Buffer* buf, int cols)
         buf->hmarklist->nmark = 0;
     if (buf->imarklist)
         buf->imarklist->nmark = 0;
-
-    if (buf->header_source) {
-        if (buf->currentURL.scheme != SCM_LOCAL || buf->mailcap_source || !strcmp(buf->currentURL.file, "-")) {
-            struct URLFile h;
-            init_stream(&h, SCM_LOCAL, NULL);
-            examineFile(buf->header_source, &h);
-            if (h.stream) {
-                readHeader(&h, buf, TRUE, NULL);
-                UFclose(&h);
-            }
-        } else if (buf->search_header) /* -m option */
-            readHeader(&f, buf, TRUE, NULL);
-    }
 
     WcOption.auto_detect = WC_OPT_DETECT_OFF;
     UseContentCharset = FALSE;
