@@ -1479,7 +1479,7 @@ DEFUN(editBf, EDIT, "Edit local source")
     }
     if (Currentbuf->edit)
         cmd = unquote_mailcap(Currentbuf->edit, Currentbuf->real_type, fn,
-            checkHeader(Currentbuf, "Content-Type:"), NULL);
+            getHttpHeaderValue(Currentbuf->document_header, "Content-Type:"), NULL);
     else
         cmd = myEditor(Editor, shell_quote(fn),
             cur_real_linenumber(Currentbuf));

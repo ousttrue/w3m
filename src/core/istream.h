@@ -152,7 +152,7 @@ struct URLFile {
     char* ext;
     enum CompressionTyep compression;
     int content_encoding;
-    char* guess_type;
+    const char* guess_type;
     char* ssl_certificate;
     char* url;
     time_t modtime;
@@ -188,7 +188,7 @@ struct URLOption {
 
 struct HttpRequest;
 struct form_list;
-struct URLFile openURL(char* url, ParsedURL* pu, ParsedURL* current,
+struct URLFile openURL(const char* url, ParsedURL* pu, ParsedURL* current,
     struct URLOption* option, struct form_list* request,
     TextList* extra_header, struct URLFile* ouf,
     struct HttpRequest* hr, unsigned char* status);

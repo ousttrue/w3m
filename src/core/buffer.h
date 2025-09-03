@@ -61,7 +61,7 @@ typedef struct _BufferPos {
 
 typedef struct _Buffer {
     char* filename;
-    char* buffername;
+    const char* buffername;
     Line* firstLine;
     Line* topLine;
     Line* currentLine;
@@ -70,7 +70,7 @@ typedef struct _Buffer {
     struct _Buffer* linkBuffer[MAX_LB];
     short width;
     char* type;
-    char* real_type;
+    const char* real_type;
     int allLine;
     enum BufferProperty bufferprop;
     int currentColumn;

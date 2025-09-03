@@ -1578,7 +1578,7 @@ get_zone(char** s, int* z_hour, int* z_min)
 
 /* RFC 1123 or RFC 850 or ANSI C asctime() format string -> time_t */
 time_t
-mymktime(char* timestr)
+mymktime(const char* timestr)
 {
     char* s;
     int day, mon, year, hour, min, sec, z_hour = 0, z_min = 0;

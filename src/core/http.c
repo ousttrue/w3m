@@ -19,6 +19,7 @@
 #include <myctype.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 #include <strings.h>
 
 int override_user_agent = false;
@@ -475,4 +476,52 @@ struct HttpResponse readHttpResponse(struct URLFile* uf, ParsedURL* pu)
     }
 
     return response;
+}
+
+const char* getHttpHeaderValue(TextList* document_header, const char* field)
+{
+    if (!field) {
+        return NULL;
+    }
+    if (!document_header) {
+        return NULL;
+    }
+
+    int len = strlen(field);
+    for (TextListItem* i = document_header->first; i != NULL; i = i->next) {
+        if (!strncasecmp(i->ptr, field, len)) {
+            char* p = i->ptr + len;
+            return remove_space(p);
+        }
+    }
+    return NULL;
+}
+
+struct ContentTypeCharset getContentType(TextList* document_header)
+{
+    const char* p = getHttpHeaderValue(document_header, "Content-Type:");
+    if (!p) {
+        return (struct ContentTypeCharset) { 0 };
+    }
+    Str r = Strnew();
+    while (*p && *p != ';' && !IS_SPACE(*p))
+        Strcat_char(r, *p++);
+
+    struct ContentTypeCharset content_type_charset = {
+        .content_type = r->ptr,
+        .charset = 0
+    };
+
+    if ((p = strcasestr(p, "charset")) != NULL) {
+        p += 7;
+        SKIP_BLANKS(p);
+        if (*p == '=') {
+            p++;
+            SKIP_BLANKS(p);
+            if (*p == '"')
+                p++;
+            content_type_charset.charset = wc_guess_charset(p, 0);
+        }
+    }
+    return content_type_charset;
 }

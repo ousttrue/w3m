@@ -72,7 +72,7 @@ wc_codepage(int n)
 }
 
 wc_ces
-wc_guess_charset(char *charset, wc_ces orig)
+wc_guess_charset(const char *charset, wc_ces orig)
 {
     wc_ces guess;
 

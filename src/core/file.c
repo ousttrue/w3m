@@ -94,7 +94,7 @@ loadSomething(struct URLFile* f,
         return NULL;
 
     if (buf->buffername == NULL || buf->buffername[0] == '\0') {
-        buf->buffername = checkHeader(buf, "Subject:");
+        buf->buffername = getHttpHeaderValue(buf->document_header, "Subject:");
         if (buf->buffername == NULL && buf->filename != NULL)
             buf->buffername = conv_from_system(lastFileName(buf->filename));
     }
@@ -140,7 +140,7 @@ is_plain_text_type(char* type)
     return ((type && strcasecmp(type, "text/plain") == 0) || (is_text_type(type) && !is_dump_text_type(type)));
 }
 
-int is_html_type(char* type)
+int is_html_type(const char* type)
 {
     return (type && (strcasecmp(type, "text/html") == 0 || strcasecmp(type, "application/xhtml+xml") == 0));
 }
@@ -241,24 +241,6 @@ xface2xpm(char* xface)
     return cache->file;
 }
 #endif
-
-char* checkHeader(Buffer* buf, char* field)
-{
-    int len;
-    TextListItem* i;
-    char* p;
-
-    if (buf == NULL || field == NULL || buf->document_header == NULL)
-        return NULL;
-    len = strlen(field);
-    for (i = buf->document_header->first; i != NULL; i = i->next) {
-        if (!strncasecmp(i->ptr, field, len)) {
-            p = i->ptr + len;
-            return remove_space(p);
-        }
-    }
-    return NULL;
-}
 
 static int
 skip_auth_token(char** pp)
@@ -568,30 +550,32 @@ checkRedirection(ParsedURL* pu)
  * loadGeneralFile: load file to buffer
  */
 Buffer*
-loadGeneralFile(char* path, ParsedURL* volatile current, const char* referer,
-    int flag, FormList* volatile request, bool do_download)
+loadGeneralFile(char* path, ParsedURL* current, const char* referer,
+    int flag, FormList* request, bool do_download)
 {
-    struct URLFile f, *volatile of = NULL;
+    struct URLFile f, *of = NULL;
     ParsedURL pu;
     Buffer* b = NULL;
-    Buffer* (*volatile proc)(struct URLFile*, Buffer*) = loadBuffer;
-    char* volatile tpath;
-    char* volatile t = "text/plain", *p, * volatile real_type = NULL;
-    Buffer* volatile t_buf = NULL;
-    // int volatile searchHeader = SearchHeader;
-    MySignalHandler (*volatile prevtrap)(int _dummy) = NULL;
+    Buffer* (*proc)(struct URLFile*, Buffer*) = loadBuffer;
+    const char* tpath;
+    const char* t = "text/plain";
+    const char* p;
+    const char* real_type = NULL;
+    Buffer* t_buf = NULL;
+    // int  searchHeader = SearchHeader;
+    MySignalHandler (*prevtrap)(int _dummy) = NULL;
     TextList* extra_header = newTextList();
-    volatile Str uname = NULL;
-    volatile Str pwd = NULL;
-    volatile Str realm = NULL;
-    int volatile add_auth_cookie_flag;
+    Str uname = NULL;
+    Str pwd = NULL;
+    Str realm = NULL;
+    int add_auth_cookie_flag;
     unsigned char status = HTST_NORMAL;
     struct URLOption url_option;
     Str tmp;
-    Str volatile page = NULL;
+    Str page = NULL;
     wc_ces charset = WC_CES_US_ASCII;
     struct HttpRequest hr;
-    ParsedURL* volatile auth_pu;
+    ParsedURL* auth_pu;
 
     tpath = path;
     prevtrap = NULL;
@@ -695,7 +679,7 @@ load_doc: {
         t_buf->document_header = response.headers;
         if (((response.status_code >= 301 && response.status_code <= 303)
                 || response.status_code == 307)
-            && (p = checkHeader(t_buf, "Location:")) != NULL
+            && (p = (char*)getHttpHeaderValue(t_buf->document_header, "Location:")) != NULL
             && checkRedirection(&pu)) {
             /* document moved */
             /* 301: Moved Permanently */
@@ -712,7 +696,8 @@ load_doc: {
             status = HTST_NORMAL;
             goto load_doc;
         }
-        t = checkContentType(t_buf);
+        struct ContentTypeCharset cc = getContentType(t_buf->document_header);
+        t = cc.content_type;
         if (t == NULL && pu.file != NULL) {
             if (!((response.status_code >= 400 && response.status_code <= 407) || (response.status_code >= 500 && response.status_code <= 505)))
                 t = guessContentType(pu.file);
@@ -725,7 +710,7 @@ load_doc: {
                 0);
             add_auth_cookie_flag = 0;
         }
-        if ((p = checkHeader(t_buf, "WWW-Authenticate:")) != NULL && response.status_code == 401) {
+        if ((p = getHttpHeaderValue(t_buf->document_header, "WWW-Authenticate:")) != NULL && response.status_code == 401) {
             /* Authentication needed */
             struct http_auth hauth;
             if (findAuthentication(&hauth, t_buf, "WWW-Authenticate:") != NULL
@@ -744,7 +729,7 @@ load_doc: {
                 goto load_doc;
             }
         }
-        if ((p = checkHeader(t_buf, "Proxy-Authenticate:")) != NULL && response.status_code == 407) {
+        if ((p = getHttpHeaderValue(t_buf->document_header, "Proxy-Authenticate:")) != NULL && response.status_code == 407) {
             /* Authentication needed */
             struct http_auth hauth;
             if (findAuthentication(&hauth, t_buf, "Proxy-Authenticate:")
@@ -773,7 +758,7 @@ load_doc: {
             goto load_doc;
         }
 
-        f.modtime = mymktime(checkHeader(t_buf, "Last-Modified:"));
+        f.modtime = mymktime(getHttpHeaderValue(t_buf->document_header, "Last-Modified:"));
     } else if (pu.scheme == SCM_FTP) {
         check_compression(&f, path);
         if (f.compression != CMP_NOCOMPRESS) {
@@ -889,7 +874,7 @@ page_loaded:
     proc = loadBuffer;
 
     current_content_length = 0;
-    if ((p = checkHeader(t_buf, "Content-Length:")) != NULL)
+    if ((p = getHttpHeaderValue(t_buf->document_header, "Content-Length:")) != NULL)
         current_content_length = strtoclen(p);
     if (do_download) {
         /* download only */
@@ -954,7 +939,7 @@ page_loaded:
 
     // if (proc == DO_EXTERNAL) {
     //     b = doExternal(f, t, t_buf);
-    // } else 
+    // } else
     {
         b = loadSomething(&f, proc, t_buf);
     }
@@ -1672,11 +1657,11 @@ void loadHTMLstream(struct URLFile* f, Buffer* newBuf, FILE* src, int internal)
     //     long long trbyte = 0;
     //     Str lineBuf2 = Strnew();
     //     wc_ces charset = WC_CES_US_ASCII;
-    //     wc_ces volatile doc_charset = DocumentCharset;
+    //     wc_ces  doc_charset = DocumentCharset;
     //     struct html_feed_environ htmlenv1;
     //     struct readbuffer obuf;
-    //     int volatile image_flag;
-    //     MySignalHandler (*volatile prevtrap)(int _dummy) = NULL;
+    //     int  image_flag;
+    //     MySignalHandler (* prevtrap)(int _dummy) = NULL;
     //
     //     if (graph_ok(t)) {
     //         symbol_width = symbol_width0 = 1;
@@ -1762,7 +1747,7 @@ Buffer*
 loadHTMLString(Str page)
 {
     struct URLFile f;
-    MySignalHandler (*volatile prevtrap)(int _dummy) = NULL;
+    MySignalHandler (*prevtrap)(int _dummy) = NULL;
     Buffer* newBuf;
 
     init_stream(&f, SCM_LOCAL, newStrStream(page));
@@ -1796,19 +1781,19 @@ loadHTMLString(Str page)
  * loadBuffer: read file and make new buffer
  */
 Buffer*
-loadBuffer(struct URLFile* uf, Buffer* volatile newBuf)
+loadBuffer(struct URLFile* uf, Buffer* newBuf)
 {
-    FILE* volatile src = NULL;
+    FILE* src = NULL;
     wc_ces charset = WC_CES_US_ASCII;
-    wc_ces volatile doc_charset = DocumentCharset;
+    wc_ces doc_charset = DocumentCharset;
     Str lineBuf2;
-    volatile char pre_lbuf = '\0';
+    char pre_lbuf = '\0';
     int nlines;
     Str tmpf;
     long long linelen = 0, trbyte = 0;
     Lineprop* propBuffer = NULL;
     Linecolor* colorBuffer = NULL;
-    MySignalHandler (*volatile prevtrap)(int _dummy) = NULL;
+    MySignalHandler (*prevtrap)(int _dummy) = NULL;
 
     if (newBuf == NULL)
         newBuf = newBuffer();
@@ -1872,7 +1857,7 @@ loadImageBuffer(struct URLFile* uf, Buffer* newBuf)
     Str tmp, tmpf;
     FILE* src = NULL;
     struct URLFile f;
-    MySignalHandler (*volatile prevtrap)(int _dummy) = NULL;
+    MySignalHandler (*prevtrap)(int _dummy) = NULL;
     struct stat st;
     const ParsedURL* pu = newBuf ? &newBuf->currentURL : NULL;
 
@@ -2007,10 +1992,10 @@ int save2tmp(struct URLFile uf, char* tmpf)
 {
     FILE* ff;
     long long linelen = 0, trbyte = 0;
-    MySignalHandler (*volatile prevtrap)(int _dummy) = NULL;
+    MySignalHandler (*prevtrap)(int _dummy) = NULL;
     static sigjmp_buf env_bak;
-    volatile int retval = 0;
-    char* volatile buf = NULL;
+    int retval = 0;
+    char* buf = NULL;
 
     ff = fopen(tmpf, "wb");
     if (ff == NULL) {
@@ -2427,9 +2412,9 @@ char* guess_save_name(Buffer* buf, char* path)
     if (buf && buf->document_header) {
         Str name = NULL;
         char *p, *q;
-        if ((p = checkHeader(buf, "Content-Disposition:")) != NULL && (q = strcasestr(p, "filename")) != NULL && (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') && matchattr(q, "filename", 8, &name))
+        if ((p = getHttpHeaderValue(buf->document_header, "Content-Disposition:")) != NULL && (q = strcasestr(p, "filename")) != NULL && (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') && matchattr(q, "filename", 8, &name))
             path = name->ptr;
-        else if ((p = checkHeader(buf, "Content-Type:")) != NULL && (q = strcasestr(p, "name")) != NULL && (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') && matchattr(q, "name", 4, &name))
+        else if ((p = getHttpHeaderValue(buf->document_header, "Content-Type:")) != NULL && (q = strcasestr(p, "name")) != NULL && (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') && matchattr(q, "name", 4, &name))
             path = name->ptr;
     }
     return guess_filename(path);

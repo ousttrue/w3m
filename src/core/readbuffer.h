@@ -44,7 +44,6 @@ extern int cur_hseq;
 extern int cur_iseq;
 Str getLinkNumberStr(int correction);
 extern wc_ces content_charset;
-char* checkContentType(struct _Buffer* buf);
 
 #define MAX_UL_LEVEL 9
 #define UL_SYMBOL(x) (N_GRAPH_SYMBOL + (x))

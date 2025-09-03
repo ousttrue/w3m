@@ -12,7 +12,7 @@ struct form_list;
 struct HtmlTagParsed;
 
 int dir_exist(char* path);
-int is_html_type(char* type);
+int is_html_type(const char* type);
 struct _Buffer* loadGeneralFile(char* path, struct _ParsedURL* current, const char* referer, int flag, struct form_list* request, bool do_download);
 int is_boundary(unsigned char*, unsigned char*);
 
@@ -24,7 +24,6 @@ int _doFileCopy(char* tmpf, char* defstr, int download);
 int doFileMove(char* tmpf, char* defstr);
 int checkCopyFile(char* path1, char* path2);
 int checkOverWrite(char* path);
-char* checkHeader(struct _Buffer* buf, char* field);
 char* guess_save_name(struct _Buffer* buf, char* file);
 
 struct URLFile;

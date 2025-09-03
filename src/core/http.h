@@ -1,6 +1,7 @@
 #pragma once
 #include <Str.h>
 #include "textlist.h"
+#include <wc.h>
 
 extern int override_user_agent;
 extern char* UserAgent;
@@ -57,3 +58,10 @@ struct HttpResponse {
 struct URLFile;
 struct HttpResponse readHttpResponse(struct URLFile* uf, struct _ParsedURL* pu);
 bool matchattr(const char* p, const char* attr, int len, Str* value);
+const char* getHttpHeaderValue(TextList* document_header, const char* field);
+
+struct ContentTypeCharset {
+    const char* content_type;
+    wc_ces charset;
+};
+struct ContentTypeCharset getContentType(TextList* document_header);

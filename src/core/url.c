@@ -720,7 +720,7 @@ void copyParsedURL(ParsedURL* p, const ParsedURL* q)
     p->query = ALLOC_STR(q->query);
 }
 
-void parseURL2(char* url, ParsedURL* pu, ParsedURL* current)
+void parseURL2(const char* url, ParsedURL* pu, ParsedURL* current)
 {
     char* p;
     Str tmp;
@@ -970,7 +970,7 @@ void init_stream(struct URLFile* uf, int scheme, InputStream stream)
 }
 
 struct URLFile
-openURL(char* url, ParsedURL* pu, ParsedURL* current,
+openURL(const char* url, ParsedURL* pu, ParsedURL* current,
     struct URLOption* option, FormList* request, TextList* extra_header,
     struct URLFile* ouf, struct HttpRequest* hr, unsigned char* status)
 {

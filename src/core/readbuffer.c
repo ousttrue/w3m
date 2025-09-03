@@ -872,30 +872,6 @@ int table_width(struct html_feed_environ* h_env, int table_level)
     return h_env->limit - h_env->envs[h_env->envc].indent;
 }
 
-char* checkContentType(Buffer* buf)
-{
-    char* p;
-    Str r;
-    p = checkHeader(buf, "Content-Type:");
-    if (p == NULL)
-        return NULL;
-    r = Strnew();
-    while (*p && *p != ';' && !IS_SPACE(*p))
-        Strcat_char(r, *p++);
-    if ((p = strcasestr(p, "charset")) != NULL) {
-        p += 7;
-        SKIP_BLANKS(p);
-        if (*p == '=') {
-            p++;
-            SKIP_BLANKS(p);
-            if (*p == '"')
-                p++;
-            content_charset = wc_guess_charset(p, 0);
-        }
-    }
-    return r->ptr;
-}
-
 int HTMLtagproc1(struct HtmlTagParsed* tag, struct html_feed_environ* h_env)
 {
     char *p, *q, *r;
