@@ -76,7 +76,7 @@ CommandFunc GlobalKeymap[128] = {
     shiftr,
     srchbak,
     /*  @       A       B       C       D       E       F       G        */
-    readsh,
+    nulcmd,
     nulcmd,
     backBf,
     nulcmd,

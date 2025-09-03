@@ -970,40 +970,6 @@ DEFUN(setEnv, SETENV, "Set environment variable")
     }
 }
 
-/* Execute shell command and load entire output to buffer */
-DEFUN(readsh, READ_SHELL, "Execute shell command and display output")
-{
-    Buffer* buf;
-    char* cmd;
-
-    CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    cmd = searchKeyData();
-    if (cmd == NULL || *cmd == '\0') {
-        cmd = inputLineHist(getUI(), "(read shell)!", "", IN_COMMAND, ShellHist);
-    }
-    if (cmd != NULL)
-        cmd = conv_to_system(cmd);
-    if (cmd == NULL || *cmd == '\0') {
-
-        return;
-    }
-    MySignalFunc prevtrap = mySignal(SIGINT, intTrap);
-    crmode();
-    buf = getshell(cmd);
-    mySignal(SIGINT, prevtrap);
-    term_raw();
-    if (buf == NULL) {
-        /* FIXME: gettextize? */
-        message(getUI(), MSG_INFO, "Execution failed");
-        return;
-    } else {
-        buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
-        if (buf->type == NULL)
-            buf->type = "text/plain";
-        pushBuffer(buf);
-    }
-}
-
 /* Execute shell command */
 DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output")
 {

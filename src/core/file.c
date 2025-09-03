@@ -2001,24 +2001,6 @@ loadcmdout(char* cmd,
     return buf;
 }
 
-/*
- * getshell: execute shell command and get the result into a buffer
- */
-Buffer*
-getshell(char* cmd)
-{
-    Buffer* buf;
-
-    buf = loadcmdout(cmd, loadBuffer, NULL);
-    if (buf == NULL)
-        return NULL;
-    buf->filename = cmd;
-    buf->buffername = Sprintf("%s %s", SHELLBUFFERNAME,
-        conv_from_system(cmd))
-                          ->ptr;
-    return buf;
-}
-
 int save2tmp(struct URLFile uf, char* tmpf)
 {
     FILE* ff;
