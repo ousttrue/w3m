@@ -174,7 +174,6 @@ struct _Buffer* loadHTMLBuffer(struct URLFile* f, struct _Buffer* newBuf);
 struct _Buffer* loadBuffer(struct URLFile* uf, struct _Buffer* newBuf);
 struct _Buffer* loadImageBuffer(struct URLFile* uf, struct _Buffer* newBuf);
 int save2tmp(struct URLFile uf, char* tmpf);
-struct _Buffer* doExternal(struct URLFile uf, char* type, struct _Buffer* defaultbuf);
 int doFileSave(struct URLFile uf, char* defstr);
 void init_stream(struct URLFile* uf, int scheme, InputStream stream);
 int checkSaveFile(InputStream stream, char* path);
