@@ -43,6 +43,7 @@ struct cookie {
 #define COO_EBADHOST (8 | COO_OVERRIDE_OK) /* dot in matched host name in FQDN (version 1 case 4) */
 #define COO_EPORT (9) /* Port match failed (version 1' case 5) */
 #define COO_EMAX COO_EPORT
+extern const char* violations[COO_EMAX];
 
 struct _ParsedURL;
 struct _Buffer;

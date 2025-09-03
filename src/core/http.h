@@ -13,6 +13,14 @@ extern int CrossOriginReferer;
 extern int use_cookie;
 extern int override_content_type;
 extern Str header_string;
+extern int accept_cookie;
+extern int show_cookie;
+enum AcceptBadCookieMode {
+    ACCEPT_BAD_COOKIE_DISCARD = 0,
+    ACCEPT_BAD_COOKIE_ACCEPT = 1,
+    ACCEPT_BAD_COOKIE_ASK = 2,
+};
+extern enum AcceptBadCookieMode accept_bad_cookie;
 
 #define NO_REFERER ((const char*)-1)
 
@@ -29,6 +37,7 @@ enum HttpRequestFlag {
 };
 
 struct form_list;
+
 struct HttpRequest {
     enum HttpMethod command;
     enum HttpRequestFlag flag;
@@ -37,6 +46,14 @@ struct HttpRequest {
 };
 struct _ParsedURL;
 
-Str HTTPrequestMethod(struct HttpRequest* hr);
-Str HTTPrequestURI(struct _ParsedURL* pu, struct HttpRequest* hr);
-Str HTTPrequest(struct _ParsedURL* pu, struct _ParsedURL* current, struct HttpRequest* hr, TextList* extra);
+Str getHttpRequestMethodStr(struct HttpRequest* hr);
+Str getHttpRequestURIStr(struct _ParsedURL* pu, struct HttpRequest* hr);
+Str getHttpRequestStr(struct _ParsedURL* pu, struct _ParsedURL* current, struct HttpRequest* hr, TextList* extra);
+
+struct HttpResponse {
+    int status_code;
+    TextList* headers;
+};
+struct URLFile;
+struct HttpResponse readHttpResponse(struct URLFile* uf, struct _ParsedURL* pu);
+bool matchattr(const char* p, const char* attr, int len, Str* value);

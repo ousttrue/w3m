@@ -1122,15 +1122,15 @@ retry:
             if (pu->scheme == SCM_HTTPS) {
                 if (*status == HTST_NORMAL) {
                     hr->command = HR_COMMAND_CONNECT;
-                    tmp = HTTPrequest(pu, current, hr, extra_header);
+                    tmp = getHttpRequestStr(pu, current, hr, extra_header);
                     *status = HTST_CONNECT;
                 } else {
                     hr->flag |= HR_FLAG_LOCAL;
-                    tmp = HTTPrequest(pu, current, hr, extra_header);
+                    tmp = getHttpRequestStr(pu, current, hr, extra_header);
                     *status = HTST_NORMAL;
                 }
             } else {
-                tmp = HTTPrequest(pu, current, hr, extra_header);
+                tmp = getHttpRequestStr(pu, current, hr, extra_header);
                 *status = HTST_NORMAL;
             }
         } else {
@@ -1147,7 +1147,7 @@ retry:
                 }
             }
             hr->flag |= HR_FLAG_LOCAL;
-            tmp = HTTPrequest(pu, current, hr, extra_header);
+            tmp = getHttpRequestStr(pu, current, hr, extra_header);
             *status = HTST_NORMAL;
         }
         if (pu->scheme == SCM_HTTPS) {

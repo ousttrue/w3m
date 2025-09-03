@@ -175,11 +175,9 @@ enum {
 Str AuthDigestCred(struct http_auth* ha, Str uname, Str pw, ParsedURL* pu,
     struct HttpRequest* hr, FormList* request)
 {
-    Str tmp, a1buf, a2buf, rd, s;
     unsigned char md5[MD5_DIGEST_LENGTH + 1];
-    Str uri = HTTPrequestURI(pu, hr);
+    Str uri = getHttpRequestURIStr(pu, hr);
     char nc[] = "00000001";
-    FILE* fp;
 
     Str algorithm = qstr_unquote(get_auth_param(ha->param, "algorithm"));
     Str nonce = qstr_unquote(get_auth_param(ha->param, "nonce"));
@@ -200,6 +198,8 @@ Str AuthDigestCred(struct http_auth* ha, Str uname, Str pw, ParsedURL* pu,
     cnonce = digest_hex(md5);
     cnonce_seed.r[3]++;
 
+    Str tmp, a1buf, a2buf, rd, s;
+    FILE* fp;
     if (qop) {
         char* p;
         size_t i;
@@ -254,7 +254,7 @@ Str AuthDigestCred(struct http_auth* ha, Str uname, Str pw, ParsedURL* pu,
     }
 
     /* A2 = Method ":" digest-uri-value */
-    tmp = Strnew_m_charp(HTTPrequestMethod(hr)->ptr, ":", uri->ptr, NULL);
+    tmp = Strnew_m_charp(getHttpRequestMethodStr(hr)->ptr, ":", uri->ptr, NULL);
     if (qop_i == QOP_AUTH_INT) {
         /*  A2 = Method ":" digest-uri-value ":" H(entity-body) */
         if (request && request->body) {

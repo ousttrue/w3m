@@ -1,10 +1,23 @@
 #include "http.h"
+#include "indep.h"
+#include "textlist.h"
+#include "ui.h"
 #include "version.h"
 #include "url.h"
 #include "rc.h"
 #include "cookie.h"
 #include "form.h"
+#include "line.h"
+#include "istream.h"
+#include "mimehead.h"
+#include "buffer_loader.h"
+#include "etc.h"
+#include "screen.h"
+#include "file.h"
+#include "keymap.h"
+#include <myctype.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include <strings.h>
 
 int override_user_agent = false;
@@ -18,8 +31,11 @@ int CrossOriginReferer = true;
 int use_cookie = true;
 int override_content_type = false;
 Str header_string = NULL;
+int accept_cookie = true;
+int show_cookie = false;
+enum AcceptBadCookieMode accept_bad_cookie = (ACCEPT_BAD_COOKIE_DISCARD);
 
-Str HTTPrequestMethod(struct HttpRequest* hr)
+Str getHttpRequestMethodStr(struct HttpRequest* hr)
 {
     switch (hr->command) {
     case HR_COMMAND_CONNECT:
@@ -37,7 +53,7 @@ Str HTTPrequestMethod(struct HttpRequest* hr)
     return NULL;
 }
 
-Str HTTPrequestURI(ParsedURL* pu, struct HttpRequest* hr)
+Str getHttpRequestURIStr(ParsedURL* pu, struct HttpRequest* hr)
 {
     Str tmp = Strnew();
     if (hr->command == HR_COMMAND_CONNECT) {
@@ -132,19 +148,17 @@ otherinfo(ParsedURL* target, ParsedURL* current, const char* referer)
     return s->ptr;
 }
 
-Str HTTPrequest(ParsedURL* pu, ParsedURL* current, struct HttpRequest* hr, TextList* extra)
+Str getHttpRequestStr(ParsedURL* pu, ParsedURL* current, struct HttpRequest* hr, TextList* extra)
 {
-    Str tmp;
-    TextListItem* i;
-    Str cookie;
-    tmp = HTTPrequestMethod(hr);
+    Str tmp = getHttpRequestMethodStr(hr);
     Strcat_charp(tmp, " ");
-    Strcat_charp(tmp, HTTPrequestURI(pu, hr)->ptr);
+    Strcat_charp(tmp, getHttpRequestURIStr(pu, hr)->ptr);
     Strcat_charp(tmp, " HTTP/1.0\r\n");
     if (hr->referer == NO_REFERER)
         Strcat_charp(tmp, otherinfo(pu, NULL, NULL));
     else
         Strcat_charp(tmp, otherinfo(pu, current, hr->referer));
+    TextListItem* i;
     if (extra != NULL)
         for (i = extra->first; i != NULL; i = i->next) {
             if (strncasecmp(i->ptr, "Authorization:",
@@ -163,6 +177,7 @@ Str HTTPrequest(ParsedURL* pu, ParsedURL* current, struct HttpRequest* hr, TextL
             Strcat_charp(tmp, i->ptr);
         }
 
+    Str cookie;
     if (hr->command != HR_COMMAND_CONNECT && use_cookie && (cookie = find_cookie(pu))) {
         Strcat_charp(tmp, "Cookie: ");
         Strcat(tmp, cookie);
@@ -201,4 +216,262 @@ Str HTTPrequest(ParsedURL* pu, ParsedURL* current, struct HttpRequest* hr, TextL
     fprintf(stderr, "HTTPrequest: [ %s ]\n\n", tmp->ptr);
 #endif /* DEBUG */
     return tmp;
+}
+
+bool matchattr(const char* p, const char* attr, int len, Str* value)
+{
+    char* q = NULL;
+    if (strncasecmp(p, attr, len) == 0) {
+        p += len;
+        SKIP_BLANKS(p);
+        if (value) {
+            *value = Strnew();
+            if (*p == '=') {
+                p++;
+                SKIP_BLANKS(p);
+                int quoted = 0;
+                while (!IS_ENDL(*p) && (quoted || *p != ';')) {
+                    if (!IS_SPACE(*p))
+                        q = p;
+                    if (*p == '"')
+                        quoted = (quoted) ? 0 : 1;
+                    else
+                        Strcat_char(*value, *p);
+                    p++;
+                }
+                if (q)
+                    Strshrink(*value, p - q - 1);
+            }
+            return 1;
+        } else {
+            if (IS_ENDT(*p)) {
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
+struct HttpResponse readHttpResponse(struct URLFile* uf, ParsedURL* pu)
+{
+    struct HttpResponse response = {
+        .headers = newTextList(),
+        .status_code = 0,
+    };
+    if (uf->scheme == SCM_HTTP || uf->scheme == SCM_HTTPS) {
+        response.status_code = -1;
+    }
+
+    wc_ces charset = WC_CES_US_ASCII;
+    Str lineBuf2 = NULL;
+    Str tmp;
+    while ((tmp = StrmyUFgets(uf)) && tmp->length) {
+        if (w3m_reqlog) {
+            FILE* ff;
+            ff = fopen(w3m_reqlog, "a");
+            if (ff) {
+                Strfputs(tmp, ff);
+                fclose(ff);
+            }
+        }
+        cleanup_line(tmp, HEADER_MODE);
+        if (tmp->ptr[0] == '\n' || tmp->ptr[0] == '\r' || tmp->ptr[0] == '\0') {
+            if (!lineBuf2)
+                /* there is no header */
+                break;
+            /* last header */
+        } else {
+            if (lineBuf2) {
+                Strcat(lineBuf2, tmp);
+            } else {
+                lineBuf2 = tmp;
+            }
+            int c = UFgetc(uf);
+            UFundogetc(uf);
+            if (c == ' ' || c == '\t')
+                /* header line is continued */
+                continue;
+            wc_ces mime_charset;
+            lineBuf2 = decodeMIME(lineBuf2, &mime_charset);
+            lineBuf2 = convertLine(NULL, lineBuf2, RAW_MODE,
+                mime_charset ? &mime_charset : &charset,
+                mime_charset ? mime_charset
+                             : DocumentCharset);
+            /* separated with line and stored */
+            tmp = Strnew_size(lineBuf2->length);
+            char* q;
+            for (char* p = lineBuf2->ptr; *p; p = q) {
+                for (q = p; *q && *q != '\r' && *q != '\n'; q++)
+                    ;
+                Lineprop* propBuffer;
+                lineBuf2 = checkType(Strnew_charp_n(p, q - p), &propBuffer, NULL);
+                Strcat(tmp, lineBuf2);
+                for (; *q && (*q == '\r' || *q == '\n'); q++)
+                    ;
+            }
+            lineBuf2 = tmp;
+        }
+
+        if ((uf->scheme == SCM_HTTP
+                || uf->scheme == SCM_HTTPS)
+            && response.status_code == -1) {
+            char* p = lineBuf2->ptr;
+            while (*p && !IS_SPACE(*p))
+                p++;
+            while (*p && IS_SPACE(*p))
+                p++;
+            response.status_code = atoi(p);
+
+            message(getUI(), MSG_INFO, lineBuf2->ptr);
+            // refresh(ttyWriter());
+        }
+        if (!strncasecmp(lineBuf2->ptr, "content-transfer-encoding:", 26)) {
+            char* p = lineBuf2->ptr + 26;
+            while (IS_SPACE(*p))
+                p++;
+            if (!strncasecmp(p, "base64", 6))
+                uf->encoding = ENC_BASE64;
+            else if (!strncasecmp(p, "quoted-printable", 16))
+                uf->encoding = ENC_QUOTE;
+            else if (!strncasecmp(p, "uuencode", 8) || !strncasecmp(p, "x-uuencode", 10))
+                uf->encoding = ENC_UUENCODE;
+            else
+                uf->encoding = ENC_7BIT;
+        } else if (!strncasecmp(lineBuf2->ptr, "content-encoding:", 17)) {
+            struct compression_decoder* d;
+            char* p = lineBuf2->ptr + 17;
+            while (IS_SPACE(*p))
+                p++;
+            set_compression(uf, p);
+            uf->content_encoding = uf->compression;
+        } else if (use_cookie && accept_cookie && pu && check_cookie_accept_domain(pu->host) && (!strncasecmp(lineBuf2->ptr, "Set-Cookie:", 11) || !strncasecmp(lineBuf2->ptr, "Set-Cookie2:", 12))) {
+            Str name = Strnew(), value = Strnew(), domain = NULL, path = NULL,
+                comment = NULL, commentURL = NULL, port = NULL, tmp2;
+            int version, quoted, flag = 0;
+            time_t expires = (time_t)-1;
+
+            char* q = NULL;
+            char* p;
+            if (lineBuf2->ptr[10] == '2') {
+                p = lineBuf2->ptr + 12;
+                version = 1;
+            } else {
+                p = lineBuf2->ptr + 11;
+                version = 0;
+            }
+            SKIP_BLANKS(p);
+            while (*p != '=' && !IS_ENDT(*p))
+                Strcat_char(name, *(p++));
+            Strremovetrailingspaces(name);
+            if (*p == '=') {
+                p++;
+                SKIP_BLANKS(p);
+                quoted = 0;
+                while (!IS_ENDL(*p) && (quoted || *p != ';')) {
+                    if (!IS_SPACE(*p))
+                        q = p;
+                    if (*p == '"')
+                        quoted = (quoted) ? 0 : 1;
+                    Strcat_char(value, *(p++));
+                }
+                if (q)
+                    Strshrink(value, p - q - 1);
+            }
+            while (*p == ';') {
+                p++;
+                SKIP_BLANKS(p);
+                if (matchattr(p, "expires", 7, &tmp2)) {
+                    /* version 0 */
+                    expires = mymktime(tmp2->ptr);
+                } else if (matchattr(p, "max-age", 7, &tmp2)) {
+                    /* XXX Is there any problem with max-age=0? (RFC 2109 ss. 4.2.1, 4.2.2 */
+                    expires = time(NULL) + atol(tmp2->ptr);
+                } else if (matchattr(p, "domain", 6, &tmp2)) {
+                    domain = tmp2;
+                } else if (matchattr(p, "path", 4, &tmp2)) {
+                    path = tmp2;
+                } else if (matchattr(p, "secure", 6, NULL)) {
+                    flag |= COO_SECURE;
+                } else if (matchattr(p, "comment", 7, &tmp2)) {
+                    comment = tmp2;
+                } else if (matchattr(p, "version", 7, &tmp2)) {
+                    version = atoi(tmp2->ptr);
+                } else if (matchattr(p, "port", 4, &tmp2)) {
+                    /* version 1, Set-Cookie2 */
+                    port = tmp2;
+                } else if (matchattr(p, "commentURL", 10, &tmp2)) {
+                    /* version 1, Set-Cookie2 */
+                    commentURL = tmp2;
+                } else if (matchattr(p, "discard", 7, NULL)) {
+                    /* version 1, Set-Cookie2 */
+                    flag |= COO_DISCARD;
+                }
+                quoted = 0;
+                while (!IS_ENDL(*p) && (quoted || *p != ';')) {
+                    if (*p == '"')
+                        quoted = (quoted) ? 0 : 1;
+                    p++;
+                }
+            }
+            if (pu && name->length > 0) {
+                int err;
+                if (show_cookie) {
+                    if (flag & COO_SECURE)
+                        message(getUI(), MSG_INFO, "Received a secured cookie");
+                    else
+                        message(getUI(), MSG_INFO, Sprintf("Received cookie: %s=%s", name->ptr, value->ptr)->ptr);
+                }
+                err = add_cookie(pu, name, value, expires, domain, path, flag,
+                    comment, version, port, commentURL);
+                if (err) {
+                    char* ans = (accept_bad_cookie == ACCEPT_BAD_COOKIE_ACCEPT)
+                        ? "y"
+                        : NULL;
+                    if ((err & COO_OVERRIDE_OK) && accept_bad_cookie == ACCEPT_BAD_COOKIE_ASK) {
+                        Str msg = Sprintf("Accept bad cookie from %s for %s?",
+                            pu->host,
+                            ((domain && domain->ptr)
+                                    ? domain->ptr
+                                    : "<localdomain>"));
+                        if (msg->length > getScreen()->COLS - 10)
+                            Strshrink(msg, msg->length - (getScreen()->COLS - 10));
+                        Strcat_charp(msg, " (y/n)");
+                        ans = inputAnswer(msg->ptr);
+                    }
+                    if (ans == NULL || TOLOWER(*ans) != 'y' || (err = add_cookie(pu, name, value, expires, domain, path, flag | COO_OVERRIDE, comment, version, port, commentURL))) {
+                        err = (err & ~COO_OVERRIDE_OK) - 1;
+                        char* emsg;
+                        if (err >= 0 && err < COO_EMAX)
+                            emsg = Sprintf("This cookie was rejected "
+                                           "to prevent security violation. [%s]",
+                                violations[err])
+                                       ->ptr;
+                        else
+                            emsg = "This cookie was rejected to prevent security violation.";
+                        if (show_cookie)
+                            message(getUI(), MSG_ERR, emsg);
+                    } else if (show_cookie)
+                        message(getUI(), MSG_INFO, Sprintf("Accepting invalid cookie: %s=%s", name->ptr, value->ptr)->ptr);
+                }
+            }
+        } else if (!strncasecmp(lineBuf2->ptr, "w3m-control:", 12) && uf->scheme == SCM_LOCAL_CGI) {
+            Str funcname = Strnew();
+
+            char* p = lineBuf2->ptr + 12;
+            SKIP_BLANKS(p);
+            while (*p && !IS_SPACE(*p))
+                Strcat_char(funcname, *(p++));
+            SKIP_BLANKS(p);
+            CommandFunc f = getFunc(funcname->ptr);
+            tmp = Strnew_charp(p);
+            Strchop(tmp);
+            // TODO:
+            // pushEvent(f, tmp->ptr);
+        }
+        pushText(response.headers, lineBuf2->ptr);
+        Strfree(lineBuf2);
+        lineBuf2 = NULL;
+    }
+
+    return response;
 }

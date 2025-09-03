@@ -146,12 +146,6 @@ global char* mkd_tmp_dir init(NULL);
 global char* config_file init(NULL);
 
 global int default_use_cookie init(TRUE);
-global int show_cookie init(FALSE);
-global int accept_cookie init(TRUE);
-#define ACCEPT_BAD_COOKIE_DISCARD 0
-#define ACCEPT_BAD_COOKIE_ACCEPT 1
-#define ACCEPT_BAD_COOKIE_ASK 2
-global int accept_bad_cookie init(ACCEPT_BAD_COOKIE_DISCARD);
 global char* cookie_reject_domains init(NULL);
 global char* cookie_accept_domains init(NULL);
 global char* cookie_avoid_wrong_number_of_dots init(NULL);

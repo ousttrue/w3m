@@ -24,6 +24,19 @@
 #include <strings.h>
 #include <time.h>
 
+// This array should be somewhere else
+const char* violations[COO_EMAX] = {
+    "internal error",
+    "tail match failed",
+    "wrong number of dots",
+    "RFC 2109 4.3.2 rule 1",
+    "RFC 2109 4.3.2 rule 2.1",
+    "RFC 2109 4.3.2 rule 2.2",
+    "RFC 2109 4.3.2 rule 3",
+    "RFC 2109 4.3.2 rule 4",
+    "RFC XXXX 4.3.2 rule 5"
+};
+
 static int is_saved = 1;
 
 #define contain_no_dots(p, ep) (total_dot_number((p), (ep), 1) == 0)

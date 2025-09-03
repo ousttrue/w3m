@@ -4,11 +4,10 @@
 #include "file.h"
 #include "indep.h"
 #include "myctype.h"
-#include "local.h"
 #include "hash.h"
 #include "url.h"
+#include "http.h"
 #include <stdio.h>
-#include <errno.h>
 #include <stdlib.h>
 #include <strings.h>
 #include <string.h>
