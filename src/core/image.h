@@ -4,6 +4,9 @@
 extern int activeImage;
 extern char* image_source;
 
+#define MAX_IMAGE 1000
+#define MAX_IMAGE_SIZE 2048
+
 #define INLINE_IMG_NONE 0
 #define INLINE_IMG_OSC5379 1
 #define INLINE_IMG_SIXEL 2

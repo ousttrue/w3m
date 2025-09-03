@@ -18,7 +18,6 @@
 #include "readbuffer.h"
 #include "etc.h"
 
-ParsedURL* cur_baseURL = NULL;
 wc_ces cur_document_charset = 0;
 
 #define MAX_INPUT_SIZE 80 /* TODO - max should be screen line length */

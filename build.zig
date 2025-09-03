@@ -41,6 +41,7 @@ const w3m_srcs = [_][]const u8{
     "KeyValue.c",
     "HtmlTagParsed.c",
     "compression.c",
+    "buffer_loader.c",
 
     "ui.c",
     "LineEditor.c",

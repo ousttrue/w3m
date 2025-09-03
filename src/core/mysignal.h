@@ -3,6 +3,11 @@
 
 extern bool TrapSignal;
 
+#define RETSIGTYPE void
+typedef RETSIGTYPE MySignalHandler;
+#define SIGNAL_ARG int _dummy /* XXX */
+#define SIGNAL_ARGLIST 0 /* XXX */
+
 #define TRAP_ON                                \
     if (TrapSignal) {                          \
         prevtrap = mySignal(SIGINT, KeyAbort); \

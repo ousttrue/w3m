@@ -15,9 +15,6 @@
 
 #define DEFUN(funcname, macroname, docstring) void funcname(void)
 
-#define MAX_IMAGE 1000
-#define MAX_IMAGE_SIZE 2048
-
 #ifdef FALSE
 #undef FALSE
 #endif
@@ -40,26 +37,6 @@ extern int REV_LB[];
 /*
  * Macros.
  */
-
-/* state of token scanning finite state machine */
-#define R_ST_NORMAL 0 /* normal */
-#define R_ST_TAG0 1 /* within tag, just after < */
-#define R_ST_TAG 2 /* within tag */
-#define R_ST_QUOTE 3 /* within single quote */
-#define R_ST_DQUOTE 4 /* within double quote */
-#define R_ST_EQL 5 /* = */
-#define R_ST_AMP 6 /* within ampersand quote */
-#define R_ST_EOL 7 /* end of file */
-#define R_ST_CMNT1 8 /* <!  */
-#define R_ST_CMNT2 9 /* <!- */
-#define R_ST_CMNT 10 /* within comment */
-#define R_ST_NCMNT1 11 /* comment - */
-#define R_ST_NCMNT2 12 /* comment -- */
-#define R_ST_NCMNT3 13 /* comment -- space */
-#define R_ST_IRRTAG 14 /* within irregular tag */
-#define R_ST_VALUE 15 /* within tag attribule value */
-
-#define ST_IS_REAL_TAG(s) ((s) == R_ST_TAG || (s) == R_ST_TAG0 || (s) == R_ST_EQL || (s) == R_ST_VALUE)
 
 /* is this '<' really means the beginning of a tag? */
 #define REALLY_THE_BEGINNING_OF_A_TAG(p) \
@@ -86,7 +63,6 @@ global char PermitSaveToPipe init(FALSE);
 global char DecodeCTE init(FALSE);
 global char AutoUncompress init(FALSE);
 global char PreserveTimestamp init(TRUE);
-global char MetaRefresh init(FALSE);
 
 global int CurrentKey;
 global char* CurrentKeyData;
@@ -99,7 +75,6 @@ global int nextpage_topline init(FALSE);
 global int displayLinkNumber init(FALSE);
 global int show_srch_str init(TRUE);
 global char* Imgdisplay init(IMGDISPLAY);
-global int autoImage init(TRUE);
 global int useExtImageViewer init(TRUE);
 global int maxLoadImage init(4);
 global int image_map_list init(TRUE);
@@ -159,7 +134,6 @@ global char* mailcap_files init(USER_MAILCAP ", " SYS_MAILCAP);
 
 global char ExtHalfdump init(FALSE);
 global char FollowLocale init(TRUE);
-global char UseContentCharset init(TRUE);
 global char SearchConv init(TRUE);
 global char SimplePreserveSpace init(FALSE);
 
@@ -197,14 +171,3 @@ global int FollowRedirection init(10);
 
 void w3m_exit(int i);
 
-#define AL_UNSET 0
-#define AL_EXPLICIT 1
-#define AL_IMPLICIT 2
-#define AL_IMPLICIT_ONCE 3
-
-typedef struct _AlarmEvent {
-    int sec;
-    short status;
-    int cmd;
-    void* data;
-} AlarmEvent;

@@ -1,4 +1,5 @@
 #include "readbuffer.h"
+#include "buffer_loader.h"
 #include "url.h"
 #include "HtmlTagParsed.h"
 #include "html_title.h"

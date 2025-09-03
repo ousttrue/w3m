@@ -3,9 +3,6 @@
 #include "textlist.h"
 #include "line.h"
 
-#define MAX_ENV_LEVEL 20
-#define MAX_INDENT_LEVEL 10
-
 #define set_prevchar(x, y, n) Strcopy_charp_n((x), (y), (n))
 #define set_space_to_prevchar(x) Strcopy_charp_n((x), " ", 1)
 
@@ -19,9 +16,6 @@ int is_html_type(char* type);
 char* inputAnswer(char* prompt);
 struct _Buffer* loadGeneralFile(char* path, struct _ParsedURL* current, const char* referer, int flag, struct form_list* request);
 int is_boundary(unsigned char*, unsigned char*);
-
-int getMetaRefreshParam(char* q, Str* refresh_uri);
-void HTMLlineproc2(struct _Buffer* buf, TextLineList* tl);
 
 struct _Buffer* loadHTMLString(Str page);
 void saveBuffer(struct _Buffer* buf, FILE* f, int cont);

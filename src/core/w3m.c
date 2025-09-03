@@ -1,4 +1,5 @@
 #include "w3m.h"
+#include "buffer_loader.h"
 #include "indep.h"
 #include "tmpfile.h"
 #include "istream.h"

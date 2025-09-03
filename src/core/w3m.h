@@ -6,6 +6,20 @@ struct KeyValue;
 struct _Buffer;
 struct Frame;
 
+enum AlarmStatus {
+    AL_UNSET = 0,
+    AL_EXPLICIT = 1,
+    AL_IMPLICIT = 2,
+    AL_IMPLICIT_ONCE = 3,
+};
+
+typedef struct _AlarmEvent {
+    int sec;
+    enum AlarmStatus status;
+    int cmd;
+    void* data;
+} AlarmEvent;
+
 void initialize();
 void fmInit();
 void fmTerm();

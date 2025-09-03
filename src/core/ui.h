@@ -7,7 +7,6 @@ extern int CurrentPid;
 extern wc_ces InnerCharset;
 extern wc_ces DisplayCharset;
 extern wc_ces SystemCharset;
-extern wc_ces DocumentCharset;
 extern wc_ces BookmarkCharset;
 extern int showLineNum;
 

@@ -14,11 +14,9 @@
 #include "screen.h"
 #include "ctrlcode.h"
 #include "istream.h"
+#include "buffer_loader.h"
 #include <strings.h>
 #include <unistd.h>
-
-char* NullLine = "";
-Lineprop NullProp[] = { 0 };
 
 /*
  * Buffer creation

@@ -106,7 +106,7 @@ extern int ISgetc(InputStream stream);
 extern int ISundogetc(InputStream stream);
 extern Str StrISgets2(InputStream stream, char crnl);
 #define StrISgets(stream) StrISgets2(stream, FALSE)
-#define StrmyISgets(stream) StrISgets2(stream, TRUE)
+#define StrmyISgets(stream) StrISgets2(stream, true)
 void ISgets_to_growbuf(InputStream stream, struct growbuf* gb, char crnl);
 #ifdef unused
 extern int ISread(InputStream stream, Str buf, int count);

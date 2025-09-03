@@ -157,11 +157,6 @@
 
 #define HAVE_SIGSETJMP 1
 
-#define RETSIGTYPE void
-typedef RETSIGTYPE MySignalHandler;
-#define SIGNAL_ARG int _dummy /* XXX */
-#define SIGNAL_ARGLIST 0 /* XXX */
-
 #ifndef HAVE_SRAND48
 #ifdef HAVE_SRANDOM
 #define srand48 srandom

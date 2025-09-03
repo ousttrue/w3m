@@ -1,5 +1,6 @@
 #include "etc.h"
 #include "istream.h"
+#include "readbuffer.h"
 #include "auth.h"
 #include "indep.h"
 #include "local.h"

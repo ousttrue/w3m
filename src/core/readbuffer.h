@@ -10,6 +10,26 @@ extern int IndentIncr;
 extern char DisplayBorders;
 extern int view_unseenobject;
 
+/* state of token scanning finite state machine */
+#define R_ST_NORMAL 0 /* normal */
+#define R_ST_TAG0 1 /* within tag, just after < */
+#define R_ST_TAG 2 /* within tag */
+#define R_ST_QUOTE 3 /* within single quote */
+#define R_ST_DQUOTE 4 /* within double quote */
+#define R_ST_EQL 5 /* = */
+#define R_ST_AMP 6 /* within ampersand quote */
+#define R_ST_EOL 7 /* end of file */
+#define R_ST_CMNT1 8 /* <!  */
+#define R_ST_CMNT2 9 /* <!- */
+#define R_ST_CMNT 10 /* within comment */
+#define R_ST_NCMNT1 11 /* comment - */
+#define R_ST_NCMNT2 12 /* comment -- */
+#define R_ST_NCMNT3 13 /* comment -- space */
+#define R_ST_IRRTAG 14 /* within irregular tag */
+#define R_ST_VALUE 15 /* within tag attribule value */
+
+#define ST_IS_REAL_TAG(s) ((s) == R_ST_TAG || (s) == R_ST_TAG0 || (s) == R_ST_EQL || (s) == R_ST_VALUE)
+
 #define DISPLAY_INS_DEL_SIMPLE 0
 #define DISPLAY_INS_DEL_NORMAL 1
 #define DISPLAY_INS_DEL_FONTIFY 2
@@ -176,6 +196,7 @@ char* has_hidden_link(struct readbuffer* obuf, enum HtmlTag cmd);
 void passthrough(struct readbuffer* obuf, char* str, int back);
 void set_breakpoint(struct readbuffer* obuf, int tag_length);
 
+#define MAX_ENV_LEVEL 20
 struct environment {
     unsigned char env;
     int type;
@@ -183,6 +204,7 @@ struct environment {
     char indent;
 };
 
+#define MAX_INDENT_LEVEL 10
 struct html_feed_environ {
     struct readbuffer* obuf;
     TextLineList* buf;

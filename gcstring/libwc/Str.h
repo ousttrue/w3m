@@ -35,9 +35,9 @@ void Strfree(Str);
 void Strcopy(Str, Str);
 void Strcopy_charp(Str, const char*);
 void Strcopy_charp_n(Str, const char*, int);
-void Strcat_charp_n(Str, const char*, int);
-void Strcat(Str, Str);
-void Strcat_charp(Str, const char*);
+void Strcat_charp_n(Str dst, const char*, int);
+void Strcat(Str dst, Str);
+void Strcat_charp(Str dst, const char*);
 void Strcat_m_charp(Str, ...);
 Str Strsubstr(Str, int, int);
 void Strinsert_char(Str, int, char);
@@ -79,4 +79,3 @@ void Strgrow(Str s);
 #define Strinsert(s, n, p) Strinsert_charp((s), (n), (p)->ptr)
 #define Strshrinkfirst(s, n) Strdelete((s), 0, (n))
 #define Strfputs(s, f) fwrite((s)->ptr, 1, (s)->length, (f))
-

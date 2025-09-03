@@ -1,4 +1,5 @@
 #include "rc.h"
+#include "buffer_loader.h"
 #include "KeyValue.h"
 #include "compression.h"
 #include "indep.h"
