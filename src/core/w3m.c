@@ -109,7 +109,7 @@ int prev_key = -1;
 void set_buffer_environ(Buffer*);
 static void save_buffer_position(Buffer* buf);
 
-static void _followForm(int);
+static void _followForm(int, bool);
 static void _nextA(int);
 static void _prevA(int);
 static int check_target = TRUE;
@@ -327,7 +327,7 @@ void fmTerm(void)
     vt_clrtoeolx(vt);
     // refresh(ttyWriter());
     if (activeImage)
-        loadImage(NULL, IMG_FLAG_STOP);
+        loadImage(NULL, IMG_FLAG_STOP, false);
     resetTerm();
     flush_tty();
     TerminalSet(NULL);
@@ -430,7 +430,7 @@ bool onFrame()
         Currentbuf->submit = NULL;
         gotoLine(Currentbuf, a->start.line);
         Currentbuf->pos = a->start.pos;
-        _followForm(TRUE);
+        _followForm(TRUE, false);
         return false;
     }
     /* event processing */
@@ -476,7 +476,7 @@ bool onFrame()
 
     mySignal(SIGWINCH, resize_hook);
     if (activeImage && displayImage && Currentbuf->img && !Currentbuf->image_loaded) {
-        loadImage(Currentbuf, IMG_FLAG_NEXT);
+        loadImage(Currentbuf, IMG_FLAG_NEXT, false);
         bufToScreen(getUI(), Currentbuf);
         renderFrame(getUI());
         // continue;
@@ -866,7 +866,7 @@ cmd_loadURL(char* url, ParsedURL* current, const char* referer, FormList* reques
         return;
 
     // refresh(ttyWriter());
-    buf = loadGeneralFile(url, current, referer, 0, request);
+    buf = loadGeneralFile(url, current, referer, 0, request, false);
     if (buf == NULL) {
         /* FIXME: gettextize? */
         char* emsg = Sprintf("Can't load %s", conv_from_system(url))->ptr;
@@ -1067,7 +1067,7 @@ cmd_loadfile(char* fn)
 {
     Buffer* buf;
 
-    buf = loadGeneralFile(file_to_url(fn), NULL, NO_REFERER, 0, NULL);
+    buf = loadGeneralFile(file_to_url(fn), NULL, NO_REFERER, 0, NULL, false);
     if (buf == NULL) {
         /* FIXME: gettextize? */
         char* emsg = Sprintf("%s not found", conv_from_system(fn))->ptr;
@@ -1666,7 +1666,7 @@ loadNormalBuf(Buffer* buf)
 }
 
 static Buffer*
-loadLink(char* url, char* target, const char* referer, FormList* request)
+loadLink(char* url, char* target, const char* referer, FormList* request, bool do_download)
 {
     Buffer *buf, *nfbuf;
     union frameset_element* f_element = NULL;
@@ -1683,7 +1683,7 @@ loadLink(char* url, char* target, const char* referer, FormList* request)
         referer = NO_REFERER;
     if (referer == NULL)
         referer = parsedURL2RefererStr(&Currentbuf->currentURL)->ptr;
-    buf = loadGeneralFile(url, baseURL(Currentbuf), referer, flag, request);
+    buf = loadGeneralFile(url, baseURL(Currentbuf), referer, flag, request, do_download);
     if (buf == NULL) {
         char* emsg = Sprintf("Can't load %s", url)->ptr;
         message(getUI(), MSG_ERR, emsg);
@@ -1740,8 +1740,7 @@ gotoLabel(char* label)
     return;
 }
 
-/* follow HREF link */
-DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
+static void followAnchor(bool do_download)
 {
     Anchor* a;
     ParsedURL u;
@@ -1753,7 +1752,7 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
 
     a = retrieveCurrentImg(Currentbuf);
     if (a && a->image && a->image->map) {
-        _followForm(FALSE);
+        _followForm(FALSE, do_download);
         return;
     }
     if (a && a->image && a->image->ismap) {
@@ -1762,7 +1761,7 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
     }
     a = retrieveCurrentAnchor(Currentbuf);
     if (a == NULL) {
-        _followForm(FALSE);
+        _followForm(FALSE, do_download);
         return;
     }
     if (*a->url == '#') { /* index within this buffer */
@@ -1783,17 +1782,22 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
     if (map)
         url = Sprintf("%s?%d,%d", a->url, x, y)->ptr;
 
-    loadLink(url, a->target, a->referer, NULL);
+    loadLink(url, a->target, a->referer, NULL, do_download);
+}
+
+/* follow HREF link */
+DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
+{
+    followAnchor(false);
 }
 
 /* follow HREF link in the buffer */
 void bufferA(void)
 {
-    followA();
+    followAnchor(false);
 }
 
-/* view inline image */
-DEFUN(followI, VIEW_IMAGE, "Display image in viewer")
+static void followImage(bool do_download)
 {
     Anchor* a;
     Buffer* buf;
@@ -1807,7 +1811,7 @@ DEFUN(followI, VIEW_IMAGE, "Display image in viewer")
     /* FIXME: gettextize? */
     message(getUI(), MSG_INFO, Sprintf("loading %s", a->url)->ptr);
     // refresh(ttyWriter());
-    buf = loadGeneralFile(a->url, baseURL(Currentbuf), NULL, 0, NULL);
+    buf = loadGeneralFile(a->url, baseURL(Currentbuf), NULL, 0, NULL, do_download);
     if (buf == NULL) {
         /* FIXME: gettextize? */
         char* emsg = Sprintf("Can't load %s", a->url)->ptr;
@@ -1815,6 +1819,12 @@ DEFUN(followI, VIEW_IMAGE, "Display image in viewer")
     } else if (buf != NO_BUFFER) {
         pushBuffer(buf);
     }
+}
+
+/* view inline image */
+DEFUN(followI, VIEW_IMAGE, "Display image in viewer")
+{
+    followImage(false);
 }
 
 static FormItemList*
@@ -2011,17 +2021,17 @@ query_from_followform(Str* query, FormItemList* fi, int multipart)
 /* submit form */
 DEFUN(submitForm, SUBMIT, "Submit form")
 {
-    _followForm(TRUE);
+    _followForm(TRUE, false);
 }
 
 /* process form */
 void followForm(void)
 {
-    _followForm(FALSE);
+    _followForm(FALSE, false);
 }
 
 static void
-_followForm(int submit)
+_followForm(int submit, bool do_download)
 {
     Anchor *a, *a2;
     char* p;
@@ -2148,7 +2158,7 @@ _followForm(int submit)
                 Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
             Strcat_charp(tmp2, "?");
             Strcat(tmp2, tmp);
-            loadLink(tmp2->ptr, a->target, NULL, NULL);
+            loadLink(tmp2->ptr, a->target, NULL, NULL, do_download);
         } else if (fi->parent->method == FORM_METHOD_POST) {
             Buffer* buf;
             if (multipart) {
@@ -2159,7 +2169,7 @@ _followForm(int submit)
                 fi->parent->body = tmp->ptr;
                 fi->parent->length = tmp->length;
             }
-            buf = loadLink(tmp2->ptr, a->target, NULL, fi->parent);
+            buf = loadLink(tmp2->ptr, a->target, NULL, fi->parent, do_download);
             if (multipart) {
                 unlink(fi->parent->body);
             }
@@ -2897,7 +2907,7 @@ anchorMn(Anchor* (*menu_func)(Buffer*), int go)
     arrangeCursor(Currentbuf);
 
     if (go)
-        followA();
+        followAnchor(false);
 }
 
 /* accesskey */
@@ -2946,18 +2956,14 @@ DEFUN(ldHist, HISTORY, "Show browsing history")
 DEFUN(svA, SAVE_LINK, "Save hyperlink target")
 {
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    do_download = TRUE;
-    followA();
-    do_download = FALSE;
+    followAnchor(true);
 }
 
 /* download IMG link */
 DEFUN(svI, SAVE_IMAGE, "Save inline image")
 {
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    do_download = TRUE;
-    followI();
-    do_download = FALSE;
+    followImage(true);
 }
 
 /* save buffer */
@@ -3229,7 +3235,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
         DocumentCharset = Currentbuf->document_charset;
     // SearchHeader = Currentbuf->search_header;
     DefaultType = Currentbuf->real_type;
-    buf = loadGeneralFile(url->ptr, NULL, NO_REFERER, RG_NOCACHE, request);
+    buf = loadGeneralFile(url->ptr, NULL, NO_REFERER, RG_NOCACHE, request, false);
     DocumentCharset = old_charset;
     // SearchHeader = FALSE;
     DefaultType = NULL;
@@ -3566,7 +3572,7 @@ execdict(char* word)
     dictcmd = Sprintf("%s?%s", DictCommand,
         Str_form_quote(Strnew_charp(w))->ptr)
                   ->ptr;
-    buf = loadGeneralFile(dictcmd, NULL, NO_REFERER, 0, NULL);
+    buf = loadGeneralFile(dictcmd, NULL, NO_REFERER, 0, NULL, false);
     if (buf == NULL) {
         message(getUI(), MSG_INFO, "Execution failed");
         return;

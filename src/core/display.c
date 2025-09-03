@@ -253,7 +253,7 @@ void bufToScreen(struct UI ui, Buffer* buf)
             // termClear(ttyWriter());
         }
         clearImage();
-        loadImage(buf, IMG_FLAG_STOP);
+        loadImage(buf, IMG_FLAG_STOP, false);
         image_touch++;
         draw_image_flag = false;
     }

@@ -153,7 +153,7 @@ void parseArgs(int argc, char** argv)
     else
         url = url_encode(conv_from_system(argv[1]), NULL, 0);
 
-    Buffer* newbuf = loadGeneralFile(url, NULL, NO_REFERER, 0, NULL);
+    Buffer* newbuf = loadGeneralFile(url, NULL, NO_REFERER, 0, NULL, false);
     switch (newbuf->real_scheme) {
     case SCM_MAILTO:
         break;

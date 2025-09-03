@@ -169,30 +169,29 @@ void examineFile(char* path, struct URLFile* uf)
         return;
     }
     uf->stream = openIS(path);
-    if (!do_download) {
-        if (use_lessopen && getenv("LESSOPEN") != NULL) {
-            FILE* fp;
-            uf->guess_type = guessContentType(path);
-            if (uf->guess_type == NULL)
-                uf->guess_type = "text/plain";
-            if (is_html_type(uf->guess_type))
-                return;
-            if ((fp = lessopen_stream(path))) {
-                UFclose(uf);
-                uf->stream = newFileStream(fp, (void (*)())pclose);
-                uf->guess_type = "text/plain";
-                return;
-            }
-        }
-        check_compression(uf, path);
-        if (uf->compression != CMP_NOCOMPRESS) {
-            char* ext = uf->ext;
-            const char* t0 = uncompressed_file_type(path, &ext);
-            uf->guess_type = (char*)t0;
-            uf->ext = ext;
-            uncompress_stream(uf, NULL);
+
+    if (use_lessopen && getenv("LESSOPEN") != NULL) {
+        FILE* fp;
+        uf->guess_type = guessContentType(path);
+        if (uf->guess_type == NULL)
+            uf->guess_type = "text/plain";
+        if (is_html_type(uf->guess_type))
+            return;
+        if ((fp = lessopen_stream(path))) {
+            UFclose(uf);
+            uf->stream = newFileStream(fp, (void (*)())pclose);
+            uf->guess_type = "text/plain";
             return;
         }
+    }
+    check_compression(uf, path);
+    if (uf->compression != CMP_NOCOMPRESS) {
+        char* ext = uf->ext;
+        const char* t0 = uncompressed_file_type(path, &ext);
+        uf->guess_type = (char*)t0;
+        uf->ext = ext;
+        uncompress_stream(uf, NULL);
+        return;
     }
 }
 
@@ -571,7 +570,7 @@ checkRedirection(ParsedURL* pu)
 #define DO_EXTERNAL ((Buffer * (*)(struct URLFile*, Buffer*)) doExternal)
 Buffer*
 loadGeneralFile(char* path, ParsedURL* volatile current, const char* referer,
-    int flag, FormList* volatile request)
+    int flag, FormList* volatile request, bool do_download)
 {
     struct URLFile f, *volatile of = NULL;
     ParsedURL pu;
@@ -633,7 +632,7 @@ load_doc: {
                     Str cmd = Sprintf("%s?dir=%s#current",
                         DirBufferCommand, pu.file);
                     b = loadGeneralFile(cmd->ptr, NULL, NO_REFERER, 0,
-                        NULL);
+                        NULL, do_download);
                     if (b != NULL && b != NO_BUFFER) {
                         copyParsedURL(&b->currentURL, &pu);
                         b->filename = b->currentURL.real_file;
@@ -1875,7 +1874,7 @@ loadImageBuffer(struct URLFile* uf, Buffer* newBuf)
     struct stat st;
     const ParsedURL* pu = newBuf ? &newBuf->currentURL : NULL;
 
-    loadImage(newBuf, IMG_FLAG_STOP);
+    loadImage(newBuf, IMG_FLAG_STOP, false);
     image.url = uf->url;
     image.ext = uf->ext;
     image.width = -1;

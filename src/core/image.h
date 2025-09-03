@@ -66,7 +66,7 @@ enum ImageLoadFlag {
     IMG_FLAG_STOP = 1,
     IMG_FLAG_NEXT = 2,
 };
-void loadImage(struct _Buffer* buf, enum ImageLoadFlag flag);
+void loadImage(struct _Buffer* buf, enum ImageLoadFlag flag, bool do_download);
 
 enum ImageGetFlag {
     IMG_FLAG_SKIP = 1,

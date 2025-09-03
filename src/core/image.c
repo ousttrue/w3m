@@ -1,4 +1,3 @@
-#define _DEFAULT_SOURCE
 #include "image.h"
 #include "tmpfile.h"
 #include "ui.h"
@@ -346,7 +345,7 @@ void deleteImage(Buffer* buf)
         if (a->image && a->image->cache && a->image->cache->loaded != IMG_FLAG_UNLOADED && !(a->image->cache->loaded & IMG_FLAG_DONT_REMOVE) && a->image->cache->index < 0)
             unlink(a->image->cache->file);
     }
-    loadImage(NULL, IMG_FLAG_STOP);
+    loadImage(NULL, IMG_FLAG_STOP, false);
 }
 
 void getAllImage(Buffer* buf)
@@ -399,7 +398,7 @@ showImageProgress(Buffer* buf)
     }
 }
 
-void loadImage(Buffer* buf, enum ImageLoadFlag flag)
+void loadImage(Buffer* buf, enum ImageLoadFlag flag, bool do_download)
 {
     ImageCache* cache;
     struct stat st;
@@ -512,7 +511,7 @@ void loadImage(Buffer* buf, enum ImageLoadFlag flag)
              */
             setup_child(FALSE, 0, -1);
             image_source = cache->file;
-            loadGeneralFile(cache->url, cache->current, NULL, 0, NULL);
+            loadGeneralFile(cache->url, cache->current, NULL, 0, NULL, do_download);
             /* TODO make sure removing this didn't break anything
             if (!b || !b->real_type || strncasecmp(b->real_type, "image/", 6))
                 unlink(cache->file);
