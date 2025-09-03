@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include "ssl_util.h"
 #include "growbuf.h"
 #include "file.h"

@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include "etc.h"
 #include "istream.h"
 #include "readbuffer.h"
@@ -17,6 +18,7 @@
 #include "screen.h"
 #include <pwd.h>
 #include <stdlib.h>
+#include <strings.h>
 #include <wtf.h>
 #include <fcntl.h>
 #include <sys/types.h>

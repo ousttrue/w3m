@@ -5,6 +5,7 @@
 #include "cookie.h"
 #include "form.h"
 #include <stdbool.h>
+#include <strings.h>
 
 int override_user_agent = false;
 char* UserAgent = NULL;

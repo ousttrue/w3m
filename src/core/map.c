@@ -15,6 +15,7 @@
 #include "file.h"
 #include "buffer.h"
 #include <math.h>
+#include <strings.h>
 
 MapList*
 searchMapList(Buffer* buf, char* name)

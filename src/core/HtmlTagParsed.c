@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include "HtmlTagParsed.h"
 #include "url.h"
 #include "display.h"
@@ -17,6 +18,7 @@
 #include "symbol.h"
 #include "readbuffer.h"
 #include "etc.h"
+#include <strings.h>
 
 wc_ces cur_document_charset = 0;
 

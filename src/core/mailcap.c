@@ -1,3 +1,4 @@
+#define _GNU_SOURCE 1
 #include "mailcap.h"
 #include "fm.h"
 #include "file.h"
@@ -9,6 +10,8 @@
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <strings.h>
+#include <string.h>
 
 static struct mailcap DefaultMailcap[] = {
     { "image/*", DEF_IMAGE_VIEWER " %s", 0, NULL, NULL, NULL }, /* */

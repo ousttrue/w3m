@@ -21,6 +21,7 @@
 #include "buffer.h"
 #include "defun.h"
 #include "indep.h"
+#include <strings.h>
 #include <time.h>
 
 static int is_saved = 1;

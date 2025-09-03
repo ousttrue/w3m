@@ -1,3 +1,4 @@
+#define _DEFAULT_SOURCE
 #include "image.h"
 #include "tmpfile.h"
 #include "ui.h"
@@ -602,10 +603,10 @@ getImage(Image* image, ParsedURL* current, enum ImageGetFlag flag)
 }
 
 static int
-parseImageHeader(char* path, u_int* width, u_int* height)
+parseImageHeader(char* path, unsigned int* width, unsigned int* height)
 {
     FILE* fp;
-    u_char buf[8];
+    unsigned char buf[8];
 
     if (!(fp = fopen(path, "r")))
         return FALSE;

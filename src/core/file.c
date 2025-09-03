@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include "file.h"
 #include "buffer_loader.h"
 #include "ui.h"
@@ -44,6 +45,7 @@
 #include "regex.h"
 #include "myctype.h"
 #include <stdlib.h>
+#include <strings.h>
 #include <sys/types.h>
 #include <signal.h>
 #include <setjmp.h>

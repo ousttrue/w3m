@@ -1,3 +1,7 @@
+#include "config.h"
+#include "tty.h"
+#include "ctrlcode.h"
+#include "event_poller.h"
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -5,10 +9,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <sys/ioctl.h>
-#include "config.h"
-#include "tty.h"
-#include "ctrlcode.h"
-#include "event_poller.h"
+#include <sys/select.h>
 
 //
 // input

@@ -13,6 +13,7 @@
 #include <openssl/md5.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <strings.h>
 #include <unistd.h>
 
 char QuietMessage = (false);

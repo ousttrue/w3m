@@ -14,6 +14,7 @@
 #include "Str.h"
 #include "myctype.h"
 #include "screen.h"
+#include <strings.h>
 #include <wtf.h>
 #include <math.h>
 #include <string.h>

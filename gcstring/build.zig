@@ -83,4 +83,6 @@ pub fn build(b: *std.Build) void {
     // const gc_include_dir = gc_dep.path("include");
     // std.log.debug("{s}", .{gc_include_dir.getDisplayName()});
     lib.linkLibrary(gc);
+
+    lib.installHeadersDirectory(gc_dep.path("include"), "", .{});
 }

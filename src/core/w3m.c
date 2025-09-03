@@ -8,6 +8,7 @@
 #include "quote.h"
 #include <gc/gc.h>
 #include <stdlib.h>
+#include <strings.h>
 #define MAINPROGRAM
 #include "buffer.h"
 #include "KeyValue.h"
@@ -63,6 +64,7 @@
 #include <assert.h>
 #include <sys/signalfd.h>
 #include <locale.h>
+#include <unistd.h>
 
 #include <event_poller.h>
 

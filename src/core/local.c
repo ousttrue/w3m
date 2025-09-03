@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include "version.h"
 #include "etc.h"
 #include "form.h"

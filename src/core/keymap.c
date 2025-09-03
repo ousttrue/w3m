@@ -11,6 +11,7 @@
 
 #include <Str.h>
 #include <stdio.h>
+#include <strings.h>
 
 #include "defun.h"
 

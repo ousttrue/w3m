@@ -1,5 +1,6 @@
 #pragma once
 #include <Str.h>
+#include <fcntl.h>
 #include <time.h>
 #include "line.h"
 

@@ -131,6 +131,10 @@ pub fn build(b: *std.Build) void {
 
     const flags = [_][]const u8{
         "-std=c2x",
+        // https://www.ibm.com/docs/ja/zos/2.5.0?topic=files-feature-test-macros
+        // "-D_POSIX_C_SOURCE=200112L",
+        "-D_POSIX_C_SOURCE=200809L",
+        // "-D_XOPEN_SOURCE=1",
         // "-Wno-implicit-int",
         // "-Wno-int-conversion",
         "-DHAVE_CONFIG_H",
@@ -155,7 +159,7 @@ pub fn build(b: *std.Build) void {
         exe.addIncludePath(ssl.path("x64/include"));
     } else {
         const system_libs = [_][]const u8{
-            "ncurses",
+            "tinfo",
             "ssl",
             "crypto",
         };

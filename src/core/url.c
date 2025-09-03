@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include "url.h"
 #include "buffer_loader.h"
 #include "form.h"

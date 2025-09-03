@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include "readbuffer.h"
 #include "buffer_loader.h"
 #include "url.h"
@@ -14,6 +15,7 @@
 #include "symbol.h"
 #include "display.h"
 #include "buffer.h"
+#include <strings.h>
 
 char DisableCenter = (false);
 int IndentIncr = (4);

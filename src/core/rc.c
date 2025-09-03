@@ -37,6 +37,7 @@
 #include "regex.h"
 #include <stdlib.h>
 #include <stddef.h>
+#include <strings.h>
 #include <wtf.h>
 #include <unistd.h>
 #include <fcntl.h>

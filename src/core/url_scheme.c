@@ -1,6 +1,7 @@
 #include "url_scheme.h"
 #include <myctype.h>
 #include <string.h>
+#include <strings.h>
 
 /* XXX: note html.h SCM_ */
 int DefaultPort[] = {
@@ -55,6 +56,9 @@ schemeNumToName(enum UrlScheme scheme)
 enum UrlScheme getURLScheme(char** url)
 {
     char* p = *url;
+    if(!p){
+        return SCM_UNKNOWN;
+    }
     while (*p && (IS_ALNUM(*p) || *p == '.' || *p == '+' || *p == '-'))
         p++;
 

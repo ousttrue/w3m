@@ -19,6 +19,7 @@
 #include "w3m.h"
 #include "funcname1.h"
 #include <myctype.h>
+#include <strings.h>
 
 #define DOCUMENT_CHARSET WC_CES_UTF_8
 
