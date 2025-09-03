@@ -105,7 +105,6 @@ static char* getCurWord(Buffer* buf, int* spos, int* epos);
 
 static int display_ok = FALSE;
 int prev_key = -1;
-int on_target = 1;
 
 void set_buffer_environ(Buffer*);
 static void save_buffer_position(Buffer* buf);
@@ -1697,8 +1696,6 @@ loadLink(char* url, char* target, const char* referer, FormList* request)
     if (buf == NO_BUFFER) {
         return NULL;
     }
-    if (!on_target) /* open link as an indivisual page */
-        return loadNormalBuf(buf);
 
     if (do_download) /* download (thus no need to render frames) */
         return loadNormalBuf(buf);
@@ -1792,9 +1789,7 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
 /* follow HREF link in the buffer */
 void bufferA(void)
 {
-    on_target = FALSE;
     followA();
-    on_target = TRUE;
 }
 
 /* view inline image */
