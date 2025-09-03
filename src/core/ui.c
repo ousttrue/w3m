@@ -20,6 +20,7 @@
 char* CurrentDir = 0;
 int CurrentPid = -1;
 int showLineNum = (false);
+char QuietMessage = (false);
 
 #define DISPLAY_CHARSET WC_CES_UTF_8
 #define SYSTEM_CHARSET WC_CES_UTF_8

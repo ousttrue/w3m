@@ -185,3 +185,23 @@ char* inputLineHistSearch(struct UI ui,
     else
         return allocStr(p, -1);
 }
+
+char* inputAnswer(const char* prompt)
+{
+    if (QuietMessage)
+        return "n";
+
+    char* ans;
+    // if (fmInitialized)
+    {
+        // term_raw();
+        ans = inputChar(getUI(), prompt);
+    }
+    // else {
+    //     printf("%s", prompt);
+    //     fflush(stdout);
+    //     ans = Strfgets(stdin)->ptr;
+    // }
+    return ans;
+}
+

@@ -16,8 +16,6 @@
 #include <strings.h>
 #include <unistd.h>
 
-char QuietMessage = (false);
-
 Str get_auth_param(struct auth_param* auth, char* name)
 {
     struct auth_param* ap;

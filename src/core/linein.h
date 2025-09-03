@@ -54,3 +54,5 @@ static inline char* inputChar(struct UI ui,
 {
     return inputLine(ui, p, "", IN_CHAR);
 }
+
+char* inputAnswer(const char* prompt);

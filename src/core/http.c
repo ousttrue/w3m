@@ -15,6 +15,7 @@
 #include "screen.h"
 #include "file.h"
 #include "keymap.h"
+#include "linein.h"
 #include <myctype.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -220,7 +221,7 @@ Str getHttpRequestStr(ParsedURL* pu, ParsedURL* current, struct HttpRequest* hr,
 
 bool matchattr(const char* p, const char* attr, int len, Str* value)
 {
-    char* q = NULL;
+    const char* q = NULL;
     if (strncasecmp(p, attr, len) == 0) {
         p += len;
         SKIP_BLANKS(p);

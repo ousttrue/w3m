@@ -171,7 +171,6 @@ Str convertLine(struct URLFile* uf, Str line, enum ConvertLineMode mode, wc_ces*
 
 struct _Buffer;
 struct _Buffer* loadHTMLBuffer(struct URLFile* f, struct _Buffer* newBuf);
-void loadHTMLstream(struct URLFile* f, struct _Buffer* newBuf, FILE* src, int internal);
 struct _Buffer* loadBuffer(struct URLFile* uf, struct _Buffer* newBuf);
 struct _Buffer* loadImageBuffer(struct URLFile* uf, struct _Buffer* newBuf);
 int save2tmp(struct URLFile uf, char* tmpf);

@@ -13,7 +13,6 @@ struct HtmlTagParsed;
 
 int dir_exist(char* path);
 int is_html_type(char* type);
-char* inputAnswer(char* prompt);
 struct _Buffer* loadGeneralFile(char* path, struct _ParsedURL* current, const char* referer, int flag, struct form_list* request);
 int is_boundary(unsigned char*, unsigned char*);
 
@@ -28,3 +27,6 @@ int checkCopyFile(char* path1, char* path2);
 int checkOverWrite(char* path);
 char* checkHeader(struct _Buffer* buf, char* field);
 char* guess_save_name(struct _Buffer* buf, char* file);
+
+struct URLFile;
+void loadHTMLstream(struct URLFile* f, struct _Buffer* newBuf, FILE* src, int internal);

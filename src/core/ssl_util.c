@@ -5,8 +5,8 @@
 #include "display.h"
 #include "ui.h"
 #include "screen.h"
-#include "indep.h"
 #include "gc/gc.h"
+#include "linein.h"
 #include <myctype.h>
 #include <Str.h>
 #include <openssl/ssl.h>

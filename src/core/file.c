@@ -2460,25 +2460,6 @@ int checkOverWrite(char* path)
         return -1;
 }
 
-char* inputAnswer(char* prompt)
-{
-    char* ans;
-
-    if (QuietMessage)
-        return "n";
-    // if (fmInitialized)
-    {
-        term_raw();
-        ans = inputChar(getUI(), prompt);
-    }
-    // else {
-    //     printf("%s", prompt);
-    //     fflush(stdout);
-    //     ans = Strfgets(stdin)->ptr;
-    // }
-    return ans;
-}
-
 static FILE*
 lessopen_stream(char* path)
 {
