@@ -1,5 +1,6 @@
 #define _GNU_SOURCE
 #include "url.h"
+#include "siteconf.h"
 #include "buffer_loader.h"
 #include "form.h"
 #include "istream.h"
@@ -453,7 +454,7 @@ copyPath(char* orgpath, int length, int option)
     return tmp->ptr;
 }
 
-void parseURL(char* url, ParsedURL* p_url, ParsedURL* current)
+void parseURL(const char* url, ParsedURL* p_url, ParsedURL* current)
 {
     char *p, *q, *qq;
     Str tmp;

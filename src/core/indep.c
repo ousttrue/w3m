@@ -420,7 +420,7 @@ char* cleanupName(char* name)
     return buf;
 }
 
-char* expandPath(char* name)
+char* expandPath(const char* name)
 {
     char* p;
     struct passwd *passent, *getpwnam(const char*);

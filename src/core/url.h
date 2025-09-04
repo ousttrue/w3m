@@ -47,7 +47,7 @@ struct form_list;
 struct _Buffer;
 
 Str _parsedURL2Str(ParsedURL* pu, int pass, int user, int label);
-void parseURL(char* url, ParsedURL* p_url, ParsedURL* current);
+void parseURL(const char* url, ParsedURL* p_url, ParsedURL* current);
 void copyParsedURL(ParsedURL* p, const ParsedURL* q);
 void parseURL2(const char* url, ParsedURL* pu, ParsedURL* current);
 Str parsedURL2Str(ParsedURL* pu);

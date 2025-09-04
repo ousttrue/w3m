@@ -93,7 +93,6 @@ global int BackgroundExtViewer init(TRUE);
 global int disable_secret_security_check init(FALSE);
 global char* passwd_file init(PASSWD_FILE);
 global char* pre_form_file init(PRE_FORM_FILE);
-global char* siteconf_file init(SITECONF_FILE);
 global int WrapDefault init(FALSE);
 global int IgnoreCase init(TRUE);
 global int WrapSearch init(FALSE);

@@ -1,5 +1,6 @@
 #include "buffer_loader.h"
 #include "mysignal.h"
+#include "siteconf.h"
 #include "screen.h"
 #include "auth.h"
 #include "local.h"

@@ -43,6 +43,7 @@ const w3m_srcs = [_][]const u8{
     "compression.c",
     "buffer_loader.c",
     "file_copy.c",
+    "siteconf.c",
 
     "ui.c",
     "LineEditor.c",

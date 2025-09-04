@@ -1,4 +1,5 @@
 #include "http.h"
+#include "siteconf.h"
 #include "mailcap.h"
 #include "indep.h"
 #include "textlist.h"
