@@ -72,31 +72,6 @@ static MySignalHandler KeyAbort(int _dummy)
     siglongjmp(AbortLoading, 1);
 }
 
-static Buffer*
-loadSomething(struct URLFile* f,
-    Buffer* (*loadproc)(struct URLFile*, Buffer*), Buffer* defaultbuf)
-{
-    Buffer* buf;
-
-    if ((buf = loadproc(f, defaultbuf)) == NULL)
-        return NULL;
-
-    if (buf->buffername == NULL || buf->buffername[0] == '\0') {
-        buf->buffername = getHttpHeaderValue(buf->document_header, "Subject:");
-        if (buf->buffername == NULL && buf->filename != NULL)
-            buf->buffername = conv_from_system(lastFileName(buf->filename));
-    }
-    if (buf->currentURL.scheme == SCM_UNKNOWN)
-        buf->currentURL.scheme = f->scheme;
-    if (f->scheme == SCM_LOCAL && buf->sourcefile == NULL)
-        buf->sourcefile = buf->filename;
-    if (loadproc == loadHTMLBuffer)
-        buf->type = "text/html";
-    else
-        buf->type = "text/plain";
-    return buf;
-}
-
 int dir_exist(char* path)
 {
     struct stat stbuf;
@@ -593,19 +568,33 @@ Buffer* _load(ParsedURL pu, struct URLFile f,
                                                             : NULL;
     t_buf->ssl_certificate = f.ssl_certificate;
 
-    Buffer* (*proc)(struct URLFile*, Buffer*) = loadBuffer;
-    if (is_html_type(real_type))
-        proc = loadHTMLBuffer;
-    else
-        proc = loadBuffer;
-    Buffer* b = loadSomething(&f, proc, t_buf);
+    // Buffer* (*proc)(struct URLFile*, Buffer*) = loadBuffer;
+    Buffer* b;
+    if (is_html_type(real_type)) {
+        b = loadHTMLBuffer(&f, t_buf);
+        b->type = "text/html";
+    } else {
+        b = loadBuffer(&f, t_buf);
+        b->type = "text/plain";
+    }
+    if (b) {
+        if (b->buffername == NULL || b->buffername[0] == '\0') {
+            b->buffername = getHttpHeaderValue(b->document_header, "Subject:");
+            if (b->buffername == NULL && b->filename != NULL)
+                b->buffername = conv_from_system(lastFileName(b->filename));
+        }
+        if (b->currentURL.scheme == SCM_UNKNOWN)
+            b->currentURL.scheme = f.scheme;
+        if (f.scheme == SCM_LOCAL && b->sourcefile == NULL)
+            b->sourcefile = b->filename;
+    }
 
     UFclose(&f);
     if (b && b != NO_BUFFER) {
         b->real_scheme = f.scheme;
         b->real_type = real_type;
         if (pu.label) {
-            if (proc == loadHTMLBuffer) {
+            if (is_html_type(real_type)) {
                 Anchor* a;
                 a = searchURLLabel(b, pu.label);
                 if (a != NULL) {
