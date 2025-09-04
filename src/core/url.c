@@ -454,32 +454,22 @@ copyPath(char* orgpath, int length, int option)
     return tmp->ptr;
 }
 
-void parseURL(const char* url, ParsedURL* p_url, ParsedURL* current)
+void parseURL(const char* _url, ParsedURL* p_url, ParsedURL* current)
 {
-    char *p, *q, *qq;
-    Str tmp;
+    // quote 0x01-0x20, 0x7F-0xFF
+    char* url = url_quote(_url);
 
-    url = url_quote(url); /* quote 0x01-0x20, 0x7F-0xFF */
-
-    p = url;
+    const char* p = url;
     copyParsedURL(p_url, NULL);
     p_url->scheme = SCM_MISSING;
 
-    /* RFC1808: Relative Uniform Resource Locators
-     * 4.  Resolving Relative URLs
-     */
+    // RFC1808: Relative Uniform Resource Locators
+    // 4.  Resolving Relative URLs
     if (*url == '\0' || *url == '#') {
         if (current)
             copyParsedURL(p_url, current);
         goto do_label;
     }
-#if defined(__EMX__) || defined(__CYGWIN__)
-    if (!strncasecmp(url, "file://localhost/", 17)) {
-        p_url->scheme = SCM_LOCAL;
-        p += 17 - 1;
-        url += 17 - 1;
-    }
-#endif
 #ifdef SUPPORT_DOS_DRIVE_PREFIX
     if (IS_ALPHA(*p) && (p[1] == ':' || p[1] == '|')) {
         p_url->scheme = SCM_LOCAL;
@@ -549,8 +539,8 @@ void parseURL(const char* url, ParsedURL* p_url, ParsedURL* current)
     p += 2; /* scheme://foo         */
     /*          ^p is here  */
 analyze_url:
-    q = p;
-#ifdef INET6
+    char* q = p;
+
     if (*q == '[') { /* rfc2732,rfc2373 compliance */
         p++;
         while (IS_XDIGIT(*p) || *p == ':' || *p == '.')
@@ -558,15 +548,17 @@ analyze_url:
         if (*p != ']' || (*(p + 1) && strchr(":/?#", *(p + 1)) == NULL))
             p = q;
     }
-#endif
+
     while (*p && strchr(":/@?#", *p) == NULL)
         p++;
+
+    Str tmp;
     switch (*p) {
-    case ':':
+    case ':': {
         /* scheme://user:pass@host or
          * scheme://host:port
          */
-        qq = q;
+        char* qq = q;
         q = ++p;
         while (*p && strchr("@/?#", *p) == NULL)
             p++;
@@ -584,6 +576,7 @@ analyze_url:
         p_url->port = atoi(tmp->ptr);
         /* *p is one of ['\0', '/', '?', '#'] */
         break;
+    }
     case '@':
         /* scheme://user@...            */
         p_url->user = copyPath(q, p - q, COPYPATH_SPC_IGNORE);
@@ -984,8 +977,8 @@ openURL(const char* url, ParsedURL* pu, ParsedURL* current,
     struct URLOption* option, FormList* request, TextList* extra_header,
     struct URLFile* ouf, struct HttpRequest* hr, unsigned char* status)
 {
-    Str tmp;
-    int sock, scheme;
+    int sock;
+    int scheme;
     char *p, *q, *u;
     struct URLFile uf;
     struct HttpRequest hr0;
@@ -1006,218 +999,217 @@ openURL(const char* url, ParsedURL* pu, ParsedURL* current,
         u = file_to_url(url); /* force to local file */
     else
         u = url;
-retry:
-    parseURL2(u, pu, current);
-    if (pu->scheme == SCM_LOCAL && pu->file == NULL) {
-        if (pu->label != NULL) {
-            /* #hogege is not a label but a filename */
-            Str tmp2 = Strnew_charp("#");
-            Strcat_charp(tmp2, pu->label);
-            pu->file = tmp2->ptr;
-            pu->real_file = cleanupName(file_unquote(pu->file));
-            pu->label = NULL;
-        } else {
-            /* given URL must be null string */
-#ifdef SOCK_DEBUG
-            sock_log("given URL must be null string\n");
-#endif
-            return uf;
-        }
-    }
 
-    if (LocalhostOnly && pu->host && !is_localhost(pu->host))
-        pu->host = NULL;
-
-    uf.scheme = pu->scheme;
-    uf.url = parsedURL2Str(pu)->ptr;
-    pu->is_nocache = (option->flag & RG_NOCACHE);
-    uf.ext = filename_extension(pu->file, 1);
-
-    hr->command = HR_COMMAND_GET;
-    hr->flag = 0;
-    hr->referer = option->referer;
-    hr->request = request;
-
-    switch (pu->scheme) {
-    case SCM_LOCAL:
-    case SCM_LOCAL_CGI:
-        if (request && request->body)
-            /* local CGI: POST */
-            uf.stream = newFileStream(localcgi_post(pu->real_file, pu->query,
-                                          request, option->referer),
-                (void (*)())fclose);
-        else
-            /* lodal CGI: GET */
-            uf.stream = newFileStream(localcgi_get(pu->real_file, pu->query,
-                                          option->referer),
-                (void (*)())fclose);
-        if (uf.stream) {
-            uf.is_cgi = TRUE;
-            uf.scheme = pu->scheme = SCM_LOCAL_CGI;
-            return uf;
-        }
-        examineFile(&uf, pu->real_file);
-        if (uf.stream == NULL) {
-            if (dir_exist(pu->real_file)) {
-                add_index_file(pu, &uf);
-                if (uf.stream == NULL)
-                    return uf;
-            } else if (document_root != NULL) {
-                tmp = Strnew_charp(document_root);
-                if (Strlastchar(tmp) != '/' && pu->file[0] != '/')
-                    Strcat_char(tmp, '/');
-                Strcat_charp(tmp, pu->file);
-                p = cleanupName(tmp->ptr);
-                q = cleanupName(file_unquote(p));
-                if (dir_exist(q)) {
-                    pu->file = p;
-                    pu->real_file = q;
-                    add_index_file(pu, &uf);
-                    if (uf.stream == NULL) {
-                        return uf;
-                    }
-                } else {
-                    examineFile(&uf, q);
-                    if (uf.stream) {
-                        pu->file = p;
-                        pu->real_file = q;
-                    }
-                }
-            }
-        }
-        if (uf.stream == NULL && retryAsHttp && url[0] != '/') {
-            if (scheme == SCM_MISSING || scheme == SCM_UNKNOWN) {
-                /* retry it as "http://" */
-                u = Strnew_m_charp("http://", url, NULL)->ptr;
-                goto retry;
-            }
-        }
-        return uf;
-    case SCM_HTTP:
-    case SCM_HTTPS:
-        if (pu->file == NULL)
-            pu->file = allocStr("/", -1);
-        if (request && request->method == FORM_METHOD_POST && request->body)
-            hr->command = HR_COMMAND_POST;
-        if (request && request->method == FORM_METHOD_HEAD)
-            hr->command = HR_COMMAND_HEAD;
-        if ((
-                (pu->scheme == SCM_HTTPS) ? non_null(HTTPS_proxy) : non_null(HTTP_proxy))
-            && use_proxy && pu->host != NULL && !check_no_proxy(pu->host)) {
-            hr->flag |= HR_FLAG_PROXY;
-            if (pu->scheme == SCM_HTTPS && *status == HTST_CONNECT) {
-                sock = ssl_socket_of(ouf->stream);
-                if (!(sslh = openSSLHandle(sock, pu->host,
-                          &uf.ssl_certificate))) {
-                    *status = HTST_MISSING;
-                    return uf;
-                }
-            } else if (pu->scheme == SCM_HTTPS) {
-                sock = openSocket(HTTPS_proxy_parsed.host,
-                    schemeNumToName(HTTPS_proxy_parsed.scheme),
-                    HTTPS_proxy_parsed.port);
-                sslh = NULL;
+    while (true) {
+        parseURL2(u, pu, current);
+        if (pu->scheme == SCM_LOCAL && pu->file == NULL) {
+            if (pu->label != NULL) {
+                /* #hogege is not a label but a filename */
+                Str tmp2 = Strnew_charp("#");
+                Strcat_charp(tmp2, pu->label);
+                pu->file = tmp2->ptr;
+                pu->real_file = cleanupName(file_unquote(pu->file));
+                pu->label = NULL;
             } else {
-                sock = openSocket(HTTP_proxy_parsed.host,
-                    schemeNumToName(HTTP_proxy_parsed.scheme),
-                    HTTP_proxy_parsed.port);
-                sslh = NULL;
-            }
-            if (sock < 0) {
-#ifdef SOCK_DEBUG
-                sock_log("Can't open socket\n");
-#endif
+                /* given URL must be null string */
                 return uf;
             }
-            if (pu->scheme == SCM_HTTPS) {
-                if (*status == HTST_NORMAL) {
-                    hr->command = HR_COMMAND_CONNECT;
-                    tmp = getHttpRequestStr(pu, current, hr, extra_header);
-                    *status = HTST_CONNECT;
+        }
+
+        if (LocalhostOnly && pu->host && !is_localhost(pu->host))
+            pu->host = NULL;
+
+        uf.scheme = pu->scheme;
+        uf.url = parsedURL2Str(pu)->ptr;
+        pu->is_nocache = (option->flag & RG_NOCACHE);
+        uf.ext = filename_extension(pu->file, 1);
+
+        hr->command = HR_COMMAND_GET;
+        hr->flag = 0;
+        hr->referer = option->referer;
+        hr->request = request;
+
+        switch (pu->scheme) {
+        case SCM_LOCAL:
+        case SCM_LOCAL_CGI:
+            if (request && request->body)
+                /* local CGI: POST */
+                uf.stream = newFileStream(localcgi_post(pu->real_file, pu->query,
+                                              request, option->referer),
+                    (void (*)())fclose);
+            else
+                /* lodal CGI: GET */
+                uf.stream = newFileStream(localcgi_get(pu->real_file, pu->query,
+                                              option->referer),
+                    (void (*)())fclose);
+            if (uf.stream) {
+                uf.is_cgi = TRUE;
+                uf.scheme = pu->scheme = SCM_LOCAL_CGI;
+                return uf;
+            }
+            examineFile(&uf, pu->real_file);
+            if (uf.stream == NULL) {
+                if (dir_exist(pu->real_file)) {
+                    add_index_file(pu, &uf);
+                    if (uf.stream == NULL)
+                        return uf;
+                } else if (document_root != NULL) {
+                    Str tmp = Strnew_charp(document_root);
+                    if (Strlastchar(tmp) != '/' && pu->file[0] != '/')
+                        Strcat_char(tmp, '/');
+                    Strcat_charp(tmp, pu->file);
+                    p = cleanupName(tmp->ptr);
+                    q = cleanupName(file_unquote(p));
+                    if (dir_exist(q)) {
+                        pu->file = p;
+                        pu->real_file = q;
+                        add_index_file(pu, &uf);
+                        if (uf.stream == NULL) {
+                            return uf;
+                        }
+                    } else {
+                        examineFile(&uf, q);
+                        if (uf.stream) {
+                            pu->file = p;
+                            pu->real_file = q;
+                        }
+                    }
+                }
+            }
+            if (uf.stream == NULL && retryAsHttp && url[0] != '/') {
+                if (scheme == SCM_MISSING || scheme == SCM_UNKNOWN) {
+                    /* retry it as "http://" */
+                    u = Strnew_m_charp("http://", url, NULL)->ptr;
+                    continue;
+                }
+            }
+            return uf;
+        case SCM_HTTP:
+        case SCM_HTTPS:
+            if (pu->file == NULL)
+                pu->file = allocStr("/", -1);
+            if (request && request->method == FORM_METHOD_POST && request->body)
+                hr->command = HR_COMMAND_POST;
+            if (request && request->method == FORM_METHOD_HEAD)
+                hr->command = HR_COMMAND_HEAD;
+
+            Str tmp = NULL;
+            if ((
+                    (pu->scheme == SCM_HTTPS) ? non_null(HTTPS_proxy) : non_null(HTTP_proxy))
+                && use_proxy && pu->host != NULL && !check_no_proxy(pu->host)) {
+                hr->flag |= HR_FLAG_PROXY;
+                if (pu->scheme == SCM_HTTPS && *status == HTST_CONNECT) {
+                    sock = ssl_socket_of(ouf->stream);
+                    if (!(sslh = openSSLHandle(sock, pu->host,
+                              &uf.ssl_certificate))) {
+                        *status = HTST_MISSING;
+                        return uf;
+                    }
+                } else if (pu->scheme == SCM_HTTPS) {
+                    sock = openSocket(HTTPS_proxy_parsed.host,
+                        schemeNumToName(HTTPS_proxy_parsed.scheme),
+                        HTTPS_proxy_parsed.port);
+                    sslh = NULL;
                 } else {
-                    hr->flag |= HR_FLAG_LOCAL;
+                    sock = openSocket(HTTP_proxy_parsed.host,
+                        schemeNumToName(HTTP_proxy_parsed.scheme),
+                        HTTP_proxy_parsed.port);
+                    sslh = NULL;
+                }
+                if (sock < 0) {
+                    return uf;
+                }
+                if (pu->scheme == SCM_HTTPS) {
+                    if (*status == HTST_NORMAL) {
+                        hr->command = HR_COMMAND_CONNECT;
+                        tmp = getHttpRequestStr(pu, current, hr, extra_header);
+                        *status = HTST_CONNECT;
+                    } else {
+                        hr->flag |= HR_FLAG_LOCAL;
+                        tmp = getHttpRequestStr(pu, current, hr, extra_header);
+                        *status = HTST_NORMAL;
+                    }
+                } else {
                     tmp = getHttpRequestStr(pu, current, hr, extra_header);
                     *status = HTST_NORMAL;
                 }
             } else {
-                tmp = getHttpRequestStr(pu, current, hr, extra_header);
-                *status = HTST_NORMAL;
-            }
-        } else {
-            sock = openSocket(pu->host, schemeNumToName(pu->scheme), pu->port);
-            if (sock < 0) {
-                *status = HTST_MISSING;
-                return uf;
-            }
-            if (pu->scheme == SCM_HTTPS) {
-                if (!(sslh = openSSLHandle(sock, pu->host,
-                          &uf.ssl_certificate))) {
+                sock = openSocket(pu->host, schemeNumToName(pu->scheme), pu->port);
+                if (sock < 0) {
                     *status = HTST_MISSING;
                     return uf;
                 }
+                if (pu->scheme == SCM_HTTPS) {
+                    if (!(sslh = openSSLHandle(sock, pu->host,
+                              &uf.ssl_certificate))) {
+                        *status = HTST_MISSING;
+                        return uf;
+                    }
+                }
+                hr->flag |= HR_FLAG_LOCAL;
+                tmp = getHttpRequestStr(pu, current, hr, extra_header);
+                *status = HTST_NORMAL;
             }
-            hr->flag |= HR_FLAG_LOCAL;
-            tmp = getHttpRequestStr(pu, current, hr, extra_header);
-            *status = HTST_NORMAL;
-        }
-        if (pu->scheme == SCM_HTTPS) {
-            uf.stream = newSSLStream(sslh, sock);
-            if (sslh)
-                SSL_write(sslh, tmp->ptr, tmp->length);
-            else
+            if (pu->scheme == SCM_HTTPS) {
+                uf.stream = newSSLStream(sslh, sock);
+                if (sslh)
+                    SSL_write(sslh, tmp->ptr, tmp->length);
+                else
+                    write(sock, tmp->ptr, tmp->length);
+                if (w3m_reqlog) {
+                    FILE* ff = fopen(w3m_reqlog, "a");
+                    if (ff == NULL)
+                        return uf;
+                    if (sslh)
+                        fputs("HTTPS: request via SSL\n", ff);
+                    else
+                        fputs("HTTPS: request without SSL\n", ff);
+                    fwrite(tmp->ptr, sizeof(char), tmp->length, ff);
+                    fclose(ff);
+                }
+                if (hr->command == HR_COMMAND_POST && request->enctype == FORM_ENCTYPE_MULTIPART) {
+                    if (sslh)
+                        SSL_write_from_file(sslh, request->body);
+                    else
+                        write_from_file(sock, request->body);
+                }
+                return uf;
+            } else {
                 write(sock, tmp->ptr, tmp->length);
-            if (w3m_reqlog) {
-                FILE* ff = fopen(w3m_reqlog, "a");
-                if (ff == NULL)
-                    return uf;
-                if (sslh)
-                    fputs("HTTPS: request via SSL\n", ff);
-                else
-                    fputs("HTTPS: request without SSL\n", ff);
-                fwrite(tmp->ptr, sizeof(char), tmp->length, ff);
-                fclose(ff);
-            }
-            if (hr->command == HR_COMMAND_POST && request->enctype == FORM_ENCTYPE_MULTIPART) {
-                if (sslh)
-                    SSL_write_from_file(sslh, request->body);
-                else
+                if (w3m_reqlog) {
+                    FILE* ff = fopen(w3m_reqlog, "a");
+                    if (ff == NULL)
+                        return uf;
+                    fwrite(tmp->ptr, sizeof(char), tmp->length, ff);
+                    fclose(ff);
+                }
+                if (hr->command == HR_COMMAND_POST && request->enctype == FORM_ENCTYPE_MULTIPART)
                     write_from_file(sock, request->body);
             }
+            break;
+        case SCM_DATA:
+            if (pu->file == NULL)
+                return uf;
+            p = Strnew_charp(pu->file)->ptr;
+            q = strchr(p, ',');
+            if (q == NULL)
+                return uf;
+            *q++ = '\0';
+            tmp = Strnew_charp(q);
+            q = strrchr(p, ';');
+            if (q != NULL && !strcmp(q, ";base64")) {
+                *q = '\0';
+                uf.encoding = ENC_BASE64;
+            } else
+                tmp = Str_url_unquote(tmp, FALSE, FALSE);
+            uf.stream = newStrStream(tmp);
+            uf.guess_type = (*p != '\0') ? p : "text/plain";
             return uf;
-        } else {
-            write(sock, tmp->ptr, tmp->length);
-            if (w3m_reqlog) {
-                FILE* ff = fopen(w3m_reqlog, "a");
-                if (ff == NULL)
-                    return uf;
-                fwrite(tmp->ptr, sizeof(char), tmp->length, ff);
-                fclose(ff);
-            }
-            if (hr->command == HR_COMMAND_POST && request->enctype == FORM_ENCTYPE_MULTIPART)
-                write_from_file(sock, request->body);
+        case SCM_UNKNOWN:
+        default:
+            return uf;
         }
         break;
-    case SCM_DATA:
-        if (pu->file == NULL)
-            return uf;
-        p = Strnew_charp(pu->file)->ptr;
-        q = strchr(p, ',');
-        if (q == NULL)
-            return uf;
-        *q++ = '\0';
-        tmp = Strnew_charp(q);
-        q = strrchr(p, ';');
-        if (q != NULL && !strcmp(q, ";base64")) {
-            *q = '\0';
-            uf.encoding = ENC_BASE64;
-        } else
-            tmp = Str_url_unquote(tmp, FALSE, FALSE);
-        uf.stream = newStrStream(tmp);
-        uf.guess_type = (*p != '\0') ? p : "text/plain";
-        return uf;
-    case SCM_UNKNOWN:
-    default:
-        return uf;
     }
     uf.stream = newInputStream(sock);
     return uf;
@@ -1526,4 +1518,3 @@ int same_url_p(ParsedURL* pu1, ParsedURL* pu2)
     return (pu1->scheme == pu2->scheme && pu1->port == pu2->port && (pu1->host ? pu2->host ? !strcasecmp(pu1->host, pu2->host) : 0 : 1)
         && (pu1->file ? pu2->file ? !strcmp(pu1->file, pu2->file) : 0 : 1));
 }
-

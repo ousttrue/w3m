@@ -53,7 +53,7 @@ schemeNumToName(enum UrlScheme scheme)
     return 0;
 }
 
-enum UrlScheme getURLScheme(char** url)
+enum UrlScheme getURLScheme(const char** url)
 {
     char* p = *url;
     if(!p){

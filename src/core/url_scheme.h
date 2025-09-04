@@ -21,4 +21,4 @@ enum UrlScheme {
     SCM_HTTPS = 13,
 };
 
-enum UrlScheme getURLScheme(char** url);
+enum UrlScheme getURLScheme(const char** url);
