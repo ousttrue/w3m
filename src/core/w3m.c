@@ -2140,13 +2140,13 @@ _followForm(int submit, bool do_download)
             if (multipart) {
                 unlink(fi->parent->body);
             }
-            if (buf && !(buf->bufferprop & BP_REDIRECTED)) { /* buf must be Currentbuf */
+            // if (buf && !(buf->bufferprop & BP_REDIRECTED)) { /* buf must be Currentbuf */
                 /* BP_REDIRECTED means that the buffer is obtained through
                  * Location: header. In this case, buf->form_submit must not be set
                  * because the page is not loaded by POST method but GET method.
                  */
                 buf->form_submit = save_submit_formlist(fi);
-            }
+            // }
         } else if ((fi->parent->method == FORM_METHOD_INTERNAL && (!Strcmp_charp(fi->parent->action, "map") || !Strcmp_charp(fi->parent->action, "none"))) || Currentbuf->bufferprop & BP_INTERNAL) { /* internal */
             do_internal(tmp2->ptr, tmp->ptr);
         } else {

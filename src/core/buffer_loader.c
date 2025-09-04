@@ -1266,7 +1266,7 @@ load_doc: {
             current = New(ParsedURL);
             copyParsedURL(current, &pu);
             t_buf = newBuffer();
-            t_buf->bufferprop |= BP_REDIRECTED;
+            // t_buf->bufferprop |= BP_REDIRECTED;
             status = HTST_NORMAL;
             goto load_doc;
         }
