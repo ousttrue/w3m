@@ -1,4 +1,5 @@
 #include "w3m.h"
+#include "Content.h"
 #include "HttpClient.h"
 #include "siteconf.h"
 #include "buffer_loader.h"

@@ -62,4 +62,10 @@ void initMimeTypes(void);
 TextList* make_domain_list(char* domain_list);
 int check_no_proxy(char* domain);
 int same_url_p(ParsedURL* pu1, ParsedURL* pu2);
+char* file_to_url(const char* file);
+char* cleanupName(const char* name);
+char* file_unquote(const char* str);
+int is_localhost(const char* host);
+#define url_unquote_char(pstr) \
+    ((IS_XDIGIT((*(pstr))[1]) && IS_XDIGIT((*(pstr))[2])) ? (*(pstr) += 3, (GET_MYCDIGIT((*(pstr))[-2]) << 4) | GET_MYCDIGIT((*(pstr))[-1])) : -1)
 

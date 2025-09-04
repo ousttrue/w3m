@@ -29,17 +29,7 @@ struct _ParsedURL;
 struct form_list;
 struct HtmlTagParsed;
 
-struct Content {
-    struct _ParsedURL pu;
-    struct URLFile f;
-    Str page;
-    wc_ces charset;
-    const char* real_type;
-    TextList* document_header;
-};
-
-struct Content loadGeneralFile(const char* path, struct _ParsedURL* current, struct form_list* post,
-    const char* referer, bool no_cache);
+struct Content;
 struct _Buffer* makeBuffer(struct Content* c, bool do_download);
 
 int is_boundary(unsigned char*, unsigned char*);

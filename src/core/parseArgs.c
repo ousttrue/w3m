@@ -1,4 +1,5 @@
 #include "parseArgs.h"
+#include "Content.h"
 #include "mysignal.h"
 #include "buffer_loader.h"
 #include "ctrlcode.h"

@@ -1218,3 +1218,145 @@ int same_url_p(ParsedURL* pu1, ParsedURL* pu2)
     return (pu1->scheme == pu2->scheme && pu1->port == pu2->port && (pu1->host ? pu2->host ? !strcasecmp(pu1->host, pu2->host) : 0 : 1)
         && (pu1->file ? pu2->file ? !strcmp(pu1->file, pu2->file) : 0 : 1));
 }
+
+char* file_to_url(const char* file)
+{
+    Str tmp;
+#ifdef SUPPORT_DOS_DRIVE_PREFIX
+    char* drive = NULL;
+#endif
+#ifdef SUPPORT_NETBIOS_SHARE
+    char* host = NULL;
+#endif
+
+    if (!(file = expandPath(file)))
+        return NULL;
+#ifdef SUPPORT_NETBIOS_SHARE
+    if (file[0] == '/' && file[1] == '/') {
+        char* p;
+        file += 2;
+        if (*file) {
+            p = strchr(file, '/');
+            if (p != NULL && p != file) {
+                host = allocStr(file, (p - file));
+                file = p;
+            }
+        }
+    }
+#endif
+#ifdef SUPPORT_DOS_DRIVE_PREFIX
+    if (IS_ALPHA(file[0]) && file[1] == ':') {
+        drive = allocStr(file, 2);
+        file += 2;
+    } else
+#endif
+        if (file[0] != '/') {
+        tmp = Strnew_charp(CurrentDir);
+        if (Strlastchar(tmp) != '/')
+            Strcat_char(tmp, '/');
+        Strcat_charp(tmp, file);
+        file = tmp->ptr;
+    }
+    tmp = Strnew_charp("file://");
+#ifdef SUPPORT_NETBIOS_SHARE
+    if (host)
+        Strcat_charp(tmp, host);
+#endif
+#ifdef SUPPORT_DOS_DRIVE_PREFIX
+    if (drive)
+        Strcat_charp(tmp, drive);
+#endif
+    Strcat_charp(tmp, file_quote(cleanupName(file)));
+    return tmp->ptr;
+}
+
+char* cleanupName(const char* name)
+{
+    char *buf, *p, *q;
+
+    buf = allocStr(name, -1);
+    p = buf;
+    q = name;
+    while (*q != '\0') {
+        if (strncmp(p, "/../", 4) == 0) { /* foo/bar/../FOO */
+            if (p - 2 == buf && strncmp(p - 2, "..", 2) == 0) {
+                /* ../../       */
+                p += 3;
+                q += 3;
+            } else if (p - 3 >= buf && strncmp(p - 3, "/..", 3) == 0) {
+                /* ../../../    */
+                p += 3;
+                q += 3;
+            } else {
+                while (p != buf && *--p != '/')
+                    ; /* ->foo/FOO */
+                *p = '\0';
+                q += 3;
+                strcat(buf, q);
+            }
+        } else if (strcmp(p, "/..") == 0) { /* foo/bar/..   */
+            if (p - 2 == buf && strncmp(p - 2, "..", 2) == 0) {
+                /* ../..        */
+            } else if (p - 3 >= buf && strncmp(p - 3, "/..", 3) == 0) {
+                /* ../../..     */
+            } else {
+                while (p != buf && *--p != '/')
+                    ; /* ->foo/ */
+                *++p = '\0';
+            }
+            break;
+        } else if (strncmp(p, "/./", 3) == 0) { /* foo/./bar */
+            *p = '\0'; /* -> foo/bar           */
+            q += 2;
+            strcat(buf, q);
+        } else if (strcmp(p, "/.") == 0) { /* foo/. */
+            *++p = '\0'; /* -> foo/              */
+            break;
+        } else if (strncmp(p, "//", 2) == 0) { /* foo//bar */
+            /* -> foo/bar           */
+            *p = '\0';
+            q++;
+            strcat(buf, q);
+        } else {
+            p++;
+            q++;
+        }
+    }
+    return buf;
+}
+
+char* file_unquote(const char* str)
+{
+    Str tmp = NULL;
+    char *p, *q;
+    int c;
+
+    for (p = str; *p;) {
+        if (*p == '%') {
+            q = p;
+            c = url_unquote_char(&q);
+            if (c >= 0) {
+                if (tmp == NULL)
+                    tmp = Strnew_charp_n(str, (int)(p - str));
+                if (c != '\0' && c != '\n' && c != '\r')
+                    Strcat_char(tmp, (char)c);
+                p = q;
+                continue;
+            }
+        }
+        if (tmp)
+            Strcat_char(tmp, *p);
+        p++;
+    }
+    if (tmp)
+        return tmp->ptr;
+    return str;
+}
+
+int is_localhost(const char* host)
+{
+    if (!host || !strcasecmp(host, "localhost") || !strcmp(host, "127.0.0.1") || (HostName && !strcasecmp(host, HostName)) || !strcmp(host, "[::1]"))
+        return TRUE;
+    return FALSE;
+}
+

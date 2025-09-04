@@ -1,0 +1,15 @@
+#pragma once
+#include "url.h"
+#include "istream.h"
+
+struct Content {
+    struct _ParsedURL pu;
+    struct URLFile f;
+    Str page;
+    wc_ces charset;
+    const char* real_type;
+    TextList* document_header;
+};
+
+struct Content loadGeneralFile(const char* path, struct _ParsedURL* current, struct form_list* post,
+    const char* referer, bool no_cache);

@@ -3,6 +3,7 @@
 #endif
 
 #include "fm.h"
+#include "url.h"
 #include <stdio.h>
 #include <pwd.h>
 #include <sys/param.h>
@@ -365,62 +366,7 @@ char* currentdir()
     return path;
 }
 
-char* cleanupName(char* name)
-{
-    char *buf, *p, *q;
-
-    buf = allocStr(name, -1);
-    p = buf;
-    q = name;
-    while (*q != '\0') {
-        if (strncmp(p, "/../", 4) == 0) { /* foo/bar/../FOO */
-            if (p - 2 == buf && strncmp(p - 2, "..", 2) == 0) {
-                /* ../../       */
-                p += 3;
-                q += 3;
-            } else if (p - 3 >= buf && strncmp(p - 3, "/..", 3) == 0) {
-                /* ../../../    */
-                p += 3;
-                q += 3;
-            } else {
-                while (p != buf && *--p != '/')
-                    ; /* ->foo/FOO */
-                *p = '\0';
-                q += 3;
-                strcat(buf, q);
-            }
-        } else if (strcmp(p, "/..") == 0) { /* foo/bar/..   */
-            if (p - 2 == buf && strncmp(p - 2, "..", 2) == 0) {
-                /* ../..        */
-            } else if (p - 3 >= buf && strncmp(p - 3, "/..", 3) == 0) {
-                /* ../../..     */
-            } else {
-                while (p != buf && *--p != '/')
-                    ; /* ->foo/ */
-                *++p = '\0';
-            }
-            break;
-        } else if (strncmp(p, "/./", 3) == 0) { /* foo/./bar */
-            *p = '\0'; /* -> foo/bar           */
-            q += 2;
-            strcat(buf, q);
-        } else if (strcmp(p, "/.") == 0) { /* foo/. */
-            *++p = '\0'; /* -> foo/              */
-            break;
-        } else if (strncmp(p, "//", 2) == 0) { /* foo//bar */
-            /* -> foo/bar           */
-            *p = '\0';
-            q++;
-            strcat(buf, q);
-        } else {
-            p++;
-            q++;
-        }
-    }
-    return buf;
-}
-
-char* expandPath(const char* name)
+const char* expandPath(const char* name)
 {
     struct passwd *passent, *getpwnam(const char*);
     Str extpath = NULL;
@@ -578,18 +524,6 @@ char* remove_space(char* str)
     return p;
 }
 
-int non_null(char* s)
-{
-    if (s == NULL)
-        return FALSE;
-    while (*s) {
-        if (!IS_SPACE(*s))
-            return TRUE;
-        s++;
-    }
-    return FALSE;
-}
-
 int getescapechar(char** str)
 {
     int dummy = -1;
@@ -671,13 +605,13 @@ char* getescapecmd(char** s)
     return tmp->ptr;
 }
 
-char* html_quote(const char* str)
+const char* html_quote(const char* str)
 {
     Str tmp = NULL;
-    char *p, *q;
 
+    const char *p;
     for (p = str; *p; p++) {
-        q = html_quote_char(*p);
+        char *q = html_quote_char(*p);
         if (q) {
             if (tmp == NULL)
                 tmp = Strnew_charp_n(str, (int)(p - str));
@@ -717,14 +651,10 @@ char* html_unquote(char* str)
 
 static char xdigit[0x10] = "0123456789ABCDEF";
 
-#define url_unquote_char(pstr) \
-    ((IS_XDIGIT((*(pstr))[1]) && IS_XDIGIT((*(pstr))[2])) ? (*(pstr) += 3, (GET_MYCDIGIT((*(pstr))[-2]) << 4) | GET_MYCDIGIT((*(pstr))[-1])) : -1)
-
-char* url_quote(const char* str)
+const char* url_quote(const char* str)
 {
     Str tmp = NULL;
-    char* p;
-
+    const char* p;
     for (p = str; *p; p++) {
         if (is_url_quote(*p)) {
             if (tmp == NULL)
@@ -758,34 +688,6 @@ char* file_quote(char* str)
             if (tmp)
                 Strcat_char(tmp, *p);
         }
-    }
-    if (tmp)
-        return tmp->ptr;
-    return str;
-}
-
-char* file_unquote(char* str)
-{
-    Str tmp = NULL;
-    char *p, *q;
-    int c;
-
-    for (p = str; *p;) {
-        if (*p == '%') {
-            q = p;
-            c = url_unquote_char(&q);
-            if (c >= 0) {
-                if (tmp == NULL)
-                    tmp = Strnew_charp_n(str, (int)(p - str));
-                if (c != '\0' && c != '\n' && c != '\r')
-                    Strcat_char(tmp, (char)c);
-                p = q;
-                continue;
-            }
-        }
-        if (tmp)
-            Strcat_char(tmp, *p);
-        p++;
     }
     if (tmp)
         return tmp->ptr;

@@ -1,6 +1,5 @@
-/* $Id: myctype.h,v 1.6 2003/09/22 21:02:20 ukai Exp $ */
-#ifndef _MYCTYPE_H
-#define _MYCTYPE_H
+#pragma once
+#include <stdbool.h>
 
 #define MYCTYPE_CNTRL 1
 #define MYCTYPE_SPACE 2
@@ -49,4 +48,4 @@ extern unsigned char MYCTYPE_DIGITMAP[];
 #define REALLY_THE_BEGINNING_OF_A_TAG(p) \
     (IS_ALPHA(p[1]) || p[1] == '/' || p[1] == '!' || p[1] == '?' || p[1] == '\0' || p[1] == '_')
 
-#endif
+bool non_null(const char* s);
