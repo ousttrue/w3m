@@ -13,7 +13,6 @@ extern int NoSendReferer;
 extern int CrossOriginReferer;
 extern int use_cookie;
 extern int override_content_type;
-extern Str header_string;
 extern int accept_cookie;
 extern int show_cookie;
 enum AcceptBadCookieMode {

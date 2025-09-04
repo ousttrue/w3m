@@ -20,6 +20,7 @@ void initHttpClient(struct HttpClient* c, const char* path)
     c->page = NULL;
     c->content_type = "text/plain";
     c->charset = WC_CES_US_ASCII;
+    c->current_content_length = 0;
 }
 
 bool checkRedirection(struct HttpClient* c, ParsedURL* pu)

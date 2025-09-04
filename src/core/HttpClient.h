@@ -21,6 +21,8 @@ struct HttpClient {
     Str page;
     const char* content_type;
     wc_ces charset;
+
+    long long current_content_length;
 };
 
 void initHttpClient(struct HttpClient* c, const char* path);

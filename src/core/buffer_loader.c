@@ -15,7 +15,6 @@
 #include "tmpfile.h"
 #include "buffer.h"
 #include "readbuffer.h"
-// #include "mysignal.h"
 #include "table.h"
 #include "symbol.h"
 #include "ui.h"
@@ -33,6 +32,7 @@
 #include "funcname1.h"
 #include <myctype.h>
 #include <strings.h>
+// #include "mysignal.h"
 // #include <setjmp.h>
 // #include <signal.h>
 
@@ -57,7 +57,6 @@ int displayLinkNumber = (false);
 char SimplePreserveSpace = (false);
 int squeezeBlankLine = (false);
 
-long long current_content_length;
 ParsedURL* cur_baseURL = NULL;
 
 static TextLineListItem* _tl_lp2;
@@ -906,7 +905,7 @@ void loadHTML(Str html, wc_ces doc_charset, int cols, bool use_graphic, bool int
         // if (src)
         //     Strfputs(lineBuf2, src);
         linelen += lineBuf2->length;
-        showProgress(current_content_length, &linelen, &trbyte);
+        // showProgress(current_content_length, &linelen, &trbyte);
         // if (meta_charset) { /* <META> */
         //     if (content_charset == 0 && UseContentCharset) {
         //         doc_charset = meta_charset;
@@ -972,7 +971,7 @@ Buffer* page_loaded(ParsedURL pu, struct URLFile f,
         return b;
     }
 
-    current_content_length = 0;
+    long long current_content_length = 0;
     const char* p;
     if ((p = getHttpHeaderValue(document_header, "Content-Length:")) != NULL)
         current_content_length = strtoclen(p);
@@ -1075,8 +1074,8 @@ Buffer* page_loaded(ParsedURL pu, struct URLFile f,
             }
         }
     }
-    if (header_string)
-        header_string = NULL;
+    // if (header_string)
+    //     header_string = NULL;
     if (b && b != NO_BUFFER)
         preFormUpdateBuffer(b);
     return b;
@@ -1105,58 +1104,58 @@ loadGeneralFile(const char* path, ParsedURL* current, FormList* post, const char
     // redirection loop
     while (true) {
         parseURL2(c.url, &pu, current);
-        const char* sc_redirect = query_SCONF_SUBSTITUTE_URL(&pu);
-        if (sc_redirect && *sc_redirect && checkRedirection(&c, &pu)) {
-            c.url = sc_redirect;
-            post = NULL;
-            add_auth_cookie_flag = 0;
-            current = New(ParsedURL);
-            *current = pu;
-            c.status = HTST_NORMAL;
-            continue;
-        }
+        // const char* sc_redirect = query_SCONF_SUBSTITUTE_URL(&pu);
+        // if (sc_redirect && *sc_redirect && checkRedirection(&c, &pu)) {
+        //     c.url = sc_redirect;
+        //     post = NULL;
+        //     add_auth_cookie_flag = 0;
+        //     current = New(ParsedURL);
+        //     *current = pu;
+        //     c.status = HTST_NORMAL;
+        //     continue;
+        // }
 
         term_raw();
         openURL(&c, &pu, current, post, referer, no_cache, extra_header, &hr);
-        content_charset = 0;
-        if (!c.f.stream) {
-            switch (c.f.scheme) {
-            case SCM_LOCAL: {
-                struct stat st;
-                if (stat(pu.real_file, &st) < 0)
-                    return NULL;
-                if (S_ISDIR(st.st_mode)) {
-                    if (UseExternalDirBuffer) {
-                        Str cmd = Sprintf("%s?dir=%s#current",
-                            DirBufferCommand, pu.file);
-                        Buffer* b = loadGeneralFile(cmd->ptr, NULL, NULL, NO_REFERER, 0,
-                            do_download);
-                        if (b != NULL && b != NO_BUFFER) {
-                            copyParsedURL(&b->currentURL, &pu);
-                            b->filename = b->currentURL.real_file;
-                        }
-                        return b;
-                    } else {
-                        c.page = loadLocalDir(pu.real_file);
-                        c.content_type = "local:directory";
-                        c.charset = SystemCharset;
-                    }
-                }
-            } break;
-            case SCM_UNKNOWN:
-                /* FIXME: gettextize? */
-                message(getUI(), MSG_ERR, Sprintf("Unknown URI: %s", parsedURL2Str(&pu)->ptr)->ptr);
-                break;
-
-            default:
-                break;
-            }
-            if (c.page && c.page->length > 0) {
-                term_raw();
-                return page_loaded(pu, c.f, c.page, c.charset, c.content_type, NULL, do_download);
-            }
-            return NULL;
-        }
+        // content_charset = 0;
+        // if (!c.f.stream) {
+        //     switch (c.f.scheme) {
+        //     case SCM_LOCAL: {
+        //         struct stat st;
+        //         if (stat(pu.real_file, &st) < 0)
+        //             return NULL;
+        //         if (S_ISDIR(st.st_mode)) {
+        //             if (UseExternalDirBuffer) {
+        //                 Str cmd = Sprintf("%s?dir=%s#current",
+        //                     DirBufferCommand, pu.file);
+        //                 Buffer* b = loadGeneralFile(cmd->ptr, NULL, NULL, NO_REFERER, 0,
+        //                     do_download);
+        //                 if (b != NULL && b != NO_BUFFER) {
+        //                     copyParsedURL(&b->currentURL, &pu);
+        //                     b->filename = b->currentURL.real_file;
+        //                 }
+        //                 return b;
+        //             } else {
+        //                 c.page = loadLocalDir(pu.real_file);
+        //                 c.content_type = "local:directory";
+        //                 c.charset = SystemCharset;
+        //             }
+        //         }
+        //     } break;
+        //     case SCM_UNKNOWN:
+        //         /* FIXME: gettextize? */
+        //         message(getUI(), MSG_ERR, Sprintf("Unknown URI: %s", parsedURL2Str(&pu)->ptr)->ptr);
+        //         break;
+        //
+        //     default:
+        //         break;
+        //     }
+        //     if (c.page && c.page->length > 0) {
+        //         term_raw();
+        //         return page_loaded(pu, c.f, c.page, c.charset, c.content_type, NULL, do_download);
+        //     }
+        //     return NULL;
+        // }
 
         if (c.status == HTST_MISSING) {
             term_raw();
@@ -1179,8 +1178,8 @@ loadGeneralFile(const char* path, ParsedURL* current, FormList* post, const char
             /* local CGI */
             // searchHeader = true;
         }
-        if (header_string)
-            header_string = NULL;
+        // if (header_string)
+        //     header_string = NULL;
         // TRAP_ON;
         if (pu.scheme == SCM_HTTP || pu.scheme == SCM_HTTPS) {
             term_cbreak();
@@ -1270,27 +1269,8 @@ loadGeneralFile(const char* path, ParsedURL* current, FormList* post, const char
             }
 
             c.f.modtime = mymktime(getHttpHeaderValue(response.headers, "Last-Modified:"));
-        } else if (pu.scheme == SCM_FTP) {
-            check_compression(&c.f, path);
-            if (c.f.compression != CMP_NOCOMPRESS) {
-                char* t1 = (char*)uncompressed_file_type(pu.file, NULL);
-                const char* real_type = c.f.guess_type;
-                if (t1)
-                    c.content_type = t1;
-                else
-                    c.content_type = real_type;
-            } else {
-                const char* real_type = guessContentType(pu.file);
-                if (real_type == NULL)
-                    real_type = "text/plain";
-                c.content_type = real_type;
-            }
-        } else if (pu.scheme == SCM_DATA) {
-            c.content_type = c.f.guess_type;
-        } else if (DefaultType) {
-            c.content_type = DefaultType;
-            DefaultType = NULL;
-        } else {
+        } 
+        else {
             c.content_type = guessContentType(pu.file);
             if (c.content_type == NULL)
                 c.content_type = "text/plain";
@@ -1934,7 +1914,7 @@ loadBuffer(struct URLFile* uf, Buffer* newBuf)
         if (src)
             Strfputs(lineBuf2, src);
         linelen += lineBuf2->length;
-        showProgress(current_content_length, &linelen, &trbyte);
+        // showProgress(current_content_length, &linelen, &trbyte);
         lineBuf2 = convertLine(uf, lineBuf2, HEADER_MODE, &charset, doc_charset);
         if (squeezeBlankLine) {
             if (lineBuf2->ptr[0] == '\n' && pre_lbuf == '\n') {

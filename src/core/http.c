@@ -33,7 +33,6 @@ int NoSendReferer = false;
 int CrossOriginReferer = true;
 int use_cookie = true;
 int override_content_type = false;
-Str header_string = NULL;
 int accept_cookie = true;
 int show_cookie = false;
 enum AcceptBadCookieMode accept_bad_cookie = (ACCEPT_BAD_COOKIE_DISCARD);
@@ -204,15 +203,15 @@ Str getHttpRequestStr(ParsedURL* pu, ParsedURL* current, struct HttpRequest* hr,
             }
             Strcat(tmp,
                 Sprintf("Content-Length: %ld\r\n", hr->request->length));
-            if (header_string)
-                Strcat(tmp, header_string);
+            // if (header_string)
+            //     Strcat(tmp, header_string);
             Strcat_charp(tmp, "\r\n");
             Strcat_charp_n(tmp, hr->request->body, hr->request->length);
             Strcat_charp(tmp, "\r\n");
         }
     } else {
-        if (header_string)
-            Strcat(tmp, header_string);
+        // if (header_string)
+        //     Strcat(tmp, header_string);
         Strcat_charp(tmp, "\r\n");
     }
 #ifdef DEBUG
