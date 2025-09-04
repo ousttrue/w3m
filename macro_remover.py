@@ -9,6 +9,7 @@ from enum import Enum, auto
 HERE = pathlib.Path(__file__).absolute().parent
 
 CONTEXT = {
+    "USE_XFACE": False,
     "HAVE_SIGSETJMP": True,
     "SIGWINCH": True,
     "SIGPIPE": True,
