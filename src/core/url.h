@@ -24,11 +24,6 @@ extern char* w3m_reqlog;
 extern char* index_file;
 extern int DecodeURL;
 
-#define HTST_UNKNOWN 255
-#define HTST_MISSING 254
-#define HTST_NORMAL 0
-#define HTST_CONNECT 1
-
 typedef struct _ParsedURL {
     enum UrlScheme scheme;
     char* user;
@@ -60,7 +55,7 @@ char* url_encode(const char* url, const ParsedURL* base, wc_ces doc_charset);
 struct _Buffer;
 char* url_decode2(const char* url, const struct _Buffer* buf);
 ParsedURL* baseURL(struct _Buffer* buf);
-int openSocket(char* hostname, char* remoteport_name,
+int openSocket(const char* hostname, const char* remoteport_name,
     unsigned short remoteport_num);
 
 void initMimeTypes(void);

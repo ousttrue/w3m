@@ -1,4 +1,5 @@
 #include "buffer_loader.h"
+#include "HttpClient.h"
 #include "mysignal.h"
 #include "siteconf.h"
 #include "screen.h"
@@ -1126,7 +1127,6 @@ Buffer*
 loadGeneralFile(char* path, ParsedURL* current, const char* referer,
     int flag, FormList* request, bool do_download)
 {
-    struct URLFile f;
     ParsedURL pu;
     Buffer* b = NULL;
     const char* tpath;
@@ -1141,7 +1141,6 @@ loadGeneralFile(char* path, ParsedURL* current, const char* referer,
     Str pwd = NULL;
     Str realm = NULL;
     int add_auth_cookie_flag;
-    unsigned char status = HTST_NORMAL;
     struct URLOption url_option;
     Str tmp;
     Str page = NULL;
@@ -1155,6 +1154,10 @@ loadGeneralFile(char* path, ParsedURL* current, const char* referer,
 
     checkRedirection(NULL);
 
+    struct HttpClient c = {
+        .status = HTST_NORMAL,
+    };
+
 load_doc: {
     const char* sc_redirect;
     parseURL2(tpath, &pu, current);
@@ -1165,7 +1168,7 @@ load_doc: {
         add_auth_cookie_flag = 0;
         current = New(ParsedURL);
         *current = pu;
-        status = HTST_NORMAL;
+        c.status = HTST_NORMAL;
         goto load_doc;
     }
 }
@@ -1173,11 +1176,10 @@ load_doc: {
     term_raw();
     url_option.referer = referer;
     url_option.flag = flag;
-    f = openURL(tpath, &pu, current, &url_option, request, extra_header,
-        &hr, &status);
+    openURL(&c, tpath, &pu, current, &url_option, request, extra_header, &hr);
     content_charset = 0;
-    if (f.stream == NULL) {
-        switch (f.scheme) {
+    if (!c.f.stream) {
+        switch (c.f.scheme) {
         case SCM_LOCAL: {
             struct stat st;
             if (stat(pu.real_file, &st) < 0)
@@ -1210,14 +1212,14 @@ load_doc: {
         }
         if (page && page->length > 0) {
             term_raw();
-            return page_loaded(pu, f, page, charset, t, t_buf, do_download);
+            return page_loaded(pu, c.f, page, charset, t, t_buf, do_download);
         }
         return NULL;
     }
 
-    if (status == HTST_MISSING) {
+    if (c.status == HTST_MISSING) {
         term_raw();
-        UFclose(&f);
+        UFclose(&c.f);
         return NULL;
     }
 
@@ -1232,7 +1234,7 @@ load_doc: {
     // }
 
     b = NULL;
-    if (f.is_cgi) {
+    if (c.f.is_cgi) {
         /* local CGI */
         // searchHeader = true;
     }
@@ -1249,7 +1251,7 @@ load_doc: {
         if (t_buf == NULL)
             t_buf = newBuffer();
 
-        struct HttpResponse response = readHttpResponse(&f, &pu);
+        struct HttpResponse response = readHttpResponse(&c.f, &pu);
         t_buf->document_header = response.headers;
         if (((response.status_code >= 301 && response.status_code <= 303)
                 || response.status_code == 307)
@@ -1262,12 +1264,12 @@ load_doc: {
             /* 307: Temporary Redirect (HTTP/1.1) */
             tpath = url_encode(p, NULL, 0);
             request = NULL;
-            UFclose(&f);
+            UFclose(&c.f);
             current = New(ParsedURL);
             copyParsedURL(current, &pu);
             t_buf = newBuffer();
             // t_buf->bufferprop |= BP_REDIRECTED;
-            status = HTST_NORMAL;
+            c.status = HTST_NORMAL;
             goto load_doc;
         }
         struct ContentTypeCharset cc = getContentType(t_buf->document_header);
@@ -1295,11 +1297,11 @@ load_doc: {
                 if (uname == NULL) {
                     /* abort */
                     term_raw();
-                    return page_loaded(pu, f, page, charset, t, t_buf, do_download);
+                    return page_loaded(pu, c.f, page, charset, t, t_buf, do_download);
                 }
-                UFclose(&f);
+                UFclose(&c.f);
                 add_auth_cookie_flag = 1;
-                status = HTST_NORMAL;
+                c.status = HTST_NORMAL;
                 goto load_doc;
             }
         }
@@ -1316,27 +1318,27 @@ load_doc: {
                 if (uname == NULL) {
                     /* abort */
                     term_raw();
-                    return page_loaded(pu, f, page, charset, t, t_buf, do_download);
+                    return page_loaded(pu, c.f, page, charset, t, t_buf, do_download);
                 }
-                UFclose(&f);
+                UFclose(&c.f);
                 add_auth_cookie_flag = 1;
-                status = HTST_NORMAL;
+                c.status = HTST_NORMAL;
                 add_auth_user_passwd(auth_pu, qstr_unquote(realm)->ptr, uname, pwd, 1);
                 goto load_doc;
             }
         }
         /* XXX: RFC2617 3.2.3 Authentication-Info: ? */
 
-        if (status == HTST_CONNECT) {
+        if (c.status == HTST_CONNECT) {
             goto load_doc;
         }
 
-        f.modtime = mymktime(getHttpHeaderValue(t_buf->document_header, "Last-Modified:"));
+        c.f.modtime = mymktime(getHttpHeaderValue(t_buf->document_header, "Last-Modified:"));
     } else if (pu.scheme == SCM_FTP) {
-        check_compression(&f, path);
-        if (f.compression != CMP_NOCOMPRESS) {
+        check_compression(&c.f, path);
+        if (c.f.compression != CMP_NOCOMPRESS) {
             char* t1 = (char*)uncompressed_file_type(pu.file, NULL);
-            real_type = f.guess_type;
+            real_type = c.f.guess_type;
             if (t1)
                 t = t1;
             else
@@ -1348,7 +1350,7 @@ load_doc: {
             t = real_type;
         }
     } else if (pu.scheme == SCM_DATA) {
-        t = f.guess_type;
+        t = c.f.guess_type;
     }
     //     else if (searchHeader) {
     //         searchHeader = SearchHeader = false;
@@ -1401,16 +1403,17 @@ load_doc: {
         if (t == NULL)
             t = "text/plain";
         real_type = t;
-        if (f.guess_type)
-            t = f.guess_type;
+        if (c.f.guess_type){
+            t = c.f.guess_type;
+        }
     }
 
     /* XXX: can we use guess_type to give the type to loadHTMLstream
      *      to support default utf8 encoding for XHTML here? */
-    f.guess_type = t;
+    c.f.guess_type = t;
 
     term_raw();
-    return page_loaded(pu, f, page, charset, t, t_buf, do_download);
+    return page_loaded(pu, c.f, page, charset, t, t_buf, do_download);
 }
 
 #define TAG_IS(s, tag, len) \

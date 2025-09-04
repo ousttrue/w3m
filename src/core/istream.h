@@ -179,19 +179,4 @@ int save2tmp(struct URLFile uf, char* tmpf);
 int doFileSave(struct URLFile uf, const char* defstr, int current_content_length);
 void init_stream(struct URLFile* uf, int scheme, InputStream stream);
 int checkSaveFile(InputStream stream, char* path);
-
-/* flags for loadGeneralFile */
-#define RG_NOCACHE 1
-
-struct URLOption {
-    const char* referer;
-    int flag;
-};
-
-struct HttpRequest;
-struct form_list;
-struct URLFile openURL(const char* url, ParsedURL* pu, ParsedURL* current,
-    struct URLOption* option, struct form_list* request,
-    TextList* extra_header,
-    struct HttpRequest* hr, unsigned char* status);
 void UFhalfclose(struct URLFile* f);

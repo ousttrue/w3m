@@ -13,7 +13,7 @@ extern char* ssl_min_version;
 extern char* ssl_cipher;
 
 SSL* openSSLHandle(int sock, char* hostname, char** p_cert);
-void SSL_write_from_file(SSL* ssl, char* file);
+void SSL_write_from_file(SSL* ssl, const char* file);
 
 struct ssl_handle {
     SSL* ssl;

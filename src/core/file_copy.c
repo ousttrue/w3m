@@ -103,7 +103,7 @@ int setModtime(const char* path, time_t modtime)
     return utime(path, &t);
 }
 
-int _doFileCopy(char* tmpf, char* defstr, int download)
+int _doFileCopy(const char* tmpf, const char* defstr, int download)
 {
     Str msg;
     Str filen;

@@ -22,3 +22,4 @@ enum UrlScheme {
 };
 
 enum UrlScheme getURLScheme(const char** url);
+const char* schemeNumToName(enum UrlScheme scheme);

@@ -521,7 +521,7 @@ eend:
     return NULL;
 }
 
-void SSL_write_from_file(SSL* ssl, char* file)
+void SSL_write_from_file(SSL* ssl, const char* file)
 {
     FILE* fd;
     int c;
