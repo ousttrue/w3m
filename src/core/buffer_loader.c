@@ -941,7 +941,7 @@ phase2:
 }
 
 Buffer* page_loaded(ParsedURL pu, struct URLFile f,
-    Str page, wc_ces charset, const char* real_type, Buffer* t_buf, bool do_download)
+    Str page, wc_ces charset, const char* real_type, TextList* document_header, bool do_download)
 {
     if (page) {
         if (image_source)
@@ -974,7 +974,7 @@ Buffer* page_loaded(ParsedURL pu, struct URLFile f,
 
     current_content_length = 0;
     const char* p;
-    if ((p = getHttpHeaderValue(t_buf->document_header, "Content-Length:")) != NULL)
+    if ((p = getHttpHeaderValue(document_header, "Content-Length:")) != NULL)
         current_content_length = strtoclen(p);
     if (do_download) {
         /* download only */
@@ -987,7 +987,7 @@ Buffer* page_loaded(ParsedURL pu, struct URLFile f,
                 f.modtime = st.st_mtime;
             file = conv_from_system(guessSaveName(NULL, pu.real_file));
         } else
-            file = guessSaveName(t_buf->document_header, pu.file);
+            file = guessSaveName(document_header, pu.file);
         if (doFileSave(f, file, current_content_length) == 0)
             UFhalfclose(&f);
         else
@@ -995,12 +995,11 @@ Buffer* page_loaded(ParsedURL pu, struct URLFile f,
         return NO_BUFFER;
     }
 
+    Buffer* t_buf = newBuffer();
     if ((f.content_encoding != CMP_NOCOMPRESS) && AutoUncompress) {
         uncompress_stream(&f, &pu.real_file);
     } else if (f.compression != CMP_NOCOMPRESS) {
         if (is_text_type(real_type) || searchExtViewer(real_type)) {
-            if (t_buf == NULL)
-                t_buf = newBuffer();
             uncompress_stream(&f, &t_buf->sourcefile);
             uncompressed_file_type(pu.file, &f.ext);
         } else {
@@ -1008,6 +1007,7 @@ Buffer* page_loaded(ParsedURL pu, struct URLFile f,
             f.compression = CMP_NOCOMPRESS;
         }
     }
+
     if (image_source) {
         Buffer* b = NULL;
         if (IStype(f.stream) != IST_ENCODED)
@@ -1039,7 +1039,7 @@ Buffer* page_loaded(ParsedURL pu, struct URLFile f,
     }
     if (b) {
         if (b->buffername == NULL || b->buffername[0] == '\0') {
-            b->buffername = getHttpHeaderValue(b->document_header, "Subject:");
+            b->buffername = getHttpHeaderValue(document_header, "Subject:");
             if (b->buffername == NULL && b->filename != NULL)
                 b->buffername = conv_from_system(lastFileName(b->filename));
         }
@@ -1090,29 +1090,22 @@ loadGeneralFile(char* path, ParsedURL* current, const char* referer,
     int flag, FormList* request, bool do_download)
 {
     ParsedURL pu;
-    Buffer* b = NULL;
-    const char* tpath;
+    const char* tpath = path;
     const char* t = "text/plain";
     const char* p;
     const char* real_type = NULL;
-    Buffer* t_buf = NULL;
     // int  searchHeader = SearchHeader;
     MySignalHandler (*prevtrap)(int _dummy) = NULL;
     TextList* extra_header = newTextList();
     Str uname = NULL;
     Str pwd = NULL;
     Str realm = NULL;
-    int add_auth_cookie_flag;
+    bool add_auth_cookie_flag = 0;
     struct URLOption url_option;
-    Str tmp;
     Str page = NULL;
     wc_ces charset = WC_CES_US_ASCII;
     struct HttpRequest hr;
     ParsedURL* auth_pu;
-
-    tpath = path;
-    prevtrap = NULL;
-    add_auth_cookie_flag = 0;
 
     struct HttpClient c;
     initHttpClient(&c);
@@ -1146,7 +1139,7 @@ load_doc: {
                 if (UseExternalDirBuffer) {
                     Str cmd = Sprintf("%s?dir=%s#current",
                         DirBufferCommand, pu.file);
-                    b = loadGeneralFile(cmd->ptr, NULL, NO_REFERER, 0,
+                    Buffer* b = loadGeneralFile(cmd->ptr, NULL, NO_REFERER, 0,
                         NULL, do_download);
                     if (b != NULL && b != NO_BUFFER) {
                         copyParsedURL(&b->currentURL, &pu);
@@ -1170,7 +1163,7 @@ load_doc: {
         }
         if (page && page->length > 0) {
             term_raw();
-            return page_loaded(pu, c.f, page, charset, t, t_buf, do_download);
+            return page_loaded(pu, c.f, page, charset, t, NULL, do_download);
         }
         return NULL;
     }
@@ -1191,7 +1184,7 @@ load_doc: {
     //     return NULL;
     // }
 
-    b = NULL;
+    // Buffer *b = NULL;
     if (c.f.is_cgi) {
         /* local CGI */
         // searchHeader = true;
@@ -1206,14 +1199,10 @@ load_doc: {
         message(getUI(), MSG_INFO, Sprintf("%s contacted. Waiting for reply...", pu.host)->ptr);
         // refresh(ttyWriter());
 
-        if (t_buf == NULL)
-            t_buf = newBuffer();
-
         struct HttpResponse response = readHttpResponse(&c.f, &pu);
-        t_buf->document_header = response.headers;
         if (((response.status_code >= 301 && response.status_code <= 303)
                 || response.status_code == 307)
-            && (p = (char*)getHttpHeaderValue(t_buf->document_header, "Location:")) != NULL
+            && (p = (char*)getHttpHeaderValue(response.headers, "Location:")) != NULL
             && checkRedirection(&c, &pu)) {
             /* document moved */
             /* 301: Moved Permanently */
@@ -1225,12 +1214,11 @@ load_doc: {
             UFclose(&c.f);
             current = New(ParsedURL);
             copyParsedURL(current, &pu);
-            t_buf = newBuffer();
             // t_buf->bufferprop |= BP_REDIRECTED;
             c.status = HTST_NORMAL;
             goto load_doc;
         }
-        struct ContentTypeCharset cc = getContentType(t_buf->document_header);
+        struct ContentTypeCharset cc = getContentType(response.headers);
         t = cc.content_type;
         if (t == NULL && pu.file != NULL) {
             if (!((response.status_code >= 400 && response.status_code <= 407) || (response.status_code >= 500 && response.status_code <= 505)))
@@ -1244,10 +1232,10 @@ load_doc: {
                 0);
             add_auth_cookie_flag = 0;
         }
-        if ((p = getHttpHeaderValue(t_buf->document_header, "WWW-Authenticate:")) != NULL && response.status_code == 401) {
+        if ((p = getHttpHeaderValue(response.headers, "WWW-Authenticate:")) != NULL && response.status_code == 401) {
             /* Authentication needed */
             struct http_auth hauth;
-            if (findAuthentication(&hauth, t_buf->document_header, "WWW-Authenticate:") != NULL
+            if (findAuthentication(&hauth, response.headers, "WWW-Authenticate:") != NULL
                 && (realm = get_auth_param(hauth.param, "realm")) != NULL) {
                 auth_pu = &pu;
                 getAuthCookie(&hauth, "Authorization:", extra_header,
@@ -1255,7 +1243,7 @@ load_doc: {
                 if (uname == NULL) {
                     /* abort */
                     term_raw();
-                    return page_loaded(pu, c.f, page, charset, t, t_buf, do_download);
+                    return page_loaded(pu, c.f, page, charset, t, response.headers, do_download);
                 }
                 UFclose(&c.f);
                 add_auth_cookie_flag = 1;
@@ -1263,10 +1251,10 @@ load_doc: {
                 goto load_doc;
             }
         }
-        if ((p = getHttpHeaderValue(t_buf->document_header, "Proxy-Authenticate:")) != NULL && response.status_code == 407) {
+        if ((p = getHttpHeaderValue(response.headers, "Proxy-Authenticate:")) != NULL && response.status_code == 407) {
             /* Authentication needed */
             struct http_auth hauth;
-            if (findAuthentication(&hauth, t_buf->document_header, "Proxy-Authenticate:")
+            if (findAuthentication(&hauth, response.headers, "Proxy-Authenticate:")
                     != NULL
                 && (realm = get_auth_param(hauth.param, "realm")) != NULL) {
                 auth_pu = schemeToProxy(pu.scheme);
@@ -1276,7 +1264,7 @@ load_doc: {
                 if (uname == NULL) {
                     /* abort */
                     term_raw();
-                    return page_loaded(pu, c.f, page, charset, t, t_buf, do_download);
+                    return page_loaded(pu, c.f, page, charset, t, response.headers, do_download);
                 }
                 UFclose(&c.f);
                 add_auth_cookie_flag = 1;
@@ -1291,7 +1279,7 @@ load_doc: {
             goto load_doc;
         }
 
-        c.f.modtime = mymktime(getHttpHeaderValue(t_buf->document_header, "Last-Modified:"));
+        c.f.modtime = mymktime(getHttpHeaderValue(response.headers, "Last-Modified:"));
     } else if (pu.scheme == SCM_FTP) {
         check_compression(&c.f, path);
         if (c.f.compression != CMP_NOCOMPRESS) {
@@ -1371,7 +1359,7 @@ load_doc: {
     c.f.guess_type = t;
 
     term_raw();
-    return page_loaded(pu, c.f, page, charset, t, t_buf, do_download);
+    return page_loaded(pu, c.f, page, charset, t, NULL, do_download);
 }
 
 #define TAG_IS(s, tag, len) \
