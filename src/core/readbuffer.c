@@ -1950,3 +1950,156 @@ void completeHTMLstream(struct html_feed_environ* h_env, struct readbuffer* obuf
             break;
     }
 }
+
+void init_henv(struct html_feed_environ* h_env, struct readbuffer* obuf,
+    struct environment* envs, int nenv, TextLineList* buf,
+    int limit, int indent)
+{
+    envs[0].indent = indent;
+
+    obuf->line = Strnew();
+    obuf->cprop = 0;
+    obuf->pos = 0;
+    obuf->prevchar = Strnew_size(8);
+    set_space_to_prevchar(obuf->prevchar);
+    obuf->flag = RB_IGNORE_P;
+    obuf->flag_sp = 0;
+    obuf->status = R_ST_NORMAL;
+    obuf->table_level = -1;
+    obuf->nobr_level = 0;
+    obuf->q_level = 0;
+    memset((void*)&obuf->anchor, 0, sizeof(obuf->anchor));
+    obuf->img_alt = 0;
+    obuf->input_alt.hseq = 0;
+    obuf->input_alt.fid = -1;
+    obuf->input_alt.in = 0;
+    obuf->input_alt.type = NULL;
+    obuf->input_alt.name = NULL;
+    obuf->input_alt.value = NULL;
+    obuf->in_bold = 0;
+    obuf->in_italic = 0;
+    obuf->in_under = 0;
+    obuf->in_strike = 0;
+    obuf->in_ins = 0;
+    obuf->prev_ctype = PC_ASCII;
+    obuf->tag_sp = 0;
+    obuf->fontstat_sp = 0;
+    obuf->top_margin = 0;
+    obuf->bottom_margin = 0;
+    obuf->bp.init_flag = 1;
+    set_breakpoint(obuf, 0);
+
+    h_env->buf = buf;
+    h_env->f = NULL;
+    h_env->obuf = obuf;
+    h_env->tagbuf = Strnew();
+    h_env->limit = limit;
+    h_env->maxlimit = 0;
+    h_env->envs = envs;
+    h_env->nenv = nenv;
+    h_env->envc = 0;
+    h_env->envc_real = 0;
+    h_env->title = NULL;
+    h_env->blank_lines = 0;
+}
+
+static int
+is_period_char(unsigned char* ch)
+{
+    switch (*ch) {
+    case ',':
+    case '.':
+    case ':':
+    case ';':
+    case '?':
+    case '!':
+    case ')':
+    case ']':
+    case '}':
+    case '>':
+        return 1;
+    default:
+        return 0;
+    }
+}
+
+static int
+is_beginning_char(unsigned char* ch)
+{
+    switch (*ch) {
+    case '(':
+    case '[':
+    case '{':
+    case '`':
+    case '<':
+        return 1;
+    default:
+        return 0;
+    }
+}
+
+static int
+is_combining_char(unsigned char* ch)
+{
+    Lineprop ctype = get_mctype(ch);
+
+    if (ctype & PC_WCHAR2)
+        return 1;
+    return 0;
+}
+
+static int
+is_word_char(unsigned char* ch)
+{
+    Lineprop ctype = get_mctype(ch);
+
+    if (ctype & (PC_CTRL | PC_KANJI | PC_UNKNOWN))
+        return 0;
+    if (ctype & (PC_WCHAR1 | PC_WCHAR2))
+        return 1;
+
+    if (IS_ALNUM(*ch))
+        return 1;
+
+    switch (*ch) {
+    case ',':
+    case '.':
+    case ':':
+    case '\"': /* " */
+    case '\'':
+    case '$':
+    case '%':
+    case '*':
+    case '+':
+    case '-':
+    case '@':
+    case '~':
+    case '_':
+        return 1;
+    }
+    if (*ch == NBSP_CODE)
+        return 1;
+    return 0;
+}
+
+int is_boundary(unsigned char* ch1, unsigned char* ch2)
+{
+    if (!*ch1 || !*ch2)
+        return 1;
+
+    if (*ch1 == ' ' && *ch2 == ' ')
+        return 0;
+
+    if (*ch1 != ' ' && is_period_char(ch2))
+        return 0;
+
+    if (*ch2 != ' ' && is_beginning_char(ch1))
+        return 0;
+
+    if (is_combining_char(ch2))
+        return 0;
+    if (is_word_char(ch1) && is_word_char(ch2))
+        return 0;
+
+    return 1;
+}
