@@ -65,7 +65,6 @@
 #define min(a, b) ((a) > (b) ? (b) : (a))
 #endif /* not min */
 
-static char* guess_filename(char* file);
 static int _MoveFile(char* path1, char* path2);
 static FILE* lessopen_stream(char* path);
 
@@ -557,10 +556,9 @@ Buffer* _load(ParsedURL pu, struct URLFile f,
             fclose(src);
         }
         if (do_download) {
-            char* file;
             if (!src)
                 return NULL;
-            file = guess_filename(pu.file);
+            const char* file = guessFileName(pu.file);
             doFileMove(tmp->ptr, file);
             return NO_BUFFER;
         }
@@ -589,9 +587,9 @@ Buffer* _load(ParsedURL pu, struct URLFile f,
             struct stat st;
             if (PreserveTimestamp && !stat(pu.real_file, &st))
                 f.modtime = st.st_mtime;
-            file = conv_from_system(guess_save_name(NULL, pu.real_file));
+            file = conv_from_system(guessSaveName(NULL, pu.real_file));
         } else
-            file = guess_save_name(t_buf, pu.file);
+            file = guessSaveName(t_buf->document_header, pu.file);
         if (doFileSave(f, file) == 0)
             UFhalfclose(&f);
         else
@@ -2154,7 +2152,7 @@ int _doFileCopy(char* tmpf, char* defstr, int download)
     return 0;
 }
 
-int doFileMove(char* tmpf, char* defstr)
+int doFileMove(const char* tmpf, const char* defstr)
 {
     int ret = doFileCopy(tmpf, defstr);
     unlink(tmpf);
@@ -2357,43 +2355,3 @@ lessopen_stream(char* path)
     ungetc(c, fp);
     return fp;
 }
-
-static char*
-guess_filename(char* file)
-{
-    char *p = NULL, *s;
-
-    if (file != NULL)
-        p = mybasename(file);
-    if (p == NULL || *p == '\0')
-        return DEF_SAVE_FILE;
-    s = p;
-    if (*p == '#')
-        p++;
-    while (*p != '\0') {
-        if ((*p == '#' && *(p + 1) != '\0') || *p == '?') {
-            *p = '\0';
-            break;
-        }
-        p++;
-    }
-    return s;
-}
-
-char* guess_save_name(Buffer* buf, char* path)
-{
-    if (buf && buf->document_header) {
-        Str name = NULL;
-        char *p, *q;
-        if ((p = getHttpHeaderValue(buf->document_header, "Content-Disposition:")) != NULL && (q = strcasestr(p, "filename")) != NULL && (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') && matchattr(q, "filename", 8, &name))
-            path = name->ptr;
-        else if ((p = getHttpHeaderValue(buf->document_header, "Content-Type:")) != NULL && (q = strcasestr(p, "name")) != NULL && (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') && matchattr(q, "name", 4, &name))
-            path = name->ptr;
-    }
-    return guess_filename(path);
-}
-
-/* Local Variables:    */
-/* c-basic-offset: 4   */
-/* tab-width: 8        */
-/* End:                */

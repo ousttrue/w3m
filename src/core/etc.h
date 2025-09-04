@@ -8,7 +8,6 @@ struct _Buffer;
 struct _ParsedURL;
 
 Str base64_encode(const char* src, size_t len);
-char* mybasename(char* s);
 int columnSkip(struct _Buffer* buf, int offset);
 struct _Line* lineSkip(struct _Buffer* buf, struct _Line* line, int offset, int last);
 struct _Line* currentLineSkip(struct _Buffer* buf, struct _Line* line, int offset, int last);

@@ -525,3 +525,52 @@ struct ContentTypeCharset getContentType(TextList* document_header)
     }
     return content_type_charset;
 }
+
+const char* mybasename(const char* s)
+{
+    const char* p = s;
+    while (*p)
+        p++;
+    while (s <= p && *p != '/')
+        p--;
+    if (*p == '/')
+        p++;
+    else
+        p = s;
+    return allocStr(p, -1);
+}
+
+#define DEF_SAVE_FILE "index.html"
+
+const char* guessFileName(const char* file)
+{
+    char* p;
+    if (file)
+        p = allocStr(mybasename(file), -1);
+    if (!p || *p == '\0')
+        return DEF_SAVE_FILE;
+    const char* s = p;
+    if (*p == '#')
+        p++;
+    while (*p != '\0') {
+        if ((*p == '#' && *(p + 1) != '\0') || *p == '?') {
+            *p = '\0';
+            break;
+        }
+        p++;
+    }
+    return s;
+}
+
+const char* guessSaveName(TextList* document_header, const char* path)
+{
+    if (document_header) {
+        Str name = NULL;
+        const char *p, *q;
+        if ((p = getHttpHeaderValue(document_header, "Content-Disposition:")) != NULL && (q = strcasestr(p, "filename")) != NULL && (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') && matchattr(q, "filename", 8, &name))
+            path = name->ptr;
+        else if ((p = getHttpHeaderValue(document_header, "Content-Type:")) != NULL && (q = strcasestr(p, "name")) != NULL && (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') && matchattr(q, "name", 4, &name))
+            path = name->ptr;
+    }
+    return guessFileName(path);
+}

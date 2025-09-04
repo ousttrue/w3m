@@ -2,6 +2,7 @@
  * client-side image maps
  */
 #include "map.h"
+#include "http.h"
 #include "display.h"
 #include "alloc.h"
 #include "form.h"

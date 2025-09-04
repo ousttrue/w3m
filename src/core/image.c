@@ -1,4 +1,5 @@
 #include "image.h"
+#include "http.h"
 #include "tmpfile.h"
 #include "ui.h"
 #include "buffer.h"

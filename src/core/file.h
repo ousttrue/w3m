@@ -21,10 +21,9 @@ void saveBuffer(struct _Buffer* buf, FILE* f, int cont);
 void saveBufferBody(struct _Buffer* buf, FILE* f, int cont);
 int _doFileCopy(char* tmpf, char* defstr, int download);
 #define doFileCopy(tmpf, defstr) _doFileCopy(tmpf, defstr, FALSE);
-int doFileMove(char* tmpf, char* defstr);
+int doFileMove(const char* tmpf, const char* defstr);
 int checkCopyFile(char* path1, char* path2);
 int checkOverWrite(char* path);
-char* guess_save_name(struct _Buffer* buf, char* file);
 
 struct URLFile;
 void loadHTMLstream(struct URLFile* f, struct _Buffer* newBuf, FILE* src, int internal);

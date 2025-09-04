@@ -463,20 +463,6 @@ long lrand48(void)
 }
 #endif
 
-char* mybasename(char* s)
-{
-    char* p = s;
-    while (*p)
-        p++;
-    while (s <= p && *p != '/')
-        p--;
-    if (*p == '/')
-        p++;
-    else
-        p = s;
-    return allocStr(p, -1);
-}
-
 char* mydirname(char* s)
 {
     char* p = s;
