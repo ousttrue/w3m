@@ -12,11 +12,14 @@
 #include <openssl/ssl.h>
 #include <unistd.h>
 
-void initHttpClient(struct HttpClient* c, const char *path)
+void initHttpClient(struct HttpClient* c, const char* path)
 {
     c->status = HTST_NORMAL,
     c->nredir = 0;
     c->url = path;
+    c->page = NULL;
+    c->content_type = "text/plain";
+    c->charset = WC_CES_US_ASCII;
 }
 
 bool checkRedirection(struct HttpClient* c, ParsedURL* pu)
@@ -97,7 +100,7 @@ void openURL(struct HttpClient* c, ParsedURL* pu, ParsedURL* current,
 {
     init_stream(&c->f, SCM_MISSING, NULL);
 
-    const char* u = c->url; //url;
+    const char* u = c->url; // url;
     enum UrlScheme scheme = getURLScheme(&u);
     if (current == NULL && scheme == SCM_MISSING && !ArgvIsURL)
         u = file_to_url(c->url); /* force to local file */

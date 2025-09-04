@@ -25,6 +25,10 @@ struct HttpClient {
     int nredir;
 
     const char* url;
+
+    Str page;
+    const char* content_type;
+    wc_ces charset;
 };
 
 void initHttpClient(struct HttpClient* c, const char* path);

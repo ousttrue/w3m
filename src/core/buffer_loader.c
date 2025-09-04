@@ -1090,9 +1090,7 @@ loadGeneralFile(char* path, ParsedURL* current, const char* referer,
     int flag, FormList* request, bool do_download)
 {
     ParsedURL pu;
-    const char* t = "text/plain";
-    const char* p;
-    const char* real_type = NULL;
+    // const char* real_type = NULL;
     // int  searchHeader = SearchHeader;
     MySignalHandler (*prevtrap)(int _dummy) = NULL;
     TextList* extra_header = newTextList();
@@ -1101,8 +1099,6 @@ loadGeneralFile(char* path, ParsedURL* current, const char* referer,
     Str realm = NULL;
     bool add_auth_cookie_flag = 0;
     struct URLOption url_option;
-    Str page = NULL;
-    wc_ces charset = WC_CES_US_ASCII;
     struct HttpRequest hr;
     ParsedURL* auth_pu;
 
@@ -1146,9 +1142,9 @@ load_doc: {
                     }
                     return b;
                 } else {
-                    page = loadLocalDir(pu.real_file);
-                    t = "local:directory";
-                    charset = SystemCharset;
+                    c.page = loadLocalDir(pu.real_file);
+                    c.content_type = "local:directory";
+                    c.charset = SystemCharset;
                 }
             }
         } break;
@@ -1160,9 +1156,9 @@ load_doc: {
         default:
             break;
         }
-        if (page && page->length > 0) {
+        if (c.page && c.page->length > 0) {
             term_raw();
-            return page_loaded(pu, c.f, page, charset, t, NULL, do_download);
+            return page_loaded(pu, c.f, c.page, c.charset, c.content_type, NULL, do_download);
         }
         return NULL;
     }
@@ -1199,6 +1195,7 @@ load_doc: {
         // refresh(ttyWriter());
 
         struct HttpResponse response = readHttpResponse(&c.f, &pu);
+        const char* p;
         if (((response.status_code >= 301 && response.status_code <= 303)
                 || response.status_code == 307)
             && (p = (char*)getHttpHeaderValue(response.headers, "Location:")) != NULL
@@ -1218,13 +1215,14 @@ load_doc: {
             goto load_doc;
         }
         struct ContentTypeCharset cc = getContentType(response.headers);
-        t = cc.content_type;
-        if (t == NULL && pu.file != NULL) {
-            if (!((response.status_code >= 400 && response.status_code <= 407) || (response.status_code >= 500 && response.status_code <= 505)))
-                t = guessContentType(pu.file);
+        c.content_type = cc.content_type;
+        if (c.content_type == NULL && pu.file != NULL) {
+            if (!((response.status_code >= 400 && response.status_code <= 407) || (response.status_code >= 500 && response.status_code <= 505))) {
+                c.content_type = guessContentType(pu.file);
+            }
         }
-        if (t == NULL)
-            t = "text/plain";
+        if (c.content_type == NULL)
+            c.content_type = "text/plain";
         if (add_auth_cookie_flag && realm && uname && pwd) {
             /* If authorization is required and passed */
             add_auth_user_passwd(&pu, qstr_unquote(realm)->ptr, uname, pwd,
@@ -1242,7 +1240,7 @@ load_doc: {
                 if (uname == NULL) {
                     /* abort */
                     term_raw();
-                    return page_loaded(pu, c.f, page, charset, t, response.headers, do_download);
+                    return page_loaded(pu, c.f, c.page, c.charset, c.content_type, response.headers, do_download);
                 }
                 UFclose(&c.f);
                 add_auth_cookie_flag = 1;
@@ -1263,7 +1261,7 @@ load_doc: {
                 if (uname == NULL) {
                     /* abort */
                     term_raw();
-                    return page_loaded(pu, c.f, page, charset, t, response.headers, do_download);
+                    return page_loaded(pu, c.f, c.page, c.charset, c.content_type, response.headers, do_download);
                 }
                 UFclose(&c.f);
                 add_auth_cookie_flag = 1;
@@ -1283,19 +1281,19 @@ load_doc: {
         check_compression(&c.f, path);
         if (c.f.compression != CMP_NOCOMPRESS) {
             char* t1 = (char*)uncompressed_file_type(pu.file, NULL);
-            real_type = c.f.guess_type;
+            const char* real_type = c.f.guess_type;
             if (t1)
-                t = t1;
+                c.content_type = t1;
             else
-                t = real_type;
+                c.content_type = real_type;
         } else {
-            real_type = guessContentType(pu.file);
+            const char* real_type = guessContentType(pu.file);
             if (real_type == NULL)
                 real_type = "text/plain";
-            t = real_type;
+            c.content_type = real_type;
         }
     } else if (pu.scheme == SCM_DATA) {
-        t = c.f.guess_type;
+        c.content_type = c.f.guess_type;
     }
     //     else if (searchHeader) {
     //         searchHeader = SearchHeader = false;
@@ -1341,24 +1339,24 @@ load_doc: {
     //             t = "text/plain";
     //     }
     else if (DefaultType) {
-        t = DefaultType;
+        c.content_type = DefaultType;
         DefaultType = NULL;
     } else {
-        t = guessContentType(pu.file);
-        if (t == NULL)
-            t = "text/plain";
-        real_type = t;
+        c.content_type = guessContentType(pu.file);
+        if (c.content_type == NULL)
+            c.content_type = "text/plain";
+        // real_type = c.content_type;
         if (c.f.guess_type) {
-            t = c.f.guess_type;
+            c.content_type = c.f.guess_type;
         }
     }
 
     /* XXX: can we use guess_type to give the type to loadHTMLstream
      *      to support default utf8 encoding for XHTML here? */
-    c.f.guess_type = t;
+    c.f.guess_type = c.content_type;
 
     term_raw();
-    return page_loaded(pu, c.f, page, charset, t, NULL, do_download);
+    return page_loaded(pu, c.f, c.page, c.charset, c.content_type, NULL, do_download);
 }
 
 #define TAG_IS(s, tag, len) \
