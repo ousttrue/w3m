@@ -1518,26 +1518,7 @@ loadHTMLBuffer(struct URLFile* f, Buffer* newBuf)
 
 void loadHTMLstream(struct URLFile* f, Buffer* newBuf, FILE* src, int internal)
 {
-    Str html = Strnew();
-    Str lineBuf2;
-
-    // wc_ces doc_charset = DocumentCharset;
-    // wc_ces charset = WC_CES_US_ASCII;
-    // if (newBuf != NULL) {
-    //     if (newBuf->document_charset)
-    //         charset = /*doc_charset =*/newBuf->document_charset;
-    // }
-    // if (content_charset && UseContentCharset)
-    //     doc_charset = content_charset;
-    // else if (f->guess_type && !strcasecmp(f->guess_type, "application/xhtml+xml"))
-    //     doc_charset = WC_CES_UTF_8;
-    // meta_charset = 0;
-    // cur_document_charset = charset;
-
-    while ((lineBuf2 = StrmyUFgets(f)) && lineBuf2->length) {
-        Strcat(html, lineBuf2);
-    }
-
+    Str html = readAll(f);
     struct UI ui = getUI();
     loadHTML(html, WC_CES_SHIFT_JIS /*WC_CES_US_ASCII*/, ui.vt->COLS, ui.use_graphic, internal, newBuf);
     //     struct TermEntry* t = getTermEntry();

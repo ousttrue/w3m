@@ -180,3 +180,4 @@ int doFileSave(struct URLFile uf, const char* defstr, int current_content_length
 void init_stream(struct URLFile* uf, int scheme, InputStream stream);
 int checkSaveFile(InputStream stream, char* path);
 void UFhalfclose(struct URLFile* f);
+Str readAll(struct URLFile *f);

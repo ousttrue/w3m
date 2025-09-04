@@ -481,7 +481,7 @@ int doFileSave(struct URLFile uf, const char* defstr, int current_content_length
 {
     Str msg;
     // Str filen;
-    char *p;
+    char* p;
     pid_t pid;
     char* lock;
     char* tmpf = NULL;
@@ -668,3 +668,12 @@ Str convertLine(struct URLFile* uf, Str line, enum ConvertLineMode mode, wc_ces*
     return line;
 }
 
+Str readAll(struct URLFile* f)
+{
+    Str html = Strnew();
+    Str lineBuf2;
+    while ((lineBuf2 = StrmyUFgets(f)) && lineBuf2->length) {
+        Strcat(html, lineBuf2);
+    }
+    return html;
+}
