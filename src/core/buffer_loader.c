@@ -944,123 +944,122 @@ phase2:
     // return buf;
 }
 
-Buffer* page_loaded(ParsedURL pu, struct URLFile f,
-    Str page, wc_ces charset, const char* real_type, TextList* document_header, bool do_download)
+Buffer* makeBuffer(struct Content* c, bool do_download)
 {
-    if (page) {
+    if (c->page) {
         if (image_source)
             return NULL;
         Str tmp = tmpfname(TMPF_SRC, ".html");
         FILE* src = fopen(tmp->ptr, "w");
         if (src) {
-            Str s = wc_Str_conv_strict(page, InnerCharset, charset);
+            Str s = wc_Str_conv_strict(c->page, InnerCharset, c->charset);
             Strfputs(s, src);
             fclose(src);
         }
         if (do_download) {
             if (!src)
                 return NULL;
-            const char* file = guessFileName(pu.file);
+            const char* file = guessFileName(c->pu.file);
             doFileMove(tmp->ptr, file);
             return NO_BUFFER;
         }
-        Buffer* b = loadHTMLString(page);
+        Buffer* b = loadHTMLString(c->page);
         if (b) {
-            copyParsedURL(&b->currentURL, &pu);
-            b->real_scheme = pu.scheme;
-            b->real_type = real_type;
+            copyParsedURL(&b->currentURL, &c->pu);
+            b->real_scheme = c->pu.scheme;
+            b->real_type = c->real_type;
             if (src)
                 b->sourcefile = tmp->ptr;
-            b->document_charset = charset;
+            b->document_charset = c->charset;
         }
         return b;
     }
 
     long long current_content_length = 0;
     const char* p;
-    if ((p = getHttpHeaderValue(document_header, "Content-Length:")) != NULL)
+    if ((p = getHttpHeaderValue(c->document_header, "Content-Length:")) != NULL)
         current_content_length = strtoclen(p);
     if (do_download) {
         /* download only */
-        if (DecodeCTE && IStype(f.stream) != IST_ENCODED)
-            f.stream = newEncodedStream(f.stream, f.encoding);
+        if (DecodeCTE && IStype(c->f.stream) != IST_ENCODED)
+            c->f.stream = newEncodedStream(c->f.stream, c->f.encoding);
         const char* file;
-        if (pu.scheme == SCM_LOCAL) {
+        if (c->pu.scheme == SCM_LOCAL) {
             struct stat st;
-            if (PreserveTimestamp && !stat(pu.real_file, &st))
-                f.modtime = st.st_mtime;
-            file = conv_from_system(guessSaveName(NULL, pu.real_file));
+            if (PreserveTimestamp && !stat(c->pu.real_file, &st))
+                c->f.modtime = st.st_mtime;
+            file = conv_from_system(guessSaveName(NULL, c->pu.real_file));
         } else
-            file = guessSaveName(document_header, pu.file);
-        if (doFileSave(f, file, current_content_length) == 0)
-            UFhalfclose(&f);
+            file = guessSaveName(c->document_header, c->pu.file);
+        if (doFileSave(c->f, file, current_content_length) == 0)
+            UFhalfclose(&c->f);
         else
-            UFclose(&f);
+            UFclose(&c->f);
         return NO_BUFFER;
     }
 
     Buffer* t_buf = newBuffer();
-    if ((f.content_encoding != CMP_NOCOMPRESS) && AutoUncompress) {
-        uncompress_stream(&f, &pu.real_file);
-    } else if (f.compression != CMP_NOCOMPRESS) {
-        if (is_text_type(real_type) || searchExtViewer(real_type)) {
-            uncompress_stream(&f, &t_buf->sourcefile);
-            uncompressed_file_type(pu.file, &f.ext);
+    if ((c->f.content_encoding != CMP_NOCOMPRESS) && AutoUncompress) {
+        uncompress_stream(&c->f, &c->pu.real_file);
+    } else if (c->f.compression != CMP_NOCOMPRESS) {
+        if (is_text_type(c->real_type) || searchExtViewer(c->real_type)) {
+            uncompress_stream(&c->f, &t_buf->sourcefile);
+            uncompressed_file_type(c->pu.file, &c->f.ext);
         } else {
-            real_type = compress_application_type(f.compression);
-            f.compression = CMP_NOCOMPRESS;
+            c->real_type = compress_application_type(c->f.compression);
+            c->f.compression = CMP_NOCOMPRESS;
         }
     }
 
     if (image_source) {
         Buffer* b = NULL;
-        if (IStype(f.stream) != IST_ENCODED)
-            f.stream = newEncodedStream(f.stream, f.encoding);
-        if (save2tmp(f, image_source) == 0) {
+        if (IStype(c->f.stream) != IST_ENCODED)
+            c->f.stream = newEncodedStream(c->f.stream, c->f.encoding);
+        if (save2tmp(c->f, image_source) == 0) {
             b = newBuffer();
             b->sourcefile = image_source;
-            b->real_type = real_type;
+            b->real_type = c->real_type;
         }
-        UFclose(&f);
+        UFclose(&c->f);
         return b;
     }
 
     if (t_buf == NULL)
         t_buf = newBuffer();
-    copyParsedURL(&t_buf->currentURL, &pu);
-    t_buf->filename = pu.real_file ? pu.real_file : pu.file ? conv_to_system(pu.file)
+    copyParsedURL(&t_buf->currentURL, &c->pu);
+    t_buf->filename = c->pu.real_file ? c->pu.real_file : c->pu.file ? conv_to_system(c->pu.file)
                                                             : NULL;
-    t_buf->ssl_certificate = f.ssl_certificate;
+    t_buf->ssl_certificate = c->f.ssl_certificate;
 
     // Buffer* (*proc)(struct URLFile*, Buffer*) = loadBuffer;
     Buffer* b;
-    if (is_html_type(real_type)) {
-        b = loadHTMLBuffer(&f, t_buf);
+    if (is_html_type(c->real_type)) {
+        b = loadHTMLBuffer(&c->f, t_buf);
         b->type = "text/html";
     } else {
-        b = loadBuffer(&f, t_buf);
+        b = loadBuffer(&c->f, t_buf);
         b->type = "text/plain";
     }
     if (b) {
         if (b->buffername == NULL || b->buffername[0] == '\0') {
-            b->buffername = getHttpHeaderValue(document_header, "Subject:");
+            b->buffername = getHttpHeaderValue(c->document_header, "Subject:");
             if (b->buffername == NULL && b->filename != NULL)
                 b->buffername = conv_from_system(lastFileName(b->filename));
         }
         if (b->currentURL.scheme == SCM_UNKNOWN)
-            b->currentURL.scheme = f.scheme;
-        if (f.scheme == SCM_LOCAL && b->sourcefile == NULL)
+            b->currentURL.scheme = c->f.scheme;
+        if (c->f.scheme == SCM_LOCAL && b->sourcefile == NULL)
             b->sourcefile = b->filename;
     }
 
-    UFclose(&f);
+    UFclose(&c->f);
     if (b && b != NO_BUFFER) {
-        b->real_scheme = f.scheme;
-        b->real_type = real_type;
-        if (pu.label) {
-            if (is_html_type(real_type)) {
+        b->real_scheme = c->f.scheme;
+        b->real_type = c->real_type;
+        if (c->pu.label) {
+            if (is_html_type(c->real_type)) {
                 Anchor* a;
-                a = searchURLLabel(b, pu.label);
+                a = searchURLLabel(b, c->pu.label);
                 if (a != NULL) {
                     gotoLine(b, a->start.line);
                     if (label_topline)
@@ -1072,7 +1071,7 @@ Buffer* page_loaded(ParsedURL pu, struct URLFile f,
                     arrangeCursor(b);
                 }
             } else { /* plain text */
-                int l = atoi(pu.label);
+                int l = atoi(c->pu.label);
                 gotoRealLine(b, l);
                 b->pos = 0;
                 arrangeCursor(b);
@@ -1139,9 +1138,9 @@ static void write_from_file(int sock, const char* file)
 /*
  * loadGeneralFile: load file to buffer
  */
-Buffer*
+struct Content
 loadGeneralFile(const char* path, ParsedURL* current, FormList* post, const char* referer,
-    bool no_cache, bool do_download)
+    bool no_cache)
 {
     ParsedURL pu;
     MySignalHandler (*prevtrap)(int _dummy) = NULL;
@@ -1450,7 +1449,7 @@ loadGeneralFile(const char* path, ParsedURL* current, FormList* post, const char
             if (c.status == HTST_MISSING) {
                 term_raw();
                 UFclose(&c.f);
-                return NULL;
+                return (struct Content){};
             }
 
             /* openURL() succeeded */
@@ -1522,7 +1521,9 @@ loadGeneralFile(const char* path, ParsedURL* current, FormList* post, const char
                         if (uname == NULL) {
                             /* abort */
                             term_raw();
-                            return page_loaded(pu, c.f, c.page, c.charset, c.content_type, response.headers, do_download);
+                            return (struct Content) {
+                                pu, c.f, c.page, c.charset, c.content_type, response.headers
+                            };
                         }
                         UFclose(&c.f);
                         add_auth_cookie_flag = 1;
@@ -1543,7 +1544,9 @@ loadGeneralFile(const char* path, ParsedURL* current, FormList* post, const char
                         if (uname == NULL) {
                             /* abort */
                             term_raw();
-                            return page_loaded(pu, c.f, c.page, c.charset, c.content_type, response.headers, do_download);
+                            return (struct Content) {
+                                pu, c.f, c.page, c.charset, c.content_type, response.headers
+                            };
                         }
                         UFclose(&c.f);
                         add_auth_cookie_flag = 1;
@@ -1577,7 +1580,9 @@ loadGeneralFile(const char* path, ParsedURL* current, FormList* post, const char
     c.f.guess_type = c.content_type;
 
     term_raw();
-    return page_loaded(pu, c.f, c.page, c.charset, c.content_type, NULL, do_download);
+    return (struct Content) {
+        pu, c.f, c.page, c.charset, c.content_type, NULL
+    };
 }
 
 #define TAG_IS(s, tag, len) \

@@ -2,6 +2,8 @@
 #include <Str.h>
 #include <wc.h>
 #include "line.h"
+#include "url.h"
+#include "istream.h"
 
 extern char UseContentCharset;
 extern wc_ces DocumentCharset;
@@ -27,8 +29,19 @@ struct _ParsedURL;
 struct form_list;
 struct HtmlTagParsed;
 
-struct _Buffer* loadGeneralFile(const char* path, struct _ParsedURL* current, struct form_list* post,
-    const char* referer, bool no_cache, bool do_download);
+struct Content {
+    struct _ParsedURL pu;
+    struct URLFile f;
+    Str page;
+    wc_ces charset;
+    const char* real_type;
+    TextList* document_header;
+};
+
+struct Content loadGeneralFile(const char* path, struct _ParsedURL* current, struct form_list* post,
+    const char* referer, bool no_cache);
+struct _Buffer* makeBuffer(struct Content* c, bool do_download);
+
 int is_boundary(unsigned char*, unsigned char*);
 
 struct _Buffer* loadHTMLString(Str page);

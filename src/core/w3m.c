@@ -866,7 +866,8 @@ cmd_loadURL(char* url, ParsedURL* current, const char* referer, FormList* post)
         return;
 
     // refresh(ttyWriter());
-    Buffer* buf = loadGeneralFile(url, current, post, referer, false, false);
+    struct Content c = loadGeneralFile(url, current, post, referer, false);
+    Buffer* buf = makeBuffer(&c, false);
     if (buf == NULL) {
         /* FIXME: gettextize? */
         char* emsg = Sprintf("Can't load %s", conv_from_system(url))->ptr;
@@ -1031,7 +1032,8 @@ DEFUN(ldhelp, HELP, "Show help panel")
 static void
 cmd_loadfile(char* fn)
 {
-    Buffer* buf = loadGeneralFile(file_to_url(fn), NULL, NULL, NO_REFERER, false, false);
+    struct Content c = loadGeneralFile(file_to_url(fn), NULL, NULL, NO_REFERER, false);
+    Buffer* buf = makeBuffer(&c, false);
     if (buf == NULL) {
         /* FIXME: gettextize? */
         char* emsg = Sprintf("%s not found", conv_from_system(fn))->ptr;
@@ -1647,7 +1649,8 @@ loadLink(char* url, char* target, const char* referer, FormList* post, bool do_d
     if (referer == NULL)
         referer = parsedURL2RefererStr(&Currentbuf->currentURL)->ptr;
 
-    Buffer* buf = loadGeneralFile(url, baseURL(Currentbuf), post, referer, false, do_download);
+    struct Content c = loadGeneralFile(url, baseURL(Currentbuf), post, referer, false);
+    Buffer* buf = makeBuffer(&c, do_download);
     if (buf == NULL) {
         char* emsg = Sprintf("Can't load %s", url)->ptr;
         message(getUI(), MSG_ERR, emsg);
@@ -1763,19 +1766,18 @@ void bufferA(void)
 
 static void followImage(bool do_download)
 {
-    Anchor* a;
-    Buffer* buf;
-
     if (Currentbuf->firstLine == NULL)
         return;
 
+    Anchor* a;
     a = retrieveCurrentImg(Currentbuf);
     if (a == NULL)
         return;
     /* FIXME: gettextize? */
     message(getUI(), MSG_INFO, Sprintf("loading %s", a->url)->ptr);
     // refresh(ttyWriter());
-    buf = loadGeneralFile(a->url, baseURL(Currentbuf), NULL, NULL, 0, do_download);
+    struct Content c = loadGeneralFile(a->url, baseURL(Currentbuf), NULL, NULL, 0);
+    Buffer* buf = makeBuffer(&c, do_download);
     if (buf == NULL) {
         /* FIXME: gettextize? */
         char* emsg = Sprintf("Can't load %s", a->url)->ptr;
@@ -3196,8 +3198,9 @@ DEFUN(reload, RELOAD, "Load current document anew")
     if (Currentbuf->document_charset != WC_CES_US_ASCII)
         DocumentCharset = Currentbuf->document_charset;
     // SearchHeader = Currentbuf->search_header;
-    DefaultType = Currentbuf->real_type;
-    buf = loadGeneralFile(url->ptr, NULL, post, NO_REFERER, true, false);
+    DefaultType = (char*)Currentbuf->real_type;
+    struct Content c = loadGeneralFile(url->ptr, NULL, post, NO_REFERER, true);
+    buf = makeBuffer(&c, false);
     DocumentCharset = old_charset;
     // SearchHeader = FALSE;
     DefaultType = NULL;
@@ -3519,13 +3522,12 @@ GetWord(Buffer* buf)
 static void
 execdict(char* word)
 {
-    char *w, *dictcmd;
-    Buffer* buf;
-
     if (!UseDictCommand || word == NULL || *word == '\0') {
 
         return;
     }
+
+    char *w, *dictcmd;
     w = conv_to_system(word);
     if (*w == '\0') {
 
@@ -3534,7 +3536,8 @@ execdict(char* word)
     dictcmd = Sprintf("%s?%s", DictCommand,
         Str_form_quote(Strnew_charp(w))->ptr)
                   ->ptr;
-    buf = loadGeneralFile(dictcmd, NULL, NULL, NO_REFERER, 0, false);
+    struct Content c = loadGeneralFile(dictcmd, NULL, NULL, NO_REFERER, 0);
+    Buffer* buf = makeBuffer(&c, false);
     if (buf == NULL) {
         message(getUI(), MSG_INFO, "Execution failed");
         return;
