@@ -223,7 +223,7 @@ clear_mark(Line* l)
 /* search by regular expression */
 static int srchcore(char* str, SearchFunc func)
 {
-    volatile int i, result = SR_NOTFOUND;
+    volatile int result = SR_NOTFOUND;
 
     if (str != NULL && str != SearchString)
         SearchString = str;

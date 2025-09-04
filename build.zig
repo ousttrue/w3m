@@ -133,6 +133,9 @@ pub fn build(b: *std.Build) void {
 
     const flags = [_][]const u8{
         "-std=c2x",
+        // "-Wall",
+        // "-Werror",
+        "-Wno-invalid-source-encoding",
         // https://www.ibm.com/docs/ja/zos/2.5.0?topic=files-feature-test-macros
         // "-D_POSIX_C_SOURCE=200112L",
         "-D_POSIX_C_SOURCE=200809L",

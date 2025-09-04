@@ -480,8 +480,8 @@ int checkSaveFile(InputStream stream, char* path2)
 int doFileSave(struct URLFile uf, const char* defstr, int current_content_length)
 {
     Str msg;
-    Str filen;
-    char *p, *q;
+    // Str filen;
+    char *p;
     pid_t pid;
     char* lock;
     char* tmpf = NULL;
@@ -594,7 +594,8 @@ static MySignalHandler KeyAbort(int _dummy)
 
 int save2tmp(struct URLFile uf, char* tmpf)
 {
-    long long linelen = 0, trbyte = 0;
+    // long long linelen = 0;
+    // long long trbyte = 0;
     MySignalHandler (*prevtrap)(int _dummy) = NULL;
     static sigjmp_buf env_bak;
     int retval = 0;
@@ -619,7 +620,7 @@ int save2tmp(struct URLFile uf, char* tmpf)
                 retval = -2;
                 goto _end;
             }
-            linelen += count;
+            // linelen += count;
             // showProgress(current_content_length, &linelen, &trbyte);
         }
     }

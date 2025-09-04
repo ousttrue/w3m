@@ -386,7 +386,7 @@ void vt_addMChar(struct VirtualTerm* vt, char* p, Lineprop mode, size_t len, boo
         return;
     vt_do_effects(vt, m);
     if (mode & PC_SYMBOL) {
-        char** symbol;
+        const char** symbol;
         int w = (mode & PC_KANJI) ? 2 : 1;
 
         c = ((char)wtf_get_code((wc_uchar*)p) & 0x7f) - SYMBOL_BASE;

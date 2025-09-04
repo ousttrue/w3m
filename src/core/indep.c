@@ -422,13 +422,12 @@ char* cleanupName(char* name)
 
 char* expandPath(const char* name)
 {
-    char* p;
     struct passwd *passent, *getpwnam(const char*);
     Str extpath = NULL;
 
     if (name == NULL)
         return NULL;
-    p = name;
+    const char* p = name;
     if (*p == '~') {
         p++;
         if (IS_ALPHA(*p)) {

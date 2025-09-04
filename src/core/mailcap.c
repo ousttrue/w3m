@@ -20,7 +20,7 @@ static struct mailcap DefaultMailcap[] = {
 static TextList* mailcap_list;
 static struct mailcap** UserMailcap;
 
-int mailcapMatch(struct mailcap* mcap, char* type)
+int mailcapMatch(struct mailcap* mcap, const char* type)
 {
     char *cap = mcap->type, *p;
     int level;
@@ -51,7 +51,7 @@ int mailcapMatch(struct mailcap* mcap, char* type)
 }
 
 struct mailcap*
-searchMailcap(struct mailcap* table, char* type)
+searchMailcap(struct mailcap* table, const char* type)
 {
     int level = 0;
     struct mailcap* mcap = NULL;
@@ -302,7 +302,7 @@ no_user_mailcap:
 #define MCF_DQUOTED (1 << 1)
 
 static Str
-quote_mailcap(char* s, int flag)
+quote_mailcap(const char* s, int flag)
 {
     Str d;
 
@@ -341,11 +341,10 @@ end:
 }
 
 static Str
-unquote_mailcap_loop(char* qstr, char* type, char* name, char* attr,
+unquote_mailcap_loop(const char* qstr, const char* type, const char* name, const char* attr,
     int* mc_stat, int flag0)
 {
     Str str, tmp, test, then;
-    char* p;
     int status = MC_NORMAL, prev_status = MC_NORMAL, sp = 0, flag;
 
     if (mc_stat)
@@ -357,6 +356,7 @@ unquote_mailcap_loop(char* qstr, char* type, char* name, char* attr,
     str = Strnew();
     tmp = test = then = NULL;
 
+    const char* p;
     for (flag = flag0, p = qstr; *p; p++) {
         if (status == MC_QUOTED) {
             if (prev_status == MC_PREC2)

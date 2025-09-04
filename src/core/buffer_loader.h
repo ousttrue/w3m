@@ -27,7 +27,8 @@ struct _ParsedURL;
 struct form_list;
 struct HtmlTagParsed;
 
-struct _Buffer* loadGeneralFile(char* path, struct _ParsedURL* current, const char* referer, int flag, struct form_list* request, bool do_download);
+struct _Buffer* loadGeneralFile(const char* path, struct _ParsedURL* current, struct form_list* post,
+    const char* referer, bool no_cache, bool do_download);
 int is_boundary(unsigned char*, unsigned char*);
 
 struct _Buffer* loadHTMLString(Str page);

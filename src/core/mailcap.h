@@ -18,8 +18,8 @@ struct mailcap {
     char* edit;
 };
 
-int mailcapMatch(struct mailcap* mcap, char* type);
-struct mailcap* searchMailcap(struct mailcap* table, char* type);
+int mailcapMatch(struct mailcap* mcap, const char* type);
+struct mailcap* searchMailcap(struct mailcap* table, const char* type);
 void initMailcap(void);
 char* acceptableMimeTypes(void);
 struct mailcap* searchExtViewer(const char* type);

@@ -31,7 +31,7 @@ wc_putc(const struct Writer* writer, const char *c)
 }
 
 void
-wc_putc_end(const const struct Writer* writer)
+wc_putc_end(const struct Writer* writer)
 {
     Strclear(putc_str);
     wc_push_end(putc_str, &putc_st);

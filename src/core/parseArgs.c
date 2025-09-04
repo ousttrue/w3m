@@ -146,14 +146,14 @@ fusage(FILE* f, int err)
 
 void parseArgs(int argc, char** argv)
 {
-    char* url = argv[1];
+    const char* url = argv[1];
     if (getURLScheme(&url) == SCM_MISSING && !ArgvIsURL)
     retry_as_local_file:
         url = file_to_url(argv[1]);
     else
         url = url_encode(conv_from_system(argv[1]), NULL, 0);
 
-    Buffer* newbuf = loadGeneralFile(url, NULL, NO_REFERER, 0, NULL, false);
+    Buffer* newbuf = loadGeneralFile(url, NULL, NULL, NO_REFERER, 0, false);
     switch (newbuf->real_scheme) {
     case SCM_MAILTO:
         break;

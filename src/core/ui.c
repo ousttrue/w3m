@@ -259,7 +259,7 @@ static Str make_lastline_message(Buffer* buf)
 void renderFrame(struct UI ui)
 {
     struct TermEntry* t = getTermEntry();
-    bool use_graphic = graph_ok(t);
+    // bool use_graphic = graph_ok(t);
 
     // int cursorRow = ui.vt->CurLine;
     // int cursorCol = ui.vt->CurColumn;

@@ -942,7 +942,7 @@ set_param(const char* name, const char* value)
         *(char*)p->varptr = value[0];
         break;
     case P_STRING:
-        *(char**)p->varptr = value;
+        *(const char**)p->varptr = value;
         break;
 #if defined(USE_SSL) && defined(USE_SSL_VERIFY)
     case P_SSLPATH:

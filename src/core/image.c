@@ -512,7 +512,7 @@ void loadImage(Buffer* buf, enum ImageLoadFlag flag, bool do_download)
              */
             setup_child(FALSE, 0, -1);
             image_source = cache->file;
-            loadGeneralFile(cache->url, cache->current, NULL, 0, NULL, do_download);
+            loadGeneralFile(cache->url, cache->current, NULL, NULL, false, do_download);
             /* TODO make sure removing this didn't break anything
             if (!b || !b->real_type || strncasecmp(b->real_type, "image/", 6))
                 unlink(cache->file);
@@ -818,9 +818,9 @@ void put_image_kitty(int cursorX, int cursorY,
     int c, i, j, m, t, is_anim;
     struct stat st;
     pid_t pid;
-    MySignalHandler (*volatile previntr)(int _dummy);
-    MySignalHandler (*volatile prevquit)(int _dummy);
-    MySignalHandler (*volatile prevstop)(int _dummy);
+    // MySignalHandler (*volatile previntr)(int _dummy);
+    // MySignalHandler (*volatile prevquit)(int _dummy);
+    // MySignalHandler (*volatile prevstop)(int _dummy);
 
     if (!url)
         return;
@@ -1032,9 +1032,9 @@ void put_image_sixel(int cursorX, int cursorY,
 {
     pid_t pid;
     int do_anim;
-    MySignalHandler (*volatile previntr)(int _dummy);
-    MySignalHandler (*volatile prevquit)(int _dummy);
-    MySignalHandler (*volatile prevstop)(int _dummy);
+    // MySignalHandler (*volatile previntr)(int _dummy);
+    // MySignalHandler (*volatile prevquit)(int _dummy);
+    // MySignalHandler (*volatile prevstop)(int _dummy);
 
     MOVE(ttyWriter(), y, x);
     flush_tty();
@@ -1099,9 +1099,9 @@ void put_image_sixel(int cursorX, int cursorY,
         int status;
         waitpid(pid, &status, 0);
         ttymode_reset(ISIG, 0);
-        mySignal(SIGINT, previntr);
-        mySignal(SIGQUIT, prevquit);
-        mySignal(SIGTSTP, prevstop);
+        // mySignal(SIGINT, previntr);
+        // mySignal(SIGQUIT, prevquit);
+        // mySignal(SIGTSTP, prevstop);
         if (do_anim) {
             writestr("\x1b[?80l");
         }

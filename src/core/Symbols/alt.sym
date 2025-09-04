@@ -1,4 +1,4 @@
-static char *alt_symbol[] = {
+static const char *alt_symbol[] = {
     "+",  "|",  "-",  "+",  "|",  "|",  "+",  "",
     "-",  "+",  "-",  "",   "+",  "",   "",   "",
     "+",  "|",  "-",  "+",  "|",  "|",  "+",  "",
@@ -11,7 +11,7 @@ static char *alt_symbol[] = {
     NULL
 };
 #ifdef USE_M17N
-static char *alt2_symbol[] = {
+static const char *alt2_symbol[] = {
     "-+", " |", "--", " +", "-|", " |", "-+", "",
     "--", " +", "--", "",   "-+", "",   "",   "",
     "-+", " |", "--", " +", "-|", " |", "-+", "",

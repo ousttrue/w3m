@@ -95,7 +95,7 @@ static void write_from_file(int sock, const char* file)
 }
 
 void openURL(struct HttpClient* c, ParsedURL* pu, ParsedURL* current,
-    struct URLOption* option, FormList* request, TextList* extra_header,
+    FormList* post, const char* referer, bool no_cache, TextList* extra_header,
     struct HttpRequest* hr)
 {
     init_stream(&c->f, SCM_MISSING, NULL);
@@ -129,26 +129,26 @@ void openURL(struct HttpClient* c, ParsedURL* pu, ParsedURL* current,
 
         c->f.scheme = pu->scheme;
         c->f.url = parsedURL2Str(pu)->ptr;
-        pu->is_nocache = (option->flag & RG_NOCACHE);
+        pu->is_nocache = no_cache;
         c->f.ext = filename_extension(pu->file, 1);
 
         hr->command = HR_COMMAND_GET;
         hr->flag = 0;
-        hr->referer = option->referer;
-        hr->request = request;
+        hr->referer = referer;
+        hr->request = post;
 
         switch (pu->scheme) {
         case SCM_LOCAL:
         case SCM_LOCAL_CGI:
-            if (request && request->body)
+            if (post && post->body)
                 /* local CGI: POST */
                 c->f.stream = newFileStream(localcgi_post(pu->real_file, pu->query,
-                                                request, option->referer),
+                                                post, referer),
                     (void (*)())fclose);
             else
                 /* lodal CGI: GET */
                 c->f.stream = newFileStream(localcgi_get(pu->real_file, pu->query,
-                                                option->referer),
+                                                referer),
                     (void (*)())fclose);
             if (c->f.stream) {
                 c->f.is_cgi = TRUE;
@@ -196,9 +196,9 @@ void openURL(struct HttpClient* c, ParsedURL* pu, ParsedURL* current,
         case SCM_HTTPS:
             if (pu->file == NULL)
                 pu->file = allocStr("/", -1);
-            if (request && request->method == FORM_METHOD_POST && request->body)
+            if (post && post->method == FORM_METHOD_POST && post->body)
                 hr->command = HR_COMMAND_POST;
-            if (request && request->method == FORM_METHOD_HEAD)
+            if (post && post->method == FORM_METHOD_HEAD)
                 hr->command = HR_COMMAND_HEAD;
 
             Str tmp = NULL;
@@ -276,11 +276,11 @@ void openURL(struct HttpClient* c, ParsedURL* pu, ParsedURL* current,
                     fwrite(tmp->ptr, sizeof(char), tmp->length, ff);
                     fclose(ff);
                 }
-                if (hr->command == HR_COMMAND_POST && request->enctype == FORM_ENCTYPE_MULTIPART) {
+                if (hr->command == HR_COMMAND_POST && post->enctype == FORM_ENCTYPE_MULTIPART) {
                     if (sslh)
-                        SSL_write_from_file(sslh, request->body);
+                        SSL_write_from_file(sslh, post->body);
                     else
-                        write_from_file(sock, request->body);
+                        write_from_file(sock, post->body);
                 }
                 return;
             } else {
@@ -292,8 +292,8 @@ void openURL(struct HttpClient* c, ParsedURL* pu, ParsedURL* current,
                     fwrite(tmp->ptr, sizeof(char), tmp->length, ff);
                     fclose(ff);
                 }
-                if (hr->command == HR_COMMAND_POST && request->enctype == FORM_ENCTYPE_MULTIPART)
-                    write_from_file(sock, request->body);
+                if (hr->command == HR_COMMAND_POST && post->enctype == FORM_ENCTYPE_MULTIPART)
+                    write_from_file(sock, post->body);
             }
             break;
         case SCM_DATA: {

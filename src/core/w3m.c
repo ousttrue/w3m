@@ -860,15 +860,13 @@ handleMailto(char* url)
 }
 
 static void
-cmd_loadURL(char* url, ParsedURL* current, const char* referer, FormList* request)
+cmd_loadURL(char* url, ParsedURL* current, const char* referer, FormList* post)
 {
-    Buffer* buf;
-
     if (handleMailto(url))
         return;
 
     // refresh(ttyWriter());
-    buf = loadGeneralFile(url, current, referer, 0, request, false);
+    Buffer* buf = loadGeneralFile(url, current, post, referer, false, false);
     if (buf == NULL) {
         /* FIXME: gettextize? */
         char* emsg = Sprintf("Can't load %s", conv_from_system(url))->ptr;
@@ -1033,9 +1031,7 @@ DEFUN(ldhelp, HELP, "Show help panel")
 static void
 cmd_loadfile(char* fn)
 {
-    Buffer* buf;
-
-    buf = loadGeneralFile(file_to_url(fn), NULL, NO_REFERER, 0, NULL, false);
+    Buffer* buf = loadGeneralFile(file_to_url(fn), NULL, NULL, NO_REFERER, false, false);
     if (buf == NULL) {
         /* FIXME: gettextize? */
         char* emsg = Sprintf("%s not found", conv_from_system(fn))->ptr;
@@ -1634,11 +1630,10 @@ loadNormalBuf(Buffer* buf)
 }
 
 static Buffer*
-loadLink(char* url, char* target, const char* referer, FormList* request, bool do_download)
+loadLink(char* url, char* target, const char* referer, FormList* post, bool do_download)
 {
-    Buffer *buf, *nfbuf;
+    Buffer* nfbuf;
     union frameset_element* f_element = NULL;
-    int flag = 0;
     ParsedURL *base, pu;
     const int* no_referer_ptr;
 
@@ -1651,7 +1646,8 @@ loadLink(char* url, char* target, const char* referer, FormList* request, bool d
         referer = NO_REFERER;
     if (referer == NULL)
         referer = parsedURL2RefererStr(&Currentbuf->currentURL)->ptr;
-    buf = loadGeneralFile(url, baseURL(Currentbuf), referer, flag, request, do_download);
+
+    Buffer* buf = loadGeneralFile(url, baseURL(Currentbuf), post, referer, false, do_download);
     if (buf == NULL) {
         char* emsg = Sprintf("Can't load %s", url)->ptr;
         message(getUI(), MSG_ERR, emsg);
@@ -1779,7 +1775,7 @@ static void followImage(bool do_download)
     /* FIXME: gettextize? */
     message(getUI(), MSG_INFO, Sprintf("loading %s", a->url)->ptr);
     // refresh(ttyWriter());
-    buf = loadGeneralFile(a->url, baseURL(Currentbuf), NULL, 0, NULL, do_download);
+    buf = loadGeneralFile(a->url, baseURL(Currentbuf), NULL, NULL, 0, do_download);
     if (buf == NULL) {
         /* FIXME: gettextize? */
         char* emsg = Sprintf("Can't load %s", a->url)->ptr;
@@ -2142,11 +2138,11 @@ _followForm(int submit, bool do_download)
                 unlink(fi->parent->body);
             }
             // if (buf && !(buf->bufferprop & BP_REDIRECTED)) { /* buf must be Currentbuf */
-                /* BP_REDIRECTED means that the buffer is obtained through
-                 * Location: header. In this case, buf->form_submit must not be set
-                 * because the page is not loaded by POST method but GET method.
-                 */
-                buf->form_submit = save_submit_formlist(fi);
+            /* BP_REDIRECTED means that the buffer is obtained through
+             * Location: header. In this case, buf->form_submit must not be set
+             * because the page is not loaded by POST method but GET method.
+             */
+            buf->form_submit = save_submit_formlist(fi);
             // }
         } else if ((fi->parent->method == FORM_METHOD_INTERNAL && (!Strcmp_charp(fi->parent->action, "map") || !Strcmp_charp(fi->parent->action, "none"))) || Currentbuf->bufferprop & BP_INTERNAL) { /* internal */
             do_internal(tmp2->ptr, tmp->ptr);
@@ -3157,7 +3153,6 @@ DEFUN(reload, RELOAD, "Load current document anew")
     Buffer *buf, *fbuf = NULL, sbuf;
     wc_ces old_charset;
     Str url;
-    FormList* request;
     int multipart;
 
     if (Currentbuf->bufferprop & BP_INTERNAL) {
@@ -3177,19 +3172,21 @@ DEFUN(reload, RELOAD, "Load current document anew")
     }
     copyBuffer(&sbuf, Currentbuf);
     multipart = 0;
+
+    FormList* post;
     if (Currentbuf->form_submit) {
-        request = Currentbuf->form_submit->parent;
-        if (request->method == FORM_METHOD_POST
-            && request->enctype == FORM_ENCTYPE_MULTIPART) {
+        post = Currentbuf->form_submit->parent;
+        if (post->method == FORM_METHOD_POST
+            && post->enctype == FORM_ENCTYPE_MULTIPART) {
             Str query;
             struct stat st;
             multipart = 1;
             query_from_followform(&query, Currentbuf->form_submit, multipart);
-            stat(request->body, &st);
-            request->length = st.st_size;
+            stat(post->body, &st);
+            post->length = st.st_size;
         }
     } else {
-        request = NULL;
+        post = NULL;
     }
     url = parsedURL2Str(&Currentbuf->currentURL);
     /* FIXME: gettextize? */
@@ -3200,13 +3197,13 @@ DEFUN(reload, RELOAD, "Load current document anew")
         DocumentCharset = Currentbuf->document_charset;
     // SearchHeader = Currentbuf->search_header;
     DefaultType = Currentbuf->real_type;
-    buf = loadGeneralFile(url->ptr, NULL, NO_REFERER, RG_NOCACHE, request, false);
+    buf = loadGeneralFile(url->ptr, NULL, post, NO_REFERER, true, false);
     DocumentCharset = old_charset;
     // SearchHeader = FALSE;
     DefaultType = NULL;
 
     if (multipart)
-        unlink(request->body);
+        unlink(post->body);
     if (buf == NULL) {
         /* FIXME: gettextize? */
         message(getUI(), MSG_ERR, "Can't reload...");
@@ -3537,7 +3534,7 @@ execdict(char* word)
     dictcmd = Sprintf("%s?%s", DictCommand,
         Str_form_quote(Strnew_charp(w))->ptr)
                   ->ptr;
-    buf = loadGeneralFile(dictcmd, NULL, NO_REFERER, 0, NULL, false);
+    buf = loadGeneralFile(dictcmd, NULL, NULL, NO_REFERER, 0, false);
     if (buf == NULL) {
         message(getUI(), MSG_INFO, "Execution failed");
         return;

@@ -19,8 +19,8 @@
 typedef struct {
     wc_ces ces;
     char width;
-    char** item;
-    char** conved_item;
+    const char** item;
+    const char** conved_item;
 } symbol_set;
 
 typedef struct {
@@ -80,7 +80,7 @@ encode_symbol(symbol_set* s)
     }
 }
 
-char**
+const char**
 get_symbol(wc_ces charset, int* width)
 {
     charset_symbol_set* p;
@@ -157,9 +157,10 @@ void update_utf8_symbol(void)
 
 void push_symbol(Str str, char symbol, int width, int n)
 {
-    char buf[2], *p;
+    char buf[2];
     int i;
 
+    const char *p;
     if (width == 2)
         p = alt2_symbol[(unsigned char)symbol % N_SYMBOL];
     else

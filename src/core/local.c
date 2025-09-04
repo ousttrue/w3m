@@ -347,7 +347,6 @@ FILE* localcgi_post(char* uri, char* qstr, FormList* request, const char* refere
 #ifdef HAVE_CHDIR
     char* cgi_dir;
 #endif
-    char* cgi_basename;
 
     status = cgi_filename(uri, &file, &name, &path_info);
     if (check_local_cgi(file, status) < 0)
@@ -364,6 +363,7 @@ FILE* localcgi_post(char* uri, char* qstr, FormList* request, const char* refere
 #ifdef HAVE_CHDIR
     cgi_dir = mydirname(file);
 #endif
+    const char* cgi_basename;
     cgi_basename = mybasename(file);
     pid = open_pipe_rw(&fr, NULL); /* open_pipe_rw() forks */
     /* Don't invoke gc after here, or the program might crash in some platforms */

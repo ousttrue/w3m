@@ -55,7 +55,7 @@ schemeNumToName(enum UrlScheme scheme)
 
 enum UrlScheme getURLScheme(const char** url)
 {
-    char* p = *url;
+    const char* p = *url;
     if(!p){
         return SCM_UNKNOWN;
     }

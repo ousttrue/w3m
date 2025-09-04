@@ -106,7 +106,7 @@ int setModtime(const char* path, time_t modtime)
 int _doFileCopy(const char* tmpf, const char* defstr, int download)
 {
     Str msg;
-    Str filen;
+    // Str filen;
     char *p, *q = NULL;
     pid_t pid;
     char* lock;
