@@ -14,7 +14,7 @@
 #include "tmpfile.h"
 #include "buffer.h"
 #include "readbuffer.h"
-#include "mysignal.h"
+// #include "mysignal.h"
 #include "table.h"
 #include "symbol.h"
 #include "ui.h"
@@ -32,16 +32,16 @@
 #include "funcname1.h"
 #include <myctype.h>
 #include <strings.h>
-#include <setjmp.h>
-#include <signal.h>
+// #include <setjmp.h>
+// #include <signal.h>
 
 #define DOCUMENT_CHARSET WC_CES_UTF_8
 
-static sigjmp_buf AbortLoading;
-static MySignalHandler KeyAbort(int _dummy)
-{
-    siglongjmp(AbortLoading, 1);
-}
+// static sigjmp_buf AbortLoading;
+// static MySignalHandler KeyAbort(int _dummy)
+// {
+//     siglongjmp(AbortLoading, 1);
+// }
 
 char UseContentCharset = (true);
 wc_ces DocumentCharset = (DOCUMENT_CHARSET);
@@ -1169,7 +1169,8 @@ load_doc: {
         goto load_doc;
     }
 }
-    TRAP_OFF;
+
+    term_raw();
     url_option.referer = referer;
     url_option.flag = flag;
     f = openURL(tpath, &pu, current, &url_option, request, extra_header, of,
@@ -1209,27 +1210,27 @@ load_doc: {
             break;
         }
         if (page && page->length > 0) {
-            TRAP_OFF;
+            term_raw();
             return page_loaded(pu, f, page, charset, t, t_buf, do_download);
         }
         return NULL;
     }
 
     if (status == HTST_MISSING) {
-        TRAP_OFF;
+        term_raw();
         UFclose(&f);
         return NULL;
     }
 
     /* openURL() succeeded */
-    if (sigsetjmp(AbortLoading, 1) != 0) {
-        /* transfer interrupted */
-        TRAP_OFF;
-        if (b)
-            discardBuffer(b);
-        UFclose(&f);
-        return NULL;
-    }
+    // if (sigsetjmp(AbortLoading, 1) != 0) {
+    //     /* transfer interrupted */
+    //     term_raw();
+    //     if (b)
+    //         discardBuffer(b);
+    //     UFclose(&f);
+    //     return NULL;
+    // }
 
     b = NULL;
     if (f.is_cgi) {
@@ -1238,7 +1239,7 @@ load_doc: {
     }
     if (header_string)
         header_string = NULL;
-    TRAP_ON;
+    // TRAP_ON;
     if (pu.scheme == SCM_HTTP || pu.scheme == SCM_HTTPS) {
 
         term_cbreak();
@@ -1294,7 +1295,7 @@ load_doc: {
                     auth_pu, &hr, request, &uname, &pwd);
                 if (uname == NULL) {
                     /* abort */
-                    TRAP_OFF;
+                    term_raw();
                     return page_loaded(pu, f, page, charset, t, t_buf, do_download);
                 }
                 UFclose(&f);
@@ -1315,7 +1316,7 @@ load_doc: {
                     &uname, &pwd);
                 if (uname == NULL) {
                     /* abort */
-                    TRAP_OFF;
+                    term_raw();
                     return page_loaded(pu, f, page, charset, t, t_buf, do_download);
                 }
                 UFclose(&f);
@@ -1410,7 +1411,7 @@ load_doc: {
      *      to support default utf8 encoding for XHTML here? */
     f.guess_type = t;
 
-    TRAP_OFF;
+    term_raw();
     return page_loaded(pu, f, page, charset, t, t_buf, do_download);
 }
 
@@ -1970,19 +1971,19 @@ loadHTMLString(Str page)
     init_stream(&f, SCM_LOCAL, newStrStream(page));
 
     newBuf = newBuffer();
-    if (sigsetjmp(AbortLoading, 1) != 0) {
-        TRAP_OFF;
-        discardBuffer(newBuf);
-        UFclose(&f);
-        return NULL;
-    }
-    TRAP_ON;
+    // if (sigsetjmp(AbortLoading, 1) != 0) {
+    //     term_raw();
+    //     discardBuffer(newBuf);
+    //     UFclose(&f);
+    //     return NULL;
+    // }
+    // TRAP_ON;
 
     newBuf->document_charset = InnerCharset;
     loadHTMLstream(&f, newBuf, NULL, true);
     newBuf->document_charset = WC_CES_US_ASCII;
 
-    TRAP_OFF;
+    term_raw();
     UFclose(&f);
     newBuf->topLine = newBuf->firstLine;
     newBuf->lastLine = newBuf->currentLine;
@@ -2015,10 +2016,10 @@ loadBuffer(struct URLFile* uf, Buffer* newBuf)
     if (newBuf == NULL)
         newBuf = newBuffer();
 
-    if (sigsetjmp(AbortLoading, 1) != 0) {
-        goto _end;
-    }
-    TRAP_ON;
+    // if (sigsetjmp(AbortLoading, 1) != 0) {
+    //     goto _end;
+    // }
+    // TRAP_ON;
 
     if (newBuf->sourcefile == NULL && (uf->scheme != SCM_LOCAL || newBuf->mailcap)) {
         tmpf = tmpfname(TMPF_SRC, NULL);
@@ -2054,7 +2055,7 @@ loadBuffer(struct URLFile* uf, Buffer* newBuf)
             lineBuf2->length, -1, nlines);
     }
 _end:
-    TRAP_OFF;
+    term_raw();
     newBuf->topLine = newBuf->firstLine;
     newBuf->lastLine = newBuf->currentLine;
     newBuf->currentLine = newBuf->firstLine;
