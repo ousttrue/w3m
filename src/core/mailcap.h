@@ -25,3 +25,4 @@ char* acceptableMimeTypes(void);
 struct mailcap* searchExtViewer(const char* type);
 Str unquote_mailcap(const char* qstr, const char* type, const char* name, const char* attr,
     int* mc_stat);
+bool is_dump_text_type(const char* type);

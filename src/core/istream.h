@@ -161,7 +161,7 @@ struct URLFile {
     time_t modtime;
 };
 
-void examineFile(char* path, struct URLFile* uf);
+void examineFile(struct URLFile* uf, const char* path);
 
 enum ConvertLineMode {
     RAW_MODE = 0,

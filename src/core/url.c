@@ -65,7 +65,6 @@ struct table2 {
     char* item2;
 };
 
-
 static struct table2 DefaultGuess[] = {
     { "html", "text/html" },
     { "htm", "text/html" },
@@ -969,6 +968,17 @@ void init_stream(struct URLFile* uf, int scheme, InputStream stream)
     uf->modtime = -1;
 }
 
+static int dir_exist(char* path)
+{
+    struct stat stbuf;
+
+    if (path == NULL || *path == '\0')
+        return 0;
+    if (stat(path, &stbuf) == -1)
+        return 0;
+    return IS_DIRECTORY(stbuf.st_mode);
+}
+
 struct URLFile
 openURL(const char* url, ParsedURL* pu, ParsedURL* current,
     struct URLOption* option, FormList* request, TextList* extra_header,
@@ -1046,7 +1056,7 @@ retry:
             uf.scheme = pu->scheme = SCM_LOCAL_CGI;
             return uf;
         }
-        examineFile(pu->real_file, &uf);
+        examineFile(&uf, pu->real_file);
         if (uf.stream == NULL) {
             if (dir_exist(pu->real_file)) {
                 add_index_file(pu, &uf);
@@ -1067,7 +1077,7 @@ retry:
                         return uf;
                     }
                 } else {
-                    examineFile(q, &uf);
+                    examineFile(&uf, q);
                     if (uf.stream) {
                         pu->file = p;
                         pu->real_file = q;
@@ -1231,7 +1241,7 @@ add_index_file(ParsedURL* pu, struct URLFile* uf)
         p = Strnew_m_charp(pu->file, "/", file_quote(ti->ptr), NULL)->ptr;
         p = cleanupName(p);
         q = cleanupName(file_unquote(p));
-        examineFile(q, uf);
+        examineFile(uf, q);
         if (uf->stream != NULL) {
             pu->file = p;
             pu->real_file = q;

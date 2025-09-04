@@ -72,77 +72,7 @@ static MySignalHandler KeyAbort(int _dummy)
     siglongjmp(AbortLoading, 1);
 }
 
-int dir_exist(char* path)
-{
-    struct stat stbuf;
-
-    if (path == NULL || *path == '\0')
-        return 0;
-    if (stat(path, &stbuf) == -1)
-        return 0;
-    return IS_DIRECTORY(stbuf.st_mode);
-}
-
-static int
-is_dump_text_type(const char* type)
-{
-    struct mailcap* mcap;
-    return (type && (mcap = searchExtViewer(type)) && (mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)));
-}
-
-static int
-is_text_type(const char* type)
-{
-    return (type == NULL || type[0] == '\0' || strncasecmp(type, "text/", 5) == 0 || (strncasecmp(type, "application/", 12) == 0 && strstr(type, "xhtml") != NULL) || strncasecmp(type, "message/", sizeof("message/") - 1) == 0);
-}
-
-static int
-is_plain_text_type(const char* type)
-{
-    return ((type && strcasecmp(type, "text/plain") == 0) || (is_text_type(type) && !is_dump_text_type(type)));
-}
-
-int is_html_type(const char* type)
-{
-    return (type && (strcasecmp(type, "text/html") == 0 || strcasecmp(type, "application/xhtml+xml") == 0));
-}
-
-void examineFile(char* path, struct URLFile* uf)
-{
-    struct stat stbuf;
-
-    uf->guess_type = NULL;
-    if (path == NULL || *path == '\0' || stat(path, &stbuf) == -1 || NOT_REGULAR(stbuf.st_mode)) {
-        uf->stream = NULL;
-        return;
-    }
-    uf->stream = openIS(path);
-
-    check_compression(uf, path);
-    if (uf->compression != CMP_NOCOMPRESS) {
-        char* ext = uf->ext;
-        const char* t0 = uncompressed_file_type(path, &ext);
-        uf->guess_type = (char*)t0;
-        uf->ext = ext;
-        uncompress_stream(uf, NULL);
-        return;
-    }
-}
-
-/*
- * convert line
- */
-Str convertLine(struct URLFile* uf, Str line, enum ConvertLineMode mode, wc_ces* charset, wc_ces doc_charset)
-{
-    line = wc_Str_conv_with_detect(line, charset, doc_charset, InnerCharset);
-    if (mode != RAW_MODE)
-        cleanup_line(line, mode);
-    return line;
-}
-
-
-static int
-skip_auth_token(char** pp)
+static int skip_auth_token(char** pp)
 {
     char* p;
     int first = AUTHCHR_NUL, typ;

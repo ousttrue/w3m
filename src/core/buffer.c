@@ -1,5 +1,6 @@
 #include "buffer.h"
 #include "tmpfile.h"
+#include "http.h"
 #include "screen_effects.h"
 #include "alloc.h"
 #include "display.h"
@@ -435,8 +436,7 @@ void reshapeBuffer(Buffer* buf, int cols)
         return;
     struct URLFile f;
     init_stream(&f, SCM_LOCAL, NULL);
-    examineFile(buf->mailcap_source ? buf->mailcap_source : buf->sourcefile,
-        &f);
+    examineFile(&f, buf->mailcap_source ? buf->mailcap_source : buf->sourcefile);
     if (f.stream == NULL)
         return;
 

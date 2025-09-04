@@ -12,8 +12,6 @@ struct _ParsedURL;
 struct form_list;
 struct HtmlTagParsed;
 
-int dir_exist(char* path);
-int is_html_type(const char* type);
 struct _Buffer* loadGeneralFile(char* path, struct _ParsedURL* current, const char* referer, int flag, struct form_list* request, bool do_download);
 int is_boundary(unsigned char*, unsigned char*);
 

@@ -22,7 +22,6 @@ typedef struct dirent Directory;
 #define S_IFREG 0100000
 #endif /* not S_IFREG */
 
-#define NOT_REGULAR(m) (((m) & S_IFMT) != S_IFREG)
 #define IS_DIRECTORY(m) (((m) & S_IFMT) == S_IFDIR)
 
 #ifndef S_ISDIR

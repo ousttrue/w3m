@@ -452,3 +452,8 @@ Str unquote_mailcap(const char* qstr, const char* type, const char* name, const 
 {
     return unquote_mailcap_loop(qstr, type, name, attr, mc_stat, 0);
 }
+bool is_dump_text_type(const char* type)
+{
+    struct mailcap* mcap;
+    return (type && (mcap = searchExtViewer(type)) && (mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)));
+}

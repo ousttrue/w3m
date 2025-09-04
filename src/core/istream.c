@@ -632,3 +632,39 @@ _end:
     // current_content_length = 0;
     return retval;
 }
+
+#define NOT_REGULAR(m) (((m) & S_IFMT) != S_IFREG)
+
+void examineFile(struct URLFile* uf, const char* path)
+{
+    struct stat stbuf;
+
+    uf->guess_type = NULL;
+    if (path == NULL || *path == '\0' || stat(path, &stbuf) == -1 || NOT_REGULAR(stbuf.st_mode)) {
+        uf->stream = NULL;
+        return;
+    }
+    uf->stream = openIS(path);
+
+    check_compression(uf, path);
+    if (uf->compression != CMP_NOCOMPRESS) {
+        char* ext = uf->ext;
+        const char* t0 = uncompressed_file_type(path, &ext);
+        uf->guess_type = (char*)t0;
+        uf->ext = ext;
+        uncompress_stream(uf, NULL);
+        return;
+    }
+}
+
+/*
+ * convert line
+ */
+Str convertLine(struct URLFile* uf, Str line, enum ConvertLineMode mode, wc_ces* charset, wc_ces doc_charset)
+{
+    line = wc_Str_conv_with_detect(line, charset, doc_charset, InnerCharset);
+    if (mode != RAW_MODE)
+        cleanup_line(line, mode);
+    return line;
+}
+

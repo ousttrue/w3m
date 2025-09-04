@@ -1,4 +1,5 @@
 #include "http.h"
+#include "mailcap.h"
 #include "indep.h"
 #include "textlist.h"
 #include "ui.h"
@@ -573,4 +574,18 @@ const char* guessSaveName(TextList* document_header, const char* path)
             path = name->ptr;
     }
     return guessFileName(path);
+}
+
+bool is_text_type(const char* type)
+{
+    return (type == NULL || type[0] == '\0' || strncasecmp(type, "text/", 5) == 0 || (strncasecmp(type, "application/", 12) == 0 && strstr(type, "xhtml") != NULL) || strncasecmp(type, "message/", sizeof("message/") - 1) == 0);
+}
+
+bool is_plain_text_type(const char* type)
+{
+    return ((type && strcasecmp(type, "text/plain") == 0) || (is_text_type(type) && !is_dump_text_type(type)));
+}
+bool is_html_type(const char* type)
+{
+    return (type && (strcasecmp(type, "text/html") == 0 || strcasecmp(type, "application/xhtml+xml") == 0));
 }
