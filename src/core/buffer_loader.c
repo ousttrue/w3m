@@ -1090,7 +1090,6 @@ loadGeneralFile(char* path, ParsedURL* current, const char* referer,
     int flag, FormList* request, bool do_download)
 {
     ParsedURL pu;
-    const char* tpath = path;
     const char* t = "text/plain";
     const char* p;
     const char* real_type = NULL;
@@ -1108,13 +1107,13 @@ loadGeneralFile(char* path, ParsedURL* current, const char* referer,
     ParsedURL* auth_pu;
 
     struct HttpClient c;
-    initHttpClient(&c);
+    initHttpClient(&c, path);
 
 load_doc: {
-    parseURL2(tpath, &pu, current);
+    parseURL2(c.url, &pu, current);
     const char* sc_redirect = query_SCONF_SUBSTITUTE_URL(&pu);
     if (sc_redirect && *sc_redirect && checkRedirection(&c, &pu)) {
-        tpath = (char*)sc_redirect;
+        c.url = sc_redirect;
         request = NULL;
         add_auth_cookie_flag = 0;
         current = New(ParsedURL);
@@ -1127,7 +1126,7 @@ load_doc: {
     term_raw();
     url_option.referer = referer;
     url_option.flag = flag;
-    openURL(&c, tpath, &pu, current, &url_option, request, extra_header, &hr);
+    openURL(&c, &pu, current, &url_option, request, extra_header, &hr);
     content_charset = 0;
     if (!c.f.stream) {
         switch (c.f.scheme) {
@@ -1209,7 +1208,7 @@ load_doc: {
             /* 302: Found */
             /* 303: See Other */
             /* 307: Temporary Redirect (HTTP/1.1) */
-            tpath = url_encode(p, NULL, 0);
+            c.url = url_encode(p, NULL, 0);
             request = NULL;
             UFclose(&c.f);
             current = New(ParsedURL);

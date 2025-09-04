@@ -23,14 +23,16 @@ struct HttpClient {
 
     struct _ParsedURL puv[FollowRedirection];
     int nredir;
+
+    const char* url;
 };
 
-void initHttpClient(struct HttpClient* c);
+void initHttpClient(struct HttpClient* c, const char* path);
 bool checkRedirection(struct HttpClient* c, struct _ParsedURL* pu);
 
 struct HttpRequest;
 struct form_list;
-void openURL(struct HttpClient* c, const char* url, ParsedURL* pu, ParsedURL* current,
+void openURL(struct HttpClient* c, ParsedURL* pu, ParsedURL* current,
     struct URLOption* option, struct form_list* request,
     TextList* extra_header,
     struct HttpRequest* hr);

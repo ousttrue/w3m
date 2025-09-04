@@ -12,10 +12,11 @@
 #include <openssl/ssl.h>
 #include <unistd.h>
 
-void initHttpClient(struct HttpClient* c)
+void initHttpClient(struct HttpClient* c, const char *path)
 {
     c->status = HTST_NORMAL,
     c->nredir = 0;
+    c->url = path;
 }
 
 bool checkRedirection(struct HttpClient* c, ParsedURL* pu)
@@ -90,18 +91,18 @@ static void write_from_file(int sock, const char* file)
     }
 }
 
-void openURL(struct HttpClient* c, const char* url, ParsedURL* pu, ParsedURL* current,
+void openURL(struct HttpClient* c, ParsedURL* pu, ParsedURL* current,
     struct URLOption* option, FormList* request, TextList* extra_header,
     struct HttpRequest* hr)
 {
     init_stream(&c->f, SCM_MISSING, NULL);
 
-    const char* u = url;
+    const char* u = c->url; //url;
     enum UrlScheme scheme = getURLScheme(&u);
     if (current == NULL && scheme == SCM_MISSING && !ArgvIsURL)
-        u = file_to_url(url); /* force to local file */
+        u = file_to_url(c->url); /* force to local file */
     else
-        u = url;
+        u = c->url;
 
     int sock;
     while (true) {
@@ -180,10 +181,10 @@ void openURL(struct HttpClient* c, const char* url, ParsedURL* pu, ParsedURL* cu
                     }
                 }
             }
-            if (c->f.stream == NULL && retryAsHttp && url[0] != '/') {
+            if (c->f.stream == NULL && retryAsHttp && c->url[0] != '/') {
                 if (scheme == SCM_MISSING || scheme == SCM_UNKNOWN) {
                     /* retry it as "http://" */
-                    u = Strnew_m_charp("http://", url, NULL)->ptr;
+                    u = Strnew_m_charp("http://", c->url, NULL)->ptr;
                     continue;
                 }
             }
