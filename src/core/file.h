@@ -1,3 +1,4 @@
+#include <time.h>
 #pragma aonce
 #include <Str.h>
 #include "textlist.h"
@@ -19,11 +20,6 @@ int is_boundary(unsigned char*, unsigned char*);
 struct _Buffer* loadHTMLString(Str page);
 void saveBuffer(struct _Buffer* buf, FILE* f, int cont);
 void saveBufferBody(struct _Buffer* buf, FILE* f, int cont);
-int _doFileCopy(char* tmpf, char* defstr, int download);
-#define doFileCopy(tmpf, defstr) _doFileCopy(tmpf, defstr, FALSE);
-int doFileMove(const char* tmpf, const char* defstr);
-int checkCopyFile(char* path1, char* path2);
-int checkOverWrite(char* path);
 
 struct URLFile;
 void loadHTMLstream(struct URLFile* f, struct _Buffer* newBuf, FILE* src, int internal);

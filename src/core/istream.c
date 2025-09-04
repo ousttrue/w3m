@@ -1,10 +1,24 @@
 #include "indep.h"
+#include "file_copy.h"
+#include "etc.h"
+#include "downloadlist.h"
+#include "tmpfile.h"
+#include "file.h"
 #include "ssl_util.h"
 #include "mysignal.h"
 #include "mimehead.h"
 #include "istream.h"
+#include "keymap.h"
+#include "linein.h"
+#include "history.h"
+#include "tty.h"
+#include "progress.h"
 #include <signal.h>
 #include <unistd.h>
+#include <setjmp.h>
+
+char AutoUncompress = (FALSE);
+char PreserveTimestamp = (TRUE);
 
 #define uchar unsigned char
 
@@ -448,3 +462,173 @@ void UFhalfclose(struct URLFile* f)
     }
 }
 
+int checkSaveFile(InputStream stream, char* path2)
+{
+    int des = ISfileno(stream);
+    if (des < 0)
+        return 0;
+
+    if (*path2 == '|' && PermitSaveToPipe)
+        return 0;
+
+    struct stat st1, st2;
+    if ((fstat(des, &st1) == 0) && (stat(path2, &st2) == 0))
+        if (st1.st_ino == st2.st_ino)
+            return -1;
+    return 0;
+}
+
+int doFileSave(struct URLFile uf, const char* defstr, int current_content_length)
+{
+    Str msg;
+    Str filen;
+    char *p, *q;
+    pid_t pid;
+    char* lock;
+    char* tmpf = NULL;
+#if !(defined(HAVE_SYMLINK) && defined(HAVE_LSTAT))
+    FILE* f;
+#endif
+
+    // if (fmInitialized)
+    {
+        p = searchKeyData();
+        if (p == NULL || *p == '\0') {
+            /* FIXME: gettextize? */
+            p = inputLineHist(getUI(), "(Download)Save file to: ",
+                defstr, IN_FILENAME, SaveHist);
+            if (p == NULL || *p == '\0')
+                return -1;
+            p = conv_to_system(p);
+        }
+        if (!notExistsOrOverWrite(p))
+            return -1;
+        if (checkSaveFile(uf.stream, p) < 0) {
+            /* FIXME: gettextize? */
+            msg = Sprintf("Can't save. Load file and %s are identical.",
+                conv_from_system(p));
+            message(getUI(), MSG_ERR, msg->ptr);
+            return -1;
+        }
+        /*
+         * if (save2tmp(uf, p) < 0) {
+         * msg = Sprintf("Can't save to %s", conv_from_system(p));
+         * message(getUI(), MSG_ERR, msg->ptr);
+         * }
+         */
+        lock = tmpfname(TMPF_DFL, ".lock")->ptr;
+#if defined(HAVE_SYMLINK) && defined(HAVE_LSTAT)
+        symlink(p, lock);
+#else
+        f = fopen(lock, "w");
+        if (f)
+            fclose(f);
+#endif
+        flush_tty();
+        pid = fork();
+        if (!pid) {
+            int err;
+            if ((uf.content_encoding != CMP_NOCOMPRESS) && AutoUncompress) {
+                uncompress_stream(&uf, &tmpf);
+                if (tmpf)
+                    unlink(tmpf);
+            }
+            setup_child(FALSE, 0, UFfileno(&uf));
+            err = save2tmp(uf, p);
+            if (err == 0 && PreserveTimestamp && uf.modtime != -1)
+                setModtime(p, uf.modtime);
+            UFclose(&uf);
+            unlink(lock);
+            if (err != 0)
+                exit(-err);
+            exit(0);
+        }
+        addDownloadList(pid, uf.url, p, lock, current_content_length);
+    }
+    // else {
+    //     q = searchKeyData();
+    //     if (q == NULL || *q == '\0') {
+    //         /* FIXME: gettextize? */
+    //         printf("(Download)Save file to: ");
+    //         fflush(stdout);
+    //         filen = Strfgets(stdin);
+    //         if (filen->length == 0)
+    //             return -1;
+    //         q = filen->ptr;
+    //     }
+    //     for (p = q + strlen(q) - 1; IS_SPACE(*p); p--)
+    //         ;
+    //     *(p + 1) = '\0';
+    //     if (*q == '\0')
+    //         return -1;
+    //     p = expandPath(q);
+    //     if (!notExistsOrOverWrite(p))
+    //         return -1;
+    //     if (checkSaveFile(uf.stream, p) < 0) {
+    //         /* FIXME: gettextize? */
+    //         printf("Can't save. Load file and %s are identical.", p);
+    //         return -1;
+    //     }
+    //     if (uf.content_encoding != CMP_NOCOMPRESS && AutoUncompress) {
+    //         uncompress_stream(&uf, &tmpf);
+    //         if (tmpf)
+    //             unlink(tmpf);
+    //     }
+    //     if (save2tmp(uf, p) < 0) {
+    //         /* FIXME: gettextize? */
+    //         printf("Can't save to %s\n", p);
+    //         return -1;
+    //     }
+    //     if (PreserveTimestamp && uf.modtime != -1)
+    //         setModtime(p, uf.modtime);
+    // }
+    return 0;
+}
+
+static sigjmp_buf AbortLoading;
+static MySignalHandler KeyAbort(int _dummy)
+{
+    siglongjmp(AbortLoading, 1);
+}
+
+#define SAVE_BUF_SIZE 1536
+
+int save2tmp(struct URLFile uf, char* tmpf)
+{
+    long long linelen = 0, trbyte = 0;
+    MySignalHandler (*prevtrap)(int _dummy) = NULL;
+    static sigjmp_buf env_bak;
+    int retval = 0;
+    char* buf = NULL;
+
+    FILE* ff = fopen(tmpf, "wb");
+    if (ff == NULL) {
+        /* fclose(f); */
+        return -1;
+    }
+    memcpy(env_bak, AbortLoading, sizeof(sigjmp_buf));
+    if (sigsetjmp(AbortLoading, 1) != 0) {
+        goto _end;
+    }
+    TRAP_ON;
+    {
+        int count;
+
+        buf = NewWithoutGC_N(char, SAVE_BUF_SIZE);
+        while ((count = ISread_n(uf.stream, buf, SAVE_BUF_SIZE)) > 0) {
+            if (fwrite(buf, 1, count, ff) != count) {
+                retval = -2;
+                goto _end;
+            }
+            linelen += count;
+            // showProgress(current_content_length, &linelen, &trbyte);
+        }
+    }
+_end:
+    memcpy(AbortLoading, env_bak, sizeof(sigjmp_buf));
+    TRAP_OFF;
+    xfree(buf);
+    fclose(ff);
+    // current_content_length = 0;
+    return retval;
+}

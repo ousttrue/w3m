@@ -1,5 +1,6 @@
 #include "w3m.h"
 #include "buffer_loader.h"
+#include "file_copy.h"
 #include "indep.h"
 #include "tmpfile.h"
 #include "istream.h"
@@ -2959,8 +2960,7 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document")
             file = conv_to_system(file);
         }
         file = expandPath(file);
-        if (checkOverWrite(file) < 0) {
-
+        if (!notExistsOrOverWrite(file)) {
             return;
         }
         f = fopen(file, "w");
@@ -2982,16 +2982,15 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document")
 /* save source */
 DEFUN(svSrc, DOWNLOAD SAVE, "Save document source")
 {
-    char* file;
-
     if (Currentbuf->sourcefile == NULL)
         return;
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
     PermitSaveToPipe = TRUE;
+    const char* file;
     if (Currentbuf->real_scheme == SCM_LOCAL)
         file = conv_from_system(guessSaveName(NULL, Currentbuf->currentURL.real_file));
     else
-        file = guessSaveName(Currentbuf, Currentbuf->currentURL.file);
+        file = guessSaveName(Currentbuf->document_header, Currentbuf->currentURL.file);
     doFileCopy(Currentbuf->sourcefile, file);
     PermitSaveToPipe = FALSE;
 }

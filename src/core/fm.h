@@ -59,10 +59,7 @@ global int PagerMax init(PAGER_MAX_LINE);
 // global char SearchHeader init(FALSE);
 global char* DefaultType init(NULL);
 global char TargetSelf init(FALSE);
-global char PermitSaveToPipe init(FALSE);
 global char DecodeCTE init(FALSE);
-global char AutoUncompress init(FALSE);
-global char PreserveTimestamp init(TRUE);
 
 global int CurrentKey;
 global char* CurrentKeyData;

@@ -8,6 +8,9 @@
 #include <fcntl.h>
 #include <openssl/types.h>
 
+extern char AutoUncompress;
+extern char PreserveTimestamp;
+
 struct stream_buffer {
     unsigned char* buf;
     int size, cur, next;
@@ -174,7 +177,7 @@ struct _Buffer* loadHTMLBuffer(struct URLFile* f, struct _Buffer* newBuf);
 struct _Buffer* loadBuffer(struct URLFile* uf, struct _Buffer* newBuf);
 struct _Buffer* loadImageBuffer(struct URLFile* uf, struct _Buffer* newBuf);
 int save2tmp(struct URLFile uf, char* tmpf);
-int doFileSave(struct URLFile uf, char* defstr);
+int doFileSave(struct URLFile uf, const char* defstr, int current_content_length);
 void init_stream(struct URLFile* uf, int scheme, InputStream stream);
 int checkSaveFile(InputStream stream, char* path);
 
