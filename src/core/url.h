@@ -66,3 +66,5 @@ int openSocket(char* hostname, char* remoteport_name,
 void initMimeTypes(void);
 TextList* make_domain_list(char* domain_list);
 int check_no_proxy(char* domain);
+int same_url_p(ParsedURL* pu1, ParsedURL* pu2);
+

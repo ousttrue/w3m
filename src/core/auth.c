@@ -341,3 +341,260 @@ Str AuthDigestCred(struct http_auth* ha, Str uname, Str pw, ParsedURL* pu,
 
     return tmp;
 }
+
+static int skip_auth_token(char** pp)
+{
+    char* p;
+    int first = AUTHCHR_NUL, typ;
+
+    for (p = *pp;; ++p) {
+        switch (*p) {
+        case '\0':
+            goto endoftoken;
+        default:
+            if ((unsigned char)*p > 037) {
+                typ = AUTHCHR_TOKEN;
+                break;
+            }
+            /* thru */
+        case '\177':
+        case '[':
+        case ']':
+        case '(':
+        case ')':
+        case '<':
+        case '>':
+        case '@':
+        case ';':
+        case ':':
+        case '\\':
+        case '"':
+        case '/':
+        case '?':
+        case '=':
+        case ' ':
+        case '\t':
+        case ',':
+            typ = AUTHCHR_SEP;
+            break;
+        }
+
+        if (!first)
+            first = typ;
+        else if (first != typ)
+            break;
+    }
+endoftoken:
+    *pp = p;
+    return first;
+}
+
+static Str
+extract_auth_val(char** q)
+{
+    unsigned char* qq = *(unsigned char**)q;
+    int quoted = 0;
+    Str val = Strnew();
+
+    SKIP_BLANKS(qq);
+    if (*qq == '"') {
+        quoted = TRUE;
+        Strcat_char(val, *qq++);
+    }
+    while (*qq != '\0') {
+        if (quoted && *qq == '"') {
+            Strcat_char(val, *qq++);
+            break;
+        }
+        if (!quoted) {
+            switch (*qq) {
+            case '[':
+            case ']':
+            case '(':
+            case ')':
+            case '<':
+            case '>':
+            case '@':
+            case ';':
+            case ':':
+            case '\\':
+            case '"':
+            case '/':
+            case '?':
+            case '=':
+            case ' ':
+            case '\t':
+                qq++;
+            case ',':
+                goto end_token;
+            default:
+                if (*qq <= 037 || *qq == 0177) {
+                    qq++;
+                    goto end_token;
+                }
+            }
+        } else if (quoted && *qq == '\\')
+            Strcat_char(val, *qq++);
+        Strcat_char(val, *qq++);
+    }
+end_token:
+    *q = (char*)qq;
+    return val;
+}
+
+static char*
+extract_auth_param(char* q, struct auth_param* auth)
+{
+    struct auth_param* ap;
+    char* p;
+
+    for (ap = auth; ap->name != NULL; ap++) {
+        ap->val = NULL;
+    }
+
+    while (*q != '\0') {
+        SKIP_BLANKS(q);
+        for (ap = auth; ap->name != NULL; ap++) {
+            size_t len;
+
+            len = strlen(ap->name);
+            if (strncasecmp(q, ap->name, len) == 0 && (IS_SPACE(q[len]) || q[len] == '=')) {
+                p = q + len;
+                SKIP_BLANKS(p);
+                if (*p != '=')
+                    return q;
+                q = p + 1;
+                ap->val = extract_auth_val(&q);
+                break;
+            }
+        }
+        if (ap->name == NULL) {
+            /* skip unknown param */
+            int token_type;
+            p = q;
+            if ((token_type = skip_auth_token(&q)) == AUTHCHR_TOKEN && (IS_SPACE(*q) || *q == '=')) {
+                SKIP_BLANKS(q);
+                if (*q != '=')
+                    return p;
+                q++;
+                extract_auth_val(&q);
+            } else
+                return p;
+        }
+        if (*q != '\0') {
+            SKIP_BLANKS(q);
+            if (*q == ',')
+                q++;
+            else
+                break;
+        }
+    }
+    return q;
+}
+
+static Str
+AuthBasicCred(struct http_auth* ha, Str uname, Str pw, ParsedURL* pu,
+    struct HttpRequest* hr, FormList* request)
+{
+    Str s = Strdup(uname);
+    Strcat_char(s, ':');
+    Strcat(s, pw);
+    return Strnew_m_charp("Basic ", base64_encode(s->ptr, s->length)->ptr, NULL);
+}
+
+struct auth_param none_auth_param[] = {
+    { NULL, NULL }
+};
+
+struct auth_param basic_auth_param[] = {
+    { "realm", NULL },
+    { NULL, NULL }
+};
+
+/* RFC2617: 3.2.1 The WWW-Authenticate Response Header
+ * challenge        =  "Digest" digest-challenge
+ *
+ * digest-challenge  = 1#( realm | [ domain ] | nonce |
+ *                       [ opaque ] |[ stale ] | [ algorithm ] |
+ *                        [ qop-options ] | [auth-param] )
+ *
+ * domain            = "domain" "=" <"> URI ( 1*SP URI ) <">
+ * URI               = absoluteURI | abs_path
+ * nonce             = "nonce" "=" nonce-value
+ * nonce-value       = quoted-string
+ * opaque            = "opaque" "=" quoted-string
+ * stale             = "stale" "=" ( "true" | "false" )
+ * algorithm         = "algorithm" "=" ( "MD5" | "MD5-sess" |
+ *                        token )
+ * qop-options       = "qop" "=" <"> 1#qop-value <">
+ * qop-value         = "auth" | "auth-int" | token
+ */
+struct auth_param digest_auth_param[] = {
+    { "realm", NULL },
+    { "domain", NULL },
+    { "nonce", NULL },
+    { "opaque", NULL },
+    { "stale", NULL },
+    { "algorithm", NULL },
+    { "qop", NULL },
+    { NULL, NULL }
+};
+
+/* for RFC2617: HTTP Authentication */
+struct http_auth www_auth[] = {
+    { 1, "Basic ", basic_auth_param, AuthBasicCred },
+#ifdef USE_DIGEST_AUTH
+    { 10, "Digest ", digest_auth_param, AuthDigestCred },
+#endif
+    {
+        0,
+        NULL,
+        NULL,
+        NULL,
+    }
+};
+/* *INDENT-ON* */
+
+struct http_auth* findAuthentication(struct http_auth* hauth, TextList* document_header, const char* auth_field)
+{
+    struct http_auth* ha;
+    int len = strlen(auth_field), slen;
+    char *p0, *p;
+
+    memset(hauth, 0, sizeof(struct http_auth));
+
+    TextListItem* i;
+    for (i = document_header->first; i != NULL; i = i->next) {
+        if (strncasecmp(i->ptr, auth_field, len) == 0) {
+            for (p = i->ptr + len; p != NULL && *p != '\0';) {
+                SKIP_BLANKS(p);
+                p0 = p;
+                for (ha = &www_auth[0]; ha->scheme != NULL; ha++) {
+                    slen = strlen(ha->scheme);
+                    if (strncasecmp(p, ha->scheme, slen) == 0) {
+                        p += slen;
+                        SKIP_BLANKS(p);
+                        if (hauth->pri < ha->pri) {
+                            *hauth = *ha;
+                            p = extract_auth_param(p, hauth->param);
+                            break;
+                        } else {
+                            /* weak auth */
+                            p = extract_auth_param(p, none_auth_param);
+                        }
+                    }
+                }
+                if (p0 == p) {
+                    /* all unknown auth failed */
+                    int token_type;
+                    if ((token_type = skip_auth_token(&p)) == AUTHCHR_TOKEN && IS_SPACE(*p)) {
+                        SKIP_BLANKS(p);
+                        p = extract_auth_param(p, none_auth_param);
+                    } else
+                        break;
+                }
+            }
+        }
+    }
+    return hauth->scheme ? hauth : NULL;
+}

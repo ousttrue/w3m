@@ -1,5 +1,6 @@
 #define _GNU_SOURCE
 #include "HtmlTagParsed.h"
+#include "file.h"
 #include "url.h"
 #include "display.h"
 #include "HtmlTag.h"

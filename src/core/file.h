@@ -1,8 +1,18 @@
-#include <time.h>
 #pragma aonce
 #include <Str.h>
-#include "textlist.h"
-#include "line.h"
+
+extern int FollowRedirection;
+extern char DecodeCTE;
+extern int label_topline;
+extern int UseExternalDirBuffer;
+extern char* DefaultType;
+extern int displayLinkNumber;
+extern char SimplePreserveSpace;
+extern int squeezeBlankLine;
+
+#define CGI_EXTENSION ".cgi"
+// #define CGI_EXTENSION ".cmd"
+extern char* DirBufferCommand;
 
 #define set_prevchar(x, y, n) Strcopy_charp_n((x), (y), (n))
 #define set_space_to_prevchar(x) Strcopy_charp_n((x), " ", 1)

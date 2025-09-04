@@ -1,5 +1,7 @@
 #include "rc.h"
 #include "buffer_loader.h"
+#include "url.h"
+#include "file.h"
 #include "istream.h"
 #include "KeyValue.h"
 #include "compression.h"

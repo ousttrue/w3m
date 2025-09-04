@@ -33,3 +33,4 @@ void getAuthCookie(struct http_auth* hauth, char* auth_header,
 Str AuthDigestCred(struct http_auth* ha, Str uname, Str pw,
     struct _ParsedURL* pu, struct HttpRequest* hr, struct form_list* request);
 Str qstr_unquote(Str s);
+struct http_auth* findAuthentication(struct http_auth* hauth, TextList* document_header, const char* auth_field);

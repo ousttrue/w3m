@@ -38,10 +38,6 @@ extern int REV_LB[];
  * Macros.
  */
 
-/* is this '<' really means the beginning of a tag? */
-#define REALLY_THE_BEGINNING_OF_A_TAG(p) \
-    (IS_ALPHA(p[1]) || p[1] == '/' || p[1] == '!' || p[1] == '?' || p[1] == '\0' || p[1] == '_')
-
 /* modes for align() */
 
 #define VALIGN_MIDDLE 0
@@ -57,9 +53,7 @@ global int ShowEffect init(TRUE);
 global int PagerMax init(PAGER_MAX_LINE);
 
 // global char SearchHeader init(FALSE);
-global char* DefaultType init(NULL);
 global char TargetSelf init(FALSE);
-global char DecodeCTE init(FALSE);
 
 global int CurrentKey;
 global char* CurrentKeyData;
@@ -67,9 +61,7 @@ global char* CurrentCmdData;
 
 global int confirm_on_quit init(TRUE);
 global int use_mark init(FALSE);
-global int label_topline init(FALSE);
 global int nextpage_topline init(FALSE);
-global int displayLinkNumber init(FALSE);
 global int show_srch_str init(TRUE);
 global char* Imgdisplay init(IMGDISPLAY);
 global int useExtImageViewer init(TRUE);
@@ -105,13 +97,8 @@ global char* siteconf_file init(SITECONF_FILE);
 global int WrapDefault init(FALSE);
 global int IgnoreCase init(TRUE);
 global int WrapSearch init(FALSE);
-global int squeezeBlankLine init(FALSE);
 global char* BookmarkFile init(NULL);
-global int UseExternalDirBuffer init(TRUE);
 
-#define CGI_EXTENSION ".cgi"
-// #define CGI_EXTENSION ".cmd"
-global char* DirBufferCommand init("file:///$LIB/dirlist" CGI_EXTENSION);
 global int UseDictCommand init(TRUE);
 global char* DictCommand init("file:///$LIB/w3mdict" CGI_EXTENSION);
 global int ignore_null_img_alt init(TRUE);
@@ -131,7 +118,6 @@ global char* mailcap_files init(USER_MAILCAP ", " SYS_MAILCAP);
 global char ExtHalfdump init(FALSE);
 global char FollowLocale init(TRUE);
 global char SearchConv init(TRUE);
-global char SimplePreserveSpace init(FALSE);
 
 global char UseAltEntity init(FALSE);
 global int no_rc_dir init(FALSE);
@@ -156,7 +142,6 @@ global double image_scale init(100);
 
 global char* keymap_file init(KEYMAP_FILE);
 
-global int FollowRedirection init(10);
 
 void w3m_exit(int i);
 
