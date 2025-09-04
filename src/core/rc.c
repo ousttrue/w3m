@@ -532,8 +532,6 @@ struct param_ptr params6[] = {
         NULL },
     { "bgextviewer", P_INT, PI_ONOFF, (void*)&BackgroundExtViewer,
         CMT_BGEXTVIEW, NULL },
-    { "use_lessopen", P_INT, PI_ONOFF, (void*)&use_lessopen, CMT_USE_LESSOPEN,
-        NULL },
     { NULL, 0, 0, NULL, NULL, NULL },
 };
 

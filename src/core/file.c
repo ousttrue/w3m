@@ -66,7 +66,6 @@
 #endif /* not min */
 
 static int _MoveFile(char* path1, char* path2);
-static FILE* lessopen_stream(char* path);
 
 static sigjmp_buf AbortLoading;
 
@@ -166,20 +165,6 @@ void examineFile(char* path, struct URLFile* uf)
     }
     uf->stream = openIS(path);
 
-    if (use_lessopen && getenv("LESSOPEN") != NULL) {
-        FILE* fp;
-        uf->guess_type = guessContentType(path);
-        if (uf->guess_type == NULL)
-            uf->guess_type = "text/plain";
-        if (is_html_type(uf->guess_type))
-            return;
-        if ((fp = lessopen_stream(path))) {
-            UFclose(uf);
-            uf->stream = newFileStream(fp, (void (*)())pclose);
-            uf->guess_type = "text/plain";
-            return;
-        }
-    }
     check_compression(uf, path);
     if (uf->compression != CMP_NOCOMPRESS) {
         char* ext = uf->ext;
@@ -2306,52 +2291,4 @@ int checkOverWrite(char* path)
         return 0;
     else
         return -1;
-}
-
-static FILE*
-lessopen_stream(char* path)
-{
-    char* lessopen;
-    FILE* fp;
-    Str tmpf;
-    int c, n = 0;
-
-    lessopen = getenv("LESSOPEN");
-    if (lessopen == NULL || lessopen[0] == '\0')
-        return NULL;
-
-    if (lessopen[0] != '|') /* filename mode, not supported m(__)m */
-        return NULL;
-
-    /* pipe mode */
-    ++lessopen;
-
-    /* LESSOPEN must contain one conversion specifier for strings ('%s'). */
-    for (const char* f = lessopen; *f; f++) {
-        if (*f == '%') {
-            if (f[1] == '%') /* Literal % */
-                f++;
-            else if (*++f == 's') {
-                if (n)
-                    return NULL;
-                n++;
-            } else
-                return NULL;
-        }
-    }
-    if (!n)
-        return NULL;
-
-    tmpf = Sprintf(lessopen, shell_quote(path));
-    fp = popen(tmpf->ptr, "r");
-    if (fp == NULL) {
-        return NULL;
-    }
-    c = getc(fp);
-    if (c == EOF) {
-        pclose(fp);
-        return NULL;
-    }
-    ungetc(c, fp);
-    return fp;
 }
