@@ -192,6 +192,6 @@ struct HttpRequest;
 struct form_list;
 struct URLFile openURL(const char* url, ParsedURL* pu, ParsedURL* current,
     struct URLOption* option, struct form_list* request,
-    TextList* extra_header, struct URLFile* ouf,
+    TextList* extra_header,
     struct HttpRequest* hr, unsigned char* status);
 void UFhalfclose(struct URLFile* f);

@@ -427,7 +427,7 @@ error:
 #define COPYPATH_LOWERCASE 4
 
 static char*
-copyPath(char* orgpath, int length, int option)
+copyPath(const char* orgpath, int length, int option)
 {
     Str tmp = Strnew();
     char ch;
@@ -539,7 +539,7 @@ void parseURL(const char* _url, ParsedURL* p_url, ParsedURL* current)
     p += 2; /* scheme://foo         */
     /*          ^p is here  */
 analyze_url:
-    char* q = p;
+    const char* q = p;
 
     if (*q == '[') { /* rfc2732,rfc2373 compliance */
         p++;
@@ -558,7 +558,7 @@ analyze_url:
         /* scheme://user:pass@host or
          * scheme://host:port
          */
-        char* qq = q;
+        const char* qq = q;
         q = ++p;
         while (*p && strchr("@/?#", *p) == NULL)
             p++;
@@ -975,31 +975,19 @@ static int dir_exist(char* path)
 struct URLFile
 openURL(const char* url, ParsedURL* pu, ParsedURL* current,
     struct URLOption* option, FormList* request, TextList* extra_header,
-    struct URLFile* ouf, struct HttpRequest* hr, unsigned char* status)
+    struct HttpRequest* hr, unsigned char* status)
 {
-    int sock;
-    int scheme;
-    char *p, *q, *u;
     struct URLFile uf;
-    struct HttpRequest hr0;
-    SSL* sslh = NULL;
+    init_stream(&uf, SCM_MISSING, NULL);
 
-    if (hr == NULL)
-        hr = &hr0;
-
-    if (ouf) {
-        uf = *ouf;
-    } else {
-        init_stream(&uf, SCM_MISSING, NULL);
-    }
-
-    u = url;
-    scheme = getURLScheme(&u);
+    const char* u = url;
+    enum UrlScheme scheme = getURLScheme(&u);
     if (current == NULL && scheme == SCM_MISSING && !ArgvIsURL)
         u = file_to_url(url); /* force to local file */
     else
         u = url;
 
+    int sock;
     while (true) {
         parseURL2(u, pu, current);
         if (pu->scheme == SCM_LOCAL && pu->file == NULL) {
@@ -1058,8 +1046,8 @@ openURL(const char* url, ParsedURL* pu, ParsedURL* current,
                     if (Strlastchar(tmp) != '/' && pu->file[0] != '/')
                         Strcat_char(tmp, '/');
                     Strcat_charp(tmp, pu->file);
-                    p = cleanupName(tmp->ptr);
-                    q = cleanupName(file_unquote(p));
+                    char* p = cleanupName(tmp->ptr);
+                    char* q = cleanupName(file_unquote(p));
                     if (dir_exist(q)) {
                         pu->file = p;
                         pu->real_file = q;
@@ -1094,12 +1082,13 @@ openURL(const char* url, ParsedURL* pu, ParsedURL* current,
                 hr->command = HR_COMMAND_HEAD;
 
             Str tmp = NULL;
+            SSL* sslh = NULL;
             if ((
                     (pu->scheme == SCM_HTTPS) ? non_null(HTTPS_proxy) : non_null(HTTP_proxy))
                 && use_proxy && pu->host != NULL && !check_no_proxy(pu->host)) {
                 hr->flag |= HR_FLAG_PROXY;
                 if (pu->scheme == SCM_HTTPS && *status == HTST_CONNECT) {
-                    sock = ssl_socket_of(ouf->stream);
+                    sock = ssl_socket_of(uf.stream);
                     if (!(sslh = openSSLHandle(sock, pu->host,
                               &uf.ssl_certificate))) {
                         *status = HTST_MISSING;
@@ -1187,11 +1176,11 @@ openURL(const char* url, ParsedURL* pu, ParsedURL* current,
                     write_from_file(sock, request->body);
             }
             break;
-        case SCM_DATA:
+        case SCM_DATA: {
             if (pu->file == NULL)
                 return uf;
-            p = Strnew_charp(pu->file)->ptr;
-            q = strchr(p, ',');
+            char* p = Strnew_charp(pu->file)->ptr;
+            char* q = strchr(p, ',');
             if (q == NULL)
                 return uf;
             *q++ = '\0';
@@ -1205,6 +1194,7 @@ openURL(const char* url, ParsedURL* pu, ParsedURL* current,
             uf.stream = newStrStream(tmp);
             uf.guess_type = (*p != '\0') ? p : "text/plain";
             return uf;
+        }
         case SCM_UNKNOWN:
         default:
             return uf;

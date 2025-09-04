@@ -30,7 +30,7 @@ void mySystem(char* command, int background);
 Str myExtCommand(char* cmd, char* arg, int redirect);
 Str myEditor(char* cmd, char* file, int line);
 int is_localhost(const char* host);
-char* file_to_url(char* file);
+char* file_to_url(const char* file);
 char* url_unquote_conv(char* url, wc_ces charset);
 char* expandName(char* name);
 

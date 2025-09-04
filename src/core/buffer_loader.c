@@ -1126,7 +1126,7 @@ Buffer*
 loadGeneralFile(char* path, ParsedURL* current, const char* referer,
     int flag, FormList* request, bool do_download)
 {
-    struct URLFile f, *of = NULL;
+    struct URLFile f;
     ParsedURL pu;
     Buffer* b = NULL;
     const char* tpath;
@@ -1173,9 +1173,8 @@ load_doc: {
     term_raw();
     url_option.referer = referer;
     url_option.flag = flag;
-    f = openURL(tpath, &pu, current, &url_option, request, extra_header, of,
+    f = openURL(tpath, &pu, current, &url_option, request, extra_header,
         &hr, &status);
-    of = NULL;
     content_charset = 0;
     if (f.stream == NULL) {
         switch (f.scheme) {
@@ -1329,7 +1328,6 @@ load_doc: {
         /* XXX: RFC2617 3.2.3 Authentication-Info: ? */
 
         if (status == HTST_CONNECT) {
-            of = &f;
             goto load_doc;
         }
 
