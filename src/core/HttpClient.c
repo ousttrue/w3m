@@ -8,8 +8,36 @@
 #include "ssl_util.h"
 #include "etc.h"
 #include "indep.h"
+#include "ui.h"
 #include <openssl/ssl.h>
 #include <unistd.h>
+
+void initHttpClient(struct HttpClient* c)
+{
+    c->status = HTST_NORMAL,
+    c->nredir = 0;
+}
+
+bool checkRedirection(struct HttpClient* c, ParsedURL* pu)
+{
+    if (c->nredir >= FollowRedirection) {
+        Str tmp = Sprintf("Number of redirections exceeded %d at %s",
+            FollowRedirection, parsedURL2Str(pu)->ptr);
+        message(getUI(), MSG_ERR, tmp->ptr);
+        return false;
+    }
+
+    for (int i = 0; i < c->nredir; ++i) {
+        if (same_url_p(pu, &c->puv[i])) {
+            Str tmp = Sprintf("Redirection loop detected (%s)", parsedURL2Str(pu)->ptr);
+            message(getUI(), MSG_ERR, tmp->ptr);
+            return false;
+        }
+    }
+
+    copyParsedURL(&c->puv[c->nredir++], pu);
+    return true;
+}
 
 static bool dir_exist(const char* path)
 {

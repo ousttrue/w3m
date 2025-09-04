@@ -16,10 +16,17 @@ enum HttpConnectionStatus {
     HTST_CONNECT = 1,
 };
 
+#define FollowRedirection 10
 struct HttpClient {
     struct URLFile f;
     enum HttpConnectionStatus status;
+
+    struct _ParsedURL puv[FollowRedirection];
+    int nredir;
 };
+
+void initHttpClient(struct HttpClient* c);
+bool checkRedirection(struct HttpClient* c, struct _ParsedURL* pu);
 
 struct HttpRequest;
 struct form_list;

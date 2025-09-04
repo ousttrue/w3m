@@ -48,7 +48,6 @@ char UseContentCharset = (true);
 wc_ces DocumentCharset = (DOCUMENT_CHARSET);
 int autoImage = (true);
 char MetaRefresh = (false);
-int FollowRedirection = (10);
 char DecodeCTE = (false);
 int label_topline = (false);
 int UseExternalDirBuffer = (true);
@@ -941,43 +940,6 @@ phase2:
     // return buf;
 }
 
-static bool
-checkRedirection(ParsedURL* pu)
-{
-    static ParsedURL* puv = NULL;
-    static int nredir = 0;
-    static int nredir_size = 0;
-    Str tmp;
-
-    if (pu == NULL) {
-        nredir = 0;
-        nredir_size = 0;
-        puv = NULL;
-        return true;
-    }
-    if (nredir >= FollowRedirection) {
-        /* FIXME: gettextize? */
-        tmp = Sprintf("Number of redirections exceeded %d at %s",
-            FollowRedirection, parsedURL2Str(pu)->ptr);
-        message(getUI(), MSG_ERR, tmp->ptr);
-        return false;
-    } else if (nredir_size > 0 && (same_url_p(pu, &puv[(nredir - 1) % nredir_size]) || (!(nredir % 2) && same_url_p(pu, &puv[(nredir / 2) % nredir_size])))) {
-        /* FIXME: gettextize? */
-        tmp = Sprintf("Redirection loop detected (%s)",
-            parsedURL2Str(pu)->ptr);
-        message(getUI(), MSG_ERR, tmp->ptr);
-        return false;
-    }
-    if (!puv) {
-        nredir_size = FollowRedirection / 2 + 1;
-        puv = New_N(ParsedURL, nredir_size);
-        memset(puv, 0, sizeof(ParsedURL) * nredir_size);
-    }
-    copyParsedURL(&puv[nredir % nredir_size], pu);
-    nredir++;
-    return true;
-}
-
 Buffer* page_loaded(ParsedURL pu, struct URLFile f,
     Str page, wc_ces charset, const char* real_type, Buffer* t_buf, bool do_download)
 {
@@ -1152,17 +1114,13 @@ loadGeneralFile(char* path, ParsedURL* current, const char* referer,
     prevtrap = NULL;
     add_auth_cookie_flag = 0;
 
-    checkRedirection(NULL);
-
-    struct HttpClient c = {
-        .status = HTST_NORMAL,
-    };
+    struct HttpClient c;
+    initHttpClient(&c);
 
 load_doc: {
-    const char* sc_redirect;
     parseURL2(tpath, &pu, current);
-    sc_redirect = query_SCONF_SUBSTITUTE_URL(&pu);
-    if (sc_redirect && *sc_redirect && checkRedirection(&pu)) {
+    const char* sc_redirect = query_SCONF_SUBSTITUTE_URL(&pu);
+    if (sc_redirect && *sc_redirect && checkRedirection(&c, &pu)) {
         tpath = (char*)sc_redirect;
         request = NULL;
         add_auth_cookie_flag = 0;
@@ -1256,7 +1214,7 @@ load_doc: {
         if (((response.status_code >= 301 && response.status_code <= 303)
                 || response.status_code == 307)
             && (p = (char*)getHttpHeaderValue(t_buf->document_header, "Location:")) != NULL
-            && checkRedirection(&pu)) {
+            && checkRedirection(&c, &pu)) {
             /* document moved */
             /* 301: Moved Permanently */
             /* 302: Found */
@@ -1403,7 +1361,7 @@ load_doc: {
         if (t == NULL)
             t = "text/plain";
         real_type = t;
-        if (c.f.guess_type){
+        if (c.f.guess_type) {
             t = c.f.guess_type;
         }
     }

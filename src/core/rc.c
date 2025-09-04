@@ -1,4 +1,5 @@
 #include "rc.h"
+#include "HttpClient.h"
 #include "buffer_loader.h"
 #include "siteconf.h"
 #include "url.h"
@@ -607,8 +608,6 @@ struct param_ptr params9[] = {
         NULL },
     { "default_url", P_INT, PI_SEL_C, (void*)&DefaultURLString,
         CMT_DEFAULT_URL, (void*)defaulturls },
-    { "follow_redirection", P_INT, PI_TEXT, &FollowRedirection,
-        CMT_FOLLOW_REDIRECTION, NULL },
     { "meta_refresh", P_CHARINT, PI_ONOFF, (void*)&MetaRefresh,
         CMT_META_REFRESH, NULL },
     { "localhost_only", P_CHARINT, PI_ONOFF, (void*)&LocalhostOnly,

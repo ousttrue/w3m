@@ -7,7 +7,6 @@ extern char UseContentCharset;
 extern wc_ces DocumentCharset;
 extern int autoImage;
 extern char MetaRefresh;
-extern int FollowRedirection;
 extern char DecodeCTE;
 extern int label_topline;
 extern int UseExternalDirBuffer;
