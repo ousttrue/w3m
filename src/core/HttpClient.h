@@ -27,12 +27,3 @@ struct HttpClient {
 
 void initHttpClient(struct HttpClient* c, const char* path);
 bool checkRedirection(struct HttpClient* c, struct _ParsedURL* pu);
-
-struct HttpRequest;
-struct form_list;
-void openURL(struct HttpClient* c, ParsedURL* pu, ParsedURL* current,
-    struct form_list* post,
-    const char* referer,
-    bool no_cache,
-    TextList* extra_header,
-    struct HttpRequest* hr);
