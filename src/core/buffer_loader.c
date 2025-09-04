@@ -1117,6 +1117,16 @@ loadGeneralFile(const char* path, ParsedURL* current, FormList* post, const char
 
         term_raw();
         openURL(&c, &pu, current, post, referer, no_cache, extra_header, &hr);
+
+        if (c.f.stream == NULL && retryAsHttp && c.url[0] != '/') {
+            enum UrlScheme scheme = getURLScheme(&c.url);
+            if (scheme == SCM_MISSING || scheme == SCM_UNKNOWN) {
+                /* retry it as "http://" */
+                c.url = Strnew_m_charp("http://", c.url, NULL)->ptr;
+                continue;
+            }
+        }
+
         // content_charset = 0;
         // if (!c.f.stream) {
         //     switch (c.f.scheme) {
@@ -1269,8 +1279,7 @@ loadGeneralFile(const char* path, ParsedURL* current, FormList* post, const char
             }
 
             c.f.modtime = mymktime(getHttpHeaderValue(response.headers, "Last-Modified:"));
-        } 
-        else {
+        } else {
             c.content_type = guessContentType(pu.file);
             if (c.content_type == NULL)
                 c.content_type = "text/plain";
