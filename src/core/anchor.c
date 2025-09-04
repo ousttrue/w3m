@@ -1,4 +1,5 @@
 #include "alloc.h"
+#include "buffer_loader.h"
 #include "fm.h"
 #include "screen.h"
 #include "indep.h"
@@ -9,7 +10,6 @@
 #include "image.h"
 #include "myctype.h"
 #include "regex.h"
-#include "file.h"
 
 #define bpcmp(a, b) \
     (((a).line - (b).line) ? ((a).line - (b).line) : ((a).pos - (b).pos))

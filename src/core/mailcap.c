@@ -1,7 +1,6 @@
 #define _GNU_SOURCE 1
 #include "mailcap.h"
 #include "fm.h"
-#include "file.h"
 #include "indep.h"
 #include "myctype.h"
 #include "hash.h"

@@ -31,7 +31,6 @@
 #include "ui.h"
 #include "search.h"
 #include "str_util.h"
-#include "file.h"
 #include "history.h"
 #include "image.h"
 #include "putc.h"

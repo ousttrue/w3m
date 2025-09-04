@@ -6,7 +6,6 @@
 #include "map.h"
 #include "ui.h"
 #include "symbol.h"
-#include "file.h"
 #include "w3m.h"
 #include "history.h"
 #include "ctrlcode.h"

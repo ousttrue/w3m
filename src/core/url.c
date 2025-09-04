@@ -14,7 +14,6 @@
 #include "ui.h"
 #include "cookie.h"
 #include "ssl_util.h"
-#include "file.h"
 #include "etc.h"
 #include "tty.h"
 #include <openssl/ssl.h>

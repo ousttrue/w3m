@@ -672,7 +672,7 @@ char* getescapecmd(char** s)
     return tmp->ptr;
 }
 
-char* html_quote(char* str)
+char* html_quote(const char* str)
 {
     Str tmp = NULL;
     char *p, *q;

@@ -2,6 +2,7 @@
  * client-side image maps
  */
 #include "map.h"
+#include "buffer_loader.h"
 #include "http.h"
 #include "display.h"
 #include "alloc.h"
@@ -13,7 +14,6 @@
 #include "image.h"
 #include "ctrlcode.h"
 #include "etc.h"
-#include "file.h"
 #include "buffer.h"
 #include <math.h>
 #include <strings.h>

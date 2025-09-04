@@ -14,7 +14,6 @@
 #include "buffer_loader.h"
 #include "etc.h"
 #include "screen.h"
-#include "file.h"
 #include "keymap.h"
 #include "linein.h"
 #include <myctype.h>

@@ -3,7 +3,6 @@
 #include "etc.h"
 #include "downloadlist.h"
 #include "tmpfile.h"
-#include "file.h"
 #include "ssl_util.h"
 #include "mysignal.h"
 #include "mimehead.h"

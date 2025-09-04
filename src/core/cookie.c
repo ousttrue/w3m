@@ -8,13 +8,13 @@
  */
 
 #include "cookie.h"
+#include "buffer_loader.h"
 #include "fm.h"
 #include "KeyValue.h"
 #include <alloc.h>
 #include "http.h"
 #include "etc.h"
 #include "rc.h"
-#include "file.h"
 #include "local.h"
 #include "regex.h"
 #include "myctype.h"

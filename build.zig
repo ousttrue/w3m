@@ -53,7 +53,6 @@ const w3m_srcs = [_][]const u8{
     "str_util.c",
     "line.c",
 
-    "file.c",
     "buffer.c",
     "display.c",
     "etc.c",

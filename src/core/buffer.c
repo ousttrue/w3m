@@ -8,7 +8,6 @@
 #include "ui.h"
 #include "etc.h"
 #include "w3m.h"
-#include "file.h"
 #include "image.h"
 #include "fm.h"
 #include "event_poller.h"

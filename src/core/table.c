@@ -2,8 +2,8 @@
  * HTML table
  */
 #include "table.h"
+#include "buffer_loader.h"
 #include "HtmlTagParsed.h"
-#include "file.h"
 #include "display.h"
 #include "readbuffer.h"
 #include "indep.h"
