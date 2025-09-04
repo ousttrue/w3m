@@ -18,8 +18,6 @@ struct _Buffer* loadGeneralFile(char* path, struct _ParsedURL* current, const ch
 int is_boundary(unsigned char*, unsigned char*);
 
 struct _Buffer* loadHTMLString(Str page);
-void saveBuffer(struct _Buffer* buf, FILE* f, int cont);
-void saveBufferBody(struct _Buffer* buf, FILE* f, int cont);
 
 struct URLFile;
 void loadHTMLstream(struct URLFile* f, struct _Buffer* newBuf, FILE* src, int internal);

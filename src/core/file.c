@@ -90,8 +90,7 @@ loadSomething(struct URLFile* f,
         buf->currentURL.scheme = f->scheme;
     if (f->scheme == SCM_LOCAL && buf->sourcefile == NULL)
         buf->sourcefile = buf->filename;
-    if (loadproc == loadHTMLBuffer
-        || loadproc == loadImageBuffer)
+    if (loadproc == loadHTMLBuffer)
         buf->type = "text/html";
     else
         buf->type = "text/plain";
@@ -597,10 +596,6 @@ Buffer* _load(ParsedURL pu, struct URLFile f,
     Buffer* (*proc)(struct URLFile*, Buffer*) = loadBuffer;
     if (is_html_type(real_type))
         proc = loadHTMLBuffer;
-    else if (is_plain_text_type(real_type))
-        proc = loadBuffer;
-    else if (activeImage && displayImage && !useExtImageViewer && !strncasecmp(real_type, "image/", 6))
-        proc = loadImageBuffer;
     else
         proc = loadBuffer;
     Buffer* b = loadSomething(&f, proc, t_buf);
@@ -1801,124 +1796,4 @@ _end:
         fclose(src);
 
     return newBuf;
-}
-
-Buffer*
-loadImageBuffer(struct URLFile* uf, Buffer* newBuf)
-{
-    Image image;
-    ImageCache* cache;
-    Str tmp, tmpf;
-    FILE* src = NULL;
-    struct URLFile f;
-    MySignalHandler (*prevtrap)(int _dummy) = NULL;
-    struct stat st;
-    const ParsedURL* pu = newBuf ? &newBuf->currentURL : NULL;
-
-    loadImage(newBuf, IMG_FLAG_STOP, false);
-    image.url = uf->url;
-    image.ext = uf->ext;
-    image.width = -1;
-    image.height = -1;
-    image.cache = NULL;
-    cache = getImage(&image, (ParsedURL*)pu, IMG_FLAG_AUTO);
-    if (!(pu && pu->is_nocache) && cache->loaded & IMG_FLAG_LOADED && !stat(cache->file, &st))
-        goto image_buffer;
-
-    if (IStype(uf->stream) != IST_ENCODED)
-        uf->stream = newEncodedStream(uf->stream, uf->encoding);
-    TRAP_ON;
-    if (save2tmp(*uf, cache->file) < 0) {
-        TRAP_OFF;
-        return NULL;
-    }
-    TRAP_OFF;
-
-    cache->loaded = IMG_FLAG_LOADED;
-    cache->index = 0;
-
-image_buffer:
-    if (newBuf == NULL)
-        newBuf = newBuffer();
-    cache->loaded |= IMG_FLAG_DONT_REMOVE;
-    if (newBuf->sourcefile == NULL && uf->scheme != SCM_LOCAL)
-        newBuf->sourcefile = cache->file;
-
-    tmp = Sprintf("<img src=\"%s\"><br><br>", html_quote(image.url));
-    tmpf = tmpfname(TMPF_SRC, ".html");
-    src = fopen(tmpf->ptr, "w");
-    if (src == NULL)
-        return NULL;
-    newBuf->mailcap_source = tmpf->ptr;
-
-    init_stream(&f, SCM_LOCAL, newStrStream(tmp));
-    loadHTMLstream(&f, newBuf, src, TRUE);
-    UFclose(&f);
-    if (src)
-        fclose(src);
-
-    newBuf->topLine = newBuf->firstLine;
-    newBuf->lastLine = newBuf->currentLine;
-    newBuf->currentLine = newBuf->firstLine;
-    newBuf->image_flag = IMG_FLAG_AUTO;
-    return newBuf;
-}
-
-static Str
-conv_symbol(Line* l)
-{
-    Str tmp = NULL;
-    char *p = l->lineBuf, *ep = p + l->len;
-    Lineprop* pr = l->propBuf;
-    int w;
-    char** symbol = NULL;
-
-    for (; p < ep; p++, pr++) {
-        if (*pr & PC_SYMBOL) {
-            char c = ((char)wtf_get_code((wc_uchar*)p) & 0x7f) - SYMBOL_BASE;
-            int len = get_mclen(p);
-            if (tmp == NULL) {
-                tmp = Strnew_size(l->len);
-                Strcopy_charp_n(tmp, l->lineBuf, p - l->lineBuf);
-                w = (*pr & PC_KANJI) ? 2 : 1;
-                symbol = get_symbol(DisplayCharset, &w);
-            }
-            Strcat_charp(tmp, symbol[(unsigned char)c % N_SYMBOL]);
-            p += len - 1;
-            pr += len - 1;
-        } else if (tmp != NULL)
-            Strcat_char(tmp, *p);
-    }
-    if (tmp)
-        return tmp;
-    else
-        return Strnew_charp_n(l->lineBuf, l->len);
-}
-
-/*
- * saveBuffer: write buffer to file
- */
-static void
-_saveBuffer(Buffer* buf, Line* l, FILE* f, int cont)
-{
-    Str tmp;
-    int is_html = FALSE;
-    int set_charset = !DisplayCharset;
-    wc_ces charset = DisplayCharset ? DisplayCharset : WC_CES_US_ASCII;
-
-    is_html = is_html_type(buf->type);
-}
-
-void saveBuffer(Buffer* buf, FILE* f, int cont)
-{
-    _saveBuffer(buf, buf->firstLine, f, cont);
-}
-
-void saveBufferBody(Buffer* buf, FILE* f, int cont)
-{
-    Line* l = buf->firstLine;
-
-    while (l != NULL && l->real_linenumber == 0)
-        l = l->next;
-    _saveBuffer(buf, l, f, cont);
 }

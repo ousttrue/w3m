@@ -143,3 +143,4 @@ void arrangeCursor(struct _Buffer* buf);
 void arrangeLine(struct _Buffer* buf);
 void cursorXY(struct _Buffer* buf, int x, int y);
 void restorePosition(struct _Buffer* buf, struct _Buffer* orig);
+void saveBuffer(struct _Buffer* buf, FILE* f, int cont);

@@ -900,3 +900,23 @@ void restorePosition(Buffer* buf, Buffer* orig)
     buf->currentColumn = orig->currentColumn;
     arrangeCursor(buf);
 }
+
+/*
+ * saveBuffer: write buffer to file
+ */
+static void
+_saveBuffer(Buffer* buf, Line* l, FILE* f, int cont)
+{
+    Str tmp;
+    int is_html = FALSE;
+    int set_charset = !DisplayCharset;
+    wc_ces charset = DisplayCharset ? DisplayCharset : WC_CES_US_ASCII;
+
+    is_html = is_html_type(buf->type);
+}
+
+void saveBuffer(Buffer* buf, FILE* f, int cont)
+{
+    _saveBuffer(buf, buf->firstLine, f, cont);
+}
+
