@@ -977,7 +977,7 @@ checkRedirection(ParsedURL* pu)
     return true;
 }
 
-Buffer* _load(ParsedURL pu, struct URLFile f,
+Buffer* page_loaded(ParsedURL pu, struct URLFile f,
     Str page, wc_ces charset, const char* real_type, Buffer* t_buf, bool do_download)
 {
     if (page) {
@@ -1208,8 +1208,10 @@ load_doc: {
         default:
             break;
         }
-        if (page && page->length > 0)
-            goto page_loaded;
+        if (page && page->length > 0) {
+            TRAP_OFF;
+            return page_loaded(pu, f, page, charset, t, t_buf, do_download);
+        }
         return NULL;
     }
 
@@ -1293,7 +1295,7 @@ load_doc: {
                 if (uname == NULL) {
                     /* abort */
                     TRAP_OFF;
-                    goto page_loaded;
+                    return page_loaded(pu, f, page, charset, t, t_buf, do_download);
                 }
                 UFclose(&f);
                 add_auth_cookie_flag = 1;
@@ -1314,7 +1316,7 @@ load_doc: {
                 if (uname == NULL) {
                     /* abort */
                     TRAP_OFF;
-                    goto page_loaded;
+                    return page_loaded(pu, f, page, charset, t, t_buf, do_download);
                 }
                 UFclose(&f);
                 add_auth_cookie_flag = 1;
@@ -1408,9 +1410,8 @@ load_doc: {
      *      to support default utf8 encoding for XHTML here? */
     f.guess_type = t;
 
-page_loaded:
     TRAP_OFF;
-    return _load(pu, f, page, charset, t, t_buf, do_download);
+    return page_loaded(pu, f, page, charset, t, t_buf, do_download);
 }
 
 #define TAG_IS(s, tag, len) \
@@ -2064,4 +2065,3 @@ _end:
 
     return newBuf;
 }
-
