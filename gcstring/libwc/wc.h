@@ -4,6 +4,7 @@
 #include "Str.h"
 #include "wc_types.h"
 #include "ces.h"
+#include "ccs.h"
 
 #define WC_FALSE 0
 #define WC_TRUE 1

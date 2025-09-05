@@ -4,6 +4,7 @@
 #include "hz.h"
 #include "wtf.h"
 #include "ucs.h"
+#include "ccs.h"
 
 Str
 wc_conv_from_hz(Str is, wc_ces ces)

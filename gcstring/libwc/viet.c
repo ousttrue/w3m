@@ -5,6 +5,7 @@
 #include "search.h"
 #include "ucs.h"
 #include "map/tcvn57123_tcvn5712.map"
+#include "ccs.h"
 
 wc_uint8 wc_c0_tcvn57122_map[ 0x20 ] = {
     0, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,     

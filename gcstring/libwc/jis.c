@@ -3,6 +3,7 @@
 #include "jis.h"
 #include "search.h"
 #include "ucs.h"
+#include "ccs.h"
 
 #include "map/jisx0201k_jisx0208.map"
 #include "map/jisx0208_jisx02131.map"

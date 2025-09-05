@@ -13,6 +13,7 @@
 #include "priv.h"
 #include "utf8.h"
 #include "utf7.h"
+#include "ccs.h"
 
 static wc_gset gset_usascii[] = {
     { WC_CCS_US_ASCII, WC_C_G0_CS94, 1 },

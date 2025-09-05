@@ -2,6 +2,7 @@
 #define _WC_TYPES_H
 
 #include "Str.h"
+#include "ces.h"
 #include <stdint.h>
 
 typedef unsigned char wc_uchar;
@@ -10,7 +11,6 @@ typedef uint16_t wc_uint16;
 typedef uint32_t wc_uint32;
 
 typedef wc_uint32 wc_ccs;
-typedef wc_uint32 wc_ces;
 typedef wc_uint32 wc_locale;
 typedef wc_uchar wc_bool;
 

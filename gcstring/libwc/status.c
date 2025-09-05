@@ -4,6 +4,7 @@
 
 #include "wc.h"
 #include "ucs.h"
+#include "ccs.h"
 
 wc_option WcOption = {
     WC_OPT_DETECT_ON,	/* auto_detect */

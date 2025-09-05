@@ -13,6 +13,7 @@
 #include "uhc.h"
 #include "viet.h"
 #include "wtf.h"
+#include "ccs.h"
 
 #include "ucs.map"
 

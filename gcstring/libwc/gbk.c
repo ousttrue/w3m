@@ -4,6 +4,7 @@
 #include "search.h"
 #include "wtf.h"
 #include "ucs.h"
+#include "ccs.h"
 
 #include "map/gb2312_gbk.map"
 

@@ -4,6 +4,7 @@
 #include "search.h"
 #include "wtf.h"
 #include "ucs.h"
+#include "ccs.h"
 #include "map/gb18030_ucs.map"
 
 #define C0 WC_GB18030_MAP_C0

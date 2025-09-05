@@ -3,6 +3,7 @@
 #include "johab.h"
 #include "wtf.h"
 #include "ucs.h"
+#include "ccs.h"
 
 #define C0 WC_JOHAB_MAP_C0
 #define GL WC_JOHAB_MAP_GL
