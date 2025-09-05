@@ -12,11 +12,11 @@
 #include <openssl/ssl.h>
 #include <unistd.h>
 
-void initHttpClient(struct HttpClient* c, const char* path)
+void initHttpClient(struct HttpClient* c)
 {
     c->status = HTST_NORMAL,
     c->nredir = 0;
-    c->url = path;
+    // c->url = path;
     c->page = NULL;
     c->content_type = "text/plain";
     c->charset = WC_CES_US_ASCII;

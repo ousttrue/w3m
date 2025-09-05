@@ -144,7 +144,7 @@ struct Content openLocal()
     };
 }
 
-struct Content openHttp(const char* path, ParsedURL* current, FormList* post, const char* referer, bool no_cache)
+struct Content openHttp(struct HttpClient* c, const char* path, ParsedURL* current, FormList* post, const char* referer, bool no_cache)
 {
     ParsedURL pu;
     parseURL2(path, &pu, current);
@@ -155,9 +155,6 @@ struct Content openHttp(const char* path, ParsedURL* current, FormList* post, co
     if (pu.file == NULL) {
         pu.file = allocStr("/", -1);
     }
-
-    struct HttpClient c;
-    initHttpClient(&c, path);
 
     struct HttpRequest hr = {
         .command = HR_COMMAND_GET,
@@ -183,11 +180,11 @@ struct Content openHttp(const char* path, ParsedURL* current, FormList* post, co
         // use proxy
         //
         hr.flag |= HR_FLAG_PROXY;
-        if (pu.scheme == SCM_HTTPS && c.status == HTST_CONNECT) {
-            sock = ssl_socket_of(c.f.stream);
+        if (pu.scheme == SCM_HTTPS && c->status == HTST_CONNECT) {
+            sock = ssl_socket_of(c->f.stream);
             if (!(sslh = openSSLHandle(sock, pu.host,
-                      &c.f.ssl_certificate))) {
-                c.status = HTST_MISSING;
+                      &c->f.ssl_certificate))) {
+                c->status = HTST_MISSING;
                 // return;
             }
         } else if (pu.scheme == SCM_HTTPS) {
@@ -205,40 +202,40 @@ struct Content openHttp(const char* path, ParsedURL* current, FormList* post, co
             // return;
         }
         if (pu.scheme == SCM_HTTPS) {
-            if (c.status == HTST_NORMAL) {
+            if (c->status == HTST_NORMAL) {
                 hr.command = HR_COMMAND_CONNECT;
                 tmp = getHttpRequestStr(&pu, current, &hr, extra_header);
-                c.status = HTST_CONNECT;
+                c->status = HTST_CONNECT;
             } else {
                 hr.flag |= HR_FLAG_LOCAL;
                 tmp = getHttpRequestStr(&pu, current, &hr, extra_header);
-                c.status = HTST_NORMAL;
+                c->status = HTST_NORMAL;
             }
         } else {
             tmp = getHttpRequestStr(&pu, current, &hr, extra_header);
-            c.status = HTST_NORMAL;
+            c->status = HTST_NORMAL;
         }
     } else {
         sock = openSocket(pu.host, getSchemeInfo(pu.scheme).name, pu.port);
         if (sock < 0) {
-            c.status = HTST_MISSING;
+            c->status = HTST_MISSING;
             // return;
         }
         if (pu.scheme == SCM_HTTPS) {
             if (!(sslh = openSSLHandle(sock, pu.host,
-                      &c.f.ssl_certificate))) {
-                c.status = HTST_MISSING;
+                      &c->f.ssl_certificate))) {
+                c->status = HTST_MISSING;
                 // return;
             }
         }
         hr.flag |= HR_FLAG_LOCAL;
         tmp = getHttpRequestStr(&pu, current, &hr, extra_header);
-        c.status = HTST_NORMAL;
+        c->status = HTST_NORMAL;
     }
 
-    init_stream(&c.f, SCM_MISSING, NULL);
+    init_stream(&c->f, SCM_MISSING, NULL);
     if (pu.scheme == SCM_HTTPS) {
-        c.f = (struct URLFile) {
+        c->f = (struct URLFile) {
             .scheme = pu.scheme,
             .url = parsedURL2Str(&pu)->ptr,
             .ext = filename_extension(pu.file, 1),
@@ -257,7 +254,7 @@ struct Content openHttp(const char* path, ParsedURL* current, FormList* post, co
             // }
         }
     } else {
-        c.f = (struct URLFile) {
+        c->f = (struct URLFile) {
             .scheme = pu.scheme,
             .url = parsedURL2Str(&pu)->ptr,
             .ext = filename_extension(pu.file, 1),
@@ -272,7 +269,7 @@ struct Content openHttp(const char* path, ParsedURL* current, FormList* post, co
     // message(getUI(), MSG_INFO, Sprintf("%s contacted. Waiting for reply...", pu.host)->ptr);
     // refresh(ttyWriter());
 
-    struct HttpResponse response = readHttpResponse(&c.f, &pu);
+    struct HttpResponse response = readHttpResponse(&c->f, &pu);
     const char* p;
     if (((response.status_code >= 301 && response.status_code <= 303)
             || response.status_code == 307)
@@ -282,13 +279,13 @@ struct Content openHttp(const char* path, ParsedURL* current, FormList* post, co
         /* 302: Found */
         /* 303: See Other */
         /* 307: Temporary Redirect (HTTP/1.1) */
-        c.url = url_encode(p, NULL, 0);
+        // c->url = url_encode(p, NULL, 0);
         post = NULL;
-        UFclose(&c.f);
+        UFclose(&c->f);
         current = New(ParsedURL);
         copyParsedURL(current, &pu);
         // t_buf->bufferprop |= BP_REDIRECTED;
-        c.status = HTST_NORMAL;
+        c->status = HTST_NORMAL;
 
         // redirect
         // && checkRedirection(&c, &pu)
@@ -300,25 +297,25 @@ struct Content openHttp(const char* path, ParsedURL* current, FormList* post, co
     // read body
     //
     struct ContentTypeCharset cc = getContentType(response.headers);
-    c.content_type = cc.content_type;
-    if (c.content_type == NULL && pu.file != NULL) {
+    c->content_type = cc.content_type;
+    if (c->content_type == NULL && pu.file != NULL) {
         if (!((response.status_code >= 400 && response.status_code <= 407) || (response.status_code >= 500 && response.status_code <= 505))) {
-            c.content_type = guessContentType(pu.file);
+            c->content_type = guessContentType(pu.file);
         }
     }
-    if (c.content_type == NULL)
-        c.content_type = "text/plain";
-    if (c.add_auth_cookie_flag && c.realm && c.uname && c.pwd) {
+    if (c->content_type == NULL)
+        c->content_type = "text/plain";
+    if (c->add_auth_cookie_flag && c->realm && c->uname && c->pwd) {
         /* If authorization is required and passed */
-        add_auth_user_passwd(&pu, qstr_unquote(c.realm)->ptr, c.uname, c.pwd,
+        add_auth_user_passwd(&pu, qstr_unquote(c->realm)->ptr, c->uname, c->pwd,
             0);
-        c.add_auth_cookie_flag = 0;
+        c->add_auth_cookie_flag = 0;
     }
     if ((p = getHttpHeaderValue(response.headers, "WWW-Authenticate:")) != NULL && response.status_code == 401) {
         /* Authentication needed */
         struct http_auth hauth;
         if (findAuthentication(&hauth, response.headers, "WWW-Authenticate:") != NULL
-            && (c.realm = get_auth_param(hauth.param, "realm")) != NULL) {
+            && (c->realm = get_auth_param(hauth.param, "realm")) != NULL) {
             ParsedURL* auth_pu;
             //         auth_pu = &pu;
             //         getAuthCookie(&hauth, "Authorization:", extra_header,
@@ -327,12 +324,12 @@ struct Content openHttp(const char* path, ParsedURL* current, FormList* post, co
             //             /* abort */
             //             term_raw();
             //             return (struct Content) {
-            //                 pu, c.f, c.page, c.charset, c.content_type, response.headers
+            //                 pu, c->f, c->page, c->charset, c->content_type, response.headers
             //             };
             //         }
-            //         UFclose(&c.f);
+            //         UFclose(&c->f);
             //         add_auth_cookie_flag = 1;
-            //         c.status = HTST_NORMAL;
+            //         c->status = HTST_NORMAL;
             //         continue;
             abort();
         }
@@ -342,7 +339,7 @@ struct Content openHttp(const char* path, ParsedURL* current, FormList* post, co
         struct http_auth hauth;
         if (findAuthentication(&hauth, response.headers, "Proxy-Authenticate:")
                 != NULL
-            && (c.realm = get_auth_param(hauth.param, "realm")) != NULL) {
+            && (c->realm = get_auth_param(hauth.param, "realm")) != NULL) {
             //         auth_pu = schemeToProxy(pu.scheme);
             //         getAuthCookie(&hauth, "Proxy-Authorization:",
             //             extra_header, auth_pu, &hr, post,
@@ -351,36 +348,36 @@ struct Content openHttp(const char* path, ParsedURL* current, FormList* post, co
             //             /* abort */
             //             term_raw();
             //             return (struct Content) {
-            //                 pu, c.f, c.page, c.charset, c.content_type, response.headers
+            //                 pu, c->f, c->page, c->charset, c->content_type, response.headers
             //             };
             //         }
-            //         UFclose(&c.f);
+            //         UFclose(&c->f);
             //         add_auth_cookie_flag = 1;
-            //         c.status = HTST_NORMAL;
+            //         c->status = HTST_NORMAL;
             //         add_auth_user_passwd(auth_pu, qstr_unquote(realm)->ptr, uname, pwd, 1);
             //         continue;
             abort();
         }
     }
 
-    if (c.status == HTST_CONNECT) {
+    if (c->status == HTST_CONNECT) {
         /* XXX: RFC2617 3.2.3 Authentication-Info: ? */
         abort();
     }
 
-    c.f.modtime = mymktime(getHttpHeaderValue(response.headers, "Last-Modified:"));
+    c->f.modtime = mymktime(getHttpHeaderValue(response.headers, "Last-Modified:"));
 
     /* XXX: can we use guess_type to give the type to loadHTMLstream
      *      to support default utf8 encoding for XHTML here? */
-    c.f.guess_type = c.content_type;
+    c->f.guess_type = c->content_type;
 
     // term_raw();
     return (struct Content) {
-        pu, c.f, c.page, c.charset, c.content_type, NULL
+        pu, c->f, c->page, c->charset, c->content_type, NULL
     };
-    // if (c.status == HTST_MISSING) {
+    // if (c->status == HTST_MISSING) {
     //     term_raw();
-    //     UFclose(&c.f);
+    //     UFclose(&c->f);
     //     return (struct Content) {};
     // }
 }
@@ -416,7 +413,9 @@ loadGeneralFile(const char* path, ParsedURL* current, FormList* post, const char
             // retry it as "http://"
             // c.url = ;
             //     //         // continue;
-            return openHttp(Strnew_m_charp("http://", path, NULL)->ptr, current, post, referer, no_cache);
+            struct HttpClient c;
+            initHttpClient(&c);
+            return openHttp(&c, Strnew_m_charp("http://", path, NULL)->ptr, current, post, referer, no_cache);
             //     //     }
         }
 
@@ -449,7 +448,9 @@ loadGeneralFile(const char* path, ParsedURL* current, FormList* post, const char
 
     case SCM_HTTP:
     case SCM_HTTPS: {
-        return openHttp(path, current, post, referer, no_cache);
+        struct HttpClient c;
+        initHttpClient(&c);
+        return openHttp(&c, path, current, post, referer, no_cache);
     }
 
     default:

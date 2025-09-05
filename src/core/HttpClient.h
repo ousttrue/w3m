@@ -16,7 +16,7 @@ struct HttpClient {
     struct _ParsedURL puv[FollowRedirection];
     int nredir;
 
-    const char* url;
+    // const char* url;
 
     Str uname;
     Str pwd;
@@ -30,5 +30,5 @@ struct HttpClient {
     long long current_content_length;
 };
 
-void initHttpClient(struct HttpClient* c, const char* path);
+void initHttpClient(struct HttpClient* c);
 bool checkRedirection(struct HttpClient* c, struct _ParsedURL* pu);
