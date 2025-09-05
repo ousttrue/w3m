@@ -509,7 +509,7 @@ int strmatchlen(const char* s1, const char* s2, int maxlen)
     return i;
 }
 
-char* remove_space(char* str)
+char* remove_space(const char* str)
 {
     char *p, *q;
 

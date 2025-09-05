@@ -4,7 +4,6 @@
 
 struct Content {
     struct _ParsedURL pu;
-    struct URLFile f;
     Str page;
     wc_ces charset;
     const char* real_type;

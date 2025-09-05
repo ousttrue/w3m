@@ -198,7 +198,7 @@ static Str decode_gzip(unsigned char* src, int size)
         // auto before = buffer.size();
         // buffer.resize(before + have);
         // memcpy(buffer.data() + before, out, have);
-        Strcat_charp_n(buffer, out, have);
+        Strcat_charp_n(buffer, (const char*)out, have);
     } while (strm.avail_out == 0);
 
     inflateEnd(&strm);
@@ -450,7 +450,7 @@ struct Content openHttp(struct HttpClient* c, const char* path, ParsedURL* curre
 
     // term_raw();
     return (struct Content) {
-        pu, c->f, c->page, c->charset, c->content_type, NULL
+        pu, c->page, c->charset, c->content_type, NULL
     };
     // if (c->status == HTST_MISSING) {
     //     term_raw();
