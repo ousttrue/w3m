@@ -32,7 +32,7 @@ static int image_index = 0;
 /* display image */
 
 typedef struct _termialImage {
-    ImageCache* cache;
+    struct ImageCache* cache;
     short x;
     short y;
     short sx;
@@ -159,7 +159,7 @@ closeImgdisplay(void)
     Imgdisplay_pid = 0;
 }
 
-void addImage(ImageCache* cache, int x, int y, int sx, int sy, int w, int h)
+void addImage(struct ImageCache* cache, int x, int y, int sx, int sy, int w, int h)
 {
     if (!activeImage)
         return;
@@ -244,6 +244,7 @@ void drawImage(void)
             int sh = (i->height + i->sy % pixel_per_line_i + pixel_per_line_i - 1) / pixel_per_line_i;
 
             if (enable_inline_image == INLINE_IMG_SIXEL) {
+
                 w = i->cache->a_width > 0 ? i->width : 0;
                 h = i->cache->a_height > 0 ? i->height : 0;
                 put_image_sixel(Currentbuf->cursorX, Currentbuf->cursorY,
@@ -329,7 +330,7 @@ static int n_load_image = 0;
 static Hash_sv* image_hash = NULL;
 static Hash_sv* image_file = NULL;
 static GeneralList* image_list = NULL;
-static ImageCache** image_cache = NULL;
+static struct ImageCache** image_cache = NULL;
 static Buffer* image_buffer = NULL;
 
 void deleteImage(Buffer* buf)
@@ -402,7 +403,7 @@ showImageProgress(Buffer* buf)
 
 void loadImage(Buffer* buf, enum ImageLoadFlag flag, bool do_download)
 {
-    ImageCache* cache;
+    struct ImageCache* cache;
     struct stat st;
     int i, draw = FALSE;
     /* int wait_st; */
@@ -414,8 +415,8 @@ void loadImage(Buffer* buf, enum ImageLoadFlag flag, bool do_download)
     if (n_load_image == 0)
         n_load_image = maxLoadImage;
     if (!image_cache) {
-        image_cache = New_N(ImageCache*, MAX_LOAD_IMAGE);
-        memset(image_cache, 0, sizeof(ImageCache*) * MAX_LOAD_IMAGE);
+        image_cache = New_N(struct ImageCache*, MAX_LOAD_IMAGE);
+        memset(image_cache, 0, sizeof(struct ImageCache*) * MAX_LOAD_IMAGE);
     }
     for (i = 0; i < n_load_image; i++) {
         cache = image_cache[i];
@@ -488,7 +489,7 @@ void loadImage(Buffer* buf, enum ImageLoadFlag flag, bool do_download)
         if (image_cache[i])
             continue;
         while (1) {
-            cache = (ImageCache*)popValue(image_list);
+            cache = (struct ImageCache*)popValue(image_list);
             if (!cache) {
                 for (i = 0; i < n_load_image; i++) {
                     if (image_cache[i])
@@ -535,21 +536,22 @@ void loadImage(Buffer* buf, enum ImageLoadFlag flag, bool do_download)
     }
 }
 
-ImageCache*
-getImage(Image* image, ParsedURL* current, enum ImageGetFlag flag)
+struct ImageCache*
+getImage(struct Image* image, ParsedURL* current, enum ImageGetFlag flag)
 {
-    Str key = NULL;
-    ImageCache* cache;
-
     if (!activeImage)
         return NULL;
+
     if (!image_hash)
         image_hash = newHash_sv(100);
+
+    struct ImageCache* cache;
+    Str key = NULL;
     if (image->cache)
         cache = image->cache;
     else {
         key = Sprintf("%d;%d;%s", image->width, image->height, image->url);
-        cache = (ImageCache*)getHash_sv(image_hash, key->ptr, NULL);
+        cache = (struct ImageCache*)getHash_sv(image_hash, key->ptr, NULL);
     }
     if (cache && cache->index && abs(cache->index) <= image_index - MAX_IMAGE) {
         struct stat st;
@@ -562,7 +564,7 @@ getImage(Image* image, ParsedURL* current, enum ImageGetFlag flag)
         if (flag == IMG_FLAG_SKIP)
             return NULL;
 
-        cache = New(ImageCache);
+        cache = New(struct ImageCache);
         cache->url = image->url;
         cache->current = current;
         cache->file = tmpfname(TMPF_DFL, image->ext)->ptr;
@@ -683,7 +685,7 @@ success:
     return TRUE;
 }
 
-int getImageSize(ImageCache* cache)
+int getImageSize(struct ImageCache* cache)
 {
     Str tmp;
     FILE* f;
@@ -1031,8 +1033,6 @@ save_first_animation_frame(const char* path)
 void put_image_sixel(int cursorX, int cursorY,
     const char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh, int n_terminal_image)
 {
-    pid_t pid;
-    int do_anim;
     // MySignalHandler (*volatile previntr)(int _dummy);
     // MySignalHandler (*volatile prevquit)(int _dummy);
     // MySignalHandler (*volatile prevstop)(int _dummy);
@@ -1040,12 +1040,14 @@ void put_image_sixel(int cursorX, int cursorY,
     MOVE(ttyWriter(), y, x);
     flush_tty();
 
+    int do_anim;
     do_anim = (n_terminal_image == 1 && x == 0 && y == 0 && sx == 0 && sy == 0);
 
     // previntr = mySignal(SIGINT, SIG_IGN);
     // prevquit = mySignal(SIGQUIT, SIG_IGN);
     // prevstop = mySignal(SIGTSTP, SIG_IGN);
 
+    pid_t pid;
     if ((pid = fork()) == 0) {
         char* env;
         int n = 0;

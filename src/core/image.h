@@ -1,19 +1,20 @@
 #pragma once
 #include <sys/types.h>
 
+extern int enable_inline_image;
 extern int activeImage;
 extern const char* image_source;
 
 #define MAX_IMAGE 1000
 #define MAX_IMAGE_SIZE 2048
 
-#define INLINE_IMG_NONE 0
-#define INLINE_IMG_OSC5379 1
-#define INLINE_IMG_SIXEL 2
-#define INLINE_IMG_ITERM2 3
-#define INLINE_IMG_KITTY 4
-
-extern int enable_inline_image;
+enum InlineImageType {
+    INLINE_IMG_NONE = 0,
+    INLINE_IMG_OSC5379 = 1,
+    INLINE_IMG_SIXEL = 2,
+    INLINE_IMG_ITERM2 = 3,
+    INLINE_IMG_KITTY = 4,
+};
 
 enum ImageCacheFlags {
     IMG_FLAG_UNLOADED = 0,
@@ -22,7 +23,7 @@ enum ImageCacheFlags {
     IMG_FLAG_DONT_REMOVE = 4,
 };
 
-typedef struct _imageCache {
+struct ImageCache {
     const char* url;
     struct _ParsedURL* current;
     const char* file;
@@ -34,9 +35,9 @@ typedef struct _imageCache {
     short height;
     short a_width;
     short a_height;
-} ImageCache;
+};
 
-typedef struct _image {
+struct Image {
     const char* url;
     const char* ext;
     short width;
@@ -48,12 +49,12 @@ typedef struct _image {
     const char* map;
     char ismap;
     int touch;
-    ImageCache* cache;
-} Image;
+    struct ImageCache* cache;
+};
 
 void initImage();
 void termImage();
-void addImage(ImageCache* cache, int x, int y, int sx, int sy, int w, int h);
+void addImage(struct ImageCache* cache, int x, int y, int sx, int sy, int w, int h);
 void drawImage();
 void clearImage();
 
@@ -72,9 +73,9 @@ enum ImageGetFlag {
     IMG_FLAG_SKIP = 1,
     IMG_FLAG_AUTO = 2,
 };
-ImageCache* getImage(Image* image, struct _ParsedURL* current, enum ImageGetFlag flag);
+struct ImageCache* getImage(struct Image* image, struct _ParsedURL* current, enum ImageGetFlag flag);
 
-int getImageSize(ImageCache* cache);
+int getImageSize(struct ImageCache* cache);
 
 void put_image_osc5379(int cursorX, int cursorY,
     const char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh);

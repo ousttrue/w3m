@@ -474,10 +474,10 @@ Str process_img(struct HtmlTagParsed* tag, int width)
         w0 = w;
         i0 = i;
         if (w < 0 || i < 0) {
-            Image image;
             ParsedURL u;
-
             parseURL2(p, &u, cur_baseURL);
+
+            struct Image image;
             image.url = parsedURL2Str(&u)->ptr;
             if (!uncompressed_file_type(u.file, &image.ext))
                 image.ext = filename_extension(u.file, TRUE);

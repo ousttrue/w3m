@@ -164,8 +164,8 @@ static Line* redrawLineImage(struct UI ui, Buffer* buf, Line* l, int i)
         }
         a = retrieveAnchor(buf->img, l->linenumber, pos + j);
         if (a && a->image && a->image->touch < image_touch) {
-            Image* image = a->image;
-            ImageCache* cache;
+            struct Image* image = a->image;
+            struct ImageCache* cache;
 
             cache = image->cache = getImage(image, baseURL(buf),
                 buf->image_flag);

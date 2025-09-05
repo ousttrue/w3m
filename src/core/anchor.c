@@ -11,6 +11,8 @@
 #include "myctype.h"
 #include "regex.h"
 
+typedef Anchor* (*AnchorFunc)(Buffer*, const char*, const char*, int, int);
+
 #define bpcmp(a, b) \
     (((a).line - (b).line) ? ((a).line - (b).line) : ((a).pos - (b).pos))
 
@@ -200,7 +202,7 @@ searchURLLabel(Buffer* buf, const char* url)
 }
 
 static Anchor*
-_put_anchor_all(Buffer* buf, char* p1, char* p2, int line, int pos)
+_put_anchor_all(Buffer* buf, const char* p1, const char* p2, int line, int pos)
 {
     Str tmp;
 
@@ -284,8 +286,7 @@ reseq_anchor(Buffer* buf)
 }
 
 static char*
-reAnchorPos(Buffer* buf, Line* l, char* p1, char* p2,
-    Anchor* (*anchorproc)(Buffer*, char*, char*, int, int))
+reAnchorPos(Buffer* buf, Line* l, char* p1, char* p2, AnchorFunc anchorproc)
 {
     Anchor* a;
     int spos, epos;
@@ -332,9 +333,8 @@ void reAnchorWord(Buffer* buf, Line* l, int spos, int epos)
 
 /* search regexp and register them as anchors */
 /* returns error message if any               */
-static char*
-reAnchorAny(Buffer* buf, char* re,
-    Anchor* (*anchorproc)(Buffer*, char*, char*, int, int))
+static const char*
+reAnchorAny(Buffer* buf, const char* re, AnchorFunc anchorproc)
 {
     Line* l;
     char *p = NULL, *p1, *p2;
@@ -361,7 +361,7 @@ reAnchorAny(Buffer* buf, char* re,
     return NULL;
 }
 
-char* reAnchor(Buffer* buf, const char* re)
+const char* reAnchor(Buffer* buf, const char* re)
 {
     return reAnchorAny(buf, re, _put_anchor_all);
 }
@@ -470,7 +470,6 @@ void shiftAnchorPosition(AnchorList* al, HmarkerList* hl, int line, int pos,
 void addMultirowsImg(Buffer* buf, AnchorList* al)
 {
     int i, j, k, col, ecol, pos;
-    Image* img;
     Anchor a_img, a_href, a_form, *a;
     Line *l, *ls;
 
@@ -478,6 +477,7 @@ void addMultirowsImg(Buffer* buf, AnchorList* al)
         return;
     for (i = 0; i < al->nanchor; i++) {
         a_img = al->anchors[i];
+        struct Image* img;
         img = a_img.image;
         if (a_img.hseq < 0 || !img || img->rows <= 1)
             continue;

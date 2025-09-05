@@ -545,10 +545,11 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                         a_img->image = NULL;
                         if (iseq > 0) {
                             ParsedURL u;
-                            Image* image;
-
                             parseURL2(a_img->url, &u, base);
-                            a_img->image = image = New(Image);
+
+                            struct Image* image;
+                            a_img->image = image = New(struct Image);
+
                             image->url = parsedURL2Str(&u)->ptr;
                             if (!uncompressed_file_type(u.file, &image->ext))
                                 image->ext = filename_extension(u.file, TRUE);

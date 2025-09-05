@@ -104,7 +104,7 @@ static int match_range_longchar(longchar*, longchar*, longchar*, int);
 /*
  * regexCompile: compile regular expression
  */
-char* regexCompile(char* ex, int igncase)
+char* regexCompile(const char* ex, int igncase)
 {
     char* msg;
     newRegex(ex, igncase, &DefaultRegex, &msg);

@@ -19,7 +19,7 @@ typedef struct _anchor {
     char slave;
     short y;
     short rows;
-    struct _image* image;
+    struct Image* image;
 } Anchor;
 
 typedef struct _anchorList {
@@ -60,7 +60,7 @@ Anchor* retrieveCurrentForm(struct _Buffer* buf);
 Anchor* searchAnchor(AnchorList* al, const char* str);
 Anchor* searchURLLabel(struct _Buffer* buf, const char* url);
 void reAnchorWord(struct _Buffer* buf, Line* l, int spos, int epos);
-char* reAnchor(struct _Buffer* buf, const char* re);
+const char* reAnchor(struct _Buffer* buf, const char* re);
 void addMultirowsForm(struct _Buffer* buf, AnchorList* al);
 Anchor* closest_next_anchor(AnchorList* a, Anchor* an, int x, int y);
 Anchor* closest_prev_anchor(AnchorList* a, Anchor* an, int x, int y);
