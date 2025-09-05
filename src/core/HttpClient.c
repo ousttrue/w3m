@@ -21,6 +21,11 @@ void initHttpClient(struct HttpClient* c, const char* path)
     c->content_type = "text/plain";
     c->charset = WC_CES_US_ASCII;
     c->current_content_length = 0;
+
+    c->uname = NULL;
+    c->pwd = NULL;
+    c->realm = NULL;
+    c->add_auth_cookie_flag = 0;
 }
 
 bool checkRedirection(struct HttpClient* c, ParsedURL* pu)
@@ -43,4 +48,3 @@ bool checkRedirection(struct HttpClient* c, ParsedURL* pu)
     copyParsedURL(&c->puv[c->nredir++], pu);
     return true;
 }
-

@@ -18,6 +18,11 @@ struct HttpClient {
 
     const char* url;
 
+    Str uname;
+    Str pwd;
+    Str realm;
+    bool add_auth_cookie_flag;
+
     Str page;
     const char* content_type;
     wc_ces charset;
