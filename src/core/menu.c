@@ -27,14 +27,14 @@
 
 static const char** FRAME;
 static int FRAME_WIDTH;
-#define G_start             \
-    {                       \
-        if (graph_mode)     \
+#define G_start                \
+    {                          \
+        if (graph_mode)        \
             vt_graphstart(vt); \
     }
-#define G_end             \
-    {                     \
-        if (graph_mode)   \
+#define G_end                \
+    {                        \
+        if (graph_mode)      \
             vt_graphend(vt); \
     }
 
@@ -844,6 +844,7 @@ int select_menu(Menu* menu, int mselect)
     vt_move(vt, menu->y + mselect - menu->offset, menu->x);
     vt_toggle_stand(vt);
     // refresh(ttyWriter());
+    renderFrame(getUI());
 
     return (menu->select);
 }
