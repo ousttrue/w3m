@@ -103,12 +103,9 @@ loadGeneralFile(const char* path, ParsedURL* current, FormList* post, const char
         {
             init_stream(&c.f, SCM_MISSING, NULL);
 
-            const char* u = c.url; // url;
-            enum UrlScheme scheme = getURLScheme(&u);
-            if (current == NULL && scheme == SCM_MISSING && !ArgvIsURL)
-                u = file_to_url(c.url); /* force to local file */
-            else
-                u = c.url;
+            const char* u = (current == NULL && getUrlScheme(c.url) == SCM_MISSING && !ArgvIsURL)
+                ? file_to_url(c.url) /* force to local file */
+                : c.url;
 
             parseURL2(u, &pu, current);
             if (pu.scheme == SCM_LOCAL && pu.file == NULL) {
@@ -215,12 +212,12 @@ loadGeneralFile(const char* path, ParsedURL* current, FormList* post, const char
                             }
                         } else if (pu.scheme == SCM_HTTPS) {
                             sock = openSocket(HTTPS_proxy_parsed.host,
-                                schemeNumToName(HTTPS_proxy_parsed.scheme),
+                                getSchemeInfo(HTTPS_proxy_parsed.scheme).name,
                                 HTTPS_proxy_parsed.port);
                             sslh = NULL;
                         } else {
                             sock = openSocket(HTTP_proxy_parsed.host,
-                                schemeNumToName(HTTP_proxy_parsed.scheme),
+                                getSchemeInfo(HTTP_proxy_parsed.scheme).name,
                                 HTTP_proxy_parsed.port);
                             sslh = NULL;
                         }
@@ -242,7 +239,7 @@ loadGeneralFile(const char* path, ParsedURL* current, FormList* post, const char
                             c.status = HTST_NORMAL;
                         }
                     } else {
-                        sock = openSocket(pu.host, schemeNumToName(pu.scheme), pu.port);
+                        sock = openSocket(pu.host, getSchemeInfo(pu.scheme).name, pu.port);
                         if (sock < 0) {
                             c.status = HTST_MISSING;
                             // return;
@@ -324,10 +321,11 @@ loadGeneralFile(const char* path, ParsedURL* current, FormList* post, const char
                 }
             }
             if (c.f.stream == NULL && retryAsHttp && c.url[0] != '/') {
-                enum UrlScheme scheme = getURLScheme(&c.url);
+                const char* tmp = c.url;
+                enum UrlScheme scheme = parseUrlScheme(&tmp);
                 if (scheme == SCM_MISSING || scheme == SCM_UNKNOWN) {
                     /* retry it as "http://" */
-                    c.url = Strnew_m_charp("http://", c.url, NULL)->ptr;
+                    c.url = Strnew_m_charp("http://", tmp, NULL)->ptr;
                     continue;
                 }
             }

@@ -147,12 +147,9 @@ fusage(FILE* f, int err)
 
 void parseArgs(int argc, char** argv)
 {
-    const char* url = argv[1];
-    if (getURLScheme(&url) == SCM_MISSING && !ArgvIsURL)
-    retry_as_local_file:
-        url = file_to_url(argv[1]);
-    else
-        url = url_encode(conv_from_system(argv[1]), NULL, 0);
+    const char* url = (getUrlScheme(argv[1]) == SCM_MISSING && !ArgvIsURL)
+        ? file_to_url(argv[1])
+        : url_encode(conv_from_system(argv[1]), NULL, 0);
 
     struct Content c = loadGeneralFile(url, NULL, NULL, NO_REFERER, 0);
     Buffer* newbuf = makeBuffer(&c, false);

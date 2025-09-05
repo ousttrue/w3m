@@ -1,25 +1,34 @@
 #pragma once
 
-extern int DefaultPort[];
-
 enum UrlScheme {
-    SCM_UNKNOWN = 255,
-    SCM_MISSING = 254,
-    SCM_HTTP = 0,
-    SCM_GOPHER = 1,
-    SCM_FTP = 2,
-    SCM_FTPDIR = 3,
-    SCM_LOCAL = 4,
-    SCM_LOCAL_CGI = 5,
-    SCM_EXEC = 6,
-    SCM_NNTP = 7,
-    SCM_NNTP_GROUP = 8,
-    SCM_NEWS = 9,
-    SCM_NEWS_GROUP = 10,
-    SCM_DATA = 11,
-    SCM_MAILTO = 12,
-    SCM_HTTPS = 13,
+    SCM_UNKNOWN = 0,
+    SCM_HTTP = 1,
+    SCM_GOPHER = 2,
+    SCM_FTP = 3,
+    SCM_FTPDIR = 4,
+    SCM_LOCAL = 5,
+    SCM_LOCAL_CGI = 6,
+    SCM_EXEC = 7,
+    SCM_NNTP = 8,
+    SCM_NNTP_GROUP = 9,
+    SCM_NEWS = 10,
+    SCM_NEWS_GROUP = 11,
+    SCM_DATA = 12,
+    SCM_MAILTO = 13,
+    SCM_HTTPS = 14,
+    SCM_MISSING = 255,
 };
 
-enum UrlScheme getURLScheme(const char** url);
-const char* schemeNumToName(enum UrlScheme scheme);
+struct SchemeInfo {
+    const char* name;
+    enum UrlScheme scheme;
+    int port;
+};
+struct SchemeInfo getSchemeInfo(enum UrlScheme scheme);
+
+enum UrlScheme parseUrlScheme(const char** url);
+inline static enum UrlScheme getUrlScheme(const char* url)
+{
+    const char* tmp = url;
+    return parseUrlScheme(&tmp);
+}

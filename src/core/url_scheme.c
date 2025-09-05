@@ -3,77 +3,62 @@
 #include <string.h>
 #include <strings.h>
 
-/* XXX: note html.h SCM_ */
-int DefaultPort[] = {
-    80, /* http */
-    70, /* gopher */
-    21, /* ftp */
-    21, /* ftpdir */
-    0, /* local - not defined */
-    0, /* local-CGI - not defined? */
-    0, /* exec - not defined? */
-    119, /* nntp */
-    119, /* nntp group */
-    119, /* news */
-    119, /* news group */
-    0, /* data - not defined */
-    0, /* mailto - not defined */
-    443, /* https */
+struct SchemeInfo schemetable[] = {
+    { 0, SCM_UNKNOWN, 0 },
+    { "http", SCM_HTTP, 80 },
+    { "gopher", SCM_GOPHER, 70 },
+    { "ftp", SCM_FTP, 21 },
+    { "ftp", SCM_FTPDIR, 21 },
+    { "file", SCM_LOCAL, 0 },
+    { "file", SCM_LOCAL_CGI, 0 },
+    { "exec", SCM_EXEC, 0 },
+    { "nntp", SCM_NNTP, 119 },
+    { "nntp", SCM_NNTP_GROUP, 119 },
+    { "news", SCM_NEWS, 119 },
+    { "news", SCM_NEWS_GROUP, 119 },
+    { "data", SCM_DATA, 0 },
+    { "mailto", SCM_MAILTO, 0 },
+    { "https", SCM_HTTPS, 443 },
 };
 
-struct SchemeTable {
-    const char* cmdname;
-    enum UrlScheme cmd;
-};
-
-struct SchemeTable schemetable[] = {
-    { "http", SCM_HTTP },
-    { "gopher", SCM_GOPHER },
-    { "ftp", SCM_FTP },
-    { "local", SCM_LOCAL },
-    { "file", SCM_LOCAL },
-    /*  {"exec", SCM_EXEC}, */
-    { "nntp", SCM_NNTP },
-    /*  {"nntp", SCM_NNTP_GROUP}, */
-    { "news", SCM_NEWS },
-    /*  {"news", SCM_NEWS_GROUP}, */
-    { "data", SCM_DATA },
-    { "mailto", SCM_MAILTO },
-    { "https", SCM_HTTPS },
-    { 0, SCM_UNKNOWN },
-};
-
-const char*
-schemeNumToName(enum UrlScheme scheme)
+struct SchemeInfo getSchemeInfo(enum UrlScheme scheme)
 {
-    for (int i = 0; schemetable[i].cmdname; i++) {
-        if (schemetable[i].cmd == scheme)
-            return schemetable[i].cmdname;
-    }
-    return 0;
-}
-
-enum UrlScheme getURLScheme(const char** url)
-{
-    const char* p = *url;
-    if(!p){
-        return SCM_UNKNOWN;
-    }
-    while (*p && (IS_ALNUM(*p) || *p == '.' || *p == '+' || *p == '-'))
-        p++;
-
-    int scheme = SCM_MISSING;
-    if (*p == ':') { /* scheme found */
-        scheme = SCM_UNKNOWN;
-        const char* q;
-        for (int i = 0; (q = schemetable[i].cmdname); i++) {
-            int len = strlen(q);
-            if (!strncasecmp(q, *url, len) && (*url)[len] == ':') {
-                scheme = schemetable[i].cmd;
-                *url = p + 1;
-                break;
-            }
+    for (int i = 0; i < sizeof(schemetable) / sizeof(schemetable[0]); ++i) {
+        if (schemetable[i].scheme == scheme) {
+            return schemetable[i];
         }
     }
-    return scheme;
+    return (struct SchemeInfo) {
+        0,
+        SCM_MISSING,
+        0,
+    };
+}
+
+enum UrlScheme parseUrlScheme(const char** url)
+{
+    if (url && *url) {
+        const char* p = *url;
+        while (*p && (IS_ALNUM(*p) || *p == '.' || *p == '+' || *p == '-'))
+            p++;
+        if (*p == ':') { /* scheme found */
+            for (int i = 1; i < sizeof(schemetable) / sizeof(schemetable[0]); ++i) {
+                const char* q = schemetable[i].name;
+                int len = strlen(q);
+                if (strncasecmp(q, *url, len) == 0) {
+                    *url = p + 1;
+                    return schemetable[i].scheme;
+                }
+            }
+
+            // ???:
+            *url = p + 1;
+            return SCM_UNKNOWN;
+        } else {
+            // no ':'
+            return SCM_MISSING;
+        }
+    }
+    // empty string as SCM_UNKNOWN
+    return SCM_UNKNOWN;
 }

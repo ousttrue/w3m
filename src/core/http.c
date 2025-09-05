@@ -112,7 +112,7 @@ otherinfo(ParsedURL* target, ParsedURL* current, const char* referer)
     if (target->host) {
         Strcat_charp(s, "Host: ");
         Strcat_charp(s, target->host);
-        if (target->port != DefaultPort[target->scheme])
+        if (target->port != getSchemeInfo(target->scheme).port)
             Strcat(s, Sprintf(":%d", target->port));
         Strcat_charp(s, "\r\n");
     }

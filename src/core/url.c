@@ -438,7 +438,7 @@ copyPath(const char* orgpath, int length, int option)
 void parseURL(const char* _url, ParsedURL* p_url, ParsedURL* current)
 {
     // quote 0x01-0x20, 0x7F-0xFF
-    char* url = url_quote(_url);
+    const char* url = url_quote(_url);
 
     const char* p = url;
     copyParsedURL(p_url, NULL);
@@ -458,7 +458,7 @@ void parseURL(const char* _url, ParsedURL* p_url, ParsedURL* current)
     }
 #endif /* SUPPORT_DOS_DRIVE_PREFIX */
     /* search for scheme */
-    p_url->scheme = getURLScheme(&p);
+    p_url->scheme = parseUrlScheme(&p);
     if (p_url->scheme == SCM_MISSING) {
         /* scheme part is not found in the url. This means either
          * (a) the url is relative to the current or (b) the url
@@ -498,10 +498,7 @@ void parseURL(const char* _url, ParsedURL* p_url, ParsedURL* current)
     /* get host and port */
     if (p[0] != '/' || p[1] != '/') { /* scheme:foo or scheme:/foo */
         p_url->host = NULL;
-        if (p_url->scheme != SCM_UNKNOWN)
-            p_url->port = DefaultPort[p_url->scheme];
-        else
-            p_url->port = 0;
+        p_url->port = getSchemeInfo(p_url->scheme).port;
         goto analyze_file;
     }
     /* after here, p begins with // */
@@ -570,10 +567,7 @@ analyze_url:
     case '#':
         p_url->host = copyPath(q, p - q,
             COPYPATH_SPC_IGNORE | COPYPATH_LOWERCASE);
-        if (p_url->scheme != SCM_UNKNOWN)
-            p_url->port = DefaultPort[p_url->scheme];
-        else
-            p_url->port = 0;
+        p_url->port = getSchemeInfo(p_url->scheme).port;
         break;
     }
 analyze_file:
@@ -589,8 +583,9 @@ analyze_file:
          */
 
         p_url->scheme = SCM_FTP; /* ftp://host/... */
-        if (p_url->port == 0)
-            p_url->port = DefaultPort[SCM_FTP];
+        if (p_url->port == 0){
+            p_url->port = getSchemeInfo(SCM_FTP).port;
+        }
     }
 #endif
     if ((*p == '\0' || *p == '#' || *p == '?') && p_url->host == NULL) {
@@ -700,10 +695,10 @@ void parseURL2(const char* url, ParsedURL* pu, ParsedURL* current)
     int relative_uri = FALSE;
 
     parseURL(url, pu, current);
-#ifndef USE_W3MMAILER
+
     if (pu->scheme == SCM_MAILTO)
         return;
-#endif
+
     if (pu->scheme == SCM_DATA)
         return;
     if (pu->scheme == SCM_NEWS || pu->scheme == SCM_NEWS_GROUP) {
@@ -829,22 +824,6 @@ void parseURL2(const char* url, ParsedURL* pu, ParsedURL* current)
 Str _parsedURL2Str(ParsedURL* pu, int pass, int user, int label)
 {
     Str tmp;
-    static char* scheme_str[] = {
-        "http",
-        "gopher",
-        "ftp",
-        "ftp",
-        "file",
-        "file",
-        "exec",
-        "nntp",
-        "nntp",
-        "news",
-        "news",
-        "data",
-        "mailto",
-        "https",
-    };
 
     if (pu->scheme == SCM_MISSING) {
         return Strnew_charp("???");
@@ -863,7 +842,7 @@ Str _parsedURL2Str(ParsedURL* pu, int pass, int user, int label)
         }
         return tmp;
     }
-    tmp = Strnew_charp(scheme_str[pu->scheme]);
+    tmp = Strnew_charp(getSchemeInfo(pu->scheme).name);
     Strcat_char(tmp, ':');
 #ifndef USE_W3MMAILER
     if (pu->scheme == SCM_MAILTO) {
@@ -892,7 +871,7 @@ Str _parsedURL2Str(ParsedURL* pu, int pass, int user, int label)
     }
     if (pu->host) {
         Strcat_charp(tmp, pu->host);
-        if (pu->port != DefaultPort[pu->scheme]) {
+        if (pu->port != getSchemeInfo(pu->scheme).port) {
             Strcat_char(tmp, ':');
             Strcat(tmp, Sprintf("%d", pu->port));
         }
@@ -1359,4 +1338,3 @@ int is_localhost(const char* host)
         return TRUE;
     return FALSE;
 }
-
