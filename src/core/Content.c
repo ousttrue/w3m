@@ -66,84 +66,117 @@ static void write_from_file(int sock, const char* file)
     }
 }
 
-struct Content openLocal()
+struct Content openLocal(const char* u, ParsedURL* current, FormList* post, const char* referer)
 {
-    // ParsedURL pu;
-    // parseURL2(u, &pu, current);
-    //
-    // if (pu.label != NULL) {
-    //     /* #hogege is not a label but a filename */
-    //     Str tmp2 = Strnew_charp("#");
-    //     Strcat_charp(tmp2, pu.label);
-    //     pu.file = tmp2->ptr;
-    //     pu.real_file = cleanupName(file_unquote(pu.file));
-    //     pu.label = NULL;
-    // } else {
-    //     /* given URL must be null string */
-    //     // return;
-    // }
-    //
-    // if (post && post->body)
-    //     /* local CGI: POST */
-    //     c.f.stream = newFileStream(localcgi_post(pu.real_file, pu.query,
-    //                                    post, referer),
-    //         (void (*)())fclose);
-    // else
-    //     /* lodal CGI: GET */
-    //     c.f.stream = newFileStream(localcgi_get(pu.real_file, pu.query,
-    //                                    referer),
-    //         (void (*)())fclose);
-    // if (c.f.stream) {
-    //     c.f.is_cgi = true;
-    //     c.f.scheme = pu.scheme = SCM_LOCAL_CGI;
-    //     // return;
-    // } else {
-    //     examineFile(&c.f, pu.real_file);
-    //     if (c.f.stream == NULL) {
-    //         if (dir_exist(pu.real_file)) {
-    //             add_index_file(&pu, &c.f);
-    //             if (c.f.stream == NULL) {
-    //                 // return;
-    //             }
-    //         } else if (document_root != NULL) {
-    //             Str tmp = Strnew_charp(document_root);
-    //             if (Strlastchar(tmp) != '/' && pu.file[0] != '/')
-    //                 Strcat_char(tmp, '/');
-    //             Strcat_charp(tmp, pu.file);
-    //             char* p = cleanupName(tmp->ptr);
-    //             char* q = cleanupName(file_unquote(p));
-    //             if (dir_exist(q)) {
-    //                 pu.file = p;
-    //                 pu.real_file = q;
-    //                 add_index_file(&pu, &c.f);
-    //                 if (c.f.stream == NULL) {
-    //                     // return;
-    //                 }
-    //             } else {
-    //                 examineFile(&c.f, q);
-    //                 if (c.f.stream) {
-    //                     pu.file = p;
-    //                     pu.real_file = q;
-    //                 }
-    //             }
-    //         }
-    //     }
-    //     break;
-    // }
-    // break;
-    //
-    // c.content_type = guessContentType(pu.file);
-    // if (c.content_type == NULL)
-    //     c.content_type = "text/plain";
-    // // real_type = c.content_type;
-    // if (c.f.guess_type) {
-    //     c.content_type = c.f.guess_type;
-    // }
-    //
+    // u = file_to_url(u);
+    ParsedURL pu;
+    parseURL2(u, &pu, current);
+
+    if (pu.label != NULL) {
+        // #hogege is not a label but a filename
+        Str tmp2 = Strnew_charp("#");
+        Strcat_charp(tmp2, pu.label);
+        pu.file = tmp2->ptr;
+        pu.real_file = cleanupName(file_unquote(pu.file));
+        pu.label = NULL;
+    }
+
+    struct URLFile f;
+    init_stream(&f, SCM_MISSING, NULL);
+    if (post && post->body) {
+        // local CGI: POST
+        f.stream = newFileStream(localcgi_post(pu.real_file, pu.query, post, referer), &fclose);
+    } else {
+        // lodal CGI: GET
+        f.stream = newFileStream(localcgi_get(pu.real_file, pu.query, referer), &fclose);
+    }
+
+    if (f.stream) {
+        f.is_cgi = true;
+        f.scheme = pu.scheme = SCM_LOCAL_CGI;
+    } else {
+        examineFile(&f, pu.real_file);
+        if (f.stream == NULL) {
+            if (dir_exist(pu.real_file)) {
+                add_index_file(&pu, &f);
+                // if (f.stream == NULL) {
+                //     // return;
+                // }
+            } else if (document_root != NULL) {
+                Str tmp = Strnew_charp(document_root);
+                if (Strlastchar(tmp) != '/' && pu.file[0] != '/')
+                    Strcat_char(tmp, '/');
+                Strcat_charp(tmp, pu.file);
+                char* p = cleanupName(tmp->ptr);
+                char* q = cleanupName(file_unquote(p));
+                if (dir_exist(q)) {
+                    pu.file = p;
+                    pu.real_file = q;
+                    add_index_file(&pu, &f);
+                    // if (f.stream == NULL) {
+                    //     // return;
+                    // }
+                } else {
+                    examineFile(&f, q);
+                    if (f.stream) {
+                        pu.file = p;
+                        pu.real_file = q;
+                    }
+                }
+            }
+        }
+    }
+    if (!f.stream) {
+        return (struct Content) {
+            .pu = pu,
+            .page = NULL,
+        };
+    }
+    Str page = readAll(&f);
+
+    const char* content_type = guessContentType(pu.file);
+    if (content_type == NULL) {
+        content_type = "text/plain";
+    }
+    // real_type = c.content_type;
+    if (f.guess_type) {
+        content_type = f.guess_type;
+    }
+
     // term_raw();
     return (struct Content) {
-        // pu, c.f, c.page, c.charset, c.content_type, NULL
+        .pu = pu,
+        .page = page,
+        .charset = WC_CES_UTF_8,
+        .real_type = content_type,
+        .document_header = NULL,
     };
+
+    //         struct stat st;
+    //         if (stat(pu.real_file, &st) < 0)
+    //             return NULL;
+    //         if (S_ISDIR(st.st_mode)) {
+    //             if (UseExternalDirBuffer) {
+    //                 Str cmd = Sprintf("%s?dir=%s#current",
+    //                     DirBufferCommand, pu.file);
+    //                 Buffer* b = loadGeneralFile(cmd->ptr, NULL, NULL, NO_REFERER, 0,
+    //                     do_download);
+    //                 if (b != NULL && b != NO_BUFFER) {
+    //                     copyParsedURL(&b->currentURL, &pu);
+    //                     b->filename = b->currentURL.real_file;
+    //                 }
+    //                 return b;
+    //             } else {
+    //                 c.page = loadLocalDir(pu.real_file);
+    //                 c.content_type = "local:directory";
+    //                 c.charset = SystemCharset;
+    //             }
+    //         }
+    // if (c.f.is_cgi) {
+    //     /* local CGI */
+    //     // searchHeader = true;
+    // }
+    // break;
 }
 
 bool is_gzip(const unsigned char* src)
@@ -479,7 +512,7 @@ loadGeneralFile(const char* path, ParsedURL* current, FormList* post, const char
     switch (pu.scheme) {
     case SCM_LOCAL:
     case SCM_LOCAL_CGI: {
-        struct Content content = openLocal();
+        struct Content content = openLocal(path, current, post, referer);
         if (content.page) {
             return content;
         } else if (retryAsHttp) {
@@ -495,32 +528,6 @@ loadGeneralFile(const char* path, ParsedURL* current, FormList* post, const char
             return openHttp(&c, Strnew_m_charp("http://", path, NULL)->ptr, current, post, referer, no_cache);
             //     //     }
         }
-
-        //         struct stat st;
-        //         if (stat(pu.real_file, &st) < 0)
-        //             return NULL;
-        //         if (S_ISDIR(st.st_mode)) {
-        //             if (UseExternalDirBuffer) {
-        //                 Str cmd = Sprintf("%s?dir=%s#current",
-        //                     DirBufferCommand, pu.file);
-        //                 Buffer* b = loadGeneralFile(cmd->ptr, NULL, NULL, NO_REFERER, 0,
-        //                     do_download);
-        //                 if (b != NULL && b != NO_BUFFER) {
-        //                     copyParsedURL(&b->currentURL, &pu);
-        //                     b->filename = b->currentURL.real_file;
-        //                 }
-        //                 return b;
-        //             } else {
-        //                 c.page = loadLocalDir(pu.real_file);
-        //                 c.content_type = "local:directory";
-        //                 c.charset = SystemCharset;
-        //             }
-        //         }
-        // if (c.f.is_cgi) {
-        //     /* local CGI */
-        //     // searchHeader = true;
-        // }
-        // break;
     }
 
     case SCM_HTTP:

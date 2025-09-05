@@ -257,7 +257,7 @@ void uncompress_stream(struct URLFile* uf, char** src)
             uf->scheme = SCM_LOCAL;
     }
     UFhalfclose(uf);
-    uf->stream = newFileStream(f1, (void (*)())fclose);
+    uf->stream = newFileStream(f1, &fclose);
 }
 
 void set_compression(struct URLFile* uf, const char *p)

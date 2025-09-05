@@ -18,9 +18,10 @@ struct stream_buffer {
 
 typedef struct stream_buffer* StreamBuffer;
 
+typedef int(*FileCloseFunc)(FILE*);
 struct io_file_handle {
     FILE* f;
-    void (*close)(void*);
+    FileCloseFunc close;
 };
 
 union input_stream;
@@ -100,7 +101,7 @@ typedef struct encoded_stream* EncodedStrStream;
 typedef union input_stream* InputStream;
 
 extern InputStream newInputStream(int des);
-extern InputStream newFileStream(FILE* f, void (*closep)());
+extern InputStream newFileStream(FILE* f, FileCloseFunc closep);
 extern InputStream newStrStream(Str s);
 extern InputStream newSSLStream(SSL* ssl, int sock);
 extern InputStream newEncodedStream(InputStream is, enum StreamEncoding encoding);
@@ -180,4 +181,4 @@ int doFileSave(struct URLFile uf, const char* defstr, int current_content_length
 void init_stream(struct URLFile* uf, int scheme, InputStream stream);
 int checkSaveFile(InputStream stream, char* path);
 void UFhalfclose(struct URLFile* f);
-Str readAll(struct URLFile *f);
+Str readAll(struct URLFile* f);

@@ -110,21 +110,21 @@ newInputStream(int des)
     return stream;
 }
 
-InputStream
-newFileStream(FILE* f, void (*closep)())
+InputStream newFileStream(FILE* f, FileCloseFunc closep)
 {
-    InputStream stream;
-    if (f == NULL)
+    if (!f) {
         return NULL;
-    stream = NewWithoutGC(union input_stream);
+    }
+
+    InputStream stream = NewWithoutGC(union input_stream);
     init_base_stream(&stream->base, STREAM_BUF_SIZE);
     stream->file.type = IST_FILE;
     stream->file.handle = NewWithoutGC(struct io_file_handle);
     stream->file.handle->f = f;
     if (closep)
-        stream->file.handle->close = (void (*)(void*))closep;
+        stream->file.handle->close = closep;
     else
-        stream->file.handle->close = (void (*)(void*))fclose;
+        stream->file.handle->close = fclose;
     stream->file.read = (int (*)())file_read;
     stream->file.close = (void (*)())file_close;
     return stream;
