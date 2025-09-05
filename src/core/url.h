@@ -47,7 +47,7 @@ void copyParsedURL(ParsedURL* p, const ParsedURL* q);
 void parseURL2(const char* url, ParsedURL* pu, ParsedURL* current);
 Str parsedURL2Str(ParsedURL* pu);
 Str parsedURL2RefererStr(ParsedURL* pu);
-char* guessContentType(char* filename);
+char* guessContentType(const char* filename);
 char* filename_extension(char* path, int is_url);
 struct _ParsedURL* schemeToProxy(int scheme);
 wc_ces url_to_charset(const char* url, const ParsedURL* base, wc_ces doc_charset);

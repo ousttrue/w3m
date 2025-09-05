@@ -2,7 +2,7 @@
 #include <sys/types.h>
 
 extern int activeImage;
-extern char* image_source;
+extern const char* image_source;
 
 #define MAX_IMAGE 1000
 #define MAX_IMAGE_SIZE 2048
@@ -23,10 +23,10 @@ enum ImageCacheFlags {
 };
 
 typedef struct _imageCache {
-    char* url;
+    const char* url;
     struct _ParsedURL* current;
-    char* file;
-    char* touch;
+    const char* file;
+    const char* touch;
     pid_t pid;
     enum ImageCacheFlags loaded;
     int index;
@@ -37,15 +37,15 @@ typedef struct _imageCache {
 } ImageCache;
 
 typedef struct _image {
-    char* url;
-    char* ext;
+    const char* url;
+    const char* ext;
     short width;
     short height;
     short xoffset;
     short yoffset;
     short y;
     short rows;
-    char* map;
+    const char* map;
     char ismap;
     int touch;
     ImageCache* cache;
@@ -77,10 +77,10 @@ ImageCache* getImage(Image* image, struct _ParsedURL* current, enum ImageGetFlag
 int getImageSize(ImageCache* cache);
 
 void put_image_osc5379(int cursorX, int cursorY,
-    char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh);
+    const char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh);
 void put_image_sixel(int cursorX, int cursorY,
-    char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh, int n_terminal_image);
+    const char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh, int n_terminal_image);
 void put_image_iterm2(int cursorX, int cursorY,
-    char* url, int x, int y, int w, int h);
+    const char* url, int x, int y, int w, int h);
 void put_image_kitty(int cursorX, int cursorY,
-    char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh, int c, int r);
+    const char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh, int c, int r);

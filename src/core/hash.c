@@ -4,7 +4,7 @@
 #include <gc.h>
 
 static unsigned int
-hashfunc(char* s)
+hashfunc(const char* s)
 {
     unsigned int h = 0;
     while (*s) {
@@ -21,9 +21,7 @@ hashfunc(char* s)
 
 #define keycomp(x, y) !strcmp(x, y)
 
-/* *INDENT-OFF* */
-defhashfunc(char*, int, si)
-    defhashfunc(char*, char*, ss)
-        defhashfunc(char*, void*, sv)
+defhashfunc(const char*, int, si)
+    defhashfunc(const char*, char*, ss)
+        defhashfunc(const char*, void*, sv)
             defhashfunc_i(int, void*, iv)
-    /* *INDENT-ON* */

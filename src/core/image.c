@@ -25,7 +25,7 @@
 #include <fcntl.h>
 
 int activeImage = (FALSE);
-char* image_source = (NULL);
+const char* image_source = (NULL);
 
 static int image_index = 0;
 
@@ -225,7 +225,7 @@ void drawImage(void)
             if (!i->cache->touch || stat(i->cache->file, &st))
                 return;
 
-            char* url = i->cache->file;
+            const char* url = i->cache->file;
 
             int x = i->x / pixel_per_char_i;
             int y = i->y / pixel_per_line_i;
@@ -604,7 +604,7 @@ getImage(Image* image, ParsedURL* current, enum ImageGetFlag flag)
 }
 
 static int
-parseImageHeader(char* path, unsigned int* width, unsigned int* height)
+parseImageHeader(const char* path, unsigned int* width, unsigned int* height)
 {
     FILE* fp;
     unsigned char buf[8];
@@ -740,7 +740,7 @@ got_image_size:
 }
 
 void put_image_osc5379(int cursorX, int cursorY,
-    char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh)
+    const char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh)
 {
     char* size;
     if (w > 0 && h > 0)
@@ -755,7 +755,7 @@ void put_image_osc5379(int cursorX, int cursorY,
 }
 
 void put_image_iterm2(int cursorX, int cursorY,
-    char* url, int x, int y, int w, int h)
+    const char* url, int x, int y, int w, int h)
 {
     Str buf;
     char* cbuf;
@@ -810,7 +810,7 @@ cleanup:
 }
 
 void put_image_kitty(int cursorX, int cursorY,
-    char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh, int cols, int rows)
+    const char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh, int cols, int rows)
 {
     Str buf, base64;
     char *cbuf, *type, *tmpf;
@@ -866,7 +866,7 @@ void put_image_kitty(int cursorX, int cursorY,
                     Strcat_charp(buf, "[0]");
                     argv[i++] = buf->ptr;
                 } else {
-                    argv[i++] = url;
+                    argv[i++] = (char*)url;
                 }
                 argv[i++] = tmpf;
                 argv[i++] = NULL;
@@ -1029,7 +1029,7 @@ save_first_animation_frame(const char* path)
 }
 
 void put_image_sixel(int cursorX, int cursorY,
-    char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh, int n_terminal_image)
+    const char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh, int n_terminal_image)
 {
     pid_t pid;
     int do_anim;

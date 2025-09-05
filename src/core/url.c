@@ -945,7 +945,7 @@ guessContentTypeFromTable(struct table2* table, char* filename)
     return NULL;
 }
 
-char* guessContentType(char* filename)
+char* guessContentType(const char* filename)
 {
     char* ret;
     int i;
