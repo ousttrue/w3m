@@ -953,8 +953,8 @@ Buffer* makeBuffer(struct Content* c, bool do_download)
         Str tmp = tmpfname(TMPF_SRC, ".html");
         FILE* src = fopen(tmp->ptr, "w");
         if (src) {
-            Str s = wc_Str_conv_strict(c->page, InnerCharset, c->charset);
-            Strfputs(s, src);
+            // Str s = wc_Str_conv_strict(c->page, InnerCharset, c->charset);
+            Strfputs(c->page, src);
             fclose(src);
         }
         if (do_download) {
@@ -999,19 +999,6 @@ Buffer* makeBuffer(struct Content* c, bool do_download)
         return NO_BUFFER;
     }
 
-    Buffer* t_buf = newBuffer();
-    if ((c->f.content_encoding != CMP_NOCOMPRESS) && AutoUncompress) {
-        uncompress_stream(&c->f, &c->pu.real_file);
-    } else if (c->f.compression != CMP_NOCOMPRESS) {
-        if (is_text_type(c->real_type) || searchExtViewer(c->real_type)) {
-            uncompress_stream(&c->f, &t_buf->sourcefile);
-            uncompressed_file_type(c->pu.file, &c->f.ext);
-        } else {
-            c->real_type = compress_application_type(c->f.compression);
-            c->f.compression = CMP_NOCOMPRESS;
-        }
-    }
-
     if (image_source) {
         Buffer* b = NULL;
         if (IStype(c->f.stream) != IST_ENCODED)
@@ -1025,8 +1012,7 @@ Buffer* makeBuffer(struct Content* c, bool do_download)
         return b;
     }
 
-    if (t_buf == NULL)
-        t_buf = newBuffer();
+    Buffer* t_buf = newBuffer();
     copyParsedURL(&t_buf->currentURL, &c->pu);
     t_buf->filename = c->pu.real_file ? c->pu.real_file : c->pu.file ? conv_to_system(c->pu.file)
                                                                      : NULL;

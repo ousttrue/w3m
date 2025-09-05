@@ -1,6 +1,12 @@
 const std = @import("std");
 const zcc = @import("compile_commands.zig");
 
+const system_libs = [_][]const u8{
+    "tinfo",
+    "ssl",
+    "crypto",
+    "z",
+};
 const output_public_headers = [_][]const u8{
     "writer.h",
     "TermEntry.h",
@@ -164,11 +170,6 @@ pub fn build(b: *std.Build) void {
         exe.addLibraryPath(ssl.path("x64/lib"));
         exe.addIncludePath(ssl.path("x64/include"));
     } else {
-        const system_libs = [_][]const u8{
-            "tinfo",
-            "ssl",
-            "crypto",
-        };
         for (system_libs) |lib| {
             exe.linkSystemLibrary(lib);
         }

@@ -13,6 +13,8 @@
 #include "auth.h"
 #include <openssl/ssl.h>
 #include <unistd.h>
+#include <zlib.h>
+#include <assert.h>
 
 static bool dir_exist(const char* path)
 {
@@ -142,6 +144,66 @@ struct Content openLocal()
     return (struct Content) {
         // pu, c.f, c.page, c.charset, c.content_type, NULL
     };
+}
+
+bool is_gzip(const unsigned char* src)
+{
+    return (int)src[0] == 0x1f && (int)src[1] == 0x8b && (int)src[2] == 0x08;
+}
+
+static Str decode_gzip(unsigned char* src, int size)
+{
+    // auto sig = src.subspan(0, 3);
+    if (!is_gzip(src)) {
+        //     assert(false);
+        //     uint8_t _debug[] = { sig[0], sig[1], sig[2] };
+        return NULL;
+    }
+
+    z_stream strm = { 0 };
+    strm.zalloc = Z_NULL;
+    strm.zfree = Z_NULL;
+    strm.opaque = Z_NULL;
+    strm.avail_in = 0;
+    strm.next_in = Z_NULL;
+    int ret = inflateInit2(&strm, 47);
+    if (ret != Z_OK) {
+        return NULL;
+    }
+
+    Str buffer = Strnew();
+
+    strm.avail_in = size;
+    strm.next_in = src;
+
+    do {
+        const int CHUNK = 16384;
+        unsigned char out[CHUNK];
+        strm.avail_out = CHUNK;
+        strm.next_out = out;
+        ret = inflate(&strm, Z_NO_FLUSH);
+        assert(ret != Z_STREAM_ERROR); /* state not clobbered */
+        switch (ret) {
+        case Z_NEED_DICT:
+            ret = Z_DATA_ERROR; /* and fall through */
+        case Z_DATA_ERROR:
+        case Z_MEM_ERROR:
+            (void)inflateEnd(&strm);
+            assert(false);
+            buffer = 0;
+            break;
+        }
+        auto have = CHUNK - strm.avail_out;
+
+        // auto before = buffer.size();
+        // buffer.resize(before + have);
+        // memcpy(buffer.data() + before, out, have);
+        Strcat_charp_n(buffer, out, have);
+    } while (strm.avail_out == 0);
+
+    inflateEnd(&strm);
+
+    return buffer;
 }
 
 struct Content openHttp(struct HttpClient* c, const char* path, ParsedURL* current, FormList* post, const char* referer, bool no_cache)
@@ -370,6 +432,21 @@ struct Content openHttp(struct HttpClient* c, const char* path, ParsedURL* curre
     /* XXX: can we use guess_type to give the type to loadHTMLstream
      *      to support default utf8 encoding for XHTML here? */
     c->f.guess_type = c->content_type;
+
+    // Buffer* t_buf = newBuffer();
+    if ((c->f.content_encoding != CMP_NOCOMPRESS) && AutoUncompress) {
+        uncompress_stream(&c->f, &pu.real_file);
+    } else if (c->f.compression != CMP_NOCOMPRESS) {
+        if (is_text_type(c->content_type)) {
+            // uncompress_stream(&c->f, &t_buf->sourcefile);
+            // uncompressed_file_type(c->pu.file, &c->f.ext);
+            Str src = readAll(&c->f);
+            c->page = decode_gzip((unsigned char*)src->ptr, src->length);
+        } else {
+            c->content_type = compress_application_type(c->f.compression);
+            c->f.compression = CMP_NOCOMPRESS;
+        }
+    }
 
     // term_raw();
     return (struct Content) {
