@@ -300,7 +300,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
 #ifdef DEBUG
     FILE* debug = NULL;
 #endif
-    char* id = NULL;
+    const char* id = NULL;
     int hseq, form_id;
     Str line;
     char* endp;

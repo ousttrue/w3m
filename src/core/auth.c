@@ -16,7 +16,7 @@
 #include <strings.h>
 #include <unistd.h>
 
-Str get_auth_param(struct auth_param* auth, char* name)
+Str get_auth_param(struct auth_param* auth, const char* name)
 {
     struct auth_param* ap;
     for (ap = auth; ap->name != NULL; ap++) {
@@ -47,7 +47,7 @@ Str qstr_unquote(Str s)
         return s;
 }
 
-void getAuthCookie(struct http_auth* hauth, char* auth_header,
+void getAuthCookie(struct http_auth* hauth, const char* auth_header,
     TextList* extra_header, ParsedURL* pu, struct HttpRequest* hr,
     FormList* request,
     volatile Str* uname, volatile Str* pwd)

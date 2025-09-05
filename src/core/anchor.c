@@ -17,8 +17,8 @@
 #define FIRST_ANCHOR_SIZE 30
 
 AnchorList*
-putAnchor(AnchorList* al, char* url, char* target, Anchor** anchor_return,
-    const char* referer, char* title, unsigned char key, int line, int pos)
+putAnchor(AnchorList* al, const char* url, const char* target, Anchor** anchor_return,
+    const char* referer, const char* title, unsigned char key, int line, int pos)
 {
     int n, i, j;
     Anchor* a;
@@ -67,7 +67,7 @@ putAnchor(AnchorList* al, char* url, char* target, Anchor** anchor_return,
 }
 
 Anchor*
-registerHref(Buffer* buf, char* url, char* target, const char* referer, char* title,
+registerHref(Buffer* buf, const char* url, const char* target, const char* referer, const char* title,
     unsigned char key, int line, int pos)
 {
     Anchor* a;
@@ -77,7 +77,8 @@ registerHref(Buffer* buf, char* url, char* target, const char* referer, char* ti
 }
 
 Anchor*
-registerName(Buffer* buf, char* url, int line, int pos)
+
+registerName(Buffer* buf, const char* url, int line, int pos)
 {
     Anchor* a;
     buf->name = putAnchor(buf->name, url, NULL, &a, NULL, NULL, '\0', line,
@@ -86,7 +87,7 @@ registerName(Buffer* buf, char* url, int line, int pos)
 }
 
 Anchor*
-registerImg(Buffer* buf, char* url, char* title, int line, int pos)
+registerImg(Buffer* buf, const char* url, const char* title, int line, int pos)
 {
     Anchor* a;
     buf->img = putAnchor(buf->img, url, NULL, &a, NULL, title, '\0', line,
@@ -176,7 +177,7 @@ retrieveCurrentForm(Buffer* buf)
 }
 
 Anchor*
-searchAnchor(AnchorList* al, char* str)
+searchAnchor(AnchorList* al, const char* str)
 {
     int i;
     Anchor* a;
@@ -193,7 +194,7 @@ searchAnchor(AnchorList* al, char* str)
 }
 
 Anchor*
-searchURLLabel(Buffer* buf, char* url)
+searchURLLabel(Buffer* buf, const char* url)
 {
     return searchAnchor(buf->name, url);
 }
@@ -360,7 +361,7 @@ reAnchorAny(Buffer* buf, char* re,
     return NULL;
 }
 
-char* reAnchor(Buffer* buf, char* re)
+char* reAnchor(Buffer* buf, const char* re)
 {
     return reAnchorAny(buf, re, _put_anchor_all);
 }
