@@ -70,7 +70,7 @@ const w3m_srcs = [_][]const u8{
     "table.c",
     "local.c",
     "form.c",
-    "map.c",
+    "maparea.c",
     "rc.c",
     "menu.c",
     "mailcap.c",

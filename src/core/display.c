@@ -3,7 +3,7 @@
 #include "screen_effects.h"
 #include "image.h"
 #include "etc.h"
-#include "map.h"
+#include "maparea.h"
 #include "ui.h"
 #include "symbol.h"
 #include "w3m.h"

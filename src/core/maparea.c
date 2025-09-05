@@ -1,7 +1,4 @@
-/*
- * client-side image maps
- */
-#include "map.h"
+#include "maparea.h"
 #include "buffer_loader.h"
 #include "http.h"
 #include "display.h"
@@ -19,7 +16,7 @@
 #include <strings.h>
 
 MapList*
-searchMapList(Buffer* buf, char* name)
+searchMapList(Buffer* buf, const char* name)
 {
     MapList* ml;
 
@@ -208,14 +205,13 @@ retrieveCurrentMap(Buffer* buf)
 
 #if defined(USE_IMAGE) || defined(MENU_MAP)
 MapArea*
-follow_map_menu(Buffer* buf, char* name, Anchor* a_img, int x, int y)
+follow_map_menu(Buffer* buf, const char* name, Anchor* a_img, int x, int y)
 {
     MapList* ml;
     ListItem* al;
     int i, selected = -1;
     int initial = 0;
     MapArea* a;
-    char** label;
 
     ml = searchMapList(buf, name);
     if (ml == NULL || ml->area == NULL || ml->area->nitem == 0)
@@ -229,6 +225,7 @@ follow_map_menu(Buffer* buf, char* name, Anchor* a_img, int x, int y)
         goto map_end;
     }
 
+    const char** label;
     label = New_N(char*, ml->area->nitem + 1);
     for (i = 0, al = ml->area->first; al != NULL; i++, al = al->next) {
         a = (MapArea*)al->ptr;
@@ -254,7 +251,7 @@ map_end:
 
 
 MapArea*
-newMapArea(char* url, char* target, char* alt, char* shape, char* coords)
+newMapArea(const char* url, const char* target, const char* alt, const char* shape, const char* coords)
 {
     MapArea* a = New(MapArea);
     char* p;

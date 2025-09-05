@@ -9,9 +9,9 @@ typedef struct _MapList {
 } MapList;
 
 typedef struct _MapArea {
-    char* url;
-    char* target;
-    char* alt;
+    const char* url;
+    const char* target;
+    const char* alt;
     char shape;
     short* coords;
     int ncoords;
@@ -23,11 +23,11 @@ struct _Buffer;
 struct KeyValue;
 struct _anchor;
 
-MapList* searchMapList(struct _Buffer* buf, char* name);
+MapList* searchMapList(struct _Buffer* buf, const char* name);
 void follow_map(struct KeyValue* arg);
-MapArea* follow_map_menu(struct _Buffer* buf, char* name, struct _anchor* a_img, int x, int y);
+MapArea* follow_map_menu(struct _Buffer* buf, const char* name, struct _anchor* a_img, int x, int y);
 int getMapXY(struct _Buffer* buf, struct _anchor* a, int* x, int* y);
 MapArea* retrieveCurrentMapArea(struct _Buffer* buf);
 struct _anchor* retrieveCurrentMap(struct _Buffer* buf);
-MapArea* newMapArea(char* url, char* target, char* alt, char* shape, char* coords);
+MapArea* newMapArea(const char* url, const char* target, const char* alt, const char* shape, const char* coords);
 struct _Buffer* page_info_panel(struct _Buffer* buf);

@@ -1536,7 +1536,7 @@ smDelBuf(char c)
 
 /* --- OptionMenu --- */
 
-void optionMenu(int x, int y, char** label, int* variable, int initial,
+void optionMenu(int x, int y, const char** label, int* variable, int initial,
     void (*func)())
 {
     Menu menu;

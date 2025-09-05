@@ -1,6 +1,6 @@
 #include "ui.h"
 #include "indep.h"
-#include "map.h"
+#include "maparea.h"
 #include "screen.h"
 #include "screen_effects.h"
 #include "putc.h"

@@ -21,7 +21,7 @@
 #include "regex.h"
 #include "util.h"
 #include "w3m.h"
-#include "map.h"
+#include "maparea.h"
 #include <strings.h>
 #include <wtf.h>
 #include <unistd.h>

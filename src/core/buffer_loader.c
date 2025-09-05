@@ -31,7 +31,7 @@
 #include "HtmlTagParsed.h"
 #include "indep.h"
 #include "form.h"
-#include "map.h"
+#include "maparea.h"
 #include "w3m.h"
 #include "funcname1.h"
 #include <myctype.h>

@@ -6,7 +6,7 @@
 #include "form.h"
 #include "buffer.h"
 #include "http.h"
-#include "map.h"
+#include "maparea.h"
 #include "image.h"
 #include "myctype.h"
 #include "regex.h"

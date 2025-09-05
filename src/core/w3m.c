@@ -26,7 +26,7 @@
 #include "http.h"
 #include "mysignal.h"
 #include "proxy.h"
-#include "map.h"
+#include "maparea.h"
 #include "ssl_util.h"
 #include "mailcap.h"
 #include "local.h"
