@@ -1269,47 +1269,9 @@ DEFUN(srchprv, SEARCH_PREV, "Continue search backward")
     srch_nxtprv(1);
 }
 
-static int
-handleMailto(const char* url)
-{
-    Str to;
-    char* pos;
-
-    if (strncasecmp(url, "mailto:", 7))
-        return 0;
-#ifdef USE_W3MMAILER
-    if (!non_null(Mailer) || MailtoOptions == MAILTO_OPTIONS_USE_W3MMAILER)
-        return 0;
-#else
-    if (!non_null(Mailer)) {
-        /* FIXME: gettextize? */
-        message(getUI(), MSG_ERR, "no mailer is specified");
-        return 1;
-    }
-#endif
-
-    /* invoke external mailer */
-    if (MailtoOptions == MAILTO_OPTIONS_USE_MAILTO_URL) {
-        to = Strnew_charp(html_unquote((char*)url));
-    } else {
-        to = Strnew_charp(url + 7);
-        if ((pos = strchr(to->ptr, '?')) != NULL)
-            Strtruncate(to, pos - to->ptr);
-    }
-    exec_cmd(myExtCommand(Mailer, shell_quote(file_unquote(to->ptr)),
-        FALSE)
-            ->ptr);
-
-    pushHashHist(URLHist, (char*)url);
-    return 1;
-}
-
 static void
 cmd_loadURL(char* url, ParsedURL* current, const char* referer, FormList* post)
 {
-    if (handleMailto(url))
-        return;
-
     // refresh(ttyWriter());
     struct Content c = loadGeneralFile(url, current, post, referer, false);
     Buffer* buf = makeBuffer(&c, false);
@@ -2136,8 +2098,6 @@ static void followAnchor(bool do_download)
             return;
         }
     }
-    if (handleMailto(a->url))
-        return;
     url = (char*)a->url;
     if (map)
         url = Sprintf("%s?%d,%d", a->url, x, y)->ptr;

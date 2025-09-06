@@ -1,6 +1,7 @@
-/* $Id: entity.c,v 1.7 2003/09/24 18:48:59 ukai Exp $ */
-#ifdef DUMMY
 #include "Str.h"
+#include <wc.h>
+
+#ifdef DUMMY
 #define NBSP " "
 #define UseAltEntity 1
 #undef USE_M17N
@@ -9,6 +10,7 @@
 #include "ucs.h"
 #include "utf8.h"
 #endif /* DUMMY */
+
 #include "ctrlcode.h"
 #include "ui.h"
 

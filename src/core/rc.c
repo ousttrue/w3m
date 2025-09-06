@@ -328,9 +328,6 @@ static struct sel_c badcookiestr[] = {
 };
 
 static struct sel_c mailtooptionsstr[] = {
-#ifdef USE_W3MMAILER
-    { N_S(MAILTO_OPTIONS_USE_W3MMAILER), N_("use internal mailer instead") },
-#endif
     { N_S(MAILTO_OPTIONS_IGNORE), N_("ignore options and use only the address") },
     { N_S(MAILTO_OPTIONS_USE_MAILTO_URL), N_("use full mailto URL") },
     { 0, NULL, NULL }
@@ -459,7 +456,6 @@ struct param_ptr params2[] = {
 };
 
 struct param_ptr params3[] = {
-    { "pagerline", P_NZINT, PI_TEXT, (void*)&PagerMax, CMT_PAGERLINE, NULL },
     { "use_history", P_INT, PI_ONOFF, (void*)&UseHistory, CMT_HISTORY, NULL },
     { "history", P_INT, PI_TEXT, (void*)&URLHistSize, CMT_HISTSIZE, NULL },
     { "save_hist", P_INT, PI_ONOFF, (void*)&SaveURLHist, CMT_SAVEHIST, NULL },
@@ -1122,8 +1118,6 @@ do_recursive_mkdir(const char* dir)
 void sync_with_option(void)
 {
     init_tmp();
-    if (PagerMax < getScreen()->ROWS)
-        PagerMax = getScreen()->ROWS;
     WrapSearch = WrapDefault;
     parse_proxy();
     parse_cookie();

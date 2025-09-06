@@ -1,4 +1,5 @@
 #include "menu.h"
+#include "config.h"
 #include "alloc.h"
 #include "display.h"
 #include "rc.h"

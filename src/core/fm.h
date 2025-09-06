@@ -1,10 +1,5 @@
 #pragma once
 
-#include "config.h"
-#include "textlist.h"
-#include <wc.h>
-#include <Str.h>
-
 #ifdef MAINPROGRAM
 #define global
 #define init(x) = (x)
@@ -24,25 +19,6 @@
 #define FALSE 0
 #define TRUE 1
 
-#ifdef MAINPROGRAM
-
-#else /* not MAINPROGRAM */
-#endif /* not MAINPROGRAM */
-
-/*
- * Macros.
- */
-
-/* modes for align() */
-
-/*
- * Globals.
- */
-
-#define PAGER_MAX_LINE 10000 /* Maximum line kept as pager */
-global int PagerMax init(PAGER_MAX_LINE);
-
-// global char SearchHeader init(FALSE);
 global char TargetSelf init(FALSE);
 
 global int CurrentKey;
@@ -52,14 +28,8 @@ global char* CurrentCmdData;
 global int confirm_on_quit init(TRUE);
 global int use_mark init(FALSE);
 
-#ifdef USE_W3MMAILER
-global char* Mailer init(NULL);
-#else
 global char* Mailer init(DEF_MAILER);
-#endif
-#ifdef USE_W3MMAILER
-#define MAILTO_OPTIONS_USE_W3MMAILER 0
-#endif
+
 #define MAILTO_OPTIONS_IGNORE 1
 #define MAILTO_OPTIONS_USE_MAILTO_URL 2
 global int MailtoOptions init(MAILTO_OPTIONS_IGNORE);
