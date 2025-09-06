@@ -41,7 +41,6 @@
 #include "frame.h"
 #include "term_renderer.h"
 #include "etc.h"
-#include "fm.h"
 #include "term_size.h"
 #include "graphicchar.h"
 #include "tty.h"

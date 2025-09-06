@@ -35,7 +35,6 @@
 #include "image.h"
 #include "ssl_util.h"
 #include "symbol.h"
-#include "fm.h"
 #include "term_renderer.h"
 #include "myctype.h"
 #include "proto.h"

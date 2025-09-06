@@ -19,7 +19,6 @@
 #include "screen_effects.h"
 #include "TermEntry.h"
 #include "graphicchar.h"
-#include "fm.h"
 #include "keymap.h"
 #include "myctype.h"
 #include "regex.h"
@@ -635,7 +634,7 @@ static int smDelBuf(char c);
 static Menu MainMenu;
 /* FIXME: gettextize here */
 static wc_ces MainMenuCharset = WC_CES_US_ASCII; /* FIXME: charset of source code */
-static int MainMenuEncode = FALSE;
+static int MainMenuEncode = false;
 
 #include <libintl.h>
 #define _(String) gettext(String)
@@ -1026,11 +1025,11 @@ set_menu_frame(void)
 {
     struct TermEntry* t = getTermEntry();
     if (graph_ok(t)) {
-        graph_mode = TRUE;
+        graph_mode = true;
         FRAME_WIDTH = 1;
         FRAME = graph_symbol;
     } else {
-        graph_mode = FALSE;
+        graph_mode = false;
         FRAME_WIDTH = 0;
         FRAME = get_symbol(DisplayCharset, &FRAME_WIDTH);
         if (!WcOption.use_wide)
@@ -1635,7 +1634,7 @@ void initMenu(void)
             item->label = wc_conv(_(item->label), MainMenuCharset,
                 InnerCharset)
                               ->ptr;
-        MainMenuEncode = TRUE;
+        MainMenuEncode = true;
     }
     if ((mf = fopen(confFile(MENU_FILE), "rt")) != NULL) {
         interpret_menu(mf);
@@ -1892,7 +1891,7 @@ list_menu(Buffer* buf)
     AnchorList* al = buf->href;
     Anchor* a;
     Anchor** ap;
-    int i, n, nitem = 0, key = -1, two = FALSE;
+    int i, n, nitem = 0, key = -1, two = false;
     char** label;
     char* t;
     unsigned char c;
@@ -1908,7 +1907,7 @@ list_menu(Buffer* buf)
         return NULL;
 
     if (nitem >= nlmKeys)
-        two = TRUE;
+        two = true;
     label = New_N(char*, nitem + 1);
     ap = New_N(Anchor*, nitem);
     for (i = 0, n = 0; i < al->nanchor; i++) {
