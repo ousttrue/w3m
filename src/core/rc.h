@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <wc.h>
 
+extern char* passwd_file;
+
 extern char* tmp_dir;
 extern char* rc_dir;
 

@@ -9,7 +9,6 @@
 #include "LineEditor.h"
 #include "w3m.h"
 #include "indep.h"
-#include "fm.h"
 #include <stdbool.h>
 #include <wtf.h>
 

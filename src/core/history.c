@@ -5,7 +5,6 @@
 #include "rc.h"
 #include "ui.h"
 #include "indep.h"
-#include "fm.h"
 #include "buffer.h"
 #include <sys/stat.h>
 

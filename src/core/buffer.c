@@ -9,7 +9,6 @@
 #include "etc.h"
 #include "w3m.h"
 #include "image.h"
-#include "fm.h"
 #include "event_poller.h"
 #include "screen.h"
 #include "ctrlcode.h"
@@ -17,6 +16,12 @@
 #include "buffer_loader.h"
 #include <strings.h>
 #include <unistd.h>
+
+int REV_LB[MAX_LB] = {
+    LB_N_INFO,
+    LB_INFO,
+    LB_N_SOURCE,
+};
 
 /*
  * Buffer creation
@@ -224,15 +229,14 @@ void gotoLine(Buffer* buf, int n)
         sprintf(msg, "Last line is #%ld", buf->lastLine->linenumber);
         set_delayed_message(msg);
         buf->currentLine = l;
-        buf->topLine = lineSkip(buf, buf->currentLine, -(getScreen()->ROWS - 1),
-            FALSE);
+        buf->topLine = lineSkip(buf, buf->currentLine, -(getScreen()->ROWS - 1), false);
         return;
     }
     for (; l != NULL; l = l->next) {
         if (l->linenumber >= n) {
             buf->currentLine = l;
             if (n < buf->topLine->linenumber || buf->topLine->linenumber + getScreen()->ROWS <= n)
-                buf->topLine = lineSkip(buf, l, -(getScreen()->ROWS + 1) / 2, FALSE);
+                buf->topLine = lineSkip(buf, l, -(getScreen()->ROWS + 1) / 2, false);
             break;
         }
     }
@@ -262,14 +266,14 @@ void gotoRealLine(Buffer* buf, int n)
         set_delayed_message(msg);
         buf->currentLine = l;
         buf->topLine = lineSkip(buf, buf->currentLine, -(getScreen()->ROWS - 1),
-            FALSE);
+            false);
         return;
     }
     for (; l != NULL; l = l->next) {
         if (l->real_linenumber >= n) {
             buf->currentLine = l;
             if (n < buf->topLine->real_linenumber || buf->topLine->real_linenumber + getScreen()->ROWS <= n)
-                buf->topLine = lineSkip(buf, l, -(getScreen()->ROWS + 1) / 2, FALSE);
+                buf->topLine = lineSkip(buf, l, -(getScreen()->ROWS + 1) / 2, false);
             break;
         }
     }
@@ -456,7 +460,7 @@ void reshapeBuffer(Buffer* buf, int cols)
         buf->imarklist->nmark = 0;
 
     WcOption.auto_detect = WC_OPT_DETECT_OFF;
-    UseContentCharset = FALSE;
+    UseContentCharset = false;
     if (is_html_type(buf->type))
         loadHTMLBuffer(&f, buf);
     else
@@ -464,7 +468,7 @@ void reshapeBuffer(Buffer* buf, int cols)
     UFclose(&f);
     wc_uint8 old_auto_detect = WcOption.auto_detect;
     WcOption.auto_detect = old_auto_detect;
-    UseContentCharset = TRUE;
+    UseContentCharset = true;
 
     // buf->height = getScreen()->ROWS - 1 + 1;
     if (buf->firstLine && sbuf.firstLine) {
@@ -481,7 +485,7 @@ void reshapeBuffer(Buffer* buf, int cols)
         n = (buf->currentLine->linenumber - buf->topLine->linenumber)
             - (cur->linenumber - sbuf.topLine->linenumber);
         if (n) {
-            buf->topLine = lineSkip(buf, buf->topLine, n, FALSE);
+            buf->topLine = lineSkip(buf, buf->topLine, n, false);
             if (cur->real_linenumber > 0)
                 gotoRealLine(buf, cur->real_linenumber);
             else
@@ -642,7 +646,7 @@ void cursorUp0(Buffer* buf, int n)
     if (buf->cursorY > 0)
         cursorUpDown(buf, -1);
     else {
-        buf->topLine = lineSkip(buf, buf->topLine, -n, FALSE);
+        buf->topLine = lineSkip(buf, buf->topLine, -n, false);
         if (buf->currentLine->prev != NULL)
             buf->currentLine = buf->currentLine->prev;
         arrangeLine(buf);
@@ -671,7 +675,7 @@ void cursorDown0(Buffer* buf, int n)
     if (buf->cursorY < getScreen()->ROWS - 1)
         cursorUpDown(buf, 1);
     else {
-        buf->topLine = lineSkip(buf, buf->topLine, n, FALSE);
+        buf->topLine = lineSkip(buf, buf->topLine, n, false);
         if (buf->currentLine->next != NULL)
             buf->currentLine = buf->currentLine->next;
         arrangeLine(buf);
@@ -701,7 +705,7 @@ void cursorUpDown(Buffer* buf, int n)
 
     if (buf->firstLine == NULL)
         return;
-    if ((buf->currentLine = currentLineSkip(buf, cl, n, FALSE)) == cl)
+    if ((buf->currentLine = currentLineSkip(buf, cl, n, false)) == cl)
         return;
     arrangeLine(buf);
 }
@@ -798,7 +802,7 @@ void arrangeCursor(Buffer* buf)
         /*
          * buf->topLine = buf->currentLine;
          */
-        buf->topLine = lineSkip(buf, buf->currentLine, 0, FALSE);
+        buf->topLine = lineSkip(buf, buf->currentLine, 0, false);
     }
     /* Arrange column */
     while (buf->pos < 0 && buf->currentLine->prev && buf->currentLine->bpos) {
@@ -891,7 +895,7 @@ void cursorXY(Buffer* buf, int x, int y)
 void restorePosition(Buffer* buf, Buffer* orig)
 {
     buf->topLine = lineSkip(buf, buf->firstLine, TOP_LINENUMBER(orig) - 1,
-        FALSE);
+        false);
     gotoLine(buf, CUR_LINENUMBER(orig));
     buf->pos = orig->pos;
     if (buf->currentLine && orig->currentLine)
@@ -907,7 +911,7 @@ static void
 _saveBuffer(Buffer* buf, Line* l, FILE* f, int cont)
 {
     Str tmp;
-    int is_html = FALSE;
+    int is_html = false;
     int set_charset = !DisplayCharset;
     wc_ces charset = DisplayCharset ? DisplayCharset : WC_CES_US_ASCII;
 
@@ -918,4 +922,3 @@ void saveBuffer(Buffer* buf, FILE* f, int cont)
 {
     _saveBuffer(buf, buf->firstLine, f, cont);
 }
-

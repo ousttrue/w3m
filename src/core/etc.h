@@ -4,6 +4,10 @@
 #include <time.h>
 #include "line.h"
 
+extern int nextpage_topline;
+extern int ShowEffect;
+extern int disable_secret_security_check;
+
 struct _Buffer;
 struct _ParsedURL;
 

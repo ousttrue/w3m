@@ -1,5 +1,8 @@
 #include "rc.h"
 #include "HttpClient.h"
+#include "HtmlTagParsed.h"
+#include "search.h"
+#include "cookie.h"
 #include "buffer_loader.h"
 #include "siteconf.h"
 #include "url.h"
@@ -44,6 +47,9 @@
 #include <wtf.h>
 #include <unistd.h>
 #include <fcntl.h>
+
+#define PASSWD_FILE RC_DIR "/passwd"
+char* passwd_file = (PASSWD_FILE);
 
 char* tmp_dir = 0;
 char* rc_dir = (NULL);

@@ -2,7 +2,6 @@
 #include "tty.h"
 #include "ui.h"
 #include "buffer.h"
-#include "fm.h"
 #include "display.h"
 #include "regex.h"
 #include "mysignal.h"
@@ -13,6 +12,11 @@
 #include <signal.h>
 #include <unistd.h>
 #include <wtf.h>
+
+char SearchConv = (true);
+int IgnoreCase = (true);
+int WrapSearch = (false);
+int show_srch_str = (true);
 
 #ifdef _WIN32
 #else
@@ -45,7 +49,7 @@ enum SearchResultFlags forwardSearch(Buffer* buf, char* str)
 {
     char *p, *first, *last;
     Line *l, *begin;
-    int wrapped = FALSE;
+    int wrapped = false;
     int pos;
 
     if ((p = regexCompile(str, IgnoreCase)) != NULL) {
@@ -83,7 +87,7 @@ enum SearchResultFlags forwardSearch(Buffer* buf, char* str)
         if (l == NULL) {
             if (WrapSearch) {
                 l = buf->firstLine;
-                wrapped = TRUE;
+                wrapped = true;
             } else {
                 break;
             }
@@ -114,7 +118,7 @@ enum SearchResultFlags backwardSearch(Buffer* buf, char* str)
 {
     char *p, *q, *found, *found_last, *first, *last;
     Line *l, *begin;
-    int wrapped = FALSE;
+    int wrapped = false;
     int pos;
 
     if ((p = regexCompile(str, IgnoreCase)) != NULL) {
@@ -173,7 +177,7 @@ enum SearchResultFlags backwardSearch(Buffer* buf, char* str)
         if (l == NULL) {
             if (WrapSearch) {
                 l = buf->lastLine;
-                wrapped = TRUE;
+                wrapped = true;
             } else {
                 break;
             }
@@ -262,7 +266,7 @@ dispincsrch(int ch, Str buf, Lineprop* prop)
 {
     static Buffer sbuf;
     char* str;
-    int do_next_search = FALSE;
+    int do_next_search = false;
 
     if (ch == 0 && buf == NULL) {
         SAVE_BUFPOSITION(&sbuf); /* search starting point */
@@ -273,11 +277,11 @@ dispincsrch(int ch, Str buf, Lineprop* prop)
     switch (ch) {
     case 022: /* C-r */
         searchRoutine = backwardSearch;
-        do_next_search = TRUE;
+        do_next_search = true;
         break;
     case 023: /* C-s */
         searchRoutine = forwardSearch;
-        do_next_search = TRUE;
+        do_next_search = true;
         break;
 
     default:
@@ -330,7 +334,7 @@ void srch(SearchFunc func, char* prompt)
 {
     char* str;
     int result;
-    int disp = FALSE;
+    int disp = false;
     int pos;
 
     str = searchKeyData();
@@ -342,7 +346,7 @@ void srch(SearchFunc func, char* prompt)
 
             return;
         }
-        disp = TRUE;
+        disp = true;
     }
     pos = Currentbuf->pos;
     if (func == forwardSearch)

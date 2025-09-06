@@ -7,7 +7,6 @@
 #include "etc.h"
 #include "ctrlcode.h"
 #include "local.h"
-#include "fm.h"
 #include "history.h"
 #include "screen.h"
 #include "screen_effects.h"

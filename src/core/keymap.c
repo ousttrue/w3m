@@ -1,5 +1,4 @@
 #include "keymap.h"
-#include "fm.h"
 #include "myctype.h"
 #include "rc.h"
 #include "ctrlcode.h"
@@ -14,6 +13,9 @@
 #include <strings.h>
 
 #include "defun.h"
+
+#define KEYMAP_FILE "keymap"
+char* keymap_file = (KEYMAP_FILE);
 
 struct FuncList w3mFuncList[] = {
 #include "funcnamemap.h"

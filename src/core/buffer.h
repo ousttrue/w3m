@@ -9,6 +9,8 @@
 #define CPIPEBUFFERNAME "*stream(closed)*"
 #define DICTBUFFERNAME "*dictionary*"
 
+extern int REV_LB[];
+
 /* mark URL, Message-ID */
 #define CHK_URL 1
 #define CHK_NMID 2

@@ -2,6 +2,10 @@
 #include "Str.h"
 #include <wc.h>
 
+extern int FoldTextarea;
+extern char* Editor;
+extern char* pre_form_file;
+
 #define FORM_UNKNOWN -1
 #define FORM_INPUT_TEXT 0
 #define FORM_INPUT_PASSWORD 1

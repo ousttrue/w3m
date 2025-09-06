@@ -1,6 +1,8 @@
 #pragma once
 #include "line.h"
 
+extern int MarkAllPages;
+
 typedef struct {
     int line;
     int pos;

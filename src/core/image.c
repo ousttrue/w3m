@@ -11,7 +11,6 @@
 #include "indep.h"
 #include "mysignal.h"
 #include "rc.h"
-#include "fm.h"
 #include "etc.h"
 #include "screen.h"
 #include "tty.h"
@@ -26,6 +25,11 @@
 
 int activeImage = (FALSE);
 const char* image_source = (NULL);
+char* Imgdisplay = (IMGDISPLAY);
+int useExtImageViewer = (TRUE);
+int maxLoadImage = (4);
+int image_map_list = (TRUE);
+double image_scale = (100);
 
 static int image_index = 0;
 

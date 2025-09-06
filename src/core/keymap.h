@@ -8,6 +8,8 @@
 #define K_MULTI 0x10000000
 #define MULTI_KEY(c) (((c) >> 16) & 0x77F)
 
+extern char* keymap_file;
+
 typedef void (*CommandFunc)();
 extern CommandFunc GlobalKeymap[];
 extern CommandFunc EscKeymap[];

@@ -22,6 +22,17 @@ struct cookie {
     char flag;
     struct cookie* next;
 };
+// global struct auth_cookie* Auth_cookie init(NULL);
+extern struct cookie* First_cookie;
+extern int default_use_cookie;
+extern char* cookie_reject_domains;
+extern char* cookie_accept_domains;
+extern char* cookie_avoid_wrong_number_of_dots;
+extern TextList* Cookie_reject_domains;
+extern TextList* Cookie_accept_domains;
+extern TextList* Cookie_avoid_wrong_number_of_dots_domains;
+extern int no_rc_dir;
+
 #define COO_USE 1
 #define COO_SECURE 2
 #define COO_DOMAIN 4

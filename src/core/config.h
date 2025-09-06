@@ -18,16 +18,11 @@
 
 #define BOOKMARK "bookmark.html"
 #define CONFIG_FILE "config"
-#define KEYMAP_FILE "keymap"
 #define MENU_FILE "menu"
 #define MOUSE_FILE "mouse"
 #define COOKIE_FILE "cookie"
 #define HISTORY_FILE "history"
 
-#define PASSWD_FILE RC_DIR "/passwd"
-#define PRE_FORM_FILE RC_DIR "/pre_form"
-#define USER_MAILCAP RC_DIR "/mailcap"
-#define SYS_MAILCAP CONF_DIR "/mailcap"
 #define USER_MIMETYPES "~/.mime.types"
 #define SYS_MIMETYPES ETC_DIR "/mime.types"
 #define USER_URIMETHODMAP RC_DIR "/urimethodmap"
@@ -90,7 +85,6 @@
 #define NOWRAP
 #define MATRIX
 
-#define DEF_EDITOR "/usr/bin/vi"
 #define DEF_MAILER "/usr/bin/mail"
 #define DEF_EXT_BROWSER "/usr/bin/firefox"
 

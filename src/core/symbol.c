@@ -1,5 +1,4 @@
 #include "symbol.h"
-#include "fm.h"
 #include "graphicchar.h"
 #include "ctrlcode.h"
 #include "indep.h"

@@ -10,7 +10,6 @@
 #include "mysignal.h"
 #include "ui.h"
 #include "rc.h"
-#include "fm.h"
 #include "ctrlcode.h"
 #include "myctype.h"
 #include "HtmlTag.h"
@@ -28,6 +27,10 @@
 #endif
 #include <signal.h>
 #include <unistd.h>
+
+int nextpage_topline = (FALSE);
+int ShowEffect = (TRUE);
+int disable_secret_security_check = (FALSE);
 
 struct auth_pass {
     int bad;
@@ -970,12 +973,11 @@ parsePasswd(FILE* fp, int netrc)
 
 FILE* openSecretFile(char* fname)
 {
-    char* efname;
-    struct stat st;
-
     if (fname == NULL)
         return NULL;
-    efname = expandPath(fname);
+
+    const char* efname = expandPath(fname);
+    struct stat st;
     if (stat(efname, &st) < 0)
         return NULL;
 

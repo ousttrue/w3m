@@ -1,6 +1,5 @@
 #include "alloc.h"
 #include "buffer_loader.h"
-#include "fm.h"
 #include "screen.h"
 #include "indep.h"
 #include "form.h"
@@ -10,6 +9,8 @@
 #include "image.h"
 #include "myctype.h"
 #include "regex.h"
+
+int MarkAllPages = (FALSE);
 
 typedef Anchor* (*AnchorFunc)(Buffer*, const char*, const char*, int, int);
 

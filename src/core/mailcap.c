@@ -1,6 +1,5 @@
 #define _GNU_SOURCE 1
 #include "mailcap.h"
-#include "fm.h"
 #include "indep.h"
 #include "myctype.h"
 #include "hash.h"
@@ -10,6 +9,10 @@
 #include <stdlib.h>
 #include <strings.h>
 #include <string.h>
+
+#define USER_MAILCAP RC_DIR "/mailcap"
+#define SYS_MAILCAP CONF_DIR "/mailcap"
+char* mailcap_files = (USER_MAILCAP ", " SYS_MAILCAP);
 
 static struct mailcap DefaultMailcap[] = {
     { "image/*", DEF_IMAGE_VIEWER " %s", 0, NULL, NULL, NULL }, /* */

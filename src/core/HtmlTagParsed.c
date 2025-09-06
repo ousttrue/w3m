@@ -5,7 +5,6 @@
 #include "display.h"
 #include "HtmlTag.h"
 #include "HtmlTagAttribute.h"
-#include "fm.h"
 #include "image.h"
 #include "myctype.h"
 #include "indep.h"
@@ -22,6 +21,8 @@
 #include <strings.h>
 
 wc_ces cur_document_charset = 0;
+int pseudoInlines = (TRUE);
+int ignore_null_img_alt = (TRUE);
 
 #define MAX_INPUT_SIZE 80 /* TODO - max should be screen line length */
 
@@ -151,14 +152,15 @@ static bool toAlign(const char* oval, void* align)
     return true;
 }
 
-static bool toVAlign(const char* oval, void* valign)
+static bool toVAlign(const char* oval, void* _valign)
 {
+    enum VAlignType* valign = (enum VAlignType*)_valign;
     if (strcasecmp(oval, "top") == 0 || strcasecmp(oval, "baseline") == 0)
-        *(int*)valign = VALIGN_TOP;
+        *valign = VALIGN_TOP;
     else if (strcasecmp(oval, "bottom") == 0)
-        *(int*)valign = VALIGN_BOTTOM;
+        *valign = VALIGN_BOTTOM;
     else if (strcasecmp(oval, "middle") == 0)
-        *(int*)valign = VALIGN_MIDDLE;
+        *valign = VALIGN_MIDDLE;
     else
         return false;
     return true;

@@ -11,7 +11,6 @@
 #include "etc.h"
 #include "screen.h"
 #include "graphicchar.h"
-#include "fm.h"
 #include "rc.h"
 #include "w3m.h"
 #include "config.h"
@@ -45,9 +44,9 @@ make_optional_header_string(char* s)
     hs = Strnew_size(strlen(s) + 3);
     Strcopy_charp_n(hs, s, p - s);
     if (!Strcasecmp_charp(hs, "content-type"))
-        override_content_type = TRUE;
+        override_content_type = true;
     if (!Strcasecmp_charp(hs, "user-agent"))
-        override_user_agent = TRUE;
+        override_user_agent = true;
     Strcat_charp(hs, ": ");
     if (*(++p)) { /* not null header */
         SKIP_BLANKS(p); /* skip white spaces */

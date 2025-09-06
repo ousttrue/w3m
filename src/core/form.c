@@ -15,7 +15,6 @@
 #include "buffer.h"
 #include "display.h"
 #include "etc.h"
-#include "fm.h"
 #include "myctype.h"
 #include "local.h"
 #include "regex.h"
@@ -25,6 +24,12 @@
 #include <strings.h>
 #include <wtf.h>
 #include <unistd.h>
+
+int FoldTextarea = (false);
+#define DEF_EDITOR "/usr/bin/vim"
+char* Editor = (DEF_EDITOR);
+#define PRE_FORM_FILE RC_DIR "/pre_form"
+char* pre_form_file = (PRE_FORM_FILE);
 
 extern Str* textarea_str;
 extern int max_textarea;
@@ -415,8 +420,7 @@ void formUpdateBuffer(Anchor* a, Buffer* buf, FormItemList* form)
         if (form->type == FORM_SELECT) {
             p = form->label->ptr;
             updateSelectOption(form, form->select_option);
-        } else
-        {
+        } else {
             if (!form->value)
                 break;
             p = form->value->ptr;
@@ -643,9 +647,9 @@ void updateSelectOption(FormItemList* fi, FormSelectOptionItem* item)
         return;
     for (i = 0; item != NULL; i++, item = item->next) {
         if (i == fi->selected)
-            item->checked = TRUE;
+            item->checked = true;
         else
-            item->checked = FALSE;
+            item->checked = false;
     }
 }
 

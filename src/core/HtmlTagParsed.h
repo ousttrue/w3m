@@ -10,6 +10,14 @@ extern Str* textarea_str;
 extern int form_max;
 extern struct form_list** forms;
 extern struct form_select_option* select_option;
+extern int pseudoInlines;
+extern int ignore_null_img_alt;
+
+enum VAlignType {
+    VALIGN_MIDDLE = 0,
+    VALIGN_TOP = 1,
+    VALIGN_BOTTOM = 2,
+};
 
 void initParser(int* pMax_textarea, int* pMax_select);
 void init2();
@@ -62,4 +70,3 @@ Str process_n_textarea(void);
 void feed_textarea(char* str);
 Str process_form(struct HtmlTagParsed* tag);
 Str process_n_form(void);
-

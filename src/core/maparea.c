@@ -6,7 +6,6 @@
 #include "form.h"
 #include "indep.h"
 #include "ui.h"
-#include "fm.h"
 #include "menu.h"
 #include "image.h"
 #include "ctrlcode.h"

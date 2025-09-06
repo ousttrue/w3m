@@ -9,7 +9,6 @@
 
 #include "cookie.h"
 #include "buffer_loader.h"
-#include "fm.h"
 #include "KeyValue.h"
 #include <alloc.h>
 #include "http.h"
@@ -23,6 +22,16 @@
 #include "indep.h"
 #include <strings.h>
 #include <time.h>
+
+struct cookie* First_cookie = (NULL);
+int default_use_cookie = (TRUE);
+char* cookie_reject_domains = (NULL);
+char* cookie_accept_domains = (NULL);
+char* cookie_avoid_wrong_number_of_dots = (NULL);
+TextList* Cookie_reject_domains;
+TextList* Cookie_accept_domains;
+TextList* Cookie_avoid_wrong_number_of_dots_domains;
+int no_rc_dir = (FALSE);
 
 // This array should be somewhere else
 const char* violations[COO_EMAX] = {

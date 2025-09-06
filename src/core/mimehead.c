@@ -1,9 +1,4 @@
-/*
- * MIME header support by Akinori ITO
- */
-
 #include "mimehead.h"
-#include "fm.h"
 #include "myctype.h"
 #include "Str.h"
 #include "growbuf.h"

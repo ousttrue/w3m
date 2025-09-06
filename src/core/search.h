@@ -2,6 +2,11 @@
 #include "buffer.h"
 #include <stdbool.h>
 
+extern char SearchConv;
+extern int IgnoreCase;
+extern int WrapSearch;
+extern int show_srch_str;
+
 enum SearchResultFlags {
     SR_FOUND = 0x1,
     SR_NOTFOUND = 0x2,

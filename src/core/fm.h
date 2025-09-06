@@ -25,13 +25,8 @@
 #define TRUE 1
 
 #ifdef MAINPROGRAM
-int REV_LB[MAX_LB] = {
-    LB_N_INFO,
-    LB_INFO,
-    LB_N_SOURCE,
-};
+
 #else /* not MAINPROGRAM */
-extern int REV_LB[];
 #endif /* not MAINPROGRAM */
 
 /*
@@ -40,15 +35,10 @@ extern int REV_LB[];
 
 /* modes for align() */
 
-#define VALIGN_MIDDLE 0
-#define VALIGN_TOP 1
-#define VALIGN_BOTTOM 2
-
 /*
  * Globals.
  */
 
-global int ShowEffect init(TRUE);
 #define PAGER_MAX_LINE 10000 /* Maximum line kept as pager */
 global int PagerMax init(PAGER_MAX_LINE);
 
@@ -61,14 +51,7 @@ global char* CurrentCmdData;
 
 global int confirm_on_quit init(TRUE);
 global int use_mark init(FALSE);
-global int nextpage_topline init(FALSE);
-global int show_srch_str init(TRUE);
-global char* Imgdisplay init(IMGDISPLAY);
-global int useExtImageViewer init(TRUE);
-global int maxLoadImage init(4);
-global int image_map_list init(TRUE);
-global int pseudoInlines init(TRUE);
-global char* Editor init(DEF_EDITOR);
+
 #ifdef USE_W3MMAILER
 global char* Mailer init(NULL);
 #else
@@ -90,56 +73,32 @@ global char* ExtBrowser7 init(NULL);
 global char* ExtBrowser8 init(NULL);
 global char* ExtBrowser9 init(NULL);
 global int BackgroundExtViewer init(TRUE);
-global int disable_secret_security_check init(FALSE);
-global char* passwd_file init(PASSWD_FILE);
-global char* pre_form_file init(PRE_FORM_FILE);
 global int WrapDefault init(FALSE);
-global int IgnoreCase init(TRUE);
-global int WrapSearch init(FALSE);
 global char* BookmarkFile init(NULL);
 
 global int UseDictCommand init(TRUE);
 global char* DictCommand init("file:///$LIB/w3mdict" CGI_EXTENSION);
-global int ignore_null_img_alt init(TRUE);
-global int FoldTextarea init(FALSE);
 #define DEFAULT_URL_EMPTY 0
 #define DEFAULT_URL_CURRENT 1
 #define DEFAULT_URL_LINK 2
 global int DefaultURLString init(DEFAULT_URL_CURRENT);
-global int MarkAllPages init(FALSE);
 
-global struct auth_cookie* Auth_cookie init(NULL);
-global struct cookie* First_cookie init(NULL);
-
-global char* mailcap_files init(USER_MAILCAP ", " SYS_MAILCAP);
 
 
 global char ExtHalfdump init(FALSE);
 global char FollowLocale init(TRUE);
-global char SearchConv init(TRUE);
 
 global char UseAltEntity init(FALSE);
-global int no_rc_dir init(FALSE);
 global char* param_tmp_dir init(NULL);
 #ifdef HAVE_MKDTEMP
 global char* mkd_tmp_dir init(NULL);
 #endif
 global char* config_file init(NULL);
 
-global int default_use_cookie init(TRUE);
-global char* cookie_reject_domains init(NULL);
-global char* cookie_accept_domains init(NULL);
-global char* cookie_avoid_wrong_number_of_dots init(NULL);
-global TextList* Cookie_reject_domains;
-global TextList* Cookie_accept_domains;
-global TextList* Cookie_avoid_wrong_number_of_dots_domains;
-
 
 global int is_redisplay init(FALSE);
 global int clear_buffer init(TRUE);
-global double image_scale init(100);
 
-global char* keymap_file init(KEYMAP_FILE);
 
 
 void w3m_exit(int i);
