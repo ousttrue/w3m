@@ -2,6 +2,25 @@
 #include <stdbool.h>
 #include <sys/types.h>
 
+enum DefaultUrlType {
+    DEFAULT_URL_EMPTY = 0,
+    DEFAULT_URL_CURRENT = 1,
+    DEFAULT_URL_LINK = 2,
+};
+extern int DefaultURLString;
+extern int UseDictCommand;
+extern char* DictCommand;
+extern int use_mark;
+
+extern int clear_buffer;
+extern char* config_file;
+extern char FollowLocale;
+extern int confirm_on_quit;
+
+extern int CurrentKey;
+extern char* CurrentKeyData;
+extern char* CurrentCmdData;
+
 struct KeyValue;
 struct _Buffer;
 struct Frame;
@@ -39,3 +58,4 @@ void tmpClearBuffer(struct _Buffer* buf);
 
 void change_charset(struct KeyValue* arg);
 void saveBufferInfo(void);
+void w3m_exit(int i);

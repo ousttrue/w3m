@@ -1,4 +1,5 @@
 #include "w3m.h"
+#include "defun_macro.h"
 #include "Content.h"
 #include "HttpClient.h"
 #include "siteconf.h"
@@ -71,11 +72,25 @@
 
 #include <event_poller.h>
 
+int DefaultURLString = (DEFAULT_URL_CURRENT);
+int UseDictCommand = (TRUE);
+char* DictCommand = ("file:///$LIB/w3mdict" CGI_EXTENSION);
+char* BookmarkFile = (NULL);
+int use_mark = (FALSE);
+int confirm_on_quit = (TRUE);
+int CurrentKey;
+char* CurrentKeyData;
+char* CurrentCmdData;
+
 #ifndef HOST_NAME_MAX
 #define HOST_NAME_MAX 255
 #endif
 
 #define DSTR_LEN 256
+
+int clear_buffer = (TRUE);
+char* config_file = (NULL);
+char FollowLocale = (TRUE);
 
 struct Hist* LoadHist;
 struct Hist* SaveHist;

@@ -1,4 +1,6 @@
 #include "rc.h"
+#include "w3m.h"
+#include "entity.h"
 #include "HttpClient.h"
 #include "HtmlTagParsed.h"
 #include "search.h"
@@ -53,6 +55,10 @@ char* passwd_file = (PASSWD_FILE);
 
 char* tmp_dir = 0;
 char* rc_dir = (NULL);
+
+char* mkd_tmp_dir = (NULL);
+char* param_tmp_dir = (NULL);
+int WrapDefault = (FALSE);
 
 struct param_ptr {
     char* name;
@@ -361,7 +367,6 @@ struct param_ptr params1[] = {
         CMT_PIXEL_PER_CHAR, NULL },
     { "pixel_per_line", P_PIXELS, PI_TEXT, (void*)&pixel_per_line,
         CMT_PIXEL_PER_LINE, NULL },
-    { "target_self", P_CHARINT, PI_ONOFF, (void*)&TargetSelf, CMT_TSELF, NULL },
     { "display_link", P_INT, PI_ONOFF, (void*)&displayLink, CMT_DISPLINK,
         NULL },
     { "display_link_number", P_INT, PI_ONOFF, (void*)&displayLinkNumber,
@@ -603,8 +608,6 @@ struct param_ptr params10[] = {
         CMT_SYSTEM_CHARSET, (void*)&system_charset_str },
     { "follow_locale", P_CHARINT, PI_ONOFF, (void*)&FollowLocale,
         CMT_FOLLOW_LOCALE, NULL },
-    { "ext_halfdump", P_CHARINT, PI_ONOFF, (void*)&ExtHalfdump,
-        CMT_EXT_HALFDUMP, NULL },
     { "use_wide", P_CHARINT, PI_ONOFF, (void*)&WcOption.use_wide, CMT_USE_WIDE,
         NULL },
     { "use_combining", P_CHARINT, PI_ONOFF, (void*)&WcOption.use_combining,

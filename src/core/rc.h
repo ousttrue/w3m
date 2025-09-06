@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include <wc.h>
 
+extern int WrapDefault;
+extern char* mkd_tmp_dir;
+
 extern char* passwd_file;
 
 extern char* tmp_dir;
@@ -26,5 +29,3 @@ char* confFile(char* base);
 char* auxbinFile(char* base);
 // char* libFile(char* base);
 // char* helpFile(char* base);
-
-

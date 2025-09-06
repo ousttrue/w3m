@@ -4,6 +4,7 @@
 #include "line.h"
 #include "url.h"
 #include "istream.h"
+#include "platform.h"
 
 extern char UseContentCharset;
 extern wc_ces DocumentCharset;
@@ -16,9 +17,6 @@ extern char* DefaultType;
 extern int displayLinkNumber;
 extern char SimplePreserveSpace;
 extern int squeezeBlankLine;
-
-#define CGI_EXTENSION ".cgi"
-// #define CGI_EXTENSION ".cmd"
 extern char* DirBufferCommand;
 
 #define set_prevchar(x, y, n) Strcopy_charp_n((x), (y), (n))
