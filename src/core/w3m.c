@@ -286,8 +286,6 @@ void initialize()
 
     if (!non_null(Editor) && (p = getenv("EDITOR")) != NULL)
         Editor = p;
-    if (!non_null(Mailer) && (p = getenv("MAILER")) != NULL)
-        Mailer = p;
 
     CurrentKey = -1;
     if (BookmarkFile == NULL)
@@ -1270,7 +1268,7 @@ DEFUN(srchprv, SEARCH_PREV, "Continue search backward")
 }
 
 static void
-cmd_loadURL(char* url, ParsedURL* current, const char* referer, FormList* post)
+cmd_loadURL(const char* url, ParsedURL* current, const char* referer, FormList* post)
 {
     // refresh(ttyWriter());
     struct Content c = loadGeneralFile(url, current, post, referer, false);
@@ -2032,7 +2030,7 @@ DEFUN(reMark, REG_MARK, "Mark all occurences of a pattern")
 }
 
 static void
-gotoLabel(char* label)
+gotoLabel(const char* label)
 {
     Anchor* al = searchURLLabel(Currentbuf, label);
     if (al == NULL) {
@@ -2922,11 +2920,12 @@ DEFUN(svI, SAVE_IMAGE, "Save inline image")
 /* save buffer */
 DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document")
 {
-    char *qfile = NULL, *file;
+    char* qfile = NULL;
     FILE* f;
     int is_pipe;
 
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
+    const char* file;
     file = searchKeyData();
     if (file == NULL || *file == '\0') {
         /* FIXME: gettextize? */
@@ -3323,72 +3322,6 @@ DEFUN(chkWORD, MARK_WORD, "Turn current word into hyperlink")
     if (p == NULL)
         return;
     reAnchorWord(Currentbuf, Currentbuf->currentLine, spos, epos);
-}
-
-/* spawn external browser */
-static void
-invoke_browser(char* url)
-{
-    Str cmd;
-    char* browser = NULL;
-    int bg = 0, len;
-
-    CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    browser = searchKeyData();
-    if (browser == NULL || *browser == '\0') {
-        browser = ExtBrowser;
-        if (browser == NULL || *browser == '\0') {
-            browser = inputStr(getUI(), "Browse command: ", NULL);
-            if (browser != NULL)
-                browser = conv_to_system(browser);
-        }
-    } else {
-        browser = conv_to_system(browser);
-    }
-    if (browser == NULL || *browser == '\0') {
-
-        return;
-    }
-
-    if ((len = strlen(browser)) >= 2 && browser[len - 1] == '&' && browser[len - 2] != '\\') {
-        browser = allocStr(browser, len - 2);
-        bg = 1;
-    }
-    cmd = myExtCommand(browser, shell_quote(url), FALSE);
-    Strremovetrailingspaces(cmd);
-    fmTerm();
-    mySystem(cmd->ptr, bg);
-    fmInit();
-}
-
-DEFUN(extbrz, EXTERN, "Display using an external browser")
-{
-    if (Currentbuf->bufferprop & BP_INTERNAL) {
-        /* FIXME: gettextize? */
-        message(getUI(), MSG_ERR, "Can't browse...");
-        return;
-    }
-    if (Currentbuf->currentURL.scheme == SCM_LOCAL && !strcmp(Currentbuf->currentURL.file, "-")) {
-        /* file is std input */
-        /* FIXME: gettextize? */
-        message(getUI(), MSG_ERR, "Can't browse stdin");
-        return;
-    }
-    invoke_browser(parsedURL2Str(&Currentbuf->currentURL)->ptr);
-}
-
-DEFUN(linkbrz, EXTERN_LINK, "Display target using an external browser")
-{
-    Anchor* a;
-    ParsedURL pu;
-
-    if (Currentbuf->firstLine == NULL)
-        return;
-    a = retrieveCurrentAnchor(Currentbuf);
-    if (a == NULL)
-        return;
-    parseURL2(a->url, &pu, baseURL(Currentbuf));
-    invoke_browser(parsedURL2Str(&pu)->ptr);
 }
 
 /* show current line number and number of lines in the entire document */

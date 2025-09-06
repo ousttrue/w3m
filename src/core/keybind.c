@@ -90,7 +90,7 @@ CommandFunc GlobalKeymap[128] = {
     lup1,
     ldown1,
     linkLst,
-    extbrz,
+    nulcmd,
     srchprv,
     nulcmd,
     /*  P       Q       R       S       T       U       V       W        */
@@ -237,7 +237,7 @@ CommandFunc EscKeymap[128] = {
     nulcmd,
     nulcmd,
     nulcmd,
-    linkbrz,
+    nulcmd,
     nulcmd,
     nulcmd,
     /*  P       Q       R       S       T       U       V       W        */

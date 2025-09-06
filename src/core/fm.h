@@ -28,21 +28,6 @@ global char* CurrentCmdData;
 global int confirm_on_quit init(TRUE);
 global int use_mark init(FALSE);
 
-global char* Mailer init(DEF_MAILER);
-
-#define MAILTO_OPTIONS_IGNORE 1
-#define MAILTO_OPTIONS_USE_MAILTO_URL 2
-global int MailtoOptions init(MAILTO_OPTIONS_IGNORE);
-global char* ExtBrowser init(DEF_EXT_BROWSER);
-global char* ExtBrowser2 init(NULL);
-global char* ExtBrowser3 init(NULL);
-global char* ExtBrowser4 init(NULL);
-global char* ExtBrowser5 init(NULL);
-global char* ExtBrowser6 init(NULL);
-global char* ExtBrowser7 init(NULL);
-global char* ExtBrowser8 init(NULL);
-global char* ExtBrowser9 init(NULL);
-global int BackgroundExtViewer init(TRUE);
 global int WrapDefault init(FALSE);
 global char* BookmarkFile init(NULL);
 

@@ -327,12 +327,6 @@ static struct sel_c badcookiestr[] = {
     { 0, NULL, NULL }
 };
 
-static struct sel_c mailtooptionsstr[] = {
-    { N_S(MAILTO_OPTIONS_IGNORE), N_("ignore options and use only the address") },
-    { N_S(MAILTO_OPTIONS_USE_MAILTO_URL), N_("use full mailto URL") },
-    { 0, NULL, NULL }
-};
-
 static wc_ces_list* display_charset_str = NULL;
 static wc_ces_list* document_charset_str = NULL;
 static wc_ces_list* system_charset_str = NULL;
@@ -511,32 +505,9 @@ struct param_ptr params5[] = {
 };
 
 struct param_ptr params6[] = {
-    { "mime_types", P_STRING, PI_TEXT, (void*)&mimetypes_files, CMT_MIMETYPES,
-        NULL },
+    { "mime_types", P_STRING, PI_TEXT, (void*)&mimetypes_files, CMT_MIMETYPES, NULL },
     { "mailcap", P_STRING, PI_TEXT, (void*)&mailcap_files, CMT_MAILCAP, NULL },
     { "editor", P_STRING, PI_TEXT, (void*)&Editor, CMT_EDITOR, NULL },
-    { "mailto_options", P_INT, PI_SEL_C, (void*)&MailtoOptions,
-        CMT_MAILTO_OPTIONS, (void*)mailtooptionsstr },
-    { "mailer", P_STRING, PI_TEXT, (void*)&Mailer, CMT_MAILER, NULL },
-    { "extbrowser", P_STRING, PI_TEXT, (void*)&ExtBrowser, CMT_EXTBRZ, NULL },
-    { "extbrowser2", P_STRING, PI_TEXT, (void*)&ExtBrowser2, CMT_EXTBRZ2,
-        NULL },
-    { "extbrowser3", P_STRING, PI_TEXT, (void*)&ExtBrowser3, CMT_EXTBRZ3,
-        NULL },
-    { "extbrowser4", P_STRING, PI_TEXT, (void*)&ExtBrowser4, CMT_EXTBRZ4,
-        NULL },
-    { "extbrowser5", P_STRING, PI_TEXT, (void*)&ExtBrowser5, CMT_EXTBRZ5,
-        NULL },
-    { "extbrowser6", P_STRING, PI_TEXT, (void*)&ExtBrowser6, CMT_EXTBRZ6,
-        NULL },
-    { "extbrowser7", P_STRING, PI_TEXT, (void*)&ExtBrowser7, CMT_EXTBRZ7,
-        NULL },
-    { "extbrowser8", P_STRING, PI_TEXT, (void*)&ExtBrowser8, CMT_EXTBRZ8,
-        NULL },
-    { "extbrowser9", P_STRING, PI_TEXT, (void*)&ExtBrowser9, CMT_EXTBRZ9,
-        NULL },
-    { "bgextviewer", P_INT, PI_ONOFF, (void*)&BackgroundExtViewer,
-        CMT_BGEXTVIEW, NULL },
     { NULL, 0, 0, NULL, NULL, NULL },
 };
 
