@@ -1,26 +1,23 @@
 #include "entity.h"
 #include "Str.h"
+#include "ctrlcode.h"
+#include "ui.h"
+#include "hash.h"
+#include "ucs.h"
+#include "utf8.h"
+
 #include <string.h>
 #include <wc.h>
 
-#ifdef DUMMY
-#define NBSP " "
-#define UseAltEntity 1
-#undef USE_M17N
-#else /* DUMMY */
-// #include "fm.h"
-#include "ucs.h"
-#include "utf8.h"
 char UseAltEntity = (false);
-#endif /* DUMMY */
 
-#include "ctrlcode.h"
-#include "ui.h"
+extern HashItem_si MyHashItem[];
+extern HashItem_si* MyHashItemTbl[];
+extern Hash_si entity;
 
-extern char* conv_entity(unsigned int c);
+// extern char* conv_entity(unsigned int c);
 
-/* *INDENT-OFF* */
-static char* alt_latin1[96] = {
+static const char* alt_latin1[96] = {
     NBSP, "!", "-c-", "-L-", "CUR", "=Y=", "|", "S:",
     "\"", "(C)", "-a", "<<", "NOT", "-", "(R)", "-",
     "DEG", "+-", "^2", "^3", "'", "u", "P:", ".",
@@ -34,9 +31,8 @@ static char* alt_latin1[96] = {
     "d-", "n~", "o`", "o'", "o^", "o~", "o:", "-:",
     "o/", "u`", "u'", "u^", "u:", "y'", "th", "y:"
 };
-/* *INDENT-ON* */
 
-char* conv_entity(unsigned int c)
+const char* conv_entity(unsigned int c)
 {
     char b = c & 0xff;
 
@@ -2214,3 +2210,67 @@ HashItem_si* MyHashItemTbl[] = {
 };
 
 Hash_si entity = { 100, MyHashItemTbl };
+
+int getescapechar(const char** str)
+{
+    int dummy = -1;
+    char *p = *str, *q;
+    int strict_entity = true;
+
+    if (*p == '&')
+        p++;
+    if (*p == '#') {
+        p++;
+        if (*p == 'x' || *p == 'X') {
+            p++;
+            if (!IS_XDIGIT(*p)) {
+                *str = p;
+                return -1;
+            }
+            for (dummy = GET_MYCDIGIT(*p), p++; IS_XDIGIT(*p); p++)
+                dummy = dummy * 0x10 + GET_MYCDIGIT(*p);
+            if (*p == ';')
+                p++;
+            *str = p;
+            return dummy;
+        } else {
+            if (!IS_DIGIT(*p)) {
+                *str = p;
+                return -1;
+            }
+            for (dummy = GET_MYCDIGIT(*p), p++; IS_DIGIT(*p); p++)
+                dummy = dummy * 10 + GET_MYCDIGIT(*p);
+            if (*p == ';')
+                p++;
+            *str = p;
+            return dummy;
+        }
+    }
+    if (!IS_ALPHA(*p)) {
+        *str = p;
+        return -1;
+    }
+    q = p;
+    for (p++; IS_ALNUM(*p); p++)
+        ;
+    q = allocStr(q, p - q);
+    if (strcasestr("lt gt amp quot apos nbsp", q) && *p != '=') {
+        /* a character entity MUST be terminated with ";". However,
+         * there's MANY web pages which uses &lt , &gt or something
+         * like them as &lt;, &gt;, etc. Therefore, we treat the most
+         * popular character entities (including &#xxxx;) without
+         * the last ";" as character entities. If the trailing character
+         * is "=", it must be a part of query in an URL. So &lt=, &gt=, etc.
+         * are not regarded as character entities.
+         */
+        strict_entity = false;
+    }
+    if (*p == ';')
+        p++;
+    else if (strict_entity) {
+        *str = p;
+        return -1;
+    }
+    *str = p;
+    return getHash_si(&entity, q, -1);
+}

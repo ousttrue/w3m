@@ -1,4 +1,5 @@
 #include "buffer_loader.h"
+#include "entity.h"
 #include "Content.h"
 #include "istream.h"
 #include "ssl_util.h"

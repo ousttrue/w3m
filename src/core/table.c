@@ -2,6 +2,7 @@
  * HTML table
  */
 #include "table.h"
+#include "entity.h"
 #include "buffer_loader.h"
 #include "HtmlTagParsed.h"
 #include "display.h"

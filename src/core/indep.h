@@ -19,8 +19,6 @@ extern char* HTML_QUOTE_MAP[];
 #define html_quote_char(c) HTML_QUOTE_MAP[(int)is_html_quote(c)]
 
 extern long long strtoclen(const char* s);
-extern char* conv_entity(unsigned int ch);
-extern int getescapechar(char** s);
 extern char* getescapecmd(char** s);
 extern int strCmp(const void* s1, const void* s2);
 extern char* currentdir(void);
