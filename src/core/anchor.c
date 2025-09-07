@@ -1,7 +1,7 @@
 #include "alloc.h"
 #include "buffer_loader.h"
 #include "screen.h"
-#include "indep.h"
+#include "quote.h"
 #include "form.h"
 #include "buffer.h"
 #include "http.h"

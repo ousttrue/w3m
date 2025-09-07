@@ -15,8 +15,6 @@ extern HashItem_si MyHashItem[];
 extern HashItem_si* MyHashItemTbl[];
 extern Hash_si entity;
 
-// extern char* conv_entity(unsigned int c);
-
 static const char* alt_latin1[96] = {
     NBSP, "!", "-c-", "-L-", "CUR", "=Y=", "|", "S:",
     "\"", "(C)", "-a", "<<", "NOT", "-", "(R)", "-",
@@ -2274,3 +2272,21 @@ int getescapechar(const char** str)
     *str = p;
     return getHash_si(&entity, q, -1);
 }
+
+const char* getescapecmd(const char** s)
+{
+    char* save = *s;
+    Str tmp;
+    int ch = getescapechar(s);
+
+    if (ch >= 0)
+        return conv_entity(ch);
+
+    if (*save != '&')
+        tmp = Strnew_charp("&");
+    else
+        tmp = Strnew();
+    Strcat_charp_n(tmp, save, *s - save);
+    return tmp->ptr;
+}
+

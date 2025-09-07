@@ -2,12 +2,12 @@
  * HTML table
  */
 #include "table.h"
+#include "quote.h"
 #include "entity.h"
 #include "buffer_loader.h"
 #include "HtmlTagParsed.h"
 #include "display.h"
 #include "readbuffer.h"
-#include "indep.h"
 #include "etc.h"
 #include "symbol.h"
 #include "HtmlTagAttribute.h"

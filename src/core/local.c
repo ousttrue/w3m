@@ -6,21 +6,20 @@
 #include "form.h"
 #include "url.h"
 #include "ui.h"
-#include <alloc.h>
 #include "tmpfile.h"
 #include "http.h"
 #include "screen.h"
+#include "quote.h"
 #include "indep.h"
+#include <alloc.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <signal.h>
 #include <errno.h>
 #include <time.h>
 #include <unistd.h>
-#include "hash.h"
 
 char* HostName = (NULL);
 int multicolList = (false);
@@ -62,6 +61,11 @@ Str localCookie()
     return Local_cookie;
 }
 
+static int strCmp(const void* s1, const void* s2)
+{
+    return strcmp(*(const char**)s1, *(const char**)s2);
+}
+
 Str loadLocalDir(char* dname)
 {
     Str tmp;
@@ -69,7 +73,7 @@ Str loadLocalDir(char* dname)
     Directory* dir;
     struct stat st;
     char** flist;
-    char *p;
+    char* p;
     Str fbuf = Strnew();
     struct stat lst;
     char lbuf[1024];
@@ -134,11 +138,10 @@ Str loadLocalDir(char* dname)
         } else {
             if (S_ISLNK(lst.st_mode))
                 Strcat_charp(tmp, "[LINK] ");
+            else if (S_ISDIR(st.st_mode))
+                Strcat_charp(tmp, "[DIR]&nbsp; ");
             else
-                if (S_ISDIR(st.st_mode))
-                    Strcat_charp(tmp, "[DIR]&nbsp; ");
-                else
-                    Strcat_charp(tmp, "[FILE] ");
+                Strcat_charp(tmp, "[FILE] ");
         }
         Strcat_m_charp(tmp, "<A HREF=\"", html_quote(file_quote(p)), NULL);
         if (S_ISDIR(st.st_mode))

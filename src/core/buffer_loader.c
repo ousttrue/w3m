@@ -1,5 +1,6 @@
 #include "buffer_loader.h"
 #include "entity.h"
+#include "quote.h"
 #include "Content.h"
 #include "istream.h"
 #include "ssl_util.h"
@@ -120,8 +121,7 @@ addLink(Buffer* buf, struct HtmlTagParsed* tag)
 
     parsedtag_get_value(tag, ATTR_HREF, &href);
     if (href)
-        href = url_encode(remove_space(href), baseURL(buf),
-            buf->document_charset);
+        href = url_encode(remove_space(href), baseURL(buf), buf->document_charset);
     parsedtag_get_value(tag, ATTR_TITLE, &title);
     parsedtag_get_value(tag, ATTR_TYPE, &ctype);
     parsedtag_get_value(tag, ATTR_REL, &rel);

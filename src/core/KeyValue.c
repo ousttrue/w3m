@@ -1,8 +1,9 @@
 #include "KeyValue.h"
+#include "alloc.h"
+#include "quote.h"
 #include <myctype.h>
 #include <Str.h>
 #include <strings.h>
-#include "indep.h"
 
 const char* tag_get_value(struct KeyValue* t, const char* arg)
 {
@@ -10,7 +11,7 @@ const char* tag_get_value(struct KeyValue* t, const char* arg)
         if (!strcasecmp(t->arg, arg))
             return t->value;
     }
-    return NULL;
+    return 0;
 }
 
 bool tag_exists(struct KeyValue* t, const char* arg)
@@ -28,7 +29,7 @@ struct KeyValue* cgistr2tagarg(const char* cgistr)
     Str value;
     struct KeyValue *t0, *t;
 
-    t = t0 = NULL;
+    t = t0 = 0;
     do {
         t = New(struct KeyValue);
         t->next = t0;

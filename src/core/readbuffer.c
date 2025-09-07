@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #define _GNU_SOURCE
 #include "readbuffer.h"
+#include "quote.h"
 #include "buffer_loader.h"
 #include "url.h"
 #include "HtmlTagParsed.h"
@@ -10,11 +11,9 @@
 #include "myctype.h"
 #include "table.h"
 #include "ui.h"
-#include "indep.h"
 #include "ctrlcode.h"
 #include "symbol.h"
 #include "display.h"
-#include "buffer.h"
 #include <strings.h>
 
 char DisableCenter = (false);

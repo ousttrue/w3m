@@ -3,14 +3,13 @@
 #include "http.h"
 #include "HttpClient.h"
 #include "ssl_util.h"
-// #include "tty.h"
 #include "local.h"
 #include "myctype.h"
 #include "indep.h"
 #include "proxy.h"
-// #include "ui.h"
 #include "etc.h"
 #include "auth.h"
+#include "quote.h"
 #include <openssl/ssl.h>
 #include <unistd.h>
 #include <zlib.h>

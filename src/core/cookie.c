@@ -14,12 +14,11 @@
 #include "http.h"
 #include "etc.h"
 #include "rc.h"
-#include "local.h"
 #include "regex.h"
 #include "myctype.h"
 #include "buffer.h"
 #include "defun.h"
-#include "indep.h"
+#include "quote.h"
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>

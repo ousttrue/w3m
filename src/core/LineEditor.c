@@ -106,7 +106,7 @@ void next_compl(struct LineEditor* e, int next)
     if (next == 0)
         return;
 
-    if (status != CPL_OK && status != CPL_MENU){
+    if (status != CPL_OK && status != CPL_MENU) {
         ui_bell();
     }
     if (status == CPL_FAIL)
@@ -481,6 +481,11 @@ disp_next:
             vt_addstr(vt, "----- Press CTRL-D to continue -----");
         vt_boldend(vt);
     }
+}
+
+static int strCmp(const void* s1, const void* s2)
+{
+    return strcmp(*(const char**)s1, *(const char**)s2);
 }
 
 Str le_doComplete(struct LineEditor* e, Str ifn, enum CompletionStatus* status, int next)

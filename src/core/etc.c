@@ -1,9 +1,11 @@
+#include "alloc.h"
 #define _GNU_SOURCE
 #include "etc.h"
+#include "indep.h"
 #include "istream.h"
 #include "readbuffer.h"
 #include "auth.h"
-#include "indep.h"
+#include "quote.h"
 #include "local.h"
 #include "display.h"
 #include "buffer.h"

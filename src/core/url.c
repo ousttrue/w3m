@@ -1,5 +1,6 @@
 #define _GNU_SOURCE
 #include "url.h"
+#include "quote.h"
 #include "siteconf.h"
 #include "buffer_loader.h"
 #include "form.h"
@@ -1186,34 +1187,6 @@ char* cleanupName(const char* name)
         }
     }
     return buf;
-}
-
-char* file_unquote(const char* str)
-{
-    Str tmp = NULL;
-    char *p, *q;
-    int c;
-
-    for (p = str; *p;) {
-        if (*p == '%') {
-            q = p;
-            c = url_unquote_char(&q);
-            if (c >= 0) {
-                if (tmp == NULL)
-                    tmp = Strnew_charp_n(str, (int)(p - str));
-                if (c != '\0' && c != '\n' && c != '\r')
-                    Strcat_char(tmp, (char)c);
-                p = q;
-                continue;
-            }
-        }
-        if (tmp)
-            Strcat_char(tmp, *p);
-        p++;
-    }
-    if (tmp)
-        return tmp->ptr;
-    return str;
 }
 
 int is_localhost(const char* host)

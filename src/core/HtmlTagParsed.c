@@ -1,6 +1,9 @@
+#include "alloc.h"
 #include <stdlib.h>
 #define _GNU_SOURCE
 #include "HtmlTagParsed.h"
+#include "entity.h"
+#include "quote.h"
 #include "buffer_loader.h"
 #include "url.h"
 #include "display.h"
@@ -8,7 +11,6 @@
 #include "HtmlTagAttribute.h"
 #include "image.h"
 #include "myctype.h"
-#include "indep.h"
 #include "Str.h"
 #include "hash.h"
 #include "table.h"

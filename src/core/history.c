@@ -1,11 +1,12 @@
 #include "history.h"
+#include <alloc.h>
 #include "buffer_loader.h"
 #include "etc.h"
 #include "tmpfile.h"
 #include "hash.h"
 #include "rc.h"
 #include "ui.h"
-#include "indep.h"
+#include "quote.h"
 #include "buffer.h"
 #include <sys/stat.h>
 

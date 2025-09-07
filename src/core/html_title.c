@@ -1,13 +1,14 @@
 #include "html_title.h"
-#include "indep.h"
+#include "quote.h"
+#include "entity.h"
 
 static Str cur_title;
 static Str pre_title;
 
 void init_title()
 {
-    cur_title = NULL;
-    pre_title = NULL;
+    cur_title = 0;
+    pre_title = 0;
 }
 
 Str process_title(struct HtmlTagParsed* tag)
@@ -15,7 +16,7 @@ Str process_title(struct HtmlTagParsed* tag)
     if (pre_title)
         return 0;
     cur_title = Strnew();
-    return NULL;
+    return 0;
 }
 
 Str process_n_title(struct HtmlTagParsed* tag)
@@ -23,15 +24,15 @@ Str process_n_title(struct HtmlTagParsed* tag)
     Str tmp;
 
     if (pre_title)
-        return NULL;
+        return 0;
     if (!cur_title)
-        return NULL;
+        return 0;
     Strremovefirstspaces(cur_title);
     Strremovetrailingspaces(cur_title);
     tmp = Strnew_m_charp("<title_alt title=\"",
-        html_quote(cur_title->ptr), "\">", NULL);
+        html_quote(cur_title->ptr), "\">", 0);
     pre_title = cur_title;
-    cur_title = NULL;
+    cur_title = 0;
     return tmp;
 }
 
