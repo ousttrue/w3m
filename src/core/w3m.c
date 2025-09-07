@@ -79,6 +79,9 @@
 #define HELP_CGI "w3mhelp"
 #define BOOKMARK "bookmark.html"
 
+char ArgvIsURL = true;
+int DecodeURL = false;
+
 int DefaultURLString = (DEFAULT_URL_CURRENT);
 int UseDictCommand = (true);
 char* DictCommand = ("file:///$LIB/w3mdict" CGI_EXTENSION);
@@ -1459,7 +1462,7 @@ DEFUN(ldhelp, HELP, "Show help panel")
 static void
 cmd_loadfile(char* fn)
 {
-    struct Content c = loadGeneralFile(file_to_url(fn), NULL, NULL, NO_REFERER, false);
+    struct Content c = loadGeneralFile(file_to_url(fn, CurrentDir), NULL, NULL, NO_REFERER, false);
     Buffer* buf = makeBuffer(&c, false);
     if (buf == NULL) {
         /* FIXME: gettextize? */
@@ -4070,4 +4073,55 @@ char* w3m_conf_dir(void)
 char* w3m_help_dir(void)
 {
     return w3m_dir("W3M_HELP_DIR", HELP_DIR);
+}
+
+char* file_to_url(const char* file, const char* currentDir)
+{
+    Str tmp;
+#ifdef SUPPORT_DOS_DRIVE_PREFIX
+    char* drive = NULL;
+#endif
+#ifdef SUPPORT_NETBIOS_SHARE
+    char* host = NULL;
+#endif
+
+    if (!(file = expandPath(file)))
+        return NULL;
+#ifdef SUPPORT_NETBIOS_SHARE
+    if (file[0] == '/' && file[1] == '/') {
+        char* p;
+        file += 2;
+        if (*file) {
+            p = strchr(file, '/');
+            if (p != NULL && p != file) {
+                host = allocStr(file, (p - file));
+                file = p;
+            }
+        }
+    }
+#endif
+#ifdef SUPPORT_DOS_DRIVE_PREFIX
+    if (IS_ALPHA(file[0]) && file[1] == ':') {
+        drive = allocStr(file, 2);
+        file += 2;
+    } else
+#endif
+        if (file[0] != '/') {
+        tmp = Strnew_charp(currentDir);
+        if (Strlastchar(tmp) != '/')
+            Strcat_char(tmp, '/');
+        Strcat_charp(tmp, file);
+        file = tmp->ptr;
+    }
+    tmp = Strnew_charp("file://");
+#ifdef SUPPORT_NETBIOS_SHARE
+    if (host)
+        Strcat_charp(tmp, host);
+#endif
+#ifdef SUPPORT_DOS_DRIVE_PREFIX
+    if (drive)
+        Strcat_charp(tmp, drive);
+#endif
+    Strcat_charp(tmp, file_quote(cleanupName(file)));
+    return tmp->ptr;
 }

@@ -2,6 +2,9 @@
 #include <stdbool.h>
 #include <sys/types.h>
 
+extern char ArgvIsURL;
+extern int DecodeURL;
+
 enum DefaultUrlType {
     DEFAULT_URL_EMPTY = 0,
     DEFAULT_URL_CURRENT = 1,
@@ -64,3 +67,4 @@ char* w3m_lib_dir(void);
 char* w3m_etc_dir(void);
 char* w3m_conf_dir(void);
 char* w3m_help_dir(void);
+char* file_to_url(const char* file, const char* currentDir);

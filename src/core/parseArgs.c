@@ -144,7 +144,7 @@ fusage(FILE* f, int err)
 void parseArgs(int argc, char** argv)
 {
     const char* url = (getUrlScheme(argv[1]) == SCM_MISSING && !ArgvIsURL)
-        ? file_to_url(argv[1])
+        ? file_to_url(argv[1], CurrentDir)
         : url_quote(conv_from_system(argv[1]));
 
     struct Content c = loadGeneralFile(url, NULL, NULL, NO_REFERER, 0);

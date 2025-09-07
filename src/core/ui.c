@@ -1,5 +1,6 @@
 #include "ui.h"
 #include "quote.h"
+#include "w3m.h"
 #include "maparea.h"
 #include "screen.h"
 #include "screen_effects.h"

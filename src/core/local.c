@@ -1,6 +1,7 @@
 #include "local.h"
 #define _GNU_SOURCE
 #include "w3m.h"
+#include "Content.h"
 #include "version.h"
 #include "etc.h"
 #include "form.h"

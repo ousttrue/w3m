@@ -1,5 +1,6 @@
 #include "maparea.h"
 #include "html_quote.h"
+#include "w3m.h"
 #include "buffer_loader.h"
 #include "http.h"
 #include "display.h"

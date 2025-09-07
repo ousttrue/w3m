@@ -1,67 +1,10 @@
-#define _GNU_SOURCE
 #include "url.h"
-#include "ui.h"
 #include "quote.h"
-#include "siteconf.h"
-#include "buffer_loader.h"
-#include "istream.h"
-#include "buffer.h"
-#include "http.h"
-#include "indep.h"
-#include "mysignal.h"
-#include "local.h"
-#include "proxy.h"
-#include "etc.h"
-#include <openssl/ssl.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-
-#include <signal.h>
-#include <setjmp.h>
-#include <errno.h>
-
-#include <sys/stat.h>
-
-#include "Str.h"
 #include "myctype.h"
-#include "regex.h"
+#include <stdlib.h>
+#include <string.h>
 
-char ArgvIsURL = true;
-char LocalhostOnly = false;
-char* document_root = NULL;
-int retryAsHttp = true;
-char* index_file = NULL;
-int DecodeURL = false;
-
-static sigjmp_buf AbortLoading;
-
-/* #define HTTP_DEFAULT_FILE    "/index.html" */
-
-#ifndef HTTP_DEFAULT_FILE
 #define HTTP_DEFAULT_FILE "/"
-#endif /* not HTTP_DEFAULT_FILE */
-
-#ifdef SOCK_DEBUG
-#include <stdarg.h>
-
-static void
-sock_log(char* message, ...)
-{
-    FILE* f = fopen("zzzsocklog", "a");
-    va_list va;
-
-    if (f == NULL)
-        return;
-    va_start(va, message);
-    vfprintf(f, message, va);
-    fclose(f);
-}
-
-#endif
 
 static char*
 DefaultFile(int scheme)
@@ -76,29 +19,7 @@ DefaultFile(int scheme)
     case SCM_FTPDIR:
         return allocStr("/", -1);
     }
-    return NULL;
-}
-
-static MySignalHandler
-KeyAbort(int _dummy)
-{
-    siglongjmp(AbortLoading, 1);
-}
-
-struct Url*
-baseURL(Buffer* buf)
-{
-    if (buf->bufferprop & BP_NO_URL) {
-        /* no URL is defined for the buffer */
-        return NULL;
-    }
-    if (buf->baseURL != NULL) {
-        /* <BASE> tag is defined in the document */
-        return buf->baseURL;
-    } else if (IS_EMPTY_PARSED_URL(&buf->currentURL))
-        return NULL;
-    else
-        return &buf->currentURL;
+    return 0;
 }
 
 #define COPYPATH_SPC_ALLOW 0
@@ -141,7 +62,7 @@ void parseURL(const char* _url, struct Url* p_url, struct Url* current)
     const char* url = url_quote(_url);
 
     const char* p = url;
-    copyParsedURL(p_url, NULL);
+    copyParsedURL(p_url, 0);
     p_url->scheme = SCM_MISSING;
 
     // RFC1808: Relative Uniform Resource Locators
@@ -197,7 +118,7 @@ void parseURL(const char* _url, struct Url* p_url, struct Url* current)
     }
     /* get host and port */
     if (p[0] != '/' || p[1] != '/') { /* scheme:foo or scheme:/foo */
-        p_url->host = NULL;
+        p_url->host = 0;
         p_url->port = getSchemeInfo(p_url->scheme).port;
         goto analyze_file;
     }
@@ -223,11 +144,11 @@ analyze_url:
         p++;
         while (IS_XDIGIT(*p) || *p == ':' || *p == '.')
             p++;
-        if (*p != ']' || (*(p + 1) && strchr(":/?#", *(p + 1)) == NULL))
+        if (*p != ']' || (*(p + 1) && strchr(":/?#", *(p + 1)) == 0))
             p = q;
     }
 
-    while (*p && strchr(":/@?#", *p) == NULL)
+    while (*p && strchr(":/@?#", *p) == 0)
         p++;
 
     Str tmp;
@@ -238,7 +159,7 @@ analyze_url:
          */
         const char* qq = q;
         q = ++p;
-        while (*p && strchr("@/?#", *p) == NULL)
+        while (*p && strchr("@/?#", *p) == 0)
             p++;
         if (*p == '@') {
             /* scheme://user:pass@...       */
@@ -272,7 +193,7 @@ analyze_url:
     }
 analyze_file:
 #ifndef SUPPORT_NETBIOS_SHARE
-    if (p_url->scheme == SCM_LOCAL && p_url->user == NULL && p_url->host != NULL && *p_url->host != '\0' && !is_localhost(p_url->host)) {
+    if (p_url->scheme == SCM_LOCAL && p_url->user == 0 && p_url->host != 0 && *p_url->host != '\0' && !is_localhost(p_url->host)) {
         /*
          * In the environments other than CYGWIN, a URL like
          * file://host/file is regarded as ftp://host/file.
@@ -288,7 +209,7 @@ analyze_file:
         }
     }
 #endif
-    if ((*p == '\0' || *p == '#' || *p == '?') && p_url->host == NULL) {
+    if ((*p == '\0' || *p == '#' || *p == '?') && p_url->host == 0) {
         p_url->file = "";
         goto do_query;
     }
@@ -326,7 +247,7 @@ analyze_file:
              * if the scheme is SCM_LOCAL, the special
              * treatment will apply to # for convinience.
              */
-            if (p > q && *(p - 1) == '/' && (cgi == NULL || p < cgi)) {
+            if (p > q && *(p - 1) == '/' && (cgi == 0 || p < cgi)) {
                 /*
                  * # comes as the first character of the file name
                  * that means, # is not a label but a part of the file
@@ -360,18 +281,18 @@ do_label:
     if (p_url->scheme == SCM_MISSING) {
         p_url->scheme = SCM_LOCAL;
         p_url->file = allocStr(p, -1);
-        p_url->label = NULL;
+        p_url->label = 0;
     } else if (*p == '#')
         p_url->label = allocStr(p + 1, -1);
     else
-        p_url->label = NULL;
+        p_url->label = 0;
 }
 
-#define ALLOC_STR(s) ((s) == NULL ? NULL : allocStr(s, -1))
+#define ALLOC_STR(s) ((s) == 0 ? 0 : allocStr(s, -1))
 
 void copyParsedURL(struct Url* p, const struct Url* q)
 {
-    if (q == NULL) {
+    if (q == 0) {
         memset(p, 0, sizeof(struct Url));
         p->scheme = SCM_UNKNOWN;
         return;
@@ -416,28 +337,28 @@ void parseURL2(const char* url, struct Url* pu, struct Url* current)
         else
             pu->scheme = SCM_NNTP;
         if (current && (current->scheme == SCM_NNTP || current->scheme == SCM_NNTP_GROUP)) {
-            if (pu->host == NULL) {
+            if (pu->host == 0) {
                 pu->host = current->host;
                 pu->port = current->port;
             }
         }
         return;
     }
-    if (pu->scheme == SCM_LOCAL) {
-        const char* q = expandName(file_unquote(pu->file));
-#ifdef SUPPORT_DOS_DRIVE_PREFIX
-        Str drive;
-        if (IS_ALPHA(q[0]) && q[1] == ':') {
-            drive = Strnew_charp_n(q, 2);
-            Strcat_charp(drive, file_quote(q + 2));
-            pu->file = drive->ptr;
-        } else
-#endif
-            pu->file = file_quote(q);
-    }
+    //     if (pu->scheme == SCM_LOCAL) {
+    //         const char* q = expandName(file_unquote(pu->file));
+    // #ifdef SUPPORT_DOS_DRIVE_PREFIX
+    //         Str drive;
+    //         if (IS_ALPHA(q[0]) && q[1] == ':') {
+    //             drive = Strnew_charp_n(q, 2);
+    //             Strcat_charp(drive, file_quote(q + 2));
+    //             pu->file = drive->ptr;
+    //         } else
+    // #endif
+    //             pu->file = file_quote(q);
+    //     }
 
     if (current && (pu->scheme == current->scheme || (pu->scheme == SCM_FTP && current->scheme == SCM_FTPDIR) || (pu->scheme == SCM_LOCAL && current->scheme == SCM_LOCAL_CGI))
-        && pu->host == NULL) {
+        && pu->host == 0) {
         /* Copy omitted element from the current URL */
         pu->user = current->user;
         pu->pass = current->pass;
@@ -481,7 +402,7 @@ void parseURL2(const char* url, struct Url* pu, struct Url* current)
 #endif
             strcmp(pu->file, "-")) {
             /* local file, relative path */
-            Str tmp = Strnew_charp(CurrentDir);
+            Str tmp = parsedURL2Str(current);
             if (Strlastchar(tmp) != '/')
                 Strcat_char(tmp, '/');
             Strcat_charp(tmp, file_unquote(pu->file));
@@ -513,7 +434,7 @@ void parseURL2(const char* url, struct Url* pu, struct Url* current)
             if (pu->host && !is_localhost(pu->host)) {
                 Str tmp = Strnew_charp("//");
                 Strcat_m_charp(tmp, pu->host,
-                    cleanupName(file_unquote(pu->file)), NULL);
+                    cleanupName(file_unquote(pu->file)), 0);
                 pu->real_file = tmp->ptr;
             } else
 #endif
@@ -531,7 +452,7 @@ Str _parsedURL2Str(struct Url* pu, int pass, int user, int label)
     } else if (pu->scheme == SCM_UNKNOWN) {
         return Strnew_charp(pu->file);
     }
-    if (pu->host == NULL && pu->file == NULL && label && pu->label != NULL) {
+    if (pu->host == 0 && pu->file == 0 && label && pu->label != 0) {
         /* local label */
         return Sprintf("#%s", pu->label);
     }
@@ -578,9 +499,9 @@ Str _parsedURL2Str(struct Url* pu, int pass, int user, int label)
         }
     }
     if (
-        (pu->file == NULL || (pu->file[0] != '/'
+        (pu->file == 0 || (pu->file[0] != '/'
 #ifdef SUPPORT_DOS_DRIVE_PREFIX
-             && !(IS_ALPHA(pu->file[0]) && pu->file[1] == ':' && pu->host == NULL)
+             && !(IS_ALPHA(pu->file[0]) && pu->file[1] == ':' && pu->host == 0)
 #endif
                  )))
         Strcat_char(tmp, '/');
@@ -608,24 +529,10 @@ Str parsedURL2RefererStr(struct Url* pu)
     return _parsedURL2Str(pu, false, false, false);
 }
 
-void init_stream(struct URLFile* uf, int scheme, InputStream stream)
-{
-    memset(uf, 0, sizeof(struct URLFile));
-    uf->stream = stream;
-    uf->scheme = scheme;
-    uf->encoding = ENC_7BIT;
-    uf->is_cgi = false;
-    uf->compression = CMP_NOCOMPRESS;
-    uf->content_encoding = CMP_NOCOMPRESS;
-    uf->guess_type = NULL;
-    uf->ext = NULL;
-    uf->modtime = -1;
-}
-
 const char* filename_extension(const char* path, int is_url)
 {
     const char* last_dot = "";
-    if (path == NULL)
+    if (path == 0)
         return last_dot;
     const char* p = path;
     if (*p == '.')
@@ -647,88 +554,10 @@ const char* filename_extension(const char* path, int is_url)
         return last_dot;
 }
 
-struct Url*
-schemeToProxy(int scheme)
-{
-    struct Url* pu = NULL; /* for gcc */
-    switch (scheme) {
-    case SCM_HTTP:
-        pu = &HTTP_proxy_parsed;
-        break;
-    case SCM_HTTPS:
-        pu = &HTTPS_proxy_parsed;
-        break;
-#ifdef DEBUG
-    default:
-        abort();
-#endif
-    }
-    return pu;
-}
-
-char* url_decode2(const char* url, const Buffer* buf)
-{
-    if (!DecodeURL)
-        return (char*)url;
-    wc_ces url_charset = buf ? buf->document_charset : 0;
-    return url_unquote_conv((char*)url, url_charset);
-}
-
 int same_url_p(struct Url* pu1, struct Url* pu2)
 {
     return (pu1->scheme == pu2->scheme && pu1->port == pu2->port && (pu1->host ? pu2->host ? !strcasecmp(pu1->host, pu2->host) : 0 : 1)
         && (pu1->file ? pu2->file ? !strcmp(pu1->file, pu2->file) : 0 : 1));
-}
-
-char* file_to_url(const char* file)
-{
-    Str tmp;
-#ifdef SUPPORT_DOS_DRIVE_PREFIX
-    char* drive = NULL;
-#endif
-#ifdef SUPPORT_NETBIOS_SHARE
-    char* host = NULL;
-#endif
-
-    if (!(file = expandPath(file)))
-        return NULL;
-#ifdef SUPPORT_NETBIOS_SHARE
-    if (file[0] == '/' && file[1] == '/') {
-        char* p;
-        file += 2;
-        if (*file) {
-            p = strchr(file, '/');
-            if (p != NULL && p != file) {
-                host = allocStr(file, (p - file));
-                file = p;
-            }
-        }
-    }
-#endif
-#ifdef SUPPORT_DOS_DRIVE_PREFIX
-    if (IS_ALPHA(file[0]) && file[1] == ':') {
-        drive = allocStr(file, 2);
-        file += 2;
-    } else
-#endif
-        if (file[0] != '/') {
-        tmp = Strnew_charp(CurrentDir);
-        if (Strlastchar(tmp) != '/')
-            Strcat_char(tmp, '/');
-        Strcat_charp(tmp, file);
-        file = tmp->ptr;
-    }
-    tmp = Strnew_charp("file://");
-#ifdef SUPPORT_NETBIOS_SHARE
-    if (host)
-        Strcat_charp(tmp, host);
-#endif
-#ifdef SUPPORT_DOS_DRIVE_PREFIX
-    if (drive)
-        Strcat_charp(tmp, drive);
-#endif
-    Strcat_charp(tmp, file_quote(cleanupName(file)));
-    return tmp->ptr;
 }
 
 char* cleanupName(const char* name)
@@ -788,7 +617,9 @@ char* cleanupName(const char* name)
 
 int is_localhost(const char* host)
 {
-    if (!host || !strcasecmp(host, "localhost") || !strcmp(host, "127.0.0.1") || (HostName && !strcasecmp(host, HostName)) || !strcmp(host, "[::1]"))
+    if (!host || !strcasecmp(host, "localhost") || !strcmp(host, "127.0.0.1")
+        /*|| (HostName && !strcasecmp(host, HostName))*/
+        || !strcmp(host, "[::1]"))
         return true;
     return false;
 }

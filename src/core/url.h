@@ -1,13 +1,6 @@
 #pragma once
-#include "Str.h"
 #include "url_scheme.h"
-
-extern char ArgvIsURL;
-extern char LocalhostOnly;
-extern char* document_root;
-extern int retryAsHttp;
-extern char* index_file;
-extern int DecodeURL;
+#include "Str.h"
 
 struct Url {
     enum UrlScheme scheme;
@@ -34,8 +27,6 @@ void parseURL2(const char* url, struct Url* pu, struct Url* current);
 Str parsedURL2Str(struct Url* pu);
 Str parsedURL2RefererStr(struct Url* pu);
 const char* filename_extension(const char* path, int is_url);
-struct Url* schemeToProxy(int scheme);
 int same_url_p(struct Url* pu1, struct Url* pu2);
-char* file_to_url(const char* file);
 char* cleanupName(const char* name);
 int is_localhost(const char* host);

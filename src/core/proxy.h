@@ -13,3 +13,5 @@ extern int NOproxy_netaddr;
 extern TextList* NO_proxy_domains;
 extern char use_proxy;
 // #define Do_not_use_proxy (!use_proxy)
+
+struct Url* schemeToProxy(enum UrlScheme scheme);

@@ -1,5 +1,6 @@
 #include "LineEditor.h"
 #include "indep.h"
+#include "w3m.h"
 #include "buffer.h"
 #include "str_util.h"
 #include "linein.h"

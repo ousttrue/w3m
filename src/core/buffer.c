@@ -923,3 +923,28 @@ void saveBuffer(Buffer* buf, FILE* f, int cont)
 {
     _saveBuffer(buf, buf->firstLine, f, cont);
 }
+
+struct Url*
+baseURL(Buffer* buf)
+{
+    if (buf->bufferprop & BP_NO_URL) {
+        /* no URL is defined for the buffer */
+        return NULL;
+    }
+    if (buf->baseURL != NULL) {
+        /* <BASE> tag is defined in the document */
+        return buf->baseURL;
+    } else if (IS_EMPTY_PARSED_URL(&buf->currentURL))
+        return NULL;
+    else
+        return &buf->currentURL;
+}
+
+char* url_decode2(const char* url, const Buffer* buf)
+{
+    if (!DecodeURL)
+        return (char*)url;
+    wc_ces url_charset = buf ? buf->document_charset : 0;
+    return url_unquote_conv((char*)url, url_charset);
+}
+

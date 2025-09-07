@@ -17,6 +17,11 @@
 #include <zlib.h>
 #include <assert.h>
 
+char* index_file = 0;
+char* document_root = 0;
+char LocalhostOnly = false;
+int retryAsHttp = true;
+
 static bool dir_exist(const char* path)
 {
     if (path == NULL || *path == '\0')

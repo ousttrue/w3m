@@ -1,5 +1,6 @@
 #include "alloc.h"
 #include "quote.h"
+#include "w3m.h"
 #include "buffer_loader.h"
 #include "screen.h"
 #include "html_quote.h"

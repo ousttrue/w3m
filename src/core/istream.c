@@ -641,3 +641,17 @@ Str readAll(struct URLFile* f)
     }
     return html;
 }
+
+void init_stream(struct URLFile* uf, int scheme, InputStream stream)
+{
+    memset(uf, 0, sizeof(struct URLFile));
+    uf->stream = stream;
+    uf->scheme = scheme;
+    uf->encoding = ENC_7BIT;
+    uf->is_cgi = false;
+    uf->compression = CMP_NOCOMPRESS;
+    uf->content_encoding = CMP_NOCOMPRESS;
+    uf->guess_type = NULL;
+    uf->ext = NULL;
+    uf->modtime = -1;
+}
