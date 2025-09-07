@@ -666,11 +666,6 @@ schemeToProxy(int scheme)
     return pu;
 }
 
-const char* url_encode(const char* url, const struct Url* base, wc_ces doc_charset)
-{
-    return url_quote_conv(url, doc_charset);
-}
-
 char* url_decode2(const char* url, const Buffer* buf)
 {
     if (!DecodeURL)

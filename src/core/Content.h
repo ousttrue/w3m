@@ -1,6 +1,7 @@
 #pragma once
 #include "url.h"
-#include "istream.h"
+#include "textlist.h"
+#include <wc.h>
 
 struct Content {
     struct Url pu;

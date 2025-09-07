@@ -1,9 +1,6 @@
 #pragma once
 #include "Str.h"
 #include "url_scheme.h"
-#include "textlist.h"
-
-#include <wc.h>
 
 extern char ArgvIsURL;
 extern char LocalhostOnly;
@@ -38,8 +35,6 @@ Str parsedURL2Str(struct Url* pu);
 Str parsedURL2RefererStr(struct Url* pu);
 const char* filename_extension(const char* path, int is_url);
 struct Url* schemeToProxy(int scheme);
-const char* url_encode(const char* url, const struct Url* base, wc_ces doc_charset);
-
 int same_url_p(struct Url* pu1, struct Url* pu2);
 char* file_to_url(const char* file);
 char* cleanupName(const char* name);

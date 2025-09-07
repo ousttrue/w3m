@@ -2,6 +2,7 @@
 #include <Str.h>
 #include <time.h>
 #include "url.h"
+#include "textlist.h"
 
 struct portlist {
     unsigned short port;

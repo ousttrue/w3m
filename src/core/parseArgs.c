@@ -1,4 +1,5 @@
 #include "parseArgs.h"
+#include "quote.h"
 #include "Content.h"
 #include "mysignal.h"
 #include "buffer_loader.h"
@@ -144,7 +145,7 @@ void parseArgs(int argc, char** argv)
 {
     const char* url = (getUrlScheme(argv[1]) == SCM_MISSING && !ArgvIsURL)
         ? file_to_url(argv[1])
-        : url_encode(conv_from_system(argv[1]), NULL, 0);
+        : url_quote(conv_from_system(argv[1]));
 
     struct Content c = loadGeneralFile(url, NULL, NULL, NO_REFERER, 0);
     Buffer* newbuf = makeBuffer(&c, false);

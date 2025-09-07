@@ -1,4 +1,5 @@
 #include "alloc.h"
+#include "quote.h"
 #include "buffer_loader.h"
 #include "screen.h"
 #include "html_quote.h"
@@ -206,10 +207,8 @@ searchURLLabel(Buffer* buf, const char* url)
 static Anchor*
 _put_anchor_all(Buffer* buf, const char* p1, const char* p2, int line, int pos)
 {
-    Str tmp;
-
-    tmp = Strnew_charp_n(p1, p2 - p1);
-    return registerHref(buf, url_encode(tmp->ptr, baseURL(buf), buf->document_charset),
+    Str tmp = Strnew_charp_n(p1, p2 - p1);
+    return registerHref(buf, url_quote(tmp->ptr),
         NULL, NO_REFERER, NULL,
         '\0', line, pos);
 }

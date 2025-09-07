@@ -1,5 +1,6 @@
 #pragma once
 #include "istream.h"
+#include <wc.h>
 
 enum HttpConnectionStatus {
     HTST_UNKNOWN = 255,

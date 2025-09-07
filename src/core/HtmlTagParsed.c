@@ -194,7 +194,7 @@ struct HtmlTagParsed* parse_tag(const char** s, bool internal)
     /* Parse tag name */
     char tagname[MAX_TAG_LEN];
     tagname[0] = '\0';
-    char* q = (*s) + 1;
+    const char* q = (*s) + 1;
     char* p = tagname;
     if (*q == '/') {
         *(p++) = *(q++);
@@ -397,7 +397,7 @@ Str process_img(struct HtmlTagParsed* tag, int width)
 
     if (!parsedtag_get_value(tag, ATTR_SRC, &p))
         return tmp;
-    p = url_encode(remove_space(p), cur_baseURL, cur_document_charset);
+    p = url_quote(remove_space(p));
     q = NULL;
     parsedtag_get_value(tag, ATTR_ALT, &q);
     if (!pseudoInlines && (q == NULL || (*q == '\0' && ignore_null_img_alt)))
@@ -1274,7 +1274,7 @@ Str process_form_int(struct HtmlTagParsed* tag, int fid)
     parsedtag_get_value(tag, ATTR_METHOD, &p);
     q = "!CURRENT_URL!";
     parsedtag_get_value(tag, ATTR_ACTION, &q);
-    q = url_encode(remove_space(q), cur_baseURL, cur_document_charset);
+    q = url_quote(remove_space(q));
     r = NULL;
     if (parsedtag_get_value(tag, ATTR_ACCEPT_CHARSET, &r))
         r = check_accept_charset(r);
