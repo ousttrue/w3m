@@ -1147,6 +1147,12 @@ close_all_fds_except(int i, int f)
     }
 }
 
+#define SETPGRP_VOID 1
+#ifdef SETPGRP_VOID
+#define SETPGRP() setpgrp()
+#else
+#define SETPGRP() setpgrp(0, 0)
+#endif
 void setup_child(int child, int i, int f)
 {
     reset_signals();

@@ -1,4 +1,3 @@
-#include "config.h"
 #include "tty.h"
 #include "ctrlcode.h"
 #include "event_poller.h"
@@ -66,14 +65,6 @@ const struct Writer* ttyWriter()
     return &g_writer;
 }
 
-#ifdef HAVE_TERMIO_H
-#include <termio.h>
-typedef struct termio TerminalMode;
-#define _TerminalSet(fd, x) ioctl(fd, TCSETA, x)
-#define _TerminalGet(fd, x) ioctl(fd, TCGETA, x)
-#define MODEFLAG(d) ((d).c_lflag)
-#define IMODEFLAG(d) ((d).c_iflag)
-#endif /* HAVE_TERMIO_H */
 
 #include <termios.h>
 #include <unistd.h>
@@ -83,13 +74,6 @@ typedef struct termios TerminalMode;
 #define MODEFLAG(d) ((d).c_lflag)
 #define IMODEFLAG(d) ((d).c_iflag)
 
-#ifdef HAVE_SGTTY_H
-#include <sgtty.h>
-typedef struct sgttyb TerminalMode;
-#define _TerminalSet(fd, x) ioctl(fd, TIOCSETP, x)
-#define _TerminalGet(fd, x) ioctl(fd, TIOCGETP, x)
-#define MODEFLAG(d) ((d).sg_flags)
-#endif /* HAVE_SGTTY_H */
 
 static TerminalMode d_ioval;
 
@@ -161,7 +145,6 @@ char* ttyname_tty(void)
 }
 
 void term_raw(void)
-#ifndef HAVE_SGTTY_H
 #ifdef IEXTEN
 #define TTY_MODE ISIG | ICANON | ECHO | IEXTEN
 #else /* not IEXTEN */
@@ -171,20 +154,13 @@ void term_raw(void)
     ttymode_reset(TTY_MODE, IXON | IXOFF);
     set_cc(VMIN, 1);
 }
-#else /* HAVE_SGTTY_H */
-{
-    ttymode_set(RAW, 0);
-}
-#endif /* HAVE_SGTTY_H */
 
 void ttymode_set(int mode, int imode)
 {
     TerminalMode ioval;
     _TerminalGet(g_tty, &ioval);
     MODEFLAG(ioval) |= mode;
-#ifndef HAVE_SGTTY_H
     IMODEFLAG(ioval) |= imode;
-#endif /* not HAVE_SGTTY_H */
 
     while (_TerminalSet(g_tty, &ioval) == -1) {
         if (errno == EINTR || errno == EAGAIN)
@@ -200,9 +176,7 @@ void ttymode_reset(int mode, int imode)
     TerminalMode ioval;
     _TerminalGet(g_tty, &ioval);
     MODEFLAG(ioval) &= ~mode;
-#ifndef HAVE_SGTTY_H
     IMODEFLAG(ioval) &= ~imode;
-#endif /* not HAVE_SGTTY_H */
 
     while (_TerminalSet(g_tty, &ioval) == -1) {
         if (errno == EINTR || errno == EAGAIN)
@@ -228,29 +202,17 @@ void set_cc(int spec, int val)
 }
 
 void crmode(void)
-#ifndef HAVE_SGTTY_H
 {
     ttymode_reset(ICANON, IXON);
     ttymode_set(ISIG, 0);
     set_cc(VMIN, 1);
 }
-#else /* HAVE_SGTTY_H */
-{
-    ttymode_set(CBREAK, 0);
-}
-#endif /* HAVE_SGTTY_H */
 
 void nocrmode(void)
-#ifndef HAVE_SGTTY_H
 {
     ttymode_set(ICANON, 0);
     set_cc(VMIN, 4);
 }
-#else /* HAVE_SGTTY_H */
-{
-    ttymode_reset(CBREAK, 0);
-}
-#endif /* HAVE_SGTTY_H */
 
 void term_echo(void)
 {
@@ -263,16 +225,10 @@ void term_noecho(void)
 }
 
 void term_cooked(void)
-#ifndef HAVE_SGTTY_H
 {
     ttymode_set(TTY_MODE, 0);
     set_cc(VMIN, 4);
 }
-#else /* HAVE_SGTTY_H */
-{
-    ttymode_reset(RAW, 0);
-}
-#endif /* HAVE_SGTTY_H */
 
 void term_cbreak(void)
 {

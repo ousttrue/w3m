@@ -50,6 +50,7 @@ static struct compression_decoder compression_decoders[] = {
 };
 
 #define S_IXANY (S_IXUSR | S_IXGRP | S_IXOTH)
+#define PATH_SEPARATOR ':'
 
 static int
 check_command(char* cmd, int auxbin_p)

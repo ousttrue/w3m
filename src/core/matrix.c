@@ -32,7 +32,6 @@
 **
 ***************************************************************************/
 
-#include "config.h"
 #include "matrix.h"
 #include "alloc.h"
 
@@ -53,9 +52,7 @@
         b = tmp;     \
     }
 
-#ifdef HAVE_FLOAT_H
 #include <float.h>
-#endif /* not HAVE_FLOAT_H */
 #if defined(DBL_MAX)
 static double Tiny = 10.0 / DBL_MAX;
 #elif defined(FLT_MAX)

@@ -6,17 +6,19 @@ import re
 from typing import NamedTuple, Union, List, Optional
 from enum import Enum, auto
 
+
 HERE = pathlib.Path(__file__).absolute().parent
 
-# /* #undef USE_BINMODE_STREAM */
-# /* #undef HAVE_TERMIO_H */
-# /* #undef HAVE_SGTTY_H */
-# #define SIZEOF_LONG_LONG 8
-# /* #undef HAVE_STROQ */
-# /* #undef HAVE_ATOQ */
-# /* #undef HAVE_GETPASSPHRASE */
 
 CONTEXT = {
+    "HAVE_SGTTY_H": False,
+    "HAVE_STROQ": False,
+    "HAVE_ATOQ": False,
+    "HAVE_GETPASSPHRASE": False,
+    "HAVE_TERMIO_H": False,
+    "HAVE_FLOAT_H": True,
+    "HAVE_SYS_SELECT_H": True,
+    "HAVE_SIGSETJMP": True,
     "HAVE_TERMIOS_H": True,
     "HAVE_DIRENT_H": True,
     "HAVE_LOCALE_H": True,
@@ -62,7 +64,6 @@ CONTEXT = {
     "W3MIMGDISPLAY_SETUID ": False,
     "USE_IMLIB2 ": False,
     "USE_XFACE": False,
-    "HAVE_SIGSETJMP": True,
     "SIGWINCH": True,
     "SIGPIPE": True,
     "SIGCHLD": True,

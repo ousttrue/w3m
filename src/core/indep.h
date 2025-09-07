@@ -1,6 +1,5 @@
 #ifndef INDEP_H
 #define INDEP_H
-#include "config.h"
 #include <alloc.h>
 #include <Str.h>
 

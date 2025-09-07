@@ -13,7 +13,6 @@
 #include "graphicchar.h"
 #include "rc.h"
 #include "w3m.h"
-#include "config.h"
 #include <setjmp.h>
 #include <signal.h>
 #include <stdlib.h>

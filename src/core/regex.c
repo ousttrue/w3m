@@ -14,12 +14,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <gc.h>
-#include "config.h"
 #include <wc.h>
 #include <wtf.h>
 #include <ucs.h>
 #include "regex.h"
-#include "config.h"
 #include <myctype.h>
 
 #ifndef NULL
