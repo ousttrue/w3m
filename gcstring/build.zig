@@ -15,9 +15,13 @@ const public_headers = [_][]const u8{
     "utf8.h",
     "regex.h",
     "quote.h",
+    "url_scheme.h",
+    "url.h",
 };
 
 const srcs = [_][]const u8{
+    "url_scheme.c",
+    "url.c",
     "quote.c",
     "regex.c",
     "alloc.c",
@@ -63,7 +67,7 @@ pub fn build(b: *std.Build) void {
     });
     b.installArtifact(lib);
     lib.linkLibC();
-    lib.addIncludePath(b.path(""));
+    lib.addIncludePath(b.path("libwc"));
     lib.addCSourceFiles(.{
         .root = b.path("libwc"),
         .files = &srcs,

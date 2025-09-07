@@ -1,6 +1,7 @@
 #pragma once
 #include "url_scheme.h"
 #include "Str.h"
+#include <stdbool.h>
 
 struct Url {
     enum UrlScheme scheme;

@@ -60,7 +60,6 @@ const w3m_srcs = [_][]const u8{
     "LineEditor.c",
     "tmpfile.c",
 
-    "url_scheme.c",
     "ssl_util.c",
     "str_util.c",
     "line.c",
@@ -80,7 +79,6 @@ const w3m_srcs = [_][]const u8{
     "image.c",
     "symbol.c",
     "entity.c",
-    "url.c",
     "mimehead.c",
     "cookie.c",
     "history.c",
