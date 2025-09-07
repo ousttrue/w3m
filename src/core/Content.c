@@ -1,4 +1,5 @@
 #include "Content.h"
+#include "network.h"
 #include "alloc.h"
 #include "mimetypes.h"
 #include "form.h"

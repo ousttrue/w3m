@@ -38,7 +38,6 @@ char* url_unquote_conv(char* url, wc_ces charset);
 const char* expandName(const char* name);
 
 time_t mymktime(const char* timestr);
-char* FQDN(char* host);
 pid_t open_pipe_rw(FILE** fr, FILE** fw);
 FILE* openSecretFile(char* fname);
 void loadPasswd(void);

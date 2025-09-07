@@ -1,4 +1,5 @@
 #include "rc.h"
+#include "network.h"
 #include "w3m.h"
 #include "mimetypes.h"
 #include "entity.h"

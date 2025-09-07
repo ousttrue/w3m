@@ -1310,7 +1310,7 @@ const char* expandName(const char* name)
     if (name == NULL)
         return NULL;
 
-    struct passwd *passent;
+    struct passwd* passent;
     Str extpath = NULL;
 
     const char* p = name;
@@ -1364,11 +1364,11 @@ static char* monthtbl[] = {
 };
 
 static int
-get_day(char** s)
+get_day(const char** s)
 {
     Str tmp = Strnew();
     int day;
-    char* ss = *s;
+    const char* ss = *s;
 
     if (!**s)
         return -1;
@@ -1386,11 +1386,11 @@ get_day(char** s)
 }
 
 static int
-get_month(char** s)
+get_month(const char** s)
 {
     Str tmp = Strnew();
     int mon;
-    char* ss = *s;
+    const char* ss = *s;
 
     if (!**s)
         return -1;
@@ -1415,11 +1415,11 @@ get_month(char** s)
 }
 
 static int
-get_year(char** s)
+get_year(const char** s)
 {
     Str tmp = Strnew();
     int year;
-    char* ss = *s;
+    const char* ss = *s;
 
     if (!**s)
         return -1;
@@ -1442,10 +1442,10 @@ get_year(char** s)
 }
 
 static int
-get_time(char** s, int* hour, int* min, int* sec)
+get_time(const char** s, int* hour, int* min, int* sec)
 {
     Str tmp = Strnew();
-    char* ss = *s;
+    const char* ss = *s;
 
     if (!**s)
         return -1;
@@ -1482,11 +1482,11 @@ get_time(char** s, int* hour, int* min, int* sec)
 }
 
 static int
-get_zone(char** s, int* z_hour, int* z_min)
+get_zone(const char** s, int* z_hour, int* z_min)
 {
     Str tmp = Strnew();
     int zone;
-    char* ss = *s;
+    const char* ss = *s;
 
     if (!**s)
         return -1;
@@ -1510,22 +1510,16 @@ get_zone(char** s, int* z_hour, int* z_min)
 time_t
 mymktime(const char* timestr)
 {
-    char* s;
-    int day, mon, year, hour, min, sec, z_hour = 0, z_min = 0;
-
     if (!(timestr && *timestr))
         return -1;
-    s = timestr;
 
-#ifdef DEBUG
-    fprintf(stderr, "mktime: %s\n", timestr);
-#endif /* DEBUG */
-
+    const char* s = timestr;
     while (*s && IS_ALPHA(*s))
         s++;
     while (*s && !IS_ALNUM(*s))
         s++;
 
+    int day, mon, year, hour, min, sec, z_hour = 0, z_min = 0;
     if (IS_DIGIT(*s)) {
         /* RFC 1123 or RFC 850 format */
         if ((day = get_day(&s)) == -1)
@@ -1594,60 +1588,7 @@ mymktime(const char* timestr)
     return (time_t)((day * 60 * 60 * 24) + (hour * 60 * 60) + (min * 60) + sec);
 }
 
-#include <sys/socket.h>
-#include <netdb.h>
-char* FQDN(char* host)
-{
-    char* p;
-    int* af;
 
-    if (host == NULL)
-        return NULL;
-
-    if (strcasecmp(host, "localhost") == 0)
-        return host;
-
-    for (p = host; *p && *p != '.'; p++)
-        ;
-
-    if (*p == '.')
-        return host;
-
-    for (af = ai_family_order_table[DNS_order];; af++) {
-        int error;
-        struct addrinfo hints;
-        struct addrinfo *res, *res0;
-        char* namebuf;
-
-        memset(&hints, 0, sizeof(hints));
-        hints.ai_flags = AI_CANONNAME;
-        hints.ai_family = *af;
-        hints.ai_socktype = SOCK_STREAM;
-        error = getaddrinfo(host, NULL, &hints, &res0);
-        if (error) {
-            if (*af == PF_UNSPEC) {
-                /* all done */
-                break;
-            }
-            /* try next address family */
-            continue;
-        }
-        for (res = res0; res != NULL; res = res->ai_next) {
-            if (res->ai_canonname) {
-                /* found */
-                namebuf = strdup(res->ai_canonname);
-                freeaddrinfo(res0);
-                return namebuf;
-            }
-        }
-        freeaddrinfo(res0);
-        if (*af == PF_UNSPEC) {
-            break;
-        }
-    }
-    /* all failed */
-    return NULL;
-}
 
 static char Base64Table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 

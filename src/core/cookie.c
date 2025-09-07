@@ -8,6 +8,7 @@
  */
 
 #include "cookie.h"
+#include "network.h"
 #include "buffer_loader.h"
 #include "KeyValue.h"
 #include <alloc.h>

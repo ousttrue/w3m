@@ -1,5 +1,6 @@
 #include "LineEditor.h"
 #include "indep.h"
+#include "buffer.h"
 #include "str_util.h"
 #include "linein.h"
 #include "display.h"
