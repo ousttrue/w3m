@@ -49,7 +49,9 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+#define W3MCONFIG "w3mconfig"
 #define PASSWD_FILE RC_DIR "/passwd"
+#define CONFIG_FILE "config"
 char* passwd_file = (PASSWD_FILE);
 
 char* tmp_dir = 0;

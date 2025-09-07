@@ -23,6 +23,7 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 
+#define IMGDISPLAY "w3mimgdisplay"
 int activeImage = (FALSE);
 const char* image_source = (NULL);
 char* Imgdisplay = (IMGDISPLAY);

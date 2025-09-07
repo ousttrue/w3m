@@ -26,6 +26,8 @@
 #include <stdio.h>
 #include <wtf.h>
 
+#define MENU_FILE "menu"
+
 static const char** FRAME;
 static int FRAME_WIDTH;
 #define G_start                \

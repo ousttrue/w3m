@@ -8,6 +8,8 @@
 #include "buffer.h"
 #include <sys/stat.h>
 
+#define HISTORY_FILE "history"
+
 int UseHistory = (TRUE);
 int URLHistSize = (100);
 int SaveURLHist = (TRUE);

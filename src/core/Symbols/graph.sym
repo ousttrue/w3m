@@ -5,11 +5,9 @@ const char *graph_symbol[] = {
     "v",  "m",  "q",  "",   "j",  "",   "",   "",
 };
 
-#ifdef USE_M17N
 const char *graph2_symbol[] = {
     "qn", " t", "qw", " l", "qu", " x", "qk", "",
     "qv", " m", "qq", "",   "qj", "",   "",   "",
     "qn", " t", "qw", " l", "qu", " x", "qk", "",
     "qv", " m", "qq", "",   "qj", "",   "",   "",
 };
-#endif

@@ -1,38 +1,4 @@
-/* config.h.  Generated from config.h.in by configure.  */
-#ifndef CONFIG_H_SEEN
-#define CONFIG_H_SEEN
-/*
- * Configuration for w3m
- */
-#define JA 0
-#define EN 1
-
-/* Name of package */
-#define PACKAGE "w3m"
-
-#define HELP_FILE "w3mhelp-w3m_en.html"
-#define HELP_CGI "w3mhelp"
-#define W3MCONFIG "w3mconfig"
-#define IMGDISPLAY "w3mimgdisplay"
-#define XFACE2XPM "xface2xpm"
-
-#define BOOKMARK "bookmark.html"
-#define CONFIG_FILE "config"
-#define MENU_FILE "menu"
-#define MOUSE_FILE "mouse"
-#define COOKIE_FILE "cookie"
-#define HISTORY_FILE "history"
-
-#define USER_MIMETYPES "~/.mime.types"
-#define SYS_MIMETYPES ETC_DIR "/mime.types"
-#define USER_URIMETHODMAP RC_DIR "/urimethodmap"
-#define SYS_URIMETHODMAP CONF_DIR "/urimethodmap"
-
-/* User Configuration */
-#define USE_M17N 1
-#define USE_UNICODE 1
-#define W3M_LANG EN
-#define LANG W3M_LANG
+#pragma once
 
 /* Define to 1 if translation of program messages to the user's
    native language is requested. */
@@ -162,5 +128,3 @@
 #endif
 
 #define PATH_SEPARATOR ':'
-
-#endif /* CONFIG_H_SEEN */

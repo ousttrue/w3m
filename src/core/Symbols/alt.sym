@@ -10,7 +10,6 @@ static const char *alt_symbol[] = {
     "<=UpDn ",
     NULL
 };
-#ifdef USE_M17N
 static const char *alt2_symbol[] = {
     "-+", " |", "--", " +", "-|", " |", "-+", "",
     "--", " +", "--", "",   "-+", "",   "",   "",
@@ -23,4 +22,3 @@ static const char *alt2_symbol[] = {
     "<=UpDn ",
     NULL
 };
-#endif

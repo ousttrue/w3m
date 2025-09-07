@@ -23,6 +23,8 @@
 #include <strings.h>
 #include <time.h>
 
+#define COOKIE_FILE "cookie"
+
 struct cookie* First_cookie = (NULL);
 int default_use_cookie = (TRUE);
 char* cookie_reject_domains = (NULL);

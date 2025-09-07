@@ -8,6 +8,8 @@ from enum import Enum, auto
 
 HERE = pathlib.Path(__file__).absolute().parent
 
+#define USE_UNICODE 1
+
 CONTEXT = {
     "USE_XFACE": False,
     "HAVE_SIGSETJMP": True,
@@ -242,7 +244,9 @@ class MacroNode:
 
 
 def main(path: pathlib.Path, debug=False):
-    if path.suffix not in [".h", ".c", ".cpp"]:
+    if path.suffix not in [".h", ".c", ".cpp", ".sym"]:
+        return
+    if path.name.startswith("euc"):
         return
 
     print(str(path))

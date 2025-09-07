@@ -310,9 +310,9 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
     int internal = 0;
     Anchor** a_textarea = NULL;
     Anchor** a_select = NULL;
-#if defined(USE_M17N) || defined(USE_IMAGE)
+
     ParsedURL* base = baseURL(buf);
-#endif
+
     wc_ces name_charset = url_to_charset(NULL, &buf->currentURL,
         buf->document_charset);
 
@@ -712,9 +712,9 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                         if (!buf->baseURL)
                             buf->baseURL = New(ParsedURL);
                         parseURL2(p, buf->baseURL, &buf->currentURL);
-#if defined(USE_M17N) || defined(USE_IMAGE)
+
                         base = buf->baseURL;
-#endif
+
                     }
                     if (parsedtag_get_value(tag, ATTR_TARGET, &p))
                         buf->baseTarget = url_quote_conv(p, buf->document_charset);

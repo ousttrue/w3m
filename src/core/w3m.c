@@ -71,6 +71,11 @@
 
 #include <event_poller.h>
 
+#define PACKAGE "w3m"
+#define HELP_FILE "w3mhelp-w3m_en.html"
+#define HELP_CGI "w3mhelp"
+#define BOOKMARK "bookmark.html"
+
 int DefaultURLString = (DEFAULT_URL_CURRENT);
 int UseDictCommand = (TRUE);
 char* DictCommand = ("file:///$LIB/w3mdict" CGI_EXTENSION);
@@ -1551,7 +1556,7 @@ DEFUN(movR1, MOVE_RIGHT1, "Cursor right. With edge touched, slide")
  * From: Takashi Nishimoto <g96p0935@mse.waseda.ac.jp> Date: Mon, 14 Jun
  * 1999 09:29:56 +0900
  */
-#if defined(USE_M17N) && defined(USE_UNICODE)
+
 #define nextChar(s, l) \
     do {               \
         (s)++;         \
@@ -1572,17 +1577,6 @@ is_wordchar(wc_uint32 c)
 {
     return wc_is_ucs_alnum(c);
 }
-#else
-#define nextChar(s, l) (s)++
-#define prevChar(s, l) (s)--
-#define getChar(p) ((int)*(p))
-
-static int
-is_wordchar(int c)
-{
-    return IS_ALNUM(c);
-}
-#endif
 
 static int
 prev_nonnull_line(Line* line)

@@ -35,6 +35,9 @@
 #include "myctype.h"
 #include "regex.h"
 
+#define SYS_MIMETYPES ETC_DIR "/mime.types"
+#define USER_MIMETYPES "~/.mime.types"
+
 char* mimetypes_files = (USER_MIMETYPES ", " SYS_MIMETYPES);
 int DNS_order = DNS_ORDER_UNSPEC;
 char ArgvIsURL = true;
