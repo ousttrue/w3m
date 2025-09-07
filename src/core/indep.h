@@ -22,7 +22,6 @@ extern long long strtoclen(const char* s);
 extern char* conv_entity(unsigned int ch);
 extern int getescapechar(char** s);
 extern char* getescapecmd(char** s);
-extern char* allocStr(const char* s, int len);
 extern int strCmp(const void* s1, const void* s2);
 extern char* currentdir(void);
 extern const char* expandPath(const char* name);

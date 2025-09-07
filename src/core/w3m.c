@@ -265,7 +265,7 @@ void initialize()
             /* Don't use hostname if it is truncated.  */
             hostname[HOST_NAME_MAX + 1] = '\0';
             hostname_len = strlen(hostname);
-            if (hostname_len <= HOST_NAME_MAX && hostname_len < STR_SIZE_MAX)
+            if (hostname_len <= HOST_NAME_MAX)
                 HostName = allocStr(hostname, (int)hostname_len);
         }
     }

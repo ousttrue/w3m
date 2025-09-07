@@ -14,14 +14,37 @@
  * results obtained from use of this software.
  */
 #include "Str.h"
+#include "myctype.h"
+#include "alloc.h"
+#include <gc.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <gc.h>
 #include <stdarg.h>
 #include <string.h>
-#include "myctype.h"
+#include <limits.h>
 
 #define INITIAL_STR_SIZE 32
+#define STR_SIZE_MAX (INT_MAX / 32)
+
+char* allocStr(const char* s, int len)
+{
+    char* ptr;
+
+    if (s == NULL)
+        return NULL;
+    if (len < 0)
+        len = strlen(s);
+    if (len < 0 || len >= STR_SIZE_MAX)
+        len = STR_SIZE_MAX - 1;
+    ptr = NewAtom_N(char, len + 1);
+    if (ptr == NULL) {
+        fprintf(stderr, "fm: Can't allocate string. Give me more memory!\n");
+        exit(-1);
+    }
+    memcpy(ptr, s, len);
+    ptr[len] = '\0';
+    return ptr;
+}
 
 #ifdef STR_DEBUG
 /* This is obsolete, because "Str" can handle a '\0' character now. */
@@ -583,4 +606,9 @@ Str Strfgetall(FILE* f)
         Strcat_char(s, c);
     }
     return s;
+}
+
+void Strcat_char(Str x, char y)
+{
+    (((x)->length + 1 >= STR_SIZE_MAX) ? 0 : (((x)->length + 1 >= (x)->area_size) ? Strgrow(x), 0 : 0, (x)->ptr[(x)->length++] = (y), (x)->ptr[(x)->length] = 0));
 }
