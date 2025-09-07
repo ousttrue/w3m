@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #define _GNU_SOURCE
 #include "readbuffer.h"
 #include "buffer_loader.h"

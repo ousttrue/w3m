@@ -20,6 +20,7 @@
 #include "buffer.h"
 #include "defun.h"
 #include "indep.h"
+#include <stdlib.h>
 #include <strings.h>
 #include <time.h>
 

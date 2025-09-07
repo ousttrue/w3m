@@ -12,6 +12,7 @@
 #include "etc.h"
 #include "buffer.h"
 #include <math.h>
+#include <stdlib.h>
 #include <strings.h>
 
 MapList*

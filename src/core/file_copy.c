@@ -12,6 +12,7 @@
 #include "etc.h"
 #include "downloadlist.h"
 #include <Str.h>
+#include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>

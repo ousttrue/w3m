@@ -12,6 +12,7 @@
 #include "screen_effects.h"
 #include "url.h"
 #include <dirent.h>
+#include <stdlib.h>
 #include <wtf.h>
 
 static int

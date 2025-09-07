@@ -16,6 +16,7 @@ const public_headers = [_][]const u8{
 };
 
 const srcs = [_][]const u8{
+    "alloc.c",
     "Str.c",
     "myctype.c",
     "big5.c",

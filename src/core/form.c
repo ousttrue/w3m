@@ -21,6 +21,7 @@
 #include "util.h"
 #include "w3m.h"
 #include "maparea.h"
+#include <stdlib.h>
 #include <strings.h>
 #include <wtf.h>
 #include <unistd.h>
