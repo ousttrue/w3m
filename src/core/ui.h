@@ -16,7 +16,8 @@ extern char QuietMessage;
 #define Str_conv_to_halfdump(x) (ExtHalfdump ? wc_Str_conv((x), InnerCharset, DisplayCharset) : (x))
 #define conv_from_system(x) wc_conv((x), SystemCharset, InnerCharset)->ptr
 #define conv_to_system(x) wc_conv_strict((x), InnerCharset, SystemCharset)->ptr
-#define url_quote_conv(x, c) url_quote(wc_conv_strict((x), InnerCharset, (c))->ptr)
+
+const char* url_quote_conv(const char *x, wc_ces c);
 
 struct _Buffer;
 extern struct _Buffer* Currentbuf;

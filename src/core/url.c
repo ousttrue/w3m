@@ -693,10 +693,9 @@ url_to_charset(const char* url, const ParsedURL* base, wc_ces doc_charset)
                                                     : DocumentCharset;
 }
 
-char* url_encode(const char* url, const ParsedURL* base, wc_ces doc_charset)
+const char* url_encode(const char* url, const ParsedURL* base, wc_ces doc_charset)
 {
-    return url_quote_conv((char*)url,
-        url_to_charset(url, base, doc_charset));
+    return url_quote_conv(url, url_to_charset(url, base, doc_charset));
 }
 
 char* url_decode2(const char* url, const Buffer* buf)

@@ -1,5 +1,5 @@
 #include "ui.h"
-#include "indep.h"
+#include "quote.h"
 #include "maparea.h"
 #include "screen.h"
 #include "screen_effects.h"
@@ -32,6 +32,11 @@ wc_ces BookmarkCharset = (SYSTEM_CHARSET);
 
 Buffer* Currentbuf = 0;
 Buffer* Firstbuf = 0;
+
+const char* url_quote_conv(const char* x, wc_ces c)
+{
+    return url_quote(wc_conv_strict((x), InnerCharset, (c))->ptr);
+}
 
 struct UI getUI()
 {
