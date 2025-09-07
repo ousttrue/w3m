@@ -14,9 +14,6 @@
  */
 #pragma once
 
-#include <stdio.h>
-#include <string.h>
-
 char* allocStr(const char* s, int len);
 
 typedef struct _Str {
@@ -25,7 +22,7 @@ typedef struct _Str {
     int area_size;
 }* Str;
 
-Str Strnew(void);
+Str Strnew();
 Str Strnew_size(int);
 Str Strnew_charp(const char*);
 Str Strnew_charp_n(const char*, int);
@@ -55,28 +52,17 @@ void Strremovetrailingspaces(Str);
 Str Stralign_left(Str, int);
 Str Stralign_right(Str, int);
 Str Stralign_center(Str, int);
-
 Str Sprintf(char* fmt, ...);
-
-Str Strfgets(FILE*);
-Str Strfgetall(FILE*);
-
 void Strgrow(Str s);
-
 void Strcat_char(Str x, char y);
-
-#define Strcatc(x, y) ((x)->ptr[(x)->length++] = (y))
-#define Strnulterm(x) ((x)->ptr[(x)->length] = 0)
-#define Strcmp(x, y) strcmp((x)->ptr, (y)->ptr)
-#define Strcmp_charp(x, y) strcmp((x)->ptr, (y))
-#define Strncmp(x, y, n) strncmp((x)->ptr, (y)->ptr, (n))
-#define Strncmp_charp(x, y, n) strncmp((x)->ptr, (y), (n))
-#define Strcasecmp(x, y) strcasecmp((x)->ptr, (y)->ptr)
-#define Strcasecmp_charp(x, y) strcasecmp((x)->ptr, (y))
-#define Strncasecmp(x, y, n) strncasecmp((x)->ptr, (y)->ptr, (n))
-#define Strncasecmp_charp(x, y, n) strncasecmp((x)->ptr, (y), (n))
-
-#define Strlastchar(s) ((s)->length > 0 ? (s)->ptr[(s)->length - 1] : '\0')
-#define Strinsert(s, n, p) Strinsert_charp((s), (n), (p)->ptr)
-#define Strshrinkfirst(s, n) Strdelete((s), 0, (n))
-#define Strfputs(s, f) fwrite((s)->ptr, 1, (s)->length, (f))
+inline static void Strcatc(Str x, char y) { ((x)->ptr[(x)->length++] = (y)); }
+inline static void Strnulterm(Str x) { ((x)->ptr[(x)->length] = 0); }
+int Strcmp(Str x, Str y);
+int Strcmp_charp(Str x, const char* y);
+int Strncmp(Str x, Str y, int n);
+int Strncmp_charp(Str x, const char* y, int n);
+int Strcasecmp(Str x, Str y);
+int Strcasecmp_charp(Str x, const char* y);
+int Strncasecmp(Str x, Str y, int n);
+int Strncasecmp_charp(Str x, const char* y, int n);
+inline static char Strlastchar(Str s) { return ((s)->length > 0 ? (s)->ptr[(s)->length - 1] : '\0'); }

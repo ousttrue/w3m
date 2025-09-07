@@ -1,5 +1,6 @@
 #include "siteconf.h"
 #include "rc.h"
+#include "etc.h"
 #include "url.h"
 #include "alloc.h"
 #include "regex.h"
@@ -7,6 +8,7 @@
 #include "indep.h"
 #include "myctype.h"
 #include <stdbool.h>
+#include <string.h>
 
 #define SITECONF_FILE RC_DIR "/siteconf"
 

@@ -1,5 +1,6 @@
 #include "history.h"
 #include "buffer_loader.h"
+#include "etc.h"
 #include "tmpfile.h"
 #include "hash.h"
 #include "rc.h"

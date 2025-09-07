@@ -13,6 +13,7 @@
 #include "url.h"
 #include <dirent.h>
 #include <stdlib.h>
+#include <string.h>
 #include <wtf.h>
 
 static int

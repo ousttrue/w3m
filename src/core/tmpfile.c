@@ -4,6 +4,7 @@
 #include "ui.h"
 #include "textlist.h"
 #include "image.h"
+#include <string.h>
 #include <unistd.h>
 
 TextList* g_fileToDelete = NULL;

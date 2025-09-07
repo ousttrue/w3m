@@ -13,6 +13,7 @@
 #include "ucs.h"
 #include "utf8.h"
 #include "ccs.h"
+#include <string.h>
 
 wc_uint8 WTF_WIDTH_MAP[ 0x100 ] = {
     1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,

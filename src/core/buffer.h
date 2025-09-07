@@ -3,6 +3,7 @@
 #include "anchor.h"
 #include "linklist.h"
 #include "url.h"
+#include <stdio.h>
 
 #define SHELLBUFFERNAME "*Shellout*"
 #define PIPEBUFFERNAME "*stream*"

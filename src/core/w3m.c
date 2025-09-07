@@ -13,6 +13,7 @@
 #include "quote.h"
 #include <gc/gc.h>
 #include <stdlib.h>
+#include <string.h>
 #include <strings.h>
 #define MAINPROGRAM
 #include "buffer.h"

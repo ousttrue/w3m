@@ -3,6 +3,7 @@
 
 #include "Str.h"
 #include "ces.h"
+#include <stddef.h>
 #include <stdint.h>
 
 typedef unsigned char wc_uchar;

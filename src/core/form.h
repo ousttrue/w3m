@@ -1,5 +1,6 @@
 #pragma once
 #include "Str.h"
+#include <stdio.h>
 #include <wc.h>
 
 extern int FoldTextarea;

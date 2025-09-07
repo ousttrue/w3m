@@ -2,6 +2,7 @@
 #include "myctype.h"
 #include "Str.h"
 #include "growbuf.h"
+#include <string.h>
 #include <sys/types.h>
 
 #define MIME_ENCODED_LINE_LIMIT 80

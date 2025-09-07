@@ -6,6 +6,7 @@
 #include "wc.h"
 
 #include <langinfo.h>
+#include <string.h>
 
 wc_locale WcLocale = 0;
 

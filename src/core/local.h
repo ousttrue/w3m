@@ -1,5 +1,6 @@
 #pragma once
 #include <Str.h>
+#include <stdio.h>
 #include <sys/types.h>
 
 struct form_list;

@@ -1,7 +1,9 @@
 #include "growbuf.h"
 #include "alloc.h"
 #include <gc/gc.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 static void* w3m_GC_realloc_atomic(void* ptr, size_t size)
 {

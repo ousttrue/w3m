@@ -1,4 +1,3 @@
-/* $Id: Str.c,v 1.8 2002/12/24 17:20:46 ukai Exp $ */
 /*
  * String manipulation library for Boehm GC
  *
@@ -38,7 +37,7 @@ char* allocStr(const char* s, int len)
         len = STR_SIZE_MAX - 1;
     ptr = NewAtom_N(char, len + 1);
     if (ptr == NULL) {
-        fprintf(stderr, "fm: Can't allocate string. Give me more memory!\n");
+        // fprintf(stderr, "fm: Can't allocate string. Give me more memory!\n");
         exit(-1);
     }
     memcpy(ptr, s, len);
@@ -586,29 +585,16 @@ Str Sprintf(char* fmt, ...)
     return s;
 }
 
-Str Strfgets(FILE* f)
-{
-    Str s = Strnew();
-    int c;
-    while ((c = fgetc(f)) != EOF) {
-        Strcat_char(s, c);
-        if (c == '\n')
-            break;
-    }
-    return s;
-}
-
-Str Strfgetall(FILE* f)
-{
-    Str s = Strnew();
-    int c;
-    while ((c = fgetc(f)) != EOF) {
-        Strcat_char(s, c);
-    }
-    return s;
-}
-
 void Strcat_char(Str x, char y)
 {
     (((x)->length + 1 >= STR_SIZE_MAX) ? 0 : (((x)->length + 1 >= (x)->area_size) ? Strgrow(x), 0 : 0, (x)->ptr[(x)->length++] = (y), (x)->ptr[(x)->length] = 0));
 }
+
+int Strcmp(Str x, Str y) { return strcmp((x)->ptr, (y)->ptr); }
+int Strcmp_charp(Str x, const char* y) { return strcmp((x)->ptr, (y)); }
+int Strncmp(Str x, Str y, int n) { return strncmp((x)->ptr, (y)->ptr, (n)); }
+int Strncmp_charp(Str x, const char* y, int n) { return strncmp((x)->ptr, (y), (n)); }
+int Strcasecmp(Str x, Str y) { return strcasecmp((x)->ptr, (y)->ptr); }
+int Strcasecmp_charp(Str x, const char* y) { return strcasecmp((x)->ptr, (y)); }
+int Strncasecmp(Str x, Str y, int n) { return strncasecmp((x)->ptr, (y)->ptr, (n)); }
+int Strncasecmp_charp(Str x, const char* y, int n) { return strncasecmp((x)->ptr, (y), (n)); }

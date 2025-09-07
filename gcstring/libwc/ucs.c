@@ -1,6 +1,7 @@
 
 
 #include <stdlib.h>
+#include <strings.h>
 #include "wc.h"
 #include "ucs.h"
 #include "search.h"

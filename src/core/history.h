@@ -1,6 +1,7 @@
 #pragma once
 #include "textlist.h"
 #include "hash.h"
+#include <stddef.h>
 
 typedef ListItem HistItem;
 typedef GeneralList HistList;

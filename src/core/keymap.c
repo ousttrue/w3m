@@ -1,4 +1,5 @@
 #include "keymap.h"
+#include "etc.h"
 #include "myctype.h"
 #include "rc.h"
 #include "ctrlcode.h"
@@ -10,6 +11,7 @@
 
 #include <Str.h>
 #include <stdio.h>
+#include <string.h>
 #include <strings.h>
 
 #include "defun.h"

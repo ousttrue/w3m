@@ -1709,3 +1709,26 @@ Str base64_encode(const char* src, size_t len)
     Strnulterm(dest);
     return dest;
 }
+
+Str Strfgets(FILE* f)
+{
+    Str s = Strnew();
+    int c;
+    while ((c = fgetc(f)) != EOF) {
+        Strcat_char(s, c);
+        if (c == '\n')
+            break;
+    }
+    return s;
+}
+
+Str Strfgetall(FILE* f)
+{
+    Str s = Strnew();
+    int c;
+    while ((c = fgetc(f)) != EOF) {
+        Strcat_char(s, c);
+    }
+    return s;
+}
+

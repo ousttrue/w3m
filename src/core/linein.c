@@ -10,6 +10,7 @@
 #include "w3m.h"
 #include "indep.h"
 #include <stdbool.h>
+#include <string.h>
 #include <wtf.h>
 
 int space_autocomplete = false;

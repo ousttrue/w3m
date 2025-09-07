@@ -1,5 +1,6 @@
 #include "menu.h"
 #include "defun_macro.h"
+#include "etc.h"
 #include "alloc.h"
 #include "display.h"
 #include "rc.h"
@@ -23,6 +24,7 @@
 #include "regex.h"
 #include "event_poller.h"
 #include <stdio.h>
+#include <string.h>
 #include <wtf.h>
 
 #define MENU_FILE "menu"

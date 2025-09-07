@@ -9,6 +9,7 @@
 #include "image.h"
 #include "myctype.h"
 #include "regex.h"
+#include <string.h>
 
 int MarkAllPages = (false);
 

@@ -1,5 +1,6 @@
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE /* strcasestr() */
+#include <string.h>
 #endif
 
 #include "url.h"

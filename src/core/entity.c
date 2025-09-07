@@ -1,5 +1,6 @@
 #include "entity.h"
 #include "Str.h"
+#include <string.h>
 #include <wc.h>
 
 #ifdef DUMMY

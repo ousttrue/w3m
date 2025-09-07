@@ -15,6 +15,7 @@
 #include "putc.h"
 #include <assert.h>
 #include <math.h>
+#include <string.h>
 
 int displayLink = (false);
 int displayLineInfo = (false);

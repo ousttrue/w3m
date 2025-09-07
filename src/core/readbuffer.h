@@ -1,5 +1,7 @@
 #pragma once
 #include <Str.h>
+#include <stdio.h>
+#include <string.h>
 #include "line.h"
 #include "anchor.h"
 #include "textlist.h"

@@ -14,6 +14,7 @@
 #include "ctrlcode.h"
 #include "istream.h"
 #include "buffer_loader.h"
+#include <string.h>
 #include <strings.h>
 #include <unistd.h>
 

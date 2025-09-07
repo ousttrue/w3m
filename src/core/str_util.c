@@ -3,14 +3,14 @@
 
 Str escape_spaces(Str s)
 {
-    if (s == NULL)
+    if (!s)
         return s;
 
-    Str tmp = NULL;
+    Str tmp = 0;
     char* p;
     for (p = s->ptr; *p; p++) {
         if (*p == ' ' || *p == CTRL_I) {
-            if (tmp == NULL)
+            if (!tmp)
                 tmp = Strnew_charp_n(s->ptr, (int)(p - s->ptr));
             Strcat_char(tmp, '\\');
         }
@@ -24,14 +24,14 @@ Str escape_spaces(Str s)
 
 Str unescape_spaces(Str s)
 {
-    if (s == NULL)
+    if (!s)
         return s;
 
-    Str tmp = NULL;
+    Str tmp = 0;
     char* p;
     for (p = s->ptr; *p; p++) {
         if (*p == '\\' && (*(p + 1) == ' ' || *(p + 1) == CTRL_I)) {
-            if (tmp == NULL)
+            if (!tmp)
                 tmp = Strnew_charp_n(s->ptr, (int)(p - s->ptr));
         } else {
             if (tmp)
