@@ -43,7 +43,7 @@ typedef struct form_list {
     struct form_item_list* lastitem;
     int method;
     Str action;
-    char* target;
+    const char* target;
     char* name;
     wc_ces charset;
     int enctype;

@@ -53,6 +53,7 @@ const w3m_srcs = [_][]const u8{
     "Content.c",
     "html_quote.c",
     "mimetypes.c",
+    "convertline.c",
 
     "ui.c",
     "LineEditor.c",

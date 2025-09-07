@@ -824,7 +824,7 @@ end:
     return ret;
 }
 
-char* filename_extension(char* path, int is_url)
+const char* filename_extension(const char* path, int is_url)
 {
     char *last_dot = "", *p = path;
     int i;

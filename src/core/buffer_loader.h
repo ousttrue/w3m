@@ -40,4 +40,4 @@ void loadHTMLstream(struct URLFile* f, struct _Buffer* newBuf, FILE* src, int in
 struct _Buffer;
 void loadHTML(Str html, wc_ces doc_charset, int cols, bool use_graphic, bool internal, struct _Buffer* buf);
 void addnewline(struct _Buffer* buf, char* line, Lineprop* prop, Linecolor* color, int pos, int width, int nlines);
-int getMetaRefreshParam(char* q, Str* refresh_uri);
+int getMetaRefreshParam(const char* q, Str* refresh_uri);

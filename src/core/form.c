@@ -1,4 +1,5 @@
 #include "form.h"
+#include "convertline.h"
 #include "mimetypes.h"
 #include "http.h"
 #include "tmpfile.h"
@@ -576,7 +577,7 @@ void input_textarea(FormItemList* fi)
             Strshrink(tmp, 1);
             Strcat_charp(tmp, "\r\n");
         }
-        tmp = convertLine(NULL, tmp, RAW_MODE, &charset, DisplayCharset);
+        tmp = convertLine(NULL, tmp, RAW_MODE, &charset, DisplayCharset, InnerCharset);
         Strcat(fi->value, tmp);
     }
     WcOption.auto_detect = auto_detect;

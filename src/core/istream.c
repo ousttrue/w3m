@@ -434,23 +434,6 @@ memchop(char* p, int* len)
     return;
 }
 
-void cleanup_line(Str s, enum ConvertLineMode mode)
-{
-    if (s->length >= 2 && s->ptr[s->length - 2] == '\r' && s->ptr[s->length - 1] == '\n') {
-        Strshrink(s, 2);
-        Strcat_char(s, '\n');
-    } else if (Strlastchar(s) == '\r')
-        s->ptr[s->length - 1] = '\n';
-    else if (Strlastchar(s) != '\n')
-        Strcat_char(s, '\n');
-
-    int i;
-    for (i = 0; i < s->length; i++) {
-        if (s->ptr[i] == '\0')
-            s->ptr[i] = ' ';
-    }
-}
-
 void UFhalfclose(struct URLFile* f)
 {
     switch (f->scheme) {
@@ -647,17 +630,6 @@ void examineFile(struct URLFile* uf, const char* path)
         uncompress_stream(uf, NULL);
         return;
     }
-}
-
-/*
- * convert line
- */
-Str convertLine(struct URLFile* uf, Str line, enum ConvertLineMode mode, wc_ces* charset, wc_ces doc_charset)
-{
-    line = wc_Str_conv_with_detect(line, charset, doc_charset, InnerCharset);
-    if (mode != RAW_MODE)
-        cleanup_line(line, mode);
-    return line;
 }
 
 Str readAll(struct URLFile* f)

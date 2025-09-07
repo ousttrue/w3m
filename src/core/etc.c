@@ -1,6 +1,7 @@
 #include "alloc.h"
 #define _GNU_SOURCE
 #include "etc.h"
+#include "convertline.h"
 #include "indep.h"
 #include "istream.h"
 #include "readbuffer.h"
@@ -486,7 +487,6 @@ char* mydirname(char* s)
     return allocStr(s, strlen(s) - strlen(p) + 1);
 }
 
-
 int next_status(char c, int* status)
 {
     switch (*status) {
@@ -798,7 +798,7 @@ add_auth_pass_entry(const struct auth_pass* ent, int netrc, int override)
 }
 
 static struct auth_pass*
-find_auth_pass_entry(char* host, int port, char* realm, char* uname,
+find_auth_pass_entry(const char* host, int port, const char* realm, const char* uname,
     int is_proxy)
 {
     struct auth_pass* ent;
@@ -817,13 +817,12 @@ find_auth_pass_entry(char* host, int port, char* realm, char* uname,
 int find_auth_user_passwd(ParsedURL* pu, char* realm,
     Str* uname, Str* pwd, int is_proxy)
 {
-    struct auth_pass* ent;
-
     if (pu->user && pu->pass) {
         *uname = Strnew_charp(pu->user);
         *pwd = Strnew_charp(pu->pass);
         return 1;
     }
+    struct auth_pass* ent;
     ent = find_auth_pass_entry(pu->host, pu->port, realm, pu->user, is_proxy);
     if (ent) {
         *uname = ent->uname;
@@ -1308,13 +1307,13 @@ Str myEditor(char* cmd, char* file, int line)
 
 const char* expandName(const char* name)
 {
-    char* p;
-    struct passwd *passent, *getpwnam(const char*);
-    Str extpath = NULL;
-
     if (name == NULL)
         return NULL;
-    p = name;
+
+    struct passwd *passent;
+    Str extpath = NULL;
+
+    const char* p = name;
     if (*p == '/') {
         if ((*(p + 1) == '~' && IS_ALPHA(*(p + 2)))
             && personal_document_root) {
@@ -1354,7 +1353,7 @@ char* url_unquote_conv(char* url, wc_ces charset)
     if (!charset || charset == WC_CES_US_ASCII)
         charset = SystemCharset;
     WcOption.auto_detect = WC_OPT_DETECT_ON;
-    tmp = convertLine(NULL, tmp, RAW_MODE, &charset, charset);
+    tmp = convertLine(NULL, tmp, RAW_MODE, &charset, charset, InnerCharset);
     WcOption.auto_detect = old_auto_detect;
     return tmp->ptr;
 }
@@ -1733,4 +1732,3 @@ Str Strfgetall(FILE* f)
     }
     return s;
 }
-

@@ -1,4 +1,5 @@
 #include "http.h"
+#include "convertline.h"
 #include "siteconf.h"
 #include "quote.h"
 #include "mailcap.h"
@@ -76,14 +77,13 @@ Str getHttpRequestURIStr(ParsedURL* pu, struct HttpRequest* hr)
 static Str
 parsedURL2RefererOriginStr(ParsedURL* pu)
 {
-    char* f = pu->file;
-    char* q = pu->query;
+    const char* f = pu->file;
+    const char* q = pu->query;
     pu->file = NULL;
     pu->query = NULL;
     Str s = _parsedURL2Str(pu, false, false, false);
     pu->file = f;
     pu->query = q;
-
     return s;
 }
 
@@ -269,7 +269,7 @@ struct HttpResponse readHttpResponse(struct URLFile* uf, ParsedURL* pu)
     Str lineBuf2 = NULL;
     Str tmp;
     while ((tmp = StrmyUFgets(uf)) && tmp->length) {
-        cleanup_line(tmp, HEADER_MODE);
+        cleanup_line(tmp);
         if (tmp->ptr[0] == '\n' || tmp->ptr[0] == '\r' || tmp->ptr[0] == '\0') {
             if (!lineBuf2)
                 /* there is no header */
@@ -291,7 +291,8 @@ struct HttpResponse readHttpResponse(struct URLFile* uf, ParsedURL* pu)
             lineBuf2 = convertLine(NULL, lineBuf2, RAW_MODE,
                 mime_charset ? &mime_charset : &charset,
                 mime_charset ? mime_charset
-                             : DocumentCharset);
+                             : DocumentCharset,
+                InnerCharset);
             /* separated with line and stored */
             tmp = Strnew_size(lineBuf2->length);
             char* q;

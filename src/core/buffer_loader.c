@@ -1,5 +1,6 @@
 #include "buffer_loader.h"
 #include "entity.h"
+#include "convertline.h"
 #include "quote.h"
 #include "html_quote.h"
 #include "Content.h"
@@ -149,7 +150,7 @@ addLink(Buffer* buf, struct HtmlTagParsed* tag)
         buf->linklist = l;
 }
 
-int getMetaRefreshParam(char* q, Str* refresh_uri)
+int getMetaRefreshParam(const char* q, Str* refresh_uri)
 {
     int refresh_interval;
     char* r;
@@ -917,7 +918,7 @@ void loadHTML(Str html, wc_ces doc_charset, int cols, bool use_graphic, bool int
         //     }
         //     meta_charset = 0;
         // }
-        lineBuf2 = convertLine(&f, lineBuf2, HTML_MODE, &charset, doc_charset);
+        lineBuf2 = convertLine(&f, lineBuf2, HTML_MODE, &charset, doc_charset, InnerCharset);
         // cur_document_charset = charset;
         HTMLlineproc0(lineBuf2->ptr, &htmlenv1, internal);
     }
@@ -1679,7 +1680,7 @@ loadBuffer(struct URLFile* uf, Buffer* newBuf)
             Strfputs(lineBuf2, src);
         linelen += lineBuf2->length;
         // showProgress(current_content_length, &linelen, &trbyte);
-        lineBuf2 = convertLine(uf, lineBuf2, HEADER_MODE, &charset, doc_charset);
+        lineBuf2 = convertLine(uf, lineBuf2, HEADER_MODE, &charset, doc_charset, InnerCharset);
         if (squeezeBlankLine) {
             if (lineBuf2->ptr[0] == '\n' && pre_lbuf == '\n') {
                 ++nlines;

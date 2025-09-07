@@ -91,7 +91,7 @@ typedef struct _Buffer {
     HmarkerList* imarklist;
     ParsedURL currentURL;
     ParsedURL* baseURL;
-    char* baseTarget;
+    const char* baseTarget;
     int real_scheme;
     char* sourcefile;
     int* clone;
