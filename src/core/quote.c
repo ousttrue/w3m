@@ -7,9 +7,6 @@
 extern unsigned char QUOTE_MAP[];
 enum QuoteMask GET_QUOTE_TYPE(unsigned char c) { return QUOTE_MAP[(int)(unsigned char)(c)]; }
 
-extern const char* HTML_QUOTE_MAP[];
-const char* html_quote_char(unsigned char c) { return HTML_QUOTE_MAP[(int)is_html_quote(c)]; }
-
 static char xdigit[0x10] = "0123456789ABCDEF";
 
 #define url_unquote_char(pstr) \
@@ -28,50 +25,6 @@ const char* remove_space(const char* str)
     if (*q != '\0')
         return Strnew_charp_n(p, q - p)->ptr;
     return p;
-}
-
-const char* html_quote(const char* str)
-{
-    Str tmp = NULL;
-
-    const char* p;
-    for (p = str; *p; p++) {
-        const char* q = html_quote_char(*p);
-        if (q) {
-            if (tmp == NULL)
-                tmp = Strnew_charp_n(str, (int)(p - str));
-            Strcat_charp(tmp, q);
-        } else {
-            if (tmp)
-                Strcat_char(tmp, *p);
-        }
-    }
-    if (tmp)
-        return tmp->ptr;
-    return str;
-}
-
-char* html_unquote(char* str)
-{
-    Str tmp = NULL;
-    char *p, *q;
-
-    for (p = str; *p;) {
-        if (*p == '&') {
-            if (tmp == NULL)
-                tmp = Strnew_charp_n(str, (int)(p - str));
-            q = getescapecmd(&p);
-            Strcat_charp(tmp, q);
-        } else {
-            if (tmp)
-                Strcat_char(tmp, *p);
-            p++;
-        }
-    }
-
-    if (tmp)
-        return tmp->ptr;
-    return str;
 }
 
 const char* url_quote(const char* str)

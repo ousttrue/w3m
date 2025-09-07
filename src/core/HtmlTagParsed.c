@@ -1,9 +1,8 @@
-#include "alloc.h"
-#include <stdlib.h>
 #define _GNU_SOURCE
 #include "HtmlTagParsed.h"
 #include "entity.h"
 #include "quote.h"
+#include "html_quote.h"
 #include "buffer_loader.h"
 #include "url.h"
 #include "display.h"
@@ -21,7 +20,9 @@
 #include "symbol.h"
 #include "readbuffer.h"
 #include "etc.h"
+#include "alloc.h"
 #include <strings.h>
+#include <stdlib.h>
 
 wc_ces cur_document_charset = 0;
 int pseudoInlines = (true);
@@ -188,7 +189,7 @@ static ToValFunc toValFunc[] = {
 extern Hash_si tagtable;
 #define MAX_TAG_LEN 64
 
-struct HtmlTagParsed* parse_tag(char** s, bool internal)
+struct HtmlTagParsed* parse_tag(const char** s, bool internal)
 {
     /* Parse tag name */
     char tagname[MAX_TAG_LEN];

@@ -10,6 +10,7 @@
 #include "istream.h"
 #include "progress.h"
 #include "version.h"
+#include "html_quote.h"
 #include "quote.h"
 #include <gc/gc.h>
 #include <stdlib.h>
@@ -3599,7 +3600,7 @@ void w3m_exit(int i)
 DEFUN(execCmd, COMMAND, "Invoke w3m function(s)")
 {
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    char* data = searchKeyData();
+    const char* data = searchKeyData();
     if (data == NULL || *data == '\0') {
         data = inputStrHist(getUI(), "command [; ...]: ", "", TextHist);
         if (data == NULL) {
@@ -3614,7 +3615,7 @@ DEFUN(execCmd, COMMAND, "Invoke w3m function(s)")
             data++;
             continue;
         }
-        char* p = getWord(&data);
+        const char* p = getWord(&data);
         CommandFunc func = getFunc(p);
         p = getQWord(&data);
         CurrentKey = -1;
@@ -3658,7 +3659,7 @@ SigAlarm(int _dummy)
 DEFUN(setAlarm, ALARM, "Set alarm")
 {
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    char* data = searchKeyData();
+    const char* data = searchKeyData();
     if (data == NULL || *data == '\0') {
         data = inputStrHist(getUI(), "(Alarm)sec command: ", "", TextHist);
         if (data == NULL) {

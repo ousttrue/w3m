@@ -52,6 +52,7 @@ const w3m_srcs = [_][]const u8{
     "siteconf.c",
     "HttpClient.c",
     "Content.c",
+    "html_quote.c",
 
     "ui.c",
     "LineEditor.c",

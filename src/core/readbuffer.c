@@ -2,6 +2,7 @@
 #define _GNU_SOURCE
 #include "readbuffer.h"
 #include "quote.h"
+#include "html_quote.h"
 #include "buffer_loader.h"
 #include "url.h"
 #include "HtmlTagParsed.h"

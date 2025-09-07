@@ -1,11 +1,9 @@
 #include "buffer_loader.h"
 #include "entity.h"
 #include "quote.h"
+#include "html_quote.h"
 #include "Content.h"
 #include "istream.h"
-#include "ssl_util.h"
-#include "HttpClient.h"
-#include "proxy.h"
 #include "mysignal.h"
 #include "siteconf.h"
 #include "screen.h"
@@ -14,7 +12,6 @@
 #include "tty.h"
 #include "rc.h"
 #include "etc.h"
-#include "mailcap.h"
 #include "alloc.h"
 #include "file_copy.h"
 #include "http.h"
@@ -27,11 +24,9 @@
 #include "istream.h"
 #include "image.h"
 #include "display.h"
-#include "progress.h"
 #include "html_title.h"
 #include "readbuffer.h"
 #include "HtmlTagParsed.h"
-#include "indep.h"
 #include "form.h"
 #include "maparea.h"
 #include "w3m.h"
@@ -296,7 +291,8 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
     Anchor *a_href = NULL, *a_img = NULL, *a_form = NULL;
     const char *p;
     const char *q;
-    char *r, *s, *t, *str;
+    char *r, *s, *t;
+    const char *str;
     Lineprop mode, effect, ex_effect;
     int pos;
     int nlines;
@@ -306,7 +302,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
     const char* id = NULL;
     int hseq, form_id;
     Str line;
-    char* endp;
+    const char* endp;
     char symbol = '\0';
     int internal = 0;
     Anchor** a_textarea = NULL;

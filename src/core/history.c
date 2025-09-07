@@ -1,5 +1,4 @@
 #include "history.h"
-#include <alloc.h>
 #include "buffer_loader.h"
 #include "etc.h"
 #include "tmpfile.h"
@@ -8,6 +7,8 @@
 #include "ui.h"
 #include "quote.h"
 #include "buffer.h"
+#include "html_quote.h"
+#include <alloc.h>
 #include <sys/stat.h>
 
 #define HISTORY_FILE "history"

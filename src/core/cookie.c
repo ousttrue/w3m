@@ -18,7 +18,7 @@
 #include "myctype.h"
 #include "buffer.h"
 #include "defun.h"
-#include "quote.h"
+#include "html_quote.h"
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>

@@ -138,7 +138,7 @@ const char* compress_application_type(enum CompressionTyep compression)
     return NULL;
 }
 
-const char* uncompressed_file_type(const char* path, char** ext)
+const char* uncompressed_file_type(const char* path, const char** ext)
 {
     int len, slen;
     Str fn;

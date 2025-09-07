@@ -283,17 +283,6 @@ unsigned char QUOTE_MAP[0x100] = {
     16,
 };
 
-const char* HTML_QUOTE_MAP[] = {
-    NULL,
-    "&amp;",
-    "&lt;",
-    "&gt;",
-    "&quot;",
-    "&apos;",
-    NULL,
-    NULL,
-};
-
 long long
 strtoclen(const char* s)
 {

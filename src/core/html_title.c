@@ -1,5 +1,5 @@
 #include "html_title.h"
-#include "quote.h"
+#include "html_quote.h"
 #include "entity.h"
 
 static Str cur_title;

@@ -23,7 +23,7 @@ enum CompressionTyep {
 };
 
 const char* compress_application_type(enum CompressionTyep compression);
-const char* uncompressed_file_type(const char* path, char** ext);
+const char* uncompressed_file_type(const char* path, const char** ext);
 const char* acceptableEncoding(void);
 
 struct URLFile;

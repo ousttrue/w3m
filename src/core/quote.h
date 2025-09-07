@@ -15,11 +15,9 @@ inline static bool is_shell_unsafe(unsigned char c) { return (GET_QUOTE_TYPE(c) 
 inline static bool is_url_quote(unsigned char c) { return (GET_QUOTE_TYPE(c) & URL_QUOTE_MASK); }
 inline static bool is_file_quote(unsigned char c) { return (GET_QUOTE_TYPE(c) & FILE_QUOTE_MASK); }
 inline static bool is_url_unsafe(unsigned char c) { return (GET_QUOTE_TYPE(c) & URL_UNSAFE_MASK); }
-const char* html_quote_char(unsigned char c);
 
 const char* remove_space(const char* str);
-const char* html_quote(const char* str);
-char* html_unquote(char* str);
+
 char* file_quote(char* str);
 const char* url_quote(const char* str);
 Str Str_url_unquote(Str x, int is_form, int safe);

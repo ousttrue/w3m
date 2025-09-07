@@ -2,7 +2,7 @@
  * HTML table
  */
 #include "table.h"
-#include "quote.h"
+#include "html_quote.h"
 #include "entity.h"
 #include "buffer_loader.h"
 #include "HtmlTagParsed.h"
@@ -340,7 +340,7 @@ int visible_length(char* str)
     int status = R_ST_NORMAL;
     int prev_status = status;
     Str tagbuf = Strnew();
-    char *t, *r2;
+    const char *t, *r2;
     int amp_len = 0;
 
     while (*str) {

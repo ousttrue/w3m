@@ -37,7 +37,7 @@ Str process_form_int(struct HtmlTagParsed* tag, int fid);
 extern int n_selectitem;
 extern int n_select;
 
-struct HtmlTagParsed* parse_tag(char** s, bool internal);
+struct HtmlTagParsed* parse_tag(const char** s, bool internal);
 
 inline static bool parsedtag_accepts(struct HtmlTagParsed* tag, int id)
 {
