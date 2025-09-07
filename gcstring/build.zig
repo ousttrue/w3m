@@ -13,9 +13,11 @@ const public_headers = [_][]const u8{
     "iso2022.h",
     "ucs.h",
     "utf8.h",
+    "regex.h",
 };
 
 const srcs = [_][]const u8{
+    "regex.c",
     "alloc.c",
     "Str.c",
     "myctype.c",

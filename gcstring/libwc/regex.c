@@ -1,4 +1,3 @@
-/* $Id: regex.c,v 1.23 2010/08/24 10:11:51 htrb Exp $ */
 /*
  * regex: Regular expression pattern match library
  *
@@ -6,6 +5,8 @@
  * Revised by A.ITO, January 2002
  */
 
+#include "regex.h"
+#include "myctype.h"
 #ifdef REGEX_DEBUG
 #include <sys/types.h>
 #include <malloc.h>
@@ -14,11 +15,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <gc.h>
-#include <wc.h>
-#include <wtf.h>
-#include <ucs.h>
-#include "regex.h"
-#include <myctype.h>
+#include "wc.h"
+#include "wtf.h"
+#include "ucs.h"
 
 #ifndef NULL
 #define NULL 0
@@ -705,8 +704,7 @@ char* lc2c(longchar* x, int len)
             sprintf(buf, "[%x-%x]", x[j].wch.ccs, x[j].wch.code);
             strcpy(&y[i], buf);
             i += strlen(buf);
-        }
-        else
+        } else
             y[i++] = x[j].ch;
         j++;
     }

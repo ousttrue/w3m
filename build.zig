@@ -79,7 +79,6 @@ const w3m_srcs = [_][]const u8{
     "entity.c",
     "url.c",
     "mimehead.c",
-    "regex.c",
     "cookie.c",
     "history.c",
 
