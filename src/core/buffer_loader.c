@@ -290,10 +290,10 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
     static Lineprop* outp = NULL;
     static int out_size = 0;
     Anchor *a_href = NULL, *a_img = NULL, *a_form = NULL;
-    const char *p;
-    const char *q;
+    const char* p;
+    const char* q;
     char *r, *s, *t;
-    const char *str;
+    const char* str;
     Lineprop mode, effect, ex_effect;
     int pos;
     int nlines;
@@ -311,8 +311,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
 
     struct Url* base = baseURL(buf);
 
-    wc_ces name_charset = url_to_charset(NULL, &buf->currentURL,
-        buf->document_charset);
+    wc_ces name_charset = buf->document_charset;
 
     if (out_size == 0) {
         out_size = LINELEN;
@@ -710,7 +709,6 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                         parseURL2(p, buf->baseURL, &buf->currentURL);
 
                         base = buf->baseURL;
-
                     }
                     if (parsedtag_get_value(tag, ATTR_TARGET, &p))
                         buf->baseTarget = url_quote_conv(p, buf->document_charset);

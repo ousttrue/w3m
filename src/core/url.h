@@ -38,7 +38,6 @@ Str parsedURL2Str(struct Url* pu);
 Str parsedURL2RefererStr(struct Url* pu);
 const char* filename_extension(const char* path, int is_url);
 struct Url* schemeToProxy(int scheme);
-wc_ces url_to_charset(const char* url, const struct Url* base, wc_ces doc_charset);
 const char* url_encode(const char* url, const struct Url* base, wc_ces doc_charset);
 
 int same_url_p(struct Url* pu1, struct Url* pu2);

@@ -666,38 +666,16 @@ schemeToProxy(int scheme)
     return pu;
 }
 
-wc_ces
-url_to_charset(const char* url, const struct Url* base, wc_ces doc_charset)
-{
-    const struct Url* pu;
-    struct Url pu_buf;
-    if (url && *url && *url != '#') {
-        parseURL2((char*)url, &pu_buf, (struct Url*)base);
-        pu = &pu_buf;
-    } else {
-        pu = base;
-    }
-    if (pu && (pu->scheme == SCM_LOCAL || pu->scheme == SCM_LOCAL_CGI))
-        return SystemCharset;
-
-    const wc_ces* csptr;
-    csptr = query_SCONF_URL_CHARSET(pu);
-
-    return (csptr && *csptr) ? *csptr : doc_charset;
-}
-
 const char* url_encode(const char* url, const struct Url* base, wc_ces doc_charset)
 {
-    return url_quote_conv(url, url_to_charset(url, base, doc_charset));
+    return url_quote_conv(url, doc_charset);
 }
 
 char* url_decode2(const char* url, const Buffer* buf)
 {
-    wc_ces url_charset;
-
     if (!DecodeURL)
         return (char*)url;
-    url_charset = buf ? url_to_charset(url, baseURL((Buffer*)buf), buf->document_charset) : url_to_charset(url, NULL, 0);
+    wc_ces url_charset = buf ? buf->document_charset : 0;
     return url_unquote_conv((char*)url, url_charset);
 }
 
