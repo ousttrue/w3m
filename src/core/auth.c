@@ -397,7 +397,7 @@ extract_auth_val(char** q)
 
     SKIP_BLANKS(qq);
     if (*qq == '"') {
-        quoted = TRUE;
+        quoted = true;
         Strcat_char(val, *qq++);
     }
     while (*qq != '\0') {

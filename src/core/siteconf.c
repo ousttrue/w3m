@@ -114,7 +114,7 @@ void loadSiteconf(void)
             /* If we have an extra or unknown option, ignore this record
              * for future extensions. */
             if (strcmp(opt, "exact") == 0) {
-                newent->url_exact = TRUE;
+                newent->url_exact = true;
             } else if (*opt != 0)
                 continue;
             if (*p)

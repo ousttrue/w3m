@@ -252,7 +252,7 @@ int openSocket(const char* hostname,
     }
 
     /* rfc2732 compliance */
-    hname = hostname;
+    hname = (char*)hostname;
     if (hname != NULL && hname[0] == '[' && hname[strlen(hname) - 1] == ']') {
         hname = allocStr(hostname + 1, -1);
         hname[strlen(hname) - 1] = '\0';
@@ -603,7 +603,7 @@ void parseURL2(const char* url, ParsedURL* pu, ParsedURL* current)
 {
     char* p;
     Str tmp;
-    int relative_uri = FALSE;
+    int relative_uri = false;
 
     parseURL(url, pu, current);
 
@@ -673,7 +673,7 @@ void parseURL2(const char* url, ParsedURL* pu, ParsedURL* current)
                     }
                     Strcat_charp(tmp, p);
                     pu->file = tmp->ptr;
-                    relative_uri = TRUE;
+                    relative_uri = true;
                 }
             }
         } else { /* scheme:[?query][#label] */
@@ -810,12 +810,12 @@ Str _parsedURL2Str(ParsedURL* pu, int pass, int user, int label)
 
 Str parsedURL2Str(ParsedURL* pu)
 {
-    return _parsedURL2Str(pu, FALSE, TRUE, TRUE);
+    return _parsedURL2Str(pu, false, true, true);
 }
 
 Str parsedURL2RefererStr(ParsedURL* pu)
 {
-    return _parsedURL2Str(pu, FALSE, FALSE, FALSE);
+    return _parsedURL2Str(pu, false, false, false);
 }
 
 void init_stream(struct URLFile* uf, int scheme, InputStream stream)
@@ -824,7 +824,7 @@ void init_stream(struct URLFile* uf, int scheme, InputStream stream)
     uf->stream = stream;
     uf->scheme = scheme;
     uf->encoding = ENC_7BIT;
-    uf->is_cgi = FALSE;
+    uf->is_cgi = false;
     uf->compression = CMP_NOCOMPRESS;
     uf->content_encoding = CMP_NOCOMPRESS;
     uf->guess_type = NULL;
@@ -1219,6 +1219,6 @@ char* file_unquote(const char* str)
 int is_localhost(const char* host)
 {
     if (!host || !strcasecmp(host, "localhost") || !strcmp(host, "127.0.0.1") || (HostName && !strcasecmp(host, HostName)) || !strcmp(host, "[::1]"))
-        return TRUE;
-    return FALSE;
+        return true;
+    return false;
 }

@@ -422,7 +422,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
             } else {
                 /* tag processing */
                 struct HtmlTagParsed* tag;
-                if (!(tag = parse_tag(&str, TRUE)))
+                if (!(tag = parse_tag(&str, true)))
                     continue;
                 switch (tag->tagid) {
                 case HTML_B:
@@ -493,7 +493,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                         a_href = registerHref(buf, p, q, r, s,
                             *t, currentLn(buf), pos);
                         a_href->hseq = ((hseq > 0) ? hseq : -hseq) - 1;
-                        a_href->slave = (hseq > 0) ? FALSE : TRUE;
+                        a_href->slave = (hseq > 0) ? false : true;
                     }
                     break;
                 case HTML_N_A:
@@ -550,7 +550,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
 
                             image->url = parsedURL2Str(&u)->ptr;
                             if (!uncompressed_file_type(u.file, &image->ext))
-                                image->ext = filename_extension(u.file, TRUE);
+                                image->ext = filename_extension(u.file, true);
                             image->cache = NULL;
                             image->width = (w > MAX_IMAGE_SIZE) ? MAX_IMAGE_SIZE : w;
                             image->height = (h > MAX_IMAGE_SIZE) ? MAX_IMAGE_SIZE : h;

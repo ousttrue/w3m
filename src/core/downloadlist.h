@@ -3,9 +3,9 @@
 
 typedef struct _DownloadList {
     pid_t pid;
-    char* url;
-    char* save;
-    char* lock;
+    const char* url;
+    const char* save;
+    const char* lock;
     long long size;
     time_t time;
     int running;

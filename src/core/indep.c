@@ -417,9 +417,9 @@ int strmatchlen(const char* s1, const char* s2, int maxlen)
     return i;
 }
 
-char* remove_space(const char* str)
+const char* remove_space(const char* str)
 {
-    char *p, *q;
+    const char *p, *q;
 
     for (p = str; *p && IS_SPACE(*p); p++)
         ;
@@ -436,7 +436,7 @@ int getescapechar(char** str)
 {
     int dummy = -1;
     char *p = *str, *q;
-    int strict_entity = TRUE;
+    int strict_entity = true;
 
     if (*p == '&')
         p++;
@@ -484,7 +484,7 @@ int getescapechar(char** str)
          * is "=", it must be a part of query in an URL. So &lt=, &gt=, etc.
          * are not regarded as character entities.
          */
-        strict_entity = FALSE;
+        strict_entity = false;
     }
     if (*p == ';')
         p++;
@@ -682,42 +682,7 @@ char* shell_quote(const char* str)
     return str;
 }
 
-static char*
-w3m_dir(const char* name, char* dft)
-{
-#ifdef USE_PATH_ENVVAR
-    char* value = getenv(name);
-    return value ? value : dft;
-#else
-    return dft;
-#endif
-}
 
-char* w3m_auxbin_dir(void)
-{
-    return w3m_dir("W3M_AUXBIN_DIR", AUXBIN_DIR);
-}
-
-char* w3m_lib_dir(void)
-{
-    /* FIXME: use W3M_CGIBIN_DIR? */
-    return w3m_dir("W3M_LIB_DIR", CGIBIN_DIR);
-}
-
-char* w3m_etc_dir(void)
-{
-    return w3m_dir("W3M_ETC_DIR", ETC_DIR);
-}
-
-char* w3m_conf_dir(void)
-{
-    return w3m_dir("W3M_CONF_DIR", CONF_DIR);
-}
-
-char* w3m_help_dir(void)
-{
-    return w3m_dir("W3M_HELP_DIR", HELP_DIR);
-}
 /* Local Variables:    */
 /* c-basic-offset: 4   */
 /* tab-width: 8        */

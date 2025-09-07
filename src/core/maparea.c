@@ -1,10 +1,10 @@
 #include "maparea.h"
+#include "indep.h"
 #include "buffer_loader.h"
 #include "http.h"
 #include "display.h"
 #include "alloc.h"
 #include "form.h"
-#include "indep.h"
 #include "ui.h"
 #include "menu.h"
 #include "image.h"
@@ -41,17 +41,17 @@ inMapArea(MapArea* a, int x, int y)
     double r1, r2, s, c, t;
 
     if (!a)
-        return FALSE;
+        return false;
     switch (a->shape) {
     case SHAPE_RECT:
         if (x >= a->coords[0] && y >= a->coords[1] && x <= a->coords[2] && y <= a->coords[3])
-            return TRUE;
+            return true;
         break;
     case SHAPE_CIRCLE:
         if ((x - a->coords[0]) * (x - a->coords[0])
                 + (y - a->coords[1]) * (y - a->coords[1])
             <= a->coords[2] * a->coords[2])
-            return TRUE;
+            return true;
         break;
     case SHAPE_POLY:
         for (t = 0, i = 0; i < a->ncoords; i += 2) {
@@ -60,7 +60,7 @@ inMapArea(MapArea* a, int x, int y)
             r2 = sqrt((double)(x - a->coords[i + 2]) * (x - a->coords[i + 2])
                 + (double)(y - a->coords[i + 3]) * (y - a->coords[i + 3]));
             if (r1 == 0 || r2 == 0)
-                return TRUE;
+                return true;
             s = ((double)(x - a->coords[i]) * (y - a->coords[i + 3])
                     - (double)(x - a->coords[i + 2]) * (y - a->coords[i + 1]))
                 / r1 / r2;
@@ -70,14 +70,14 @@ inMapArea(MapArea* a, int x, int y)
             t += atan2(s, c);
         }
         if (fabs(t) > 2 * 3.14)
-            return TRUE;
+            return true;
         break;
     case SHAPE_DEFAULT:
-        return TRUE;
+        return true;
     default:
         break;
     }
-    return FALSE;
+    return false;
 }
 
 static int
@@ -250,7 +250,6 @@ MapArea*
 newMapArea(const char* url, const char* target, const char* alt, const char* shape, const char* coords)
 {
     MapArea* a = New(MapArea);
-    char* p;
     int i, max;
 
     a->url = url;
@@ -287,6 +286,7 @@ newMapArea(const char* url, const char* target, const char* alt, const char* sha
         a->ncoords = 3;
     }
     max = a->ncoords;
+    const char* p;
     for (i = 0, p = coords; (a->shape == SHAPE_POLY || i < a->ncoords) && *p;) {
         while (IS_SPACE(*p))
             p++;
@@ -345,7 +345,7 @@ append_map_info(Buffer* buf, Str tmp, FormItemList* fi)
     ListItem* al;
     MapArea* a;
     ParsedURL pu;
-    char *p, *q;
+    char* p;
 
     ml = searchMapList(buf, fi->value ? fi->value->ptr : NULL);
     if (ml == NULL)
@@ -359,7 +359,7 @@ append_map_info(Buffer* buf, Str tmp, FormItemList* fi)
         if (!a)
             continue;
         parseURL2(a->url, &pu, baseURL(buf));
-        q = html_quote(parsedURL2Str(&pu)->ptr);
+        const char* q = html_quote(parsedURL2Str(&pu)->ptr);
         p = html_quote(url_decode2(a->url, buf));
         Strcat_m_charp(tmp, "<tr valign=top><td>&nbsp;&nbsp;<td><a href=\"",
             q, "\">",

@@ -1,4 +1,5 @@
 #include "compression.h"
+#include "w3m.h"
 #include "textlist.h"
 #include "indep.h"
 #include "istream.h"
@@ -227,7 +228,7 @@ void uncompress_stream(struct URLFile* uf, char** src)
             int count;
             FILE* f = NULL;
 
-            setup_child(TRUE, 2, UFfileno(uf));
+            setup_child(true, 2, UFfileno(uf));
             if (tmpf)
                 f = fopen(tmpf, "wb");
             while ((count = ISread_n(uf->stream, buf, SAVE_BUF_SIZE)) > 0) {
@@ -244,7 +245,7 @@ void uncompress_stream(struct URLFile* uf, char** src)
         }
         /* child1 */
         dup2(1, 2); /* stderr>&stdout */
-        setup_child(TRUE, -1, -1);
+        setup_child(true, -1, -1);
         if (use_d_arg)
             execlp(expand_cmd, expand_name, "-d", NULL);
         else

@@ -28,9 +28,9 @@
 #include <signal.h>
 #include <unistd.h>
 
-int nextpage_topline = (FALSE);
-int ShowEffect = (TRUE);
-int disable_secret_security_check = (FALSE);
+int nextpage_topline = (false);
+int ShowEffect = (true);
+int disable_secret_security_check = (false);
 
 struct auth_pass {
     int bad;
@@ -238,12 +238,12 @@ Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor)
     char *str = s->ptr, *endp = &s->ptr[s->length], *bs = NULL;
     Lineprop ceffect = PE_NORMAL;
     Linecolor cmode = 0;
-    int check_color = FALSE;
+    int check_color = false;
     Linecolor* color = NULL;
     static Linecolor* color_buffer = NULL;
     static int color_size = 0;
     char* es = NULL;
-    int do_copy = FALSE;
+    int do_copy = false;
     int i;
     int plen = 0, clen;
     int* plens = NULL;
@@ -278,7 +278,7 @@ Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor)
             || (es != NULL)) {
             char *sp = str, *ep;
             s = Strnew_size(s->length);
-            do_copy = TRUE;
+            do_copy = true;
             ep = endp;
             if (bs && ep > bs - 2)
                 ep = bs - 2;
@@ -391,7 +391,7 @@ Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor)
                     es = memchr(str, ESC_CODE, endp - str);
                 if (ok) {
                     if (cmode)
-                        check_color = TRUE;
+                        check_color = true;
                     continue;
                 }
             } else if (str > es)
@@ -802,7 +802,7 @@ find_auth_pass_entry(char* host, int port, char* realm, char* uname,
     struct auth_pass* ent;
     for (ent = passwords; ent != NULL; ent = ent->next) {
         if (ent->is_proxy == is_proxy
-            && (ent->bad != TRUE)
+            && (ent->bad != true)
             && (!ent->host || !Strcasecmp_charp(ent->host, host))
             && (!ent->port || ent->port == port)
             && (!ent->uname || !uname || !Strcmp_charp(ent->uname, uname))
@@ -852,7 +852,7 @@ void invalidate_auth_user_passwd(ParsedURL* pu, char* realm, Str uname, Str pwd,
     struct auth_pass* ent;
     ent = find_auth_pass_entry(pu->host, pu->port, realm, NULL, is_proxy);
     if (ent) {
-        ent->bad = TRUE;
+        ent->bad = true;
     }
     return;
 }
@@ -1164,7 +1164,7 @@ void setup_child(int child, int i, int f)
      * and corrupt image data can be cached in ~/.w3m.
      */
     close_all_fds_except(i, f);
-    QuietMessage = TRUE;
+    QuietMessage = true;
     TrapSignal = false;
 }
 
@@ -1236,7 +1236,7 @@ void mySystem(char* command, int background)
     if (background) {
         // flush_tty();
         if (!fork()) {
-            setup_child(FALSE, 0, -1);
+            setup_child(false, 0, -1);
             myExec(command);
         }
     } else
@@ -1247,14 +1247,14 @@ Str myExtCommand(char* cmd, char* arg, int redirect)
 {
     Str tmp = NULL;
     char* p;
-    int set_arg = FALSE;
+    int set_arg = false;
 
     for (p = cmd; *p; p++) {
         if (*p == '%' && *(p + 1) == 's' && !set_arg) {
             if (tmp == NULL)
                 tmp = Strnew_charp_n(cmd, (int)(p - cmd));
             Strcat_charp(tmp, arg);
-            set_arg = TRUE;
+            set_arg = true;
             p++;
         } else {
             if (tmp)
@@ -1274,20 +1274,20 @@ Str myEditor(char* cmd, char* file, int line)
 {
     Str tmp = NULL;
     char* p;
-    int set_file = FALSE, set_line = FALSE;
+    int set_file = false, set_line = false;
 
     for (p = cmd; *p; p++) {
         if (*p == '%' && *(p + 1) == 's' && !set_file) {
             if (tmp == NULL)
                 tmp = Strnew_charp_n(cmd, (int)(p - cmd));
             Strcat_charp(tmp, file);
-            set_file = TRUE;
+            set_file = true;
             p++;
         } else if (*p == '%' && *(p + 1) == 'd' && !set_line && line > 0) {
             if (tmp == NULL)
                 tmp = Strnew_charp_n(cmd, (int)(p - cmd));
             Strcat(tmp, Sprintf("%d", line));
-            set_line = TRUE;
+            set_line = true;
             p++;
         } else {
             if (tmp)
@@ -1348,7 +1348,7 @@ char* url_unquote_conv(char* url, wc_ces charset)
 {
     wc_uint8 old_auto_detect = WcOption.auto_detect;
     Str tmp;
-    tmp = Str_url_unquote(Strnew_charp(url), FALSE, TRUE);
+    tmp = Str_url_unquote(Strnew_charp(url), false, true);
     if (!charset || charset == WC_CES_US_ASCII)
         charset = SystemCharset;
     WcOption.auto_detect = WC_OPT_DETECT_ON;

@@ -1,4 +1,3 @@
-#include "indep.h"
 #include "file_copy.h"
 #include "etc.h"
 #include "downloadlist.h"
@@ -13,11 +12,12 @@
 #include "tty.h"
 #include "progress.h"
 #include <signal.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <setjmp.h>
 
-char AutoUncompress = (FALSE);
-char PreserveTimestamp = (TRUE);
+char AutoUncompress = (false);
+char PreserveTimestamp = (true);
 
 #define uchar unsigned char
 
@@ -79,7 +79,7 @@ init_buffer(BaseStream base, char* buf, int bufsize)
     } else {
         sb->next = 0;
     }
-    base->iseos = FALSE;
+    base->iseos = false;
 }
 
 static void
@@ -304,7 +304,7 @@ int ISread_n(InputStream stream, char* dst, int count)
     if (MUST_BE_UPDATED(base)) {
         l = (*base->read)(base->handle, &dst[len], count - len);
         if (l <= 0) {
-            base->iseos = TRUE;
+            base->iseos = true;
         } else {
             len += l;
         }
@@ -387,14 +387,14 @@ ens_read(struct ens_handle* handle, char* buf, int len)
         char* p;
         struct growbuf gbtmp;
 
-        ISgets_to_growbuf(handle->is, &handle->gb, TRUE);
+        ISgets_to_growbuf(handle->is, &handle->gb, true);
         if (handle->gb.length == 0)
             return 0;
         if (handle->encoding == ENC_BASE64)
             memchop(handle->gb.ptr, &handle->gb.length);
         else if (handle->encoding == ENC_UUENCODE) {
             if (handle->gb.length >= 5 && !strncmp(handle->gb.ptr, "begin", 5))
-                ISgets_to_growbuf(handle->is, &handle->gb, TRUE);
+                ISgets_to_growbuf(handle->is, &handle->gb, true);
             memchop(handle->gb.ptr, &handle->gb.length);
         }
         growbuf_init_without_GC(&gbtmp);
@@ -532,7 +532,7 @@ int doFileSave(struct URLFile uf, const char* defstr, int current_content_length
                 if (tmpf)
                     unlink(tmpf);
             }
-            setup_child(FALSE, 0, UFfileno(&uf));
+            setup_child(false, 0, UFfileno(&uf));
             err = save2tmp(uf, p);
             if (err == 0 && PreserveTimestamp && uf.modtime != -1)
                 setModtime(p, uf.modtime);

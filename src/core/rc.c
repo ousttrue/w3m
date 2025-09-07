@@ -59,7 +59,7 @@ char* rc_dir = (NULL);
 
 char* mkd_tmp_dir = (NULL);
 char* param_tmp_dir = (NULL);
-int WrapDefault = (FALSE);
+int WrapDefault = (false);
 
 struct param_ptr {
     char* name;
@@ -99,7 +99,7 @@ static int RC_table_size;
 
 /* FIXME: gettextize here */
 static wc_ces OptionCharset = WC_CES_US_ASCII; /* FIXME: charset of source code */
-static int OptionEncode = FALSE;
+static int OptionEncode = false;
 
 #define CMT_HELPER N_("External Viewer Setup")
 #define CMT_TABSTOP N_("Tab width in characters")
@@ -1115,7 +1115,7 @@ void sync_with_option(void)
     update_utf8_symbol();
     wtf_init(DocumentCharset, DisplayCharset);
 
-    initKeymap(FALSE);
+    initKeymap(false);
     initMenu();
 }
 
@@ -1147,7 +1147,7 @@ void init_rc(void)
     if (do_recursive_mkdir(rc_dir) == -1)
         goto rc_dir_err;
 
-    no_rc_dir = FALSE;
+    no_rc_dir = false;
 
     if (config_file == NULL)
         config_file = rcFile(CONFIG_FILE);
@@ -1171,7 +1171,7 @@ open_rc:
     return;
 
 rc_dir_err:
-    no_rc_dir = TRUE;
+    no_rc_dir = true;
     create_option_search_table();
     goto open_rc;
 }
@@ -1294,7 +1294,7 @@ load_option_panel(void)
             s->text = wc_conv(_(s->text), OptionCharset,
                 InnerCharset)
                           ->ptr;
-        OptionEncode = TRUE;
+        OptionEncode = true;
     }
     src = Strdup(optionpanel_str);
 

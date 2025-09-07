@@ -64,10 +64,10 @@ static int _MoveFile(const char* path1, const char* path2)
     if (f1 == NULL)
         return -1;
     if (*path2 == '|' && PermitSaveToPipe) {
-        is_pipe = TRUE;
+        is_pipe = true;
         f2 = popen(path2 + 1, "w");
     } else {
-        is_pipe = FALSE;
+        is_pipe = false;
         f2 = fopen(path2, "wb");
     }
     if (f2 == NULL) {
@@ -166,7 +166,7 @@ int _doFileCopy(const char* tmpf, const char* defstr, int download)
         flush_tty();
         pid = fork();
         if (!pid) {
-            setup_child(FALSE, 0, -1);
+            setup_child(false, 0, -1);
             if (!_MoveFile(tmpf, p) && PreserveTimestamp && !is_pipe && !stat(tmpf, &st))
                 setModtime(p, st.st_mtime);
             unlink(lock);
@@ -195,7 +195,7 @@ int _doFileCopy(const char* tmpf, const char* defstr, int download)
     //         return -1;
     //     p = q;
     //     if (*p == '|' && PermitSaveToPipe)
-    //         is_pipe = TRUE;
+    //         is_pipe = true;
     //     else {
     //         p = expandPath(p);
     //         if (!notExistsOrOverWrite(p))

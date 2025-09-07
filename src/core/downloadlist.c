@@ -1,6 +1,6 @@
 #include "downloadlist.h"
-#include "ui.h"
 #include "indep.h"
+#include "ui.h"
 #include <Str.h>
 #include <alloc.h>
 #include <time.h>
@@ -16,7 +16,7 @@ static bool add_download_list = false;
 void updateDownload()
 {
     if (add_download_list) {
-        add_download_list = FALSE;
+        add_download_list = false;
         ldDL();
     }
 }
@@ -32,7 +32,7 @@ void addDownloadList(pid_t pid, char* url, char* save, char* lock, long long siz
     d->lock = lock;
     d->size = size;
     d->time = time(0);
-    d->running = TRUE;
+    d->running = true;
     d->err = 0;
     d->next = NULL;
     d->prev = LastDL;
@@ -50,10 +50,10 @@ int checkDownloadList(void)
     struct stat st;
 
     if (!FirstDL)
-        return FALSE;
+        return false;
     for (d = FirstDL; d != NULL; d = d->next) {
         if (d->running && !lstat(d->lock, &st))
-            return TRUE;
+            return true;
     }
-    return FALSE;
+    return false;
 }

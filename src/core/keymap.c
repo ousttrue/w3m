@@ -182,7 +182,7 @@ void initKeymap(int force)
         }
     }
 
-    keymap_initialized = TRUE;
+    keymap_initialized = true;
 }
 
 CommandFunc getFunc(const char* id)

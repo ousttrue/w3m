@@ -1,4 +1,6 @@
+#include "local.h"
 #define _GNU_SOURCE
+#include "w3m.h"
 #include "version.h"
 #include "etc.h"
 #include "form.h"
@@ -18,7 +20,6 @@
 #include <errno.h>
 #include <time.h>
 #include <unistd.h>
-#include "local.h"
 #include "hash.h"
 
 char* HostName = (NULL);
@@ -68,7 +69,7 @@ Str loadLocalDir(char* dname)
     Directory* dir;
     struct stat st;
     char** flist;
-    char *p, *qdir;
+    char *p;
     Str fbuf = Strnew();
     struct stat lst;
     char lbuf[1024];
@@ -82,7 +83,7 @@ Str loadLocalDir(char* dname)
     dirname = Strnew_charp(dname);
     if (Strlastchar(dirname) != '/')
         Strcat_char(dirname, '/');
-    qdir = html_quote(Str_conv_from_system(dirname)->ptr);
+    const char* qdir = html_quote(Str_conv_from_system(dirname)->ptr);
     /* FIXME: gettextize? */
     tmp = Strnew_m_charp("<HTML>\n<HEAD>\n<BASE HREF=\"file://",
         html_quote(file_quote(dirname->ptr)),
@@ -320,7 +321,7 @@ FILE* localcgi_post(char* uri, char* qstr, FormList* request, const char* refere
         return fr;
     }
     /* child */
-    setup_child(TRUE, 2, fw ? fileno(fw) : -1);
+    setup_child(true, 2, fw ? fileno(fw) : -1);
 
     set_cgi_environ(name, file, uri);
     if (path_info)

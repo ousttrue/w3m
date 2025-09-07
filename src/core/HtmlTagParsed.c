@@ -21,8 +21,8 @@
 #include <strings.h>
 
 wc_ces cur_document_charset = 0;
-int pseudoInlines = (TRUE);
-int ignore_null_img_alt = (TRUE);
+int pseudoInlines = (true);
+int ignore_null_img_alt = (true);
 
 #define MAX_INPUT_SIZE 80 /* TODO - max should be screen line length */
 
@@ -256,7 +256,7 @@ struct HtmlTagParsed* parse_tag(char** s, bool internal)
                 while (*q && *q != '"') {
                     Strcat_char(value_tmp, *q);
                     if (!tag->need_reconstruct && is_html_quote(*q))
-                        tag->need_reconstruct = TRUE;
+                        tag->need_reconstruct = true;
                     q++;
                 }
                 if (*q == '"')
@@ -266,7 +266,7 @@ struct HtmlTagParsed* parse_tag(char** s, bool internal)
                 while (*q && *q != '\'') {
                     Strcat_char(value_tmp, *q);
                     if (!tag->need_reconstruct && is_html_quote(*q))
-                        tag->need_reconstruct = TRUE;
+                        tag->need_reconstruct = true;
                     q++;
                 }
                 if (*q == '\'')
@@ -275,7 +275,7 @@ struct HtmlTagParsed* parse_tag(char** s, bool internal)
                 while (*q && !IS_SPACE(*q) && *q != '>') {
                     Strcat_char(value_tmp, *q);
                     if (!tag->need_reconstruct && is_html_quote(*q))
-                        tag->need_reconstruct = TRUE;
+                        tag->need_reconstruct = true;
                     q++;
                 }
             }
@@ -294,10 +294,10 @@ struct HtmlTagParsed* parse_tag(char** s, bool internal)
         }
 
         if (value_tmp) {
-            int j, hidden = FALSE;
+            int j, hidden = false;
             for (j = 0; j < i; j++) {
                 if (tag->attrid[j] == ATTR_TYPE && tag->value[j] && strcmp("hidden", tag->value[j]) == 0) {
-                    hidden = TRUE;
+                    hidden = true;
                     break;
                 }
             }
@@ -315,7 +315,7 @@ struct HtmlTagParsed* parse_tag(char** s, bool internal)
 
         if (i != nattr) {
             if (!internal && ((AttrMAP[attr_id].flag & AFLG_INT) || (value && AttrMAP[attr_id].vtype == VTYPE_METHOD && !strcasecmp(value->ptr, "internal")))) {
-                tag->need_reconstruct = TRUE;
+                tag->need_reconstruct = true;
                 continue;
             }
             tag->attrid[i] = attr_id;
@@ -324,7 +324,7 @@ struct HtmlTagParsed* parse_tag(char** s, bool internal)
             else
                 tag->value[i] = NULL;
         } else {
-            tag->need_reconstruct = TRUE;
+            tag->need_reconstruct = true;
         }
     }
 
@@ -349,7 +349,7 @@ bool parsedtag_set_value(struct HtmlTagParsed* tag, enum HtmlTagAttribute id, co
         tag->value[i] = allocStr(value, -1);
     else
         tag->value[i] = NULL;
-    tag->need_reconstruct = TRUE;
+    tag->need_reconstruct = true;
     return 1;
 }
 
@@ -388,7 +388,7 @@ Str process_img(struct HtmlTagParsed* tag, int width)
     int w, i, nw, ni = 1, n, w0 = -1, i0 = -1;
     int align, xoffset, yoffset, top, bottom, ismap = 0;
     int use_image = activeImage && displayImage;
-    int pre_int = FALSE, ext_pre_int = FALSE;
+    int pre_int = false, ext_pre_int = false;
     Str tmp = Strnew();
 
     if (!parsedtag_get_value(tag, ATTR_SRC, &p))
@@ -441,7 +441,7 @@ Str process_img(struct HtmlTagParsed* tag, int width)
     r = NULL;
     parsedtag_get_value(tag, ATTR_USEMAP, &r);
     if (parsedtag_exists(tag, ATTR_PRE_INT))
-        ext_pre_int = TRUE;
+        ext_pre_int = true;
 
     tmp = Strnew_size(128);
     if (use_image) {
@@ -461,7 +461,7 @@ Str process_img(struct HtmlTagParsed* tag, int width)
         Str tmp2;
         r2 = strchr(r, '#');
         s = "<form_int method=internal action=map>";
-        tmp2 = process_form(parse_tag(&s, TRUE));
+        tmp2 = process_form(parse_tag(&s, true));
         if (tmp2)
             Strcat(tmp, tmp2);
         Strcat(tmp, Sprintf("<input_alt fid=\"%d\" "
@@ -482,7 +482,7 @@ Str process_img(struct HtmlTagParsed* tag, int width)
             struct Image image;
             image.url = parsedURL2Str(&u)->ptr;
             if (!uncompressed_file_type(u.file, &image.ext))
-                image.ext = filename_extension(u.file, TRUE);
+                image.ext = filename_extension(u.file, true);
             image.cache = NULL;
             image.width = w;
             image.height = i;
@@ -506,14 +506,14 @@ Str process_img(struct HtmlTagParsed* tag, int width)
         }
         Strcat(tmp,
             Sprintf("<pre_int><img_alt hseq=\"%d\" src=\"", cur_iseq++));
-        pre_int = TRUE;
+        pre_int = true;
     } else {
         if (w < 0)
             w = 12 * pixel_per_char;
         nw = w ? (int)((w - 1) / pixel_per_char + 1) : 1;
         if (r) {
             Strcat_charp(tmp, "<pre_int>");
-            pre_int = TRUE;
+            pre_int = true;
         }
         Strcat_charp(tmp, "<img_alt src=\"");
     }
@@ -616,7 +616,7 @@ Str process_img(struct HtmlTagParsed* tag, int width)
                 else {
                     if (!pre_int) {
                         Strcat_charp(tmp, "<pre_int>");
-                        pre_int = TRUE;
+                        pre_int = true;
                     }
                     push_symbol(tmp, IMG_SYMBOL, symbol_width, 1);
                     n = symbol_width;
@@ -628,7 +628,7 @@ Str process_img(struct HtmlTagParsed* tag, int width)
             /* must be a horizontal line */
             if (!pre_int) {
                 Strcat_charp(tmp, "<pre_int>");
-                pre_int = TRUE;
+                pre_int = true;
             }
             w = w / pixel_per_char / symbol_width;
             if (w <= 0)
@@ -704,7 +704,7 @@ Str process_input(struct HtmlTagParsed* tag)
 
     if (cur_form_id < 0) {
         char* s = "<form_int method=internal action=none>";
-        tmp = process_form(parse_tag(&s, TRUE));
+        tmp = process_form(parse_tag(&s, true));
     }
     if (tmp == NULL)
         tmp = Strnew();
@@ -887,7 +887,7 @@ Str process_button(struct HtmlTagParsed* tag)
 
     if (cur_form_id < 0) {
         char* s = "<form_int method=internal action=none>";
-        tmp = process_form(parse_tag(&s, TRUE));
+        tmp = process_form(parse_tag(&s, true));
     }
     if (tmp == NULL)
         tmp = Strnew();
@@ -951,7 +951,7 @@ Str process_select(struct HtmlTagParsed* tag)
 
     if (cur_form_id < 0) {
         char* s = "<form_int method=internal action=none>";
-        tmp = process_form(parse_tag(&s, TRUE));
+        tmp = process_form(parse_tag(&s, true));
     }
 
     p = "";
@@ -1018,7 +1018,7 @@ void feed_select(char* str)
         if (tmp->ptr[0] == '<' && Strlastchar(tmp) == '>') {
             struct HtmlTagParsed* tag;
             char* q;
-            if (!(tag = parse_tag(&p, FALSE)))
+            if (!(tag = parse_tag(&p, false)))
                 continue;
             switch (tag->tagid) {
             case HTML_OPTION:
@@ -1111,7 +1111,7 @@ Str process_textarea(struct HtmlTagParsed* tag, int width)
 
     if (cur_form_id < 0) {
         char* s = "<form_int method=internal action=none>";
-        tmp = process_form(parse_tag(&s, TRUE));
+        tmp = process_form(parse_tag(&s, true));
     }
 
     p = "";
@@ -1143,7 +1143,7 @@ Str process_textarea(struct HtmlTagParsed* tag, int width)
         textarea_str = New_Reuse(Str, textarea_str, max_textarea);
     }
     textarea_str[n_textarea] = Strnew();
-    ignore_nl_textarea = TRUE;
+    ignore_nl_textarea = true;
 
     return tmp;
 }
@@ -1184,7 +1184,7 @@ void feed_textarea(char* str)
         if (*str == '\n')
             str++;
     }
-    ignore_nl_textarea = FALSE;
+    ignore_nl_textarea = false;
     while (*str) {
         if (*str == '&')
             Strcat_charp(textarea_str[n_textarea], getescapecmd(&str));

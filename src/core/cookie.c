@@ -26,14 +26,14 @@
 #define COOKIE_FILE "cookie"
 
 struct cookie* First_cookie = (NULL);
-int default_use_cookie = (TRUE);
+int default_use_cookie = (true);
 char* cookie_reject_domains = (NULL);
 char* cookie_accept_domains = (NULL);
 char* cookie_avoid_wrong_number_of_dots = (NULL);
 TextList* Cookie_reject_domains;
 TextList* Cookie_accept_domains;
 TextList* Cookie_avoid_wrong_number_of_dots_domains;
-int no_rc_dir = (FALSE);
+int no_rc_dir = (false);
 
 // This array should be somewhere else
 const char* violations[COO_EMAX] = {
@@ -279,22 +279,22 @@ static int
 check_avoid_wrong_number_of_dots_domain(Str domain)
 {
     TextListItem* tl;
-    int avoid_wrong_number_of_dots_domain = FALSE;
+    int avoid_wrong_number_of_dots_domain = false;
 
     if (Cookie_avoid_wrong_number_of_dots_domains && Cookie_avoid_wrong_number_of_dots_domains->nitem > 0) {
         for (tl = Cookie_avoid_wrong_number_of_dots_domains->first;
             tl != NULL; tl = tl->next) {
             if (domain_match(domain->ptr, tl->ptr)) {
-                avoid_wrong_number_of_dots_domain = TRUE;
+                avoid_wrong_number_of_dots_domain = true;
                 break;
             }
         }
     }
 
-    if (avoid_wrong_number_of_dots_domain == TRUE) {
-        return TRUE;
+    if (avoid_wrong_number_of_dots_domain == true) {
+        return true;
     } else {
-        return FALSE;
+        return false;
     }
 }
 

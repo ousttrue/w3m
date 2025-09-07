@@ -1,14 +1,7 @@
-#ifndef INDEP_H
-#define INDEP_H
+#pragma once
 #include <alloc.h>
 #include <Str.h>
-
-#ifndef TRUE
-#define TRUE 1
-#endif /* TRUE */
-#ifndef FALSE
-#define FALSE 0
-#endif /* FALSE */
+#include <stdbool.h>
 
 extern unsigned char QUOTE_MAP[];
 extern char* HTML_QUOTE_MAP[];
@@ -35,20 +28,13 @@ extern char* currentdir(void);
 extern const char* expandPath(const char* name);
 extern int strcasemstr(char* str, char* srch[], char** ret_ptr);
 int strmatchlen(const char* s1, const char* s2, int maxlen);
-extern char* remove_space(const char* str);
+extern const char* remove_space(const char* str);
 extern const char* html_quote(const char* str);
 extern char* html_unquote(char* str);
 extern char* file_quote(char* str);
 extern const char* url_quote(const char* str);
 extern Str Str_url_unquote(Str x, int is_form, int safe);
 extern Str Str_form_quote(Str x);
-#define Str_form_unquote(x) Str_url_unquote((x), TRUE, FALSE)
+#define Str_form_unquote(x) Str_url_unquote((x), true, false)
 extern char* shell_quote(const char* str);
 
-extern char* w3m_auxbin_dir(void);
-extern char* w3m_lib_dir(void);
-extern char* w3m_etc_dir(void);
-extern char* w3m_conf_dir(void);
-extern char* w3m_help_dir(void);
-
-#endif /* INDEP_H */

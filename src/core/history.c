@@ -10,9 +10,9 @@
 
 #define HISTORY_FILE "history"
 
-int UseHistory = (TRUE);
+int UseHistory = (true);
 int URLHistSize = (100);
-int SaveURLHist = (TRUE);
+int SaveURLHist = (true);
 
 /* Merge entries from their history into ours */
 static int

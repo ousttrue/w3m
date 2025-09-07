@@ -59,3 +59,8 @@ void tmpClearBuffer(struct _Buffer* buf);
 void change_charset(struct KeyValue* arg);
 void saveBufferInfo(void);
 void w3m_exit(int i);
+char* w3m_auxbin_dir(void);
+char* w3m_lib_dir(void);
+char* w3m_etc_dir(void);
+char* w3m_conf_dir(void);
+char* w3m_help_dir(void);

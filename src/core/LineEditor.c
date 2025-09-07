@@ -52,7 +52,7 @@ void le_initialize(struct LineEditor* e, struct UI ui, struct Hist* hist, enum I
     } else if (flag & IN_PASSWORD) {
         e->cm_mode = CPL_NEVER;
         e->is_passwd = true;
-        e->move_word = FALSE;
+        e->move_word = false;
     } else if (flag & IN_COMMAND)
         e->cm_mode = CPL_ON;
     else
@@ -66,12 +66,12 @@ void le_initialize(struct LineEditor* e, struct UI ui, struct Hist* hist, enum I
         e->CLen = e->CPos = 0;
     }
 
-    e->i_cont = TRUE;
-    e->i_broken = FALSE;
-    e->i_quote = FALSE;
-    e->cm_next = FALSE;
+    e->i_cont = true;
+    e->i_broken = false;
+    e->i_quote = false;
+    e->cm_next = false;
     e->cm_disp_next = -1;
-    e->need_redraw = FALSE;
+    e->need_redraw = false;
 }
 
 void next_compl(struct LineEditor* e, int next)
@@ -141,8 +141,8 @@ void _mvL(struct LineEditor* e)
 
 void _inbrk(struct LineEditor* e)
 {
-    e->i_cont = FALSE;
-    e->i_broken = TRUE;
+    e->i_cont = false;
+    e->i_broken = true;
 }
 
 void delC(struct LineEditor* e)
@@ -223,7 +223,7 @@ void _editor(struct LineEditor* e)
     if (e->is_passwd)
         return;
 
-    fi.readonly = FALSE;
+    fi.readonly = false;
     fi.value = Strdup(e->strBuf);
     Strcat_char(fi.value, '\n');
 
@@ -264,7 +264,7 @@ void _prev(struct LineEditor* e)
 
 void _quo(struct LineEditor* e)
 {
-    e->i_quote = TRUE;
+    e->i_quote = true;
 }
 
 void _bsw(struct LineEditor* e)
@@ -368,12 +368,12 @@ void le_next_dcompl(struct LineEditor* e, int next)
 
     if (e->cm_mode == CPL_NEVER || e->cm_mode & CPL_OFF)
         return;
-    e->cm_disp_clear = FALSE;
+    e->cm_disp_clear = false;
     if (e->ui.vt->ROWS - 1 >= 3) {
-        comment = TRUE;
+        comment = true;
         nline = e->ui.vt->ROWS - 1 - 2;
     } else if (e->ui.vt->ROWS - 1) {
-        comment = FALSE;
+        comment = false;
         nline = e->ui.vt->ROWS - 1;
     } else {
         return;
@@ -393,7 +393,7 @@ void le_next_dcompl(struct LineEditor* e, int next)
         goto disp_next;
     }
 
-    e->cm_next = FALSE;
+    e->cm_next = false;
     next_compl(e, 0);
     if (e->NCFileBuf == 0)
         return;
@@ -559,7 +559,7 @@ Str le_doComplete(struct LineEditor* e, Str ifn, enum CompletionStatus* status, 
         qsort(e->CFileBuf, e->NCFileBuf, sizeof(e->CFileBuf[0]), strCmp);
         e->NCFileOffset = 0;
         if (e->NCFileBuf >= 2) {
-            e->cm_next = TRUE;
+            e->cm_next = true;
             *status = CPL_AMBIG;
         } else {
             *status = CPL_OK;

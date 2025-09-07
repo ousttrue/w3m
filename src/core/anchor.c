@@ -10,7 +10,7 @@
 #include "myctype.h"
 #include "regex.h"
 
-int MarkAllPages = (FALSE);
+int MarkAllPages = (false);
 
 typedef Anchor* (*AnchorFunc)(Buffer*, const char*, const char*, int, int);
 
@@ -60,7 +60,7 @@ putAnchor(AnchorList* al, const char* url, const char* target, Anchor** anchor_r
     a->referer = referer;
     a->title = title;
     a->accesskey = key;
-    a->slave = FALSE;
+    a->slave = false;
     a->start = bp;
     a->end = bp;
     al->nanchor++;
@@ -517,7 +517,7 @@ void addMultirowsImg(Buffer* buf, AnchorList* al)
             pos = columnPos(l, col);
             a = registerImg(buf, a_img.url, a_img.title, l->linenumber, pos);
             a->hseq = -a_img.hseq;
-            a->slave = TRUE;
+            a->slave = true;
             a->image = img;
             a->end.pos = pos + ecol - col;
             for (k = pos; k < a->end.pos; k++)
@@ -527,7 +527,7 @@ void addMultirowsImg(Buffer* buf, AnchorList* al)
                     a_href.referer, a_href.title,
                     a_href.accesskey, l->linenumber, pos);
                 a->hseq = a_href.hseq;
-                a->slave = TRUE;
+                a->slave = true;
                 a->end.pos = pos + ecol - col;
                 for (k = pos; k < a->end.pos; k++)
                     l->propBuf[k] |= PE_ANCHOR;
