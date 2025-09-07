@@ -1,7 +1,7 @@
 #include "compression.h"
+#include "mimetypes.h"
 #include "w3m.h"
 #include "textlist.h"
-#include "indep.h"
 #include "istream.h"
 #include "rc.h"
 #include "image.h"

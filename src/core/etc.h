@@ -35,7 +35,7 @@ void mySystem(char* command, int background);
 Str myExtCommand(char* cmd, char* arg, int redirect);
 Str myEditor(char* cmd, char* file, int line);
 char* url_unquote_conv(char* url, wc_ces charset);
-char* expandName(char* name);
+const char* expandName(const char* name);
 
 time_t mymktime(const char* timestr);
 char* FQDN(char* host);

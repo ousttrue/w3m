@@ -36,10 +36,6 @@
 #include "myctype.h"
 #include "regex.h"
 
-#define SYS_MIMETYPES ETC_DIR "/mime.types"
-#define USER_MIMETYPES "~/.mime.types"
-
-char* mimetypes_files = (USER_MIMETYPES ", " SYS_MIMETYPES);
 int DNS_order = DNS_ORDER_UNSPEC;
 char ArgvIsURL = true;
 char LocalhostOnly = false;
@@ -60,34 +56,6 @@ int ai_family_order_table[7][3] = {
 };
 
 static sigjmp_buf AbortLoading;
-
-struct table2 {
-    char* item1;
-    char* item2;
-};
-
-static struct table2 DefaultGuess[] = {
-    { "html", "text/html" },
-    { "htm", "text/html" },
-    { "shtml", "text/html" },
-    { "xhtml", "application/xhtml+xml" },
-    { "gif", "image/gif" },
-    { "jpeg", "image/jpeg" },
-    { "jpg", "image/jpeg" },
-    { "png", "image/png" },
-    { "xbm", "image/xbm" },
-    { "au", "audio/basic" },
-    { "gz", "application/x-gzip" },
-    { "Z", "application/x-compress" },
-    { "bz2", "application/x-bzip" },
-    { "tar", "application/x-tar" },
-    { "zip", "application/x-zip" },
-    { "lha", "application/x-lha" },
-    { "lzh", "application/x-lha" },
-    { "ps", "application/postscript" },
-    { "pdf", "application/pdf" },
-    { NULL, NULL }
-};
 
 /* #define HTTP_DEFAULT_FILE    "/index.html" */
 
@@ -112,75 +80,6 @@ sock_log(char* message, ...)
 }
 
 #endif
-
-static TextList* mimetypes_list;
-static struct table2** UserMimeTypes;
-
-static struct table2*
-loadMimeTypes(char* filename)
-{
-    FILE* f;
-    char *d, *type;
-    int i, n;
-    Str tmp;
-    struct table2* mtypes;
-
-    f = fopen(expandPath(filename), "r");
-    if (f == NULL)
-        return NULL;
-    n = 0;
-    while (tmp = Strfgets(f), tmp->length > 0) {
-        d = tmp->ptr;
-        if (d[0] != '#') {
-            d = strtok(d, " \t\n\r");
-            if (d != NULL) {
-                d = strtok(NULL, " \t\n\r");
-                for (i = 0; d != NULL; i++)
-                    d = strtok(NULL, " \t\n\r");
-                n += i;
-            }
-        }
-    }
-    fseek(f, 0, 0);
-    mtypes = New_N(struct table2, n + 1);
-    i = 0;
-    while (tmp = Strfgets(f), tmp->length > 0) {
-        d = tmp->ptr;
-        if (d[0] == '#')
-            continue;
-        type = strtok(d, " \t\n\r");
-        if (type == NULL)
-            continue;
-        while (1) {
-            d = strtok(NULL, " \t\n\r");
-            if (d == NULL)
-                break;
-            mtypes[i].item1 = Strnew_charp(d)->ptr;
-            mtypes[i].item2 = Strnew_charp(type)->ptr;
-            i++;
-        }
-    }
-    mtypes[i].item1 = NULL;
-    mtypes[i].item2 = NULL;
-    fclose(f);
-    return mtypes;
-}
-
-void initMimeTypes(void)
-{
-    int i;
-    TextListItem* tl;
-
-    if (non_null(mimetypes_files))
-        mimetypes_list = make_domain_list(mimetypes_files);
-    else
-        mimetypes_list = NULL;
-    if (mimetypes_list == NULL)
-        return;
-    UserMimeTypes = New_N(struct table2*, mimetypes_list->nitem);
-    for (i = 0, tl = mimetypes_list->first; tl; i++, tl = tl->next)
-        UserMimeTypes[i] = loadMimeTypes(tl->ptr);
-}
 
 static char*
 DefaultFile(int scheme)
@@ -494,7 +393,7 @@ analyze_file:
          */
 
         p_url->scheme = SCM_FTP; /* ftp://host/... */
-        if (p_url->port == 0){
+        if (p_url->port == 0) {
             p_url->port = getSchemeInfo(SCM_FTP).port;
         }
     }
@@ -601,8 +500,6 @@ void copyParsedURL(ParsedURL* p, const ParsedURL* q)
 
 void parseURL2(const char* url, ParsedURL* pu, ParsedURL* current)
 {
-    char* p;
-    Str tmp;
     int relative_uri = false;
 
     parseURL(url, pu, current);
@@ -612,6 +509,8 @@ void parseURL2(const char* url, ParsedURL* pu, ParsedURL* current)
 
     if (pu->scheme == SCM_DATA)
         return;
+
+    const char* p;
     if (pu->scheme == SCM_NEWS || pu->scheme == SCM_NEWS_GROUP) {
         if (pu->file && !strchr(pu->file, '@') && (!(p = strchr(pu->file, '/')) || strchr(p + 1, '-') || *(p + 1) == '\0'))
             pu->scheme = SCM_NEWS_GROUP;
@@ -635,7 +534,7 @@ void parseURL2(const char* url, ParsedURL* pu, ParsedURL* current)
         return;
     }
     if (pu->scheme == SCM_LOCAL) {
-        char* q = expandName(file_unquote(pu->file));
+        const char* q = expandName(file_unquote(pu->file));
 #ifdef SUPPORT_DOS_DRIVE_PREFIX
         Str drive;
         if (IS_ALPHA(q[0]) && q[1] == ':') {
@@ -665,6 +564,7 @@ void parseURL2(const char* url, ParsedURL* pu, ParsedURL* current)
                 /* file is relative [process 1] */
                 p = pu->file;
                 if (current->file) {
+                    Str tmp;
                     tmp = Strnew_charp(current->file);
                     while (tmp->length > 0) {
                         if (Strlastchar(tmp) == '/')
@@ -691,7 +591,7 @@ void parseURL2(const char* url, ParsedURL* pu, ParsedURL* current)
 #endif
             strcmp(pu->file, "-")) {
             /* local file, relative path */
-            tmp = Strnew_charp(CurrentDir);
+            Str tmp = Strnew_charp(CurrentDir);
             if (Strlastchar(tmp) != '/')
                 Strcat_char(tmp, '/');
             Strcat_charp(tmp, file_unquote(pu->file));
@@ -830,77 +730,6 @@ void init_stream(struct URLFile* uf, int scheme, InputStream stream)
     uf->guess_type = NULL;
     uf->ext = NULL;
     uf->modtime = -1;
-}
-
-static char*
-guessContentTypeFromTable(struct table2* table, char* filename)
-{
-    struct table2* t;
-    char* p;
-    if (table == NULL)
-        return NULL;
-    p = &filename[strlen(filename) - 1];
-    while (filename < p && *p != '.')
-        p--;
-    if (p == filename)
-        return NULL;
-    p++;
-    for (t = table; t->item1; t++) {
-        if (!strcmp(p, t->item1))
-            return t->item2;
-    }
-    for (t = table; t->item1; t++) {
-        if (!strcasecmp(p, t->item1))
-            return t->item2;
-    }
-    return NULL;
-}
-
-char* guessContentType(const char* filename)
-{
-    char* ret;
-    int i;
-
-    if (filename == NULL)
-        return NULL;
-    if (mimetypes_list == NULL)
-        goto no_user_mimetypes;
-
-    for (i = 0; i < mimetypes_list->nitem; i++) {
-        if ((ret = guessContentTypeFromTable(UserMimeTypes[i], filename)) != NULL)
-            return ret;
-    }
-
-no_user_mimetypes:
-    return guessContentTypeFromTable(DefaultGuess, filename);
-}
-
-TextList*
-make_domain_list(char* domain_list)
-{
-    char* p;
-    Str tmp;
-    TextList* domains = NULL;
-
-    p = domain_list;
-    tmp = Strnew_size(64);
-    while (*p) {
-        while (*p && IS_SPACE(*p))
-            p++;
-        Strclear(tmp);
-        while (*p && !IS_SPACE(*p) && *p != ',')
-            Strcat_char(tmp, *p++);
-        if (tmp->length > 0) {
-            if (domains == NULL)
-                domains = newTextList();
-            pushText(domains, tmp->ptr);
-        }
-        while (*p && IS_SPACE(*p))
-            p++;
-        if (*p == ',')
-            p++;
-    }
-    return domains;
 }
 
 static int

@@ -1,4 +1,5 @@
 #include "image.h"
+#include "mimetypes.h"
 #include "alloc.h"
 #include "w3m.h"
 #include "Content.h"
@@ -816,7 +817,7 @@ void put_image_kitty(int cursorX, int cursorY,
     const char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh, int cols, int rows)
 {
     Str buf, base64;
-    char *cbuf, *type, *tmpf;
+    char *cbuf, *tmpf;
     char* argv[4];
     FILE* fp;
     int c, i, j, m, t, is_anim;
@@ -829,7 +830,7 @@ void put_image_kitty(int cursorX, int cursorY,
     if (!url)
         return;
 
-    type = guessContentType(url);
+    const char* type = guessContentType(url);
     t = 100; /* always convert to png for now. */
 
     if (!(type && !strcasecmp(type, "image/png"))) {

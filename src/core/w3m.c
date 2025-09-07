@@ -1,5 +1,6 @@
 #include "w3m.h"
 #include "defun_macro.h"
+#include "mimetypes.h"
 #include "Content.h"
 #include "HttpClient.h"
 #include "siteconf.h"

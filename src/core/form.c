@@ -1,4 +1,5 @@
 #include "form.h"
+#include "mimetypes.h"
 #include "http.h"
 #include "tmpfile.h"
 #include "istream.h"

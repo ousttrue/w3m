@@ -1,5 +1,6 @@
 #include "rc.h"
 #include "w3m.h"
+#include "mimetypes.h"
 #include "entity.h"
 #include "HtmlTagParsed.h"
 #include "search.h"

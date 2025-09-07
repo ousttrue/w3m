@@ -75,4 +75,6 @@ extern void appendTextLine(TextLineList* tl, Str line, int pos);
 #define rpopTextLine(tl) ((TextLine*)rpopValue((GeneralList*)(tl)))
 #define appendTextLineList(tl, tl2) ((TextLineList*)appendGeneralList((GeneralList*)(tl), (GeneralList*)(tl2)))
 
+TextList* make_domain_list(const char* domain_list);
+
 #endif /* not TEXTLIST_H */

@@ -5,7 +5,6 @@
 
 #include <wc.h>
 
-extern char* mimetypes_files;
 
 #define IS_EMPTY_PARSED_URL(pu) ((pu)->scheme == SCM_UNKNOWN && !(pu)->file)
 
@@ -25,14 +24,14 @@ extern int DecodeURL;
 
 typedef struct _ParsedURL {
     enum UrlScheme scheme;
-    char* user;
-    char* pass;
-    char* host;
+    const char* user;
+    const char* pass;
+    const char* host;
     int port;
-    char* file;
-    char* real_file;
-    char* query;
-    char* label;
+    const char* file;
+    const char* real_file;
+    const char* query;
+    const char* label;
     int is_nocache;
 } ParsedURL;
 
@@ -46,7 +45,6 @@ void copyParsedURL(ParsedURL* p, const ParsedURL* q);
 void parseURL2(const char* url, ParsedURL* pu, ParsedURL* current);
 Str parsedURL2Str(ParsedURL* pu);
 Str parsedURL2RefererStr(ParsedURL* pu);
-char* guessContentType(const char* filename);
 char* filename_extension(char* path, int is_url);
 struct _ParsedURL* schemeToProxy(int scheme);
 wc_ces url_to_charset(const char* url, const ParsedURL* base, wc_ces doc_charset);
@@ -57,8 +55,6 @@ ParsedURL* baseURL(struct _Buffer* buf);
 int openSocket(const char* hostname, const char* remoteport_name,
     unsigned short remoteport_num);
 
-void initMimeTypes(void);
-TextList* make_domain_list(char* domain_list);
 int check_no_proxy(char* domain);
 int same_url_p(ParsedURL* pu1, ParsedURL* pu2);
 char* file_to_url(const char* file);

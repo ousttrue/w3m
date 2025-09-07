@@ -1306,7 +1306,7 @@ Str myEditor(char* cmd, char* file, int line)
     return tmp;
 }
 
-char* expandName(char* name)
+const char* expandName(const char* name)
 {
     char* p;
     struct passwd *passent, *getpwnam(const char*);
