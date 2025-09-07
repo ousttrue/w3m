@@ -8,9 +8,20 @@ from enum import Enum, auto
 
 HERE = pathlib.Path(__file__).absolute().parent
 
-#define USE_UNICODE 1
-
 CONTEXT = {
+    "ENABLE_REMOVE_TRAILINGSPACES": True,
+    "TABLE_EXPAND": False,
+    "TABLE_NO_COMPACT": False,
+    "NOWRAP": False,
+    "MENU_THIN_FRAME": False,
+    "USE_EGD": False,
+    "CLEAR_BUF": False,
+    "INET6": True,
+    "HAVE_SOCKLEN_T": True,
+    "HAVE_OLD_SS_FAMILY": False,
+    "USE_W3MIMG_WIN": False,
+    "W3MIMGDISPLAY_SETUID ": False,
+    "USE_IMLIB2 ": False,
     "USE_XFACE": False,
     "HAVE_SIGSETJMP": True,
     "SIGWINCH": True,
@@ -18,6 +29,7 @@ CONTEXT = {
     "SIGCHLD": True,
     "SIGTSTP": True,
     # 'SIGSTOP': False,
+    "USE_DIGEST_AUTH": True,
     "USE_COOKIE": True,
     "USE_ALARM": True,
     "USE_SSL": True,
@@ -54,6 +66,7 @@ CONTEXT = {
     "USE_IMAGE": True,
     #
     "USE_MOUSE": False,
+    "USE_SYSMOUSE": False,
     "USE_GPM": False,
     "USE_NNTP": False,
     "USE_GOPHER": False,

@@ -1531,12 +1531,7 @@ int HTMLtagproc1(struct HtmlTagParsed* tag, struct html_feed_environ* h_env)
         table_mode[obuf->table_level].nobr_level = 0;
         table_mode[obuf->table_level].caption = 0;
         table_mode[obuf->table_level].end_tag = 0; /* HTML_UNKNOWN */
-#ifndef TABLE_EXPAND
         tables[obuf->table_level]->total_width = width;
-#else
-        tables[obuf->table_level]->real_width = width;
-        tables[obuf->table_level]->total_width = 0;
-#endif
         return 1;
     case HTML_N_TABLE:
         /* should be processed in HTMLlineproc() */

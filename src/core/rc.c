@@ -88,9 +88,9 @@ static int RC_table_size;
 #define P_CHARINT 2
 #define P_CHAR 3
 #define P_STRING 4
-#if defined(USE_SSL) && defined(USE_SSL_VERIFY)
+
 #define P_SSLPATH 5
-#endif
+
 #define P_COLOR 6
 #define P_CODE 7
 #define P_PIXELS 8
@@ -317,7 +317,6 @@ static struct sel_c displayinsdel[] = {
     { 0, NULL, NULL }
 };
 
-#ifdef INET6
 static struct sel_c dnsorders[] = {
     { N_S(DNS_ORDER_UNSPEC), N_("unspecified") },
     { N_S(DNS_ORDER_INET_INET6), N_("inet inet6") },
@@ -326,7 +325,6 @@ static struct sel_c dnsorders[] = {
     { N_S(DNS_ORDER_INET6_ONLY), N_("inet6 only") },
     { 0, NULL, NULL }
 };
-#endif /* INET6 */
 
 static struct sel_c badcookiestr[] = {
     { N_S(ACCEPT_BAD_COOKIE_DISCARD), N_("discard") },
@@ -591,10 +589,8 @@ struct param_ptr params9[] = {
         CMT_META_REFRESH, NULL },
     { "localhost_only", P_CHARINT, PI_ONOFF, (void*)&LocalhostOnly,
         CMT_LOCALHOST_ONLY, NULL },
-#ifdef INET6
     { "dns_order", P_INT, PI_SEL_C, (void*)&DNS_order, CMT_DNS_ORDER,
         (void*)dnsorders },
-#endif /* INET6 */
     { NULL, 0, 0, NULL, NULL, NULL },
 };
 

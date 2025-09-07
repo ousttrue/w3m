@@ -355,9 +355,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
         if (++nlines == llimit)
             break;
         pos = 0;
-#ifdef ENABLE_REMOVE_TRAILINGSPACES
         Strremovetrailingspaces(line);
-#endif
         str = line->ptr;
         endp = str + line->length;
         while (str < endp) {

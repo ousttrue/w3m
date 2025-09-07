@@ -61,10 +61,6 @@ init_PRNG(void)
     if (RAND_status())
         return;
     if ((file = RAND_file_name(buffer, sizeof(buffer)))) {
-#ifdef USE_EGD
-        if (RAND_egd(file) > 0)
-            return;
-#endif
         RAND_load_file(file, -1);
     }
     if (RAND_status())

@@ -48,7 +48,6 @@ char* w3m_reqlog = 0;
 char* index_file = NULL;
 int DecodeURL = false;
 
-#ifdef INET6
 /* see rc.c, "dns_order" and dnsorders[] */
 int ai_family_order_table[7][3] = {
     { PF_UNSPEC, PF_UNSPEC, PF_UNSPEC }, /* 0:unspec */
@@ -59,7 +58,6 @@ int ai_family_order_table[7][3] = {
     { PF_UNSPEC, PF_UNSPEC, PF_UNSPEC }, /* 5: --- */
     { PF_INET6, PF_UNSPEC, PF_UNSPEC }, /* 6:inet6 */
 };
-#endif /* INET6 */
 
 static sigjmp_buf AbortLoading;
 
@@ -226,19 +224,10 @@ int openSocket(const char* hostname,
     const char* remoteport_name, unsigned short remoteport_num)
 {
     volatile int sock = -1;
-#ifdef INET6
     int* af;
     struct addrinfo hints, *res0, *res;
     int error;
     char* hname;
-#else /* not INET6 */
-    struct sockaddr_in hostaddr;
-    struct hostent* entry;
-    struct protoent* proto;
-    unsigned short s_port;
-    int a1, a2, a3, a4;
-    unsigned long adr;
-#endif /* not INET6 */
     MySignalHandler (*volatile prevtrap)(int _dummy) = NULL;
 
     /* FIXME: gettextize? */
@@ -262,7 +251,6 @@ int openSocket(const char* hostname,
         goto error;
     }
 
-#ifdef INET6
     /* rfc2732 compliance */
     hname = hostname;
     if (hname != NULL && hname[0] == '[' && hname[strlen(hname) - 1] == ']') {
@@ -316,86 +304,6 @@ int openSocket(const char* hostname,
         freeaddrinfo(res0);
         break;
     }
-#else /* not INET6 */
-    s_port = htons(remoteport_num);
-    memset((char*)&hostaddr, 0, sizeof(struct sockaddr_in));
-    if ((proto = getprotobyname("tcp")) == NULL) {
-        /* protocol number of TCP is 6 */
-        proto = New(struct protoent);
-        proto->p_proto = 6;
-    }
-    if ((sock = socket(AF_INET, SOCK_STREAM, proto->p_proto)) < 0) {
-#ifdef SOCK_DEBUG
-        sock_log("openSocket: socket() failed. reason: %s\n", strerror(errno));
-#endif
-        goto error;
-    }
-    regexCompile("^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$", 0);
-    if (regexMatch(hostname, -1, 1)) {
-        sscanf(hostname, "%d.%d.%d.%d", &a1, &a2, &a3, &a4);
-        adr = htonl((a1 << 24) | (a2 << 16) | (a3 << 8) | a4);
-        memcpy(&hostaddr.sin_addr, &adr, sizeof(long));
-        hostaddr.sin_family = AF_INET;
-        hostaddr.sin_port = s_port;
-
-        message(getUI(), MSG_INFO, Sprintf("Connecting to %s", hostname)->ptr);
-        refresh(ttyWriter());
-
-        if (connect(sock, (struct sockaddr*)&hostaddr,
-                sizeof(struct sockaddr_in))
-            < 0) {
-#ifdef SOCK_DEBUG
-            sock_log("openSocket: connect() failed. reason: %s\n",
-                strerror(errno));
-#endif
-            goto error;
-        }
-    } else {
-        char** h_addr_list;
-        int result = -1;
-
-        message(Sprintf("Performing hostname lookup on %s", hostname)->ptr,
-            0, 0);
-        refresh(ttyWriter());
-
-        if ((entry = gethostbyname(hostname)) == NULL) {
-#ifdef SOCK_DEBUG
-            sock_log("openSocket: gethostbyname() failed. reason: %s\n",
-                strerror(errno));
-#endif
-            goto error;
-        }
-        hostaddr.sin_family = AF_INET;
-        hostaddr.sin_port = s_port;
-        for (h_addr_list = entry->h_addr_list; *h_addr_list; h_addr_list++) {
-            memcpy(&hostaddr.sin_addr, h_addr_list[0], entry->h_length);
-#ifdef SOCK_DEBUG
-            adr = ntohl(*(long*)&hostaddr.sin_addr);
-            sock_log("openSocket: connecting %d.%d.%d.%d\n",
-                (adr >> 24) & 0xff,
-                (adr >> 16) & 0xff, (adr >> 8) & 0xff, adr & 0xff);
-#endif
-
-            message(getUI(), MSG_INFO, Sprintf("Connecting to %s", hostname)->ptr);
-            refresh(ttyWriter());
-
-            if ((result = connect(sock, (struct sockaddr*)&hostaddr,
-                     sizeof(struct sockaddr_in)))
-                == 0) {
-                break;
-            }
-#ifdef SOCK_DEBUG
-            else {
-                sock_log("openSocket: connect() failed. reason: %s\n",
-                    strerror(errno));
-            }
-#endif
-        }
-        if (result < 0) {
-            goto error;
-        }
-    }
-#endif /* not INET6 */
 
     TRAP_OFF;
     return sock;
@@ -1036,32 +944,6 @@ int check_no_proxy(char* domain)
     }
     TRAP_ON;
     {
-#ifndef INET6
-        struct hostent* he;
-        int n;
-        unsigned char** h_addr_list;
-        char addr[4 * 16], buf[5];
-
-        he = gethostbyname(domain);
-        if (!he) {
-            ret = 0;
-            goto end;
-        }
-        for (h_addr_list = (unsigned char**)he->h_addr_list; *h_addr_list;
-            h_addr_list++) {
-            sprintf(addr, "%d", h_addr_list[0][0]);
-            for (n = 1; n < he->h_length; n++) {
-                sprintf(buf, ".%d", h_addr_list[0][n]);
-                strcat(addr, buf);
-            }
-            for (tl = NO_proxy_domains->first; tl != NULL; tl = tl->next) {
-                if (strncmp(tl->ptr, addr, strlen(tl->ptr)) == 0) {
-                    ret = 1;
-                    goto end;
-                }
-            }
-        }
-#else /* INET6 */
         int error;
         struct addrinfo hints;
         struct addrinfo *res, *res0;
@@ -1107,7 +989,6 @@ int check_no_proxy(char* domain)
                 break;
             }
         }
-#endif /* INET6 */
     }
 end:
     TRAP_OFF;

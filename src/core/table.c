@@ -44,9 +44,6 @@ int symbol_width0 = 0;
 #define HTT_MIDDLE 0x200
 #define HTT_BOTTOM 0x400
 #define HTT_VTRSET 0x800
-#ifdef NOWRAP
-#define HTT_NOWRAP 4
-#endif /* NOWRAP */
 #define TAG_IS(s, tag, len) (strncasecmp(s, tag, len) == 0 && (s[len] == '>' || IS_SPACE((int)s[len])))
 
 #ifndef max
@@ -1735,11 +1732,7 @@ void renderTable(struct table* t, int max_width, struct html_feed_environ* h_env
     HTMLlineproc0("</pre>", h_env, true);
 }
 
-#ifdef TABLE_NO_COMPACT
-#define THR_PADDING 2
-#else
 #define THR_PADDING 4
-#endif
 
 struct table*
 begin_table(int border, int spacing, int padding, int vspace)
@@ -1898,10 +1891,6 @@ setwidth(struct table* t, struct table_mode* mode)
     int width = setwidth0(t, mode);
     if (width < 0)
         return;
-#ifdef NOWRAP
-    if (t->tabattr[t->row][t->col] & HTT_NOWRAP)
-        check_minimum0(t, width);
-#endif /* NOWRAP */
     if (mode->pre_mode & (TBLM_NOBR | TBLM_PRE | TBLM_PRE_INT) && mode->nobr_offset >= 0)
         check_minimum0(t, width - mode->nobr_offset);
 }
@@ -2402,31 +2391,12 @@ feed_table_tag(struct table* tbl, char* line, struct table_mode* mode,
                 break;
             }
         }
-#ifdef NOWRAP
-        if (parsedtag_exists(tag, ATTR_NOWRAP))
-            tbl->tabattr[tbl->row][tbl->col] |= HTT_NOWRAP;
-#endif /* NOWRAP */
         v = 0;
         if (parsedtag_get_value(tag, ATTR_WIDTH, &v)) {
-#ifdef TABLE_EXPAND
-            if (v > 0) {
-                if (tbl->real_width > 0)
-                    v = -(v * 100) / (tbl->real_width * pixel_per_char);
-                else
-                    v = (int)(v / pixel_per_char);
-            }
-#else
             v = RELATIVE_WIDTH(v);
-#endif /* not TABLE_EXPAND */
         }
         if (parsedtag_get_value(tag, ATTR_ID, &p))
             tbl->tabidvalue[tbl->row][tbl->col] = Strnew_charp(p);
-#ifdef NOWRAP
-        if (v != 0) {
-            /* NOWRAP and WIDTH= conflicts each other */
-            tbl->tabattr[tbl->row][tbl->col] &= ~HTT_NOWRAP;
-        }
-#endif /* NOWRAP */
         tbl->tabattr[tbl->row][tbl->col] &= ~(HTT_ALIGN | HTT_VALIGN);
         tbl->tabattr[tbl->row][tbl->col] |= (align | valign);
         if (colspan > 1) {
@@ -2780,29 +2750,6 @@ feed_table_tag(struct table* tbl, char* line, struct table_mode* mode,
             feed_table_block_tag(tbl, line, mode, 0, cmd);
             addcontentssize(tbl, maximum_table_width(tbl1));
             check_minimum0(tbl, tbl1->sloppy_width);
-#ifdef TABLE_EXPAND
-            w = tbl1->total_width;
-            v = 0;
-            colspan = table_colspan(tbl, tbl->row, tbl->col);
-            if (colspan > 1) {
-                if (cell->icell >= 0)
-                    v = cell->fixed_width[cell->icell];
-            } else
-                v = tbl->fixed_width[tbl->col];
-            if (v < 0 && tbl->real_width > 0 && tbl1->real_width > 0)
-                w = -(tbl1->real_width * 100) / tbl->real_width;
-            else
-                w = tbl1->real_width;
-            if (w > 0)
-                check_minimum0(tbl, w);
-            else if (w < 0 && v < w) {
-                if (colspan > 1) {
-                    if (cell->icell >= 0)
-                        cell->fixed_width[cell->icell] = w;
-                } else
-                    tbl->fixed_width[tbl->col] = w;
-            }
-#endif
             setwidth0(tbl, mode);
             clearcontentssize(tbl, mode);
         }

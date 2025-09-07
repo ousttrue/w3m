@@ -542,9 +542,7 @@ struct auth_param digest_auth_param[] = {
 /* for RFC2617: HTTP Authentication */
 struct http_auth www_auth[] = {
     { 1, "Basic ", basic_auth_param, AuthBasicCred },
-#ifdef USE_DIGEST_AUTH
     { 10, "Digest ", digest_auth_param, AuthDigestCred },
-#endif
     {
         0,
         NULL,

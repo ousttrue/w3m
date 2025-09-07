@@ -76,9 +76,7 @@ fversion(FILE* f)
 #ifdef USE_W3MMAILER
         ",w3mmailer"
 #endif
-#ifdef INET6
         ",ipv6"
-#endif
         ",alarm"
         ",mark");
 }
@@ -115,10 +113,8 @@ fusage(FILE* f, int err)
     fprintf(f, "    +<num>           goto <num> line\n");
     fprintf(f, "    -num             show line number\n");
     fprintf(f, "    -no-proxy        don't use proxy\n");
-#ifdef INET6
     fprintf(f, "    -4               IPv4 only (-o dns_order=4)\n");
     fprintf(f, "    -6               IPv6 only (-o dns_order=6)\n");
-#endif
     fprintf(f, "    -insecure        use insecure SSL config options\n");
     fprintf(f,
         "    -cookie          use cookie (-no-cookie: don't use cookie)\n");

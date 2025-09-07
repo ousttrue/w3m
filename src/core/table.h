@@ -96,9 +96,6 @@ struct table {
     int vcellpadding;
     int vspace;
     int flag;
-#ifdef TABLE_EXPAND
-    int real_width;
-#endif /* TABLE_EXPAND */
     Str caption;
     Str id;
     GeneralList*** tabdata;

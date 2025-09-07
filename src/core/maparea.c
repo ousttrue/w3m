@@ -202,7 +202,6 @@ retrieveCurrentMap(Buffer* buf)
     return NULL;
 }
 
-#if defined(USE_IMAGE) || defined(MENU_MAP)
 MapArea*
 follow_map_menu(Buffer* buf, const char* name, Anchor* a_img, int x, int y)
 {
@@ -246,8 +245,6 @@ map_end:
     }
     return NULL;
 }
-#endif
-
 
 MapArea*
 newMapArea(const char* url, const char* target, const char* alt, const char* shape, const char* coords)

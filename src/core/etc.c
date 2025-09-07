@@ -1594,18 +1594,12 @@ mymktime(const char* timestr)
     return (time_t)((day * 60 * 60 * 24) + (hour * 60 * 60) + (min * 60) + sec);
 }
 
-#ifdef INET6
 #include <sys/socket.h>
-#endif /* INET6 */
 #include <netdb.h>
 char* FQDN(char* host)
 {
     char* p;
-#ifndef INET6
-    struct hostent* entry;
-#else /* INET6 */
     int* af;
-#endif /* INET6 */
 
     if (host == NULL)
         return NULL;
@@ -1619,12 +1613,6 @@ char* FQDN(char* host)
     if (*p == '.')
         return host;
 
-#ifndef INET6
-    if (!(entry = gethostbyname(host)))
-        return NULL;
-
-    return allocStr(entry->h_name, -1);
-#else /* INET6 */
     for (af = ai_family_order_table[DNS_order];; af++) {
         int error;
         struct addrinfo hints;
@@ -1659,7 +1647,6 @@ char* FQDN(char* host)
     }
     /* all failed */
     return NULL;
-#endif /* INET6 */
 }
 
 static char Base64Table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";

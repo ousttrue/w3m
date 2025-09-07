@@ -12,6 +12,9 @@
 
 #define USER_MAILCAP RC_DIR "/mailcap"
 #define SYS_MAILCAP CONF_DIR "/mailcap"
+#define DEF_IMAGE_VIEWER "display"
+#define DEF_AUDIO_PLAYER "showaudio"
+
 char* mailcap_files = (USER_MAILCAP ", " SYS_MAILCAP);
 
 static struct mailcap DefaultMailcap[] = {
