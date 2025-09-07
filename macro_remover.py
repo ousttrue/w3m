@@ -8,7 +8,46 @@ from enum import Enum, auto
 
 HERE = pathlib.Path(__file__).absolute().parent
 
+# /* #undef USE_BINMODE_STREAM */
+# /* #undef HAVE_TERMIO_H */
+# /* #undef HAVE_SGTTY_H */
+# #define SIZEOF_LONG_LONG 8
+# /* #undef HAVE_STROQ */
+# /* #undef HAVE_ATOQ */
+# /* #undef HAVE_GETPASSPHRASE */
+
 CONTEXT = {
+    "HAVE_TERMIOS_H": True,
+    "HAVE_DIRENT_H": True,
+    "HAVE_LOCALE_H": True,
+    "HAVE_STDINT_H": True,
+    "HAVE_INTTYPES_H": True,
+    "HAVE_STRTOLL": True,
+    "HAVE_ATOLL": True,
+    "HAVE_STRCASECMP": True,
+    "HAVE_STRCASESTR": True,
+    "HAVE_STRCHR": True,
+    "HAVE_STRERROR": True,
+    "HAVE_BCOPY": True,
+    "HAVE_WAITPID": True,
+    "HAVE_WAIT3": True,
+    "HAVE_STRFTIME": True,
+    "HAVE_GETCWD": True,
+    "HAVE_GETWD": True,
+    "HAVE_SYMLINK": True,
+    "HAVE_READLINK": True,
+    "HAVE_LSTAT": True,
+    "HAVE_SETENV": True,
+    "HAVE_PUTENV": True,
+    "HAVE_SRAND48": True,
+    "HAVE_SRANDOM": True,
+    "HAVE_CHDIR": True,
+    "HAVE_MKDTEMP": True,
+    "HAVE_FACCESSAT": True,
+    "HAVE_SETPGRP": True,
+    "HAVE_SETLOCALE": True,
+    "HAVE_LANGINFO_CODESET": True,
+    #
     "ENABLE_REMOVE_TRAILINGSPACES": True,
     "TABLE_EXPAND": False,
     "TABLE_NO_COMPACT": False,

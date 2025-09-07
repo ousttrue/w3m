@@ -17,9 +17,7 @@
 #include <signal.h>
 #include <errno.h>
 #include <time.h>
-#ifdef HAVE_READLINK
 #include <unistd.h>
-#endif /* HAVE_READLINK */
 #include "local.h"
 #include "hash.h"
 
@@ -72,12 +70,8 @@ Str loadLocalDir(char* dname)
     char** flist;
     char *p, *qdir;
     Str fbuf = Strnew();
-#ifdef HAVE_LSTAT
     struct stat lst;
-#ifdef HAVE_READLINK
     char lbuf[1024];
-#endif /* HAVE_READLINK */
-#endif /* HAVE_LSTAT */
     int i, l, nrow = 0, n = 0, maxlen = 0;
     int nfile, nfile_max = 100;
     Str dirname;
@@ -129,21 +123,17 @@ Str loadLocalDir(char* dname)
         if (Strlastchar(fbuf) != '/')
             Strcat_char(fbuf, '/');
         Strcat_charp(fbuf, p);
-#ifdef HAVE_LSTAT
         if (lstat(fbuf->ptr, &lst) < 0)
             continue;
-#endif /* HAVE_LSTAT */
         if (stat(fbuf->ptr, &st) < 0)
             continue;
         if (multicolList) {
             if (n == 1)
                 Strcat_charp(tmp, "<TD><NOBR>");
         } else {
-#ifdef HAVE_LSTAT
             if (S_ISLNK(lst.st_mode))
                 Strcat_charp(tmp, "[LINK] ");
             else
-#endif /* HAVE_LSTAT */
                 if (S_ISDIR(st.st_mode))
                     Strcat_charp(tmp, "[DIR]&nbsp; ");
                 else
@@ -204,52 +194,8 @@ check_local_cgi(char* file, int status)
 
 void set_environ(const char* var, const char* value)
 {
-#ifdef HAVE_SETENV
     if (var != NULL && value != NULL)
         setenv(var, value, 1);
-#else /* not HAVE_SETENV */
-    static Hash_sv* env_hash = NULL;
-    Str tmp = Strnew_m_charp(var, "=", value, NULL);
-
-    if (env_hash == NULL)
-        env_hash = newHash_sv(20);
-    putHash_sv(env_hash, var, (void*)tmp->ptr);
-#ifdef HAVE_PUTENV
-    putenv(tmp->ptr);
-#else /* not HAVE_PUTENV */
-    extern char** environ;
-    char** ne;
-    int i, l, el;
-    char **e, **newenv;
-
-    /* I have no setenv() nor putenv() */
-    /* This part is taken from terms.c of skkfep */
-    l = strlen(var);
-    for (e = environ, i = 0; *e != NULL; e++, i++) {
-        if (strncmp(e, var, l) == 0 && (*e)[l] == '=') {
-            el = strlen(*e) - l - 1;
-            if (el >= strlen(value)) {
-                strcpy(*e + l + 1, value);
-                return 0;
-            } else {
-                for (; *e != NULL; e++, i++) {
-                    *e = *(e + 1);
-                }
-                i--;
-                break;
-            }
-        }
-    }
-    newenv = (char**)GC_malloc((i + 2) * sizeof(char*));
-    if (newenv == NULL)
-        return;
-    for (e = environ, ne = newenv; *e != NULL; *(ne++) = *(e++))
-        ;
-    *(ne++) = tmp->ptr;
-    *ne = NULL;
-    environ = newenv;
-#endif /* not HAVE_PUTENV */
-#endif /* not HAVE_SETENV */
 }
 
 static void
@@ -344,9 +290,7 @@ FILE* localcgi_post(char* uri, char* qstr, FormList* request, const char* refere
     int status;
     pid_t pid;
     char *file = uri, *name = uri, *path_info = NULL, *tmpf = NULL;
-#ifdef HAVE_CHDIR
     char* cgi_dir;
-#endif
 
     status = cgi_filename(uri, &file, &name, &path_info);
     if (check_local_cgi(file, status) < 0)
@@ -360,9 +304,7 @@ FILE* localcgi_post(char* uri, char* qstr, FormList* request, const char* refere
     }
     if (qstr)
         uri = Strnew_m_charp(uri, "?", qstr, NULL)->ptr;
-#ifdef HAVE_CHDIR
     cgi_dir = mydirname(file);
-#endif
     const char* cgi_basename;
     cgi_basename = mybasename(file);
     pid = open_pipe_rw(&fr, NULL); /* open_pipe_rw() forks */

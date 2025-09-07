@@ -3587,13 +3587,11 @@ void w3m_exit(int i)
     stopDownload();
     deleteFiles();
     free_ssl_ctx();
-#ifdef HAVE_MKDTEMP
     if (mkd_tmp_dir)
         if (rmdir(mkd_tmp_dir) != 0) {
             fprintf(stderr, "Can't remove temporary directory (%s)!\n", mkd_tmp_dir);
             exit(1);
         }
-#endif
     exit(i);
 }
 

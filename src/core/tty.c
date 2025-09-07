@@ -75,7 +75,6 @@ typedef struct termio TerminalMode;
 #define IMODEFLAG(d) ((d).c_iflag)
 #endif /* HAVE_TERMIO_H */
 
-#ifdef HAVE_TERMIOS_H
 #include <termios.h>
 #include <unistd.h>
 typedef struct termios TerminalMode;
@@ -83,7 +82,6 @@ typedef struct termios TerminalMode;
 #define _TerminalGet(fd, x) tcgetattr(fd, x)
 #define MODEFLAG(d) ((d).c_lflag)
 #define IMODEFLAG(d) ((d).c_iflag)
-#endif /* HAVE_TERMIOS_H */
 
 #ifdef HAVE_SGTTY_H
 #include <sgtty.h>
@@ -171,11 +169,7 @@ void term_raw(void)
 #endif /* not IEXTEN */
 {
     ttymode_reset(TTY_MODE, IXON | IXOFF);
-#ifdef HAVE_TERMIOS_H
     set_cc(VMIN, 1);
-#else /* not HAVE_TERMIOS_H */
-    set_cc(VEOF, 1);
-#endif /* not HAVE_TERMIOS_H */
 }
 #else /* HAVE_SGTTY_H */
 {
@@ -238,11 +232,7 @@ void crmode(void)
 {
     ttymode_reset(ICANON, IXON);
     ttymode_set(ISIG, 0);
-#ifdef HAVE_TERMIOS_H
     set_cc(VMIN, 1);
-#else /* not HAVE_TERMIOS_H */
-    set_cc(VEOF, 1);
-#endif /* not HAVE_TERMIOS_H */
 }
 #else /* HAVE_SGTTY_H */
 {
@@ -254,11 +244,7 @@ void nocrmode(void)
 #ifndef HAVE_SGTTY_H
 {
     ttymode_set(ICANON, 0);
-#ifdef HAVE_TERMIOS_H
     set_cc(VMIN, 4);
-#else /* not HAVE_TERMIOS_H */
-    set_cc(VEOF, 4);
-#endif /* not HAVE_TERMIOS_H */
 }
 #else /* HAVE_SGTTY_H */
 {
@@ -280,11 +266,7 @@ void term_cooked(void)
 #ifndef HAVE_SGTTY_H
 {
     ttymode_set(TTY_MODE, 0);
-#ifdef HAVE_TERMIOS_H
     set_cc(VMIN, 4);
-#else /* not HAVE_TERMIOS_H */
-    set_cc(VEOF, 4);
-#endif /* not HAVE_TERMIOS_H */
 }
 #else /* HAVE_SGTTY_H */
 {
