@@ -44,18 +44,18 @@ struct HttpRequest {
     const char* referer;
     struct form_list* request;
 };
-struct _ParsedURL;
+struct Url;
 
 Str getHttpRequestMethodStr(struct HttpRequest* hr);
-Str getHttpRequestURIStr(struct _ParsedURL* pu, struct HttpRequest* hr);
-Str getHttpRequestStr(struct _ParsedURL* pu, struct _ParsedURL* current, struct HttpRequest* hr, TextList* extra);
+Str getHttpRequestURIStr(struct Url* pu, struct HttpRequest* hr);
+Str getHttpRequestStr(struct Url* pu, struct Url* current, struct HttpRequest* hr, TextList* extra);
 
 struct HttpResponse {
     int status_code;
     TextList* headers;
 };
 struct URLFile;
-struct HttpResponse readHttpResponse(struct URLFile* uf, struct _ParsedURL* pu);
+struct HttpResponse readHttpResponse(struct URLFile* uf, struct Url* pu);
 bool matchattr(const char* p, const char* attr, int len, Str* value);
 const char* getHttpHeaderValue(TextList* document_header, const char* field);
 

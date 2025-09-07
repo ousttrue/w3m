@@ -1695,7 +1695,7 @@ int HTMLtagproc1(struct HtmlTagParsed* tag, struct html_feed_environ* h_env)
 
         p = NULL;
         if (parsedtag_get_value(tag, ATTR_HREF, &p)) {
-            cur_baseURL = New(ParsedURL);
+            cur_baseURL = New(struct Url);
             parseURL(p, cur_baseURL, NULL);
         }
 

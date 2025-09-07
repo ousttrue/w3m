@@ -12,7 +12,7 @@ extern int retryAsHttp;
 extern char* index_file;
 extern int DecodeURL;
 
-typedef struct _ParsedURL {
+struct Url {
     enum UrlScheme scheme;
     const char* user;
     const char* pass;
@@ -22,26 +22,26 @@ typedef struct _ParsedURL {
     const char* real_file;
     const char* query;
     const char* label;
-    int is_nocache;
-} ParsedURL;
+    bool is_nocache;
+};
 
-inline static bool IS_EMPTY_PARSED_URL(struct _ParsedURL* pu)
+inline static bool IS_EMPTY_PARSED_URL(struct Url* pu)
 {
     return ((pu)->scheme == SCM_UNKNOWN && !(pu)->file);
 }
 
-Str _parsedURL2Str(ParsedURL* pu, int pass, int user, int label);
-void parseURL(const char* url, ParsedURL* p_url, ParsedURL* current);
-void copyParsedURL(ParsedURL* p, const ParsedURL* q);
-void parseURL2(const char* url, ParsedURL* pu, ParsedURL* current);
-Str parsedURL2Str(ParsedURL* pu);
-Str parsedURL2RefererStr(ParsedURL* pu);
+Str _parsedURL2Str(struct Url* pu, int pass, int user, int label);
+void parseURL(const char* url, struct Url* p_url, struct Url* current);
+void copyParsedURL(struct Url* p, const struct Url* q);
+void parseURL2(const char* url, struct Url* pu, struct Url* current);
+Str parsedURL2Str(struct Url* pu);
+Str parsedURL2RefererStr(struct Url* pu);
 const char* filename_extension(const char* path, int is_url);
-struct _ParsedURL* schemeToProxy(int scheme);
-wc_ces url_to_charset(const char* url, const ParsedURL* base, wc_ces doc_charset);
-const char* url_encode(const char* url, const ParsedURL* base, wc_ces doc_charset);
+struct Url* schemeToProxy(int scheme);
+wc_ces url_to_charset(const char* url, const struct Url* base, wc_ces doc_charset);
+const char* url_encode(const char* url, const struct Url* base, wc_ces doc_charset);
 
-int same_url_p(ParsedURL* pu1, ParsedURL* pu2);
+int same_url_p(struct Url* pu1, struct Url* pu2);
 char* file_to_url(const char* file);
 char* cleanupName(const char* name);
 int is_localhost(const char* host);

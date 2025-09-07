@@ -80,7 +80,7 @@ static Line* redrawLine(struct UI ui, Buffer* buf, Line* l, int i)
     Lineprop* pr;
     Linecolor* pc;
     Anchor* a;
-    ParsedURL url;
+    struct Url url;
     int k, vpos = -1;
 
     if (l == NULL) {
@@ -274,7 +274,7 @@ static int redrawLineRegion(struct UI ui, Buffer* buf, Line* l, int i, int bpos,
     Linecolor* pc;
     int bcol, ecol;
     Anchor* a;
-    ParsedURL url;
+    struct Url url;
     int k, vpos = -1;
 
     if (l == NULL)

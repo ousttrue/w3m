@@ -107,7 +107,7 @@ void loadSiteconf(void)
             opt = getWord(&p);
             SKIP_BLANKS(p);
             if (!newent->re_url) {
-                ParsedURL pu;
+                struct Url pu;
                 if (!url || !*url)
                     continue;
                 parseURL2(url, &pu, NULL);
@@ -157,7 +157,7 @@ void loadSiteconf(void)
     fclose(fp);
 }
 
-static const void* querySiteconf(const ParsedURL* query_pu, int field)
+static const void* querySiteconf(const struct Url* query_pu, int field)
 {
     const struct siteconf_rec* ent;
     Str u;
@@ -167,7 +167,7 @@ static const void* querySiteconf(const ParsedURL* query_pu, int field)
         return NULL;
     if (!query_pu || IS_EMPTY_PARSED_URL(query_pu))
         return NULL;
-    u = parsedURL2Str((ParsedURL*)query_pu);
+    u = parsedURL2Str((struct Url*)query_pu);
     if (u->length == 0)
         return NULL;
 
@@ -223,23 +223,23 @@ url_found:
     return NULL;
 }
 
-const char* query_SCONF_SUBSTITUTE_URL(const struct _ParsedURL* pu)
+const char* query_SCONF_SUBSTITUTE_URL(const struct Url* pu)
 {
     return ((const char*)querySiteconf(pu, SCONF_SUBSTITUTE_URL));
 }
-const char* query_SCONF_USER_AGENT(const struct _ParsedURL* pu)
+const char* query_SCONF_USER_AGENT(const struct Url* pu)
 {
     return ((const char*)querySiteconf(pu, SCONF_USER_AGENT));
 }
-const wc_ces* query_SCONF_URL_CHARSET(const struct _ParsedURL* pu)
+const wc_ces* query_SCONF_URL_CHARSET(const struct Url* pu)
 {
     return ((const wc_ces*)querySiteconf(pu, SCONF_URL_CHARSET));
 }
-const int* query_SCONF_NO_REFERER_FROM(const struct _ParsedURL* pu)
+const int* query_SCONF_NO_REFERER_FROM(const struct Url* pu)
 {
     return ((const int*)querySiteconf(pu, SCONF_NO_REFERER_FROM));
 }
-const int* query_SCONF_NO_REFERER_TO(const struct _ParsedURL* pu)
+const int* query_SCONF_NO_REFERER_TO(const struct Url* pu)
 {
     return ((const int*)querySiteconf(pu, SCONF_NO_REFERER_TO));
 }

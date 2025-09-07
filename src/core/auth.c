@@ -48,7 +48,7 @@ Str qstr_unquote(Str s)
 }
 
 void getAuthCookie(struct http_auth* hauth, const char* auth_header,
-    TextList* extra_header, ParsedURL* pu, struct HttpRequest* hr,
+    TextList* extra_header, struct Url* pu, struct HttpRequest* hr,
     FormList* request,
     volatile Str* uname, volatile Str* pwd)
 {
@@ -170,7 +170,7 @@ enum {
     QOP_AUTH_INT,
 };
 
-Str AuthDigestCred(struct http_auth* ha, Str uname, Str pw, ParsedURL* pu,
+Str AuthDigestCred(struct http_auth* ha, Str uname, Str pw, struct Url* pu,
     struct HttpRequest* hr, FormList* request)
 {
     unsigned char md5[MD5_DIGEST_LENGTH + 1];
@@ -493,7 +493,7 @@ extract_auth_param(char* q, struct auth_param* auth)
 }
 
 static Str
-AuthBasicCred(struct http_auth* ha, Str uname, Str pw, ParsedURL* pu,
+AuthBasicCred(struct http_auth* ha, Str uname, Str pw, struct Url* pu,
     struct HttpRequest* hr, FormList* request)
 {
     Str s = Strdup(uname);

@@ -28,7 +28,7 @@ void initHttpClient(struct HttpClient* c)
     c->add_auth_cookie_flag = 0;
 }
 
-bool checkRedirection(struct HttpClient* c, ParsedURL* pu)
+bool checkRedirection(struct HttpClient* c, struct Url* pu)
 {
     if (c->nredir >= FollowRedirection) {
         Str tmp = Sprintf("Number of redirections exceeded %d at %s",

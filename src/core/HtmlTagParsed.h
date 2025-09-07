@@ -4,7 +4,7 @@
 #include "HtmlTagAttribute.h"
 #include <wc.h>
 
-extern struct _ParsedURL* cur_baseURL;
+extern struct Url* cur_baseURL;
 extern int n_textarea;
 extern Str* textarea_str;
 extern int form_max;

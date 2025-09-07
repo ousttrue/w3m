@@ -23,7 +23,6 @@ extern char* DirBufferCommand;
 #define set_space_to_prevchar(x) Strcopy_charp_n((x), " ", 1)
 
 struct _Buffer;
-struct _ParsedURL;
 struct form_list;
 struct HtmlTagParsed;
 

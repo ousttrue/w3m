@@ -6,8 +6,8 @@
 
 extern char* HTTP_proxy;
 extern char* HTTPS_proxy;
-extern ParsedURL HTTP_proxy_parsed;
-extern ParsedURL HTTPS_proxy_parsed;
+extern struct Url HTTP_proxy_parsed;
+extern struct Url HTTPS_proxy_parsed;
 extern char* NO_proxy;
 extern int NOproxy_netaddr;
 extern TextList* NO_proxy_domains;

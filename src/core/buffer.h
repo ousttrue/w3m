@@ -89,8 +89,8 @@ typedef struct _Buffer {
     struct _MapList* maplist;
     HmarkerList* hmarklist;
     HmarkerList* imarklist;
-    ParsedURL currentURL;
-    ParsedURL* baseURL;
+    struct Url currentURL;
+    struct Url* baseURL;
     const char* baseTarget;
     int real_scheme;
     char* sourcefile;
@@ -147,4 +147,4 @@ void cursorXY(struct _Buffer* buf, int x, int y);
 void restorePosition(struct _Buffer* buf, struct _Buffer* orig);
 void saveBuffer(struct _Buffer* buf, FILE* f, int cont);
 char* url_decode2(const char* url, const struct _Buffer* buf);
-ParsedURL* baseURL(struct _Buffer* buf);
+struct Url* baseURL(struct _Buffer* buf);

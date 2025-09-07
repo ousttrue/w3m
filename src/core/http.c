@@ -57,7 +57,7 @@ Str getHttpRequestMethodStr(struct HttpRequest* hr)
     return NULL;
 }
 
-Str getHttpRequestURIStr(ParsedURL* pu, struct HttpRequest* hr)
+Str getHttpRequestURIStr(struct Url* pu, struct HttpRequest* hr)
 {
     Str tmp = Strnew();
     if (hr->command == HR_COMMAND_CONNECT) {
@@ -75,7 +75,7 @@ Str getHttpRequestURIStr(ParsedURL* pu, struct HttpRequest* hr)
 }
 
 static Str
-parsedURL2RefererOriginStr(ParsedURL* pu)
+parsedURL2RefererOriginStr(struct Url* pu)
 {
     const char* f = pu->file;
     const char* q = pu->query;
@@ -88,7 +88,7 @@ parsedURL2RefererOriginStr(ParsedURL* pu)
 }
 
 static char*
-otherinfo(ParsedURL* target, ParsedURL* current, const char* referer)
+otherinfo(struct Url* target, struct Url* current, const char* referer)
 {
     Str s = Strnew();
     const int* no_referer_ptr;
@@ -151,7 +151,7 @@ otherinfo(ParsedURL* target, ParsedURL* current, const char* referer)
     return s->ptr;
 }
 
-Str getHttpRequestStr(ParsedURL* pu, ParsedURL* current, struct HttpRequest* hr, TextList* extra)
+Str getHttpRequestStr(struct Url* pu, struct Url* current, struct HttpRequest* hr, TextList* extra)
 {
     Str tmp = getHttpRequestMethodStr(hr);
     Strcat_charp(tmp, " ");
@@ -255,7 +255,7 @@ bool matchattr(const char* p, const char* attr, int len, Str* value)
     return 0;
 }
 
-struct HttpResponse readHttpResponse(struct URLFile* uf, ParsedURL* pu)
+struct HttpResponse readHttpResponse(struct URLFile* uf, struct Url* pu)
 {
     struct HttpResponse response = {
         .headers = newTextList(),

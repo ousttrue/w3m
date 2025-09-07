@@ -345,7 +345,7 @@ append_map_info(Buffer* buf, Str tmp, FormItemList* fi)
     MapList* ml;
     ListItem* al;
     MapArea* a;
-    ParsedURL pu;
+    struct Url pu;
     char* p;
 
     ml = searchMapList(buf, fi->value ? fi->value->ptr : NULL);
@@ -375,7 +375,7 @@ static void
 append_link_info(Buffer* buf, Str html, LinkList* link)
 {
     LinkList* l;
-    ParsedURL pu;
+    struct Url pu;
     char* url;
 
     if (!link)
@@ -415,7 +415,7 @@ page_info_panel(Buffer* buf)
 {
     Str tmp = Strnew_size(1024);
     Anchor* a;
-    ParsedURL pu;
+    struct Url pu;
     TextListItem* ti;
     int all;
     char *p, *q;

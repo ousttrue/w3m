@@ -2,7 +2,7 @@
 #include <Str.h>
 #include "textlist.h"
 
-struct _ParsedURL;
+struct Url;
 struct HttpRequest;
 struct form_list;
 
@@ -22,15 +22,15 @@ struct http_auth {
     int pri;
     const char* scheme;
     struct auth_param* param;
-    Str (*cred)(struct http_auth* ha, Str uname, Str pw, struct _ParsedURL* pu,
+    Str (*cred)(struct http_auth* ha, Str uname, Str pw, struct Url* pu,
         struct HttpRequest* hr, struct form_list* request);
 };
 void getAuthCookie(struct http_auth* hauth, const char* auth_header,
-    TextList* extra_header, struct _ParsedURL* pu, struct HttpRequest* hr,
+    TextList* extra_header, struct Url* pu, struct HttpRequest* hr,
     struct form_list* request,
     volatile Str* uname, volatile Str* pwd);
 
 Str AuthDigestCred(struct http_auth* ha, Str uname, Str pw,
-    struct _ParsedURL* pu, struct HttpRequest* hr, struct form_list* request);
+    struct Url* pu, struct HttpRequest* hr, struct form_list* request);
 Str qstr_unquote(Str s);
 struct http_auth* findAuthentication(struct http_auth* hauth, TextList* document_header, const char* auth_field);

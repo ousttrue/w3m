@@ -590,7 +590,7 @@ loadLink(const char* url, const char* target, const char* referer, FormList* pos
 {
     Buffer* nfbuf;
     union frameset_element* f_element = NULL;
-    ParsedURL *base, pu;
+    struct Url *base, pu;
     const int* no_referer_ptr;
 
     message(getUI(), MSG_INFO, Sprintf("loading %s", url)->ptr);
@@ -1290,7 +1290,7 @@ DEFUN(srchprv, SEARCH_PREV, "Continue search backward")
 }
 
 static void
-cmd_loadURL(const char* url, ParsedURL* current, const char* referer, FormList* post)
+cmd_loadURL(const char* url, struct Url* current, const char* referer, FormList* post)
 {
     // refresh(ttyWriter());
     struct Content c = loadGeneralFile(url, current, post, referer, false);
@@ -2074,7 +2074,7 @@ gotoLabel(const char* label)
 static void followAnchor(bool do_download)
 {
     Anchor* a;
-    ParsedURL u;
+    struct Url u;
     int x = 0, y = 0, map = 0;
     char* url;
 
@@ -2284,7 +2284,7 @@ _nextA(int visited)
     BufferPoint* po;
     Anchor *an, *pan;
     int i, x, y, n = searchKeyNum();
-    ParsedURL url;
+    struct Url url;
 
     if (Currentbuf->firstLine == NULL)
         return;
@@ -2366,7 +2366,7 @@ _prevA(int visited)
     BufferPoint* po;
     Anchor *an, *pan;
     int i, x, y, n = searchKeyNum();
-    ParsedURL url;
+    struct Url url;
 
     if (Currentbuf->firstLine == NULL)
         return;
@@ -2626,7 +2626,7 @@ goURL0(char* prompt, int relative)
 {
     char* url;
     const char* referer;
-    ParsedURL p_url, *current;
+    struct Url p_url, *current;
     Buffer* cur_buf = Currentbuf;
     const int* no_referer_ptr;
 
@@ -2694,7 +2694,7 @@ DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer")
 {
     char* url;
     if ((url = getenv("HTTP_HOME")) != NULL || (url = getenv("WWW_HOME")) != NULL) {
-        ParsedURL p_url;
+        struct Url p_url;
         Buffer* cur_buf = Currentbuf;
         SKIP_BLANKS(url);
         url = url_encode(url, NULL, 0);
@@ -2815,7 +2815,7 @@ void follow_map(struct KeyValue* arg)
     Anchor* an;
     MapArea* a;
     int x, y;
-    ParsedURL p_url;
+    struct Url p_url;
 
     an = retrieveCurrentImg(Currentbuf);
     x = Currentbuf->cursorX;
@@ -2838,7 +2838,7 @@ void follow_map(struct KeyValue* arg)
 DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
 {
     LinkList* l = link_menu(Currentbuf);
-    ParsedURL p_url;
+    struct Url p_url;
 
     if (!l || !l->url)
         return;
@@ -2996,7 +2996,7 @@ _peekURL(int only_img)
 {
 
     Anchor* a;
-    ParsedURL pu;
+    struct Url pu;
     static Str s = NULL;
     static Lineprop* p = NULL;
     Lineprop* pp;
@@ -3510,7 +3510,7 @@ void set_buffer_environ(Buffer* buf)
     l = buf->currentLine;
     if (l && (buf != prev_buf || l != prev_line || buf->pos != prev_pos)) {
         Anchor* a;
-        ParsedURL pu;
+        struct Url pu;
         char* s = GetWord(buf);
         set_environ("W3M_CURRENT_WORD", s ? s : "");
         a = retrieveCurrentAnchor(buf);

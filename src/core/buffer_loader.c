@@ -61,7 +61,7 @@ int displayLinkNumber = (false);
 char SimplePreserveSpace = (false);
 int squeezeBlankLine = (false);
 
-ParsedURL* cur_baseURL = NULL;
+struct Url* cur_baseURL = NULL;
 
 static TextLineListItem* _tl_lp2;
 
@@ -309,7 +309,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
     Anchor** a_textarea = NULL;
     Anchor** a_select = NULL;
 
-    ParsedURL* base = baseURL(buf);
+    struct Url* base = baseURL(buf);
 
     wc_ces name_charset = url_to_charset(NULL, &buf->currentURL,
         buf->document_charset);
@@ -540,7 +540,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                         a_img->hseq = iseq;
                         a_img->image = NULL;
                         if (iseq > 0) {
-                            ParsedURL u;
+                            struct Url u;
                             parseURL2(a_img->url, &u, base);
 
                             struct Image* image;
@@ -706,7 +706,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                         p = url_encode(remove_space(p), NULL,
                             buf->document_charset);
                         if (!buf->baseURL)
-                            buf->baseURL = New(ParsedURL);
+                            buf->baseURL = New(struct Url);
                         parseURL2(p, buf->baseURL, &buf->currentURL);
 
                         base = buf->baseURL;

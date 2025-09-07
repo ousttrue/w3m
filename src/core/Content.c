@@ -27,7 +27,7 @@ static bool dir_exist(const char* path)
     return IS_DIRECTORY(stbuf.st_mode);
 }
 
-static void add_index_file(ParsedURL* pu, struct URLFile* uf)
+static void add_index_file(struct Url* pu, struct URLFile* uf)
 {
     char *p, *q;
     TextList* index_file_list = NULL;
@@ -67,10 +67,10 @@ static void write_from_file(int sock, const char* file)
     }
 }
 
-struct Content openLocal(const char* u, ParsedURL* current, FormList* post, const char* referer)
+struct Content openLocal(const char* u, struct Url* current, FormList* post, const char* referer)
 {
     // u = file_to_url(u);
-    ParsedURL pu;
+    struct Url pu;
     parseURL2(u, &pu, current);
 
     if (pu.label != NULL) {
@@ -240,9 +240,9 @@ static Str decode_gzip(unsigned char* src, int size)
     return buffer;
 }
 
-struct Content openHttp(struct HttpClient* c, const char* path, ParsedURL* current, FormList* post, const char* referer, bool no_cache)
+struct Content openHttp(struct HttpClient* c, const char* path, struct Url* current, FormList* post, const char* referer, bool no_cache)
 {
-    ParsedURL pu;
+    struct Url pu;
     parseURL2(path, &pu, current);
     pu.is_nocache = no_cache;
     if (LocalhostOnly && pu.host && !is_localhost(pu.host)) {
@@ -378,7 +378,7 @@ struct Content openHttp(struct HttpClient* c, const char* path, ParsedURL* curre
         // c->url = url_encode(p, NULL, 0);
         post = NULL;
         UFclose(&c->f);
-        current = New(ParsedURL);
+        current = New(struct Url);
         copyParsedURL(current, &pu);
         // t_buf->bufferprop |= BP_REDIRECTED;
         c->status = HTST_NORMAL;
@@ -412,7 +412,7 @@ struct Content openHttp(struct HttpClient* c, const char* path, ParsedURL* curre
         struct http_auth hauth;
         if (findAuthentication(&hauth, response.headers, "WWW-Authenticate:") != NULL
             && (c->realm = get_auth_param(hauth.param, "realm")) != NULL) {
-            ParsedURL* auth_pu;
+            struct Url* auth_pu;
             //         auth_pu = &pu;
             //         getAuthCookie(&hauth, "Authorization:", extra_header,
             //             auth_pu, &hr, post, &uname, &pwd);
@@ -494,15 +494,15 @@ struct Content openHttp(struct HttpClient* c, const char* path, ParsedURL* curre
 }
 
 struct Content
-loadGeneralFile(const char* path, ParsedURL* current, FormList* post, const char* referer,
+loadGeneralFile(const char* path, struct Url* current, FormList* post, const char* referer,
     bool no_cache)
 {
     //         openURL(&c, &pu, current, post, referer, no_cache, extra_header, &hr);
-    // void openURL(struct HttpClient* c, ParsedURL* pu, ParsedURL* current,
+    // void openURL(struct HttpClient* c, struct Url* pu, struct Url* current,
     //     FormList* post, const char* referer, bool no_cache, TextList* extra_header,
     //     struct HttpRequest* hr)
 
-    ParsedURL pu;
+    struct Url pu;
     parseURL2(path, &pu, current);
 
     // enum UrlScheme scheme = getUrlScheme(c.url);

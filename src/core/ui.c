@@ -155,7 +155,7 @@ static Str make_lastline_link(Buffer* buf, char* title, char* url)
 {
     Str s = NULL, u;
     Lineprop* pr;
-    ParsedURL pu;
+    struct Url pu;
     char* p;
     int l = getScreen()->COLS - 1, i;
 

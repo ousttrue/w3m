@@ -371,7 +371,7 @@ void getAllImage(Buffer* buf)
     if (!al)
         return;
 
-    ParsedURL* current = baseURL(buf);
+    struct Url* current = baseURL(buf);
     int i;
     Anchor* a;
     for (i = 0, a = al->anchors; i < al->nanchor; i++, a++) {
@@ -539,7 +539,7 @@ void loadImage(Buffer* buf, enum ImageLoadFlag flag, bool do_download)
 }
 
 struct ImageCache*
-getImage(struct Image* image, ParsedURL* current, enum ImageGetFlag flag)
+getImage(struct Image* image, struct Url* current, enum ImageGetFlag flag)
 {
     if (!activeImage)
         return NULL;

@@ -1,23 +1,17 @@
 #define _GNU_SOURCE
 #include "url.h"
+#include "ui.h"
 #include "quote.h"
 #include "siteconf.h"
 #include "buffer_loader.h"
-#include "form.h"
 #include "istream.h"
-#include "display.h"
 #include "buffer.h"
 #include "http.h"
 #include "indep.h"
 #include "mysignal.h"
 #include "local.h"
 #include "proxy.h"
-#include "rc.h"
-#include "ui.h"
-#include "cookie.h"
-#include "ssl_util.h"
 #include "etc.h"
-#include "tty.h"
 #include <openssl/ssl.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -91,7 +85,7 @@ KeyAbort(int _dummy)
     siglongjmp(AbortLoading, 1);
 }
 
-ParsedURL*
+struct Url*
 baseURL(Buffer* buf)
 {
     if (buf->bufferprop & BP_NO_URL) {
@@ -141,7 +135,7 @@ copyPath(const char* orgpath, int length, int option)
     return tmp->ptr;
 }
 
-void parseURL(const char* _url, ParsedURL* p_url, ParsedURL* current)
+void parseURL(const char* _url, struct Url* p_url, struct Url* current)
 {
     // quote 0x01-0x20, 0x7F-0xFF
     const char* url = url_quote(_url);
@@ -375,10 +369,10 @@ do_label:
 
 #define ALLOC_STR(s) ((s) == NULL ? NULL : allocStr(s, -1))
 
-void copyParsedURL(ParsedURL* p, const ParsedURL* q)
+void copyParsedURL(struct Url* p, const struct Url* q)
 {
     if (q == NULL) {
-        memset(p, 0, sizeof(ParsedURL));
+        memset(p, 0, sizeof(struct Url));
         p->scheme = SCM_UNKNOWN;
         return;
     }
@@ -394,7 +388,7 @@ void copyParsedURL(ParsedURL* p, const ParsedURL* q)
     p->query = ALLOC_STR(q->query);
 }
 
-void parseURL2(const char* url, ParsedURL* pu, ParsedURL* current)
+void parseURL2(const char* url, struct Url* pu, struct Url* current)
 {
     int relative_uri = false;
 
@@ -528,7 +522,7 @@ void parseURL2(const char* url, ParsedURL* pu, ParsedURL* current)
     }
 }
 
-Str _parsedURL2Str(ParsedURL* pu, int pass, int user, int label)
+Str _parsedURL2Str(struct Url* pu, int pass, int user, int label)
 {
     Str tmp;
 
@@ -604,12 +598,12 @@ Str _parsedURL2Str(ParsedURL* pu, int pass, int user, int label)
     return tmp;
 }
 
-Str parsedURL2Str(ParsedURL* pu)
+Str parsedURL2Str(struct Url* pu)
 {
     return _parsedURL2Str(pu, false, true, true);
 }
 
-Str parsedURL2RefererStr(ParsedURL* pu)
+Str parsedURL2RefererStr(struct Url* pu)
 {
     return _parsedURL2Str(pu, false, false, false);
 }
@@ -630,11 +624,10 @@ void init_stream(struct URLFile* uf, int scheme, InputStream stream)
 
 const char* filename_extension(const char* path, int is_url)
 {
-    char *last_dot = "", *p = path;
-    int i;
-
+    const char* last_dot = "";
     if (path == NULL)
         return last_dot;
+    const char* p = path;
     if (*p == '.')
         p++;
     for (; *p; p++) {
@@ -644,6 +637,7 @@ const char* filename_extension(const char* path, int is_url)
             break;
     }
     if (*last_dot == '.') {
+        int i;
         for (i = 1; i < 8 && last_dot[i]; i++) {
             if (is_url && !IS_ALNUM(last_dot[i]))
                 break;
@@ -653,10 +647,10 @@ const char* filename_extension(const char* path, int is_url)
         return last_dot;
 }
 
-ParsedURL*
+struct Url*
 schemeToProxy(int scheme)
 {
-    ParsedURL* pu = NULL; /* for gcc */
+    struct Url* pu = NULL; /* for gcc */
     switch (scheme) {
     case SCM_HTTP:
         pu = &HTTP_proxy_parsed;
@@ -673,12 +667,12 @@ schemeToProxy(int scheme)
 }
 
 wc_ces
-url_to_charset(const char* url, const ParsedURL* base, wc_ces doc_charset)
+url_to_charset(const char* url, const struct Url* base, wc_ces doc_charset)
 {
-    const ParsedURL* pu;
-    ParsedURL pu_buf;
+    const struct Url* pu;
+    struct Url pu_buf;
     if (url && *url && *url != '#') {
-        parseURL2((char*)url, &pu_buf, (ParsedURL*)base);
+        parseURL2((char*)url, &pu_buf, (struct Url*)base);
         pu = &pu_buf;
     } else {
         pu = base;
@@ -689,11 +683,10 @@ url_to_charset(const char* url, const ParsedURL* base, wc_ces doc_charset)
     const wc_ces* csptr;
     csptr = query_SCONF_URL_CHARSET(pu);
 
-    return (csptr && *csptr) ? *csptr : doc_charset ? doc_charset
-                                                    : DocumentCharset;
+    return (csptr && *csptr) ? *csptr : doc_charset;
 }
 
-const char* url_encode(const char* url, const ParsedURL* base, wc_ces doc_charset)
+const char* url_encode(const char* url, const struct Url* base, wc_ces doc_charset)
 {
     return url_quote_conv(url, url_to_charset(url, base, doc_charset));
 }
@@ -708,7 +701,7 @@ char* url_decode2(const char* url, const Buffer* buf)
     return url_unquote_conv((char*)url, url_charset);
 }
 
-int same_url_p(ParsedURL* pu1, ParsedURL* pu2)
+int same_url_p(struct Url* pu1, struct Url* pu2)
 {
     return (pu1->scheme == pu2->scheme && pu1->port == pu2->port && (pu1->host ? pu2->host ? !strcasecmp(pu1->host, pu2->host) : 0 : 1)
         && (pu1->file ? pu2->file ? !strcmp(pu1->file, pu2->file) : 0 : 1));

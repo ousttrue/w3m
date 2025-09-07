@@ -12,7 +12,6 @@ extern char* rc_dir;
 
 struct _Buffer;
 struct KeyValue;
-struct _ParsedURL;
 
 void show_params(FILE* fp);
 int str_to_bool(const char* value, int old);

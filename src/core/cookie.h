@@ -9,7 +9,7 @@ struct portlist {
 };
 
 struct cookie {
-    ParsedURL url;
+    struct Url url;
     Str name;
     Str value;
     time_t expires;
@@ -56,12 +56,12 @@ extern int no_rc_dir;
 #define COO_EMAX COO_EPORT
 extern const char* violations[COO_EMAX];
 
-struct _ParsedURL;
+struct Url;
 struct _Buffer;
 struct KeyValue;
 
-Str find_cookie(struct _ParsedURL* pu);
-int add_cookie(struct _ParsedURL* pu, Str name, Str value, time_t expires,
+Str find_cookie(struct Url* pu);
+int add_cookie(struct Url* pu, Str name, Str value, time_t expires,
     Str domain, Str path, int flag, Str comment, int version,
     Str port, Str commentURL);
 void save_cookies(void);

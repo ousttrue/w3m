@@ -10,7 +10,7 @@ extern int ShowEffect;
 extern int disable_secret_security_check;
 
 struct _Buffer;
-struct _ParsedURL;
+struct Url;
 
 Str base64_encode(const char* src, size_t len);
 int columnSkip(struct _Buffer* buf, int offset);
@@ -23,9 +23,9 @@ char* mydirname(char* s);
 int next_status(char c, int* status);
 int read_token(Str buf, char** instr, int* status, int pre, int append);
 Str correct_irrtag(int status);
-int find_auth_user_passwd(struct _ParsedURL* pu, char* realm, Str* uname, Str* pwd, int is_proxy);
-void add_auth_user_passwd(struct _ParsedURL* pu, char* realm, Str uname, Str pwd, int is_proxy);
-void invalidate_auth_user_passwd(struct _ParsedURL* pu, char* realm, Str uname, Str pwd, int is_proxy);
+int find_auth_user_passwd(struct Url* pu, char* realm, Str* uname, Str* pwd, int is_proxy);
+void add_auth_user_passwd(struct Url* pu, char* realm, Str uname, Str pwd, int is_proxy);
+void invalidate_auth_user_passwd(struct Url* pu, char* realm, Str uname, Str pwd, int is_proxy);
 char* last_modified(struct _Buffer* buf);
 Str romanNumeral(int n);
 Str romanAlphabet(int n);

@@ -3,7 +3,7 @@
 #include "istream.h"
 
 struct Content {
-    struct _ParsedURL pu;
+    struct Url pu;
     Str page;
     wc_ces charset;
     const char* real_type;
@@ -11,5 +11,5 @@ struct Content {
 };
 
 struct form_list;
-struct Content loadGeneralFile(const char* path, struct _ParsedURL* current, struct form_list* post,
+struct Content loadGeneralFile(const char* path, struct Url* current, struct form_list* post,
     const char* referer, bool no_cache);

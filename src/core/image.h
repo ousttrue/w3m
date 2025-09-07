@@ -30,7 +30,7 @@ enum ImageCacheFlags {
 
 struct ImageCache {
     const char* url;
-    struct _ParsedURL* current;
+    struct Url* current;
     const char* file;
     const char* touch;
     pid_t pid;
@@ -78,7 +78,7 @@ enum ImageGetFlag {
     IMG_FLAG_SKIP = 1,
     IMG_FLAG_AUTO = 2,
 };
-struct ImageCache* getImage(struct Image* image, struct _ParsedURL* current, enum ImageGetFlag flag);
+struct ImageCache* getImage(struct Image* image, struct Url* current, enum ImageGetFlag flag);
 
 int getImageSize(struct ImageCache* cache);
 

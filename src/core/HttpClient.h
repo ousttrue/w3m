@@ -13,7 +13,7 @@ struct HttpClient {
     struct URLFile f;
     enum HttpConnectionStatus status;
 
-    struct _ParsedURL puv[FollowRedirection];
+    struct Url puv[FollowRedirection];
     int nredir;
 
     // const char* url;
@@ -31,4 +31,4 @@ struct HttpClient {
 };
 
 void initHttpClient(struct HttpClient* c);
-bool checkRedirection(struct HttpClient* c, struct _ParsedURL* pu);
+bool checkRedirection(struct HttpClient* c, struct Url* pu);

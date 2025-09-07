@@ -13,10 +13,10 @@ enum SiteConfType {
     SCONF_N_FIELD = 6,
 };
 
-struct _ParsedURL;
-const char* query_SCONF_SUBSTITUTE_URL(const struct _ParsedURL* pu);
-const char* query_SCONF_USER_AGENT(const struct _ParsedURL* pu);
-const wc_ces* query_SCONF_URL_CHARSET(const struct _ParsedURL* pu);
-const int* query_SCONF_NO_REFERER_FROM(const struct _ParsedURL* pu);
-const int* query_SCONF_NO_REFERER_TO(const struct _ParsedURL* pu);
+struct Url;
+const char* query_SCONF_SUBSTITUTE_URL(const struct Url* pu);
+const char* query_SCONF_USER_AGENT(const struct Url* pu);
+const wc_ces* query_SCONF_URL_CHARSET(const struct Url* pu);
+const int* query_SCONF_NO_REFERER_FROM(const struct Url* pu);
+const int* query_SCONF_NO_REFERER_TO(const struct Url* pu);
 void loadSiteconf();
