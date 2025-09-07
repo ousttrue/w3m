@@ -110,9 +110,6 @@ int _doFileCopy(const char* tmpf, const char* defstr, int download)
     char *p, *q = NULL;
     pid_t pid;
     char* lock;
-#if !(defined(HAVE_SYMLINK) && defined(HAVE_LSTAT))
-    FILE* f;
-#endif
     struct stat st;
     long long size = 0;
     bool is_pipe = false;
@@ -155,13 +152,7 @@ int _doFileCopy(const char* tmpf, const char* defstr, int download)
         }
         lock = tmpfname(TMPF_DFL, ".lock")->ptr;
 
-#if defined(HAVE_SYMLINK) && defined(HAVE_LSTAT)
         symlink(p, lock);
-#else
-        f = fopen(lock, "w");
-        if (f)
-            fclose(f);
-#endif
 
         flush_tty();
         pid = fork();

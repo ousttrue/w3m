@@ -525,15 +525,8 @@ void loadImage(Buffer* buf, enum ImageLoadFlag flag, bool do_download)
             if (!b || !b->real_type || strncasecmp(b->real_type, "image/", 6))
                 unlink(cache->file);
             */
-#if defined(HAVE_SYMLINK) && defined(HAVE_LSTAT)
+
             symlink(cache->file, cache->touch);
-#else
-            {
-                FILE* f = fopen(cache->touch, "w");
-                if (f)
-                    fclose(f);
-            }
-#endif
             exit(0);
         } else if (cache->pid < 0) {
             cache->pid = 0;

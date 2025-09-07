@@ -485,9 +485,6 @@ int doFileSave(struct URLFile uf, const char* defstr, int current_content_length
     pid_t pid;
     char* lock;
     char* tmpf = NULL;
-#if !(defined(HAVE_SYMLINK) && defined(HAVE_LSTAT))
-    FILE* f;
-#endif
 
     // if (fmInitialized)
     {
@@ -516,13 +513,7 @@ int doFileSave(struct URLFile uf, const char* defstr, int current_content_length
          * }
          */
         lock = tmpfname(TMPF_DFL, ".lock")->ptr;
-#if defined(HAVE_SYMLINK) && defined(HAVE_LSTAT)
         symlink(p, lock);
-#else
-        f = fopen(lock, "w");
-        if (f)
-            fclose(f);
-#endif
         flush_tty();
         pid = fork();
         if (!pid) {
