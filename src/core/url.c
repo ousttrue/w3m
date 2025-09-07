@@ -45,7 +45,6 @@ char ArgvIsURL = true;
 char LocalhostOnly = false;
 char* document_root = NULL;
 int retryAsHttp = true;
-char* w3m_reqlog = 0;
 char* index_file = NULL;
 int DecodeURL = false;
 

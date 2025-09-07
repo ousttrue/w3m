@@ -20,7 +20,6 @@ extern char ArgvIsURL;
 extern char LocalhostOnly;
 extern char* document_root;
 extern int retryAsHttp;
-extern char* w3m_reqlog;
 extern char* index_file;
 extern int DecodeURL;
 

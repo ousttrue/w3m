@@ -269,14 +269,6 @@ struct HttpResponse readHttpResponse(struct URLFile* uf, ParsedURL* pu)
     Str lineBuf2 = NULL;
     Str tmp;
     while ((tmp = StrmyUFgets(uf)) && tmp->length) {
-        if (w3m_reqlog) {
-            FILE* ff;
-            ff = fopen(w3m_reqlog, "a");
-            if (ff) {
-                Strfputs(tmp, ff);
-                fclose(ff);
-            }
-        }
         cleanup_line(tmp, HEADER_MODE);
         if (tmp->ptr[0] == '\n' || tmp->ptr[0] == '\r' || tmp->ptr[0] == '\0') {
             if (!lineBuf2)
