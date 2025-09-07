@@ -1,5 +1,6 @@
 #pragma once
-#include <Str.h>
+#include "Str.h"
+#include <stdbool.h>
 
 enum QuoteMask {
     HTML_QUOTE_MASK = 0x07 /* &, <, >, ", ' */,
@@ -18,17 +19,18 @@ inline static bool is_url_unsafe(unsigned char c) { return (GET_QUOTE_TYPE(c) & 
 
 const char* remove_space(const char* str);
 
-char* file_quote(char* str);
+const char* file_quote(const char* str);
+const char* file_unquote(const char* str);
+
 const char* url_quote(const char* str);
 Str Str_url_unquote(Str x, int is_form, int safe);
+
 Str Str_form_quote(Str x);
 inline static Str Str_form_unquote(Str x) { return Str_url_unquote((x), true, false); }
-extern char* shell_quote(const char* str);
+
+char* shell_quote(const char* str);
 
 const char* getWord(const char** str);
 const char* getQWord(const char** str);
-
 struct regex;
 const char* getRegexWord(const char** str, struct regex** regex_ret);
-
-const char* file_unquote(const char* str);

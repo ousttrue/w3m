@@ -1,7 +1,6 @@
 #include "quote.h"
-#include "entity.h"
 #include "regex.h"
-#include <myctype.h>
+#include "myctype.h"
 #include <stdio.h>
 
 extern unsigned char QUOTE_MAP[];
@@ -48,16 +47,15 @@ const char* url_quote(const char* str)
     return str;
 }
 
-char* file_quote(char* str)
+const char* file_quote(const char* str)
 {
     Str tmp = NULL;
-    char* p;
-    char buf[4];
-
+    const char* p;
     for (p = str; *p; p++) {
         if (is_file_quote(*p)) {
             if (tmp == NULL)
                 tmp = Strnew_charp_n(str, (int)(p - str));
+            char buf[4];
             sprintf(buf, "%%%02X", (unsigned char)*p);
             Strcat_charp(tmp, buf);
         } else {
