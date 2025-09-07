@@ -1110,7 +1110,7 @@ void sync_with_option(void)
         AcceptLang = _("en;q=1.0");
     }
     if (AcceptEncoding == NULL || *AcceptEncoding == '\0')
-        AcceptEncoding = acceptableEncoding();
+        AcceptEncoding = (char*)acceptableEncoding();
     if (AcceptMedia == NULL || *AcceptMedia == '\0')
         AcceptMedia = acceptableMimeTypes();
     update_utf8_symbol();
@@ -1133,7 +1133,7 @@ void init_rc(void)
         rc_dir = allocStr(RC_DIR, -1);
     if (rc_dir == NULL || *rc_dir == '\0')
         goto rc_dir_err;
-    rc_dir = expandPath(rc_dir);
+    rc_dir = (char*)expandPath(rc_dir);
 
     i = strlen(rc_dir);
     if (i > 1 && rc_dir[i - 1] == '/')
@@ -1192,7 +1192,7 @@ void init_tmp(void)
         return;
     }
 
-    tmp_dir = expandPath(tmp_dir);
+    tmp_dir = (char*)expandPath(tmp_dir);
     i = strlen(tmp_dir);
     if (i > 1 && tmp_dir[i - 1] == '/')
         tmp_dir[i - 1] = '\0';
@@ -1243,9 +1243,7 @@ to_str(struct param_ptr* p)
     case P_CHAR:
         return Sprintf("%c", *(char*)p->varptr);
     case P_STRING:
-#if defined(USE_SSL) && defined(USE_SSL_VERIFY)
     case P_SSLPATH:
-#endif
         /*  SystemCharset -> InnerCharset */
         return Strnew_charp(conv_from_system(*(char**)p->varptr));
     case P_PIXELS:
@@ -1260,7 +1258,6 @@ Buffer*
 load_option_panel(void)
 {
     Str src;
-    struct param_ptr* p;
     struct sel_c* s;
     wc_ces_list* c;
     int x, i;
@@ -1274,9 +1271,8 @@ load_option_panel(void)
     if (!OptionEncode) {
         optionpanel_str = wc_Str_conv(optionpanel_str, OptionCharset, InnerCharset);
         for (i = 0; sections[i].name != NULL; i++) {
-            sections[i].name = wc_conv(_(sections[i].name), OptionCharset,
-                InnerCharset)
-                                   ->ptr;
+            sections[i].name = wc_conv(_(sections[i].name), OptionCharset, InnerCharset)->ptr;
+            struct param_ptr* p;
             for (p = sections[i].params; p->name; p++) {
                 p->comment = wc_conv(_(p->comment), OptionCharset,
                     InnerCharset)
@@ -1302,9 +1298,10 @@ load_option_panel(void)
     Strcat_charp(src, "<table><tr><td>");
     for (i = 0; sections[i].name != NULL; i++) {
         Strcat_m_charp(src, "<h1>", sections[i].name, "</h1>", NULL);
-        p = sections[i].params;
+        ;
         Strcat_charp(src, "<table width=100% cellpadding=0>");
-        while (p->name) {
+        for (int j = 0; sections[i].params[j].name; ++j) {
+            struct param_ptr* p = &sections[i].params[j];
             Strcat_m_charp(src, "<tr><td>", p->comment, NULL);
             Strcat(src, Sprintf("</td><td width=%d>", (int)(28 * pixel_per_char)));
             switch (p->inputtype) {
@@ -1352,7 +1349,6 @@ load_option_panel(void)
                 break;
             }
             Strcat_charp(src, "</td></tr>\n");
-            p++;
         }
         Strcat_charp(src,
             "<tr><td></td><td><p><input type=submit value=\"OK\"></td></tr>");
