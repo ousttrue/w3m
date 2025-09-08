@@ -12,7 +12,6 @@ extern int disable_secret_security_check;
 struct _Buffer;
 struct Url;
 
-Str base64_encode(const char* src, size_t len);
 int columnSkip(struct _Buffer* buf, int offset);
 struct _Line* lineSkip(struct _Buffer* buf, struct _Line* line, int offset, int last);
 struct _Line* currentLineSkip(struct _Buffer* buf, struct _Line* line, int offset, int last);

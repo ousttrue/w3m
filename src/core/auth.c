@@ -1,4 +1,5 @@
 #include "auth.h"
+#include "base64.h"
 #include "textlist.h"
 #include "indep.h"
 #include "form.h"
