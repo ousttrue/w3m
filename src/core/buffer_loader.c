@@ -630,7 +630,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                     if (a_select && parsedtag_get_value(tag, ATTR_SELECTNUMBER, &selectnumber)) {
                         if (selectnumber >= max_select) {
                             max_select = 2 * selectnumber;
-                            select_option = New_Reuse(FormSelectOption,
+                            select_option = New_Reuse(struct FormSelectOption,
                                 select_option,
                                 max_select);
                             a_select = New_Reuse(Anchor*, a_select,

@@ -50,7 +50,7 @@ static Str cur_option_label;
 static int cur_option_selected;
 static int cur_status;
 /* menu based <select>  */
-FormSelectOption* select_option;
+struct FormSelectOption* select_option;
 int max_select = MAX_SELECT;
 int n_select;
 static int cur_option_maxwidth;
@@ -77,7 +77,7 @@ void initParser(int* pMax_textarea, int* pMax_select)
     n_select = -1;
     if (!max_select) { /* halfload */
         max_select = MAX_SELECT;
-        select_option = New_N(FormSelectOption, max_select);
+        select_option = New_N(struct FormSelectOption, max_select);
         // a_select = New_N(Anchor*, max_select);
     }
     *pMax_select = max_select;
@@ -91,7 +91,7 @@ void init2()
     textarea_str = New_N(Str, max_textarea);
     n_select = 0;
     max_select = MAX_SELECT;
-    select_option = New_N(FormSelectOption, max_select);
+    select_option = New_N(struct FormSelectOption, max_select);
     cur_select = NULL;
     form_sp = -1;
     form_max = -1;
@@ -973,7 +973,7 @@ Str process_select(struct HtmlTagParsed* tag)
         Strcat_charp(select_str, ">");
         if (n_select == max_select) {
             max_select *= 2;
-            select_option = New_Reuse(FormSelectOption, select_option, max_select);
+            select_option = New_Reuse(struct FormSelectOption, select_option, max_select);
         }
         select_option[n_select].first = NULL;
         select_option[n_select].last = NULL;

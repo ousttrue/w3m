@@ -640,9 +640,9 @@ static struct FormItem* save_submit_formlist(struct FormItem* src)
     struct FormItem* srcitem;
     struct FormItem* item;
     struct FormItem* ret = NULL;
-    FormSelectOptionItem* opt;
-    FormSelectOptionItem* curopt;
-    FormSelectOptionItem* srcopt;
+    struct FormSelectOptionItem* opt;
+    struct FormSelectOptionItem* curopt;
+    struct FormSelectOptionItem* srcopt;
 
     if (src == NULL)
         return NULL;
@@ -672,7 +672,7 @@ static struct FormItem* save_submit_formlist(struct FormItem* src)
         for (srcopt = srcitem->select_option; srcopt; srcopt = srcopt->next) {
             if (!srcopt->checked)
                 continue;
-            opt = New(FormSelectOptionItem);
+            opt = New(struct FormSelectOptionItem);
             opt->value = Strdup(srcopt->value);
             opt->label = Strdup(srcopt->label);
             opt->checked = srcopt->checked;

@@ -37,7 +37,7 @@ char* pre_form_file = (PRE_FORM_FILE);
 
 extern Str* textarea_str;
 extern int max_textarea;
-extern FormSelectOption* select_option;
+extern struct FormSelectOption* select_option;
 extern int max_select;
 #include "menu.h"
 
@@ -599,10 +599,10 @@ void do_internal(char* action, char* data)
     }
 }
 
-void addSelectOption(FormSelectOption* fso, Str value, Str label, int chk)
+void addSelectOption(struct FormSelectOption* fso, Str value, Str label, int chk)
 {
-    FormSelectOptionItem* o;
-    o = New(FormSelectOptionItem);
+    struct FormSelectOptionItem* o;
+    o = New(struct FormSelectOptionItem);
     if (value == NULL)
         value = label;
     o->value = value;
@@ -619,9 +619,9 @@ void addSelectOption(FormSelectOption* fso, Str value, Str label, int chk)
     }
 }
 
-void chooseSelectOption(struct FormItem* fi, FormSelectOptionItem* item)
+void chooseSelectOption(struct FormItem* fi, struct FormSelectOptionItem* item)
 {
-    FormSelectOptionItem* opt;
+    struct FormSelectOptionItem* opt;
     int i;
 
     fi->selected = 0;
@@ -643,7 +643,7 @@ void chooseSelectOption(struct FormItem* fi, FormSelectOptionItem* item)
     updateSelectOption(fi, item);
 }
 
-void updateSelectOption(struct FormItem* fi, FormSelectOptionItem* item)
+void updateSelectOption(struct FormItem* fi, struct FormSelectOptionItem* item)
 {
     int i;
 
@@ -660,7 +660,7 @@ void updateSelectOption(struct FormItem* fi, FormSelectOptionItem* item)
 int formChooseOptionByMenu(struct FormItem* fi, int x, int y)
 {
     int i, n, selected = -1, init_select = fi->selected;
-    FormSelectOptionItem* opt;
+    struct FormSelectOptionItem* opt;
     char** label;
 
     for (n = 0, opt = fi->select_option; opt != NULL; n++, opt = opt->next)
@@ -912,7 +912,7 @@ void preFormUpdateBuffer(Buffer* buf)
     Anchor* a;
     FormList* fl;
     struct FormItem* fi;
-    FormSelectOptionItem* opt;
+    struct FormSelectOptionItem* opt;
     int j;
 
     if (!buf || !buf->formitem || !PreForm)

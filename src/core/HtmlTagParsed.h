@@ -9,7 +9,7 @@ extern int n_textarea;
 extern Str* textarea_str;
 extern int form_max;
 extern struct form_list** forms;
-extern struct form_select_option* select_option;
+extern struct FormSelectOption* select_option;
 extern int pseudoInlines;
 extern int ignore_null_img_alt;
 

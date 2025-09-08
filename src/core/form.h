@@ -40,21 +40,21 @@ typedef struct form_list {
     unsigned long length;
 } FormList;
 
-typedef struct form_select_option_item {
+struct FormSelectOptionItem {
     Str value;
     Str label;
     int checked;
-    struct form_select_option_item* next;
-} FormSelectOptionItem;
+    struct FormSelectOptionItem* next;
+};
 
-typedef struct form_select_option {
-    FormSelectOptionItem* first;
-    FormSelectOptionItem* last;
-} FormSelectOption;
+struct FormSelectOption {
+    struct FormSelectOptionItem* first;
+    struct FormSelectOptionItem* last;
+};
 
-void addSelectOption(FormSelectOption* fso, Str value, Str label, int chk);
-void chooseSelectOption(struct FormItem* fi, FormSelectOptionItem* item);
-void updateSelectOption(struct FormItem* fi, FormSelectOptionItem* item);
+void addSelectOption(struct FormSelectOption* fso, Str value, Str label, int chk);
+void chooseSelectOption(struct FormItem* fi, struct FormSelectOptionItem* item);
+void updateSelectOption(struct FormItem* fi, struct FormSelectOptionItem* item);
 int formChooseOptionByMenu(struct FormItem* fi, int x, int y);
 
 enum FormItemType {
@@ -82,7 +82,7 @@ struct FormItem {
     int rows;
     int maxlength;
     int readonly;
-    FormSelectOptionItem* select_option;
+    struct FormSelectOptionItem* select_option;
     Str label, init_label;
     int selected, init_selected;
     struct form_list* parent;
