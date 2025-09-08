@@ -17,9 +17,11 @@ const public_headers = [_][]const u8{
     "quote.h",
     "url_scheme.h",
     "url.h",
+    "textlist.h",
 };
 
 const srcs = [_][]const u8{
+    "textlist.c",
     "url_scheme.c",
     "url.c",
     "quote.c",

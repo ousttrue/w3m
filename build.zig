@@ -88,7 +88,6 @@ const w3m_srcs = [_][]const u8{
     "istream.c",
 
     "indep.c",
-    "textlist.c",
     "hash.c",
 
     "version.c",
@@ -182,8 +181,18 @@ pub fn build(b: *std.Build) void {
     const gcs = gcs_dep.artifact("gcstring");
     exe.linkLibrary(gcs);
 
-    const output = build_output(b, target, optimize);
-    exe.linkLibrary(output);
+    {
+        const lib = build_lib(
+            b,
+            target,
+            optimize,
+            "output",
+            b.path("src/output"),
+            &output_srcs,
+            &output_public_headers,
+        );
+        exe.linkLibrary(lib);
+    }
 
     const wf = gen_functable(b);
     {
@@ -217,27 +226,31 @@ pub fn build(b: *std.Build) void {
     _ = zcc.createStep(b, "cdb", targets.toOwnedSlice() catch @panic("OOM"));
 }
 
-fn build_output(
+fn build_lib(
     b: *std.Build,
     target: std.Build.ResolvedTarget,
     optimize: std.builtin.OptimizeMode,
+    name: []const u8,
+    root: std.Build.LazyPath,
+    files: []const []const u8,
+    public_headers: []const []const u8,
 ) *std.Build.Step.Compile {
     const mod = b.addModule("output", .{
         .target = target,
         .optimize = optimize,
     });
     const lib = b.addLibrary(.{
-        .name = "output",
+        .name = name,
         .root_module = mod,
     });
     lib.linkLibC();
     lib.addCSourceFiles(.{
-        .root = b.path("src/output"),
-        .files = &output_srcs,
+        .root = root,
+        .files = files,
         // .flags = &flags,
     });
-    for (output_public_headers) |header| {
-        lib.installHeader(b.path("src/output").path(b, header), header);
+    for (public_headers) |header| {
+        lib.installHeader(root.path(b, header), header);
     }
     return lib;
 }
