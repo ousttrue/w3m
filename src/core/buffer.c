@@ -473,7 +473,9 @@ void reshapeBuffer(Buffer* buf, int cols)
         loadHTMLBuffer(&f, buf);
     else
         loadBuffer(&f, buf);
-    UFclose(&f);
+    if (ISclose(f.stream) == 0) {
+        f.stream = NULL;
+    }
     wc_uint8 old_auto_detect = WcOption.auto_detect;
     WcOption.auto_detect = old_auto_detect;
     UseContentCharset = true;

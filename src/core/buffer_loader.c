@@ -111,13 +111,15 @@ static int currentLn(Buffer* buf)
 static void
 addLink(Buffer* buf, struct HtmlTagParsed* tag)
 {
-    char *href = NULL, *title = NULL, *ctype = NULL, *rel = NULL, *rev = NULL;
+    char *title = NULL, *ctype = NULL, *rel = NULL, *rev = NULL;
     char type = LINK_TYPE_NONE;
     LinkList* l;
 
+    const char* href;
     parsedtag_get_value(tag, ATTR_HREF, &href);
-    if (href)
+    if (href) {
         href = url_quote(remove_space(href));
+    }
     parsedtag_get_value(tag, ATTR_TITLE, &title);
     parsedtag_get_value(tag, ATTR_TYPE, &ctype);
     parsedtag_get_value(tag, ATTR_REL, &rel);
@@ -153,7 +155,6 @@ addLink(Buffer* buf, struct HtmlTagParsed* tag)
 int getMetaRefreshParam(const char* q, Str* refresh_uri)
 {
     int refresh_interval;
-    char* r;
     Str s_tmp = NULL;
 
     if (q == NULL || refresh_uri == NULL)
@@ -168,7 +169,7 @@ int getMetaRefreshParam(const char* q, Str* refresh_uri)
             q += 4;
             if (*q == '\"' || *q == '\'') /* " or ' */
                 q++;
-            r = q;
+            const char* r = q;
             while (*r && !IS_SPACE(*r) && *r != ';')
                 r++;
             s_tmp = Strnew_charp_n(q, r - q);
@@ -899,7 +900,7 @@ void loadHTML(Str html, wc_ces doc_charset, int cols, bool use_graphic, bool int
     struct URLFile f;
     init_stream(&f, SCM_LOCAL, newStrStream(html));
     meta_charset = 0;
-    while ((lineBuf2 = StrmyUFgets(&f)) && lineBuf2->length) {
+    while ((lineBuf2 = StrmyISgets(f.stream)) && lineBuf2->length) {
         // if (src)
         //     Strfputs(lineBuf2, src);
         linelen += lineBuf2->length;
@@ -1617,7 +1618,9 @@ loadHTMLString(Str page)
     newBuf->document_charset = WC_CES_US_ASCII;
 
     term_raw();
-    UFclose(&f);
+    if (ISclose(f.stream) == 0) {
+        f.stream = NULL;
+    }
     newBuf->topLine = newBuf->firstLine;
     newBuf->lastLine = newBuf->currentLine;
     newBuf->currentLine = newBuf->firstLine;

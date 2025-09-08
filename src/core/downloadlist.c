@@ -21,7 +21,7 @@ void updateDownload()
     }
 }
 
-void addDownloadList(pid_t pid, char* url, char* save, char* lock, long long size)
+void addDownloadList(pid_t pid, const char* url, const char* save, const char* lock, long long size)
 {
     DownloadList* d = New(DownloadList);
     d->pid = pid;

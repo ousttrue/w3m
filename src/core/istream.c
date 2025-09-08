@@ -440,7 +440,9 @@ void UFhalfclose(struct URLFile* f)
     case SCM_FTP:
         break;
     default:
-        UFclose(f);
+        if (ISclose(f->stream) == 0) {
+            f->stream = NULL;
+        }
         break;
     }
 }
@@ -511,7 +513,9 @@ int doFileSave(struct URLFile uf, const char* defstr, int current_content_length
             err = save2tmp(uf, p);
             if (err == 0 && PreserveTimestamp && uf.modtime != -1)
                 setModtime(p, uf.modtime);
-            UFclose(&uf);
+            if (ISclose(uf.stream) == 0) {
+                uf.stream = NULL;
+            }
             unlink(lock);
             if (err != 0)
                 exit(-err);
@@ -623,7 +627,7 @@ void examineFile(struct URLFile* uf, const char* path)
 
     check_compression(uf, path);
     if (uf->compression != CMP_NOCOMPRESS) {
-        char* ext = uf->ext;
+        const char* ext = uf->ext;
         const char* t0 = uncompressed_file_type(path, &ext);
         uf->guess_type = (char*)t0;
         uf->ext = ext;
@@ -636,7 +640,7 @@ Str readAll(struct URLFile* f)
 {
     Str html = Strnew();
     Str lineBuf2;
-    while ((lineBuf2 = StrmyUFgets(f)) && lineBuf2->length) {
+    while ((lineBuf2 = StrmyISgets(f->stream)) && lineBuf2->length) {
         Strcat(html, lineBuf2);
     }
     return html;

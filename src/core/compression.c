@@ -209,7 +209,9 @@ void uncompress_stream(struct URLFile* uf, char** src)
     /* child1 -- stdout|f1=uf -> parent */
     pid1 = open_pipe_rw(&f1, NULL);
     if (pid1 < 0) {
-        UFclose(uf);
+        if (ISclose(uf->stream) == 0) {
+            uf->stream = NULL;
+        }
         return;
     }
     if (pid1 == 0) {
@@ -220,7 +222,9 @@ void uncompress_stream(struct URLFile* uf, char** src)
         /* uf -> child2 -- stdout|stdin -> child1 */
         pid2 = open_pipe_rw(&f2, NULL);
         if (pid2 < 0) {
-            UFclose(uf);
+            if (ISclose(uf->stream) == 0) {
+                uf->stream = NULL;
+            }
             exit(1);
         }
         if (pid2 == 0) {
@@ -238,7 +242,9 @@ void uncompress_stream(struct URLFile* uf, char** src)
                 if (f && fwrite(buf, 1, count, f) != count)
                     break;
             }
-            UFclose(uf);
+            if (ISclose(uf->stream) == 0) {
+                uf->stream = NULL;
+            }
             if (f)
                 fclose(f);
             xfree(buf);
@@ -263,7 +269,7 @@ void uncompress_stream(struct URLFile* uf, char** src)
     uf->stream = newFileStream(f1, &fclose);
 }
 
-void set_compression(struct URLFile* uf, const char *p)
+void set_compression(struct URLFile* uf, const char* p)
 {
     uf->compression = CMP_NOCOMPRESS;
 

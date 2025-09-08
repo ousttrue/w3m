@@ -260,7 +260,7 @@ struct HttpResponse readHttpResponse(struct URLFile* uf, struct Url* pu)
     wc_ces charset = WC_CES_US_ASCII;
     Str lineBuf2 = NULL;
     Str tmp;
-    while ((tmp = StrmyUFgets(uf)) && tmp->length) {
+    while ((tmp = StrmyISgets(uf->stream)) && tmp->length) {
         cleanup_line(tmp);
         if (tmp->ptr[0] == '\n' || tmp->ptr[0] == '\r' || tmp->ptr[0] == '\0') {
             if (!lineBuf2)
@@ -273,8 +273,8 @@ struct HttpResponse readHttpResponse(struct URLFile* uf, struct Url* pu)
             } else {
                 lineBuf2 = tmp;
             }
-            int c = UFgetc(uf);
-            UFundogetc(uf);
+            int c = ISgetc(uf->stream);
+            ISundogetc(uf->stream);
             if (c == ' ' || c == '\t')
                 /* header line is continued */
                 continue;

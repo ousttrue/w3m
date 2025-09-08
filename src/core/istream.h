@@ -138,14 +138,10 @@ extern void ssl_accept_this_site(char* hostname);
 
 #define openIS(path) newInputStream(open((path), O_RDONLY))
 
-#define StrUFgets(f) StrISgets((f)->stream)
-#define StrmyUFgets(f) StrmyISgets((f)->stream)
-#define UFgetc(f) ISgetc((f)->stream)
-#define UFundogetc(f) ISundogetc((f)->stream)
-#define UFclose(f)                   \
-    if (ISclose((f)->stream) == 0) { \
-        (f)->stream = NULL;          \
-    }
+// #define UFclose(f)                   \
+//     if (ISclose((f)->stream) == 0) { \
+//         (f)->stream = NULL;          \
+//     }
 #define UFfileno(f) ISfileno((f)->stream)
 
 struct URLFile {

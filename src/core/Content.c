@@ -382,7 +382,9 @@ struct Content openHttp(struct HttpClient* c, const char* path, struct Url* curr
         /* 307: Temporary Redirect (HTTP/1.1) */
         // c->url = url_encode(p, NULL, 0);
         post = NULL;
-        UFclose(&c->f);
+        if (ISclose(c->f.stream) == 0) {
+            c->f.stream = NULL;
+        }
         current = New(struct Url);
         copyParsedURL(current, &pu);
         // t_buf->bufferprop |= BP_REDIRECTED;
