@@ -1,21 +1,10 @@
-#include "file_copy.h"
-#include "subprocess.h"
-#include "downloadlist.h"
-#include "tmpfile.h"
-#include "ssl_util.h"
-#include "mysignal.h"
-#include "mimehead.h"
 #include "istream.h"
-#include "keymap.h"
-#include "linein.h"
-#include "history.h"
-#include "tty.h"
-#include "progress.h"
-#include <signal.h>
+#include "ssl_util.h"
+#include "file_copy.h"
+#include "mimehead.h"
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <setjmp.h>
 
 char AutoUncompress = (false);
 char PreserveTimestamp = (true);
@@ -45,6 +34,7 @@ static void memchop(char* p, int* len);
 static void
 do_update(BaseStream base)
 {
+
     int len;
     base->stream.cur = base->stream.next = 0;
     len = (*base->read)(base->handle, base->stream.buf, base->stream.size);
@@ -55,7 +45,7 @@ do_update(BaseStream base)
 }
 
 static int
-buffer_read(StreamBuffer sb, char* obuf, int count)
+buffer_read(struct stream_buffer* sb, char* obuf, int count)
 {
     int len = sb->next - sb->cur;
     if (len > 0) {
@@ -70,7 +60,7 @@ buffer_read(StreamBuffer sb, char* obuf, int count)
 static void
 init_buffer(BaseStream base, char* buf, int bufsize)
 {
-    StreamBuffer sb = &base->stream;
+    struct stream_buffer* sb = &base->stream;
     sb->size = bufsize;
     sb->cur = 0;
     sb->buf = NewWithoutGC_N(uchar, bufsize);
@@ -184,16 +174,13 @@ newEncodedStream(InputStream is, enum StreamEncoding encoding)
 
 int ISclose(InputStream stream)
 {
-    MySignalFunc prevtrap = 0;
+    // MySignalFunc prevtrap = 0;
     if (stream == NULL)
         return -1;
     if (stream->base.close != NULL) {
-        if (stream->base.type & IST_UNCLOSE) {
-            return -1;
-        }
-        prevtrap = mySignal(SIGINT, SIG_IGN);
+        // prevtrap = mySignal(SIGINT, SIG_IGN);
         stream->base.close(stream->base.handle);
-        mySignal(SIGINT, prevtrap);
+        // mySignal(SIGINT, prevtrap);
     }
     xfree(stream->base.stream.buf);
     xfree(stream);
@@ -213,7 +200,7 @@ int ISgetc(InputStream stream)
 
 int ISundogetc(InputStream stream)
 {
-    StreamBuffer sb;
+    struct stream_buffer* sb;
     if (stream == NULL)
         return -1;
     sb = &stream->base.stream;
@@ -238,7 +225,7 @@ Str StrISgets2(InputStream stream, char crnl)
 void ISgets_to_growbuf(InputStream stream, struct growbuf* gb, char crnl)
 {
     BaseStream base = &stream->base;
-    StreamBuffer sb = &base->stream;
+    struct stream_buffer* sb = &base->stream;
     int i;
 
     gb->length = 0;
@@ -317,7 +304,7 @@ int ISfileno(InputStream stream)
 {
     if (stream == NULL)
         return -1;
-    switch (IStype(stream) & ~IST_UNCLOSE) {
+    switch (IStype(stream)) {
     case IST_BASIC:
         return *(int*)stream->base.handle;
     case IST_FILE:
@@ -331,7 +318,7 @@ int ISfileno(InputStream stream)
     }
 }
 
-int ISeos(InputStream stream)
+bool ISeos(InputStream stream)
 {
     BaseStream base = &stream->base;
     if (!base->iseos && MUST_BE_UPDATED(base))
@@ -450,11 +437,11 @@ int checkSaveFile(InputStream stream, const char* path2)
     return 0;
 }
 
-static sigjmp_buf AbortLoading;
-static MySignalHandler KeyAbort(int _dummy)
-{
-    siglongjmp(AbortLoading, 1);
-}
+// static sigjmp_buf AbortLoading;
+// static MySignalHandler KeyAbort(int _dummy)
+// {
+//     siglongjmp(AbortLoading, 1);
+// }
 
 #define SAVE_BUF_SIZE 1536
 
@@ -462,8 +449,8 @@ int save2tmp(union input_stream* stream, const char* tmpf)
 {
     // long long linelen = 0;
     // long long trbyte = 0;
-    MySignalHandler (*prevtrap)(int _dummy) = NULL;
-    static sigjmp_buf env_bak;
+    // MySignalHandler (*prevtrap)(int _dummy) = NULL;
+    // static sigjmp_buf env_bak;
     int retval = 0;
     char* buf = NULL;
 
@@ -472,11 +459,11 @@ int save2tmp(union input_stream* stream, const char* tmpf)
         /* fclose(f); */
         return -1;
     }
-    memcpy(env_bak, AbortLoading, sizeof(sigjmp_buf));
-    if (sigsetjmp(AbortLoading, 1) != 0) {
-        goto _end;
-    }
-    TRAP_ON;
+    // memcpy(env_bak, AbortLoading, sizeof(sigjmp_buf));
+    // if (sigsetjmp(AbortLoading, 1) != 0) {
+    //     goto _end;
+    // }
+    // TRAP_ON;
     {
         int count;
 
@@ -491,8 +478,8 @@ int save2tmp(union input_stream* stream, const char* tmpf)
         }
     }
 _end:
-    memcpy(AbortLoading, env_bak, sizeof(sigjmp_buf));
-    TRAP_OFF;
+    // memcpy(AbortLoading, env_bak, sizeof(sigjmp_buf));
+    // TRAP_OFF;
     xfree(buf);
     fclose(ff);
     // current_content_length = 0;

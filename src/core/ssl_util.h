@@ -22,3 +22,6 @@ struct ssl_handle {
 void ssl_close(struct ssl_handle* handle);
 int ssl_read(struct ssl_handle* handle, char* buf, int len);
 void free_ssl_ctx(void);
+
+// inline static int ssl_socket_of(union input_stream* stream) { return ((stream)->ssl.handle->sock); }
+// inline static SSL* ssl_of(union input_stream* stream) { return ((stream)->ssl.handle->ssl); }
