@@ -22,9 +22,7 @@ char* mydirname(char* s);
 int next_status(char c, int* status);
 int read_token(Str buf, char** instr, int* status, int pre, int append);
 Str correct_irrtag(int status);
-int find_auth_user_passwd(struct Url* pu, char* realm, Str* uname, Str* pwd, int is_proxy);
-void add_auth_user_passwd(struct Url* pu, char* realm, Str uname, Str pwd, int is_proxy);
-void invalidate_auth_user_passwd(struct Url* pu, char* realm, Str uname, Str pwd, int is_proxy);
+
 char* last_modified(struct _Buffer* buf);
 Str romanNumeral(int n);
 Str romanAlphabet(int n);
