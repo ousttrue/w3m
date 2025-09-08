@@ -41,6 +41,3 @@ pid_t open_pipe_rw(FILE** fr, FILE** fw);
 FILE* openSecretFile(char* fname);
 void loadPasswd(void);
 
-Str Strfgets(FILE*);
-Str Strfgetall(FILE*);
-inline static int Strfputs(Str s, FILE* f) { return fwrite((s)->ptr, 1, (s)->length, (f)); }

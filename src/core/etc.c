@@ -1587,27 +1587,3 @@ mymktime(const char* timestr)
     min -= z_min;
     return (time_t)((day * 60 * 60 * 24) + (hour * 60 * 60) + (min * 60) + sec);
 }
-
-
-
-Str Strfgets(FILE* f)
-{
-    Str s = Strnew();
-    int c;
-    while ((c = fgetc(f)) != EOF) {
-        Strcat_char(s, c);
-        if (c == '\n')
-            break;
-    }
-    return s;
-}
-
-Str Strfgetall(FILE* f)
-{
-    Str s = Strnew();
-    int c;
-    while ((c = fgetc(f)) != EOF) {
-        Strcat_char(s, c);
-    }
-    return s;
-}

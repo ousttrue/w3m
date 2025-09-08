@@ -598,3 +598,26 @@ int Strcasecmp(Str x, Str y) { return strcasecmp((x)->ptr, (y)->ptr); }
 int Strcasecmp_charp(Str x, const char* y) { return strcasecmp((x)->ptr, (y)); }
 int Strncasecmp(Str x, Str y, int n) { return strncasecmp((x)->ptr, (y)->ptr, (n)); }
 int Strncasecmp_charp(Str x, const char* y, int n) { return strncasecmp((x)->ptr, (y), (n)); }
+
+Str Strfgets(FILE* f)
+{
+    Str s = Strnew();
+    int c;
+    while ((c = fgetc(f)) != EOF) {
+        Strcat_char(s, c);
+        if (c == '\n')
+            break;
+    }
+    return s;
+}
+
+Str Strfgetall(FILE* f)
+{
+    Str s = Strnew();
+    int c;
+    while ((c = fgetc(f)) != EOF) {
+        Strcat_char(s, c);
+    }
+    return s;
+}
+

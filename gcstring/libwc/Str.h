@@ -13,6 +13,7 @@
  * results obtained from use of this software.
  */
 #pragma once
+#include <stdio.h>
 
 char* allocStr(const char* s, int len);
 
@@ -66,3 +67,7 @@ int Strcasecmp_charp(Str x, const char* y);
 int Strncasecmp(Str x, Str y, int n);
 int Strncasecmp_charp(Str x, const char* y, int n);
 inline static char Strlastchar(Str s) { return ((s)->length > 0 ? (s)->ptr[(s)->length - 1] : '\0'); }
+
+Str Strfgets(FILE*);
+Str Strfgetall(FILE*);
+inline static int Strfputs(Str s, FILE* f) { return fwrite((s)->ptr, 1, (s)->length, (f)); }
