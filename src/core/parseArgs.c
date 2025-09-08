@@ -9,7 +9,6 @@
 #include "version.h"
 #include "http.h"
 #include "history.h"
-#include "etc.h"
 #include "screen.h"
 #include "graphicchar.h"
 #include "rc.h"

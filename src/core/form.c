@@ -16,7 +16,6 @@
 #include "cookie.h"
 #include "buffer.h"
 #include "display.h"
-#include "etc.h"
 #include "myctype.h"
 #include "local.h"
 #include "regex.h"

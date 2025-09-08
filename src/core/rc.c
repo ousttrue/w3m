@@ -27,7 +27,6 @@
 #include "menu.h"
 #include "version.h"
 #include "buffer.h"
-#include "etc.h"
 #include "http.h"
 #include "proxy.h"
 #include "display.h"
@@ -59,6 +58,7 @@ char* passwd_file = (PASSWD_FILE);
 
 char* tmp_dir = 0;
 char* rc_dir = (NULL);
+int disable_secret_security_check = (false);
 
 char* mkd_tmp_dir = (NULL);
 char* param_tmp_dir = (NULL);

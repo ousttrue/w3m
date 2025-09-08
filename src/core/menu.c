@@ -1,6 +1,5 @@
 #include "menu.h"
 #include "defun_macro.h"
-#include "etc.h"
 #include "alloc.h"
 #include "display.h"
 #include "rc.h"

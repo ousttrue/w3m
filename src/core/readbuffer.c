@@ -8,7 +8,6 @@
 #include "HtmlTagParsed.h"
 #include "html_title.h"
 #include "alloc.h"
-#include "etc.h"
 #include "myctype.h"
 #include "table.h"
 #include "ui.h"

@@ -12,6 +12,7 @@
 #define CPIPEBUFFERNAME "*stream(closed)*"
 #define DICTBUFFERNAME "*dictionary*"
 
+extern int nextpage_topline;
 extern int REV_LB[];
 
 /* mark URL, Message-ID */

@@ -1,6 +1,5 @@
 #include "siteconf.h"
 #include "rc.h"
-#include "etc.h"
 #include "url.h"
 #include "alloc.h"
 #include "regex.h"

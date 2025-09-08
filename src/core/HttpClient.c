@@ -6,7 +6,6 @@
 #include "proxy.h"
 #include "istream.h"
 #include "ssl_util.h"
-#include "etc.h"
 #include "indep.h"
 #include "ui.h"
 #include <openssl/ssl.h>

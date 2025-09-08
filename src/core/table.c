@@ -9,7 +9,6 @@
 #include "HtmlTagParsed.h"
 #include "display.h"
 #include "readbuffer.h"
-#include "etc.h"
 #include "symbol.h"
 #include "HtmlTagAttribute.h"
 #include "Str.h"

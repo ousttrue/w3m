@@ -16,7 +16,6 @@
 #include "istream.h"
 #include "mimehead.h"
 #include "buffer_loader.h"
-#include "etc.h"
 #include "screen.h"
 #include "keymap.h"
 #include "linein.h"

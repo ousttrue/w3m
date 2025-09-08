@@ -1,5 +1,4 @@
 #include "keymap.h"
-#include "etc.h"
 #include "myctype.h"
 #include "rc.h"
 #include "ctrlcode.h"

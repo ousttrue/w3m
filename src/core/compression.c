@@ -6,7 +6,6 @@
 #include "istream.h"
 #include "rc.h"
 #include "image.h"
-#include "etc.h"
 #include "tmpfile.h"
 #include <Str.h>
 #include <stdlib.h>

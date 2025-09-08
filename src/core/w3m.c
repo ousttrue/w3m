@@ -43,7 +43,6 @@
 #include "putc.h"
 #include "frame.h"
 #include "term_renderer.h"
-#include "etc.h"
 #include "term_size.h"
 #include "graphicchar.h"
 #include "tty.h"
@@ -4125,3 +4124,78 @@ char* file_to_url(const char* file, const char* currentDir)
     Strcat_charp(tmp, file_quote(cleanupName(file)));
     return tmp->ptr;
 }
+
+Str myEditor(const char* cmd, const char* file, int line)
+{
+    Str tmp = NULL;
+    char* p;
+    int set_file = false, set_line = false;
+
+    for (p = cmd; *p; p++) {
+        if (*p == '%' && *(p + 1) == 's' && !set_file) {
+            if (tmp == NULL)
+                tmp = Strnew_charp_n(cmd, (int)(p - cmd));
+            Strcat_charp(tmp, file);
+            set_file = true;
+            p++;
+        } else if (*p == '%' && *(p + 1) == 'd' && !set_line && line > 0) {
+            if (tmp == NULL)
+                tmp = Strnew_charp_n(cmd, (int)(p - cmd));
+            Strcat(tmp, Sprintf("%d", line));
+            set_line = true;
+            p++;
+        } else {
+            if (tmp)
+                Strcat_char(tmp, *p);
+        }
+    }
+    if (!set_file) {
+        if (tmp == NULL)
+            tmp = Strnew_charp(cmd);
+        if (!set_line && line > 1 && strcasestr(cmd, "vi"))
+            Strcat(tmp, Sprintf(" +%d", line));
+        Strcat_m_charp(tmp, " ", file, NULL);
+    }
+    return tmp;
+}
+
+// const char* expandName(const char* name)
+// {
+//     if (name == NULL)
+//         return NULL;
+//
+//     struct passwd* passent;
+//     Str extpath = NULL;
+//
+//     const char* p = name;
+//     if (*p == '/') {
+//         if ((*(p + 1) == '~' && IS_ALPHA(*(p + 2)))
+//             && personal_document_root) {
+//             char* q;
+//             p += 2;
+//             q = strchr(p, '/');
+//             if (q) { /* /~user/dir... */
+//                 passent = getpwnam(allocStr(p, q - p));
+//                 p = q;
+//             } else { /* /~user */
+//                 passent = getpwnam(p);
+//                 p = "";
+//             }
+//             if (!passent)
+//                 goto rest;
+//             extpath = Strnew_m_charp(passent->pw_dir, "/",
+//                 personal_document_root, NULL);
+//             if (*personal_document_root == '\0' && *p == '/')
+//                 p++;
+//         } else
+//             goto rest;
+//         if (Strcmp_charp(extpath, "/") == 0 && *p == '/')
+//             p++;
+//         Strcat_charp(extpath, p);
+//         return extpath->ptr;
+//     } else
+//         return expandPath(p);
+// rest:
+//     return name;
+// }
+

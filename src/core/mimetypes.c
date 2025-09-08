@@ -1,6 +1,5 @@
 #include "mimetypes.h"
 #include "indep.h"
-#include "etc.h"
 #include <Str.h>
 #include <alloc.h>
 #include <myctype.h>

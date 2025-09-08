@@ -10,7 +10,6 @@
 #include "local.h"
 #include "myctype.h"
 #include "proxy.h"
-#include "etc.h"
 #include "auth.h"
 #include "quote.h"
 

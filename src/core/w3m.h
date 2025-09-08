@@ -1,6 +1,7 @@
 #pragma once
 #include <stdbool.h>
 #include <sys/types.h>
+#include <Str.h>
 
 extern char ArgvIsURL;
 extern int DecodeURL;
@@ -68,3 +69,4 @@ char* w3m_etc_dir(void);
 char* w3m_conf_dir(void);
 char* w3m_help_dir(void);
 char* file_to_url(const char* file, const char* currentDir);
+Str myEditor(const char* cmd, const char* file, int line);

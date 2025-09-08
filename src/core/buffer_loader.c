@@ -12,7 +12,6 @@
 #include "local.h"
 #include "tty.h"
 #include "rc.h"
-#include "etc.h"
 #include "alloc.h"
 #include "file_copy.h"
 #include "http.h"

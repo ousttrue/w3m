@@ -10,7 +10,6 @@
 #include "progress.h"
 #include "tmpfile.h"
 #include "tty.h"
-#include "etc.h"
 #include "downloadlist.h"
 #include <Str.h>
 #include <stdlib.h>

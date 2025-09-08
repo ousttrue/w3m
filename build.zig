@@ -92,7 +92,6 @@ const w3m_srcs = [_][]const u8{
 
     "buffer.c",
     "display.c",
-    "etc.c",
     "search.c",
     "linein.c",
     "table.c",

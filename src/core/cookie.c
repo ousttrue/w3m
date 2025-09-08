@@ -13,7 +13,6 @@
 #include "KeyValue.h"
 #include <alloc.h>
 #include "http.h"
-#include "etc.h"
 #include "rc.h"
 #include "regex.h"
 #include "myctype.h"

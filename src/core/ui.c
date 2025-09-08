@@ -11,7 +11,6 @@
 #include "display.h"
 #include "buffer.h"
 #include "graphicchar.h"
-#include <etc.h>
 #include <myctype.h>
 #include <math.h>
 #include <stdarg.h>

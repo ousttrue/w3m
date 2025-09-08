@@ -20,7 +20,6 @@
 #include "compression.h"
 #include "symbol.h"
 #include "readbuffer.h"
-#include "etc.h"
 #include "alloc.h"
 #include <strings.h>
 #include <stdlib.h>

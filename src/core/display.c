@@ -2,7 +2,6 @@
 #include "alloc.h"
 #include "screen_effects.h"
 #include "image.h"
-#include "etc.h"
 #include "maparea.h"
 #include "ui.h"
 #include "symbol.h"

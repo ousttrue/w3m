@@ -1,12 +1,13 @@
 #include "buffer.h"
 #include "tmpfile.h"
+#include "convertline.h"
+#include "quote.h"
 #include "http.h"
 #include "screen_effects.h"
 #include "alloc.h"
 #include "display.h"
 #include "form.h"
 #include "ui.h"
-#include "etc.h"
 #include "w3m.h"
 #include "image.h"
 #include "event_poller.h"
@@ -21,6 +22,8 @@
 
 #include <wc.h>
 #include <wtf.h>
+
+int nextpage_topline = (false);
 
 int REV_LB[MAX_LB] = {
     LB_N_INFO,
@@ -944,6 +947,19 @@ baseURL(Buffer* buf)
         return &buf->currentURL;
 }
 
+static char* url_unquote_conv(char* url, wc_ces charset)
+{
+    wc_uint8 old_auto_detect = WcOption.auto_detect;
+    Str tmp;
+    tmp = Str_url_unquote(Strnew_charp(url), false, true);
+    if (!charset || charset == WC_CES_US_ASCII)
+        charset = SystemCharset;
+    WcOption.auto_detect = WC_OPT_DETECT_ON;
+    tmp = convertLine(NULL, tmp, RAW_MODE, &charset, charset, InnerCharset);
+    WcOption.auto_detect = old_auto_detect;
+    return tmp->ptr;
+}
+
 char* url_decode2(const char* url, const Buffer* buf)
 {
     if (!DecodeURL)
@@ -1027,4 +1043,3 @@ char* last_modified(Buffer* buf)
     }
     return "unknown";
 }
-

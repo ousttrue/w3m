@@ -6,7 +6,6 @@
 #include "linein.h"
 #include "display.h"
 #include "form.h"
-#include "etc.h"
 #include "ctrlcode.h"
 #include "local.h"
 #include "history.h"
