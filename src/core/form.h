@@ -7,20 +7,6 @@ extern int FoldTextarea;
 extern char* Editor;
 extern char* pre_form_file;
 
-#define FORM_UNKNOWN -1
-#define FORM_INPUT_TEXT 0
-#define FORM_INPUT_PASSWORD 1
-#define FORM_INPUT_CHECKBOX 2
-#define FORM_INPUT_RADIO 3
-#define FORM_INPUT_SUBMIT 4
-#define FORM_INPUT_RESET 5
-#define FORM_INPUT_HIDDEN 6
-#define FORM_INPUT_IMAGE 7
-#define FORM_SELECT 8
-#define FORM_TEXTAREA 9
-#define FORM_INPUT_BUTTON 10
-#define FORM_INPUT_FILE 11
-
 #define FORM_I_TEXT_DEFAULT_SIZE 40
 #define FORM_I_SELECT_DEFAULT_SIZE 40
 #define FORM_I_TEXTAREA_DEFAULT_WIDTH 40
@@ -39,8 +25,8 @@ extern char* pre_form_file;
                        * within one document */
 
 typedef struct form_list {
-    struct form_item_list* item;
-    struct form_item_list* lastitem;
+    struct FormItem* item;
+    struct FormItem* lastitem;
     int method;
     Str action;
     const char* target;
@@ -67,12 +53,27 @@ typedef struct form_select_option {
 } FormSelectOption;
 
 void addSelectOption(FormSelectOption* fso, Str value, Str label, int chk);
-void chooseSelectOption(struct form_item_list* fi, FormSelectOptionItem* item);
-void updateSelectOption(struct form_item_list* fi, FormSelectOptionItem* item);
-int formChooseOptionByMenu(struct form_item_list* fi, int x, int y);
+void chooseSelectOption(struct FormItem* fi, FormSelectOptionItem* item);
+void updateSelectOption(struct FormItem* fi, FormSelectOptionItem* item);
+int formChooseOptionByMenu(struct FormItem* fi, int x, int y);
 
-typedef struct form_item_list {
-    int type;
+enum FormItemType {
+    FORM_UNKNOWN = -1,
+    FORM_INPUT_TEXT = 0,
+    FORM_INPUT_PASSWORD = 1,
+    FORM_INPUT_CHECKBOX = 2,
+    FORM_INPUT_RADIO = 3,
+    FORM_INPUT_SUBMIT = 4,
+    FORM_INPUT_RESET = 5,
+    FORM_INPUT_HIDDEN = 6,
+    FORM_INPUT_IMAGE = 7,
+    FORM_SELECT = 8,
+    FORM_TEXTAREA = 9,
+    FORM_INPUT_BUTTON = 10,
+    FORM_INPUT_FILE = 11,
+};
+struct FormItem {
+    enum FormItemType type;
     Str name;
     Str value, init_value;
     int checked, init_checked;
@@ -85,8 +86,8 @@ typedef struct form_item_list {
     Str label, init_label;
     int selected, init_selected;
     struct form_list* parent;
-    struct form_item_list* next;
-} FormItemList;
+    struct FormItem* next;
+};
 
 struct _anchor;
 struct _Buffer;
@@ -96,16 +97,16 @@ struct _anchorList;
 struct form_list* newFormList(char* action, char* method, char* charset,
     char* enctype, char* target, char* name,
     struct form_list* _next);
-struct form_item_list* formList_addInput(struct form_list* fl,
+struct FormItem* formList_addInput(struct form_list* fl,
     struct HtmlTagParsed* tag);
-char* form2str(FormItemList* fi);
+char* form2str(struct FormItem* fi);
 int formtype(char* typestr);
-void formRecheckRadio(struct _anchor* a, struct _Buffer* buf, FormItemList* form);
+void formRecheckRadio(struct _anchor* a, struct _Buffer* buf, struct FormItem* form);
 void formResetBuffer(struct _Buffer* buf, struct _anchorList* formitem);
-void formUpdateBuffer(struct _anchor* a, struct _Buffer* buf, FormItemList* form);
+void formUpdateBuffer(struct _anchor* a, struct _Buffer* buf, struct FormItem* form);
 void preFormUpdateBuffer(struct _Buffer* buf);
 Str textfieldrep(Str s, int width);
-void input_textarea(FormItemList* fi);
+void input_textarea(struct FormItem* fi);
 void do_internal(char* action, char* data);
 void form_write_data(FILE* f, char* boundary, char* name, char* value);
 void form_write_from_file(FILE* f, char* boundary, char* name, char* filename, char* file);

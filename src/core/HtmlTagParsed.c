@@ -993,7 +993,7 @@ Str process_n_select(void)
     process_option();
     if (!select_is_multiple) {
         if (select_option[n_select].first) {
-            FormItemList sitem;
+            struct FormItem sitem;
             chooseSelectOption(&sitem, select_option[n_select].first);
             Strcat(select_str, textfieldrep(sitem.label, cur_option_maxwidth));
         }

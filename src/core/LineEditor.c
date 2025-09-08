@@ -221,7 +221,7 @@ void _next(struct LineEditor* e)
 
 void _editor(struct LineEditor* e)
 {
-    FormItemList fi;
+    struct FormItem fi;
     char* p;
 
     if (e->is_passwd)

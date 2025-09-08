@@ -101,7 +101,7 @@ typedef struct _Buffer {
     wc_ces document_charset;
     wc_uint8 auto_detect;
     TextList* document_header;
-    struct form_item_list* form_submit;
+    struct FormItem* form_submit;
     char* savecache;
     char* edit;
     struct mailcap* mailcap;

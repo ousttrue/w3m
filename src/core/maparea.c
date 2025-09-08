@@ -141,7 +141,7 @@ MapArea*
 retrieveCurrentMapArea(Buffer* buf)
 {
     Anchor *a_img, *a_form;
-    FormItemList* fi;
+    struct FormItem* fi;
     MapList* ml;
     ListItem* al;
     MapArea* a;
@@ -153,7 +153,7 @@ retrieveCurrentMapArea(Buffer* buf)
     a_form = retrieveCurrentForm(buf);
     if (!(a_form && a_form->url))
         return NULL;
-    fi = (FormItemList*)a_form->url;
+    fi = (struct FormItem*)a_form->url;
     if (!(fi && fi->parent && fi->parent->item))
         return NULL;
     fi = fi->parent->item;
@@ -193,12 +193,12 @@ Anchor*
 retrieveCurrentMap(Buffer* buf)
 {
     Anchor* a;
-    FormItemList* fi;
+    struct FormItem* fi;
 
     a = retrieveCurrentForm(buf);
     if (!a || !a->url)
         return NULL;
-    fi = (FormItemList*)a->url;
+    fi = (struct FormItem*)a->url;
     if (fi->parent->method == FORM_METHOD_INTERNAL && !Strcmp_charp(fi->parent->action, "map"))
         return a;
     return NULL;
@@ -341,7 +341,7 @@ newMapArea(const char* url, const char* target, const char* alt, const char* sha
 
 /* append image map links */
 static void
-append_map_info(Buffer* buf, Str tmp, FormItemList* fi)
+append_map_info(Buffer* buf, Str tmp, struct FormItem* fi)
 {
     MapList* ml;
     ListItem* al;
@@ -492,7 +492,7 @@ page_info_panel(Buffer* buf)
     }
     a = retrieveCurrentForm(buf);
     if (a != NULL) {
-        FormItemList* fi = (FormItemList*)a->url;
+        struct FormItem* fi = (struct FormItem*)a->url;
         p = form2str(fi);
         p = html_quote(url_decode2(p, buf));
         Strcat_m_charp(tmp,

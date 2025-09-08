@@ -445,7 +445,7 @@ void fmInit(void)
 }
 
 static Str
-conv_form_encoding(Str val, FormItemList* fi, Buffer* buf)
+conv_form_encoding(Str val, struct FormItem* fi, Buffer* buf)
 {
     wc_ces charset = SystemCharset;
 
@@ -457,9 +457,9 @@ conv_form_encoding(Str val, FormItemList* fi, Buffer* buf)
 }
 
 static void
-query_from_followform(Str* query, FormItemList* fi, int multipart)
+query_from_followform(Str* query, struct FormItem* fi, int multipart)
 {
-    FormItemList* f2;
+    struct FormItem* f2;
     FILE* body = NULL;
 
     if (multipart) {
@@ -633,13 +633,13 @@ loadLink(const char* url, const char* target, const char* referer, FormList* pos
     return loadNormalBuf(buf);
 }
 
-static FormItemList* save_submit_formlist(FormItemList* src)
+static struct FormItem* save_submit_formlist(struct FormItem* src)
 {
     FormList* list;
     FormList* srclist;
-    FormItemList* srcitem;
-    FormItemList* item;
-    FormItemList* ret = NULL;
+    struct FormItem* srcitem;
+    struct FormItem* item;
+    struct FormItem* ret = NULL;
     FormSelectOptionItem* opt;
     FormSelectOptionItem* curopt;
     FormSelectOptionItem* srcopt;
@@ -658,7 +658,7 @@ static FormItemList* save_submit_formlist(FormItemList* src)
     list->length = srclist->length;
 
     for (srcitem = srclist->item; srcitem; srcitem = srcitem->next) {
-        item = New(FormItemList);
+        item = New(struct FormItem);
         item->type = srcitem->type;
         item->name = Strdup(srcitem->name);
         item->value = Strdup(srcitem->value);
@@ -703,7 +703,7 @@ static FormItemList* save_submit_formlist(FormItemList* src)
     return ret;
 }
 
-void do_submit(Anchor* a, FormItemList* fi, bool do_download)
+void do_submit(Anchor* a, struct FormItem* fi, bool do_download)
 {
     Str tmp = Strnew();
     int multipart = (fi->parent->method == FORM_METHOD_POST && fi->parent->enctype == FORM_ENCTYPE_MULTIPART);
@@ -763,7 +763,7 @@ _followForm(bool submit, bool do_download)
     if (a == NULL)
         return;
 
-    FormItemList* fi = (FormItemList*)a->url;
+    struct FormItem* fi = (struct FormItem*)a->url;
     switch (fi->type) {
     case FORM_INPUT_TEXT: {
         if (submit) {
@@ -891,7 +891,7 @@ _followForm(bool submit, bool do_download)
     case FORM_INPUT_RESET: {
         for (int i = 0; i < Currentbuf->formitem->nanchor; i++) {
             Anchor* a2 = &Currentbuf->formitem->anchors[i];
-            FormItemList* f2 = (FormItemList*)a2->url;
+            struct FormItem* f2 = (struct FormItem*)a2->url;
             if (f2->parent == fi->parent && f2->name && f2->value && f2->type != FORM_INPUT_SUBMIT && f2->type != FORM_INPUT_HIDDEN && f2->type != FORM_INPUT_RESET) {
                 f2->value = f2->init_value;
                 f2->checked = f2->init_checked;
@@ -3025,7 +3025,7 @@ _peekURL(int only_img)
             if (a == NULL)
                 return;
         } else
-            s = Strnew_charp(form2str((FormItemList*)a->url));
+            s = Strnew_charp(form2str((struct FormItem*)a->url));
     }
     if (s == NULL) {
         parseURL2(a->url, &pu, baseURL(Currentbuf));
@@ -3530,7 +3530,7 @@ void set_buffer_environ(Buffer* buf)
             set_environ("W3M_CURRENT_IMG", "");
         a = retrieveCurrentForm(buf);
         if (a)
-            set_environ("W3M_CURRENT_FORM", form2str((FormItemList*)a->url));
+            set_environ("W3M_CURRENT_FORM", form2str((struct FormItem*)a->url));
         else
             set_environ("W3M_CURRENT_FORM", "");
         set_environ("W3M_CURRENT_LINE", Sprintf("%ld", l->real_linenumber)->ptr);

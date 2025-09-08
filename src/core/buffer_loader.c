@@ -749,7 +749,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                     break;
                 case HTML_N_TEXTAREA_INT:
                     if (a_textarea && n_textarea >= 0) {
-                        FormItemList* item = (FormItemList*)a_textarea[n_textarea]->url;
+                        struct FormItem* item = (struct FormItem*)a_textarea[n_textarea]->url;
                         item->init_value = item->value = textarea_str[n_textarea];
                     }
                     break;
@@ -763,7 +763,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                     break;
                 case HTML_N_SELECT_INT:
                     if (a_select && n_select >= 0) {
-                        FormItemList* item = (FormItemList*)a_select[n_select]->url;
+                        struct FormItem* item = (struct FormItem*)a_select[n_select]->url;
                         item->select_option = select_option[n_select].first;
                         chooseSelectOption(item, item->select_option);
                         item->init_selected = item->selected;
