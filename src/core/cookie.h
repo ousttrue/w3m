@@ -9,6 +9,15 @@ struct portlist {
     struct portlist* next;
 };
 
+enum CookieFlag {
+    COO_USE = 1,
+    COO_SECURE = 2,
+    COO_DOMAIN = 4,
+    COO_PATH = 8,
+    COO_DISCARD = 16,
+    COO_OVERRIDE = 32 /* user chose to override security checks */,
+};
+
 struct cookie {
     struct Url url;
     Str name;
@@ -20,9 +29,10 @@ struct cookie {
     Str commentURL;
     struct portlist* portl;
     char version;
-    char flag;
+    enum CookieFlag flag;
     struct cookie* next;
 };
+
 // global struct auth_cookie* Auth_cookie init(NULL);
 extern struct cookie* First_cookie;
 extern int default_use_cookie;
@@ -33,13 +43,6 @@ extern TextList* Cookie_reject_domains;
 extern TextList* Cookie_accept_domains;
 extern TextList* Cookie_avoid_wrong_number_of_dots_domains;
 extern int no_rc_dir;
-
-#define COO_USE 1
-#define COO_SECURE 2
-#define COO_DOMAIN 4
-#define COO_PATH 8
-#define COO_DISCARD 16
-#define COO_OVERRIDE 32 /* user chose to override security checks */
 
 #define COO_OVERRIDE_OK 32 /* flag to specify that an error is overridable */
 /* version 0 refers to the original cookie_spec.html */

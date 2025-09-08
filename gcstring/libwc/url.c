@@ -1,4 +1,5 @@
 #include "url.h"
+#include "Str.h"
 #include "quote.h"
 #include "myctype.h"
 #include <stdlib.h>
@@ -402,7 +403,7 @@ void parseURL2(const char* url, struct Url* pu, struct Url* current)
 #endif
             strcmp(pu->file, "-")) {
             /* local file, relative path */
-            Str tmp = parsedURL2Str(current);
+            Str tmp = current ? parsedURL2Str(current) : Strnew();
             if (Strlastchar(tmp) != '/')
                 Strcat_char(tmp, '/');
             Strcat_charp(tmp, file_unquote(pu->file));
