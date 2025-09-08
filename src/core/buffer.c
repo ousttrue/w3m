@@ -17,6 +17,7 @@
 #include <string.h>
 #include <strings.h>
 #include <unistd.h>
+#include <time.h>
 
 #include <wc.h>
 #include <wtf.h>

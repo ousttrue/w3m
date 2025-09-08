@@ -1,4 +1,5 @@
 #include "http.h"
+#include "time_util.h"
 #include "convertline.h"
 #include "siteconf.h"
 #include "quote.h"
@@ -340,7 +341,11 @@ struct HttpResponse readHttpResponse(struct URLFile* uf, struct Url* pu)
                 p++;
             set_compression(uf, p);
             uf->content_encoding = uf->compression;
-        } else if (use_cookie && accept_cookie && pu && check_cookie_accept_domain(pu->host) && (!strncasecmp(lineBuf2->ptr, "Set-Cookie:", 11) || !strncasecmp(lineBuf2->ptr, "Set-Cookie2:", 12))) {
+        } else if (use_cookie
+            && accept_cookie
+            && pu
+            && check_cookie_accept_domain(pu->host)
+            && (!strncasecmp(lineBuf2->ptr, "Set-Cookie:", 11) || !strncasecmp(lineBuf2->ptr, "Set-Cookie2:", 12))) {
             Str name = Strnew(), value = Strnew(), domain = NULL, path = NULL,
                 comment = NULL, commentURL = NULL, port = NULL, tmp2;
             int version, quoted, flag = 0;
