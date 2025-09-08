@@ -27,8 +27,10 @@ const content_public_headers = [_][]const u8{
     "url.h",
     "growbuf.h",
     "mimehead.h",
+    "expandpath.h",
 };
 const content_srcs = [_][]const u8{
+    "expandpath.c",
     "mimehead.c",
     "growbuf.c",
     "url.c",
@@ -47,7 +49,6 @@ const system_libs = [_][]const u8{
     "z",
 };
 const w3m_srcs = [_][]const u8{
-    "expandpath.c",
     "subprocess.c",
     "token.c",
     "time_util.c",
