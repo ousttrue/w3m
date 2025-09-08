@@ -10,7 +10,6 @@
 #include "search.h"
 #include "cookie.h"
 #include "buffer_loader.h"
-#include "siteconf.h"
 #include "url.h"
 #include "istream.h"
 #include "KeyValue.h"
@@ -567,8 +566,6 @@ struct param_ptr params9[] = {
         NULL },
     { "pre_form_file", P_STRING, PI_TEXT, (void*)&pre_form_file,
         CMT_PRE_FORM_FILE, NULL },
-    { "siteconf_file", P_STRING, PI_TEXT, (void*)&siteconf_file,
-        CMT_SITECONF_FILE, NULL },
     { "user_agent", P_STRING, PI_TEXT, (void*)&UserAgent, CMT_USERAGENT, NULL },
     { "no_referer", P_INT, PI_ONOFF, (void*)&NoSendReferer, CMT_NOSENDREFERER,
         NULL },
@@ -1150,7 +1147,6 @@ void sync_with_option(void)
         initImage();
     loadPasswd();
     loadPreForm();
-    loadSiteconf();
 
     if (AcceptLang == NULL || *AcceptLang == '\0') {
         /* TRANSLATORS:

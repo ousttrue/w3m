@@ -38,6 +38,6 @@ void preFormUpdateBuffer(struct _Buffer* buf);
 Str textfieldrep(Str s, int width);
 void input_textarea(struct FormItem* fi);
 void do_internal(char* action, char* data);
-void form_write_data(FILE* f, char* boundary, char* name, char* value);
-void form_write_from_file(FILE* f, char* boundary, char* name, char* filename, char* file);
+void form_write_data(FILE* f, const char* boundary, const char* name, const char* value);
+void form_write_from_file(FILE* f, const char* boundary, const char* name, const char* filename, const char* file);
 void loadPreForm(void);

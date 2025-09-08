@@ -4,7 +4,6 @@
 #include "defun_macro.h"
 #include "mimetypes.h"
 #include "Content.h"
-#include "siteconf.h"
 #include "buffer_loader.h"
 #include "file_copy.h"
 #include "tmpfile.h"
@@ -265,7 +264,7 @@ void initialize()
 
     NO_proxy_domains = newTextList();
     initDeleteFile();
-    CurrentDir = currentdir();
+    CurrentDir = (char*)currentdir();
     CurrentPid = (int)getpid();
     BookmarkFile = NULL;
     config_file = NULL;
@@ -499,6 +498,8 @@ query_from_followform(Str* query, struct FormItem* fi, int multipart)
         case FORM_INPUT_CHECKBOX:
             if (!f2->checked)
                 continue;
+        default:
+            break;
         }
         if (multipart) {
             if (f2->type == FORM_INPUT_IMAGE) {
@@ -605,7 +606,6 @@ loadLink(const char* url, const char* target, const char* referer, struct Form* 
     message(getUI(), MSG_INFO, Sprintf("loading %s", url)->ptr);
     // refresh(ttyWriter());
 
-    no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->currentURL);
     base = baseURL(Currentbuf);
     if ((no_referer_ptr && *no_referer_ptr) || base == NULL || base->scheme == SCM_LOCAL || base->scheme == SCM_LOCAL_CGI || base->scheme == SCM_DATA)
         referer = NO_REFERER;
@@ -2667,7 +2667,6 @@ goURL0(char* prompt, int relative)
             SKIP_BLANKS(url);
     }
     if (relative) {
-        no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->currentURL);
         current = baseURL(Currentbuf);
         if ((no_referer_ptr && *no_referer_ptr) || current == NULL || current->scheme == SCM_LOCAL || current->scheme == SCM_LOCAL_CGI || current->scheme == SCM_DATA)
             referer = NO_REFERER;

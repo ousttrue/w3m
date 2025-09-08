@@ -1,7 +1,6 @@
 #include "http.h"
 #include "time_util.h"
 #include "convertline.h"
-#include "siteconf.h"
 #include "quote.h"
 #include "mailcap.h"
 #include "textlist.h"
@@ -91,13 +90,10 @@ otherinfo(struct Url* target, struct Url* current, const char* referer)
     Str s = Strnew();
     const int* no_referer_ptr;
     int no_referer;
-    const char* url_user_agent = query_SCONF_USER_AGENT(target);
 
     if (!override_user_agent) {
         Strcat_charp(s, "User-Agent: ");
-        if (url_user_agent)
-            Strcat_charp(s, url_user_agent);
-        else if (UserAgent == NULL || *UserAgent == '\0')
+        if (UserAgent == NULL || *UserAgent == '\0')
             Strcat_charp(s, w3m_version);
         else
             Strcat_charp(s, UserAgent);
@@ -120,9 +116,7 @@ otherinfo(struct Url* target, struct Url* current, const char* referer)
         Strcat_charp(s, "Cache-control: no-cache\r\n");
     }
     no_referer = NoSendReferer;
-    no_referer_ptr = query_SCONF_NO_REFERER_FROM(current);
     no_referer = no_referer || (no_referer_ptr && *no_referer_ptr);
-    no_referer_ptr = query_SCONF_NO_REFERER_TO(target);
     no_referer = no_referer || (no_referer_ptr && *no_referer_ptr);
     if (!no_referer) {
         int cross_origin = false;

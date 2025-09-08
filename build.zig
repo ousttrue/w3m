@@ -76,7 +76,6 @@ const w3m_srcs = [_][]const u8{
     "compression.c",
     "buffer_loader.c",
     "file_copy.c",
-    "siteconf.c",
     "HttpClient.c",
     "Content.c",
     "html_quote.c",
