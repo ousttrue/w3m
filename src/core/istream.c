@@ -434,19 +434,6 @@ memchop(char* p, int* len)
     return;
 }
 
-void UFhalfclose(struct URLFile* f)
-{
-    switch (f->scheme) {
-    case SCM_FTP:
-        break;
-    default:
-        if (ISclose(f->stream) == 0) {
-            f->stream = NULL;
-        }
-        break;
-    }
-}
-
 int checkSaveFile(InputStream stream, char* path2)
 {
     int des = ISfileno(stream);
@@ -638,11 +625,11 @@ void examineFile(struct URLFile* uf, const char* path)
     // }
 }
 
-Str readAll(struct URLFile* f)
+Str readAll(union input_stream *stream)
 {
     Str html = Strnew();
     Str lineBuf2;
-    while ((lineBuf2 = StrmyISgets(f->stream)) && lineBuf2->length) {
+    while ((lineBuf2 = StrmyISgets(stream)) && lineBuf2->length) {
         Strcat(html, lineBuf2);
     }
     return html;

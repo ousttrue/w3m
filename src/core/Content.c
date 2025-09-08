@@ -142,7 +142,7 @@ struct Content openLocal(const char* u, struct Url* current, struct Form* post, 
             .page = NULL,
         };
     }
-    Str page = readAll(&f);
+    Str page = readAll(f.stream);
 
     const char* content_type = guessContentType(pu.file);
     if (content_type == NULL) {
@@ -612,13 +612,13 @@ struct Content openHttp(struct HttpClient* c, const char* path, struct Url* curr
     // Buffer* t_buf = newBuffer();
     if ((c->f.content_encoding != CMP_NOCOMPRESS) && AutoUncompress) {
         // uncompress_stream(&c->f, &pu.real_file);
-        Str src = readAll(&c->f);
+        Str src = readAll(c->f.stream);
         c->page = decode_gzip((unsigned char*)src->ptr, src->length);
     } else if (c->f.compression != CMP_NOCOMPRESS) {
         if (is_text_type(c->content_type)) {
             // uncompress_stream(&c->f, &t_buf->sourcefile);
             // uncompressed_file_type(c->pu.file, &c->f.ext);
-            Str src = readAll(&c->f);
+            Str src = readAll(c->f.stream);
             c->page = decode_gzip((unsigned char*)src->ptr, src->length);
         } else {
             c->content_type = compress_application_type(c->f.compression);

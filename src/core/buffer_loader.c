@@ -1485,7 +1485,7 @@ loadHTMLBuffer(struct URLFile* f, Buffer* newBuf)
             newBuf->sourcefile = tmp->ptr;
     }
 
-    loadHTMLstream(f, newBuf, src, false);
+    loadHTMLstream(f->stream, newBuf, src, false);
 
     newBuf->topLine = newBuf->firstLine;
     newBuf->lastLine = newBuf->currentLine;
@@ -1498,9 +1498,9 @@ loadHTMLBuffer(struct URLFile* f, Buffer* newBuf)
     return newBuf;
 }
 
-void loadHTMLstream(struct URLFile* f, Buffer* newBuf, FILE* src, int internal)
+void loadHTMLstream(union input_stream *stream, Buffer* newBuf, FILE* src, int internal)
 {
-    Str html = readAll(f);
+    Str html = readAll(stream);
     struct UI ui = getUI();
     loadHTML(html, WC_CES_SHIFT_JIS /*WC_CES_US_ASCII*/, ui.vt->COLS, ui.use_graphic, internal, newBuf);
     //     struct TermEntry* t = getTermEntry();
@@ -1614,7 +1614,7 @@ loadHTMLString(Str page)
     // TRAP_ON;
 
     newBuf->document_charset = InnerCharset;
-    loadHTMLstream(&f, newBuf, NULL, true);
+    loadHTMLstream(f.stream, newBuf, NULL, true);
     newBuf->document_charset = WC_CES_US_ASCII;
 
     term_raw();

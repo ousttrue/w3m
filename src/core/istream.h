@@ -139,6 +139,7 @@ extern void ssl_accept_this_site(char* hostname);
 #define openIS(path) newInputStream(open((path), O_RDONLY))
 
 int save2tmp(union input_stream *s, const char* tmpf);
+Str readAll(union input_stream *stream);
 
 struct URLFile {
     enum UrlScheme scheme;
@@ -162,5 +163,3 @@ struct _Buffer* loadBuffer(struct URLFile* uf, struct _Buffer* newBuf);
 int doFileSave(struct URLFile uf, const char* defstr, int current_content_length);
 void init_stream(struct URLFile* uf, int scheme, InputStream stream);
 int checkSaveFile(InputStream stream, char* path);
-void UFhalfclose(struct URLFile* f);
-Str readAll(struct URLFile* f);

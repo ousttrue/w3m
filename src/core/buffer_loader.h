@@ -33,8 +33,8 @@ int is_boundary(unsigned char*, unsigned char*);
 
 struct _Buffer* loadHTMLString(Str page);
 
-struct URLFile;
-void loadHTMLstream(struct URLFile* f, struct _Buffer* newBuf, FILE* src, int internal);
+union input_stream;
+void loadHTMLstream(union input_stream *stream, struct _Buffer* newBuf, FILE* src, int internal);
 
 struct _Buffer;
 void loadHTML(Str html, wc_ces doc_charset, int cols, bool use_graphic, bool internal, struct _Buffer* buf);
