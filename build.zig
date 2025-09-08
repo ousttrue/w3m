@@ -94,7 +94,6 @@ const w3m_srcs = [_][]const u8{
     "image.c",
     "symbol.c",
     "entity.c",
-    "mimehead.c",
     "cookie.c",
     "history.c",
 
