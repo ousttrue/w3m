@@ -1,6 +1,6 @@
 #include "auth.h"
 #include "base64.h"
-#include "form.h"
+#include "html_form.h"
 #include "http.h"
 #include "url.h"
 #include "ctrlcode.h"

@@ -1,7 +1,7 @@
 #include "HttpClient.h"
 #include "url_scheme.h"
 #include "http.h"
-#include "form.h"
+#include "html_form.h"
 #include "local.h"
 #include "proxy.h"
 #include "istream.h"

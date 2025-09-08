@@ -2,7 +2,7 @@
 #include "network.h"
 #include "alloc.h"
 #include "mimetypes.h"
-#include "form.h"
+#include "html_form.h"
 #include "http.h"
 #include "HttpClient.h"
 #include "ssl_util.h"

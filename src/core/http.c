@@ -10,7 +10,7 @@
 #include "url.h"
 #include "rc.h"
 #include "cookie.h"
-#include "form.h"
+#include "html_form.h"
 #include "line.h"
 #include "istream.h"
 #include "mimehead.h"

@@ -4,7 +4,7 @@
 #include "Content.h"
 #include "version.h"
 #include "etc.h"
-#include "form.h"
+#include "html_form.h"
 #include "url.h"
 #include "ui.h"
 #include "tmpfile.h"
