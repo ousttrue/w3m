@@ -1,6 +1,6 @@
 #include <stdlib.h>
-#define _GNU_SOURCE
 #include "readbuffer.h"
+#include "str_util.h"
 #include "quote.h"
 #include "html_quote.h"
 #include "buffer_loader.h"
@@ -15,6 +15,7 @@
 #include "ctrlcode.h"
 #include "symbol.h"
 #include "display.h"
+#include "hash.h"
 #include <strings.h>
 
 #include <wc.h>
@@ -283,6 +284,45 @@ sloppy_parse_line(char** str)
             (*str)++;
         return 0;
     }
+}
+
+#define MAX_CMD_LEN 128
+
+static int gethtmlcmd(const char** s)
+{
+    extern Hash_si tagtable;
+    char cmdstr[MAX_CMD_LEN];
+    char* p = cmdstr;
+    const char* save = *s;
+    int cmd;
+
+    (*s)++;
+    /* first character */
+    if (IS_ALNUM(**s) || **s == '_' || **s == '/') {
+        *(p++) = TOLOWER(**s);
+        (*s)++;
+    } else
+        return HTML_UNKNOWN;
+    if (p[-1] == '/')
+        SKIP_BLANKS(*s);
+    while ((IS_ALNUM(**s) || **s == '_') && p - cmdstr < MAX_CMD_LEN) {
+        *(p++) = TOLOWER(**s);
+        (*s)++;
+    }
+    if (p - cmdstr == MAX_CMD_LEN) {
+        /* buffer overflow: perhaps caused by bad HTML source */
+        *s = save + 1;
+        return HTML_UNKNOWN;
+    }
+    *p = '\0';
+
+    /* hash search */
+    cmd = getHash_si(&tagtable, cmdstr, HTML_UNKNOWN);
+    while (**s && **s != '>')
+        (*s)++;
+    if (**s == '>')
+        (*s)++;
+    return cmd;
 }
 
 void passthrough(struct readbuffer* obuf, char* str, int back)
@@ -604,7 +644,7 @@ void flushline(struct html_feed_environ* h_env, struct readbuffer* obuf, int ind
             Strcat_charp(tmp, html_quote(obuf->anchor.title));
         }
         if (obuf->anchor.accesskey) {
-            char* c = html_quote_char(obuf->anchor.accesskey);
+            const char* c = html_quote_char(obuf->anchor.accesskey);
             Strcat_charp(tmp, "\" ACCESSKEY=\"");
             if (c)
                 Strcat_charp(tmp, c);

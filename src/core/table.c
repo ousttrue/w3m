@@ -2,6 +2,7 @@
  * HTML table
  */
 #include "table.h"
+#include "token.h"
 #include "html_quote.h"
 #include "entity.h"
 #include "buffer_loader.h"

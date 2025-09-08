@@ -490,6 +490,18 @@ static int strCmp(const void* s1, const void* s2)
     return strcmp(*(const char**)s1, *(const char**)s2);
 }
 
+static const char* lastFileName(const char* path)
+{
+    const char* p = path;
+    const char* q = p;
+    while (*p != '\0') {
+        if (*p == '/')
+            q = p + 1;
+        p++;
+    }
+    return allocStr(q, -1);
+}
+
 Str le_doComplete(struct LineEditor* e, Str ifn, enum CompletionStatus* status, int next)
 {
     int fl, i;

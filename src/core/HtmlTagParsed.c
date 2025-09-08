@@ -1,5 +1,6 @@
 #define _GNU_SOURCE
 #include "HtmlTagParsed.h"
+#include "token.h"
 #include "entity.h"
 #include "quote.h"
 #include "html_quote.h"
@@ -51,7 +52,7 @@ static Str cur_option;
 static Str cur_option_value;
 static Str cur_option_label;
 static int cur_option_selected;
-static int cur_status;
+static enum ReadtokenStatus cur_status;
 /* menu based <select>  */
 struct FormSelectOption* select_option;
 int max_select = MAX_SELECT;

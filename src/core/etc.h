@@ -5,15 +5,8 @@
 extern int nextpage_topline;
 extern int disable_secret_security_check;
 
-int gethtmlcmd(char** s);
-char* lastFileName(char* path);
-char* mydirname(char* s);
-int next_status(char c, int* status);
-int read_token(Str buf, char** instr, int* status, int pre, int append);
-Str correct_irrtag(int status);
 
-Str romanNumeral(int n);
-Str romanAlphabet(int n);
+
 void setup_child(int child, int i, int f);
 void myExec(char* command);
 void mySystem(char* command, int background);

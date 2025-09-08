@@ -290,6 +290,24 @@ cgi_filename(char* uri, char** fn, char** name, char** path_info)
     return CGIFN_LIBDIR;
 }
 
+static const char* mydirname(const char* s)
+{
+    const char* p = s;
+    while (*p)
+        p++;
+    if (s != p)
+        p--;
+    while (s != p && *p == '/')
+        p--;
+    while (s != p && *p != '/')
+        p--;
+    if (*p != '/')
+        return ".";
+    while (s != p && *p == '/')
+        p--;
+    return allocStr(s, strlen(s) - strlen(p) + 1);
+}
+
 FILE* localcgi_post(const char* uri, const char* qstr, struct Form* request, const char* referer)
 {
     FILE *fr = NULL, *fw = NULL;

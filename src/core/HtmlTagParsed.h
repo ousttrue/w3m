@@ -27,7 +27,7 @@ extern wc_ces cur_document_charset;
 struct HtmlTagParsed {
     enum HtmlTag tagid;
     enum HtmlTagAttribute* attrid;
-    char** value;
+    const char** value;
     // HtmlTagAttribute to index
     unsigned char* map;
     bool need_reconstruct;

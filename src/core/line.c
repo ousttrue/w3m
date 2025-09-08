@@ -9,6 +9,19 @@
 
 int Tabstop = 8;
 
+int columnPos(Line* line, int column)
+{
+    int i;
+
+    for (i = 1; i < line->len; i++) {
+        if (COLPOS(line, i) > column)
+            break;
+    }
+    for (i--; i > 0 && line->propBuf[i] & PC_WCHAR2; i--)
+        ;
+    return i;
+}
+
 static int
 nextColumn(int n, char* p, Lineprop* pr)
 {
@@ -358,4 +371,3 @@ Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor)
         *ocolor = check_color ? color_buffer : NULL;
     return s;
 }
-

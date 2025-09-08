@@ -47,6 +47,7 @@ const system_libs = [_][]const u8{
     "z",
 };
 const w3m_srcs = [_][]const u8{
+    "token.c",
     "time_util.c",
     "tty.c",
     "keybind.c",
