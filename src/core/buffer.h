@@ -5,6 +5,7 @@
 #include "url.h"
 #include "textlist.h"
 #include <stdio.h>
+#include <wc.h>
 
 #define SHELLBUFFERNAME "*Shellout*"
 #define PIPEBUFFERNAME "*stream*"

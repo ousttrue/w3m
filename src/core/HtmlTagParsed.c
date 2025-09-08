@@ -24,6 +24,9 @@
 #include <strings.h>
 #include <stdlib.h>
 
+#include <wc.h>
+#include <wtf.h>
+
 wc_ces cur_document_charset = 0;
 int pseudoInlines = (true);
 int ignore_null_img_alt = (true);

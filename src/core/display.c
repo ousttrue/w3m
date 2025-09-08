@@ -17,6 +17,9 @@
 #include <math.h>
 #include <string.h>
 
+#include <wc.h>
+#include <wtf.h>
+ 
 int displayLink = (false);
 int displayLineInfo = (false);
 int FoldLine = (false);

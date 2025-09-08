@@ -39,6 +39,8 @@
 // #include "mysignal.h"
 // #include <setjmp.h>
 // #include <signal.h>
+#include <wc.h>
+#include <wtf.h>
 
 #define DOCUMENT_CHARSET WC_CES_UTF_8
 

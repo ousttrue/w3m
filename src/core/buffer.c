@@ -18,6 +18,9 @@
 #include <strings.h>
 #include <unistd.h>
 
+#include <wc.h>
+#include <wtf.h>
+
 int REV_LB[MAX_LB] = {
     LB_N_INFO,
     LB_INFO,

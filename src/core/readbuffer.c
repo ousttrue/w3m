@@ -17,6 +17,9 @@
 #include "display.h"
 #include <strings.h>
 
+#include <wc.h>
+#include <wtf.h>
+
 char DisableCenter = (false);
 int IndentIncr = (4);
 char DisplayBorders = (false);

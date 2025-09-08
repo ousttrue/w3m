@@ -155,7 +155,6 @@ void ui_printStatus(const char* fmt, ...)
 static Str make_lastline_link(Buffer* buf, char* title, char* url)
 {
     Str s = NULL, u;
-    Lineprop* pr;
     struct Url pu;
     char* p;
     int l = getScreen()->COLS - 1, i;
@@ -178,6 +177,7 @@ static Str make_lastline_link(Buffer* buf, char* title, char* url)
     u = parsedURL2Str(&pu);
     if (DecodeURL)
         u = Strnew_charp(url_decode2(u->ptr, buf));
+    Lineprop* pr;
     u = checkType(u, &pr, NULL);
     if (l <= 4 || l >= get_Str_strwidth(u)) {
         if (!s)

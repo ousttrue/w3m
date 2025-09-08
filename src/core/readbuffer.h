@@ -7,6 +7,8 @@
 #include "textlist.h"
 #include "HtmlTag.h"
 
+#include <wc.h>
+
 extern char DisableCenter;
 extern int IndentIncr;
 extern char DisplayBorders;

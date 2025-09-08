@@ -6,7 +6,6 @@
 #include "line.h"
 
 extern int nextpage_topline;
-extern int ShowEffect;
 extern int disable_secret_security_check;
 
 struct _Buffer;
@@ -16,7 +15,6 @@ int columnSkip(struct _Buffer* buf, int offset);
 struct _Line* lineSkip(struct _Buffer* buf, struct _Line* line, int offset, int last);
 struct _Line* currentLineSkip(struct _Buffer* buf, struct _Line* line, int offset, int last);
 int gethtmlcmd(char** s);
-Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor);
 char* lastFileName(char* path);
 char* mydirname(char* s);
 int next_status(char c, int* status);
@@ -31,6 +29,8 @@ void myExec(char* command);
 void mySystem(char* command, int background);
 Str myExtCommand(char* cmd, char* arg, int redirect);
 Str myEditor(char* cmd, char* file, int line);
+
+#include <wc.h>
 char* url_unquote_conv(char* url, wc_ces charset);
 const char* expandName(const char* name);
 

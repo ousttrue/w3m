@@ -1,6 +1,5 @@
 #pragma once
-#include <wc.h>
-#include <wtf.h>
+#include <Str.h>
 
 #define LINELEN 256 /* Initial line length */
 extern int Tabstop;
@@ -81,3 +80,7 @@ inline static int COLPOS(struct _Line* l, int c)
 
 int columnPos(Line* line, int column);
 int columnLen(Line* line, int column);
+
+// mulity byte sequence ?
+// set PC_WCHAR1, PC_WCHAR2
+Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor);
