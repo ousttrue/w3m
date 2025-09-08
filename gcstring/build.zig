@@ -23,6 +23,7 @@ const srcs = [_][]const u8{
     "base64.c",
     "textlist.c",
     "quote.c",
+    "quote_map.c",
     "regex.c",
     "alloc.c",
     "Str.c",

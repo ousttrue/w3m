@@ -5,7 +5,6 @@
 #include "alloc.h"
 #include "regex.h"
 #include "quote.h"
-#include "indep.h"
 #include "myctype.h"
 #include <stdbool.h>
 #include <string.h>
@@ -155,6 +154,18 @@ void loadSiteconf(void)
         ent = NULL;
     }
     fclose(fp);
+}
+
+static int strmatchlen(const char* s1, const char* s2, int maxlen)
+{
+    /* To allow the maxlen to be negatie (infinity),
+     * compare by "!=" instead of "<=". */
+    int i;
+    for (i = 0; i != maxlen; ++i) {
+        if (!s1[i] || !s2[i] || s1[i] != s2[i])
+            break;
+    }
+    return i;
 }
 
 static const void* querySiteconf(const struct Url* query_pu, int field)

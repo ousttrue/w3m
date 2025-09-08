@@ -1,5 +1,4 @@
 #include "tmpfile.h"
-#include "indep.h"
 #include "rc.h"
 #include "ui.h"
 #include "textlist.h"

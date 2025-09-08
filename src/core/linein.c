@@ -4,12 +4,9 @@
 #include "screen.h"
 #include "ctrlcode.h"
 #include "display.h"
-#include "local.h"
 #include "event_poller.h"
 #include "screen.h"
 #include "LineEditor.h"
-#include "w3m.h"
-#include "indep.h"
 #include <stdbool.h>
 #include <string.h>
 #include <wtf.h>

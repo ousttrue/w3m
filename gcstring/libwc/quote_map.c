@@ -1,20 +1,3 @@
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE /* strcasestr() */
-#include <string.h>
-#endif
-
-#include "url.h"
-#include <stdio.h>
-#include <pwd.h>
-#include <sys/param.h>
-#include <sys/types.h>
-#include <stdlib.h>
-#include "indep.h"
-#include "Str.h"
-#include <gc.h>
-#include "myctype.h"
-#include "entity.h"
-
 unsigned char QUOTE_MAP[0x100] = {
     /* NUL SOH STX ETX EOT ENQ ACK BEL  BS  HT  LF  VT  FF  CR  SO  SI */
     24,
@@ -283,53 +266,3 @@ unsigned char QUOTE_MAP[0x100] = {
     16,
 };
 
-static int
-strcasematch(char* s1, char* s2)
-{
-    int x;
-    while (*s1) {
-        if (*s2 == '\0')
-            return 1;
-        x = TOLOWER(*s1) - TOLOWER(*s2);
-        if (x != 0)
-            break;
-        s1++;
-        s2++;
-    }
-    return (*s2 == '\0');
-}
-
-/* search multiple strings */
-int strcasemstr(char* str, char* srch[], char** ret_ptr)
-{
-    int i;
-    while (*str) {
-        for (i = 0; srch[i]; i++) {
-            if (strcasematch(str, srch[i])) {
-                if (ret_ptr)
-                    *ret_ptr = str;
-                return i;
-            }
-        }
-        str++;
-    }
-    return -1;
-}
-
-int strmatchlen(const char* s1, const char* s2, int maxlen)
-{
-    int i;
-
-    /* To allow the maxlen to be negatie (infinity),
-     * compare by "!=" instead of "<=". */
-    for (i = 0; i != maxlen; ++i) {
-        if (!s1[i] || !s2[i] || s1[i] != s2[i])
-            break;
-    }
-    return i;
-}
-
-/* Local Variables:    */
-/* c-basic-offset: 4   */
-/* tab-width: 8        */
-/* End:                */

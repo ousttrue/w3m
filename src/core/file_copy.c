@@ -4,7 +4,6 @@
 #include "subprocess.h"
 #include "linein.h"
 #include "history.h"
-#include "indep.h"
 #include "str_util.h"
 #include "myctype.h"
 #include "istream.h"

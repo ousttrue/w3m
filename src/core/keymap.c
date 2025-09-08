@@ -3,15 +3,14 @@
 #include "rc.h"
 #include "ctrlcode.h"
 #include "ui.h"
-#include "indep.h"
-#include "istream.h"
-#include "history.h"
 #include "quote.h"
+#include "hash.h"
 
 #include <Str.h>
 #include <stdio.h>
 #include <string.h>
 #include <strings.h>
+#include <sys/stat.h>
 
 #include "defun.h"
 

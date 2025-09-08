@@ -10,7 +10,6 @@
 #include "http.h"
 #include "screen.h"
 #include "quote.h"
-#include "indep.h"
 #include "html_quote.h"
 #include <alloc.h>
 #include <string.h>

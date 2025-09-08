@@ -112,7 +112,6 @@ const w3m_srcs = [_][]const u8{
     "tagtable.c",
     "istream.c",
 
-    "indep.c",
     "hash.c",
 
     "version.c",

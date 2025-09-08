@@ -1,12 +1,5 @@
 #include "HttpClient.h"
-#include "url_scheme.h"
 #include "http.h"
-#include "html_form.h"
-#include "local.h"
-#include "proxy.h"
-#include "istream.h"
-#include "ssl_util.h"
-#include "indep.h"
 #include "ui.h"
 #include <openssl/ssl.h>
 #include <unistd.h>

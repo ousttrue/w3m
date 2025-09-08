@@ -1,6 +1,5 @@
 #include "downloadlist.h"
 #include "expandpath.h"
-#include "indep.h"
 #include "ui.h"
 #include <Str.h>
 #include <alloc.h>

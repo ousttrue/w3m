@@ -1,6 +1,6 @@
 #include "LineEditor.h"
+#include "alloc.h"
 #include "expandpath.h"
-#include "indep.h"
 #include "w3m.h"
 #include "buffer.h"
 #include "str_util.h"
@@ -12,7 +12,6 @@
 #include "history.h"
 #include "screen.h"
 #include "screen_effects.h"
-#include "url.h"
 #include <dirent.h>
 #include <stdlib.h>
 #include <string.h>

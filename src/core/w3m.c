@@ -1,4 +1,5 @@
 #include "w3m.h"
+#include "alloc.h"
 #include "expandpath.h"
 #include "defun_macro.h"
 #include "mimetypes.h"
@@ -6,7 +7,6 @@
 #include "siteconf.h"
 #include "buffer_loader.h"
 #include "file_copy.h"
-#include "indep.h"
 #include "tmpfile.h"
 #include "istream.h"
 #include "progress.h"
