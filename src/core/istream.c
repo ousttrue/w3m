@@ -505,12 +505,13 @@ int doFileSave(struct URLFile uf, const char* defstr, int current_content_length
         if (!pid) {
             int err;
             if ((uf.content_encoding != CMP_NOCOMPRESS) && AutoUncompress) {
-                uncompress_stream(&uf, &tmpf);
-                if (tmpf)
-                    unlink(tmpf);
+                abort();
+                // uncompress_stream(&uf, &tmpf);
+                // if (tmpf)
+                //     unlink(tmpf);
             }
-            setup_child(false, 0, UFfileno(&uf));
-            err = save2tmp(uf, p);
+            setup_child(false, 0, ISfileno(uf.stream));
+            err = save2tmp(uf.stream, p);
             if (err == 0 && PreserveTimestamp && uf.modtime != -1)
                 setModtime(p, uf.modtime);
             if (ISclose(uf.stream) == 0) {
@@ -571,7 +572,7 @@ static MySignalHandler KeyAbort(int _dummy)
 
 #define SAVE_BUF_SIZE 1536
 
-int save2tmp(struct URLFile uf, char* tmpf)
+int save2tmp(union input_stream *stream, const char* tmpf)
 {
     // long long linelen = 0;
     // long long trbyte = 0;
@@ -594,7 +595,7 @@ int save2tmp(struct URLFile uf, char* tmpf)
         int count;
 
         buf = NewWithoutGC_N(char, SAVE_BUF_SIZE);
-        while ((count = ISread_n(uf.stream, buf, SAVE_BUF_SIZE)) > 0) {
+        while ((count = ISread_n(stream, buf, SAVE_BUF_SIZE)) > 0) {
             if (fwrite(buf, 1, count, ff) != count) {
                 retval = -2;
                 goto _end;
@@ -625,15 +626,16 @@ void examineFile(struct URLFile* uf, const char* path)
     }
     uf->stream = openIS(path);
 
-    check_compression(uf, path);
-    if (uf->compression != CMP_NOCOMPRESS) {
-        const char* ext = uf->ext;
-        const char* t0 = uncompressed_file_type(path, &ext);
-        uf->guess_type = (char*)t0;
-        uf->ext = ext;
-        uncompress_stream(uf, NULL);
-        return;
-    }
+    // check_compression(uf, path);
+    // if (uf->compression != CMP_NOCOMPRESS) {
+    //     abort();
+    //     // const char* ext = uf->ext;
+    //     // const char* t0 = uncompressed_file_type(path, &ext);
+    //     // uf->guess_type = (char*)t0;
+    //     // uf->ext = ext;
+    //     // uncompress_stream(uf, NULL);
+    //     // return;
+    // }
 }
 
 Str readAll(struct URLFile* f)

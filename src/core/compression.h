@@ -27,6 +27,5 @@ const char* uncompressed_file_type(const char* path, const char** ext);
 const char* acceptableEncoding(void);
 
 struct URLFile;
-void check_compression(struct URLFile* uf, const char* path);
-void uncompress_stream(struct URLFile* uf, char** src);
+// void check_compression(struct URLFile* uf, const char* path);
 void set_compression(struct URLFile* uf, const char* p);

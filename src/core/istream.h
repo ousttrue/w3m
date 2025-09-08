@@ -138,11 +138,7 @@ extern void ssl_accept_this_site(char* hostname);
 
 #define openIS(path) newInputStream(open((path), O_RDONLY))
 
-// #define UFclose(f)                   \
-//     if (ISclose((f)->stream) == 0) { \
-//         (f)->stream = NULL;          \
-//     }
-#define UFfileno(f) ISfileno((f)->stream)
+int save2tmp(union input_stream *s, const char* tmpf);
 
 struct URLFile {
     enum UrlScheme scheme;
@@ -163,7 +159,6 @@ void examineFile(struct URLFile* uf, const char* path);
 struct _Buffer;
 struct _Buffer* loadHTMLBuffer(struct URLFile* f, struct _Buffer* newBuf);
 struct _Buffer* loadBuffer(struct URLFile* uf, struct _Buffer* newBuf);
-int save2tmp(struct URLFile uf, char* tmpf);
 int doFileSave(struct URLFile uf, const char* defstr, int current_content_length);
 void init_stream(struct URLFile* uf, int scheme, InputStream stream);
 int checkSaveFile(InputStream stream, char* path);

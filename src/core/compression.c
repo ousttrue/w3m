@@ -108,26 +108,26 @@ const char* acceptableEncoding(void)
     return encodings->ptr;
 }
 
-void check_compression(struct URLFile* uf, const char* path)
-{
-    if (!path)
-        return;
-
-    int len = strlen(path);
-    uf->compression = CMP_NOCOMPRESS;
-    struct compression_decoder* d;
-    for (d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
-        int elen;
-        if (d->ext == NULL)
-            continue;
-        elen = strlen(d->ext);
-        if (len > elen && strcasecmp(&path[len - elen], d->ext) == 0) {
-            uf->compression = d->type;
-            uf->guess_type = d->mime_type;
-            break;
-        }
-    }
-}
+// void check_compression(struct URLFile* uf, const char* path)
+// {
+//     if (!path)
+//         return;
+//
+//     int len = strlen(path);
+//     uf->compression = CMP_NOCOMPRESS;
+//     struct compression_decoder* d;
+//     for (d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
+//         int elen;
+//         if (d->ext == NULL)
+//             continue;
+//         elen = strlen(d->ext);
+//         if (len > elen && strcasecmp(&path[len - elen], d->ext) == 0) {
+//             uf->compression = d->type;
+//             uf->guess_type = d->mime_type;
+//             break;
+//         }
+//     }
+// }
 
 const char* compress_application_type(enum CompressionTyep compression)
 {
@@ -170,104 +170,104 @@ const char* uncompressed_file_type(const char* path, const char** ext)
     return t0;
 }
 
-#define SAVE_BUF_SIZE 1536
-
-void uncompress_stream(struct URLFile* uf, char** src)
-{
-    pid_t pid1;
-    FILE* f1;
-    char* expand_cmd = GUNZIP_CMDNAME;
-    char* expand_name = GUNZIP_NAME;
-    char* tmpf = NULL;
-    char* ext = NULL;
-    struct compression_decoder* d;
-    int use_d_arg = 0;
-
-    if (IStype(uf->stream) != IST_ENCODED) {
-        uf->stream = newEncodedStream(uf->stream, uf->encoding);
-        uf->encoding = ENC_7BIT;
-    }
-    for (d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
-        if (uf->compression == d->type) {
-            if (d->auxbin_p)
-                expand_cmd = auxbinFile(d->cmd);
-            else
-                expand_cmd = d->cmd;
-            expand_name = d->name;
-            ext = d->ext;
-            use_d_arg = d->use_d_arg;
-            break;
-        }
-    }
-    uf->compression = CMP_NOCOMPRESS;
-
-    if (uf->scheme != SCM_LOCAL
-        && !image_source) {
-        tmpf = tmpfname(TMPF_DFL, ext)->ptr;
-    }
-
-    /* child1 -- stdout|f1=uf -> parent */
-    pid1 = open_pipe_rw(&f1, NULL);
-    if (pid1 < 0) {
-        if (ISclose(uf->stream) == 0) {
-            uf->stream = NULL;
-        }
-        return;
-    }
-    if (pid1 == 0) {
-        /* child */
-        pid_t pid2;
-        FILE* f2 = stdin;
-
-        /* uf -> child2 -- stdout|stdin -> child1 */
-        pid2 = open_pipe_rw(&f2, NULL);
-        if (pid2 < 0) {
-            if (ISclose(uf->stream) == 0) {
-                uf->stream = NULL;
-            }
-            exit(1);
-        }
-        if (pid2 == 0) {
-            /* child2 */
-            char* buf = NewWithoutGC_N(char, SAVE_BUF_SIZE);
-            int count;
-            FILE* f = NULL;
-
-            setup_child(true, 2, UFfileno(uf));
-            if (tmpf)
-                f = fopen(tmpf, "wb");
-            while ((count = ISread_n(uf->stream, buf, SAVE_BUF_SIZE)) > 0) {
-                if (fwrite(buf, 1, count, stdout) != count)
-                    break;
-                if (f && fwrite(buf, 1, count, f) != count)
-                    break;
-            }
-            if (ISclose(uf->stream) == 0) {
-                uf->stream = NULL;
-            }
-            if (f)
-                fclose(f);
-            xfree(buf);
-            exit(0);
-        }
-        /* child1 */
-        dup2(1, 2); /* stderr>&stdout */
-        setup_child(true, -1, -1);
-        if (use_d_arg)
-            execlp(expand_cmd, expand_name, "-d", NULL);
-        else
-            execlp(expand_cmd, expand_name, NULL);
-        exit(1);
-    }
-    if (tmpf) {
-        if (src)
-            *src = tmpf;
-        else
-            uf->scheme = SCM_LOCAL;
-    }
-    UFhalfclose(uf);
-    uf->stream = newFileStream(f1, &fclose);
-}
+// #define SAVE_BUF_SIZE 1536
+//
+// void uncompress_stream(struct URLFile* uf, char** src)
+// {
+//     pid_t pid1;
+//     FILE* f1;
+//     char* expand_cmd = GUNZIP_CMDNAME;
+//     char* expand_name = GUNZIP_NAME;
+//     char* tmpf = NULL;
+//     char* ext = NULL;
+//     struct compression_decoder* d;
+//     int use_d_arg = 0;
+//
+//     if (IStype(uf->stream) != IST_ENCODED) {
+//         uf->stream = newEncodedStream(uf->stream, uf->encoding);
+//         uf->encoding = ENC_7BIT;
+//     }
+//     for (d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
+//         if (uf->compression == d->type) {
+//             if (d->auxbin_p)
+//                 expand_cmd = auxbinFile(d->cmd);
+//             else
+//                 expand_cmd = d->cmd;
+//             expand_name = d->name;
+//             ext = d->ext;
+//             use_d_arg = d->use_d_arg;
+//             break;
+//         }
+//     }
+//     uf->compression = CMP_NOCOMPRESS;
+//
+//     if (uf->scheme != SCM_LOCAL
+//         && !image_source) {
+//         tmpf = tmpfname(TMPF_DFL, ext)->ptr;
+//     }
+//
+//     /* child1 -- stdout|f1=uf -> parent */
+//     pid1 = open_pipe_rw(&f1, NULL);
+//     if (pid1 < 0) {
+//         if (ISclose(uf->stream) == 0) {
+//             uf->stream = NULL;
+//         }
+//         return;
+//     }
+//     if (pid1 == 0) {
+//         /* child */
+//         pid_t pid2;
+//         FILE* f2 = stdin;
+//
+//         /* uf -> child2 -- stdout|stdin -> child1 */
+//         pid2 = open_pipe_rw(&f2, NULL);
+//         if (pid2 < 0) {
+//             if (ISclose(uf->stream) == 0) {
+//                 uf->stream = NULL;
+//             }
+//             exit(1);
+//         }
+//         if (pid2 == 0) {
+//             /* child2 */
+//             char* buf = NewWithoutGC_N(char, SAVE_BUF_SIZE);
+//             int count;
+//             FILE* f = NULL;
+//
+//             setup_child(true, 2, ISfileno(uf->stream));
+//             if (tmpf)
+//                 f = fopen(tmpf, "wb");
+//             while ((count = ISread_n(uf->stream, buf, SAVE_BUF_SIZE)) > 0) {
+//                 if (fwrite(buf, 1, count, stdout) != count)
+//                     break;
+//                 if (f && fwrite(buf, 1, count, f) != count)
+//                     break;
+//             }
+//             if (ISclose(uf->stream) == 0) {
+//                 uf->stream = NULL;
+//             }
+//             if (f)
+//                 fclose(f);
+//             xfree(buf);
+//             exit(0);
+//         }
+//         /* child1 */
+//         dup2(1, 2); /* stderr>&stdout */
+//         setup_child(true, -1, -1);
+//         if (use_d_arg)
+//             execlp(expand_cmd, expand_name, "-d", NULL);
+//         else
+//             execlp(expand_cmd, expand_name, NULL);
+//         exit(1);
+//     }
+//     if (tmpf) {
+//         if (src)
+//             *src = tmpf;
+//         else
+//             uf->scheme = SCM_LOCAL;
+//     }
+//     UFhalfclose(uf);
+//     uf->stream = newFileStream(f1, &fclose);
+// }
 
 void set_compression(struct URLFile* uf, const char* p)
 {
