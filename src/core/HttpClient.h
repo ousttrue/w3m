@@ -1,5 +1,6 @@
 #pragma once
-#include "istream.h"
+#include "URLFile.h"
+#include "url.h"
 #include <wc.h>
 
 enum HttpConnectionStatus {

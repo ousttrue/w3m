@@ -1,4 +1,5 @@
 #include "buffer_loader.h"
+#include "URLFile.h"
 #include "entity.h"
 #include "convertline.h"
 #include "quote.h"
@@ -293,7 +294,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
     Anchor *a_href = NULL, *a_img = NULL, *a_form = NULL;
     const char* p;
     const char* q;
-    char *r, *s, *t;
+    const char *r, *s, *t;
     const char* str;
     Lineprop mode, effect, ex_effect;
     int pos;

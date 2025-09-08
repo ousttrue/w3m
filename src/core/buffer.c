@@ -1,5 +1,6 @@
 #include "buffer.h"
 #include "tmpfile.h"
+#include "URLFile.h"
 #include "convertline.h"
 #include "quote.h"
 #include "http.h"

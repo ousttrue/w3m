@@ -1,6 +1,6 @@
 #include "HttpClient.h"
 #include "http.h"
-#include "ui.h"
+// #include "ui.h"
 #include <openssl/ssl.h>
 #include <unistd.h>
 
@@ -25,14 +25,14 @@ bool checkRedirection(struct HttpClient* c, struct Url* pu)
     if (c->nredir >= FollowRedirection) {
         Str tmp = Sprintf("Number of redirections exceeded %d at %s",
             FollowRedirection, parsedURL2Str(pu)->ptr);
-        message(getUI(), MSG_ERR, tmp->ptr);
+        // message(getUI(), MSG_ERR, tmp->ptr);
         return false;
     }
 
     for (int i = 0; i < c->nredir; ++i) {
         if (same_url_p(pu, &c->puv[i])) {
             Str tmp = Sprintf("Redirection loop detected (%s)", parsedURL2Str(pu)->ptr);
-            message(getUI(), MSG_ERR, tmp->ptr);
+            // message(getUI(), MSG_ERR, tmp->ptr);
             return false;
         }
     }

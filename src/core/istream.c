@@ -434,7 +434,7 @@ memchop(char* p, int* len)
     return;
 }
 
-int checkSaveFile(InputStream stream, char* path2)
+int checkSaveFile(InputStream stream, const char* path2)
 {
     int des = ISfileno(stream);
     if (des < 0)
@@ -450,107 +450,6 @@ int checkSaveFile(InputStream stream, char* path2)
     return 0;
 }
 
-int doFileSave(struct URLFile uf, const char* defstr, int current_content_length)
-{
-    Str msg;
-    // Str filen;
-    char* p;
-    pid_t pid;
-    char* lock;
-    char* tmpf = NULL;
-
-    // if (fmInitialized)
-    {
-        p = searchKeyData();
-        if (p == NULL || *p == '\0') {
-            /* FIXME: gettextize? */
-            p = inputLineHist(getUI(), "(Download)Save file to: ",
-                defstr, IN_FILENAME, SaveHist);
-            if (p == NULL || *p == '\0')
-                return -1;
-            p = conv_to_system(p);
-        }
-        if (!notExistsOrOverWrite(p))
-            return -1;
-        if (checkSaveFile(uf.stream, p) < 0) {
-            /* FIXME: gettextize? */
-            msg = Sprintf("Can't save. Load file and %s are identical.",
-                conv_from_system(p));
-            message(getUI(), MSG_ERR, msg->ptr);
-            return -1;
-        }
-        /*
-         * if (save2tmp(uf, p) < 0) {
-         * msg = Sprintf("Can't save to %s", conv_from_system(p));
-         * message(getUI(), MSG_ERR, msg->ptr);
-         * }
-         */
-        lock = tmpfname(TMPF_DFL, ".lock")->ptr;
-        symlink(p, lock);
-        flush_tty();
-        pid = fork();
-        if (!pid) {
-            int err;
-            if ((uf.content_encoding != CMP_NOCOMPRESS) && AutoUncompress) {
-                abort();
-                // uncompress_stream(&uf, &tmpf);
-                // if (tmpf)
-                //     unlink(tmpf);
-            }
-            setup_child(false, 0, ISfileno(uf.stream));
-            err = save2tmp(uf.stream, p);
-            if (err == 0 && PreserveTimestamp && uf.modtime != -1)
-                setModtime(p, uf.modtime);
-            if (ISclose(uf.stream) == 0) {
-                uf.stream = NULL;
-            }
-            unlink(lock);
-            if (err != 0)
-                exit(-err);
-            exit(0);
-        }
-        addDownloadList(pid, uf.url, p, lock, current_content_length);
-    }
-    // else {
-    //     q = searchKeyData();
-    //     if (q == NULL || *q == '\0') {
-    //         /* FIXME: gettextize? */
-    //         printf("(Download)Save file to: ");
-    //         fflush(stdout);
-    //         filen = Strfgets(stdin);
-    //         if (filen->length == 0)
-    //             return -1;
-    //         q = filen->ptr;
-    //     }
-    //     for (p = q + strlen(q) - 1; IS_SPACE(*p); p--)
-    //         ;
-    //     *(p + 1) = '\0';
-    //     if (*q == '\0')
-    //         return -1;
-    //     p = expandPath(q);
-    //     if (!notExistsOrOverWrite(p))
-    //         return -1;
-    //     if (checkSaveFile(uf.stream, p) < 0) {
-    //         /* FIXME: gettextize? */
-    //         printf("Can't save. Load file and %s are identical.", p);
-    //         return -1;
-    //     }
-    //     if (uf.content_encoding != CMP_NOCOMPRESS && AutoUncompress) {
-    //         uncompress_stream(&uf, &tmpf);
-    //         if (tmpf)
-    //             unlink(tmpf);
-    //     }
-    //     if (save2tmp(uf, p) < 0) {
-    //         /* FIXME: gettextize? */
-    //         printf("Can't save to %s\n", p);
-    //         return -1;
-    //     }
-    //     if (PreserveTimestamp && uf.modtime != -1)
-    //         setModtime(p, uf.modtime);
-    // }
-    return 0;
-}
-
 static sigjmp_buf AbortLoading;
 static MySignalHandler KeyAbort(int _dummy)
 {
@@ -559,7 +458,7 @@ static MySignalHandler KeyAbort(int _dummy)
 
 #define SAVE_BUF_SIZE 1536
 
-int save2tmp(union input_stream *stream, const char* tmpf)
+int save2tmp(union input_stream* stream, const char* tmpf)
 {
     // long long linelen = 0;
     // long long trbyte = 0;
@@ -600,32 +499,7 @@ _end:
     return retval;
 }
 
-#define NOT_REGULAR(m) (((m) & S_IFMT) != S_IFREG)
-
-void examineFile(struct URLFile* uf, const char* path)
-{
-    struct stat stbuf;
-
-    uf->guess_type = NULL;
-    if (path == NULL || *path == '\0' || stat(path, &stbuf) == -1 || NOT_REGULAR(stbuf.st_mode)) {
-        uf->stream = NULL;
-        return;
-    }
-    uf->stream = openIS(path);
-
-    // check_compression(uf, path);
-    // if (uf->compression != CMP_NOCOMPRESS) {
-    //     abort();
-    //     // const char* ext = uf->ext;
-    //     // const char* t0 = uncompressed_file_type(path, &ext);
-    //     // uf->guess_type = (char*)t0;
-    //     // uf->ext = ext;
-    //     // uncompress_stream(uf, NULL);
-    //     // return;
-    // }
-}
-
-Str readAll(union input_stream *stream)
+Str readAll(union input_stream* stream)
 {
     Str html = Strnew();
     Str lineBuf2;
@@ -633,18 +507,4 @@ Str readAll(union input_stream *stream)
         Strcat(html, lineBuf2);
     }
     return html;
-}
-
-void init_stream(struct URLFile* uf, int scheme, InputStream stream)
-{
-    memset(uf, 0, sizeof(struct URLFile));
-    uf->stream = stream;
-    uf->scheme = scheme;
-    uf->encoding = ENC_7BIT;
-    uf->is_cgi = false;
-    uf->compression = CMP_NOCOMPRESS;
-    uf->content_encoding = CMP_NOCOMPRESS;
-    uf->guess_type = NULL;
-    uf->ext = NULL;
-    uf->modtime = -1;
 }

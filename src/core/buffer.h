@@ -88,7 +88,7 @@ typedef struct _Buffer {
     AnchorList* img;
     AnchorList* formitem;
     LinkList* linklist;
-    struct form_list* formlist;
+    struct Form* formlist;
     struct _MapList* maplist;
     HmarkerList* hmarklist;
     HmarkerList* imarklist;

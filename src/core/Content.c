@@ -388,7 +388,7 @@ struct Content openHttp(struct HttpClient* c, const char* path, struct Url* curr
     }
 
     if ((p = getHttpHeaderValue(response.headers, "content-encoding:"))) {
-        set_compression(&c->f, p);
+        set_compression(p, &c->f.compression);
         c->f.content_encoding = c->f.compression;
     }
 
