@@ -18,9 +18,11 @@ const public_headers = [_][]const u8{
     "url_scheme.h",
     "url.h",
     "textlist.h",
+    "growbuf.h",
 };
 
 const srcs = [_][]const u8{
+    "growbuf.c",
     "textlist.c",
     "url_scheme.c",
     "url.c",

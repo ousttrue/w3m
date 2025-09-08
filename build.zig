@@ -53,7 +53,6 @@ const w3m_srcs = [_][]const u8{
     "mysignal.c",
     "http.c",
     "downloadlist.c",
-    "growbuf.c",
     "keymap.c",
     "progress.c",
     "html_title.c",
