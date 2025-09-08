@@ -16,6 +16,6 @@ struct Content {
     TextList* document_header;
 };
 
-struct form_list;
-struct Content loadGeneralFile(const char* path, struct Url* current, struct form_list* post,
+struct Form;
+struct Content loadGeneralFile(const char* path, struct Url* current, struct Form* post,
     const char* referer, bool no_cache);

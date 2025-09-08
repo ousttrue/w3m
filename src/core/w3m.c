@@ -589,7 +589,7 @@ static Buffer* loadNormalBuf(Buffer* buf)
 }
 
 static Buffer*
-loadLink(const char* url, const char* target, const char* referer, FormList* post, bool do_download)
+loadLink(const char* url, const char* target, const char* referer, struct Form* post, bool do_download)
 {
     Buffer* nfbuf;
     union frameset_element* f_element = NULL;
@@ -635,8 +635,8 @@ loadLink(const char* url, const char* target, const char* referer, FormList* pos
 
 static struct FormItem* save_submit_formlist(struct FormItem* src)
 {
-    FormList* list;
-    FormList* srclist;
+    struct Form* list;
+    struct Form* srclist;
     struct FormItem* srcitem;
     struct FormItem* item;
     struct FormItem* ret = NULL;
@@ -647,7 +647,7 @@ static struct FormItem* save_submit_formlist(struct FormItem* src)
     if (src == NULL)
         return NULL;
     srclist = src->parent;
-    list = New(FormList);
+    list = New(struct Form);
     list->method = srclist->method;
     list->action = Strdup(srclist->action);
     list->charset = srclist->charset;
@@ -1293,7 +1293,7 @@ DEFUN(srchprv, SEARCH_PREV, "Continue search backward")
 }
 
 static void
-cmd_loadURL(const char* url, struct Url* current, const char* referer, FormList* post)
+cmd_loadURL(const char* url, struct Url* current, const char* referer, struct Form* post)
 {
     // refresh(ttyWriter());
     struct Content c = loadGeneralFile(url, current, post, referer, false);
@@ -2744,7 +2744,7 @@ DEFUN(ldBmark, BOOKMARK VIEW_BOOKMARK, "View bookmarks")
 DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
 {
     Str tmp;
-    FormList* request;
+    struct Form* request;
 
     tmp = Sprintf("mode=panel&cookie=%s&bmark=%s&url=%s&title=%s"
                   "&charset=%s",
@@ -3175,7 +3175,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
     copyBuffer(&sbuf, Currentbuf);
     multipart = 0;
 
-    FormList* post;
+    struct Form* post;
     if (Currentbuf->form_submit) {
         post = Currentbuf->form_submit->parent;
         if (post->method == FORM_METHOD_POST

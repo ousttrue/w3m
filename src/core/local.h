@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 
-struct form_list;
+struct Form;
 
 // #define DEV_NULL_PATH "nul"
 #define DEV_NULL_PATH "/dev/null"
@@ -48,7 +48,7 @@ Str localCookie(void);
 Str loadLocalDir(char* dirname);
 void set_environ(const char* var, const char* value);
 
-FILE* localcgi_post(const char*, const char*, struct form_list*, const char*);
+FILE* localcgi_post(const char*, const char*, struct Form*, const char*);
 
 static inline FILE* localcgi_get(const char* u, const char* q, const char* r)
 {

@@ -583,7 +583,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                     a_img = NULL;
                     break;
                 case HTML_INPUT_ALT: {
-                    FormList* form;
+                    struct Form* form;
                     int top = 0, bottom = 0;
                     int textareanumber = -1;
                     int selectnumber = -1;

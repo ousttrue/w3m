@@ -4,7 +4,7 @@
 
 struct Url;
 struct HttpRequest;
-struct form_list;
+struct Form;
 
 struct auth_param {
     const char* name;
@@ -17,11 +17,11 @@ struct http_auth {
     const char* scheme;
     struct auth_param* param;
     Str (*cred)(struct http_auth* ha, Str uname, Str pw, struct Url* pu,
-        struct HttpRequest* hr, struct form_list* request);
+        struct HttpRequest* hr, struct Form* request);
 };
 void getAuthCookie(struct http_auth* hauth, const char* auth_header,
     TextList* extra_header, struct Url* pu, struct HttpRequest* hr,
-    struct form_list* request,
+    struct Form* request,
     volatile Str* uname, volatile Str* pwd);
 
 Str qstr_unquote(Str s);

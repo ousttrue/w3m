@@ -33,7 +33,7 @@ int ignore_null_img_alt = (true);
 #define FORMSTACK_SIZE 10
 #define FRAMESTACK_SIZE 10
 #define INITIAL_FORM_SIZE 10
-FormList** forms;
+struct Form** forms;
 static int* form_stack;
 int form_max = -1;
 static int forms_size = 0;
@@ -1298,12 +1298,12 @@ Str process_form_int(struct HtmlTagParsed* tag, int fid)
     }
     if (forms_size == 0) {
         forms_size = INITIAL_FORM_SIZE;
-        forms = New_N(FormList*, forms_size);
+        forms = New_N(struct Form*, forms_size);
         form_stack = NewAtom_N(int, forms_size);
     }
     if (forms_size <= form_max) {
         forms_size += form_max;
-        forms = New_Reuse(FormList*, forms, forms_size);
+        forms = New_Reuse(struct Form*, forms, forms_size);
         form_stack = New_Reuse(int, form_stack, forms_size);
     }
     form_stack[form_sp] = fid;

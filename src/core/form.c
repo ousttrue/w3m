@@ -56,11 +56,11 @@ struct {
 };
 /* *INDENT-ON* */
 
-struct form_list*
+struct Form*
 newFormList(char* action, char* method, char* charset, char* enctype,
-    char* target, char* name, struct form_list* _next)
+    char* target, char* name, struct Form* _next)
 {
-    struct form_list* l;
+    struct Form* l;
     Str a = Strnew_charp(action);
     int m = FORM_METHOD_GET;
     int e = FORM_ENCTYPE_URLENCODED;
@@ -81,7 +81,7 @@ newFormList(char* action, char* method, char* charset, char* enctype,
     if (charset != NULL)
         c = wc_guess_charset(charset, 0);
 
-    l = New(struct form_list);
+    l = New(struct Form);
     l->item = l->lastitem = NULL;
     l->action = a;
     l->method = m;
@@ -100,7 +100,7 @@ newFormList(char* action, char* method, char* charset, char* enctype,
  * add <input> element to form_list
  */
 struct FormItem*
-formList_addInput(struct form_list* fl, struct HtmlTagParsed* tag)
+formList_addInput(struct Form* fl, struct HtmlTagParsed* tag)
 {
     struct FormItem* item;
     char* p;
@@ -910,7 +910,7 @@ void preFormUpdateBuffer(Buffer* buf)
     struct pre_form_item* pi;
     int i;
     Anchor* a;
-    FormList* fl;
+    struct Form* fl;
     struct FormItem* fi;
     struct FormSelectOptionItem* opt;
     int j;

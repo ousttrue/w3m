@@ -125,7 +125,7 @@ static void invalidate_auth_user_passwd(struct Url* pu, char* realm, Str uname, 
 
 void getAuthCookie(struct http_auth* hauth, const char* auth_header,
     TextList* extra_header, struct Url* pu, struct HttpRequest* hr,
-    FormList* request,
+    struct Form* request,
     volatile Str* uname, volatile Str* pwd)
 {
     Str ss = NULL;
@@ -247,7 +247,7 @@ enum {
 };
 
 Str AuthDigestCred(struct http_auth* ha, Str uname, Str pw, struct Url* pu,
-    struct HttpRequest* hr, FormList* request)
+    struct HttpRequest* hr, struct Form* request)
 {
     unsigned char md5[MD5_DIGEST_LENGTH + 1];
     Str uri = getHttpRequestURIStr(pu, hr);
@@ -570,7 +570,7 @@ extract_auth_param(char* q, struct auth_param* auth)
 
 static Str
 AuthBasicCred(struct http_auth* ha, Str uname, Str pw, struct Url* pu,
-    struct HttpRequest* hr, FormList* request)
+    struct HttpRequest* hr, struct Form* request)
 {
     Str s = Strdup(uname);
     Strcat_char(s, ':');

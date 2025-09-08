@@ -36,13 +36,13 @@ enum HttpRequestFlag {
     HR_FLAG_PROXY = 2,
 };
 
-struct form_list;
+struct Form;
 
 struct HttpRequest {
     enum HttpMethod command;
     enum HttpRequestFlag flag;
     const char* referer;
-    struct form_list* request;
+    struct Form* request;
 };
 struct Url;
 

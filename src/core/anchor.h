@@ -39,7 +39,7 @@ typedef struct {
 } HmarkerList;
 
 struct _Buffer;
-struct form_list;
+struct Form;
 struct HtmlTagParsed;
 
 AnchorList* putAnchor(AnchorList* al, const char* url, const char* target,
@@ -52,7 +52,7 @@ Anchor* registerHref(struct _Buffer* buf, const char* url, const char* target,
 Anchor* registerName(struct _Buffer* buf, const char* url, int line, int pos);
 Anchor* registerImg(struct _Buffer* buf, const char* url, const char* title, int line,
     int pos);
-Anchor* registerForm(struct _Buffer* buf, struct form_list* flist,
+Anchor* registerForm(struct _Buffer* buf, struct Form* flist,
     struct HtmlTagParsed* tag, int line, int pos);
 int onAnchor(Anchor* a, int line, int pos);
 Anchor* retrieveAnchor(AnchorList* al, int line, int pos);

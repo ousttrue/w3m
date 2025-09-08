@@ -11,34 +11,36 @@ extern char* pre_form_file;
 #define FORM_I_SELECT_DEFAULT_SIZE 40
 #define FORM_I_TEXTAREA_DEFAULT_WIDTH 40
 
-#define FORM_METHOD_GET 0
-#define FORM_METHOD_POST 1
-#define FORM_METHOD_INTERNAL 2
-#define FORM_METHOD_HEAD 3
-
-#define FORM_ENCTYPE_URLENCODED 0
-#define FORM_ENCTYPE_MULTIPART 1
-
 #define MAX_TEXTAREA 10 /* max number of <textarea>..</textarea> \
                          * within one document */
 #define MAX_SELECT 10 /* max number of <select>..</select> \
                        * within one document */
 
-typedef struct form_list {
+enum FormMethodType {
+    FORM_METHOD_GET = 0,
+    FORM_METHOD_POST = 1,
+    FORM_METHOD_INTERNAL = 2,
+    FORM_METHOD_HEAD = 3,
+};
+enum FormEncodeType {
+    FORM_ENCTYPE_URLENCODED = 0,
+    FORM_ENCTYPE_MULTIPART = 1,
+};
+struct Form {
     struct FormItem* item;
     struct FormItem* lastitem;
-    int method;
+    enum FormMethodType method;
     Str action;
     const char* target;
-    char* name;
+    const char* name;
     wc_ces charset;
-    int enctype;
-    struct form_list* next;
+    enum FormEncodeType enctype;
+    struct Form* next;
     int nitems;
-    char* body;
-    char* boundary;
+    const char* body;
+    const char* boundary;
     unsigned long length;
-} FormList;
+};
 
 struct FormSelectOptionItem {
     Str value;
@@ -85,7 +87,7 @@ struct FormItem {
     struct FormSelectOptionItem* select_option;
     Str label, init_label;
     int selected, init_selected;
-    struct form_list* parent;
+    struct Form* parent;
     struct FormItem* next;
 };
 
@@ -94,10 +96,10 @@ struct _Buffer;
 struct HtmlTagParsed;
 struct _anchorList;
 
-struct form_list* newFormList(char* action, char* method, char* charset,
+struct Form* newFormList(char* action, char* method, char* charset,
     char* enctype, char* target, char* name,
-    struct form_list* _next);
-struct FormItem* formList_addInput(struct form_list* fl,
+    struct Form* _next);
+struct FormItem* formList_addInput(struct Form* fl,
     struct HtmlTagParsed* tag);
 char* form2str(struct FormItem* fi);
 int formtype(char* typestr);

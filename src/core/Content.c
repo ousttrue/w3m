@@ -72,7 +72,7 @@ static void write_from_file(int sock, const char* file)
     }
 }
 
-struct Content openLocal(const char* u, struct Url* current, FormList* post, const char* referer)
+struct Content openLocal(const char* u, struct Url* current, struct Form* post, const char* referer)
 {
     // u = file_to_url(u);
     struct Url pu;
@@ -245,7 +245,7 @@ static Str decode_gzip(unsigned char* src, int size)
     return buffer;
 }
 
-struct Content openHttp(struct HttpClient* c, const char* path, struct Url* current, FormList* post, const char* referer, bool no_cache)
+struct Content openHttp(struct HttpClient* c, const char* path, struct Url* current, struct Form* post, const char* referer, bool no_cache)
 {
     struct Url pu;
     parseURL2(path, &pu, current);
@@ -499,12 +499,12 @@ struct Content openHttp(struct HttpClient* c, const char* path, struct Url* curr
 }
 
 struct Content
-loadGeneralFile(const char* path, struct Url* current, FormList* post, const char* referer,
+loadGeneralFile(const char* path, struct Url* current, struct Form* post, const char* referer,
     bool no_cache)
 {
     //         openURL(&c, &pu, current, post, referer, no_cache, extra_header, &hr);
     // void openURL(struct HttpClient* c, struct Url* pu, struct Url* current,
-    //     FormList* post, const char* referer, bool no_cache, TextList* extra_header,
+    //     struct Form* post, const char* referer, bool no_cache, TextList* extra_header,
     //     struct HttpRequest* hr)
 
     struct Url pu;
