@@ -1,4 +1,5 @@
 #include "file_copy.h"
+#include "expandpath.h"
 #include "keymap.h"
 #include "subprocess.h"
 #include "linein.h"

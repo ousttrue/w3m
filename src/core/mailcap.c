@@ -1,7 +1,6 @@
-#define _GNU_SOURCE 1
 #include "mailcap.h"
-#include "mimetypes.h"
-#include "indep.h"
+#include "alloc.h"
+#include "expandpath.h"
 #include "myctype.h"
 #include "hash.h"
 #include "http.h"

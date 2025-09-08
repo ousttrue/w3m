@@ -1,4 +1,5 @@
 #include "rc.h"
+#include "expandpath.h"
 #include "network.h"
 #include "auth.h"
 #include "Content.h"

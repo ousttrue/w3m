@@ -1,4 +1,5 @@
 #include "linein.h"
+#include "expandpath.h"
 #include "history.h"
 #include "screen.h"
 #include "ctrlcode.h"

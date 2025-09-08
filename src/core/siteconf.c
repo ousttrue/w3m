@@ -1,4 +1,5 @@
 #include "siteconf.h"
+#include "expandpath.h"
 #include "rc.h"
 #include "url.h"
 #include "alloc.h"

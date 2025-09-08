@@ -283,59 +283,6 @@ unsigned char QUOTE_MAP[0x100] = {
     16,
 };
 
-long long
-strtoclen(const char* s)
-{
-    return atoll(s);
-}
-
-char* currentdir()
-{
-    char* path;
-#ifdef MAXPATHLEN
-    path = NewAtom_N(char, MAXPATHLEN);
-    getcwd(path, MAXPATHLEN);
-#else
-    path = getcwd(NULL, 0);
-#endif
-    return path;
-}
-
-const char* expandPath(const char* name)
-{
-    struct passwd *passent, *getpwnam(const char*);
-    Str extpath = NULL;
-
-    if (name == NULL)
-        return NULL;
-    const char* p = name;
-    if (*p == '~') {
-        p++;
-        if (IS_ALPHA(*p)) {
-            char* q = strchr(p, '/');
-            if (q) { /* ~user/dir... */
-                passent = getpwnam(allocStr(p, q - p));
-                p = q;
-            } else { /* ~user */
-                passent = getpwnam(p);
-                p = "";
-            }
-            if (!passent)
-                goto rest;
-            extpath = Strnew_charp(passent->pw_dir);
-        } else if (*p == '/' || *p == '\0') { /* ~/dir... or ~ */
-            extpath = Strnew_charp(getenv("HOME"));
-        } else
-            goto rest;
-        if (Strcmp_charp(extpath, "/") == 0 && *p == '/')
-            p++;
-        Strcat_charp(extpath, p);
-        return extpath->ptr;
-    }
-rest:
-    return name;
-}
-
 static int
 strcasematch(char* s1, char* s2)
 {
@@ -381,8 +328,6 @@ int strmatchlen(const char* s1, const char* s2, int maxlen)
     }
     return i;
 }
-
-
 
 /* Local Variables:    */
 /* c-basic-offset: 4   */

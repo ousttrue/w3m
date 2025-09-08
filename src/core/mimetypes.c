@@ -1,4 +1,5 @@
 #include "mimetypes.h"
+#include "expandpath.h"
 #include "indep.h"
 #include <Str.h>
 #include <alloc.h>

@@ -1,4 +1,5 @@
 #include "local.h"
+#include "expandpath.h"
 #include "w3m.h"
 #include "Content.h"
 #include "subprocess.h"

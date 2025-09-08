@@ -1,8 +1,8 @@
 #include "w3m.h"
+#include "expandpath.h"
 #include "defun_macro.h"
 #include "mimetypes.h"
 #include "Content.h"
-#include "HttpClient.h"
 #include "siteconf.h"
 #include "buffer_loader.h"
 #include "file_copy.h"
@@ -17,7 +17,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
-#define MAINPROGRAM
+#include <sys/param.h>
 #include "buffer.h"
 #include "KeyValue.h"
 #include "defun.h"
@@ -244,6 +244,13 @@ wrap_GC_warn_proc(char* msg, GC_word arg)
 #include <libintl.h>
 #define _(String) gettext(String)
 #define N_(String) (String)
+
+static const char* currentdir()
+{
+    char* path = NewAtom_N(char, MAXPATHLEN);
+    getcwd(path, MAXPATHLEN);
+    return path;
+}
 
 void initialize()
 {
@@ -4198,4 +4205,3 @@ Str myEditor(const char* cmd, const char* file, int line)
 // rest:
 //     return name;
 // }
-
