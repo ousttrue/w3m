@@ -1,12 +1,9 @@
 const std = @import("std");
 const zcc = @import("compile_commands.zig");
 
-const system_libs = [_][]const u8{
-    "tinfo",
-    "ssl",
-    "crypto",
-    "z",
-};
+//
+// output
+//
 const output_public_headers = [_][]const u8{
     "writer.h",
     "TermEntry.h",
@@ -20,6 +17,25 @@ const output_srcs = [_][]const u8{
     "graphicchar.c",
 };
 
+//
+// content
+//
+const content_public_headers = [_][]const u8{
+    "proxy.h",
+};
+const content_srcs = [_][]const u8{
+    "proxy.c",
+};
+
+//
+// w3m
+//
+const system_libs = [_][]const u8{
+    "tinfo",
+    "ssl",
+    "crypto",
+    "z",
+};
 const w3m_srcs = [_][]const u8{
     "tty.c",
     "keybind.c",
@@ -32,7 +48,6 @@ const w3m_srcs = [_][]const u8{
     "term_renderer.c",
     "putc.c",
     "auth.c",
-    "proxy.c",
     "mysignal.c",
     "http.c",
     "downloadlist.c",
@@ -191,6 +206,20 @@ pub fn build(b: *std.Build) void {
             &output_srcs,
             &output_public_headers,
         );
+        exe.linkLibrary(lib);
+    }
+
+    {
+        const lib = build_lib(
+            b,
+            target,
+            optimize,
+            "content",
+            b.path("src/content"),
+            &content_srcs,
+            &content_public_headers,
+        );
+        lib.linkLibrary(gcs);
         exe.linkLibrary(lib);
     }
 
