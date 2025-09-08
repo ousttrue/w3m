@@ -23,8 +23,16 @@ const output_srcs = [_][]const u8{
 const content_public_headers = [_][]const u8{
     "proxy.h",
     "network.h",
+    "url_scheme.h",
+    "url.h",
+    "growbuf.h",
+    "mimehead.h",
 };
 const content_srcs = [_][]const u8{
+    "mimehead.c",
+    "growbuf.c",
+    "url.c",
+    "url_scheme.c",
     "network.c",
     "proxy.c",
 };
