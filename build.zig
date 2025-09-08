@@ -22,8 +22,10 @@ const output_srcs = [_][]const u8{
 //
 const content_public_headers = [_][]const u8{
     "proxy.h",
+    "network.h",
 };
 const content_srcs = [_][]const u8{
+    "network.c",
     "proxy.c",
 };
 
@@ -69,7 +71,6 @@ const w3m_srcs = [_][]const u8{
     "html_quote.c",
     "mimetypes.c",
     "convertline.c",
-    "network.c",
 
     "ui.c",
     "LineEditor.c",
