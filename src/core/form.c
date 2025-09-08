@@ -56,8 +56,8 @@ struct {
 /* *INDENT-ON* */
 
 struct Form*
-newFormList(char* action, char* method, char* charset, char* enctype,
-    char* target, char* name, struct Form* _next)
+newFormList(const char* action, const char* method, const char* charset, const char* enctype,
+    const char* target, const char* name, struct Form* _next)
 {
     struct Form* l;
     Str a = Strnew_charp(action);
@@ -177,7 +177,7 @@ static char* _formmethodtbl[] = {
     "GET", "POST", "INTERNAL", "HEAD"
 };
 
-char* form2str(struct FormItem* fi)
+const char* form2str(struct FormItem* fi)
 {
     Str tmp = Strnew();
 
@@ -193,7 +193,7 @@ char* form2str(struct FormItem* fi)
     return tmp->ptr;
 }
 
-int formtype(char* typestr)
+int formtype(const char* typestr)
 {
     int i;
     for (i = 0; _formtypetbl[i]; i++) {
@@ -585,7 +585,7 @@ input_end:
     unlink(tmpf);
 }
 
-void do_internal(char* action, char* data)
+void do_internal(const char* action, const char* data)
 {
     int i;
 
@@ -741,7 +741,7 @@ struct pre_form {
 static struct pre_form* PreForm = NULL;
 
 static struct pre_form*
-add_pre_form(struct pre_form* prev, char* url, Regex* re_url, char* name, char* action)
+add_pre_form(struct pre_form* prev, const char* url, Regex* re_url, const char* name, const char* action)
 {
     struct Url pu;
     struct pre_form* new;
@@ -765,7 +765,7 @@ add_pre_form(struct pre_form* prev, char* url, Regex* re_url, char* name, char* 
 
 static struct pre_form_item*
 add_pre_form_item(struct pre_form* pf, struct pre_form_item* prev, int type,
-    char* name, char* value, char* checked)
+    const char* name, const char* value, const char* checked)
 {
     struct pre_form_item* new;
 

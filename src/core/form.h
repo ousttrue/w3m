@@ -24,20 +24,20 @@ struct _Buffer;
 struct HtmlTagParsed;
 struct _anchorList;
 
-struct Form* newFormList(char* action, char* method, char* charset,
-    char* enctype, char* target, char* name,
+struct Form* newFormList(const char* action, const char* method, const char* charset,
+    const char* enctype, const char* target, const char* name,
     struct Form* _next);
 struct FormItem* formList_addInput(struct Form* fl,
     struct HtmlTagParsed* tag);
-char* form2str(struct FormItem* fi);
-int formtype(char* typestr);
+const char* form2str(struct FormItem* fi);
+int formtype(const char* typestr);
 void formRecheckRadio(struct _anchor* a, struct _Buffer* buf, struct FormItem* form);
 void formResetBuffer(struct _Buffer* buf, struct _anchorList* formitem);
 void formUpdateBuffer(struct _anchor* a, struct _Buffer* buf, struct FormItem* form);
 void preFormUpdateBuffer(struct _Buffer* buf);
 Str textfieldrep(Str s, int width);
 void input_textarea(struct FormItem* fi);
-void do_internal(char* action, char* data);
+void do_internal(const char* action, const char* data);
 void form_write_data(FILE* f, const char* boundary, const char* name, const char* value);
 void form_write_from_file(FILE* f, const char* boundary, const char* name, const char* filename, const char* file);
 void loadPreForm(void);
