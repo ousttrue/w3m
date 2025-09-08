@@ -1,5 +1,6 @@
 #include "rc.h"
 #include "network.h"
+#include "auth.h"
 #include "Content.h"
 #include "w3m.h"
 #include "mimetypes.h"
@@ -1086,6 +1087,56 @@ do_recursive_mkdir(const char* dir)
     }
 
     return 0;
+}
+
+#define FILE_IS_READABLE_MSG "SECURITY NOTE: file %s must not be accessible by others"
+
+FILE* openSecretFile(const char* fname)
+{
+    if (fname == NULL)
+        return NULL;
+
+    const char* efname = expandPath(fname);
+    struct stat st;
+    if (stat(efname, &st) < 0)
+        return NULL;
+
+    /* check permissions, if group or others readable or writable,
+     * refuse it, because it's insecure.
+     *
+     * XXX: disable_secret_security_check will introduce some
+     *    security issues, but on some platform such as Windows
+     *    it's not possible (or feasible) to disable group|other
+     *    readable and writable.
+     *   [w3m-dev 03368][w3m-dev 03369][w3m-dev 03370]
+     */
+    if (disable_secret_security_check)
+        /* do nothing */;
+    else if ((st.st_mode & (S_IRWXG | S_IRWXO)) != 0) {
+        message(getUI(), MSG_INFO, Sprintf(FILE_IS_READABLE_MSG, fname)->ptr);
+        // refresh(ttyWriter());
+        sleep(2);
+        return NULL;
+    }
+
+    return fopen(efname, "r");
+}
+
+static void loadPasswd(void)
+{
+    FILE* fp = openSecretFile(passwd_file);
+    if (fp != NULL) {
+        parsePasswd(fp, 0);
+        fclose(fp);
+    }
+
+    /* for FTP */
+    fp = openSecretFile("~/.netrc");
+    if (fp != NULL) {
+        parsePasswd(fp, 1);
+        fclose(fp);
+    }
+    return;
 }
 
 void sync_with_option(void)

@@ -1,5 +1,6 @@
 #include "file_copy.h"
 #include "keymap.h"
+#include "subprocess.h"
 #include "linein.h"
 #include "history.h"
 #include "indep.h"

@@ -1,5 +1,5 @@
 #include "file_copy.h"
-#include "etc.h"
+#include "subprocess.h"
 #include "downloadlist.h"
 #include "tmpfile.h"
 #include "ssl_util.h"

@@ -1,11 +1,9 @@
 #include "local.h"
-#define _GNU_SOURCE
 #include "w3m.h"
 #include "Content.h"
+#include "subprocess.h"
 #include "version.h"
-#include "etc.h"
 #include "html_form.h"
-#include "url.h"
 #include "ui.h"
 #include "tmpfile.h"
 #include "http.h"
@@ -183,7 +181,7 @@ Str loadLocalDir(char* dname)
 }
 
 static int
-check_local_cgi(char* file, int status)
+check_local_cgi(const char* file, int status)
 {
     struct stat st;
 
@@ -221,7 +219,7 @@ set_cgi_environ(char* name, char* fn, char* req_uri)
 }
 
 static Str
-checkPath(char* fn, char* path)
+checkPath(const char* fn, const char* path)
 {
     char* p;
     Str tmp;
@@ -244,7 +242,7 @@ checkPath(char* fn, char* path)
 }
 
 static int
-cgi_filename(char* uri, char** fn, char** name, char** path_info)
+cgi_filename(const char* uri, const char** fn, const char** name, const char** path_info)
 {
     Str tmp;
     int offset;
@@ -310,13 +308,14 @@ static const char* mydirname(const char* s)
 
 FILE* localcgi_post(const char* uri, const char* qstr, struct Form* request, const char* referer)
 {
-    FILE *fr = NULL, *fw = NULL;
-    int status;
-    pid_t pid;
-    char *file = uri, *name = uri, *path_info = NULL, *tmpf = NULL;
-    char* cgi_dir;
+    FILE *fr = NULL;
+    FILE *fw = NULL;
+    const char* file = uri;
+    const char* name = uri;
+    const char* path_info = NULL;
+    const char* tmpf = NULL;
 
-    status = cgi_filename(uri, &file, &name, &path_info);
+    int status = cgi_filename(uri, &file, &name, &path_info);
     if (check_local_cgi(file, status) < 0)
         return NULL;
     writeLocalCookie();
@@ -328,9 +327,10 @@ FILE* localcgi_post(const char* uri, const char* qstr, struct Form* request, con
     }
     if (qstr)
         uri = Strnew_m_charp(uri, "?", qstr, NULL)->ptr;
-    cgi_dir = mydirname(file);
+    const char* cgi_dir = mydirname(file);
     const char* cgi_basename;
     cgi_basename = mybasename(file);
+    pid_t pid;
     pid = open_pipe_rw(&fr, NULL); /* open_pipe_rw() forks */
     /* Don't invoke gc after here, or the program might crash in some platforms */
     if (pid < 0) {

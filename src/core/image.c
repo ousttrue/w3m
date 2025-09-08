@@ -1,5 +1,6 @@
 #include "image.h"
 #include "mimetypes.h"
+#include "subprocess.h"
 #include "base64.h"
 #include "alloc.h"
 #include "w3m.h"

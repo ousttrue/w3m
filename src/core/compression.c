@@ -1,5 +1,6 @@
 #include "compression.h"
 #include "mimetypes.h"
+#include "subprocess.h"
 #include "w3m.h"
 #include "textlist.h"
 #include "istream.h"
@@ -142,7 +143,6 @@ const char* uncompressed_file_type(const char* path, const char** ext)
 {
     int len, slen;
     Str fn;
-    char* t0;
     struct compression_decoder* d;
 
     if (path == NULL)
@@ -164,7 +164,8 @@ const char* uncompressed_file_type(const char* path, const char** ext)
     Strshrink(fn, slen);
     if (ext)
         *ext = filename_extension(fn->ptr, 0);
-    t0 = guessContentType(fn->ptr);
+
+    const char* t0 = guessContentType(fn->ptr);
     if (t0 == NULL)
         t0 = "text/plain";
     return t0;

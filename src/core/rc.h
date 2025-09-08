@@ -26,5 +26,5 @@ char* rcFile(const char* base);
 char* etcFile(char* base);
 char* confFile(char* base);
 char* auxbinFile(char* base);
-// char* libFile(char* base);
-// char* helpFile(char* base);
+
+FILE* openSecretFile(const char* fname);
