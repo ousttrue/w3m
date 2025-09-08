@@ -153,12 +153,12 @@ struct URLFile {
     char is_cgi;
     char encoding;
     union input_stream* stream;
-    char* ext;
+    const char* ext;
     enum CompressionTyep compression;
     int content_encoding;
     const char* guess_type;
-    char* ssl_certificate;
-    char* url;
+    const char* ssl_certificate;
+    const char* url;
     time_t modtime;
 };
 

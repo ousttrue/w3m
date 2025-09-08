@@ -1,5 +1,4 @@
 #include "alloc.h"
-#define _GNU_SOURCE
 #include "etc.h"
 #include "convertline.h"
 #include "indep.h"
@@ -9,7 +8,6 @@
 #include "quote.h"
 #include "local.h"
 #include "display.h"
-#include "buffer.h"
 #include "mysignal.h"
 #include "ui.h"
 #include "rc.h"
@@ -25,40 +23,12 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <time.h>
-#if defined(HAVE_WAITPID) || defined(HAVE_WAIT3)
 #include <sys/wait.h>
-#endif
 #include <signal.h>
 #include <unistd.h>
 
 int nextpage_topline = (false);
 int disable_secret_security_check = (false);
-
-int columnSkip(Buffer* buf, int offset)
-{
-    int i, maxColumn;
-    int column = buf->currentColumn + offset;
-    int nlines = getScreen()->ROWS + 1;
-    Line* l;
-
-    maxColumn = 0;
-    for (i = 0, l = buf->topLine; i < nlines && l != NULL; i++, l = l->next) {
-        if (l->width < 0)
-            l->width = COLPOS(l, l->len);
-        if (l->width - 1 > maxColumn)
-            maxColumn = l->width - 1;
-    }
-    maxColumn -= getScreen()->COLS - 1;
-    if (column < maxColumn)
-        maxColumn = column;
-    if (maxColumn < 0)
-        maxColumn = 0;
-
-    if (buf->currentColumn == maxColumn)
-        return 0;
-    buf->currentColumn = maxColumn;
-    return 1;
-}
 
 int columnPos(Line* line, int column)
 {
@@ -71,35 +41,6 @@ int columnPos(Line* line, int column)
     for (i--; i > 0 && line->propBuf[i] & PC_WCHAR2; i--)
         ;
     return i;
-}
-
-Line* lineSkip(Buffer* buf, Line* line, int offset, int last)
-{
-    int i;
-    Line* l;
-
-    l = currentLineSkip(buf, line, offset, last);
-    if (!nextpage_topline)
-        for (i = getScreen()->ROWS - 1 - (buf->lastLine->linenumber - l->linenumber);
-            i > 0 && l->prev != NULL; i--, l = l->prev)
-            ;
-    return l;
-}
-
-Line* currentLineSkip(Buffer* buf, Line* line, int offset, int last)
-{
-    int i, n;
-    Line* l = line;
-
-    if (offset == 0)
-        return l;
-    if (offset > 0)
-        for (i = 0; i < offset && l->next != NULL; i++, l = l->next)
-            ;
-    else
-        for (i = 0; i < -offset && l->prev != NULL; i++, l = l->prev)
-            ;
-    return l;
 }
 
 #define MAX_CMD_LEN 128
@@ -515,27 +456,6 @@ void loadPasswd(void)
         fclose(fp);
     }
     return;
-}
-
-/* get last modified time */
-char* last_modified(Buffer* buf)
-{
-    TextListItem* ti;
-    struct stat st;
-
-    if (buf->document_header) {
-        for (ti = buf->document_header->first; ti; ti = ti->next) {
-            if (strncasecmp(ti->ptr, "Last-modified: ", 15) == 0) {
-                return ti->ptr + 15;
-            }
-        }
-        return "unknown";
-    } else if (buf->currentURL.scheme == SCM_LOCAL) {
-        if (stat(buf->currentURL.file, &st) < 0)
-            return "unknown";
-        return ctime(&st.st_mtime);
-    }
-    return "unknown";
 }
 
 static char roman_num1[] = {

@@ -368,7 +368,7 @@ Str ssl_get_certificate(SSL* ssl, char* hostname)
     return s;
 }
 
-SSL* openSSLHandle(int sock, char* hostname, char** p_cert)
+SSL* openSSLHandle(int sock, const char* hostname, const char** p_cert)
 {
     SSL* handle = NULL;
     static char* old_ssl_forbid_method = NULL;

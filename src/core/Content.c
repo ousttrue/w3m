@@ -12,6 +12,7 @@
 #include "etc.h"
 #include "auth.h"
 #include "quote.h"
+
 #include <openssl/ssl.h>
 #include <unistd.h>
 #include <zlib.h>
@@ -283,8 +284,7 @@ struct Content openHttp(struct HttpClient* c, const char* path, struct Url* curr
         hr.flag |= HR_FLAG_PROXY;
         if (pu.scheme == SCM_HTTPS && c->status == HTST_CONNECT) {
             sock = ssl_socket_of(c->f.stream);
-            if (!(sslh = openSSLHandle(sock, pu.host,
-                      &c->f.ssl_certificate))) {
+            if (!(sslh = openSSLHandle(sock, pu.host, &c->f.ssl_certificate))) {
                 c->status = HTST_MISSING;
                 // return;
             }
