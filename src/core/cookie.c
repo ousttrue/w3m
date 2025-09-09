@@ -8,22 +8,16 @@
  */
 
 #include "cookie.h"
-
 #include "network.h"
-#include "buffer_loader.h"
 #include "KeyValue.h"
-#include "http.h"
 #include "rc.h"
 #include "regex.h"
 #include "myctype.h"
-#include "buffer.h"
-#include "defun.h"
-#include "html_quote.h"
-
 #include <alloc.h>
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+#include <sys/stat.h>
 #include <time.h>
 
 #define COOKIE_FILE "cookie"
@@ -127,8 +121,7 @@ make_portlist(Str port)
     return first;
 }
 
-static Str
-portlist2str(struct portlist* first)
+Str portlist2str(struct portlist* first)
 {
     struct portlist* pl;
     Str tmp;
@@ -177,8 +170,7 @@ check_expired_cookies(void)
     }
 }
 
-static Str
-make_cookie(struct cookie* cookie)
+Str make_cookie(struct cookie* cookie)
 {
     Str tmp = Strdup(cookie->name);
     Strcat_char(tmp, '=');
@@ -436,19 +428,17 @@ nth_cookie(int n)
 
 void save_cookies(void)
 {
-    struct cookie* p;
-    char* cookie_file;
-    FILE* fp;
-
     check_expired_cookies();
 
     if (!First_cookie || is_saved || no_rc_dir)
         return;
 
-    cookie_file = rcFile(COOKIE_FILE);
-    if (!(fp = fopen(cookie_file, "w")))
+    const char* cookie_file = rcFile(COOKIE_FILE);
+    FILE* fp = fopen(cookie_file, "w");
+    if (!fp)
         return;
 
+    struct cookie* p;
     for (p = First_cookie; p; p = p->next) {
         if (!(p->flag & COO_USE) || p->flag & COO_DISCARD)
             continue;
@@ -555,97 +545,6 @@ void initCookie(void)
     check_expired_cookies();
 }
 
-Buffer*
-cookie_list_panel(void)
-{
-    /* FIXME: gettextize? */
-    Str src = Strnew_charp("<html><head><title>Cookies</title></head>"
-                           "<body><center><b>Cookies</b></center>"
-                           "<p><form method=internal action=cookie>");
-    struct cookie* p;
-    int i;
-    char *tmp, tmp2[80];
-
-    if (!use_cookie || !First_cookie)
-        return NULL;
-
-    Strcat_charp(src, "<ol>");
-    for (p = First_cookie, i = 0; p; p = p->next, i++) {
-        tmp = html_quote(parsedURL2Str(&p->url)->ptr);
-        if (p->expires != (time_t)-1) {
-            strftime(tmp2, 80, "%a, %d %b %Y %H:%M:%S GMT",
-                gmtime(&p->expires));
-        } else
-            tmp2[0] = '\0';
-        Strcat_charp(src, "<li>");
-        Strcat_charp(src, "<h1><a href=\"");
-        Strcat_charp(src, tmp);
-        Strcat_charp(src, "\">");
-        Strcat_charp(src, tmp);
-        Strcat_charp(src, "</a></h1>");
-
-        Strcat_charp(src, "<table cellpadding=0>");
-        if (!(p->flag & COO_SECURE)) {
-            Strcat_charp(src, "<tr><td width=\"80\"><b>Cookie:</b></td><td>");
-            Strcat_charp(src, html_quote(make_cookie(p)->ptr));
-            Strcat_charp(src, "</td></tr>");
-        }
-        if (p->comment) {
-            Strcat_charp(src, "<tr><td width=\"80\"><b>Comment:</b></td><td>");
-            Strcat_charp(src, html_quote(p->comment->ptr));
-            Strcat_charp(src, "</td></tr>");
-        }
-        if (p->commentURL) {
-            Strcat_charp(src,
-                "<tr><td width=\"80\"><b>CommentURL:</b></td><td>");
-            Strcat_charp(src, "<a href=\"");
-            Strcat_charp(src, html_quote(p->commentURL->ptr));
-            Strcat_charp(src, "\">");
-            Strcat_charp(src, html_quote(p->commentURL->ptr));
-            Strcat_charp(src, "</a>");
-            Strcat_charp(src, "</td></tr>");
-        }
-        if (tmp2[0]) {
-            Strcat_charp(src, "<tr><td width=\"80\"><b>Expires:</b></td><td>");
-            Strcat_charp(src, tmp2);
-            if (p->flag & COO_DISCARD)
-                Strcat_charp(src, " (Discard)");
-            Strcat_charp(src, "</td></tr>");
-        }
-        Strcat_charp(src, "<tr><td width=\"80\"><b>Version:</b></td><td>");
-        Strcat_charp(src, Sprintf("%d", p->version)->ptr);
-        Strcat_charp(src, "</td></tr><tr><td>");
-        if (p->domain) {
-            Strcat_charp(src, "<tr><td width=\"80\"><b>Domain:</b></td><td>");
-            Strcat_charp(src, html_quote(p->domain->ptr));
-            Strcat_charp(src, "</td></tr>");
-        }
-        if (p->path) {
-            Strcat_charp(src, "<tr><td width=\"80\"><b>Path:</b></td><td>");
-            Strcat_charp(src, html_quote(p->path->ptr));
-            Strcat_charp(src, "</td></tr>");
-        }
-        if (p->portl) {
-            Strcat_charp(src, "<tr><td width=\"80\"><b>Port:</b></td><td>");
-            Strcat_charp(src, html_quote(portlist2str(p->portl)->ptr));
-            Strcat_charp(src, "</td></tr>");
-        }
-        Strcat_charp(src, "<tr><td width=\"80\"><b>Secure:</b></td><td>");
-        Strcat_charp(src, (p->flag & COO_SECURE) ? "Yes" : "No");
-        Strcat_charp(src, "</td></tr><tr><td>");
-
-        Strcat(src, Sprintf("<tr><td width=\"80\"><b>Use:</b></td><td>"
-                            "<input type=radio name=\"%d\" value=1%s>Yes"
-                            "&nbsp;&nbsp;"
-                            "<input type=radio name=\"%d\" value=0%s>No",
-                        i, (p->flag & COO_USE) ? " checked" : "", i, (!(p->flag & COO_USE)) ? " checked" : ""));
-        Strcat_charp(src,
-            "</td></tr><tr><td><input type=submit value=\"OK\"></table><p>");
-    }
-    Strcat_charp(src, "</ol></form></body></html>");
-    return loadHTMLString(src);
-}
-
 void set_cookie_flag(struct KeyValue* arg)
 {
     int n, v;
@@ -666,7 +565,7 @@ void set_cookie_flag(struct KeyValue* arg)
         }
         arg = arg->next;
     }
-    backBf();
+    // backBf();
 }
 
 bool check_cookie_accept_domain(const char* domain)

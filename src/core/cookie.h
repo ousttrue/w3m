@@ -89,3 +89,5 @@ int add_cookie(struct Url* pu, Str name, Str value, time_t expires,
 struct KeyValue;
 void set_cookie_flag(struct KeyValue* arg);
 bool check_cookie_accept_domain(const char* domain);
+Str make_cookie(struct cookie* cookie);
+Str portlist2str(struct portlist* first);
