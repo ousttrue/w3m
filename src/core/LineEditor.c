@@ -1,6 +1,6 @@
 #include "LineEditor.h"
 #include "alloc.h"
-#include "expandpath.h"
+#include "runtime.h"
 #include "w3m.h"
 #include "buffer.h"
 #include "str_util.h"

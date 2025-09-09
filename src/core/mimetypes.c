@@ -1,5 +1,5 @@
 #include "mimetypes.h"
-#include "expandpath.h"
+#include "runtime.h"
 #include <Str.h>
 #include <alloc.h>
 #include <myctype.h>

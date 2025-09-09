@@ -27,13 +27,11 @@ const content_public_headers = [_][]const u8{
     "url.h",
     "growbuf.h",
     "mimehead.h",
-    "expandpath.h",
     "HttpRequestMethod.h",
     "runtime.h",
 };
 const content_srcs = [_][]const u8{
     "runtime.c",
-    "expandpath.c",
     "mimehead.c",
     "growbuf.c",
     "url.c",

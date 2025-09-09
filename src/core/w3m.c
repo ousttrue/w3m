@@ -1,7 +1,7 @@
 #include "w3m.h"
 #include "HttpRequest.h"
 #include "alloc.h"
-#include "expandpath.h"
+#include "runtime.h"
 #include "defun_macro.h"
 #include "mimetypes.h"
 #include "Content.h"

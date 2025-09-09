@@ -1,7 +1,7 @@
 #include "local.h"
 #include "runtime.h"
 #include "HttpRequest.h"
-#include "expandpath.h"
+#include "runtime.h"
 #include "w3m.h"
 #include "Content.h"
 #include "subprocess.h"

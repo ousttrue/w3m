@@ -1,6 +1,6 @@
 #include "mailcap.h"
 #include "alloc.h"
-#include "expandpath.h"
+#include "runtime.h"
 #include "myctype.h"
 #include "hash.h"
 #include "http.h"

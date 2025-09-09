@@ -1,5 +1,5 @@
 #include "url.h"
-#include "expandpath.h"
+#include "runtime.h"
 #include "Str.h"
 #include "quote.h"
 #include "myctype.h"
@@ -302,7 +302,7 @@ static void _parseUrl(const char* _url, struct Url* p_url, struct Url* current)
             /* <A HREF="file:///foo">file:///foo</A>  or <A HREF="file://~user">file://~user</A> */
         ) {
             p += 2;
-            return analyze_file(url, p);
+            return analyze_file(p_url, p);
         }
     }
     p += 2; /* scheme://foo         */
