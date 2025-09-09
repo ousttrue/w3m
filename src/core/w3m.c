@@ -78,6 +78,7 @@
 #define HELP_CGI "w3mhelp"
 #define BOOKMARK "bookmark.html"
 
+char* mkd_tmp_dir = (NULL);
 char ArgvIsURL = true;
 int DecodeURL = false;
 

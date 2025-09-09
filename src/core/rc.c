@@ -59,9 +59,7 @@ char* tmp_dir = 0;
 char* rc_dir = (NULL);
 int disable_secret_security_check = (false);
 
-char* mkd_tmp_dir = (NULL);
 char* param_tmp_dir = (NULL);
-int WrapDefault = (false);
 
 struct param_ptr {
     char* name;
@@ -468,7 +466,6 @@ struct param_ptr params3[] = {
         CMT_SPACE_AUTOCOMPLETE, NULL },
     { "mark_all_pages", P_INT, PI_ONOFF, (void*)&MarkAllPages,
         CMT_MARK_ALL_PAGES, NULL },
-    { "wrap_search", P_INT, PI_ONOFF, (void*)&WrapDefault, CMT_WRAP, NULL },
     { "ignorecase_search", P_INT, PI_ONOFF, (void*)&IgnoreCase,
         CMT_IGNORE_CASE, NULL },
     { "clear_buffer", P_INT, PI_ONOFF, (void*)&clear_buffer, CMT_CLEAR_BUF,
@@ -1139,7 +1136,6 @@ static void loadPasswd(void)
 void sync_with_option(void)
 {
     init_tmp();
-    WrapSearch = WrapDefault;
     parse_proxy();
     parse_cookie();
     initMailcap();

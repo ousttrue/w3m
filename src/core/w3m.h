@@ -3,6 +3,7 @@
 #include <sys/types.h>
 #include <Str.h>
 
+extern char* mkd_tmp_dir;
 extern char ArgvIsURL;
 extern int DecodeURL;
 
