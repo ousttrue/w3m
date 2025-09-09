@@ -1,4 +1,5 @@
 #include "parseArgs.h"
+#include "HttpRequest.h"
 #include "quote.h"
 #include "Content.h"
 #include "mysignal.h"
@@ -29,32 +30,32 @@ extern sigjmp_buf IntReturn;
 
 extern MySignalHandler resize_hook(int _dummy);
 
-static Str
-make_optional_header_string(char* s)
-{
-    char* p;
-    Str hs;
-
-    if (strchr(s, '\n') || strchr(s, '\r'))
-        return NULL;
-    for (p = s; *p && *p != ':'; p++)
-        ;
-    if (*p != ':' || p == s)
-        return NULL;
-    hs = Strnew_size(strlen(s) + 3);
-    Strcopy_charp_n(hs, s, p - s);
-    if (!Strcasecmp_charp(hs, "content-type"))
-        override_content_type = true;
-    if (!Strcasecmp_charp(hs, "user-agent"))
-        override_user_agent = true;
-    Strcat_charp(hs, ": ");
-    if (*(++p)) { /* not null header */
-        SKIP_BLANKS(p); /* skip white spaces */
-        Strcat_charp(hs, p);
-    }
-    Strcat_charp(hs, "\r\n");
-    return hs;
-}
+// static Str
+// make_optional_header_string(char* s)
+// {
+//     char* p;
+//     Str hs;
+//
+//     if (strchr(s, '\n') || strchr(s, '\r'))
+//         return NULL;
+//     for (p = s; *p && *p != ':'; p++)
+//         ;
+//     if (*p != ':' || p == s)
+//         return NULL;
+//     hs = Strnew_size(strlen(s) + 3);
+//     Strcopy_charp_n(hs, s, p - s);
+//     if (!Strcasecmp_charp(hs, "content-type"))
+//         override_content_type = true;
+//     if (!Strcasecmp_charp(hs, "user-agent"))
+//         override_user_agent = true;
+//     Strcat_charp(hs, ": ");
+//     if (*(++p)) { /* not null header */
+//         SKIP_BLANKS(p); /* skip white spaces */
+//         Strcat_charp(hs, p);
+//     }
+//     Strcat_charp(hs, "\r\n");
+//     return hs;
+// }
 
 static void
 fversion(FILE* f)

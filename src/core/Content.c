@@ -1,5 +1,7 @@
 #include "Content.h"
+#include "HttpRequest.h"
 #include "HttpResponse.h"
+#include "istream.h"
 #include "keymap.h"
 #include "cookie.h"
 #include "network.h"

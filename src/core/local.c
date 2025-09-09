@@ -1,4 +1,5 @@
 #include "local.h"
+#include "HttpRequest.h"
 #include "expandpath.h"
 #include "w3m.h"
 #include "Content.h"
@@ -203,7 +204,7 @@ void set_environ(const char* var, const char* value)
 }
 
 static void
-set_cgi_environ(char* name, char* fn, char* req_uri)
+set_cgi_environ(const char* name, const char* fn, const char* req_uri)
 {
     set_environ("SERVER_SOFTWARE", w3m_version);
     set_environ("SERVER_PROTOCOL", "HTTP/1.0");

@@ -1,4 +1,5 @@
 #include "alloc.h"
+#include "HttpRequest.h"
 #include "quote.h"
 #include "w3m.h"
 #include "buffer_loader.h"

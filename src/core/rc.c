@@ -1,5 +1,6 @@
 #include "rc.h"
 #include "expandpath.h"
+#include "HttpRequest.h"
 #include "network.h"
 #include "auth.h"
 #include "Content.h"

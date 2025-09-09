@@ -1,7 +1,7 @@
 #include "auth.h"
+#include "HttpRequest.h"
 #include "base64.h"
 #include "html_form.h"
-#include "http.h"
 #include "url.h"
 #include "ctrlcode.h"
 

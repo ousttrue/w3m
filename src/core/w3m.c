@@ -1,4 +1,5 @@
 #include "w3m.h"
+#include "HttpRequest.h"
 #include "alloc.h"
 #include "expandpath.h"
 #include "defun_macro.h"

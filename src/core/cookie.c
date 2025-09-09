@@ -26,6 +26,8 @@
 
 #define COOKIE_FILE "cookie"
 
+int use_cookie = true;
+
 struct cookie* First_cookie = (NULL);
 int default_use_cookie = (true);
 char* cookie_reject_domains = (NULL);

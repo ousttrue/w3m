@@ -4,6 +4,8 @@
 #include "url.h"
 #include "textlist.h"
 
+extern int use_cookie;
+
 struct portlist {
     unsigned short port;
     struct portlist* next;
