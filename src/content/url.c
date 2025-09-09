@@ -83,137 +83,32 @@ copyPath(const char* orgpath, int length, int option)
     return tmp->ptr;
 }
 
-static void _parseUrl(const char* _url, struct Url* p_url, struct Url* current)
+static void do_label(struct Url* p_url, const char* p)
 {
-    const char* q = NULL;
-
-    // quote 0x01-0x20, 0x7F-0xFF
-    const char* url = url_quote(_url);
-    const char* p = url;
-
-    *p_url = (struct Url) {
-        .scheme = SCM_MISSING,
-        0,
-    };
-
-    // RFC1808: Relative Uniform Resource Locators
-    // 4.  Resolving Relative URLs
-    if (*url == '\0' || *url == '#') {
-        if (current)
-            *p_url = copyParsedUrl(current);
-        goto do_label;
-    }
-    /* search for scheme */
-    p_url->scheme = parseUrlScheme(&p);
     if (p_url->scheme == SCM_MISSING) {
-        /* scheme part is not found in the url. This means either
-         * (a) the url is relative to the current or (b) the url
-         * denotes a filename (therefore the scheme is SCM_LOCAL).
-         */
-        if (current) {
-            switch (current->scheme) {
-            case SCM_LOCAL:
-            case SCM_LOCAL_CGI:
-                p_url->scheme = SCM_LOCAL;
-                break;
-            case SCM_FTP:
-            case SCM_FTPDIR:
-                p_url->scheme = SCM_FTP;
-                break;
-            default:
-                p_url->scheme = current->scheme;
-                break;
-            }
-        } else
-            p_url->scheme = SCM_LOCAL;
-        p = url;
-        if (!strncmp(p, "//", 2)) {
-            /* URL begins with // */
-            /* it means that 'scheme:' is abbreviated */
-            p += 2;
-            goto analyze_url;
-        }
-        /* the url doesn't begin with '//' */
-        goto analyze_file;
-    }
-    /* scheme part has been found */
-    if (p_url->scheme == SCM_UNKNOWN) {
-        p_url->file = allocStr(url, -1);
-        return;
-    }
-    /* get host and port */
-    if (p[0] != '/' || p[1] != '/') { /* scheme:foo or scheme:/foo */
-        p_url->host = 0;
-        p_url->port = getSchemeInfo(p_url->scheme).port;
-        goto analyze_file;
-    }
-    /* after here, p begins with // */
-    if (p_url->scheme == SCM_LOCAL) { /* file://foo           */
-        if (p[2] == '/' || p[2] == '~'
-            /* <A HREF="file:///foo">file:///foo</A>  or <A HREF="file://~user">file://~user</A> */
-        ) {
-            p += 2;
-            goto analyze_file;
-        }
-    }
-    p += 2; /* scheme://foo         */
-    /*          ^p is here  */
-analyze_url:
-    q = p;
+        p_url->scheme = SCM_LOCAL;
+        p_url->file = allocStr(p, -1);
+        p_url->label = 0;
+    } else if (*p == '#')
+        p_url->label = allocStr(p + 1, -1);
+    else
+        p_url->label = 0;
+}
 
-    if (*q == '[') { /* rfc2732,rfc2373 compliance */
-        p++;
-        while (IS_XDIGIT(*p) || *p == ':' || *p == '.')
+static void do_query(struct Url* p_url, const char* p)
+{
+    if (*p == '?') {
+        const char* q = ++p;
+        while (*p && *p != '#')
             p++;
-        if (*p != ']' || (*(p + 1) && strchr(":/?#", *(p + 1)) == 0))
-            p = q;
+        p_url->query = copyPath(q, p - q, COPYPATH_SPC_ALLOW);
     }
 
-    while (*p && strchr(":/@?#", *p) == 0)
-        p++;
+    return do_label(p_url, p);
+}
 
-    Str tmp;
-    switch (*p) {
-    case ':': {
-        /* scheme://user:pass@host or
-         * scheme://host:port
-         */
-        const char* qq = q;
-        q = ++p;
-        while (*p && strchr("@/?#", *p) == 0)
-            p++;
-        if (*p == '@') {
-            /* scheme://user:pass@...       */
-            p_url->user = copyPath(qq, q - 1 - qq, COPYPATH_SPC_IGNORE);
-            p_url->pass = copyPath(q, p - q, COPYPATH_SPC_ALLOW);
-            p++;
-            goto analyze_url;
-        }
-        /* scheme://host:port/ */
-        p_url->host = copyPath(qq, q - 1 - qq,
-            COPYPATH_SPC_IGNORE | COPYPATH_LOWERCASE);
-        tmp = Strnew_charp_n(q, p - q);
-        p_url->port = atoi(tmp->ptr);
-        /* *p is one of ['\0', '/', '?', '#'] */
-        break;
-    }
-    case '@':
-        /* scheme://user@...            */
-        p_url->user = copyPath(q, p - q, COPYPATH_SPC_IGNORE);
-        p++;
-        goto analyze_url;
-    case '\0':
-        /* scheme://host                */
-    case '/':
-    case '?':
-    case '#':
-        p_url->host = copyPath(q, p - q,
-            COPYPATH_SPC_IGNORE | COPYPATH_LOWERCASE);
-        p_url->port = getSchemeInfo(p_url->scheme).port;
-        break;
-    }
-analyze_file:
-
+static void analyze_file(struct Url* p_url, const char* p)
+{
     if (p_url->scheme == SCM_LOCAL && p_url->user == 0 && p_url->host != 0 && *p_url->host != '\0' && !is_localhost(p_url->host)) {
         /*
          * In the environments other than CYGWIN, a URL like
@@ -232,15 +127,15 @@ analyze_file:
 
     if ((*p == '\0' || *p == '#' || *p == '?') && p_url->host == 0) {
         p_url->file = "";
-        goto do_query;
+        return do_query(p_url, p);
     }
 
-    q = p;
+    const char* q = p;
     if (*p == '/')
         p++;
     if (*p == '\0' || *p == '#' || *p == '?') { /* scheme://host[:port]/ */
         p_url->file = DefaultFile(p_url->scheme);
-        goto do_query;
+        return do_query(p_url, p);
     }
     {
         char* cgi = strchr(p, '?');
@@ -277,22 +172,142 @@ analyze_file:
             p_url->file = copyPath(q, p - q, COPYPATH_SPC_IGNORE);
     }
 
-do_query:
-    if (*p == '?') {
-        q = ++p;
-        while (*p && *p != '#')
+    return do_query(p_url, p);
+}
+
+static void analyze_url(struct Url* p_url, const char* p)
+{
+    const char* q = p;
+
+    if (*q == '[') { /* rfc2732,rfc2373 compliance */
+        p++;
+        while (IS_XDIGIT(*p) || *p == ':' || *p == '.')
             p++;
-        p_url->query = copyPath(q, p - q, COPYPATH_SPC_ALLOW);
+        if (*p != ']' || (*(p + 1) && strchr(":/?#", *(p + 1)) == 0))
+            p = q;
     }
-do_label:
+
+    while (*p && strchr(":/@?#", *p) == 0)
+        p++;
+
+    Str tmp;
+    switch (*p) {
+    case ':': {
+        /* scheme://user:pass@host or
+         * scheme://host:port
+         */
+        const char* qq = q;
+        q = ++p;
+        while (*p && strchr("@/?#", *p) == 0)
+            p++;
+        if (*p == '@') {
+            /* scheme://user:pass@...       */
+            p_url->user = copyPath(qq, q - 1 - qq, COPYPATH_SPC_IGNORE);
+            p_url->pass = copyPath(q, p - q, COPYPATH_SPC_ALLOW);
+            p++;
+            return analyze_url(p_url, p);
+        }
+        /* scheme://host:port/ */
+        p_url->host = copyPath(qq, q - 1 - qq,
+            COPYPATH_SPC_IGNORE | COPYPATH_LOWERCASE);
+        tmp = Strnew_charp_n(q, p - q);
+        p_url->port = atoi(tmp->ptr);
+        /* *p is one of ['\0', '/', '?', '#'] */
+        break;
+    }
+    case '@':
+        /* scheme://user@...            */
+        p_url->user = copyPath(q, p - q, COPYPATH_SPC_IGNORE);
+        p++;
+        return analyze_url(p_url, p);
+    case '\0':
+        /* scheme://host                */
+    case '/':
+    case '?':
+    case '#':
+        p_url->host = copyPath(q, p - q,
+            COPYPATH_SPC_IGNORE | COPYPATH_LOWERCASE);
+        p_url->port = getSchemeInfo(p_url->scheme).port;
+        break;
+    }
+
+    return analyze_file(p_url, p);
+}
+
+static void _parseUrl(const char* _url, struct Url* p_url, struct Url* current)
+{
+    *p_url = (struct Url) {
+        .scheme = SCM_MISSING,
+        0,
+    };
+
+    // quote 0x01-0x20, 0x7F-0xFF
+    const char* url = url_quote(_url);
+    const char* p = url;
+
+    // RFC1808: Relative Uniform Resource Locators
+    // 4.  Resolving Relative URLs
+    if (*url == '\0' || *url == '#') {
+        if (current)
+            *p_url = copyParsedUrl(current);
+        return do_label(p_url, p);
+    }
+    /* search for scheme */
+    p_url->scheme = parseUrlScheme(&p);
     if (p_url->scheme == SCM_MISSING) {
-        p_url->scheme = SCM_LOCAL;
-        p_url->file = allocStr(p, -1);
-        p_url->label = 0;
-    } else if (*p == '#')
-        p_url->label = allocStr(p + 1, -1);
-    else
-        p_url->label = 0;
+        /* scheme part is not found in the url. This means either
+         * (a) the url is relative to the current or (b) the url
+         * denotes a filename (therefore the scheme is SCM_LOCAL).
+         */
+        if (current) {
+            switch (current->scheme) {
+            case SCM_LOCAL:
+            case SCM_LOCAL_CGI:
+                p_url->scheme = SCM_LOCAL;
+                break;
+            case SCM_FTP:
+            case SCM_FTPDIR:
+                p_url->scheme = SCM_FTP;
+                break;
+            default:
+                p_url->scheme = current->scheme;
+                break;
+            }
+        } else
+            p_url->scheme = SCM_LOCAL;
+        p = url;
+        if (!strncmp(p, "//", 2)) {
+            /* URL begins with // */
+            /* it means that 'scheme:' is abbreviated */
+            p += 2;
+            return analyze_url(p_url, p);
+        }
+        /* the url doesn't begin with '//' */
+        return analyze_file(p_url, p);
+    }
+    /* scheme part has been found */
+    if (p_url->scheme == SCM_UNKNOWN) {
+        p_url->file = allocStr(url, -1);
+        return;
+    }
+    /* get host and port */
+    if (p[0] != '/' || p[1] != '/') { /* scheme:foo or scheme:/foo */
+        p_url->host = 0;
+        p_url->port = getSchemeInfo(p_url->scheme).port;
+        return analyze_file(p_url, p);
+    }
+    /* after here, p begins with // */
+    if (p_url->scheme == SCM_LOCAL) { /* file://foo           */
+        if (p[2] == '/' || p[2] == '~'
+            /* <A HREF="file:///foo">file:///foo</A>  or <A HREF="file://~user">file://~user</A> */
+        ) {
+            p += 2;
+            return analyze_file(url, p);
+        }
+    }
+    p += 2; /* scheme://foo         */
+    /*          ^p is here  */
+    return analyze_url(p_url, p);
 }
 
 struct Url parseUrl(const char* url, struct Url* current)
