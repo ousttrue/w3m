@@ -73,12 +73,6 @@ void parseURL(const char* _url, struct Url* p_url, struct Url* current)
             copyParsedURL(p_url, current);
         goto do_label;
     }
-#ifdef SUPPORT_DOS_DRIVE_PREFIX
-    if (IS_ALPHA(*p) && (p[1] == ':' || p[1] == '|')) {
-        p_url->scheme = SCM_LOCAL;
-        goto analyze_file;
-    }
-#endif /* SUPPORT_DOS_DRIVE_PREFIX */
     /* search for scheme */
     p_url->scheme = parseUrlScheme(&p);
     if (p_url->scheme == SCM_MISSING) {
@@ -126,11 +120,7 @@ void parseURL(const char* _url, struct Url* p_url, struct Url* current)
     /* after here, p begins with // */
     if (p_url->scheme == SCM_LOCAL) { /* file://foo           */
         if (p[2] == '/' || p[2] == '~'
-        /* <A HREF="file:///foo">file:///foo</A>  or <A HREF="file://~user">file://~user</A> */
-#ifdef SUPPORT_DOS_DRIVE_PREFIX
-            || (IS_ALPHA(p[2]) && (p[3] == ':' || p[3] == '|'))
-        /* <A HREF="file://DRIVE/foo">file://DRIVE/foo</A> */
-#endif /* SUPPORT_DOS_DRIVE_PREFIX */
+            /* <A HREF="file:///foo">file:///foo</A>  or <A HREF="file://~user">file://~user</A> */
         ) {
             p += 2;
             goto analyze_file;
@@ -193,7 +183,7 @@ analyze_url:
         break;
     }
 analyze_file:
-#ifndef SUPPORT_NETBIOS_SHARE
+
     if (p_url->scheme == SCM_LOCAL && p_url->user == 0 && p_url->host != 0 && *p_url->host != '\0' && !is_localhost(p_url->host)) {
         /*
          * In the environments other than CYGWIN, a URL like
@@ -209,25 +199,11 @@ analyze_file:
             p_url->port = getSchemeInfo(SCM_FTP).port;
         }
     }
-#endif
+
     if ((*p == '\0' || *p == '#' || *p == '?') && p_url->host == 0) {
         p_url->file = "";
         goto do_query;
     }
-#ifdef SUPPORT_DOS_DRIVE_PREFIX
-    if (p_url->scheme == SCM_LOCAL) {
-        q = p;
-        if (*q == '/')
-            q++;
-        if (IS_ALPHA(q[0]) && (q[1] == ':' || q[1] == '|')) {
-            if (q[1] == '|') {
-                p = allocStr(q, -1);
-                p[1] = ':';
-            } else
-                p = q;
-        }
-    }
-#endif
 
     q = p;
     if (*p == '/')
@@ -347,14 +323,6 @@ void parseURL2(const char* url, struct Url* pu, struct Url* current)
     }
     //     if (pu->scheme == SCM_LOCAL) {
     //         const char* q = expandName(file_unquote(pu->file));
-    // #ifdef SUPPORT_DOS_DRIVE_PREFIX
-    //         Str drive;
-    //         if (IS_ALPHA(q[0]) && q[1] == ':') {
-    //             drive = Strnew_charp_n(q, 2);
-    //             Strcat_charp(drive, file_quote(q + 2));
-    //             pu->file = drive->ptr;
-    //         } else
-    // #endif
     //             pu->file = file_quote(q);
     //     }
 
@@ -367,12 +335,7 @@ void parseURL2(const char* url, struct Url* pu, struct Url* current)
         pu->port = current->port;
         if (pu->file && *pu->file) {
             if (
-                pu->file[0] != '/'
-#ifdef SUPPORT_DOS_DRIVE_PREFIX
-                && !(pu->scheme == SCM_LOCAL && IS_ALPHA(pu->file[0])
-                    && pu->file[1] == ':')
-#endif
-            ) {
+                pu->file[0] != '/') {
                 /* file is relative [process 1] */
                 p = pu->file;
                 if (current->file) {
@@ -397,11 +360,7 @@ void parseURL2(const char* url, struct Url* pu, struct Url* current)
          * from the current URL. */
     }
     if (pu->file) {
-        if (pu->scheme == SCM_LOCAL && pu->file[0] != '/' &&
-#ifdef SUPPORT_DOS_DRIVE_PREFIX /* for 'drive:' */
-            !(IS_ALPHA(pu->file[0]) && pu->file[1] == ':') &&
-#endif
-            strcmp(pu->file, "-")) {
+        if (pu->scheme == SCM_LOCAL && pu->file[0] != '/' && strcmp(pu->file, "-")) {
             /* local file, relative path */
             Str tmp = current ? parsedURL2Str(current) : Strnew();
             if (Strlastchar(tmp) != '/')
@@ -431,15 +390,7 @@ void parseURL2(const char* url, struct Url* pu, struct Url* current)
             pu->file = cleanupName(pu->file);
         }
         if (pu->scheme == SCM_LOCAL) {
-#ifdef SUPPORT_NETBIOS_SHARE
-            if (pu->host && !is_localhost(pu->host)) {
-                Str tmp = Strnew_charp("//");
-                Strcat_m_charp(tmp, pu->host,
-                    cleanupName(file_unquote(pu->file)), 0);
-                pu->real_file = tmp->ptr;
-            } else
-#endif
-                pu->real_file = cleanupName(file_unquote(pu->file));
+            pu->real_file = cleanupName(file_unquote(pu->file));
         }
     }
 }
@@ -500,11 +451,7 @@ Str _parsedURL2Str(struct Url* pu, int pass, int user, int label)
         }
     }
     if (
-        (pu->file == 0 || (pu->file[0] != '/'
-#ifdef SUPPORT_DOS_DRIVE_PREFIX
-             && !(IS_ALPHA(pu->file[0]) && pu->file[1] == ':' && pu->host == 0)
-#endif
-                 )))
+        (pu->file == 0 || (pu->file[0] != '/')))
         Strcat_char(tmp, '/');
     Strcat_charp(tmp, pu->file);
     if (pu->scheme == SCM_FTPDIR && Strlastchar(tmp) != '/')

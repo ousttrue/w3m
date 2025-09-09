@@ -4083,9 +4083,6 @@ char* w3m_help_dir(void)
 char* file_to_url(const char* file, const char* currentDir)
 {
     Str tmp;
-#ifdef SUPPORT_DOS_DRIVE_PREFIX
-    char* drive = NULL;
-#endif
 #ifdef SUPPORT_NETBIOS_SHARE
     char* host = NULL;
 #endif
@@ -4105,12 +4102,6 @@ char* file_to_url(const char* file, const char* currentDir)
         }
     }
 #endif
-#ifdef SUPPORT_DOS_DRIVE_PREFIX
-    if (IS_ALPHA(file[0]) && file[1] == ':') {
-        drive = allocStr(file, 2);
-        file += 2;
-    } else
-#endif
         if (file[0] != '/') {
         tmp = Strnew_charp(currentDir);
         if (Strlastchar(tmp) != '/')
@@ -4122,10 +4113,6 @@ char* file_to_url(const char* file, const char* currentDir)
 #ifdef SUPPORT_NETBIOS_SHARE
     if (host)
         Strcat_charp(tmp, host);
-#endif
-#ifdef SUPPORT_DOS_DRIVE_PREFIX
-    if (drive)
-        Strcat_charp(tmp, drive);
 #endif
     Strcat_charp(tmp, file_quote(cleanupName(file)));
     return tmp->ptr;

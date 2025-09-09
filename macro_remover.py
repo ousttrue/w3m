@@ -11,6 +11,7 @@ HERE = pathlib.Path(__file__).absolute().parent
 
 
 CONTEXT = {
+    "SUPPORT_DOS_DRIVE_PREFIX": False,
     "HAVE_SGTTY_H": False,
     "HAVE_STROQ": False,
     "HAVE_ATOQ": False,
