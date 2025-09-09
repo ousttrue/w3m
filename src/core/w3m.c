@@ -620,7 +620,7 @@ loadLink(const char* url, const char* target, const char* referer, struct Form* 
         return NULL;
     }
 
-    parseUrl(url, &pu, base);
+    pu = parseUrl(url, base);
     pushHashHist(URLHist, parsedURL2Str(&pu)->ptr);
 
     if (buf == NO_BUFFER) {
@@ -2108,7 +2108,7 @@ static void followAnchor(bool do_download)
         gotoLabel((char*)a->url + 1);
         return;
     }
-    parseUrl(a->url, &u, baseURL(Currentbuf));
+    u = parseUrl(a->url, baseURL(Currentbuf));
     if (Strcmp(parsedURL2Str(&u), parsedURL2Str(&Currentbuf->currentURL)) == 0) {
         /* index within this buffer */
         if (u.label) {
@@ -2329,7 +2329,7 @@ _nextA(int visited)
                         po->pos);
                 hseq++;
                 if (visited == true && an) {
-                    parseUrl(an->url, &url, baseURL(Currentbuf));
+                    url = parseUrl(an->url, baseURL(Currentbuf));
                     if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
                         goto _end;
                     }
@@ -2348,7 +2348,7 @@ _nextA(int visited)
             x = an->start.pos;
             y = an->start.line;
             if (visited == true) {
-                parseUrl(an->url, &url, baseURL(Currentbuf));
+                url = parseUrl(an->url, baseURL(Currentbuf));
                 if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
                     goto _end;
                 }
@@ -2411,7 +2411,7 @@ _prevA(int visited)
                         po->pos);
                 hseq--;
                 if (visited == true && an) {
-                    parseUrl(an->url, &url, baseURL(Currentbuf));
+                    url = parseUrl(an->url, baseURL(Currentbuf));
                     if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
                         goto _end;
                     }
@@ -2430,7 +2430,7 @@ _prevA(int visited)
             x = an->start.pos;
             y = an->start.line;
             if (visited == true && an) {
-                parseUrl(an->url, &url, baseURL(Currentbuf));
+                url = parseUrl(an->url, baseURL(Currentbuf));
                 if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
                     goto _end;
                 }
@@ -2655,7 +2655,7 @@ goURL0(char* prompt, int relative)
         a = retrieveCurrentAnchor(Currentbuf);
         if (a) {
             char* a_url;
-            parseUrl(a->url, &p_url, current);
+            p_url = parseUrl(a->url, current);
             a_url = parsedURL2Str(&p_url)->ptr;
             if (DefaultURLString == DEFAULT_URL_LINK)
                 url = url_decode2(a_url, Currentbuf);
@@ -2686,7 +2686,7 @@ goURL0(char* prompt, int relative)
         gotoLabel(url + 1);
         return;
     }
-    parseUrl(url, &p_url, current);
+    p_url = parseUrl(url, current);
     pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
     cmd_loadURL(url, current, referer, NULL);
     if (Currentbuf != cur_buf) /* success */
@@ -2706,7 +2706,7 @@ DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer")
         Buffer* cur_buf = Currentbuf;
         SKIP_BLANKS(url);
         url = url_quote(url);
-        parseUrl(url, &p_url, NULL);
+        p_url = parseUrl(url, NULL);
         pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
         cmd_loadURL(url, NULL, NULL, NULL);
         if (Currentbuf != cur_buf) /* success */
@@ -2727,7 +2727,7 @@ cmd_loadBuffer(Buffer* buf, int prop, int linkid)
     } else if (buf != NO_BUFFER) {
         buf->bufferprop |= (BP_INTERNAL | prop);
         if (!(buf->bufferprop & BP_NO_URL))
-            buf->currentURL = copyParsedURL(&Currentbuf->currentURL);
+            buf->currentURL = copyParsedUrl(&Currentbuf->currentURL);
         if (linkid != LB_NOLINK) {
             buf->linkBuffer[REV_LB[linkid]] = Currentbuf;
             Currentbuf->linkBuffer[linkid] = buf;
@@ -2836,7 +2836,7 @@ void follow_map(struct KeyValue* arg)
         gotoLabel(a->url + 1);
         return;
     }
-    parseUrl(a->url, &p_url, baseURL(Currentbuf));
+    p_url = parseUrl(a->url, baseURL(Currentbuf));
     pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
     cmd_loadURL(a->url, baseURL(Currentbuf),
         parsedURL2Str(&Currentbuf->currentURL)->ptr, NULL);
@@ -2854,7 +2854,7 @@ DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
         gotoLabel(l->url + 1);
         return;
     }
-    parseUrl(l->url, &p_url, baseURL(Currentbuf));
+    p_url = parseUrl(l->url, baseURL(Currentbuf));
     pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
     cmd_loadURL(l->url, baseURL(Currentbuf),
         parsedURL2Str(&Currentbuf->currentURL)->ptr, NULL);
@@ -2994,7 +2994,7 @@ DEFUN(svSrc, DOWNLOAD SAVE, "Save document source")
     // if (Currentbuf->real_scheme == SCM_LOCAL)
     //     file = conv_from_system(guessSaveName(NULL, Currentbuf->currentURL.real_file));
     // else
-        file = guessSaveName(Currentbuf->document_header, Currentbuf->currentURL.file);
+    file = guessSaveName(Currentbuf->document_header, Currentbuf->currentURL.file);
     doFileCopy(Currentbuf->sourcefile, file);
     PermitSaveToPipe = false;
 }
@@ -3033,7 +3033,7 @@ _peekURL(int only_img)
             s = Strnew_charp(form2str((struct FormItem*)a->url));
     }
     if (s == NULL) {
-        parseUrl(a->url, &pu, baseURL(Currentbuf));
+        pu = parseUrl(a->url, baseURL(Currentbuf));
         s = parsedURL2Str(&pu);
     }
     if (DecodeURL)
@@ -3204,7 +3204,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
         DocumentCharset = Currentbuf->document_charset;
     // SearchHeader = Currentbuf->search_header;
     DefaultType = (char*)Currentbuf->real_type;
-    struct Content c = loadGeneralFile(url->ptr, NULL, post, NO_REFERER/*, true*/);
+    struct Content c = loadGeneralFile(url->ptr, NULL, post, NO_REFERER /*, true*/);
     buf = makeBuffer(&c, false);
     DocumentCharset = old_charset;
     // SearchHeader = false;
@@ -3523,13 +3523,13 @@ void set_buffer_environ(Buffer* buf)
         set_environ("W3M_CURRENT_WORD", s ? s : "");
         a = retrieveCurrentAnchor(buf);
         if (a) {
-            parseUrl(a->url, &pu, baseURL(buf));
+            pu = parseUrl(a->url, baseURL(buf));
             set_environ("W3M_CURRENT_LINK", parsedURL2Str(&pu)->ptr);
         } else
             set_environ("W3M_CURRENT_LINK", "");
         a = retrieveCurrentImg(buf);
         if (a) {
-            parseUrl(a->url, &pu, baseURL(buf));
+            pu = parseUrl(a->url, baseURL(buf));
             set_environ("W3M_CURRENT_IMG", parsedURL2Str(&pu)->ptr);
         } else
             set_environ("W3M_CURRENT_IMG", "");
@@ -4151,43 +4151,3 @@ Str myEditor(const char* cmd, const char* file, int line)
     }
     return tmp;
 }
-
-// const char* expandName(const char* name)
-// {
-//     if (name == NULL)
-//         return NULL;
-//
-//     struct passwd* passent;
-//     Str extpath = NULL;
-//
-//     const char* p = name;
-//     if (*p == '/') {
-//         if ((*(p + 1) == '~' && IS_ALPHA(*(p + 2)))
-//             && personal_document_root) {
-//             char* q;
-//             p += 2;
-//             q = strchr(p, '/');
-//             if (q) { /* /~user/dir... */
-//                 passent = getpwnam(allocStr(p, q - p));
-//                 p = q;
-//             } else { /* /~user */
-//                 passent = getpwnam(p);
-//                 p = "";
-//             }
-//             if (!passent)
-//                 goto rest;
-//             extpath = Strnew_m_charp(passent->pw_dir, "/",
-//                 personal_document_root, NULL);
-//             if (*personal_document_root == '\0' && *p == '/')
-//                 p++;
-//         } else
-//             goto rest;
-//         if (Strcmp_charp(extpath, "/") == 0 && *p == '/')
-//             p++;
-//         Strcat_charp(extpath, p);
-//         return extpath->ptr;
-//     } else
-//         return expandPath(p);
-// rest:
-//     return name;
-// }

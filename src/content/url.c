@@ -1,4 +1,5 @@
 #include "url.h"
+#include "expandpath.h"
 #include "Str.h"
 #include "quote.h"
 #include "myctype.h"
@@ -9,7 +10,7 @@
 
 #define ALLOC_STR(s) ((s) == 0 ? 0 : allocStr(s, -1))
 
-struct Url copyParsedURL(const struct Url* q)
+struct Url copyParsedUrl(const struct Url* q)
 {
     if (!q) {
         return (struct Url) {
@@ -99,7 +100,7 @@ static void _parseUrl(const char* _url, struct Url* p_url, struct Url* current)
     // 4.  Resolving Relative URLs
     if (*url == '\0' || *url == '#') {
         if (current)
-            *p_url = copyParsedURL(current);
+            *p_url = copyParsedUrl(current);
         goto do_label;
     }
     /* search for scheme */
@@ -294,16 +295,17 @@ do_label:
         p_url->label = 0;
 }
 
-void parseUrl(const char* url, struct Url* pu, struct Url* current)
+struct Url parseUrl(const char* url, struct Url* current)
 {
-
+    struct Url _pu;
+    struct Url* pu = &_pu;
     _parseUrl(url, pu, current);
 
     if (pu->scheme == SCM_MAILTO)
-        return;
+        return _pu;
 
     if (pu->scheme == SCM_DATA)
-        return;
+        return _pu;
 
     const char* p;
     if (pu->scheme == SCM_NEWS || pu->scheme == SCM_NEWS_GROUP) {
@@ -311,7 +313,7 @@ void parseUrl(const char* url, struct Url* pu, struct Url* current)
             pu->scheme = SCM_NEWS_GROUP;
         else
             pu->scheme = SCM_NEWS;
-        return;
+        return _pu;
     }
     if (pu->scheme == SCM_NNTP || pu->scheme == SCM_NNTP_GROUP) {
         if (pu->file && *pu->file == '/')
@@ -326,12 +328,12 @@ void parseUrl(const char* url, struct Url* pu, struct Url* current)
                 pu->port = current->port;
             }
         }
-        return;
+        return _pu;
     }
-    // if (pu->scheme == SCM_LOCAL) {
-    //     const char* q = expandName(file_unquote(pu->file));
-    //     pu->file = file_quote(q);
-    // }
+    if (pu->scheme == SCM_LOCAL) {
+        const char* q = expandName(file_unquote(pu->file));
+        pu->file = file_quote(q);
+    }
 
     bool relative_uri = false;
     if (current && (pu->scheme == current->scheme || (pu->scheme == SCM_FTP && current->scheme == SCM_FTPDIR) || (pu->scheme == SCM_LOCAL && current->scheme == SCM_LOCAL_CGI))
@@ -401,6 +403,7 @@ void parseUrl(const char* url, struct Url* pu, struct Url* current)
             // pu->real_file = cleanupName(file_unquote(pu->file));
         }
     }
+    return _pu;
 }
 
 Str _parsedURL2Str(struct Url* pu, int pass, int user, int label)

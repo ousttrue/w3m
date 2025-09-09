@@ -540,7 +540,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                         a_img->image = NULL;
                         if (iseq > 0) {
                             struct Url u;
-                            parseUrl(a_img->url, &u, base);
+                            u = parseUrl(a_img->url, base);
 
                             struct Image* image;
                             a_img->image = image = New(struct Image);
@@ -704,7 +704,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                         p = url_quote(remove_space(p));
                         if (!buf->baseURL)
                             buf->baseURL = New(struct Url);
-                        parseUrl(p, buf->baseURL, &buf->currentURL);
+                        *buf->baseURL = parseUrl(p, &buf->currentURL);
 
                         base = buf->baseURL;
                     }
@@ -723,7 +723,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                             buf->event = setAlarmEvent(buf->event,
                                 refresh_interval,
                                 AL_IMPLICIT_ONCE,
-                                FUNCNAME_gorURL, p);
+                                FUNCNAME_gorURL, (void*)p);
                         } else if (refresh_interval > 0)
                             buf->event = setAlarmEvent(buf->event,
                                 refresh_interval,
@@ -960,7 +960,7 @@ Buffer* makeBuffer(struct Content* c, bool do_download)
         }
         Buffer* b = loadHTMLString(c->page);
         if (b) {
-            b->currentURL = copyParsedURL(&c->pu);
+            b->currentURL = copyParsedUrl(&c->pu);
             b->real_scheme = c->pu.scheme;
             b->real_type = c->real_type;
             if (src)

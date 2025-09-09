@@ -484,7 +484,7 @@ Str process_img(struct HtmlTagParsed* tag, int width)
         i0 = i;
         if (w < 0 || i < 0) {
             struct Url u;
-            parseUrl(p, &u, cur_baseURL);
+            u = parseUrl(p, cur_baseURL);
 
             struct Image image;
             image.url = parsedURL2Str(&u)->ptr;

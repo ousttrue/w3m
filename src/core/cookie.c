@@ -227,15 +227,15 @@ get_cookie_info(Str domain, Str path, Str name)
 
 Str find_cookie(struct Url* pu)
 {
-    struct cookie *p;
-    struct cookie *p1;
-    struct cookie *fco = NULL;
+    struct cookie* p;
+    struct cookie* p1;
+    struct cookie* fco = NULL;
 
     int version = 0;
-    const char*fq_domainname = FQDN(pu->host);
+    const char* fq_domainname = FQDN(pu->host);
     check_expired_cookies();
     for (p = First_cookie; p; p = p->next) {
-        const char*domainname = (p->version == 0) ? fq_domainname : pu->host;
+        const char* domainname = (p->version == 0) ? fq_domainname : pu->host;
         if (p->flag & COO_USE && match_cookie(pu, p, domainname)) {
             for (p1 = fco; p1 && Strcasecmp(p1->name, p->name);
                 p1 = p1->next)
@@ -395,7 +395,7 @@ int add_cookie(struct Url* pu, Str name, Str value,
         First_cookie = p;
     }
 
-    p->url = copyParsedURL(pu);
+    p->url = copyParsedUrl(pu);
     p->name = name;
     p->value = value;
     p->expires = expires;
@@ -484,28 +484,26 @@ readcol(const char** p)
     return tmp;
 }
 
-void load_cookies(void)
+void load_cookies()
 {
-    struct cookie *cookie, *p;
-    FILE* fp;
-    Str line;
-    char* str;
-
-    if (!(fp = fopen(rcFile(COOKIE_FILE), "r")))
+    FILE* fp = fopen(rcFile(COOKIE_FILE), "r");
+    if (!(fp))
         return;
 
+    struct cookie *cookie, *p;
     if (First_cookie) {
         for (p = First_cookie; p->next; p = p->next)
             ;
     } else {
         p = NULL;
     }
+
     for (;;) {
-        line = Strfgets(fp);
+        Str line = Strfgets(fp);
 
         if (line->length == 0)
             break;
-        str = line->ptr;
+        const char* str = line->ptr;
         cookie = New(struct cookie);
         cookie->next = NULL;
         cookie->flag = 0;
@@ -514,7 +512,7 @@ void load_cookies(void)
         cookie->comment = NULL;
         cookie->portl = NULL;
         cookie->commentURL = NULL;
-        parseUrl(readcol(&str)->ptr, &cookie->url, NULL);
+        cookie->url = parseUrl(readcol(&str)->ptr, NULL);
         if (!*str)
             break;
         cookie->name = readcol(&str);

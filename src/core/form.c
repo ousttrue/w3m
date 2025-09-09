@@ -751,7 +751,7 @@ add_pre_form(struct pre_form* prev, const char* url, Regex* re_url, const char* 
     else
         new = PreForm = New(struct pre_form);
     if (url && !re_url) {
-        parseUrl(url, &pu, NULL);
+        pu = parseUrl(url, NULL);
         new->url = parsedURL2Str(&pu)->ptr;
     } else
         new->url = url;

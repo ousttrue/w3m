@@ -80,7 +80,7 @@ struct Content openLocal(const char* u, struct Url* current, struct Form* post, 
 {
     // u = file_to_url(u);
     struct Url pu;
-    parseUrl(u, &pu, current);
+    pu = parseUrl(u, current);
 
     if (pu.label != NULL) {
         // #hogege is not a label but a filename
@@ -252,7 +252,7 @@ static Str decode_gzip(unsigned char* src, int size)
 struct Content openHttp(struct HttpClient* c, const char* path, struct Url* current, struct Form* post, const char* referer)
 {
     struct Url pu;
-    parseUrl(path, &pu, current);
+    pu = parseUrl(path, current);
     if (LocalhostOnly && pu.host && !is_localhost(pu.host)) {
         pu.host = NULL;
     }
@@ -520,7 +520,7 @@ struct Content openHttp(struct HttpClient* c, const char* path, struct Url* curr
             c->f.stream = NULL;
         }
         current = New(struct Url);
-        *current = copyParsedURL(&pu);
+        *current = copyParsedUrl(&pu);
         // t_buf->bufferprop |= BP_REDIRECTED;
         c->status = HTST_NORMAL;
 
@@ -645,7 +645,7 @@ loadGeneralFile(const char* path, struct Url* current, struct Form* post, const 
     //     struct HttpRequest* hr)
 
     struct Url pu;
-    parseUrl(path, &pu, current);
+    pu = parseUrl(path, current);
 
     // enum UrlScheme scheme = getUrlScheme(c.url);
     // const char* u = (current == NULL && getUrlScheme(c.url) == SCM_MISSING && !ArgvIsURL)

@@ -40,3 +40,43 @@ const char* expandPath(const char* name)
 rest:
     return name;
 }
+
+const char* expandName(const char* name)
+{
+    if (name == NULL)
+        return NULL;
+
+    struct passwd* passent;
+    Str extpath = NULL;
+
+    const char* p = name;
+    if (*p == '/') {
+        // if ((*(p + 1) == '~' && IS_ALPHA(*(p + 2))) && personal_document_root) {
+        //     char* q;
+        //     p += 2;
+        //     q = strchr(p, '/');
+        //     if (q) { /* /~user/dir... */
+        //         passent = getpwnam(allocStr(p, q - p));
+        //         p = q;
+        //     } else { /* /~user */
+        //         passent = getpwnam(p);
+        //         p = "";
+        //     }
+        //     if (!passent)
+        //         goto rest;
+        //     extpath = Strnew_m_charp(passent->pw_dir, "/",
+        //         personal_document_root, NULL);
+        //     if (*personal_document_root == '\0' && *p == '/')
+        //         p++;
+        // } 
+        // else
+            goto rest;
+        if (Strcmp_charp(extpath, "/") == 0 && *p == '/')
+            p++;
+        Strcat_charp(extpath, p);
+        return extpath->ptr;
+    } else
+        return expandPath(p);
+rest:
+    return name;
+}
