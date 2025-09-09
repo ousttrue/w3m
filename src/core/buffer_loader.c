@@ -960,7 +960,7 @@ Buffer* makeBuffer(struct Content* c, bool do_download)
         }
         Buffer* b = loadHTMLString(c->page);
         if (b) {
-            copyParsedURL(&b->currentURL, &c->pu);
+            b->currentURL = copyParsedURL(&c->pu);
             b->real_scheme = c->pu.scheme;
             b->real_type = c->real_type;
             if (src)
@@ -1499,7 +1499,7 @@ loadHTMLBuffer(struct URLFile* f, Buffer* newBuf)
     return newBuf;
 }
 
-void loadHTMLstream(union input_stream *stream, Buffer* newBuf, FILE* src, int internal)
+void loadHTMLstream(union input_stream* stream, Buffer* newBuf, FILE* src, int internal)
 {
     Str html = readAll(stream);
     struct UI ui = getUI();

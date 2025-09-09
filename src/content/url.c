@@ -59,18 +59,22 @@ copyPath(const char* orgpath, int length, int option)
 
 void parseURL(const char* _url, struct Url* p_url, struct Url* current)
 {
+    const char* q = NULL;
+
     // quote 0x01-0x20, 0x7F-0xFF
     const char* url = url_quote(_url);
-
     const char* p = url;
-    copyParsedURL(p_url, 0);
-    p_url->scheme = SCM_MISSING;
+
+    *p_url = (struct Url) {
+        .scheme = SCM_MISSING,
+        0,
+    };
 
     // RFC1808: Relative Uniform Resource Locators
     // 4.  Resolving Relative URLs
     if (*url == '\0' || *url == '#') {
         if (current)
-            copyParsedURL(p_url, current);
+            *p_url = copyParsedURL(current);
         goto do_label;
     }
     /* search for scheme */
@@ -129,7 +133,7 @@ void parseURL(const char* _url, struct Url* p_url, struct Url* current)
     p += 2; /* scheme://foo         */
     /*          ^p is here  */
 analyze_url:
-    const char* q = p;
+    q = p;
 
     if (*q == '[') { /* rfc2732,rfc2373 compliance */
         p++;
@@ -267,23 +271,28 @@ do_label:
 
 #define ALLOC_STR(s) ((s) == 0 ? 0 : allocStr(s, -1))
 
-void copyParsedURL(struct Url* p, const struct Url* q)
+struct Url copyParsedURL(const struct Url* q)
 {
-    if (q == 0) {
-        memset(p, 0, sizeof(struct Url));
-        p->scheme = SCM_UNKNOWN;
-        return;
+    if (!q) {
+        return (struct Url) {
+            .scheme = SCM_UNKNOWN,
+            0
+        };
     }
-    p->scheme = q->scheme;
-    p->port = q->port;
-    p->is_nocache = q->is_nocache;
-    p->user = ALLOC_STR(q->user);
-    p->pass = ALLOC_STR(q->pass);
-    p->host = ALLOC_STR(q->host);
-    p->file = ALLOC_STR(q->file);
-    p->real_file = ALLOC_STR(q->real_file);
-    p->label = ALLOC_STR(q->label);
-    p->query = ALLOC_STR(q->query);
+
+    return (struct Url) {
+        .scheme = q->scheme,
+        .user = ALLOC_STR(q->user),
+        .pass = ALLOC_STR(q->pass),
+        .host = ALLOC_STR(q->host),
+        .port = q->port,
+        .file = ALLOC_STR(q->file),
+        .label = ALLOC_STR(q->label),
+        .query = ALLOC_STR(q->query),
+        //
+        .real_file = ALLOC_STR(q->real_file),
+        .is_nocache = q->is_nocache,
+    };
 }
 
 void parseURL2(const char* url, struct Url* pu, struct Url* current)

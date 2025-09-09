@@ -521,7 +521,7 @@ struct Content openHttp(struct HttpClient* c, const char* path, struct Url* curr
             c->f.stream = NULL;
         }
         current = New(struct Url);
-        copyParsedURL(current, &pu);
+        *current = copyParsedURL(&pu);
         // t_buf->bufferprop |= BP_REDIRECTED;
         c->status = HTST_NORMAL;
 

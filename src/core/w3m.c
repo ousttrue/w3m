@@ -2727,7 +2727,7 @@ cmd_loadBuffer(Buffer* buf, int prop, int linkid)
     } else if (buf != NO_BUFFER) {
         buf->bufferprop |= (BP_INTERNAL | prop);
         if (!(buf->bufferprop & BP_NO_URL))
-            copyParsedURL(&buf->currentURL, &Currentbuf->currentURL);
+            buf->currentURL = copyParsedURL(&Currentbuf->currentURL);
         if (linkid != LB_NOLINK) {
             buf->linkBuffer[REV_LB[linkid]] = Currentbuf;
             Currentbuf->linkBuffer[linkid] = buf;
@@ -4102,7 +4102,7 @@ char* file_to_url(const char* file, const char* currentDir)
         }
     }
 #endif
-        if (file[0] != '/') {
+    if (file[0] != '/') {
         tmp = Strnew_charp(currentDir);
         if (Strlastchar(tmp) != '/')
             Strcat_char(tmp, '/');

@@ -54,7 +54,7 @@ static int is_saved = 1;
 #define contain_no_dots(p, ep) (total_dot_number((p), (ep), 1) == 0)
 
 static unsigned int
-total_dot_number(char* p, char* ep, unsigned int max_count)
+total_dot_number(const char* p, const char* ep, unsigned int max_count)
 {
     unsigned int count = 0;
     if (!ep)
@@ -67,8 +67,8 @@ total_dot_number(char* p, char* ep, unsigned int max_count)
     return count;
 }
 
-static char*
-domain_match(char* host, char* domain)
+static const char*
+domain_match(const char* host, const char* domain)
 {
     int m0, m1;
 
@@ -197,7 +197,7 @@ make_cookie(struct cookie* cookie)
 }
 
 static int
-match_cookie(struct Url* pu, struct cookie* cookie, char* domainname)
+match_cookie(struct Url* pu, struct cookie* cookie, const char* domainname)
 {
     if (!domainname)
         return 0;
@@ -396,7 +396,7 @@ int add_cookie(struct Url* pu, Str name, Str value,
         First_cookie = p;
     }
 
-    copyParsedURL(&p->url, pu);
+    p->url = copyParsedURL(pu);
     p->name = name;
     p->value = value;
     p->expires = expires;
@@ -475,7 +475,7 @@ void save_cookies(void)
 }
 
 static Str
-readcol(char** p)
+readcol(const char** p)
 {
     Str tmp = Strnew();
     while (**p && **p != '\n' && **p != '\r' && **p != '\t')

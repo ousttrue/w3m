@@ -265,7 +265,7 @@ newRegex(char* ex, int igncase, Regex* regex, char** msg)
 /*
  * regexMatch: match regular expression
  */
-int regexMatch(char* str, int len, int firstp)
+int regexMatch(const char* str, int len, int firstp)
 {
     return RegexMatch(&DefaultRegex, str, len, firstp);
 }

@@ -37,6 +37,6 @@ bool checkRedirection(struct HttpClient* c, struct Url* pu)
         }
     }
 
-    copyParsedURL(&c->puv[c->nredir++], pu);
+    c->puv[c->nredir++] = copyParsedURL(pu);
     return true;
 }

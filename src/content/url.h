@@ -10,9 +10,10 @@ struct Url {
     const char* host;
     int port;
     const char* file;
-    const char* real_file;
     const char* query;
     const char* label;
+    //
+    const char* real_file;
     bool is_nocache;
 };
 
@@ -23,7 +24,7 @@ inline static bool IS_EMPTY_PARSED_URL(struct Url* pu)
 
 Str _parsedURL2Str(struct Url* pu, int pass, int user, int label);
 void parseURL(const char* url, struct Url* p_url, struct Url* current);
-void copyParsedURL(struct Url* p, const struct Url* q);
+struct Url copyParsedURL(const struct Url* q);
 void parseURL2(const char* url, struct Url* pu, struct Url* current);
 Str parsedURL2Str(struct Url* pu);
 Str parsedURL2RefererStr(struct Url* pu);
