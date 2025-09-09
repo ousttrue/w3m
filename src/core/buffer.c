@@ -199,10 +199,10 @@ writeBufferName(Buffer* buf, int n)
         switch (buf->currentURL.scheme) {
         case SCM_LOCAL:
         case SCM_LOCAL_CGI:
-            if (strcmp(buf->currentURL.file, "-")) {
-                Strcat_char(msg, ' ');
-                Strcat_charp(msg, conv_from_system(buf->currentURL.real_file));
-            }
+            // if (strcmp(buf->currentURL.file, "-")) {
+            //     Strcat_char(msg, ' ');
+            //     Strcat_charp(msg, conv_from_system(buf->currentURL.real_file));
+            // }
             break;
         case SCM_UNKNOWN:
         case SCM_MISSING:

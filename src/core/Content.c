@@ -55,7 +55,7 @@ static void add_index_file(struct Url* pu, struct URLFile* uf)
         examineFile(uf, q);
         if (uf->stream != NULL) {
             pu->file = p;
-            pu->real_file = q;
+            // pu->real_file = q;
             return;
         }
     }
@@ -87,7 +87,7 @@ struct Content openLocal(const char* u, struct Url* current, struct Form* post, 
         Str tmp2 = Strnew_charp("#");
         Strcat_charp(tmp2, pu.label);
         pu.file = tmp2->ptr;
-        pu.real_file = cleanupName(file_unquote(pu.file));
+        // pu.real_file = cleanupName(file_unquote(pu.file));
         pu.label = NULL;
     }
 
@@ -95,19 +95,19 @@ struct Content openLocal(const char* u, struct Url* current, struct Form* post, 
     init_stream(&f, SCM_MISSING, NULL);
     if (post && post->body) {
         // local CGI: POST
-        f.stream = newFileStream(localcgi_post(pu.real_file, pu.query, post, referer), &fclose);
+        f.stream = newFileStream(localcgi_post(pu.file, pu.query, post, referer), &fclose);
     } else {
         // lodal CGI: GET
-        f.stream = newFileStream(localcgi_get(pu.real_file, pu.query, referer), &fclose);
+        f.stream = newFileStream(localcgi_get(pu.file, pu.query, referer), &fclose);
     }
 
     if (f.stream) {
         f.is_cgi = true;
         f.scheme = pu.scheme = SCM_LOCAL_CGI;
     } else {
-        examineFile(&f, pu.real_file);
+        examineFile(&f, pu.file);
         if (f.stream == NULL) {
-            if (dir_exist(pu.real_file)) {
+            if (dir_exist(pu.file)) {
                 add_index_file(&pu, &f);
                 // if (f.stream == NULL) {
                 //     // return;
@@ -121,7 +121,7 @@ struct Content openLocal(const char* u, struct Url* current, struct Form* post, 
                 char* q = cleanupName(file_unquote(p));
                 if (dir_exist(q)) {
                     pu.file = p;
-                    pu.real_file = q;
+                    // pu.real_file = q;
                     add_index_file(&pu, &f);
                     // if (f.stream == NULL) {
                     //     // return;
@@ -130,7 +130,7 @@ struct Content openLocal(const char* u, struct Url* current, struct Form* post, 
                     examineFile(&f, q);
                     if (f.stream) {
                         pu.file = p;
-                        pu.real_file = q;
+                        // pu.real_file = q;
                     }
                 }
             }
@@ -249,11 +249,10 @@ static Str decode_gzip(unsigned char* src, int size)
     return buffer;
 }
 
-struct Content openHttp(struct HttpClient* c, const char* path, struct Url* current, struct Form* post, const char* referer, bool no_cache)
+struct Content openHttp(struct HttpClient* c, const char* path, struct Url* current, struct Form* post, const char* referer)
 {
     struct Url pu;
     parseURL2(path, &pu, current);
-    pu.is_nocache = no_cache;
     if (LocalhostOnly && pu.host && !is_localhost(pu.host)) {
         pu.host = NULL;
     }
@@ -638,8 +637,7 @@ struct Content openHttp(struct HttpClient* c, const char* path, struct Url* curr
 }
 
 struct Content
-loadGeneralFile(const char* path, struct Url* current, struct Form* post, const char* referer,
-    bool no_cache)
+loadGeneralFile(const char* path, struct Url* current, struct Form* post, const char* referer)
 {
     //         openURL(&c, &pu, current, post, referer, no_cache, extra_header, &hr);
     // void openURL(struct HttpClient* c, struct Url* pu, struct Url* current,
@@ -670,7 +668,7 @@ loadGeneralFile(const char* path, struct Url* current, struct Form* post, const 
             //     //         // continue;
             struct HttpClient c;
             initHttpClient(&c);
-            return openHttp(&c, Strnew_m_charp("http://", path, NULL)->ptr, current, post, referer, no_cache);
+            return openHttp(&c, Strnew_m_charp("http://", path, NULL)->ptr, current, post, referer);
             //     //     }
         }
     }
@@ -679,7 +677,7 @@ loadGeneralFile(const char* path, struct Url* current, struct Form* post, const 
     case SCM_HTTPS: {
         struct HttpClient c;
         initHttpClient(&c);
-        return openHttp(&c, path, current, post, referer, no_cache);
+        return openHttp(&c, path, current, post, referer);
     }
 
     default:

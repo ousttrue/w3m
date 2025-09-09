@@ -524,7 +524,7 @@ void loadImage(Buffer* buf, enum ImageLoadFlag flag, bool do_download)
              */
             setup_child(false, 0, -1);
             image_source = cache->file;
-            struct Content c = loadGeneralFile(cache->url, cache->current, NULL, NULL, false);
+            struct Content c = loadGeneralFile(cache->url, cache->current, NULL, NULL);
             /* TODO make sure removing this didn't break anything
             if (!b || !b->real_type || strncasecmp(b->real_type, "image/", 6))
                 unlink(cache->file);

@@ -87,7 +87,7 @@ otherinfo(struct Url* target, struct Url* current, const char* referer)
             Strcat(s, Sprintf(":%d", target->port));
         Strcat_charp(s, "\r\n");
     }
-    if (target->is_nocache || NoCache) {
+    if (/*target->is_nocache ||*/ NoCache) {
         Strcat_charp(s, "Pragma: no-cache\r\n");
         Strcat_charp(s, "Cache-control: no-cache\r\n");
     }

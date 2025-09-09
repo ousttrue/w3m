@@ -612,7 +612,7 @@ loadLink(const char* url, const char* target, const char* referer, struct Form* 
     if (referer == NULL)
         referer = parsedURL2RefererStr(&Currentbuf->currentURL)->ptr;
 
-    struct Content c = loadGeneralFile(url, baseURL(Currentbuf), post, referer, false);
+    struct Content c = loadGeneralFile(url, baseURL(Currentbuf), post, referer);
     Buffer* buf = makeBuffer(&c, do_download);
     if (buf == NULL) {
         char* emsg = Sprintf("Can't load %s", url)->ptr;
@@ -1302,7 +1302,7 @@ static void
 cmd_loadURL(const char* url, struct Url* current, const char* referer, struct Form* post)
 {
     // refresh(ttyWriter());
-    struct Content c = loadGeneralFile(url, current, post, referer, false);
+    struct Content c = loadGeneralFile(url, current, post, referer);
     Buffer* buf = makeBuffer(&c, false);
     if (buf == NULL) {
         /* FIXME: gettextize? */
@@ -1468,7 +1468,7 @@ DEFUN(ldhelp, HELP, "Show help panel")
 static void
 cmd_loadfile(char* fn)
 {
-    struct Content c = loadGeneralFile(file_to_url(fn, CurrentDir), NULL, NULL, NO_REFERER, false);
+    struct Content c = loadGeneralFile(file_to_url(fn, CurrentDir), NULL, NULL, NO_REFERER);
     Buffer* buf = makeBuffer(&c, false);
     if (buf == NULL) {
         /* FIXME: gettextize? */
@@ -2147,7 +2147,7 @@ static void followImage(bool do_download)
     /* FIXME: gettextize? */
     message(getUI(), MSG_INFO, Sprintf("loading %s", a->url)->ptr);
     // refresh(ttyWriter());
-    struct Content c = loadGeneralFile(a->url, baseURL(Currentbuf), NULL, NULL, 0);
+    struct Content c = loadGeneralFile(a->url, baseURL(Currentbuf), NULL, NULL);
     Buffer* buf = makeBuffer(&c, do_download);
     if (buf == NULL) {
         /* FIXME: gettextize? */
@@ -2700,7 +2700,7 @@ DEFUN(goURL, GOTO, "Open specified document in a new buffer")
 
 DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer")
 {
-    char* url;
+    const char* url;
     if ((url = getenv("HTTP_HOME")) != NULL || (url = getenv("WWW_HOME")) != NULL) {
         struct Url p_url;
         Buffer* cur_buf = Currentbuf;
@@ -2991,9 +2991,9 @@ DEFUN(svSrc, DOWNLOAD SAVE, "Save document source")
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
     PermitSaveToPipe = true;
     const char* file;
-    if (Currentbuf->real_scheme == SCM_LOCAL)
-        file = conv_from_system(guessSaveName(NULL, Currentbuf->currentURL.real_file));
-    else
+    // if (Currentbuf->real_scheme == SCM_LOCAL)
+    //     file = conv_from_system(guessSaveName(NULL, Currentbuf->currentURL.real_file));
+    // else
         file = guessSaveName(Currentbuf->document_header, Currentbuf->currentURL.file);
     doFileCopy(Currentbuf->sourcefile, file);
     PermitSaveToPipe = false;
@@ -3204,7 +3204,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
         DocumentCharset = Currentbuf->document_charset;
     // SearchHeader = Currentbuf->search_header;
     DefaultType = (char*)Currentbuf->real_type;
-    struct Content c = loadGeneralFile(url->ptr, NULL, post, NO_REFERER, true);
+    struct Content c = loadGeneralFile(url->ptr, NULL, post, NO_REFERER/*, true*/);
     buf = makeBuffer(&c, false);
     DocumentCharset = old_charset;
     // SearchHeader = false;
@@ -3473,7 +3473,7 @@ execdict(char* word)
     dictcmd = Sprintf("%s?%s", DictCommand,
         Str_form_quote(Strnew_charp(w))->ptr)
                   ->ptr;
-    struct Content c = loadGeneralFile(dictcmd, NULL, NULL, NO_REFERER, 0);
+    struct Content c = loadGeneralFile(dictcmd, NULL, NULL, NO_REFERER);
     Buffer* buf = makeBuffer(&c, false);
     if (buf == NULL) {
         message(getUI(), MSG_INFO, "Execution failed");

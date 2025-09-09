@@ -290,8 +290,7 @@ struct Url copyParsedURL(const struct Url* q)
         .label = ALLOC_STR(q->label),
         .query = ALLOC_STR(q->query),
         //
-        .real_file = ALLOC_STR(q->real_file),
-        .is_nocache = q->is_nocache,
+        // .is_nocache = q->is_nocache,
     };
 }
 
@@ -399,7 +398,7 @@ void parseURL2(const char* url, struct Url* pu, struct Url* current)
             pu->file = cleanupName(pu->file);
         }
         if (pu->scheme == SCM_LOCAL) {
-            pu->real_file = cleanupName(file_unquote(pu->file));
+            // pu->real_file = cleanupName(file_unquote(pu->file));
         }
     }
 }

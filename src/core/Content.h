@@ -18,4 +18,4 @@ struct Content {
 
 struct Form;
 struct Content loadGeneralFile(const char* path, struct Url* current, struct Form* post,
-    const char* referer, bool no_cache);
+    const char* referer);
