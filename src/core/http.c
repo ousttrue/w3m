@@ -30,20 +30,21 @@ int accept_cookie = true;
 int show_cookie = false;
 enum AcceptBadCookieMode accept_bad_cookie = (ACCEPT_BAD_COOKIE_DISCARD);
 
-Str getHttpRequestURIStr(struct Url* pu, struct HttpRequest* hr)
+Str getHttpRequestURIStr(struct HttpRequest* hr)
 {
     Str tmp = Strnew();
     if (hr->method == HTTP_METHOD_CONNECT) {
-        Strcat_charp(tmp, pu->host);
-        Strcat(tmp, Sprintf(":%d", pu->port));
+        Strcat_charp(tmp, hr->url.host);
+        Strcat(tmp, Sprintf(":%d", hr->url.port));
     } else if (hr->flag & HR_FLAG_LOCAL) {
-        Strcat_charp(tmp, pu->file);
-        if (pu->query) {
+        Strcat_charp(tmp, hr->url.file);
+        if (hr->url.query) {
             Strcat_char(tmp, '?');
-            Strcat_charp(tmp, pu->query);
+            Strcat_charp(tmp, hr->url.query);
         }
-    } else
-        Strcat(tmp, _parsedURL2Str(pu, true, true, false));
+    } else {
+        Strcat(tmp, _parsedURL2Str(&hr->url, true, true, false));
+    }
     return tmp;
 }
 
@@ -119,18 +120,19 @@ otherinfo(struct Url* target, struct Url* current, const char* referer)
     return s->ptr;
 }
 
-Str getHttpRequestStr(struct Url* pu, struct Url* current, struct HttpRequest* hr, TextList* extra)
+Str getHttpRequestStr(struct HttpRequest* hr, struct Url* current, TextList* extra)
 {
     Str tmp = Strnew_charp(httpRequestMethodStr(hr->method));
     Strcat_charp(tmp, " ");
-    Strcat_charp(tmp, getHttpRequestURIStr(pu, hr)->ptr);
+    Strcat_charp(tmp, getHttpRequestURIStr(hr)->ptr);
     Strcat_charp(tmp, " HTTP/1.0\r\n");
     if (hr->referer == NO_REFERER)
-        Strcat_charp(tmp, otherinfo(pu, NULL, NULL));
+        Strcat_charp(tmp, otherinfo(&hr->url, NULL, NULL));
     else
-        Strcat_charp(tmp, otherinfo(pu, current, hr->referer));
-    TextListItem* i;
-    if (extra != NULL)
+        Strcat_charp(tmp, otherinfo(&hr->url, current, hr->referer));
+
+    if (extra) {
+        TextListItem* i;
         for (i = extra->first; i != NULL; i = i->next) {
             if (strncasecmp(i->ptr, "Authorization:",
                     sizeof("Authorization:") - 1)
@@ -141,15 +143,16 @@ Str getHttpRequestStr(struct Url* pu, struct Url* current, struct HttpRequest* h
             if (strncasecmp(i->ptr, "Proxy-Authorization:",
                     sizeof("Proxy-Authorization:") - 1)
                 == 0) {
-                if (pu->scheme == SCM_HTTPS
+                if (hr->url.scheme == SCM_HTTPS
                     && hr->method != HTTP_METHOD_CONNECT)
                     continue;
             }
             Strcat_charp(tmp, i->ptr);
         }
+    }
 
     Str cookie;
-    if (hr->method != HTTP_METHOD_CONNECT && use_cookie && (cookie = find_cookie(pu))) {
+    if (hr->method != HTTP_METHOD_CONNECT && use_cookie && (cookie = find_cookie(&hr->url))) {
         Strcat_charp(tmp, "Cookie: ");
         Strcat(tmp, cookie);
         Strcat_charp(tmp, "\r\n");
@@ -158,12 +161,11 @@ Str getHttpRequestStr(struct Url* pu, struct Url* current, struct HttpRequest* h
             Strcat_charp(tmp, "Cookie2: $Version=\"1\"\r\n");
     }
     if (hr->method == HTTP_METHOD_POST) {
-        if (hr->request->enctype == FORM_ENCTYPE_MULTIPART) {
+        if (hr->post->enctype == FORM_ENCTYPE_MULTIPART) {
             Strcat_charp(tmp, "Content-Type: multipart/form-data; boundary=");
-            Strcat_charp(tmp, hr->request->boundary);
+            Strcat_charp(tmp, hr->post->boundary);
             Strcat_charp(tmp, "\r\n");
-            Strcat(tmp,
-                Sprintf("Content-Length: %ld\r\n", hr->request->length));
+            Strcat(tmp, Sprintf("Content-Length: %ld\r\n", hr->post->length));
             Strcat_charp(tmp, "\r\n");
         } else {
             if (!override_content_type) {
@@ -171,11 +173,11 @@ Str getHttpRequestStr(struct Url* pu, struct Url* current, struct HttpRequest* h
                     "Content-Type: application/x-www-form-urlencoded\r\n");
             }
             Strcat(tmp,
-                Sprintf("Content-Length: %ld\r\n", hr->request->length));
+                Sprintf("Content-Length: %ld\r\n", hr->post->length));
             // if (header_string)
             //     Strcat(tmp, header_string);
             Strcat_charp(tmp, "\r\n");
-            Strcat_charp_n(tmp, hr->request->body, hr->request->length);
+            Strcat_charp_n(tmp, hr->post->body, hr->post->length);
             Strcat_charp(tmp, "\r\n");
         }
     } else {
@@ -183,9 +185,6 @@ Str getHttpRequestStr(struct Url* pu, struct Url* current, struct HttpRequest* h
         //     Strcat(tmp, header_string);
         Strcat_charp(tmp, "\r\n");
     }
-#ifdef DEBUG
-    fprintf(stderr, "HTTPrequest: [ %s ]\n\n", tmp->ptr);
-#endif /* DEBUG */
     return tmp;
 }
 

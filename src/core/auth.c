@@ -125,7 +125,7 @@ static void invalidate_auth_user_passwd(struct Url* pu, char* realm, Str uname, 
 
 void getAuthCookie(struct http_auth* hauth, const char* auth_header,
     TextList* extra_header, struct Url* pu, struct HttpRequest* hr,
-    struct Form* request,
+    struct Form* post,
     volatile Str* uname, volatile Str* pwd)
 {
     Str ss = NULL;
@@ -169,7 +169,7 @@ void getAuthCookie(struct http_auth* hauth, const char* auth_header,
         /* found username & password in passwd file */;
     } else {
         // if (QuietMessage)
-            return;
+        return;
         // /* input username and password */
         // sleep(2);
         //
@@ -190,7 +190,7 @@ void getAuthCookie(struct http_auth* hauth, const char* auth_header,
         // *pwd = Str_conv_to_system(Strnew_charp(pp));
         // // term_cbreak();
     }
-    ss = hauth->cred(hauth, *uname, *pwd, pu, hr, request);
+    ss = hauth->cred(hauth, *uname, *pwd, hr, post);
     if (ss) {
         tmp = Strnew_charp(auth_header);
         Strcat_m_charp(tmp, " ", ss->ptr, "\r\n", NULL);
@@ -246,11 +246,10 @@ enum {
     QOP_AUTH_INT,
 };
 
-Str AuthDigestCred(struct http_auth* ha, Str uname, Str pw, struct Url* pu,
-    struct HttpRequest* hr, struct Form* request)
+Str AuthDigestCred(struct http_auth* ha, Str uname, Str pw, struct HttpRequest* hr, struct Form* post)
 {
     unsigned char md5[MD5_DIGEST_LENGTH + 1];
-    Str uri = getHttpRequestURIStr(pu, hr);
+    Str uri = getHttpRequestURIStr(hr);
     char nc[] = "00000001";
 
     Str algorithm = qstr_unquote(get_auth_param(ha->param, "algorithm"));
@@ -331,9 +330,9 @@ Str AuthDigestCred(struct http_auth* ha, Str uname, Str pw, struct Url* pu,
     tmp = Strnew_m_charp(httpRequestMethodStr(hr->method), ":", uri->ptr, NULL);
     if (qop_i == QOP_AUTH_INT) {
         /*  A2 = Method ":" digest-uri-value ":" H(entity-body) */
-        if (request && request->body) {
-            if (request->method == FORM_METHOD_POST && request->enctype == FORM_ENCTYPE_MULTIPART) {
-                fp = fopen(request->body, "r");
+        if (post && post->body) {
+            if (post->method == FORM_METHOD_POST && post->enctype == FORM_ENCTYPE_MULTIPART) {
+                fp = fopen(post->body, "r");
                 if (fp != NULL) {
                     Str ebody;
                     ebody = Strfgetall(fp);
@@ -343,7 +342,7 @@ Str AuthDigestCred(struct http_auth* ha, Str uname, Str pw, struct Url* pu,
                     MD5((unsigned char*)"", 0, md5);
                 }
             } else {
-                MD5((unsigned char*)request->body, request->length, md5);
+                MD5((unsigned char*)post->body, post->length, md5);
             }
         } else {
             MD5((unsigned char*)"", 0, md5);
@@ -569,8 +568,7 @@ extract_auth_param(char* q, struct auth_param* auth)
 }
 
 static Str
-AuthBasicCred(struct http_auth* ha, Str uname, Str pw, struct Url* pu,
-    struct HttpRequest* hr, struct Form* request)
+AuthBasicCred(struct http_auth* ha, Str uname, Str pw, struct HttpRequest* hr, struct Form* post)
 {
     Str s = Strdup(uname);
     Strcat_char(s, ':');

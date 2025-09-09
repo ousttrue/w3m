@@ -1,4 +1,5 @@
 #pragma once
+#include "url.h"
 #include "http_request_method.h"
 #include "textlist.h"
 #include <Str.h>
@@ -33,15 +34,15 @@ enum HttpRequestFlag {
 struct Form;
 
 struct HttpRequest {
+    struct Url url;
     enum HttpMethod method;
     enum HttpRequestFlag flag;
     const char* referer;
-    struct Form* request;
+    struct Form* post;
 };
-struct Url;
 
-Str getHttpRequestURIStr(struct Url* pu, struct HttpRequest* hr);
-Str getHttpRequestStr(struct Url* pu, struct Url* current, struct HttpRequest* hr, TextList* extra);
+Str getHttpRequestURIStr(struct HttpRequest* hr);
+Str getHttpRequestStr(struct HttpRequest* hr, struct Url* current, TextList* extra);
 
 bool matchattr(const char* p, const char* attr, int len, Str* value);
 const char* getHttpHeaderValue(TextList* document_header, const char* field);

@@ -251,21 +251,21 @@ static Str decode_gzip(unsigned char* src, int size)
 
 struct Content openHttp(struct HttpClient* c, const char* path, struct Url* current, struct Form* post, const char* referer)
 {
-    struct Url pu;
-    pu = parseUrl(path, current);
-    if (LocalhostOnly && pu.host && !is_localhost(pu.host)) {
-        pu.host = NULL;
-    }
-    if (pu.file == NULL) {
-        pu.file = allocStr("/", -1);
-    }
-
     struct HttpRequest hr = {
+        .url = parseUrl(path, current),
         .method = HTTP_METHOD_GET,
         .flag = 0,
         .referer = referer,
-        .request = post,
+        .post = post,
     };
+
+    if (LocalhostOnly && hr.url.host && !is_localhost(hr.url.host)) {
+        hr.url.host = NULL;
+    }
+    if (!hr.url.file) {
+        hr.url.file = allocStr("/", -1);
+    }
+
     if (post && post->method == FORM_METHOD_POST && post->body)
         hr.method = HTTP_METHOD_POST;
     if (post && post->method == FORM_METHOD_HEAD)
@@ -278,19 +278,19 @@ struct Content openHttp(struct HttpClient* c, const char* path, struct Url* curr
     SSL* sslh = NULL;
     int sock;
     TextList* extra_header = newTextList();
-    if (((pu.scheme == SCM_HTTPS) ? non_null(HTTPS_proxy) : non_null(HTTP_proxy))
-        && use_proxy && pu.host != NULL && !check_no_proxy(pu.host)) {
+    if (((hr.url.scheme == SCM_HTTPS) ? non_null(HTTPS_proxy) : non_null(HTTP_proxy))
+        && use_proxy && hr.url.host != NULL && !check_no_proxy(hr.url.host)) {
         //
         // use proxy
         //
         hr.flag |= HR_FLAG_PROXY;
-        if (pu.scheme == SCM_HTTPS && c->status == HTST_CONNECT) {
+        if (hr.url.scheme == SCM_HTTPS && c->status == HTST_CONNECT) {
             sock = c->f.stream->ssl.handle->sock;
-            if (!(sslh = openSSLHandle(sock, pu.host, &c->f.ssl_certificate))) {
+            if (!(sslh = openSSLHandle(sock, hr.url.host, &c->f.ssl_certificate))) {
                 c->status = HTST_MISSING;
                 // return;
             }
-        } else if (pu.scheme == SCM_HTTPS) {
+        } else if (hr.url.scheme == SCM_HTTPS) {
             sock = openSocket(HTTPS_proxy_parsed.host,
                 getSchemeInfo(HTTPS_proxy_parsed.scheme).name,
                 HTTPS_proxy_parsed.port);
@@ -304,44 +304,44 @@ struct Content openHttp(struct HttpClient* c, const char* path, struct Url* curr
         if (sock < 0) {
             // return;
         }
-        if (pu.scheme == SCM_HTTPS) {
+        if (hr.url.scheme == SCM_HTTPS) {
             if (c->status == HTST_NORMAL) {
                 hr.method = HTTP_METHOD_CONNECT;
-                tmp = getHttpRequestStr(&pu, current, &hr, extra_header);
+                tmp = getHttpRequestStr(&hr, current, extra_header);
                 c->status = HTST_CONNECT;
             } else {
                 hr.flag |= HR_FLAG_LOCAL;
-                tmp = getHttpRequestStr(&pu, current, &hr, extra_header);
+                tmp = getHttpRequestStr(&hr, current, extra_header);
                 c->status = HTST_NORMAL;
             }
         } else {
-            tmp = getHttpRequestStr(&pu, current, &hr, extra_header);
+            tmp = getHttpRequestStr(&hr, current, extra_header);
             c->status = HTST_NORMAL;
         }
     } else {
-        sock = openSocket(pu.host, getSchemeInfo(pu.scheme).name, pu.port);
+        sock = openSocket(hr.url.host, getSchemeInfo(hr.url.scheme).name, hr.url.port);
         if (sock < 0) {
             c->status = HTST_MISSING;
             // return;
         }
-        if (pu.scheme == SCM_HTTPS) {
-            if (!(sslh = openSSLHandle(sock, pu.host,
+        if (hr.url.scheme == SCM_HTTPS) {
+            if (!(sslh = openSSLHandle(sock, hr.url.host,
                       &c->f.ssl_certificate))) {
                 c->status = HTST_MISSING;
                 // return;
             }
         }
         hr.flag |= HR_FLAG_LOCAL;
-        tmp = getHttpRequestStr(&pu, current, &hr, extra_header);
+        tmp = getHttpRequestStr(&hr, current, extra_header);
         c->status = HTST_NORMAL;
     }
 
     init_stream(&c->f, SCM_MISSING, NULL);
-    if (pu.scheme == SCM_HTTPS) {
+    if (hr.url.scheme == SCM_HTTPS) {
         c->f = (struct URLFile) {
-            .scheme = pu.scheme,
-            .url = parsedURL2Str(&pu)->ptr,
-            .ext = filename_extension(pu.file, 1),
+            .scheme = hr.url.scheme,
+            .url = parsedURL2Str(&hr.url)->ptr,
+            .ext = filename_extension(hr.url.file, 1),
             .stream = newSSLStream(sslh, sock),
         };
         // if (sslh)
@@ -358,9 +358,9 @@ struct Content openHttp(struct HttpClient* c, const char* path, struct Url* curr
         }
     } else {
         c->f = (struct URLFile) {
-            .scheme = pu.scheme,
-            .url = parsedURL2Str(&pu)->ptr,
-            .ext = filename_extension(pu.file, 1),
+            .scheme = hr.url.scheme,
+            .url = parsedURL2Str(&hr.url)->ptr,
+            .ext = filename_extension(hr.url.file, 1),
             .stream = newInputStream(sock),
         };
         write(sock, tmp->ptr, tmp->length);
@@ -369,10 +369,10 @@ struct Content openHttp(struct HttpClient* c, const char* path, struct Url* curr
     }
 
     // term_cbreak();
-    // message(getUI(), MSG_INFO, Sprintf("%s contacted. Waiting for reply...", pu.host)->ptr);
+    // message(getUI(), MSG_INFO, Sprintf("%s contacted. Waiting for reply...", hr.url.host)->ptr);
     // refresh(ttyWriter());
 
-    struct HttpResponse response = readHttpResponse(&pu, c->f.stream);
+    struct HttpResponse response = readHttpResponse(&hr.url, c->f.stream);
 
     const char* p;
     if ((p = getHttpHeaderValue(response.headers, "content-transfer-encoding:"))) {
@@ -393,7 +393,7 @@ struct Content openHttp(struct HttpClient* c, const char* path, struct Url* curr
 
     if (use_cookie
         && accept_cookie
-        && check_cookie_accept_domain(pu.host)
+        && check_cookie_accept_domain(hr.url.host)
         && ((p = getHttpHeaderValue(response.headers, "Set-Cookie:"))
             || (p = getHttpHeaderValue(response.headers, "Set-Cookie2:")))) {
         Str name = Strnew(), value = Strnew(), domain = NULL, path = NULL,
@@ -460,7 +460,7 @@ struct Content openHttp(struct HttpClient* c, const char* path, struct Url* curr
             //     else
             //         message(getUI(), MSG_INFO, Sprintf("Received cookie: %s=%s", name->ptr, value->ptr)->ptr);
             // }
-            int err = add_cookie(&pu, name, value, expires, domain, path, flag,
+            int err = add_cookie(&hr.url, name, value, expires, domain, path, flag,
                 comment, version, port, commentURL);
             if (err) {
                 char* ans = (accept_bad_cookie == ACCEPT_BAD_COOKIE_ACCEPT)
@@ -468,7 +468,7 @@ struct Content openHttp(struct HttpClient* c, const char* path, struct Url* curr
                     : NULL;
                 // if ((err & COO_OVERRIDE_OK) && accept_bad_cookie == ACCEPT_BAD_COOKIE_ASK) {
                 //     Str msg = Sprintf("Accept bad cookie from %s for %s?",
-                //         pu.host,
+                //         hr.url.host,
                 //         ((domain && domain->ptr)
                 //                 ? domain->ptr
                 //                 : "<localdomain>"));
@@ -477,7 +477,7 @@ struct Content openHttp(struct HttpClient* c, const char* path, struct Url* curr
                 //     Strcat_charp(msg, " (y/n)");
                 //     ans = inputAnswer(msg->ptr);
                 // }
-                if (ans == NULL || TOLOWER(*ans) != 'y' || (err = add_cookie(&pu, name, value, expires, domain, path, flag | COO_OVERRIDE, comment, version, port, commentURL))) {
+                if (ans == NULL || TOLOWER(*ans) != 'y' || (err = add_cookie(&hr.url, name, value, expires, domain, path, flag | COO_OVERRIDE, comment, version, port, commentURL))) {
                     err = (err & ~COO_OVERRIDE_OK) - 1;
                     char* emsg;
                     if (err >= 0 && err < COO_EMAX)
@@ -520,12 +520,12 @@ struct Content openHttp(struct HttpClient* c, const char* path, struct Url* curr
             c->f.stream = NULL;
         }
         current = New(struct Url);
-        *current = copyParsedUrl(&pu);
+        *current = copyParsedUrl(&hr.url);
         // t_buf->bufferprop |= BP_REDIRECTED;
         c->status = HTST_NORMAL;
 
         // redirect
-        // && checkRedirection(&c, &pu)
+        // && checkRedirection(&c, &hr.url)
         // return openHttp();
         abort();
     }
@@ -535,16 +535,16 @@ struct Content openHttp(struct HttpClient* c, const char* path, struct Url* curr
     //
     struct ContentTypeCharset cc = getContentType(response.headers);
     c->content_type = cc.content_type;
-    if (c->content_type == NULL && pu.file != NULL) {
+    if (c->content_type == NULL && hr.url.file != NULL) {
         if (!((response.status_code >= 400 && response.status_code <= 407) || (response.status_code >= 500 && response.status_code <= 505))) {
-            c->content_type = guessContentType(pu.file);
+            c->content_type = guessContentType(hr.url.file);
         }
     }
     if (c->content_type == NULL)
         c->content_type = "text/plain";
     if (c->add_auth_cookie_flag && c->realm && c->uname && c->pwd) {
         /* If authorization is required and passed */
-        add_auth_user_passwd(&pu, qstr_unquote(c->realm)->ptr, c->uname, c->pwd,
+        add_auth_user_passwd(&hr.url, qstr_unquote(c->realm)->ptr, c->uname, c->pwd,
             0);
         c->add_auth_cookie_flag = 0;
     }
@@ -554,14 +554,14 @@ struct Content openHttp(struct HttpClient* c, const char* path, struct Url* curr
         if (findAuthentication(&hauth, response.headers, "WWW-Authenticate:") != NULL
             && (c->realm = get_auth_param(hauth.param, "realm")) != NULL) {
             struct Url* auth_pu;
-            //         auth_pu = &pu;
+            //         auth_pu = &hr.url;
             //         getAuthCookie(&hauth, "Authorization:", extra_header,
             //             auth_pu, &hr, post, &uname, &pwd);
             //         if (uname == NULL) {
             //             /* abort */
             //             term_raw();
             //             return (struct Content) {
-            //                 pu, c->f, c->page, c->charset, c->content_type, response.headers
+            //                 hr.url, c->f, c->page, c->charset, c->content_type, response.headers
             //             };
             //         }
             //         UFclose(&c->f);
@@ -577,7 +577,7 @@ struct Content openHttp(struct HttpClient* c, const char* path, struct Url* curr
         if (findAuthentication(&hauth, response.headers, "Proxy-Authenticate:")
                 != NULL
             && (c->realm = get_auth_param(hauth.param, "realm")) != NULL) {
-            //         auth_pu = schemeToProxy(pu.scheme);
+            //         auth_pu = schemeToProxy(hr.url.scheme);
             //         getAuthCookie(&hauth, "Proxy-Authorization:",
             //             extra_header, auth_pu, &hr, post,
             //             &uname, &pwd);
@@ -585,7 +585,7 @@ struct Content openHttp(struct HttpClient* c, const char* path, struct Url* curr
             //             /* abort */
             //             term_raw();
             //             return (struct Content) {
-            //                 pu, c->f, c->page, c->charset, c->content_type, response.headers
+            //                 hr.url, c->f, c->page, c->charset, c->content_type, response.headers
             //             };
             //         }
             //         UFclose(&c->f);
@@ -610,13 +610,13 @@ struct Content openHttp(struct HttpClient* c, const char* path, struct Url* curr
 
     // Buffer* t_buf = newBuffer();
     if ((c->f.content_encoding != CMP_NOCOMPRESS) && AutoUncompress) {
-        // uncompress_stream(&c->f, &pu.real_file);
+        // uncompress_stream(&c->f, &hr.url.real_file);
         Str src = readAll(c->f.stream);
         c->page = decode_gzip((unsigned char*)src->ptr, src->length);
     } else if (c->f.compression != CMP_NOCOMPRESS) {
         if (is_text_type(c->content_type)) {
             // uncompress_stream(&c->f, &t_buf->sourcefile);
-            // uncompressed_file_type(c->pu.file, &c->f.ext);
+            // uncompressed_file_type(c->hr.url.file, &c->f.ext);
             Str src = readAll(c->f.stream);
             c->page = decode_gzip((unsigned char*)src->ptr, src->length);
         } else {
@@ -627,7 +627,7 @@ struct Content openHttp(struct HttpClient* c, const char* path, struct Url* curr
 
     // term_raw();
     return (struct Content) {
-        pu, c->page, c->charset, c->content_type, NULL
+        hr.url, c->page, c->charset, c->content_type, NULL
     };
     // if (c->status == HTST_MISSING) {
     //     term_raw();
