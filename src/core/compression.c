@@ -1,4 +1,5 @@
 #include "compression.h"
+#include "runtime.h"
 #include "mimetypes.h"
 #include "subprocess.h"
 #include "w3m.h"

@@ -29,8 +29,10 @@ const content_public_headers = [_][]const u8{
     "mimehead.h",
     "expandpath.h",
     "HttpRequestMethod.h",
+    "runtime.h",
 };
 const content_srcs = [_][]const u8{
+    "runtime.c",
     "expandpath.c",
     "mimehead.c",
     "growbuf.c",
@@ -177,13 +179,10 @@ pub fn build(b: *std.Build) void {
         // "-Wno-implicit-int",
         // "-Wno-int-conversion",
         "-DHAVE_CONFIG_H",
-        b.fmt("-DAUXBIN_DIR=\"{s}\"", .{AUXBIN_DIR}),
-        b.fmt("-DCGIBIN_DIR=\"{s}\"", .{CGIBIN_DIR}),
-        b.fmt("-DHELP_DIR=\"{s}\"", .{HELP_DIR}),
-        b.fmt("-DETC_DIR=\"{s}\"", .{ETC_DIR}),
-        b.fmt("-DCONF_DIR=\"{s}\"", .{CONF_DIR}),
         b.fmt("-DRC_DIR=\"{s}\"", .{RC_DIR}),
         b.fmt("-DLOCALEDIR=\"{s}\"", .{localedir}),
+        b.fmt("-DETC_DIR=\"{s}\"", .{ETC_DIR}),
+        b.fmt("-DCONF_DIR=\"{s}\"", .{CONF_DIR}),
     };
     exe.addCSourceFiles(.{
         .root = b.path("src/core"),
@@ -218,6 +217,7 @@ pub fn build(b: *std.Build) void {
             b.path("src/output"),
             &output_srcs,
             &output_public_headers,
+            &.{},
         );
         exe.linkLibrary(lib);
     }
@@ -231,6 +231,13 @@ pub fn build(b: *std.Build) void {
             b.path("src/content"),
             &content_srcs,
             &content_public_headers,
+            &.{
+                b.fmt("-DAUXBIN_DIR=\"{s}\"", .{AUXBIN_DIR}),
+                b.fmt("-DCGIBIN_DIR=\"{s}\"", .{CGIBIN_DIR}),
+                b.fmt("-DETC_DIR=\"{s}\"", .{ETC_DIR}),
+                b.fmt("-DCONF_DIR=\"{s}\"", .{CONF_DIR}),
+                b.fmt("-DHELP_DIR=\"{s}\"", .{HELP_DIR}),
+            },
         );
         lib.linkLibrary(gcs);
         exe.linkLibrary(lib);
@@ -276,6 +283,7 @@ fn build_lib(
     root: std.Build.LazyPath,
     files: []const []const u8,
     public_headers: []const []const u8,
+    flags: []const []const u8,
 ) *std.Build.Step.Compile {
     const mod = b.addModule("output", .{
         .target = target,
@@ -289,7 +297,7 @@ fn build_lib(
     lib.addCSourceFiles(.{
         .root = root,
         .files = files,
-        // .flags = &flags,
+        .flags = flags,
     });
     for (public_headers) |header| {
         lib.installHeader(root.path(b, header), header);

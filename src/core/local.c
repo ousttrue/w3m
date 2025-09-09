@@ -1,4 +1,5 @@
 #include "local.h"
+#include "runtime.h"
 #include "HttpRequest.h"
 #include "expandpath.h"
 #include "w3m.h"
