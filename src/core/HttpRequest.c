@@ -4,8 +4,8 @@
 #include "html_form.h"
 #include <strings.h>
 
-int override_user_agent = false;
-char* UserAgent = NULL;
+bool override_user_agent = false;
+const char* UserAgent = NULL;
 char* AcceptMedia = NULL;
 char* AcceptEncoding = NULL;
 char* AcceptLang = NULL;

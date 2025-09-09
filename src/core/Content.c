@@ -485,7 +485,7 @@ struct Content openHttp(struct HttpClient* c, const char* path, struct Url* curr
                     if (err >= 0 && err < COO_EMAX)
                         emsg = Sprintf("This cookie was rejected "
                                        "to prevent security violation. [%s]",
-                            violations[err])
+                            getCookieViolationMsg(err))
                                    ->ptr;
                     else
                         emsg = "This cookie was rejected to prevent security violation.";

@@ -8,10 +8,10 @@
  */
 
 #include "cookie.h"
+
 #include "network.h"
 #include "buffer_loader.h"
 #include "KeyValue.h"
-#include <alloc.h>
 #include "http.h"
 #include "rc.h"
 #include "regex.h"
@@ -19,6 +19,8 @@
 #include "buffer.h"
 #include "defun.h"
 #include "html_quote.h"
+
+#include <alloc.h>
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
@@ -26,7 +28,7 @@
 
 #define COOKIE_FILE "cookie"
 
-int use_cookie = true;
+bool use_cookie = true;
 
 struct cookie* First_cookie = (NULL);
 int default_use_cookie = (true);
@@ -37,19 +39,6 @@ TextList* Cookie_reject_domains;
 TextList* Cookie_accept_domains;
 TextList* Cookie_avoid_wrong_number_of_dots_domains;
 int no_rc_dir = (false);
-
-// This array should be somewhere else
-const char* violations[COO_EMAX] = {
-    "internal error",
-    "tail match failed",
-    "wrong number of dots",
-    "RFC 2109 4.3.2 rule 1",
-    "RFC 2109 4.3.2 rule 2.1",
-    "RFC 2109 4.3.2 rule 2.2",
-    "RFC 2109 4.3.2 rule 3",
-    "RFC 2109 4.3.2 rule 4",
-    "RFC XXXX 4.3.2 rule 5"
-};
 
 static int is_saved = 1;
 
@@ -680,12 +669,12 @@ void set_cookie_flag(struct KeyValue* arg)
     backBf();
 }
 
-int check_cookie_accept_domain(const char* domain)
+bool check_cookie_accept_domain(const char* domain)
 {
-    TextListItem* tl;
-
     if (domain == NULL)
         return 0;
+
+    TextListItem* tl;
 
     if (Cookie_accept_domains && Cookie_accept_domains->nitem > 0) {
         for (tl = Cookie_accept_domains->first; tl != NULL; tl = tl->next) {

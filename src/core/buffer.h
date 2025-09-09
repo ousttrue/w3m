@@ -155,3 +155,4 @@ int columnSkip(struct _Buffer* buf, int offset);
 struct _Line* lineSkip(struct _Buffer* buf, struct _Line* line, int offset, int last);
 struct _Line* currentLineSkip(struct _Buffer* buf, struct _Line* line, int offset, int last);
 char* last_modified(struct _Buffer* buf);
+struct _Buffer* cookie_list_panel(void);

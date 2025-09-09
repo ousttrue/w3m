@@ -3,8 +3,8 @@
 #include "HttpRequestMethod.h"
 #include "textlist.h"
 
-// extern int override_user_agent;
-extern char* UserAgent;
+// extern bool override_user_agent;
+extern const char* UserAgent;
 extern char* AcceptMedia;
 extern char* AcceptEncoding;
 extern char* AcceptLang;
