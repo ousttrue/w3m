@@ -1,10 +1,25 @@
 #include "runtime.h"
+#include "textlist.h"
 #include "myctype.h"
 #include <Str.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include <pwd.h>
+#include <string.h>
+#include <unistd.h>
+
+// #include "rc.h"
+// #include "ui.h"
+// #include "textlist.h"
+// #include "image.h"
+
+const char* CurrentDir = 0;
+int CurrentPid = -1;
+char* tmp_dir = 0;
+char* rc_dir = 0;
+
+TextList* g_fileToDelete = NULL;
 
 const char* expandPath(const char* name)
 {
@@ -112,4 +127,82 @@ const char* w3m_conf_dir()
 const char* w3m_help_dir()
 {
     return w3m_dir("W3M_HELP_DIR", HELP_DIR);
+}
+
+const char* rcFile(const char* base)
+{
+    if (base && (base[0] == '/' || (base[0] == '.' && (base[1] == '/' || (base[1] == '.' && base[2] == '/'))) || (base[0] == '~' && base[1] == '/')))
+        /* /file, ./file, ../file, ~/file */
+        return expandPath(base);
+    return expandPath(Strnew_m_charp(rc_dir, "/", base, NULL)->ptr);
+}
+
+const char* auxbinFile(const char* base)
+{
+    return expandPath(Strnew_m_charp(w3m_auxbin_dir(), "/", base, NULL)->ptr);
+}
+
+const char* etcFile(const char* base)
+{
+    return expandPath(Strnew_m_charp(w3m_etc_dir(), "/", base, NULL)->ptr);
+}
+
+const char* confFile(const char* base)
+{
+    return expandPath(Strnew_m_charp(w3m_conf_dir(), "/", base, NULL)->ptr);
+}
+
+void initDeleteFile()
+{
+    g_fileToDelete = newTextList();
+}
+
+void deinitDeleteFile()
+{
+    for (char* f = popText(g_fileToDelete); f; f = popText(g_fileToDelete)) {
+        unlink(f);
+        // if (enable_inline_image == INLINE_IMG_SIXEL && strcmp(f + strlen(f) - 4, ".gif") == 0) {
+        //     Str firstframe = Strnew_charp(f);
+        //     Strcat_charp(firstframe, "-1");
+        //     unlink(firstframe->ptr);
+        // }
+    }
+}
+
+void pushDeleteFile(const char* path)
+{
+    pushText(g_fileToDelete, path);
+}
+
+Str tmpfname(enum TmpFileType type, const char* ext)
+{
+    static char* tmpf_base[MAX_TMPF_TYPE] = {
+        "tmp",
+        "src",
+        "cache",
+        "cookie",
+        "hist",
+    };
+    static unsigned int tmpf_seq[MAX_TMPF_TYPE] = { 0 };
+
+    const char* dir = tmp_dir;
+    switch (type) {
+    case TMPF_HIST:
+        dir = rc_dir;
+        break;
+    case TMPF_DFL:
+    case TMPF_COOKIE:
+    case TMPF_SRC:
+    case TMPF_CACHE:
+    default:
+        break;
+    }
+
+    Str tmpf = Sprintf("%s/w3m%s%d-%d%s",
+        dir,
+        tmpf_base[type],
+        CurrentPid, tmpf_seq[type]++, (ext) ? ext : "");
+
+    pushDeleteFile(tmpf->ptr);
+    return tmpf;
 }

@@ -3,8 +3,7 @@
 #include <wc.h>
 
 extern char QuietMessage;
-extern char* CurrentDir;
-extern int CurrentPid;
+
 extern wc_ces InnerCharset;
 extern wc_ces DisplayCharset;
 extern wc_ces SystemCharset;
@@ -17,7 +16,7 @@ extern int showLineNum;
 #define conv_from_system(x) wc_conv((x), SystemCharset, InnerCharset)->ptr
 #define conv_to_system(x) wc_conv_strict((x), InnerCharset, SystemCharset)->ptr
 
-const char* url_quote_conv(const char *x, wc_ces c);
+const char* url_quote_conv(const char* x, wc_ces c);
 
 struct _Buffer;
 extern struct _Buffer* Currentbuf;
@@ -38,8 +37,7 @@ enum MessageSeverity {
 };
 
 struct VirtualTerm;
-struct Rect
-{
+struct Rect {
     int x;
     int y;
     int cols;

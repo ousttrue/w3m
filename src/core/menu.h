@@ -15,13 +15,13 @@
 
 typedef struct _MenuItem {
     int type;
-    char* label;
+    const char* label;
     int* variable;
     int value;
     void (*func)();
     struct _Menu* popup;
-    char* keys;
-    char* data;
+    const char* keys;
+    const char* data;
 } MenuItem;
 
 typedef struct _Menu {
@@ -65,7 +65,7 @@ void down_menu(Menu* menu, int n);
 int action_menu(Menu* menu);
 void popup_menu(Menu* parent, Menu* menu);
 void guess_menu_xy(Menu* menu, int width, int* x, int* y);
-void new_option_menu(Menu* menu, char** label, int* variable, void (*func)());
+void new_option_menu(Menu* menu, const char** label, int* variable, void (*func)());
 int setMenuItem(MenuItem* item, char* type, char* line);
 int addMenuList(MenuList** list, char* id);
 int getMenuN(MenuList* list, char* id);

@@ -1,4 +1,5 @@
 #include "parseArgs.h"
+#include "runtime.h"
 #include "HttpRequest.h"
 #include "quote.h"
 #include "Content.h"

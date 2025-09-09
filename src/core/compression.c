@@ -1,13 +1,8 @@
 #include "compression.h"
+#include "url.h"
 #include "runtime.h"
 #include "mimetypes.h"
-#include "subprocess.h"
-#include "w3m.h"
 #include "textlist.h"
-#include "istream.h"
-#include "rc.h"
-#include "image.h"
-#include "tmpfile.h"
 #include <Str.h>
 #include <stdlib.h>
 #include <string.h>

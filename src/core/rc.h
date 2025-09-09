@@ -2,9 +2,6 @@
 #include <stdio.h>
 #include <wc.h>
 
-extern char* tmp_dir;
-extern char* rc_dir;
-
 struct _Buffer;
 struct KeyValue;
 
@@ -17,9 +14,5 @@ void init_tmp(void);
 struct _Buffer* load_option_panel(void);
 void panel_set_option(struct KeyValue*);
 void sync_with_option(void);
-char* rcFile(const char* base);
-char* etcFile(char* base);
-char* confFile(char* base);
-char* auxbinFile(char* base);
 
 FILE* openSecretFile(const char* fname);

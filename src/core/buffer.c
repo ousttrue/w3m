@@ -1,7 +1,7 @@
 #include "buffer.h"
+#include "runtime.h"
 #include "html_quote.h"
 #include "cookie.h"
-#include "tmpfile.h"
 #include "URLFile.h"
 #include "convertline.h"
 #include "quote.h"

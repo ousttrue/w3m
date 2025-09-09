@@ -18,8 +18,6 @@
 #include <wtf.h>
 
 char QuietMessage = (false);
-char* CurrentDir = 0;
-int CurrentPid = -1;
 int showLineNum = (false);
 
 #define DISPLAY_CHARSET WC_CES_UTF_8

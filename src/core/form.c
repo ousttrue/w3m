@@ -1,9 +1,8 @@
 #include "form.h"
+#include "runtime.h"
 #include "convertline.h"
 #include "mimetypes.h"
 #include "http.h"
-#include "tmpfile.h"
-#include "istream.h"
 #include "HtmlTagParsed.h"
 #include "KeyValue.h"
 #include "HtmlTagAttribute.h"
@@ -12,10 +11,8 @@
 #include "rc.h"
 #include "downloadlist.h"
 #include "ui.h"
-#include "keymap.h"
 #include "cookie.h"
 #include "buffer.h"
-#include "display.h"
 #include "myctype.h"
 #include "local.h"
 #include "regex.h"
@@ -471,6 +468,8 @@ void formUpdateBuffer(Anchor* a, Buffer* buf, struct FormItem* form)
                     a->start.line, spos, pos - epos);
             }
         }
+        break;
+    default:
         break;
     }
     copyBuffer(buf, &save);

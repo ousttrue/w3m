@@ -7,7 +7,6 @@
 #include "Content.h"
 #include "buffer_loader.h"
 #include "file_copy.h"
-#include "tmpfile.h"
 #include "istream.h"
 #include "progress.h"
 #include "version.h"

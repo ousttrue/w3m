@@ -1,4 +1,5 @@
 #include "keymap.h"
+#include "runtime.h"
 #include "myctype.h"
 #include "rc.h"
 #include "ctrlcode.h"
@@ -27,9 +28,9 @@ static bool keymap_initialized = false;
 static struct stat sys_current_keymap_file;
 static struct stat current_keymap_file;
 
-void setKeymap(char* p, int lineno)
+void setKeymap(const char* p, int lineno)
 {
-    char* s = getQWord(&p);
+    const char* s = getQWord(&p);
     int c = getKey(s);
     if (c < 0) { /* error */
         char* emsg;
@@ -139,9 +140,9 @@ interpret_keymap(FILE* kf, struct stat* current, int force)
             continue;
         line = wc_Str_conv(line, charset, InnerCharset);
 
-        char* p = line->ptr;
+        const char* p = line->ptr;
 
-        char* s = getWord(&p);
+        const char* s = getWord(&p);
         if (*s == '#') {
             // comment
             continue;
@@ -149,11 +150,11 @@ interpret_keymap(FILE* kf, struct stat* current, int force)
         if (!strcmp(s, "keymap")) {
             setKeymap(p, lineno);
         } else if (!strcmp(s, "charset") || !strcmp(s, "encoding")) {
-            char* q = getQWord(&p);
+            const char* q = getQWord(&p);
             if (*q)
                 charset = wc_guess_charset(q, charset);
         } else if (!strcmp(s, "verbose")) {
-            char* q = getWord(&p);
+            const char* q = getWord(&p);
             if (*q)
                 verbose = str_to_bool(q, verbose);
         } else { /* error */
@@ -329,7 +330,7 @@ getKey2(char** str)
         return -1;
 }
 
-int getKey(char* s)
+int getKey(const char* s)
 {
     int c, c2;
 

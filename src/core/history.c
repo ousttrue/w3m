@@ -1,9 +1,8 @@
 #include "history.h"
+#include "runtime.h"
 #include "buffer_loader.h"
 #include "w3m.h"
-#include "tmpfile.h"
 #include "hash.h"
-#include "rc.h"
 #include "ui.h"
 #include "quote.h"
 #include "buffer.h"
@@ -34,16 +33,14 @@ Buffer*
 historyBuffer(struct Hist* hist)
 {
     Str src = Strnew();
-    HistItem* item;
-    char *p, *q;
-
-    /* FIXME: gettextize? */
     Strcat_charp(src, "<html>\n<head><title>History Page</title></head>\n");
     Strcat_charp(src, "<body>\n<h1>History Page</h1>\n<hr>\n");
     Strcat_charp(src, "<ol>\n");
     if (hist && hist->list) {
+        HistItem* item;
         for (item = hist->list->last; item; item = item->prev) {
-            q = html_quote((char*)item->ptr);
+            const char* q = html_quote((char*)item->ptr);
+            const char* p;
             if (DecodeURL)
                 p = html_quote(url_decode2((char*)item->ptr, NULL));
             else

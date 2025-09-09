@@ -1,4 +1,5 @@
 #include "URLFile.h"
+#include "runtime.h"
 #include "compression.h"
 #include "downloadlist.h"
 #include "istream.h"
@@ -7,7 +8,6 @@
 #include "history.h"
 #include "file_copy.h"
 #include "subprocess.h"
-#include "tmpfile.h"
 #include "tty.h"
 #include <stdlib.h>
 #include <string.h>

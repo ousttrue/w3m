@@ -8,7 +8,6 @@
 #include "Content.h"
 #include "buffer_loader.h"
 #include "http.h"
-#include "tmpfile.h"
 #include "ui.h"
 #include "buffer.h"
 #include "local.h"

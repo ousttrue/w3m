@@ -56,8 +56,6 @@
 #define CONFIG_FILE "config"
 char* passwd_file = (PASSWD_FILE);
 
-char* tmp_dir = 0;
-char* rc_dir = (NULL);
 int disable_secret_security_check = (false);
 
 char* param_tmp_dir = (NULL);
@@ -1165,43 +1163,10 @@ void sync_with_option(void)
     initMenu();
 }
 
-void init_rc(void)
+static void open_rc()
 {
-    int i;
-    FILE* f;
-
-    if (rc_dir != NULL)
-        goto open_rc;
-
-    rc_dir = allocStr(getenv("W3M_DIR"), -1);
-    if (rc_dir == NULL || *rc_dir == '\0')
-        rc_dir = allocStr(RC_DIR, -1);
-    if (rc_dir == NULL || *rc_dir == '\0')
-        goto rc_dir_err;
-    rc_dir = (char*)expandPath(rc_dir);
-
-    i = strlen(rc_dir);
-    if (i > 1 && rc_dir[i - 1] == '/')
-        rc_dir[i - 1] = '\0';
-
-    display_charset_str = wc_get_ces_list();
-    document_charset_str = display_charset_str;
-    system_charset_str = display_charset_str;
-
-    tmp_dir = rc_dir;
-
-    if (do_recursive_mkdir(rc_dir) == -1)
-        goto rc_dir_err;
-
-    no_rc_dir = false;
-
-    if (config_file == NULL)
-        config_file = rcFile(CONFIG_FILE);
-
-    create_option_search_table();
-
-open_rc:
     /* open config file */
+    FILE* f;
     if ((f = fopen(etcFile(W3MCONFIG), "rt")) != NULL) {
         interpret_rc(f);
         fclose(f);
@@ -1215,11 +1180,47 @@ open_rc:
         fclose(f);
     }
     return;
+}
 
-rc_dir_err:
+static void rc_dir_err()
+{
     no_rc_dir = true;
     create_option_search_table();
-    goto open_rc;
+    return open_rc();
+}
+
+void init_rc(void)
+{
+    if (rc_dir == NULL) {
+        rc_dir = allocStr(getenv("W3M_DIR"), -1);
+        if (rc_dir == NULL || *rc_dir == '\0')
+            rc_dir = allocStr(RC_DIR, -1);
+        if (rc_dir == NULL || *rc_dir == '\0')
+            return rc_dir_err();
+        rc_dir = (char*)expandPath(rc_dir);
+
+        int i = strlen(rc_dir);
+        if (i > 1 && rc_dir[i - 1] == '/')
+            rc_dir[i - 1] = '\0';
+
+        display_charset_str = wc_get_ces_list();
+        document_charset_str = display_charset_str;
+        system_charset_str = display_charset_str;
+
+        tmp_dir = rc_dir;
+
+        if (do_recursive_mkdir(rc_dir) == -1)
+            return rc_dir_err();
+
+        no_rc_dir = false;
+
+        if (config_file == NULL)
+            config_file = rcFile(CONFIG_FILE);
+
+        create_option_search_table();
+    }
+
+    return open_rc();
 }
 
 void init_tmp(void)
@@ -1438,35 +1439,4 @@ void panel_set_option(struct KeyValue* arg)
     }
     sync_with_option();
     backBf();
-}
-
-char* rcFile(const char* base)
-{
-    if (base && (base[0] == '/' || (base[0] == '.' && (base[1] == '/' || (base[1] == '.' && base[2] == '/'))) || (base[0] == '~' && base[1] == '/')))
-        /* /file, ./file, ../file, ~/file */
-        return expandPath(base);
-    return expandPath(Strnew_m_charp(rc_dir, "/", base, NULL)->ptr);
-}
-
-char* auxbinFile(char* base)
-{
-    return expandPath(Strnew_m_charp(w3m_auxbin_dir(), "/", base, NULL)->ptr);
-}
-
-#if 0 /* not used */
-char *
-libFile(char *base)
-{
-    return expandPath(Strnew_m_charp(w3m_lib_dir(), "/", base, NULL)->ptr);
-}
-#endif
-
-char* etcFile(char* base)
-{
-    return expandPath(Strnew_m_charp(w3m_etc_dir(), "/", base, NULL)->ptr);
-}
-
-char* confFile(char* base)
-{
-    return expandPath(Strnew_m_charp(w3m_conf_dir(), "/", base, NULL)->ptr);
 }

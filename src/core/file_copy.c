@@ -8,7 +8,6 @@
 #include "myctype.h"
 #include "istream.h"
 #include "progress.h"
-#include "tmpfile.h"
 #include "tty.h"
 #include "downloadlist.h"
 #include <Str.h>

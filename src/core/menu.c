@@ -1,4 +1,5 @@
 #include "menu.h"
+#include "runtime.h"
 #include "defun_macro.h"
 #include "alloc.h"
 #include "display.h"
@@ -674,7 +675,6 @@ static Menu* CurrentMenu = NULL;
 void new_menu(Menu* menu, MenuItem* item)
 {
     int i, l;
-    char* p;
 
     menu->cursorX = 0;
     menu->cursorY = 0;
@@ -697,6 +697,7 @@ void new_menu(Menu* menu, MenuItem* item)
     for (i = 0; i < 128; i++)
         menu->keymap[i] = MenuKeymap[i];
     menu->width = 0;
+    const char* p;
     for (i = 0; i < menu->nitem; i++) {
         if ((p = item[i].keys) != NULL) {
             while (*p) {
@@ -990,15 +991,15 @@ void guess_menu_xy(Menu* parent, int width, int* x, int* y)
     *y = parent->y + parent->select - parent->offset;
 }
 
-void new_option_menu(Menu* menu, char** label, int* variable, void (*func)())
+void new_option_menu(Menu* menu, const char** label, int* variable, void (*func)())
 {
     int i, nitem;
-    char** p;
     MenuItem* item;
 
     if (label == NULL || *label == NULL)
         return;
 
+    const char** p;
     for (i = 0, p = label; *p != NULL; i++, p++)
         ;
     nitem = i;
