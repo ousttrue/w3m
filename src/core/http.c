@@ -30,28 +30,10 @@ int accept_cookie = true;
 int show_cookie = false;
 enum AcceptBadCookieMode accept_bad_cookie = (ACCEPT_BAD_COOKIE_DISCARD);
 
-Str getHttpRequestMethodStr(struct HttpRequest* hr)
-{
-    switch (hr->command) {
-    case HR_COMMAND_CONNECT:
-        return Strnew_charp("CONNECT");
-    case HR_COMMAND_POST:
-        return Strnew_charp("POST");
-        break;
-    case HR_COMMAND_HEAD:
-        return Strnew_charp("HEAD");
-        break;
-    case HR_COMMAND_GET:
-    default:
-        return Strnew_charp("GET");
-    }
-    return NULL;
-}
-
 Str getHttpRequestURIStr(struct Url* pu, struct HttpRequest* hr)
 {
     Str tmp = Strnew();
-    if (hr->command == HR_COMMAND_CONNECT) {
+    if (hr->method == HTTP_METHOD_CONNECT) {
         Strcat_charp(tmp, pu->host);
         Strcat(tmp, Sprintf(":%d", pu->port));
     } else if (hr->flag & HR_FLAG_LOCAL) {
@@ -139,7 +121,7 @@ otherinfo(struct Url* target, struct Url* current, const char* referer)
 
 Str getHttpRequestStr(struct Url* pu, struct Url* current, struct HttpRequest* hr, TextList* extra)
 {
-    Str tmp = getHttpRequestMethodStr(hr);
+    Str tmp = Strnew_charp(httpRequestMethodStr(hr->method));
     Strcat_charp(tmp, " ");
     Strcat_charp(tmp, getHttpRequestURIStr(pu, hr)->ptr);
     Strcat_charp(tmp, " HTTP/1.0\r\n");
@@ -153,21 +135,21 @@ Str getHttpRequestStr(struct Url* pu, struct Url* current, struct HttpRequest* h
             if (strncasecmp(i->ptr, "Authorization:",
                     sizeof("Authorization:") - 1)
                 == 0) {
-                if (hr->command == HR_COMMAND_CONNECT)
+                if (hr->method == HTTP_METHOD_CONNECT)
                     continue;
             }
             if (strncasecmp(i->ptr, "Proxy-Authorization:",
                     sizeof("Proxy-Authorization:") - 1)
                 == 0) {
                 if (pu->scheme == SCM_HTTPS
-                    && hr->command != HR_COMMAND_CONNECT)
+                    && hr->method != HTTP_METHOD_CONNECT)
                     continue;
             }
             Strcat_charp(tmp, i->ptr);
         }
 
     Str cookie;
-    if (hr->command != HR_COMMAND_CONNECT && use_cookie && (cookie = find_cookie(pu))) {
+    if (hr->method != HTTP_METHOD_CONNECT && use_cookie && (cookie = find_cookie(pu))) {
         Strcat_charp(tmp, "Cookie: ");
         Strcat(tmp, cookie);
         Strcat_charp(tmp, "\r\n");
@@ -175,7 +157,7 @@ Str getHttpRequestStr(struct Url* pu, struct Url* current, struct HttpRequest* h
         if (cookie->ptr[0] != '$')
             Strcat_charp(tmp, "Cookie2: $Version=\"1\"\r\n");
     }
-    if (hr->command == HR_COMMAND_POST) {
+    if (hr->method == HTTP_METHOD_POST) {
         if (hr->request->enctype == FORM_ENCTYPE_MULTIPART) {
             Strcat_charp(tmp, "Content-Type: multipart/form-data; boundary=");
             Strcat_charp(tmp, hr->request->boundary);

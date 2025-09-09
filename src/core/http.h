@@ -1,6 +1,7 @@
 #pragma once
-#include <Str.h>
+#include "http_request_method.h"
 #include "textlist.h"
+#include <Str.h>
 #include <wc.h>
 
 extern int override_user_agent;
@@ -24,13 +25,6 @@ extern enum AcceptBadCookieMode accept_bad_cookie;
 
 #define NO_REFERER ((const char*)-1)
 
-enum HttpMethod {
-    HR_COMMAND_GET = 0,
-    HR_COMMAND_POST = 1,
-    HR_COMMAND_CONNECT = 2,
-    HR_COMMAND_HEAD = 3,
-};
-
 enum HttpRequestFlag {
     HR_FLAG_LOCAL = 1,
     HR_FLAG_PROXY = 2,
@@ -39,14 +33,13 @@ enum HttpRequestFlag {
 struct Form;
 
 struct HttpRequest {
-    enum HttpMethod command;
+    enum HttpMethod method;
     enum HttpRequestFlag flag;
     const char* referer;
     struct Form* request;
 };
 struct Url;
 
-Str getHttpRequestMethodStr(struct HttpRequest* hr);
 Str getHttpRequestURIStr(struct Url* pu, struct HttpRequest* hr);
 Str getHttpRequestStr(struct Url* pu, struct Url* current, struct HttpRequest* hr, TextList* extra);
 

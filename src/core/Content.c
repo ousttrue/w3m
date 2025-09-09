@@ -262,15 +262,15 @@ struct Content openHttp(struct HttpClient* c, const char* path, struct Url* curr
     }
 
     struct HttpRequest hr = {
-        .command = HR_COMMAND_GET,
+        .method = HTTP_METHOD_GET,
         .flag = 0,
         .referer = referer,
         .request = post,
     };
     if (post && post->method == FORM_METHOD_POST && post->body)
-        hr.command = HR_COMMAND_POST;
+        hr.method = HTTP_METHOD_POST;
     if (post && post->method == FORM_METHOD_HEAD)
-        hr.command = HR_COMMAND_HEAD;
+        hr.method = HTTP_METHOD_HEAD;
 
     //
     // open socket
@@ -307,7 +307,7 @@ struct Content openHttp(struct HttpClient* c, const char* path, struct Url* curr
         }
         if (pu.scheme == SCM_HTTPS) {
             if (c->status == HTST_NORMAL) {
-                hr.command = HR_COMMAND_CONNECT;
+                hr.method = HTTP_METHOD_CONNECT;
                 tmp = getHttpRequestStr(&pu, current, &hr, extra_header);
                 c->status = HTST_CONNECT;
             } else {
@@ -350,7 +350,7 @@ struct Content openHttp(struct HttpClient* c, const char* path, struct Url* curr
         // else
         //     write(sock, tmp->ptr, tmp->length);
 
-        if (hr.command == HR_COMMAND_POST && post->enctype == FORM_ENCTYPE_MULTIPART) {
+        if (hr.method == HTTP_METHOD_POST && post->enctype == FORM_ENCTYPE_MULTIPART) {
             // if (sslh) {
             SSL_write_from_file(sslh, post->body);
             // } else {
@@ -365,7 +365,7 @@ struct Content openHttp(struct HttpClient* c, const char* path, struct Url* curr
             .stream = newInputStream(sock),
         };
         write(sock, tmp->ptr, tmp->length);
-        if (hr.command == HR_COMMAND_POST && post->enctype == FORM_ENCTYPE_MULTIPART)
+        if (hr.method == HTTP_METHOD_POST && post->enctype == FORM_ENCTYPE_MULTIPART)
             write_from_file(sock, post->body);
     }
 

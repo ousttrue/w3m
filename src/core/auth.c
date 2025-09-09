@@ -272,7 +272,7 @@ Str AuthDigestCred(struct http_auth* ha, Str uname, Str pw, struct Url* pu,
     cnonce = digest_hex(md5);
     cnonce_seed.r[3]++;
 
-    Str tmp, a1buf, a2buf, rd, s;
+    Str a1buf, a2buf, rd, s;
     FILE* fp;
     if (qop) {
         char* p;
@@ -301,7 +301,7 @@ Str AuthDigestCred(struct http_auth* ha, Str uname, Str pw, struct Url* pu,
     }
 
     /* A1 = unq(username-value) ":" unq(realm-value) ":" passwd */
-    tmp = Strnew_m_charp(uname->ptr, ":",
+    Str tmp = Strnew_m_charp(uname->ptr, ":",
         qstr_unquote(get_auth_param(ha->param, "realm"))->ptr,
         ":", pw->ptr, NULL);
     MD5((unsigned char*)tmp->ptr, strlen(tmp->ptr), md5);
@@ -328,7 +328,7 @@ Str AuthDigestCred(struct http_auth* ha, Str uname, Str pw, struct Url* pu,
     }
 
     /* A2 = Method ":" digest-uri-value */
-    tmp = Strnew_m_charp(getHttpRequestMethodStr(hr)->ptr, ":", uri->ptr, NULL);
+    tmp = Strnew_m_charp(httpRequestMethodStr(hr->method), ":", uri->ptr, NULL);
     if (qop_i == QOP_AUTH_INT) {
         /*  A2 = Method ":" digest-uri-value ":" H(entity-body) */
         if (request && request->body) {
