@@ -7,6 +7,31 @@
 
 #define HTTP_DEFAULT_FILE "/"
 
+#define ALLOC_STR(s) ((s) == 0 ? 0 : allocStr(s, -1))
+
+struct Url copyParsedURL(const struct Url* q)
+{
+    if (!q) {
+        return (struct Url) {
+            .scheme = SCM_UNKNOWN,
+            0
+        };
+    }
+
+    return (struct Url) {
+        .scheme = q->scheme,
+        .user = ALLOC_STR(q->user),
+        .pass = ALLOC_STR(q->pass),
+        .host = ALLOC_STR(q->host),
+        .port = q->port,
+        .file = ALLOC_STR(q->file),
+        .label = ALLOC_STR(q->label),
+        .query = ALLOC_STR(q->query),
+        //
+        // .is_nocache = q->is_nocache,
+    };
+}
+
 static char*
 DefaultFile(int scheme)
 {
@@ -57,7 +82,7 @@ copyPath(const char* orgpath, int length, int option)
     return tmp->ptr;
 }
 
-void parseURL(const char* _url, struct Url* p_url, struct Url* current)
+static void _parseUrl(const char* _url, struct Url* p_url, struct Url* current)
 {
     const char* q = NULL;
 
@@ -269,36 +294,10 @@ do_label:
         p_url->label = 0;
 }
 
-#define ALLOC_STR(s) ((s) == 0 ? 0 : allocStr(s, -1))
-
-struct Url copyParsedURL(const struct Url* q)
+void parseUrl(const char* url, struct Url* pu, struct Url* current)
 {
-    if (!q) {
-        return (struct Url) {
-            .scheme = SCM_UNKNOWN,
-            0
-        };
-    }
 
-    return (struct Url) {
-        .scheme = q->scheme,
-        .user = ALLOC_STR(q->user),
-        .pass = ALLOC_STR(q->pass),
-        .host = ALLOC_STR(q->host),
-        .port = q->port,
-        .file = ALLOC_STR(q->file),
-        .label = ALLOC_STR(q->label),
-        .query = ALLOC_STR(q->query),
-        //
-        // .is_nocache = q->is_nocache,
-    };
-}
-
-void parseURL2(const char* url, struct Url* pu, struct Url* current)
-{
-    int relative_uri = false;
-
-    parseURL(url, pu, current);
+    _parseUrl(url, pu, current);
 
     if (pu->scheme == SCM_MAILTO)
         return;
@@ -329,11 +328,12 @@ void parseURL2(const char* url, struct Url* pu, struct Url* current)
         }
         return;
     }
-    //     if (pu->scheme == SCM_LOCAL) {
-    //         const char* q = expandName(file_unquote(pu->file));
-    //             pu->file = file_quote(q);
-    //     }
+    // if (pu->scheme == SCM_LOCAL) {
+    //     const char* q = expandName(file_unquote(pu->file));
+    //     pu->file = file_quote(q);
+    // }
 
+    bool relative_uri = false;
     if (current && (pu->scheme == current->scheme || (pu->scheme == SCM_FTP && current->scheme == SCM_FTPDIR) || (pu->scheme == SCM_LOCAL && current->scheme == SCM_LOCAL_CGI))
         && pu->host == 0) {
         /* Copy omitted element from the current URL */

@@ -82,14 +82,13 @@ domain_match(const char* host, const char* domain)
         if (strcasecmp(host, domain) == 0)
             return host;
     } else if (!m0 && !m1) {
-        int offset;
-        char* domain_p;
         /*
          * "." match all domains (w3m only),
          * and ".local" match local domains ([DRAFT 12] s. 2)
          */
+        const char* domain_p;
         if (strcasecmp(domain, ".") == 0 || strcasecmp(domain, ".local") == 0) {
-            offset = strlen(host);
+            int offset = strlen(host);
             domain_p = &host[offset];
             if (domain[1] == '\0' || contain_no_dots(host, domain_p))
                 return domain_p;
@@ -103,7 +102,7 @@ domain_match(const char* host, const char* domain)
         }
         /* [RFC 2109] s. 2, cases 2, 3 */
         else {
-            offset = (domain[0] != '.') ? 0 : strlen(host) - strlen(domain);
+            int offset = (domain[0] != '.') ? 0 : strlen(host) - strlen(domain);
             domain_p = &host[offset];
             if (offset >= 0 && strcasecmp(domain_p, domain) == 0)
                 return domain_p;
@@ -228,15 +227,15 @@ get_cookie_info(Str domain, Str path, Str name)
 
 Str find_cookie(struct Url* pu)
 {
-    Str tmp;
-    struct cookie *p, *p1, *fco = NULL;
-    int version = 0;
-    char *fq_domainname, *domainname;
+    struct cookie *p;
+    struct cookie *p1;
+    struct cookie *fco = NULL;
 
-    fq_domainname = FQDN(pu->host);
+    int version = 0;
+    const char*fq_domainname = FQDN(pu->host);
     check_expired_cookies();
     for (p = First_cookie; p; p = p->next) {
-        domainname = (p->version == 0) ? fq_domainname : pu->host;
+        const char*domainname = (p->version == 0) ? fq_domainname : pu->host;
         if (p->flag & COO_USE && match_cookie(pu, p, domainname)) {
             for (p1 = fco; p1 && Strcasecmp(p1->name, p->name);
                 p1 = p1->next)
@@ -255,7 +254,7 @@ Str find_cookie(struct Url* pu)
     if (!fco)
         return NULL;
 
-    tmp = Strnew();
+    Str tmp = Strnew();
     if (version > 0)
         Strcat(tmp, Sprintf("$Version=\"%d\"; ", version));
 
@@ -304,7 +303,7 @@ int add_cookie(struct Url* pu, Str name, Str value,
     int flag, Str comment, int version, Str port, Str commentURL)
 {
     struct cookie* p;
-    char* domainname = (version == 0) ? FQDN(pu->host) : pu->host;
+    const char* domainname = (version == 0) ? FQDN(pu->host) : pu->host;
     Str odomain = domain, opath = path;
     struct portlist* portlist = NULL;
     int use_security = !(flag & COO_OVERRIDE);
@@ -330,7 +329,6 @@ int add_cookie(struct Url* pu, Str name, Str value,
         return COO_ENODOT;
 
     if (domain) {
-        char* dp;
         /* [DRAFT 12] s. 4.2.2 (does not apply in the case that
          * host name is the same as domain attribute for version 0
          * cookie)
@@ -357,6 +355,7 @@ int add_cookie(struct Url* pu, Str name, Str value,
         }
 
         /* [RFC 2109] s. 4.3.2 case 3 */
+        const char* dp;
         if (!(dp = domain_match(domainname, domain->ptr)))
             COOKIE_ERROR(COO_EDOM);
         /* [RFC 2409] s. 4.3.2 case 4 */
@@ -515,7 +514,7 @@ void load_cookies(void)
         cookie->comment = NULL;
         cookie->portl = NULL;
         cookie->commentURL = NULL;
-        parseURL(readcol(&str)->ptr, &cookie->url, NULL);
+        parseUrl(readcol(&str)->ptr, &cookie->url, NULL);
         if (!*str)
             break;
         cookie->name = readcol(&str);

@@ -19,8 +19,7 @@ inline static bool IS_EMPTY_PARSED_URL(struct Url* pu)
     return ((pu)->scheme == SCM_UNKNOWN && !(pu)->file);
 }
 struct Url copyParsedURL(const struct Url* q);
-void parseURL(const char* url, struct Url* p_url, struct Url* current);
-void parseURL2(const char* url, struct Url* pu, struct Url* current);
+void parseUrl(const char* url, struct Url* pu, struct Url* current);
 
 Str _parsedURL2Str(struct Url* pu, int pass, int user, int label);
 Str parsedURL2Str(struct Url* pu);

@@ -540,7 +540,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                         a_img->image = NULL;
                         if (iseq > 0) {
                             struct Url u;
-                            parseURL2(a_img->url, &u, base);
+                            parseUrl(a_img->url, &u, base);
 
                             struct Image* image;
                             a_img->image = image = New(struct Image);
@@ -704,7 +704,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                         p = url_quote(remove_space(p));
                         if (!buf->baseURL)
                             buf->baseURL = New(struct Url);
-                        parseURL2(p, buf->baseURL, &buf->currentURL);
+                        parseUrl(p, buf->baseURL, &buf->currentURL);
 
                         base = buf->baseURL;
                     }

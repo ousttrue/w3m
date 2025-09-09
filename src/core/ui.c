@@ -172,7 +172,7 @@ static Str make_lastline_link(Buffer* buf, char* title, char* url)
     }
     if (!url)
         return s;
-    parseURL2(url, &pu, baseURL(buf));
+    parseUrl(url, &pu, baseURL(buf));
     u = parsedURL2Str(&pu);
     if (DecodeURL)
         u = Strnew_charp(url_decode2(u->ptr, buf));

@@ -111,7 +111,7 @@ static Line* redrawLine(struct UI ui, Buffer* buf, Line* l, int i)
         if (useVisitedColor && vpos <= pos + j && !(pr[j] & PE_VISITED)) {
             a = retrieveAnchor(buf->href, l->linenumber, pos + j);
             if (a) {
-                parseURL2(a->url, &url, baseURL(buf));
+                parseUrl(a->url, &url, baseURL(buf));
                 if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
                     for (k = a->start.pos; k < a->end.pos; k++)
                         pr[k - pos] |= PE_VISITED;
@@ -296,7 +296,7 @@ static int redrawLineRegion(struct UI ui, Buffer* buf, Line* l, int i, int bpos,
         if (useVisitedColor && vpos <= pos + j && !(pr[j] & PE_VISITED)) {
             a = retrieveAnchor(buf->href, l->linenumber, pos + j);
             if (a) {
-                parseURL2(a->url, &url, baseURL(buf));
+                parseUrl(a->url, &url, baseURL(buf));
                 if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
                     for (k = a->start.pos; k < a->end.pos; k++)
                         pr[k - pos] |= PE_VISITED;

@@ -1018,9 +1018,9 @@ static void
 parse_proxy(void)
 {
     if (non_null(HTTP_proxy))
-        parseURL(HTTP_proxy, &HTTP_proxy_parsed, NULL);
+        parseUrl(HTTP_proxy, &HTTP_proxy_parsed, NULL);
     if (non_null(HTTPS_proxy))
-        parseURL(HTTPS_proxy, &HTTPS_proxy_parsed, NULL);
+        parseUrl(HTTPS_proxy, &HTTPS_proxy_parsed, NULL);
     if (non_null(NO_proxy))
         set_no_proxy(NO_proxy);
 }

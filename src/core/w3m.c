@@ -620,7 +620,7 @@ loadLink(const char* url, const char* target, const char* referer, struct Form* 
         return NULL;
     }
 
-    parseURL2(url, &pu, base);
+    parseUrl(url, &pu, base);
     pushHashHist(URLHist, parsedURL2Str(&pu)->ptr);
 
     if (buf == NO_BUFFER) {
@@ -2108,7 +2108,7 @@ static void followAnchor(bool do_download)
         gotoLabel((char*)a->url + 1);
         return;
     }
-    parseURL2(a->url, &u, baseURL(Currentbuf));
+    parseUrl(a->url, &u, baseURL(Currentbuf));
     if (Strcmp(parsedURL2Str(&u), parsedURL2Str(&Currentbuf->currentURL)) == 0) {
         /* index within this buffer */
         if (u.label) {
@@ -2329,7 +2329,7 @@ _nextA(int visited)
                         po->pos);
                 hseq++;
                 if (visited == true && an) {
-                    parseURL2(an->url, &url, baseURL(Currentbuf));
+                    parseUrl(an->url, &url, baseURL(Currentbuf));
                     if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
                         goto _end;
                     }
@@ -2348,7 +2348,7 @@ _nextA(int visited)
             x = an->start.pos;
             y = an->start.line;
             if (visited == true) {
-                parseURL2(an->url, &url, baseURL(Currentbuf));
+                parseUrl(an->url, &url, baseURL(Currentbuf));
                 if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
                     goto _end;
                 }
@@ -2411,7 +2411,7 @@ _prevA(int visited)
                         po->pos);
                 hseq--;
                 if (visited == true && an) {
-                    parseURL2(an->url, &url, baseURL(Currentbuf));
+                    parseUrl(an->url, &url, baseURL(Currentbuf));
                     if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
                         goto _end;
                     }
@@ -2430,7 +2430,7 @@ _prevA(int visited)
             x = an->start.pos;
             y = an->start.line;
             if (visited == true && an) {
-                parseURL2(an->url, &url, baseURL(Currentbuf));
+                parseUrl(an->url, &url, baseURL(Currentbuf));
                 if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
                     goto _end;
                 }
@@ -2655,7 +2655,7 @@ goURL0(char* prompt, int relative)
         a = retrieveCurrentAnchor(Currentbuf);
         if (a) {
             char* a_url;
-            parseURL2(a->url, &p_url, current);
+            parseUrl(a->url, &p_url, current);
             a_url = parsedURL2Str(&p_url)->ptr;
             if (DefaultURLString == DEFAULT_URL_LINK)
                 url = url_decode2(a_url, Currentbuf);
@@ -2686,7 +2686,7 @@ goURL0(char* prompt, int relative)
         gotoLabel(url + 1);
         return;
     }
-    parseURL2(url, &p_url, current);
+    parseUrl(url, &p_url, current);
     pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
     cmd_loadURL(url, current, referer, NULL);
     if (Currentbuf != cur_buf) /* success */
@@ -2706,7 +2706,7 @@ DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer")
         Buffer* cur_buf = Currentbuf;
         SKIP_BLANKS(url);
         url = url_quote(url);
-        parseURL2(url, &p_url, NULL);
+        parseUrl(url, &p_url, NULL);
         pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
         cmd_loadURL(url, NULL, NULL, NULL);
         if (Currentbuf != cur_buf) /* success */
@@ -2836,7 +2836,7 @@ void follow_map(struct KeyValue* arg)
         gotoLabel(a->url + 1);
         return;
     }
-    parseURL2(a->url, &p_url, baseURL(Currentbuf));
+    parseUrl(a->url, &p_url, baseURL(Currentbuf));
     pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
     cmd_loadURL(a->url, baseURL(Currentbuf),
         parsedURL2Str(&Currentbuf->currentURL)->ptr, NULL);
@@ -2854,7 +2854,7 @@ DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
         gotoLabel(l->url + 1);
         return;
     }
-    parseURL2(l->url, &p_url, baseURL(Currentbuf));
+    parseUrl(l->url, &p_url, baseURL(Currentbuf));
     pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
     cmd_loadURL(l->url, baseURL(Currentbuf),
         parsedURL2Str(&Currentbuf->currentURL)->ptr, NULL);
@@ -3033,7 +3033,7 @@ _peekURL(int only_img)
             s = Strnew_charp(form2str((struct FormItem*)a->url));
     }
     if (s == NULL) {
-        parseURL2(a->url, &pu, baseURL(Currentbuf));
+        parseUrl(a->url, &pu, baseURL(Currentbuf));
         s = parsedURL2Str(&pu);
     }
     if (DecodeURL)
@@ -3523,13 +3523,13 @@ void set_buffer_environ(Buffer* buf)
         set_environ("W3M_CURRENT_WORD", s ? s : "");
         a = retrieveCurrentAnchor(buf);
         if (a) {
-            parseURL2(a->url, &pu, baseURL(buf));
+            parseUrl(a->url, &pu, baseURL(buf));
             set_environ("W3M_CURRENT_LINK", parsedURL2Str(&pu)->ptr);
         } else
             set_environ("W3M_CURRENT_LINK", "");
         a = retrieveCurrentImg(buf);
         if (a) {
-            parseURL2(a->url, &pu, baseURL(buf));
+            parseUrl(a->url, &pu, baseURL(buf));
             set_environ("W3M_CURRENT_IMG", parsedURL2Str(&pu)->ptr);
         } else
             set_environ("W3M_CURRENT_IMG", "");

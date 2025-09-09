@@ -659,7 +659,7 @@ link_list_panel(Buffer* buf)
         Strcat_charp(tmp, "<hr><h2>Links</h2>\n<ol>\n");
         for (l = buf->linklist; l; l = l->next) {
             if (l->url) {
-                parseURL2(l->url, &pu, baseURL(buf));
+                parseUrl(l->url, &pu, baseURL(buf));
                 p = parsedURL2Str(&pu)->ptr;
                 u = html_quote(p);
                 if (DecodeURL)
@@ -689,7 +689,7 @@ link_list_panel(Buffer* buf)
             a = &al->anchors[i];
             if (a->hseq < 0 || a->slave)
                 continue;
-            parseURL2(a->url, &pu, baseURL(buf));
+            parseUrl(a->url, &pu, baseURL(buf));
             p = parsedURL2Str(&pu)->ptr;
             u = html_quote(p);
             if (DecodeURL)
@@ -711,7 +711,7 @@ link_list_panel(Buffer* buf)
             a = &al->anchors[i];
             if (a->slave)
                 continue;
-            parseURL2(a->url, &pu, baseURL(buf));
+            parseUrl(a->url, &pu, baseURL(buf));
             p = parsedURL2Str(&pu)->ptr;
             u = html_quote(p);
             if (DecodeURL)
@@ -740,7 +740,7 @@ link_list_panel(Buffer* buf)
                     m = (MapArea*)mi->ptr;
                     if (!m)
                         continue;
-                    parseURL2(m->url, &pu, baseURL(buf));
+                    parseUrl(m->url, &pu, baseURL(buf));
                     p = parsedURL2Str(&pu)->ptr;
                     u = html_quote(p);
                     if (DecodeURL)
