@@ -43,8 +43,14 @@ const content_public_headers = [_][]const u8{
     "html_quote.h",
     "mailcap.h",
     "http_message.h",
+    "istream.h",
+    "compression.h",
+    "mimetypes.h",
 };
 const content_srcs = [_][]const u8{
+    "compression.c",
+    "mimetypes.c",
+    "istream.c",
     "http_message.c",
     "mailcap.c",
     "html_quote.c",
@@ -97,11 +103,9 @@ const w3m_srcs = [_][]const u8{
     "html_tag_info.c",
     "html_tag_attribute_info.c",
     "HtmlTagParsed.c",
-    "compression.c",
     "buffer_loader.c",
     "HttpClient.c",
     "Content.c",
-    "mimetypes.c",
 
     "ui.c",
     "LineEditor.c",
@@ -123,7 +127,6 @@ const w3m_srcs = [_][]const u8{
 
     "anchor.c",
     "tagtable.c",
-    "istream.c",
 
     "version.c",
 };
