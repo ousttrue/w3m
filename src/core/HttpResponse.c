@@ -2,11 +2,9 @@
 #include "convertline.h"
 #include "mimehead.h"
 #include "myctype.h"
+#include "line.h"
 #include <stdlib.h>
 #include <wc.h>
-
-#include "ui.h"
-#include "buffer_loader.h"
 
 struct HttpResponse readHttpResponse(struct Url* pu, union input_stream* stream)
 {
@@ -43,9 +41,8 @@ struct HttpResponse readHttpResponse(struct Url* pu, union input_stream* stream)
             lineBuf2 = decodeMIME(lineBuf2, &mime_charset);
             lineBuf2 = convertLine(NULL, lineBuf2, RAW_MODE,
                 mime_charset ? &mime_charset : &charset,
-                mime_charset ? mime_charset
-                             : DocumentCharset,
-                InnerCharset);
+                mime_charset ? mime_charset : WC_CES_UTF_8,
+                WC_CES_WTF);
             /* separated with line and stored */
             tmp = Strnew_size(lineBuf2->length);
             char* q;
@@ -71,7 +68,7 @@ struct HttpResponse readHttpResponse(struct Url* pu, union input_stream* stream)
                 p++;
             response.status_code = atoi(p);
 
-            message(getUI(), MSG_INFO, lineBuf2->ptr);
+            // message(getUI(), MSG_INFO, lineBuf2->ptr);
             // refresh(ttyWriter());
         }
 
