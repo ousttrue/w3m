@@ -83,7 +83,7 @@ int DecodeURL = false;
 int DefaultURLString = (DEFAULT_URL_CURRENT);
 int UseDictCommand = (true);
 char* DictCommand = ("file:///$LIB/w3mdict" CGI_EXTENSION);
-char* BookmarkFile = (NULL);
+const char* BookmarkFile = (NULL);
 int use_mark = (false);
 int confirm_on_quit = (true);
 int CurrentKey;
@@ -124,7 +124,6 @@ static int need_resize_screen = false;
 MySignalHandler resize_hook(int _dummy);
 static void resize_screen(void);
 
-static void cmd_loadfile(char* path);
 static void cmd_loadBuffer(Buffer* buf, int prop, int linkid);
 
 static char* getCurWord(Buffer* buf, int* spos, int* epos);
@@ -612,7 +611,7 @@ loadLink(const char* url, const char* target, const char* referer, struct Form* 
     if (referer == NULL)
         referer = parsedURL2RefererStr(&Currentbuf->currentURL)->ptr;
 
-    struct Content c = loadGeneralFile(url, baseURL(Currentbuf), post, referer);
+    struct Content c = loadGeneralFile(url, baseURL(Currentbuf), post, referer, UI_TTY);
     Buffer* buf = makeBuffer(&c, do_download);
     if (buf == NULL) {
         char* emsg = Sprintf("Can't load %s", url)->ptr;
@@ -777,10 +776,8 @@ _followForm(bool submit, bool do_download)
             return;
         }
         if (fi->readonly)
-            /* FIXME: gettextize? */
             message(getUI(), MSG_INFO, "Read only field!");
-        /* FIXME: gettextize? */
-        char* p = inputStrHist(getUI(), "TEXT:", fi->value ? fi->value->ptr : NULL, TextHist);
+        const char* p = inputStrHist(getUI(), "TEXT:", fi->value ? fi->value->ptr : NULL, TextHist);
         if (p == NULL || fi->readonly)
             break;
         fi->value = Strnew_charp(p);
@@ -797,10 +794,8 @@ _followForm(bool submit, bool do_download)
             return;
         }
         if (fi->readonly)
-            /* FIXME: gettextize? */
             message(getUI(), MSG_INFO, "Read only field!");
-        /* FIXME: gettextize? */
-        char* p = inputFilenameHist(getUI(), "Filename:", fi->value ? fi->value->ptr : NULL, NULL);
+        const char* p = inputFilenameHist(getUI(), "Filename:", fi->value ? fi->value->ptr : NULL, NULL);
         if (p == NULL || fi->readonly)
             break;
         fi->value = Strnew_charp(p);
@@ -817,12 +812,10 @@ _followForm(bool submit, bool do_download)
             return;
         }
         if (fi->readonly) {
-            /* FIXME: gettextize? */
             message(getUI(), MSG_INFO, "Read only field!");
             break;
         }
-        /* FIXME: gettextize? */
-        char* p = inputLine(getUI(), "Password:", fi->value ? fi->value->ptr : NULL,
+        const char* p = inputLine(getUI(), "Password:", fi->value ? fi->value->ptr : NULL,
             IN_PASSWORD);
         if (p == NULL)
             break;
@@ -1302,7 +1295,7 @@ static void
 cmd_loadURL(const char* url, struct Url* current, const char* referer, struct Form* post)
 {
     // refresh(ttyWriter());
-    struct Content c = loadGeneralFile(url, current, post, referer);
+    struct Content c = loadGeneralFile(url, current, post, referer, UI_TTY);
     Buffer* buf = makeBuffer(&c, false);
     if (buf == NULL) {
         /* FIXME: gettextize? */
@@ -1386,11 +1379,8 @@ DEFUN(col1L, LEFT, "Shift screen one column left")
 
 DEFUN(setEnv, SETENV, "Set environment variable")
 {
-    char* env;
-    char *var, *value;
-
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    env = searchKeyData();
+    const char* env = searchKeyData();
     if (env == NULL || *env == '\0' || strchr(env, '=') == NULL) {
         if (env != NULL && *env != '\0')
             env = Sprintf("%s=", env)->ptr;
@@ -1400,8 +1390,10 @@ DEFUN(setEnv, SETENV, "Set environment variable")
             return;
         }
     }
+
+    char* value;
     if ((value = strchr(env, '=')) != NULL && value > env) {
-        var = allocStr(env, value - env);
+        char* var = allocStr(env, value - env);
         value++;
         set_environ(var, value);
     }
@@ -1410,10 +1402,8 @@ DEFUN(setEnv, SETENV, "Set environment variable")
 /* Execute shell command */
 DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output")
 {
-    char* cmd;
-
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    cmd = searchKeyData();
+    const char* cmd = searchKeyData();
     if (cmd == NULL || *cmd == '\0') {
         cmd = inputLineHist(getUI(), "(exec shell)!", "", IN_COMMAND, ShellHist);
     }
@@ -1431,12 +1421,23 @@ DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output")
     }
 }
 
+static void cmd_loadfile(const char* fn)
+{
+    struct Content c = loadGeneralFile(file_to_url(fn, CurrentDir), NULL, NULL, NO_REFERER, UI_TTY);
+    Buffer* buf = makeBuffer(&c, false);
+    if (buf == NULL) {
+        /* FIXME: gettextize? */
+        char* emsg = Sprintf("%s not found", conv_from_system(fn))->ptr;
+        message(getUI(), MSG_ERR, emsg);
+    } else if (buf != NO_BUFFER) {
+        pushBuffer(buf);
+    }
+}
+
 /* Load file */
 DEFUN(ldfile, LOAD, "Open local file in a new buffer")
 {
-    char* fn;
-
-    fn = searchKeyData();
+    const char* fn = searchKeyData();
     if (fn == NULL || *fn == '\0') {
         /* FIXME: gettextize? */
         fn = inputFilenameHist(getUI(), "(Load)Filename? ", NULL, LoadHist);
@@ -1444,7 +1445,6 @@ DEFUN(ldfile, LOAD, "Open local file in a new buffer")
     if (fn != NULL)
         fn = conv_to_system(fn);
     if (fn == NULL || *fn == '\0') {
-
         return;
     }
     cmd_loadfile(fn);
@@ -1463,20 +1463,6 @@ DEFUN(ldhelp, HELP, "Show help panel")
         Str_form_quote(Strnew_charp(w3m_version))->ptr,
         Str_form_quote(Strnew_charp_n(lang, n))->ptr);
     cmd_loadURL(tmp->ptr, NULL, NO_REFERER, NULL);
-}
-
-static void
-cmd_loadfile(char* fn)
-{
-    struct Content c = loadGeneralFile(file_to_url(fn, CurrentDir), NULL, NULL, NO_REFERER);
-    Buffer* buf = makeBuffer(&c, false);
-    if (buf == NULL) {
-        /* FIXME: gettextize? */
-        char* emsg = Sprintf("%s not found", conv_from_system(fn))->ptr;
-        message(getUI(), MSG_ERR, emsg);
-    } else if (buf != NO_BUFFER) {
-        pushBuffer(buf);
-    }
 }
 
 /* Move cursor left */
@@ -1718,8 +1704,7 @@ end:
 static void
 _quitfm(int confirm)
 {
-    char* ans = "y";
-
+    const char* ans = "y";
     if (checkDownloadList())
         /* FIXME: gettextize? */
         ans = inputChar(getUI(), "Download process retains. "
@@ -2011,18 +1996,15 @@ DEFUN(prevMk, PREV_MARK, "Go to the previous mark")
     message(getUI(), MSG_INFO, "No mark exist before here");
 }
 
-static char* MarkString = NULL;
+static const char* MarkString = NULL;
 
 /* Mark place to which the regular expression matches */
 DEFUN(reMark, REG_MARK, "Mark all occurences of a pattern")
 {
-    Line* l;
-    char* str;
-    char *p, *p1, *p2;
-
     if (!use_mark)
         return;
-    str = searchKeyData();
+
+    const char* str = searchKeyData();
     if (str == NULL || *str == '\0') {
         str = inputStrHist(getUI(), "(Mark)Regexp: ", MarkString, TextHist);
         if (str == NULL || *str == '\0') {
@@ -2035,6 +2017,9 @@ DEFUN(reMark, REG_MARK, "Mark all occurences of a pattern")
         message(getUI(), MSG_INFO, str);
         return;
     }
+
+    Line* l;
+    char *p, *p1, *p2;
     MarkString = str;
     for (l = Currentbuf->firstLine; l != NULL; l = l->next) {
         p = l->lineBuf;
@@ -2147,7 +2132,7 @@ static void followImage(bool do_download)
     /* FIXME: gettextize? */
     message(getUI(), MSG_INFO, Sprintf("loading %s", a->url)->ptr);
     // refresh(ttyWriter());
-    struct Content c = loadGeneralFile(a->url, baseURL(Currentbuf), NULL, NULL);
+    struct Content c = loadGeneralFile(a->url, baseURL(Currentbuf), NULL, NULL, UI_TTY);
     Buffer* buf = makeBuffer(&c, do_download);
     if (buf == NULL) {
         /* FIXME: gettextize? */
@@ -2776,13 +2761,12 @@ DEFUN(ldOpt, OPTIONS, "Display options setting panel")
 /* set an option */
 DEFUN(setOpt, SET_OPTION, "Set option")
 {
-    char* opt;
-
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    opt = searchKeyData();
+
+    const char* opt = searchKeyData();
     if (opt == NULL || *opt == '\0' || strchr(opt, '=') == NULL) {
         if (opt != NULL && *opt != '\0') {
-            char* v = get_param_option(opt);
+            const char* v = get_param_option(opt);
             opt = Sprintf("%s=%s", opt, v ? v : "")->ptr;
         }
         opt = inputStrHist(getUI(), "Set option: ", opt, TextHist);
@@ -2939,13 +2923,9 @@ DEFUN(svI, SAVE_IMAGE, "Save inline image")
 /* save buffer */
 DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document")
 {
-    char* qfile = NULL;
-    FILE* f;
-    int is_pipe;
-
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    const char* file;
-    file = searchKeyData();
+    const char* file = searchKeyData();
+    const char* qfile = NULL;
     if (file == NULL || *file == '\0') {
         /* FIXME: gettextize? */
         qfile = inputLineHist(getUI(), "Save buffer to: ", NULL, IN_COMMAND, SaveHist);
@@ -2955,6 +2935,8 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document")
         }
     }
     file = conv_to_system(qfile ? qfile : file);
+    bool is_pipe;
+    FILE* f;
     if (*file == '|') {
         is_pipe = true;
         f = popen(file + 1, "w");
@@ -3204,7 +3186,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
         DocumentCharset = Currentbuf->document_charset;
     // SearchHeader = Currentbuf->search_header;
     DefaultType = (char*)Currentbuf->real_type;
-    struct Content c = loadGeneralFile(url->ptr, NULL, post, NO_REFERER /*, true*/);
+    struct Content c = loadGeneralFile(url->ptr, NULL, post, NO_REFERER, UI_TTY /*, true*/);
     buf = makeBuffer(&c, false);
     DocumentCharset = old_charset;
     // SearchHeader = false;
@@ -3274,17 +3256,13 @@ void change_charset(struct KeyValue* arg)
 
 DEFUN(docCSet, CHARSET, "Change the character encoding for the current document")
 {
-    char* cs;
-    wc_ces charset;
-
-    cs = searchKeyData();
+    const char* cs = searchKeyData();
     if (cs == NULL || *cs == '\0')
         /* FIXME: gettextize? */
         cs = inputStr(getUI(), "Document charset: ",
             wc_ces_to_charset(Currentbuf->document_charset));
-    charset = wc_guess_charset_short(cs, 0);
+    wc_ces charset = wc_guess_charset_short(cs, 0);
     if (charset == 0) {
-
         return;
     }
     _docCSet(charset);
@@ -3292,15 +3270,12 @@ DEFUN(docCSet, CHARSET, "Change the character encoding for the current document"
 
 DEFUN(defCSet, DEFAULT_CHARSET, "Change the default character encoding")
 {
-    char* cs;
-    wc_ces charset;
-
-    cs = searchKeyData();
+    const char* cs = searchKeyData();
     if (cs == NULL || *cs == '\0')
         /* FIXME: gettextize? */
         cs = inputStr(getUI(), "Default document charset: ",
             wc_ces_to_charset(DocumentCharset));
-    charset = wc_guess_charset_short(cs, 0);
+    wc_ces charset = wc_guess_charset_short(cs, 0);
     if (charset != 0)
         DocumentCharset = charset;
 }
@@ -3473,7 +3448,7 @@ execdict(char* word)
     dictcmd = Sprintf("%s?%s", DictCommand,
         Str_form_quote(Strnew_charp(w))->ptr)
                   ->ptr;
-    struct Content c = loadGeneralFile(dictcmd, NULL, NULL, NO_REFERER);
+    struct Content c = loadGeneralFile(dictcmd, NULL, NULL, NO_REFERER, UI_TTY);
     Buffer* buf = makeBuffer(&c, false);
     if (buf == NULL) {
         message(getUI(), MSG_INFO, "Execution failed");

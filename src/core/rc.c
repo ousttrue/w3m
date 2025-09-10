@@ -940,7 +940,7 @@ set_param(const char* name, const char* value)
     return 1;
 }
 
-int set_param_option(char* option)
+int set_param_option(const char* option)
 {
     Str tmp = Strnew();
     char *p = option, *q;
@@ -973,7 +973,7 @@ option_assigned:
     return 1;
 }
 
-char* get_param_option(char* name)
+const char* get_param_option(const char* name)
 {
     struct param_ptr* p;
 

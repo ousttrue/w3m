@@ -251,7 +251,7 @@ static Str decode_gzip(unsigned char* src, int size)
     return buffer;
 }
 
-struct Content openHttp(struct HttpClient* c, const char* path, struct Url* current, struct Form* post, const char* referer)
+static struct Content openHttp(struct HttpClient* c, const char* path, struct Url* current, struct Form* post, const char* referer, struct UserInteraction ui)
 {
     struct HttpRequest hr = {
         .url = parseUrl(path, current),
@@ -288,7 +288,7 @@ struct Content openHttp(struct HttpClient* c, const char* path, struct Url* curr
         hr.flag |= HR_FLAG_PROXY;
         if (hr.url.scheme == SCM_HTTPS && c->status == HTST_CONNECT) {
             sock = c->f.stream->ssl.handle->sock;
-            if (!(sslh = openSSLHandle(sock, hr.url.host, &c->f.ssl_certificate))) {
+            if (!(sslh = openSSLHandle(ui, sock, hr.url.host, &c->f.ssl_certificate))) {
                 c->status = HTST_MISSING;
                 // return;
             }
@@ -327,7 +327,7 @@ struct Content openHttp(struct HttpClient* c, const char* path, struct Url* curr
             // return;
         }
         if (hr.url.scheme == SCM_HTTPS) {
-            if (!(sslh = openSSLHandle(sock, hr.url.host,
+            if (!(sslh = openSSLHandle(ui, sock, hr.url.host,
                       &c->f.ssl_certificate))) {
                 c->status = HTST_MISSING;
                 // return;
@@ -639,7 +639,8 @@ struct Content openHttp(struct HttpClient* c, const char* path, struct Url* curr
 }
 
 struct Content
-loadGeneralFile(const char* path, struct Url* current, struct Form* post, const char* referer)
+loadGeneralFile(const char* path, struct Url* current, struct Form* post, const char* referer,
+    struct UserInteraction ui)
 {
     //         openURL(&c, &pu, current, post, referer, no_cache, extra_header, &hr);
     // void openURL(struct HttpClient* c, struct Url* pu, struct Url* current,
@@ -670,7 +671,7 @@ loadGeneralFile(const char* path, struct Url* current, struct Form* post, const 
             //     //         // continue;
             struct HttpClient c;
             initHttpClient(&c);
-            return openHttp(&c, Strnew_m_charp("http://", path, NULL)->ptr, current, post, referer);
+            return openHttp(&c, Strnew_m_charp("http://", path, NULL)->ptr, current, post, referer, ui);
             //     //     }
         }
     }
@@ -679,7 +680,7 @@ loadGeneralFile(const char* path, struct Url* current, struct Form* post, const 
     case SCM_HTTPS: {
         struct HttpClient c;
         initHttpClient(&c);
-        return openHttp(&c, path, current, post, referer);
+        return openHttp(&c, path, current, post, referer, ui);
     }
 
     default:

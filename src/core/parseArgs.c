@@ -147,7 +147,7 @@ void parseArgs(int argc, char** argv)
         ? file_to_url(argv[1], CurrentDir)
         : url_quote(conv_from_system(argv[1]));
 
-    struct Content c = loadGeneralFile(url, NULL, NULL, NO_REFERER);
+    struct Content c = loadGeneralFile(url, NULL, NULL, NO_REFERER, (struct UserInteraction) { 0 });
     Buffer* newbuf = makeBuffer(&c, false);
     switch (newbuf->real_scheme) {
     case SCM_MAILTO:

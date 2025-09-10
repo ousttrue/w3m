@@ -1,6 +1,7 @@
 #pragma once
 #include "url.h"
 #include "textlist.h"
+#include "UserInteraction.h"
 #include <wc.h>
 
 extern char* index_file;
@@ -18,4 +19,4 @@ struct Content {
 
 struct Form;
 struct Content loadGeneralFile(const char* path, struct Url* current, struct Form* post,
-    const char* referer);
+    const char* referer, struct UserInteraction ui);

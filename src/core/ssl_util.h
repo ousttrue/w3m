@@ -1,4 +1,5 @@
 #pragma once
+#include "UserInteraction.h"
 #include <openssl/types.h>
 
 extern int ssl_verify_server;
@@ -12,7 +13,7 @@ extern char* ssl_forbid_method;
 extern char* ssl_min_version;
 extern char* ssl_cipher;
 
-SSL* openSSLHandle(int sock, const char* hostname, const char** p_cert);
+SSL* openSSLHandle(struct UserInteraction ui, int sock, const char* hostname, const char** p_cert);
 void SSL_write_from_file(SSL* ssl, const char* file);
 
 struct ssl_handle {
@@ -22,6 +23,3 @@ struct ssl_handle {
 void ssl_close(struct ssl_handle* handle);
 int ssl_read(struct ssl_handle* handle, char* buf, int len);
 void free_ssl_ctx(void);
-
-// inline static int ssl_socket_of(union input_stream* stream) { return ((stream)->ssl.handle->sock); }
-// inline static SSL* ssl_of(union input_stream* stream) { return ((stream)->ssl.handle->ssl); }

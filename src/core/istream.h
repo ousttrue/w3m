@@ -121,7 +121,6 @@ void ISgets_to_growbuf(InputStream stream, struct growbuf* gb, char crnl);
 int ISread_n(InputStream stream, char* dst, int bufsize);
 int ISfileno(InputStream stream);
 bool ISeos(InputStream stream);
-void ssl_accept_this_site(char* hostname);
 
 inline static enum InputStreamType IStype(union input_stream* stream) { return ((stream)->base.type); }
 inline static bool is_eos(union input_stream* stream) { return ISeos(stream); }

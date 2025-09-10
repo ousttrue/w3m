@@ -1,11 +1,6 @@
-#define _GNU_SOURCE
 #include "ssl_util.h"
 #include "growbuf.h"
-#include "display.h"
-#include "ui.h"
-#include "screen.h"
-#include "gc/gc.h"
-#include "linein.h"
+#include <gc/gc.h>
 #include <myctype.h>
 #include <Str.h>
 #include <openssl/ssl.h>
@@ -32,9 +27,10 @@ char* ssl_cipher = NULL;
 #include <openssl/err.h>
 
 SSL_CTX* ssl_ctx = NULL;
+
 static Str accept_this_site;
 
-void ssl_accept_this_site(char* hostname)
+static void ssl_accept_this_site(const char* hostname)
 {
     if (hostname)
         accept_this_site = Strnew_charp(hostname);
@@ -109,7 +105,7 @@ str_to_ssl_version(const char* name)
 #endif /* SSL_CTX_set_min_proto_version */
 
 static int
-ssl_match_cert_ident(char* ident, int ilen, char* hostname)
+ssl_match_cert_ident(const char* ident, int ilen, const char* hostname)
 {
     /* RFC2818 3.1.  Server Identity
      * Names may contain the wildcard
@@ -138,7 +134,7 @@ ssl_match_cert_ident(char* ident, int ilen, char* hostname)
     return *hostname == '\0';
 }
 static Str
-ssl_check_cert_ident(X509* x, char* hostname)
+ssl_check_cert_ident(X509* x, const char* hostname)
 {
     int i;
     Str ret = NULL;
@@ -242,7 +238,7 @@ ssl_check_cert_ident(X509* x, char* hostname)
     return ret;
 }
 
-Str ssl_get_certificate(SSL* ssl, char* hostname)
+static Str ssl_get_certificate(struct UserInteraction ui, SSL* ssl, const char* hostname)
 {
     BIO* bp;
     X509* x;
@@ -253,7 +249,7 @@ Str ssl_get_certificate(SSL* ssl, char* hostname)
     char buf[2048];
     Str amsg = NULL;
     Str emsg;
-    char* ans;
+    const char* ans;
 
     if (ssl == NULL)
         return NULL;
@@ -263,23 +259,20 @@ Str ssl_get_certificate(SSL* ssl, char* hostname)
             && strcasecmp(accept_this_site->ptr, hostname) == 0)
             ans = "y";
         else {
-            /* FIXME: gettextize? */
             emsg = Strnew_charp("No SSL peer certificate: accept? (y/n)");
-            ans = inputAnswer(emsg->ptr);
+            ans = ui.inputCallback(emsg->ptr);
         }
         if (ans && TOLOWER(*ans) == 'y')
-            /* FIXME: gettextize? */
             amsg = Strnew_charp("Accept SSL session without any peer certificate");
         else {
-            /* FIXME: gettextize? */
-            char* e = "This SSL session was rejected "
-                      "to prevent security violation: no peer certificate";
-            message(getUI(), MSG_ERR, e);
+            const char* e = "This SSL session was rejected "
+                            "to prevent security violation: no peer certificate";
+            ui.messageCallback(e);
             free_ssl_ctx();
             return NULL;
         }
         if (amsg)
-            message(getUI(), MSG_ERR, amsg->ptr);
+            ui.messageCallback(amsg->ptr);
         ssl_accept_this_site(hostname);
         /* FIXME: gettextize? */
         s = amsg ? amsg : Strnew_charp("valid certificate");
@@ -298,19 +291,16 @@ Str ssl_get_certificate(SSL* ssl, char* hostname)
                 && strcasecmp(accept_this_site->ptr, hostname) == 0)
                 ans = "y";
             else {
-                /* FIXME: gettextize? */
                 emsg = Sprintf("%s: accept? (y/n)", em);
-                ans = inputAnswer(emsg->ptr);
+                ans = ui.inputCallback(emsg->ptr);
             }
             if (ans && TOLOWER(*ans) == 'y') {
-                /* FIXME: gettextize? */
                 amsg = Sprintf("Accept unsecure SSL session: "
                                "unverified: %s",
                     em);
             } else {
-                /* FIXME: gettextize? */
-                char* e = Sprintf("This SSL session was rejected: %s", em)->ptr;
-                message(getUI(), MSG_ERR, e);
+                const char* e = Sprintf("This SSL session was rejected: %s", em)->ptr;
+                ui.messageCallback(e);
                 free_ssl_ctx();
                 return NULL;
             }
@@ -323,26 +313,25 @@ Str ssl_get_certificate(SSL* ssl, char* hostname)
             ans = "y";
         else {
             Str ep = Strdup(emsg);
-            if (ep->length > getScreen()->COLS - 16)
-                Strshrink(ep, ep->length - (getScreen()->COLS - 16));
+            // if (ep->length > getScreen()->COLS - 16)
+            //     Strshrink(ep, ep->length - (getScreen()->COLS - 16));
             Strcat_charp(ep, ": accept? (y/n)");
-            ans = inputAnswer(ep->ptr);
+            ans = ui.inputCallback(ep->ptr);
         }
         if (ans && TOLOWER(*ans) == 'y') {
             /* FIXME: gettextize? */
             amsg = Strnew_charp("Accept unsecure SSL session:");
             Strcat(amsg, emsg);
         } else {
-            /* FIXME: gettextize? */
-            char* e = "This SSL session was rejected "
-                      "to prevent security violation";
-            message(getUI(), MSG_ERR, e);
+            const char* e = "This SSL session was rejected "
+                            "to prevent security violation";
+            ui.messageCallback(e);
             free_ssl_ctx();
             return NULL;
         }
     }
     if (amsg)
-        message(getUI(), MSG_ERR, amsg->ptr);
+        ui.messageCallback(amsg->ptr);
     ssl_accept_this_site(hostname);
     /* FIXME: gettextize? */
     s = amsg ? amsg : Strnew_charp("valid certificate");
@@ -368,7 +357,7 @@ Str ssl_get_certificate(SSL* ssl, char* hostname)
     return s;
 }
 
-SSL* openSSLHandle(int sock, const char* hostname, const char** p_cert)
+SSL* openSSLHandle(struct UserInteraction ui, int sock, const char* hostname, const char** p_cert)
 {
     SSL* handle = NULL;
     static char* old_ssl_forbid_method = NULL;
@@ -499,7 +488,7 @@ SSL* openSSLHandle(int sock, const char* hostname, const char** p_cert)
     SSL_set_tlsext_host_name(handle, hostname);
 #endif /* (SSLEAY_VERSION_NUMBER >= 0x00908070) && !defined(OPENSSL_NO_TLSEXT) */
     if (SSL_connect(handle) > 0) {
-        Str serv_cert = ssl_get_certificate(handle, hostname);
+        Str serv_cert = ssl_get_certificate(ui, handle, hostname);
         if (serv_cert) {
             *p_cert = serv_cert->ptr;
             return handle;
@@ -512,8 +501,9 @@ eend:
     close(sock);
     if (handle)
         SSL_free(handle);
-    /* FIXME: gettextize? */
-    message(getUI(), MSG_ERR, Sprintf("SSL error: %s, a workaround might be: w3m -insecure", ERR_error_string(ERR_get_error(), NULL)) ->ptr);
+    ui.messageCallback(Sprintf("SSL error: %s, a workaround might be: w3m -insecure",
+        ERR_error_string(ERR_get_error(), NULL))
+            ->ptr);
     return NULL;
 }
 

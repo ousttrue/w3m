@@ -14,7 +14,7 @@ enum SearchResultFlags {
 };
 typedef enum SearchResultFlags (*SearchFunc)(Buffer*, char*);
 
-char* conv_search_string(char* str, wc_ces f_ces);
+char* conv_search_string(const char* str, wc_ces f_ces);
 enum SearchResultFlags forwardSearch(struct _Buffer* buf, char* str);
 enum SearchResultFlags backwardSearch(struct _Buffer* buf, char* str);
 void isrch(SearchFunc func, char* prompt);

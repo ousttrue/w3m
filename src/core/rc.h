@@ -7,8 +7,8 @@ struct KeyValue;
 
 void show_params(FILE* fp);
 int str_to_bool(const char* value, int old);
-int set_param_option(char* option);
-char* get_param_option(char* name);
+int set_param_option(const char* option);
+const char* get_param_option(const char* name);
 void init_rc(void);
 void init_tmp(void);
 struct _Buffer* load_option_panel(void);
