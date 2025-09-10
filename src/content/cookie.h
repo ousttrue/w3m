@@ -14,6 +14,15 @@ extern TextList* Cookie_accept_domains;
 extern TextList* Cookie_avoid_wrong_number_of_dots_domains;
 extern int no_rc_dir;
 
+extern int accept_cookie;
+extern int show_cookie;
+enum AcceptBadCookieMode {
+    ACCEPT_BAD_COOKIE_DISCARD = 0,
+    ACCEPT_BAD_COOKIE_ACCEPT = 1,
+    ACCEPT_BAD_COOKIE_ASK = 2,
+};
+extern enum AcceptBadCookieMode accept_bad_cookie;
+
 enum CookieViolation {
     COO_OVERRIDE_OK = 32 /* flag to specify that an error is overridable */,
     /* version 0 refers to the original cookie_spec.html */

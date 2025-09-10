@@ -1,4 +1,5 @@
 #include "buffer_loader.h"
+#include "http_message.h"
 #include "runtime.h"
 #include "URLFile.h"
 #include "entity.h"
@@ -14,7 +15,6 @@
 #include "rc.h"
 #include "alloc.h"
 #include "file_copy.h"
-#include "http.h"
 #include "buffer.h"
 #include "readbuffer.h"
 #include "table.h"

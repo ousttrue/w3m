@@ -1,5 +1,6 @@
 #include "Content.h"
 #include "http_message.h"
+#include "mailcap.h"
 #include "runtime.h"
 #include "HttpRequest.h"
 #include "HttpResponse.h"
@@ -11,7 +12,6 @@
 #include "alloc.h"
 #include "mimetypes.h"
 #include "html_form.h"
-#include "http.h"
 #include "HttpClient.h"
 #include "ssl_util.h"
 #include "local_cgi.h"
@@ -688,4 +688,19 @@ loadGeneralFile(const char* path, struct Url* current, struct Form* post, const 
     default:
         return (struct Content) {};
     }
+}
+
+bool is_text_type(const char* type)
+{
+    return (type == NULL || type[0] == '\0' || strncasecmp(type, "text/", 5) == 0 || (strncasecmp(type, "application/", 12) == 0 && strstr(type, "xhtml") != NULL) || strncasecmp(type, "message/", sizeof("message/") - 1) == 0);
+}
+
+bool is_plain_text_type(const char* type)
+{
+    return ((type && strcasecmp(type, "text/plain") == 0) || (is_text_type(type) && !is_dump_text_type(type)));
+}
+
+bool is_html_type(const char* type)
+{
+    return (type && (strcasecmp(type, "text/html") == 0 || strcasecmp(type, "application/xhtml+xml") == 0));
 }

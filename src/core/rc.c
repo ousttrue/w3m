@@ -26,7 +26,6 @@
 #include "keymap.h"
 #include "menu.h"
 #include "buffer.h"
-#include "http.h"
 #include "proxy.h"
 #include "display.h"
 #include "mailcap.h"

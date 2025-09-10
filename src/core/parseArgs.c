@@ -7,14 +7,10 @@
 #include "ctrlcode.h"
 #include "buffer.h"
 #include "ui.h"
-#include "http.h"
 #include "history.h"
-#include "screen.h"
-#include "graphicchar.h"
 #include "rc.h"
 #include "w3m.h"
 #include <setjmp.h>
-#include <signal.h>
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>

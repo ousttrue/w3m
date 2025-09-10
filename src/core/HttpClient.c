@@ -1,6 +1,4 @@
 #include "HttpClient.h"
-#include "http.h"
-// #include "ui.h"
 #include <openssl/ssl.h>
 #include <unistd.h>
 

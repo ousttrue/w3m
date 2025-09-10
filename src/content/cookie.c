@@ -34,6 +34,10 @@ TextList* Cookie_accept_domains;
 TextList* Cookie_avoid_wrong_number_of_dots_domains;
 int no_rc_dir = (false);
 
+int accept_cookie = true;
+int show_cookie = false;
+enum AcceptBadCookieMode accept_bad_cookie = (ACCEPT_BAD_COOKIE_DISCARD);
+
 static int is_saved = 1;
 
 #define contain_no_dots(p, ep) (total_dot_number((p), (ep), 1) == 0)

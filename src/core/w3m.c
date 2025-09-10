@@ -1,4 +1,5 @@
 #include "w3m.h"
+#include "http_message.h"
 #include "HttpRequest.h"
 #include "alloc.h"
 #include "runtime.h"
@@ -24,7 +25,6 @@
 #include "downloadlist.h"
 #include "funcname1.h"
 #include "form.h"
-#include "http.h"
 #include "proxy.h"
 #include "maparea.h"
 #include "ssl_util.h"

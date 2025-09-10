@@ -86,7 +86,6 @@ const w3m_srcs = [_][]const u8{
     "term_size.c",
     "term_renderer.c",
     "putc.c",
-    "http.c",
     "downloadlist.c",
     "keymap.c",
     "progress.c",

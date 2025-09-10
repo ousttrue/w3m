@@ -3,7 +3,6 @@
 #include "html_quote.h"
 #include "w3m.h"
 #include "buffer_loader.h"
-#include "http.h"
 #include "display.h"
 #include "alloc.h"
 #include "form.h"
