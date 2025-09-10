@@ -9,7 +9,6 @@
 #include "file_copy.h"
 #include "istream.h"
 #include "progress.h"
-#include "version.h"
 #include "html_quote.h"
 #include "quote.h"
 #include <gc/gc.h>

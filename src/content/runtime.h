@@ -1,6 +1,7 @@
 #pragma once
 #include <Str.h>
 
+extern char* w3m_version;
 extern const char* CurrentDir;
 extern int CurrentPid;
 extern char* tmp_dir;

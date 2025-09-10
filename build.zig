@@ -21,16 +21,24 @@ const output_srcs = [_][]const u8{
 // content
 //
 const content_public_headers = [_][]const u8{
+    "growbuf.h",
+    "runtime.h",
+    "KeyValue.h",
+    //
+    "html_form.h",
     "proxy.h",
     "network.h",
     "url_scheme.h",
     "url.h",
-    "growbuf.h",
     "mimehead.h",
+    "cookie.h",
     "HttpRequestMethod.h",
-    "runtime.h",
+    "HttpRequest.h",
 };
 const content_srcs = [_][]const u8{
+    "HttpRequest.c",
+    "KeyValue.c",
+    "cookie.c",
     "runtime.c",
     "mimehead.c",
     "growbuf.c",
@@ -52,7 +60,6 @@ const system_libs = [_][]const u8{
 const w3m_srcs = [_][]const u8{
     "URLFile.c",
     "HttpResponse.c",
-    "HttpRequest.c",
     "subprocess.c",
     "token.c",
     "time_util.c",
@@ -76,7 +83,6 @@ const w3m_srcs = [_][]const u8{
     "readbuffer.c",
     "html_tag_info.c",
     "html_tag_attribute_info.c",
-    "KeyValue.c",
     "HtmlTagParsed.c",
     "compression.c",
     "buffer_loader.c",
@@ -108,7 +114,6 @@ const w3m_srcs = [_][]const u8{
     "image.c",
     "symbol.c",
     "entity.c",
-    "cookie.c",
     "history.c",
 
     "anchor.c",

@@ -1,7 +1,6 @@
 #include "http.h"
 #include "url.h"
 #include "cookie.h"
-#include "version.h"
 #include "html_form.h"
 #include "istream.h"
 #include "convertline.h"

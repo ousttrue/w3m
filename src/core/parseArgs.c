@@ -8,7 +8,6 @@
 #include "ctrlcode.h"
 #include "buffer.h"
 #include "ui.h"
-#include "version.h"
 #include "http.h"
 #include "history.h"
 #include "screen.h"

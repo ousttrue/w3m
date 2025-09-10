@@ -4,7 +4,6 @@
 #include "runtime.h"
 #include "Content.h"
 #include "subprocess.h"
-#include "version.h"
 #include "html_form.h"
 #include "ui.h"
 #include "http.h"
