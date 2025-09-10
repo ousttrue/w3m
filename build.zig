@@ -71,6 +71,7 @@ const system_libs = [_][]const u8{
     "z",
 };
 const w3m_srcs = [_][]const u8{
+    "http_message.c",
     "URLFile.c",
     "HttpResponse.c",
     "token.c",
@@ -168,6 +169,23 @@ pub fn build(b: *std.Build) void {
         .root_module = mod,
     });
     b.installArtifact(exe);
+
+    const test_mod = b.addModule("w3m_test", .{
+        .target = target,
+        .optimize = optimize,
+        .root_source_file = b.path("src/test.zig"),
+    });
+    const exe_tests = b.addTest(.{
+        .root_module = test_mod,
+    });
+    exe_tests.addCSourceFiles(.{
+        .files = &.{
+            "src/core/http_message.c",
+        },
+    });
+    exe_tests.addIncludePath(b.path(""));
+    b.installArtifact(exe_tests);
+
     targets.append(exe) catch @panic("OOM");
     exe.linkLibC();
 
@@ -202,6 +220,7 @@ pub fn build(b: *std.Build) void {
     } else {
         for (system_libs) |lib| {
             exe.linkSystemLibrary(lib);
+            exe_tests.linkSystemLibrary(lib);
         }
     }
 
@@ -211,6 +230,7 @@ pub fn build(b: *std.Build) void {
     });
     const gcs = gcs_dep.artifact("gcstring");
     exe.linkLibrary(gcs);
+    exe_tests.linkLibrary(gcs);
 
     {
         const lib = build_lib(
@@ -224,6 +244,7 @@ pub fn build(b: *std.Build) void {
             &.{},
         );
         exe.linkLibrary(lib);
+        exe_tests.linkLibrary(lib);
     }
 
     {
@@ -245,6 +266,7 @@ pub fn build(b: *std.Build) void {
         );
         lib.linkLibrary(gcs);
         exe.linkLibrary(lib);
+        exe_tests.linkLibrary(lib);
     }
 
     const wf = gen_functable(b);
@@ -277,6 +299,10 @@ pub fn build(b: *std.Build) void {
     // }
 
     _ = zcc.createStep(b, "cdb", targets.toOwnedSlice() catch @panic("OOM"));
+
+    const run_exe_tests = b.addRunArtifact(exe_tests);
+    const test_step = b.step("test", "Run tests");
+    test_step.dependOn(&run_exe_tests.step);
 }
 
 fn build_lib(

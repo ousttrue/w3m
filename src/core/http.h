@@ -13,7 +13,6 @@ enum AcceptBadCookieMode {
 };
 extern enum AcceptBadCookieMode accept_bad_cookie;
 
-bool matchattr(const char* p, const char* attr, int len, Str* value);
 const char* getHttpHeaderValue(TextList* document_header, const char* field);
 
 struct ContentTypeCharset {

@@ -1,4 +1,5 @@
 #include "Content.h"
+#include "http_message.h"
 #include "runtime.h"
 #include "HttpRequest.h"
 #include "HttpResponse.h"

@@ -1,4 +1,5 @@
 #include "mailcap.h"
+#include "http_message.h"
 #include "alloc.h"
 #include "runtime.h"
 #include "myctype.h"
