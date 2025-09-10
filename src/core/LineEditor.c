@@ -8,7 +8,7 @@
 #include "display.h"
 #include "form.h"
 #include "ctrlcode.h"
-#include "local.h"
+#include "local_cgi.h"
 #include "history.h"
 #include "screen.h"
 #include "screen_effects.h"

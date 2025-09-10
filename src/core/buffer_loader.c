@@ -9,7 +9,7 @@
 #include "istream.h"
 #include "screen.h"
 #include "auth.h"
-#include "local.h"
+#include "local_cgi.h"
 #include "tty.h"
 #include "rc.h"
 #include "alloc.h"

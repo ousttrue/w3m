@@ -42,7 +42,7 @@ typedef struct dirent Directory;
 extern int multicolList;
 
 Str localCookie(void);
-Str loadLocalDir(char* dirname);
+// Str loadLocalDir(char* dirname);
 void set_environ(const char* var, const char* value);
 
 FILE* localcgi_post(const char*, const char*, struct Form*, const char*);

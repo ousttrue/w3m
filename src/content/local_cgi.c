@@ -1,11 +1,11 @@
-#include "local.h"
+#include "local_cgi.h"
 #include "runtime.h"
 #include "str_util.h"
 #include "HttpRequest.h"
 #include "subprocess.h"
 #include "html_form.h"
-#include "ui.h"
-#include "screen.h"
+// #include "ui.h"
+// #include "screen.h"
 #include "quote.h"
 #include "html_quote.h"
 #include <wc.h>
@@ -56,120 +56,119 @@ static int strCmp(const void* s1, const void* s2)
     return strcmp(*(const char**)s1, *(const char**)s2);
 }
 
-
-Str loadLocalDir(char* dname)
-{
-    Str tmp;
-    DIR* d;
-    Directory* dir;
-    struct stat st;
-    char** flist;
-    char* p;
-    Str fbuf = Strnew();
-    struct stat lst;
-    char lbuf[1024];
-    int i, l, nrow = 0, n = 0, maxlen = 0;
-    int nfile, nfile_max = 100;
-    Str dirname;
-
-    d = opendir(dname);
-    if (d == NULL)
-        return NULL;
-    dirname = Strnew_charp(dname);
-    if (Strlastchar(dirname) != '/')
-        Strcat_char(dirname, '/');
-
-    const char* qdir = html_quote(wc_Str_conv(dirname, SystemCharset, InnerCharset)->ptr);
-    tmp = Strnew_m_charp("<HTML>\n<HEAD>\n<BASE HREF=\"file://",
-        html_quote(file_quote(dirname->ptr)),
-        "\">\n<TITLE>Directory list of ", qdir,
-        "</TITLE>\n</HEAD>\n<BODY>\n<H1>Directory list of ",
-        qdir, "</H1>\n", NULL);
-    flist = New_N(char*, nfile_max);
-    nfile = 0;
-    while ((dir = readdir(d)) != NULL) {
-        flist[nfile++] = allocStr(dir->d_name, -1);
-        if (nfile == nfile_max) {
-            nfile_max *= 2;
-            flist = New_Reuse(char*, flist, nfile_max);
-        }
-        if (multicolList) {
-            l = strlen(dir->d_name);
-            if (l > maxlen)
-                maxlen = l;
-            n++;
-        }
-    }
-    closedir(d);
-
-    if (multicolList) {
-        l = getScreen()->COLS / (maxlen + 2);
-        if (!l)
-            l = 1;
-        nrow = (n + l - 1) / l;
-        n = 1;
-        Strcat_charp(tmp, "<TABLE CELLPADDING=0>\n<TR VALIGN=TOP>\n");
-    }
-    qsort((void*)flist, nfile, sizeof(char*), strCmp);
-    for (i = 0; i < nfile; i++) {
-        p = flist[i];
-        if (strcmp(p, ".") == 0)
-            continue;
-        Strcopy(fbuf, dirname);
-        if (Strlastchar(fbuf) != '/')
-            Strcat_char(fbuf, '/');
-        Strcat_charp(fbuf, p);
-        if (lstat(fbuf->ptr, &lst) < 0)
-            continue;
-        if (stat(fbuf->ptr, &st) < 0)
-            continue;
-        if (multicolList) {
-            if (n == 1)
-                Strcat_charp(tmp, "<TD><NOBR>");
-        } else {
-            if (S_ISLNK(lst.st_mode))
-                Strcat_charp(tmp, "[LINK] ");
-            else if (S_ISDIR(st.st_mode))
-                Strcat_charp(tmp, "[DIR]&nbsp; ");
-            else
-                Strcat_charp(tmp, "[FILE] ");
-        }
-        Strcat_m_charp(tmp, "<A HREF=\"", html_quote(file_quote(p)), NULL);
-        if (S_ISDIR(st.st_mode))
-            Strcat_char(tmp, '/');
-        Strcat_m_charp(tmp, "\">", html_quote(conv_from_system(p)), NULL);
-        if (S_ISDIR(st.st_mode))
-            Strcat_char(tmp, '/');
-        Strcat_charp(tmp, "</A>");
-        if (multicolList) {
-            if (n++ == nrow) {
-                Strcat_charp(tmp, "</NOBR></TD>\n");
-                n = 1;
-            } else {
-                Strcat_charp(tmp, "<BR>\n");
-            }
-        } else {
-#if defined(HAVE_LSTAT) && defined(HAVE_READLINK)
-            if (S_ISLNK(lst.st_mode)) {
-                if ((l = readlink(fbuf->ptr, lbuf, sizeof(lbuf) - 1)) > 0) {
-                    lbuf[l] = '\0';
-                    Strcat_m_charp(tmp, " -> ",
-                        html_quote(conv_from_system(lbuf)), NULL);
-                    if (S_ISDIR(st.st_mode))
-                        Strcat_char(tmp, '/');
-                }
-            }
-#endif /* HAVE_LSTAT && HAVE_READLINK */
-            Strcat_charp(tmp, "<br>\n");
-        }
-    }
-    if (multicolList) {
-        Strcat_charp(tmp, "</TR>\n</TABLE>\n");
-    }
-    Strcat_charp(tmp, "</BODY>\n</HTML>\n");
-
-    return tmp;
-}
+// Str loadLocalDir(char* dname)
+// {
+//     Str tmp;
+//     DIR* d;
+//     Directory* dir;
+//     struct stat st;
+//     char** flist;
+//     char* p;
+//     Str fbuf = Strnew();
+//     struct stat lst;
+//     char lbuf[1024];
+//     int i, l, nrow = 0, n = 0, maxlen = 0;
+//     int nfile, nfile_max = 100;
+//     Str dirname;
+//
+//     d = opendir(dname);
+//     if (d == NULL)
+//         return NULL;
+//     dirname = Strnew_charp(dname);
+//     if (Strlastchar(dirname) != '/')
+//         Strcat_char(dirname, '/');
+//
+//     const char* qdir = html_quote(wc_Str_conv(dirname, SystemCharset, InnerCharset)->ptr);
+//     tmp = Strnew_m_charp("<HTML>\n<HEAD>\n<BASE HREF=\"file://",
+//         html_quote(file_quote(dirname->ptr)),
+//         "\">\n<TITLE>Directory list of ", qdir,
+//         "</TITLE>\n</HEAD>\n<BODY>\n<H1>Directory list of ",
+//         qdir, "</H1>\n", NULL);
+//     flist = New_N(char*, nfile_max);
+//     nfile = 0;
+//     while ((dir = readdir(d)) != NULL) {
+//         flist[nfile++] = allocStr(dir->d_name, -1);
+//         if (nfile == nfile_max) {
+//             nfile_max *= 2;
+//             flist = New_Reuse(char*, flist, nfile_max);
+//         }
+//         if (multicolList) {
+//             l = strlen(dir->d_name);
+//             if (l > maxlen)
+//                 maxlen = l;
+//             n++;
+//         }
+//     }
+//     closedir(d);
+//
+//     if (multicolList) {
+//         l = getScreen()->COLS / (maxlen + 2);
+//         if (!l)
+//             l = 1;
+//         nrow = (n + l - 1) / l;
+//         n = 1;
+//         Strcat_charp(tmp, "<TABLE CELLPADDING=0>\n<TR VALIGN=TOP>\n");
+//     }
+//     qsort((void*)flist, nfile, sizeof(char*), strCmp);
+//     for (i = 0; i < nfile; i++) {
+//         p = flist[i];
+//         if (strcmp(p, ".") == 0)
+//             continue;
+//         Strcopy(fbuf, dirname);
+//         if (Strlastchar(fbuf) != '/')
+//             Strcat_char(fbuf, '/');
+//         Strcat_charp(fbuf, p);
+//         if (lstat(fbuf->ptr, &lst) < 0)
+//             continue;
+//         if (stat(fbuf->ptr, &st) < 0)
+//             continue;
+//         if (multicolList) {
+//             if (n == 1)
+//                 Strcat_charp(tmp, "<TD><NOBR>");
+//         } else {
+//             if (S_ISLNK(lst.st_mode))
+//                 Strcat_charp(tmp, "[LINK] ");
+//             else if (S_ISDIR(st.st_mode))
+//                 Strcat_charp(tmp, "[DIR]&nbsp; ");
+//             else
+//                 Strcat_charp(tmp, "[FILE] ");
+//         }
+//         Strcat_m_charp(tmp, "<A HREF=\"", html_quote(file_quote(p)), NULL);
+//         if (S_ISDIR(st.st_mode))
+//             Strcat_char(tmp, '/');
+//         Strcat_m_charp(tmp, "\">", html_quote(conv_from_system(p)), NULL);
+//         if (S_ISDIR(st.st_mode))
+//             Strcat_char(tmp, '/');
+//         Strcat_charp(tmp, "</A>");
+//         if (multicolList) {
+//             if (n++ == nrow) {
+//                 Strcat_charp(tmp, "</NOBR></TD>\n");
+//                 n = 1;
+//             } else {
+//                 Strcat_charp(tmp, "<BR>\n");
+//             }
+//         } else {
+// #if defined(HAVE_LSTAT) && defined(HAVE_READLINK)
+//             if (S_ISLNK(lst.st_mode)) {
+//                 if ((l = readlink(fbuf->ptr, lbuf, sizeof(lbuf) - 1)) > 0) {
+//                     lbuf[l] = '\0';
+//                     Strcat_m_charp(tmp, " -> ",
+//                         html_quote(conv_from_system(lbuf)), NULL);
+//                     if (S_ISDIR(st.st_mode))
+//                         Strcat_char(tmp, '/');
+//                 }
+//             }
+// #endif /* HAVE_LSTAT && HAVE_READLINK */
+//             Strcat_charp(tmp, "<br>\n");
+//         }
+//     }
+//     if (multicolList) {
+//         Strcat_charp(tmp, "</TR>\n</TABLE>\n");
+//     }
+//     Strcat_charp(tmp, "</BODY>\n</HTML>\n");
+//
+//     return tmp;
+// }
 
 enum CgiType {
     CGIFN_NORMAL = 0,

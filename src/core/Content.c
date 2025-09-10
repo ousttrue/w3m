@@ -13,7 +13,7 @@
 #include "http.h"
 #include "HttpClient.h"
 #include "ssl_util.h"
-#include "local.h"
+#include "local_cgi.h"
 #include "myctype.h"
 #include "proxy.h"
 #include "auth.h"

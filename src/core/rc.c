@@ -31,7 +31,7 @@
 #include "display.h"
 #include "mailcap.h"
 #include "ui.h"
-#include "local.h"
+#include "local_cgi.h"
 #include "image.h"
 #include "ssl_util.h"
 #include "symbol.h"

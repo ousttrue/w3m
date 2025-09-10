@@ -38,8 +38,14 @@ const content_public_headers = [_][]const u8{
     "ssl_util.h",
     "UserInteraction.h",
     "auth.h",
+    "subprocess.h",
+    "local_cgi.h",
+    "html_quote.h",
 };
 const content_srcs = [_][]const u8{
+    "html_quote.c",
+    "local_cgi.c",
+    "subprocess.c",
     "auth.c",
     "ssl_util.c",
     "convertline.c",
@@ -67,7 +73,6 @@ const system_libs = [_][]const u8{
 const w3m_srcs = [_][]const u8{
     "URLFile.c",
     "HttpResponse.c",
-    "subprocess.c",
     "token.c",
     "time_util.c",
     "tty.c",
@@ -94,13 +99,11 @@ const w3m_srcs = [_][]const u8{
     "file_copy.c",
     "HttpClient.c",
     "Content.c",
-    "html_quote.c",
     "mimetypes.c",
 
     "ui.c",
     "LineEditor.c",
 
-    "str_util.c",
     "line.c",
 
     "buffer.c",
@@ -108,7 +111,6 @@ const w3m_srcs = [_][]const u8{
     "search.c",
     "linein.c",
     "table.c",
-    "local.c",
     "form.c",
     "maparea.c",
     "rc.c",

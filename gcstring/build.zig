@@ -20,9 +20,11 @@ const public_headers = [_][]const u8{
     "ctrlcode.h",
     "hash.h",
     "entity.h",
+    "str_util.h",
 };
 
 const srcs = [_][]const u8{
+    "str_util.c",
     "entity.c",
     "hash.c",
     "base64.c",

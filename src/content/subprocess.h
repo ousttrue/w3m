@@ -1,6 +1,7 @@
 #pragma once
 #include <stdio.h>
 #include <unistd.h>
+#include <stdbool.h>
 
 void setup_child(int child, int i, int f);
 pid_t open_pipe_rw(FILE** fr, FILE** fw);
