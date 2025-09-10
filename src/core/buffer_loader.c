@@ -950,15 +950,15 @@ Buffer* makeBuffer(struct Content* c, bool do_download)
         if (do_download) {
             if (!src)
                 return NULL;
-            const char* file = guessFileName(c->pu.file);
+            const char* file = guessFileName(c->url.file);
             doFileMove(tmp->ptr, file);
             return NO_BUFFER;
         }
         Buffer* b = loadHTMLString(c->page);
         if (b) {
-            b->currentURL = copyParsedUrl(&c->pu);
-            b->real_scheme = c->pu.scheme;
-            b->real_type = c->real_type;
+            b->currentURL = copyParsedUrl(&c->url);
+            b->real_scheme = c->url.scheme;
+            b->real_type = c->content_type;
             if (src)
                 b->sourcefile = tmp->ptr;
             b->document_charset = c->charset;

@@ -9,11 +9,10 @@ extern char LocalhostOnly;
 extern int retryAsHttp;
 
 struct Content {
-    struct Url pu;
+    struct Url url;
     Str page;
+    const char* content_type;
     wc_ces charset;
-    const char* real_type;
-    TextList* document_header;
 };
 
 struct Form;

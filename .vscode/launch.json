@@ -10,7 +10,8 @@
             "request": "launch",
             "program": "${workspaceFolder}/zig-out/bin/w3m",
             "args": [
-                "www.google.com"
+                // "www.google.com"
+                "www.yahoo.co.jp",
             ],
             "env": [
                 "TERM=xterm-256color"
@@ -24,7 +25,8 @@
             "request": "launch",
             "program": "${workspaceFolder}/zig-out/bin/w3m",
             "args": [
-                "www.google.com"
+                // "www.google.com"
+                "www.yahoo.co.jp",
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

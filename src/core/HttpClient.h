@@ -1,6 +1,7 @@
 #pragma once
 #include "URLFile.h"
 #include "url.h"
+#include "UserInteraction.h"
 #include <wc.h>
 
 enum HttpConnectionStatus {
@@ -34,3 +35,6 @@ struct HttpClient {
 
 void initHttpClient(struct HttpClient* c);
 bool checkRedirection(struct HttpClient* c, struct Url* pu);
+
+struct Form;
+struct Content openHttp(struct HttpClient* c, const char* path, struct Url* current, struct Form* post, const char* referer, struct UserInteraction ui);
