@@ -36,7 +36,7 @@ Str process_n_title(struct HtmlTagParsed* tag)
     return tmp;
 }
 
-void feed_title(char* str)
+void feed_title(const char* str)
 {
     if (pre_title)
         return;

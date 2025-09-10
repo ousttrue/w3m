@@ -1,7 +1,6 @@
 #include "mysignal.h"
 #include <signal.h>
 
-bool TrapSignal = true;
 
 MySignalFunc mySignal(int signal_number, MySignalFunc action)
 {

@@ -23,8 +23,8 @@ extern char FollowLocale;
 extern int confirm_on_quit;
 
 extern int CurrentKey;
-extern char* CurrentKeyData;
-extern char* CurrentCmdData;
+extern const char* CurrentKeyData;
+extern const char* CurrentCmdData;
 
 struct KeyValue;
 struct _Buffer;

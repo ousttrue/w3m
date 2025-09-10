@@ -1009,7 +1009,7 @@ Str process_n_select(void)
     return select_str;
 }
 
-void feed_select(char* str)
+void feed_select(const char* str)
 {
     Str tmp = Strnew();
     int prev_status = cur_status;
@@ -1181,7 +1181,7 @@ Str process_n_textarea(void)
     return tmp;
 }
 
-void feed_textarea(char* str)
+void feed_textarea(const char* str)
 {
     if (cur_textarea == NULL)
         return;

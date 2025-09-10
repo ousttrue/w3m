@@ -148,7 +148,7 @@ void push_nchars(struct readbuffer* obuf, int width, const char* str, int len, L
     obuf->flag |= RB_NFLUSHED;
 }
 
-void check_breakpoint(struct readbuffer* obuf, bool pre_mode, char* ch)
+void check_breakpoint(struct readbuffer* obuf, bool pre_mode, const char* ch)
 {
     int len = obuf->line->length;
     append_tags(obuf);
@@ -173,7 +173,7 @@ void push_char(struct readbuffer* obuf, int pre_mode, char ch)
     obuf->flag |= RB_NFLUSHED;
 }
 
-void proc_mchar(struct readbuffer* obuf, bool pre_mode, int width, char** str, Lineprop mode)
+void proc_mchar(struct readbuffer* obuf, bool pre_mode, int width, const char** str, Lineprop mode)
 {
     check_breakpoint(obuf, pre_mode, *str);
     obuf->pos += width;

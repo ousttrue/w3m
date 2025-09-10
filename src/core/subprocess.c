@@ -44,7 +44,6 @@ void setup_child(int child, int i, int f)
      */
     close_all_fds_except(i, f);
     // QuietMessage = true;
-    TrapSignal = false;
 }
 
 pid_t open_pipe_rw(FILE** fr, FILE** fw)

@@ -2805,7 +2805,7 @@ feed_table_tag(struct table* tbl, char* line, struct table_mode* mode,
     return TAG_ACTION_NONE;
 }
 
-int feed_table(struct table* tbl, char* line, struct table_mode* mode,
+int feed_table(struct table* tbl, const char* line, struct table_mode* mode,
     int width, int internal)
 {
     int i;

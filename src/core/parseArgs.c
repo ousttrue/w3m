@@ -28,7 +28,7 @@ extern sigjmp_buf IntReturn;
 #define help() fusage(stdout, 0)
 #define usage() fusage(stderr, 1)
 
-extern MySignalHandler resize_hook(int _dummy);
+extern void resize_hook(int _dummy);
 
 // static Str
 // make_optional_header_string(char* s)

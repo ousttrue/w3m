@@ -87,8 +87,8 @@ const char* BookmarkFile = (NULL);
 int use_mark = (false);
 int confirm_on_quit = (true);
 int CurrentKey;
-char* CurrentKeyData;
-char* CurrentCmdData;
+const char* CurrentKeyData;
+const char* CurrentCmdData;
 
 #ifndef HOST_NAME_MAX
 #define HOST_NAME_MAX 255
@@ -118,10 +118,10 @@ static AlarmEvent DefaultAlarm = {
     0, AL_UNSET, FUNCNAME_nulcmd, NULL
 };
 static AlarmEvent* CurrentAlarm = &DefaultAlarm;
-static MySignalHandler SigAlarm(int _dummy);
+static void SigAlarm(int _dummy);
 
 static int need_resize_screen = false;
-MySignalHandler resize_hook(int _dummy);
+void resize_hook(int _dummy);
 static void resize_screen(void);
 
 static void cmd_loadBuffer(Buffer* buf, int prop, int linkid);
@@ -363,8 +363,7 @@ void fmTerm(void)
     close_tty();
 }
 
-static MySignalHandler
-reset_exit_with_value(int _dummy, int rval)
+static void reset_exit_with_value(int _dummy, int rval)
 {
     resetTerm();
     flush_tty();
@@ -374,20 +373,17 @@ reset_exit_with_value(int _dummy, int rval)
     w3m_exit(rval);
 }
 
-MySignalHandler
-reset_error_exit(int _dummy)
+void reset_error_exit(int _dummy)
 {
-    reset_exit_with_value(SIGNAL_ARGLIST, 1);
+    reset_exit_with_value(0, 1);
 }
 
-MySignalHandler
-reset_exit(int _dummy)
+void reset_exit(int _dummy)
 {
-    reset_exit_with_value(SIGNAL_ARGLIST, 0);
+    reset_exit_with_value(0, 0);
 }
 
-MySignalHandler
-error_dump(int _dummy)
+void error_dump(int _dummy)
 {
     mySignal(SIGIOT, SIG_DFL);
     resetTerm();
@@ -1114,13 +1110,12 @@ repBuffer(Buffer* oldbuf, Buffer* buf)
 }
 
 static sigjmp_buf IntReturn;
-static MySignalHandler intTrap(int _dummy)
+static void intTrap(int _dummy)
 { /* Interrupt catcher */
     siglongjmp(IntReturn, 0);
 }
 
-MySignalHandler
-resize_hook(int _dummy)
+void resize_hook(int _dummy)
 {
     need_resize_screen = true;
     mySignal(SIGWINCH, resize_hook);
@@ -1834,7 +1829,7 @@ void _goLine(const char* l)
 DEFUN(goLine, GOTO_LINE, "Go to the specified line")
 {
 
-    char* str = searchKeyData();
+    const char* str = searchKeyData();
     if (str)
         _goLine(str);
     else
@@ -3432,7 +3427,7 @@ GetWord(Buffer* buf)
 }
 
 static void
-execdict(char* word)
+execdict(const char* word)
 {
     if (!UseDictCommand || word == NULL || *word == '\0') {
 
@@ -3528,10 +3523,9 @@ void set_buffer_environ(Buffer* buf)
     prev_pos = buf->pos;
 }
 
-char* searchKeyData(void)
+const char* searchKeyData()
 {
-    char* data = NULL;
-
+    const char* data = NULL;
     if (CurrentKeyData != NULL && *CurrentKeyData != '\0')
         data = CurrentKeyData;
     else if (CurrentCmdData != NULL && *CurrentCmdData != '\0')
@@ -3548,10 +3542,8 @@ char* searchKeyData(void)
 static int
 searchKeyNum(void)
 {
-    char* d;
     int n = 1;
-
-    d = searchKeyData();
+    const char* d = searchKeyData();
     if (d != NULL)
         n = atoi(d);
     return n;
@@ -3610,8 +3602,7 @@ DEFUN(execCmd, COMMAND, "Invoke w3m function(s)")
     }
 }
 
-static MySignalHandler
-SigAlarm(int _dummy)
+static void SigAlarm(int _dummy)
 {
     char* data;
 

@@ -22,7 +22,7 @@ struct FuncList {
 };
 extern struct FuncList w3mFuncList[];
 
-char* searchKeyData(void);
+const char* searchKeyData(void);
 void setKeymap(const char* p, int lineno);
 void initKeymap(int force);
 CommandFunc getFunc(const char* id);

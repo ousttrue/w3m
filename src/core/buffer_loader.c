@@ -859,7 +859,7 @@ void loadHTML(Str html, wc_ces doc_charset, int cols, bool use_graphic, bool int
     // wc_ces doc_charset = DocumentCharset;
     struct html_feed_environ htmlenv1;
     struct readbuffer obuf;
-    MySignalHandler (*volatile prevtrap)(int _dummy) = NULL;
+    void (*volatile prevtrap)(int _dummy) = NULL;
 
     if (use_graphic) {
         symbol_width = symbol_width0 = 1;
@@ -1075,21 +1075,21 @@ Buffer* makeBuffer(struct Content* c, bool do_download)
 static InputStream _file_lp2;
 
 static void
-proc_escape(struct readbuffer* obuf, char** str_return)
+proc_escape(struct readbuffer* obuf, const char** str_return)
 {
-    char *str = *str_return, *estr;
+    const char* str = *str_return;
     int ech = getescapechar(str_return);
     int width, n_add = *str_return - str;
-    Lineprop mode = PC_ASCII;
 
     if (ech < 0) {
         *str_return = str;
         proc_mchar(obuf, obuf->flag & RB_SPECIAL, 1, str_return, PC_ASCII);
         return;
     }
+    Lineprop mode = PC_ASCII;
     mode = IS_CNTRL(ech) ? PC_CTRL : PC_ASCII;
 
-    estr = conv_entity(ech);
+    const char* estr = conv_entity(ech);
     check_breakpoint(obuf, obuf->flag & RB_SPECIAL, estr);
     width = get_strwidth(estr);
     if (width == 1 && ech == (unsigned char)*estr && ech != '&' && ech != '<' && ech != '>') {
@@ -1131,7 +1131,7 @@ need_flushline(struct html_feed_environ* h_env, struct readbuffer* obuf,
 #endif /* not min */
 
 /* HTML processing first pass */
-void HTMLlineproc0(char* line, struct html_feed_environ* h_env, bool internal)
+void HTMLlineproc0(const char* line, struct html_feed_environ* h_env, bool internal)
 {
     Lineprop mode;
     int cmd;
@@ -1169,11 +1169,10 @@ table_start:
     }
 
     while (*line != '\0') {
-        char *str, *p;
         int is_tag = false;
         int pre_mode = (obuf->table_level >= 0 && tbl_mode) ? tbl_mode->pre_mode : obuf->flag;
         int end_tag = (obuf->table_level >= 0 && tbl_mode) ? tbl_mode->end_tag : obuf->end_tag;
-
+        const char *str;
         if (*line == '<' || obuf->status != R_ST_NORMAL) {
             /*
              * Tag processing
@@ -1210,7 +1209,7 @@ table_start:
 
         if (pre_mode & (RB_PLAIN | RB_INTXTA | RB_INSELECT | RB_SCRIPT | RB_STYLE | RB_TITLE)) {
             if (is_tag) {
-                p = str;
+                const char* p = str;
                 if ((tag = parse_tag(&p, internal))) {
                     if (tag->tagid == end_tag || (pre_mode & RB_INSELECT && tag->tagid == HTML_N_FORM)
                         || (pre_mode & RB_TITLE
@@ -1232,6 +1231,7 @@ table_start:
                 continue;
             }
             if (is_tag) {
+                const char* p;
                 if (strncmp(str, "<!--", 4) && (p = strchr(str + 1, '<'))) {
                     str = Strnew_charp_n(str, p - str)->ptr;
                     line = Strnew_m_charp(p, line, NULL)->ptr;
@@ -1344,7 +1344,7 @@ table_start:
             if (obuf->flag & (RB_SPECIAL & ~RB_NOBR)) {
                 char ch = *str;
                 if (!(obuf->flag & RB_PLAIN) && (*str == '&')) {
-                    char* p = str;
+                    const char* p = str;
                     int ech = getescapechar(&p);
                     if (ech == '\n' || ech == '\r') {
                         ch = '\n';
@@ -1375,7 +1375,7 @@ table_start:
                         != 0);
                     str++;
                 } else if (obuf->flag & RB_PLAIN) {
-                    char* p = html_quote_char(*str);
+                    const char* p = html_quote_char(*str);
                     if (p) {
                         push_charp(obuf, 1, p, PC_ASCII);
                         str++;
@@ -1600,7 +1600,7 @@ Buffer*
 loadHTMLString(Str page)
 {
     struct URLFile f;
-    MySignalHandler (*prevtrap)(int _dummy) = NULL;
+    void (*prevtrap)(int _dummy) = NULL;
     Buffer* newBuf;
 
     init_stream(&f, SCM_LOCAL, newStrStream(page));
@@ -1648,7 +1648,7 @@ loadBuffer(struct URLFile* uf, Buffer* newBuf)
     long long linelen = 0, trbyte = 0;
     Lineprop* propBuffer = NULL;
     Linecolor* colorBuffer = NULL;
-    MySignalHandler (*prevtrap)(int _dummy) = NULL;
+    void (*prevtrap)(int _dummy) = NULL;
 
     if (newBuf == NULL)
         newBuf = newBuffer();

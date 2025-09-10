@@ -164,13 +164,13 @@ inline static void push_str(struct readbuffer* obuf, int width, Str str, Linepro
     push_nchars(obuf, width, str->ptr, str->length, mode);
 }
 void fillline(struct readbuffer* obuf, int indent);
-void check_breakpoint(struct readbuffer* obuf, bool pre_mode, char* ch);
+void check_breakpoint(struct readbuffer* obuf, bool pre_mode, const char* ch);
 void push_char(struct readbuffer* obuf, int pre_mode, char ch);
 inline static void PUSH(struct readbuffer* obuf, char c)
 {
     push_char(obuf, obuf->flag & RB_SPECIAL, c);
 }
-void proc_mchar(struct readbuffer* obuf, bool pre_mode, int width, char** str, Lineprop mode);
+void proc_mchar(struct readbuffer* obuf, bool pre_mode, int width, const char** str, Lineprop mode);
 int close_effect0(struct readbuffer* obuf, enum HtmlTag cmd);
 void push_spaces(struct readbuffer* obuf, bool pre_mode, int width);
 void clear_ignore_p_flag(struct readbuffer* obuf, int cmd);
@@ -212,7 +212,7 @@ void do_blankline(struct html_feed_environ* h_env, struct readbuffer* obuf, int 
 void save_fonteffect(struct html_feed_environ* h_env, struct readbuffer* obuf);
 void restore_fonteffect(struct html_feed_environ* h_env, struct readbuffer* obuf);
 int HTMLtagproc1(struct HtmlTagParsed* tag, struct html_feed_environ* h_env);
-void HTMLlineproc0(char* istr, struct html_feed_environ* h_env, bool internal);
+void HTMLlineproc0(const char* istr, struct html_feed_environ* h_env, bool internal);
 void init_henv(struct html_feed_environ*, struct readbuffer*, struct environment*, int, TextLineList*, int, int);
 void completeHTMLstream(struct html_feed_environ*, struct readbuffer*);
 void process_idattr(struct readbuffer* obuf, int cmd, struct HtmlTagParsed* tag);

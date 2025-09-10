@@ -21,7 +21,7 @@ int show_srch_str = (true);
 #ifdef _WIN32
 #else
 static sigjmp_buf IntReturn;
-static MySignalHandler intTrap(int _dummy)
+static void intTrap(int _dummy)
 { /* Interrupt catcher */
     siglongjmp(IntReturn, 0);
 }

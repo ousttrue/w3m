@@ -156,7 +156,7 @@ struct table* begin_table(int border, int spacing, int padding,
     int vspace);
 void end_table(struct table* tbl);
 void check_rowcol(struct table* tbl, struct table_mode* mode);
-int feed_table(struct table* tbl, char* line, struct table_mode* mode,
+int feed_table(struct table* tbl, const char* line, struct table_mode* mode,
     int width, int internal);
 void feed_table1(struct table* tbl, Str tok, struct table_mode* mode,
     int width);
