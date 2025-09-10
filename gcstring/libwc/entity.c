@@ -1,13 +1,14 @@
 #include "entity.h"
 #include "Str.h"
 #include "ctrlcode.h"
-#include "ui.h"
 #include "hash.h"
+
+#include "wc.h"
+#include "wtf.h"
 #include "ucs.h"
 #include "utf8.h"
 
 #include <string.h>
-#include <wc.h>
 
 char UseAltEntity = (false);
 
@@ -47,16 +48,17 @@ const char* conv_entity(unsigned int c)
     if (c < 0x100) { /* Latin1 (ISO 8859-1) */
         if (UseAltEntity)
             return alt_latin1[c - 0xa0];
-        return wc_conv_n(&b, 1, WC_CES_ISO_8859_1, InnerCharset)->ptr;
+        return wc_conv_n(&b, 1, WC_CES_ISO_8859_1, WC_CES_WTF)->ptr;
     }
     if (c <= WC_C_UCS4_END) { /* Unicode */
-        char* chk;
         wc_uchar utf8[7];
         wc_ucs_to_utf8(c, utf8);
         /* we eventually need to display it so check DisplayCharset */
-        chk = wc_conv((char*)utf8, WC_CES_UTF_8, DisplayCharset ? DisplayCharset : WC_CES_US_ASCII)->ptr;
+        const char* chk;
+        // chk = wc_conv((char*)utf8, WC_CES_UTF_8, DisplayCharset ? DisplayCharset : WC_CES_US_ASCII)->ptr;
+        chk = utf8;
         if (strcmp(chk, "?") != 0)
-            return wc_conv((char*)utf8, WC_CES_UTF_8, InnerCharset)->ptr;
+            return wc_conv((char*)utf8, WC_CES_UTF_8, WC_CES_WTF)->ptr;
     }
     if (c == 0x201c || c == 0x201f || c == 0x201d || c == 0x2033)
         return "\"";

@@ -117,14 +117,11 @@ const w3m_srcs = [_][]const u8{
     "mailcap.c",
     "image.c",
     "symbol.c",
-    "entity.c",
     "history.c",
 
     "anchor.c",
     "tagtable.c",
     "istream.c",
-
-    "hash.c",
 
     "version.c",
 };
