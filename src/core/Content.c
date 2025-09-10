@@ -19,6 +19,7 @@
 #include "proxy.h"
 #include "auth.h"
 #include "quote.h"
+#include "URLFile.h"
 
 #include <openssl/ssl.h>
 #include <unistd.h>
@@ -208,8 +209,8 @@ loadGeneralFile(const char* path, struct Url* current, struct Form* post, const 
             // c.url = ;
             //     //         // continue;
             struct HttpClient c;
-            initHttpClient(&c);
-            return openHttp(&c, Strnew_m_charp("http://", path, NULL)->ptr, current, post, referer, ui);
+            httpInitClient(&c, ui);
+            return httpRequest(&c, Strnew_m_charp("http://", path, NULL)->ptr, current, post, referer);
             //     //     }
         }
     }
@@ -217,8 +218,8 @@ loadGeneralFile(const char* path, struct Url* current, struct Form* post, const 
     case SCM_HTTP:
     case SCM_HTTPS: {
         struct HttpClient c;
-        initHttpClient(&c);
-        return openHttp(&c, path, current, post, referer, ui);
+        httpInitClient(&c, ui);
+        return httpRequest(&c, path, current, post, referer);
     }
 
     default:

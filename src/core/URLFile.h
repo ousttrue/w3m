@@ -9,7 +9,7 @@ struct URLFile {
     char encoding;
     union input_stream* stream;
     const char* ext;
-    enum CompressionTyep compression;
+    enum CompressionType compression;
     int content_encoding;
     const char* guess_type;
     const char* ssl_certificate;

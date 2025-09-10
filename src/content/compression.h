@@ -13,7 +13,7 @@
 #define W3MHELPERPANEL_CMDNAME "w3mhelperpanel"
 #endif
 
-enum CompressionTyep {
+enum CompressionType {
     CMP_NOCOMPRESS = 0,
     CMP_COMPRESS = 1,
     CMP_GZIP = 2,
@@ -22,7 +22,7 @@ enum CompressionTyep {
     CMP_BROTLI = 5,
 };
 
-const char* compress_application_type(enum CompressionTyep compression);
+const char* compress_application_type(enum CompressionType compression);
 const char* uncompressed_file_type(const char* path, const char** ext);
 const char* acceptableEncoding(void);
-void set_compression(const char* p, enum CompressionTyep* pCompression);
+enum CompressionType get_compression(const char* p);

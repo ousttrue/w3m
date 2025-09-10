@@ -1,6 +1,6 @@
 #pragma once
-#include "URLFile.h"
-#include "url.h"
+#include "HttpRequest.h"
+#include "HttpResponse.h"
 #include "UserInteraction.h"
 #include <wc.h>
 
@@ -11,30 +11,26 @@ enum HttpConnectionStatus {
     HTST_CONNECT = 1,
 };
 
-#define FollowRedirection 10
-struct HttpClient {
-    struct URLFile f;
+#define MAX_FOLLOW_REDIRECTION 10
+
+struct HttpExchange {
     enum HttpConnectionStatus status;
+    union input_stream *stream;
+    struct HttpRequest request;
+    struct HttpResponse response;
+};
 
-    struct Url puv[FollowRedirection];
-    int nredir;
-
-    // const char* url;
-
+struct HttpClient {
+    struct UserInteraction ui;
+    struct HttpExchange exchanges[MAX_FOLLOW_REDIRECTION];
     Str uname;
     Str pwd;
     Str realm;
     bool add_auth_cookie_flag;
-
-    Str page;
-    const char* content_type;
-    wc_ces charset;
-
-    long long current_content_length;
+    const char *ssl_certificate;
 };
 
-void initHttpClient(struct HttpClient* c);
-bool checkRedirection(struct HttpClient* c, struct Url* pu);
-
+void httpInitClient(struct HttpClient* c, struct UserInteraction ui);
 struct Form;
-struct Content openHttp(struct HttpClient* c, const char* path, struct Url* current, struct Form* post, const char* referer, struct UserInteraction ui);
+struct Content httpRequest(struct HttpClient* c,
+    const char* path, struct Url* current, struct Form* post, const char* referer);

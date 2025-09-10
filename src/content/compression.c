@@ -125,7 +125,7 @@ const char* acceptableEncoding(void)
 //     }
 // }
 
-const char* compress_application_type(enum CompressionTyep compression)
+const char* compress_application_type(enum CompressionType compression)
 {
     for (struct compression_decoder* d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
         if (d->type == compression)
@@ -166,19 +166,14 @@ const char* uncompressed_file_type(const char* path, const char** ext)
     return t0;
 }
 
-void set_compression(const char* p, enum CompressionTyep* pCompression)
+enum CompressionType get_compression(const char* p)
 {
-    *pCompression = CMP_NOCOMPRESS;
-
     for (struct compression_decoder* d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
-        char** e;
-        for (e = d->encodings; *e != NULL; e++) {
+        for (char** e = d->encodings; *e != NULL; e++) {
             if (strncasecmp(p, *e, strlen(*e)) == 0) {
-                *pCompression = d->type;
-                break;
+                return d->type;
             }
         }
-        if (*pCompression != CMP_NOCOMPRESS)
-            break;
     }
+    return CMP_NOCOMPRESS;
 }

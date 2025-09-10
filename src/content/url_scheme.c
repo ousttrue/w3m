@@ -44,7 +44,7 @@ enum UrlScheme parseUrlScheme(const char** url)
         if (*p == ':') { /* scheme found */
             for (int i = 1; i < sizeof(schemetable) / sizeof(schemetable[0]); ++i) {
                 const char* q = schemetable[i].name;
-                int len = strlen(q);
+                int len = p-*url;
                 if (strncasecmp(q, *url, len) == 0) {
                     *url = p + 1;
                     return schemetable[i].scheme;
