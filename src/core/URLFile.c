@@ -27,18 +27,32 @@ void init_stream(struct URLFile* uf, int scheme, InputStream stream)
     uf->modtime = -1;
 }
 
+static bool canSaveFile(InputStream stream, const char* path2)
+{
+    int des = ISfileno(stream);
+    if (des < 0)
+        return true;
+
+    if (*path2 == '|' && PermitSaveToPipe)
+        return true;
+
+    struct stat st1, st2;
+    if ((fstat(des, &st1) == 0) && (stat(path2, &st2) == 0))
+        if (st1.st_ino == st2.st_ino)
+            return false;
+    return true;
+}
+
 int doFileSave(struct URLFile uf, const char* defstr, int current_content_length)
 {
-    Str msg;
-    // Str filen;
-    char* p;
-    pid_t pid;
-    char* lock;
-    char* tmpf = NULL;
-
     // if (fmInitialized)
     {
-        p = searchKeyData();
+        Str msg;
+        // Str filen;
+        pid_t pid;
+        char* lock;
+        char* tmpf = NULL;
+        const char* p = searchKeyData();
         if (p == NULL || *p == '\0') {
             /* FIXME: gettextize? */
             p = inputLineHist(getUI(), "(Download)Save file to: ",
@@ -49,7 +63,7 @@ int doFileSave(struct URLFile uf, const char* defstr, int current_content_length
         }
         if (!notExistsOrOverWrite(p))
             return -1;
-        if (checkSaveFile(uf.stream, p) < 0) {
+        if (!canSaveFile(uf.stream, p)) {
             /* FIXME: gettextize? */
             msg = Sprintf("Can't save. Load file and %s are identical.",
                 conv_from_system(p));

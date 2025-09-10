@@ -421,22 +421,6 @@ memchop(char* p, int* len)
     return;
 }
 
-int checkSaveFile(InputStream stream, const char* path2)
-{
-    int des = ISfileno(stream);
-    if (des < 0)
-        return 0;
-
-    if (*path2 == '|' && PermitSaveToPipe)
-        return 0;
-
-    struct stat st1, st2;
-    if ((fstat(des, &st1) == 0) && (stat(path2, &st2) == 0))
-        if (st1.st_ino == st2.st_ino)
-            return -1;
-    return 0;
-}
-
 // static sigjmp_buf AbortLoading;
 // static MySignalHandler KeyAbort(int _dummy)
 // {

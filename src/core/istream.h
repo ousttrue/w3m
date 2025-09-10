@@ -136,4 +136,3 @@ inline static Str str_of(union input_stream* stream) { return ((stream)->str.han
 
 int save2tmp(union input_stream* s, const char* tmpf);
 Str readAll(union input_stream* stream);
-int checkSaveFile(union input_stream* stream, const char* path);

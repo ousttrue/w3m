@@ -19,7 +19,7 @@
 
 bool PermitSaveToPipe = (false);
 
-static bool canCopyFile(const char* path1, const char* path2)
+bool canCopyFile(const char* path1, const char* path2)
 {
     if (*path2 == '|' && PermitSaveToPipe)
         return true;
