@@ -1,12 +1,12 @@
 #include "URLFile.h"
 #include "runtime.h"
+#include "buffer_loader.h"
 #include "compression.h"
 #include "downloadlist.h"
 #include "istream.h"
 #include "keymap.h"
 #include "linein.h"
 #include "history.h"
-#include "file_copy.h"
 #include "subprocess.h"
 #include "tty.h"
 #include <stdlib.h>

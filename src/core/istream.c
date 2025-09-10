@@ -1,6 +1,5 @@
 #include "istream.h"
 #include "ssl_util.h"
-#include "file_copy.h"
 #include "mimehead.h"
 #include <stdlib.h>
 #include <string.h>

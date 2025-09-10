@@ -7,7 +7,6 @@
 #include "mimetypes.h"
 #include "Content.h"
 #include "buffer_loader.h"
-#include "file_copy.h"
 #include "progress.h"
 #include "html_quote.h"
 #include "quote.h"

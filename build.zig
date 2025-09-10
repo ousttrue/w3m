@@ -99,7 +99,6 @@ const w3m_srcs = [_][]const u8{
     "HtmlTagParsed.c",
     "compression.c",
     "buffer_loader.c",
-    "file_copy.c",
     "HttpClient.c",
     "Content.c",
     "mimetypes.c",
