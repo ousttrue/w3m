@@ -4,7 +4,6 @@
 #include "buffer.h"
 #include "display.h"
 #include "regex.h"
-#include "mysignal.h"
 #include "linein.h"
 #include "keymap.h"
 #include "history.h"
@@ -38,7 +37,7 @@ set_mark(Line* l, int pos, int epos)
 }
 
 /* normalize search string */
-char* conv_search_string(const char* str, wc_ces f_ces)
+const char* conv_search_string(const char* str, wc_ces f_ces)
 {
     if (SearchConv && !WcOption.pre_conv && Currentbuf->document_charset != f_ces)
         str = wtf_conv_fit(str, Currentbuf->document_charset);
@@ -224,8 +223,32 @@ clear_mark(Line* l)
         l->propBuf[pos] &= ~PE_MARK;
 }
 
+typedef void (*MySignalFunc)(int);
+static MySignalFunc mySignal(int signal_number, MySignalFunc action)
+{
+#ifdef SA_RESTART
+    struct sigaction new_action, old_action;
+
+    sigemptyset(&new_action.sa_mask);
+    new_action.sa_handler = action;
+    if (signal_number == SIGALRM) {
+#ifdef SA_INTERRUPT
+        new_action.sa_flags = SA_INTERRUPT;
+#else
+        new_action.sa_flags = 0;
+#endif
+    } else {
+        new_action.sa_flags = SA_RESTART;
+    }
+    sigaction(signal_number, &new_action, &old_action);
+    return (old_action.sa_handler);
+#else
+    return (signal(signal_number, action));
+#endif
+}
+
 /* search by regular expression */
-static int srchcore(char* str, SearchFunc func)
+static int srchcore(const char* str, SearchFunc func)
 {
     volatile int result = SR_NOTFOUND;
 
