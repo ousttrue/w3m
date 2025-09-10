@@ -35,8 +35,11 @@ const content_public_headers = [_][]const u8{
     "HttpRequestMethod.h",
     "HttpRequest.h",
     "convertline.h",
+    "ssl_util.h",
+    "UserInteraction.h",
 };
 const content_srcs = [_][]const u8{
+    "ssl_util.c",
     "convertline.c",
     "HttpRequest.c",
     "KeyValue.c",
@@ -97,7 +100,6 @@ const w3m_srcs = [_][]const u8{
     "ui.c",
     "LineEditor.c",
 
-    "ssl_util.c",
     "str_util.c",
     "line.c",
 
