@@ -583,8 +583,8 @@ wtf_is_hangul(wc_uchar *p)
     return WC_FALSE;
 }
 
-char *
-wtf_conv_fit(char *s, wc_ces ces)
+const char *
+wtf_conv_fit(const char *s, wc_ces ces)
 {
     wc_uchar *p;
     Str os;
