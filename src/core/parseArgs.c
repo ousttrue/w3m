@@ -3,7 +3,6 @@
 #include "HttpRequest.h"
 #include "quote.h"
 #include "Content.h"
-#include "mysignal.h"
 #include "buffer_loader.h"
 #include "ctrlcode.h"
 #include "buffer.h"

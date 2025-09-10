@@ -26,7 +26,6 @@
 #include "funcname1.h"
 #include "form.h"
 #include "http.h"
-#include "mysignal.h"
 #include "proxy.h"
 #include "maparea.h"
 #include "ssl_util.h"
@@ -171,32 +170,32 @@ die_oom(size_t bytes)
     return NULL;
 }
 
-static void
-sig_chld(int signo)
-{
-    int p_stat;
-    pid_t pid;
+// static void
+// sig_chld(int signo)
+// {
+//     int p_stat;
+//     pid_t pid;
+//
+//     while ((pid = waitpid(-1, &p_stat, WNOHANG)) > 0) {
+//         DownloadList* d;
+//
+//         if (WIFEXITED(p_stat)) {
+//             for (d = FirstDL; d != NULL; d = d->next) {
+//                 if (d->pid == pid) {
+//                     d->err = WEXITSTATUS(p_stat);
+//                     break;
+//                 }
+//             }
+//         }
+//     }
+//     mySignal(SIGCHLD, sig_chld);
+// }
 
-    while ((pid = waitpid(-1, &p_stat, WNOHANG)) > 0) {
-        DownloadList* d;
-
-        if (WIFEXITED(p_stat)) {
-            for (d = FirstDL; d != NULL; d = d->next) {
-                if (d->pid == pid) {
-                    d->err = WEXITSTATUS(p_stat);
-                    break;
-                }
-            }
-        }
-    }
-    mySignal(SIGCHLD, sig_chld);
-}
-
-static void
-SigPipe(int _dummy)
-{
-    mySignal(SIGPIPE, SigPipe);
-}
+// static void
+// SigPipe(int _dummy)
+// {
+//     mySignal(SIGPIPE, SigPipe);
+// }
 
 static GC_warn_proc orig_GC_warn_proc = NULL;
 #define GC_WARN_KEEP_MAX (20)
@@ -321,15 +320,15 @@ void initialize()
         BookmarkFile = rcFile(BOOKMARK);
 
     fmInit();
-    mySignal(SIGWINCH, resize_hook);
+    // mySignal(SIGWINCH, resize_hook);
 
     sync_with_option();
     initCookie();
     if (UseHistory)
         loadHistory(URLHist);
 
-    mySignal(SIGCHLD, sig_chld);
-    mySignal(SIGPIPE, SigPipe);
+    // mySignal(SIGCHLD, sig_chld);
+    // mySignal(SIGPIPE, SigPipe);
 
     orig_GC_warn_proc = GC_get_warn_proc();
     GC_set_warn_proc((void*)wrap_GC_warn_proc);
@@ -383,31 +382,31 @@ void reset_exit(int _dummy)
     reset_exit_with_value(0, 0);
 }
 
-void error_dump(int _dummy)
-{
-    mySignal(SIGIOT, SIG_DFL);
-    resetTerm();
-    flush_tty();
-    TerminalSet(NULL);
-    close_tty();
+// void error_dump(int _dummy)
+// {
+//     mySignal(SIGIOT, SIG_DFL);
+//     resetTerm();
+//     flush_tty();
+//     TerminalSet(NULL);
+//     close_tty();
+//
+//     abort();
+// }
 
-    abort();
-}
-
-void set_int(void)
-{
-    mySignal(SIGHUP, reset_exit);
-    mySignal(SIGINT, reset_exit);
-    mySignal(SIGQUIT, reset_exit);
-    mySignal(SIGTERM, reset_exit);
-    mySignal(SIGILL, error_dump);
-    mySignal(SIGIOT, error_dump);
-    mySignal(SIGFPE, error_dump);
-#ifdef SIGBUS
-    mySignal(SIGBUS, error_dump);
-#endif /* SIGBUS */
-    /* mySignal(SIGSEGV, error_dump); */
-}
+// void set_int(void)
+// {
+//     mySignal(SIGHUP, reset_exit);
+//     mySignal(SIGINT, reset_exit);
+//     mySignal(SIGQUIT, reset_exit);
+//     mySignal(SIGTERM, reset_exit);
+//     mySignal(SIGILL, error_dump);
+//     mySignal(SIGIOT, error_dump);
+//     mySignal(SIGFPE, error_dump);
+// #ifdef SIGBUS
+//     mySignal(SIGBUS, error_dump);
+// #endif /* SIGBUS */
+//     /* mySignal(SIGSEGV, error_dump); */
+// }
 
 /*
  * Screen initialize
@@ -433,7 +432,7 @@ int initscr(void)
 void fmInit(void)
 {
     set_tty();
-    set_int();
+    // set_int();
     initscr();
     struct VirtualTerm* vt = getScreen();
     vt_setupscreen(vt, getLines(), getCols());
@@ -953,12 +952,12 @@ bool onFrame()
     }
     if (!Currentbuf->event)
         CurrentAlarm = &DefaultAlarm;
-    if (CurrentAlarm->sec > 0) {
-        mySignal(SIGALRM, SigAlarm);
-        alarm(CurrentAlarm->sec);
-    }
+    // if (CurrentAlarm->sec > 0) {
+    //     mySignal(SIGALRM, SigAlarm);
+    //     alarm(CurrentAlarm->sec);
+    // }
 
-    mySignal(SIGWINCH, resize_hook);
+    // mySignal(SIGWINCH, resize_hook);
     if (activeImage && displayImage && Currentbuf->img && !Currentbuf->image_loaded) {
         loadImage(Currentbuf, IMG_FLAG_NEXT, false);
         bufToScreen(getUI(), Currentbuf);
@@ -1115,11 +1114,11 @@ static void intTrap(int _dummy)
     siglongjmp(IntReturn, 0);
 }
 
-void resize_hook(int _dummy)
-{
-    need_resize_screen = true;
-    mySignal(SIGWINCH, resize_hook);
-}
+// void resize_hook(int _dummy)
+// {
+//     need_resize_screen = true;
+//     mySignal(SIGWINCH, resize_hook);
+// }
 
 static void
 resize_screen(void)
@@ -3624,10 +3623,10 @@ static void SigAlarm(int _dummy)
         }
         if (!Currentbuf->event)
             CurrentAlarm = &DefaultAlarm;
-        if (CurrentAlarm->sec > 0) {
-            mySignal(SIGALRM, SigAlarm);
-            alarm(CurrentAlarm->sec);
-        }
+        // if (CurrentAlarm->sec > 0) {
+        //     mySignal(SIGALRM, SigAlarm);
+        //     alarm(CurrentAlarm->sec);
+        // }
     }
 }
 

@@ -26,6 +26,29 @@ close_all_fds_except(int i, int f)
     }
 }
 
+void reset_signals(void)
+{
+#ifdef WIN32
+#else
+#ifdef SIGHUP
+    mySignal(SIGHUP, SIG_DFL); /* terminate process */
+#endif
+    mySignal(SIGINT, SIG_DFL); /* terminate process */
+#ifdef SIGQUIT
+    mySignal(SIGQUIT, SIG_DFL); /* terminate process */
+#endif
+    mySignal(SIGTERM, SIG_DFL); /* terminate process */
+    mySignal(SIGILL, SIG_DFL); /* create core image */
+    mySignal(SIGIOT, SIG_DFL); /* create core image */
+    mySignal(SIGFPE, SIG_DFL); /* create core image */
+#ifdef SIGBUS
+    mySignal(SIGBUS, SIG_DFL); /* create core image */
+#endif /* SIGBUS */
+    mySignal(SIGCHLD, SIG_IGN);
+    mySignal(SIGPIPE, SIG_IGN);
+#endif
+}
+
 #define SETPGRP_VOID 1
 #ifdef SETPGRP_VOID
 #define SETPGRP() setpgrp()

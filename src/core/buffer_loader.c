@@ -7,7 +7,6 @@
 #include "html_quote.h"
 #include "Content.h"
 #include "istream.h"
-#include "mysignal.h"
 #include "screen.h"
 #include "auth.h"
 #include "local.h"
@@ -35,9 +34,6 @@
 #include <openssl/ssl.h>
 #include <strings.h>
 #include <unistd.h>
-// #include "mysignal.h"
-// #include <setjmp.h>
-// #include <signal.h>
 #include <wc.h>
 #include <wtf.h>
 
