@@ -94,12 +94,12 @@ const char* guessFileName(const char* file)
 const char* guessSaveName(TextList* document_header, const char* path)
 {
     if (document_header) {
-        Str name = NULL;
+        struct CharSlice name;
         const char *p, *q;
-        if ((p = getHttpHeaderValue(document_header, "Content-Disposition:")) != NULL && (q = strcasestr(p, "filename")) != NULL && (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') && matchattr(q, "filename", 8, &name))
-            path = name->ptr;
-        else if ((p = getHttpHeaderValue(document_header, "Content-Type:")) != NULL && (q = strcasestr(p, "name")) != NULL && (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') && matchattr(q, "name", 4, &name))
-            path = name->ptr;
+        if ((p = getHttpHeaderValue(document_header, "Content-Disposition:")) != NULL && (q = strcasestr(p, "filename")) != NULL && (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') && matchattr(q, (struct CharSlice) { "filename", 8 }, &name))
+            path = Strnew_charp_n(name.p, name.len)->ptr;
+        else if ((p = getHttpHeaderValue(document_header, "Content-Type:")) != NULL && (q = strcasestr(p, "name")) != NULL && (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') && matchattr(q, (struct CharSlice){ "name", 4 }, &name))
+            path = Strnew_charp_n(name.p, name.len)->ptr;
     }
     return guessFileName(path);
 }

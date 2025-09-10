@@ -1,37 +1,63 @@
 #include "http_message.h"
 #include "myctype.h"
+#include <string.h>
 #include <strings.h>
 
-bool matchattr(const char* p, const char* attr, int len, Str* value)
+struct CharSlice makeSlice(const char* p)
 {
-    const char* q = NULL;
-    if (strncasecmp(p, attr, len) == 0) {
-        p += len;
-        SKIP_BLANKS(p);
-        if (value) {
-            *value = Strnew();
-            if (*p == '=') {
-                p++;
-                SKIP_BLANKS(p);
-                int quoted = 0;
-                while (!IS_ENDL(*p) && (quoted || *p != ';')) {
-                    if (!IS_SPACE(*p))
-                        q = p;
-                    if (*p == '"')
-                        quoted = (quoted) ? 0 : 1;
-                    else
-                        Strcat_char(*value, *p);
-                    p++;
-                }
-                if (q)
-                    Strshrink(*value, p - q - 1);
-            }
-            return 1;
-        } else {
-            if (IS_ENDT(*p)) {
-                return 1;
-            }
-        }
+    return (struct CharSlice) {
+        p,
+        strlen(p),
+    };
+}
+
+bool startswith(const char* p, struct CharSlice slice)
+{
+    return strncasecmp(p, slice.p, slice.len) == 0;
+}
+
+struct CharSlice extractSemiColon(const char* p, struct CharSlice attr)
+{
+    if (!startswith(p, attr)) {
+        // not found
+        return (struct CharSlice) { 0, 0 };
     }
-    return 0;
+
+    p += attr.len;
+    SKIP_BLANKS(p);
+
+    if (IS_ENDT(*p)) {
+        // found and empty value
+        return (struct CharSlice) { p, 0 };
+    }
+
+    if (*p != '=') {
+        // not found
+        return (struct CharSlice) { 0, 0 };
+    }
+    p++;
+    SKIP_BLANKS(p);
+
+    if (*p == '"') {
+        // quoted. search "
+        p++;
+        struct CharSlice slice = {
+            .p = p,
+            .len = 0,
+        };
+        for (; !IS_ENDL(*p) && *p != '"'; ++p) {
+            ++slice.len;
+        }
+        return slice;
+    } else {
+        // not quoted search ;
+        struct CharSlice slice = {
+            .p = p,
+            .len = 0,
+        };
+        for (; !IS_ENDL(*p) && *p != ';'; ++p) {
+            ++slice.len;
+        }
+        return slice;
+    }
 }

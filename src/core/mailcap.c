@@ -437,9 +437,10 @@ unquote_mailcap_loop(const char* qstr, const char* type, const char* name, const
                     break;
                 }
             } else if (*p == '}') {
-                char* q;
-                if (attr && (q = strcasestr(attr, tmp->ptr)) != NULL && (q == attr || IS_SPACE(*(q - 1)) || *(q - 1) == ';') && matchattr(q, tmp->ptr, tmp->length, &tmp)) {
-                    Strcat_charp(str, quote_mailcap(tmp->ptr, flag)->ptr);
+                const char* q;
+                struct CharSlice value;
+                if (attr && (q = strcasestr(attr, tmp->ptr)) != NULL && (q == attr || IS_SPACE(*(q - 1)) || *(q - 1) == ';') && matchattr(q, (struct CharSlice) { tmp->ptr, tmp->length }, &value)) {
+                    Strcat_charp(str, quote_mailcap(Strnew_charp_n(value.p, value.len), flag)->ptr);
                     if (mc_stat)
                         *mc_stat |= MCSTAT_REPPARAM;
                 }

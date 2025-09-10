@@ -400,7 +400,7 @@ static struct Content openHttp(struct HttpClient* c, const char* path, struct Ur
         && ((p = getHttpHeaderValue(response.headers, "Set-Cookie:"))
             || (p = getHttpHeaderValue(response.headers, "Set-Cookie2:")))) {
         Str name = Strnew(), value = Strnew(), domain = NULL, path = NULL,
-            comment = NULL, commentURL = NULL, port = NULL, tmp2;
+            comment = NULL, commentURL = NULL, port = NULL;
         int version, quoted, flag = 0;
         time_t expires = (time_t)-1;
 
@@ -423,29 +423,30 @@ static struct Content openHttp(struct HttpClient* c, const char* path, struct Ur
         while (*p == ';') {
             p++;
             SKIP_BLANKS(p);
-            if (matchattr(p, "expires", 7, &tmp2)) {
+            struct CharSlice tmp2;
+            if (matchattr(p, (struct CharSlice) { "expires", 7 }, &tmp2)) {
                 /* version 0 */
-                expires = mymktime(tmp2->ptr);
-            } else if (matchattr(p, "max-age", 7, &tmp2)) {
+                expires = mymktime(Strnew_charp_n(tmp2.p, tmp2.len)->ptr);
+            } else if (matchattr(p, (struct CharSlice) { "max-age", 7 }, &tmp2)) {
                 /* XXX Is there any problem with max-age=0? (RFC 2109 ss. 4.2.1, 4.2.2 */
-                expires = time(NULL) + atol(tmp2->ptr);
-            } else if (matchattr(p, "domain", 6, &tmp2)) {
-                domain = tmp2;
-            } else if (matchattr(p, "path", 4, &tmp2)) {
-                path = tmp2;
-            } else if (matchattr(p, "secure", 6, NULL)) {
+                expires = time(NULL) + atol(Strnew_charp_n(tmp2.p, tmp2.len)->ptr);
+            } else if (matchattr(p, (struct CharSlice) { "domain", 6 }, &tmp2)) {
+                domain = Strnew_charp_n(tmp2.p, tmp2.len);
+            } else if (matchattr(p, (struct CharSlice) { "path", 4 }, &tmp2)) {
+                path = Strnew_charp_n(tmp2.p, tmp2.len);
+            } else if (matchattr(p, (struct CharSlice) { "secure", 6 }, NULL)) {
                 flag |= COO_SECURE;
-            } else if (matchattr(p, "comment", 7, &tmp2)) {
-                comment = tmp2;
-            } else if (matchattr(p, "version", 7, &tmp2)) {
-                version = atoi(tmp2->ptr);
-            } else if (matchattr(p, "port", 4, &tmp2)) {
+            } else if (matchattr(p, (struct CharSlice) { "comment", 7 }, &tmp2)) {
+                comment = Strnew_charp_n(tmp2.p, tmp2.len);
+            } else if (matchattr(p, (struct CharSlice) { "version", 7 }, &tmp2)) {
+                version = atoi(Strnew_charp_n(tmp2.p, tmp2.len)->ptr);
+            } else if (matchattr(p, (struct CharSlice) { "port", 4 }, &tmp2)) {
                 /* version 1, Set-Cookie2 */
-                port = tmp2;
-            } else if (matchattr(p, "commentURL", 10, &tmp2)) {
+                port = Strnew_charp_n(tmp2.p, tmp2.len);
+            } else if (matchattr(p, (struct CharSlice) { "commentURL", 10 }, &tmp2)) {
                 /* version 1, Set-Cookie2 */
-                commentURL = tmp2;
-            } else if (matchattr(p, "discard", 7, NULL)) {
+                commentURL = Strnew_charp_n(tmp2.p, tmp2.len);
+            } else if (matchattr(p, (struct CharSlice) { "discard", 7 }, NULL)) {
                 /* version 1, Set-Cookie2 */
                 flag |= COO_DISCARD;
             }
