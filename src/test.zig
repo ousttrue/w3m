@@ -1,6 +1,6 @@
 const std = @import("std");
 const c = @cImport({
-    @cInclude("src/core/http_message.h");
+    @cInclude("src/content/http_message.h");
 });
 
 fn toSlice(slice: c.CharSlice) ?[]u8 {

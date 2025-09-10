@@ -1,5 +1,6 @@
 #pragma once
 #include <Str.h>
+#include <stdbool.h>
 
 extern char* mailcap_files;
 

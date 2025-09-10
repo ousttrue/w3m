@@ -41,8 +41,12 @@ const content_public_headers = [_][]const u8{
     "subprocess.h",
     "local_cgi.h",
     "html_quote.h",
+    "mailcap.h",
+    "http_message.h",
 };
 const content_srcs = [_][]const u8{
+    "http_message.c",
+    "mailcap.c",
     "html_quote.c",
     "local_cgi.c",
     "subprocess.c",
@@ -71,7 +75,6 @@ const system_libs = [_][]const u8{
     "z",
 };
 const w3m_srcs = [_][]const u8{
-    "http_message.c",
     "URLFile.c",
     "HttpResponse.c",
     "token.c",
@@ -115,7 +118,6 @@ const w3m_srcs = [_][]const u8{
     "maparea.c",
     "rc.c",
     "menu.c",
-    "mailcap.c",
     "image.c",
     "symbol.c",
     "history.c",
@@ -179,7 +181,7 @@ pub fn build(b: *std.Build) void {
     });
     exe_tests.addCSourceFiles(.{
         .files = &.{
-            "src/core/http_message.c",
+            "src/content/http_message.c",
         },
     });
     exe_tests.addIncludePath(b.path(""));
@@ -261,6 +263,7 @@ pub fn build(b: *std.Build) void {
                 b.fmt("-DETC_DIR=\"{s}\"", .{ETC_DIR}),
                 b.fmt("-DCONF_DIR=\"{s}\"", .{CONF_DIR}),
                 b.fmt("-DHELP_DIR=\"{s}\"", .{HELP_DIR}),
+                b.fmt("-DRC_DIR=\"{s}\"", .{RC_DIR}),
             },
         );
         lib.linkLibrary(gcs);
