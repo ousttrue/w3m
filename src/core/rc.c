@@ -496,8 +496,6 @@ struct param_ptr params4[] = {
 struct param_ptr params5[] = {
     { "document_root", P_STRING, PI_TEXT, (void*)&document_root, CMT_DROOT,
         NULL },
-    { "personal_document_root", P_STRING, PI_TEXT,
-        (void*)&personal_document_root, CMT_PDROOT, NULL },
     { "cgi_bin", P_STRING, PI_TEXT, (void*)&cgi_bin, CMT_CGIBIN, NULL },
     { "index_file", P_STRING, PI_TEXT, (void*)&index_file, CMT_IFILE, NULL },
     { "tmp_dir", P_STRING, PI_TEXT, (void*)&param_tmp_dir, CMT_TMP, NULL },

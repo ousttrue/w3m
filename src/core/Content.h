@@ -5,7 +5,6 @@
 #include <wc.h>
 
 extern char* index_file;
-extern char* document_root;
 extern char LocalhostOnly;
 extern int retryAsHttp;
 

@@ -39,10 +39,7 @@ typedef struct dirent Directory;
 #define S_ISLNK(m) (((m) & S_IFMT) == S_IFLNK)
 #endif /* not S_ISLNK */
 
-extern char* HostName;
 extern int multicolList;
-extern char* cgi_bin;
-extern char* personal_document_root;
 
 Str localCookie(void);
 Str loadLocalDir(char* dirname);

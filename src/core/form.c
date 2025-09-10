@@ -1,4 +1,5 @@
 #include "form.h"
+#include "str_util.h"
 #include "runtime.h"
 #include "convertline.h"
 #include "mimetypes.h"
@@ -659,11 +660,10 @@ int formChooseOptionByMenu(struct FormItem* fi, int x, int y)
 {
     int i, n, selected = -1, init_select = fi->selected;
     struct FormSelectOptionItem* opt;
-    char** label;
 
     for (n = 0, opt = fi->select_option; opt != NULL; n++, opt = opt->next)
         ;
-    label = New_N(char*, n + 1);
+    const char** label = New_N(char*, n + 1);
     for (i = 0, opt = fi->select_option; opt != NULL; i++, opt = opt->next)
         label[i] = opt->label->ptr;
     label[n] = NULL;

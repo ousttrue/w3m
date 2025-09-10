@@ -1,4 +1,5 @@
 #include "Content.h"
+#include "runtime.h"
 #include "HttpRequest.h"
 #include "HttpResponse.h"
 #include "istream.h"
@@ -24,7 +25,6 @@
 #include <assert.h>
 
 char* index_file = 0;
-char* document_root = 0;
 char LocalhostOnly = false;
 int retryAsHttp = true;
 

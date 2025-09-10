@@ -504,7 +504,7 @@ static const char* lastFileName(const char* path)
 Str le_doComplete(struct LineEditor* e, Str ifn, enum CompletionStatus* status, int next)
 {
     int fl, i;
-    char *fn, *p;
+    char *p;
     DIR* d;
     Directory* dir;
     struct stat st;
@@ -544,7 +544,7 @@ Str le_doComplete(struct LineEditor* e, Str ifn, enum CompletionStatus* status, 
                 e->CompleteBuf = escape_spaces(e->CompleteBuf);
             return e->CompleteBuf;
         }
-        fn = lastFileName(ifn->ptr);
+        const char* fn = lastFileName(ifn->ptr);
         fl = strlen(fn);
         e->CFileName = Strnew();
         for (;;) {
@@ -608,7 +608,8 @@ Str le_doComplete(struct LineEditor* e, Str ifn, enum CompletionStatus* status, 
     }
     if (e->cm_mode & CPL_ON)
         e->CompleteBuf = escape_spaces(e->CompleteBuf);
-    return Str_conv_from_system(e->CompleteBuf);
+
+    return wc_Str_conv(e->CompleteBuf, SystemCharset, InnerCharset);
 }
 
 int le_setStrType(struct LineEditor* e, Str str, Lineprop* prop)

@@ -1,4 +1,5 @@
 #include "http.h"
+#include "str_util.h"
 #include "url.h"
 #include "cookie.h"
 #include "html_form.h"
@@ -99,20 +100,6 @@ struct ContentTypeCharset getContentType(TextList* document_header)
         }
     }
     return content_type_charset;
-}
-
-const char* mybasename(const char* s)
-{
-    const char* p = s;
-    while (*p)
-        p++;
-    while (s <= p && *p != '/')
-        p--;
-    if (*p == '/')
-        p++;
-    else
-        p = s;
-    return allocStr(p, -1);
 }
 
 #define DEF_SAVE_FILE "index.html"

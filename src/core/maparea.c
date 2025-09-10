@@ -1,4 +1,5 @@
 #include "maparea.h"
+#include "str_util.h"
 #include "html_quote.h"
 #include "w3m.h"
 #include "buffer_loader.h"
@@ -342,26 +343,21 @@ newMapArea(const char* url, const char* target, const char* alt, const char* sha
 static void
 append_map_info(Buffer* buf, Str tmp, struct FormItem* fi)
 {
-    MapList* ml;
-    ListItem* al;
-    MapArea* a;
-    struct Url pu;
-    char* p;
-
-    ml = searchMapList(buf, fi->value ? fi->value->ptr : NULL);
+    MapList* ml = searchMapList(buf, fi->value ? fi->value->ptr : NULL);
     if (ml == NULL)
         return;
 
     Strcat_m_charp(tmp,
         "<tr valign=top><td colspan=2>Links of current image map",
         "<tr valign=top><td colspan=2><table>", NULL);
+    ListItem* al;
     for (al = ml->area->first; al != NULL; al = al->next) {
-        a = (MapArea*)al->ptr;
+        MapArea* a = (MapArea*)al->ptr;
         if (!a)
             continue;
-        pu = parseUrl(a->url, baseURL(buf));
+        struct Url pu = parseUrl(a->url, baseURL(buf));
         const char* q = html_quote(parsedURL2Str(&pu)->ptr);
-        p = html_quote(url_decode2(a->url, buf));
+        const char* p = html_quote(url_decode2(a->url, buf));
         Strcat_m_charp(tmp, "<tr valign=top><td>&nbsp;&nbsp;<td><a href=\"",
             q, "\">",
             html_quote(*a->alt ? a->alt : mybasename(a->url)),

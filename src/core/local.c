@@ -1,15 +1,14 @@
 #include "local.h"
 #include "runtime.h"
+#include "str_util.h"
 #include "HttpRequest.h"
-#include "runtime.h"
-#include "Content.h"
 #include "subprocess.h"
 #include "html_form.h"
 #include "ui.h"
-#include "http.h"
 #include "screen.h"
 #include "quote.h"
 #include "html_quote.h"
+#include <wc.h>
 #include <alloc.h>
 #include <string.h>
 #include <stdio.h>
@@ -20,14 +19,7 @@
 #include <time.h>
 #include <unistd.h>
 
-char* HostName = (NULL);
 int multicolList = (false);
-char* cgi_bin = (NULL);
-char* personal_document_root = (NULL);
-
-#define CGIFN_NORMAL 0
-#define CGIFN_LIBDIR 1
-#define CGIFN_CGIBIN 2
 
 static Str Local_cookie = NULL;
 static char* Local_cookie_file = NULL;
@@ -35,13 +27,12 @@ static char* Local_cookie_file = NULL;
 static void
 writeLocalCookie()
 {
-    FILE* f;
 
     if (Local_cookie_file)
         return;
     Local_cookie_file = tmpfname(TMPF_COOKIE, NULL)->ptr;
     set_environ("LOCAL_COOKIE_FILE", Local_cookie_file);
-    f = fopen(Local_cookie_file, "wb");
+    FILE* f = fopen(Local_cookie_file, "wb");
     if (!f)
         return;
     localCookie();
@@ -65,6 +56,7 @@ static int strCmp(const void* s1, const void* s2)
     return strcmp(*(const char**)s1, *(const char**)s2);
 }
 
+
 Str loadLocalDir(char* dname)
 {
     Str tmp;
@@ -86,8 +78,8 @@ Str loadLocalDir(char* dname)
     dirname = Strnew_charp(dname);
     if (Strlastchar(dirname) != '/')
         Strcat_char(dirname, '/');
-    const char* qdir = html_quote(Str_conv_from_system(dirname)->ptr);
-    /* FIXME: gettextize? */
+
+    const char* qdir = html_quote(wc_Str_conv(dirname, SystemCharset, InnerCharset)->ptr);
     tmp = Strnew_m_charp("<HTML>\n<HEAD>\n<BASE HREF=\"file://",
         html_quote(file_quote(dirname->ptr)),
         "\">\n<TITLE>Directory list of ", qdir,
@@ -179,8 +171,14 @@ Str loadLocalDir(char* dname)
     return tmp;
 }
 
+enum CgiType {
+    CGIFN_NORMAL = 0,
+    CGIFN_LIBDIR = 1,
+    CGIFN_CGIBIN = 2,
+};
+
 static int
-check_local_cgi(const char* file, int status)
+check_local_cgi(const char* file, enum CgiType status)
 {
     struct stat st;
 
@@ -240,7 +238,7 @@ checkPath(const char* fn, const char* path)
     return NULL;
 }
 
-static int
+static enum CgiType
 cgi_filename(const char* uri, const char** fn, const char** name, const char** path_info)
 {
     Str tmp;
@@ -307,8 +305,8 @@ static const char* mydirname(const char* s)
 
 FILE* localcgi_post(const char* uri, const char* qstr, struct Form* request, const char* referer)
 {
-    FILE *fr = NULL;
-    FILE *fw = NULL;
+    FILE* fr = NULL;
+    FILE* fw = NULL;
     const char* file = uri;
     const char* name = uri;
     const char* path_info = NULL;

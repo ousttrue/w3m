@@ -1,11 +1,15 @@
 #pragma once
 #include <Str.h>
 
+extern const char* HostName;
 extern char* w3m_version;
 extern const char* CurrentDir;
 extern int CurrentPid;
 extern char* tmp_dir;
 extern char* rc_dir;
+// local-cgi
+extern const char* cgi_bin;
+extern const char* document_root;
 
 const char* expandPath(const char* name);
 const char* expandName(const char* name);

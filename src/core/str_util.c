@@ -86,7 +86,6 @@ Str romanAlphabet(int n)
     return r;
 }
 
-
 Str escape_spaces(Str s)
 {
     if (!s)
@@ -127,4 +126,18 @@ Str unescape_spaces(Str s)
     if (tmp)
         return tmp;
     return s;
+}
+
+const char* mybasename(const char* s)
+{
+    const char* p = s;
+    while (*p)
+        p++;
+    while (s <= p && *p != '/')
+        p--;
+    if (*p == '/')
+        p++;
+    else
+        p = s;
+    return allocStr(p, -1);
 }

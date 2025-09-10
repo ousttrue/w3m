@@ -22,7 +22,6 @@ struct ContentTypeCharset {
 };
 struct ContentTypeCharset getContentType(TextList* document_header);
 const char* guessFileName(const char* file);
-const char* mybasename(const char* s);
 const char* guessSaveName(TextList* document_header, const char* file);
 
 bool is_text_type(const char* type);

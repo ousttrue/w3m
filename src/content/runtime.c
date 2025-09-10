@@ -14,10 +14,13 @@
 // #include "textlist.h"
 // #include "image.h"
 
+const char* HostName = (NULL);
 const char* CurrentDir = 0;
 int CurrentPid = -1;
 char* tmp_dir = 0;
 char* rc_dir = 0;
+const char* cgi_bin = (NULL);
+const char* document_root = 0;
 
 TextList* g_fileToDelete = NULL;
 

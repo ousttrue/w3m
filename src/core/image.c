@@ -1,5 +1,6 @@
 #include "image.h"
 #include "linein.h"
+#include "str_util.h"
 #include "runtime.h"
 #include "mimetypes.h"
 #include "subprocess.h"
