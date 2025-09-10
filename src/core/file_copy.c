@@ -19,23 +19,6 @@
 
 bool PermitSaveToPipe = (false);
 
-bool notExistsOrOverWrite(const char* path)
-{
-    struct stat st;
-    if (stat(path, &st) < 0) {
-        // not exists
-        return true;
-    }
-
-    const char* ans = inputAnswer("File exists. Overwrite? (y/n)");
-    if (ans && TOLOWER(*ans) == 'y') {
-        // can overwrite
-        return true;
-    }
-
-    return false;
-}
-
 static bool canCopyFile(const char* path1, const char* path2)
 {
     if (*path2 == '|' && PermitSaveToPipe)

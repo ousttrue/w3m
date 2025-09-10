@@ -9,6 +9,7 @@
 #include "LineEditor.h"
 #include <stdbool.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <wtf.h>
 
 int space_autocomplete = false;
@@ -57,7 +58,7 @@ LineEditorFunc InputKeymap[32] = {
 
 static struct LineEditor g_editor;
 
-char* inputLineHistSearch(struct UI ui,
+const char* inputLineHistSearch(struct UI ui,
     const char* prompt, const char* def_str, enum InputLineFlags flag, struct Hist* hist, IncFunc incrfunc)
 {
     le_initialize(&g_editor, ui, hist, flag, def_str);
@@ -184,12 +185,12 @@ char* inputLineHistSearch(struct UI ui,
         return allocStr(p, -1);
 }
 
-char* inputAnswer(const char* prompt)
+const char* inputAnswer(const char* prompt)
 {
     if (QuietMessage)
         return "n";
 
-    char* ans;
+    const char* ans;
     // if (fmInitialized)
     {
         // term_raw();
@@ -203,3 +204,19 @@ char* inputAnswer(const char* prompt)
     return ans;
 }
 
+bool notExistsOrOverWrite(const char* path)
+{
+    struct stat st;
+    if (stat(path, &st) < 0) {
+        // not exists
+        return true;
+    }
+
+    const char* ans = inputAnswer("File exists. Overwrite? (y/n)");
+    if (ans && TOLOWER(*ans) == 'y') {
+        // can overwrite
+        return true;
+    }
+
+    return false;
+}
