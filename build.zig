@@ -37,8 +37,10 @@ const content_public_headers = [_][]const u8{
     "convertline.h",
     "ssl_util.h",
     "UserInteraction.h",
+    "auth.h",
 };
 const content_srcs = [_][]const u8{
+    "auth.c",
     "ssl_util.c",
     "convertline.c",
     "HttpRequest.c",
@@ -78,7 +80,6 @@ const w3m_srcs = [_][]const u8{
     "term_size.c",
     "term_renderer.c",
     "putc.c",
-    "auth.c",
     "mysignal.c",
     "http.c",
     "downloadlist.c",

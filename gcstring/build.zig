@@ -17,6 +17,7 @@ const public_headers = [_][]const u8{
     "quote.h",
     "textlist.h",
     "base64.h",
+    "ctrlcode.h",
 };
 
 const srcs = [_][]const u8{
