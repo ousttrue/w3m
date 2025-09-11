@@ -44,7 +44,7 @@ const char* conv_search_string(const char* str, wc_ces f_ces)
     return str;
 }
 
-enum SearchResultFlags forwardSearch(Buffer* buf, char* str)
+enum SearchResultFlags forwardSearch(struct Buffer* buf, char* str)
 {
     char *p, *first, *last;
     Line *l, *begin;
@@ -113,7 +113,7 @@ enum SearchResultFlags forwardSearch(Buffer* buf, char* str)
     return SR_NOTFOUND;
 }
 
-enum SearchResultFlags backwardSearch(Buffer* buf, char* str)
+enum SearchResultFlags backwardSearch(struct Buffer* buf, char* str)
 {
     char *p, *q, *found, *found_last, *first, *last;
     Line *l, *begin;
@@ -287,7 +287,7 @@ disp_srchresult(int result, char* prompt, char* str)
 static int
 dispincsrch(int ch, Str buf, Lineprop* prop)
 {
-    static Buffer sbuf;
+    static struct Buffer sbuf;
     char* str;
     int do_next_search = false;
 
@@ -342,7 +342,7 @@ dispincsrch(int ch, Str buf, Lineprop* prop)
 void isrch(SearchFunc func, char* prompt)
 {
     char* str;
-    Buffer sbuf;
+    struct Buffer sbuf;
     SAVE_BUFPOSITION(&sbuf);
     dispincsrch(0, NULL, NULL); /* initialize incremental search state */
 

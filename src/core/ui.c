@@ -28,8 +28,8 @@ wc_ces DisplayCharset = DISPLAY_CHARSET;
 wc_ces SystemCharset = SYSTEM_CHARSET;
 wc_ces BookmarkCharset = (SYSTEM_CHARSET);
 
-Buffer* Currentbuf = 0;
-Buffer* Firstbuf = 0;
+struct Buffer* Currentbuf = 0;
+struct Buffer* Firstbuf = 0;
 
 const char* url_quote_conv(const char* x, wc_ces c)
 {
@@ -149,7 +149,7 @@ void ui_printStatus(const char* fmt, ...)
     va_end(args);
 }
 
-static Str make_lastline_link(Buffer* buf, char* title, char* url)
+static Str make_lastline_link(struct Buffer* buf, char* title, char* url)
 {
     Str s = NULL, u;
     struct Url pu;
@@ -196,7 +196,7 @@ static Str make_lastline_link(Buffer* buf, char* title, char* url)
     return s;
 }
 
-static Str make_lastline_message(Buffer* buf)
+static Str make_lastline_message(struct Buffer* buf)
 {
     Str msg, s = NULL;
     int sl = 0;
@@ -267,7 +267,7 @@ void renderFrame(struct UI ui)
     // int cursorRow = ui.vt->CurLine;
     // int cursorCol = ui.vt->CurColumn;
 
-    Buffer* buf = Currentbuf;
+    struct Buffer* buf = Currentbuf;
     int cursorRow = buf->cursorY;
     int cursorCol = buf->cursorX;
     drawAnchorCursor(ui, buf);

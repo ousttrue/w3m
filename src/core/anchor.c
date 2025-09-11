@@ -15,7 +15,7 @@
 
 int MarkAllPages = (false);
 
-typedef Anchor* (*AnchorFunc)(Buffer*, const char*, const char*, int, int);
+typedef Anchor* (*AnchorFunc)(struct Buffer*, const char*, const char*, int, int);
 
 #define bpcmp(a, b) \
     (((a).line - (b).line) ? ((a).line - (b).line) : ((a).pos - (b).pos))
@@ -73,7 +73,7 @@ putAnchor(AnchorList* al, const char* url, const char* target, Anchor** anchor_r
 }
 
 Anchor*
-registerHref(Buffer* buf, const char* url, const char* target, const char* referer, const char* title,
+registerHref(struct Buffer* buf, const char* url, const char* target, const char* referer, const char* title,
     unsigned char key, int line, int pos)
 {
     Anchor* a;
@@ -84,7 +84,7 @@ registerHref(Buffer* buf, const char* url, const char* target, const char* refer
 
 Anchor*
 
-registerName(Buffer* buf, const char* url, int line, int pos)
+registerName(struct Buffer* buf, const char* url, int line, int pos)
 {
     Anchor* a;
     buf->name = putAnchor(buf->name, url, NULL, &a, NULL, NULL, '\0', line,
@@ -93,7 +93,7 @@ registerName(Buffer* buf, const char* url, int line, int pos)
 }
 
 Anchor*
-registerImg(Buffer* buf, const char* url, const char* title, int line, int pos)
+registerImg(struct Buffer* buf, const char* url, const char* title, int line, int pos)
 {
     Anchor* a;
     buf->img = putAnchor(buf->img, url, NULL, &a, NULL, title, '\0', line,
@@ -102,7 +102,7 @@ registerImg(Buffer* buf, const char* url, const char* title, int line, int pos)
 }
 
 Anchor*
-registerForm(Buffer* buf, struct Form* flist, struct HtmlTagParsed* tag, int line,
+registerForm(struct Buffer* buf, struct Form* flist, struct HtmlTagParsed* tag, int line,
     int pos)
 {
     Anchor* a;
@@ -158,7 +158,7 @@ retrieveAnchor(AnchorList* al, int line, int pos)
 }
 
 Anchor*
-retrieveCurrentAnchor(Buffer* buf)
+retrieveCurrentAnchor(struct Buffer* buf)
 {
     if (buf->currentLine == NULL)
         return NULL;
@@ -166,7 +166,7 @@ retrieveCurrentAnchor(Buffer* buf)
 }
 
 Anchor*
-retrieveCurrentImg(Buffer* buf)
+retrieveCurrentImg(struct Buffer* buf)
 {
     if (buf->currentLine == NULL)
         return NULL;
@@ -174,7 +174,7 @@ retrieveCurrentImg(Buffer* buf)
 }
 
 Anchor*
-retrieveCurrentForm(Buffer* buf)
+retrieveCurrentForm(struct Buffer* buf)
 {
     if (buf->currentLine == NULL)
         return NULL;
@@ -200,13 +200,13 @@ searchAnchor(AnchorList* al, const char* str)
 }
 
 Anchor*
-searchURLLabel(Buffer* buf, const char* url)
+searchURLLabel(struct Buffer* buf, const char* url)
 {
     return searchAnchor(buf->name, url);
 }
 
 static Anchor*
-_put_anchor_all(Buffer* buf, const char* p1, const char* p2, int line, int pos)
+_put_anchor_all(struct Buffer* buf, const char* p1, const char* p2, int line, int pos)
 {
     Str tmp = Strnew_charp_n(p1, p2 - p1);
     return registerHref(buf, url_quote(tmp->ptr),
@@ -233,7 +233,7 @@ reseq_anchor0(AnchorList* al, short* seqmap)
 
 /* renumber anchor */
 static void
-reseq_anchor(Buffer* buf)
+reseq_anchor(struct Buffer* buf)
 {
     int i, j, n, nmark = (buf->hmarklist) ? buf->hmarklist->nmark : 0;
     short* seqmap;
@@ -288,7 +288,7 @@ reseq_anchor(Buffer* buf)
 }
 
 static char*
-reAnchorPos(Buffer* buf, Line* l, char* p1, char* p2, AnchorFunc anchorproc)
+reAnchorPos(struct Buffer* buf, Line* l, char* p1, char* p2, AnchorFunc anchorproc)
 {
     Anchor* a;
     int spos, epos;
@@ -328,7 +328,7 @@ reAnchorPos(Buffer* buf, Line* l, char* p1, char* p2, AnchorFunc anchorproc)
     return p2;
 }
 
-void reAnchorWord(Buffer* buf, Line* l, int spos, int epos)
+void reAnchorWord(struct Buffer* buf, Line* l, int spos, int epos)
 {
     reAnchorPos(buf, l, &l->lineBuf[spos], &l->lineBuf[epos], _put_anchor_all);
 }
@@ -336,7 +336,7 @@ void reAnchorWord(Buffer* buf, Line* l, int spos, int epos)
 /* search regexp and register them as anchors */
 /* returns error message if any               */
 static const char*
-reAnchorAny(Buffer* buf, const char* re, AnchorFunc anchorproc)
+reAnchorAny(struct Buffer* buf, const char* re, AnchorFunc anchorproc)
 {
     Line* l;
     char *p = NULL, *p1, *p2;
@@ -363,7 +363,7 @@ reAnchorAny(Buffer* buf, const char* re, AnchorFunc anchorproc)
     return NULL;
 }
 
-const char* reAnchor(Buffer* buf, const char* re)
+const char* reAnchor(struct Buffer* buf, const char* re)
 {
     return reAnchorAny(buf, re, _put_anchor_all);
 }
@@ -469,7 +469,7 @@ void shiftAnchorPosition(AnchorList* al, HmarkerList* hl, int line, int pos,
     }
 }
 
-void addMultirowsImg(Buffer* buf, AnchorList* al)
+void addMultirowsImg(struct Buffer* buf, AnchorList* al)
 {
     int i, j, k, col, ecol, pos;
     Anchor a_img, a_href, a_form, *a;
@@ -545,7 +545,7 @@ void addMultirowsImg(Buffer* buf, AnchorList* al)
     }
 }
 
-void addMultirowsForm(Buffer* buf, AnchorList* al)
+void addMultirowsForm(struct Buffer* buf, AnchorList* al)
 {
     int i, j, k, col, ecol, pos;
     Anchor a_form, *a;
@@ -601,7 +601,7 @@ void addMultirowsForm(Buffer* buf, AnchorList* al)
     }
 }
 
-char* getAnchorText(Buffer* buf, AnchorList* al, Anchor* a)
+char* getAnchorText(struct Buffer* buf, AnchorList* al, Anchor* a)
 {
     int hseq, i;
     Line* l;
@@ -637,8 +637,8 @@ char* getAnchorText(Buffer* buf, AnchorList* al, Anchor* a)
     return tmp ? tmp->ptr : NULL;
 }
 
-Buffer*
-link_list_panel(Buffer* buf)
+struct Buffer*
+link_list_panel(struct Buffer* buf)
 {
     if (buf->bufferprop & BP_INTERNAL || (buf->linklist == NULL && buf->href == NULL && buf->img == NULL)) {
         return NULL;
@@ -760,7 +760,7 @@ link_list_panel(Buffer* buf)
         Strcat_charp(tmp, "</ol>\n");
     }
 
-    Buffer* newBuf = loadHTMLString(tmp, WC_CES_UTF_8);
+    struct Buffer* newBuf = loadHTMLString(tmp, WC_CES_UTF_8);
     newBuf->document_charset = buf->document_charset;
     return newBuf;
 }

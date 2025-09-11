@@ -18,7 +18,7 @@ extern char* DictCommand;
 extern int use_mark;
 
 extern int clear_buffer;
-extern char* config_file;
+extern const char* config_file;
 extern char FollowLocale;
 extern int confirm_on_quit;
 
@@ -27,7 +27,7 @@ extern const char* CurrentKeyData;
 extern const char* CurrentCmdData;
 
 struct KeyValue;
-struct _Buffer;
+struct Buffer;
 struct Frame;
 
 enum AlarmStatus {
@@ -51,15 +51,15 @@ void fmTerm();
 int main_loop(const char* line_str);
 void _goLine(const char* l);
 
-void delBuffer(struct _Buffer* buf);
+void delBuffer(struct Buffer* buf);
 
 bool onFrame();
 void onKeyInput(unsigned char c);
 
 void pushEvent(int cmd, void* data);
-void chkURLBuffer(struct _Buffer* buf);
+void chkURLBuffer(struct Buffer* buf);
 struct _AlarmEvent* setAlarmEvent(struct _AlarmEvent* event, int sec, short status, int cmd, void* data);
-void tmpClearBuffer(struct _Buffer* buf);
+void tmpClearBuffer(struct Buffer* buf);
 
 void change_charset(struct KeyValue* arg);
 void saveBufferInfo(void);

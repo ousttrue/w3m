@@ -20,7 +20,7 @@ void updateSelectOption(struct FormItem* fi, struct FormSelectOptionItem* item);
 int formChooseOptionByMenu(struct FormItem* fi, int x, int y);
 
 struct _anchor;
-struct _Buffer;
+struct Buffer;
 struct HtmlTagParsed;
 struct _anchorList;
 
@@ -31,10 +31,10 @@ struct FormItem* formList_addInput(struct Form* fl,
     struct HtmlTagParsed* tag);
 const char* form2str(struct FormItem* fi);
 int formtype(const char* typestr);
-void formRecheckRadio(struct _anchor* a, struct _Buffer* buf, struct FormItem* form);
-void formResetBuffer(struct _Buffer* buf, struct _anchorList* formitem);
-void formUpdateBuffer(struct _anchor* a, struct _Buffer* buf, struct FormItem* form);
-void preFormUpdateBuffer(struct _Buffer* buf);
+void formRecheckRadio(struct _anchor* a, struct Buffer* buf, struct FormItem* form);
+void formResetBuffer(struct Buffer* buf, struct _anchorList* formitem);
+void formUpdateBuffer(struct _anchor* a, struct Buffer* buf, struct FormItem* form);
+void preFormUpdateBuffer(struct Buffer* buf);
 Str textfieldrep(Str s, int width);
 void input_textarea(struct FormItem* fi);
 void do_internal(const char* action, const char* data);

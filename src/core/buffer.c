@@ -34,13 +34,13 @@ int REV_LB[MAX_LB] = {
 };
 
 /*
- * Buffer creation
+ * struct Buffer creation
  */
-Buffer*
+struct Buffer*
 newBuffer()
 {
-    Buffer* n = New(Buffer);
-    memset(n, 0, sizeof(Buffer));
+    struct Buffer* n = New(struct Buffer);
+    memset(n, 0, sizeof(struct Buffer));
     n->width = 0;
     n->currentURL.scheme = SCM_UNKNOWN;
     n->baseURL = NULL;
@@ -59,10 +59,10 @@ newBuffer()
 /*
  * Create null buffer
  */
-Buffer*
+struct Buffer*
 nullBuffer(void)
 {
-    Buffer* b;
+    struct Buffer* b;
 
     b = newBuffer();
     b->buffername = "*Null*";
@@ -72,7 +72,7 @@ nullBuffer(void)
 /*
  * clearBuffer: clear buffer content
  */
-void clearBuffer(Buffer* buf)
+void clearBuffer(struct Buffer* buf)
 {
     buf->firstLine = buf->topLine = buf->currentLine = buf->lastLine = NULL;
     buf->allLine = 0;
@@ -82,12 +82,12 @@ void clearBuffer(Buffer* buf)
  * discardBuffer: free buffer structure
  */
 
-void discardBuffer(Buffer* buf)
+void discardBuffer(struct Buffer* buf)
 {
     deleteImage(buf);
     clearBuffer(buf);
     for (int i = 0; i < MAX_LB; i++) {
-        Buffer* b = buf->linkBuffer[i];
+        struct Buffer* b = buf->linkBuffer[i];
         if (b == NULL)
             continue;
         b->linkBuffer[REV_LB[i]] = NULL;
@@ -107,10 +107,10 @@ void discardBuffer(Buffer* buf)
 /*
  * namedBuffer: Select buffer which have specified name
  */
-Buffer*
-namedBuffer(Buffer* first, char* name)
+struct Buffer*
+namedBuffer(struct Buffer* first, char* name)
 {
-    Buffer* buf;
+    struct Buffer* buf;
 
     if (!strcmp(first->buffername, name)) {
         return first;
@@ -126,10 +126,10 @@ namedBuffer(Buffer* first, char* name)
 /*
  * deleteBuffer: delete buffer
  */
-Buffer*
-deleteBuffer(Buffer* first, Buffer* delbuf)
+struct Buffer*
+deleteBuffer(struct Buffer* first, struct Buffer* delbuf)
 {
-    Buffer *buf, *b;
+    struct Buffer *buf, *b;
 
     if (first == delbuf && first->nextBuffer != NULL) {
         buf = first->nextBuffer;
@@ -147,10 +147,10 @@ deleteBuffer(Buffer* first, Buffer* delbuf)
 /*
  * replaceBuffer: replace buffer
  */
-Buffer*
-replaceBuffer(Buffer* first, Buffer* delbuf, Buffer* newbuf)
+struct Buffer*
+replaceBuffer(struct Buffer* first, struct Buffer* delbuf, struct Buffer* newbuf)
 {
-    Buffer* buf;
+    struct Buffer* buf;
 
     if (delbuf == NULL) {
         newbuf->nextBuffer = first;
@@ -171,11 +171,11 @@ replaceBuffer(Buffer* first, Buffer* delbuf, Buffer* newbuf)
     return newbuf;
 }
 
-Buffer*
-nthBuffer(Buffer* firstbuf, int n)
+struct Buffer*
+nthBuffer(struct Buffer* firstbuf, int n)
 {
     int i;
-    Buffer* buf = firstbuf;
+    struct Buffer* buf = firstbuf;
 
     if (n < 0)
         return firstbuf;
@@ -188,7 +188,7 @@ nthBuffer(Buffer* firstbuf, int n)
 }
 
 static void
-writeBufferName(Buffer* buf, int n)
+writeBufferName(struct Buffer* buf, int n)
 {
     int all = buf->allLine;
     if (all == 0 && buf->lastLine != NULL)
@@ -220,7 +220,7 @@ writeBufferName(Buffer* buf, int n)
 /*
  * gotoLine: go to line number
  */
-void gotoLine(Buffer* buf, int n)
+void gotoLine(struct Buffer* buf, int n)
 {
     char msg[36];
     Line* l = buf->firstLine;
@@ -255,7 +255,7 @@ void gotoLine(Buffer* buf, int n)
 /*
  * gotoRealLine: go to real line number
  */
-void gotoRealLine(Buffer* buf, int n)
+void gotoRealLine(struct Buffer* buf, int n)
 {
     char msg[36];
     Line* l = buf->firstLine;
@@ -289,12 +289,12 @@ void gotoRealLine(Buffer* buf, int n)
     }
 }
 
-static Buffer*
-listBuffer(Buffer* top, Buffer* current)
+static struct Buffer*
+listBuffer(struct Buffer* top, struct Buffer* current)
 {
     struct VirtualTerm* vt = getScreen();
     int i, c = 0;
-    Buffer* buf = top;
+    struct Buffer* buf = top;
 
     vt_move(vt, 0, 0);
     if (useColor) {
@@ -324,7 +324,7 @@ listBuffer(Buffer* top, Buffer* current)
     }
     vt_standout(vt);
     /* FIXME: gettextize? */
-    message(getUI(), MSG_INFO, "Buffer selection mode: SPC for select / D for delete buffer");
+    message(getUI(), MSG_INFO, "struct Buffer selection mode: SPC for select / D for delete buffer");
     vt_standend(vt);
     vt_move(vt, c, 0);
     // refresh(ttyWriter());
@@ -334,15 +334,15 @@ listBuffer(Buffer* top, Buffer* current)
 /*
  * Select buffer visually
  */
-Buffer*
-selectBuffer(Buffer* firstbuf, Buffer* currentbuf, char* selectchar)
+struct Buffer*
+selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectchar)
 {
     struct VirtualTerm* vt = getScreen();
-    int i, cpoint, /* Current Buffer Number */
+    int i, cpoint, /* Current struct Buffer Number */
         spoint, /* Current Line on Screen */
         maxbuf, sclimit = getScreen()->ROWS - 1; /* Upper limit of line * number in
                                                   * the * screen */
-    Buffer *buf, *topbuf;
+    struct Buffer *buf, *topbuf;
     char c;
 
     i = cpoint = 0;
@@ -442,7 +442,7 @@ end:
 /*
  * Reshape HTML buffer
  */
-void reshapeBuffer(Buffer* buf, int cols)
+void reshapeBuffer(struct Buffer* buf, int cols)
 {
     buf->width = cols;
     if (buf->sourcefile == NULL)
@@ -452,7 +452,7 @@ void reshapeBuffer(Buffer* buf, int cols)
     if (stream == NULL)
         return;
 
-    Buffer sbuf;
+    struct Buffer sbuf;
     copyBuffer(&sbuf, buf);
     clearBuffer(buf);
 
@@ -511,16 +511,16 @@ void reshapeBuffer(Buffer* buf, int cols)
 }
 
 /* shallow copy */
-void copyBuffer(Buffer* a, Buffer* b)
+void copyBuffer(struct Buffer* a, struct Buffer* b)
 {
     readBufferCache(b);
-    memcpy(a, b, sizeof(Buffer));
+    memcpy(a, b, sizeof(struct Buffer));
 }
 
-Buffer*
-prevBuffer(Buffer* first, Buffer* buf)
+struct Buffer*
+prevBuffer(struct Buffer* first, struct Buffer* buf)
 {
-    Buffer* b;
+    struct Buffer* b;
 
     for (b = first; b != NULL && b->nextBuffer != buf; b = b->nextBuffer)
         ;
@@ -530,7 +530,7 @@ prevBuffer(Buffer* first, Buffer* buf)
 #define fwrite1(d, f) (fwrite(&d, sizeof(d), 1, f) == 0)
 #define fread1(d, f) (fread(&d, sizeof(d), 1, f) == 0)
 
-int writeBufferCache(Buffer* buf)
+int writeBufferCache(struct Buffer* buf)
 {
     Str tmp;
     FILE* cache = NULL;
@@ -580,7 +580,7 @@ _error1:
     return -1;
 }
 
-int readBufferCache(Buffer* buf)
+int readBufferCache(struct Buffer* buf)
 {
     FILE* cache;
     Line *l = NULL, *prevl = NULL, *basel = NULL;
@@ -648,7 +648,7 @@ int readBufferCache(Buffer* buf)
     return 0;
 }
 
-void cursorUp0(Buffer* buf, int n)
+void cursorUp0(struct Buffer* buf, int n)
 {
     if (buf->cursorY > 0)
         cursorUpDown(buf, -1);
@@ -660,7 +660,7 @@ void cursorUp0(Buffer* buf, int n)
     }
 }
 
-void cursorUp(Buffer* buf, int n)
+void cursorUp(struct Buffer* buf, int n)
 {
     Line* l = buf->currentLine;
     if (buf->firstLine == NULL)
@@ -677,7 +677,7 @@ void cursorUp(Buffer* buf, int n)
         cursorUp0(buf, n);
 }
 
-void cursorDown0(Buffer* buf, int n)
+void cursorDown0(struct Buffer* buf, int n)
 {
     if (buf->cursorY < getScreen()->ROWS - 1)
         cursorUpDown(buf, 1);
@@ -689,7 +689,7 @@ void cursorDown0(Buffer* buf, int n)
     }
 }
 
-void cursorDown(Buffer* buf, int n)
+void cursorDown(struct Buffer* buf, int n)
 {
     Line* l = buf->currentLine;
     if (buf->firstLine == NULL)
@@ -706,7 +706,7 @@ void cursorDown(Buffer* buf, int n)
         cursorDown0(buf, n);
 }
 
-void cursorUpDown(Buffer* buf, int n)
+void cursorUpDown(struct Buffer* buf, int n)
 {
     Line* cl = buf->currentLine;
 
@@ -717,7 +717,7 @@ void cursorUpDown(Buffer* buf, int n)
     arrangeLine(buf);
 }
 
-void cursorRight(Buffer* buf, int n)
+void cursorRight(struct Buffer* buf, int n)
 {
     int i, delta = 1, cpos, vpos2;
     Line* l = buf->currentLine;
@@ -757,7 +757,7 @@ void cursorRight(Buffer* buf, int n)
     buf->cursorX = buf->visualpos - l->bwidth;
 }
 
-void cursorLeft(Buffer* buf, int n)
+void cursorLeft(struct Buffer* buf, int n)
 {
     int i, delta = 1, cpos;
     Line* l = buf->currentLine;
@@ -787,7 +787,7 @@ void cursorLeft(Buffer* buf, int n)
     buf->cursorX = buf->visualpos - l->bwidth;
 }
 
-void cursorHome(Buffer* buf)
+void cursorHome(struct Buffer* buf)
 {
     buf->visualpos = 0;
     buf->cursorX = buf->cursorY = 0;
@@ -797,7 +797,7 @@ void cursorHome(Buffer* buf)
  * Arrange line,column and cursor position according to current line and
  * current position.
  */
-void arrangeCursor(Buffer* buf)
+void arrangeCursor(struct Buffer* buf)
 {
     int col, col2, pos;
     int delta = 1;
@@ -849,7 +849,7 @@ void arrangeCursor(Buffer* buf)
 #endif
 }
 
-void arrangeLine(Buffer* buf)
+void arrangeLine(struct Buffer* buf)
 {
     int i, cpos;
 
@@ -876,7 +876,7 @@ void arrangeLine(Buffer* buf)
 #endif
 }
 
-void cursorXY(Buffer* buf, int x, int y)
+void cursorXY(struct Buffer* buf, int x, int y)
 {
     int oldX;
 
@@ -899,7 +899,7 @@ void cursorXY(Buffer* buf, int x, int y)
     }
 }
 
-void restorePosition(Buffer* buf, Buffer* orig)
+void restorePosition(struct Buffer* buf, struct Buffer* orig)
 {
     buf->topLine = lineSkip(buf, buf->firstLine, TOP_LINENUMBER(orig) - 1,
         false);
@@ -915,7 +915,7 @@ void restorePosition(Buffer* buf, Buffer* orig)
  * saveBuffer: write buffer to file
  */
 static void
-_saveBuffer(Buffer* buf, Line* l, FILE* f, int cont)
+_saveBuffer(struct Buffer* buf, Line* l, FILE* f, int cont)
 {
     Str tmp;
     int is_html = false;
@@ -925,13 +925,13 @@ _saveBuffer(Buffer* buf, Line* l, FILE* f, int cont)
     is_html = buf->content_type == CONTENTTYPE_TEXT_HTML;
 }
 
-void saveBuffer(Buffer* buf, FILE* f, int cont)
+void saveBuffer(struct Buffer* buf, FILE* f, int cont)
 {
     _saveBuffer(buf, buf->firstLine, f, cont);
 }
 
 struct Url*
-baseURL(Buffer* buf)
+baseURL(struct Buffer* buf)
 {
     if (buf->bufferprop & BP_NO_URL) {
         /* no URL is defined for the buffer */
@@ -959,7 +959,7 @@ static char* url_unquote_conv(char* url, wc_ces charset)
     return tmp->ptr;
 }
 
-char* url_decode2(const char* url, const Buffer* buf)
+char* url_decode2(const char* url, const struct Buffer* buf)
 {
     if (!DecodeURL)
         return (char*)url;
@@ -967,7 +967,7 @@ char* url_decode2(const char* url, const Buffer* buf)
     return url_unquote_conv((char*)url, url_charset);
 }
 
-int columnSkip(Buffer* buf, int offset)
+int columnSkip(struct Buffer* buf, int offset)
 {
     int i, maxColumn;
     int column = buf->currentColumn + offset;
@@ -993,7 +993,7 @@ int columnSkip(Buffer* buf, int offset)
     return 1;
 }
 
-Line* lineSkip(Buffer* buf, Line* line, int offset, int last)
+Line* lineSkip(struct Buffer* buf, Line* line, int offset, int last)
 {
     int i;
     Line* l;
@@ -1006,7 +1006,7 @@ Line* lineSkip(Buffer* buf, Line* line, int offset, int last)
     return l;
 }
 
-Line* currentLineSkip(Buffer* buf, Line* line, int offset, int last)
+Line* currentLineSkip(struct Buffer* buf, Line* line, int offset, int last)
 {
     int i, n;
     Line* l = line;
@@ -1023,7 +1023,7 @@ Line* currentLineSkip(Buffer* buf, Line* line, int offset, int last)
 }
 
 /* get last modified time */
-char* last_modified(Buffer* buf)
+char* last_modified(struct Buffer* buf)
 {
     TextListItem* ti;
     struct stat st;
@@ -1043,7 +1043,7 @@ char* last_modified(Buffer* buf)
     return "unknown";
 }
 
-Buffer*
+struct Buffer*
 cookie_list_panel(void)
 {
     /* FIXME: gettextize? */

@@ -74,7 +74,7 @@ struct Frame* screenToFrame(const struct VirtualTerm* vt)
     return frame;
 }
 
-static Line* redrawLine(struct UI ui, Buffer* buf, Line* l, int i)
+static Line* redrawLine(struct UI ui, struct Buffer* buf, Line* l, int i)
 {
     int j, pos, rcol, ncol, delta = 1;
     int column = buf->currentColumn;
@@ -145,7 +145,7 @@ static Line* redrawLine(struct UI ui, Buffer* buf, Line* l, int i)
     return l;
 }
 
-static Line* redrawLineImage(struct UI ui, Buffer* buf, Line* l, int i)
+static Line* redrawLineImage(struct UI ui, struct Buffer* buf, Line* l, int i)
 {
     int j, pos, rcol;
     int column = buf->currentColumn;
@@ -213,7 +213,7 @@ static Line* redrawLineImage(struct UI ui, Buffer* buf, Line* l, int i)
     return l;
 }
 
-static void redrawNLine(struct UI ui, Buffer* buf, int n)
+static void redrawNLine(struct UI ui, struct Buffer* buf, int n)
 {
     if (useColor) {
         EFFECT_ANCHOR_END_C(ui.vt);
@@ -243,7 +243,7 @@ static void redrawNLine(struct UI ui, Buffer* buf, int n)
     getAllImage(buf);
 }
 
-void bufToScreen(struct UI ui, Buffer* buf)
+void bufToScreen(struct UI ui, struct Buffer* buf)
 {
     if (buf->width == 0) {
         reshapeBuffer(buf, ui.viewport.cols);
@@ -267,7 +267,7 @@ void bufToScreen(struct UI ui, Buffer* buf)
         buf->topLine = buf->firstLine;
 }
 
-static int redrawLineRegion(struct UI ui, Buffer* buf, Line* l, int i, int bpos, int epos)
+static int redrawLineRegion(struct UI ui, struct Buffer* buf, Line* l, int i, int bpos, int epos)
 {
     int j, pos, rcol, ncol, delta = 1;
     int column = buf->currentColumn;
@@ -332,7 +332,7 @@ static int redrawLineRegion(struct UI ui, Buffer* buf, Line* l, int i, int bpos,
 }
 
 static void
-drawAnchorCursor0(struct UI ui, Buffer* buf,
+drawAnchorCursor0(struct UI ui, struct Buffer* buf,
     AnchorList* al, int hseq, int prevhseq, int tline, int eline, int active)
 {
     Line* l = buf->topLine;
@@ -374,7 +374,7 @@ drawAnchorCursor0(struct UI ui, Buffer* buf,
     }
 }
 
-void drawAnchorCursor(struct UI ui, Buffer* buf)
+void drawAnchorCursor(struct UI ui, struct Buffer* buf)
 {
     if (!buf->firstLine || !buf->hmarklist)
         return;

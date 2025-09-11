@@ -36,7 +36,7 @@ extern int REV_LB[];
 #define TOP_LINENUMBER(buf) ((buf)->topLine ? (buf)->topLine->linenumber : 1)
 #define CUR_LINENUMBER(buf) ((buf)->currentLine ? (buf)->currentLine->linenumber : 1)
 
-#define NO_BUFFER ((Buffer*)1)
+#define NO_BUFFER ((struct Buffer*)1)
 
 enum LinkBufferType {
     LB_NOLINK = -1,
@@ -55,25 +55,25 @@ enum BufferProperty {
     BP_CLOSE = 0x40,
 };
 
-typedef struct _BufferPos {
+typedef struct BufferPos {
     long top_linenumber;
     long cur_linenumber;
     int currentColumn;
     int pos;
     int bpos;
-    struct _BufferPos* next;
-    struct _BufferPos* prev;
+    struct BufferPos* next;
+    struct BufferPos* prev;
 } BufferPos;
 
-typedef struct _Buffer {
+struct Buffer {
     char* filename;
     const char* buffername;
     Line* firstLine;
     Line* topLine;
     Line* currentLine;
     Line* lastLine;
-    struct _Buffer* nextBuffer;
-    struct _Buffer* linkBuffer[MAX_LB];
+    struct Buffer* nextBuffer;
+    struct Buffer* linkBuffer[MAX_LB];
     short width;
     enum ContentType content_type;
     int allLine;
@@ -112,47 +112,47 @@ typedef struct _Buffer {
     char image_flag;
     char image_loaded;
     Anchor* submit;
-    struct _BufferPos* undo;
+    struct BufferPos* undo;
     struct _AlarmEvent* event;
-} Buffer;
+};
 
 #define _INIT_BUFFER_WIDTH (getCols() - (showLineNum ? 6 : 1))
 #define INIT_BUFFER_WIDTH ((_INIT_BUFFER_WIDTH > 0) ? _INIT_BUFFER_WIDTH : 0)
 #define FOLD_BUFFER_WIDTH (FoldLine ? (INIT_BUFFER_WIDTH + 1) : -1)
 
-struct _Buffer* newBuffer();
-struct _Buffer* nullBuffer(void);
-void clearBuffer(struct _Buffer* buf);
-void discardBuffer(struct _Buffer* buf);
-struct _Buffer* namedBuffer(struct _Buffer* first, char* name);
-struct _Buffer* deleteBuffer(struct _Buffer* first, struct _Buffer* delbuf);
-struct _Buffer* replaceBuffer(struct _Buffer* first, struct _Buffer* delbuf, struct _Buffer* newbuf);
-struct _Buffer* nthBuffer(struct _Buffer* firstbuf, int n);
-void gotoRealLine(struct _Buffer* buf, int n);
-void gotoLine(struct _Buffer* buf, int n);
-struct _Buffer* selectBuffer(struct _Buffer* firstbuf, struct _Buffer* currentbuf, char* selectchar);
-void reshapeBuffer(struct _Buffer* buf, int cols);
-void copyBuffer(struct _Buffer* a, struct _Buffer* b);
-struct _Buffer* prevBuffer(struct _Buffer* first, struct _Buffer* buf);
-int writeBufferCache(struct _Buffer* buf);
-int readBufferCache(struct _Buffer* buf);
-void cursorUp0(struct _Buffer* buf, int n);
-void cursorUp(struct _Buffer* buf, int n);
-void cursorDown0(struct _Buffer* buf, int n);
-void cursorDown(struct _Buffer* buf, int n);
-void cursorUpDown(struct _Buffer* buf, int n);
-void cursorRight(struct _Buffer* buf, int n);
-void cursorLeft(struct _Buffer* buf, int n);
-void cursorHome(struct _Buffer* buf);
-void arrangeCursor(struct _Buffer* buf);
-void arrangeLine(struct _Buffer* buf);
-void cursorXY(struct _Buffer* buf, int x, int y);
-void restorePosition(struct _Buffer* buf, struct _Buffer* orig);
-void saveBuffer(struct _Buffer* buf, FILE* f, int cont);
-char* url_decode2(const char* url, const struct _Buffer* buf);
-struct Url* baseURL(struct _Buffer* buf);
-int columnSkip(struct _Buffer* buf, int offset);
-struct _Line* lineSkip(struct _Buffer* buf, struct _Line* line, int offset, int last);
-struct _Line* currentLineSkip(struct _Buffer* buf, struct _Line* line, int offset, int last);
-char* last_modified(struct _Buffer* buf);
-struct _Buffer* cookie_list_panel(void);
+struct Buffer* newBuffer();
+struct Buffer* nullBuffer(void);
+void clearBuffer(struct Buffer* buf);
+void discardBuffer(struct Buffer* buf);
+struct Buffer* namedBuffer(struct Buffer* first, char* name);
+struct Buffer* deleteBuffer(struct Buffer* first, struct Buffer* delbuf);
+struct Buffer* replaceBuffer(struct Buffer* first, struct Buffer* delbuf, struct Buffer* newbuf);
+struct Buffer* nthBuffer(struct Buffer* firstbuf, int n);
+void gotoRealLine(struct Buffer* buf, int n);
+void gotoLine(struct Buffer* buf, int n);
+struct Buffer* selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectchar);
+void reshapeBuffer(struct Buffer* buf, int cols);
+void copyBuffer(struct Buffer* a, struct Buffer* b);
+struct Buffer* prevBuffer(struct Buffer* first, struct Buffer* buf);
+int writeBufferCache(struct Buffer* buf);
+int readBufferCache(struct Buffer* buf);
+void cursorUp0(struct Buffer* buf, int n);
+void cursorUp(struct Buffer* buf, int n);
+void cursorDown0(struct Buffer* buf, int n);
+void cursorDown(struct Buffer* buf, int n);
+void cursorUpDown(struct Buffer* buf, int n);
+void cursorRight(struct Buffer* buf, int n);
+void cursorLeft(struct Buffer* buf, int n);
+void cursorHome(struct Buffer* buf);
+void arrangeCursor(struct Buffer* buf);
+void arrangeLine(struct Buffer* buf);
+void cursorXY(struct Buffer* buf, int x, int y);
+void restorePosition(struct Buffer* buf, struct Buffer* orig);
+void saveBuffer(struct Buffer* buf, FILE* f, int cont);
+char* url_decode2(const char* url, const struct Buffer* buf);
+struct Url* baseURL(struct Buffer* buf);
+int columnSkip(struct Buffer* buf, int offset);
+struct _Line* lineSkip(struct Buffer* buf, struct _Line* line, int offset, int last);
+struct _Line* currentLineSkip(struct Buffer* buf, struct _Line* line, int offset, int last);
+char* last_modified(struct Buffer* buf);
+struct Buffer* cookie_list_panel(void);

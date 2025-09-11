@@ -16,7 +16,7 @@
 #include <strings.h>
 
 MapList*
-searchMapList(Buffer* buf, const char* name)
+searchMapList(struct Buffer* buf, const char* name)
 {
     MapList* ml;
 
@@ -105,7 +105,7 @@ nearestMapArea(MapList* ml, int x, int y)
 }
 
 static int
-searchMapArea(Buffer* buf, MapList* ml, Anchor* a_img)
+searchMapArea(struct Buffer* buf, MapList* ml, Anchor* a_img)
 {
     ListItem* al;
     MapArea* a;
@@ -137,7 +137,7 @@ searchMapArea(Buffer* buf, MapList* ml, Anchor* a_img)
 }
 
 MapArea*
-retrieveCurrentMapArea(Buffer* buf)
+retrieveCurrentMapArea(struct Buffer* buf)
 {
     Anchor *a_img, *a_form;
     struct FormItem* fi;
@@ -170,7 +170,7 @@ retrieveCurrentMapArea(Buffer* buf)
     return NULL;
 }
 
-int getMapXY(Buffer* buf, Anchor* a, int* x, int* y)
+int getMapXY(struct Buffer* buf, Anchor* a, int* x, int* y)
 {
     if (!buf || !a || !a->image || !x || !y)
         return 0;
@@ -189,7 +189,7 @@ int getMapXY(Buffer* buf, Anchor* a, int* x, int* y)
 }
 
 Anchor*
-retrieveCurrentMap(Buffer* buf)
+retrieveCurrentMap(struct Buffer* buf)
 {
     Anchor* a;
     struct FormItem* fi;
@@ -204,7 +204,7 @@ retrieveCurrentMap(Buffer* buf)
 }
 
 MapArea*
-follow_map_menu(Buffer* buf, const char* name, Anchor* a_img, int x, int y)
+follow_map_menu(struct Buffer* buf, const char* name, Anchor* a_img, int x, int y)
 {
     MapList* ml;
     ListItem* al;
@@ -340,7 +340,7 @@ newMapArea(const char* url, const char* target, const char* alt, const char* sha
 
 /* append image map links */
 static void
-append_map_info(Buffer* buf, Str tmp, struct FormItem* fi)
+append_map_info(struct Buffer* buf, Str tmp, struct FormItem* fi)
 {
     MapList* ml = searchMapList(buf, fi->value ? fi->value->ptr : NULL);
     if (ml == NULL)
@@ -367,7 +367,7 @@ append_map_info(Buffer* buf, Str tmp, struct FormItem* fi)
 
 /* append links */
 static void
-append_link_info(Buffer* buf, Str html, LinkList* link)
+append_link_info(struct Buffer* buf, Str html, LinkList* link)
 {
     if (!link)
         return;
@@ -403,8 +403,8 @@ append_link_info(Buffer* buf, Str html, LinkList* link)
 /*
  * information of current page and link
  */
-Buffer*
-page_info_panel(Buffer* buf)
+struct Buffer*
+page_info_panel(struct Buffer* buf)
 {
     Str tmp = Strnew_size(1024);
     Anchor* a;
@@ -414,7 +414,7 @@ page_info_panel(Buffer* buf)
     char *p, *q;
     wc_ces_list* list;
     char charset[16];
-    Buffer* newbuf;
+    struct Buffer* newbuf;
 
     Strcat_charp(tmp, "<html><head>\
 <title>Information about current page</title>\

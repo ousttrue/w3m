@@ -31,7 +31,7 @@ int doFileMove(const char* tmpf, const char* defstr);
 #define set_prevchar(x, y, n) Strcopy_charp_n((x), (y), (n))
 #define set_space_to_prevchar(x) Strcopy_charp_n((x), " ", 1)
 
-struct _Buffer;
+struct Buffer;
 struct form_list;
 struct HtmlTagParsed;
 struct Content;
@@ -41,7 +41,7 @@ union input_stream;
 int is_boundary(unsigned char*, unsigned char*);
 int getMetaRefreshParam(const char* q, Str* refresh_uri);
 void HTMLlineproc0(const char* istr, struct html_feed_environ* h_env, bool internal);
-struct _Buffer* makeBuffer(struct Content* c);
-struct _Buffer* loadHTMLString(Str page, wc_ces content_charset);
-struct _Buffer* loadHTMLBuffer(struct Url url, union input_stream* stream, wc_ces content_charset, struct _Buffer* newBuf);
-struct _Buffer* loadBuffer(struct Url url, union input_stream* streamf, struct _Buffer* newBuf);
+struct Buffer* makeBuffer(struct Content* c);
+struct Buffer* loadHTMLString(Str page, wc_ces content_charset);
+struct Buffer* loadHTMLBuffer(struct Url url, union input_stream* stream, wc_ces content_charset, struct Buffer* newBuf);
+struct Buffer* loadBuffer(struct Url url, union input_stream* streamf, struct Buffer* newBuf);

@@ -24,7 +24,7 @@ extern int SaveURLHist;
 #define HIST_LIST_MAX GENERAL_LIST_MAX
 #define HIST_HASH_SIZE 127
 
-struct _Buffer;
+struct Buffer;
 
 struct Hist* newHist(void);
 struct Hist* copyHist(struct Hist* hist);
@@ -38,4 +38,4 @@ char* prevHist(struct Hist* hist);
 int loadHistory(struct Hist* hist);
 void saveHistory(struct Hist* hist, size_t size);
 void ldHist(void);
-struct _Buffer* historyBuffer(struct Hist* hist);
+struct Buffer* historyBuffer(struct Hist* hist);

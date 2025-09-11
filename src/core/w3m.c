@@ -92,7 +92,7 @@ const char* CurrentCmdData;
 #define DSTR_LEN 256
 
 int clear_buffer = (true);
-char* config_file = (NULL);
+const char* config_file = (NULL);
 char FollowLocale = (true);
 
 struct Hist* LoadHist;
@@ -119,15 +119,15 @@ static int need_resize_screen = false;
 void resize_hook(int _dummy);
 static void resize_screen(void);
 
-static void cmd_loadBuffer(Buffer* buf, int prop, int linkid);
+static void cmd_loadBuffer(struct Buffer* buf, int prop, int linkid);
 
-static char* getCurWord(Buffer* buf, int* spos, int* epos);
+static char* getCurWord(struct Buffer* buf, int* spos, int* epos);
 
 static int display_ok = false;
 int prev_key = -1;
 
-void set_buffer_environ(Buffer*);
-static void save_buffer_position(Buffer* buf);
+void set_buffer_environ(struct Buffer*);
+static void save_buffer_position(struct Buffer* buf);
 
 static void _nextA(int);
 static void _prevA(int);
@@ -137,7 +137,7 @@ static int searchKeyNum(void);
 /*
  * List of error messages
  */
-Buffer*
+struct Buffer*
 message_list_panel(void)
 {
     Str tmp = Strnew_size(getScreen()->ROWS * getScreen()->COLS);
@@ -440,7 +440,7 @@ void fmInit(void)
 }
 
 static Str
-conv_form_encoding(Str val, struct FormItem* fi, Buffer* buf)
+conv_form_encoding(Str val, struct FormItem* fi, struct Buffer* buf)
 {
     wc_ces charset = SystemCharset;
 
@@ -561,13 +561,13 @@ query_from_followform(Str* query, struct FormItem* fi, int multipart)
     }
 }
 
-static void pushBuffer(Buffer* buf)
+static void pushBuffer(struct Buffer* buf)
 {
     deleteImage(Currentbuf);
     if (clear_buffer)
         tmpClearBuffer(Currentbuf);
 
-    Buffer* b;
+    struct Buffer* b;
     if (Firstbuf == Currentbuf) {
         buf->nextBuffer = Firstbuf;
         Firstbuf = Currentbuf = buf;
@@ -579,16 +579,16 @@ static void pushBuffer(Buffer* buf)
     saveBufferInfo();
 }
 
-static Buffer* loadNormalBuf(Buffer* buf)
+static struct Buffer* loadNormalBuf(struct Buffer* buf)
 {
     pushBuffer(buf);
     return buf;
 }
 
-static Buffer*
+static struct Buffer*
 loadLink(const char* url, const char* target, const char* referer, struct Form* post, bool do_download)
 {
-    Buffer* nfbuf;
+    struct Buffer* nfbuf;
     union frameset_element* f_element = NULL;
     struct Url *base, pu;
     const int* no_referer_ptr;
@@ -612,7 +612,7 @@ loadLink(const char* url, const char* target, const char* referer, struct Form* 
         return NO_BUFFER;
     }
 
-    Buffer* buf = makeBuffer(&c);
+    struct Buffer* buf = makeBuffer(&c);
     if (buf == NULL) {
         char* emsg = Sprintf("Can't load %s", url)->ptr;
         message(getUI(), MSG_ERR, emsg);
@@ -731,7 +731,7 @@ void do_submit(Anchor* a, struct FormItem* fi, bool do_download)
         Strcat(tmp2, tmp);
         loadLink(tmp2->ptr, (char*)a->target, NULL, NULL, do_download);
     } else if (fi->parent->method == FORM_METHOD_POST) {
-        Buffer* buf;
+        struct Buffer* buf;
         if (multipart) {
             struct stat st;
             stat(fi->parent->body, &st);
@@ -1073,7 +1073,7 @@ escKeyProc(int c, int esc, unsigned char* map)
         w3mFuncList[(int)map[c]].func();
 }
 
-void tmpClearBuffer(Buffer* buf)
+void tmpClearBuffer(struct Buffer* buf)
 {
     if (writeBufferCache(buf) == 0) {
         buf->firstLine = NULL;
@@ -1095,7 +1095,7 @@ void saveBufferInfo()
     fclose(fp);
 }
 
-void delBuffer(Buffer* buf)
+void delBuffer(struct Buffer* buf)
 {
     if (buf == NULL)
         return;
@@ -1107,7 +1107,7 @@ void delBuffer(Buffer* buf)
 }
 
 static void
-repBuffer(Buffer* oldbuf, Buffer* buf)
+repBuffer(struct Buffer* oldbuf, struct Buffer* buf)
 {
     Firstbuf = replaceBuffer(Firstbuf, oldbuf, buf);
     Currentbuf = buf;
@@ -1141,7 +1141,7 @@ resize_screen(void)
 static void
 nscroll(int n)
 {
-    Buffer* buf = Currentbuf;
+    struct Buffer* buf = Currentbuf;
     Line *top = buf->topLine, *cur = buf->currentLine;
     int lnum, tlnum, llnum, diff_n;
 
@@ -1295,7 +1295,7 @@ cmd_loadURL(const char* url, struct Url* current, const char* referer, struct Fo
 {
     // refresh(ttyWriter());
     struct Content c = loadGeneralFile(url, current, post, referer, UI_TTY);
-    Buffer* buf = makeBuffer(&c);
+    struct Buffer* buf = makeBuffer(&c);
     if (buf == NULL) {
         /* FIXME: gettextize? */
         char* emsg = Sprintf("Can't load %s", conv_from_system(url))->ptr;
@@ -1306,7 +1306,7 @@ cmd_loadURL(const char* url, struct Url* current, const char* referer, struct Fo
 }
 
 static void
-shiftvisualpos(Buffer* buf, int shift)
+shiftvisualpos(struct Buffer* buf, int shift)
 {
     Line* l = buf->currentLine;
     buf->visualpos -= shift;
@@ -1345,7 +1345,7 @@ DEFUN(shiftr, SHIFT_RIGHT, "Shift screen right")
 
 DEFUN(col1R, RIGHT, "Shift screen one column right")
 {
-    Buffer* buf = Currentbuf;
+    struct Buffer* buf = Currentbuf;
     Line* l = buf->currentLine;
     int j, column, n = searchKeyNum();
 
@@ -1362,7 +1362,7 @@ DEFUN(col1R, RIGHT, "Shift screen one column right")
 
 DEFUN(col1L, LEFT, "Shift screen one column left")
 {
-    Buffer* buf = Currentbuf;
+    struct Buffer* buf = Currentbuf;
     Line* l = buf->currentLine;
     int j, n = searchKeyNum();
 
@@ -1423,7 +1423,7 @@ DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output")
 static void cmd_loadfile(const char* fn)
 {
     struct Content c = loadGeneralFile(file_to_url(fn, CurrentDir), NULL, NULL, NO_REFERER, UI_TTY);
-    Buffer* buf = makeBuffer(&c);
+    struct Buffer* buf = makeBuffer(&c);
     if (buf == NULL) {
         /* FIXME: gettextize? */
         char* emsg = Sprintf("%s not found", conv_from_system(fn))->ptr;
@@ -1741,7 +1741,7 @@ DEFUN(qquitfm, QUIT, "Quit with confirmation request")
 /* Select buffer */
 DEFUN(selBuf, SELECT, "Display buffer-stack panel")
 {
-    Buffer* buf;
+    struct Buffer* buf;
     int ok;
     char cmd;
 
@@ -1859,7 +1859,7 @@ DEFUN(linend, LINE_END, "Go to the end of the line")
 }
 
 static int
-cur_real_linenumber(Buffer* buf)
+cur_real_linenumber(struct Buffer* buf)
 {
     Line *l, *cur = buf->currentLine;
     int n;
@@ -2045,7 +2045,7 @@ gotoLabel(const char* label)
         return;
     }
 
-    Buffer* buf = newBuffer();
+    struct Buffer* buf = newBuffer();
     copyBuffer(buf, Currentbuf);
     int i;
     for (i = 0; i < MAX_LB; i++)
@@ -2134,11 +2134,11 @@ static void followImage(bool do_download)
     message(getUI(), MSG_INFO, Sprintf("loading %s", a->url)->ptr);
     // refresh(ttyWriter());
     struct Content c = loadGeneralFile(a->url, baseURL(Currentbuf), NULL, NULL, UI_TTY);
-    if(do_download){
+    if (do_download) {
         // TODO
         abort();
     }
-    Buffer* buf = makeBuffer(&c);
+    struct Buffer* buf = makeBuffer(&c);
     if (buf == NULL) {
         /* FIXME: gettextize? */
         char* emsg = Sprintf("Can't load %s", a->url)->ptr;
@@ -2584,7 +2584,7 @@ DEFUN(nextBf, NEXT, "Switch to the next buffer")
 /* go to the previous bufferr */
 DEFUN(prevBf, PREV, "Switch to the previous buffer")
 {
-    Buffer* buf = Currentbuf->nextBuffer;
+    struct Buffer* buf = Currentbuf->nextBuffer;
     if (!buf) {
         return;
     }
@@ -2592,7 +2592,7 @@ DEFUN(prevBf, PREV, "Switch to the previous buffer")
 }
 
 static int
-checkBackBuffer(Buffer* buf)
+checkBackBuffer(struct Buffer* buf)
 {
     if (buf->nextBuffer)
         return true;
@@ -2614,7 +2614,7 @@ DEFUN(backBf, BACK, "Close current buffer and return to the one below in stack")
 
 DEFUN(deletePrevBuf, DELETE_PREVBUF, "Delete previous buffer (mainly for local CGI-scripts)")
 {
-    Buffer* buf = Currentbuf->nextBuffer;
+    struct Buffer* buf = Currentbuf->nextBuffer;
     if (buf)
         delBuffer(buf);
 }
@@ -2626,7 +2626,7 @@ goURL0(char* prompt, int relative)
     const char* url;
     const char* referer;
     struct Url p_url, *current;
-    Buffer* cur_buf = Currentbuf;
+    struct Buffer* cur_buf = Currentbuf;
     const int* no_referer_ptr;
 
     url = searchKeyData();
@@ -2693,7 +2693,7 @@ DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer")
     const char* url;
     if ((url = getenv("HTTP_HOME")) != NULL || (url = getenv("WWW_HOME")) != NULL) {
         struct Url p_url;
-        Buffer* cur_buf = Currentbuf;
+        struct Buffer* cur_buf = Currentbuf;
         SKIP_BLANKS(url);
         url = url_quote(url);
         p_url = parseUrl(url, NULL);
@@ -2710,7 +2710,7 @@ DEFUN(gorURL, GOTO_RELATIVE, "Go to relative address")
 }
 
 static void
-cmd_loadBuffer(Buffer* buf, int prop, int linkid)
+cmd_loadBuffer(struct Buffer* buf, int prop, int linkid)
 {
     if (buf == NULL) {
         message(getUI(), MSG_ERR, "Can't load string");
@@ -2793,7 +2793,7 @@ DEFUN(msgs, MSGS, "Display error messages")
 /* page info */
 DEFUN(pginfo, INFO, "Display information about the current document")
 {
-    Buffer* buf;
+    struct Buffer* buf;
 
     if ((buf = Currentbuf->linkBuffer[LB_N_INFO]) != NULL) {
         Currentbuf = buf;
@@ -2850,7 +2850,7 @@ DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
 }
 
 static void
-anchorMn(Anchor* (*menu_func)(Buffer*), int go)
+anchorMn(Anchor* (*menu_func)(struct Buffer*), int go)
 {
     Anchor* a;
     BufferPoint* po;
@@ -2889,7 +2889,7 @@ DEFUN(movlistMn, MOVE_LIST_MENU, "Pop up menu to navigate between hyperlinks")
 /* link,anchor,image list */
 DEFUN(linkLst, LIST, "Show all URLs referenced")
 {
-    Buffer* buf = link_list_panel(Currentbuf);
+    struct Buffer* buf = link_list_panel(Currentbuf);
     if (buf) {
         cmd_loadBuffer(buf, BP_NORMAL, LB_NOLINK);
     }
@@ -2898,7 +2898,7 @@ DEFUN(linkLst, LIST, "Show all URLs referenced")
 /* cookie list */
 DEFUN(cooLst, COOKIE, "View cookie list")
 {
-    Buffer* buf;
+    struct Buffer* buf;
 
     buf = cookie_list_panel();
     if (buf != NULL)
@@ -3095,7 +3095,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
     if (Currentbuf->content_type == CONTENTTYPE_UNKNOWN)
         return;
 
-    Buffer* buf;
+    struct Buffer* buf;
     if ((buf = Currentbuf->linkBuffer[LB_SOURCE]) != NULL || (buf = Currentbuf->linkBuffer[LB_N_SOURCE]) != NULL) {
         Currentbuf = buf;
 
@@ -3134,7 +3134,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
 /* reload */
 DEFUN(reload, RELOAD, "Load current document anew")
 {
-    Buffer *buf, *fbuf = NULL, sbuf;
+    struct Buffer *buf, *fbuf = NULL, sbuf;
     wc_ces old_charset;
     Str url;
     int multipart;
@@ -3233,7 +3233,7 @@ _docCSet(wc_ces charset)
 
 void change_charset(struct KeyValue* arg)
 {
-    Buffer* buf = Currentbuf->linkBuffer[LB_N_INFO];
+    struct Buffer* buf = Currentbuf->linkBuffer[LB_N_INFO];
     wc_ces charset;
 
     if (buf == NULL)
@@ -3277,7 +3277,7 @@ DEFUN(defCSet, DEFAULT_CHARSET, "Change the default character encoding")
 }
 
 /* mark URL-like patterns as anchors */
-void chkURLBuffer(Buffer* buf)
+void chkURLBuffer(struct Buffer* buf)
 {
     static char* url_like_pat[] = {
         "https?://[a-zA-Z0-9][a-zA-Z0-9:%\\-\\./?=~_\\&+@#,\\$;]*[a-zA-Z0-9_/=\\-]",
@@ -3384,7 +3384,7 @@ DEFUN(wrapToggle, WRAP_TOGGLE, "Toggle wrapping mode in searches")
 }
 
 static char*
-getCurWord(Buffer* buf, int* spos, int* epos)
+getCurWord(struct Buffer* buf, int* spos, int* epos)
 {
     char* p;
     Line* l = buf->currentLine;
@@ -3416,7 +3416,7 @@ getCurWord(Buffer* buf, int* spos, int* epos)
 }
 
 static char*
-GetWord(Buffer* buf)
+GetWord(struct Buffer* buf)
 {
     int b, e;
     char* p;
@@ -3445,7 +3445,7 @@ execdict(const char* word)
         Str_form_quote(Strnew_charp(w))->ptr)
                   ->ptr;
     struct Content c = loadGeneralFile(dictcmd, NULL, NULL, NO_REFERER, UI_TTY);
-    Buffer* buf = makeBuffer(&c);
+    struct Buffer* buf = makeBuffer(&c);
     if (buf == NULL) {
         message(getUI(), MSG_INFO, "Execution failed");
         return;
@@ -3469,9 +3469,9 @@ DEFUN(dictwordat, DICT_WORD_AT,
     execdict(GetWord(Currentbuf));
 }
 
-void set_buffer_environ(Buffer* buf)
+void set_buffer_environ(struct Buffer* buf)
 {
-    static Buffer* prev_buf = NULL;
+    static struct Buffer* prev_buf = NULL;
     static Line* prev_line = NULL;
     static int prev_pos = -1;
     Line* l;
@@ -3553,7 +3553,7 @@ searchKeyNum(void)
 void deleteFiles()
 {
     while (Firstbuf && Firstbuf != NO_BUFFER) {
-        Buffer* buf = Firstbuf->nextBuffer;
+        struct Buffer* buf = Firstbuf->nextBuffer;
         discardBuffer(Firstbuf);
         Firstbuf = buf;
     }
@@ -3749,7 +3749,7 @@ convert_size3(long long size)
     return tmp->ptr;
 }
 
-static Buffer*
+static struct Buffer*
 DownloadListBuffer(void)
 {
     DownloadList* d;
@@ -3881,7 +3881,7 @@ void stopDownload(void)
 /* download panel */
 DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
 {
-    Buffer* buf;
+    struct Buffer* buf;
     int replace = false, new_tab = false;
     int reload;
 
@@ -3915,7 +3915,7 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
 }
 
 static void
-save_buffer_position(Buffer* buf)
+save_buffer_position(struct Buffer* buf)
 {
     BufferPos* b = buf->undo;
 
@@ -3939,7 +3939,7 @@ save_buffer_position(Buffer* buf)
 static void
 resetPos(BufferPos* b)
 {
-    Buffer buf;
+    struct Buffer buf;
     Line top, cur;
 
     top.linenumber = b->top_linenumber;

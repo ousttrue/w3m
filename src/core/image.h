@@ -63,16 +63,16 @@ void addImage(struct ImageCache* cache, int x, int y, int sx, int sy, int w, int
 void drawImage();
 void clearImage();
 
-struct _Buffer;
-void deleteImage(struct _Buffer* buf);
-void getAllImage(struct _Buffer* buf);
+struct Buffer;
+void deleteImage(struct Buffer* buf);
+void getAllImage(struct Buffer* buf);
 
 enum ImageLoadFlag {
     IMG_FLAG_START = 0,
     IMG_FLAG_STOP = 1,
     IMG_FLAG_NEXT = 2,
 };
-void loadImage(struct _Buffer* buf, enum ImageLoadFlag flag, bool do_download);
+void loadImage(struct Buffer* buf, enum ImageLoadFlag flag, bool do_download);
 
 enum ImageGetFlag {
     IMG_FLAG_SKIP = 1,

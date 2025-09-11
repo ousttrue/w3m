@@ -12,11 +12,11 @@ enum SearchResultFlags {
     SR_NOTFOUND = 0x2,
     SR_WRAPPED = 0x4,
 };
-typedef enum SearchResultFlags (*SearchFunc)(Buffer*, char*);
+typedef enum SearchResultFlags (*SearchFunc)(struct Buffer*, char*);
 
 const char* conv_search_string(const char* str, wc_ces f_ces);
-enum SearchResultFlags forwardSearch(struct _Buffer* buf, char* str);
-enum SearchResultFlags backwardSearch(struct _Buffer* buf, char* str);
+enum SearchResultFlags forwardSearch(struct Buffer* buf, char* str);
+enum SearchResultFlags backwardSearch(struct Buffer* buf, char* str);
 void isrch(SearchFunc func, char* prompt);
 void srch(SearchFunc func, char* prompt);
 void srch_nxtprv(bool reverse);

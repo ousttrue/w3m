@@ -646,7 +646,7 @@ static int MainMenuEncode = false;
 static MenuItem MainMenuItem[] = {
     /* type        label           variable value func     popup keys data  */
     { MENU_FUNC, N_(" Back         (b) "), NULL, 0, backBf, NULL, "b", NULL },
-    { MENU_POPUP, N_(" Select Buffer(s) "), NULL, 0, NULL, &SelectMenu, "s",
+    { MENU_POPUP, N_(" Select struct Buffer(s) "), NULL, 0, NULL, &SelectMenu, "s",
         NULL },
     { MENU_FUNC, N_(" View Source  (v) "), NULL, 0, vwSrc, NULL, "vV", NULL },
     { MENU_FUNC, N_(" Edit Source  (e) "), NULL, 0, editBf, NULL, "eE", NULL },
@@ -1200,12 +1200,13 @@ mSusp(char c)
     return (MENU_NOTHING);
 }
 
-static char* SearchString = NULL;
+static const char* SearchString = NULL;
 
-int (*menuSearchRoutine)(Menu*, char*, int);
+typedef int (*MenuSearchRoutineFunc)(Menu*, const char*, int);
+MenuSearchRoutineFunc menuSearchRoutine;
 
 static int
-menuForwardSearch(Menu* menu, char* str, int from)
+menuForwardSearch(Menu* menu, const char* str, int from)
 {
     int i;
     char* p;
@@ -1224,9 +1225,7 @@ menuForwardSearch(Menu* menu, char* str, int from)
 static int
 menu_search_forward(Menu* menu, int from)
 {
-    char* str;
-    int found;
-    str = inputStrHist(getUI(), "Forward: ", NULL, TextHist);
+    const char* str = inputStrHist(getUI(), "Forward: ", NULL, TextHist);
     if (str != NULL && *str == '\0')
         str = SearchString;
     if (str == NULL || *str == '\0')
@@ -1234,7 +1233,7 @@ menu_search_forward(Menu* menu, int from)
     SearchString = str;
     str = conv_search_string(str, DisplayCharset);
     menuSearchRoutine = menuForwardSearch;
-    found = menuForwardSearch(menu, str, from + 1);
+    int found = menuForwardSearch(menu, str, from + 1);
     if (WrapSearch && found == -1)
         found = menuForwardSearch(menu, str, 0);
     if (found >= 0)
@@ -1254,7 +1253,7 @@ mSrchF(char c)
 }
 
 static int
-menuBackwardSearch(Menu* menu, char* str, int from)
+menuBackwardSearch(Menu* menu, const char* str, int from)
 {
     int i;
     char* p;
@@ -1273,9 +1272,7 @@ menuBackwardSearch(Menu* menu, char* str, int from)
 static int
 menu_search_backward(Menu* menu, int from)
 {
-    char* str;
-    int found;
-    str = inputStrHist(getUI(), "Backward: ", NULL, TextHist);
+    const char* str = inputStrHist(getUI(), "Backward: ", NULL, TextHist);
     if (str != NULL && *str == '\0')
         str = SearchString;
     if (str == NULL || *str == '\0')
@@ -1283,7 +1280,7 @@ menu_search_backward(Menu* menu, int from)
     SearchString = str;
     str = conv_search_string(str, DisplayCharset);
     menuSearchRoutine = menuBackwardSearch;
-    found = menuBackwardSearch(menu, str, from - 1);
+    int found = menuBackwardSearch(menu, str, from - 1);
     if (WrapSearch && found == -1)
         found = menuBackwardSearch(menu, str, menu->nitem);
     if (found >= 0)
@@ -1305,23 +1302,21 @@ mSrchB(char c)
 static int
 menu_search_next_previous(Menu* menu, int from, int reverse)
 {
-    int found;
-    static int (*routine[2])(Menu*, char*, int) = {
+    static MenuSearchRoutineFunc routine[2] = {
         menuForwardSearch, menuBackwardSearch
     };
-    char* str;
 
     if (menuSearchRoutine == NULL) {
         message(getUI(), MSG_INFO, "No previous regular expression");
         return -1;
     }
-    str = conv_search_string(SearchString, DisplayCharset);
+    const char* str = conv_search_string(SearchString, DisplayCharset);
     if (reverse != 0)
         reverse = 1;
     if (menuSearchRoutine == menuBackwardSearch)
         reverse ^= 1;
     from += reverse ? -1 : 1;
-    found = (*routine[reverse])(menu, str, from);
+    int found = (*routine[reverse])(menu, str, from);
     if (WrapSearch && found == -1)
         found = (*routine[reverse])(menu, str, reverse * menu->nitem);
     if (found >= 0)
@@ -1383,14 +1378,11 @@ void popupMenu(int x, int y, Menu* menu)
 DEFUN(mainMn, MAIN_MENU MENU, "Pop up menu")
 {
     Menu* menu = &MainMenu;
-    char* data;
-    int n;
     int x = Currentbuf->cursorX,
         y = Currentbuf->cursorY;
-
-    data = searchKeyData();
+    const char* data = searchKeyData();
     if (data != NULL) {
-        n = getMenuN(w3mMenuList, data);
+        int n = getMenuN(w3mMenuList, data);
         if (n < 0)
             return;
         menu = w3mMenuList[n].menu;
@@ -1414,7 +1406,7 @@ static void
 initSelectMenu(void)
 {
     int i, nitem, len = 0, l;
-    Buffer* buf;
+    struct Buffer* buf;
     Str str;
     char** label;
     char* p;
@@ -1479,7 +1471,7 @@ static void
 smChBuf(void)
 {
     int i;
-    Buffer* buf;
+    struct Buffer* buf;
 
     if (SelectV < 0 || SelectV >= SelectMenu.nitem)
         return;
@@ -1499,7 +1491,7 @@ static int
 smDelBuf(char c)
 {
     int i, x, y, mselect;
-    Buffer* buf;
+    struct Buffer* buf;
 
     if (CurrentMenu->select < 0 || CurrentMenu->select >= SelectMenu.nitem)
         return (MENU_NOTHING);
@@ -1713,7 +1705,7 @@ int addMenuList(MenuList** mlist, char* id)
     return n;
 }
 
-int getMenuN(MenuList* list, char* id)
+int getMenuN(MenuList* list, const char* id)
 {
     int n;
 
@@ -1727,7 +1719,7 @@ int getMenuN(MenuList* list, char* id)
 /* --- InitMenu (END) --- */
 
 LinkList*
-link_menu(Buffer* buf)
+link_menu(struct Buffer* buf)
 {
     Menu menu;
     LinkList* l;
@@ -1786,7 +1778,7 @@ link_menu(Buffer* buf)
 /* --- LinkMenu (END) --- */
 
 Anchor*
-accesskey_menu(Buffer* buf)
+accesskey_menu(struct Buffer* buf)
 {
     Menu menu;
     AnchorList* al = buf->href;
@@ -1887,7 +1879,7 @@ lmSelect(char c)
 }
 
 Anchor*
-list_menu(Buffer* buf)
+list_menu(struct Buffer* buf)
 {
     Menu menu;
     AnchorList* al = buf->href;

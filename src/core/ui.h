@@ -17,9 +17,9 @@ extern int showLineNum;
 
 const char* url_quote_conv(const char* x, wc_ces c);
 
-struct _Buffer;
-extern struct _Buffer* Currentbuf;
-extern struct _Buffer* Firstbuf;
+struct Buffer;
+extern struct Buffer* Currentbuf;
+extern struct Buffer* Firstbuf;
 
 // key input(blocking) or draw require UI or query tty
 //

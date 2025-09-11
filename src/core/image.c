@@ -342,9 +342,9 @@ static Hash_sv* image_hash = NULL;
 static Hash_sv* image_file = NULL;
 static GeneralList* image_list = NULL;
 static struct ImageCache** image_cache = NULL;
-static Buffer* image_buffer = NULL;
+static struct Buffer* image_buffer = NULL;
 
-void deleteImage(Buffer* buf)
+void deleteImage(struct Buffer* buf)
 {
     if (!buf)
         return;
@@ -362,7 +362,7 @@ void deleteImage(Buffer* buf)
     loadImage(NULL, IMG_FLAG_STOP, false);
 }
 
-void getAllImage(Buffer* buf)
+void getAllImage(struct Buffer* buf)
 {
     image_buffer = buf;
     if (!buf)
@@ -386,7 +386,7 @@ void getAllImage(Buffer* buf)
 }
 
 static void
-showImageProgress(Buffer* buf)
+showImageProgress(struct Buffer* buf)
 {
     AnchorList* al;
     Anchor* a;
@@ -412,7 +412,7 @@ showImageProgress(Buffer* buf)
     }
 }
 
-void loadImage(Buffer* buf, enum ImageLoadFlag flag, bool do_download)
+void loadImage(struct Buffer* buf, enum ImageLoadFlag flag, bool do_download)
 {
     struct ImageCache* cache;
     struct stat st;
