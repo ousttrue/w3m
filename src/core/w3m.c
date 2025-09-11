@@ -1142,7 +1142,7 @@ static void
 nscroll(int n)
 {
     struct Buffer* buf = Currentbuf;
-    Line *top = buf->topLine, *cur = buf->currentLine;
+    struct Line *top = buf->topLine, *cur = buf->currentLine;
     int lnum, tlnum, llnum, diff_n;
 
     if (buf->firstLine == NULL)
@@ -1308,7 +1308,7 @@ cmd_loadURL(const char* url, struct Url* current, const char* referer, struct Fo
 static void
 shiftvisualpos(struct Buffer* buf, int shift)
 {
-    Line* l = buf->currentLine;
+    struct Line* l = buf->currentLine;
     buf->visualpos -= shift;
     if (buf->visualpos - l->bwidth >= getScreen()->COLS)
         buf->visualpos = l->bwidth + getScreen()->COLS - 1;
@@ -1346,7 +1346,7 @@ DEFUN(shiftr, SHIFT_RIGHT, "Shift screen right")
 DEFUN(col1R, RIGHT, "Shift screen one column right")
 {
     struct Buffer* buf = Currentbuf;
-    Line* l = buf->currentLine;
+    struct Line* l = buf->currentLine;
     int j, column, n = searchKeyNum();
 
     if (l == NULL)
@@ -1363,7 +1363,7 @@ DEFUN(col1R, RIGHT, "Shift screen one column right")
 DEFUN(col1L, LEFT, "Shift screen one column left")
 {
     struct Buffer* buf = Currentbuf;
-    Line* l = buf->currentLine;
+    struct Line* l = buf->currentLine;
     int j, n = searchKeyNum();
 
     if (l == NULL)
@@ -1576,9 +1576,9 @@ is_wordchar(wc_uint32 c)
 }
 
 static int
-prev_nonnull_line(Line* line)
+prev_nonnull_line(struct Line* line)
 {
-    Line* l;
+    struct Line* l;
 
     for (l = line; l != NULL && l->len == 0; l = l->prev)
         ;
@@ -1594,7 +1594,7 @@ prev_nonnull_line(Line* line)
 DEFUN(movLW, PREV_WORD, "Move to the previous word")
 {
     char* lb;
-    Line *pline, *l;
+    struct Line *pline, *l;
     int ppos;
     int i, n = searchKeyNum();
 
@@ -1643,9 +1643,9 @@ end:
 }
 
 static int
-next_nonnull_line(Line* line)
+next_nonnull_line(struct Line* line)
 {
-    Line* l;
+    struct Line* l;
 
     for (l = line; l != NULL && l->len == 0; l = l->next)
         ;
@@ -1662,7 +1662,7 @@ next_nonnull_line(Line* line)
 DEFUN(movRW, NEXT_WORD, "Move to the next word")
 {
     char* lb;
-    Line *pline, *l;
+    struct Line *pline, *l;
     int ppos;
     int i, n = searchKeyNum();
 
@@ -1861,7 +1861,7 @@ DEFUN(linend, LINE_END, "Go to the end of the line")
 static int
 cur_real_linenumber(struct Buffer* buf)
 {
-    Line *l, *cur = buf->currentLine;
+    struct Line *l, *cur = buf->currentLine;
     int n;
 
     if (!cur)
@@ -1920,7 +1920,7 @@ DEFUN(editScr, EDIT_SCREEN, "Edit rendered copy of document")
 /* Set / unset mark */
 DEFUN(_mark, MARK, "Set/unset mark")
 {
-    Line* l;
+    struct Line* l;
     if (!use_mark)
         return;
     if (Currentbuf->firstLine == NULL)
@@ -1932,7 +1932,7 @@ DEFUN(_mark, MARK, "Set/unset mark")
 /* Go to next mark */
 DEFUN(nextMk, NEXT_MARK, "Go to the next mark")
 {
-    Line* l;
+    struct Line* l;
     int i;
 
     if (!use_mark)
@@ -1965,7 +1965,7 @@ DEFUN(nextMk, NEXT_MARK, "Go to the next mark")
 /* Go to previous mark */
 DEFUN(prevMk, PREV_MARK, "Go to the previous mark")
 {
-    Line* l;
+    struct Line* l;
     int i;
 
     if (!use_mark)
@@ -2019,7 +2019,7 @@ DEFUN(reMark, REG_MARK, "Mark all occurences of a pattern")
         return;
     }
 
-    Line* l;
+    struct Line* l;
     char *p, *p1, *p2;
     MarkString = str;
     for (l = Currentbuf->firstLine; l != NULL; l = l->next) {
@@ -2445,7 +2445,7 @@ nextX(int d, int dy)
 {
     HmarkerList* hl = Currentbuf->hmarklist;
     Anchor *an, *pan;
-    Line* l;
+    struct Line* l;
     int i, x, y, n = searchKeyNum();
 
     if (Currentbuf->firstLine == NULL)
@@ -3315,7 +3315,7 @@ DEFUN(chkWORD, MARK_WORD, "Turn current word into hyperlink")
 /* show current line number and number of lines in the entire document */
 DEFUN(curlno, LINE_INFO, "Display current position in document")
 {
-    Line* l = Currentbuf->currentLine;
+    struct Line* l = Currentbuf->currentLine;
     Str tmp;
     int cur = 0, all = 0, col = 0, len = 0;
 
@@ -3387,7 +3387,7 @@ static char*
 getCurWord(struct Buffer* buf, int* spos, int* epos)
 {
     char* p;
-    Line* l = buf->currentLine;
+    struct Line* l = buf->currentLine;
     int b, e;
 
     *spos = 0;
@@ -3472,9 +3472,9 @@ DEFUN(dictwordat, DICT_WORD_AT,
 void set_buffer_environ(struct Buffer* buf)
 {
     static struct Buffer* prev_buf = NULL;
-    static Line* prev_line = NULL;
+    static struct Line* prev_line = NULL;
     static int prev_pos = -1;
-    Line* l;
+    struct Line* l;
 
     if (buf == NULL)
         return;
@@ -3940,7 +3940,7 @@ static void
 resetPos(BufferPos* b)
 {
     struct Buffer buf;
-    Line top, cur;
+    struct Line top, cur;
 
     top.linenumber = b->top_linenumber;
     cur.linenumber = b->cur_linenumber;

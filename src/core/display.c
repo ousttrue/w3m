@@ -32,7 +32,7 @@ double pixel_per_line = (DEFAULT_PIXEL_PER_LINE);
 int pixel_per_line_i = (DEFAULT_PIXEL_PER_LINE);
 int set_pixel_per_line = (false);
 
-static Line* cline = NULL;
+static struct Line* cline = NULL;
 static int ccolumn = -1;
 static int image_touch = 0;
 static bool draw_image_flag = false;
@@ -74,7 +74,7 @@ struct Frame* screenToFrame(const struct VirtualTerm* vt)
     return frame;
 }
 
-static Line* redrawLine(struct UI ui, struct Buffer* buf, Line* l, int i)
+static struct Line* redrawLine(struct UI ui, struct Buffer* buf, struct Line* l, int i)
 {
     int j, pos, rcol, ncol, delta = 1;
     int column = buf->currentColumn;
@@ -145,7 +145,7 @@ static Line* redrawLine(struct UI ui, struct Buffer* buf, Line* l, int i)
     return l;
 }
 
-static Line* redrawLineImage(struct UI ui, struct Buffer* buf, Line* l, int i)
+static struct Line* redrawLineImage(struct UI ui, struct Buffer* buf, struct Line* l, int i)
 {
     int j, pos, rcol;
     int column = buf->currentColumn;
@@ -220,7 +220,7 @@ static void redrawNLine(struct UI ui, struct Buffer* buf, int n)
         vt_setbcolor(ui.vt, bg_color);
     }
 
-    Line* l;
+    struct Line* l;
     int i;
     for (i = 0, l = buf->topLine; i < ui.viewport.rows; i++, l = l->next) {
         if (i >= ui.viewport.rows - n || i < -n)
@@ -267,7 +267,7 @@ void bufToScreen(struct UI ui, struct Buffer* buf)
         buf->topLine = buf->firstLine;
 }
 
-static int redrawLineRegion(struct UI ui, struct Buffer* buf, Line* l, int i, int bpos, int epos)
+static int redrawLineRegion(struct UI ui, struct Buffer* buf, struct Line* l, int i, int bpos, int epos)
 {
     int j, pos, rcol, ncol, delta = 1;
     int column = buf->currentColumn;
@@ -335,7 +335,7 @@ static void
 drawAnchorCursor0(struct UI ui, struct Buffer* buf,
     AnchorList* al, int hseq, int prevhseq, int tline, int eline, int active)
 {
-    Line* l = buf->topLine;
+    struct Line* l = buf->topLine;
     for (int j = 0; j < al->nanchor; j++) {
         Anchor* an = &al->anchors[j];
         if (an->start.line < tline)

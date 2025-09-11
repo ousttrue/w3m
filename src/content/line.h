@@ -8,7 +8,7 @@ typedef unsigned short Lineprop;
 typedef unsigned char Linecolor;
 
 /*
- * Line Property
+ * struct Line Property
  */
 
 #define P_CHARTYPE 0x3f00
@@ -50,12 +50,12 @@ typedef unsigned char Linecolor;
 #define CharEffect(c) ((c) & (P_EFFECT | PC_SYMBOL))
 #define SetCharType(v, c) ((v) = (((v) & ~P_CHARTYPE) | (c)))
 
-typedef struct _Line {
+struct Line {
     char* lineBuf;
     Lineprop* propBuf;
     Linecolor* colorBuf;
-    struct _Line* next;
-    struct _Line* prev;
+    struct Line* next;
+    struct Line* prev;
     int len;
     int width;
     long linenumber; /* on buffer */
@@ -64,7 +64,7 @@ typedef struct _Line {
     int size;
     int bpos;
     int bwidth;
-} Line;
+};
 
 enum CalcPositionMode {
     CP_AUTO = 0,
@@ -73,13 +73,13 @@ enum CalcPositionMode {
 
 int calcPosition(char* l, Lineprop* pr, int len, int pos, int bpos, enum CalcPositionMode mode);
 
-inline static int COLPOS(struct _Line* l, int c)
+inline static int COLPOS(struct Line* l, int c)
 {
     return calcPosition(l->lineBuf, l->propBuf, l->len, c, 0, CP_AUTO);
 }
 
-int columnPos(Line* line, int column);
-int columnLen(Line* line, int column);
+int columnPos(struct Line* line, int column);
+int columnLen(struct Line* line, int column);
 
 // mulity byte sequence ?
 // set PC_WCHAR1, PC_WCHAR2

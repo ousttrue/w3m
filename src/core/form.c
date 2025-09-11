@@ -264,7 +264,7 @@ void formResetBuffer(struct Buffer* buf, AnchorList* formitem)
 }
 
 static int
-form_update_line(Line* line, char** str, int spos, int epos, int width,
+form_update_line(struct Line* line, char** str, int spos, int epos, int width,
     int newline, int password)
 {
     int c_len = 1, c_width = 1, w, i, len, pos;
@@ -383,7 +383,7 @@ void formUpdateBuffer(Anchor* a, struct Buffer* buf, struct FormItem* form)
     struct Buffer save;
     char* p;
     int spos, epos, rows, c_rows, pos, col = 0;
-    Line* l;
+    struct Line* l;
 
     copyBuffer(&save, buf);
     gotoLine(buf, a->start.line);

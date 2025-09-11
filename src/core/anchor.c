@@ -288,7 +288,7 @@ reseq_anchor(struct Buffer* buf)
 }
 
 static char*
-reAnchorPos(struct Buffer* buf, Line* l, char* p1, char* p2, AnchorFunc anchorproc)
+reAnchorPos(struct Buffer* buf, struct Line* l, char* p1, char* p2, AnchorFunc anchorproc)
 {
     Anchor* a;
     int spos, epos;
@@ -328,7 +328,7 @@ reAnchorPos(struct Buffer* buf, Line* l, char* p1, char* p2, AnchorFunc anchorpr
     return p2;
 }
 
-void reAnchorWord(struct Buffer* buf, Line* l, int spos, int epos)
+void reAnchorWord(struct Buffer* buf, struct Line* l, int spos, int epos)
 {
     reAnchorPos(buf, l, &l->lineBuf[spos], &l->lineBuf[epos], _put_anchor_all);
 }
@@ -338,7 +338,7 @@ void reAnchorWord(struct Buffer* buf, Line* l, int spos, int epos)
 static const char*
 reAnchorAny(struct Buffer* buf, const char* re, AnchorFunc anchorproc)
 {
-    Line* l;
+    struct Line* l;
     char *p = NULL, *p1, *p2;
 
     if (re == NULL || *re == '\0') {
@@ -473,7 +473,7 @@ void addMultirowsImg(struct Buffer* buf, AnchorList* al)
 {
     int i, j, k, col, ecol, pos;
     Anchor a_img, a_href, a_form, *a;
-    Line *l, *ls;
+    struct Line *l, *ls;
 
     if (al == NULL || al->nanchor == 0)
         return;
@@ -549,7 +549,7 @@ void addMultirowsForm(struct Buffer* buf, AnchorList* al)
 {
     int i, j, k, col, ecol, pos;
     Anchor a_form, *a;
-    Line *l, *ls;
+    struct Line *l, *ls;
 
     if (al == NULL || al->nanchor == 0)
         return;
@@ -604,7 +604,7 @@ void addMultirowsForm(struct Buffer* buf, AnchorList* al)
 char* getAnchorText(struct Buffer* buf, AnchorList* al, Anchor* a)
 {
     int hseq, i;
-    Line* l;
+    struct Line* l;
     Str tmp = NULL;
     char *p, *ep;
 

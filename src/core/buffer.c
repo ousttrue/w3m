@@ -223,7 +223,7 @@ writeBufferName(struct Buffer* buf, int n)
 void gotoLine(struct Buffer* buf, int n)
 {
     char msg[36];
-    Line* l = buf->firstLine;
+    struct Line* l = buf->firstLine;
     if (l == NULL)
         return;
     if (l->linenumber > n) {
@@ -258,7 +258,7 @@ void gotoLine(struct Buffer* buf, int n)
 void gotoRealLine(struct Buffer* buf, int n)
 {
     char msg[36];
-    Line* l = buf->firstLine;
+    struct Line* l = buf->firstLine;
 
     if (l == NULL)
         return;
@@ -339,7 +339,7 @@ selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectcha
 {
     struct VirtualTerm* vt = getScreen();
     int i, cpoint, /* Current struct Buffer Number */
-        spoint, /* Current Line on Screen */
+        spoint, /* Current struct Line on Screen */
         maxbuf, sclimit = getScreen()->ROWS - 1; /* Upper limit of line * number in
                                                   * the * screen */
     struct Buffer *buf, *topbuf;
@@ -479,7 +479,7 @@ void reshapeBuffer(struct Buffer* buf, int cols)
 
     // buf->height = getScreen()->ROWS - 1 + 1;
     if (buf->firstLine && sbuf.firstLine) {
-        Line* cur = sbuf.currentLine;
+        struct Line* cur = sbuf.currentLine;
         int n;
 
         buf->pos = sbuf.pos + cur->bpos;
@@ -534,7 +534,7 @@ int writeBufferCache(struct Buffer* buf)
 {
     Str tmp;
     FILE* cache = NULL;
-    Line* l;
+    struct Line* l;
     int colorflag;
 
     if (buf->savecache)
@@ -583,7 +583,7 @@ _error1:
 int readBufferCache(struct Buffer* buf)
 {
     FILE* cache;
-    Line *l = NULL, *prevl = NULL, *basel = NULL;
+    struct Line *l = NULL, *prevl = NULL, *basel = NULL;
     long lnum = 0, clnum, tlnum;
     int colorflag;
 
@@ -601,7 +601,7 @@ int readBufferCache(struct Buffer* buf)
     while (!feof(cache)) {
         lnum++;
         prevl = l;
-        l = New(Line);
+        l = New(struct Line);
         l->prev = prevl;
         if (prevl)
             prevl->next = l;
@@ -662,7 +662,7 @@ void cursorUp0(struct Buffer* buf, int n)
 
 void cursorUp(struct Buffer* buf, int n)
 {
-    Line* l = buf->currentLine;
+    struct Line* l = buf->currentLine;
     if (buf->firstLine == NULL)
         return;
     while (buf->currentLine->prev && buf->currentLine->bpos)
@@ -691,7 +691,7 @@ void cursorDown0(struct Buffer* buf, int n)
 
 void cursorDown(struct Buffer* buf, int n)
 {
-    Line* l = buf->currentLine;
+    struct Line* l = buf->currentLine;
     if (buf->firstLine == NULL)
         return;
     while (buf->currentLine->next && buf->currentLine->next->bpos)
@@ -708,7 +708,7 @@ void cursorDown(struct Buffer* buf, int n)
 
 void cursorUpDown(struct Buffer* buf, int n)
 {
-    Line* cl = buf->currentLine;
+    struct Line* cl = buf->currentLine;
 
     if (buf->firstLine == NULL)
         return;
@@ -720,7 +720,7 @@ void cursorUpDown(struct Buffer* buf, int n)
 void cursorRight(struct Buffer* buf, int n)
 {
     int i, delta = 1, cpos, vpos2;
-    Line* l = buf->currentLine;
+    struct Line* l = buf->currentLine;
 
     if (buf->firstLine == NULL)
         return;
@@ -760,7 +760,7 @@ void cursorRight(struct Buffer* buf, int n)
 void cursorLeft(struct Buffer* buf, int n)
 {
     int i, delta = 1, cpos;
-    Line* l = buf->currentLine;
+    struct Line* l = buf->currentLine;
 
     if (buf->firstLine == NULL)
         return;
@@ -915,7 +915,7 @@ void restorePosition(struct Buffer* buf, struct Buffer* orig)
  * saveBuffer: write buffer to file
  */
 static void
-_saveBuffer(struct Buffer* buf, Line* l, FILE* f, int cont)
+_saveBuffer(struct Buffer* buf, struct Line* l, FILE* f, int cont)
 {
     Str tmp;
     int is_html = false;
@@ -972,7 +972,7 @@ int columnSkip(struct Buffer* buf, int offset)
     int i, maxColumn;
     int column = buf->currentColumn + offset;
     int nlines = getScreen()->ROWS + 1;
-    Line* l;
+    struct Line* l;
 
     maxColumn = 0;
     for (i = 0, l = buf->topLine; i < nlines && l != NULL; i++, l = l->next) {
@@ -993,10 +993,10 @@ int columnSkip(struct Buffer* buf, int offset)
     return 1;
 }
 
-Line* lineSkip(struct Buffer* buf, Line* line, int offset, int last)
+struct Line* lineSkip(struct Buffer* buf, struct Line* line, int offset, int last)
 {
     int i;
-    Line* l;
+    struct Line* l;
 
     l = currentLineSkip(buf, line, offset, last);
     if (!nextpage_topline)
@@ -1006,10 +1006,10 @@ Line* lineSkip(struct Buffer* buf, Line* line, int offset, int last)
     return l;
 }
 
-Line* currentLineSkip(struct Buffer* buf, Line* line, int offset, int last)
+struct Line* currentLineSkip(struct Buffer* buf, struct Line* line, int offset, int last)
 {
     int i, n;
-    Line* l = line;
+    struct Line* l = line;
 
     if (offset == 0)
         return l;

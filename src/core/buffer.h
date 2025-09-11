@@ -68,10 +68,10 @@ typedef struct BufferPos {
 struct Buffer {
     char* filename;
     const char* buffername;
-    Line* firstLine;
-    Line* topLine;
-    Line* currentLine;
-    Line* lastLine;
+    struct Line* firstLine;
+    struct Line* topLine;
+    struct Line* currentLine;
+    struct Line* lastLine;
     struct Buffer* nextBuffer;
     struct Buffer* linkBuffer[MAX_LB];
     short width;
@@ -152,7 +152,7 @@ void saveBuffer(struct Buffer* buf, FILE* f, int cont);
 char* url_decode2(const char* url, const struct Buffer* buf);
 struct Url* baseURL(struct Buffer* buf);
 int columnSkip(struct Buffer* buf, int offset);
-struct _Line* lineSkip(struct Buffer* buf, struct _Line* line, int offset, int last);
-struct _Line* currentLineSkip(struct Buffer* buf, struct _Line* line, int offset, int last);
+struct Line* lineSkip(struct Buffer* buf, struct Line* line, int offset, int last);
+struct Line* currentLineSkip(struct Buffer* buf, struct Line* line, int offset, int last);
 char* last_modified(struct Buffer* buf);
 struct Buffer* cookie_list_panel(void);

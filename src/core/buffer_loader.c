@@ -195,8 +195,8 @@ static void
 addnewline2(struct Buffer* buf, char* line, Lineprop* prop, Linecolor* color, int pos,
     int nlines)
 {
-    Line* l;
-    l = New(Line);
+    struct Line* l;
+    l = New(struct Line);
     l->next = NULL;
     l->lineBuf = line;
     l->propBuf = prop;
@@ -233,7 +233,7 @@ static void addnewline(struct Buffer* buf, char* line, Lineprop* prop, Linecolor
     char* s;
     Lineprop* p;
     Linecolor* c;
-    Line* l;
+    struct Line* l;
     int i, bpos, bwidth;
 
     if (pos > 0) {

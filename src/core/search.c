@@ -30,7 +30,7 @@ static char* SearchString = NULL;
 static SearchFunc searchRoutine;
 
 static void
-set_mark(Line* l, int pos, int epos)
+set_mark(struct Line* l, int pos, int epos)
 {
     for (; pos < epos && pos < l->size; pos++)
         l->propBuf[pos] |= PE_MARK;
@@ -47,7 +47,7 @@ const char* conv_search_string(const char* str, wc_ces f_ces)
 enum SearchResultFlags forwardSearch(struct Buffer* buf, char* str)
 {
     char *p, *first, *last;
-    Line *l, *begin;
+    struct Line *l, *begin;
     int wrapped = false;
     int pos;
 
@@ -116,7 +116,7 @@ enum SearchResultFlags forwardSearch(struct Buffer* buf, char* str)
 enum SearchResultFlags backwardSearch(struct Buffer* buf, char* str)
 {
     char *p, *q, *found, *found_last, *first, *last;
-    Line *l, *begin;
+    struct Line *l, *begin;
     int wrapped = false;
     int pos;
 
@@ -214,7 +214,7 @@ enum SearchResultFlags backwardSearch(struct Buffer* buf, char* str)
 }
 
 static void
-clear_mark(Line* l)
+clear_mark(struct Line* l)
 {
     int pos;
     if (!l)
