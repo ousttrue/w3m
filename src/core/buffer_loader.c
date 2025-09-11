@@ -844,7 +844,8 @@ void HTMLlineproc2(Buffer* buf, TextLineList* tl)
     HTMLlineproc2body(buf, textlist_feed, -1);
 }
 
-static void loadHTML(Str html, wc_ces doc_charset, int cols, bool use_graphic, bool internal, struct _Buffer* buf)
+static int loadHTML(struct html_feed_environ* htmlenv1,
+    Str html, wc_ces doc_charset, int cols, bool use_graphic, bool internal)
 {
     struct environment envs[MAX_ENV_LEVEL];
     long long linelen = 0;
@@ -852,9 +853,8 @@ static void loadHTML(Str html, wc_ces doc_charset, int cols, bool use_graphic, b
     Str lineBuf2 = Strnew();
     wc_ces charset = WC_CES_US_ASCII;
     // wc_ces doc_charset = DocumentCharset;
-    struct html_feed_environ htmlenv1;
     struct readbuffer obuf;
-    void (*volatile prevtrap)(int _dummy) = NULL;
+    // void (*volatile prevtrap)(int _dummy) = NULL;
 
     if (use_graphic) {
         symbol_width = symbol_width0 = 1;
@@ -875,9 +875,9 @@ static void loadHTML(Str html, wc_ces doc_charset, int cols, bool use_graphic, b
     else
         image_flag = IMG_FLAG_SKIP;
 
-    init_henv(&htmlenv1, &obuf, envs, MAX_ENV_LEVEL, NULL, cols, 0);
+    init_henv(htmlenv1, &obuf, envs, MAX_ENV_LEVEL, NULL, cols, 0);
 
-    htmlenv1.buf = newTextLineList();
+    htmlenv1->buf = newTextLineList();
     cur_baseURL = NULL; // baseURL(newBuf);
 
     // if (sigsetjmp(AbortLoading, 1) != 0) {
@@ -909,28 +909,126 @@ static void loadHTML(Str html, wc_ces doc_charset, int cols, bool use_graphic, b
         // }
         lineBuf2 = convertLine(lineBuf2, HTML_MODE, &charset, doc_charset, InnerCharset);
         // cur_document_charset = charset;
-        HTMLlineproc0(lineBuf2->ptr, &htmlenv1, internal);
+        HTMLlineproc0(lineBuf2->ptr, htmlenv1, internal);
     }
     if (obuf.status != R_ST_NORMAL) {
-        HTMLlineproc0("\n", &htmlenv1, internal);
+        HTMLlineproc0("\n", htmlenv1, internal);
     }
     obuf.status = R_ST_NORMAL;
-    completeHTMLstream(&htmlenv1, &obuf);
-    flushline(&htmlenv1, &obuf, 0, 2, htmlenv1.limit);
+    completeHTMLstream(htmlenv1, &obuf);
+    flushline(htmlenv1, &obuf, 0, 2, htmlenv1->limit);
     cur_baseURL = NULL;
     cur_document_charset = 0;
 
+    return trbyte + linelen;
+}
+
+static void loadHTMLstream(union input_stream* stream, Buffer* buf, int internal)
+{
+    Str html = readAll(stream);
+    struct UI ui = getUI();
+    struct html_feed_environ htmlenv1;
+
+    buf->trbyte = loadHTML(&htmlenv1, html, WC_CES_SHIFT_JIS /*WC_CES_US_ASCII*/, ui.vt->COLS, ui.use_graphic, internal);
+
+    // phase2:
     // Buffer* buf = newBuffer();
     if (htmlenv1.title)
         buf->buffername = htmlenv1.title;
-
-phase2:
-    buf->trbyte = trbyte + linelen;
     // TRAP_OFF;
-    buf->document_charset = charset;
-    buf->image_flag = image_flag;
+    // buf->document_charset = charset;
+    // buf->image_flag = image_flag;
     HTMLlineproc2(buf, htmlenv1.buf);
     // return buf;
+    // }
+
+    //     struct TermEntry* t = getTermEntry();
+    //     struct environment envs[MAX_ENV_LEVEL];
+    //     long long linelen = 0;
+    //     long long trbyte = 0;
+    //     Str lineBuf2 = Strnew();
+    //     wc_ces charset = WC_CES_US_ASCII;
+    //     wc_ces  doc_charset = DocumentCharset;
+    //     struct html_feed_environ htmlenv1;
+    //     struct readbuffer obuf;
+    //     int  image_flag;
+    //     MySignalHandler (* prevtrap)(int _dummy) = NULL;
+    //
+    //     if (graph_ok(t)) {
+    //         symbol_width = symbol_width0 = 1;
+    //     } else {
+    //         symbol_width0 = 0;
+    //         get_symbol(DisplayCharset, &symbol_width0);
+    //         symbol_width = WcOption.use_wide ? symbol_width0 : 1;
+    //     }
+    //
+    //     init_title();
+    //     init2();
+    //     if (newBuf->image_flag)
+    //         image_flag = newBuf->image_flag;
+    //     else if (activeImage && displayImage && autoImage)
+    //         image_flag = IMG_FLAG_AUTO;
+    //     else
+    //         image_flag = IMG_FLAG_SKIP;
+    //
+    //     init_henv(&htmlenv1, &obuf, envs, MAX_ENV_LEVEL, NULL, newBuf->width, 0);
+    //
+    //     htmlenv1.buf = newTextLineList();
+    // #if defined(USE_M17N) || defined(USE_IMAGE)
+    //     cur_baseURL = baseURL(newBuf);
+    // #endif
+    //
+    //     if (sigsetjmp(AbortLoading, 1) != 0) {
+    //         HTMLlineproc0("<br>Transfer Interrupted!<br>", &htmlenv1, true);
+    //         goto phase2;
+    //     }
+    //     TRAP_ON;
+    //
+    //     if (newBuf != NULL) {
+    //         if (newBuf->document_charset)
+    //             charset = doc_charset = newBuf->document_charset;
+    //     }
+    //     if (content_charset && UseContentCharset)
+    //         doc_charset = content_charset;
+    //     else if (f->guess_type && !strcasecmp(f->guess_type, "application/xhtml+xml"))
+    //         doc_charset = WC_CES_UTF_8;
+    //     meta_charset = 0;
+    //     if (IStype(f->stream) != IST_ENCODED)
+    //         f->stream = newEncodedStream(f->stream, f->encoding);
+    //     while ((lineBuf2 = StrmyUFgets(f)) && lineBuf2->length) {
+    //         if (src)
+    //             Strfputs(lineBuf2, src);
+    //         linelen += lineBuf2->length;
+    //         showProgress(current_content_length, &linelen, &trbyte);
+    //         if (meta_charset) { /* <META> */
+    //             if (content_charset == 0 && UseContentCharset) {
+    //                 doc_charset = meta_charset;
+    //                 charset = WC_CES_US_ASCII;
+    //             }
+    //             meta_charset = 0;
+    //         }
+    //         lineBuf2 = convertLine(f, lineBuf2, HTML_MODE, &charset, doc_charset);
+    //         cur_document_charset = charset;
+    //         HTMLlineproc0(lineBuf2->ptr, &htmlenv1, internal);
+    //     }
+    //     if (obuf.status != R_ST_NORMAL) {
+    //         HTMLlineproc0("\n", &htmlenv1, internal);
+    //     }
+    //     obuf.status = R_ST_NORMAL;
+    //     completeHTMLstream(&htmlenv1, &obuf);
+    //     flushline(&htmlenv1, &obuf, 0, 2, htmlenv1.limit);
+    // #if defined(USE_M17N) || defined(USE_IMAGE)
+    //     cur_baseURL = NULL;
+    // #endif
+    //     cur_document_charset = 0;
+    //     if (htmlenv1.title)
+    //         newBuf->buffername = htmlenv1.title;
+    // phase2:
+    //     newBuf->trbyte = trbyte + linelen;
+    //     TRAP_OFF;
+    //     newBuf->document_charset = charset;
+    //     newBuf->image_flag = image_flag;
+    //     HTMLlineproc2(newBuf, htmlenv1.buf);
 }
 
 Buffer* makeBuffer(struct Content* c)
@@ -1455,100 +1553,6 @@ table_start:
     }
 }
 
-static void loadHTMLstream(union input_stream* stream, Buffer* newBuf, FILE* src, int internal)
-{
-    Str html = readAll(stream);
-    struct UI ui = getUI();
-    loadHTML(html, WC_CES_SHIFT_JIS /*WC_CES_US_ASCII*/, ui.vt->COLS, ui.use_graphic, internal, newBuf);
-    //     struct TermEntry* t = getTermEntry();
-    //     struct environment envs[MAX_ENV_LEVEL];
-    //     long long linelen = 0;
-    //     long long trbyte = 0;
-    //     Str lineBuf2 = Strnew();
-    //     wc_ces charset = WC_CES_US_ASCII;
-    //     wc_ces  doc_charset = DocumentCharset;
-    //     struct html_feed_environ htmlenv1;
-    //     struct readbuffer obuf;
-    //     int  image_flag;
-    //     MySignalHandler (* prevtrap)(int _dummy) = NULL;
-    //
-    //     if (graph_ok(t)) {
-    //         symbol_width = symbol_width0 = 1;
-    //     } else {
-    //         symbol_width0 = 0;
-    //         get_symbol(DisplayCharset, &symbol_width0);
-    //         symbol_width = WcOption.use_wide ? symbol_width0 : 1;
-    //     }
-    //
-    //     init_title();
-    //     init2();
-    //     if (newBuf->image_flag)
-    //         image_flag = newBuf->image_flag;
-    //     else if (activeImage && displayImage && autoImage)
-    //         image_flag = IMG_FLAG_AUTO;
-    //     else
-    //         image_flag = IMG_FLAG_SKIP;
-    //
-    //     init_henv(&htmlenv1, &obuf, envs, MAX_ENV_LEVEL, NULL, newBuf->width, 0);
-    //
-    //     htmlenv1.buf = newTextLineList();
-    // #if defined(USE_M17N) || defined(USE_IMAGE)
-    //     cur_baseURL = baseURL(newBuf);
-    // #endif
-    //
-    //     if (sigsetjmp(AbortLoading, 1) != 0) {
-    //         HTMLlineproc0("<br>Transfer Interrupted!<br>", &htmlenv1, true);
-    //         goto phase2;
-    //     }
-    //     TRAP_ON;
-    //
-    //     if (newBuf != NULL) {
-    //         if (newBuf->document_charset)
-    //             charset = doc_charset = newBuf->document_charset;
-    //     }
-    //     if (content_charset && UseContentCharset)
-    //         doc_charset = content_charset;
-    //     else if (f->guess_type && !strcasecmp(f->guess_type, "application/xhtml+xml"))
-    //         doc_charset = WC_CES_UTF_8;
-    //     meta_charset = 0;
-    //     if (IStype(f->stream) != IST_ENCODED)
-    //         f->stream = newEncodedStream(f->stream, f->encoding);
-    //     while ((lineBuf2 = StrmyUFgets(f)) && lineBuf2->length) {
-    //         if (src)
-    //             Strfputs(lineBuf2, src);
-    //         linelen += lineBuf2->length;
-    //         showProgress(current_content_length, &linelen, &trbyte);
-    //         if (meta_charset) { /* <META> */
-    //             if (content_charset == 0 && UseContentCharset) {
-    //                 doc_charset = meta_charset;
-    //                 charset = WC_CES_US_ASCII;
-    //             }
-    //             meta_charset = 0;
-    //         }
-    //         lineBuf2 = convertLine(f, lineBuf2, HTML_MODE, &charset, doc_charset);
-    //         cur_document_charset = charset;
-    //         HTMLlineproc0(lineBuf2->ptr, &htmlenv1, internal);
-    //     }
-    //     if (obuf.status != R_ST_NORMAL) {
-    //         HTMLlineproc0("\n", &htmlenv1, internal);
-    //     }
-    //     obuf.status = R_ST_NORMAL;
-    //     completeHTMLstream(&htmlenv1, &obuf);
-    //     flushline(&htmlenv1, &obuf, 0, 2, htmlenv1.limit);
-    // #if defined(USE_M17N) || defined(USE_IMAGE)
-    //     cur_baseURL = NULL;
-    // #endif
-    //     cur_document_charset = 0;
-    //     if (htmlenv1.title)
-    //         newBuf->buffername = htmlenv1.title;
-    // phase2:
-    //     newBuf->trbyte = trbyte + linelen;
-    //     TRAP_OFF;
-    //     newBuf->document_charset = charset;
-    //     newBuf->image_flag = image_flag;
-    //     HTMLlineproc2(newBuf, htmlenv1.buf);
-}
-
 /*
  * loadHTMLBuffer: read file and make new buffer
  */
@@ -1559,28 +1563,26 @@ loadHTMLBuffer(struct Url url, union input_stream* stream, Buffer* newBuf)
     if (newBuf == NULL)
         newBuf = newBuffer();
 
-    FILE* src = NULL;
-    if (newBuf->sourcefile == NULL && (url.scheme != SCM_LOCAL || newBuf->mailcap)) {
-        Str tmp = tmpfname(TMPF_SRC, ".html");
-        src = fopen(tmp->ptr, "w");
-        if (src)
-            newBuf->sourcefile = tmp->ptr;
-    }
+    // FILE* src = NULL;
+    // if (newBuf->sourcefile == NULL && (url.scheme != SCM_LOCAL || newBuf->mailcap)) {
+    //     Str tmp = tmpfname(TMPF_SRC, ".html");
+    //     src = fopen(tmp->ptr, "w");
+    //     if (src)
+    //         newBuf->sourcefile = tmp->ptr;
+    // }
 
-    loadHTMLstream(stream, newBuf, src, false);
+    loadHTMLstream(stream, newBuf, false);
 
     newBuf->topLine = newBuf->firstLine;
     newBuf->lastLine = newBuf->currentLine;
     newBuf->currentLine = newBuf->firstLine;
     if (n_textarea)
         formResetBuffer(newBuf, newBuf->formitem);
-    if (src)
-        fclose(src);
+    // if (src)
+    //     fclose(src);
 
     return newBuf;
 }
-
-
 
 /*
  * loadHTMLString: read string and make new buffer
@@ -1601,7 +1603,7 @@ loadHTMLString(Str page)
     // TRAP_ON;
 
     newBuf->document_charset = InnerCharset;
-    loadHTMLstream(stream, newBuf, NULL, true);
+    loadHTMLstream(stream, newBuf, true);
     newBuf->document_charset = WC_CES_US_ASCII;
 
     term_raw();
