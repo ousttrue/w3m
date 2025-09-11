@@ -1079,7 +1079,6 @@ void tmpClearBuffer(struct Buffer* buf)
         buf->firstLine = NULL;
         buf->topLine = NULL;
         buf->currentLine = NULL;
-        buf->lastLine = NULL;
     }
 }
 
@@ -1153,8 +1152,8 @@ nscroll(int n)
         lnum += n;
         if (lnum < buf->topLine->linenumber)
             lnum = buf->topLine->linenumber;
-        else if (lnum > buf->lastLine->linenumber)
-            lnum = buf->lastLine->linenumber;
+        else if (lnum > lastLine(buf)->linenumber)
+            lnum = lastLine(buf)->linenumber;
     } else {
         tlnum = buf->topLine->linenumber;
         llnum = buf->topLine->linenumber + getScreen()->ROWS - 1;
@@ -1822,9 +1821,9 @@ void _goLine(const char* l)
     if (*l == '^') {
         Currentbuf->topLine = Currentbuf->currentLine = Currentbuf->firstLine;
     } else if (*l == '$') {
-        Currentbuf->topLine = lineSkip(Currentbuf, Currentbuf->lastLine,
+        Currentbuf->topLine = lineSkip(Currentbuf, lastLine(Currentbuf),
             -(getScreen()->ROWS + 1) / 2, true);
-        Currentbuf->currentLine = Currentbuf->lastLine;
+        Currentbuf->currentLine = lastLine(Currentbuf);
     } else
         gotoRealLine(Currentbuf, atoi(l));
     arrangeCursor(Currentbuf);
@@ -2520,7 +2519,7 @@ nextY(int d)
         if (an)
             hseq = abs(an->hseq);
         an = NULL;
-        for (; y >= 0 && y <= Currentbuf->lastLine->linenumber; y += d) {
+        for (; y >= 0 && y <= lastLine(Currentbuf)->linenumber; y += d) {
             an = retrieveAnchor(Currentbuf->href, y, x);
             if (!an)
                 an = retrieveAnchor(Currentbuf->formitem, y, x);
@@ -3328,8 +3327,8 @@ DEFUN(curlno, LINE_INFO, "Display current position in document")
             l->width = COLPOS(l, l->len);
         len = l->bwidth + l->width;
     }
-    if (Currentbuf->lastLine)
-        all = Currentbuf->lastLine->real_linenumber;
+    if (lastLine(Currentbuf))
+        all = lastLine(Currentbuf)->real_linenumber;
     tmp = Sprintf("line %d/%d (%d%%) col %d/%d", cur, all,
         (int)((double)cur * 100.0 / (double)(all ? all : 1)
             + 0.5),

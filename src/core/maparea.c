@@ -423,8 +423,8 @@ page_info_panel(struct Buffer* buf)
     if (buf == NULL)
         goto end;
     all = buf->allLine;
-    if (all == 0 && buf->lastLine)
-        all = buf->lastLine->linenumber;
+    if (all == 0 && lastLine(buf))
+        all = lastLine(buf)->linenumber;
     Strcat_charp(tmp, "<form method=internal action=charset>");
     p = url_decode2(parsedURL2Str(&buf->currentURL)->ptr, NULL);
     Strcat_m_charp(tmp, "<table cellpadding=0>",

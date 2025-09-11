@@ -9,7 +9,24 @@
 
 int Tabstop = 8;
 
-int columnPos(Line* line, int column)
+struct Line* newLine(char* line, Lineprop* prop, Linecolor* color, int pos, int nlines)
+{
+    struct Line* l;
+    l = New(struct Line);
+    l->next = NULL;
+    l->lineBuf = line;
+    l->propBuf = prop;
+    l->colorBuf = color;
+    l->len = pos;
+    l->width = -1;
+    l->size = pos;
+    l->bpos = 0;
+    l->bwidth = 0;
+    l->real_linenumber = nlines;
+    return l;
+}
+
+int columnPos(struct Line* line, int column)
 {
     int i;
 
@@ -79,7 +96,7 @@ int calcPosition(char* l, Lineprop* pr, int len, int pos, int bpos, enum CalcPos
     return realColumn[pos];
 }
 
-int columnLen(Line* line, int column)
+int columnLen(struct Line* line, int column)
 {
     int i, j;
 

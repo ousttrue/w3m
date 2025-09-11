@@ -175,7 +175,7 @@ enum SearchResultFlags backwardSearch(struct Buffer* buf, char* str)
     for (l = l->prev;; l = l->prev) {
         if (l == NULL) {
             if (WrapSearch) {
-                l = buf->lastLine;
+                l = lastLine(buf);
                 wrapped = true;
             } else {
                 break;

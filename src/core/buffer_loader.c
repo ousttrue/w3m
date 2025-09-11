@@ -180,49 +180,63 @@ int getMetaRefreshParam(const char* q, Str* refresh_uri)
 char* NullLine = "";
 Lineprop NullProp[] = { 0 };
 
-static void
-addnewline2(struct Buffer* buf, char* line, Lineprop* prop, Linecolor* color, int pos,
-    int nlines)
+// static void
+// addnewline2(struct Buffer* buf, char* line, Lineprop* prop, Linecolor* color, int pos, int nlines)
+// {
+//     struct Line* l;
+//     l = New(struct Line);
+//     l->next = NULL;
+//     l->lineBuf = line;
+//     l->propBuf = prop;
+//     l->colorBuf = color;
+//     l->len = pos;
+//     l->width = -1;
+//     l->size = pos;
+//     l->bpos = 0;
+//     l->bwidth = 0;
+//     l->prev = buf->currentLine;
+//     if (buf->currentLine) {
+//         l->next = buf->currentLine->next;
+//         buf->currentLine->next = l;
+//     } else
+//         l->next = NULL;
+//     if (lastLine(buf) == NULL || lastLine(buf) == buf->currentLine)
+//         lastLine(buf) = l;
+//     buf->currentLine = l;
+//     if (buf->firstLine == NULL)
+//         buf->firstLine = l;
+//     l->linenumber = ++buf->allLine;
+//     l->real_linenumber = nlines;
+// }
+
+//
+// buf->CurrentLine
+//  ^prev
+// Line
+//  vnext
+// Null
+//
+static void addLine(struct Buffer* buf, struct Line* l)
 {
-    struct Line* l;
-    l = New(struct Line);
-    l->next = NULL;
-    l->lineBuf = line;
-    l->propBuf = prop;
-    l->colorBuf = color;
-    l->len = pos;
-    l->width = -1;
-    l->size = pos;
-    l->bpos = 0;
-    l->bwidth = 0;
     l->prev = buf->currentLine;
     if (buf->currentLine) {
         l->next = buf->currentLine->next;
         buf->currentLine->next = l;
-    } else
+    } else {
         l->next = NULL;
-    if (buf->lastLine == NULL || buf->lastLine == buf->currentLine)
-        buf->lastLine = l;
+    }
     buf->currentLine = l;
     if (buf->firstLine == NULL)
         buf->firstLine = l;
     l->linenumber = ++buf->allLine;
-    if (nlines < 0) {
-        /*     l->real_linenumber = l->linenumber;     */
-        l->real_linenumber = 0;
-    } else {
-        l->real_linenumber = nlines;
-    }
-    l = NULL;
 }
 
-static void addnewline(struct Buffer* buf, char* line, Lineprop* prop, Linecolor* color, int pos,
+static void addNewline(struct Buffer* buf, char* line, Lineprop* prop, Linecolor* color, int pos,
     int width, int nlines)
 {
     char* s;
     Lineprop* p;
     Linecolor* c;
-    struct Line* l;
     int i, bpos, bwidth;
 
     if (pos > 0) {
@@ -239,13 +253,18 @@ static void addnewline(struct Buffer* buf, char* line, Lineprop* prop, Linecolor
     } else {
         c = NULL;
     }
-    addnewline2(buf, s, p, c, pos, nlines);
+
+    {
+        struct Line* l = newLine(s, p, c, pos, nlines);
+        addLine(buf, l);
+    }
+
     if (pos <= 0 || width <= 0)
         return;
     bpos = 0;
     bwidth = 0;
     while (1) {
-        l = buf->currentLine;
+        struct Line* l = buf->currentLine;
         l->bpos = bpos;
         l->bwidth = bwidth;
         i = columnLen(l, width);
@@ -265,7 +284,7 @@ static void addnewline(struct Buffer* buf, char* line, Lineprop* prop, Linecolor
         if (c)
             c += i;
         pos -= i;
-        addnewline2(buf, s, p, c, pos, nlines);
+        addLine(buf, newLine(s, p, c, pos, nlines));
     }
 }
 
@@ -780,7 +799,7 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
         }
         /* end of processing for one line */
         if (!internal)
-            addnewline(buf, outc, outp, NULL, pos, -1, nlines);
+            addNewline(buf, outc, outp, NULL, pos, -1, nlines);
         if (internal == HTML_N_INTERNAL)
             internal = 0;
         if (str != endp) {
@@ -1524,27 +1543,15 @@ table_start:
 struct Buffer*
 loadHTMLBuffer(struct Url url, union input_stream* stream, wc_ces content_charset, struct Buffer* newBuf)
 {
-
     if (newBuf == NULL)
         newBuf = newBuffer();
-
-    // FILE* src = NULL;
-    // if (newBuf->sourcefile == NULL && (url.scheme != SCM_LOCAL || newBuf->mailcap)) {
-    //     Str tmp = tmpfname(TMPF_SRC, ".html");
-    //     src = fopen(tmp->ptr, "w");
-    //     if (src)
-    //         newBuf->sourcefile = tmp->ptr;
-    // }
 
     loadHTMLstream(stream, content_charset, newBuf, false);
 
     newBuf->topLine = newBuf->firstLine;
-    newBuf->lastLine = newBuf->currentLine;
     newBuf->currentLine = newBuf->firstLine;
     if (n_textarea)
         formResetBuffer(newBuf, newBuf->formitem);
-    // if (src)
-    //     fclose(src);
 
     return newBuf;
 }
@@ -1572,7 +1579,6 @@ loadHTMLString(Str page, wc_ces content_charset)
     term_raw();
     ISclose(stream);
     newBuf->topLine = newBuf->firstLine;
-    newBuf->lastLine = newBuf->currentLine;
     newBuf->currentLine = newBuf->firstLine;
     newBuf->content_type = CONTENTTYPE_TEXT_HTML;
     if (n_textarea)
@@ -1591,7 +1597,6 @@ loadBuffer(struct Url url, union input_stream* stream, struct Buffer* newBuf)
     wc_ces doc_charset = DocumentCharset;
     Str lineBuf2;
     char pre_lbuf = '\0';
-    int nlines;
     Str tmpf;
     long long linelen = 0, trbyte = 0;
     Lineprop* propBuffer = NULL;
@@ -1615,7 +1620,7 @@ loadBuffer(struct Url url, union input_stream* stream, struct Buffer* newBuf)
     if (newBuf->document_charset)
         charset = doc_charset = newBuf->document_charset;
 
-    nlines = 0;
+    int nlines = 0;
     // if (IStype(stream) != IST_ENCODED) {
     //     abort();
     //     // uf->stream = newEncodedStream(uf->stream, uf->encoding);
@@ -1636,13 +1641,12 @@ loadBuffer(struct Url url, union input_stream* stream, struct Buffer* newBuf)
         ++nlines;
         Strchop(lineBuf2);
         lineBuf2 = checkType(lineBuf2, &propBuffer, NULL);
-        addnewline(newBuf, lineBuf2->ptr, propBuffer, colorBuffer,
+        addNewline(newBuf, lineBuf2->ptr, propBuffer, colorBuffer,
             lineBuf2->length, -1, nlines);
     }
 _end:
     term_raw();
     newBuf->topLine = newBuf->firstLine;
-    newBuf->lastLine = newBuf->currentLine;
     newBuf->currentLine = newBuf->firstLine;
     newBuf->trbyte = trbyte + linelen;
     newBuf->document_charset = charset;

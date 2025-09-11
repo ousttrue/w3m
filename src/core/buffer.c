@@ -74,7 +74,7 @@ nullBuffer(void)
  */
 void clearBuffer(struct Buffer* buf)
 {
-    buf->firstLine = buf->topLine = buf->currentLine = buf->lastLine = NULL;
+    buf->firstLine = buf->topLine = buf->currentLine = NULL;
     buf->allLine = 0;
 }
 
@@ -102,6 +102,17 @@ void discardBuffer(struct Buffer* buf)
     }
     if (buf->mailcap_source)
         unlink(buf->mailcap_source);
+}
+
+struct Line* lastLine(struct Buffer* buf)
+{
+    struct Line* l = buf->firstLine;
+    if (!l) {
+        return NULL;
+    }
+    for (; l->next; l = l->next) {
+    }
+    return l;
 }
 
 /*
@@ -191,8 +202,8 @@ static void
 writeBufferName(struct Buffer* buf, int n)
 {
     int all = buf->allLine;
-    if (all == 0 && buf->lastLine != NULL)
-        all = buf->lastLine->linenumber;
+    if (all == 0 && lastLine(buf) != NULL)
+        all = lastLine(buf)->linenumber;
     vt_move(getScreen(), n, 0);
 
     Str msg = Sprintf("<%s> [%d lines]", buf->buffername, all);
@@ -233,10 +244,10 @@ void gotoLine(struct Buffer* buf, int n)
         buf->topLine = buf->currentLine = l;
         return;
     }
-    if (buf->lastLine->linenumber < n) {
-        l = buf->lastLine;
+    if (lastLine(buf)->linenumber < n) {
+        l = lastLine(buf);
         /* FIXME: gettextize? */
-        sprintf(msg, "Last line is #%ld", buf->lastLine->linenumber);
+        sprintf(msg, "Last line is #%ld", lastLine(buf)->linenumber);
         set_delayed_message(msg);
         buf->currentLine = l;
         buf->topLine = lineSkip(buf, buf->currentLine, -(getScreen()->ROWS - 1), false);
@@ -269,10 +280,10 @@ void gotoRealLine(struct Buffer* buf, int n)
         buf->topLine = buf->currentLine = l;
         return;
     }
-    if (buf->lastLine->real_linenumber < n) {
-        l = buf->lastLine;
+    if (lastLine(buf)->real_linenumber < n) {
+        l = lastLine(buf);
         /* FIXME: gettextize? */
-        sprintf(msg, "Last line is #%ld", buf->lastLine->real_linenumber);
+        sprintf(msg, "Last line is #%ld", lastLine(buf)->real_linenumber);
         set_delayed_message(msg);
         buf->currentLine = l;
         buf->topLine = lineSkip(buf, buf->currentLine, -(getScreen()->ROWS - 1),
@@ -639,8 +650,7 @@ int readBufferCache(struct Buffer* buf)
         }
     }
     if (prevl) {
-        buf->lastLine = prevl;
-        buf->lastLine->next = NULL;
+        lastLine(buf)->next = NULL;
     }
     fclose(cache);
     unlink(buf->savecache);
@@ -696,7 +706,7 @@ void cursorDown(struct Buffer* buf, int n)
         return;
     while (buf->currentLine->next && buf->currentLine->next->bpos)
         cursorDown0(buf, n);
-    if (buf->currentLine == buf->lastLine) {
+    if (buf->currentLine == lastLine(buf)) {
         gotoLine(buf, l->linenumber);
         arrangeLine(buf);
         return;
@@ -1000,7 +1010,7 @@ struct Line* lineSkip(struct Buffer* buf, struct Line* line, int offset, int las
 
     l = currentLineSkip(buf, line, offset, last);
     if (!nextpage_topline)
-        for (i = getScreen()->ROWS - 1 - (buf->lastLine->linenumber - l->linenumber);
+        for (i = getScreen()->ROWS - 1 - (lastLine(buf)->linenumber - l->linenumber);
             i > 0 && l->prev != NULL; i--, l = l->prev)
             ;
     return l;

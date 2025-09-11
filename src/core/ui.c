@@ -40,8 +40,8 @@ struct UI getUI()
 {
     int rootX = 0;
     if (showLineNum) {
-        if (Currentbuf->lastLine && Currentbuf->lastLine->real_linenumber > 0)
-            rootX = (int)(log(Currentbuf->lastLine->real_linenumber + 0.1)
+        if (lastLine(Currentbuf) && lastLine(Currentbuf)->real_linenumber > 0)
+            rootX = (int)(log(lastLine(Currentbuf)->real_linenumber + 0.1)
                         / log(10))
                 + 2;
         if (rootX < 5)
@@ -226,9 +226,9 @@ static Str make_lastline_message(struct Buffer* buf)
     }
 
     msg = Strnew();
-    if (displayLineInfo && buf->currentLine != NULL && buf->lastLine != NULL) {
+    if (displayLineInfo && buf->currentLine != NULL && lastLine(buf) != NULL) {
         int cl = buf->currentLine->real_linenumber;
-        int ll = buf->lastLine->real_linenumber;
+        int ll = lastLine(buf)->real_linenumber;
         int r = (int)((double)cl * 100.0 / (double)(ll ? ll : 1) + 0.5);
         Strcat(msg, Sprintf("%d/%d (%d%%)", cl, ll, r));
     } else

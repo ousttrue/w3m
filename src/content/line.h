@@ -66,6 +66,8 @@ struct Line {
     int bwidth;
 };
 
+struct Line* newLine(char* line, Lineprop* prop, Linecolor* color, int pos, int nlines);
+
 enum CalcPositionMode {
     CP_AUTO = 0,
     CP_FORCE = 1,

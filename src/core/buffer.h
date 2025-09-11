@@ -71,7 +71,6 @@ struct Buffer {
     struct Line* firstLine;
     struct Line* topLine;
     struct Line* currentLine;
-    struct Line* lastLine;
     struct Buffer* nextBuffer;
     struct Buffer* linkBuffer[MAX_LB];
     short width;
@@ -128,6 +127,7 @@ struct Buffer* namedBuffer(struct Buffer* first, char* name);
 struct Buffer* deleteBuffer(struct Buffer* first, struct Buffer* delbuf);
 struct Buffer* replaceBuffer(struct Buffer* first, struct Buffer* delbuf, struct Buffer* newbuf);
 struct Buffer* nthBuffer(struct Buffer* firstbuf, int n);
+struct Line* lastLine(struct Buffer* buf);
 void gotoRealLine(struct Buffer* buf, int n);
 void gotoLine(struct Buffer* buf, int n);
 struct Buffer* selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectchar);
