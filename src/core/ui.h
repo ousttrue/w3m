@@ -51,6 +51,7 @@ void cursorUpDown(int n);
 void cursorRight(int n);
 void cursorLeft(int n);
 void cursorHome();
+bool applyCursor();
 
 struct UI getUI();
 void message(struct UI ui, enum MessageSeverity, const char* s);

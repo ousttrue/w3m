@@ -1,12 +1,10 @@
 #include "buffer.h"
-#include "Content.h"
 #include "runtime.h"
 #include "html_quote.h"
 #include "cookie.h"
 #include "convertline.h"
 #include "quote.h"
 #include "screen_effects.h"
-#include "alloc.h"
 #include "display.h"
 #include "form.h"
 #include "ui.h"
@@ -17,6 +15,7 @@
 #include "ctrlcode.h"
 #include "istream.h"
 #include "buffer_loader.h"
+#include "alloc.h"
 #include <string.h>
 #include <strings.h>
 #include <unistd.h>
@@ -1020,4 +1019,37 @@ cookie_list_panel(void)
     }
     Strcat_charp(src, "</ol></form></body></html>");
     return loadHTMLString(src, WC_CES_UTF_8);
+}
+
+struct Int2 updateCursor(struct Buffer* buf, struct Int2 viewport_size,
+    struct Int2 viewport_cursor, struct Int2 cursor_delta, bool* hasScroll)
+{
+    int x = viewport_cursor.x + cursor_delta.x;
+    if (x < 0) {
+        // left
+        x = 0;
+        *hasScroll = true;
+    } else if (x >= viewport_size.x) {
+        // right
+        x = viewport_size.x - 1;
+        *hasScroll = true;
+    }
+
+    int y = viewport_cursor.y + cursor_delta.y;
+    if (y < 0) {
+        // up
+        buf->topLineIndex += y;
+        y = 0;
+        *hasScroll = true;
+    } else if (y >= viewport_size.y) {
+        // down
+        buf->topLineIndex += (1 + y - viewport_size.y);
+        y = viewport_size.y - 1;
+        *hasScroll = true;
+    }
+
+    return (struct Int2) {
+        .x = x,
+        .y = y,
+    };
 }

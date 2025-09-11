@@ -36,7 +36,12 @@ const char* url_quote_conv(const char* x, wc_ces c)
     return url_quote(wc_conv_strict((x), InnerCharset, (c))->ptr);
 }
 
-static struct Int2 cursor = {
+static struct Int2 viewport_cursor = {
+    .x = 0,
+    .y = 0,
+};
+
+static struct Int2 cursor_delta = {
     .x = 0,
     .y = 0,
 };
@@ -53,23 +58,23 @@ void cursorDown(int n)
 
 void cursorUpDown(int n)
 {
-    cursor.y += n;
+    cursor_delta.y += n;
 }
 
 void cursorRight(int n)
 {
-    cursor.x += n;
+    cursor_delta.x += n;
 }
 
 void cursorLeft(int n)
 {
-    cursor.x -= n;
+    cursor_delta.x -= n;
 }
 
 void cursorHome()
 {
-    cursor.x = 0;
-    cursor.y = 0;
+    cursor_delta.x = 0;
+    cursor_delta.y = 0;
 }
 
 struct UI getUI()
@@ -98,7 +103,10 @@ struct UI getUI()
                 .y = vt->ROWS - rootY,
             },
         },
-        .cursor = cursor,
+        .cursor = {
+            .x = rootX + viewport_cursor.x,
+            .y = rootY + viewport_cursor.y,
+        },
     };
     return ui;
 }
@@ -295,6 +303,14 @@ static Str make_lastline_message(struct Buffer* buf)
         Strcat_charp(msg, ">");
     }
     return msg;
+}
+
+bool applyCursor()
+{
+    bool scroll = false;
+    viewport_cursor = updateCursor(Currentbuf, getUI().viewport.size, viewport_cursor, cursor_delta, &scroll);
+    cursor_delta = (struct Int2) { 0, 0 };
+    return scroll;
 }
 
 void renderFrame(struct UI ui)

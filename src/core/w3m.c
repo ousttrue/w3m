@@ -1,4 +1,5 @@
 #include "w3m.h"
+#include "term_renderer.h"
 #include "http_message.h"
 #include "ui.h"
 #include "HttpRequest.h"
@@ -118,7 +119,6 @@ static void SigAlarm(int _dummy);
 
 static int need_resize_screen = false;
 void resize_hook(int _dummy);
-static void resize_screen(void);
 
 static void cmd_loadBuffer(struct Buffer* buf, int prop, int linkid);
 
@@ -909,6 +909,15 @@ _followForm(bool submit, bool do_download)
     }
 }
 
+static void
+resize_screen(void)
+{
+    need_resize_screen = false;
+    setlinescols(get_tty_fd());
+    vt_setupscreen(getScreen(), getLines(), getCols());
+    vt_clear(getScreen());
+}
+
 bool onFrame()
 {
     struct TermEntry* t = getTermEntry();
@@ -993,8 +1002,10 @@ void onKeyInput(unsigned char c)
     }
 
     g_keylog[g_i % sizeof(g_keylog)] = c;
+    struct UI ui = getUI();
     if (IS_ASCII(c)) { /* Ascii */
-        ui_printStatus("STATUS: key=[%02x > %02x > %02x > %02x > %02x > %02x > %02x > %02x]",
+        ui_printStatus("STATUS: (%d, %d) top=%d key=[%02x > %02x > %02x > %02x > %02x > %02x > %02x > %02x]",
+            ui.cursor.x, ui.cursor.y, Currentbuf->topLineIndex,
             g_keylog[(g_i - 0) % sizeof(g_keylog)],
             g_keylog[(g_i - 1) % sizeof(g_keylog)],
             g_keylog[(g_i - 2) % sizeof(g_keylog)],
@@ -1012,6 +1023,9 @@ void onKeyInput(unsigned char c)
             CommandFunc func = (prev == 0x1b) ? EscKeymap[c]
                                               : GlobalKeymap[c];
             func();
+        }
+        if(applyCursor()){
+            termClear(ttyWriter());
         }
         bufToScreen(getUI(), Currentbuf);
         renderFrame(getUI());
@@ -1114,114 +1128,40 @@ repBuffer(struct Buffer* oldbuf, struct Buffer* buf)
     Currentbuf = buf;
 }
 
-static sigjmp_buf IntReturn;
-static void intTrap(int _dummy)
-{ /* Interrupt catcher */
-    siglongjmp(IntReturn, 0);
-}
-
-// void resize_hook(int _dummy)
-// {
-//     need_resize_screen = true;
-//     mySignal(SIGWINCH, resize_hook);
-// }
-
-static void
-resize_screen(void)
-{
-    need_resize_screen = false;
-    setlinescols(get_tty_fd());
-    vt_setupscreen(getScreen(), getLines(), getCols());
-    vt_clear(getScreen());
-}
-
-/*
- * Command functions: These functions are called with a keystroke.
- */
-
-static void
-nscroll(int n)
-{
-    struct Buffer* buf = Currentbuf;
-    struct Line* top = topLine(buf);
-    struct Line* cur = currentLine(buf);
-    int lnum, tlnum, llnum, diff_n;
-
-    if (buf->firstLine == NULL)
-        return;
-    lnum = cur->linenumber;
-    buf->topLineIndex = lineSkip(buf, top, n, false)->linenumber;
-    if (topLine(buf) == top) {
-        lnum += n;
-        if (lnum < topLine(buf)->linenumber)
-            lnum = topLine(buf)->linenumber;
-        else if (lnum > lastLine(buf)->linenumber)
-            lnum = lastLine(buf)->linenumber;
-    } else {
-        tlnum = topLine(buf)->linenumber;
-        llnum = topLine(buf)->linenumber + getScreen()->ROWS - 1;
-        if (nextpage_topline)
-            diff_n = 0;
-        else
-            diff_n = n - (tlnum - top->linenumber);
-        if (lnum < tlnum)
-            lnum = tlnum + diff_n;
-        if (lnum > llnum)
-            lnum = llnum + diff_n;
-    }
-    gotoLine(buf, lnum);
-    arrangeLine(buf);
-    if (n > 0) {
-        if (currentLine(buf)->bpos && currentLine(buf)->bwidth >= buf->currentColumn + buf->visualpos)
-            cursorDown(1);
-        else {
-            while (currentLine(buf)->next && currentLine(buf)->next->bpos && currentLine(buf)->bwidth + currentLine(buf)->width < buf->currentColumn + buf->visualpos)
-                cursorDown(1);
-        }
-    } else {
-        if (currentLine(buf)->bwidth + currentLine(buf)->width < buf->currentColumn + buf->visualpos)
-            cursorUp(1);
-        else {
-            while (currentLine(buf)->prev && currentLine(buf)->bpos && currentLine(buf)->bwidth >= buf->currentColumn + buf->visualpos)
-                cursorUp(1);
-        }
-    }
-}
-
 /* Move page forward */
 DEFUN(pgFore, NEXT_PAGE, "Scroll down one page")
 {
-    nscroll(searchKeyNum() * (getScreen()->ROWS - 1));
+    Currentbuf->topLineIndex += getScreen()->ROWS;
 }
 
 /* Move page backward */
 DEFUN(pgBack, PREV_PAGE, "Scroll up one page")
 {
-    nscroll(searchKeyNum() * (getScreen()->ROWS - 1));
+    // nscroll(searchKeyNum() * (getScreen()->ROWS - 1));
 }
 
 /* Move half page forward */
 DEFUN(hpgFore, NEXT_HALF_PAGE, "Scroll down half a page")
 {
-    nscroll(-searchKeyNum() * (getScreen()->ROWS / 2 - 1));
+    // nscroll(-searchKeyNum() * (getScreen()->ROWS / 2 - 1));
 }
 
 /* Move half page backward */
 DEFUN(hpgBack, PREV_HALF_PAGE, "Scroll up half a page")
 {
-    nscroll(-searchKeyNum() * (getScreen()->ROWS / 2 - 1));
+    // nscroll(-searchKeyNum() * (getScreen()->ROWS / 2 - 1));
 }
 
 /* 1 line up */
 DEFUN(lup1, UP, "Scroll the screen up one line")
 {
-    nscroll(searchKeyNum());
+    Currentbuf->topLineIndex++;
 }
 
 /* 1 line down */
 DEFUN(ldown1, DOWN, "Scroll the screen down one line")
 {
-    nscroll(-searchKeyNum());
+    Currentbuf->topLineIndex--;
 }
 
 /* move cursor position to the center of screen */
@@ -1466,88 +1406,44 @@ DEFUN(ldhelp, HELP, "Show help panel")
     cmd_loadURL(tmp->ptr, NULL, NO_REFERER, NULL);
 }
 
-/* Move cursor left */
-static void
-_movL(int n)
-{
-    int i, m = searchKeyNum();
-    if (Currentbuf->firstLine == NULL)
-        return;
-    for (i = 0; i < m; i++)
-        cursorLeft(n);
-}
-
 DEFUN(movL, MOVE_LEFT, "Cursor left")
 {
-    _movL(getScreen()->COLS / 2);
+    cursorLeft(1);
 }
 
 DEFUN(movL1, MOVE_LEFT1, "Cursor left. With edge touched, slide")
 {
-    _movL(1);
-}
-
-/* Move cursor downward */
-static void
-_movD(int n)
-{
-    int i, m = searchKeyNum();
-    if (Currentbuf->firstLine == NULL)
-        return;
-    for (i = 0; i < m; i++)
-        cursorDown(n);
+    cursorLeft(1);
 }
 
 DEFUN(movD, MOVE_DOWN, "Cursor down")
 {
-    _movD((getScreen()->ROWS + 1) / 2);
+    cursorDown(1);
 }
 
 DEFUN(movD1, MOVE_DOWN1, "Cursor down. With edge touched, slide")
 {
-    _movD(1);
-}
-
-/* move cursor upward */
-static void
-_movU(int n)
-{
-    int i, m = searchKeyNum();
-    if (Currentbuf->firstLine == NULL)
-        return;
-    for (i = 0; i < m; i++)
-        cursorUp(n);
+    cursorDown(1);
 }
 
 DEFUN(movU, MOVE_UP, "Cursor up")
 {
-    _movU((getScreen()->ROWS + 1) / 2);
+    cursorUp(1);
 }
 
 DEFUN(movU1, MOVE_UP1, "Cursor up. With edge touched, slide")
 {
-    _movU(1);
-}
-
-/* Move cursor right */
-static void
-_movR(int n)
-{
-    int i, m = searchKeyNum();
-    if (Currentbuf->firstLine == NULL)
-        return;
-    for (i = 0; i < m; i++)
-        cursorRight(n);
+    cursorUp(1);
 }
 
 DEFUN(movR, MOVE_RIGHT, "Cursor right")
 {
-    _movR(getScreen()->COLS / 2);
+    cursorRight(1);
 }
 
 DEFUN(movR1, MOVE_RIGHT1, "Cursor right. With edge touched, slide")
 {
-    _movR(1);
+    cursorRight(1);
 }
 
 /* movLW, movRW */

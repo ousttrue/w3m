@@ -145,3 +145,5 @@ struct Line* lineSkip(struct Buffer* buf, struct Line* line, int offset, int las
 struct Line* currentLineSkip(struct Buffer* buf, struct Line* line, int offset, int last);
 char* last_modified(struct Buffer* buf);
 struct Buffer* cookie_list_panel(void);
+struct Int2 updateCursor(struct Buffer* buf, struct Int2 viewport_size,
+    struct Int2 viewport_cursor, struct Int2 cursor_delta, bool *hasScroll);
