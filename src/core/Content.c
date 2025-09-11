@@ -10,7 +10,7 @@
 #include "network.h"
 #include "time_util.h"
 #include "alloc.h"
-#include "mimetypes.h"
+#include "ContentType.h"
 #include "html_form.h"
 #include "HttpClient.h"
 #include "ssl_util.h"
@@ -133,21 +133,22 @@ struct Content openLocal(const char* u, struct Url* current, struct Form* post, 
     }
     Str page = readAll(f.stream);
 
-    const char* content_type = guessContentType(pu.file);
+    enum ContentType content_type = guessContentType(pu.file);
     if (content_type == NULL) {
-        content_type = "text/plain";
+        content_type = CONTENTTYPE_TEXT_PLAIN;
     }
-    // real_type = c.content_type;
-    if (f.guess_type) {
-        content_type = f.guess_type;
-    }
+    // if (f.guess_type) {
+    //     content_type = f.guess_type;
+    // }
 
     // term_raw();
     return (struct Content) {
         .url = pu,
         .page = page,
-        .charset = WC_CES_UTF_8,
-        .content_type = content_type,
+        .cc = {
+            .charset = WC_CES_UTF_8,
+            .content_type = content_type,
+        },
     };
 
     //         struct stat st;
@@ -225,19 +226,4 @@ loadGeneralFile(const char* path, struct Url* current, struct Form* post, const 
     default:
         return (struct Content) {};
     }
-}
-
-bool is_text_type(const char* type)
-{
-    return (type == NULL || type[0] == '\0' || strncasecmp(type, "text/", 5) == 0 || (strncasecmp(type, "application/", 12) == 0 && strstr(type, "xhtml") != NULL) || strncasecmp(type, "message/", sizeof("message/") - 1) == 0);
-}
-
-bool is_plain_text_type(const char* type)
-{
-    return ((type && strcasecmp(type, "text/plain") == 0) || (is_text_type(type) && !is_dump_text_type(type)));
-}
-
-bool is_html_type(const char* type)
-{
-    return (type && (strcasecmp(type, "text/html") == 0 || strcasecmp(type, "application/xhtml+xml") == 0));
 }

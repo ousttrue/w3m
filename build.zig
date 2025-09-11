@@ -45,11 +45,13 @@ const content_public_headers = [_][]const u8{
     "http_message.h",
     "istream.h",
     "compression.h",
-    "mimetypes.h",
+    "ContentType.h",
+    "CharSlice.h",
 };
 const content_srcs = [_][]const u8{
+    "CharSlice.c",
+    "ContentType.c",
     "compression.c",
-    "mimetypes.c",
     "istream.c",
     "http_message.c",
     "mailcap.c",

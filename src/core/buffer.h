@@ -1,5 +1,6 @@
 #pragma once
 #include "line.h"
+#include "ContentType.h"
 #include "anchor.h"
 #include "linklist.h"
 #include "url.h"
@@ -74,8 +75,7 @@ typedef struct _Buffer {
     struct _Buffer* nextBuffer;
     struct _Buffer* linkBuffer[MAX_LB];
     short width;
-    char* type;
-    const char* real_type;
+    enum ContentType content_type;
     int allLine;
     enum BufferProperty bufferprop;
     int currentColumn;

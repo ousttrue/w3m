@@ -2,7 +2,7 @@
 #include "linein.h"
 #include "str_util.h"
 #include "runtime.h"
-#include "mimetypes.h"
+#include "ContentType.h"
 #include "subprocess.h"
 #include "base64.h"
 #include "alloc.h"
@@ -822,7 +822,7 @@ void put_image_kitty(int cursorX, int cursorY,
     char *cbuf, *tmpf;
     char* argv[4];
     FILE* fp;
-    int c, i, j, m, t, is_anim;
+    int c, i, j, m, t;
     struct stat st;
     pid_t pid;
     // MySignalHandler (*volatile previntr)(int _dummy);
@@ -832,17 +832,18 @@ void put_image_kitty(int cursorX, int cursorY,
     if (!url)
         return;
 
-    const char* type = guessContentType(url);
+    enum ContentType content_type = guessContentType(url);
     t = 100; /* always convert to png for now. */
 
-    if (!(type && !strcasecmp(type, "image/png"))) {
+    if (content_type == CONTENTTYPE_IMAGE_PNG) {
         tmpf = Sprintf("%s/%s.png", tmp_dir, mybasename(url))->ptr;
 
-        if (type && !strcasecmp(type, "image/gif")) {
-            is_anim = 1;
-        } else {
-            is_anim = 0;
-        }
+        bool is_anim = false;
+        // if (type && !strcasecmp(type, "image/gif")) {
+        //     is_anim = 1;
+        // } else {
+        //     is_anim = 0;
+        // }
 
         /* convert only if png doesn't exist yet. */
 

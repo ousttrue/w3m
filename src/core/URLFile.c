@@ -82,7 +82,7 @@ int doFileSave(struct URLFile uf, const char* defstr, int current_content_length
         pid = fork();
         if (!pid) {
             int err;
-            if ((uf.content_encoding != CMP_NOCOMPRESS) && AutoUncompress) {
+            if ((uf.content_encoding != CMP_NOCOMPRESS) /*&& AutoUncompress*/) {
                 abort();
                 // uncompress_stream(&uf, &tmpf);
                 // if (tmpf)

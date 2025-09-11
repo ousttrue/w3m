@@ -1,4 +1,5 @@
 #pragma once
+#include "ContentType.h"
 
 #if defined(__EMX__) /* use $extension? */
 #define GUNZIP_CMDNAME "gzip"
@@ -23,6 +24,6 @@ enum CompressionType {
 };
 
 const char* compress_application_type(enum CompressionType compression);
-const char* uncompressed_file_type(const char* path, const char** ext);
+enum ContentType uncompressed_file_type(const char* path, const char** ext);
 const char* acceptableEncoding(void);
 enum CompressionType get_compression(const char* p);

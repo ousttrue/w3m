@@ -4,7 +4,7 @@
 #include "alloc.h"
 #include "runtime.h"
 #include "defun_macro.h"
-#include "mimetypes.h"
+#include "ContentType.h"
 #include "Content.h"
 #include "buffer_loader.h"
 #include "progress.h"
@@ -1869,16 +1869,18 @@ cur_real_linenumber(Buffer* buf)
 DEFUN(editBf, EDIT, "Edit local source")
 {
     char* fn = Currentbuf->filename;
-    Str cmd;
-
-    if (fn == NULL || (Currentbuf->type == NULL && Currentbuf->edit == NULL) || /* Reading shell */
-        Currentbuf->real_scheme != SCM_LOCAL || !strcmp(Currentbuf->currentURL.file, "-") /* file is std input  */
+    if (fn == NULL
+        || (Currentbuf->content_type == CONTENTTYPE_UNKNOWN && Currentbuf->edit == NULL)
+        || /* Reading shell */ Currentbuf->real_scheme != SCM_LOCAL
+        || !strcmp(Currentbuf->currentURL.file, "-") /* file is std input  */
     ) {
         message(getUI(), MSG_ERR, "Can't edit other than local file");
         return;
     }
+
+    Str cmd;
     if (Currentbuf->edit)
-        cmd = unquote_mailcap(Currentbuf->edit, Currentbuf->real_type, fn,
+        cmd = unquote_mailcap(Currentbuf->edit, contentTypeStr(Currentbuf->content_type), fn,
             getHttpHeaderValue(Currentbuf->document_header, "Content-Type:"), NULL);
     else
         cmd = myEditor(Editor, shell_quote(fn),
@@ -3077,7 +3079,7 @@ DEFUN(curURL, PEEK, "Show current address")
 
 DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
 {
-    if (Currentbuf->type == NULL)
+    if (Currentbuf->content_type == CONTENTTYPE_UNKNOWN)
         return;
 
     Buffer* buf;
@@ -3092,24 +3094,14 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
 
     buf = newBuffer();
 
-    if (is_html_type(Currentbuf->type)) {
-        buf->type = "text/plain";
-        if (Currentbuf->real_type && is_html_type(Currentbuf->real_type))
-            buf->real_type = "text/plain";
-        else
-            buf->real_type = Currentbuf->real_type;
+    if (Currentbuf->content_type == CONTENTTYPE_TEXT_HTML) {
+        buf->content_type = CONTENTTYPE_TEXT_PLAIN;
         buf->buffername = Sprintf("source of %s", Currentbuf->buffername)->ptr;
         buf->linkBuffer[LB_N_SOURCE] = Currentbuf;
         Currentbuf->linkBuffer[LB_SOURCE] = buf;
-    } else if (!strcasecmp(Currentbuf->type, "text/plain")) {
-        buf->type = "text/html";
-        if (Currentbuf->real_type && !strcasecmp(Currentbuf->real_type, "text/plain"))
-            buf->real_type = "text/html";
-        else
-            buf->real_type = Currentbuf->real_type;
-        buf->buffername = Sprintf("HTML view of %s",
-            Currentbuf->buffername)
-                              ->ptr;
+    } else if (Currentbuf->content_type == CONTENTTYPE_TEXT_PLAIN) {
+        buf->content_type = CONTENTTYPE_TEXT_HTML;
+        buf->buffername = Sprintf("HTML view of %s", Currentbuf->buffername)->ptr;
         buf->linkBuffer[LB_SOURCE] = Currentbuf;
         Currentbuf->linkBuffer[LB_N_SOURCE] = buf;
     } else {
@@ -3175,7 +3167,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
     if (Currentbuf->document_charset != WC_CES_US_ASCII)
         DocumentCharset = Currentbuf->document_charset;
     // SearchHeader = Currentbuf->search_header;
-    DefaultType = (char*)Currentbuf->real_type;
+    DefaultType = contentTypeStr(Currentbuf->content_type);
     struct Content c = loadGeneralFile(url->ptr, NULL, post, NO_REFERER, UI_TTY /*, true*/);
     buf = makeBuffer(&c, false);
     DocumentCharset = old_charset;
@@ -3195,7 +3187,8 @@ DEFUN(reload, RELOAD, "Load current document anew")
     if (fbuf != NULL)
         Firstbuf = deleteBuffer(Firstbuf, fbuf);
     repBuffer(Currentbuf, buf);
-    if ((buf->type != NULL) && (sbuf.type != NULL) && ((!strcasecmp(buf->type, "text/plain") && is_html_type(sbuf.type)) || (is_html_type(buf->type) && !strcasecmp(sbuf.type, "text/plain")))) {
+    if ((buf->content_type == CONTENTTYPE_TEXT_PLAIN && sbuf.content_type == CONTENTTYPE_TEXT_HTML)
+        || (buf->content_type == CONTENTTYPE_TEXT_HTML && sbuf.content_type == CONTENTTYPE_TEXT_PLAIN)) {
         vwSrc();
         if (Currentbuf != buf)
             Firstbuf = deleteBuffer(Firstbuf, buf);
@@ -3446,8 +3439,8 @@ execdict(const char* word)
     } else if (buf != NO_BUFFER) {
         buf->filename = w;
         buf->buffername = Sprintf("%s %s", DICTBUFFERNAME, word)->ptr;
-        if (buf->type == NULL)
-            buf->type = "text/plain";
+        if (buf->content_type == CONTENTTYPE_UNKNOWN)
+            buf->content_type = CONTENTTYPE_TEXT_PLAIN;
         pushBuffer(buf);
     }
 }
@@ -3477,7 +3470,7 @@ void set_buffer_environ(Buffer* buf)
         set_environ("W3M_FILENAME", buf->filename);
         set_environ("W3M_TITLE", buf->buffername);
         set_environ("W3M_URL", parsedURL2Str(&buf->currentURL)->ptr);
-        set_environ("W3M_TYPE", buf->real_type ? buf->real_type : "unknown");
+        set_environ("W3M_TYPE", contentTypeStr(buf->content_type));
         set_environ("W3M_CHARSET", wc_ces_to_charset(buf->document_charset));
     }
     l = buf->currentLine;
@@ -3670,13 +3663,11 @@ setAlarmEvent(AlarmEvent* event, int sec, short status, int cmd, void* data)
 
 DEFUN(reinit, REINIT, "Reload configuration file")
 {
-    char* resource = searchKeyData();
-
+    const char* resource = searchKeyData();
     if (resource == NULL) {
         init_rc();
         sync_with_option();
         initCookie();
-
         return;
     }
 
@@ -3708,7 +3699,7 @@ DEFUN(reinit, REINIT, "Reload configuration file")
     }
 
     if (!strcasecmp(resource, "MIMETYPES")) {
-        initMimeTypes();
+        // initMimeTypes();
         return;
     }
 

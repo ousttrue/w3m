@@ -8,7 +8,7 @@
 #include "http_message.h"
 #include "cookie.h"
 #include "Content.h"
-#include "mimetypes.h"
+#include "ContentType.h"
 #include "myctype.h"
 #include "network.h"
 #include "proxy.h"
@@ -475,17 +475,21 @@ struct Content httpRequest(struct HttpClient* c,
         struct ContentTypeCharset cc = getContentType(res->headers);
         struct Content content = {
             .url = c->exchanges[i].request.url,
-            .content_type = cc.content_type,
-            .charset = cc.charset,
             .page = 0,
+            .cc = {
+                .content_type = cc.content_type,
+                .charset = cc.charset,
+            },
         };
-        if (content.content_type == NULL && req->url.file != NULL) {
-            if (!((res->status_code >= 400 && res->status_code <= 407) || (res->status_code >= 500 && res->status_code <= 505))) {
-                content.content_type = guessContentType(req->url.file);
+        if (content.cc.content_type == CONTENTTYPE_UNKNOWN && req->url.file != NULL) {
+            if (!((res->status_code >= 400 && res->status_code <= 407)
+                    || (res->status_code >= 500 && res->status_code <= 505))) {
+                content.cc.content_type = guessContentType(req->url.file);
             }
         }
-        if (content.content_type == NULL)
-            content.content_type = "text/plain";
+        if (content.cc.content_type == CONTENTTYPE_UNKNOWN) {
+            content.cc.content_type = CONTENTTYPE_TEXT_PLAIN;
+        }
 
         // c->f.modtime = mymktime(getHttpHeaderValue(res->headers, "Last-Modified:"));
 
@@ -501,19 +505,8 @@ struct Content httpRequest(struct HttpClient* c,
         if ((p = getHttpHeaderValue(res->headers, "content-encoding:"))) {
             content_encoding = get_compression(p);
         }
-        if (content_encoding != CMP_NOCOMPRESS && AutoUncompress) {
-            // uncompress_stream(&c->f, &req->url.real_file);
+        if (content_encoding != CMP_NOCOMPRESS) {
             content.page = decode_gzip((unsigned char*)src->ptr, src->length);
-        } else if (content_encoding != CMP_NOCOMPRESS) {
-            if (is_text_type(content.content_type)) {
-                // uncompress_stream(&c->f, &t_buf->sourcefile);
-                // uncompressed_file_type(c->req->url.file, &c->f.ext);
-                content.page = decode_gzip((unsigned char*)src->ptr, src->length);
-            } else {
-                content.content_type = compress_application_type(content_encoding);
-                // c->f.compression = CMP_NOCOMPRESS;
-                content.page = src;
-            }
         } else {
             content.page = src;
         }

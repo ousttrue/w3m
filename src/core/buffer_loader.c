@@ -53,7 +53,7 @@ char DecodeCTE = (false);
 int label_topline = (false);
 int UseExternalDirBuffer = (true);
 char* DirBufferCommand = ("file:///$LIB/dirlist" CGI_EXTENSION);
-char* DefaultType = (NULL);
+const char* DefaultType = (NULL);
 int displayLinkNumber = (false);
 char SimplePreserveSpace = (false);
 int squeezeBlankLine = (false);
@@ -958,10 +958,10 @@ Buffer* makeBuffer(struct Content* c, bool do_download)
         if (b) {
             b->currentURL = copyParsedUrl(&c->url);
             b->real_scheme = c->url.scheme;
-            b->real_type = c->content_type;
+            b->content_type = c->cc.content_type;
             if (src)
                 b->sourcefile = tmp->ptr;
-            b->document_charset = c->charset;
+            b->document_charset = c->cc.charset;
         }
         return b;
     }
@@ -1621,8 +1621,7 @@ loadHTMLString(Str page)
     newBuf->topLine = newBuf->firstLine;
     newBuf->lastLine = newBuf->currentLine;
     newBuf->currentLine = newBuf->firstLine;
-    newBuf->type = "text/html";
-    newBuf->real_type = newBuf->type;
+    newBuf->content_type = CONTENTTYPE_TEXT_HTML;
     if (n_textarea)
         formResetBuffer(newBuf, newBuf->formitem);
     return newBuf;

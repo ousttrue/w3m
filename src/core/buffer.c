@@ -97,7 +97,7 @@ void discardBuffer(Buffer* buf)
         unlink(buf->savecache);
     if (--(*buf->clone))
         return;
-    if (buf->sourcefile && (!buf->real_type || strncasecmp(buf->real_type, "image/", 6))) {
+    if (buf->sourcefile && (contentTypeIsImage(buf->content_type))) {
         if (buf->real_scheme != SCM_LOCAL)
             unlink(buf->sourcefile);
     }
@@ -472,7 +472,7 @@ void reshapeBuffer(Buffer* buf, int cols)
 
     WcOption.auto_detect = WC_OPT_DETECT_OFF;
     UseContentCharset = false;
-    if (is_html_type(buf->type))
+    if (buf->content_type == CONTENTTYPE_TEXT_HTML)
         loadHTMLBuffer(&f, buf);
     else
         loadBuffer(&f, buf);
@@ -505,7 +505,7 @@ void reshapeBuffer(Buffer* buf, int cols)
                 gotoLine(buf, cur->linenumber);
         }
         buf->pos -= buf->currentLine->bpos;
-        if (FoldLine && !is_html_type(buf->type))
+        if (FoldLine && buf->content_type != CONTENTTYPE_TEXT_HTML)
             buf->currentColumn = 0;
         else
             buf->currentColumn = sbuf.currentColumn;
@@ -928,7 +928,7 @@ _saveBuffer(Buffer* buf, Line* l, FILE* f, int cont)
     int set_charset = !DisplayCharset;
     wc_ces charset = DisplayCharset ? DisplayCharset : WC_CES_US_ASCII;
 
-    is_html = is_html_type(buf->type);
+    is_html = buf->content_type == CONTENTTYPE_TEXT_HTML;
 }
 
 void saveBuffer(Buffer* buf, FILE* f, int cont)
@@ -1065,7 +1065,7 @@ cookie_list_panel(void)
 
     Strcat_charp(src, "<ol>");
     for (p = First_cookie, i = 0; p; p = p->next, i++) {
-        const char*tmp = html_quote(parsedURL2Str(&p->url)->ptr);
+        const char* tmp = html_quote(parsedURL2Str(&p->url)->ptr);
         if (p->expires != (time_t)-1) {
             strftime(tmp2, 80, "%a, %d %b %Y %H:%M:%S GMT",
                 gmtime(&p->expires));

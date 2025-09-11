@@ -8,7 +8,7 @@
 #include <fcntl.h>
 #include <openssl/types.h>
 
-extern char AutoUncompress;
+// extern char AutoUncompress;
 extern char PreserveTimestamp;
 
 struct stream_buffer {

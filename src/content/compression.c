@@ -1,7 +1,6 @@
 #include "compression.h"
 #include "url.h"
 #include "runtime.h"
-#include "mimetypes.h"
 #include "textlist.h"
 #include <Str.h>
 #include <stdlib.h>
@@ -134,17 +133,14 @@ const char* compress_application_type(enum CompressionType compression)
     return NULL;
 }
 
-const char* uncompressed_file_type(const char* path, const char** ext)
+enum ContentType uncompressed_file_type(const char* path, const char** ext)
 {
-    int len, slen;
-    Str fn;
+    if (!path)
+        return CONTENTTYPE_UNKNOWN;
+
+    int slen = 0;
+    int len = strlen(path);
     struct compression_decoder* d;
-
-    if (path == NULL)
-        return NULL;
-
-    slen = 0;
-    len = strlen(path);
     for (d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
         if (d->ext == NULL)
             continue;
@@ -153,17 +149,15 @@ const char* uncompressed_file_type(const char* path, const char** ext)
             break;
     }
     if (d->type == CMP_NOCOMPRESS)
-        return NULL;
+        return 0;
 
+    Str fn;
     fn = Strnew_charp(path);
     Strshrink(fn, slen);
     if (ext)
         *ext = filename_extension(fn->ptr, 0);
 
-    const char* t0 = guessContentType(fn->ptr);
-    if (t0 == NULL)
-        t0 = "text/plain";
-    return t0;
+    return guessContentType(fn->ptr);
 }
 
 enum CompressionType get_compression(const char* p)

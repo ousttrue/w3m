@@ -5,7 +5,6 @@
 #include "auth.h"
 #include "Content.h"
 #include "w3m.h"
-#include "mimetypes.h"
 #include "entity.h"
 #include "HtmlTagParsed.h"
 #include "search.h"
@@ -468,8 +467,6 @@ struct param_ptr params3[] = {
         NULL },
     { "decode_cte", P_CHARINT, PI_ONOFF, (void*)&DecodeCTE, CMT_DECODE_CTE,
         NULL },
-    { "auto_uncompress", P_CHARINT, PI_ONOFF, (void*)&AutoUncompress,
-        CMT_AUTO_UNCOMPRESS, NULL },
     { "preserve_timestamp", P_CHARINT, PI_ONOFF, (void*)&PreserveTimestamp,
         CMT_PRESERVE_TIMESTAMP, NULL },
     { "keymap_file", P_STRING, PI_TEXT, (void*)&keymap_file, CMT_KEYMAP_FILE,
@@ -939,9 +936,8 @@ set_param(const char* name, const char* value)
 
 int set_param_option(const char* option)
 {
+    const char *p = option;
     Str tmp = Strnew();
-    char *p = option, *q;
-
     while (*p && !IS_SPACE(*p) && *p != '=')
         Strcat_char(tmp, *p++);
     while (*p && IS_SPACE(*p))
@@ -954,7 +950,8 @@ int set_param_option(const char* option)
     Strlower(tmp);
     if (set_param(tmp->ptr, p))
         goto option_assigned;
-    q = tmp->ptr;
+
+    const char *q = tmp->ptr;
     if (!strncmp(q, "no", 2)) { /* -o noxxx, -o no-xxx, -o no_xxx */
         q += 2;
         if (*q == '-' || *q == '_')
@@ -1133,7 +1130,7 @@ void sync_with_option(void)
     parse_proxy();
     parse_cookie();
     initMailcap();
-    initMimeTypes();
+    // initMimeTypes();
     if ((displayImage || enable_inline_image))
         initImage();
     loadPasswd();

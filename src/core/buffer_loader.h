@@ -13,7 +13,7 @@ extern char MetaRefresh;
 extern char DecodeCTE;
 extern int label_topline;
 extern int UseExternalDirBuffer;
-extern char* DefaultType;
+extern const char* DefaultType;
 extern int displayLinkNumber;
 extern char SimplePreserveSpace;
 extern int squeezeBlankLine;

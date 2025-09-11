@@ -369,17 +369,15 @@ append_map_info(Buffer* buf, Str tmp, struct FormItem* fi)
 static void
 append_link_info(Buffer* buf, Str html, LinkList* link)
 {
-    LinkList* l;
-    struct Url pu;
-    char* url;
-
     if (!link)
         return;
 
     Strcat_charp(html, "<hr width=50%><h1>Link information</h1><table>\n");
+    LinkList* l;
     for (l = link; l; l = l->next) {
+        const char* url;
         if (l->url) {
-            pu = parseUrl(l->url, baseURL(buf));
+            struct Url pu = parseUrl(l->url, baseURL(buf));
             url = html_quote(parsedURL2Str(&pu)->ptr);
         } else
             url = "(empty)";
@@ -435,7 +433,7 @@ page_info_panel(Buffer* buf)
         "<tr valign=top><td nowrap>Current URL<td>",
         html_quote(p),
         "<tr valign=top><td nowrap>Document Type<td>",
-        buf->real_type ? html_quote(buf->real_type) : "unknown",
+        contentTypeStr(buf->content_type),
         "<tr valign=top><td nowrap>Last Modified<td>",
         html_quote(last_modified(buf)), NULL);
     if (buf->document_charset != InnerCharset) {

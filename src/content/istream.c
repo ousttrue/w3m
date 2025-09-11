@@ -5,7 +5,7 @@
 #include <string.h>
 #include <unistd.h>
 
-char AutoUncompress = (false);
+// char AutoUncompress = (false);
 char PreserveTimestamp = (true);
 
 #define uchar unsigned char

@@ -1,8 +1,8 @@
 #include "form.h"
+#include "ContentType.h"
 #include "str_util.h"
 #include "runtime.h"
 #include "convertline.h"
-#include "mimetypes.h"
 #include "HtmlTagParsed.h"
 #include "KeyValue.h"
 #include "HtmlTagAttribute.h"
@@ -692,25 +692,23 @@ void form_write_data(FILE* f, const char* boundary, const char* name, const char
 
 void form_write_from_file(FILE* f, const char* boundary, const char* name, const char* filename, const char* file)
 {
-    FILE* fd;
-    struct stat st;
-    int c;
-    char* type;
-
     fprintf(f, "--%s\r\n", boundary);
     fprintf(f,
         "Content-Disposition: form-data; name=\"%s\"; filename=\"%s\"\r\n",
         name, mybasename(filename));
-    type = guessContentType(file);
-    fprintf(f, "Content-Type: %s\r\n\r\n",
-        type ? type : "application/octet-stream");
 
+    enum ContentType content_type = guessContentType(file);
+    // fprintf(f, "Content-Type: %s\r\n\r\n",
+    //     type ? type : "application/octet-stream");
+
+    struct stat st;
     if (lstat(file, &st) < 0)
         goto write_end;
     if (S_ISDIR(st.st_mode))
         goto write_end;
-    fd = fopen(file, "r");
+    FILE* fd = fopen(file, "r");
     if (fd != NULL) {
+        int c;
         while ((c = fgetc(fd)) != EOF)
             fputc(c, f);
         fclose(fd);
