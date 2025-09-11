@@ -83,7 +83,6 @@ const system_libs = [_][]const u8{
     "z",
 };
 const w3m_srcs = [_][]const u8{
-    "URLFile.c",
     "HttpResponse.c",
     "token.c",
     "time_util.c",

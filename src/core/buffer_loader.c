@@ -1,7 +1,6 @@
 #include "buffer_loader.h"
 #include "http_message.h"
 #include "runtime.h"
-#include "URLFile.h"
 #include "entity.h"
 #include "convertline.h"
 #include "quote.h"
@@ -894,10 +893,9 @@ void loadHTML(Str html, wc_ces doc_charset, int cols, bool use_graphic, bool int
     // if (content_charset && UseContentCharset)
     //     doc_charset = content_charset;
 
-    struct URLFile f;
-    init_stream(&f, SCM_LOCAL, newStrStream(html));
+    union input_stream* stream = newStrStream(html);
     meta_charset = 0;
-    while ((lineBuf2 = StrmyISgets(f.stream)) && lineBuf2->length) {
+    while ((lineBuf2 = StrmyISgets(stream)) && lineBuf2->length) {
         // if (src)
         //     Strfputs(lineBuf2, src);
         linelen += lineBuf2->length;
@@ -1168,7 +1166,7 @@ table_start:
         int is_tag = false;
         int pre_mode = (obuf->table_level >= 0 && tbl_mode) ? tbl_mode->pre_mode : obuf->flag;
         int end_tag = (obuf->table_level >= 0 && tbl_mode) ? tbl_mode->end_tag : obuf->end_tag;
-        const char *str;
+        const char* str;
         if (*line == '<' || obuf->status != R_ST_NORMAL) {
             /*
              * Tag processing
@@ -1468,7 +1466,7 @@ table_start:
  * loadHTMLBuffer: read file and make new buffer
  */
 Buffer*
-loadHTMLBuffer(struct Url url, union input_stream *stream, Buffer* newBuf)
+loadHTMLBuffer(struct Url url, union input_stream* stream, Buffer* newBuf)
 {
 
     if (newBuf == NULL)
@@ -1595,12 +1593,9 @@ void loadHTMLstream(union input_stream* stream, Buffer* newBuf, FILE* src, int i
 Buffer*
 loadHTMLString(Str page)
 {
-    struct URLFile f;
-    void (*prevtrap)(int _dummy) = NULL;
+    union input_stream* stream = newStrStream(page);
+
     Buffer* newBuf;
-
-    init_stream(&f, SCM_LOCAL, newStrStream(page));
-
     newBuf = newBuffer();
     // if (sigsetjmp(AbortLoading, 1) != 0) {
     //     term_raw();
@@ -1611,13 +1606,11 @@ loadHTMLString(Str page)
     // TRAP_ON;
 
     newBuf->document_charset = InnerCharset;
-    loadHTMLstream(f.stream, newBuf, NULL, true);
+    loadHTMLstream(stream, newBuf, NULL, true);
     newBuf->document_charset = WC_CES_US_ASCII;
 
     term_raw();
-    if (ISclose(f.stream) == 0) {
-        f.stream = NULL;
-    }
+    ISclose(stream);
     newBuf->topLine = newBuf->firstLine;
     newBuf->lastLine = newBuf->currentLine;
     newBuf->currentLine = newBuf->firstLine;
@@ -1631,7 +1624,7 @@ loadHTMLString(Str page)
  * loadBuffer: read file and make new buffer
  */
 Buffer*
-loadBuffer(struct Url url, union input_stream *stream, Buffer* newBuf)
+loadBuffer(struct Url url, union input_stream* stream, Buffer* newBuf)
 {
     FILE* src = NULL;
     wc_ces charset = WC_CES_US_ASCII;
@@ -1665,7 +1658,7 @@ loadBuffer(struct Url url, union input_stream *stream, Buffer* newBuf)
         doc_charset = content_charset;
 
     nlines = 0;
-    if (IStype(stream) != IST_ENCODED){
+    if (IStype(stream) != IST_ENCODED) {
         abort();
         // uf->stream = newEncodedStream(uf->stream, uf->encoding);
     }
@@ -1881,4 +1874,3 @@ int doFileMove(const char* tmpf, const char* defstr)
     unlink(tmpf);
     return ret;
 }
-

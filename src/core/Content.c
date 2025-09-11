@@ -19,7 +19,6 @@
 #include "proxy.h"
 #include "auth.h"
 #include "quote.h"
-#include "URLFile.h"
 
 #include <openssl/ssl.h>
 #include <unistd.h>

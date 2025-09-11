@@ -12,7 +12,6 @@
 #include "myctype.h"
 #include "network.h"
 #include "proxy.h"
-#include "URLFile.h"
 #include "istream.h"
 #include "ssl_util.h"
 #include "time_util.h"
