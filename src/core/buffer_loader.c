@@ -1,49 +1,38 @@
 #include "buffer_loader.h"
-#include "ces.h"
-#include "http_message.h"
-#include "runtime.h"
-#include "entity.h"
 #include "convertline.h"
-#include "quote.h"
-#include "html_quote.h"
-#include "Content.h"
-#include "istream.h"
-#include "screen.h"
-#include "auth.h"
-#include "local_cgi.h"
-#include "tty.h"
-#include "rc.h"
-#include "alloc.h"
-#include "buffer.h"
-#include "readbuffer.h"
-#include "table.h"
-#include "symbol.h"
-#include "ui.h"
-#include "istream.h"
-#include "image.h"
 #include "display.h"
+#include "html_quote.h"
 #include "html_title.h"
+#include "runtime.h"
+#include "tty.h"
+#include "w3m.h"
+#include "buffer.h"
+#include "entity.h"
+#include "html_form.h"
+#include "image.h"
+#include "maparea.h"
+#include "quote.h"
+#include "Content.h"
+#include "screen.h"
 #include "readbuffer.h"
 #include "HtmlTagParsed.h"
 #include "form.h"
-#include "maparea.h"
-#include "w3m.h"
 #include "funcname1.h"
+#include "alloc.h"
+#include "symbol.h"
+#include "table.h"
+#include "ui.h"
 #include <myctype.h>
-#include <openssl/ssl.h>
+#include <stdlib.h>
+#include <string.h>
 #include <strings.h>
+#include <time.h>
 #include <unistd.h>
 #include <utime.h>
 #include <wc.h>
 #include <wtf.h>
 
 #define DOCUMENT_CHARSET WC_CES_UTF_8
-
-// static sigjmp_buf AbortLoading;
-// static MySignalHandler KeyAbort(int _dummy)
-// {
-//     siglongjmp(AbortLoading, 1);
-// }
 
 wc_ces DocumentCharset = (DOCUMENT_CHARSET);
 int autoImage = (true);
