@@ -39,7 +39,7 @@ struct HttpResponse readHttpResponse(struct Url* pu, union input_stream* stream)
                 continue;
             wc_ces mime_charset;
             lineBuf2 = decodeMIME(lineBuf2, &mime_charset);
-            lineBuf2 = convertLine(NULL, lineBuf2, RAW_MODE,
+            lineBuf2 = convertLine(lineBuf2, RAW_MODE,
                 mime_charset ? &mime_charset : &charset,
                 mime_charset ? mime_charset : WC_CES_UTF_8,
                 WC_CES_WTF);

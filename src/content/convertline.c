@@ -20,8 +20,7 @@ void cleanup_line(Str s)
     }
 }
 
-Str convertLine(struct URLFile* uf, Str line, enum ConvertLineMode mode,
-    wc_ces* pOutCharset, wc_ces from, wc_ces to)
+Str convertLine(Str line, enum ConvertLineMode mode, wc_ces* pOutCharset, wc_ces from, wc_ces to)
 {
     line = wc_Str_conv_with_detect(line, pOutCharset, from, to);
     if (mode != RAW_MODE) {

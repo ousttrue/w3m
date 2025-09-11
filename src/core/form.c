@@ -575,7 +575,7 @@ void input_textarea(struct FormItem* fi)
             Strshrink(tmp, 1);
             Strcat_charp(tmp, "\r\n");
         }
-        tmp = convertLine(NULL, tmp, RAW_MODE, &charset, DisplayCharset, InnerCharset);
+        tmp = convertLine(tmp, RAW_MODE, &charset, DisplayCharset, InnerCharset);
         Strcat(fi->value, tmp);
     }
     WcOption.auto_detect = auto_detect;

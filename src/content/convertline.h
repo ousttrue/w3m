@@ -9,6 +9,4 @@ enum ConvertLineMode {
 };
 void cleanup_line(Str s);
 
-struct URLFile;
-Str convertLine(struct URLFile* uf, Str line, enum ConvertLineMode mode,
-    wc_ces* pOutCharset, wc_ces from, wc_ces to);
+Str convertLine(Str line, enum ConvertLineMode mode, wc_ces* pOutCharset, wc_ces from, wc_ces to);

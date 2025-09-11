@@ -960,7 +960,7 @@ static char* url_unquote_conv(char* url, wc_ces charset)
     if (!charset || charset == WC_CES_US_ASCII)
         charset = SystemCharset;
     WcOption.auto_detect = WC_OPT_DETECT_ON;
-    tmp = convertLine(NULL, tmp, RAW_MODE, &charset, charset, InnerCharset);
+    tmp = convertLine( tmp, RAW_MODE, &charset, charset, InnerCharset);
     WcOption.auto_detect = old_auto_detect;
     return tmp->ptr;
 }
