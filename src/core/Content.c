@@ -40,29 +40,30 @@ static bool dir_exist(const char* path)
     return IS_DIRECTORY(stbuf.st_mode);
 }
 
-static void add_index_file(struct Url* pu, struct URLFile* uf)
+static union input_stream* add_index_file(struct Url* pu)
 {
-    char *p, *q;
     TextList* index_file_list = NULL;
-    TextListItem* ti;
-
     if (non_null(index_file))
         index_file_list = make_domain_list(index_file);
     if (index_file_list == NULL) {
-        uf->stream = NULL;
-        return;
+        return NULL;
     }
+
+    TextListItem* ti;
     for (ti = index_file_list->first; ti; ti = ti->next) {
+        char *p, *q;
         p = Strnew_m_charp(pu->file, "/", file_quote(ti->ptr), NULL)->ptr;
         p = cleanupName(p);
         q = cleanupName(file_unquote(p));
-        examineFile(uf, q);
-        if (uf->stream != NULL) {
+        union input_stream* stream = examineFile(q);
+        if (stream) {
             pu->file = p;
             // pu->real_file = q;
-            return;
+            return stream;
         }
     }
+
+    return NULL;
 }
 
 struct Content openLocal(const char* u, struct Url* current, struct Form* post, const char* referer)
@@ -80,27 +81,24 @@ struct Content openLocal(const char* u, struct Url* current, struct Form* post, 
         pu.label = NULL;
     }
 
-    struct URLFile f;
-    init_stream(&f, SCM_MISSING, NULL);
+    union input_stream* stream;
     if (post && post->body) {
         // local CGI: POST
-        f.stream = newFileStream(localcgi_post(pu.file, pu.query, post, referer), &fclose);
+        stream = newFileStream(localcgi_post(pu.file, pu.query, post, referer), &fclose);
     } else {
         // lodal CGI: GET
-        f.stream = newFileStream(localcgi_get(pu.file, pu.query, referer), &fclose);
+        stream = newFileStream(localcgi_get(pu.file, pu.query, referer), &fclose);
     }
 
-    if (f.stream) {
-        f.is_cgi = true;
-        f.scheme = pu.scheme = SCM_LOCAL_CGI;
+    bool is_cgi = false;
+    if (stream) {
+        is_cgi = true;
+        pu.scheme = SCM_LOCAL_CGI;
     } else {
-        examineFile(&f, pu.file);
-        if (f.stream == NULL) {
+        stream = examineFile(pu.file);
+        if (!stream) {
             if (dir_exist(pu.file)) {
-                add_index_file(&pu, &f);
-                // if (f.stream == NULL) {
-                //     // return;
-                // }
+                stream = add_index_file(&pu);
             } else if (document_root != NULL) {
                 Str tmp = Strnew_charp(document_root);
                 if (Strlastchar(tmp) != '/' && pu.file[0] != '/')
@@ -110,28 +108,24 @@ struct Content openLocal(const char* u, struct Url* current, struct Form* post, 
                 char* q = cleanupName(file_unquote(p));
                 if (dir_exist(q)) {
                     pu.file = p;
-                    // pu.real_file = q;
-                    add_index_file(&pu, &f);
-                    // if (f.stream == NULL) {
-                    //     // return;
-                    // }
+                    stream = add_index_file(&pu);
                 } else {
-                    examineFile(&f, q);
-                    if (f.stream) {
+                    stream = examineFile(q);
+                    if (stream) {
                         pu.file = p;
-                        // pu.real_file = q;
                     }
                 }
             }
         }
     }
-    if (!f.stream) {
+    if (!stream) {
         return (struct Content) {
             .url = pu,
             .page = NULL,
         };
     }
-    Str page = readAll(f.stream);
+    Str page = readAll(stream);
+    ISclose(stream);
 
     enum ContentType content_type = guessContentType(pu.file);
     if (content_type == NULL) {

@@ -448,10 +448,9 @@ void reshapeBuffer(Buffer* buf, int cols)
     buf->width = cols;
     if (buf->sourcefile == NULL)
         return;
-    struct URLFile f;
-    init_stream(&f, SCM_LOCAL, NULL);
-    examineFile(&f, buf->mailcap_source ? buf->mailcap_source : buf->sourcefile);
-    if (f.stream == NULL)
+
+    union input_stream* stream = examineFile(buf->mailcap_source ? buf->mailcap_source : buf->sourcefile);
+    if (stream == NULL)
         return;
 
     Buffer sbuf;
@@ -473,12 +472,10 @@ void reshapeBuffer(Buffer* buf, int cols)
     WcOption.auto_detect = WC_OPT_DETECT_OFF;
     UseContentCharset = false;
     if (buf->content_type == CONTENTTYPE_TEXT_HTML)
-        loadHTMLBuffer(&f, buf);
+        loadHTMLBuffer(buf->currentURL, stream, buf);
     else
-        loadBuffer(&f, buf);
-    if (ISclose(f.stream) == 0) {
-        f.stream = NULL;
-    }
+        loadBuffer(buf->currentURL, stream, buf);
+    ISclose(stream);
     wc_uint8 old_auto_detect = WcOption.auto_detect;
     WcOption.auto_detect = old_auto_detect;
     UseContentCharset = true;
@@ -960,7 +957,7 @@ static char* url_unquote_conv(char* url, wc_ces charset)
     if (!charset || charset == WC_CES_US_ASCII)
         charset = SystemCharset;
     WcOption.auto_detect = WC_OPT_DETECT_ON;
-    tmp = convertLine( tmp, RAW_MODE, &charset, charset, InnerCharset);
+    tmp = convertLine(tmp, RAW_MODE, &charset, charset, InnerCharset);
     WcOption.auto_detect = old_auto_detect;
     return tmp->ptr;
 }

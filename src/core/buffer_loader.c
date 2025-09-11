@@ -1468,21 +1468,21 @@ table_start:
  * loadHTMLBuffer: read file and make new buffer
  */
 Buffer*
-loadHTMLBuffer(struct URLFile* f, Buffer* newBuf)
+loadHTMLBuffer(struct Url url, union input_stream *stream, Buffer* newBuf)
 {
-    FILE* src = NULL;
-    Str tmp;
 
     if (newBuf == NULL)
         newBuf = newBuffer();
-    if (newBuf->sourcefile == NULL && (f->scheme != SCM_LOCAL || newBuf->mailcap)) {
-        tmp = tmpfname(TMPF_SRC, ".html");
+
+    FILE* src = NULL;
+    if (newBuf->sourcefile == NULL && (url.scheme != SCM_LOCAL || newBuf->mailcap)) {
+        Str tmp = tmpfname(TMPF_SRC, ".html");
         src = fopen(tmp->ptr, "w");
         if (src)
             newBuf->sourcefile = tmp->ptr;
     }
 
-    loadHTMLstream(f->stream, newBuf, src, false);
+    loadHTMLstream(stream, newBuf, src, false);
 
     newBuf->topLine = newBuf->firstLine;
     newBuf->lastLine = newBuf->currentLine;
@@ -1631,7 +1631,7 @@ loadHTMLString(Str page)
  * loadBuffer: read file and make new buffer
  */
 Buffer*
-loadBuffer(struct URLFile* uf, Buffer* newBuf)
+loadBuffer(struct Url url, union input_stream *stream, Buffer* newBuf)
 {
     FILE* src = NULL;
     wc_ces charset = WC_CES_US_ASCII;
@@ -1653,7 +1653,7 @@ loadBuffer(struct URLFile* uf, Buffer* newBuf)
     // }
     // TRAP_ON;
 
-    if (newBuf->sourcefile == NULL && (uf->scheme != SCM_LOCAL || newBuf->mailcap)) {
+    if (newBuf->sourcefile == NULL && (url.scheme != SCM_LOCAL || newBuf->mailcap)) {
         tmpf = tmpfname(TMPF_SRC, NULL);
         src = fopen(tmpf->ptr, "w");
         if (src)
@@ -1665,9 +1665,11 @@ loadBuffer(struct URLFile* uf, Buffer* newBuf)
         doc_charset = content_charset;
 
     nlines = 0;
-    if (IStype(uf->stream) != IST_ENCODED)
-        uf->stream = newEncodedStream(uf->stream, uf->encoding);
-    while ((lineBuf2 = StrmyISgets(uf->stream)) && lineBuf2->length) {
+    if (IStype(stream) != IST_ENCODED){
+        abort();
+        // uf->stream = newEncodedStream(uf->stream, uf->encoding);
+    }
+    while ((lineBuf2 = StrmyISgets(stream)) && lineBuf2->length) {
         if (src)
             Strfputs(lineBuf2, src);
         linelen += lineBuf2->length;

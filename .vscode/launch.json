@@ -25,8 +25,8 @@
             "request": "launch",
             "program": "${workspaceFolder}/zig-out/bin/w3m",
             "args": [
-                // "www.google.com"
-                "www.yahoo.co.jp",
+                "www.google.com"
+                // "www.yahoo.co.jp",
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

@@ -52,3 +52,6 @@ struct _Buffer;
 void loadHTML(Str html, wc_ces doc_charset, int cols, bool use_graphic, bool internal, struct _Buffer* buf);
 void addnewline(struct _Buffer* buf, char* line, Lineprop* prop, Linecolor* color, int pos, int width, int nlines);
 int getMetaRefreshParam(const char* q, Str* refresh_uri);
+struct _Buffer;
+struct _Buffer* loadHTMLBuffer(struct Url url, union input_stream *stream, struct _Buffer* newBuf);
+struct _Buffer* loadBuffer(struct Url url, union input_stream *streamf, struct _Buffer* newBuf);

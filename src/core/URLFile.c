@@ -142,31 +142,6 @@ int doFileSave(struct URLFile uf, const char* defstr, int current_content_length
     return 0;
 }
 
-#define NOT_REGULAR(m) (((m) & S_IFMT) != S_IFREG)
-
-void examineFile(struct URLFile* uf, const char* path)
-{
-    struct stat stbuf;
-
-    uf->guess_type = NULL;
-    if (path == NULL || *path == '\0' || stat(path, &stbuf) == -1 || NOT_REGULAR(stbuf.st_mode)) {
-        uf->stream = NULL;
-        return;
-    }
-    uf->stream = openIS(path);
-
-    // check_compression(uf, path);
-    // if (uf->compression != CMP_NOCOMPRESS) {
-    //     abort();
-    //     // const char* ext = uf->ext;
-    //     // const char* t0 = uncompressed_file_type(path, &ext);
-    //     // uf->guess_type = (char*)t0;
-    //     // uf->ext = ext;
-    //     // uncompress_stream(uf, NULL);
-    //     // return;
-    // }
-}
-
 // #define SAVE_BUF_SIZE 1536
 //
 // void uncompress_stream(struct URLFile* uf, char** src)

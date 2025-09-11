@@ -17,11 +17,6 @@ struct URLFile {
     time_t modtime;
 };
 
-void examineFile(struct URLFile* uf, const char* path);
-
-struct _Buffer;
-struct _Buffer* loadHTMLBuffer(struct URLFile* f, struct _Buffer* newBuf);
-struct _Buffer* loadBuffer(struct URLFile* uf, struct _Buffer* newBuf);
 int doFileSave(struct URLFile uf, const char* defstr, int current_content_length);
 union input_stream;
 void init_stream(struct URLFile* uf, int scheme, union input_stream* stream);

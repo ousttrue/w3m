@@ -478,3 +478,25 @@ Str readAll(union input_stream* stream)
     }
     return html;
 }
+
+#define NOT_REGULAR(m) (((m) & S_IFMT) != S_IFREG)
+
+union input_stream* examineFile(const char* path)
+{
+    struct stat stbuf;
+    if (path == NULL || *path == '\0' || stat(path, &stbuf) == -1 || NOT_REGULAR(stbuf.st_mode)) {
+        return NULL;
+    }
+    return openIS(path);
+
+    // check_compression(uf, path);
+    // if (uf->compression != CMP_NOCOMPRESS) {
+    //     abort();
+    //     // const char* ext = uf->ext;
+    //     // const char* t0 = uncompressed_file_type(path, &ext);
+    //     // uf->guess_type = (char*)t0;
+    //     // uf->ext = ext;
+    //     // uncompress_stream(uf, NULL);
+    //     // return;
+    // }
+}
