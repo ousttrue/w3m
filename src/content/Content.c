@@ -1,29 +1,15 @@
 #include "Content.h"
-#include "http_message.h"
-#include "mailcap.h"
 #include "runtime.h"
 #include "HttpRequest.h"
-#include "HttpResponse.h"
 #include "istream.h"
-#include "keymap.h"
-#include "cookie.h"
-#include "network.h"
 #include "time_util.h"
-#include "alloc.h"
 #include "ContentType.h"
 #include "html_form.h"
 #include "HttpClient.h"
-#include "ssl_util.h"
 #include "local_cgi.h"
 #include "myctype.h"
-#include "proxy.h"
 #include "auth.h"
 #include "quote.h"
-
-#include <openssl/ssl.h>
-#include <unistd.h>
-#include <zlib.h>
-#include <assert.h>
 
 char* index_file = 0;
 char LocalhostOnly = false;

@@ -47,8 +47,18 @@ const content_public_headers = [_][]const u8{
     "compression.h",
     "ContentType.h",
     "CharSlice.h",
+    "Content.h",
+    "HttpResponse.h",
+    "line.h",
+    "time_util.h",
+    "HttpClient.h",
 };
 const content_srcs = [_][]const u8{
+    "HttpClient.c",
+    "time_util.c",
+    "line.c",
+    "HttpResponse.c",
+    "Content.c",
     "CharSlice.c",
     "ContentType.c",
     "compression.c",
@@ -83,9 +93,7 @@ const system_libs = [_][]const u8{
     "z",
 };
 const w3m_srcs = [_][]const u8{
-    "HttpResponse.c",
     "token.c",
-    "time_util.c",
     "tty.c",
     "keybind.c",
     "util.c",
@@ -105,13 +113,9 @@ const w3m_srcs = [_][]const u8{
     "html_tag_attribute_info.c",
     "HtmlTagParsed.c",
     "buffer_loader.c",
-    "HttpClient.c",
-    "Content.c",
 
     "ui.c",
     "LineEditor.c",
-
-    "line.c",
 
     "buffer.c",
     "display.c",

@@ -15,7 +15,7 @@
 #include "istream.h"
 #include "ssl_util.h"
 #include "time_util.h"
-#include "keymap.h"
+// #include "keymap.h"
 #include <assert.h>
 #include <openssl/ssl.h>
 #include <unistd.h>
@@ -99,8 +99,7 @@ static Str decode_gzip(unsigned char* src, int size)
             buffer = 0;
             break;
         }
-        auto have = CHUNK - strm.avail_out;
-
+        int have = CHUNK - strm.avail_out;
         // auto before = buffer.size();
         // buffer.resize(before + have);
         // memcpy(buffer.data() + before, out, have);
@@ -368,16 +367,16 @@ struct Content httpRequest(struct HttpClient* c,
             }
         }
 
-        if ((p = getHttpHeaderValue(res->headers, "w3m-control:"))
-            && c->exchanges[i].request.url.scheme == SCM_LOCAL_CGI) {
-            Str funcname = Strnew();
-            SKIP_BLANKS(p);
-            CommandFunc f = getFunc(funcname->ptr);
-            Str tmp = Strnew_charp(p);
-            Strchop(tmp);
-            // TODO:
-            // pushEvent(f, tmp->ptr);
-        }
+        // if ((p = getHttpHeaderValue(res->headers, "w3m-control:"))
+        //     && c->exchanges[i].request.url.scheme == SCM_LOCAL_CGI) {
+        //     Str funcname = Strnew();
+        //     SKIP_BLANKS(p);
+        //     CommandFunc f = getFunc(funcname->ptr);
+        //     Str tmp = Strnew_charp(p);
+        //     Strchop(tmp);
+        //     // TODO:
+        //     // pushEvent(f, tmp->ptr);
+        // }
 
         if (((res->status_code >= 301 && res->status_code <= 303)
                 || res->status_code == 307)
