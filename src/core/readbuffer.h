@@ -212,7 +212,6 @@ void do_blankline(struct html_feed_environ* h_env, struct readbuffer* obuf, int 
 void save_fonteffect(struct html_feed_environ* h_env, struct readbuffer* obuf);
 void restore_fonteffect(struct html_feed_environ* h_env, struct readbuffer* obuf);
 int HTMLtagproc1(struct HtmlTagParsed* tag, struct html_feed_environ* h_env);
-void HTMLlineproc0(const char* istr, struct html_feed_environ* h_env, bool internal);
 void init_henv(struct html_feed_environ*, struct readbuffer*, struct environment*, int, TextLineList*, int, int);
 void completeHTMLstream(struct html_feed_environ*, struct readbuffer*);
 void process_idattr(struct readbuffer* obuf, int cmd, struct HtmlTagParsed* tag);

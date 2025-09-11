@@ -227,7 +227,7 @@ addnewline2(Buffer* buf, char* line, Lineprop* prop, Linecolor* color, int pos,
     l = NULL;
 }
 
-void addnewline(Buffer* buf, char* line, Lineprop* prop, Linecolor* color, int pos,
+static void addnewline(Buffer* buf, char* line, Lineprop* prop, Linecolor* color, int pos,
     int width, int nlines)
 {
     char* s;
@@ -844,7 +844,7 @@ void HTMLlineproc2(Buffer* buf, TextLineList* tl)
     HTMLlineproc2body(buf, textlist_feed, -1);
 }
 
-void loadHTML(Str html, wc_ces doc_charset, int cols, bool use_graphic, bool internal, struct _Buffer* buf)
+static void loadHTML(Str html, wc_ces doc_charset, int cols, bool use_graphic, bool internal, struct _Buffer* buf)
 {
     struct environment envs[MAX_ENV_LEVEL];
     long long linelen = 0;
@@ -933,7 +933,7 @@ phase2:
     // return buf;
 }
 
-Buffer* makeBuffer(struct Content* c, bool do_download)
+Buffer* makeBuffer(struct Content* c)
 {
     if (c->page) {
         if (image_source)
@@ -944,13 +944,6 @@ Buffer* makeBuffer(struct Content* c, bool do_download)
             // Str s = wc_Str_conv_strict(c->page, InnerCharset, c->charset);
             Strfputs(c->page, src);
             fclose(src);
-        }
-        if (do_download) {
-            if (!src)
-                return NULL;
-            const char* file = guessFileName(c->url.file);
-            doFileMove(tmp->ptr, file);
-            return NO_BUFFER;
         }
         Buffer* b = loadHTMLString(c->page);
         if (b) {
@@ -1462,38 +1455,7 @@ table_start:
     }
 }
 
-/*
- * loadHTMLBuffer: read file and make new buffer
- */
-Buffer*
-loadHTMLBuffer(struct Url url, union input_stream* stream, Buffer* newBuf)
-{
-
-    if (newBuf == NULL)
-        newBuf = newBuffer();
-
-    FILE* src = NULL;
-    if (newBuf->sourcefile == NULL && (url.scheme != SCM_LOCAL || newBuf->mailcap)) {
-        Str tmp = tmpfname(TMPF_SRC, ".html");
-        src = fopen(tmp->ptr, "w");
-        if (src)
-            newBuf->sourcefile = tmp->ptr;
-    }
-
-    loadHTMLstream(stream, newBuf, src, false);
-
-    newBuf->topLine = newBuf->firstLine;
-    newBuf->lastLine = newBuf->currentLine;
-    newBuf->currentLine = newBuf->firstLine;
-    if (n_textarea)
-        formResetBuffer(newBuf, newBuf->formitem);
-    if (src)
-        fclose(src);
-
-    return newBuf;
-}
-
-void loadHTMLstream(union input_stream* stream, Buffer* newBuf, FILE* src, int internal)
+static void loadHTMLstream(union input_stream* stream, Buffer* newBuf, FILE* src, int internal)
 {
     Str html = readAll(stream);
     struct UI ui = getUI();
@@ -1586,6 +1548,39 @@ void loadHTMLstream(union input_stream* stream, Buffer* newBuf, FILE* src, int i
     //     newBuf->image_flag = image_flag;
     //     HTMLlineproc2(newBuf, htmlenv1.buf);
 }
+
+/*
+ * loadHTMLBuffer: read file and make new buffer
+ */
+Buffer*
+loadHTMLBuffer(struct Url url, union input_stream* stream, Buffer* newBuf)
+{
+
+    if (newBuf == NULL)
+        newBuf = newBuffer();
+
+    FILE* src = NULL;
+    if (newBuf->sourcefile == NULL && (url.scheme != SCM_LOCAL || newBuf->mailcap)) {
+        Str tmp = tmpfname(TMPF_SRC, ".html");
+        src = fopen(tmp->ptr, "w");
+        if (src)
+            newBuf->sourcefile = tmp->ptr;
+    }
+
+    loadHTMLstream(stream, newBuf, src, false);
+
+    newBuf->topLine = newBuf->firstLine;
+    newBuf->lastLine = newBuf->currentLine;
+    newBuf->currentLine = newBuf->firstLine;
+    if (n_textarea)
+        formResetBuffer(newBuf, newBuf->formitem);
+    if (src)
+        fclose(src);
+
+    return newBuf;
+}
+
+
 
 /*
  * loadHTMLString: read string and make new buffer

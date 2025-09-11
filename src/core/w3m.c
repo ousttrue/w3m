@@ -603,7 +603,16 @@ loadLink(const char* url, const char* target, const char* referer, struct Form* 
         referer = parsedURL2RefererStr(&Currentbuf->currentURL)->ptr;
 
     struct Content c = loadGeneralFile(url, baseURL(Currentbuf), post, referer, UI_TTY);
-    Buffer* buf = makeBuffer(&c, do_download);
+    if (do_download) {
+        if (!c.page)
+            return NULL;
+        const char* file = guessFileName(c.url.file);
+        // doFileMove(tmp->ptr, file);
+        abort();
+        return NO_BUFFER;
+    }
+
+    Buffer* buf = makeBuffer(&c);
     if (buf == NULL) {
         char* emsg = Sprintf("Can't load %s", url)->ptr;
         message(getUI(), MSG_ERR, emsg);
@@ -1286,7 +1295,7 @@ cmd_loadURL(const char* url, struct Url* current, const char* referer, struct Fo
 {
     // refresh(ttyWriter());
     struct Content c = loadGeneralFile(url, current, post, referer, UI_TTY);
-    Buffer* buf = makeBuffer(&c, false);
+    Buffer* buf = makeBuffer(&c);
     if (buf == NULL) {
         /* FIXME: gettextize? */
         char* emsg = Sprintf("Can't load %s", conv_from_system(url))->ptr;
@@ -1414,7 +1423,7 @@ DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output")
 static void cmd_loadfile(const char* fn)
 {
     struct Content c = loadGeneralFile(file_to_url(fn, CurrentDir), NULL, NULL, NO_REFERER, UI_TTY);
-    Buffer* buf = makeBuffer(&c, false);
+    Buffer* buf = makeBuffer(&c);
     if (buf == NULL) {
         /* FIXME: gettextize? */
         char* emsg = Sprintf("%s not found", conv_from_system(fn))->ptr;
@@ -2125,7 +2134,11 @@ static void followImage(bool do_download)
     message(getUI(), MSG_INFO, Sprintf("loading %s", a->url)->ptr);
     // refresh(ttyWriter());
     struct Content c = loadGeneralFile(a->url, baseURL(Currentbuf), NULL, NULL, UI_TTY);
-    Buffer* buf = makeBuffer(&c, do_download);
+    if(do_download){
+        // TODO
+        abort();
+    }
+    Buffer* buf = makeBuffer(&c);
     if (buf == NULL) {
         /* FIXME: gettextize? */
         char* emsg = Sprintf("Can't load %s", a->url)->ptr;
@@ -3169,7 +3182,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
     // SearchHeader = Currentbuf->search_header;
     DefaultType = contentTypeStr(Currentbuf->content_type);
     struct Content c = loadGeneralFile(url->ptr, NULL, post, NO_REFERER, UI_TTY /*, true*/);
-    buf = makeBuffer(&c, false);
+    buf = makeBuffer(&c);
     DocumentCharset = old_charset;
     // SearchHeader = false;
     DefaultType = NULL;
@@ -3432,7 +3445,7 @@ execdict(const char* word)
         Str_form_quote(Strnew_charp(w))->ptr)
                   ->ptr;
     struct Content c = loadGeneralFile(dictcmd, NULL, NULL, NO_REFERER, UI_TTY);
-    Buffer* buf = makeBuffer(&c, false);
+    Buffer* buf = makeBuffer(&c);
     if (buf == NULL) {
         message(getUI(), MSG_INFO, "Execution failed");
         return;
