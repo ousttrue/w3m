@@ -1658,10 +1658,10 @@ loadBuffer(struct Url url, union input_stream* stream, Buffer* newBuf)
         doc_charset = content_charset;
 
     nlines = 0;
-    if (IStype(stream) != IST_ENCODED) {
-        abort();
-        // uf->stream = newEncodedStream(uf->stream, uf->encoding);
-    }
+    // if (IStype(stream) != IST_ENCODED) {
+    //     abort();
+    //     // uf->stream = newEncodedStream(uf->stream, uf->encoding);
+    // }
     while ((lineBuf2 = StrmyISgets(stream)) && lineBuf2->length) {
         if (src)
             Strfputs(lineBuf2, src);

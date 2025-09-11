@@ -53,9 +53,10 @@ guessContentTypeFromTable(const char* filename, struct ContentTypeTable* table)
     if (p == filename || ext_len > 5) {
         return CONTENTTYPE_UNKNOWN;
     }
+    const char* begin = ext + sizeof(ext) - ext_len;
 
     for (struct ContentTypeTable* t = table; t->file_extension; ++t) {
-        if (strcmp(ext, t->file_extension) == 0) {
+        if (strcmp(begin, t->file_extension) == 0) {
             return t->content_type;
         }
     }

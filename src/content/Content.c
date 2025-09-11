@@ -113,9 +113,9 @@ struct Content openLocal(const char* u, struct Url* current, struct Form* post, 
     ISclose(stream);
 
     enum ContentType content_type = guessContentType(pu.file);
-    if (content_type == NULL) {
-        content_type = CONTENTTYPE_TEXT_PLAIN;
-    }
+    // if (content_type == NULL) {
+    //     content_type = CONTENTTYPE_TEXT_PLAIN;
+    // }
     // if (f.guess_type) {
     //     content_type = f.guess_type;
     // }

@@ -499,14 +499,30 @@ struct Content httpRequest(struct HttpClient* c,
 
         Str src = readAll(c->exchanges[i].stream);
         ISclose(c->exchanges[i].stream);
-        enum CompressionType content_encoding = CMP_NOCOMPRESS;
         if ((p = getHttpHeaderValue(res->headers, "content-encoding:"))) {
-            content_encoding = get_compression(p);
-        }
-        if (content_encoding != CMP_NOCOMPRESS) {
-            content.page = decode_gzip((unsigned char*)src->ptr, src->length);
-        } else {
-            content.page = src;
+            enum CompressionType content_encoding = get_compression(p);
+            switch (content_encoding) {
+            case CMP_NOCOMPRESS:
+                content.page = src;
+                break;
+
+            case CMP_COMPRESS:
+            case CMP_GZIP:
+                content.page = decode_gzip((unsigned char*)src->ptr, src->length);
+                break;
+
+            case CMP_BZIP2:
+                abort();
+                break;
+
+            case CMP_DEFLATE:
+                abort();
+                break;
+
+            case CMP_BROTLI:
+                abort();
+                break;
+            }
         }
 
         // term_raw();
