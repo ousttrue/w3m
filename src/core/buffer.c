@@ -469,7 +469,6 @@ void reshapeBuffer(Buffer* buf, int cols)
         buf->imarklist->nmark = 0;
 
     WcOption.auto_detect = WC_OPT_DETECT_OFF;
-    UseContentCharset = false;
     if (buf->content_type == CONTENTTYPE_TEXT_HTML)
         loadHTMLBuffer(buf->currentURL, stream, buf);
     else
@@ -477,7 +476,6 @@ void reshapeBuffer(Buffer* buf, int cols)
     ISclose(stream);
     wc_uint8 old_auto_detect = WcOption.auto_detect;
     WcOption.auto_detect = old_auto_detect;
-    UseContentCharset = true;
 
     // buf->height = getScreen()->ROWS - 1 + 1;
     if (buf->firstLine && sbuf.firstLine) {

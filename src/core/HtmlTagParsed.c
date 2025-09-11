@@ -212,10 +212,11 @@ struct HtmlTagParsed* parse_tag(const char** s, bool internal)
         q++;
 
     enum HtmlTag tag_id = getHash_si(&tagtable, tagname, HTML_UNKNOWN);
+    struct HtmlTagParsed* tag = NULL;    
     if (tag_id == HTML_UNKNOWN || (!internal && TagMAP[tag_id].flag & TFLG_INT))
         goto skip_parse_tagarg;
 
-    struct HtmlTagParsed* tag = New(struct HtmlTagParsed);
+    tag = New(struct HtmlTagParsed);
     memset(tag, 0, sizeof(struct HtmlTagParsed));
     tag->tagid = tag_id;
 

@@ -6,7 +6,6 @@
 #include "istream.h"
 #include "platform.h"
 
-extern char UseContentCharset;
 extern wc_ces DocumentCharset;
 extern int autoImage;
 extern char MetaRefresh;

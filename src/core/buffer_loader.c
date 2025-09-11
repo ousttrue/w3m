@@ -44,7 +44,6 @@
 //     siglongjmp(AbortLoading, 1);
 // }
 
-char UseContentCharset = (true);
 wc_ces DocumentCharset = (DOCUMENT_CHARSET);
 int autoImage = (true);
 char MetaRefresh = (false);
@@ -1651,8 +1650,6 @@ loadBuffer(struct Url url, union input_stream* stream, Buffer* newBuf)
     }
     if (newBuf->document_charset)
         charset = doc_charset = newBuf->document_charset;
-    if (content_charset && UseContentCharset)
-        doc_charset = content_charset;
 
     nlines = 0;
     // if (IStype(stream) != IST_ENCODED) {

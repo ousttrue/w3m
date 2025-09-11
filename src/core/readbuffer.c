@@ -900,7 +900,6 @@ ul_type(struct HtmlTagParsed* tag, int default_type)
 
 struct table* tables[MAX_TABLE];
 struct table_mode table_mode[MAX_TABLE];
-wc_ces content_charset = 0;
 wc_ces meta_charset = 0;
 
 int table_width(struct html_feed_environ* h_env, int table_level)
