@@ -1393,7 +1393,7 @@ load_option_panel(void)
         Strcat_charp(src, "</table><hr width=50%>");
     }
     Strcat_charp(src, "</table></form></body></html>");
-    buf = loadHTMLString(src);
+    buf = loadHTMLString(src, WC_CES_UTF_8);
     if (buf)
         buf->document_charset = OptionCharset;
     return buf;

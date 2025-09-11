@@ -151,7 +151,7 @@ message_list_panel(void)
     concatMessageList(tmp);
 
     Strcat_charp(tmp, "</table></body></html>");
-    return loadHTMLString(tmp);
+    return loadHTMLString(tmp, WC_CES_UTF_8);
 }
 
 static void*
@@ -3830,7 +3830,7 @@ DownloadListBuffer(void)
         Strcat_charp(src, "\n</pre><hr>\n");
     }
     Strcat_charp(src, "</form></body></html>");
-    return loadHTMLString(src);
+    return loadHTMLString(src, WC_CES_UTF_8);
 }
 
 void download_action(struct KeyValue* arg)

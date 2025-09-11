@@ -760,7 +760,7 @@ link_list_panel(Buffer* buf)
         Strcat_charp(tmp, "</ol>\n");
     }
 
-    Buffer* newBuf = loadHTMLString(tmp);
+    Buffer* newBuf = loadHTMLString(tmp, WC_CES_UTF_8);
     newBuf->document_charset = buf->document_charset;
     return newBuf;
 }

@@ -470,7 +470,7 @@ void reshapeBuffer(Buffer* buf, int cols)
 
     WcOption.auto_detect = WC_OPT_DETECT_OFF;
     if (buf->content_type == CONTENTTYPE_TEXT_HTML)
-        loadHTMLBuffer(buf->currentURL, stream, buf);
+        loadHTMLBuffer(buf->currentURL, stream, buf->document_charset, buf);
     else
         loadBuffer(buf->currentURL, stream, buf);
     ISclose(stream);
@@ -1131,5 +1131,5 @@ cookie_list_panel(void)
             "</td></tr><tr><td><input type=submit value=\"OK\"></table><p>");
     }
     Strcat_charp(src, "</ol></form></body></html>");
-    return loadHTMLString(src);
+    return loadHTMLString(src, WC_CES_UTF_8);
 }

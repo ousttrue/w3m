@@ -1,4 +1,5 @@
 #include "buffer_loader.h"
+#include "ces.h"
 #include "http_message.h"
 #include "runtime.h"
 #include "entity.h"
@@ -844,13 +845,13 @@ void HTMLlineproc2(Buffer* buf, TextLineList* tl)
 }
 
 static int loadHTML(struct html_feed_environ* htmlenv1,
-    Str html, wc_ces doc_charset, int cols, bool use_graphic, bool internal)
+    Str html, wc_ces content_charset, int cols, bool use_graphic, bool internal)
 {
     struct environment envs[MAX_ENV_LEVEL];
     long long linelen = 0;
     long long trbyte = 0;
     Str lineBuf2 = Strnew();
-    wc_ces charset = WC_CES_US_ASCII;
+    // wc_ces charset = WC_CES_US_ASCII;
     // wc_ces doc_charset = DocumentCharset;
     struct readbuffer obuf;
     // void (*volatile prevtrap)(int _dummy) = NULL;
@@ -889,6 +890,8 @@ static int loadHTML(struct html_feed_environ* htmlenv1,
     //     if (newBuf->document_charset)
     //         charset = doc_charset = newBuf->document_charset;
     // }
+
+    wc_ces doc_charset = content_charset;
     // if (content_charset && UseContentCharset)
     //     doc_charset = content_charset;
 
@@ -899,14 +902,18 @@ static int loadHTML(struct html_feed_environ* htmlenv1,
         //     Strfputs(lineBuf2, src);
         linelen += lineBuf2->length;
         // showProgress(current_content_length, &linelen, &trbyte);
-        // if (meta_charset) { /* <META> */
-        //     if (content_charset == 0 && UseContentCharset) {
-        //         doc_charset = meta_charset;
-        //         charset = WC_CES_US_ASCII;
-        //     }
-        //     meta_charset = 0;
-        // }
-        lineBuf2 = convertLine(lineBuf2, HTML_MODE, &charset, doc_charset, InnerCharset);
+        if (meta_charset) { /* <META> */
+            //     if (content_charset == 0 && UseContentCharset) {
+            doc_charset = meta_charset;
+            //         charset = WC_CES_US_ASCII;
+            //     }
+            meta_charset = 0;
+        }
+        wc_ces out_charset = 0;
+        lineBuf2 = convertLine(lijneBuf2, HTML_MODE, &out_charset, doc_charset, InnerCharset);
+        if (out_charset && out_charset != doc_charset) {
+            doc_charset = out_charset;
+        }
         // cur_document_charset = charset;
         HTMLlineproc0(lineBuf2->ptr, htmlenv1, internal);
     }
@@ -922,13 +929,14 @@ static int loadHTML(struct html_feed_environ* htmlenv1,
     return trbyte + linelen;
 }
 
-static void loadHTMLstream(union input_stream* stream, Buffer* buf, int internal)
+// WC_CES_SHIFT_JIS /*WC_CES_US_ASCII*/
+static void loadHTMLstream(union input_stream* stream, wc_ces content_charset, Buffer* buf, bool internal)
 {
     Str html = readAll(stream);
     struct UI ui = getUI();
     struct html_feed_environ htmlenv1;
 
-    buf->trbyte = loadHTML(&htmlenv1, html, WC_CES_SHIFT_JIS /*WC_CES_US_ASCII*/, ui.vt->COLS, ui.use_graphic, internal);
+    buf->trbyte = loadHTML(&htmlenv1, html, content_charset, ui.vt->COLS, ui.use_graphic, internal);
 
     // phase2:
     // Buffer* buf = newBuffer();
@@ -1042,7 +1050,7 @@ Buffer* makeBuffer(struct Content* c)
             Strfputs(c->page, src);
             fclose(src);
         }
-        Buffer* b = loadHTMLString(c->page);
+        Buffer* b = loadHTMLString(c->page, c->cc.charset);
         if (b) {
             b->currentURL = copyParsedUrl(&c->url);
             b->real_scheme = c->url.scheme;
@@ -1556,7 +1564,7 @@ table_start:
  * loadHTMLBuffer: read file and make new buffer
  */
 Buffer*
-loadHTMLBuffer(struct Url url, union input_stream* stream, Buffer* newBuf)
+loadHTMLBuffer(struct Url url, union input_stream* stream, wc_ces content_charset, Buffer* newBuf)
 {
 
     if (newBuf == NULL)
@@ -1570,7 +1578,7 @@ loadHTMLBuffer(struct Url url, union input_stream* stream, Buffer* newBuf)
     //         newBuf->sourcefile = tmp->ptr;
     // }
 
-    loadHTMLstream(stream, newBuf, false);
+    loadHTMLstream(stream, content_charset, newBuf, false);
 
     newBuf->topLine = newBuf->firstLine;
     newBuf->lastLine = newBuf->currentLine;
@@ -1587,7 +1595,7 @@ loadHTMLBuffer(struct Url url, union input_stream* stream, Buffer* newBuf)
  * loadHTMLString: read string and make new buffer
  */
 Buffer*
-loadHTMLString(Str page)
+loadHTMLString(Str page, wc_ces content_charset)
 {
     union input_stream* stream = newStrStream(page);
 
@@ -1601,9 +1609,7 @@ loadHTMLString(Str page)
     // }
     // TRAP_ON;
 
-    newBuf->document_charset = InnerCharset;
-    loadHTMLstream(stream, newBuf, true);
-    newBuf->document_charset = WC_CES_US_ASCII;
+    loadHTMLstream(stream, content_charset, newBuf, true);
 
     term_raw();
     ISclose(stream);

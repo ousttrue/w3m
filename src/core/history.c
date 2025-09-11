@@ -53,7 +53,7 @@ historyBuffer(struct Hist* hist)
         }
     }
     Strcat_charp(src, "</ol>\n</body>\n</html>");
-    return loadHTMLString(src);
+    return loadHTMLString(src, WC_CES_UTF_8);
 }
 
 int loadHistory(struct Hist* hist)
