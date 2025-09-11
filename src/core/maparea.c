@@ -175,10 +175,10 @@ int getMapXY(struct Buffer* buf, Anchor* a, int* x, int* y)
     if (!buf || !a || !a->image || !x || !y)
         return 0;
     *x = (int)((buf->currentColumn + buf->cursorX
-                   - COLPOS(buf->currentLine, a->start.pos) + 0.5)
+                   - COLPOS(currentLine(buf), a->start.pos) + 0.5)
              * pixel_per_char)
         - a->image->xoffset;
-    *y = (int)((buf->currentLine->linenumber - a->image->y + 0.5)
+    *y = (int)((currentLine(buf)->linenumber - a->image->y + 0.5)
              * pixel_per_line)
         - a->image->yoffset;
     if (*x <= 0)

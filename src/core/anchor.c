@@ -160,26 +160,26 @@ retrieveAnchor(AnchorList* al, int line, int pos)
 Anchor*
 retrieveCurrentAnchor(struct Buffer* buf)
 {
-    if (buf->currentLine == NULL)
+    if (currentLine(buf) == NULL)
         return NULL;
-    return retrieveAnchor(buf->href, buf->currentLine->linenumber, buf->pos);
+    return retrieveAnchor(buf->href, currentLine(buf)->linenumber, buf->pos);
 }
 
 Anchor*
 retrieveCurrentImg(struct Buffer* buf)
 {
-    if (buf->currentLine == NULL)
+    if (currentLine(buf) == NULL)
         return NULL;
-    return retrieveAnchor(buf->img, buf->currentLine->linenumber, buf->pos);
+    return retrieveAnchor(buf->img, currentLine(buf)->linenumber, buf->pos);
 }
 
 Anchor*
 retrieveCurrentForm(struct Buffer* buf)
 {
-    if (buf->currentLine == NULL)
+    if (currentLine(buf) == NULL)
         return NULL;
     return retrieveAnchor(buf->formitem,
-        buf->currentLine->linenumber, buf->pos);
+        currentLine(buf)->linenumber, buf->pos);
 }
 
 Anchor*
@@ -347,7 +347,7 @@ reAnchorAny(struct Buffer* buf, const char* re, AnchorFunc anchorproc)
     if ((re = regexCompile(re, 1)) != NULL) {
         return re;
     }
-    for (l = MarkAllPages ? buf->firstLine : buf->topLine; l != NULL && (MarkAllPages || l->linenumber < buf->topLine->linenumber + getScreen()->ROWS - 1);
+    for (l = MarkAllPages ? buf->firstLine : topLine(buf); l != NULL && (MarkAllPages || l->linenumber < topLine(buf)->linenumber + getScreen()->ROWS - 1);
         l = l->next) {
         if (p && l->bpos)
             continue;

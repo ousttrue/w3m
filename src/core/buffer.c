@@ -74,7 +74,9 @@ nullBuffer(void)
  */
 void clearBuffer(struct Buffer* buf)
 {
-    buf->firstLine = buf->topLine = buf->currentLine = NULL;
+    buf->firstLine = NULL;
+    buf->topLineIndex = 0;
+    buf->currentLineIndex = 0;
     buf->allLine = 0;
 }
 
@@ -113,6 +115,26 @@ struct Line* lastLine(struct Buffer* buf)
     for (; l->next; l = l->next) {
     }
     return l;
+}
+
+struct Line* currentLine(struct Buffer* buf)
+{
+    for (struct Line* l = buf->firstLine; l; l = l->next) {
+        if (l->linenumber == buf->currentLineIndex) {
+            return l;
+        }
+    }
+    return NULL;
+}
+
+struct Line* topLine(struct Buffer* buf)
+{
+    for (struct Line* l = buf->firstLine; l; l = l->next) {
+        if (l->linenumber == buf->topLineIndex) {
+            return l;
+        }
+    }
+    return NULL;
 }
 
 /*
@@ -241,7 +263,7 @@ void gotoLine(struct Buffer* buf, int n)
         /* FIXME: gettextize? */
         sprintf(msg, "First line is #%ld", l->linenumber);
         set_delayed_message(msg);
-        buf->topLine = buf->currentLine = l;
+        buf->topLineIndex = buf->currentLineIndex = l->linenumber;
         return;
     }
     if (lastLine(buf)->linenumber < n) {
@@ -249,15 +271,15 @@ void gotoLine(struct Buffer* buf, int n)
         /* FIXME: gettextize? */
         sprintf(msg, "Last line is #%ld", lastLine(buf)->linenumber);
         set_delayed_message(msg);
-        buf->currentLine = l;
-        buf->topLine = lineSkip(buf, buf->currentLine, -(getScreen()->ROWS - 1), false);
+        buf->currentLineIndex = l->linenumber;
+        buf->topLineIndex = lineSkip(buf, currentLine(buf), -(getScreen()->ROWS - 1), false)->linenumber;
         return;
     }
     for (; l != NULL; l = l->next) {
         if (l->linenumber >= n) {
-            buf->currentLine = l;
-            if (n < buf->topLine->linenumber || buf->topLine->linenumber + getScreen()->ROWS <= n)
-                buf->topLine = lineSkip(buf, l, -(getScreen()->ROWS + 1) / 2, false);
+            buf->currentLineIndex = l->linenumber;
+            if (n < topLine(buf)->linenumber || topLine(buf)->linenumber + getScreen()->ROWS <= n)
+                buf->topLineIndex = lineSkip(buf, l, -(getScreen()->ROWS + 1) / 2, false)->linenumber;
             break;
         }
     }
@@ -277,7 +299,7 @@ void gotoLine(struct Buffer* buf, int n)
 //         /* FIXME: gettextize? */
 //         sprintf(msg, "First line is #%ld", l->real_linenumber);
 //         set_delayed_message(msg);
-//         buf->topLine = buf->currentLine = l;
+//         topLine(buf) = currentLine(buf) = l;
 //         return;
 //     }
 //     if (lastLine(buf)->real_linenumber < n) {
@@ -285,16 +307,16 @@ void gotoLine(struct Buffer* buf, int n)
 //         /* FIXME: gettextize? */
 //         sprintf(msg, "Last line is #%ld", lastLine(buf)->real_linenumber);
 //         set_delayed_message(msg);
-//         buf->currentLine = l;
-//         buf->topLine = lineSkip(buf, buf->currentLine, -(getScreen()->ROWS - 1),
+//         currentLine(buf) = l;
+//         topLine(buf) = lineSkip(buf, currentLine(buf), -(getScreen()->ROWS - 1),
 //             false);
 //         return;
 //     }
 //     for (; l != NULL; l = l->next) {
 //         if (l->real_linenumber >= n) {
-//             buf->currentLine = l;
-//             if (n < buf->topLine->real_linenumber || buf->topLine->real_linenumber + getScreen()->ROWS <= n)
-//                 buf->topLine = lineSkip(buf, l, -(getScreen()->ROWS + 1) / 2, false);
+//             currentLine(buf) = l;
+//             if (n < topLine(buf)->real_linenumber || topLine(buf)->real_linenumber + getScreen()->ROWS <= n)
+//                 topLine(buf) = lineSkip(buf, l, -(getScreen()->ROWS + 1) / 2, false);
 //             break;
 //         }
 //     }
@@ -490,7 +512,7 @@ void reshapeBuffer(struct Buffer* buf, int cols)
 
     // buf->height = getScreen()->ROWS - 1 + 1;
     if (buf->firstLine && sbuf.firstLine) {
-        struct Line* cur = sbuf.currentLine;
+        struct Line* cur = currentLine(&sbuf);
         int n;
 
         buf->pos = sbuf.pos + cur->bpos;
@@ -499,17 +521,17 @@ void reshapeBuffer(struct Buffer* buf, int cols)
         // if (cur->real_linenumber > 0)
         //     gotoRealLine(buf, cur->real_linenumber);
         // else
-            gotoLine(buf, cur->linenumber);
-        n = (buf->currentLine->linenumber - buf->topLine->linenumber)
-            - (cur->linenumber - sbuf.topLine->linenumber);
+        gotoLine(buf, cur->linenumber);
+        n = (currentLine(buf)->linenumber - topLine(buf)->linenumber)
+            - (cur->linenumber - sbuf.topLineIndex);
         if (n) {
-            buf->topLine = lineSkip(buf, buf->topLine, n, false);
+            buf->topLineIndex = lineSkip(buf, topLine(buf), n, false)->linenumber;
             // if (cur->real_linenumber > 0)
             //     gotoRealLine(buf, cur->real_linenumber);
             // else
-                gotoLine(buf, cur->linenumber);
+            gotoLine(buf, cur->linenumber);
         }
-        buf->pos -= buf->currentLine->bpos;
+        buf->pos -= currentLine(buf)->bpos;
         if (FoldLine && buf->content_type != CONTENTTYPE_TEXT_HTML)
             buf->currentColumn = 0;
         else
@@ -560,7 +582,7 @@ int writeBufferCache(struct Buffer* buf)
     if (!cache)
         goto _error1;
 
-    if (fwrite1(buf->currentLine->linenumber, cache) || fwrite1(buf->topLine->linenumber, cache))
+    if (fwrite1(currentLine(buf)->linenumber, cache) || fwrite1(topLine(buf)->linenumber, cache))
         goto _error;
 
     for (l = buf->firstLine; l; l = l->next) {
@@ -620,9 +642,9 @@ int readBufferCache(struct Buffer* buf)
             buf->firstLine = l;
         l->linenumber = lnum;
         if (lnum == clnum)
-            buf->currentLine = l;
+            buf->currentLineIndex = l->linenumber;
         if (lnum == tlnum)
-            buf->topLine = l;
+            buf->topLineIndex = l->linenumber;
         if (fread1(l->usrflags, cache) || fread1(l->width, cache) || fread1(l->len, cache) || fread1(l->size, cache) || fread1(l->bpos, cache) || fread1(l->bwidth, cache))
             break;
         if (l->bpos == 0) {
@@ -663,27 +685,27 @@ void cursorUp0(struct Buffer* buf, int n)
     if (buf->cursorY > 0)
         cursorUpDown(buf, -1);
     else {
-        buf->topLine = lineSkip(buf, buf->topLine, -n, false);
-        if (buf->currentLine->prev != NULL)
-            buf->currentLine = buf->currentLine->prev;
+        buf->topLineIndex = lineSkip(buf, topLine(buf), -n, false)->linenumber;
+        if (currentLine(buf)->prev != NULL)
+            buf->currentLineIndex = currentLine(buf)->prev->linenumber;
         arrangeLine(buf);
     }
 }
 
 void cursorUp(struct Buffer* buf, int n)
 {
-    struct Line* l = buf->currentLine;
+    struct Line* l = currentLine(buf);
     if (buf->firstLine == NULL)
         return;
-    while (buf->currentLine->prev && buf->currentLine->bpos)
+    while (currentLine(buf)->prev && currentLine(buf)->bpos)
         cursorUp0(buf, n);
-    if (buf->currentLine == buf->firstLine) {
+    if (currentLine(buf) == buf->firstLine) {
         gotoLine(buf, l->linenumber);
         arrangeLine(buf);
         return;
     }
     cursorUp0(buf, n);
-    while (buf->currentLine->prev && buf->currentLine->bpos && buf->currentLine->bwidth >= buf->currentColumn + buf->visualpos)
+    while (currentLine(buf)->prev && currentLine(buf)->bpos && currentLine(buf)->bwidth >= buf->currentColumn + buf->visualpos)
         cursorUp0(buf, n);
 }
 
@@ -692,45 +714,45 @@ void cursorDown0(struct Buffer* buf, int n)
     if (buf->cursorY < getScreen()->ROWS - 1)
         cursorUpDown(buf, 1);
     else {
-        buf->topLine = lineSkip(buf, buf->topLine, n, false);
-        if (buf->currentLine->next != NULL)
-            buf->currentLine = buf->currentLine->next;
+        buf->topLineIndex = lineSkip(buf, topLine(buf), n, false)->linenumber;
+        if (currentLine(buf)->next != NULL)
+            buf->currentLineIndex = currentLine(buf)->next->linenumber;
         arrangeLine(buf);
     }
 }
 
 void cursorDown(struct Buffer* buf, int n)
 {
-    struct Line* l = buf->currentLine;
+    struct Line* l = currentLine(buf);
     if (buf->firstLine == NULL)
         return;
-    while (buf->currentLine->next && buf->currentLine->next->bpos)
+    while (currentLine(buf)->next && currentLine(buf)->next->bpos)
         cursorDown0(buf, n);
-    if (buf->currentLine == lastLine(buf)) {
+    if (currentLine(buf) == lastLine(buf)) {
         gotoLine(buf, l->linenumber);
         arrangeLine(buf);
         return;
     }
     cursorDown0(buf, n);
-    while (buf->currentLine->next && buf->currentLine->next->bpos && buf->currentLine->bwidth + buf->currentLine->width < buf->currentColumn + buf->visualpos)
+    while (currentLine(buf)->next && currentLine(buf)->next->bpos && currentLine(buf)->bwidth + currentLine(buf)->width < buf->currentColumn + buf->visualpos)
         cursorDown0(buf, n);
 }
 
 void cursorUpDown(struct Buffer* buf, int n)
 {
-    struct Line* cl = buf->currentLine;
+    struct Line* cl = currentLine(buf);
 
     if (buf->firstLine == NULL)
         return;
-    if ((buf->currentLine = currentLineSkip(buf, cl, n, false)) == cl)
-        return;
-    arrangeLine(buf);
+    buf->currentLineIndex = currentLineSkip(buf, cl, n, false)->linenumber;
+    //     return;
+    // arrangeLine(buf);
 }
 
 void cursorRight(struct Buffer* buf, int n)
 {
     int i, delta = 1, cpos, vpos2;
-    struct Line* l = buf->currentLine;
+    struct Line* l = currentLine(buf);
 
     if (buf->firstLine == NULL)
         return;
@@ -770,7 +792,7 @@ void cursorRight(struct Buffer* buf, int n)
 void cursorLeft(struct Buffer* buf, int n)
 {
     int i, delta = 1, cpos;
-    struct Line* l = buf->currentLine;
+    struct Line* l = currentLine(buf);
 
     if (buf->firstLine == NULL)
         return;
@@ -782,7 +804,7 @@ void cursorLeft(struct Buffer* buf, int n)
         buf->pos = i - delta;
     else if (l->prev && l->bpos) {
         cursorUp0(buf, -1);
-        buf->pos = buf->currentLine->len - 1;
+        buf->pos = currentLine(buf)->len - 1;
         arrangeCursor(buf);
         return;
     } else
@@ -811,51 +833,51 @@ void arrangeCursor(struct Buffer* buf)
 {
     int col, col2, pos;
     int delta = 1;
-    if (buf == NULL || buf->currentLine == NULL)
+    if (buf == NULL || currentLine(buf) == NULL)
         return;
     /* Arrange line */
-    if (buf->currentLine->linenumber - buf->topLine->linenumber >= getScreen()->ROWS
-        || buf->currentLine->linenumber < buf->topLine->linenumber) {
+    if (currentLine(buf)->linenumber - topLine(buf)->linenumber >= getScreen()->ROWS
+        || currentLine(buf)->linenumber < topLine(buf)->linenumber) {
         /*
-         * buf->topLine = buf->currentLine;
+         * topLine(buf) = currentLine(buf);
          */
-        buf->topLine = lineSkip(buf, buf->currentLine, 0, false);
+        buf->topLineIndex = lineSkip(buf, currentLine(buf), 0, false)->linenumber;
     }
     /* Arrange column */
-    while (buf->pos < 0 && buf->currentLine->prev && buf->currentLine->bpos) {
-        pos = buf->pos + buf->currentLine->prev->len;
+    while (buf->pos < 0 && currentLine(buf)->prev && currentLine(buf)->bpos) {
+        pos = buf->pos + currentLine(buf)->prev->len;
         cursorUp0(buf, 1);
         buf->pos = pos;
     }
-    while (buf->pos >= buf->currentLine->len && buf->currentLine->next && buf->currentLine->next->bpos) {
-        pos = buf->pos - buf->currentLine->len;
+    while (buf->pos >= currentLine(buf)->len && currentLine(buf)->next && currentLine(buf)->next->bpos) {
+        pos = buf->pos - currentLine(buf)->len;
         cursorDown0(buf, 1);
         buf->pos = pos;
     }
-    if (buf->currentLine->len == 0 || buf->pos < 0)
+    if (currentLine(buf)->len == 0 || buf->pos < 0)
         buf->pos = 0;
-    else if (buf->pos >= buf->currentLine->len)
-        buf->pos = buf->currentLine->len - 1;
-    while (buf->pos > 0 && buf->currentLine->propBuf[buf->pos] & PC_WCHAR2)
+    else if (buf->pos >= currentLine(buf)->len)
+        buf->pos = currentLine(buf)->len - 1;
+    while (buf->pos > 0 && currentLine(buf)->propBuf[buf->pos] & PC_WCHAR2)
         buf->pos--;
-    col = COLPOS(buf->currentLine, buf->pos);
-    while (buf->pos + delta < buf->currentLine->len && buf->currentLine->propBuf[buf->pos + delta] & PC_WCHAR2)
+    col = COLPOS(currentLine(buf), buf->pos);
+    while (buf->pos + delta < currentLine(buf)->len && currentLine(buf)->propBuf[buf->pos + delta] & PC_WCHAR2)
         delta++;
-    col2 = COLPOS(buf->currentLine, buf->pos + delta);
+    col2 = COLPOS(currentLine(buf), buf->pos + delta);
     if (col < buf->currentColumn || col2 > getScreen()->COLS + buf->currentColumn) {
         buf->currentColumn = 0;
         if (col2 > getScreen()->COLS)
             columnSkip(buf, col);
     }
     /* Arrange cursor */
-    buf->cursorY = buf->currentLine->linenumber - buf->topLine->linenumber;
-    buf->visualpos = buf->currentLine->bwidth + COLPOS(buf->currentLine, buf->pos) - buf->currentColumn;
-    buf->cursorX = buf->visualpos - buf->currentLine->bwidth;
+    buf->cursorY = currentLine(buf)->linenumber - topLine(buf)->linenumber;
+    buf->visualpos = currentLine(buf)->bwidth + COLPOS(currentLine(buf), buf->pos) - buf->currentColumn;
+    buf->cursorX = buf->visualpos - currentLine(buf)->bwidth;
 #ifdef DISPLAY_DEBUG
     fprintf(stderr,
         "arrangeCursor: column=%d, cursorX=%d, visualpos=%d, pos=%d, len=%d\n",
         buf->currentColumn, buf->cursorX, buf->visualpos, buf->pos,
-        buf->currentLine->len);
+        currentLine(buf)->len);
 #endif
 }
 
@@ -865,13 +887,13 @@ void arrangeLine(struct Buffer* buf)
 
     if (buf->firstLine == NULL)
         return;
-    buf->cursorY = buf->currentLine->linenumber - buf->topLine->linenumber;
-    i = columnPos(buf->currentLine, buf->currentColumn + buf->visualpos - buf->currentLine->bwidth);
-    cpos = COLPOS(buf->currentLine, i) - buf->currentColumn;
+    buf->cursorY = currentLine(buf)->linenumber - topLine(buf)->linenumber;
+    i = columnPos(currentLine(buf), buf->currentColumn + buf->visualpos - currentLine(buf)->bwidth);
+    cpos = COLPOS(currentLine(buf), i) - buf->currentColumn;
     if (cpos >= 0) {
         buf->cursorX = cpos;
         buf->pos = i;
-    } else if (buf->currentLine->len > i) {
+    } else if (currentLine(buf)->len > i) {
         buf->cursorX = 0;
         buf->pos = i + 1;
     } else {
@@ -882,7 +904,7 @@ void arrangeLine(struct Buffer* buf)
     fprintf(stderr,
         "arrangeLine: column=%d, cursorX=%d, visualpos=%d, pos=%d, len=%d\n",
         buf->currentColumn, buf->cursorX, buf->visualpos, buf->pos,
-        buf->currentLine->len);
+        currentLine(buf)->len);
 #endif
 }
 
@@ -911,12 +933,11 @@ void cursorXY(struct Buffer* buf, int x, int y)
 
 void restorePosition(struct Buffer* buf, struct Buffer* orig)
 {
-    buf->topLine = lineSkip(buf, buf->firstLine, TOP_LINENUMBER(orig) - 1,
-        false);
-    gotoLine(buf, CUR_LINENUMBER(orig));
+    buf->topLineIndex = lineSkip(buf, buf->firstLine, orig->topLineIndex - 1, false)->linenumber;
+    gotoLine(buf, orig->currentLineIndex);
     buf->pos = orig->pos;
-    if (buf->currentLine && orig->currentLine)
-        buf->pos += orig->currentLine->bpos - buf->currentLine->bpos;
+    if (currentLine(buf) && currentLine(orig))
+        buf->pos += currentLine(orig)->bpos - currentLine(buf)->bpos;
     buf->currentColumn = orig->currentColumn;
     arrangeCursor(buf);
 }
@@ -985,7 +1006,7 @@ int columnSkip(struct Buffer* buf, int offset)
     struct Line* l;
 
     maxColumn = 0;
-    for (i = 0, l = buf->topLine; i < nlines && l != NULL; i++, l = l->next) {
+    for (i = 0, l = topLine(buf); i < nlines && l != NULL; i++, l = l->next) {
         if (l->width < 0)
             l->width = COLPOS(l, l->len);
         if (l->width - 1 > maxColumn)

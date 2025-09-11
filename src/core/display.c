@@ -222,7 +222,7 @@ static void redrawNLine(struct UI ui, struct Buffer* buf, int n)
 
     struct Line* l;
     int i;
-    for (i = 0, l = buf->topLine; i < ui.viewport.rows; i++, l = l->next) {
+    for (i = 0, l = topLine(buf); i < ui.viewport.rows; i++, l = l->next) {
         if (i >= ui.viewport.rows - n || i < -n)
             l = redrawLine(ui, buf, l, i + ui.viewport.y);
         if (l == NULL)
@@ -236,7 +236,7 @@ static void redrawNLine(struct UI ui, struct Buffer* buf, int n)
     if (!(activeImage && displayImage && buf->img))
         return;
     vt_move(ui.vt, buf->cursorY + ui.viewport.y, buf->cursorX + ui.viewport.x);
-    for (i = 0, l = buf->topLine; i < ui.viewport.rows && l; i++, l = l->next) {
+    for (i = 0, l = topLine(buf); i < ui.viewport.rows && l; i++, l = l->next) {
         if (i >= ui.viewport.rows - n || i < -n)
             redrawLineImage(ui, buf, l, i + ui.viewport.y);
     }
@@ -249,7 +249,7 @@ void bufToScreen(struct UI ui, struct Buffer* buf)
         reshapeBuffer(buf, ui.viewport.cols);
     }
 
-    if (activeImage && (cline != buf->topLine || ccolumn != buf->currentColumn)) {
+    if (activeImage && (cline != topLine(buf) || ccolumn != buf->currentColumn)) {
         if (draw_image_flag) {
             vt_clear(getScreen());
             // termClear(ttyWriter());
@@ -260,11 +260,11 @@ void bufToScreen(struct UI ui, struct Buffer* buf)
         draw_image_flag = false;
     }
     redrawNLine(ui, buf, getScreen()->ROWS - 1);
-    cline = buf->topLine;
+    cline = topLine(buf);
     ccolumn = buf->currentColumn;
 
-    if (buf->topLine == NULL)
-        buf->topLine = buf->firstLine;
+    if (topLine(buf) == NULL)
+        buf->topLineIndex = buf->firstLine->linenumber;
 }
 
 static int redrawLineRegion(struct UI ui, struct Buffer* buf, struct Line* l, int i, int bpos, int epos)
@@ -335,7 +335,7 @@ static void
 drawAnchorCursor0(struct UI ui, struct Buffer* buf,
     AnchorList* al, int hseq, int prevhseq, int tline, int eline, int active)
 {
-    struct Line* l = buf->topLine;
+    struct Line* l = topLine(buf);
     for (int j = 0; j < al->nanchor; j++) {
         Anchor* an = &al->anchors[j];
         if (an->start.line < tline)
@@ -391,7 +391,7 @@ void drawAnchorCursor(struct UI ui, struct Buffer* buf)
         hseq = an->hseq;
     else
         hseq = -1;
-    tline = buf->topLine->linenumber;
+    tline = topLine(buf)->linenumber;
     eline = tline + ui.viewport.rows;
     prevhseq = buf->hmarklist->prevhseq;
 

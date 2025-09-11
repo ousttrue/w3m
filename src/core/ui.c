@@ -145,7 +145,7 @@ void ui_printStatus(const char* fmt, ...)
     va_end(args);
 }
 
-static Str make_lastline_link(struct Buffer* buf, char* title, char* url)
+static Str make_lastline_link(struct Buffer* buf, const char* title, const char* url)
 {
     Str s = NULL, u;
     struct Url pu;
@@ -203,7 +203,7 @@ static Str make_lastline_message(struct Buffer* buf)
             s = make_lastline_link(buf, a->alt, a->url);
         else {
             Anchor* a = retrieveCurrentAnchor(buf);
-            char* p = NULL;
+            const char* p = NULL;
             if (a && a->title && *a->title)
                 p = a->title;
             else {
@@ -222,8 +222,8 @@ static Str make_lastline_message(struct Buffer* buf)
     }
 
     msg = Strnew();
-    // if (displayLineInfo && buf->currentLine != NULL && lastLine(buf) != NULL) {
-    //     int cl = buf->currentLine->real_linenumber;
+    // if (displayLineInfo && currentLine(buf) != NULL && lastLine(buf) != NULL) {
+    //     int cl = currentLine(buf)->real_linenumber;
     //     int ll = lastLine(buf)->real_linenumber;
     //     int r = (int)((double)cl * 100.0 / (double)(ll ? ll : 1) + 0.5);
     //     Strcat(msg, Sprintf("%d/%d (%d%%)", cl, ll, r));
@@ -312,7 +312,7 @@ void ui_cursor_set_x(int x)
 {
     if (Currentbuf->firstLine == NULL)
         return;
-    while (Currentbuf->currentLine->prev && Currentbuf->currentLine->bpos)
+    while (currentLine(Currentbuf)->prev && currentLine(Currentbuf)->bpos)
         cursorUp0(Currentbuf, 1);
     Currentbuf->pos = 0;
     arrangeCursor(Currentbuf);

@@ -405,12 +405,12 @@ void formUpdateBuffer(Anchor* a, struct Buffer* buf, struct FormItem* form)
     switch (form->type) {
     case FORM_INPUT_CHECKBOX:
     case FORM_INPUT_RADIO:
-        if (buf->currentLine == NULL || spos >= buf->currentLine->len || spos < 0)
+        if (currentLine(buf) == NULL || spos >= currentLine(buf)->len || spos < 0)
             break;
         if (form->checked)
-            buf->currentLine->lineBuf[spos] = '*';
+            currentLine(buf)->lineBuf[spos] = '*';
         else
-            buf->currentLine->lineBuf[spos] = ' ';
+            currentLine(buf)->lineBuf[spos] = ' ';
         break;
     case FORM_INPUT_TEXT:
     case FORM_INPUT_FILE:
@@ -425,11 +425,11 @@ void formUpdateBuffer(Anchor* a, struct Buffer* buf, struct FormItem* form)
                 break;
             p = form->value->ptr;
         }
-        l = buf->currentLine;
+        l = currentLine(buf);
         if (!l)
             break;
         if (form->type == FORM_TEXTAREA) {
-            int n = a->y - buf->currentLine->linenumber;
+            int n = a->y - currentLine(buf)->linenumber;
             if (n > 0)
                 for (; l && n; l = l->prev, n--)
                     ;

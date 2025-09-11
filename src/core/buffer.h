@@ -20,21 +20,19 @@ extern int REV_LB[];
 #define CHK_URL 1
 #define CHK_NMID 2
 
-#define COPY_BUFPOSITION(dstbuf, srcbuf)                   \
-    {                                                      \
-        (dstbuf)->topLine = (srcbuf)->topLine;             \
-        (dstbuf)->currentLine = (srcbuf)->currentLine;     \
-        (dstbuf)->pos = (srcbuf)->pos;                     \
-        (dstbuf)->cursorX = (srcbuf)->cursorX;             \
-        (dstbuf)->cursorY = (srcbuf)->cursorY;             \
-        (dstbuf)->visualpos = (srcbuf)->visualpos;         \
-        (dstbuf)->currentColumn = (srcbuf)->currentColumn; \
+#define COPY_BUFPOSITION(dstbuf, srcbuf)                         \
+    {                                                            \
+        (dstbuf)->topLineIndex = (srcbuf)->topLineIndex;         \
+        (dstbuf)->currentLineIndex = (srcbuf)->currentLineIndex; \
+        (dstbuf)->pos = (srcbuf)->pos;                           \
+        (dstbuf)->cursorX = (srcbuf)->cursorX;                   \
+        (dstbuf)->cursorY = (srcbuf)->cursorY;                   \
+        (dstbuf)->visualpos = (srcbuf)->visualpos;               \
+        (dstbuf)->currentColumn = (srcbuf)->currentColumn;       \
     }
 
 #define SAVE_BUFPOSITION(sbufp) COPY_BUFPOSITION(sbufp, Currentbuf)
 #define RESTORE_BUFPOSITION(sbufp) COPY_BUFPOSITION(Currentbuf, sbufp)
-#define TOP_LINENUMBER(buf) ((buf)->topLine ? (buf)->topLine->linenumber : 1)
-#define CUR_LINENUMBER(buf) ((buf)->currentLine ? (buf)->currentLine->linenumber : 1)
 
 #define NO_BUFFER ((struct Buffer*)1)
 
@@ -69,8 +67,8 @@ struct Buffer {
     char* filename;
     const char* buffername;
     struct Line* firstLine;
-    struct Line* topLine;
-    struct Line* currentLine;
+    int topLineIndex;
+    int currentLineIndex;
     struct Buffer* nextBuffer;
     struct Buffer* linkBuffer[MAX_LB];
     short width;
@@ -127,7 +125,9 @@ struct Buffer* namedBuffer(struct Buffer* first, char* name);
 struct Buffer* deleteBuffer(struct Buffer* first, struct Buffer* delbuf);
 struct Buffer* replaceBuffer(struct Buffer* first, struct Buffer* delbuf, struct Buffer* newbuf);
 struct Buffer* nthBuffer(struct Buffer* firstbuf, int n);
+struct Line* currentLine(struct Buffer* buf);
 struct Line* lastLine(struct Buffer* buf);
+struct Line* topLine(struct Buffer* buf);
 // void gotoRealLine(struct Buffer* buf, int n);
 void gotoLine(struct Buffer* buf, int n);
 struct Buffer* selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectchar);
