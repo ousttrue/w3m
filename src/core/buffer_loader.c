@@ -294,9 +294,6 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
     Lineprop mode, effect, ex_effect;
     int pos;
     int nlines;
-#ifdef DEBUG
-    FILE* debug = NULL;
-#endif
     const char* id = NULL;
     int hseq, form_id;
     Str line;
@@ -326,21 +323,10 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
         a_select = New_N(Anchor*, max_select);
     }
 
-#ifdef DEBUG
-    if (w3m_debug)
-        debug = fopen("zzzerr", "a");
-#endif
-
     effect = 0;
     ex_effect = 0;
     nlines = 0;
     while ((line = feed()) != NULL) {
-#ifdef DEBUG
-        if (w3m_debug) {
-            Strfputs(line, debug);
-            fputc('\n', debug);
-        }
-#endif
         if (n_textarea >= 0 && *(line->ptr) != '<') { /* halfload */
             Strcat(textarea_str[n_textarea], line);
             continue;
@@ -813,10 +799,6 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
             goto proc_again;
         }
     }
-#ifdef DEBUG
-    if (w3m_debug)
-        fclose(debug);
-#endif
     for (form_id = 1; form_id <= form_max; form_id++)
         if (forms[form_id])
             forms[form_id]->next = forms[form_id - 1];
@@ -1218,9 +1200,10 @@ need_flushline(struct html_feed_environ* h_env, struct readbuffer* obuf,
     return 0;
 }
 
-#ifndef min
-#define min(a, b) ((a) > (b) ? (b) : (a))
-#endif /* not min */
+inline static int min(int a, int b)
+{
+    return ((a) > (b) ? (b) : (a));
+}
 
 /* HTML processing first pass */
 void HTMLlineproc0(const char* line, struct html_feed_environ* h_env, bool internal)
@@ -1235,20 +1218,6 @@ void HTMLlineproc0(const char* line, struct html_feed_environ* h_env, bool inter
     struct table_mode* tbl_mode = NULL;
     int tbl_width = 0;
     int is_hangul, prev_is_hangul = 0;
-
-#ifdef DEBUG
-    if (w3m_debug) {
-        FILE* f = fopen("zzzproc1", "a");
-        fprintf(f, "%c%c%c%c",
-            (obuf->flag & RB_PREMODE) ? 'P' : ' ',
-            (obuf->table_level >= 0) ? 'T' : ' ',
-            (obuf->flag & RB_INTXTA) ? 'X' : ' ',
-            (obuf->flag & (RB_SCRIPT | RB_STYLE)) ? 'S' : ' ');
-        fprintf(f, "HTMLlineproc1(\"%s\",%d,%lx)\n", line, h_env->limit,
-            (unsigned long)h_env);
-        fclose(f);
-    }
-#endif
 
     tokbuf = Strnew();
 
