@@ -40,10 +40,6 @@ struct UI getUI()
 {
     int rootX = 0;
     if (showLineNum) {
-        if (lastLine(Currentbuf) && lastLine(Currentbuf)->real_linenumber > 0)
-            rootX = (int)(log(lastLine(Currentbuf)->real_linenumber + 0.1)
-                        / log(10))
-                + 2;
         if (rootX < 5)
             rootX = 5;
         if (rootX > getScreen()->COLS)
@@ -226,13 +222,12 @@ static Str make_lastline_message(struct Buffer* buf)
     }
 
     msg = Strnew();
-    if (displayLineInfo && buf->currentLine != NULL && lastLine(buf) != NULL) {
-        int cl = buf->currentLine->real_linenumber;
-        int ll = lastLine(buf)->real_linenumber;
-        int r = (int)((double)cl * 100.0 / (double)(ll ? ll : 1) + 0.5);
-        Strcat(msg, Sprintf("%d/%d (%d%%)", cl, ll, r));
-    } else
-        /* FIXME: gettextize? */
+    // if (displayLineInfo && buf->currentLine != NULL && lastLine(buf) != NULL) {
+    //     int cl = buf->currentLine->real_linenumber;
+    //     int ll = lastLine(buf)->real_linenumber;
+    //     int r = (int)((double)cl * 100.0 / (double)(ll ? ll : 1) + 0.5);
+    //     Strcat(msg, Sprintf("%d/%d (%d%%)", cl, ll, r));
+    // } else
         Strcat_charp(msg, "Viewing");
     if (buf->ssl_certificate)
         Strcat_charp(msg, "[SSL]");

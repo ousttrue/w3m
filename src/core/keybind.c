@@ -11,7 +11,7 @@ CommandFunc GlobalKeymap[128] = {
     nulcmd,
     linend,
     movR,
-    curlno,
+    nulcmd,
     /*  C-h     C-i     C-j     C-k     C-l     C-m     C-n     C-o      */
     ldHist,
     nextA,

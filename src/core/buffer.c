@@ -263,42 +263,42 @@ void gotoLine(struct Buffer* buf, int n)
     }
 }
 
-/*
- * gotoRealLine: go to real line number
- */
-void gotoRealLine(struct Buffer* buf, int n)
-{
-    char msg[36];
-    struct Line* l = buf->firstLine;
-
-    if (l == NULL)
-        return;
-    if (l->real_linenumber > n) {
-        /* FIXME: gettextize? */
-        sprintf(msg, "First line is #%ld", l->real_linenumber);
-        set_delayed_message(msg);
-        buf->topLine = buf->currentLine = l;
-        return;
-    }
-    if (lastLine(buf)->real_linenumber < n) {
-        l = lastLine(buf);
-        /* FIXME: gettextize? */
-        sprintf(msg, "Last line is #%ld", lastLine(buf)->real_linenumber);
-        set_delayed_message(msg);
-        buf->currentLine = l;
-        buf->topLine = lineSkip(buf, buf->currentLine, -(getScreen()->ROWS - 1),
-            false);
-        return;
-    }
-    for (; l != NULL; l = l->next) {
-        if (l->real_linenumber >= n) {
-            buf->currentLine = l;
-            if (n < buf->topLine->real_linenumber || buf->topLine->real_linenumber + getScreen()->ROWS <= n)
-                buf->topLine = lineSkip(buf, l, -(getScreen()->ROWS + 1) / 2, false);
-            break;
-        }
-    }
-}
+// /*
+//  * gotoRealLine: go to real line number
+//  */
+// void gotoRealLine(struct Buffer* buf, int n)
+// {
+//     char msg[36];
+//     struct Line* l = buf->firstLine;
+//
+//     if (l == NULL)
+//         return;
+//     if (l->real_linenumber > n) {
+//         /* FIXME: gettextize? */
+//         sprintf(msg, "First line is #%ld", l->real_linenumber);
+//         set_delayed_message(msg);
+//         buf->topLine = buf->currentLine = l;
+//         return;
+//     }
+//     if (lastLine(buf)->real_linenumber < n) {
+//         l = lastLine(buf);
+//         /* FIXME: gettextize? */
+//         sprintf(msg, "Last line is #%ld", lastLine(buf)->real_linenumber);
+//         set_delayed_message(msg);
+//         buf->currentLine = l;
+//         buf->topLine = lineSkip(buf, buf->currentLine, -(getScreen()->ROWS - 1),
+//             false);
+//         return;
+//     }
+//     for (; l != NULL; l = l->next) {
+//         if (l->real_linenumber >= n) {
+//             buf->currentLine = l;
+//             if (n < buf->topLine->real_linenumber || buf->topLine->real_linenumber + getScreen()->ROWS <= n)
+//                 buf->topLine = lineSkip(buf, l, -(getScreen()->ROWS + 1) / 2, false);
+//             break;
+//         }
+//     }
+// }
 
 static struct Buffer*
 listBuffer(struct Buffer* top, struct Buffer* current)
@@ -496,17 +496,17 @@ void reshapeBuffer(struct Buffer* buf, int cols)
         buf->pos = sbuf.pos + cur->bpos;
         while (cur->bpos && cur->prev)
             cur = cur->prev;
-        if (cur->real_linenumber > 0)
-            gotoRealLine(buf, cur->real_linenumber);
-        else
+        // if (cur->real_linenumber > 0)
+        //     gotoRealLine(buf, cur->real_linenumber);
+        // else
             gotoLine(buf, cur->linenumber);
         n = (buf->currentLine->linenumber - buf->topLine->linenumber)
             - (cur->linenumber - sbuf.topLine->linenumber);
         if (n) {
             buf->topLine = lineSkip(buf, buf->topLine, n, false);
-            if (cur->real_linenumber > 0)
-                gotoRealLine(buf, cur->real_linenumber);
-            else
+            // if (cur->real_linenumber > 0)
+            //     gotoRealLine(buf, cur->real_linenumber);
+            // else
                 gotoLine(buf, cur->linenumber);
         }
         buf->pos -= buf->currentLine->bpos;
@@ -564,7 +564,7 @@ int writeBufferCache(struct Buffer* buf)
         goto _error;
 
     for (l = buf->firstLine; l; l = l->next) {
-        if (fwrite1(l->real_linenumber, cache) || fwrite1(l->usrflags, cache) || fwrite1(l->width, cache) || fwrite1(l->len, cache) || fwrite1(l->size, cache) || fwrite1(l->bpos, cache) || fwrite1(l->bwidth, cache))
+        if (fwrite1(l->usrflags, cache) || fwrite1(l->width, cache) || fwrite1(l->len, cache) || fwrite1(l->size, cache) || fwrite1(l->bpos, cache) || fwrite1(l->bwidth, cache))
             goto _error;
         if (l->bpos == 0) {
             if (fwrite(l->lineBuf, 1, l->size, cache) < l->size || fwrite(l->propBuf, sizeof(Lineprop), l->size, cache) < l->size)
@@ -623,7 +623,7 @@ int readBufferCache(struct Buffer* buf)
             buf->currentLine = l;
         if (lnum == tlnum)
             buf->topLine = l;
-        if (fread1(l->real_linenumber, cache) || fread1(l->usrflags, cache) || fread1(l->width, cache) || fread1(l->len, cache) || fread1(l->size, cache) || fread1(l->bpos, cache) || fread1(l->bwidth, cache))
+        if (fread1(l->usrflags, cache) || fread1(l->width, cache) || fread1(l->len, cache) || fread1(l->size, cache) || fread1(l->bpos, cache) || fread1(l->bwidth, cache))
             break;
         if (l->bpos == 0) {
             basel = l;

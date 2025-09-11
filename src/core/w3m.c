@@ -1824,8 +1824,9 @@ void _goLine(const char* l)
         Currentbuf->topLine = lineSkip(Currentbuf, lastLine(Currentbuf),
             -(getScreen()->ROWS + 1) / 2, true);
         Currentbuf->currentLine = lastLine(Currentbuf);
-    } else
-        gotoRealLine(Currentbuf, atoi(l));
+    } 
+    // else
+    //     gotoRealLine(Currentbuf, atoi(l));
     arrangeCursor(Currentbuf);
 }
 
@@ -1857,21 +1858,21 @@ DEFUN(linend, LINE_END, "Go to the end of the line")
     arrangeCursor(Currentbuf);
 }
 
-static int
-cur_real_linenumber(struct Buffer* buf)
-{
-    struct Line *l, *cur = buf->currentLine;
-    int n;
-
-    if (!cur)
-        return 1;
-    n = cur->real_linenumber ? cur->real_linenumber : 1;
-    for (l = buf->firstLine; l && l != cur && l->real_linenumber == 0; l = l->next) { /* header */
-        if (l->bpos == 0)
-            n++;
-    }
-    return n;
-}
+// static int
+// cur_real_linenumber(struct Buffer* buf)
+// {
+//     struct Line *l, *cur = buf->currentLine;
+//     int n;
+//
+//     if (!cur)
+//         return 1;
+//     n = cur->real_linenumber ? cur->real_linenumber : 1;
+//     for (l = buf->firstLine; l && l != cur && l->real_linenumber == 0; l = l->next) { /* header */
+//         if (l->bpos == 0)
+//             n++;
+//     }
+//     return n;
+// }
 
 /* Run editor on the current buffer */
 DEFUN(editBf, EDIT, "Edit local source")
@@ -1891,8 +1892,8 @@ DEFUN(editBf, EDIT, "Edit local source")
         cmd = unquote_mailcap(Currentbuf->edit, contentTypeStr(Currentbuf->content_type), fn,
             getHttpHeaderValue(Currentbuf->document_header, "Content-Type:"), NULL);
     else
-        cmd = myEditor(Editor, shell_quote(fn),
-            cur_real_linenumber(Currentbuf));
+        cmd = myEditor(Editor, shell_quote(fn), 1);
+    // cur_real_linenumber(Currentbuf));
     exec_cmd(cmd->ptr);
 
     reload();
@@ -1911,7 +1912,9 @@ DEFUN(editScr, EDIT_SCREEN, "Edit rendered copy of document")
     saveBuffer(Currentbuf, f, true);
     fclose(f);
     exec_cmd(myEditor(Editor, shell_quote(tmpf),
-        cur_real_linenumber(Currentbuf))
+        1
+        // cur_real_linenumber(Currentbuf)
+        )
             ->ptr);
     unlink(tmpf);
 }
@@ -3312,32 +3315,32 @@ DEFUN(chkWORD, MARK_WORD, "Turn current word into hyperlink")
 }
 
 /* show current line number and number of lines in the entire document */
-DEFUN(curlno, LINE_INFO, "Display current position in document")
-{
-    struct Line* l = Currentbuf->currentLine;
-    Str tmp;
-    int cur = 0, all = 0, col = 0, len = 0;
-
-    if (l != NULL) {
-        cur = l->real_linenumber;
-        col = l->bwidth + Currentbuf->currentColumn + Currentbuf->cursorX + 1;
-        while (l->next && l->next->bpos)
-            l = l->next;
-        if (l->width < 0)
-            l->width = COLPOS(l, l->len);
-        len = l->bwidth + l->width;
-    }
-    if (lastLine(Currentbuf))
-        all = lastLine(Currentbuf)->real_linenumber;
-    tmp = Sprintf("line %d/%d (%d%%) col %d/%d", cur, all,
-        (int)((double)cur * 100.0 / (double)(all ? all : 1)
-            + 0.5),
-        col, len);
-    Strcat_charp(tmp, "  ");
-    Strcat_charp(tmp, wc_ces_to_charset_desc(Currentbuf->document_charset));
-
-    message(getUI(), MSG_INFO, tmp->ptr);
-}
+// DEFUN(curlno, LINE_INFO, "Display current position in document")
+// {
+//     struct Line* l = Currentbuf->currentLine;
+//     Str tmp;
+//     int cur = 0, all = 0, col = 0, len = 0;
+//
+//     if (l != NULL) {
+//         cur = l->real_linenumber;
+//         col = l->bwidth + Currentbuf->currentColumn + Currentbuf->cursorX + 1;
+//         while (l->next && l->next->bpos)
+//             l = l->next;
+//         if (l->width < 0)
+//             l->width = COLPOS(l, l->len);
+//         len = l->bwidth + l->width;
+//     }
+//     if (lastLine(Currentbuf))
+//         all = lastLine(Currentbuf)->real_linenumber;
+//     tmp = Sprintf("line %d/%d (%d%%) col %d/%d", cur, all,
+//         (int)((double)cur * 100.0 / (double)(all ? all : 1)
+//             + 0.5),
+//         col, len);
+//     Strcat_charp(tmp, "  ");
+//     Strcat_charp(tmp, wc_ces_to_charset_desc(Currentbuf->document_charset));
+//
+//     message(getUI(), MSG_INFO, tmp->ptr);
+// }
 
 DEFUN(dispI, DISPLAY_IMAGE, "Restart loading and drawing of images")
 {
@@ -3508,7 +3511,7 @@ void set_buffer_environ(struct Buffer* buf)
             set_environ("W3M_CURRENT_FORM", form2str((struct FormItem*)a->url));
         else
             set_environ("W3M_CURRENT_FORM", "");
-        set_environ("W3M_CURRENT_LINE", Sprintf("%ld", l->real_linenumber)->ptr);
+        // set_environ("W3M_CURRENT_LINE", Sprintf("%ld", l->real_linenumber)->ptr);
         set_environ("W3M_CURRENT_COLUMN", Sprintf("%d", buf->currentColumn + buf->cursorX + 1)->ptr);
     } else if (!l) {
         set_environ("W3M_CURRENT_WORD", "");

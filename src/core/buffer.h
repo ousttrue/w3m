@@ -128,7 +128,7 @@ struct Buffer* deleteBuffer(struct Buffer* first, struct Buffer* delbuf);
 struct Buffer* replaceBuffer(struct Buffer* first, struct Buffer* delbuf, struct Buffer* newbuf);
 struct Buffer* nthBuffer(struct Buffer* firstbuf, int n);
 struct Line* lastLine(struct Buffer* buf);
-void gotoRealLine(struct Buffer* buf, int n);
+// void gotoRealLine(struct Buffer* buf, int n);
 void gotoLine(struct Buffer* buf, int n);
 struct Buffer* selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectchar);
 void reshapeBuffer(struct Buffer* buf, int cols);

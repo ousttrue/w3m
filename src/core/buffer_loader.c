@@ -216,29 +216,24 @@ Lineprop NullProp[] = { 0 };
 //  vnext
 // Null
 //
-static void addLine(struct Buffer* buf, struct Line* l)
+static void addLine(struct Line* prev, struct Line* l)
 {
-    l->prev = buf->currentLine;
-    if (buf->currentLine) {
-        l->next = buf->currentLine->next;
-        buf->currentLine->next = l;
-    } else {
-        l->next = NULL;
+    l->prev = prev;
+    l->next = NULL;
+    if (prev) {
+        // prev => next
+        //      ^ insert l
+        // prev => l => next
+        // l->next = prev->next;
+        prev->next = l;
     }
-    buf->currentLine = l;
-    if (buf->firstLine == NULL)
-        buf->firstLine = l;
-    l->linenumber = ++buf->allLine;
 }
 
-static void addNewline(struct Buffer* buf, char* line, Lineprop* prop, Linecolor* color, int pos,
-    int width, int nlines)
+static struct Line* addNewline(struct Line* prev, char* line, Lineprop* prop, Linecolor* color, int pos,
+    int width, int index)
 {
     char* s;
     Lineprop* p;
-    Linecolor* c;
-    int i, bpos, bwidth;
-
     if (pos > 0) {
         s = allocStr(line, pos);
         p = NewAtom_N(Lineprop, pos);
@@ -247,6 +242,8 @@ static void addNewline(struct Buffer* buf, char* line, Lineprop* prop, Linecolor
         s = NullLine;
         p = NullProp;
     }
+
+    Linecolor* c;
     if (pos > 0 && color) {
         c = NewAtom_N(Linecolor, pos);
         memcpy(c, color, pos * sizeof(Linecolor));
@@ -254,38 +251,40 @@ static void addNewline(struct Buffer* buf, char* line, Lineprop* prop, Linecolor
         c = NULL;
     }
 
-    {
-        struct Line* l = newLine(s, p, c, pos, nlines);
-        addLine(buf, l);
-    }
-
-    if (pos <= 0 || width <= 0)
-        return;
-    bpos = 0;
-    bwidth = 0;
-    while (1) {
-        struct Line* l = buf->currentLine;
-        l->bpos = bpos;
-        l->bwidth = bwidth;
-        i = columnLen(l, width);
-        if (i == 0) {
-            i++;
-            while (i < l->len && p[i] & PC_WCHAR2)
-                i++;
-        }
-        l->len = i;
-        l->width = COLPOS(l, l->len);
-        if (pos <= i)
-            return;
-        bpos += l->len;
-        bwidth += l->width;
-        s += i;
-        p += i;
-        if (c)
-            c += i;
-        pos -= i;
-        addLine(buf, newLine(s, p, c, pos, nlines));
-    }
+    struct Line* l = newLine(s, p, c, pos, index);
+    addLine(prev, l);
+    // prev = l;
+    // if (pos > 0 && width > 0) {
+    //     int bpos = 0;
+    //     int bwidth = 0;
+    //     while (1) {
+    //         l->bpos = bpos;
+    //         l->bwidth = bwidth;
+    //         int i = columnLen(l, width);
+    //         if (i == 0) {
+    //             i++;
+    //             while (i < l->len && p[i] & PC_WCHAR2)
+    //                 i++;
+    //         }
+    //         l->len = i;
+    //         l->width = COLPOS(l, l->len);
+    //         if (pos <= i)
+    //             break;
+    //         bpos += l->len;
+    //         bwidth += l->width;
+    //         s += i;
+    //         p += i;
+    //         if (c)
+    //             c += i;
+    //         pos -= i;
+    //
+    //         l = newLine(s, p, c, pos, nlines);
+    //         // l->linenumber = ++buf->allLine;
+    //         addLine(prev, l);
+    //         prev = l;
+    //     }
+    // }
+    return l;
 }
 
 static void
@@ -798,8 +797,13 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
             }
         }
         /* end of processing for one line */
-        if (!internal)
-            addNewline(buf, outc, outp, NULL, pos, -1, nlines);
+        if (!internal) {
+            struct Line* l = addNewline(buf->currentLine, outc, outp, NULL, pos, -1, ++buf->allLine);
+            buf->currentLine = l;
+            if (buf->firstLine == NULL) {
+                buf->firstLine = l;
+            }
+        }
         if (internal == HTML_N_INTERNAL)
             internal = 0;
         if (str != endp) {
@@ -1620,7 +1624,6 @@ loadBuffer(struct Url url, union input_stream* stream, struct Buffer* newBuf)
     if (newBuf->document_charset)
         charset = doc_charset = newBuf->document_charset;
 
-    int nlines = 0;
     // if (IStype(stream) != IST_ENCODED) {
     //     abort();
     //     // uf->stream = newEncodedStream(uf->stream, uf->encoding);
@@ -1633,16 +1636,20 @@ loadBuffer(struct Url url, union input_stream* stream, struct Buffer* newBuf)
         lineBuf2 = convertLine(lineBuf2, HEADER_MODE, &charset, doc_charset, InnerCharset);
         if (squeezeBlankLine) {
             if (lineBuf2->ptr[0] == '\n' && pre_lbuf == '\n') {
-                ++nlines;
                 continue;
             }
             pre_lbuf = lineBuf2->ptr[0];
         }
-        ++nlines;
         Strchop(lineBuf2);
         lineBuf2 = checkType(lineBuf2, &propBuffer, NULL);
-        addNewline(newBuf, lineBuf2->ptr, propBuffer, colorBuffer,
-            lineBuf2->length, -1, nlines);
+        {
+            struct Line* l = addNewline(newBuf->currentLine,
+                lineBuf2->ptr, propBuffer, colorBuffer, lineBuf2->length, -1, ++newBuf->allLine);
+            newBuf->currentLine = l;
+            if (newBuf->firstLine == NULL) {
+                newBuf->firstLine = l;
+            }
+        }
     }
 _end:
     term_raw();

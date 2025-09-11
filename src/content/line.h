@@ -59,14 +59,13 @@ struct Line {
     int len;
     int width;
     long linenumber; /* on buffer */
-    long real_linenumber; /* on file */
     unsigned short usrflags;
     int size;
     int bpos;
     int bwidth;
 };
 
-struct Line* newLine(char* line, Lineprop* prop, Linecolor* color, int pos, int nlines);
+struct Line* newLine(char* line, Lineprop* prop, Linecolor* color, int pos, int index);
 
 enum CalcPositionMode {
     CP_AUTO = 0,

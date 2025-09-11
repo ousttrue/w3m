@@ -9,7 +9,7 @@
 
 int Tabstop = 8;
 
-struct Line* newLine(char* line, Lineprop* prop, Linecolor* color, int pos, int nlines)
+struct Line* newLine(char* line, Lineprop* prop, Linecolor* color, int pos, int index)
 {
     struct Line* l;
     l = New(struct Line);
@@ -22,7 +22,7 @@ struct Line* newLine(char* line, Lineprop* prop, Linecolor* color, int pos, int 
     l->size = pos;
     l->bpos = 0;
     l->bwidth = 0;
-    l->real_linenumber = nlines;
+    l->linenumber = index;
     return l;
 }
 
