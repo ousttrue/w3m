@@ -1,5 +1,6 @@
 #include "w3m.h"
 #include "http_message.h"
+#include "ui.h"
 #include "HttpRequest.h"
 #include "alloc.h"
 #include "runtime.h"
@@ -870,9 +871,10 @@ _followForm(bool submit, bool do_download)
             do_submit(a, fi, do_download);
             return;
         }
+        struct UI ui = getUI();
         if (!formChooseOptionByMenu(fi,
-                Currentbuf->cursorX - Currentbuf->pos + a->start.pos,
-                Currentbuf->cursorY))
+                ui.cursor.x - Currentbuf->pos + a->start.pos,
+                ui.cursor.y))
             break;
         formUpdateBuffer(a, Currentbuf, fi);
         if (fi->parent->nitems == 1) {
@@ -1171,17 +1173,17 @@ nscroll(int n)
     arrangeLine(buf);
     if (n > 0) {
         if (currentLine(buf)->bpos && currentLine(buf)->bwidth >= buf->currentColumn + buf->visualpos)
-            cursorDown(buf, 1);
+            cursorDown(1);
         else {
             while (currentLine(buf)->next && currentLine(buf)->next->bpos && currentLine(buf)->bwidth + currentLine(buf)->width < buf->currentColumn + buf->visualpos)
-                cursorDown0(buf, 1);
+                cursorDown(1);
         }
     } else {
         if (currentLine(buf)->bwidth + currentLine(buf)->width < buf->currentColumn + buf->visualpos)
-            cursorUp(buf, 1);
+            cursorUp(1);
         else {
             while (currentLine(buf)->prev && currentLine(buf)->bpos && currentLine(buf)->bwidth >= buf->currentColumn + buf->visualpos)
-                cursorUp0(buf, 1);
+                cursorUp(1);
         }
     }
 }
@@ -1228,7 +1230,7 @@ DEFUN(ctrCsrV, CENTER_V, "Center on cursor line")
     int offsety;
     if (Currentbuf->firstLine == NULL)
         return;
-    offsety = getScreen()->ROWS / 2 - Currentbuf->cursorY;
+    offsety = getScreen()->ROWS / 2 - getUI().cursor.y;
     if (offsety != 0) {
         Currentbuf->topLineIndex = lineSkip(Currentbuf, topLine(Currentbuf), -offsety, false)->linenumber;
         arrangeLine(Currentbuf);
@@ -1240,7 +1242,7 @@ DEFUN(ctrCsrH, CENTER_H, "Center on cursor column")
     int offsetx;
     if (Currentbuf->firstLine == NULL)
         return;
-    offsetx = Currentbuf->cursorX - getScreen()->COLS / 2;
+    offsetx = getUI().cursor.x - getScreen()->COLS / 2;
     if (offsetx != 0) {
         columnSkip(Currentbuf, offsetx);
         arrangeCursor(Currentbuf);
@@ -1315,7 +1317,7 @@ shiftvisualpos(struct Buffer* buf, int shift)
     else if (buf->visualpos - l->bwidth < 0)
         buf->visualpos = l->bwidth;
     arrangeLine(buf);
-    if (buf->visualpos - l->bwidth == -shift && buf->cursorX == 0)
+    if (buf->visualpos - l->bwidth == -shift && getUI().cursor.x == 0)
         buf->visualpos = l->bwidth;
 }
 
@@ -1472,7 +1474,7 @@ _movL(int n)
     if (Currentbuf->firstLine == NULL)
         return;
     for (i = 0; i < m; i++)
-        cursorLeft(Currentbuf, n);
+        cursorLeft(n);
 }
 
 DEFUN(movL, MOVE_LEFT, "Cursor left")
@@ -1493,7 +1495,7 @@ _movD(int n)
     if (Currentbuf->firstLine == NULL)
         return;
     for (i = 0; i < m; i++)
-        cursorDown(Currentbuf, n);
+        cursorDown(n);
 }
 
 DEFUN(movD, MOVE_DOWN, "Cursor down")
@@ -1514,7 +1516,7 @@ _movU(int n)
     if (Currentbuf->firstLine == NULL)
         return;
     for (i = 0; i < m; i++)
-        cursorUp(Currentbuf, n);
+        cursorUp(n);
 }
 
 DEFUN(movU, MOVE_UP, "Cursor up")
@@ -1535,7 +1537,7 @@ _movR(int n)
     if (Currentbuf->firstLine == NULL)
         return;
     for (i = 0; i < m; i++)
-        cursorRight(Currentbuf, n);
+        cursorRight(n);
 }
 
 DEFUN(movR, MOVE_RIGHT, "Cursor right")
@@ -1855,7 +1857,7 @@ DEFUN(linend, LINE_END, "Go to the end of the line")
         return;
     while (currentLine(Currentbuf)->next
         && currentLine(Currentbuf)->next->bpos)
-        cursorDown0(Currentbuf, 1);
+        cursorDown(1);
     Currentbuf->pos = currentLine(Currentbuf)->len - 1;
     arrangeCursor(Currentbuf);
 }
@@ -2820,8 +2822,8 @@ void follow_map(struct KeyValue* arg)
     struct Url p_url;
 
     an = retrieveCurrentImg(Currentbuf);
-    x = Currentbuf->cursorX;
-    y = Currentbuf->cursorY;
+    // x = Currentbuf->cursorX;
+    // y = Currentbuf->cursorY;
     a = follow_map_menu(Currentbuf, (char*)name, an, x, y);
     if (a == NULL || a->url == NULL || *(a->url) == '\0') {
         return;
@@ -3515,7 +3517,7 @@ void set_buffer_environ(struct Buffer* buf)
         else
             set_environ("W3M_CURRENT_FORM", "");
         // set_environ("W3M_CURRENT_LINE", Sprintf("%ld", l->real_linenumber)->ptr);
-        set_environ("W3M_CURRENT_COLUMN", Sprintf("%d", buf->currentColumn + buf->cursorX + 1)->ptr);
+        // set_environ("W3M_CURRENT_COLUMN", Sprintf("%d", buf->currentColumn + buf->cursorX + 1)->ptr);
     } else if (!l) {
         set_environ("W3M_CURRENT_WORD", "");
         set_environ("W3M_CURRENT_LINK", "");

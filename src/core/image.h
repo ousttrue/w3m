@@ -82,11 +82,11 @@ struct ImageCache* getImage(struct Image* image, struct Url* current, enum Image
 
 int getImageSize(struct ImageCache* cache);
 
-void put_image_osc5379(int cursorX, int cursorY,
+void put_image_osc5379(
     const char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh);
-void put_image_sixel(int cursorX, int cursorY,
+void put_image_sixel(
     const char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh, int n_terminal_image);
-void put_image_iterm2(int cursorX, int cursorY,
+void put_image_iterm2(
     const char* url, int x, int y, int w, int h);
-void put_image_kitty(int cursorX, int cursorY,
+void put_image_kitty(
     const char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh, int c, int r);

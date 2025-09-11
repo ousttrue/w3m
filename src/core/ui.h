@@ -1,4 +1,5 @@
 #pragma once
+#include "geometry.h"
 #include <Str.h>
 #include <wc.h>
 
@@ -36,21 +37,24 @@ enum MessageSeverity {
 };
 
 struct VirtualTerm;
-struct Rect {
-    int x;
-    int y;
-    int cols;
-    int rows;
-};
+
 struct UI {
     struct VirtualTerm* vt;
     bool use_graphic;
     struct Rect viewport;
+    struct Int2 cursor;
 };
+
+void cursorUp(int n);
+void cursorDown(int n);
+void cursorUpDown(int n);
+void cursorRight(int n);
+void cursorLeft(int n);
+void cursorHome();
 
 struct UI getUI();
 void message(struct UI ui, enum MessageSeverity, const char* s);
-inline static void error_message(const char *s)
+inline static void error_message(const char* s)
 {
     message(getUI(), MSG_ERR, s);
 }

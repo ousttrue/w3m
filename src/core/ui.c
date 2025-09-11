@@ -36,6 +36,42 @@ const char* url_quote_conv(const char* x, wc_ces c)
     return url_quote(wc_conv_strict((x), InnerCharset, (c))->ptr);
 }
 
+static struct Int2 cursor = {
+    .x = 0,
+    .y = 0,
+};
+
+void cursorUp(int n)
+{
+    cursorUpDown(-n);
+}
+
+void cursorDown(int n)
+{
+    cursorUpDown(n);
+}
+
+void cursorUpDown(int n)
+{
+    cursor.y += n;
+}
+
+void cursorRight(int n)
+{
+    cursor.x += n;
+}
+
+void cursorLeft(int n)
+{
+    cursor.x -= n;
+}
+
+void cursorHome()
+{
+    cursor.x = 0;
+    cursor.y = 0;
+}
+
 struct UI getUI()
 {
     int rootX = 0;
@@ -53,14 +89,21 @@ struct UI getUI()
         .vt = vt,
         .use_graphic = graph_ok(t),
         .viewport = {
-            .x = rootX,
-            .y = rootY,
-            .cols = vt->COLS - rootX,
-            .rows = vt->ROWS - rootY,
+            .offset = {
+                .x = rootX,
+                .y = rootY,
+            },
+            .size = {
+                .x = vt->COLS - rootX,
+                .y = vt->ROWS - rootY,
+            },
         },
+        .cursor = cursor,
     };
     return ui;
 }
+// short cursorX;
+// short cursorY;
 
 // static GeneralList* message_list = NULL;
 //
@@ -228,7 +271,7 @@ static Str make_lastline_message(struct Buffer* buf)
     //     int r = (int)((double)cl * 100.0 / (double)(ll ? ll : 1) + 0.5);
     //     Strcat(msg, Sprintf("%d/%d (%d%%)", cl, ll, r));
     // } else
-        Strcat_charp(msg, "Viewing");
+    Strcat_charp(msg, "Viewing");
     if (buf->ssl_certificate)
         Strcat_charp(msg, "[SSL]");
     Strcat_charp(msg, " <");
@@ -263,8 +306,8 @@ void renderFrame(struct UI ui)
     // int cursorCol = ui.vt->CurColumn;
 
     struct Buffer* buf = Currentbuf;
-    int cursorRow = buf->cursorY;
-    int cursorCol = buf->cursorX;
+    // int cursorRow = buf->cursorY;
+    // int cursorCol = buf->cursorX;
     drawAnchorCursor(ui, buf);
 
     Str msg = make_lastline_message(buf);
@@ -299,7 +342,8 @@ void renderFrame(struct UI ui)
     wc_putc_init(InnerCharset, DisplayCharset);
     refreshFrame(ttyWriter(), frame);
     wc_putc_end(ttyWriter());
-    MOVE(ttyWriter(), cursorRow, cursorCol);
+
+    MOVE(ttyWriter(), ui.cursor.y, ui.cursor.x);
     flushWriter(ttyWriter());
 }
 
@@ -313,7 +357,7 @@ void ui_cursor_set_x(int x)
     if (Currentbuf->firstLine == NULL)
         return;
     while (currentLine(Currentbuf)->prev && currentLine(Currentbuf)->bpos)
-        cursorUp0(Currentbuf, 1);
+        cursorUp(1);
     Currentbuf->pos = 0;
     arrangeCursor(Currentbuf);
 }

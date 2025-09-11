@@ -26,8 +26,8 @@ typedef struct _MenuItem {
 
 typedef struct _Menu {
     struct _Menu* parent;
-    int cursorX;
-    int cursorY;
+    // int cursorX;
+    // int cursorY;
     int x;
     int y;
     int width;

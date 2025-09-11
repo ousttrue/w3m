@@ -676,8 +676,8 @@ void new_menu(Menu* menu, MenuItem* item)
 {
     int i, l;
 
-    menu->cursorX = 0;
-    menu->cursorY = 0;
+    // menu->cursorX = 0;
+    // menu->cursorY = 0;
     menu->x = 0;
     menu->y = 0;
     menu->nitem = 0;
@@ -966,8 +966,8 @@ void popup_menu(Menu* parent, Menu* menu)
     menu->offset = 0;
     menu->active = 1;
     if (parent != NULL) {
-        menu->cursorX = parent->cursorX;
-        menu->cursorY = parent->cursorY;
+        // menu->cursorX = parent->cursorX;
+        // menu->cursorY = parent->cursorY;
         guess_menu_xy(parent, menu->width, &menu->x, &menu->y);
     }
     geom_menu(menu, menu->x, menu->y, menu->select);
@@ -1367,8 +1367,8 @@ void popupMenu(int x, int y, Menu* menu)
 
     initSelectMenu();
 
-    menu->cursorX = Currentbuf->cursorX;
-    menu->cursorY = Currentbuf->cursorY;
+    // menu->cursorX = Currentbuf->cursorX;
+    // menu->cursorY = Currentbuf->cursorY;
     menu->x = x + FRAME_WIDTH + 1;
     menu->y = y + 2;
 
@@ -1378,8 +1378,6 @@ void popupMenu(int x, int y, Menu* menu)
 DEFUN(mainMn, MAIN_MENU MENU, "Pop up menu")
 {
     Menu* menu = &MainMenu;
-    int x = Currentbuf->cursorX,
-        y = Currentbuf->cursorY;
     const char* data = searchKeyData();
     if (data != NULL) {
         int n = getMenuN(w3mMenuList, data);
@@ -1387,7 +1385,9 @@ DEFUN(mainMn, MAIN_MENU MENU, "Pop up menu")
             return;
         menu = w3mMenuList[n].menu;
     }
-    popupMenu(x, y, menu);
+    
+    struct UI ui = getUI();
+    popupMenu(ui.cursor.x, ui.cursor.y, menu);
 }
 
 /* --- MainMenu (END) --- */
@@ -1396,10 +1396,8 @@ DEFUN(mainMn, MAIN_MENU MENU, "Pop up menu")
 
 DEFUN(selMn, SELECT_MENU, "Pop up buffer-stack menu")
 {
-    int x = Currentbuf->cursorX,
-        y = Currentbuf->cursorY;
-
-    popupMenu(x, y, &SelectMenu);
+    struct UI ui = getUI();
+    popupMenu(ui.cursor.x, ui.cursor.y, &SelectMenu);
 }
 
 static void
@@ -1408,7 +1406,7 @@ initSelectMenu(void)
     int i, nitem, len = 0, l;
     struct Buffer* buf;
     Str str;
-    char** label;
+    const char** label;
     char* p;
     static char* comment = " SPC for select / D for delete buffer ";
 
@@ -1461,8 +1459,8 @@ initSelectMenu(void)
 
     new_option_menu(&SelectMenu, label, &SelectV, smChBuf);
     SelectMenu.initial = SelectV;
-    SelectMenu.cursorX = Currentbuf->cursorX;
-    SelectMenu.cursorY = Currentbuf->cursorY;
+    // SelectMenu.cursorX = Currentbuf->cursorX;
+    // SelectMenu.cursorY = Currentbuf->cursorY;
     SelectMenu.keymap['D'] = smDelBuf;
     SelectMenu.item[nitem].type = MENU_NOP;
 }
@@ -1540,8 +1538,8 @@ void optionMenu(int x, int y, const char** label, int* variable, int initial,
     set_menu_frame();
 
     new_option_menu(&menu, label, variable, func);
-    menu.cursorX = getScreen()->COLS - 1;
-    menu.cursorY = getScreen()->ROWS - 1;
+    // menu.cursorX = getScreen()->COLS - 1;
+    // menu.cursorY = getScreen()->ROWS - 1;
     menu.x = x;
     menu.y = y;
     menu.initial = initial;
@@ -1759,10 +1757,10 @@ link_menu(struct Buffer* buf)
     new_option_menu(&menu, label, &linkV, NULL);
 
     menu.initial = 0;
-    menu.cursorX = buf->cursorX;
-    menu.cursorY = buf->cursorY;
-    menu.x = menu.cursorX + FRAME_WIDTH + 1;
-    menu.y = menu.cursorY + 2;
+    // menu.cursorX = buf->cursorX;
+    // menu.cursorY = buf->cursorY;
+    menu.x = /*menu.cursorX +*/ FRAME_WIDTH + 1;
+    menu.y = /*menu.cursorY +*/ 2;
 
     popup_menu(NULL, &menu);
 
@@ -1816,10 +1814,10 @@ accesskey_menu(struct Buffer* buf)
     new_option_menu(&menu, label, &key, NULL);
 
     menu.initial = 0;
-    menu.cursorX = buf->cursorX;
-    menu.cursorY = buf->cursorY;
-    menu.x = menu.cursorX + FRAME_WIDTH + 1;
-    menu.y = menu.cursorY + 2;
+    // menu.cursorX = buf->cursorX;
+    // menu.cursorY = buf->cursorY;
+    menu.x = /*menu.cursorX +*/ FRAME_WIDTH + 1;
+    menu.y = /*menu.cursorY +*/ 2;
     for (i = 0; i < 128; i++)
         menu.keyselect[i] = -1;
     for (i = 0; i < nitem; i++) {
@@ -1928,10 +1926,10 @@ list_menu(struct Buffer* buf)
     new_option_menu(&menu, label, &key, NULL);
 
     menu.initial = 0;
-    menu.cursorX = buf->cursorX;
-    menu.cursorY = buf->cursorY;
-    menu.x = menu.cursorX + FRAME_WIDTH + 1;
-    menu.y = menu.cursorY + 2;
+    // menu.cursorX = buf->cursorX;
+    // menu.cursorY = buf->cursorY;
+    menu.x = /*menu.cursorX +*/ FRAME_WIDTH + 1;
+    menu.y = /*menu.cursorY +*/ 2;
     for (i = 0; i < 128; i++)
         menu.keyselect[i] = -1;
     if (two) {

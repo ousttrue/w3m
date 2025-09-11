@@ -258,16 +258,16 @@ void drawImage(void)
 
                 w = i->cache->a_width > 0 ? i->width : 0;
                 h = i->cache->a_height > 0 ? i->height : 0;
-                put_image_sixel(Currentbuf->cursorX, Currentbuf->cursorY,
+                put_image_sixel(
                     url, x, y, w, h, i->sx, i->sy, sw * pixel_per_char, sh * pixel_per_line_i, n_terminal_image);
             } else if (enable_inline_image == INLINE_IMG_OSC5379) {
-                put_image_osc5379(Currentbuf->cursorX, Currentbuf->cursorY,
+                put_image_osc5379(
                     url, x, y, w, h, sx, sy, sw, sh);
             } else if (enable_inline_image == INLINE_IMG_ITERM2) {
-                put_image_iterm2(Currentbuf->cursorX, Currentbuf->cursorY,
+                put_image_iterm2(
                     url, x, y, sw, sh);
             } else if (enable_inline_image == INLINE_IMG_KITTY) {
-                put_image_kitty(Currentbuf->cursorX, Currentbuf->cursorY,
+                put_image_kitty(
                     url, x, y, i->width, i->height, i->sx, i->sy, sw * pixel_per_char, sh * pixel_per_line_i, sw, sh);
             }
 
@@ -745,7 +745,7 @@ got_image_size:
     return true;
 }
 
-void put_image_osc5379(int cursorX, int cursorY,
+void put_image_osc5379(
     const char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh)
 {
     char* size;
@@ -757,10 +757,9 @@ void put_image_osc5379(int cursorX, int cursorY,
     MOVE(ttyWriter(), y, x);
     Str buf = Sprintf("\x1b]5379;show_picture %s %s %dx%d+%d+%d\x07", url, size, sw, sh, sx, sy);
     writestr(buf->ptr);
-    MOVE(ttyWriter(), cursorY, cursorX);
 }
 
-void put_image_iterm2(int cursorX, int cursorY,
+void put_image_iterm2(
     const char* url, int x, int y, int w, int h)
 {
     Str buf;
@@ -812,10 +811,9 @@ void put_image_iterm2(int cursorX, int cursorY,
 cleanup:
     fclose(fp);
     writestr("\a");
-    MOVE(ttyWriter(), cursorY, cursorX);
 }
 
-void put_image_kitty(int cursorX, int cursorY,
+void put_image_kitty(
     const char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh, int cols, int rows)
 {
     Str buf, base64;
@@ -944,7 +942,6 @@ void put_image_kitty(int cursorX, int cursorY,
     }
 cleanup:
     fclose(fp);
-    MOVE(ttyWriter(), cursorY, cursorX);
 }
 
 static void
@@ -1035,7 +1032,7 @@ save_first_animation_frame(const char* path)
     return NULL;
 }
 
-void put_image_sixel(int cursorX, int cursorY,
+void put_image_sixel(
     const char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh, int n_terminal_image)
 {
     // MySignalHandler (*volatile previntr)(int _dummy);
@@ -1114,6 +1111,4 @@ void put_image_sixel(int cursorX, int cursorY,
             writestr("\x1b[?80l");
         }
     }
-
-    MOVE(ttyWriter(), cursorY, cursorX);
 }

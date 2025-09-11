@@ -25,8 +25,6 @@ extern int REV_LB[];
         (dstbuf)->topLineIndex = (srcbuf)->topLineIndex;         \
         (dstbuf)->currentLineIndex = (srcbuf)->currentLineIndex; \
         (dstbuf)->pos = (srcbuf)->pos;                           \
-        (dstbuf)->cursorX = (srcbuf)->cursorX;                   \
-        (dstbuf)->cursorY = (srcbuf)->cursorY;                   \
         (dstbuf)->visualpos = (srcbuf)->visualpos;               \
         (dstbuf)->currentColumn = (srcbuf)->currentColumn;       \
     }
@@ -76,8 +74,6 @@ struct Buffer {
     int allLine;
     enum BufferProperty bufferprop;
     int currentColumn;
-    short cursorX;
-    short cursorY;
     int pos;
     int visualpos;
     AnchorList* href;
@@ -136,14 +132,7 @@ void copyBuffer(struct Buffer* a, struct Buffer* b);
 struct Buffer* prevBuffer(struct Buffer* first, struct Buffer* buf);
 int writeBufferCache(struct Buffer* buf);
 int readBufferCache(struct Buffer* buf);
-void cursorUp0(struct Buffer* buf, int n);
-void cursorUp(struct Buffer* buf, int n);
-void cursorDown0(struct Buffer* buf, int n);
-void cursorDown(struct Buffer* buf, int n);
-void cursorUpDown(struct Buffer* buf, int n);
-void cursorRight(struct Buffer* buf, int n);
-void cursorLeft(struct Buffer* buf, int n);
-void cursorHome(struct Buffer* buf);
+
 void arrangeCursor(struct Buffer* buf);
 void arrangeLine(struct Buffer* buf);
 void cursorXY(struct Buffer* buf, int x, int y);

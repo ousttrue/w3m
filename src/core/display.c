@@ -18,7 +18,7 @@
 
 #include <wc.h>
 #include <wtf.h>
- 
+
 int displayLink = (false);
 int displayLineInfo = (false);
 int FoldLine = (false);
@@ -90,7 +90,7 @@ static struct Line* redrawLine(struct UI ui, struct Buffer* buf, struct Line* l,
     }
     vt_move(ui.vt, i, 0);
 
-    vt_move(ui.vt, i, ui.viewport.x);
+    vt_move(ui.vt, i, ui.viewport.offset.x);
     if (l->width < 0)
         l->width = COLPOS(l, l->len);
     if (l->len == 0 || l->width - 1 < column) {
@@ -140,7 +140,7 @@ static struct Line* redrawLine(struct UI ui, struct Buffer* buf, struct Line* l,
     }
 
     vt_line_end(ui.vt);
-    if (rcol - column < ui.viewport.cols)
+    if (rcol - column < ui.viewport.size.x)
         vt_clrtoeolx(ui.vt);
     return l;
 }
@@ -160,7 +160,7 @@ static struct Line* redrawLineImage(struct UI ui, struct Buffer* buf, struct Lin
         return l;
     pos = columnPos(l, column);
     rcol = COLPOS(l, pos);
-    for (j = 0; rcol - column < ui.viewport.cols && pos + j < l->len; j++) {
+    for (j = 0; rcol - column < ui.viewport.size.x && pos + j < l->len; j++) {
         if (rcol - column < 0) {
             rcol = COLPOS(l, pos + j + 1);
             continue;
@@ -177,7 +177,7 @@ static struct Line* redrawLineImage(struct UI ui, struct Buffer* buf, struct Lin
                     image->width = cache->width;
                     image->height = cache->height;
                 }
-                x = (int)((rcol - column + ui.viewport.x) * pixel_per_char);
+                x = (int)((rcol - column + ui.viewport.offset.x) * pixel_per_char);
                 y = (int)(i * pixel_per_line);
                 sx = (int)((rcol - COLPOS(l, a->start.pos)) * pixel_per_char);
                 sy = (int)((l->linenumber - image->y) * pixel_per_line);
@@ -199,8 +199,8 @@ static struct Line* redrawLineImage(struct UI ui, struct Buffer* buf, struct Lin
                     h = image->height - sy;
                 else
                     h = (int)(pixel_per_line - sy);
-                if (w > (int)((ui.viewport.x + ui.viewport.cols) * pixel_per_char - x))
-                    w = (int)((ui.viewport.x + ui.viewport.cols) * pixel_per_char - x);
+                if (w > (int)((ui.viewport.offset.x + ui.viewport.size.x) * pixel_per_char - x))
+                    w = (int)((ui.viewport.offset.x + ui.viewport.size.x) * pixel_per_char - x);
                 if (h > (int)((ui.vt->ROWS - 1) * pixel_per_line - y))
                     h = (int)((ui.vt->ROWS - 1) * pixel_per_line - y);
                 addImage(cache, x, y, sx, sy, w, h);
@@ -222,23 +222,24 @@ static void redrawNLine(struct UI ui, struct Buffer* buf, int n)
 
     struct Line* l;
     int i;
-    for (i = 0, l = topLine(buf); i < ui.viewport.rows; i++, l = l->next) {
-        if (i >= ui.viewport.rows - n || i < -n)
-            l = redrawLine(ui, buf, l, i + ui.viewport.y);
+    for (i = 0, l = topLine(buf); i < ui.viewport.size.y; i++, l = l->next) {
+        if (i >= ui.viewport.size.y - n || i < -n)
+            l = redrawLine(ui, buf, l, i + ui.viewport.offset.y);
         if (l == NULL)
             break;
     }
     if (n > 0) {
-        vt_move(ui.vt, i + ui.viewport.y, 0);
+        vt_move(ui.vt, i + ui.viewport.offset.y, 0);
         vt_clrtobotx(ui.vt);
     }
 
     if (!(activeImage && displayImage && buf->img))
         return;
-    vt_move(ui.vt, buf->cursorY + ui.viewport.y, buf->cursorX + ui.viewport.x);
-    for (i = 0, l = topLine(buf); i < ui.viewport.rows && l; i++, l = l->next) {
-        if (i >= ui.viewport.rows - n || i < -n)
-            redrawLineImage(ui, buf, l, i + ui.viewport.y);
+
+    // vt_move(ui.vt, buf->cursorY + ui.viewport.offset.y, buf->cursorX + ui.viewport.offset.x);
+    for (i = 0, l = topLine(buf); i < ui.viewport.size.y && l; i++, l = l->next) {
+        if (i >= ui.viewport.size.y - n || i < -n)
+            redrawLineImage(ui, buf, l, i + ui.viewport.offset.y);
     }
     getAllImage(buf);
 }
@@ -246,7 +247,7 @@ static void redrawNLine(struct UI ui, struct Buffer* buf, int n)
 void bufToScreen(struct UI ui, struct Buffer* buf)
 {
     if (buf->width == 0) {
-        reshapeBuffer(buf, ui.viewport.cols);
+        reshapeBuffer(buf, ui.viewport.size.x);
     }
 
     if (activeImage && (cline != topLine(buf) || ccolumn != buf->currentColumn)) {
@@ -292,7 +293,7 @@ static int redrawLineRegion(struct UI ui, struct Buffer* buf, struct Line* l, in
     bcol = bpos - pos;
     ecol = epos - pos;
 
-    for (j = 0; rcol - column < ui.viewport.cols && pos + j < l->len; j += delta) {
+    for (j = 0; rcol - column < ui.viewport.size.x && pos + j < l->len; j += delta) {
         if (useVisitedColor && vpos <= pos + j && !(pr[j] & PE_VISITED)) {
             a = retrieveAnchor(buf->href, l->linenumber, pos + j);
             if (a) {
@@ -306,18 +307,18 @@ static int redrawLineRegion(struct UI ui, struct Buffer* buf, struct Line* l, in
         }
         delta = wtf_len((wc_uchar*)&p[j]);
         ncol = COLPOS(l, pos + j + delta);
-        if (ncol - column > ui.viewport.cols)
+        if (ncol - column > ui.viewport.size.x)
             break;
         if (pc)
             vt_do_color(ui.vt, pc[j]);
         if (j >= bcol && j < ecol) {
             if (rcol < column) {
-                vt_move(ui.vt, i, ui.viewport.x);
+                vt_move(ui.vt, i, ui.viewport.offset.x);
                 for (rcol = column; rcol < ncol; rcol++)
                     vt_addChar(ui.vt, ' ', 0, ui.use_graphic);
                 continue;
             }
-            vt_move(ui.vt, i, rcol - column + ui.viewport.x);
+            vt_move(ui.vt, i, rcol - column + ui.viewport.offset.x);
             if (p[j] == '\t') {
                 for (; rcol < ncol; rcol++)
                     vt_addChar(ui.vt, ' ', 0, ui.use_graphic);
@@ -366,10 +367,10 @@ drawAnchorCursor0(struct UI ui, struct Buffer* buf,
                 }
             }
             if (active && start_pos < end_pos)
-                redrawLineRegion(ui, buf, l, l->linenumber - tline + ui.viewport.y, start_pos, end_pos);
+                redrawLineRegion(ui, buf, l, l->linenumber - tline + ui.viewport.offset.y, start_pos, end_pos);
         } else if (prevhseq >= 0 && an->hseq == prevhseq) {
             if (active)
-                redrawLineRegion(ui, buf, l, l->linenumber - tline + ui.viewport.y, an->start.pos, an->end.pos);
+                redrawLineRegion(ui, buf, l, l->linenumber - tline + ui.viewport.offset.y, an->start.pos, an->end.pos);
         }
     }
 }
@@ -392,7 +393,7 @@ void drawAnchorCursor(struct UI ui, struct Buffer* buf)
     else
         hseq = -1;
     tline = topLine(buf)->linenumber;
-    eline = tline + ui.viewport.rows;
+    eline = tline + ui.viewport.size.y;
     prevhseq = buf->hmarklist->prevhseq;
 
     if (buf->href) {
