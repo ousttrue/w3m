@@ -85,7 +85,7 @@ enum SearchResultFlags forwardSearch(struct Buffer* buf, const char* str)
     for (l = l->next;; l = l->next) {
         if (l == NULL) {
             if (WrapSearch) {
-                l = buf->lines.firstLine;
+                l = buf->document.firstLine;
                 wrapped = true;
             } else {
                 break;

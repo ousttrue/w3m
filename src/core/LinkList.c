@@ -106,7 +106,7 @@ link_menu(struct Buffer* buf)
 struct Buffer*
 link_list_panel(struct Buffer* buf)
 {
-    if (buf->bufferprop & BP_INTERNAL || (buf->linklist == 0 && buf->lines.href == 0 && buf->img == 0)) {
+    if (buf->bufferprop & BP_INTERNAL || (buf->linklist == 0 && buf->document.href == 0 && buf->img == 0)) {
         return 0;
     }
 
@@ -148,9 +148,9 @@ link_list_panel(struct Buffer* buf)
         Strcat_charp(tmp, "</ol>\n");
     }
 
-    if (buf->lines.href) {
+    if (buf->document.href) {
         Strcat_charp(tmp, "<hr><h2>Anchors</h2>\n<ol>\n");
-        al = buf->lines.href;
+        al = buf->document.href;
         for (i = 0; i < al->nanchor; i++) {
             a = &al->anchors[i];
             if (a->hseq < 0 || a->slave)

@@ -764,7 +764,7 @@ void do_submit(struct Anchor* a, struct FormItem* fi, bool do_download)
 static void
 _followForm(bool submit, bool do_download)
 {
-    if (Currentbuf->lines.firstLine == NULL)
+    if (Currentbuf->document.firstLine == NULL)
         return;
 
     struct Anchor* a = retrieveCurrentForm(Currentbuf);
@@ -1084,7 +1084,7 @@ escKeyProc(int c, int esc, unsigned char* map)
 void tmpClearBuffer(struct Buffer* buf)
 {
     if (writeBufferCache(buf) == 0) {
-        buf->lines.firstLine = NULL;
+        buf->document.firstLine = NULL;
         buf->topLineIndex = 0;
         buf->currentLineIndex = 0;
     }
@@ -1159,7 +1159,7 @@ DEFUN(ldown1, DOWN, "Scroll the screen down one line")
 /* move cursor position to the center of screen */
 DEFUN(ctrCsrV, CENTER_V, "Center on cursor line")
 {
-    if (Currentbuf->lines.firstLine == NULL)
+    if (Currentbuf->document.firstLine == NULL)
         return;
     int offsety = getScreen()->ROWS / 2 - getUI().viewport_cursor.y;
     if (offsety != 0) {
@@ -1170,7 +1170,7 @@ DEFUN(ctrCsrV, CENTER_V, "Center on cursor line")
 
 DEFUN(ctrCsrH, CENTER_H, "Center on cursor column")
 {
-    if (Currentbuf->lines.firstLine == NULL)
+    if (Currentbuf->document.firstLine == NULL)
         return;
     int offsetx = getUI().viewport_cursor.x - getScreen()->COLS / 2;
     if (offsetx != 0) {
@@ -1256,7 +1256,7 @@ DEFUN(shiftl, SHIFT_LEFT, "Shift screen left")
 {
     int column;
 
-    if (Currentbuf->lines.firstLine == NULL)
+    if (Currentbuf->document.firstLine == NULL)
         return;
     column = Currentbuf->currentColumn;
     columnSkip(Currentbuf, searchKeyNum() * (-getScreen()->COLS + 1) + 1);
@@ -1268,7 +1268,7 @@ DEFUN(shiftr, SHIFT_RIGHT, "Shift screen right")
 {
     int column;
 
-    if (Currentbuf->lines.firstLine == NULL)
+    if (Currentbuf->document.firstLine == NULL)
         return;
     column = Currentbuf->currentColumn;
     columnSkip(Currentbuf, searchKeyNum() * (getScreen()->COLS - 1) - 1);
@@ -1491,7 +1491,7 @@ DEFUN(movLW, PREV_WORD, "Move to the previous word")
     int ppos;
     int i, n = searchKeyNum();
 
-    if (Currentbuf->lines.firstLine == NULL)
+    if (Currentbuf->document.firstLine == NULL)
         return;
 
     struct LineList *pline, *l;
@@ -1554,7 +1554,7 @@ DEFUN(movRW, NEXT_WORD, "Move to the next word")
 {
     int i, n = searchKeyNum();
 
-    if (Currentbuf->lines.firstLine == NULL)
+    if (Currentbuf->document.firstLine == NULL)
         return;
 
     char* lb;
@@ -1709,7 +1709,7 @@ void _goLine(const char* l)
     }
     Currentbuf->pos = 0;
     if (*l == '^') {
-        Currentbuf->topLineIndex = Currentbuf->currentLineIndex = Currentbuf->lines.firstLine->linenumber;
+        Currentbuf->topLineIndex = Currentbuf->currentLineIndex = Currentbuf->document.firstLine->linenumber;
     } else if (*l == '$') {
         Currentbuf->topLineIndex = lineSkip(Currentbuf, lastLine(Currentbuf),
             -(getScreen()->ROWS + 1) / 2, true)
@@ -1740,7 +1740,7 @@ DEFUN(goLineL, END, "Go to the last line")
 /* Go to the bottom of the line */
 DEFUN(linend, LINE_END, "Go to the end of the line")
 {
-    if (Currentbuf->lines.firstLine == NULL)
+    if (Currentbuf->document.firstLine == NULL)
         return;
     while (currentLine(Currentbuf)->next
         && currentLine(Currentbuf)->next->bpos)
@@ -1815,7 +1815,7 @@ DEFUN(_mark, MARK, "Set/unset mark")
 {
     if (!use_mark)
         return;
-    if (Currentbuf->lines.firstLine == NULL)
+    if (Currentbuf->document.firstLine == NULL)
         return;
     struct LineList* l = currentLine(Currentbuf);
     l->l.propBuf[Currentbuf->pos] ^= PE_MARK;
@@ -1826,7 +1826,7 @@ DEFUN(nextMk, NEXT_MARK, "Go to the next mark")
 {
     if (!use_mark)
         return;
-    if (Currentbuf->lines.firstLine == NULL)
+    if (Currentbuf->document.firstLine == NULL)
         return;
     int i = Currentbuf->pos + 1;
     struct LineList* l = currentLine(Currentbuf);
@@ -1856,7 +1856,7 @@ DEFUN(prevMk, PREV_MARK, "Go to the previous mark")
 {
     if (!use_mark)
         return;
-    if (Currentbuf->lines.firstLine == NULL)
+    if (Currentbuf->document.firstLine == NULL)
         return;
     int i = Currentbuf->pos - 1;
     struct LineList* l = currentLine(Currentbuf);
@@ -1908,7 +1908,7 @@ DEFUN(reMark, REG_MARK, "Mark all occurences of a pattern")
     struct LineList* l;
     char *p, *p1, *p2;
     MarkString = str;
-    for (l = Currentbuf->lines.firstLine; l != NULL; l = l->next) {
+    for (l = Currentbuf->document.firstLine; l != NULL; l = l->next) {
         p = l->l.lineBuf;
         for (;;) {
             if (regexMatch(p, &l->l.lineBuf[l->l.len] - p, p == l->l.lineBuf) == 1) {
@@ -1960,7 +1960,7 @@ static void followAnchor(bool do_download)
     int x = 0, y = 0, map = 0;
     char* url;
 
-    if (Currentbuf->lines.firstLine == NULL)
+    if (Currentbuf->document.firstLine == NULL)
         return;
 
     a = retrieveCurrentImg(Currentbuf);
@@ -2010,7 +2010,7 @@ void bufferA(void)
 
 static void followImage(bool do_download)
 {
-    if (Currentbuf->lines.firstLine == NULL)
+    if (Currentbuf->document.firstLine == NULL)
         return;
 
     struct Anchor* a;
@@ -2061,7 +2061,7 @@ DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink")
     struct Anchor* an;
     int hseq = 0;
 
-    if (Currentbuf->lines.firstLine == NULL)
+    if (Currentbuf->document.firstLine == NULL)
         return;
     if (!hl || hl->nmark == 0)
         return;
@@ -2070,7 +2070,7 @@ DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink")
         if (hseq >= hl->nmark)
             return;
         po = hl->marks + hseq;
-        an = retrieveAnchor(Currentbuf->lines.href, *po);
+        an = retrieveAnchor(Currentbuf->document.href, *po);
         if (an == NULL)
             an = retrieveAnchor(Currentbuf->formitem, *po);
         hseq++;
@@ -2089,7 +2089,7 @@ DEFUN(lastA, LINK_END, "Move to the last hyperlink")
     struct Anchor* an;
     int hseq;
 
-    if (Currentbuf->lines.firstLine == NULL)
+    if (Currentbuf->document.firstLine == NULL)
         return;
     if (!hl || hl->nmark == 0)
         return;
@@ -2099,7 +2099,7 @@ DEFUN(lastA, LINK_END, "Move to the last hyperlink")
         if (hseq < 0)
             return;
         po = hl->marks + hseq;
-        an = retrieveAnchor(Currentbuf->lines.href, *po);
+        an = retrieveAnchor(Currentbuf->document.href, *po);
         if (an == NULL)
             an = retrieveAnchor(Currentbuf->formitem, *po);
         hseq--;
@@ -2119,13 +2119,13 @@ DEFUN(nthA, LINK_N, "Go to the nth link")
     if (n < 0 || n > hl->nmark)
         return;
 
-    if (Currentbuf->lines.firstLine == NULL)
+    if (Currentbuf->document.firstLine == NULL)
         return;
     if (!hl || hl->nmark == 0)
         return;
 
     struct BufferPoint* po = hl->marks + n - 1;
-    struct Anchor* an = retrieveAnchor(Currentbuf->lines.href, *po);
+    struct Anchor* an = retrieveAnchor(Currentbuf->document.href, *po);
     if (an == NULL)
         an = retrieveAnchor(Currentbuf->formitem, *po);
     if (an == NULL)
@@ -2170,7 +2170,7 @@ _nextA(int visited)
     int i, x, y, n = searchKeyNum();
     struct Url url;
 
-    if (Currentbuf->lines.firstLine == NULL)
+    if (Currentbuf->document.firstLine == NULL)
         return;
     if (!hl || hl->nmark == 0)
         return;
@@ -2198,7 +2198,7 @@ _nextA(int visited)
                     goto _end;
                 }
                 po = &hl->marks[hseq];
-                an = retrieveAnchor(Currentbuf->lines.href, *po);
+                an = retrieveAnchor(Currentbuf->document.href, *po);
                 if (visited != true && an == NULL)
                     an = retrieveAnchor(Currentbuf->formitem, *po);
                 hseq++;
@@ -2210,7 +2210,7 @@ _nextA(int visited)
                 }
             } while (an == NULL || an == pan);
         } else {
-            an = closest_next_anchor(Currentbuf->lines.href, NULL, x, y);
+            an = closest_next_anchor(Currentbuf->document.href, NULL, x, y);
             if (visited != true)
                 an = closest_next_anchor(Currentbuf->formitem, an, x, y);
             if (an == NULL) {
@@ -2251,7 +2251,7 @@ _prevA(int visited)
     int i, x, y, n = searchKeyNum();
     struct Url url;
 
-    if (Currentbuf->lines.firstLine == NULL)
+    if (Currentbuf->document.firstLine == NULL)
         return;
     if (!hl || hl->nmark == 0)
         return;
@@ -2279,7 +2279,7 @@ _prevA(int visited)
                     goto _end;
                 }
                 po = hl->marks + hseq;
-                an = retrieveAnchor(Currentbuf->lines.href, *po);
+                an = retrieveAnchor(Currentbuf->document.href, *po);
                 if (visited != true && an == NULL)
                     an = retrieveAnchor(Currentbuf->formitem, *po);
                 hseq--;
@@ -2291,7 +2291,7 @@ _prevA(int visited)
                 }
             } while (an == NULL || an == pan);
         } else {
-            an = closest_prev_anchor(Currentbuf->lines.href, NULL, x, y);
+            an = closest_prev_anchor(Currentbuf->document.href, NULL, x, y);
             if (visited != true)
                 an = closest_prev_anchor(Currentbuf->formitem, an, x, y);
             if (an == NULL) {
@@ -2330,7 +2330,7 @@ nextX(int d, int dy)
     struct Anchor *an, *pan;
     int i, x, y, n = searchKeyNum();
 
-    if (Currentbuf->lines.firstLine == NULL)
+    if (Currentbuf->document.firstLine == NULL)
         return;
     if (!hl || hl->nmark == 0)
         return;
@@ -2351,7 +2351,7 @@ nextX(int d, int dy)
         while (1) {
             for (; x >= 0 && x < l->l.len; x += d) {
                 struct BufferPoint bp = { .line = y, .pos = x };
-                an = retrieveAnchor(Currentbuf->lines.href, bp);
+                an = retrieveAnchor(Currentbuf->document.href, bp);
                 if (!an)
                     an = retrieveAnchor(Currentbuf->formitem, bp);
                 if (an) {
@@ -2387,7 +2387,7 @@ nextY(int d)
     int i, x, y, n = searchKeyNum();
     int hseq;
 
-    if (Currentbuf->lines.firstLine == NULL)
+    if (Currentbuf->document.firstLine == NULL)
         return;
     if (!hl || hl->nmark == 0)
         return;
@@ -2406,7 +2406,7 @@ nextY(int d)
         an = NULL;
         for (; y >= 0 && y <= lastLine(Currentbuf)->linenumber; y += d) {
             struct BufferPoint bp = { .line = y, .pos = x };
-            an = retrieveAnchor(Currentbuf->lines.href, bp);
+            an = retrieveAnchor(Currentbuf->document.href, bp);
             if (!an)
                 an = retrieveAnchor(Currentbuf->formitem, bp);
             if (an && hseq != abs(an->hseq)) {
@@ -2737,7 +2737,7 @@ DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
 static void
 anchorMn(struct Anchor* (*menu_func)(struct Buffer*), int go)
 {
-    if (!Currentbuf->lines.href || !Currentbuf->hmarklist)
+    if (!Currentbuf->document.href || !Currentbuf->hmarklist)
         return;
 
     struct Anchor* a = menu_func(Currentbuf);
@@ -2881,7 +2881,7 @@ _peekURL(int only_img)
     Lineprop* pp;
     static int offset = 0, n;
 
-    if (Currentbuf->lines.firstLine == NULL)
+    if (Currentbuf->document.firstLine == NULL)
         return;
     if (CurrentKey == prev_key && s != NULL) {
         if (s->length - offset >= getCols())
@@ -3091,7 +3091,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
             Firstbuf = deleteBuffer(Firstbuf, buf);
     }
     Currentbuf->form_submit = sbuf.form_submit;
-    if (Currentbuf->lines.firstLine) {
+    if (Currentbuf->document.firstLine) {
         // COPY_BUFROOT(Currentbuf, &sbuf);
         // restorePosition(Currentbuf, &sbuf);
     }
@@ -3800,7 +3800,7 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
 static void
 save_buffer_position(struct Buffer* buf)
 {
-    if (!buf->lines.firstLine)
+    if (!buf->document.firstLine)
         return;
 
     struct BufferPos* b = buf->undo;
@@ -3837,7 +3837,7 @@ resetPos(struct BufferPos* b)
 
 DEFUN(undoPos, UNDO, "Cancel the last cursor movement")
 {
-    if (!Currentbuf->lines.firstLine)
+    if (!Currentbuf->document.firstLine)
         return;
 
     struct BufferPos* b = Currentbuf->undo;
@@ -3849,7 +3849,7 @@ DEFUN(undoPos, UNDO, "Cancel the last cursor movement")
 
 DEFUN(redoPos, REDO, "Cancel the last undo")
 {
-    if (!Currentbuf->lines.firstLine)
+    if (!Currentbuf->document.firstLine)
         return;
 
     struct BufferPos* b = Currentbuf->undo;
@@ -3861,7 +3861,7 @@ DEFUN(redoPos, REDO, "Cancel the last undo")
 
 DEFUN(cursorTop, CURSOR_TOP, "Move cursor to the top of the screen")
 {
-    if (Currentbuf->lines.firstLine == NULL)
+    if (Currentbuf->document.firstLine == NULL)
         return;
     Currentbuf->currentLineIndex = lineSkip(Currentbuf, topLine(Currentbuf), 0, false)->linenumber;
     arrangeLine(Currentbuf);
@@ -3869,7 +3869,7 @@ DEFUN(cursorTop, CURSOR_TOP, "Move cursor to the top of the screen")
 
 DEFUN(cursorMiddle, CURSOR_MIDDLE, "Move cursor to the middle of the screen")
 {
-    if (Currentbuf->lines.firstLine == NULL)
+    if (Currentbuf->document.firstLine == NULL)
         return;
     int offsety = (getScreen()->ROWS - 1) / 2;
     Currentbuf->currentLineIndex = currentLineSkip(Currentbuf, topLine(Currentbuf), offsety, false)->linenumber;
@@ -3878,7 +3878,7 @@ DEFUN(cursorMiddle, CURSOR_MIDDLE, "Move cursor to the middle of the screen")
 
 DEFUN(cursorBottom, CURSOR_BOTTOM, "Move cursor to the bottom of the screen")
 {
-    if (Currentbuf->lines.firstLine == NULL)
+    if (Currentbuf->document.firstLine == NULL)
         return;
     int offsety = getScreen()->ROWS - 1;
     Currentbuf->currentLineIndex = currentLineSkip(Currentbuf, topLine(Currentbuf), offsety, false)->linenumber;

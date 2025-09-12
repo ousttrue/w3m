@@ -1721,7 +1721,7 @@ int getMenuN(MenuList* list, const char* id)
 struct Anchor*
 accesskey_menu(struct Buffer* buf)
 {
-    struct AnchorList* al = buf->lines.href;
+    struct AnchorList* al = buf->document.href;
     struct Anchor* a;
     struct Anchor** ap;
     int i, n, nitem = 0, key = -1;
@@ -1821,12 +1821,12 @@ struct Anchor*
 list_menu(struct Buffer* buf)
 {
     Menu menu;
-    struct AnchorList* al = buf->lines.href;
+    struct AnchorList* al = buf->document.href;
     struct Anchor* a;
     struct Anchor** ap;
     int i, n, nitem = 0, key = -1, two = false;
     char** label;
-    char* t;
+    const char* t;
     unsigned char c;
 
     if (!al)

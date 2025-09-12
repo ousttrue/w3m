@@ -41,7 +41,7 @@ struct Buffer {
     const char* filename;
     const char* buffername;
 
-    struct Document lines;
+    struct Document document;
     int topLineIndex;
     int currentLineIndex;
 

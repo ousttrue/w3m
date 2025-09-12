@@ -463,7 +463,7 @@ void formUpdateBuffer(struct Anchor* a, struct Buffer* buf, struct FormItem* for
                 rows > 1,
                 form->type == FORM_INPUT_PASSWORD);
             if (pos != epos) {
-                shiftAnchorPosition(buf->lines.href, buf->hmarklist,
+                shiftAnchorPosition(buf->document.href, buf->hmarklist,
                     (struct BufferPoint) { .line = a->start.line, .pos = spos }, pos - epos);
                 shiftAnchorPosition(buf->name, buf->hmarklist,
                     (struct BufferPoint) { .line = a->start.line, .pos = spos }, pos - epos);
@@ -731,10 +731,10 @@ struct pre_form_item {
 };
 
 struct pre_form {
-    char* url;
+    const char* url;
     Regex* re_url;
-    char* name;
-    char* action;
+    const char* name;
+    const char* action;
     struct pre_form_item* item;
     struct pre_form* next;
 };

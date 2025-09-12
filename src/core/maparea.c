@@ -347,7 +347,7 @@ page_info_panel(struct Buffer* buf)
     if (buf == NULL)
         goto end;
 
-    int all = buf->lines.allLine;
+    int all = buf->document.allLine;
     if (all == 0 && lastLine(buf))
         all = lastLine(buf)->linenumber;
     Strcat_charp(tmp, "<form method=internal action=charset>");

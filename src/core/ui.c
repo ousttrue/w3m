@@ -341,7 +341,7 @@ void renderFrame(struct UI ui)
     drawAnchorCursor(ui, buf);
 
     Str msg = make_lastline_message(buf);
-    if (buf->lines.firstLine == NULL) {
+    if (buf->document.firstLine == NULL) {
         Strcat_charp(msg, "\tNo Line");
     }
     // if (delayed_msg != NULL) {
@@ -383,7 +383,7 @@ void ui_bell()
 
 void ui_cursor_set_x(int x)
 {
-    if (Currentbuf->lines.firstLine == NULL)
+    if (Currentbuf->document.firstLine == NULL)
         return;
     while (currentLine(Currentbuf)->prev && currentLine(Currentbuf)->bpos)
         cursorUp(1);
