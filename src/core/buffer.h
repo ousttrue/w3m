@@ -85,6 +85,7 @@ struct Buffer {
 #define INIT_BUFFER_WIDTH ((_INIT_BUFFER_WIDTH > 0) ? _INIT_BUFFER_WIDTH : 0)
 #define FOLD_BUFFER_WIDTH (FoldLine ? (INIT_BUFFER_WIDTH + 1) : -1)
 
+
 struct Buffer* newBuffer();
 struct Buffer* nullBuffer(void);
 void clearBuffer(struct Buffer* buf);
@@ -106,6 +107,7 @@ struct Buffer* prevBuffer(struct Buffer* first, struct Buffer* buf);
 int writeBufferCache(struct Buffer* buf);
 int readBufferCache(struct Buffer* buf);
 
+bool applyCursor(struct Buffer* buf);
 void arrangeCursor(struct Buffer* buf);
 void arrangeLine(struct Buffer* buf);
 void cursorXY(struct Buffer* buf, int x, int y);
@@ -118,6 +120,7 @@ struct LineList* lineSkip(struct Buffer* buf, struct LineList* line, int offset,
 struct LineList* currentLineSkip(struct Buffer* buf, struct LineList* line, int offset, int last);
 char* last_modified(struct Buffer* buf);
 struct Buffer* cookie_list_panel(void);
+struct Int2 viewportCursor(struct Buffer* buf);
 struct Int2 updateCursor(struct Buffer* buf, struct Int2 viewport_size,
     struct Int2 viewport_cursor, struct Int2 cursor_delta, bool* hasScroll);
 void reseq_anchor(struct Buffer* buf);

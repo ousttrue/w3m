@@ -1362,7 +1362,7 @@ mSgrMouse(char c)
 
 /* --- MainMenu --- */
 
-void popupMenu(int x, int y, Menu* menu)
+void popupMenu(struct UI ui, Menu* menu)
 {
     set_menu_frame();
 
@@ -1370,8 +1370,8 @@ void popupMenu(int x, int y, Menu* menu)
 
     // menu->cursorX = Currentbuf->cursorX;
     // menu->cursorY = Currentbuf->cursorY;
-    menu->x = x + FRAME_WIDTH + 1;
-    menu->y = y + 2;
+    menu->x = ui.term_cursor.x + FRAME_WIDTH + 1;
+    menu->y = ui.term_cursor.y + 2;
 
     popup_menu(NULL, menu);
 }
@@ -1388,7 +1388,7 @@ DEFUN(mainMn, MAIN_MENU MENU, "Pop up menu")
     }
     
     struct UI ui = getUI();
-    popupMenu(ui.cursor.x, ui.cursor.y, menu);
+    popupMenu(ui, menu);
 }
 
 /* --- MainMenu (END) --- */
@@ -1398,7 +1398,7 @@ DEFUN(mainMn, MAIN_MENU MENU, "Pop up menu")
 DEFUN(selMn, SELECT_MENU, "Pop up buffer-stack menu")
 {
     struct UI ui = getUI();
-    popupMenu(ui.cursor.x, ui.cursor.y, &SelectMenu);
+    popupMenu(ui, &SelectMenu);
 }
 
 static void

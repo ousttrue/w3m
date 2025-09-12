@@ -11,6 +11,18 @@ struct Rect {
     struct Int2 size;
 };
 
+struct VirtualTerm;
+
+struct UI {
+    struct VirtualTerm* vt;
+    bool use_graphic;
+    struct Rect viewport;
+    // viewport local position
+    struct Int2 viewport_cursor;
+    // term global position
+    struct Int2 term_cursor;
+};
+
 struct BufferPoint {
     int line;
     int pos;

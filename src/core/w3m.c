@@ -876,8 +876,8 @@ _followForm(bool submit, bool do_download)
         }
         struct UI ui = getUI();
         if (!formChooseOptionByMenu(fi,
-                ui.cursor.x - Currentbuf->pos + a->start.pos,
-                ui.cursor.y))
+                ui.viewport_cursor.x - Currentbuf->pos + a->start.pos,
+                ui.viewport_cursor.y))
             break;
         formUpdateBuffer(a, Currentbuf, fi);
         if (fi->parent->nitems == 1) {
@@ -1017,7 +1017,7 @@ void onKeyInput(unsigned char c)
                                               : GlobalKeymap[c];
             func();
         }
-        if (applyCursor()) {
+        if (applyCursor(Currentbuf)) {
             termClear(ttyWriter());
         }
         bufToScreen(getUI(), Currentbuf);
@@ -1160,10 +1160,9 @@ DEFUN(ldown1, DOWN, "Scroll the screen down one line")
 /* move cursor position to the center of screen */
 DEFUN(ctrCsrV, CENTER_V, "Center on cursor line")
 {
-    int offsety;
     if (Currentbuf->firstLine == NULL)
         return;
-    offsety = getScreen()->ROWS / 2 - getUI().cursor.y;
+    int offsety = getScreen()->ROWS / 2 - getUI().viewport_cursor.y;
     if (offsety != 0) {
         Currentbuf->topLineIndex = lineSkip(Currentbuf, topLine(Currentbuf), -offsety, false)->linenumber;
         arrangeLine(Currentbuf);
@@ -1172,10 +1171,9 @@ DEFUN(ctrCsrV, CENTER_V, "Center on cursor line")
 
 DEFUN(ctrCsrH, CENTER_H, "Center on cursor column")
 {
-    int offsetx;
     if (Currentbuf->firstLine == NULL)
         return;
-    offsetx = getUI().cursor.x - getScreen()->COLS / 2;
+    int offsetx = getUI().viewport_cursor.x - getScreen()->COLS / 2;
     if (offsetx != 0) {
         columnSkip(Currentbuf, offsetx);
         arrangeCursor(Currentbuf);
@@ -1250,7 +1248,7 @@ shiftvisualpos(struct Buffer* buf, int shift)
     else if (buf->visualpos - l->bwidth < 0)
         buf->visualpos = l->bwidth;
     arrangeLine(buf);
-    if (buf->visualpos - l->bwidth == -shift && getUI().cursor.x == 0)
+    if (buf->visualpos - l->bwidth == -shift && getUI().viewport_cursor.x == 0)
         buf->visualpos = l->bwidth;
 }
 

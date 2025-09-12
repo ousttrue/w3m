@@ -1506,3 +1506,17 @@ const char* reAnchor(struct Buffer* buf, const char* re)
 {
     return reAnchorAny(buf, re, _put_anchor_all);
 }
+
+bool applyCursor(struct Buffer* buf)
+{
+    bool scroll = false;
+    // viewport_cursor = updateCursor(Currentbuf, getUI().viewport.size, viewport_cursor, cursorDelta(), &scroll);
+    return scroll;
+}
+
+struct Int2 viewportCursor(struct Buffer* buf)
+{
+    return (struct Int2){
+        0,0
+    };
+}

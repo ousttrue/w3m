@@ -38,15 +38,16 @@ const char* url_quote_conv(const char* x, wc_ces c)
     return url_quote(wc_conv_strict((x), InnerCharset, (c))->ptr);
 }
 
-static struct Int2 viewport_cursor = {
-    .x = 0,
-    .y = 0,
-};
-
 static struct Int2 cursor_delta = {
     .x = 0,
     .y = 0,
 };
+struct Int2 cursorDelta()
+{
+    struct Int2 cd = cursor_delta;
+    cursor_delta = (struct Int2) { 0, 0 };
+    return cd;
+}
 
 void cursorUp(int n)
 {
@@ -92,6 +93,8 @@ struct UI getUI()
 
     struct VirtualTerm* vt = getScreen();
     struct TermEntry* t = getTermEntry();
+
+    struct Int2 vc = viewportCursor(Currentbuf);
     struct UI ui = {
         .vt = vt,
         .use_graphic = graph_ok(t),
@@ -105,10 +108,10 @@ struct UI getUI()
                 .y = vt->ROWS - rootY,
             },
         },
-        .viewport_cursor = viewport_cursor,
-        .cursor = {
-            .x = rootX + viewport_cursor.x,
-            .y = rootY + viewport_cursor.y,
+        .viewport_cursor = vc,
+        .term_cursor = {
+            .x = rootX + vc.x,
+            .y = rootY + vc.y,
         },
     };
     return ui;
@@ -308,14 +311,6 @@ static Str make_lastline_message(struct Buffer* buf)
     return msg;
 }
 
-bool applyCursor()
-{
-    bool scroll = false;
-    viewport_cursor = updateCursor(Currentbuf, getUI().viewport.size, viewport_cursor, cursor_delta, &scroll);
-    cursor_delta = (struct Int2) { 0, 0 };
-    return scroll;
-}
-
 void renderFrame(struct UI ui)
 {
     struct TermEntry* t = getTermEntry();
@@ -381,7 +376,7 @@ void renderFrame(struct UI ui)
     refreshFrame(ttyWriter(), frame);
     wc_putc_end(ttyWriter());
 
-    MOVE(ttyWriter(), ui.cursor.y, ui.cursor.x);
+    MOVE(ttyWriter(), ui.term_cursor.y, ui.term_cursor.x);
     flushWriter(ttyWriter());
 }
 

@@ -36,25 +36,13 @@ enum MessageSeverity {
     MSG_ERR,
 };
 
-struct VirtualTerm;
-
-struct UI {
-    struct VirtualTerm* vt;
-    bool use_graphic;
-    struct Rect viewport;
-    // viewport local position
-    struct Int2 viewport_cursor;
-    // global position
-    struct Int2 cursor;
-};
-
 void cursorUp(int n);
 void cursorDown(int n);
 void cursorUpDown(int n);
 void cursorRight(int n);
 void cursorLeft(int n);
 void cursorHome();
-bool applyCursor();
+struct Int2 cursorDelta();
 
 struct UI getUI();
 void message(struct UI ui, enum MessageSeverity, const char* s);

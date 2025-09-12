@@ -2,6 +2,7 @@
  * w3m menu.h
  */
 #pragma once
+#include "geometry.h"
 
 extern int FRAME_WIDTH;
 
@@ -70,6 +71,6 @@ void new_option_menu(Menu* menu, const char** label, int* variable, void (*func)
 int setMenuItem(MenuItem* item, const char* type, const char* line);
 int addMenuList(MenuList** list, const char* id);
 int getMenuN(MenuList* list, const char* id);
-void popupMenu(int x, int y, Menu* menu);
+void popupMenu(struct UI ui, Menu* menu);
 void optionMenu(int x, int y, const char** label, int* variable, int initial, void (*func)());
 void initMenu(void);
