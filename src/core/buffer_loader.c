@@ -207,7 +207,7 @@ Lineprop NullProp[] = { 0 };
 //  vnext
 // Null
 //
-static void addLine(struct Line* prev, struct Line* l)
+static void addLine(struct LineList* prev, struct LineList* l)
 {
     l->prev = prev;
     l->next = NULL;
@@ -220,7 +220,7 @@ static void addLine(struct Line* prev, struct Line* l)
     }
 }
 
-static struct Line* addNewline(struct Line* prev, char* line, Lineprop* prop, Linecolor* color, int pos,
+static struct LineList* addNewline(struct LineList* prev, char* line, Lineprop* prop, Linecolor* color, int pos,
     int width, int index)
 {
     char* s;
@@ -242,7 +242,7 @@ static struct Line* addNewline(struct Line* prev, char* line, Lineprop* prop, Li
         c = NULL;
     }
 
-    struct Line* l = newLine(s, p, c, pos, index);
+    struct LineList* l = newLine(s, p, c, pos, index);
     addLine(prev, l);
     // prev = l;
     // if (pos > 0 && width > 0) {
@@ -788,7 +788,7 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
         }
         /* end of processing for one line */
         if (!internal) {
-            struct Line* l = addNewline(currentLine(buf), outc, outp, NULL, pos, -1, ++buf->allLine);
+            struct LineList* l = addNewline(currentLine(buf), outc, outp, NULL, pos, -1, ++buf->allLine);
             buf->currentLineIndex = l->linenumber;
             if (buf->firstLine == NULL) {
                 buf->firstLine = l;
@@ -1633,7 +1633,7 @@ loadBuffer(struct Url url, union input_stream* stream, struct Buffer* newBuf)
         Strchop(lineBuf2);
         lineBuf2 = checkType(lineBuf2, &propBuffer, NULL);
         {
-            struct Line* l = addNewline(currentLine(newBuf),
+            struct LineList* l = addNewline(currentLine(newBuf),
                 lineBuf2->ptr, propBuffer, colorBuffer, lineBuf2->length, -1, ++newBuf->allLine);
             newBuf->currentLineIndex = l->linenumber;
             if (newBuf->firstLine == NULL) {

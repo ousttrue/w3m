@@ -47,7 +47,7 @@ const char* conv_search_string(const char* str, wc_ces f_ces)
 enum SearchResultFlags forwardSearch(struct Buffer* buf, const char* str)
 {
     char *p, *first, *last;
-    struct Line *l, *begin;
+    struct LineList *l, *begin;
     int wrapped = false;
     int pos;
 
@@ -66,20 +66,20 @@ enum SearchResultFlags forwardSearch(struct Buffer* buf, const char* str)
             l = l->prev;
     }
     begin = l;
-    while (pos < l->size && l->propBuf[pos] & PC_WCHAR2)
+    while (pos < l->l.size && l->l.propBuf[pos] & PC_WCHAR2)
         pos++;
-    if (pos < l->size && regexMatch(&l->lineBuf[pos], l->size - pos, 0) == 1) {
+    if (pos < l->l.size && regexMatch(&l->l.lineBuf[pos], l->l.size - pos, 0) == 1) {
         matchedPosition(&first, &last);
-        pos = first - l->lineBuf;
-        while (pos >= l->len && l->next && l->next->bpos) {
-            pos -= l->len;
+        pos = first - l->l.lineBuf;
+        while (pos >= l->l.len && l->next && l->next->bpos) {
+            pos -= l->l.len;
             l = l->next;
         }
         buf->pos = pos;
         if (l != currentLine(buf))
             gotoLine(buf, l->linenumber);
         arrangeCursor(buf);
-        set_mark(l, pos, pos + last - first);
+        set_mark(&l->l, pos, pos + last - first);
         return SR_FOUND;
     }
     for (l = l->next;; l = l->next) {
@@ -93,18 +93,18 @@ enum SearchResultFlags forwardSearch(struct Buffer* buf, const char* str)
         }
         if (l->bpos)
             continue;
-        if (regexMatch(l->lineBuf, l->size, 1) == 1) {
+        if (regexMatch(l->l.lineBuf, l->l.size, 1) == 1) {
             matchedPosition(&first, &last);
-            pos = first - l->lineBuf;
-            while (pos >= l->len && l->next && l->next->bpos) {
-                pos -= l->len;
+            pos = first - l->l.lineBuf;
+            while (pos >= l->l.len && l->next && l->next->bpos) {
+                pos -= l->l.len;
                 l = l->next;
             }
             buf->pos = pos;
             buf->currentLineIndex = l->linenumber;
             gotoLine(buf, l->linenumber);
             arrangeCursor(buf);
-            set_mark(l, pos, pos + last - first);
+            set_mark(&l->l, pos, pos + last - first);
             return SR_FOUND | (wrapped ? SR_WRAPPED : 0);
         }
         if (wrapped && l == begin) /* no match */
@@ -116,7 +116,7 @@ enum SearchResultFlags forwardSearch(struct Buffer* buf, const char* str)
 enum SearchResultFlags backwardSearch(struct Buffer* buf, const char* str)
 {
     char *p, *q, *found, *found_last, *first, *last;
-    struct Line *l, *begin;
+    struct LineList *l, *begin;
     int wrapped = false;
     int pos;
 
@@ -137,38 +137,38 @@ enum SearchResultFlags backwardSearch(struct Buffer* buf, const char* str)
     begin = l;
     if (pos > 0) {
         pos--;
-        while (pos > 0 && l->propBuf[pos] & PC_WCHAR2)
+        while (pos > 0 && l->l.propBuf[pos] & PC_WCHAR2)
             pos--;
-        p = &l->lineBuf[pos];
+        p = &l->l.lineBuf[pos];
         found = NULL;
         found_last = NULL;
-        q = l->lineBuf;
-        while (regexMatch(q, &l->lineBuf[l->size] - q, q == l->lineBuf) == 1) {
+        q = l->l.lineBuf;
+        while (regexMatch(q, &l->l.lineBuf[l->l.size] - q, q == l->l.lineBuf) == 1) {
             matchedPosition(&first, &last);
             if (first <= p) {
                 found = first;
                 found_last = last;
             }
-            if (q - l->lineBuf >= l->size)
+            if (q - l->l.lineBuf >= l->l.size)
                 break;
             q++;
-            while (q - l->lineBuf < l->size
-                && l->propBuf[q - l->lineBuf] & PC_WCHAR2)
+            while (q - l->l.lineBuf < l->l.size
+                && l->l.propBuf[q - l->l.lineBuf] & PC_WCHAR2)
                 q++;
             if (q > p)
                 break;
         }
         if (found) {
-            pos = found - l->lineBuf;
-            while (pos >= l->len && l->next && l->next->bpos) {
-                pos -= l->len;
+            pos = found - l->l.lineBuf;
+            while (pos >= l->l.len && l->next && l->next->bpos) {
+                pos -= l->l.len;
                 l = l->next;
             }
             buf->pos = pos;
             if (l != currentLine(buf))
                 gotoLine(buf, l->linenumber);
             arrangeCursor(buf);
-            set_mark(l, pos, pos + found_last - found);
+            set_mark(&l->l, pos, pos + found_last - found);
             return SR_FOUND;
         }
     }
@@ -183,22 +183,22 @@ enum SearchResultFlags backwardSearch(struct Buffer* buf, const char* str)
         }
         found = NULL;
         found_last = NULL;
-        q = l->lineBuf;
-        while (regexMatch(q, &l->lineBuf[l->size] - q, q == l->lineBuf) == 1) {
+        q = l->l.lineBuf;
+        while (regexMatch(q, &l->l.lineBuf[l->l.size] - q, q == l->l.lineBuf) == 1) {
             matchedPosition(&first, &last);
             found = first;
             found_last = last;
-            if (q - l->lineBuf >= l->size)
+            if (q - l->l.lineBuf >= l->l.size)
                 break;
             q++;
-            while (q - l->lineBuf < l->size
-                && l->propBuf[q - l->lineBuf] & PC_WCHAR2)
+            while (q - l->l.lineBuf < l->l.size
+                && l->l.propBuf[q - l->l.lineBuf] & PC_WCHAR2)
                 q++;
         }
         if (found) {
-            pos = found - l->lineBuf;
-            while (pos >= l->len && l->next && l->next->bpos) {
-                pos -= l->len;
+            pos = found - l->l.lineBuf;
+            while (pos >= l->l.len && l->next && l->next->bpos) {
+                pos -= l->l.len;
                 l = l->next;
             }
             buf->pos = pos;

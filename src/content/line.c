@@ -9,20 +9,22 @@
 
 int Tabstop = 8;
 
-struct Line* newLine(char* line, Lineprop* prop, Linecolor* color, int pos, int index)
+struct LineList* newLine(char* line, Lineprop* prop, Linecolor* color, int pos, int index)
 {
-    struct Line* l;
-    l = New(struct Line);
+    struct LineList* l = New(struct LineList);
     l->next = NULL;
-    l->lineBuf = line;
-    l->propBuf = prop;
-    l->colorBuf = color;
-    l->len = pos;
-    l->width = -1;
-    l->size = pos;
+    l->prev = NULL;
     l->bpos = 0;
     l->bwidth = 0;
     l->linenumber = index;
+    l->l = (struct Line) {
+        .lineBuf = line,
+        .propBuf = prop,
+        .colorBuf = color,
+        .len = pos,
+        .width = -1,
+        .size = pos,
+    };
     return l;
 }
 

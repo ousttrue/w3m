@@ -288,23 +288,23 @@ reseq_anchor(struct Buffer* buf)
 }
 
 static char*
-reAnchorPos(struct Buffer* buf, struct Line* l, char* p1, char* p2, AnchorFunc anchorproc)
+reAnchorPos(struct Buffer* buf, struct LineList* l, char* p1, char* p2, AnchorFunc anchorproc)
 {
     Anchor* a;
     int spos, epos;
     int i, hseq = -2;
 
-    spos = p1 - l->lineBuf;
-    epos = p2 - l->lineBuf;
+    spos = p1 - l->l.lineBuf;
+    epos = p2 - l->l.lineBuf;
     for (i = spos; i < epos; i++) {
-        if (l->propBuf[i] & (PE_ANCHOR | PE_FORM))
+        if (l->l.propBuf[i] & (PE_ANCHOR | PE_FORM))
             return p2;
     }
     for (i = spos; i < epos; i++)
-        l->propBuf[i] |= PE_ANCHOR;
-    while (spos > l->len && l->next && l->next->bpos) {
-        spos -= l->len;
-        epos -= l->len;
+        l->l.propBuf[i] |= PE_ANCHOR;
+    while (spos > l->l.len && l->next && l->next->bpos) {
+        spos -= l->l.len;
+        epos -= l->l.len;
         l = l->next;
     }
     while (1) {
@@ -315,10 +315,10 @@ reAnchorPos(struct Buffer* buf, struct Line* l, char* p1, char* p2, AnchorFunc a
             hseq = a->hseq;
         }
         a->end.line = l->linenumber;
-        if (epos > l->len && l->next && l->next->bpos) {
-            a->end.pos = l->len;
+        if (epos > l->l.len && l->next && l->next->bpos) {
+            a->end.pos = l->l.len;
             spos = 0;
-            epos -= l->len;
+            epos -= l->l.len;
             l = l->next;
         } else {
             a->end.pos = epos;
@@ -328,9 +328,9 @@ reAnchorPos(struct Buffer* buf, struct Line* l, char* p1, char* p2, AnchorFunc a
     return p2;
 }
 
-void reAnchorWord(struct Buffer* buf, struct Line* l, int spos, int epos)
+void reAnchorWord(struct Buffer* buf, struct LineList* l, int spos, int epos)
 {
-    reAnchorPos(buf, l, &l->lineBuf[spos], &l->lineBuf[epos], _put_anchor_all);
+    reAnchorPos(buf, l, &l->l.lineBuf[spos], &l->l.lineBuf[epos], _put_anchor_all);
 }
 
 /* search regexp and register them as anchors */
@@ -338,7 +338,7 @@ void reAnchorWord(struct Buffer* buf, struct Line* l, int spos, int epos)
 static const char*
 reAnchorAny(struct Buffer* buf, const char* re, AnchorFunc anchorproc)
 {
-    struct Line* l;
+    struct LineList* l;
     char *p = NULL, *p1, *p2;
 
     if (re == NULL || *re == '\0') {
@@ -351,9 +351,9 @@ reAnchorAny(struct Buffer* buf, const char* re, AnchorFunc anchorproc)
         l = l->next) {
         if (p && l->bpos)
             continue;
-        p = l->lineBuf;
+        p = l->l.lineBuf;
         for (;;) {
-            if (regexMatch(p, &l->lineBuf[l->size] - p, p == l->lineBuf) == 1) {
+            if (regexMatch(p, &l->l.lineBuf[l->l.size] - p, p == l->l.lineBuf) == 1) {
                 matchedPosition(&p1, &p2);
                 p = reAnchorPos(buf, l, p1, p2, anchorproc);
             } else
@@ -473,7 +473,7 @@ void addMultirowsImg(struct Buffer* buf, AnchorList* al)
 {
     int i, j, k, col, ecol, pos;
     Anchor a_img, a_href, a_form, *a;
-    struct Line *l, *ls;
+    struct LineList *l, *ls;
 
     if (al == NULL || al->nanchor == 0)
         return;
@@ -510,19 +510,19 @@ void addMultirowsImg(struct Buffer* buf, AnchorList* al)
             a_form = *a;
         else
             a_form.url = NULL;
-        col = COLPOS(ls, a_img.start.pos);
-        ecol = COLPOS(ls, a_img.end.pos);
+        col = COLPOS(&ls->l, a_img.start.pos);
+        ecol = COLPOS(&ls->l, a_img.end.pos);
         for (j = 0; l && j < img->rows; l = l->next, j++) {
             if (a_img.start.line == l->linenumber)
                 continue;
-            pos = columnPos(l, col);
+            pos = columnPos(&l->l, col);
             a = registerImg(buf, a_img.url, a_img.title, l->linenumber, pos);
             a->hseq = -a_img.hseq;
             a->slave = true;
             a->image = img;
             a->end.pos = pos + ecol - col;
             for (k = pos; k < a->end.pos; k++)
-                l->propBuf[k] |= PE_IMAGE;
+                l->l.propBuf[k] |= PE_IMAGE;
             if (a_href.url) {
                 a = registerHref(buf, a_href.url, a_href.target,
                     a_href.referer, a_href.title,
@@ -531,7 +531,7 @@ void addMultirowsImg(struct Buffer* buf, AnchorList* al)
                 a->slave = true;
                 a->end.pos = pos + ecol - col;
                 for (k = pos; k < a->end.pos; k++)
-                    l->propBuf[k] |= PE_ANCHOR;
+                    l->l.propBuf[k] |= PE_ANCHOR;
             }
             if (a_form.url) {
                 buf->formitem = putAnchor(buf->formitem, a_form.url,
@@ -549,7 +549,7 @@ void addMultirowsForm(struct Buffer* buf, AnchorList* al)
 {
     int i, j, k, col, ecol, pos;
     Anchor a_form, *a;
-    struct Line *l, *ls;
+    struct LineList *l, *ls;
 
     if (al == NULL || al->nanchor == 0)
         return;
@@ -575,10 +575,10 @@ void addMultirowsForm(struct Buffer* buf, AnchorList* al)
             if (!ls)
                 continue;
         }
-        col = COLPOS(ls, a_form.start.pos);
-        ecol = COLPOS(ls, a_form.end.pos);
+        col = COLPOS(&ls->l, a_form.start.pos);
+        ecol = COLPOS(&ls->l, a_form.end.pos);
         for (j = 0; l && j < a_form.rows; l = l->next, j++) {
-            pos = columnPos(l, col);
+            pos = columnPos(&l->l, col);
             if (j == 0) {
                 buf->hmarklist->marks[a_form.hseq].line = l->linenumber;
                 buf->hmarklist->marks[a_form.hseq].pos = pos;
@@ -591,28 +591,25 @@ void addMultirowsForm(struct Buffer* buf, AnchorList* al)
             a->hseq = a_form.hseq;
             a->y = a_form.y;
             a->end.pos = pos + ecol - col;
-            if (pos < 1 || a->end.pos >= l->size)
+            if (pos < 1 || a->end.pos >= l->l.size)
                 continue;
-            l->lineBuf[pos - 1] = '[';
-            l->lineBuf[a->end.pos] = ']';
+            l->l.lineBuf[pos - 1] = '[';
+            l->l.lineBuf[a->end.pos] = ']';
             for (k = pos; k < a->end.pos; k++)
-                l->propBuf[k] |= PE_FORM;
+                l->l.propBuf[k] |= PE_FORM;
         }
     }
 }
 
 char* getAnchorText(struct Buffer* buf, AnchorList* al, Anchor* a)
 {
-    int hseq, i;
-    struct Line* l;
-    Str tmp = NULL;
-    char *p, *ep;
-
     if (!a || a->hseq < 0)
         return NULL;
-    hseq = a->hseq;
-    l = buf->firstLine;
-    for (i = 0; i < al->nanchor; i++) {
+
+    Str tmp = NULL;
+    int hseq = a->hseq;
+    struct LineList* l = buf->firstLine;
+    for (int i = 0; i < al->nanchor; i++) {
         a = &al->anchors[i];
         if (a->hseq != hseq)
             continue;
@@ -622,8 +619,8 @@ char* getAnchorText(struct Buffer* buf, AnchorList* al, Anchor* a)
         }
         if (!l)
             break;
-        p = l->lineBuf + a->start.pos;
-        ep = l->lineBuf + a->end.pos;
+        const char* p = l->l.lineBuf + a->start.pos;
+        const char* ep = l->l.lineBuf + a->end.pos;
         for (; p < ep && IS_SPACE(*p); p++)
             ;
         if (p == ep)

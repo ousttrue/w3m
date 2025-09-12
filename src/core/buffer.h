@@ -64,7 +64,7 @@ struct Buffer {
     char* filename;
     const char* buffername;
 
-    struct Line* firstLine;
+    struct LineList* firstLine;
     int topLineIndex;
     int currentLineIndex;
     int allLine;
@@ -123,9 +123,9 @@ struct Buffer* namedBuffer(struct Buffer* first, char* name);
 struct Buffer* deleteBuffer(struct Buffer* first, struct Buffer* delbuf);
 struct Buffer* replaceBuffer(struct Buffer* first, struct Buffer* delbuf, struct Buffer* newbuf);
 struct Buffer* nthBuffer(struct Buffer* firstbuf, int n);
-struct Line* currentLine(struct Buffer* buf);
-struct Line* lastLine(struct Buffer* buf);
-struct Line* topLine(struct Buffer* buf);
+struct LineList* currentLine(struct Buffer* buf);
+struct LineList* lastLine(struct Buffer* buf);
+struct LineList* topLine(struct Buffer* buf);
 // void gotoRealLine(struct Buffer* buf, int n);
 void gotoLine(struct Buffer* buf, int n);
 struct Buffer* selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectchar);
@@ -143,8 +143,8 @@ void saveBuffer(struct Buffer* buf, FILE* f, int cont);
 char* url_decode2(const char* url, const struct Buffer* buf);
 struct Url* baseURL(struct Buffer* buf);
 int columnSkip(struct Buffer* buf, int offset);
-struct Line* lineSkip(struct Buffer* buf, struct Line* line, int offset, int last);
-struct Line* currentLineSkip(struct Buffer* buf, struct Line* line, int offset, int last);
+struct LineList* lineSkip(struct Buffer* buf, struct LineList* line, int offset, int last);
+struct LineList* currentLineSkip(struct Buffer* buf, struct LineList* line, int offset, int last);
 char* last_modified(struct Buffer* buf);
 struct Buffer* cookie_list_panel(void);
 struct Int2 updateCursor(struct Buffer* buf, struct Int2 viewport_size,

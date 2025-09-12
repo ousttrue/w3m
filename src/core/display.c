@@ -32,7 +32,7 @@ double pixel_per_line = (DEFAULT_PIXEL_PER_LINE);
 int pixel_per_line_i = (DEFAULT_PIXEL_PER_LINE);
 int set_pixel_per_line = (false);
 
-static struct Line* cline = NULL;
+static struct LineList* cline = NULL;
 static int ccolumn = -1;
 static int image_touch = 0;
 static bool draw_image_flag = false;
@@ -74,7 +74,7 @@ struct Frame* screenToFrame(const struct VirtualTerm* vt)
     return frame;
 }
 
-static struct Line* redrawLine(struct UI ui, struct Buffer* buf, struct Line* l, int i)
+static struct LineList* redrawLine(struct UI ui, struct Buffer* buf, struct LineList* l, int i)
 {
     int j, pos, rcol, ncol, delta = 1;
     int column = buf->currentColumn;
@@ -91,23 +91,23 @@ static struct Line* redrawLine(struct UI ui, struct Buffer* buf, struct Line* l,
     vt_move(ui.vt, i, 0);
 
     vt_move(ui.vt, i, ui.viewport.offset.x);
-    if (l->width < 0)
-        l->width = COLPOS(l, l->len);
-    if (l->len == 0 || l->width - 1 < column) {
+    if (l->l.width < 0)
+        l->l.width = COLPOS(&l->l, l->l.len);
+    if (l->l.len == 0 || l->l.width - 1 < column) {
         vt_clrtoeolx(ui.vt);
         return l;
     }
     /* need_clrtoeol(); */
-    pos = columnPos(l, column);
-    p = &(l->lineBuf[pos]);
-    pr = &(l->propBuf[pos]);
-    if (useColor && l->colorBuf)
-        pc = &(l->colorBuf[pos]);
+    pos = columnPos(&l->l, column);
+    p = &(l->l.lineBuf[pos]);
+    pr = &(l->l.propBuf[pos]);
+    if (useColor && l->l.colorBuf)
+        pc = &(l->l.colorBuf[pos]);
     else
         pc = NULL;
-    rcol = COLPOS(l, pos);
+    rcol = COLPOS(&l->l, pos);
 
-    for (j = 0; rcol - column < buf->width && pos + j < l->len; j += delta) {
+    for (j = 0; rcol - column < buf->width && pos + j < l->l.len; j += delta) {
         if (useVisitedColor && vpos <= pos + j && !(pr[j] & PE_VISITED)) {
             a = retrieveAnchor(buf->href, l->linenumber, pos + j);
             if (a) {
@@ -120,7 +120,7 @@ static struct Line* redrawLine(struct UI ui, struct Buffer* buf, struct Line* l,
             }
         }
         delta = wtf_len((wc_uchar*)&p[j]);
-        ncol = COLPOS(l, pos + j + delta);
+        ncol = COLPOS(&l->l, pos + j + delta);
         if (ncol - column > buf->width)
             break;
         if (pc)
@@ -145,7 +145,7 @@ static struct Line* redrawLine(struct UI ui, struct Buffer* buf, struct Line* l,
     return l;
 }
 
-static struct Line* redrawLineImage(struct UI ui, struct Buffer* buf, struct Line* l, int i)
+static struct LineList* redrawLineImage(struct UI ui, struct Buffer* buf, struct LineList* l, int i)
 {
     int j, pos, rcol;
     int column = buf->currentColumn;
@@ -154,15 +154,15 @@ static struct Line* redrawLineImage(struct UI ui, struct Buffer* buf, struct Lin
 
     if (l == NULL)
         return NULL;
-    if (l->width < 0)
-        l->width = COLPOS(l, l->len);
-    if (l->len == 0 || l->width - 1 < column)
+    if (l->l.width < 0)
+        l->l.width = COLPOS(&l->l, l->l.len);
+    if (l->l.len == 0 || l->l.width - 1 < column)
         return l;
-    pos = columnPos(l, column);
-    rcol = COLPOS(l, pos);
-    for (j = 0; rcol - column < ui.viewport.size.x && pos + j < l->len; j++) {
+    pos = columnPos(&l->l, column);
+    rcol = COLPOS(&l->l, pos);
+    for (j = 0; rcol - column < ui.viewport.size.x && pos + j < l->l.len; j++) {
         if (rcol - column < 0) {
-            rcol = COLPOS(l, pos + j + 1);
+            rcol = COLPOS(&l->l, pos + j + 1);
             continue;
         }
         a = retrieveAnchor(buf->img, l->linenumber, pos + j);
@@ -179,7 +179,7 @@ static struct Line* redrawLineImage(struct UI ui, struct Buffer* buf, struct Lin
                 }
                 x = (int)((rcol - column + ui.viewport.offset.x) * pixel_per_char);
                 y = (int)(i * pixel_per_line);
-                sx = (int)((rcol - COLPOS(l, a->start.pos)) * pixel_per_char);
+                sx = (int)((rcol - COLPOS(&l->l, a->start.pos)) * pixel_per_char);
                 sy = (int)((l->linenumber - image->y) * pixel_per_line);
                 if (!enable_inline_image) {
                     if (sx == 0 && x + image->xoffset >= 0)
@@ -208,7 +208,7 @@ static struct Line* redrawLineImage(struct UI ui, struct Buffer* buf, struct Lin
                 draw_image_flag = true;
             }
         }
-        rcol = COLPOS(l, pos + j + 1);
+        rcol = COLPOS(&l->l, pos + j + 1);
     }
     return l;
 }
@@ -220,7 +220,7 @@ static void redrawNLine(struct UI ui, struct Buffer* buf, int n)
         vt_setbcolor(ui.vt, bg_color);
     }
 
-    struct Line* l;
+    struct LineList* l;
     int i;
     for (i = 0, l = topLine(buf); i < ui.viewport.size.y; i++, l = l->next) {
         if (i >= ui.viewport.size.y - n || i < -n)
@@ -268,7 +268,7 @@ void bufToScreen(struct UI ui, struct Buffer* buf)
         buf->topLineIndex = buf->firstLine->linenumber;
 }
 
-static int redrawLineRegion(struct UI ui, struct Buffer* buf, struct Line* l, int i, int bpos, int epos)
+static int redrawLineRegion(struct UI ui, struct Buffer* buf, struct LineList* l, int i, int bpos, int epos)
 {
     int j, pos, rcol, ncol, delta = 1;
     int column = buf->currentColumn;
@@ -282,18 +282,18 @@ static int redrawLineRegion(struct UI ui, struct Buffer* buf, struct Line* l, in
 
     if (l == NULL)
         return 0;
-    pos = columnPos(l, column);
-    p = &(l->lineBuf[pos]);
-    pr = &(l->propBuf[pos]);
-    if (useColor && l->colorBuf)
-        pc = &(l->colorBuf[pos]);
+    pos = columnPos(&l->l, column);
+    p = &(l->l.lineBuf[pos]);
+    pr = &(l->l.propBuf[pos]);
+    if (useColor && l->l.colorBuf)
+        pc = &(l->l.colorBuf[pos]);
     else
         pc = NULL;
-    rcol = COLPOS(l, pos);
+    rcol = COLPOS(&l->l, pos);
     bcol = bpos - pos;
     ecol = epos - pos;
 
-    for (j = 0; rcol - column < ui.viewport.size.x && pos + j < l->len; j += delta) {
+    for (j = 0; rcol - column < ui.viewport.size.x && pos + j < l->l.len; j += delta) {
         if (useVisitedColor && vpos <= pos + j && !(pr[j] & PE_VISITED)) {
             a = retrieveAnchor(buf->href, l->linenumber, pos + j);
             if (a) {
@@ -306,7 +306,7 @@ static int redrawLineRegion(struct UI ui, struct Buffer* buf, struct Line* l, in
             }
         }
         delta = wtf_len((wc_uchar*)&p[j]);
-        ncol = COLPOS(l, pos + j + delta);
+        ncol = COLPOS(&l->l, pos + j + delta);
         if (ncol - column > ui.viewport.size.x)
             break;
         if (pc)
@@ -336,7 +336,7 @@ static void
 drawAnchorCursor0(struct UI ui, struct Buffer* buf,
     AnchorList* al, int hseq, int prevhseq, int tline, int eline, int active)
 {
-    struct Line* l = topLine(buf);
+    struct LineList* l = topLine(buf);
     for (int j = 0; j < al->nanchor; j++) {
         Anchor* an = &al->anchors[j];
         if (an->start.line < tline)
@@ -353,17 +353,17 @@ drawAnchorCursor0(struct UI ui, struct Buffer* buf,
             int start_pos = an->start.pos;
             int end_pos = an->end.pos;
             for (int i = an->start.pos; i < an->end.pos; i++) {
-                if (enable_inline_image && (l->propBuf[i] & PE_IMAGE)) {
+                if (enable_inline_image && (l->l.propBuf[i] & PE_IMAGE)) {
                     if (start_pos == i)
                         start_pos = i + 1;
                     else if (end_pos == an->end.pos)
                         end_pos = i - 1;
                 }
-                if (l->propBuf[i] & (PE_IMAGE | PE_ANCHOR | PE_FORM)) {
+                if (l->l.propBuf[i] & (PE_IMAGE | PE_ANCHOR | PE_FORM)) {
                     if (active)
-                        l->propBuf[i] |= PE_ACTIVE;
+                        l->l.propBuf[i] |= PE_ACTIVE;
                     else
-                        l->propBuf[i] &= ~PE_ACTIVE;
+                        l->l.propBuf[i] &= ~PE_ACTIVE;
                 }
             }
             if (active && start_pos < end_pos)

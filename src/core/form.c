@@ -383,7 +383,6 @@ void formUpdateBuffer(Anchor* a, struct Buffer* buf, struct FormItem* form)
     struct Buffer save;
     char* p;
     int spos, epos, rows, c_rows, pos, col = 0;
-    struct Line* l;
 
     copyBuffer(&save, buf);
     gotoLine(buf, a->start.line);
@@ -405,12 +404,12 @@ void formUpdateBuffer(Anchor* a, struct Buffer* buf, struct FormItem* form)
     switch (form->type) {
     case FORM_INPUT_CHECKBOX:
     case FORM_INPUT_RADIO:
-        if (currentLine(buf) == NULL || spos >= currentLine(buf)->len || spos < 0)
+        if (currentLine(buf) == NULL || spos >= currentLine(buf)->l.len || spos < 0)
             break;
         if (form->checked)
-            currentLine(buf)->lineBuf[spos] = '*';
+            currentLine(buf)->l.lineBuf[spos] = '*';
         else
-            currentLine(buf)->lineBuf[spos] = ' ';
+            currentLine(buf)->l.lineBuf[spos] = ' ';
         break;
     case FORM_INPUT_TEXT:
     case FORM_INPUT_FILE:
@@ -425,7 +424,7 @@ void formUpdateBuffer(Anchor* a, struct Buffer* buf, struct FormItem* form)
                 break;
             p = form->value->ptr;
         }
-        l = currentLine(buf);
+        struct LineList* l = currentLine(buf);
         if (!l)
             break;
         if (form->type == FORM_TEXTAREA) {
@@ -440,19 +439,19 @@ void formUpdateBuffer(Anchor* a, struct Buffer* buf, struct FormItem* form)
                 break;
         }
         rows = form->rows ? form->rows : 1;
-        col = COLPOS(l, a->start.pos);
+        col = COLPOS(&l->l, a->start.pos);
         for (c_rows = 0; c_rows < rows; c_rows++, l = l->next) {
             if (l == NULL)
                 break;
             if (rows > 1) {
-                pos = columnPos(l, col);
+                pos = columnPos(&l->l, col);
                 a = retrieveAnchor(buf->formitem, l->linenumber, pos);
                 if (a == NULL)
                     break;
                 spos = a->start.pos;
                 epos = a->end.pos;
             }
-            if (a->start.line != a->end.line || spos > epos || epos >= l->len || spos < 0 || epos < 0 || COLPOS(l, epos) < col)
+            if (a->start.line != a->end.line || spos > epos || epos >= l->l.len || spos < 0 || epos < 0 || COLPOS(l, epos) < col)
                 break;
             pos = form_update_line(l, &p, spos, epos, COLPOS(l, epos) - col,
                 rows > 1,

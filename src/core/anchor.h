@@ -61,7 +61,7 @@ Anchor* retrieveCurrentImg(struct Buffer* buf);
 Anchor* retrieveCurrentForm(struct Buffer* buf);
 Anchor* searchAnchor(AnchorList* al, const char* str);
 Anchor* searchURLLabel(struct Buffer* buf, const char* url);
-void reAnchorWord(struct Buffer* buf, struct Line* l, int spos, int epos);
+void reAnchorWord(struct Buffer* buf, struct LineList* l, int spos, int epos);
 const char* reAnchor(struct Buffer* buf, const char* re);
 void addMultirowsForm(struct Buffer* buf, AnchorList* al);
 Anchor* closest_next_anchor(AnchorList* a, Anchor* an, int x, int y);

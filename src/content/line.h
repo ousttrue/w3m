@@ -54,18 +54,25 @@ struct Line {
     char* lineBuf;
     Lineprop* propBuf;
     Linecolor* colorBuf;
-    struct Line* next;
-    struct Line* prev;
     int len;
     int width;
-    long linenumber; /* on buffer */
     unsigned short usrflags;
     int size;
+};
+
+struct LineList {
+    struct Line l;
+    struct LineList* next;
+    struct LineList* prev;
+    // on buffer
+    long linenumber;
+    // line break position
     int bpos;
+    // line break column width
     int bwidth;
 };
 
-struct Line* newLine(char* line, Lineprop* prop, Linecolor* color, int pos, int index);
+struct LineList* newLine(char* line, Lineprop* prop, Linecolor* color, int pos, int index);
 
 enum CalcPositionMode {
     CP_AUTO = 0,

@@ -45,7 +45,6 @@
 #include "screen.h"
 #include <stdio.h>
 #include <signal.h>
-#include <setjmp.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -1024,7 +1023,7 @@ void onKeyInput(unsigned char c)
                                               : GlobalKeymap[c];
             func();
         }
-        if(applyCursor()){
+        if (applyCursor()) {
             termClear(ttyWriter());
         }
         bufToScreen(getUI(), Currentbuf);
@@ -1250,7 +1249,7 @@ cmd_loadURL(const char* url, struct Url* current, const char* referer, struct Fo
 static void
 shiftvisualpos(struct Buffer* buf, int shift)
 {
-    struct Line* l = currentLine(buf);
+    struct LineList* l = currentLine(buf);
     buf->visualpos -= shift;
     if (buf->visualpos - l->bwidth >= getScreen()->COLS)
         buf->visualpos = l->bwidth + getScreen()->COLS - 1;
@@ -1288,7 +1287,7 @@ DEFUN(shiftr, SHIFT_RIGHT, "Shift screen right")
 DEFUN(col1R, RIGHT, "Shift screen one column right")
 {
     struct Buffer* buf = Currentbuf;
-    struct Line* l = currentLine(buf);
+    struct LineList* l = currentLine(buf);
     int j, column, n = searchKeyNum();
 
     if (l == NULL)
@@ -1305,7 +1304,7 @@ DEFUN(col1R, RIGHT, "Shift screen one column right")
 DEFUN(col1L, LEFT, "Shift screen one column left")
 {
     struct Buffer* buf = Currentbuf;
-    struct Line* l = currentLine(buf);
+    struct LineList* l = currentLine(buf);
     int j, n = searchKeyNum();
 
     if (l == NULL)
@@ -1452,14 +1451,21 @@ DEFUN(movR1, MOVE_RIGHT1, "Cursor right. With edge touched, slide")
  * 1999 09:29:56 +0900
  */
 
-#define nextChar(s, l) \
-    do {               \
-        (s)++;         \
-    } while ((s) < (l)->len && (l)->propBuf[s] & PC_WCHAR2)
-#define prevChar(s, l) \
-    do {               \
-        (s)--;         \
-    } while ((s) > 0 && (l)->propBuf[s] & PC_WCHAR2)
+static int nextChar(int s, struct Line* l)
+{
+    do {
+        (s)++;
+    } while ((s) < (l)->len && (l)->propBuf[s] & PC_WCHAR2);
+    return s;
+}
+
+static int prevChar(int s, struct Line* l)
+{
+    do {
+        (s)--;
+    } while ((s) > 0 && (l)->propBuf[s] & PC_WCHAR2);
+    return s;
+}
 
 static wc_uint32
 getChar(char* p)
@@ -1474,31 +1480,30 @@ is_wordchar(wc_uint32 c)
 }
 
 static int
-prev_nonnull_line(struct Line* line)
+prev_nonnull_line(struct LineList* line)
 {
-    struct Line* l;
-
-    for (l = line; l != NULL && l->len == 0; l = l->prev)
+    struct LineList* l;
+    for (l = line; l != NULL && l->l.len == 0; l = l->prev)
         ;
-    if (l == NULL || l->len == 0)
+    if (l == NULL || l->l.len == 0)
         return -1;
 
     Currentbuf->currentLineIndex = l->linenumber;
     if (l != line)
-        Currentbuf->pos = currentLine(Currentbuf)->len;
+        Currentbuf->pos = currentLine(Currentbuf)->l.len;
     return 0;
 }
 
 DEFUN(movLW, PREV_WORD, "Move to the previous word")
 {
     char* lb;
-    struct Line *pline, *l;
     int ppos;
     int i, n = searchKeyNum();
 
     if (Currentbuf->firstLine == NULL)
         return;
 
+    struct LineList *pline, *l;
     for (i = 0; i < n; i++) {
         pline = currentLine(Currentbuf);
         ppos = Currentbuf->pos;
@@ -1508,10 +1513,9 @@ DEFUN(movLW, PREV_WORD, "Move to the previous word")
 
         while (1) {
             l = currentLine(Currentbuf);
-            lb = l->lineBuf;
+            lb = l->l.lineBuf;
             while (Currentbuf->pos > 0) {
-                int tmp = Currentbuf->pos;
-                prevChar(tmp, l);
+                int tmp = prevChar(Currentbuf->pos, &l->l);
                 if (is_wordchar(getChar(&lb[tmp])))
                     break;
                 Currentbuf->pos = tmp;
@@ -1523,14 +1527,13 @@ DEFUN(movLW, PREV_WORD, "Move to the previous word")
                 Currentbuf->pos = ppos;
                 goto end;
             }
-            Currentbuf->pos = currentLine(Currentbuf)->len;
+            Currentbuf->pos = currentLine(Currentbuf)->l.len;
         }
 
         l = currentLine(Currentbuf);
-        lb = l->lineBuf;
+        lb = l->l.lineBuf;
         while (Currentbuf->pos > 0) {
-            int tmp = Currentbuf->pos;
-            prevChar(tmp, l);
+            int tmp = prevChar(Currentbuf->pos, &l->l);
             if (!is_wordchar(getChar(&lb[tmp])))
                 break;
             Currentbuf->pos = tmp;
@@ -1541,14 +1544,13 @@ end:
 }
 
 static int
-next_nonnull_line(struct Line* line)
+next_nonnull_line(struct LineList* line)
 {
-    struct Line* l;
-
-    for (l = line; l != NULL && l->len == 0; l = l->next)
+    struct LineList* l;
+    for (l = line; l != NULL && l->l.len == 0; l = l->next)
         ;
 
-    if (l == NULL || l->len == 0)
+    if (l == NULL || l->l.len == 0)
         return -1;
 
     Currentbuf->currentLineIndex = l->linenumber;
@@ -1559,30 +1561,28 @@ next_nonnull_line(struct Line* line)
 
 DEFUN(movRW, NEXT_WORD, "Move to the next word")
 {
-    char* lb;
-    struct Line *pline, *l;
-    int ppos;
     int i, n = searchKeyNum();
 
     if (Currentbuf->firstLine == NULL)
         return;
 
+    char* lb;
     for (i = 0; i < n; i++) {
-        pline = currentLine(Currentbuf);
-        ppos = Currentbuf->pos;
+        struct LineList* pline = currentLine(Currentbuf);
+        int ppos = Currentbuf->pos;
 
         if (next_nonnull_line(currentLine(Currentbuf)) < 0)
             goto end;
 
-        l = currentLine(Currentbuf);
-        lb = l->lineBuf;
-        while (Currentbuf->pos < l->len && is_wordchar(getChar(&lb[Currentbuf->pos])))
-            nextChar(Currentbuf->pos, l);
+        struct LineList* l = currentLine(Currentbuf);
+        lb = l->l.lineBuf;
+        while (Currentbuf->pos < l->l.len && is_wordchar(getChar(&lb[Currentbuf->pos])))
+            Currentbuf->pos = nextChar(Currentbuf->pos, &l->l);
 
         while (1) {
-            while (Currentbuf->pos < l->len && !is_wordchar(getChar(&lb[Currentbuf->pos])))
-                nextChar(Currentbuf->pos, l);
-            if (Currentbuf->pos < l->len)
+            while (Currentbuf->pos < l->l.len && !is_wordchar(getChar(&lb[Currentbuf->pos])))
+                Currentbuf->pos = nextChar(Currentbuf->pos, &l->l);
+            if (Currentbuf->pos < l->l.len)
                 break;
             if (next_nonnull_line(currentLine(Currentbuf)->next) < 0) {
                 Currentbuf->currentLineIndex = pline->linenumber;
@@ -1591,7 +1591,7 @@ DEFUN(movRW, NEXT_WORD, "Move to the next word")
             }
             Currentbuf->pos = 0;
             l = currentLine(Currentbuf);
-            lb = l->lineBuf;
+            lb = l->l.lineBuf;
         }
     }
 end:
@@ -1754,7 +1754,7 @@ DEFUN(linend, LINE_END, "Go to the end of the line")
     while (currentLine(Currentbuf)->next
         && currentLine(Currentbuf)->next->bpos)
         cursorDown(1);
-    Currentbuf->pos = currentLine(Currentbuf)->len - 1;
+    Currentbuf->pos = currentLine(Currentbuf)->l.len - 1;
     arrangeCursor(Currentbuf);
 }
 
@@ -1822,34 +1822,30 @@ DEFUN(editScr, EDIT_SCREEN, "Edit rendered copy of document")
 /* Set / unset mark */
 DEFUN(_mark, MARK, "Set/unset mark")
 {
-    struct Line* l;
     if (!use_mark)
         return;
     if (Currentbuf->firstLine == NULL)
         return;
-    l = currentLine(Currentbuf);
-    l->propBuf[Currentbuf->pos] ^= PE_MARK;
+    struct LineList* l = currentLine(Currentbuf);
+    l->l.propBuf[Currentbuf->pos] ^= PE_MARK;
 }
 
 /* Go to next mark */
 DEFUN(nextMk, NEXT_MARK, "Go to the next mark")
 {
-    struct Line* l;
-    int i;
-
     if (!use_mark)
         return;
     if (Currentbuf->firstLine == NULL)
         return;
-    i = Currentbuf->pos + 1;
-    l = currentLine(Currentbuf);
-    if (i >= l->len) {
+    int i = Currentbuf->pos + 1;
+    struct LineList* l = currentLine(Currentbuf);
+    if (i >= l->l.len) {
         i = 0;
         l = l->next;
     }
     while (l != NULL) {
-        for (; i < l->len; i++) {
-            if (l->propBuf[i] & PE_MARK) {
+        for (; i < l->l.len; i++) {
+            if (l->l.propBuf[i] & PE_MARK) {
                 Currentbuf->currentLineIndex = l->linenumber;
                 Currentbuf->pos = i;
                 arrangeCursor(Currentbuf);
@@ -1867,23 +1863,20 @@ DEFUN(nextMk, NEXT_MARK, "Go to the next mark")
 /* Go to previous mark */
 DEFUN(prevMk, PREV_MARK, "Go to the previous mark")
 {
-    struct Line* l;
-    int i;
-
     if (!use_mark)
         return;
     if (Currentbuf->firstLine == NULL)
         return;
-    i = Currentbuf->pos - 1;
-    l = currentLine(Currentbuf);
+    int i = Currentbuf->pos - 1;
+    struct LineList* l = currentLine(Currentbuf);
     if (i < 0) {
         l = l->prev;
         if (l != NULL)
-            i = l->len - 1;
+            i = l->l.len - 1;
     }
     while (l != NULL) {
         for (; i >= 0; i--) {
-            if (l->propBuf[i] & PE_MARK) {
+            if (l->l.propBuf[i] & PE_MARK) {
                 Currentbuf->currentLineIndex = l->linenumber;
                 Currentbuf->pos = i;
                 arrangeCursor(Currentbuf);
@@ -1893,7 +1886,7 @@ DEFUN(prevMk, PREV_MARK, "Go to the previous mark")
         }
         l = l->prev;
         if (l != NULL)
-            i = l->len - 1;
+            i = l->l.len - 1;
     }
     /* FIXME: gettextize? */
     message(getUI(), MSG_INFO, "No mark exist before here");
@@ -1921,15 +1914,15 @@ DEFUN(reMark, REG_MARK, "Mark all occurences of a pattern")
         return;
     }
 
-    struct Line* l;
+    struct LineList* l;
     char *p, *p1, *p2;
     MarkString = str;
     for (l = Currentbuf->firstLine; l != NULL; l = l->next) {
-        p = l->lineBuf;
+        p = l->l.lineBuf;
         for (;;) {
-            if (regexMatch(p, &l->lineBuf[l->len] - p, p == l->lineBuf) == 1) {
+            if (regexMatch(p, &l->l.lineBuf[l->l.len] - p, p == l->l.lineBuf) == 1) {
                 matchedPosition(&p1, &p2);
-                l->propBuf[p1 - l->lineBuf] |= PE_MARK;
+                l->l.propBuf[p1 - l->l.lineBuf] |= PE_MARK;
                 p = p2;
             } else
                 break;
@@ -2348,7 +2341,6 @@ nextX(int d, int dy)
 {
     HmarkerList* hl = Currentbuf->hmarklist;
     Anchor *an, *pan;
-    struct Line* l;
     int i, x, y, n = searchKeyNum();
 
     if (Currentbuf->firstLine == NULL)
@@ -2360,6 +2352,7 @@ nextX(int d, int dy)
     if (an == NULL)
         an = retrieveCurrentForm(Currentbuf);
 
+    struct LineList* l;
     l = currentLine(Currentbuf);
     x = Currentbuf->pos;
     y = l->linenumber;
@@ -2369,7 +2362,7 @@ nextX(int d, int dy)
             x = (d > 0) ? an->end.pos : an->start.pos - 1;
         an = NULL;
         while (1) {
-            for (; x >= 0 && x < l->len; x += d) {
+            for (; x >= 0 && x < l->l.len; x += d) {
                 an = retrieveAnchor(Currentbuf->href, y, x);
                 if (!an)
                     an = retrieveAnchor(Currentbuf->formitem, y, x);
@@ -2383,7 +2376,7 @@ nextX(int d, int dy)
             l = (dy > 0) ? l->next : l->prev;
             if (!l)
                 break;
-            x = (d > 0) ? 0 : l->len - 1;
+            x = (d > 0) ? 0 : l->l.len - 1;
             y = l->linenumber;
         }
         if (!an)
@@ -3290,29 +3283,29 @@ static char*
 getCurWord(struct Buffer* buf, int* spos, int* epos)
 {
     char* p;
-    struct Line* l = currentLine(buf);
+    struct LineList* l = currentLine(buf);
     int b, e;
 
     *spos = 0;
     *epos = 0;
     if (l == NULL)
         return NULL;
-    p = l->lineBuf;
+    p = l->l.lineBuf;
     e = buf->pos;
     while (e > 0 && !is_wordchar(getChar(&p[e])))
-        prevChar(e, l);
+        e = prevChar(e, &l->l);
     if (!is_wordchar(getChar(&p[e])))
         return NULL;
     b = e;
     while (b > 0) {
         int tmp = b;
-        prevChar(tmp, l);
+        tmp = prevChar(tmp, &l->l);
         if (!is_wordchar(getChar(&p[tmp])))
             break;
         b = tmp;
     }
-    while (e < l->len && is_wordchar(getChar(&p[e])))
-        nextChar(e, l);
+    while (e < l->l.len && is_wordchar(getChar(&p[e])))
+        e = nextChar(e, &l->l);
     *spos = b;
     *epos = e;
     return &p[b];

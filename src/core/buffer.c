@@ -105,9 +105,9 @@ void discardBuffer(struct Buffer* buf)
         unlink(buf->mailcap_source);
 }
 
-struct Line* lastLine(struct Buffer* buf)
+struct LineList* lastLine(struct Buffer* buf)
 {
-    struct Line* l = buf->firstLine;
+    struct LineList* l = buf->firstLine;
     if (!l) {
         return NULL;
     }
@@ -116,9 +116,9 @@ struct Line* lastLine(struct Buffer* buf)
     return l;
 }
 
-struct Line* currentLine(struct Buffer* buf)
+struct LineList* currentLine(struct Buffer* buf)
 {
-    for (struct Line* l = buf->firstLine; l; l = l->next) {
+    for (struct LineList* l = buf->firstLine; l; l = l->next) {
         if (l->linenumber == buf->currentLineIndex) {
             return l;
         }
@@ -126,9 +126,9 @@ struct Line* currentLine(struct Buffer* buf)
     return NULL;
 }
 
-struct Line* topLine(struct Buffer* buf)
+struct LineList* topLine(struct Buffer* buf)
 {
-    for (struct Line* l = buf->firstLine; l; l = l->next) {
+    for (struct LineList* l = buf->firstLine; l; l = l->next) {
         if (l->linenumber == buf->topLineIndex) {
             return l;
         }
@@ -255,7 +255,7 @@ writeBufferName(struct Buffer* buf, int n)
 void gotoLine(struct Buffer* buf, int n)
 {
     char msg[36];
-    struct Line* l = buf->firstLine;
+    struct LineList* l = buf->firstLine;
     if (l == NULL)
         return;
     if (l->linenumber > n) {
@@ -511,7 +511,7 @@ void reshapeBuffer(struct Buffer* buf, int cols)
 
     // buf->height = getScreen()->ROWS - 1 + 1;
     if (buf->firstLine && sbuf.firstLine) {
-        struct Line* cur = currentLine(&sbuf);
+        struct LineList* cur = currentLine(&sbuf);
         int n;
 
         buf->pos = sbuf.pos + cur->bpos;
@@ -566,7 +566,6 @@ int writeBufferCache(struct Buffer* buf)
 {
     Str tmp;
     FILE* cache = NULL;
-    struct Line* l;
     int colorflag;
 
     if (buf->savecache)
@@ -584,19 +583,20 @@ int writeBufferCache(struct Buffer* buf)
     if (fwrite1(currentLine(buf)->linenumber, cache) || fwrite1(topLine(buf)->linenumber, cache))
         goto _error;
 
+    struct LineList* l;
     for (l = buf->firstLine; l; l = l->next) {
-        if (fwrite1(l->usrflags, cache) || fwrite1(l->width, cache) || fwrite1(l->len, cache) || fwrite1(l->size, cache) || fwrite1(l->bpos, cache) || fwrite1(l->bwidth, cache))
+        if (fwrite1(l->l.usrflags, cache) || fwrite1(l->l.width, cache) || fwrite1(l->l.len, cache) || fwrite1(l->l.size, cache) || fwrite1(l->bpos, cache) || fwrite1(l->bwidth, cache))
             goto _error;
         if (l->bpos == 0) {
-            if (fwrite(l->lineBuf, 1, l->size, cache) < l->size || fwrite(l->propBuf, sizeof(Lineprop), l->size, cache) < l->size)
+            if (fwrite(l->l.lineBuf, 1, l->l.size, cache) < l->l.size || fwrite(l->l.propBuf, sizeof(Lineprop), l->l.size, cache) < l->l.size)
                 goto _error;
         }
-        colorflag = l->colorBuf ? 1 : 0;
+        colorflag = l->l.colorBuf ? 1 : 0;
         if (fwrite1(colorflag, cache))
             goto _error;
         if (colorflag) {
             if (l->bpos == 0) {
-                if (fwrite(l->colorBuf, sizeof(Linecolor), l->size, cache) < l->size)
+                if (fwrite(l->l.colorBuf, sizeof(Linecolor), l->l.size, cache) < l->l.size)
                     goto _error;
             }
         }
@@ -615,7 +615,6 @@ _error1:
 int readBufferCache(struct Buffer* buf)
 {
     FILE* cache;
-    struct Line *l = NULL, *prevl = NULL, *basel = NULL;
     long lnum = 0, clnum, tlnum;
     int colorflag;
 
@@ -630,6 +629,7 @@ int readBufferCache(struct Buffer* buf)
         return -1;
     }
 
+    struct LineList *l = NULL, *prevl = NULL, *basel = NULL;
     while (!feof(cache)) {
         lnum++;
         prevl = l;
@@ -644,30 +644,30 @@ int readBufferCache(struct Buffer* buf)
             buf->currentLineIndex = l->linenumber;
         if (lnum == tlnum)
             buf->topLineIndex = l->linenumber;
-        if (fread1(l->usrflags, cache) || fread1(l->width, cache) || fread1(l->len, cache) || fread1(l->size, cache) || fread1(l->bpos, cache) || fread1(l->bwidth, cache))
+        if (fread1(l->l.usrflags, cache) || fread1(l->l.width, cache) || fread1(l->l.len, cache) || fread1(l->l.size, cache) || fread1(l->bpos, cache) || fread1(l->bwidth, cache))
             break;
         if (l->bpos == 0) {
             basel = l;
-            l->lineBuf = NewAtom_N(char, l->size + 1);
-            fread(l->lineBuf, 1, l->size, cache);
-            l->lineBuf[l->size] = '\0';
-            l->propBuf = NewAtom_N(Lineprop, l->size);
-            fread(l->propBuf, sizeof(Lineprop), l->size, cache);
+            l->l.lineBuf = NewAtom_N(char, l->l.size + 1);
+            fread(l->l.lineBuf, 1, l->l.size, cache);
+            l->l.lineBuf[l->l.size] = '\0';
+            l->l.propBuf = NewAtom_N(Lineprop, l->l.size);
+            fread(l->l.propBuf, sizeof(Lineprop), l->l.size, cache);
         } else if (basel) {
-            l->lineBuf = basel->lineBuf + l->bpos;
-            l->propBuf = basel->propBuf + l->bpos;
+            l->l.lineBuf = basel->l.lineBuf + l->bpos;
+            l->l.propBuf = basel->l.propBuf + l->bpos;
         } else
             break;
         if (fread1(colorflag, cache))
             break;
         if (colorflag) {
             if (l->bpos == 0) {
-                l->colorBuf = NewAtom_N(Linecolor, l->size);
-                fread(l->colorBuf, sizeof(Linecolor), l->size, cache);
+                l->l.colorBuf = NewAtom_N(Linecolor, l->l.size);
+                fread(l->l.colorBuf, sizeof(Linecolor), l->l.size, cache);
             } else
-                l->colorBuf = basel->colorBuf + l->bpos;
+                l->l.colorBuf = basel->l.colorBuf + l->bpos;
         } else {
-            l->colorBuf = NULL;
+            l->l.colorBuf = NULL;
         }
     }
     if (prevl) {
@@ -699,25 +699,25 @@ void arrangeCursor(struct Buffer* buf)
     }
     /* Arrange column */
     while (buf->pos < 0 && currentLine(buf)->prev && currentLine(buf)->bpos) {
-        pos = buf->pos + currentLine(buf)->prev->len;
+        pos = buf->pos + currentLine(buf)->prev->l.len;
         cursorUp(1);
         buf->pos = pos;
     }
-    while (buf->pos >= currentLine(buf)->len && currentLine(buf)->next && currentLine(buf)->next->bpos) {
-        pos = buf->pos - currentLine(buf)->len;
+    while (buf->pos >= currentLine(buf)->l.len && currentLine(buf)->next && currentLine(buf)->next->bpos) {
+        pos = buf->pos - currentLine(buf)->l.len;
         cursorDown(1);
         buf->pos = pos;
     }
-    if (currentLine(buf)->len == 0 || buf->pos < 0)
+    if (currentLine(buf)->l.len == 0 || buf->pos < 0)
         buf->pos = 0;
-    else if (buf->pos >= currentLine(buf)->len)
-        buf->pos = currentLine(buf)->len - 1;
-    while (buf->pos > 0 && currentLine(buf)->propBuf[buf->pos] & PC_WCHAR2)
+    else if (buf->pos >= currentLine(buf)->l.len)
+        buf->pos = currentLine(buf)->l.len - 1;
+    while (buf->pos > 0 && currentLine(buf)->l.propBuf[buf->pos] & PC_WCHAR2)
         buf->pos--;
-    col = COLPOS(currentLine(buf), buf->pos);
-    while (buf->pos + delta < currentLine(buf)->len && currentLine(buf)->propBuf[buf->pos + delta] & PC_WCHAR2)
+    col = COLPOS(&currentLine(buf)->l, buf->pos);
+    while (buf->pos + delta < currentLine(buf)->l.len && currentLine(buf)->l.propBuf[buf->pos + delta] & PC_WCHAR2)
         delta++;
-    col2 = COLPOS(currentLine(buf), buf->pos + delta);
+    col2 = COLPOS(&currentLine(buf)->l, buf->pos + delta);
     if (col < buf->currentColumn || col2 > getScreen()->COLS + buf->currentColumn) {
         buf->currentColumn = 0;
         if (col2 > getScreen()->COLS)
@@ -725,7 +725,7 @@ void arrangeCursor(struct Buffer* buf)
     }
     /* Arrange cursor */
     // buf->cursorY = currentLine(buf)->linenumber - topLine(buf)->linenumber;
-    buf->visualpos = currentLine(buf)->bwidth + COLPOS(currentLine(buf), buf->pos) - buf->currentColumn;
+    buf->visualpos = currentLine(buf)->bwidth + COLPOS(&currentLine(buf)->l, buf->pos) - buf->currentColumn;
     // buf->cursorX = buf->visualpos - currentLine(buf)->bwidth;
 #ifdef DISPLAY_DEBUG
     fprintf(stderr,
@@ -742,12 +742,12 @@ void arrangeLine(struct Buffer* buf)
     if (buf->firstLine == NULL)
         return;
     // buf->cursorY = currentLine(buf)->linenumber - topLine(buf)->linenumber;
-    i = columnPos(currentLine(buf), buf->currentColumn + buf->visualpos - currentLine(buf)->bwidth);
-    cpos = COLPOS(currentLine(buf), i) - buf->currentColumn;
+    i = columnPos(&currentLine(buf)->l, buf->currentColumn + buf->visualpos - currentLine(buf)->bwidth);
+    cpos = COLPOS(&currentLine(buf)->l, i) - buf->currentColumn;
     if (cpos >= 0) {
         // buf->cursorX = cpos;
         buf->pos = i;
-    } else if (currentLine(buf)->len > i) {
+    } else if (currentLine(buf)->l.len > i) {
         // buf->cursorX = 0;
         buf->pos = i + 1;
     } else {
@@ -802,7 +802,7 @@ void restorePosition(struct Buffer* buf, struct Buffer* orig)
  * saveBuffer: write buffer to file
  */
 static void
-_saveBuffer(struct Buffer* buf, struct Line* l, FILE* f, int cont)
+_saveBuffer(struct Buffer* buf, FILE* f, int cont)
 {
     Str tmp;
     int is_html = false;
@@ -814,7 +814,7 @@ _saveBuffer(struct Buffer* buf, struct Line* l, FILE* f, int cont)
 
 void saveBuffer(struct Buffer* buf, FILE* f, int cont)
 {
-    _saveBuffer(buf, buf->firstLine, f, cont);
+    _saveBuffer(buf, f, cont);
 }
 
 struct Url*
@@ -856,17 +856,16 @@ char* url_decode2(const char* url, const struct Buffer* buf)
 
 int columnSkip(struct Buffer* buf, int offset)
 {
-    int i, maxColumn;
     int column = buf->currentColumn + offset;
     int nlines = getScreen()->ROWS + 1;
-    struct Line* l;
 
-    maxColumn = 0;
-    for (i = 0, l = topLine(buf); i < nlines && l != NULL; i++, l = l->next) {
-        if (l->width < 0)
-            l->width = COLPOS(l, l->len);
-        if (l->width - 1 > maxColumn)
-            maxColumn = l->width - 1;
+    int maxColumn = 0;
+    struct LineList* l = topLine(buf);
+    for (int i = 0; i < nlines && l != NULL; i++, l = l->next) {
+        if (l->l.width < 0)
+            l->l.width = COLPOS(&l->l, l->l.len);
+        if (l->l.width - 1 > maxColumn)
+            maxColumn = l->l.width - 1;
     }
     maxColumn -= getScreen()->COLS - 1;
     if (column < maxColumn)
@@ -880,23 +879,20 @@ int columnSkip(struct Buffer* buf, int offset)
     return 1;
 }
 
-struct Line* lineSkip(struct Buffer* buf, struct Line* line, int offset, int last)
+struct LineList* lineSkip(struct Buffer* buf, struct LineList* line, int offset, int last)
 {
-    int i;
-    struct Line* l;
-
-    l = currentLineSkip(buf, line, offset, last);
+    struct LineList* l = currentLineSkip(buf, line, offset, last);
     if (!nextpage_topline)
-        for (i = getScreen()->ROWS - 1 - (lastLine(buf)->linenumber - l->linenumber);
+        for (int i = getScreen()->ROWS - 1 - (lastLine(buf)->linenumber - l->linenumber);
             i > 0 && l->prev != NULL; i--, l = l->prev)
             ;
     return l;
 }
 
-struct Line* currentLineSkip(struct Buffer* buf, struct Line* line, int offset, int last)
+struct LineList* currentLineSkip(struct Buffer* buf, struct LineList* line, int offset, int last)
 {
     int i, n;
-    struct Line* l = line;
+    struct LineList* l = line;
 
     if (offset == 0)
         return l;
