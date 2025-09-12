@@ -106,7 +106,7 @@ link_menu(struct Buffer* buf)
 struct Buffer*
 link_list_panel(struct Buffer* buf)
 {
-    if (buf->bufferprop & BP_INTERNAL || (buf->linklist == 0 && buf->document.href == 0 && buf->img == 0)) {
+    if (buf->bufferprop & BP_INTERNAL || (buf->linklist == 0 && buf->document.href == 0 && buf->document.img == 0)) {
         return 0;
     }
 
@@ -170,9 +170,9 @@ link_list_panel(struct Buffer* buf)
         Strcat_charp(tmp, "</ol>\n");
     }
 
-    if (buf->img) {
+    if (buf->document.img) {
         Strcat_charp(tmp, "<hr><h2>Images</h2>\n<ol>\n");
-        al = buf->img;
+        al = buf->document.img;
         for (i = 0; i < al->nanchor; i++) {
             a = &al->anchors[i];
             if (a->slave)
@@ -190,7 +190,7 @@ link_list_panel(struct Buffer* buf)
                 t = html_quote(url_decode2(a->url, buf ? buf->document_charset : 0));
             Strcat_m_charp(tmp, "<li><a href=\"", u, "\">", t, "</a><br>", p,
                 "\n", 0);
-            a = retrieveAnchor(buf->formitem, a->start);
+            a = retrieveAnchor(buf->document.formitem, a->start);
             if (!a)
                 continue;
             fi = (struct FormItem*)a->url;

@@ -35,6 +35,9 @@ struct Document
     struct LineList* firstLine;
     int allLine;
     struct AnchorList* href;
+    struct AnchorList* name;
+    struct AnchorList* img;
+    struct AnchorList* formitem;
 };
 
 struct Buffer {
@@ -54,9 +57,7 @@ struct Buffer {
     struct Buffer* linkBuffer[MAX_LB];
     enum ContentType content_type;
     enum BufferProperty bufferprop;
-    struct AnchorList* name;
-    struct AnchorList* img;
-    struct AnchorList* formitem;
+
     struct LinkList* linklist;
     struct Form* formlist;
     struct _MapList* maplist;

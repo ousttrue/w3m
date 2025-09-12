@@ -168,7 +168,7 @@ static struct LineList* redrawLineImage(struct UI ui, struct Buffer* buf, struct
             rcol = COLPOS(&l->l, pos + j + 1);
             continue;
         }
-        a = retrieveAnchor(buf->img, (struct BufferPoint) { .line = l->linenumber, .pos = pos + j });
+        a = retrieveAnchor(buf->document.img, (struct BufferPoint) { .line = l->linenumber, .pos = pos + j });
         if (a && a->image && a->image->touch < image_touch) {
             struct Image* image = a->image;
             struct ImageCache* cache;
@@ -236,7 +236,7 @@ static void redrawNLine(struct UI ui, struct Buffer* buf, int n)
         vt_clrtobotx(ui.vt);
     }
 
-    if (!(activeImage && displayImage && buf->img))
+    if (!(activeImage && displayImage && buf->document.img))
         return;
 
     // vt_move(ui.vt, buf->cursorY + ui.viewport.offset.y, buf->cursorX + ui.viewport.offset.x);
@@ -400,7 +400,7 @@ void drawAnchorCursor(struct UI ui, struct Buffer* buf)
 {
     if (!buf->document.firstLine || !buf->hmarklist)
         return;
-    if (!buf->document.href && !buf->formitem)
+    if (!buf->document.href && !buf->document.formitem)
         return;
 
     int tline = topLine(buf)->linenumber;
@@ -411,9 +411,9 @@ void drawAnchorCursor(struct UI ui, struct Buffer* buf)
         drawAnchorCursor0(ui, buf, buf->document.href, hseq, prevhseq, tline, eline, 1);
         drawAnchorCursor0(ui, buf, buf->document.href, hseq, -1, tline, eline, 0);
     }
-    if (buf->formitem) {
-        drawAnchorCursor0(ui, buf, buf->formitem, hseq, prevhseq, tline, eline, 1);
-        drawAnchorCursor0(ui, buf, buf->formitem, hseq, -1, tline, eline, 0);
+    if (buf->document.formitem) {
+        drawAnchorCursor0(ui, buf, buf->document.formitem, hseq, prevhseq, tline, eline, 1);
+        drawAnchorCursor0(ui, buf, buf->document.formitem, hseq, -1, tline, eline, 0);
     }
     buf->hmarklist->prevhseq = hseq;
 }

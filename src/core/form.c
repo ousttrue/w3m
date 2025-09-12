@@ -208,8 +208,8 @@ void formRecheckRadio(struct Anchor* a, struct Buffer* buf, struct FormItem* fi)
     struct Anchor* a2;
     struct FormItem* f2;
 
-    for (i = 0; i < buf->formitem->nanchor; i++) {
-        a2 = &buf->formitem->anchors[i];
+    for (i = 0; i < buf->document.formitem->nanchor; i++) {
+        a2 = &buf->document.formitem->anchors[i];
         f2 = (struct FormItem*)a2->url;
         if (f2->parent == fi->parent && f2 != fi && f2->type == FORM_INPUT_RADIO && Strcmp(f2->name, fi->name) == 0) {
             f2->checked = 0;
@@ -226,10 +226,10 @@ void formResetBuffer(struct Buffer* buf, struct AnchorList* formitem)
     struct Anchor* a;
     struct FormItem *f1, *f2;
 
-    if (buf == NULL || buf->formitem == NULL || formitem == NULL)
+    if (buf == NULL || buf->document.formitem == NULL || formitem == NULL)
         return;
-    for (i = 0; i < buf->formitem->nanchor && i < formitem->nanchor; i++) {
-        a = &buf->formitem->anchors[i];
+    for (i = 0; i < buf->document.formitem->nanchor && i < formitem->nanchor; i++) {
+        a = &buf->document.formitem->anchors[i];
         if (a->y != a->start.line)
             continue;
         f1 = (struct FormItem*)a->url;
@@ -447,7 +447,7 @@ void formUpdateBuffer(struct Anchor* a, struct Buffer* buf, struct FormItem* for
                 break;
             if (rows > 1) {
                 pos = columnPos(&l->l, col);
-                a = retrieveAnchor(buf->formitem,
+                a = retrieveAnchor(buf->document.formitem,
                     (struct BufferPoint) { .line = l->linenumber, .pos = pos });
                 if (a == NULL)
                     break;
@@ -465,11 +465,11 @@ void formUpdateBuffer(struct Anchor* a, struct Buffer* buf, struct FormItem* for
             if (pos != epos) {
                 shiftAnchorPosition(buf->document.href, buf->hmarklist,
                     (struct BufferPoint) { .line = a->start.line, .pos = spos }, pos - epos);
-                shiftAnchorPosition(buf->name, buf->hmarklist,
+                shiftAnchorPosition(buf->document.name, buf->hmarklist,
                     (struct BufferPoint) { .line = a->start.line, .pos = spos }, pos - epos);
-                shiftAnchorPosition(buf->img, buf->hmarklist,
+                shiftAnchorPosition(buf->document.img, buf->hmarklist,
                     (struct BufferPoint) { .line = a->start.line, .pos = spos }, pos - epos);
-                shiftAnchorPosition(buf->formitem, buf->hmarklist,
+                shiftAnchorPosition(buf->document.formitem, buf->hmarklist,
                     (struct BufferPoint) { .line = a->start.line, .pos = spos }, pos - epos);
             }
         }
@@ -724,8 +724,8 @@ write_end:
 
 struct pre_form_item {
     int type;
-    char* name;
-    char* value;
+    const char* name;
+    const char* value;
     int checked;
     struct pre_form_item* next;
 };
@@ -817,7 +817,7 @@ void loadPreForm(void)
     if (fp == NULL)
         return;
     while (1) {
-        char *p, *s, *arg;
+        const char *p, *s, *arg;
         Regex* re_arg;
 
         line = Strfgets(fp);
@@ -914,7 +914,7 @@ void preFormUpdateBuffer(struct Buffer* buf)
     struct FormSelectOptionItem* opt;
     int j;
 
-    if (!buf || !buf->formitem || !PreForm)
+    if (!buf || !buf->document.formitem || !PreForm)
         return;
 
     for (pf = PreForm; pf; pf = pf->next) {
@@ -927,8 +927,8 @@ void preFormUpdateBuffer(struct Buffer* buf)
                 continue;
         } else
             continue;
-        for (i = 0; i < buf->formitem->nanchor; i++) {
-            a = &buf->formitem->anchors[i];
+        for (i = 0; i < buf->document.formitem->nanchor; i++) {
+            a = &buf->document.formitem->anchors[i];
             fi = (struct FormItem*)a->url;
             fl = fi->parent;
             if (pf->name && (!fl->name || strcmp(fl->name, pf->name)))

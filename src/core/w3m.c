@@ -892,8 +892,8 @@ _followForm(bool submit, bool do_download)
         break;
     }
     case FORM_INPUT_RESET: {
-        for (int i = 0; i < Currentbuf->formitem->nanchor; i++) {
-            struct Anchor* a2 = &Currentbuf->formitem->anchors[i];
+        for (int i = 0; i < Currentbuf->document.formitem->nanchor; i++) {
+            struct Anchor* a2 = &Currentbuf->document.formitem->anchors[i];
             struct FormItem* f2 = (struct FormItem*)a2->url;
             if (f2->parent == fi->parent && f2->name && f2->value && f2->type != FORM_INPUT_SUBMIT && f2->type != FORM_INPUT_HIDDEN && f2->type != FORM_INPUT_RESET) {
                 f2->value = f2->init_value;
@@ -976,7 +976,7 @@ bool onFrame()
     // }
 
     // mySignal(SIGWINCH, resize_hook);
-    if (activeImage && displayImage && Currentbuf->img && !Currentbuf->image_loaded) {
+    if (activeImage && displayImage && Currentbuf->document.img && !Currentbuf->image_loaded) {
         loadImage(Currentbuf, IMG_FLAG_NEXT, false);
         bufToScreen(getUI(), Currentbuf);
         renderFrame(getUI());
@@ -2072,7 +2072,7 @@ DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink")
         po = hl->marks + hseq;
         an = retrieveAnchor(Currentbuf->document.href, *po);
         if (an == NULL)
-            an = retrieveAnchor(Currentbuf->formitem, *po);
+            an = retrieveAnchor(Currentbuf->document.formitem, *po);
         hseq++;
     } while (an == NULL);
 
@@ -2101,7 +2101,7 @@ DEFUN(lastA, LINK_END, "Move to the last hyperlink")
         po = hl->marks + hseq;
         an = retrieveAnchor(Currentbuf->document.href, *po);
         if (an == NULL)
-            an = retrieveAnchor(Currentbuf->formitem, *po);
+            an = retrieveAnchor(Currentbuf->document.formitem, *po);
         hseq--;
     } while (an == NULL);
 
@@ -2127,7 +2127,7 @@ DEFUN(nthA, LINK_N, "Go to the nth link")
     struct BufferPoint* po = hl->marks + n - 1;
     struct Anchor* an = retrieveAnchor(Currentbuf->document.href, *po);
     if (an == NULL)
-        an = retrieveAnchor(Currentbuf->formitem, *po);
+        an = retrieveAnchor(Currentbuf->document.formitem, *po);
     if (an == NULL)
         return;
 
@@ -2200,7 +2200,7 @@ _nextA(int visited)
                 po = &hl->marks[hseq];
                 an = retrieveAnchor(Currentbuf->document.href, *po);
                 if (visited != true && an == NULL)
-                    an = retrieveAnchor(Currentbuf->formitem, *po);
+                    an = retrieveAnchor(Currentbuf->document.formitem, *po);
                 hseq++;
                 if (visited == true && an) {
                     url = parseUrl(an->url, baseURL(Currentbuf));
@@ -2212,7 +2212,7 @@ _nextA(int visited)
         } else {
             an = closest_next_anchor(Currentbuf->document.href, NULL, x, y);
             if (visited != true)
-                an = closest_next_anchor(Currentbuf->formitem, an, x, y);
+                an = closest_next_anchor(Currentbuf->document.formitem, an, x, y);
             if (an == NULL) {
                 if (visited == true)
                     return;
@@ -2281,7 +2281,7 @@ _prevA(int visited)
                 po = hl->marks + hseq;
                 an = retrieveAnchor(Currentbuf->document.href, *po);
                 if (visited != true && an == NULL)
-                    an = retrieveAnchor(Currentbuf->formitem, *po);
+                    an = retrieveAnchor(Currentbuf->document.formitem, *po);
                 hseq--;
                 if (visited == true && an) {
                     url = parseUrl(an->url, baseURL(Currentbuf));
@@ -2293,7 +2293,7 @@ _prevA(int visited)
         } else {
             an = closest_prev_anchor(Currentbuf->document.href, NULL, x, y);
             if (visited != true)
-                an = closest_prev_anchor(Currentbuf->formitem, an, x, y);
+                an = closest_prev_anchor(Currentbuf->document.formitem, an, x, y);
             if (an == NULL) {
                 if (visited == true)
                     return;
@@ -2353,7 +2353,7 @@ nextX(int d, int dy)
                 struct BufferPoint bp = { .line = y, .pos = x };
                 an = retrieveAnchor(Currentbuf->document.href, bp);
                 if (!an)
-                    an = retrieveAnchor(Currentbuf->formitem, bp);
+                    an = retrieveAnchor(Currentbuf->document.formitem, bp);
                 if (an) {
                     pan = an;
                     break;
@@ -2408,7 +2408,7 @@ nextY(int d)
             struct BufferPoint bp = { .line = y, .pos = x };
             an = retrieveAnchor(Currentbuf->document.href, bp);
             if (!an)
-                an = retrieveAnchor(Currentbuf->formitem, bp);
+                an = retrieveAnchor(Currentbuf->document.formitem, bp);
             if (an && hseq != abs(an->hseq)) {
                 pan = an;
                 break;

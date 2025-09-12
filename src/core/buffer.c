@@ -504,9 +504,9 @@ void reshapeBuffer(struct Buffer* buf, int cols)
     clearBuffer(buf);
 
     buf->document.href = 0;
-    buf->name = 0;
-    buf->img = 0;
-    buf->formitem = 0;
+    buf->document.name = 0;
+    buf->document.img = 0;
+    buf->document.formitem = 0;
     buf->formlist = 0;
     buf->linklist = 0;
     buf->maplist = 0;
@@ -554,7 +554,7 @@ void reshapeBuffer(struct Buffer* buf, int cols)
     }
     if (buf->check_url)
         chkURLBuffer(buf);
-    formResetBuffer(buf, sbuf.formitem);
+    formResetBuffer(buf, sbuf.document.formitem);
 }
 
 /* shallow copy */
@@ -1058,7 +1058,7 @@ struct Anchor*
 registerName(struct Buffer* buf, const char* url, struct BufferPoint bp)
 {
     struct Anchor* a;
-    buf->name = putAnchor(buf->name, &a, bp);
+    buf->document.name = putAnchor(buf->document.name, &a, bp);
     initAnchor(a, url, 0, 0, 0, '\0');
     return a;
 }
@@ -1067,7 +1067,7 @@ struct Anchor*
 registerImg(struct Buffer* buf, const char* url, const char* title, struct BufferPoint bp)
 {
     struct Anchor* a;
-    buf->img = putAnchor(buf->img, &a, bp);
+    buf->document.img = putAnchor(buf->document.img, &a, bp);
     initAnchor(a, url, 0, 0, title, '\0');
     return a;
 }
@@ -1080,7 +1080,7 @@ registerForm(struct Buffer* buf, struct Form* flist, struct HtmlTagParsed* tag, 
         return 0;
 
     struct Anchor* a;
-    buf->formitem = putAnchor(buf->formitem, &a, bp);
+    buf->document.formitem = putAnchor(buf->document.formitem, &a, bp);
     initAnchor(a, (char*)fi, flist->target, 0, 0, '\0');
     return a;
 }
@@ -1113,7 +1113,7 @@ retrieveCurrentImg(struct Buffer* buf)
 {
     if (currentLine(buf) == 0)
         return 0;
-    return retrieveAnchor(buf->img,
+    return retrieveAnchor(buf->document.img,
         (struct BufferPoint) { .line = currentLine(buf)->linenumber, .pos = buf->pos });
 }
 
@@ -1122,7 +1122,7 @@ retrieveCurrentForm(struct Buffer* buf)
 {
     if (currentLine(buf) == 0)
         return 0;
-    return retrieveAnchor(buf->formitem,
+    return retrieveAnchor(buf->document.formitem,
         (struct BufferPoint) { .line = currentLine(buf)->linenumber, .pos = buf->pos });
 }
 
@@ -1146,7 +1146,7 @@ searchAnchor(struct AnchorList* al, const char* str)
 struct Anchor*
 searchURLLabel(struct Buffer* buf, const char* url)
 {
-    return searchAnchor(buf->name, url);
+    return searchAnchor(buf->document.name, url);
 }
 
 /* renumber struct Anchor */
@@ -1176,7 +1176,7 @@ void reseq_anchor(struct Buffer* buf)
             a->hseq = n;
             struct Anchor* a1 = closest_next_anchor(buf->document.href, 0, a->start.pos,
                 a->start.line);
-            a1 = closest_next_anchor(buf->formitem, a1, a->start.pos,
+            a1 = closest_next_anchor(buf->document.formitem, a1, a->start.pos,
                 a->start.line);
             if (a1 && a1->hseq >= 0) {
                 seqmap[n] = seqmap[a1->hseq];
@@ -1194,7 +1194,7 @@ void reseq_anchor(struct Buffer* buf)
     buf->hmarklist = ml;
 
     reseq_anchor0(buf->document.href, seqmap);
-    reseq_anchor0(buf->formitem, seqmap);
+    reseq_anchor0(buf->document.formitem, seqmap);
 }
 
 void addMultirowsImg(struct Buffer* buf, struct AnchorList* al)
@@ -1233,7 +1233,7 @@ void addMultirowsImg(struct Buffer* buf, struct AnchorList* al)
             a_href = *a;
         else
             a_href.url = 0;
-        a = retrieveAnchor(buf->formitem, a_img.start);
+        a = retrieveAnchor(buf->document.formitem, a_img.start);
         if (a)
             a_form = *a;
         else
@@ -1263,7 +1263,7 @@ void addMultirowsImg(struct Buffer* buf, struct AnchorList* al)
                     l->l.propBuf[k] |= PE_ANCHOR;
             }
             if (a_form.url) {
-                buf->formitem = putAnchor(buf->formitem, &a,
+                buf->document.formitem = putAnchor(buf->document.formitem, &a,
                     (struct BufferPoint) { .line = l->linenumber, .pos = pos });
                 initAnchor(a, a_form.url, a_form.target, 0, 0, '\0');
                 a->hseq = a_form.hseq;
@@ -1314,7 +1314,7 @@ void addMultirowsForm(struct Buffer* buf, struct AnchorList* al)
             }
             if (a_form.start.line == l->linenumber)
                 continue;
-            buf->formitem = putAnchor(buf->formitem, &a,
+            buf->document.formitem = putAnchor(buf->document.formitem, &a,
                 (struct BufferPoint) { .line = l->linenumber, .pos = pos });
             initAnchor(a, a_form.url, a_form.target, 0, 0, '\0');
             a->hseq = a_form.hseq;

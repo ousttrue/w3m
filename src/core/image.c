@@ -351,7 +351,7 @@ void deleteImage(struct Buffer* buf)
     if (!buf)
         return;
 
-    struct AnchorList* al = buf->img;
+    struct AnchorList* al = buf->document.img;
     if (!al)
         return;
 
@@ -371,7 +371,7 @@ void getAllImage(struct Buffer* buf)
         return;
     buf->image_loaded = true;
 
-    struct AnchorList* al = buf->img;
+    struct AnchorList* al = buf->document.img;
     if (!al)
         return;
 
@@ -396,7 +396,7 @@ showImageProgress(struct Buffer* buf)
 
     if (!buf)
         return;
-    al = buf->img;
+    al = buf->document.img;
     if (!al)
         return;
     for (i = 0, l = 0, n = 0, a = al->anchors; i < al->nanchor; i++, a++) {

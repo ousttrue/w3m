@@ -504,7 +504,7 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
                                 IMG_FLAG_SKIP);
                         } else if (iseq < 0) {
                             struct BufferPoint* po = buf->imarklist->marks - iseq - 1;
-                            struct Anchor* a = retrieveAnchor(buf->img, *po);
+                            struct Anchor* a = retrieveAnchor(buf->document.img, *po);
                             if (a) {
                                 a_img->url = a->url;
                                 a_img->image = a->image;
@@ -767,8 +767,8 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
             forms[form_id]->next = forms[form_id - 1];
     buf->formlist = (form_max >= 0) ? forms[form_max] : NULL;
     if (n_textarea)
-        addMultirowsForm(buf, buf->formitem);
-    addMultirowsImg(buf, buf->img);
+        addMultirowsForm(buf, buf->document.formitem);
+    addMultirowsImg(buf, buf->document.img);
 }
 
 static Str
@@ -1506,7 +1506,7 @@ loadHTMLBuffer(struct Url url, union input_stream* stream, wc_ces content_charse
     newBuf->topLineIndex = newBuf->document.firstLine->linenumber;
     newBuf->currentLineIndex = newBuf->document.firstLine->linenumber;
     if (n_textarea)
-        formResetBuffer(newBuf, newBuf->formitem);
+        formResetBuffer(newBuf, newBuf->document.formitem);
 
     return newBuf;
 }
@@ -1537,7 +1537,7 @@ loadHTMLString(Str page, wc_ces content_charset)
     newBuf->currentLineIndex = newBuf->document.firstLine->linenumber;
     newBuf->content_type = CONTENTTYPE_TEXT_HTML;
     if (n_textarea)
-        formResetBuffer(newBuf, newBuf->formitem);
+        formResetBuffer(newBuf, newBuf->document.formitem);
     return newBuf;
 }
 
