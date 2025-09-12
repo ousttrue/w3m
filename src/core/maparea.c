@@ -1,5 +1,6 @@
 #include "maparea.h"
 #include "Anchor.h"
+#include "LinkList.h"
 #include "str_util.h"
 #include "html_quote.h"
 #include "w3m.h"
@@ -141,7 +142,7 @@ int getMapXY(struct Buffer* buf, struct Anchor* a, int* x, int* y)
     if (!buf || !a || !a->image || !x || !y)
         return 0;
     *x = (int)((buf->currentColumn /*+ buf->cursorX*/
-                   - COLPOS(currentLine(buf), a->start.pos) + 0.5)
+                   - COLPOS(&currentLine(buf)->l, a->start.pos) + 0.5)
              * pixel_per_char)
         - a->image->xoffset;
     *y = (int)((currentLine(buf)->linenumber - a->image->y + 0.5)
@@ -331,40 +332,7 @@ append_map_info(struct Buffer* buf, Str tmp, struct FormItem* fi)
     Strcat_charp(tmp, "</table>");
 }
 
-/* append links */
-static void
-append_link_info(struct Buffer* buf, Str html, LinkList* link)
-{
-    if (!link)
-        return;
 
-    Strcat_charp(html, "<hr width=50%><h1>Link information</h1><table>\n");
-    LinkList* l;
-    for (l = link; l; l = l->next) {
-        const char* url;
-        if (l->url) {
-            struct Url pu = parseUrl(l->url, baseURL(buf));
-            url = html_quote(parsedURL2Str(&pu)->ptr);
-        } else
-            url = "(empty)";
-        Strcat_m_charp(html, "<tr valign=top><td><a href=\"", url, "\">",
-            l->title ? html_quote(l->title) : "(empty)", "</a><td>",
-            NULL);
-        if (l->type == LINK_TYPE_REL)
-            Strcat_charp(html, "[Rel]");
-        else if (l->type == LINK_TYPE_REV)
-            Strcat_charp(html, "[Rev]");
-        if (!l->url)
-            url = "(empty)";
-        else
-            url = html_quote(url_decode2(l->url, buf));
-        Strcat_m_charp(html, "<td>", url, NULL);
-        if (l->ctype)
-            Strcat_m_charp(html, " (", html_quote(l->ctype), ")", NULL);
-        Strcat_charp(html, "\n");
-    }
-    Strcat_charp(html, "</table>\n");
-}
 
 /*
  * information of current page and link
@@ -377,7 +345,7 @@ page_info_panel(struct Buffer* buf)
     struct Url pu;
     TextListItem* ti;
     int all;
-    char *p, *q;
+    const char *p, *q;
     wc_ces_list* list;
     char charset[16];
     struct Buffer* newbuf;

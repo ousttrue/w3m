@@ -1,5 +1,6 @@
 #include "buffer_loader.h"
 #include "AnchorList.h"
+#include "LinkList.h"
 #include "convertline.h"
 #include "display.h"
 #include "html_quote.h"
@@ -85,49 +86,7 @@ ex_efct(int ex)
     return effect;
 }
 
-static void
-addLink(struct Buffer* buf, struct HtmlTagParsed* tag)
-{
-    char *title = NULL, *ctype = NULL, *rel = NULL, *rev = NULL;
-    char type = LINK_TYPE_NONE;
-    LinkList* l;
 
-    const char* href;
-    parsedtag_get_value(tag, ATTR_HREF, &href);
-    if (href) {
-        href = url_quote(remove_space(href));
-    }
-    parsedtag_get_value(tag, ATTR_TITLE, &title);
-    parsedtag_get_value(tag, ATTR_TYPE, &ctype);
-    parsedtag_get_value(tag, ATTR_REL, &rel);
-    if (rel != NULL) {
-        /* forward link type */
-        type = LINK_TYPE_REL;
-        if (title == NULL)
-            title = rel;
-    }
-    parsedtag_get_value(tag, ATTR_REV, &rev);
-    if (rev != NULL) {
-        /* reverse link type */
-        type = LINK_TYPE_REV;
-        if (title == NULL)
-            title = rev;
-    }
-
-    l = New(LinkList);
-    l->url = href;
-    l->title = title;
-    l->ctype = ctype;
-    l->type = type;
-    l->next = NULL;
-    if (buf->linklist) {
-        LinkList* i;
-        for (i = buf->linklist; i->next; i = i->next)
-            ;
-        i->next = l;
-    } else
-        buf->linklist = l;
-}
 
 int getMetaRefreshParam(const char* q, Str* refresh_uri)
 {

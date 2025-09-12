@@ -32,7 +32,7 @@
 #define MENU_FILE "menu"
 
 static const char** FRAME;
-static int FRAME_WIDTH;
+int FRAME_WIDTH;
 #define G_start                \
     {                          \
         if (graph_mode)        \
@@ -1025,8 +1025,7 @@ void new_option_menu(Menu* menu, const char** label, int* variable, void (*func)
     new_menu(menu, item);
 }
 
-static void
-set_menu_frame(void)
+void set_menu_frame(void)
 {
     struct TermEntry* t = getTermEntry();
     if (graph_ok(t)) {
@@ -1717,62 +1716,7 @@ int getMenuN(MenuList* list, const char* id)
 
 /* --- InitMenu (END) --- */
 
-LinkList*
-link_menu(struct Buffer* buf)
-{
-    Menu menu;
-    LinkList* l;
-    int i, nitem, len = 0, linkV = -1;
-    Str str;
-    char* p;
 
-    if (!buf->linklist)
-        return NULL;
-
-    for (i = 0, l = buf->linklist; l; i++, l = l->next)
-        ;
-    nitem = i;
-
-    const char** label;
-    label = New_N(char*, nitem + 1);
-    for (i = 0, l = buf->linklist; l; i++, l = l->next) {
-        str = Strnew_charp(l->title ? l->title : "(empty)");
-        if (l->type == LINK_TYPE_REL)
-            Strcat_charp(str, " [Rel] ");
-        else if (l->type == LINK_TYPE_REV)
-            Strcat_charp(str, " [Rev] ");
-        else
-            Strcat_charp(str, " ");
-        if (!l->url)
-            p = "";
-        else
-            p = url_decode2(l->url, buf);
-        Strcat_charp(str, p);
-        label[i] = str->ptr;
-        if (len < str->length)
-            len = str->length;
-    }
-    label[nitem] = NULL;
-
-    set_menu_frame();
-    new_option_menu(&menu, label, &linkV, NULL);
-
-    menu.initial = 0;
-    // menu.cursorX = buf->cursorX;
-    // menu.cursorY = buf->cursorY;
-    menu.x = /*menu.cursorX +*/ FRAME_WIDTH + 1;
-    menu.y = /*menu.cursorY +*/ 2;
-
-    popup_menu(NULL, &menu);
-
-    if (linkV < 0)
-        return NULL;
-    for (i = 0, l = buf->linklist; l; i++, l = l->next) {
-        if (i == linkV)
-            return l;
-    }
-    return NULL;
-}
 
 /* --- LinkMenu (END) --- */
 

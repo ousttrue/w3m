@@ -1,4 +1,5 @@
 #include "w3m.h"
+#include "LinkList.h"
 #include "Anchor.h"
 #include "AnchorList.h"
 #include "term_renderer.h"
@@ -2721,7 +2722,7 @@ void follow_map(struct KeyValue* arg)
 /* link menu */
 DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
 {
-    LinkList* l = link_menu(Currentbuf);
+    struct LinkList* l = link_menu(Currentbuf);
     struct Url p_url;
 
     if (!l || !l->url)

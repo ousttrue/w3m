@@ -2,7 +2,6 @@
 #include "line.h"
 #include "geometry.h"
 #include "ContentType.h"
-#include "linklist.h"
 #include "url.h"
 #include "textlist.h"
 #include <stdio.h>
@@ -53,7 +52,7 @@ struct Buffer {
     struct AnchorList* name;
     struct AnchorList* img;
     struct AnchorList* formitem;
-    LinkList* linklist;
+    struct LinkList* linklist;
     struct Form* formlist;
     struct _MapList* maplist;
     struct HmarkerList* hmarklist;
@@ -140,7 +139,6 @@ struct AnchorList;
 void addMultirowsForm(struct Buffer* buf, struct AnchorList* al);
 void addMultirowsImg(struct Buffer* buf, struct AnchorList* al);
 const char* getAnchorText(struct Buffer* buf, struct AnchorList* al, struct Anchor* a);
-struct Buffer* link_list_panel(struct Buffer* buf);
 struct BufferPoint getBufferPosition(struct Buffer* buf);
 
 inline static void COPY_BUFPOSITION(struct Buffer* dstbuf, struct Buffer* srcbuf)

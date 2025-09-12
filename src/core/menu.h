@@ -3,6 +3,8 @@
  */
 #pragma once
 
+extern int FRAME_WIDTH;
+
 #define MENU_END 0
 #define MENU_NOP 1
 #define MENU_VALUE 2
@@ -49,10 +51,9 @@ typedef struct _MenuList {
 } MenuList;
 
 struct Buffer;
-struct _LinkList* link_menu(struct Buffer* buf);
 struct Anchor* accesskey_menu(struct Buffer* buf);
 struct Anchor* list_menu(struct Buffer* buf);
-
+void set_menu_frame(void);
 void new_menu(Menu* menu, MenuItem* item);
 void geom_menu(Menu* menu, int x, int y, int mselect);
 void draw_all_menu(Menu* menu);
