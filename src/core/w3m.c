@@ -77,7 +77,6 @@
 
 char* mkd_tmp_dir = (NULL);
 char ArgvIsURL = true;
-int DecodeURL = false;
 
 int DefaultURLString = (DEFAULT_URL_CURRENT);
 int UseDictCommand = (true);
@@ -2524,7 +2523,7 @@ goURL0(char* prompt, int relative)
         if (current) {
             char* c_url = parsedURL2Str(current)->ptr;
             if (DefaultURLString == DEFAULT_URL_CURRENT)
-                url = url_decode2(c_url, NULL);
+                url = url_decode2(c_url, 0);
             else
                 pushHist(hist, c_url);
         }
@@ -2534,7 +2533,7 @@ goURL0(char* prompt, int relative)
             p_url = parseUrl(a->url, current);
             a_url = parsedURL2Str(&p_url)->ptr;
             if (DefaultURLString == DEFAULT_URL_LINK)
-                url = url_decode2(a_url, Currentbuf);
+                url = url_decode2(a_url, Currentbuf->document_charset);
             else
                 pushHist(hist, a_url);
         }
@@ -2910,7 +2909,7 @@ _peekURL(int only_img)
         s = parsedURL2Str(&pu);
     }
     if (DecodeURL)
-        s = Strnew_charp(url_decode2(s->ptr, Currentbuf));
+        s = Strnew_charp(url_decode2(s->ptr, Currentbuf->document_charset));
     s = checkType(s, &pp, NULL);
     p = NewAtom_N(Lineprop, s->length);
     memcpy((void*)p, (void*)pp, s->length * sizeof(Lineprop));
@@ -2962,7 +2961,7 @@ DEFUN(curURL, PEEK, "Show current address")
         offset = 0;
         s = currentURL();
         if (DecodeURL)
-            s = Strnew_charp(url_decode2(s->ptr, NULL));
+            s = Strnew_charp(url_decode2(s->ptr, 0));
         s = checkType(s, &pp, NULL);
         p = NewAtom_N(Lineprop, s->length);
         memcpy(p, pp, s->length * sizeof(Lineprop));

@@ -208,7 +208,7 @@ void _next(struct LineEditor* e)
     p = nextHist(hist);
     if (p) {
         if (DecodeURL && (e->cm_mode & CPL_URL))
-            p = url_decode2(p, NULL);
+            p = url_decode2(p, 0);
         e->strBuf = Strnew_charp(p);
     } else {
         e->strBuf = e->strCurrentBuf;
@@ -259,7 +259,7 @@ void _prev(struct LineEditor* e)
         e->strCurrentBuf = e->strBuf;
     }
     if (DecodeURL && (e->cm_mode & CPL_URL))
-        p = url_decode2(p, NULL);
+        p = url_decode2(p, 0);
     e->strBuf = Strnew_charp(p);
     e->CLen = e->CPos = le_setStrType(e, e->strBuf, e->strProp);
     e->offset = 0;

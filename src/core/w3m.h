@@ -5,7 +5,6 @@
 
 extern char* mkd_tmp_dir;
 extern char ArgvIsURL;
-extern int DecodeURL;
 
 enum DefaultUrlType {
     DEFAULT_URL_EMPTY = 0,

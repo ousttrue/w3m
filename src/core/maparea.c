@@ -1,4 +1,5 @@
 #include "maparea.h"
+#include "runtime.h"
 #include "Anchor.h"
 #include "LinkList.h"
 #include "str_util.h"
@@ -323,7 +324,7 @@ append_map_info(struct Buffer* buf, Str tmp, struct FormItem* fi)
             continue;
         struct Url pu = parseUrl(a->url, baseURL(buf));
         const char* q = html_quote(parsedURL2Str(&pu)->ptr);
-        const char* p = html_quote(url_decode2(a->url, buf));
+        const char* p = html_quote(url_decode2(a->url, buf ? buf->document_charset : 0));
         Strcat_m_charp(tmp, "<tr valign=top><td>&nbsp;&nbsp;<td><a href=\"",
             q, "\">",
             html_quote(*a->alt ? a->alt : mybasename(a->url)),
@@ -360,7 +361,7 @@ page_info_panel(struct Buffer* buf)
     if (all == 0 && lastLine(buf))
         all = lastLine(buf)->linenumber;
     Strcat_charp(tmp, "<form method=internal action=charset>");
-    p = url_decode2(parsedURL2Str(&buf->currentURL)->ptr, NULL);
+    p = url_decode2(parsedURL2Str(&buf->currentURL)->ptr, 0);
     Strcat_m_charp(tmp, "<table cellpadding=0>",
         "<tr valign=top><td nowrap>Title<td>",
         html_quote(buf->buffername),
@@ -396,7 +397,7 @@ page_info_panel(struct Buffer* buf)
         p = parsedURL2Str(&pu)->ptr;
         q = html_quote(p);
         if (DecodeURL)
-            p = html_quote(url_decode2(p, buf));
+            p = html_quote(url_decode2(p, buf ? buf->document_charset : 0));
         else
             p = q;
         Strcat_m_charp(tmp,
@@ -409,7 +410,7 @@ page_info_panel(struct Buffer* buf)
         p = parsedURL2Str(&pu)->ptr;
         q = html_quote(p);
         if (DecodeURL)
-            p = html_quote(url_decode2(p, buf));
+            p = html_quote(url_decode2(p, buf ? buf->document_charset : 0));
         else
             p = q;
         Strcat_m_charp(tmp,
@@ -420,7 +421,7 @@ page_info_panel(struct Buffer* buf)
     if (a != NULL) {
         struct FormItem* fi = (struct FormItem*)a->url;
         p = form2str(fi);
-        p = html_quote(url_decode2(p, buf));
+        p = html_quote(url_decode2(p, buf ? buf->document_charset : 0));
         Strcat_m_charp(tmp,
             "<tr valign=top><td nowrap>Method/type of current form&nbsp;<td>",
             p, NULL);

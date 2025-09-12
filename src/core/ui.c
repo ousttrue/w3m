@@ -1,4 +1,5 @@
 #include "ui.h"
+#include "runtime.h"
 #include "AnchorList.h"
 #include "Anchor.h"
 #include "quote.h"
@@ -23,11 +24,7 @@ char QuietMessage = (false);
 int showLineNum = (false);
 
 #define DISPLAY_CHARSET WC_CES_UTF_8
-#define SYSTEM_CHARSET WC_CES_UTF_8
-wc_ces InnerCharset = WC_CES_WTF; /* Don't change */
 wc_ces DisplayCharset = DISPLAY_CHARSET;
-// filesystem charset
-wc_ces SystemCharset = SYSTEM_CHARSET;
 wc_ces BookmarkCharset = (SYSTEM_CHARSET);
 
 struct Buffer* Currentbuf = 0;
@@ -226,7 +223,7 @@ static Str make_lastline_link(struct Buffer* buf, const char* title, const char*
     pu = parseUrl(url, baseURL(buf));
     u = parsedURL2Str(&pu);
     if (DecodeURL)
-        u = Strnew_charp(url_decode2(u->ptr, buf));
+        u = Strnew_charp(url_decode2(u->ptr, buf ? buf->document_charset : 0));
     Lineprop* pr;
     u = checkType(u, &pr, NULL);
     if (l <= 4 || l >= get_Str_strwidth(u)) {

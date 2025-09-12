@@ -849,27 +849,6 @@ baseURL(struct Buffer* buf)
         return &buf->currentURL;
 }
 
-static char* url_unquote_conv(char* url, wc_ces charset)
-{
-    wc_uint8 old_auto_detect = WcOption.auto_detect;
-    Str tmp;
-    tmp = Str_url_unquote(Strnew_charp(url), false, true);
-    if (!charset || charset == WC_CES_US_ASCII)
-        charset = SystemCharset;
-    WcOption.auto_detect = WC_OPT_DETECT_ON;
-    tmp = convertLine(tmp, RAW_MODE, &charset, charset, InnerCharset);
-    WcOption.auto_detect = old_auto_detect;
-    return tmp->ptr;
-}
-
-char* url_decode2(const char* url, const struct Buffer* buf)
-{
-    if (!DecodeURL)
-        return (char*)url;
-    wc_ces url_charset = buf ? buf->document_charset : 0;
-    return url_unquote_conv((char*)url, url_charset);
-}
-
 int columnSkip(struct Buffer* buf, int offset)
 {
     int column = buf->currentColumn + offset;

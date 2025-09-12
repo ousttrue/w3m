@@ -39,10 +39,10 @@ historyBuffer(struct Hist* hist)
     if (hist && hist->list) {
         HistItem* item;
         for (item = hist->list->last; item; item = item->prev) {
-            const char* q = html_quote((char*)item->ptr);
+            const char* q = html_quote(item->ptr);
             const char* p;
             if (DecodeURL)
-                p = html_quote(url_decode2((char*)item->ptr, NULL));
+                p = html_quote(url_decode2(item->ptr, 0));
             else
                 p = q;
             Strcat_charp(src, "<li><a href=\"");

@@ -1,8 +1,8 @@
 #include "symbol.h"
-#include "ui.h"
 #include "alloc.h"
 #include "graphicchar.h"
 #include "ctrlcode.h"
+#include "runtime.h"
 #include <wtf.h>
 
 #include "Symbols/alt.sym"

@@ -1,5 +1,7 @@
 #pragma once
 #include <Str.h>
+#include <wc.h>
+#include <stdbool.h>
 
 extern const char* HostName;
 extern char* w3m_version;
@@ -10,6 +12,11 @@ extern char* rc_dir;
 // local-cgi
 extern const char* cgi_bin;
 extern const char* document_root;
+
+#define SYSTEM_CHARSET WC_CES_UTF_8
+extern wc_ces InnerCharset;
+extern wc_ces SystemCharset;
+extern bool DecodeURL;
 
 const char* expandPath(const char* name);
 const char* expandName(const char* name);
@@ -35,3 +42,6 @@ void initDeleteFile();
 void deinitDeleteFile();
 void pushDeleteFile(const char* path);
 Str tmpfname(enum TmpFileType type, const char* ext);
+
+const char* url_decode2(const char* url, wc_ces url_charset);
+

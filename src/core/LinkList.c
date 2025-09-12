@@ -1,4 +1,5 @@
 #include "LinkList.h"
+#include "runtime.h"
 #include "AnchorList.h"
 #include "Anchor.h"
 #include "HtmlTagParsed.h"
@@ -36,7 +37,7 @@ void append_link_info(struct Buffer* buf, Str html, struct LinkList* link)
         if (!l->url)
             url = "(empty)";
         else
-            url = html_quote(url_decode2(l->url, buf));
+            url = html_quote(url_decode2(l->url, buf ? buf->document_charset : 0));
         Strcat_m_charp(html, "<td>", url, NULL);
         if (l->ctype)
             Strcat_m_charp(html, " (", html_quote(l->ctype), ")", NULL);
@@ -74,7 +75,7 @@ link_menu(struct Buffer* buf)
         if (!l->url)
             p = "";
         else
-            p = url_decode2(l->url, buf);
+            p = url_decode2(l->url, buf ? buf->document_charset : 0);
         Strcat_charp(str, p);
         label[i] = str->ptr;
         if (len < str->length)
@@ -128,7 +129,7 @@ link_list_panel(struct Buffer* buf)
                 p = parsedURL2Str(&pu)->ptr;
                 u = html_quote(p);
                 if (DecodeURL)
-                    p = html_quote(url_decode2(p, buf));
+                    p = html_quote(url_decode2(p, buf ? buf->document_charset : 0));
                 else
                     p = u;
             } else
@@ -158,7 +159,7 @@ link_list_panel(struct Buffer* buf)
             p = parsedURL2Str(&pu)->ptr;
             u = html_quote(p);
             if (DecodeURL)
-                p = html_quote(url_decode2(p, buf));
+                p = html_quote(url_decode2(p, buf ? buf->document_charset : 0));
             else
                 p = u;
             t = getAnchorText(buf, al, a);
@@ -180,13 +181,13 @@ link_list_panel(struct Buffer* buf)
             p = parsedURL2Str(&pu)->ptr;
             u = html_quote(p);
             if (DecodeURL)
-                p = html_quote(url_decode2(p, buf));
+                p = html_quote(url_decode2(p, buf ? buf->document_charset : 0));
             else
                 p = u;
             if (a->title && *a->title)
                 t = html_quote(a->title);
             else
-                t = html_quote(url_decode2(a->url, buf));
+                t = html_quote(url_decode2(a->url, buf ? buf->document_charset : 0));
             Strcat_m_charp(tmp, "<li><a href=\"", u, "\">", t, "</a><br>", p,
                 "\n", 0);
             a = retrieveAnchor(buf->formitem, a->start);
@@ -209,13 +210,13 @@ link_list_panel(struct Buffer* buf)
                     p = parsedURL2Str(&pu)->ptr;
                     u = html_quote(p);
                     if (DecodeURL)
-                        p = html_quote(url_decode2(p, buf));
+                        p = html_quote(url_decode2(p, buf ? buf->document_charset : 0));
                     else
                         p = u;
                     if (m->alt && *m->alt)
                         t = html_quote(m->alt);
                     else
-                        t = html_quote(url_decode2(m->url, buf));
+                        t = html_quote(url_decode2(m->url, buf ? buf->document_charset : 0));
                     Strcat_m_charp(tmp, "<li><a href=\"", u, "\">", t,
                         "</a><br>", p, "\n", 0);
                 }

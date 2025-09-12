@@ -113,7 +113,6 @@ void arrangeLine(struct Buffer* buf);
 void cursorXY(struct Buffer* buf, int x, int y);
 void restorePosition(struct Buffer* buf, struct Buffer* orig);
 void saveBuffer(struct Buffer* buf, FILE* f, int cont);
-char* url_decode2(const char* url, const struct Buffer* buf);
 struct Url* baseURL(struct Buffer* buf);
 int columnSkip(struct Buffer* buf, int offset);
 struct LineList* lineSkip(struct Buffer* buf, struct LineList* line, int offset, int last);

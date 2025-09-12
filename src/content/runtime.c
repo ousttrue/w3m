@@ -1,6 +1,8 @@
 #include "runtime.h"
 #include "textlist.h"
 #include "myctype.h"
+#include "quote.h"
+#include "convertline.h"
 #include <Str.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,6 +23,10 @@ char* tmp_dir = 0;
 char* rc_dir = 0;
 const char* cgi_bin = (NULL);
 const char* document_root = 0;
+
+wc_ces InnerCharset = WC_CES_WTF; /* Don't change */
+wc_ces SystemCharset = SYSTEM_CHARSET;
+bool DecodeURL = false;
 
 TextList* g_fileToDelete = NULL;
 
@@ -208,4 +214,23 @@ Str tmpfname(enum TmpFileType type, const char* ext)
 
     pushDeleteFile(tmpf->ptr);
     return tmpf;
+}
+
+static const char* url_unquote_conv(const char* url, wc_ces charset)
+{
+    wc_uint8 old_auto_detect = WcOption.auto_detect;
+    Str tmp = Str_url_unquote(Strnew_charp(url), false, true);
+    if (!charset || charset == WC_CES_US_ASCII)
+        charset = SystemCharset;
+    WcOption.auto_detect = WC_OPT_DETECT_ON;
+    tmp = convertLine(tmp, RAW_MODE, &charset, charset, InnerCharset);
+    WcOption.auto_detect = old_auto_detect;
+    return tmp->ptr;
+}
+
+const char* url_decode2(const char* url, wc_ces url_charset)
+{
+    if (!DecodeURL)
+        return url;
+    return url_unquote_conv(url, url_charset);
 }

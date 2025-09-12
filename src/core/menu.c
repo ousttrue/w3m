@@ -1434,7 +1434,7 @@ initSelectMenu(void)
                 break;
             default:
                 Strcat_char(str, ' ');
-                p = url_decode2(parsedURL2Str(&buf->currentURL)->ptr, NULL);
+                p = url_decode2(parsedURL2Str(&buf->currentURL)->ptr, 0);
                 Strcat_charp(str, p);
                 break;
             }
