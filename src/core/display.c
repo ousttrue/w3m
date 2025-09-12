@@ -398,7 +398,7 @@ static int currentAnchorHseq(struct Buffer* buf)
 
 void drawAnchorCursor(struct UI ui, struct Buffer* buf)
 {
-    if (!buf->document.firstLine || !buf->hmarklist)
+    if (!buf->document.firstLine || !buf->document.hmarklist)
         return;
     if (!buf->document.href && !buf->document.formitem)
         return;
@@ -406,7 +406,7 @@ void drawAnchorCursor(struct UI ui, struct Buffer* buf)
     int tline = topLine(buf)->linenumber;
     int eline = tline + ui.viewport.size.y;
     int hseq = currentAnchorHseq(buf);
-    int prevhseq = buf->hmarklist->prevhseq;
+    int prevhseq = buf->document.hmarklist->prevhseq;
     if (buf->document.href) {
         drawAnchorCursor0(ui, buf, buf->document.href, hseq, prevhseq, tline, eline, 1);
         drawAnchorCursor0(ui, buf, buf->document.href, hseq, -1, tline, eline, 0);
@@ -415,5 +415,5 @@ void drawAnchorCursor(struct UI ui, struct Buffer* buf)
         drawAnchorCursor0(ui, buf, buf->document.formitem, hseq, prevhseq, tline, eline, 1);
         drawAnchorCursor0(ui, buf, buf->document.formitem, hseq, -1, tline, eline, 0);
     }
-    buf->hmarklist->prevhseq = hseq;
+    buf->document.hmarklist->prevhseq = hseq;
 }

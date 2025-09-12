@@ -507,13 +507,13 @@ void reshapeBuffer(struct Buffer* buf, int cols)
     buf->document.name = 0;
     buf->document.img = 0;
     buf->document.formitem = 0;
-    buf->formlist = 0;
-    buf->linklist = 0;
-    buf->maplist = 0;
-    if (buf->hmarklist)
-        buf->hmarklist->nmark = 0;
-    if (buf->imarklist)
-        buf->imarklist->nmark = 0;
+    buf->document.formlist = 0;
+    buf->document.linklist = 0;
+    buf->document.maplist = 0;
+    if (buf->document.hmarklist)
+        buf->document.hmarklist->nmark = 0;
+    if (buf->document.imarklist)
+        buf->document.imarklist->nmark = 0;
 
     WcOption.auto_detect = WC_OPT_DETECT_OFF;
     if (buf->content_type == CONTENTTYPE_TEXT_HTML)
@@ -1155,7 +1155,7 @@ void reseq_anchor(struct Buffer* buf)
     if (!buf->document.href)
         return;
 
-    int nmark = (buf->hmarklist) ? buf->hmarklist->nmark : 0;
+    int nmark = (buf->document.hmarklist) ? buf->document.hmarklist->nmark : 0;
     int n = nmark;
     for (int i = 0; i < buf->document.href->nanchor; i++) {
         struct Anchor* a = &buf->document.href->anchors[i];
@@ -1189,9 +1189,9 @@ void reseq_anchor(struct Buffer* buf)
     }
 
     for (int i = 0; i < nmark; i++) {
-        ml = putHmarker(ml, buf->hmarklist->marks[i].line, buf->hmarklist->marks[i].pos, seqmap[i]);
+        ml = putHmarker(ml, buf->document.hmarklist->marks[i].line, buf->document.hmarklist->marks[i].pos, seqmap[i]);
     }
-    buf->hmarklist = ml;
+    buf->document.hmarklist = ml;
 
     reseq_anchor0(buf->document.href, seqmap);
     reseq_anchor0(buf->document.formitem, seqmap);
@@ -1309,8 +1309,8 @@ void addMultirowsForm(struct Buffer* buf, struct AnchorList* al)
         for (j = 0; l && j < a_form.rows; l = l->next, j++) {
             pos = columnPos(&l->l, col);
             if (j == 0) {
-                buf->hmarklist->marks[a_form.hseq].line = l->linenumber;
-                buf->hmarklist->marks[a_form.hseq].pos = pos;
+                buf->document.hmarklist->marks[a_form.hseq].line = l->linenumber;
+                buf->document.hmarklist->marks[a_form.hseq].pos = pos;
             }
             if (a_form.start.line == l->linenumber)
                 continue;

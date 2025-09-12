@@ -2056,7 +2056,7 @@ void followForm(void)
 /* go to the top anchor */
 DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink")
 {
-    struct HmarkerList* hl = Currentbuf->hmarklist;
+    struct HmarkerList* hl = Currentbuf->document.hmarklist;
     struct BufferPoint* po;
     struct Anchor* an;
     int hseq = 0;
@@ -2084,7 +2084,7 @@ DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink")
 /* go to the last anchor */
 DEFUN(lastA, LINK_END, "Move to the last hyperlink")
 {
-    struct HmarkerList* hl = Currentbuf->hmarklist;
+    struct HmarkerList* hl = Currentbuf->document.hmarklist;
     struct BufferPoint* po;
     struct Anchor* an;
     int hseq;
@@ -2113,7 +2113,7 @@ DEFUN(lastA, LINK_END, "Move to the last hyperlink")
 /* go to the nth anchor */
 DEFUN(nthA, LINK_N, "Go to the nth link")
 {
-    struct HmarkerList* hl = Currentbuf->hmarklist;
+    struct HmarkerList* hl = Currentbuf->document.hmarklist;
 
     int n = searchKeyNum();
     if (n < 0 || n > hl->nmark)
@@ -2164,7 +2164,7 @@ DEFUN(prevVA, PREV_VISITED, "Move to the previous visited hyperlink")
 static void
 _nextA(int visited)
 {
-    struct HmarkerList* hl = Currentbuf->hmarklist;
+    struct HmarkerList* hl = Currentbuf->document.hmarklist;
     struct BufferPoint* po;
     struct Anchor *an, *pan;
     int i, x, y, n = searchKeyNum();
@@ -2245,7 +2245,7 @@ _end:
 static void
 _prevA(int visited)
 {
-    struct HmarkerList* hl = Currentbuf->hmarklist;
+    struct HmarkerList* hl = Currentbuf->document.hmarklist;
     struct BufferPoint* po;
     struct Anchor *an, *pan;
     int i, x, y, n = searchKeyNum();
@@ -2326,7 +2326,7 @@ _end:
 static void
 nextX(int d, int dy)
 {
-    struct HmarkerList* hl = Currentbuf->hmarklist;
+    struct HmarkerList* hl = Currentbuf->document.hmarklist;
     struct Anchor *an, *pan;
     int i, x, y, n = searchKeyNum();
 
@@ -2382,7 +2382,7 @@ nextX(int d, int dy)
 static void
 nextY(int d)
 {
-    struct HmarkerList* hl = Currentbuf->hmarklist;
+    struct HmarkerList* hl = Currentbuf->document.hmarklist;
     struct Anchor *an, *pan;
     int i, x, y, n = searchKeyNum();
     int hseq;
@@ -2737,14 +2737,14 @@ DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
 static void
 anchorMn(struct Anchor* (*menu_func)(struct Buffer*), int go)
 {
-    if (!Currentbuf->document.href || !Currentbuf->hmarklist)
+    if (!Currentbuf->document.href || !Currentbuf->document.hmarklist)
         return;
 
     struct Anchor* a = menu_func(Currentbuf);
     if (!a || a->hseq < 0)
         return;
 
-    struct BufferPoint* po = &Currentbuf->hmarklist->marks[a->hseq];
+    struct BufferPoint* po = &Currentbuf->document.hmarklist->marks[a->hseq];
     gotoLine(Currentbuf, po->line);
     Currentbuf->pos = po->pos;
     arrangeCursor(Currentbuf);

@@ -25,7 +25,7 @@ searchMapList(struct Buffer* buf, const char* name)
 
     if (name == NULL)
         return NULL;
-    for (ml = buf->maplist; ml != NULL; ml = ml->next) {
+    for (ml = buf->document.maplist; ml != NULL; ml = ml->next) {
         if (!Strcmp_charp(ml->name, name))
             break;
     }
@@ -425,7 +425,7 @@ page_info_panel(struct Buffer* buf)
     Strcat_charp(tmp, "</table>\n");
     Strcat_charp(tmp, "</form>");
 
-    append_link_info(buf, tmp, buf->linklist);
+    append_link_info(buf, tmp, buf->document.linklist);
 
     if (buf->document_header != NULL) {
         Strcat_charp(tmp, "<hr width=50%><h1>Header information</h1><pre>\n");

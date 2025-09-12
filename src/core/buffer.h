@@ -38,6 +38,11 @@ struct Document
     struct AnchorList* name;
     struct AnchorList* img;
     struct AnchorList* formitem;
+    struct Form* formlist;
+    struct LinkList* linklist;
+    struct _MapList* maplist;
+    struct HmarkerList* hmarklist;
+    struct HmarkerList* imarklist;
 };
 
 struct Buffer {
@@ -58,11 +63,6 @@ struct Buffer {
     enum ContentType content_type;
     enum BufferProperty bufferprop;
 
-    struct LinkList* linklist;
-    struct Form* formlist;
-    struct _MapList* maplist;
-    struct HmarkerList* hmarklist;
-    struct HmarkerList* imarklist;
     struct Url currentURL;
     struct Url* baseURL;
     const char* baseTarget;

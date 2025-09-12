@@ -54,16 +54,16 @@ link_menu(struct Buffer* buf)
     int i, nitem, len = 0, linkV = -1;
     Str str;
 
-    if (!buf->linklist)
+    if (!buf->document.linklist)
         return NULL;
 
-    for (i = 0, l = buf->linklist; l; i++, l = l->next)
+    for (i = 0, l = buf->document.linklist; l; i++, l = l->next)
         ;
     nitem = i;
 
     const char** label;
     label = New_N(char*, nitem + 1);
-    for (i = 0, l = buf->linklist; l; i++, l = l->next) {
+    for (i = 0, l = buf->document.linklist; l; i++, l = l->next) {
         str = Strnew_charp(l->title ? l->title : "(empty)");
         if (l->type == LINK_TYPE_REL)
             Strcat_charp(str, " [Rel] ");
@@ -96,7 +96,7 @@ link_menu(struct Buffer* buf)
 
     if (linkV < 0)
         return NULL;
-    for (i = 0, l = buf->linklist; l; i++, l = l->next) {
+    for (i = 0, l = buf->document.linklist; l; i++, l = l->next) {
         if (i == linkV)
             return l;
     }
@@ -106,7 +106,7 @@ link_menu(struct Buffer* buf)
 struct Buffer*
 link_list_panel(struct Buffer* buf)
 {
-    if (buf->bufferprop & BP_INTERNAL || (buf->linklist == 0 && buf->document.href == 0 && buf->document.img == 0)) {
+    if (buf->bufferprop & BP_INTERNAL || (buf->document.linklist == 0 && buf->document.href == 0 && buf->document.img == 0)) {
         return 0;
     }
 
@@ -121,9 +121,9 @@ link_list_panel(struct Buffer* buf)
     Str tmp = Strnew_charp("<title>Link List</title>\
 <h1 align=center>Link List</h1>\n");
 
-    if (buf->linklist) {
+    if (buf->document.linklist) {
         Strcat_charp(tmp, "<hr><h2>Links</h2>\n<ol>\n");
-        for (l = buf->linklist; l; l = l->next) {
+        for (l = buf->document.linklist; l; l = l->next) {
             if (l->url) {
                 pu = parseUrl(l->url, baseURL(buf));
                 p = parsedURL2Str(&pu)->ptr;
@@ -265,12 +265,12 @@ void addLink(struct Buffer* buf, struct HtmlTagParsed* tag)
     l->ctype = ctype;
     l->type = type;
     l->next = NULL;
-    if (buf->linklist) {
+    if (buf->document.linklist) {
         struct LinkList* i;
-        for (i = buf->linklist; i->next; i = i->next)
+        for (i = buf->document.linklist; i->next; i = i->next)
             ;
         i->next = l;
     } else {
-        buf->linklist = l;
+        buf->document.linklist = l;
     }
 }
