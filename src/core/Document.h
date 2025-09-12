@@ -10,6 +10,9 @@ struct Document {
 
     struct LineList* firstLine;
     int allLine;
+    int topLineIndex;
+    int currentLineIndex;
+
     struct AnchorList* href;
     struct AnchorList* name;
     struct AnchorList* img;
@@ -22,6 +25,17 @@ struct Document {
 };
 
 struct HtmlTagParsed;
+
+struct LineList* getLine(struct Document *doc, int i);
+struct LineList* lastLine(struct Document *doc);
+inline static struct LineList* currentLine(struct Document *doc)
+{
+    return getLine(doc, doc->currentLineIndex);
+}
+inline static struct LineList* topLine(struct Document *doc)
+{
+    return getLine(doc, doc->topLineIndex);
+}
 
 struct Anchor* registerHref(struct Document* doc, const char* url, const char* target,
     const char* referer, const char* title, unsigned char key,

@@ -36,8 +36,6 @@ struct Buffer {
     const char* buffername;
 
     struct Document document;
-    int topLineIndex;
-    int currentLineIndex;
 
     short width;
     int currentColumn;
@@ -84,10 +82,6 @@ struct Buffer* namedBuffer(struct Buffer* first, char* name);
 struct Buffer* deleteBuffer(struct Buffer* first, struct Buffer* delbuf);
 struct Buffer* replaceBuffer(struct Buffer* first, struct Buffer* delbuf, struct Buffer* newbuf);
 struct Buffer* nthBuffer(struct Buffer* firstbuf, int n);
-struct LineList* currentLine(struct Buffer* buf);
-struct LineList* lastLine(struct Buffer* buf);
-struct LineList* topLine(struct Buffer* buf);
-struct LineList* getLine(struct Buffer* buf, int i);
 // void gotoRealLine(struct Buffer* buf, int n);
 void gotoLine(struct Buffer* buf, int n);
 struct Buffer* selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectchar);
@@ -128,8 +122,8 @@ struct BufferPoint getBufferPosition(struct Buffer* buf);
 
 inline static void COPY_BUFPOSITION(struct Buffer* dstbuf, struct Buffer* srcbuf)
 {
-    (dstbuf)->topLineIndex = (srcbuf)->topLineIndex;
-    (dstbuf)->currentLineIndex = (srcbuf)->currentLineIndex;
+    (dstbuf)->document.topLineIndex = (srcbuf)->document.topLineIndex;
+    (dstbuf)->document.currentLineIndex = (srcbuf)->document.currentLineIndex;
     (dstbuf)->pos = (srcbuf)->pos;
     (dstbuf)->visualpos = (srcbuf)->visualpos;
     (dstbuf)->currentColumn = (srcbuf)->currentColumn;

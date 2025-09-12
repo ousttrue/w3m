@@ -81,8 +81,8 @@ void clearBuffer(struct Buffer* buf)
 {
     // charset !
     // buf->document = (struct Document) { 0 };
-    buf->topLineIndex = 0;
-    buf->currentLineIndex = 0;
+    buf->document.topLineIndex = 0;
+    buf->document.currentLineIndex = 0;
 }
 
 /*
@@ -109,47 +109,6 @@ void discardBuffer(struct Buffer* buf)
     }
     if (buf->mailcap_source)
         unlink(buf->mailcap_source);
-}
-
-struct LineList* lastLine(struct Buffer* buf)
-{
-    struct LineList* l = buf->document.firstLine;
-    if (!l) {
-        return 0;
-    }
-    for (; l->next; l = l->next) {
-    }
-    return l;
-}
-
-struct LineList* currentLine(struct Buffer* buf)
-{
-    for (struct LineList* l = buf->document.firstLine; l; l = l->next) {
-        if (l->linenumber == buf->currentLineIndex) {
-            return l;
-        }
-    }
-    return 0;
-}
-
-struct LineList* getLine(struct Buffer* buf, int i)
-{
-    for (struct LineList* l = buf->document.firstLine; l; l = l->next) {
-        if (l->linenumber == i) {
-            return l;
-        }
-    }
-    return 0;
-}
-
-struct LineList* topLine(struct Buffer* buf)
-{
-    for (struct LineList* l = buf->document.firstLine; l; l = l->next) {
-        if (l->linenumber == buf->topLineIndex) {
-            return l;
-        }
-    }
-    return 0;
 }
 
 /*
@@ -239,8 +198,8 @@ static void
 writeBufferName(struct Buffer* buf, int n)
 {
     int all = buf->document.allLine;
-    if (all == 0 && lastLine(buf) != 0)
-        all = lastLine(buf)->linenumber;
+    if (all == 0 && lastLine(&buf->document) != 0)
+        all = lastLine(&buf->document)->linenumber;
     vt_move(getScreen(), n, 0);
 
     Str msg = Sprintf("<%s> [%d lines]", buf->buffername, all);
@@ -278,23 +237,23 @@ void gotoLine(struct Buffer* buf, int n)
         /* FIXME: gettextize? */
         sprintf(msg, "First line is #%ld", l->linenumber);
         set_delayed_message(msg);
-        buf->topLineIndex = buf->currentLineIndex = l->linenumber;
+        buf->document.topLineIndex = buf->document.currentLineIndex = l->linenumber;
         return;
     }
-    if (lastLine(buf)->linenumber < n) {
-        l = lastLine(buf);
+    if (lastLine(&buf->document)->linenumber < n) {
+        l = lastLine(&buf->document);
         /* FIXME: gettextize? */
-        sprintf(msg, "Last line is #%ld", lastLine(buf)->linenumber);
+        sprintf(msg, "Last line is #%ld", lastLine(&buf->document)->linenumber);
         set_delayed_message(msg);
-        buf->currentLineIndex = l->linenumber;
-        buf->topLineIndex = lineSkip(buf, currentLine(buf), -(getScreen()->ROWS - 1), false)->linenumber;
+        buf->document.currentLineIndex = l->linenumber;
+        buf->document.topLineIndex = lineSkip(buf, currentLine(&buf->document), -(getScreen()->ROWS - 1), false)->linenumber;
         return;
     }
     for (; l != 0; l = l->next) {
         if (l->linenumber >= n) {
-            buf->currentLineIndex = l->linenumber;
-            if (n < topLine(buf)->linenumber || topLine(buf)->linenumber + getScreen()->ROWS <= n)
-                buf->topLineIndex = lineSkip(buf, l, -(getScreen()->ROWS + 1) / 2, false)->linenumber;
+            buf->document.currentLineIndex = l->linenumber;
+            if (n < topLine(&buf->document)->linenumber || topLine(&buf->document)->linenumber + getScreen()->ROWS <= n)
+                buf->document.topLineIndex = lineSkip(buf, l, -(getScreen()->ROWS + 1) / 2, false)->linenumber;
             break;
         }
     }
@@ -314,24 +273,24 @@ void gotoLine(struct Buffer* buf, int n)
 //         /* FIXME: gettextize? */
 //         sprintf(msg, "First line is #%ld", l->real_linenumber);
 //         set_delayed_message(msg);
-//         topLine(buf) = currentLine(buf) = l;
+//         topLine(&buf->document) = currentLine(&buf->document) = l;
 //         return;
 //     }
-//     if (lastLine(buf)->real_linenumber < n) {
-//         l = lastLine(buf);
+//     if (lastLine(&buf->document)->real_linenumber < n) {
+//         l = lastLine(&buf->document);
 //         /* FIXME: gettextize? */
-//         sprintf(msg, "Last line is #%ld", lastLine(buf)->real_linenumber);
+//         sprintf(msg, "Last line is #%ld", lastLine(&buf->document)->real_linenumber);
 //         set_delayed_message(msg);
-//         currentLine(buf) = l;
-//         topLine(buf) = lineSkip(buf, currentLine(buf), -(getScreen()->ROWS - 1),
+//         currentLine(&buf->document) = l;
+//         topLine(&buf->document) = lineSkip(buf, currentLine(&buf->document), -(getScreen()->ROWS - 1),
 //             false);
 //         return;
 //     }
 //     for (; l != 0; l = l->next) {
 //         if (l->real_linenumber >= n) {
-//             currentLine(buf) = l;
-//             if (n < topLine(buf)->real_linenumber || topLine(buf)->real_linenumber + getScreen()->ROWS <= n)
-//                 topLine(buf) = lineSkip(buf, l, -(getScreen()->ROWS + 1) / 2, false);
+//             currentLine(&buf->document) = l;
+//             if (n < topLine(&buf->document)->real_linenumber || topLine(&buf->document)->real_linenumber + getScreen()->ROWS <= n)
+//                 topLine(&buf->document) = lineSkip(buf, l, -(getScreen()->ROWS + 1) / 2, false);
 //             break;
 //         }
 //     }
@@ -527,7 +486,7 @@ void reshapeBuffer(struct Buffer* buf, int cols)
 
     // buf->height = getScreen()->ROWS - 1 + 1;
     if (buf->document.firstLine && sbuf.document.firstLine) {
-        struct LineList* cur = currentLine(&sbuf);
+        struct LineList* cur = currentLine(&sbuf.document);
         int n;
 
         buf->pos = sbuf.pos + cur->bpos;
@@ -537,16 +496,16 @@ void reshapeBuffer(struct Buffer* buf, int cols)
         //     gotoRealLine(buf, cur->real_linenumber);
         // else
         gotoLine(buf, cur->linenumber);
-        n = (currentLine(buf)->linenumber - topLine(buf)->linenumber)
-            - (cur->linenumber - sbuf.topLineIndex);
+        n = (currentLine(&buf->document)->linenumber - topLine(&buf->document)->linenumber)
+            - (cur->linenumber - sbuf.document.topLineIndex);
         if (n) {
-            buf->topLineIndex = lineSkip(buf, topLine(buf), n, false)->linenumber;
+            buf->document.topLineIndex = lineSkip(buf, topLine(&buf->document), n, false)->linenumber;
             // if (cur->real_linenumber > 0)
             //     gotoRealLine(buf, cur->real_linenumber);
             // else
             gotoLine(buf, cur->linenumber);
         }
-        buf->pos -= currentLine(buf)->bpos;
+        buf->pos -= currentLine(&buf->document)->bpos;
         if (FoldLine && buf->content_type != CONTENTTYPE_TEXT_HTML)
             buf->currentColumn = 0;
         else
@@ -596,7 +555,7 @@ int writeBufferCache(struct Buffer* buf)
     if (!cache)
         goto _error1;
 
-    if (fwrite1(currentLine(buf)->linenumber, cache) || fwrite1(topLine(buf)->linenumber, cache))
+    if (fwrite1(currentLine(&buf->document)->linenumber, cache) || fwrite1(topLine(&buf->document)->linenumber, cache))
         goto _error;
 
     struct LineList* l;
@@ -657,9 +616,9 @@ int readBufferCache(struct Buffer* buf)
             buf->document.firstLine = l;
         l->linenumber = lnum;
         if (lnum == clnum)
-            buf->currentLineIndex = l->linenumber;
+            buf->document.currentLineIndex = l->linenumber;
         if (lnum == tlnum)
-            buf->topLineIndex = l->linenumber;
+            buf->document.topLineIndex = l->linenumber;
         if (fread1(l->l.usrflags, cache) || fread1(l->l.width, cache) || fread1(l->l.len, cache) || fread1(l->l.size, cache) || fread1(l->bpos, cache) || fread1(l->bwidth, cache))
             break;
         if (l->bpos == 0) {
@@ -687,7 +646,7 @@ int readBufferCache(struct Buffer* buf)
         }
     }
     if (prevl) {
-        lastLine(buf)->next = 0;
+        lastLine(&buf->document)->next = 0;
     }
     fclose(cache);
     unlink(buf->savecache);
@@ -703,51 +662,51 @@ void arrangeCursor(struct Buffer* buf)
 {
     int col, col2, pos;
     int delta = 1;
-    if (buf == 0 || currentLine(buf) == 0)
+    if (buf == 0 || currentLine(&buf->document) == 0)
         return;
     /* Arrange line */
-    if (currentLine(buf)->linenumber - topLine(buf)->linenumber >= getScreen()->ROWS
-        || currentLine(buf)->linenumber < topLine(buf)->linenumber) {
+    if (currentLine(&buf->document)->linenumber - topLine(&buf->document)->linenumber >= getScreen()->ROWS
+        || currentLine(&buf->document)->linenumber < topLine(&buf->document)->linenumber) {
         /*
-         * topLine(buf) = currentLine(buf);
+         * topLine(&buf->document) = currentLine(&buf->document);
          */
-        buf->topLineIndex = lineSkip(buf, currentLine(buf), 0, false)->linenumber;
+        buf->document.topLineIndex = lineSkip(buf, currentLine(&buf->document), 0, false)->linenumber;
     }
     /* Arrange column */
-    while (buf->pos < 0 && currentLine(buf)->prev && currentLine(buf)->bpos) {
-        pos = buf->pos + currentLine(buf)->prev->l.len;
+    while (buf->pos < 0 && currentLine(&buf->document)->prev && currentLine(&buf->document)->bpos) {
+        pos = buf->pos + currentLine(&buf->document)->prev->l.len;
         cursorUp(1);
         buf->pos = pos;
     }
-    while (buf->pos >= currentLine(buf)->l.len && currentLine(buf)->next && currentLine(buf)->next->bpos) {
-        pos = buf->pos - currentLine(buf)->l.len;
+    while (buf->pos >= currentLine(&buf->document)->l.len && currentLine(&buf->document)->next && currentLine(&buf->document)->next->bpos) {
+        pos = buf->pos - currentLine(&buf->document)->l.len;
         cursorDown(1);
         buf->pos = pos;
     }
-    if (currentLine(buf)->l.len == 0 || buf->pos < 0)
+    if (currentLine(&buf->document)->l.len == 0 || buf->pos < 0)
         buf->pos = 0;
-    else if (buf->pos >= currentLine(buf)->l.len)
-        buf->pos = currentLine(buf)->l.len - 1;
-    while (buf->pos > 0 && currentLine(buf)->l.propBuf[buf->pos] & PC_WCHAR2)
+    else if (buf->pos >= currentLine(&buf->document)->l.len)
+        buf->pos = currentLine(&buf->document)->l.len - 1;
+    while (buf->pos > 0 && currentLine(&buf->document)->l.propBuf[buf->pos] & PC_WCHAR2)
         buf->pos--;
-    col = COLPOS(&currentLine(buf)->l, buf->pos);
-    while (buf->pos + delta < currentLine(buf)->l.len && currentLine(buf)->l.propBuf[buf->pos + delta] & PC_WCHAR2)
+    col = COLPOS(&currentLine(&buf->document)->l, buf->pos);
+    while (buf->pos + delta < currentLine(&buf->document)->l.len && currentLine(&buf->document)->l.propBuf[buf->pos + delta] & PC_WCHAR2)
         delta++;
-    col2 = COLPOS(&currentLine(buf)->l, buf->pos + delta);
+    col2 = COLPOS(&currentLine(&buf->document)->l, buf->pos + delta);
     if (col < buf->currentColumn || col2 > getScreen()->COLS + buf->currentColumn) {
         buf->currentColumn = 0;
         if (col2 > getScreen()->COLS)
             columnSkip(buf, col);
     }
     /* Arrange cursor */
-    // buf->cursorY = currentLine(buf)->linenumber - topLine(buf)->linenumber;
-    buf->visualpos = currentLine(buf)->bwidth + COLPOS(&currentLine(buf)->l, buf->pos) - buf->currentColumn;
-    // buf->cursorX = buf->visualpos - currentLine(buf)->bwidth;
+    // buf->cursorY = currentLine(&buf->document)->linenumber - topLine(&buf->document)->linenumber;
+    buf->visualpos = currentLine(&buf->document)->bwidth + COLPOS(&currentLine(&buf->document)->l, buf->pos) - buf->currentColumn;
+    // buf->cursorX = buf->visualpos - currentLine(&buf->document)->bwidth;
 #ifdef DISPLAY_DEBUG
     fprintf(stderr,
         "arrangeCursor: column=%d, cursorX=%d, visualpos=%d, pos=%d, len=%d\n",
         buf->currentColumn, buf->cursorX, buf->visualpos, buf->pos,
-        currentLine(buf)->len);
+        currentLine(&buf->document)->len);
 #endif
 }
 
@@ -757,13 +716,13 @@ void arrangeLine(struct Buffer* buf)
 
     if (buf->document.firstLine == 0)
         return;
-    // buf->cursorY = currentLine(buf)->linenumber - topLine(buf)->linenumber;
-    i = columnPos(&currentLine(buf)->l, buf->currentColumn + buf->visualpos - currentLine(buf)->bwidth);
-    cpos = COLPOS(&currentLine(buf)->l, i) - buf->currentColumn;
+    // buf->cursorY = currentLine(&buf->document)->linenumber - topLine(&buf->document)->linenumber;
+    i = columnPos(&currentLine(&buf->document)->l, buf->currentColumn + buf->visualpos - currentLine(&buf->document)->bwidth);
+    cpos = COLPOS(&currentLine(&buf->document)->l, i) - buf->currentColumn;
     if (cpos >= 0) {
         // buf->cursorX = cpos;
         buf->pos = i;
-    } else if (currentLine(buf)->l.len > i) {
+    } else if (currentLine(&buf->document)->l.len > i) {
         // buf->cursorX = 0;
         buf->pos = i + 1;
     } else {
@@ -774,7 +733,7 @@ void arrangeLine(struct Buffer* buf)
     fprintf(stderr,
         "arrangeLine: column=%d, cursorX=%d, visualpos=%d, pos=%d, len=%d\n",
         buf->currentColumn, buf->cursorX, buf->visualpos, buf->pos,
-        currentLine(buf)->len);
+        currentLine(&buf->document)->len);
 #endif
 }
 
@@ -805,11 +764,11 @@ void cursorXY(struct Buffer* buf, int x, int y)
 
 void restorePosition(struct Buffer* buf, struct Buffer* orig)
 {
-    buf->topLineIndex = lineSkip(buf, buf->document.firstLine, orig->topLineIndex - 1, false)->linenumber;
-    gotoLine(buf, orig->currentLineIndex);
+    buf->document.topLineIndex = lineSkip(buf, buf->document.firstLine, orig->document.topLineIndex - 1, false)->linenumber;
+    gotoLine(buf, orig->document.currentLineIndex);
     buf->pos = orig->pos;
-    if (currentLine(buf) && currentLine(orig))
-        buf->pos += currentLine(orig)->bpos - currentLine(buf)->bpos;
+    if (currentLine(&buf->document) && currentLine(&orig->document))
+        buf->pos += currentLine(&orig->document)->bpos - currentLine(&buf->document)->bpos;
     buf->currentColumn = orig->currentColumn;
     arrangeCursor(buf);
 }
@@ -855,7 +814,7 @@ int columnSkip(struct Buffer* buf, int offset)
     int nlines = getScreen()->ROWS + 1;
 
     int maxColumn = 0;
-    struct LineList* l = topLine(buf);
+    struct LineList* l = topLine(&buf->document);
     for (int i = 0; i < nlines && l != 0; i++, l = l->next) {
         if (l->l.width < 0)
             l->l.width = COLPOS(&l->l, l->l.len);
@@ -878,7 +837,7 @@ struct LineList* lineSkip(struct Buffer* buf, struct LineList* line, int offset,
 {
     struct LineList* l = currentLineSkip(buf, line, offset, last);
     if (!nextpage_topline)
-        for (int i = getScreen()->ROWS - 1 - (lastLine(buf)->linenumber - l->linenumber);
+        for (int i = getScreen()->ROWS - 1 - (lastLine(&buf->document)->linenumber - l->linenumber);
             i > 0 && l->prev != 0; i--, l = l->prev)
             ;
     return l;
@@ -1029,12 +988,12 @@ struct Int2 updateCursor(struct Buffer* buf, struct Int2 viewport_size,
     int y = viewport_cursor.y + cursor_delta.y;
     if (y < 0) {
         // up
-        buf->topLineIndex += y;
+        buf->document.topLineIndex += y;
         y = 0;
         *hasScroll = true;
     } else if (y >= viewport_size.y) {
         // down
-        buf->topLineIndex += (1 + y - viewport_size.y);
+        buf->document.topLineIndex += (1 + y - viewport_size.y);
         y = viewport_size.y - 1;
         *hasScroll = true;
     }
@@ -1048,7 +1007,7 @@ struct Int2 updateCursor(struct Buffer* buf, struct Int2 viewport_size,
 struct BufferPoint getBufferPosition(struct Buffer* buf)
 {
     struct UI ui = getUI();
-    struct LineList* l = getLine(Currentbuf, ui.viewport_cursor.y);
+    struct LineList* l = getLine(&Currentbuf->document, ui.viewport_cursor.y);
     if (!l) {
         return (struct BufferPoint) { 0, 0 };
     }
@@ -1071,19 +1030,19 @@ retrieveCurrentAnchor(struct Buffer* buf)
 struct Anchor*
 retrieveCurrentImg(struct Buffer* buf)
 {
-    if (currentLine(buf) == 0)
+    if (currentLine(&buf->document) == 0)
         return 0;
     return retrieveAnchor(buf->document.img,
-        (struct BufferPoint) { .line = currentLine(buf)->linenumber, .pos = buf->pos });
+        (struct BufferPoint) { .line = currentLine(&buf->document)->linenumber, .pos = buf->pos });
 }
 
 struct Anchor*
 retrieveCurrentForm(struct Buffer* buf)
 {
-    if (currentLine(buf) == 0)
+    if (currentLine(&buf->document) == 0)
         return 0;
     return retrieveAnchor(buf->document.formitem,
-        (struct BufferPoint) { .line = currentLine(buf)->linenumber, .pos = buf->pos });
+        (struct BufferPoint) { .line = currentLine(&buf->document)->linenumber, .pos = buf->pos });
 }
 
 struct Anchor*
@@ -1424,7 +1383,7 @@ reAnchorAny(struct Buffer* buf, const char* re, AnchorFunc anchorproc)
     if ((re = regexCompile(re, 1)) != NULL) {
         return re;
     }
-    for (l = MarkAllPages ? buf->document.firstLine : topLine(buf); l != NULL && (MarkAllPages || l->linenumber < topLine(buf)->linenumber + getScreen()->ROWS - 1);
+    for (l = MarkAllPages ? buf->document.firstLine : topLine(&buf->document); l != NULL && (MarkAllPages || l->linenumber < topLine(&buf->document)->linenumber + getScreen()->ROWS - 1);
         l = l->next) {
         if (p && l->bpos)
             continue;

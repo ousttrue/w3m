@@ -3,6 +3,27 @@
 #include "AnchorList.h"
 #include "form.h"
 
+struct LineList* getLine(struct Document* doc, int i)
+{
+    for (struct LineList* l = doc->firstLine; l; l = l->next) {
+        if (l->linenumber == i) {
+            return l;
+        }
+    }
+    return 0;
+}
+
+struct LineList* lastLine(struct Document* doc)
+{
+    struct LineList* l = doc->firstLine;
+    if (!l) {
+        return 0;
+    }
+    for (; l->next; l = l->next) {
+    }
+    return l;
+}
+
 struct Anchor*
 registerImg(struct Document* doc, const char* url, const char* title, struct BufferPoint bp)
 {

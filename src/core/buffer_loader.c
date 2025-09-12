@@ -143,15 +143,15 @@ Lineprop NullProp[] = { 0 };
 //     l->size = pos;
 //     l->bpos = 0;
 //     l->bwidth = 0;
-//     l->prev = currentLine(buf);
-//     if (currentLine(buf)) {
-//         l->next = currentLine(buf)->next;
-//         currentLine(buf)->next = l;
+//     l->prev = currentLine(&buf->document);
+//     if (currentLine(&buf->document)) {
+//         l->next = currentLine(&buf->document)->next;
+//         currentLine(&buf->document)->next = l;
 //     } else
 //         l->next = NULL;
-//     if (lastLine(buf) == NULL || lastLine(buf) == currentLine(buf))
+//     if (lastLine(buf) == NULL || lastLine(buf) == currentLine(&buf->document))
 //         lastLine(buf) = l;
-//     currentLine(buf) = l;
+//     currentLine(&buf->document) = l;
 //     if (buf->firstLine == NULL)
 //         buf->firstLine = l;
 //     l->linenumber = ++buf->allLine;
@@ -740,15 +740,15 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
                 id = NULL;
                 if (parsedtag_get_value(tag, ATTR_ID, &id)) {
                     id = url_quote_conv(id, buf->document.charset);
-                    registerName(buf, id,
+                    registerName(&buf->document, id,
                         (struct BufferPoint) { .line = buf->document.allLine, .pos = pos });
                 }
             }
         }
         /* end of processing for one line */
         if (!internal) {
-            struct LineList* l = addNewline(currentLine(buf), outc, outp, NULL, pos, -1, buf->document.allLine++);
-            buf->currentLineIndex = l->linenumber;
+            struct LineList* l = addNewline(currentLine(&buf->document), outc, outp, NULL, pos, -1, buf->document.allLine++);
+            buf->document.currentLineIndex = l->linenumber;
             if (buf->document.firstLine == NULL) {
                 buf->document.firstLine = l;
             }
@@ -1502,8 +1502,8 @@ loadHTMLBuffer(struct Url url, union input_stream* stream, wc_ces content_charse
 
     loadHTMLstream(stream, &newBuf->document.charset, newBuf, false);
 
-    newBuf->topLineIndex = newBuf->document.firstLine->linenumber;
-    newBuf->currentLineIndex = newBuf->document.firstLine->linenumber;
+    newBuf->document.topLineIndex = newBuf->document.firstLine->linenumber;
+    newBuf->document.currentLineIndex = newBuf->document.firstLine->linenumber;
     if (n_textarea)
         formResetBuffer(newBuf, newBuf->document.formitem);
 
@@ -1532,8 +1532,8 @@ loadHTMLString(Str page, wc_ces content_charset)
 
     term_raw();
     ISclose(stream);
-    newBuf->topLineIndex = newBuf->document.firstLine->linenumber;
-    newBuf->currentLineIndex = newBuf->document.firstLine->linenumber;
+    newBuf->document.topLineIndex = newBuf->document.firstLine->linenumber;
+    newBuf->document.currentLineIndex = newBuf->document.firstLine->linenumber;
     newBuf->content_type = CONTENTTYPE_TEXT_HTML;
     if (n_textarea)
         formResetBuffer(newBuf, newBuf->document.formitem);
@@ -1594,9 +1594,9 @@ loadBuffer(struct Url url, union input_stream* stream, struct Buffer* newBuf)
         Strchop(lineBuf2);
         lineBuf2 = checkType(lineBuf2, &propBuffer, NULL);
         {
-            struct LineList* l = addNewline(currentLine(newBuf),
+            struct LineList* l = addNewline(currentLine(&newBuf->document),
                 lineBuf2->ptr, propBuffer, colorBuffer, lineBuf2->length, -1, newBuf->document.allLine++);
-            newBuf->currentLineIndex = l->linenumber;
+            newBuf->document.currentLineIndex = l->linenumber;
             if (newBuf->document.firstLine == NULL) {
                 newBuf->document.firstLine = l;
             }
@@ -1604,8 +1604,8 @@ loadBuffer(struct Url url, union input_stream* stream, struct Buffer* newBuf)
     }
 _end:
     term_raw();
-    newBuf->topLineIndex = newBuf->document.firstLine->linenumber;
-    newBuf->currentLineIndex = newBuf->document.firstLine->linenumber;
+    newBuf->document.topLineIndex = newBuf->document.firstLine->linenumber;
+    newBuf->document.currentLineIndex = newBuf->document.firstLine->linenumber;
     newBuf->trbyte = trbyte + linelen;
     newBuf->document.charset = charset;
     if (src)

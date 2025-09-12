@@ -55,7 +55,7 @@ enum SearchResultFlags forwardSearch(struct Buffer* buf, const char* str)
         message(getUI(), MSG_INFO, p);
         return SR_NOTFOUND;
     }
-    l = currentLine(buf);
+    l = currentLine(&buf->document);
     if (l == NULL) {
         return SR_NOTFOUND;
     }
@@ -76,7 +76,7 @@ enum SearchResultFlags forwardSearch(struct Buffer* buf, const char* str)
             l = l->next;
         }
         buf->pos = pos;
-        if (l != currentLine(buf))
+        if (l != currentLine(&buf->document))
             gotoLine(buf, l->linenumber);
         arrangeCursor(buf);
         set_mark(&l->l, pos, pos + last - first);
@@ -101,7 +101,7 @@ enum SearchResultFlags forwardSearch(struct Buffer* buf, const char* str)
                 l = l->next;
             }
             buf->pos = pos;
-            buf->currentLineIndex = l->linenumber;
+            buf->document.currentLineIndex = l->linenumber;
             gotoLine(buf, l->linenumber);
             arrangeCursor(buf);
             set_mark(&l->l, pos, pos + last - first);
@@ -124,7 +124,7 @@ enum SearchResultFlags backwardSearch(struct Buffer* buf, const char* str)
         message(getUI(), MSG_INFO, p);
         return SR_NOTFOUND;
     }
-    l = currentLine(buf);
+    l = currentLine(&buf->document);
     if (l == NULL) {
         return SR_NOTFOUND;
     }
@@ -165,7 +165,7 @@ enum SearchResultFlags backwardSearch(struct Buffer* buf, const char* str)
                 l = l->next;
             }
             buf->pos = pos;
-            if (l != currentLine(buf))
+            if (l != currentLine(&buf->document))
                 gotoLine(buf, l->linenumber);
             arrangeCursor(buf);
             set_mark(&l->l, pos, pos + found_last - found);
@@ -175,7 +175,7 @@ enum SearchResultFlags backwardSearch(struct Buffer* buf, const char* str)
     for (l = l->prev;; l = l->prev) {
         if (l == NULL) {
             if (WrapSearch) {
-                l = lastLine(buf);
+                l = lastLine(&buf->document);
                 wrapped = true;
             } else {
                 break;
@@ -264,7 +264,7 @@ static int srchcore(const char* str, SearchFunc func)
 
         result = func(Currentbuf, str);
         if (result & SR_FOUND)
-            clear_mark(&currentLine(Currentbuf)->l);
+            clear_mark(&currentLine(&Currentbuf->document)->l);
     }
     mySignal(SIGINT, prevtrap);
     term_raw();
@@ -324,7 +324,7 @@ dispincsrch(int ch, Str buf, Lineprop* prop)
             }
             arrangeCursor(Currentbuf);
 
-            clear_mark(&currentLine(Currentbuf)->l);
+            clear_mark(&currentLine(&Currentbuf->document)->l);
             return -1;
         } else
             return 020; /* _prev completion for C-s C-s */
@@ -335,7 +335,7 @@ dispincsrch(int ch, Str buf, Lineprop* prop)
         arrangeCursor(Currentbuf);
     }
 
-    clear_mark(&currentLine(Currentbuf)->l);
+    clear_mark(&currentLine(&Currentbuf->document)->l);
     return -1;
 }
 
@@ -374,7 +374,7 @@ void srch(SearchFunc func, char* prompt)
         Currentbuf->pos += 1;
     result = srchcore(str, func);
     if (result & SR_FOUND)
-        clear_mark(&currentLine(Currentbuf)->l);
+        clear_mark(&currentLine(&Currentbuf->document)->l);
     else
         Currentbuf->pos = pos;
 
@@ -403,7 +403,7 @@ void srch_nxtprv(bool reverse)
 
     enum SearchResultFlags result = srchcore(SearchString, routine[reverse]);
     if (result & SR_FOUND)
-        clear_mark(&currentLine(Currentbuf)->l);
+        clear_mark(&currentLine(&Currentbuf->document)->l);
     else {
         if (!reverse)
             Currentbuf->pos -= 1;
