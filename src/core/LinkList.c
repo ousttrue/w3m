@@ -49,7 +49,7 @@ void append_link_info(struct Buffer* buf, Str html, struct LinkList* link)
 struct LinkList*
 link_menu(struct Buffer* buf)
 {
-    Menu menu;
+    struct Menu menu;
     struct LinkList* l;
     int i, nitem, len = 0, linkV = -1;
     Str str;

@@ -13,7 +13,6 @@
 #include "history.h"
 #include "buffer.h"
 #include "ui.h"
-// #include "funcname1.h"
 #include "symbol.h"
 #include "w3m.h"
 #include "image.h"
@@ -28,6 +27,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <wtf.h>
+
+#define MENU_NOTHING -1
+#define MENU_CANCEL -2
+#define MENU_CLOSE -3
 
 #define MENU_FILE "menu"
 
@@ -67,8 +70,9 @@ static int mSrchB(char c);
 static int mSrchN(char c);
 static int mSrchP(char c);
 
-/* *INDENT-OFF* */
-static int (*MenuKeymap[128])(char c) = {
+typedef int (*MenuFunc)(char c);
+
+static MenuFunc MenuKeymap[128] = {
     /*  C-@     C-a     C-b     C-c     C-d     C-e     C-f     C-g      */
     mNull,
     mTop,
@@ -623,29 +627,23 @@ static int (*MenuEscDKeymap[128])(char c) = {
     mNull,
 };
 
-/* *INDENT-ON* */
-/* --- SelectMenu --- */
-
-static Menu SelectMenu;
+static struct Menu SelectMenu;
 static int SelectV = 0;
 static void initSelectMenu(void);
 static void smChBuf(void);
 static int smDelBuf(char c);
 
-/* --- SelectMenu (END) --- */
-
 /* --- MainMenu --- */
 
-static Menu MainMenu;
-/* FIXME: gettextize here */
-static wc_ces MainMenuCharset = WC_CES_US_ASCII; /* FIXME: charset of source code */
+static struct Menu MainMenu;
+static wc_ces MainMenuCharset = WC_CES_US_ASCII;
 static int MainMenuEncode = false;
 
 #include <libintl.h>
 #define _(String) gettext(String)
 #define N_(String) (String)
 
-static MenuItem MainMenuItem[] = {
+static struct MenuItem MainMenuItem[] = {
     /* type        label           variable value func     popup keys data  */
     { MENU_FUNC, N_(" Back         (b) "), NULL, 0, backBf, NULL, "b", NULL },
     { MENU_POPUP, N_(" Select struct Buffer(s) "), NULL, 0, NULL, &SelectMenu, "s",
@@ -670,13 +668,12 @@ static MenuItem MainMenuItem[] = {
 
 /* --- MainMenu (END) --- */
 
-static MenuList* w3mMenuList;
+static struct MenuList* w3mMenuList;
 
-static Menu* CurrentMenu = NULL;
+static struct Menu* CurrentMenu = NULL;
 
-void new_menu(Menu* menu, MenuItem* item)
+void new_menu(struct Menu* menu, struct MenuItem* item)
 {
-    int i, l;
 
     // menu->cursorX = 0;
     // menu->cursorY = 0;
@@ -692,6 +689,7 @@ void new_menu(Menu* menu, MenuItem* item)
     if (item == NULL)
         return;
 
+    int i;
     for (i = 0; item[i].type != MENU_END; i++)
         ;
     menu->nitem = i;
@@ -710,13 +708,13 @@ void new_menu(Menu* menu, MenuItem* item)
                 p++;
             }
         }
-        l = get_strwidth(item[i].label);
+        int l = get_strwidth(item[i].label);
         if (l > menu->width)
             menu->width = l;
     }
 }
 
-void geom_menu(Menu* menu, int x, int y, int mselect)
+void geom_menu(struct Menu* menu, int x, int y, int mselect)
 {
     int win_x, win_y, win_w, win_h;
 
@@ -753,14 +751,14 @@ void geom_menu(Menu* menu, int x, int y, int mselect)
     menu->y = win_y + 1;
 }
 
-void draw_all_menu(Menu* menu)
+void draw_all_menu(struct Menu* menu)
 {
     if (menu->parent != NULL)
         draw_all_menu(menu->parent);
     draw_menu(menu);
 }
 
-void draw_menu(Menu* menu)
+void draw_menu(struct Menu* menu)
 {
     struct VirtualTerm* vt = getScreen();
     int x, y, w;
@@ -822,14 +820,14 @@ void draw_menu(Menu* menu)
     }
 }
 
-void draw_menu_item(Menu* menu, int mselect)
+void draw_menu_item(struct Menu* menu, int mselect)
 {
     struct VirtualTerm* vt = getScreen();
     vt_mvaddnstr(vt, menu->y + mselect - menu->offset, menu->x,
         menu->item[mselect].label, menu->width);
 }
 
-int select_menu(Menu* menu, int mselect)
+int select_menu(struct Menu* menu, int mselect)
 {
     struct VirtualTerm* vt = getScreen();
     if (mselect < 0 || mselect >= menu->nitem)
@@ -855,7 +853,7 @@ int select_menu(Menu* menu, int mselect)
     return (menu->select);
 }
 
-void goto_menu(Menu* menu, int mselect, int down)
+void goto_menu(struct Menu* menu, int mselect, int down)
 {
     int select_in;
     if (mselect >= menu->nitem)
@@ -883,7 +881,7 @@ void goto_menu(Menu* menu, int mselect, int down)
     select_menu(menu, mselect);
 }
 
-void up_menu(Menu* menu, int n)
+void up_menu(struct Menu* menu, int n)
 {
     if (n < 0 || menu->offset == 0)
         return;
@@ -894,7 +892,7 @@ void up_menu(Menu* menu, int n)
     draw_menu(menu);
 }
 
-void down_menu(Menu* menu, int n)
+void down_menu(struct Menu* menu, int n)
 {
     if (n < 0 || menu->offset + menu->height == menu->nitem)
         return;
@@ -905,11 +903,11 @@ void down_menu(Menu* menu, int n)
     draw_menu(menu);
 }
 
-int action_menu(Menu* menu)
+int action_menu(struct Menu* menu)
 {
     char c;
     int mselect;
-    MenuItem item;
+    struct MenuItem item;
 
     if (menu->active == 0) {
         if (menu->parent != NULL)
@@ -954,7 +952,7 @@ int action_menu(Menu* menu)
     return (0);
 }
 
-void popup_menu(Menu* parent, Menu* menu)
+void popup_menu(struct Menu* parent, struct Menu* menu)
 {
     int active = 1;
 
@@ -982,7 +980,7 @@ void popup_menu(Menu* parent, Menu* menu)
     CurrentMenu = parent;
 }
 
-void guess_menu_xy(Menu* parent, int width, int* x, int* y)
+void guess_menu_xy(struct Menu* parent, int width, int* x, int* y)
 {
     *x = parent->x + parent->width + FRAME_WIDTH - 1;
     if (*x + width + FRAME_WIDTH > getScreen()->COLS) {
@@ -993,10 +991,10 @@ void guess_menu_xy(Menu* parent, int width, int* x, int* y)
     *y = parent->y + parent->select - parent->offset;
 }
 
-void new_option_menu(Menu* menu, const char** label, int* variable, void (*func)())
+void new_option_menu(struct Menu* menu, const char** label, int* variable, void (*func)())
 {
     int i, nitem;
-    MenuItem* item;
+    struct MenuItem* item;
 
     if (label == NULL || *label == NULL)
         return;
@@ -1006,7 +1004,7 @@ void new_option_menu(Menu* menu, const char** label, int* variable, void (*func)
         ;
     nitem = i;
 
-    item = New_N(MenuItem, nitem + 1);
+    item = New_N(struct MenuItem, nitem + 1);
 
     for (i = 0, p = label; i < nitem; i++, p++) {
         if (func != NULL)
@@ -1203,11 +1201,11 @@ mSusp(char c)
 
 static const char* SearchString = NULL;
 
-typedef int (*MenuSearchRoutineFunc)(Menu*, const char*, int);
+typedef int (*MenuSearchRoutineFunc)(struct Menu*, const char*, int);
 MenuSearchRoutineFunc menuSearchRoutine;
 
 static int
-menuForwardSearch(Menu* menu, const char* str, int from)
+menuForwardSearch(struct Menu* menu, const char* str, int from)
 {
     int i;
     char* p;
@@ -1224,7 +1222,7 @@ menuForwardSearch(Menu* menu, const char* str, int from)
 }
 
 static int
-menu_search_forward(Menu* menu, int from)
+menu_search_forward(struct Menu* menu, int from)
 {
     const char* str = inputStrHist(getUI(), "Forward: ", NULL, TextHist);
     if (str != NULL && *str == '\0')
@@ -1254,7 +1252,7 @@ mSrchF(char c)
 }
 
 static int
-menuBackwardSearch(Menu* menu, const char* str, int from)
+menuBackwardSearch(struct Menu* menu, const char* str, int from)
 {
     int i;
     char* p;
@@ -1271,7 +1269,7 @@ menuBackwardSearch(Menu* menu, const char* str, int from)
 }
 
 static int
-menu_search_backward(Menu* menu, int from)
+menu_search_backward(struct Menu* menu, int from)
 {
     const char* str = inputStrHist(getUI(), "Backward: ", NULL, TextHist);
     if (str != NULL && *str == '\0')
@@ -1301,7 +1299,7 @@ mSrchB(char c)
 }
 
 static int
-menu_search_next_previous(Menu* menu, int from, int reverse)
+menu_search_next_previous(struct Menu* menu, int from, int reverse)
 {
     static MenuSearchRoutineFunc routine[2] = {
         menuForwardSearch, menuBackwardSearch
@@ -1362,7 +1360,7 @@ mSgrMouse(char c)
 
 /* --- MainMenu --- */
 
-void popupMenu(struct UI ui, Menu* menu)
+void popupMenu(struct UI ui, struct Menu* menu)
 {
     set_menu_frame();
 
@@ -1378,7 +1376,7 @@ void popupMenu(struct UI ui, Menu* menu)
 
 DEFUN(mainMn, MAIN_MENU MENU, "Pop up menu")
 {
-    Menu* menu = &MainMenu;
+    struct Menu* menu = &MainMenu;
     const char* data = searchKeyData();
     if (data != NULL) {
         int n = getMenuN(w3mMenuList, data);
@@ -1534,7 +1532,7 @@ smDelBuf(char c)
 void optionMenu(int x, int y, const char** label, int* variable, int initial,
     void (*func)())
 {
-    Menu menu;
+    struct Menu menu;
 
     set_menu_frame();
 
@@ -1557,7 +1555,7 @@ interpret_menu(FILE* mf)
 {
     Str line;
     int in_menu = 0, nmenu = 0, nitem = 0, type;
-    MenuItem* item = NULL;
+    struct MenuItem* item = NULL;
     wc_ces charset = SystemCharset;
 
     while (!feof(mf)) {
@@ -1579,7 +1577,7 @@ interpret_menu(FILE* mf)
                 in_menu = 0;
             else {
                 nitem++;
-                item = New_Reuse(MenuItem, item, (nitem + 1));
+                item = New_Reuse(struct MenuItem, item, (nitem + 1));
                 w3mMenuList[nmenu].item = item;
                 item[nitem].type = MENU_END;
             }
@@ -1589,7 +1587,7 @@ interpret_menu(FILE* mf)
                 continue;
             in_menu = 1;
             if ((nmenu = getMenuN(w3mMenuList, s)) != -1)
-                w3mMenuList[nmenu].item = New(MenuItem);
+                w3mMenuList[nmenu].item = New(struct MenuItem);
             else
                 nmenu = addMenuList(&w3mMenuList, s);
             item = w3mMenuList[nmenu].item;
@@ -1607,9 +1605,9 @@ interpret_menu(FILE* mf)
 void initMenu(void)
 {
     FILE* mf;
-    MenuList* list;
+    struct MenuList* list;
 
-    w3mMenuList = New_N(MenuList, 3);
+    w3mMenuList = New_N(struct MenuList, 3);
     w3mMenuList[0].id = "Main";
     w3mMenuList[0].menu = &MainMenu;
     w3mMenuList[0].item = MainMenuItem;
@@ -1619,7 +1617,7 @@ void initMenu(void)
     w3mMenuList[2].id = NULL;
 
     if (!MainMenuEncode) {
-        MenuItem* item;
+        struct MenuItem* item;
         /* FIXME: charset that gettext(3) returns */
         MainMenuCharset = SystemCharset;
         for (item = MainMenuItem; item->type != MENU_END; item++)
@@ -1644,7 +1642,7 @@ void initMenu(void)
     }
 }
 
-int setMenuItem(MenuItem* item, const char* type, const char* line)
+int setMenuItem(struct MenuItem* item, const char* type, const char* line)
 {
     if (type == NULL || *type == '\0') /* error */
         return -1;
@@ -1687,27 +1685,25 @@ int setMenuItem(MenuItem* item, const char* type, const char* line)
     return -1; /* error */
 }
 
-int addMenuList(MenuList** mlist, const char* id)
+int addMenuList(struct MenuList** mlist, const char* id)
 {
     int n;
-    MenuList* list = *mlist;
+    struct MenuList* list = *mlist;
 
     for (n = 0; list->id != NULL; list++, n++)
         ;
-    *mlist = New_Reuse(MenuList, *mlist, (n + 2));
+    *mlist = New_Reuse(struct MenuList, *mlist, (n + 2));
     list = *mlist + n;
     list->id = id;
-    list->menu = New(Menu);
-    list->item = New(MenuItem);
+    list->menu = New(struct Menu);
+    list->item = New(struct MenuItem);
     (list + 1)->id = NULL;
     return n;
 }
 
-int getMenuN(MenuList* list, const char* id)
+int getMenuN(struct MenuList* list, const char* id)
 {
-    int n;
-
-    for (n = 0; list->id != NULL; list++, n++) {
+    for (int n = 0; list->id != NULL; list++, n++) {
         if (strcmp(id, list->id) == 0)
             return n;
     }
@@ -1751,7 +1747,7 @@ accesskey_menu(struct Buffer* buf)
     label[nitem] = NULL;
 
     set_menu_frame();
-    Menu menu;
+    struct Menu menu;
     new_option_menu(&menu, label, &key, NULL);
 
     menu.initial = 0;
@@ -1820,7 +1816,7 @@ lmSelect(char c)
 struct Anchor*
 list_menu(struct Buffer* buf)
 {
-    Menu menu;
+    struct Menu menu;
     struct AnchorList* al = buf->document.href;
     struct Anchor* a;
     struct Anchor** ap;
