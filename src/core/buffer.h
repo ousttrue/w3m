@@ -30,14 +30,19 @@ enum BufferProperty {
     BP_CLOSE = 0x40,
 };
 
+struct RenderedLines
+{
+    struct LineList* firstLine;
+    int allLine;
+};
+
 struct Buffer {
-    char* filename;
+    const char* filename;
     const char* buffername;
 
-    struct LineList* firstLine;
+    struct RenderedLines lines;
     int topLineIndex;
     int currentLineIndex;
-    int allLine;
 
     short width;
     int currentColumn;

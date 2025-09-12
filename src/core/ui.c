@@ -341,8 +341,7 @@ void renderFrame(struct UI ui)
     drawAnchorCursor(ui, buf);
 
     Str msg = make_lastline_message(buf);
-    if (buf->firstLine == NULL) {
-        /* FIXME: gettextize? */
+    if (buf->lines.firstLine == NULL) {
         Strcat_charp(msg, "\tNo Line");
     }
     // if (delayed_msg != NULL) {
@@ -384,7 +383,7 @@ void ui_bell()
 
 void ui_cursor_set_x(int x)
 {
-    if (Currentbuf->firstLine == NULL)
+    if (Currentbuf->lines.firstLine == NULL)
         return;
     while (currentLine(Currentbuf)->prev && currentLine(Currentbuf)->bpos)
         cursorUp(1);

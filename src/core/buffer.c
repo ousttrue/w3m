@@ -79,10 +79,9 @@ nullBuffer(void)
  */
 void clearBuffer(struct Buffer* buf)
 {
-    buf->firstLine = 0;
+    buf->lines = (struct RenderedLines) { 0 };
     buf->topLineIndex = 0;
     buf->currentLineIndex = 0;
-    buf->allLine = 0;
 }
 
 /*
@@ -113,7 +112,7 @@ void discardBuffer(struct Buffer* buf)
 
 struct LineList* lastLine(struct Buffer* buf)
 {
-    struct LineList* l = buf->firstLine;
+    struct LineList* l = buf->lines.firstLine;
     if (!l) {
         return 0;
     }
@@ -124,7 +123,7 @@ struct LineList* lastLine(struct Buffer* buf)
 
 struct LineList* currentLine(struct Buffer* buf)
 {
-    for (struct LineList* l = buf->firstLine; l; l = l->next) {
+    for (struct LineList* l = buf->lines.firstLine; l; l = l->next) {
         if (l->linenumber == buf->currentLineIndex) {
             return l;
         }
@@ -134,7 +133,7 @@ struct LineList* currentLine(struct Buffer* buf)
 
 struct LineList* getLine(struct Buffer* buf, int i)
 {
-    for (struct LineList* l = buf->firstLine; l; l = l->next) {
+    for (struct LineList* l = buf->lines.firstLine; l; l = l->next) {
         if (l->linenumber == i) {
             return l;
         }
@@ -144,7 +143,7 @@ struct LineList* getLine(struct Buffer* buf, int i)
 
 struct LineList* topLine(struct Buffer* buf)
 {
-    for (struct LineList* l = buf->firstLine; l; l = l->next) {
+    for (struct LineList* l = buf->lines.firstLine; l; l = l->next) {
         if (l->linenumber == buf->topLineIndex) {
             return l;
         }
@@ -238,7 +237,7 @@ nthBuffer(struct Buffer* firstbuf, int n)
 static void
 writeBufferName(struct Buffer* buf, int n)
 {
-    int all = buf->allLine;
+    int all = buf->lines.allLine;
     if (all == 0 && lastLine(buf) != 0)
         all = lastLine(buf)->linenumber;
     vt_move(getScreen(), n, 0);
@@ -271,7 +270,7 @@ writeBufferName(struct Buffer* buf, int n)
 void gotoLine(struct Buffer* buf, int n)
 {
     char msg[36];
-    struct LineList* l = buf->firstLine;
+    struct LineList* l = buf->lines.firstLine;
     if (l == 0)
         return;
     if (l->linenumber > n) {
@@ -526,7 +525,7 @@ void reshapeBuffer(struct Buffer* buf, int cols)
     WcOption.auto_detect = old_auto_detect;
 
     // buf->height = getScreen()->ROWS - 1 + 1;
-    if (buf->firstLine && sbuf.firstLine) {
+    if (buf->lines.firstLine && sbuf.lines.firstLine) {
         struct LineList* cur = currentLine(&sbuf);
         int n;
 
@@ -587,7 +586,7 @@ int writeBufferCache(struct Buffer* buf)
     if (buf->savecache)
         return -1;
 
-    if (buf->firstLine == 0)
+    if (buf->lines.firstLine == 0)
         goto _error1;
 
     tmp = tmpfname(TMPF_CACHE, 0);
@@ -600,7 +599,7 @@ int writeBufferCache(struct Buffer* buf)
         goto _error;
 
     struct LineList* l;
-    for (l = buf->firstLine; l; l = l->next) {
+    for (l = buf->lines.firstLine; l; l = l->next) {
         if (fwrite1(l->l.usrflags, cache) || fwrite1(l->l.width, cache) || fwrite1(l->l.len, cache) || fwrite1(l->l.size, cache) || fwrite1(l->bpos, cache) || fwrite1(l->bwidth, cache))
             goto _error;
         if (l->bpos == 0) {
@@ -654,7 +653,7 @@ int readBufferCache(struct Buffer* buf)
         if (prevl)
             prevl->next = l;
         else
-            buf->firstLine = l;
+            buf->lines.firstLine = l;
         l->linenumber = lnum;
         if (lnum == clnum)
             buf->currentLineIndex = l->linenumber;
@@ -755,7 +754,7 @@ void arrangeLine(struct Buffer* buf)
 {
     int i, cpos;
 
-    if (buf->firstLine == 0)
+    if (buf->lines.firstLine == 0)
         return;
     // buf->cursorY = currentLine(buf)->linenumber - topLine(buf)->linenumber;
     i = columnPos(&currentLine(buf)->l, buf->currentColumn + buf->visualpos - currentLine(buf)->bwidth);
@@ -805,7 +804,7 @@ void cursorXY(struct Buffer* buf, int x, int y)
 
 void restorePosition(struct Buffer* buf, struct Buffer* orig)
 {
-    buf->topLineIndex = lineSkip(buf, buf->firstLine, orig->topLineIndex - 1, false)->linenumber;
+    buf->topLineIndex = lineSkip(buf, buf->lines.firstLine, orig->topLineIndex - 1, false)->linenumber;
     gotoLine(buf, orig->currentLineIndex);
     buf->pos = orig->pos;
     if (currentLine(buf) && currentLine(orig))
@@ -1212,7 +1211,7 @@ void addMultirowsImg(struct Buffer* buf, struct AnchorList* al)
         img = a_img.image;
         if (a_img.hseq < 0 || !img || img->rows <= 1)
             continue;
-        for (l = buf->firstLine; l != 0; l = l->next) {
+        for (l = buf->lines.firstLine; l != 0; l = l->next) {
             if (l->linenumber == img->y)
                 break;
         }
@@ -1288,7 +1287,7 @@ void addMultirowsForm(struct Buffer* buf, struct AnchorList* al)
         al->anchors[i].rows = 1;
         if (a_form.hseq < 0 || a_form.rows <= 1)
             continue;
-        for (l = buf->firstLine; l != 0; l = l->next) {
+        for (l = buf->lines.firstLine; l != 0; l = l->next) {
             if (l->linenumber == a_form.y)
                 break;
         }
@@ -1338,7 +1337,7 @@ const char* getAnchorText(struct Buffer* buf, struct AnchorList* al, struct Anch
 
     Str tmp = 0;
     int hseq = a->hseq;
-    struct LineList* l = buf->firstLine;
+    struct LineList* l = buf->lines.firstLine;
     for (int i = 0; i < al->nanchor; i++) {
         a = &al->anchors[i];
         if (a->hseq != hseq)
@@ -1465,7 +1464,7 @@ reAnchorAny(struct Buffer* buf, const char* re, AnchorFunc anchorproc)
     if ((re = regexCompile(re, 1)) != NULL) {
         return re;
     }
-    for (l = MarkAllPages ? buf->firstLine : topLine(buf); l != NULL && (MarkAllPages || l->linenumber < topLine(buf)->linenumber + getScreen()->ROWS - 1);
+    for (l = MarkAllPages ? buf->lines.firstLine : topLine(buf); l != NULL && (MarkAllPages || l->linenumber < topLine(buf)->linenumber + getScreen()->ROWS - 1);
         l = l->next) {
         if (p && l->bpos)
             continue;
@@ -1495,7 +1494,7 @@ bool applyCursor(struct Buffer* buf)
 
 struct Int2 viewportCursor(struct Buffer* buf)
 {
-    return (struct Int2){
-        0,0
+    return (struct Int2) {
+        0, 0
     };
 }

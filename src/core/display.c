@@ -268,8 +268,8 @@ void bufToScreen(struct UI ui, struct Buffer* buf)
     ccolumn = buf->currentColumn;
 
     if (topLine(buf) == NULL) {
-        if (buf->firstLine) {
-            buf->topLineIndex = buf->firstLine->linenumber;
+        if (buf->lines.firstLine) {
+            buf->topLineIndex = buf->lines.firstLine->linenumber;
         }
     }
 }
@@ -398,7 +398,7 @@ static int currentAnchorHseq(struct Buffer* buf)
 
 void drawAnchorCursor(struct UI ui, struct Buffer* buf)
 {
-    if (!buf->firstLine || !buf->hmarklist)
+    if (!buf->lines.firstLine || !buf->hmarklist)
         return;
     if (!buf->href && !buf->formitem)
         return;

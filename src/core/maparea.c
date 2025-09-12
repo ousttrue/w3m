@@ -333,8 +333,6 @@ append_map_info(struct Buffer* buf, Str tmp, struct FormItem* fi)
     Strcat_charp(tmp, "</table>");
 }
 
-
-
 /*
  * information of current page and link
  */
@@ -342,26 +340,19 @@ struct Buffer*
 page_info_panel(struct Buffer* buf)
 {
     Str tmp = Strnew_size(1024);
-    struct Anchor* a;
-    struct Url pu;
-    TextListItem* ti;
-    int all;
-    const char *p, *q;
-    wc_ces_list* list;
-    char charset[16];
-    struct Buffer* newbuf;
-
     Strcat_charp(tmp, "<html><head>\
 <title>Information about current page</title>\
 </head><body>\
 <h1>Information about current page</h1>\n");
     if (buf == NULL)
         goto end;
-    all = buf->allLine;
+
+    int all = buf->lines.allLine;
     if (all == 0 && lastLine(buf))
         all = lastLine(buf)->linenumber;
     Strcat_charp(tmp, "<form method=internal action=charset>");
-    p = url_decode2(parsedURL2Str(&buf->currentURL)->ptr, 0);
+
+    const char* p = url_decode2(parsedURL2Str(&buf->currentURL)->ptr, 0);
     Strcat_m_charp(tmp, "<table cellpadding=0>",
         "<tr valign=top><td nowrap>Title<td>",
         html_quote(buf->buffername),
@@ -371,11 +362,13 @@ page_info_panel(struct Buffer* buf)
         contentTypeStr(buf->content_type),
         "<tr valign=top><td nowrap>Last Modified<td>",
         html_quote(last_modified(buf)), NULL);
+
     if (buf->document_charset != InnerCharset) {
-        list = wc_get_ces_list();
+        wc_ces_list* list = wc_get_ces_list();
         Strcat_charp(tmp,
             "<tr><td nowrap>Document Charset<td><select name=charset>");
         for (; list->name != NULL; list++) {
+            char charset[16];
             sprintf(charset, "%d", (unsigned int)list->id);
             Strcat_m_charp(tmp, "<option value=", charset,
                 (buf->document_charset == list->id) ? " selected>"
@@ -391,11 +384,11 @@ page_info_panel(struct Buffer* buf)
         "<tr valign=top><td nowrap>Transferred bytes<td>",
         Sprintf("%lu", (unsigned long)buf->trbyte)->ptr, NULL);
 
-    a = retrieveCurrentAnchor(buf);
+    struct Anchor* a = retrieveCurrentAnchor(buf);
     if (a != NULL) {
-        pu = parseUrl(a->url, baseURL(buf));
+        struct Url pu = parseUrl(a->url, baseURL(buf));
         p = parsedURL2Str(&pu)->ptr;
-        q = html_quote(p);
+        const char* q = html_quote(p);
         if (DecodeURL)
             p = html_quote(url_decode2(p, buf ? buf->document_charset : 0));
         else
@@ -406,9 +399,9 @@ page_info_panel(struct Buffer* buf)
     }
     a = retrieveCurrentImg(buf);
     if (a != NULL) {
-        pu = parseUrl(a->url, baseURL(buf));
+        struct Url pu = parseUrl(a->url, baseURL(buf));
         p = parsedURL2Str(&pu)->ptr;
-        q = html_quote(p);
+        const char* q = html_quote(p);
         if (DecodeURL)
             p = html_quote(url_decode2(p, buf ? buf->document_charset : 0));
         else
@@ -436,6 +429,7 @@ page_info_panel(struct Buffer* buf)
 
     if (buf->document_header != NULL) {
         Strcat_charp(tmp, "<hr width=50%><h1>Header information</h1><pre>\n");
+        TextListItem* ti;
         for (ti = buf->document_header->first; ti != NULL; ti = ti->next)
             Strcat_m_charp(tmp, "<pre_int>", html_quote(ti->ptr),
                 "</pre_int>\n", NULL);
@@ -447,7 +441,7 @@ page_info_panel(struct Buffer* buf)
             html_quote(buf->ssl_certificate), "</pre>\n", NULL);
 end:
     Strcat_charp(tmp, "</body></html>");
-    newbuf = loadHTMLString(tmp, WC_CES_UTF_8);
+    struct Buffer* newbuf = loadHTMLString(tmp, WC_CES_UTF_8);
     if (newbuf)
         newbuf->document_charset = buf->document_charset;
     return newbuf;
