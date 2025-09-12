@@ -1,4 +1,6 @@
 #include "menu.h"
+#include "AnchorList.h"
+#include "Anchor.h"
 #include "runtime.h"
 #include "defun_macro.h"
 #include "alloc.h"

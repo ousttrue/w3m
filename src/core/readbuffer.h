@@ -4,7 +4,7 @@
 #include <string.h>
 #include "token.h"
 #include "line.h"
-#include "anchor.h"
+#include "Anchor.h"
 #include "textlist.h"
 #include "HtmlTag.h"
 
@@ -173,6 +173,7 @@ void proc_mchar(struct readbuffer* obuf, bool pre_mode, int width, const char** 
 int close_effect0(struct readbuffer* obuf, enum HtmlTag cmd);
 void push_spaces(struct readbuffer* obuf, bool pre_mode, int width);
 void clear_ignore_p_flag(struct readbuffer* obuf, int cmd);
+struct HtmlTagParsed;
 void set_alignment(struct readbuffer* obuf, struct HtmlTagParsed* tag);
 void append_tags(struct readbuffer* obuf);
 void push_tag(struct readbuffer* obuf, const char* cmdname, enum HtmlTag cmd);

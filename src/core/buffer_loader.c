@@ -1,4 +1,5 @@
 #include "buffer_loader.h"
+#include "AnchorList.h"
 #include "convertline.h"
 #include "display.h"
 #include "html_quote.h"

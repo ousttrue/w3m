@@ -1,4 +1,5 @@
 #include "maparea.h"
+#include "Anchor.h"
 #include "str_util.h"
 #include "html_quote.h"
 #include "w3m.h"
@@ -104,8 +105,7 @@ nearestMapArea(MapList* ml, int x, int y)
     return n;
 }
 
-static int
-searchMapArea(struct Buffer* buf, MapList* ml, struct Anchor* a_img)
+int searchMapArea(struct Buffer* buf, MapList* ml, struct Anchor* a_img)
 {
     ListItem* al;
     MapArea* a;
@@ -134,40 +134,6 @@ searchMapArea(struct Buffer* buf, MapList* ml, struct Anchor* a_img)
     else if (n < 0)
         return -n;
     return n;
-}
-
-MapArea*
-retrieveCurrentMapArea(struct Buffer* buf)
-{
-    struct Anchor *a_img, *a_form;
-    struct FormItem* fi;
-    MapList* ml;
-    ListItem* al;
-    MapArea* a;
-    int i, n;
-
-    a_img = retrieveCurrentImg(buf);
-    if (!(a_img && a_img->image && a_img->image->map))
-        return NULL;
-    a_form = retrieveCurrentForm(buf);
-    if (!(a_form && a_form->url))
-        return NULL;
-    fi = (struct FormItem*)a_form->url;
-    if (!(fi && fi->parent && fi->parent->item))
-        return NULL;
-    fi = fi->parent->item;
-    ml = searchMapList(buf, fi->value ? fi->value->ptr : NULL);
-    if (!ml)
-        return NULL;
-    n = searchMapArea(buf, ml, a_img);
-    if (n < 0)
-        return NULL;
-    for (i = 0, al = ml->area->first; al != NULL; i++, al = al->next) {
-        a = (MapArea*)al->ptr;
-        if (a && i == n)
-            return a;
-    }
-    return NULL;
 }
 
 int getMapXY(struct Buffer* buf, struct Anchor* a, int* x, int* y)

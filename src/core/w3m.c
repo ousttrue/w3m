@@ -1,4 +1,6 @@
 #include "w3m.h"
+#include "Anchor.h"
+#include "AnchorList.h"
 #include "term_renderer.h"
 #include "http_message.h"
 #include "ui.h"

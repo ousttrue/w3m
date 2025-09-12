@@ -31,3 +31,4 @@ MapArea* retrieveCurrentMapArea(struct Buffer* buf);
 struct Anchor* retrieveCurrentMap(struct Buffer* buf);
 MapArea* newMapArea(const char* url, const char* target, const char* alt, const char* shape, const char* coords);
 struct Buffer* page_info_panel(struct Buffer* buf);
+int searchMapArea(struct Buffer* buf, MapList* ml, struct Anchor* a_img);

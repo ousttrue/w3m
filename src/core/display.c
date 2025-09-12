@@ -1,4 +1,6 @@
 #include "display.h"
+#include "AnchorList.h"
+#include "Anchor.h"
 #include "alloc.h"
 #include "screen_effects.h"
 #include "image.h"

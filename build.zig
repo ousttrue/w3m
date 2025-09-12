@@ -130,7 +130,8 @@ const w3m_srcs = [_][]const u8{
     "symbol.c",
     "history.c",
 
-    "anchor.c",
+    "Anchor.c",
+    "AnchorList.c",
     "tagtable.c",
 
     "version.c",

@@ -1,4 +1,6 @@
 #include "image.h"
+#include "AnchorList.h"
+#include "Anchor.h"
 #include "linein.h"
 #include "str_util.h"
 #include "runtime.h"

@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "maparea.h"
 #include "runtime.h"
 #include "html_quote.h"
 #include "cookie.h"
@@ -16,6 +17,8 @@
 #include "istream.h"
 #include "buffer_loader.h"
 #include "alloc.h"
+#include "Anchor.h"
+#include "AnchorList.h"
 #include <string.h>
 #include <strings.h>
 #include <unistd.h>
@@ -42,14 +45,14 @@ newBuffer()
     memset(n, 0, sizeof(struct Buffer));
     n->width = 0;
     n->currentURL.scheme = SCM_UNKNOWN;
-    n->baseURL = NULL;
-    n->baseTarget = NULL;
+    n->baseURL = 0;
+    n->baseTarget = 0;
     n->buffername = "";
     n->bufferprop = BP_NORMAL;
     n->clone = New(int);
     *n->clone = 1;
     n->trbyte = 0;
-    n->ssl_certificate = NULL;
+    n->ssl_certificate = 0;
     n->auto_detect = WcOption.auto_detect;
     n->check_url = MarkAllPages;
     return n;
@@ -73,7 +76,7 @@ nullBuffer(void)
  */
 void clearBuffer(struct Buffer* buf)
 {
-    buf->firstLine = NULL;
+    buf->firstLine = 0;
     buf->topLineIndex = 0;
     buf->currentLineIndex = 0;
     buf->allLine = 0;
@@ -89,9 +92,9 @@ void discardBuffer(struct Buffer* buf)
     clearBuffer(buf);
     for (int i = 0; i < MAX_LB; i++) {
         struct Buffer* b = buf->linkBuffer[i];
-        if (b == NULL)
+        if (b == 0)
             continue;
-        b->linkBuffer[REV_LB[i]] = NULL;
+        b->linkBuffer[REV_LB[i]] = 0;
     }
     if (buf->savecache)
         unlink(buf->savecache);
@@ -109,7 +112,7 @@ struct LineList* lastLine(struct Buffer* buf)
 {
     struct LineList* l = buf->firstLine;
     if (!l) {
-        return NULL;
+        return 0;
     }
     for (; l->next; l = l->next) {
     }
@@ -123,7 +126,7 @@ struct LineList* currentLine(struct Buffer* buf)
             return l;
         }
     }
-    return NULL;
+    return 0;
 }
 
 struct LineList* topLine(struct Buffer* buf)
@@ -133,7 +136,7 @@ struct LineList* topLine(struct Buffer* buf)
             return l;
         }
     }
-    return NULL;
+    return 0;
 }
 
 /*
@@ -147,12 +150,12 @@ namedBuffer(struct Buffer* first, char* name)
     if (!strcmp(first->buffername, name)) {
         return first;
     }
-    for (buf = first; buf->nextBuffer != NULL; buf = buf->nextBuffer) {
+    for (buf = first; buf->nextBuffer != 0; buf = buf->nextBuffer) {
         if (!strcmp(buf->nextBuffer->buffername, name)) {
             return buf->nextBuffer;
         }
     }
-    return NULL;
+    return 0;
 }
 
 /*
@@ -163,12 +166,12 @@ deleteBuffer(struct Buffer* first, struct Buffer* delbuf)
 {
     struct Buffer *buf, *b;
 
-    if (first == delbuf && first->nextBuffer != NULL) {
+    if (first == delbuf && first->nextBuffer != 0) {
         buf = first->nextBuffer;
         discardBuffer(first);
         return buf;
     }
-    if ((buf = prevBuffer(first, delbuf)) != NULL) {
+    if ((buf = prevBuffer(first, delbuf)) != 0) {
         b = buf->nextBuffer;
         buf->nextBuffer = b->nextBuffer;
         discardBuffer(b);
@@ -184,7 +187,7 @@ replaceBuffer(struct Buffer* first, struct Buffer* delbuf, struct Buffer* newbuf
 {
     struct Buffer* buf;
 
-    if (delbuf == NULL) {
+    if (delbuf == 0) {
         newbuf->nextBuffer = first;
         return newbuf;
     }
@@ -212,8 +215,8 @@ nthBuffer(struct Buffer* firstbuf, int n)
     if (n < 0)
         return firstbuf;
     for (i = 0; i < n; i++) {
-        if (buf == NULL)
-            return NULL;
+        if (buf == 0)
+            return 0;
         buf = buf->nextBuffer;
     }
     return buf;
@@ -223,12 +226,12 @@ static void
 writeBufferName(struct Buffer* buf, int n)
 {
     int all = buf->allLine;
-    if (all == 0 && lastLine(buf) != NULL)
+    if (all == 0 && lastLine(buf) != 0)
         all = lastLine(buf)->linenumber;
     vt_move(getScreen(), n, 0);
 
     Str msg = Sprintf("<%s> [%d lines]", buf->buffername, all);
-    if (buf->filename != NULL) {
+    if (buf->filename != 0) {
         switch (buf->currentURL.scheme) {
         case SCM_LOCAL:
         case SCM_LOCAL_CGI:
@@ -256,7 +259,7 @@ void gotoLine(struct Buffer* buf, int n)
 {
     char msg[36];
     struct LineList* l = buf->firstLine;
-    if (l == NULL)
+    if (l == 0)
         return;
     if (l->linenumber > n) {
         /* FIXME: gettextize? */
@@ -274,7 +277,7 @@ void gotoLine(struct Buffer* buf, int n)
         buf->topLineIndex = lineSkip(buf, currentLine(buf), -(getScreen()->ROWS - 1), false)->linenumber;
         return;
     }
-    for (; l != NULL; l = l->next) {
+    for (; l != 0; l = l->next) {
         if (l->linenumber >= n) {
             buf->currentLineIndex = l->linenumber;
             if (n < topLine(buf)->linenumber || topLine(buf)->linenumber + getScreen()->ROWS <= n)
@@ -292,7 +295,7 @@ void gotoLine(struct Buffer* buf, int n)
 //     char msg[36];
 //     struct Line* l = buf->firstLine;
 //
-//     if (l == NULL)
+//     if (l == 0)
 //         return;
 //     if (l->real_linenumber > n) {
 //         /* FIXME: gettextize? */
@@ -311,7 +314,7 @@ void gotoLine(struct Buffer* buf, int n)
 //             false);
 //         return;
 //     }
-//     for (; l != NULL; l = l->next) {
+//     for (; l != 0; l = l->next) {
 //         if (l->real_linenumber >= n) {
 //             currentLine(buf) = l;
 //             if (n < topLine(buf)->real_linenumber || topLine(buf)->real_linenumber + getScreen()->ROWS <= n)
@@ -347,7 +350,7 @@ listBuffer(struct Buffer* top, struct Buffer* current)
             vt_toggle_stand(vt);
         } else
             vt_clrtoeolx(vt);
-        if (buf->nextBuffer == NULL) {
+        if (buf->nextBuffer == 0) {
             vt_move(vt, i + 1, 0);
             vt_clrtobotx(vt);
             break;
@@ -378,7 +381,7 @@ selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectcha
     char c;
 
     i = cpoint = 0;
-    for (buf = firstbuf; buf != NULL; buf = buf->nextBuffer) {
+    for (buf = firstbuf; buf != 0; buf = buf->nextBuffer) {
         if (buf == currentbuf)
             cpoint = i;
         i++;
@@ -418,7 +421,7 @@ selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectcha
         case CTRL_N:
         case 'j':
             if (spoint < sclimit - 1) {
-                if (currentbuf->nextBuffer == NULL)
+                if (currentbuf->nextBuffer == 0)
                     continue;
                 writeBufferName(currentbuf, spoint);
                 currentbuf = currentbuf->nextBuffer;
@@ -477,24 +480,24 @@ end:
 void reshapeBuffer(struct Buffer* buf, int cols)
 {
     buf->width = cols;
-    if (buf->sourcefile == NULL)
+    if (buf->sourcefile == 0)
         return;
 
     union input_stream* stream = examineFile(buf->mailcap_source ? buf->mailcap_source : buf->sourcefile);
-    if (stream == NULL)
+    if (stream == 0)
         return;
 
     struct Buffer sbuf;
     copyBuffer(&sbuf, buf);
     clearBuffer(buf);
 
-    buf->href = NULL;
-    buf->name = NULL;
-    buf->img = NULL;
-    buf->formitem = NULL;
-    buf->formlist = NULL;
-    buf->linklist = NULL;
-    buf->maplist = NULL;
+    buf->href = 0;
+    buf->name = 0;
+    buf->img = 0;
+    buf->formitem = 0;
+    buf->formlist = 0;
+    buf->linklist = 0;
+    buf->maplist = 0;
     if (buf->hmarklist)
         buf->hmarklist->nmark = 0;
     if (buf->imarklist)
@@ -554,7 +557,7 @@ prevBuffer(struct Buffer* first, struct Buffer* buf)
 {
     struct Buffer* b;
 
-    for (b = first; b != NULL && b->nextBuffer != buf; b = b->nextBuffer)
+    for (b = first; b != 0 && b->nextBuffer != buf; b = b->nextBuffer)
         ;
     return b;
 }
@@ -565,16 +568,16 @@ prevBuffer(struct Buffer* first, struct Buffer* buf)
 int writeBufferCache(struct Buffer* buf)
 {
     Str tmp;
-    FILE* cache = NULL;
+    FILE* cache = 0;
     int colorflag;
 
     if (buf->savecache)
         return -1;
 
-    if (buf->firstLine == NULL)
+    if (buf->firstLine == 0)
         goto _error1;
 
-    tmp = tmpfname(TMPF_CACHE, NULL);
+    tmp = tmpfname(TMPF_CACHE, 0);
     buf->savecache = tmp->ptr;
     cache = fopen(buf->savecache, "w");
     if (!cache)
@@ -608,7 +611,7 @@ _error:
     fclose(cache);
     unlink(buf->savecache);
 _error1:
-    buf->savecache = NULL;
+    buf->savecache = 0;
     return -1;
 }
 
@@ -618,18 +621,18 @@ int readBufferCache(struct Buffer* buf)
     long lnum = 0, clnum, tlnum;
     int colorflag;
 
-    if (buf->savecache == NULL)
+    if (buf->savecache == 0)
         return -1;
 
     cache = fopen(buf->savecache, "r");
-    if (cache == NULL || fread1(clnum, cache) || fread1(tlnum, cache)) {
-        if (cache != NULL)
+    if (cache == 0 || fread1(clnum, cache) || fread1(tlnum, cache)) {
+        if (cache != 0)
             fclose(cache);
-        buf->savecache = NULL;
+        buf->savecache = 0;
         return -1;
     }
 
-    struct LineList *l = NULL, *prevl = NULL, *basel = NULL;
+    struct LineList *l = 0, *prevl = 0, *basel = 0;
     while (!feof(cache)) {
         lnum++;
         prevl = l;
@@ -667,15 +670,15 @@ int readBufferCache(struct Buffer* buf)
             } else
                 l->l.colorBuf = basel->l.colorBuf + l->bpos;
         } else {
-            l->l.colorBuf = NULL;
+            l->l.colorBuf = 0;
         }
     }
     if (prevl) {
-        lastLine(buf)->next = NULL;
+        lastLine(buf)->next = 0;
     }
     fclose(cache);
     unlink(buf->savecache);
-    buf->savecache = NULL;
+    buf->savecache = 0;
     return 0;
 }
 
@@ -687,7 +690,7 @@ void arrangeCursor(struct Buffer* buf)
 {
     int col, col2, pos;
     int delta = 1;
-    if (buf == NULL || currentLine(buf) == NULL)
+    if (buf == 0 || currentLine(buf) == 0)
         return;
     /* Arrange line */
     if (currentLine(buf)->linenumber - topLine(buf)->linenumber >= getScreen()->ROWS
@@ -739,7 +742,7 @@ void arrangeLine(struct Buffer* buf)
 {
     int i, cpos;
 
-    if (buf->firstLine == NULL)
+    if (buf->firstLine == 0)
         return;
     // buf->cursorY = currentLine(buf)->linenumber - topLine(buf)->linenumber;
     i = columnPos(&currentLine(buf)->l, buf->currentColumn + buf->visualpos - currentLine(buf)->bwidth);
@@ -822,13 +825,13 @@ baseURL(struct Buffer* buf)
 {
     if (buf->bufferprop & BP_NO_URL) {
         /* no URL is defined for the buffer */
-        return NULL;
+        return 0;
     }
-    if (buf->baseURL != NULL) {
+    if (buf->baseURL != 0) {
         /* <BASE> tag is defined in the document */
         return buf->baseURL;
     } else if (IS_EMPTY_PARSED_URL(&buf->currentURL))
-        return NULL;
+        return 0;
     else
         return &buf->currentURL;
 }
@@ -861,7 +864,7 @@ int columnSkip(struct Buffer* buf, int offset)
 
     int maxColumn = 0;
     struct LineList* l = topLine(buf);
-    for (int i = 0; i < nlines && l != NULL; i++, l = l->next) {
+    for (int i = 0; i < nlines && l != 0; i++, l = l->next) {
         if (l->l.width < 0)
             l->l.width = COLPOS(&l->l, l->l.len);
         if (l->l.width - 1 > maxColumn)
@@ -884,7 +887,7 @@ struct LineList* lineSkip(struct Buffer* buf, struct LineList* line, int offset,
     struct LineList* l = currentLineSkip(buf, line, offset, last);
     if (!nextpage_topline)
         for (int i = getScreen()->ROWS - 1 - (lastLine(buf)->linenumber - l->linenumber);
-            i > 0 && l->prev != NULL; i--, l = l->prev)
+            i > 0 && l->prev != 0; i--, l = l->prev)
             ;
     return l;
 }
@@ -897,10 +900,10 @@ struct LineList* currentLineSkip(struct Buffer* buf, struct LineList* line, int 
     if (offset == 0)
         return l;
     if (offset > 0)
-        for (i = 0; i < offset && l->next != NULL; i++, l = l->next)
+        for (i = 0; i < offset && l->next != 0; i++, l = l->next)
             ;
     else
-        for (i = 0; i < -offset && l->prev != NULL; i++, l = l->prev)
+        for (i = 0; i < -offset && l->prev != 0; i++, l = l->prev)
             ;
     return l;
 }
@@ -938,7 +941,7 @@ cookie_list_panel(void)
     char tmp2[80];
 
     if (!use_cookie || !First_cookie)
-        return NULL;
+        return 0;
 
     Strcat_charp(src, "<ol>");
     for (p = First_cookie, i = 0; p; p = p->next, i++) {
@@ -1048,4 +1051,469 @@ struct Int2 updateCursor(struct Buffer* buf, struct Int2 viewport_size,
         .x = x,
         .y = y,
     };
+}
+
+struct Anchor*
+registerHref(struct Buffer* buf, const char* url, const char* target, const char* referer, const char* title,
+    unsigned char key, int line, int pos)
+{
+    struct Anchor* a;
+    buf->href = putAnchor(buf->href, &a, (struct BufferPoint) { .line = line, .pos = pos });
+    initAnchor(a, url, target, referer, title, key);
+    return a;
+}
+
+struct Anchor*
+registerName(struct Buffer* buf, const char* url, int line, int pos)
+{
+    struct Anchor* a;
+    buf->name = putAnchor(buf->name, &a, (struct BufferPoint) { .line = line, .pos = pos });
+    initAnchor(a, url, 0, 0, 0, '\0');
+    return a;
+}
+
+struct Anchor*
+registerImg(struct Buffer* buf, const char* url, const char* title, int line, int pos)
+{
+    struct Anchor* a;
+    buf->img = putAnchor(buf->img, &a, (struct BufferPoint) { .line = line, .pos = pos });
+    initAnchor(a, url, 0, 0, title, '\0');
+    return a;
+}
+
+struct Anchor*
+registerForm(struct Buffer* buf, struct Form* flist, struct HtmlTagParsed* tag, int line,
+    int pos)
+{
+    struct FormItem* fi = formList_addInput(flist, tag);
+    if (fi == 0)
+        return 0;
+
+    struct Anchor* a;
+    buf->formitem = putAnchor(buf->formitem, &a, (struct BufferPoint) { .line = line, .pos = pos });
+    initAnchor(a, (char*)fi, flist->target, 0, 0, '\0');
+    return a;
+}
+
+struct Anchor*
+retrieveCurrentAnchor(struct Buffer* buf)
+{
+    if (currentLine(buf) == 0)
+        return 0;
+    return retrieveAnchor(buf->href, currentLine(buf)->linenumber, buf->pos);
+}
+
+struct Anchor*
+retrieveCurrentImg(struct Buffer* buf)
+{
+    if (currentLine(buf) == 0)
+        return 0;
+    return retrieveAnchor(buf->img, currentLine(buf)->linenumber, buf->pos);
+}
+
+struct Anchor*
+retrieveCurrentForm(struct Buffer* buf)
+{
+    if (currentLine(buf) == 0)
+        return 0;
+    return retrieveAnchor(buf->formitem,
+        currentLine(buf)->linenumber, buf->pos);
+}
+
+struct Anchor*
+searchAnchor(struct AnchorList* al, const char* str)
+{
+    int i;
+    struct Anchor* a;
+    if (al == 0)
+        return 0;
+    for (i = 0; i < al->nanchor; i++) {
+        a = &al->anchors[i];
+        if (a->hseq < 0)
+            continue;
+        if (!strcmp(a->url, str))
+            return a;
+    }
+    return 0;
+}
+
+struct Anchor*
+searchURLLabel(struct Buffer* buf, const char* url)
+{
+    return searchAnchor(buf->name, url);
+}
+
+/* renumber struct Anchor */
+void reseq_anchor(struct Buffer* buf)
+{
+    if (!buf->href)
+        return;
+
+    int nmark = (buf->hmarklist) ? buf->hmarklist->nmark : 0;
+    int n = nmark;
+    for (int i = 0; i < buf->href->nanchor; i++) {
+        struct Anchor* a = &buf->href->anchors[i];
+        if (a->hseq == -2)
+            n++;
+    }
+    if (n == nmark)
+        return;
+
+    short* seqmap = NewAtom_N(short, n);
+    for (int i = 0; i < n; i++)
+        seqmap[i] = i;
+
+    struct HmarkerList* ml = 0;
+    for (int i = 0; i < buf->href->nanchor; i++) {
+        struct Anchor* a = &buf->href->anchors[i];
+        if (a->hseq == -2) {
+            a->hseq = n;
+            struct Anchor* a1 = closest_next_anchor(buf->href, 0, a->start.pos,
+                a->start.line);
+            a1 = closest_next_anchor(buf->formitem, a1, a->start.pos,
+                a->start.line);
+            if (a1 && a1->hseq >= 0) {
+                seqmap[n] = seqmap[a1->hseq];
+                for (int j = a1->hseq; j < nmark; j++)
+                    seqmap[j]++;
+            }
+            ml = putHmarker(ml, a->start.line, a->start.pos, seqmap[n]);
+            n++;
+        }
+    }
+
+    for (int i = 0; i < nmark; i++) {
+        ml = putHmarker(ml, buf->hmarklist->marks[i].line, buf->hmarklist->marks[i].pos, seqmap[i]);
+    }
+    buf->hmarklist = ml;
+
+    reseq_anchor0(buf->href, seqmap);
+    reseq_anchor0(buf->formitem, seqmap);
+}
+
+void addMultirowsImg(struct Buffer* buf, struct AnchorList* al)
+{
+    int i, j, k, col, ecol, pos;
+    struct Anchor a_img, a_href, a_form, *a;
+    struct LineList *l, *ls;
+
+    if (al == 0 || al->nanchor == 0)
+        return;
+    for (i = 0; i < al->nanchor; i++) {
+        a_img = al->anchors[i];
+        struct Image* img;
+        img = a_img.image;
+        if (a_img.hseq < 0 || !img || img->rows <= 1)
+            continue;
+        for (l = buf->firstLine; l != 0; l = l->next) {
+            if (l->linenumber == img->y)
+                break;
+        }
+        if (!l)
+            continue;
+        if (a_img.y == a_img.start.line)
+            ls = l;
+        else {
+            for (ls = l; ls != 0;
+                ls = (a_img.y < a_img.start.line) ? ls->next : ls->prev) {
+                if (ls->linenumber == a_img.start.line)
+                    break;
+            }
+            if (!ls)
+                continue;
+        }
+        a = retrieveAnchor(buf->href, a_img.start.line, a_img.start.pos);
+        if (a)
+            a_href = *a;
+        else
+            a_href.url = 0;
+        a = retrieveAnchor(buf->formitem, a_img.start.line, a_img.start.pos);
+        if (a)
+            a_form = *a;
+        else
+            a_form.url = 0;
+        col = COLPOS(&ls->l, a_img.start.pos);
+        ecol = COLPOS(&ls->l, a_img.end.pos);
+        for (j = 0; l && j < img->rows; l = l->next, j++) {
+            if (a_img.start.line == l->linenumber)
+                continue;
+            pos = columnPos(&l->l, col);
+            a = registerImg(buf, a_img.url, a_img.title, l->linenumber, pos);
+            a->hseq = -a_img.hseq;
+            a->slave = true;
+            a->image = img;
+            a->end.pos = pos + ecol - col;
+            for (k = pos; k < a->end.pos; k++)
+                l->l.propBuf[k] |= PE_IMAGE;
+            if (a_href.url) {
+                a = registerHref(buf, a_href.url, a_href.target,
+                    a_href.referer, a_href.title,
+                    a_href.accesskey, l->linenumber, pos);
+                a->hseq = a_href.hseq;
+                a->slave = true;
+                a->end.pos = pos + ecol - col;
+                for (k = pos; k < a->end.pos; k++)
+                    l->l.propBuf[k] |= PE_ANCHOR;
+            }
+            if (a_form.url) {
+                buf->formitem = putAnchor(buf->formitem, &a,
+                    (struct BufferPoint) { .line = l->linenumber, .pos = pos });
+                initAnchor(a, a_form.url, a_form.target, 0, 0, '\0');
+                a->hseq = a_form.hseq;
+                a->end.pos = pos + ecol - col;
+            }
+        }
+        img->rows = 0;
+    }
+}
+
+void addMultirowsForm(struct Buffer* buf, struct AnchorList* al)
+{
+    int i, j, k, col, ecol, pos;
+    struct Anchor a_form, *a;
+    struct LineList *l, *ls;
+
+    if (al == 0 || al->nanchor == 0)
+        return;
+    for (i = 0; i < al->nanchor; i++) {
+        a_form = al->anchors[i];
+        al->anchors[i].rows = 1;
+        if (a_form.hseq < 0 || a_form.rows <= 1)
+            continue;
+        for (l = buf->firstLine; l != 0; l = l->next) {
+            if (l->linenumber == a_form.y)
+                break;
+        }
+        if (!l)
+            continue;
+        if (a_form.y == a_form.start.line)
+            ls = l;
+        else {
+            for (ls = l; ls != 0;
+                ls = (a_form.y < a_form.start.line) ? ls->next : ls->prev) {
+                if (ls->linenumber == a_form.start.line)
+                    break;
+            }
+            if (!ls)
+                continue;
+        }
+        col = COLPOS(&ls->l, a_form.start.pos);
+        ecol = COLPOS(&ls->l, a_form.end.pos);
+        for (j = 0; l && j < a_form.rows; l = l->next, j++) {
+            pos = columnPos(&l->l, col);
+            if (j == 0) {
+                buf->hmarklist->marks[a_form.hseq].line = l->linenumber;
+                buf->hmarklist->marks[a_form.hseq].pos = pos;
+            }
+            if (a_form.start.line == l->linenumber)
+                continue;
+            buf->formitem = putAnchor(buf->formitem, &a,
+                (struct BufferPoint) { .line = l->linenumber, .pos = pos });
+            initAnchor(a, a_form.url, a_form.target, 0, 0, '\0');
+            a->hseq = a_form.hseq;
+            a->y = a_form.y;
+            a->end.pos = pos + ecol - col;
+            if (pos < 1 || a->end.pos >= l->l.size)
+                continue;
+            l->l.lineBuf[pos - 1] = '[';
+            l->l.lineBuf[a->end.pos] = ']';
+            for (k = pos; k < a->end.pos; k++)
+                l->l.propBuf[k] |= PE_FORM;
+        }
+    }
+}
+
+const char* getAnchorText(struct Buffer* buf, struct AnchorList* al, struct Anchor* a)
+{
+    if (!a || a->hseq < 0)
+        return 0;
+
+    Str tmp = 0;
+    int hseq = a->hseq;
+    struct LineList* l = buf->firstLine;
+    for (int i = 0; i < al->nanchor; i++) {
+        a = &al->anchors[i];
+        if (a->hseq != hseq)
+            continue;
+        for (; l; l = l->next) {
+            if (l->linenumber == a->start.line)
+                break;
+        }
+        if (!l)
+            break;
+        const char* p = l->l.lineBuf + a->start.pos;
+        const char* ep = l->l.lineBuf + a->end.pos;
+        for (; p < ep && IS_SPACE(*p); p++)
+            ;
+        if (p == ep)
+            continue;
+        if (!tmp)
+            tmp = Strnew_size(ep - p);
+        else
+            Strcat_char(tmp, ' ');
+        Strcat_charp_n(tmp, p, ep - p);
+    }
+    return tmp ? tmp->ptr : 0;
+}
+
+MapArea*
+retrieveCurrentMapArea(struct Buffer* buf)
+{
+    struct Anchor *a_img, *a_form;
+    struct FormItem* fi;
+    MapList* ml;
+    ListItem* al;
+    MapArea* a;
+    int i, n;
+
+    a_img = retrieveCurrentImg(buf);
+    if (!(a_img && a_img->image && a_img->image->map))
+        return 0;
+    a_form = retrieveCurrentForm(buf);
+    if (!(a_form && a_form->url))
+        return 0;
+    fi = (struct FormItem*)a_form->url;
+    if (!(fi && fi->parent && fi->parent->item))
+        return 0;
+    fi = fi->parent->item;
+    ml = searchMapList(buf, fi->value ? fi->value->ptr : 0);
+    if (!ml)
+        return 0;
+    n = searchMapArea(buf, ml, a_img);
+    if (n < 0)
+        return 0;
+    for (i = 0, al = ml->area->first; al != 0; i++, al = al->next) {
+        a = (MapArea*)al->ptr;
+        if (a && i == n)
+            return a;
+    }
+    return 0;
+}
+
+struct Buffer*
+link_list_panel(struct Buffer* buf)
+{
+    if (buf->bufferprop & BP_INTERNAL || (buf->linklist == 0 && buf->href == 0 && buf->img == 0)) {
+        return 0;
+    }
+
+    LinkList* l;
+    struct AnchorList* al;
+    struct Anchor* a;
+    struct FormItem* fi;
+    int i;
+    const char *t, *u, *p;
+    struct Url pu;
+    /* FIXME: gettextize? */
+    Str tmp = Strnew_charp("<title>Link List</title>\
+<h1 align=center>Link List</h1>\n");
+
+    if (buf->linklist) {
+        Strcat_charp(tmp, "<hr><h2>Links</h2>\n<ol>\n");
+        for (l = buf->linklist; l; l = l->next) {
+            if (l->url) {
+                pu = parseUrl(l->url, baseURL(buf));
+                p = parsedURL2Str(&pu)->ptr;
+                u = html_quote(p);
+                if (DecodeURL)
+                    p = html_quote(url_decode2(p, buf));
+                else
+                    p = u;
+            } else
+                u = p = "";
+            if (l->type == LINK_TYPE_REL)
+                t = " [Rel]";
+            else if (l->type == LINK_TYPE_REV)
+                t = " [Rev]";
+            else
+                t = "";
+            t = Sprintf("%s%s\n", l->title ? l->title : "", t)->ptr;
+            t = html_quote(t);
+            Strcat_m_charp(tmp, "<li><a href=\"", u, "\">", t, "</a><br>", p,
+                "\n", 0);
+        }
+        Strcat_charp(tmp, "</ol>\n");
+    }
+
+    if (buf->href) {
+        Strcat_charp(tmp, "<hr><h2>Anchors</h2>\n<ol>\n");
+        al = buf->href;
+        for (i = 0; i < al->nanchor; i++) {
+            a = &al->anchors[i];
+            if (a->hseq < 0 || a->slave)
+                continue;
+            pu = parseUrl(a->url, baseURL(buf));
+            p = parsedURL2Str(&pu)->ptr;
+            u = html_quote(p);
+            if (DecodeURL)
+                p = html_quote(url_decode2(p, buf));
+            else
+                p = u;
+            t = getAnchorText(buf, al, a);
+            t = t ? html_quote(t) : "";
+            Strcat_m_charp(tmp, "<li><a href=\"", u, "\">", t, "</a><br>", p,
+                "\n", 0);
+        }
+        Strcat_charp(tmp, "</ol>\n");
+    }
+
+    if (buf->img) {
+        Strcat_charp(tmp, "<hr><h2>Images</h2>\n<ol>\n");
+        al = buf->img;
+        for (i = 0; i < al->nanchor; i++) {
+            a = &al->anchors[i];
+            if (a->slave)
+                continue;
+            pu = parseUrl(a->url, baseURL(buf));
+            p = parsedURL2Str(&pu)->ptr;
+            u = html_quote(p);
+            if (DecodeURL)
+                p = html_quote(url_decode2(p, buf));
+            else
+                p = u;
+            if (a->title && *a->title)
+                t = html_quote(a->title);
+            else
+                t = html_quote(url_decode2(a->url, buf));
+            Strcat_m_charp(tmp, "<li><a href=\"", u, "\">", t, "</a><br>", p,
+                "\n", 0);
+            a = retrieveAnchor(buf->formitem, a->start.line, a->start.pos);
+            if (!a)
+                continue;
+            fi = (struct FormItem*)a->url;
+            fi = fi->parent->item;
+            if (fi->parent->method == FORM_METHOD_INTERNAL && !Strcmp_charp(fi->parent->action, "map") && fi->value) {
+                MapList* ml = searchMapList(buf, fi->value->ptr);
+                ListItem* mi;
+                MapArea* m;
+                if (!ml)
+                    continue;
+                Strcat_charp(tmp, "<br>\n<b>Image map</b>\n<ol>\n");
+                for (mi = ml->area->first; mi != 0; mi = mi->next) {
+                    m = (MapArea*)mi->ptr;
+                    if (!m)
+                        continue;
+                    pu = parseUrl(m->url, baseURL(buf));
+                    p = parsedURL2Str(&pu)->ptr;
+                    u = html_quote(p);
+                    if (DecodeURL)
+                        p = html_quote(url_decode2(p, buf));
+                    else
+                        p = u;
+                    if (m->alt && *m->alt)
+                        t = html_quote(m->alt);
+                    else
+                        t = html_quote(url_decode2(m->url, buf));
+                    Strcat_m_charp(tmp, "<li><a href=\"", u, "\">", t,
+                        "</a><br>", p, "\n", 0);
+                }
+                Strcat_charp(tmp, "</ol>\n");
+            }
+        }
+        Strcat_charp(tmp, "</ol>\n");
+    }
+
+    struct Buffer* newBuf = loadHTMLString(tmp, WC_CES_UTF_8);
+    newBuf->document_charset = buf->document_charset;
+    return newBuf;
 }

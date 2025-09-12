@@ -1,4 +1,6 @@
 #include "form.h"
+#include "AnchorList.h"
+#include "Anchor.h"
 #include "ContentType.h"
 #include "str_util.h"
 #include "runtime.h"

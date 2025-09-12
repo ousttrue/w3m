@@ -1,7 +1,6 @@
 #pragma once
 #include "line.h"
 #include "ContentType.h"
-#include "anchor.h"
 #include "linklist.h"
 #include "url.h"
 #include "textlist.h"
@@ -149,3 +148,25 @@ char* last_modified(struct Buffer* buf);
 struct Buffer* cookie_list_panel(void);
 struct Int2 updateCursor(struct Buffer* buf, struct Int2 viewport_size,
     struct Int2 viewport_cursor, struct Int2 cursor_delta, bool *hasScroll);
+void reseq_anchor(struct Buffer* buf);
+struct Anchor* registerHref(struct Buffer* buf, const char* url, const char* target,
+    const char* referer, const char* title, unsigned char key,
+    int line, int pos);
+struct Anchor* registerName(struct Buffer* buf, const char* url, int line, int pos);
+struct Anchor* registerImg(struct Buffer* buf, const char* url, const char* title, int line,
+    int pos);
+struct HtmlTagParsed;
+struct Anchor* registerForm(struct Buffer* buf, struct Form* flist,
+    struct HtmlTagParsed* tag, int line, int pos);
+struct Anchor* retrieveCurrentAnchor(struct Buffer* buf);
+struct Anchor* retrieveCurrentImg(struct Buffer* buf);
+struct Anchor* retrieveCurrentForm(struct Buffer* buf);
+struct Anchor* searchURLLabel(struct Buffer* buf, const char* url);
+void reAnchorWord(struct Buffer* buf, struct LineList* l, int spos, int epos);
+const char* reAnchor(struct Buffer* buf, const char* re);
+struct AnchorList;
+void addMultirowsForm(struct Buffer* buf, struct AnchorList* al);
+void addMultirowsImg(struct Buffer* buf, struct AnchorList* al);
+const char* getAnchorText(struct Buffer* buf, struct AnchorList* al, struct Anchor* a);
+struct Buffer* link_list_panel(struct Buffer* buf);
+

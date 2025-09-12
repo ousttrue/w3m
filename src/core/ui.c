@@ -1,4 +1,6 @@
 #include "ui.h"
+#include "AnchorList.h"
+#include "Anchor.h"
 #include "quote.h"
 #include "w3m.h"
 #include "maparea.h"
