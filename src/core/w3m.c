@@ -3177,11 +3177,10 @@ void chkURLBuffer(struct Buffer* buf)
         "ftp://[a-zA-Z0-9:%\\-\\./_@]*\\[[a-fA-F0-9:][a-fA-F0-9:\\.]*\\][a-zA-Z0-9:%\\-\\./=_+@#,\\$]*",
         NULL
     };
-    int i;
-    for (i = 0; url_like_pat[i]; i++) {
+    for (int i = 0; url_like_pat[i]; i++) {
         reAnchor(buf, url_like_pat[i]);
     }
-    buf->check_url |= CHK_URL;
+    buf->check_url = true;
 }
 
 DEFUN(chkURL, MARK_URL, "Turn URL-like strings into hyperlinks")
@@ -3313,6 +3312,8 @@ GetWord(struct Buffer* buf)
     }
     return NULL;
 }
+
+#define DICTBUFFERNAME "*dictionary*"
 
 static void
 execdict(const char* word)

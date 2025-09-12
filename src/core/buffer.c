@@ -553,7 +553,7 @@ void reshapeBuffer(struct Buffer* buf, int cols)
             buf->currentColumn = sbuf.currentColumn;
         arrangeCursor(buf);
     }
-    if (buf->check_url & CHK_URL)
+    if (buf->check_url)
         chkURLBuffer(buf);
     formResetBuffer(buf, sbuf.formitem);
 }

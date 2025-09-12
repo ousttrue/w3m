@@ -8,26 +8,8 @@
 #include <stdio.h>
 #include <wc.h>
 
-#define SHELLBUFFERNAME "*Shellout*"
-#define PIPEBUFFERNAME "*stream*"
-#define CPIPEBUFFERNAME "*stream(closed)*"
-#define DICTBUFFERNAME "*dictionary*"
-
 extern int nextpage_topline;
 extern int REV_LB[];
-
-/* mark URL, Message-ID */
-#define CHK_URL 1
-#define CHK_NMID 2
-
-#define COPY_BUFPOSITION(dstbuf, srcbuf)                         \
-    {                                                            \
-        (dstbuf)->topLineIndex = (srcbuf)->topLineIndex;         \
-        (dstbuf)->currentLineIndex = (srcbuf)->currentLineIndex; \
-        (dstbuf)->pos = (srcbuf)->pos;                           \
-        (dstbuf)->visualpos = (srcbuf)->visualpos;               \
-        (dstbuf)->currentColumn = (srcbuf)->currentColumn;       \
-    }
 
 #define SAVE_BUFPOSITION(sbufp) COPY_BUFPOSITION(sbufp, Currentbuf)
 #define RESTORE_BUFPOSITION(sbufp) COPY_BUFPOSITION(Currentbuf, sbufp)
@@ -162,3 +144,13 @@ void addMultirowsImg(struct Buffer* buf, struct AnchorList* al);
 const char* getAnchorText(struct Buffer* buf, struct AnchorList* al, struct Anchor* a);
 struct Buffer* link_list_panel(struct Buffer* buf);
 struct BufferPoint getBufferPosition(struct Buffer* buf);
+
+inline static void COPY_BUFPOSITION(struct Buffer* dstbuf, struct Buffer* srcbuf)
+{
+    (dstbuf)->topLineIndex = (srcbuf)->topLineIndex;
+    (dstbuf)->currentLineIndex = (srcbuf)->currentLineIndex;
+    (dstbuf)->pos = (srcbuf)->pos;
+    (dstbuf)->visualpos = (srcbuf)->visualpos;
+    (dstbuf)->currentColumn = (srcbuf)->currentColumn;
+}
+
