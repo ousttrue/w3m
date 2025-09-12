@@ -2073,7 +2073,7 @@ void followForm(void)
 DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink")
 {
     HmarkerList* hl = Currentbuf->hmarklist;
-    BufferPoint* po;
+    struct BufferPoint* po;
     Anchor* an;
     int hseq = 0;
 
@@ -2101,7 +2101,7 @@ DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink")
 DEFUN(lastA, LINK_END, "Move to the last hyperlink")
 {
     HmarkerList* hl = Currentbuf->hmarklist;
-    BufferPoint* po;
+    struct BufferPoint* po;
     Anchor* an;
     int hseq;
 
@@ -2130,7 +2130,7 @@ DEFUN(lastA, LINK_END, "Move to the last hyperlink")
 DEFUN(nthA, LINK_N, "Go to the nth link")
 {
     HmarkerList* hl = Currentbuf->hmarklist;
-    BufferPoint* po;
+    struct BufferPoint* po;
     Anchor* an;
 
     int n = searchKeyNum();
@@ -2183,7 +2183,7 @@ static void
 _nextA(int visited)
 {
     HmarkerList* hl = Currentbuf->hmarklist;
-    BufferPoint* po;
+    struct BufferPoint* po;
     Anchor *an, *pan;
     int i, x, y, n = searchKeyNum();
     struct Url url;
@@ -2265,7 +2265,7 @@ static void
 _prevA(int visited)
 {
     HmarkerList* hl = Currentbuf->hmarklist;
-    BufferPoint* po;
+    struct BufferPoint* po;
     Anchor *an, *pan;
     int i, x, y, n = searchKeyNum();
     struct Url url;
@@ -2756,7 +2756,7 @@ static void
 anchorMn(Anchor* (*menu_func)(struct Buffer*), int go)
 {
     Anchor* a;
-    BufferPoint* po;
+    struct BufferPoint* po;
 
     if (!Currentbuf->href || !Currentbuf->hmarklist)
         return;
@@ -3945,10 +3945,9 @@ char* file_to_url(const char* file, const char* currentDir)
 Str myEditor(const char* cmd, const char* file, int line)
 {
     Str tmp = NULL;
-    char* p;
     int set_file = false, set_line = false;
 
-    for (p = cmd; *p; p++) {
+    for (const char* p = cmd; *p; p++) {
         if (*p == '%' && *(p + 1) == 's' && !set_file) {
             if (tmp == NULL)
                 tmp = Strnew_charp_n(cmd, (int)(p - cmd));

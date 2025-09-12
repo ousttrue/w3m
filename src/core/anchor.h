@@ -3,11 +3,11 @@
 
 extern int MarkAllPages;
 
-typedef struct {
+struct BufferPoint {
     int line;
     int pos;
     int invalid;
-} BufferPoint;
+};
 
 typedef struct _anchor {
     const char* url;
@@ -15,8 +15,8 @@ typedef struct _anchor {
     const char* referer;
     const char* title;
     unsigned char accesskey;
-    BufferPoint start;
-    BufferPoint end;
+    struct BufferPoint start;
+    struct BufferPoint end;
     int hseq;
     char slave;
     short y;
@@ -32,7 +32,7 @@ typedef struct _anchorList {
 } AnchorList;
 
 typedef struct {
-    BufferPoint* marks;
+    struct BufferPoint* marks;
     int nmark;
     int markmax;
     int prevhseq;

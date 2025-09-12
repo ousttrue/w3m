@@ -28,7 +28,7 @@ putAnchor(AnchorList* al, const char* url, const char* target, Anchor** anchor_r
 {
     int n, i, j;
     Anchor* a;
-    BufferPoint bp = { 0 };
+    struct BufferPoint bp = { 0 };
     if (al == NULL) {
         al = New(AnchorList);
         al->anchors = NULL;
@@ -118,7 +118,7 @@ registerForm(struct Buffer* buf, struct Form* flist, struct HtmlTagParsed* tag, 
 
 int onAnchor(Anchor* a, int line, int pos)
 {
-    BufferPoint bp;
+    struct BufferPoint bp;
     bp.line = line;
     bp.pos = pos;
 
@@ -381,14 +381,14 @@ putHmarker(HmarkerList* ml, int line, int pos, int seq)
     }
     if (ml->markmax == 0) {
         ml->markmax = FIRST_MARKER_SIZE;
-        ml->marks = NewAtom_N(BufferPoint, ml->markmax);
-        memset(ml->marks, 0, sizeof(BufferPoint) * ml->markmax);
+        ml->marks = NewAtom_N(struct BufferPoint, ml->markmax);
+        memset(ml->marks, 0, sizeof(struct BufferPoint) * ml->markmax);
     }
     if (seq + 1 > ml->nmark)
         ml->nmark = seq + 1;
     if (ml->nmark >= ml->markmax) {
         ml->markmax = ml->nmark * 2;
-        ml->marks = New_Reuse(BufferPoint, ml->marks, ml->markmax);
+        ml->marks = New_Reuse(struct BufferPoint, ml->marks, ml->markmax);
     }
     ml->marks[seq].line = line;
     ml->marks[seq].pos = pos;
