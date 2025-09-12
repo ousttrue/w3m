@@ -42,6 +42,9 @@ struct UI {
     struct VirtualTerm* vt;
     bool use_graphic;
     struct Rect viewport;
+    // viewport local position
+    struct Int2 viewport_cursor;
+    // global position
     struct Int2 cursor;
 };
 

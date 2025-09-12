@@ -278,7 +278,6 @@ static int redrawLineRegion(struct UI ui, struct Buffer* buf, struct LineList* l
     Lineprop* pr;
     Linecolor* pc;
     int bcol, ecol;
-    struct Anchor* a;
     struct Url url;
     int k, vpos = -1;
 
@@ -297,7 +296,8 @@ static int redrawLineRegion(struct UI ui, struct Buffer* buf, struct LineList* l
 
     for (j = 0; rcol - column < ui.viewport.size.x && pos + j < l->l.len; j += delta) {
         if (useVisitedColor && vpos <= pos + j && !(pr[j] & PE_VISITED)) {
-            a = retrieveAnchor(buf->href, (struct BufferPoint) { .line = l->linenumber, .pos = pos + j });
+            struct Anchor* a = retrieveAnchor(buf->href,
+                (struct BufferPoint) { .line = l->linenumber, .pos = pos + j });
             if (a) {
                 url = parseUrl(a->url, baseURL(buf));
                 if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
@@ -374,9 +374,8 @@ drawAnchorCursor0(struct UI ui, struct Buffer* buf,
             continue;
         if (an->start.line >= eline)
             return;
-        for (; l; l = l->next) {
-            if (l->linenumber == an->start.line)
-                break;
+        for (; l && l->linenumber < an->start.line; l = l->next) {
+            ;
         }
         _drawAnchorCursor(ui, buf, hseq, prevhseq, tline, l, an, active);
     }
@@ -387,7 +386,10 @@ static int currentAnchorHseq(struct Buffer* buf)
     struct Anchor* an = retrieveCurrentAnchor(buf);
     if (!an)
         an = retrieveCurrentMap(buf);
-    return an ? an->hseq : -1;
+    if (!an) {
+        return -1;
+    }
+    return an->hseq;
 }
 
 void drawAnchorCursor(struct UI ui, struct Buffer* buf)

@@ -169,3 +169,4 @@ void addMultirowsForm(struct Buffer* buf, struct AnchorList* al);
 void addMultirowsImg(struct Buffer* buf, struct AnchorList* al);
 const char* getAnchorText(struct Buffer* buf, struct AnchorList* al, struct Anchor* a);
 struct Buffer* link_list_panel(struct Buffer* buf);
+struct BufferPoint getBufferPosition(struct Buffer* buf);

@@ -80,6 +80,7 @@ const char* getMoveXY(int x, int y)
     static char buf[32];
     return buf;
 #else
-    return tgoto(T.cm, x, y);
+    const char *p =  tgoto(T.cm, x, y);
+    return p;
 #endif
 }

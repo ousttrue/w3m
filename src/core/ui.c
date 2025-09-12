@@ -105,6 +105,7 @@ struct UI getUI()
                 .y = vt->ROWS - rootY,
             },
         },
+        .viewport_cursor = viewport_cursor,
         .cursor = {
             .x = rootX + viewport_cursor.x,
             .y = rootY + viewport_cursor.y,
@@ -322,6 +323,25 @@ void renderFrame(struct UI ui)
 
     // int cursorRow = ui.vt->CurLine;
     // int cursorCol = ui.vt->CurColumn;
+
+    struct Anchor* a = retrieveCurrentAnchor(Currentbuf);
+    struct BufferPoint bp = getBufferPosition(Currentbuf);
+    ui_printStatus("STATUS: (%d, %d) a(%d, %d=%d) %s",
+        // "top=%d key=[%02x > %02x > %02x > %02x > %02x > %02x > %02x > %02x]",
+        bp.line, bp.pos,
+        a ? a->start.line : -1,
+        a ? a->start.pos : -1,
+        a ? a->end.pos : -1,
+        a ? a->title : "--"
+        // g_keylog[(g_i - 0) % sizeof(g_keylog)],
+        // g_keylog[(g_i - 1) % sizeof(g_keylog)],
+        // g_keylog[(g_i - 2) % sizeof(g_keylog)],
+        // g_keylog[(g_i - 3) % sizeof(g_keylog)],
+        // g_keylog[(g_i - 4) % sizeof(g_keylog)],
+        // g_keylog[(g_i - 5) % sizeof(g_keylog)],
+        // g_keylog[(g_i - 6) % sizeof(g_keylog)],
+        // g_keylog[(g_i - 7) % sizeof(g_keylog)]
+    );
 
     struct Buffer* buf = Currentbuf;
     // int cursorRow = buf->cursorY;

@@ -1005,16 +1005,6 @@ void onKeyInput(unsigned char c)
     g_keylog[g_i % sizeof(g_keylog)] = c;
     struct UI ui = getUI();
     if (IS_ASCII(c)) { /* Ascii */
-        ui_printStatus("STATUS: (%d, %d) top=%d key=[%02x > %02x > %02x > %02x > %02x > %02x > %02x > %02x]",
-            ui.cursor.x, ui.cursor.y, Currentbuf->topLineIndex,
-            g_keylog[(g_i - 0) % sizeof(g_keylog)],
-            g_keylog[(g_i - 1) % sizeof(g_keylog)],
-            g_keylog[(g_i - 2) % sizeof(g_keylog)],
-            g_keylog[(g_i - 3) % sizeof(g_keylog)],
-            g_keylog[(g_i - 4) % sizeof(g_keylog)],
-            g_keylog[(g_i - 5) % sizeof(g_keylog)],
-            g_keylog[(g_i - 6) % sizeof(g_keylog)],
-            g_keylog[(g_i - 7) % sizeof(g_keylog)]);
 
         set_buffer_environ(Currentbuf);
         save_buffer_position(Currentbuf);

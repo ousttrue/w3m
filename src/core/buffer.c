@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "line.h"
 #include "regex.h"
 #include "HttpRequest.h"
 #include "maparea.h"
@@ -1096,13 +1097,21 @@ registerForm(struct Buffer* buf, struct Form* flist, struct HtmlTagParsed* tag, 
     return a;
 }
 
+struct BufferPoint getBufferPosition(struct Buffer* buf)
+{
+    struct UI ui = getUI();
+    return (struct BufferPoint) {
+        .line = ui.viewport_cursor.y,
+        .pos = columnPos(&currentLine(buf)->l, ui.viewport_cursor.x),
+    };
+}
+
 struct Anchor*
 retrieveCurrentAnchor(struct Buffer* buf)
 {
-    if (currentLine(buf) == 0)
+    if (!buf)
         return 0;
-    return retrieveAnchor(buf->href,
-        (struct BufferPoint) { .line = currentLine(buf)->linenumber, .pos = buf->pos });
+    return retrieveAnchor(buf->href, getBufferPosition(buf));
 }
 
 struct Anchor*
