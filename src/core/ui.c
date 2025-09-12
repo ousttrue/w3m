@@ -223,7 +223,7 @@ static Str make_lastline_link(struct Buffer* buf, const char* title, const char*
     pu = parseUrl(url, baseURL(buf));
     u = parsedURL2Str(&pu);
     if (DecodeURL)
-        u = Strnew_charp(url_decode2(u->ptr, buf ? buf->document_charset : 0));
+        u = Strnew_charp(url_decode2(u->ptr, buf ? buf->document.charset : 0));
     Lineprop* pr;
     u = checkType(u, &pr, NULL);
     if (l <= 4 || l >= get_Str_strwidth(u)) {

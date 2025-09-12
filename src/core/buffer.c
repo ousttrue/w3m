@@ -79,7 +79,8 @@ nullBuffer(void)
  */
 void clearBuffer(struct Buffer* buf)
 {
-    buf->document = (struct Document) { 0 };
+    // charset !
+    // buf->document = (struct Document) { 0 };
     buf->topLineIndex = 0;
     buf->currentLineIndex = 0;
 }
@@ -517,7 +518,7 @@ void reshapeBuffer(struct Buffer* buf, int cols)
 
     WcOption.auto_detect = WC_OPT_DETECT_OFF;
     if (buf->content_type == CONTENTTYPE_TEXT_HTML)
-        loadHTMLBuffer(buf->currentURL, stream, buf->document_charset, buf);
+        loadHTMLBuffer(buf->currentURL, stream, buf->document.charset, buf);
     else
         loadBuffer(buf->currentURL, stream, buf);
     ISclose(stream);

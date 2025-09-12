@@ -324,7 +324,7 @@ append_map_info(struct Buffer* buf, Str tmp, struct FormItem* fi)
             continue;
         struct Url pu = parseUrl(a->url, baseURL(buf));
         const char* q = html_quote(parsedURL2Str(&pu)->ptr);
-        const char* p = html_quote(url_decode2(a->url, buf ? buf->document_charset : 0));
+        const char* p = html_quote(url_decode2(a->url, buf ? buf->document.charset : 0));
         Strcat_m_charp(tmp, "<tr valign=top><td>&nbsp;&nbsp;<td><a href=\"",
             q, "\">",
             html_quote(*a->alt ? a->alt : mybasename(a->url)),
@@ -363,7 +363,7 @@ page_info_panel(struct Buffer* buf)
         "<tr valign=top><td nowrap>Last Modified<td>",
         html_quote(last_modified(buf)), NULL);
 
-    if (buf->document_charset != InnerCharset) {
+    if (buf->document.charset != InnerCharset) {
         wc_ces_list* list = wc_get_ces_list();
         Strcat_charp(tmp,
             "<tr><td nowrap>Document Charset<td><select name=charset>");
@@ -371,7 +371,7 @@ page_info_panel(struct Buffer* buf)
             char charset[16];
             sprintf(charset, "%d", (unsigned int)list->id);
             Strcat_m_charp(tmp, "<option value=", charset,
-                (buf->document_charset == list->id) ? " selected>"
+                (buf->document.charset == list->id) ? " selected>"
                                                     : ">",
                 list->desc, NULL);
         }
@@ -390,7 +390,7 @@ page_info_panel(struct Buffer* buf)
         p = parsedURL2Str(&pu)->ptr;
         const char* q = html_quote(p);
         if (DecodeURL)
-            p = html_quote(url_decode2(p, buf ? buf->document_charset : 0));
+            p = html_quote(url_decode2(p, buf ? buf->document.charset : 0));
         else
             p = q;
         Strcat_m_charp(tmp,
@@ -403,7 +403,7 @@ page_info_panel(struct Buffer* buf)
         p = parsedURL2Str(&pu)->ptr;
         const char* q = html_quote(p);
         if (DecodeURL)
-            p = html_quote(url_decode2(p, buf ? buf->document_charset : 0));
+            p = html_quote(url_decode2(p, buf ? buf->document.charset : 0));
         else
             p = q;
         Strcat_m_charp(tmp,
@@ -414,7 +414,7 @@ page_info_panel(struct Buffer* buf)
     if (a != NULL) {
         struct FormItem* fi = (struct FormItem*)a->url;
         p = form2str(fi);
-        p = html_quote(url_decode2(p, buf ? buf->document_charset : 0));
+        p = html_quote(url_decode2(p, buf ? buf->document.charset : 0));
         Strcat_m_charp(tmp,
             "<tr valign=top><td nowrap>Method/type of current form&nbsp;<td>",
             p, NULL);
@@ -443,6 +443,6 @@ end:
     Strcat_charp(tmp, "</body></html>");
     struct Buffer* newbuf = loadHTMLString(tmp, WC_CES_UTF_8);
     if (newbuf)
-        newbuf->document_charset = buf->document_charset;
+        newbuf->document.charset = buf->document.charset;
     return newbuf;
 }

@@ -32,6 +32,7 @@ enum BufferProperty {
 
 struct Document
 {
+    wc_ces charset;
     struct LineList* firstLine;
     int allLine;
     struct AnchorList* href;
@@ -71,7 +72,6 @@ struct Buffer {
     int* clone;
     size_t trbyte;
     bool check_url;
-    wc_ces document_charset;
     wc_uint8 auto_detect;
     TextList* document_header;
     struct FormItem* form_submit;

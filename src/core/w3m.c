@@ -448,8 +448,8 @@ conv_form_encoding(Str val, struct FormItem* fi, struct Buffer* buf)
 
     if (fi->parent->charset)
         charset = fi->parent->charset;
-    else if (buf->document_charset && buf->document_charset != WC_CES_US_ASCII)
-        charset = buf->document_charset;
+    else if (buf->document.charset && buf->document.charset != WC_CES_US_ASCII)
+        charset = buf->document.charset;
     return wc_Str_conv_strict(val, InnerCharset, charset);
 }
 
@@ -2533,7 +2533,7 @@ goURL0(char* prompt, int relative)
             p_url = parseUrl(a->url, current);
             a_url = parsedURL2Str(&p_url)->ptr;
             if (DefaultURLString == DEFAULT_URL_LINK)
-                url = url_decode2(a_url, Currentbuf->document_charset);
+                url = url_decode2(a_url, Currentbuf->document.charset);
             else
                 pushHist(hist, a_url);
         }
@@ -2908,7 +2908,7 @@ _peekURL(int only_img)
         s = parsedURL2Str(&pu);
     }
     if (DecodeURL)
-        s = Strnew_charp(url_decode2(s->ptr, Currentbuf->document_charset));
+        s = Strnew_charp(url_decode2(s->ptr, Currentbuf->document.charset));
     s = checkType(s, &pp, NULL);
     p = NewAtom_N(Lineprop, s->length);
     memcpy((void*)p, (void*)pp, s->length * sizeof(Lineprop));
@@ -3008,7 +3008,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
     buf->real_scheme = Currentbuf->real_scheme;
     buf->filename = Currentbuf->filename;
     buf->sourcefile = Currentbuf->sourcefile;
-    buf->document_charset = Currentbuf->document_charset;
+    buf->document.charset = Currentbuf->document.charset;
     buf->clone = Currentbuf->clone;
     (*buf->clone)++;
 
@@ -3061,8 +3061,8 @@ DEFUN(reload, RELOAD, "Load current document anew")
     message(getUI(), MSG_INFO, "Reloading...");
     // refresh(ttyWriter());
     old_charset = DocumentCharset;
-    if (Currentbuf->document_charset != WC_CES_US_ASCII)
-        DocumentCharset = Currentbuf->document_charset;
+    if (Currentbuf->document.charset != WC_CES_US_ASCII)
+        DocumentCharset = Currentbuf->document.charset;
     // SearchHeader = Currentbuf->search_header;
     DefaultType = contentTypeStr(Currentbuf->content_type);
     struct Content c = loadGeneralFile(url->ptr, NULL, post, NO_REFERER, UI_TTY /*, true*/);
@@ -3112,7 +3112,7 @@ _docCSet(wc_ces charset)
         message(getUI(), MSG_INFO, "Can't reload...");
         return;
     }
-    Currentbuf->document_charset = charset;
+    Currentbuf->document.charset = charset;
 }
 
 void change_charset(struct KeyValue* arg)
@@ -3126,7 +3126,7 @@ void change_charset(struct KeyValue* arg)
     Currentbuf = buf;
     if (Currentbuf->bufferprop & BP_INTERNAL)
         return;
-    charset = Currentbuf->document_charset;
+    charset = Currentbuf->document.charset;
     for (; arg; arg = arg->next) {
         if (!strcmp(arg->arg, "charset"))
             charset = atoi(arg->value);
@@ -3140,7 +3140,7 @@ DEFUN(docCSet, CHARSET, "Change the character encoding for the current document"
     if (cs == NULL || *cs == '\0')
         /* FIXME: gettextize? */
         cs = inputStr(getUI(), "Document charset: ",
-            wc_ces_to_charset(Currentbuf->document_charset));
+            wc_ces_to_charset(Currentbuf->document.charset));
     wc_ces charset = wc_guess_charset_short(cs, 0);
     if (charset == 0) {
         return;
@@ -3369,7 +3369,7 @@ void set_buffer_environ(struct Buffer* buf)
         set_environ("W3M_TITLE", buf->buffername);
         set_environ("W3M_URL", parsedURL2Str(&buf->currentURL)->ptr);
         set_environ("W3M_TYPE", contentTypeStr(buf->content_type));
-        set_environ("W3M_CHARSET", wc_ces_to_charset(buf->document_charset));
+        set_environ("W3M_CHARSET", wc_ces_to_charset(buf->document.charset));
     }
     struct LineList* l = currentLine(buf);
     if (l && (buf != prev_buf || l != prev_line || buf->pos != prev_pos)) {

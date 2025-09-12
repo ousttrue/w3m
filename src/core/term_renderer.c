@@ -2,6 +2,7 @@
 #include "TermEntry.h"
 #include "frame.h"
 #include "graphicchar.h"
+#include "myctype.h"
 #include <stdio.h>
 
 int highIntensityColors = 0;
@@ -126,6 +127,12 @@ void refreshFrame(const struct Writer* writer, struct Frame* frame)
                 putWriter(writer, ' ');
             } else if (CHMODE(cell->prop) != C_WCHAR2) {
                 // wc_putc(writer, pc[col]);
+                if (cell->str[0] != 32) {
+                    if (!IS_ASCII(cell->str[0])) {
+                        const char* x = cell->str;
+                        int a = 0;
+                    }
+                }
                 putsWriter(writer, cell->str);
             }
             //     pcol = col + 1;
