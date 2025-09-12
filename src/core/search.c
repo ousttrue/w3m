@@ -204,7 +204,7 @@ enum SearchResultFlags backwardSearch(struct Buffer* buf, const char* str)
             buf->pos = pos;
             gotoLine(buf, l->linenumber);
             arrangeCursor(buf);
-            set_mark(l, pos, pos + found_last - found);
+            set_mark(&l->l, pos, pos + found_last - found);
             return SR_FOUND | (wrapped ? SR_WRAPPED : 0);
         }
         if (wrapped && l == begin) /* no match */
@@ -264,7 +264,7 @@ static int srchcore(const char* str, SearchFunc func)
 
         result = func(Currentbuf, str);
         if (result & SR_FOUND)
-            clear_mark(currentLine(Currentbuf));
+            clear_mark(&currentLine(Currentbuf)->l);
     }
     mySignal(SIGINT, prevtrap);
     term_raw();
@@ -272,7 +272,7 @@ static int srchcore(const char* str, SearchFunc func)
 }
 
 static void
-disp_srchresult(int result, char* prompt, char* str)
+disp_srchresult(int result, const char* prompt, const char* str)
 {
     if (str == NULL)
         str = "";
@@ -324,7 +324,7 @@ dispincsrch(int ch, Str buf, Lineprop* prop)
             }
             arrangeCursor(Currentbuf);
 
-            clear_mark(currentLine(Currentbuf));
+            clear_mark(&currentLine(Currentbuf)->l);
             return -1;
         } else
             return 020; /* _prev completion for C-s C-s */
@@ -335,19 +335,18 @@ dispincsrch(int ch, Str buf, Lineprop* prop)
         arrangeCursor(Currentbuf);
     }
 
-    clear_mark(currentLine(Currentbuf));
+    clear_mark(&currentLine(Currentbuf)->l);
     return -1;
 }
 
 void isrch(SearchFunc func, char* prompt)
 {
-    char* str;
     struct Buffer sbuf;
     SAVE_BUFPOSITION(&sbuf);
     dispincsrch(0, NULL, NULL); /* initialize incremental search state */
 
     searchRoutine = func;
-    str = inputLineHistSearch(getUI(), prompt, NULL, IN_STRING, TextHist, dispincsrch);
+    const char* str = inputLineHistSearch(getUI(), prompt, NULL, IN_STRING, TextHist, dispincsrch);
     if (str == NULL) {
         RESTORE_BUFPOSITION(&sbuf);
     }
@@ -355,12 +354,11 @@ void isrch(SearchFunc func, char* prompt)
 
 void srch(SearchFunc func, char* prompt)
 {
-    char* str;
     int result;
     int disp = false;
     int pos;
 
-    str = searchKeyData();
+    const char* str = searchKeyData();
     if (str == NULL || *str == '\0') {
         str = inputStrHist(getUI(), prompt, NULL, TextHist);
         if (str != NULL && *str == '\0')
@@ -376,7 +374,7 @@ void srch(SearchFunc func, char* prompt)
         Currentbuf->pos += 1;
     result = srchcore(str, func);
     if (result & SR_FOUND)
-        clear_mark(currentLine(Currentbuf));
+        clear_mark(&currentLine(Currentbuf)->l);
     else
         Currentbuf->pos = pos;
 
@@ -405,7 +403,7 @@ void srch_nxtprv(bool reverse)
 
     enum SearchResultFlags result = srchcore(SearchString, routine[reverse]);
     if (result & SR_FOUND)
-        clear_mark(currentLine(Currentbuf));
+        clear_mark(&currentLine(Currentbuf)->l);
     else {
         if (!reverse)
             Currentbuf->pos -= 1;

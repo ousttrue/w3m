@@ -79,7 +79,7 @@ nullBuffer(void)
  */
 void clearBuffer(struct Buffer* buf)
 {
-    buf->lines = (struct RenderedLines) { 0 };
+    buf->lines = (struct Document) { 0 };
     buf->topLineIndex = 0;
     buf->currentLineIndex = 0;
 }
