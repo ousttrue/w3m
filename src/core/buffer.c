@@ -1045,47 +1045,6 @@ struct Int2 updateCursor(struct Buffer* buf, struct Int2 viewport_size,
     };
 }
 
-struct Anchor*
-registerHref(struct Buffer* buf, const char* url, const char* target, const char* referer, const char* title,
-    unsigned char key, struct BufferPoint bp)
-{
-    struct Anchor* a;
-    buf->document.href = putAnchor(buf->document.href, &a, bp);
-    initAnchor(a, url, target, referer, title, key);
-    return a;
-}
-
-struct Anchor*
-registerName(struct Buffer* buf, const char* url, struct BufferPoint bp)
-{
-    struct Anchor* a;
-    buf->document.name = putAnchor(buf->document.name, &a, bp);
-    initAnchor(a, url, 0, 0, 0, '\0');
-    return a;
-}
-
-struct Anchor*
-registerImg(struct Buffer* buf, const char* url, const char* title, struct BufferPoint bp)
-{
-    struct Anchor* a;
-    buf->document.img = putAnchor(buf->document.img, &a, bp);
-    initAnchor(a, url, 0, 0, title, '\0');
-    return a;
-}
-
-struct Anchor*
-registerForm(struct Buffer* buf, struct Form* flist, struct HtmlTagParsed* tag, struct BufferPoint bp)
-{
-    struct FormItem* fi = formList_addInput(flist, tag);
-    if (fi == 0)
-        return 0;
-
-    struct Anchor* a;
-    buf->document.formitem = putAnchor(buf->document.formitem, &a, bp);
-    initAnchor(a, (char*)fi, flist->target, 0, 0, '\0');
-    return a;
-}
-
 struct BufferPoint getBufferPosition(struct Buffer* buf)
 {
     struct UI ui = getUI();
@@ -1245,7 +1204,7 @@ void addMultirowsImg(struct Buffer* buf, struct AnchorList* al)
             if (a_img.start.line == l->linenumber)
                 continue;
             pos = columnPos(&l->l, col);
-            a = registerImg(buf, a_img.url, a_img.title,
+            a = registerImg(&buf->document, a_img.url, a_img.title,
                 (struct BufferPoint) { .line = l->linenumber, .pos = pos });
             a->hseq = -a_img.hseq;
             a->slave = true;
@@ -1254,7 +1213,7 @@ void addMultirowsImg(struct Buffer* buf, struct AnchorList* al)
             for (k = pos; k < a->end.pos; k++)
                 l->l.propBuf[k] |= PE_IMAGE;
             if (a_href.url) {
-                a = registerHref(buf, a_href.url, a_href.target,
+                a = registerHref(&buf->document, a_href.url, a_href.target,
                     a_href.referer, a_href.title, a_href.accesskey,
                     (struct BufferPoint) { .line = l->linenumber, .pos = pos });
                 a->hseq = a_href.hseq;
@@ -1402,7 +1361,7 @@ static struct Anchor*
 _put_anchor_all(struct Buffer* buf, const char* p1, const char* p2, struct BufferPoint bp)
 {
     Str tmp = Strnew_charp_n(p1, p2 - p1);
-    return registerHref(buf, url_quote(tmp->ptr), NULL, NO_REFERER, NULL, '\0', bp);
+    return registerHref(&buf->document, url_quote(tmp->ptr), NULL, NO_REFERER, NULL, '\0', bp);
 }
 
 typedef struct Anchor* (*AnchorFunc)(struct Buffer*, const char*, const char*, struct BufferPoint);

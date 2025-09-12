@@ -397,7 +397,8 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
                     id = NULL;
                     if (parsedtag_get_value(tag, ATTR_NAME, &id)) {
                         id = url_quote_conv(id, buf->document.charset);
-                        registerName(buf, id, (struct BufferPoint) { .line = buf->document.allLine, .pos = pos });
+                        registerName(&buf->document,
+                            id, (struct BufferPoint) { .line = buf->document.allLine, .pos = pos });
                     }
                     if (parsedtag_get_value(tag, ATTR_HREF, &p))
                         p = url_quote(remove_space(p));
@@ -421,7 +422,7 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
                     }
                     if (p) {
                         effect |= PE_ANCHOR;
-                        a_href = registerHref(buf, p, q, r, s, *t,
+                        a_href = registerHref(&buf->document, p, q, r, s, *t,
                             (struct BufferPoint) { .line = buf->document.allLine, .pos = pos });
                         a_href->hseq = ((hseq > 0) ? hseq : -hseq) - 1;
                         a_href->slave = (hseq > 0) ? false : true;
@@ -469,7 +470,8 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
                         parsedtag_get_value(tag, ATTR_TITLE, &s);
                         p = url_quote_conv(remove_space(p),
                             buf->document.charset);
-                        a_img = registerImg(buf, p, s, (struct BufferPoint) { .line = buf->document.allLine, .pos = pos });
+                        a_img = registerImg(&buf->document,
+                            p, s, (struct BufferPoint) { .line = buf->document.allLine, .pos = pos });
                         a_img->hseq = iseq;
                         a_img->image = NULL;
                         if (iseq > 0) {
@@ -572,7 +574,7 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
                                 max_select);
                         }
                     }
-                    a_form = registerForm(buf, form, tag,
+                    a_form = registerForm(&buf->document, form, tag,
                         (struct BufferPoint) { .line = buf->document.allLine, .pos = pos });
                     if (a_textarea && textareanumber >= 0)
                         a_textarea[textareanumber] = a_form;
@@ -786,7 +788,7 @@ void HTMLlineproc2(struct Buffer* buf, TextLineList* tl)
 }
 
 static int loadHTML(struct html_feed_environ* htmlenv1,
-    Str html, wc_ces *doc_charset, int cols, bool use_graphic, bool internal)
+    Str html, wc_ces* doc_charset, int cols, bool use_graphic, bool internal)
 {
     struct environment envs[MAX_ENV_LEVEL];
     long long linelen = 0;
@@ -871,7 +873,7 @@ static int loadHTML(struct html_feed_environ* htmlenv1,
 }
 
 // WC_CES_SHIFT_JIS /*WC_CES_US_ASCII*/
-static void loadHTMLstream(union input_stream* stream, wc_ces *content_charset, struct Buffer* buf, bool internal)
+static void loadHTMLstream(union input_stream* stream, wc_ces* content_charset, struct Buffer* buf, bool internal)
 {
     Str html = readAll(stream);
     struct UI ui = getUI();
