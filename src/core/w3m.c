@@ -612,7 +612,7 @@ loadLink(const char* url, const char* target, const char* referer, struct Form* 
         const char* file = guessFileName(c.url.file);
         // doFileMove(tmp->ptr, file);
         abort();
-        return NO_BUFFER;
+        return NULL;
     }
 
     struct Buffer* buf = makeBuffer(&c);
@@ -625,7 +625,7 @@ loadLink(const char* url, const char* target, const char* referer, struct Form* 
     struct Url pu = parseUrl(url, base);
     pushHashHist(URLHist, parsedURL2Str(&pu)->ptr);
 
-    if (buf == NO_BUFFER) {
+    if (buf == NULL) {
         return NULL;
     }
 
@@ -1234,7 +1234,7 @@ cmd_loadURL(const char* url, struct Url* current, const char* referer, struct Fo
         /* FIXME: gettextize? */
         char* emsg = Sprintf("Can't load %s", conv_from_system(url))->ptr;
         message(getUI(), MSG_ERR, emsg);
-    } else if (buf != NO_BUFFER) {
+    } else if (buf) {
         pushBuffer(buf);
     }
 }
@@ -1362,7 +1362,7 @@ static void cmd_loadfile(const char* fn)
         /* FIXME: gettextize? */
         char* emsg = Sprintf("%s not found", conv_from_system(fn))->ptr;
         message(getUI(), MSG_ERR, emsg);
-    } else if (buf != NO_BUFFER) {
+    } else if (buf) {
         pushBuffer(buf);
     }
 }
@@ -2032,7 +2032,7 @@ static void followImage(bool do_download)
         /* FIXME: gettextize? */
         char* emsg = Sprintf("Can't load %s", a->url)->ptr;
         message(getUI(), MSG_ERR, emsg);
-    } else if (buf != NO_BUFFER) {
+    } else if (buf) {
         pushBuffer(buf);
     }
 }
@@ -2601,7 +2601,7 @@ cmd_loadBuffer(struct Buffer* buf, int prop, int linkid)
 {
     if (buf == NULL) {
         message(getUI(), MSG_ERR, "Can't load string");
-    } else if (buf != NO_BUFFER) {
+    } else if (buf) {
         buf->bufferprop |= (BP_INTERNAL | prop);
         if (!(buf->bufferprop & BP_NO_URL))
             buf->currentURL = copyParsedUrl(&Currentbuf->currentURL);
@@ -3080,7 +3080,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
         /* FIXME: gettextize? */
         message(getUI(), MSG_ERR, "Can't reload...");
         return;
-    } else if (buf == NO_BUFFER) {
+    } else if (buf) {
 
         return;
     }
@@ -3337,7 +3337,7 @@ execdict(const char* word)
     if (buf == NULL) {
         message(getUI(), MSG_INFO, "Execution failed");
         return;
-    } else if (buf != NO_BUFFER) {
+    } else if (buf) {
         buf->filename = w;
         buf->buffername = Sprintf("%s %s", DICTBUFFERNAME, word)->ptr;
         if (buf->content_type == CONTENTTYPE_UNKNOWN)
@@ -3440,7 +3440,7 @@ searchKeyNum(void)
 
 void deleteFiles()
 {
-    while (Firstbuf && Firstbuf != NO_BUFFER) {
+    while (Firstbuf) {
         struct Buffer* buf = Firstbuf->nextBuffer;
         discardBuffer(Firstbuf);
         Firstbuf = buf;

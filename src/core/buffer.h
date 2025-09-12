@@ -14,8 +14,6 @@ extern int REV_LB[];
 #define SAVE_BUFPOSITION(sbufp) COPY_BUFPOSITION(sbufp, Currentbuf)
 #define RESTORE_BUFPOSITION(sbufp) COPY_BUFPOSITION(Currentbuf, sbufp)
 
-#define NO_BUFFER ((struct Buffer*)1)
-
 enum LinkBufferType {
     LB_NOLINK = -1,
     LB_INFO = 0 /* pginfo() */,
@@ -153,4 +151,3 @@ inline static void COPY_BUFPOSITION(struct Buffer* dstbuf, struct Buffer* srcbuf
     (dstbuf)->visualpos = (srcbuf)->visualpos;
     (dstbuf)->currentColumn = (srcbuf)->currentColumn;
 }
-
