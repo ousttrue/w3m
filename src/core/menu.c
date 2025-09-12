@@ -1386,7 +1386,7 @@ DEFUN(mainMn, MAIN_MENU MENU, "Pop up menu")
             return;
         menu = w3mMenuList[n].menu;
     }
-    
+
     struct UI ui = getUI();
     popupMenu(ui, menu);
 }
@@ -1408,7 +1408,6 @@ initSelectMenu(void)
     struct Buffer* buf;
     Str str;
     const char** label;
-    char* p;
     static char* comment = " SPC for select / D for delete buffer ";
 
     SelectV = -1;
@@ -1432,11 +1431,12 @@ initSelectMenu(void)
                 /* case SCM_UNKNOWN: */
             case SCM_MISSING:
                 break;
-            default:
+            default: {
                 Strcat_char(str, ' ');
-                p = url_decode2(parsedURL2Str(&buf->currentURL)->ptr, 0);
+                const char* p = url_decode2(parsedURL2Str(&buf->currentURL)->ptr, 0);
                 Strcat_charp(str, p);
                 break;
+            }
             }
         }
         label[i] = str->ptr;
@@ -1567,8 +1567,8 @@ interpret_menu(FILE* mf)
         if (line->length == 0)
             continue;
         line = wc_Str_conv(line, charset, InnerCharset);
-        const char*p = line->ptr;
-        const char*s = getWord(&p);
+        const char* p = line->ptr;
+        const char* s = getWord(&p);
         if (*s == '#') /* comment */
             continue;
         if (in_menu) {
@@ -1716,20 +1716,15 @@ int getMenuN(MenuList* list, const char* id)
 
 /* --- InitMenu (END) --- */
 
-
-
 /* --- LinkMenu (END) --- */
 
 struct Anchor*
 accesskey_menu(struct Buffer* buf)
 {
-    Menu menu;
-    struct AnchorList* al = buf->href;
+    struct AnchorList* al = buf->lines.href;
     struct Anchor* a;
     struct Anchor** ap;
     int i, n, nitem = 0, key = -1;
-    char** label;
-    char* t;
     unsigned char c;
 
     if (!al)
@@ -1742,12 +1737,12 @@ accesskey_menu(struct Buffer* buf)
     if (!nitem)
         return NULL;
 
-    label = New_N(char*, nitem + 1);
+    const char** label = New_N(char*, nitem + 1);
     ap = New_N(struct Anchor*, nitem);
     for (i = 0, n = 0; i < al->nanchor; i++) {
         a = &al->anchors[i];
         if (!a->slave && a->accesskey && IS_ASCII(a->accesskey)) {
-            t = getAnchorText(buf, al, a);
+            const char* t = getAnchorText(buf, al, a);
             label[n] = Sprintf("%c: %s", a->accesskey, t ? t : "")->ptr;
             ap[n] = a;
             n++;
@@ -1756,6 +1751,7 @@ accesskey_menu(struct Buffer* buf)
     label[nitem] = NULL;
 
     set_menu_frame();
+    Menu menu;
     new_option_menu(&menu, label, &key, NULL);
 
     menu.initial = 0;
@@ -1825,7 +1821,7 @@ struct Anchor*
 list_menu(struct Buffer* buf)
 {
     Menu menu;
-    struct AnchorList* al = buf->href;
+    struct AnchorList* al = buf->lines.href;
     struct Anchor* a;
     struct Anchor** ap;
     int i, n, nitem = 0, key = -1, two = false;

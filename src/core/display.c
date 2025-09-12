@@ -112,7 +112,7 @@ static struct LineList* redrawLine(struct UI ui, struct Buffer* buf, struct Line
 
     for (j = 0; rcol - column < buf->width && pos + j < l->l.len; j += delta) {
         if (useVisitedColor && vpos <= pos + j && !(pr[j] & PE_VISITED)) {
-            a = retrieveAnchor(buf->href, (struct BufferPoint) { .line = l->linenumber, .pos = pos + j });
+            a = retrieveAnchor(buf->lines.href, (struct BufferPoint) { .line = l->linenumber, .pos = pos + j });
             if (a) {
                 url = parseUrl(a->url, baseURL(buf));
                 if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
@@ -300,7 +300,7 @@ static int redrawLineRegion(struct UI ui, struct Buffer* buf, struct LineList* l
 
     for (j = 0; rcol - column < ui.viewport.size.x && pos + j < l->l.len; j += delta) {
         if (useVisitedColor && vpos <= pos + j && !(pr[j] & PE_VISITED)) {
-            struct Anchor* a = retrieveAnchor(buf->href,
+            struct Anchor* a = retrieveAnchor(buf->lines.href,
                 (struct BufferPoint) { .line = l->linenumber, .pos = pos + j });
             if (a) {
                 url = parseUrl(a->url, baseURL(buf));
@@ -400,16 +400,16 @@ void drawAnchorCursor(struct UI ui, struct Buffer* buf)
 {
     if (!buf->lines.firstLine || !buf->hmarklist)
         return;
-    if (!buf->href && !buf->formitem)
+    if (!buf->lines.href && !buf->formitem)
         return;
 
     int tline = topLine(buf)->linenumber;
     int eline = tline + ui.viewport.size.y;
     int hseq = currentAnchorHseq(buf);
     int prevhseq = buf->hmarklist->prevhseq;
-    if (buf->href) {
-        drawAnchorCursor0(ui, buf, buf->href, hseq, prevhseq, tline, eline, 1);
-        drawAnchorCursor0(ui, buf, buf->href, hseq, -1, tline, eline, 0);
+    if (buf->lines.href) {
+        drawAnchorCursor0(ui, buf, buf->lines.href, hseq, prevhseq, tline, eline, 1);
+        drawAnchorCursor0(ui, buf, buf->lines.href, hseq, -1, tline, eline, 0);
     }
     if (buf->formitem) {
         drawAnchorCursor0(ui, buf, buf->formitem, hseq, prevhseq, tline, eline, 1);

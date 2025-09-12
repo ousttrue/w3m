@@ -34,6 +34,7 @@ struct RenderedLines
 {
     struct LineList* firstLine;
     int allLine;
+    struct AnchorList* href;
 };
 
 struct Buffer {
@@ -53,7 +54,6 @@ struct Buffer {
     struct Buffer* linkBuffer[MAX_LB];
     enum ContentType content_type;
     enum BufferProperty bufferprop;
-    struct AnchorList* href;
     struct AnchorList* name;
     struct AnchorList* img;
     struct AnchorList* formitem;

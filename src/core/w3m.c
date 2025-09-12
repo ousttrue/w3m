@@ -2070,7 +2070,7 @@ DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink")
         if (hseq >= hl->nmark)
             return;
         po = hl->marks + hseq;
-        an = retrieveAnchor(Currentbuf->href, *po);
+        an = retrieveAnchor(Currentbuf->lines.href, *po);
         if (an == NULL)
             an = retrieveAnchor(Currentbuf->formitem, *po);
         hseq++;
@@ -2099,7 +2099,7 @@ DEFUN(lastA, LINK_END, "Move to the last hyperlink")
         if (hseq < 0)
             return;
         po = hl->marks + hseq;
-        an = retrieveAnchor(Currentbuf->href, *po);
+        an = retrieveAnchor(Currentbuf->lines.href, *po);
         if (an == NULL)
             an = retrieveAnchor(Currentbuf->formitem, *po);
         hseq--;
@@ -2125,7 +2125,7 @@ DEFUN(nthA, LINK_N, "Go to the nth link")
         return;
 
     struct BufferPoint* po = hl->marks + n - 1;
-    struct Anchor* an = retrieveAnchor(Currentbuf->href, *po);
+    struct Anchor* an = retrieveAnchor(Currentbuf->lines.href, *po);
     if (an == NULL)
         an = retrieveAnchor(Currentbuf->formitem, *po);
     if (an == NULL)
@@ -2198,7 +2198,7 @@ _nextA(int visited)
                     goto _end;
                 }
                 po = &hl->marks[hseq];
-                an = retrieveAnchor(Currentbuf->href, *po);
+                an = retrieveAnchor(Currentbuf->lines.href, *po);
                 if (visited != true && an == NULL)
                     an = retrieveAnchor(Currentbuf->formitem, *po);
                 hseq++;
@@ -2210,7 +2210,7 @@ _nextA(int visited)
                 }
             } while (an == NULL || an == pan);
         } else {
-            an = closest_next_anchor(Currentbuf->href, NULL, x, y);
+            an = closest_next_anchor(Currentbuf->lines.href, NULL, x, y);
             if (visited != true)
                 an = closest_next_anchor(Currentbuf->formitem, an, x, y);
             if (an == NULL) {
@@ -2279,7 +2279,7 @@ _prevA(int visited)
                     goto _end;
                 }
                 po = hl->marks + hseq;
-                an = retrieveAnchor(Currentbuf->href, *po);
+                an = retrieveAnchor(Currentbuf->lines.href, *po);
                 if (visited != true && an == NULL)
                     an = retrieveAnchor(Currentbuf->formitem, *po);
                 hseq--;
@@ -2291,7 +2291,7 @@ _prevA(int visited)
                 }
             } while (an == NULL || an == pan);
         } else {
-            an = closest_prev_anchor(Currentbuf->href, NULL, x, y);
+            an = closest_prev_anchor(Currentbuf->lines.href, NULL, x, y);
             if (visited != true)
                 an = closest_prev_anchor(Currentbuf->formitem, an, x, y);
             if (an == NULL) {
@@ -2351,7 +2351,7 @@ nextX(int d, int dy)
         while (1) {
             for (; x >= 0 && x < l->l.len; x += d) {
                 struct BufferPoint bp = { .line = y, .pos = x };
-                an = retrieveAnchor(Currentbuf->href, bp);
+                an = retrieveAnchor(Currentbuf->lines.href, bp);
                 if (!an)
                     an = retrieveAnchor(Currentbuf->formitem, bp);
                 if (an) {
@@ -2406,7 +2406,7 @@ nextY(int d)
         an = NULL;
         for (; y >= 0 && y <= lastLine(Currentbuf)->linenumber; y += d) {
             struct BufferPoint bp = { .line = y, .pos = x };
-            an = retrieveAnchor(Currentbuf->href, bp);
+            an = retrieveAnchor(Currentbuf->lines.href, bp);
             if (!an)
                 an = retrieveAnchor(Currentbuf->formitem, bp);
             if (an && hseq != abs(an->hseq)) {
@@ -2737,15 +2737,14 @@ DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
 static void
 anchorMn(struct Anchor* (*menu_func)(struct Buffer*), int go)
 {
-    struct Anchor* a;
-    struct BufferPoint* po;
-
-    if (!Currentbuf->href || !Currentbuf->hmarklist)
+    if (!Currentbuf->lines.href || !Currentbuf->hmarklist)
         return;
-    a = menu_func(Currentbuf);
+
+    struct Anchor* a = menu_func(Currentbuf);
     if (!a || a->hseq < 0)
         return;
-    po = &Currentbuf->hmarklist->marks[a->hseq];
+
+    struct BufferPoint* po = &Currentbuf->hmarklist->marks[a->hseq];
     gotoLine(Currentbuf, po->line);
     Currentbuf->pos = po->pos;
     arrangeCursor(Currentbuf);

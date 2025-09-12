@@ -53,7 +53,6 @@ link_menu(struct Buffer* buf)
     struct LinkList* l;
     int i, nitem, len = 0, linkV = -1;
     Str str;
-    char* p;
 
     if (!buf->linklist)
         return NULL;
@@ -72,6 +71,7 @@ link_menu(struct Buffer* buf)
             Strcat_charp(str, " [Rev] ");
         else
             Strcat_charp(str, " ");
+        const char* p;
         if (!l->url)
             p = "";
         else
@@ -106,7 +106,7 @@ link_menu(struct Buffer* buf)
 struct Buffer*
 link_list_panel(struct Buffer* buf)
 {
-    if (buf->bufferprop & BP_INTERNAL || (buf->linklist == 0 && buf->href == 0 && buf->img == 0)) {
+    if (buf->bufferprop & BP_INTERNAL || (buf->linklist == 0 && buf->lines.href == 0 && buf->img == 0)) {
         return 0;
     }
 
@@ -148,9 +148,9 @@ link_list_panel(struct Buffer* buf)
         Strcat_charp(tmp, "</ol>\n");
     }
 
-    if (buf->href) {
+    if (buf->lines.href) {
         Strcat_charp(tmp, "<hr><h2>Anchors</h2>\n<ol>\n");
-        al = buf->href;
+        al = buf->lines.href;
         for (i = 0; i < al->nanchor; i++) {
             a = &al->anchors[i];
             if (a->hseq < 0 || a->slave)

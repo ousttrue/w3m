@@ -503,7 +503,7 @@ void reshapeBuffer(struct Buffer* buf, int cols)
     copyBuffer(&sbuf, buf);
     clearBuffer(buf);
 
-    buf->href = 0;
+    buf->lines.href = 0;
     buf->name = 0;
     buf->img = 0;
     buf->formitem = 0;
@@ -1049,7 +1049,7 @@ registerHref(struct Buffer* buf, const char* url, const char* target, const char
     unsigned char key, struct BufferPoint bp)
 {
     struct Anchor* a;
-    buf->href = putAnchor(buf->href, &a, bp);
+    buf->lines.href = putAnchor(buf->lines.href, &a, bp);
     initAnchor(a, url, target, referer, title, key);
     return a;
 }
@@ -1105,7 +1105,7 @@ retrieveCurrentAnchor(struct Buffer* buf)
 {
     if (!buf)
         return 0;
-    return retrieveAnchor(buf->href, getBufferPosition(buf));
+    return retrieveAnchor(buf->lines.href, getBufferPosition(buf));
 }
 
 struct Anchor*
@@ -1152,13 +1152,13 @@ searchURLLabel(struct Buffer* buf, const char* url)
 /* renumber struct Anchor */
 void reseq_anchor(struct Buffer* buf)
 {
-    if (!buf->href)
+    if (!buf->lines.href)
         return;
 
     int nmark = (buf->hmarklist) ? buf->hmarklist->nmark : 0;
     int n = nmark;
-    for (int i = 0; i < buf->href->nanchor; i++) {
-        struct Anchor* a = &buf->href->anchors[i];
+    for (int i = 0; i < buf->lines.href->nanchor; i++) {
+        struct Anchor* a = &buf->lines.href->anchors[i];
         if (a->hseq == -2)
             n++;
     }
@@ -1170,11 +1170,11 @@ void reseq_anchor(struct Buffer* buf)
         seqmap[i] = i;
 
     struct HmarkerList* ml = 0;
-    for (int i = 0; i < buf->href->nanchor; i++) {
-        struct Anchor* a = &buf->href->anchors[i];
+    for (int i = 0; i < buf->lines.href->nanchor; i++) {
+        struct Anchor* a = &buf->lines.href->anchors[i];
         if (a->hseq == -2) {
             a->hseq = n;
-            struct Anchor* a1 = closest_next_anchor(buf->href, 0, a->start.pos,
+            struct Anchor* a1 = closest_next_anchor(buf->lines.href, 0, a->start.pos,
                 a->start.line);
             a1 = closest_next_anchor(buf->formitem, a1, a->start.pos,
                 a->start.line);
@@ -1193,7 +1193,7 @@ void reseq_anchor(struct Buffer* buf)
     }
     buf->hmarklist = ml;
 
-    reseq_anchor0(buf->href, seqmap);
+    reseq_anchor0(buf->lines.href, seqmap);
     reseq_anchor0(buf->formitem, seqmap);
 }
 
@@ -1228,7 +1228,7 @@ void addMultirowsImg(struct Buffer* buf, struct AnchorList* al)
             if (!ls)
                 continue;
         }
-        a = retrieveAnchor(buf->href, a_img.start);
+        a = retrieveAnchor(buf->lines.href, a_img.start);
         if (a)
             a_href = *a;
         else
