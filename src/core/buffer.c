@@ -1110,10 +1110,12 @@ registerForm(struct Buffer* buf, struct Form* flist, struct HtmlTagParsed* tag, 
 struct BufferPoint getBufferPosition(struct Buffer* buf)
 {
     struct UI ui = getUI();
-    int pos = columnPos(&getLine(Currentbuf, ui.viewport_cursor.y)->l, ui.viewport_cursor.x);
-    if (ui.viewport_cursor.y == 4) {
-        int a = 0;
+    struct LineList* l = getLine(Currentbuf, ui.viewport_cursor.y);
+    if (!l) {
+        return (struct BufferPoint) { 0, 0 };
     }
+
+    int pos = columnPos(&l->l, ui.viewport_cursor.x);
     return (struct BufferPoint) {
         .line = ui.viewport_cursor.y,
         .pos = pos,

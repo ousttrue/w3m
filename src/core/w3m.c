@@ -590,17 +590,18 @@ static struct Buffer* loadNormalBuf(struct Buffer* buf)
 static struct Buffer*
 loadLink(const char* url, const char* target, const char* referer, struct Form* post, bool do_download)
 {
-    struct Buffer* nfbuf;
-    union frameset_element* f_element = NULL;
-    struct Url *base, pu;
-    const int* no_referer_ptr;
 
     message(getUI(), MSG_INFO, Sprintf("loading %s", url)->ptr);
     // refresh(ttyWriter());
 
-    base = baseURL(Currentbuf);
-    if ((no_referer_ptr && *no_referer_ptr) || base == NULL || base->scheme == SCM_LOCAL || base->scheme == SCM_LOCAL_CGI || base->scheme == SCM_DATA)
-        referer = NO_REFERER;
+    struct Url* base = baseURL(Currentbuf);
+    // const int* no_referer_ptr;
+    // if ((no_referer_ptr && *no_referer_ptr)
+    //     || base == NULL
+    //     || base->scheme == SCM_LOCAL
+    //     || base->scheme == SCM_LOCAL_CGI
+    //     || base->scheme == SCM_DATA)
+    //     referer = NO_REFERER;
     if (referer == NULL)
         referer = parsedURL2RefererStr(&Currentbuf->currentURL)->ptr;
 
@@ -621,7 +622,7 @@ loadLink(const char* url, const char* target, const char* referer, struct Form* 
         return NULL;
     }
 
-    pu = parseUrl(url, base);
+    struct Url pu = parseUrl(url, base);
     pushHashHist(URLHist, parsedURL2Str(&pu)->ptr);
 
     if (buf == NO_BUFFER) {

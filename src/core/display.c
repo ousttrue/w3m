@@ -266,8 +266,11 @@ void bufToScreen(struct UI ui, struct Buffer* buf)
     cline = topLine(buf);
     ccolumn = buf->currentColumn;
 
-    if (topLine(buf) == NULL)
-        buf->topLineIndex = buf->firstLine->linenumber;
+    if (topLine(buf) == NULL) {
+        if (buf->firstLine) {
+            buf->topLineIndex = buf->firstLine->linenumber;
+        }
+    }
 }
 
 static int redrawLineRegion(struct UI ui, struct Buffer* buf, struct LineList* l, int i, int bpos, int epos)
