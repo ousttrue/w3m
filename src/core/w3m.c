@@ -3829,7 +3829,6 @@ save_buffer_position(struct Buffer* buf)
     b->cur_linenumber = buf->currentLineIndex;
     b->currentColumn = buf->currentColumn;
     b->pos = buf->pos;
-    b->bpos = currentLine(buf) ? currentLine(buf)->bpos : 0;
     b->next = NULL;
     b->prev = buf->undo;
     if (buf->undo)

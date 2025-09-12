@@ -56,7 +56,6 @@ typedef struct BufferPos {
     long cur_linenumber;
     int currentColumn;
     int pos;
-    int bpos;
     struct BufferPos* next;
     struct BufferPos* prev;
 } BufferPos;
@@ -64,18 +63,21 @@ typedef struct BufferPos {
 struct Buffer {
     char* filename;
     const char* buffername;
+
     struct Line* firstLine;
     int topLineIndex;
     int currentLineIndex;
-    struct Buffer* nextBuffer;
-    struct Buffer* linkBuffer[MAX_LB];
-    short width;
-    enum ContentType content_type;
     int allLine;
-    enum BufferProperty bufferprop;
+
+    short width;
     int currentColumn;
     int pos;
     int visualpos;
+
+    struct Buffer* nextBuffer;
+    struct Buffer* linkBuffer[MAX_LB];
+    enum ContentType content_type;
+    enum BufferProperty bufferprop;
     AnchorList* href;
     AnchorList* name;
     AnchorList* img;
