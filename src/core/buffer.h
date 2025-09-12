@@ -1,5 +1,6 @@
 #pragma once
 #include "line.h"
+#include "geometry.h"
 #include "ContentType.h"
 #include "linklist.h"
 #include "url.h"
@@ -147,17 +148,16 @@ struct LineList* currentLineSkip(struct Buffer* buf, struct LineList* line, int 
 char* last_modified(struct Buffer* buf);
 struct Buffer* cookie_list_panel(void);
 struct Int2 updateCursor(struct Buffer* buf, struct Int2 viewport_size,
-    struct Int2 viewport_cursor, struct Int2 cursor_delta, bool *hasScroll);
+    struct Int2 viewport_cursor, struct Int2 cursor_delta, bool* hasScroll);
 void reseq_anchor(struct Buffer* buf);
 struct Anchor* registerHref(struct Buffer* buf, const char* url, const char* target,
     const char* referer, const char* title, unsigned char key,
-    int line, int pos);
-struct Anchor* registerName(struct Buffer* buf, const char* url, int line, int pos);
-struct Anchor* registerImg(struct Buffer* buf, const char* url, const char* title, int line,
-    int pos);
+    struct BufferPoint bp);
+struct Anchor* registerName(struct Buffer* buf, const char* url, struct BufferPoint bp);
+struct Anchor* registerImg(struct Buffer* buf, const char* url, const char* title, struct BufferPoint bp);
 struct HtmlTagParsed;
-struct Anchor* registerForm(struct Buffer* buf, struct Form* flist,
-    struct HtmlTagParsed* tag, int line, int pos);
+struct Anchor* registerForm(struct Buffer* buf, struct Form* flist, struct HtmlTagParsed* tag,
+    struct BufferPoint bp);
 struct Anchor* retrieveCurrentAnchor(struct Buffer* buf);
 struct Anchor* retrieveCurrentImg(struct Buffer* buf);
 struct Anchor* retrieveCurrentForm(struct Buffer* buf);
@@ -169,4 +169,3 @@ void addMultirowsForm(struct Buffer* buf, struct AnchorList* al);
 void addMultirowsImg(struct Buffer* buf, struct AnchorList* al);
 const char* getAnchorText(struct Buffer* buf, struct AnchorList* al, struct Anchor* a);
 struct Buffer* link_list_panel(struct Buffer* buf);
-

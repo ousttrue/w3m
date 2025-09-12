@@ -111,7 +111,7 @@ static struct LineList* redrawLine(struct UI ui, struct Buffer* buf, struct Line
 
     for (j = 0; rcol - column < buf->width && pos + j < l->l.len; j += delta) {
         if (useVisitedColor && vpos <= pos + j && !(pr[j] & PE_VISITED)) {
-            a = retrieveAnchor(buf->href, l->linenumber, pos + j);
+            a = retrieveAnchor(buf->href, (struct BufferPoint) { .line = l->linenumber, .pos = pos + j });
             if (a) {
                 url = parseUrl(a->url, baseURL(buf));
                 if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
@@ -167,7 +167,7 @@ static struct LineList* redrawLineImage(struct UI ui, struct Buffer* buf, struct
             rcol = COLPOS(&l->l, pos + j + 1);
             continue;
         }
-        a = retrieveAnchor(buf->img, l->linenumber, pos + j);
+        a = retrieveAnchor(buf->img, (struct BufferPoint) { .line = l->linenumber, .pos = pos + j });
         if (a && a->image && a->image->touch < image_touch) {
             struct Image* image = a->image;
             struct ImageCache* cache;
@@ -297,7 +297,7 @@ static int redrawLineRegion(struct UI ui, struct Buffer* buf, struct LineList* l
 
     for (j = 0; rcol - column < ui.viewport.size.x && pos + j < l->l.len; j += delta) {
         if (useVisitedColor && vpos <= pos + j && !(pr[j] & PE_VISITED)) {
-            a = retrieveAnchor(buf->href, l->linenumber, pos + j);
+            a = retrieveAnchor(buf->href, (struct BufferPoint) { .line = l->linenumber, .pos = pos + j });
             if (a) {
                 url = parseUrl(a->url, baseURL(buf));
                 if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {

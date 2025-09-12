@@ -66,7 +66,7 @@ void reseq_anchor0(struct AnchorList* al, short* seqmap)
     }
 }
 
-struct Anchor* retrieveAnchor(struct AnchorList* al, int line, int pos)
+struct Anchor* retrieveAnchor(struct AnchorList* al, struct BufferPoint bp)
 {
     if (al == NULL || al->nanchor == 0)
         return NULL;
@@ -76,7 +76,7 @@ struct Anchor* retrieveAnchor(struct AnchorList* al, int line, int pos)
 
     for (size_t b = 0, e = al->nanchor - 1; b <= e; al->acache = (b + e) / 2) {
         struct Anchor* a = &al->anchors[al->acache];
-        int cmp = onAnchor(a, line, pos);
+        int cmp = onAnchor(a, bp);
         if (cmp == 0)
             return a;
         else if (cmp > 0)
@@ -153,20 +153,16 @@ putHmarker(struct HmarkerList* ml, int line, int pos, int seq)
     return ml;
 }
 
-void shiftAnchorPosition(struct AnchorList* al, struct HmarkerList* hl, int line, int pos,
-    int shift)
+void shiftAnchorPosition(struct AnchorList* al, struct HmarkerList* hl, struct BufferPoint bp, int shift)
 {
-    struct Anchor* a;
-    size_t b, e, s = 0;
-    int cmp;
-
     if (al == NULL || al->nanchor == 0)
         return;
 
-    s = al->nanchor / 2;
+    int s = al->nanchor / 2;
+    size_t b, e;
     for (b = 0, e = al->nanchor - 1; b <= e; s = (b + e + 1) / 2) {
-        a = &al->anchors[s];
-        cmp = onAnchor(a, line, pos);
+        struct Anchor* a = &al->anchors[s];
+        int cmp = onAnchor(a, bp);
         if (cmp == 0)
             break;
         else if (cmp > 0)
@@ -177,15 +173,15 @@ void shiftAnchorPosition(struct AnchorList* al, struct HmarkerList* hl, int line
             e = s - 1;
     }
     for (; s < al->nanchor; s++) {
-        a = &al->anchors[s];
-        if (a->start.line > line)
+        struct Anchor* a = &al->anchors[s];
+        if (a->start.line > bp.line)
             break;
-        if (a->start.pos > pos) {
+        if (a->start.pos > bp.pos) {
             a->start.pos += shift;
-            if (hl && hl->marks && a->hseq >= 0 && hl->marks[a->hseq].line == line)
+            if (hl && hl->marks && a->hseq >= 0 && hl->marks[a->hseq].line == bp.line)
                 hl->marks[a->hseq].pos = a->start.pos;
         }
-        if (a->end.pos >= pos)
+        if (a->end.pos >= bp.pos)
             a->end.pos += shift;
     }
 }

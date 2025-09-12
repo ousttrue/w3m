@@ -21,6 +21,4 @@ struct Anchor {
 
 void initAnchor(struct Anchor* a, const char* url, const char* target,
     const char* referer, const char* title, unsigned char key);
-
-int onAnchor(struct Anchor* a, int line, int pos);
-
+int onAnchor(struct Anchor* a, struct BufferPoint bp);

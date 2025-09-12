@@ -2081,9 +2081,9 @@ DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink")
         if (hseq >= hl->nmark)
             return;
         po = hl->marks + hseq;
-        an = retrieveAnchor(Currentbuf->href, po->line, po->pos);
+        an = retrieveAnchor(Currentbuf->href, *po);
         if (an == NULL)
-            an = retrieveAnchor(Currentbuf->formitem, po->line, po->pos);
+            an = retrieveAnchor(Currentbuf->formitem, *po);
         hseq++;
     } while (an == NULL);
 
@@ -2110,9 +2110,9 @@ DEFUN(lastA, LINK_END, "Move to the last hyperlink")
         if (hseq < 0)
             return;
         po = hl->marks + hseq;
-        an = retrieveAnchor(Currentbuf->href, po->line, po->pos);
+        an = retrieveAnchor(Currentbuf->href, *po);
         if (an == NULL)
-            an = retrieveAnchor(Currentbuf->formitem, po->line, po->pos);
+            an = retrieveAnchor(Currentbuf->formitem, *po);
         hseq--;
     } while (an == NULL);
 
@@ -2125,8 +2125,6 @@ DEFUN(lastA, LINK_END, "Move to the last hyperlink")
 DEFUN(nthA, LINK_N, "Go to the nth link")
 {
     struct HmarkerList* hl = Currentbuf->hmarklist;
-    struct BufferPoint* po;
-    struct Anchor* an;
 
     int n = searchKeyNum();
     if (n < 0 || n > hl->nmark)
@@ -2137,10 +2135,10 @@ DEFUN(nthA, LINK_N, "Go to the nth link")
     if (!hl || hl->nmark == 0)
         return;
 
-    po = hl->marks + n - 1;
-    an = retrieveAnchor(Currentbuf->href, po->line, po->pos);
+    struct BufferPoint* po = hl->marks + n - 1;
+    struct Anchor* an = retrieveAnchor(Currentbuf->href, *po);
     if (an == NULL)
-        an = retrieveAnchor(Currentbuf->formitem, po->line, po->pos);
+        an = retrieveAnchor(Currentbuf->formitem, *po);
     if (an == NULL)
         return;
 
@@ -2211,10 +2209,9 @@ _nextA(int visited)
                     goto _end;
                 }
                 po = &hl->marks[hseq];
-                an = retrieveAnchor(Currentbuf->href, po->line, po->pos);
+                an = retrieveAnchor(Currentbuf->href, *po);
                 if (visited != true && an == NULL)
-                    an = retrieveAnchor(Currentbuf->formitem, po->line,
-                        po->pos);
+                    an = retrieveAnchor(Currentbuf->formitem, *po);
                 hseq++;
                 if (visited == true && an) {
                     url = parseUrl(an->url, baseURL(Currentbuf));
@@ -2293,10 +2290,9 @@ _prevA(int visited)
                     goto _end;
                 }
                 po = hl->marks + hseq;
-                an = retrieveAnchor(Currentbuf->href, po->line, po->pos);
+                an = retrieveAnchor(Currentbuf->href, *po);
                 if (visited != true && an == NULL)
-                    an = retrieveAnchor(Currentbuf->formitem, po->line,
-                        po->pos);
+                    an = retrieveAnchor(Currentbuf->formitem, *po);
                 hseq--;
                 if (visited == true && an) {
                     url = parseUrl(an->url, baseURL(Currentbuf));
@@ -2365,9 +2361,10 @@ nextX(int d, int dy)
         an = NULL;
         while (1) {
             for (; x >= 0 && x < l->l.len; x += d) {
-                an = retrieveAnchor(Currentbuf->href, y, x);
+                struct BufferPoint bp = { .line = y, .pos = x };
+                an = retrieveAnchor(Currentbuf->href, bp);
                 if (!an)
-                    an = retrieveAnchor(Currentbuf->formitem, y, x);
+                    an = retrieveAnchor(Currentbuf->formitem, bp);
                 if (an) {
                     pan = an;
                     break;
@@ -2419,9 +2416,10 @@ nextY(int d)
             hseq = abs(an->hseq);
         an = NULL;
         for (; y >= 0 && y <= lastLine(Currentbuf)->linenumber; y += d) {
-            an = retrieveAnchor(Currentbuf->href, y, x);
+            struct BufferPoint bp = { .line = y, .pos = x };
+            an = retrieveAnchor(Currentbuf->href, bp);
             if (!an)
-                an = retrieveAnchor(Currentbuf->formitem, y, x);
+                an = retrieveAnchor(Currentbuf->formitem, bp);
             if (an && hseq != abs(an->hseq)) {
                 pan = an;
                 break;

@@ -442,7 +442,7 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
                     id = NULL;
                     if (parsedtag_get_value(tag, ATTR_NAME, &id)) {
                         id = url_quote_conv(id, name_charset);
-                        registerName(buf, id, buf->currentLineIndex, pos);
+                        registerName(buf, id, (struct BufferPoint) { .line = buf->currentLineIndex, .pos = pos });
                     }
                     if (parsedtag_get_value(tag, ATTR_HREF, &p))
                         p = url_quote(remove_space(p));
@@ -466,8 +466,8 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
                     }
                     if (p) {
                         effect |= PE_ANCHOR;
-                        a_href = registerHref(buf, p, q, r, s,
-                            *t, buf->currentLineIndex, pos);
+                        a_href = registerHref(buf, p, q, r, s, *t,
+                            (struct BufferPoint) { .line = buf->currentLineIndex, .pos = pos });
                         a_href->hseq = ((hseq > 0) ? hseq : -hseq) - 1;
                         a_href->slave = (hseq > 0) ? false : true;
                     }
@@ -514,7 +514,7 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
                         parsedtag_get_value(tag, ATTR_TITLE, &s);
                         p = url_quote_conv(remove_space(p),
                             buf->document_charset);
-                        a_img = registerImg(buf, p, s, buf->currentLineIndex, pos);
+                        a_img = registerImg(buf, p, s, (struct BufferPoint) { .line = buf->currentLineIndex, .pos = pos });
                         a_img->hseq = iseq;
                         a_img->image = NULL;
                         if (iseq > 0) {
@@ -545,8 +545,7 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
                                 IMG_FLAG_SKIP);
                         } else if (iseq < 0) {
                             struct BufferPoint* po = buf->imarklist->marks - iseq - 1;
-                            struct Anchor* a = retrieveAnchor(buf->img,
-                                po->line, po->pos);
+                            struct Anchor* a = retrieveAnchor(buf->img, *po);
                             if (a) {
                                 a_img->url = a->url;
                                 a_img->image = a->image;
@@ -618,7 +617,8 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
                                 max_select);
                         }
                     }
-                    a_form = registerForm(buf, form, tag, buf->currentLineIndex, pos);
+                    a_form = registerForm(buf, form, tag,
+                        (struct BufferPoint) { .line = buf->currentLineIndex, .pos = pos });
                     if (a_textarea && textareanumber >= 0)
                         a_textarea[textareanumber] = a_form;
                     if (a_select && selectnumber >= 0)
@@ -783,7 +783,8 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
                 id = NULL;
                 if (parsedtag_get_value(tag, ATTR_ID, &id)) {
                     id = url_quote_conv(id, name_charset);
-                    registerName(buf, id, buf->currentLineIndex, pos);
+                    registerName(buf, id,
+                        (struct BufferPoint) { .line = buf->currentLineIndex, .pos = pos });
                 }
             }
         }

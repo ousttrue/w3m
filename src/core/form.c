@@ -447,26 +447,30 @@ void formUpdateBuffer(struct Anchor* a, struct Buffer* buf, struct FormItem* for
                 break;
             if (rows > 1) {
                 pos = columnPos(&l->l, col);
-                a = retrieveAnchor(buf->formitem, l->linenumber, pos);
+                a = retrieveAnchor(buf->formitem,
+                    (struct BufferPoint) { .line = l->linenumber, .pos = pos });
                 if (a == NULL)
                     break;
                 spos = a->start.pos;
                 epos = a->end.pos;
             }
-            if (a->start.line != a->end.line || spos > epos || epos >= l->l.len || spos < 0 || epos < 0 || COLPOS(l, epos) < col)
+            if (a->start.line != a->end.line
+                || spos > epos
+                || epos >= l->l.len
+                || spos < 0 || epos < 0 || COLPOS(&l->l, epos) < col)
                 break;
-            pos = form_update_line(l, &p, spos, epos, COLPOS(l, epos) - col,
+            pos = form_update_line(&l->l, &p, spos, epos, COLPOS(&l->l, epos) - col,
                 rows > 1,
                 form->type == FORM_INPUT_PASSWORD);
             if (pos != epos) {
                 shiftAnchorPosition(buf->href, buf->hmarklist,
-                    a->start.line, spos, pos - epos);
+                    (struct BufferPoint) { .line = a->start.line, .pos = spos }, pos - epos);
                 shiftAnchorPosition(buf->name, buf->hmarklist,
-                    a->start.line, spos, pos - epos);
+                    (struct BufferPoint) { .line = a->start.line, .pos = spos }, pos - epos);
                 shiftAnchorPosition(buf->img, buf->hmarklist,
-                    a->start.line, spos, pos - epos);
+                    (struct BufferPoint) { .line = a->start.line, .pos = spos }, pos - epos);
                 shiftAnchorPosition(buf->formitem, buf->hmarklist,
-                    a->start.line, spos, pos - epos);
+                    (struct BufferPoint) { .line = a->start.line, .pos = spos }, pos - epos);
             }
         }
         break;
