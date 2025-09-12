@@ -3359,12 +3359,12 @@ DEFUN(dictwordat, DICT_WORD_AT,
 void set_buffer_environ(struct Buffer* buf)
 {
     static struct Buffer* prev_buf = NULL;
-    static struct Line* prev_line = NULL;
+    static struct LineList* prev_line = NULL;
     static int prev_pos = -1;
-    struct Line* l;
 
     if (buf == NULL)
         return;
+
     if (buf != prev_buf) {
         set_environ("W3M_SOURCEFILE", buf->sourcefile);
         set_environ("W3M_FILENAME", buf->filename);
@@ -3373,7 +3373,7 @@ void set_buffer_environ(struct Buffer* buf)
         set_environ("W3M_TYPE", contentTypeStr(buf->content_type));
         set_environ("W3M_CHARSET", wc_ces_to_charset(buf->document_charset));
     }
-    l = currentLine(buf);
+    struct LineList* l = currentLine(buf);
     if (l && (buf != prev_buf || l != prev_line || buf->pos != prev_pos)) {
         struct Anchor* a;
         struct Url pu;
@@ -3802,13 +3802,17 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
 static void
 save_buffer_position(struct Buffer* buf)
 {
-    BufferPos* b = buf->undo;
-
     if (!buf->firstLine)
         return;
-    if (b && b->top_linenumber == buf->topLineIndex && b->cur_linenumber == buf->currentLineIndex && b->currentColumn == buf->currentColumn && b->pos == buf->pos)
+
+    struct BufferPos* b = buf->undo;
+    if (b
+        && b->top_linenumber == buf->topLineIndex
+        && b->cur_linenumber == buf->currentLineIndex
+        && b->currentColumn == buf->currentColumn
+        && b->pos == buf->pos)
         return;
-    b = New(BufferPos);
+    b = New(struct BufferPos);
     b->top_linenumber = buf->topLineIndex;
     b->cur_linenumber = buf->currentLineIndex;
     b->currentColumn = buf->currentColumn;
@@ -3821,28 +3825,24 @@ save_buffer_position(struct Buffer* buf)
 }
 
 static void
-resetPos(BufferPos* b)
+resetPos(struct BufferPos* b)
 {
-    struct Buffer buf;
-
-    // top.linenumber = b->top_linenumber;
-    // cur.linenumber = b->cur_linenumber;
-    // cur.bpos = b->bpos;
-    buf.topLineIndex = b->top_linenumber;
-    buf.currentLineIndex = b->cur_linenumber;
-    buf.pos = b->pos;
-    buf.currentColumn = b->currentColumn;
+    struct Buffer buf = {
+        .topLineIndex = b->top_linenumber,
+        .currentLineIndex = b->cur_linenumber,
+        .pos = b->pos,
+        .currentColumn = b->currentColumn,
+    };
     restorePosition(Currentbuf, &buf);
     Currentbuf->undo = b;
 }
 
 DEFUN(undoPos, UNDO, "Cancel the last cursor movement")
 {
-    BufferPos* b = Currentbuf->undo;
-    int i;
-
     if (!Currentbuf->firstLine)
         return;
+
+    struct BufferPos* b = Currentbuf->undo;
     if (!b || !b->prev)
         return;
 
@@ -3851,11 +3851,10 @@ DEFUN(undoPos, UNDO, "Cancel the last cursor movement")
 
 DEFUN(redoPos, REDO, "Cancel the last undo")
 {
-    BufferPos* b = Currentbuf->undo;
-    int i;
-
     if (!Currentbuf->firstLine)
         return;
+
+    struct BufferPos* b = Currentbuf->undo;
     if (!b || !b->next)
         return;
 

@@ -16,3 +16,12 @@ struct BufferPoint {
     int pos;
     int invalid;
 };
+
+struct BufferPos {
+    int top_linenumber;
+    int cur_linenumber;
+    int currentColumn;
+    int pos;
+    struct BufferPos* next;
+    struct BufferPos* prev;
+};
