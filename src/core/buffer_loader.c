@@ -391,7 +391,7 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
                     break;
                 case HTML_A:
                     p = r = s = NULL;
-                    q = buf->baseTarget;
+                    q = buf->document.baseTarget;
                     t = "";
                     hseq = 0;
                     id = NULL;
@@ -552,7 +552,7 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
                     }
 
                     if (!form->target)
-                        form->target = buf->baseTarget;
+                        form->target = buf->document.baseTarget;
                     if (a_textarea && parsedtag_get_value(tag, ATTR_TEXTAREANUMBER, &textareanumber)) {
                         if (textareanumber >= max_textarea) {
                             max_textarea = 2 * textareanumber;
@@ -636,14 +636,14 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
                 case HTML_BASE:
                     if (parsedtag_get_value(tag, ATTR_HREF, &p)) {
                         p = url_quote(remove_space(p));
-                        if (!buf->baseURL)
-                            buf->baseURL = New(struct Url);
-                        *buf->baseURL = parseUrl(p, &buf->currentURL);
+                        if (!buf->document.baseURL)
+                            buf->document.baseURL = New(struct Url);
+                        *buf->document.baseURL = parseUrl(p, &buf->currentURL);
 
-                        base = buf->baseURL;
+                        base = buf->document.baseURL;
                     }
                     if (parsedtag_get_value(tag, ATTR_TARGET, &p))
-                        buf->baseTarget = url_quote_conv(p, buf->document.charset);
+                        buf->document.baseTarget = url_quote_conv(p, buf->document.charset);
                     break;
                 case HTML_META:
                     p = q = NULL;

@@ -33,6 +33,9 @@ enum BufferProperty {
 struct Document
 {
     wc_ces charset;
+    struct Url* baseURL;
+    const char* baseTarget;
+
     struct LineList* firstLine;
     int allLine;
     struct AnchorList* href;
@@ -65,8 +68,7 @@ struct Buffer {
     enum BufferProperty bufferprop;
 
     struct Url currentURL;
-    struct Url* baseURL;
-    const char* baseTarget;
+
     int real_scheme;
     char* sourcefile;
     int* clone;

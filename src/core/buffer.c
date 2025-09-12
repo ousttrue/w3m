@@ -48,8 +48,8 @@ newBuffer()
     memset(n, 0, sizeof(struct Buffer));
     n->width = 0;
     n->currentURL.scheme = SCM_UNKNOWN;
-    n->baseURL = 0;
-    n->baseTarget = 0;
+    n->document.baseURL = 0;
+    n->document.baseTarget = 0;
     n->buffername = "";
     n->bufferprop = BP_NORMAL;
     n->clone = New(int);
@@ -840,9 +840,9 @@ baseURL(struct Buffer* buf)
         /* no URL is defined for the buffer */
         return 0;
     }
-    if (buf->baseURL != 0) {
+    if (buf->document.baseURL != 0) {
         /* <BASE> tag is defined in the document */
-        return buf->baseURL;
+        return buf->document.baseURL;
     } else if (IS_EMPTY_PARSED_URL(&buf->currentURL))
         return 0;
     else
