@@ -284,7 +284,7 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
     static char* outc = NULL;
     static Lineprop* outp = NULL;
     static int out_size = 0;
-    Anchor *a_href = NULL, *a_img = NULL, *a_form = NULL;
+    struct Anchor *a_href = NULL, *a_img = NULL, *a_form = NULL;
     const char* p;
     const char* q;
     const char *r, *s, *t;
@@ -298,8 +298,8 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
     const char* endp;
     char symbol = '\0';
     int internal = 0;
-    Anchor** a_textarea = NULL;
-    Anchor** a_select = NULL;
+    struct Anchor** a_textarea = NULL;
+    struct Anchor** a_select = NULL;
 
     struct Url* base = baseURL(buf);
 
@@ -315,10 +315,10 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
     int max_select;
     initParser(&max_textarea, &max_select);
     if (!max_textarea) { /* halfload */
-        a_textarea = New_N(Anchor*, max_textarea);
+        a_textarea = New_N(struct Anchor*, max_textarea);
     }
     if (!max_select) { /* halfload */
-        a_select = New_N(Anchor*, max_select);
+        a_select = New_N(struct Anchor*, max_select);
     }
 
     effect = 0;
@@ -544,7 +544,7 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
                                 IMG_FLAG_SKIP);
                         } else if (iseq < 0) {
                             struct BufferPoint* po = buf->imarklist->marks - iseq - 1;
-                            Anchor* a = retrieveAnchor(buf->img,
+                            struct Anchor* a = retrieveAnchor(buf->img,
                                 po->line, po->pos);
                             if (a) {
                                 a_img->url = a->url;
@@ -603,7 +603,7 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
                             max_textarea = 2 * textareanumber;
                             textarea_str = New_Reuse(Str, textarea_str,
                                 max_textarea);
-                            a_textarea = New_Reuse(Anchor*, a_textarea,
+                            a_textarea = New_Reuse(struct Anchor*, a_textarea,
                                 max_textarea);
                         }
                     }
@@ -613,7 +613,7 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
                             select_option = New_Reuse(struct FormSelectOption,
                                 select_option,
                                 max_select);
-                            a_select = New_Reuse(Anchor*, a_select,
+                            a_select = New_Reuse(struct Anchor*, a_select,
                                 max_select);
                         }
                     }
@@ -1118,7 +1118,7 @@ struct Buffer* makeBuffer(struct Content* c)
     //     b->real_type = c->real_type;
     //     if (c->pu.label) {
     //         if (is_html_type(c->real_type)) {
-    //             Anchor* a;
+    //             struct Anchor* a;
     //             a = searchURLLabel(b, c->pu.label);
     //             if (a != NULL) {
     //                 gotoLine(b, a->start.line);

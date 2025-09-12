@@ -708,7 +708,7 @@ static struct FormItem* save_submit_formlist(struct FormItem* src)
     return ret;
 }
 
-void do_submit(Anchor* a, struct FormItem* fi, bool do_download)
+void do_submit(struct Anchor* a, struct FormItem* fi, bool do_download)
 {
     Str tmp = Strnew();
     int multipart = (fi->parent->method == FORM_METHOD_POST && fi->parent->enctype == FORM_ENCTYPE_MULTIPART);
@@ -764,7 +764,7 @@ _followForm(bool submit, bool do_download)
     if (Currentbuf->firstLine == NULL)
         return;
 
-    Anchor* a = retrieveCurrentForm(Currentbuf);
+    struct Anchor* a = retrieveCurrentForm(Currentbuf);
     if (a == NULL)
         return;
 
@@ -890,7 +890,7 @@ _followForm(bool submit, bool do_download)
     }
     case FORM_INPUT_RESET: {
         for (int i = 0; i < Currentbuf->formitem->nanchor; i++) {
-            Anchor* a2 = &Currentbuf->formitem->anchors[i];
+            struct Anchor* a2 = &Currentbuf->formitem->anchors[i];
             struct FormItem* f2 = (struct FormItem*)a2->url;
             if (f2->parent == fi->parent && f2->name && f2->value && f2->type != FORM_INPUT_SUBMIT && f2->type != FORM_INPUT_HIDDEN && f2->type != FORM_INPUT_RESET) {
                 f2->value = f2->init_value;
@@ -924,7 +924,7 @@ bool onFrame()
 
     updateDownload();
     if (Currentbuf->submit) {
-        Anchor* a = Currentbuf->submit;
+        struct Anchor* a = Currentbuf->submit;
         Currentbuf->submit = NULL;
         gotoLine(Currentbuf, a->start.line);
         Currentbuf->pos = a->start.pos;
@@ -1933,7 +1933,7 @@ DEFUN(reMark, REG_MARK, "Mark all occurences of a pattern")
 static void
 gotoLabel(const char* label)
 {
-    Anchor* al = searchURLLabel(Currentbuf, label);
+    struct Anchor* al = searchURLLabel(Currentbuf, label);
     if (al == NULL) {
         /* FIXME: gettextize? */
         message(getUI(), MSG_INFO, Sprintf("%s is not found", label)->ptr);
@@ -1964,7 +1964,7 @@ gotoLabel(const char* label)
 
 static void followAnchor(bool do_download)
 {
-    Anchor* a;
+    struct Anchor* a;
     struct Url u;
     int x = 0, y = 0, map = 0;
     char* url;
@@ -2022,7 +2022,7 @@ static void followImage(bool do_download)
     if (Currentbuf->firstLine == NULL)
         return;
 
-    Anchor* a;
+    struct Anchor* a;
     a = retrieveCurrentImg(Currentbuf);
     if (a == NULL)
         return;
@@ -2065,9 +2065,9 @@ void followForm(void)
 /* go to the top anchor */
 DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink")
 {
-    HmarkerList* hl = Currentbuf->hmarklist;
+    struct HmarkerList* hl = Currentbuf->hmarklist;
     struct BufferPoint* po;
-    Anchor* an;
+    struct Anchor* an;
     int hseq = 0;
 
     if (Currentbuf->firstLine == NULL)
@@ -2093,9 +2093,9 @@ DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink")
 /* go to the last anchor */
 DEFUN(lastA, LINK_END, "Move to the last hyperlink")
 {
-    HmarkerList* hl = Currentbuf->hmarklist;
+    struct HmarkerList* hl = Currentbuf->hmarklist;
     struct BufferPoint* po;
-    Anchor* an;
+    struct Anchor* an;
     int hseq;
 
     if (Currentbuf->firstLine == NULL)
@@ -2122,9 +2122,9 @@ DEFUN(lastA, LINK_END, "Move to the last hyperlink")
 /* go to the nth anchor */
 DEFUN(nthA, LINK_N, "Go to the nth link")
 {
-    HmarkerList* hl = Currentbuf->hmarklist;
+    struct HmarkerList* hl = Currentbuf->hmarklist;
     struct BufferPoint* po;
-    Anchor* an;
+    struct Anchor* an;
 
     int n = searchKeyNum();
     if (n < 0 || n > hl->nmark)
@@ -2175,9 +2175,9 @@ DEFUN(prevVA, PREV_VISITED, "Move to the previous visited hyperlink")
 static void
 _nextA(int visited)
 {
-    HmarkerList* hl = Currentbuf->hmarklist;
+    struct HmarkerList* hl = Currentbuf->hmarklist;
     struct BufferPoint* po;
-    Anchor *an, *pan;
+    struct Anchor *an, *pan;
     int i, x, y, n = searchKeyNum();
     struct Url url;
 
@@ -2257,9 +2257,9 @@ _end:
 static void
 _prevA(int visited)
 {
-    HmarkerList* hl = Currentbuf->hmarklist;
+    struct HmarkerList* hl = Currentbuf->hmarklist;
     struct BufferPoint* po;
-    Anchor *an, *pan;
+    struct Anchor *an, *pan;
     int i, x, y, n = searchKeyNum();
     struct Url url;
 
@@ -2339,8 +2339,8 @@ _end:
 static void
 nextX(int d, int dy)
 {
-    HmarkerList* hl = Currentbuf->hmarklist;
-    Anchor *an, *pan;
+    struct HmarkerList* hl = Currentbuf->hmarklist;
+    struct Anchor *an, *pan;
     int i, x, y, n = searchKeyNum();
 
     if (Currentbuf->firstLine == NULL)
@@ -2394,8 +2394,8 @@ nextX(int d, int dy)
 static void
 nextY(int d)
 {
-    HmarkerList* hl = Currentbuf->hmarklist;
-    Anchor *an, *pan;
+    struct HmarkerList* hl = Currentbuf->hmarklist;
+    struct Anchor *an, *pan;
     int i, x, y, n = searchKeyNum();
     int hseq;
 
@@ -2528,7 +2528,7 @@ goURL0(char* prompt, int relative)
     url = searchKeyData();
     if (url == NULL) {
         struct Hist* hist = copyHist(URLHist);
-        Anchor* a;
+        struct Anchor* a;
 
         current = baseURL(Currentbuf);
         if (current) {
@@ -2705,7 +2705,7 @@ DEFUN(pginfo, INFO, "Display information about the current document")
 void follow_map(struct KeyValue* arg)
 {
     const char* name = tag_get_value(arg, "link");
-    Anchor* an;
+    struct Anchor* an;
     MapArea* a;
     int x, y;
     struct Url p_url;
@@ -2746,9 +2746,9 @@ DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
 }
 
 static void
-anchorMn(Anchor* (*menu_func)(struct Buffer*), int go)
+anchorMn(struct Anchor* (*menu_func)(struct Buffer*), int go)
 {
-    Anchor* a;
+    struct Anchor* a;
     struct BufferPoint* po;
 
     if (!Currentbuf->href || !Currentbuf->hmarklist)
@@ -2886,7 +2886,7 @@ static void
 _peekURL(int only_img)
 {
 
-    Anchor* a;
+    struct Anchor* a;
     struct Url pu;
     static Str s = NULL;
     static Lineprop* p = NULL;
@@ -3384,7 +3384,7 @@ void set_buffer_environ(struct Buffer* buf)
     }
     l = currentLine(buf);
     if (l && (buf != prev_buf || l != prev_line || buf->pos != prev_pos)) {
-        Anchor* a;
+        struct Anchor* a;
         struct Url pu;
         char* s = GetWord(buf);
         set_environ("W3M_CURRENT_WORD", s ? s : "");

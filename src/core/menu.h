@@ -43,15 +43,15 @@ typedef struct _Menu {
 } Menu;
 
 typedef struct _MenuList {
-    char* id;
+    const char* id;
     Menu* menu;
     MenuItem* item;
 } MenuList;
 
 struct Buffer;
 struct _LinkList* link_menu(struct Buffer* buf);
-struct _anchor* accesskey_menu(struct Buffer* buf);
-struct _anchor* list_menu(struct Buffer* buf);
+struct Anchor* accesskey_menu(struct Buffer* buf);
+struct Anchor* list_menu(struct Buffer* buf);
 
 void new_menu(Menu* menu, MenuItem* item);
 void geom_menu(Menu* menu, int x, int y, int mselect);
@@ -66,8 +66,8 @@ int action_menu(Menu* menu);
 void popup_menu(Menu* parent, Menu* menu);
 void guess_menu_xy(Menu* menu, int width, int* x, int* y);
 void new_option_menu(Menu* menu, const char** label, int* variable, void (*func)());
-int setMenuItem(MenuItem* item, char* type, char* line);
-int addMenuList(MenuList** list, char* id);
+int setMenuItem(MenuItem* item, const char* type, const char* line);
+int addMenuList(MenuList** list, const char* id);
 int getMenuN(MenuList* list, const char* id);
 void popupMenu(int x, int y, Menu* menu);
 void optionMenu(int x, int y, const char** label, int* variable, int initial, void (*func)());

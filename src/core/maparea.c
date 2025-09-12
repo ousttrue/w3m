@@ -105,7 +105,7 @@ nearestMapArea(MapList* ml, int x, int y)
 }
 
 static int
-searchMapArea(struct Buffer* buf, MapList* ml, Anchor* a_img)
+searchMapArea(struct Buffer* buf, MapList* ml, struct Anchor* a_img)
 {
     ListItem* al;
     MapArea* a;
@@ -139,7 +139,7 @@ searchMapArea(struct Buffer* buf, MapList* ml, Anchor* a_img)
 MapArea*
 retrieveCurrentMapArea(struct Buffer* buf)
 {
-    Anchor *a_img, *a_form;
+    struct Anchor *a_img, *a_form;
     struct FormItem* fi;
     MapList* ml;
     ListItem* al;
@@ -170,7 +170,7 @@ retrieveCurrentMapArea(struct Buffer* buf)
     return NULL;
 }
 
-int getMapXY(struct Buffer* buf, Anchor* a, int* x, int* y)
+int getMapXY(struct Buffer* buf, struct Anchor* a, int* x, int* y)
 {
     if (!buf || !a || !a->image || !x || !y)
         return 0;
@@ -188,10 +188,10 @@ int getMapXY(struct Buffer* buf, Anchor* a, int* x, int* y)
     return 1;
 }
 
-Anchor*
+struct Anchor*
 retrieveCurrentMap(struct Buffer* buf)
 {
-    Anchor* a;
+    struct Anchor* a;
     struct FormItem* fi;
 
     a = retrieveCurrentForm(buf);
@@ -204,7 +204,7 @@ retrieveCurrentMap(struct Buffer* buf)
 }
 
 MapArea*
-follow_map_menu(struct Buffer* buf, const char* name, Anchor* a_img, int x, int y)
+follow_map_menu(struct Buffer* buf, const char* name, struct Anchor* a_img, int x, int y)
 {
     MapList* ml;
     ListItem* al;
@@ -407,7 +407,7 @@ struct Buffer*
 page_info_panel(struct Buffer* buf)
 {
     Str tmp = Strnew_size(1024);
-    Anchor* a;
+    struct Anchor* a;
     struct Url pu;
     TextListItem* ti;
     int all;
@@ -466,7 +466,7 @@ page_info_panel(struct Buffer* buf)
         else
             p = q;
         Strcat_m_charp(tmp,
-            "<tr valign=top><td nowrap>URL of current anchor<td><a href=\"",
+            "<tr valign=top><td nowrap>URL of current struct Anchor<td><a href=\"",
             q, "\">", p, "</a>", NULL);
     }
     a = retrieveCurrentImg(buf);

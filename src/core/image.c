@@ -349,11 +349,11 @@ void deleteImage(struct Buffer* buf)
     if (!buf)
         return;
 
-    AnchorList* al = buf->img;
+    struct AnchorList* al = buf->img;
     if (!al)
         return;
 
-    Anchor* a;
+    struct Anchor* a;
     int i;
     for (i = 0, a = al->anchors; i < al->nanchor; i++, a++) {
         if (a->image && a->image->cache && a->image->cache->loaded != IMG_FLAG_UNLOADED && !(a->image->cache->loaded & IMG_FLAG_DONT_REMOVE) && a->image->cache->index < 0)
@@ -369,13 +369,13 @@ void getAllImage(struct Buffer* buf)
         return;
     buf->image_loaded = true;
 
-    AnchorList* al = buf->img;
+    struct AnchorList* al = buf->img;
     if (!al)
         return;
 
     struct Url* current = baseURL(buf);
     int i;
-    Anchor* a;
+    struct Anchor* a;
     for (i = 0, a = al->anchors; i < al->nanchor; i++, a++) {
         if (a->image) {
             a->image->cache = getImage(a->image, current, buf->image_flag);
@@ -388,8 +388,8 @@ void getAllImage(struct Buffer* buf)
 static void
 showImageProgress(struct Buffer* buf)
 {
-    AnchorList* al;
-    Anchor* a;
+    struct AnchorList* al;
+    struct Anchor* a;
     int i, l, n;
 
     if (!buf)

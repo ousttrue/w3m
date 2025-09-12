@@ -21,13 +21,13 @@ typedef struct _MapArea {
 
 struct Buffer;
 struct KeyValue;
-struct _anchor;
+struct Anchor;
 
 MapList* searchMapList(struct Buffer* buf, const char* name);
 void follow_map(struct KeyValue* arg);
-MapArea* follow_map_menu(struct Buffer* buf, const char* name, struct _anchor* a_img, int x, int y);
-int getMapXY(struct Buffer* buf, struct _anchor* a, int* x, int* y);
+MapArea* follow_map_menu(struct Buffer* buf, const char* name, struct Anchor* a_img, int x, int y);
+int getMapXY(struct Buffer* buf, struct Anchor* a, int* x, int* y);
 MapArea* retrieveCurrentMapArea(struct Buffer* buf);
-struct _anchor* retrieveCurrentMap(struct Buffer* buf);
+struct Anchor* retrieveCurrentMap(struct Buffer* buf);
 MapArea* newMapArea(const char* url, const char* target, const char* alt, const char* shape, const char* coords);
 struct Buffer* page_info_panel(struct Buffer* buf);

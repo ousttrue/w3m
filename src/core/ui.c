@@ -253,12 +253,12 @@ static Str make_lastline_message(struct Buffer* buf)
         if (a)
             s = make_lastline_link(buf, a->alt, a->url);
         else {
-            Anchor* a = retrieveCurrentAnchor(buf);
+            struct Anchor* a = retrieveCurrentAnchor(buf);
             const char* p = NULL;
             if (a && a->title && *a->title)
                 p = a->title;
             else {
-                Anchor* a_img = retrieveCurrentImg(buf);
+                struct Anchor* a_img = retrieveCurrentImg(buf);
                 if (a_img && a_img->title && *a_img->title)
                     p = a_img->title;
             }

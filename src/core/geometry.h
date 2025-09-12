@@ -10,3 +10,9 @@ struct Rect {
     struct Int2 offset;
     struct Int2 size;
 };
+
+struct BufferPoint {
+    int line;
+    int pos;
+    int invalid;
+};

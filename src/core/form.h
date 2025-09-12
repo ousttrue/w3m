@@ -19,10 +19,10 @@ void chooseSelectOption(struct FormItem* fi, struct FormSelectOptionItem* item);
 void updateSelectOption(struct FormItem* fi, struct FormSelectOptionItem* item);
 int formChooseOptionByMenu(struct FormItem* fi, int x, int y);
 
-struct _anchor;
+struct Anchor;
 struct Buffer;
 struct HtmlTagParsed;
-struct _anchorList;
+struct AnchorList;
 
 struct Form* newFormList(const char* action, const char* method, const char* charset,
     const char* enctype, const char* target, const char* name,
@@ -31,9 +31,9 @@ struct FormItem* formList_addInput(struct Form* fl,
     struct HtmlTagParsed* tag);
 const char* form2str(struct FormItem* fi);
 int formtype(const char* typestr);
-void formRecheckRadio(struct _anchor* a, struct Buffer* buf, struct FormItem* form);
-void formResetBuffer(struct Buffer* buf, struct _anchorList* formitem);
-void formUpdateBuffer(struct _anchor* a, struct Buffer* buf, struct FormItem* form);
+void formRecheckRadio(struct Anchor* a, struct Buffer* buf, struct FormItem* form);
+void formResetBuffer(struct Buffer* buf, struct AnchorList* formitem);
+void formUpdateBuffer(struct Anchor* a, struct Buffer* buf, struct FormItem* form);
 void preFormUpdateBuffer(struct Buffer* buf);
 Str textfieldrep(Str s, int width);
 void input_textarea(struct FormItem* fi);

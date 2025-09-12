@@ -1555,7 +1555,6 @@ static void
 interpret_menu(FILE* mf)
 {
     Str line;
-    char *p, *s;
     int in_menu = 0, nmenu = 0, nitem = 0, type;
     MenuItem* item = NULL;
     wc_ces charset = SystemCharset;
@@ -1567,8 +1566,8 @@ interpret_menu(FILE* mf)
         if (line->length == 0)
             continue;
         line = wc_Str_conv(line, charset, InnerCharset);
-        p = line->ptr;
-        s = getWord(&p);
+        const char*p = line->ptr;
+        const char*s = getWord(&p);
         if (*s == '#') /* comment */
             continue;
         if (in_menu) {
@@ -1644,7 +1643,7 @@ void initMenu(void)
     }
 }
 
-int setMenuItem(MenuItem* item, char* type, char* line)
+int setMenuItem(MenuItem* item, const char* type, const char* line)
 {
     if (type == NULL || *type == '\0') /* error */
         return -1;
@@ -1657,10 +1656,10 @@ int setMenuItem(MenuItem* item, char* type, char* line)
         item->label = getQWord(&line);
         return MENU_NOP;
     } else if (strcmp(type, "func") == 0) {
-        char* label = getQWord(&line);
-        char* func = getWord(&line);
-        char* keys = getQWord(&line);
-        char* data = getQWord(&line);
+        const char* label = getQWord(&line);
+        const char* func = getWord(&line);
+        const char* keys = getQWord(&line);
+        const char* data = getQWord(&line);
         if (*func == '\0') /* error */
             return -1;
         item->type = MENU_FUNC;
@@ -1670,9 +1669,9 @@ int setMenuItem(MenuItem* item, char* type, char* line)
         item->data = data;
         return MENU_FUNC;
     } else if (strcmp(type, "popup") == 0) {
-        char* label = getQWord(&line);
-        char* popup = getQWord(&line);
-        char* keys = getQWord(&line);
+        const char* label = getQWord(&line);
+        const char* popup = getQWord(&line);
+        const char* keys = getQWord(&line);
         if (*popup == '\0') /* error */
             return -1;
         item->type = MENU_POPUP;
@@ -1687,7 +1686,7 @@ int setMenuItem(MenuItem* item, char* type, char* line)
     return -1; /* error */
 }
 
-int addMenuList(MenuList** mlist, char* id)
+int addMenuList(MenuList** mlist, const char* id)
 {
     int n;
     MenuList* list = *mlist;
@@ -1722,7 +1721,6 @@ link_menu(struct Buffer* buf)
     Menu menu;
     LinkList* l;
     int i, nitem, len = 0, linkV = -1;
-    char** label;
     Str str;
     char* p;
 
@@ -1733,6 +1731,7 @@ link_menu(struct Buffer* buf)
         ;
     nitem = i;
 
+    const char** label;
     label = New_N(char*, nitem + 1);
     for (i = 0, l = buf->linklist; l; i++, l = l->next) {
         str = Strnew_charp(l->title ? l->title : "(empty)");
@@ -1775,13 +1774,13 @@ link_menu(struct Buffer* buf)
 
 /* --- LinkMenu (END) --- */
 
-Anchor*
+struct Anchor*
 accesskey_menu(struct Buffer* buf)
 {
     Menu menu;
-    AnchorList* al = buf->href;
-    Anchor* a;
-    Anchor** ap;
+    struct AnchorList* al = buf->href;
+    struct Anchor* a;
+    struct Anchor** ap;
     int i, n, nitem = 0, key = -1;
     char** label;
     char* t;
@@ -1798,7 +1797,7 @@ accesskey_menu(struct Buffer* buf)
         return NULL;
 
     label = New_N(char*, nitem + 1);
-    ap = New_N(Anchor*, nitem);
+    ap = New_N(struct Anchor*, nitem);
     for (i = 0, n = 0; i < al->nanchor; i++) {
         a = &al->anchors[i];
         if (!a->slave && a->accesskey && IS_ASCII(a->accesskey)) {
@@ -1876,13 +1875,13 @@ lmSelect(char c)
         return (MENU_NOTHING);
 }
 
-Anchor*
+struct Anchor*
 list_menu(struct Buffer* buf)
 {
     Menu menu;
-    AnchorList* al = buf->href;
-    Anchor* a;
-    Anchor** ap;
+    struct AnchorList* al = buf->href;
+    struct Anchor* a;
+    struct Anchor** ap;
     int i, n, nitem = 0, key = -1, two = false;
     char** label;
     char* t;
@@ -1901,7 +1900,7 @@ list_menu(struct Buffer* buf)
     if (nitem >= nlmKeys)
         two = true;
     label = New_N(char*, nitem + 1);
-    ap = New_N(Anchor*, nitem);
+    ap = New_N(struct Anchor*, nitem);
     for (i = 0, n = 0; i < al->nanchor; i++) {
         a = &al->anchors[i];
         if (!a->slave) {

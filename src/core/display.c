@@ -81,7 +81,7 @@ static struct LineList* redrawLine(struct UI ui, struct Buffer* buf, struct Line
     char* p;
     Lineprop* pr;
     Linecolor* pc;
-    Anchor* a;
+    struct Anchor* a;
     struct Url url;
     int k, vpos = -1;
 
@@ -149,7 +149,7 @@ static struct LineList* redrawLineImage(struct UI ui, struct Buffer* buf, struct
 {
     int j, pos, rcol;
     int column = buf->currentColumn;
-    Anchor* a;
+    struct Anchor* a;
     int x, y, sx, sy, w, h;
 
     if (l == NULL)
@@ -276,7 +276,7 @@ static int redrawLineRegion(struct UI ui, struct Buffer* buf, struct LineList* l
     Lineprop* pr;
     Linecolor* pc;
     int bcol, ecol;
-    Anchor* a;
+    struct Anchor* a;
     struct Url url;
     int k, vpos = -1;
 
@@ -332,47 +332,60 @@ static int redrawLineRegion(struct UI ui, struct Buffer* buf, struct LineList* l
     return rcol - column;
 }
 
+static void _drawAnchorCursor(struct UI ui, struct Buffer* buf,
+    int hseq, int prevhseq,
+    int tline, struct LineList* l, struct Anchor* an, bool active)
+{
+    if (hseq >= 0 && an->hseq == hseq) {
+        int start_pos = an->start.pos;
+        int end_pos = an->end.pos;
+        for (int i = an->start.pos; i < an->end.pos; i++) {
+            if (enable_inline_image && (l->l.propBuf[i] & PE_IMAGE)) {
+                if (start_pos == i)
+                    start_pos = i + 1;
+                else if (end_pos == an->end.pos)
+                    end_pos = i - 1;
+            }
+            if (l->l.propBuf[i] & (PE_IMAGE | PE_ANCHOR | PE_FORM)) {
+                if (active)
+                    l->l.propBuf[i] |= PE_ACTIVE;
+                else
+                    l->l.propBuf[i] &= ~PE_ACTIVE;
+            }
+        }
+        if (active && start_pos < end_pos)
+            redrawLineRegion(ui, buf, l, l->linenumber - tline + ui.viewport.offset.y, start_pos, end_pos);
+    } else if (prevhseq >= 0 && an->hseq == prevhseq) {
+        if (active)
+            redrawLineRegion(ui, buf, l, l->linenumber - tline + ui.viewport.offset.y, an->start.pos, an->end.pos);
+    }
+}
+
 static void
 drawAnchorCursor0(struct UI ui, struct Buffer* buf,
-    AnchorList* al, int hseq, int prevhseq, int tline, int eline, int active)
+    struct AnchorList* al, int hseq, int prevhseq, int tline, int eline, bool active)
 {
     struct LineList* l = topLine(buf);
     for (int j = 0; j < al->nanchor; j++) {
-        Anchor* an = &al->anchors[j];
+        struct Anchor* an = &al->anchors[j];
         if (an->start.line < tline)
             continue;
         if (an->start.line >= eline)
             return;
-        for (;; l = l->next) {
-            if (l == NULL)
-                return;
+        for (; l; l = l->next) {
             if (l->linenumber == an->start.line)
                 break;
         }
-        if (hseq >= 0 && an->hseq == hseq) {
-            int start_pos = an->start.pos;
-            int end_pos = an->end.pos;
-            for (int i = an->start.pos; i < an->end.pos; i++) {
-                if (enable_inline_image && (l->l.propBuf[i] & PE_IMAGE)) {
-                    if (start_pos == i)
-                        start_pos = i + 1;
-                    else if (end_pos == an->end.pos)
-                        end_pos = i - 1;
-                }
-                if (l->l.propBuf[i] & (PE_IMAGE | PE_ANCHOR | PE_FORM)) {
-                    if (active)
-                        l->l.propBuf[i] |= PE_ACTIVE;
-                    else
-                        l->l.propBuf[i] &= ~PE_ACTIVE;
-                }
-            }
-            if (active && start_pos < end_pos)
-                redrawLineRegion(ui, buf, l, l->linenumber - tline + ui.viewport.offset.y, start_pos, end_pos);
-        } else if (prevhseq >= 0 && an->hseq == prevhseq) {
-            if (active)
-                redrawLineRegion(ui, buf, l, l->linenumber - tline + ui.viewport.offset.y, an->start.pos, an->end.pos);
-        }
+        _drawAnchorCursor(ui, buf, hseq, prevhseq, tline, l, an, active);
     }
+}
+
+static int currentAnchorHseq(struct Buffer* buf)
+{
+    struct Anchor* an = retrieveCurrentAnchor(buf);
+    if (!an)
+        an = retrieveCurrentMap(buf);
+    return an ? an->hseq : -1;
 }
 
 void drawAnchorCursor(struct UI ui, struct Buffer* buf)
@@ -382,20 +395,10 @@ void drawAnchorCursor(struct UI ui, struct Buffer* buf)
     if (!buf->href && !buf->formitem)
         return;
 
-    Anchor* an = retrieveCurrentAnchor(buf);
-    if (!an)
-        an = retrieveCurrentMap(buf);
-
-    int hseq, prevhseq;
-    int tline, eline;
-    if (an)
-        hseq = an->hseq;
-    else
-        hseq = -1;
-    tline = topLine(buf)->linenumber;
-    eline = tline + ui.viewport.size.y;
-    prevhseq = buf->hmarklist->prevhseq;
-
+    int tline = topLine(buf)->linenumber;
+    int eline = tline + ui.viewport.size.y;
+    int hseq = currentAnchorHseq(buf);
+    int prevhseq = buf->hmarklist->prevhseq;
     if (buf->href) {
         drawAnchorCursor0(ui, buf, buf->href, hseq, prevhseq, tline, eline, 1);
         drawAnchorCursor0(ui, buf, buf->href, hseq, -1, tline, eline, 0);
