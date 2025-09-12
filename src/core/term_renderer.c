@@ -147,9 +147,6 @@ void refreshFrame(const struct Writer* writer, struct Frame* frame)
     //     putsWriter(writer, t->me);
     //     mode &= ~M_MEND;
     // }
-
-    MOVE(writer, 0, 0);
-    putWriter(writer, '0');
 }
 
 // static int

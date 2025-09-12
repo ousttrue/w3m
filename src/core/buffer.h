@@ -126,6 +126,7 @@ struct Buffer* nthBuffer(struct Buffer* firstbuf, int n);
 struct LineList* currentLine(struct Buffer* buf);
 struct LineList* lastLine(struct Buffer* buf);
 struct LineList* topLine(struct Buffer* buf);
+struct LineList* getLine(struct Buffer* buf, int i);
 // void gotoRealLine(struct Buffer* buf, int n);
 void gotoLine(struct Buffer* buf, int n);
 struct Buffer* selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectchar);

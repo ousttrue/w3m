@@ -132,6 +132,16 @@ struct LineList* currentLine(struct Buffer* buf)
     return 0;
 }
 
+struct LineList* getLine(struct Buffer* buf, int i)
+{
+    for (struct LineList* l = buf->firstLine; l; l = l->next) {
+        if (l->linenumber == i) {
+            return l;
+        }
+    }
+    return 0;
+}
+
 struct LineList* topLine(struct Buffer* buf)
 {
     for (struct LineList* l = buf->firstLine; l; l = l->next) {
@@ -1100,9 +1110,13 @@ registerForm(struct Buffer* buf, struct Form* flist, struct HtmlTagParsed* tag, 
 struct BufferPoint getBufferPosition(struct Buffer* buf)
 {
     struct UI ui = getUI();
+    int pos = columnPos(&getLine(Currentbuf, ui.viewport_cursor.y)->l, ui.viewport_cursor.x);
+    if (ui.viewport_cursor.y == 4) {
+        int a = 0;
+    }
     return (struct BufferPoint) {
         .line = ui.viewport_cursor.y,
-        .pos = columnPos(&currentLine(buf)->l, ui.viewport_cursor.x),
+        .pos = pos,
     };
 }
 
