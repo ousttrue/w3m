@@ -249,8 +249,8 @@ static struct LineList* addNewline(struct LineList* prev, char* line, Lineprop* 
 
 typedef Str (*FeedFunc)();
 
-static void
-HTMLlineproc2body(struct Document* doc, struct Url* base, FeedFunc feed)
+static struct Document
+HTMLlineproc2body(struct Url* base, wc_ces charset, FeedFunc feed)
 {
     static char* outc = NULL;
     static Lineprop* outp = NULL;
@@ -288,8 +288,11 @@ HTMLlineproc2body(struct Document* doc, struct Url* base, FeedFunc feed)
         a_select = New_N(struct Anchor*, max_select);
     }
 
-    doc->firstLine = 0;
-    doc->allLine = 0;
+    struct Document doc = {
+        .charset = charset,
+        .firstLine = 0,
+        .allLine = 0,
+    };
 
     effect = 0;
     ex_effect = 0;
@@ -403,38 +406,38 @@ HTMLlineproc2body(struct Document* doc, struct Url* base, FeedFunc feed)
                     break;
                 case HTML_A:
                     p = r = s = NULL;
-                    q = doc->baseTarget;
+                    q = doc.baseTarget;
                     t = "";
                     hseq = 0;
                     id = NULL;
                     if (parsedtag_get_value(tag, ATTR_NAME, &id)) {
-                        id = url_quote_conv(id, doc->charset);
-                        registerName(doc, id, (struct BufferPoint) { .line = doc->allLine, .pos = pos });
+                        id = url_quote_conv(id, doc.charset);
+                        registerName(&doc, id, (struct BufferPoint) { .line = doc.allLine, .pos = pos });
                     }
                     if (parsedtag_get_value(tag, ATTR_HREF, &p))
                         p = url_quote(remove_space(p));
                     if (parsedtag_get_value(tag, ATTR_TARGET, &q))
-                        q = url_quote_conv(q, doc->charset);
+                        q = url_quote_conv(q, doc.charset);
                     if (parsedtag_get_value(tag, ATTR_REFERER, &r))
                         r = url_quote(r);
                     parsedtag_get_value(tag, ATTR_TITLE, &s);
                     parsedtag_get_value(tag, ATTR_ACCESSKEY, &t);
                     parsedtag_get_value(tag, ATTR_HSEQ, &hseq);
                     if (hseq > 0)
-                        doc->hmarklist = putHmarker(doc->hmarklist, doc->allLine, pos, hseq - 1);
+                        doc.hmarklist = putHmarker(doc.hmarklist, doc.allLine, pos, hseq - 1);
                     else if (hseq < 0) {
                         int h = -hseq - 1;
-                        if (doc->hmarklist && h < doc->hmarklist->nmark && doc->hmarklist->marks[h].invalid) {
-                            doc->hmarklist->marks[h].pos = pos;
-                            doc->hmarklist->marks[h].line = doc->allLine;
-                            doc->hmarklist->marks[h].invalid = 0;
+                        if (doc.hmarklist && h < doc.hmarklist->nmark && doc.hmarklist->marks[h].invalid) {
+                            doc.hmarklist->marks[h].pos = pos;
+                            doc.hmarklist->marks[h].line = doc.allLine;
+                            doc.hmarklist->marks[h].invalid = 0;
                             hseq = -hseq;
                         }
                     }
                     if (p) {
                         effect |= PE_ANCHOR;
-                        a_href = registerHref(doc, p, q, r, s, *t,
-                            (struct BufferPoint) { .line = doc->allLine, .pos = pos });
+                        a_href = registerHref(&doc, p, q, r, s, *t,
+                            (struct BufferPoint) { .line = doc.allLine, .pos = pos });
                         a_href->hseq = ((hseq > 0) ? hseq : -hseq) - 1;
                         a_href->slave = (hseq > 0) ? false : true;
                     }
@@ -442,11 +445,11 @@ HTMLlineproc2body(struct Document* doc, struct Url* base, FeedFunc feed)
                 case HTML_N_A:
                     effect &= ~PE_ANCHOR;
                     if (a_href) {
-                        a_href->end.line = doc->allLine;
+                        a_href->end.line = doc.allLine;
                         a_href->end.pos = pos;
                         if (a_href->start.line == a_href->end.line && a_href->start.pos == a_href->end.pos) {
-                            if (doc->hmarklist && a_href->hseq >= 0 && a_href->hseq < doc->hmarklist->nmark)
-                                doc->hmarklist->marks[a_href->hseq].invalid = 1;
+                            if (doc.hmarklist && a_href->hseq >= 0 && a_href->hseq < doc.hmarklist->nmark)
+                                doc.hmarklist->marks[a_href->hseq].invalid = 1;
                             a_href->hseq = -1;
                         }
                         a_href = NULL;
@@ -454,7 +457,7 @@ HTMLlineproc2body(struct Document* doc, struct Url* base, FeedFunc feed)
                     break;
 
                 case HTML_LINK:
-                    addLink(doc, tag);
+                    addLink(&doc, tag);
                     break;
 
                 case HTML_IMG_ALT:
@@ -473,16 +476,16 @@ HTMLlineproc2body(struct Document* doc, struct Url* base, FeedFunc feed)
                         q = NULL;
                         parsedtag_get_value(tag, ATTR_USEMAP, &q);
                         if (iseq > 0) {
-                            doc->imarklist = putHmarker(doc->imarklist,
-                                doc->allLine, pos,
+                            doc.imarklist = putHmarker(doc.imarklist,
+                                doc.allLine, pos,
                                 iseq - 1);
                         }
                         s = NULL;
                         parsedtag_get_value(tag, ATTR_TITLE, &s);
                         p = url_quote_conv(remove_space(p),
-                            doc->charset);
-                        a_img = registerImg(doc, p, s,
-                            (struct BufferPoint) { .line = doc->allLine, .pos = pos });
+                            doc.charset);
+                        a_img = registerImg(&doc, p, s,
+                            (struct BufferPoint) { .line = doc.allLine, .pos = pos });
                         a_img->hseq = iseq;
                         a_img->image = NULL;
                         if (iseq > 0) {
@@ -500,7 +503,7 @@ HTMLlineproc2body(struct Document* doc, struct Url* base, FeedFunc feed)
                             image->height = (h > MAX_IMAGE_SIZE) ? MAX_IMAGE_SIZE : h;
                             image->xoffset = xoffset;
                             image->yoffset = yoffset;
-                            image->y = doc->allLine - top;
+                            image->y = doc.allLine - top;
                             if (image->xoffset < 0 && pos == 0)
                                 image->xoffset = 0;
                             if (image->yoffset < 0 && image->y == 1)
@@ -512,8 +515,8 @@ HTMLlineproc2body(struct Document* doc, struct Url* base, FeedFunc feed)
                             image->cache = getImage(image, base,
                                 IMG_FLAG_SKIP);
                         } else if (iseq < 0) {
-                            struct BufferPoint* po = doc->imarklist->marks - iseq - 1;
-                            struct Anchor* a = retrieveAnchor(doc->img, *po);
+                            struct BufferPoint* po = doc.imarklist->marks - iseq - 1;
+                            struct Anchor* a = retrieveAnchor(doc.img, *po);
                             if (a) {
                                 a_img->url = a->url;
                                 a_img->image = a->image;
@@ -525,7 +528,7 @@ HTMLlineproc2body(struct Document* doc, struct Url* base, FeedFunc feed)
                 case HTML_N_IMG_ALT:
                     effect &= ~PE_IMAGE;
                     if (a_img) {
-                        a_img->end.line = doc->allLine;
+                        a_img->end.line = doc.allLine;
                         a_img->end.pos = pos;
                     }
                     a_img = NULL;
@@ -549,23 +552,23 @@ HTMLlineproc2body(struct Document* doc, struct Url* base, FeedFunc feed)
                         int hpos = pos;
                         if (*str == '[')
                             hpos++;
-                        doc->hmarklist = putHmarker(doc->hmarklist, doc->allLine,
+                        doc.hmarklist = putHmarker(doc.hmarklist, doc.allLine,
                             hpos, hseq - 1);
                     } else if (hseq < 0) {
                         int h = -hseq - 1;
                         int hpos = pos;
                         if (*str == '[')
                             hpos++;
-                        if (doc->hmarklist && h < doc->hmarklist->nmark && doc->hmarklist->marks[h].invalid) {
-                            doc->hmarklist->marks[h].pos = hpos;
-                            doc->hmarklist->marks[h].line = doc->allLine;
-                            doc->hmarklist->marks[h].invalid = 0;
+                        if (doc.hmarklist && h < doc.hmarklist->nmark && doc.hmarklist->marks[h].invalid) {
+                            doc.hmarklist->marks[h].pos = hpos;
+                            doc.hmarklist->marks[h].line = doc.allLine;
+                            doc.hmarklist->marks[h].invalid = 0;
                             hseq = -hseq;
                         }
                     }
 
                     if (!form->target)
-                        form->target = doc->baseTarget;
+                        form->target = doc.baseTarget;
                     if (a_textarea && parsedtag_get_value(tag, ATTR_TEXTAREANUMBER, &textareanumber)) {
                         if (textareanumber >= max_textarea) {
                             max_textarea = 2 * textareanumber;
@@ -585,15 +588,15 @@ HTMLlineproc2body(struct Document* doc, struct Url* base, FeedFunc feed)
                                 max_select);
                         }
                     }
-                    a_form = registerForm(doc, form, tag,
-                        (struct BufferPoint) { .line = doc->allLine, .pos = pos });
+                    a_form = registerForm(&doc, form, tag,
+                        (struct BufferPoint) { .line = doc.allLine, .pos = pos });
                     if (a_textarea && textareanumber >= 0)
                         a_textarea[textareanumber] = a_form;
                     if (a_select && selectnumber >= 0)
                         a_select[selectnumber] = a_form;
                     if (a_form) {
                         a_form->hseq = hseq - 1;
-                        a_form->y = doc->allLine - top;
+                        a_form->y = doc.allLine - top;
                         a_form->rows = 1 + top + bottom;
                         if (!parsedtag_exists(tag, ATTR_NO_EFFECT))
                             effect |= PE_FORM;
@@ -603,7 +606,7 @@ HTMLlineproc2body(struct Document* doc, struct Url* base, FeedFunc feed)
                 case HTML_N_INPUT_ALT:
                     effect &= ~PE_FORM;
                     if (a_form) {
-                        a_form->end.line = doc->allLine;
+                        a_form->end.line = doc.allLine;
                         a_form->end.pos = pos;
                         if (a_form->start.line == a_form->end.line && a_form->start.pos == a_form->end.pos)
                             a_form->hseq = -1;
@@ -615,15 +618,15 @@ HTMLlineproc2body(struct Document* doc, struct Url* base, FeedFunc feed)
                         MapList* m = New(MapList);
                         m->name = Strnew_charp(p);
                         m->area = newGeneralList();
-                        m->next = doc->maplist;
-                        doc->maplist = m;
+                        m->next = doc.maplist;
+                        doc.maplist = m;
                     }
                     break;
                 case HTML_N_MAP:
                     /* nothing to do */
                     break;
                 case HTML_AREA:
-                    if (doc->maplist == NULL) /* outside of <map>..</map> */
+                    if (doc.maplist == NULL) /* outside of <map>..</map> */
                         break;
                     if (parsedtag_get_value(tag, ATTR_HREF, &p)) {
                         MapArea* a;
@@ -637,7 +640,7 @@ HTMLlineproc2body(struct Document* doc, struct Url* base, FeedFunc feed)
                         parsedtag_get_value(tag, ATTR_SHAPE, &r);
                         parsedtag_get_value(tag, ATTR_COORDS, &s);
                         a = newMapArea(p, t, q, r, s);
-                        pushValue(doc->maplist->area, (void*)a);
+                        pushValue(doc.maplist->area, (void*)a);
                     }
                     break;
                 case HTML_FRAMESET:
@@ -649,14 +652,14 @@ HTMLlineproc2body(struct Document* doc, struct Url* base, FeedFunc feed)
                 case HTML_BASE:
                     if (parsedtag_get_value(tag, ATTR_HREF, &p)) {
                         p = url_quote(remove_space(p));
-                        if (!doc->baseURL)
-                            doc->baseURL = New(struct Url);
-                        *doc->baseURL = parseUrl(p, base);
+                        if (!doc.baseURL)
+                            doc.baseURL = New(struct Url);
+                        *doc.baseURL = parseUrl(p, base);
 
-                        base = doc->baseURL;
+                        base = doc.baseURL;
                     }
                     if (parsedtag_get_value(tag, ATTR_TARGET, &p))
-                        doc->baseTarget = url_quote_conv(p, doc->charset);
+                        doc.baseTarget = url_quote_conv(p, doc.charset);
                     break;
                 case HTML_META:
                     p = q = NULL;
@@ -736,7 +739,7 @@ HTMLlineproc2body(struct Document* doc, struct Url* base, FeedFunc feed)
                     break;
                 case HTML_TITLE_ALT:
                     if (parsedtag_get_value(tag, ATTR_TITLE, &p))
-                        doc->title = html_unquote(p);
+                        doc.title = html_unquote(p);
                     break;
                 case HTML_SYMBOL:
                     effect |= PC_SYMBOL;
@@ -751,18 +754,18 @@ HTMLlineproc2body(struct Document* doc, struct Url* base, FeedFunc feed)
                 }
                 id = NULL;
                 if (parsedtag_get_value(tag, ATTR_ID, &id)) {
-                    id = url_quote_conv(id, doc->charset);
-                    registerName(doc, id,
-                        (struct BufferPoint) { .line = doc->allLine, .pos = pos });
+                    id = url_quote_conv(id, doc.charset);
+                    registerName(&doc, id,
+                        (struct BufferPoint) { .line = doc.allLine, .pos = pos });
                 }
             }
         }
         /* end of processing for one line */
         if (!internal) {
-            struct LineList* l = addNewline(currentLine(doc), outc, outp, NULL, pos, -1, doc->allLine++);
-            doc->currentLineIndex = l->linenumber;
-            if (doc->firstLine == NULL) {
-                doc->firstLine = l;
+            struct LineList* l = addNewline(currentLine(&doc), outc, outp, NULL, pos, -1, doc.allLine++);
+            doc.currentLineIndex = l->linenumber;
+            if (doc.firstLine == NULL) {
+                doc.firstLine = l;
             }
         }
         if (internal == HTML_N_INTERNAL)
@@ -775,10 +778,12 @@ HTMLlineproc2body(struct Document* doc, struct Url* base, FeedFunc feed)
     for (form_id = 1; form_id <= form_max; form_id++)
         if (forms[form_id])
             forms[form_id]->next = forms[form_id - 1];
-    doc->formlist = (form_max >= 0) ? forms[form_max] : NULL;
+    doc.formlist = (form_max >= 0) ? forms[form_max] : NULL;
     if (n_textarea)
-        addMultirowsForm(doc, doc->formitem);
-    addMultirowsImg(doc, doc->img);
+        addMultirowsForm(&doc, doc.formitem);
+    addMultirowsImg(&doc, doc.img);
+
+    return doc;
 }
 
 static int loadHTML(struct html_feed_environ* htmlenv1,
@@ -886,7 +891,7 @@ static void loadHTMLstream(Str html, wc_ces* content_charset, struct Buffer* buf
     // static void HTMLlineproc2(struct Buffer* buf, TextLineList* tl)
     // {
     _tl_lp2 = htmlenv1.buf->first;
-    HTMLlineproc2body(&buf->document, baseURL(buf), textlist_feed);
+    buf->document = HTMLlineproc2body(baseURL(buf), buf->document.charset, textlist_feed);
     // }
 
     // return buf;
