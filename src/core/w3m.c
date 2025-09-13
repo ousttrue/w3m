@@ -743,7 +743,7 @@ _followForm(struct UI ui, bool submit, bool do_download)
         if (p == NULL || fi->readonly)
             break;
         fi->value = Strnew_charp(p);
-        formUpdateBuffer(ui, a, ui.current_buffer, fi);
+        formUpdateBuffer(a, ui.current_buffer, fi);
         if (fi->accept || fi->parent->nitems == 1) {
             do_submit(ui, a, fi, do_download);
             return;
@@ -761,7 +761,7 @@ _followForm(struct UI ui, bool submit, bool do_download)
         if (p == NULL || fi->readonly)
             break;
         fi->value = Strnew_charp(p);
-        formUpdateBuffer(ui, a, ui.current_buffer, fi);
+        formUpdateBuffer(a, ui.current_buffer, fi);
         if (fi->accept || fi->parent->nitems == 1) {
             do_submit(ui, a, fi, do_download);
             return;
@@ -782,7 +782,7 @@ _followForm(struct UI ui, bool submit, bool do_download)
         if (p == NULL)
             break;
         fi->value = Strnew_charp(p);
-        formUpdateBuffer(ui, a, ui.current_buffer, fi);
+        formUpdateBuffer(a, ui.current_buffer, fi);
         if (fi->accept) {
             do_submit(ui, a, fi, do_download);
             return;
@@ -798,7 +798,7 @@ _followForm(struct UI ui, bool submit, bool do_download)
             message(ui, MSG_INFO, "Read only field!");
         }
         input_textarea(fi);
-        formUpdateBuffer(ui, a, ui.current_buffer, fi);
+        formUpdateBuffer(a, ui.current_buffer, fi);
         break;
     }
     case FORM_INPUT_RADIO: {
@@ -824,7 +824,7 @@ _followForm(struct UI ui, bool submit, bool do_download)
             break;
         }
         fi->checked = !fi->checked;
-        formUpdateBuffer(ui, a, ui.current_buffer, fi);
+        formUpdateBuffer(a, ui.current_buffer, fi);
         break;
     }
     case FORM_SELECT: {
@@ -836,7 +836,7 @@ _followForm(struct UI ui, bool submit, bool do_download)
                 ui.viewport_cursor.x - ui.current_buffer->pos + a->start.pos,
                 ui.viewport_cursor.y))
             break;
-        formUpdateBuffer(ui, a, ui.current_buffer, fi);
+        formUpdateBuffer(a, ui.current_buffer, fi);
         if (fi->parent->nitems == 1) {
             do_submit(ui, a, fi, do_download);
             return;
@@ -858,7 +858,7 @@ _followForm(struct UI ui, bool submit, bool do_download)
                 f2->checked = f2->init_checked;
                 f2->label = f2->init_label;
                 f2->selected = f2->init_selected;
-                formUpdateBuffer(ui, a2, ui.current_buffer, f2);
+                formUpdateBuffer(a2, ui.current_buffer, f2);
             }
         }
         break;

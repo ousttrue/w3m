@@ -213,14 +213,14 @@ void formRecheckRadio(struct UI ui, struct Anchor* a, struct Buffer* buf, struct
         f2 = (struct FormItem*)a2->url;
         if (f2->parent == fi->parent && f2 != fi && f2->type == FORM_INPUT_RADIO && Strcmp(f2->name, fi->name) == 0) {
             f2->checked = 0;
-            formUpdateBuffer(ui, a2, buf, f2);
+            formUpdateBuffer(a2, buf, f2);
         }
     }
     fi->checked = 1;
-    formUpdateBuffer(ui, a, buf, fi);
+    formUpdateBuffer(a, buf, fi);
 }
 
-void formResetBuffer(struct UI ui, struct Buffer* buf, struct AnchorList* formitem)
+void formResetBuffer(struct Buffer* buf, struct AnchorList* formitem)
 {
     int i;
     struct Anchor* a;
@@ -261,7 +261,7 @@ void formResetBuffer(struct UI ui, struct Buffer* buf, struct AnchorList* formit
         default:
             continue;
         }
-        formUpdateBuffer(ui, a, buf, f1);
+        formUpdateBuffer(a, buf, f1);
     }
 }
 
@@ -380,7 +380,7 @@ form_update_line(struct Line* line, char** str, int spos, int epos, int width,
     return pos;
 }
 
-void formUpdateBuffer(struct UI ui, struct Anchor* a, struct Buffer* buf, struct FormItem* form)
+void formUpdateBuffer(struct Anchor* a, struct Buffer* buf, struct FormItem* form)
 {
     struct Buffer save;
     char* p;
@@ -952,12 +952,12 @@ void preFormUpdateBuffer(struct UI ui, struct Buffer* buf)
                 case FORM_INPUT_PASSWORD:
                 case FORM_TEXTAREA:
                     fi->value = Strnew_charp(pi->value);
-                    formUpdateBuffer(ui, a, buf, fi);
+                    formUpdateBuffer(a, buf, fi);
                     break;
                 case FORM_INPUT_CHECKBOX:
                     if (pi->value && fi->value && !Strcmp_charp(fi->value, pi->value)) {
                         fi->checked = pi->checked;
-                        formUpdateBuffer(ui, a, buf, fi);
+                        formUpdateBuffer(a, buf, fi);
                     }
                     break;
                 case FORM_INPUT_RADIO:
@@ -972,7 +972,7 @@ void preFormUpdateBuffer(struct UI ui, struct Buffer* buf)
                             fi->value = opt->value;
                             fi->label = opt->label;
                             updateSelectOption(fi, fi->select_option);
-                            formUpdateBuffer(ui, a, buf, fi);
+                            formUpdateBuffer(a, buf, fi);
                             break;
                         }
                     }

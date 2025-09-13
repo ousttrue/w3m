@@ -33,8 +33,8 @@ struct FormItem* formList_addInput(struct Form* fl,
 const char* form2str(struct FormItem* fi);
 int formtype(const char* typestr);
 void formRecheckRadio(struct UI ui, struct Anchor* a, struct Buffer* buf, struct FormItem* form);
-void formResetBuffer(struct UI ui, struct Buffer* buf, struct AnchorList* formitem);
-void formUpdateBuffer(struct UI ui, struct Anchor* a, struct Buffer* buf, struct FormItem* form);
+void formResetBuffer(struct Buffer* buf, struct AnchorList* formitem);
+void formUpdateBuffer(struct Anchor* a, struct Buffer* buf, struct FormItem* form);
 void preFormUpdateBuffer(struct UI ui, struct Buffer* buf);
 Str textfieldrep(Str s, int width);
 void input_textarea(struct FormItem* fi);

@@ -1393,7 +1393,7 @@ loadHTMLBuffer(struct UI ui, struct Url url, union input_stream* stream, wc_ces 
     newBuf->document.topLineIndex = newBuf->document.firstLine->linenumber;
     newBuf->document.currentLineIndex = newBuf->document.firstLine->linenumber;
     if (n_textarea)
-        formResetBuffer(ui, newBuf, newBuf->document.formitem);
+        formResetBuffer(newBuf, newBuf->document.formitem);
 
     return newBuf;
 }
@@ -1407,7 +1407,7 @@ struct Buffer* makeBuffer(struct UI ui, struct Content* c)
         struct Buffer* buf = newBuffer();
         buf->document = loadHtmlDocument(c->page, baseURL(buf), c->cc.charset, false);
         if (n_textarea)
-            formResetBuffer(ui, buf, buf->document.formitem);
+            formResetBuffer(buf, buf->document.formitem);
         if (buf) {
             buf->content = *c;
             Str tmp = tmpfname(TMPF_SRC, ".html");
