@@ -1,4 +1,5 @@
 #include "keymap.h"
+#include "ui.h"
 #include "defun.h"
 #include "../defun.h"
 

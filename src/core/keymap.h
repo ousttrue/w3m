@@ -1,4 +1,5 @@
 #pragma once
+#include "ui.h"
 
 #define KEY_HASH_SIZE 127
 
@@ -10,7 +11,7 @@
 
 extern char* keymap_file;
 
-typedef void (*CommandFunc)();
+typedef void (*CommandFunc)(struct UI ui);
 extern CommandFunc GlobalKeymap[];
 extern CommandFunc EscKeymap[];
 extern CommandFunc EscBKeymap[];

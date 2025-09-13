@@ -630,7 +630,7 @@ static int (*MenuEscDKeymap[128])(char c) = {
 static struct Menu SelectMenu;
 static int SelectV = 0;
 static void initSelectMenu(void);
-static void smChBuf(void);
+static void smChBuf(struct UI ui);
 static int smDelBuf(char c);
 
 /* --- MainMenu --- */
@@ -942,7 +942,7 @@ int action_menu(struct Menu* menu)
             CurrentKey = -1;
             CurrentKeyData = NULL;
             CurrentCmdData = item.data;
-            (*item.func)();
+            (*item.func)(getUI());
             CurrentCmdData = NULL;
         }
     } else if (mselect == MENU_CLOSE) {
@@ -991,7 +991,7 @@ void guess_menu_xy(struct Menu* parent, int width, int* x, int* y)
     *y = parent->y + parent->select - parent->offset;
 }
 
-void new_option_menu(struct Menu* menu, const char** label, int* variable, void (*func)())
+void new_option_menu(struct Menu* menu, const char** label, int* variable, CommandFunc func)
 {
     int i, nitem;
     struct MenuItem* item;
@@ -1193,7 +1193,7 @@ mClose(char c)
 static int
 mSusp(char c)
 {
-    susp();
+    susp(getUI());
     draw_all_menu(CurrentMenu);
     select_menu(CurrentMenu, CurrentMenu->select);
     return (MENU_NOTHING);
@@ -1385,7 +1385,6 @@ DEFUN(mainMn, MAIN_MENU MENU, "Pop up menu")
         menu = w3mMenuList[n].menu;
     }
 
-    struct UI ui = getUI();
     popupMenu(ui, menu);
 }
 
@@ -1395,7 +1394,6 @@ DEFUN(mainMn, MAIN_MENU MENU, "Pop up menu")
 
 DEFUN(selMn, SELECT_MENU, "Pop up buffer-stack menu")
 {
-    struct UI ui = getUI();
     popupMenu(ui, &SelectMenu);
 }
 
@@ -1465,7 +1463,7 @@ initSelectMenu(void)
 }
 
 static void
-smChBuf(void)
+smChBuf(struct UI ui)
 {
     int i;
     struct Buffer* buf;
@@ -1529,8 +1527,7 @@ smDelBuf(char c)
 
 /* --- OptionMenu --- */
 
-void optionMenu(int x, int y, const char** label, int* variable, int initial,
-    void (*func)())
+void optionMenu(int x, int y, const char** label, int* variable, int initial, CommandFunc func)
 {
     struct Menu menu;
 

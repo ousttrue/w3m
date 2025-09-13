@@ -37,5 +37,4 @@ char* nextHist(struct Hist* hist);
 char* prevHist(struct Hist* hist);
 int loadHistory(struct Hist* hist);
 void saveHistory(struct Hist* hist, size_t size);
-void ldHist(void);
 struct Buffer* historyBuffer(struct Hist* hist);

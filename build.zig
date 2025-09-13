@@ -394,7 +394,7 @@ fn gen_functable(b: *std.Build) *std.Build.Step.WriteFile {
     const defun_h = run_awk_cmd(
         b,
         gcc_e.output,
-        "$1 ~ /^[_A-Za-z]/ { print \"void \" $1 \"();\" }",
+        "$1 ~ /^[_A-Za-z]/ { print \"void \" $1 \"(struct UI ui);\" }",
     );
     _ = wf.addCopyFile(defun_h.output, "defun.h");
 

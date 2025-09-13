@@ -1430,5 +1430,5 @@ void panel_set_option(struct KeyValue* arg)
         fclose(f);
     }
     sync_with_option();
-    backBf();
+    backBf(getUI());
 }

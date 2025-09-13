@@ -1,5 +1,6 @@
 #pragma once
 #include "geometry.h"
+#include "keymap.h"
 
 extern int FRAME_WIDTH;
 
@@ -16,7 +17,7 @@ struct MenuItem {
     const char* label;
     int* variable;
     int value;
-    void (*func)();
+    CommandFunc func;
     struct Menu* popup;
     const char* keys;
     const char* data;
@@ -62,10 +63,10 @@ void down_menu(struct Menu* menu, int n);
 int action_menu(struct Menu* menu);
 void popup_menu(struct Menu* parent, struct Menu* menu);
 void guess_menu_xy(struct Menu* menu, int width, int* x, int* y);
-void new_option_menu(struct Menu* menu, const char** label, int* variable, void (*func)());
+void new_option_menu(struct Menu* menu, const char** label, int* variable, CommandFunc func);
 int setMenuItem(struct MenuItem* item, const char* type, const char* line);
 int addMenuList(struct MenuList** list, const char* id);
 int getMenuN(struct MenuList* list, const char* id);
 void popupMenu(struct UI ui, struct Menu* menu);
-void optionMenu(int x, int y, const char** label, int* variable, int initial, void (*func)());
+void optionMenu(int x, int y, const char** label, int* variable, int initial, CommandFunc func);
 void initMenu(void);

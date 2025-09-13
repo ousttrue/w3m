@@ -17,7 +17,7 @@ void updateDownload()
 {
     if (add_download_list) {
         add_download_list = false;
-        ldDL();
+        ldDL(getUI());
     }
 }
 

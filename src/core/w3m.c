@@ -762,7 +762,7 @@ void do_submit(struct Anchor* a, struct FormItem* fi, bool do_download)
 }
 
 static void
-_followForm(bool submit, bool do_download)
+_followForm(struct UI ui, bool submit, bool do_download)
 {
     if (Currentbuf->document.firstLine == NULL)
         return;
@@ -779,8 +779,8 @@ _followForm(bool submit, bool do_download)
             return;
         }
         if (fi->readonly)
-            message(getUI(), MSG_INFO, "Read only field!");
-        const char* p = inputStrHist(getUI(), "TEXT:", fi->value ? fi->value->ptr : NULL, TextHist);
+            message(ui, MSG_INFO, "Read only field!");
+        const char* p = inputStrHist(ui, "TEXT:", fi->value ? fi->value->ptr : NULL, TextHist);
         if (p == NULL || fi->readonly)
             break;
         fi->value = Strnew_charp(p);
@@ -797,8 +797,8 @@ _followForm(bool submit, bool do_download)
             return;
         }
         if (fi->readonly)
-            message(getUI(), MSG_INFO, "Read only field!");
-        const char* p = inputFilenameHist(getUI(), "Filename:", fi->value ? fi->value->ptr : NULL, NULL);
+            message(ui, MSG_INFO, "Read only field!");
+        const char* p = inputFilenameHist(ui, "Filename:", fi->value ? fi->value->ptr : NULL, NULL);
         if (p == NULL || fi->readonly)
             break;
         fi->value = Strnew_charp(p);
@@ -815,10 +815,10 @@ _followForm(bool submit, bool do_download)
             return;
         }
         if (fi->readonly) {
-            message(getUI(), MSG_INFO, "Read only field!");
+            message(ui, MSG_INFO, "Read only field!");
             break;
         }
-        const char* p = inputLine(getUI(), "Password:", fi->value ? fi->value->ptr : NULL,
+        const char* p = inputLine(ui, "Password:", fi->value ? fi->value->ptr : NULL,
             IN_PASSWORD);
         if (p == NULL)
             break;
@@ -836,7 +836,7 @@ _followForm(bool submit, bool do_download)
             return;
         }
         if (fi->readonly) {
-            message(getUI(), MSG_INFO, "Read only field!");
+            message(ui, MSG_INFO, "Read only field!");
         }
         input_textarea(fi);
         formUpdateBuffer(a, Currentbuf, fi);
@@ -848,7 +848,7 @@ _followForm(bool submit, bool do_download)
             return;
         }
         if (fi->readonly) {
-            message(getUI(), MSG_INFO, "Read only field!");
+            message(ui, MSG_INFO, "Read only field!");
             break;
         }
         formRecheckRadio(a, Currentbuf, fi);
@@ -861,7 +861,7 @@ _followForm(bool submit, bool do_download)
         }
         if (fi->readonly) {
             /* FIXME: gettextize? */
-            message(getUI(), MSG_INFO, "Read only field!");
+            message(ui, MSG_INFO, "Read only field!");
             break;
         }
         fi->checked = !fi->checked;
@@ -873,7 +873,6 @@ _followForm(bool submit, bool do_download)
             do_submit(a, fi, do_download);
             return;
         }
-        struct UI ui = getUI();
         if (!formChooseOptionByMenu(fi,
                 ui.viewport_cursor.x - Currentbuf->pos + a->start.pos,
                 ui.viewport_cursor.y))
@@ -922,6 +921,8 @@ resize_screen(void)
 
 bool onFrame()
 {
+    struct UI ui = getUI();
+
     struct TermEntry* t = getTermEntry();
     bool use_graphic = graph_ok(t);
 
@@ -931,7 +932,7 @@ bool onFrame()
         Currentbuf->submit = NULL;
         gotoLine(Currentbuf, a->start.line);
         Currentbuf->pos = a->start.pos;
-        _followForm(true, false);
+        _followForm(ui, true, false);
         return false;
     }
     /* event processing */
@@ -939,10 +940,10 @@ bool onFrame()
         CurrentKey = -1;
         CurrentKeyData = NULL;
         CurrentCmdData = (char*)CurrentEvent->data;
-        w3mFuncList[CurrentEvent->cmd].func();
+        w3mFuncList[CurrentEvent->cmd].func(ui);
 
-        bufToScreen(getUI(), Currentbuf);
-        renderFrame(getUI());
+        bufToScreen(ui, Currentbuf);
+        renderFrame(ui);
 
         CurrentCmdData = NULL;
         CurrentEvent = CurrentEvent->next;
@@ -957,10 +958,10 @@ bool onFrame()
                 CurrentKey = -1;
                 CurrentKeyData = NULL;
                 CurrentCmdData = (char*)CurrentAlarm->data;
-                w3mFuncList[CurrentAlarm->cmd].func();
+                w3mFuncList[CurrentAlarm->cmd].func(ui);
 
-                bufToScreen(getUI(), Currentbuf);
-                renderFrame(getUI());
+                bufToScreen(ui, Currentbuf);
+                renderFrame(ui);
 
                 CurrentCmdData = NULL;
                 return false;
@@ -978,14 +979,14 @@ bool onFrame()
     // mySignal(SIGWINCH, resize_hook);
     if (activeImage && displayImage && Currentbuf->document.img && !Currentbuf->image_loaded) {
         loadImage(Currentbuf, IMG_FLAG_NEXT, false);
-        bufToScreen(getUI(), Currentbuf);
-        renderFrame(getUI());
+        bufToScreen(ui, Currentbuf);
+        renderFrame(ui);
         // continue;
     }
     if (need_resize_screen) {
         resize_screen();
-        bufToScreen(getUI(), Currentbuf);
-        renderFrame(getUI());
+        bufToScreen(ui, Currentbuf);
+        renderFrame(ui);
     }
 
     return true;
@@ -1014,13 +1015,13 @@ void onKeyInput(unsigned char c)
             unsigned char prev = g_keylog[(g_i - 1) % sizeof(g_keylog)];
             CommandFunc func = (prev == 0x1b) ? EscKeymap[c]
                                               : GlobalKeymap[c];
-            func();
+            func(ui);
         }
         if (applyCursor(Currentbuf)) {
             termClear(ttyWriter());
         }
-        bufToScreen(getUI(), Currentbuf);
-        renderFrame(getUI());
+        bufToScreen(ui, Currentbuf);
+        renderFrame(ui);
     }
     ++g_i;
 
@@ -1078,7 +1079,7 @@ escKeyProc(int c, int esc, unsigned char* map)
     }
     CurrentKey = esc | c;
     if (map)
-        w3mFuncList[(int)map[c]].func();
+        w3mFuncList[(int)map[c]].func(getUI());
 }
 
 void tmpClearBuffer(struct Buffer* buf)
@@ -1161,7 +1162,7 @@ DEFUN(ctrCsrV, CENTER_V, "Center on cursor line")
 {
     if (Currentbuf->document.firstLine == NULL)
         return;
-    int offsety = getScreen()->ROWS / 2 - getUI().viewport_cursor.y;
+    int offsety = getScreen()->ROWS / 2 - ui.viewport_cursor.y;
     if (offsety != 0) {
         Currentbuf->document.topLineIndex = lineSkip(Currentbuf, topLine(&Currentbuf->document), -offsety, false)->linenumber;
         arrangeLine(Currentbuf);
@@ -1172,7 +1173,7 @@ DEFUN(ctrCsrH, CENTER_H, "Center on cursor column")
 {
     if (Currentbuf->document.firstLine == NULL)
         return;
-    int offsetx = getUI().viewport_cursor.x - getScreen()->COLS / 2;
+    int offsetx = ui.viewport_cursor.x - getScreen()->COLS / 2;
     if (offsetx != 0) {
         columnSkip(Currentbuf, offsetx);
         arrangeCursor(Currentbuf);
@@ -1315,7 +1316,7 @@ DEFUN(setEnv, SETENV, "Set environment variable")
     if (env == NULL || *env == '\0' || strchr(env, '=') == NULL) {
         if (env != NULL && *env != '\0')
             env = Sprintf("%s=", env)->ptr;
-        env = inputStrHist(getUI(), "Set environ: ", env, TextHist);
+        env = inputStrHist(ui, "Set environ: ", env, TextHist);
         if (env == NULL || *env == '\0') {
 
             return;
@@ -1336,7 +1337,7 @@ DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output")
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
     const char* cmd = searchKeyData();
     if (cmd == NULL || *cmd == '\0') {
-        cmd = inputLineHist(getUI(), "(exec shell)!", "", IN_COMMAND, ShellHist);
+        cmd = inputLineHist(ui, "(exec shell)!", "", IN_COMMAND, ShellHist);
     }
     if (cmd != NULL)
         cmd = conv_to_system(cmd);
@@ -1371,7 +1372,7 @@ DEFUN(ldfile, LOAD, "Open local file in a new buffer")
     const char* fn = searchKeyData();
     if (fn == NULL || *fn == '\0') {
         /* FIXME: gettextize? */
-        fn = inputFilenameHist(getUI(), "(Load)Filename? ", NULL, LoadHist);
+        fn = inputFilenameHist(ui, "(Load)Filename? ", NULL, LoadHist);
     }
     if (fn != NULL)
         fn = conv_to_system(fn);
@@ -1655,10 +1656,10 @@ DEFUN(selBuf, SELECT, "Display buffer-stack panel")
             }
             break;
         case 'q':
-            qquitfm();
+            qquitfm(getUI());
             break;
         case 'Q':
-            quitfm();
+            quitfm(getUI());
             break;
         }
     } while (!ok);
@@ -1787,7 +1788,7 @@ DEFUN(editBf, EDIT, "Edit local source")
     // cur_real_linenumber(Currentbuf));
     exec_cmd(cmd->ptr);
 
-    reload();
+    reload(ui);
 }
 
 /* Run editor on the current screen */
@@ -1965,7 +1966,7 @@ static void followAnchor(bool do_download)
 
     a = retrieveCurrentImg(Currentbuf);
     if (a && a->image && a->image->map) {
-        _followForm(false, do_download);
+        _followForm(getUI(), false, do_download);
         return;
     }
     if (a && a->image && a->image->ismap) {
@@ -1974,7 +1975,7 @@ static void followAnchor(bool do_download)
     }
     a = retrieveCurrentAnchor(Currentbuf);
     if (a == NULL) {
-        _followForm(false, do_download);
+        _followForm(getUI(), false, do_download);
         return;
     }
     if (*a->url == '#') { /* index within this buffer */
@@ -2044,13 +2045,13 @@ DEFUN(followI, VIEW_IMAGE, "Display image in viewer")
 /* submit form */
 DEFUN(submitForm, SUBMIT, "Submit form")
 {
-    _followForm(true, false);
+    _followForm(ui, true, false);
 }
 
 /* process form */
-void followForm(void)
+void followForm(struct UI ui)
 {
-    _followForm(false, false);
+    _followForm(ui, false, false);
 }
 
 /* go to the top anchor */
@@ -3025,7 +3026,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
 
     if (Currentbuf->bufferprop & BP_INTERNAL) {
         if (!strcmp(Currentbuf->buffername, DOWNLOAD_LIST_TITLE)) {
-            ldDL();
+            ldDL(ui);
             return;
         }
         /* FIXME: gettextize? */
@@ -3086,7 +3087,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
     repBuffer(Currentbuf, buf);
     if ((buf->content_type == CONTENTTYPE_TEXT_PLAIN && sbuf.content_type == CONTENTTYPE_TEXT_HTML)
         || (buf->content_type == CONTENTTYPE_TEXT_HTML && sbuf.content_type == CONTENTTYPE_TEXT_PLAIN)) {
-        vwSrc();
+        vwSrc(ui);
         if (Currentbuf != buf)
             Firstbuf = deleteBuffer(Firstbuf, buf);
     }
@@ -3483,7 +3484,7 @@ DEFUN(execCmd, COMMAND, "Invoke w3m function(s)")
         CurrentKey = -1;
         CurrentKeyData = NULL;
         CurrentCmdData = *p ? p : NULL;
-        func();
+        func(ui);
         CurrentCmdData = NULL;
     }
 }
@@ -3496,7 +3497,7 @@ static void SigAlarm(int _dummy)
         CurrentKey = -1;
         CurrentKeyData = NULL;
         CurrentCmdData = data = (char*)CurrentAlarm->data;
-        w3mFuncList[CurrentAlarm->cmd].func();
+        w3mFuncList[CurrentAlarm->cmd].func(getUI());
         CurrentCmdData = NULL;
         if (CurrentAlarm->status == AL_IMPLICIT_ONCE) {
             CurrentAlarm->sec = 0;
@@ -3744,7 +3745,7 @@ void download_action(struct KeyValue* arg)
             }
         }
     }
-    ldDL();
+    ldDL(getUI());
 }
 
 void stopDownload(void)
@@ -3791,7 +3792,7 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
     }
     pushBuffer(buf);
     if (replace)
-        deletePrevBuf();
+        deletePrevBuf(ui);
     if (reload)
         Currentbuf->event = setAlarmEvent(Currentbuf->event, 1, AL_IMPLICIT,
             FUNCNAME_reload, NULL);
