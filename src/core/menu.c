@@ -1416,11 +1416,11 @@ initSelectMenu(struct UI ui)
     for (i = 0, buf = Firstbuf; i < nitem; i++, buf = buf->nextBuffer) {
         str = Sprintf("<%s>", buf->document.title);
         if (buf->filename != NULL) {
-            switch (buf->currentURL.scheme) {
+            switch (buf->content.url.scheme) {
             case SCM_LOCAL:
-                // if (strcmp(buf->currentURL.file, "-")) {
+                // if (strcmp(buf->content.url.file, "-")) {
                 //     Strcat_char(str, ' ');
-                //     Strcat_charp(str, conv_from_system(buf->currentURL.real_file));
+                //     Strcat_charp(str, conv_from_system(buf->content.url.real_file));
                 // }
                 break;
                 /* case SCM_UNKNOWN: */
@@ -1428,7 +1428,7 @@ initSelectMenu(struct UI ui)
                 break;
             default: {
                 Strcat_char(str, ' ');
-                const char* p = url_decode2(parsedURL2Str(&buf->currentURL)->ptr, 0);
+                const char* p = url_decode2(parsedURL2Str(&buf->content.url)->ptr, 0);
                 Strcat_charp(str, p);
                 break;
             }

@@ -43,7 +43,7 @@ newBuffer()
     struct Buffer* n = New(struct Buffer);
     memset(n, 0, sizeof(struct Buffer));
     n->width = 0;
-    n->currentURL.scheme = SCM_UNKNOWN;
+    n->content.url.scheme = SCM_UNKNOWN;
     n->document.baseURL = 0;
     n->document.baseTarget = 0;
     n->document.title = "";
@@ -89,9 +89,9 @@ void discardBuffer(struct Buffer* buf)
         unlink(buf->savecache);
     if (--(*buf->clone))
         return;
-    if (buf->sourcefile && (contentTypeIsImage(buf->content_type))) {
-        if (buf->currentURL.scheme != SCM_LOCAL)
-            unlink(buf->sourcefile);
+    if (buf->content.sourcefile && (contentTypeIsImage(buf->content.cc.content_type))) {
+        if (buf->content.url.scheme != SCM_LOCAL)
+            unlink(buf->content.sourcefile);
     }
     if (buf->mailcap_source)
         unlink(buf->mailcap_source);
@@ -190,12 +190,12 @@ writeBufferName(struct Buffer* buf, int n)
 
     Str msg = Sprintf("<%s> [%d lines]", buf->document.title, all);
     if (buf->filename != 0) {
-        switch (buf->currentURL.scheme) {
+        switch (buf->content.url.scheme) {
         case SCM_LOCAL:
         case SCM_LOCAL_CGI:
-            // if (strcmp(buf->currentURL.file, "-")) {
+            // if (strcmp(buf->content.url.file, "-")) {
             //     Strcat_char(msg, ' ');
-            //     Strcat_charp(msg, conv_from_system(buf->currentURL.real_file));
+            //     Strcat_charp(msg, conv_from_system(buf->content.url.real_file));
             // }
             break;
         case SCM_UNKNOWN:
@@ -203,7 +203,7 @@ writeBufferName(struct Buffer* buf, int n)
             break;
         default:
             Strcat_char(msg, ' ');
-            Strcat(msg, parsedURL2Str(&buf->currentURL));
+            Strcat(msg, parsedURL2Str(&buf->content.url));
             break;
         }
     }
@@ -438,10 +438,10 @@ end:
 void reshapeBuffer(struct UI ui, struct Buffer* buf, int cols)
 {
     buf->width = cols;
-    if (buf->sourcefile == 0)
+    if (buf->content.sourcefile == 0)
         return;
 
-    union input_stream* stream = examineFile(buf->mailcap_source ? buf->mailcap_source : buf->sourcefile);
+    union input_stream* stream = examineFile(buf->mailcap_source ? buf->mailcap_source : buf->content.sourcefile);
     if (stream == 0)
         return;
 
@@ -462,10 +462,10 @@ void reshapeBuffer(struct UI ui, struct Buffer* buf, int cols)
         buf->document.imarklist->nmark = 0;
 
     WcOption.auto_detect = WC_OPT_DETECT_OFF;
-    if (buf->content_type == CONTENTTYPE_TEXT_HTML)
-        loadHTMLBuffer(ui, buf->currentURL, stream, buf->document.charset, buf);
+    if (buf->content.cc.content_type == CONTENTTYPE_TEXT_HTML)
+        loadHTMLBuffer(ui, buf->content.url, stream, buf->document.charset, buf);
     else
-        loadBuffer(buf->currentURL, stream, buf);
+        loadBuffer(buf->content.url, stream, buf);
     ISclose(stream);
     wc_uint8 old_auto_detect = WcOption.auto_detect;
     WcOption.auto_detect = old_auto_detect;
@@ -492,7 +492,7 @@ void reshapeBuffer(struct UI ui, struct Buffer* buf, int cols)
             gotoLine(buf, cur->linenumber);
         }
         buf->pos -= currentLine(&buf->document)->bpos;
-        if (FoldLine && buf->content_type != CONTENTTYPE_TEXT_HTML)
+        if (FoldLine && buf->content.cc.content_type != CONTENTTYPE_TEXT_HTML)
             buf->currentColumn = 0;
         else
             buf->currentColumn = sbuf.currentColumn;
@@ -770,7 +770,7 @@ _saveBuffer(struct Buffer* buf, FILE* f, int cont)
     int set_charset = !DisplayCharset;
     wc_ces charset = DisplayCharset ? DisplayCharset : WC_CES_US_ASCII;
 
-    is_html = buf->content_type == CONTENTTYPE_TEXT_HTML;
+    is_html = buf->content.cc.content_type == CONTENTTYPE_TEXT_HTML;
 }
 
 void saveBuffer(struct Buffer* buf, FILE* f, int cont)
@@ -788,10 +788,10 @@ baseURL(struct Buffer* buf)
     if (buf->document.baseURL != 0) {
         /* <BASE> tag is defined in the document */
         return buf->document.baseURL;
-    } else if (IS_EMPTY_PARSED_URL(&buf->currentURL))
+    } else if (IS_EMPTY_PARSED_URL(&buf->content.url))
         return 0;
     else
-        return &buf->currentURL;
+        return &buf->content.url;
 }
 
 int columnSkip(struct Buffer* buf, int offset)
@@ -858,8 +858,8 @@ char* last_modified(struct Buffer* buf)
             }
         }
         return "unknown";
-    } else if (buf->currentURL.scheme == SCM_LOCAL) {
-        if (stat(buf->currentURL.file, &st) < 0)
+    } else if (buf->content.url.scheme == SCM_LOCAL) {
+        if (stat(buf->content.url.file, &st) < 0)
             return "unknown";
         return ctime(&st.st_mtime);
     }

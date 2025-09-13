@@ -12,6 +12,7 @@ extern int retryAsHttp;
 struct Content {
     struct Url url;
     Str page;
+    const char* sourcefile;
     struct ContentTypeCharset cc;
 };
 

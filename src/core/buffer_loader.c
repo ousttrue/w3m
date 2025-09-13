@@ -990,25 +990,22 @@ static struct Document loadHTMLstream(Str html, struct Url* base, wc_ces content
 
 struct Buffer* makeBuffer(struct UI ui, struct Content* c)
 {
+    if (image_source)
+        return NULL;
+
     if (c->page) {
-        if (image_source)
-            return NULL;
-        Str tmp = tmpfname(TMPF_SRC, ".html");
-        FILE* src = fopen(tmp->ptr, "w");
-        if (src) {
-            // Str s = wc_Str_conv_strict(c->page, InnerCharset, c->charset);
-            Strfputs(c->page, src);
-            fclose(src);
+        struct Buffer* buf = loadHTMLString(ui, c->page, c->cc.charset);
+        if (buf) {
+            buf->content = *c;
+            Str tmp = tmpfname(TMPF_SRC, ".html");
+            FILE* src = fopen(tmp->ptr, "w");
+            if (src) {
+                Strfputs(c->page, src);
+                fclose(src);
+                buf->content.sourcefile = tmp->ptr;
+            }
         }
-        struct Buffer* b = loadHTMLString(ui, c->page, c->cc.charset);
-        if (b) {
-            b->currentURL = copyParsedUrl(&c->url);
-            b->content_type = c->cc.content_type;
-            if (src)
-                b->sourcefile = tmp->ptr;
-            b->document.charset = c->cc.charset;
-        }
-        return b;
+        return buf;
     }
     abort();
 
@@ -1542,7 +1539,7 @@ loadHTMLString(struct UI ui, Str page, wc_ces content_charset)
     // ISclose(stream);
     newBuf->document.topLineIndex = newBuf->document.firstLine->linenumber;
     newBuf->document.currentLineIndex = newBuf->document.firstLine->linenumber;
-    newBuf->content_type = CONTENTTYPE_TEXT_HTML;
+    newBuf->content.cc.content_type = CONTENTTYPE_TEXT_HTML;
     if (n_textarea)
         formResetBuffer(ui, newBuf, newBuf->document.formitem);
     return newBuf;
@@ -1571,11 +1568,11 @@ loadBuffer(struct Url url, union input_stream* stream, struct Buffer* newBuf)
     // }
     // TRAP_ON;
 
-    if (newBuf->sourcefile == NULL && (url.scheme != SCM_LOCAL || newBuf->mailcap)) {
+    if (newBuf->content.sourcefile == NULL && (url.scheme != SCM_LOCAL || newBuf->mailcap)) {
         tmpf = tmpfname(TMPF_SRC, NULL);
         src = fopen(tmpf->ptr, "w");
         if (src)
-            newBuf->sourcefile = tmpf->ptr;
+            newBuf->content.sourcefile = tmpf->ptr;
     }
 
     wc_ces charset = WC_CES_US_ASCII;

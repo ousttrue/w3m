@@ -48,14 +48,14 @@ void parseArgs(int argc, char** argv)
     struct Content c = loadGeneralFile(url, NULL, NULL, NO_REFERER, (struct UserInteraction) { 0 });
     struct Buffer* newbuf = makeBuffer(ui, &c);
 
-    switch (newbuf->currentURL.scheme) {
+    switch (newbuf->content.url.scheme) {
     case SCM_MAILTO:
         break;
     case SCM_LOCAL:
     case SCM_LOCAL_CGI:
         unshiftHist(LoadHist, url);
     default:
-        pushHashHist(URLHist, parsedURL2Str(&newbuf->currentURL)->ptr);
+        pushHashHist(URLHist, parsedURL2Str(&newbuf->content.url)->ptr);
         break;
     }
     Firstbuf = Currentbuf = newbuf;
@@ -73,7 +73,7 @@ void SAVE_BUFPOSITION(struct Buffer* sbufp)
 //     if ((fp = fopen(rcFile("bufinfo"), "w")) == NULL) {
 //         return;
 //     }
-//     fprintf(fp, "%s\n", currentURL(ui)->ptr);
+//     fprintf(fp, "%s\n", content.url(ui)->ptr);
 //     fclose(fp);
 // }
 
@@ -112,7 +112,7 @@ void cmd_loadContent(struct UI ui, struct Content c)
     }
     // buf->bufferprop |= (BP_INTERNAL | prop);
     // if (!(buf->bufferprop & BP_NO_URL))
-    //     buf->currentURL = copyParsedUrl(&ui.current_buffer->currentURL);
+    //     buf->content.url = copyParsedUrl(&ui.current_buffer->content.url);
     pushBuffer(ui, buf);
 }
 

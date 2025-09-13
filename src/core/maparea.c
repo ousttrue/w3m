@@ -351,14 +351,14 @@ page_info_panel(struct UI ui, struct Buffer* buf)
         all = lastLine(&buf->document)->linenumber;
     Strcat_charp(tmp, "<form method=internal action=charset>");
 
-    const char* p = url_decode2(parsedURL2Str(&buf->currentURL)->ptr, 0);
+    const char* p = url_decode2(parsedURL2Str(&buf->content.url)->ptr, 0);
     Strcat_m_charp(tmp, "<table cellpadding=0>",
         "<tr valign=top><td nowrap>Title<td>",
         html_quote(buf->document.title),
         "<tr valign=top><td nowrap>Current URL<td>",
         html_quote(p),
         "<tr valign=top><td nowrap>Document Type<td>",
-        contentTypeStr(buf->content_type),
+        contentTypeStr(buf->content.cc.content_type),
         "<tr valign=top><td nowrap>Last Modified<td>",
         html_quote(last_modified(buf)), NULL);
 

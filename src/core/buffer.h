@@ -1,8 +1,8 @@
 #pragma once
 #include "line.h"
 #include "geometry.h"
+#include "Content.h"
 #include "Document.h"
-#include "ContentType.h"
 #include "url.h"
 #include "textlist.h"
 #include <stdio.h>
@@ -17,9 +17,8 @@ struct Buffer {
 
     char* ssl_certificate;
     TextList* document_header;
-    struct Url currentURL;
-    enum ContentType content_type;
-    const char* sourcefile;
+
+    struct Content content;
 
     struct Document document;
 

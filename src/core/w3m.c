@@ -583,7 +583,7 @@ loadLink(struct UI ui, const char* url, const char* target, const char* referer,
     //     || base->scheme == SCM_DATA)
     //     referer = NO_REFERER;
     if (referer == NULL)
-        referer = parsedURL2RefererStr(&ui.current_buffer->currentURL)->ptr;
+        referer = parsedURL2RefererStr(&ui.current_buffer->content.url)->ptr;
 
     struct Content c = loadGeneralFile(url, baseURL(ui.current_buffer), post, referer, UI_TTY);
     if (do_download) {
@@ -677,7 +677,7 @@ static void do_submit(struct UI ui, struct Anchor* a, struct FormItem* fi, bool 
     Str tmp2 = Strdup(fi->parent->action);
     if (!Strcmp_charp(tmp2, "!CURRENT_URL!")) {
         /* It means "current URL" */
-        tmp2 = parsedURL2Str(&ui.current_buffer->currentURL);
+        tmp2 = parsedURL2Str(&ui.current_buffer->content.url);
         char* p;
         if ((p = strchr(tmp2->ptr, '?')) != NULL)
             Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
@@ -711,7 +711,7 @@ static void do_submit(struct UI ui, struct Anchor* a, struct FormItem* fi, bool 
          */
         buf->form_submit = save_submit_formlist(fi);
         // }
-    } else if ((fi->parent->method == FORM_METHOD_INTERNAL && (!Strcmp_charp(fi->parent->action, "map") || !Strcmp_charp(fi->parent->action, "none"))) 
+    } else if ((fi->parent->method == FORM_METHOD_INTERNAL && (!Strcmp_charp(fi->parent->action, "map") || !Strcmp_charp(fi->parent->action, "none")))
         // || ui.current_buffer->bufferprop & BP_INTERNAL
     ) { /* internal */
         do_internal(ui, tmp2->ptr, tmp->ptr);
@@ -1054,8 +1054,6 @@ void tmpClearBuffer(struct Buffer* buf)
         buf->document.currentLineIndex = 0;
     }
 }
-
-static Str currentURL(struct UI ui);
 
 void delBuffer(struct UI ui, struct Buffer* buf)
 {
@@ -1705,9 +1703,9 @@ DEFUN(editBf, EDIT, "Edit local source")
 {
     const char* fn = ui.current_buffer->filename;
     if (fn == NULL
-        || (ui.current_buffer->content_type == CONTENTTYPE_UNKNOWN && ui.current_buffer->edit == NULL)
-        || /* Reading shell */ ui.current_buffer->currentURL.scheme != SCM_LOCAL
-        || !strcmp(ui.current_buffer->currentURL.file, "-") /* file is std input  */
+        || (ui.current_buffer->content.cc.content_type == CONTENTTYPE_UNKNOWN && ui.current_buffer->edit == NULL)
+        || /* Reading shell */ ui.current_buffer->content.url.scheme != SCM_LOCAL
+        || !strcmp(ui.current_buffer->content.url.file, "-") /* file is std input  */
     ) {
         message(getUI(), MSG_ERR, "Can't edit other than local file");
         return;
@@ -1715,7 +1713,7 @@ DEFUN(editBf, EDIT, "Edit local source")
 
     Str cmd;
     if (ui.current_buffer->edit)
-        cmd = unquote_mailcap(ui.current_buffer->edit, contentTypeStr(ui.current_buffer->content_type), fn,
+        cmd = unquote_mailcap(ui.current_buffer->edit, contentTypeStr(ui.current_buffer->content.cc.content_type), fn,
             getHttpHeaderValue(ui.current_buffer->document_header, "Content-Type:"), NULL);
     else
         cmd = myEditor(Editor, shell_quote(fn), 1);
@@ -1868,8 +1866,8 @@ gotoLabel(struct UI ui, const char* label)
 
     struct Buffer* buf = newBuffer();
     copyBuffer(buf, ui.current_buffer);
-    buf->currentURL.label = allocStr(label, -1);
-    pushHashHist(URLHist, parsedURL2Str(&buf->currentURL)->ptr);
+    buf->content.url.label = allocStr(label, -1);
+    pushHashHist(URLHist, parsedURL2Str(&buf->content.url)->ptr);
     (*buf->clone)++;
     pushBuffer(ui, buf);
     gotoLine(ui.current_buffer, al->start.line);
@@ -1914,7 +1912,7 @@ static void followAnchor(struct UI ui, bool do_download)
         return;
     }
     u = parseUrl(a->url, baseURL(ui.current_buffer));
-    if (Strcmp(parsedURL2Str(&u), parsedURL2Str(&ui.current_buffer->currentURL)) == 0) {
+    if (Strcmp(parsedURL2Str(&u), parsedURL2Str(&ui.current_buffer->content.url)) == 0) {
         /* index within this buffer */
         if (u.label) {
             gotoLabel(ui, u.label);
@@ -2467,7 +2465,7 @@ goURL0(struct UI ui, char* prompt, int relative)
         if ((no_referer_ptr && *no_referer_ptr) || current == NULL || current->scheme == SCM_LOCAL || current->scheme == SCM_LOCAL_CGI || current->scheme == SCM_DATA)
             referer = NO_REFERER;
         else
-            referer = parsedURL2RefererStr(&ui.current_buffer->currentURL)->ptr;
+            referer = parsedURL2RefererStr(&ui.current_buffer->content.url)->ptr;
         url = url_quote(url);
     } else {
         current = NULL;
@@ -2486,7 +2484,7 @@ goURL0(struct UI ui, char* prompt, int relative)
     pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
     cmd_loadURL(ui, url, current, referer, NULL);
     if (ui.current_buffer != cur_buf) /* success */
-        pushHashHist(URLHist, parsedURL2Str(&ui.current_buffer->currentURL)->ptr);
+        pushHashHist(URLHist, parsedURL2Str(&ui.current_buffer->content.url)->ptr);
 }
 
 DEFUN(goURL, GOTO, "Open specified document in a new buffer")
@@ -2506,7 +2504,7 @@ DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer")
         pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
         cmd_loadURL(ui, url, NULL, NULL, NULL);
         if (ui.current_buffer != cur_buf) /* success */
-            pushHashHist(URLHist, parsedURL2Str(&ui.current_buffer->currentURL)->ptr);
+            pushHashHist(URLHist, parsedURL2Str(&ui.current_buffer->content.url)->ptr);
     }
 }
 
@@ -2534,7 +2532,7 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
                   "&charset=%s",
         (Str_form_quote(localCookie()))->ptr,
         (Str_form_quote(Strnew_charp(BookmarkFile)))->ptr,
-        (Str_form_quote(parsedURL2Str(&ui.current_buffer->currentURL)))->ptr,
+        (Str_form_quote(parsedURL2Str(&ui.current_buffer->content.url)))->ptr,
         (Str_form_quote(wc_conv_strict(ui.current_buffer->document.title,
              InnerCharset,
              BookmarkCharset)))
@@ -2609,7 +2607,7 @@ void follow_map(struct UI ui, struct KeyValue* arg)
     p_url = parseUrl(a->url, baseURL(ui.current_buffer));
     pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
     cmd_loadURL(ui, a->url, baseURL(ui.current_buffer),
-        parsedURL2Str(&ui.current_buffer->currentURL)->ptr, NULL);
+        parsedURL2Str(&ui.current_buffer->content.url)->ptr, NULL);
 }
 
 /* link menu */
@@ -2627,7 +2625,7 @@ DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
     p_url = parseUrl(l->url, baseURL(ui.current_buffer));
     pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
     cmd_loadURL(ui, l->url, baseURL(ui.current_buffer),
-        parsedURL2Str(&ui.current_buffer->currentURL)->ptr, NULL);
+        parsedURL2Str(&ui.current_buffer->content.url)->ptr, NULL);
 }
 
 typedef struct Anchor* (*AnchorMenuFunc)(struct UI ui, struct Buffer*);
@@ -2751,16 +2749,16 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document")
 /* save source */
 DEFUN(svSrc, DOWNLOAD SAVE, "Save document source")
 {
-    if (ui.current_buffer->sourcefile == NULL)
+    if (ui.current_buffer->content.sourcefile == NULL)
         return;
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
     PermitSaveToPipe = true;
     const char* file;
     // if (ui.current_buffer->real_scheme == SCM_LOCAL)
-    //     file = conv_from_system(guessSaveName(NULL, ui.current_buffer->currentURL.real_file));
+    //     file = conv_from_system(guessSaveName(NULL, ui.current_buffer->content.url.real_file));
     // else
-    file = guessSaveName(ui.current_buffer->document_header, ui.current_buffer->currentURL.file);
-    doFileCopy(ui.current_buffer->sourcefile, file);
+    file = guessSaveName(ui.current_buffer->document_header, ui.current_buffer->content.url.file);
+    doFileCopy(ui.current_buffer->content.sourcefile, file);
     PermitSaveToPipe = false;
 }
 
@@ -2831,11 +2829,11 @@ DEFUN(peekIMG, PEEK_IMG, "Show image address")
 static Str
 currentURL(struct UI ui)
 {
-    if (!ui.current_buffer 
+    if (!ui.current_buffer
         // || ui.current_buffer->bufferprop & BP_INTERNAL
     )
         return Strnew_size(0);
-    return parsedURL2Str(&ui.current_buffer->currentURL);
+    return parsedURL2Str(&ui.current_buffer->content.url);
 }
 
 DEFUN(curURL, PEEK, "Show current address")
@@ -2872,27 +2870,27 @@ DEFUN(curURL, PEEK, "Show current address")
 
 DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
 {
-    if (ui.current_buffer->content_type == CONTENTTYPE_UNKNOWN) {
+    if (ui.current_buffer->content.cc.content_type == CONTENTTYPE_UNKNOWN) {
         return;
     }
-    if (ui.current_buffer->sourcefile == NULL) {
+    if (ui.current_buffer->content.sourcefile == NULL) {
         return;
     }
 
     struct Buffer* buf = newBuffer();
 
-    if (ui.current_buffer->content_type == CONTENTTYPE_TEXT_HTML) {
-        buf->content_type = CONTENTTYPE_TEXT_PLAIN;
+    if (ui.current_buffer->content.cc.content_type == CONTENTTYPE_TEXT_HTML) {
+        buf->content.cc.content_type = CONTENTTYPE_TEXT_PLAIN;
         buf->document.title = Sprintf("source of %s", ui.current_buffer->document.title)->ptr;
-    } else if (ui.current_buffer->content_type == CONTENTTYPE_TEXT_PLAIN) {
-        buf->content_type = CONTENTTYPE_TEXT_HTML;
+    } else if (ui.current_buffer->content.cc.content_type == CONTENTTYPE_TEXT_PLAIN) {
+        buf->content.cc.content_type = CONTENTTYPE_TEXT_HTML;
         buf->document.title = Sprintf("HTML view of %s", ui.current_buffer->document.title)->ptr;
     } else {
         return;
     }
-    buf->currentURL = ui.current_buffer->currentURL;
+    buf->content.url = ui.current_buffer->content.url;
     buf->filename = ui.current_buffer->filename;
-    buf->sourcefile = ui.current_buffer->sourcefile;
+    buf->content.sourcefile = ui.current_buffer->content.sourcefile;
     buf->document.charset = ui.current_buffer->document.charset;
     buf->clone = ui.current_buffer->clone;
     (*buf->clone)++;
@@ -2912,7 +2910,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
     //     message(getUI(), MSG_ERR, "Can't reload...");
     //     return;
     // }
-    if (ui.current_buffer->currentURL.scheme == SCM_LOCAL && !strcmp(ui.current_buffer->currentURL.file, "-")) {
+    if (ui.current_buffer->content.url.scheme == SCM_LOCAL && !strcmp(ui.current_buffer->content.url.file, "-")) {
         /* file is std input */
         /* FIXME: gettextize? */
         message(getUI(), MSG_ERR, "Can't reload stdin");
@@ -2938,14 +2936,14 @@ DEFUN(reload, RELOAD, "Load current document anew")
     } else {
         post = NULL;
     }
-    Str url = parsedURL2Str(&ui.current_buffer->currentURL);
+    Str url = parsedURL2Str(&ui.current_buffer->content.url);
     message(getUI(), MSG_INFO, "Reloading...");
     // refresh(ttyWriter());
     wc_ces old_charset = DocumentCharset;
     if (ui.current_buffer->document.charset != WC_CES_US_ASCII)
         DocumentCharset = ui.current_buffer->document.charset;
     // SearchHeader = ui.current_buffer->search_header;
-    DefaultType = contentTypeStr(ui.current_buffer->content_type);
+    DefaultType = contentTypeStr(ui.current_buffer->content.cc.content_type);
     struct Content c = loadGeneralFile(url->ptr, NULL, post, NO_REFERER, UI_TTY /*, true*/);
 
     struct Buffer* buf = makeBuffer(ui, &c);
@@ -2968,8 +2966,8 @@ DEFUN(reload, RELOAD, "Load current document anew")
     // if (fbuf != NULL)
     //     Firstbuf = deleteBuffer(Firstbuf, fbuf);
     repBuffer(ui, ui.current_buffer, buf);
-    if ((buf->content_type == CONTENTTYPE_TEXT_PLAIN && sbuf.content_type == CONTENTTYPE_TEXT_HTML)
-        || (buf->content_type == CONTENTTYPE_TEXT_HTML && sbuf.content_type == CONTENTTYPE_TEXT_PLAIN)) {
+    if ((buf->content.cc.content_type == CONTENTTYPE_TEXT_PLAIN && sbuf.content.cc.content_type == CONTENTTYPE_TEXT_HTML)
+        || (buf->content.cc.content_type == CONTENTTYPE_TEXT_HTML && sbuf.content.cc.content_type == CONTENTTYPE_TEXT_PLAIN)) {
         vwSrc(ui);
         if (ui.current_buffer != buf)
             Firstbuf = deleteBuffer(Firstbuf, buf);
@@ -2992,7 +2990,7 @@ _docCSet(struct UI ui, wc_ces charset)
 {
     // if (ui.current_buffer->bufferprop & BP_INTERNAL)
     //     return;
-    if (ui.current_buffer->sourcefile == NULL) {
+    if (ui.current_buffer->content.sourcefile == NULL) {
         message(getUI(), MSG_INFO, "Can't reload...");
         return;
     }
@@ -3234,11 +3232,11 @@ void set_buffer_environ(struct Buffer* buf)
         return;
 
     if (buf != prev_buf) {
-        set_environ("W3M_SOURCEFILE", buf->sourcefile);
+        set_environ("W3M_SOURCEFILE", buf->content.sourcefile);
         set_environ("W3M_FILENAME", buf->filename);
         set_environ("W3M_TITLE", buf->document.title);
-        set_environ("W3M_URL", parsedURL2Str(&buf->currentURL)->ptr);
-        set_environ("W3M_TYPE", contentTypeStr(buf->content_type));
+        set_environ("W3M_URL", parsedURL2Str(&buf->content.url)->ptr);
+        set_environ("W3M_TYPE", contentTypeStr(buf->content.cc.content_type));
         set_environ("W3M_CHARSET", wc_ces_to_charset(buf->document.charset));
     }
     struct LineList* l = currentLine(&buf->document);
