@@ -247,8 +247,10 @@ static struct LineList* addNewline(struct LineList* prev, char* line, Lineprop* 
     return l;
 }
 
+typedef Str (*FeedFunc)();
+
 static void
-HTMLlineproc2body(struct Document* doc, struct Url* base, Str (*feed)(), int llimit)
+HTMLlineproc2body(struct Document* doc, struct Url* base, FeedFunc feed)
 {
     static char* outc = NULL;
     static Lineprop* outp = NULL;
@@ -298,8 +300,6 @@ HTMLlineproc2body(struct Document* doc, struct Url* base, Str (*feed)(), int lli
             continue;
         }
     proc_again:
-        if (++nlines == llimit)
-            break;
         pos = 0;
         Strremovetrailingspaces(line);
         str = line->ptr;
@@ -781,13 +781,6 @@ HTMLlineproc2body(struct Document* doc, struct Url* base, Str (*feed)(), int lli
     addMultirowsImg(doc, doc->img);
 }
 
-static void HTMLlineproc2(struct Buffer* buf, TextLineList* tl)
-{
-    _tl_lp2 = tl->first;
-
-    HTMLlineproc2body(&buf->document, baseURL(buf), textlist_feed, -1);
-}
-
 static int loadHTML(struct html_feed_environ* htmlenv1,
     Str html, wc_ces* doc_charset, int cols, bool use_graphic, bool internal)
 {
@@ -874,9 +867,9 @@ static int loadHTML(struct html_feed_environ* htmlenv1,
 }
 
 // WC_CES_SHIFT_JIS /*WC_CES_US_ASCII*/
-static void loadHTMLstream(union input_stream* stream, wc_ces* content_charset, struct Buffer* buf, bool internal)
+static void loadHTMLstream(Str html, wc_ces* content_charset, struct Buffer* buf, bool internal)
 {
-    Str html = readAll(stream);
+    // Str html = readAll(stream);
     struct UI ui = getUI();
     struct html_feed_environ htmlenv1;
 
@@ -889,7 +882,13 @@ static void loadHTMLstream(union input_stream* stream, wc_ces* content_charset, 
     // TRAP_OFF;
     // buf->document_charset = charset;
     // buf->image_flag = image_flag;
-    HTMLlineproc2(buf, htmlenv1.buf);
+    // HTMLlineproc2(buf, htmlenv1.buf);
+    // static void HTMLlineproc2(struct Buffer* buf, TextLineList* tl)
+    // {
+    _tl_lp2 = htmlenv1.buf->first;
+    HTMLlineproc2body(&buf->document, baseURL(buf), textlist_feed);
+    // }
+
     // return buf;
     // }
 
@@ -1497,11 +1496,13 @@ table_start:
 struct Buffer*
 loadHTMLBuffer(struct UI ui, struct Url url, union input_stream* stream, wc_ces content_charset, struct Buffer* newBuf)
 {
+    Str html = readAll(stream);
+
     if (newBuf == NULL)
         newBuf = newBuffer();
     newBuf->document.charset = content_charset;
 
-    loadHTMLstream(stream, &newBuf->document.charset, newBuf, false);
+    loadHTMLstream(html, &newBuf->document.charset, newBuf, false);
 
     newBuf->document.topLineIndex = newBuf->document.firstLine->linenumber;
     newBuf->document.currentLineIndex = newBuf->document.firstLine->linenumber;
@@ -1517,7 +1518,7 @@ loadHTMLBuffer(struct UI ui, struct Url url, union input_stream* stream, wc_ces 
 struct Buffer*
 loadHTMLString(struct UI ui, Str page, wc_ces content_charset)
 {
-    union input_stream* stream = newStrStream(page);
+    // union input_stream* stream = newStrStream(page);
 
     struct Buffer* newBuf = newBuffer();
     newBuf->document.charset = content_charset;
@@ -1529,10 +1530,10 @@ loadHTMLString(struct UI ui, Str page, wc_ces content_charset)
     // }
     // TRAP_ON;
 
-    loadHTMLstream(stream, &newBuf->document.charset, newBuf, true);
+    loadHTMLstream(page, &newBuf->document.charset, newBuf, true);
 
     term_raw();
-    ISclose(stream);
+    // ISclose(stream);
     newBuf->document.topLineIndex = newBuf->document.firstLine->linenumber;
     newBuf->document.currentLineIndex = newBuf->document.firstLine->linenumber;
     newBuf->content_type = CONTENTTYPE_TEXT_HTML;
