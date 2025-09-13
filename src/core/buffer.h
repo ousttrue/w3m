@@ -71,7 +71,6 @@ void restorePosition(struct Buffer* buf, struct Buffer* orig);
 void saveBuffer(struct Buffer* buf, FILE* f, int cont);
 struct Url* baseURL(struct Buffer* buf);
 int columnSkip(struct Buffer* buf, int offset);
-struct LineList* lineSkip(struct Buffer* buf, struct LineList* line, int offset);
 struct LineList* currentLineSkip(struct Buffer* buf, struct LineList* line, int offset);
 char* last_modified(struct Buffer* buf);
 struct Content cookie_list_panel(struct UI ui);

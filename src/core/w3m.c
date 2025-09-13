@@ -1116,7 +1116,7 @@ DEFUN(ctrCsrV, CENTER_V, "Center on cursor line")
         return;
     int offsety = getScreen()->ROWS / 2 - ui.viewport_cursor.y;
     if (offsety != 0) {
-        ui.current_buffer->document.topLineIndex = lineSkip(ui.current_buffer, topLine(&ui.current_buffer->document), -offsety)->linenumber;
+        ui.current_buffer->document.topLineIndex = ui.current_buffer->document.topLineIndex - offsety;
         arrangeLine(ui.current_buffer);
     }
 }
@@ -1644,9 +1644,7 @@ void _goLine(struct UI ui, const char* l)
     if (*l == '^') {
         ui.current_buffer->document.topLineIndex = ui.current_buffer->document.currentLineIndex = ui.current_buffer->document.firstLine->linenumber;
     } else if (*l == '$') {
-        ui.current_buffer->document.topLineIndex = lineSkip(ui.current_buffer, lastLine(&ui.current_buffer->document),
-            -(getScreen()->ROWS + 1) / 2)
-                                                       ->linenumber;
+        ui.current_buffer->document.topLineIndex = ui.current_buffer->document.allLine - (getScreen()->ROWS + 1) / 2;
         ui.current_buffer->document.currentLineIndex = lastLine(&ui.current_buffer->document)->linenumber;
     }
     // else
@@ -1872,10 +1870,8 @@ gotoLabel(struct UI ui, const char* label)
     pushBuffer(ui, buf);
     gotoLine(ui.current_buffer, al->start.line);
     if (label_topline)
-        ui.current_buffer->document.topLineIndex = lineSkip(ui.current_buffer, topLine(&ui.current_buffer->document),
-            currentLine(&ui.current_buffer->document)->linenumber
-                - topLine(&ui.current_buffer->document)->linenumber)
-                                                       ->linenumber;
+        ui.current_buffer->document.topLineIndex = ui.current_buffer->document.currentLineIndex
+            - topLine(&ui.current_buffer->document)->linenumber;
     ui.current_buffer->pos = al->start.pos;
     arrangeCursor(ui.current_buffer);
 
@@ -3502,7 +3498,7 @@ convert_size3(long long size)
 static struct Content DownloadListBuffer(struct UI ui)
 {
     if (!FirstDL)
-        return (struct Content){};
+        return (struct Content) {};
 
     DownloadList* d;
     Str src = NULL;
@@ -3736,7 +3732,7 @@ DEFUN(cursorTop, CURSOR_TOP, "Move cursor to the top of the screen")
 {
     if (ui.current_buffer->document.firstLine == NULL)
         return;
-    ui.current_buffer->document.currentLineIndex = lineSkip(ui.current_buffer, topLine(&ui.current_buffer->document), 0)->linenumber;
+    ui.current_buffer->document.currentLineIndex = 0;
     arrangeLine(ui.current_buffer);
 }
 
