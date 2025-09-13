@@ -83,14 +83,13 @@ void pushBuffer(struct UI ui, struct Buffer* buf)
     if (clear_buffer)
         clearBuffer(ui.current_buffer);
 
+    buf->nextBuffer = ui.current_buffer;
+    Currentbuf = buf;
     struct Buffer* b;
     if (Firstbuf == ui.current_buffer) {
-        buf->nextBuffer = Firstbuf;
-        Firstbuf = ui.current_buffer = buf;
+        Firstbuf = buf;
     } else if ((b = prevBuffer(Firstbuf, ui.current_buffer)) != NULL) {
         b->nextBuffer = buf;
-        buf->nextBuffer = ui.current_buffer;
-        ui.current_buffer = buf;
     }
 }
 
@@ -105,7 +104,7 @@ void cmd_loadContent(struct UI ui, struct Content c)
     // if ((buf = ui.current_buffer->linkBuffer[LB_INFO]) != NULL)
     //     delBuffer(ui, buf);
 
-    struct Buffer *buf = makeBuffer(ui, &c);
+    struct Buffer* buf = makeBuffer(ui, &c);
     if (!buf) {
         message(getUI(), MSG_ERR, "Can't load string");
         return;

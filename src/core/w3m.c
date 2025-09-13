@@ -582,8 +582,8 @@ loadLink(struct UI ui, const char* url, const char* target, const char* referer,
     //     || base->scheme == SCM_LOCAL_CGI
     //     || base->scheme == SCM_DATA)
     //     referer = NO_REFERER;
-    if (referer == NULL)
-        referer = parsedURL2RefererStr(&ui.current_buffer->content.url)->ptr;
+    // if (referer == NULL)
+    //     referer = parsedURL2RefererStr(&ui.current_buffer->content.url)->ptr;
 
     struct Content c = loadGeneralFile(url, baseURL(ui.current_buffer), post, referer, UI_TTY);
     if (do_download) {
@@ -902,8 +902,8 @@ bool onFrame()
         w3mFuncList[CurrentEvent->cmd].func(ui);
 
         if (updateCursor(getUI().current_buffer)) {
-            termClear(ttyWriter());
         }
+        termClear(ttyWriter());
         bufToScreen(ui);
         renderFrame(ui);
 
@@ -923,8 +923,8 @@ bool onFrame()
                 w3mFuncList[CurrentAlarm->cmd].func(ui);
 
                 if (updateCursor(getUI().current_buffer)) {
-                    termClear(ttyWriter());
                 }
+                termClear(ttyWriter());
                 bufToScreen(ui);
                 renderFrame(ui);
 
