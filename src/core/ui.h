@@ -36,7 +36,7 @@ void cursorUpDown(int n);
 void cursorRight(int n);
 void cursorLeft(int n);
 void cursorHome();
-struct Int2 cursorDelta();
+bool updateCursor(struct Buffer* buf);
 
 struct UI getUI();
 void message(struct UI ui, enum MessageSeverity, const char* s);

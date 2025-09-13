@@ -33,16 +33,22 @@ const char* url_quote_conv(const char* x, wc_ces c)
     return url_quote(wc_conv_strict((x), InnerCharset, (c))->ptr);
 }
 
+static struct Int2 viewport_cursor = {
+    .x = 0,
+    .y = 0,
+};
+
 static struct Int2 cursor_delta = {
     .x = 0,
     .y = 0,
 };
-struct Int2 cursorDelta()
-{
-    struct Int2 cd = cursor_delta;
-    cursor_delta = (struct Int2) { 0, 0 };
-    return cd;
-}
+
+// struct Int2 cursorDelta()
+// {
+//     struct Int2 cd = cursor_delta;
+//     cursor_delta = (struct Int2) { 0, 0 };
+//     return cd;
+// }
 
 void cursorUp(int n)
 {
@@ -89,7 +95,6 @@ struct UI getUI()
     struct VirtualTerm* vt = getScreen();
     struct TermEntry* t = getTermEntry();
 
-    struct Int2 vc = viewportCursor(Currentbuf);
     struct UI ui = {
         .current_buffer = Currentbuf,
         .vt = vt,
@@ -104,10 +109,10 @@ struct UI getUI()
                 .y = vt->ROWS - rootY,
             },
         },
-        .viewport_cursor = vc,
+        .viewport_cursor = viewport_cursor,
         .term_cursor = {
-            .x = rootX + vc.x,
-            .y = rootY + vc.y,
+            .x = rootX + viewport_cursor.x,
+            .y = rootY + viewport_cursor.y,
         },
     };
     return ui;
@@ -309,16 +314,18 @@ static Str make_lastline_message(struct Buffer* buf)
 
 void renderFrame(struct UI ui)
 {
+    struct Buffer* buf = ui.current_buffer;
     struct TermEntry* t = getTermEntry();
     // bool use_graphic = graph_ok(t);
 
     // int cursorRow = ui.vt->CurLine;
     // int cursorCol = ui.vt->CurColumn;
 
-    struct Anchor* a = retrieveCurrentAnchor(Currentbuf);
-    struct BufferPoint bp = getBufferPosition(Currentbuf);
-    ui_printStatus("STATUS: (%d, %d) a(%d, %d=%d) %s",
+    struct Anchor* a = retrieveCurrentAnchor(buf);
+    struct BufferPoint bp = getBufferPosition(buf);
+    ui_printStatus("STATUS: (%d, %d), (%d, %d) a(%d, %d=%d) %s",
         // "top=%d key=[%02x > %02x > %02x > %02x > %02x > %02x > %02x > %02x]",
+        ui.viewport_cursor.y, ui.viewport_cursor.x,
         bp.line, bp.pos,
         a ? a->start.line : -1,
         a ? a->start.pos : -1,
@@ -334,10 +341,9 @@ void renderFrame(struct UI ui)
         // g_keylog[(g_i - 7) % sizeof(g_keylog)]
     );
 
-    struct Buffer* buf = Currentbuf;
     // int cursorRow = buf->cursorY;
     // int cursorCol = buf->cursorX;
-    drawAnchorCursor(ui, buf);
+    drawAnchorCursor(ui);
 
     Str msg = make_lastline_message(buf);
     if (buf->document.firstLine == NULL) {
@@ -384,8 +390,48 @@ void ui_cursor_set_x(int x)
 {
     if (Currentbuf->document.firstLine == NULL)
         return;
-    while (currentLine(Currentbuf)->prev && currentLine(Currentbuf)->bpos)
+    while (currentLine(&Currentbuf->document)->prev && currentLine(&Currentbuf->document)->bpos)
         cursorUp(1);
     Currentbuf->pos = 0;
     arrangeCursor(Currentbuf);
+}
+
+bool updateCursor(struct Buffer* buf)
+{
+    bool hasScroll = false;
+    struct VirtualTerm* vt = getScreen();
+
+    int x = viewport_cursor.x + cursor_delta.x;
+    if (x < 0) {
+        // left
+        x = 0;
+        hasScroll = true;
+    } else if (x >= vt->COLS) {
+        // right
+        x = vt->COLS - 1;
+        hasScroll = true;
+    }
+
+    int y = viewport_cursor.y + cursor_delta.y;
+    if (y < 0) {
+        // up
+        buf->document.topLineIndex += y;
+        y = 0;
+        hasScroll = true;
+    } else if (y >= vt->ROWS) {
+        // down
+        buf->document.topLineIndex += (1 + y - vt->ROWS);
+        y = vt->ROWS - 1;
+        hasScroll = true;
+    }
+
+    cursor_delta = (struct Int2) {
+        .x = 0,
+        .y = 0,
+    };
+    viewport_cursor = (struct Int2) {
+        .x = x,
+        .y = y,
+    };
+    return hasScroll;
 }

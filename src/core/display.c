@@ -247,8 +247,9 @@ static void redrawNLine(struct UI ui, struct Buffer* buf, int n)
     getAllImage(buf);
 }
 
-void bufToScreen(struct UI ui, struct Buffer* buf)
+void bufToScreen(struct UI ui)
 {
+    struct Buffer *buf = ui.current_buffer;
     if (buf->width == 0) {
         reshapeBuffer(ui, buf, ui.viewport.size.x);
     }
@@ -396,8 +397,9 @@ static int currentAnchorHseq(struct Buffer* buf)
     return an->hseq;
 }
 
-void drawAnchorCursor(struct UI ui, struct Buffer* buf)
+void drawAnchorCursor(struct UI ui)
 {
+    struct Buffer*buf=ui.current_buffer;
     if (!buf->document.firstLine || !buf->document.hmarklist)
         return;
     if (!buf->document.href && !buf->document.formitem)

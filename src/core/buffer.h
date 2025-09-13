@@ -90,7 +90,6 @@ struct Buffer* prevBuffer(struct Buffer* first, struct Buffer* buf);
 int writeBufferCache(struct Buffer* buf);
 int readBufferCache(struct Buffer* buf);
 
-bool applyCursor(struct Buffer* buf);
 void arrangeCursor(struct Buffer* buf);
 void arrangeLine(struct Buffer* buf);
 void cursorXY(struct Buffer* buf, int x, int y);
@@ -102,9 +101,6 @@ struct LineList* lineSkip(struct Buffer* buf, struct LineList* line, int offset,
 struct LineList* currentLineSkip(struct Buffer* buf, struct LineList* line, int offset, int last);
 char* last_modified(struct Buffer* buf);
 struct Content cookie_list_panel(struct UI ui);
-struct Int2 viewportCursor(struct Buffer* buf);
-struct Int2 updateCursor(struct Buffer* buf, struct Int2 viewport_size,
-    struct Int2 viewport_cursor, struct Int2 cursor_delta, bool* hasScroll);
 void reseq_anchor(struct Buffer* buf);
 
 struct Anchor* retrieveCurrentAnchor(struct Buffer* buf);

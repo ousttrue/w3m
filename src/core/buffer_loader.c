@@ -277,6 +277,9 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
         a_select = New_N(struct Anchor*, max_select);
     }
 
+    buf->document.firstLine = 0;
+    buf->document.allLine = 0;
+
     effect = 0;
     ex_effect = 0;
     nlines = 0;

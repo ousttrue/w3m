@@ -899,7 +899,10 @@ bool onFrame()
         CurrentCmdData = (char*)CurrentEvent->data;
         w3mFuncList[CurrentEvent->cmd].func(ui);
 
-        bufToScreen(ui, ui.current_buffer);
+        if (updateCursor(getUI().current_buffer)) {
+            termClear(ttyWriter());
+        }
+        bufToScreen(ui);
         renderFrame(ui);
 
         CurrentCmdData = NULL;
@@ -917,7 +920,10 @@ bool onFrame()
                 CurrentCmdData = (char*)CurrentAlarm->data;
                 w3mFuncList[CurrentAlarm->cmd].func(ui);
 
-                bufToScreen(ui, ui.current_buffer);
+                if (updateCursor(getUI().current_buffer)) {
+                    termClear(ttyWriter());
+                }
+                bufToScreen(ui);
                 renderFrame(ui);
 
                 CurrentCmdData = NULL;
@@ -936,13 +942,13 @@ bool onFrame()
     // mySignal(SIGWINCH, resize_hook);
     if (activeImage && displayImage && ui.current_buffer->document.img && !ui.current_buffer->image_loaded) {
         loadImage(ui.current_buffer, IMG_FLAG_NEXT, false);
-        bufToScreen(ui, ui.current_buffer);
+        bufToScreen(ui);
         renderFrame(ui);
         // continue;
     }
     if (need_resize_screen) {
         resize_screen();
-        bufToScreen(ui, ui.current_buffer);
+        bufToScreen(ui);
         renderFrame(ui);
     }
 
@@ -962,23 +968,22 @@ void onKeyInput(unsigned char c)
     }
 
     g_keylog[g_i % sizeof(g_keylog)] = c;
-    struct UI ui = getUI();
     if (IS_ASCII(c)) { /* Ascii */
 
-        set_buffer_environ(ui.current_buffer);
-        save_buffer_position(ui.current_buffer);
+        set_buffer_environ(getUI().current_buffer);
+        save_buffer_position(getUI().current_buffer);
         {
             CurrentKey = c;
             unsigned char prev = g_keylog[(g_i - 1) % sizeof(g_keylog)];
             CommandFunc func = (prev == 0x1b) ? EscKeymap[c]
                                               : GlobalKeymap[c];
-            func(ui);
+            func(getUI());
         }
-        if (applyCursor(ui.current_buffer)) {
+        if (updateCursor(getUI().current_buffer)) {
             termClear(ttyWriter());
         }
-        bufToScreen(ui, ui.current_buffer);
-        renderFrame(ui);
+        bufToScreen(getUI());
+        renderFrame(getUI());
     }
     ++g_i;
 

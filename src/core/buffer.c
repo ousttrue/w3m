@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "ui.h"
 #include "buffer_list.h"
 #include "line.h"
 #include "regex.h"
@@ -980,47 +981,13 @@ cookie_list_panel(struct UI ui)
     };
 }
 
-struct Int2 updateCursor(struct Buffer* buf, struct Int2 viewport_size,
-    struct Int2 viewport_cursor, struct Int2 cursor_delta, bool* hasScroll)
-{
-    int x = viewport_cursor.x + cursor_delta.x;
-    if (x < 0) {
-        // left
-        x = 0;
-        *hasScroll = true;
-    } else if (x >= viewport_size.x) {
-        // right
-        x = viewport_size.x - 1;
-        *hasScroll = true;
-    }
-
-    int y = viewport_cursor.y + cursor_delta.y;
-    if (y < 0) {
-        // up
-        buf->document.topLineIndex += y;
-        y = 0;
-        *hasScroll = true;
-    } else if (y >= viewport_size.y) {
-        // down
-        buf->document.topLineIndex += (1 + y - viewport_size.y);
-        y = viewport_size.y - 1;
-        *hasScroll = true;
-    }
-
-    return (struct Int2) {
-        .x = x,
-        .y = y,
-    };
-}
-
 struct BufferPoint getBufferPosition(struct Buffer* buf)
 {
     struct UI ui = getUI();
-    struct LineList* l = getLine(&Currentbuf->document, ui.viewport_cursor.y);
+    struct LineList* l = getLine(&buf->document, ui.viewport_cursor.y);
     if (!l) {
         return (struct BufferPoint) { 0, 0 };
     }
-
     int pos = columnPos(&l->l, ui.viewport_cursor.x);
     return (struct BufferPoint) {
         .line = ui.viewport_cursor.y,
@@ -1334,8 +1301,8 @@ _put_anchor_all(struct Buffer* buf, const char* p1, const char* p2, struct Buffe
 
 typedef struct Anchor* (*AnchorFunc)(struct Buffer*, const char*, const char*, struct BufferPoint);
 
-static char*
-reAnchorPos(struct Buffer* buf, struct LineList* l, char* p1, char* p2, AnchorFunc anchorproc)
+static const char*
+reAnchorPos(struct Buffer* buf, struct LineList* l, const char* p1, const char* p2, AnchorFunc anchorproc)
 {
     int spos = p1 - l->l.lineBuf;
     int epos = p2 - l->l.lineBuf;
@@ -1384,7 +1351,6 @@ static const char*
 reAnchorAny(struct Buffer* buf, const char* re, AnchorFunc anchorproc)
 {
     struct LineList* l;
-    char *p = NULL, *p1, *p2;
 
     if (re == NULL || *re == '\0') {
         return NULL;
@@ -1392,6 +1358,8 @@ reAnchorAny(struct Buffer* buf, const char* re, AnchorFunc anchorproc)
     if ((re = regexCompile(re, 1)) != NULL) {
         return re;
     }
+
+    const char* p = NULL;
     for (l = MarkAllPages ? buf->document.firstLine : topLine(&buf->document); l != NULL && (MarkAllPages || l->linenumber < topLine(&buf->document)->linenumber + getScreen()->ROWS - 1);
         l = l->next) {
         if (p && l->bpos)
@@ -1399,6 +1367,7 @@ reAnchorAny(struct Buffer* buf, const char* re, AnchorFunc anchorproc)
         p = l->l.lineBuf;
         for (;;) {
             if (regexMatch(p, &l->l.lineBuf[l->l.size] - p, p == l->l.lineBuf) == 1) {
+                const char *p1, *p2;
                 matchedPosition(&p1, &p2);
                 p = reAnchorPos(buf, l, p1, p2, anchorproc);
             } else
@@ -1411,18 +1380,4 @@ reAnchorAny(struct Buffer* buf, const char* re, AnchorFunc anchorproc)
 const char* reAnchor(struct Buffer* buf, const char* re)
 {
     return reAnchorAny(buf, re, _put_anchor_all);
-}
-
-bool applyCursor(struct Buffer* buf)
-{
-    bool scroll = false;
-    // viewport_cursor = updateCursor(Currentbuf, getUI().viewport.size, viewport_cursor, cursorDelta(), &scroll);
-    return scroll;
-}
-
-struct Int2 viewportCursor(struct Buffer* buf)
-{
-    return (struct Int2) {
-        0, 0
-    };
 }
