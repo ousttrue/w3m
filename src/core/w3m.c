@@ -1863,8 +1863,9 @@ gotoLabel(struct UI ui, const char* label)
     }
 
     struct Buffer* buf = newBuffer();
-    copyBuffer(buf, ui.current_buffer);
-    buf->content.url.label = allocStr(label, -1);
+    buf->content = ui.current_buffer->content;
+    buf->document = ui.current_buffer->document;
+
     pushHashHist(URLHist, parsedURL2Str(&buf->content.url)->ptr);
     (*buf->clone)++;
     pushBuffer(ui, buf);
@@ -2912,8 +2913,6 @@ DEFUN(reload, RELOAD, "Load current document anew")
         return;
     }
 
-    struct Buffer sbuf;
-    copyBuffer(&sbuf, ui.current_buffer);
     int multipart = 0;
 
     struct Form* post;
@@ -2961,13 +2960,13 @@ DEFUN(reload, RELOAD, "Load current document anew")
     // if (fbuf != NULL)
     //     Firstbuf = deleteBuffer(Firstbuf, fbuf);
     repBuffer(ui, ui.current_buffer, buf);
-    if ((buf->content.cc.content_type == CONTENTTYPE_TEXT_PLAIN && sbuf.content.cc.content_type == CONTENTTYPE_TEXT_HTML)
-        || (buf->content.cc.content_type == CONTENTTYPE_TEXT_HTML && sbuf.content.cc.content_type == CONTENTTYPE_TEXT_PLAIN)) {
-        vwSrc(ui);
-        if (ui.current_buffer != buf)
-            Firstbuf = deleteBuffer(Firstbuf, buf);
-    }
-    ui.current_buffer->form_submit = sbuf.form_submit;
+    // if ((buf->content.cc.content_type == CONTENTTYPE_TEXT_PLAIN && sbuf.content.cc.content_type == CONTENTTYPE_TEXT_HTML)
+    //     || (buf->content.cc.content_type == CONTENTTYPE_TEXT_HTML && sbuf.content.cc.content_type == CONTENTTYPE_TEXT_PLAIN)) {
+    //     vwSrc(ui);
+    //     if (ui.current_buffer != buf)
+    //         Firstbuf = deleteBuffer(Firstbuf, buf);
+    // }
+    // ui.current_buffer->form_submit = sbuf.form_submit;
     if (ui.current_buffer->document.firstLine) {
         // COPY_BUFROOT(ui.current_buffer, &sbuf);
         // restorePosition(ui.current_buffer, &sbuf);

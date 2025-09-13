@@ -382,12 +382,11 @@ form_update_line(struct Line* line, char** str, int spos, int epos, int width,
 
 void formUpdateBuffer(struct Anchor* a, struct Buffer* buf, struct FormItem* form)
 {
-    struct Buffer save;
-    char* p;
-    int spos, epos, rows, c_rows, pos, col = 0;
-
-    copyBuffer(&save, buf);
+    int top = buf->document.topLineIndex;
+    int current = buf->document.currentLineIndex;
     gotoLine(&buf->document, a->start.line);
+
+    int spos, epos;
     switch (form->type) {
     case FORM_TEXTAREA:
     case FORM_INPUT_TEXT:
@@ -403,6 +402,9 @@ void formUpdateBuffer(struct Anchor* a, struct Buffer* buf, struct FormItem* for
         spos = a->start.pos + 1;
         epos = a->end.pos - 1;
     }
+
+    int rows, c_rows, pos, col = 0;
+    char* p;
     switch (form->type) {
     case FORM_INPUT_CHECKBOX:
     case FORM_INPUT_RADIO:
@@ -477,8 +479,9 @@ void formUpdateBuffer(struct Anchor* a, struct Buffer* buf, struct FormItem* for
     default:
         break;
     }
-    copyBuffer(buf, &save);
-    arrangeLine(buf);
+
+    buf->document.topLineIndex = top;
+    buf->document.currentLineIndex = current;
 }
 
 Str textfieldrep(Str s, int width)
