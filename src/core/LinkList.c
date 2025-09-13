@@ -47,23 +47,23 @@ void append_link_info(struct Buffer* buf, Str html, struct LinkList* link)
 }
 
 struct LinkList*
-link_menu(struct Buffer* buf)
+link_menu(struct UI ui)
 {
     struct Menu menu;
     struct LinkList* l;
     int i, nitem, len = 0, linkV = -1;
     Str str;
 
-    if (!buf->document.linklist)
+    if (!ui.current_buffer->document.linklist)
         return NULL;
 
-    for (i = 0, l = buf->document.linklist; l; i++, l = l->next)
+    for (i = 0, l = ui.current_buffer->document.linklist; l; i++, l = l->next)
         ;
     nitem = i;
 
     const char** label;
     label = New_N(char*, nitem + 1);
-    for (i = 0, l = buf->document.linklist; l; i++, l = l->next) {
+    for (i = 0, l = ui.current_buffer->document.linklist; l; i++, l = l->next) {
         str = Strnew_charp(l->title ? l->title : "(empty)");
         if (l->type == LINK_TYPE_REL)
             Strcat_charp(str, " [Rel] ");
@@ -75,7 +75,7 @@ link_menu(struct Buffer* buf)
         if (!l->url)
             p = "";
         else
-            p = url_decode2(l->url, buf ? buf->document.charset : 0);
+            p = url_decode2(l->url, ui.current_buffer ? ui.current_buffer->document.charset : 0);
         Strcat_charp(str, p);
         label[i] = str->ptr;
         if (len < str->length)
@@ -87,16 +87,16 @@ link_menu(struct Buffer* buf)
     new_option_menu(&menu, label, &linkV, NULL);
 
     menu.initial = 0;
-    // menu.cursorX = buf->cursorX;
-    // menu.cursorY = buf->cursorY;
+    // menu.cursorX = ui.current_buffer->cursorX;
+    // menu.cursorY = ui.current_buffer->cursorY;
     menu.x = /*menu.cursorX +*/ FRAME_WIDTH + 1;
     menu.y = /*menu.cursorY +*/ 2;
 
-    popup_menu(NULL, &menu);
+    popup_menu(ui, NULL, &menu);
 
     if (linkV < 0)
         return NULL;
-    for (i = 0, l = buf->document.linklist; l; i++, l = l->next) {
+    for (i = 0, l = ui.current_buffer->document.linklist; l; i++, l = l->next) {
         if (i == linkV)
             return l;
     }

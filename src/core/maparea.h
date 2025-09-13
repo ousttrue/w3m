@@ -26,7 +26,7 @@ struct Anchor;
 
 MapList* searchMapList(struct Buffer* buf, const char* name);
 void follow_map(struct UI ui, struct KeyValue* arg);
-MapArea* follow_map_menu(struct Buffer* buf, const char* name, struct Anchor* a_img, int x, int y);
+MapArea* follow_map_menu(struct UI ui, struct Buffer* buf, const char* name, struct Anchor* a_img, int x, int y);
 int getMapXY(struct Buffer* buf, struct Anchor* a, int* x, int* y);
 MapArea* retrieveCurrentMapArea(struct Buffer* buf);
 struct Anchor* retrieveCurrentMap(struct Buffer* buf);

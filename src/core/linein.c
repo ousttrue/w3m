@@ -136,10 +136,10 @@ const char* inputLineHistSearch(struct UI ui,
             g_editor.cm_disp_next = -1;
         } else if (!g_editor.i_quote && c < 0x20) { /* Control code */
             if (incrfunc == NULL
-                || (c = incrfunc((int)c, g_editor.strBuf, g_editor.strProp)) < 0x20)
+                || (c = incrfunc(ui, (int)c, g_editor.strBuf, g_editor.strProp)) < 0x20)
                 InputKeymap[(int)c](&g_editor);
             if (incrfunc && c != (unsigned char)-1 && c != CTRL_J)
-                incrfunc(-1, g_editor.strBuf, g_editor.strProp);
+                incrfunc(ui, -1, g_editor.strBuf, g_editor.strProp);
             if (g_editor.cm_clear)
                 g_editor.cm_next = false;
             if (g_editor.cm_disp_clear)
@@ -157,7 +157,7 @@ const char* inputLineHistSearch(struct UI ui,
                 goto next_char;
             le_ins_char(&g_editor, tmp);
             if (incrfunc)
-                incrfunc(-1, g_editor.strBuf, g_editor.strProp);
+                incrfunc(ui, -1, g_editor.strBuf, g_editor.strProp);
         }
         if (g_editor.CLen && (flag & IN_CHAR))
             break;

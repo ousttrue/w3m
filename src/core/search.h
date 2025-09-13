@@ -1,5 +1,6 @@
 #pragma once
-#include "buffer.h"
+#include "geometry.h"
+#include <wc.h>
 #include <stdbool.h>
 
 extern char SearchConv;
@@ -12,11 +13,11 @@ enum SearchResultFlags {
     SR_NOTFOUND = 0x2,
     SR_WRAPPED = 0x4,
 };
-typedef enum SearchResultFlags (*SearchFunc)(struct Buffer*, const char*);
+typedef enum SearchResultFlags (*SearchFunc)(struct UI ui, const char*);
 
-const char* conv_search_string(const char* str, wc_ces f_ces);
-enum SearchResultFlags forwardSearch(struct Buffer* buf, const char* str);
-enum SearchResultFlags backwardSearch(struct Buffer* buf, const char* str);
-void isrch(SearchFunc func, char* prompt);
-void srch(SearchFunc func, char* prompt);
-void srch_nxtprv(bool reverse);
+const char* conv_search_string(struct UI ui, const char* str, wc_ces f_ces);
+enum SearchResultFlags forwardSearch(struct UI ui, const char* str);
+enum SearchResultFlags backwardSearch(struct UI ui, const char* str);
+void isrch(struct UI ui, SearchFunc func, char* prompt);
+void srch(struct UI ui, SearchFunc func, char* prompt);
+void srch_nxtprv(struct UI ui, bool reverse);

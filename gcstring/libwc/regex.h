@@ -36,4 +36,4 @@ char* regexCompile(const char* ex, int igncase);
 
 int regexMatch(const char* str, int len, int firstp);
 
-void matchedPosition(char** first, char** last);
+void matchedPosition(const char** first, const char** last);

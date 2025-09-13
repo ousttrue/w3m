@@ -660,7 +660,7 @@ void updateSelectOption(struct FormItem* fi, struct FormSelectOptionItem* item)
     }
 }
 
-int formChooseOptionByMenu(struct FormItem* fi, int x, int y)
+int formChooseOptionByMenu(struct UI ui, struct FormItem* fi, int x, int y)
 {
     int i, n, selected = -1, init_select = fi->selected;
     struct FormSelectOptionItem* opt;
@@ -672,7 +672,7 @@ int formChooseOptionByMenu(struct FormItem* fi, int x, int y)
         label[i] = opt->label->ptr;
     label[n] = NULL;
 
-    optionMenu(x, y, label, &selected, init_select, NULL);
+    optionMenu(ui, x, y, label, &selected, init_select, NULL);
 
     if (selected < 0)
         return 0;

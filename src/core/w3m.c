@@ -873,7 +873,7 @@ _followForm(struct UI ui, bool submit, bool do_download)
             do_submit(ui, a, fi, do_download);
             return;
         }
-        if (!formChooseOptionByMenu(fi,
+        if (!formChooseOptionByMenu(ui, fi,
                 ui.viewport_cursor.x - ui.current_buffer->pos + a->start.pos,
                 ui.viewport_cursor.y))
             break;
@@ -1191,36 +1191,36 @@ DEFUN(rdrwSc, REDRAW, "Draw the screen anew")
 
 DEFUN(srchfor, SEARCH SEARCH_FORE WHEREIS, "Search forward")
 {
-    srch(forwardSearch, "Forward: ");
+    srch(ui, forwardSearch, "Forward: ");
 }
 
 DEFUN(isrchfor, ISEARCH, "Incremental search forward")
 {
-    isrch(forwardSearch, "I-search: ");
+    isrch(ui, forwardSearch, "I-search: ");
 }
 
 /* Search regular expression backward */
 
 DEFUN(srchbak, SEARCH_BACK, "Search backward")
 {
-    srch(backwardSearch, "Backward: ");
+    srch(ui, backwardSearch, "Backward: ");
 }
 
 DEFUN(isrchbak, ISEARCH_BACK, "Incremental search backward")
 {
-    isrch(backwardSearch, "I-search backward: ");
+    isrch(ui, backwardSearch, "I-search backward: ");
 }
 
 /* Search next matching */
 DEFUN(srchnxt, SEARCH_NEXT, "Continue search forward")
 {
-    srch_nxtprv(0);
+    srch_nxtprv(ui, 0);
 }
 
 /* Search previous matching */
 DEFUN(srchprv, SEARCH_PREV, "Continue search backward")
 {
-    srch_nxtprv(1);
+    srch_nxtprv(ui, 1);
 }
 
 static void
@@ -1900,19 +1900,19 @@ DEFUN(reMark, REG_MARK, "Mark all occurences of a pattern")
             return;
         }
     }
-    str = conv_search_string(str, DisplayCharset);
+    str = conv_search_string(ui, str, DisplayCharset);
     if ((str = regexCompile(str, 1)) != NULL) {
         message(getUI(), MSG_INFO, str);
         return;
     }
 
     struct LineList* l;
-    char *p, *p1, *p2;
     MarkString = str;
     for (l = ui.current_buffer->document.firstLine; l != NULL; l = l->next) {
-        p = l->l.lineBuf;
+        const char* p = l->l.lineBuf;
         for (;;) {
             if (regexMatch(p, &l->l.lineBuf[l->l.len] - p, p == l->l.lineBuf) == 1) {
+                const char *p1, *p2;
                 matchedPosition(&p1, &p2);
                 l->l.propBuf[p1 - l->l.lineBuf] |= PE_MARK;
                 p = p2;
@@ -2695,15 +2695,15 @@ DEFUN(pginfo, INFO, "Display information about the current document")
 void follow_map(struct UI ui, struct KeyValue* arg)
 {
     const char* name = tag_get_value(arg, "link");
-    struct Anchor* an;
-    MapArea* a;
     int x, y;
     struct Url p_url;
 
+    struct Anchor* an;
     an = retrieveCurrentImg(ui.current_buffer);
     // x = ui.current_buffer->cursorX;
     // y = ui.current_buffer->cursorY;
-    a = follow_map_menu(ui.current_buffer, (char*)name, an, x, y);
+    MapArea* a;
+    a = follow_map_menu(ui, ui.current_buffer, name, an, x, y);
     if (a == NULL || a->url == NULL || *(a->url) == '\0') {
         return;
     }
@@ -2720,7 +2720,7 @@ void follow_map(struct UI ui, struct KeyValue* arg)
 /* link menu */
 DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
 {
-    struct LinkList* l = link_menu(ui.current_buffer);
+    struct LinkList* l = link_menu(ui);
     struct Url p_url;
 
     if (!l || !l->url)
@@ -2735,13 +2735,15 @@ DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
         parsedURL2Str(&ui.current_buffer->currentURL)->ptr, NULL);
 }
 
+typedef struct Anchor* (*AnchorMenuFunc)(struct UI ui, struct Buffer*);
+
 static void
-anchorMn(struct UI ui, struct Anchor* (*menu_func)(struct Buffer*), int go)
+anchorMn(struct UI ui, AnchorMenuFunc menu_func, int go)
 {
     if (!ui.current_buffer->document.href || !ui.current_buffer->document.hmarklist)
         return;
 
-    struct Anchor* a = menu_func(ui.current_buffer);
+    struct Anchor* a = menu_func(ui, ui.current_buffer);
     if (!a || a->hseq < 0)
         return;
 

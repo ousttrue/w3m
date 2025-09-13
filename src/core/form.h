@@ -18,7 +18,7 @@ extern char* pre_form_file;
 void addSelectOption(struct FormSelectOption* fso, Str value, Str label, int chk);
 void chooseSelectOption(struct FormItem* fi, struct FormSelectOptionItem* item);
 void updateSelectOption(struct FormItem* fi, struct FormSelectOptionItem* item);
-int formChooseOptionByMenu(struct FormItem* fi, int x, int y);
+int formChooseOptionByMenu(struct UI ui, struct FormItem* fi, int x, int y);
 
 struct Anchor;
 struct Buffer;

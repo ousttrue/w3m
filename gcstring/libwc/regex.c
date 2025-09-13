@@ -315,7 +315,7 @@ void MatchedPosition(Regex* re, char** first, char** last)
     *last = re->lposition;
 }
 
-void matchedPosition(char** first, char** last)
+void matchedPosition(const char** first, const char** last)
 {
     *first = DefaultRegex.position;
     *last = DefaultRegex.lposition;

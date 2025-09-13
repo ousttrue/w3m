@@ -20,6 +20,6 @@ struct Buffer;
 struct HtmlTagParsed;
 
 void append_link_info(struct Buffer* buf, Str html, struct LinkList* link);
-struct LinkList* link_menu(struct Buffer* buf);
+struct LinkList* link_menu(struct UI ui);
 struct Buffer* link_list_panel(struct UI ui, struct Buffer* buf);
 void addLink(struct Buffer* buf, struct HtmlTagParsed* tag);
