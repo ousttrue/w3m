@@ -94,14 +94,23 @@ void pushBuffer(struct UI ui, struct Buffer* buf)
     }
 }
 
-void cmd_loadBuffer(struct UI ui, struct Buffer* buf,
+void cmd_loadContent(struct UI ui, struct Content c,
     enum BufferProperty prop, enum LinkBufferType linkid)
 {
+    // struct Buffer* buf;
+    // if ((buf = ui.current_buffer->linkBuffer[LB_N_INFO]) != NULL) {
+    //     ui.current_buffer = buf;
+    //
+    //     return;
+    // }
+    // if ((buf = ui.current_buffer->linkBuffer[LB_INFO]) != NULL)
+    //     delBuffer(ui, buf);
+
+    struct Buffer *buf = makeBuffer(ui, &c);
     if (!buf) {
         message(getUI(), MSG_ERR, "Can't load string");
         return;
     }
-
     buf->bufferprop |= (BP_INTERNAL | prop);
     if (!(buf->bufferprop & BP_NO_URL))
         buf->currentURL = copyParsedUrl(&ui.current_buffer->currentURL);

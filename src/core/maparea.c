@@ -9,7 +9,6 @@
 #include "display.h"
 #include "alloc.h"
 #include "form.h"
-#include "ui.h"
 #include "menu.h"
 #include "image.h"
 #include "ctrlcode.h"
@@ -336,7 +335,7 @@ append_map_info(struct Buffer* buf, Str tmp, struct FormItem* fi)
 /*
  * information of current page and link
  */
-struct Buffer*
+struct Content
 page_info_panel(struct UI ui, struct Buffer* buf)
 {
     Str tmp = Strnew_size(1024);
@@ -441,8 +440,12 @@ page_info_panel(struct UI ui, struct Buffer* buf)
             html_quote(buf->ssl_certificate), "</pre>\n", NULL);
 end:
     Strcat_charp(tmp, "</body></html>");
-    struct Buffer* newbuf = loadHTMLString(ui, tmp, WC_CES_UTF_8);
-    if (newbuf)
-        newbuf->document.charset = buf->document.charset;
-    return newbuf;
+    return (struct Content) {
+        .url = {},
+        .page = tmp,
+        .cc = {
+            .content_type = CONTENTTYPE_TEXT_HTML,
+            .charset = WC_CES_UTF_8,
+        },
+    };
 }

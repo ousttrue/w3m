@@ -2,6 +2,7 @@
 #include "geometry.h"
 #include "textlist.h"
 #include "hash.h"
+#include "Content.h"
 #include <stddef.h>
 
 typedef ListItem HistItem;
@@ -25,8 +26,6 @@ extern int SaveURLHist;
 #define HIST_LIST_MAX GENERAL_LIST_MAX
 #define HIST_HASH_SIZE 127
 
-struct Buffer;
-
 struct Hist* newHist(void);
 struct Hist* copyHist(struct Hist* hist);
 HistItem* unshiftHist(struct Hist* hist, const char* ptr);
@@ -38,4 +37,4 @@ char* nextHist(struct Hist* hist);
 char* prevHist(struct Hist* hist);
 int loadHistory(struct Hist* hist);
 void saveHistory(struct Hist* hist, size_t size);
-struct Buffer* historyBuffer(struct UI ui, struct Hist* hist);
+struct Content historyBuffer(struct UI ui, struct Hist* hist);

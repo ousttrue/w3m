@@ -101,7 +101,7 @@ int columnSkip(struct Buffer* buf, int offset);
 struct LineList* lineSkip(struct Buffer* buf, struct LineList* line, int offset, int last);
 struct LineList* currentLineSkip(struct Buffer* buf, struct LineList* line, int offset, int last);
 char* last_modified(struct Buffer* buf);
-struct Buffer* cookie_list_panel(struct UI ui);
+struct Content cookie_list_panel(struct UI ui);
 struct Int2 viewportCursor(struct Buffer* buf);
 struct Int2 updateCursor(struct Buffer* buf, struct Int2 viewport_size,
     struct Int2 viewport_cursor, struct Int2 cursor_delta, bool* hasScroll);

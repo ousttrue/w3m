@@ -1,11 +1,9 @@
 #include "history.h"
 #include "runtime.h"
 #include "buffer_loader.h"
-#include "w3m.h"
 #include "hash.h"
 #include "ui.h"
 #include "quote.h"
-#include "buffer.h"
 #include "html_quote.h"
 #include <alloc.h>
 #include <sys/stat.h>
@@ -29,7 +27,7 @@ mergeHistory(struct Hist* ours, struct Hist* theirs)
     return 0;
 }
 
-struct Buffer*
+struct Content
 historyBuffer(struct UI ui, struct Hist* hist)
 {
     Str src = Strnew();
@@ -53,7 +51,12 @@ historyBuffer(struct UI ui, struct Hist* hist)
         }
     }
     Strcat_charp(src, "</ol>\n</body>\n</html>");
-    return loadHTMLString(ui, src, WC_CES_UTF_8);
+    // return loadHTMLString(ui, src, WC_CES_UTF_8);
+    return (struct Content) {
+        .url = {},
+        .page = src,
+        .cc = {},
+    };
 }
 
 int loadHistory(struct Hist* hist)

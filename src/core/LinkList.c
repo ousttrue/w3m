@@ -103,31 +103,26 @@ link_menu(struct UI ui)
     return NULL;
 }
 
-struct Buffer*
+struct Content
 link_list_panel(struct UI ui, struct Buffer* buf)
 {
     if (buf->bufferprop & BP_INTERNAL || (buf->document.linklist == 0 && buf->document.href == 0 && buf->document.img == 0)) {
-        return 0;
+        return (struct Content) {};
     }
 
-    struct LinkList* l;
-    struct AnchorList* al;
-    struct Anchor* a;
-    struct FormItem* fi;
-    int i;
-    const char *t, *u, *p;
-    struct Url pu;
-    /* FIXME: gettextize? */
     Str tmp = Strnew_charp("<title>Link List</title>\
 <h1 align=center>Link List</h1>\n");
 
     if (buf->document.linklist) {
         Strcat_charp(tmp, "<hr><h2>Links</h2>\n<ol>\n");
-        for (l = buf->document.linklist; l; l = l->next) {
+        for (struct LinkList* l = buf->document.linklist; l; l = l->next) {
+            const char* p;
+            const char* u;
+            const char* t;
             if (l->url) {
-                pu = parseUrl(l->url, baseURL(buf));
+                struct Url pu = parseUrl(l->url, baseURL(buf));
                 p = parsedURL2Str(&pu)->ptr;
-                u = html_quote(p);
+                const char* u = html_quote(p);
                 if (DecodeURL)
                     p = html_quote(url_decode2(p, buf ? buf->document.charset : 0));
                 else
@@ -150,19 +145,19 @@ link_list_panel(struct UI ui, struct Buffer* buf)
 
     if (buf->document.href) {
         Strcat_charp(tmp, "<hr><h2>Anchors</h2>\n<ol>\n");
-        al = buf->document.href;
-        for (i = 0; i < al->nanchor; i++) {
-            a = &al->anchors[i];
+        struct AnchorList* al = buf->document.href;
+        for (int i = 0; i < al->nanchor; i++) {
+            struct Anchor* a = &al->anchors[i];
             if (a->hseq < 0 || a->slave)
                 continue;
-            pu = parseUrl(a->url, baseURL(buf));
-            p = parsedURL2Str(&pu)->ptr;
-            u = html_quote(p);
+            struct Url pu = parseUrl(a->url, baseURL(buf));
+            const char* p = parsedURL2Str(&pu)->ptr;
+            const char* u = html_quote(p);
             if (DecodeURL)
                 p = html_quote(url_decode2(p, buf ? buf->document.charset : 0));
             else
                 p = u;
-            t = getAnchorText(buf, al, a);
+            const char* t = getAnchorText(buf, al, a);
             t = t ? html_quote(t) : "";
             Strcat_m_charp(tmp, "<li><a href=\"", u, "\">", t, "</a><br>", p,
                 "\n", 0);
@@ -172,18 +167,19 @@ link_list_panel(struct UI ui, struct Buffer* buf)
 
     if (buf->document.img) {
         Strcat_charp(tmp, "<hr><h2>Images</h2>\n<ol>\n");
-        al = buf->document.img;
-        for (i = 0; i < al->nanchor; i++) {
-            a = &al->anchors[i];
+        struct AnchorList* al = buf->document.img;
+        for (int i = 0; i < al->nanchor; i++) {
+            struct Anchor* a = &al->anchors[i];
             if (a->slave)
                 continue;
-            pu = parseUrl(a->url, baseURL(buf));
-            p = parsedURL2Str(&pu)->ptr;
-            u = html_quote(p);
+            struct Url pu = parseUrl(a->url, baseURL(buf));
+            const char* p = parsedURL2Str(&pu)->ptr;
+            const char* u = html_quote(p);
             if (DecodeURL)
                 p = html_quote(url_decode2(p, buf ? buf->document.charset : 0));
             else
                 p = u;
+            const char* t;
             if (a->title && *a->title)
                 t = html_quote(a->title);
             else
@@ -193,7 +189,7 @@ link_list_panel(struct UI ui, struct Buffer* buf)
             a = retrieveAnchor(buf->document.formitem, a->start);
             if (!a)
                 continue;
-            fi = (struct FormItem*)a->url;
+            struct FormItem* fi = (struct FormItem*)a->url;
             fi = fi->parent->item;
             if (fi->parent->method == FORM_METHOD_INTERNAL && !Strcmp_charp(fi->parent->action, "map") && fi->value) {
                 MapList* ml = searchMapList(buf, fi->value->ptr);
@@ -226,9 +222,14 @@ link_list_panel(struct UI ui, struct Buffer* buf)
         Strcat_charp(tmp, "</ol>\n");
     }
 
-    struct Buffer* newBuf = loadHTMLString(ui, tmp, WC_CES_UTF_8);
-    newBuf->document.charset = buf->document.charset;
-    return newBuf;
+    return (struct Content) {
+        .url = {},
+        .page = tmp,
+        .cc = {
+            .content_type = CONTENTTYPE_TEXT_HTML,
+            .charset = WC_CES_UTF_8,
+        },
+    };
 }
 
 void addLink(struct Buffer* buf, struct HtmlTagParsed* tag)

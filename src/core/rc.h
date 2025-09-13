@@ -1,9 +1,9 @@
 #pragma once
 #include "geometry.h"
+#include "Content.h"
 #include <stdio.h>
 #include <wc.h>
 
-struct Buffer;
 struct KeyValue;
 
 void show_params(FILE* fp);
@@ -12,7 +12,7 @@ int set_param_option(const char* option);
 const char* get_param_option(const char* name);
 void init_rc(void);
 void init_tmp(void);
-struct Buffer* load_option_panel(struct UI ui);
+struct Content load_option_panel(struct UI ui);
 void panel_set_option(struct UI ui, struct KeyValue*);
 void sync_with_option(void);
 

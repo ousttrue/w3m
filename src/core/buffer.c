@@ -881,7 +881,7 @@ char* last_modified(struct Buffer* buf)
     return "unknown";
 }
 
-struct Buffer*
+struct Content
 cookie_list_panel(struct UI ui)
 {
     /* FIXME: gettextize? */
@@ -893,7 +893,7 @@ cookie_list_panel(struct UI ui)
     char tmp2[80];
 
     if (!use_cookie || !First_cookie)
-        return 0;
+        return (struct Content) {};
 
     Strcat_charp(src, "<ol>");
     for (p = First_cookie, i = 0; p; p = p->next, i++) {
@@ -969,7 +969,15 @@ cookie_list_panel(struct UI ui)
             "</td></tr><tr><td><input type=submit value=\"OK\"></table><p>");
     }
     Strcat_charp(src, "</ol></form></body></html>");
-    return loadHTMLString(ui, src, WC_CES_UTF_8);
+
+    return (struct Content) {
+        .url = {},
+        .page = src,
+        .cc = {
+            .content_type = CONTENTTYPE_TEXT_HTML,
+            .charset = WC_CES_UTF_8,
+        },
+    };
 }
 
 struct Int2 updateCursor(struct Buffer* buf, struct Int2 viewport_size,

@@ -937,7 +937,7 @@ set_param(const char* name, const char* value)
 
 int set_param_option(const char* option)
 {
-    const char *p = option;
+    const char* p = option;
     Str tmp = Strnew();
     while (*p && !IS_SPACE(*p) && *p != '=')
         Strcat_char(tmp, *p++);
@@ -952,7 +952,7 @@ int set_param_option(const char* option)
     if (set_param(tmp->ptr, p))
         goto option_assigned;
 
-    const char *q = tmp->ptr;
+    const char* q = tmp->ptr;
     if (!strncmp(q, "no", 2)) { /* -o noxxx, -o no-xxx, -o no_xxx */
         q += 2;
         if (*q == '-' || *q == '_')
@@ -1293,23 +1293,16 @@ to_str(struct param_ptr* p)
     return NULL;
 }
 
-struct Buffer*
+struct Content
 load_option_panel(struct UI ui)
 {
-    Str src;
-    struct sel_c* s;
-    wc_ces_list* c;
-    int x, i;
-    Str tmp;
-    struct Buffer* buf;
-
     if (optionpanel_str == NULL)
         optionpanel_str = Sprintf(optionpanel_src1, w3m_version,
             html_quote(localCookie()->ptr), _(CMT_HELPER));
     OptionCharset = SystemCharset; /* FIXME */
     if (!OptionEncode) {
         optionpanel_str = wc_Str_conv(optionpanel_str, OptionCharset, InnerCharset);
-        for (i = 0; sections[i].name != NULL; i++) {
+        for (int i = 0; sections[i].name != NULL; i++) {
             sections[i].name = wc_conv(_(sections[i].name), OptionCharset, InnerCharset)->ptr;
             struct param_ptr* p;
             for (p = sections[i].params; p->name; p++) {
@@ -1318,7 +1311,7 @@ load_option_panel(struct UI ui)
                                  ->ptr;
                 if (p->inputtype == PI_SEL_C
                     && p->select != colorstr) {
-                    for (s = (struct sel_c*)p->select; s->text != NULL; s++) {
+                    for (struct sel_c* s = (struct sel_c*)p->select; s->text != NULL; s++) {
                         s->text = wc_conv(_(s->text), OptionCharset,
                             InnerCharset)
                                       ->ptr;
@@ -1326,16 +1319,16 @@ load_option_panel(struct UI ui)
                 }
             }
         }
-        for (s = colorstr; s->text; s++)
+        for (struct sel_c* s = colorstr; s->text; s++)
             s->text = wc_conv(_(s->text), OptionCharset,
                 InnerCharset)
                           ->ptr;
         OptionEncode = true;
     }
-    src = Strdup(optionpanel_str);
+    Str src = Strdup(optionpanel_str);
 
     Strcat_charp(src, "<table><tr><td>");
-    for (i = 0; sections[i].name != NULL; i++) {
+    for (int i = 0; sections[i].name != NULL; i++) {
         Strcat_m_charp(src, "<h1>", sections[i].name, "</h1>", NULL);
         ;
         Strcat_charp(src, "<table width=100% cellpadding=0>");
@@ -1350,8 +1343,8 @@ load_option_panel(struct UI ui)
                     " value=\"",
                     html_quote(to_str(p)->ptr), "\">", NULL);
                 break;
-            case PI_ONOFF:
-                x = atoi(to_str(p)->ptr);
+            case PI_ONOFF: {
+                int x = atoi(to_str(p)->ptr);
                 Strcat_m_charp(src, "<input type=radio name=",
                     p->name,
                     " value=1",
@@ -1360,23 +1353,26 @@ load_option_panel(struct UI ui)
                     p->name,
                     " value=0", (x ? "" : " checked"), ">NO", NULL);
                 break;
-            case PI_SEL_C:
-                tmp = to_str(p);
+            }
+            case PI_SEL_C: {
+                Str tmp = to_str(p);
                 Strcat_m_charp(src, "<select name=", p->name, ">", NULL);
-                for (s = (struct sel_c*)p->select; s->text != NULL; s++) {
+                for (struct sel_c* s = (struct sel_c*)p->select; s->text != NULL; s++) {
                     Strcat_charp(src, "<option value=");
                     Strcat(src, Sprintf("%s\n", s->cvalue));
-                    if ((p->type != P_CHAR && s->value == atoi(tmp->ptr)) || (p->type == P_CHAR && (char)s->value == *(tmp->ptr)))
+                    if ((p->type != P_CHAR && s->value == atoi(tmp->ptr))
+                        || (p->type == P_CHAR && (char)s->value == *(tmp->ptr)))
                         Strcat_charp(src, " selected");
                     Strcat_char(src, '>');
                     Strcat_charp(src, s->text);
                 }
                 Strcat_charp(src, "</select>");
                 break;
-            case PI_CODE:
-                tmp = to_str(p);
+            }
+            case PI_CODE: {
+                Str tmp = to_str(p);
                 Strcat_m_charp(src, "<select name=", p->name, ">", NULL);
-                for (c = *(wc_ces_list**)p->select; c->desc != NULL; c++) {
+                for (wc_ces_list* c = *(wc_ces_list**)p->select; c->desc != NULL; c++) {
                     Strcat_charp(src, "<option value=");
                     Strcat(src, Sprintf("%s\n", c->name));
                     if (c->id == atoi(tmp->ptr))
@@ -1387,6 +1383,7 @@ load_option_panel(struct UI ui)
                 Strcat_charp(src, "</select>");
                 break;
             }
+            }
             Strcat_charp(src, "</td></tr>\n");
         }
         Strcat_charp(src,
@@ -1394,10 +1391,15 @@ load_option_panel(struct UI ui)
         Strcat_charp(src, "</table><hr width=50%>");
     }
     Strcat_charp(src, "</table></form></body></html>");
-    buf = loadHTMLString(ui, src, WC_CES_UTF_8);
-    if (buf)
-        buf->document.charset = OptionCharset;
-    return buf;
+
+    return (struct Content) {
+        .url = {},
+        .page = src,
+        .cc = {
+            .content_type = CONTENTTYPE_TEXT_HTML,
+            .charset = WC_CES_UTF_8,
+        },
+    };
 }
 
 void panel_set_option(struct UI ui, struct KeyValue* arg)

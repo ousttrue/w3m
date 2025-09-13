@@ -136,21 +136,22 @@ static int searchKeyNum(void);
 /*
  * List of error messages
  */
-static struct Buffer*
-message_list_panel(struct UI ui)
+static struct Content message_list_panel(struct UI ui)
 {
     Str tmp = Strnew_size(getScreen()->ROWS * getScreen()->COLS);
-    ListItem* p;
-
-    /* FIXME: gettextize? */
     Strcat_charp(tmp,
         "<html><head><title>List of error messages</title></head><body>"
         "<h1>List of error messages</h1><table cellpadding=0>\n");
-
     concatMessageList(tmp);
-
     Strcat_charp(tmp, "</table></body></html>");
-    return loadHTMLString(ui, tmp, WC_CES_UTF_8);
+    return (struct Content) {
+        .url = {},
+        .page = tmp,
+        .cc = {
+            .content_type = CONTENTTYPE_TEXT_HTML,
+            .charset = WC_CES_UTF_8,
+        },
+    };
 }
 
 static void*
@@ -559,8 +560,6 @@ query_from_followform(struct UI ui, Str* query, struct FormItem* fi, int multipa
             Strshrink(*query, 1);
     }
 }
-
-
 
 // static struct Buffer* loadNormalBuf(struct UI ui, struct Buffer* buf)
 // {
@@ -2545,7 +2544,7 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
 /* option setting */
 DEFUN(ldOpt, OPTIONS, "Display options setting panel")
 {
-    cmd_loadBuffer(ui, load_option_panel(ui), BP_NO_URL, LB_NOLINK);
+    cmd_loadContent(ui, load_option_panel(ui), BP_NO_URL, LB_NOLINK);
 }
 
 /* set an option */
@@ -2572,23 +2571,15 @@ DEFUN(setOpt, SET_OPTION, "Set option")
 /* error message list */
 DEFUN(msgs, MSGS, "Display error messages")
 {
-    cmd_loadBuffer(ui, message_list_panel(ui), BP_NO_URL, LB_NOLINK);
+    struct Content c = message_list_panel(ui);
+    cmd_loadContent(ui, c, BP_NO_URL, LB_NOLINK);
 }
 
 /* page info */
 DEFUN(pginfo, INFO, "Display information about the current document")
 {
-    struct Buffer* buf;
-
-    if ((buf = ui.current_buffer->linkBuffer[LB_N_INFO]) != NULL) {
-        ui.current_buffer = buf;
-
-        return;
-    }
-    if ((buf = ui.current_buffer->linkBuffer[LB_INFO]) != NULL)
-        delBuffer(ui, buf);
-    buf = page_info_panel(ui, ui.current_buffer);
-    cmd_loadBuffer(ui, buf, BP_NORMAL, LB_INFO);
+    struct Content c = page_info_panel(ui, ui.current_buffer);
+    cmd_loadContent(ui, c, BP_NORMAL, LB_INFO);
 }
 
 void follow_map(struct UI ui, struct KeyValue* arg)
@@ -2675,26 +2666,22 @@ DEFUN(movlistMn, MOVE_LIST_MENU, "Pop up menu to navigate between hyperlinks")
 /* link,anchor,image list */
 DEFUN(linkLst, LIST, "Show all URLs referenced")
 {
-    struct Buffer* buf = link_list_panel(ui, ui.current_buffer);
-    if (buf) {
-        cmd_loadBuffer(ui, buf, BP_NORMAL, LB_NOLINK);
-    }
+    struct Content c = link_list_panel(ui, ui.current_buffer);
+    cmd_loadContent(ui, c, BP_NORMAL, LB_NOLINK);
 }
 
 /* cookie list */
 DEFUN(cooLst, COOKIE, "View cookie list")
 {
-    struct Buffer* buf;
-
-    buf = cookie_list_panel(ui);
-    if (buf != NULL)
-        cmd_loadBuffer(ui, buf, BP_NO_URL, LB_NOLINK);
+    struct Content c = cookie_list_panel(ui);
+    cmd_loadContent(ui, c, BP_NO_URL, LB_NOLINK);
 }
 
 /* History page */
 DEFUN(ldHist, HISTORY, "Show browsing history")
 {
-    cmd_loadBuffer(ui, historyBuffer(ui, URLHist), BP_NO_URL, LB_NOLINK);
+    struct Content c = historyBuffer(ui, URLHist);
+    cmd_loadContent(ui, c, BP_NO_URL, LB_NOLINK);
 }
 
 /* download HREF link */
@@ -3773,8 +3760,6 @@ DEFUN(cursorBottom, CURSOR_BOTTOM, "Move cursor to the bottom of the screen")
     ui.current_buffer->document.currentLineIndex = currentLineSkip(ui.current_buffer, topLine(&ui.current_buffer->document), offsety, false)->linenumber;
     arrangeLine(ui.current_buffer);
 }
-
-
 
 Str myEditor(const char* cmd, const char* file, int line)
 {
