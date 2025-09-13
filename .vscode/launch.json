@@ -27,7 +27,8 @@
             "args": [
                 // "www.google.com",
                 // "www.yahoo.co.jp",
-                "~/.w3m/bookmark.html",
+                // "~/.w3m/bookmark.html",
+                "http://localhost:80/index.html",
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

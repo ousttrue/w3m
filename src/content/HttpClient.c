@@ -498,6 +498,8 @@ struct Content httpRequest(struct HttpClient* c,
         // Buffer* t_buf = newBuffer();
 
         Str src = readAll(c->exchanges[i].stream);
+        content.page = src;
+
         ISclose(c->exchanges[i].stream);
         if ((p = getHttpHeaderValue(res->headers, "content-encoding:"))) {
             enum CompressionType content_encoding = get_compression(p);

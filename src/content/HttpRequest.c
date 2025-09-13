@@ -2,6 +2,7 @@
 #include "runtime.h"
 #include "cookie.h"
 #include "html_form.h"
+#include <stdlib.h>
 #include <strings.h>
 
 bool override_user_agent = false;
@@ -10,7 +11,7 @@ char* AcceptMedia = NULL;
 char* AcceptEncoding = NULL;
 char* AcceptLang = NULL;
 char NoCache = false;
-int NoSendReferer = false;
+int NoSendReferer = true;
 int CrossOriginReferer = true;
 int override_content_type = false;
 
@@ -80,6 +81,7 @@ otherinfo(struct Url* target, struct Url* current, const char* referer)
     no_referer = no_referer || (no_referer_ptr && *no_referer_ptr);
     no_referer = no_referer || (no_referer_ptr && *no_referer_ptr);
     if (!no_referer) {
+        abort();
         int cross_origin = false;
         if (CrossOriginReferer && current && current->host && (!target || !target->host || strcasecmp(current->host, target->host) != 0 || current->port != target->port || current->scheme != target->scheme))
             cross_origin = true;
