@@ -35,8 +35,6 @@ struct Buffer {
     struct FormItem* form_submit;
     char* savecache;
     char* edit;
-    struct mailcap* mailcap;
-    char* mailcap_source;
     char image_flag;
     char image_loaded;
     struct Anchor* submit;

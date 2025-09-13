@@ -1543,7 +1543,7 @@ loadBuffer(struct Url url, union input_stream* stream, struct Buffer* newBuf)
     // }
     // TRAP_ON;
 
-    if (newBuf->content.sourcefile == NULL && (url.scheme != SCM_LOCAL || newBuf->mailcap)) {
+    if (newBuf->content.sourcefile == NULL && url.scheme != SCM_LOCAL) {
         tmpf = tmpfname(TMPF_SRC, NULL);
         src = fopen(tmpf->ptr, "w");
         if (src)

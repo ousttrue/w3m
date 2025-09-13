@@ -93,8 +93,6 @@ void discardBuffer(struct Buffer* buf)
         if (buf->content.url.scheme != SCM_LOCAL)
             unlink(buf->content.sourcefile);
     }
-    if (buf->mailcap_source)
-        unlink(buf->mailcap_source);
 }
 
 /*
@@ -441,7 +439,7 @@ void reshapeBuffer(struct UI ui, struct Buffer* buf, int cols)
     if (buf->content.sourcefile == 0)
         return;
 
-    union input_stream* stream = examineFile(buf->mailcap_source ? buf->mailcap_source : buf->content.sourcefile);
+    union input_stream* stream = examineFile(buf->content.sourcefile);
     if (stream == 0)
         return;
 
