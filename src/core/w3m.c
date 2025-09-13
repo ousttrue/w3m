@@ -2535,7 +2535,7 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
         (Str_form_quote(localCookie()))->ptr,
         (Str_form_quote(Strnew_charp(BookmarkFile)))->ptr,
         (Str_form_quote(parsedURL2Str(&ui.current_buffer->currentURL)))->ptr,
-        (Str_form_quote(wc_conv_strict(ui.current_buffer->buffername,
+        (Str_form_quote(wc_conv_strict(ui.current_buffer->document.title,
              InnerCharset,
              BookmarkCharset)))
             ->ptr,
@@ -2887,12 +2887,12 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
 
     if (ui.current_buffer->content_type == CONTENTTYPE_TEXT_HTML) {
         buf->content_type = CONTENTTYPE_TEXT_PLAIN;
-        buf->buffername = Sprintf("source of %s", ui.current_buffer->buffername)->ptr;
+        buf->document.title = Sprintf("source of %s", ui.current_buffer->document.title)->ptr;
         buf->linkBuffer[LB_N_SOURCE] = ui.current_buffer;
         ui.current_buffer->linkBuffer[LB_SOURCE] = buf;
     } else if (ui.current_buffer->content_type == CONTENTTYPE_TEXT_PLAIN) {
         buf->content_type = CONTENTTYPE_TEXT_HTML;
-        buf->buffername = Sprintf("HTML view of %s", ui.current_buffer->buffername)->ptr;
+        buf->document.title = Sprintf("HTML view of %s", ui.current_buffer->document.title)->ptr;
         buf->linkBuffer[LB_SOURCE] = ui.current_buffer;
         ui.current_buffer->linkBuffer[LB_N_SOURCE] = buf;
     } else {
@@ -2913,7 +2913,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
 DEFUN(reload, RELOAD, "Load current document anew")
 {
     if (ui.current_buffer->bufferprop & BP_INTERNAL) {
-        if (!strcmp(ui.current_buffer->buffername, DOWNLOAD_LIST_TITLE)) {
+        if (!strcmp(ui.current_buffer->document.title, DOWNLOAD_LIST_TITLE)) {
             ldDL(ui);
             return;
         }
@@ -3245,7 +3245,7 @@ void set_buffer_environ(struct Buffer* buf)
     if (buf != prev_buf) {
         set_environ("W3M_SOURCEFILE", buf->sourcefile);
         set_environ("W3M_FILENAME", buf->filename);
-        set_environ("W3M_TITLE", buf->buffername);
+        set_environ("W3M_TITLE", buf->document.title);
         set_environ("W3M_URL", parsedURL2Str(&buf->currentURL)->ptr);
         set_environ("W3M_TYPE", contentTypeStr(buf->content_type));
         set_environ("W3M_CHARSET", wc_ces_to_charset(buf->document.charset));
@@ -3647,7 +3647,7 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
     int replace = false, new_tab = false;
     int reload;
 
-    if (ui.current_buffer->bufferprop & BP_INTERNAL && !strcmp(ui.current_buffer->buffername, DOWNLOAD_LIST_TITLE))
+    if (ui.current_buffer->bufferprop & BP_INTERNAL && !strcmp(ui.current_buffer->document.title, DOWNLOAD_LIST_TITLE))
         replace = true;
     if (!FirstDL) {
         if (replace) {

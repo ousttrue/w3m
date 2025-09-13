@@ -32,7 +32,6 @@ enum BufferProperty {
 
 struct Buffer {
     const char* filename;
-    const char* buffername;
 
     struct Document document;
 
@@ -110,8 +109,6 @@ struct Anchor* searchURLLabel(struct Buffer* buf, const char* url);
 void reAnchorWord(struct Buffer* buf, struct LineList* l, int spos, int epos);
 const char* reAnchor(struct Buffer* buf, const char* re);
 struct AnchorList;
-void addMultirowsForm(struct Buffer* buf, struct AnchorList* al);
-void addMultirowsImg(struct Buffer* buf, struct AnchorList* al);
 const char* getAnchorText(struct Buffer* buf, struct AnchorList* al, struct Anchor* a);
 struct BufferPoint getBufferPosition(struct Buffer* buf);
 

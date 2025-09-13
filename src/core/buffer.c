@@ -52,7 +52,7 @@ newBuffer()
     n->currentURL.scheme = SCM_UNKNOWN;
     n->document.baseURL = 0;
     n->document.baseTarget = 0;
-    n->buffername = "";
+    n->document.title = "";
     n->bufferprop = BP_NORMAL;
     n->clone = New(int);
     *n->clone = 1;
@@ -69,10 +69,8 @@ newBuffer()
 struct Buffer*
 nullBuffer(void)
 {
-    struct Buffer* b;
-
-    b = newBuffer();
-    b->buffername = "*Null*";
+    struct Buffer* b = newBuffer();
+    b->document.title = "*Null*";
     return b;
 }
 
@@ -121,11 +119,11 @@ namedBuffer(struct Buffer* first, char* name)
 {
     struct Buffer* buf;
 
-    if (!strcmp(first->buffername, name)) {
+    if (!strcmp(first->document.title, name)) {
         return first;
     }
     for (buf = first; buf->nextBuffer != 0; buf = buf->nextBuffer) {
-        if (!strcmp(buf->nextBuffer->buffername, name)) {
+        if (!strcmp(buf->nextBuffer->document.title, name)) {
             return buf->nextBuffer;
         }
     }
@@ -204,7 +202,7 @@ writeBufferName(struct Buffer* buf, int n)
         all = lastLine(&buf->document)->linenumber;
     vt_move(getScreen(), n, 0);
 
-    Str msg = Sprintf("<%s> [%d lines]", buf->buffername, all);
+    Str msg = Sprintf("<%s> [%d lines]", buf->document.title, all);
     if (buf->filename != 0) {
         switch (buf->currentURL.scheme) {
         case SCM_LOCAL:
@@ -1090,139 +1088,6 @@ void reseq_anchor(struct Buffer* buf)
 
     reseq_anchor0(buf->document.href, seqmap);
     reseq_anchor0(buf->document.formitem, seqmap);
-}
-
-void addMultirowsImg(struct Buffer* buf, struct AnchorList* al)
-{
-    int i, j, k, col, ecol, pos;
-    struct Anchor a_img, a_href, a_form, *a;
-    struct LineList *l, *ls;
-
-    if (al == 0 || al->nanchor == 0)
-        return;
-    for (i = 0; i < al->nanchor; i++) {
-        a_img = al->anchors[i];
-        struct Image* img;
-        img = a_img.image;
-        if (a_img.hseq < 0 || !img || img->rows <= 1)
-            continue;
-        for (l = buf->document.firstLine; l != 0; l = l->next) {
-            if (l->linenumber == img->y)
-                break;
-        }
-        if (!l)
-            continue;
-        if (a_img.y == a_img.start.line)
-            ls = l;
-        else {
-            for (ls = l; ls != 0;
-                ls = (a_img.y < a_img.start.line) ? ls->next : ls->prev) {
-                if (ls->linenumber == a_img.start.line)
-                    break;
-            }
-            if (!ls)
-                continue;
-        }
-        a = retrieveAnchor(buf->document.href, a_img.start);
-        if (a)
-            a_href = *a;
-        else
-            a_href.url = 0;
-        a = retrieveAnchor(buf->document.formitem, a_img.start);
-        if (a)
-            a_form = *a;
-        else
-            a_form.url = 0;
-        col = COLPOS(&ls->l, a_img.start.pos);
-        ecol = COLPOS(&ls->l, a_img.end.pos);
-        for (j = 0; l && j < img->rows; l = l->next, j++) {
-            if (a_img.start.line == l->linenumber)
-                continue;
-            pos = columnPos(&l->l, col);
-            a = registerImg(&buf->document, a_img.url, a_img.title,
-                (struct BufferPoint) { .line = l->linenumber, .pos = pos });
-            a->hseq = -a_img.hseq;
-            a->slave = true;
-            a->image = img;
-            a->end.pos = pos + ecol - col;
-            for (k = pos; k < a->end.pos; k++)
-                l->l.propBuf[k] |= PE_IMAGE;
-            if (a_href.url) {
-                a = registerHref(&buf->document, a_href.url, a_href.target,
-                    a_href.referer, a_href.title, a_href.accesskey,
-                    (struct BufferPoint) { .line = l->linenumber, .pos = pos });
-                a->hseq = a_href.hseq;
-                a->slave = true;
-                a->end.pos = pos + ecol - col;
-                for (k = pos; k < a->end.pos; k++)
-                    l->l.propBuf[k] |= PE_ANCHOR;
-            }
-            if (a_form.url) {
-                buf->document.formitem = putAnchor(buf->document.formitem, &a,
-                    (struct BufferPoint) { .line = l->linenumber, .pos = pos });
-                initAnchor(a, a_form.url, a_form.target, 0, 0, '\0');
-                a->hseq = a_form.hseq;
-                a->end.pos = pos + ecol - col;
-            }
-        }
-        img->rows = 0;
-    }
-}
-
-void addMultirowsForm(struct Buffer* buf, struct AnchorList* al)
-{
-    int i, j, k, col, ecol, pos;
-    struct Anchor a_form, *a;
-    struct LineList *l, *ls;
-
-    if (al == 0 || al->nanchor == 0)
-        return;
-    for (i = 0; i < al->nanchor; i++) {
-        a_form = al->anchors[i];
-        al->anchors[i].rows = 1;
-        if (a_form.hseq < 0 || a_form.rows <= 1)
-            continue;
-        for (l = buf->document.firstLine; l != 0; l = l->next) {
-            if (l->linenumber == a_form.y)
-                break;
-        }
-        if (!l)
-            continue;
-        if (a_form.y == a_form.start.line)
-            ls = l;
-        else {
-            for (ls = l; ls != 0;
-                ls = (a_form.y < a_form.start.line) ? ls->next : ls->prev) {
-                if (ls->linenumber == a_form.start.line)
-                    break;
-            }
-            if (!ls)
-                continue;
-        }
-        col = COLPOS(&ls->l, a_form.start.pos);
-        ecol = COLPOS(&ls->l, a_form.end.pos);
-        for (j = 0; l && j < a_form.rows; l = l->next, j++) {
-            pos = columnPos(&l->l, col);
-            if (j == 0) {
-                buf->document.hmarklist->marks[a_form.hseq].line = l->linenumber;
-                buf->document.hmarklist->marks[a_form.hseq].pos = pos;
-            }
-            if (a_form.start.line == l->linenumber)
-                continue;
-            buf->document.formitem = putAnchor(buf->document.formitem, &a,
-                (struct BufferPoint) { .line = l->linenumber, .pos = pos });
-            initAnchor(a, a_form.url, a_form.target, 0, 0, '\0');
-            a->hseq = a_form.hseq;
-            a->y = a_form.y;
-            a->end.pos = pos + ecol - col;
-            if (pos < 1 || a->end.pos >= l->l.size)
-                continue;
-            l->l.lineBuf[pos - 1] = '[';
-            l->l.lineBuf[a->end.pos] = ']';
-            for (k = pos; k < a->end.pos; k++)
-                l->l.propBuf[k] |= PE_FORM;
-        }
-    }
 }
 
 const char* getAnchorText(struct Buffer* buf, struct AnchorList* al, struct Anchor* a)

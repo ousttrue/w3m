@@ -290,7 +290,7 @@ static Str make_lastline_message(struct Buffer* buf)
     if (buf->ssl_certificate)
         Strcat_charp(msg, "[SSL]");
     Strcat_charp(msg, " <");
-    Strcat_charp(msg, buf->buffername);
+    Strcat_charp(msg, buf->document.title);
 
     if (s) {
         int l = getScreen()->COLS - 3 - sl;

@@ -232,7 +232,7 @@ link_list_panel(struct UI ui, struct Buffer* buf)
     };
 }
 
-void addLink(struct Buffer* buf, struct HtmlTagParsed* tag)
+void addLink(struct Document* doc, struct HtmlTagParsed* tag)
 {
     char *title = NULL, *ctype = NULL, *rel = NULL, *rev = NULL;
     enum LinkType type = LINK_TYPE_NONE;
@@ -259,19 +259,18 @@ void addLink(struct Buffer* buf, struct HtmlTagParsed* tag)
             title = rev;
     }
 
-    struct LinkList* l;
-    l = New(struct LinkList);
+    struct LinkList* l = New(struct LinkList);
     l->url = href;
     l->title = title;
     l->ctype = ctype;
     l->type = type;
     l->next = NULL;
-    if (buf->document.linklist) {
+    if (doc->linklist) {
         struct LinkList* i;
-        for (i = buf->document.linklist; i->next; i = i->next)
+        for (i = doc->linklist; i->next; i = i->next)
             ;
         i->next = l;
     } else {
-        buf->document.linklist = l;
+        doc->linklist = l;
     }
 }

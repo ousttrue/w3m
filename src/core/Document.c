@@ -2,6 +2,7 @@
 #include "Anchor.h"
 #include "AnchorList.h"
 #include "form.h"
+#include "image.h"
 
 struct LineList* getLine(struct Document* doc, int i)
 {
@@ -64,3 +65,137 @@ registerForm(struct Document* doc, struct Form* flist, struct HtmlTagParsed* tag
     initAnchor(a, (char*)fi, flist->target, 0, 0, '\0');
     return a;
 }
+
+void addMultirowsForm(struct Document* doc, struct AnchorList* al)
+{
+    int i, j, k, col, ecol, pos;
+    struct Anchor a_form, *a;
+    struct LineList *l, *ls;
+
+    if (al == 0 || al->nanchor == 0)
+        return;
+    for (i = 0; i < al->nanchor; i++) {
+        a_form = al->anchors[i];
+        al->anchors[i].rows = 1;
+        if (a_form.hseq < 0 || a_form.rows <= 1)
+            continue;
+        for (l = doc->firstLine; l != 0; l = l->next) {
+            if (l->linenumber == a_form.y)
+                break;
+        }
+        if (!l)
+            continue;
+        if (a_form.y == a_form.start.line)
+            ls = l;
+        else {
+            for (ls = l; ls != 0;
+                ls = (a_form.y < a_form.start.line) ? ls->next : ls->prev) {
+                if (ls->linenumber == a_form.start.line)
+                    break;
+            }
+            if (!ls)
+                continue;
+        }
+        col = COLPOS(&ls->l, a_form.start.pos);
+        ecol = COLPOS(&ls->l, a_form.end.pos);
+        for (j = 0; l && j < a_form.rows; l = l->next, j++) {
+            pos = columnPos(&l->l, col);
+            if (j == 0) {
+                doc->hmarklist->marks[a_form.hseq].line = l->linenumber;
+                doc->hmarklist->marks[a_form.hseq].pos = pos;
+            }
+            if (a_form.start.line == l->linenumber)
+                continue;
+            doc->formitem = putAnchor(doc->formitem, &a,
+                (struct BufferPoint) { .line = l->linenumber, .pos = pos });
+            initAnchor(a, a_form.url, a_form.target, 0, 0, '\0');
+            a->hseq = a_form.hseq;
+            a->y = a_form.y;
+            a->end.pos = pos + ecol - col;
+            if (pos < 1 || a->end.pos >= l->l.size)
+                continue;
+            l->l.lineBuf[pos - 1] = '[';
+            l->l.lineBuf[a->end.pos] = ']';
+            for (k = pos; k < a->end.pos; k++)
+                l->l.propBuf[k] |= PE_FORM;
+        }
+    }
+}
+
+void addMultirowsImg(struct Document* doc, struct AnchorList* al)
+{
+    int i, j, k, col, ecol, pos;
+    struct Anchor a_img, a_href, a_form, *a;
+    struct LineList *l, *ls;
+
+    if (al == 0 || al->nanchor == 0)
+        return;
+    for (i = 0; i < al->nanchor; i++) {
+        a_img = al->anchors[i];
+        struct Image* img;
+        img = a_img.image;
+        if (a_img.hseq < 0 || !img || img->rows <= 1)
+            continue;
+        for (l = doc->firstLine; l != 0; l = l->next) {
+            if (l->linenumber == img->y)
+                break;
+        }
+        if (!l)
+            continue;
+        if (a_img.y == a_img.start.line)
+            ls = l;
+        else {
+            for (ls = l; ls != 0;
+                ls = (a_img.y < a_img.start.line) ? ls->next : ls->prev) {
+                if (ls->linenumber == a_img.start.line)
+                    break;
+            }
+            if (!ls)
+                continue;
+        }
+        a = retrieveAnchor(doc->href, a_img.start);
+        if (a)
+            a_href = *a;
+        else
+            a_href.url = 0;
+        a = retrieveAnchor(doc->formitem, a_img.start);
+        if (a)
+            a_form = *a;
+        else
+            a_form.url = 0;
+        col = COLPOS(&ls->l, a_img.start.pos);
+        ecol = COLPOS(&ls->l, a_img.end.pos);
+        for (j = 0; l && j < img->rows; l = l->next, j++) {
+            if (a_img.start.line == l->linenumber)
+                continue;
+            pos = columnPos(&l->l, col);
+            a = registerImg(doc, a_img.url, a_img.title,
+                (struct BufferPoint) { .line = l->linenumber, .pos = pos });
+            a->hseq = -a_img.hseq;
+            a->slave = true;
+            a->image = img;
+            a->end.pos = pos + ecol - col;
+            for (k = pos; k < a->end.pos; k++)
+                l->l.propBuf[k] |= PE_IMAGE;
+            if (a_href.url) {
+                a = registerHref(doc, a_href.url, a_href.target,
+                    a_href.referer, a_href.title, a_href.accesskey,
+                    (struct BufferPoint) { .line = l->linenumber, .pos = pos });
+                a->hseq = a_href.hseq;
+                a->slave = true;
+                a->end.pos = pos + ecol - col;
+                for (k = pos; k < a->end.pos; k++)
+                    l->l.propBuf[k] |= PE_ANCHOR;
+            }
+            if (a_form.url) {
+                doc->formitem = putAnchor(doc->formitem, &a,
+                    (struct BufferPoint) { .line = l->linenumber, .pos = pos });
+                initAnchor(a, a_form.url, a_form.target, 0, 0, '\0');
+                a->hseq = a_form.hseq;
+                a->end.pos = pos + ecol - col;
+            }
+        }
+        img->rows = 0;
+    }
+}
+

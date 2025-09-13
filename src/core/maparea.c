@@ -354,7 +354,7 @@ page_info_panel(struct UI ui, struct Buffer* buf)
     const char* p = url_decode2(parsedURL2Str(&buf->currentURL)->ptr, 0);
     Strcat_m_charp(tmp, "<table cellpadding=0>",
         "<tr valign=top><td nowrap>Title<td>",
-        html_quote(buf->buffername),
+        html_quote(buf->document.title),
         "<tr valign=top><td nowrap>Current URL<td>",
         html_quote(p),
         "<tr valign=top><td nowrap>Document Type<td>",

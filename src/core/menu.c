@@ -1414,7 +1414,7 @@ initSelectMenu(struct UI ui)
 
     label = New_N(char*, nitem + 2);
     for (i = 0, buf = Firstbuf; i < nitem; i++, buf = buf->nextBuffer) {
-        str = Sprintf("<%s>", buf->buffername);
+        str = Sprintf("<%s>", buf->document.title);
         if (buf->filename != NULL) {
             switch (buf->currentURL.scheme) {
             case SCM_LOCAL:
