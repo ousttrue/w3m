@@ -50,7 +50,6 @@ struct Buffer {
     int real_scheme;
     char* sourcefile;
     int* clone;
-    size_t trbyte;
     bool check_url;
     wc_uint8 auto_detect;
     TextList* document_header;

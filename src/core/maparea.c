@@ -381,7 +381,8 @@ page_info_panel(struct UI ui, struct Buffer* buf)
         "<tr valign=top><td nowrap>Number of lines<td>",
         Sprintf("%d", all)->ptr,
         "<tr valign=top><td nowrap>Transferred bytes<td>",
-        Sprintf("%lu", (unsigned long)buf->trbyte)->ptr, NULL);
+        // Sprintf("%lu", (unsigned long)buf->trbyte)->ptr,
+        NULL);
 
     struct Anchor* a = retrieveCurrentAnchor(buf);
     if (a != NULL) {

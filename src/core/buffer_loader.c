@@ -872,18 +872,16 @@ static int loadHTML(struct html_feed_environ* htmlenv1,
 }
 
 // WC_CES_SHIFT_JIS /*WC_CES_US_ASCII*/
-static void loadHTMLstream(Str html, wc_ces* content_charset, struct Buffer* buf, bool internal)
+static struct Document loadHTMLstream(Str html, struct Url* base, wc_ces content_charset, bool internal)
 {
     // Str html = readAll(stream);
     struct UI ui = getUI();
     struct html_feed_environ htmlenv1;
 
-    buf->trbyte = loadHTML(&htmlenv1, html, content_charset, ui.vt->COLS, ui.use_graphic, internal);
+    int trbyte = loadHTML(&htmlenv1, html, &content_charset, ui.vt->COLS, ui.use_graphic, internal);
 
     // phase2:
     // struct Buffer* buf = newBuffer();
-    if (htmlenv1.title)
-        buf->document.title = htmlenv1.title;
     // TRAP_OFF;
     // buf->document_charset = charset;
     // buf->image_flag = image_flag;
@@ -891,7 +889,9 @@ static void loadHTMLstream(Str html, wc_ces* content_charset, struct Buffer* buf
     // static void HTMLlineproc2(struct Buffer* buf, TextLineList* tl)
     // {
     _tl_lp2 = htmlenv1.buf->first;
-    buf->document = HTMLlineproc2body(baseURL(buf), buf->document.charset, textlist_feed);
+    struct Document doc = HTMLlineproc2body(base, content_charset, textlist_feed);
+    if (htmlenv1.title)
+        doc.title = htmlenv1.title;
     // }
 
     // return buf;
@@ -984,6 +984,8 @@ static void loadHTMLstream(Str html, wc_ces* content_charset, struct Buffer* buf
     //     newBuf->document_charset = charset;
     //     newBuf->image_flag = image_flag;
     //     HTMLlineproc2(newBuf, htmlenv1.buf);
+
+    return doc;
 }
 
 struct Buffer* makeBuffer(struct UI ui, struct Content* c)
@@ -1505,9 +1507,9 @@ loadHTMLBuffer(struct UI ui, struct Url url, union input_stream* stream, wc_ces 
 
     if (newBuf == NULL)
         newBuf = newBuffer();
-    newBuf->document.charset = content_charset;
+    // newBuf->document.charset = content_charset;
 
-    loadHTMLstream(html, &newBuf->document.charset, newBuf, false);
+    newBuf->document = loadHTMLstream(html, baseURL(newBuf), content_charset, false);
 
     newBuf->document.topLineIndex = newBuf->document.firstLine->linenumber;
     newBuf->document.currentLineIndex = newBuf->document.firstLine->linenumber;
@@ -1526,7 +1528,7 @@ loadHTMLString(struct UI ui, Str page, wc_ces content_charset)
     // union input_stream* stream = newStrStream(page);
 
     struct Buffer* newBuf = newBuffer();
-    newBuf->document.charset = content_charset;
+    // newBuf->document.charset = content_charset;
     // if (sigsetjmp(AbortLoading, 1) != 0) {
     //     term_raw();
     //     discardBuffer(newBuf);
@@ -1535,7 +1537,7 @@ loadHTMLString(struct UI ui, Str page, wc_ces content_charset)
     // }
     // TRAP_ON;
 
-    loadHTMLstream(page, &newBuf->document.charset, newBuf, true);
+    newBuf->document = loadHTMLstream(page, baseURL(newBuf), content_charset, true);
 
     term_raw();
     // ISclose(stream);
@@ -1613,7 +1615,7 @@ _end:
     term_raw();
     newBuf->document.topLineIndex = newBuf->document.firstLine->linenumber;
     newBuf->document.currentLineIndex = newBuf->document.firstLine->linenumber;
-    newBuf->trbyte = trbyte + linelen;
+    // newBuf->trbyte = trbyte + linelen;
     newBuf->document.charset = charset;
     if (src)
         fclose(src);

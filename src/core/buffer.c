@@ -56,7 +56,6 @@ newBuffer()
     n->bufferprop = BP_NORMAL;
     n->clone = New(int);
     *n->clone = 1;
-    n->trbyte = 0;
     n->ssl_certificate = 0;
     n->auto_detect = WcOption.auto_detect;
     n->check_url = MarkAllPages;
