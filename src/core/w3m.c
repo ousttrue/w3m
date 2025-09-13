@@ -889,7 +889,7 @@ bool onFrame()
     if (ui.current_buffer->submit) {
         struct Anchor* a = ui.current_buffer->submit;
         ui.current_buffer->submit = NULL;
-        gotoLine(ui.current_buffer, a->start.line);
+        gotoLine(&ui.current_buffer->document, a->start.line);
         ui.current_buffer->pos = a->start.pos;
         _followForm(ui, true, false);
         return false;
@@ -1868,7 +1868,7 @@ gotoLabel(struct UI ui, const char* label)
     pushHashHist(URLHist, parsedURL2Str(&buf->content.url)->ptr);
     (*buf->clone)++;
     pushBuffer(ui, buf);
-    gotoLine(ui.current_buffer, al->start.line);
+    gotoLine(&ui.current_buffer->document, al->start.line);
     if (label_topline)
         ui.current_buffer->document.topLineIndex = ui.current_buffer->document.currentLineIndex
             - topLine(&ui.current_buffer->document)->linenumber;
@@ -1990,7 +1990,7 @@ DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink")
         hseq++;
     } while (an == NULL);
 
-    gotoLine(ui.current_buffer, po->line);
+    gotoLine(&ui.current_buffer->document, po->line);
     ui.current_buffer->pos = po->pos;
     arrangeCursor(ui.current_buffer);
 }
@@ -2019,7 +2019,7 @@ DEFUN(lastA, LINK_END, "Move to the last hyperlink")
         hseq--;
     } while (an == NULL);
 
-    gotoLine(ui.current_buffer, po->line);
+    gotoLine(&ui.current_buffer->document, po->line);
     ui.current_buffer->pos = po->pos;
     arrangeCursor(ui.current_buffer);
 }
@@ -2045,7 +2045,7 @@ DEFUN(nthA, LINK_N, "Go to the nth link")
     if (an == NULL)
         return;
 
-    gotoLine(ui.current_buffer, po->line);
+    gotoLine(&ui.current_buffer->document, po->line);
     ui.current_buffer->pos = po->pos;
     arrangeCursor(ui.current_buffer);
 }
@@ -2150,7 +2150,7 @@ _end:
     if (an == NULL || an->hseq < 0)
         return;
     po = &hl->marks[an->hseq];
-    gotoLine(ui.current_buffer, po->line);
+    gotoLine(&ui.current_buffer->document, po->line);
     ui.current_buffer->pos = po->pos;
     arrangeCursor(ui.current_buffer);
 }
@@ -2231,7 +2231,7 @@ _end:
     if (an == NULL || an->hseq < 0)
         return;
     po = hl->marks + an->hseq;
-    gotoLine(ui.current_buffer, po->line);
+    gotoLine(&ui.current_buffer->document, po->line);
     ui.current_buffer->pos = po->pos;
     arrangeCursor(ui.current_buffer);
 }
@@ -2287,7 +2287,7 @@ nextX(struct UI ui, int d, int dy)
 
     if (pan == NULL)
         return;
-    gotoLine(ui.current_buffer, y);
+    gotoLine(&ui.current_buffer->document, y);
     ui.current_buffer->pos = pan->start.pos;
     arrangeCursor(ui.current_buffer);
 }
@@ -2334,7 +2334,7 @@ nextY(struct UI ui, int d)
 
     if (pan == NULL)
         return;
-    gotoLine(ui.current_buffer, pan->start.line);
+    gotoLine(&ui.current_buffer->document, pan->start.line);
     arrangeLine(ui.current_buffer);
 }
 
@@ -2636,7 +2636,7 @@ anchorMn(struct UI ui, AnchorMenuFunc menu_func, int go)
         return;
 
     struct BufferPoint* po = &ui.current_buffer->document.hmarklist->marks[a->hseq];
-    gotoLine(ui.current_buffer, po->line);
+    gotoLine(&ui.current_buffer->document, po->line);
     ui.current_buffer->pos = po->pos;
     arrangeCursor(ui.current_buffer);
 

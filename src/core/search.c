@@ -77,7 +77,7 @@ enum SearchResultFlags forwardSearch(struct UI ui, const char* str)
         }
         ui.current_buffer->pos = pos;
         if (l != currentLine(&ui.current_buffer->document))
-            gotoLine(ui.current_buffer, l->linenumber);
+            gotoLine(&ui.current_buffer->document, l->linenumber);
         arrangeCursor(ui.current_buffer);
         set_mark(&l->l, pos, pos + last - first);
         return SR_FOUND;
@@ -105,7 +105,7 @@ enum SearchResultFlags forwardSearch(struct UI ui, const char* str)
             }
             ui.current_buffer->pos = pos;
             ui.current_buffer->document.currentLineIndex = l->linenumber;
-            gotoLine(ui.current_buffer, l->linenumber);
+            gotoLine(&ui.current_buffer->document, l->linenumber);
             arrangeCursor(ui.current_buffer);
             set_mark(&l->l, pos, pos + last - first);
             return SR_FOUND | (wrapped ? SR_WRAPPED : 0);
@@ -168,7 +168,7 @@ enum SearchResultFlags backwardSearch(struct UI ui, const char* str)
             }
             ui.current_buffer->pos = pos;
             if (l != currentLine(&ui.current_buffer->document))
-                gotoLine(ui.current_buffer, l->linenumber);
+                gotoLine(&ui.current_buffer->document, l->linenumber);
             arrangeCursor(ui.current_buffer);
             set_mark(&l->l, pos, pos + found_last - found);
             return SR_FOUND;
@@ -207,7 +207,7 @@ enum SearchResultFlags backwardSearch(struct UI ui, const char* str)
                 l = l->next;
             }
             ui.current_buffer->pos = pos;
-            gotoLine(ui.current_buffer, l->linenumber);
+            gotoLine(&ui.current_buffer->document, l->linenumber);
             arrangeCursor(ui.current_buffer);
             set_mark(&l->l, pos, pos + found_last - found);
             return SR_FOUND | (wrapped ? SR_WRAPPED : 0);

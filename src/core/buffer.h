@@ -56,7 +56,7 @@ struct Buffer* deleteBuffer(struct Buffer* first, struct Buffer* delbuf);
 struct Buffer* replaceBuffer(struct Buffer* first, struct Buffer* delbuf, struct Buffer* newbuf);
 struct Buffer* nthBuffer(struct Buffer* firstbuf, int n);
 // void gotoRealLine(struct Buffer* buf, int n);
-void gotoLine(struct Buffer* buf, int n);
+void gotoLine(struct Document* doc, int n);
 struct Buffer* selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectchar);
 void reshapeBuffer(struct UI ui, struct Buffer* buf, int cols);
 void copyBuffer(struct Buffer* a, struct Buffer* b);

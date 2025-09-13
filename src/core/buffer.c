@@ -211,33 +211,33 @@ writeBufferName(struct Buffer* buf, int n)
 /*
  * gotoLine: go to line number
  */
-void gotoLine(struct Buffer* buf, int n)
+void gotoLine(struct Document* doc, int n)
 {
     char msg[36];
-    struct LineList* l = buf->document.firstLine;
+    struct LineList* l = doc->firstLine;
     if (l == 0)
         return;
     if (l->linenumber > n) {
         /* FIXME: gettextize? */
         sprintf(msg, "First line is #%ld", l->linenumber);
         set_delayed_message(msg);
-        buf->document.topLineIndex = buf->document.currentLineIndex = l->linenumber;
+        doc->topLineIndex = doc->currentLineIndex = l->linenumber;
         return;
     }
-    if (lastLine(&buf->document)->linenumber < n) {
-        l = lastLine(&buf->document);
+    if (lastLine(doc)->linenumber < n) {
+        l = lastLine(doc);
         /* FIXME: gettextize? */
-        sprintf(msg, "Last line is #%ld", lastLine(&buf->document)->linenumber);
+        sprintf(msg, "Last line is #%ld", lastLine(doc)->linenumber);
         set_delayed_message(msg);
-        buf->document.currentLineIndex = l->linenumber;
-        buf->document.topLineIndex = buf->document.currentLineIndex - (getScreen()->ROWS - 1);
+        doc->currentLineIndex = l->linenumber;
+        doc->topLineIndex = doc->currentLineIndex - (getScreen()->ROWS - 1);
         return;
     }
     for (; l != 0; l = l->next) {
         if (l->linenumber >= n) {
-            buf->document.currentLineIndex = l->linenumber;
-            if (n < topLine(&buf->document)->linenumber || topLine(&buf->document)->linenumber + getScreen()->ROWS <= n)
-                buf->document.topLineIndex = l->linenumber - (getScreen()->ROWS + 1) / 2;
+            doc->currentLineIndex = l->linenumber;
+            if (n < topLine(doc)->linenumber || topLine(doc)->linenumber + getScreen()->ROWS <= n)
+                doc->topLineIndex = l->linenumber - (getScreen()->ROWS + 1) / 2;
             break;
         }
     }
@@ -479,7 +479,7 @@ void reshapeBuffer(struct UI ui, struct Buffer* buf, int cols)
         // if (cur->real_linenumber > 0)
         //     gotoRealLine(buf, cur->real_linenumber);
         // else
-        gotoLine(buf, cur->linenumber);
+        gotoLine(&buf->document, cur->linenumber);
         n = (currentLine(&buf->document)->linenumber - topLine(&buf->document)->linenumber)
             - (cur->linenumber - sbuf.document.topLineIndex);
         if (n) {
@@ -487,7 +487,7 @@ void reshapeBuffer(struct UI ui, struct Buffer* buf, int cols)
             // if (cur->real_linenumber > 0)
             //     gotoRealLine(buf, cur->real_linenumber);
             // else
-            gotoLine(buf, cur->linenumber);
+            gotoLine(&buf->document, cur->linenumber);
         }
         buf->pos -= currentLine(&buf->document)->bpos;
         if (FoldLine && buf->content.cc.content_type != CONTENTTYPE_TEXT_HTML)
@@ -749,7 +749,7 @@ void cursorXY(struct Buffer* buf, int x, int y)
 void restorePosition(struct Buffer* buf, struct Buffer* orig)
 {
     buf->document.topLineIndex = orig->document.topLineIndex - 1;
-    gotoLine(buf, orig->document.currentLineIndex);
+    gotoLine(&buf->document, orig->document.currentLineIndex);
     buf->pos = orig->pos;
     if (currentLine(&buf->document) && currentLine(&orig->document))
         buf->pos += currentLine(&orig->document)->bpos - currentLine(&buf->document)->bpos;
