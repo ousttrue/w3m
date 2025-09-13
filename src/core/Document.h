@@ -1,7 +1,9 @@
 #pragma once
-#include <wc.h>
 #include "url.h"
 #include "geometry.h"
+#include <wc.h>
+
+extern wc_ces DocumentCharset;
 
 struct Document {
     wc_ces charset;

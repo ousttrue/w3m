@@ -59,7 +59,6 @@ struct Buffer* nthBuffer(struct Buffer* firstbuf, int n);
 void gotoLine(struct Document* doc, int n);
 struct Buffer* selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectchar);
 void reshapeBuffer(struct UI ui, struct Buffer* buf, int cols);
-void copyBuffer(struct Buffer* a, struct Buffer* b);
 struct Buffer* prevBuffer(struct Buffer* first, struct Buffer* buf);
 int writeBufferCache(struct Buffer* buf);
 int readBufferCache(struct Buffer* buf);
@@ -93,3 +92,5 @@ inline static void COPY_BUFPOSITION(struct Buffer* dstbuf, struct Buffer* srcbuf
     (dstbuf)->visualpos = (srcbuf)->visualpos;
     (dstbuf)->currentColumn = (srcbuf)->currentColumn;
 }
+
+struct Buffer* makeBuffer(struct UI ui, struct Content* c);

@@ -4,6 +4,9 @@
 #include "form.h"
 #include "image.h"
 
+#define DOCUMENT_CHARSET WC_CES_UTF_8
+wc_ces DocumentCharset = (DOCUMENT_CHARSET);
+
 struct LineList* getLine(struct Document* doc, int i)
 {
     for (struct LineList* l = doc->firstLine; l; l = l->next) {

@@ -15,6 +15,8 @@ extern int IndentIncr;
 extern char DisplayBorders;
 extern int view_unseenobject;
 
+#define set_prevchar(x, y, n) Strcopy_charp_n((x), (y), (n))
+#define set_space_to_prevchar(x) Strcopy_charp_n((x), " ", 1)
 
 #define DISPLAY_INS_DEL_SIMPLE 0
 #define DISPLAY_INS_DEL_NORMAL 1
@@ -215,3 +217,6 @@ int HTMLtagproc1(struct HtmlTagParsed* tag, struct html_feed_environ* h_env);
 void init_henv(struct html_feed_environ*, struct readbuffer*, struct environment*, int, TextLineList*, int, int);
 void completeHTMLstream(struct html_feed_environ*, struct readbuffer*);
 void process_idattr(struct readbuffer* obuf, int cmd, struct HtmlTagParsed* tag);
+int is_boundary(unsigned char*, unsigned char*);
+int getMetaRefreshParam(const char* q, Str* refresh_uri);
+void HTMLlineproc0(const char* istr, struct html_feed_environ* h_env, bool internal);

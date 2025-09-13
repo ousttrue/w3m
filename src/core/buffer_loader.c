@@ -34,9 +34,7 @@
 #include <wc.h>
 #include <wtf.h>
 
-#define DOCUMENT_CHARSET WC_CES_UTF_8
 
-wc_ces DocumentCharset = (DOCUMENT_CHARSET);
 int autoImage = (true);
 char MetaRefresh = (false);
 char DecodeCTE = (false);
@@ -874,7 +872,7 @@ static int loadHTML(struct html_feed_environ* htmlenv1,
 }
 
 // WC_CES_SHIFT_JIS /*WC_CES_US_ASCII*/
-static struct Document loadHtmlDocument(Str html, struct Url* base, wc_ces content_charset, bool internal)
+static struct Document loadHtmlDocument(Str html, wc_ces content_charset, struct Url* base, bool internal)
 {
     // Str html = readAll(stream);
     struct UI ui = getUI();
@@ -986,6 +984,9 @@ static struct Document loadHtmlDocument(Str html, struct Url* base, wc_ces conte
     //     newBuf->document_charset = charset;
     //     newBuf->image_flag = image_flag;
     //     HTMLlineproc2(newBuf, htmlenv1.buf);
+
+    // if (n_textarea)
+    //     formResetBuffer(buf, buf->document.formitem);
 
     return doc;
 }
@@ -1376,195 +1377,75 @@ table_start:
     }
 }
 
-/*
- * loadHTMLBuffer: read file and make new buffer
- */
-struct Buffer*
-loadHTMLBuffer(struct UI ui, struct Url url, union input_stream* stream, wc_ces content_charset, struct Buffer* newBuf)
+// struct Buffer*
+// loadHTMLBuffer(struct UI ui, struct Url url, union input_stream* stream, wc_ces content_charset, struct Buffer* newBuf)
+// {
+//     Str html = readAll(stream);
+//
+//     if (newBuf == NULL)
+//         newBuf = newBuffer();
+//     // newBuf->document.charset = content_charset;
+//
+//     newBuf->document = loadHtmlDocument(html, baseURL(newBuf), content_charset, false);
+//
+//     newBuf->document.topLineIndex = newBuf->document.firstLine->linenumber;
+//     newBuf->document.currentLineIndex = newBuf->document.firstLine->linenumber;
+//     if (n_textarea)
+//         formResetBuffer(newBuf, newBuf->document.formitem);
+//
+//     return newBuf;
+// }
+
+struct Document loadTextDocument(Str page, wc_ces charset)
 {
-    Str html = readAll(stream);
+    // FILE* src = NULL;
+    // Str tmpf;
+    // long long linelen = 0, trbyte = 0;
+    // void (*prevtrap)(int _dummy) = NULL;
 
-    if (newBuf == NULL)
-        newBuf = newBuffer();
-    // newBuf->document.charset = content_charset;
-
-    newBuf->document = loadHtmlDocument(html, baseURL(newBuf), content_charset, false);
-
-    newBuf->document.topLineIndex = newBuf->document.firstLine->linenumber;
-    newBuf->document.currentLineIndex = newBuf->document.firstLine->linenumber;
-    if (n_textarea)
-        formResetBuffer(newBuf, newBuf->document.formitem);
-
-    return newBuf;
-}
-
-struct Buffer* makeBuffer(struct UI ui, struct Content* c)
-{
-    if (image_source)
-        return NULL;
-
-    if (c->page) {
-        struct Buffer* buf = newBuffer();
-        buf->document = loadHtmlDocument(c->page, baseURL(buf), c->cc.charset, false);
-        if (n_textarea)
-            formResetBuffer(buf, buf->document.formitem);
-        if (buf) {
-            buf->content = *c;
-            Str tmp = tmpfname(TMPF_SRC, ".html");
-            FILE* src = fopen(tmp->ptr, "w");
-            if (src) {
-                Strfputs(c->page, src);
-                fclose(src);
-                buf->content.sourcefile = tmp->ptr;
-            }
-        }
-        return buf;
-    }
-    abort();
-
-    // long long current_content_length = 0;
-    // const char* p;
-    // if ((p = getHttpHeaderValue(c->document_header, "Content-Length:")) != NULL)
-    //     current_content_length = strtoclen(p);
-    // if (do_download) {
-    //     abort();
-    //     // /* download only */
-    //     // if (DecodeCTE && IStype(c->f.stream) != IST_ENCODED)
-    //     //     c->f.stream = newEncodedStream(c->f.stream, c->f.encoding);
-    //     // const char* file;
-    //     // if (c->pu.scheme == SCM_LOCAL) {
-    //     //     struct stat st;
-    //     //     if (PreserveTimestamp && !stat(c->pu.real_file, &st))
-    //     //         c->f.modtime = st.st_mtime;
-    //     //     file = conv_from_system(guessSaveName(NULL, c->pu.real_file));
-    //     // } else
-    //     //     file = guessSaveName(c->document_header, c->pu.file);
-    //     // if (doFileSave(c->f, file, current_content_length) == 0)
-    //     //     UFhalfclose(&c->f);
-    //     // else
-    //     //     UFclose(&c->f);
-    //     // return NO_BUFFER;
-    // }
-    //
-    // if (image_source) {
-    //     abort();
-    //     // struct Buffer* b = NULL;
-    //     // if (IStype(c->f.stream) != IST_ENCODED)
-    //     //     c->f.stream = newEncodedStream(c->f.stream, c->f.encoding);
-    //     // if (save2tmp(c->f, image_source) == 0) {
-    //     //     b = newBuffer();
-    //     //     b->sourcefile = image_source;
-    //     //     b->real_type = c->real_type;
-    //     // }
-    //     // UFclose(&c->f);
-    //     // return b;
-    // }
-    //
-    // struct Buffer* t_buf = newBuffer();
-    // copyParsedURL(&t_buf->currentURL, &c->pu);
-    // t_buf->filename = c->pu.real_file ? c->pu.real_file : c->pu.file ? conv_to_system(c->pu.file)
-    //                                                                  : NULL;
-    // t_buf->ssl_certificate = c->f.ssl_certificate;
-    //
-    // // struct Buffer* (*proc)(struct URLFile*, struct Buffer*) = loadBuffer;
-    // struct Buffer* b;
-    // if (is_html_type(c->real_type)) {
-    //     b = loadHTMLBuffer(&c->f, t_buf);
-    //     b->type = "text/html";
-    // } else {
-    //     b = loadBuffer(&c->f, t_buf);
-    //     b->type = "text/plain";
-    // }
-    // if (b) {
-    //     if (b->buffername == NULL || b->buffername[0] == '\0') {
-    //         b->buffername = getHttpHeaderValue(c->document_header, "Subject:");
-    //         if (b->buffername == NULL && b->filename != NULL)
-    //             b->buffername = conv_from_system(lastFileName(b->filename));
-    //     }
-    //     if (b->currentURL.scheme == SCM_UNKNOWN)
-    //         b->currentURL.scheme = c->f.scheme;
-    //     if (c->f.scheme == SCM_LOCAL && b->sourcefile == NULL)
-    //         b->sourcefile = b->filename;
-    // }
-    //
-    // UFclose(&c->f);
-    // if (b && b != NO_BUFFER) {
-    //     b->real_scheme = c->f.scheme;
-    //     b->real_type = c->real_type;
-    //     if (c->pu.label) {
-    //         if (is_html_type(c->real_type)) {
-    //             struct Anchor* a;
-    //             a = searchURLLabel(b, c->pu.label);
-    //             if (a != NULL) {
-    //                 gotoLine(b, a->start.line);
-    //                 if (label_topline)
-    //                     b->topLine = lineSkip(b, b->topLine,
-    //                         b->currentLine->linenumber
-    //                             - b->topLine->linenumber,
-    //                         false);
-    //                 b->pos = a->start.pos;
-    //                 arrangeCursor(b);
-    //             }
-    //         } else { /* plain text */
-    //             int l = atoi(c->pu.label);
-    //             gotoRealLine(b, l);
-    //             b->pos = 0;
-    //             arrangeCursor(b);
-    //         }
-    //     }
-    // }
-    // // if (header_string)
-    // //     header_string = NULL;
-    // if (b && b != NO_BUFFER)
-    //     preFormUpdateBuffer(b);
-    // return b;
-}
-
-/*
- * loadBuffer: read file and make new buffer
- */
-struct Buffer*
-loadBuffer(struct Url url, union input_stream* stream, struct Buffer* newBuf)
-{
-    FILE* src = NULL;
-    Str lineBuf2;
-    char pre_lbuf = '\0';
-    Str tmpf;
-    long long linelen = 0, trbyte = 0;
-    Lineprop* propBuffer = NULL;
-    Linecolor* colorBuffer = NULL;
-    void (*prevtrap)(int _dummy) = NULL;
-
-    if (newBuf == NULL)
-        newBuf = newBuffer();
+    // if (newBuf == NULL)
+    //     newBuf = newBuffer();
 
     // if (sigsetjmp(AbortLoading, 1) != 0) {
     //     goto _end;
     // }
     // TRAP_ON;
 
-    if (newBuf->content.sourcefile == NULL && url.scheme != SCM_LOCAL) {
-        tmpf = tmpfname(TMPF_SRC, NULL);
-        src = fopen(tmpf->ptr, "w");
-        if (src)
-            newBuf->content.sourcefile = tmpf->ptr;
-    }
+    // if (newBuf->content.sourcefile == NULL && url.scheme != SCM_LOCAL) {
+    //     tmpf = tmpfname(TMPF_SRC, NULL);
+    //     src = fopen(tmpf->ptr, "w");
+    //     if (src)
+    //         newBuf->content.sourcefile = tmpf->ptr;
+    // }
 
-    wc_ces charset = WC_CES_US_ASCII;
-    wc_ces doc_charset = DocumentCharset;
-    if (newBuf->document.charset)
-        charset = doc_charset = newBuf->document.charset;
+    // wc_ces charset = WC_CES_US_ASCII;
+    // wc_ces doc_charset = DocumentCharset;
+    // if (newBuf->document.charset)
+    //     charset = doc_charset = newBuf->document.charset;
 
     // if (IStype(stream) != IST_ENCODED) {
     //     abort();
     //     // uf->stream = newEncodedStream(uf->stream, uf->encoding);
     // }
+
+    struct Document doc = {
+        .charset = charset,
+        .firstLine = 0,
+        .allLine = 0,
+    };
+
+    Lineprop* propBuffer = NULL;
+    Linecolor* colorBuffer = NULL;
+    char pre_lbuf = '\0';
+    long long linelen = 0;
+    union input_stream* stream = newStrStream(page);
+    Str lineBuf2;
     while ((lineBuf2 = StrmyISgets(stream)) && lineBuf2->length) {
-        if (src)
-            Strfputs(lineBuf2, src);
+        // if (src)
+        //     Strfputs(lineBuf2, src);
         linelen += lineBuf2->length;
         // showProgress(current_content_length, &linelen, &trbyte);
-        lineBuf2 = convertLine(lineBuf2, HEADER_MODE, &charset, doc_charset, InnerCharset);
+        lineBuf2 = convertLine(lineBuf2, HEADER_MODE, &doc.charset, doc.charset, InnerCharset);
         if (squeezeBlankLine) {
             if (lineBuf2->ptr[0] == '\n' && pre_lbuf == '\n') {
                 continue;
@@ -1574,24 +1455,34 @@ loadBuffer(struct Url url, union input_stream* stream, struct Buffer* newBuf)
         Strchop(lineBuf2);
         lineBuf2 = checkType(lineBuf2, &propBuffer, NULL);
         {
-            struct LineList* l = addNewline(currentLine(&newBuf->document),
-                lineBuf2->ptr, propBuffer, colorBuffer, lineBuf2->length, -1, newBuf->document.allLine++);
-            newBuf->document.currentLineIndex = l->linenumber;
-            if (newBuf->document.firstLine == NULL) {
-                newBuf->document.firstLine = l;
+            struct LineList* l = addNewline(currentLine(&doc),
+                lineBuf2->ptr, propBuffer, colorBuffer, lineBuf2->length, -1, doc.allLine++);
+            doc.currentLineIndex = l->linenumber;
+            if (doc.firstLine == NULL) {
+                doc.firstLine = l;
             }
         }
     }
 _end:
-    term_raw();
-    newBuf->document.topLineIndex = newBuf->document.firstLine->linenumber;
-    newBuf->document.currentLineIndex = newBuf->document.firstLine->linenumber;
-    // newBuf->trbyte = trbyte + linelen;
-    newBuf->document.charset = charset;
-    if (src)
-        fclose(src);
+    ISclose(stream);
 
-    return newBuf;
+    // term_raw();
+    doc.topLineIndex = doc.firstLine->linenumber;
+    doc.currentLineIndex = doc.firstLine->linenumber;
+    // newBuf->trbyte = trbyte + linelen;
+    // doc.charset = charset;
+    // if (src)
+    //     fclose(src);
+
+    return doc;
+}
+
+struct Document loadContent(struct UI ui, struct Content* content, struct Url* base)
+{
+    if (content->cc.content_type == CONTENTTYPE_TEXT_HTML)
+        return loadHtmlDocument(content->page, content->cc.charset, base, false);
+    else
+        return loadTextDocument(content->page, content->cc.charset);
 }
 
 bool PermitSaveToPipe = (false);
@@ -1661,116 +1552,4 @@ int setModtime(const char* path, time_t modtime)
         t.actime = time(NULL);
     t.modtime = modtime;
     return utime(path, &t);
-}
-
-int _doFileCopy(const char* tmpf, const char* defstr, int download)
-{
-    // Str msg;
-    // // Str filen;
-    // char *p, *q = NULL;
-    // pid_t pid;
-    // char* lock;
-    // struct stat st;
-    // long long size = 0;
-    // bool is_pipe = false;
-    //
-    // // if (fmInitialized)
-    // {
-    //     p = searchKeyData();
-    //     if (p == NULL || *p == '\0') {
-    //         /* FIXME: gettextize? */
-    //         q = inputLineHist(getUI(), "(Download)Save file to: ",
-    //             defstr, IN_COMMAND, SaveHist);
-    //         if (q == NULL || *q == '\0')
-    //             return false;
-    //         p = conv_to_system(q);
-    //     }
-    //     if (*p == '|' && PermitSaveToPipe)
-    //         is_pipe = true;
-    //     else {
-    //         if (q) {
-    //             p = unescape_spaces(Strnew_charp(q))->ptr;
-    //             p = conv_to_system(p);
-    //         }
-    //         p = expandPath(p);
-    //         if (!notExistsOrOverWrite(p))
-    //             return -1;
-    //     }
-    //     if (!canCopyFile(tmpf, p)) {
-    //         msg = Sprintf("Can't copy. %s and %s are identical.",
-    //             conv_from_system(tmpf), conv_from_system(p));
-    //         message(getUI(), MSG_ERR, msg->ptr);
-    //         return -1;
-    //     }
-    //     if (!download) {
-    //         if (_MoveFile(tmpf, p) < 0) {
-    //             /* FIXME: gettextize? */
-    //             msg = Sprintf("Can't save to %s", conv_from_system(p));
-    //             message(getUI(), MSG_ERR, msg->ptr);
-    //         }
-    //         return -1;
-    //     }
-    //     lock = tmpfname(TMPF_DFL, ".lock")->ptr;
-    //
-    //     symlink(p, lock);
-    //
-    //     flush_tty();
-    //     pid = fork();
-    //     if (!pid) {
-    //         setup_child(false, 0, -1);
-    //         if (!_MoveFile(tmpf, p) && PreserveTimestamp && !is_pipe && !stat(tmpf, &st))
-    //             setModtime(p, st.st_mtime);
-    //         unlink(lock);
-    //         exit(0);
-    //     }
-    //     if (!stat(tmpf, &st))
-    //         size = st.st_size;
-    //     addDownloadList(pid, conv_from_system(tmpf), p, lock, size);
-    // }
-    //
-    // // else {
-    // //     q = searchKeyData();
-    // //     if (q == NULL || *q == '\0') {
-    // //         /* FIXME: gettextize? */
-    // //         printf("(Download)Save file to: ");
-    // //         fflush(stdout);
-    // //         filen = Strfgets(stdin);
-    // //         if (filen->length == 0)
-    // //             return -1;
-    // //         q = filen->ptr;
-    // //     }
-    // //     for (p = q + strlen(q) - 1; IS_SPACE(*p); p--)
-    // //         ;
-    // //     *(p + 1) = '\0';
-    // //     if (*q == '\0')
-    // //         return -1;
-    // //     p = q;
-    // //     if (*p == '|' && PermitSaveToPipe)
-    // //         is_pipe = true;
-    // //     else {
-    // //         p = expandPath(p);
-    // //         if (!notExistsOrOverWrite(p))
-    // //             return -1;
-    // //     }
-    // //     if (checkCopyFile(tmpf, p) < 0) {
-    // //         /* FIXME: gettextize? */
-    // //         printf("Can't copy. %s and %s are identical.", tmpf, p);
-    // //         return -1;
-    // //     }
-    // //     if (_MoveFile(tmpf, p) < 0) {
-    // //         /* FIXME: gettextize? */
-    // //         printf("Can't save to %s\n", p);
-    // //         return -1;
-    // //     }
-    // //     if (PreserveTimestamp && !is_pipe && !stat(tmpf, &st))
-    // //         setModtime(p, st.st_mtime);
-    // // }
-    return 0;
-}
-
-int doFileMove(const char* tmpf, const char* defstr)
-{
-    int ret = doFileCopy(tmpf, defstr);
-    unlink(tmpf);
-    return ret;
 }

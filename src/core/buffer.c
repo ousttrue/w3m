@@ -24,6 +24,7 @@
 #include "alloc.h"
 #include "Anchor.h"
 #include "AnchorList.h"
+#include <stdlib.h>
 #include <string.h>
 #include <strings.h>
 #include <unistd.h>
@@ -435,53 +436,47 @@ end:
  */
 void reshapeBuffer(struct UI ui, struct Buffer* buf, int cols)
 {
-    buf->width = cols;
     if (buf->content.sourcefile == 0)
         return;
+    buf->width = cols;
 
-    union input_stream* stream = examineFile(buf->content.sourcefile);
-    if (stream == 0)
-        return;
+    // union input_stream* stream = examineFile(buf->content.sourcefile);
+    // if (stream == 0)
+    //     return;
 
-    struct Buffer sbuf;
-    copyBuffer(&sbuf, buf);
-    clearBuffer(buf);
+    // buf->document.href = 0;
+    // buf->document.name = 0;
+    // buf->document.img = 0;
+    // buf->document.formitem = 0;
+    // buf->document.formlist = 0;
+    // buf->document.linklist = 0;
+    // buf->document.maplist = 0;
+    // if (buf->document.hmarklist)
+    //     buf->document.hmarklist->nmark = 0;
+    // if (buf->document.imarklist)
+    //     buf->document.imarklist->nmark = 0;
 
-    buf->document.href = 0;
-    buf->document.name = 0;
-    buf->document.img = 0;
-    buf->document.formitem = 0;
-    buf->document.formlist = 0;
-    buf->document.linklist = 0;
-    buf->document.maplist = 0;
-    if (buf->document.hmarklist)
-        buf->document.hmarklist->nmark = 0;
-    if (buf->document.imarklist)
-        buf->document.imarklist->nmark = 0;
+    struct Document sbuf = buf->document;
 
-    WcOption.auto_detect = WC_OPT_DETECT_OFF;
-    if (buf->content.cc.content_type == CONTENTTYPE_TEXT_HTML)
-        loadHTMLBuffer(ui, buf->content.url, stream, buf->document.charset, buf);
-    else
-        loadBuffer(buf->content.url, stream, buf);
-    ISclose(stream);
     wc_uint8 old_auto_detect = WcOption.auto_detect;
+    WcOption.auto_detect = WC_OPT_DETECT_OFF;
+    buf->document = loadContent(ui, &buf->content, baseURL(buf));
+    // ISclose(stream);
     WcOption.auto_detect = old_auto_detect;
 
     // buf->height = getScreen()->ROWS - 1 + 1;
-    if (buf->document.firstLine && sbuf.document.firstLine) {
-        struct LineList* cur = currentLine(&sbuf.document);
-        int n;
+    if (buf->document.firstLine && sbuf.firstLine) {
+        struct LineList* cur = currentLine(&sbuf);
 
-        buf->pos = sbuf.pos + cur->bpos;
-        while (cur->bpos && cur->prev)
-            cur = cur->prev;
+        // buf->pos = sbuf.pos + cur->bpos;
+        // while (cur->bpos && cur->prev)
+        //     cur = cur->prev;
         // if (cur->real_linenumber > 0)
         //     gotoRealLine(buf, cur->real_linenumber);
         // else
         gotoLine(&buf->document, cur->linenumber);
-        n = (currentLine(&buf->document)->linenumber - topLine(&buf->document)->linenumber)
-            - (cur->linenumber - sbuf.document.topLineIndex);
+        int n = (currentLine(&buf->document)->linenumber - topLine(&buf->document)->linenumber)
+            - (cur->linenumber - sbuf.topLineIndex);
         if (n) {
             buf->document.topLineIndex = buf->document.topLineIndex + n;
             // if (cur->real_linenumber > 0)
@@ -490,22 +485,15 @@ void reshapeBuffer(struct UI ui, struct Buffer* buf, int cols)
             gotoLine(&buf->document, cur->linenumber);
         }
         buf->pos -= currentLine(&buf->document)->bpos;
-        if (FoldLine && buf->content.cc.content_type != CONTENTTYPE_TEXT_HTML)
+        // if (FoldLine && buf->content.cc.content_type != CONTENTTYPE_TEXT_HTML)
             buf->currentColumn = 0;
-        else
-            buf->currentColumn = sbuf.currentColumn;
+        // else
+        //     buf->currentColumn = sbuf.currentColumn;
         arrangeCursor(buf);
     }
     if (buf->check_url)
         chkURLBuffer(buf);
-    formResetBuffer(buf, sbuf.document.formitem);
-}
-
-/* shallow copy */
-void copyBuffer(struct Buffer* a, struct Buffer* b)
-{
-    readBufferCache(b);
-    memcpy(a, b, sizeof(struct Buffer));
+    formResetBuffer(buf, sbuf.formitem);
 }
 
 struct Buffer*
@@ -1203,4 +1191,124 @@ reAnchorAny(struct Buffer* buf, const char* re, AnchorFunc anchorproc)
 const char* reAnchor(struct Buffer* buf, const char* re)
 {
     return reAnchorAny(buf, re, _put_anchor_all);
+}
+
+struct Buffer* makeBuffer(struct UI ui, struct Content* c)
+{
+    if (image_source)
+        return NULL;
+
+    if (c->page) {
+        struct Buffer* buf = newBuffer();
+        buf->document = loadContent(ui, c, baseURL(buf));
+        if (buf) {
+            buf->content = *c;
+            Str tmp = tmpfname(TMPF_SRC, ".html");
+            FILE* src = fopen(tmp->ptr, "w");
+            if (src) {
+                Strfputs(c->page, src);
+                fclose(src);
+                buf->content.sourcefile = tmp->ptr;
+            }
+        }
+        return buf;
+    }
+    abort();
+
+    // long long current_content_length = 0;
+    // const char* p;
+    // if ((p = getHttpHeaderValue(c->document_header, "Content-Length:")) != NULL)
+    //     current_content_length = strtoclen(p);
+    // if (do_download) {
+    //     abort();
+    //     // /* download only */
+    //     // if (DecodeCTE && IStype(c->f.stream) != IST_ENCODED)
+    //     //     c->f.stream = newEncodedStream(c->f.stream, c->f.encoding);
+    //     // const char* file;
+    //     // if (c->pu.scheme == SCM_LOCAL) {
+    //     //     struct stat st;
+    //     //     if (PreserveTimestamp && !stat(c->pu.real_file, &st))
+    //     //         c->f.modtime = st.st_mtime;
+    //     //     file = conv_from_system(guessSaveName(NULL, c->pu.real_file));
+    //     // } else
+    //     //     file = guessSaveName(c->document_header, c->pu.file);
+    //     // if (doFileSave(c->f, file, current_content_length) == 0)
+    //     //     UFhalfclose(&c->f);
+    //     // else
+    //     //     UFclose(&c->f);
+    //     // return NO_BUFFER;
+    // }
+    //
+    // if (image_source) {
+    //     abort();
+    //     // struct Buffer* b = NULL;
+    //     // if (IStype(c->f.stream) != IST_ENCODED)
+    //     //     c->f.stream = newEncodedStream(c->f.stream, c->f.encoding);
+    //     // if (save2tmp(c->f, image_source) == 0) {
+    //     //     b = newBuffer();
+    //     //     b->sourcefile = image_source;
+    //     //     b->real_type = c->real_type;
+    //     // }
+    //     // UFclose(&c->f);
+    //     // return b;
+    // }
+    //
+    // struct Buffer* t_buf = newBuffer();
+    // copyParsedURL(&t_buf->currentURL, &c->pu);
+    // t_buf->filename = c->pu.real_file ? c->pu.real_file : c->pu.file ? conv_to_system(c->pu.file)
+    //                                                                  : NULL;
+    // t_buf->ssl_certificate = c->f.ssl_certificate;
+    //
+    // // struct Buffer* (*proc)(struct URLFile*, struct Buffer*) = loadBuffer;
+    // struct Buffer* b;
+    // if (is_html_type(c->real_type)) {
+    //     b = loadHTMLBuffer(&c->f, t_buf);
+    //     b->type = "text/html";
+    // } else {
+    //     b = loadBuffer(&c->f, t_buf);
+    //     b->type = "text/plain";
+    // }
+    // if (b) {
+    //     if (b->buffername == NULL || b->buffername[0] == '\0') {
+    //         b->buffername = getHttpHeaderValue(c->document_header, "Subject:");
+    //         if (b->buffername == NULL && b->filename != NULL)
+    //             b->buffername = conv_from_system(lastFileName(b->filename));
+    //     }
+    //     if (b->currentURL.scheme == SCM_UNKNOWN)
+    //         b->currentURL.scheme = c->f.scheme;
+    //     if (c->f.scheme == SCM_LOCAL && b->sourcefile == NULL)
+    //         b->sourcefile = b->filename;
+    // }
+    //
+    // UFclose(&c->f);
+    // if (b && b != NO_BUFFER) {
+    //     b->real_scheme = c->f.scheme;
+    //     b->real_type = c->real_type;
+    //     if (c->pu.label) {
+    //         if (is_html_type(c->real_type)) {
+    //             struct Anchor* a;
+    //             a = searchURLLabel(b, c->pu.label);
+    //             if (a != NULL) {
+    //                 gotoLine(b, a->start.line);
+    //                 if (label_topline)
+    //                     b->topLine = lineSkip(b, b->topLine,
+    //                         b->currentLine->linenumber
+    //                             - b->topLine->linenumber,
+    //                         false);
+    //                 b->pos = a->start.pos;
+    //                 arrangeCursor(b);
+    //             }
+    //         } else { /* plain text */
+    //             int l = atoi(c->pu.label);
+    //             gotoRealLine(b, l);
+    //             b->pos = 0;
+    //             arrangeCursor(b);
+    //         }
+    //     }
+    // }
+    // // if (header_string)
+    // //     header_string = NULL;
+    // if (b && b != NO_BUFFER)
+    //     preFormUpdateBuffer(b);
+    // return b;
 }
