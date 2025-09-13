@@ -581,11 +581,76 @@ static void pushBuffer(struct UI ui, struct Buffer* buf)
     saveBufferInfo(ui);
 }
 
-static struct Buffer* loadNormalBuf(struct UI ui, struct Buffer* buf)
+static struct Buffer* pushContent(struct UI ui, struct Content c)
 {
+    struct Buffer* buf = makeBuffer(ui, &c);
+    if (!buf) {
+        Str emsg = Sprintf("Can't load %s", parsedURL2Str(&c.url)->ptr);
+        message(getUI(), MSG_ERR, emsg->ptr);
+        return 0;
+    }
+    // struct Buffer* buf = makeBuffer(ui, &c);
+    // if (buf == NULL) {
+    //     message(getUI(), MSG_INFO, "Execution failed");
+    //     return;
+    // } else if (buf) {
+    //     buf->filename = w;
+    //     buf->buffername = Sprintf("%s %s", DICTBUFFERNAME, word)->ptr;
+    //     if (buf->content_type == CONTENTTYPE_UNKNOWN)
+    //         buf->content_type = CONTENTTYPE_TEXT_PLAIN;
+    //     pushBuffer(ui, buf);
+    // }    // if (do_download) {
+    //     // TODO
+    //     abort();
+    // }
+    // struct Buffer* buf = makeBuffer(ui, &c);
+    // if (buf == NULL) {
+    //     /* FIXME: gettextize? */
+    //     char* emsg = Sprintf("Can't load %s", a->url)->ptr;
+    //     message(ui, MSG_ERR, emsg);
+    // } else if (buf) {
+    //     pushBuffer(ui, buf);
+    // }    // struct Buffer* buf = makeBuffer(ui, &c);
+    // if (buf == NULL) {
+    //     /* FIXME: gettextize? */
+    //     char* emsg = Sprintf("%s not found", conv_from_system(fn))->ptr;
+    //     message(getUI(), MSG_ERR, emsg);
+    // } else if (buf) {
+    //     pushBuffer(ui, buf);
+    // }    // struct Buffer* buf = makeBuffer(ui, &c);
+    // if (buf == NULL) {
+    //     char* emsg = Sprintf("Can't load %s", url)->ptr;
+    //     message(ui, MSG_ERR, emsg);
+    //     return NULL;
+    // }
+    //
+    // struct Url pu = parseUrl(url, base);
+    // pushHashHist(URLHist, parsedURL2Str(&pu)->ptr);
+    //
+    // if (buf == NULL) {
+    //     return NULL;
+    // }
+    //
+    // if (do_download) /* download (thus no need to render frames) */
+    //     return loadNormalBuf(ui, buf);
+    //
+    // if (target == NULL || /* no target specified (that means this page is not a frame page) */
+    //     !strcmp(target, "_top") /* this link is specified to be opened as an indivisual * page */
+    // ) {
+    //     return loadNormalBuf(ui, buf);
+    // }
+    //
+    // return loadNormalBuf(ui, buf);
+
     pushBuffer(ui, buf);
     return buf;
 }
+
+// static struct Buffer* loadNormalBuf(struct UI ui, struct Buffer* buf)
+// {
+//     pushBuffer(ui, buf);
+//     return buf;
+// }
 
 static struct Buffer*
 loadLink(struct UI ui, const char* url, const char* target, const char* referer, struct Form* post, bool do_download)
@@ -615,30 +680,7 @@ loadLink(struct UI ui, const char* url, const char* target, const char* referer,
         return NULL;
     }
 
-    struct Buffer* buf = makeBuffer(ui, &c);
-    if (buf == NULL) {
-        char* emsg = Sprintf("Can't load %s", url)->ptr;
-        message(ui, MSG_ERR, emsg);
-        return NULL;
-    }
-
-    struct Url pu = parseUrl(url, base);
-    pushHashHist(URLHist, parsedURL2Str(&pu)->ptr);
-
-    if (buf == NULL) {
-        return NULL;
-    }
-
-    if (do_download) /* download (thus no need to render frames) */
-        return loadNormalBuf(ui, buf);
-
-    if (target == NULL || /* no target specified (that means this page is not a frame page) */
-        !strcmp(target, "_top") /* this link is specified to be opened as an indivisual * page */
-    ) {
-        return loadNormalBuf(ui, buf);
-    }
-
-    return loadNormalBuf(ui, buf);
+    return pushContent(ui, c);
 }
 
 static struct FormItem* save_submit_formlist(struct FormItem* src)
@@ -1224,18 +1266,11 @@ DEFUN(srchprv, SEARCH_PREV, "Continue search backward")
 }
 
 static void
-cmd_loadURL(struct UI ui, const char* url, struct Url* current, const char* referer, struct Form* post)
+cmd_loadURL(struct UI ui,
+    const char* url, struct Url* current, const char* referer, struct Form* post)
 {
-    // refresh(ttyWriter());
     struct Content c = loadGeneralFile(url, current, post, referer, UI_TTY);
-    struct Buffer* buf = makeBuffer(ui, &c);
-    if (buf == NULL) {
-        /* FIXME: gettextize? */
-        char* emsg = Sprintf("Can't load %s", conv_from_system(url))->ptr;
-        message(getUI(), MSG_ERR, emsg);
-    } else if (buf) {
-        pushBuffer(ui, buf);
-    }
+    pushContent(ui, c);
 }
 
 static void
@@ -1356,14 +1391,7 @@ DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output")
 static void cmd_loadfile(struct UI ui, const char* fn)
 {
     struct Content c = loadGeneralFile(file_to_url(fn, CurrentDir), NULL, NULL, NO_REFERER, UI_TTY);
-    struct Buffer* buf = makeBuffer(ui, &c);
-    if (buf == NULL) {
-        /* FIXME: gettextize? */
-        char* emsg = Sprintf("%s not found", conv_from_system(fn))->ptr;
-        message(getUI(), MSG_ERR, emsg);
-    } else if (buf) {
-        pushBuffer(ui, buf);
-    }
+    pushContent(ui, c);
 }
 
 /* Load file */
@@ -1934,8 +1962,7 @@ gotoLabel(struct UI ui, const char* label)
 
     struct Buffer* buf = newBuffer();
     copyBuffer(buf, ui.current_buffer);
-    int i;
-    for (i = 0; i < MAX_LB; i++)
+    for (int i = 0; i < MAX_LB; i++)
         buf->linkBuffer[i] = NULL;
     buf->currentURL.label = allocStr(label, -1);
     pushHashHist(URLHist, parsedURL2Str(&buf->currentURL)->ptr);
@@ -2022,18 +2049,7 @@ static void followImage(struct UI ui, bool do_download)
     message(getUI(), MSG_INFO, Sprintf("loading %s", a->url)->ptr);
     // refresh(ttyWriter());
     struct Content c = loadGeneralFile(a->url, baseURL(ui.current_buffer), NULL, NULL, UI_TTY);
-    if (do_download) {
-        // TODO
-        abort();
-    }
-    struct Buffer* buf = makeBuffer(ui, &c);
-    if (buf == NULL) {
-        /* FIXME: gettextize? */
-        char* emsg = Sprintf("Can't load %s", a->url)->ptr;
-        message(ui, MSG_ERR, emsg);
-    } else if (buf) {
-        pushBuffer(ui, buf);
-    }
+    pushContent(ui, c);
 }
 
 /* view inline image */
@@ -3021,11 +3037,6 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
 /* reload */
 DEFUN(reload, RELOAD, "Load current document anew")
 {
-    struct Buffer *buf, *fbuf = NULL, sbuf;
-    wc_ces old_charset;
-    Str url;
-    int multipart;
-
     if (ui.current_buffer->bufferprop & BP_INTERNAL) {
         if (!strcmp(ui.current_buffer->buffername, DOWNLOAD_LIST_TITLE)) {
             ldDL(ui);
@@ -3041,8 +3052,10 @@ DEFUN(reload, RELOAD, "Load current document anew")
         message(getUI(), MSG_ERR, "Can't reload stdin");
         return;
     }
+
+    struct Buffer sbuf;
     copyBuffer(&sbuf, ui.current_buffer);
-    multipart = 0;
+    int multipart = 0;
 
     struct Form* post;
     if (ui.current_buffer->form_submit) {
@@ -3059,17 +3072,17 @@ DEFUN(reload, RELOAD, "Load current document anew")
     } else {
         post = NULL;
     }
-    url = parsedURL2Str(&ui.current_buffer->currentURL);
-    /* FIXME: gettextize? */
+    Str url = parsedURL2Str(&ui.current_buffer->currentURL);
     message(getUI(), MSG_INFO, "Reloading...");
     // refresh(ttyWriter());
-    old_charset = DocumentCharset;
+    wc_ces old_charset = DocumentCharset;
     if (ui.current_buffer->document.charset != WC_CES_US_ASCII)
         DocumentCharset = ui.current_buffer->document.charset;
     // SearchHeader = ui.current_buffer->search_header;
     DefaultType = contentTypeStr(ui.current_buffer->content_type);
     struct Content c = loadGeneralFile(url->ptr, NULL, post, NO_REFERER, UI_TTY /*, true*/);
-    buf = makeBuffer(ui, &c);
+
+    struct Buffer* buf = makeBuffer(ui, &c);
     DocumentCharset = old_charset;
     // SearchHeader = false;
     DefaultType = NULL;
@@ -3084,8 +3097,10 @@ DEFUN(reload, RELOAD, "Load current document anew")
 
         return;
     }
-    if (fbuf != NULL)
-        Firstbuf = deleteBuffer(Firstbuf, fbuf);
+
+    // struct Buffer *fbuf = NULL;
+    // if (fbuf != NULL)
+    //     Firstbuf = deleteBuffer(Firstbuf, fbuf);
     repBuffer(ui, ui.current_buffer, buf);
     if ((buf->content_type == CONTENTTYPE_TEXT_PLAIN && sbuf.content_type == CONTENTTYPE_TEXT_HTML)
         || (buf->content_type == CONTENTTYPE_TEXT_HTML && sbuf.content_type == CONTENTTYPE_TEXT_PLAIN)) {
@@ -3319,31 +3334,17 @@ static void
 execdict(struct UI ui, const char* word)
 {
     if (!UseDictCommand || word == NULL || *word == '\0') {
-
         return;
     }
 
-    char *w, *dictcmd;
-    w = conv_to_system(word);
+    const char* w = conv_to_system(word);
     if (*w == '\0') {
+        return;
+    }
 
-        return;
-    }
-    dictcmd = Sprintf("%s?%s", DictCommand,
-        Str_form_quote(Strnew_charp(w))->ptr)
-                  ->ptr;
+    const char* dictcmd = Sprintf("%s?%s", DictCommand, Str_form_quote(Strnew_charp(w))->ptr) ->ptr;
     struct Content c = loadGeneralFile(dictcmd, NULL, NULL, NO_REFERER, UI_TTY);
-    struct Buffer* buf = makeBuffer(ui, &c);
-    if (buf == NULL) {
-        message(getUI(), MSG_INFO, "Execution failed");
-        return;
-    } else if (buf) {
-        buf->filename = w;
-        buf->buffername = Sprintf("%s %s", DICTBUFFERNAME, word)->ptr;
-        if (buf->content_type == CONTENTTYPE_UNKNOWN)
-            buf->content_type = CONTENTTYPE_TEXT_PLAIN;
-        pushBuffer(ui, buf);
-    }
+    pushContent(ui, c);
 }
 
 DEFUN(dictword, DICT_WORD, "Execute dictionary command (see README.dict)")
