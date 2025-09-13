@@ -1116,7 +1116,7 @@ DEFUN(ctrCsrV, CENTER_V, "Center on cursor line")
         return;
     int offsety = getScreen()->ROWS / 2 - ui.viewport_cursor.y;
     if (offsety != 0) {
-        ui.current_buffer->document.topLineIndex = lineSkip(ui.current_buffer, topLine(&ui.current_buffer->document), -offsety, false)->linenumber;
+        ui.current_buffer->document.topLineIndex = lineSkip(ui.current_buffer, topLine(&ui.current_buffer->document), -offsety)->linenumber;
         arrangeLine(ui.current_buffer);
     }
 }
@@ -1645,7 +1645,7 @@ void _goLine(struct UI ui, const char* l)
         ui.current_buffer->document.topLineIndex = ui.current_buffer->document.currentLineIndex = ui.current_buffer->document.firstLine->linenumber;
     } else if (*l == '$') {
         ui.current_buffer->document.topLineIndex = lineSkip(ui.current_buffer, lastLine(&ui.current_buffer->document),
-            -(getScreen()->ROWS + 1) / 2, true)
+            -(getScreen()->ROWS + 1) / 2)
                                                        ->linenumber;
         ui.current_buffer->document.currentLineIndex = lastLine(&ui.current_buffer->document)->linenumber;
     }
@@ -1874,8 +1874,7 @@ gotoLabel(struct UI ui, const char* label)
     if (label_topline)
         ui.current_buffer->document.topLineIndex = lineSkip(ui.current_buffer, topLine(&ui.current_buffer->document),
             currentLine(&ui.current_buffer->document)->linenumber
-                - topLine(&ui.current_buffer->document)->linenumber,
-            false)
+                - topLine(&ui.current_buffer->document)->linenumber)
                                                        ->linenumber;
     ui.current_buffer->pos = al->start.pos;
     arrangeCursor(ui.current_buffer);
@@ -3737,7 +3736,7 @@ DEFUN(cursorTop, CURSOR_TOP, "Move cursor to the top of the screen")
 {
     if (ui.current_buffer->document.firstLine == NULL)
         return;
-    ui.current_buffer->document.currentLineIndex = lineSkip(ui.current_buffer, topLine(&ui.current_buffer->document), 0, false)->linenumber;
+    ui.current_buffer->document.currentLineIndex = lineSkip(ui.current_buffer, topLine(&ui.current_buffer->document), 0)->linenumber;
     arrangeLine(ui.current_buffer);
 }
 
@@ -3746,7 +3745,7 @@ DEFUN(cursorMiddle, CURSOR_MIDDLE, "Move cursor to the middle of the screen")
     if (ui.current_buffer->document.firstLine == NULL)
         return;
     int offsety = (getScreen()->ROWS - 1) / 2;
-    ui.current_buffer->document.currentLineIndex = currentLineSkip(ui.current_buffer, topLine(&ui.current_buffer->document), offsety, false)->linenumber;
+    ui.current_buffer->document.currentLineIndex = currentLineSkip(ui.current_buffer, topLine(&ui.current_buffer->document), offsety)->linenumber;
     arrangeLine(ui.current_buffer);
 }
 
@@ -3755,7 +3754,7 @@ DEFUN(cursorBottom, CURSOR_BOTTOM, "Move cursor to the bottom of the screen")
     if (ui.current_buffer->document.firstLine == NULL)
         return;
     int offsety = getScreen()->ROWS - 1;
-    ui.current_buffer->document.currentLineIndex = currentLineSkip(ui.current_buffer, topLine(&ui.current_buffer->document), offsety, false)->linenumber;
+    ui.current_buffer->document.currentLineIndex = currentLineSkip(ui.current_buffer, topLine(&ui.current_buffer->document), offsety)->linenumber;
     arrangeLine(ui.current_buffer);
 }
 
