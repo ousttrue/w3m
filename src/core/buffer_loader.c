@@ -783,6 +783,8 @@ HTMLlineproc2body(struct Url* base, wc_ces charset, FeedFunc feed)
         addMultirowsForm(&doc, doc.formitem);
     addMultirowsImg(&doc, doc.img);
 
+    doc.topLineIndex = doc.firstLine->linenumber;
+    doc.currentLineIndex = doc.firstLine->linenumber;
     return doc;
 }
 
@@ -872,7 +874,7 @@ static int loadHTML(struct html_feed_environ* htmlenv1,
 }
 
 // WC_CES_SHIFT_JIS /*WC_CES_US_ASCII*/
-static struct Document loadHTMLstream(Str html, struct Url* base, wc_ces content_charset, bool internal)
+static struct Document loadHtmlDocument(Str html, struct Url* base, wc_ces content_charset, bool internal)
 {
     // Str html = readAll(stream);
     struct UI ui = getUI();
@@ -986,125 +988,6 @@ static struct Document loadHTMLstream(Str html, struct Url* base, wc_ces content
     //     HTMLlineproc2(newBuf, htmlenv1.buf);
 
     return doc;
-}
-
-struct Buffer* makeBuffer(struct UI ui, struct Content* c)
-{
-    if (image_source)
-        return NULL;
-
-    if (c->page) {
-        struct Buffer* buf = loadHTMLString(ui, c->page, c->cc.charset);
-        if (buf) {
-            buf->content = *c;
-            Str tmp = tmpfname(TMPF_SRC, ".html");
-            FILE* src = fopen(tmp->ptr, "w");
-            if (src) {
-                Strfputs(c->page, src);
-                fclose(src);
-                buf->content.sourcefile = tmp->ptr;
-            }
-        }
-        return buf;
-    }
-    abort();
-
-    // long long current_content_length = 0;
-    // const char* p;
-    // if ((p = getHttpHeaderValue(c->document_header, "Content-Length:")) != NULL)
-    //     current_content_length = strtoclen(p);
-    // if (do_download) {
-    //     abort();
-    //     // /* download only */
-    //     // if (DecodeCTE && IStype(c->f.stream) != IST_ENCODED)
-    //     //     c->f.stream = newEncodedStream(c->f.stream, c->f.encoding);
-    //     // const char* file;
-    //     // if (c->pu.scheme == SCM_LOCAL) {
-    //     //     struct stat st;
-    //     //     if (PreserveTimestamp && !stat(c->pu.real_file, &st))
-    //     //         c->f.modtime = st.st_mtime;
-    //     //     file = conv_from_system(guessSaveName(NULL, c->pu.real_file));
-    //     // } else
-    //     //     file = guessSaveName(c->document_header, c->pu.file);
-    //     // if (doFileSave(c->f, file, current_content_length) == 0)
-    //     //     UFhalfclose(&c->f);
-    //     // else
-    //     //     UFclose(&c->f);
-    //     // return NO_BUFFER;
-    // }
-    //
-    // if (image_source) {
-    //     abort();
-    //     // struct Buffer* b = NULL;
-    //     // if (IStype(c->f.stream) != IST_ENCODED)
-    //     //     c->f.stream = newEncodedStream(c->f.stream, c->f.encoding);
-    //     // if (save2tmp(c->f, image_source) == 0) {
-    //     //     b = newBuffer();
-    //     //     b->sourcefile = image_source;
-    //     //     b->real_type = c->real_type;
-    //     // }
-    //     // UFclose(&c->f);
-    //     // return b;
-    // }
-    //
-    // struct Buffer* t_buf = newBuffer();
-    // copyParsedURL(&t_buf->currentURL, &c->pu);
-    // t_buf->filename = c->pu.real_file ? c->pu.real_file : c->pu.file ? conv_to_system(c->pu.file)
-    //                                                                  : NULL;
-    // t_buf->ssl_certificate = c->f.ssl_certificate;
-    //
-    // // struct Buffer* (*proc)(struct URLFile*, struct Buffer*) = loadBuffer;
-    // struct Buffer* b;
-    // if (is_html_type(c->real_type)) {
-    //     b = loadHTMLBuffer(&c->f, t_buf);
-    //     b->type = "text/html";
-    // } else {
-    //     b = loadBuffer(&c->f, t_buf);
-    //     b->type = "text/plain";
-    // }
-    // if (b) {
-    //     if (b->buffername == NULL || b->buffername[0] == '\0') {
-    //         b->buffername = getHttpHeaderValue(c->document_header, "Subject:");
-    //         if (b->buffername == NULL && b->filename != NULL)
-    //             b->buffername = conv_from_system(lastFileName(b->filename));
-    //     }
-    //     if (b->currentURL.scheme == SCM_UNKNOWN)
-    //         b->currentURL.scheme = c->f.scheme;
-    //     if (c->f.scheme == SCM_LOCAL && b->sourcefile == NULL)
-    //         b->sourcefile = b->filename;
-    // }
-    //
-    // UFclose(&c->f);
-    // if (b && b != NO_BUFFER) {
-    //     b->real_scheme = c->f.scheme;
-    //     b->real_type = c->real_type;
-    //     if (c->pu.label) {
-    //         if (is_html_type(c->real_type)) {
-    //             struct Anchor* a;
-    //             a = searchURLLabel(b, c->pu.label);
-    //             if (a != NULL) {
-    //                 gotoLine(b, a->start.line);
-    //                 if (label_topline)
-    //                     b->topLine = lineSkip(b, b->topLine,
-    //                         b->currentLine->linenumber
-    //                             - b->topLine->linenumber,
-    //                         false);
-    //                 b->pos = a->start.pos;
-    //                 arrangeCursor(b);
-    //             }
-    //         } else { /* plain text */
-    //             int l = atoi(c->pu.label);
-    //             gotoRealLine(b, l);
-    //             b->pos = 0;
-    //             arrangeCursor(b);
-    //         }
-    //     }
-    // }
-    // // if (header_string)
-    // //     header_string = NULL;
-    // if (b && b != NO_BUFFER)
-    //     preFormUpdateBuffer(b);
-    // return b;
 }
 
 #define TAG_IS(s, tag, len) \
@@ -1505,7 +1388,7 @@ loadHTMLBuffer(struct UI ui, struct Url url, union input_stream* stream, wc_ces 
         newBuf = newBuffer();
     // newBuf->document.charset = content_charset;
 
-    newBuf->document = loadHTMLstream(html, baseURL(newBuf), content_charset, false);
+    newBuf->document = loadHtmlDocument(html, baseURL(newBuf), content_charset, false);
 
     newBuf->document.topLineIndex = newBuf->document.firstLine->linenumber;
     newBuf->document.currentLineIndex = newBuf->document.firstLine->linenumber;
@@ -1515,34 +1398,126 @@ loadHTMLBuffer(struct UI ui, struct Url url, union input_stream* stream, wc_ces 
     return newBuf;
 }
 
-/*
- * loadHTMLString: read string and make new buffer
- */
-struct Buffer*
-loadHTMLString(struct UI ui, Str page, wc_ces content_charset)
+struct Buffer* makeBuffer(struct UI ui, struct Content* c)
 {
-    // union input_stream* stream = newStrStream(page);
+    if (image_source)
+        return NULL;
 
-    struct Buffer* newBuf = newBuffer();
-    // newBuf->document.charset = content_charset;
-    // if (sigsetjmp(AbortLoading, 1) != 0) {
-    //     term_raw();
-    //     discardBuffer(newBuf);
-    //     UFclose(&f);
-    //     return NULL;
+    if (c->page) {
+        struct Buffer* buf = newBuffer();
+        buf->document = loadHtmlDocument(c->page, baseURL(buf), c->cc.charset, false);
+        if (n_textarea)
+            formResetBuffer(ui, buf, buf->document.formitem);
+        if (buf) {
+            buf->content = *c;
+            Str tmp = tmpfname(TMPF_SRC, ".html");
+            FILE* src = fopen(tmp->ptr, "w");
+            if (src) {
+                Strfputs(c->page, src);
+                fclose(src);
+                buf->content.sourcefile = tmp->ptr;
+            }
+        }
+        return buf;
+    }
+    abort();
+
+    // long long current_content_length = 0;
+    // const char* p;
+    // if ((p = getHttpHeaderValue(c->document_header, "Content-Length:")) != NULL)
+    //     current_content_length = strtoclen(p);
+    // if (do_download) {
+    //     abort();
+    //     // /* download only */
+    //     // if (DecodeCTE && IStype(c->f.stream) != IST_ENCODED)
+    //     //     c->f.stream = newEncodedStream(c->f.stream, c->f.encoding);
+    //     // const char* file;
+    //     // if (c->pu.scheme == SCM_LOCAL) {
+    //     //     struct stat st;
+    //     //     if (PreserveTimestamp && !stat(c->pu.real_file, &st))
+    //     //         c->f.modtime = st.st_mtime;
+    //     //     file = conv_from_system(guessSaveName(NULL, c->pu.real_file));
+    //     // } else
+    //     //     file = guessSaveName(c->document_header, c->pu.file);
+    //     // if (doFileSave(c->f, file, current_content_length) == 0)
+    //     //     UFhalfclose(&c->f);
+    //     // else
+    //     //     UFclose(&c->f);
+    //     // return NO_BUFFER;
     // }
-    // TRAP_ON;
-
-    newBuf->document = loadHTMLstream(page, baseURL(newBuf), content_charset, true);
-
-    term_raw();
-    // ISclose(stream);
-    newBuf->document.topLineIndex = newBuf->document.firstLine->linenumber;
-    newBuf->document.currentLineIndex = newBuf->document.firstLine->linenumber;
-    newBuf->content.cc.content_type = CONTENTTYPE_TEXT_HTML;
-    if (n_textarea)
-        formResetBuffer(ui, newBuf, newBuf->document.formitem);
-    return newBuf;
+    //
+    // if (image_source) {
+    //     abort();
+    //     // struct Buffer* b = NULL;
+    //     // if (IStype(c->f.stream) != IST_ENCODED)
+    //     //     c->f.stream = newEncodedStream(c->f.stream, c->f.encoding);
+    //     // if (save2tmp(c->f, image_source) == 0) {
+    //     //     b = newBuffer();
+    //     //     b->sourcefile = image_source;
+    //     //     b->real_type = c->real_type;
+    //     // }
+    //     // UFclose(&c->f);
+    //     // return b;
+    // }
+    //
+    // struct Buffer* t_buf = newBuffer();
+    // copyParsedURL(&t_buf->currentURL, &c->pu);
+    // t_buf->filename = c->pu.real_file ? c->pu.real_file : c->pu.file ? conv_to_system(c->pu.file)
+    //                                                                  : NULL;
+    // t_buf->ssl_certificate = c->f.ssl_certificate;
+    //
+    // // struct Buffer* (*proc)(struct URLFile*, struct Buffer*) = loadBuffer;
+    // struct Buffer* b;
+    // if (is_html_type(c->real_type)) {
+    //     b = loadHTMLBuffer(&c->f, t_buf);
+    //     b->type = "text/html";
+    // } else {
+    //     b = loadBuffer(&c->f, t_buf);
+    //     b->type = "text/plain";
+    // }
+    // if (b) {
+    //     if (b->buffername == NULL || b->buffername[0] == '\0') {
+    //         b->buffername = getHttpHeaderValue(c->document_header, "Subject:");
+    //         if (b->buffername == NULL && b->filename != NULL)
+    //             b->buffername = conv_from_system(lastFileName(b->filename));
+    //     }
+    //     if (b->currentURL.scheme == SCM_UNKNOWN)
+    //         b->currentURL.scheme = c->f.scheme;
+    //     if (c->f.scheme == SCM_LOCAL && b->sourcefile == NULL)
+    //         b->sourcefile = b->filename;
+    // }
+    //
+    // UFclose(&c->f);
+    // if (b && b != NO_BUFFER) {
+    //     b->real_scheme = c->f.scheme;
+    //     b->real_type = c->real_type;
+    //     if (c->pu.label) {
+    //         if (is_html_type(c->real_type)) {
+    //             struct Anchor* a;
+    //             a = searchURLLabel(b, c->pu.label);
+    //             if (a != NULL) {
+    //                 gotoLine(b, a->start.line);
+    //                 if (label_topline)
+    //                     b->topLine = lineSkip(b, b->topLine,
+    //                         b->currentLine->linenumber
+    //                             - b->topLine->linenumber,
+    //                         false);
+    //                 b->pos = a->start.pos;
+    //                 arrangeCursor(b);
+    //             }
+    //         } else { /* plain text */
+    //             int l = atoi(c->pu.label);
+    //             gotoRealLine(b, l);
+    //             b->pos = 0;
+    //             arrangeCursor(b);
+    //         }
+    //     }
+    // }
+    // // if (header_string)
+    // //     header_string = NULL;
+    // if (b && b != NO_BUFFER)
+    //     preFormUpdateBuffer(b);
+    // return b;
 }
 
 /*

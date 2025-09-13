@@ -3500,9 +3500,11 @@ convert_size3(long long size)
     return tmp->ptr;
 }
 
-static struct Buffer*
-DownloadListBuffer(struct UI ui)
+static struct Content DownloadListBuffer(struct UI ui)
 {
+    if (!FirstDL)
+        return (struct Content){};
+
     DownloadList* d;
     Str src = NULL;
     struct stat st;
@@ -3510,8 +3512,6 @@ DownloadListBuffer(struct UI ui)
     int duration, rate, eta;
     size_t size;
 
-    if (!FirstDL)
-        return NULL;
     cur_time = time(0);
     /* FIXME: gettextize? */
     src = Strnew_charp("<html><head><title>" DOWNLOAD_LIST_TITLE
@@ -3581,7 +3581,14 @@ DownloadListBuffer(struct UI ui)
         Strcat_charp(src, "\n</pre><hr>\n");
     }
     Strcat_charp(src, "</form></body></html>");
-    return loadHTMLString(ui, src, WC_CES_UTF_8);
+
+    return (struct Content) {
+        .page = src,
+        .cc = {
+            .content_type = CONTENTTYPE_TEXT_HTML,
+            .charset = WC_CES_UTF_8,
+        },
+    };
 }
 
 void download_action(struct UI ui, struct KeyValue* arg)
@@ -3632,10 +3639,7 @@ void stopDownload(void)
 /* download panel */
 DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
 {
-    struct Buffer* buf;
-    int replace = false, new_tab = false;
-    int reload;
-
+    int replace = false;
     // if (ui.current_buffer->bufferprop & BP_INTERNAL && !strcmp(ui.current_buffer->document.title, DOWNLOAD_LIST_TITLE))
     //     replace = true;
     if (!FirstDL) {
@@ -3646,10 +3650,10 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
         }
         return;
     }
-    reload = checkDownloadList();
-    buf = DownloadListBuffer(ui);
-    if (!buf) {
+    int reload = checkDownloadList();
 
+    struct Content c = DownloadListBuffer(ui);
+    if (!c.page) {
         return;
     }
     // buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
@@ -3657,7 +3661,7 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
         // COPY_BUFROOT(buf, ui.current_buffer);
         // restorePosition(buf, ui.current_buffer);
     }
-    pushBuffer(ui, buf);
+    pushContent(ui, c);
     if (replace)
         deletePrevBuf(ui);
     if (reload)

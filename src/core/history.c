@@ -51,7 +51,6 @@ historyBuffer(struct UI ui, struct Hist* hist)
         }
     }
     Strcat_charp(src, "</ol>\n</body>\n</html>");
-    // return loadHTMLString(ui, src, WC_CES_UTF_8);
     return (struct Content) {
         .url = {},
         .page = src,

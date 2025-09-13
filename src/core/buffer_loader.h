@@ -42,6 +42,5 @@ int is_boundary(unsigned char*, unsigned char*);
 int getMetaRefreshParam(const char* q, Str* refresh_uri);
 void HTMLlineproc0(const char* istr, struct html_feed_environ* h_env, bool internal);
 struct Buffer* makeBuffer(struct UI ui, struct Content* c);
-struct Buffer* loadHTMLString(struct UI ui, Str page, wc_ces content_charset);
 struct Buffer* loadHTMLBuffer(struct UI ui, struct Url url, union input_stream* stream, wc_ces content_charset, struct Buffer* newBuf);
 struct Buffer* loadBuffer(struct Url url, union input_stream* streamf, struct Buffer* newBuf);
