@@ -42,7 +42,7 @@ extern int max_select;
 /* *INDENT-OFF* */
 struct {
     char* action;
-    void (*rout)(struct KeyValue*);
+    void (*rout)(struct UI ui, struct KeyValue*);
 } internal_action[] = {
     { "map", follow_map },
     { "option", panel_set_option },
@@ -202,7 +202,7 @@ int formtype(const char* typestr)
     return FORM_INPUT_TEXT;
 }
 
-void formRecheckRadio(struct Anchor* a, struct Buffer* buf, struct FormItem* fi)
+void formRecheckRadio(struct UI ui, struct Anchor* a, struct Buffer* buf, struct FormItem* fi)
 {
     int i;
     struct Anchor* a2;
@@ -213,14 +213,14 @@ void formRecheckRadio(struct Anchor* a, struct Buffer* buf, struct FormItem* fi)
         f2 = (struct FormItem*)a2->url;
         if (f2->parent == fi->parent && f2 != fi && f2->type == FORM_INPUT_RADIO && Strcmp(f2->name, fi->name) == 0) {
             f2->checked = 0;
-            formUpdateBuffer(a2, buf, f2);
+            formUpdateBuffer(ui, a2, buf, f2);
         }
     }
     fi->checked = 1;
-    formUpdateBuffer(a, buf, fi);
+    formUpdateBuffer(ui, a, buf, fi);
 }
 
-void formResetBuffer(struct Buffer* buf, struct AnchorList* formitem)
+void formResetBuffer(struct UI ui, struct Buffer* buf, struct AnchorList* formitem)
 {
     int i;
     struct Anchor* a;
@@ -261,7 +261,7 @@ void formResetBuffer(struct Buffer* buf, struct AnchorList* formitem)
         default:
             continue;
         }
-        formUpdateBuffer(a, buf, f1);
+        formUpdateBuffer(ui, a, buf, f1);
     }
 }
 
@@ -380,7 +380,7 @@ form_update_line(struct Line* line, char** str, int spos, int epos, int width,
     return pos;
 }
 
-void formUpdateBuffer(struct Anchor* a, struct Buffer* buf, struct FormItem* form)
+void formUpdateBuffer(struct UI ui, struct Anchor* a, struct Buffer* buf, struct FormItem* form)
 {
     struct Buffer save;
     char* p;
@@ -406,12 +406,12 @@ void formUpdateBuffer(struct Anchor* a, struct Buffer* buf, struct FormItem* for
     switch (form->type) {
     case FORM_INPUT_CHECKBOX:
     case FORM_INPUT_RADIO:
-        if (currentLine(buf) == NULL || spos >= currentLine(buf)->l.len || spos < 0)
+        if (currentLine(&buf->document) == NULL || spos >= currentLine(&buf->document)->l.len || spos < 0)
             break;
         if (form->checked)
-            currentLine(buf)->l.lineBuf[spos] = '*';
+            currentLine(&buf->document)->l.lineBuf[spos] = '*';
         else
-            currentLine(buf)->l.lineBuf[spos] = ' ';
+            currentLine(&buf->document)->l.lineBuf[spos] = ' ';
         break;
     case FORM_INPUT_TEXT:
     case FORM_INPUT_FILE:
@@ -426,11 +426,11 @@ void formUpdateBuffer(struct Anchor* a, struct Buffer* buf, struct FormItem* for
                 break;
             p = form->value->ptr;
         }
-        struct LineList* l = currentLine(buf);
+        struct LineList* l = currentLine(&buf->document);
         if (!l)
             break;
         if (form->type == FORM_TEXTAREA) {
-            int n = a->y - currentLine(buf)->linenumber;
+            int n = a->y - currentLine(&buf->document)->linenumber;
             if (n > 0)
                 for (; l && n; l = l->prev, n--)
                     ;
@@ -589,14 +589,14 @@ input_end:
     unlink(tmpf);
 }
 
-void do_internal(const char* action, const char* data)
+void do_internal(struct UI ui, const char* action, const char* data)
 {
     int i;
 
     for (i = 0; internal_action[i].action; i++) {
         if (strcasecmp(internal_action[i].action, action) == 0) {
             if (internal_action[i].rout)
-                internal_action[i].rout(cgistr2tagarg(data));
+                internal_action[i].rout(ui, cgistr2tagarg(data));
             return;
         }
     }
@@ -903,7 +903,7 @@ void loadPreForm(void)
     fclose(fp);
 }
 
-void preFormUpdateBuffer(struct Buffer* buf)
+void preFormUpdateBuffer(struct UI ui, struct Buffer* buf)
 {
     struct pre_form* pf;
     struct pre_form_item* pi;
@@ -952,17 +952,17 @@ void preFormUpdateBuffer(struct Buffer* buf)
                 case FORM_INPUT_PASSWORD:
                 case FORM_TEXTAREA:
                     fi->value = Strnew_charp(pi->value);
-                    formUpdateBuffer(a, buf, fi);
+                    formUpdateBuffer(ui, a, buf, fi);
                     break;
                 case FORM_INPUT_CHECKBOX:
                     if (pi->value && fi->value && !Strcmp_charp(fi->value, pi->value)) {
                         fi->checked = pi->checked;
-                        formUpdateBuffer(a, buf, fi);
+                        formUpdateBuffer(ui, a, buf, fi);
                     }
                     break;
                 case FORM_INPUT_RADIO:
                     if (pi->value && fi->value && !Strcmp_charp(fi->value, pi->value))
-                        formRecheckRadio(a, buf, fi);
+                        formRecheckRadio(ui, a, buf, fi);
                     break;
                 case FORM_SELECT:
                     for (j = 0, opt = fi->select_option; opt != NULL;
@@ -972,7 +972,7 @@ void preFormUpdateBuffer(struct Buffer* buf)
                             fi->value = opt->value;
                             fi->label = opt->label;
                             updateSelectOption(fi, fi->select_option);
-                            formUpdateBuffer(a, buf, fi);
+                            formUpdateBuffer(ui, a, buf, fi);
                             break;
                         }
                     }

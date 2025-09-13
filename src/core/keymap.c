@@ -3,7 +3,6 @@
 #include "myctype.h"
 #include "rc.h"
 #include "ctrlcode.h"
-#include "ui.h"
 #include "quote.h"
 #include "hash.h"
 

@@ -143,10 +143,10 @@ int getMapXY(struct Buffer* buf, struct Anchor* a, int* x, int* y)
     if (!buf || !a || !a->image || !x || !y)
         return 0;
     *x = (int)((buf->currentColumn /*+ buf->cursorX*/
-                   - COLPOS(&currentLine(buf)->l, a->start.pos) + 0.5)
+                   - COLPOS(&currentLine(&buf->document)->l, a->start.pos) + 0.5)
              * pixel_per_char)
         - a->image->xoffset;
-    *y = (int)((currentLine(buf)->linenumber - a->image->y + 0.5)
+    *y = (int)((currentLine(&buf->document)->linenumber - a->image->y + 0.5)
              * pixel_per_line)
         - a->image->yoffset;
     if (*x <= 0)
@@ -337,7 +337,7 @@ append_map_info(struct Buffer* buf, Str tmp, struct FormItem* fi)
  * information of current page and link
  */
 struct Buffer*
-page_info_panel(struct Buffer* buf)
+page_info_panel(struct UI ui, struct Buffer* buf)
 {
     Str tmp = Strnew_size(1024);
     Strcat_charp(tmp, "<html><head>\
@@ -348,8 +348,8 @@ page_info_panel(struct Buffer* buf)
         goto end;
 
     int all = buf->document.allLine;
-    if (all == 0 && lastLine(buf))
-        all = lastLine(buf)->linenumber;
+    if (all == 0 && lastLine(&buf->document))
+        all = lastLine(&buf->document)->linenumber;
     Strcat_charp(tmp, "<form method=internal action=charset>");
 
     const char* p = url_decode2(parsedURL2Str(&buf->currentURL)->ptr, 0);
@@ -441,7 +441,7 @@ page_info_panel(struct Buffer* buf)
             html_quote(buf->ssl_certificate), "</pre>\n", NULL);
 end:
     Strcat_charp(tmp, "</body></html>");
-    struct Buffer* newbuf = loadHTMLString(tmp, WC_CES_UTF_8);
+    struct Buffer* newbuf = loadHTMLString(ui, tmp, WC_CES_UTF_8);
     if (newbuf)
         newbuf->document.charset = buf->document.charset;
     return newbuf;

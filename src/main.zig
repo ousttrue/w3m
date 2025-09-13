@@ -54,6 +54,7 @@ pub fn main() !void {
     c.initialize();
     defun.init(addFunc);
     c.parseArgs(
+        c.getUI(),
         @intCast(std.os.argv.len),
         @ptrCast(std.os.argv),
     );

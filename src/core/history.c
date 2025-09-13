@@ -30,7 +30,7 @@ mergeHistory(struct Hist* ours, struct Hist* theirs)
 }
 
 struct Buffer*
-historyBuffer(struct Hist* hist)
+historyBuffer(struct UI ui, struct Hist* hist)
 {
     Str src = Strnew();
     Strcat_charp(src, "<html>\n<head><title>History Page</title></head>\n");
@@ -53,7 +53,7 @@ historyBuffer(struct Hist* hist)
         }
     }
     Strcat_charp(src, "</ol>\n</body>\n</html>");
-    return loadHTMLString(src, WC_CES_UTF_8);
+    return loadHTMLString(ui, src, WC_CES_UTF_8);
 }
 
 int loadHistory(struct Hist* hist)
@@ -91,13 +91,13 @@ void saveHistory(struct Hist* hist, size_t size)
     FILE* f;
     struct Hist* fhist;
     HistItem* item;
-    char* histf;
     int rename_ret;
     struct stat st;
 
     if (hist == NULL || hist->list == NULL)
         return;
 
+    const char* histf;
     histf = rcFile(HISTORY_FILE);
     if (stat(histf, &st) == -1)
         goto fail;
@@ -160,7 +160,7 @@ struct Hist* copyHist(struct Hist* hist)
 }
 
 HistItem*
-unshiftHist(struct Hist* hist, char* ptr)
+unshiftHist(struct Hist* hist, const char* ptr)
 {
     HistItem* item;
 
@@ -178,7 +178,7 @@ unshiftHist(struct Hist* hist, char* ptr)
 }
 
 HistItem*
-pushHist(struct Hist* hist, char* ptr)
+pushHist(struct Hist* hist, const char* ptr)
 {
     HistItem* item;
 
@@ -198,7 +198,7 @@ pushHist(struct Hist* hist, char* ptr)
 /* Don't mix pushHashHist() and pushHist()/unshiftHist(). */
 
 HistItem*
-pushHashHist(struct Hist* hist, char* ptr)
+pushHashHist(struct Hist* hist, const char* ptr)
 {
     HistItem* item;
 
@@ -222,7 +222,7 @@ pushHashHist(struct Hist* hist, char* ptr)
 }
 
 HistItem*
-getHashHist(struct Hist* hist, char* ptr)
+getHashHist(struct Hist* hist, const char* ptr)
 {
     HistItem* item;
 

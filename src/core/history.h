@@ -1,4 +1,5 @@
 #pragma once
+#include "geometry.h"
 #include "textlist.h"
 #include "hash.h"
 #include <stddef.h>
@@ -28,13 +29,13 @@ struct Buffer;
 
 struct Hist* newHist(void);
 struct Hist* copyHist(struct Hist* hist);
-HistItem* unshiftHist(struct Hist* hist, char* ptr);
-HistItem* pushHist(struct Hist* hist, char* ptr);
-HistItem* pushHashHist(struct Hist* hist, char* ptr);
-HistItem* getHashHist(struct Hist* hist, char* ptr);
+HistItem* unshiftHist(struct Hist* hist, const char* ptr);
+HistItem* pushHist(struct Hist* hist, const char* ptr);
+HistItem* pushHashHist(struct Hist* hist, const char* ptr);
+HistItem* getHashHist(struct Hist* hist, const char* ptr);
 char* lastHist(struct Hist* hist);
 char* nextHist(struct Hist* hist);
 char* prevHist(struct Hist* hist);
 int loadHistory(struct Hist* hist);
 void saveHistory(struct Hist* hist, size_t size);
-struct Buffer* historyBuffer(struct Hist* hist);
+struct Buffer* historyBuffer(struct UI ui, struct Hist* hist);

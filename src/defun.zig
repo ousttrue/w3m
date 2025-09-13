@@ -11,7 +11,7 @@ pub const CommandFunc = fn () callconv(.c) void;
 //     _goLine("^");
 // }
 pub export fn goLineF() void {
-    c._goLine("^");
+    c._goLine(c.getUI(), "^");
 }
 
 // /* Go to the beginning of the line */

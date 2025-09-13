@@ -42,7 +42,7 @@ char MetaRefresh = (false);
 char DecodeCTE = (false);
 int label_topline = (false);
 int UseExternalDirBuffer = (true);
-char* DirBufferCommand = ("file:///$LIB/dirlist" CGI_EXTENSION);
+const char* DirBufferCommand = ("file:///$LIB/dirlist" CGI_EXTENSION);
 const char* DefaultType = (NULL);
 int displayLinkNumber = (false);
 char SimplePreserveSpace = (false);
@@ -981,7 +981,7 @@ static void loadHTMLstream(union input_stream* stream, wc_ces* content_charset, 
     //     HTMLlineproc2(newBuf, htmlenv1.buf);
 }
 
-struct Buffer* makeBuffer(struct Content* c)
+struct Buffer* makeBuffer(struct UI ui, struct Content* c)
 {
     if (c->page) {
         if (image_source)
@@ -993,7 +993,7 @@ struct Buffer* makeBuffer(struct Content* c)
             Strfputs(c->page, src);
             fclose(src);
         }
-        struct Buffer* b = loadHTMLString(c->page, c->cc.charset);
+        struct Buffer* b = loadHTMLString(ui, c->page, c->cc.charset);
         if (b) {
             b->currentURL = copyParsedUrl(&c->url);
             b->real_scheme = c->url.scheme;
@@ -1494,7 +1494,7 @@ table_start:
  * loadHTMLBuffer: read file and make new buffer
  */
 struct Buffer*
-loadHTMLBuffer(struct Url url, union input_stream* stream, wc_ces content_charset, struct Buffer* newBuf)
+loadHTMLBuffer(struct UI ui, struct Url url, union input_stream* stream, wc_ces content_charset, struct Buffer* newBuf)
 {
     if (newBuf == NULL)
         newBuf = newBuffer();
@@ -1505,7 +1505,7 @@ loadHTMLBuffer(struct Url url, union input_stream* stream, wc_ces content_charse
     newBuf->document.topLineIndex = newBuf->document.firstLine->linenumber;
     newBuf->document.currentLineIndex = newBuf->document.firstLine->linenumber;
     if (n_textarea)
-        formResetBuffer(newBuf, newBuf->document.formitem);
+        formResetBuffer(ui, newBuf, newBuf->document.formitem);
 
     return newBuf;
 }
@@ -1514,7 +1514,7 @@ loadHTMLBuffer(struct Url url, union input_stream* stream, wc_ces content_charse
  * loadHTMLString: read string and make new buffer
  */
 struct Buffer*
-loadHTMLString(Str page, wc_ces content_charset)
+loadHTMLString(struct UI ui, Str page, wc_ces content_charset)
 {
     union input_stream* stream = newStrStream(page);
 
@@ -1536,7 +1536,7 @@ loadHTMLString(Str page, wc_ces content_charset)
     newBuf->document.currentLineIndex = newBuf->document.firstLine->linenumber;
     newBuf->content_type = CONTENTTYPE_TEXT_HTML;
     if (n_textarea)
-        formResetBuffer(newBuf, newBuf->document.formitem);
+        formResetBuffer(ui, newBuf, newBuf->document.formitem);
     return newBuf;
 }
 

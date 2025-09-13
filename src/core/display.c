@@ -250,7 +250,7 @@ static void redrawNLine(struct UI ui, struct Buffer* buf, int n)
 void bufToScreen(struct UI ui, struct Buffer* buf)
 {
     if (buf->width == 0) {
-        reshapeBuffer(buf, ui.viewport.size.x);
+        reshapeBuffer(ui, buf, ui.viewport.size.x);
     }
 
     if (activeImage && (cline != topLine(&buf->document) || ccolumn != buf->currentColumn)) {

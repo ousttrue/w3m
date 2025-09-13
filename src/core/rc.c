@@ -1293,7 +1293,7 @@ to_str(struct param_ptr* p)
 }
 
 struct Buffer*
-load_option_panel(void)
+load_option_panel(struct UI ui)
 {
     Str src;
     struct sel_c* s;
@@ -1393,13 +1393,13 @@ load_option_panel(void)
         Strcat_charp(src, "</table><hr width=50%>");
     }
     Strcat_charp(src, "</table></form></body></html>");
-    buf = loadHTMLString(src, WC_CES_UTF_8);
+    buf = loadHTMLString(ui, src, WC_CES_UTF_8);
     if (buf)
         buf->document.charset = OptionCharset;
     return buf;
 }
 
-void panel_set_option(struct KeyValue* arg)
+void panel_set_option(struct UI ui, struct KeyValue* arg)
 {
     FILE* f = NULL;
     char* p;

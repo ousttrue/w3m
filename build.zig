@@ -21,6 +21,7 @@ const output_srcs = [_][]const u8{
 // content
 //
 const content_public_headers = [_][]const u8{
+    "geometry.h",
     "growbuf.h",
     "runtime.h",
     "KeyValue.h",

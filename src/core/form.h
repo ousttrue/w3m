@@ -1,4 +1,5 @@
 #pragma once
+#include "geometry.h"
 #include "html_form.h"
 
 extern int FoldTextarea;
@@ -31,13 +32,13 @@ struct FormItem* formList_addInput(struct Form* fl,
     struct HtmlTagParsed* tag);
 const char* form2str(struct FormItem* fi);
 int formtype(const char* typestr);
-void formRecheckRadio(struct Anchor* a, struct Buffer* buf, struct FormItem* form);
-void formResetBuffer(struct Buffer* buf, struct AnchorList* formitem);
-void formUpdateBuffer(struct Anchor* a, struct Buffer* buf, struct FormItem* form);
-void preFormUpdateBuffer(struct Buffer* buf);
+void formRecheckRadio(struct UI ui, struct Anchor* a, struct Buffer* buf, struct FormItem* form);
+void formResetBuffer(struct UI ui, struct Buffer* buf, struct AnchorList* formitem);
+void formUpdateBuffer(struct UI ui, struct Anchor* a, struct Buffer* buf, struct FormItem* form);
+void preFormUpdateBuffer(struct UI ui, struct Buffer* buf);
 Str textfieldrep(Str s, int width);
 void input_textarea(struct FormItem* fi);
-void do_internal(const char* action, const char* data);
+void do_internal(struct UI ui, const char* action, const char* data);
 void form_write_data(FILE* f, const char* boundary, const char* name, const char* value);
 void form_write_from_file(FILE* f, const char* boundary, const char* name, const char* filename, const char* file);
 void loadPreForm(void);

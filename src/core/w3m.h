@@ -1,4 +1,5 @@
 #pragma once
+#include "geometry.h"
 #include <stdbool.h>
 #include <sys/types.h>
 #include <Str.h>
@@ -48,9 +49,9 @@ void fmInit();
 void fmTerm();
 
 int main_loop(const char* line_str);
-void _goLine(const char* l);
+void _goLine(struct UI ui, const char* l);
 
-void delBuffer(struct Buffer* buf);
+void delBuffer(struct UI ui, struct Buffer* buf);
 
 bool onFrame();
 void onKeyInput(unsigned char c);
@@ -60,8 +61,8 @@ void chkURLBuffer(struct Buffer* buf);
 struct _AlarmEvent* setAlarmEvent(struct _AlarmEvent* event, int sec, short status, int cmd, void* data);
 void tmpClearBuffer(struct Buffer* buf);
 
-void change_charset(struct KeyValue* arg);
-void saveBufferInfo(void);
+void change_charset(struct UI ui, struct KeyValue* arg);
+void saveBufferInfo(struct UI ui);
 void w3m_exit(int i);
 char* file_to_url(const char* file, const char* currentDir);
 Str myEditor(const char* cmd, const char* file, int line);

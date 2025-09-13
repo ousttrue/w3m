@@ -449,7 +449,7 @@ end:
 /*
  * Reshape HTML buffer
  */
-void reshapeBuffer(struct Buffer* buf, int cols)
+void reshapeBuffer(struct UI ui, struct Buffer* buf, int cols)
 {
     buf->width = cols;
     if (buf->sourcefile == 0)
@@ -477,7 +477,7 @@ void reshapeBuffer(struct Buffer* buf, int cols)
 
     WcOption.auto_detect = WC_OPT_DETECT_OFF;
     if (buf->content_type == CONTENTTYPE_TEXT_HTML)
-        loadHTMLBuffer(buf->currentURL, stream, buf->document.charset, buf);
+        loadHTMLBuffer(ui, buf->currentURL, stream, buf->document.charset, buf);
     else
         loadBuffer(buf->currentURL, stream, buf);
     ISclose(stream);
@@ -514,7 +514,7 @@ void reshapeBuffer(struct Buffer* buf, int cols)
     }
     if (buf->check_url)
         chkURLBuffer(buf);
-    formResetBuffer(buf, sbuf.document.formitem);
+    formResetBuffer(ui, buf, sbuf.document.formitem);
 }
 
 /* shallow copy */
@@ -881,7 +881,7 @@ char* last_modified(struct Buffer* buf)
 }
 
 struct Buffer*
-cookie_list_panel(void)
+cookie_list_panel(struct UI ui)
 {
     /* FIXME: gettextize? */
     Str src = Strnew_charp("<html><head><title>Cookies</title></head>"
@@ -968,7 +968,7 @@ cookie_list_panel(void)
             "</td></tr><tr><td><input type=submit value=\"OK\"></table><p>");
     }
     Strcat_charp(src, "</ol></form></body></html>");
-    return loadHTMLString(src, WC_CES_UTF_8);
+    return loadHTMLString(ui, src, WC_CES_UTF_8);
 }
 
 struct Int2 updateCursor(struct Buffer* buf, struct Int2 viewport_size,

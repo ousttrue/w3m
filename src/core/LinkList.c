@@ -104,7 +104,7 @@ link_menu(struct Buffer* buf)
 }
 
 struct Buffer*
-link_list_panel(struct Buffer* buf)
+link_list_panel(struct UI ui, struct Buffer* buf)
 {
     if (buf->bufferprop & BP_INTERNAL || (buf->document.linklist == 0 && buf->document.href == 0 && buf->document.img == 0)) {
         return 0;
@@ -226,7 +226,7 @@ link_list_panel(struct Buffer* buf)
         Strcat_charp(tmp, "</ol>\n");
     }
 
-    struct Buffer* newBuf = loadHTMLString(tmp, WC_CES_UTF_8);
+    struct Buffer* newBuf = loadHTMLString(ui, tmp, WC_CES_UTF_8);
     newBuf->document.charset = buf->document.charset;
     return newBuf;
 }

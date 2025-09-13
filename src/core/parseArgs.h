@@ -1,3 +1,4 @@
 #pragma once
+#include "geometry.h"
 
-void parseArgs(int argc, char** argv);
+void parseArgs(struct UI ui, int argc, char** argv);

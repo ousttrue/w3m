@@ -85,7 +85,7 @@ struct Buffer* nthBuffer(struct Buffer* firstbuf, int n);
 // void gotoRealLine(struct Buffer* buf, int n);
 void gotoLine(struct Buffer* buf, int n);
 struct Buffer* selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectchar);
-void reshapeBuffer(struct Buffer* buf, int cols);
+void reshapeBuffer(struct UI ui, struct Buffer* buf, int cols);
 void copyBuffer(struct Buffer* a, struct Buffer* b);
 struct Buffer* prevBuffer(struct Buffer* first, struct Buffer* buf);
 int writeBufferCache(struct Buffer* buf);
@@ -102,7 +102,7 @@ int columnSkip(struct Buffer* buf, int offset);
 struct LineList* lineSkip(struct Buffer* buf, struct LineList* line, int offset, int last);
 struct LineList* currentLineSkip(struct Buffer* buf, struct LineList* line, int offset, int last);
 char* last_modified(struct Buffer* buf);
-struct Buffer* cookie_list_panel(void);
+struct Buffer* cookie_list_panel(struct UI ui);
 struct Int2 viewportCursor(struct Buffer* buf);
 struct Int2 updateCursor(struct Buffer* buf, struct Int2 viewport_size,
     struct Int2 viewport_cursor, struct Int2 cursor_delta, bool* hasScroll);

@@ -93,6 +93,7 @@ struct UI getUI()
 
     struct Int2 vc = viewportCursor(Currentbuf);
     struct UI ui = {
+        .current_buffer = Currentbuf,
         .vt = vt,
         .use_graphic = graph_ok(t),
         .viewport = {

@@ -136,14 +136,14 @@ fusage(FILE* f, int err)
     exit(err);
 }
 
-void parseArgs(int argc, char** argv)
+void parseArgs(struct UI ui, int argc, char** argv)
 {
     const char* url = (getUrlScheme(argv[1]) == SCM_MISSING && !ArgvIsURL)
         ? file_to_url(argv[1], CurrentDir)
         : url_quote(conv_from_system(argv[1]));
 
     struct Content c = loadGeneralFile(url, NULL, NULL, NO_REFERER, (struct UserInteraction) { 0 });
-    struct Buffer* newbuf = makeBuffer(&c);
+    struct Buffer* newbuf = makeBuffer(ui, &c);
 
     switch (newbuf->real_scheme) {
     case SCM_MAILTO:
@@ -156,5 +156,5 @@ void parseArgs(int argc, char** argv)
         break;
     }
     Firstbuf = Currentbuf = newbuf;
-    saveBufferInfo();
+    saveBufferInfo(ui);
 }

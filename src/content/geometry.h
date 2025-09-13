@@ -1,4 +1,5 @@
 #pragma once
+#include <stdbool.h>
 
 // cursor position, term size... etc
 struct Int2 {
@@ -12,8 +13,10 @@ struct Rect {
 };
 
 struct VirtualTerm;
+struct Buffer;
 
 struct UI {
+    struct Buffer* current_buffer;
     struct VirtualTerm* vt;
     bool use_graphic;
     struct Rect viewport;

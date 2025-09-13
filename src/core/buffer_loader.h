@@ -1,10 +1,10 @@
 #pragma once
-#include <Str.h>
-#include <wc.h>
-#include "line.h"
+#include "geometry.h"
 #include "url.h"
 #include "istream.h"
 #include "platform.h"
+#include <Str.h>
+#include <wc.h>
 
 extern wc_ces DocumentCharset;
 extern int autoImage;
@@ -16,7 +16,7 @@ extern const char* DefaultType;
 extern int displayLinkNumber;
 extern char SimplePreserveSpace;
 extern int squeezeBlankLine;
-extern char* DirBufferCommand;
+extern const char* DirBufferCommand;
 extern bool PermitSaveToPipe;
 
 bool canCopyFile(const char* path1, const char* path2);
@@ -41,7 +41,7 @@ union input_stream;
 int is_boundary(unsigned char*, unsigned char*);
 int getMetaRefreshParam(const char* q, Str* refresh_uri);
 void HTMLlineproc0(const char* istr, struct html_feed_environ* h_env, bool internal);
-struct Buffer* makeBuffer(struct Content* c);
-struct Buffer* loadHTMLString(Str page, wc_ces content_charset);
-struct Buffer* loadHTMLBuffer(struct Url url, union input_stream* stream, wc_ces content_charset, struct Buffer* newBuf);
+struct Buffer* makeBuffer(struct UI ui, struct Content* c);
+struct Buffer* loadHTMLString(struct UI ui, Str page, wc_ces content_charset);
+struct Buffer* loadHTMLBuffer(struct UI ui, struct Url url, union input_stream* stream, wc_ces content_charset, struct Buffer* newBuf);
 struct Buffer* loadBuffer(struct Url url, union input_stream* streamf, struct Buffer* newBuf);
