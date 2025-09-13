@@ -94,8 +94,7 @@ void pushBuffer(struct UI ui, struct Buffer* buf)
     }
 }
 
-void cmd_loadContent(struct UI ui, struct Content c,
-    enum BufferProperty prop, enum LinkBufferType linkid)
+void cmd_loadContent(struct UI ui, struct Content c, enum BufferProperty prop)
 {
     // struct Buffer* buf;
     // if ((buf = ui.current_buffer->linkBuffer[LB_N_INFO]) != NULL) {
@@ -114,10 +113,6 @@ void cmd_loadContent(struct UI ui, struct Content c,
     buf->bufferprop |= (BP_INTERNAL | prop);
     if (!(buf->bufferprop & BP_NO_URL))
         buf->currentURL = copyParsedUrl(&ui.current_buffer->currentURL);
-    if (linkid != LB_NOLINK) {
-        buf->linkBuffer[REV_LB[linkid]] = ui.current_buffer;
-        ui.current_buffer->linkBuffer[linkid] = buf;
-    }
     pushBuffer(ui, buf);
 }
 

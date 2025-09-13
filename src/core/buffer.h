@@ -9,18 +9,8 @@
 #include <wc.h>
 
 extern int nextpage_topline;
-extern int REV_LB[];
 
 #define RESTORE_BUFPOSITION(sbufp) COPY_BUFPOSITION(Currentbuf, sbufp)
-
-enum LinkBufferType {
-    LB_NOLINK = -1,
-    LB_INFO = 0 /* pginfo() */,
-    LB_N_INFO = 1,
-    LB_SOURCE = 2 /* vwSrc() */,
-    LB_N_SOURCE = LB_SOURCE,
-    MAX_LB = 3,
-};
 
 enum BufferProperty {
     BP_NORMAL = 0x0,
@@ -41,7 +31,6 @@ struct Buffer {
     int visualpos;
 
     struct Buffer* nextBuffer;
-    struct Buffer* linkBuffer[MAX_LB];
     enum ContentType content_type;
     enum BufferProperty bufferprop;
 

@@ -34,12 +34,6 @@
 
 int nextpage_topline = (false);
 
-int REV_LB[MAX_LB] = {
-    LB_N_INFO,
-    LB_INFO,
-    LB_N_SOURCE,
-};
-
 /*
  * struct Buffer creation
  */
@@ -92,12 +86,6 @@ void discardBuffer(struct Buffer* buf)
 {
     deleteImage(buf);
     clearBuffer(buf);
-    for (int i = 0; i < MAX_LB; i++) {
-        struct Buffer* b = buf->linkBuffer[i];
-        if (b == 0)
-            continue;
-        b->linkBuffer[REV_LB[i]] = 0;
-    }
     if (buf->savecache)
         unlink(buf->savecache);
     if (--(*buf->clone))

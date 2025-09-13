@@ -1866,8 +1866,6 @@ gotoLabel(struct UI ui, const char* label)
 
     struct Buffer* buf = newBuffer();
     copyBuffer(buf, ui.current_buffer);
-    for (int i = 0; i < MAX_LB; i++)
-        buf->linkBuffer[i] = NULL;
     buf->currentURL.label = allocStr(label, -1);
     pushHashHist(URLHist, parsedURL2Str(&buf->currentURL)->ptr);
     (*buf->clone)++;
@@ -2549,7 +2547,7 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
 /* option setting */
 DEFUN(ldOpt, OPTIONS, "Display options setting panel")
 {
-    cmd_loadContent(ui, load_option_panel(ui), BP_NO_URL, LB_NOLINK);
+    cmd_loadContent(ui, load_option_panel(ui), BP_NO_URL);
 }
 
 /* set an option */
@@ -2577,14 +2575,14 @@ DEFUN(setOpt, SET_OPTION, "Set option")
 DEFUN(msgs, MSGS, "Display error messages")
 {
     struct Content c = message_list_panel(ui);
-    cmd_loadContent(ui, c, BP_NO_URL, LB_NOLINK);
+    cmd_loadContent(ui, c, BP_NO_URL);
 }
 
 /* page info */
 DEFUN(pginfo, INFO, "Display information about the current document")
 {
     struct Content c = page_info_panel(ui, ui.current_buffer);
-    cmd_loadContent(ui, c, BP_NORMAL, LB_INFO);
+    cmd_loadContent(ui, c, BP_NORMAL);
 }
 
 void follow_map(struct UI ui, struct KeyValue* arg)
@@ -2672,21 +2670,21 @@ DEFUN(movlistMn, MOVE_LIST_MENU, "Pop up menu to navigate between hyperlinks")
 DEFUN(linkLst, LIST, "Show all URLs referenced")
 {
     struct Content c = link_list_panel(ui, ui.current_buffer);
-    cmd_loadContent(ui, c, BP_NORMAL, LB_NOLINK);
+    cmd_loadContent(ui, c, BP_NORMAL);
 }
 
 /* cookie list */
 DEFUN(cooLst, COOKIE, "View cookie list")
 {
     struct Content c = cookie_list_panel(ui);
-    cmd_loadContent(ui, c, BP_NO_URL, LB_NOLINK);
+    cmd_loadContent(ui, c, BP_NO_URL);
 }
 
 /* History page */
 DEFUN(ldHist, HISTORY, "Show browsing history")
 {
     struct Content c = historyBuffer(ui, URLHist);
-    cmd_loadContent(ui, c, BP_NO_URL, LB_NOLINK);
+    cmd_loadContent(ui, c, BP_NO_URL);
 }
 
 /* download HREF link */
@@ -2870,31 +2868,21 @@ DEFUN(curURL, PEEK, "Show current address")
 
 DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
 {
-    if (ui.current_buffer->content_type == CONTENTTYPE_UNKNOWN)
-        return;
-
-    struct Buffer* buf;
-    if ((buf = ui.current_buffer->linkBuffer[LB_SOURCE]) != NULL || (buf = ui.current_buffer->linkBuffer[LB_N_SOURCE]) != NULL) {
-        ui.current_buffer = buf;
-
+    if (ui.current_buffer->content_type == CONTENTTYPE_UNKNOWN) {
         return;
     }
     if (ui.current_buffer->sourcefile == NULL) {
         return;
     }
 
-    buf = newBuffer();
+    struct Buffer* buf = newBuffer();
 
     if (ui.current_buffer->content_type == CONTENTTYPE_TEXT_HTML) {
         buf->content_type = CONTENTTYPE_TEXT_PLAIN;
         buf->document.title = Sprintf("source of %s", ui.current_buffer->document.title)->ptr;
-        buf->linkBuffer[LB_N_SOURCE] = ui.current_buffer;
-        ui.current_buffer->linkBuffer[LB_SOURCE] = buf;
     } else if (ui.current_buffer->content_type == CONTENTTYPE_TEXT_PLAIN) {
         buf->content_type = CONTENTTYPE_TEXT_HTML;
         buf->document.title = Sprintf("HTML view of %s", ui.current_buffer->document.title)->ptr;
-        buf->linkBuffer[LB_SOURCE] = ui.current_buffer;
-        ui.current_buffer->linkBuffer[LB_N_SOURCE] = buf;
     } else {
         return;
     }
@@ -3010,21 +2998,21 @@ _docCSet(struct UI ui, wc_ces charset)
 
 void change_charset(struct UI ui, struct KeyValue* arg)
 {
-    struct Buffer* buf = ui.current_buffer->linkBuffer[LB_N_INFO];
-    wc_ces charset;
-
-    if (buf == NULL)
-        return;
-    delBuffer(ui, ui.current_buffer);
-    ui.current_buffer = buf;
-    if (ui.current_buffer->bufferprop & BP_INTERNAL)
-        return;
-    charset = ui.current_buffer->document.charset;
-    for (; arg; arg = arg->next) {
-        if (!strcmp(arg->arg, "charset"))
-            charset = atoi(arg->value);
-    }
-    _docCSet(ui, charset);
+    abort();
+    // struct Buffer* buf = ui.current_buffer->linkBuffer[LB_N_INFO];
+    // if (buf == NULL)
+    //     return;
+    // delBuffer(ui, ui.current_buffer);
+    // ui.current_buffer = buf;
+    // if (ui.current_buffer->bufferprop & BP_INTERNAL)
+    //     return;
+    // wc_ces charset;
+    // charset = ui.current_buffer->document.charset;
+    // for (; arg; arg = arg->next) {
+    //     if (!strcmp(arg->arg, "charset"))
+    //         charset = atoi(arg->value);
+    // }
+    // _docCSet(ui, charset);
 }
 
 DEFUN(docCSet, CHARSET, "Change the character encoding for the current document")
