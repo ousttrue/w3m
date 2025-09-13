@@ -817,22 +817,6 @@ int columnSkip(struct Buffer* buf, int offset)
     return 1;
 }
 
-struct LineList* currentLineSkip(struct Buffer* buf, struct LineList* line, int offset)
-{
-    int i, n;
-    struct LineList* l = line;
-
-    if (offset == 0)
-        return l;
-    if (offset > 0)
-        for (i = 0; i < offset && l->next != 0; i++, l = l->next)
-            ;
-    else
-        for (i = 0; i < -offset && l->prev != 0; i++, l = l->prev)
-            ;
-    return l;
-}
-
 /* get last modified time */
 char* last_modified(struct Buffer* buf)
 {

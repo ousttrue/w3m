@@ -3741,7 +3741,7 @@ DEFUN(cursorMiddle, CURSOR_MIDDLE, "Move cursor to the middle of the screen")
     if (ui.current_buffer->document.firstLine == NULL)
         return;
     int offsety = (getScreen()->ROWS - 1) / 2;
-    ui.current_buffer->document.currentLineIndex = currentLineSkip(ui.current_buffer, topLine(&ui.current_buffer->document), offsety)->linenumber;
+    ui.current_buffer->document.currentLineIndex += offsety;
     arrangeLine(ui.current_buffer);
 }
 
@@ -3750,7 +3750,7 @@ DEFUN(cursorBottom, CURSOR_BOTTOM, "Move cursor to the bottom of the screen")
     if (ui.current_buffer->document.firstLine == NULL)
         return;
     int offsety = getScreen()->ROWS - 1;
-    ui.current_buffer->document.currentLineIndex = currentLineSkip(ui.current_buffer, topLine(&ui.current_buffer->document), offsety)->linenumber;
+    ui.current_buffer->document.currentLineIndex += offsety;
     arrangeLine(ui.current_buffer);
 }
 
