@@ -13,5 +13,5 @@ void parseArgs(int argc, char** argv);
 void SAVE_BUFPOSITION(struct Buffer *sbufp);
 void cmd_loadfile(struct UI ui, const char* fn);
 void pushBuffer(struct UI ui, struct Buffer* buf);
-void cmd_loadContent(struct UI ui, struct Content c, enum BufferProperty prop);
+void cmd_loadContent(struct UI ui, struct Content c);
 struct Buffer* pushContent(struct UI ui, struct Content c);

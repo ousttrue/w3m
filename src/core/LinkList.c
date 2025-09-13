@@ -106,9 +106,9 @@ link_menu(struct UI ui)
 struct Content
 link_list_panel(struct UI ui, struct Buffer* buf)
 {
-    if (buf->bufferprop & BP_INTERNAL || (buf->document.linklist == 0 && buf->document.href == 0 && buf->document.img == 0)) {
-        return (struct Content) {};
-    }
+    // if (buf->bufferprop & BP_INTERNAL || (buf->document.linklist == 0 && buf->document.href == 0 && buf->document.img == 0)) {
+    //     return (struct Content) {};
+    // }
 
     Str tmp = Strnew_charp("<title>Link List</title>\
 <h1 align=center>Link List</h1>\n");

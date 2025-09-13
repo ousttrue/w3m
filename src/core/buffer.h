@@ -12,16 +12,14 @@ extern int nextpage_topline;
 
 #define RESTORE_BUFPOSITION(sbufp) COPY_BUFPOSITION(Currentbuf, sbufp)
 
-enum BufferProperty {
-    BP_NORMAL = 0x0,
-    BP_PIPE = 0x1,
-    BP_INTERNAL = 0x8,
-    BP_NO_URL = 0x10,
-    BP_CLOSE = 0x40,
-};
-
 struct Buffer {
     const char* filename;
+
+    char* ssl_certificate;
+    TextList* document_header;
+    struct Url currentURL;
+    enum ContentType content_type;
+    const char* sourcefile;
 
     struct Document document;
 
@@ -31,23 +29,15 @@ struct Buffer {
     int visualpos;
 
     struct Buffer* nextBuffer;
-    enum ContentType content_type;
-    enum BufferProperty bufferprop;
 
-    struct Url currentURL;
-
-    int real_scheme;
-    char* sourcefile;
     int* clone;
     bool check_url;
     wc_uint8 auto_detect;
-    TextList* document_header;
     struct FormItem* form_submit;
     char* savecache;
     char* edit;
     struct mailcap* mailcap;
     char* mailcap_source;
-    char* ssl_certificate;
     char image_flag;
     char image_loaded;
     struct Anchor* submit;

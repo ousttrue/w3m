@@ -48,7 +48,7 @@ void parseArgs(int argc, char** argv)
     struct Content c = loadGeneralFile(url, NULL, NULL, NO_REFERER, (struct UserInteraction) { 0 });
     struct Buffer* newbuf = makeBuffer(ui, &c);
 
-    switch (newbuf->real_scheme) {
+    switch (newbuf->currentURL.scheme) {
     case SCM_MAILTO:
         break;
     case SCM_LOCAL:
@@ -94,7 +94,7 @@ void pushBuffer(struct UI ui, struct Buffer* buf)
     }
 }
 
-void cmd_loadContent(struct UI ui, struct Content c, enum BufferProperty prop)
+void cmd_loadContent(struct UI ui, struct Content c)
 {
     // struct Buffer* buf;
     // if ((buf = ui.current_buffer->linkBuffer[LB_N_INFO]) != NULL) {
@@ -110,9 +110,9 @@ void cmd_loadContent(struct UI ui, struct Content c, enum BufferProperty prop)
         message(getUI(), MSG_ERR, "Can't load string");
         return;
     }
-    buf->bufferprop |= (BP_INTERNAL | prop);
-    if (!(buf->bufferprop & BP_NO_URL))
-        buf->currentURL = copyParsedUrl(&ui.current_buffer->currentURL);
+    // buf->bufferprop |= (BP_INTERNAL | prop);
+    // if (!(buf->bufferprop & BP_NO_URL))
+    //     buf->currentURL = copyParsedUrl(&ui.current_buffer->currentURL);
     pushBuffer(ui, buf);
 }
 

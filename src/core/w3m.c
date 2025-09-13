@@ -711,7 +711,9 @@ static void do_submit(struct UI ui, struct Anchor* a, struct FormItem* fi, bool 
          */
         buf->form_submit = save_submit_formlist(fi);
         // }
-    } else if ((fi->parent->method == FORM_METHOD_INTERNAL && (!Strcmp_charp(fi->parent->action, "map") || !Strcmp_charp(fi->parent->action, "none"))) || ui.current_buffer->bufferprop & BP_INTERNAL) { /* internal */
+    } else if ((fi->parent->method == FORM_METHOD_INTERNAL && (!Strcmp_charp(fi->parent->action, "map") || !Strcmp_charp(fi->parent->action, "none"))) 
+        // || ui.current_buffer->bufferprop & BP_INTERNAL
+    ) { /* internal */
         do_internal(ui, tmp2->ptr, tmp->ptr);
     } else {
         message(ui, MSG_ERR, "Can't send form because of illegal method.");
@@ -1704,7 +1706,7 @@ DEFUN(editBf, EDIT, "Edit local source")
     const char* fn = ui.current_buffer->filename;
     if (fn == NULL
         || (ui.current_buffer->content_type == CONTENTTYPE_UNKNOWN && ui.current_buffer->edit == NULL)
-        || /* Reading shell */ ui.current_buffer->real_scheme != SCM_LOCAL
+        || /* Reading shell */ ui.current_buffer->currentURL.scheme != SCM_LOCAL
         || !strcmp(ui.current_buffer->currentURL.file, "-") /* file is std input  */
     ) {
         message(getUI(), MSG_ERR, "Can't edit other than local file");
@@ -2547,7 +2549,7 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
 /* option setting */
 DEFUN(ldOpt, OPTIONS, "Display options setting panel")
 {
-    cmd_loadContent(ui, load_option_panel(ui), BP_NO_URL);
+    cmd_loadContent(ui, load_option_panel(ui));
 }
 
 /* set an option */
@@ -2575,14 +2577,14 @@ DEFUN(setOpt, SET_OPTION, "Set option")
 DEFUN(msgs, MSGS, "Display error messages")
 {
     struct Content c = message_list_panel(ui);
-    cmd_loadContent(ui, c, BP_NO_URL);
+    cmd_loadContent(ui, c);
 }
 
 /* page info */
 DEFUN(pginfo, INFO, "Display information about the current document")
 {
     struct Content c = page_info_panel(ui, ui.current_buffer);
-    cmd_loadContent(ui, c, BP_NORMAL);
+    cmd_loadContent(ui, c);
 }
 
 void follow_map(struct UI ui, struct KeyValue* arg)
@@ -2670,21 +2672,21 @@ DEFUN(movlistMn, MOVE_LIST_MENU, "Pop up menu to navigate between hyperlinks")
 DEFUN(linkLst, LIST, "Show all URLs referenced")
 {
     struct Content c = link_list_panel(ui, ui.current_buffer);
-    cmd_loadContent(ui, c, BP_NORMAL);
+    cmd_loadContent(ui, c);
 }
 
 /* cookie list */
 DEFUN(cooLst, COOKIE, "View cookie list")
 {
     struct Content c = cookie_list_panel(ui);
-    cmd_loadContent(ui, c, BP_NO_URL);
+    cmd_loadContent(ui, c);
 }
 
 /* History page */
 DEFUN(ldHist, HISTORY, "Show browsing history")
 {
     struct Content c = historyBuffer(ui, URLHist);
-    cmd_loadContent(ui, c, BP_NO_URL);
+    cmd_loadContent(ui, c);
 }
 
 /* download HREF link */
@@ -2829,7 +2831,9 @@ DEFUN(peekIMG, PEEK_IMG, "Show image address")
 static Str
 currentURL(struct UI ui)
 {
-    if (!ui.current_buffer || ui.current_buffer->bufferprop & BP_INTERNAL)
+    if (!ui.current_buffer 
+        // || ui.current_buffer->bufferprop & BP_INTERNAL
+    )
         return Strnew_size(0);
     return parsedURL2Str(&ui.current_buffer->currentURL);
 }
@@ -2841,8 +2845,8 @@ DEFUN(curURL, PEEK, "Show current address")
     Lineprop* pp;
     static int offset = 0, n;
 
-    if (ui.current_buffer->bufferprop & BP_INTERNAL)
-        return;
+    // if (ui.current_buffer->bufferprop & BP_INTERNAL)
+    //     return;
     if (CurrentKey == prev_key && s != NULL) {
         if (s->length - offset >= getCols())
             offset++;
@@ -2887,7 +2891,6 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
         return;
     }
     buf->currentURL = ui.current_buffer->currentURL;
-    buf->real_scheme = ui.current_buffer->real_scheme;
     buf->filename = ui.current_buffer->filename;
     buf->sourcefile = ui.current_buffer->sourcefile;
     buf->document.charset = ui.current_buffer->document.charset;
@@ -2900,15 +2903,15 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
 /* reload */
 DEFUN(reload, RELOAD, "Load current document anew")
 {
-    if (ui.current_buffer->bufferprop & BP_INTERNAL) {
-        if (!strcmp(ui.current_buffer->document.title, DOWNLOAD_LIST_TITLE)) {
-            ldDL(ui);
-            return;
-        }
-        /* FIXME: gettextize? */
-        message(getUI(), MSG_ERR, "Can't reload...");
-        return;
-    }
+    // if (ui.current_buffer->bufferprop & BP_INTERNAL) {
+    //     if (!strcmp(ui.current_buffer->document.title, DOWNLOAD_LIST_TITLE)) {
+    //         ldDL(ui);
+    //         return;
+    //     }
+    //     /* FIXME: gettextize? */
+    //     message(getUI(), MSG_ERR, "Can't reload...");
+    //     return;
+    // }
     if (ui.current_buffer->currentURL.scheme == SCM_LOCAL && !strcmp(ui.current_buffer->currentURL.file, "-")) {
         /* file is std input */
         /* FIXME: gettextize? */
@@ -2987,8 +2990,8 @@ DEFUN(reshape, RESHAPE, "Re-render document")
 static void
 _docCSet(struct UI ui, wc_ces charset)
 {
-    if (ui.current_buffer->bufferprop & BP_INTERNAL)
-        return;
+    // if (ui.current_buffer->bufferprop & BP_INTERNAL)
+    //     return;
     if (ui.current_buffer->sourcefile == NULL) {
         message(getUI(), MSG_INFO, "Can't reload...");
         return;
@@ -3635,8 +3638,8 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
     int replace = false, new_tab = false;
     int reload;
 
-    if (ui.current_buffer->bufferprop & BP_INTERNAL && !strcmp(ui.current_buffer->document.title, DOWNLOAD_LIST_TITLE))
-        replace = true;
+    // if (ui.current_buffer->bufferprop & BP_INTERNAL && !strcmp(ui.current_buffer->document.title, DOWNLOAD_LIST_TITLE))
+    //     replace = true;
     if (!FirstDL) {
         if (replace) {
             if (ui.current_buffer == Firstbuf && ui.current_buffer->nextBuffer == NULL) {
@@ -3651,7 +3654,7 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
 
         return;
     }
-    buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
+    // buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
     if (replace) {
         // COPY_BUFROOT(buf, ui.current_buffer);
         // restorePosition(buf, ui.current_buffer);

@@ -1003,7 +1003,6 @@ struct Buffer* makeBuffer(struct UI ui, struct Content* c)
         struct Buffer* b = loadHTMLString(ui, c->page, c->cc.charset);
         if (b) {
             b->currentURL = copyParsedUrl(&c->url);
-            b->real_scheme = c->url.scheme;
             b->content_type = c->cc.content_type;
             if (src)
                 b->sourcefile = tmp->ptr;

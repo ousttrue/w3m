@@ -47,7 +47,6 @@ newBuffer()
     n->document.baseURL = 0;
     n->document.baseTarget = 0;
     n->document.title = "";
-    n->bufferprop = BP_NORMAL;
     n->clone = New(int);
     *n->clone = 1;
     n->ssl_certificate = 0;
@@ -91,7 +90,7 @@ void discardBuffer(struct Buffer* buf)
     if (--(*buf->clone))
         return;
     if (buf->sourcefile && (contentTypeIsImage(buf->content_type))) {
-        if (buf->real_scheme != SCM_LOCAL)
+        if (buf->currentURL.scheme != SCM_LOCAL)
             unlink(buf->sourcefile);
     }
     if (buf->mailcap_source)
@@ -782,10 +781,10 @@ void saveBuffer(struct Buffer* buf, FILE* f, int cont)
 struct Url*
 baseURL(struct Buffer* buf)
 {
-    if (buf->bufferprop & BP_NO_URL) {
-        /* no URL is defined for the buffer */
-        return 0;
-    }
+    // if (buf->bufferprop & BP_NO_URL) {
+    //     /* no URL is defined for the buffer */
+    //     return 0;
+    // }
     if (buf->document.baseURL != 0) {
         /* <BASE> tag is defined in the document */
         return buf->document.baseURL;
