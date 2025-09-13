@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "buffer_list.h"
 #include "line.h"
 #include "regex.h"
 #include "HttpRequest.h"

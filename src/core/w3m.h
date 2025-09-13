@@ -5,7 +5,6 @@
 #include <Str.h>
 
 extern char* mkd_tmp_dir;
-extern char ArgvIsURL;
 
 enum DefaultUrlType {
     DEFAULT_URL_EMPTY = 0,
@@ -17,7 +16,6 @@ extern int UseDictCommand;
 extern char* DictCommand;
 extern int use_mark;
 
-extern int clear_buffer;
 extern const char* config_file;
 extern char FollowLocale;
 extern int confirm_on_quit;
@@ -62,7 +60,5 @@ struct _AlarmEvent* setAlarmEvent(struct _AlarmEvent* event, int sec, short stat
 void tmpClearBuffer(struct Buffer* buf);
 
 void change_charset(struct UI ui, struct KeyValue* arg);
-void saveBufferInfo(struct UI ui);
 void w3m_exit(int i);
-char* file_to_url(const char* file, const char* currentDir);
 Str myEditor(const char* cmd, const char* file, int line);

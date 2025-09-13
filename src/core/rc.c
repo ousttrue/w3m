@@ -1,4 +1,5 @@
 #include "rc.h"
+#include "buffer_list.h"
 #include "runtime.h"
 #include "HttpRequest.h"
 #include "network.h"

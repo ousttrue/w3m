@@ -1,4 +1,5 @@
 #include "ui.h"
+#include "buffer_list.h"
 #include "runtime.h"
 #include "AnchorList.h"
 #include "Anchor.h"
@@ -26,9 +27,6 @@ int showLineNum = (false);
 #define DISPLAY_CHARSET WC_CES_UTF_8
 wc_ces DisplayCharset = DISPLAY_CHARSET;
 wc_ces BookmarkCharset = (SYSTEM_CHARSET);
-
-struct Buffer* Currentbuf = 0;
-struct Buffer* Firstbuf = 0;
 
 const char* url_quote_conv(const char* x, wc_ces c)
 {

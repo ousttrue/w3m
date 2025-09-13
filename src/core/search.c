@@ -1,4 +1,5 @@
 #include "search.h"
+#include "buffer_list.h"
 #include "tty.h"
 #include "ui.h"
 #include "buffer.h"

@@ -11,7 +11,6 @@
 extern int nextpage_topline;
 extern int REV_LB[];
 
-#define SAVE_BUFPOSITION(sbufp) COPY_BUFPOSITION(sbufp, Currentbuf)
 #define RESTORE_BUFPOSITION(sbufp) COPY_BUFPOSITION(Currentbuf, sbufp)
 
 enum LinkBufferType {

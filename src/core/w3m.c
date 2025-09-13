@@ -1,4 +1,5 @@
 #include "w3m.h"
+#include "buffer_list.h"
 #include "LinkList.h"
 #include "Anchor.h"
 #include "AnchorList.h"
@@ -76,7 +77,6 @@
 #define BOOKMARK "bookmark.html"
 
 char* mkd_tmp_dir = (NULL);
-char ArgvIsURL = true;
 
 int DefaultURLString = (DEFAULT_URL_CURRENT);
 int UseDictCommand = (true);
@@ -94,7 +94,6 @@ const char* CurrentCmdData;
 
 #define DSTR_LEN 256
 
-int clear_buffer = (true);
 const char* config_file = (NULL);
 char FollowLocale = (true);
 
@@ -120,8 +119,6 @@ static void SigAlarm(int _dummy);
 
 static int need_resize_screen = false;
 void resize_hook(int _dummy);
-
-static void cmd_loadBuffer(struct UI ui, struct Buffer* buf, int prop, int linkid);
 
 static char* getCurWord(struct Buffer* buf, int* spos, int* epos);
 
@@ -563,88 +560,7 @@ query_from_followform(struct UI ui, Str* query, struct FormItem* fi, int multipa
     }
 }
 
-static void pushBuffer(struct UI ui, struct Buffer* buf)
-{
-    deleteImage(ui.current_buffer);
-    if (clear_buffer)
-        tmpClearBuffer(ui.current_buffer);
 
-    struct Buffer* b;
-    if (Firstbuf == ui.current_buffer) {
-        buf->nextBuffer = Firstbuf;
-        Firstbuf = ui.current_buffer = buf;
-    } else if ((b = prevBuffer(Firstbuf, ui.current_buffer)) != NULL) {
-        b->nextBuffer = buf;
-        buf->nextBuffer = ui.current_buffer;
-        ui.current_buffer = buf;
-    }
-    saveBufferInfo(ui);
-}
-
-static struct Buffer* pushContent(struct UI ui, struct Content c)
-{
-    struct Buffer* buf = makeBuffer(ui, &c);
-    if (!buf) {
-        Str emsg = Sprintf("Can't load %s", parsedURL2Str(&c.url)->ptr);
-        message(getUI(), MSG_ERR, emsg->ptr);
-        return 0;
-    }
-    // struct Buffer* buf = makeBuffer(ui, &c);
-    // if (buf == NULL) {
-    //     message(getUI(), MSG_INFO, "Execution failed");
-    //     return;
-    // } else if (buf) {
-    //     buf->filename = w;
-    //     buf->buffername = Sprintf("%s %s", DICTBUFFERNAME, word)->ptr;
-    //     if (buf->content_type == CONTENTTYPE_UNKNOWN)
-    //         buf->content_type = CONTENTTYPE_TEXT_PLAIN;
-    //     pushBuffer(ui, buf);
-    // }    // if (do_download) {
-    //     // TODO
-    //     abort();
-    // }
-    // struct Buffer* buf = makeBuffer(ui, &c);
-    // if (buf == NULL) {
-    //     /* FIXME: gettextize? */
-    //     char* emsg = Sprintf("Can't load %s", a->url)->ptr;
-    //     message(ui, MSG_ERR, emsg);
-    // } else if (buf) {
-    //     pushBuffer(ui, buf);
-    // }    // struct Buffer* buf = makeBuffer(ui, &c);
-    // if (buf == NULL) {
-    //     /* FIXME: gettextize? */
-    //     char* emsg = Sprintf("%s not found", conv_from_system(fn))->ptr;
-    //     message(getUI(), MSG_ERR, emsg);
-    // } else if (buf) {
-    //     pushBuffer(ui, buf);
-    // }    // struct Buffer* buf = makeBuffer(ui, &c);
-    // if (buf == NULL) {
-    //     char* emsg = Sprintf("Can't load %s", url)->ptr;
-    //     message(ui, MSG_ERR, emsg);
-    //     return NULL;
-    // }
-    //
-    // struct Url pu = parseUrl(url, base);
-    // pushHashHist(URLHist, parsedURL2Str(&pu)->ptr);
-    //
-    // if (buf == NULL) {
-    //     return NULL;
-    // }
-    //
-    // if (do_download) /* download (thus no need to render frames) */
-    //     return loadNormalBuf(ui, buf);
-    //
-    // if (target == NULL || /* no target specified (that means this page is not a frame page) */
-    //     !strcmp(target, "_top") /* this link is specified to be opened as an indivisual * page */
-    // ) {
-    //     return loadNormalBuf(ui, buf);
-    // }
-    //
-    // return loadNormalBuf(ui, buf);
-
-    pushBuffer(ui, buf);
-    return buf;
-}
 
 // static struct Buffer* loadNormalBuf(struct UI ui, struct Buffer* buf)
 // {
@@ -1135,16 +1051,6 @@ void tmpClearBuffer(struct Buffer* buf)
 
 static Str currentURL(struct UI ui);
 
-void saveBufferInfo(struct UI ui)
-{
-    FILE* fp;
-    if ((fp = fopen(rcFile("bufinfo"), "w")) == NULL) {
-        return;
-    }
-    fprintf(fp, "%s\n", currentURL(ui)->ptr);
-    fclose(fp);
-}
-
 void delBuffer(struct UI ui, struct Buffer* buf)
 {
     if (buf == NULL)
@@ -1386,12 +1292,6 @@ DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output")
         fmInit();
         // getch();
     }
-}
-
-static void cmd_loadfile(struct UI ui, const char* fn)
-{
-    struct Content c = loadGeneralFile(file_to_url(fn, CurrentDir), NULL, NULL, NO_REFERER, UI_TTY);
-    pushContent(ui, c);
 }
 
 /* Load file */
@@ -2611,23 +2511,6 @@ DEFUN(gorURL, GOTO_RELATIVE, "Go to relative address")
     goURL0(ui, "Goto relative URL: ", true);
 }
 
-static void
-cmd_loadBuffer(struct UI ui, struct Buffer* buf, int prop, int linkid)
-{
-    if (buf == NULL) {
-        message(getUI(), MSG_ERR, "Can't load string");
-    } else if (buf) {
-        buf->bufferprop |= (BP_INTERNAL | prop);
-        if (!(buf->bufferprop & BP_NO_URL))
-            buf->currentURL = copyParsedUrl(&ui.current_buffer->currentURL);
-        if (linkid != LB_NOLINK) {
-            buf->linkBuffer[REV_LB[linkid]] = ui.current_buffer;
-            ui.current_buffer->linkBuffer[linkid] = buf;
-        }
-        pushBuffer(ui, buf);
-    }
-}
-
 /* load bookmark */
 DEFUN(ldBmark, BOOKMARK VIEW_BOOKMARK, "View bookmarks")
 {
@@ -3342,7 +3225,7 @@ execdict(struct UI ui, const char* word)
         return;
     }
 
-    const char* dictcmd = Sprintf("%s?%s", DictCommand, Str_form_quote(Strnew_charp(w))->ptr) ->ptr;
+    const char* dictcmd = Sprintf("%s?%s", DictCommand, Str_form_quote(Strnew_charp(w))->ptr)->ptr;
     struct Content c = loadGeneralFile(dictcmd, NULL, NULL, NO_REFERER, UI_TTY);
     pushContent(ui, c);
 }
@@ -3891,43 +3774,7 @@ DEFUN(cursorBottom, CURSOR_BOTTOM, "Move cursor to the bottom of the screen")
     arrangeLine(ui.current_buffer);
 }
 
-char* file_to_url(const char* file, const char* currentDir)
-{
-    Str tmp;
-#ifdef SUPPORT_NETBIOS_SHARE
-    char* host = NULL;
-#endif
 
-    if (!(file = expandPath(file)))
-        return NULL;
-#ifdef SUPPORT_NETBIOS_SHARE
-    if (file[0] == '/' && file[1] == '/') {
-        char* p;
-        file += 2;
-        if (*file) {
-            p = strchr(file, '/');
-            if (p != NULL && p != file) {
-                host = allocStr(file, (p - file));
-                file = p;
-            }
-        }
-    }
-#endif
-    if (file[0] != '/') {
-        tmp = Strnew_charp(currentDir);
-        if (Strlastchar(tmp) != '/')
-            Strcat_char(tmp, '/');
-        Strcat_charp(tmp, file);
-        file = tmp->ptr;
-    }
-    tmp = Strnew_charp("file://");
-#ifdef SUPPORT_NETBIOS_SHARE
-    if (host)
-        Strcat_charp(tmp, host);
-#endif
-    Strcat_charp(tmp, file_quote(cleanupName(file)));
-    return tmp->ptr;
-}
 
 Str myEditor(const char* cmd, const char* file, int line)
 {

@@ -1,7 +1,7 @@
 const std = @import("std");
 const c = @cImport({
     @cInclude("w3m.h");
-    @cInclude("parseArgs.h");
+    @cInclude("buffer_list.h");
     @cInclude("keymap.h");
 });
 const message_queue = @import("message_queue.zig");
@@ -54,7 +54,6 @@ pub fn main() !void {
     c.initialize();
     defun.init(addFunc);
     c.parseArgs(
-        c.getUI(),
         @intCast(std.os.argv.len),
         @ptrCast(std.os.argv),
     );

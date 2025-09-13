@@ -1,4 +1,5 @@
 #include "menu.h"
+#include "buffer_list.h"
 #include "AnchorList.h"
 #include "Anchor.h"
 #include "runtime.h"

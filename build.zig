@@ -94,6 +94,7 @@ const system_libs = [_][]const u8{
     "z",
 };
 const w3m_srcs = [_][]const u8{
+    "buffer_list.c",
     "Document.c",
     "LinkList.c",
     "token.c",
@@ -101,7 +102,6 @@ const w3m_srcs = [_][]const u8{
     "keybind.c",
     "util.c",
     "w3m.c",
-    "parseArgs.c",
     "screen.c",
     "screen_effects.c",
     "term_size.c",
