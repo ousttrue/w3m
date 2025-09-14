@@ -2,7 +2,6 @@
 #include "alloc.h"
 #include "graphicchar.h"
 #include "ctrlcode.h"
-#include "runtime.h"
 #include <wtf.h>
 
 #include "Symbols/alt.sym"
@@ -75,7 +74,7 @@ encode_symbol(symbol_set* s)
     s->conved_item = New_N(char*, i);
     for (i = 0; s->item[i]; i++) {
         if (*(s->item[i]))
-            s->conved_item[i] = wc_conv(s->item[i], s->ces, InnerCharset)->ptr;
+            s->conved_item[i] = wc_conv(s->item[i], s->ces, WC_CES_WTF)->ptr;
     }
 }
 

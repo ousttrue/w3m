@@ -6,15 +6,11 @@ const zcc = @import("compile_commands.zig");
 //
 const output_public_headers = [_][]const u8{
     "writer.h",
-    "TermEntry.h",
-    "graphicchar.h",
     "frame.h",
     "line_prop.h",
 };
 const output_srcs = [_][]const u8{
     "writer.c",
-    "TermEntry.c",
-    "graphicchar.c",
 };
 
 //
@@ -148,7 +144,6 @@ const w3m_srcs = [_][]const u8{
     "rc.c",
     "menu.c",
     "image_loader.c",
-    "symbol.c",
     "history.c",
 
     "tagtable.c",
