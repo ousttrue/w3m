@@ -1039,8 +1039,6 @@ getChar(const char* p)
     return wc_any_to_ucs(wtf_parse1((wc_uchar**)&p));
 }
 
-
-
 /* Go to specified line */
 void _goLine(struct UI ui, const char* l)
 {
@@ -1057,94 +1055,6 @@ void _goLine(struct UI ui, const char* l)
     }
     // else
     //     gotoRealLine(ui.current_buffer, atoi(l));
-}
-
-DEFUN(goLine, GOTO_LINE, "Go to the specified line")
-{
-
-    const char* str = searchKeyData();
-    if (str)
-        _goLine(ui, str);
-    else
-        /* FIXME: gettextize? */
-        _goLine(ui, inputStr(getUI(), "Goto line: ", ""));
-}
-
-DEFUN(goLineL, END, "Go to the last line")
-{
-    _goLine(ui, "$");
-}
-
-/* Go to the bottom of the line */
-DEFUN(linend, LINE_END, "Go to the end of the line")
-{
-    if (ui.current_buffer->document.firstLine == NULL)
-        return;
-    while (currentLine(&ui.current_buffer->document)->next
-        && currentLine(&ui.current_buffer->document)->next->bpos)
-        cursorDown(1);
-    ui.current_buffer->pos = currentLine(&ui.current_buffer->document)->l.len - 1;
-}
-
-// static int
-// cur_real_linenumber(struct Buffer* buf)
-// {
-//     struct Line *l, *cur = currentLine(&buf->document);
-//     int n;
-//
-//     if (!cur)
-//         return 1;
-//     n = cur->real_linenumber ? cur->real_linenumber : 1;
-//     for (l = buf->firstLine; l && l != cur && l->real_linenumber == 0; l = l->next) { /* header */
-//         if (l->bpos == 0)
-//             n++;
-//     }
-//     return n;
-// }
-
-/* Run editor on the current buffer */
-DEFUN(editBf, EDIT, "Edit local source")
-{
-    const char* fn = ui.current_buffer->filename;
-    if (fn == NULL
-        || (ui.current_buffer->content.cc.content_type == CONTENTTYPE_UNKNOWN && ui.current_buffer->edit == NULL)
-        || /* Reading shell */ ui.current_buffer->content.url.scheme != SCM_LOCAL
-        || !strcmp(ui.current_buffer->content.url.file, "-") /* file is std input  */
-    ) {
-        message(getUI(), MSG_ERR, "Can't edit other than local file");
-        return;
-    }
-
-    Str cmd;
-    if (ui.current_buffer->edit)
-        cmd = unquote_mailcap(ui.current_buffer->edit, contentTypeStr(ui.current_buffer->content.cc.content_type), fn,
-            getHttpHeaderValue(ui.current_buffer->document_header, "Content-Type:"), NULL);
-    else
-        cmd = myEditor(Editor, shell_quote(fn), 1);
-    // cur_real_linenumber(ui.current_buffer));
-    exec_cmd(cmd->ptr);
-
-    // reload(ui);
-}
-
-/* Run editor on the current screen */
-DEFUN(editScr, EDIT_SCREEN, "Edit rendered copy of document")
-{
-    char* tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
-    FILE* f = fopen(tmpf, "w");
-    if (f == NULL) {
-        /* FIXME: gettextize? */
-        message(getUI(), MSG_ERR, Sprintf("Can't open %s", tmpf)->ptr);
-        return;
-    }
-    saveBuffer(ui.current_buffer, f, true);
-    fclose(f);
-    exec_cmd(myEditor(Editor, shell_quote(tmpf),
-        1
-        // cur_real_linenumber(ui.current_buffer)
-        )
-            ->ptr);
-    unlink(tmpf);
 }
 
 /* Set / unset mark */

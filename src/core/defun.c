@@ -1,4 +1,8 @@
 #include "HttpRequest.h"
+#include "util.h"
+#include "form.h"
+#include "http_message.h"
+#include "mailcap.h"
 #include "buffer_list.h"
 #include "defun_macro.h"
 #include "geometry.h" // IWYU pragma: keep
@@ -15,6 +19,7 @@
 #include "platform.h"
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <wtf.h>
 #include <ucs.h>
 
@@ -441,4 +446,72 @@ DEFUN(selBuf, SELECT, "Display buffer-stack panel")
         if (clear_buffer)
             tmpClearBuffer(buf);
     }
+}
+
+DEFUN(goLine, GOTO_LINE, "Go to the specified line")
+{
+    const char* str = searchKeyData();
+    if (str)
+        _goLine(ui, str);
+    else
+        _goLine(ui, inputStr(getUI(), "Goto line: ", ""));
+}
+
+DEFUN(goLineL, END, "Go to the last line")
+{
+    _goLine(ui, "$");
+}
+
+/* Go to the bottom of the line */
+DEFUN(linend, LINE_END, "Go to the end of the line")
+{
+    if (ui.current_buffer->document.firstLine == NULL)
+        return;
+    while (currentLine(&ui.current_buffer->document)->next
+        && currentLine(&ui.current_buffer->document)->next->bpos)
+        cursorDown(1);
+    ui.current_buffer->pos = currentLine(&ui.current_buffer->document)->l.len - 1;
+}
+
+/* Run editor on the current buffer */
+DEFUN(editBf, EDIT, "Edit local source")
+{
+    const char* fn = ui.current_buffer->filename;
+    if (fn == NULL
+        || (ui.current_buffer->content.cc.content_type == CONTENTTYPE_UNKNOWN && ui.current_buffer->edit == NULL)
+        || /* Reading shell */ ui.current_buffer->content.url.scheme != SCM_LOCAL
+        || !strcmp(ui.current_buffer->content.url.file, "-") /* file is std input  */
+    ) {
+        message(getUI(), MSG_ERR, "Can't edit other than local file");
+        return;
+    }
+
+    Str cmd;
+    if (ui.current_buffer->edit)
+        cmd = unquote_mailcap(ui.current_buffer->edit, contentTypeStr(ui.current_buffer->content.cc.content_type), fn,
+            getHttpHeaderValue(ui.current_buffer->document_header, "Content-Type:"), NULL);
+    else
+        cmd = myEditor(Editor, shell_quote(fn), 1);
+    exec_cmd(cmd->ptr);
+}
+
+/* Run editor on the current screen */
+DEFUN(editScr, EDIT_SCREEN, "Edit rendered copy of document")
+{
+    const char* tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
+    FILE* f = fopen(tmpf, "w");
+    if (f == NULL) {
+        /* FIXME: gettextize? */
+        message(getUI(), MSG_ERR, Sprintf("Can't open %s", tmpf)->ptr);
+        return;
+    }
+
+    saveBuffer(ui.current_buffer, f, true);
+    fclose(f);
+    exec_cmd(myEditor(Editor, shell_quote(tmpf),
+        1
+        // cur_real_linenumber(ui.current_buffer)
+        )
+            ->ptr);
+    unlink(tmpf);
 }
