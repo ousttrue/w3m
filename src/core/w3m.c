@@ -450,7 +450,7 @@ bool onFrame()
         struct Anchor* a = ui.current_buffer->submit;
         ui.current_buffer->submit = NULL;
         gotoLine(&ui.current_buffer->document, a->start.line);
-        ui.current_buffer->pos = a->start.pos;
+        ui.current_buffer->document.pos = a->start.pos;
         _followForm(ui, true, false);
         return false;
     }
@@ -621,7 +621,7 @@ void _goLine(struct UI ui, const char* l)
 
         return;
     }
-    ui.current_buffer->pos = 0;
+    ui.current_buffer->document.pos = 0;
     if (*l == '^') {
         ui.current_buffer->document.topLineIndex = ui.current_buffer->document.currentLineIndex = ui.current_buffer->document.firstLine->linenumber;
     } else if (*l == '$') {
@@ -663,7 +663,7 @@ nextX(struct UI ui, int d, int dy)
 
     struct LineList* l;
     l = currentLine(&ui.current_buffer->document);
-    x = ui.current_buffer->pos;
+    x = ui.current_buffer->document.pos;
     y = l->linenumber;
     pan = NULL;
     for (i = 0; i < n; i++) {
@@ -696,7 +696,7 @@ nextX(struct UI ui, int d, int dy)
     if (pan == NULL)
         return;
     gotoLine(&ui.current_buffer->document, y);
-    ui.current_buffer->pos = pan->start.pos;
+    ui.current_buffer->document.pos = pan->start.pos;
 }
 
 /* go to the next downward/upward anchor */
@@ -717,7 +717,7 @@ nextY(struct UI ui, int d)
     if (an == NULL)
         an = retrieveCurrentForm(ui.current_buffer);
 
-    x = ui.current_buffer->pos;
+    x = ui.current_buffer->document.pos;
     y = currentLine(&ui.current_buffer->document)->linenumber + d;
     pan = NULL;
     hseq = -1;
@@ -1044,7 +1044,7 @@ anchorMn(struct UI ui, AnchorMenuFunc menu_func, int go)
 
     struct BufferPoint* po = &ui.current_buffer->document.hmarklist->marks[a->hseq];
     gotoLine(&ui.current_buffer->document, po->line);
-    ui.current_buffer->pos = po->pos;
+    ui.current_buffer->document.pos = po->pos;
 
     if (go)
         followAnchor(ui, false);
@@ -1673,7 +1673,7 @@ getCurWord(struct Buffer* buf, int* spos, int* epos)
     if (l == NULL)
         return NULL;
     p = l->l.lineBuf;
-    e = buf->pos;
+    e = buf->document.pos;
     while (e > 0 && !wc_is_ucs_alnum(getChar(&p[e])))
         e = prevChar(e, &l->l);
     if (!wc_is_ucs_alnum(getChar(&p[e])))
@@ -1753,7 +1753,7 @@ void set_buffer_environ(struct Buffer* buf)
         set_environ("W3M_CHARSET", wc_ces_to_charset(buf->document.charset));
     }
     struct LineList* l = currentLine(&buf->document);
-    if (l && (buf != prev_buf || l != prev_line || buf->pos != prev_pos)) {
+    if (l && (buf != prev_buf || l != prev_line || buf->document.pos != prev_pos)) {
         struct Anchor* a;
         struct Url pu;
         char* s = GetWord(buf);
@@ -1787,7 +1787,7 @@ void set_buffer_environ(struct Buffer* buf)
     }
     prev_buf = buf;
     prev_line = l;
-    prev_pos = buf->pos;
+    prev_pos = buf->document.pos;
 }
 
 void deleteFiles()
@@ -2166,14 +2166,14 @@ save_buffer_position(struct Buffer* buf)
     if (b
         && b->top_linenumber == buf->document.topLineIndex
         && b->cur_linenumber == buf->document.currentLineIndex
-        && b->currentColumn == buf->currentColumn
-        && b->pos == buf->pos)
+        && b->currentColumn == buf->document.currentColumn
+        && b->pos == buf->document.pos)
         return;
     b = New(struct BufferPos);
     b->top_linenumber = buf->document.topLineIndex;
     b->cur_linenumber = buf->document.currentLineIndex;
-    b->currentColumn = buf->currentColumn;
-    b->pos = buf->pos;
+    b->currentColumn = buf->document.currentColumn;
+    b->pos = buf->document.pos;
     b->next = NULL;
     b->prev = buf->undo;
     if (buf->undo)
@@ -2188,9 +2188,9 @@ resetPos(struct UI ui, struct BufferPos* b)
         .document = {
             .topLineIndex = b->top_linenumber,
             .currentLineIndex = b->cur_linenumber,
+            .pos = b->pos,
+            .currentColumn = b->currentColumn,
         },
-        .pos = b->pos,
-        .currentColumn = b->currentColumn,
     };
     restorePosition(ui.current_buffer, &buf);
     ui.current_buffer->undo = b;

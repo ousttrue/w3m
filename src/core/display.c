@@ -80,7 +80,7 @@ struct Frame* screenToFrame(const struct VirtualTerm* vt)
 static struct LineList* redrawLine(struct UI ui, struct Buffer* buf, struct LineList* l, int i)
 {
     int j, pos, rcol, ncol, delta = 1;
-    int column = buf->currentColumn;
+    int column = buf->document.currentColumn;
     char* p;
     Lineprop* pr;
     Linecolor* pc;
@@ -151,7 +151,7 @@ static struct LineList* redrawLine(struct UI ui, struct Buffer* buf, struct Line
 static struct LineList* redrawLineImage(struct UI ui, struct Buffer* buf, struct LineList* l, int i)
 {
     int j, pos, rcol;
-    int column = buf->currentColumn;
+    int column = buf->document.currentColumn;
     struct Anchor* a;
     int x, y, sx, sy, w, h;
 
@@ -254,7 +254,7 @@ void bufToScreen(struct UI ui)
         reshapeBuffer(ui, buf, ui.viewport.size.x);
     }
 
-    if (activeImage && (cline != topLine(&buf->document) || ccolumn != buf->currentColumn)) {
+    if (activeImage && (cline != topLine(&buf->document) || ccolumn != buf->document.currentColumn)) {
         if (draw_image_flag) {
             vt_clear(getScreen());
             // termClear(ttyWriter());
@@ -266,7 +266,7 @@ void bufToScreen(struct UI ui)
     }
     redrawNLine(ui, buf, getScreen()->ROWS);
     cline = topLine(&buf->document);
-    ccolumn = buf->currentColumn;
+    ccolumn = buf->document.currentColumn;
 
     if (topLine(&buf->document) == NULL) {
         if (buf->document.firstLine) {
@@ -278,7 +278,7 @@ void bufToScreen(struct UI ui)
 static int redrawLineRegion(struct UI ui, struct Buffer* buf, struct LineList* l, int i, int bpos, int epos)
 {
     int j, pos, rcol, ncol, delta = 1;
-    int column = buf->currentColumn;
+    int column = buf->document.currentColumn;
     char* p;
     Lineprop* pr;
     Linecolor* pc;

@@ -57,7 +57,7 @@ enum SearchResultFlags forwardSearch(struct UI ui, const char* str)
     if (l == NULL) {
         return SR_NOTFOUND;
     }
-    int pos = ui.current_buffer->pos;
+    int pos = ui.current_buffer->document.pos;
     if (l->bpos) {
         pos += l->bpos;
         while (l->bpos && l->prev)
@@ -75,7 +75,7 @@ enum SearchResultFlags forwardSearch(struct UI ui, const char* str)
             pos -= l->l.len;
             l = l->next;
         }
-        ui.current_buffer->pos = pos;
+        ui.current_buffer->document.pos = pos;
         if (l != currentLine(&ui.current_buffer->document))
             gotoLine(&ui.current_buffer->document, l->linenumber);
         set_mark(&l->l, pos, pos + last - first);
@@ -102,7 +102,7 @@ enum SearchResultFlags forwardSearch(struct UI ui, const char* str)
                 pos -= l->l.len;
                 l = l->next;
             }
-            ui.current_buffer->pos = pos;
+            ui.current_buffer->document.pos = pos;
             ui.current_buffer->document.currentLineIndex = l->linenumber;
             gotoLine(&ui.current_buffer->document, l->linenumber);
             set_mark(&l->l, pos, pos + last - first);
@@ -126,7 +126,7 @@ enum SearchResultFlags backwardSearch(struct UI ui, const char* str)
     if (l == NULL) {
         return SR_NOTFOUND;
     }
-    int pos = ui.current_buffer->pos;
+    int pos = ui.current_buffer->document.pos;
     if (l->bpos) {
         pos += l->bpos;
         while (l->bpos && l->prev)
@@ -164,7 +164,7 @@ enum SearchResultFlags backwardSearch(struct UI ui, const char* str)
                 pos -= l->l.len;
                 l = l->next;
             }
-            ui.current_buffer->pos = pos;
+            ui.current_buffer->document.pos = pos;
             if (l != currentLine(&ui.current_buffer->document))
                 gotoLine(&ui.current_buffer->document, l->linenumber);
             set_mark(&l->l, pos, pos + found_last - found);
@@ -203,7 +203,7 @@ enum SearchResultFlags backwardSearch(struct UI ui, const char* str)
                 pos -= l->l.len;
                 l = l->next;
             }
-            ui.current_buffer->pos = pos;
+            ui.current_buffer->document.pos = pos;
             gotoLine(&ui.current_buffer->document, l->linenumber);
             set_mark(&l->l, pos, pos + found_last - found);
             return SR_FOUND | (wrapped ? SR_WRAPPED : 0);
@@ -316,11 +316,11 @@ dispincsrch(struct UI ui, int ch, Str buf, Lineprop* prop)
     if (do_next_search) {
         if (*str) {
             if (searchRoutine == forwardSearch)
-                ui.current_buffer->pos += 1;
+                ui.current_buffer->document.pos += 1;
             SAVE_BUFPOSITION(&sbuf);
             if (srchcore(ui, str, searchRoutine) == SR_NOTFOUND
                 && searchRoutine == forwardSearch) {
-                ui.current_buffer->pos -= 1;
+                ui.current_buffer->document.pos -= 1;
                 SAVE_BUFPOSITION(&sbuf);
             }
 
@@ -329,7 +329,7 @@ dispincsrch(struct UI ui, int ch, Str buf, Lineprop* prop)
         } else
             return 020; /* _prev completion for C-s C-s */
     } else if (*str) {
-        RESTORE_BUFPOSITION(&sbuf);
+        RESTORE_BUFPOSITION(ui, &sbuf.document);
         srchcore(ui, str, searchRoutine);
     }
 
@@ -346,7 +346,7 @@ void isrch(struct UI ui, SearchFunc func, char* prompt)
     searchRoutine = func;
     const char* str = inputLineHistSearch(ui, prompt, NULL, IN_STRING, TextHist, dispincsrch);
     if (str == NULL) {
-        RESTORE_BUFPOSITION(&sbuf);
+        RESTORE_BUFPOSITION(ui, &sbuf.document);
     }
 }
 
@@ -367,14 +367,14 @@ void srch(struct UI ui, SearchFunc func, char* prompt)
         }
         disp = true;
     }
-    pos = ui.current_buffer->pos;
+    pos = ui.current_buffer->document.pos;
     if (func == forwardSearch)
-        ui.current_buffer->pos += 1;
+        ui.current_buffer->document.pos += 1;
     result = srchcore(ui, str, func);
     if (result & SR_FOUND)
         clear_mark(&currentLine(&ui.current_buffer->document)->l);
     else
-        ui.current_buffer->pos = pos;
+        ui.current_buffer->document.pos = pos;
 
     if (disp)
         disp_srchresult(result, prompt, str);
@@ -397,14 +397,14 @@ void srch_nxtprv(struct UI ui, bool reverse)
     if (searchRoutine == backwardSearch)
         reverse = !reverse;
     if (!reverse)
-        ui.current_buffer->pos += 1;
+        ui.current_buffer->document.pos += 1;
 
     enum SearchResultFlags result = srchcore(ui, SearchString, routine[reverse]);
     if (result & SR_FOUND)
         clear_mark(&currentLine(&ui.current_buffer->document)->l);
     else {
         if (!reverse)
-            ui.current_buffer->pos -= 1;
+            ui.current_buffer->document.pos -= 1;
     }
 
     disp_srchresult(result, (reverse ? "Backward: " : "Forward: "), SearchString);

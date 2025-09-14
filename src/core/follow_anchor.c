@@ -404,7 +404,7 @@ void _followForm(struct UI ui, bool submit, bool do_download)
             return;
         }
         if (!formChooseOptionByMenu(ui, fi,
-                ui.viewport_cursor.x - ui.current_buffer->pos + a->start.pos,
+                ui.viewport_cursor.x - ui.current_buffer->document.pos + a->start.pos,
                 ui.viewport_cursor.y))
             break;
         formUpdateBuffer(a, ui.current_buffer, fi);
@@ -460,7 +460,7 @@ void gotoLabel(struct UI ui, const char* label)
     if (label_topline)
         ui.current_buffer->document.topLineIndex = ui.current_buffer->document.currentLineIndex
             - topLine(&ui.current_buffer->document)->linenumber;
-    ui.current_buffer->pos = al->start.pos;
+    ui.current_buffer->document.pos = al->start.pos;
 
     return;
 }

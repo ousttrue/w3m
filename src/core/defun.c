@@ -130,17 +130,17 @@ DEFUN(srchprv, SEARCH_PREV, "Continue search backward")
 /* Shift screen left */
 DEFUN(shiftl, SHIFT_LEFT, "Shift screen left")
 {
-    int column = ui.current_buffer->currentColumn;
+    int column = ui.current_buffer->document.currentColumn;
     columnSkip(ui.current_buffer, ui.searchkey_num * (-ui.viewport.size.x + 1) + 1);
-    shiftvisualpos(ui.current_buffer, ui.current_buffer->currentColumn - column);
+    shiftvisualpos(ui.current_buffer, ui.current_buffer->document.currentColumn - column);
 }
 
 /* Shift screen right */
 DEFUN(shiftr, SHIFT_RIGHT, "Shift screen right")
 {
-    int column = ui.current_buffer->currentColumn;
+    int column = ui.current_buffer->document.currentColumn;
     columnSkip(ui.current_buffer, ui.searchkey_num * (ui.viewport.size.x - 1) - 1);
-    shiftvisualpos(ui.current_buffer, ui.current_buffer->currentColumn - column);
+    shiftvisualpos(ui.current_buffer, ui.current_buffer->document.currentColumn - column);
 }
 
 DEFUN(col1R, RIGHT, "Shift screen one column right")
@@ -151,9 +151,9 @@ DEFUN(col1R, RIGHT, "Shift screen one column right")
 
     int n = ui.searchkey_num;
     for (int j = 0; j < n; j++) {
-        int column = ui.current_buffer->currentColumn;
+        int column = ui.current_buffer->document.currentColumn;
         columnSkip(ui.current_buffer, 1);
-        if (column == ui.current_buffer->currentColumn)
+        if (column == ui.current_buffer->document.currentColumn)
             break;
         shiftvisualpos(ui.current_buffer, 1);
     }
@@ -166,7 +166,7 @@ DEFUN(col1L, LEFT, "Shift screen one column left")
         return;
     int n = ui.searchkey_num;
     for (int j = 0; j < n; j++) {
-        if (ui.current_buffer->currentColumn == 0)
+        if (ui.current_buffer->document.currentColumn == 0)
             break;
         columnSkip(ui.current_buffer, -1);
         shiftvisualpos(ui.current_buffer, -1);
@@ -299,7 +299,7 @@ next_nonnull_line(struct UI ui, struct LineList* line)
 
     ui.current_buffer->document.currentLineIndex = l->linenumber;
     if (l != line)
-        ui.current_buffer->pos = 0;
+        ui.current_buffer->document.pos = 0;
     return 0;
 }
 
@@ -314,27 +314,27 @@ DEFUN(movRW, NEXT_WORD, "Move to the next word")
     int n = ui.searchkey_num;
     for (int i = 0; i < n; i++) {
         struct LineList* pline = currentLine(&ui.current_buffer->document);
-        int ppos = ui.current_buffer->pos;
+        int ppos = ui.current_buffer->document.pos;
 
         if (next_nonnull_line(ui, currentLine(&ui.current_buffer->document)) < 0)
             return;
 
         struct LineList* l = currentLine(&ui.current_buffer->document);
         const char* lb = l->l.lineBuf;
-        while (ui.current_buffer->pos < l->l.len && wc_is_ucs_alnum(getChar(&lb[ui.current_buffer->pos])))
-            ui.current_buffer->pos = nextChar(ui.current_buffer->pos, &l->l);
+        while (ui.current_buffer->document.pos < l->l.len && wc_is_ucs_alnum(getChar(&lb[ui.current_buffer->document.pos])))
+            ui.current_buffer->document.pos = nextChar(ui.current_buffer->document.pos, &l->l);
 
         while (1) {
-            while (ui.current_buffer->pos < l->l.len && !wc_is_ucs_alnum(getChar(&lb[ui.current_buffer->pos])))
-                ui.current_buffer->pos = nextChar(ui.current_buffer->pos, &l->l);
-            if (ui.current_buffer->pos < l->l.len)
+            while (ui.current_buffer->document.pos < l->l.len && !wc_is_ucs_alnum(getChar(&lb[ui.current_buffer->document.pos])))
+                ui.current_buffer->document.pos = nextChar(ui.current_buffer->document.pos, &l->l);
+            if (ui.current_buffer->document.pos < l->l.len)
                 break;
             if (next_nonnull_line(ui, currentLine(&ui.current_buffer->document)->next) < 0) {
                 ui.current_buffer->document.currentLineIndex = pline->linenumber;
-                ui.current_buffer->pos = ppos;
+                ui.current_buffer->document.pos = ppos;
                 return;
             }
-            ui.current_buffer->pos = 0;
+            ui.current_buffer->document.pos = 0;
             l = currentLine(&ui.current_buffer->document);
             lb = l->l.lineBuf;
         }
@@ -352,7 +352,7 @@ prev_nonnull_line(struct UI ui, struct LineList* line)
 
     ui.current_buffer->document.currentLineIndex = l->linenumber;
     if (l != line)
-        ui.current_buffer->pos = currentLine(&ui.current_buffer->document)->l.len;
+        ui.current_buffer->document.pos = currentLine(&ui.current_buffer->document)->l.len;
     return 0;
 }
 
@@ -361,7 +361,7 @@ DEFUN(movLW, PREV_WORD, "Move to the previous word")
     int n = ui.searchkey_num;
     for (int i = 0; i < n; i++) {
         struct LineList* pline = currentLine(&ui.current_buffer->document);
-        int ppos = ui.current_buffer->pos;
+        int ppos = ui.current_buffer->document.pos;
 
         if (prev_nonnull_line(ui, currentLine(&ui.current_buffer->document)) < 0)
             goto end;
@@ -369,30 +369,30 @@ DEFUN(movLW, PREV_WORD, "Move to the previous word")
         while (1) {
             struct LineList* l = currentLine(&ui.current_buffer->document);
             const char* lb = l->l.lineBuf;
-            while (ui.current_buffer->pos > 0) {
-                int tmp = prevChar(ui.current_buffer->pos, &l->l);
+            while (ui.current_buffer->document.pos > 0) {
+                int tmp = prevChar(ui.current_buffer->document.pos, &l->l);
                 if (wc_is_ucs_alnum(getChar(&lb[tmp])))
                     break;
-                ui.current_buffer->pos = tmp;
+                ui.current_buffer->document.pos = tmp;
             }
-            if (ui.current_buffer->pos > 0)
+            if (ui.current_buffer->document.pos > 0)
                 break;
             if (prev_nonnull_line(ui, currentLine(&ui.current_buffer->document)->prev) < 0) {
                 ui.current_buffer->document.currentLineIndex = pline->linenumber;
-                ui.current_buffer->pos = ppos;
+                ui.current_buffer->document.pos = ppos;
                 goto end;
             }
-            ui.current_buffer->pos = currentLine(&ui.current_buffer->document)->l.len;
+            ui.current_buffer->document.pos = currentLine(&ui.current_buffer->document)->l.len;
         }
 
         {
             struct LineList* l = currentLine(&ui.current_buffer->document);
             const char* lb = l->l.lineBuf;
-            while (ui.current_buffer->pos > 0) {
-                int tmp = prevChar(ui.current_buffer->pos, &l->l);
+            while (ui.current_buffer->document.pos > 0) {
+                int tmp = prevChar(ui.current_buffer->document.pos, &l->l);
                 if (!wc_is_ucs_alnum(getChar(&lb[tmp])))
                     break;
-                ui.current_buffer->pos = tmp;
+                ui.current_buffer->document.pos = tmp;
             }
         }
     }
@@ -473,7 +473,7 @@ DEFUN(linend, LINE_END, "Go to the end of the line")
     while (currentLine(&ui.current_buffer->document)->next
         && currentLine(&ui.current_buffer->document)->next->bpos)
         cursorDown(1);
-    ui.current_buffer->pos = currentLine(&ui.current_buffer->document)->l.len - 1;
+    ui.current_buffer->document.pos = currentLine(&ui.current_buffer->document)->l.len - 1;
 }
 
 /* Run editor on the current buffer */
@@ -527,7 +527,7 @@ DEFUN(_mark, MARK, "Set/unset mark")
     if (ui.current_buffer->document.firstLine == NULL)
         return;
     struct LineList* l = currentLine(&ui.current_buffer->document);
-    l->l.propBuf[ui.current_buffer->pos] ^= PE_MARK;
+    l->l.propBuf[ui.current_buffer->document.pos] ^= PE_MARK;
 }
 
 /* Go to next mark */
@@ -537,7 +537,7 @@ DEFUN(nextMk, NEXT_MARK, "Go to the next mark")
         return;
     if (ui.current_buffer->document.firstLine == NULL)
         return;
-    int i = ui.current_buffer->pos + 1;
+    int i = ui.current_buffer->document.pos + 1;
     struct LineList* l = currentLine(&ui.current_buffer->document);
     if (i >= l->l.len) {
         i = 0;
@@ -547,7 +547,7 @@ DEFUN(nextMk, NEXT_MARK, "Go to the next mark")
         for (; i < l->l.len; i++) {
             if (l->l.propBuf[i] & PE_MARK) {
                 ui.current_buffer->document.currentLineIndex = l->linenumber;
-                ui.current_buffer->pos = i;
+                ui.current_buffer->document.pos = i;
 
                 return;
             }
@@ -566,7 +566,7 @@ DEFUN(prevMk, PREV_MARK, "Go to the previous mark")
         return;
     if (ui.current_buffer->document.firstLine == NULL)
         return;
-    int i = ui.current_buffer->pos - 1;
+    int i = ui.current_buffer->document.pos - 1;
     struct LineList* l = currentLine(&ui.current_buffer->document);
     if (i < 0) {
         l = l->prev;
@@ -577,7 +577,7 @@ DEFUN(prevMk, PREV_MARK, "Go to the previous mark")
         for (; i >= 0; i--) {
             if (l->l.propBuf[i] & PE_MARK) {
                 ui.current_buffer->document.currentLineIndex = l->linenumber;
-                ui.current_buffer->pos = i;
+                ui.current_buffer->document.pos = i;
 
                 return;
             }
@@ -670,7 +670,7 @@ DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink")
     } while (an == NULL);
 
     gotoLine(&ui.current_buffer->document, po->line);
-    ui.current_buffer->pos = po->pos;
+    ui.current_buffer->document.pos = po->pos;
 }
 
 /* go to the last anchor */
@@ -698,7 +698,7 @@ DEFUN(lastA, LINK_END, "Move to the last hyperlink")
     } while (an == NULL);
 
     gotoLine(&ui.current_buffer->document, po->line);
-    ui.current_buffer->pos = po->pos;
+    ui.current_buffer->document.pos = po->pos;
 }
 
 /* go to the nth anchor */
@@ -723,7 +723,7 @@ DEFUN(nthA, LINK_N, "Go to the nth link")
         return;
 
     gotoLine(&ui.current_buffer->document, po->line);
-    ui.current_buffer->pos = po->pos;
+    ui.current_buffer->document.pos = po->pos;
 }
 
 /* go to the next anchor */
@@ -749,4 +749,3 @@ DEFUN(prevVA, PREV_VISITED, "Move to the previous visited hyperlink")
 {
     _prevA(ui, true);
 }
-

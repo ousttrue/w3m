@@ -10,8 +10,6 @@
 
 extern int nextpage_topline;
 
-#define RESTORE_BUFPOSITION(sbufp) COPY_BUFPOSITION(Currentbuf, sbufp)
-
 struct Buffer {
     const char* filename;
 
@@ -21,10 +19,6 @@ struct Buffer {
     struct Content content;
 
     struct Document document;
-
-    int currentColumn;
-    int pos;
-    int visualpos;
 
     struct Buffer* nextBuffer;
 
@@ -44,7 +38,6 @@ struct Buffer {
 #define _INIT_BUFFER_WIDTH (getCols() - (showLineNum ? 6 : 1))
 #define INIT_BUFFER_WIDTH ((_INIT_BUFFER_WIDTH > 0) ? _INIT_BUFFER_WIDTH : 0)
 #define FOLD_BUFFER_WIDTH (FoldLine ? (INIT_BUFFER_WIDTH + 1) : -1)
-
 
 struct Buffer* newBuffer();
 struct Buffer* nullBuffer(void);
@@ -81,13 +74,18 @@ struct AnchorList;
 const char* getAnchorText(struct Buffer* buf, struct AnchorList* al, struct Anchor* a);
 struct BufferPoint getBufferPosition(struct Buffer* buf);
 
-inline static void COPY_BUFPOSITION(struct Buffer* dstbuf, struct Buffer* srcbuf)
+inline static void COPY_BUFPOSITION(struct Document* dstbuf, struct Document* srcbuf)
 {
-    (dstbuf)->document.topLineIndex = (srcbuf)->document.topLineIndex;
-    (dstbuf)->document.currentLineIndex = (srcbuf)->document.currentLineIndex;
+    (dstbuf)->topLineIndex = (srcbuf)->topLineIndex;
+    (dstbuf)->currentLineIndex = (srcbuf)->currentLineIndex;
     (dstbuf)->pos = (srcbuf)->pos;
     (dstbuf)->visualpos = (srcbuf)->visualpos;
     (dstbuf)->currentColumn = (srcbuf)->currentColumn;
+}
+
+inline static void RESTORE_BUFPOSITION(struct UI ui, struct Document* sbufp)
+{
+    COPY_BUFPOSITION(&ui.current_buffer->document, sbufp);
 }
 
 struct Buffer* makeBuffer(struct UI ui, struct Content* c);

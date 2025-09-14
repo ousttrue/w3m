@@ -141,7 +141,7 @@ int getMapXY(struct Buffer* buf, struct Anchor* a, int* x, int* y)
 {
     if (!buf || !a || !a->image || !x || !y)
         return 0;
-    *x = (int)((buf->currentColumn /*+ buf->cursorX*/
+    *x = (int)((buf->document.currentColumn /*+ buf->cursorX*/
                    - COLPOS(&currentLine(&buf->document)->l, a->start.pos) + 0.5)
              * pixel_per_char)
         - a->image->xoffset;

@@ -17,6 +17,9 @@ struct Document {
     int currentLineIndex;
 
     int cols;
+    int currentColumn;
+    int pos;
+    int visualpos;
 
     struct AnchorList* href;
     struct AnchorList* name;

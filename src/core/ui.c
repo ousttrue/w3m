@@ -421,7 +421,7 @@ void ui_cursor_set_x(int x)
         return;
     while (currentLine(&Currentbuf->document)->prev && currentLine(&Currentbuf->document)->bpos)
         cursorUp(1);
-    Currentbuf->pos = 0;
+    Currentbuf->document.pos = 0;
 }
 
 bool updateCursor(struct Buffer* buf)

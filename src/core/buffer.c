@@ -483,9 +483,9 @@ void reshapeBuffer(struct UI ui, struct Buffer* buf, int cols)
             // else
             gotoLine(&buf->document, cur->linenumber);
         }
-        buf->pos -= currentLine(&buf->document)->bpos;
+        buf->document.pos -= currentLine(&buf->document)->bpos;
         // if (FoldLine && buf->content.cc.content_type != CONTENTTYPE_TEXT_HTML)
-            buf->currentColumn = 0;
+            buf->document.currentColumn = 0;
         // else
         //     buf->currentColumn = sbuf.currentColumn;
     }
@@ -709,10 +709,10 @@ void restorePosition(struct Buffer* buf, struct Buffer* orig)
 {
     buf->document.topLineIndex = orig->document.topLineIndex - 1;
     gotoLine(&buf->document, orig->document.currentLineIndex);
-    buf->pos = orig->pos;
+    buf->document.pos = orig->document.pos;
     if (currentLine(&buf->document) && currentLine(&orig->document))
-        buf->pos += currentLine(&orig->document)->bpos - currentLine(&buf->document)->bpos;
-    buf->currentColumn = orig->currentColumn;
+        buf->document.pos += currentLine(&orig->document)->bpos - currentLine(&buf->document)->bpos;
+    buf->document.currentColumn = orig->document.currentColumn;
 }
 
 /*
@@ -752,7 +752,7 @@ baseURL(struct Buffer* buf)
 
 int columnSkip(struct Buffer* buf, int offset)
 {
-    int column = buf->currentColumn + offset;
+    int column = buf->document.currentColumn + offset;
     int nlines = getScreen()->ROWS + 1;
 
     int maxColumn = 0;
@@ -769,9 +769,9 @@ int columnSkip(struct Buffer* buf, int offset)
     if (maxColumn < 0)
         maxColumn = 0;
 
-    if (buf->currentColumn == maxColumn)
+    if (buf->document.currentColumn == maxColumn)
         return 0;
-    buf->currentColumn = maxColumn;
+    buf->document.currentColumn = maxColumn;
     return 1;
 }
 
@@ -923,7 +923,7 @@ retrieveCurrentImg(struct Buffer* buf)
     if (currentLine(&buf->document) == 0)
         return 0;
     return retrieveAnchor(buf->document.img,
-        (struct BufferPoint) { .line = currentLine(&buf->document)->linenumber, .pos = buf->pos });
+        (struct BufferPoint) { .line = currentLine(&buf->document)->linenumber, .pos = buf->document.pos });
 }
 
 struct Anchor*
@@ -932,7 +932,7 @@ retrieveCurrentForm(struct Buffer* buf)
     if (currentLine(&buf->document) == 0)
         return 0;
     return retrieveAnchor(buf->document.formitem,
-        (struct BufferPoint) { .line = currentLine(&buf->document)->linenumber, .pos = buf->pos });
+        (struct BufferPoint) { .line = currentLine(&buf->document)->linenumber, .pos = buf->document.pos });
 }
 
 struct Anchor*
@@ -1295,13 +1295,13 @@ void tmpClearBuffer(struct Buffer* buf)
 void shiftvisualpos(struct Buffer* buf, int shift)
 {
     struct LineList* l = currentLine(&buf->document);
-    buf->visualpos -= shift;
-    if (buf->visualpos - l->bwidth >= getScreen()->COLS)
-        buf->visualpos = l->bwidth + getScreen()->COLS - 1;
-    else if (buf->visualpos - l->bwidth < 0)
-        buf->visualpos = l->bwidth;
-    if (buf->visualpos - l->bwidth == -shift && getUI().viewport_cursor.x == 0)
-        buf->visualpos = l->bwidth;
+    buf->document.visualpos -= shift;
+    if (buf->document.visualpos - l->bwidth >= getScreen()->COLS)
+        buf->document.visualpos = l->bwidth + getScreen()->COLS - 1;
+    else if (buf->document.visualpos - l->bwidth < 0)
+        buf->document.visualpos = l->bwidth;
+    if (buf->document.visualpos - l->bwidth == -shift && getUI().viewport_cursor.x == 0)
+        buf->document.visualpos = l->bwidth;
 }
 
 /* go to the next [visited] anchor */
@@ -1323,7 +1323,7 @@ void _nextA(struct UI ui, int visited)
         an = retrieveCurrentForm(ui.current_buffer);
 
     y = currentLine(&ui.current_buffer->document)->linenumber;
-    x = ui.current_buffer->pos;
+    x = ui.current_buffer->document.pos;
 
     if (visited == true) {
         n = hl->nmark;
@@ -1380,7 +1380,7 @@ _end:
         return;
     po = &hl->marks[an->hseq];
     gotoLine(&ui.current_buffer->document, po->line);
-    ui.current_buffer->pos = po->pos;
+    ui.current_buffer->document.pos = po->pos;
 }
 
 /* go to the previous anchor */
@@ -1402,7 +1402,7 @@ void _prevA(struct UI ui, int visited)
         an = retrieveCurrentForm(ui.current_buffer);
 
     y = currentLine(&ui.current_buffer->document)->linenumber;
-    x = ui.current_buffer->pos;
+    x = ui.current_buffer->document.pos;
 
     if (visited == true) {
         n = hl->nmark;
@@ -1459,5 +1459,5 @@ _end:
         return;
     po = hl->marks + an->hseq;
     gotoLine(&ui.current_buffer->document, po->line);
-    ui.current_buffer->pos = po->pos;
+    ui.current_buffer->document.pos = po->pos;
 }
