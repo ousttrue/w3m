@@ -17,6 +17,8 @@ struct Buffer;
 
 struct UI {
     struct Buffer* current_buffer;
+    struct Content* content;
+    struct Document* document;
     struct VirtualTerm* vt;
     bool use_graphic;
     struct Rect viewport;

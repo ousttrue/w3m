@@ -42,7 +42,7 @@ void parseArgs(int argc, char** argv)
 
 void SAVE_BUFPOSITION(struct Buffer* sbufp)
 {
-    COPY_DOCUMENT_POSITION(sbufp, Currentbuf);
+    COPY_DOCUMENT_POSITION(&sbufp->document, &Currentbuf->document);
 }
 
 // void saveBufferInfo(struct UI ui)
@@ -62,9 +62,10 @@ void pushBuffer(struct UI ui, struct Buffer* buf)
     }
     pushHashHist(URLHist, parsedURL2Str(&buf->content.url)->ptr);
 
-    deleteImage(ui.current_buffer);
-    if (clear_buffer)
-        clearBuffer(ui.current_buffer);
+    deleteImage(ui.document);
+    if (clear_buffer) {
+        // clearBuffer(ui.current_buffer);
+    }
 
     buf->nextBuffer = ui.current_buffer;
     Currentbuf = buf;

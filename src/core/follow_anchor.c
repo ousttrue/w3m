@@ -73,30 +73,30 @@ void query_from_followform(struct UI ui, Str* query, struct FormItem* fi, int mu
         if (multipart) {
             if (f2->type == FORM_INPUT_IMAGE) {
                 int x = 0, y = 0;
-                getMapXY(&ui.current_buffer->document,
-                    retrieveAnchor(ui.current_buffer->document.img, getBufferPosition(ui)), &x, &y);
-                *query = Strdup(conv_form_encoding(f2->name, fi, ui.current_buffer->document.charset));
+                getMapXY(ui.document,
+                    retrieveAnchor(ui.document->img, getBufferPosition(ui)), &x, &y);
+                *query = Strdup(conv_form_encoding(f2->name, fi, ui.document->charset));
                 Strcat_charp(*query, ".x");
                 form_write_data(body, fi->parent->boundary, (*query)->ptr,
                     Sprintf("%d", x)->ptr);
-                *query = Strdup(conv_form_encoding(f2->name, fi, ui.current_buffer->document.charset));
+                *query = Strdup(conv_form_encoding(f2->name, fi, ui.document->charset));
                 Strcat_charp(*query, ".y");
                 form_write_data(body, fi->parent->boundary, (*query)->ptr,
                     Sprintf("%d", y)->ptr);
             } else if (f2->name && f2->name->length > 0 && f2->value != NULL) {
                 /* not IMAGE */
-                *query = conv_form_encoding(f2->value, fi, ui.current_buffer->document.charset);
+                *query = conv_form_encoding(f2->value, fi, ui.document->charset);
                 if (f2->type == FORM_INPUT_FILE)
                     form_write_from_file(body, fi->parent->boundary,
                         conv_form_encoding(f2->name, fi,
-                            ui.current_buffer->document.charset)
+                            ui.document->charset)
                             ->ptr,
                         (*query)->ptr,
                         Str_conv_to_system(f2->value)->ptr);
                 else
                     form_write_data(body, fi->parent->boundary,
                         conv_form_encoding(f2->name, fi,
-                            ui.current_buffer->document.charset)
+                            ui.document->charset)
                             ->ptr,
                         (*query)->ptr);
             }
@@ -104,19 +104,19 @@ void query_from_followform(struct UI ui, Str* query, struct FormItem* fi, int mu
             /* not multipart */
             if (f2->type == FORM_INPUT_IMAGE) {
                 int x = 0, y = 0;
-                getMapXY(&ui.current_buffer->document,
-                    retrieveAnchor(ui.current_buffer->document.img, getBufferPosition(ui)), &x, &y);
+                getMapXY(ui.document,
+                    retrieveAnchor(ui.document->img, getBufferPosition(ui)), &x, &y);
                 Strcat(*query,
-                    Str_form_quote(conv_form_encoding(f2->name, fi, ui.current_buffer->document.charset)));
+                    Str_form_quote(conv_form_encoding(f2->name, fi, ui.document->charset)));
                 Strcat(*query, Sprintf(".x=%d&", x));
                 Strcat(*query,
-                    Str_form_quote(conv_form_encoding(f2->name, fi, ui.current_buffer->document.charset)));
+                    Str_form_quote(conv_form_encoding(f2->name, fi, ui.document->charset)));
                 Strcat(*query, Sprintf(".y=%d", y));
             } else {
                 /* not IMAGE */
                 if (f2->name && f2->name->length > 0) {
                     Strcat(*query,
-                        Str_form_quote(conv_form_encoding(f2->name, fi, ui.current_buffer->document.charset)));
+                        Str_form_quote(conv_form_encoding(f2->name, fi, ui.document->charset)));
                     Strcat_char(*query, '=');
                 }
                 if (f2->value != NULL) {
@@ -124,7 +124,7 @@ void query_from_followform(struct UI ui, Str* query, struct FormItem* fi, int mu
                         Strcat(*query, Str_form_quote(f2->value));
                     else {
                         Strcat(*query,
-                            Str_form_quote(conv_form_encoding(f2->value, fi, ui.current_buffer->document.charset)));
+                            Str_form_quote(conv_form_encoding(f2->value, fi, ui.document->charset)));
                     }
                 }
             }
@@ -296,10 +296,10 @@ static void do_submit(struct UI ui, struct Anchor* a, struct FormItem* fi, bool 
 
 void _followForm(struct UI ui, bool submit, bool do_download)
 {
-    if (ui.current_buffer->document.firstLine == NULL)
+    if (ui.document->firstLine == NULL)
         return;
 
-    struct Anchor* a = retrieveAnchor(ui.current_buffer->document.formitem, getBufferPosition(ui));
+    struct Anchor* a = retrieveAnchor(ui.document->formitem, getBufferPosition(ui));
     if (a == NULL)
         return;
 
@@ -406,7 +406,7 @@ void _followForm(struct UI ui, bool submit, bool do_download)
             return;
         }
         if (!formChooseOptionByMenu(ui, fi,
-                ui.viewport_cursor.x - ui.current_buffer->document.pos + a->start.pos,
+                ui.viewport_cursor.x - ui.document->pos + a->start.pos,
                 ui.viewport_cursor.y))
             break;
         formUpdateBuffer(a, ui.current_buffer, fi);
@@ -423,8 +423,8 @@ void _followForm(struct UI ui, bool submit, bool do_download)
         break;
     }
     case FORM_INPUT_RESET: {
-        for (int i = 0; i < ui.current_buffer->document.formitem->nanchor; i++) {
-            struct Anchor* a2 = &ui.current_buffer->document.formitem->anchors[i];
+        for (int i = 0; i < ui.document->formitem->nanchor; i++) {
+            struct Anchor* a2 = &ui.document->formitem->anchors[i];
             struct FormItem* f2 = (struct FormItem*)a2->url;
             if (f2->parent == fi->parent && f2->name && f2->value && f2->type != FORM_INPUT_SUBMIT && f2->type != FORM_INPUT_HIDDEN && f2->type != FORM_INPUT_RESET) {
                 f2->value = f2->init_value;
@@ -458,21 +458,21 @@ void gotoLabel(struct UI ui, const char* label)
     pushHashHist(URLHist, parsedURL2Str(&buf->content.url)->ptr);
     (*buf->clone)++;
     pushBuffer(ui, buf);
-    gotoLine(&ui.current_buffer->document, al->start.line);
+    gotoLine(ui.document, al->start.line);
     if (label_topline)
-        ui.current_buffer->document.topLineIndex = ui.current_buffer->document.currentLineIndex
+        ui.document->topLineIndex = ui.current_buffer->document.currentLineIndex
             - topLine(&ui.current_buffer->document)->linenumber;
-    ui.current_buffer->document.pos = al->start.pos;
+    ui.document->pos = al->start.pos;
 
     return;
 }
 
 void followAnchor(struct UI ui, bool do_download)
 {
-    if (ui.current_buffer->document.firstLine == NULL)
+    if (ui.document->firstLine == NULL)
         return;
 
-    struct Anchor* a = retrieveAnchor(ui.current_buffer->document.img, getBufferPosition(ui));
+    struct Anchor* a = retrieveAnchor(ui.document->img, getBufferPosition(ui));
     if (a && a->image && a->image->map) {
         _followForm(ui, false, do_download);
         return;
@@ -480,10 +480,10 @@ void followAnchor(struct UI ui, bool do_download)
     int x = 0, y = 0;
     int map = 0;
     if (a && a->image && a->image->ismap) {
-        getMapXY(&ui.current_buffer->document, a, &x, &y);
+        getMapXY(ui.document, a, &x, &y);
         map = 1;
     }
-    a = retrieveAnchor(ui.current_buffer->document.href, getBufferPosition(ui));
+    a = retrieveAnchor(ui.document->href, getBufferPosition(ui));
     if (a == NULL) {
         _followForm(getUI(), false, do_download);
         return;
@@ -512,10 +512,10 @@ void followAnchor(struct UI ui, bool do_download)
 
 void followImage(struct UI ui, bool do_download)
 {
-    if (ui.current_buffer->document.firstLine == NULL)
+    if (ui.document->firstLine == NULL)
         return;
 
-    struct Anchor* a = retrieveAnchor(ui.current_buffer->document.img, getBufferPosition(ui));
+    struct Anchor* a = retrieveAnchor(ui.document->img, getBufferPosition(ui));
     if (a == NULL)
         return;
     /* FIXME: gettextize? */

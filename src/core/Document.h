@@ -1,6 +1,7 @@
 #pragma once
 #include "url.h"
 #include "geometry.h"
+#include "image.h"
 #include <wc.h>
 
 extern wc_ces DocumentCharset;
@@ -39,6 +40,9 @@ struct Document {
     struct MapList* maplist;
     struct HmarkerList* hmarklist;
     struct HmarkerList* imarklist;
+
+    bool image_loaded;
+    enum ImageGetFlag image_flag;
 };
 
 inline static void COPY_DOCUMENT_POSITION(struct Document* dst, struct Document* src)

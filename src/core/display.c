@@ -149,10 +149,10 @@ static struct LineList* redrawLine(struct UI ui, struct Buffer* buf, struct Line
     return l;
 }
 
-static struct LineList* redrawLineImage(struct UI ui, struct Buffer* buf, struct LineList* l, int i)
+static struct LineList* redrawLineImage(struct UI ui, struct Document* doc, struct LineList* l, int i)
 {
     int j, pos, rcol;
-    int column = buf->document.currentColumn;
+    int column = doc->currentColumn;
     struct Anchor* a;
     int x, y, sx, sy, w, h;
 
@@ -169,13 +169,12 @@ static struct LineList* redrawLineImage(struct UI ui, struct Buffer* buf, struct
             rcol = COLPOS(&l->l, pos + j + 1);
             continue;
         }
-        a = retrieveAnchor(buf->document.img, (struct BufferPoint) { .line = l->linenumber, .pos = pos + j });
+        a = retrieveAnchor(doc->img, (struct BufferPoint) { .line = l->linenumber, .pos = pos + j });
         if (a && a->image && a->image->touch < image_touch) {
             struct Image* image = a->image;
             struct ImageCache* cache;
 
-            cache = image->cache = getImage(image, makeBaseUrl(&buf->document),
-                buf->image_flag);
+            cache = image->cache = getImage(image, makeBaseUrl(doc), doc->image_flag);
             if (cache) {
                 if ((image->width < 0 && cache->width > 0) || (image->height < 0 && cache->height > 0)) {
                     image->width = cache->width;

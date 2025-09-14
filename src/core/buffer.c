@@ -77,22 +77,13 @@ nullBuffer(void)
 }
 
 /*
- * clearBuffer: clear buffer content
- */
-void clearBuffer(struct Buffer* buf)
-{
-    // charset !
-    buf->document = (struct Document) { 0 };
-}
-
-/*
  * discardBuffer: free buffer structure
  */
 
 void discardBuffer(struct Buffer* buf)
 {
-    deleteImage(buf);
-    clearBuffer(buf);
+    deleteImage(&buf->document);
+    // clearBuffer(buf);
     if (buf->savecache)
         unlink(buf->savecache);
     if (--(*buf->clone))
@@ -741,30 +732,30 @@ void saveBuffer(struct Buffer* buf, FILE* f, int cont)
     _saveBuffer(buf, f, cont);
 }
 
-int columnSkip(struct Buffer* buf, int offset)
-{
-    int column = buf->document.currentColumn + offset;
-    int nlines = getScreen()->ROWS + 1;
-
-    int maxColumn = 0;
-    struct LineList* l = topLine(&buf->document);
-    for (int i = 0; i < nlines && l != 0; i++, l = l->next) {
-        if (l->l.width < 0)
-            l->l.width = COLPOS(&l->l, l->l.len);
-        if (l->l.width - 1 > maxColumn)
-            maxColumn = l->l.width - 1;
-    }
-    maxColumn -= getScreen()->COLS - 1;
-    if (column < maxColumn)
-        maxColumn = column;
-    if (maxColumn < 0)
-        maxColumn = 0;
-
-    if (buf->document.currentColumn == maxColumn)
-        return 0;
-    buf->document.currentColumn = maxColumn;
-    return 1;
-}
+// int columnSkip(struct Buffer* buf, int offset)
+// {
+//     int column = buf->document.currentColumn + offset;
+//     int nlines = getScreen()->ROWS + 1;
+//
+//     int maxColumn = 0;
+//     struct LineList* l = topLine(&buf->document);
+//     for (int i = 0; i < nlines && l != 0; i++, l = l->next) {
+//         if (l->l.width < 0)
+//             l->l.width = COLPOS(&l->l, l->l.len);
+//         if (l->l.width - 1 > maxColumn)
+//             maxColumn = l->l.width - 1;
+//     }
+//     maxColumn -= getScreen()->COLS - 1;
+//     if (column < maxColumn)
+//         maxColumn = column;
+//     if (maxColumn < 0)
+//         maxColumn = 0;
+//
+//     if (buf->document.currentColumn == maxColumn)
+//         return 0;
+//     buf->document.currentColumn = maxColumn;
+//     return 1;
+// }
 
 struct Content
 cookie_list_panel(struct UI ui)

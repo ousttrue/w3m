@@ -21,8 +21,6 @@ struct Buffer {
     struct FormItem* form_submit;
     char* savecache;
     char* edit;
-    char image_flag;
-    char image_loaded;
     struct Anchor* submit;
     struct BufferPos* undo;
     struct _AlarmEvent* event;
@@ -34,7 +32,6 @@ struct Buffer {
 
 struct Buffer* newBuffer();
 struct Buffer* nullBuffer(void);
-void clearBuffer(struct Buffer* buf);
 void discardBuffer(struct Buffer* buf);
 struct Buffer* namedBuffer(struct Buffer* first, char* name);
 struct Buffer* deleteBuffer(struct Buffer* first, struct Buffer* delbuf);
@@ -51,7 +48,7 @@ int readBufferCache(struct Buffer* buf);
 void cursorXY(struct Buffer* buf, int x, int y);
 void restorePosition(struct Buffer* buf, struct Buffer* orig);
 void saveBuffer(struct Buffer* buf, FILE* f, int cont);
-int columnSkip(struct Buffer* buf, int offset);
+// int columnSkip(struct Buffer* buf, int offset);
 struct Content cookie_list_panel(struct UI ui);
 void reseq_anchor(struct Buffer* buf);
 

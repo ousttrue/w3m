@@ -127,6 +127,8 @@ struct UI getUI()
 
     struct UI ui = {
         .current_buffer = Currentbuf,
+        .document = Currentbuf ? &Currentbuf->document : 0,
+        .content = Currentbuf ? &Currentbuf->content : 0,
         .vt = vt,
         .use_graphic = graph_ok(t),
         .viewport = {

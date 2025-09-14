@@ -344,14 +344,14 @@ static Hash_sv* image_hash = NULL;
 static Hash_sv* image_file = NULL;
 static GeneralList* image_list = NULL;
 static struct ImageCache** image_cache = NULL;
-static struct Buffer* image_buffer = NULL;
+static struct Document* image_buffer = NULL;
 
-void deleteImage(struct Buffer* buf)
+void deleteImage(struct Document* doc)
 {
-    if (!buf)
+    if (!doc)
         return;
 
-    struct AnchorList* al = buf->document.img;
+    struct AnchorList* al = doc->img;
     if (!al)
         return;
 
@@ -364,25 +364,25 @@ void deleteImage(struct Buffer* buf)
     loadImage(NULL, IMG_FLAG_STOP, false);
 }
 
-void getAllImage(struct Buffer* buf)
+void getAllImage(struct Document* doc)
 {
-    image_buffer = buf;
-    if (!buf)
+    image_buffer = doc;
+    if (!doc)
         return;
-    buf->image_loaded = true;
+    doc->image_loaded = true;
 
-    struct AnchorList* al = buf->document.img;
+    struct AnchorList* al = doc->img;
     if (!al)
         return;
 
-    struct Url* current = makeBaseUrl(&buf->document);
+    struct Url* current = makeBaseUrl(doc);
     int i;
     struct Anchor* a;
     for (i = 0, a = al->anchors; i < al->nanchor; i++, a++) {
         if (a->image) {
-            a->image->cache = getImage(a->image, current, buf->image_flag);
+            a->image->cache = getImage(a->image, current, doc->image_flag);
             if (a->image->cache && a->image->cache->loaded == IMG_FLAG_UNLOADED)
-                buf->image_loaded = false;
+                doc->image_loaded = false;
         }
     }
 }
@@ -414,7 +414,7 @@ showImageProgress(struct Buffer* buf)
     }
 }
 
-void loadImage(struct Buffer* buf, enum ImageLoadFlag flag, bool do_download)
+void loadImage(struct Document *doc, enum ImageLoadFlag flag, bool do_download)
 {
     struct ImageCache* cache;
     struct stat st;
@@ -459,7 +459,7 @@ void loadImage(struct Buffer* buf, enum ImageLoadFlag flag, bool do_download)
         image_cache[i] = NULL;
     }
 
-    for (i = (buf != image_buffer) ? 0 : maxLoadImage; i < n_load_image; i++) {
+    for (i = (doc != image_buffer) ? 0 : maxLoadImage; i < n_load_image; i++) {
         cache = image_cache[i];
         if (!cache || !cache->touch)
             continue;
@@ -491,10 +491,10 @@ void loadImage(struct Buffer* buf, enum ImageLoadFlag flag, bool do_download)
     if (draw && image_buffer) {
         if (!enable_inline_image)
             drawImage();
-        showImageProgress(image_buffer);
+        // showImageProgress(image_buffer);
     }
 
-    image_buffer = buf;
+    image_buffer = doc;
 
     if (!image_list)
         return;

@@ -503,8 +503,8 @@ bool onFrame()
     // }
 
     // mySignal(SIGWINCH, resize_hook);
-    if (activeImage && displayImage && ui.current_buffer->document.img && !ui.current_buffer->image_loaded) {
-        loadImage(ui.current_buffer, IMG_FLAG_NEXT, false);
+    if (activeImage && displayImage && ui.document->img && !ui.document->image_loaded) {
+        loadImage(ui.document, IMG_FLAG_NEXT, false);
         bufToScreen(ui);
         renderFrame(ui);
         // continue;
@@ -1482,7 +1482,7 @@ DEFUN(dispI, DISPLAY_IMAGE, "Restart loading and drawing of images")
      * if (!(ui.current_buffer->type && is_html_type(ui.current_buffer->type)))
      * return;
      */
-    ui.current_buffer->image_flag = IMG_FLAG_AUTO;
+    ui.document->image_flag = IMG_FLAG_AUTO;
 }
 
 DEFUN(stopI, STOP_IMAGE, "Stop loading and drawing of images")
@@ -1493,7 +1493,7 @@ DEFUN(stopI, STOP_IMAGE, "Stop loading and drawing of images")
      * if (!(ui.current_buffer->type && is_html_type(ui.current_buffer->type)))
      * return;
      */
-    ui.current_buffer->image_flag = IMG_FLAG_SKIP;
+    ui.document->image_flag = IMG_FLAG_SKIP;
 }
 
 DEFUN(dispVer, VERSION, "Display the version of w3m")
