@@ -86,6 +86,7 @@ const document_public_headers = [_][]const u8{
     "Line.h",
     "Anchor.h",
     "AnchorList.h",
+    "Image.h",
 };
 const document_srcs = [_][]const u8{
     "Anchor.c",
@@ -106,7 +107,6 @@ const system_libs = [_][]const u8{
 const w3m_srcs = [_][]const u8{
     "defun.c",
 
-    "Image.c",
     "page_info.c",
     "follow_anchor.c",
     "buffer_list.c",

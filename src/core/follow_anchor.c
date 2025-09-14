@@ -9,7 +9,7 @@
 #include "url.h"
 #include "buffer.h"
 #include "Anchor.h"
-#include "image.h"
+#include "Image.h"
 #include "html_form.h"
 #include "form.h"
 #include "maparea.h"

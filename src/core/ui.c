@@ -1,5 +1,5 @@
 #include "ui.h"
-#include "image.h"
+#include "Image.h"
 #include "form.h"
 #include "keymap.h"
 #include "buffer_list.h"

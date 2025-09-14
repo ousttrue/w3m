@@ -2,7 +2,7 @@
 #include "Anchor.h"
 #include "AnchorList.h"
 #include "form.h"
-#include "image.h"
+#include "Image.h"
 #include "url.h"
 
 #define DOCUMENT_CHARSET WC_CES_UTF_8
