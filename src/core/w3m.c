@@ -1029,56 +1029,6 @@ escKeyProc(int c, int esc, unsigned char* map)
         w3mFuncList[(int)map[c]].func(getUI());
 }
 
-/* Redraw screen */
-DEFUN(rdrwSc, REDRAW, "Draw the screen anew")
-{
-    vt_clear(getScreen());
-}
-
-/* Search regular expression forward */
-
-DEFUN(srchfor, SEARCH SEARCH_FORE WHEREIS, "Search forward")
-{
-    srch(ui, forwardSearch, "Forward: ");
-}
-
-DEFUN(isrchfor, ISEARCH, "Incremental search forward")
-{
-    isrch(ui, forwardSearch, "I-search: ");
-}
-
-/* Search regular expression backward */
-
-DEFUN(srchbak, SEARCH_BACK, "Search backward")
-{
-    srch(ui, backwardSearch, "Backward: ");
-}
-
-DEFUN(isrchbak, ISEARCH_BACK, "Incremental search backward")
-{
-    isrch(ui, backwardSearch, "I-search backward: ");
-}
-
-/* Search next matching */
-DEFUN(srchnxt, SEARCH_NEXT, "Continue search forward")
-{
-    srch_nxtprv(ui, 0);
-}
-
-/* Search previous matching */
-DEFUN(srchprv, SEARCH_PREV, "Continue search backward")
-{
-    srch_nxtprv(ui, 1);
-}
-
-static void
-cmd_loadURL(struct UI ui,
-    const char* url, struct Url* current, const char* referer, struct Form* post)
-{
-    struct Content c = loadGeneralFile(url, current, post, referer, UI_TTY);
-    pushContent(ui, c);
-}
-
 static void
 shiftvisualpos(struct Buffer* buf, int shift)
 {
@@ -1212,16 +1162,13 @@ DEFUN(ldfile, LOAD, "Open local file in a new buffer")
 /* Load help file */
 DEFUN(ldhelp, HELP, "Show help panel")
 {
-    char* lang;
-    int n;
-    Str tmp;
-
-    lang = AcceptLang;
-    n = strcspn(lang, ";, \t");
-    tmp = Sprintf("file:///$LIB/" HELP_CGI CGI_EXTENSION "?version=%s&lang=%s",
+    const char* lang = AcceptLang;
+    int n = strcspn(lang, ";, \t");
+    Str tmp = Sprintf("file:///$LIB/" HELP_CGI CGI_EXTENSION "?version=%s&lang=%s",
         Str_form_quote(Strnew_charp(w3m_version))->ptr,
         Str_form_quote(Strnew_charp_n(lang, n))->ptr);
-    cmd_loadURL(ui, tmp->ptr, NULL, NO_REFERER, NULL);
+    struct Content c = loadGeneralFile(tmp->ptr, NULL, NULL, NO_REFERER, UI_TTY);
+    pushContent(ui, c);
 }
 
 DEFUN(movL, MOVE_LEFT, "Cursor left")
@@ -2349,8 +2296,10 @@ goURL0(struct UI ui, char* prompt, int relative)
         return;
     }
     p_url = parseUrl(url, current);
+
     pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
-    cmd_loadURL(ui, url, current, referer, NULL);
+    struct Content c = loadGeneralFile(url, current, NULL, referer, UI_TTY);
+    pushContent(ui, c);
     if (ui.current_buffer != cur_buf) /* success */
         pushHashHist(URLHist, parsedURL2Str(&ui.current_buffer->content.url)->ptr);
 }
@@ -2370,7 +2319,8 @@ DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer")
         url = url_quote(url);
         p_url = parseUrl(url, NULL);
         pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
-        cmd_loadURL(ui, url, NULL, NULL, NULL);
+        struct Content c = loadGeneralFile(url, NULL, NULL, NULL, UI_TTY);
+        pushContent(ui, c);
         if (ui.current_buffer != cur_buf) /* success */
             pushHashHist(URLHist, parsedURL2Str(&ui.current_buffer->content.url)->ptr);
     }
@@ -2384,7 +2334,8 @@ DEFUN(gorURL, GOTO_RELATIVE, "Go to relative address")
 /* load bookmark */
 DEFUN(ldBmark, BOOKMARK VIEW_BOOKMARK, "View bookmarks")
 {
-    cmd_loadURL(ui, BookmarkFile, NULL, NO_REFERER, NULL);
+    struct Content c = loadGeneralFile(BookmarkFile, NULL, NULL, NO_REFERER, UI_TTY);
+    pushContent(ui, c);
 }
 
 #define W3MBOOKMARK_CMDNAME "w3mbookmark"
@@ -2393,11 +2344,8 @@ DEFUN(ldBmark, BOOKMARK VIEW_BOOKMARK, "View bookmarks")
 /* Add current to bookmark */
 DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
 {
-    Str tmp;
-    struct Form* request;
-
-    tmp = Sprintf("mode=panel&cookie=%s&bmark=%s&url=%s&title=%s"
-                  "&charset=%s",
+    Str tmp = Sprintf("mode=panel&cookie=%s&bmark=%s&url=%s&title=%s"
+                      "&charset=%s",
         (Str_form_quote(localCookie()))->ptr,
         (Str_form_quote(Strnew_charp(BookmarkFile)))->ptr,
         (Str_form_quote(parsedURL2Str(&ui.current_buffer->content.url)))->ptr,
@@ -2406,10 +2354,11 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
              BookmarkCharset)))
             ->ptr,
         wc_ces_to_charset(BookmarkCharset));
-    request = newFormList(NULL, "post", NULL, NULL, NULL, NULL, NULL);
-    request->body = tmp->ptr;
-    request->length = tmp->length;
-    cmd_loadURL(ui, "file:///$LIB/" W3MBOOKMARK_CMDNAME, NULL, NO_REFERER, request);
+    struct Form* post = newFormList(NULL, "post", NULL, NULL, NULL, NULL, NULL);
+    post->body = tmp->ptr;
+    post->length = tmp->length;
+    struct Content c = loadGeneralFile("file:///$LIB/" W3MBOOKMARK_CMDNAME, NULL, post, NO_REFERER, UI_TTY);
+    pushContent(ui, c);
 }
 
 /* option setting */
@@ -2475,8 +2424,9 @@ void follow_map(struct UI ui, struct KeyValue* arg)
     }
     p_url = parseUrl(a->url, baseURL(ui.current_buffer));
     pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
-    cmd_loadURL(ui, a->url, baseURL(ui.current_buffer),
-        parsedURL2Str(&ui.current_buffer->content.url)->ptr, NULL);
+    struct Content c = loadGeneralFile(a->url, baseURL(ui.current_buffer),
+        NULL, parsedURL2Str(&ui.current_buffer->content.url)->ptr, UI_TTY);
+    pushContent(ui, c);
 }
 
 /* link menu */
@@ -2493,8 +2443,9 @@ DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
     }
     p_url = parseUrl(l->url, baseURL(ui.current_buffer));
     pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
-    cmd_loadURL(ui, l->url, baseURL(ui.current_buffer),
-        parsedURL2Str(&ui.current_buffer->content.url)->ptr, NULL);
+    struct Content c = loadGeneralFile(l->url, baseURL(ui.current_buffer),
+        NULL, parsedURL2Str(&ui.current_buffer->content.url)->ptr, UI_TTY);
+    pushContent(ui, c);
 }
 
 typedef struct Anchor* (*AnchorMenuFunc)(struct UI ui, struct Buffer*);

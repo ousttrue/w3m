@@ -1,6 +1,7 @@
 #include "defun_macro.h"
 #include "geometry.h" // IWYU pragma: keep
 #include "buffer.h"
+#include "search.h"
 
 DEFUN(nulcmd, NOTHING NULL @ @ @, "Do nothing")
 { /* do nothing */
@@ -57,4 +58,46 @@ DEFUN(ctrCsrH, CENTER_H, "Center on cursor column")
     if (offsetx) {
         columnSkip(ui.current_buffer, offsetx);
     }
+}
+
+/* Redraw screen */
+DEFUN(rdrwSc, REDRAW, "Draw the screen anew")
+{
+    ui.current_buffer->document = (struct Document) {};
+}
+
+/* Search regular expression forward */
+
+DEFUN(srchfor, SEARCH SEARCH_FORE WHEREIS, "Search forward")
+{
+    srch(ui, forwardSearch, "Forward: ");
+}
+
+DEFUN(isrchfor, ISEARCH, "Incremental search forward")
+{
+    isrch(ui, forwardSearch, "I-search: ");
+}
+
+/* Search regular expression backward */
+
+DEFUN(srchbak, SEARCH_BACK, "Search backward")
+{
+    srch(ui, backwardSearch, "Backward: ");
+}
+
+DEFUN(isrchbak, ISEARCH_BACK, "Incremental search backward")
+{
+    isrch(ui, backwardSearch, "I-search backward: ");
+}
+
+/* Search next matching */
+DEFUN(srchnxt, SEARCH_NEXT, "Continue search forward")
+{
+    srch_nxtprv(ui, 0);
+}
+
+/* Search previous matching */
+DEFUN(srchprv, SEARCH_PREV, "Continue search backward")
+{
+    srch_nxtprv(ui, 1);
 }
