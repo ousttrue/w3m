@@ -21,16 +21,16 @@ link_menu(struct UI ui)
     int i, nitem, len = 0, linkV = -1;
     Str str;
 
-    if (!ui.current_buffer->document.linklist)
+    if (!ui.document->linklist)
         return NULL;
 
-    for (i = 0, l = ui.current_buffer->document.linklist; l; i++, l = l->next)
+    for (i = 0, l = ui.document->linklist; l; i++, l = l->next)
         ;
     nitem = i;
 
     const char** label;
     label = New_N(char*, nitem + 1);
-    for (i = 0, l = ui.current_buffer->document.linklist; l; i++, l = l->next) {
+    for (i = 0, l = ui.document->linklist; l; i++, l = l->next) {
         str = Strnew_charp(l->title ? l->title : "(empty)");
         if (l->type == LINK_TYPE_REL)
             Strcat_charp(str, " [Rel] ");

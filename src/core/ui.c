@@ -202,30 +202,6 @@ void set_delayed_message(char* s)
     delayed_msg = allocStr(s, -1);
 }
 
-// void disp_err_message(char* s, int redraw_current)
-// {
-//     record_err_message(s);
-//     disp_message(s, redraw_current);
-// }
-//
-// void disp_message_nsec(char* s, int redraw_current, int sec, int purge, int mouse)
-// {
-//     if (QuietMessage)
-//         return;
-//     if (Currentbuf != NULL)
-//         message(s, Currentbuf->cursorX + Currentbuf->rootX,
-//             Currentbuf->cursorY + Currentbuf->rootY);
-//     else
-//         message(s, getScreen()->ROWS - 1, 0);
-//     // refresh(ttyWriter());
-//     sleep_till_anykey(sec * 1000, purge);
-// }
-//
-// void disp_message(char* s, int redraw_current)
-// {
-//     disp_message_nsec(s, redraw_current, 10, FALSE, TRUE);
-// }
-
 static char g_status[512];
 
 void ui_printStatus(const char* fmt, ...)

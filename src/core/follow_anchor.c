@@ -148,7 +148,7 @@ loadLink(struct UI ui, const char* url, const char* target, const char* referer,
     // message(ui, MSG_INFO, Sprintf("loading %s", url)->ptr);
     // refresh(ttyWriter());
 
-    struct Url* base = makeBaseUrl(&ui.current_buffer->document);
+    struct Url* base = makeBaseUrl(ui.document);
     // const int* no_referer_ptr;
     // if ((no_referer_ptr && *no_referer_ptr)
     //     || base == NULL
@@ -159,7 +159,7 @@ loadLink(struct UI ui, const char* url, const char* target, const char* referer,
     // if (referer == NULL)
     //     referer = parsedURL2RefererStr(&ui.current_buffer->content.url)->ptr;
 
-    struct Content c = loadGeneralFile(url, makeBaseUrl(&ui.current_buffer->document), post, referer, UI_TTY);
+    struct Content c = loadGeneralFile(url, makeBaseUrl(ui.document), post, referer, UI_TTY);
     if (do_download) {
         if (!c.page)
             return NULL;

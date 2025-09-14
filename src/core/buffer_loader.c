@@ -15,7 +15,6 @@
 #include "maparea.h"
 #include "quote.h"
 #include "Content.h"
-#include "screen.h"
 #include "readbuffer.h"
 #include "HtmlTagParsed.h"
 #include "form.h"
@@ -23,7 +22,6 @@
 #include "alloc.h"
 #include "symbol.h"
 #include "table.h"
-#include "ui.h"
 #include <myctype.h>
 #include <stdlib.h>
 #include <string.h>
@@ -33,7 +31,6 @@
 #include <utime.h>
 #include <wc.h>
 #include <wtf.h>
-
 
 int autoImage = (true);
 char MetaRefresh = (false);
@@ -292,7 +289,7 @@ HTMLlineproc2body(struct Url url, wc_ces charset, int cols, FeedFunc feed)
         .cols = cols,
         .url = url,
     };
-    struct Url *base = makeBaseUrl(&doc);
+    struct Url* base = makeBaseUrl(&doc);
 
     effect = 0;
     ex_effect = 0;
@@ -874,13 +871,13 @@ static int loadHTML(struct html_feed_environ* htmlenv1,
 }
 
 // WC_CES_SHIFT_JIS /*WC_CES_US_ASCII*/
-static struct Document loadHtmlDocument(struct Url url, Str html, wc_ces content_charset, bool internal)
+static struct Document loadHtmlDocument(struct Url url, Str html, wc_ces content_charset,
+    int cols, bool use_graphic,
+    bool internal)
 {
-    // Str html = readAll(stream);
-    struct UI ui = getUI();
     struct html_feed_environ htmlenv1;
 
-    int trbyte = loadHTML(&htmlenv1, html, &content_charset, ui.vt->COLS, ui.use_graphic, internal);
+    int trbyte = loadHTML(&htmlenv1, html, &content_charset, cols, use_graphic, internal);
 
     // phase2:
     // struct Buffer* buf = newBuffer();
@@ -891,7 +888,7 @@ static struct Document loadHtmlDocument(struct Url url, Str html, wc_ces content
     // static void HTMLlineproc2(struct Buffer* buf, TextLineList* tl)
     // {
     _tl_lp2 = htmlenv1.buf->first;
-    struct Document doc = HTMLlineproc2body(url, content_charset, ui.vt->COLS, textlist_feed);
+    struct Document doc = HTMLlineproc2body(url, content_charset, cols, textlist_feed);
     if (htmlenv1.title)
         doc.title = htmlenv1.title;
     // }
@@ -1479,10 +1476,11 @@ _end:
     return doc;
 }
 
-struct Document loadContent(struct UI ui, struct Content* content)
+struct Document loadContent(struct Content* content, int cols, bool use_graphic)
 {
     if (content->cc.content_type == CONTENTTYPE_TEXT_HTML)
-        return loadHtmlDocument(content->url, content->page, content->cc.charset, false);
+        return loadHtmlDocument(content->url, content->page, content->cc.charset,
+            cols, use_graphic, false);
     else
         return loadTextDocument(content->page, content->cc.charset);
 }
