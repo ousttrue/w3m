@@ -2,6 +2,8 @@
 #include "textlist.h"
 #include "myctype.h"
 #include "quote.h"
+#include "url.h"
+#include "convertline.h"
 #include <Str.h>
 #include <stdlib.h>
 #include <string.h>

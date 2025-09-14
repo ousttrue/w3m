@@ -3,6 +3,7 @@
 #include "HtmlTag.h"
 #include "HtmlTagAttribute.h"
 #include <wc.h>
+#include <stdbool.h>
 
 extern int activeImage;
 extern bool displayLinkNumber;

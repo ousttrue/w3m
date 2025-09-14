@@ -25,9 +25,21 @@ const public_headers = [_][]const u8{
     "symbol.h",
     "TermEntry.h",
     "graphicchar.h",
+    "html_form.h",
+    "html_quote.h",
+    "url_scheme.h",
+    "url.h",
+    "runtime.h",
+    "convertline.h",
 };
 
 const srcs = [_][]const u8{
+    "convertline.c",
+    "runtime.c",
+    "url_scheme.c",
+    "url.c",
+    "html_quote.c",
+    "html_form.c",
     "TermEntry.c",
     "graphicchar.c",
     "symbol.c",
@@ -83,11 +95,31 @@ pub fn build(b: *std.Build) void {
     b.installArtifact(lib);
     lib.linkLibC();
     lib.addIncludePath(b.path("libwc"));
+
+    const PACKAGE = "w3m";
+    const prefix = "/usr/local";
+    const exec_prefix = prefix;
+    const libexecdir = b.fmt("{s}/libexec", .{exec_prefix});
+    const datarootdir = b.fmt("{s}/share", .{prefix});
+    const sysconfdir = b.fmt("{s}/etc", .{prefix});
+    const CGIBIN_DIR = b.fmt("{s}/{s}/cgi-bin", .{ libexecdir, PACKAGE });
+    const AUXBIN_DIR = b.fmt("{s}/{s}", .{ libexecdir, PACKAGE });
+    const HELP_DIR = b.fmt("{s}/w3m", .{datarootdir});
+    const RC_DIR = "~/.w3m";
+    const ETC_DIR = sysconfdir;
+    const CONF_DIR = b.fmt("{s}/{s}", .{ sysconfdir, PACKAGE });
+
     lib.addCSourceFiles(.{
         .root = b.path("libwc"),
         .files = &srcs,
         .flags = &.{
             "-DUSE_UNICODE",
+            b.fmt("-DAUXBIN_DIR=\"{s}\"", .{AUXBIN_DIR}),
+            b.fmt("-DCGIBIN_DIR=\"{s}\"", .{CGIBIN_DIR}),
+            b.fmt("-DETC_DIR=\"{s}\"", .{ETC_DIR}),
+            b.fmt("-DCONF_DIR=\"{s}\"", .{CONF_DIR}),
+            b.fmt("-DHELP_DIR=\"{s}\"", .{HELP_DIR}),
+            b.fmt("-DRC_DIR=\"{s}\"", .{RC_DIR}),
         },
     });
 
