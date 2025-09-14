@@ -295,7 +295,7 @@ static Str make_lastline_message(struct UI ui)
             if (a && a->title && *a->title)
                 p = a->title;
             else {
-                struct Anchor* a_img = retrieveCurrentImg(ui);
+                struct Anchor* a_img = retrieveAnchor(ui.current_buffer->document.href, getBufferPosition(ui));
                 if (a_img && a_img->title && *a_img->title)
                     p = a_img->title;
             }

@@ -51,8 +51,6 @@ void ui_bell();
 void ui_printStatus(const char* fmt, ...);
 void ui_cursor_set_x(int x);
 struct BufferPoint getBufferPosition(struct UI ui);
-// struct Anchor* retrieveCurrentAnchor(struct UI ui);
-struct Anchor* retrieveCurrentImg(struct UI ui);
 struct Anchor* retrieveCurrentForm(struct UI ui);
 struct Anchor* retrieveCurrentMap(struct UI ui);
 struct MapArea* retrieveCurrentMapArea(struct UI ui);

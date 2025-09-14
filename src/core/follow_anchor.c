@@ -73,7 +73,8 @@ void query_from_followform(struct UI ui, Str* query, struct FormItem* fi, int mu
         if (multipart) {
             if (f2->type == FORM_INPUT_IMAGE) {
                 int x = 0, y = 0;
-                getMapXY(&ui.current_buffer->document, retrieveCurrentImg(ui), &x, &y);
+                getMapXY(&ui.current_buffer->document,
+                    retrieveAnchor(ui.current_buffer->document.img, getBufferPosition(ui)), &x, &y);
                 *query = Strdup(conv_form_encoding(f2->name, fi, ui.current_buffer->document.charset));
                 Strcat_charp(*query, ".x");
                 form_write_data(body, fi->parent->boundary, (*query)->ptr,
@@ -103,7 +104,8 @@ void query_from_followform(struct UI ui, Str* query, struct FormItem* fi, int mu
             /* not multipart */
             if (f2->type == FORM_INPUT_IMAGE) {
                 int x = 0, y = 0;
-                getMapXY(&ui.current_buffer->document, retrieveCurrentImg(ui), &x, &y);
+                getMapXY(&ui.current_buffer->document,
+                    retrieveAnchor(ui.current_buffer->document.img, getBufferPosition(ui)), &x, &y);
                 Strcat(*query,
                     Str_form_quote(conv_form_encoding(f2->name, fi, ui.current_buffer->document.charset)));
                 Strcat(*query, Sprintf(".x=%d&", x));
@@ -470,7 +472,7 @@ void followAnchor(struct UI ui, bool do_download)
     if (ui.current_buffer->document.firstLine == NULL)
         return;
 
-    struct Anchor* a = retrieveCurrentImg(ui);
+    struct Anchor* a = retrieveAnchor(ui.current_buffer->document.img, getBufferPosition(ui));
     if (a && a->image && a->image->map) {
         _followForm(ui, false, do_download);
         return;
@@ -513,8 +515,7 @@ void followImage(struct UI ui, bool do_download)
     if (ui.current_buffer->document.firstLine == NULL)
         return;
 
-    struct Anchor* a;
-    a = retrieveCurrentImg(ui);
+    struct Anchor* a = retrieveAnchor(ui.current_buffer->document.img, getBufferPosition(ui));
     if (a == NULL)
         return;
     /* FIXME: gettextize? */

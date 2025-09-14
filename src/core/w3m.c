@@ -842,7 +842,7 @@ void follow_map(struct UI ui, struct KeyValue* arg)
 {
     const char* name = tag_get_value(arg, "link");
 
-    struct Anchor* an = retrieveCurrentImg(ui);
+    struct Anchor* an = retrieveAnchor(ui.current_buffer->document.img, getBufferPosition(ui));
     int x, y;
     // x = ui.current_buffer->cursorX;
     // y = ui.current_buffer->cursorY;
@@ -1155,7 +1155,7 @@ _peekURL(struct UI ui, int only_img)
     if (a == NULL) {
         a = (only_img ? NULL : retrieveCurrentForm(ui));
         if (a == NULL) {
-            a = retrieveCurrentImg(ui);
+            a = retrieveAnchor(ui.current_buffer->document.img, getBufferPosition(ui));
             if (a == NULL)
                 return;
         } else
@@ -1616,7 +1616,7 @@ void set_buffer_environ(struct UI ui)
             set_environ("W3M_CURRENT_LINK", parsedURL2Str(&pu)->ptr);
         } else
             set_environ("W3M_CURRENT_LINK", "");
-        a = retrieveCurrentImg(ui);
+        a = retrieveAnchor(ui.current_buffer->document.img, getBufferPosition(ui));
         if (a) {
             pu = parseUrl(a->url, baseURL(buf));
             set_environ("W3M_CURRENT_IMG", parsedURL2Str(&pu)->ptr);

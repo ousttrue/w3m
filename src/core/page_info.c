@@ -132,7 +132,7 @@ page_info_panel(struct UI ui, struct Buffer* buf)
             "<tr valign=top><td nowrap>URL of current struct Anchor<td><a href=\"",
             q, "\">", p, "</a>", NULL);
     }
-    a = retrieveCurrentImg(ui);
+    a = retrieveAnchor(ui.current_buffer->document.img, getBufferPosition(ui));
     if (a != NULL) {
         struct Url pu = parseUrl(a->url, baseURL(buf));
         p = parsedURL2Str(&pu)->ptr;
