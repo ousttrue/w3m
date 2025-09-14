@@ -15,7 +15,7 @@
 #include "history.h"
 #include "html_quote.h"
 #include "http_message.h"
-#include "image.h"
+#include "image_loader.h"
 #include "keymap.h"
 #include "linein.h"
 #include "local_cgi.h"

@@ -8,7 +8,7 @@
 #include "display.h"
 #include "HtmlTag.h"
 #include "HtmlTagAttribute.h"
-#include "image.h"
+#include "image_loader.h"
 #include "myctype.h"
 #include "Str.h"
 #include "hash.h"

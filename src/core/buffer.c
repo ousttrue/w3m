@@ -16,7 +16,7 @@
 #include "form.h"
 #include "ui.h"
 #include "w3m.h"
-#include "image.h"
+#include "image_loader.h"
 #include "event_poller.h"
 #include "screen.h"
 #include "ctrlcode.h"

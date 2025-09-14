@@ -1,7 +1,7 @@
 #pragma once
 #include "url.h"
 #include "geometry.h"
-#include "image.h"
+#include "Image.h"
 #include <wc.h>
 
 extern wc_ces DocumentCharset;

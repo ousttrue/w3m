@@ -3,7 +3,7 @@
 #include "Anchor.h"
 #include "display.h"
 #include "menu.h"
-#include "image.h"
+#include "image_loader.h"
 #include "myctype.h"
 #include "alloc.h"
 #include <math.h>

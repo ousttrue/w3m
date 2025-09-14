@@ -142,7 +142,7 @@ const w3m_srcs = [_][]const u8{
     "maparea.c",
     "rc.c",
     "menu.c",
-    "image.c",
+    "image_loader.c",
     "symbol.c",
     "history.c",
 

@@ -1,4 +1,4 @@
-#include "image.h"
+#include "image_loader.h"
 #include "AnchorList.h"
 #include "Anchor.h"
 #include "linein.h"

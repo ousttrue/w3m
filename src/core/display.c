@@ -5,7 +5,7 @@
 #include "Anchor.h"
 #include "alloc.h"
 #include "screen_effects.h"
-#include "image.h"
+#include "image_loader.h"
 #include "maparea.h"
 #include "ui.h"
 #include "symbol.h"

@@ -12,7 +12,7 @@
 #include "geometry.h" // IWYU pragma: keep
 #include "buffer.h"
 #include "history.h"
-#include "image.h"
+#include "image_loader.h"
 #include "linein.h"
 #include "local_cgi.h"
 #include "runtime.h"

@@ -32,7 +32,7 @@
 #include "mailcap.h"
 #include "ui.h"
 #include "local_cgi.h"
-#include "image.h"
+#include "image_loader.h"
 #include "ssl_util.h"
 #include "symbol.h"
 #include "term_renderer.h"

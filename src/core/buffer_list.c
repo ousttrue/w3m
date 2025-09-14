@@ -5,7 +5,7 @@
 #include "buffer.h"
 #include "buffer_loader.h"
 #include "history.h"
-#include "image.h"
+#include "image_loader.h"
 #include "linein.h"
 #include "quote.h"
 #include "ui.h"

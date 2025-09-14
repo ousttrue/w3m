@@ -12,7 +12,7 @@
 #include "buffer.h"
 #include "entity.h"
 #include "html_form.h"
-#include "image.h"
+#include "image_loader.h"
 #include "maparea.h"
 #include "quote.h"
 #include "Content.h"
@@ -510,8 +510,7 @@ HTMLlineproc2body(struct Url url, wc_ces charset, int cols, FeedFunc feed)
                             image->map = q;
                             image->ismap = ismap;
                             image->touch = 0;
-                            image->cache = getImage(image, base,
-                                IMG_FLAG_SKIP);
+                            image->cache = getImage(image, base, IMG_FLAG_SKIP);
                         } else if (iseq < 0) {
                             struct BufferPoint* po = doc.imarklist->marks - iseq - 1;
                             struct Anchor* a = retrieveAnchor(doc.img, *po);
