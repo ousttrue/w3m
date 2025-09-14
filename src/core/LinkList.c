@@ -192,14 +192,14 @@ link_list_panel(struct UI ui, struct Buffer* buf)
             struct FormItem* fi = (struct FormItem*)a->url;
             fi = fi->parent->item;
             if (fi->parent->method == FORM_METHOD_INTERNAL && !Strcmp_charp(fi->parent->action, "map") && fi->value) {
-                MapList* ml = searchMapList(buf, fi->value->ptr);
+                struct MapList* ml = searchMapList(&buf->document, fi->value->ptr);
                 ListItem* mi;
-                MapArea* m;
+                struct MapArea* m;
                 if (!ml)
                     continue;
                 Strcat_charp(tmp, "<br>\n<b>Image map</b>\n<ol>\n");
                 for (mi = ml->area->first; mi != 0; mi = mi->next) {
-                    m = (MapArea*)mi->ptr;
+                    m = (struct MapArea*)mi->ptr;
                     if (!m)
                         continue;
                     pu = parseUrl(m->url, baseURL(buf));

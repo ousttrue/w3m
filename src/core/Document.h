@@ -27,7 +27,7 @@ struct Document {
     struct AnchorList* formitem;
     struct Form* formlist;
     struct LinkList* linklist;
-    struct _MapList* maplist;
+    struct MapList* maplist;
     struct HmarkerList* hmarklist;
     struct HmarkerList* imarklist;
 };

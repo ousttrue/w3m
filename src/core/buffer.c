@@ -1039,14 +1039,14 @@ const char* getAnchorText(struct Buffer* buf, struct AnchorList* al, struct Anch
     return tmp ? tmp->ptr : 0;
 }
 
-MapArea*
+struct MapArea*
 retrieveCurrentMapArea(struct Buffer* buf)
 {
     struct Anchor *a_img, *a_form;
     struct FormItem* fi;
-    MapList* ml;
+    struct MapList* ml;
     ListItem* al;
-    MapArea* a;
+    struct MapArea* a;
     int i, n;
 
     a_img = retrieveCurrentImg(buf);
@@ -1059,14 +1059,14 @@ retrieveCurrentMapArea(struct Buffer* buf)
     if (!(fi && fi->parent && fi->parent->item))
         return 0;
     fi = fi->parent->item;
-    ml = searchMapList(buf, fi->value ? fi->value->ptr : 0);
+    ml = searchMapList(&buf->document, fi->value ? fi->value->ptr : 0);
     if (!ml)
         return 0;
     n = searchMapArea(buf, ml, a_img);
     if (n < 0)
         return 0;
     for (i = 0, al = ml->area->first; al != 0; i++, al = al->next) {
-        a = (MapArea*)al->ptr;
+        a = (struct MapArea*)al->ptr;
         if (a && i == n)
             return a;
     }

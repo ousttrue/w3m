@@ -17,28 +17,22 @@
 #include <stdlib.h>
 #include <strings.h>
 
-MapList*
-searchMapList(struct Buffer* buf, const char* name)
+struct MapList*
+searchMapList(struct Document* doc, const char* name)
 {
-    MapList* ml;
-
     if (name == NULL)
         return NULL;
-    for (ml = buf->document.maplist; ml != NULL; ml = ml->next) {
+
+    struct MapList* ml;
+    for (ml = doc->maplist; ml != NULL; ml = ml->next) {
         if (!Strcmp_charp(ml->name, name))
             break;
     }
     return ml;
 }
 
-#define SHAPE_UNKNOWN 0
-#define SHAPE_DEFAULT 1
-#define SHAPE_RECT 2
-#define SHAPE_CIRCLE 3
-#define SHAPE_POLY 4
-
 static int
-inMapArea(MapArea* a, int x, int y)
+inMapArea(struct MapArea* a, int x, int y)
 {
     int i;
     double r1, r2, s, c, t;
@@ -84,16 +78,16 @@ inMapArea(MapArea* a, int x, int y)
 }
 
 static int
-nearestMapArea(MapList* ml, int x, int y)
+nearestMapArea(struct MapList* ml, int x, int y)
 {
     ListItem* al;
-    MapArea* a;
+    struct MapArea* a;
     int i, l, n = -1, min = -1, limit = pixel_per_char * pixel_per_char + pixel_per_line * pixel_per_line;
 
     if (!ml || !ml->area)
         return n;
     for (i = 0, al = ml->area->first; al != NULL; i++, al = al->next) {
-        a = (MapArea*)al->ptr;
+        a = (struct MapArea*)al->ptr;
         if (a) {
             l = (a->center_x - x) * (a->center_x - x)
                 + (a->center_y - y) * (a->center_y - y);
@@ -106,10 +100,10 @@ nearestMapArea(MapList* ml, int x, int y)
     return n;
 }
 
-int searchMapArea(struct Buffer* buf, MapList* ml, struct Anchor* a_img)
+int searchMapArea(struct Buffer* buf, struct MapList* ml, struct Anchor* a_img)
 {
     ListItem* al;
-    MapArea* a;
+    struct MapArea* a;
     int i, n;
     int px, py;
 
@@ -119,7 +113,7 @@ int searchMapArea(struct Buffer* buf, MapList* ml, struct Anchor* a_img)
         return -1;
     n = -ml->area->nitem;
     for (i = 0, al = ml->area->first; al != NULL; i++, al = al->next) {
-        a = (MapArea*)al->ptr;
+        a = (struct MapArea*)al->ptr;
         if (!a)
             continue;
         if (n < 0 && inMapArea(a, px, py)) {
@@ -170,20 +164,15 @@ retrieveCurrentMap(struct Buffer* buf)
     return NULL;
 }
 
-MapArea*
+struct MapArea*
 follow_map_menu(struct UI ui, struct Buffer* buf, const char* name, struct Anchor* a_img, int x, int y)
 {
-    MapList* ml;
-    ListItem* al;
-    int i, selected = -1;
-    int initial = 0;
-    MapArea* a;
-
-    ml = searchMapList(buf, name);
+    struct MapList* ml = searchMapList(&buf->document, name);
     if (ml == NULL || ml->area == NULL || ml->area->nitem == 0)
         return NULL;
 
-    initial = searchMapArea(buf, ml, a_img);
+    int initial = searchMapArea(buf, ml, a_img);
+    int selected = -1;
     if (initial < 0)
         initial = 0;
     else if (!image_map_list) {
@@ -193,8 +182,10 @@ follow_map_menu(struct UI ui, struct Buffer* buf, const char* name, struct Ancho
 
     const char** label;
     label = New_N(char*, ml->area->nitem + 1);
+    ListItem* al;
+    int i;
     for (i = 0, al = ml->area->first; al != NULL; i++, al = al->next) {
-        a = (MapArea*)al->ptr;
+        struct MapArea* a = (struct MapArea*)al->ptr;
         if (a)
             label[i] = *a->alt ? a->alt : a->url;
         else
@@ -208,16 +199,16 @@ map_end:
     if (selected >= 0) {
         for (i = 0, al = ml->area->first; al != NULL; i++, al = al->next) {
             if (al->ptr && i == selected)
-                return (MapArea*)al->ptr;
+                return (struct MapArea*)al->ptr;
         }
     }
     return NULL;
 }
 
-MapArea*
+struct MapArea*
 newMapArea(const char* url, const char* target, const char* alt, const char* shape, const char* coords)
 {
-    MapArea* a = New(MapArea);
+    struct MapArea* a = New(struct MapArea);
     int i, max;
 
     a->url = url;
@@ -309,7 +300,7 @@ newMapArea(const char* url, const char* target, const char* alt, const char* sha
 static void
 append_map_info(struct Buffer* buf, Str tmp, struct FormItem* fi)
 {
-    MapList* ml = searchMapList(buf, fi->value ? fi->value->ptr : NULL);
+    struct MapList* ml = searchMapList(&buf->document, fi->value ? fi->value->ptr : NULL);
     if (ml == NULL)
         return;
 
@@ -318,7 +309,7 @@ append_map_info(struct Buffer* buf, Str tmp, struct FormItem* fi)
         "<tr valign=top><td colspan=2><table>", NULL);
     ListItem* al;
     for (al = ml->area->first; al != NULL; al = al->next) {
-        MapArea* a = (MapArea*)al->ptr;
+        struct MapArea* a = (struct MapArea*)al->ptr;
         if (!a)
             continue;
         struct Url pu = parseUrl(a->url, baseURL(buf));

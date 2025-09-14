@@ -995,7 +995,7 @@ void follow_map(struct UI ui, struct KeyValue* arg)
     an = retrieveCurrentImg(ui.current_buffer);
     // x = ui.current_buffer->cursorX;
     // y = ui.current_buffer->cursorY;
-    MapArea* a;
+    struct MapArea* a;
     a = follow_map_menu(ui, ui.current_buffer, name, an, x, y);
     if (a == NULL || a->url == NULL || *(a->url) == '\0') {
         return;

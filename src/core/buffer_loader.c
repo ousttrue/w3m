@@ -613,7 +613,7 @@ HTMLlineproc2body(struct Url* base, wc_ces charset, int cols, FeedFunc feed)
                     break;
                 case HTML_MAP:
                     if (parsedtag_get_value(tag, ATTR_NAME, &p)) {
-                        MapList* m = New(MapList);
+                        struct MapList* m = New(struct MapList);
                         m->name = Strnew_charp(p);
                         m->area = newGeneralList();
                         m->next = doc.maplist;
@@ -627,7 +627,7 @@ HTMLlineproc2body(struct Url* base, wc_ces charset, int cols, FeedFunc feed)
                     if (doc.maplist == NULL) /* outside of <map>..</map> */
                         break;
                     if (parsedtag_get_value(tag, ATTR_HREF, &p)) {
-                        MapArea* a;
+                        struct MapArea* a;
                         p = url_quote(remove_space(p));
                         t = NULL;
                         parsedtag_get_value(tag, ATTR_TARGET, &t);
