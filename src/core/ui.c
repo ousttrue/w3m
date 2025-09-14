@@ -1,4 +1,5 @@
 #include "ui.h"
+#include "keymap.h"
 #include "buffer_list.h"
 #include "runtime.h"
 #include "AnchorList.h"
@@ -18,6 +19,7 @@
 #include <myctype.h>
 #include <math.h>
 #include <stdarg.h>
+#include <stdlib.h>
 #include <wc.h>
 #include <wtf.h>
 
@@ -81,6 +83,32 @@ void cursorHome()
     cursor_delta.y = 0;
 }
 
+const char* searchKeyData()
+{
+    const char* data = NULL;
+    if (CurrentKeyData != NULL && *CurrentKeyData != '\0')
+        data = CurrentKeyData;
+    else if (CurrentCmdData != NULL && *CurrentCmdData != '\0')
+        data = CurrentCmdData;
+    else if (CurrentKey >= 0)
+        data = getKeyData(CurrentKey);
+    CurrentKeyData = NULL;
+    CurrentCmdData = NULL;
+    if (data == NULL || *data == '\0')
+        return NULL;
+    return allocStr(data, -1);
+}
+
+static int
+searchKeyNum(void)
+{
+    int n = 1;
+    const char* d = searchKeyData();
+    if (d != NULL)
+        n = atoi(d);
+    return n;
+}
+
 struct UI getUI()
 {
     int rootX = 0;
@@ -114,6 +142,7 @@ struct UI getUI()
             .x = rootX + viewport_cursor.x,
             .y = rootY + viewport_cursor.y,
         },
+        .searchkey_num = searchKeyNum(),
     };
     return ui;
 }

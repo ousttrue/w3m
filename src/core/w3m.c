@@ -60,7 +60,6 @@
 
 #define PACKAGE "w3m"
 #define HELP_FILE "w3mhelp-w3m_en.html"
-#define HELP_CGI "w3mhelp"
 #define BOOKMARK "bookmark.html"
 
 char* mkd_tmp_dir = (NULL);
@@ -118,7 +117,6 @@ static void save_buffer_position(struct Buffer* buf);
 static void _nextA(struct UI ui, int);
 static void _prevA(struct UI ui, int);
 static int check_target = true;
-static int searchKeyNum(void);
 
 /*
  * List of error messages
@@ -1029,148 +1027,6 @@ escKeyProc(int c, int esc, unsigned char* map)
         w3mFuncList[(int)map[c]].func(getUI());
 }
 
-static void
-shiftvisualpos(struct Buffer* buf, int shift)
-{
-    struct LineList* l = currentLine(&buf->document);
-    buf->visualpos -= shift;
-    if (buf->visualpos - l->bwidth >= getScreen()->COLS)
-        buf->visualpos = l->bwidth + getScreen()->COLS - 1;
-    else if (buf->visualpos - l->bwidth < 0)
-        buf->visualpos = l->bwidth;
-    if (buf->visualpos - l->bwidth == -shift && getUI().viewport_cursor.x == 0)
-        buf->visualpos = l->bwidth;
-}
-
-/* Shift screen left */
-DEFUN(shiftl, SHIFT_LEFT, "Shift screen left")
-{
-    int column;
-
-    if (ui.current_buffer->document.firstLine == NULL)
-        return;
-    column = ui.current_buffer->currentColumn;
-    columnSkip(ui.current_buffer, searchKeyNum() * (-getScreen()->COLS + 1) + 1);
-    shiftvisualpos(ui.current_buffer, ui.current_buffer->currentColumn - column);
-}
-
-/* Shift screen right */
-DEFUN(shiftr, SHIFT_RIGHT, "Shift screen right")
-{
-    int column;
-
-    if (ui.current_buffer->document.firstLine == NULL)
-        return;
-    column = ui.current_buffer->currentColumn;
-    columnSkip(ui.current_buffer, searchKeyNum() * (getScreen()->COLS - 1) - 1);
-    shiftvisualpos(ui.current_buffer, ui.current_buffer->currentColumn - column);
-}
-
-DEFUN(col1R, RIGHT, "Shift screen one column right")
-{
-    struct Buffer* buf = ui.current_buffer;
-    struct LineList* l = currentLine(&buf->document);
-    int j, column, n = searchKeyNum();
-
-    if (l == NULL)
-        return;
-    for (j = 0; j < n; j++) {
-        column = buf->currentColumn;
-        columnSkip(ui.current_buffer, 1);
-        if (column == buf->currentColumn)
-            break;
-        shiftvisualpos(ui.current_buffer, 1);
-    }
-}
-
-DEFUN(col1L, LEFT, "Shift screen one column left")
-{
-    struct Buffer* buf = ui.current_buffer;
-    struct LineList* l = currentLine(&buf->document);
-    int j, n = searchKeyNum();
-
-    if (l == NULL)
-        return;
-    for (j = 0; j < n; j++) {
-        if (buf->currentColumn == 0)
-            break;
-        columnSkip(ui.current_buffer, -1);
-        shiftvisualpos(ui.current_buffer, -1);
-    }
-}
-
-DEFUN(setEnv, SETENV, "Set environment variable")
-{
-    CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    const char* env = searchKeyData();
-    if (env == NULL || *env == '\0' || strchr(env, '=') == NULL) {
-        if (env != NULL && *env != '\0')
-            env = Sprintf("%s=", env)->ptr;
-        env = inputStrHist(ui, "Set environ: ", env, TextHist);
-        if (env == NULL || *env == '\0') {
-
-            return;
-        }
-    }
-
-    char* value;
-    if ((value = strchr(env, '=')) != NULL && value > env) {
-        char* var = allocStr(env, value - env);
-        value++;
-        set_environ(var, value);
-    }
-}
-
-/* Execute shell command */
-DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output")
-{
-    CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    const char* cmd = searchKeyData();
-    if (cmd == NULL || *cmd == '\0') {
-        cmd = inputLineHist(ui, "(exec shell)!", "", IN_COMMAND, ShellHist);
-    }
-    if (cmd != NULL)
-        cmd = conv_to_system(cmd);
-    if (cmd != NULL && *cmd != '\0') {
-        fmTerm();
-        printf("\n");
-        (void)!system(cmd); /* We do not care about the exit code here! */
-        /* FIXME: gettextize? */
-        printf("\n[Hit any key]");
-        fflush(stdout);
-        fmInit();
-        // getch();
-    }
-}
-
-/* Load file */
-DEFUN(ldfile, LOAD, "Open local file in a new buffer")
-{
-    const char* fn = searchKeyData();
-    if (fn == NULL || *fn == '\0') {
-        /* FIXME: gettextize? */
-        fn = inputFilenameHist(ui, "(Load)Filename? ", NULL, LoadHist);
-    }
-    if (fn != NULL)
-        fn = conv_to_system(fn);
-    if (fn == NULL || *fn == '\0') {
-        return;
-    }
-    cmd_loadfile(ui, fn);
-}
-
-/* Load help file */
-DEFUN(ldhelp, HELP, "Show help panel")
-{
-    const char* lang = AcceptLang;
-    int n = strcspn(lang, ";, \t");
-    Str tmp = Sprintf("file:///$LIB/" HELP_CGI CGI_EXTENSION "?version=%s&lang=%s",
-        Str_form_quote(Strnew_charp(w3m_version))->ptr,
-        Str_form_quote(Strnew_charp_n(lang, n))->ptr);
-    struct Content c = loadGeneralFile(tmp->ptr, NULL, NULL, NO_REFERER, UI_TTY);
-    pushContent(ui, c);
-}
-
 DEFUN(movL, MOVE_LEFT, "Cursor left")
 {
     cursorLeft(1);
@@ -1234,7 +1090,7 @@ static int prevChar(int s, struct Line* l)
 }
 
 static wc_uint32
-getChar(char* p)
+getChar(const char* p)
 {
     return wc_any_to_ucs(wtf_parse1((wc_uchar**)&p));
 }
@@ -1262,24 +1118,20 @@ prev_nonnull_line(struct UI ui, struct LineList* line)
 
 DEFUN(movLW, PREV_WORD, "Move to the previous word")
 {
-    char* lb;
-    int ppos;
-    int i, n = searchKeyNum();
-
     if (ui.current_buffer->document.firstLine == NULL)
         return;
 
-    struct LineList *pline, *l;
-    for (i = 0; i < n; i++) {
-        pline = currentLine(&ui.current_buffer->document);
-        ppos = ui.current_buffer->pos;
+    int n = ui.searchkey_num;
+    for (int i = 0; i < n; i++) {
+        struct LineList* pline = currentLine(&ui.current_buffer->document);
+        int ppos = ui.current_buffer->pos;
 
         if (prev_nonnull_line(ui, currentLine(&ui.current_buffer->document)) < 0)
             goto end;
 
         while (1) {
-            l = currentLine(&ui.current_buffer->document);
-            lb = l->l.lineBuf;
+            struct LineList* l = currentLine(&ui.current_buffer->document);
+            const char* lb = l->l.lineBuf;
             while (ui.current_buffer->pos > 0) {
                 int tmp = prevChar(ui.current_buffer->pos, &l->l);
                 if (is_wordchar(getChar(&lb[tmp])))
@@ -1296,13 +1148,15 @@ DEFUN(movLW, PREV_WORD, "Move to the previous word")
             ui.current_buffer->pos = currentLine(&ui.current_buffer->document)->l.len;
         }
 
-        l = currentLine(&ui.current_buffer->document);
-        lb = l->l.lineBuf;
-        while (ui.current_buffer->pos > 0) {
-            int tmp = prevChar(ui.current_buffer->pos, &l->l);
-            if (!is_wordchar(getChar(&lb[tmp])))
-                break;
-            ui.current_buffer->pos = tmp;
+        {
+            struct LineList* l = currentLine(&ui.current_buffer->document);
+            const char* lb = l->l.lineBuf;
+            while (ui.current_buffer->pos > 0) {
+                int tmp = prevChar(ui.current_buffer->pos, &l->l);
+                if (!is_wordchar(getChar(&lb[tmp])))
+                    break;
+                ui.current_buffer->pos = tmp;
+            }
         }
     }
 end:
@@ -1326,13 +1180,8 @@ next_nonnull_line(struct UI ui, struct LineList* line)
 
 DEFUN(movRW, NEXT_WORD, "Move to the next word")
 {
-    int i, n = searchKeyNum();
-
-    if (ui.current_buffer->document.firstLine == NULL)
-        return;
-
-    char* lb;
-    for (i = 0; i < n; i++) {
+    int n = ui.searchkey_num;
+    for (int i = 0; i < n; i++) {
         struct LineList* pline = currentLine(&ui.current_buffer->document);
         int ppos = ui.current_buffer->pos;
 
@@ -1340,7 +1189,7 @@ DEFUN(movRW, NEXT_WORD, "Move to the next word")
             goto end;
 
         struct LineList* l = currentLine(&ui.current_buffer->document);
-        lb = l->l.lineBuf;
+        const char* lb = l->l.lineBuf;
         while (ui.current_buffer->pos < l->l.len && is_wordchar(getChar(&lb[ui.current_buffer->pos])))
             ui.current_buffer->pos = nextChar(ui.current_buffer->pos, &l->l);
 
@@ -1858,7 +1707,7 @@ DEFUN(nthA, LINK_N, "Go to the nth link")
 {
     struct HmarkerList* hl = ui.current_buffer->document.hmarklist;
 
-    int n = searchKeyNum();
+    int n = ui.searchkey_num;
     if (n < 0 || n > hl->nmark)
         return;
 
@@ -1909,7 +1758,7 @@ _nextA(struct UI ui, int visited)
     struct HmarkerList* hl = ui.current_buffer->document.hmarklist;
     struct BufferPoint* po;
     struct Anchor *an, *pan;
-    int i, x, y, n = searchKeyNum();
+    int i, x, y, n = ui.searchkey_num;
     struct Url url;
 
     if (ui.current_buffer->document.firstLine == NULL)
@@ -1989,7 +1838,7 @@ _prevA(struct UI ui, int visited)
     struct HmarkerList* hl = ui.current_buffer->document.hmarklist;
     struct BufferPoint* po;
     struct Anchor *an, *pan;
-    int i, x, y, n = searchKeyNum();
+    int i, x, y, n = ui.searchkey_num;
     struct Url url;
 
     if (ui.current_buffer->document.firstLine == NULL)
@@ -2068,7 +1917,7 @@ nextX(struct UI ui, int d, int dy)
 {
     struct HmarkerList* hl = ui.current_buffer->document.hmarklist;
     struct Anchor *an, *pan;
-    int i, x, y, n = searchKeyNum();
+    int i, x, y, n = ui.searchkey_num;
 
     if (ui.current_buffer->document.firstLine == NULL)
         return;
@@ -2123,7 +1972,7 @@ nextY(struct UI ui, int d)
 {
     struct HmarkerList* hl = ui.current_buffer->document.hmarklist;
     struct Anchor *an, *pan;
-    int i, x, y, n = searchKeyNum();
+    int i, x, y, n = ui.searchkey_num;
     int hseq;
 
     if (ui.current_buffer->document.firstLine == NULL)
@@ -2738,7 +2587,7 @@ _peekURL(struct UI ui, int only_img)
     p = NewAtom_N(Lineprop, s->length);
     memcpy((void*)p, (void*)pp, s->length * sizeof(Lineprop));
 disp:
-    n = searchKeyNum();
+    n = ui.searchkey_num;
     if (n > 1 && s->length > (n - 1) * (getCols() - 1))
         offset = (n - 1) * (getCols() - 1);
     while (offset < s->length && p[offset] & PC_WCHAR2)
@@ -2792,7 +2641,7 @@ DEFUN(curURL, PEEK, "Show current address")
         p = NewAtom_N(Lineprop, s->length);
         memcpy(p, pp, s->length * sizeof(Lineprop));
     }
-    n = searchKeyNum();
+    n = ui.searchkey_num;
     if (n > 1 && s->length > (n - 1) * (getCols() - 1))
         offset = (n - 1) * (getCols() - 1);
     while (offset < s->length && p[offset] & PC_WCHAR2)
@@ -3206,32 +3055,6 @@ void set_buffer_environ(struct Buffer* buf)
     prev_buf = buf;
     prev_line = l;
     prev_pos = buf->pos;
-}
-
-const char* searchKeyData()
-{
-    const char* data = NULL;
-    if (CurrentKeyData != NULL && *CurrentKeyData != '\0')
-        data = CurrentKeyData;
-    else if (CurrentCmdData != NULL && *CurrentCmdData != '\0')
-        data = CurrentCmdData;
-    else if (CurrentKey >= 0)
-        data = getKeyData(CurrentKey);
-    CurrentKeyData = NULL;
-    CurrentCmdData = NULL;
-    if (data == NULL || *data == '\0')
-        return NULL;
-    return allocStr(data, -1);
-}
-
-static int
-searchKeyNum(void)
-{
-    int n = 1;
-    const char* d = searchKeyData();
-    if (d != NULL)
-        n = atoi(d);
-    return n;
 }
 
 void deleteFiles()

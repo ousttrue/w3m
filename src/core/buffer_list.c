@@ -16,29 +16,6 @@ struct Buffer* Firstbuf = 0;
 char ArgvIsURL = true;
 int clear_buffer = (true);
 
-// char* file_to_url(const char* file, const char* currentDir);
-char* file_to_url(const char* file, const char* currentDir)
-{
-    file = expandPath(file);
-    if (!file) {
-        return NULL;
-    }
-
-    if (file[0] != '/') {
-        Str tmp = Strnew_charp(currentDir);
-        if (Strlastchar(tmp) != '/')
-            Strcat_char(tmp, '/');
-        Strcat_charp(tmp, file);
-        file = tmp->ptr;
-    }
-
-    {
-        Str tmp = Strnew_charp("file://");
-        Strcat_charp(tmp, file_quote(cleanupName(file)));
-        return tmp->ptr;
-    }
-}
-
 void parseArgs(int argc, char** argv)
 {
     struct UI ui = getUI();
@@ -160,10 +137,4 @@ struct Buffer* pushContent(struct UI ui, struct Content c)
     }
     pushBuffer(ui, buf);
     return buf;
-}
-
-void cmd_loadfile(struct UI ui, const char* fn)
-{
-    struct Content c = loadGeneralFile(file_to_url(fn, CurrentDir), NULL, NULL, NO_REFERER, UI_TTY);
-    pushContent(ui, c);
 }

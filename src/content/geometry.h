@@ -24,6 +24,7 @@ struct UI {
     struct Int2 viewport_cursor;
     // term global position
     struct Int2 term_cursor;
+    int searchkey_num;
 };
 
 struct BufferPoint {

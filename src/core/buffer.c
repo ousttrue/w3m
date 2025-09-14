@@ -1291,3 +1291,15 @@ void tmpClearBuffer(struct Buffer* buf)
     }
 }
 
+void shiftvisualpos(struct Buffer* buf, int shift)
+{
+    struct LineList* l = currentLine(&buf->document);
+    buf->visualpos -= shift;
+    if (buf->visualpos - l->bwidth >= getScreen()->COLS)
+        buf->visualpos = l->bwidth + getScreen()->COLS - 1;
+    else if (buf->visualpos - l->bwidth < 0)
+        buf->visualpos = l->bwidth;
+    if (buf->visualpos - l->bwidth == -shift && getUI().viewport_cursor.x == 0)
+        buf->visualpos = l->bwidth;
+}
+

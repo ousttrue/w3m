@@ -37,6 +37,7 @@ void cursorRight(int n);
 void cursorLeft(int n);
 void cursorHome();
 bool updateCursor(struct Buffer* buf);
+const char* searchKeyData();
 
 struct UI getUI();
 void message(struct UI ui, enum MessageSeverity, const char* s);

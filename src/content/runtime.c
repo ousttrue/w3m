@@ -1,4 +1,5 @@
 #include "runtime.h"
+#include "url.h"
 #include "textlist.h"
 #include "myctype.h"
 #include "quote.h"
@@ -103,6 +104,28 @@ const char* expandName(const char* name)
         return expandPath(p);
 rest:
     return name;
+}
+
+const char* file_to_url(const char* file, const char* currentDir)
+{
+    file = expandPath(file);
+    if (!file) {
+        return NULL;
+    }
+
+    if (file[0] != '/') {
+        Str tmp = Strnew_charp(currentDir);
+        if (Strlastchar(tmp) != '/')
+            Strcat_char(tmp, '/');
+        Strcat_charp(tmp, file);
+        file = tmp->ptr;
+    }
+
+    {
+        Str tmp = Strnew_charp("file://");
+        Strcat_charp(tmp, file_quote(cleanupName(file)));
+        return tmp->ptr;
+    }
 }
 
 static const char*

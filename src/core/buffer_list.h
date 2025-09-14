@@ -11,7 +11,6 @@ extern int clear_buffer;
 
 void parseArgs(int argc, char** argv);
 void SAVE_BUFPOSITION(struct Buffer *sbufp);
-void cmd_loadfile(struct UI ui, const char* fn);
 void pushBuffer(struct UI ui, struct Buffer* buf);
 void delBuffer(struct UI ui, struct Buffer* buf);
 void repBuffer(struct UI ui, struct Buffer* oldbuf, struct Buffer* buf);

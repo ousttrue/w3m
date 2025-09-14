@@ -93,3 +93,4 @@ inline static void COPY_BUFPOSITION(struct Buffer* dstbuf, struct Buffer* srcbuf
 
 struct Buffer* makeBuffer(struct UI ui, struct Content* c);
 void tmpClearBuffer(struct Buffer* buf);
+void shiftvisualpos(struct Buffer* buf, int shift);

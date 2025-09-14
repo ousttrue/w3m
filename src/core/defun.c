@@ -1,7 +1,21 @@
+#include "HttpRequest.h"
+#include "buffer_list.h"
 #include "defun_macro.h"
 #include "geometry.h" // IWYU pragma: keep
 #include "buffer.h"
+#include "history.h"
+#include "linein.h"
+#include "local_cgi.h"
+#include "runtime.h"
 #include "search.h"
+#include "keymap.h" // IWYU pragma: keep
+#include "w3m.h"
+#include "quote.h"
+#include "platform.h"
+#include <stdlib.h>
+#include <string.h>
+
+#define HELP_CGI "w3mhelp"
 
 DEFUN(nulcmd, NOTHING NULL @ @ @, "Do nothing")
 { /* do nothing */
@@ -100,4 +114,124 @@ DEFUN(srchnxt, SEARCH_NEXT, "Continue search forward")
 DEFUN(srchprv, SEARCH_PREV, "Continue search backward")
 {
     srch_nxtprv(ui, 1);
+}
+
+/* Shift screen left */
+DEFUN(shiftl, SHIFT_LEFT, "Shift screen left")
+{
+    int column = ui.current_buffer->currentColumn;
+    columnSkip(ui.current_buffer, ui.searchkey_num * (-ui.viewport.size.x + 1) + 1);
+    shiftvisualpos(ui.current_buffer, ui.current_buffer->currentColumn - column);
+}
+
+/* Shift screen right */
+DEFUN(shiftr, SHIFT_RIGHT, "Shift screen right")
+{
+    int column = ui.current_buffer->currentColumn;
+    columnSkip(ui.current_buffer, ui.searchkey_num * (ui.viewport.size.x - 1) - 1);
+    shiftvisualpos(ui.current_buffer, ui.current_buffer->currentColumn - column);
+}
+
+DEFUN(col1R, RIGHT, "Shift screen one column right")
+{
+    struct LineList* l = currentLine(&ui.current_buffer->document);
+    if (l == NULL)
+        return;
+
+    int n = ui.searchkey_num;
+    for (int j = 0; j < n; j++) {
+        int column = ui.current_buffer->currentColumn;
+        columnSkip(ui.current_buffer, 1);
+        if (column == ui.current_buffer->currentColumn)
+            break;
+        shiftvisualpos(ui.current_buffer, 1);
+    }
+}
+
+DEFUN(col1L, LEFT, "Shift screen one column left")
+{
+    struct LineList* l = currentLine(&ui.current_buffer->document);
+    if (l == NULL)
+        return;
+    int n = ui.searchkey_num;
+    for (int j = 0; j < n; j++) {
+        if (ui.current_buffer->currentColumn == 0)
+            break;
+        columnSkip(ui.current_buffer, -1);
+        shiftvisualpos(ui.current_buffer, -1);
+    }
+}
+
+DEFUN(setEnv, SETENV, "Set environment variable")
+{
+    // CurrentKeyData = NULL; /* not allowed in w3m-control: */
+    const char* env = searchKeyData();
+    if (env == NULL || *env == '\0' || strchr(env, '=') == NULL) {
+        if (env != NULL && *env != '\0')
+            env = Sprintf("%s=", env)->ptr;
+        env = inputStrHist(ui, "Set environ: ", env, TextHist);
+        if (env == NULL || *env == '\0') {
+
+            return;
+        }
+    }
+
+    char* value;
+    if ((value = strchr(env, '=')) != NULL && value > env) {
+        char* var = allocStr(env, value - env);
+        value++;
+        set_environ(var, value);
+    }
+}
+
+/* Execute shell command */
+DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output")
+{
+    // CurrentKeyData = NULL; /* not allowed in w3m-control: */
+    const char* cmd = searchKeyData();
+    if (cmd == NULL || *cmd == '\0') {
+        cmd = inputLineHist(ui, "(exec shell)!", "", IN_COMMAND, ShellHist);
+    }
+    if (cmd != NULL)
+        cmd = conv_to_system(cmd);
+    if (cmd != NULL && *cmd != '\0') {
+        fmTerm();
+        printf("\n");
+        (void)!system(cmd); /* We do not care about the exit code here! */
+        /* FIXME: gettextize? */
+        printf("\n[Hit any key]");
+        fflush(stdout);
+        fmInit();
+        // getch();
+    }
+}
+
+/* Load file */
+DEFUN(ldfile, LOAD, "Open local file in a new buffer")
+{
+    const char* fn = searchKeyData();
+    if (fn == NULL || *fn == '\0') {
+        /* FIXME: gettextize? */
+        fn = inputFilenameHist(ui, "(Load)Filename? ", NULL, LoadHist);
+    }
+    if (fn != NULL)
+        fn = conv_to_system(fn);
+    if (fn == NULL || *fn == '\0') {
+        return;
+    }
+    // cmd_loadfile(ui, fn);
+    struct Content c = loadGeneralFile(file_to_url(fn, CurrentDir), NULL, NULL, NO_REFERER, UI_TTY);
+    pushContent(ui, c);
+}
+
+/* Load help file */
+DEFUN(ldhelp, HELP, "Show help panel")
+{
+    const char* lang = AcceptLang;
+    int n = strcspn(lang, ";, \t");
+    Str tmp = Sprintf("file:///$LIB/" HELP_CGI CGI_EXTENSION "?version=%s&lang=%s",
+        Str_form_quote(Strnew_charp(w3m_version))->ptr,
+        Str_form_quote(Strnew_charp_n(lang, n))->ptr);
+    struct Content c = loadGeneralFile(tmp->ptr, NULL, NULL, NO_REFERER, UI_TTY);
+    pushContent(ui, c);
 }
