@@ -1,5 +1,5 @@
 #pragma once
-#include "line.h"
+#include "Line.h"
 #include "textlist.h"
 
 extern int symbol_width;

@@ -1,10 +1,8 @@
 #pragma once
-#include "line.h"
+#include "Line.h"
 #include "geometry.h"
 #include "Content.h"
 #include "Document.h"
-#include "url.h"
-#include "textlist.h"
 #include <stdio.h>
 #include <wc.h>
 

@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "token.h"
-#include "line.h"
+#include "Line.h"
 #include "Anchor.h"
 #include "textlist.h"
 #include "HtmlTag.h"

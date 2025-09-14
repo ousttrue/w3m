@@ -2,7 +2,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "line_prop.h"
-#include "line.h"
+#include "Line.h"
 
 extern int Do_not_use_ti_te;
 

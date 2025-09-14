@@ -87,8 +87,10 @@ const content_srcs = [_][]const u8{
 //
 const document_public_headers = [_][]const u8{
     "token.h",
+    "Line.h",
 };
 const document_srcs = [_][]const u8{
+    "Line.c",
     "token.c",
 };
 
@@ -103,7 +105,6 @@ const system_libs = [_][]const u8{
 };
 const w3m_srcs = [_][]const u8{
     "defun.c",
-    "line.c",
 
     "page_info.c",
     "follow_anchor.c",

@@ -1,5 +1,5 @@
 #pragma once
-#include "line.h"
+#include "Line.h"
 
 extern int graph_mode;
 

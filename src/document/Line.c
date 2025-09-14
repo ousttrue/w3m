@@ -1,4 +1,4 @@
-#include "line.h"
+#include "Line.h"
 #include "alloc.h"
 #include "ctrlcode.h"
 #include <stdlib.h>

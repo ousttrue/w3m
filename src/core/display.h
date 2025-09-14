@@ -1,6 +1,5 @@
 #pragma once
-#include "line.h"
-#include "ui.h"
+#include "geometry.h"
 #include <Str.h>
 
 extern int displayLink;

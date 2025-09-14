@@ -1,4 +1,5 @@
 #include "buffer_loader.h"
+#include "ui.h"
 #include "AnchorList.h"
 #include "LinkList.h"
 #include "convertline.h"

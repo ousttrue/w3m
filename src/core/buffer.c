@@ -2,7 +2,7 @@
 #include "history.h"
 #include "ui.h"
 #include "buffer_list.h"
-#include "line.h"
+#include "Line.h"
 #include "regex.h"
 #include "HttpRequest.h"
 #include "maparea.h"
