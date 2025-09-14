@@ -1364,25 +1364,6 @@ _docCSet(struct UI ui, wc_ces charset)
     ui.current_buffer->document.charset = charset;
 }
 
-void change_charset(struct UI ui, struct KeyValue* arg)
-{
-    abort();
-    // struct Buffer* buf = ui.current_buffer->linkBuffer[LB_N_INFO];
-    // if (buf == NULL)
-    //     return;
-    // delBuffer(ui, ui.current_buffer);
-    // ui.current_buffer = buf;
-    // if (ui.current_buffer->bufferprop & BP_INTERNAL)
-    //     return;
-    // wc_ces charset;
-    // charset = ui.current_buffer->document.charset;
-    // for (; arg; arg = arg->next) {
-    //     if (!strcmp(arg->arg, "charset"))
-    //         charset = atoi(arg->value);
-    // }
-    // _docCSet(ui, charset);
-}
-
 DEFUN(docCSet, CHARSET, "Change the character encoding for the current document")
 {
     const char* cs = searchKeyData();

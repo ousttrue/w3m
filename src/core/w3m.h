@@ -57,7 +57,6 @@ void pushEvent(int cmd, void* data);
 void chkURLBuffer(struct Buffer* buf);
 struct _AlarmEvent* setAlarmEvent(struct _AlarmEvent* event, int sec, short status, int cmd, void* data);
 
-void change_charset(struct UI ui, struct KeyValue* arg);
 void w3m_exit(int i);
 Str myEditor(const char* cmd, const char* file, int line);
 void _quitfm(bool confirm);

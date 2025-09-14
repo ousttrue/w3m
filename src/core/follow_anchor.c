@@ -1,4 +1,5 @@
 #include "follow_anchor.h"
+#include "internal.h"
 #include "AnchorList.h"
 #include "alloc.h"
 #include "buffer_list.h"

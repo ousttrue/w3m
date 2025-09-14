@@ -108,6 +108,7 @@ const system_libs = [_][]const u8{
 const w3m_srcs = [_][]const u8{
     "defun.c",
 
+    "internal.c",
     "page_info.c",
     "follow_anchor.c",
     "buffer_list.c",

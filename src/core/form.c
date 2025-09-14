@@ -39,21 +39,6 @@ extern struct FormSelectOption* select_option;
 extern int max_select;
 #include "menu.h"
 
-/* *INDENT-OFF* */
-struct {
-    char* action;
-    void (*rout)(struct UI ui, struct KeyValue*);
-} internal_action[] = {
-    { "map", follow_map },
-    { "option", panel_set_option },
-    { "cookie", set_cookie_flag },
-    { "download", download_action },
-    { "charset", change_charset },
-    { "none", NULL },
-    { NULL, NULL },
-};
-/* *INDENT-ON* */
-
 struct Form*
 newFormList(const char* action, const char* method, const char* charset, const char* enctype,
     const char* target, const char* name, struct Form* _next)
@@ -555,19 +540,6 @@ void input_textarea(struct FormItem* fi)
     fclose(f);
 input_end:
     unlink(tmpf);
-}
-
-void do_internal(struct UI ui, const char* action, const char* data)
-{
-    int i;
-
-    for (i = 0; internal_action[i].action; i++) {
-        if (strcasecmp(internal_action[i].action, action) == 0) {
-            if (internal_action[i].rout)
-                internal_action[i].rout(ui, cgistr2tagarg(data));
-            return;
-        }
-    }
 }
 
 void addSelectOption(struct FormSelectOption* fso, Str value, Str label, int chk)
