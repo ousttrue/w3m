@@ -3,23 +3,24 @@
  */
 #include "table.h"
 #include "token.h"
-#include "html_quote.h"
 #include "entity.h"
-#include "buffer_loader.h"
-#include "HtmlTagParsed.h"
-#include "display.h"
-#include "readbuffer.h"
 #include "symbol.h"
-#include "HtmlTagAttribute.h"
-#include "Str.h"
+#include "html_quote.h"
+#include "HtmlTagParsed.h"
+#include "readbuffer.h"
+
 #include "myctype.h"
-#include "screen.h"
-#include <strings.h>
+
+#include <wc.h>
 #include <wtf.h>
+
+#include <strings.h>
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
 #include <sys/types.h>
+
+char SimplePreserveSpace = (false);
 
 int symbol_width = 0;
 int symbol_width0 = 0;
@@ -65,28 +66,28 @@ int symbol_width0 = 0;
 #endif /* not MESCHACH */
 
 int correct_table_matrix(struct table*, int, int, int, double);
-void set_table_matrix(struct table*, int);
+void set_table_matrix(struct table*, int, int);
 
 static double
-weight(int x)
+weight(int x, int cols)
 {
 
-    if (x < getScreen()->COLS)
+    if (x < cols)
         return (double)x;
     else
-        return getScreen()->COLS * (log((double)x / getScreen()->COLS) + 1.);
+        return cols * (log((double)x / cols) + 1.);
 }
 
 static double
-weight2(int a)
+weight2(int a, int cols)
 {
-    return (double)a / getScreen()->COLS * 4 + 1.;
+    return (double)a / cols * 4 + 1.;
 }
 
-#define sigma_td(a) (0.5 * weight2(a)) /* <td width=...> */
-#define sigma_td_nw(a) (32 * weight2(a)) /* <td ...> */
-#define sigma_table(a) (0.25 * weight2(a)) /* <table width=...> */
-#define sigma_table_nw(a) (2 * weight2(a)) /* <table...> */
+static double sigma_td(int a, int cols) { return (0.5 * weight2(a, cols)); } /* <td width=...> */
+static double sigma_td_nw(int a, int cols) { return (32 * weight2(a, cols)); } /* <td ...> */
+static double sigma_table(int a, int cols) { return (0.25 * weight2(a, cols)); } /* <table width=...> */
+static double sigma_table_nw(int a, int cols) { return (2 * weight2(a, cols)); } /* <table...> */
 
 static int
 bsearch_2short(short e1, short* ent1, short e2, short* ent2, int base,
@@ -310,7 +311,7 @@ check_row(struct table* t, int row)
     }
 }
 
-void pushdata(struct table* t, int row, int col, char* data)
+void pushdata(struct table* t, int row, int col, const char* data)
 {
     check_row(t, row);
     if (t->tabdata[row][col] == NULL)
@@ -320,7 +321,7 @@ void pushdata(struct table* t, int row, int col, char* data)
 }
 
 static void
-suspend_or_pushdata(struct table* tbl, char* line)
+suspend_or_pushdata(struct table* tbl, const char* line)
 {
     if (tbl->flag & TBL_IN_COL)
         pushdata(tbl, tbl->row, tbl->col, line);
@@ -334,11 +335,11 @@ suspend_or_pushdata(struct table* tbl, char* line)
 #define PUSH_TAG(str, n) Strcat_charp_n(tagbuf, str, n)
 
 int visible_length_offset = 0;
-int visible_length(char* str)
+int visible_length(const char* str)
 {
     int len = 0, n, max_len = 0;
-    int status = R_ST_NORMAL;
-    int prev_status = status;
+    enum ReadtokenStatus status = R_ST_NORMAL;
+    enum ReadtokenStatus prev_status = status;
     Str tagbuf = Strnew();
     const char *t, *r2;
     int amp_len = 0;
@@ -402,7 +403,7 @@ int visible_length(char* str)
 }
 
 static int
-visible_length_plain(char* str)
+visible_length_plain(const char* str)
 {
     int len = 0, max_len = 0;
 
@@ -426,14 +427,14 @@ visible_length_plain(char* str)
 }
 
 static int
-maximum_visible_length(char* str, int offset)
+maximum_visible_length(const char* str, int offset)
 {
     visible_length_offset = offset;
     return visible_length(str);
 }
 
 static int
-maximum_visible_length_plain(char* str, int offset)
+maximum_visible_length_plain(const char* str, int offset)
 {
     visible_length_offset = offset;
     return visible_length_plain(str);
@@ -619,7 +620,7 @@ get_spec_cell_width(struct table* tbl, int row, int col)
     return w;
 }
 
-void do_refill(struct table* tbl, int row, int col, int maxlimit)
+void do_refill(struct table* tbl, int row, int col, int maxlimit, int cols)
 {
     TextList* orgdata;
     TextListItem* l;
@@ -635,7 +636,7 @@ void do_refill(struct table* tbl, int row, int col, int maxlimit)
 
     init_henv(&h_env, &obuf, envs, MAX_ENV_LEVEL,
         (TextLineList*)tbl->tabdata[row][col],
-        get_spec_cell_width(tbl, row, col), 0);
+        get_spec_cell_width(tbl, row, col), 0, cols);
     obuf.flag |= RB_INTABLE;
     if (h_env.limit > maxlimit)
         h_env.limit = maxlimit;
@@ -644,7 +645,7 @@ void do_refill(struct table* tbl, int row, int col, int maxlimit)
     for (l = orgdata->first; l != NULL; l = l->next) {
         if (TAG_IS(l->ptr, "<table_alt", 10)) {
             int id = -1;
-            char* p = l->ptr;
+            const char* p = l->ptr;
             struct HtmlTagParsed* tag;
             if ((tag = parse_tag(&p, true)) != NULL)
                 parsedtag_get_value(tag, ATTR_TID, &id);
@@ -1405,7 +1406,7 @@ void initRenderTable(void)
 }
 
 static void
-renderCoTable(struct table* tbl, int maxlimit)
+renderCoTable(struct table* tbl, int maxlimit, int cols)
 {
     struct readbuffer obuf;
     struct html_feed_environ h_env;
@@ -1427,7 +1428,7 @@ renderCoTable(struct table* tbl, int maxlimit)
         indent = tbl->tables[i].indent;
 
         init_henv(&h_env, &obuf, envs, MAX_ENV_LEVEL, tbl->tables[i].buf,
-            get_spec_cell_width(tbl, row, col), indent);
+            get_spec_cell_width(tbl, row, col), indent, cols);
         check_row(tbl, row);
         if (h_env.limit > maxlimit)
             h_env.limit = maxlimit;
@@ -1457,7 +1458,7 @@ make_caption(struct table* t, struct html_feed_environ* h_env)
     else
         limit = h_env->limit;
     init_henv(&henv, &obuf, envs, MAX_ENV_LEVEL, newTextLineList(),
-        limit, h_env->envs[h_env->envc].indent);
+        limit, h_env->envs[h_env->envc].indent, h_env->cols);
     HTMLlineproc0("<center>", &henv, true);
     HTMLlineproc0(t->caption->ptr, &henv, false);
     HTMLlineproc0("</center>", &henv, true);
@@ -1521,7 +1522,7 @@ void renderTable(struct table* t, int max_width, struct html_feed_environ* h_env
         if (t->tabwidth[0] < t->minimum_width[0])
             t->tabwidth[0] = t->minimum_width[0];
     } else {
-        set_table_matrix(t, max_width);
+        set_table_matrix(t, max_width, h_env->cols);
 
         itr = 0;
         mat = m_get(t->maxcol + 1, t->maxcol + 1);
@@ -1568,14 +1569,14 @@ void renderTable(struct table* t, int max_width, struct html_feed_environ* h_env
     for (i = 0; i <= t->maxcol; i++)
         t->tabwidth[i] = ceil_at_intervals(t->tabwidth[i], rulewidth);
 
-    renderCoTable(t, h_env->limit);
+    renderCoTable(t, h_env->limit, h_env->cols);
 
     for (i = 0; i <= t->maxcol; i++) {
         for (j = 0; j <= t->maxrow; j++) {
             check_row(t, j);
             if (t->tabattr[j][i] & HTT_Y)
                 continue;
-            do_refill(t, j, i, h_env->limit);
+            do_refill(t, j, i, h_env->limit, h_env->cols);
         }
     }
 
@@ -1980,7 +1981,7 @@ void check_rowcol(struct table* tbl, struct table_mode* mode)
 }
 
 static int
-skip_space(struct table* t, char* line, struct table_linfo* linfo,
+skip_space(struct table* t, const char* line, struct table_linfo* linfo,
     int checkminimum)
 {
     int skip = 0, s = linfo->prev_spaces;
@@ -1996,7 +1997,7 @@ skip_space(struct table* t, char* line, struct table_linfo* linfo,
     }
 
     while (*line) {
-        char *save = line, *c = line;
+        const char *save = line, *c = line;
         int ec, len, wlen, plen;
         ctype = get_mctype(line);
         len = get_mcwidth(line);
@@ -2055,7 +2056,7 @@ skip_space(struct table* t, char* line, struct table_linfo* linfo,
 
 static void
 feed_table_inline_tag(struct table* tbl,
-    char* line, struct table_mode* mode, int width)
+    const char* line, struct table_mode* mode, int width)
 {
     check_rowcol(tbl, mode);
     pushdata(tbl, tbl->row, tbl->col, line);
@@ -2068,7 +2069,7 @@ feed_table_inline_tag(struct table* tbl,
 
 static void
 feed_table_block_tag(struct table* tbl,
-    char* line, struct table_mode* mode, int indent, int cmd)
+    const char* line, struct table_mode* mode, int indent, int cmd)
 {
     int offset;
     if (mode->indent_level <= 0 && indent == -1)
@@ -2164,7 +2165,7 @@ table_close_anchor0(struct table* tbl, struct table_mode* mode)
 #define ATTR_ROWSPAN_MAX 32766
 
 static int
-feed_table_tag(struct table* tbl, char* line, struct table_mode* mode,
+feed_table_tag(struct table* tbl, const char* line, struct table_mode* mode,
     int width, struct HtmlTagParsed* tag)
 {
     int cmd;
@@ -2808,14 +2809,10 @@ feed_table_tag(struct table* tbl, char* line, struct table_mode* mode,
 int feed_table(struct table* tbl, const char* line, struct table_mode* mode,
     int width, int internal)
 {
-    int i;
-    char* p;
-    Str tmp;
     struct table_linfo* linfo = &tbl->linfo;
-
     if (*line == '<' && line[1] && REALLY_THE_BEGINNING_OF_A_TAG(line)) {
         struct HtmlTagParsed* tag;
-        p = line;
+        const char* p = line;
         tag = parse_tag(&p, internal);
         if (tag) {
             switch (feed_table_tag(tbl, line, mode, width, tag)) {
@@ -2857,9 +2854,9 @@ int feed_table(struct table* tbl, const char* line, struct table_mode* mode,
         return -1;
     }
     if (!(mode->pre_mode & TBLM_PLAIN) && !(*line == '<' && line[strlen(line) - 1] == '>') && strchr(line, '&') != NULL) {
-        tmp = Strnew();
-        for (p = line; *p;) {
-            char *q, *r;
+        Str tmp = Strnew();
+        for (const char* p = line; *p;) {
+            const char *q, *r;
             if (*p == '&') {
                 if (!strncasecmp(p, "&amp;", 5) || !strncasecmp(p, "&gt;", 4) || !strncasecmp(p, "&lt;", 4)) {
                     /* do not convert */
@@ -2913,7 +2910,7 @@ int feed_table(struct table* tbl, const char* line, struct table_mode* mode,
             mode->nobr_offset = tbl->tabcontentssize;
 
         /* count of number of spaces skipped in normal mode */
-        i = skip_space(tbl, line, linfo, !(mode->pre_mode & TBLM_NOBR));
+        int i = skip_space(tbl, line, linfo, !(mode->pre_mode & TBLM_NOBR));
         addcontentssize(tbl, visible_length(line) - i);
         setwidth(tbl, mode);
         pushdata(tbl, tbl->row, tbl->col, line);
@@ -2929,12 +2926,13 @@ int feed_table(struct table* tbl, const char* line, struct table_mode* mode,
         check_rowcol(tbl, mode);
         while (*line) {
             int nl = false;
+            const char* p;
             if ((p = strchr(line, '\r')) || (p = strchr(line, '\n'))) {
                 if (*p == '\r' && p[1] == '\n')
                     p++;
                 if (p[1]) {
                     p++;
-                    tmp = Strnew_charp_n(line, p - line);
+                    Str tmp = Strnew_charp_n(line, p - line);
                     line = p;
                     p = tmp->ptr;
                 } else {
@@ -2946,6 +2944,7 @@ int feed_table(struct table* tbl, const char* line, struct table_mode* mode,
                 p = line;
                 line = "";
             }
+            int i;
             if (mode->pre_mode & TBLM_PLAIN)
                 i = maximum_visible_length_plain(p, tbl->tabcontentssize);
             else
@@ -2962,14 +2961,11 @@ int feed_table(struct table* tbl, const char* line, struct table_mode* mode,
 
 void feed_table1(struct table* tbl, Str tok, struct table_mode* mode, int width)
 {
-    Str tokbuf;
-    int status;
-    char* line;
     if (!tok)
         return;
-    tokbuf = Strnew();
-    status = R_ST_NORMAL;
-    line = tok->ptr;
+    Str tokbuf = Strnew();
+    enum ReadtokenStatus status = R_ST_NORMAL;
+    const char* line = tok->ptr;
     while (read_token(tokbuf, &line, &status, mode->pre_mode & TBLM_PREMODE, 0))
         feed_table(tbl, tokbuf->ptr, mode, width, true);
 }
@@ -3101,7 +3097,7 @@ correct_table_matrix4(struct table* t, int col, int cspan, char* flags,
 }
 
 static void
-set_table_matrix0(struct table* t, int maxwidth)
+set_table_matrix0(struct table* t, int maxwidth, int cols)
 {
     size_t size = t->maxcol + 1;
     int i, j, k, bcol, ecol;
@@ -3118,7 +3114,7 @@ set_table_matrix0(struct table* t, int maxwidth)
 
     w0 = 0.;
     for (i = 0; i < size; i++) {
-        we[i] = weight(t->tabwidth[i]);
+        we[i] = weight(t->tabwidth[i], cols);
         w0 += we[i];
     }
     if (w0 <= 0.)
@@ -3127,7 +3123,7 @@ set_table_matrix0(struct table* t, int maxwidth)
     if (cell->necell == 0) {
         for (i = 0; i < size; i++) {
             s = we[i] / w0;
-            b = sigma_td_nw((int)(s * maxwidth));
+            b = sigma_td_nw((int)(s * maxwidth), cols);
             correct_table_matrix2(t, i, 1, s, b);
         }
         return;
@@ -3146,7 +3142,7 @@ set_table_matrix0(struct table* t, int maxwidth)
             expand[i]++;
         }
         for (i = bcol; i < ecol; i++) {
-            w = weight(width * (t->tabwidth[i] + 0.1) / w1);
+            w = weight(width * (t->tabwidth[i] + 0.1) / w1, cols);
             if (w > we[i])
                 we[i] = w;
         }
@@ -3166,19 +3162,19 @@ set_table_matrix0(struct table* t, int maxwidth)
         j = cell->eindex[k];
         bcol = cell->col[j];
         width = cell->width[j] - (cell->colspan[j] - 1) * t->cellspacing;
-        w = weight(width);
+        w = weight(width, cols);
         s = w / (w1 + w);
-        b = sigma_td_nw((int)(s * maxwidth));
+        b = sigma_td_nw((int)(s * maxwidth), cols);
         correct_table_matrix4(t, bcol, cell->colspan[j], expand, s, b);
     }
 
     for (i = 0; i < size; i++) {
         if (expand[i] == 0) {
             s = we[i] / max(w1, 1.);
-            b = sigma_td_nw((int)(s * maxwidth));
+            b = sigma_td_nw((int)(s * maxwidth), cols);
         } else {
             s = we[i] / max(w0 - w1, 1.);
-            b = sigma_td_nw(maxwidth);
+            b = sigma_td_nw(maxwidth, cols);
         }
         correct_table_matrix3(t, i, expand, s, b);
     }
@@ -3265,7 +3261,7 @@ check_relative_width(struct table* t, int maxwidth)
     }
 }
 
-void set_table_matrix(struct table* t, int width)
+void set_table_matrix(struct table* t, int width, int cols)
 {
     int size = t->maxcol + 1;
     int i, j;
@@ -3289,11 +3285,11 @@ void set_table_matrix(struct table* t, int width)
     for (i = 0; i < size; i++) {
         if (t->fixed_width[i] > 0) {
             a = max(t->fixed_width[i], t->minimum_width[i]);
-            b = sigma_td(a);
+            b = sigma_td(a, cols);
             correct_table_matrix(t, i, 1, a, b);
         } else if (t->fixed_width[i] < 0) {
             s = -(double)t->fixed_width[i] / 100.;
-            b = sigma_td((int)(s * width));
+            b = sigma_td((int)(s * width), cols);
             correct_table_matrix2(t, i, 1, s, b);
         }
     }
@@ -3301,21 +3297,21 @@ void set_table_matrix(struct table* t, int width)
     for (j = 0; j <= cell->maxcell; j++) {
         if (cell->fixed_width[j] > 0) {
             a = max(cell->fixed_width[j], cell->minimum_width[j]);
-            b = sigma_td(a);
+            b = sigma_td(a, cols);
             correct_table_matrix(t, cell->col[j], cell->colspan[j], a, b);
         } else if (cell->fixed_width[j] < 0) {
             s = -(double)cell->fixed_width[j] / 100.;
-            b = sigma_td((int)(s * width));
+            b = sigma_td((int)(s * width), cols);
             correct_table_matrix2(t, cell->col[j], cell->colspan[j], s, b);
         }
     }
 
-    set_table_matrix0(t, width);
+    set_table_matrix0(t, width, cols);
 
     if (t->total_width > 0) {
-        b = sigma_table(width);
+        b = sigma_table(width, cols);
     } else {
-        b = sigma_table_nw(width);
+        b = sigma_table_nw(width, cols);
     }
     correct_table_matrix(t, 0, size, width, b);
 }

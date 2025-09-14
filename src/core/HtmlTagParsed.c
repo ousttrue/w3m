@@ -3,7 +3,6 @@
 #include "entity.h"
 #include "token.h"
 #include "html_form.h"
-#include "readbuffer.h"
 #include "table.h"
 #include "html_tag_info.h"
 #include "html_tag_attribute_info.h"
@@ -20,6 +19,13 @@
 
 #include <wc.h>
 #include <wtf.h>
+
+int cur_hseq;
+int cur_iseq;
+Str getLinkNumberStr(int correction)
+{
+    return Sprintf("[%d]", cur_hseq + correction);
+}
 
 bool displayLinkNumber = (false);
 wc_ces cur_document_charset = 0;
@@ -703,7 +709,7 @@ img_end:
     return tmp;
 }
 
-Str process_anchor(struct HtmlTagParsed* tag, char* tagbuf)
+Str process_anchor(struct HtmlTagParsed* tag, const char* tagbuf)
 {
     if (tag->need_reconstruct) {
         parsedtag_set_value(tag, ATTR_HSEQ, Sprintf("%d", cur_hseq++)->ptr);
@@ -1315,11 +1321,11 @@ check_charset(char* p)
 
 Str process_form_int(struct HtmlTagParsed* tag, int fid)
 {
-    char *p, *q, *r, *s, *tg, *n;
+    char *p, *r, *s, *tg, *n;
 
     p = "get";
     parsedtag_get_value(tag, ATTR_METHOD, &p);
-    q = "!CURRENT_URL!";
+    const char* q = "!CURRENT_URL!";
     parsedtag_get_value(tag, ATTR_ACTION, &q);
     q = url_quote(remove_space(q));
     r = NULL;
@@ -1369,27 +1375,4 @@ Str process_n_form(void)
     if (form_sp >= 0)
         form_sp--;
     return NULL;
-}
-
-void process_idattr(struct readbuffer* obuf, int cmd, struct HtmlTagParsed* tag)
-{
-    char *id = NULL, *framename = NULL;
-    Str idtag = NULL;
-
-    /*
-     * HTML_TABLE is handled by the other process.
-     */
-    if (cmd == HTML_TABLE)
-        return;
-
-    parsedtag_get_value(tag, ATTR_ID, &id);
-    parsedtag_get_value(tag, ATTR_FRAMENAME, &framename);
-    if (id == NULL)
-        return;
-    if (framename)
-        idtag = Sprintf("<_id id=\"%s\" framename=\"%s\">",
-            html_quote(id), html_quote(framename));
-    else
-        idtag = Sprintf("<_id id=\"%s\">", html_quote(id));
-    push_tag(obuf, idtag->ptr, HTML_NOP);
 }

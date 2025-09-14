@@ -32,6 +32,10 @@ extern double pixel_per_line;
 extern int pixel_per_line_i;
 extern int set_pixel_per_line;
 
+extern int cur_hseq;
+extern int cur_iseq;
+Str getLinkNumberStr(int correction);
+
 enum VAlignType {
     VALIGN_MIDDLE = 0,
     VALIGN_TOP = 1,
@@ -76,7 +80,7 @@ Str parsedtag2str(struct HtmlTagParsed* tag);
 
 Str process_hr(struct HtmlTagParsed* tag, int width, int indent_width);
 Str process_img(struct HtmlTagParsed* tag, int width);
-Str process_anchor(struct HtmlTagParsed* tag, char* tagbuf);
+Str process_anchor(struct HtmlTagParsed* tag, const char* tagbuf);
 Str process_input(struct HtmlTagParsed* tag);
 Str process_button(struct HtmlTagParsed* tag);
 Str process_n_button(void);

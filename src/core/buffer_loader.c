@@ -39,7 +39,6 @@ char DecodeCTE = (false);
 int UseExternalDirBuffer = (true);
 const char* DirBufferCommand = ("file:///$LIB/dirlist" CGI_EXTENSION);
 const char* DefaultType = (NULL);
-char SimplePreserveSpace = (false);
 int squeezeBlankLine = (false);
 
 struct Url* cur_baseURL = NULL;
@@ -815,7 +814,7 @@ static int loadHTML(struct html_feed_environ* htmlenv1,
     else
         image_flag = IMG_FLAG_SKIP;
 
-    init_henv(htmlenv1, &obuf, envs, MAX_ENV_LEVEL, NULL, cols, 0);
+    init_henv(htmlenv1, &obuf, envs, MAX_ENV_LEVEL, NULL, cols, 0, cols);
 
     htmlenv1->buf = newTextLineList();
     cur_baseURL = NULL; // baseURL(newBuf);

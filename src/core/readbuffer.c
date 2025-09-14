@@ -1,37 +1,31 @@
-#include <stdlib.h>
 #include "readbuffer.h"
 #include "str_util.h"
-#include "quote.h"
 #include "html_quote.h"
-#include "buffer_loader.h"
 #include "url.h"
 #include "HtmlTagParsed.h"
 #include "html_title.h"
 #include "alloc.h"
 #include "myctype.h"
 #include "table.h"
-#include "ui.h"
 #include "ctrlcode.h"
 #include "symbol.h"
-#include "display.h"
 #include "hash.h"
-#include <strings.h>
+
+#include "ui.h"
 
 #include <wc.h>
 #include <wtf.h>
+
+#include <strings.h>
+#include <stdlib.h>
+
+
 
 char DisableCenter = (false);
 int IndentIncr = (4);
 char DisplayBorders = (false);
 int displayInsDel = (DISPLAY_INS_DEL_NORMAL);
 int view_unseenobject = (false);
-
-int cur_hseq;
-int cur_iseq;
-Str getLinkNumberStr(int correction)
-{
-    return Sprintf("[%d]", cur_hseq + correction);
-}
 
 int need_number = 0;
 
@@ -338,7 +332,7 @@ void passthrough(struct readbuffer* obuf, char* str, int back)
     while (*str) {
         str_bak = str;
         if (sloppy_parse_line(&str)) {
-            char* q = str_bak;
+            const char* q = str_bak;
             cmd = gethtmlcmd(&q);
             if (back) {
                 struct link_stack* p;
@@ -459,7 +453,7 @@ void flushline(struct html_feed_environ* h_env, struct readbuffer* obuf, int ind
         struct readbuffer o;
         struct environment e[1];
 
-        init_henv(&h, &o, e, 1, NULL, width, indent);
+        init_henv(&h, &o, e, 1, NULL, width, indent, h_env->cols);
         o.line = Strnew_size(width + 20);
         o.pos = obuf->pos;
         o.flag = obuf->flag;
@@ -580,7 +574,7 @@ void flushline(struct html_feed_environ* h_env, struct readbuffer* obuf, int ind
         struct readbuffer o;
         struct environment e[1];
 
-        init_henv(&h, &o, e, 1, NULL, width, indent);
+        init_henv(&h, &o, e, 1, NULL, width, indent, h_env->cols);
         o.line = Strnew_size(width + 20);
         o.pos = obuf->pos;
         o.flag = obuf->flag;
@@ -1974,7 +1968,7 @@ void completeHTMLstream(struct html_feed_environ* h_env, struct readbuffer* obuf
 
 void init_henv(struct html_feed_environ* h_env, struct readbuffer* obuf,
     struct environment* envs, int nenv, TextLineList* buf,
-    int limit, int indent)
+    int limit, int indent, int cols)
 {
     envs[0].indent = indent;
 
@@ -2022,6 +2016,7 @@ void init_henv(struct html_feed_environ* h_env, struct readbuffer* obuf,
     h_env->envc_real = 0;
     h_env->title = NULL;
     h_env->blank_lines = 0;
+    h_env->cols = cols;
 }
 
 static int
@@ -2123,4 +2118,27 @@ int is_boundary(unsigned char* ch1, unsigned char* ch2)
         return 0;
 
     return 1;
+}
+
+void process_idattr(struct readbuffer* obuf, int cmd, struct HtmlTagParsed* tag)
+{
+    char *id = NULL, *framename = NULL;
+    Str idtag = NULL;
+
+    /*
+     * HTML_TABLE is handled by the other process.
+     */
+    if (cmd == HTML_TABLE)
+        return;
+
+    parsedtag_get_value(tag, ATTR_ID, &id);
+    parsedtag_get_value(tag, ATTR_FRAMENAME, &framename);
+    if (id == NULL)
+        return;
+    if (framename)
+        idtag = Sprintf("<_id id=\"%s\" framename=\"%s\">",
+            html_quote(id), html_quote(framename));
+    else
+        idtag = Sprintf("<_id id=\"%s\">", html_quote(id));
+    push_tag(obuf, idtag->ptr, HTML_NOP);
 }

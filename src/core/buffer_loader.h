@@ -11,7 +11,6 @@ extern char MetaRefresh;
 extern char DecodeCTE;
 extern int UseExternalDirBuffer;
 extern const char* DefaultType;
-extern char SimplePreserveSpace;
 extern int squeezeBlankLine;
 extern const char* DirBufferCommand;
 extern bool PermitSaveToPipe;

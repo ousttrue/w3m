@@ -4,6 +4,7 @@
 
 extern int symbol_width;
 extern int symbol_width0;
+extern char SimplePreserveSpace;
 
 #if (defined(MESCHACH) && !defined(MATRIX))
 #define MATRIX
@@ -134,8 +135,8 @@ struct table {
 #define TBLM_ANCHOR 0x1000000
 
 struct table* newTable(void);
-void pushdata(struct table* t, int row, int col, char* data);
-int visible_length(char* str);
+void pushdata(struct table* t, int row, int col, const char* data);
+int visible_length(const char* str);
 
 #define ALIGN_CENTER 0
 #define ALIGN_LEFT 1
@@ -147,7 +148,7 @@ void align(TextLine* lbuf, int width, int mode);
 
 void print_item(struct table* t, int row, int col, int width, Str buf);
 void print_sep(struct table* t, int row, int type, int maxcol, Str buf);
-void do_refill(struct table* tbl, int row, int col, int maxlimit);
+void do_refill(struct table* tbl, int row, int col, int maxlimit, int cols);
 void initRenderTable(void);
 struct html_feed_environ;
 void renderTable(struct table* t, int max_width,

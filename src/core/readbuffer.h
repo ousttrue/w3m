@@ -17,6 +17,7 @@ extern int view_unseenobject;
 
 #define set_prevchar(x, y, n) Strcopy_charp_n((x), (y), (n))
 #define set_space_to_prevchar(x) Strcopy_charp_n((x), " ", 1)
+#define RELATIVE_WIDTH(w) (((w) >= 0) ? (int)((w) / pixel_per_char) : (w))
 
 #define DISPLAY_INS_DEL_SIMPLE 0
 #define DISPLAY_INS_DEL_NORMAL 1
@@ -27,18 +28,6 @@ int table_width(struct html_feed_environ* h_env, int table_level);
 extern int need_number;
 extern wc_ces meta_charset;
 
-// TODO
-extern int cur_hseq;
-extern int cur_iseq;
-Str getLinkNumberStr(int correction);
-
-#define MAX_UL_LEVEL 9
-#define UL_SYMBOL(x) (N_GRAPH_SYMBOL + (x))
-#define UL_SYMBOL_DISC UL_SYMBOL(9)
-#define UL_SYMBOL_CIRCLE UL_SYMBOL(10)
-#define UL_SYMBOL_SQUARE UL_SYMBOL(11)
-#define HR_SYMBOL 26
-#define IMG_SYMBOL UL_SYMBOL(12)
 
 struct cmdtable {
     const char* cmdname;
@@ -205,6 +194,7 @@ struct html_feed_environ {
     int envc_real;
     char* title;
     int blank_lines;
+    int cols;
 };
 
 void flushline(struct html_feed_environ* h_env, struct readbuffer* obuf, int indent, int force, int width);
@@ -214,9 +204,9 @@ void do_blankline(struct html_feed_environ* h_env, struct readbuffer* obuf, int 
 void save_fonteffect(struct html_feed_environ* h_env, struct readbuffer* obuf);
 void restore_fonteffect(struct html_feed_environ* h_env, struct readbuffer* obuf);
 int HTMLtagproc1(struct HtmlTagParsed* tag, struct html_feed_environ* h_env);
-void init_henv(struct html_feed_environ*, struct readbuffer*, struct environment*, int, TextLineList*, int, int);
+void init_henv(struct html_feed_environ*, struct readbuffer*, struct environment*, int, TextLineList*, int, int, int cols);
 void completeHTMLstream(struct html_feed_environ*, struct readbuffer*);
-void process_idattr(struct readbuffer* obuf, int cmd, struct HtmlTagParsed* tag);
 int is_boundary(unsigned char*, unsigned char*);
 int getMetaRefreshParam(const char* q, Str* refresh_uri);
 void HTMLlineproc0(const char* istr, struct html_feed_environ* h_env, bool internal);
+void process_idattr(struct readbuffer* obuf, int cmd, struct HtmlTagParsed* tag);
