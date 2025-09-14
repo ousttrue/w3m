@@ -9,7 +9,7 @@
 #include "runtime.h"
 #include "tty.h"
 #include "w3m.h"
-#include "buffer.h"
+#include "Buffer.h"
 #include "entity.h"
 #include "html_form.h"
 #include "image_loader.h"

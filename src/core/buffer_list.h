@@ -1,6 +1,5 @@
 #pragma once
 #include "geometry.h"
-#include "buffer.h"
 #include "Content.h"
 
 struct Buffer;

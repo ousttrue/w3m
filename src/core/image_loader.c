@@ -13,7 +13,7 @@
 #include "Content.h"
 #include "buffer_loader.h"
 #include "ui.h"
-#include "buffer.h"
+#include "Buffer.h"
 #include "local_cgi.h"
 #include "display.h"
 #include "term_renderer.h"

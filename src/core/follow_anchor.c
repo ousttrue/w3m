@@ -7,7 +7,7 @@
 #include "quote.h"
 #include "runtime.h"
 #include "url.h"
-#include "buffer.h"
+#include "buffer_util.h"
 #include "Anchor.h"
 #include "Image.h"
 #include "html_form.h"

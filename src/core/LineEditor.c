@@ -2,7 +2,7 @@
 #include "alloc.h"
 #include "runtime.h"
 #include "w3m.h"
-#include "buffer.h"
+#include "Buffer.h"
 #include "str_util.h"
 #include "linein.h"
 #include "display.h"

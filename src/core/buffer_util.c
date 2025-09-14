@@ -1,4 +1,4 @@
-#include "buffer.h"
+#include "buffer_util.h"
 #include "history.h"
 #include "ui.h"
 #include "buffer_list.h"

@@ -3,7 +3,7 @@
 #include "AnchorList.h"
 #include "Anchor.h"
 #include "HtmlTagParsed.h"
-#include "buffer.h"
+#include "buffer_util.h"
 #include "buffer_loader.h"
 #include "html_quote.h"
 #include "maparea.h"

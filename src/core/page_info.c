@@ -2,7 +2,7 @@
 #include "Content.h"
 #include "Document.h"
 #include "AnchorList.h"
-#include "buffer.h"
+#include "Buffer.h"
 #include "runtime.h"
 #include "html_quote.h"
 #include "ui.h"

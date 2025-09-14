@@ -13,7 +13,7 @@
 #include "w3m.h"
 #include "history.h"
 #include "ctrlcode.h"
-#include "buffer.h"
+#include "buffer_util.h"
 #include "screen.h"
 #include "frame.h"
 #include "putc.h"
@@ -234,9 +234,9 @@ static void redrawNLine(struct UI ui, struct Buffer* buf, int n)
     // vt_move(ui.vt, buf->cursorY + ui.viewport.offset.y, buf->cursorX + ui.viewport.offset.x);
     for (i = 0, l = topLine(&buf->document); i < ui.viewport.size.y && l; i++, l = l->next) {
         if (i >= ui.viewport.size.y - n || i < -n)
-            redrawLineImage(ui, buf, l, i + ui.viewport.offset.y);
+            redrawLineImage(ui, &buf->document, l, i + ui.viewport.offset.y);
     }
-    getAllImage(buf);
+    getAllImage(&buf->document);
 }
 
 void bufToScreen(struct UI ui)

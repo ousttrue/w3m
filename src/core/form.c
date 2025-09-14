@@ -14,7 +14,7 @@
 #include "downloadlist.h"
 #include "ui.h"
 #include "cookie.h"
-#include "buffer.h"
+#include "buffer_util.h"
 #include "myctype.h"
 #include "local_cgi.h"
 #include "regex.h"

@@ -42,7 +42,7 @@
 #include <gc/gc.h>
 #include <locale.h>
 #include <stdlib.h>
-#include "buffer.h"
+#include "buffer_util.h"
 #include "funcname1.h"
 #include "proxy.h"
 #include "term_size.h"

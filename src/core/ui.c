@@ -16,7 +16,7 @@
 #include "TermEntry.h"
 #include "tty.h"
 #include "display.h"
-#include "buffer.h"
+#include "Buffer.h"
 #include "graphicchar.h"
 #include <myctype.h>
 #include <math.h>

@@ -1,28 +1,7 @@
 #pragma once
-#include "Line.h"
-#include "geometry.h"
-#include "Content.h"
-#include "Document.h"
-#include <stdio.h>
-#include <wc.h>
+#include "Buffer.h"
 
 extern int nextpage_topline;
-
-struct Buffer {
-    struct Content content;
-    struct Document document;
-    struct Buffer* nextBuffer;
-
-    int* clone;
-    bool check_url;
-    wc_uint8 auto_detect;
-    struct FormItem* form_submit;
-    char* savecache;
-    char* edit;
-    struct Anchor* submit;
-    struct BufferPos* undo;
-    struct _AlarmEvent* event;
-};
 
 #define _INIT_BUFFER_WIDTH (getCols() - (showLineNum ? 6 : 1))
 #define INIT_BUFFER_WIDTH ((_INIT_BUFFER_WIDTH > 0) ? _INIT_BUFFER_WIDTH : 0)
@@ -61,3 +40,4 @@ void tmpClearBuffer(struct Buffer* buf);
 void shiftvisualpos(struct Buffer* buf, int shift);
 void _nextA(struct UI ui, int visited);
 void _prevA(struct UI ui, int visited);
+

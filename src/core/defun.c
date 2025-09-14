@@ -10,7 +10,7 @@
 #include "buffer_list.h"
 #include "defun_macro.h"
 #include "geometry.h" // IWYU pragma: keep
-#include "buffer.h"
+#include "buffer_util.h"
 #include "history.h"
 #include "image_loader.h"
 #include "linein.h"

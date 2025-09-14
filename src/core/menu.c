@@ -12,7 +12,7 @@
 #include "defun.h"
 #include "search.h"
 #include "history.h"
-#include "buffer.h"
+#include "buffer_util.h"
 #include "ui.h"
 #include "symbol.h"
 #include "w3m.h"
