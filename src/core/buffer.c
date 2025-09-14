@@ -194,6 +194,7 @@ writeBufferName(struct Buffer* buf, int n)
         all = lastLine(&buf->document)->linenumber;
     vt_move(getScreen(), n, 0);
 
+
     Str msg = Sprintf("<%s> [%d lines]", buf->document.title, all);
     switch (buf->content.url.scheme) {
     case SCM_LOCAL:
@@ -763,27 +764,6 @@ int columnSkip(struct Buffer* buf, int offset)
         return 0;
     buf->document.currentColumn = maxColumn;
     return 1;
-}
-
-/* get last modified time */
-char* last_modified(struct Buffer* buf)
-{
-    TextListItem* ti;
-    struct stat st;
-
-    if (buf->content.document_header) {
-        for (ti = buf->content.document_header->first; ti; ti = ti->next) {
-            if (strncasecmp(ti->ptr, "Last-modified: ", 15) == 0) {
-                return ti->ptr + 15;
-            }
-        }
-        return "unknown";
-    } else if (buf->content.url.scheme == SCM_LOCAL) {
-        if (stat(buf->content.url.file, &st) < 0)
-            return "unknown";
-        return ctime(&st.st_mtime);
-    }
-    return "unknown";
 }
 
 struct Content

@@ -24,3 +24,5 @@ struct Content loadGeneralFile(const char* path, struct Url* current, struct For
     const char* referer, struct UserInteraction ui);
 
 bool is_plain_text_type(const char* type);
+
+const char* last_modified(struct Content* content);

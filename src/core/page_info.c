@@ -1,4 +1,6 @@
 #include "page_info.h"
+#include "Content.h"
+#include "Document.h"
 #include "AnchorList.h"
 #include "buffer.h"
 #include "runtime.h"
@@ -9,6 +11,7 @@
 #include "maparea.h"
 #include "str_util.h"
 #include "LinkList.h"
+#include <strings.h>
 
 static void append_map_info(struct Document* doc, Str tmp, struct FormItem* fi)
 {
@@ -68,33 +71,34 @@ static void append_link_info(struct Document* doc, Str html, struct LinkList* li
 }
 
 struct Content
-page_info_panel(struct UI ui, struct Buffer* buf)
+page_info_panel(struct Content* content, struct Document* doc, struct BufferPoint bp)
 {
     Str tmp = Strnew_size(1024);
     Strcat_charp(tmp, "<html><head>\
 <title>Information about current page</title>\
 </head><body>\
 <h1>Information about current page</h1>\n");
-    if (buf == NULL)
+
+    if (!content || !doc)
         goto end;
 
-    int all = buf->document.allLine;
-    if (all == 0 && lastLine(&buf->document))
-        all = lastLine(&buf->document)->linenumber;
+    int all = doc->allLine;
+    if (all == 0 && lastLine(doc))
+        all = lastLine(doc)->linenumber;
     Strcat_charp(tmp, "<form method=internal action=charset>");
 
-    const char* p = url_decode2(parsedURL2Str(&buf->content.url)->ptr, 0);
+    const char* p = url_decode2(parsedURL2Str(&doc->url)->ptr, 0);
     Strcat_m_charp(tmp, "<table cellpadding=0>",
         "<tr valign=top><td nowrap>Title<td>",
-        html_quote(buf->document.title),
+        html_quote(doc->title),
         "<tr valign=top><td nowrap>Current URL<td>",
         html_quote(p),
         "<tr valign=top><td nowrap>Document Type<td>",
-        contentTypeStr(buf->content.cc.content_type),
+        contentTypeStr(content->cc.content_type),
         "<tr valign=top><td nowrap>Last Modified<td>",
-        html_quote(last_modified(buf)), NULL);
+        html_quote(last_modified(content)), NULL);
 
-    if (buf->document.charset != InnerCharset) {
+    if (doc->charset != InnerCharset) {
         wc_ces_list* list = wc_get_ces_list();
         Strcat_charp(tmp,
             "<tr><td nowrap>Document Charset<td><select name=charset>");
@@ -102,8 +106,8 @@ page_info_panel(struct UI ui, struct Buffer* buf)
             char charset[16];
             sprintf(charset, "%d", (unsigned int)list->id);
             Strcat_m_charp(tmp, "<option value=", charset,
-                (buf->document.charset == list->id) ? " selected>"
-                                                    : ">",
+                (doc->charset == list->id) ? " selected>"
+                                           : ">",
                 list->desc, NULL);
         }
         Strcat_charp(tmp, "</select>");
@@ -116,61 +120,60 @@ page_info_panel(struct UI ui, struct Buffer* buf)
         // Sprintf("%lu", (unsigned long)buf->trbyte)->ptr,
         NULL);
 
-    struct Anchor* a = retrieveAnchor(ui.current_buffer->document.href, getBufferPosition(ui));
+    struct Anchor* a = retrieveAnchor(doc->href, bp);
     if (a != NULL) {
-        struct Url pu = parseUrl(a->url, makeBaseUrl(&buf->document));
+        struct Url pu = parseUrl(a->url, makeBaseUrl(doc));
         p = parsedURL2Str(&pu)->ptr;
         const char* q = html_quote(p);
         if (DecodeURL)
-            p = html_quote(url_decode2(p, buf ? buf->document.charset : 0));
+            p = html_quote(url_decode2(p, doc ? doc->charset : 0));
         else
             p = q;
         Strcat_m_charp(tmp,
             "<tr valign=top><td nowrap>URL of current struct Anchor<td><a href=\"",
             q, "\">", p, "</a>", NULL);
     }
-    a = retrieveAnchor(ui.current_buffer->document.img, getBufferPosition(ui));
+    a = retrieveAnchor(doc->img, bp);
     if (a != NULL) {
-        struct Url pu = parseUrl(a->url, makeBaseUrl(&buf->document));
+        struct Url pu = parseUrl(a->url, makeBaseUrl(doc));
         p = parsedURL2Str(&pu)->ptr;
         const char* q = html_quote(p);
         if (DecodeURL)
-            p = html_quote(url_decode2(p, buf ? buf->document.charset : 0));
+            p = html_quote(url_decode2(p, doc ? doc->charset : 0));
         else
             p = q;
         Strcat_m_charp(tmp,
             "<tr valign=top><td nowrap>URL of current image<td><a href=\"",
             q, "\">", p, "</a>", NULL);
     }
-    a = retrieveAnchor(ui.current_buffer->document.formitem, getBufferPosition(ui));
+    a = retrieveAnchor(doc->formitem, bp);
     if (a != NULL) {
         struct FormItem* fi = (struct FormItem*)a->url;
         p = form2str(fi);
-        p = html_quote(url_decode2(p, buf ? buf->document.charset : 0));
+        p = html_quote(url_decode2(p, doc ? doc->charset : 0));
         Strcat_m_charp(tmp,
             "<tr valign=top><td nowrap>Method/type of current form&nbsp;<td>",
             p, NULL);
         if (fi->parent->method == FORM_METHOD_INTERNAL
             && !Strcmp_charp(fi->parent->action, "map"))
-            append_map_info(&buf->document, tmp, fi->parent->item);
+            append_map_info(doc, tmp, fi->parent->item);
     }
     Strcat_charp(tmp, "</table>\n");
     Strcat_charp(tmp, "</form>");
 
-    append_link_info(&buf->document, tmp, buf->document.linklist);
+    append_link_info(doc, tmp, doc->linklist);
 
-    if (buf->content.document_header) {
+    if (content->document_header) {
         Strcat_charp(tmp, "<hr width=50%><h1>Header information</h1><pre>\n");
-        TextListItem* ti;
-        for (ti = buf->content.document_header->first; ti != NULL; ti = ti->next)
+        for (TextListItem* ti = content->document_header->first; ti != NULL; ti = ti->next)
             Strcat_m_charp(tmp, "<pre_int>", html_quote(ti->ptr),
                 "</pre_int>\n", NULL);
         Strcat_charp(tmp, "</pre>\n");
     }
 
-    if (buf->content.ssl_certificate)
+    if (content->ssl_certificate)
         Strcat_m_charp(tmp, "<h1>SSL certificate</h1><pre>\n",
-            html_quote(buf->content.ssl_certificate), "</pre>\n", NULL);
+            html_quote(content->ssl_certificate), "</pre>\n", NULL);
 end:
     Strcat_charp(tmp, "</body></html>");
     return (struct Content) {

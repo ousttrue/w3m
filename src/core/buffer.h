@@ -52,7 +52,6 @@ void cursorXY(struct Buffer* buf, int x, int y);
 void restorePosition(struct Buffer* buf, struct Buffer* orig);
 void saveBuffer(struct Buffer* buf, FILE* f, int cont);
 int columnSkip(struct Buffer* buf, int offset);
-char* last_modified(struct Buffer* buf);
 struct Content cookie_list_panel(struct UI ui);
 void reseq_anchor(struct Buffer* buf);
 

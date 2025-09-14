@@ -834,7 +834,10 @@ DEFUN(msgs, MSGS, "Display error messages")
 /* page info */
 DEFUN(pginfo, INFO, "Display information about the current document")
 {
-    struct Content c = page_info_panel(ui, ui.current_buffer);
+    struct Content c = page_info_panel(
+        &ui.current_buffer->content,
+        &ui.current_buffer->document,
+        getBufferPosition(ui));
     pushContent(ui, c);
 }
 

@@ -10,6 +10,7 @@
 #include "myctype.h"
 #include "auth.h"
 #include "quote.h"
+#include <strings.h>
 
 char* index_file = 0;
 char LocalhostOnly = false;
@@ -205,4 +206,23 @@ loadGeneralFile(const char* path, struct Url* current, struct Form* post, const 
     default:
         return (struct Content) {};
     }
+}
+
+/* get last modified time */
+const char* last_modified(struct Content* content)
+{
+    if (content->document_header) {
+        for (TextListItem* ti = content->document_header->first; ti; ti = ti->next) {
+            if (strncasecmp(ti->ptr, "Last-modified: ", 15) == 0) {
+                return ti->ptr + 15;
+            }
+        }
+        return "unknown";
+    } else if (content->url.scheme == SCM_LOCAL) {
+        struct stat st;
+        if (stat(content->url.file, &st) < 0)
+            return "unknown";
+        return ctime(&st.st_mtime);
+    }
+    return "unknown";
 }

@@ -1,10 +1,10 @@
 #pragma once
 #include "geometry.h"
-#include "Content.h"
 
-struct Buffer;
+struct Content;
+struct Document;
 
 /*
  * information of current page and link
  */
-struct Content page_info_panel(struct UI ui, struct Buffer* buf);
+struct Content page_info_panel(struct Content *content, struct Document* doc, struct BufferPoint bp);
