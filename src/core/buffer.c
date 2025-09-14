@@ -487,7 +487,6 @@ void reshapeBuffer(struct UI ui, struct Buffer* buf, int cols)
             buf->currentColumn = 0;
         // else
         //     buf->currentColumn = sbuf.currentColumn;
-        arrangeCursor(buf);
     }
     if (buf->check_url)
         chkURLBuffer(buf);
@@ -624,88 +623,61 @@ int readBufferCache(struct Buffer* buf)
     return 0;
 }
 
-/*
- * Arrange line,column and cursor position according to current line and
- * current position.
- */
-void arrangeCursor(struct Buffer* buf)
-{
-    int col, col2, pos;
-    int delta = 1;
-    if (buf == 0 || currentLine(&buf->document) == 0)
-        return;
-    /* Arrange line */
-    if (currentLine(&buf->document)->linenumber - topLine(&buf->document)->linenumber >= getScreen()->ROWS
-        || currentLine(&buf->document)->linenumber < topLine(&buf->document)->linenumber) {
-        /*
-         * topLine(&buf->document) = currentLine(&buf->document);
-         */
-        buf->document.topLineIndex = buf->document.currentLineIndex;
-    }
-    /* Arrange column */
-    while (buf->pos < 0 && currentLine(&buf->document)->prev && currentLine(&buf->document)->bpos) {
-        pos = buf->pos + currentLine(&buf->document)->prev->l.len;
-        cursorUp(1);
-        buf->pos = pos;
-    }
-    while (buf->pos >= currentLine(&buf->document)->l.len && currentLine(&buf->document)->next && currentLine(&buf->document)->next->bpos) {
-        pos = buf->pos - currentLine(&buf->document)->l.len;
-        cursorDown(1);
-        buf->pos = pos;
-    }
-    if (currentLine(&buf->document)->l.len == 0 || buf->pos < 0)
-        buf->pos = 0;
-    else if (buf->pos >= currentLine(&buf->document)->l.len)
-        buf->pos = currentLine(&buf->document)->l.len - 1;
-    while (buf->pos > 0 && currentLine(&buf->document)->l.propBuf[buf->pos] & PC_WCHAR2)
-        buf->pos--;
-    col = COLPOS(&currentLine(&buf->document)->l, buf->pos);
-    while (buf->pos + delta < currentLine(&buf->document)->l.len && currentLine(&buf->document)->l.propBuf[buf->pos + delta] & PC_WCHAR2)
-        delta++;
-    col2 = COLPOS(&currentLine(&buf->document)->l, buf->pos + delta);
-    if (col < buf->currentColumn || col2 > getScreen()->COLS + buf->currentColumn) {
-        buf->currentColumn = 0;
-        if (col2 > getScreen()->COLS)
-            columnSkip(buf, col);
-    }
-    /* Arrange cursor */
-    // buf->cursorY = currentLine(&buf->document)->linenumber - topLine(&buf->document)->linenumber;
-    buf->visualpos = currentLine(&buf->document)->bwidth + COLPOS(&currentLine(&buf->document)->l, buf->pos) - buf->currentColumn;
-    // buf->cursorX = buf->visualpos - currentLine(&buf->document)->bwidth;
-#ifdef DISPLAY_DEBUG
-    fprintf(stderr,
-        "arrangeCursor: column=%d, cursorX=%d, visualpos=%d, pos=%d, len=%d\n",
-        buf->currentColumn, buf->cursorX, buf->visualpos, buf->pos,
-        currentLine(&buf->document)->len);
-#endif
-}
-
-void arrangeLine(struct Buffer* buf)
-{
-    int i, cpos;
-
-    if (buf->document.firstLine == 0)
-        return;
-    // buf->cursorY = currentLine(&buf->document)->linenumber - topLine(&buf->document)->linenumber;
-    i = columnPos(&currentLine(&buf->document)->l, buf->currentColumn + buf->visualpos - currentLine(&buf->document)->bwidth);
-    cpos = COLPOS(&currentLine(&buf->document)->l, i) - buf->currentColumn;
-    if (cpos >= 0) {
-        // buf->cursorX = cpos;
-        buf->pos = i;
-    } else if (currentLine(&buf->document)->l.len > i) {
-        // buf->cursorX = 0;
-        buf->pos = i + 1;
-    } else {
-        // buf->cursorX = 0;
-        buf->pos = 0;
-    }
-#ifdef DISPLAY_DEBUG
-    fprintf(stderr,
-        "arrangeLine: column=%d, cursorX=%d, visualpos=%d, pos=%d, len=%d\n",
-        buf->currentColumn, buf->cursorX, buf->visualpos, buf->pos,
-        currentLine(&buf->document)->len);
-#endif
-}
+// /*
+//  * Arrange line,column and cursor position according to current line and
+//  * current position.
+//  */
+// void arrangeCursor(struct Buffer* buf)
+// {
+//     int col, col2, pos;
+//     int delta = 1;
+//     if (buf == 0 || currentLine(&buf->document) == 0)
+//         return;
+//     /* Arrange line */
+//     if (currentLine(&buf->document)->linenumber - topLine(&buf->document)->linenumber >= getScreen()->ROWS
+//         || currentLine(&buf->document)->linenumber < topLine(&buf->document)->linenumber) {
+//         /*
+//          * topLine(&buf->document) = currentLine(&buf->document);
+//          */
+//         buf->document.topLineIndex = buf->document.currentLineIndex;
+//     }
+//     /* Arrange column */
+//     while (buf->pos < 0 && currentLine(&buf->document)->prev && currentLine(&buf->document)->bpos) {
+//         pos = buf->pos + currentLine(&buf->document)->prev->l.len;
+//         cursorUp(1);
+//         buf->pos = pos;
+//     }
+//     while (buf->pos >= currentLine(&buf->document)->l.len && currentLine(&buf->document)->next && currentLine(&buf->document)->next->bpos) {
+//         pos = buf->pos - currentLine(&buf->document)->l.len;
+//         cursorDown(1);
+//         buf->pos = pos;
+//     }
+//     if (currentLine(&buf->document)->l.len == 0 || buf->pos < 0)
+//         buf->pos = 0;
+//     else if (buf->pos >= currentLine(&buf->document)->l.len)
+//         buf->pos = currentLine(&buf->document)->l.len - 1;
+//     while (buf->pos > 0 && currentLine(&buf->document)->l.propBuf[buf->pos] & PC_WCHAR2)
+//         buf->pos--;
+//     col = COLPOS(&currentLine(&buf->document)->l, buf->pos);
+//     while (buf->pos + delta < currentLine(&buf->document)->l.len && currentLine(&buf->document)->l.propBuf[buf->pos + delta] & PC_WCHAR2)
+//         delta++;
+//     col2 = COLPOS(&currentLine(&buf->document)->l, buf->pos + delta);
+//     if (col < buf->currentColumn || col2 > getScreen()->COLS + buf->currentColumn) {
+//         buf->currentColumn = 0;
+//         if (col2 > getScreen()->COLS)
+//             columnSkip(buf, col);
+//     }
+//     /* Arrange cursor */
+//     // buf->cursorY = currentLine(&buf->document)->linenumber - topLine(&buf->document)->linenumber;
+//     buf->visualpos = currentLine(&buf->document)->bwidth + COLPOS(&currentLine(&buf->document)->l, buf->pos) - buf->currentColumn;
+//     // buf->cursorX = buf->visualpos - currentLine(&buf->document)->bwidth;
+// #ifdef DISPLAY_DEBUG
+//     fprintf(stderr,
+//         "arrangeCursor: column=%d, cursorX=%d, visualpos=%d, pos=%d, len=%d\n",
+//         buf->currentColumn, buf->cursorX, buf->visualpos, buf->pos,
+//         currentLine(&buf->document)->len);
+// #endif
+// }
 
 void cursorXY(struct Buffer* buf, int x, int y)
 {
@@ -740,7 +712,6 @@ void restorePosition(struct Buffer* buf, struct Buffer* orig)
     if (currentLine(&buf->document) && currentLine(&orig->document))
         buf->pos += currentLine(&orig->document)->bpos - currentLine(&buf->document)->bpos;
     buf->currentColumn = orig->currentColumn;
-    arrangeCursor(buf);
 }
 
 /*

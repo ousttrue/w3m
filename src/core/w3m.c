@@ -1033,7 +1033,6 @@ escKeyProc(int c, int esc, unsigned char* map)
 DEFUN(rdrwSc, REDRAW, "Draw the screen anew")
 {
     vt_clear(getScreen());
-    arrangeCursor(ui.current_buffer);
 }
 
 /* Search regular expression forward */
@@ -1089,7 +1088,6 @@ shiftvisualpos(struct Buffer* buf, int shift)
         buf->visualpos = l->bwidth + getScreen()->COLS - 1;
     else if (buf->visualpos - l->bwidth < 0)
         buf->visualpos = l->bwidth;
-    arrangeLine(buf);
     if (buf->visualpos - l->bwidth == -shift && getUI().viewport_cursor.x == 0)
         buf->visualpos = l->bwidth;
 }
@@ -1361,7 +1359,6 @@ DEFUN(movLW, PREV_WORD, "Move to the previous word")
         }
     }
 end:
-    arrangeCursor(ui.current_buffer);
 }
 
 static int
@@ -1416,7 +1413,6 @@ DEFUN(movRW, NEXT_WORD, "Move to the next word")
         }
     }
 end:
-    arrangeCursor(ui.current_buffer);
 }
 
 static void
@@ -1541,7 +1537,6 @@ void _goLine(struct UI ui, const char* l)
     }
     // else
     //     gotoRealLine(ui.current_buffer, atoi(l));
-    arrangeCursor(ui.current_buffer);
 }
 
 DEFUN(goLine, GOTO_LINE, "Go to the specified line")
@@ -1569,7 +1564,6 @@ DEFUN(linend, LINE_END, "Go to the end of the line")
         && currentLine(&ui.current_buffer->document)->next->bpos)
         cursorDown(1);
     ui.current_buffer->pos = currentLine(&ui.current_buffer->document)->l.len - 1;
-    arrangeCursor(ui.current_buffer);
 }
 
 // static int
@@ -1662,7 +1656,6 @@ DEFUN(nextMk, NEXT_MARK, "Go to the next mark")
             if (l->l.propBuf[i] & PE_MARK) {
                 ui.current_buffer->document.currentLineIndex = l->linenumber;
                 ui.current_buffer->pos = i;
-                arrangeCursor(ui.current_buffer);
 
                 return;
             }
@@ -1693,7 +1686,6 @@ DEFUN(prevMk, PREV_MARK, "Go to the previous mark")
             if (l->l.propBuf[i] & PE_MARK) {
                 ui.current_buffer->document.currentLineIndex = l->linenumber;
                 ui.current_buffer->pos = i;
-                arrangeCursor(ui.current_buffer);
 
                 return;
             }
@@ -1766,7 +1758,6 @@ gotoLabel(struct UI ui, const char* label)
         ui.current_buffer->document.topLineIndex = ui.current_buffer->document.currentLineIndex
             - topLine(&ui.current_buffer->document)->linenumber;
     ui.current_buffer->pos = al->start.pos;
-    arrangeCursor(ui.current_buffer);
 
     return;
 }
@@ -1885,7 +1876,6 @@ DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink")
 
     gotoLine(&ui.current_buffer->document, po->line);
     ui.current_buffer->pos = po->pos;
-    arrangeCursor(ui.current_buffer);
 }
 
 /* go to the last anchor */
@@ -1914,7 +1904,6 @@ DEFUN(lastA, LINK_END, "Move to the last hyperlink")
 
     gotoLine(&ui.current_buffer->document, po->line);
     ui.current_buffer->pos = po->pos;
-    arrangeCursor(ui.current_buffer);
 }
 
 /* go to the nth anchor */
@@ -1940,7 +1929,6 @@ DEFUN(nthA, LINK_N, "Go to the nth link")
 
     gotoLine(&ui.current_buffer->document, po->line);
     ui.current_buffer->pos = po->pos;
-    arrangeCursor(ui.current_buffer);
 }
 
 /* go to the next anchor */
@@ -2045,7 +2033,6 @@ _end:
     po = &hl->marks[an->hseq];
     gotoLine(&ui.current_buffer->document, po->line);
     ui.current_buffer->pos = po->pos;
-    arrangeCursor(ui.current_buffer);
 }
 
 /* go to the previous anchor */
@@ -2126,7 +2113,6 @@ _end:
     po = hl->marks + an->hseq;
     gotoLine(&ui.current_buffer->document, po->line);
     ui.current_buffer->pos = po->pos;
-    arrangeCursor(ui.current_buffer);
 }
 
 /* go to the next left/right anchor */
@@ -2182,7 +2168,6 @@ nextX(struct UI ui, int d, int dy)
         return;
     gotoLine(&ui.current_buffer->document, y);
     ui.current_buffer->pos = pan->start.pos;
-    arrangeCursor(ui.current_buffer);
 }
 
 /* go to the next downward/upward anchor */
@@ -2228,7 +2213,6 @@ nextY(struct UI ui, int d)
     if (pan == NULL)
         return;
     gotoLine(&ui.current_buffer->document, pan->start.line);
-    arrangeLine(ui.current_buffer);
 }
 
 /* go to the next left anchor */
@@ -2528,7 +2512,6 @@ anchorMn(struct UI ui, AnchorMenuFunc menu_func, int go)
     struct BufferPoint* po = &ui.current_buffer->document.hmarklist->marks[a->hseq];
     gotoLine(&ui.current_buffer->document, po->line);
     ui.current_buffer->pos = po->pos;
-    arrangeCursor(ui.current_buffer);
 
     if (go)
         followAnchor(ui, false);
@@ -3735,7 +3718,6 @@ DEFUN(cursorTop, CURSOR_TOP, "Move cursor to the top of the screen")
     if (ui.current_buffer->document.firstLine == NULL)
         return;
     ui.current_buffer->document.currentLineIndex = 0;
-    arrangeLine(ui.current_buffer);
 }
 
 DEFUN(cursorMiddle, CURSOR_MIDDLE, "Move cursor to the middle of the screen")
@@ -3744,7 +3726,6 @@ DEFUN(cursorMiddle, CURSOR_MIDDLE, "Move cursor to the middle of the screen")
         return;
     int offsety = (getScreen()->ROWS - 1) / 2;
     ui.current_buffer->document.currentLineIndex += offsety;
-    arrangeLine(ui.current_buffer);
 }
 
 DEFUN(cursorBottom, CURSOR_BOTTOM, "Move cursor to the bottom of the screen")
@@ -3753,7 +3734,6 @@ DEFUN(cursorBottom, CURSOR_BOTTOM, "Move cursor to the bottom of the screen")
         return;
     int offsety = getScreen()->ROWS - 1;
     ui.current_buffer->document.currentLineIndex += offsety;
-    arrangeLine(ui.current_buffer);
 }
 
 Str myEditor(const char* cmd, const char* file, int line)

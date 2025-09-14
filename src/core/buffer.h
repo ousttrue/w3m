@@ -63,8 +63,6 @@ struct Buffer* prevBuffer(struct Buffer* first, struct Buffer* buf);
 int writeBufferCache(struct Buffer* buf);
 int readBufferCache(struct Buffer* buf);
 
-void arrangeCursor(struct Buffer* buf);
-void arrangeLine(struct Buffer* buf);
 void cursorXY(struct Buffer* buf, int x, int y);
 void restorePosition(struct Buffer* buf, struct Buffer* orig);
 void saveBuffer(struct Buffer* buf, FILE* f, int cont);

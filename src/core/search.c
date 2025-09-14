@@ -78,7 +78,6 @@ enum SearchResultFlags forwardSearch(struct UI ui, const char* str)
         ui.current_buffer->pos = pos;
         if (l != currentLine(&ui.current_buffer->document))
             gotoLine(&ui.current_buffer->document, l->linenumber);
-        arrangeCursor(ui.current_buffer);
         set_mark(&l->l, pos, pos + last - first);
         return SR_FOUND;
     }
@@ -106,7 +105,6 @@ enum SearchResultFlags forwardSearch(struct UI ui, const char* str)
             ui.current_buffer->pos = pos;
             ui.current_buffer->document.currentLineIndex = l->linenumber;
             gotoLine(&ui.current_buffer->document, l->linenumber);
-            arrangeCursor(ui.current_buffer);
             set_mark(&l->l, pos, pos + last - first);
             return SR_FOUND | (wrapped ? SR_WRAPPED : 0);
         }
@@ -169,7 +167,6 @@ enum SearchResultFlags backwardSearch(struct UI ui, const char* str)
             ui.current_buffer->pos = pos;
             if (l != currentLine(&ui.current_buffer->document))
                 gotoLine(&ui.current_buffer->document, l->linenumber);
-            arrangeCursor(ui.current_buffer);
             set_mark(&l->l, pos, pos + found_last - found);
             return SR_FOUND;
         }
@@ -208,7 +205,6 @@ enum SearchResultFlags backwardSearch(struct UI ui, const char* str)
             }
             ui.current_buffer->pos = pos;
             gotoLine(&ui.current_buffer->document, l->linenumber);
-            arrangeCursor(ui.current_buffer);
             set_mark(&l->l, pos, pos + found_last - found);
             return SR_FOUND | (wrapped ? SR_WRAPPED : 0);
         }
@@ -327,7 +323,6 @@ dispincsrch(struct UI ui, int ch, Str buf, Lineprop* prop)
                 ui.current_buffer->pos -= 1;
                 SAVE_BUFPOSITION(&sbuf);
             }
-            arrangeCursor(ui.current_buffer);
 
             clear_mark(&currentLine(&ui.current_buffer->document)->l);
             return -1;
@@ -335,9 +330,7 @@ dispincsrch(struct UI ui, int ch, Str buf, Lineprop* prop)
             return 020; /* _prev completion for C-s C-s */
     } else if (*str) {
         RESTORE_BUFPOSITION(&sbuf);
-        arrangeCursor(ui.current_buffer);
         srchcore(ui, str, searchRoutine);
-        arrangeCursor(ui.current_buffer);
     }
 
     clear_mark(&currentLine(&ui.current_buffer->document)->l);

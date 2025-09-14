@@ -393,7 +393,6 @@ void ui_cursor_set_x(int x)
     while (currentLine(&Currentbuf->document)->prev && currentLine(&Currentbuf->document)->bpos)
         cursorUp(1);
     Currentbuf->pos = 0;
-    arrangeCursor(Currentbuf);
 }
 
 bool updateCursor(struct Buffer* buf)
