@@ -14,6 +14,8 @@
 #include "platform.h"
 #include <stdlib.h>
 #include <string.h>
+#include <wtf.h>
+#include <ucs.h>
 
 #define HELP_CGI "w3mhelp"
 
@@ -276,3 +278,56 @@ DEFUN(movR1, MOVE_RIGHT1, "Cursor right. With edge touched, slide")
     cursorRight(1);
 }
 
+static int
+next_nonnull_line(struct UI ui, struct LineList* line)
+{
+    struct LineList* l;
+    for (l = line; l != NULL && l->l.len == 0; l = l->next)
+        ;
+
+    if (l == NULL || l->l.len == 0)
+        return -1;
+
+    ui.current_buffer->document.currentLineIndex = l->linenumber;
+    if (l != line)
+        ui.current_buffer->pos = 0;
+    return 0;
+}
+
+static wc_uint32
+getChar(const char* p)
+{
+    return wc_any_to_ucs(wtf_parse1((wc_uchar**)&p));
+}
+
+DEFUN(movRW, NEXT_WORD, "Move to the next word")
+{
+    int n = ui.searchkey_num;
+    for (int i = 0; i < n; i++) {
+        struct LineList* pline = currentLine(&ui.current_buffer->document);
+        int ppos = ui.current_buffer->pos;
+
+        if (next_nonnull_line(ui, currentLine(&ui.current_buffer->document)) < 0)
+            return;
+
+        struct LineList* l = currentLine(&ui.current_buffer->document);
+        const char* lb = l->l.lineBuf;
+        while (ui.current_buffer->pos < l->l.len && wc_is_ucs_alnum(getChar(&lb[ui.current_buffer->pos])))
+            ui.current_buffer->pos = nextChar(ui.current_buffer->pos, &l->l);
+
+        while (1) {
+            while (ui.current_buffer->pos < l->l.len && !wc_is_ucs_alnum(getChar(&lb[ui.current_buffer->pos])))
+                ui.current_buffer->pos = nextChar(ui.current_buffer->pos, &l->l);
+            if (ui.current_buffer->pos < l->l.len)
+                break;
+            if (next_nonnull_line(ui, currentLine(&ui.current_buffer->document)->next) < 0) {
+                ui.current_buffer->document.currentLineIndex = pline->linenumber;
+                ui.current_buffer->pos = ppos;
+                return;
+            }
+            ui.current_buffer->pos = 0;
+            l = currentLine(&ui.current_buffer->document);
+            lb = l->l.lineBuf;
+        }
+    }
+}

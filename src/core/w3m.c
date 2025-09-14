@@ -1033,14 +1033,6 @@ escKeyProc(int c, int esc, unsigned char* map)
  * 1999 09:29:56 +0900
  */
 
-static int nextChar(int s, struct Line* l)
-{
-    do {
-        (s)++;
-    } while ((s) < (l)->len && (l)->propBuf[s] & PC_WCHAR2);
-    return s;
-}
-
 static int prevChar(int s, struct Line* l)
 {
     do {
@@ -1072,9 +1064,6 @@ prev_nonnull_line(struct UI ui, struct LineList* line)
 
 DEFUN(movLW, PREV_WORD, "Move to the previous word")
 {
-    if (ui.current_buffer->document.firstLine == NULL)
-        return;
-
     int n = ui.searchkey_num;
     for (int i = 0; i < n; i++) {
         struct LineList* pline = currentLine(&ui.current_buffer->document);
@@ -1111,55 +1100,6 @@ DEFUN(movLW, PREV_WORD, "Move to the previous word")
                     break;
                 ui.current_buffer->pos = tmp;
             }
-        }
-    }
-end:
-}
-
-static int
-next_nonnull_line(struct UI ui, struct LineList* line)
-{
-    struct LineList* l;
-    for (l = line; l != NULL && l->l.len == 0; l = l->next)
-        ;
-
-    if (l == NULL || l->l.len == 0)
-        return -1;
-
-    ui.current_buffer->document.currentLineIndex = l->linenumber;
-    if (l != line)
-        ui.current_buffer->pos = 0;
-    return 0;
-}
-
-DEFUN(movRW, NEXT_WORD, "Move to the next word")
-{
-    int n = ui.searchkey_num;
-    for (int i = 0; i < n; i++) {
-        struct LineList* pline = currentLine(&ui.current_buffer->document);
-        int ppos = ui.current_buffer->pos;
-
-        if (next_nonnull_line(ui, currentLine(&ui.current_buffer->document)) < 0)
-            goto end;
-
-        struct LineList* l = currentLine(&ui.current_buffer->document);
-        const char* lb = l->l.lineBuf;
-        while (ui.current_buffer->pos < l->l.len && wc_is_ucs_alnum(getChar(&lb[ui.current_buffer->pos])))
-            ui.current_buffer->pos = nextChar(ui.current_buffer->pos, &l->l);
-
-        while (1) {
-            while (ui.current_buffer->pos < l->l.len && !wc_is_ucs_alnum(getChar(&lb[ui.current_buffer->pos])))
-                ui.current_buffer->pos = nextChar(ui.current_buffer->pos, &l->l);
-            if (ui.current_buffer->pos < l->l.len)
-                break;
-            if (next_nonnull_line(ui, currentLine(&ui.current_buffer->document)->next) < 0) {
-                ui.current_buffer->document.currentLineIndex = pline->linenumber;
-                ui.current_buffer->pos = ppos;
-                goto end;
-            }
-            ui.current_buffer->pos = 0;
-            l = currentLine(&ui.current_buffer->document);
-            lb = l->l.lineBuf;
         }
     }
 end:

@@ -390,3 +390,12 @@ Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor)
         *ocolor = check_color ? color_buffer : NULL;
     return s;
 }
+
+int nextChar(int s, struct Line* l)
+{
+    do {
+        (s)++;
+    } while ((s) < (l)->len && (l)->propBuf[s] & PC_WCHAR2);
+    return s;
+}
+
