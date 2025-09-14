@@ -2,7 +2,6 @@
 #include "convertline.h"
 #include "mimehead.h"
 #include "myctype.h"
-#include "line.h"
 #include <stdlib.h>
 #include <wc.h>
 
@@ -49,8 +48,9 @@ struct HttpResponse readHttpResponse(struct Url* pu, union input_stream* stream)
             for (char* p = lineBuf2->ptr; *p; p = q) {
                 for (q = p; *q && *q != '\r' && *q != '\n'; q++)
                     ;
-                Lineprop* propBuffer;
-                lineBuf2 = checkType(Strnew_charp_n(p, q - p), &propBuffer, NULL);
+                // Lineprop* propBuffer;
+                // lineBuf2 = checkType(Strnew_charp_n(p, q - p), &propBuffer, NULL);
+                lineBuf2 = Strnew_charp_n(p, q - p);
                 Strcat(tmp, lineBuf2);
                 for (; *q && (*q == '\r' || *q == '\n'); q++)
                     ;

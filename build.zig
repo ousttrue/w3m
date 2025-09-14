@@ -50,14 +50,12 @@ const content_public_headers = [_][]const u8{
     "CharSlice.h",
     "Content.h",
     "HttpResponse.h",
-    "line.h",
     "time_util.h",
     "HttpClient.h",
 };
 const content_srcs = [_][]const u8{
     "HttpClient.c",
     "time_util.c",
-    "line.c",
     "HttpResponse.c",
     "Content.c",
     "CharSlice.c",
@@ -105,6 +103,7 @@ const system_libs = [_][]const u8{
 };
 const w3m_srcs = [_][]const u8{
     "defun.c",
+    "line.c",
 
     "page_info.c",
     "follow_anchor.c",
