@@ -21,6 +21,7 @@ const public_headers = [_][]const u8{
     "hash.h",
     "entity.h",
     "str_util.h",
+    "geometry.h",
 };
 
 const srcs = [_][]const u8{

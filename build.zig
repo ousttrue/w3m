@@ -21,7 +21,6 @@ const output_srcs = [_][]const u8{
 // content
 //
 const content_public_headers = [_][]const u8{
-    "geometry.h",
     "growbuf.h",
     "runtime.h",
     "KeyValue.h",
@@ -88,8 +87,12 @@ const content_srcs = [_][]const u8{
 const document_public_headers = [_][]const u8{
     "token.h",
     "Line.h",
+    "Anchor.h",
+    "AnchorList.h",
 };
 const document_srcs = [_][]const u8{
+    "Anchor.c",
+    "AnchorList.c",
     "Line.c",
     "token.c",
 };
@@ -146,8 +149,6 @@ const w3m_srcs = [_][]const u8{
     "symbol.c",
     "history.c",
 
-    "Anchor.c",
-    "AnchorList.c",
     "tagtable.c",
 
     "version.c",
