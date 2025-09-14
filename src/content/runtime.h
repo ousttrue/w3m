@@ -16,6 +16,8 @@ extern const char* document_root;
 #define SYSTEM_CHARSET WC_CES_UTF_8
 extern wc_ces InnerCharset;
 extern wc_ces SystemCharset;
+#define Str_conv_to_system(x) wc_Str_conv_strict((x), InnerCharset, SystemCharset)
+
 extern bool DecodeURL;
 
 const char* expandPath(const char* name);

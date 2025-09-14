@@ -38,7 +38,6 @@
 int autoImage = (true);
 char MetaRefresh = (false);
 char DecodeCTE = (false);
-int label_topline = (false);
 int UseExternalDirBuffer = (true);
 const char* DirBufferCommand = ("file:///$LIB/dirlist" CGI_EXTENSION);
 const char* DefaultType = (NULL);

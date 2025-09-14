@@ -9,7 +9,6 @@
 extern int autoImage;
 extern char MetaRefresh;
 extern char DecodeCTE;
-extern int label_topline;
 extern int UseExternalDirBuffer;
 extern const char* DefaultType;
 extern int displayLinkNumber;
