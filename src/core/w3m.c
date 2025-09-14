@@ -1029,65 +1029,6 @@ escKeyProc(int c, int esc, unsigned char* map)
         w3mFuncList[(int)map[c]].func(getUI());
 }
 
-/* Move page forward */
-DEFUN(pgFore, NEXT_PAGE, "Scroll down one page")
-{
-    ui.current_buffer->document.topLineIndex += getScreen()->ROWS;
-}
-
-/* Move page backward */
-DEFUN(pgBack, PREV_PAGE, "Scroll up one page")
-{
-    // nscroll(searchKeyNum() * (getScreen()->ROWS - 1));
-}
-
-/* Move half page forward */
-DEFUN(hpgFore, NEXT_HALF_PAGE, "Scroll down half a page")
-{
-    // nscroll(-searchKeyNum() * (getScreen()->ROWS / 2 - 1));
-}
-
-/* Move half page backward */
-DEFUN(hpgBack, PREV_HALF_PAGE, "Scroll up half a page")
-{
-    // nscroll(-searchKeyNum() * (getScreen()->ROWS / 2 - 1));
-}
-
-/* 1 line up */
-DEFUN(lup1, UP, "Scroll the screen up one line")
-{
-    ui.current_buffer->document.topLineIndex++;
-}
-
-/* 1 line down */
-DEFUN(ldown1, DOWN, "Scroll the screen down one line")
-{
-    ui.current_buffer->document.topLineIndex--;
-}
-
-/* move cursor position to the center of screen */
-DEFUN(ctrCsrV, CENTER_V, "Center on cursor line")
-{
-    if (ui.current_buffer->document.firstLine == NULL)
-        return;
-    int offsety = getScreen()->ROWS / 2 - ui.viewport_cursor.y;
-    if (offsety != 0) {
-        ui.current_buffer->document.topLineIndex = ui.current_buffer->document.topLineIndex - offsety;
-        arrangeLine(ui.current_buffer);
-    }
-}
-
-DEFUN(ctrCsrH, CENTER_H, "Center on cursor column")
-{
-    if (ui.current_buffer->document.firstLine == NULL)
-        return;
-    int offsetx = ui.viewport_cursor.x - getScreen()->COLS / 2;
-    if (offsetx != 0) {
-        columnSkip(ui.current_buffer, offsetx);
-        arrangeCursor(ui.current_buffer);
-    }
-}
-
 /* Redraw screen */
 DEFUN(rdrwSc, REDRAW, "Draw the screen anew")
 {
