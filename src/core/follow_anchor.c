@@ -299,7 +299,7 @@ void _followForm(struct UI ui, bool submit, bool do_download)
     if (ui.current_buffer->document.firstLine == NULL)
         return;
 
-    struct Anchor* a = retrieveCurrentForm(ui);
+    struct Anchor* a = retrieveAnchor(ui.current_buffer->document.formitem, getBufferPosition(ui));
     if (a == NULL)
         return;
 

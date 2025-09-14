@@ -1,4 +1,5 @@
 #include "display.h"
+#include "form.h"
 #include "runtime.h"
 #include "AnchorList.h"
 #include "Anchor.h"
@@ -227,7 +228,7 @@ static void redrawNLine(struct UI ui, struct Buffer* buf, int n)
     int i;
     for (i = 0, l = topLine(&buf->document); i < ui.viewport.size.y && l; i++, l = l->next) {
         // if (i >= ui.viewport.size.y - n || i < -n)
-            redrawLine(ui, buf, l, i + ui.viewport.offset.y);
+        redrawLine(ui, buf, l, i + ui.viewport.offset.y);
         // if (l == NULL)
         //     break;
     }
@@ -249,7 +250,7 @@ static void redrawNLine(struct UI ui, struct Buffer* buf, int n)
 
 void bufToScreen(struct UI ui)
 {
-    struct Buffer *buf = ui.current_buffer;
+    struct Buffer* buf = ui.current_buffer;
     if (buf->document.cols == 0) {
         reshapeBuffer(ui, buf, ui.viewport.size.x);
     }
@@ -386,6 +387,19 @@ drawAnchorCursor0(struct UI ui, struct Buffer* buf,
     }
 }
 
+static struct Anchor*
+retrieveCurrentMap(struct UI ui)
+{
+    struct Anchor* a = retrieveAnchor(ui.current_buffer->document.formitem, getBufferPosition(ui));
+    if (!a || !a->url)
+        return NULL;
+
+    struct FormItem* fi = (struct FormItem*)a->url;
+    if (fi->parent->method == FORM_METHOD_INTERNAL && !Strcmp_charp(fi->parent->action, "map"))
+        return a;
+    return NULL;
+}
+
 static int currentAnchorHseq(struct UI ui)
 {
     struct Anchor* an = retrieveAnchor(ui.current_buffer->document.href, getBufferPosition(ui));
@@ -399,7 +413,7 @@ static int currentAnchorHseq(struct UI ui)
 
 void drawAnchorCursor(struct UI ui)
 {
-    struct Buffer*buf=ui.current_buffer;
+    struct Buffer* buf = ui.current_buffer;
     if (!buf->document.firstLine || !buf->document.hmarklist)
         return;
     if (!buf->document.href && !buf->document.formitem)

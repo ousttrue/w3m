@@ -145,7 +145,7 @@ page_info_panel(struct UI ui, struct Buffer* buf)
             "<tr valign=top><td nowrap>URL of current image<td><a href=\"",
             q, "\">", p, "</a>", NULL);
     }
-    a = retrieveCurrentForm(ui);
+    a = retrieveAnchor(ui.current_buffer->document.formitem, getBufferPosition(ui));
     if (a != NULL) {
         struct FormItem* fi = (struct FormItem*)a->url;
         p = form2str(fi);

@@ -764,7 +764,7 @@ nextX(struct UI ui, int d, int dy)
 
     struct Anchor* an = retrieveAnchor(ui.current_buffer->document.href, getBufferPosition(ui));
     if (an == NULL)
-        an = retrieveCurrentForm(ui);
+        an = retrieveAnchor(ui.current_buffer->document.formitem, getBufferPosition(ui));
 
     int y;
     struct Anchor* pan = getNextHorizontalAnchor(&ui.current_buffer->document, an, ui.searchkey_num, d, dy);
@@ -814,7 +814,7 @@ nextY(struct UI ui, int d)
 
     struct Anchor* an = retrieveAnchor(ui.current_buffer->document.href, getBufferPosition(ui));
     if (an == NULL)
-        an = retrieveCurrentForm(ui);
+        an = retrieveAnchor(ui.current_buffer->document.formitem, getBufferPosition(ui));
 
     x = ui.current_buffer->document.pos;
     y = currentLine(&ui.current_buffer->document)->linenumber + d;

@@ -281,6 +281,43 @@ static Str make_lastline_link(struct Buffer* buf, const char* title, const char*
     return s;
 }
 
+static struct MapArea*
+retrieveCurrentMapArea(struct UI ui)
+{
+    struct Anchor* a_img;
+    a_img = retrieveAnchor(ui.current_buffer->document.img, getBufferPosition(ui));
+    if (!(a_img && a_img->image && a_img->image->map))
+        return 0;
+
+    struct Anchor* a_form = retrieveAnchor(ui.current_buffer->document.formitem, getBufferPosition(ui));
+    if (!(a_form && a_form->url))
+        return 0;
+
+    struct FormItem* fi;
+    fi = (struct FormItem*)a_form->url;
+    if (!(fi && fi->parent && fi->parent->item))
+        return 0;
+    fi = fi->parent->item;
+
+    struct MapList* ml;
+    ml = searchMapList(&ui.current_buffer->document, fi->value ? fi->value->ptr : 0);
+    if (!ml)
+        return 0;
+
+    int n = searchMapArea(&ui.current_buffer->document, ml, a_img);
+    if (n < 0)
+        return 0;
+
+    ListItem* al = ml->area->first;
+    for (int i = 0; al != 0; i++, al = al->next) {
+        struct MapArea* a;
+        a = (struct MapArea*)al->ptr;
+        if (a && i == n)
+            return a;
+    }
+    return 0;
+}
+
 static Str make_lastline_message(struct UI ui)
 {
     Str s = NULL;
@@ -476,72 +513,4 @@ struct BufferPoint getBufferPosition(struct UI ui)
         .line = ui.viewport_cursor.y,
         .pos = pos,
     };
-}
-
-struct Anchor*
-retrieveCurrentAnchor(struct UI ui)
-{
-    return retrieveAnchor(ui.current_buffer->document.href, getBufferPosition(ui));
-}
-
-struct Anchor*
-retrieveCurrentImg(struct UI ui)
-{
-    return retrieveAnchor(ui.current_buffer->document.img, getBufferPosition(ui));
-}
-
-struct Anchor*
-retrieveCurrentForm(struct UI ui)
-{
-    return retrieveAnchor(ui.current_buffer->document.formitem, getBufferPosition(ui));
-}
-
-struct Anchor*
-retrieveCurrentMap(struct UI ui)
-{
-    struct Anchor* a = retrieveCurrentForm(ui);
-    if (!a || !a->url)
-        return NULL;
-
-    struct FormItem* fi = (struct FormItem*)a->url;
-    if (fi->parent->method == FORM_METHOD_INTERNAL && !Strcmp_charp(fi->parent->action, "map"))
-        return a;
-    return NULL;
-}
-
-struct MapArea*
-retrieveCurrentMapArea(struct UI ui)
-{
-    struct Anchor* a_img;
-    a_img = retrieveCurrentImg(ui);
-    if (!(a_img && a_img->image && a_img->image->map))
-        return 0;
-
-    struct Anchor* a_form = retrieveCurrentForm(ui);
-    if (!(a_form && a_form->url))
-        return 0;
-
-    struct FormItem* fi;
-    fi = (struct FormItem*)a_form->url;
-    if (!(fi && fi->parent && fi->parent->item))
-        return 0;
-    fi = fi->parent->item;
-
-    struct MapList* ml;
-    ml = searchMapList(&ui.current_buffer->document, fi->value ? fi->value->ptr : 0);
-    if (!ml)
-        return 0;
-
-    int n = searchMapArea(&ui.current_buffer->document, ml, a_img);
-    if (n < 0)
-        return 0;
-
-    ListItem* al = ml->area->first;
-    for (int i = 0; al != 0; i++, al = al->next) {
-        struct MapArea* a;
-        a = (struct MapArea*)al->ptr;
-        if (a && i == n)
-            return a;
-    }
-    return 0;
 }

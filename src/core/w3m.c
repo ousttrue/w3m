@@ -1153,7 +1153,7 @@ _peekURL(struct UI ui, int only_img)
     s = NULL;
     a = (only_img ? NULL : retrieveAnchor(ui.current_buffer->document.href, getBufferPosition(ui)));
     if (a == NULL) {
-        a = (only_img ? NULL : retrieveCurrentForm(ui));
+        a = (only_img ? NULL : retrieveAnchor(ui.current_buffer->document.formitem, getBufferPosition(ui)));
         if (a == NULL) {
             a = retrieveAnchor(ui.current_buffer->document.img, getBufferPosition(ui));
             if (a == NULL)
@@ -1622,7 +1622,7 @@ void set_buffer_environ(struct UI ui)
             set_environ("W3M_CURRENT_IMG", parsedURL2Str(&pu)->ptr);
         } else
             set_environ("W3M_CURRENT_IMG", "");
-        a = retrieveCurrentForm(ui);
+        a = retrieveAnchor(ui.current_buffer->document.formitem, getBufferPosition(ui));
         if (a)
             set_environ("W3M_CURRENT_FORM", form2str((struct FormItem*)a->url));
         else
