@@ -58,7 +58,6 @@ int readBufferCache(struct Buffer* buf);
 void cursorXY(struct Buffer* buf, int x, int y);
 void restorePosition(struct Buffer* buf, struct Buffer* orig);
 void saveBuffer(struct Buffer* buf, FILE* f, int cont);
-struct Url* baseURL(struct Buffer* buf);
 int columnSkip(struct Buffer* buf, int offset);
 char* last_modified(struct Buffer* buf);
 struct Content cookie_list_panel(struct UI ui);

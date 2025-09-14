@@ -247,7 +247,7 @@ static struct LineList* addNewline(struct LineList* prev, char* line, Lineprop* 
 typedef Str (*FeedFunc)();
 
 static struct Document
-HTMLlineproc2body(struct Url* base, wc_ces charset, int cols, FeedFunc feed)
+HTMLlineproc2body(struct Url url, wc_ces charset, int cols, FeedFunc feed)
 {
     static char* outc = NULL;
     static Lineprop* outp = NULL;
@@ -290,7 +290,9 @@ HTMLlineproc2body(struct Url* base, wc_ces charset, int cols, FeedFunc feed)
         .firstLine = 0,
         .allLine = 0,
         .cols = cols,
+        .url = url,
     };
+    struct Url *base = makeBaseUrl(&doc);
 
     effect = 0;
     ex_effect = 0;
@@ -650,11 +652,11 @@ HTMLlineproc2body(struct Url* base, wc_ces charset, int cols, FeedFunc feed)
                 case HTML_BASE:
                     if (parsedtag_get_value(tag, ATTR_HREF, &p)) {
                         p = url_quote(remove_space(p));
-                        if (!doc.baseURL)
-                            doc.baseURL = New(struct Url);
-                        *doc.baseURL = parseUrl(p, base);
+                        if (!doc.baseUrl)
+                            doc.baseUrl = New(struct Url);
+                        *doc.baseUrl = parseUrl(p, base);
 
-                        base = doc.baseURL;
+                        base = doc.baseUrl;
                     }
                     if (parsedtag_get_value(tag, ATTR_TARGET, &p))
                         doc.baseTarget = url_quote_conv(p, doc.charset);
@@ -872,7 +874,7 @@ static int loadHTML(struct html_feed_environ* htmlenv1,
 }
 
 // WC_CES_SHIFT_JIS /*WC_CES_US_ASCII*/
-static struct Document loadHtmlDocument(Str html, wc_ces content_charset, struct Url* base, bool internal)
+static struct Document loadHtmlDocument(struct Url url, Str html, wc_ces content_charset, bool internal)
 {
     // Str html = readAll(stream);
     struct UI ui = getUI();
@@ -889,7 +891,7 @@ static struct Document loadHtmlDocument(Str html, wc_ces content_charset, struct
     // static void HTMLlineproc2(struct Buffer* buf, TextLineList* tl)
     // {
     _tl_lp2 = htmlenv1.buf->first;
-    struct Document doc = HTMLlineproc2body(base, content_charset, ui.vt->COLS, textlist_feed);
+    struct Document doc = HTMLlineproc2body(url, content_charset, ui.vt->COLS, textlist_feed);
     if (htmlenv1.title)
         doc.title = htmlenv1.title;
     // }
@@ -1477,10 +1479,10 @@ _end:
     return doc;
 }
 
-struct Document loadContent(struct UI ui, struct Content* content, struct Url* base)
+struct Document loadContent(struct UI ui, struct Content* content)
 {
     if (content->cc.content_type == CONTENTTYPE_TEXT_HTML)
-        return loadHtmlDocument(content->page, content->cc.charset, base, false);
+        return loadHtmlDocument(content->url, content->page, content->cc.charset, false);
     else
         return loadTextDocument(content->page, content->cc.charset);
 }

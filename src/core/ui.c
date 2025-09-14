@@ -255,7 +255,7 @@ static Str make_lastline_link(struct Buffer* buf, const char* title, const char*
     }
     if (!url)
         return s;
-    pu = parseUrl(url, baseURL(buf));
+    pu = parseUrl(url, makeBaseUrl(&buf->document));
     u = parsedURL2Str(&pu);
     if (DecodeURL)
         u = Strnew_charp(url_decode2(u->ptr, buf ? buf->document.charset : 0));

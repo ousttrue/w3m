@@ -46,7 +46,7 @@ newBuffer()
     memset(n, 0, sizeof(struct Buffer));
     n->document.cols = 0;
     n->content.url.scheme = SCM_UNKNOWN;
-    n->document.baseURL = 0;
+    n->document.baseUrl = 0;
     n->document.baseTarget = 0;
     n->document.title = "";
     n->clone = New(int);
@@ -459,7 +459,7 @@ void reshapeBuffer(struct UI ui, struct Buffer* buf, int cols)
 
     wc_uint8 old_auto_detect = WcOption.auto_detect;
     WcOption.auto_detect = WC_OPT_DETECT_OFF;
-    buf->document = loadContent(ui, &buf->content, baseURL(buf));
+    buf->document = loadContent(ui, &buf->content);
     // ISclose(stream);
     WcOption.auto_detect = old_auto_detect;
 
@@ -732,22 +732,6 @@ _saveBuffer(struct Buffer* buf, FILE* f, int cont)
 void saveBuffer(struct Buffer* buf, FILE* f, int cont)
 {
     _saveBuffer(buf, f, cont);
-}
-
-struct Url*
-baseURL(struct Buffer* buf)
-{
-    // if (buf->bufferprop & BP_NO_URL) {
-    //     /* no URL is defined for the buffer */
-    //     return 0;
-    // }
-    if (buf->document.baseURL != 0) {
-        /* <BASE> tag is defined in the document */
-        return buf->document.baseURL;
-    } else if (IS_EMPTY_PARSED_URL(&buf->content.url))
-        return 0;
-    else
-        return &buf->content.url;
 }
 
 int columnSkip(struct Buffer* buf, int offset)
@@ -1096,7 +1080,7 @@ struct Buffer* makeBuffer(struct UI ui, struct Content* c)
 
     if (c->page) {
         struct Buffer* buf = newBuffer();
-        buf->document = loadContent(ui, c, baseURL(buf));
+        buf->document = loadContent(ui, c);
         if (buf) {
             buf->content = *c;
             Str tmp = tmpfname(TMPF_SRC, ".html");
@@ -1272,7 +1256,7 @@ void _nextA(struct UI ui, int visited)
                     an = retrieveAnchor(ui.current_buffer->document.formitem, *po);
                 hseq++;
                 if (visited == true && an) {
-                    url = parseUrl(an->url, baseURL(ui.current_buffer));
+                    url = parseUrl(an->url, makeBaseUrl(&ui.current_buffer->document));
                     if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
                         goto _end;
                     }
@@ -1291,7 +1275,7 @@ void _nextA(struct UI ui, int visited)
             x = an->start.pos;
             y = an->start.line;
             if (visited == true) {
-                url = parseUrl(an->url, baseURL(ui.current_buffer));
+                url = parseUrl(an->url, makeBaseUrl(&ui.current_buffer->document));
                 if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
                     goto _end;
                 }
@@ -1351,7 +1335,7 @@ void _prevA(struct UI ui, int visited)
                     an = retrieveAnchor(ui.current_buffer->document.formitem, *po);
                 hseq--;
                 if (visited == true && an) {
-                    url = parseUrl(an->url, baseURL(ui.current_buffer));
+                    url = parseUrl(an->url, makeBaseUrl(&ui.current_buffer->document));
                     if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
                         goto _end;
                     }
@@ -1370,7 +1354,7 @@ void _prevA(struct UI ui, int visited)
             x = an->start.pos;
             y = an->start.line;
             if (visited == true && an) {
-                url = parseUrl(an->url, baseURL(ui.current_buffer));
+                url = parseUrl(an->url, makeBaseUrl(&ui.current_buffer->document));
                 if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
                     goto _end;
                 }

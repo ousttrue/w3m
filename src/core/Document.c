@@ -3,9 +3,23 @@
 #include "AnchorList.h"
 #include "form.h"
 #include "image.h"
+#include "url.h"
 
 #define DOCUMENT_CHARSET WC_CES_UTF_8
 wc_ces DocumentCharset = (DOCUMENT_CHARSET);
+
+struct Url*
+makeBaseUrl(struct Document* doc)
+{
+    if (doc->baseUrl) {
+        /* <BASE> tag is defined in the document */
+        return doc->baseUrl;
+    }
+    if (IS_EMPTY_PARSED_URL(&doc->url)) {
+        return 0;
+    }
+    return &doc->url;
+}
 
 struct LineList* getLine(struct Document* doc, int i)
 {
@@ -236,4 +250,3 @@ struct Anchor* getNextHorizontalAnchor(struct Document* doc, struct Anchor* an, 
     }
     return pan;
 }
-

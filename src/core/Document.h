@@ -6,10 +6,17 @@
 extern wc_ces DocumentCharset;
 
 struct Document {
+    // copy of Content::url
+    struct Url url;
+
     wc_ces charset;
-    struct Url* baseURL;
-    const char* baseTarget;
     const char* title;
+
+    // <base href="https://www.example.com/" />
+    // <base target="_blank" />
+    // <base target="_top" href="https://example.com/" />
+    struct Url* baseUrl;
+    const char* baseTarget;
 
     struct LineList* firstLine;
     int allLine;
@@ -45,6 +52,7 @@ inline static void COPY_DOCUMENT_POSITION(struct Document* dst, struct Document*
 
 struct HtmlTagParsed;
 
+struct Url* makeBaseUrl(struct Document* doc);
 struct LineList* getLine(struct Document* doc, int i);
 struct LineList* lastLine(struct Document* doc);
 inline static struct LineList* currentLine(struct Document* doc)

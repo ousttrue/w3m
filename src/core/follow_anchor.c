@@ -148,7 +148,7 @@ loadLink(struct UI ui, const char* url, const char* target, const char* referer,
     // message(ui, MSG_INFO, Sprintf("loading %s", url)->ptr);
     // refresh(ttyWriter());
 
-    struct Url* base = baseURL(ui.current_buffer);
+    struct Url* base = makeBaseUrl(&ui.current_buffer->document);
     // const int* no_referer_ptr;
     // if ((no_referer_ptr && *no_referer_ptr)
     //     || base == NULL
@@ -159,7 +159,7 @@ loadLink(struct UI ui, const char* url, const char* target, const char* referer,
     // if (referer == NULL)
     //     referer = parsedURL2RefererStr(&ui.current_buffer->content.url)->ptr;
 
-    struct Content c = loadGeneralFile(url, baseURL(ui.current_buffer), post, referer, UI_TTY);
+    struct Content c = loadGeneralFile(url, makeBaseUrl(&ui.current_buffer->document), post, referer, UI_TTY);
     if (do_download) {
         if (!c.page)
             return NULL;
@@ -493,7 +493,7 @@ void followAnchor(struct UI ui, bool do_download)
         return;
     }
 
-    struct Url u = parseUrl(a->url, baseURL(ui.current_buffer));
+    struct Url u = parseUrl(a->url, makeBaseUrl(&ui.current_buffer->document));
     if (Strcmp(parsedURL2Str(&u), parsedURL2Str(&ui.current_buffer->content.url)) == 0) {
         /* index within this buffer */
         if (u.label) {
@@ -521,6 +521,6 @@ void followImage(struct UI ui, bool do_download)
     /* FIXME: gettextize? */
     message(getUI(), MSG_INFO, Sprintf("loading %s", a->url)->ptr);
     // refresh(ttyWriter());
-    struct Content c = loadGeneralFile(a->url, baseURL(ui.current_buffer), NULL, NULL, UI_TTY);
+    struct Content c = loadGeneralFile(a->url, makeBaseUrl(&ui.current_buffer->document), NULL, NULL, UI_TTY);
     pushContent(ui, c);
 }

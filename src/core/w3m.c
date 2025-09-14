@@ -687,7 +687,7 @@ goURL0(struct UI ui, char* prompt, int relative)
     if (url == NULL) {
         struct Hist* hist = copyHist(URLHist);
 
-        current = baseURL(ui.current_buffer);
+        current = makeBaseUrl(&ui.current_buffer->document);
         if (current) {
             char* c_url = parsedURL2Str(current)->ptr;
             if (DefaultURLString == DEFAULT_URL_CURRENT)
@@ -711,7 +711,7 @@ goURL0(struct UI ui, char* prompt, int relative)
             SKIP_BLANKS(url);
     }
     if (relative) {
-        current = baseURL(ui.current_buffer);
+        current = makeBaseUrl(&ui.current_buffer->document);
         if ((no_referer_ptr && *no_referer_ptr) || current == NULL || current->scheme == SCM_LOCAL || current->scheme == SCM_LOCAL_CGI || current->scheme == SCM_DATA)
             referer = NO_REFERER;
         else
@@ -855,9 +855,9 @@ void follow_map(struct UI ui, struct KeyValue* arg)
         return;
     }
 
-    struct Url p_url = parseUrl(a->url, baseURL(ui.current_buffer));
+    struct Url p_url = parseUrl(a->url, makeBaseUrl(&ui.current_buffer->document));
     pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
-    struct Content c = loadGeneralFile(a->url, baseURL(ui.current_buffer),
+    struct Content c = loadGeneralFile(a->url, makeBaseUrl(&ui.current_buffer->document),
         NULL, parsedURL2Str(&ui.current_buffer->content.url)->ptr, UI_TTY);
     pushContent(ui, c);
 }
@@ -874,9 +874,9 @@ DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
         gotoLabel(ui, l->url + 1);
         return;
     }
-    p_url = parseUrl(l->url, baseURL(ui.current_buffer));
+    p_url = parseUrl(l->url, makeBaseUrl(&ui.current_buffer->document));
     pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
-    struct Content c = loadGeneralFile(l->url, baseURL(ui.current_buffer),
+    struct Content c = loadGeneralFile(l->url, makeBaseUrl(&ui.current_buffer->document),
         NULL, parsedURL2Str(&ui.current_buffer->content.url)->ptr, UI_TTY);
     pushContent(ui, c);
 }
@@ -1162,7 +1162,7 @@ _peekURL(struct UI ui, int only_img)
             s = Strnew_charp(form2str((struct FormItem*)a->url));
     }
     if (s == NULL) {
-        pu = parseUrl(a->url, baseURL(ui.current_buffer));
+        pu = parseUrl(a->url, makeBaseUrl(&ui.current_buffer->document));
         s = parsedURL2Str(&pu);
     }
     if (DecodeURL)
@@ -1612,13 +1612,13 @@ void set_buffer_environ(struct UI ui)
         set_environ("W3M_CURRENT_WORD", s ? s : "");
         a = retrieveAnchor(ui.current_buffer->document.href, getBufferPosition(ui));
         if (a) {
-            pu = parseUrl(a->url, baseURL(buf));
+            pu = parseUrl(a->url, makeBaseUrl(&buf->document));
             set_environ("W3M_CURRENT_LINK", parsedURL2Str(&pu)->ptr);
         } else
             set_environ("W3M_CURRENT_LINK", "");
         a = retrieveAnchor(ui.current_buffer->document.img, getBufferPosition(ui));
         if (a) {
-            pu = parseUrl(a->url, baseURL(buf));
+            pu = parseUrl(a->url, makeBaseUrl(&buf->document));
             set_environ("W3M_CURRENT_IMG", parsedURL2Str(&pu)->ptr);
         } else
             set_environ("W3M_CURRENT_IMG", "");

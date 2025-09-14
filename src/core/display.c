@@ -115,7 +115,7 @@ static struct LineList* redrawLine(struct UI ui, struct Buffer* buf, struct Line
         if (useVisitedColor && vpos <= pos + j && !(pr[j] & PE_VISITED)) {
             a = retrieveAnchor(buf->document.href, (struct BufferPoint) { .line = l->linenumber, .pos = pos + j });
             if (a) {
-                url = parseUrl(a->url, baseURL(buf));
+                url = parseUrl(a->url, makeBaseUrl(&buf->document));
                 if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
                     for (k = a->start.pos; k < a->end.pos; k++)
                         pr[k - pos] |= PE_VISITED;
@@ -174,7 +174,7 @@ static struct LineList* redrawLineImage(struct UI ui, struct Buffer* buf, struct
             struct Image* image = a->image;
             struct ImageCache* cache;
 
-            cache = image->cache = getImage(image, baseURL(buf),
+            cache = image->cache = getImage(image, makeBaseUrl(&buf->document),
                 buf->image_flag);
             if (cache) {
                 if ((image->width < 0 && cache->width > 0) || (image->height < 0 && cache->height > 0)) {
@@ -305,7 +305,7 @@ static int redrawLineRegion(struct UI ui, struct Buffer* buf, struct LineList* l
             struct Anchor* a = retrieveAnchor(buf->document.href,
                 (struct BufferPoint) { .line = l->linenumber, .pos = pos + j });
             if (a) {
-                url = parseUrl(a->url, baseURL(buf));
+                url = parseUrl(a->url, makeBaseUrl(&buf->document));
                 if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
                     for (k = a->start.pos; k < a->end.pos; k++)
                         pr[k - pos] |= PE_VISITED;

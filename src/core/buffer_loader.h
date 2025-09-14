@@ -18,4 +18,4 @@ extern const char* DirBufferCommand;
 extern bool PermitSaveToPipe;
 
 struct Content;
-struct Document loadContent(struct UI ui, struct Content* content, struct Url* base);
+struct Document loadContent(struct UI ui, struct Content* content);

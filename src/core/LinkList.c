@@ -87,7 +87,7 @@ link_list_panel(struct UI ui, struct Buffer* buf)
             const char* u;
             const char* t;
             if (l->url) {
-                struct Url pu = parseUrl(l->url, baseURL(buf));
+                struct Url pu = parseUrl(l->url, makeBaseUrl(&buf->document));
                 p = parsedURL2Str(&pu)->ptr;
                 const char* u = html_quote(p);
                 if (DecodeURL)
@@ -117,7 +117,7 @@ link_list_panel(struct UI ui, struct Buffer* buf)
             struct Anchor* a = &al->anchors[i];
             if (a->hseq < 0 || a->slave)
                 continue;
-            struct Url pu = parseUrl(a->url, baseURL(buf));
+            struct Url pu = parseUrl(a->url, makeBaseUrl(&buf->document));
             const char* p = parsedURL2Str(&pu)->ptr;
             const char* u = html_quote(p);
             if (DecodeURL)
@@ -139,7 +139,7 @@ link_list_panel(struct UI ui, struct Buffer* buf)
             struct Anchor* a = &al->anchors[i];
             if (a->slave)
                 continue;
-            struct Url pu = parseUrl(a->url, baseURL(buf));
+            struct Url pu = parseUrl(a->url, makeBaseUrl(&buf->document));
             const char* p = parsedURL2Str(&pu)->ptr;
             const char* u = html_quote(p);
             if (DecodeURL)
@@ -169,7 +169,7 @@ link_list_panel(struct UI ui, struct Buffer* buf)
                     m = (struct MapArea*)mi->ptr;
                     if (!m)
                         continue;
-                    pu = parseUrl(m->url, baseURL(buf));
+                    pu = parseUrl(m->url, makeBaseUrl(&buf->document));
                     p = parsedURL2Str(&pu)->ptr;
                     u = html_quote(p);
                     if (DecodeURL)

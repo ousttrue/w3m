@@ -26,7 +26,7 @@ append_map_info(struct Buffer* buf, Str tmp, struct FormItem* fi)
         struct MapArea* a = (struct MapArea*)al->ptr;
         if (!a)
             continue;
-        struct Url pu = parseUrl(a->url, baseURL(buf));
+        struct Url pu = parseUrl(a->url, makeBaseUrl(&buf->document));
         const char* q = html_quote(parsedURL2Str(&pu)->ptr);
         const char* p = html_quote(url_decode2(a->url, buf ? buf->document.charset : 0));
         Strcat_m_charp(tmp, "<tr valign=top><td>&nbsp;&nbsp;<td><a href=\"",
@@ -47,7 +47,7 @@ void append_link_info(struct Buffer* buf, Str html, struct LinkList* link)
     for (struct LinkList* l = link; l; l = l->next) {
         const char* url;
         if (l->url) {
-            struct Url pu = parseUrl(l->url, baseURL(buf));
+            struct Url pu = parseUrl(l->url, makeBaseUrl(&buf->document));
             url = html_quote(parsedURL2Str(&pu)->ptr);
         } else
             url = "(empty)";
@@ -121,7 +121,7 @@ page_info_panel(struct UI ui, struct Buffer* buf)
 
     struct Anchor* a = retrieveAnchor(ui.current_buffer->document.href, getBufferPosition(ui));
     if (a != NULL) {
-        struct Url pu = parseUrl(a->url, baseURL(buf));
+        struct Url pu = parseUrl(a->url, makeBaseUrl(&buf->document));
         p = parsedURL2Str(&pu)->ptr;
         const char* q = html_quote(p);
         if (DecodeURL)
@@ -134,7 +134,7 @@ page_info_panel(struct UI ui, struct Buffer* buf)
     }
     a = retrieveAnchor(ui.current_buffer->document.img, getBufferPosition(ui));
     if (a != NULL) {
-        struct Url pu = parseUrl(a->url, baseURL(buf));
+        struct Url pu = parseUrl(a->url, makeBaseUrl(&buf->document));
         p = parsedURL2Str(&pu)->ptr;
         const char* q = html_quote(p);
         if (DecodeURL)

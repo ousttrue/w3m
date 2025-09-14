@@ -375,7 +375,7 @@ void getAllImage(struct Buffer* buf)
     if (!al)
         return;
 
-    struct Url* current = baseURL(buf);
+    struct Url* current = makeBaseUrl(&buf->document);
     int i;
     struct Anchor* a;
     for (i = 0, a = al->anchors; i < al->nanchor; i++, a++) {
