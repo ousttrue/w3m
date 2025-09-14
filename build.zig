@@ -94,6 +94,8 @@ const system_libs = [_][]const u8{
     "z",
 };
 const w3m_srcs = [_][]const u8{
+    "defun.c",
+
     "buffer_list.c",
     "Document.c",
     "LinkList.c",
@@ -517,6 +519,7 @@ fn gen_gcc_e(b: *std.Build) struct {
         "/^DEFUN/{p;n;/^[ \t]/p;}",
     });
     sed.addFileArg(b.path("src/core/w3m.c"));
+    sed.addFileArg(b.path("src/core/defun.c"));
     sed.addFileArg(b.path("src/core/menu.c"));
     // {
     //     const install = b.addInstallFile(sed.captureStdOut(), "01_sed.txt");

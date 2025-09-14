@@ -1,75 +1,62 @@
 #include "w3m.h"
-#include "buffer_list.h"
+#include "Document.h"
+#include "HttpRequest.h"
+#include "KeyValue.h"
 #include "LinkList.h"
+#include "TermEntry.h"
+#include "buffer_list.h"
+#include "cookie.h"
+#include "display.h"
+#include "downloadlist.h"
+#include "form.h"
+#include "graphicchar.h"
+#include "history.h"
+#include "html_quote.h"
+#include "http_message.h"
+#include "image.h"
+#include "keymap.h"
+#include "linein.h"
+#include "local_cgi.h"
+#include "maparea.h"
+#include "menu.h"
+#include "myctype.h"
+#include "platform.h"
 #include "Anchor.h"
 #include "AnchorList.h"
+#include "progress.h"
+#include "quote.h"
+#include "rc.h"
+#include "search.h"
+#include "ssl_util.h"
+#include "str_util.h"
 #include "term_renderer.h"
-#include "http_message.h"
+#include "ucs.h"
 #include "ui.h"
-#include "HttpRequest.h"
 #include "alloc.h"
 #include "runtime.h"
 #include "defun_macro.h"
-#include "ContentType.h"
 #include "Content.h"
-#include "buffer_loader.h"
-#include "progress.h"
-#include "html_quote.h"
-#include "quote.h"
 #include <gc/gc.h>
-#include <stdlib.h>
-#include <string.h>
-#include <strings.h>
-#include <sys/param.h>
-#include "buffer.h"
-#include "KeyValue.h"
-#include "defun.h"
-#include "linein.h"
-#include "menu.h"
-#include "keymap.h"
-#include "downloadlist.h"
-#include "funcname1.h"
-#include "form.h"
-#include "proxy.h"
-#include "maparea.h"
-#include "ssl_util.h"
-#include "mailcap.h"
-#include "local_cgi.h"
-#include "cookie.h"
-#include "ui.h"
-#include "search.h"
-#include "str_util.h"
-#include "history.h"
-#include "image.h"
-#include "term_renderer.h"
-#include "term_size.h"
-#include "graphicchar.h"
-#include "tty.h"
-#include "TermEntry.h"
-#include "screen.h"
-#include <stdio.h>
-#include <signal.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/wait.h>
-#include <time.h>
-#include "display.h"
-#include "myctype.h"
-#include "regex.h"
-#include "rc.h"
-#include "wc.h"
-#include "wtf.h"
-#include "ucs.h"
-#include "util.h"
-#include <sys/epoll.h>
-#include <assert.h>
-#include <sys/signalfd.h>
 #include <locale.h>
-#include <unistd.h>
-
+#include <stdlib.h>
+#include "buffer.h"
+#include "funcname1.h"
+#include "proxy.h"
+#include "term_size.h"
+#include "tty.h"
+#include "screen.h"
+#include <wc.h>
+#include "util.h"
+#include "wtf.h"
 #include <event_poller.h>
+#include <string.h>
+#include <sys/param.h>
+#include <unistd.h>
+#include "mailcap.h"
+#include "defun.h"
+#include "../defun.h"
+#include "regex.h"
+#include "buffer_loader.h"
 
 #define PACKAGE "w3m"
 #define HELP_FILE "w3mhelp-w3m_en.html"
@@ -347,7 +334,7 @@ void resetTerm(void)
 void fmTerm(void)
 {
     struct VirtualTerm* vt = getScreen();
-    vt_move(vt, getLines() - 1, 0);
+    vt_move(vt, getScreen()->ROWS - 1, 0);
     vt_clrtoeolx(vt);
     // refresh(ttyWriter());
     if (activeImage)
@@ -1007,10 +994,6 @@ void pushEvent(int cmd, void* data)
     else
         CurrentEvent = event;
     LastEvent = event;
-}
-
-DEFUN(nulcmd, NOTHING NULL @ @ @, "Do nothing")
-{ /* do nothing */
 }
 
 void pcmap(void)
@@ -1686,7 +1669,7 @@ DEFUN(editBf, EDIT, "Edit local source")
     // cur_real_linenumber(ui.current_buffer));
     exec_cmd(cmd->ptr);
 
-    reload(ui);
+    // reload(ui);
 }
 
 /* Run editor on the current screen */
