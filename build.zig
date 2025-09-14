@@ -85,6 +85,16 @@ const content_srcs = [_][]const u8{
 };
 
 //
+// document
+//
+const document_public_headers = [_][]const u8{
+    "token.h",
+};
+const document_srcs = [_][]const u8{
+    "token.c",
+};
+
+//
 // w3m
 //
 const system_libs = [_][]const u8{
@@ -101,7 +111,6 @@ const w3m_srcs = [_][]const u8{
     "buffer_list.c",
     "Document.c",
     "LinkList.c",
-    "token.c",
     "tty.c",
     "keybind.c",
     "util.c",
@@ -279,6 +288,29 @@ pub fn build(b: *std.Build) void {
                 b.fmt("-DCONF_DIR=\"{s}\"", .{CONF_DIR}),
                 b.fmt("-DHELP_DIR=\"{s}\"", .{HELP_DIR}),
                 b.fmt("-DRC_DIR=\"{s}\"", .{RC_DIR}),
+            },
+        );
+        lib.linkLibrary(gcs);
+        exe.linkLibrary(lib);
+        exe_tests.linkLibrary(lib);
+    }
+
+    {
+        const lib = build_lib(
+            b,
+            target,
+            optimize,
+            "document",
+            b.path("src/document"),
+            &document_srcs,
+            &document_public_headers,
+            &.{
+                // b.fmt("-DAUXBIN_DIR=\"{s}\"", .{AUXBIN_DIR}),
+                // b.fmt("-DCGIBIN_DIR=\"{s}\"", .{CGIBIN_DIR}),
+                // b.fmt("-DETC_DIR=\"{s}\"", .{ETC_DIR}),
+                // b.fmt("-DCONF_DIR=\"{s}\"", .{CONF_DIR}),
+                // b.fmt("-DHELP_DIR=\"{s}\"", .{HELP_DIR}),
+                // b.fmt("-DRC_DIR=\"{s}\"", .{RC_DIR}),
             },
         );
         lib.linkLibrary(gcs);

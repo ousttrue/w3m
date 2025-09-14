@@ -1,4 +1,3 @@
-#define _GNU_SOURCE
 #include "HtmlTagParsed.h"
 #include "token.h"
 #include "entity.h"
