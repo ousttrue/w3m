@@ -1,4 +1,6 @@
 #include "ui.h"
+#include "image.h"
+#include "form.h"
 #include "keymap.h"
 #include "buffer_list.h"
 #include "runtime.h"
@@ -279,27 +281,26 @@ static Str make_lastline_link(struct Buffer* buf, const char* title, const char*
     return s;
 }
 
-static Str make_lastline_message(struct Buffer* buf)
+static Str make_lastline_message(struct UI ui)
 {
-    Str msg, s = NULL;
+    Str s = NULL;
     int sl = 0;
-
     if (displayLink) {
-        struct MapArea* a = retrieveCurrentMapArea(buf);
+        struct MapArea* a = retrieveCurrentMapArea(ui);
         if (a)
-            s = make_lastline_link(buf, a->alt, a->url);
+            s = make_lastline_link(ui.current_buffer, a->alt, a->url);
         else {
-            struct Anchor* a = retrieveCurrentAnchor(buf);
+            struct Anchor* a = retrieveCurrentAnchor(ui);
             const char* p = NULL;
             if (a && a->title && *a->title)
                 p = a->title;
             else {
-                struct Anchor* a_img = retrieveCurrentImg(buf);
+                struct Anchor* a_img = retrieveCurrentImg(ui);
                 if (a_img && a_img->title && *a_img->title)
                     p = a_img->title;
             }
             if (p || a)
-                s = make_lastline_link(buf, p, a ? a->url : NULL);
+                s = make_lastline_link(ui.current_buffer, p, a ? a->url : NULL);
         }
         if (s) {
             sl = get_Str_strwidth(s);
@@ -308,7 +309,7 @@ static Str make_lastline_message(struct Buffer* buf)
         }
     }
 
-    msg = Strnew();
+    Str msg = Strnew();
     // if (displayLineInfo && currentLine(buf) != NULL && lastLine(buf) != NULL) {
     //     int cl = currentLine(buf)->real_linenumber;
     //     int ll = lastLine(buf)->real_linenumber;
@@ -316,10 +317,10 @@ static Str make_lastline_message(struct Buffer* buf)
     //     Strcat(msg, Sprintf("%d/%d (%d%%)", cl, ll, r));
     // } else
     Strcat_charp(msg, "Viewing");
-    if (buf->ssl_certificate)
+    if (ui.current_buffer->ssl_certificate)
         Strcat_charp(msg, "[SSL]");
     Strcat_charp(msg, " <");
-    Strcat_charp(msg, buf->document.title);
+    Strcat_charp(msg, ui.current_buffer->document.title);
 
     if (s) {
         int l = getScreen()->COLS - 3 - sl;
@@ -350,8 +351,8 @@ void renderFrame(struct UI ui)
     // int cursorRow = ui.vt->CurLine;
     // int cursorCol = ui.vt->CurColumn;
 
-    struct Anchor* a = retrieveCurrentAnchor(buf);
-    struct BufferPoint bp = getBufferPosition(buf);
+    struct Anchor* a = retrieveCurrentAnchor(ui);
+    struct BufferPoint bp = getBufferPosition(ui);
     ui_printStatus("STATUS: (%d, %d), (%d, %d) a(%d, %d=%d) %s",
         // "top=%d key=[%02x > %02x > %02x > %02x > %02x > %02x > %02x > %02x]",
         ui.viewport_cursor.y, ui.viewport_cursor.x,
@@ -374,7 +375,7 @@ void renderFrame(struct UI ui)
     // int cursorCol = buf->cursorX;
     drawAnchorCursor(ui);
 
-    Str msg = make_lastline_message(buf);
+    Str msg = make_lastline_message(ui);
     if (buf->document.firstLine == NULL) {
         Strcat_charp(msg, "\tNo Line");
     }
@@ -462,4 +463,85 @@ bool updateCursor(struct Buffer* buf)
         .y = y,
     };
     return hasScroll;
+}
+
+struct BufferPoint getBufferPosition(struct UI ui)
+{
+    struct LineList* l = getLine(&ui.current_buffer->document, ui.viewport_cursor.y);
+    if (!l) {
+        return (struct BufferPoint) { 0, 0 };
+    }
+    int pos = columnPos(&l->l, ui.viewport_cursor.x);
+    return (struct BufferPoint) {
+        .line = ui.viewport_cursor.y,
+        .pos = pos,
+    };
+}
+
+struct Anchor*
+retrieveCurrentAnchor(struct UI ui)
+{
+    return retrieveAnchor(ui.current_buffer->document.href, getBufferPosition(ui));
+}
+
+struct Anchor*
+retrieveCurrentImg(struct UI ui)
+{
+    return retrieveAnchor(ui.current_buffer->document.img, getBufferPosition(ui));
+}
+
+struct Anchor*
+retrieveCurrentForm(struct UI ui)
+{
+    return retrieveAnchor(ui.current_buffer->document.formitem, getBufferPosition(ui));
+}
+
+struct Anchor*
+retrieveCurrentMap(struct UI ui)
+{
+    struct Anchor* a = retrieveCurrentForm(ui);
+    if (!a || !a->url)
+        return NULL;
+
+    struct FormItem* fi = (struct FormItem*)a->url;
+    if (fi->parent->method == FORM_METHOD_INTERNAL && !Strcmp_charp(fi->parent->action, "map"))
+        return a;
+    return NULL;
+}
+
+struct MapArea*
+retrieveCurrentMapArea(struct UI ui)
+{
+    struct Anchor* a_img;
+    a_img = retrieveCurrentImg(ui);
+    if (!(a_img && a_img->image && a_img->image->map))
+        return 0;
+
+    struct Anchor* a_form = retrieveCurrentForm(ui);
+    if (!(a_form && a_form->url))
+        return 0;
+
+    struct FormItem* fi;
+    fi = (struct FormItem*)a_form->url;
+    if (!(fi && fi->parent && fi->parent->item))
+        return 0;
+    fi = fi->parent->item;
+
+    struct MapList* ml;
+    ml = searchMapList(&ui.current_buffer->document, fi->value ? fi->value->ptr : 0);
+    if (!ml)
+        return 0;
+
+    int n = searchMapArea(&ui.current_buffer->document, ml, a_img);
+    if (n < 0)
+        return 0;
+
+    ListItem* al = ml->area->first;
+    for (int i = 0; al != 0; i++, al = al->next) {
+        struct MapArea* a;
+        a = (struct MapArea*)al->ptr;
+        if (a && i == n)
+            return a;
+    }
+    return 0;
 }

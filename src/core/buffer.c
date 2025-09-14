@@ -895,46 +895,6 @@ cookie_list_panel(struct UI ui)
     };
 }
 
-struct BufferPoint getBufferPosition(struct Buffer* buf)
-{
-    struct UI ui = getUI();
-    struct LineList* l = getLine(&buf->document, ui.viewport_cursor.y);
-    if (!l) {
-        return (struct BufferPoint) { 0, 0 };
-    }
-    int pos = columnPos(&l->l, ui.viewport_cursor.x);
-    return (struct BufferPoint) {
-        .line = ui.viewport_cursor.y,
-        .pos = pos,
-    };
-}
-
-struct Anchor*
-retrieveCurrentAnchor(struct Buffer* buf)
-{
-    if (!buf)
-        return 0;
-    return retrieveAnchor(buf->document.href, getBufferPosition(buf));
-}
-
-struct Anchor*
-retrieveCurrentImg(struct Buffer* buf)
-{
-    if (currentLine(&buf->document) == 0)
-        return 0;
-    return retrieveAnchor(buf->document.img,
-        (struct BufferPoint) { .line = currentLine(&buf->document)->linenumber, .pos = buf->document.pos });
-}
-
-struct Anchor*
-retrieveCurrentForm(struct Document* doc)
-{
-    if (currentLine(doc) == 0)
-        return 0;
-    return retrieveAnchor(doc->formitem,
-        (struct BufferPoint) { .line = doc->currentLineIndex, .pos = doc->pos });
-}
-
 struct Anchor*
 searchAnchor(struct AnchorList* al, const char* str)
 {
@@ -1037,40 +997,6 @@ const char* getAnchorText(struct Buffer* buf, struct AnchorList* al, struct Anch
         Strcat_charp_n(tmp, p, ep - p);
     }
     return tmp ? tmp->ptr : 0;
-}
-
-struct MapArea*
-retrieveCurrentMapArea(struct Buffer* buf)
-{
-    struct Anchor* a_img;
-    struct FormItem* fi;
-    struct MapList* ml;
-    ListItem* al;
-    struct MapArea* a;
-    int i, n;
-
-    a_img = retrieveCurrentImg(buf);
-    if (!(a_img && a_img->image && a_img->image->map))
-        return 0;
-    struct Anchor* a_form = retrieveCurrentForm(&buf->document);
-    if (!(a_form && a_form->url))
-        return 0;
-    fi = (struct FormItem*)a_form->url;
-    if (!(fi && fi->parent && fi->parent->item))
-        return 0;
-    fi = fi->parent->item;
-    ml = searchMapList(&buf->document, fi->value ? fi->value->ptr : 0);
-    if (!ml)
-        return 0;
-    n = searchMapArea(&buf->document, ml, a_img);
-    if (n < 0)
-        return 0;
-    for (i = 0, al = ml->area->first; al != 0; i++, al = al->next) {
-        a = (struct MapArea*)al->ptr;
-        if (a && i == n)
-            return a;
-    }
-    return 0;
 }
 
 static struct Anchor*
@@ -1318,9 +1244,9 @@ void _nextA(struct UI ui, int visited)
     if (!hl || hl->nmark == 0)
         return;
 
-    struct Anchor* an = retrieveCurrentAnchor(ui.current_buffer);
+    struct Anchor* an = retrieveCurrentAnchor(ui);
     if (visited != true && an == NULL)
-        an = retrieveCurrentForm(&ui.current_buffer->document);
+        an = retrieveCurrentForm(ui);
 
     y = currentLine(&ui.current_buffer->document)->linenumber;
     x = ui.current_buffer->document.pos;
@@ -1397,9 +1323,9 @@ void _prevA(struct UI ui, int visited)
     if (!hl || hl->nmark == 0)
         return;
 
-    struct Anchor* an = retrieveCurrentAnchor(ui.current_buffer);
+    struct Anchor* an = retrieveCurrentAnchor(ui);
     if (visited != true && an == NULL)
-        an = retrieveCurrentForm(&ui.current_buffer->document);
+        an = retrieveCurrentForm(ui);
 
     y = currentLine(&ui.current_buffer->document)->linenumber;
     x = ui.current_buffer->document.pos;

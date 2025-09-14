@@ -1,4 +1,5 @@
 #include "w3m.h"
+#include "page_info.h"
 #include "follow_anchor.h"
 #include "Document.h"
 #include "HttpRequest.h"
@@ -112,7 +113,7 @@ static char* getCurWord(struct Buffer* buf, int* spos, int* epos);
 static int display_ok = false;
 int prev_key = -1;
 
-void set_buffer_environ(struct Buffer*);
+void set_buffer_environ(struct UI ui);
 static void save_buffer_position(struct Buffer* buf);
 
 static int check_target = true;
@@ -532,7 +533,7 @@ void onKeyInput(unsigned char c)
     g_keylog[g_i % sizeof(g_keylog)] = c;
     if (IS_ASCII(c)) { /* Ascii */
 
-        set_buffer_environ(getUI().current_buffer);
+        set_buffer_environ(getUI());
         save_buffer_position(getUI().current_buffer);
         {
             CurrentKey = c;
@@ -657,9 +658,9 @@ nextX(struct UI ui, int d, int dy)
     if (!hl || hl->nmark == 0)
         return;
 
-    struct Anchor* an = retrieveCurrentAnchor(ui.current_buffer);
+    struct Anchor* an = retrieveCurrentAnchor(ui);
     if (an == NULL)
-        an = retrieveCurrentForm(&ui.current_buffer->document);
+        an = retrieveCurrentForm(ui);
 
     struct LineList* l;
     l = currentLine(&ui.current_buffer->document);
@@ -713,9 +714,9 @@ nextY(struct UI ui, int d)
     if (!hl || hl->nmark == 0)
         return;
 
-    struct Anchor* an = retrieveCurrentAnchor(ui.current_buffer);
+    struct Anchor* an = retrieveCurrentAnchor(ui);
     if (an == NULL)
-        an = retrieveCurrentForm(ui.current_buffer);
+        an = retrieveCurrentForm(ui);
 
     x = ui.current_buffer->document.pos;
     y = currentLine(&ui.current_buffer->document)->linenumber + d;
@@ -843,7 +844,7 @@ goURL0(struct UI ui, char* prompt, int relative)
             else
                 pushHist(hist, c_url);
         }
-        a = retrieveCurrentAnchor(ui.current_buffer);
+        a = retrieveCurrentAnchor(ui);
         if (a) {
             char* a_url;
             p_url = parseUrl(a->url, current);
@@ -988,11 +989,9 @@ DEFUN(pginfo, INFO, "Display information about the current document")
 void follow_map(struct UI ui, struct KeyValue* arg)
 {
     const char* name = tag_get_value(arg, "link");
-    int x, y;
-    struct Url p_url;
 
-    struct Anchor* an;
-    an = retrieveCurrentImg(ui.current_buffer);
+    struct Anchor* an = retrieveCurrentImg(ui);
+    int x, y;
     // x = ui.current_buffer->cursorX;
     // y = ui.current_buffer->cursorY;
     struct MapArea* a = follow_map_menu(ui, &ui.current_buffer->document, name, an, x, y);
@@ -1003,7 +1002,8 @@ void follow_map(struct UI ui, struct KeyValue* arg)
         gotoLabel(ui, a->url + 1);
         return;
     }
-    p_url = parseUrl(a->url, baseURL(ui.current_buffer));
+
+    struct Url p_url = parseUrl(a->url, baseURL(ui.current_buffer));
     pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
     struct Content c = loadGeneralFile(a->url, baseURL(ui.current_buffer),
         NULL, parsedURL2Str(&ui.current_buffer->content.url)->ptr, UI_TTY);
@@ -1299,11 +1299,11 @@ _peekURL(struct UI ui, int only_img)
         offset = 0;
     }
     s = NULL;
-    a = (only_img ? NULL : retrieveCurrentAnchor(ui.current_buffer));
+    a = (only_img ? NULL : retrieveCurrentAnchor(ui));
     if (a == NULL) {
-        a = (only_img ? NULL : retrieveCurrentForm(&ui.current_buffer->document));
+        a = (only_img ? NULL : retrieveCurrentForm(ui));
         if (a == NULL) {
-            a = retrieveCurrentImg(ui.current_buffer);
+            a = retrieveCurrentImg(ui);
             if (a == NULL)
                 return;
         } else
@@ -1734,12 +1734,13 @@ DEFUN(dictwordat, DICT_WORD_AT,
     execdict(ui, GetWord(ui.current_buffer));
 }
 
-void set_buffer_environ(struct Buffer* buf)
+void set_buffer_environ(struct UI ui)
 {
     static struct Buffer* prev_buf = NULL;
     static struct LineList* prev_line = NULL;
     static int prev_pos = -1;
 
+    struct Buffer* buf = ui.current_buffer;
     if (buf == NULL)
         return;
 
@@ -1757,19 +1758,19 @@ void set_buffer_environ(struct Buffer* buf)
         struct Url pu;
         char* s = GetWord(buf);
         set_environ("W3M_CURRENT_WORD", s ? s : "");
-        a = retrieveCurrentAnchor(buf);
+        a = retrieveCurrentAnchor(ui);
         if (a) {
             pu = parseUrl(a->url, baseURL(buf));
             set_environ("W3M_CURRENT_LINK", parsedURL2Str(&pu)->ptr);
         } else
             set_environ("W3M_CURRENT_LINK", "");
-        a = retrieveCurrentImg(buf);
+        a = retrieveCurrentImg(ui);
         if (a) {
             pu = parseUrl(a->url, baseURL(buf));
             set_environ("W3M_CURRENT_IMG", parsedURL2Str(&pu)->ptr);
         } else
             set_environ("W3M_CURRENT_IMG", "");
-        a = retrieveCurrentForm(&buf->document);
+        a = retrieveCurrentForm(ui);
         if (a)
             set_environ("W3M_CURRENT_FORM", form2str((struct FormItem*)a->url));
         else

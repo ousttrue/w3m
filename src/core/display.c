@@ -386,11 +386,11 @@ drawAnchorCursor0(struct UI ui, struct Buffer* buf,
     }
 }
 
-static int currentAnchorHseq(struct Buffer* buf)
+static int currentAnchorHseq(struct UI ui)
 {
-    struct Anchor* an = retrieveCurrentAnchor(buf);
+    struct Anchor* an = retrieveCurrentAnchor(ui);
     if (!an)
-        an = retrieveCurrentMap(buf);
+        an = retrieveCurrentMap(ui);
     if (!an) {
         return -1;
     }
@@ -407,7 +407,7 @@ void drawAnchorCursor(struct UI ui)
 
     int tline = topLine(&buf->document)->linenumber;
     int eline = tline + ui.viewport.size.y;
-    int hseq = currentAnchorHseq(buf);
+    int hseq = currentAnchorHseq(ui);
     int prevhseq = buf->document.hmarklist->prevhseq;
     if (buf->document.href) {
         drawAnchorCursor0(ui, buf, buf->document.href, hseq, prevhseq, tline, eline, 1);

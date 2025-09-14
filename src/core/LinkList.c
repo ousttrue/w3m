@@ -13,39 +13,6 @@
 #include "w3m.h"
 #include "alloc.h"
 
-/* append links */
-void append_link_info(struct Buffer* buf, Str html, struct LinkList* link)
-{
-    if (!link)
-        return;
-
-    Strcat_charp(html, "<hr width=50%><h1>Link information</h1><table>\n");
-    for (struct LinkList* l = link; l; l = l->next) {
-        const char* url;
-        if (l->url) {
-            struct Url pu = parseUrl(l->url, baseURL(buf));
-            url = html_quote(parsedURL2Str(&pu)->ptr);
-        } else
-            url = "(empty)";
-        Strcat_m_charp(html, "<tr valign=top><td><a href=\"", url, "\">",
-            l->title ? html_quote(l->title) : "(empty)", "</a><td>",
-            NULL);
-        if (l->type == LINK_TYPE_REL)
-            Strcat_charp(html, "[Rel]");
-        else if (l->type == LINK_TYPE_REV)
-            Strcat_charp(html, "[Rev]");
-        if (!l->url)
-            url = "(empty)";
-        else
-            url = html_quote(url_decode2(l->url, buf ? buf->document.charset : 0));
-        Strcat_m_charp(html, "<td>", url, NULL);
-        if (l->ctype)
-            Strcat_m_charp(html, " (", html_quote(l->ctype), ")", NULL);
-        Strcat_charp(html, "\n");
-    }
-    Strcat_charp(html, "</table>\n");
-}
-
 struct LinkList*
 link_menu(struct UI ui)
 {

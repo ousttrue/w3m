@@ -1743,7 +1743,7 @@ accesskey_menu(struct UI ui, struct Buffer* buf)
         menu.keyselect[(int)c] = i;
     }
 
-    a = retrieveCurrentAnchor(buf);
+    a = retrieveCurrentAnchor(ui);
     if (a && a->accesskey && IS_ASCII(a->accesskey)) {
         for (i = 0; i < nitem; i++) {
             if (a->hseq == ap[i]->hseq) {
@@ -1787,7 +1787,6 @@ list_menu(struct UI ui, struct Buffer* buf)
 {
     struct Menu menu;
     struct AnchorList* al = buf->document.href;
-    struct Anchor* a;
     struct Anchor** ap;
     int i, n, nitem = 0, key = -1, two = false;
     const char* t;
@@ -1796,7 +1795,7 @@ list_menu(struct UI ui, struct Buffer* buf)
     if (!al)
         return NULL;
     for (i = 0; i < al->nanchor; i++) {
-        a = &al->anchors[i];
+        struct Anchor* a = &al->anchors[i];
         if (!a->slave)
             nitem++;
     }
@@ -1810,7 +1809,7 @@ list_menu(struct UI ui, struct Buffer* buf)
     label = New_N(char*, nitem + 1);
     ap = New_N(struct Anchor*, nitem);
     for (i = 0, n = 0; i < al->nanchor; i++) {
-        a = &al->anchors[i];
+        struct Anchor* a = &al->anchors[i];
         if (!a->slave) {
             t = getAnchorText(buf, al, a);
             if (!t)
@@ -1858,7 +1857,8 @@ list_menu(struct UI ui, struct Buffer* buf)
         }
     }
 
-    a = retrieveCurrentAnchor(buf);
+    struct Anchor* a;
+    a = retrieveCurrentAnchor(ui);
     if (a) {
         for (i = 0; i < nitem; i++) {
             if (a->hseq == ap[i]->hseq) {

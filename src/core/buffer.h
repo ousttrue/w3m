@@ -64,15 +64,11 @@ char* last_modified(struct Buffer* buf);
 struct Content cookie_list_panel(struct UI ui);
 void reseq_anchor(struct Buffer* buf);
 
-struct Anchor* retrieveCurrentAnchor(struct Buffer* buf);
-struct Anchor* retrieveCurrentImg(struct Buffer* buf);
-struct Anchor* retrieveCurrentForm(struct Document* doc);
 struct Anchor* searchURLLabel(struct Buffer* buf, const char* url);
 void reAnchorWord(struct Buffer* buf, struct LineList* l, int spos, int epos);
 const char* reAnchor(struct Buffer* buf, const char* re);
 struct AnchorList;
 const char* getAnchorText(struct Buffer* buf, struct AnchorList* al, struct Anchor* a);
-struct BufferPoint getBufferPosition(struct Buffer* buf);
 
 struct Buffer* makeBuffer(struct UI ui, struct Content* c);
 void tmpClearBuffer(struct Buffer* buf);

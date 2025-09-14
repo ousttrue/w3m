@@ -73,7 +73,7 @@ void query_from_followform(struct UI ui, Str* query, struct FormItem* fi, int mu
         if (multipart) {
             if (f2->type == FORM_INPUT_IMAGE) {
                 int x = 0, y = 0;
-                getMapXY(&ui.current_buffer->document, retrieveCurrentImg(ui.current_buffer), &x, &y);
+                getMapXY(&ui.current_buffer->document, retrieveCurrentImg(ui), &x, &y);
                 *query = Strdup(conv_form_encoding(f2->name, fi, ui.current_buffer));
                 Strcat_charp(*query, ".x");
                 form_write_data(body, fi->parent->boundary, (*query)->ptr,
@@ -103,7 +103,7 @@ void query_from_followform(struct UI ui, Str* query, struct FormItem* fi, int mu
             /* not multipart */
             if (f2->type == FORM_INPUT_IMAGE) {
                 int x = 0, y = 0;
-                getMapXY(&ui.current_buffer->document, retrieveCurrentImg(ui.current_buffer), &x, &y);
+                getMapXY(&ui.current_buffer->document, retrieveCurrentImg(ui), &x, &y);
                 Strcat(*query,
                     Str_form_quote(conv_form_encoding(f2->name, fi, ui.current_buffer)));
                 Strcat(*query, Sprintf(".x=%d&", x));
@@ -297,7 +297,7 @@ void _followForm(struct UI ui, bool submit, bool do_download)
     if (ui.current_buffer->document.firstLine == NULL)
         return;
 
-    struct Anchor* a = retrieveCurrentForm(&ui.current_buffer->document);
+    struct Anchor* a = retrieveCurrentForm(ui);
     if (a == NULL)
         return;
 
@@ -470,7 +470,7 @@ void followAnchor(struct UI ui, bool do_download)
     if (ui.current_buffer->document.firstLine == NULL)
         return;
 
-    struct Anchor* a = retrieveCurrentImg(ui.current_buffer);
+    struct Anchor* a = retrieveCurrentImg(ui);
     if (a && a->image && a->image->map) {
         _followForm(ui, false, do_download);
         return;
@@ -481,7 +481,7 @@ void followAnchor(struct UI ui, bool do_download)
         getMapXY(&ui.current_buffer->document, a, &x, &y);
         map = 1;
     }
-    a = retrieveCurrentAnchor(ui.current_buffer);
+    a = retrieveCurrentAnchor(ui);
     if (a == NULL) {
         _followForm(getUI(), false, do_download);
         return;
@@ -513,7 +513,7 @@ void followImage(struct UI ui, bool do_download)
         return;
 
     struct Anchor* a;
-    a = retrieveCurrentImg(ui.current_buffer);
+    a = retrieveCurrentImg(ui);
     if (a == NULL)
         return;
     /* FIXME: gettextize? */
