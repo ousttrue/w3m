@@ -16,5 +16,4 @@ void pushBuffer(struct UI ui, struct Buffer* buf);
 void delBuffer(struct UI ui, struct Buffer* buf);
 void repBuffer(struct UI ui, struct Buffer* oldbuf, struct Buffer* buf);
 void setCurrentBuffer(struct Buffer* buf);
-void cmd_loadContent(struct UI ui, struct Content c);
 struct Buffer* pushContent(struct UI ui, struct Content c);

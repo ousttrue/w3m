@@ -2352,7 +2352,7 @@ DEFUN(nextBf, NEXT, "Switch to the next buffer")
 /* go to the previous bufferr */
 DEFUN(prevBf, PREV, "Switch to the previous buffer")
 {
-    setCurrentBuffer( ui.current_buffer->nextBuffer);
+    setCurrentBuffer(ui.current_buffer->nextBuffer);
 }
 
 static int
@@ -2507,7 +2507,8 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
 /* option setting */
 DEFUN(ldOpt, OPTIONS, "Display options setting panel")
 {
-    cmd_loadContent(ui, load_option_panel(ui));
+    struct Content c = load_option_panel(ui);
+    pushContent(ui, c);
 }
 
 /* set an option */
@@ -2535,14 +2536,14 @@ DEFUN(setOpt, SET_OPTION, "Set option")
 DEFUN(msgs, MSGS, "Display error messages")
 {
     struct Content c = message_list_panel(ui);
-    cmd_loadContent(ui, c);
+    pushContent(ui, c);
 }
 
 /* page info */
 DEFUN(pginfo, INFO, "Display information about the current document")
 {
     struct Content c = page_info_panel(ui, ui.current_buffer);
-    cmd_loadContent(ui, c);
+    pushContent(ui, c);
 }
 
 void follow_map(struct UI ui, struct KeyValue* arg)
@@ -2630,21 +2631,21 @@ DEFUN(movlistMn, MOVE_LIST_MENU, "Pop up menu to navigate between hyperlinks")
 DEFUN(linkLst, LIST, "Show all URLs referenced")
 {
     struct Content c = link_list_panel(ui, ui.current_buffer);
-    cmd_loadContent(ui, c);
+    pushContent(ui, c);
 }
 
 /* cookie list */
 DEFUN(cooLst, COOKIE, "View cookie list")
 {
     struct Content c = cookie_list_panel(ui);
-    cmd_loadContent(ui, c);
+    pushContent(ui, c);
 }
 
 /* History page */
 DEFUN(ldHist, HISTORY, "Show browsing history")
 {
     struct Content c = historyBuffer(ui, URLHist);
-    cmd_loadContent(ui, c);
+    pushContent(ui, c);
 }
 
 /* download HREF link */

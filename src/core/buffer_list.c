@@ -80,6 +80,11 @@ void SAVE_BUFPOSITION(struct Buffer* sbufp)
 
 void pushBuffer(struct UI ui, struct Buffer* buf)
 {
+    if (!buf) {
+        return;
+    }
+    pushHashHist(URLHist, parsedURL2Str(&buf->content.url)->ptr);
+
     deleteImage(ui.current_buffer);
     if (clear_buffer)
         clearBuffer(ui.current_buffer);
@@ -145,19 +150,6 @@ void setCurrentBuffer(struct Buffer* buf)
     }
 }
 
-void cmd_loadContent(struct UI ui, struct Content c)
-{
-    struct Buffer* buf = makeBuffer(ui, &c);
-    if (!buf) {
-        message(getUI(), MSG_ERR, "Can't load string");
-        return;
-    }
-    // buf->bufferprop |= (BP_INTERNAL | prop);
-    // if (!(buf->bufferprop & BP_NO_URL))
-    //     buf->content.url = copyParsedUrl(&ui.current_buffer->content.url);
-    pushBuffer(ui, buf);
-}
-
 struct Buffer* pushContent(struct UI ui, struct Content c)
 {
     struct Buffer* buf = makeBuffer(ui, &c);
@@ -166,59 +158,6 @@ struct Buffer* pushContent(struct UI ui, struct Content c)
         message(getUI(), MSG_ERR, emsg->ptr);
         return 0;
     }
-    // struct Buffer* buf = makeBuffer(ui, &c);
-    // if (buf == NULL) {
-    //     message(getUI(), MSG_INFO, "Execution failed");
-    //     return;
-    // } else if (buf) {
-    //     buf->filename = w;
-    //     buf->buffername = Sprintf("%s %s", DICTBUFFERNAME, word)->ptr;
-    //     if (buf->content_type == CONTENTTYPE_UNKNOWN)
-    //         buf->content_type = CONTENTTYPE_TEXT_PLAIN;
-    //     pushBuffer(ui, buf);
-    // }    // if (do_download) {
-    //     // TODO
-    //     abort();
-    // }
-    // struct Buffer* buf = makeBuffer(ui, &c);
-    // if (buf == NULL) {
-    //     /* FIXME: gettextize? */
-    //     char* emsg = Sprintf("Can't load %s", a->url)->ptr;
-    //     message(ui, MSG_ERR, emsg);
-    // } else if (buf) {
-    //     pushBuffer(ui, buf);
-    // }    // struct Buffer* buf = makeBuffer(ui, &c);
-    // if (buf == NULL) {
-    //     /* FIXME: gettextize? */
-    //     char* emsg = Sprintf("%s not found", conv_from_system(fn))->ptr;
-    //     message(getUI(), MSG_ERR, emsg);
-    // } else if (buf) {
-    //     pushBuffer(ui, buf);
-    // }    // struct Buffer* buf = makeBuffer(ui, &c);
-    // if (buf == NULL) {
-    //     char* emsg = Sprintf("Can't load %s", url)->ptr;
-    //     message(ui, MSG_ERR, emsg);
-    //     return NULL;
-    // }
-    //
-    // struct Url pu = parseUrl(url, base);
-    // pushHashHist(URLHist, parsedURL2Str(&pu)->ptr);
-    //
-    // if (buf == NULL) {
-    //     return NULL;
-    // }
-    //
-    // if (do_download) /* download (thus no need to render frames) */
-    //     return loadNormalBuf(ui, buf);
-    //
-    // if (target == NULL || /* no target specified (that means this page is not a frame page) */
-    //     !strcmp(target, "_top") /* this link is specified to be opened as an indivisual * page */
-    // ) {
-    //     return loadNormalBuf(ui, buf);
-    // }
-    //
-    // return loadNormalBuf(ui, buf);
-
     pushBuffer(ui, buf);
     return buf;
 }
