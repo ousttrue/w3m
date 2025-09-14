@@ -506,3 +506,20 @@ void followAnchor(struct UI ui, bool do_download)
 
     loadLink(ui, url, (char*)a->target, a->referer, NULL, do_download);
 }
+
+void followImage(struct UI ui, bool do_download)
+{
+    if (ui.current_buffer->document.firstLine == NULL)
+        return;
+
+    struct Anchor* a;
+    a = retrieveCurrentImg(ui.current_buffer);
+    if (a == NULL)
+        return;
+    /* FIXME: gettextize? */
+    message(getUI(), MSG_INFO, Sprintf("loading %s", a->url)->ptr);
+    // refresh(ttyWriter());
+    struct Content c = loadGeneralFile(a->url, baseURL(ui.current_buffer), NULL, NULL, UI_TTY);
+    pushContent(ui, c);
+}
+

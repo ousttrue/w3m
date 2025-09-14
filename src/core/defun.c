@@ -1,4 +1,6 @@
+#include "AnchorList.h"
 #include "HttpRequest.h"
+#include "follow_anchor.h"
 #include "regex.h"
 #include "util.h"
 #include "form.h"
@@ -625,3 +627,126 @@ DEFUN(reMark, REG_MARK, "Mark all occurences of a pattern")
         }
     }
 }
+
+/* follow HREF link */
+DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
+{
+    followAnchor(ui, false);
+}
+
+/* view inline image */
+DEFUN(followI, VIEW_IMAGE, "Display image in viewer")
+{
+    followImage(ui, false);
+}
+
+/* submit form */
+DEFUN(submitForm, SUBMIT, "Submit form")
+{
+    _followForm(ui, true, false);
+}
+
+/* go to the top anchor */
+DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink")
+{
+    struct HmarkerList* hl = ui.current_buffer->document.hmarklist;
+    if (ui.current_buffer->document.firstLine == NULL)
+        return;
+
+    if (!hl || hl->nmark == 0)
+        return;
+
+    struct BufferPoint* po;
+    struct Anchor* an;
+    int hseq = 0;
+    do {
+        if (hseq >= hl->nmark)
+            return;
+        po = hl->marks + hseq;
+        an = retrieveAnchor(ui.current_buffer->document.href, *po);
+        if (an == NULL)
+            an = retrieveAnchor(ui.current_buffer->document.formitem, *po);
+        hseq++;
+    } while (an == NULL);
+
+    gotoLine(&ui.current_buffer->document, po->line);
+    ui.current_buffer->pos = po->pos;
+}
+
+/* go to the last anchor */
+DEFUN(lastA, LINK_END, "Move to the last hyperlink")
+{
+    struct HmarkerList* hl = ui.current_buffer->document.hmarklist;
+    struct BufferPoint* po;
+    struct Anchor* an;
+    int hseq;
+
+    if (ui.current_buffer->document.firstLine == NULL)
+        return;
+    if (!hl || hl->nmark == 0)
+        return;
+
+    hseq = hl->nmark - 1;
+    do {
+        if (hseq < 0)
+            return;
+        po = hl->marks + hseq;
+        an = retrieveAnchor(ui.current_buffer->document.href, *po);
+        if (an == NULL)
+            an = retrieveAnchor(ui.current_buffer->document.formitem, *po);
+        hseq--;
+    } while (an == NULL);
+
+    gotoLine(&ui.current_buffer->document, po->line);
+    ui.current_buffer->pos = po->pos;
+}
+
+/* go to the nth anchor */
+DEFUN(nthA, LINK_N, "Go to the nth link")
+{
+    struct HmarkerList* hl = ui.current_buffer->document.hmarklist;
+
+    int n = ui.searchkey_num;
+    if (n < 0 || n > hl->nmark)
+        return;
+
+    if (ui.current_buffer->document.firstLine == NULL)
+        return;
+    if (!hl || hl->nmark == 0)
+        return;
+
+    struct BufferPoint* po = hl->marks + n - 1;
+    struct Anchor* an = retrieveAnchor(ui.current_buffer->document.href, *po);
+    if (an == NULL)
+        an = retrieveAnchor(ui.current_buffer->document.formitem, *po);
+    if (an == NULL)
+        return;
+
+    gotoLine(&ui.current_buffer->document, po->line);
+    ui.current_buffer->pos = po->pos;
+}
+
+/* go to the next anchor */
+DEFUN(nextA, NEXT_LINK, "Move to the next hyperlink")
+{
+    _nextA(ui, false);
+}
+
+/* go to the previous anchor */
+DEFUN(prevA, PREV_LINK, "Move to the previous hyperlink")
+{
+    _prevA(ui, false);
+}
+
+/* go to the next visited anchor */
+DEFUN(nextVA, NEXT_VISITED, "Move to the next visited hyperlink")
+{
+    _nextA(ui, true);
+}
+
+/* go to the previous visited anchor */
+DEFUN(prevVA, PREV_VISITED, "Move to the previous visited hyperlink")
+{
+    _prevA(ui, true);
+}
+

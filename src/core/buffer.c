@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "history.h"
 #include "ui.h"
 #include "buffer_list.h"
 #include "line.h"
@@ -1303,3 +1304,160 @@ void shiftvisualpos(struct Buffer* buf, int shift)
         buf->visualpos = l->bwidth;
 }
 
+/* go to the next [visited] anchor */
+void _nextA(struct UI ui, int visited)
+{
+    struct HmarkerList* hl = ui.current_buffer->document.hmarklist;
+    struct BufferPoint* po;
+    struct Anchor *an, *pan;
+    int i, x, y, n = ui.searchkey_num;
+    struct Url url;
+
+    if (ui.current_buffer->document.firstLine == NULL)
+        return;
+    if (!hl || hl->nmark == 0)
+        return;
+
+    an = retrieveCurrentAnchor(ui.current_buffer);
+    if (visited != true && an == NULL)
+        an = retrieveCurrentForm(ui.current_buffer);
+
+    y = currentLine(&ui.current_buffer->document)->linenumber;
+    x = ui.current_buffer->pos;
+
+    if (visited == true) {
+        n = hl->nmark;
+    }
+
+    for (i = 0; i < n; i++) {
+        pan = an;
+        if (an && an->hseq >= 0) {
+            int hseq = an->hseq + 1;
+            do {
+                if (hseq >= hl->nmark) {
+                    if (visited == true)
+                        return;
+                    an = pan;
+                    goto _end;
+                }
+                po = &hl->marks[hseq];
+                an = retrieveAnchor(ui.current_buffer->document.href, *po);
+                if (visited != true && an == NULL)
+                    an = retrieveAnchor(ui.current_buffer->document.formitem, *po);
+                hseq++;
+                if (visited == true && an) {
+                    url = parseUrl(an->url, baseURL(ui.current_buffer));
+                    if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
+                        goto _end;
+                    }
+                }
+            } while (an == NULL || an == pan);
+        } else {
+            an = closest_next_anchor(ui.current_buffer->document.href, NULL, x, y);
+            if (visited != true)
+                an = closest_next_anchor(ui.current_buffer->document.formitem, an, x, y);
+            if (an == NULL) {
+                if (visited == true)
+                    return;
+                an = pan;
+                break;
+            }
+            x = an->start.pos;
+            y = an->start.line;
+            if (visited == true) {
+                url = parseUrl(an->url, baseURL(ui.current_buffer));
+                if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
+                    goto _end;
+                }
+            }
+        }
+    }
+    if (visited == true)
+        return;
+
+_end:
+    if (an == NULL || an->hseq < 0)
+        return;
+    po = &hl->marks[an->hseq];
+    gotoLine(&ui.current_buffer->document, po->line);
+    ui.current_buffer->pos = po->pos;
+}
+
+/* go to the previous anchor */
+void _prevA(struct UI ui, int visited)
+{
+    struct HmarkerList* hl = ui.current_buffer->document.hmarklist;
+    struct BufferPoint* po;
+    struct Anchor *an, *pan;
+    int i, x, y, n = ui.searchkey_num;
+    struct Url url;
+
+    if (ui.current_buffer->document.firstLine == NULL)
+        return;
+    if (!hl || hl->nmark == 0)
+        return;
+
+    an = retrieveCurrentAnchor(ui.current_buffer);
+    if (visited != true && an == NULL)
+        an = retrieveCurrentForm(ui.current_buffer);
+
+    y = currentLine(&ui.current_buffer->document)->linenumber;
+    x = ui.current_buffer->pos;
+
+    if (visited == true) {
+        n = hl->nmark;
+    }
+
+    for (i = 0; i < n; i++) {
+        pan = an;
+        if (an && an->hseq >= 0) {
+            int hseq = an->hseq - 1;
+            do {
+                if (hseq < 0) {
+                    if (visited == true)
+                        return;
+                    an = pan;
+                    goto _end;
+                }
+                po = hl->marks + hseq;
+                an = retrieveAnchor(ui.current_buffer->document.href, *po);
+                if (visited != true && an == NULL)
+                    an = retrieveAnchor(ui.current_buffer->document.formitem, *po);
+                hseq--;
+                if (visited == true && an) {
+                    url = parseUrl(an->url, baseURL(ui.current_buffer));
+                    if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
+                        goto _end;
+                    }
+                }
+            } while (an == NULL || an == pan);
+        } else {
+            an = closest_prev_anchor(ui.current_buffer->document.href, NULL, x, y);
+            if (visited != true)
+                an = closest_prev_anchor(ui.current_buffer->document.formitem, an, x, y);
+            if (an == NULL) {
+                if (visited == true)
+                    return;
+                an = pan;
+                break;
+            }
+            x = an->start.pos;
+            y = an->start.line;
+            if (visited == true && an) {
+                url = parseUrl(an->url, baseURL(ui.current_buffer));
+                if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
+                    goto _end;
+                }
+            }
+        }
+    }
+    if (visited == true)
+        return;
+
+_end:
+    if (an == NULL || an->hseq < 0)
+        return;
+    po = hl->marks + an->hseq;
+    gotoLine(&ui.current_buffer->document, po->line);
+    ui.current_buffer->pos = po->pos;
+}
