@@ -66,7 +66,7 @@ void reseq_anchor(struct Buffer* buf);
 
 struct Anchor* retrieveCurrentAnchor(struct Buffer* buf);
 struct Anchor* retrieveCurrentImg(struct Buffer* buf);
-struct Anchor* retrieveCurrentForm(struct Buffer* buf);
+struct Anchor* retrieveCurrentForm(struct Document* doc);
 struct Anchor* searchURLLabel(struct Buffer* buf, const char* url);
 void reAnchorWord(struct Buffer* buf, struct LineList* l, int spos, int epos);
 const char* reAnchor(struct Buffer* buf, const char* re);

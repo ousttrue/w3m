@@ -649,7 +649,7 @@ static void
 nextX(struct UI ui, int d, int dy)
 {
     struct HmarkerList* hl = ui.current_buffer->document.hmarklist;
-    struct Anchor *an, *pan;
+    struct Anchor* pan;
     int i, x, y, n = ui.searchkey_num;
 
     if (ui.current_buffer->document.firstLine == NULL)
@@ -657,9 +657,9 @@ nextX(struct UI ui, int d, int dy)
     if (!hl || hl->nmark == 0)
         return;
 
-    an = retrieveCurrentAnchor(ui.current_buffer);
+    struct Anchor* an = retrieveCurrentAnchor(ui.current_buffer);
     if (an == NULL)
-        an = retrieveCurrentForm(ui.current_buffer);
+        an = retrieveCurrentForm(&ui.current_buffer->document);
 
     struct LineList* l;
     l = currentLine(&ui.current_buffer->document);
@@ -704,7 +704,7 @@ static void
 nextY(struct UI ui, int d)
 {
     struct HmarkerList* hl = ui.current_buffer->document.hmarklist;
-    struct Anchor *an, *pan;
+    struct Anchor* pan;
     int i, x, y, n = ui.searchkey_num;
     int hseq;
 
@@ -713,7 +713,7 @@ nextY(struct UI ui, int d)
     if (!hl || hl->nmark == 0)
         return;
 
-    an = retrieveCurrentAnchor(ui.current_buffer);
+    struct Anchor* an = retrieveCurrentAnchor(ui.current_buffer);
     if (an == NULL)
         an = retrieveCurrentForm(ui.current_buffer);
 
@@ -995,8 +995,7 @@ void follow_map(struct UI ui, struct KeyValue* arg)
     an = retrieveCurrentImg(ui.current_buffer);
     // x = ui.current_buffer->cursorX;
     // y = ui.current_buffer->cursorY;
-    struct MapArea* a;
-    a = follow_map_menu(ui, ui.current_buffer, name, an, x, y);
+    struct MapArea* a = follow_map_menu(ui, &ui.current_buffer->document, name, an, x, y);
     if (a == NULL || a->url == NULL || *(a->url) == '\0') {
         return;
     }
@@ -1302,7 +1301,7 @@ _peekURL(struct UI ui, int only_img)
     s = NULL;
     a = (only_img ? NULL : retrieveCurrentAnchor(ui.current_buffer));
     if (a == NULL) {
-        a = (only_img ? NULL : retrieveCurrentForm(ui.current_buffer));
+        a = (only_img ? NULL : retrieveCurrentForm(&ui.current_buffer->document));
         if (a == NULL) {
             a = retrieveCurrentImg(ui.current_buffer);
             if (a == NULL)
@@ -1770,7 +1769,7 @@ void set_buffer_environ(struct Buffer* buf)
             set_environ("W3M_CURRENT_IMG", parsedURL2Str(&pu)->ptr);
         } else
             set_environ("W3M_CURRENT_IMG", "");
-        a = retrieveCurrentForm(buf);
+        a = retrieveCurrentForm(&buf->document);
         if (a)
             set_environ("W3M_CURRENT_FORM", form2str((struct FormItem*)a->url));
         else

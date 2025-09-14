@@ -14,9 +14,11 @@ struct Document {
     struct LineList* firstLine;
     int allLine;
     int topLineIndex;
+    // cursor y in document
     int currentLineIndex;
 
     int cols;
+    // cursor x in document
     int currentColumn;
     int pos;
     int visualpos;

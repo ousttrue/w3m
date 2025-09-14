@@ -73,7 +73,7 @@ void query_from_followform(struct UI ui, Str* query, struct FormItem* fi, int mu
         if (multipart) {
             if (f2->type == FORM_INPUT_IMAGE) {
                 int x = 0, y = 0;
-                getMapXY(ui.current_buffer, retrieveCurrentImg(ui.current_buffer), &x, &y);
+                getMapXY(&ui.current_buffer->document, retrieveCurrentImg(ui.current_buffer), &x, &y);
                 *query = Strdup(conv_form_encoding(f2->name, fi, ui.current_buffer));
                 Strcat_charp(*query, ".x");
                 form_write_data(body, fi->parent->boundary, (*query)->ptr,
@@ -103,7 +103,7 @@ void query_from_followform(struct UI ui, Str* query, struct FormItem* fi, int mu
             /* not multipart */
             if (f2->type == FORM_INPUT_IMAGE) {
                 int x = 0, y = 0;
-                getMapXY(ui.current_buffer, retrieveCurrentImg(ui.current_buffer), &x, &y);
+                getMapXY(&ui.current_buffer->document, retrieveCurrentImg(ui.current_buffer), &x, &y);
                 Strcat(*query,
                     Str_form_quote(conv_form_encoding(f2->name, fi, ui.current_buffer)));
                 Strcat(*query, Sprintf(".x=%d&", x));
@@ -297,7 +297,7 @@ void _followForm(struct UI ui, bool submit, bool do_download)
     if (ui.current_buffer->document.firstLine == NULL)
         return;
 
-    struct Anchor* a = retrieveCurrentForm(ui.current_buffer);
+    struct Anchor* a = retrieveCurrentForm(&ui.current_buffer->document);
     if (a == NULL)
         return;
 
@@ -478,7 +478,7 @@ void followAnchor(struct UI ui, bool do_download)
     int x = 0, y = 0;
     int map = 0;
     if (a && a->image && a->image->ismap) {
-        getMapXY(ui.current_buffer, a, &x, &y);
+        getMapXY(&ui.current_buffer->document, a, &x, &y);
         map = 1;
     }
     a = retrieveCurrentAnchor(ui.current_buffer);

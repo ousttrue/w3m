@@ -485,7 +485,7 @@ void reshapeBuffer(struct UI ui, struct Buffer* buf, int cols)
         }
         buf->document.pos -= currentLine(&buf->document)->bpos;
         // if (FoldLine && buf->content.cc.content_type != CONTENTTYPE_TEXT_HTML)
-            buf->document.currentColumn = 0;
+        buf->document.currentColumn = 0;
         // else
         //     buf->currentColumn = sbuf.currentColumn;
     }
@@ -927,12 +927,12 @@ retrieveCurrentImg(struct Buffer* buf)
 }
 
 struct Anchor*
-retrieveCurrentForm(struct Buffer* buf)
+retrieveCurrentForm(struct Document* doc)
 {
-    if (currentLine(&buf->document) == 0)
+    if (currentLine(doc) == 0)
         return 0;
-    return retrieveAnchor(buf->document.formitem,
-        (struct BufferPoint) { .line = currentLine(&buf->document)->linenumber, .pos = buf->document.pos });
+    return retrieveAnchor(doc->formitem,
+        (struct BufferPoint) { .line = doc->currentLineIndex, .pos = doc->pos });
 }
 
 struct Anchor*
@@ -1042,7 +1042,7 @@ const char* getAnchorText(struct Buffer* buf, struct AnchorList* al, struct Anch
 struct MapArea*
 retrieveCurrentMapArea(struct Buffer* buf)
 {
-    struct Anchor *a_img, *a_form;
+    struct Anchor* a_img;
     struct FormItem* fi;
     struct MapList* ml;
     ListItem* al;
@@ -1052,7 +1052,7 @@ retrieveCurrentMapArea(struct Buffer* buf)
     a_img = retrieveCurrentImg(buf);
     if (!(a_img && a_img->image && a_img->image->map))
         return 0;
-    a_form = retrieveCurrentForm(buf);
+    struct Anchor* a_form = retrieveCurrentForm(&buf->document);
     if (!(a_form && a_form->url))
         return 0;
     fi = (struct FormItem*)a_form->url;
@@ -1062,7 +1062,7 @@ retrieveCurrentMapArea(struct Buffer* buf)
     ml = searchMapList(&buf->document, fi->value ? fi->value->ptr : 0);
     if (!ml)
         return 0;
-    n = searchMapArea(buf, ml, a_img);
+    n = searchMapArea(&buf->document, ml, a_img);
     if (n < 0)
         return 0;
     for (i = 0, al = ml->area->first; al != 0; i++, al = al->next) {
@@ -1309,7 +1309,7 @@ void _nextA(struct UI ui, int visited)
 {
     struct HmarkerList* hl = ui.current_buffer->document.hmarklist;
     struct BufferPoint* po;
-    struct Anchor *an, *pan;
+    struct Anchor* pan;
     int i, x, y, n = ui.searchkey_num;
     struct Url url;
 
@@ -1318,9 +1318,9 @@ void _nextA(struct UI ui, int visited)
     if (!hl || hl->nmark == 0)
         return;
 
-    an = retrieveCurrentAnchor(ui.current_buffer);
+    struct Anchor* an = retrieveCurrentAnchor(ui.current_buffer);
     if (visited != true && an == NULL)
-        an = retrieveCurrentForm(ui.current_buffer);
+        an = retrieveCurrentForm(&ui.current_buffer->document);
 
     y = currentLine(&ui.current_buffer->document)->linenumber;
     x = ui.current_buffer->document.pos;
@@ -1388,7 +1388,7 @@ void _prevA(struct UI ui, int visited)
 {
     struct HmarkerList* hl = ui.current_buffer->document.hmarklist;
     struct BufferPoint* po;
-    struct Anchor *an, *pan;
+    struct Anchor* pan;
     int i, x, y, n = ui.searchkey_num;
     struct Url url;
 
@@ -1397,9 +1397,9 @@ void _prevA(struct UI ui, int visited)
     if (!hl || hl->nmark == 0)
         return;
 
-    an = retrieveCurrentAnchor(ui.current_buffer);
+    struct Anchor* an = retrieveCurrentAnchor(ui.current_buffer);
     if (visited != true && an == NULL)
-        an = retrieveCurrentForm(ui.current_buffer);
+        an = retrieveCurrentForm(&ui.current_buffer->document);
 
     y = currentLine(&ui.current_buffer->document)->linenumber;
     x = ui.current_buffer->document.pos;

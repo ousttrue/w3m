@@ -100,20 +100,17 @@ nearestMapArea(struct MapList* ml, int x, int y)
     return n;
 }
 
-int searchMapArea(struct Buffer* buf, struct MapList* ml, struct Anchor* a_img)
+int searchMapArea(struct Document* doc, struct MapList* ml, struct Anchor* a_img)
 {
-    ListItem* al;
-    struct MapArea* a;
-    int i, n;
-    int px, py;
-
     if (!(ml && ml->area && ml->area->nitem))
         return -1;
-    if (!getMapXY(buf, a_img, &px, &py))
+    int px, py;
+    if (!getMapXY(doc, a_img, &px, &py))
         return -1;
-    n = -ml->area->nitem;
-    for (i = 0, al = ml->area->first; al != NULL; i++, al = al->next) {
-        a = (struct MapArea*)al->ptr;
+    int n = -ml->area->nitem;
+    ListItem* al = ml->area->first;
+    for (int i = 0; al != NULL; i++, al = al->next) {
+        struct MapArea* a = (struct MapArea*)al->ptr;
         if (!a)
             continue;
         if (n < 0 && inMapArea(a, px, py)) {
@@ -131,33 +128,33 @@ int searchMapArea(struct Buffer* buf, struct MapList* ml, struct Anchor* a_img)
     return n;
 }
 
-int getMapXY(struct Buffer* buf, struct Anchor* a, int* x, int* y)
+bool getMapXY(struct Document* doc, struct Anchor* a, int* x, int* y)
 {
-    if (!buf || !a || !a->image || !x || !y)
-        return 0;
-    *x = (int)((buf->document.currentColumn /*+ buf->cursorX*/
-                   - COLPOS(&currentLine(&buf->document)->l, a->start.pos) + 0.5)
+    if (!doc || !a || !a->image || !x || !y)
+        return false;
+
+    *x = (int)((doc->currentColumn /*+ buf->cursorX*/
+                   - COLPOS(&currentLine(doc)->l, a->start.pos) + 0.5)
              * pixel_per_char)
         - a->image->xoffset;
-    *y = (int)((currentLine(&buf->document)->linenumber - a->image->y + 0.5)
+    *y = (int)((doc->currentLineIndex - a->image->y + 0.5)
              * pixel_per_line)
         - a->image->yoffset;
     if (*x <= 0)
         *x = 1;
     if (*y <= 0)
         *y = 1;
-    return 1;
+    return true;
 }
 
 struct Anchor*
 retrieveCurrentMap(struct Buffer* buf)
 {
-    struct Anchor* a;
-    struct FormItem* fi;
-
-    a = retrieveCurrentForm(buf);
+    struct Anchor* a = retrieveCurrentForm(&buf->document);
     if (!a || !a->url)
         return NULL;
+
+    struct FormItem* fi;
     fi = (struct FormItem*)a->url;
     if (fi->parent->method == FORM_METHOD_INTERNAL && !Strcmp_charp(fi->parent->action, "map"))
         return a;
@@ -165,13 +162,13 @@ retrieveCurrentMap(struct Buffer* buf)
 }
 
 struct MapArea*
-follow_map_menu(struct UI ui, struct Buffer* buf, const char* name, struct Anchor* a_img, int x, int y)
+follow_map_menu(struct UI ui, struct Document*doc, const char* name, struct Anchor* a_img, int x, int y)
 {
-    struct MapList* ml = searchMapList(&buf->document, name);
+    struct MapList* ml = searchMapList(doc, name);
     if (ml == NULL || ml->area == NULL || ml->area->nitem == 0)
         return NULL;
 
-    int initial = searchMapArea(buf, ml, a_img);
+    int initial = searchMapArea(doc, ml, a_img);
     int selected = -1;
     if (initial < 0)
         initial = 0;
@@ -401,7 +398,7 @@ page_info_panel(struct UI ui, struct Buffer* buf)
             "<tr valign=top><td nowrap>URL of current image<td><a href=\"",
             q, "\">", p, "</a>", NULL);
     }
-    a = retrieveCurrentForm(buf);
+    a = retrieveCurrentForm(&buf->document);
     if (a != NULL) {
         struct FormItem* fi = (struct FormItem*)a->url;
         p = form2str(fi);
