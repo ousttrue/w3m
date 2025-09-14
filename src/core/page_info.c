@@ -159,18 +159,18 @@ page_info_panel(struct UI ui, struct Buffer* buf)
 
     append_link_info(&buf->document, tmp, buf->document.linklist);
 
-    if (buf->document_header != NULL) {
+    if (buf->content.document_header) {
         Strcat_charp(tmp, "<hr width=50%><h1>Header information</h1><pre>\n");
         TextListItem* ti;
-        for (ti = buf->document_header->first; ti != NULL; ti = ti->next)
+        for (ti = buf->content.document_header->first; ti != NULL; ti = ti->next)
             Strcat_m_charp(tmp, "<pre_int>", html_quote(ti->ptr),
                 "</pre_int>\n", NULL);
         Strcat_charp(tmp, "</pre>\n");
     }
 
-    if (buf->ssl_certificate)
+    if (buf->content.ssl_certificate)
         Strcat_m_charp(tmp, "<h1>SSL certificate</h1><pre>\n",
-            html_quote(buf->ssl_certificate), "</pre>\n", NULL);
+            html_quote(buf->content.ssl_certificate), "</pre>\n", NULL);
 end:
     Strcat_charp(tmp, "</body></html>");
     return (struct Content) {

@@ -13,9 +13,6 @@ extern int nextpage_topline;
 struct Buffer {
     const char* filename;
 
-    char* ssl_certificate;
-    TextList* document_header;
-
     struct Content content;
 
     struct Document document;

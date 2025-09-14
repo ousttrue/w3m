@@ -354,7 +354,7 @@ static Str make_lastline_message(struct UI ui)
     //     Strcat(msg, Sprintf("%d/%d (%d%%)", cl, ll, r));
     // } else
     Strcat_charp(msg, "Viewing");
-    if (ui.current_buffer->ssl_certificate)
+    if (ui.current_buffer->content.ssl_certificate)
         Strcat_charp(msg, "[SSL]");
     Strcat_charp(msg, " <");
     Strcat_charp(msg, ui.current_buffer->document.title);

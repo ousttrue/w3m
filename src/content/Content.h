@@ -11,6 +11,9 @@ extern int retryAsHttp;
 
 struct Content {
     struct Url url;
+    TextList* document_header;
+    const char* ssl_certificate;
+
     Str page;
     const char* sourcefile;
     struct ContentTypeCharset cc;

@@ -493,7 +493,7 @@ DEFUN(editBf, EDIT, "Edit local source")
     Str cmd;
     if (ui.current_buffer->edit)
         cmd = unquote_mailcap(ui.current_buffer->edit, contentTypeStr(ui.current_buffer->content.cc.content_type), fn,
-            getHttpHeaderValue(ui.current_buffer->document_header, "Content-Type:"), NULL);
+            getHttpHeaderValue(ui.current_buffer->content.document_header, "Content-Type:"), NULL);
     else
         cmd = myEditor(Editor, shell_quote(fn), 1);
     exec_cmd(cmd->ptr);

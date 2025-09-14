@@ -42,19 +42,27 @@ int nextpage_topline = (false);
 struct Buffer*
 newBuffer()
 {
-    struct Buffer* n = New(struct Buffer);
-    memset(n, 0, sizeof(struct Buffer));
-    n->document.cols = 0;
-    n->content.url.scheme = SCM_UNKNOWN;
-    n->document.baseUrl = 0;
-    n->document.baseTarget = 0;
-    n->document.title = "";
-    n->clone = New(int);
-    *n->clone = 1;
-    n->ssl_certificate = 0;
-    n->auto_detect = WcOption.auto_detect;
-    n->check_url = MarkAllPages;
-    return n;
+    struct Buffer* buf = New(struct Buffer);
+    memset(buf, 0, sizeof(struct Buffer));
+
+    buf->content = (struct Content) {
+        .url.scheme = SCM_UNKNOWN,
+        .ssl_certificate = 0,
+    };
+
+    buf->document = (struct Document) {
+        .cols = 0,
+        .baseUrl = 0,
+        .baseTarget = 0,
+        .title = "",
+    };
+
+    buf->clone = New(int);
+    *buf->clone = 1;
+
+    buf->auto_detect = WcOption.auto_detect;
+    buf->check_url = MarkAllPages;
+    return buf;
 }
 
 /*
@@ -765,8 +773,8 @@ char* last_modified(struct Buffer* buf)
     TextListItem* ti;
     struct stat st;
 
-    if (buf->document_header) {
-        for (ti = buf->document_header->first; ti; ti = ti->next) {
+    if (buf->content.document_header) {
+        for (ti = buf->content.document_header->first; ti; ti = ti->next) {
             if (strncasecmp(ti->ptr, "Last-modified: ", 15) == 0) {
                 return ti->ptr + 15;
             }

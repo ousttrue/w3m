@@ -24,18 +24,20 @@
 void httpInitClient(struct HttpClient* c, struct UserInteraction ui)
 {
     memset(c, 0, sizeof(struct HttpClient));
-    c->ui = ui;
+    *c = (struct HttpClient) {
+        .ui = ui,
+        .uname = NULL,
+        .pwd = NULL,
+        .realm = NULL,
+        .add_auth_cookie_flag = 0,
+        .ssl_certificate = 0,
+    };
     // c->status = HTST_NORMAL,
     // c->url = path;
     // c->page = NULL;
     // c->content_type = "text/plain";
     // c->charset = WC_CES_US_ASCII;
     // c->current_content_length = 0;
-    c->uname = NULL;
-    c->pwd = NULL;
-    c->realm = NULL;
-    c->add_auth_cookie_flag = 0;
-    c->ssl_certificate = 0;
 }
 
 static void write_from_file(int sock, const char* file)
@@ -473,6 +475,8 @@ struct Content httpRequest(struct HttpClient* c,
         struct ContentTypeCharset cc = getContentType(res->headers);
         struct Content content = {
             .url = c->exchanges[i].request.url,
+            .document_header = c->exchanges[i].response.headers,
+            .ssl_certificate = c->ssl_certificate,
             .page = 0,
             .cc = {
                 .content_type = cc.content_type,

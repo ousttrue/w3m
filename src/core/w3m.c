@@ -1123,7 +1123,7 @@ DEFUN(svSrc, DOWNLOAD SAVE, "Save document source")
     // if (ui.current_buffer->real_scheme == SCM_LOCAL)
     //     file = conv_from_system(guessSaveName(NULL, ui.current_buffer->content.url.real_file));
     // else
-    const char* file = guessSaveName(ui.current_buffer->document_header, ui.current_buffer->content.url.file);
+    const char* file = guessSaveName(ui.current_buffer->content.document_header, ui.current_buffer->content.url.file);
     doFileCopy(ui.current_buffer->content.sourcefile, file);
     PermitSaveToPipe = false;
 }
