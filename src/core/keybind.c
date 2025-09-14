@@ -34,7 +34,7 @@ CommandFunc GlobalKeymap[128] = {
     /*  C-x     C-y     C-z     C-[     C-\     C-]     C-^     C-_      */
     nulcmd,
     nulcmd,
-    susp,
+    nulcmd,
     nulcmd,
     nulcmd,
     nulcmd,

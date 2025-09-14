@@ -63,7 +63,6 @@ static int mLineD(struct UI ui, char c);
 static int mOk(struct UI ui, char c);
 static int mCancel(struct UI ui, char c);
 static int mClose(struct UI ui, char c);
-static int mSusp(struct UI ui, char c);
 static int mMouse(struct UI ui, char c);
 static int mSgrMouse(struct UI ui, char c);
 static int mSrchF(struct UI ui, char c);
@@ -102,7 +101,7 @@ static MenuFunc MenuKeymap[128] = {
     /*  C-x     C-y     C-z     C-[     C-\     C-]     C-^     C-_      */
     mNull,
     mNull,
-    mSusp,
+    mNull,
     mNull,
     mNull,
     mNull,
@@ -1187,15 +1186,6 @@ static int
 mClose(struct UI ui, char c)
 {
     return (MENU_CLOSE);
-}
-
-static int
-mSusp(struct UI ui, char c)
-{
-    susp(getUI());
-    draw_all_menu(CurrentMenu);
-    select_menu(CurrentMenu, CurrentMenu->select);
-    return (MENU_NOTHING);
 }
 
 static const char* SearchString = NULL;

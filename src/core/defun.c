@@ -4,6 +4,7 @@
 #include "geometry.h" // IWYU pragma: keep
 #include "buffer.h"
 #include "history.h"
+#include "image.h"
 #include "linein.h"
 #include "local_cgi.h"
 #include "runtime.h"
@@ -329,5 +330,115 @@ DEFUN(movRW, NEXT_WORD, "Move to the next word")
             l = currentLine(&ui.current_buffer->document);
             lb = l->l.lineBuf;
         }
+    }
+}
+
+static int
+prev_nonnull_line(struct UI ui, struct LineList* line)
+{
+    struct LineList* l;
+    for (l = line; l != NULL && l->l.len == 0; l = l->prev)
+        ;
+    if (l == NULL || l->l.len == 0)
+        return -1;
+
+    ui.current_buffer->document.currentLineIndex = l->linenumber;
+    if (l != line)
+        ui.current_buffer->pos = currentLine(&ui.current_buffer->document)->l.len;
+    return 0;
+}
+
+DEFUN(movLW, PREV_WORD, "Move to the previous word")
+{
+    int n = ui.searchkey_num;
+    for (int i = 0; i < n; i++) {
+        struct LineList* pline = currentLine(&ui.current_buffer->document);
+        int ppos = ui.current_buffer->pos;
+
+        if (prev_nonnull_line(ui, currentLine(&ui.current_buffer->document)) < 0)
+            goto end;
+
+        while (1) {
+            struct LineList* l = currentLine(&ui.current_buffer->document);
+            const char* lb = l->l.lineBuf;
+            while (ui.current_buffer->pos > 0) {
+                int tmp = prevChar(ui.current_buffer->pos, &l->l);
+                if (wc_is_ucs_alnum(getChar(&lb[tmp])))
+                    break;
+                ui.current_buffer->pos = tmp;
+            }
+            if (ui.current_buffer->pos > 0)
+                break;
+            if (prev_nonnull_line(ui, currentLine(&ui.current_buffer->document)->prev) < 0) {
+                ui.current_buffer->document.currentLineIndex = pline->linenumber;
+                ui.current_buffer->pos = ppos;
+                goto end;
+            }
+            ui.current_buffer->pos = currentLine(&ui.current_buffer->document)->l.len;
+        }
+
+        {
+            struct LineList* l = currentLine(&ui.current_buffer->document);
+            const char* lb = l->l.lineBuf;
+            while (ui.current_buffer->pos > 0) {
+                int tmp = prevChar(ui.current_buffer->pos, &l->l);
+                if (!wc_is_ucs_alnum(getChar(&lb[tmp])))
+                    break;
+                ui.current_buffer->pos = tmp;
+            }
+        }
+    }
+end:
+}
+
+/* Quit */
+DEFUN(quitfm, ABORT EXIT, "Quit without confirmation")
+{
+    _quitfm(false);
+}
+
+/* Question and Quit */
+DEFUN(qquitfm, QUIT, "Quit with confirmation request")
+{
+    _quitfm(confirm_on_quit);
+}
+
+/* Select buffer */
+DEFUN(selBuf, SELECT, "Display buffer-stack panel")
+{
+    struct Buffer* buf;
+    int ok;
+    char cmd;
+
+    ok = false;
+    do {
+        buf = selectBuffer(Firstbuf, ui.current_buffer, &cmd);
+        switch (cmd) {
+        case 'B':
+            ok = true;
+            break;
+        case '\n':
+        case ' ':
+            setCurrentBuffer(buf);
+            ok = true;
+            break;
+        case 'D':
+            delBuffer(ui, buf);
+            break;
+        case 'q':
+            qquitfm(getUI());
+            break;
+        case 'Q':
+            quitfm(getUI());
+            break;
+        }
+    } while (!ok);
+
+    for (buf = Firstbuf; buf != NULL; buf = buf->nextBuffer) {
+        if (buf == ui.current_buffer)
+            continue;
+        deleteImage(buf);
+        if (clear_buffer)
+            tmpClearBuffer(buf);
     }
 }

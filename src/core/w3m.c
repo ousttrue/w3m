@@ -1033,183 +1033,13 @@ escKeyProc(int c, int esc, unsigned char* map)
  * 1999 09:29:56 +0900
  */
 
-static int prevChar(int s, struct Line* l)
-{
-    do {
-        (s)--;
-    } while ((s) > 0 && (l)->propBuf[s] & PC_WCHAR2);
-    return s;
-}
-
 static wc_uint32
 getChar(const char* p)
 {
     return wc_any_to_ucs(wtf_parse1((wc_uchar**)&p));
 }
 
-static int
-prev_nonnull_line(struct UI ui, struct LineList* line)
-{
-    struct LineList* l;
-    for (l = line; l != NULL && l->l.len == 0; l = l->prev)
-        ;
-    if (l == NULL || l->l.len == 0)
-        return -1;
 
-    ui.current_buffer->document.currentLineIndex = l->linenumber;
-    if (l != line)
-        ui.current_buffer->pos = currentLine(&ui.current_buffer->document)->l.len;
-    return 0;
-}
-
-DEFUN(movLW, PREV_WORD, "Move to the previous word")
-{
-    int n = ui.searchkey_num;
-    for (int i = 0; i < n; i++) {
-        struct LineList* pline = currentLine(&ui.current_buffer->document);
-        int ppos = ui.current_buffer->pos;
-
-        if (prev_nonnull_line(ui, currentLine(&ui.current_buffer->document)) < 0)
-            goto end;
-
-        while (1) {
-            struct LineList* l = currentLine(&ui.current_buffer->document);
-            const char* lb = l->l.lineBuf;
-            while (ui.current_buffer->pos > 0) {
-                int tmp = prevChar(ui.current_buffer->pos, &l->l);
-                if (wc_is_ucs_alnum(getChar(&lb[tmp])))
-                    break;
-                ui.current_buffer->pos = tmp;
-            }
-            if (ui.current_buffer->pos > 0)
-                break;
-            if (prev_nonnull_line(ui, currentLine(&ui.current_buffer->document)->prev) < 0) {
-                ui.current_buffer->document.currentLineIndex = pline->linenumber;
-                ui.current_buffer->pos = ppos;
-                goto end;
-            }
-            ui.current_buffer->pos = currentLine(&ui.current_buffer->document)->l.len;
-        }
-
-        {
-            struct LineList* l = currentLine(&ui.current_buffer->document);
-            const char* lb = l->l.lineBuf;
-            while (ui.current_buffer->pos > 0) {
-                int tmp = prevChar(ui.current_buffer->pos, &l->l);
-                if (!wc_is_ucs_alnum(getChar(&lb[tmp])))
-                    break;
-                ui.current_buffer->pos = tmp;
-            }
-        }
-    }
-end:
-}
-
-static void
-_quitfm(int confirm)
-{
-    const char* ans = "y";
-    if (checkDownloadList())
-        /* FIXME: gettextize? */
-        ans = inputChar(getUI(), "Download process retains. "
-                                 "Do you want to exit w3m? (y/n)");
-    else if (confirm)
-        /* FIXME: gettextize? */
-        ans = inputChar(getUI(), "Do you want to exit w3m? (y/n)");
-    if (!(ans && TOLOWER(*ans) == 'y')) {
-
-        return;
-    }
-
-    term_title(""); /* XXX */
-    if (activeImage)
-        termImage();
-    fmTerm();
-    save_cookies();
-    if (UseHistory && SaveURLHist)
-        saveHistory(URLHist, URLHistSize);
-    w3m_exit(0);
-}
-
-/* Quit */
-DEFUN(quitfm, ABORT EXIT, "Quit without confirmation")
-{
-    _quitfm(false);
-}
-
-/* Question and Quit */
-DEFUN(qquitfm, QUIT, "Quit with confirmation request")
-{
-    _quitfm(confirm_on_quit);
-}
-
-/* Select buffer */
-DEFUN(selBuf, SELECT, "Display buffer-stack panel")
-{
-    struct Buffer* buf;
-    int ok;
-    char cmd;
-
-    ok = false;
-    do {
-        buf = selectBuffer(Firstbuf, ui.current_buffer, &cmd);
-        switch (cmd) {
-        case 'B':
-            ok = true;
-            break;
-        case '\n':
-        case ' ':
-            setCurrentBuffer(buf);
-            ok = true;
-            break;
-        case 'D':
-            delBuffer(ui, buf);
-            break;
-        case 'q':
-            qquitfm(getUI());
-            break;
-        case 'Q':
-            quitfm(getUI());
-            break;
-        }
-    } while (!ok);
-
-    for (buf = Firstbuf; buf != NULL; buf = buf->nextBuffer) {
-        if (buf == ui.current_buffer)
-            continue;
-        deleteImage(buf);
-        if (clear_buffer)
-            tmpClearBuffer(buf);
-    }
-}
-
-/* Suspend (on BSD), or run interactive shell (on SysV) */
-DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background")
-{
-    struct VirtualTerm* vt = getScreen();
-#ifndef SIGSTOP
-    char* shell;
-#endif /* not SIGSTOP */
-    vt_move(vt, getLines() - 1, 0);
-    vt_clrtoeolx(vt);
-    // refresh(ttyWriter());
-    fmTerm();
-#ifndef SIGSTOP
-    shell = getenv("SHELL");
-    if (shell == NULL)
-        shell = "/bin/sh";
-    system(shell);
-#else /* SIGSTOP */
-    signal(SIGTSTP, SIG_DFL); /* just in case */
-    /*
-     * Note: If susp() was called from SIGTSTP handler,
-     * unblocking SIGTSTP would be required here.
-     * Currently not.
-     */
-    kill(0, SIGTSTP); /* stop whole job, not a single process */
-#endif /* SIGSTOP */
-    fmInit();
-}
 
 /* Go to specified line */
 void _goLine(struct UI ui, const char* l)
@@ -3435,4 +3265,29 @@ Str myEditor(const char* cmd, const char* file, int line)
         Strcat_m_charp(tmp, " ", file, NULL);
     }
     return tmp;
+}
+
+void _quitfm(bool confirm)
+{
+    const char* ans = "y";
+    if (checkDownloadList())
+        /* FIXME: gettextize? */
+        ans = inputChar(getUI(), "Download process retains. "
+                                 "Do you want to exit w3m? (y/n)");
+    else if (confirm)
+        /* FIXME: gettextize? */
+        ans = inputChar(getUI(), "Do you want to exit w3m? (y/n)");
+    if (!(ans && TOLOWER(*ans) == 'y')) {
+
+        return;
+    }
+
+    term_title(""); /* XXX */
+    if (activeImage)
+        termImage();
+    fmTerm();
+    save_cookies();
+    if (UseHistory && SaveURLHist)
+        saveHistory(URLHist, URLHistSize);
+    w3m_exit(0);
 }

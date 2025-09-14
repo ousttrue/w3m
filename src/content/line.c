@@ -399,3 +399,11 @@ int nextChar(int s, struct Line* l)
     return s;
 }
 
+int prevChar(int s, struct Line* l)
+{
+    do {
+        (s)--;
+    } while ((s) > 0 && (l)->propBuf[s] & PC_WCHAR2);
+    return s;
+}
+

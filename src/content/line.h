@@ -93,3 +93,4 @@ int columnLen(struct Line* line, int column);
 // set PC_WCHAR1, PC_WCHAR2
 Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor);
 int nextChar(int s, struct Line* l);
+int prevChar(int s, struct Line* l);
