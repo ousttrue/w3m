@@ -2,6 +2,12 @@
 #include <Str.h>
 #include <ces.h>
 
+#define MAX_SELECT 10 /* max number of <select>..</select> \
+                       * within one document */
+
+#define MAX_TEXTAREA 10 /* max number of <textarea>..</textarea> \
+                         * within one document */
+
 struct FormSelectOptionItem {
     Str value;
     Str label;
@@ -74,3 +80,9 @@ struct Form {
 
 enum FormItemType formtype(const char* typestr);
 const char* form2str(struct FormItem* fi);
+struct Form* newFormList(const char* action, const char* method, const char* charset,
+    const char* enctype, const char* target, const char* name,
+    struct Form* _next);
+void chooseSelectOption(struct FormItem* fi, struct FormSelectOptionItem* item);
+void updateSelectOption(struct FormItem* fi, struct FormSelectOptionItem* item);
+void addSelectOption(struct FormSelectOption* fso, Str value, Str label, int chk);

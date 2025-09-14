@@ -1,30 +1,36 @@
 #include "form.h"
+#include "HtmlTagParsed.h"
+#include "Line.h"
 #include "AnchorList.h"
 #include "Anchor.h"
 #include "ContentType.h"
 #include "str_util.h"
 #include "runtime.h"
 #include "convertline.h"
-#include "HtmlTagParsed.h"
 #include "KeyValue.h"
 #include "HtmlTagAttribute.h"
 #include "quote.h"
-#include "alloc.h"
 #include "rc.h"
 #include "downloadlist.h"
 #include "ui.h"
 #include "cookie.h"
 #include "buffer_util.h"
-#include "myctype.h"
 #include "local_cgi.h"
 #include "regex.h"
 #include "util.h"
 #include "w3m.h"
 #include "maparea.h"
+#include "menu.h"
+
+#include "alloc.h"
+#include "myctype.h"
+
+#include <wc.h>
+#include <wtf.h>
+
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
-#include <wtf.h>
 #include <unistd.h>
 
 int FoldTextarea = (false);
@@ -37,47 +43,6 @@ extern Str* textarea_str;
 extern int max_textarea;
 extern struct FormSelectOption* select_option;
 extern int max_select;
-#include "menu.h"
-
-struct Form*
-newFormList(const char* action, const char* method, const char* charset, const char* enctype,
-    const char* target, const char* name, struct Form* _next)
-{
-    struct Form* l;
-    Str a = Strnew_charp(action);
-    int m = FORM_METHOD_GET;
-    int e = FORM_ENCTYPE_URLENCODED;
-    wc_ces c = 0;
-
-    if (method == NULL || !strcasecmp(method, "get"))
-        m = FORM_METHOD_GET;
-    else if (!strcasecmp(method, "post"))
-        m = FORM_METHOD_POST;
-    else if (!strcasecmp(method, "internal"))
-        m = FORM_METHOD_INTERNAL;
-    /* unknown method is regarded as 'get' */
-
-    if (m != FORM_METHOD_GET && enctype != NULL && !strcasecmp(enctype, "multipart/form-data")) {
-        e = FORM_ENCTYPE_MULTIPART;
-    }
-
-    if (charset != NULL)
-        c = wc_guess_charset(charset, 0);
-
-    l = New(struct Form);
-    l->item = l->lastitem = NULL;
-    l->action = a;
-    l->method = m;
-    l->charset = c;
-    l->enctype = e;
-    l->target = target;
-    l->name = name;
-    l->next = _next;
-    l->nitems = 0;
-    l->body = NULL;
-    l->length = 0;
-    return l;
-}
 
 /*
  * add <input> element to form_list
@@ -434,40 +399,6 @@ void formUpdateBuffer(struct Anchor* a, struct Buffer* buf, struct FormItem* for
     buf->document.currentLineIndex = current;
 }
 
-Str textfieldrep(Str s, int width)
-{
-    Lineprop c_type;
-    Str n = Strnew_size(width + 2);
-    int i, j, k, c_len;
-
-    j = 0;
-    for (i = 0; i < s->length; i += c_len) {
-        c_type = get_mctype((unsigned char*)&s->ptr[i]);
-        c_len = get_mclen(&s->ptr[i]);
-        if (s->ptr[i] == '\r')
-            continue;
-        k = j + get_mcwidth(&s->ptr[i]);
-        if (k > width)
-            break;
-        if (c_type == PC_CTRL)
-            Strcat_char(n, ' ');
-        else if (c_type & PC_UNKNOWN)
-            Strcat_char(n, ' ');
-        else if (s->ptr[i] == '&')
-            Strcat_charp(n, "&amp;");
-        else if (s->ptr[i] == '<')
-            Strcat_charp(n, "&lt;");
-        else if (s->ptr[i] == '>')
-            Strcat_charp(n, "&gt;");
-        else
-            Strcat_charp_n(n, &s->ptr[i], c_len);
-        j = k;
-    }
-    for (; j < width; j++)
-        Strcat_char(n, ' ');
-    return n;
-}
-
 static void
 form_fputs_decode(Str s, FILE* f)
 {
@@ -540,64 +471,6 @@ void input_textarea(struct FormItem* fi)
     fclose(f);
 input_end:
     unlink(tmpf);
-}
-
-void addSelectOption(struct FormSelectOption* fso, Str value, Str label, int chk)
-{
-    struct FormSelectOptionItem* o;
-    o = New(struct FormSelectOptionItem);
-    if (value == NULL)
-        value = label;
-    o->value = value;
-    Strremovefirstspaces(label);
-    Strremovetrailingspaces(label);
-    o->label = label;
-    o->checked = chk;
-    o->next = NULL;
-    if (fso->first == NULL)
-        fso->first = fso->last = o;
-    else {
-        fso->last->next = o;
-        fso->last = o;
-    }
-}
-
-void chooseSelectOption(struct FormItem* fi, struct FormSelectOptionItem* item)
-{
-    struct FormSelectOptionItem* opt;
-    int i;
-
-    fi->selected = 0;
-    if (item == NULL) {
-        fi->value = Strnew_size(0);
-        fi->label = Strnew_size(0);
-        return;
-    }
-    fi->value = item->value;
-    fi->label = item->label;
-    for (i = 0, opt = item; opt != NULL; i++, opt = opt->next) {
-        if (opt->checked) {
-            fi->value = opt->value;
-            fi->label = opt->label;
-            fi->selected = i;
-            break;
-        }
-    }
-    updateSelectOption(fi, item);
-}
-
-void updateSelectOption(struct FormItem* fi, struct FormSelectOptionItem* item)
-{
-    int i;
-
-    if (fi == NULL || item == NULL)
-        return;
-    for (i = 0; item != NULL; i++, item = item->next) {
-        if (i == fi->selected)
-            item->checked = true;
-        else
-            item->checked = false;
-    }
 }
 
 int formChooseOptionByMenu(struct UI ui, struct FormItem* fi, int x, int y)
