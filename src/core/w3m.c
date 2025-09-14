@@ -1027,46 +1027,6 @@ escKeyProc(int c, int esc, unsigned char* map)
         w3mFuncList[(int)map[c]].func(getUI());
 }
 
-DEFUN(movL, MOVE_LEFT, "Cursor left")
-{
-    cursorLeft(1);
-}
-
-DEFUN(movL1, MOVE_LEFT1, "Cursor left. With edge touched, slide")
-{
-    cursorLeft(1);
-}
-
-DEFUN(movD, MOVE_DOWN, "Cursor down")
-{
-    cursorDown(1);
-}
-
-DEFUN(movD1, MOVE_DOWN1, "Cursor down. With edge touched, slide")
-{
-    cursorDown(1);
-}
-
-DEFUN(movU, MOVE_UP, "Cursor up")
-{
-    cursorUp(1);
-}
-
-DEFUN(movU1, MOVE_UP1, "Cursor up. With edge touched, slide")
-{
-    cursorUp(1);
-}
-
-DEFUN(movR, MOVE_RIGHT, "Cursor right")
-{
-    cursorRight(1);
-}
-
-DEFUN(movR1, MOVE_RIGHT1, "Cursor right. With edge touched, slide")
-{
-    cursorRight(1);
-}
-
 /* movLW, movRW */
 /*
  * From: Takashi Nishimoto <g96p0935@mse.waseda.ac.jp> Date: Mon, 14 Jun
