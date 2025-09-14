@@ -1,6 +1,7 @@
 #include "Anchor.h"
 #include <string.h>
 
+
 int MarkAllPages = (false);
 
 void initAnchor(struct Anchor* a, const char* url, const char* target,

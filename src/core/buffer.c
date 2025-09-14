@@ -195,23 +195,21 @@ writeBufferName(struct Buffer* buf, int n)
     vt_move(getScreen(), n, 0);
 
     Str msg = Sprintf("<%s> [%d lines]", buf->document.title, all);
-    if (buf->filename != 0) {
-        switch (buf->content.url.scheme) {
-        case SCM_LOCAL:
-        case SCM_LOCAL_CGI:
-            // if (strcmp(buf->content.url.file, "-")) {
-            //     Strcat_char(msg, ' ');
-            //     Strcat_charp(msg, conv_from_system(buf->content.url.real_file));
-            // }
-            break;
-        case SCM_UNKNOWN:
-        case SCM_MISSING:
-            break;
-        default:
-            Strcat_char(msg, ' ');
-            Strcat(msg, parsedURL2Str(&buf->content.url));
-            break;
-        }
+    switch (buf->content.url.scheme) {
+    case SCM_LOCAL:
+    case SCM_LOCAL_CGI:
+        // if (strcmp(buf->content.url.file, "-")) {
+        //     Strcat_char(msg, ' ');
+        //     Strcat_charp(msg, conv_from_system(buf->content.url.real_file));
+        // }
+        break;
+    case SCM_UNKNOWN:
+    case SCM_MISSING:
+        break;
+    default:
+        Strcat_char(msg, ' ');
+        Strcat(msg, parsedURL2Str(&buf->content.url));
+        break;
     }
     vt_addnstr_sup(getScreen(), msg->ptr, getScreen()->COLS - 1);
 }

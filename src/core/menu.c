@@ -1405,24 +1405,22 @@ initSelectMenu(struct UI ui)
     label = New_N(char*, nitem + 2);
     for (i = 0, buf = Firstbuf; i < nitem; i++, buf = buf->nextBuffer) {
         str = Sprintf("<%s>", buf->document.title);
-        if (buf->filename != NULL) {
-            switch (buf->content.url.scheme) {
-            case SCM_LOCAL:
-                // if (strcmp(buf->content.url.file, "-")) {
-                //     Strcat_char(str, ' ');
-                //     Strcat_charp(str, conv_from_system(buf->content.url.real_file));
-                // }
-                break;
-                /* case SCM_UNKNOWN: */
-            case SCM_MISSING:
-                break;
-            default: {
-                Strcat_char(str, ' ');
-                const char* p = url_decode2(parsedURL2Str(&buf->content.url)->ptr, 0);
-                Strcat_charp(str, p);
-                break;
-            }
-            }
+        switch (buf->content.url.scheme) {
+        case SCM_LOCAL:
+            // if (strcmp(buf->content.url.file, "-")) {
+            //     Strcat_char(str, ' ');
+            //     Strcat_charp(str, conv_from_system(buf->content.url.real_file));
+            // }
+            break;
+            /* case SCM_UNKNOWN: */
+        case SCM_MISSING:
+            break;
+        default: {
+            Strcat_char(str, ' ');
+            const char* p = url_decode2(parsedURL2Str(&buf->content.url)->ptr, 0);
+            Strcat_charp(str, p);
+            break;
+        }
         }
         label[i] = str->ptr;
         if (len < str->length)

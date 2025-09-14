@@ -1255,7 +1255,6 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
         return;
     }
     buf->content.url = ui.current_buffer->content.url;
-    buf->filename = ui.current_buffer->filename;
     buf->content.sourcefile = ui.current_buffer->content.sourcefile;
     buf->document.charset = ui.current_buffer->document.charset;
     buf->clone = ui.current_buffer->clone;
@@ -1598,7 +1597,6 @@ void set_buffer_environ(struct UI ui)
 
     if (buf != prev_buf) {
         set_environ("W3M_SOURCEFILE", buf->content.sourcefile);
-        set_environ("W3M_FILENAME", buf->filename);
         set_environ("W3M_TITLE", buf->document.title);
         set_environ("W3M_URL", parsedURL2Str(&buf->content.url)->ptr);
         set_environ("W3M_TYPE", contentTypeStr(buf->content.cc.content_type));

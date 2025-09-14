@@ -480,22 +480,23 @@ DEFUN(linend, LINE_END, "Go to the end of the line")
 /* Run editor on the current buffer */
 DEFUN(editBf, EDIT, "Edit local source")
 {
-    const char* fn = ui.current_buffer->filename;
-    if (fn == NULL
-        || (ui.current_buffer->content.cc.content_type == CONTENTTYPE_UNKNOWN && ui.current_buffer->edit == NULL)
-        || /* Reading shell */ ui.current_buffer->content.url.scheme != SCM_LOCAL
-        || !strcmp(ui.current_buffer->content.url.file, "-") /* file is std input  */
-    ) {
-        message(getUI(), MSG_ERR, "Can't edit other than local file");
-        return;
-    }
+    // const char* fn = ui.current_buffer->filename;
+    // if (fn == NULL
+    //     || (ui.current_buffer->content.cc.content_type == CONTENTTYPE_UNKNOWN && ui.current_buffer->edit == NULL)
+    //     || /* Reading shell */ ui.current_buffer->content.url.scheme != SCM_LOCAL
+    //     || !strcmp(ui.current_buffer->content.url.file, "-") /* file is std input  */
+    // ) {
+    //     message(getUI(), MSG_ERR, "Can't edit other than local file");
+    //     return;
+    // }
 
     Str cmd;
     if (ui.current_buffer->edit)
-        cmd = unquote_mailcap(ui.current_buffer->edit, contentTypeStr(ui.current_buffer->content.cc.content_type), fn,
+        cmd = unquote_mailcap(ui.current_buffer->edit,
+            contentTypeStr(ui.current_buffer->content.cc.content_type), ui.current_buffer->content.sourcefile,
             getHttpHeaderValue(ui.current_buffer->content.document_header, "Content-Type:"), NULL);
     else
-        cmd = myEditor(Editor, shell_quote(fn), 1);
+        cmd = myEditor(Editor, shell_quote(ui.current_buffer->content.sourcefile), 1);
     exec_cmd(cmd->ptr);
 }
 

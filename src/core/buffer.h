@@ -11,12 +11,8 @@
 extern int nextpage_topline;
 
 struct Buffer {
-    const char* filename;
-
     struct Content content;
-
     struct Document document;
-
     struct Buffer* nextBuffer;
 
     int* clone;
