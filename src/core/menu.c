@@ -1464,48 +1464,32 @@ initSelectMenu(struct UI ui)
 static void
 smChBuf(struct UI ui)
 {
-    int i;
-    struct Buffer* buf;
-
     if (SelectV < 0 || SelectV >= SelectMenu.nitem)
         return;
+
+    int i;
+    struct Buffer* buf;
     for (i = 0, buf = Firstbuf; i < SelectV; i++, buf = buf->nextBuffer)
         ;
-    ui.current_buffer = buf;
-    for (buf = Firstbuf; buf != NULL; buf = buf->nextBuffer) {
-        if (buf == ui.current_buffer)
-            continue;
-        deleteImage(buf);
-        if (clear_buffer)
-            tmpClearBuffer(buf);
-    }
+
+    setCurrentBuffer(buf);
 }
 
 static int
 smDelBuf(struct UI ui, char c)
 {
-    int i, x, y, mselect;
-    struct Buffer* buf;
-
     if (CurrentMenu->select < 0 || CurrentMenu->select >= SelectMenu.nitem)
         return (MENU_NOTHING);
-    for (i = 0, buf = Firstbuf; i < CurrentMenu->select;
-        i++, buf = buf->nextBuffer)
-        ;
-    if (ui.current_buffer == buf)
-        ui.current_buffer = buf->nextBuffer;
-    Firstbuf = deleteBuffer(Firstbuf, buf);
-    if (!ui.current_buffer)
-        ui.current_buffer = nthBuffer(Firstbuf, i - 1);
-    ;
-    if (Firstbuf == NULL) {
-        Firstbuf = nullBuffer();
-        ui.current_buffer = Firstbuf;
-    }
 
-    x = CurrentMenu->x;
-    y = CurrentMenu->y;
-    mselect = CurrentMenu->select;
+    struct Buffer* buf = Firstbuf;
+    for (int i = 0; i < CurrentMenu->select; i++, buf = buf->nextBuffer)
+        ;
+
+    delBuffer(ui, buf);
+
+    int x = CurrentMenu->x;
+    int y = CurrentMenu->y;
+    int mselect = CurrentMenu->select;
 
     initSelectMenu(ui);
 

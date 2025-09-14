@@ -73,9 +73,7 @@ nullBuffer(void)
 void clearBuffer(struct Buffer* buf)
 {
     // charset !
-    // buf->document = (struct Document) { 0 };
-    buf->document.topLineIndex = 0;
-    buf->document.currentLineIndex = 0;
+    buf->document = (struct Document) { 0 };
 }
 
 /*
@@ -1312,3 +1310,13 @@ struct Buffer* makeBuffer(struct UI ui, struct Content* c)
     //     preFormUpdateBuffer(b);
     // return b;
 }
+
+void tmpClearBuffer(struct Buffer* buf)
+{
+    if (writeBufferCache(buf) == 0) {
+        buf->document.firstLine = NULL;
+        buf->document.topLineIndex = 0;
+        buf->document.currentLineIndex = 0;
+    }
+}
+

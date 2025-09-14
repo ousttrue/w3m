@@ -49,7 +49,6 @@ void fmTerm();
 int main_loop(const char* line_str);
 void _goLine(struct UI ui, const char* l);
 
-void delBuffer(struct UI ui, struct Buffer* buf);
 
 bool onFrame();
 void onKeyInput(unsigned char c);
@@ -57,7 +56,6 @@ void onKeyInput(unsigned char c);
 void pushEvent(int cmd, void* data);
 void chkURLBuffer(struct Buffer* buf);
 struct _AlarmEvent* setAlarmEvent(struct _AlarmEvent* event, int sec, short status, int cmd, void* data);
-void tmpClearBuffer(struct Buffer* buf);
 
 void change_charset(struct UI ui, struct KeyValue* arg);
 void w3m_exit(int i);

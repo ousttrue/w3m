@@ -1,4 +1,5 @@
 #include "buffer_list.h"
+#include "buffer.h"
 #include "Content.h"
 #include "HttpRequest.h"
 #include "buffer.h"
@@ -93,17 +94,59 @@ void pushBuffer(struct UI ui, struct Buffer* buf)
     }
 }
 
+void delBuffer(struct UI ui, struct Buffer* buf)
+{
+    if (buf == NULL)
+        return;
+    if (Currentbuf == buf)
+        Currentbuf = buf->nextBuffer;
+    Firstbuf = deleteBuffer(Firstbuf, buf);
+    if (!Currentbuf)
+        Currentbuf = Firstbuf;
+
+    if (Firstbuf == NULL) {
+        /* No more buffer */
+        Firstbuf = nullBuffer();
+        Currentbuf = Firstbuf;
+    }
+
+    // if (ui.current_buffer == buf)
+    //     ui.current_buffer = buf->nextBuffer;
+    // Firstbuf = deleteBuffer(Firstbuf, buf);
+    // if (!ui.current_buffer)
+    //     ui.current_buffer = nthBuffer(Firstbuf, i - 1);
+    // ;
+    // if (Firstbuf == NULL) {
+    //     Firstbuf = nullBuffer();
+    //     ui.current_buffer = Firstbuf;
+    // }
+}
+
+void repBuffer(struct UI ui, struct Buffer* oldbuf, struct Buffer* buf)
+{
+    Firstbuf = replaceBuffer(Firstbuf, oldbuf, buf);
+    Currentbuf = buf;
+}
+
+void setCurrentBuffer(struct Buffer* buf)
+{
+    if (!buf) {
+        return;
+    }
+    Currentbuf = buf;
+
+    // ui.current_buffer = buf;
+    for (buf = Firstbuf; buf != NULL; buf = buf->nextBuffer) {
+        if (buf == Currentbuf)
+            continue;
+        deleteImage(buf);
+        if (clear_buffer)
+            tmpClearBuffer(buf);
+    }
+}
+
 void cmd_loadContent(struct UI ui, struct Content c)
 {
-    // struct Buffer* buf;
-    // if ((buf = ui.current_buffer->linkBuffer[LB_N_INFO]) != NULL) {
-    //     ui.current_buffer = buf;
-    //
-    //     return;
-    // }
-    // if ((buf = ui.current_buffer->linkBuffer[LB_INFO]) != NULL)
-    //     delBuffer(ui, buf);
-
     struct Buffer* buf = makeBuffer(ui, &c);
     if (!buf) {
         message(getUI(), MSG_ERR, "Can't load string");

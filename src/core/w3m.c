@@ -1046,33 +1046,6 @@ escKeyProc(int c, int esc, unsigned char* map)
         w3mFuncList[(int)map[c]].func(getUI());
 }
 
-void tmpClearBuffer(struct Buffer* buf)
-{
-    if (writeBufferCache(buf) == 0) {
-        buf->document.firstLine = NULL;
-        buf->document.topLineIndex = 0;
-        buf->document.currentLineIndex = 0;
-    }
-}
-
-void delBuffer(struct UI ui, struct Buffer* buf)
-{
-    if (buf == NULL)
-        return;
-    if (ui.current_buffer == buf)
-        ui.current_buffer = buf->nextBuffer;
-    Firstbuf = deleteBuffer(Firstbuf, buf);
-    if (!ui.current_buffer)
-        ui.current_buffer = Firstbuf;
-}
-
-static void
-repBuffer(struct UI ui, struct Buffer* oldbuf, struct Buffer* buf)
-{
-    Firstbuf = replaceBuffer(Firstbuf, oldbuf, buf);
-    ui.current_buffer = buf;
-}
-
 /* Move page forward */
 DEFUN(pgFore, NEXT_PAGE, "Scroll down one page")
 {
@@ -1576,16 +1549,11 @@ DEFUN(selBuf, SELECT, "Display buffer-stack panel")
             break;
         case '\n':
         case ' ':
-            ui.current_buffer = buf;
+            setCurrentBuffer(buf);
             ok = true;
             break;
         case 'D':
             delBuffer(ui, buf);
-            if (Firstbuf == NULL) {
-                /* No more buffer */
-                Firstbuf = nullBuffer();
-                ui.current_buffer = Firstbuf;
-            }
             break;
         case 'q':
             qquitfm(getUI());
@@ -2378,17 +2346,13 @@ DEFUN(nextU, NEXT_UP, "Move upward to the next hyperlink")
 /* go to the next bufferr */
 DEFUN(nextBf, NEXT, "Switch to the next buffer")
 {
-    ui.current_buffer = prevBuffer(Firstbuf, ui.current_buffer);
+    setCurrentBuffer(prevBuffer(Firstbuf, ui.current_buffer));
 }
 
 /* go to the previous bufferr */
 DEFUN(prevBf, PREV, "Switch to the previous buffer")
 {
-    struct Buffer* buf = ui.current_buffer->nextBuffer;
-    if (!buf) {
-        return;
-    }
-    ui.current_buffer = buf;
+    setCurrentBuffer( ui.current_buffer->nextBuffer);
 }
 
 static int
