@@ -264,7 +264,7 @@ void bufToScreen(struct UI ui)
         image_touch++;
         draw_image_flag = false;
     }
-    redrawNLine(ui, buf, getScreen()->ROWS - 1);
+    redrawNLine(ui, buf, getScreen()->ROWS);
     cline = topLine(&buf->document);
     ccolumn = buf->currentColumn;
 
