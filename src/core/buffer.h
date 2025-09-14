@@ -74,20 +74,6 @@ struct AnchorList;
 const char* getAnchorText(struct Buffer* buf, struct AnchorList* al, struct Anchor* a);
 struct BufferPoint getBufferPosition(struct Buffer* buf);
 
-inline static void COPY_BUFPOSITION(struct Document* dstbuf, struct Document* srcbuf)
-{
-    (dstbuf)->topLineIndex = (srcbuf)->topLineIndex;
-    (dstbuf)->currentLineIndex = (srcbuf)->currentLineIndex;
-    (dstbuf)->pos = (srcbuf)->pos;
-    (dstbuf)->visualpos = (srcbuf)->visualpos;
-    (dstbuf)->currentColumn = (srcbuf)->currentColumn;
-}
-
-inline static void RESTORE_BUFPOSITION(struct UI ui, struct Document* sbufp)
-{
-    COPY_BUFPOSITION(&ui.current_buffer->document, sbufp);
-}
-
 struct Buffer* makeBuffer(struct UI ui, struct Content* c);
 void tmpClearBuffer(struct Buffer* buf);
 void shiftvisualpos(struct Buffer* buf, int shift);

@@ -42,7 +42,7 @@ void parseArgs(int argc, char** argv)
 
 void SAVE_BUFPOSITION(struct Buffer* sbufp)
 {
-    COPY_BUFPOSITION(sbufp, Currentbuf);
+    COPY_DOCUMENT_POSITION(sbufp, Currentbuf);
 }
 
 // void saveBufferInfo(struct UI ui)

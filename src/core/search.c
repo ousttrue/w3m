@@ -329,7 +329,7 @@ dispincsrch(struct UI ui, int ch, Str buf, Lineprop* prop)
         } else
             return 020; /* _prev completion for C-s C-s */
     } else if (*str) {
-        RESTORE_BUFPOSITION(ui, &sbuf.document);
+        COPY_DOCUMENT_POSITION(&ui.current_buffer->document, &sbuf.document);
         srchcore(ui, str, searchRoutine);
     }
 
@@ -346,7 +346,7 @@ void isrch(struct UI ui, SearchFunc func, char* prompt)
     searchRoutine = func;
     const char* str = inputLineHistSearch(ui, prompt, NULL, IN_STRING, TextHist, dispincsrch);
     if (str == NULL) {
-        RESTORE_BUFPOSITION(ui, &sbuf.document);
+        COPY_DOCUMENT_POSITION(&ui.current_buffer->document, &sbuf.document);
     }
 }
 

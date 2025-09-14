@@ -32,6 +32,15 @@ struct Document {
     struct HmarkerList* imarklist;
 };
 
+inline static void COPY_DOCUMENT_POSITION(struct Document* dst, struct Document* src)
+{
+    dst->topLineIndex = src->topLineIndex;
+    dst->currentLineIndex = src->currentLineIndex;
+    dst->pos = src->pos;
+    dst->visualpos = src->visualpos;
+    dst->currentColumn = src->currentColumn;
+}
+
 struct HtmlTagParsed;
 
 struct LineList* getLine(struct Document* doc, int i);
