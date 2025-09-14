@@ -1,4 +1,5 @@
 #include "HttpRequest.h"
+#include "regex.h"
 #include "util.h"
 #include "form.h"
 #include "http_message.h"
@@ -514,4 +515,113 @@ DEFUN(editScr, EDIT_SCREEN, "Edit rendered copy of document")
         )
             ->ptr);
     unlink(tmpf);
+}
+
+/* Set / unset mark */
+DEFUN(_mark, MARK, "Set/unset mark")
+{
+    if (!use_mark)
+        return;
+    if (ui.current_buffer->document.firstLine == NULL)
+        return;
+    struct LineList* l = currentLine(&ui.current_buffer->document);
+    l->l.propBuf[ui.current_buffer->pos] ^= PE_MARK;
+}
+
+/* Go to next mark */
+DEFUN(nextMk, NEXT_MARK, "Go to the next mark")
+{
+    if (!use_mark)
+        return;
+    if (ui.current_buffer->document.firstLine == NULL)
+        return;
+    int i = ui.current_buffer->pos + 1;
+    struct LineList* l = currentLine(&ui.current_buffer->document);
+    if (i >= l->l.len) {
+        i = 0;
+        l = l->next;
+    }
+    while (l != NULL) {
+        for (; i < l->l.len; i++) {
+            if (l->l.propBuf[i] & PE_MARK) {
+                ui.current_buffer->document.currentLineIndex = l->linenumber;
+                ui.current_buffer->pos = i;
+
+                return;
+            }
+        }
+        l = l->next;
+        i = 0;
+    }
+    /* FIXME: gettextize? */
+    message(getUI(), MSG_INFO, "No mark exist after here");
+}
+
+/* Go to previous mark */
+DEFUN(prevMk, PREV_MARK, "Go to the previous mark")
+{
+    if (!use_mark)
+        return;
+    if (ui.current_buffer->document.firstLine == NULL)
+        return;
+    int i = ui.current_buffer->pos - 1;
+    struct LineList* l = currentLine(&ui.current_buffer->document);
+    if (i < 0) {
+        l = l->prev;
+        if (l != NULL)
+            i = l->l.len - 1;
+    }
+    while (l != NULL) {
+        for (; i >= 0; i--) {
+            if (l->l.propBuf[i] & PE_MARK) {
+                ui.current_buffer->document.currentLineIndex = l->linenumber;
+                ui.current_buffer->pos = i;
+
+                return;
+            }
+        }
+        l = l->prev;
+        if (l != NULL)
+            i = l->l.len - 1;
+    }
+    /* FIXME: gettextize? */
+    message(getUI(), MSG_INFO, "No mark exist before here");
+}
+
+static const char* MarkString = NULL;
+
+/* Mark place to which the regular expression matches */
+DEFUN(reMark, REG_MARK, "Mark all occurences of a pattern")
+{
+    if (!use_mark)
+        return;
+
+    const char* str = searchKeyData();
+    if (str == NULL || *str == '\0') {
+        str = inputStrHist(getUI(), "(Mark)Regexp: ", MarkString, TextHist);
+        if (str == NULL || *str == '\0') {
+
+            return;
+        }
+    }
+    str = conv_search_string(ui, str, DisplayCharset);
+    if ((str = regexCompile(str, 1)) != NULL) {
+        message(getUI(), MSG_INFO, str);
+        return;
+    }
+
+    struct LineList* l;
+    MarkString = str;
+    for (l = ui.current_buffer->document.firstLine; l != NULL; l = l->next) {
+        const char* p = l->l.lineBuf;
+        for (;;) {
+            if (regexMatch(p, &l->l.lineBuf[l->l.len] - p, p == l->l.lineBuf) == 1) {
+                const char *p1, *p2;
+                matchedPosition(&p1, &p2);
+                l->l.propBuf[p1 - l->l.lineBuf] |= PE_MARK;
+                p = p2;
+            } else
+                break;
+        }
+    }
 }
