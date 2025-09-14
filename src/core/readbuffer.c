@@ -11,15 +11,11 @@
 #include "symbol.h"
 #include "hash.h"
 
-#include "ui.h"
-
 #include <wc.h>
 #include <wtf.h>
 
 #include <strings.h>
 #include <stdlib.h>
-
-
 
 char DisableCenter = (false);
 int IndentIncr = (4);
@@ -974,18 +970,18 @@ int HTMLtagproc1(struct HtmlTagParsed* tag, struct html_feed_environ* h_env)
         HTMLlineproc0("</b>", h_env, true);
         return 1;
     case HTML_Q:
-        if (DisplayCharset != WC_CES_US_ASCII) {
-            HTMLlineproc0((obuf->q_level & 1 ? "&lsquo;" : "&ldquo;"), h_env, true);
-            obuf->q_level += 1;
-        } else
-            HTMLlineproc0("`", h_env, true);
+        // if (DisplayCharset != WC_CES_US_ASCII) {
+        //     HTMLlineproc0((obuf->q_level & 1 ? "&lsquo;" : "&ldquo;"), h_env, true);
+        //     obuf->q_level += 1;
+        // } else
+        HTMLlineproc0("`", h_env, true);
         return 1;
     case HTML_N_Q:
-        if (DisplayCharset != WC_CES_US_ASCII) {
-            obuf->q_level -= 1;
-            HTMLlineproc0((obuf->q_level & 1 ? "&rsquo;" : "&rdquo;"), h_env, true);
-        } else
-            HTMLlineproc0("'", h_env, true);
+        // if (DisplayCharset != WC_CES_US_ASCII) {
+        //     obuf->q_level -= 1;
+        //     HTMLlineproc0((obuf->q_level & 1 ? "&rsquo;" : "&rdquo;"), h_env, true);
+        // } else
+        HTMLlineproc0("'", h_env, true);
         return 1;
     case HTML_FIGURE:
     case HTML_N_FIGURE:
