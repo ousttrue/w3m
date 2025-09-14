@@ -1056,12 +1056,6 @@ getChar(const char* p)
 }
 
 static int
-is_wordchar(wc_uint32 c)
-{
-    return wc_is_ucs_alnum(c);
-}
-
-static int
 prev_nonnull_line(struct UI ui, struct LineList* line)
 {
     struct LineList* l;
@@ -1094,7 +1088,7 @@ DEFUN(movLW, PREV_WORD, "Move to the previous word")
             const char* lb = l->l.lineBuf;
             while (ui.current_buffer->pos > 0) {
                 int tmp = prevChar(ui.current_buffer->pos, &l->l);
-                if (is_wordchar(getChar(&lb[tmp])))
+                if (wc_is_ucs_alnum(getChar(&lb[tmp])))
                     break;
                 ui.current_buffer->pos = tmp;
             }
@@ -1113,7 +1107,7 @@ DEFUN(movLW, PREV_WORD, "Move to the previous word")
             const char* lb = l->l.lineBuf;
             while (ui.current_buffer->pos > 0) {
                 int tmp = prevChar(ui.current_buffer->pos, &l->l);
-                if (!is_wordchar(getChar(&lb[tmp])))
+                if (!wc_is_ucs_alnum(getChar(&lb[tmp])))
                     break;
                 ui.current_buffer->pos = tmp;
             }
@@ -1150,11 +1144,11 @@ DEFUN(movRW, NEXT_WORD, "Move to the next word")
 
         struct LineList* l = currentLine(&ui.current_buffer->document);
         const char* lb = l->l.lineBuf;
-        while (ui.current_buffer->pos < l->l.len && is_wordchar(getChar(&lb[ui.current_buffer->pos])))
+        while (ui.current_buffer->pos < l->l.len && wc_is_ucs_alnum(getChar(&lb[ui.current_buffer->pos])))
             ui.current_buffer->pos = nextChar(ui.current_buffer->pos, &l->l);
 
         while (1) {
-            while (ui.current_buffer->pos < l->l.len && !is_wordchar(getChar(&lb[ui.current_buffer->pos])))
+            while (ui.current_buffer->pos < l->l.len && !wc_is_ucs_alnum(getChar(&lb[ui.current_buffer->pos])))
                 ui.current_buffer->pos = nextChar(ui.current_buffer->pos, &l->l);
             if (ui.current_buffer->pos < l->l.len)
                 break;
@@ -2901,19 +2895,19 @@ getCurWord(struct Buffer* buf, int* spos, int* epos)
         return NULL;
     p = l->l.lineBuf;
     e = buf->pos;
-    while (e > 0 && !is_wordchar(getChar(&p[e])))
+    while (e > 0 && !wc_is_ucs_alnum(getChar(&p[e])))
         e = prevChar(e, &l->l);
-    if (!is_wordchar(getChar(&p[e])))
+    if (!wc_is_ucs_alnum(getChar(&p[e])))
         return NULL;
     b = e;
     while (b > 0) {
         int tmp = b;
         tmp = prevChar(tmp, &l->l);
-        if (!is_wordchar(getChar(&p[tmp])))
+        if (!wc_is_ucs_alnum(getChar(&p[tmp])))
             break;
         b = tmp;
     }
-    while (e < l->l.len && is_wordchar(getChar(&p[e])))
+    while (e < l->l.len && wc_is_ucs_alnum(getChar(&p[e])))
         e = nextChar(e, &l->l);
     *spos = b;
     *epos = e;
