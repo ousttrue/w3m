@@ -1687,7 +1687,6 @@ struct Anchor*
 accesskey_menu(struct UI ui, struct Buffer* buf)
 {
     struct AnchorList* al = buf->document.href;
-    struct Anchor* a;
     struct Anchor** ap;
     int i, n, nitem = 0, key = -1;
     unsigned char c;
@@ -1695,7 +1694,7 @@ accesskey_menu(struct UI ui, struct Buffer* buf)
     if (!al)
         return NULL;
     for (i = 0; i < al->nanchor; i++) {
-        a = &al->anchors[i];
+        struct Anchor* a = &al->anchors[i];
         if (!a->slave && a->accesskey && IS_ASCII(a->accesskey))
             nitem++;
     }
@@ -1705,7 +1704,7 @@ accesskey_menu(struct UI ui, struct Buffer* buf)
     const char** label = New_N(char*, nitem + 1);
     ap = New_N(struct Anchor*, nitem);
     for (i = 0, n = 0; i < al->nanchor; i++) {
-        a = &al->anchors[i];
+        struct Anchor* a = &al->anchors[i];
         if (!a->slave && a->accesskey && IS_ASCII(a->accesskey)) {
             const char* t = getAnchorText(buf, al, a);
             label[n] = Sprintf("%c: %s", a->accesskey, t ? t : "")->ptr;
@@ -1743,7 +1742,8 @@ accesskey_menu(struct UI ui, struct Buffer* buf)
         menu.keyselect[(int)c] = i;
     }
 
-    a = retrieveCurrentAnchor(ui);
+    struct Anchor* a;
+    a = retrieveAnchor(ui.current_buffer->document.href, getBufferPosition(ui));
     if (a && a->accesskey && IS_ASCII(a->accesskey)) {
         for (i = 0; i < nitem; i++) {
             if (a->hseq == ap[i]->hseq) {
@@ -1857,13 +1857,14 @@ list_menu(struct UI ui, struct Buffer* buf)
         }
     }
 
-    struct Anchor* a;
-    a = retrieveCurrentAnchor(ui);
-    if (a) {
-        for (i = 0; i < nitem; i++) {
-            if (a->hseq == ap[i]->hseq) {
-                menu.initial = i;
-                break;
+    {
+        struct Anchor* a = retrieveAnchor(ui.current_buffer->document.href, getBufferPosition(ui));
+        if (a) {
+            for (i = 0; i < nitem; i++) {
+                if (a->hseq == ap[i]->hseq) {
+                    menu.initial = i;
+                    break;
+                }
             }
         }
     }

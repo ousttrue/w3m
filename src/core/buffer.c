@@ -1244,7 +1244,7 @@ void _nextA(struct UI ui, int visited)
     if (!hl || hl->nmark == 0)
         return;
 
-    struct Anchor* an = retrieveCurrentAnchor(ui);
+    struct Anchor* an = retrieveAnchor(ui.current_buffer->document.href, getBufferPosition(ui));
     if (visited != true && an == NULL)
         an = retrieveCurrentForm(ui);
 
@@ -1323,7 +1323,7 @@ void _prevA(struct UI ui, int visited)
     if (!hl || hl->nmark == 0)
         return;
 
-    struct Anchor* an = retrieveCurrentAnchor(ui);
+    struct Anchor* an = retrieveAnchor(ui.current_buffer->document.href, getBufferPosition(ui));
     if (visited != true && an == NULL)
         an = retrieveCurrentForm(ui);
 

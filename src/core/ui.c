@@ -290,7 +290,7 @@ static Str make_lastline_message(struct UI ui)
         if (a)
             s = make_lastline_link(ui.current_buffer, a->alt, a->url);
         else {
-            struct Anchor* a = retrieveCurrentAnchor(ui);
+            struct Anchor* a = retrieveAnchor(ui.current_buffer->document.href, getBufferPosition(ui));
             const char* p = NULL;
             if (a && a->title && *a->title)
                 p = a->title;
@@ -351,7 +351,7 @@ void renderFrame(struct UI ui)
     // int cursorRow = ui.vt->CurLine;
     // int cursorCol = ui.vt->CurColumn;
 
-    struct Anchor* a = retrieveCurrentAnchor(ui);
+    struct Anchor* a = retrieveAnchor(ui.current_buffer->document.href, getBufferPosition(ui));
     struct BufferPoint bp = getBufferPosition(ui);
     ui_printStatus("STATUS: (%d, %d), (%d, %d) a(%d, %d=%d) %s",
         // "top=%d key=[%02x > %02x > %02x > %02x > %02x > %02x > %02x > %02x]",

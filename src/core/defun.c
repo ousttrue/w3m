@@ -762,7 +762,7 @@ nextX(struct UI ui, int d, int dy)
     if (!hl || hl->nmark == 0)
         return;
 
-    struct Anchor* an = retrieveCurrentAnchor(ui);
+    struct Anchor* an = retrieveAnchor(ui.current_buffer->document.href, getBufferPosition(ui));
     if (an == NULL)
         an = retrieveCurrentForm(ui);
 
@@ -812,7 +812,7 @@ nextY(struct UI ui, int d)
     if (!hl || hl->nmark == 0)
         return;
 
-    struct Anchor* an = retrieveCurrentAnchor(ui);
+    struct Anchor* an = retrieveAnchor(ui.current_buffer->document.href, getBufferPosition(ui));
     if (an == NULL)
         an = retrieveCurrentForm(ui);
 

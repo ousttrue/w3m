@@ -1,4 +1,5 @@
 #include "page_info.h"
+#include "AnchorList.h"
 #include "buffer.h"
 #include "runtime.h"
 #include "html_quote.h"
@@ -118,7 +119,7 @@ page_info_panel(struct UI ui, struct Buffer* buf)
         // Sprintf("%lu", (unsigned long)buf->trbyte)->ptr,
         NULL);
 
-    struct Anchor* a = retrieveCurrentAnchor(ui);
+    struct Anchor* a = retrieveAnchor(ui.current_buffer->document.href, getBufferPosition(ui));
     if (a != NULL) {
         struct Url pu = parseUrl(a->url, baseURL(buf));
         p = parsedURL2Str(&pu)->ptr;

@@ -388,7 +388,7 @@ drawAnchorCursor0(struct UI ui, struct Buffer* buf,
 
 static int currentAnchorHseq(struct UI ui)
 {
-    struct Anchor* an = retrieveCurrentAnchor(ui);
+    struct Anchor* an = retrieveAnchor(ui.current_buffer->document.href, getBufferPosition(ui));
     if (!an)
         an = retrieveCurrentMap(ui);
     if (!an) {

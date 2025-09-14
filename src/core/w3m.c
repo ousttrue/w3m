@@ -686,7 +686,6 @@ goURL0(struct UI ui, char* prompt, int relative)
     url = searchKeyData();
     if (url == NULL) {
         struct Hist* hist = copyHist(URLHist);
-        struct Anchor* a;
 
         current = baseURL(ui.current_buffer);
         if (current) {
@@ -696,7 +695,8 @@ goURL0(struct UI ui, char* prompt, int relative)
             else
                 pushHist(hist, c_url);
         }
-        a = retrieveCurrentAnchor(ui);
+
+        struct Anchor* a = retrieveAnchor(ui.current_buffer->document.href, getBufferPosition(ui));
         if (a) {
             char* a_url;
             p_url = parseUrl(a->url, current);
@@ -1151,7 +1151,7 @@ _peekURL(struct UI ui, int only_img)
         offset = 0;
     }
     s = NULL;
-    a = (only_img ? NULL : retrieveCurrentAnchor(ui));
+    a = (only_img ? NULL : retrieveAnchor(ui.current_buffer->document.href, getBufferPosition(ui)));
     if (a == NULL) {
         a = (only_img ? NULL : retrieveCurrentForm(ui));
         if (a == NULL) {
@@ -1610,7 +1610,7 @@ void set_buffer_environ(struct UI ui)
         struct Url pu;
         char* s = GetWord(buf);
         set_environ("W3M_CURRENT_WORD", s ? s : "");
-        a = retrieveCurrentAnchor(ui);
+        a = retrieveAnchor(ui.current_buffer->document.href, getBufferPosition(ui));
         if (a) {
             pu = parseUrl(a->url, baseURL(buf));
             set_environ("W3M_CURRENT_LINK", parsedURL2Str(&pu)->ptr);
