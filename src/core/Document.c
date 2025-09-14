@@ -202,3 +202,38 @@ void addMultirowsImg(struct Document* doc, struct AnchorList* al)
     }
 }
 
+struct Anchor* getNextHorizontalAnchor(struct Document* doc, struct Anchor* an, int searchkey_num, int d, int dy)
+{
+    struct LineList* l = currentLine(doc);
+    int x = doc->pos;
+    int y = l->linenumber;
+    struct Anchor* pan = NULL;
+    for (int i = 0; i < searchkey_num; i++) {
+        if (an)
+            x = (d > 0) ? an->end.pos : an->start.pos - 1;
+        an = NULL;
+        while (1) {
+            for (; x >= 0 && x < l->l.len; x += d) {
+                struct BufferPoint bp = { .line = y, .pos = x };
+                an = retrieveAnchor(doc->href, bp);
+                if (!an)
+                    an = retrieveAnchor(doc->formitem, bp);
+                if (an) {
+                    pan = an;
+                    break;
+                }
+            }
+            if (!dy || an)
+                break;
+            l = (dy > 0) ? l->next : l->prev;
+            if (!l)
+                break;
+            x = (d > 0) ? 0 : l->l.len - 1;
+            y = l->linenumber;
+        }
+        if (!an)
+            break;
+    }
+    return pan;
+}
+

@@ -1,4 +1,5 @@
 #include "AnchorList.h"
+#include "Anchor.h"
 #include "HttpRequest.h"
 #include "follow_anchor.h"
 #include "regex.h"
@@ -748,4 +749,120 @@ DEFUN(nextVA, NEXT_VISITED, "Move to the next visited hyperlink")
 DEFUN(prevVA, PREV_VISITED, "Move to the previous visited hyperlink")
 {
     _prevA(ui, true);
+}
+
+/* go to the next left/right anchor */
+static void
+nextX(struct UI ui, int d, int dy)
+{
+    if (ui.current_buffer->document.firstLine == NULL)
+        return;
+
+    struct HmarkerList* hl = ui.current_buffer->document.hmarklist;
+    if (!hl || hl->nmark == 0)
+        return;
+
+    struct Anchor* an = retrieveCurrentAnchor(ui);
+    if (an == NULL)
+        an = retrieveCurrentForm(ui);
+
+    int y;
+    struct Anchor* pan = getNextHorizontalAnchor(&ui.current_buffer->document, an, ui.searchkey_num, d, dy);
+    if (pan == NULL)
+        return;
+
+    ui.current_buffer->document.pos = pan->start.pos;
+}
+
+/* go to the next left anchor */
+DEFUN(nextL, NEXT_LEFT, "Move left to the next hyperlink")
+{
+    nextX(ui, -1, 0);
+}
+
+/* go to the next left-up anchor */
+DEFUN(nextLU, NEXT_LEFT_UP, "Move left or upward to the next hyperlink")
+{
+    nextX(ui, -1, -1);
+}
+
+/* go to the next right anchor */
+DEFUN(nextR, NEXT_RIGHT, "Move right to the next hyperlink")
+{
+    nextX(ui, 1, 0);
+}
+
+/* go to the next right-down anchor */
+DEFUN(nextRD, NEXT_RIGHT_DOWN, "Move right or downward to the next hyperlink")
+{
+    nextX(ui, 1, 1);
+}
+
+/* go to the next downward/upward anchor */
+static void
+nextY(struct UI ui, int d)
+{
+    struct HmarkerList* hl = ui.current_buffer->document.hmarklist;
+    struct Anchor* pan;
+    int i, x, y, n = ui.searchkey_num;
+    int hseq;
+
+    if (ui.current_buffer->document.firstLine == NULL)
+        return;
+    if (!hl || hl->nmark == 0)
+        return;
+
+    struct Anchor* an = retrieveCurrentAnchor(ui);
+    if (an == NULL)
+        an = retrieveCurrentForm(ui);
+
+    x = ui.current_buffer->document.pos;
+    y = currentLine(&ui.current_buffer->document)->linenumber + d;
+    pan = NULL;
+    hseq = -1;
+    for (i = 0; i < n; i++) {
+        if (an)
+            hseq = abs(an->hseq);
+        an = NULL;
+        for (; y >= 0 && y <= lastLine(&ui.current_buffer->document)->linenumber; y += d) {
+            struct BufferPoint bp = { .line = y, .pos = x };
+            an = retrieveAnchor(ui.current_buffer->document.href, bp);
+            if (!an)
+                an = retrieveAnchor(ui.current_buffer->document.formitem, bp);
+            if (an && hseq != abs(an->hseq)) {
+                pan = an;
+                break;
+            }
+        }
+        if (!an)
+            break;
+    }
+
+    if (pan == NULL)
+        return;
+    gotoLine(&ui.current_buffer->document, pan->start.line);
+}
+
+/* go to the next downward anchor */
+DEFUN(nextD, NEXT_DOWN, "Move downward to the next hyperlink")
+{
+    nextY(ui, 1);
+}
+
+/* go to the next upward anchor */
+DEFUN(nextU, NEXT_UP, "Move upward to the next hyperlink")
+{
+    nextY(ui, -1);
+}
+
+/* go to the next bufferr */
+DEFUN(nextBf, NEXT, "Switch to the next buffer")
+{
+    setCurrentBuffer(prevBuffer(Firstbuf, ui.current_buffer));
+}
+
+/* go to the previous bufferr */
+DEFUN(prevBf, PREV, "Switch to the previous buffer")
+{
+    setCurrentBuffer(ui.current_buffer->nextBuffer);
 }

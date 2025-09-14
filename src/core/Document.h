@@ -65,3 +65,4 @@ struct Anchor* registerForm(struct Document* doc, struct Form* flist, struct Htm
 struct Anchor* registerImg(struct Document* doc, const char* url, const char* title, struct BufferPoint bp);
 void addMultirowsForm(struct Document* doc, struct AnchorList* al);
 void addMultirowsImg(struct Document* doc, struct AnchorList* al);
+struct Anchor* getNextHorizontalAnchor(struct Document* doc, struct Anchor* an, int searchkey_num, int d, int dy);
