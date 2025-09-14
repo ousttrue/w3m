@@ -1,4 +1,5 @@
 #include "image_loader.h"
+#include "HtmlTagParsed.h"
 #include "AnchorList.h"
 #include "Anchor.h"
 #include "linein.h"
@@ -32,16 +33,92 @@
 #include <fcntl.h>
 
 #define IMGDISPLAY "w3mimgdisplay"
-int activeImage = (false);
 const char* image_source = (NULL);
 char* Imgdisplay = (IMGDISPLAY);
 int useExtImageViewer = (true);
 int maxLoadImage = (4);
 int image_map_list = (true);
-double image_scale = (100);
 
+#define MAX_IMAGE 1000
+static Hash_sv* image_hash = NULL;
 static int image_index = 0;
 
+#ifndef MAX_LOAD_IMAGE
+#define MAX_LOAD_IMAGE 8
+#endif
+static int n_load_image = 0;
+static Hash_sv* image_file = NULL;
+static GeneralList* image_list = NULL;
+static struct ImageCache** image_cache = NULL;
+static struct Document* image_buffer = NULL;
+
+struct ImageCache* getImageCache(struct Image* image, struct Url* current, enum ImageGetFlag flag)
+{
+    if (!activeImage)
+        return NULL;
+
+    if (!image_hash)
+        image_hash = newHash_sv(100);
+
+    struct ImageCache* cache;
+    Str key = NULL;
+    if (image->cache)
+        cache = image->cache;
+    else {
+        key = Sprintf("%d;%d;%s", image->width, image->height, image->url);
+        cache = (struct ImageCache*)getHash_sv(image_hash, key->ptr, NULL);
+    }
+    if (cache && cache->index && abs(cache->index) <= image_index - MAX_IMAGE) {
+        struct stat st;
+        if (stat(cache->file, &st))
+            cache->loaded = IMG_FLAG_UNLOADED;
+        cache->index = 0;
+    }
+
+    if (!cache) {
+        if (flag == IMG_FLAG_SKIP)
+            return NULL;
+
+        cache = New(struct ImageCache);
+        cache->url = image->url;
+        cache->current = current;
+        cache->file = tmpfname(TMPF_DFL, image->ext)->ptr;
+        cache->pid = 0;
+        cache->index = 0;
+        cache->loaded = IMG_FLAG_UNLOADED;
+        if (enable_inline_image == INLINE_IMG_OSC5379) {
+            if (image->width > 0 && image->width % pixel_per_char_i > 0)
+                image->width += (pixel_per_char_i - image->width % pixel_per_char_i);
+
+            if (image->height > 0 && image->height % pixel_per_line_i > 0)
+                image->height += (pixel_per_line_i - image->height % pixel_per_line_i);
+        }
+        cache->touch = tmpfname(TMPF_DFL, NULL)->ptr;
+
+        cache->width = image->width;
+        cache->height = image->height;
+        cache->a_width = image->width;
+        cache->a_height = image->height;
+        putHash_sv(image_hash, key->ptr, (void*)cache);
+    }
+    if (flag != IMG_FLAG_SKIP) {
+        if (cache->loaded == IMG_FLAG_UNLOADED) {
+            if (!image_file)
+                image_file = newHash_sv(100);
+            if (!getHash_sv(image_file, cache->file, NULL)) {
+                putHash_sv(image_file, cache->file, (void*)cache);
+                if (!image_list)
+                    image_list = newGeneralList();
+                pushValue(image_list, (void*)cache);
+            }
+        }
+        if (!cache->index)
+            cache->index = ++image_index;
+    }
+    if (cache->loaded & IMG_FLAG_LOADED)
+        getImageSize(cache);
+    return cache;
+}
 /* display image */
 
 typedef struct _termialImage {
@@ -336,16 +413,6 @@ void clearImage()
 
 /* load image */
 
-#ifndef MAX_LOAD_IMAGE
-#define MAX_LOAD_IMAGE 8
-#endif
-static int n_load_image = 0;
-static Hash_sv* image_hash = NULL;
-static Hash_sv* image_file = NULL;
-static GeneralList* image_list = NULL;
-static struct ImageCache** image_cache = NULL;
-static struct Document* image_buffer = NULL;
-
 void deleteImage(struct Document* doc)
 {
     if (!doc)
@@ -380,7 +447,7 @@ void getAllImage(struct Document* doc)
     struct Anchor* a;
     for (i = 0, a = al->anchors; i < al->nanchor; i++, a++) {
         if (a->image) {
-            a->image->cache = getImage(a->image, current, doc->image_flag);
+            a->image->cache = getImageCache(a->image, current, doc->image_flag);
             if (a->image->cache && a->image->cache->loaded == IMG_FLAG_UNLOADED)
                 doc->image_loaded = false;
         }
@@ -542,74 +609,7 @@ void loadImage(struct Document *doc, enum ImageLoadFlag flag, bool do_download)
     }
 }
 
-struct ImageCache*
-getImage(struct Image* image, struct Url* current, enum ImageGetFlag flag)
-{
-    if (!activeImage)
-        return NULL;
 
-    if (!image_hash)
-        image_hash = newHash_sv(100);
-
-    struct ImageCache* cache;
-    Str key = NULL;
-    if (image->cache)
-        cache = image->cache;
-    else {
-        key = Sprintf("%d;%d;%s", image->width, image->height, image->url);
-        cache = (struct ImageCache*)getHash_sv(image_hash, key->ptr, NULL);
-    }
-    if (cache && cache->index && abs(cache->index) <= image_index - MAX_IMAGE) {
-        struct stat st;
-        if (stat(cache->file, &st))
-            cache->loaded = IMG_FLAG_UNLOADED;
-        cache->index = 0;
-    }
-
-    if (!cache) {
-        if (flag == IMG_FLAG_SKIP)
-            return NULL;
-
-        cache = New(struct ImageCache);
-        cache->url = image->url;
-        cache->current = current;
-        cache->file = tmpfname(TMPF_DFL, image->ext)->ptr;
-        cache->pid = 0;
-        cache->index = 0;
-        cache->loaded = IMG_FLAG_UNLOADED;
-        if (enable_inline_image == INLINE_IMG_OSC5379) {
-            if (image->width > 0 && image->width % pixel_per_char_i > 0)
-                image->width += (pixel_per_char_i - image->width % pixel_per_char_i);
-
-            if (image->height > 0 && image->height % pixel_per_line_i > 0)
-                image->height += (pixel_per_line_i - image->height % pixel_per_line_i);
-        }
-        cache->touch = tmpfname(TMPF_DFL, NULL)->ptr;
-
-        cache->width = image->width;
-        cache->height = image->height;
-        cache->a_width = image->width;
-        cache->a_height = image->height;
-        putHash_sv(image_hash, key->ptr, (void*)cache);
-    }
-    if (flag != IMG_FLAG_SKIP) {
-        if (cache->loaded == IMG_FLAG_UNLOADED) {
-            if (!image_file)
-                image_file = newHash_sv(100);
-            if (!getHash_sv(image_file, cache->file, NULL)) {
-                putHash_sv(image_file, cache->file, (void*)cache);
-                if (!image_list)
-                    image_list = newGeneralList();
-                pushValue(image_list, (void*)cache);
-            }
-        }
-        if (!cache->index)
-            cache->index = ++image_index;
-    }
-    if (cache->loaded & IMG_FLAG_LOADED)
-        getImageSize(cache);
-    return cache;
-}
 
 static int
 parseImageHeader(const char* path, unsigned int* width, unsigned int* height)

@@ -1,24 +1,25 @@
 #include "HtmlTagParsed.h"
-#include "token.h"
-#include "entity.h"
-#include "quote.h"
-#include "html_quote.h"
-#include "buffer_loader.h"
-#include "url.h"
-#include "display.h"
-#include "HtmlTag.h"
 #include "HtmlTagAttribute.h"
-#include "image_loader.h"
-#include "myctype.h"
-#include "Str.h"
-#include "hash.h"
+#include "entity.h"
+#include "token.h"
+#include "form.h"
+#include "readbuffer.h"
 #include "table.h"
 #include "html_tag_info.h"
 #include "html_tag_attribute_info.h"
-#include "form.h"
-#include "compression.h"
+// #include "entity.h"
+#include "quote.h"
+#include "html_quote.h"
+// #include "url.h"
+// #include "display.h"
+// #include "HtmlTag.h"
+#include "Image.h"
+// #include "Str.h"
+// #include "compression.h"
 #include "symbol.h"
-#include "readbuffer.h"
+
+#include "hash.h"
+#include "myctype.h"
 #include "alloc.h"
 #include <strings.h>
 #include <stdlib.h>
@@ -26,9 +27,21 @@
 #include <wc.h>
 #include <wtf.h>
 
+bool displayLinkNumber = (false);
 wc_ces cur_document_charset = 0;
 int pseudoInlines = (true);
 int ignore_null_img_alt = (true);
+int activeImage = (false);
+double image_scale = (100);
+bool enable_inline_image = false;
+bool displayImage = (true);
+
+double pixel_per_char = (DEFAULT_PIXEL_PER_CHAR);
+int pixel_per_char_i = (DEFAULT_PIXEL_PER_CHAR);
+int set_pixel_per_char = (false);
+double pixel_per_line = (DEFAULT_PIXEL_PER_LINE);
+int pixel_per_line_i = (DEFAULT_PIXEL_PER_LINE);
+int set_pixel_per_line = (false);
 
 #define MAX_INPUT_SIZE 80 /* TODO - max should be screen line length */
 
@@ -211,7 +224,7 @@ struct HtmlTagParsed* parse_tag(const char** s, bool internal)
         q++;
 
     enum HtmlTag tag_id = getHash_si(&tagtable, tagname, HTML_UNKNOWN);
-    struct HtmlTagParsed* tag = NULL;    
+    struct HtmlTagParsed* tag = NULL;
     if (tag_id == HTML_UNKNOWN || (!internal && TagMAP[tag_id].flag & TFLG_INT))
         goto skip_parse_tagarg;
 
@@ -391,23 +404,20 @@ Str parsedtag2str(struct HtmlTagParsed* tag)
 
 Str process_img(struct HtmlTagParsed* tag, int width)
 {
-    char *p, *q, *r, *r2 = NULL, *s, *t;
-    int w, i, nw, ni = 1, n, w0 = -1, i0 = -1;
-    int align, xoffset, yoffset, top, bottom, ismap = 0;
-    int use_image = activeImage && displayImage;
-    int pre_int = false, ext_pre_int = false;
     Str tmp = Strnew();
-
+    const char* p;
     if (!parsedtag_get_value(tag, ATTR_SRC, &p))
         return tmp;
     p = url_quote(remove_space(p));
-    q = NULL;
+    const char* q = NULL;
     parsedtag_get_value(tag, ATTR_ALT, &q);
     if (!pseudoInlines && (q == NULL || (*q == '\0' && ignore_null_img_alt)))
         return tmp;
-    t = q;
+
+    const char* t = q;
     parsedtag_get_value(tag, ATTR_TITLE, &t);
-    w = -1;
+    int w = -1;
+    bool use_image = activeImage && displayImage;
     if (parsedtag_get_value(tag, ATTR_WIDTH, &w)) {
         if (w < 0) {
             if (width > 0)
@@ -425,7 +435,10 @@ Str process_img(struct HtmlTagParsed* tag, int width)
             }
         }
     }
-    i = -1;
+
+    int i = -1;
+    int align = 0;
+    int ismap = 0;
     if (use_image) {
         if (parsedtag_get_value(tag, ATTR_HEIGHT, &i)) {
             if (i > 0) {
@@ -445,11 +458,17 @@ Str process_img(struct HtmlTagParsed* tag, int width)
             ismap = 1;
     } else
         parsedtag_get_value(tag, ATTR_HEIGHT, &i);
-    r = NULL;
+
+    const char* r = NULL;
     parsedtag_get_value(tag, ATTR_USEMAP, &r);
+    bool ext_pre_int = false;
     if (parsedtag_exists(tag, ATTR_PRE_INT))
         ext_pre_int = true;
 
+    char* r2 = NULL;
+    int nw, ni = 1, n, w0 = -1, i0 = -1;
+    int xoffset, yoffset, top, bottom;
+    int pre_int = false;
     tmp = Strnew_size(128);
     if (use_image) {
         switch (align) {
@@ -467,7 +486,7 @@ Str process_img(struct HtmlTagParsed* tag, int width)
     if (r) {
         Str tmp2;
         r2 = strchr(r, '#');
-        s = "<form_int method=internal action=map>";
+        const char* s = "<form_int method=internal action=map>";
         tmp2 = process_form(parse_tag(&s, true));
         if (tmp2)
             Strcat(tmp, tmp2);
@@ -483,26 +502,26 @@ Str process_img(struct HtmlTagParsed* tag, int width)
         w0 = w;
         i0 = i;
         if (w < 0 || i < 0) {
-            struct Url u;
-            u = parseUrl(p, cur_baseURL);
-
-            struct Image image;
-            image.url = parsedURL2Str(&u)->ptr;
-            if (!uncompressed_file_type(u.file, &image.ext))
-                image.ext = filename_extension(u.file, true);
-            image.cache = NULL;
-            image.width = w;
-            image.height = i;
-
-            image.cache = getImage(&image, cur_baseURL, IMG_FLAG_SKIP);
-            if (image.cache && image.cache->width > 0 && image.cache->height > 0) {
-                w = w0 = image.cache->width;
-                i = i0 = image.cache->height;
-            }
-            if (w < 0)
-                w = 8 * pixel_per_char;
-            if (i < 0)
-                i = pixel_per_line;
+            // struct Url u;
+            // u = parseUrl(p, cur_baseURL);
+            //
+            // struct Image image;
+            // image.url = parsedURL2Str(&u)->ptr;
+            // if (!uncompressed_file_type(u.file, &image.ext))
+            //     image.ext = filename_extension(u.file, true);
+            // image.cache = NULL;
+            // image.width = w;
+            // image.height = i;
+            //
+            // // image.cache = getImageCache(&image, cur_baseURL, IMG_FLAG_SKIP);
+            // if (image.cache && image.cache->width > 0 && image.cache->height > 0) {
+            //     w = w0 = image.cache->width;
+            //     i = i0 = image.cache->height;
+            // }
+            // if (w < 0)
+            //     w = 8 * pixel_per_char;
+            // if (i < 0)
+            //     i = pixel_per_line;
         }
         if (enable_inline_image) {
             nw = (w > 1) ? ((w - 1) / pixel_per_char_i + 1) : 1;
@@ -598,8 +617,9 @@ Str process_img(struct HtmlTagParsed* tag, int width)
         n = get_strwidth(q);
         if (use_image) {
             if (n > nw) {
-                char* r;
-                for (r = q, n = 0; *r; r += get_mclen(r), n += get_mcwidth(r)) {
+                for (r = q, n = 0;
+                    *r;
+                    r += get_mclen(r), n += get_mcwidth(r)) {
                     if (n + get_mcwidth(r) > nw)
                         break;
                 }
@@ -703,19 +723,17 @@ Str process_anchor(struct HtmlTagParsed* tag, char* tagbuf)
 
 Str process_input(struct HtmlTagParsed* tag)
 {
-    int i = 20, v, x, y, z, iw, ih, size = 20;
-    char *q, *p, *r, *p2, *s;
     Str tmp = NULL;
-    char* qq = "";
-    int qlen = 0;
-
     if (cur_form_id < 0) {
-        char* s = "<form_int method=internal action=none>";
+        const char* s = "<form_int method=internal action=none>";
         tmp = process_form(parse_tag(&s, true));
     }
     if (tmp == NULL)
         tmp = Strnew();
 
+    int i = 20, v, x, y, z, iw, ih, size = 20;
+    char *q, *p, *r, *p2, *s;
+    int qlen = 0;
     p = "text";
     parsedtag_get_value(tag, ATTR_TYPE, &p);
     q = NULL;
@@ -758,6 +776,7 @@ Str process_input(struct HtmlTagParsed* tag)
     /* VALUE attribute is not allowed in <INPUT TYPE=FILE> tag. */
     if (v == FORM_INPUT_FILE)
         q = NULL;
+    const char* qq = "";
     if (q) {
         qq = html_quote(q);
         qlen = get_strwidth(q);
@@ -889,24 +908,21 @@ Str process_input(struct HtmlTagParsed* tag)
 Str process_button(struct HtmlTagParsed* tag)
 {
     Str tmp = NULL;
-    char *p, *q, *r, *qq = "";
-    int v;
-
     if (cur_form_id < 0) {
-        char* s = "<form_int method=internal action=none>";
+        const char* s = "<form_int method=internal action=none>";
         tmp = process_form(parse_tag(&s, true));
     }
     if (tmp == NULL)
         tmp = Strnew();
 
-    p = "submit";
+    const char* p = "submit";
     parsedtag_get_value(tag, ATTR_TYPE, &p);
-    q = NULL;
+    const char* q = NULL;
     parsedtag_get_value(tag, ATTR_VALUE, &q);
-    r = "";
+    const char* r = "";
     parsedtag_get_value(tag, ATTR_NAME, &r);
 
-    v = formtype(p);
+    int v = formtype(p);
     if (v == FORM_UNKNOWN)
         return NULL;
 
@@ -932,6 +948,8 @@ Str process_button(struct HtmlTagParsed* tag)
             break;
         }
     }
+
+    const char* qq = "";
     if (q) {
         qq = html_quote(q);
     }
@@ -954,14 +972,12 @@ Str process_n_button(void)
 Str process_select(struct HtmlTagParsed* tag)
 {
     Str tmp = NULL;
-    char* p;
-
     if (cur_form_id < 0) {
-        char* s = "<form_int method=internal action=none>";
+        const char* s = "<form_int method=internal action=none>";
         tmp = process_form(parse_tag(&s, true));
     }
 
-    p = "";
+    const char* p = "";
     parsedtag_get_value(tag, ATTR_NAME, &p);
     cur_select = Strnew_charp(p);
     select_is_multiple = parsedtag_exists(tag, ATTR_MULTIPLE);
@@ -1011,26 +1027,26 @@ Str process_n_select(void)
 
 void feed_select(const char* str)
 {
-    Str tmp = Strnew();
-    int prev_status = cur_status;
     static int prev_spaces = -1;
-    char* p;
-
     if (cur_select == NULL)
         return;
+
+    Str tmp = Strnew();
+    int prev_status = cur_status;
+
     while (read_token(tmp, &str, &cur_status, 0, 0)) {
         if (cur_status != R_ST_NORMAL || prev_status != R_ST_NORMAL)
             continue;
-        p = tmp->ptr;
+        const char* p = tmp->ptr;
         if (tmp->ptr[0] == '<' && Strlastchar(tmp) == '>') {
             struct HtmlTagParsed* tag;
-            char* q;
             if (!(tag = parse_tag(&p, false)))
                 continue;
             switch (tag->tagid) {
-            case HTML_OPTION:
+            case HTML_OPTION: {
                 process_option();
                 cur_option = Strnew();
+                const char* q;
                 if (parsedtag_get_value(tag, ATTR_VALUE, &q))
                     cur_option_value = Strnew_charp(q);
                 else
@@ -1042,6 +1058,7 @@ void feed_select(const char* str)
                 cur_option_selected = parsedtag_exists(tag, ATTR_SELECTED);
                 prev_spaces = -1;
                 break;
+            }
             case HTML_N_OPTION:
                 /* do nothing */
                 break;
@@ -1109,19 +1126,18 @@ void process_option(void)
     n_selectitem++;
 }
 
-Str process_textarea(struct HtmlTagParsed* tag, int width)
-{
-    Str tmp = NULL;
-    char* p;
 #define TEXTAREA_ATTR_COL_MAX 4096
 #define TEXTAREA_ATTR_ROWS_MAX 4096
 
+Str process_textarea(struct HtmlTagParsed* tag, int width)
+{
+    Str tmp = NULL;
     if (cur_form_id < 0) {
-        char* s = "<form_int method=internal action=none>";
+        const char* s = "<form_int method=internal action=none>";
         tmp = process_form(parse_tag(&s, true));
     }
 
-    p = "";
+    const char* p = "";
     parsedtag_get_value(tag, ATTR_NAME, &p);
     cur_textarea = Strnew_charp(p);
     cur_textarea_size = 20;

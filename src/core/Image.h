@@ -51,3 +51,4 @@ enum ImageGetFlag {
     IMG_FLAG_SKIP = 1,
     IMG_FLAG_AUTO = 2,
 };
+

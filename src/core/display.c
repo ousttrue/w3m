@@ -1,4 +1,5 @@
 #include "display.h"
+#include "HtmlTagParsed.h"
 #include "form.h"
 #include "runtime.h"
 #include "AnchorList.h"
@@ -26,15 +27,6 @@
 int displayLink = (false);
 int displayLineInfo = (false);
 int FoldLine = (false);
-int enable_inline_image = false;
-int displayImage = (true);
-
-double pixel_per_char = (DEFAULT_PIXEL_PER_CHAR);
-int pixel_per_char_i = (DEFAULT_PIXEL_PER_CHAR);
-int set_pixel_per_char = (false);
-double pixel_per_line = (DEFAULT_PIXEL_PER_LINE);
-int pixel_per_line_i = (DEFAULT_PIXEL_PER_LINE);
-int set_pixel_per_line = (false);
 
 static struct LineList* cline = NULL;
 static int ccolumn = -1;
@@ -174,7 +166,7 @@ static struct LineList* redrawLineImage(struct UI ui, struct Document* doc, stru
             struct Image* image = a->image;
             struct ImageCache* cache;
 
-            cache = image->cache = getImage(image, makeBaseUrl(doc), doc->image_flag);
+            cache = image->cache = getImageCache(image, makeBaseUrl(doc), doc->image_flag);
             if (cache) {
                 if ((image->width < 0 && cache->width > 0) || (image->height < 0 && cache->height > 0)) {
                     image->width = cache->width;

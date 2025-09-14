@@ -4,6 +4,8 @@
 #include "HtmlTagAttribute.h"
 #include <wc.h>
 
+extern int activeImage;
+extern bool displayLinkNumber;
 extern struct Url* cur_baseURL;
 extern int n_textarea;
 extern Str* textarea_str;
@@ -12,6 +14,23 @@ extern struct Form** forms;
 extern struct FormSelectOption* select_option;
 extern int pseudoInlines;
 extern int ignore_null_img_alt;
+extern double image_scale;
+extern bool enable_inline_image;
+extern bool displayImage;
+
+#define DEFAULT_PIXEL_PER_CHAR 7.0 /* arbitrary */
+#define DEFAULT_PIXEL_PER_LINE 14.0 /* arbitrary */
+#define MINIMUM_PIXEL_PER_CHAR 4.0
+#define MAXIMUM_PIXEL_PER_CHAR 32.0
+
+#define REAL_WIDTH(w, limit) (((w) >= 0) ? (int)((w) / pixel_per_char) : -(w) * (limit) / 100)
+
+extern double pixel_per_char;
+extern int pixel_per_char_i;
+extern int set_pixel_per_char;
+extern double pixel_per_line;
+extern int pixel_per_line_i;
+extern int set_pixel_per_line;
 
 enum VAlignType {
     VALIGN_MIDDLE = 0,

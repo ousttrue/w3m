@@ -167,41 +167,6 @@ formList_addInput(struct Form* fl, struct HtmlTagParsed* tag)
     return item;
 }
 
-static char* _formtypetbl[] = {
-    "text", "password", "checkbox", "radio", "submit", "reset", "hidden",
-    "image", "select", "textarea", "button", "file", NULL
-};
-
-static char* _formmethodtbl[] = {
-    "GET", "POST", "INTERNAL", "HEAD"
-};
-
-const char* form2str(struct FormItem* fi)
-{
-    Str tmp = Strnew();
-
-    if (fi->type != FORM_SELECT && fi->type != FORM_TEXTAREA)
-        Strcat_charp(tmp, "input type=");
-    Strcat_charp(tmp, _formtypetbl[fi->type]);
-    if (fi->name && fi->name->length)
-        Strcat_m_charp(tmp, " name=\"", fi->name->ptr, "\"", NULL);
-    if ((fi->type == FORM_INPUT_RADIO || fi->type == FORM_INPUT_CHECKBOX || fi->type == FORM_SELECT) && fi->value)
-        Strcat_m_charp(tmp, " value=\"", fi->value->ptr, "\"", NULL);
-    Strcat_m_charp(tmp, " (", _formmethodtbl[fi->parent->method], " ",
-        fi->parent->action->ptr, ")", NULL);
-    return tmp->ptr;
-}
-
-int formtype(const char* typestr)
-{
-    int i;
-    for (i = 0; _formtypetbl[i]; i++) {
-        if (!strcasecmp(typestr, _formtypetbl[i]))
-            return i;
-    }
-    return FORM_INPUT_TEXT;
-}
-
 void formRecheckRadio(struct UI ui, struct Anchor* a, struct Buffer* buf, struct FormItem* fi)
 {
     int i;

@@ -1,16 +1,12 @@
 #pragma once
 #include "Image.h"
 
-extern int enable_inline_image;
-extern int activeImage;
 extern const char* image_source;
 extern char* Imgdisplay;
 extern int useExtImageViewer;
 extern int maxLoadImage;
 extern int image_map_list;
-extern double image_scale;
 
-#define MAX_IMAGE 1000
 
 void initImage();
 void termImage();
@@ -28,8 +24,7 @@ enum ImageLoadFlag {
     IMG_FLAG_NEXT = 2,
 };
 void loadImage(struct Document* doc, enum ImageLoadFlag flag, bool do_download);
-
-struct ImageCache* getImage(struct Image* image, struct Url* current, enum ImageGetFlag flag);
+struct ImageCache* getImageCache(struct Image* image, struct Url* current, enum ImageGetFlag flag);
 
 int getImageSize(struct ImageCache* cache);
 

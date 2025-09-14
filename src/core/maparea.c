@@ -1,4 +1,5 @@
 #include "maparea.h"
+#include "HtmlTagParsed.h"
 #include "Document.h"
 #include "Anchor.h"
 #include "display.h"

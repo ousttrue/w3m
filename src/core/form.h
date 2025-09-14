@@ -30,8 +30,6 @@ struct Form* newFormList(const char* action, const char* method, const char* cha
     struct Form* _next);
 struct FormItem* formList_addInput(struct Form* fl,
     struct HtmlTagParsed* tag);
-const char* form2str(struct FormItem* fi);
-int formtype(const char* typestr);
 void formRecheckRadio(struct UI ui, struct Anchor* a, struct Buffer* buf, struct FormItem* form);
 void formResetBuffer(struct Buffer* buf, struct AnchorList* formitem);
 void formUpdateBuffer(struct Anchor* a, struct Buffer* buf, struct FormItem* form);

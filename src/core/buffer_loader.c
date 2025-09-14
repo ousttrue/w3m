@@ -39,7 +39,6 @@ char DecodeCTE = (false);
 int UseExternalDirBuffer = (true);
 const char* DirBufferCommand = ("file:///$LIB/dirlist" CGI_EXTENSION);
 const char* DefaultType = (NULL);
-int displayLinkNumber = (false);
 char SimplePreserveSpace = (false);
 int squeezeBlankLine = (false);
 
@@ -510,7 +509,7 @@ HTMLlineproc2body(struct Url url, wc_ces charset, int cols, FeedFunc feed)
                             image->map = q;
                             image->ismap = ismap;
                             image->touch = 0;
-                            image->cache = getImage(image, base, IMG_FLAG_SKIP);
+                            image->cache = getImageCache(image, base, IMG_FLAG_SKIP);
                         } else if (iseq < 0) {
                             struct BufferPoint* po = doc.imarklist->marks - iseq - 1;
                             struct Anchor* a = retrieveAnchor(doc.img, *po);

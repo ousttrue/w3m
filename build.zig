@@ -53,6 +53,7 @@ const content_public_headers = [_][]const u8{
     "HttpClient.h",
 };
 const content_srcs = [_][]const u8{
+    "html_form.c",
     "HttpClient.c",
     "time_util.c",
     "HttpResponse.c",
@@ -109,6 +110,7 @@ const system_libs = [_][]const u8{
 const w3m_srcs = [_][]const u8{
     "defun.c",
 
+    "Image.c",
     "page_info.c",
     "follow_anchor.c",
     "buffer_list.c",

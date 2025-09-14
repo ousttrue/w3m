@@ -11,7 +11,6 @@ extern char MetaRefresh;
 extern char DecodeCTE;
 extern int UseExternalDirBuffer;
 extern const char* DefaultType;
-extern int displayLinkNumber;
 extern char SimplePreserveSpace;
 extern int squeezeBlankLine;
 extern const char* DirBufferCommand;

@@ -71,3 +71,6 @@ struct Form {
     const char* boundary;
     unsigned long length;
 };
+
+enum FormItemType formtype(const char* typestr);
+const char* form2str(struct FormItem* fi);

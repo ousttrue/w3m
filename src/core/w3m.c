@@ -1,4 +1,5 @@
 #include "w3m.h"
+#include "HtmlTagParsed.h"
 #include "page_info.h"
 #include "follow_anchor.h"
 #include "Document.h"
