@@ -22,7 +22,6 @@ struct Buffer {
 
     struct Document document;
 
-    short width;
     int currentColumn;
     int pos;
     int visualpos;

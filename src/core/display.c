@@ -110,7 +110,7 @@ static struct LineList* redrawLine(struct UI ui, struct Buffer* buf, struct Line
         pc = NULL;
     rcol = COLPOS(&l->l, pos);
 
-    for (j = 0; rcol - column < buf->width && pos + j < l->l.len; j += delta) {
+    for (j = 0; rcol - column < buf->document.cols && pos + j < l->l.len; j += delta) {
         if (useVisitedColor && vpos <= pos + j && !(pr[j] & PE_VISITED)) {
             a = retrieveAnchor(buf->document.href, (struct BufferPoint) { .line = l->linenumber, .pos = pos + j });
             if (a) {
@@ -124,7 +124,7 @@ static struct LineList* redrawLine(struct UI ui, struct Buffer* buf, struct Line
         }
         delta = wtf_len((wc_uchar*)&p[j]);
         ncol = COLPOS(&l->l, pos + j + delta);
-        if (ncol - column > buf->width)
+        if (ncol - column > buf->document.cols)
             break;
         if (pc)
             vt_do_color(ui.vt, pc[j]);
@@ -225,11 +225,11 @@ static void redrawNLine(struct UI ui, struct Buffer* buf, int n)
 
     struct LineList* l;
     int i;
-    for (i = 0, l = topLine(&buf->document); i < ui.viewport.size.y; i++, l = l->next) {
-        if (i >= ui.viewport.size.y - n || i < -n)
-            l = redrawLine(ui, buf, l, i + ui.viewport.offset.y);
-        if (l == NULL)
-            break;
+    for (i = 0, l = topLine(&buf->document); i < ui.viewport.size.y && l; i++, l = l->next) {
+        // if (i >= ui.viewport.size.y - n || i < -n)
+            redrawLine(ui, buf, l, i + ui.viewport.offset.y);
+        // if (l == NULL)
+        //     break;
     }
     if (n > 0) {
         vt_move(ui.vt, i + ui.viewport.offset.y, 0);
@@ -250,7 +250,7 @@ static void redrawNLine(struct UI ui, struct Buffer* buf, int n)
 void bufToScreen(struct UI ui)
 {
     struct Buffer *buf = ui.current_buffer;
-    if (buf->width == 0) {
+    if (buf->document.cols == 0) {
         reshapeBuffer(ui, buf, ui.viewport.size.x);
     }
 

@@ -369,21 +369,6 @@ void flushline(struct html_feed_environ* h_env, struct readbuffer* obuf, int ind
          *hidden_under = NULL, *hidden_italic = NULL, *hidden_strike = NULL,
          *hidden_ins = NULL, *hidden_input = NULL, *hidden = NULL;
 
-#ifdef DEBUG
-    if (w3m_debug) {
-        FILE* df = fopen("zzzproc1", "a");
-        fprintf(df, "flushline(%s,%d,%d,%d)\n", obuf->line->ptr, indent, force,
-            width);
-        if (buf) {
-            TextLineListItem* p;
-            for (p = buf->first; p; p = p->next) {
-                fprintf(df, "buf=\"%s\"\n", p->ptr->line->ptr);
-            }
-        }
-        fclose(df);
-    }
-#endif
-
     if (!(obuf->flag & (RB_SPECIAL & ~RB_NOBR)) && Strlastchar(line) == ' ') {
         Strshrink(line, 1);
         obuf->pos--;

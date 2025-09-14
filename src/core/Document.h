@@ -16,6 +16,8 @@ struct Document {
     int topLineIndex;
     int currentLineIndex;
 
+    int cols;
+
     struct AnchorList* href;
     struct AnchorList* name;
     struct AnchorList* img;

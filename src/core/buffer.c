@@ -44,7 +44,7 @@ newBuffer()
 {
     struct Buffer* n = New(struct Buffer);
     memset(n, 0, sizeof(struct Buffer));
-    n->width = 0;
+    n->document.cols = 0;
     n->content.url.scheme = SCM_UNKNOWN;
     n->document.baseURL = 0;
     n->document.baseTarget = 0;
@@ -437,7 +437,7 @@ void reshapeBuffer(struct UI ui, struct Buffer* buf, int cols)
 {
     if (buf->content.sourcefile == 0)
         return;
-    buf->width = cols;
+    buf->document.cols = cols;
 
     // union input_stream* stream = examineFile(buf->content.sourcefile);
     // if (stream == 0)

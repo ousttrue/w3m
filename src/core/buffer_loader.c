@@ -247,7 +247,7 @@ static struct LineList* addNewline(struct LineList* prev, char* line, Lineprop* 
 typedef Str (*FeedFunc)();
 
 static struct Document
-HTMLlineproc2body(struct Url* base, wc_ces charset, FeedFunc feed)
+HTMLlineproc2body(struct Url* base, wc_ces charset, int cols, FeedFunc feed)
 {
     static char* outc = NULL;
     static Lineprop* outp = NULL;
@@ -289,6 +289,7 @@ HTMLlineproc2body(struct Url* base, wc_ces charset, FeedFunc feed)
         .charset = charset,
         .firstLine = 0,
         .allLine = 0,
+        .cols = cols,
     };
 
     effect = 0;
@@ -888,7 +889,7 @@ static struct Document loadHtmlDocument(Str html, wc_ces content_charset, struct
     // static void HTMLlineproc2(struct Buffer* buf, TextLineList* tl)
     // {
     _tl_lp2 = htmlenv1.buf->first;
-    struct Document doc = HTMLlineproc2body(base, content_charset, textlist_feed);
+    struct Document doc = HTMLlineproc2body(base, content_charset, ui.vt->COLS, textlist_feed);
     if (htmlenv1.title)
         doc.title = htmlenv1.title;
     // }

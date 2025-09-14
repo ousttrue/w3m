@@ -1495,7 +1495,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
 /* reshape */
 DEFUN(reshape, RESHAPE, "Re-render document")
 {
-    ui.current_buffer->width = 0;
+    ui.current_buffer->document.cols = 0;
 }
 
 static void
