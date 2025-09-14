@@ -10,11 +10,9 @@
 #include "str_util.h"
 #include "LinkList.h"
 
-/* append image map links */
-static void
-append_map_info(struct Buffer* buf, Str tmp, struct FormItem* fi)
+static void append_map_info(struct Document* doc, Str tmp, struct FormItem* fi)
 {
-    struct MapList* ml = searchMapList(&buf->document, fi->value ? fi->value->ptr : NULL);
+    struct MapList* ml = searchMapList(doc, fi->value ? fi->value->ptr : NULL);
     if (ml == NULL)
         return;
 
@@ -26,9 +24,9 @@ append_map_info(struct Buffer* buf, Str tmp, struct FormItem* fi)
         struct MapArea* a = (struct MapArea*)al->ptr;
         if (!a)
             continue;
-        struct Url pu = parseUrl(a->url, makeBaseUrl(&buf->document));
+        struct Url pu = parseUrl(a->url, makeBaseUrl(doc));
         const char* q = html_quote(parsedURL2Str(&pu)->ptr);
-        const char* p = html_quote(url_decode2(a->url, buf ? buf->document.charset : 0));
+        const char* p = html_quote(url_decode2(a->url, doc ? doc->charset : 0));
         Strcat_m_charp(tmp, "<tr valign=top><td>&nbsp;&nbsp;<td><a href=\"",
             q, "\">",
             html_quote(*a->alt ? a->alt : mybasename(a->url)),
@@ -37,8 +35,7 @@ append_map_info(struct Buffer* buf, Str tmp, struct FormItem* fi)
     Strcat_charp(tmp, "</table>");
 }
 
-/* append links */
-void append_link_info(struct Buffer* buf, Str html, struct LinkList* link)
+static void append_link_info(struct Document* doc, Str html, struct LinkList* link)
 {
     if (!link)
         return;
@@ -47,7 +44,7 @@ void append_link_info(struct Buffer* buf, Str html, struct LinkList* link)
     for (struct LinkList* l = link; l; l = l->next) {
         const char* url;
         if (l->url) {
-            struct Url pu = parseUrl(l->url, makeBaseUrl(&buf->document));
+            struct Url pu = parseUrl(l->url, makeBaseUrl(doc));
             url = html_quote(parsedURL2Str(&pu)->ptr);
         } else
             url = "(empty)";
@@ -61,7 +58,7 @@ void append_link_info(struct Buffer* buf, Str html, struct LinkList* link)
         if (!l->url)
             url = "(empty)";
         else
-            url = html_quote(url_decode2(l->url, buf ? buf->document.charset : 0));
+            url = html_quote(url_decode2(l->url, doc ? doc->charset : 0));
         Strcat_m_charp(html, "<td>", url, NULL);
         if (l->ctype)
             Strcat_m_charp(html, " (", html_quote(l->ctype), ")", NULL);
@@ -155,12 +152,12 @@ page_info_panel(struct UI ui, struct Buffer* buf)
             p, NULL);
         if (fi->parent->method == FORM_METHOD_INTERNAL
             && !Strcmp_charp(fi->parent->action, "map"))
-            append_map_info(buf, tmp, fi->parent->item);
+            append_map_info(&buf->document, tmp, fi->parent->item);
     }
     Strcat_charp(tmp, "</table>\n");
     Strcat_charp(tmp, "</form>");
 
-    append_link_info(buf, tmp, buf->document.linklist);
+    append_link_info(&buf->document, tmp, buf->document.linklist);
 
     if (buf->document_header != NULL) {
         Strcat_charp(tmp, "<hr width=50%><h1>Header information</h1><pre>\n");
