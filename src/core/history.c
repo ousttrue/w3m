@@ -1,6 +1,5 @@
 #include "history.h"
 #include "runtime.h"
-#include "buffer_loader.h"
 #include "hash.h"
 #include "ui.h"
 #include "quote.h"

@@ -1,4 +1,5 @@
 #include "buffer_util.h"
+#include "document_renderer.h"
 #include "history.h"
 #include "ui.h"
 #include "buffer_list.h"
@@ -21,7 +22,6 @@
 #include "screen.h"
 #include "ctrlcode.h"
 #include "istream.h"
-#include "buffer_loader.h"
 #include "alloc.h"
 #include "Anchor.h"
 #include "AnchorList.h"

@@ -2,7 +2,6 @@
 #include "buffer_util.h"
 #include "Content.h"
 #include "HttpRequest.h"
-#include "buffer_loader.h"
 #include "history.h"
 #include "image_loader.h"
 #include "linein.h"

@@ -1,9 +1,5 @@
 #pragma once
-#include "geometry.h"
-#include "url.h"
-#include "istream.h"
-#include <Str.h>
-#include <wc.h>
+#include "Document.h"
 
 extern int autoImage;
 extern char MetaRefresh;

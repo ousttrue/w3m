@@ -1,4 +1,5 @@
 #include "w3m.h"
+#include "document_renderer.h"
 #include "HtmlTagParsed.h"
 #include "internal.h"
 #include "page_info.h"
@@ -59,7 +60,6 @@
 #include "defun.h"
 #include "../defun.h"
 #include "regex.h"
-#include "buffer_loader.h"
 
 #define PACKAGE "w3m"
 #define HELP_FILE "w3mhelp-w3m_en.html"

@@ -1,4 +1,5 @@
 #include "rc.h"
+#include "document_renderer.h"
 #include "follow_anchor.h"
 #include "table.h"
 #include "buffer_list.h"
@@ -12,7 +13,6 @@
 #include "HtmlTagParsed.h"
 #include "search.h"
 #include "cookie.h"
-#include "buffer_loader.h"
 #include "url.h"
 #include "istream.h"
 #include "KeyValue.h"

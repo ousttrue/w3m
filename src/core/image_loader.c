@@ -11,7 +11,6 @@
 #include "alloc.h"
 #include "w3m.h"
 #include "Content.h"
-#include "buffer_loader.h"
 #include "ui.h"
 #include "Buffer.h"
 #include "local_cgi.h"

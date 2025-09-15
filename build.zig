@@ -131,7 +131,7 @@ const w3m_srcs = [_][]const u8{
     "downloadlist.c",
     "keymap.c",
     "progress.c",
-    "buffer_loader.c",
+    "document_renderer.c",
 
     "ui.c",
     "LineEditor.c",
