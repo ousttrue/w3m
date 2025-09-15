@@ -38,7 +38,7 @@ void initialize();
 void fmInit();
 void fmTerm();
 
-void main_loop();
+void main_loop(int argc, char** argv);
 void _goLine(struct UI ui, const char* l);
 
 bool onFrame();

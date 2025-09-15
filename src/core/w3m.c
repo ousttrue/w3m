@@ -916,8 +916,13 @@ struct IOBEvent iob_wait(struct IOBlocker* iob, int timeout_ms)
     }
 }
 
-void main_loop()
+void main_loop(int argc, char** argv)
 {
+    initialize();
+    parseArgs(argc, argv);
+    // onFrame();
+    onKeyInput(0);
+
     // init
     struct IOBlocker iob;
     memset(&iob, 0, sizeof(iob));
@@ -936,15 +941,28 @@ void main_loop()
             break;
 
         case IOB_EVENT_INPUT:
-            printf("input: %d\n", ev.value);
+            if (ev.value == 3 // <C-c>
+            ) {
+                // raw mode
+                g_running = false;
+            } else {
+                // printf("input: %d\n", ev.value);
+                onKeyInput(ev.value);
+            }
             break;
 
         case IOB_EVENT_SIGNAL:
-            printf("signal: %d\n", ev.value);
+            switch (ev.value) {
+            case SIGINT:
+                g_running = false;
+                break;
+            }
             break;
         }
     }
 
     // finalize
     iob_deinit(&iob);
+
+    fmTerm();
 }

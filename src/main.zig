@@ -65,8 +65,10 @@ pub fn main() !void {
     //     @ptrCast(std.os.argv),
     // );
     // try main_loop();
-
-    c.main_loop();
+    c.main_loop(
+        @intCast(std.os.argv.len),
+        @ptrCast(std.os.argv),
+    );
 }
 
 fn createSignalfd() i32 {
