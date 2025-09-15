@@ -50,3 +50,5 @@ void pushDeleteFile(const char* path);
 Str tmpfname(enum TmpFileType type, const char* ext);
 
 const char* url_decode2(const char* url, wc_ces url_charset);
+
+int doFileCopy(const char* tmpf, const char* defstr);

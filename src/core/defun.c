@@ -1,4 +1,5 @@
 #include "AnchorList.h"
+#include "document_renderer.h"
 #include "menu.h"
 #include "LinkList.h"
 #include "internal.h"
@@ -1118,3 +1119,33 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document")
         fclose(f);
 }
 
+/* save source */
+DEFUN(svSrc, DOWNLOAD SAVE, "Save document source")
+{
+    if (ui.current_buffer->content.sourcefile == NULL)
+        return;
+    CurrentKeyData = NULL; /* not allowed in w3m-control: */
+    PermitSaveToPipe = true;
+    // if (ui.current_buffer->real_scheme == SCM_LOCAL)
+    //     file = conv_from_system(guessSaveName(NULL, ui.current_buffer->content.url.real_file));
+    // else
+    const char* file = guessSaveName(ui.current_buffer->content.document_header, ui.current_buffer->content.url.file);
+    doFileCopy(ui.current_buffer->content.sourcefile, file);
+    PermitSaveToPipe = false;
+}
+
+/* peek URL */
+DEFUN(peekURL, PEEK_LINK, "Show target address")
+{
+    // _peekURL(ui, 0);
+}
+
+/* peek URL of image */
+DEFUN(peekIMG, PEEK_IMG, "Show image address")
+{
+    // _peekURL(ui, 1);
+}
+
+DEFUN(curURL, PEEK, "Show current address")
+{
+}

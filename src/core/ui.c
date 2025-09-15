@@ -1,6 +1,7 @@
 #include "ui.h"
 #include "Image.h"
 #include "MapArea.h"
+#include "alloc.h"
 #include "form.h"
 #include "keymap.h"
 #include "buffer_list.h"
@@ -20,6 +21,7 @@
 #include <myctype.h>
 #include <stdarg.h>
 #include <stdlib.h>
+#include <string.h>
 #include <wc.h>
 #include <wtf.h>
 

@@ -257,3 +257,118 @@ const char* url_decode2(const char* url, wc_ces url_charset)
         return url;
     return url_unquote_conv(url, url_charset);
 }
+
+int _doFileCopy(const char* tmpf, const char* defstr, int download)
+{
+    // Str msg;
+    // // Str filen;
+    // char *p, *q = NULL;
+    // pid_t pid;
+    // char* lock;
+    // struct stat st;
+    // long long size = 0;
+    // bool is_pipe = false;
+    //
+    // // if (fmInitialized)
+    // {
+    //     p = searchKeyData();
+    //     if (p == NULL || *p == '\0') {
+    //         /* FIXME: gettextize? */
+    //         q = inputLineHist(getUI(), "(Download)Save file to: ",
+    //             defstr, IN_COMMAND, SaveHist);
+    //         if (q == NULL || *q == '\0')
+    //             return false;
+    //         p = conv_to_system(q);
+    //     }
+    //     if (*p == '|' && PermitSaveToPipe)
+    //         is_pipe = true;
+    //     else {
+    //         if (q) {
+    //             p = unescape_spaces(Strnew_charp(q))->ptr;
+    //             p = conv_to_system(p);
+    //         }
+    //         p = expandPath(p);
+    //         if (!notExistsOrOverWrite(p))
+    //             return -1;
+    //     }
+    //     if (!canCopyFile(tmpf, p)) {
+    //         msg = Sprintf("Can't copy. %s and %s are identical.",
+    //             conv_from_system(tmpf), conv_from_system(p));
+    //         message(getUI(), MSG_ERR, msg->ptr);
+    //         return -1;
+    //     }
+    //     if (!download) {
+    //         if (_MoveFile(tmpf, p) < 0) {
+    //             /* FIXME: gettextize? */
+    //             msg = Sprintf("Can't save to %s", conv_from_system(p));
+    //             message(getUI(), MSG_ERR, msg->ptr);
+    //         }
+    //         return -1;
+    //     }
+    //     lock = tmpfname(TMPF_DFL, ".lock")->ptr;
+    //
+    //     symlink(p, lock);
+    //
+    //     flush_tty();
+    //     pid = fork();
+    //     if (!pid) {
+    //         setup_child(false, 0, -1);
+    //         if (!_MoveFile(tmpf, p) && PreserveTimestamp && !is_pipe && !stat(tmpf, &st))
+    //             setModtime(p, st.st_mtime);
+    //         unlink(lock);
+    //         exit(0);
+    //     }
+    //     if (!stat(tmpf, &st))
+    //         size = st.st_size;
+    //     addDownloadList(pid, conv_from_system(tmpf), p, lock, size);
+    // }
+    //
+    // // else {
+    // //     q = searchKeyData();
+    // //     if (q == NULL || *q == '\0') {
+    // //         /* FIXME: gettextize? */
+    // //         printf("(Download)Save file to: ");
+    // //         fflush(stdout);
+    // //         filen = Strfgets(stdin);
+    // //         if (filen->length == 0)
+    // //             return -1;
+    // //         q = filen->ptr;
+    // //     }
+    // //     for (p = q + strlen(q) - 1; IS_SPACE(*p); p--)
+    // //         ;
+    // //     *(p + 1) = '\0';
+    // //     if (*q == '\0')
+    // //         return -1;
+    // //     p = q;
+    // //     if (*p == '|' && PermitSaveToPipe)
+    // //         is_pipe = true;
+    // //     else {
+    // //         p = expandPath(p);
+    // //         if (!notExistsOrOverWrite(p))
+    // //             return -1;
+    // //     }
+    // //     if (checkCopyFile(tmpf, p) < 0) {
+    // //         /* FIXME: gettextize? */
+    // //         printf("Can't copy. %s and %s are identical.", tmpf, p);
+    // //         return -1;
+    // //     }
+    // //     if (_MoveFile(tmpf, p) < 0) {
+    // //         /* FIXME: gettextize? */
+    // //         printf("Can't save to %s\n", p);
+    // //         return -1;
+    // //     }
+    // //     if (PreserveTimestamp && !is_pipe && !stat(tmpf, &st))
+    // //         setModtime(p, st.st_mtime);
+    // // }
+    return 0;
+}
+int doFileCopy(const char* tmpf, const char* defstr)
+{
+    return _doFileCopy(tmpf, defstr, false);
+}
+int doFileMove(const char* tmpf, const char* defstr)
+{
+    int ret = doFileCopy(tmpf, defstr);
+    unlink(tmpf);
+    return ret;
+}
