@@ -411,13 +411,13 @@ end:
 /* Quit */
 DEFUN(quitfm, ABORT EXIT, "Quit without confirmation")
 {
-    _quitfm(false);
+    // _quitfm(false);
 }
 
 /* Question and Quit */
 DEFUN(qquitfm, QUIT, "Quit with confirmation request")
 {
-    _quitfm(confirm_on_quit);
+    // _quitfm(confirm_on_quit);
 }
 
 /* Select buffer */

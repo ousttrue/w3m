@@ -718,29 +718,43 @@ Str myEditor(const char* cmd, const char* file, int line)
     return tmp;
 }
 
-void _quitfm(bool confirm)
+// void _quitfm(bool confirm)
+// {
+//     const char* ans = "y";
+//     if (checkDownloadList())
+//         /* FIXME: gettextize? */
+//         ans = inputChar(getUI(), "Download process retains. "
+//                                  "Do you want to exit w3m? (y/n)");
+//     else if (confirm)
+//         /* FIXME: gettextize? */
+//         ans = inputChar(getUI(), "Do you want to exit w3m? (y/n)");
+//     if (!(ans && TOLOWER(*ans) == 'y')) {
+//
+//         return;
+//     }
+//
+//     term_title(""); /* XXX */
+//     if (activeImage)
+//         termImage();
+//     fmTerm();
+//     save_cookies();
+//     if (UseHistory && SaveURLHist)
+//         saveHistory(URLHist, URLHistSize);
+//     w3m_exit(0);
+// }
+
+#include <sys/signalfd.h>
+int create_signalfd(void)
 {
-    const char* ans = "y";
-    if (checkDownloadList())
-        /* FIXME: gettextize? */
-        ans = inputChar(getUI(), "Download process retains. "
-                                 "Do you want to exit w3m? (y/n)");
-    else if (confirm)
-        /* FIXME: gettextize? */
-        ans = inputChar(getUI(), "Do you want to exit w3m? (y/n)");
-    if (!(ans && TOLOWER(*ans) == 'y')) {
+    sigset_t mask;
+    sigemptyset(&mask);
+    sigaddset(&mask, SIGINT);
+    // sigaddset(&mask, SIGTERM);
+    // sigaddset(&mask, SIGUSR1);
+    // sigaddset(&mask, SIGUSR2);
 
-        return;
-    }
-
-    term_title(""); /* XXX */
-    if (activeImage)
-        termImage();
-    fmTerm();
-    save_cookies();
-    if (UseHistory && SaveURLHist)
-        saveHistory(URLHist, URLHistSize);
-    w3m_exit(0);
+    sigprocmask(SIG_BLOCK, &mask, NULL);
+    return signalfd(-1, &mask, SFD_CLOEXEC);
 }
 
 #include <sys/epoll.h>
@@ -749,6 +763,7 @@ enum IOBEventType {
     IOB_EVENT_ERROR,
     IOB_EVENT_TIMEOUT,
     IOB_EVENT_INPUT,
+    IOB_EVENT_SIGNAL,
 };
 
 struct IOBEvent {
@@ -768,6 +783,8 @@ struct IOBlocker {
     int input_buffer_len;
     int input_enable;
     int input_pos;
+
+    int signalfd;
 };
 
 void iob_init(struct IOBlocker* iob, int max_event)
@@ -785,7 +802,7 @@ void iob_init(struct IOBlocker* iob, int max_event)
     memset(&ev, 0, sizeof(ev));
     ev.events = EPOLLIN;
     ev.data.fd = STDIN_FILENO;
-    if (epoll_ctl(iob->epfd, EPOLL_CTL_ADD, STDIN_FILENO, &ev) != 0) {
+    if (epoll_ctl(iob->epfd, EPOLL_CTL_ADD, ev.data.fd, &ev) != 0) {
         perror("epoll_ctl");
         abort();
     }
@@ -793,6 +810,19 @@ void iob_init(struct IOBlocker* iob, int max_event)
     iob->input_buffer_len = 0;
     iob->input_enable = 0;
     iob->input_pos = 0;
+
+    // add signalfd
+    iob->signalfd = create_signalfd();
+    if (iob->signalfd == -1) {
+        perror("Failed to create signal file descriptor");
+        abort();
+    }
+    ev.events = EPOLLIN;
+    ev.data.fd = iob->signalfd;
+    if (epoll_ctl(iob->epfd, EPOLL_CTL_ADD, ev.data.fd, &ev) != 0) {
+        perror("Failed to add signal file descriptor to epoll");
+        abort();
+    }
 }
 
 void iob_deinit(struct IOBlocker* iob)
@@ -818,38 +848,52 @@ struct IOBEvent iob_wait(struct IOBlocker* iob, int timeout_ms)
 
         if (iob->event_enable && iob->event_pos < iob->event_enable) {
             struct epoll_event ev = iob->event_buffer[iob->event_pos++];
+            if (ev.data.fd == STDIN_FILENO) {
+                // read STDIN
+                int ready_read_size;
+                if (ioctl(ev.data.fd, FIONREAD, &ready_read_size) == -1) {
+                    // error
+                    return (struct IOBEvent) {
+                        .type = IOB_EVENT_ERROR,
+                        .value = errno,
+                    };
+                }
+                if (ready_read_size == 0) {
+                    // no input
+                    return (struct IOBEvent) {
+                        .type = IOB_EVENT_ERROR,
+                        .value = errno,
+                    };
+                }
+                if (!iob->input_buffer) {
+                    iob->input_buffer = malloc(ready_read_size);
+                    iob->input_buffer_len = ready_read_size;
+                } else if (ready_read_size > iob->input_buffer_len) {
+                    iob->input_buffer = realloc(iob->input_buffer, ready_read_size);
+                    iob->input_buffer_len = ready_read_size;
+                }
+                iob->input_pos = 0;
+                iob->input_enable = read(ev.data.fd, iob->input_buffer, iob->input_buffer_len);
+                if (iob->input_enable < 0) {
+                    // error
+                    return (struct IOBEvent) {
+                        .type = IOB_EVENT_ERROR,
+                        .value = errno,
+                    };
+                }
 
-            // read STDIN
-            int ready_read_size;
-            if (ioctl(ev.data.fd, FIONREAD, &ready_read_size) == -1) {
-                // error
+            } else if (ev.data.fd == iob->signalfd) {
+                struct signalfd_siginfo info = { 0 };
+                if (read(iob->signalfd, &info, sizeof(info)) != sizeof(info)) {
+                    abort();
+                }
                 return (struct IOBEvent) {
-                    .type = IOB_EVENT_ERROR,
-                    .value = errno,
+                    .type = IOB_EVENT_SIGNAL,
+                    .value = info.ssi_signo,
                 };
-            }
-            if (ready_read_size == 0) {
-                // no input
-                return (struct IOBEvent) {
-                    .type = IOB_EVENT_ERROR,
-                    .value = errno,
-                };
-            }
-            if (!iob->input_buffer) {
-                iob->input_buffer = malloc(ready_read_size);
-                iob->input_buffer_len = ready_read_size;
-            } else if (ready_read_size > iob->input_buffer_len) {
-                iob->input_buffer = realloc(iob->input_buffer, ready_read_size);
-                iob->input_buffer_len = ready_read_size;
-            }
-            iob->input_pos = 0;
-            iob->input_enable = read(ev.data.fd, iob->input_buffer, iob->input_buffer_len);
-            if (iob->input_enable < 0) {
-                // error
-                return (struct IOBEvent) {
-                    .type = IOB_EVENT_ERROR,
-                    .value = errno,
-                };
+            } else {
+                // not reach
+                abort();
             }
         } else {
             // block
@@ -883,16 +927,20 @@ void main_loop()
     while (g_running) {
         struct IOBEvent ev = iob_wait(&iob, timeout_ms);
         switch (ev.type) {
-        case IOB_EVENT_TIMEOUT:
-            break;
-
         case IOB_EVENT_ERROR:
             printf("error: %d\n", ev.value);
             g_running = false;
             break;
 
+        case IOB_EVENT_TIMEOUT:
+            break;
+
         case IOB_EVENT_INPUT:
             printf("input: %d\n", ev.value);
+            break;
+
+        case IOB_EVENT_SIGNAL:
+            printf("signal: %d\n", ev.value);
             break;
         }
     }
