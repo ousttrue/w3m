@@ -1,5 +1,6 @@
 #pragma once
 #include "geometry.h"
+#include <Str.h>
 
 struct Content;
 struct Document;
@@ -7,4 +8,4 @@ struct Document;
 /*
  * information of current page and link
  */
-struct Content page_info_panel(struct Content *content, struct Document* doc, struct BufferPoint bp);
+Str page_info_panel_html(struct Content *content, struct Document* doc, struct BufferPoint bp);

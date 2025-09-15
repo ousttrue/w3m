@@ -25,19 +25,17 @@ int readBufferCache(struct Buffer* buf);
 void cursorXY(struct Buffer* buf, int x, int y);
 void restorePosition(struct Buffer* buf, struct Buffer* orig);
 void saveBuffer(struct Buffer* buf, FILE* f, int cont);
-// int columnSkip(struct Buffer* buf, int offset);
-struct Content cookie_list_panel(struct UI ui);
+Str cookie_list_panel_html();
 void reseq_anchor(struct Buffer* buf);
 
 struct Anchor* searchURLLabel(struct Buffer* buf, const char* url);
 void reAnchorWord(struct Buffer* buf, struct LineList* l, int spos, int epos);
 const char* reAnchor(struct Buffer* buf, const char* re);
 struct AnchorList;
-const char* getAnchorText(struct Document *doc, struct AnchorList* al, struct Anchor* a);
+const char* getAnchorText(struct Document* doc, struct AnchorList* al, struct Anchor* a);
 
 struct Buffer* makeBuffer(struct Content* c, int cols, bool use_graphic);
 void tmpClearBuffer(struct Buffer* buf);
 void shiftvisualpos(struct Buffer* buf, int shift);
 void _nextA(struct UI ui, int visited);
 void _prevA(struct UI ui, int visited);
-

@@ -486,3 +486,17 @@ struct BufferPoint getBufferPosition(struct UI ui)
         .pos = pos,
     };
 }
+
+/*
+ * List of error messages
+ */
+Str message_list_panel_html()
+{
+    Str tmp = Strnew();
+    Strcat_charp(tmp,
+        "<html><head><title>List of error messages</title></head><body>"
+        "<h1>List of error messages</h1><table cellpadding=0>\n");
+    concatMessageList(tmp);
+    Strcat_charp(tmp, "</table></body></html>");
+    return tmp;
+}

@@ -1295,8 +1295,7 @@ to_str(struct param_ptr* p)
     return NULL;
 }
 
-struct Content
-load_option_panel(struct UI ui)
+Str load_option_panel_html()
 {
     if (optionpanel_str == NULL)
         optionpanel_str = Sprintf(optionpanel_src1, w3m_version,
@@ -1394,14 +1393,7 @@ load_option_panel(struct UI ui)
     }
     Strcat_charp(src, "</table></form></body></html>");
 
-    return (struct Content) {
-        .url = {},
-        .page = src,
-        .cc = {
-            .content_type = CONTENTTYPE_TEXT_HTML,
-            .charset = WC_CES_UTF_8,
-        },
-    };
+    return src;
 }
 
 void panel_set_option(struct UI ui, struct KeyValue* arg)

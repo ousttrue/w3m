@@ -62,10 +62,9 @@ void do_internal(struct UI ui, const char* action, const char* data)
     }
 }
 
-struct Content link_list_panel(struct Document* doc)
+Str link_list_panel_html(struct Document* doc)
 {
-    Str tmp = Strnew_charp("<title>Link List</title>\
-<h1 align=center>Link List</h1>\n");
+    Str tmp = Strnew_charp("<title>Link List</title><h1 align=center>Link List</h1>\n");
 
     if (doc) {
         if (doc->linklist) {
@@ -178,14 +177,7 @@ struct Content link_list_panel(struct Document* doc)
         }
     }
 
-    return (struct Content) {
-        .url = {},
-        .page = tmp,
-        .cc = {
-            .content_type = CONTENTTYPE_TEXT_HTML,
-            .charset = WC_CES_UTF_8,
-        },
-    };
+    return tmp;
 }
 
 struct LinkList* link_menu(struct UI ui, struct Document* doc)

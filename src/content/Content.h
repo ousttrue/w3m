@@ -19,6 +19,22 @@ struct Content {
     struct ContentTypeCharset cc;
 };
 
+inline static struct Content emptyContent()
+{
+    return (struct Content) {};
+}
+
+inline static struct Content makeContentFromHtmlUtf8(Str html)
+{
+    return (struct Content) {
+        .page = html,
+        .cc = {
+            .content_type = CONTENTTYPE_TEXT_HTML,
+            .charset = WC_CES_UTF_8,
+        },
+    };
+};
+
 struct Form;
 struct Content getContent(const char* path, struct Url* current, struct Form* post,
     const char* referer, struct UserInteraction ui);

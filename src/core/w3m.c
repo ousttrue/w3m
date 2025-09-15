@@ -116,27 +116,6 @@ static void save_buffer_position(struct Buffer* buf);
 
 static int check_target = true;
 
-/*
- * List of error messages
- */
-static struct Content message_list_panel(struct UI ui)
-{
-    Str tmp = Strnew_size(getScreen()->ROWS * getScreen()->COLS);
-    Strcat_charp(tmp,
-        "<html><head><title>List of error messages</title></head><body>"
-        "<h1>List of error messages</h1><table cellpadding=0>\n");
-    concatMessageList(tmp);
-    Strcat_charp(tmp, "</table></body></html>");
-    return (struct Content) {
-        .url = {},
-        .page = tmp,
-        .cc = {
-            .content_type = CONTENTTYPE_TEXT_HTML,
-            .charset = WC_CES_UTF_8,
-        },
-    };
-}
-
 static void*
 die_oom(size_t bytes)
 {
@@ -643,51 +622,6 @@ void followForm(struct UI ui)
     _followForm(ui, false, false);
 }
 
-/* option setting */
-DEFUN(ldOpt, OPTIONS, "Display options setting panel")
-{
-    struct Content c = load_option_panel(ui);
-    pushContent(c, ui.viewport.size.x, ui.use_graphic);
-}
-
-/* set an option */
-DEFUN(setOpt, SET_OPTION, "Set option")
-{
-    CurrentKeyData = NULL; /* not allowed in w3m-control: */
-
-    const char* opt = searchKeyData();
-    if (opt == NULL || *opt == '\0' || strchr(opt, '=') == NULL) {
-        if (opt != NULL && *opt != '\0') {
-            const char* v = get_param_option(opt);
-            opt = Sprintf("%s=%s", opt, v ? v : "")->ptr;
-        }
-        opt = inputStrHist(getUI(), "Set option: ", opt, TextHist);
-        if (opt == NULL || *opt == '\0') {
-
-            return;
-        }
-    }
-    if (set_param_option(opt))
-        sync_with_option();
-}
-
-/* error message list */
-DEFUN(msgs, MSGS, "Display error messages")
-{
-    struct Content c = message_list_panel(ui);
-    pushContent(c, ui.viewport.size.x, ui.use_graphic);
-}
-
-/* page info */
-DEFUN(pginfo, INFO, "Display information about the current document")
-{
-    struct Content c = page_info_panel(
-        &ui.current_buffer->content,
-        &ui.current_buffer->document,
-        getBufferPosition(ui));
-    pushContent(c, ui.viewport.size.x, ui.use_graphic);
-}
-
 void follow_map(struct UI ui, struct KeyValue* arg)
 {
     const char* name = tag_get_value(arg, "link");
@@ -771,21 +705,21 @@ DEFUN(movlistMn, MOVE_LIST_MENU, "Pop up menu to navigate between hyperlinks")
 /* link,anchor,image list */
 DEFUN(linkLst, LIST, "Show all URLs referenced")
 {
-    struct Content c = link_list_panel(&ui.current_buffer->document);
+    struct Content c = makeContentFromHtmlUtf8(link_list_panel_html(&ui.current_buffer->document));
     pushContent(c, ui.viewport.size.x, ui.use_graphic);
 }
 
 /* cookie list */
 DEFUN(cooLst, COOKIE, "View cookie list")
 {
-    struct Content c = cookie_list_panel(ui);
+    struct Content c = makeContentFromHtmlUtf8(cookie_list_panel_html());
     pushContent(c, ui.viewport.size.x, ui.use_graphic);
 }
 
 /* History page */
 DEFUN(ldHist, HISTORY, "Show browsing history")
 {
-    struct Content c = historyBuffer(ui, URLHist);
+    struct Content c = makeContentFromHtmlUtf8(historyBuffer_html(URLHist));
     pushContent(c, ui.viewport.size.x, ui.use_graphic);
 }
 
@@ -1669,10 +1603,10 @@ convert_size3(long long size)
     return tmp->ptr;
 }
 
-static struct Content DownloadListBuffer(struct UI ui)
+static Str DownloadListBuffer_html()
 {
     if (!FirstDL)
-        return (struct Content) {};
+        return 0;
 
     DownloadList* d;
     Str src = NULL;
@@ -1751,13 +1685,7 @@ static struct Content DownloadListBuffer(struct UI ui)
     }
     Strcat_charp(src, "</form></body></html>");
 
-    return (struct Content) {
-        .page = src,
-        .cc = {
-            .content_type = CONTENTTYPE_TEXT_HTML,
-            .charset = WC_CES_UTF_8,
-        },
-    };
+    return src;
 }
 
 void download_action(struct UI ui, struct KeyValue* arg)
@@ -1821,7 +1749,7 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
     }
     int reload = checkDownloadList();
 
-    struct Content c = DownloadListBuffer(ui);
+    struct Content c = makeContentFromHtmlUtf8(DownloadListBuffer_html());
     if (!c.page) {
         return;
     }

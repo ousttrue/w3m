@@ -755,23 +755,20 @@ void saveBuffer(struct Buffer* buf, FILE* f, int cont)
 //     return 1;
 // }
 
-struct Content
-cookie_list_panel(struct UI ui)
+Str cookie_list_panel_html()
 {
-    /* FIXME: gettextize? */
     Str src = Strnew_charp("<html><head><title>Cookies</title></head>"
                            "<body><center><b>Cookies</b></center>"
                            "<p><form method=internal action=cookie>");
-    struct cookie* p;
-    int i;
-    char tmp2[80];
 
     if (!use_cookie || !First_cookie)
-        return (struct Content) {};
+        return 0;
 
     Strcat_charp(src, "<ol>");
-    for (p = First_cookie, i = 0; p; p = p->next, i++) {
+    struct cookie* p = First_cookie;
+    for (int i = 0; p; p = p->next, i++) {
         const char* tmp = html_quote(parsedURL2Str(&p->url)->ptr);
+        char tmp2[80];
         if (p->expires != (time_t)-1) {
             strftime(tmp2, 80, "%a, %d %b %Y %H:%M:%S GMT",
                 gmtime(&p->expires));
@@ -844,14 +841,7 @@ cookie_list_panel(struct UI ui)
     }
     Strcat_charp(src, "</ol></form></body></html>");
 
-    return (struct Content) {
-        .url = {},
-        .page = src,
-        .cc = {
-            .content_type = CONTENTTYPE_TEXT_HTML,
-            .charset = WC_CES_UTF_8,
-        },
-    };
+    return src;
 }
 
 struct Anchor*

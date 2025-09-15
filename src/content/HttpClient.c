@@ -400,7 +400,7 @@ struct Content httpRequest(struct HttpClient* c,
                 if (same_url_p(&new_url, &c->exchanges[i].request.url)) {
                     Str tmp = Sprintf("Redirection loop detected (%s)", parsedURL2Str(&new_url)->ptr);
                     // message(getUI(), MSG_ERR, tmp->ptr);
-                    return (struct Content) { 0 };
+                    return emptyContent();
                 }
             }
 
@@ -539,6 +539,6 @@ struct Content httpRequest(struct HttpClient* c,
     {
         Str tmp = Sprintf("Number of redirections exceeded %d", MAX_FOLLOW_REDIRECTION);
         // message(getUI(), MSG_ERR, tmp->ptr);
-        return (struct Content) {};
+        return emptyContent();
     }
 }

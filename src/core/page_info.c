@@ -69,8 +69,7 @@ static void append_link_info(struct Document* doc, Str html, struct LinkList* li
     Strcat_charp(html, "</table>\n");
 }
 
-struct Content
-page_info_panel(struct Content* content, struct Document* doc, struct BufferPoint bp)
+Str page_info_panel_html(struct Content* content, struct Document* doc, struct BufferPoint bp)
 {
     Str tmp = Strnew_size(1024);
     Strcat_charp(tmp, "<html><head>\
@@ -175,12 +174,5 @@ page_info_panel(struct Content* content, struct Document* doc, struct BufferPoin
             html_quote(content->ssl_certificate), "</pre>\n", NULL);
 end:
     Strcat_charp(tmp, "</body></html>");
-    return (struct Content) {
-        .url = {},
-        .page = tmp,
-        .cc = {
-            .content_type = CONTENTTYPE_TEXT_HTML,
-            .charset = WC_CES_UTF_8,
-        },
-    };
+    return tmp;
 }

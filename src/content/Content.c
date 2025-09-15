@@ -105,10 +105,7 @@ struct Content openLocal(const char* u, struct Url* current, struct Form* post, 
         }
     }
     if (!stream) {
-        return (struct Content) {
-            .url = pu,
-            .page = NULL,
-        };
+        return emptyContent();
     }
     Str page = readAll(stream);
     ISclose(stream);
@@ -204,7 +201,7 @@ getContent(const char* path, struct Url* current, struct Form* post, const char*
     }
 
     default:
-        return (struct Content) {};
+        return emptyContent();
     }
 }
 

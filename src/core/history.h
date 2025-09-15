@@ -1,5 +1,4 @@
 #pragma once
-#include "geometry.h"
 #include "textlist.h"
 #include "hash.h"
 #include "Content.h"
@@ -37,4 +36,4 @@ char* nextHist(struct Hist* hist);
 char* prevHist(struct Hist* hist);
 int loadHistory(struct Hist* hist);
 void saveHistory(struct Hist* hist, size_t size);
-struct Content historyBuffer(struct UI ui, struct Hist* hist);
+Str historyBuffer_html(struct Hist* hist);

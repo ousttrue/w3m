@@ -52,3 +52,4 @@ void ui_cursor_set_x(int x);
 
 // (line, bytepos) in buffer from cursor (row, col)
 struct BufferPoint getBufferPosition(struct UI ui);
+Str message_list_panel_html();

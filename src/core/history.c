@@ -26,8 +26,7 @@ mergeHistory(struct Hist* ours, struct Hist* theirs)
     return 0;
 }
 
-struct Content
-historyBuffer(struct UI ui, struct Hist* hist)
+Str historyBuffer_html(struct Hist* hist)
 {
     Str src = Strnew();
     Strcat_charp(src, "<html>\n<head><title>History Page</title></head>\n");
@@ -50,11 +49,7 @@ historyBuffer(struct UI ui, struct Hist* hist)
         }
     }
     Strcat_charp(src, "</ol>\n</body>\n</html>");
-    return (struct Content) {
-        .url = {},
-        .page = src,
-        .cc = {},
-    };
+    return src;
 }
 
 int loadHistory(struct Hist* hist)

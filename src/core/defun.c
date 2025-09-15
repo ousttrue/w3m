@@ -1,4 +1,5 @@
 #include "AnchorList.h"
+#include "page_info.h"
 #include "Anchor.h"
 #include "HttpRequest.h"
 #include "follow_anchor.h"
@@ -21,6 +22,7 @@
 #include "keymap.h" // IWYU pragma: keep
 #include "w3m.h"
 #include "quote.h"
+#include "rc.h"
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -951,3 +953,47 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
     pushContent(c, ui.viewport.size.x, ui.use_graphic);
 }
 
+/* option setting */
+DEFUN(ldOpt, OPTIONS, "Display options setting panel")
+{
+    struct Content c = makeContentFromHtmlUtf8(load_option_panel_html());
+    pushContent(c, ui.viewport.size.x, ui.use_graphic);
+}
+
+/* set an option */
+DEFUN(setOpt, SET_OPTION, "Set option")
+{
+    CurrentKeyData = NULL; /* not allowed in w3m-control: */
+
+    const char* opt = searchKeyData();
+    if (opt == NULL || *opt == '\0' || strchr(opt, '=') == NULL) {
+        if (opt != NULL && *opt != '\0') {
+            const char* v = get_param_option(opt);
+            opt = Sprintf("%s=%s", opt, v ? v : "")->ptr;
+        }
+        opt = inputStrHist(getUI(), "Set option: ", opt, TextHist);
+        if (opt == NULL || *opt == '\0') {
+
+            return;
+        }
+    }
+    if (set_param_option(opt))
+        sync_with_option();
+}
+
+/* error message list */
+DEFUN(msgs, MSGS, "Display error messages")
+{
+    struct Content c = makeContentFromHtmlUtf8(message_list_panel_html());
+    pushContent(c, ui.viewport.size.x, ui.use_graphic);
+}
+
+/* page info */
+DEFUN(pginfo, INFO, "Display information about the current document")
+{
+    struct Content c = makeContentFromHtmlUtf8(page_info_panel_html(
+        &ui.current_buffer->content,
+        &ui.current_buffer->document,
+        getBufferPosition(ui)));
+    pushContent(c, ui.viewport.size.x, ui.use_graphic);
+}
