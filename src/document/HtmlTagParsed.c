@@ -33,7 +33,7 @@ int pseudoInlines = (true);
 int ignore_null_img_alt = (true);
 int activeImage = (false);
 double image_scale = (100);
-bool enable_inline_image = false;
+enum InlineImageType enable_inline_image = INLINE_IMG_NONE;
 bool displayImage = (true);
 
 double pixel_per_char = (DEFAULT_PIXEL_PER_CHAR);

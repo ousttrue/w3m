@@ -707,7 +707,7 @@ void follow_map(struct UI ui, struct KeyValue* arg)
 
     struct Url p_url = parseUrl(a->url, makeBaseUrl(&ui.current_buffer->document));
     pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
-    struct Content c = loadGeneralFile(a->url, makeBaseUrl(&ui.current_buffer->document),
+    struct Content c = getContent(a->url, makeBaseUrl(&ui.current_buffer->document),
         NULL, parsedURL2Str(&ui.current_buffer->content.url)->ptr, UI_TTY);
     pushContent(c, ui.viewport.size.x, ui.use_graphic);
 }
@@ -726,7 +726,7 @@ DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
 
     struct Url p_url = parseUrl(l->url, makeBaseUrl(&ui.current_buffer->document));
     pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
-    struct Content c = loadGeneralFile(l->url, makeBaseUrl(&ui.current_buffer->document),
+    struct Content c = getContent(l->url, makeBaseUrl(&ui.current_buffer->document),
         NULL, parsedURL2Str(&ui.current_buffer->content.url)->ptr, UI_TTY);
     pushContent(c, ui.viewport.size.x, ui.use_graphic);
 }
@@ -1158,7 +1158,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
         DocumentCharset = ui.current_buffer->document.charset;
     // SearchHeader = ui.current_buffer->search_header;
     DefaultType = contentTypeStr(ui.current_buffer->content.cc.content_type);
-    struct Content c = loadGeneralFile(url->ptr, NULL, post, NO_REFERER, UI_TTY /*, true*/);
+    struct Content c = getContent(url->ptr, NULL, post, NO_REFERER, UI_TTY /*, true*/);
 
     struct Buffer* buf = makeBuffer(&c, ui.viewport.size.x, ui.use_graphic);
     DocumentCharset = old_charset;
@@ -1402,7 +1402,7 @@ execdict(struct UI ui, const char* word)
     }
 
     const char* dictcmd = Sprintf("%s?%s", DictCommand, Str_form_quote(Strnew_charp(w))->ptr)->ptr;
-    struct Content c = loadGeneralFile(dictcmd, NULL, NULL, NO_REFERER, UI_TTY);
+    struct Content c = getContent(dictcmd, NULL, NULL, NO_REFERER, UI_TTY);
     pushContent(c, ui.viewport.size.x, ui.use_graphic);
 }
 

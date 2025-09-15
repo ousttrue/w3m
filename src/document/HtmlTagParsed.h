@@ -16,7 +16,7 @@ extern struct FormSelectOption* select_option;
 extern int pseudoInlines;
 extern int ignore_null_img_alt;
 extern double image_scale;
-extern bool enable_inline_image;
+extern enum InlineImageType enable_inline_image;
 extern bool displayImage;
 extern int max_textarea;
 extern int max_select;

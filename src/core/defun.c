@@ -232,7 +232,7 @@ DEFUN(ldfile, LOAD, "Open local file in a new buffer")
         return;
     }
     // cmd_loadfile(ui, fn);
-    struct Content c = loadGeneralFile(file_to_url(fn, CurrentDir), NULL, NULL, NO_REFERER, UI_TTY);
+    struct Content c = getContent(file_to_url(fn, CurrentDir), NULL, NULL, NO_REFERER, UI_TTY);
     pushContent(c, ui.viewport.size.x, ui.use_graphic);
 }
 
@@ -244,7 +244,7 @@ DEFUN(ldhelp, HELP, "Show help panel")
     Str tmp = Sprintf("file:///$LIB/" HELP_CGI CGI_EXTENSION "?version=%s&lang=%s",
         Str_form_quote(Strnew_charp(w3m_version))->ptr,
         Str_form_quote(Strnew_charp_n(lang, n))->ptr);
-    struct Content c = loadGeneralFile(tmp->ptr, NULL, NULL, NO_REFERER, UI_TTY);
+    struct Content c = getContent(tmp->ptr, NULL, NULL, NO_REFERER, UI_TTY);
     pushContent(c, ui.viewport.size.x, ui.use_graphic);
 }
 
@@ -909,7 +909,7 @@ DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer")
         url = url_quote(url);
         p_url = parseUrl(url, NULL);
         pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
-        struct Content c = loadGeneralFile(url, NULL, NULL, NULL, UI_TTY);
+        struct Content c = getContent(url, NULL, NULL, NULL, UI_TTY);
         pushContent(c, ui.viewport.size.x, ui.use_graphic);
         if (ui.current_buffer != cur_buf) /* success */
             pushHashHist(URLHist, parsedURL2Str(&ui.current_buffer->content.url)->ptr);
@@ -924,7 +924,7 @@ DEFUN(gorURL, GOTO_RELATIVE, "Go to relative address")
 /* load bookmark */
 DEFUN(ldBmark, BOOKMARK VIEW_BOOKMARK, "View bookmarks")
 {
-    struct Content c = loadGeneralFile(BookmarkFile, NULL, NULL, NO_REFERER, UI_TTY);
+    struct Content c = getContent(BookmarkFile, NULL, NULL, NO_REFERER, UI_TTY);
     pushContent(c, ui.viewport.size.x, ui.use_graphic);
 }
 
@@ -947,7 +947,7 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
     struct Form* post = newFormList(NULL, "post", NULL, NULL, NULL, NULL, NULL);
     post->body = tmp->ptr;
     post->length = tmp->length;
-    struct Content c = loadGeneralFile("file:///$LIB/" W3MBOOKMARK_CMDNAME, NULL, post, NO_REFERER, UI_TTY);
+    struct Content c = getContent("file:///$LIB/" W3MBOOKMARK_CMDNAME, NULL, post, NO_REFERER, UI_TTY);
     pushContent(c, ui.viewport.size.x, ui.use_graphic);
 }
 

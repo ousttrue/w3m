@@ -593,7 +593,7 @@ void loadImage(struct Document *doc, enum ImageLoadFlag flag, bool do_download)
              */
             setup_child(false, 0, -1);
             image_source = cache->file;
-            struct Content c = loadGeneralFile(cache->url, cache->current, NULL, NULL, UI_TTY);
+            struct Content c = getContent(cache->url, cache->current, NULL, NULL, UI_TTY);
             /* TODO make sure removing this didn't break anything
             if (!b || !b->real_type || strncasecmp(b->real_type, "image/", 6))
                 unlink(cache->file);

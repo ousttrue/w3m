@@ -159,7 +159,7 @@ struct Content openLocal(const char* u, struct Url* current, struct Form* post, 
 }
 
 struct Content
-loadGeneralFile(const char* path, struct Url* current, struct Form* post, const char* referer,
+getContent(const char* path, struct Url* current, struct Form* post, const char* referer,
     struct UserInteraction ui)
 {
     //         openURL(&c, &pu, current, post, referer, no_cache, extra_header, &hr);

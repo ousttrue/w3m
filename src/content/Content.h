@@ -20,7 +20,7 @@ struct Content {
 };
 
 struct Form;
-struct Content loadGeneralFile(const char* path, struct Url* current, struct Form* post,
+struct Content getContent(const char* path, struct Url* current, struct Form* post,
     const char* referer, struct UserInteraction ui);
 
 bool is_plain_text_type(const char* type);
