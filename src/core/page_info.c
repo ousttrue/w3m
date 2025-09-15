@@ -5,11 +5,10 @@
 #include "Buffer.h"
 #include "runtime.h"
 #include "html_quote.h"
-#include "ui.h"
 #include "Anchor.h"
 #include "form.h"
 #include "maparea.h"
-#include "str_util.h"
+#include "quote.h"
 #include "LinkList.h"
 #include <strings.h>
 

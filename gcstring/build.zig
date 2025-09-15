@@ -31,9 +31,15 @@ const public_headers = [_][]const u8{
     "url.h",
     "runtime.h",
     "convertline.h",
+    "ContentType.h",
+    "http_message.h",
+    "CharSlice.h",
 };
 
 const srcs = [_][]const u8{
+    "CharSlice.c",
+    "ContentType.c",
+    "http_message.c",
     "convertline.c",
     "runtime.c",
     "url_scheme.c",

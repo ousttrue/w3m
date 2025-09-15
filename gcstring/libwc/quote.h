@@ -34,3 +34,5 @@ const char* getWord(const char** str);
 const char* getQWord(const char** str);
 struct regex;
 const char* getRegexWord(const char** str, struct regex** regex_ret);
+
+const char* mybasename(const char* s);

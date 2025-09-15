@@ -128,16 +128,3 @@ Str unescape_spaces(Str s)
     return s;
 }
 
-const char* mybasename(const char* s)
-{
-    const char* p = s;
-    while (*p)
-        p++;
-    while (s <= p && *p != '/')
-        p--;
-    if (*p == '/')
-        p++;
-    else
-        p = s;
-    return allocStr(p, -1);
-}

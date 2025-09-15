@@ -1,6 +1,6 @@
 #include "textlist.h"
 #include "alloc.h"
-#include <Str.h>
+#include "Str.h"
 #include <myctype.h>
 #include <gc.h>
 

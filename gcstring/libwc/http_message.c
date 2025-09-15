@@ -1,7 +1,6 @@
 #include "http_message.h"
 #include "myctype.h"
 #include "quote.h"
-#include "str_util.h"
 #include <string.h>
 #include <strings.h>
 

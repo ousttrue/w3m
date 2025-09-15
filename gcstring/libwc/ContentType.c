@@ -1,8 +1,7 @@
 #include "ContentType.h"
 #include "http_message.h"
 #include "myctype.h"
-#include "runtime.h"
-#include "str_util.h"
+#include "quote.h"
 #include <string.h>
 
 #define SYS_MIMETYPES ETC_DIR "/mime.types"

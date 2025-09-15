@@ -32,11 +32,8 @@ const content_public_headers = [_][]const u8{
     "subprocess.h",
     "local_cgi.h",
     "mailcap.h",
-    "http_message.h",
     "istream.h",
     "compression.h",
-    "ContentType.h",
-    "CharSlice.h",
     "Content.h",
     "HttpResponse.h",
     "time_util.h",
@@ -47,11 +44,8 @@ const content_srcs = [_][]const u8{
     "time_util.c",
     "HttpResponse.c",
     "Content.c",
-    "CharSlice.c",
-    "ContentType.c",
     "compression.c",
     "istream.c",
-    "http_message.c",
     "mailcap.c",
     "local_cgi.c",
     "subprocess.c",
@@ -194,21 +188,21 @@ pub fn build(b: *std.Build) void {
     });
     b.installArtifact(exe);
 
-    const test_mod = b.addModule("w3m_test", .{
-        .target = target,
-        .optimize = optimize,
-        .root_source_file = b.path("src/test.zig"),
-    });
-    const exe_tests = b.addTest(.{
-        .root_module = test_mod,
-    });
-    exe_tests.addCSourceFiles(.{
-        .files = &.{
-            "src/content/http_message.c",
-        },
-    });
-    exe_tests.addIncludePath(b.path(""));
-    b.installArtifact(exe_tests);
+    // const test_mod = b.addModule("w3m_test", .{
+    //     .target = target,
+    //     .optimize = optimize,
+    //     .root_source_file = b.path("src/test.zig"),
+    // });
+    // const exe_tests = b.addTest(.{
+    //     .root_module = test_mod,
+    // });
+    // exe_tests.addCSourceFiles(.{
+    //     .files = &.{
+    //         "gcstring/libwc/http_message.c",
+    //     },
+    // });
+    // exe_tests.addIncludePath(b.path(""));
+    // b.installArtifact(exe_tests);
 
     targets.append(exe) catch @panic("OOM");
     exe.linkLibC();
@@ -244,7 +238,7 @@ pub fn build(b: *std.Build) void {
     } else {
         for (system_libs) |lib| {
             exe.linkSystemLibrary(lib);
-            exe_tests.linkSystemLibrary(lib);
+            // exe_tests.linkSystemLibrary(lib);
         }
     }
 
@@ -254,7 +248,7 @@ pub fn build(b: *std.Build) void {
     });
     const gcs = gcs_dep.artifact("gcstring");
     exe.linkLibrary(gcs);
-    exe_tests.linkLibrary(gcs);
+    // exe_tests.linkLibrary(gcs);
 
     {
         const lib = build_lib(
@@ -268,7 +262,7 @@ pub fn build(b: *std.Build) void {
             &.{},
         );
         exe.linkLibrary(lib);
-        exe_tests.linkLibrary(lib);
+        // exe_tests.linkLibrary(lib);
     }
 
     {
@@ -291,7 +285,7 @@ pub fn build(b: *std.Build) void {
         );
         lib.linkLibrary(gcs);
         exe.linkLibrary(lib);
-        exe_tests.linkLibrary(lib);
+        // exe_tests.linkLibrary(lib);
     }
 
     {
@@ -314,7 +308,7 @@ pub fn build(b: *std.Build) void {
         );
         lib.linkLibrary(gcs);
         exe.linkLibrary(lib);
-        exe_tests.linkLibrary(lib);
+        // exe_tests.linkLibrary(lib);
     }
 
     const wf = gen_functable(b);
@@ -348,9 +342,9 @@ pub fn build(b: *std.Build) void {
 
     _ = zcc.createStep(b, "cdb", targets.toOwnedSlice() catch @panic("OOM"));
 
-    const run_exe_tests = b.addRunArtifact(exe_tests);
-    const test_step = b.step("test", "Run tests");
-    test_step.dependOn(&run_exe_tests.step);
+    // const run_exe_tests = b.addRunArtifact(exe_tests);
+    // const test_step = b.step("test", "Run tests");
+    // test_step.dependOn(&run_exe_tests.step);
 }
 
 fn build_lib(

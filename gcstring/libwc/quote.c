@@ -321,3 +321,18 @@ const char* file_unquote(const char* str)
     return str;
 }
 
+const char* mybasename(const char* s)
+{
+    const char* p = s;
+    while (*p)
+        p++;
+    while (s <= p && *p != '/')
+        p--;
+    if (*p == '/')
+        p++;
+    else
+        p = s;
+    return allocStr(p, -1);
+}
+
+
