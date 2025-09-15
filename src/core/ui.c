@@ -1,14 +1,13 @@
 #include "ui.h"
 #include "Image.h"
+#include "MapArea.h"
 #include "form.h"
 #include "keymap.h"
 #include "buffer_list.h"
 #include "runtime.h"
 #include "AnchorList.h"
 #include "Anchor.h"
-#include "quote.h"
 #include "w3m.h"
-#include "maparea.h"
 #include "screen.h"
 #include "screen_effects.h"
 #include "putc.h"
@@ -19,7 +18,6 @@
 #include "Buffer.h"
 #include "graphicchar.h"
 #include <myctype.h>
-#include <math.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <wc.h>

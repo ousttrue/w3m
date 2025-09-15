@@ -4,22 +4,16 @@
 #include "AnchorList.h"
 #include "Anchor.h"
 #include "ContentType.h"
-#include "str_util.h"
 #include "runtime.h"
 #include "convertline.h"
-#include "KeyValue.h"
-#include "HtmlTagAttribute.h"
 #include "quote.h"
 #include "rc.h"
-#include "downloadlist.h"
 #include "ui.h"
-#include "cookie.h"
 #include "buffer_util.h"
 #include "local_cgi.h"
 #include "regex.h"
 #include "util.h"
 #include "w3m.h"
-#include "maparea.h"
 #include "menu.h"
 
 #include "alloc.h"
@@ -28,7 +22,6 @@
 #include <wc.h>
 #include <wtf.h>
 
-#include <stdlib.h>
 #include <string.h>
 #include <strings.h>
 #include <unistd.h>

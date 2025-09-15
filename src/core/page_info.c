@@ -7,7 +7,7 @@
 #include "html_quote.h"
 #include "Anchor.h"
 #include "form.h"
-#include "maparea.h"
+#include "MapArea.h"
 #include "quote.h"
 #include "LinkList.h"
 #include <strings.h>

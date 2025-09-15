@@ -1,7 +1,7 @@
 #include "internal.h"
+#include "MapArea.h"
 #include "alloc.h"
 #include "html_quote.h"
-#include "maparea.h"
 #include "rc.h"
 #include "cookie.h"
 #include "downloadlist.h"

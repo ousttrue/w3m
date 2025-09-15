@@ -1,10 +1,7 @@
-#include "maparea.h"
+#include "MapArea.h"
 #include "HtmlTagParsed.h"
 #include "Document.h"
 #include "Anchor.h"
-#include "display.h"
-#include "menu.h"
-#include "image_loader.h"
 #include "myctype.h"
 #include "alloc.h"
 #include <math.h>
@@ -139,47 +136,6 @@ bool getMapXY(struct Document* doc, struct Anchor* a, int* x, int* y)
     if (*y <= 0)
         *y = 1;
     return true;
-}
-
-struct MapArea*
-follow_map_menu(struct UI ui, struct Document* doc, const char* name, struct Anchor* a_img, int x, int y)
-{
-    struct MapList* ml = searchMapList(doc, name);
-    if (ml == NULL || ml->area == NULL || ml->area->nitem == 0)
-        return NULL;
-
-    int initial = searchMapArea(doc, ml, a_img);
-    int selected = -1;
-    if (initial < 0)
-        initial = 0;
-    else if (!image_map_list) {
-        selected = initial;
-        goto map_end;
-    }
-
-    const char** label;
-    label = New_N(char*, ml->area->nitem + 1);
-    ListItem* al;
-    int i;
-    for (i = 0, al = ml->area->first; al != NULL; i++, al = al->next) {
-        struct MapArea* a = (struct MapArea*)al->ptr;
-        if (a)
-            label[i] = *a->alt ? a->alt : a->url;
-        else
-            label[i] = "";
-    }
-    label[ml->area->nitem] = NULL;
-
-    optionMenu(ui, x, y, label, &selected, initial, NULL);
-
-map_end:
-    if (selected >= 0) {
-        for (i = 0, al = ml->area->first; al != NULL; i++, al = al->next) {
-            if (al->ptr && i == selected)
-                return (struct MapArea*)al->ptr;
-        }
-    }
-    return NULL;
 }
 
 struct MapArea*

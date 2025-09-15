@@ -7,9 +7,7 @@
 #include "alloc.h"
 #include "screen_effects.h"
 #include "image_loader.h"
-#include "maparea.h"
 #include "ui.h"
-#include "symbol.h"
 #include "w3m.h"
 #include "history.h"
 #include "ctrlcode.h"
@@ -18,7 +16,6 @@
 #include "frame.h"
 #include "putc.h"
 #include <assert.h>
-#include <math.h>
 #include <string.h>
 
 #include <wc.h>

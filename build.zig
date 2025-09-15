@@ -81,8 +81,10 @@ const document_public_headers = [_][]const u8{
     "html_tag_attribute_info.h",
     "Document.h",
     "LinkList.h",
+    "MapArea.h",
 };
 const document_srcs = [_][]const u8{
+    "MapArea.c",
     "LinkList.c",
     "Document.c",
     "html_title.c",
@@ -135,7 +137,6 @@ const w3m_srcs = [_][]const u8{
     "search.c",
     "linein.c",
     "form.c",
-    "maparea.c",
     "rc.c",
     "menu.c",
     "image_loader.c",

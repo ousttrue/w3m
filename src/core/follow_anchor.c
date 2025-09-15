@@ -1,4 +1,6 @@
 #include "follow_anchor.h"
+#include "MapArea.h"
+#include "image_loader.h"
 #include "internal.h"
 #include "AnchorList.h"
 #include "alloc.h"
@@ -13,7 +15,7 @@
 #include "Image.h"
 #include "html_form.h"
 #include "form.h"
-#include "maparea.h"
+#include "menu.h"
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -524,4 +526,44 @@ void followImage(struct UI ui, bool do_download)
     // refresh(ttyWriter());
     struct Content c = loadGeneralFile(a->url, makeBaseUrl(&ui.current_buffer->document), NULL, NULL, UI_TTY);
     pushContent(ui, c);
+}
+
+struct MapArea*
+follow_map_menu(struct UI ui, struct Document* doc, const char* name, struct Anchor* a_img, int x, int y)
+{
+    struct MapList* ml = searchMapList(doc, name);
+    if (ml == NULL || ml->area == NULL || ml->area->nitem == 0)
+        return NULL;
+
+    int initial = searchMapArea(doc, ml, a_img);
+    int selected = -1;
+    if (initial < 0)
+        initial = 0;
+    else if (!image_map_list) {
+        selected = initial;
+        goto map_end;
+    }
+
+    const char** label = New_N(char*, ml->area->nitem + 1);
+    ListItem* al = ml->area->first;
+    for (int i = 0; al; i++, al = al->next) {
+        struct MapArea* a = (struct MapArea*)al->ptr;
+        if (a)
+            label[i] = *a->alt ? a->alt : a->url;
+        else
+            label[i] = "";
+    }
+    label[ml->area->nitem] = NULL;
+
+    optionMenu(ui, x, y, label, &selected, initial, NULL);
+
+map_end:
+    if (selected >= 0) {
+        ListItem* al = ml->area->first;
+        for (int i = 0; al; i++, al = al->next) {
+            if (al->ptr && i == selected)
+                return (struct MapArea*)al->ptr;
+        }
+    }
+    return NULL;
 }
