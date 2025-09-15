@@ -33,7 +33,7 @@ struct Anchor* searchURLLabel(struct Buffer* buf, const char* url);
 void reAnchorWord(struct Buffer* buf, struct LineList* l, int spos, int epos);
 const char* reAnchor(struct Buffer* buf, const char* re);
 struct AnchorList;
-const char* getAnchorText(struct Buffer* buf, struct AnchorList* al, struct Anchor* a);
+const char* getAnchorText(struct Document *doc, struct AnchorList* al, struct Anchor* a);
 
 struct Buffer* makeBuffer(struct UI ui, struct Content* c);
 void tmpClearBuffer(struct Buffer* buf);

@@ -32,11 +32,6 @@ int showLineNum = (false);
 wc_ces DisplayCharset = DISPLAY_CHARSET;
 wc_ces BookmarkCharset = (SYSTEM_CHARSET);
 
-const char* url_quote_conv(const char* x, wc_ces c)
-{
-    return url_quote(wc_conv_strict((x), InnerCharset, (c))->ptr);
-}
-
 static struct Int2 viewport_cursor = {
     .x = 0,
     .y = 0,

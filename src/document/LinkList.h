@@ -1,5 +1,4 @@
 #pragma once
-#include "geometry.h"
 #include <Str.h>
 
 enum LinkType {
@@ -20,6 +19,4 @@ struct Buffer;
 struct Document;
 struct HtmlTagParsed;
 
-struct LinkList* link_menu(struct UI ui);
-struct Content link_list_panel(struct UI ui, struct Buffer* buf);
 void addLink(struct Document* doc, struct HtmlTagParsed* tag);

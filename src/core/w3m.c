@@ -1,5 +1,6 @@
 #include "w3m.h"
 #include "HtmlTagParsed.h"
+#include "internal.h"
 #include "page_info.h"
 #include "follow_anchor.h"
 #include "Document.h"
@@ -869,16 +870,16 @@ void follow_map(struct UI ui, struct KeyValue* arg)
 /* link menu */
 DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
 {
-    struct LinkList* l = link_menu(ui);
-    struct Url p_url;
-
+    struct LinkList* l = link_menu(ui, ui.document);
     if (!l || !l->url)
         return;
+
     if (*(l->url) == '#') {
         gotoLabel(ui, l->url + 1);
         return;
     }
-    p_url = parseUrl(l->url, makeBaseUrl(&ui.current_buffer->document));
+
+    struct Url p_url = parseUrl(l->url, makeBaseUrl(&ui.current_buffer->document));
     pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
     struct Content c = loadGeneralFile(l->url, makeBaseUrl(&ui.current_buffer->document),
         NULL, parsedURL2Str(&ui.current_buffer->content.url)->ptr, UI_TTY);
@@ -925,7 +926,7 @@ DEFUN(movlistMn, MOVE_LIST_MENU, "Pop up menu to navigate between hyperlinks")
 /* link,anchor,image list */
 DEFUN(linkLst, LIST, "Show all URLs referenced")
 {
-    struct Content c = link_list_panel(ui, ui.current_buffer);
+    struct Content c = link_list_panel(&ui.current_buffer->document);
     pushContent(ui, c);
 }
 

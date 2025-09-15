@@ -78,3 +78,4 @@ struct Anchor* registerImg(struct Document* doc, const char* url, const char* ti
 void addMultirowsForm(struct Document* doc, struct AnchorList* al);
 void addMultirowsImg(struct Document* doc, struct AnchorList* al);
 struct Anchor* getNextHorizontalAnchor(struct Document* doc, struct Anchor* an, int searchkey_num, int d, int dy);
+const char* getAnchorText(struct Document* doc, struct AnchorList* al, struct Anchor* a);

@@ -86,8 +86,10 @@ const document_public_headers = [_][]const u8{
     "html_tag_info.h",
     "html_tag_attribute_info.h",
     "Document.h",
+    "LinkList.h",
 };
 const document_srcs = [_][]const u8{
+    "LinkList.c",
     "Document.c",
     "html_title.c",
     "html_tag_info.c",
@@ -117,7 +119,6 @@ const w3m_srcs = [_][]const u8{
     "page_info.c",
     "follow_anchor.c",
     "buffer_list.c",
-    "LinkList.c",
     "tty.c",
     "keybind.c",
     "util.c",

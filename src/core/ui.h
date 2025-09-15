@@ -13,8 +13,6 @@ extern int showLineNum;
 #define conv_from_system(x) wc_conv((x), SystemCharset, InnerCharset)->ptr
 #define conv_to_system(x) wc_conv_strict((x), InnerCharset, SystemCharset)->ptr
 
-const char* url_quote_conv(const char* x, wc_ces c);
-
 // key input(blocking) or draw require UI or query tty
 //
 // form input

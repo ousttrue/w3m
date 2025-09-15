@@ -24,4 +24,3 @@ struct HmarkerList {
 
 struct HmarkerList* putHmarker(struct HmarkerList* ml, int line, int pos, int seq);
 void shiftAnchorPosition(struct AnchorList* a, struct HmarkerList* hl, struct BufferPoint bp, int shift);
-

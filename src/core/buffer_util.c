@@ -185,7 +185,6 @@ writeBufferName(struct Buffer* buf, int n)
         all = lastLine(&buf->document)->linenumber;
     vt_move(getScreen(), n, 0);
 
-
     Str msg = Sprintf("<%s> [%d lines]", buf->document.title, all);
     switch (buf->content.url.scheme) {
     case SCM_LOCAL:
@@ -925,39 +924,6 @@ void reseq_anchor(struct Buffer* buf)
 
     reseq_anchor0(buf->document.href, seqmap);
     reseq_anchor0(buf->document.formitem, seqmap);
-}
-
-const char* getAnchorText(struct Buffer* buf, struct AnchorList* al, struct Anchor* a)
-{
-    if (!a || a->hseq < 0)
-        return 0;
-
-    Str tmp = 0;
-    int hseq = a->hseq;
-    struct LineList* l = buf->document.firstLine;
-    for (int i = 0; i < al->nanchor; i++) {
-        a = &al->anchors[i];
-        if (a->hseq != hseq)
-            continue;
-        for (; l; l = l->next) {
-            if (l->linenumber == a->start.line)
-                break;
-        }
-        if (!l)
-            break;
-        const char* p = l->l.lineBuf + a->start.pos;
-        const char* ep = l->l.lineBuf + a->end.pos;
-        for (; p < ep && IS_SPACE(*p); p++)
-            ;
-        if (p == ep)
-            continue;
-        if (!tmp)
-            tmp = Strnew_size(ep - p);
-        else
-            Strcat_char(tmp, ' ');
-        Strcat_charp_n(tmp, p, ep - p);
-    }
-    return tmp ? tmp->ptr : 0;
 }
 
 static struct Anchor*

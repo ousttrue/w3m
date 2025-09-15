@@ -4,6 +4,7 @@
 #include "alloc.h"
 #include "html_form.h"
 #include "Image.h"
+#include "myctype.h"
 #include "url.h"
 #include "HtmlTagParsed.h"
 #include <stdlib.h>
@@ -324,4 +325,37 @@ struct Anchor* getNextHorizontalAnchor(struct Document* doc, struct Anchor* an, 
             break;
     }
     return pan;
+}
+
+const char* getAnchorText(struct Document* doc, struct AnchorList* al, struct Anchor* a)
+{
+    if (!a || a->hseq < 0)
+        return 0;
+
+    Str tmp = 0;
+    int hseq = a->hseq;
+    struct LineList* l = doc->firstLine;
+    for (int i = 0; i < al->nanchor; i++) {
+        a = &al->anchors[i];
+        if (a->hseq != hseq)
+            continue;
+        for (; l; l = l->next) {
+            if (l->linenumber == a->start.line)
+                break;
+        }
+        if (!l)
+            break;
+        const char* p = l->l.lineBuf + a->start.pos;
+        const char* ep = l->l.lineBuf + a->end.pos;
+        for (; p < ep && IS_SPACE(*p); p++)
+            ;
+        if (p == ep)
+            continue;
+        if (!tmp)
+            tmp = Strnew_size(ep - p);
+        else
+            Strcat_char(tmp, ' ');
+        Strcat_charp_n(tmp, p, ep - p);
+    }
+    return tmp ? tmp->ptr : 0;
 }

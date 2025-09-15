@@ -1,5 +1,4 @@
 #include "buffer_loader.h"
-#include "ui.h"
 #include "AnchorList.h"
 #include "LinkList.h"
 #include "convertline.h"
@@ -15,7 +14,6 @@
 #include "image_loader.h"
 #include "maparea.h"
 #include "quote.h"
-#include "Content.h"
 #include "readbuffer.h"
 #include "HtmlTagParsed.h"
 #include "form.h"
@@ -23,15 +21,18 @@
 #include "alloc.h"
 #include "symbol.h"
 #include "table.h"
+
 #include <myctype.h>
+
+#include <wc.h>
+#include <wtf.h>
+
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
 #include <time.h>
 #include <unistd.h>
 #include <utime.h>
-#include <wc.h>
-#include <wtf.h>
 
 int autoImage = (true);
 char MetaRefresh = (false);
@@ -241,6 +242,11 @@ static struct LineList* addNewline(struct LineList* prev, char* line, Lineprop* 
 }
 
 typedef Str (*FeedFunc)();
+
+static const char* url_quote_conv(const char* x, wc_ces c)
+{
+    return url_quote(wc_conv_strict((x), WC_CES_WTF, (c))->ptr);
+}
 
 static struct Document
 HTMLlineproc2body(struct Url url, wc_ces charset, int cols, FeedFunc feed)
@@ -799,7 +805,7 @@ static int loadHTML(struct html_feed_environ* htmlenv1,
         symbol_width = symbol_width0 = 1;
     } else {
         symbol_width0 = 0;
-        get_symbol(DisplayCharset, &symbol_width0);
+        get_symbol(WC_CES_US_ASCII/*DisplayCharset*/, &symbol_width0);
         symbol_width = WcOption.use_wide ? symbol_width0 : 1;
     }
 
