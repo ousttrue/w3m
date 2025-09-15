@@ -3,7 +3,7 @@
 #include "runtime.h"
 #include "w3m.h"
 #include "Buffer.h"
-#include "str_util.h"
+#include "quote.h"
 #include "linein.h"
 #include "display.h"
 #include "form.h"
@@ -199,13 +199,13 @@ void killn(struct LineEditor* e)
 void _next(struct LineEditor* e)
 {
     struct Hist* hist = e->CurrentHist;
-    char* p;
 
     if (!e->use_hist)
         return;
     if (e->strCurrentBuf == NULL)
         return;
-    p = nextHist(hist);
+
+    const char* p = nextHist(hist);
     if (p) {
         if (DecodeURL && (e->cm_mode & CPL_URL))
             p = url_decode2(p, 0);
@@ -247,7 +247,8 @@ void _prev(struct LineEditor* e)
         return;
 
     struct Hist* hist = e->CurrentHist;
-    char* p;
+
+    const char* p;
     if (e->strCurrentBuf) {
         p = prevHist(hist);
         if (p == NULL)

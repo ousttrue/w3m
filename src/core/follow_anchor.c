@@ -634,3 +634,19 @@ void goURL0(struct UI ui, const char* prompt, bool relative)
     }
 }
 
+void anchorMn(struct UI ui, AnchorMenuFunc menu_func, int go)
+{
+    if (!ui.current_buffer->document.href || !ui.current_buffer->document.hmarklist)
+        return;
+
+    struct Anchor* a = menu_func(ui, ui.current_buffer);
+    if (!a || a->hseq < 0)
+        return;
+
+    struct BufferPoint* po = &ui.current_buffer->document.hmarklist->marks[a->hseq];
+    gotoLine(&ui.current_buffer->document, po->line);
+    ui.current_buffer->document.pos = po->pos;
+
+    if (go)
+        followAnchor(ui, false);
+}

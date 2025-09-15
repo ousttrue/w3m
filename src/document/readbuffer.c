@@ -1,5 +1,5 @@
 #include "readbuffer.h"
-#include "str_util.h"
+#include "quote.h"
 #include "html_quote.h"
 #include "url.h"
 #include "HtmlTagParsed.h"

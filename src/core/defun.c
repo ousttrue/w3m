@@ -1,4 +1,7 @@
 #include "AnchorList.h"
+#include "menu.h"
+#include "LinkList.h"
+#include "internal.h"
 #include "page_info.h"
 #include "Anchor.h"
 #include "HttpRequest.h"
@@ -997,3 +1000,121 @@ DEFUN(pginfo, INFO, "Display information about the current document")
         getBufferPosition(ui)));
     pushContent(c, ui.viewport.size.x, ui.use_graphic);
 }
+
+/* link menu */
+DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
+{
+    struct LinkList* l = link_menu(ui, ui.document);
+    if (!l || !l->url)
+        return;
+
+    if (*(l->url) == '#') {
+        gotoLabel(ui, l->url + 1);
+        return;
+    }
+
+    struct Url p_url = parseUrl(l->url, makeBaseUrl(&ui.current_buffer->document));
+    pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
+    struct Content c = getContent(l->url, makeBaseUrl(&ui.current_buffer->document),
+        NULL, parsedURL2Str(&ui.current_buffer->content.url)->ptr, UI_TTY);
+    pushContent(c, ui.viewport.size.x, ui.use_graphic);
+}
+
+/* accesskey */
+DEFUN(accessKey, ACCESSKEY, "Pop up accesskey menu")
+{
+    anchorMn(ui, accesskey_menu, true);
+}
+
+/* list menu */
+DEFUN(listMn, LIST_MENU, "Pop up menu for hyperlinks to browse to")
+{
+    anchorMn(ui, list_menu, true);
+}
+
+DEFUN(movlistMn, MOVE_LIST_MENU, "Pop up menu to navigate between hyperlinks")
+{
+    anchorMn(ui, list_menu, false);
+}
+
+/* link,anchor,image list */
+DEFUN(linkLst, LIST, "Show all URLs referenced")
+{
+    struct Content c = makeContentFromHtmlUtf8(link_list_panel_html(&ui.current_buffer->document));
+    pushContent(c, ui.viewport.size.x, ui.use_graphic);
+}
+
+/* cookie list */
+DEFUN(cooLst, COOKIE, "View cookie list")
+{
+    struct Content c = makeContentFromHtmlUtf8(cookie_list_panel_html());
+    pushContent(c, ui.viewport.size.x, ui.use_graphic);
+}
+
+/* History page */
+DEFUN(ldHist, HISTORY, "Show browsing history")
+{
+    struct Content c = makeContentFromHtmlUtf8(historyBuffer_html(URLHist));
+    pushContent(c, ui.viewport.size.x, ui.use_graphic);
+}
+
+/* download HREF link */
+DEFUN(svA, SAVE_LINK, "Save hyperlink target")
+{
+    CurrentKeyData = NULL; /* not allowed in w3m-control: */
+    followAnchor(ui, true);
+}
+
+/* download IMG link */
+DEFUN(svI, SAVE_IMAGE, "Save inline image")
+{
+    CurrentKeyData = NULL; /* not allowed in w3m-control: */
+    followImage(ui, true);
+}
+
+/* save buffer */
+DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document")
+{
+    CurrentKeyData = NULL; /* not allowed in w3m-control: */
+    const char* file = searchKeyData();
+    const char* qfile = NULL;
+    if (file == NULL || *file == '\0') {
+        /* FIXME: gettextize? */
+        qfile = inputLineHist(getUI(), "Save buffer to: ", NULL, IN_COMMAND, SaveHist);
+        if (qfile == NULL || *qfile == '\0') {
+
+            return;
+        }
+    }
+    file = conv_to_system(qfile ? qfile : file);
+
+    bool is_pipe;
+    FILE* f;
+    if (*file == '|') {
+        is_pipe = true;
+        f = popen(file + 1, "w");
+    } else {
+        if (qfile) {
+            file = unescape_spaces(Strnew_charp(qfile))->ptr;
+            file = conv_to_system(file);
+        }
+        file = expandPath(file);
+        if (!notExistsOrOverWrite(file)) {
+            return;
+        }
+        f = fopen(file, "w");
+        is_pipe = false;
+    }
+    if (f == NULL) {
+        /* FIXME: gettextize? */
+        char* emsg = Sprintf("Can't open %s", conv_from_system(file))->ptr;
+        message(getUI(), MSG_ERR, emsg);
+        return;
+    }
+    saveBuffer(ui.current_buffer, f, true);
+    if (is_pipe)
+        pclose(f);
+    else
+        fclose(f);
+}
+

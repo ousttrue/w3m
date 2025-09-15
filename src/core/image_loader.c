@@ -3,7 +3,6 @@
 #include "AnchorList.h"
 #include "Anchor.h"
 #include "linein.h"
-#include "str_util.h"
 #include "runtime.h"
 #include "ContentType.h"
 #include "subprocess.h"

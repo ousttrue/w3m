@@ -28,7 +28,7 @@ Str Str_url_unquote(Str x, int is_form, int safe);
 Str Str_form_quote(Str x);
 inline static Str Str_form_unquote(Str x) { return Str_url_unquote((x), true, false); }
 
-char* shell_quote(const char* str);
+const char* shell_quote(const char* str);
 
 const char* getWord(const char** str);
 const char* getQWord(const char** str);
@@ -36,3 +36,8 @@ struct regex;
 const char* getRegexWord(const char** str, struct regex** regex_ret);
 
 const char* mybasename(const char* s);
+
+Str escape_spaces(Str s);
+Str unescape_spaces(Str s);
+Str romanNumeral(int n);
+Str romanAlphabet(int n);

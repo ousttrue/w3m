@@ -257,7 +257,7 @@ newRegex0(char** ex, int igncase, Regex* regex, char** msg, int level)
 }
 
 Regex*
-newRegex(char* ex, int igncase, Regex* regex, char** msg)
+newRegex(const char* ex, int igncase, Regex* regex, const char** msg)
 {
     return newRegex0(&ex, igncase, regex, msg, 0);
 }

@@ -1,13 +1,9 @@
 #include "local_cgi.h"
 #include "runtime.h"
-#include "str_util.h"
 #include "HttpRequest.h"
 #include "subprocess.h"
 #include "html_form.h"
-// #include "ui.h"
-// #include "screen.h"
 #include "quote.h"
-#include "html_quote.h"
 #include <wc.h>
 #include <alloc.h>
 #include <string.h>

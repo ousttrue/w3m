@@ -24,3 +24,6 @@ void query_from_followform(struct Buffer* buf, struct BufferPoint bp, Str* query
 void followImage(struct UI ui, bool do_download);
 struct MapArea* follow_map_menu(struct UI ui, struct Document* doc, const char* name, struct Anchor* a_img, int x, int y);
 void goURL0(struct UI ui, const char* prompt, bool relative);
+
+typedef struct Anchor* (*AnchorMenuFunc)(struct UI ui, struct Buffer*);
+void anchorMn(struct UI ui, AnchorMenuFunc menu_func, int go);
