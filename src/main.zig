@@ -66,29 +66,7 @@ pub fn main() !void {
     // );
     // try main_loop();
 
-    // First initialize a `desc` object through `mco_desc_init`.
-    var desc = c.mco_desc_init(&coro_entry, 0);
-    // Configure `desc` fields when needed (e.g. customize user_data or allocation functions).
-    desc.user_data = null;
-    // Call `mco_create` with the output coroutine pointer and `desc` pointer.
-    var co: [*c]c.mco_coro = undefined;
-    var res = c.mco_create(&co, &desc);
-    std.debug.assert(res == c.MCO_SUCCESS);
-    // The coroutine should be now in suspended state.
-    std.debug.assert(c.mco_status(co) == c.MCO_SUSPENDED);
-    // Call `mco_resume` to start for the first time, switching to its context.
-    res = c.mco_resume(co); // Should print "coroutine 1".
-    std.debug.assert(res == c.MCO_SUCCESS);
-    // We get back from coroutine context in suspended state (because it's unfinished).
-    std.debug.assert(c.mco_status(co) == c.MCO_SUSPENDED);
-    // Call `mco_resume` to resume for a second time.
-    res = c.mco_resume(co); // Should print "coroutine 2".
-    std.debug.assert(res == c.MCO_SUCCESS);
-    // The coroutine finished and should be now dead.
-    std.debug.assert(c.mco_status(co) == c.MCO_DEAD);
-    // Call `mco_destroy` to destroy the coroutine.
-    res = c.mco_destroy(co);
-    std.debug.assert(res == c.MCO_SUCCESS);
+    c.main_loop();
 }
 
 fn createSignalfd() i32 {
@@ -107,15 +85,15 @@ fn producer() !void {
 
     // stdin
     {
-        var signal_event = std.os.linux.epoll_event{
+        var event = std.os.linux.epoll_event{
             .events = std.os.linux.EPOLL.IN,
             .data = std.os.linux.epoll_data{ .fd = std.posix.STDIN_FILENO },
         };
         _ = std.os.linux.epoll_ctl(
             epoll_fd,
             std.os.linux.EPOLL.CTL_ADD,
-            signal_event.data.fd,
-            &signal_event,
+            event.data.fd,
+            &event,
         );
     }
 
@@ -123,15 +101,15 @@ fn producer() !void {
     const signal_fd = createSignalfd();
     defer _ = std.os.linux.close(signal_fd);
     {
-        var signal_event = std.os.linux.epoll_event{
+        var event = std.os.linux.epoll_event{
             .events = std.os.linux.EPOLL.IN,
             .data = std.os.linux.epoll_data{ .fd = signal_fd },
         };
         _ = std.os.linux.epoll_ctl(
             epoll_fd,
             std.os.linux.EPOLL.CTL_ADD,
-            signal_event.data.fd,
-            &signal_event,
+            event.data.fd,
+            &event,
         );
     }
 

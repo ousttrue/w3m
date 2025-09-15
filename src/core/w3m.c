@@ -31,6 +31,7 @@
 #include "myctype.h"
 #include "alloc.h"
 
+#include <errno.h>
 #include <event_poller.h>
 
 #include <wc.h>
@@ -45,6 +46,8 @@
 #define PACKAGE "w3m"
 #define HELP_FILE "w3mhelp-w3m_en.html"
 #define BOOKMARK "bookmark.html"
+
+bool g_running = true;
 
 char* mkd_tmp_dir = (NULL);
 
@@ -738,4 +741,162 @@ void _quitfm(bool confirm)
     if (UseHistory && SaveURLHist)
         saveHistory(URLHist, URLHistSize);
     w3m_exit(0);
+}
+
+#include <sys/epoll.h>
+
+enum IOBEventType {
+    IOB_EVENT_ERROR,
+    IOB_EVENT_TIMEOUT,
+    IOB_EVENT_INPUT,
+};
+
+struct IOBEvent {
+    enum IOBEventType type;
+    int value;
+};
+
+struct IOBlocker {
+    int epfd;
+
+    struct epoll_event* event_buffer;
+    int event_buffer_len;
+    int event_enable;
+    int event_pos;
+
+    char* input_buffer;
+    int input_buffer_len;
+    int input_enable;
+    int input_pos;
+};
+
+void iob_init(struct IOBlocker* iob, int max_event)
+{
+    iob->epfd = epoll_create1(EPOLL_CLOEXEC);
+
+    // event buffer
+    iob->event_buffer = malloc(sizeof(struct epoll_event) * max_event);
+    iob->event_buffer_len = max_event;
+    iob->event_enable = 0;
+    iob->event_pos = 0;
+
+    // add STDIN
+    struct epoll_event ev;
+    memset(&ev, 0, sizeof(ev));
+    ev.events = EPOLLIN;
+    ev.data.fd = STDIN_FILENO;
+    if (epoll_ctl(iob->epfd, EPOLL_CTL_ADD, STDIN_FILENO, &ev) != 0) {
+        perror("epoll_ctl");
+        abort();
+    }
+    iob->input_buffer = 0;
+    iob->input_buffer_len = 0;
+    iob->input_enable = 0;
+    iob->input_pos = 0;
+}
+
+void iob_deinit(struct IOBlocker* iob)
+{
+    if (iob->input_buffer) {
+        free(iob->input_buffer);
+    }
+    close(iob->epfd);
+    if (iob->event_buffer) {
+        free(iob->event_buffer);
+    }
+}
+
+struct IOBEvent iob_wait(struct IOBlocker* iob, int timeout_ms)
+{
+    while (true) {
+        if (iob->input_enable && iob->input_pos < iob->input_enable) {
+            return (struct IOBEvent) {
+                .type = IOB_EVENT_INPUT,
+                .value = iob->input_buffer[iob->input_pos++],
+            };
+        }
+
+        if (iob->event_enable && iob->event_pos < iob->event_enable) {
+            struct epoll_event ev = iob->event_buffer[iob->event_pos++];
+
+            // read STDIN
+            int ready_read_size;
+            if (ioctl(ev.data.fd, FIONREAD, &ready_read_size) == -1) {
+                // error
+                return (struct IOBEvent) {
+                    .type = IOB_EVENT_ERROR,
+                    .value = errno,
+                };
+            }
+            if (ready_read_size == 0) {
+                // no input
+                return (struct IOBEvent) {
+                    .type = IOB_EVENT_ERROR,
+                    .value = errno,
+                };
+            }
+            if (!iob->input_buffer) {
+                iob->input_buffer = malloc(ready_read_size);
+                iob->input_buffer_len = ready_read_size;
+            } else if (ready_read_size > iob->input_buffer_len) {
+                iob->input_buffer = realloc(iob->input_buffer, ready_read_size);
+                iob->input_buffer_len = ready_read_size;
+            }
+            iob->input_pos = 0;
+            iob->input_enable = read(ev.data.fd, iob->input_buffer, iob->input_buffer_len);
+            if (iob->input_enable < 0) {
+                // error
+                return (struct IOBEvent) {
+                    .type = IOB_EVENT_ERROR,
+                    .value = errno,
+                };
+            }
+        } else {
+            // block
+            iob->event_enable = epoll_wait(iob->epfd, iob->event_buffer, iob->event_buffer_len, timeout_ms);
+            if (iob->event_enable == 0) {
+                // timeout
+                return (struct IOBEvent) {
+                    .type = IOB_EVENT_TIMEOUT,
+                };
+            } else if (iob->event_enable < 0) {
+                // error / signal
+                return (struct IOBEvent) {
+                    .type = IOB_EVENT_ERROR,
+                    .value = errno,
+                };
+            } else {
+                iob->event_pos = 0;
+            }
+        }
+    }
+}
+
+void main_loop()
+{
+    // init
+    struct IOBlocker iob;
+    memset(&iob, 0, sizeof(iob));
+    iob_init(&iob, 12);
+
+    int timeout_ms = -1;
+    while (g_running) {
+        struct IOBEvent ev = iob_wait(&iob, timeout_ms);
+        switch (ev.type) {
+        case IOB_EVENT_TIMEOUT:
+            break;
+
+        case IOB_EVENT_ERROR:
+            printf("error: %d\n", ev.value);
+            g_running = false;
+            break;
+
+        case IOB_EVENT_INPUT:
+            printf("input: %d\n", ev.value);
+            break;
+        }
+    }
+
+    // finalize
+    iob_deinit(&iob);
 }
