@@ -1015,7 +1015,7 @@ const char* reAnchor(struct Buffer* buf, const char* re)
     return reAnchorAny(buf, re, _put_anchor_all);
 }
 
-struct Buffer* makeBuffer(struct UI ui, struct Content* c)
+struct Buffer* makeBuffer(struct Content* c, int cols, bool use_graphic)
 {
     if (image_source)
         return NULL;
@@ -1024,7 +1024,7 @@ struct Buffer* makeBuffer(struct UI ui, struct Content* c)
         struct Buffer* buf = newBuffer();
         buf->document = loadContent(c->url,
             c->page->ptr, c->cc.charset, c->cc.content_type,
-            ui.viewport.size.x, ui.use_graphic);
+            cols, use_graphic);
         if (buf) {
             buf->content = *c;
             Str tmp = tmpfname(TMPF_SRC, ".html");

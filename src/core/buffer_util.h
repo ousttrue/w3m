@@ -35,7 +35,7 @@ const char* reAnchor(struct Buffer* buf, const char* re);
 struct AnchorList;
 const char* getAnchorText(struct Document *doc, struct AnchorList* al, struct Anchor* a);
 
-struct Buffer* makeBuffer(struct UI ui, struct Content* c);
+struct Buffer* makeBuffer(struct Content* c, int cols, bool use_graphic);
 void tmpClearBuffer(struct Buffer* buf);
 void shiftvisualpos(struct Buffer* buf, int shift);
 void _nextA(struct UI ui, int visited);

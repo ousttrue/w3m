@@ -1473,7 +1473,7 @@ smDelBuf(struct UI ui, char c)
     for (int i = 0; i < CurrentMenu->select; i++, buf = buf->nextBuffer)
         ;
 
-    delBuffer(ui, buf);
+    delBuffer(buf);
 
     int x = CurrentMenu->x;
     int y = CurrentMenu->y;

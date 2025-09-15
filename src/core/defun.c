@@ -232,7 +232,7 @@ DEFUN(ldfile, LOAD, "Open local file in a new buffer")
     }
     // cmd_loadfile(ui, fn);
     struct Content c = loadGeneralFile(file_to_url(fn, CurrentDir), NULL, NULL, NO_REFERER, UI_TTY);
-    pushContent(ui, c);
+    pushContent(c, ui.viewport.size.x, ui.use_graphic);
 }
 
 /* Load help file */
@@ -244,7 +244,7 @@ DEFUN(ldhelp, HELP, "Show help panel")
         Str_form_quote(Strnew_charp(w3m_version))->ptr,
         Str_form_quote(Strnew_charp_n(lang, n))->ptr);
     struct Content c = loadGeneralFile(tmp->ptr, NULL, NULL, NO_REFERER, UI_TTY);
-    pushContent(ui, c);
+    pushContent(c, ui.viewport.size.x, ui.use_graphic);
 }
 
 DEFUN(movL, MOVE_LEFT, "Cursor left")
@@ -431,7 +431,7 @@ DEFUN(selBuf, SELECT, "Display buffer-stack panel")
             ok = true;
             break;
         case 'D':
-            delBuffer(ui, buf);
+            delBuffer(buf);
             break;
         case 'q':
             qquitfm(getUI());

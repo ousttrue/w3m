@@ -22,7 +22,7 @@ void parseArgs(int argc, char** argv)
         : url_quote(conv_from_system(argv[1]));
 
     struct Content c = loadGeneralFile(url, NULL, NULL, NO_REFERER, (struct UserInteraction) { 0 });
-    struct Buffer* newbuf = makeBuffer(ui, &c);
+    struct Buffer* newbuf = makeBuffer(&c, ui.viewport.size.x, ui.use_graphic);
 
     switch (newbuf->content.url.scheme) {
     case SCM_MAILTO:
@@ -53,29 +53,30 @@ void SAVE_BUFPOSITION(struct Buffer* sbufp)
 //     fclose(fp);
 // }
 
-void pushBuffer(struct UI ui, struct Buffer* buf)
+void pushBuffer(struct Buffer* buf)
 {
     if (!buf) {
         return;
     }
     pushHashHist(URLHist, parsedURL2Str(&buf->content.url)->ptr);
 
-    deleteImage(ui.document);
+    deleteImage(&buf->document);
     if (clear_buffer) {
         // clearBuffer(ui.current_buffer);
     }
 
-    buf->nextBuffer = ui.current_buffer;
+    buf->nextBuffer = Currentbuf;
     Currentbuf = buf;
+
     struct Buffer* b;
-    if (Firstbuf == ui.current_buffer) {
+    if (Firstbuf == Currentbuf) {
         Firstbuf = buf;
-    } else if ((b = prevBuffer(Firstbuf, ui.current_buffer)) != NULL) {
+    } else if ((b = prevBuffer(Firstbuf, Currentbuf))) {
         b->nextBuffer = buf;
     }
 }
 
-void delBuffer(struct UI ui, struct Buffer* buf)
+void delBuffer(struct Buffer* buf)
 {
     if (buf == NULL)
         return;
@@ -90,20 +91,9 @@ void delBuffer(struct UI ui, struct Buffer* buf)
         Firstbuf = nullBuffer();
         Currentbuf = Firstbuf;
     }
-
-    // if (ui.current_buffer == buf)
-    //     ui.current_buffer = buf->nextBuffer;
-    // Firstbuf = deleteBuffer(Firstbuf, buf);
-    // if (!ui.current_buffer)
-    //     ui.current_buffer = nthBuffer(Firstbuf, i - 1);
-    // ;
-    // if (Firstbuf == NULL) {
-    //     Firstbuf = nullBuffer();
-    //     ui.current_buffer = Firstbuf;
-    // }
 }
 
-void repBuffer(struct UI ui, struct Buffer* oldbuf, struct Buffer* buf)
+void repBuffer(struct Buffer* oldbuf, struct Buffer* buf)
 {
     Firstbuf = replaceBuffer(Firstbuf, oldbuf, buf);
     Currentbuf = buf;
@@ -120,20 +110,20 @@ void setCurrentBuffer(struct Buffer* buf)
     for (buf = Firstbuf; buf != NULL; buf = buf->nextBuffer) {
         if (buf == Currentbuf)
             continue;
-        deleteImage(buf);
+        deleteImage(&buf->document);
         if (clear_buffer)
             tmpClearBuffer(buf);
     }
 }
 
-struct Buffer* pushContent(struct UI ui, struct Content c)
+struct Buffer* pushContent(struct Content c, int cols, bool use_graphic)
 {
-    struct Buffer* buf = makeBuffer(ui, &c);
+    struct Buffer* buf = makeBuffer(&c, cols, use_graphic);
     if (!buf) {
         Str emsg = Sprintf("Can't load %s", parsedURL2Str(&c.url)->ptr);
         message(getUI(), MSG_ERR, emsg->ptr);
         return 0;
     }
-    pushBuffer(ui, buf);
+    pushBuffer(buf);
     return buf;
 }

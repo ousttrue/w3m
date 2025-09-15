@@ -663,14 +663,14 @@ DEFUN(backBf, BACK, "Close current buffer and return to the one below in stack")
         return;
     }
 
-    delBuffer(ui, ui.current_buffer);
+    delBuffer(ui.current_buffer);
 }
 
 DEFUN(deletePrevBuf, DELETE_PREVBUF, "Delete previous buffer (mainly for local CGI-scripts)")
 {
     struct Buffer* buf = ui.current_buffer->nextBuffer;
     if (buf)
-        delBuffer(ui, buf);
+        delBuffer(buf);
 }
 
 /* go to specified URL */
@@ -734,7 +734,7 @@ goURL0(struct UI ui, char* prompt, int relative)
 
     pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
     struct Content c = loadGeneralFile(url, current, NULL, referer, UI_TTY);
-    pushContent(ui, c);
+    pushContent(c, ui.viewport.size.x, ui.use_graphic);
     if (ui.current_buffer != cur_buf) /* success */
         pushHashHist(URLHist, parsedURL2Str(&ui.current_buffer->content.url)->ptr);
 }
@@ -755,7 +755,7 @@ DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer")
         p_url = parseUrl(url, NULL);
         pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
         struct Content c = loadGeneralFile(url, NULL, NULL, NULL, UI_TTY);
-        pushContent(ui, c);
+        pushContent(c, ui.viewport.size.x, ui.use_graphic);
         if (ui.current_buffer != cur_buf) /* success */
             pushHashHist(URLHist, parsedURL2Str(&ui.current_buffer->content.url)->ptr);
     }
@@ -770,7 +770,7 @@ DEFUN(gorURL, GOTO_RELATIVE, "Go to relative address")
 DEFUN(ldBmark, BOOKMARK VIEW_BOOKMARK, "View bookmarks")
 {
     struct Content c = loadGeneralFile(BookmarkFile, NULL, NULL, NO_REFERER, UI_TTY);
-    pushContent(ui, c);
+    pushContent(c, ui.viewport.size.x, ui.use_graphic);
 }
 
 #define W3MBOOKMARK_CMDNAME "w3mbookmark"
@@ -793,14 +793,14 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
     post->body = tmp->ptr;
     post->length = tmp->length;
     struct Content c = loadGeneralFile("file:///$LIB/" W3MBOOKMARK_CMDNAME, NULL, post, NO_REFERER, UI_TTY);
-    pushContent(ui, c);
+    pushContent(c, ui.viewport.size.x, ui.use_graphic);
 }
 
 /* option setting */
 DEFUN(ldOpt, OPTIONS, "Display options setting panel")
 {
     struct Content c = load_option_panel(ui);
-    pushContent(ui, c);
+    pushContent(c, ui.viewport.size.x, ui.use_graphic);
 }
 
 /* set an option */
@@ -828,7 +828,7 @@ DEFUN(setOpt, SET_OPTION, "Set option")
 DEFUN(msgs, MSGS, "Display error messages")
 {
     struct Content c = message_list_panel(ui);
-    pushContent(ui, c);
+    pushContent(c, ui.viewport.size.x, ui.use_graphic);
 }
 
 /* page info */
@@ -838,7 +838,7 @@ DEFUN(pginfo, INFO, "Display information about the current document")
         &ui.current_buffer->content,
         &ui.current_buffer->document,
         getBufferPosition(ui));
-    pushContent(ui, c);
+    pushContent(c, ui.viewport.size.x, ui.use_graphic);
 }
 
 void follow_map(struct UI ui, struct KeyValue* arg)
@@ -862,7 +862,7 @@ void follow_map(struct UI ui, struct KeyValue* arg)
     pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
     struct Content c = loadGeneralFile(a->url, makeBaseUrl(&ui.current_buffer->document),
         NULL, parsedURL2Str(&ui.current_buffer->content.url)->ptr, UI_TTY);
-    pushContent(ui, c);
+    pushContent(c, ui.viewport.size.x, ui.use_graphic);
 }
 
 /* link menu */
@@ -881,7 +881,7 @@ DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
     pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
     struct Content c = loadGeneralFile(l->url, makeBaseUrl(&ui.current_buffer->document),
         NULL, parsedURL2Str(&ui.current_buffer->content.url)->ptr, UI_TTY);
-    pushContent(ui, c);
+    pushContent(c, ui.viewport.size.x, ui.use_graphic);
 }
 
 typedef struct Anchor* (*AnchorMenuFunc)(struct UI ui, struct Buffer*);
@@ -925,21 +925,21 @@ DEFUN(movlistMn, MOVE_LIST_MENU, "Pop up menu to navigate between hyperlinks")
 DEFUN(linkLst, LIST, "Show all URLs referenced")
 {
     struct Content c = link_list_panel(&ui.current_buffer->document);
-    pushContent(ui, c);
+    pushContent(c, ui.viewport.size.x, ui.use_graphic);
 }
 
 /* cookie list */
 DEFUN(cooLst, COOKIE, "View cookie list")
 {
     struct Content c = cookie_list_panel(ui);
-    pushContent(ui, c);
+    pushContent(c, ui.viewport.size.x, ui.use_graphic);
 }
 
 /* History page */
 DEFUN(ldHist, HISTORY, "Show browsing history")
 {
     struct Content c = historyBuffer(ui, URLHist);
-    pushContent(ui, c);
+    pushContent(c, ui.viewport.size.x, ui.use_graphic);
 }
 
 /* download HREF link */
@@ -1263,7 +1263,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
     buf->clone = ui.current_buffer->clone;
     (*buf->clone)++;
 
-    pushBuffer(ui, buf);
+    pushBuffer(buf);
 }
 
 /* reload */
@@ -1295,7 +1295,8 @@ DEFUN(reload, RELOAD, "Load current document anew")
             Str query;
             struct stat st;
             multipart = 1;
-            query_from_followform(ui, &query, ui.current_buffer->form_submit, multipart);
+            query_from_followform(ui.current_buffer, getBufferPosition(ui),
+                &query, ui.current_buffer->form_submit, multipart);
             stat(post->body, &st);
             post->length = st.st_size;
         }
@@ -1312,7 +1313,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
     DefaultType = contentTypeStr(ui.current_buffer->content.cc.content_type);
     struct Content c = loadGeneralFile(url->ptr, NULL, post, NO_REFERER, UI_TTY /*, true*/);
 
-    struct Buffer* buf = makeBuffer(ui, &c);
+    struct Buffer* buf = makeBuffer(&c, ui.viewport.size.x, ui.use_graphic);
     DocumentCharset = old_charset;
     // SearchHeader = false;
     DefaultType = NULL;
@@ -1331,7 +1332,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
     // struct Buffer *fbuf = NULL;
     // if (fbuf != NULL)
     //     Firstbuf = deleteBuffer(Firstbuf, fbuf);
-    repBuffer(ui, ui.current_buffer, buf);
+    repBuffer(ui.current_buffer, buf);
     // if ((buf->content.cc.content_type == CONTENTTYPE_TEXT_PLAIN && sbuf.content.cc.content_type == CONTENTTYPE_TEXT_HTML)
     //     || (buf->content.cc.content_type == CONTENTTYPE_TEXT_HTML && sbuf.content.cc.content_type == CONTENTTYPE_TEXT_PLAIN)) {
     //     vwSrc(ui);
@@ -1555,7 +1556,7 @@ execdict(struct UI ui, const char* word)
 
     const char* dictcmd = Sprintf("%s?%s", DictCommand, Str_form_quote(Strnew_charp(w))->ptr)->ptr;
     struct Content c = loadGeneralFile(dictcmd, NULL, NULL, NO_REFERER, UI_TTY);
-    pushContent(ui, c);
+    pushContent(c, ui.viewport.size.x, ui.use_graphic);
 }
 
 DEFUN(dictword, DICT_WORD, "Execute dictionary command (see README.dict)")
@@ -1967,7 +1968,7 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
         if (replace) {
             if (ui.current_buffer == Firstbuf && ui.current_buffer->nextBuffer == NULL) {
             } else
-                delBuffer(ui, ui.current_buffer);
+                delBuffer(ui.current_buffer);
         }
         return;
     }
@@ -1982,7 +1983,7 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
         // COPY_BUFROOT(buf, ui.current_buffer);
         // restorePosition(buf, ui.current_buffer);
     }
-    pushContent(ui, c);
+    pushContent(c, ui.viewport.size.x, ui.use_graphic);
     if (replace)
         deletePrevBuf(ui);
     if (reload)
