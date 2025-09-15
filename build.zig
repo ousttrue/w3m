@@ -82,8 +82,10 @@ const document_public_headers = [_][]const u8{
     "Document.h",
     "LinkList.h",
     "MapArea.h",
+    "document_renderer.h",
 };
 const document_srcs = [_][]const u8{
+    "document_renderer.c",
     "MapArea.c",
     "LinkList.c",
     "Document.c",
@@ -127,7 +129,6 @@ const w3m_srcs = [_][]const u8{
     "downloadlist.c",
     "keymap.c",
     "progress.c",
-    "document_renderer.c",
 
     "ui.c",
     "LineEditor.c",

@@ -14,8 +14,6 @@
 #include "symbol.h"
 #include "table.h"
 
-#include "istream.h"
-
 #include "alloc.h"
 #include <myctype.h>
 
@@ -28,6 +26,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <utime.h>
+#include <sys/stat.h>
 
 int autoImage = (true);
 char MetaRefresh = (false);
@@ -493,8 +492,8 @@ HTMLlineproc2body(struct Url url, wc_ces charset, int cols, FeedFunc feed)
                             a_img->image = image = New(struct Image);
 
                             image->url = parsedURL2Str(&u)->ptr;
-                            if (!uncompressed_file_type(u.file, &image->ext))
-                                image->ext = filename_extension(u.file, true);
+                            // if (!uncompressed_file_type(u.file, &image->ext))
+                            image->ext = filename_extension(u.file, true);
                             image->cache = NULL;
                             image->width = (w > MAX_IMAGE_SIZE) ? MAX_IMAGE_SIZE : w;
                             image->height = (h > MAX_IMAGE_SIZE) ? MAX_IMAGE_SIZE : h;
@@ -784,13 +783,35 @@ HTMLlineproc2body(struct Url url, wc_ces charset, int cols, FeedFunc feed)
     return doc;
 }
 
+struct LineSplitter {
+    const char* p;
+};
+
+static Str split_line(struct LineSplitter* ls)
+{
+    if (!ls->p || *ls->p == 0) {
+        return 0;
+    }
+
+    const char *begin = ls->p;
+    const char *p = begin;
+    for(; *p; ++p)
+    {
+        if(*p=='\n'){
+            ++p;
+            break;
+        }
+    }
+    ls->p = p;
+    return Strnew_charp_n(begin, p - begin);
+}
+
 static int loadHTML(struct html_feed_environ* htmlenv1,
-    Str html, wc_ces* doc_charset, int cols, bool use_graphic, bool internal)
+    const char* html, wc_ces* doc_charset, int cols, bool use_graphic, bool internal)
 {
     struct environment envs[MAX_ENV_LEVEL];
     long long linelen = 0;
     long long trbyte = 0;
-    Str lineBuf2 = Strnew();
     // wc_ces charset = WC_CES_US_ASCII;
     // wc_ces doc_charset = DocumentCharset;
     struct readbuffer obuf;
@@ -835,9 +856,13 @@ static int loadHTML(struct html_feed_environ* htmlenv1,
     // if (content_charset && UseContentCharset)
     //     doc_charset = content_charset;
 
-    union input_stream* stream = newStrStream(html);
+    // union input_stream* stream = newStrStream(html);
     meta_charset = 0;
-    while ((lineBuf2 = StrmyISgets(stream)) && lineBuf2->length) {
+    struct LineSplitter ls = {
+        .p = html,
+    };
+    Str lineBuf2; // Strnew();
+    while ((lineBuf2 = split_line(&ls)) && lineBuf2->length) {
         // if (src)
         //     Strfputs(lineBuf2, src);
         linelen += lineBuf2->length;
@@ -870,7 +895,7 @@ static int loadHTML(struct html_feed_environ* htmlenv1,
 }
 
 // WC_CES_SHIFT_JIS /*WC_CES_US_ASCII*/
-static struct Document loadHtmlDocument(struct Url url, Str html, wc_ces content_charset,
+static struct Document loadHtmlDocument(struct Url url, const char* html, wc_ces content_charset,
     int cols, bool use_graphic,
     bool internal)
 {
@@ -991,8 +1016,6 @@ static struct Document loadHtmlDocument(struct Url url, Str html, wc_ces content
 
 #define TAG_IS(s, tag, len) \
     (strncasecmp(s, tag, len) == 0 && (s[len] == '>' || IS_SPACE((int)s[len])))
-
-static InputStream _file_lp2;
 
 static void
 proc_escape(struct readbuffer* obuf, const char** str_return)
@@ -1394,7 +1417,7 @@ table_start:
 //     return newBuf;
 // }
 
-struct Document loadTextDocument(Str page, wc_ces charset)
+struct Document loadTextDocument(const char* src, wc_ces charset)
 {
     // FILE* src = NULL;
     // Str tmpf;
@@ -1436,9 +1459,12 @@ struct Document loadTextDocument(Str page, wc_ces charset)
     Linecolor* colorBuffer = NULL;
     char pre_lbuf = '\0';
     long long linelen = 0;
-    union input_stream* stream = newStrStream(page);
+
+    struct LineSplitter ls = {
+        .p = src,
+    };
     Str lineBuf2;
-    while ((lineBuf2 = StrmyISgets(stream)) && lineBuf2->length) {
+    while ((lineBuf2 = split_line(&ls)) && lineBuf2->length) {
         // if (src)
         //     Strfputs(lineBuf2, src);
         linelen += lineBuf2->length;
@@ -1462,7 +1488,6 @@ struct Document loadTextDocument(Str page, wc_ces charset)
         }
     }
 _end:
-    ISclose(stream);
 
     // term_raw();
     doc.topLineIndex = doc.firstLine->linenumber;
@@ -1502,45 +1527,45 @@ bool canCopyFile(const char* path1, const char* path2)
 
 #define SAVE_BUF_SIZE 1536
 
-static int _MoveFile(const char* path1, const char* path2)
-{
-    InputStream f1;
-    FILE* f2;
-    int is_pipe;
-    long long linelen = 0, trbyte = 0;
-    char* buf = NULL;
-    int count;
-
-    f1 = openIS(path1);
-    if (f1 == NULL)
-        return -1;
-    if (*path2 == '|' && PermitSaveToPipe) {
-        is_pipe = true;
-        f2 = popen(path2 + 1, "w");
-    } else {
-        is_pipe = false;
-        f2 = fopen(path2, "wb");
-    }
-    if (f2 == NULL) {
-        ISclose(f1);
-        return -1;
-    }
-
-    int current_content_length = 0;
-    buf = NewWithoutGC_N(char, SAVE_BUF_SIZE);
-    while ((count = ISread_n(f1, buf, SAVE_BUF_SIZE)) > 0) {
-        fwrite(buf, 1, count, f2);
-        linelen += count;
-        // showProgress(current_content_length, &linelen, &trbyte);
-    }
-    xfree(buf);
-    ISclose(f1);
-    if (is_pipe)
-        pclose(f2);
-    else
-        fclose(f2);
-    return 0;
-}
+// static int _MoveFile(const char* path1, const char* path2)
+// {
+//     InputStream f1;
+//     FILE* f2;
+//     int is_pipe;
+//     long long linelen = 0, trbyte = 0;
+//     char* buf = NULL;
+//     int count;
+//
+//     f1 = openIS(path1);
+//     if (f1 == NULL)
+//         return -1;
+//     if (*path2 == '|' && PermitSaveToPipe) {
+//         is_pipe = true;
+//         f2 = popen(path2 + 1, "w");
+//     } else {
+//         is_pipe = false;
+//         f2 = fopen(path2, "wb");
+//     }
+//     if (f2 == NULL) {
+//         ISclose(f1);
+//         return -1;
+//     }
+//
+//     int current_content_length = 0;
+//     buf = NewWithoutGC_N(char, SAVE_BUF_SIZE);
+//     while ((count = ISread_n(f1, buf, SAVE_BUF_SIZE)) > 0) {
+//         fwrite(buf, 1, count, f2);
+//         linelen += count;
+//         // showProgress(current_content_length, &linelen, &trbyte);
+//     }
+//     xfree(buf);
+//     ISclose(f1);
+//     if (is_pipe)
+//         pclose(f2);
+//     else
+//         fclose(f2);
+//     return 0;
+// }
 
 int setModtime(const char* path, time_t modtime)
 {
