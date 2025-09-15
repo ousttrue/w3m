@@ -1593,3 +1593,13 @@ DEFUN(cursorBottom, CURSOR_BOTTOM, "Move cursor to the bottom of the screen")
     ui.current_buffer->document.currentLineIndex += offsety;
 }
 
+DEFUN(goLineF, BEGIN, "Go to the first line")
+{
+    _goLine(ui, "^");
+}
+
+/* Go to the beginning of the line */
+DEFUN(linbeg, LINE_BEGIN, "Go to the beginning of the line")
+{
+    ui.document->pos = 0;
+}

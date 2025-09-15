@@ -27,3 +27,4 @@ void goURL0(struct UI ui, const char* prompt, bool relative);
 
 typedef struct Anchor* (*AnchorMenuFunc)(struct UI ui, struct Buffer*);
 void anchorMn(struct UI ui, AnchorMenuFunc menu_func, int go);
+void _goLine(struct UI ui, const char* l);
