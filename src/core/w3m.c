@@ -64,8 +64,6 @@
 
 char* mkd_tmp_dir = (NULL);
 
-int UseDictCommand = (true);
-char* DictCommand = ("file:///$LIB/w3mdict" CGI_EXTENSION);
 int use_mark = (false);
 int confirm_on_quit = (true);
 int CurrentKey;
@@ -103,8 +101,6 @@ static void SigAlarm(int _dummy);
 
 static int need_resize_screen = false;
 void resize_hook(int _dummy);
-
-static char* getCurWord(struct Buffer* buf, int* spos, int* epos);
 
 static int display_ok = false;
 int prev_key = -1;
@@ -584,12 +580,6 @@ escKeyProc(int c, int esc, unsigned char* map)
  * 1999 09:29:56 +0900
  */
 
-static wc_uint32
-getChar(const char* p)
-{
-    return wc_any_to_ucs(wtf_parse1((wc_uchar**)&p));
-}
-
 /* Go to specified line */
 void _goLine(struct UI ui, const char* l)
 {
@@ -644,8 +634,6 @@ void follow_map(struct UI ui, struct KeyValue* arg)
     pushContent(c, ui.viewport.size.x, ui.use_graphic);
 }
 
-
-
 /* show current URL */
 static Str
 currentURL(struct UI ui)
@@ -655,162 +643,6 @@ currentURL(struct UI ui)
     )
         return Strnew_size(0);
     return parsedURL2Str(&ui.current_buffer->content.url);
-}
-
-
-/* view HTML source */
-
-DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
-{
-    if (ui.current_buffer->content.cc.content_type == CONTENTTYPE_UNKNOWN) {
-        return;
-    }
-    if (ui.current_buffer->content.sourcefile == NULL) {
-        return;
-    }
-
-    struct Buffer* buf = newBuffer();
-
-    if (ui.current_buffer->content.cc.content_type == CONTENTTYPE_TEXT_HTML) {
-        buf->content.cc.content_type = CONTENTTYPE_TEXT_PLAIN;
-        buf->document.title = Sprintf("source of %s", ui.current_buffer->document.title)->ptr;
-    } else if (ui.current_buffer->content.cc.content_type == CONTENTTYPE_TEXT_PLAIN) {
-        buf->content.cc.content_type = CONTENTTYPE_TEXT_HTML;
-        buf->document.title = Sprintf("HTML view of %s", ui.current_buffer->document.title)->ptr;
-    } else {
-        return;
-    }
-    buf->content.url = ui.current_buffer->content.url;
-    buf->content.sourcefile = ui.current_buffer->content.sourcefile;
-    buf->document.charset = ui.current_buffer->document.charset;
-    buf->clone = ui.current_buffer->clone;
-    (*buf->clone)++;
-
-    pushBuffer(buf);
-}
-
-/* reload */
-DEFUN(reload, RELOAD, "Load current document anew")
-{
-    // if (ui.current_buffer->bufferprop & BP_INTERNAL) {
-    //     if (!strcmp(ui.current_buffer->document.title, DOWNLOAD_LIST_TITLE)) {
-    //         ldDL(ui);
-    //         return;
-    //     }
-    //     /* FIXME: gettextize? */
-    //     message(getUI(), MSG_ERR, "Can't reload...");
-    //     return;
-    // }
-    if (ui.current_buffer->content.url.scheme == SCM_LOCAL && !strcmp(ui.current_buffer->content.url.file, "-")) {
-        /* file is std input */
-        /* FIXME: gettextize? */
-        message(getUI(), MSG_ERR, "Can't reload stdin");
-        return;
-    }
-
-    int multipart = 0;
-
-    struct Form* post;
-    if (ui.current_buffer->form_submit) {
-        post = ui.current_buffer->form_submit->parent;
-        if (post->method == FORM_METHOD_POST
-            && post->enctype == FORM_ENCTYPE_MULTIPART) {
-            Str query;
-            struct stat st;
-            multipart = 1;
-            query_from_followform(ui.current_buffer, getBufferPosition(ui),
-                &query, ui.current_buffer->form_submit, multipart);
-            stat(post->body, &st);
-            post->length = st.st_size;
-        }
-    } else {
-        post = NULL;
-    }
-    Str url = parsedURL2Str(&ui.current_buffer->content.url);
-    message(getUI(), MSG_INFO, "Reloading...");
-    // refresh(ttyWriter());
-    wc_ces old_charset = DocumentCharset;
-    if (ui.current_buffer->document.charset != WC_CES_US_ASCII)
-        DocumentCharset = ui.current_buffer->document.charset;
-    // SearchHeader = ui.current_buffer->search_header;
-    DefaultType = contentTypeStr(ui.current_buffer->content.cc.content_type);
-    struct Content c = getContent(url->ptr, NULL, post, NO_REFERER, UI_TTY /*, true*/);
-
-    struct Buffer* buf = makeBuffer(&c, ui.viewport.size.x, ui.use_graphic);
-    DocumentCharset = old_charset;
-    // SearchHeader = false;
-    DefaultType = NULL;
-
-    if (multipart)
-        unlink(post->body);
-    if (buf == NULL) {
-        /* FIXME: gettextize? */
-        message(getUI(), MSG_ERR, "Can't reload...");
-        return;
-    } else if (buf) {
-
-        return;
-    }
-
-    // struct Buffer *fbuf = NULL;
-    // if (fbuf != NULL)
-    //     Firstbuf = deleteBuffer(Firstbuf, fbuf);
-    repBuffer(ui.current_buffer, buf);
-    // if ((buf->content.cc.content_type == CONTENTTYPE_TEXT_PLAIN && sbuf.content.cc.content_type == CONTENTTYPE_TEXT_HTML)
-    //     || (buf->content.cc.content_type == CONTENTTYPE_TEXT_HTML && sbuf.content.cc.content_type == CONTENTTYPE_TEXT_PLAIN)) {
-    //     vwSrc(ui);
-    //     if (ui.current_buffer != buf)
-    //         Firstbuf = deleteBuffer(Firstbuf, buf);
-    // }
-    // ui.current_buffer->form_submit = sbuf.form_submit;
-    if (ui.current_buffer->document.firstLine) {
-        // COPY_BUFROOT(ui.current_buffer, &sbuf);
-        // restorePosition(ui.current_buffer, &sbuf);
-    }
-}
-
-/* reshape */
-DEFUN(reshape, RESHAPE, "Re-render document")
-{
-    ui.current_buffer->document.cols = 0;
-}
-
-static void
-_docCSet(struct UI ui, wc_ces charset)
-{
-    // if (ui.current_buffer->bufferprop & BP_INTERNAL)
-    //     return;
-    if (ui.current_buffer->content.sourcefile == NULL) {
-        message(getUI(), MSG_INFO, "Can't reload...");
-        return;
-    }
-    ui.current_buffer->document.charset = charset;
-}
-
-DEFUN(docCSet, CHARSET, "Change the character encoding for the current document")
-{
-    const char* cs = searchKeyData();
-    if (cs == NULL || *cs == '\0')
-        /* FIXME: gettextize? */
-        cs = inputStr(getUI(), "Document charset: ",
-            wc_ces_to_charset(ui.current_buffer->document.charset));
-    wc_ces charset = wc_guess_charset_short(cs, 0);
-    if (charset == 0) {
-        return;
-    }
-    _docCSet(ui, charset);
-}
-
-DEFUN(defCSet, DEFAULT_CHARSET, "Change the default character encoding")
-{
-    const char* cs = searchKeyData();
-    if (cs == NULL || *cs == '\0')
-        /* FIXME: gettextize? */
-        cs = inputStr(getUI(), "Default document charset: ",
-            wc_ces_to_charset(DocumentCharset));
-    wc_ces charset = wc_guess_charset_short(cs, 0);
-    if (charset != 0)
-        DocumentCharset = charset;
 }
 
 /* mark URL-like patterns as anchors */
@@ -831,166 +663,6 @@ void chkURLBuffer(struct Buffer* buf)
         reAnchor(buf, url_like_pat[i]);
     }
     buf->check_url = true;
-}
-
-DEFUN(chkURL, MARK_URL, "Turn URL-like strings into hyperlinks")
-{
-    chkURLBuffer(ui.current_buffer);
-}
-
-DEFUN(chkWORD, MARK_WORD, "Turn current word into hyperlink")
-{
-    char* p;
-    int spos, epos;
-    p = getCurWord(ui.current_buffer, &spos, &epos);
-    if (p == NULL)
-        return;
-    reAnchorWord(ui.current_buffer, currentLine(&ui.current_buffer->document), spos, epos);
-}
-
-/* show current line number and number of lines in the entire document */
-// DEFUN(curlno, LINE_INFO, "Display current position in document")
-// {
-//     struct Line* l = currentLine(&ui.current_buffer->document);
-//     Str tmp;
-//     int cur = 0, all = 0, col = 0, len = 0;
-//
-//     if (l != NULL) {
-//         cur = l->real_linenumber;
-//         col = l->bwidth + ui.current_buffer->currentColumn + ui.current_buffer->cursorX + 1;
-//         while (l->next && l->next->bpos)
-//             l = l->next;
-//         if (l->width < 0)
-//             l->width = COLPOS(l, l->len);
-//         len = l->bwidth + l->width;
-//     }
-//     if (lastLine(&ui.current_buffer->document))
-//         all = lastLine(&ui.current_buffer->document)->real_linenumber;
-//     tmp = Sprintf("line %d/%d (%d%%) col %d/%d", cur, all,
-//         (int)((double)cur * 100.0 / (double)(all ? all : 1)
-//             + 0.5),
-//         col, len);
-//     Strcat_charp(tmp, "  ");
-//     Strcat_charp(tmp, wc_ces_to_charset_desc(ui.current_buffer->document_charset));
-//
-//     message(getUI(), MSG_INFO, tmp->ptr);
-// }
-
-DEFUN(dispI, DISPLAY_IMAGE, "Restart loading and drawing of images")
-{
-    if (!displayImage)
-        initImage();
-    if (!activeImage)
-        return;
-    displayImage = true;
-    /*
-     * if (!(ui.current_buffer->type && is_html_type(ui.current_buffer->type)))
-     * return;
-     */
-    ui.document->image_flag = IMG_FLAG_AUTO;
-}
-
-DEFUN(stopI, STOP_IMAGE, "Stop loading and drawing of images")
-{
-    if (!activeImage)
-        return;
-    /*
-     * if (!(ui.current_buffer->type && is_html_type(ui.current_buffer->type)))
-     * return;
-     */
-    ui.document->image_flag = IMG_FLAG_SKIP;
-}
-
-DEFUN(dispVer, VERSION, "Display the version of w3m")
-{
-    message(getUI(), MSG_INFO, Sprintf("w3m version %s", w3m_version)->ptr);
-}
-
-DEFUN(wrapToggle, WRAP_TOGGLE, "Toggle wrapping mode in searches")
-{
-    if (WrapSearch) {
-        WrapSearch = false;
-        /* FIXME: gettextize? */
-        message(getUI(), MSG_INFO, "Wrap search off");
-    } else {
-        WrapSearch = true;
-        /* FIXME: gettextize? */
-        message(getUI(), MSG_INFO, "Wrap search on");
-    }
-}
-
-static char*
-getCurWord(struct Buffer* buf, int* spos, int* epos)
-{
-    char* p;
-    struct LineList* l = currentLine(&buf->document);
-    int b, e;
-
-    *spos = 0;
-    *epos = 0;
-    if (l == NULL)
-        return NULL;
-    p = l->l.lineBuf;
-    e = buf->document.pos;
-    while (e > 0 && !wc_is_ucs_alnum(getChar(&p[e])))
-        e = prevChar(e, &l->l);
-    if (!wc_is_ucs_alnum(getChar(&p[e])))
-        return NULL;
-    b = e;
-    while (b > 0) {
-        int tmp = b;
-        tmp = prevChar(tmp, &l->l);
-        if (!wc_is_ucs_alnum(getChar(&p[tmp])))
-            break;
-        b = tmp;
-    }
-    while (e < l->l.len && wc_is_ucs_alnum(getChar(&p[e])))
-        e = nextChar(e, &l->l);
-    *spos = b;
-    *epos = e;
-    return &p[b];
-}
-
-static char*
-GetWord(struct Buffer* buf)
-{
-    int b, e;
-    char* p;
-
-    if ((p = getCurWord(buf, &b, &e)) != NULL) {
-        return Strnew_charp_n(p, e - b)->ptr;
-    }
-    return NULL;
-}
-
-#define DICTBUFFERNAME "*dictionary*"
-
-static void
-execdict(struct UI ui, const char* word)
-{
-    if (!UseDictCommand || word == NULL || *word == '\0') {
-        return;
-    }
-
-    const char* w = conv_to_system(word);
-    if (*w == '\0') {
-        return;
-    }
-
-    const char* dictcmd = Sprintf("%s?%s", DictCommand, Str_form_quote(Strnew_charp(w))->ptr)->ptr;
-    struct Content c = getContent(dictcmd, NULL, NULL, NO_REFERER, UI_TTY);
-    pushContent(c, ui.viewport.size.x, ui.use_graphic);
-}
-
-DEFUN(dictword, DICT_WORD, "Execute dictionary command (see README.dict)")
-{
-    execdict(ui, inputStr(getUI(), "(dictionary)!", ""));
-}
-
-DEFUN(dictwordat, DICT_WORD_AT,
-    "Execute dictionary command for word at cursor")
-{
-    execdict(ui, GetWord(ui.current_buffer));
 }
 
 void set_buffer_environ(struct UI ui)

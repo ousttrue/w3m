@@ -39,3 +39,5 @@ void tmpClearBuffer(struct Buffer* buf);
 void shiftvisualpos(struct Buffer* buf, int shift);
 void _nextA(struct UI ui, int visited);
 void _prevA(struct UI ui, int visited);
+const char* getCurWord(struct Buffer* buf, int* spos, int* epos);
+const char* GetWord(struct Buffer* buf);

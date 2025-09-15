@@ -10,10 +10,6 @@ extern wc_ces BookmarkCharset;
 extern int showLineNum;
 extern const char* BookmarkFile;
 
-#define Str_conv_to_halfdump(x) (ExtHalfdump ? wc_Str_conv((x), InnerCharset, DisplayCharset) : (x))
-#define conv_from_system(x) wc_conv((x), SystemCharset, InnerCharset)->ptr
-#define conv_to_system(x) wc_conv_strict((x), InnerCharset, SystemCharset)->ptr
-
 // key input(blocking) or draw require UI or query tty
 //
 // form input

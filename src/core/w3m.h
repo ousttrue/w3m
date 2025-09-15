@@ -6,8 +6,6 @@
 
 extern char* mkd_tmp_dir;
 
-extern int UseDictCommand;
-extern char* DictCommand;
 extern int use_mark;
 
 extern const char* config_file;

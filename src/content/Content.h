@@ -8,6 +8,8 @@
 extern char* index_file;
 extern char LocalhostOnly;
 extern int retryAsHttp;
+extern int UseDictCommand;
+extern char* DictCommand;
 
 struct Content {
     struct Url url;
@@ -42,3 +44,5 @@ struct Content getContent(const char* path, struct Url* current, struct Form* po
 bool is_plain_text_type(const char* type);
 
 const char* last_modified(struct Content* content);
+
+struct Content execdict(const char* word, struct UserInteraction ui);

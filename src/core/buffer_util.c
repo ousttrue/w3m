@@ -30,6 +30,7 @@
 
 #include <wc.h>
 #include <wtf.h>
+#include <ucs.h>
 
 int nextpage_topline = (false);
 
@@ -1304,4 +1305,50 @@ _end:
     po = hl->marks + an->hseq;
     gotoLine(&ui.current_buffer->document, po->line);
     ui.current_buffer->document.pos = po->pos;
+}
+
+inline static wc_uint32 getChar(const char* p)
+{
+    return wc_any_to_ucs(wtf_parse1((wc_uchar**)&p));
+}
+
+const char* getCurWord(struct Buffer* buf, int* spos, int* epos)
+{
+    char* p;
+    struct LineList* l = currentLine(&buf->document);
+    int b, e;
+
+    *spos = 0;
+    *epos = 0;
+    if (l == NULL)
+        return NULL;
+    p = l->l.lineBuf;
+    e = buf->document.pos;
+    while (e > 0 && !wc_is_ucs_alnum(getChar(&p[e])))
+        e = prevChar(e, &l->l);
+    if (!wc_is_ucs_alnum(getChar(&p[e])))
+        return NULL;
+    b = e;
+    while (b > 0) {
+        int tmp = b;
+        tmp = prevChar(tmp, &l->l);
+        if (!wc_is_ucs_alnum(getChar(&p[tmp])))
+            break;
+        b = tmp;
+    }
+    while (e < l->l.len && wc_is_ucs_alnum(getChar(&p[e])))
+        e = nextChar(e, &l->l);
+    *spos = b;
+    *epos = e;
+    return &p[b];
+}
+
+const char* GetWord(struct Buffer* buf)
+{
+    int b, e;
+    const char* p;
+    if ((p = getCurWord(buf, &b, &e)) != NULL) {
+        return Strnew_charp_n(p, e - b)->ptr;
+    }
+    return NULL;
 }

@@ -1,4 +1,5 @@
 #include "AnchorList.h"
+#include "HtmlTagParsed.h"
 #include "document_renderer.h"
 #include "menu.h"
 #include "LinkList.h"
@@ -1148,4 +1149,247 @@ DEFUN(peekIMG, PEEK_IMG, "Show image address")
 
 DEFUN(curURL, PEEK, "Show current address")
 {
+}
+
+/* view HTML source */
+DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
+{
+    if (ui.current_buffer->content.cc.content_type == CONTENTTYPE_UNKNOWN) {
+        return;
+    }
+    if (ui.current_buffer->content.sourcefile == NULL) {
+        return;
+    }
+
+    struct Buffer* buf = newBuffer();
+
+    if (ui.current_buffer->content.cc.content_type == CONTENTTYPE_TEXT_HTML) {
+        buf->content.cc.content_type = CONTENTTYPE_TEXT_PLAIN;
+        buf->document.title = Sprintf("source of %s", ui.current_buffer->document.title)->ptr;
+    } else if (ui.current_buffer->content.cc.content_type == CONTENTTYPE_TEXT_PLAIN) {
+        buf->content.cc.content_type = CONTENTTYPE_TEXT_HTML;
+        buf->document.title = Sprintf("HTML view of %s", ui.current_buffer->document.title)->ptr;
+    } else {
+        return;
+    }
+    buf->content.url = ui.current_buffer->content.url;
+    buf->content.sourcefile = ui.current_buffer->content.sourcefile;
+    buf->document.charset = ui.current_buffer->document.charset;
+    buf->clone = ui.current_buffer->clone;
+    (*buf->clone)++;
+
+    pushBuffer(buf);
+}
+
+/* reload */
+DEFUN(reload, RELOAD, "Load current document anew")
+{
+    // if (ui.current_buffer->bufferprop & BP_INTERNAL) {
+    //     if (!strcmp(ui.current_buffer->document.title, DOWNLOAD_LIST_TITLE)) {
+    //         ldDL(ui);
+    //         return;
+    //     }
+    //     /* FIXME: gettextize? */
+    //     message(getUI(), MSG_ERR, "Can't reload...");
+    //     return;
+    // }
+    if (ui.current_buffer->content.url.scheme == SCM_LOCAL && !strcmp(ui.current_buffer->content.url.file, "-")) {
+        /* file is std input */
+        /* FIXME: gettextize? */
+        message(getUI(), MSG_ERR, "Can't reload stdin");
+        return;
+    }
+
+    int multipart = 0;
+
+    struct Form* post;
+    if (ui.current_buffer->form_submit) {
+        post = ui.current_buffer->form_submit->parent;
+        if (post->method == FORM_METHOD_POST
+            && post->enctype == FORM_ENCTYPE_MULTIPART) {
+            Str query;
+            struct stat st;
+            multipart = 1;
+            query_from_followform(ui.current_buffer, getBufferPosition(ui),
+                &query, ui.current_buffer->form_submit, multipart);
+            stat(post->body, &st);
+            post->length = st.st_size;
+        }
+    } else {
+        post = NULL;
+    }
+    Str url = parsedURL2Str(&ui.current_buffer->content.url);
+    message(getUI(), MSG_INFO, "Reloading...");
+    // refresh(ttyWriter());
+    wc_ces old_charset = DocumentCharset;
+    if (ui.current_buffer->document.charset != WC_CES_US_ASCII)
+        DocumentCharset = ui.current_buffer->document.charset;
+    // SearchHeader = ui.current_buffer->search_header;
+    DefaultType = contentTypeStr(ui.current_buffer->content.cc.content_type);
+    struct Content c = getContent(url->ptr, NULL, post, NO_REFERER, UI_TTY /*, true*/);
+
+    struct Buffer* buf = makeBuffer(&c, ui.viewport.size.x, ui.use_graphic);
+    DocumentCharset = old_charset;
+    // SearchHeader = false;
+    DefaultType = NULL;
+
+    if (multipart)
+        unlink(post->body);
+    if (buf == NULL) {
+        /* FIXME: gettextize? */
+        message(getUI(), MSG_ERR, "Can't reload...");
+        return;
+    } else if (buf) {
+
+        return;
+    }
+
+    // struct Buffer *fbuf = NULL;
+    // if (fbuf != NULL)
+    //     Firstbuf = deleteBuffer(Firstbuf, fbuf);
+    repBuffer(ui.current_buffer, buf);
+    // if ((buf->content.cc.content_type == CONTENTTYPE_TEXT_PLAIN && sbuf.content.cc.content_type == CONTENTTYPE_TEXT_HTML)
+    //     || (buf->content.cc.content_type == CONTENTTYPE_TEXT_HTML && sbuf.content.cc.content_type == CONTENTTYPE_TEXT_PLAIN)) {
+    //     vwSrc(ui);
+    //     if (ui.current_buffer != buf)
+    //         Firstbuf = deleteBuffer(Firstbuf, buf);
+    // }
+    // ui.current_buffer->form_submit = sbuf.form_submit;
+    if (ui.current_buffer->document.firstLine) {
+        // COPY_BUFROOT(ui.current_buffer, &sbuf);
+        // restorePosition(ui.current_buffer, &sbuf);
+    }
+}
+
+/* reshape */
+DEFUN(reshape, RESHAPE, "Re-render document")
+{
+    ui.current_buffer->document.cols = 0;
+}
+
+DEFUN(docCSet, CHARSET, "Change the character encoding for the current document")
+{
+    const char* cs = searchKeyData();
+    if (cs == NULL || *cs == '\0')
+        /* FIXME: gettextize? */
+        cs = inputStr(getUI(), "Document charset: ",
+            wc_ces_to_charset(ui.current_buffer->document.charset));
+    wc_ces charset = wc_guess_charset_short(cs, 0);
+    if (charset == 0) {
+        return;
+    }
+    // _docCSet(ui, charset);
+    if (ui.current_buffer->content.sourcefile == NULL) {
+        message(getUI(), MSG_INFO, "Can't reload...");
+        return;
+    }
+    ui.current_buffer->document.charset = charset;
+}
+
+DEFUN(defCSet, DEFAULT_CHARSET, "Change the default character encoding")
+{
+    const char* cs = searchKeyData();
+    if (cs == NULL || *cs == '\0')
+        /* FIXME: gettextize? */
+        cs = inputStr(getUI(), "Default document charset: ",
+            wc_ces_to_charset(DocumentCharset));
+    wc_ces charset = wc_guess_charset_short(cs, 0);
+    if (charset != 0)
+        DocumentCharset = charset;
+}
+
+DEFUN(chkURL, MARK_URL, "Turn URL-like strings into hyperlinks")
+{
+    chkURLBuffer(ui.current_buffer);
+}
+
+DEFUN(chkWORD, MARK_WORD, "Turn current word into hyperlink")
+{
+    int spos, epos;
+    const char* p = getCurWord(ui.current_buffer, &spos, &epos);
+    if (p == NULL)
+        return;
+    reAnchorWord(ui.current_buffer, currentLine(&ui.current_buffer->document), spos, epos);
+}
+
+/* show current line number and number of lines in the entire document */
+// DEFUN(curlno, LINE_INFO, "Display current position in document")
+// {
+//     struct Line* l = currentLine(&ui.current_buffer->document);
+//     Str tmp;
+//     int cur = 0, all = 0, col = 0, len = 0;
+//
+//     if (l != NULL) {
+//         cur = l->real_linenumber;
+//         col = l->bwidth + ui.current_buffer->currentColumn + ui.current_buffer->cursorX + 1;
+//         while (l->next && l->next->bpos)
+//             l = l->next;
+//         if (l->width < 0)
+//             l->width = COLPOS(l, l->len);
+//         len = l->bwidth + l->width;
+//     }
+//     if (lastLine(&ui.current_buffer->document))
+//         all = lastLine(&ui.current_buffer->document)->real_linenumber;
+//     tmp = Sprintf("line %d/%d (%d%%) col %d/%d", cur, all,
+//         (int)((double)cur * 100.0 / (double)(all ? all : 1)
+//             + 0.5),
+//         col, len);
+//     Strcat_charp(tmp, "  ");
+//     Strcat_charp(tmp, wc_ces_to_charset_desc(ui.current_buffer->document_charset));
+//
+//     message(getUI(), MSG_INFO, tmp->ptr);
+// }
+
+DEFUN(dispI, DISPLAY_IMAGE, "Restart loading and drawing of images")
+{
+    if (!displayImage)
+        initImage();
+    if (!activeImage)
+        return;
+    displayImage = true;
+    /*
+     * if (!(ui.current_buffer->type && is_html_type(ui.current_buffer->type)))
+     * return;
+     */
+    ui.document->image_flag = IMG_FLAG_AUTO;
+}
+
+DEFUN(stopI, STOP_IMAGE, "Stop loading and drawing of images")
+{
+    if (!activeImage)
+        return;
+    /*
+     * if (!(ui.current_buffer->type && is_html_type(ui.current_buffer->type)))
+     * return;
+     */
+    ui.document->image_flag = IMG_FLAG_SKIP;
+}
+
+DEFUN(dispVer, VERSION, "Display the version of w3m")
+{
+    message(getUI(), MSG_INFO, Sprintf("w3m version %s", w3m_version)->ptr);
+}
+
+DEFUN(wrapToggle, WRAP_TOGGLE, "Toggle wrapping mode in searches")
+{
+    if (WrapSearch) {
+        WrapSearch = false;
+        /* FIXME: gettextize? */
+        message(getUI(), MSG_INFO, "Wrap search off");
+    } else {
+        WrapSearch = true;
+        /* FIXME: gettextize? */
+        message(getUI(), MSG_INFO, "Wrap search on");
+    }
+}
+
+DEFUN(dictword, DICT_WORD, "Execute dictionary command (see README.dict)")
+{
+    execdict(inputStr(getUI(), "(dictionary)!", ""), UI_TTY);
+}
+
+DEFUN(dictwordat, DICT_WORD_AT,
+    "Execute dictionary command for word at cursor")
+{
+    execdict(GetWord(ui.current_buffer), UI_TTY);
 }

@@ -15,6 +15,8 @@
 char* index_file = 0;
 char LocalhostOnly = false;
 int retryAsHttp = true;
+int UseDictCommand = (true);
+char* DictCommand = ("file:///$LIB/w3mdict" CGI_EXTENSION);
 
 static bool dir_exist(const char* path)
 {
@@ -222,4 +224,21 @@ const char* last_modified(struct Content* content)
         return ctime(&st.st_mtime);
     }
     return "unknown";
+}
+
+#define DICTBUFFERNAME "*dictionary*"
+
+struct Content execdict(const char* word, struct UserInteraction ui)
+{
+    if (!UseDictCommand || word == NULL || *word == '\0') {
+        return emptyContent();
+    }
+
+    const char* w = conv_to_system(word);
+    if (*w == '\0') {
+        return emptyContent();
+    }
+
+    const char* dictcmd = Sprintf("%s?%s", DictCommand, Str_form_quote(Strnew_charp(w))->ptr)->ptr;
+    return getContent(dictcmd, NULL, NULL, NO_REFERER, ui);
 }
