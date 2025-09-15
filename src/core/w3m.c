@@ -779,8 +779,7 @@ struct IOBlocker {
     int event_enable;
     int event_pos;
 
-    char* input_buffer;
-    int input_buffer_len;
+    char input_buffer[128];
     int input_enable;
     int input_pos;
 
@@ -806,8 +805,6 @@ void iob_init(struct IOBlocker* iob, int max_event)
         perror("epoll_ctl");
         abort();
     }
-    iob->input_buffer = 0;
-    iob->input_buffer_len = 0;
     iob->input_enable = 0;
     iob->input_pos = 0;
 
@@ -827,9 +824,6 @@ void iob_init(struct IOBlocker* iob, int max_event)
 
 void iob_deinit(struct IOBlocker* iob)
 {
-    if (iob->input_buffer) {
-        free(iob->input_buffer);
-    }
     close(iob->epfd);
     if (iob->event_buffer) {
         free(iob->event_buffer);
@@ -849,31 +843,8 @@ struct IOBEvent iob_wait(struct IOBlocker* iob, int timeout_ms)
         if (iob->event_enable && iob->event_pos < iob->event_enable) {
             struct epoll_event ev = iob->event_buffer[iob->event_pos++];
             if (ev.data.fd == STDIN_FILENO) {
-                // read STDIN
-                int ready_read_size;
-                if (ioctl(ev.data.fd, FIONREAD, &ready_read_size) == -1) {
-                    // error
-                    return (struct IOBEvent) {
-                        .type = IOB_EVENT_ERROR,
-                        .value = errno,
-                    };
-                }
-                if (ready_read_size == 0) {
-                    // no input
-                    return (struct IOBEvent) {
-                        .type = IOB_EVENT_ERROR,
-                        .value = errno,
-                    };
-                }
-                if (!iob->input_buffer) {
-                    iob->input_buffer = malloc(ready_read_size);
-                    iob->input_buffer_len = ready_read_size;
-                } else if (ready_read_size > iob->input_buffer_len) {
-                    iob->input_buffer = realloc(iob->input_buffer, ready_read_size);
-                    iob->input_buffer_len = ready_read_size;
-                }
                 iob->input_pos = 0;
-                iob->input_enable = read(ev.data.fd, iob->input_buffer, iob->input_buffer_len);
+                iob->input_enable = read(ev.data.fd, iob->input_buffer, sizeof(iob->input_buffer));
                 if (iob->input_enable < 0) {
                     // error
                     return (struct IOBEvent) {
@@ -881,7 +852,6 @@ struct IOBEvent iob_wait(struct IOBlocker* iob, int timeout_ms)
                         .value = errno,
                     };
                 }
-
             } else if (ev.data.fd == iob->signalfd) {
                 struct signalfd_siginfo info = { 0 };
                 if (read(iob->signalfd, &info, sizeof(info)) != sizeof(info)) {
