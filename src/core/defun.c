@@ -2,6 +2,7 @@
 #include "Anchor.h"
 #include "HttpRequest.h"
 #include "follow_anchor.h"
+#include "myctype.h"
 #include "regex.h"
 #include "util.h"
 #include "form.h"
@@ -445,7 +446,7 @@ DEFUN(selBuf, SELECT, "Display buffer-stack panel")
     for (buf = Firstbuf; buf != NULL; buf = buf->nextBuffer) {
         if (buf == ui.current_buffer)
             continue;
-        deleteImage(buf);
+        deleteImage(&buf->document);
         if (clear_buffer)
             tmpClearBuffer(buf);
     }
@@ -866,3 +867,87 @@ DEFUN(prevBf, PREV, "Switch to the previous buffer")
 {
     setCurrentBuffer(ui.current_buffer->nextBuffer);
 }
+
+static int
+checkBackBuffer(struct Buffer* buf)
+{
+    if (buf->nextBuffer)
+        return true;
+
+    return false;
+}
+
+/* delete current buffer and back to the previous buffer */
+DEFUN(backBf, BACK, "Close current buffer and return to the one below in stack")
+{
+    if (!ui.current_buffer->nextBuffer) {
+        message(getUI(), MSG_INFO, "Can't go back...");
+        return;
+    }
+    delBuffer(ui.current_buffer);
+}
+
+DEFUN(deletePrevBuf, DELETE_PREVBUF, "Delete previous buffer (mainly for local CGI-scripts)")
+{
+    struct Buffer* buf = ui.current_buffer->nextBuffer;
+    if (buf)
+        delBuffer(buf);
+}
+
+DEFUN(goURL, GOTO, "Open specified document in a new buffer")
+{
+    goURL0(ui, "Goto URL: ", false);
+}
+
+DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer")
+{
+    const char* url;
+    if ((url = getenv("HTTP_HOME")) != NULL || (url = getenv("WWW_HOME")) != NULL) {
+        struct Url p_url;
+        struct Buffer* cur_buf = ui.current_buffer;
+        SKIP_BLANKS(url);
+        url = url_quote(url);
+        p_url = parseUrl(url, NULL);
+        pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
+        struct Content c = loadGeneralFile(url, NULL, NULL, NULL, UI_TTY);
+        pushContent(c, ui.viewport.size.x, ui.use_graphic);
+        if (ui.current_buffer != cur_buf) /* success */
+            pushHashHist(URLHist, parsedURL2Str(&ui.current_buffer->content.url)->ptr);
+    }
+}
+
+DEFUN(gorURL, GOTO_RELATIVE, "Go to relative address")
+{
+    goURL0(ui, "Goto relative URL: ", true);
+}
+
+/* load bookmark */
+DEFUN(ldBmark, BOOKMARK VIEW_BOOKMARK, "View bookmarks")
+{
+    struct Content c = loadGeneralFile(BookmarkFile, NULL, NULL, NO_REFERER, UI_TTY);
+    pushContent(c, ui.viewport.size.x, ui.use_graphic);
+}
+
+#define W3MBOOKMARK_CMDNAME "w3mbookmark"
+// #define W3MBOOKMARK_CMDNAME "w3mbookmark.exe"
+
+/* Add current to bookmark */
+DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
+{
+    Str tmp = Sprintf("mode=panel&cookie=%s&bmark=%s&url=%s&title=%s"
+                      "&charset=%s",
+        (Str_form_quote(localCookie()))->ptr,
+        (Str_form_quote(Strnew_charp(BookmarkFile)))->ptr,
+        (Str_form_quote(parsedURL2Str(&ui.current_buffer->content.url)))->ptr,
+        (Str_form_quote(wc_conv_strict(ui.current_buffer->document.title,
+             InnerCharset,
+             BookmarkCharset)))
+            ->ptr,
+        wc_ces_to_charset(BookmarkCharset));
+    struct Form* post = newFormList(NULL, "post", NULL, NULL, NULL, NULL, NULL);
+    post->body = tmp->ptr;
+    post->length = tmp->length;
+    struct Content c = loadGeneralFile("file:///$LIB/" W3MBOOKMARK_CMDNAME, NULL, post, NO_REFERER, UI_TTY);
+    pushContent(c, ui.viewport.size.x, ui.use_graphic);
+}
+

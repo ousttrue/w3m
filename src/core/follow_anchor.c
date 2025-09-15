@@ -1,4 +1,5 @@
 #include "follow_anchor.h"
+#include "HttpRequest.h"
 #include "MapArea.h"
 #include "image_loader.h"
 #include "internal.h"
@@ -7,6 +8,7 @@
 #include "buffer_list.h"
 #include "history.h"
 #include "linein.h"
+#include "myctype.h"
 #include "quote.h"
 #include "runtime.h"
 #include "url.h"
@@ -22,6 +24,7 @@
 #include <unistd.h>
 
 int label_topline = (false);
+enum DefaultUrlType DefaultURLString = (DEFAULT_URL_CURRENT);
 
 static Str
 conv_form_encoding(Str val, struct FormItem* fi, wc_ces document_charset)
@@ -567,3 +570,67 @@ map_end:
     }
     return NULL;
 }
+
+/* go to specified URL */
+void goURL0(struct UI ui, const char* prompt, bool relative)
+{
+    struct Buffer* cur_buf = ui.current_buffer;
+
+    const char* url = searchKeyData();
+    if (url == NULL) {
+        struct Hist* hist = copyHist(URLHist);
+
+        struct Url* current = makeBaseUrl(&ui.current_buffer->document);
+        if (current) {
+            char* c_url = parsedURL2Str(current)->ptr;
+            if (DefaultURLString == DEFAULT_URL_CURRENT)
+                url = url_decode2(c_url, 0);
+            else
+                pushHist(hist, c_url);
+        }
+
+        struct Anchor* a = retrieveAnchor(ui.current_buffer->document.href, getBufferPosition(ui));
+        if (a) {
+            struct Url p_url = parseUrl(a->url, current);
+            const char* a_url = parsedURL2Str(&p_url)->ptr;
+            if (DefaultURLString == DEFAULT_URL_LINK)
+                url = url_decode2(a_url, ui.current_buffer->document.charset);
+            else
+                pushHist(hist, a_url);
+        }
+        url = inputLineHist(getUI(), prompt, url, IN_URL, hist);
+        if (url != NULL)
+            SKIP_BLANKS(url);
+    }
+
+    const char* referer;
+    struct Url* current;
+    if (relative) {
+        current = makeBaseUrl(&ui.current_buffer->document);
+        if (current == NULL || current->scheme == SCM_LOCAL || current->scheme == SCM_LOCAL_CGI || current->scheme == SCM_DATA)
+            referer = NO_REFERER;
+        else
+            referer = parsedURL2RefererStr(&ui.current_buffer->content.url)->ptr;
+        url = url_quote(url);
+    } else {
+        current = NULL;
+        referer = NULL;
+        url = url_quote(url);
+    }
+    if (url == NULL || *url == '\0') {
+
+        return;
+    }
+    if (*url == '#') {
+        gotoLabel(ui, url + 1);
+        return;
+    } else {
+        struct Url p_url = parseUrl(url, current);
+        pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
+        struct Content c = loadGeneralFile(url, current, NULL, referer, UI_TTY);
+        pushContent(c, ui.viewport.size.x, ui.use_graphic);
+        if (ui.current_buffer != cur_buf) /* success */
+            pushHashHist(URLHist, parsedURL2Str(&ui.current_buffer->content.url)->ptr);
+    }
+}
+

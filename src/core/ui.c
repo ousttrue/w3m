@@ -25,6 +25,7 @@
 
 char QuietMessage = (false);
 int showLineNum = (false);
+const char* BookmarkFile = (NULL);
 
 #define DISPLAY_CHARSET WC_CES_UTF_8
 wc_ces DisplayCharset = DISPLAY_CHARSET;

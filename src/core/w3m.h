@@ -6,12 +6,6 @@
 
 extern char* mkd_tmp_dir;
 
-enum DefaultUrlType {
-    DEFAULT_URL_EMPTY = 0,
-    DEFAULT_URL_CURRENT = 1,
-    DEFAULT_URL_LINK = 2,
-};
-extern int DefaultURLString;
 extern int UseDictCommand;
 extern char* DictCommand;
 extern int use_mark;
@@ -48,7 +42,6 @@ void fmTerm();
 
 int main_loop(const char* line_str);
 void _goLine(struct UI ui, const char* l);
-
 
 bool onFrame();
 void onKeyInput(unsigned char c);

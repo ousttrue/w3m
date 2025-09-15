@@ -8,6 +8,7 @@ extern char QuietMessage;
 extern wc_ces DisplayCharset;
 extern wc_ces BookmarkCharset;
 extern int showLineNum;
+extern const char* BookmarkFile;
 
 #define Str_conv_to_halfdump(x) (ExtHalfdump ? wc_Str_conv((x), InnerCharset, DisplayCharset) : (x))
 #define conv_from_system(x) wc_conv((x), SystemCharset, InnerCharset)->ptr
