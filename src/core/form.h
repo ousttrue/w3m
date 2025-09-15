@@ -6,10 +6,6 @@ extern int FoldTextarea;
 extern char* Editor;
 extern char* pre_form_file;
 
-#define FORM_I_TEXT_DEFAULT_SIZE 40
-#define FORM_I_SELECT_DEFAULT_SIZE 40
-#define FORM_I_TEXTAREA_DEFAULT_WIDTH 40
-
 int formChooseOptionByMenu(struct UI ui, struct FormItem* fi, int x, int y);
 
 struct Anchor;
@@ -17,8 +13,6 @@ struct Buffer;
 struct HtmlTagParsed;
 struct AnchorList;
 
-struct FormItem* formList_addInput(struct Form* fl,
-    struct HtmlTagParsed* tag);
 void formRecheckRadio(struct UI ui, struct Anchor* a, struct Buffer* buf, struct FormItem* form);
 void formResetBuffer(struct Buffer* buf, struct AnchorList* formitem);
 void formUpdateBuffer(struct Anchor* a, struct Buffer* buf, struct FormItem* form);

@@ -18,6 +18,8 @@ extern int ignore_null_img_alt;
 extern double image_scale;
 extern bool enable_inline_image;
 extern bool displayImage;
+extern int max_textarea;
+extern int max_select;
 
 #define DEFAULT_PIXEL_PER_CHAR 7.0 /* arbitrary */
 #define DEFAULT_PIXEL_PER_LINE 14.0 /* arbitrary */

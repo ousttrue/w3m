@@ -8,6 +8,10 @@
 #define MAX_TEXTAREA 10 /* max number of <textarea>..</textarea> \
                          * within one document */
 
+#define FORM_I_TEXT_DEFAULT_SIZE 40
+#define FORM_I_SELECT_DEFAULT_SIZE 40
+#define FORM_I_TEXTAREA_DEFAULT_WIDTH 40
+
 struct FormSelectOptionItem {
     Str value;
     Str label;
