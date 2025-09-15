@@ -1,4 +1,5 @@
 #include "AnchorList.h"
+#include "cookie.h"
 #include "HtmlTagParsed.h"
 #include "document_renderer.h"
 #include "menu.h"
@@ -1393,3 +1394,202 @@ DEFUN(dictwordat, DICT_WORD_AT,
 {
     execdict(GetWord(ui.current_buffer), UI_TTY);
 }
+
+DEFUN(execCmd, COMMAND, "Invoke w3m function(s)")
+{
+    CurrentKeyData = NULL; /* not allowed in w3m-control: */
+    const char* data = searchKeyData();
+    if (data == NULL || *data == '\0') {
+        data = inputStrHist(getUI(), "command [; ...]: ", "", TextHist);
+        if (data == NULL) {
+
+            return;
+        }
+    }
+    /* data: FUNC [DATA] [; FUNC [DATA] ...] */
+    while (*data) {
+        SKIP_BLANKS(data);
+        if (*data == ';') {
+            data++;
+            continue;
+        }
+        const char* p = getWord(&data);
+        CommandFunc func = getFunc(p);
+        p = getQWord(&data);
+        CurrentKey = -1;
+        CurrentKeyData = NULL;
+        CurrentCmdData = *p ? p : NULL;
+        func(ui);
+        CurrentCmdData = NULL;
+    }
+}
+
+DEFUN(setAlarm, ALARM, "Set alarm")
+{
+    CurrentKeyData = NULL; /* not allowed in w3m-control: */
+    const char* data = searchKeyData();
+    if (data == NULL || *data == '\0') {
+        data = inputStrHist(getUI(), "(Alarm)sec command: ", "", TextHist);
+        if (data == NULL) {
+
+            return;
+        }
+    }
+    CommandFunc cmd = NULL;
+    int sec = 0;
+    if (*data) {
+        sec = atoi(getWord(&data));
+        if (sec > 0)
+            cmd = getFunc(getWord(&data));
+    }
+    // if (cmd >= 0)
+    {
+        data = getQWord(&data);
+        // TODO:
+        // setAlarmEvent(&DefaultAlarm, sec, AL_EXPLICIT, cmd, data);
+        // message(getUI(), MSG_INFO, Sprintf("%dsec %s %s", sec, w3mFuncList[cmd].id, data)->ptr);
+    }
+    // else {
+    //     setAlarmEvent(&DefaultAlarm, 0, AL_UNSET, FUNCNAME_nulcmd, NULL);
+    // }
+}
+
+DEFUN(reinit, REINIT, "Reload configuration file")
+{
+    const char* resource = searchKeyData();
+    if (resource == NULL) {
+        init_rc();
+        sync_with_option();
+        initCookie();
+        return;
+    }
+
+    if (!strcasecmp(resource, "CONFIG") || !strcasecmp(resource, "RC")) {
+        init_rc();
+        sync_with_option();
+
+        return;
+    }
+
+    if (!strcasecmp(resource, "COOKIE")) {
+        initCookie();
+        return;
+    }
+
+    if (!strcasecmp(resource, "KEYMAP")) {
+        initKeymap(true);
+        return;
+    }
+
+    if (!strcasecmp(resource, "MAILCAP")) {
+        initMailcap();
+        return;
+    }
+
+    if (!strcasecmp(resource, "MENU")) {
+        initMenu();
+        return;
+    }
+
+    if (!strcasecmp(resource, "MIMETYPES")) {
+        // initMimeTypes();
+        return;
+    }
+
+    message(getUI(), MSG_ERR, Sprintf("Don't know how to reinitialize '%s'", resource)->ptr);
+}
+
+DEFUN(defKey, DEFINE_KEY, "Define a binding between a key stroke combination and a command")
+{
+    CurrentKeyData = NULL; /* not allowed in w3m-control: */
+    const char* data = searchKeyData();
+    if (data == NULL || *data == '\0') {
+        data = inputStrHist(getUI(), "Key definition: ", "", TextHist);
+        if (data == NULL || *data == '\0') {
+
+            return;
+        }
+    }
+    setKeymap(allocStr(data, -1), -1);
+}
+
+/* download panel */
+DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
+{
+    // int replace = false;
+    // // if (ui.current_buffer->bufferprop & BP_INTERNAL && !strcmp(ui.current_buffer->document.title, DOWNLOAD_LIST_TITLE))
+    // //     replace = true;
+    // if (!FirstDL) {
+    //     if (replace) {
+    //         if (ui.current_buffer == Firstbuf && ui.current_buffer->nextBuffer == NULL) {
+    //         } else
+    //             delBuffer(ui.current_buffer);
+    //     }
+    //     return;
+    // }
+    // int reload = checkDownloadList();
+    //
+    // struct Content c = makeContentFromHtmlUtf8(DownloadListBuffer_html());
+    // if (!c.page) {
+    //     return;
+    // }
+    // // buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
+    // if (replace) {
+    //     // COPY_BUFROOT(buf, ui.current_buffer);
+    //     // restorePosition(buf, ui.current_buffer);
+    // }
+    // pushContent(c, ui.viewport.size.x, ui.use_graphic);
+    // if (replace)
+    //     deletePrevBuf(ui);
+    // if (reload)
+    //     ui.current_buffer->event = setAlarmEvent(ui.current_buffer->event, 1, AL_IMPLICIT,
+    //         FUNCNAME_reload, NULL);
+}
+
+DEFUN(undoPos, UNDO, "Cancel the last cursor movement")
+{
+    if (!ui.current_buffer->document.firstLine)
+        return;
+
+    struct BufferPos* b = ui.current_buffer->undo;
+    if (!b || !b->prev)
+        return;
+
+    resetPos(ui.current_buffer, b);
+}
+
+DEFUN(redoPos, REDO, "Cancel the last undo")
+{
+    if (!ui.current_buffer->document.firstLine)
+        return;
+
+    struct BufferPos* b = ui.current_buffer->undo;
+    if (!b || !b->next)
+        return;
+
+    resetPos(ui.current_buffer, b);
+}
+
+DEFUN(cursorTop, CURSOR_TOP, "Move cursor to the top of the screen")
+{
+    if (ui.current_buffer->document.firstLine == NULL)
+        return;
+    ui.current_buffer->document.currentLineIndex = 0;
+}
+
+DEFUN(cursorMiddle, CURSOR_MIDDLE, "Move cursor to the middle of the screen")
+{
+    if (ui.current_buffer->document.firstLine == NULL)
+        return;
+    int offsety = (ui.viewport.size.y - 1) / 2;
+    ui.current_buffer->document.currentLineIndex += offsety;
+}
+
+DEFUN(cursorBottom, CURSOR_BOTTOM, "Move cursor to the bottom of the screen")
+{
+    if (ui.current_buffer->document.firstLine == NULL)
+        return;
+    int offsety = ui.viewport.size.y - 1;
+    ui.current_buffer->document.currentLineIndex += offsety;
+}
+

@@ -547,7 +547,7 @@ fn gen_gcc_e(b: *std.Build) struct {
         "-ne",
         "/^DEFUN/{p;n;/^[ \t]/p;}",
     });
-    sed.addFileArg(b.path("src/core/w3m.c"));
+    // sed.addFileArg(b.path("src/core/w3m.c"));
     sed.addFileArg(b.path("src/core/defun.c"));
     sed.addFileArg(b.path("src/core/menu.c"));
     // {

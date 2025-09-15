@@ -1352,3 +1352,17 @@ const char* GetWord(struct Buffer* buf)
     }
     return NULL;
 }
+
+void resetPos(struct Buffer* buf, struct BufferPos* b)
+{
+    struct Buffer pos = {
+        .document = {
+            .topLineIndex = b->top_linenumber,
+            .currentLineIndex = b->cur_linenumber,
+            .pos = b->pos,
+            .currentColumn = b->currentColumn,
+        },
+    };
+    restorePosition(buf, &pos);
+    buf->undo = b;
+}

@@ -1,5 +1,6 @@
 #include "follow_anchor.h"
 #include "HttpRequest.h"
+#include "KeyValue.h"
 #include "MapArea.h"
 #include "image_loader.h"
 #include "internal.h"
@@ -650,3 +651,89 @@ void anchorMn(struct UI ui, AnchorMenuFunc menu_func, int go)
     if (go)
         followAnchor(ui, false);
 }
+
+/* Go to specified line */
+void _goLine(struct UI ui, const char* l)
+{
+    if (l == NULL || *l == '\0' || currentLine(&ui.current_buffer->document) == NULL) {
+
+        return;
+    }
+    ui.current_buffer->document.pos = 0;
+    if (*l == '^') {
+        ui.current_buffer->document.topLineIndex = ui.current_buffer->document.currentLineIndex = ui.current_buffer->document.firstLine->linenumber;
+    } else if (*l == '$') {
+        ui.current_buffer->document.topLineIndex = ui.current_buffer->document.allLine - (ui.viewport.size.y + 1) / 2;
+        ui.current_buffer->document.currentLineIndex = lastLine(&ui.current_buffer->document)->linenumber;
+    }
+    // else
+    //     gotoRealLine(ui.current_buffer, atoi(l));
+}
+
+/* follow HREF link in the buffer */
+static void bufferA(struct UI ui)
+{
+    followAnchor(ui, false);
+}
+
+/* process form */
+void followForm(struct UI ui)
+{
+    _followForm(ui, false, false);
+}
+
+void follow_map(struct UI ui, struct KeyValue* arg)
+{
+    const char* name = tag_get_value(arg, "link");
+
+    struct Anchor* an = retrieveAnchor(ui.current_buffer->document.img, getBufferPosition(ui));
+    int x, y;
+    // x = ui.current_buffer->cursorX;
+    // y = ui.current_buffer->cursorY;
+    struct MapArea* a = follow_map_menu(ui, &ui.current_buffer->document, name, an, x, y);
+    if (a == NULL || a->url == NULL || *(a->url) == '\0') {
+        return;
+    }
+    if (*(a->url) == '#') {
+        gotoLabel(ui, a->url + 1);
+        return;
+    }
+
+    struct Url p_url = parseUrl(a->url, makeBaseUrl(&ui.current_buffer->document));
+    pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
+    struct Content c = getContent(a->url, makeBaseUrl(&ui.current_buffer->document),
+        NULL, parsedURL2Str(&ui.current_buffer->content.url)->ptr, UI_TTY);
+    pushContent(c, ui.viewport.size.x, ui.use_graphic);
+}
+
+/* show current URL */
+static Str
+currentURL(struct UI ui)
+{
+    if (!ui.current_buffer
+        // || ui.current_buffer->bufferprop & BP_INTERNAL
+    )
+        return Strnew_size(0);
+    return parsedURL2Str(&ui.current_buffer->content.url);
+}
+
+/* mark URL-like patterns as anchors */
+void chkURLBuffer(struct Buffer* buf)
+{
+    static char* url_like_pat[] = {
+        "https?://[a-zA-Z0-9][a-zA-Z0-9:%\\-\\./?=~_\\&+@#,\\$;]*[a-zA-Z0-9_/=\\-]",
+        "file:/[a-zA-Z0-9:%\\-\\./=_\\+@#,\\$;]*",
+        "ftp://[a-zA-Z0-9][a-zA-Z0-9:%\\-\\./=_+@#,\\$]*[a-zA-Z0-9_/]",
+#ifndef USE_W3MMAILER /* see also chkExternalURIBuffer() */
+        "mailto:[^<> 	][^<> 	]*@[a-zA-Z0-9][a-zA-Z0-9\\-\\._]*[a-zA-Z0-9]",
+#endif
+        "https?://[a-zA-Z0-9:%\\-\\./_@]*\\[[a-fA-F0-9:][a-fA-F0-9:\\.]*\\][a-zA-Z0-9:%\\-\\./?=~_\\&+@#,\\$;]*",
+        "ftp://[a-zA-Z0-9:%\\-\\./_@]*\\[[a-fA-F0-9:][a-fA-F0-9:\\.]*\\][a-zA-Z0-9:%\\-\\./=_+@#,\\$]*",
+        NULL
+    };
+    for (int i = 0; url_like_pat[i]; i++) {
+        reAnchor(buf, url_like_pat[i]);
+    }
+    buf->check_url = true;
+}
+
