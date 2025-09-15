@@ -14,9 +14,7 @@
 #include "symbol.h"
 #include "table.h"
 
-#include "Content.h"
 #include "istream.h"
-#include "image_loader.h"
 
 #include "alloc.h"
 #include <myctype.h>
@@ -511,7 +509,7 @@ HTMLlineproc2body(struct Url url, wc_ces charset, int cols, FeedFunc feed)
                             image->map = q;
                             image->ismap = ismap;
                             image->touch = 0;
-                            image->cache = getImageCache(image, base, IMG_FLAG_SKIP);
+                            // image->cache = getImageCache(image, base, IMG_FLAG_SKIP);
                         } else if (iseq < 0) {
                             struct BufferPoint* po = doc.imarklist->marks - iseq - 1;
                             struct Anchor* a = retrieveAnchor(doc.img, *po);
@@ -802,7 +800,7 @@ static int loadHTML(struct html_feed_environ* htmlenv1,
         symbol_width = symbol_width0 = 1;
     } else {
         symbol_width0 = 0;
-        get_symbol(WC_CES_US_ASCII/*DisplayCharset*/, &symbol_width0);
+        get_symbol(WC_CES_US_ASCII /*DisplayCharset*/, &symbol_width0);
         symbol_width = WcOption.use_wide ? symbol_width0 : 1;
     }
 
@@ -1477,13 +1475,14 @@ _end:
     return doc;
 }
 
-struct Document loadContent(struct Content* content, int cols, bool use_graphic)
+struct Document loadContent(struct Url url,
+    const char* content, wc_ces content_charset, enum ContentType content_type,
+    int cols, bool use_graphic)
 {
-    if (content->cc.content_type == CONTENTTYPE_TEXT_HTML)
-        return loadHtmlDocument(content->url, content->page, content->cc.charset,
-            cols, use_graphic, false);
+    if (content_type == CONTENTTYPE_TEXT_HTML)
+        return loadHtmlDocument(url, content, content_charset, cols, use_graphic, false);
     else
-        return loadTextDocument(content->page, content->cc.charset);
+        return loadTextDocument(content, content_charset);
 }
 
 bool PermitSaveToPipe = (false);

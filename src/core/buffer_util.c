@@ -453,7 +453,9 @@ void reshapeBuffer(struct UI ui, struct Buffer* buf, int cols)
 
     wc_uint8 old_auto_detect = WcOption.auto_detect;
     WcOption.auto_detect = WC_OPT_DETECT_OFF;
-    buf->document = loadContent(&buf->content, ui.viewport.size.x, ui.use_graphic);
+    buf->document = loadContent(buf->content.url,
+        buf->content.page->ptr, buf->content.cc.charset, buf->content.cc.content_type,
+        ui.viewport.size.x, ui.use_graphic);
     // ISclose(stream);
     WcOption.auto_detect = old_auto_detect;
 
@@ -1020,7 +1022,9 @@ struct Buffer* makeBuffer(struct UI ui, struct Content* c)
 
     if (c->page) {
         struct Buffer* buf = newBuffer();
-        buf->document = loadContent(c, ui.viewport.size.x, ui.use_graphic);
+        buf->document = loadContent(c->url,
+            c->page->ptr, c->cc.charset, c->cc.content_type,
+            ui.viewport.size.x, ui.use_graphic);
         if (buf) {
             buf->content = *c;
             Str tmp = tmpfname(TMPF_SRC, ".html");
