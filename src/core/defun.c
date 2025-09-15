@@ -20,7 +20,6 @@
 #include "keymap.h" // IWYU pragma: keep
 #include "w3m.h"
 #include "quote.h"
-#include "platform.h"
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>

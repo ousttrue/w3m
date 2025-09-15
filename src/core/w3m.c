@@ -24,7 +24,6 @@
 #include "maparea.h"
 #include "menu.h"
 #include "myctype.h"
-#include "platform.h"
 #include "Anchor.h"
 #include "AnchorList.h"
 #include "progress.h"

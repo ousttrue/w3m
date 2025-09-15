@@ -13,6 +13,9 @@ extern char* rc_dir;
 extern const char* cgi_bin;
 extern const char* document_root;
 
+#define CGI_EXTENSION ".cgi"
+// #define CGI_EXTENSION ".cmd"
+
 #define SYSTEM_CHARSET WC_CES_UTF_8
 extern wc_ces InnerCharset;
 extern wc_ces SystemCharset;
@@ -47,4 +50,3 @@ void pushDeleteFile(const char* path);
 Str tmpfname(enum TmpFileType type, const char* ext);
 
 const char* url_decode2(const char* url, wc_ces url_charset);
-
