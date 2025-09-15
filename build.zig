@@ -326,6 +326,12 @@ pub fn build(b: *std.Build) void {
         exe.addIncludePath(b.path("zig-out/include"));
     }
 
+    const minicoro_dep = b.dependency("minicoro", .{
+        .target = target,
+        .optimize = optimize,
+    });
+    exe.linkLibrary(minicoro_dep.artifact("minicoro"));
+
     // {
     //     const mktable = build_mktable(b, b.graph.host, optimize, &.{});
     //     // {

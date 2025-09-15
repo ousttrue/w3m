@@ -14,6 +14,9 @@
             .url = "git+https://github.com/bdwgc/bdwgc.git#6d068ea3fa8191f252a8ca4910e0bd3cbb877d0f",
             .hash = "N-V-__8AAErMLQAwjbOfoyLuc13gMqoO5Th7H6d6MkA9X6Uy",
         },
+        .minicoro = .{
+            .path = "minicoro",
+        },
     },
     .minimum_zig_version = "0.15.1",
     .paths = .{""},

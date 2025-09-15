@@ -4,14 +4,14 @@ const c = @cImport({
     @cInclude("ui.h");
 });
 
-pub const CommandFunc = fn () callconv(.c) void;
+pub const CommandFunc = fn (ui: c.UI) callconv(.c) void;
 
 // DEFUN(goLineF, BEGIN, "Go to the first line")
 // {
 //     _goLine("^");
 // }
-pub export fn goLineF() void {
-    c._goLine(c.getUI(), "^");
+pub export fn goLineF(ui: c.UI) void {
+    c._goLine(ui, "^");
 }
 
 // /* Go to the beginning of the line */
@@ -24,7 +24,7 @@ pub export fn goLineF() void {
 //     Currentbuf->pos = 0;
 //     arrangeCursor(Currentbuf);
 // }
-pub export fn linbeg() void {
+pub export fn linbeg(_: c.UI) void {
     c.ui_cursor_set_x(0);
 }
 

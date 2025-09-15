@@ -3,6 +3,7 @@ const c = @cImport({
     @cInclude("w3m.h");
     @cInclude("buffer_list.h");
     @cInclude("keymap.h");
+    @cInclude("minicoro.h");
 });
 const message_queue = @import("message_queue.zig");
 const defun = @import("defun.zig");
@@ -50,14 +51,44 @@ fn addFunc(f: *const defun.CommandFunc, name: []const u8, desc: []const u8) void
     _ = desc;
 }
 
+export fn coro_entry(co: [*c]c.mco_coro) void {
+    std.debug.print("coroutine 1\n", .{});
+    _ = c.mco_yield(co);
+    std.debug.print("coroutine 2\n", .{});
+}
+
 pub fn main() !void {
-    c.initialize();
+    // c.initialize();
     defun.init(addFunc);
-    c.parseArgs(
-        @intCast(std.os.argv.len),
-        @ptrCast(std.os.argv),
-    );
-    try main_loop();
+    // c.parseArgs(
+    //     @intCast(std.os.argv.len),
+    //     @ptrCast(std.os.argv),
+    // );
+    // try main_loop();
+
+    // First initialize a `desc` object through `mco_desc_init`.
+    var desc = c.mco_desc_init(&coro_entry, 0);
+    // Configure `desc` fields when needed (e.g. customize user_data or allocation functions).
+    desc.user_data = null;
+    // Call `mco_create` with the output coroutine pointer and `desc` pointer.
+    var co: [*c]c.mco_coro = undefined;
+    var res = c.mco_create(&co, &desc);
+    std.debug.assert(res == c.MCO_SUCCESS);
+    // The coroutine should be now in suspended state.
+    std.debug.assert(c.mco_status(co) == c.MCO_SUSPENDED);
+    // Call `mco_resume` to start for the first time, switching to its context.
+    res = c.mco_resume(co); // Should print "coroutine 1".
+    std.debug.assert(res == c.MCO_SUCCESS);
+    // We get back from coroutine context in suspended state (because it's unfinished).
+    std.debug.assert(c.mco_status(co) == c.MCO_SUSPENDED);
+    // Call `mco_resume` to resume for a second time.
+    res = c.mco_resume(co); // Should print "coroutine 2".
+    std.debug.assert(res == c.MCO_SUCCESS);
+    // The coroutine finished and should be now dead.
+    std.debug.assert(c.mco_status(co) == c.MCO_DEAD);
+    // Call `mco_destroy` to destroy the coroutine.
+    res = c.mco_destroy(co);
+    std.debug.assert(res == c.MCO_SUCCESS);
 }
 
 fn createSignalfd() i32 {
