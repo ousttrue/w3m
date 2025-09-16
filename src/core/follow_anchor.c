@@ -166,7 +166,7 @@ loadLink(struct UI ui, const char* url, const char* target, const char* referer,
     // if (referer == NULL)
     //     referer = parsedURL2RefererStr(&ui.current_buffer->content.url)->ptr;
 
-    struct Content c = getContent(url, makeBaseUrl(ui.document), post, referer, UI_TTY);
+    struct Content c = getContent(ui, url, makeBaseUrl(ui.document), post, referer);
     if (do_download) {
         if (!c.page)
             return NULL;
@@ -528,7 +528,7 @@ void followImage(struct UI ui, bool do_download)
     /* FIXME: gettextize? */
     message(getUI(), MSG_INFO, Sprintf("loading %s", a->url)->ptr);
     // refresh(ttyWriter());
-    struct Content c = getContent(a->url, makeBaseUrl(&ui.current_buffer->document), NULL, NULL, UI_TTY);
+    struct Content c = getContent(ui, a->url, makeBaseUrl(&ui.current_buffer->document), NULL, NULL);
     pushContent(c, ui.viewport.size.x, ui.use_graphic);
 }
 
@@ -628,7 +628,7 @@ void goURL0(struct UI ui, const char* prompt, bool relative)
     } else {
         struct Url p_url = parseUrl(url, current);
         pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
-        struct Content c = getContent(url, current, NULL, referer, UI_TTY);
+        struct Content c = getContent(ui, url, current, NULL, referer);
         pushContent(c, ui.viewport.size.x, ui.use_graphic);
         if (ui.current_buffer != cur_buf) /* success */
             pushHashHist(URLHist, parsedURL2Str(&ui.current_buffer->content.url)->ptr);
@@ -701,8 +701,8 @@ void follow_map(struct UI ui, struct KeyValue* arg)
 
     struct Url p_url = parseUrl(a->url, makeBaseUrl(&ui.current_buffer->document));
     pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
-    struct Content c = getContent(a->url, makeBaseUrl(&ui.current_buffer->document),
-        NULL, parsedURL2Str(&ui.current_buffer->content.url)->ptr, UI_TTY);
+    struct Content c = getContent(ui, a->url, makeBaseUrl(&ui.current_buffer->document),
+        NULL, parsedURL2Str(&ui.current_buffer->content.url)->ptr);
     pushContent(c, ui.viewport.size.x, ui.use_graphic);
 }
 
@@ -736,4 +736,3 @@ void chkURLBuffer(struct Buffer* buf)
     }
     buf->check_url = true;
 }
-

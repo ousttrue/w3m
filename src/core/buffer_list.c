@@ -21,7 +21,7 @@ void parseArgs(int argc, char** argv)
         ? file_to_url(argv[1], CurrentDir)
         : url_quote(conv_from_system(argv[1]));
 
-    struct Content c = getContent(url, NULL, NULL, NO_REFERER, (struct UserInteraction) { 0 });
+    struct Content c = getContent(ui, url, NULL, NULL, NO_REFERER);
     struct Buffer* newbuf = makeBuffer(&c, ui.viewport.size.x, ui.use_graphic);
 
     switch (newbuf->content.url.scheme) {

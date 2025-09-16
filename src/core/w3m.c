@@ -290,7 +290,7 @@ void fmTerm(void)
     vt_clrtoeolx(vt);
     // refresh(ttyWriter());
     if (activeImage)
-        loadImage(NULL, IMG_FLAG_STOP, false);
+        loadImage((struct UI){}, NULL, IMG_FLAG_STOP, false);
     resetTerm();
     flush_tty();
     TerminalSet(NULL);
@@ -441,7 +441,7 @@ bool onFrame()
 
     // mySignal(SIGWINCH, resize_hook);
     if (activeImage && displayImage && ui.document->img && !ui.document->image_loaded) {
-        loadImage(ui.document, IMG_FLAG_NEXT, false);
+        loadImage(ui, ui.document, IMG_FLAG_NEXT, false);
         bufToScreen(ui);
         renderFrame(ui);
         // continue;

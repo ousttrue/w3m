@@ -1,5 +1,5 @@
 #pragma once
-#include "UserInteraction.h"
+#include "geometry.h"
 #include <openssl/types.h>
 
 extern int ssl_verify_server;
@@ -13,7 +13,7 @@ extern char* ssl_forbid_method;
 extern char* ssl_min_version;
 extern char* ssl_cipher;
 
-SSL* openSSLHandle(struct UserInteraction ui, int sock, const char* hostname, const char** p_cert);
+SSL* openSSLHandle(struct UI ui, int sock, const char* hostname, const char** p_cert);
 void SSL_write_from_file(SSL* ssl, const char* file);
 
 struct ssl_handle {

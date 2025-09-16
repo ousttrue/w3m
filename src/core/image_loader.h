@@ -1,4 +1,5 @@
 #pragma once
+#include "geometry.h"
 #include "Image.h"
 
 extern const char* image_source;
@@ -6,7 +7,6 @@ extern char* Imgdisplay;
 extern int useExtImageViewer;
 extern int maxLoadImage;
 extern int image_map_list;
-
 
 void initImage();
 void termImage();
@@ -23,7 +23,7 @@ enum ImageLoadFlag {
     IMG_FLAG_STOP = 1,
     IMG_FLAG_NEXT = 2,
 };
-void loadImage(struct Document* doc, enum ImageLoadFlag flag, bool do_download);
+void loadImage(struct UI ui, struct Document* doc, enum ImageLoadFlag flag, bool do_download);
 struct ImageCache* getImageCache(struct Image* image, struct Url* current, enum ImageGetFlag flag);
 
 int getImageSize(struct ImageCache* cache);

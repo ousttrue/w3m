@@ -15,6 +15,12 @@ struct Rect {
 struct VirtualTerm;
 struct Buffer;
 
+typedef const char* (*InputFunc)(const char* prompt);
+typedef void (*MessageFunc)(const char* msg);
+
+// #define UI_TTY \
+//     (struct UserInteraction) { .inputCallback = inputAnswer, .messageCallback = &error_message, }
+
 struct UI {
     struct Buffer* current_buffer;
     struct Content* content;
@@ -27,6 +33,11 @@ struct UI {
     // term global position
     struct Int2 term_cursor;
     int searchkey_num;
+
+    InputFunc inputCallback;
+    // void* confirmData;
+    MessageFunc messageCallback;
+    // void* MessageData;
 };
 
 struct BufferPoint {

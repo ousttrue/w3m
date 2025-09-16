@@ -158,8 +158,8 @@ struct Content openLocal(const char* u, struct Url* current, struct Form* post, 
 }
 
 struct Content
-getContent(const char* path, struct Url* current, struct Form* post, const char* referer,
-    struct UserInteraction ui)
+getContent(struct UI ui, const char* path, struct Url* current,
+    struct Form* post, const char* referer)
 {
     //         openURL(&c, &pu, current, post, referer, no_cache, extra_header, &hr);
     // void openURL(struct HttpClient* c, struct Url* pu, struct Url* current,
@@ -189,7 +189,7 @@ getContent(const char* path, struct Url* current, struct Form* post, const char*
             // c.url = ;
             //     //         // continue;
             struct HttpClient c;
-            httpInitClient(&c, ui);
+            httpInitClient(ui, &c);
             return httpRequest(&c, Strnew_m_charp("http://", path, NULL)->ptr, current, post, referer);
             //     //     }
         }
@@ -198,7 +198,7 @@ getContent(const char* path, struct Url* current, struct Form* post, const char*
     case SCM_HTTP:
     case SCM_HTTPS: {
         struct HttpClient c;
-        httpInitClient(&c, ui);
+        httpInitClient(ui, &c);
         return httpRequest(&c, path, current, post, referer);
     }
 
@@ -228,7 +228,7 @@ const char* last_modified(struct Content* content)
 
 #define DICTBUFFERNAME "*dictionary*"
 
-struct Content execdict(const char* word, struct UserInteraction ui)
+struct Content execdict(struct UI ui, const char* word)
 {
     if (!UseDictCommand || word == NULL || *word == '\0') {
         return emptyContent();
@@ -240,5 +240,5 @@ struct Content execdict(const char* word, struct UserInteraction ui)
     }
 
     const char* dictcmd = Sprintf("%s?%s", DictCommand, Str_form_quote(Strnew_charp(w))->ptr)->ptr;
-    return getContent(dictcmd, NULL, NULL, NO_REFERER, ui);
+    return getContent(ui, dictcmd, NULL, NULL, NO_REFERER);
 }

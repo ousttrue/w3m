@@ -1,4 +1,5 @@
 #include "display.h"
+#include "Buffer.h"
 #include "HtmlTagParsed.h"
 #include "form.h"
 #include "runtime.h"
@@ -249,7 +250,7 @@ void bufToScreen(struct UI ui)
             // termClear(ttyWriter());
         }
         clearImage();
-        loadImage(buf, IMG_FLAG_STOP, false);
+        loadImage(ui, buf, IMG_FLAG_STOP, false);
         image_touch++;
         draw_image_flag = false;
     }

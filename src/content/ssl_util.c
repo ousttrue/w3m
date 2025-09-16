@@ -238,7 +238,7 @@ ssl_check_cert_ident(X509* x, const char* hostname)
     return ret;
 }
 
-static Str ssl_get_certificate(struct UserInteraction ui, SSL* ssl, const char* hostname)
+static Str ssl_get_certificate(struct UI ui, SSL* ssl, const char* hostname)
 {
     BIO* bp;
     X509* x;
@@ -357,7 +357,7 @@ static Str ssl_get_certificate(struct UserInteraction ui, SSL* ssl, const char* 
     return s;
 }
 
-SSL* openSSLHandle(struct UserInteraction ui, int sock, const char* hostname, const char** p_cert)
+SSL* openSSLHandle(struct UI ui, int sock, const char* hostname, const char** p_cert)
 {
     SSL* handle = NULL;
     static char* old_ssl_forbid_method = NULL;

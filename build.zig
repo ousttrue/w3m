@@ -27,7 +27,6 @@ const content_public_headers = [_][]const u8{
     "HttpRequestMethod.h",
     "HttpRequest.h",
     "ssl_util.h",
-    "UserInteraction.h",
     "auth.h",
     "subprocess.h",
     "local_cgi.h",

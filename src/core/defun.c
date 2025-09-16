@@ -240,7 +240,7 @@ DEFUN(ldfile, LOAD, "Open local file in a new buffer")
         return;
     }
     // cmd_loadfile(ui, fn);
-    struct Content c = getContent(file_to_url(fn, CurrentDir), NULL, NULL, NO_REFERER, UI_TTY);
+    struct Content c = getContent(ui, file_to_url(fn, CurrentDir), NULL, NULL, NO_REFERER);
     pushContent(c, ui.viewport.size.x, ui.use_graphic);
 }
 
@@ -252,7 +252,7 @@ DEFUN(ldhelp, HELP, "Show help panel")
     Str tmp = Sprintf("file:///$LIB/" HELP_CGI CGI_EXTENSION "?version=%s&lang=%s",
         Str_form_quote(Strnew_charp(w3m_version))->ptr,
         Str_form_quote(Strnew_charp_n(lang, n))->ptr);
-    struct Content c = getContent(tmp->ptr, NULL, NULL, NO_REFERER, UI_TTY);
+    struct Content c = getContent(ui, tmp->ptr, NULL, NULL, NO_REFERER);
     pushContent(c, ui.viewport.size.x, ui.use_graphic);
 }
 
@@ -443,10 +443,10 @@ DEFUN(selBuf, SELECT, "Display buffer-stack panel")
             delBuffer(buf);
             break;
         case 'q':
-            qquitfm(getUI());
+            qquitfm(ui);
             break;
         case 'Q':
-            quitfm(getUI());
+            quitfm(ui);
             break;
         }
     } while (!ok);
@@ -466,7 +466,7 @@ DEFUN(goLine, GOTO_LINE, "Go to the specified line")
     if (str)
         _goLine(ui, str);
     else
-        _goLine(ui, inputStr(getUI(), "Goto line: ", ""));
+        _goLine(ui, inputStr(ui, "Goto line: ", ""));
 }
 
 DEFUN(goLineL, END, "Go to the last line")
@@ -494,7 +494,7 @@ DEFUN(editBf, EDIT, "Edit local source")
     //     || /* Reading shell */ ui.current_buffer->content.url.scheme != SCM_LOCAL
     //     || !strcmp(ui.current_buffer->content.url.file, "-") /* file is std input  */
     // ) {
-    //     message(getUI(), MSG_ERR, "Can't edit other than local file");
+    //     message(ui, MSG_ERR, "Can't edit other than local file");
     //     return;
     // }
 
@@ -515,7 +515,7 @@ DEFUN(editScr, EDIT_SCREEN, "Edit rendered copy of document")
     FILE* f = fopen(tmpf, "w");
     if (f == NULL) {
         /* FIXME: gettextize? */
-        message(getUI(), MSG_ERR, Sprintf("Can't open %s", tmpf)->ptr);
+        message(ui, MSG_ERR, Sprintf("Can't open %s", tmpf)->ptr);
         return;
     }
 
@@ -566,7 +566,7 @@ DEFUN(nextMk, NEXT_MARK, "Go to the next mark")
         i = 0;
     }
     /* FIXME: gettextize? */
-    message(getUI(), MSG_INFO, "No mark exist after here");
+    message(ui, MSG_INFO, "No mark exist after here");
 }
 
 /* Go to previous mark */
@@ -597,7 +597,7 @@ DEFUN(prevMk, PREV_MARK, "Go to the previous mark")
             i = l->l.len - 1;
     }
     /* FIXME: gettextize? */
-    message(getUI(), MSG_INFO, "No mark exist before here");
+    message(ui, MSG_INFO, "No mark exist before here");
 }
 
 static const char* MarkString = NULL;
@@ -610,7 +610,7 @@ DEFUN(reMark, REG_MARK, "Mark all occurences of a pattern")
 
     const char* str = searchKeyData();
     if (str == NULL || *str == '\0') {
-        str = inputStrHist(getUI(), "(Mark)Regexp: ", MarkString, TextHist);
+        str = inputStrHist(ui, "(Mark)Regexp: ", MarkString, TextHist);
         if (str == NULL || *str == '\0') {
 
             return;
@@ -618,7 +618,7 @@ DEFUN(reMark, REG_MARK, "Mark all occurences of a pattern")
     }
     str = conv_search_string(ui, str, DisplayCharset);
     if ((str = regexCompile(str, 1)) != NULL) {
-        message(getUI(), MSG_INFO, str);
+        message(ui, MSG_INFO, str);
         return;
     }
 
@@ -889,7 +889,7 @@ checkBackBuffer(struct Buffer* buf)
 DEFUN(backBf, BACK, "Close current buffer and return to the one below in stack")
 {
     if (!ui.current_buffer->nextBuffer) {
-        message(getUI(), MSG_INFO, "Can't go back...");
+        message(ui, MSG_INFO, "Can't go back...");
         return;
     }
     delBuffer(ui.current_buffer);
@@ -917,7 +917,7 @@ DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer")
         url = url_quote(url);
         p_url = parseUrl(url, NULL);
         pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
-        struct Content c = getContent(url, NULL, NULL, NULL, UI_TTY);
+        struct Content c = getContent(ui, url, NULL, NULL, NULL);
         pushContent(c, ui.viewport.size.x, ui.use_graphic);
         if (ui.current_buffer != cur_buf) /* success */
             pushHashHist(URLHist, parsedURL2Str(&ui.current_buffer->content.url)->ptr);
@@ -932,7 +932,7 @@ DEFUN(gorURL, GOTO_RELATIVE, "Go to relative address")
 /* load bookmark */
 DEFUN(ldBmark, BOOKMARK VIEW_BOOKMARK, "View bookmarks")
 {
-    struct Content c = getContent(BookmarkFile, NULL, NULL, NO_REFERER, UI_TTY);
+    struct Content c = getContent(ui, BookmarkFile, NULL, NULL, NO_REFERER);
     pushContent(c, ui.viewport.size.x, ui.use_graphic);
 }
 
@@ -955,7 +955,7 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
     struct Form* post = newFormList(NULL, "post", NULL, NULL, NULL, NULL, NULL);
     post->body = tmp->ptr;
     post->length = tmp->length;
-    struct Content c = getContent("file:///$LIB/" W3MBOOKMARK_CMDNAME, NULL, post, NO_REFERER, UI_TTY);
+    struct Content c = getContent(ui, "file:///$LIB/" W3MBOOKMARK_CMDNAME, NULL, post, NO_REFERER);
     pushContent(c, ui.viewport.size.x, ui.use_graphic);
 }
 
@@ -977,7 +977,7 @@ DEFUN(setOpt, SET_OPTION, "Set option")
             const char* v = get_param_option(opt);
             opt = Sprintf("%s=%s", opt, v ? v : "")->ptr;
         }
-        opt = inputStrHist(getUI(), "Set option: ", opt, TextHist);
+        opt = inputStrHist(ui, "Set option: ", opt, TextHist);
         if (opt == NULL || *opt == '\0') {
 
             return;
@@ -1018,8 +1018,8 @@ DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
 
     struct Url p_url = parseUrl(l->url, makeBaseUrl(&ui.current_buffer->document));
     pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
-    struct Content c = getContent(l->url, makeBaseUrl(&ui.current_buffer->document),
-        NULL, parsedURL2Str(&ui.current_buffer->content.url)->ptr, UI_TTY);
+    struct Content c = getContent(ui, l->url, makeBaseUrl(&ui.current_buffer->document),
+        NULL, parsedURL2Str(&ui.current_buffer->content.url)->ptr);
     pushContent(c, ui.viewport.size.x, ui.use_graphic);
 }
 
@@ -1083,7 +1083,7 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document")
     const char* qfile = NULL;
     if (file == NULL || *file == '\0') {
         /* FIXME: gettextize? */
-        qfile = inputLineHist(getUI(), "Save buffer to: ", NULL, IN_COMMAND, SaveHist);
+        qfile = inputLineHist(ui, "Save buffer to: ", NULL, IN_COMMAND, SaveHist);
         if (qfile == NULL || *qfile == '\0') {
 
             return;
@@ -1111,7 +1111,7 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document")
     if (f == NULL) {
         /* FIXME: gettextize? */
         char* emsg = Sprintf("Can't open %s", conv_from_system(file))->ptr;
-        message(getUI(), MSG_ERR, emsg);
+        message(ui, MSG_ERR, emsg);
         return;
     }
     saveBuffer(ui.current_buffer, f, true);
@@ -1191,13 +1191,13 @@ DEFUN(reload, RELOAD, "Load current document anew")
     //         return;
     //     }
     //     /* FIXME: gettextize? */
-    //     message(getUI(), MSG_ERR, "Can't reload...");
+    //     message(ui, MSG_ERR, "Can't reload...");
     //     return;
     // }
     if (ui.current_buffer->content.url.scheme == SCM_LOCAL && !strcmp(ui.current_buffer->content.url.file, "-")) {
         /* file is std input */
         /* FIXME: gettextize? */
-        message(getUI(), MSG_ERR, "Can't reload stdin");
+        message(ui, MSG_ERR, "Can't reload stdin");
         return;
     }
 
@@ -1220,14 +1220,14 @@ DEFUN(reload, RELOAD, "Load current document anew")
         post = NULL;
     }
     Str url = parsedURL2Str(&ui.current_buffer->content.url);
-    message(getUI(), MSG_INFO, "Reloading...");
+    message(ui, MSG_INFO, "Reloading...");
     // refresh(ttyWriter());
     wc_ces old_charset = DocumentCharset;
     if (ui.current_buffer->document.charset != WC_CES_US_ASCII)
         DocumentCharset = ui.current_buffer->document.charset;
     // SearchHeader = ui.current_buffer->search_header;
     DefaultType = contentTypeStr(ui.current_buffer->content.cc.content_type);
-    struct Content c = getContent(url->ptr, NULL, post, NO_REFERER, UI_TTY /*, true*/);
+    struct Content c = getContent(ui, url->ptr, NULL, post, NO_REFERER /*, true*/);
 
     struct Buffer* buf = makeBuffer(&c, ui.viewport.size.x, ui.use_graphic);
     DocumentCharset = old_charset;
@@ -1238,7 +1238,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
         unlink(post->body);
     if (buf == NULL) {
         /* FIXME: gettextize? */
-        message(getUI(), MSG_ERR, "Can't reload...");
+        message(ui, MSG_ERR, "Can't reload...");
         return;
     } else if (buf) {
 
@@ -1273,7 +1273,7 @@ DEFUN(docCSet, CHARSET, "Change the character encoding for the current document"
     const char* cs = searchKeyData();
     if (cs == NULL || *cs == '\0')
         /* FIXME: gettextize? */
-        cs = inputStr(getUI(), "Document charset: ",
+        cs = inputStr(ui, "Document charset: ",
             wc_ces_to_charset(ui.current_buffer->document.charset));
     wc_ces charset = wc_guess_charset_short(cs, 0);
     if (charset == 0) {
@@ -1281,7 +1281,7 @@ DEFUN(docCSet, CHARSET, "Change the character encoding for the current document"
     }
     // _docCSet(ui, charset);
     if (ui.current_buffer->content.sourcefile == NULL) {
-        message(getUI(), MSG_INFO, "Can't reload...");
+        message(ui, MSG_INFO, "Can't reload...");
         return;
     }
     ui.current_buffer->document.charset = charset;
@@ -1292,7 +1292,7 @@ DEFUN(defCSet, DEFAULT_CHARSET, "Change the default character encoding")
     const char* cs = searchKeyData();
     if (cs == NULL || *cs == '\0')
         /* FIXME: gettextize? */
-        cs = inputStr(getUI(), "Default document charset: ",
+        cs = inputStr(ui, "Default document charset: ",
             wc_ces_to_charset(DocumentCharset));
     wc_ces charset = wc_guess_charset_short(cs, 0);
     if (charset != 0)
@@ -1338,7 +1338,7 @@ DEFUN(chkWORD, MARK_WORD, "Turn current word into hyperlink")
 //     Strcat_charp(tmp, "  ");
 //     Strcat_charp(tmp, wc_ces_to_charset_desc(ui.current_buffer->document_charset));
 //
-//     message(getUI(), MSG_INFO, tmp->ptr);
+//     message(ui, MSG_INFO, tmp->ptr);
 // }
 
 DEFUN(dispI, DISPLAY_IMAGE, "Restart loading and drawing of images")
@@ -1368,7 +1368,7 @@ DEFUN(stopI, STOP_IMAGE, "Stop loading and drawing of images")
 
 DEFUN(dispVer, VERSION, "Display the version of w3m")
 {
-    message(getUI(), MSG_INFO, Sprintf("w3m version %s", w3m_version)->ptr);
+    message(ui, MSG_INFO, Sprintf("w3m version %s", w3m_version)->ptr);
 }
 
 DEFUN(wrapToggle, WRAP_TOGGLE, "Toggle wrapping mode in searches")
@@ -1376,23 +1376,23 @@ DEFUN(wrapToggle, WRAP_TOGGLE, "Toggle wrapping mode in searches")
     if (WrapSearch) {
         WrapSearch = false;
         /* FIXME: gettextize? */
-        message(getUI(), MSG_INFO, "Wrap search off");
+        message(ui, MSG_INFO, "Wrap search off");
     } else {
         WrapSearch = true;
         /* FIXME: gettextize? */
-        message(getUI(), MSG_INFO, "Wrap search on");
+        message(ui, MSG_INFO, "Wrap search on");
     }
 }
 
 DEFUN(dictword, DICT_WORD, "Execute dictionary command (see README.dict)")
 {
-    execdict(inputStr(getUI(), "(dictionary)!", ""), UI_TTY);
+    execdict(ui, inputStr(ui, "(dictionary)!", ""));
 }
 
 DEFUN(dictwordat, DICT_WORD_AT,
     "Execute dictionary command for word at cursor")
 {
-    execdict(GetWord(ui.current_buffer), UI_TTY);
+    execdict(ui, GetWord(ui.current_buffer));
 }
 
 DEFUN(execCmd, COMMAND, "Invoke w3m function(s)")
@@ -1400,7 +1400,7 @@ DEFUN(execCmd, COMMAND, "Invoke w3m function(s)")
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
     const char* data = searchKeyData();
     if (data == NULL || *data == '\0') {
-        data = inputStrHist(getUI(), "command [; ...]: ", "", TextHist);
+        data = inputStrHist(ui, "command [; ...]: ", "", TextHist);
         if (data == NULL) {
 
             return;
@@ -1429,7 +1429,7 @@ DEFUN(setAlarm, ALARM, "Set alarm")
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
     const char* data = searchKeyData();
     if (data == NULL || *data == '\0') {
-        data = inputStrHist(getUI(), "(Alarm)sec command: ", "", TextHist);
+        data = inputStrHist(ui, "(Alarm)sec command: ", "", TextHist);
         if (data == NULL) {
 
             return;
@@ -1447,7 +1447,7 @@ DEFUN(setAlarm, ALARM, "Set alarm")
         data = getQWord(&data);
         // TODO:
         // setAlarmEvent(&DefaultAlarm, sec, AL_EXPLICIT, cmd, data);
-        // message(getUI(), MSG_INFO, Sprintf("%dsec %s %s", sec, w3mFuncList[cmd].id, data)->ptr);
+        // message(ui, MSG_INFO, Sprintf("%dsec %s %s", sec, w3mFuncList[cmd].id, data)->ptr);
     }
     // else {
     //     setAlarmEvent(&DefaultAlarm, 0, AL_UNSET, FUNCNAME_nulcmd, NULL);
@@ -1496,7 +1496,7 @@ DEFUN(reinit, REINIT, "Reload configuration file")
         return;
     }
 
-    message(getUI(), MSG_ERR, Sprintf("Don't know how to reinitialize '%s'", resource)->ptr);
+    message(ui, MSG_ERR, Sprintf("Don't know how to reinitialize '%s'", resource)->ptr);
 }
 
 DEFUN(defKey, DEFINE_KEY, "Define a binding between a key stroke combination and a command")
@@ -1504,7 +1504,7 @@ DEFUN(defKey, DEFINE_KEY, "Define a binding between a key stroke combination and
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
     const char* data = searchKeyData();
     if (data == NULL || *data == '\0') {
-        data = inputStrHist(getUI(), "Key definition: ", "", TextHist);
+        data = inputStrHist(ui, "Key definition: ", "", TextHist);
         if (data == NULL || *data == '\0') {
 
             return;

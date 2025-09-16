@@ -1,5 +1,4 @@
 #include "HttpClient.h"
-#include "quote.h"
 #include "alloc.h"
 #include "auth.h"
 #include "html_form.h"
@@ -15,13 +14,12 @@
 #include "istream.h"
 #include "ssl_util.h"
 #include "time_util.h"
-// #include "keymap.h"
 #include <assert.h>
 #include <openssl/ssl.h>
 #include <unistd.h>
 #include <zlib.h>
 
-void httpInitClient(struct HttpClient* c, struct UserInteraction ui)
+void httpInitClient(struct UI ui, struct HttpClient* c)
 {
     memset(c, 0, sizeof(struct HttpClient));
     *c = (struct HttpClient) {

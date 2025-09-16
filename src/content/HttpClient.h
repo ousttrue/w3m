@@ -1,7 +1,7 @@
 #pragma once
+#include "geometry.h"
 #include "HttpRequest.h"
 #include "HttpResponse.h"
-#include "UserInteraction.h"
 #include <wc.h>
 
 enum HttpConnectionStatus {
@@ -21,7 +21,7 @@ struct HttpExchange {
 };
 
 struct HttpClient {
-    struct UserInteraction ui;
+    struct UI ui;
     struct HttpExchange exchanges[MAX_FOLLOW_REDIRECTION];
     Str uname;
     Str pwd;
@@ -30,7 +30,7 @@ struct HttpClient {
     const char *ssl_certificate;
 };
 
-void httpInitClient(struct HttpClient* c, struct UserInteraction ui);
+void httpInitClient(struct UI ui, struct HttpClient* c);
 struct Form;
 struct Content httpRequest(struct HttpClient* c,
     const char* path, struct Url* current, struct Form* post, const char* referer);
