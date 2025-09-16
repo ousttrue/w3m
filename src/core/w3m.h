@@ -1,4 +1,5 @@
 #pragma once
+#include "Content.h"
 #include "geometry.h"
 #include <wc.h>
 
@@ -15,6 +16,8 @@ extern wc_ces DisplayCharset;
 extern wc_ces BookmarkCharset;
 extern int showLineNum;
 extern const char* BookmarkFile;
+
+struct Buffer* getFirstbuf();
 
 // entry point
 void main_loop(int argc, char** argv);
@@ -52,3 +55,14 @@ void ui_cursor_set_x(int x);
 struct BufferPoint getBufferPosition(struct Buffer* buf);
 Str message_list_panel_html();
 int exec_cmd(char* cmd);
+
+extern char ArgvIsURL;
+extern int clear_buffer;
+
+struct Buffer* parseArgs(struct UI* ui, int argc, char** argv);
+void SAVE_BUFPOSITION(struct Buffer* sbufp);
+void pushBuffer(struct Buffer* buf);
+void delBuffer(struct Buffer* buf);
+void repBuffer(struct Buffer* oldbuf, struct Buffer* buf);
+void setCurrentBuffer(struct Buffer* buf);
+struct Buffer* pushContent(struct UI* ui, struct Content c, int cols, bool use_graphic);

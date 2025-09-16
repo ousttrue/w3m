@@ -2,7 +2,6 @@
 #include "document_renderer.h"
 #include "follow_anchor.h"
 #include "table.h"
-#include "buffer_list.h"
 #include "runtime.h"
 #include "HttpRequest.h"
 #include "network.h"

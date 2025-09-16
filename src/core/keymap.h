@@ -11,7 +11,6 @@
 
 extern char* keymap_file;
 
-typedef void (*CommandFunc)(struct UI *ui);
 extern CommandFunc GlobalKeymap[];
 extern CommandFunc EscKeymap[];
 extern CommandFunc EscBKeymap[];

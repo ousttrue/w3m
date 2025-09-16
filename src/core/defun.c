@@ -15,7 +15,6 @@
 #include "form.h"
 #include "http_message.h"
 #include "mailcap.h"
-#include "buffer_list.h"
 #include "defun_macro.h"
 #include "geometry.h" // IWYU pragma: keep
 #include "buffer_util.h"
@@ -44,7 +43,7 @@ DEFUN(nulcmd, NOTHING NULL @ @ @, "Do nothing")
 /* Move page forward */
 DEFUN(pgFore, NEXT_PAGE, "Scroll down one page")
 {
-    ui->document->topLineIndex += ui->viewport.size.y;
+    ui->current_buffer->document.topLineIndex += ui->viewport.size.y;
 }
 
 /* Move page backward */
@@ -68,13 +67,13 @@ DEFUN(hpgBack, PREV_HALF_PAGE, "Scroll up half a page")
 /* 1 line up */
 DEFUN(lup1, UP, "Scroll the screen up one line")
 {
-    ui->document->topLineIndex++;
+    ui->current_buffer->document.topLineIndex++;
 }
 
 /* 1 line down */
 DEFUN(ldown1, DOWN, "Scroll the screen down one line")
 {
-    ui->document->topLineIndex--;
+    ui->current_buffer->document.topLineIndex--;
 }
 
 /* move cursor position to the center of screen */
@@ -82,7 +81,7 @@ DEFUN(ctrCsrV, CENTER_V, "Center on cursor line")
 {
     int offsety = ui->viewport.size.y / 2 - ui->viewport_cursor.y;
     if (offsety) {
-        ui->document->topLineIndex = ui->document->topLineIndex - offsety;
+        ui->current_buffer->document.topLineIndex = ui->current_buffer->document.topLineIndex - offsety;
     }
 }
 
@@ -90,7 +89,7 @@ DEFUN(ctrCsrH, CENTER_H, "Center on cursor column")
 {
     int offsetx = ui->viewport_cursor.x - ui->viewport.size.x / 2;
     if (offsetx) {
-        ui->document->currentColumn += offsetx;
+        ui->current_buffer->document.currentColumn += offsetx;
     }
 }
 
@@ -139,17 +138,17 @@ DEFUN(srchprv, SEARCH_PREV, "Continue search backward")
 /* Shift screen left */
 DEFUN(shiftl, SHIFT_LEFT, "Shift screen left")
 {
-    int column = ui->document->currentColumn;
-    ui->document->currentColumn += (ui->searchkey_num * (-ui->viewport.size.x + 1) + 1);
-    shiftvisualpos(ui, ui->current_buffer, ui->document->currentColumn - column);
+    int column = ui->current_buffer->document.currentColumn;
+    ui->current_buffer->document.currentColumn += (ui->searchkey_num * (-ui->viewport.size.x + 1) + 1);
+    shiftvisualpos(ui, ui->current_buffer, ui->current_buffer->document.currentColumn - column);
 }
 
 /* Shift screen right */
 DEFUN(shiftr, SHIFT_RIGHT, "Shift screen right")
 {
-    int column = ui->document->currentColumn;
-    ui->document->currentColumn += (ui->searchkey_num * (ui->viewport.size.x - 1) - 1);
-    shiftvisualpos(ui, ui->current_buffer, ui->document->currentColumn - column);
+    int column = ui->current_buffer->document.currentColumn;
+    ui->current_buffer->document.currentColumn += (ui->searchkey_num * (ui->viewport.size.x - 1) - 1);
+    shiftvisualpos(ui, ui->current_buffer, ui->current_buffer->document.currentColumn - column);
 }
 
 DEFUN(col1R, RIGHT, "Shift screen one column right")
@@ -160,9 +159,9 @@ DEFUN(col1R, RIGHT, "Shift screen one column right")
 
     int n = ui->searchkey_num;
     for (int j = 0; j < n; j++) {
-        int column = ui->document->currentColumn;
-        ui->document->currentColumn += 1;
-        if (column == ui->document->currentColumn)
+        int column = ui->current_buffer->document.currentColumn;
+        ui->current_buffer->document.currentColumn += 1;
+        if (column == ui->current_buffer->document.currentColumn)
             break;
         shiftvisualpos(ui, ui->current_buffer, 1);
     }
@@ -175,9 +174,9 @@ DEFUN(col1L, LEFT, "Shift screen one column left")
         return;
     int n = ui->searchkey_num;
     for (int j = 0; j < n; j++) {
-        if (ui->document->currentColumn == 0)
+        if (ui->current_buffer->document.currentColumn == 0)
             break;
-        ui->document->currentColumn += (-1);
+        ui->current_buffer->document.currentColumn += (-1);
         shiftvisualpos(ui, ui->current_buffer, -1);
     }
 }
@@ -306,9 +305,9 @@ next_nonnull_line(struct UI *ui, struct LineList* line)
     if (l == NULL || l->l.len == 0)
         return -1;
 
-    ui->document->currentLineIndex = l->linenumber;
+    ui->current_buffer->document.currentLineIndex = l->linenumber;
     if (l != line)
-        ui->document->pos = 0;
+        ui->current_buffer->document.pos = 0;
     return 0;
 }
 
@@ -323,27 +322,27 @@ DEFUN(movRW, NEXT_WORD, "Move to the next word")
     int n = ui->searchkey_num;
     for (int i = 0; i < n; i++) {
         struct LineList* pline = currentLine(&ui->current_buffer->document);
-        int ppos = ui->document->pos;
+        int ppos = ui->current_buffer->document.pos;
 
         if (next_nonnull_line(ui, currentLine(&ui->current_buffer->document)) < 0)
             return;
 
         struct LineList* l = currentLine(&ui->current_buffer->document);
         const char* lb = l->l.lineBuf;
-        while (ui->document->pos < l->l.len && wc_is_ucs_alnum(getChar(&lb[ui->document->pos])))
-            ui->document->pos = nextChar(ui->document->pos, &l->l);
+        while (ui->current_buffer->document.pos < l->l.len && wc_is_ucs_alnum(getChar(&lb[ui->current_buffer->document.pos])))
+            ui->current_buffer->document.pos = nextChar(ui->current_buffer->document.pos, &l->l);
 
         while (1) {
-            while (ui->document->pos < l->l.len && !wc_is_ucs_alnum(getChar(&lb[ui->document->pos])))
-                ui->document->pos = nextChar(ui->document->pos, &l->l);
-            if (ui->document->pos < l->l.len)
+            while (ui->current_buffer->document.pos < l->l.len && !wc_is_ucs_alnum(getChar(&lb[ui->current_buffer->document.pos])))
+                ui->current_buffer->document.pos = nextChar(ui->current_buffer->document.pos, &l->l);
+            if (ui->current_buffer->document.pos < l->l.len)
                 break;
             if (next_nonnull_line(ui, currentLine(&ui->current_buffer->document)->next) < 0) {
-                ui->document->currentLineIndex = pline->linenumber;
-                ui->document->pos = ppos;
+                ui->current_buffer->document.currentLineIndex = pline->linenumber;
+                ui->current_buffer->document.pos = ppos;
                 return;
             }
-            ui->document->pos = 0;
+            ui->current_buffer->document.pos = 0;
             l = currentLine(&ui->current_buffer->document);
             lb = l->l.lineBuf;
         }
@@ -359,9 +358,9 @@ prev_nonnull_line(struct UI *ui, struct LineList* line)
     if (l == NULL || l->l.len == 0)
         return -1;
 
-    ui->document->currentLineIndex = l->linenumber;
+    ui->current_buffer->document.currentLineIndex = l->linenumber;
     if (l != line)
-        ui->document->pos = currentLine(&ui->current_buffer->document)->l.len;
+        ui->current_buffer->document.pos = currentLine(&ui->current_buffer->document)->l.len;
     return 0;
 }
 
@@ -370,7 +369,7 @@ DEFUN(movLW, PREV_WORD, "Move to the previous word")
     int n = ui->searchkey_num;
     for (int i = 0; i < n; i++) {
         struct LineList* pline = currentLine(&ui->current_buffer->document);
-        int ppos = ui->document->pos;
+        int ppos = ui->current_buffer->document.pos;
 
         if (prev_nonnull_line(ui, currentLine(&ui->current_buffer->document)) < 0)
             goto end;
@@ -378,30 +377,30 @@ DEFUN(movLW, PREV_WORD, "Move to the previous word")
         while (1) {
             struct LineList* l = currentLine(&ui->current_buffer->document);
             const char* lb = l->l.lineBuf;
-            while (ui->document->pos > 0) {
-                int tmp = prevChar(ui->document->pos, &l->l);
+            while (ui->current_buffer->document.pos > 0) {
+                int tmp = prevChar(ui->current_buffer->document.pos, &l->l);
                 if (wc_is_ucs_alnum(getChar(&lb[tmp])))
                     break;
-                ui->document->pos = tmp;
+                ui->current_buffer->document.pos = tmp;
             }
-            if (ui->document->pos > 0)
+            if (ui->current_buffer->document.pos > 0)
                 break;
             if (prev_nonnull_line(ui, currentLine(&ui->current_buffer->document)->prev) < 0) {
-                ui->document->currentLineIndex = pline->linenumber;
-                ui->document->pos = ppos;
+                ui->current_buffer->document.currentLineIndex = pline->linenumber;
+                ui->current_buffer->document.pos = ppos;
                 goto end;
             }
-            ui->document->pos = currentLine(&ui->current_buffer->document)->l.len;
+            ui->current_buffer->document.pos = currentLine(&ui->current_buffer->document)->l.len;
         }
 
         {
             struct LineList* l = currentLine(&ui->current_buffer->document);
             const char* lb = l->l.lineBuf;
-            while (ui->document->pos > 0) {
-                int tmp = prevChar(ui->document->pos, &l->l);
+            while (ui->current_buffer->document.pos > 0) {
+                int tmp = prevChar(ui->current_buffer->document.pos, &l->l);
                 if (!wc_is_ucs_alnum(getChar(&lb[tmp])))
                     break;
-                ui->document->pos = tmp;
+                ui->current_buffer->document.pos = tmp;
             }
         }
     }
@@ -429,7 +428,7 @@ DEFUN(selBuf, SELECT, "Display buffer-stack panel")
 
     ok = false;
     do {
-        buf = selectBuffer(ui, Firstbuf, ui->current_buffer, &cmd);
+        buf = selectBuffer(ui, getFirstbuf(), ui->current_buffer, &cmd);
         switch (cmd) {
         case 'B':
             ok = true;
@@ -451,7 +450,7 @@ DEFUN(selBuf, SELECT, "Display buffer-stack panel")
         }
     } while (!ok);
 
-    for (buf = Firstbuf; buf != NULL; buf = buf->nextBuffer) {
+    for (buf = getFirstbuf(); buf != NULL; buf = buf->nextBuffer) {
         if (buf == ui->current_buffer)
             continue;
         deleteImage(&buf->document);
@@ -477,12 +476,12 @@ DEFUN(goLineL, END, "Go to the last line")
 /* Go to the bottom of the line */
 DEFUN(linend, LINE_END, "Go to the end of the line")
 {
-    if (ui->document->firstLine == NULL)
+    if (ui->current_buffer->document.firstLine == NULL)
         return;
     while (currentLine(&ui->current_buffer->document)->next
         && currentLine(&ui->current_buffer->document)->next->bpos)
         cursorDown(1);
-    ui->document->pos = currentLine(&ui->current_buffer->document)->l.len - 1;
+    ui->current_buffer->document.pos = currentLine(&ui->current_buffer->document)->l.len - 1;
 }
 
 /* Run editor on the current buffer */
@@ -534,10 +533,10 @@ DEFUN(_mark, MARK, "Set/unset mark")
 {
     if (!use_mark)
         return;
-    if (ui->document->firstLine == NULL)
+    if (ui->current_buffer->document.firstLine == NULL)
         return;
     struct LineList* l = currentLine(&ui->current_buffer->document);
-    l->l.propBuf[ui->document->pos] ^= PE_MARK;
+    l->l.propBuf[ui->current_buffer->document.pos] ^= PE_MARK;
 }
 
 /* Go to next mark */
@@ -545,9 +544,9 @@ DEFUN(nextMk, NEXT_MARK, "Go to the next mark")
 {
     if (!use_mark)
         return;
-    if (ui->document->firstLine == NULL)
+    if (ui->current_buffer->document.firstLine == NULL)
         return;
-    int i = ui->document->pos + 1;
+    int i = ui->current_buffer->document.pos + 1;
     struct LineList* l = currentLine(&ui->current_buffer->document);
     if (i >= l->l.len) {
         i = 0;
@@ -556,8 +555,8 @@ DEFUN(nextMk, NEXT_MARK, "Go to the next mark")
     while (l != NULL) {
         for (; i < l->l.len; i++) {
             if (l->l.propBuf[i] & PE_MARK) {
-                ui->document->currentLineIndex = l->linenumber;
-                ui->document->pos = i;
+                ui->current_buffer->document.currentLineIndex = l->linenumber;
+                ui->current_buffer->document.pos = i;
 
                 return;
             }
@@ -574,9 +573,9 @@ DEFUN(prevMk, PREV_MARK, "Go to the previous mark")
 {
     if (!use_mark)
         return;
-    if (ui->document->firstLine == NULL)
+    if (ui->current_buffer->document.firstLine == NULL)
         return;
-    int i = ui->document->pos - 1;
+    int i = ui->current_buffer->document.pos - 1;
     struct LineList* l = currentLine(&ui->current_buffer->document);
     if (i < 0) {
         l = l->prev;
@@ -586,8 +585,8 @@ DEFUN(prevMk, PREV_MARK, "Go to the previous mark")
     while (l != NULL) {
         for (; i >= 0; i--) {
             if (l->l.propBuf[i] & PE_MARK) {
-                ui->document->currentLineIndex = l->linenumber;
-                ui->document->pos = i;
+                ui->current_buffer->document.currentLineIndex = l->linenumber;
+                ui->current_buffer->document.pos = i;
 
                 return;
             }
@@ -624,7 +623,7 @@ DEFUN(reMark, REG_MARK, "Mark all occurences of a pattern")
 
     struct LineList* l;
     MarkString = str;
-    for (l = ui->document->firstLine; l != NULL; l = l->next) {
+    for (l = ui->current_buffer->document.firstLine; l != NULL; l = l->next) {
         const char* p = l->l.lineBuf;
         for (;;) {
             if (regexMatch(p, &l->l.lineBuf[l->l.len] - p, p == l->l.lineBuf) == 1) {
@@ -659,8 +658,8 @@ DEFUN(submitForm, SUBMIT, "Submit form")
 /* go to the top anchor */
 DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink")
 {
-    struct HmarkerList* hl = ui->document->hmarklist;
-    if (ui->document->firstLine == NULL)
+    struct HmarkerList* hl = ui->current_buffer->document.hmarklist;
+    if (ui->current_buffer->document.firstLine == NULL)
         return;
 
     if (!hl || hl->nmark == 0)
@@ -673,25 +672,25 @@ DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink")
         if (hseq >= hl->nmark)
             return;
         po = hl->marks + hseq;
-        an = retrieveAnchor(ui->document->href, *po);
+        an = retrieveAnchor(ui->current_buffer->document.href, *po);
         if (an == NULL)
-            an = retrieveAnchor(ui->document->formitem, *po);
+            an = retrieveAnchor(ui->current_buffer->document.formitem, *po);
         hseq++;
     } while (an == NULL);
 
     gotoLine(&ui->current_buffer->document, po->line);
-    ui->document->pos = po->pos;
+    ui->current_buffer->document.pos = po->pos;
 }
 
 /* go to the last anchor */
 DEFUN(lastA, LINK_END, "Move to the last hyperlink")
 {
-    struct HmarkerList* hl = ui->document->hmarklist;
+    struct HmarkerList* hl = ui->current_buffer->document.hmarklist;
     struct BufferPoint* po;
     struct Anchor* an;
     int hseq;
 
-    if (ui->document->firstLine == NULL)
+    if (ui->current_buffer->document.firstLine == NULL)
         return;
     if (!hl || hl->nmark == 0)
         return;
@@ -701,39 +700,39 @@ DEFUN(lastA, LINK_END, "Move to the last hyperlink")
         if (hseq < 0)
             return;
         po = hl->marks + hseq;
-        an = retrieveAnchor(ui->document->href, *po);
+        an = retrieveAnchor(ui->current_buffer->document.href, *po);
         if (an == NULL)
-            an = retrieveAnchor(ui->document->formitem, *po);
+            an = retrieveAnchor(ui->current_buffer->document.formitem, *po);
         hseq--;
     } while (an == NULL);
 
     gotoLine(&ui->current_buffer->document, po->line);
-    ui->document->pos = po->pos;
+    ui->current_buffer->document.pos = po->pos;
 }
 
 /* go to the nth anchor */
 DEFUN(nthA, LINK_N, "Go to the nth link")
 {
-    struct HmarkerList* hl = ui->document->hmarklist;
+    struct HmarkerList* hl = ui->current_buffer->document.hmarklist;
 
     int n = ui->searchkey_num;
     if (n < 0 || n > hl->nmark)
         return;
 
-    if (ui->document->firstLine == NULL)
+    if (ui->current_buffer->document.firstLine == NULL)
         return;
     if (!hl || hl->nmark == 0)
         return;
 
     struct BufferPoint* po = hl->marks + n - 1;
-    struct Anchor* an = retrieveAnchor(ui->document->href, *po);
+    struct Anchor* an = retrieveAnchor(ui->current_buffer->document.href, *po);
     if (an == NULL)
-        an = retrieveAnchor(ui->document->formitem, *po);
+        an = retrieveAnchor(ui->current_buffer->document.formitem, *po);
     if (an == NULL)
         return;
 
     gotoLine(&ui->current_buffer->document, po->line);
-    ui->document->pos = po->pos;
+    ui->current_buffer->document.pos = po->pos;
 }
 
 /* go to the next anchor */
@@ -764,23 +763,23 @@ DEFUN(prevVA, PREV_VISITED, "Move to the previous visited hyperlink")
 static void
 nextX(struct UI *ui, int d, int dy)
 {
-    if (ui->document->firstLine == NULL)
+    if (ui->current_buffer->document.firstLine == NULL)
         return;
 
-    struct HmarkerList* hl = ui->document->hmarklist;
+    struct HmarkerList* hl = ui->current_buffer->document.hmarklist;
     if (!hl || hl->nmark == 0)
         return;
 
-    struct Anchor* an = retrieveAnchor(ui->document->href, getBufferPosition(ui->current_buffer));
+    struct Anchor* an = retrieveAnchor(ui->current_buffer->document.href, getBufferPosition(ui->current_buffer));
     if (an == NULL)
-        an = retrieveAnchor(ui->document->formitem, getBufferPosition(ui->current_buffer));
+        an = retrieveAnchor(ui->current_buffer->document.formitem, getBufferPosition(ui->current_buffer));
 
     int y;
     struct Anchor* pan = getNextHorizontalAnchor(&ui->current_buffer->document, an, ui->searchkey_num, d, dy);
     if (pan == NULL)
         return;
 
-    ui->document->pos = pan->start.pos;
+    ui->current_buffer->document.pos = pan->start.pos;
 }
 
 /* go to the next left anchor */
@@ -811,21 +810,21 @@ DEFUN(nextRD, NEXT_RIGHT_DOWN, "Move right or downward to the next hyperlink")
 static void
 nextY(struct UI *ui, int d)
 {
-    struct HmarkerList* hl = ui->document->hmarklist;
+    struct HmarkerList* hl = ui->current_buffer->document.hmarklist;
     struct Anchor* pan;
     int i, x, y, n = ui->searchkey_num;
     int hseq;
 
-    if (ui->document->firstLine == NULL)
+    if (ui->current_buffer->document.firstLine == NULL)
         return;
     if (!hl || hl->nmark == 0)
         return;
 
-    struct Anchor* an = retrieveAnchor(ui->document->href, getBufferPosition(ui->current_buffer));
+    struct Anchor* an = retrieveAnchor(ui->current_buffer->document.href, getBufferPosition(ui->current_buffer));
     if (an == NULL)
-        an = retrieveAnchor(ui->document->formitem, getBufferPosition(ui->current_buffer));
+        an = retrieveAnchor(ui->current_buffer->document.formitem, getBufferPosition(ui->current_buffer));
 
-    x = ui->document->pos;
+    x = ui->current_buffer->document.pos;
     y = currentLine(&ui->current_buffer->document)->linenumber + d;
     pan = NULL;
     hseq = -1;
@@ -835,9 +834,9 @@ nextY(struct UI *ui, int d)
         an = NULL;
         for (; y >= 0 && y <= lastLine(&ui->current_buffer->document)->linenumber; y += d) {
             struct BufferPoint bp = { .line = y, .pos = x };
-            an = retrieveAnchor(ui->document->href, bp);
+            an = retrieveAnchor(ui->current_buffer->document.href, bp);
             if (!an)
-                an = retrieveAnchor(ui->document->formitem, bp);
+                an = retrieveAnchor(ui->current_buffer->document.formitem, bp);
             if (an && hseq != abs(an->hseq)) {
                 pan = an;
                 break;
@@ -867,7 +866,7 @@ DEFUN(nextU, NEXT_UP, "Move upward to the next hyperlink")
 /* go to the next bufferr */
 DEFUN(nextBf, NEXT, "Switch to the next buffer")
 {
-    setCurrentBuffer(prevBuffer(Firstbuf, ui->current_buffer));
+    setCurrentBuffer(prevBuffer(getFirstbuf(), ui->current_buffer));
 }
 
 /* go to the previous bufferr */
@@ -1007,7 +1006,7 @@ DEFUN(pginfo, INFO, "Display information about the current document")
 /* link menu */
 DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
 {
-    struct LinkList* l = link_menu(ui, ui->document);
+    struct LinkList* l = link_menu(ui, &ui->current_buffer->document);
     if (!l || !l->url)
         return;
 
@@ -1352,7 +1351,7 @@ DEFUN(dispI, DISPLAY_IMAGE, "Restart loading and drawing of images")
      * if (!(ui->current_buffer->type && is_html_type(ui->current_buffer->type)))
      * return;
      */
-    ui->document->image_flag = IMG_FLAG_AUTO;
+    ui->current_buffer->document.image_flag = IMG_FLAG_AUTO;
 }
 
 DEFUN(stopI, STOP_IMAGE, "Stop loading and drawing of images")
@@ -1363,7 +1362,7 @@ DEFUN(stopI, STOP_IMAGE, "Stop loading and drawing of images")
      * if (!(ui->current_buffer->type && is_html_type(ui->current_buffer->type)))
      * return;
      */
-    ui->document->image_flag = IMG_FLAG_SKIP;
+    ui->current_buffer->document.image_flag = IMG_FLAG_SKIP;
 }
 
 DEFUN(dispVer, VERSION, "Display the version of w3m")
@@ -1601,5 +1600,5 @@ DEFUN(goLineF, BEGIN, "Go to the first line")
 /* Go to the beginning of the line */
 DEFUN(linbeg, LINE_BEGIN, "Go to the beginning of the line")
 {
-    ui->document->pos = 0;
+    ui->current_buffer->document.pos = 0;
 }

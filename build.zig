@@ -115,7 +115,6 @@ const w3m_srcs = [_][]const u8{
     "internal.c",
     "page_info.c",
     "follow_anchor.c",
-    "buffer_list.c",
     "tty.c",
     "keybind.c",
     "w3m.c",

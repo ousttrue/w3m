@@ -35,11 +35,13 @@ struct CoVTable {
 
 // #define UI_TTY \
 //     (struct UserInteraction) { .inputCallback = inputAnswer, .messageCallback = &error_message, }
-
+struct UI;
+typedef void (*CommandFunc)(struct UI *ui);
 struct UI {
+    struct Buffer* first_buffer;
     struct Buffer* current_buffer;
-    struct Content* content;
-    struct Document* document;
+    // struct Content* content;
+    // struct Document* document;
     struct VirtualTerm* vt;
     bool use_graphic;
     struct Rect viewport;
@@ -49,6 +51,7 @@ struct UI {
     struct Int2 term_cursor;
     int searchkey_num;
 
+    CommandFunc cmd;
     struct mco_coro* co;
     struct CoVTable vtable;
 };

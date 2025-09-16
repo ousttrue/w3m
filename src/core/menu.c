@@ -1,5 +1,4 @@
 #include "menu.h"
-#include "buffer_list.h"
 #include "AnchorList.h"
 #include "Anchor.h"
 #include "runtime.h"
@@ -1388,14 +1387,14 @@ initSelectMenu(struct UI *ui)
     static char* comment = " SPC for select / D for delete buffer ";
 
     SelectV = -1;
-    for (i = 0, buf = Firstbuf; buf != NULL; i++, buf = buf->nextBuffer) {
+    for (i = 0, buf = getFirstbuf(); buf != NULL; i++, buf = buf->nextBuffer) {
         if (buf == ui->current_buffer)
             SelectV = i;
     }
     nitem = i;
 
     label = New_N(char*, nitem + 2);
-    for (i = 0, buf = Firstbuf; i < nitem; i++, buf = buf->nextBuffer) {
+    for (i = 0, buf = getFirstbuf(); i < nitem; i++, buf = buf->nextBuffer) {
         str = Sprintf("<%s>", buf->document.title);
         switch (buf->content.url.scheme) {
         case SCM_LOCAL:
@@ -1449,7 +1448,7 @@ smChBuf(struct UI *ui)
 
     int i;
     struct Buffer* buf;
-    for (i = 0, buf = Firstbuf; i < SelectV; i++, buf = buf->nextBuffer)
+    for (i = 0, buf = getFirstbuf(); i < SelectV; i++, buf = buf->nextBuffer)
         ;
 
     setCurrentBuffer(buf);
@@ -1461,7 +1460,7 @@ smDelBuf(struct UI *ui, char c)
     if (CurrentMenu->select < 0 || CurrentMenu->select >= SelectMenu.nitem)
         return (MENU_NOTHING);
 
-    struct Buffer* buf = Firstbuf;
+    struct Buffer* buf = getFirstbuf();
     for (int i = 0; i < CurrentMenu->select; i++, buf = buf->nextBuffer)
         ;
 

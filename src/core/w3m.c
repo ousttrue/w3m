@@ -1,10 +1,10 @@
 #include "w3m.h"
 #include "Buffer.h"
 #include "HtmlTagParsed.h"
+#include "HttpRequest.h"
 #include "follow_anchor.h"
 #include "Document.h"
 #include "TermEntry.h"
-#include "buffer_list.h"
 #include "cookie.h"
 #include "display.h"
 #include "downloadlist.h"
@@ -19,6 +19,7 @@
 #include "AnchorList.h"
 #include "MapArea.h"
 #include "putc.h"
+#include "quote.h"
 #include "rc.h"
 #include "screen_effects.h"
 #include "ssl_util.h"
@@ -165,53 +166,51 @@ searchKeyNum(void)
     return n;
 }
 
-struct UI g_ui = {};
-
-struct UI* getUI()
+struct UI g_ui = { 0 };
+struct Buffer* getFirstbuf()
 {
-    int rootX = 0;
-    if (showLineNum) {
-        if (rootX < 5)
-            rootX = 5;
-        if (rootX > getScreen()->COLS)
-            rootX = getScreen()->COLS;
-    }
-    int rootY = 0;
-
-    struct VirtualTerm* vt = getScreen();
-    struct TermEntry* t = getTermEntry();
-
-    g_ui = (struct UI) {
-        .current_buffer = Currentbuf,
-        .document = Currentbuf ? &Currentbuf->document : 0,
-        .content = Currentbuf ? &Currentbuf->content : 0,
-        .vt = vt,
-        .use_graphic = graph_ok(t),
-        .viewport = {
-            .offset = {
-                .x = rootX,
-                .y = rootY,
-            },
-            .size = {
-                .x = vt->COLS - rootX,
-                .y = vt->ROWS - rootY,
-            },
-        },
-        .viewport_cursor = viewport_cursor,
-        .term_cursor = {
-            .x = rootX + viewport_cursor.x,
-            .y = rootY + viewport_cursor.y,
-        },
-        .searchkey_num = searchKeyNum(),
-    };
-    return &g_ui;
+    return g_ui.first_buffer;
 }
 
-struct UI* getCoUI(struct mco_coro* co)
-{
-    g_ui.co = co;
-    return &g_ui;
-}
+// struct UI* getUI()
+// {
+//     int rootX = 0;
+//     if (showLineNum) {
+//         if (rootX < 5)
+//             rootX = 5;
+//         if (rootX > getScreen()->COLS)
+//             rootX = getScreen()->COLS;
+//     }
+//     int rootY = 0;
+//
+//     struct VirtualTerm* vt = getScreen();
+//     struct TermEntry* t = getTermEntry();
+//
+//     g_ui = (struct UI) {
+//         .current_buffer = Currentbuf,
+//         .document = Currentbuf ? &Currentbuf->document : 0,
+//         .content = Currentbuf ? &Currentbuf->content : 0,
+//         .vt = vt,
+//         .use_graphic = graph_ok(t),
+//         .viewport = {
+//             .offset = {
+//                 .x = rootX,
+//                 .y = rootY,
+//             },
+//             .size = {
+//                 .x = vt->COLS - rootX,
+//                 .y = vt->ROWS - rootY,
+//             },
+//         },
+//         .viewport_cursor = viewport_cursor,
+//         .term_cursor = {
+//             .x = rootX + viewport_cursor.x,
+//             .y = rootY + viewport_cursor.y,
+//         },
+//         .searchkey_num = searchKeyNum(),
+//     };
+//     return &g_ui;
+// }
 
 // short cursorX;
 // short cursorY;
@@ -496,11 +495,11 @@ void ui_bell()
 
 void ui_cursor_set_x(int x)
 {
-    if (Currentbuf->document.firstLine == NULL)
+    if (g_ui.current_buffer->document.firstLine == NULL)
         return;
-    while (currentLine(&Currentbuf->document)->prev && currentLine(&Currentbuf->document)->bpos)
+    while (currentLine(&g_ui.current_buffer->document)->prev && currentLine(&g_ui.current_buffer->document)->bpos)
         cursorUp(1);
-    Currentbuf->document.pos = 0;
+    g_ui.current_buffer->document.pos = 0;
 }
 
 bool updateCursor(struct Buffer* buf)
@@ -611,7 +610,7 @@ wrap_GC_warn_proc(const char* msg, GC_word arg)
             i %= sizeof(msg_ring) / sizeof(msg_ring[0]);
 
             printf(msg_ring[i].msg, (unsigned long)msg_ring[i].arg);
-            sleep_till_anykey(getUI(), 1000, 1);
+            sleep_till_anykey(&g_ui, 1000, 1);
         }
 
         lock = 0;
@@ -625,7 +624,7 @@ static const char* currentdir()
     return path;
 }
 
-static void initialize(struct UI* ui)
+static void initialize()
 {
     wc_uint8 auto_detect;
     if (!getenv("GC_LARGE_ALLOC_WARN_INTERVAL"))
@@ -696,7 +695,6 @@ static void initialize(struct UI* ui)
     fmInit();
     // mySignal(SIGWINCH, resize_hook);
 
-    sync_with_option(ui);
     initCookie();
     if (UseHistory)
         loadHistory(URLHist);
@@ -706,6 +704,43 @@ static void initialize(struct UI* ui)
 
     orig_GC_warn_proc = GC_get_warn_proc();
     GC_set_warn_proc(wrap_GC_warn_proc);
+
+    // struct UI* ui = getUI();
+    int rootX = 0;
+    if (showLineNum) {
+        if (rootX < 5)
+            rootX = 5;
+        if (rootX > getScreen()->COLS)
+            rootX = getScreen()->COLS;
+    }
+    int rootY = 0;
+
+    struct VirtualTerm* vt = getScreen();
+    struct TermEntry* t = getTermEntry();
+
+    g_ui.current_buffer = 0;
+    // .document = g_ui.current_buffer ? &g_ui.current_buffer->document : 0,
+    // .content = g_ui.current_buffer ? &g_ui.current_buffer->content : 0,
+    g_ui.vt = vt,
+    g_ui.use_graphic = graph_ok(t),
+    g_ui.viewport = (struct Rect) {
+        .offset = {
+            .x = rootX,
+            .y = rootY,
+        },
+        .size = {
+            .x = vt->COLS - rootX,
+            .y = vt->ROWS - rootY,
+        },
+    },
+    g_ui.viewport_cursor = viewport_cursor;
+    g_ui.term_cursor = (struct Int2) {
+        .x = rootX + viewport_cursor.x,
+        .y = rootY + viewport_cursor.y,
+    };
+    g_ui.searchkey_num = searchKeyNum();
+
+    sync_with_option(&g_ui);
 }
 
 void resetTerm(void)
@@ -738,10 +773,10 @@ void fmTerm(void)
 
 static void deleteFiles()
 {
-    while (Firstbuf) {
-        struct Buffer* buf = Firstbuf->nextBuffer;
-        discardBuffer(Firstbuf);
-        Firstbuf = buf;
+    while (getFirstbuf()) {
+        struct Buffer* buf = getFirstbuf()->nextBuffer;
+        discardBuffer(getFirstbuf());
+        g_ui.first_buffer = buf;
     }
 
     deinitDeleteFile();
@@ -894,17 +929,19 @@ save_buffer_position(struct Buffer* buf)
     buf->undo = b;
 }
 
-static void coro_entry(mco_coro* co)
-{
-    struct UI* ui = (struct UI*)mco_get_user_data(co);
-}
-
 struct CoTask {
     mco_desc desc;
     mco_coro* co;
     struct UI* ui;
 };
-struct CoTask* newTask(CommandFunc func)
+
+static void coro_entry(mco_coro* co)
+{
+    struct CoTask* task = (struct CoTask*)mco_get_user_data(co);
+    task->ui->cmd(task->ui);
+}
+
+struct CoTask* newTask()
 {
     struct CoTask* task = New(struct CoTask);
     // First initialize a `desc` object through `mco_desc_init`.
@@ -930,15 +967,45 @@ struct CoTask* resume(struct CoTask* task, unsigned char ch)
     return mco_status(task->co) == MCO_SUSPENDED ? task : 0;
 }
 
+const int mcoGetCh(struct mco_coro* co)
+{
+    // yield block
+    mco_result res = mco_yield(co);
+    assert(res == MCO_SUCCESS);
+
+    unsigned char ch;
+    res = mco_pop(co, &ch, 1);
+    assert(res == MCO_SUCCESS);
+    return ch;
+}
+
+const char* mcoInput(struct mco_coro* co, const char* prompt)
+{
+    struct CoTask* task = (struct CoTask*)mco_get_user_data(co);
+    return inputAnswer(task->ui, prompt);
+}
+
+void mcoMessage(struct mco_coro*, enum MessageSeverity error, const char* msg)
+{
+}
+
 struct CoTask* launch(CommandFunc func)
 {
-    struct CoTask* task = newTask(func);
+    struct CoTask* task = newTask();
 
-    task->ui = getCoUI(task->co);
+    g_ui.cmd = func;
+    g_ui.co = task->co;
+    g_ui.vtable = (struct CoVTable) {
+        .getCh = &mcoGetCh,
+        .input = &mcoInput,
+        .message = &mcoMessage,
+    };
+
+    task->ui = &g_ui;
 
     // setup
-    set_buffer_environ(Currentbuf, getBufferPosition(Currentbuf));
-    save_buffer_position(Currentbuf);
+    set_buffer_environ(g_ui.current_buffer, getBufferPosition(g_ui.current_buffer));
+    save_buffer_position(g_ui.current_buffer);
     // execute
     mco_result res = mco_resume(task->co);
 
@@ -947,14 +1014,16 @@ struct CoTask* launch(CommandFunc func)
 
 void onKeyInput(unsigned char ch)
 {
-    struct TermEntry* t = getTermEntry();
-    bool use_graphic = graph_ok(t);
-
     static unsigned char g_keylog[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
     static int g_i = 0;
     g_keylog[g_i++ % sizeof(g_keylog)] = ch;
 
-    if (IS_ASCII(ch)) {
+    // struct TermEntry* t = getTermEntry();
+    // bool use_graphic = graph_ok(t);
+
+    if (ch && IS_ASCII(ch)) {
+        // struct UI* ui = getUI();
+
         unsigned char prev = CurrentKey;
         CurrentKey = ch;
 
@@ -968,11 +1037,47 @@ void onKeyInput(unsigned char ch)
             current_task = launch(func);
         }
 
-        if (updateCursor(Currentbuf)) {
+        {
+            int rootX = 0;
+            if (showLineNum) {
+                if (rootX < 5)
+                    rootX = 5;
+                if (rootX > getScreen()->COLS)
+                    rootX = getScreen()->COLS;
+            }
+            int rootY = 0;
+
+            struct VirtualTerm* vt = getScreen();
+            struct TermEntry* t = getTermEntry();
+
+            // g_ui.current_buffer = 0;
+            // .document = g_ui.current_buffer ? &g_ui.current_buffer->document : 0,
+            // .content = g_ui.current_buffer ? &g_ui.current_buffer->content : 0,
+            g_ui.vt = vt,
+            g_ui.use_graphic = graph_ok(t),
+            g_ui.viewport = (struct Rect) {
+                .offset = {
+                    .x = rootX,
+                    .y = rootY,
+                },
+                .size = {
+                    .x = vt->COLS - rootX,
+                    .y = vt->ROWS - rootY,
+                },
+            },
+            g_ui.viewport_cursor = viewport_cursor;
+            g_ui.term_cursor = (struct Int2) {
+                .x = rootX + viewport_cursor.x,
+                .y = rootY + viewport_cursor.y,
+            };
+            g_ui.searchkey_num = searchKeyNum();
+        }
+
+        if (updateCursor(g_ui.current_buffer)) {
             termClear(ttyWriter());
         }
-        bufToScreen(getUI());
-        renderFrame(getUI());
+        bufToScreen(&g_ui);
+        renderFrame(&g_ui);
     }
 
     prev_key = CurrentKey;
@@ -1207,10 +1312,10 @@ struct IOBEvent iob_wait(struct IOBlocker* iob, int timeout_ms)
 
 void main_loop(int argc, char** argv)
 {
-    struct UI* ui = getUI();
+    initialize();
 
-    initialize(ui);
-    parseArgs(ui, argc, argv);
+    g_ui.first_buffer = g_ui.current_buffer = parseArgs(&g_ui, argc, argv);
+    //  saveBufferInfo(ui);
     // onFrame();
     onKeyInput(0);
 
@@ -1256,4 +1361,119 @@ void main_loop(int argc, char** argv)
     iob_deinit(&iob);
 
     fmTerm();
+}
+
+char ArgvIsURL = true;
+int clear_buffer = (true);
+
+struct Buffer* parseArgs(struct UI* ui, int argc, char** argv)
+{
+    const char* url = (getUrlScheme(argv[1]) == SCM_MISSING && !ArgvIsURL)
+        ? file_to_url(argv[1], CurrentDir)
+        : url_quote(conv_from_system(argv[1]));
+
+    struct Content c = getContent(ui, url, NULL, NULL, NO_REFERER);
+    struct Buffer* newbuf = makeBuffer(&c, ui->viewport.size.x, ui->use_graphic);
+
+    switch (newbuf->content.url.scheme) {
+    case SCM_MAILTO:
+        break;
+    case SCM_LOCAL:
+    case SCM_LOCAL_CGI:
+        unshiftHist(LoadHist, url);
+    default:
+        pushHashHist(URLHist, parsedURL2Str(&newbuf->content.url)->ptr);
+        break;
+    }
+    return newbuf;
+}
+
+void SAVE_BUFPOSITION(struct Buffer* sbufp)
+{
+    COPY_DOCUMENT_POSITION(&sbufp->document, &g_ui.current_buffer->document);
+}
+
+// void saveBufferInfo(struct UI *ui)
+// {
+//     FILE* fp;
+//     if ((fp = fopen(rcFile("bufinfo"), "w")) == NULL) {
+//         return;
+//     }
+//     fprintf(fp, "%s\n", content.url(ui)->ptr);
+//     fclose(fp);
+// }
+
+void pushBuffer(struct Buffer* buf)
+{
+    if (!buf) {
+        return;
+    }
+    pushHashHist(URLHist, parsedURL2Str(&buf->content.url)->ptr);
+
+    deleteImage(&buf->document);
+    if (clear_buffer) {
+        // clearBuffer(ui->current_buffer);
+    }
+
+    buf->nextBuffer = g_ui.current_buffer;
+    g_ui.current_buffer = buf;
+
+    struct Buffer* b;
+    if (g_ui.first_buffer == g_ui.current_buffer) {
+        g_ui.first_buffer = buf;
+    } else if ((b = prevBuffer(g_ui.first_buffer, g_ui.current_buffer))) {
+        b->nextBuffer = buf;
+    }
+}
+
+void delBuffer(struct Buffer* buf)
+{
+    if (buf == NULL)
+        return;
+    if (g_ui.current_buffer == buf)
+        g_ui.current_buffer = buf->nextBuffer;
+    g_ui.first_buffer = deleteBuffer(g_ui.first_buffer, buf);
+    if (!g_ui.current_buffer)
+        g_ui.current_buffer = g_ui.first_buffer;
+
+    if (g_ui.first_buffer == NULL) {
+        /* No more buffer */
+        g_ui.first_buffer = nullBuffer();
+        g_ui.current_buffer = g_ui.first_buffer;
+    }
+}
+
+void repBuffer(struct Buffer* oldbuf, struct Buffer* buf)
+{
+    g_ui.first_buffer = replaceBuffer(g_ui.first_buffer, oldbuf, buf);
+    g_ui.current_buffer = buf;
+}
+
+void setCurrentBuffer(struct Buffer* buf)
+{
+    if (!buf) {
+        return;
+    }
+    g_ui.current_buffer = buf;
+
+    // ui->current_buffer = buf;
+    for (buf = g_ui.first_buffer; buf != NULL; buf = buf->nextBuffer) {
+        if (buf == g_ui.current_buffer)
+            continue;
+        deleteImage(&buf->document);
+        if (clear_buffer)
+            tmpClearBuffer(buf);
+    }
+}
+
+struct Buffer* pushContent(struct UI* ui, struct Content c, int cols, bool use_graphic)
+{
+    struct Buffer* buf = makeBuffer(&c, cols, use_graphic);
+    if (!buf) {
+        Str emsg = Sprintf("Can't load %s", parsedURL2Str(&c.url)->ptr);
+        message(ui, MSG_ERR, emsg->ptr);
+        return 0;
+    }
+    pushBuffer(buf);
+    return buf;
 }

@@ -1,7 +1,6 @@
 const std = @import("std");
 const c = @cImport({
     @cInclude("w3m.h");
-    @cInclude("buffer_list.h");
     @cInclude("keymap.h");
     @cInclude("minicoro.h");
 });

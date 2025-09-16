@@ -7,7 +7,6 @@
 #include "internal.h"
 #include "AnchorList.h"
 #include "alloc.h"
-#include "buffer_list.h"
 #include "history.h"
 #include "linein.h"
 #include "myctype.h"
@@ -156,7 +155,7 @@ loadLink(struct UI *ui, const char* url, const char* target, const char* referer
     // message(ui, MSG_INFO, Sprintf("loading %s", url)->ptr);
     // refresh(ttyWriter());
 
-    struct Url* base = makeBaseUrl(ui->document);
+    struct Url* base = makeBaseUrl(&ui->current_buffer->document);
     // const int* no_referer_ptr;
     // if ((no_referer_ptr && *no_referer_ptr)
     //     || base == NULL
@@ -167,7 +166,7 @@ loadLink(struct UI *ui, const char* url, const char* target, const char* referer
     // if (referer == NULL)
     //     referer = parsedURL2RefererStr(&ui->current_buffer->content.url)->ptr;
 
-    struct Content c = getContent(ui, url, makeBaseUrl(ui->document), post, referer);
+    struct Content c = getContent(ui, url, makeBaseUrl(&ui->current_buffer->document), post, referer);
     if (do_download) {
         if (!c.page)
             return NULL;
@@ -304,10 +303,10 @@ static void do_submit(struct UI *ui, struct Anchor* a, struct FormItem* fi, bool
 
 void _followForm(struct UI *ui, bool submit, bool do_download)
 {
-    if (ui->document->firstLine == NULL)
+    if (ui->current_buffer->document.firstLine == NULL)
         return;
 
-    struct Anchor* a = retrieveAnchor(ui->document->formitem, getBufferPosition(ui->current_buffer));
+    struct Anchor* a = retrieveAnchor(ui->current_buffer->document.formitem, getBufferPosition(ui->current_buffer));
     if (a == NULL)
         return;
 
@@ -414,7 +413,7 @@ void _followForm(struct UI *ui, bool submit, bool do_download)
             return;
         }
         if (!formChooseOptionByMenu(ui, fi,
-                ui->viewport_cursor.x - ui->document->pos + a->start.pos,
+                ui->viewport_cursor.x - ui->current_buffer->document.pos + a->start.pos,
                 ui->viewport_cursor.y))
             break;
         formUpdateBuffer(a, ui->current_buffer, fi);
@@ -431,8 +430,8 @@ void _followForm(struct UI *ui, bool submit, bool do_download)
         break;
     }
     case FORM_INPUT_RESET: {
-        for (int i = 0; i < ui->document->formitem->nanchor; i++) {
-            struct Anchor* a2 = &ui->document->formitem->anchors[i];
+        for (int i = 0; i < ui->current_buffer->document.formitem->nanchor; i++) {
+            struct Anchor* a2 = &ui->current_buffer->document.formitem->anchors[i];
             struct FormItem* f2 = (struct FormItem*)a2->url;
             if (f2->parent == fi->parent && f2->name && f2->value && f2->type != FORM_INPUT_SUBMIT && f2->type != FORM_INPUT_HIDDEN && f2->type != FORM_INPUT_RESET) {
                 f2->value = f2->init_value;
@@ -466,21 +465,21 @@ void gotoLabel(struct UI *ui, const char* label)
     pushHashHist(URLHist, parsedURL2Str(&buf->content.url)->ptr);
     (*buf->clone)++;
     pushBuffer(buf);
-    gotoLine(ui->document, al->start.line);
+    gotoLine(&ui->current_buffer->document, al->start.line);
     if (label_topline)
-        ui->document->topLineIndex = ui->current_buffer->document.currentLineIndex
+        ui->current_buffer->document.topLineIndex = ui->current_buffer->document.currentLineIndex
             - topLine(&ui->current_buffer->document)->linenumber;
-    ui->document->pos = al->start.pos;
+    ui->current_buffer->document.pos = al->start.pos;
 
     return;
 }
 
 void followAnchor(struct UI *ui, bool do_download)
 {
-    if (ui->document->firstLine == NULL)
+    if (ui->current_buffer->document.firstLine == NULL)
         return;
 
-    struct Anchor* a = retrieveAnchor(ui->document->img, getBufferPosition(ui->current_buffer));
+    struct Anchor* a = retrieveAnchor(ui->current_buffer->document.img, getBufferPosition(ui->current_buffer));
     if (a && a->image && a->image->map) {
         _followForm(ui, false, do_download);
         return;
@@ -488,10 +487,10 @@ void followAnchor(struct UI *ui, bool do_download)
     int x = 0, y = 0;
     int map = 0;
     if (a && a->image && a->image->ismap) {
-        getMapXY(ui->document, a, &x, &y);
+        getMapXY(&ui->current_buffer->document, a, &x, &y);
         map = 1;
     }
-    a = retrieveAnchor(ui->document->href, getBufferPosition(ui->current_buffer));
+    a = retrieveAnchor(ui->current_buffer->document.href, getBufferPosition(ui->current_buffer));
     if (a == NULL) {
         _followForm(ui, false, do_download);
         return;
@@ -520,10 +519,10 @@ void followAnchor(struct UI *ui, bool do_download)
 
 void followImage(struct UI *ui, bool do_download)
 {
-    if (ui->document->firstLine == NULL)
+    if (ui->current_buffer->document.firstLine == NULL)
         return;
 
-    struct Anchor* a = retrieveAnchor(ui->document->img, getBufferPosition(ui->current_buffer));
+    struct Anchor* a = retrieveAnchor(ui->current_buffer->document.img, getBufferPosition(ui->current_buffer));
     if (a == NULL)
         return;
     /* FIXME: gettextize? */

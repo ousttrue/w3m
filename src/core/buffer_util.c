@@ -1,7 +1,6 @@
 #include "buffer_util.h"
 #include "document_renderer.h"
 #include "history.h"
-#include "buffer_list.h"
 #include "Line.h"
 #include "regex.h"
 #include "HttpRequest.h"
