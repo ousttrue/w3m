@@ -1,6 +1,6 @@
 #pragma once
+#include "geometry.h"
 #include "Line.h"
-#include "ui.h"
 #include <Str.h>
 #include <stdbool.h>
 

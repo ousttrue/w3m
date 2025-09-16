@@ -1,7 +1,7 @@
 #include "downloadlist.h"
+#include "w3m.h"
 #include "KeyValue.h"
 #include "runtime.h"
-#include "ui.h"
 #include <Str.h>
 #include <alloc.h>
 #include <signal.h>

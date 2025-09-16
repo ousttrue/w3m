@@ -17,10 +17,12 @@
 #include "local_cgi.h"
 #include "Anchor.h"
 #include "AnchorList.h"
+#include "MapArea.h"
+#include "putc.h"
 #include "rc.h"
+#include "screen_effects.h"
 #include "ssl_util.h"
 #include "term_renderer.h"
-#include "ui.h"
 #include "runtime.h"
 #include "buffer_util.h"
 #include "funcname1.h"
@@ -32,9 +34,11 @@
 #include "myctype.h"
 #include "alloc.h"
 #include <wc.h>
+#include "wtf.h"
 
 #include <gc/gc.h>
 
+#include <stdarg.h>
 #include <errno.h>
 #include <locale.h>
 #include <stdlib.h>
@@ -78,7 +82,483 @@ int prev_key = -1;
 
 static int check_target = true;
 
-void initialize();
+char QuietMessage = (false);
+int showLineNum = (false);
+const char* BookmarkFile = (NULL);
+
+#define DISPLAY_CHARSET WC_CES_UTF_8
+wc_ces DisplayCharset = DISPLAY_CHARSET;
+wc_ces BookmarkCharset = (SYSTEM_CHARSET);
+
+static struct Int2 viewport_cursor = {
+    .x = 0,
+    .y = 0,
+};
+
+static struct Int2 cursor_delta = {
+    .x = 0,
+    .y = 0,
+};
+
+// struct Int2 cursorDelta()
+// {
+//     struct Int2 cd = cursor_delta;
+//     cursor_delta = (struct Int2) { 0, 0 };
+//     return cd;
+// }
+
+void cursorUp(int n)
+{
+    cursorUpDown(-n);
+}
+
+void cursorDown(int n)
+{
+    cursorUpDown(n);
+}
+
+void cursorUpDown(int n)
+{
+    cursor_delta.y += n;
+}
+
+void cursorRight(int n)
+{
+    cursor_delta.x += n;
+}
+
+void cursorLeft(int n)
+{
+    cursor_delta.x -= n;
+}
+
+void cursorHome()
+{
+    cursor_delta.x = 0;
+    cursor_delta.y = 0;
+}
+
+const char* searchKeyData()
+{
+    const char* data = NULL;
+    if (CurrentKeyData != NULL && *CurrentKeyData != '\0')
+        data = CurrentKeyData;
+    else if (CurrentCmdData != NULL && *CurrentCmdData != '\0')
+        data = CurrentCmdData;
+    else if (CurrentKey >= 0)
+        data = getKeyData(CurrentKey);
+    CurrentKeyData = NULL;
+    CurrentCmdData = NULL;
+    if (data == NULL || *data == '\0')
+        return NULL;
+    return allocStr(data, -1);
+}
+
+static int
+searchKeyNum(void)
+{
+    int n = 1;
+    const char* d = searchKeyData();
+    if (d != NULL)
+        n = atoi(d);
+    return n;
+}
+
+struct UI getUI()
+{
+    int rootX = 0;
+    if (showLineNum) {
+        if (rootX < 5)
+            rootX = 5;
+        if (rootX > getScreen()->COLS)
+            rootX = getScreen()->COLS;
+    }
+    int rootY = 0;
+
+    struct VirtualTerm* vt = getScreen();
+    struct TermEntry* t = getTermEntry();
+
+    struct UI ui = {
+        .current_buffer = Currentbuf,
+        .document = Currentbuf ? &Currentbuf->document : 0,
+        .content = Currentbuf ? &Currentbuf->content : 0,
+        .vt = vt,
+        .use_graphic = graph_ok(t),
+        .viewport = {
+            .offset = {
+                .x = rootX,
+                .y = rootY,
+            },
+            .size = {
+                .x = vt->COLS - rootX,
+                .y = vt->ROWS - rootY,
+            },
+        },
+        .viewport_cursor = viewport_cursor,
+        .term_cursor = {
+            .x = rootX + viewport_cursor.x,
+            .y = rootY + viewport_cursor.y,
+        },
+        .searchkey_num = searchKeyNum(),
+    };
+    return ui;
+}
+// short cursorX;
+// short cursorY;
+
+// static GeneralList* message_list = NULL;
+//
+// void record_err_message(char* s)
+// {
+//     if (!message_list)
+//         message_list = newGeneralList();
+//     if (message_list->nitem >= getScreen()->ROWS)
+//         popValue(message_list);
+//     pushValue(message_list, allocStr(s, -1));
+// }
+
+void concatMessageList(Str tmp)
+{
+    // if (message_list)
+    //     for (p = message_list->last; p; p = p->prev)
+    //         Strcat_m_charp(tmp, "<tr><td><pre>", html_quote(p->ptr),
+    //             "</pre></td></tr>\n", NULL);
+    // else
+    //     Strcat_charp(tmp, "<tr><td>(no message recorded)</td></tr>\n");
+}
+
+void status(struct UI ui, const char* s)
+{
+    struct VirtualTerm* vt = ui.vt;
+    int row = vt->CurLine;
+    int col = vt->CurColumn;
+    vt_move(vt, vt->ROWS - 3, 0);
+    vt_addnstr(vt, s, vt->COLS - 1);
+    vt_clrtoeolx(vt);
+    vt_move(vt, row, col);
+}
+
+void message(struct UI ui, enum MessageSeverity severity, const char* s)
+{
+    struct VirtualTerm* vt = ui.vt;
+    int row = vt->CurLine;
+    int col = vt->CurColumn;
+    vt_move(vt, vt->ROWS - 2, 0);
+    vt_addnstr(vt, s, vt->COLS - 1);
+    vt_clrtoeolx(vt);
+    vt_move(vt, row, col);
+}
+
+static char* delayed_msg = NULL;
+void set_delayed_message(char* s)
+{
+    delayed_msg = allocStr(s, -1);
+}
+
+static char g_status[512];
+
+void ui_printStatus(const char* fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(g_status, sizeof(g_status), fmt, args);
+    va_end(args);
+}
+
+static Str make_lastline_link(struct Buffer* buf, const char* title, const char* url)
+{
+    Str s = NULL, u;
+    struct Url pu;
+    char* p;
+    int l = getScreen()->COLS - 1, i;
+
+    if (title && *title) {
+        s = Strnew_m_charp("[", title, "]", NULL);
+        for (p = s->ptr; *p; p++) {
+            if (IS_CNTRL(*p) || IS_SPACE(*p))
+                *p = ' ';
+        }
+        if (url)
+            Strcat_charp(s, " ");
+        l -= get_Str_strwidth(s);
+        if (l <= 0)
+            return s;
+    }
+    if (!url)
+        return s;
+    pu = parseUrl(url, makeBaseUrl(&buf->document));
+    u = parsedURL2Str(&pu);
+    if (DecodeURL)
+        u = Strnew_charp(url_decode2(u->ptr, buf ? buf->document.charset : 0));
+    Lineprop* pr;
+    u = checkType(u, &pr, NULL);
+    if (l <= 4 || l >= get_Str_strwidth(u)) {
+        if (!s)
+            return u;
+        Strcat(s, u);
+        return s;
+    }
+    if (!s)
+        s = Strnew_size(getScreen()->COLS);
+    i = (l - 2) / 2;
+    while (i && pr[i] & PC_WCHAR2)
+        i--;
+    Strcat_charp_n(s, u->ptr, i);
+    Strcat_charp(s, "..");
+    i = get_Str_strwidth(u) - (getScreen()->COLS - 1 - get_Str_strwidth(s));
+    while (i < u->length && pr[i] & PC_WCHAR2)
+        i++;
+    Strcat_charp(s, &u->ptr[i]);
+    return s;
+}
+
+static struct MapArea*
+retrieveCurrentMapArea(struct UI ui)
+{
+    struct Anchor* a_img;
+    a_img = retrieveAnchor(ui.current_buffer->document.img, getBufferPosition(ui));
+    if (!(a_img && a_img->image && a_img->image->map))
+        return 0;
+
+    struct Anchor* a_form = retrieveAnchor(ui.current_buffer->document.formitem, getBufferPosition(ui));
+    if (!(a_form && a_form->url))
+        return 0;
+
+    struct FormItem* fi;
+    fi = (struct FormItem*)a_form->url;
+    if (!(fi && fi->parent && fi->parent->item))
+        return 0;
+    fi = fi->parent->item;
+
+    struct MapList* ml;
+    ml = searchMapList(&ui.current_buffer->document, fi->value ? fi->value->ptr : 0);
+    if (!ml)
+        return 0;
+
+    int n = searchMapArea(&ui.current_buffer->document, ml, a_img);
+    if (n < 0)
+        return 0;
+
+    ListItem* al = ml->area->first;
+    for (int i = 0; al != 0; i++, al = al->next) {
+        struct MapArea* a;
+        a = (struct MapArea*)al->ptr;
+        if (a && i == n)
+            return a;
+    }
+    return 0;
+}
+
+static Str make_lastline_message(struct UI ui)
+{
+    Str s = NULL;
+    int sl = 0;
+    if (displayLink) {
+        struct MapArea* a = retrieveCurrentMapArea(ui);
+        if (a)
+            s = make_lastline_link(ui.current_buffer, a->alt, a->url);
+        else {
+            struct Anchor* a = retrieveAnchor(ui.current_buffer->document.href, getBufferPosition(ui));
+            const char* p = NULL;
+            if (a && a->title && *a->title)
+                p = a->title;
+            else {
+                struct Anchor* a_img = retrieveAnchor(ui.current_buffer->document.href, getBufferPosition(ui));
+                if (a_img && a_img->title && *a_img->title)
+                    p = a_img->title;
+            }
+            if (p || a)
+                s = make_lastline_link(ui.current_buffer, p, a ? a->url : NULL);
+        }
+        if (s) {
+            sl = get_Str_strwidth(s);
+            if (sl >= getScreen()->COLS - 3)
+                return s;
+        }
+    }
+
+    Str msg = Strnew();
+    // if (displayLineInfo && currentLine(buf) != NULL && lastLine(buf) != NULL) {
+    //     int cl = currentLine(buf)->real_linenumber;
+    //     int ll = lastLine(buf)->real_linenumber;
+    //     int r = (int)((double)cl * 100.0 / (double)(ll ? ll : 1) + 0.5);
+    //     Strcat(msg, Sprintf("%d/%d (%d%%)", cl, ll, r));
+    // } else
+    Strcat_charp(msg, "Viewing");
+    if (ui.current_buffer->content.ssl_certificate)
+        Strcat_charp(msg, "[SSL]");
+    Strcat_charp(msg, " <");
+    Strcat_charp(msg, ui.current_buffer->document.title);
+
+    if (s) {
+        int l = getScreen()->COLS - 3 - sl;
+        if (get_Str_strwidth(msg) > l) {
+            char* p;
+            for (p = msg->ptr; *p; p += get_mclen(p)) {
+                l -= get_mcwidth(p);
+                if (l < 0)
+                    break;
+            }
+            l = p - msg->ptr;
+            Strtruncate(msg, l);
+        }
+        Strcat_charp(msg, "> ");
+        Strcat(msg, s);
+    } else {
+        Strcat_charp(msg, ">");
+    }
+    return msg;
+}
+
+void renderFrame(struct UI ui)
+{
+    struct Buffer* buf = ui.current_buffer;
+    struct TermEntry* t = getTermEntry();
+    // bool use_graphic = graph_ok(t);
+
+    // int cursorRow = ui.vt->CurLine;
+    // int cursorCol = ui.vt->CurColumn;
+
+    struct Anchor* a = retrieveAnchor(ui.current_buffer->document.href, getBufferPosition(ui));
+    struct BufferPoint bp = getBufferPosition(ui);
+    ui_printStatus("STATUS: (%d, %d), (%d, %d) a(%d, %d=%d) %s",
+        // "top=%d key=[%02x > %02x > %02x > %02x > %02x > %02x > %02x > %02x]",
+        ui.viewport_cursor.y, ui.viewport_cursor.x,
+        bp.line, bp.pos,
+        a ? a->start.line : -1,
+        a ? a->start.pos : -1,
+        a ? a->end.pos : -1,
+        a ? a->title : "--"
+        // g_keylog[(g_i - 0) % sizeof(g_keylog)],
+        // g_keylog[(g_i - 1) % sizeof(g_keylog)],
+        // g_keylog[(g_i - 2) % sizeof(g_keylog)],
+        // g_keylog[(g_i - 3) % sizeof(g_keylog)],
+        // g_keylog[(g_i - 4) % sizeof(g_keylog)],
+        // g_keylog[(g_i - 5) % sizeof(g_keylog)],
+        // g_keylog[(g_i - 6) % sizeof(g_keylog)],
+        // g_keylog[(g_i - 7) % sizeof(g_keylog)]
+    );
+
+    // int cursorRow = buf->cursorY;
+    // int cursorCol = buf->cursorX;
+    drawAnchorCursor(ui);
+
+    Str msg = make_lastline_message(ui);
+    if (buf->document.firstLine == NULL) {
+        Strcat_charp(msg, "\tNo Line");
+    }
+    // if (delayed_msg != NULL) {
+    //     message(getUI(), MSG_INFO, delayed_msg);
+    //     delayed_msg = NULL;
+    //     // refresh(ttyWriter());
+    // }
+    vt_standout(ui.vt);
+    status(getUI(), g_status);
+    message(getUI(), MSG_INFO, msg->ptr);
+    vt_standend(ui.vt);
+    // term_title(conv_to_system(buf->buffername));
+    // refresh(ttyWriter());
+    // if (activeImage && displayImage && buf->img && buf->image_loaded) {
+    //     drawImage();
+    // }
+    // if (buf != save_current_buf) {
+    //     saveBufferInfo();
+    //     save_current_buf = buf;
+    // }
+    // if (buf->check_url & CHK_URL) {
+    //     chkURLBuffer(buf);
+    //     renderToScreen();
+    // }
+
+    struct Frame* frame = screenToFrame(ui.vt);
+    wc_putc_init(InnerCharset, DisplayCharset);
+    refreshFrame(ttyWriter(), frame);
+    wc_putc_end(ttyWriter());
+
+    MOVE(ttyWriter(), ui.term_cursor.y, ui.term_cursor.x);
+    flushWriter(ttyWriter());
+}
+
+void ui_bell()
+{
+    termBell(ttyWriter());
+}
+
+void ui_cursor_set_x(int x)
+{
+    if (Currentbuf->document.firstLine == NULL)
+        return;
+    while (currentLine(&Currentbuf->document)->prev && currentLine(&Currentbuf->document)->bpos)
+        cursorUp(1);
+    Currentbuf->document.pos = 0;
+}
+
+bool updateCursor(struct Buffer* buf)
+{
+    bool hasScroll = false;
+    struct VirtualTerm* vt = getScreen();
+
+    int x = viewport_cursor.x + cursor_delta.x;
+    if (x < 0) {
+        // left
+        x = 0;
+        hasScroll = true;
+    } else if (x >= vt->COLS) {
+        // right
+        x = vt->COLS - 1;
+        hasScroll = true;
+    }
+
+    int y = viewport_cursor.y + cursor_delta.y;
+    if (y < 0) {
+        // up
+        buf->document.topLineIndex += y;
+        y = 0;
+        hasScroll = true;
+    } else if (y >= vt->ROWS) {
+        // down
+        buf->document.topLineIndex += (1 + y - vt->ROWS);
+        y = vt->ROWS - 1;
+        hasScroll = true;
+    }
+
+    cursor_delta = (struct Int2) {
+        .x = 0,
+        .y = 0,
+    };
+    viewport_cursor = (struct Int2) {
+        .x = x,
+        .y = y,
+    };
+    return hasScroll;
+}
+
+struct BufferPoint getBufferPosition(struct UI ui)
+{
+    struct LineList* l = getLine(&ui.current_buffer->document, ui.viewport_cursor.y);
+    if (!l) {
+        return (struct BufferPoint) { 0, 0 };
+    }
+    int pos = columnPos(&l->l, ui.viewport_cursor.x);
+    return (struct BufferPoint) {
+        .line = ui.viewport_cursor.y,
+        .pos = pos,
+    };
+}
+
+/*
+ * List of error messages
+ */
+Str message_list_panel_html()
+{
+    Str tmp = Strnew();
+    Strcat_charp(tmp,
+        "<html><head><title>List of error messages</title></head><body>"
+        "<h1>List of error messages</h1><table cellpadding=0>\n");
+    concatMessageList(tmp);
+    Strcat_charp(tmp, "</table></body></html>");
+    return tmp;
+}
 
 static void*
 die_oom(size_t bytes)

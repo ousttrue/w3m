@@ -4,9 +4,8 @@
 #include "HttpRequest.h"
 #include "history.h"
 #include "image_loader.h"
-#include "linein.h"
 #include "quote.h"
-#include "ui.h"
+#include "w3m.h"
 #include "runtime.h"
 
 struct Buffer* Currentbuf = 0;

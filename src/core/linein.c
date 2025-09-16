@@ -1,4 +1,5 @@
 #include "linein.h"
+#include "w3m.h"
 #include "runtime.h"
 #include "history.h"
 #include "screen.h"

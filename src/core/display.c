@@ -8,7 +8,6 @@
 #include "alloc.h"
 #include "screen_effects.h"
 #include "image_loader.h"
-#include "ui.h"
 #include "w3m.h"
 #include "history.h"
 #include "ctrlcode.h"

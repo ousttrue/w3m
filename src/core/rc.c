@@ -31,7 +31,6 @@
 #include "proxy.h"
 #include "display.h"
 #include "mailcap.h"
-#include "ui.h"
 #include "local_cgi.h"
 #include "image_loader.h"
 #include "ssl_util.h"

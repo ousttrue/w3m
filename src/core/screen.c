@@ -4,7 +4,7 @@
 #include "alloc.h"
 #include "myctype.h"
 #include "symbol.h"
-#include "ui.h"
+#include "w3m.h"
 #include "ctrlcode.h"
 #include <wc.h>
 #include <wtf.h>

@@ -1,4 +1,5 @@
 #include "follow_anchor.h"
+#include "w3m.h"
 #include "HttpRequest.h"
 #include "KeyValue.h"
 #include "MapArea.h"

@@ -1,4 +1,5 @@
 #include "keymap.h"
+#include "w3m.h"
 #include "runtime.h"
 #include "myctype.h"
 #include "rc.h"

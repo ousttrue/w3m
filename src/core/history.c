@@ -1,9 +1,9 @@
 #include "history.h"
 #include "runtime.h"
 #include "hash.h"
-#include "ui.h"
 #include "quote.h"
 #include "html_quote.h"
+#include "w3m.h"
 #include <alloc.h>
 #include <sys/stat.h>
 

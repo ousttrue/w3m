@@ -1,12 +1,11 @@
 #include "search.h"
 #include "buffer_list.h"
 #include "tty.h"
-#include "ui.h"
+#include "w3m.h"
 #include "buffer_util.h"
 #include "display.h"
 #include "regex.h"
 #include "linein.h"
-#include "keymap.h"
 #include "history.h"
 #include <setjmp.h>
 #include <signal.h>

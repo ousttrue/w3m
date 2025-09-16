@@ -1,8 +1,8 @@
 #include "progress.h"
-#include <Str.h>
 #include "screen.h"
 #include "screen_effects.h"
-#include "ui.h"
+#include "w3m.h"
+#include <Str.h>
 #include <math.h>
 #include <time.h>
 
