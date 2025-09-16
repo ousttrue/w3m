@@ -267,12 +267,12 @@ static Str ssl_get_certificate(struct UI ui, SSL* ssl, const char* hostname)
         else {
             const char* e = "This SSL session was rejected "
                             "to prevent security violation: no peer certificate";
-            ui.messageCallback(e);
+            ui.messageCallback(MSG_ERR, e);
             free_ssl_ctx();
             return NULL;
         }
         if (amsg)
-            ui.messageCallback(amsg->ptr);
+            ui.messageCallback(MSG_ERR, amsg->ptr);
         ssl_accept_this_site(hostname);
         /* FIXME: gettextize? */
         s = amsg ? amsg : Strnew_charp("valid certificate");
@@ -300,7 +300,7 @@ static Str ssl_get_certificate(struct UI ui, SSL* ssl, const char* hostname)
                     em);
             } else {
                 const char* e = Sprintf("This SSL session was rejected: %s", em)->ptr;
-                ui.messageCallback(e);
+                ui.messageCallback(MSG_ERR, e);
                 free_ssl_ctx();
                 return NULL;
             }
@@ -325,13 +325,13 @@ static Str ssl_get_certificate(struct UI ui, SSL* ssl, const char* hostname)
         } else {
             const char* e = "This SSL session was rejected "
                             "to prevent security violation";
-            ui.messageCallback(e);
+            ui.messageCallback(MSG_ERR, e);
             free_ssl_ctx();
             return NULL;
         }
     }
     if (amsg)
-        ui.messageCallback(amsg->ptr);
+        ui.messageCallback(MSG_ERR, amsg->ptr);
     ssl_accept_this_site(hostname);
     /* FIXME: gettextize? */
     s = amsg ? amsg : Strnew_charp("valid certificate");
@@ -501,7 +501,7 @@ eend:
     close(sock);
     if (handle)
         SSL_free(handle);
-    ui.messageCallback(Sprintf("SSL error: %s, a workaround might be: w3m -insecure",
+    ui.messageCallback(MSG_ERR, Sprintf("SSL error: %s, a workaround might be: w3m -insecure",
         ERR_error_string(ERR_get_error(), NULL))
             ->ptr);
     return NULL;

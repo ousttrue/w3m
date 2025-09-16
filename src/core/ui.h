@@ -19,10 +19,7 @@ extern const char* BookmarkFile;
 // image
 // message(cookie, etc...)
 //
-enum MessageSeverity {
-    MSG_INFO,
-    MSG_ERR,
-};
+;
 
 void cursorUp(int n);
 void cursorDown(int n);

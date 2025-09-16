@@ -15,8 +15,13 @@ struct Rect {
 struct VirtualTerm;
 struct Buffer;
 
+enum MessageSeverity {
+    MSG_INFO,
+    MSG_ERR,
+};
+
 typedef const char* (*InputFunc)(const char* prompt);
-typedef void (*MessageFunc)(const char* msg);
+typedef void (*MessageFunc)(enum MessageSeverity error, const char* msg);
 
 // #define UI_TTY \
 //     (struct UserInteraction) { .inputCallback = inputAnswer, .messageCallback = &error_message, }
