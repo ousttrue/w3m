@@ -58,13 +58,13 @@ LineEditorFunc InputKeymap[32] = {
 
 static struct LineEditor g_editor;
 
-const char* inputLineHistSearch(struct UI ui,
+const char* inputLineHistSearch(struct UI *ui,
     const char* prompt, const char* def_str, enum InputLineFlags flag, struct Hist* hist, IncFunc incrfunc)
 {
     le_initialize(&g_editor, ui, hist, flag, def_str);
 
     int opos = get_strwidth(prompt);
-    int epos = ui.vt->ROWS - 2 - opos;
+    int epos = ui->vt->ROWS - 2 - opos;
     if (epos < 0)
         epos = 0;
     int lpos = epos / 3;
@@ -90,26 +90,26 @@ const char* inputLineHistSearch(struct UI ui,
         }
 
         // show prompt
-        vt_move(ui.vt, ui.vt->ROWS - 1, 0);
-        vt_addstr(ui.vt, prompt);
+        vt_move(ui->vt, ui->vt->ROWS - 1, 0);
+        vt_addstr(ui->vt, prompt);
 
         // show current
         if (g_editor.is_passwd)
             le_addPasswd(&g_editor,
-                g_editor.strBuf->ptr, g_editor.strProp, g_editor.CLen, g_editor.offset, ui.vt->COLS - opos);
+                g_editor.strBuf->ptr, g_editor.strProp, g_editor.CLen, g_editor.offset, ui->vt->COLS - opos);
         else
             le_addStr(&g_editor,
-                g_editor.strBuf->ptr, g_editor.strProp, g_editor.CLen, g_editor.offset, ui.vt->COLS - opos);
+                g_editor.strBuf->ptr, g_editor.strProp, g_editor.CLen, g_editor.offset, ui->vt->COLS - opos);
 
         // cursor
-        vt_clrtoeolx(ui.vt);
-        vt_move(ui.vt, ui.vt->ROWS - 1, opos + x - g_editor.offset);
+        vt_clrtoeolx(ui->vt);
+        vt_move(ui->vt, ui->vt->ROWS - 1, opos + x - g_editor.offset);
 
         // draw frame
         renderFrame(ui);
 
     next_char:
-        c = ui.vtable.getCh(ui.co);
+        c = ui->vtable.getCh(ui->co);
         g_editor.cm_clear = true;
         g_editor.cm_disp_clear = true;
         if (!g_editor.i_quote
@@ -165,7 +165,7 @@ const char* inputLineHistSearch(struct UI ui,
     if (g_editor.i_broken)
         return NULL;
 
-    vt_move(getScreen(), ui.vt->ROWS - 1, 0);
+    vt_move(getScreen(), ui->vt->ROWS - 1, 0);
     renderFrame(ui);
 
     char* p = g_editor.strBuf->ptr;
@@ -183,7 +183,7 @@ const char* inputLineHistSearch(struct UI ui,
         return allocStr(p, -1);
 }
 
-const char* inputAnswer(struct UI ui, const char* prompt)
+const char* inputAnswer(struct UI *ui, const char* prompt)
 {
     if (QuietMessage)
         return "n";
@@ -202,7 +202,7 @@ const char* inputAnswer(struct UI ui, const char* prompt)
     return ans;
 }
 
-bool notExistsOrOverWrite(struct UI ui, const char* path)
+bool notExistsOrOverWrite(struct UI *ui, const char* path)
 {
     struct stat st;
     if (stat(path, &st) < 0) {

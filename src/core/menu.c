@@ -44,27 +44,27 @@ int FRAME_WIDTH;
             vt_graphend(vt); \
     }
 
-static int mNull(struct UI ui, char c);
-static int mSelect(struct UI ui, char c);
-static int mDown(struct UI ui, char c);
-static int mUp(struct UI ui, char c);
-static int mLast(struct UI ui, char c);
-static int mTop(struct UI ui, char c);
-static int mNext(struct UI ui, char c);
-static int mPrev(struct UI ui, char c);
-static int mFore(struct UI ui, char c);
-static int mBack(struct UI ui, char c);
-static int mLineU(struct UI ui, char c);
-static int mLineD(struct UI ui, char c);
-static int mOk(struct UI ui, char c);
-static int mCancel(struct UI ui, char c);
-static int mClose(struct UI ui, char c);
-static int mMouse(struct UI ui, char c);
-static int mSgrMouse(struct UI ui, char c);
-static int mSrchF(struct UI ui, char c);
-static int mSrchB(struct UI ui, char c);
-static int mSrchN(struct UI ui, char c);
-static int mSrchP(struct UI ui, char c);
+static int mNull(struct UI *ui, char c);
+static int mSelect(struct UI *ui, char c);
+static int mDown(struct UI *ui, char c);
+static int mUp(struct UI *ui, char c);
+static int mLast(struct UI *ui, char c);
+static int mTop(struct UI *ui, char c);
+static int mNext(struct UI *ui, char c);
+static int mPrev(struct UI *ui, char c);
+static int mFore(struct UI *ui, char c);
+static int mBack(struct UI *ui, char c);
+static int mLineU(struct UI *ui, char c);
+static int mLineD(struct UI *ui, char c);
+static int mOk(struct UI *ui, char c);
+static int mCancel(struct UI *ui, char c);
+static int mClose(struct UI *ui, char c);
+static int mMouse(struct UI *ui, char c);
+static int mSgrMouse(struct UI *ui, char c);
+static int mSrchF(struct UI *ui, char c);
+static int mSrchB(struct UI *ui, char c);
+static int mSrchN(struct UI *ui, char c);
+static int mSrchP(struct UI *ui, char c);
 
 static MenuFunc MenuKeymap[128] = {
     /*  C-@     C-a     C-b     C-c     C-d     C-e     C-f     C-g      */
@@ -623,9 +623,9 @@ static MenuFunc MenuEscDKeymap[128] = {
 
 static struct Menu SelectMenu;
 static int SelectV = 0;
-static void initSelectMenu(struct UI ui);
-static void smChBuf(struct UI ui);
-static int smDelBuf(struct UI ui, char c);
+static void initSelectMenu(struct UI *ui);
+static void smChBuf(struct UI *ui);
+static int smDelBuf(struct UI *ui, char c);
 
 /* --- MainMenu --- */
 
@@ -821,7 +821,7 @@ void draw_menu_item(struct Menu* menu, int mselect)
         menu->item[mselect].label, menu->width);
 }
 
-int select_menu(struct UI ui, struct Menu* menu, int mselect)
+int select_menu(struct UI *ui, struct Menu* menu, int mselect)
 {
     struct VirtualTerm* vt = getScreen();
     if (mselect < 0 || mselect >= menu->nitem)
@@ -847,7 +847,7 @@ int select_menu(struct UI ui, struct Menu* menu, int mselect)
     return (menu->select);
 }
 
-void goto_menu(struct UI ui, struct Menu* menu, int mselect, int down)
+void goto_menu(struct UI *ui, struct Menu* menu, int mselect, int down)
 {
     int select_in;
     if (mselect >= menu->nitem)
@@ -897,7 +897,7 @@ void down_menu(struct Menu* menu, int n)
     draw_menu(menu);
 }
 
-int action_menu(struct UI ui, struct Menu* menu)
+int action_menu(struct UI *ui, struct Menu* menu)
 {
     int mselect;
     struct MenuItem item;
@@ -911,7 +911,7 @@ int action_menu(struct UI ui, struct Menu* menu)
     select_menu(ui, menu, menu->select);
 
     while (1) {
-        int c = ui.vtable.getCh(ui.co);
+        int c = ui->vtable.getCh(ui->co);
         if (IS_ASCII(c)) { /* Ascii */
             mselect = (*menu->keymap[(int)c])(ui, c);
             if (mselect != MENU_NOTHING)
@@ -943,7 +943,7 @@ int action_menu(struct UI ui, struct Menu* menu)
     return (0);
 }
 
-void popup_menu(struct UI ui, struct Menu* parent, struct Menu* menu)
+void popup_menu(struct UI *ui, struct Menu* parent, struct Menu* menu)
 {
     int active = 1;
 
@@ -1033,13 +1033,13 @@ void set_menu_frame(void)
 /* --- MenuFunctions --- */
 
 static int
-mNull(struct UI ui, char c)
+mNull(struct UI *ui, char c)
 {
     return (MENU_NOTHING);
 }
 
 static int
-mSelect(struct UI ui, char c)
+mSelect(struct UI *ui, char c)
 {
     if (IS_ASCII(c))
         return (select_menu(ui, CurrentMenu, CurrentMenu->keyselect[(int)c]));
@@ -1048,7 +1048,7 @@ mSelect(struct UI ui, char c)
 }
 
 static int
-mDown(struct UI ui, char c)
+mDown(struct UI *ui, char c)
 {
     if (CurrentMenu->select >= CurrentMenu->nitem - 1)
         return (MENU_NOTHING);
@@ -1057,7 +1057,7 @@ mDown(struct UI ui, char c)
 }
 
 static int
-mUp(struct UI ui, char c)
+mUp(struct UI *ui, char c)
 {
     if (CurrentMenu->select <= 0)
         return (MENU_NOTHING);
@@ -1066,21 +1066,21 @@ mUp(struct UI ui, char c)
 }
 
 static int
-mLast(struct UI ui, char c)
+mLast(struct UI *ui, char c)
 {
     goto_menu(ui, CurrentMenu, CurrentMenu->nitem - 1, -1);
     return (MENU_NOTHING);
 }
 
 static int
-mTop(struct UI ui, char c)
+mTop(struct UI *ui, char c)
 {
     goto_menu(ui, CurrentMenu, 0, 1);
     return (MENU_NOTHING);
 }
 
 static int
-mNext(struct UI ui, char c)
+mNext(struct UI *ui, char c)
 {
     int mselect = CurrentMenu->select + CurrentMenu->height;
 
@@ -1092,7 +1092,7 @@ mNext(struct UI ui, char c)
 }
 
 static int
-mPrev(struct UI ui, char c)
+mPrev(struct UI *ui, char c)
 {
     int mselect = CurrentMenu->select - CurrentMenu->height;
 
@@ -1104,7 +1104,7 @@ mPrev(struct UI ui, char c)
 }
 
 static int
-mFore(struct UI ui, char c)
+mFore(struct UI *ui, char c)
 {
     if (CurrentMenu->select >= CurrentMenu->nitem - 1)
         return (MENU_NOTHING);
@@ -1114,7 +1114,7 @@ mFore(struct UI ui, char c)
 }
 
 static int
-mBack(struct UI ui, char c)
+mBack(struct UI *ui, char c)
 {
     if (CurrentMenu->select <= 0)
         return (MENU_NOTHING);
@@ -1124,7 +1124,7 @@ mBack(struct UI ui, char c)
 }
 
 static int
-mLineU(struct UI ui, char c)
+mLineU(struct UI *ui, char c)
 {
     int mselect = CurrentMenu->select;
 
@@ -1142,7 +1142,7 @@ mLineU(struct UI ui, char c)
 }
 
 static int
-mLineD(struct UI ui, char c)
+mLineD(struct UI *ui, char c)
 {
     int mselect = CurrentMenu->select;
 
@@ -1160,7 +1160,7 @@ mLineD(struct UI ui, char c)
 }
 
 static int
-mOk(struct UI ui, char c)
+mOk(struct UI *ui, char c)
 {
     int mselect = CurrentMenu->select;
 
@@ -1170,24 +1170,24 @@ mOk(struct UI ui, char c)
 }
 
 static int
-mCancel(struct UI ui, char c)
+mCancel(struct UI *ui, char c)
 {
     return (MENU_CANCEL);
 }
 
 static int
-mClose(struct UI ui, char c)
+mClose(struct UI *ui, char c)
 {
     return (MENU_CLOSE);
 }
 
 static const char* SearchString = NULL;
 
-typedef int (*MenuSearchRoutineFunc)(struct UI ui, struct Menu*, const char*, int);
+typedef int (*MenuSearchRoutineFunc)(struct UI *ui, struct Menu*, const char*, int);
 MenuSearchRoutineFunc menuSearchRoutine;
 
 static int
-menuForwardSearch(struct UI ui, struct Menu* menu, const char* str, int from)
+menuForwardSearch(struct UI *ui, struct Menu* menu, const char* str, int from)
 {
     char* p;
     if ((p = regexCompile(str, IgnoreCase)) != NULL) {
@@ -1203,7 +1203,7 @@ menuForwardSearch(struct UI ui, struct Menu* menu, const char* str, int from)
 }
 
 static int
-menu_search_forward(struct UI ui, struct Menu* menu, int from)
+menu_search_forward(struct UI *ui, struct Menu* menu, int from)
 {
     const char* str = inputStrHist(ui, "Forward: ", NULL, TextHist);
     if (str != NULL && *str == '\0')
@@ -1223,7 +1223,7 @@ menu_search_forward(struct UI ui, struct Menu* menu, int from)
 }
 
 static int
-mSrchF(struct UI ui, char c)
+mSrchF(struct UI *ui, char c)
 {
     int mselect;
     mselect = menu_search_forward(ui, CurrentMenu, CurrentMenu->select);
@@ -1233,7 +1233,7 @@ mSrchF(struct UI ui, char c)
 }
 
 static int
-menuBackwardSearch(struct UI ui, struct Menu* menu, const char* str, int from)
+menuBackwardSearch(struct UI *ui, struct Menu* menu, const char* str, int from)
 {
     int i;
     char* p;
@@ -1250,7 +1250,7 @@ menuBackwardSearch(struct UI ui, struct Menu* menu, const char* str, int from)
 }
 
 static int
-menu_search_backward(struct UI ui, struct Menu* menu, int from)
+menu_search_backward(struct UI *ui, struct Menu* menu, int from)
 {
     const char* str = inputStrHist(ui, "Backward: ", NULL, TextHist);
     if (str != NULL && *str == '\0')
@@ -1270,7 +1270,7 @@ menu_search_backward(struct UI ui, struct Menu* menu, int from)
 }
 
 static int
-mSrchB(struct UI ui, char c)
+mSrchB(struct UI *ui, char c)
 {
     int mselect;
     mselect = menu_search_backward(ui, CurrentMenu, CurrentMenu->select);
@@ -1280,7 +1280,7 @@ mSrchB(struct UI ui, char c)
 }
 
 static int
-menu_search_next_previous(struct UI ui, struct Menu* menu, int from, int reverse)
+menu_search_next_previous(struct UI *ui, struct Menu* menu, int from, int reverse)
 {
     static MenuSearchRoutineFunc routine[2] = {
         menuForwardSearch, menuBackwardSearch
@@ -1306,7 +1306,7 @@ menu_search_next_previous(struct UI ui, struct Menu* menu, int from, int reverse
 }
 
 static int
-mSrchN(struct UI ui, char c)
+mSrchN(struct UI *ui, char c)
 {
     int mselect;
     mselect = menu_search_next_previous(ui, CurrentMenu, CurrentMenu->select, 0);
@@ -1316,7 +1316,7 @@ mSrchN(struct UI ui, char c)
 }
 
 static int
-mSrchP(struct UI ui, char c)
+mSrchP(struct UI *ui, char c)
 {
     int mselect;
     mselect = menu_search_next_previous(ui, CurrentMenu, CurrentMenu->select, 1);
@@ -1326,13 +1326,13 @@ mSrchP(struct UI ui, char c)
 }
 
 static int
-mMouse(struct UI ui, char c)
+mMouse(struct UI *ui, char c)
 {
     return (MENU_NOTHING);
 }
 
 static int
-mSgrMouse(struct UI ui, char c)
+mSgrMouse(struct UI *ui, char c)
 {
     return (MENU_NOTHING);
 }
@@ -1341,16 +1341,16 @@ mSgrMouse(struct UI ui, char c)
 
 /* --- MainMenu --- */
 
-void popupMenu(struct UI ui, struct Menu* menu)
+void popupMenu(struct UI *ui, struct Menu* menu)
 {
     set_menu_frame();
 
     initSelectMenu(ui);
 
-    // menu->cursorX = ui.current_buffer->cursorX;
-    // menu->cursorY = ui.current_buffer->cursorY;
-    menu->x = ui.term_cursor.x + FRAME_WIDTH + 1;
-    menu->y = ui.term_cursor.y + 2;
+    // menu->cursorX = ui->current_buffer->cursorX;
+    // menu->cursorY = ui->current_buffer->cursorY;
+    menu->x = ui->term_cursor.x + FRAME_WIDTH + 1;
+    menu->y = ui->term_cursor.y + 2;
 
     popup_menu(ui, NULL, menu);
 }
@@ -1379,7 +1379,7 @@ DEFUN(selMn, SELECT_MENU, "Pop up buffer-stack menu")
 }
 
 static void
-initSelectMenu(struct UI ui)
+initSelectMenu(struct UI *ui)
 {
     int i, nitem, len = 0, l;
     struct Buffer* buf;
@@ -1389,7 +1389,7 @@ initSelectMenu(struct UI ui)
 
     SelectV = -1;
     for (i = 0, buf = Firstbuf; buf != NULL; i++, buf = buf->nextBuffer) {
-        if (buf == ui.current_buffer)
+        if (buf == ui->current_buffer)
             SelectV = i;
     }
     nitem = i;
@@ -1435,14 +1435,14 @@ initSelectMenu(struct UI ui)
 
     new_option_menu(&SelectMenu, label, &SelectV, smChBuf);
     SelectMenu.initial = SelectV;
-    // SelectMenu.cursorX = ui.current_buffer->cursorX;
-    // SelectMenu.cursorY = ui.current_buffer->cursorY;
+    // SelectMenu.cursorX = ui->current_buffer->cursorX;
+    // SelectMenu.cursorY = ui->current_buffer->cursorY;
     SelectMenu.keymap['D'] = smDelBuf;
     SelectMenu.item[nitem].type = MENU_NOP;
 }
 
 static void
-smChBuf(struct UI ui)
+smChBuf(struct UI *ui)
 {
     if (SelectV < 0 || SelectV >= SelectMenu.nitem)
         return;
@@ -1456,7 +1456,7 @@ smChBuf(struct UI ui)
 }
 
 static int
-smDelBuf(struct UI ui, char c)
+smDelBuf(struct UI *ui, char c)
 {
     if (CurrentMenu->select < 0 || CurrentMenu->select >= SelectMenu.nitem)
         return (MENU_NOTHING);
@@ -1490,7 +1490,7 @@ smDelBuf(struct UI ui, char c)
 
 /* --- OptionMenu --- */
 
-void optionMenu(struct UI ui, int x, int y, const char** label, int* variable, int initial, CommandFunc func)
+void optionMenu(struct UI *ui, int x, int y, const char** label, int* variable, int initial, CommandFunc func)
 {
     set_menu_frame();
 
@@ -1674,7 +1674,7 @@ int getMenuN(struct MenuList* list, const char* id)
 /* --- LinkMenu (END) --- */
 
 struct Anchor*
-accesskey_menu(struct UI ui, struct Buffer* buf)
+accesskey_menu(struct UI *ui, struct Buffer* buf)
 {
     struct AnchorList* al = buf->document.href;
     struct Anchor** ap;
@@ -1733,7 +1733,7 @@ accesskey_menu(struct UI ui, struct Buffer* buf)
     }
 
     struct Anchor* a;
-    a = retrieveAnchor(ui.current_buffer->document.href, getBufferPosition(ui));
+    a = retrieveAnchor(ui->current_buffer->document.href, getBufferPosition(ui->current_buffer));
     if (a && a->accesskey && IS_ASCII(a->accesskey)) {
         for (i = 0; i < nitem; i++) {
             if (a->hseq == ap[i]->hseq) {
@@ -1754,7 +1754,7 @@ static char lmKeys2[] = "1234567890ABCDEFGHILMOPQRSTUVWXYZ";
 #define nlmKeys2 (sizeof(lmKeys2) - 1)
 
 static int
-lmGoto(struct UI ui, char c)
+lmGoto(struct UI *ui, char c)
 {
     if (IS_ASCII(c) && CurrentMenu->keyselect[(int)c] >= 0) {
         goto_menu(ui, CurrentMenu, CurrentMenu->nitem - 1, -1);
@@ -1764,7 +1764,7 @@ lmGoto(struct UI ui, char c)
 }
 
 static int
-lmSelect(struct UI ui, char c)
+lmSelect(struct UI *ui, char c)
 {
     if (IS_ASCII(c))
         return select_menu(ui, CurrentMenu, (CurrentMenu->select / nlmKeys) * nlmKeys + CurrentMenu->keyselect[(int)c]);
@@ -1773,7 +1773,7 @@ lmSelect(struct UI ui, char c)
 }
 
 struct Anchor*
-list_menu(struct UI ui, struct Buffer* buf)
+list_menu(struct UI *ui, struct Buffer* buf)
 {
     struct Menu menu;
     struct AnchorList* al = buf->document.href;
@@ -1848,7 +1848,7 @@ list_menu(struct UI ui, struct Buffer* buf)
     }
 
     {
-        struct Anchor* a = retrieveAnchor(ui.current_buffer->document.href, getBufferPosition(ui));
+        struct Anchor* a = retrieveAnchor(ui->current_buffer->document.href, getBufferPosition(ui->current_buffer));
         if (a) {
             for (i = 0; i < nitem; i++) {
                 if (a->hseq == ap[i]->hseq) {

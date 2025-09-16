@@ -13,7 +13,7 @@ extern char* ssl_forbid_method;
 extern char* ssl_min_version;
 extern char* ssl_cipher;
 
-SSL* openSSLHandle(struct UI ui, int sock, const char* hostname, const char** p_cert);
+SSL* openSSLHandle(struct UI *ui, int sock, const char* hostname, const char** p_cert);
 void SSL_write_from_file(SSL* ssl, const char* file);
 
 struct ssl_handle {

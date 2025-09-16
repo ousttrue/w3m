@@ -1078,7 +1078,7 @@ do_recursive_mkdir(const char* dir)
 
 #define FILE_IS_READABLE_MSG "SECURITY NOTE: file %s must not be accessible by others"
 
-FILE* openSecretFile(struct UI ui, const char* fname)
+FILE* openSecretFile(struct UI *ui, const char* fname)
 {
     if (fname == NULL)
         return NULL;
@@ -1109,7 +1109,7 @@ FILE* openSecretFile(struct UI ui, const char* fname)
     return fopen(efname, "r");
 }
 
-static void loadPasswd(struct UI ui)
+static void loadPasswd(struct UI *ui)
 {
     FILE* fp = openSecretFile(ui, passwd_file);
     if (fp != NULL) {
@@ -1126,7 +1126,7 @@ static void loadPasswd(struct UI ui)
     return;
 }
 
-void sync_with_option(struct UI ui)
+void sync_with_option(struct UI *ui)
 {
     init_tmp();
     parse_proxy();
@@ -1395,7 +1395,7 @@ Str load_option_panel_html()
     return src;
 }
 
-void panel_set_option(struct UI ui, struct KeyValue* arg)
+void panel_set_option(struct UI *ui, struct KeyValue* arg)
 {
     FILE* f = NULL;
     if (config_file == NULL) {

@@ -549,7 +549,7 @@ void initCookie(void)
     check_expired_cookies();
 }
 
-void set_cookie_flag(struct UI ui, struct KeyValue* arg)
+void set_cookie_flag(struct UI *ui, struct KeyValue* arg)
 {
     int n, v;
     struct cookie* p;

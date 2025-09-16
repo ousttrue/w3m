@@ -38,11 +38,11 @@ inline static struct Content makeContentFromHtmlUtf8(Str html)
 };
 
 struct Form;
-struct Content getContent(struct UI ui, const char* path, struct Url* current,
+struct Content getContent(struct UI *ui, const char* path, struct Url* current,
     struct Form* post, const char* referer);
 
 bool is_plain_text_type(const char* type);
 
 const char* last_modified(struct Content* content);
 
-struct Content execdict(struct UI ui, const char* word);
+struct Content execdict(struct UI *ui, const char* word);

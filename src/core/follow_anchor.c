@@ -151,12 +151,12 @@ void query_from_followform(struct Buffer* buf, struct BufferPoint bp,
 }
 
 static struct Buffer*
-loadLink(struct UI ui, const char* url, const char* target, const char* referer, struct Form* post, bool do_download)
+loadLink(struct UI *ui, const char* url, const char* target, const char* referer, struct Form* post, bool do_download)
 {
     // message(ui, MSG_INFO, Sprintf("loading %s", url)->ptr);
     // refresh(ttyWriter());
 
-    struct Url* base = makeBaseUrl(ui.document);
+    struct Url* base = makeBaseUrl(ui->document);
     // const int* no_referer_ptr;
     // if ((no_referer_ptr && *no_referer_ptr)
     //     || base == NULL
@@ -165,9 +165,9 @@ loadLink(struct UI ui, const char* url, const char* target, const char* referer,
     //     || base->scheme == SCM_DATA)
     //     referer = NO_REFERER;
     // if (referer == NULL)
-    //     referer = parsedURL2RefererStr(&ui.current_buffer->content.url)->ptr;
+    //     referer = parsedURL2RefererStr(&ui->current_buffer->content.url)->ptr;
 
-    struct Content c = getContent(ui, url, makeBaseUrl(ui.document), post, referer);
+    struct Content c = getContent(ui, url, makeBaseUrl(ui->document), post, referer);
     if (do_download) {
         if (!c.page)
             return NULL;
@@ -177,7 +177,7 @@ loadLink(struct UI ui, const char* url, const char* target, const char* referer,
         return NULL;
     }
 
-    return pushContent(ui, c, ui.viewport.size.x, ui.use_graphic);
+    return pushContent(ui, c, ui->viewport.size.x, ui->use_graphic);
 }
 
 static struct FormItem* save_submit_formlist(struct FormItem* src)
@@ -250,16 +250,16 @@ static struct FormItem* save_submit_formlist(struct FormItem* src)
     return ret;
 }
 
-static void do_submit(struct UI ui, struct Anchor* a, struct FormItem* fi, bool do_download)
+static void do_submit(struct UI *ui, struct Anchor* a, struct FormItem* fi, bool do_download)
 {
     Str tmp = Strnew();
     int multipart = (fi->parent->method == FORM_METHOD_POST && fi->parent->enctype == FORM_ENCTYPE_MULTIPART);
-    query_from_followform(ui.current_buffer, getBufferPosition(ui), &tmp, fi, multipart);
+    query_from_followform(ui->current_buffer, getBufferPosition(ui->current_buffer), &tmp, fi, multipart);
 
     Str tmp2 = Strdup(fi->parent->action);
     if (!Strcmp_charp(tmp2, "!CURRENT_URL!")) {
         /* It means "current URL" */
-        tmp2 = parsedURL2Str(&ui.current_buffer->content.url);
+        tmp2 = parsedURL2Str(&ui->current_buffer->content.url);
         char* p;
         if ((p = strchr(tmp2->ptr, '?')) != NULL)
             Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
@@ -286,7 +286,7 @@ static void do_submit(struct UI ui, struct Anchor* a, struct FormItem* fi, bool 
         if (multipart) {
             unlink(fi->parent->body);
         }
-        // if (buf && !(buf->bufferprop & BP_REDIRECTED)) { /* buf must be ui.current_buffer */
+        // if (buf && !(buf->bufferprop & BP_REDIRECTED)) { /* buf must be ui->current_buffer */
         /* BP_REDIRECTED means that the buffer is obtained through
          * Location: header. In this case, buf->form_submit must not be set
          * because the page is not loaded by POST method but GET method.
@@ -294,7 +294,7 @@ static void do_submit(struct UI ui, struct Anchor* a, struct FormItem* fi, bool 
         buf->form_submit = save_submit_formlist(fi);
         // }
     } else if ((fi->parent->method == FORM_METHOD_INTERNAL && (!Strcmp_charp(fi->parent->action, "map") || !Strcmp_charp(fi->parent->action, "none")))
-        // || ui.current_buffer->bufferprop & BP_INTERNAL
+        // || ui->current_buffer->bufferprop & BP_INTERNAL
     ) { /* internal */
         do_internal(ui, tmp2->ptr, tmp->ptr);
     } else {
@@ -302,12 +302,12 @@ static void do_submit(struct UI ui, struct Anchor* a, struct FormItem* fi, bool 
     }
 }
 
-void _followForm(struct UI ui, bool submit, bool do_download)
+void _followForm(struct UI *ui, bool submit, bool do_download)
 {
-    if (ui.document->firstLine == NULL)
+    if (ui->document->firstLine == NULL)
         return;
 
-    struct Anchor* a = retrieveAnchor(ui.document->formitem, getBufferPosition(ui));
+    struct Anchor* a = retrieveAnchor(ui->document->formitem, getBufferPosition(ui->current_buffer));
     if (a == NULL)
         return;
 
@@ -324,7 +324,7 @@ void _followForm(struct UI ui, bool submit, bool do_download)
         if (p == NULL || fi->readonly)
             break;
         fi->value = Strnew_charp(p);
-        formUpdateBuffer(a, ui.current_buffer, fi);
+        formUpdateBuffer(a, ui->current_buffer, fi);
         if (fi->accept || fi->parent->nitems == 1) {
             do_submit(ui, a, fi, do_download);
             return;
@@ -342,7 +342,7 @@ void _followForm(struct UI ui, bool submit, bool do_download)
         if (p == NULL || fi->readonly)
             break;
         fi->value = Strnew_charp(p);
-        formUpdateBuffer(a, ui.current_buffer, fi);
+        formUpdateBuffer(a, ui->current_buffer, fi);
         if (fi->accept || fi->parent->nitems == 1) {
             do_submit(ui, a, fi, do_download);
             return;
@@ -363,7 +363,7 @@ void _followForm(struct UI ui, bool submit, bool do_download)
         if (p == NULL)
             break;
         fi->value = Strnew_charp(p);
-        formUpdateBuffer(a, ui.current_buffer, fi);
+        formUpdateBuffer(a, ui->current_buffer, fi);
         if (fi->accept) {
             do_submit(ui, a, fi, do_download);
             return;
@@ -379,7 +379,7 @@ void _followForm(struct UI ui, bool submit, bool do_download)
             message(ui, MSG_INFO, "Read only field!");
         }
         input_textarea(ui, fi);
-        formUpdateBuffer(a, ui.current_buffer, fi);
+        formUpdateBuffer(a, ui->current_buffer, fi);
         break;
     }
     case FORM_INPUT_RADIO: {
@@ -391,7 +391,7 @@ void _followForm(struct UI ui, bool submit, bool do_download)
             message(ui, MSG_INFO, "Read only field!");
             break;
         }
-        formRecheckRadio(ui, a, ui.current_buffer, fi);
+        formRecheckRadio(ui, a, ui->current_buffer, fi);
         break;
     }
     case FORM_INPUT_CHECKBOX: {
@@ -405,7 +405,7 @@ void _followForm(struct UI ui, bool submit, bool do_download)
             break;
         }
         fi->checked = !fi->checked;
-        formUpdateBuffer(a, ui.current_buffer, fi);
+        formUpdateBuffer(a, ui->current_buffer, fi);
         break;
     }
     case FORM_SELECT: {
@@ -414,10 +414,10 @@ void _followForm(struct UI ui, bool submit, bool do_download)
             return;
         }
         if (!formChooseOptionByMenu(ui, fi,
-                ui.viewport_cursor.x - ui.document->pos + a->start.pos,
-                ui.viewport_cursor.y))
+                ui->viewport_cursor.x - ui->document->pos + a->start.pos,
+                ui->viewport_cursor.y))
             break;
-        formUpdateBuffer(a, ui.current_buffer, fi);
+        formUpdateBuffer(a, ui->current_buffer, fi);
         if (fi->parent->nitems == 1) {
             do_submit(ui, a, fi, do_download);
             return;
@@ -431,15 +431,15 @@ void _followForm(struct UI ui, bool submit, bool do_download)
         break;
     }
     case FORM_INPUT_RESET: {
-        for (int i = 0; i < ui.document->formitem->nanchor; i++) {
-            struct Anchor* a2 = &ui.document->formitem->anchors[i];
+        for (int i = 0; i < ui->document->formitem->nanchor; i++) {
+            struct Anchor* a2 = &ui->document->formitem->anchors[i];
             struct FormItem* f2 = (struct FormItem*)a2->url;
             if (f2->parent == fi->parent && f2->name && f2->value && f2->type != FORM_INPUT_SUBMIT && f2->type != FORM_INPUT_HIDDEN && f2->type != FORM_INPUT_RESET) {
                 f2->value = f2->init_value;
                 f2->checked = f2->init_checked;
                 f2->label = f2->init_label;
                 f2->selected = f2->init_selected;
-                formUpdateBuffer(a2, ui.current_buffer, f2);
+                formUpdateBuffer(a2, ui->current_buffer, f2);
             }
         }
         break;
@@ -450,9 +450,9 @@ void _followForm(struct UI ui, bool submit, bool do_download)
     }
 }
 
-void gotoLabel(struct UI ui, const char* label)
+void gotoLabel(struct UI *ui, const char* label)
 {
-    struct Anchor* al = searchURLLabel(ui.current_buffer, label);
+    struct Anchor* al = searchURLLabel(ui->current_buffer, label);
     if (al == NULL) {
         /* FIXME: gettextize? */
         message(ui, MSG_INFO, Sprintf("%s is not found", label)->ptr);
@@ -460,27 +460,27 @@ void gotoLabel(struct UI ui, const char* label)
     }
 
     struct Buffer* buf = newBuffer();
-    buf->content = ui.current_buffer->content;
-    buf->document = ui.current_buffer->document;
+    buf->content = ui->current_buffer->content;
+    buf->document = ui->current_buffer->document;
 
     pushHashHist(URLHist, parsedURL2Str(&buf->content.url)->ptr);
     (*buf->clone)++;
     pushBuffer(buf);
-    gotoLine(ui.document, al->start.line);
+    gotoLine(ui->document, al->start.line);
     if (label_topline)
-        ui.document->topLineIndex = ui.current_buffer->document.currentLineIndex
-            - topLine(&ui.current_buffer->document)->linenumber;
-    ui.document->pos = al->start.pos;
+        ui->document->topLineIndex = ui->current_buffer->document.currentLineIndex
+            - topLine(&ui->current_buffer->document)->linenumber;
+    ui->document->pos = al->start.pos;
 
     return;
 }
 
-void followAnchor(struct UI ui, bool do_download)
+void followAnchor(struct UI *ui, bool do_download)
 {
-    if (ui.document->firstLine == NULL)
+    if (ui->document->firstLine == NULL)
         return;
 
-    struct Anchor* a = retrieveAnchor(ui.document->img, getBufferPosition(ui));
+    struct Anchor* a = retrieveAnchor(ui->document->img, getBufferPosition(ui->current_buffer));
     if (a && a->image && a->image->map) {
         _followForm(ui, false, do_download);
         return;
@@ -488,10 +488,10 @@ void followAnchor(struct UI ui, bool do_download)
     int x = 0, y = 0;
     int map = 0;
     if (a && a->image && a->image->ismap) {
-        getMapXY(ui.document, a, &x, &y);
+        getMapXY(ui->document, a, &x, &y);
         map = 1;
     }
-    a = retrieveAnchor(ui.document->href, getBufferPosition(ui));
+    a = retrieveAnchor(ui->document->href, getBufferPosition(ui->current_buffer));
     if (a == NULL) {
         _followForm(ui, false, do_download);
         return;
@@ -501,8 +501,8 @@ void followAnchor(struct UI ui, bool do_download)
         return;
     }
 
-    struct Url u = parseUrl(a->url, makeBaseUrl(&ui.current_buffer->document));
-    if (Strcmp(parsedURL2Str(&u), parsedURL2Str(&ui.current_buffer->content.url)) == 0) {
+    struct Url u = parseUrl(a->url, makeBaseUrl(&ui->current_buffer->document));
+    if (Strcmp(parsedURL2Str(&u), parsedURL2Str(&ui->current_buffer->content.url)) == 0) {
         /* index within this buffer */
         if (u.label) {
             gotoLabel(ui, u.label);
@@ -518,23 +518,23 @@ void followAnchor(struct UI ui, bool do_download)
     loadLink(ui, url, (char*)a->target, a->referer, NULL, do_download);
 }
 
-void followImage(struct UI ui, bool do_download)
+void followImage(struct UI *ui, bool do_download)
 {
-    if (ui.document->firstLine == NULL)
+    if (ui->document->firstLine == NULL)
         return;
 
-    struct Anchor* a = retrieveAnchor(ui.document->img, getBufferPosition(ui));
+    struct Anchor* a = retrieveAnchor(ui->document->img, getBufferPosition(ui->current_buffer));
     if (a == NULL)
         return;
     /* FIXME: gettextize? */
     message(ui, MSG_INFO, Sprintf("loading %s", a->url)->ptr);
     // refresh(ttyWriter());
-    struct Content c = getContent(ui, a->url, makeBaseUrl(&ui.current_buffer->document), NULL, NULL);
-    pushContent(ui, c, ui.viewport.size.x, ui.use_graphic);
+    struct Content c = getContent(ui, a->url, makeBaseUrl(&ui->current_buffer->document), NULL, NULL);
+    pushContent(ui, c, ui->viewport.size.x, ui->use_graphic);
 }
 
 struct MapArea*
-follow_map_menu(struct UI ui, struct Document* doc, const char* name, struct Anchor* a_img, int x, int y)
+follow_map_menu(struct UI *ui, struct Document* doc, const char* name, struct Anchor* a_img, int x, int y)
 {
     struct MapList* ml = searchMapList(doc, name);
     if (ml == NULL || ml->area == NULL || ml->area->nitem == 0)
@@ -574,15 +574,15 @@ map_end:
 }
 
 /* go to specified URL */
-void goURL0(struct UI ui, const char* prompt, bool relative)
+void goURL0(struct UI *ui, const char* prompt, bool relative)
 {
-    struct Buffer* cur_buf = ui.current_buffer;
+    struct Buffer* cur_buf = ui->current_buffer;
 
     const char* url = searchKeyData();
     if (url == NULL) {
         struct Hist* hist = copyHist(URLHist);
 
-        struct Url* current = makeBaseUrl(&ui.current_buffer->document);
+        struct Url* current = makeBaseUrl(&ui->current_buffer->document);
         if (current) {
             char* c_url = parsedURL2Str(current)->ptr;
             if (DefaultURLString == DEFAULT_URL_CURRENT)
@@ -591,12 +591,12 @@ void goURL0(struct UI ui, const char* prompt, bool relative)
                 pushHist(hist, c_url);
         }
 
-        struct Anchor* a = retrieveAnchor(ui.current_buffer->document.href, getBufferPosition(ui));
+        struct Anchor* a = retrieveAnchor(ui->current_buffer->document.href, getBufferPosition(ui->current_buffer));
         if (a) {
             struct Url p_url = parseUrl(a->url, current);
             const char* a_url = parsedURL2Str(&p_url)->ptr;
             if (DefaultURLString == DEFAULT_URL_LINK)
-                url = url_decode2(a_url, ui.current_buffer->document.charset);
+                url = url_decode2(a_url, ui->current_buffer->document.charset);
             else
                 pushHist(hist, a_url);
         }
@@ -608,11 +608,11 @@ void goURL0(struct UI ui, const char* prompt, bool relative)
     const char* referer;
     struct Url* current;
     if (relative) {
-        current = makeBaseUrl(&ui.current_buffer->document);
+        current = makeBaseUrl(&ui->current_buffer->document);
         if (current == NULL || current->scheme == SCM_LOCAL || current->scheme == SCM_LOCAL_CGI || current->scheme == SCM_DATA)
             referer = NO_REFERER;
         else
-            referer = parsedURL2RefererStr(&ui.current_buffer->content.url)->ptr;
+            referer = parsedURL2RefererStr(&ui->current_buffer->content.url)->ptr;
         url = url_quote(url);
     } else {
         current = NULL;
@@ -630,68 +630,68 @@ void goURL0(struct UI ui, const char* prompt, bool relative)
         struct Url p_url = parseUrl(url, current);
         pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
         struct Content c = getContent(ui, url, current, NULL, referer);
-        pushContent(ui, c, ui.viewport.size.x, ui.use_graphic);
-        if (ui.current_buffer != cur_buf) /* success */
-            pushHashHist(URLHist, parsedURL2Str(&ui.current_buffer->content.url)->ptr);
+        pushContent(ui, c, ui->viewport.size.x, ui->use_graphic);
+        if (ui->current_buffer != cur_buf) /* success */
+            pushHashHist(URLHist, parsedURL2Str(&ui->current_buffer->content.url)->ptr);
     }
 }
 
-void anchorMn(struct UI ui, AnchorMenuFunc menu_func, int go)
+void anchorMn(struct UI *ui, AnchorMenuFunc menu_func, int go)
 {
-    if (!ui.current_buffer->document.href || !ui.current_buffer->document.hmarklist)
+    if (!ui->current_buffer->document.href || !ui->current_buffer->document.hmarklist)
         return;
 
-    struct Anchor* a = menu_func(ui, ui.current_buffer);
+    struct Anchor* a = menu_func(ui, ui->current_buffer);
     if (!a || a->hseq < 0)
         return;
 
-    struct BufferPoint* po = &ui.current_buffer->document.hmarklist->marks[a->hseq];
-    gotoLine(&ui.current_buffer->document, po->line);
-    ui.current_buffer->document.pos = po->pos;
+    struct BufferPoint* po = &ui->current_buffer->document.hmarklist->marks[a->hseq];
+    gotoLine(&ui->current_buffer->document, po->line);
+    ui->current_buffer->document.pos = po->pos;
 
     if (go)
         followAnchor(ui, false);
 }
 
 /* Go to specified line */
-void _goLine(struct UI ui, const char* l)
+void _goLine(struct UI *ui, const char* l)
 {
-    if (l == NULL || *l == '\0' || currentLine(&ui.current_buffer->document) == NULL) {
+    if (l == NULL || *l == '\0' || currentLine(&ui->current_buffer->document) == NULL) {
 
         return;
     }
-    ui.current_buffer->document.pos = 0;
+    ui->current_buffer->document.pos = 0;
     if (*l == '^') {
-        ui.current_buffer->document.topLineIndex = ui.current_buffer->document.currentLineIndex = ui.current_buffer->document.firstLine->linenumber;
+        ui->current_buffer->document.topLineIndex = ui->current_buffer->document.currentLineIndex = ui->current_buffer->document.firstLine->linenumber;
     } else if (*l == '$') {
-        ui.current_buffer->document.topLineIndex = ui.current_buffer->document.allLine - (ui.viewport.size.y + 1) / 2;
-        ui.current_buffer->document.currentLineIndex = lastLine(&ui.current_buffer->document)->linenumber;
+        ui->current_buffer->document.topLineIndex = ui->current_buffer->document.allLine - (ui->viewport.size.y + 1) / 2;
+        ui->current_buffer->document.currentLineIndex = lastLine(&ui->current_buffer->document)->linenumber;
     }
     // else
-    //     gotoRealLine(ui.current_buffer, atoi(l));
+    //     gotoRealLine(ui->current_buffer, atoi(l));
 }
 
 /* follow HREF link in the buffer */
-static void bufferA(struct UI ui)
+static void bufferA(struct UI *ui)
 {
     followAnchor(ui, false);
 }
 
 /* process form */
-void followForm(struct UI ui)
+void followForm(struct UI *ui)
 {
     _followForm(ui, false, false);
 }
 
-void follow_map(struct UI ui, struct KeyValue* arg)
+void follow_map(struct UI *ui, struct KeyValue* arg)
 {
     const char* name = tag_get_value(arg, "link");
 
-    struct Anchor* an = retrieveAnchor(ui.current_buffer->document.img, getBufferPosition(ui));
+    struct Anchor* an = retrieveAnchor(ui->current_buffer->document.img, getBufferPosition(ui->current_buffer));
     int x, y;
-    // x = ui.current_buffer->cursorX;
-    // y = ui.current_buffer->cursorY;
-    struct MapArea* a = follow_map_menu(ui, &ui.current_buffer->document, name, an, x, y);
+    // x = ui->current_buffer->cursorX;
+    // y = ui->current_buffer->cursorY;
+    struct MapArea* a = follow_map_menu(ui, &ui->current_buffer->document, name, an, x, y);
     if (a == NULL || a->url == NULL || *(a->url) == '\0') {
         return;
     }
@@ -700,21 +700,21 @@ void follow_map(struct UI ui, struct KeyValue* arg)
         return;
     }
 
-    struct Url p_url = parseUrl(a->url, makeBaseUrl(&ui.current_buffer->document));
+    struct Url p_url = parseUrl(a->url, makeBaseUrl(&ui->current_buffer->document));
     pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
-    struct Content c = getContent(ui, a->url, makeBaseUrl(&ui.current_buffer->document),
-        NULL, parsedURL2Str(&ui.current_buffer->content.url)->ptr);
-    pushContent(ui, c, ui.viewport.size.x, ui.use_graphic);
+    struct Content c = getContent(ui, a->url, makeBaseUrl(&ui->current_buffer->document),
+        NULL, parsedURL2Str(&ui->current_buffer->content.url)->ptr);
+    pushContent(ui, c, ui->viewport.size.x, ui->use_graphic);
 }
 
 // /* show current URL */
 // static Str
-// currentURL(struct UI ui)
+// currentURL(struct UI *ui)
 // {
-//     if (!ui.current_buffer
-//         // || ui.current_buffer->bufferprop & BP_INTERNAL
+//     if (!ui->current_buffer
+//         // || ui->current_buffer->bufferprop & BP_INTERNAL
 //     )
 //         return Strnew_size(0);
-//     return parsedURL2Str(&ui.current_buffer->content.url);
+//     return parsedURL2Str(&ui->current_buffer->content.url);
 // }
 

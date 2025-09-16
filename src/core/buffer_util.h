@@ -16,8 +16,8 @@ struct Buffer* replaceBuffer(struct Buffer* first, struct Buffer* delbuf, struct
 struct Buffer* nthBuffer(struct Buffer* firstbuf, int n);
 // void gotoRealLine(struct Buffer* buf, int n);
 void gotoLine(struct Document* doc, int n);
-struct Buffer* selectBuffer(struct UI ui, struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectchar);
-void reshapeBuffer(struct UI ui, struct Buffer* buf, int cols);
+struct Buffer* selectBuffer(struct UI *ui, struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectchar);
+void reshapeBuffer(struct UI *ui, struct Buffer* buf, int cols);
 struct Buffer* prevBuffer(struct Buffer* first, struct Buffer* buf);
 int writeBufferCache(struct Buffer* buf);
 int readBufferCache(struct Buffer* buf);
@@ -36,9 +36,9 @@ const char* getAnchorText(struct Document* doc, struct AnchorList* al, struct An
 
 struct Buffer* makeBuffer(struct Content* c, int cols, bool use_graphic);
 void tmpClearBuffer(struct Buffer* buf);
-void shiftvisualpos(struct UI ui, struct Buffer* buf, int shift);
-void _nextA(struct UI ui, int visited);
-void _prevA(struct UI ui, int visited);
+void shiftvisualpos(struct UI *ui, struct Buffer* buf, int shift);
+void _nextA(struct UI *ui, int visited);
+void _prevA(struct UI *ui, int visited);
 const char* getCurWord(struct Buffer* buf, int* spos, int* epos);
 const char* GetWord(struct Buffer* buf);
 void resetPos(struct Buffer* buf, struct BufferPos* b);

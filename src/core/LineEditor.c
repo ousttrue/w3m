@@ -32,7 +32,7 @@ terminated(unsigned char c)
     return 0;
 }
 
-void le_initialize(struct LineEditor* e, struct UI ui, struct Hist* hist, enum InputLineFlags flag,
+void le_initialize(struct LineEditor* e, struct UI *ui, struct Hist* hist, enum InputLineFlags flag,
     const char* def_str)
 {
     e->ui = ui;
@@ -373,12 +373,12 @@ void le_next_dcompl(struct LineEditor* e, int next)
     if (e->cm_mode == CPL_NEVER || e->cm_mode & CPL_OFF)
         return;
     e->cm_disp_clear = false;
-    if (e->ui.vt->ROWS - 1 >= 3) {
+    if (e->ui->vt->ROWS - 1 >= 3) {
         comment = true;
-        nline = e->ui.vt->ROWS - 1 - 2;
-    } else if (e->ui.vt->ROWS - 1) {
+        nline = e->ui->vt->ROWS - 1 - 2;
+    } else if (e->ui->vt->ROWS - 1) {
         comment = false;
-        nline = e->ui.vt->ROWS - 1;
+        nline = e->ui->vt->ROWS - 1;
     } else {
         return;
     }
@@ -423,8 +423,8 @@ void le_next_dcompl(struct LineEditor* e, int next)
         if (len < n)
             len = n;
     }
-    if (len > 0 && e->ui.vt->COLS > len)
-        col = e->ui.vt->COLS / len;
+    if (len > 0 && e->ui->vt->COLS > len)
+        col = e->ui->vt->COLS / len;
     else
         col = 1;
     row = (e->NCFileBuf + col - 1) / col;
@@ -471,7 +471,7 @@ disp_next:
         }
         y++;
     }
-    if (comment && y == e->ui.vt->ROWS - 1 - 1) {
+    if (comment && y == e->ui->vt->ROWS - 1 - 1) {
         vt_move(vt, y, 0);
         vt_clrtoeolx(vt);
         vt_bold(vt);
@@ -683,11 +683,11 @@ void le_addPasswd(struct LineEditor* e, char* p, Lineprop* pr, int len, int offs
     if (ncol > offset + limit)
         ncol = offset + limit;
     if (offset) {
-        vt_addChar(e->ui.vt, '{', 0, e->ui.use_graphic);
+        vt_addChar(e->ui->vt, '{', 0, e->ui->use_graphic);
         rcol = offset + 1;
     }
     for (; rcol < ncol; rcol++)
-        vt_addChar(e->ui.vt, '*', 0, e->ui.use_graphic);
+        vt_addChar(e->ui->vt, '*', 0, e->ui->use_graphic);
 }
 
 void le_addStr(struct LineEditor* e, char* p, Lineprop* pr, int len, int offset, int limit)
@@ -703,11 +703,11 @@ void le_addStr(struct LineEditor* e, char* p, Lineprop* pr, int len, int offset,
             return;
         while (pr[i] & PC_WCHAR2)
             i++;
-        vt_addChar(e->ui.vt, '{', 0, e->ui.use_graphic);
+        vt_addChar(e->ui->vt, '{', 0, e->ui->use_graphic);
         rcol = offset + 1;
         ncol = calcPosition(p, pr, len, i, 0, CP_AUTO);
         for (; rcol < ncol; rcol++)
-            vt_addChar(e->ui.vt, ' ', 0, e->ui.use_graphic);
+            vt_addChar(e->ui->vt, ' ', 0, e->ui->use_graphic);
     }
     for (; i < len; i += delta) {
         delta = wtf_len((wc_uchar*)&p[i]);
@@ -716,10 +716,10 @@ void le_addStr(struct LineEditor* e, char* p, Lineprop* pr, int len, int offset,
             break;
         if (p[i] == '\t') {
             for (; rcol < ncol; rcol++)
-                vt_addChar(e->ui.vt, ' ', 0, e->ui.use_graphic);
+                vt_addChar(e->ui->vt, ' ', 0, e->ui->use_graphic);
             continue;
         } else {
-            vt_addMChar(e->ui.vt, &p[i], pr[i], delta, e->ui.use_graphic);
+            vt_addMChar(e->ui->vt, &p[i], pr[i], delta, e->ui->use_graphic);
         }
         rcol = ncol;
     }

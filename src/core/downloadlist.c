@@ -18,7 +18,7 @@ DownloadList* FirstDL = 0;
 DownloadList* LastDL = 0;
 static bool add_download_list = false;
 
-void updateDownload(struct UI ui)
+void updateDownload(struct UI *ui)
 {
     if (add_download_list) {
         add_download_list = false;
@@ -162,7 +162,7 @@ convert_size3(long long size)
 //     return src;
 // }
 
-void download_action(struct UI ui, struct KeyValue* arg)
+void download_action(struct UI *ui, struct KeyValue* arg)
 {
     DownloadList* d;
     pid_t pid;

@@ -15,14 +15,14 @@
 #include <stdlib.h>
 #include <strings.h>
 
-typedef void (*FormActionFunc)(struct UI ui, struct KeyValue*);
+typedef void (*FormActionFunc)(struct UI *ui, struct KeyValue*);
 
 struct FormAction {
     const char* action;
     FormActionFunc rout;
 };
 
-static void change_charset(struct UI ui, struct KeyValue* arg)
+static void change_charset(struct UI *ui, struct KeyValue* arg)
 {
     abort();
     // struct Buffer* buf = ui.current_buffer->linkBuffer[LB_N_INFO];
@@ -51,7 +51,7 @@ struct FormAction internal_action[] = {
     { NULL, NULL },
 };
 
-void do_internal(struct UI ui, const char* action, const char* data)
+void do_internal(struct UI *ui, const char* action, const char* data)
 {
     for (int i = 0; internal_action[i].action; i++) {
         if (strcasecmp(internal_action[i].action, action) == 0) {
@@ -180,7 +180,7 @@ Str link_list_panel_html(struct Document* doc)
     return tmp;
 }
 
-struct LinkList* link_menu(struct UI ui, struct Document* doc)
+struct LinkList* link_menu(struct UI *ui, struct Document* doc)
 {
     if (!doc->linklist)
         return NULL;

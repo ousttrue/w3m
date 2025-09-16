@@ -165,7 +165,9 @@ searchKeyNum(void)
     return n;
 }
 
-struct UI getUI()
+struct UI g_ui = {};
+
+struct UI* getUI()
 {
     int rootX = 0;
     if (showLineNum) {
@@ -179,7 +181,7 @@ struct UI getUI()
     struct VirtualTerm* vt = getScreen();
     struct TermEntry* t = getTermEntry();
 
-    struct UI ui = {
+    g_ui = (struct UI) {
         .current_buffer = Currentbuf,
         .document = Currentbuf ? &Currentbuf->document : 0,
         .content = Currentbuf ? &Currentbuf->content : 0,
@@ -202,8 +204,15 @@ struct UI getUI()
         },
         .searchkey_num = searchKeyNum(),
     };
-    return ui;
+    return &g_ui;
 }
+
+struct UI* getCoUI(struct mco_coro* co)
+{
+    g_ui.co = co;
+    return &g_ui;
+}
+
 // short cursorX;
 // short cursorY;
 
@@ -228,9 +237,9 @@ void concatMessageList(Str tmp)
     //     Strcat_charp(tmp, "<tr><td>(no message recorded)</td></tr>\n");
 }
 
-void status(struct UI ui, const char* s)
+void status(struct UI* ui, const char* s)
 {
-    struct VirtualTerm* vt = ui.vt;
+    struct VirtualTerm* vt = ui->vt;
     int row = vt->CurLine;
     int col = vt->CurColumn;
     vt_move(vt, vt->ROWS - 3, 0);
@@ -239,9 +248,9 @@ void status(struct UI ui, const char* s)
     vt_move(vt, row, col);
 }
 
-void message(struct UI ui, enum MessageSeverity severity, const char* s)
+void message(struct UI* ui, enum MessageSeverity severity, const char* s)
 {
-    struct VirtualTerm* vt = ui.vt;
+    struct VirtualTerm* vt = ui->vt;
     int row = vt->CurLine;
     int col = vt->CurColumn;
     vt_move(vt, vt->ROWS - 2, 0);
@@ -314,14 +323,14 @@ static Str make_lastline_link(struct Buffer* buf, const char* title, const char*
 }
 
 static struct MapArea*
-retrieveCurrentMapArea(struct UI ui)
+retrieveCurrentMapArea(struct UI* ui)
 {
     struct Anchor* a_img;
-    a_img = retrieveAnchor(ui.current_buffer->document.img, getBufferPosition(ui));
+    a_img = retrieveAnchor(ui->current_buffer->document.img, getBufferPosition(ui->current_buffer));
     if (!(a_img && a_img->image && a_img->image->map))
         return 0;
 
-    struct Anchor* a_form = retrieveAnchor(ui.current_buffer->document.formitem, getBufferPosition(ui));
+    struct Anchor* a_form = retrieveAnchor(ui->current_buffer->document.formitem, getBufferPosition(ui->current_buffer));
     if (!(a_form && a_form->url))
         return 0;
 
@@ -332,11 +341,11 @@ retrieveCurrentMapArea(struct UI ui)
     fi = fi->parent->item;
 
     struct MapList* ml;
-    ml = searchMapList(&ui.current_buffer->document, fi->value ? fi->value->ptr : 0);
+    ml = searchMapList(&ui->current_buffer->document, fi->value ? fi->value->ptr : 0);
     if (!ml)
         return 0;
 
-    int n = searchMapArea(&ui.current_buffer->document, ml, a_img);
+    int n = searchMapArea(&ui->current_buffer->document, ml, a_img);
     if (n < 0)
         return 0;
 
@@ -350,26 +359,26 @@ retrieveCurrentMapArea(struct UI ui)
     return 0;
 }
 
-static Str make_lastline_message(struct UI ui)
+static Str make_lastline_message(struct UI* ui)
 {
     Str s = NULL;
     int sl = 0;
     if (displayLink) {
         struct MapArea* a = retrieveCurrentMapArea(ui);
         if (a)
-            s = make_lastline_link(ui.current_buffer, a->alt, a->url);
+            s = make_lastline_link(ui->current_buffer, a->alt, a->url);
         else {
-            struct Anchor* a = retrieveAnchor(ui.current_buffer->document.href, getBufferPosition(ui));
+            struct Anchor* a = retrieveAnchor(ui->current_buffer->document.href, getBufferPosition(ui->current_buffer));
             const char* p = NULL;
             if (a && a->title && *a->title)
                 p = a->title;
             else {
-                struct Anchor* a_img = retrieveAnchor(ui.current_buffer->document.href, getBufferPosition(ui));
+                struct Anchor* a_img = retrieveAnchor(ui->current_buffer->document.href, getBufferPosition(ui->current_buffer));
                 if (a_img && a_img->title && *a_img->title)
                     p = a_img->title;
             }
             if (p || a)
-                s = make_lastline_link(ui.current_buffer, p, a ? a->url : NULL);
+                s = make_lastline_link(ui->current_buffer, p, a ? a->url : NULL);
         }
         if (s) {
             sl = get_Str_strwidth(s);
@@ -386,10 +395,10 @@ static Str make_lastline_message(struct UI ui)
     //     Strcat(msg, Sprintf("%d/%d (%d%%)", cl, ll, r));
     // } else
     Strcat_charp(msg, "Viewing");
-    if (ui.current_buffer->content.ssl_certificate)
+    if (ui->current_buffer->content.ssl_certificate)
         Strcat_charp(msg, "[SSL]");
     Strcat_charp(msg, " <");
-    Strcat_charp(msg, ui.current_buffer->document.title);
+    Strcat_charp(msg, ui->current_buffer->document.title);
 
     if (s) {
         int l = getScreen()->COLS - 3 - sl;
@@ -411,20 +420,20 @@ static Str make_lastline_message(struct UI ui)
     return msg;
 }
 
-void renderFrame(struct UI ui)
+void renderFrame(struct UI* ui)
 {
-    struct Buffer* buf = ui.current_buffer;
+    struct Buffer* buf = ui->current_buffer;
     struct TermEntry* t = getTermEntry();
     // bool use_graphic = graph_ok(t);
 
-    // int cursorRow = ui.vt->CurLine;
-    // int cursorCol = ui.vt->CurColumn;
+    // int cursorRow = ui->vt->CurLine;
+    // int cursorCol = ui->vt->CurColumn;
 
-    struct Anchor* a = retrieveAnchor(ui.current_buffer->document.href, getBufferPosition(ui));
-    struct BufferPoint bp = getBufferPosition(ui);
+    struct Anchor* a = retrieveAnchor(ui->current_buffer->document.href, getBufferPosition(ui->current_buffer));
+    struct BufferPoint bp = getBufferPosition(ui->current_buffer);
     ui_printStatus("STATUS: (%d, %d), (%d, %d) a(%d, %d=%d) %s",
         // "top=%d key=[%02x > %02x > %02x > %02x > %02x > %02x > %02x > %02x]",
-        ui.viewport_cursor.y, ui.viewport_cursor.x,
+        ui->viewport_cursor.y, ui->viewport_cursor.x,
         bp.line, bp.pos,
         a ? a->start.line : -1,
         a ? a->start.pos : -1,
@@ -449,14 +458,14 @@ void renderFrame(struct UI ui)
         Strcat_charp(msg, "\tNo Line");
     }
     // if (delayed_msg != NULL) {
-    //     message(getUI(), MSG_INFO, delayed_msg);
+    //     message(ui, MSG_INFO, delayed_msg);
     //     delayed_msg = NULL;
     //     // refresh(ttyWriter());
     // }
-    vt_standout(ui.vt);
-    status(getUI(), g_status);
-    message(getUI(), MSG_INFO, msg->ptr);
-    vt_standend(ui.vt);
+    vt_standout(ui->vt);
+    status(ui, g_status);
+    message(ui, MSG_INFO, msg->ptr);
+    vt_standend(ui->vt);
     // term_title(conv_to_system(buf->buffername));
     // refresh(ttyWriter());
     // if (activeImage && displayImage && buf->img && buf->image_loaded) {
@@ -471,12 +480,12 @@ void renderFrame(struct UI ui)
     //     renderToScreen();
     // }
 
-    struct Frame* frame = screenToFrame(ui.vt);
+    struct Frame* frame = screenToFrame(ui->vt);
     wc_putc_init(InnerCharset, DisplayCharset);
     refreshFrame(ttyWriter(), frame);
     wc_putc_end(ttyWriter());
 
-    MOVE(ttyWriter(), ui.term_cursor.y, ui.term_cursor.x);
+    MOVE(ttyWriter(), ui->term_cursor.y, ui->term_cursor.x);
     flushWriter(ttyWriter());
 }
 
@@ -534,15 +543,15 @@ bool updateCursor(struct Buffer* buf)
     return hasScroll;
 }
 
-struct BufferPoint getBufferPosition(struct UI ui)
+struct BufferPoint getBufferPosition(struct Buffer* buf)
 {
-    struct LineList* l = getLine(&ui.current_buffer->document, ui.viewport_cursor.y);
+    struct LineList* l = getLine(&buf->document, viewport_cursor.y);
     if (!l) {
         return (struct BufferPoint) { 0, 0 };
     }
-    int pos = columnPos(&l->l, ui.viewport_cursor.x);
+    int pos = columnPos(&l->l, viewport_cursor.x);
     return (struct BufferPoint) {
-        .line = ui.viewport_cursor.y,
+        .line = viewport_cursor.y,
         .pos = pos,
     };
 }
@@ -616,7 +625,7 @@ static const char* currentdir()
     return path;
 }
 
-static void initialize(struct UI ui)
+static void initialize(struct UI* ui)
 {
     wc_uint8 auto_detect;
     if (!getenv("GC_LARGE_ALLOC_WARN_INTERVAL"))
@@ -720,7 +729,7 @@ void fmTerm(void)
     vt_clrtoeolx(vt);
     // refresh(ttyWriter());
     if (activeImage)
-        loadImage((struct UI) {}, NULL, IMG_FLAG_STOP, false);
+        loadImage(NULL, NULL, IMG_FLAG_STOP, false);
     resetTerm();
     flush_tty();
     TerminalSet(NULL);
@@ -806,13 +815,12 @@ void fmInit(void)
         initImage();
 }
 
-static void set_buffer_environ(struct UI ui)
+static void set_buffer_environ(struct Buffer* buf, struct BufferPoint bp)
 {
     static struct Buffer* prev_buf = NULL;
     static struct LineList* prev_line = NULL;
     static int prev_pos = -1;
 
-    struct Buffer* buf = ui.current_buffer;
     if (buf == NULL)
         return;
 
@@ -829,19 +837,19 @@ static void set_buffer_environ(struct UI ui)
         struct Url pu;
         const char* s = GetWord(buf);
         set_environ("W3M_CURRENT_WORD", s ? s : "");
-        a = retrieveAnchor(ui.current_buffer->document.href, getBufferPosition(ui));
+        a = retrieveAnchor(buf->document.href, bp);
         if (a) {
             pu = parseUrl(a->url, makeBaseUrl(&buf->document));
             set_environ("W3M_CURRENT_LINK", parsedURL2Str(&pu)->ptr);
         } else
             set_environ("W3M_CURRENT_LINK", "");
-        a = retrieveAnchor(ui.current_buffer->document.img, getBufferPosition(ui));
+        a = retrieveAnchor(buf->document.img, bp);
         if (a) {
             pu = parseUrl(a->url, makeBaseUrl(&buf->document));
             set_environ("W3M_CURRENT_IMG", parsedURL2Str(&pu)->ptr);
         } else
             set_environ("W3M_CURRENT_IMG", "");
-        a = retrieveAnchor(ui.current_buffer->document.formitem, getBufferPosition(ui));
+        a = retrieveAnchor(buf->document.formitem, bp);
         if (a)
             set_environ("W3M_CURRENT_FORM", form2str((struct FormItem*)a->url));
         else
@@ -886,33 +894,86 @@ save_buffer_position(struct Buffer* buf)
     buf->undo = b;
 }
 
-void onKeyInput(unsigned char c)
+static void coro_entry(mco_coro* co)
+{
+    struct UI* ui = (struct UI*)mco_get_user_data(co);
+}
+
+struct CoTask {
+    mco_desc desc;
+    mco_coro* co;
+    struct UI* ui;
+};
+struct CoTask* newTask(CommandFunc func)
+{
+    struct CoTask* task = New(struct CoTask);
+    // First initialize a `desc` object through `mco_desc_init`.
+    task->desc = mco_desc_init(coro_entry, 0);
+    // Configure `desc` fields when needed (e.g. customize user_data or allocation functions).
+    task->desc.user_data = task;
+
+    // Call `mco_create` with the output coroutine pointer and `desc` pointer.
+    mco_result res = mco_create(&task->co, &task->desc);
+    assert(res == MCO_SUCCESS);
+    // The coroutine should be now in suspended state.
+    assert(mco_status(task->co) == MCO_SUSPENDED);
+
+    return task;
+}
+
+struct CoTask* current_task = 0;
+
+struct CoTask* resume(struct CoTask* task, unsigned char ch)
+{
+    mco_push(task->co, &ch, 1);
+    mco_result res = mco_resume(task->co);
+    return mco_status(task->co) == MCO_SUSPENDED ? task : 0;
+}
+
+struct CoTask* launch(CommandFunc func)
+{
+    struct CoTask* task = newTask(func);
+
+    task->ui = getCoUI(task->co);
+
+    // setup
+    set_buffer_environ(Currentbuf, getBufferPosition(Currentbuf));
+    save_buffer_position(Currentbuf);
+    // execute
+    mco_result res = mco_resume(task->co);
+
+    return mco_status(task->co) == MCO_SUSPENDED ? task : 0;
+}
+
+void onKeyInput(unsigned char ch)
 {
     struct TermEntry* t = getTermEntry();
     bool use_graphic = graph_ok(t);
 
     static unsigned char g_keylog[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
     static int g_i = 0;
+    g_keylog[g_i++ % sizeof(g_keylog)] = ch;
 
-    g_keylog[g_i % sizeof(g_keylog)] = c;
-    if (IS_ASCII(c)) { /* Ascii */
+    if (IS_ASCII(ch)) {
+        unsigned char prev = CurrentKey;
+        CurrentKey = ch;
 
-        set_buffer_environ(getUI());
-        save_buffer_position(getUI().current_buffer);
-        {
-            CurrentKey = c;
-            unsigned char prev = g_keylog[(g_i - 1) % sizeof(g_keylog)];
-            CommandFunc func = (prev == 0x1b) ? EscKeymap[c]
-                                              : GlobalKeymap[c];
-            func(getUI());
+        if (current_task) {
+            // resume
+            current_task = resume(current_task, ch);
+        } else {
+            // launch
+            CommandFunc func = (prev == 0x1b) ? EscKeymap[ch]
+                                              : GlobalKeymap[ch];
+            current_task = launch(func);
         }
-        if (updateCursor(getUI().current_buffer)) {
+
+        if (updateCursor(Currentbuf)) {
             termClear(ttyWriter());
         }
         bufToScreen(getUI());
         renderFrame(getUI());
     }
-    ++g_i;
 
     prev_key = CurrentKey;
     CurrentKey = -1;
@@ -923,34 +984,34 @@ void pcmap(void)
 {
 }
 
-static void
-escKeyProc(int c, int esc, unsigned char* map)
-{
-    if (CurrentKey >= 0 && CurrentKey & K_MULTI) {
-        unsigned char** mmap;
-        mmap = (unsigned char**)getKeyData(MULTI_KEY(CurrentKey));
-        if (!mmap)
-            return;
-        switch (esc) {
-        case K_ESCD:
-            map = mmap[3];
-            break;
-        case K_ESCB:
-            map = mmap[2];
-            break;
-        case K_ESC:
-            map = mmap[1];
-            break;
-        default:
-            map = mmap[0];
-            break;
-        }
-        esc |= (CurrentKey & ~0xFFFF);
-    }
-    CurrentKey = esc | c;
-    if (map)
-        w3mFuncList[(int)map[c]].func(getUI());
-}
+// static void
+// escKeyProc(int c, int esc, unsigned char* map)
+// {
+//     if (CurrentKey >= 0 && CurrentKey & K_MULTI) {
+//         unsigned char** mmap;
+//         mmap = (unsigned char**)getKeyData(MULTI_KEY(CurrentKey));
+//         if (!mmap)
+//             return;
+//         switch (esc) {
+//         case K_ESCD:
+//             map = mmap[3];
+//             break;
+//         case K_ESCB:
+//             map = mmap[2];
+//             break;
+//         case K_ESC:
+//             map = mmap[1];
+//             break;
+//         default:
+//             map = mmap[0];
+//             break;
+//         }
+//         esc |= (CurrentKey & ~0xFFFF);
+//     }
+//     CurrentKey = esc | c;
+//     if (map)
+//         w3mFuncList[(int)map[c]].func(getUI());
+// }
 
 // void _quitfm(bool confirm)
 // {
@@ -1146,7 +1207,7 @@ struct IOBEvent iob_wait(struct IOBlocker* iob, int timeout_ms)
 
 void main_loop(int argc, char** argv)
 {
-    struct UI ui = getUI();
+    struct UI* ui = getUI();
 
     initialize(ui);
     parseArgs(ui, argc, argv);

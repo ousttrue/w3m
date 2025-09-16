@@ -36,19 +36,19 @@ struct Buffer;
 bool updateCursor(struct Buffer* buf);
 const char* searchKeyData();
 
-void message(struct UI ui, enum MessageSeverity, const char* s);
-inline static void error_message(struct UI ui, const char* s)
+void message(struct UI* ui, enum MessageSeverity, const char* s);
+inline static void error_message(struct UI* ui, const char* s)
 {
     message(ui, MSG_ERR, s);
 }
 void set_delayed_message(char* s);
 void concatMessageList(Str tmp);
-void renderFrame(struct UI ui);
+void renderFrame(struct UI *ui);
 void ui_bell();
 void ui_printStatus(const char* fmt, ...);
 void ui_cursor_set_x(int x);
 
 // (line, bytepos) in buffer from cursor (row, col)
-struct BufferPoint getBufferPosition(struct UI ui);
+struct BufferPoint getBufferPosition(struct Buffer* buf);
 Str message_list_panel_html();
 int exec_cmd(char* cmd);

@@ -236,23 +236,23 @@ void term_cbreak(void)
 }
 
 static void
-skip_escseq(struct UI ui)
+skip_escseq(struct UI *ui)
 {
-    int c = ui.vtable.getCh(ui.co);
+    int c = ui->vtable.getCh(ui->co);
     if (c == '[' || c == 'O') {
-        c = ui.vtable.getCh(ui.co);
+        c = ui->vtable.getCh(ui->co);
         while (IS_DIGIT(c))
-            c = ui.vtable.getCh(ui.co);
+            c = ui->vtable.getCh(ui->co);
     }
 }
 
-int sleep_till_anykey(struct UI ui, int timeout_ms, int purge)
+int sleep_till_anykey(struct UI *ui, int timeout_ms, int purge)
 {
     TerminalMode ioval;
     _TerminalGet(g_tty, &ioval);
     term_raw();
 
-    int c = ui.vtable.getCh(ui.co);
+    int c = ui->vtable.getCh(ui->co);
     if (c == ESC_CODE)
         skip_escseq(ui);
 

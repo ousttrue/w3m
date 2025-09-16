@@ -13,14 +13,14 @@ struct Buffer* Firstbuf = 0;
 char ArgvIsURL = true;
 int clear_buffer = (true);
 
-void parseArgs(struct UI ui, int argc, char** argv)
+void parseArgs(struct UI *ui, int argc, char** argv)
 {
     const char* url = (getUrlScheme(argv[1]) == SCM_MISSING && !ArgvIsURL)
         ? file_to_url(argv[1], CurrentDir)
         : url_quote(conv_from_system(argv[1]));
 
     struct Content c = getContent(ui, url, NULL, NULL, NO_REFERER);
-    struct Buffer* newbuf = makeBuffer(&c, ui.viewport.size.x, ui.use_graphic);
+    struct Buffer* newbuf = makeBuffer(&c, ui->viewport.size.x, ui->use_graphic);
 
     switch (newbuf->content.url.scheme) {
     case SCM_MAILTO:
@@ -41,7 +41,7 @@ void SAVE_BUFPOSITION(struct Buffer* sbufp)
     COPY_DOCUMENT_POSITION(&sbufp->document, &Currentbuf->document);
 }
 
-// void saveBufferInfo(struct UI ui)
+// void saveBufferInfo(struct UI *ui)
 // {
 //     FILE* fp;
 //     if ((fp = fopen(rcFile("bufinfo"), "w")) == NULL) {
@@ -60,7 +60,7 @@ void pushBuffer(struct Buffer* buf)
 
     deleteImage(&buf->document);
     if (clear_buffer) {
-        // clearBuffer(ui.current_buffer);
+        // clearBuffer(ui->current_buffer);
     }
 
     buf->nextBuffer = Currentbuf;
@@ -104,7 +104,7 @@ void setCurrentBuffer(struct Buffer* buf)
     }
     Currentbuf = buf;
 
-    // ui.current_buffer = buf;
+    // ui->current_buffer = buf;
     for (buf = Firstbuf; buf != NULL; buf = buf->nextBuffer) {
         if (buf == Currentbuf)
             continue;
@@ -114,7 +114,7 @@ void setCurrentBuffer(struct Buffer* buf)
     }
 }
 
-struct Buffer* pushContent(struct UI ui, struct Content c, int cols, bool use_graphic)
+struct Buffer* pushContent(struct UI *ui, struct Content c, int cols, bool use_graphic)
 {
     struct Buffer* buf = makeBuffer(&c, cols, use_graphic);
     if (!buf) {

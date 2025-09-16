@@ -55,7 +55,7 @@ char* convert_size(long long size, int usefloat)
 }
 
 
-void showProgress(struct UI ui, long long current_content_length, long long* linelen, long long* trbyte)
+void showProgress(struct UI *ui, long long current_content_length, long long* linelen, long long* trbyte)
 {
     if (*linelen < 1024)
         return;

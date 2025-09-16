@@ -238,7 +238,7 @@ ssl_check_cert_ident(X509* x, const char* hostname)
     return ret;
 }
 
-static Str ssl_get_certificate(struct UI ui, SSL* ssl, const char* hostname)
+static Str ssl_get_certificate(struct UI *ui, SSL* ssl, const char* hostname)
 {
     BIO* bp;
     X509* x;
@@ -260,19 +260,19 @@ static Str ssl_get_certificate(struct UI ui, SSL* ssl, const char* hostname)
             ans = "y";
         else {
             emsg = Strnew_charp("No SSL peer certificate: accept? (y/n)");
-            ans = ui.vtable.input(ui.co, emsg->ptr);
+            ans = ui->vtable.input(ui->co, emsg->ptr);
         }
         if (ans && TOLOWER(*ans) == 'y')
             amsg = Strnew_charp("Accept SSL session without any peer certificate");
         else {
             const char* e = "This SSL session was rejected "
                             "to prevent security violation: no peer certificate";
-            ui.vtable.message(ui.co, MSG_ERR, e);
+            ui->vtable.message(ui->co, MSG_ERR, e);
             free_ssl_ctx();
             return NULL;
         }
         if (amsg)
-            ui.vtable.message(ui.co, MSG_ERR, amsg->ptr);
+            ui->vtable.message(ui->co, MSG_ERR, amsg->ptr);
         ssl_accept_this_site(hostname);
         /* FIXME: gettextize? */
         s = amsg ? amsg : Strnew_charp("valid certificate");
@@ -292,7 +292,7 @@ static Str ssl_get_certificate(struct UI ui, SSL* ssl, const char* hostname)
                 ans = "y";
             else {
                 emsg = Sprintf("%s: accept? (y/n)", em);
-                ans = ui.vtable.input(ui.co, emsg->ptr);
+                ans = ui->vtable.input(ui->co, emsg->ptr);
             }
             if (ans && TOLOWER(*ans) == 'y') {
                 amsg = Sprintf("Accept unsecure SSL session: "
@@ -300,7 +300,7 @@ static Str ssl_get_certificate(struct UI ui, SSL* ssl, const char* hostname)
                     em);
             } else {
                 const char* e = Sprintf("This SSL session was rejected: %s", em)->ptr;
-                ui.vtable.message(ui.co, MSG_ERR, e);
+                ui->vtable.message(ui->co, MSG_ERR, e);
                 free_ssl_ctx();
                 return NULL;
             }
@@ -316,7 +316,7 @@ static Str ssl_get_certificate(struct UI ui, SSL* ssl, const char* hostname)
             // if (ep->length > getScreen()->COLS - 16)
             //     Strshrink(ep, ep->length - (getScreen()->COLS - 16));
             Strcat_charp(ep, ": accept? (y/n)");
-            ans = ui.vtable.input(ui.co, ep->ptr);
+            ans = ui->vtable.input(ui->co, ep->ptr);
         }
         if (ans && TOLOWER(*ans) == 'y') {
             /* FIXME: gettextize? */
@@ -325,13 +325,13 @@ static Str ssl_get_certificate(struct UI ui, SSL* ssl, const char* hostname)
         } else {
             const char* e = "This SSL session was rejected "
                             "to prevent security violation";
-            ui.vtable.message(ui.co, MSG_ERR, e);
+            ui->vtable.message(ui->co, MSG_ERR, e);
             free_ssl_ctx();
             return NULL;
         }
     }
     if (amsg)
-        ui.vtable.message(ui.co, MSG_ERR, amsg->ptr);
+        ui->vtable.message(ui->co, MSG_ERR, amsg->ptr);
     ssl_accept_this_site(hostname);
     /* FIXME: gettextize? */
     s = amsg ? amsg : Strnew_charp("valid certificate");
@@ -357,7 +357,7 @@ static Str ssl_get_certificate(struct UI ui, SSL* ssl, const char* hostname)
     return s;
 }
 
-SSL* openSSLHandle(struct UI ui, int sock, const char* hostname, const char** p_cert)
+SSL* openSSLHandle(struct UI *ui, int sock, const char* hostname, const char** p_cert)
 {
     SSL* handle = NULL;
     static char* old_ssl_forbid_method = NULL;
@@ -501,7 +501,7 @@ eend:
     close(sock);
     if (handle)
         SSL_free(handle);
-    ui.vtable.message(ui.co, MSG_ERR, Sprintf("SSL error: %s, a workaround might be: w3m -insecure",
+    ui->vtable.message(ui->co, MSG_ERR, Sprintf("SSL error: %s, a workaround might be: w3m -insecure",
         ERR_error_string(ERR_get_error(), NULL))
             ->ptr);
     return NULL;

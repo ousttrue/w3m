@@ -34,7 +34,7 @@ char* pre_form_file = (PRE_FORM_FILE);
 extern Str* textarea_str;
 extern struct FormSelectOption* select_option;
 
-void formRecheckRadio(struct UI ui, struct Anchor* a, struct Buffer* buf, struct FormItem* fi)
+void formRecheckRadio(struct UI *ui, struct Anchor* a, struct Buffer* buf, struct FormItem* fi)
 {
     int i;
     struct Anchor* a2;
@@ -341,7 +341,7 @@ form_fputs_decode(Str s, FILE* f)
     Strfputs(z, f);
 }
 
-void input_textarea(struct UI ui, struct FormItem* fi)
+void input_textarea(struct UI *ui, struct FormItem* fi)
 {
     char* tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
     Str tmp;
@@ -390,7 +390,7 @@ input_end:
     unlink(tmpf);
 }
 
-int formChooseOptionByMenu(struct UI ui, struct FormItem* fi, int x, int y)
+int formChooseOptionByMenu(struct UI *ui, struct FormItem* fi, int x, int y)
 {
     int i, n, selected = -1, init_select = fi->selected;
     struct FormSelectOptionItem* opt;
@@ -533,7 +533,7 @@ add_pre_form_item(struct pre_form* pf, struct pre_form_item* prev, int type,
  * /textarea
  */
 
-void loadPreForm(struct UI ui)
+void loadPreForm(struct UI *ui)
 {
     FILE* fp;
     Str line = NULL, textarea = NULL;
@@ -633,7 +633,7 @@ void loadPreForm(struct UI ui)
     fclose(fp);
 }
 
-void preFormUpdateBuffer(struct UI ui, struct Buffer* buf)
+void preFormUpdateBuffer(struct UI *ui, struct Buffer* buf)
 {
     struct pre_form* pf;
     struct pre_form_item* pi;

@@ -19,7 +19,7 @@
 #include <unistd.h>
 #include <zlib.h>
 
-void httpInitClient(struct UI ui, struct HttpClient* c)
+void httpInitClient(struct UI *ui, struct HttpClient* c)
 {
     memset(c, 0, sizeof(struct HttpClient));
     *c = (struct HttpClient) {

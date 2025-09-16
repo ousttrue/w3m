@@ -273,7 +273,7 @@ void gotoLine(struct Document* doc, int n)
 // }
 
 static struct Buffer*
-listBuffer(struct UI ui, struct Buffer* top, struct Buffer* current)
+listBuffer(struct UI *ui, struct Buffer* top, struct Buffer* current)
 {
     struct VirtualTerm* vt = getScreen();
     int i, c = 0;
@@ -318,7 +318,7 @@ listBuffer(struct UI ui, struct Buffer* top, struct Buffer* current)
  * Select buffer visually
  */
 struct Buffer*
-selectBuffer(struct UI ui, struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectchar)
+selectBuffer(struct UI *ui, struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectchar)
 {
     struct VirtualTerm* vt = getScreen();
     int i, cpoint, /* Current struct Buffer Number */
@@ -346,9 +346,9 @@ selectBuffer(struct UI ui, struct Buffer* firstbuf, struct Buffer* currentbuf, c
     listBuffer(ui, topbuf, currentbuf);
 
     for (;;) {
-        if ((c = ui.vtable.getCh(ui.co)) == ESC_CODE) {
-            if ((c = ui.vtable.getCh(ui.co)) == '[' || c == 'O') {
-                switch (c = ui.vtable.getCh(ui.co)) {
+        if ((c = ui->vtable.getCh(ui->co)) == ESC_CODE) {
+            if ((c = ui->vtable.getCh(ui->co)) == '[' || c == 'O') {
+                switch (c = ui->vtable.getCh(ui->co)) {
                 case 'A':
                     c = 'k';
                     break;
@@ -423,7 +423,7 @@ end:
 /*
  * Reshape HTML buffer
  */
-void reshapeBuffer(struct UI ui, struct Buffer* buf, int cols)
+void reshapeBuffer(struct UI *ui, struct Buffer* buf, int cols)
 {
     if (buf->content.sourcefile == 0)
         return;
@@ -451,7 +451,7 @@ void reshapeBuffer(struct UI ui, struct Buffer* buf, int cols)
     WcOption.auto_detect = WC_OPT_DETECT_OFF;
     buf->document = loadContent(buf->content.url,
         buf->content.page->ptr, buf->content.cc.charset, buf->content.cc.content_type,
-        ui.viewport.size.x, ui.use_graphic);
+        ui->viewport.size.x, ui->use_graphic);
     // ISclose(stream);
     WcOption.auto_detect = old_auto_detect;
 
@@ -1132,7 +1132,7 @@ void tmpClearBuffer(struct Buffer* buf)
     }
 }
 
-void shiftvisualpos(struct UI ui, struct Buffer* buf, int shift)
+void shiftvisualpos(struct UI *ui, struct Buffer* buf, int shift)
 {
     struct LineList* l = currentLine(&buf->document);
     buf->document.visualpos -= shift;
@@ -1140,30 +1140,30 @@ void shiftvisualpos(struct UI ui, struct Buffer* buf, int shift)
         buf->document.visualpos = l->bwidth + getScreen()->COLS - 1;
     else if (buf->document.visualpos - l->bwidth < 0)
         buf->document.visualpos = l->bwidth;
-    if (buf->document.visualpos - l->bwidth == -shift && ui.viewport_cursor.x == 0)
+    if (buf->document.visualpos - l->bwidth == -shift && ui->viewport_cursor.x == 0)
         buf->document.visualpos = l->bwidth;
 }
 
 /* go to the next [visited] anchor */
-void _nextA(struct UI ui, int visited)
+void _nextA(struct UI *ui, int visited)
 {
-    struct HmarkerList* hl = ui.current_buffer->document.hmarklist;
+    struct HmarkerList* hl = ui->current_buffer->document.hmarklist;
     struct BufferPoint* po;
     struct Anchor* pan;
-    int i, x, y, n = ui.searchkey_num;
+    int i, x, y, n = ui->searchkey_num;
     struct Url url;
 
-    if (ui.current_buffer->document.firstLine == NULL)
+    if (ui->current_buffer->document.firstLine == NULL)
         return;
     if (!hl || hl->nmark == 0)
         return;
 
-    struct Anchor* an = retrieveAnchor(ui.current_buffer->document.href, getBufferPosition(ui));
+    struct Anchor* an = retrieveAnchor(ui->current_buffer->document.href, getBufferPosition(ui->current_buffer));
     if (visited != true && an == NULL)
-        an = retrieveAnchor(ui.current_buffer->document.formitem, getBufferPosition(ui));
+        an = retrieveAnchor(ui->current_buffer->document.formitem, getBufferPosition(ui->current_buffer));
 
-    y = currentLine(&ui.current_buffer->document)->linenumber;
-    x = ui.current_buffer->document.pos;
+    y = currentLine(&ui->current_buffer->document)->linenumber;
+    x = ui->current_buffer->document.pos;
 
     if (visited == true) {
         n = hl->nmark;
@@ -1181,21 +1181,21 @@ void _nextA(struct UI ui, int visited)
                     goto _end;
                 }
                 po = &hl->marks[hseq];
-                an = retrieveAnchor(ui.current_buffer->document.href, *po);
+                an = retrieveAnchor(ui->current_buffer->document.href, *po);
                 if (visited != true && an == NULL)
-                    an = retrieveAnchor(ui.current_buffer->document.formitem, *po);
+                    an = retrieveAnchor(ui->current_buffer->document.formitem, *po);
                 hseq++;
                 if (visited == true && an) {
-                    url = parseUrl(an->url, makeBaseUrl(&ui.current_buffer->document));
+                    url = parseUrl(an->url, makeBaseUrl(&ui->current_buffer->document));
                     if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
                         goto _end;
                     }
                 }
             } while (an == NULL || an == pan);
         } else {
-            an = closest_next_anchor(ui.current_buffer->document.href, NULL, x, y);
+            an = closest_next_anchor(ui->current_buffer->document.href, NULL, x, y);
             if (visited != true)
-                an = closest_next_anchor(ui.current_buffer->document.formitem, an, x, y);
+                an = closest_next_anchor(ui->current_buffer->document.formitem, an, x, y);
             if (an == NULL) {
                 if (visited == true)
                     return;
@@ -1205,7 +1205,7 @@ void _nextA(struct UI ui, int visited)
             x = an->start.pos;
             y = an->start.line;
             if (visited == true) {
-                url = parseUrl(an->url, makeBaseUrl(&ui.current_buffer->document));
+                url = parseUrl(an->url, makeBaseUrl(&ui->current_buffer->document));
                 if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
                     goto _end;
                 }
@@ -1219,30 +1219,30 @@ _end:
     if (an == NULL || an->hseq < 0)
         return;
     po = &hl->marks[an->hseq];
-    gotoLine(&ui.current_buffer->document, po->line);
-    ui.current_buffer->document.pos = po->pos;
+    gotoLine(&ui->current_buffer->document, po->line);
+    ui->current_buffer->document.pos = po->pos;
 }
 
 /* go to the previous anchor */
-void _prevA(struct UI ui, int visited)
+void _prevA(struct UI *ui, int visited)
 {
-    struct HmarkerList* hl = ui.current_buffer->document.hmarklist;
+    struct HmarkerList* hl = ui->current_buffer->document.hmarklist;
     struct BufferPoint* po;
     struct Anchor* pan;
-    int i, x, y, n = ui.searchkey_num;
+    int i, x, y, n = ui->searchkey_num;
     struct Url url;
 
-    if (ui.current_buffer->document.firstLine == NULL)
+    if (ui->current_buffer->document.firstLine == NULL)
         return;
     if (!hl || hl->nmark == 0)
         return;
 
-    struct Anchor* an = retrieveAnchor(ui.current_buffer->document.href, getBufferPosition(ui));
+    struct Anchor* an = retrieveAnchor(ui->current_buffer->document.href, getBufferPosition(ui->current_buffer));
     if (visited != true && an == NULL)
-        an = retrieveAnchor(ui.current_buffer->document.formitem, getBufferPosition(ui));
+        an = retrieveAnchor(ui->current_buffer->document.formitem, getBufferPosition(ui->current_buffer));
 
-    y = currentLine(&ui.current_buffer->document)->linenumber;
-    x = ui.current_buffer->document.pos;
+    y = currentLine(&ui->current_buffer->document)->linenumber;
+    x = ui->current_buffer->document.pos;
 
     if (visited == true) {
         n = hl->nmark;
@@ -1260,21 +1260,21 @@ void _prevA(struct UI ui, int visited)
                     goto _end;
                 }
                 po = hl->marks + hseq;
-                an = retrieveAnchor(ui.current_buffer->document.href, *po);
+                an = retrieveAnchor(ui->current_buffer->document.href, *po);
                 if (visited != true && an == NULL)
-                    an = retrieveAnchor(ui.current_buffer->document.formitem, *po);
+                    an = retrieveAnchor(ui->current_buffer->document.formitem, *po);
                 hseq--;
                 if (visited == true && an) {
-                    url = parseUrl(an->url, makeBaseUrl(&ui.current_buffer->document));
+                    url = parseUrl(an->url, makeBaseUrl(&ui->current_buffer->document));
                     if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
                         goto _end;
                     }
                 }
             } while (an == NULL || an == pan);
         } else {
-            an = closest_prev_anchor(ui.current_buffer->document.href, NULL, x, y);
+            an = closest_prev_anchor(ui->current_buffer->document.href, NULL, x, y);
             if (visited != true)
-                an = closest_prev_anchor(ui.current_buffer->document.formitem, an, x, y);
+                an = closest_prev_anchor(ui->current_buffer->document.formitem, an, x, y);
             if (an == NULL) {
                 if (visited == true)
                     return;
@@ -1284,7 +1284,7 @@ void _prevA(struct UI ui, int visited)
             x = an->start.pos;
             y = an->start.line;
             if (visited == true && an) {
-                url = parseUrl(an->url, makeBaseUrl(&ui.current_buffer->document));
+                url = parseUrl(an->url, makeBaseUrl(&ui->current_buffer->document));
                 if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
                     goto _end;
                 }
@@ -1298,8 +1298,8 @@ _end:
     if (an == NULL || an->hseq < 0)
         return;
     po = hl->marks + an->hseq;
-    gotoLine(&ui.current_buffer->document, po->line);
-    ui.current_buffer->document.pos = po->pos;
+    gotoLine(&ui->current_buffer->document, po->line);
+    ui->current_buffer->document.pos = po->pos;
 }
 
 inline static wc_uint32 getChar(const char* p)

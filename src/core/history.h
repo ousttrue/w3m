@@ -35,5 +35,5 @@ char* lastHist(struct Hist* hist);
 char* nextHist(struct Hist* hist);
 char* prevHist(struct Hist* hist);
 int loadHistory(struct Hist* hist);
-void saveHistory(struct UI ui, struct Hist* hist, size_t size);
+void saveHistory(struct UI *ui, struct Hist* hist, size_t size);
 Str historyBuffer_html(struct Hist* hist);

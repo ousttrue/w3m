@@ -33,7 +33,7 @@ struct Anchor;
 struct Document;
 
 struct MapList* searchMapList(struct Document* doc, const char* name);
-void follow_map(struct UI ui, struct KeyValue* arg);
+void follow_map(struct UI *ui, struct KeyValue* arg);
 bool getMapXY(struct Document* doc, struct Anchor* a, int* x, int* y);
 struct MapArea* newMapArea(const char* url, const char* target, const char* alt, const char* shape, const char* coords);
 int searchMapArea(struct Document* doc, struct MapList* ml, struct Anchor* a_img);

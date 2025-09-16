@@ -21,8 +21,8 @@ extern DownloadList* LastDL;
 
 struct KeyValue;
 
-void updateDownload(struct UI ui);
+void updateDownload(struct UI *ui);
 void addDownloadList(pid_t pid, const char* url, const char* save, const char* lock, long long size);
 void stopDownload(void);
 int checkDownloadList(void);
-void download_action(struct UI ui, struct KeyValue* arg);
+void download_action(struct UI *ui, struct KeyValue* arg);

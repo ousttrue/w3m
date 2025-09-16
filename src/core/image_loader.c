@@ -424,7 +424,7 @@ void deleteImage(struct Document* doc)
         if (a->image && a->image->cache && a->image->cache->loaded != IMG_FLAG_UNLOADED && !(a->image->cache->loaded & IMG_FLAG_DONT_REMOVE) && a->image->cache->index < 0)
             unlink(a->image->cache->file);
     }
-    loadImage((struct UI) {}, NULL, IMG_FLAG_STOP, false);
+    loadImage(NULL, NULL, IMG_FLAG_STOP, false);
 }
 
 void getAllImage(struct Document* doc)
@@ -451,7 +451,7 @@ void getAllImage(struct Document* doc)
 }
 
 static void
-showImageProgress(struct UI ui, struct Buffer* buf)
+showImageProgress(struct UI *ui, struct Buffer* buf)
 {
     struct AnchorList* al;
     struct Anchor* a;
@@ -477,7 +477,7 @@ showImageProgress(struct UI ui, struct Buffer* buf)
     }
 }
 
-void loadImage(struct UI ui, struct Document* doc, enum ImageLoadFlag flag, bool do_download)
+void loadImage(struct UI *ui, struct Document* doc, enum ImageLoadFlag flag, bool do_download)
 {
     struct ImageCache* cache;
     struct stat st;

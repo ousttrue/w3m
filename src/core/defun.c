@@ -44,7 +44,7 @@ DEFUN(nulcmd, NOTHING NULL @ @ @, "Do nothing")
 /* Move page forward */
 DEFUN(pgFore, NEXT_PAGE, "Scroll down one page")
 {
-    ui.document->topLineIndex += ui.viewport.size.y;
+    ui->document->topLineIndex += ui->viewport.size.y;
 }
 
 /* Move page backward */
@@ -68,36 +68,36 @@ DEFUN(hpgBack, PREV_HALF_PAGE, "Scroll up half a page")
 /* 1 line up */
 DEFUN(lup1, UP, "Scroll the screen up one line")
 {
-    ui.document->topLineIndex++;
+    ui->document->topLineIndex++;
 }
 
 /* 1 line down */
 DEFUN(ldown1, DOWN, "Scroll the screen down one line")
 {
-    ui.document->topLineIndex--;
+    ui->document->topLineIndex--;
 }
 
 /* move cursor position to the center of screen */
 DEFUN(ctrCsrV, CENTER_V, "Center on cursor line")
 {
-    int offsety = ui.viewport.size.y / 2 - ui.viewport_cursor.y;
+    int offsety = ui->viewport.size.y / 2 - ui->viewport_cursor.y;
     if (offsety) {
-        ui.document->topLineIndex = ui.document->topLineIndex - offsety;
+        ui->document->topLineIndex = ui->document->topLineIndex - offsety;
     }
 }
 
 DEFUN(ctrCsrH, CENTER_H, "Center on cursor column")
 {
-    int offsetx = ui.viewport_cursor.x - ui.viewport.size.x / 2;
+    int offsetx = ui->viewport_cursor.x - ui->viewport.size.x / 2;
     if (offsetx) {
-        ui.document->currentColumn += offsetx;
+        ui->document->currentColumn += offsetx;
     }
 }
 
 /* Redraw screen */
 DEFUN(rdrwSc, REDRAW, "Draw the screen anew")
 {
-    // ui.current_buffer->document = 0;
+    // ui->current_buffer->document = 0;
 }
 
 /* Search regular expression forward */
@@ -139,46 +139,46 @@ DEFUN(srchprv, SEARCH_PREV, "Continue search backward")
 /* Shift screen left */
 DEFUN(shiftl, SHIFT_LEFT, "Shift screen left")
 {
-    int column = ui.document->currentColumn;
-    ui.document->currentColumn += (ui.searchkey_num * (-ui.viewport.size.x + 1) + 1);
-    shiftvisualpos(ui, ui.current_buffer, ui.document->currentColumn - column);
+    int column = ui->document->currentColumn;
+    ui->document->currentColumn += (ui->searchkey_num * (-ui->viewport.size.x + 1) + 1);
+    shiftvisualpos(ui, ui->current_buffer, ui->document->currentColumn - column);
 }
 
 /* Shift screen right */
 DEFUN(shiftr, SHIFT_RIGHT, "Shift screen right")
 {
-    int column = ui.document->currentColumn;
-    ui.document->currentColumn += (ui.searchkey_num * (ui.viewport.size.x - 1) - 1);
-    shiftvisualpos(ui, ui.current_buffer, ui.document->currentColumn - column);
+    int column = ui->document->currentColumn;
+    ui->document->currentColumn += (ui->searchkey_num * (ui->viewport.size.x - 1) - 1);
+    shiftvisualpos(ui, ui->current_buffer, ui->document->currentColumn - column);
 }
 
 DEFUN(col1R, RIGHT, "Shift screen one column right")
 {
-    struct LineList* l = currentLine(&ui.current_buffer->document);
+    struct LineList* l = currentLine(&ui->current_buffer->document);
     if (l == NULL)
         return;
 
-    int n = ui.searchkey_num;
+    int n = ui->searchkey_num;
     for (int j = 0; j < n; j++) {
-        int column = ui.document->currentColumn;
-        ui.document->currentColumn += 1;
-        if (column == ui.document->currentColumn)
+        int column = ui->document->currentColumn;
+        ui->document->currentColumn += 1;
+        if (column == ui->document->currentColumn)
             break;
-        shiftvisualpos(ui, ui.current_buffer, 1);
+        shiftvisualpos(ui, ui->current_buffer, 1);
     }
 }
 
 DEFUN(col1L, LEFT, "Shift screen one column left")
 {
-    struct LineList* l = currentLine(&ui.current_buffer->document);
+    struct LineList* l = currentLine(&ui->current_buffer->document);
     if (l == NULL)
         return;
-    int n = ui.searchkey_num;
+    int n = ui->searchkey_num;
     for (int j = 0; j < n; j++) {
-        if (ui.document->currentColumn == 0)
+        if (ui->document->currentColumn == 0)
             break;
-        ui.document->currentColumn += (-1);
-        shiftvisualpos(ui, ui.current_buffer, -1);
+        ui->document->currentColumn += (-1);
+        shiftvisualpos(ui, ui->current_buffer, -1);
     }
 }
 
@@ -241,7 +241,7 @@ DEFUN(ldfile, LOAD, "Open local file in a new buffer")
     }
     // cmd_loadfile(ui, fn);
     struct Content c = getContent(ui, file_to_url(fn, CurrentDir), NULL, NULL, NO_REFERER);
-    pushContent(ui, c, ui.viewport.size.x, ui.use_graphic);
+    pushContent(ui, c, ui->viewport.size.x, ui->use_graphic);
 }
 
 /* Load help file */
@@ -253,7 +253,7 @@ DEFUN(ldhelp, HELP, "Show help panel")
         Str_form_quote(Strnew_charp(w3m_version))->ptr,
         Str_form_quote(Strnew_charp_n(lang, n))->ptr);
     struct Content c = getContent(ui, tmp->ptr, NULL, NULL, NO_REFERER);
-    pushContent(ui, c, ui.viewport.size.x, ui.use_graphic);
+    pushContent(ui, c, ui->viewport.size.x, ui->use_graphic);
 }
 
 DEFUN(movL, MOVE_LEFT, "Cursor left")
@@ -297,7 +297,7 @@ DEFUN(movR1, MOVE_RIGHT1, "Cursor right. With edge touched, slide")
 }
 
 static int
-next_nonnull_line(struct UI ui, struct LineList* line)
+next_nonnull_line(struct UI *ui, struct LineList* line)
 {
     struct LineList* l;
     for (l = line; l != NULL && l->l.len == 0; l = l->next)
@@ -306,9 +306,9 @@ next_nonnull_line(struct UI ui, struct LineList* line)
     if (l == NULL || l->l.len == 0)
         return -1;
 
-    ui.document->currentLineIndex = l->linenumber;
+    ui->document->currentLineIndex = l->linenumber;
     if (l != line)
-        ui.document->pos = 0;
+        ui->document->pos = 0;
     return 0;
 }
 
@@ -320,38 +320,38 @@ getChar(const char* p)
 
 DEFUN(movRW, NEXT_WORD, "Move to the next word")
 {
-    int n = ui.searchkey_num;
+    int n = ui->searchkey_num;
     for (int i = 0; i < n; i++) {
-        struct LineList* pline = currentLine(&ui.current_buffer->document);
-        int ppos = ui.document->pos;
+        struct LineList* pline = currentLine(&ui->current_buffer->document);
+        int ppos = ui->document->pos;
 
-        if (next_nonnull_line(ui, currentLine(&ui.current_buffer->document)) < 0)
+        if (next_nonnull_line(ui, currentLine(&ui->current_buffer->document)) < 0)
             return;
 
-        struct LineList* l = currentLine(&ui.current_buffer->document);
+        struct LineList* l = currentLine(&ui->current_buffer->document);
         const char* lb = l->l.lineBuf;
-        while (ui.document->pos < l->l.len && wc_is_ucs_alnum(getChar(&lb[ui.document->pos])))
-            ui.document->pos = nextChar(ui.document->pos, &l->l);
+        while (ui->document->pos < l->l.len && wc_is_ucs_alnum(getChar(&lb[ui->document->pos])))
+            ui->document->pos = nextChar(ui->document->pos, &l->l);
 
         while (1) {
-            while (ui.document->pos < l->l.len && !wc_is_ucs_alnum(getChar(&lb[ui.document->pos])))
-                ui.document->pos = nextChar(ui.document->pos, &l->l);
-            if (ui.document->pos < l->l.len)
+            while (ui->document->pos < l->l.len && !wc_is_ucs_alnum(getChar(&lb[ui->document->pos])))
+                ui->document->pos = nextChar(ui->document->pos, &l->l);
+            if (ui->document->pos < l->l.len)
                 break;
-            if (next_nonnull_line(ui, currentLine(&ui.current_buffer->document)->next) < 0) {
-                ui.document->currentLineIndex = pline->linenumber;
-                ui.document->pos = ppos;
+            if (next_nonnull_line(ui, currentLine(&ui->current_buffer->document)->next) < 0) {
+                ui->document->currentLineIndex = pline->linenumber;
+                ui->document->pos = ppos;
                 return;
             }
-            ui.document->pos = 0;
-            l = currentLine(&ui.current_buffer->document);
+            ui->document->pos = 0;
+            l = currentLine(&ui->current_buffer->document);
             lb = l->l.lineBuf;
         }
     }
 }
 
 static int
-prev_nonnull_line(struct UI ui, struct LineList* line)
+prev_nonnull_line(struct UI *ui, struct LineList* line)
 {
     struct LineList* l;
     for (l = line; l != NULL && l->l.len == 0; l = l->prev)
@@ -359,49 +359,49 @@ prev_nonnull_line(struct UI ui, struct LineList* line)
     if (l == NULL || l->l.len == 0)
         return -1;
 
-    ui.document->currentLineIndex = l->linenumber;
+    ui->document->currentLineIndex = l->linenumber;
     if (l != line)
-        ui.document->pos = currentLine(&ui.current_buffer->document)->l.len;
+        ui->document->pos = currentLine(&ui->current_buffer->document)->l.len;
     return 0;
 }
 
 DEFUN(movLW, PREV_WORD, "Move to the previous word")
 {
-    int n = ui.searchkey_num;
+    int n = ui->searchkey_num;
     for (int i = 0; i < n; i++) {
-        struct LineList* pline = currentLine(&ui.current_buffer->document);
-        int ppos = ui.document->pos;
+        struct LineList* pline = currentLine(&ui->current_buffer->document);
+        int ppos = ui->document->pos;
 
-        if (prev_nonnull_line(ui, currentLine(&ui.current_buffer->document)) < 0)
+        if (prev_nonnull_line(ui, currentLine(&ui->current_buffer->document)) < 0)
             goto end;
 
         while (1) {
-            struct LineList* l = currentLine(&ui.current_buffer->document);
+            struct LineList* l = currentLine(&ui->current_buffer->document);
             const char* lb = l->l.lineBuf;
-            while (ui.document->pos > 0) {
-                int tmp = prevChar(ui.document->pos, &l->l);
+            while (ui->document->pos > 0) {
+                int tmp = prevChar(ui->document->pos, &l->l);
                 if (wc_is_ucs_alnum(getChar(&lb[tmp])))
                     break;
-                ui.document->pos = tmp;
+                ui->document->pos = tmp;
             }
-            if (ui.document->pos > 0)
+            if (ui->document->pos > 0)
                 break;
-            if (prev_nonnull_line(ui, currentLine(&ui.current_buffer->document)->prev) < 0) {
-                ui.document->currentLineIndex = pline->linenumber;
-                ui.document->pos = ppos;
+            if (prev_nonnull_line(ui, currentLine(&ui->current_buffer->document)->prev) < 0) {
+                ui->document->currentLineIndex = pline->linenumber;
+                ui->document->pos = ppos;
                 goto end;
             }
-            ui.document->pos = currentLine(&ui.current_buffer->document)->l.len;
+            ui->document->pos = currentLine(&ui->current_buffer->document)->l.len;
         }
 
         {
-            struct LineList* l = currentLine(&ui.current_buffer->document);
+            struct LineList* l = currentLine(&ui->current_buffer->document);
             const char* lb = l->l.lineBuf;
-            while (ui.document->pos > 0) {
-                int tmp = prevChar(ui.document->pos, &l->l);
+            while (ui->document->pos > 0) {
+                int tmp = prevChar(ui->document->pos, &l->l);
                 if (!wc_is_ucs_alnum(getChar(&lb[tmp])))
                     break;
-                ui.document->pos = tmp;
+                ui->document->pos = tmp;
             }
         }
     }
@@ -429,7 +429,7 @@ DEFUN(selBuf, SELECT, "Display buffer-stack panel")
 
     ok = false;
     do {
-        buf = selectBuffer(ui, Firstbuf, ui.current_buffer, &cmd);
+        buf = selectBuffer(ui, Firstbuf, ui->current_buffer, &cmd);
         switch (cmd) {
         case 'B':
             ok = true;
@@ -452,7 +452,7 @@ DEFUN(selBuf, SELECT, "Display buffer-stack panel")
     } while (!ok);
 
     for (buf = Firstbuf; buf != NULL; buf = buf->nextBuffer) {
-        if (buf == ui.current_buffer)
+        if (buf == ui->current_buffer)
             continue;
         deleteImage(&buf->document);
         if (clear_buffer)
@@ -477,34 +477,34 @@ DEFUN(goLineL, END, "Go to the last line")
 /* Go to the bottom of the line */
 DEFUN(linend, LINE_END, "Go to the end of the line")
 {
-    if (ui.document->firstLine == NULL)
+    if (ui->document->firstLine == NULL)
         return;
-    while (currentLine(&ui.current_buffer->document)->next
-        && currentLine(&ui.current_buffer->document)->next->bpos)
+    while (currentLine(&ui->current_buffer->document)->next
+        && currentLine(&ui->current_buffer->document)->next->bpos)
         cursorDown(1);
-    ui.document->pos = currentLine(&ui.current_buffer->document)->l.len - 1;
+    ui->document->pos = currentLine(&ui->current_buffer->document)->l.len - 1;
 }
 
 /* Run editor on the current buffer */
 DEFUN(editBf, EDIT, "Edit local source")
 {
-    // const char* fn = ui.current_buffer->filename;
+    // const char* fn = ui->current_buffer->filename;
     // if (fn == NULL
-    //     || (ui.current_buffer->content.cc.content_type == CONTENTTYPE_UNKNOWN && ui.current_buffer->edit == NULL)
-    //     || /* Reading shell */ ui.current_buffer->content.url.scheme != SCM_LOCAL
-    //     || !strcmp(ui.current_buffer->content.url.file, "-") /* file is std input  */
+    //     || (ui->current_buffer->content.cc.content_type == CONTENTTYPE_UNKNOWN && ui->current_buffer->edit == NULL)
+    //     || /* Reading shell */ ui->current_buffer->content.url.scheme != SCM_LOCAL
+    //     || !strcmp(ui->current_buffer->content.url.file, "-") /* file is std input  */
     // ) {
     //     message(ui, MSG_ERR, "Can't edit other than local file");
     //     return;
     // }
 
     Str cmd;
-    if (ui.current_buffer->edit)
-        cmd = unquote_mailcap(ui.current_buffer->edit,
-            contentTypeStr(ui.current_buffer->content.cc.content_type), ui.current_buffer->content.sourcefile,
-            getHttpHeaderValue(ui.current_buffer->content.document_header, "Content-Type:"), NULL);
+    if (ui->current_buffer->edit)
+        cmd = unquote_mailcap(ui->current_buffer->edit,
+            contentTypeStr(ui->current_buffer->content.cc.content_type), ui->current_buffer->content.sourcefile,
+            getHttpHeaderValue(ui->current_buffer->content.document_header, "Content-Type:"), NULL);
     else
-        cmd = myEditor(Editor, shell_quote(ui.current_buffer->content.sourcefile), 1);
+        cmd = myEditor(Editor, shell_quote(ui->current_buffer->content.sourcefile), 1);
     exec_cmd(cmd->ptr);
 }
 
@@ -519,11 +519,11 @@ DEFUN(editScr, EDIT_SCREEN, "Edit rendered copy of document")
         return;
     }
 
-    saveBuffer(ui.current_buffer, f, true);
+    saveBuffer(ui->current_buffer, f, true);
     fclose(f);
     exec_cmd(myEditor(Editor, shell_quote(tmpf),
         1
-        // cur_real_linenumber(ui.current_buffer)
+        // cur_real_linenumber(ui->current_buffer)
         )
             ->ptr);
     unlink(tmpf);
@@ -534,10 +534,10 @@ DEFUN(_mark, MARK, "Set/unset mark")
 {
     if (!use_mark)
         return;
-    if (ui.document->firstLine == NULL)
+    if (ui->document->firstLine == NULL)
         return;
-    struct LineList* l = currentLine(&ui.current_buffer->document);
-    l->l.propBuf[ui.document->pos] ^= PE_MARK;
+    struct LineList* l = currentLine(&ui->current_buffer->document);
+    l->l.propBuf[ui->document->pos] ^= PE_MARK;
 }
 
 /* Go to next mark */
@@ -545,10 +545,10 @@ DEFUN(nextMk, NEXT_MARK, "Go to the next mark")
 {
     if (!use_mark)
         return;
-    if (ui.document->firstLine == NULL)
+    if (ui->document->firstLine == NULL)
         return;
-    int i = ui.document->pos + 1;
-    struct LineList* l = currentLine(&ui.current_buffer->document);
+    int i = ui->document->pos + 1;
+    struct LineList* l = currentLine(&ui->current_buffer->document);
     if (i >= l->l.len) {
         i = 0;
         l = l->next;
@@ -556,8 +556,8 @@ DEFUN(nextMk, NEXT_MARK, "Go to the next mark")
     while (l != NULL) {
         for (; i < l->l.len; i++) {
             if (l->l.propBuf[i] & PE_MARK) {
-                ui.document->currentLineIndex = l->linenumber;
-                ui.document->pos = i;
+                ui->document->currentLineIndex = l->linenumber;
+                ui->document->pos = i;
 
                 return;
             }
@@ -574,10 +574,10 @@ DEFUN(prevMk, PREV_MARK, "Go to the previous mark")
 {
     if (!use_mark)
         return;
-    if (ui.document->firstLine == NULL)
+    if (ui->document->firstLine == NULL)
         return;
-    int i = ui.document->pos - 1;
-    struct LineList* l = currentLine(&ui.current_buffer->document);
+    int i = ui->document->pos - 1;
+    struct LineList* l = currentLine(&ui->current_buffer->document);
     if (i < 0) {
         l = l->prev;
         if (l != NULL)
@@ -586,8 +586,8 @@ DEFUN(prevMk, PREV_MARK, "Go to the previous mark")
     while (l != NULL) {
         for (; i >= 0; i--) {
             if (l->l.propBuf[i] & PE_MARK) {
-                ui.document->currentLineIndex = l->linenumber;
-                ui.document->pos = i;
+                ui->document->currentLineIndex = l->linenumber;
+                ui->document->pos = i;
 
                 return;
             }
@@ -624,7 +624,7 @@ DEFUN(reMark, REG_MARK, "Mark all occurences of a pattern")
 
     struct LineList* l;
     MarkString = str;
-    for (l = ui.document->firstLine; l != NULL; l = l->next) {
+    for (l = ui->document->firstLine; l != NULL; l = l->next) {
         const char* p = l->l.lineBuf;
         for (;;) {
             if (regexMatch(p, &l->l.lineBuf[l->l.len] - p, p == l->l.lineBuf) == 1) {
@@ -659,8 +659,8 @@ DEFUN(submitForm, SUBMIT, "Submit form")
 /* go to the top anchor */
 DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink")
 {
-    struct HmarkerList* hl = ui.document->hmarklist;
-    if (ui.document->firstLine == NULL)
+    struct HmarkerList* hl = ui->document->hmarklist;
+    if (ui->document->firstLine == NULL)
         return;
 
     if (!hl || hl->nmark == 0)
@@ -673,25 +673,25 @@ DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink")
         if (hseq >= hl->nmark)
             return;
         po = hl->marks + hseq;
-        an = retrieveAnchor(ui.document->href, *po);
+        an = retrieveAnchor(ui->document->href, *po);
         if (an == NULL)
-            an = retrieveAnchor(ui.document->formitem, *po);
+            an = retrieveAnchor(ui->document->formitem, *po);
         hseq++;
     } while (an == NULL);
 
-    gotoLine(&ui.current_buffer->document, po->line);
-    ui.document->pos = po->pos;
+    gotoLine(&ui->current_buffer->document, po->line);
+    ui->document->pos = po->pos;
 }
 
 /* go to the last anchor */
 DEFUN(lastA, LINK_END, "Move to the last hyperlink")
 {
-    struct HmarkerList* hl = ui.document->hmarklist;
+    struct HmarkerList* hl = ui->document->hmarklist;
     struct BufferPoint* po;
     struct Anchor* an;
     int hseq;
 
-    if (ui.document->firstLine == NULL)
+    if (ui->document->firstLine == NULL)
         return;
     if (!hl || hl->nmark == 0)
         return;
@@ -701,39 +701,39 @@ DEFUN(lastA, LINK_END, "Move to the last hyperlink")
         if (hseq < 0)
             return;
         po = hl->marks + hseq;
-        an = retrieveAnchor(ui.document->href, *po);
+        an = retrieveAnchor(ui->document->href, *po);
         if (an == NULL)
-            an = retrieveAnchor(ui.document->formitem, *po);
+            an = retrieveAnchor(ui->document->formitem, *po);
         hseq--;
     } while (an == NULL);
 
-    gotoLine(&ui.current_buffer->document, po->line);
-    ui.document->pos = po->pos;
+    gotoLine(&ui->current_buffer->document, po->line);
+    ui->document->pos = po->pos;
 }
 
 /* go to the nth anchor */
 DEFUN(nthA, LINK_N, "Go to the nth link")
 {
-    struct HmarkerList* hl = ui.document->hmarklist;
+    struct HmarkerList* hl = ui->document->hmarklist;
 
-    int n = ui.searchkey_num;
+    int n = ui->searchkey_num;
     if (n < 0 || n > hl->nmark)
         return;
 
-    if (ui.document->firstLine == NULL)
+    if (ui->document->firstLine == NULL)
         return;
     if (!hl || hl->nmark == 0)
         return;
 
     struct BufferPoint* po = hl->marks + n - 1;
-    struct Anchor* an = retrieveAnchor(ui.document->href, *po);
+    struct Anchor* an = retrieveAnchor(ui->document->href, *po);
     if (an == NULL)
-        an = retrieveAnchor(ui.document->formitem, *po);
+        an = retrieveAnchor(ui->document->formitem, *po);
     if (an == NULL)
         return;
 
-    gotoLine(&ui.current_buffer->document, po->line);
-    ui.document->pos = po->pos;
+    gotoLine(&ui->current_buffer->document, po->line);
+    ui->document->pos = po->pos;
 }
 
 /* go to the next anchor */
@@ -762,25 +762,25 @@ DEFUN(prevVA, PREV_VISITED, "Move to the previous visited hyperlink")
 
 /* go to the next left/right anchor */
 static void
-nextX(struct UI ui, int d, int dy)
+nextX(struct UI *ui, int d, int dy)
 {
-    if (ui.document->firstLine == NULL)
+    if (ui->document->firstLine == NULL)
         return;
 
-    struct HmarkerList* hl = ui.document->hmarklist;
+    struct HmarkerList* hl = ui->document->hmarklist;
     if (!hl || hl->nmark == 0)
         return;
 
-    struct Anchor* an = retrieveAnchor(ui.document->href, getBufferPosition(ui));
+    struct Anchor* an = retrieveAnchor(ui->document->href, getBufferPosition(ui->current_buffer));
     if (an == NULL)
-        an = retrieveAnchor(ui.document->formitem, getBufferPosition(ui));
+        an = retrieveAnchor(ui->document->formitem, getBufferPosition(ui->current_buffer));
 
     int y;
-    struct Anchor* pan = getNextHorizontalAnchor(&ui.current_buffer->document, an, ui.searchkey_num, d, dy);
+    struct Anchor* pan = getNextHorizontalAnchor(&ui->current_buffer->document, an, ui->searchkey_num, d, dy);
     if (pan == NULL)
         return;
 
-    ui.document->pos = pan->start.pos;
+    ui->document->pos = pan->start.pos;
 }
 
 /* go to the next left anchor */
@@ -809,35 +809,35 @@ DEFUN(nextRD, NEXT_RIGHT_DOWN, "Move right or downward to the next hyperlink")
 
 /* go to the next downward/upward anchor */
 static void
-nextY(struct UI ui, int d)
+nextY(struct UI *ui, int d)
 {
-    struct HmarkerList* hl = ui.document->hmarklist;
+    struct HmarkerList* hl = ui->document->hmarklist;
     struct Anchor* pan;
-    int i, x, y, n = ui.searchkey_num;
+    int i, x, y, n = ui->searchkey_num;
     int hseq;
 
-    if (ui.document->firstLine == NULL)
+    if (ui->document->firstLine == NULL)
         return;
     if (!hl || hl->nmark == 0)
         return;
 
-    struct Anchor* an = retrieveAnchor(ui.document->href, getBufferPosition(ui));
+    struct Anchor* an = retrieveAnchor(ui->document->href, getBufferPosition(ui->current_buffer));
     if (an == NULL)
-        an = retrieveAnchor(ui.document->formitem, getBufferPosition(ui));
+        an = retrieveAnchor(ui->document->formitem, getBufferPosition(ui->current_buffer));
 
-    x = ui.document->pos;
-    y = currentLine(&ui.current_buffer->document)->linenumber + d;
+    x = ui->document->pos;
+    y = currentLine(&ui->current_buffer->document)->linenumber + d;
     pan = NULL;
     hseq = -1;
     for (i = 0; i < n; i++) {
         if (an)
             hseq = abs(an->hseq);
         an = NULL;
-        for (; y >= 0 && y <= lastLine(&ui.current_buffer->document)->linenumber; y += d) {
+        for (; y >= 0 && y <= lastLine(&ui->current_buffer->document)->linenumber; y += d) {
             struct BufferPoint bp = { .line = y, .pos = x };
-            an = retrieveAnchor(ui.document->href, bp);
+            an = retrieveAnchor(ui->document->href, bp);
             if (!an)
-                an = retrieveAnchor(ui.document->formitem, bp);
+                an = retrieveAnchor(ui->document->formitem, bp);
             if (an && hseq != abs(an->hseq)) {
                 pan = an;
                 break;
@@ -849,7 +849,7 @@ nextY(struct UI ui, int d)
 
     if (pan == NULL)
         return;
-    gotoLine(&ui.current_buffer->document, pan->start.line);
+    gotoLine(&ui->current_buffer->document, pan->start.line);
 }
 
 /* go to the next downward anchor */
@@ -867,13 +867,13 @@ DEFUN(nextU, NEXT_UP, "Move upward to the next hyperlink")
 /* go to the next bufferr */
 DEFUN(nextBf, NEXT, "Switch to the next buffer")
 {
-    setCurrentBuffer(prevBuffer(Firstbuf, ui.current_buffer));
+    setCurrentBuffer(prevBuffer(Firstbuf, ui->current_buffer));
 }
 
 /* go to the previous bufferr */
 DEFUN(prevBf, PREV, "Switch to the previous buffer")
 {
-    setCurrentBuffer(ui.current_buffer->nextBuffer);
+    setCurrentBuffer(ui->current_buffer->nextBuffer);
 }
 
 static int
@@ -888,16 +888,16 @@ checkBackBuffer(struct Buffer* buf)
 /* delete current buffer and back to the previous buffer */
 DEFUN(backBf, BACK, "Close current buffer and return to the one below in stack")
 {
-    if (!ui.current_buffer->nextBuffer) {
+    if (!ui->current_buffer->nextBuffer) {
         message(ui, MSG_INFO, "Can't go back...");
         return;
     }
-    delBuffer(ui.current_buffer);
+    delBuffer(ui->current_buffer);
 }
 
 DEFUN(deletePrevBuf, DELETE_PREVBUF, "Delete previous buffer (mainly for local CGI-scripts)")
 {
-    struct Buffer* buf = ui.current_buffer->nextBuffer;
+    struct Buffer* buf = ui->current_buffer->nextBuffer;
     if (buf)
         delBuffer(buf);
 }
@@ -912,15 +912,15 @@ DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer")
     const char* url;
     if ((url = getenv("HTTP_HOME")) != NULL || (url = getenv("WWW_HOME")) != NULL) {
         struct Url p_url;
-        struct Buffer* cur_buf = ui.current_buffer;
+        struct Buffer* cur_buf = ui->current_buffer;
         SKIP_BLANKS(url);
         url = url_quote(url);
         p_url = parseUrl(url, NULL);
         pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
         struct Content c = getContent(ui, url, NULL, NULL, NULL);
-        pushContent(ui, c, ui.viewport.size.x, ui.use_graphic);
-        if (ui.current_buffer != cur_buf) /* success */
-            pushHashHist(URLHist, parsedURL2Str(&ui.current_buffer->content.url)->ptr);
+        pushContent(ui, c, ui->viewport.size.x, ui->use_graphic);
+        if (ui->current_buffer != cur_buf) /* success */
+            pushHashHist(URLHist, parsedURL2Str(&ui->current_buffer->content.url)->ptr);
     }
 }
 
@@ -933,7 +933,7 @@ DEFUN(gorURL, GOTO_RELATIVE, "Go to relative address")
 DEFUN(ldBmark, BOOKMARK VIEW_BOOKMARK, "View bookmarks")
 {
     struct Content c = getContent(ui, BookmarkFile, NULL, NULL, NO_REFERER);
-    pushContent(ui, c, ui.viewport.size.x, ui.use_graphic);
+    pushContent(ui, c, ui->viewport.size.x, ui->use_graphic);
 }
 
 #define W3MBOOKMARK_CMDNAME "w3mbookmark"
@@ -946,8 +946,8 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
                       "&charset=%s",
         (Str_form_quote(localCookie()))->ptr,
         (Str_form_quote(Strnew_charp(BookmarkFile)))->ptr,
-        (Str_form_quote(parsedURL2Str(&ui.current_buffer->content.url)))->ptr,
-        (Str_form_quote(wc_conv_strict(ui.current_buffer->document.title,
+        (Str_form_quote(parsedURL2Str(&ui->current_buffer->content.url)))->ptr,
+        (Str_form_quote(wc_conv_strict(ui->current_buffer->document.title,
              InnerCharset,
              BookmarkCharset)))
             ->ptr,
@@ -956,14 +956,14 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
     post->body = tmp->ptr;
     post->length = tmp->length;
     struct Content c = getContent(ui, "file:///$LIB/" W3MBOOKMARK_CMDNAME, NULL, post, NO_REFERER);
-    pushContent(ui, c, ui.viewport.size.x, ui.use_graphic);
+    pushContent(ui, c, ui->viewport.size.x, ui->use_graphic);
 }
 
 /* option setting */
 DEFUN(ldOpt, OPTIONS, "Display options setting panel")
 {
     struct Content c = makeContentFromHtmlUtf8(load_option_panel_html());
-    pushContent(ui, c, ui.viewport.size.x, ui.use_graphic);
+    pushContent(ui, c, ui->viewport.size.x, ui->use_graphic);
 }
 
 /* set an option */
@@ -991,23 +991,23 @@ DEFUN(setOpt, SET_OPTION, "Set option")
 DEFUN(msgs, MSGS, "Display error messages")
 {
     struct Content c = makeContentFromHtmlUtf8(message_list_panel_html());
-    pushContent(ui, c, ui.viewport.size.x, ui.use_graphic);
+    pushContent(ui, c, ui->viewport.size.x, ui->use_graphic);
 }
 
 /* page info */
 DEFUN(pginfo, INFO, "Display information about the current document")
 {
     struct Content c = makeContentFromHtmlUtf8(page_info_panel_html(
-        &ui.current_buffer->content,
-        &ui.current_buffer->document,
-        getBufferPosition(ui)));
-    pushContent(ui, c, ui.viewport.size.x, ui.use_graphic);
+        &ui->current_buffer->content,
+        &ui->current_buffer->document,
+        getBufferPosition(ui->current_buffer)));
+    pushContent(ui, c, ui->viewport.size.x, ui->use_graphic);
 }
 
 /* link menu */
 DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
 {
-    struct LinkList* l = link_menu(ui, ui.document);
+    struct LinkList* l = link_menu(ui, ui->document);
     if (!l || !l->url)
         return;
 
@@ -1016,11 +1016,11 @@ DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
         return;
     }
 
-    struct Url p_url = parseUrl(l->url, makeBaseUrl(&ui.current_buffer->document));
+    struct Url p_url = parseUrl(l->url, makeBaseUrl(&ui->current_buffer->document));
     pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
-    struct Content c = getContent(ui, l->url, makeBaseUrl(&ui.current_buffer->document),
-        NULL, parsedURL2Str(&ui.current_buffer->content.url)->ptr);
-    pushContent(ui, c, ui.viewport.size.x, ui.use_graphic);
+    struct Content c = getContent(ui, l->url, makeBaseUrl(&ui->current_buffer->document),
+        NULL, parsedURL2Str(&ui->current_buffer->content.url)->ptr);
+    pushContent(ui, c, ui->viewport.size.x, ui->use_graphic);
 }
 
 /* accesskey */
@@ -1043,22 +1043,22 @@ DEFUN(movlistMn, MOVE_LIST_MENU, "Pop up menu to navigate between hyperlinks")
 /* link,anchor,image list */
 DEFUN(linkLst, LIST, "Show all URLs referenced")
 {
-    struct Content c = makeContentFromHtmlUtf8(link_list_panel_html(&ui.current_buffer->document));
-    pushContent(ui, c, ui.viewport.size.x, ui.use_graphic);
+    struct Content c = makeContentFromHtmlUtf8(link_list_panel_html(&ui->current_buffer->document));
+    pushContent(ui, c, ui->viewport.size.x, ui->use_graphic);
 }
 
 /* cookie list */
 DEFUN(cooLst, COOKIE, "View cookie list")
 {
     struct Content c = makeContentFromHtmlUtf8(cookie_list_panel_html());
-    pushContent(ui, c, ui.viewport.size.x, ui.use_graphic);
+    pushContent(ui, c, ui->viewport.size.x, ui->use_graphic);
 }
 
 /* History page */
 DEFUN(ldHist, HISTORY, "Show browsing history")
 {
     struct Content c = makeContentFromHtmlUtf8(historyBuffer_html(URLHist));
-    pushContent(ui, c, ui.viewport.size.x, ui.use_graphic);
+    pushContent(ui, c, ui->viewport.size.x, ui->use_graphic);
 }
 
 /* download HREF link */
@@ -1114,7 +1114,7 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document")
         message(ui, MSG_ERR, emsg);
         return;
     }
-    saveBuffer(ui.current_buffer, f, true);
+    saveBuffer(ui->current_buffer, f, true);
     if (is_pipe)
         pclose(f);
     else
@@ -1124,15 +1124,15 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document")
 /* save source */
 DEFUN(svSrc, DOWNLOAD SAVE, "Save document source")
 {
-    if (ui.current_buffer->content.sourcefile == NULL)
+    if (ui->current_buffer->content.sourcefile == NULL)
         return;
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
     PermitSaveToPipe = true;
-    // if (ui.current_buffer->real_scheme == SCM_LOCAL)
-    //     file = conv_from_system(guessSaveName(NULL, ui.current_buffer->content.url.real_file));
+    // if (ui->current_buffer->real_scheme == SCM_LOCAL)
+    //     file = conv_from_system(guessSaveName(NULL, ui->current_buffer->content.url.real_file));
     // else
-    const char* file = guessSaveName(ui.current_buffer->content.document_header, ui.current_buffer->content.url.file);
-    doFileCopy(ui.current_buffer->content.sourcefile, file);
+    const char* file = guessSaveName(ui->current_buffer->content.document_header, ui->current_buffer->content.url.file);
+    doFileCopy(ui->current_buffer->content.sourcefile, file);
     PermitSaveToPipe = false;
 }
 
@@ -1155,28 +1155,28 @@ DEFUN(curURL, PEEK, "Show current address")
 /* view HTML source */
 DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
 {
-    if (ui.current_buffer->content.cc.content_type == CONTENTTYPE_UNKNOWN) {
+    if (ui->current_buffer->content.cc.content_type == CONTENTTYPE_UNKNOWN) {
         return;
     }
-    if (ui.current_buffer->content.sourcefile == NULL) {
+    if (ui->current_buffer->content.sourcefile == NULL) {
         return;
     }
 
     struct Buffer* buf = newBuffer();
 
-    if (ui.current_buffer->content.cc.content_type == CONTENTTYPE_TEXT_HTML) {
+    if (ui->current_buffer->content.cc.content_type == CONTENTTYPE_TEXT_HTML) {
         buf->content.cc.content_type = CONTENTTYPE_TEXT_PLAIN;
-        buf->document.title = Sprintf("source of %s", ui.current_buffer->document.title)->ptr;
-    } else if (ui.current_buffer->content.cc.content_type == CONTENTTYPE_TEXT_PLAIN) {
+        buf->document.title = Sprintf("source of %s", ui->current_buffer->document.title)->ptr;
+    } else if (ui->current_buffer->content.cc.content_type == CONTENTTYPE_TEXT_PLAIN) {
         buf->content.cc.content_type = CONTENTTYPE_TEXT_HTML;
-        buf->document.title = Sprintf("HTML view of %s", ui.current_buffer->document.title)->ptr;
+        buf->document.title = Sprintf("HTML view of %s", ui->current_buffer->document.title)->ptr;
     } else {
         return;
     }
-    buf->content.url = ui.current_buffer->content.url;
-    buf->content.sourcefile = ui.current_buffer->content.sourcefile;
-    buf->document.charset = ui.current_buffer->document.charset;
-    buf->clone = ui.current_buffer->clone;
+    buf->content.url = ui->current_buffer->content.url;
+    buf->content.sourcefile = ui->current_buffer->content.sourcefile;
+    buf->document.charset = ui->current_buffer->document.charset;
+    buf->clone = ui->current_buffer->clone;
     (*buf->clone)++;
 
     pushBuffer(buf);
@@ -1185,8 +1185,8 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
 /* reload */
 DEFUN(reload, RELOAD, "Load current document anew")
 {
-    // if (ui.current_buffer->bufferprop & BP_INTERNAL) {
-    //     if (!strcmp(ui.current_buffer->document.title, DOWNLOAD_LIST_TITLE)) {
+    // if (ui->current_buffer->bufferprop & BP_INTERNAL) {
+    //     if (!strcmp(ui->current_buffer->document.title, DOWNLOAD_LIST_TITLE)) {
     //         ldDL(ui);
     //         return;
     //     }
@@ -1194,7 +1194,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
     //     message(ui, MSG_ERR, "Can't reload...");
     //     return;
     // }
-    if (ui.current_buffer->content.url.scheme == SCM_LOCAL && !strcmp(ui.current_buffer->content.url.file, "-")) {
+    if (ui->current_buffer->content.url.scheme == SCM_LOCAL && !strcmp(ui->current_buffer->content.url.file, "-")) {
         /* file is std input */
         /* FIXME: gettextize? */
         message(ui, MSG_ERR, "Can't reload stdin");
@@ -1204,32 +1204,32 @@ DEFUN(reload, RELOAD, "Load current document anew")
     int multipart = 0;
 
     struct Form* post;
-    if (ui.current_buffer->form_submit) {
-        post = ui.current_buffer->form_submit->parent;
+    if (ui->current_buffer->form_submit) {
+        post = ui->current_buffer->form_submit->parent;
         if (post->method == FORM_METHOD_POST
             && post->enctype == FORM_ENCTYPE_MULTIPART) {
             Str query;
             struct stat st;
             multipart = 1;
-            query_from_followform(ui.current_buffer, getBufferPosition(ui),
-                &query, ui.current_buffer->form_submit, multipart);
+            query_from_followform(ui->current_buffer, getBufferPosition(ui->current_buffer),
+                &query, ui->current_buffer->form_submit, multipart);
             stat(post->body, &st);
             post->length = st.st_size;
         }
     } else {
         post = NULL;
     }
-    Str url = parsedURL2Str(&ui.current_buffer->content.url);
+    Str url = parsedURL2Str(&ui->current_buffer->content.url);
     message(ui, MSG_INFO, "Reloading...");
     // refresh(ttyWriter());
     wc_ces old_charset = DocumentCharset;
-    if (ui.current_buffer->document.charset != WC_CES_US_ASCII)
-        DocumentCharset = ui.current_buffer->document.charset;
-    // SearchHeader = ui.current_buffer->search_header;
-    DefaultType = contentTypeStr(ui.current_buffer->content.cc.content_type);
+    if (ui->current_buffer->document.charset != WC_CES_US_ASCII)
+        DocumentCharset = ui->current_buffer->document.charset;
+    // SearchHeader = ui->current_buffer->search_header;
+    DefaultType = contentTypeStr(ui->current_buffer->content.cc.content_type);
     struct Content c = getContent(ui, url->ptr, NULL, post, NO_REFERER /*, true*/);
 
-    struct Buffer* buf = makeBuffer(&c, ui.viewport.size.x, ui.use_graphic);
+    struct Buffer* buf = makeBuffer(&c, ui->viewport.size.x, ui->use_graphic);
     DocumentCharset = old_charset;
     // SearchHeader = false;
     DefaultType = NULL;
@@ -1248,24 +1248,24 @@ DEFUN(reload, RELOAD, "Load current document anew")
     // struct Buffer *fbuf = NULL;
     // if (fbuf != NULL)
     //     Firstbuf = deleteBuffer(Firstbuf, fbuf);
-    repBuffer(ui.current_buffer, buf);
+    repBuffer(ui->current_buffer, buf);
     // if ((buf->content.cc.content_type == CONTENTTYPE_TEXT_PLAIN && sbuf.content.cc.content_type == CONTENTTYPE_TEXT_HTML)
     //     || (buf->content.cc.content_type == CONTENTTYPE_TEXT_HTML && sbuf.content.cc.content_type == CONTENTTYPE_TEXT_PLAIN)) {
     //     vwSrc(ui);
-    //     if (ui.current_buffer != buf)
+    //     if (ui->current_buffer != buf)
     //         Firstbuf = deleteBuffer(Firstbuf, buf);
     // }
-    // ui.current_buffer->form_submit = sbuf.form_submit;
-    if (ui.current_buffer->document.firstLine) {
-        // COPY_BUFROOT(ui.current_buffer, &sbuf);
-        // restorePosition(ui.current_buffer, &sbuf);
+    // ui->current_buffer->form_submit = sbuf.form_submit;
+    if (ui->current_buffer->document.firstLine) {
+        // COPY_BUFROOT(ui->current_buffer, &sbuf);
+        // restorePosition(ui->current_buffer, &sbuf);
     }
 }
 
 /* reshape */
 DEFUN(reshape, RESHAPE, "Re-render document")
 {
-    ui.current_buffer->document.cols = 0;
+    ui->current_buffer->document.cols = 0;
 }
 
 DEFUN(docCSet, CHARSET, "Change the character encoding for the current document")
@@ -1274,17 +1274,17 @@ DEFUN(docCSet, CHARSET, "Change the character encoding for the current document"
     if (cs == NULL || *cs == '\0')
         /* FIXME: gettextize? */
         cs = inputStr(ui, "Document charset: ",
-            wc_ces_to_charset(ui.current_buffer->document.charset));
+            wc_ces_to_charset(ui->current_buffer->document.charset));
     wc_ces charset = wc_guess_charset_short(cs, 0);
     if (charset == 0) {
         return;
     }
     // _docCSet(ui, charset);
-    if (ui.current_buffer->content.sourcefile == NULL) {
+    if (ui->current_buffer->content.sourcefile == NULL) {
         message(ui, MSG_INFO, "Can't reload...");
         return;
     }
-    ui.current_buffer->document.charset = charset;
+    ui->current_buffer->document.charset = charset;
 }
 
 DEFUN(defCSet, DEFAULT_CHARSET, "Change the default character encoding")
@@ -1301,42 +1301,42 @@ DEFUN(defCSet, DEFAULT_CHARSET, "Change the default character encoding")
 
 DEFUN(chkURL, MARK_URL, "Turn URL-like strings into hyperlinks")
 {
-    chkURLBuffer(ui.current_buffer);
+    chkURLBuffer(ui->current_buffer);
 }
 
 DEFUN(chkWORD, MARK_WORD, "Turn current word into hyperlink")
 {
     int spos, epos;
-    const char* p = getCurWord(ui.current_buffer, &spos, &epos);
+    const char* p = getCurWord(ui->current_buffer, &spos, &epos);
     if (p == NULL)
         return;
-    reAnchorWord(ui.current_buffer, currentLine(&ui.current_buffer->document), spos, epos);
+    reAnchorWord(ui->current_buffer, currentLine(&ui->current_buffer->document), spos, epos);
 }
 
 /* show current line number and number of lines in the entire document */
 // DEFUN(curlno, LINE_INFO, "Display current position in document")
 // {
-//     struct Line* l = currentLine(&ui.current_buffer->document);
+//     struct Line* l = currentLine(&ui->current_buffer->document);
 //     Str tmp;
 //     int cur = 0, all = 0, col = 0, len = 0;
 //
 //     if (l != NULL) {
 //         cur = l->real_linenumber;
-//         col = l->bwidth + ui.current_buffer->currentColumn + ui.current_buffer->cursorX + 1;
+//         col = l->bwidth + ui->current_buffer->currentColumn + ui->current_buffer->cursorX + 1;
 //         while (l->next && l->next->bpos)
 //             l = l->next;
 //         if (l->width < 0)
 //             l->width = COLPOS(l, l->len);
 //         len = l->bwidth + l->width;
 //     }
-//     if (lastLine(&ui.current_buffer->document))
-//         all = lastLine(&ui.current_buffer->document)->real_linenumber;
+//     if (lastLine(&ui->current_buffer->document))
+//         all = lastLine(&ui->current_buffer->document)->real_linenumber;
 //     tmp = Sprintf("line %d/%d (%d%%) col %d/%d", cur, all,
 //         (int)((double)cur * 100.0 / (double)(all ? all : 1)
 //             + 0.5),
 //         col, len);
 //     Strcat_charp(tmp, "  ");
-//     Strcat_charp(tmp, wc_ces_to_charset_desc(ui.current_buffer->document_charset));
+//     Strcat_charp(tmp, wc_ces_to_charset_desc(ui->current_buffer->document_charset));
 //
 //     message(ui, MSG_INFO, tmp->ptr);
 // }
@@ -1349,10 +1349,10 @@ DEFUN(dispI, DISPLAY_IMAGE, "Restart loading and drawing of images")
         return;
     displayImage = true;
     /*
-     * if (!(ui.current_buffer->type && is_html_type(ui.current_buffer->type)))
+     * if (!(ui->current_buffer->type && is_html_type(ui->current_buffer->type)))
      * return;
      */
-    ui.document->image_flag = IMG_FLAG_AUTO;
+    ui->document->image_flag = IMG_FLAG_AUTO;
 }
 
 DEFUN(stopI, STOP_IMAGE, "Stop loading and drawing of images")
@@ -1360,10 +1360,10 @@ DEFUN(stopI, STOP_IMAGE, "Stop loading and drawing of images")
     if (!activeImage)
         return;
     /*
-     * if (!(ui.current_buffer->type && is_html_type(ui.current_buffer->type)))
+     * if (!(ui->current_buffer->type && is_html_type(ui->current_buffer->type)))
      * return;
      */
-    ui.document->image_flag = IMG_FLAG_SKIP;
+    ui->document->image_flag = IMG_FLAG_SKIP;
 }
 
 DEFUN(dispVer, VERSION, "Display the version of w3m")
@@ -1392,7 +1392,7 @@ DEFUN(dictword, DICT_WORD, "Execute dictionary command (see README.dict)")
 DEFUN(dictwordat, DICT_WORD_AT,
     "Execute dictionary command for word at cursor")
 {
-    execdict(ui, GetWord(ui.current_buffer));
+    execdict(ui, GetWord(ui->current_buffer));
 }
 
 DEFUN(execCmd, COMMAND, "Invoke w3m function(s)")
@@ -1517,13 +1517,13 @@ DEFUN(defKey, DEFINE_KEY, "Define a binding between a key stroke combination and
 DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
 {
     // int replace = false;
-    // // if (ui.current_buffer->bufferprop & BP_INTERNAL && !strcmp(ui.current_buffer->document.title, DOWNLOAD_LIST_TITLE))
+    // // if (ui->current_buffer->bufferprop & BP_INTERNAL && !strcmp(ui->current_buffer->document.title, DOWNLOAD_LIST_TITLE))
     // //     replace = true;
     // if (!FirstDL) {
     //     if (replace) {
-    //         if (ui.current_buffer == Firstbuf && ui.current_buffer->nextBuffer == NULL) {
+    //         if (ui->current_buffer == Firstbuf && ui->current_buffer->nextBuffer == NULL) {
     //         } else
-    //             delBuffer(ui.current_buffer);
+    //             delBuffer(ui->current_buffer);
     //     }
     //     return;
     // }
@@ -1535,62 +1535,62 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
     // }
     // // buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
     // if (replace) {
-    //     // COPY_BUFROOT(buf, ui.current_buffer);
-    //     // restorePosition(buf, ui.current_buffer);
+    //     // COPY_BUFROOT(buf, ui->current_buffer);
+    //     // restorePosition(buf, ui->current_buffer);
     // }
-    // pushContent(c, ui.viewport.size.x, ui.use_graphic);
+    // pushContent(c, ui->viewport.size.x, ui->use_graphic);
     // if (replace)
     //     deletePrevBuf(ui);
     // if (reload)
-    //     ui.current_buffer->event = setAlarmEvent(ui.current_buffer->event, 1, AL_IMPLICIT,
+    //     ui->current_buffer->event = setAlarmEvent(ui->current_buffer->event, 1, AL_IMPLICIT,
     //         FUNCNAME_reload, NULL);
 }
 
 DEFUN(undoPos, UNDO, "Cancel the last cursor movement")
 {
-    if (!ui.current_buffer->document.firstLine)
+    if (!ui->current_buffer->document.firstLine)
         return;
 
-    struct BufferPos* b = ui.current_buffer->undo;
+    struct BufferPos* b = ui->current_buffer->undo;
     if (!b || !b->prev)
         return;
 
-    resetPos(ui.current_buffer, b);
+    resetPos(ui->current_buffer, b);
 }
 
 DEFUN(redoPos, REDO, "Cancel the last undo")
 {
-    if (!ui.current_buffer->document.firstLine)
+    if (!ui->current_buffer->document.firstLine)
         return;
 
-    struct BufferPos* b = ui.current_buffer->undo;
+    struct BufferPos* b = ui->current_buffer->undo;
     if (!b || !b->next)
         return;
 
-    resetPos(ui.current_buffer, b);
+    resetPos(ui->current_buffer, b);
 }
 
 DEFUN(cursorTop, CURSOR_TOP, "Move cursor to the top of the screen")
 {
-    if (ui.current_buffer->document.firstLine == NULL)
+    if (ui->current_buffer->document.firstLine == NULL)
         return;
-    ui.current_buffer->document.currentLineIndex = 0;
+    ui->current_buffer->document.currentLineIndex = 0;
 }
 
 DEFUN(cursorMiddle, CURSOR_MIDDLE, "Move cursor to the middle of the screen")
 {
-    if (ui.current_buffer->document.firstLine == NULL)
+    if (ui->current_buffer->document.firstLine == NULL)
         return;
-    int offsety = (ui.viewport.size.y - 1) / 2;
-    ui.current_buffer->document.currentLineIndex += offsety;
+    int offsety = (ui->viewport.size.y - 1) / 2;
+    ui->current_buffer->document.currentLineIndex += offsety;
 }
 
 DEFUN(cursorBottom, CURSOR_BOTTOM, "Move cursor to the bottom of the screen")
 {
-    if (ui.current_buffer->document.firstLine == NULL)
+    if (ui->current_buffer->document.firstLine == NULL)
         return;
-    int offsety = ui.viewport.size.y - 1;
-    ui.current_buffer->document.currentLineIndex += offsety;
+    int offsety = ui->viewport.size.y - 1;
+    ui->current_buffer->document.currentLineIndex += offsety;
 }
 
 DEFUN(goLineF, BEGIN, "Go to the first line")
@@ -1601,5 +1601,5 @@ DEFUN(goLineF, BEGIN, "Go to the first line")
 /* Go to the beginning of the line */
 DEFUN(linbeg, LINE_BEGIN, "Go to the beginning of the line")
 {
-    ui.document->pos = 0;
+    ui->document->pos = 0;
 }

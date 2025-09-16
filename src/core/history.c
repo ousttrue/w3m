@@ -82,7 +82,7 @@ int loadHistory(struct Hist* hist)
     return 0;
 }
 
-void saveHistory(struct UI ui, struct Hist* hist, size_t size)
+void saveHistory(struct UI *ui, struct Hist* hist, size_t size)
 {
     FILE* f;
     struct Hist* fhist;

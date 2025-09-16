@@ -28,7 +28,7 @@ static bool keymap_initialized = false;
 static struct stat sys_current_keymap_file;
 static struct stat current_keymap_file;
 
-void setKeymap(struct UI ui, const char* p, int lineno)
+void setKeymap(struct UI *ui, const char* p, int lineno)
 {
     const char* s = getQWord(&p);
     int c = getKey(s);
@@ -117,7 +117,7 @@ void setKeymap(struct UI ui, const char* p, int lineno)
         putHash_iv(keyData, c, NULL);
 }
 
-static void interpret_keymap(struct UI ui, FILE* kf, struct stat* current, int force)
+static void interpret_keymap(struct UI *ui, FILE* kf, struct stat* current, int force)
 {
     int fd = fileno(kf);
     struct stat kstat;
@@ -164,7 +164,7 @@ static void interpret_keymap(struct UI ui, FILE* kf, struct stat* current, int f
     }
 }
 
-void initKeymap(struct UI ui, int force)
+void initKeymap(struct UI *ui, int force)
 {
     {
         FILE* kf = fopen(confFile(KEYMAP_FILE), "rt");

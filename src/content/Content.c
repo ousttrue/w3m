@@ -158,7 +158,7 @@ struct Content openLocal(const char* u, struct Url* current, struct Form* post, 
 }
 
 struct Content
-getContent(struct UI ui, const char* path, struct Url* current,
+getContent(struct UI *ui, const char* path, struct Url* current,
     struct Form* post, const char* referer)
 {
     //         openURL(&c, &pu, current, post, referer, no_cache, extra_header, &hr);
@@ -228,7 +228,7 @@ const char* last_modified(struct Content* content)
 
 #define DICTBUFFERNAME "*dictionary*"
 
-struct Content execdict(struct UI ui, const char* word)
+struct Content execdict(struct UI *ui, const char* word)
 {
     if (!UseDictCommand || word == NULL || *word == '\0') {
         return emptyContent();
