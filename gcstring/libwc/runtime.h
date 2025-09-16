@@ -20,16 +20,21 @@ extern const char* document_root;
 extern wc_ces InnerCharset;
 extern wc_ces SystemCharset;
 
-inline static Str Str_conv_to_system(Str x){
+inline static Str Str_conv_to_system(Str x)
+{
     return wc_Str_conv_strict((x), InnerCharset, SystemCharset);
 }
 // inline static Str_conv_to_halfdump(Strx){
 //     (ExtHalfdump ? wc_Str_conv((x), InnerCharset, DisplayCharset) : (x))
 // }
-inline static const char* conv_from_system(Str x){ return wc_conv((x), SystemCharset, InnerCharset)->ptr; }
-inline static const char* conv_to_system(Str x){ return wc_conv_strict((x), InnerCharset, SystemCharset)->ptr; }
-
-
+inline static const char* conv_from_system(const char* x)
+{
+    return wc_conv((x), SystemCharset, InnerCharset)->ptr;
+}
+inline static const char* conv_to_system(const char* x)
+{
+    return wc_conv_strict((x), InnerCharset, SystemCharset)->ptr;
+}
 
 extern bool DecodeURL;
 

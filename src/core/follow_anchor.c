@@ -706,33 +706,14 @@ void follow_map(struct UI ui, struct KeyValue* arg)
     pushContent(c, ui.viewport.size.x, ui.use_graphic);
 }
 
-/* show current URL */
-static Str
-currentURL(struct UI ui)
-{
-    if (!ui.current_buffer
-        // || ui.current_buffer->bufferprop & BP_INTERNAL
-    )
-        return Strnew_size(0);
-    return parsedURL2Str(&ui.current_buffer->content.url);
-}
+// /* show current URL */
+// static Str
+// currentURL(struct UI ui)
+// {
+//     if (!ui.current_buffer
+//         // || ui.current_buffer->bufferprop & BP_INTERNAL
+//     )
+//         return Strnew_size(0);
+//     return parsedURL2Str(&ui.current_buffer->content.url);
+// }
 
-/* mark URL-like patterns as anchors */
-void chkURLBuffer(struct Buffer* buf)
-{
-    static char* url_like_pat[] = {
-        "https?://[a-zA-Z0-9][a-zA-Z0-9:%\\-\\./?=~_\\&+@#,\\$;]*[a-zA-Z0-9_/=\\-]",
-        "file:/[a-zA-Z0-9:%\\-\\./=_\\+@#,\\$;]*",
-        "ftp://[a-zA-Z0-9][a-zA-Z0-9:%\\-\\./=_+@#,\\$]*[a-zA-Z0-9_/]",
-#ifndef USE_W3MMAILER /* see also chkExternalURIBuffer() */
-        "mailto:[^<> 	][^<> 	]*@[a-zA-Z0-9][a-zA-Z0-9\\-\\._]*[a-zA-Z0-9]",
-#endif
-        "https?://[a-zA-Z0-9:%\\-\\./_@]*\\[[a-fA-F0-9:][a-fA-F0-9:\\.]*\\][a-zA-Z0-9:%\\-\\./?=~_\\&+@#,\\$;]*",
-        "ftp://[a-zA-Z0-9:%\\-\\./_@]*\\[[a-fA-F0-9:][a-fA-F0-9:\\.]*\\][a-zA-Z0-9:%\\-\\./=_+@#,\\$]*",
-        NULL
-    };
-    for (int i = 0; url_like_pat[i]; i++) {
-        reAnchor(buf, url_like_pat[i]);
-    }
-    buf->check_url = true;
-}

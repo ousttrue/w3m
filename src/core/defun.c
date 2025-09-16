@@ -1,4 +1,5 @@
 #include "AnchorList.h"
+#include "w3m.h"
 #include "cookie.h"
 #include "HtmlTagParsed.h"
 #include "document_renderer.h"

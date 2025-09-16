@@ -3,6 +3,8 @@
 #include "myctype.h"
 #include "ctrlcode.h"
 #include <stdio.h>
+#define _GNU_SOURCE /* See feature_test_macros(7) */
+#include <string.h>
 
 extern unsigned char QUOTE_MAP[];
 enum QuoteMask GET_QUOTE_TYPE(unsigned char c) { return QUOTE_MAP[(int)(unsigned char)(c)]; }
@@ -456,4 +458,37 @@ Str unescape_spaces(Str s)
     if (tmp)
         return tmp;
     return s;
+}
+
+Str myEditor(const char* cmd, const char* file, int line)
+{
+    Str tmp = NULL;
+    bool set_file = false;
+    bool set_line = false;
+    for (const char* p = cmd; *p; p++) {
+        if (*p == '%' && *(p + 1) == 's' && !set_file) {
+            if (tmp == NULL)
+                tmp = Strnew_charp_n(cmd, (int)(p - cmd));
+            Strcat_charp(tmp, file);
+            set_file = true;
+            p++;
+        } else if (*p == '%' && *(p + 1) == 'd' && !set_line && line > 0) {
+            if (tmp == NULL)
+                tmp = Strnew_charp_n(cmd, (int)(p - cmd));
+            Strcat(tmp, Sprintf("%d", line));
+            set_line = true;
+            p++;
+        } else {
+            if (tmp)
+                Strcat_char(tmp, *p);
+        }
+    }
+    if (!set_file) {
+        if (tmp == NULL)
+            tmp = Strnew_charp(cmd);
+        if (!set_line && line > 1 && strcasestr(cmd, "vi"))
+            Strcat(tmp, Sprintf(" +%d", line));
+        Strcat_m_charp(tmp, " ", file, NULL);
+    }
+    return tmp;
 }

@@ -28,15 +28,14 @@
 #include "term_size.h"
 #include "tty.h"
 #include "screen.h"
+
 #include "myctype.h"
 #include "alloc.h"
-
-#include <errno.h>
-#include <event_poller.h>
-
 #include <wc.h>
 
 #include <gc/gc.h>
+
+#include <errno.h>
 #include <locale.h>
 #include <stdlib.h>
 #include <string.h>
@@ -72,26 +71,14 @@ struct Hist* URLHist;
 struct Hist* ShellHist;
 struct Hist* TextHist;
 
-typedef struct _Event {
-    int cmd;
-    void* data;
-    struct _Event* next;
-} Event;
-static Event* CurrentEvent = NULL;
-static Event* LastEvent = NULL;
-
-static AlarmEvent DefaultAlarm = {
-    0, AL_UNSET, FUNCNAME_nulcmd, NULL
-};
-static AlarmEvent* CurrentAlarm = &DefaultAlarm;
-static void SigAlarm(int _dummy);
-
 static int need_resize_screen = false;
 
 static int display_ok = false;
 int prev_key = -1;
 
 static int check_target = true;
+
+void initialize();
 
 static void*
 die_oom(size_t bytes)
@@ -104,33 +91,6 @@ die_oom(size_t bytes)
      */
     return NULL;
 }
-
-// static void
-// sig_chld(int signo)
-// {
-//     int p_stat;
-//     pid_t pid;
-//
-//     while ((pid = waitpid(-1, &p_stat, WNOHANG)) > 0) {
-//         DownloadList* d;
-//
-//         if (WIFEXITED(p_stat)) {
-//             for (d = FirstDL; d != NULL; d = d->next) {
-//                 if (d->pid == pid) {
-//                     d->err = WEXITSTATUS(p_stat);
-//                     break;
-//                 }
-//             }
-//         }
-//     }
-//     mySignal(SIGCHLD, sig_chld);
-// }
-
-// static void
-// SigPipe(int _dummy)
-// {
-//     mySignal(SIGPIPE, SigPipe);
-// }
 
 static GC_warn_proc orig_GC_warn_proc = NULL;
 #define GC_WARN_KEEP_MAX (20)
@@ -173,10 +133,6 @@ wrap_GC_warn_proc(char* msg, GC_word arg)
     }
 }
 
-#include <libintl.h>
-#define _(String) gettext(String)
-#define N_(String) (String)
-
 static const char* currentdir()
 {
     char* path = NewAtom_N(char, MAXPATHLEN);
@@ -192,8 +148,6 @@ void initialize()
     GC_INIT();
     GC_set_oom_fn(die_oom);
     setlocale(LC_ALL, "");
-    bindtextdomain(PACKAGE, LOCALEDIR);
-    textdomain(PACKAGE);
 
     NO_proxy_domains = newTextList();
     initDeleteFile();
@@ -290,11 +244,35 @@ void fmTerm(void)
     vt_clrtoeolx(vt);
     // refresh(ttyWriter());
     if (activeImage)
-        loadImage((struct UI){}, NULL, IMG_FLAG_STOP, false);
+        loadImage((struct UI) {}, NULL, IMG_FLAG_STOP, false);
     resetTerm();
     flush_tty();
     TerminalSet(NULL);
     close_tty();
+}
+
+static void deleteFiles()
+{
+    while (Firstbuf) {
+        struct Buffer* buf = Firstbuf->nextBuffer;
+        discardBuffer(Firstbuf);
+        Firstbuf = buf;
+    }
+
+    deinitDeleteFile();
+}
+
+static void w3m_exit(int i)
+{
+    stopDownload();
+    deleteFiles();
+    free_ssl_ctx();
+    if (mkd_tmp_dir)
+        if (rmdir(mkd_tmp_dir) != 0) {
+            fprintf(stderr, "Can't remove temporary directory (%s)!\n", mkd_tmp_dir);
+            exit(1);
+        }
+    exit(i);
 }
 
 static void reset_exit_with_value(int _dummy, int rval)
@@ -316,21 +294,6 @@ void reset_exit(int _dummy)
 {
     reset_exit_with_value(0, 0);
 }
-
-// void set_int(void)
-// {
-//     mySignal(SIGHUP, reset_exit);
-//     mySignal(SIGINT, reset_exit);
-//     mySignal(SIGQUIT, reset_exit);
-//     mySignal(SIGTERM, reset_exit);
-//     mySignal(SIGILL, error_dump);
-//     mySignal(SIGIOT, error_dump);
-//     mySignal(SIGFPE, error_dump);
-// #ifdef SIGBUS
-//     mySignal(SIGBUS, error_dump);
-// #endif /* SIGBUS */
-//     /* mySignal(SIGSEGV, error_dump); */
-// }
 
 /*
  * Screen initialize
@@ -365,94 +328,6 @@ void fmInit(void)
     term_noecho();
     if (displayImage)
         initImage();
-}
-
-static void
-resize_screen(void)
-{
-    need_resize_screen = false;
-    setlinescols(get_tty_fd());
-    vt_setupscreen(getScreen(), getLines(), getCols());
-    vt_clear(getScreen());
-}
-
-bool onFrame()
-{
-    struct UI ui = getUI();
-
-    struct TermEntry* t = getTermEntry();
-    bool use_graphic = graph_ok(t);
-
-    updateDownload();
-    if (ui.current_buffer->submit) {
-        struct Anchor* a = ui.current_buffer->submit;
-        ui.current_buffer->submit = NULL;
-        gotoLine(&ui.current_buffer->document, a->start.line);
-        ui.current_buffer->document.pos = a->start.pos;
-        _followForm(ui, true, false);
-        return false;
-    }
-    /* event processing */
-    if (CurrentEvent) {
-        CurrentKey = -1;
-        CurrentKeyData = NULL;
-        CurrentCmdData = (char*)CurrentEvent->data;
-        w3mFuncList[CurrentEvent->cmd].func(ui);
-
-        if (updateCursor(getUI().current_buffer)) {
-        }
-        termClear(ttyWriter());
-        bufToScreen(ui);
-        renderFrame(ui);
-
-        CurrentCmdData = NULL;
-        CurrentEvent = CurrentEvent->next;
-        return false;
-    }
-    /* get keypress event */
-    if (ui.current_buffer->event) {
-        if (ui.current_buffer->event->status != AL_UNSET) {
-            CurrentAlarm = ui.current_buffer->event;
-            if (CurrentAlarm->sec == 0) { /* refresh (0sec) */
-                ui.current_buffer->event = NULL;
-                CurrentKey = -1;
-                CurrentKeyData = NULL;
-                CurrentCmdData = (char*)CurrentAlarm->data;
-                w3mFuncList[CurrentAlarm->cmd].func(ui);
-
-                if (updateCursor(getUI().current_buffer)) {
-                }
-                termClear(ttyWriter());
-                bufToScreen(ui);
-                renderFrame(ui);
-
-                CurrentCmdData = NULL;
-                return false;
-            }
-        } else
-            ui.current_buffer->event = NULL;
-    }
-    if (!ui.current_buffer->event)
-        CurrentAlarm = &DefaultAlarm;
-    // if (CurrentAlarm->sec > 0) {
-    //     mySignal(SIGALRM, SigAlarm);
-    //     alarm(CurrentAlarm->sec);
-    // }
-
-    // mySignal(SIGWINCH, resize_hook);
-    if (activeImage && displayImage && ui.document->img && !ui.document->image_loaded) {
-        loadImage(ui, ui.document, IMG_FLAG_NEXT, false);
-        bufToScreen(ui);
-        renderFrame(ui);
-        // continue;
-    }
-    if (need_resize_screen) {
-        resize_screen();
-        bufToScreen(ui);
-        renderFrame(ui);
-    }
-
-    return true;
 }
 
 static void set_buffer_environ(struct UI ui)
@@ -543,10 +418,6 @@ void onKeyInput(unsigned char c)
     static unsigned char g_keylog[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
     static int g_i = 0;
 
-    if (CurrentAlarm->sec > 0) {
-        alarm(0);
-    }
-
     g_keylog[g_i % sizeof(g_keylog)] = c;
     if (IS_ASCII(c)) { /* Ascii */
 
@@ -570,21 +441,6 @@ void onKeyInput(unsigned char c)
     prev_key = CurrentKey;
     CurrentKey = -1;
     CurrentKeyData = NULL;
-}
-
-void pushEvent(int cmd, void* data)
-{
-    Event* event;
-
-    event = New(Event);
-    event->cmd = cmd;
-    event->data = data;
-    event->next = NULL;
-    if (CurrentEvent)
-        LastEvent->next = event;
-    else
-        CurrentEvent = event;
-    LastEvent = event;
 }
 
 void pcmap(void)
@@ -620,104 +476,6 @@ escKeyProc(int c, int esc, unsigned char* map)
         w3mFuncList[(int)map[c]].func(getUI());
 }
 
-void deleteFiles()
-{
-    while (Firstbuf) {
-        struct Buffer* buf = Firstbuf->nextBuffer;
-        discardBuffer(Firstbuf);
-        Firstbuf = buf;
-    }
-
-    deinitDeleteFile();
-}
-
-void w3m_exit(int i)
-{
-    stopDownload();
-    deleteFiles();
-    free_ssl_ctx();
-    if (mkd_tmp_dir)
-        if (rmdir(mkd_tmp_dir) != 0) {
-            fprintf(stderr, "Can't remove temporary directory (%s)!\n", mkd_tmp_dir);
-            exit(1);
-        }
-    exit(i);
-}
-
-static void SigAlarm(int _dummy)
-{
-    struct UI ui = getUI();
-    if (CurrentAlarm->sec > 0) {
-        CurrentKey = -1;
-        CurrentKeyData = NULL;
-        char* data;
-        CurrentCmdData = data = (char*)CurrentAlarm->data;
-        w3mFuncList[CurrentAlarm->cmd].func(getUI());
-        CurrentCmdData = NULL;
-        if (CurrentAlarm->status == AL_IMPLICIT_ONCE) {
-            CurrentAlarm->sec = 0;
-            CurrentAlarm->status = AL_UNSET;
-        }
-        if (ui.current_buffer->event) {
-            if (ui.current_buffer->event->status != AL_UNSET)
-                CurrentAlarm = ui.current_buffer->event;
-            else
-                ui.current_buffer->event = NULL;
-        }
-        if (!ui.current_buffer->event)
-            CurrentAlarm = &DefaultAlarm;
-        // if (CurrentAlarm->sec > 0) {
-        //     mySignal(SIGALRM, SigAlarm);
-        //     alarm(CurrentAlarm->sec);
-        // }
-    }
-}
-
-AlarmEvent*
-setAlarmEvent(AlarmEvent* event, int sec, short status, int cmd, void* data)
-{
-    if (event == NULL)
-        event = New(AlarmEvent);
-    event->sec = sec;
-    event->status = status;
-    event->cmd = cmd;
-    event->data = data;
-    return event;
-}
-
-Str myEditor(const char* cmd, const char* file, int line)
-{
-    Str tmp = NULL;
-    int set_file = false, set_line = false;
-
-    for (const char* p = cmd; *p; p++) {
-        if (*p == '%' && *(p + 1) == 's' && !set_file) {
-            if (tmp == NULL)
-                tmp = Strnew_charp_n(cmd, (int)(p - cmd));
-            Strcat_charp(tmp, file);
-            set_file = true;
-            p++;
-        } else if (*p == '%' && *(p + 1) == 'd' && !set_line && line > 0) {
-            if (tmp == NULL)
-                tmp = Strnew_charp_n(cmd, (int)(p - cmd));
-            Strcat(tmp, Sprintf("%d", line));
-            set_line = true;
-            p++;
-        } else {
-            if (tmp)
-                Strcat_char(tmp, *p);
-        }
-    }
-    if (!set_file) {
-        if (tmp == NULL)
-            tmp = Strnew_charp(cmd);
-        if (!set_line && line > 1 && strcasestr(cmd, "vi"))
-            Strcat(tmp, Sprintf(" +%d", line));
-        Strcat_m_charp(tmp, " ", file, NULL);
-    }
-    return tmp;
-}
-
 // void _quitfm(bool confirm)
 // {
 //     const char* ans = "y";
@@ -742,6 +500,30 @@ Str myEditor(const char* cmd, const char* file, int line)
 //         saveHistory(URLHist, URLHistSize);
 //     w3m_exit(0);
 // }
+
+//
+// TOOD: input blocking on coroutine
+//
+int exec_cmd(char* cmd)
+{
+    fmTerm();
+    int rv = system(cmd);
+    if (rv) {
+        printf("\n[Hit any key]");
+        fflush(stdout);
+        fmInit();
+        {
+            // GetChFunc getch = event_begin_input(-1);
+            // getch();
+            // event_end_input(getch);
+        }
+
+        return rv;
+    }
+    fmInit();
+
+    return 0;
+}
 
 #include <sys/signalfd.h>
 int create_signalfd(void)
