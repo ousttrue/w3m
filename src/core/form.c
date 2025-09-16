@@ -342,7 +342,7 @@ form_fputs_decode(Str s, FILE* f)
     Strfputs(z, f);
 }
 
-void input_textarea(struct FormItem* fi)
+void input_textarea(struct UI ui, struct FormItem* fi)
 {
     char* tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
     Str tmp;
@@ -353,7 +353,7 @@ void input_textarea(struct FormItem* fi)
     f = fopen(tmpf, "w");
     if (f == NULL) {
         /* FIXME: gettextize? */
-        message(getUI(), MSG_ERR, "Can't open temporary file");
+        message(ui, MSG_ERR, "Can't open temporary file");
         return;
     }
     if (fi->value)
@@ -368,7 +368,7 @@ void input_textarea(struct FormItem* fi)
     f = fopen(tmpf, "r");
     if (f == NULL) {
         /* FIXME: gettextize? */
-        message(getUI(), MSG_ERR, "Can't open temporary file");
+        message(ui, MSG_ERR, "Can't open temporary file");
         goto input_end;
     }
     fi->value = Strnew();
@@ -534,7 +534,7 @@ add_pre_form_item(struct pre_form* pf, struct pre_form_item* prev, int type,
  * /textarea
  */
 
-void loadPreForm(void)
+void loadPreForm(struct UI ui)
 {
     FILE* fp;
     Str line = NULL, textarea = NULL;
@@ -544,7 +544,7 @@ void loadPreForm(void)
     char* name = NULL;
 
     PreForm = NULL;
-    fp = openSecretFile(pre_form_file);
+    fp = openSecretFile(ui, pre_form_file);
     if (fp == NULL)
         return;
     while (1) {

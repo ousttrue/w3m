@@ -177,7 +177,7 @@ loadLink(struct UI ui, const char* url, const char* target, const char* referer,
         return NULL;
     }
 
-    return pushContent(c, ui.viewport.size.x, ui.use_graphic);
+    return pushContent(ui, c, ui.viewport.size.x, ui.use_graphic);
 }
 
 static struct FormItem* save_submit_formlist(struct FormItem* src)
@@ -378,7 +378,7 @@ void _followForm(struct UI ui, bool submit, bool do_download)
         if (fi->readonly) {
             message(ui, MSG_INFO, "Read only field!");
         }
-        input_textarea(fi);
+        input_textarea(ui, fi);
         formUpdateBuffer(a, ui.current_buffer, fi);
         break;
     }
@@ -455,7 +455,7 @@ void gotoLabel(struct UI ui, const char* label)
     struct Anchor* al = searchURLLabel(ui.current_buffer, label);
     if (al == NULL) {
         /* FIXME: gettextize? */
-        message(getUI(), MSG_INFO, Sprintf("%s is not found", label)->ptr);
+        message(ui, MSG_INFO, Sprintf("%s is not found", label)->ptr);
         return;
     }
 
@@ -493,7 +493,7 @@ void followAnchor(struct UI ui, bool do_download)
     }
     a = retrieveAnchor(ui.document->href, getBufferPosition(ui));
     if (a == NULL) {
-        _followForm(getUI(), false, do_download);
+        _followForm(ui, false, do_download);
         return;
     }
     if (*a->url == '#') { /* index within this buffer */
@@ -527,10 +527,10 @@ void followImage(struct UI ui, bool do_download)
     if (a == NULL)
         return;
     /* FIXME: gettextize? */
-    message(getUI(), MSG_INFO, Sprintf("loading %s", a->url)->ptr);
+    message(ui, MSG_INFO, Sprintf("loading %s", a->url)->ptr);
     // refresh(ttyWriter());
     struct Content c = getContent(ui, a->url, makeBaseUrl(&ui.current_buffer->document), NULL, NULL);
-    pushContent(c, ui.viewport.size.x, ui.use_graphic);
+    pushContent(ui, c, ui.viewport.size.x, ui.use_graphic);
 }
 
 struct MapArea*
@@ -600,7 +600,7 @@ void goURL0(struct UI ui, const char* prompt, bool relative)
             else
                 pushHist(hist, a_url);
         }
-        url = inputLineHist(getUI(), prompt, url, IN_URL, hist);
+        url = inputLineHist(ui, prompt, url, IN_URL, hist);
         if (url != NULL)
             SKIP_BLANKS(url);
     }
@@ -630,7 +630,7 @@ void goURL0(struct UI ui, const char* prompt, bool relative)
         struct Url p_url = parseUrl(url, current);
         pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
         struct Content c = getContent(ui, url, current, NULL, referer);
-        pushContent(c, ui.viewport.size.x, ui.use_graphic);
+        pushContent(ui, c, ui.viewport.size.x, ui.use_graphic);
         if (ui.current_buffer != cur_buf) /* success */
             pushHashHist(URLHist, parsedURL2Str(&ui.current_buffer->content.url)->ptr);
     }
@@ -704,7 +704,7 @@ void follow_map(struct UI ui, struct KeyValue* arg)
     pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
     struct Content c = getContent(ui, a->url, makeBaseUrl(&ui.current_buffer->document),
         NULL, parsedURL2Str(&ui.current_buffer->content.url)->ptr);
-    pushContent(c, ui.viewport.size.x, ui.use_graphic);
+    pushContent(ui, c, ui.viewport.size.x, ui.use_graphic);
 }
 
 // /* show current URL */

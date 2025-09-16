@@ -14,6 +14,6 @@ void init_rc(void);
 void init_tmp(void);
 Str load_option_panel_html();
 void panel_set_option(struct UI ui, struct KeyValue*);
-void sync_with_option(void);
+void sync_with_option(struct UI ui);
 
-FILE* openSecretFile(const char* fname);
+FILE* openSecretFile(struct UI ui, const char* fname);

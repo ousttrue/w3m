@@ -822,7 +822,7 @@ void draw_menu_item(struct Menu* menu, int mselect)
         menu->item[mselect].label, menu->width);
 }
 
-int select_menu(struct Menu* menu, int mselect)
+int select_menu(struct UI ui, struct Menu* menu, int mselect)
 {
     struct VirtualTerm* vt = getScreen();
     if (mselect < 0 || mselect >= menu->nitem)
@@ -843,12 +843,12 @@ int select_menu(struct Menu* menu, int mselect)
     vt_move(vt, menu->y + mselect - menu->offset, menu->x);
     vt_toggle_stand(vt);
     // refresh(ttyWriter());
-    renderFrame(getUI());
+    renderFrame(ui);
 
     return (menu->select);
 }
 
-void goto_menu(struct Menu* menu, int mselect, int down)
+void goto_menu(struct UI ui, struct Menu* menu, int mselect, int down)
 {
     int select_in;
     if (mselect >= menu->nitem)
@@ -873,7 +873,7 @@ void goto_menu(struct Menu* menu, int mselect, int down)
             return;
         }
     }
-    select_menu(menu, mselect);
+    select_menu(ui, menu, mselect);
 }
 
 void up_menu(struct Menu* menu, int n)
@@ -910,7 +910,7 @@ int action_menu(struct UI ui, struct Menu* menu)
         return (0);
     }
     draw_all_menu(menu);
-    select_menu(menu, menu->select);
+    select_menu(ui, menu, menu->select);
 
     GetChFunc getch = event_begin_input(-1);
     while (1) {
@@ -937,7 +937,7 @@ int action_menu(struct UI ui, struct Menu* menu)
             CurrentKey = -1;
             CurrentKeyData = NULL;
             CurrentCmdData = item.data;
-            (*item.func)(getUI());
+            (*item.func)(ui);
             CurrentCmdData = NULL;
         }
     } else if (mselect == MENU_CLOSE) {
@@ -1046,7 +1046,7 @@ static int
 mSelect(struct UI ui, char c)
 {
     if (IS_ASCII(c))
-        return (select_menu(CurrentMenu, CurrentMenu->keyselect[(int)c]));
+        return (select_menu(ui, CurrentMenu, CurrentMenu->keyselect[(int)c]));
     else
         return (MENU_NOTHING);
 }
@@ -1056,7 +1056,7 @@ mDown(struct UI ui, char c)
 {
     if (CurrentMenu->select >= CurrentMenu->nitem - 1)
         return (MENU_NOTHING);
-    goto_menu(CurrentMenu, CurrentMenu->select + 1, 1);
+    goto_menu(ui, CurrentMenu, CurrentMenu->select + 1, 1);
     return (MENU_NOTHING);
 }
 
@@ -1065,21 +1065,21 @@ mUp(struct UI ui, char c)
 {
     if (CurrentMenu->select <= 0)
         return (MENU_NOTHING);
-    goto_menu(CurrentMenu, CurrentMenu->select - 1, -1);
+    goto_menu(ui, CurrentMenu, CurrentMenu->select - 1, -1);
     return (MENU_NOTHING);
 }
 
 static int
 mLast(struct UI ui, char c)
 {
-    goto_menu(CurrentMenu, CurrentMenu->nitem - 1, -1);
+    goto_menu(ui, CurrentMenu, CurrentMenu->nitem - 1, -1);
     return (MENU_NOTHING);
 }
 
 static int
 mTop(struct UI ui, char c)
 {
-    goto_menu(CurrentMenu, 0, 1);
+    goto_menu(ui, CurrentMenu, 0, 1);
     return (MENU_NOTHING);
 }
 
@@ -1091,7 +1091,7 @@ mNext(struct UI ui, char c)
     if (mselect >= CurrentMenu->nitem)
         return mLast(ui, c);
     down_menu(CurrentMenu, CurrentMenu->height);
-    goto_menu(CurrentMenu, mselect, -1);
+    goto_menu(ui, CurrentMenu, mselect, -1);
     return (MENU_NOTHING);
 }
 
@@ -1103,7 +1103,7 @@ mPrev(struct UI ui, char c)
     if (mselect < 0)
         return mTop(ui, c);
     up_menu(CurrentMenu, CurrentMenu->height);
-    goto_menu(CurrentMenu, mselect, 1);
+    goto_menu(ui, CurrentMenu, mselect, 1);
     return (MENU_NOTHING);
 }
 
@@ -1112,7 +1112,7 @@ mFore(struct UI ui, char c)
 {
     if (CurrentMenu->select >= CurrentMenu->nitem - 1)
         return (MENU_NOTHING);
-    goto_menu(CurrentMenu, (CurrentMenu->select + CurrentMenu->height - 1),
+    goto_menu(ui, CurrentMenu, (CurrentMenu->select + CurrentMenu->height - 1),
         (CurrentMenu->height + 1));
     return (MENU_NOTHING);
 }
@@ -1122,7 +1122,7 @@ mBack(struct UI ui, char c)
 {
     if (CurrentMenu->select <= 0)
         return (MENU_NOTHING);
-    goto_menu(CurrentMenu, (CurrentMenu->select - CurrentMenu->height + 1),
+    goto_menu(ui, CurrentMenu, (CurrentMenu->select - CurrentMenu->height + 1),
         (-1 - CurrentMenu->height));
     return (MENU_NOTHING);
 }
@@ -1141,7 +1141,7 @@ mLineU(struct UI ui, char c)
         if (mselect < CurrentMenu->offset)
             mselect++;
     }
-    goto_menu(CurrentMenu, mselect, 1);
+    goto_menu(ui, CurrentMenu, mselect, 1);
     return (MENU_NOTHING);
 }
 
@@ -1159,7 +1159,7 @@ mLineD(struct UI ui, char c)
         if (mselect >= CurrentMenu->offset + CurrentMenu->height)
             mselect--;
     }
-    goto_menu(CurrentMenu, mselect, -1);
+    goto_menu(ui, CurrentMenu, mselect, -1);
     return (MENU_NOTHING);
 }
 
@@ -1187,21 +1187,20 @@ mClose(struct UI ui, char c)
 
 static const char* SearchString = NULL;
 
-typedef int (*MenuSearchRoutineFunc)(struct Menu*, const char*, int);
+typedef int (*MenuSearchRoutineFunc)(struct UI ui, struct Menu*, const char*, int);
 MenuSearchRoutineFunc menuSearchRoutine;
 
 static int
-menuForwardSearch(struct Menu* menu, const char* str, int from)
+menuForwardSearch(struct UI ui, struct Menu* menu, const char* str, int from)
 {
-    int i;
     char* p;
     if ((p = regexCompile(str, IgnoreCase)) != NULL) {
-        message(getUI(), MSG_INFO, p);
+        message(ui, MSG_INFO, p);
         return -1;
     }
     if (from < 0)
         from = 0;
-    for (i = from; i < menu->nitem; i++)
+    for (int i = from; i < menu->nitem; i++)
         if (menu->item[i].type != MENU_NOP && regexMatch(menu->item[i].label, -1, 1) == 1)
             return i;
     return -1;
@@ -1218,12 +1217,12 @@ menu_search_forward(struct UI ui, struct Menu* menu, int from)
     SearchString = str;
     str = conv_search_string(ui, str, DisplayCharset);
     menuSearchRoutine = menuForwardSearch;
-    int found = menuForwardSearch(menu, str, from + 1);
+    int found = menuForwardSearch(ui, menu, str, from + 1);
     if (WrapSearch && found == -1)
-        found = menuForwardSearch(menu, str, 0);
+        found = menuForwardSearch(ui, menu, str, 0);
     if (found >= 0)
         return found;
-    message(getUI(), MSG_INFO, "Not found");
+    message(ui, MSG_INFO, "Not found");
     return -1;
 }
 
@@ -1233,17 +1232,17 @@ mSrchF(struct UI ui, char c)
     int mselect;
     mselect = menu_search_forward(ui, CurrentMenu, CurrentMenu->select);
     if (mselect >= 0)
-        goto_menu(CurrentMenu, mselect, 1);
+        goto_menu(ui, CurrentMenu, mselect, 1);
     return (MENU_NOTHING);
 }
 
 static int
-menuBackwardSearch(struct Menu* menu, const char* str, int from)
+menuBackwardSearch(struct UI ui, struct Menu* menu, const char* str, int from)
 {
     int i;
     char* p;
     if ((p = regexCompile(str, IgnoreCase)) != NULL) {
-        message(getUI(), MSG_INFO, p);
+        message(ui, MSG_INFO, p);
         return -1;
     }
     if (from >= menu->nitem)
@@ -1265,12 +1264,12 @@ menu_search_backward(struct UI ui, struct Menu* menu, int from)
     SearchString = str;
     str = conv_search_string(ui, str, DisplayCharset);
     menuSearchRoutine = menuBackwardSearch;
-    int found = menuBackwardSearch(menu, str, from - 1);
+    int found = menuBackwardSearch(ui, menu, str, from - 1);
     if (WrapSearch && found == -1)
-        found = menuBackwardSearch(menu, str, menu->nitem);
+        found = menuBackwardSearch(ui, menu, str, menu->nitem);
     if (found >= 0)
         return found;
-    message(getUI(), MSG_INFO, "Not found");
+    message(ui, MSG_INFO, "Not found");
     return -1;
 }
 
@@ -1280,7 +1279,7 @@ mSrchB(struct UI ui, char c)
     int mselect;
     mselect = menu_search_backward(ui, CurrentMenu, CurrentMenu->select);
     if (mselect >= 0)
-        goto_menu(CurrentMenu, mselect, -1);
+        goto_menu(ui, CurrentMenu, mselect, -1);
     return (MENU_NOTHING);
 }
 
@@ -1292,7 +1291,7 @@ menu_search_next_previous(struct UI ui, struct Menu* menu, int from, int reverse
     };
 
     if (menuSearchRoutine == NULL) {
-        message(getUI(), MSG_INFO, "No previous regular expression");
+        message(ui, MSG_INFO, "No previous regular expression");
         return -1;
     }
     const char* str = conv_search_string(ui, SearchString, DisplayCharset);
@@ -1301,12 +1300,12 @@ menu_search_next_previous(struct UI ui, struct Menu* menu, int from, int reverse
     if (menuSearchRoutine == menuBackwardSearch)
         reverse ^= 1;
     from += reverse ? -1 : 1;
-    int found = (*routine[reverse])(menu, str, from);
+    int found = (*routine[reverse])(ui, menu, str, from);
     if (WrapSearch && found == -1)
-        found = (*routine[reverse])(menu, str, reverse * menu->nitem);
+        found = (*routine[reverse])(ui, menu, str, reverse * menu->nitem);
     if (found >= 0)
         return found;
-    message(getUI(), MSG_INFO, "Not found");
+    message(ui, MSG_INFO, "Not found");
     return -1;
 }
 
@@ -1316,7 +1315,7 @@ mSrchN(struct UI ui, char c)
     int mselect;
     mselect = menu_search_next_previous(ui, CurrentMenu, CurrentMenu->select, 0);
     if (mselect >= 0)
-        goto_menu(CurrentMenu, mselect, 1);
+        goto_menu(ui, CurrentMenu, mselect, 1);
     return (MENU_NOTHING);
 }
 
@@ -1326,7 +1325,7 @@ mSrchP(struct UI ui, char c)
     int mselect;
     mselect = menu_search_next_previous(ui, CurrentMenu, CurrentMenu->select, 1);
     if (mselect >= 0)
-        goto_menu(CurrentMenu, mselect, -1);
+        goto_menu(ui, CurrentMenu, mselect, -1);
     return (MENU_NOTHING);
 }
 
@@ -1487,7 +1486,7 @@ smDelBuf(struct UI ui, char c)
                                                               : (CurrentMenu->nitem - 2);
 
     draw_all_menu(CurrentMenu);
-    select_menu(CurrentMenu, CurrentMenu->select);
+    select_menu(ui, CurrentMenu, CurrentMenu->select);
     return (MENU_NOTHING);
 }
 
@@ -1701,7 +1700,7 @@ accesskey_menu(struct UI ui, struct Buffer* buf)
     for (i = 0, n = 0; i < al->nanchor; i++) {
         struct Anchor* a = &al->anchors[i];
         if (!a->slave && a->accesskey && IS_ASCII(a->accesskey)) {
-            const char* t = getAnchorText(buf, al, a);
+            const char* t = getAnchorText(&buf->document, al, a);
             label[n] = Sprintf("%c: %s", a->accesskey, t ? t : "")->ptr;
             ap[n] = a;
             n++;
@@ -1762,8 +1761,8 @@ static int
 lmGoto(struct UI ui, char c)
 {
     if (IS_ASCII(c) && CurrentMenu->keyselect[(int)c] >= 0) {
-        goto_menu(CurrentMenu, CurrentMenu->nitem - 1, -1);
-        goto_menu(CurrentMenu, CurrentMenu->keyselect[(int)c] * nlmKeys, 1);
+        goto_menu(ui, CurrentMenu, CurrentMenu->nitem - 1, -1);
+        goto_menu(ui, CurrentMenu, CurrentMenu->keyselect[(int)c] * nlmKeys, 1);
     }
     return (MENU_NOTHING);
 }
@@ -1772,7 +1771,7 @@ static int
 lmSelect(struct UI ui, char c)
 {
     if (IS_ASCII(c))
-        return select_menu(CurrentMenu, (CurrentMenu->select / nlmKeys) * nlmKeys + CurrentMenu->keyselect[(int)c]);
+        return select_menu(ui, CurrentMenu, (CurrentMenu->select / nlmKeys) * nlmKeys + CurrentMenu->keyselect[(int)c]);
     else
         return (MENU_NOTHING);
 }

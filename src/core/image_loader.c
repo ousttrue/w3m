@@ -451,7 +451,7 @@ void getAllImage(struct Document* doc)
 }
 
 static void
-showImageProgress(struct Buffer* buf)
+showImageProgress(struct UI ui, struct Buffer* buf)
 {
     struct AnchorList* al;
     struct Anchor* a;
@@ -472,7 +472,7 @@ showImageProgress(struct Buffer* buf)
     if (n) {
         if (enable_inline_image && n == l)
             drawImage();
-        message(getUI(), MSG_INFO, Sprintf("%d/%d images loaded", l, n)->ptr);
+        message(ui, MSG_INFO, Sprintf("%d/%d images loaded", l, n)->ptr);
         // refresh(ttyWriter());
     }
 }

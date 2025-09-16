@@ -18,11 +18,11 @@ DownloadList* FirstDL = 0;
 DownloadList* LastDL = 0;
 static bool add_download_list = false;
 
-void updateDownload()
+void updateDownload(struct UI ui)
 {
     if (add_download_list) {
         add_download_list = false;
-        ldDL(getUI());
+        ldDL(ui);
     }
 }
 
@@ -190,7 +190,7 @@ void download_action(struct UI ui, struct KeyValue* arg)
             }
         }
     }
-    ldDL(getUI());
+    ldDL(ui);
 }
 
 void stopDownload(void)

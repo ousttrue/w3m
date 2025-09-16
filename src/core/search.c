@@ -49,7 +49,7 @@ enum SearchResultFlags forwardSearch(struct UI ui, const char* str)
 
     const char* p;
     if ((p = regexCompile(str, IgnoreCase)) != NULL) {
-        message(getUI(), MSG_INFO, p);
+        message(ui, MSG_INFO, p);
         return SR_NOTFOUND;
     }
     struct LineList* l = currentLine(ui.document);
@@ -117,7 +117,7 @@ enum SearchResultFlags backwardSearch(struct UI ui, const char* str)
 {
     const char* p;
     if ((p = regexCompile(str, IgnoreCase)) != NULL) {
-        message(getUI(), MSG_INFO, p);
+        message(ui, MSG_INFO, p);
         return SR_NOTFOUND;
     }
 
@@ -273,16 +273,16 @@ static int srchcore(struct UI ui, const char* str, SearchFunc func)
 }
 
 static void
-disp_srchresult(int result, const char* prompt, const char* str)
+disp_srchresult(struct UI ui, int result, const char* prompt, const char* str)
 {
     if (str == NULL)
         str = "";
     if (result & SR_NOTFOUND)
-        message(getUI(), MSG_INFO, Sprintf("Not found: %s", str)->ptr);
+        message(ui, MSG_INFO, Sprintf("Not found: %s", str)->ptr);
     else if (result & SR_WRAPPED)
-        message(getUI(), MSG_INFO, Sprintf("Search wrapped: %s", str)->ptr);
+        message(ui, MSG_INFO, Sprintf("Search wrapped: %s", str)->ptr);
     else if (show_srch_str)
-        message(getUI(), MSG_INFO, Sprintf("%s%s", prompt, str)->ptr);
+        message(ui, MSG_INFO, Sprintf("%s%s", prompt, str)->ptr);
 }
 
 static int
@@ -358,7 +358,7 @@ void srch(struct UI ui, SearchFunc func, char* prompt)
 
     const char* str = searchKeyData();
     if (str == NULL || *str == '\0') {
-        str = inputStrHist(getUI(), prompt, NULL, TextHist);
+        str = inputStrHist(ui, prompt, NULL, TextHist);
         if (str != NULL && *str == '\0')
             str = SearchString;
         if (str == NULL) {
@@ -377,7 +377,7 @@ void srch(struct UI ui, SearchFunc func, char* prompt)
         ui.document->pos = pos;
 
     if (disp)
-        disp_srchresult(result, prompt, str);
+        disp_srchresult(ui, result, prompt, str);
     searchRoutine = func;
 }
 
@@ -388,7 +388,7 @@ void srch_nxtprv(struct UI ui, bool reverse)
     };
 
     if (searchRoutine == NULL) {
-        message(getUI(), MSG_INFO, "No previous regular expression");
+        message(ui, MSG_INFO, "No previous regular expression");
         return;
     }
 
@@ -407,5 +407,5 @@ void srch_nxtprv(struct UI ui, bool reverse)
             ui.document->pos -= 1;
     }
 
-    disp_srchresult(result, (reverse ? "Backward: " : "Forward: "), SearchString);
+    disp_srchresult(ui, result, (reverse ? "Backward: " : "Forward: "), SearchString);
 }

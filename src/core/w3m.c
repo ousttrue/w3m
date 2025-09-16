@@ -620,7 +620,7 @@ static const char* currentdir()
     return path;
 }
 
-void initialize()
+static void initialize(struct UI ui)
 {
     wc_uint8 auto_detect;
     if (!getenv("GC_LARGE_ALLOC_WARN_INTERVAL"))
@@ -691,7 +691,7 @@ void initialize()
     fmInit();
     // mySignal(SIGWINCH, resize_hook);
 
-    sync_with_option();
+    sync_with_option(ui);
     initCookie();
     if (UseHistory)
         loadHistory(URLHist);
@@ -1150,8 +1150,10 @@ struct IOBEvent iob_wait(struct IOBlocker* iob, int timeout_ms)
 
 void main_loop(int argc, char** argv)
 {
-    initialize();
-    parseArgs(argc, argv);
+    struct UI ui = getUI();
+
+    initialize(ui);
+    parseArgs(ui, argc, argv);
     // onFrame();
     onKeyInput(0);
 

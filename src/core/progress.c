@@ -55,7 +55,7 @@ char* convert_size(long long size, int usefloat)
 }
 
 
-void showProgress(long long current_content_length, long long* linelen, long long* trbyte)
+void showProgress(struct UI ui, long long current_content_length, long long* linelen, long long* trbyte)
 {
     if (*linelen < 1024)
         return;
@@ -129,7 +129,7 @@ void showProgress(long long current_content_length, long long* linelen, long lon
         } else {
             messages = Sprintf("%7s loaded", fmtrbyte);
         }
-        message(getUI(), MSG_INFO, messages->ptr);
+        message(ui, MSG_INFO, messages->ptr);
         // refresh(ttyWriter());
     }
 }

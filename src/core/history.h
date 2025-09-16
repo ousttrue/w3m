@@ -1,7 +1,7 @@
 #pragma once
 #include "textlist.h"
 #include "hash.h"
-#include "Content.h"
+#include "geometry.h"
 #include <stddef.h>
 
 typedef ListItem HistItem;
@@ -35,5 +35,5 @@ char* lastHist(struct Hist* hist);
 char* nextHist(struct Hist* hist);
 char* prevHist(struct Hist* hist);
 int loadHistory(struct Hist* hist);
-void saveHistory(struct Hist* hist, size_t size);
+void saveHistory(struct UI ui, struct Hist* hist, size_t size);
 Str historyBuffer_html(struct Hist* hist);

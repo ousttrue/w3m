@@ -55,5 +55,5 @@ static inline const char* inputChar(struct UI ui,
     return inputLine(ui, p, "", IN_CHAR);
 }
 
-const char* inputAnswer(const char* prompt);
-bool notExistsOrOverWrite(const char* path);
+const char* inputAnswer(struct UI ui, const char* prompt);
+bool notExistsOrOverWrite(struct UI ui, const char* path);

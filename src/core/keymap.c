@@ -28,7 +28,7 @@ static bool keymap_initialized = false;
 static struct stat sys_current_keymap_file;
 static struct stat current_keymap_file;
 
-void setKeymap(const char* p, int lineno)
+void setKeymap(struct UI ui, const char* p, int lineno)
 {
     const char* s = getQWord(&p);
     int c = getKey(s);
@@ -40,7 +40,7 @@ void setKeymap(const char* p, int lineno)
         else
             /* FIXME: gettextize? */
             emsg = Sprintf("defkey: unknown key '%s'", s)->ptr;
-        message(getUI(), MSG_ERR, emsg);
+        message(ui, MSG_ERR, emsg);
         return;
     }
     s = getWord(&p);
@@ -53,7 +53,7 @@ void setKeymap(const char* p, int lineno)
         else
             /* FIXME: gettextize? */
             emsg = Sprintf("defkey: invalid command '%s'", s)->ptr;
-        message(getUI(), MSG_ERR, emsg);
+        message(ui, MSG_ERR, emsg);
         return;
     }
 
@@ -117,8 +117,7 @@ void setKeymap(const char* p, int lineno)
         putHash_iv(keyData, c, NULL);
 }
 
-static void
-interpret_keymap(FILE* kf, struct stat* current, int force)
+static void interpret_keymap(struct UI ui, FILE* kf, struct stat* current, int force)
 {
     int fd = fileno(kf);
     struct stat kstat;
@@ -148,7 +147,7 @@ interpret_keymap(FILE* kf, struct stat* current, int force)
             continue;
         }
         if (!strcmp(s, "keymap")) {
-            setKeymap(p, lineno);
+            setKeymap(ui, p, lineno);
         } else if (!strcmp(s, "charset") || !strcmp(s, "encoding")) {
             const char* q = getQWord(&p);
             if (*q)
@@ -160,17 +159,17 @@ interpret_keymap(FILE* kf, struct stat* current, int force)
         } else { /* error */
             char* emsg = Sprintf("line %d: syntax error '%s'", lineno, s)->ptr;
             if (verbose)
-                message(getUI(), MSG_ERR, emsg);
+                message(ui, MSG_ERR, emsg);
         }
     }
 }
 
-void initKeymap(int force)
+void initKeymap(struct UI ui, int force)
 {
     {
         FILE* kf = fopen(confFile(KEYMAP_FILE), "rt");
         if (kf) {
-            interpret_keymap(kf, &sys_current_keymap_file, force || !keymap_initialized);
+            interpret_keymap(ui, kf, &sys_current_keymap_file, force || !keymap_initialized);
             fclose(kf);
         }
     }
@@ -178,7 +177,7 @@ void initKeymap(int force)
     {
         FILE* kf = fopen(rcFile(keymap_file), "rt");
         if (kf) {
-            interpret_keymap(kf, &current_keymap_file, force || !keymap_initialized);
+            interpret_keymap(ui, kf, &current_keymap_file, force || !keymap_initialized);
             fclose(kf);
         }
     }

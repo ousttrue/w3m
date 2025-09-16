@@ -13,9 +13,8 @@ struct Buffer* Firstbuf = 0;
 char ArgvIsURL = true;
 int clear_buffer = (true);
 
-void parseArgs(int argc, char** argv)
+void parseArgs(struct UI ui, int argc, char** argv)
 {
-    struct UI ui = getUI();
     const char* url = (getUrlScheme(argv[1]) == SCM_MISSING && !ArgvIsURL)
         ? file_to_url(argv[1], CurrentDir)
         : url_quote(conv_from_system(argv[1]));
@@ -115,12 +114,12 @@ void setCurrentBuffer(struct Buffer* buf)
     }
 }
 
-struct Buffer* pushContent(struct Content c, int cols, bool use_graphic)
+struct Buffer* pushContent(struct UI ui, struct Content c, int cols, bool use_graphic)
 {
     struct Buffer* buf = makeBuffer(&c, cols, use_graphic);
     if (!buf) {
         Str emsg = Sprintf("Can't load %s", parsedURL2Str(&c.url)->ptr);
-        message(getUI(), MSG_ERR, emsg->ptr);
+        message(ui, MSG_ERR, emsg->ptr);
         return 0;
     }
     pushBuffer(buf);

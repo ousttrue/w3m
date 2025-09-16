@@ -36,11 +36,10 @@ struct Buffer;
 bool updateCursor(struct Buffer* buf);
 const char* searchKeyData();
 
-struct UI getUI();
 void message(struct UI ui, enum MessageSeverity, const char* s);
-inline static void error_message(const char* s)
+inline static void error_message(struct UI ui, const char* s)
 {
-    message(getUI(), MSG_ERR, s);
+    message(ui, MSG_ERR, s);
 }
 void set_delayed_message(char* s);
 void concatMessageList(Str tmp);

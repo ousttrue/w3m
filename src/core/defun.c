@@ -142,7 +142,7 @@ DEFUN(shiftl, SHIFT_LEFT, "Shift screen left")
 {
     int column = ui.document->currentColumn;
     ui.document->currentColumn += (ui.searchkey_num * (-ui.viewport.size.x + 1) + 1);
-    shiftvisualpos(ui.current_buffer, ui.document->currentColumn - column);
+    shiftvisualpos(ui, ui.current_buffer, ui.document->currentColumn - column);
 }
 
 /* Shift screen right */
@@ -150,7 +150,7 @@ DEFUN(shiftr, SHIFT_RIGHT, "Shift screen right")
 {
     int column = ui.document->currentColumn;
     ui.document->currentColumn += (ui.searchkey_num * (ui.viewport.size.x - 1) - 1);
-    shiftvisualpos(ui.current_buffer, ui.document->currentColumn - column);
+    shiftvisualpos(ui, ui.current_buffer, ui.document->currentColumn - column);
 }
 
 DEFUN(col1R, RIGHT, "Shift screen one column right")
@@ -165,7 +165,7 @@ DEFUN(col1R, RIGHT, "Shift screen one column right")
         ui.document->currentColumn += 1;
         if (column == ui.document->currentColumn)
             break;
-        shiftvisualpos(ui.current_buffer, 1);
+        shiftvisualpos(ui, ui.current_buffer, 1);
     }
 }
 
@@ -179,7 +179,7 @@ DEFUN(col1L, LEFT, "Shift screen one column left")
         if (ui.document->currentColumn == 0)
             break;
         ui.document->currentColumn += (-1);
-        shiftvisualpos(ui.current_buffer, -1);
+        shiftvisualpos(ui, ui.current_buffer, -1);
     }
 }
 
@@ -242,7 +242,7 @@ DEFUN(ldfile, LOAD, "Open local file in a new buffer")
     }
     // cmd_loadfile(ui, fn);
     struct Content c = getContent(ui, file_to_url(fn, CurrentDir), NULL, NULL, NO_REFERER);
-    pushContent(c, ui.viewport.size.x, ui.use_graphic);
+    pushContent(ui, c, ui.viewport.size.x, ui.use_graphic);
 }
 
 /* Load help file */
@@ -254,7 +254,7 @@ DEFUN(ldhelp, HELP, "Show help panel")
         Str_form_quote(Strnew_charp(w3m_version))->ptr,
         Str_form_quote(Strnew_charp_n(lang, n))->ptr);
     struct Content c = getContent(ui, tmp->ptr, NULL, NULL, NO_REFERER);
-    pushContent(c, ui.viewport.size.x, ui.use_graphic);
+    pushContent(ui, c, ui.viewport.size.x, ui.use_graphic);
 }
 
 DEFUN(movL, MOVE_LEFT, "Cursor left")
@@ -430,7 +430,7 @@ DEFUN(selBuf, SELECT, "Display buffer-stack panel")
 
     ok = false;
     do {
-        buf = selectBuffer(Firstbuf, ui.current_buffer, &cmd);
+        buf = selectBuffer(ui, Firstbuf, ui.current_buffer, &cmd);
         switch (cmd) {
         case 'B':
             ok = true;
@@ -919,7 +919,7 @@ DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer")
         p_url = parseUrl(url, NULL);
         pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
         struct Content c = getContent(ui, url, NULL, NULL, NULL);
-        pushContent(c, ui.viewport.size.x, ui.use_graphic);
+        pushContent(ui, c, ui.viewport.size.x, ui.use_graphic);
         if (ui.current_buffer != cur_buf) /* success */
             pushHashHist(URLHist, parsedURL2Str(&ui.current_buffer->content.url)->ptr);
     }
@@ -934,7 +934,7 @@ DEFUN(gorURL, GOTO_RELATIVE, "Go to relative address")
 DEFUN(ldBmark, BOOKMARK VIEW_BOOKMARK, "View bookmarks")
 {
     struct Content c = getContent(ui, BookmarkFile, NULL, NULL, NO_REFERER);
-    pushContent(c, ui.viewport.size.x, ui.use_graphic);
+    pushContent(ui, c, ui.viewport.size.x, ui.use_graphic);
 }
 
 #define W3MBOOKMARK_CMDNAME "w3mbookmark"
@@ -957,14 +957,14 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
     post->body = tmp->ptr;
     post->length = tmp->length;
     struct Content c = getContent(ui, "file:///$LIB/" W3MBOOKMARK_CMDNAME, NULL, post, NO_REFERER);
-    pushContent(c, ui.viewport.size.x, ui.use_graphic);
+    pushContent(ui, c, ui.viewport.size.x, ui.use_graphic);
 }
 
 /* option setting */
 DEFUN(ldOpt, OPTIONS, "Display options setting panel")
 {
     struct Content c = makeContentFromHtmlUtf8(load_option_panel_html());
-    pushContent(c, ui.viewport.size.x, ui.use_graphic);
+    pushContent(ui, c, ui.viewport.size.x, ui.use_graphic);
 }
 
 /* set an option */
@@ -985,14 +985,14 @@ DEFUN(setOpt, SET_OPTION, "Set option")
         }
     }
     if (set_param_option(opt))
-        sync_with_option();
+        sync_with_option(ui);
 }
 
 /* error message list */
 DEFUN(msgs, MSGS, "Display error messages")
 {
     struct Content c = makeContentFromHtmlUtf8(message_list_panel_html());
-    pushContent(c, ui.viewport.size.x, ui.use_graphic);
+    pushContent(ui, c, ui.viewport.size.x, ui.use_graphic);
 }
 
 /* page info */
@@ -1002,7 +1002,7 @@ DEFUN(pginfo, INFO, "Display information about the current document")
         &ui.current_buffer->content,
         &ui.current_buffer->document,
         getBufferPosition(ui)));
-    pushContent(c, ui.viewport.size.x, ui.use_graphic);
+    pushContent(ui, c, ui.viewport.size.x, ui.use_graphic);
 }
 
 /* link menu */
@@ -1021,7 +1021,7 @@ DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
     pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
     struct Content c = getContent(ui, l->url, makeBaseUrl(&ui.current_buffer->document),
         NULL, parsedURL2Str(&ui.current_buffer->content.url)->ptr);
-    pushContent(c, ui.viewport.size.x, ui.use_graphic);
+    pushContent(ui, c, ui.viewport.size.x, ui.use_graphic);
 }
 
 /* accesskey */
@@ -1045,21 +1045,21 @@ DEFUN(movlistMn, MOVE_LIST_MENU, "Pop up menu to navigate between hyperlinks")
 DEFUN(linkLst, LIST, "Show all URLs referenced")
 {
     struct Content c = makeContentFromHtmlUtf8(link_list_panel_html(&ui.current_buffer->document));
-    pushContent(c, ui.viewport.size.x, ui.use_graphic);
+    pushContent(ui, c, ui.viewport.size.x, ui.use_graphic);
 }
 
 /* cookie list */
 DEFUN(cooLst, COOKIE, "View cookie list")
 {
     struct Content c = makeContentFromHtmlUtf8(cookie_list_panel_html());
-    pushContent(c, ui.viewport.size.x, ui.use_graphic);
+    pushContent(ui, c, ui.viewport.size.x, ui.use_graphic);
 }
 
 /* History page */
 DEFUN(ldHist, HISTORY, "Show browsing history")
 {
     struct Content c = makeContentFromHtmlUtf8(historyBuffer_html(URLHist));
-    pushContent(c, ui.viewport.size.x, ui.use_graphic);
+    pushContent(ui, c, ui.viewport.size.x, ui.use_graphic);
 }
 
 /* download HREF link */
@@ -1103,7 +1103,7 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document")
             file = conv_to_system(file);
         }
         file = expandPath(file);
-        if (!notExistsOrOverWrite(file)) {
+        if (!notExistsOrOverWrite(ui, file)) {
             return;
         }
         f = fopen(file, "w");
@@ -1460,14 +1460,14 @@ DEFUN(reinit, REINIT, "Reload configuration file")
     const char* resource = searchKeyData();
     if (resource == NULL) {
         init_rc();
-        sync_with_option();
+        sync_with_option(ui);
         initCookie();
         return;
     }
 
     if (!strcasecmp(resource, "CONFIG") || !strcasecmp(resource, "RC")) {
         init_rc();
-        sync_with_option();
+        sync_with_option(ui);
 
         return;
     }
@@ -1478,7 +1478,7 @@ DEFUN(reinit, REINIT, "Reload configuration file")
     }
 
     if (!strcasecmp(resource, "KEYMAP")) {
-        initKeymap(true);
+        initKeymap(ui, true);
         return;
     }
 
@@ -1511,7 +1511,7 @@ DEFUN(defKey, DEFINE_KEY, "Define a binding between a key stroke combination and
             return;
         }
     }
-    setKeymap(allocStr(data, -1), -1);
+    setKeymap(ui, allocStr(data, -1), -1);
 }
 
 /* download panel */

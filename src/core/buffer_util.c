@@ -274,7 +274,7 @@ void gotoLine(struct Document* doc, int n)
 // }
 
 static struct Buffer*
-listBuffer(struct Buffer* top, struct Buffer* current)
+listBuffer(struct UI ui, struct Buffer* top, struct Buffer* current)
 {
     struct VirtualTerm* vt = getScreen();
     int i, c = 0;
@@ -308,7 +308,7 @@ listBuffer(struct Buffer* top, struct Buffer* current)
     }
     vt_standout(vt);
     /* FIXME: gettextize? */
-    message(getUI(), MSG_INFO, "struct Buffer selection mode: SPC for select / D for delete buffer");
+    message(ui, MSG_INFO, "struct Buffer selection mode: SPC for select / D for delete buffer");
     vt_standend(vt);
     vt_move(vt, c, 0);
     // refresh(ttyWriter());
@@ -319,7 +319,7 @@ listBuffer(struct Buffer* top, struct Buffer* current)
  * Select buffer visually
  */
 struct Buffer*
-selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectchar)
+selectBuffer(struct UI ui, struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectchar)
 {
     struct VirtualTerm* vt = getScreen();
     int i, cpoint, /* Current struct Buffer Number */
@@ -344,7 +344,7 @@ selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectcha
         topbuf = firstbuf;
         spoint = cpoint;
     }
-    listBuffer(topbuf, currentbuf);
+    listBuffer(ui, topbuf, currentbuf);
 
     GetChFunc getch = event_begin_input(-1);
     for (;;) {
@@ -386,7 +386,7 @@ selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectcha
                 currentbuf = currentbuf->nextBuffer;
                 cpoint++;
                 spoint = 1;
-                listBuffer(topbuf, currentbuf);
+                listBuffer(ui, topbuf, currentbuf);
             }
             break;
         case CTRL_P:
@@ -408,7 +408,7 @@ selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectcha
                 spoint = cpoint - i;
                 currentbuf = nthBuffer(firstbuf, cpoint);
                 topbuf = nthBuffer(firstbuf, i);
-                listBuffer(topbuf, currentbuf);
+                listBuffer(ui, topbuf, currentbuf);
             }
             break;
         default:
@@ -1135,7 +1135,7 @@ void tmpClearBuffer(struct Buffer* buf)
     }
 }
 
-void shiftvisualpos(struct Buffer* buf, int shift)
+void shiftvisualpos(struct UI ui, struct Buffer* buf, int shift)
 {
     struct LineList* l = currentLine(&buf->document);
     buf->document.visualpos -= shift;
@@ -1143,7 +1143,7 @@ void shiftvisualpos(struct Buffer* buf, int shift)
         buf->document.visualpos = l->bwidth + getScreen()->COLS - 1;
     else if (buf->document.visualpos - l->bwidth < 0)
         buf->document.visualpos = l->bwidth;
-    if (buf->document.visualpos - l->bwidth == -shift && getUI().viewport_cursor.x == 0)
+    if (buf->document.visualpos - l->bwidth == -shift && ui.viewport_cursor.x == 0)
         buf->document.visualpos = l->bwidth;
 }
 

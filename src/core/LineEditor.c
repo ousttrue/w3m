@@ -230,7 +230,7 @@ void _editor(struct LineEditor* e)
     fi.value = Strdup(e->strBuf);
     Strcat_char(fi.value, '\n');
 
-    input_textarea(&fi);
+    input_textarea(e->ui, &fi);
 
     e->strBuf = Strnew();
     for (p = fi.value->ptr; *p; p++) {

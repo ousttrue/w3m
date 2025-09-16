@@ -1078,7 +1078,7 @@ do_recursive_mkdir(const char* dir)
 
 #define FILE_IS_READABLE_MSG "SECURITY NOTE: file %s must not be accessible by others"
 
-FILE* openSecretFile(const char* fname)
+FILE* openSecretFile(struct UI ui, const char* fname)
 {
     if (fname == NULL)
         return NULL;
@@ -1100,7 +1100,7 @@ FILE* openSecretFile(const char* fname)
     if (disable_secret_security_check)
         /* do nothing */;
     else if ((st.st_mode & (S_IRWXG | S_IRWXO)) != 0) {
-        message(getUI(), MSG_INFO, Sprintf(FILE_IS_READABLE_MSG, fname)->ptr);
+        message(ui, MSG_INFO, Sprintf(FILE_IS_READABLE_MSG, fname)->ptr);
         // refresh(ttyWriter());
         sleep(2);
         return NULL;
@@ -1109,16 +1109,16 @@ FILE* openSecretFile(const char* fname)
     return fopen(efname, "r");
 }
 
-static void loadPasswd(void)
+static void loadPasswd(struct UI ui)
 {
-    FILE* fp = openSecretFile(passwd_file);
+    FILE* fp = openSecretFile(ui, passwd_file);
     if (fp != NULL) {
         parsePasswd(fp, 0);
         fclose(fp);
     }
 
     /* for FTP */
-    fp = openSecretFile("~/.netrc");
+    fp = openSecretFile(ui, "~/.netrc");
     if (fp != NULL) {
         parsePasswd(fp, 1);
         fclose(fp);
@@ -1126,7 +1126,7 @@ static void loadPasswd(void)
     return;
 }
 
-void sync_with_option(void)
+void sync_with_option(struct UI ui)
 {
     init_tmp();
     parse_proxy();
@@ -1135,8 +1135,8 @@ void sync_with_option(void)
     // initMimeTypes();
     if ((displayImage || enable_inline_image))
         initImage();
-    loadPasswd();
-    loadPreForm();
+    loadPasswd(ui);
+    loadPreForm(ui);
 
     if (AcceptLang == NULL || *AcceptLang == '\0') {
         /* TRANSLATORS:
@@ -1153,7 +1153,7 @@ void sync_with_option(void)
     update_utf8_symbol();
     wtf_init(DocumentCharset, DisplayCharset);
 
-    initKeymap(false);
+    initKeymap(ui, false);
     initMenu();
 }
 
@@ -1398,21 +1398,20 @@ Str load_option_panel_html()
 void panel_set_option(struct UI ui, struct KeyValue* arg)
 {
     FILE* f = NULL;
-    char* p;
-    Str s = Strnew(), tmp;
-
     if (config_file == NULL) {
-        message(getUI(), MSG_INFO, "There's no config file... config not saved");
+        message(ui, MSG_INFO, "There's no config file... config not saved");
     } else {
         f = fopen(config_file, "wt");
         if (f == NULL) {
-            message(getUI(), MSG_INFO, "Can't write option!");
+            message(ui, MSG_INFO, "Can't write option!");
         }
     }
+
+    Str s = Strnew(), tmp;
     while (arg) {
         /*  InnerCharset -> SystemCharset */
         if (arg->value) {
-            p = conv_to_system(arg->value);
+            const char*p = conv_to_system(arg->value);
             if (set_param(arg->arg, p)) {
                 tmp = Sprintf("%s %s\n", arg->arg, p);
                 Strcat(tmp, s);
@@ -1425,6 +1424,6 @@ void panel_set_option(struct UI ui, struct KeyValue* arg)
         fputs(s->ptr, f);
         fclose(f);
     }
-    sync_with_option();
-    backBf(getUI());
+    sync_with_option(ui);
+    backBf(ui);
 }

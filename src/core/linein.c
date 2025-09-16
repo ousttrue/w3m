@@ -186,7 +186,7 @@ const char* inputLineHistSearch(struct UI ui,
         return allocStr(p, -1);
 }
 
-const char* inputAnswer(const char* prompt)
+const char* inputAnswer(struct UI ui, const char* prompt)
 {
     if (QuietMessage)
         return "n";
@@ -195,7 +195,7 @@ const char* inputAnswer(const char* prompt)
     // if (fmInitialized)
     {
         // term_raw();
-        ans = inputChar(getUI(), prompt);
+        ans = inputChar(ui, prompt);
     }
     // else {
     //     printf("%s", prompt);
@@ -205,7 +205,7 @@ const char* inputAnswer(const char* prompt)
     return ans;
 }
 
-bool notExistsOrOverWrite(const char* path)
+bool notExistsOrOverWrite(struct UI ui, const char* path)
 {
     struct stat st;
     if (stat(path, &st) < 0) {
@@ -213,7 +213,7 @@ bool notExistsOrOverWrite(const char* path)
         return true;
     }
 
-    const char* ans = inputAnswer("File exists. Overwrite? (y/n)");
+    const char* ans = inputAnswer(ui, "File exists. Overwrite? (y/n)");
     if (ans && TOLOWER(*ans) == 'y') {
         // can overwrite
         return true;
