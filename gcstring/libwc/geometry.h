@@ -20,8 +20,18 @@ enum MessageSeverity {
     MSG_ERR,
 };
 
-typedef const char* (*InputFunc)(const char* prompt);
-typedef void (*MessageFunc)(enum MessageSeverity error, const char* msg);
+//
+// blockable UI functions
+//
+struct mco_coro;
+typedef const int (*GetChFunc)(struct mco_coro*);
+typedef const char* (*InputFunc)(struct mco_coro*, const char* prompt);
+typedef void (*MessageFunc)(struct mco_coro*, enum MessageSeverity error, const char* msg);
+struct CoVTable {
+    GetChFunc getCh;
+    InputFunc input;
+    MessageFunc message;
+};
 
 // #define UI_TTY \
 //     (struct UserInteraction) { .inputCallback = inputAnswer, .messageCallback = &error_message, }
@@ -39,10 +49,8 @@ struct UI {
     struct Int2 term_cursor;
     int searchkey_num;
 
-    InputFunc inputCallback;
-    // void* confirmData;
-    MessageFunc messageCallback;
-    // void* MessageData;
+    struct mco_coro* co;
+    struct CoVTable vtable;
 };
 
 struct BufferPoint {

@@ -12,7 +12,6 @@
 #include "follow_anchor.h"
 #include "myctype.h"
 #include "regex.h"
-#include "util.h"
 #include "form.h"
 #include "http_message.h"
 #include "mailcap.h"

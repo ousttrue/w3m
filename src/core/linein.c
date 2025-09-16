@@ -5,7 +5,6 @@
 #include "screen.h"
 #include "ctrlcode.h"
 #include "display.h"
-#include "event_poller.h"
 #include "screen.h"
 #include "LineEditor.h"
 #include <stdbool.h>
@@ -73,7 +72,6 @@ const char* inputLineHistSearch(struct UI ui,
 
     unsigned char c;
     wc_char_conv_init(wc_guess_8bit_charset(DisplayCharset), InnerCharset);
-    GetChFunc getch = event_begin_input(-1);
 
     while (g_editor.i_cont) {
         // update offset
@@ -111,7 +109,7 @@ const char* inputLineHistSearch(struct UI ui,
         renderFrame(ui);
 
     next_char:
-        c = getch();
+        c = ui.vtable.getCh(ui.co);
         g_editor.cm_clear = true;
         g_editor.cm_disp_clear = true;
         if (!g_editor.i_quote
@@ -163,7 +161,6 @@ const char* inputLineHistSearch(struct UI ui,
         if (g_editor.CLen && (flag & IN_CHAR))
             break;
     }
-    event_end_input(getch);
 
     if (g_editor.i_broken)
         return NULL;

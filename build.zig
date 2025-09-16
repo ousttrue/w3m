@@ -118,7 +118,6 @@ const w3m_srcs = [_][]const u8{
     "buffer_list.c",
     "tty.c",
     "keybind.c",
-    "util.c",
     "w3m.c",
     "screen.c",
     "screen_effects.c",

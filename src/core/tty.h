@@ -1,7 +1,8 @@
 #pragma once
+#include "geometry.h"
+#include "writer.h"
 #include <stdio.h>
 #include <assert.h>
-#include "writer.h"
 
 extern const char* displayTitleTerm;
 
@@ -31,7 +32,7 @@ void term_noecho(void);
 void term_cooked(void);
 void term_cbreak(void);
 
-int sleep_till_anykey(int timeout_ms, int purge);
+int sleep_till_anykey(struct UI ui, int timeout_ms, int purge);
 
 char* ttyname_tty(void);
 void term_title(const char* s);

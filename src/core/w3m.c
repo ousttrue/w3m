@@ -37,6 +37,7 @@
 #include "wtf.h"
 
 #include <gc/gc.h>
+#include <minicoro.h>
 
 #include <stdarg.h>
 #include <errno.h>
@@ -576,21 +577,16 @@ static GC_warn_proc orig_GC_warn_proc = NULL;
 #define GC_WARN_KEEP_MAX (20)
 
 static void
-wrap_GC_warn_proc(char* msg, GC_word arg)
+wrap_GC_warn_proc(const char* msg, GC_word arg)
 {
-
-    /* *INDENT-OFF* */
     static struct {
-        char* msg;
+        const char* msg;
         GC_word arg;
     } msg_ring[GC_WARN_KEEP_MAX];
-    /* *INDENT-ON* */
     static int i = 0;
     static int n = 0;
     static int lock = 0;
-    int j;
-
-    j = (i + n) % (sizeof(msg_ring) / sizeof(msg_ring[0]));
+    int j = (i + n) % (sizeof(msg_ring) / sizeof(msg_ring[0]));
     msg_ring[j].msg = msg;
     msg_ring[j].arg = arg;
 
@@ -606,7 +602,7 @@ wrap_GC_warn_proc(char* msg, GC_word arg)
             i %= sizeof(msg_ring) / sizeof(msg_ring[0]);
 
             printf(msg_ring[i].msg, (unsigned long)msg_ring[i].arg);
-            sleep_till_anykey(1000, 1);
+            sleep_till_anykey(getUI(), 1000, 1);
         }
 
         lock = 0;
@@ -700,7 +696,7 @@ static void initialize(struct UI ui)
     // mySignal(SIGPIPE, SigPipe);
 
     orig_GC_warn_proc = GC_get_warn_proc();
-    GC_set_warn_proc((void*)wrap_GC_warn_proc);
+    GC_set_warn_proc(wrap_GC_warn_proc);
 }
 
 void resetTerm(void)

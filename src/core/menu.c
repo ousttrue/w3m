@@ -21,7 +21,6 @@
 #include "keymap.h"
 #include "myctype.h"
 #include "regex.h"
-#include "event_poller.h"
 #include <stdio.h>
 #include <string.h>
 #include <wtf.h>
@@ -900,7 +899,6 @@ void down_menu(struct Menu* menu, int n)
 
 int action_menu(struct UI ui, struct Menu* menu)
 {
-    char c;
     int mselect;
     struct MenuItem item;
 
@@ -912,16 +910,14 @@ int action_menu(struct UI ui, struct Menu* menu)
     draw_all_menu(menu);
     select_menu(ui, menu, menu->select);
 
-    GetChFunc getch = event_begin_input(-1);
     while (1) {
-        c = getch();
+        int c = ui.vtable.getCh(ui.co);
         if (IS_ASCII(c)) { /* Ascii */
             mselect = (*menu->keymap[(int)c])(ui, c);
             if (mselect != MENU_NOTHING)
                 break;
         }
     }
-    event_end_input(getch);
 
     if (mselect >= 0 && mselect < menu->nitem) {
         item = menu->item[mselect];

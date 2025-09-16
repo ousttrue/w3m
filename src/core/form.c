@@ -13,7 +13,6 @@
 #include "buffer_util.h"
 #include "local_cgi.h"
 #include "regex.h"
-#include "util.h"
 #include "w3m.h"
 
 #include "alloc.h"

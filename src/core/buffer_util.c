@@ -14,7 +14,6 @@
 #include "form.h"
 #include "w3m.h"
 #include "image_loader.h"
-#include "event_poller.h"
 #include "screen.h"
 #include "ctrlcode.h"
 #include "alloc.h"
@@ -346,11 +345,10 @@ selectBuffer(struct UI ui, struct Buffer* firstbuf, struct Buffer* currentbuf, c
     }
     listBuffer(ui, topbuf, currentbuf);
 
-    GetChFunc getch = event_begin_input(-1);
     for (;;) {
-        if ((c = getch()) == ESC_CODE) {
-            if ((c = getch()) == '[' || c == 'O') {
-                switch (c = getch()) {
+        if ((c = ui.vtable.getCh(ui.co)) == ESC_CODE) {
+            if ((c = ui.vtable.getCh(ui.co)) == '[' || c == 'O') {
+                switch (c = ui.vtable.getCh(ui.co)) {
                 case 'A':
                     c = 'k';
                     break;
@@ -419,7 +417,6 @@ selectBuffer(struct UI ui, struct Buffer* firstbuf, struct Buffer* currentbuf, c
         // refresh(ttyWriter());
     }
 end:
-    event_end_input(getch);
     return currentbuf;
 }
 

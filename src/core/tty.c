@@ -1,6 +1,5 @@
 #include "tty.h"
 #include "ctrlcode.h"
-#include "event_poller.h"
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -237,27 +236,25 @@ void term_cbreak(void)
 }
 
 static void
-skip_escseq(GetChFunc getch)
+skip_escseq(struct UI ui)
 {
-    int c = getch();
+    int c = ui.vtable.getCh(ui.co);
     if (c == '[' || c == 'O') {
-        c = getch();
+        c = ui.vtable.getCh(ui.co);
         while (IS_DIGIT(c))
-            c = getch();
+            c = ui.vtable.getCh(ui.co);
     }
 }
 
-int sleep_till_anykey(int timeout_ms, int purge)
+int sleep_till_anykey(struct UI ui, int timeout_ms, int purge)
 {
     TerminalMode ioval;
     _TerminalGet(g_tty, &ioval);
     term_raw();
 
-    GetChFunc getch = event_begin_input(timeout_ms);
-    int c = getch();
+    int c = ui.vtable.getCh(ui.co);
     if (c == ESC_CODE)
-        skip_escseq(getch);
-    event_end_input(getch);
+        skip_escseq(ui);
 
     int er = _TerminalSet(g_tty, &ioval);
     if (er == -1) {
