@@ -985,8 +985,10 @@ const char* mcoInput(struct mco_coro* co, const char* prompt)
     return inputAnswer(task->ui, prompt);
 }
 
-void mcoMessage(struct mco_coro*, enum MessageSeverity error, const char* msg)
+void mcoMessage(struct mco_coro* co, enum MessageSeverity error, const char* msg)
 {
+    struct CoTask* task = (struct CoTask*)mco_get_user_data(co);
+    message(task->ui, error, msg);
 }
 
 struct CoTask* launch(CommandFunc func)
@@ -1037,6 +1039,10 @@ void onKeyInput(unsigned char ch)
             current_task = launch(func);
         }
 
+        if (updateCursor(g_ui.current_buffer)) {
+            termClear(ttyWriter());
+        }
+
         {
             int rootX = 0;
             if (showLineNum) {
@@ -1073,9 +1079,6 @@ void onKeyInput(unsigned char ch)
             g_ui.searchkey_num = searchKeyNum();
         }
 
-        if (updateCursor(g_ui.current_buffer)) {
-            termClear(ttyWriter());
-        }
         bufToScreen(&g_ui);
         renderFrame(&g_ui);
     }
