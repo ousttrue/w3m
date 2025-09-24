@@ -30,6 +30,7 @@ struct Document {
     int currentColumn;
     int pos;
     int visualpos;
+    struct BufferPos* undo;
 
     struct AnchorList* href;
     struct AnchorList* name;
@@ -41,6 +42,7 @@ struct Document {
     struct HmarkerList* hmarklist;
     struct HmarkerList* imarklist;
     struct Anchor* submit;
+    struct FormItem* form_submit;
 
     bool image_loaded;
     enum ImageGetFlag image_flag;

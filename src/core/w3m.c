@@ -910,7 +910,7 @@ save_buffer_position(struct Buffer* buf)
     if (!buf->document.firstLine)
         return;
 
-    struct BufferPos* b = buf->undo;
+    struct BufferPos* b = buf->document.undo;
     if (b
         && b->top_linenumber == buf->document.topLineIndex
         && b->cur_linenumber == buf->document.currentLineIndex
@@ -923,10 +923,10 @@ save_buffer_position(struct Buffer* buf)
     b->currentColumn = buf->document.currentColumn;
     b->pos = buf->document.pos;
     b->next = NULL;
-    b->prev = buf->undo;
-    if (buf->undo)
-        buf->undo->next = b;
-    buf->undo = b;
+    b->prev = buf->document.undo;
+    if (buf->document.undo)
+        buf->document.undo->next = b;
+    buf->document.undo = b;
 }
 
 struct CoTask {

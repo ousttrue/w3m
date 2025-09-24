@@ -1203,15 +1203,15 @@ DEFUN(reload, RELOAD, "Load current document anew")
     int multipart = 0;
 
     struct Form* post;
-    if (ui->current_buffer->form_submit) {
-        post = ui->current_buffer->form_submit->parent;
+    if (ui->current_buffer->document.form_submit) {
+        post = ui->current_buffer->document.form_submit->parent;
         if (post->method == FORM_METHOD_POST
             && post->enctype == FORM_ENCTYPE_MULTIPART) {
             Str query;
             struct stat st;
             multipart = 1;
             query_from_followform(&ui->current_buffer->document, getBufferPosition(ui->current_buffer),
-                &query, ui->current_buffer->form_submit, multipart);
+                &query, ui->current_buffer->document.form_submit, multipart);
             stat(post->body, &st);
             post->length = st.st_size;
         }
@@ -1550,7 +1550,7 @@ DEFUN(undoPos, UNDO, "Cancel the last cursor movement")
     if (!ui->current_buffer->document.firstLine)
         return;
 
-    struct BufferPos* b = ui->current_buffer->undo;
+    struct BufferPos* b = ui->current_buffer->document.undo;
     if (!b || !b->prev)
         return;
 
@@ -1562,7 +1562,7 @@ DEFUN(redoPos, REDO, "Cancel the last undo")
     if (!ui->current_buffer->document.firstLine)
         return;
 
-    struct BufferPos* b = ui->current_buffer->undo;
+    struct BufferPos* b = ui->current_buffer->document.undo;
     if (!b || !b->next)
         return;
 

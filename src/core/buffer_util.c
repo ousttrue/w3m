@@ -1358,7 +1358,7 @@ void resetPos(struct Buffer* buf, struct BufferPos* b)
         },
     };
     restorePosition(buf, &pos);
-    buf->undo = b;
+    buf->document.undo = b;
 }
 
 /* mark URL-like patterns as anchors */
