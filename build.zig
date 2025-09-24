@@ -68,7 +68,6 @@ const document_public_headers = [_][]const u8{
     "Anchor.h",
     "AnchorList.h",
     "Image.h",
-    "Buffer.h",
     "HtmlTagParsed.h",
     "HtmlTag.h",
     "HtmlTagAttribute.h",
