@@ -482,7 +482,7 @@ void reshapeBuffer(struct UI *ui, struct Buffer* buf, int cols)
     }
     if (buf->check_url)
         chkURLBuffer(buf);
-    formResetBuffer(buf, sbuf.formitem);
+    formResetDocument(&buf->document, sbuf.formitem);
 }
 
 struct Buffer*

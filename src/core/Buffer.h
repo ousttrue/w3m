@@ -13,7 +13,6 @@ struct Buffer {
     struct FormItem* form_submit;
     char* savecache;
     char* edit;
-    struct Anchor* submit;
     struct BufferPos* undo;
     struct _AlarmEvent* event;
 };

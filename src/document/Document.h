@@ -40,6 +40,7 @@ struct Document {
     struct MapList* maplist;
     struct HmarkerList* hmarklist;
     struct HmarkerList* imarklist;
+    struct Anchor* submit;
 
     bool image_loaded;
     enum ImageGetFlag image_flag;
