@@ -11,6 +11,5 @@ struct Buffer {
     bool check_url;
     wc_uint8 auto_detect;
     char* savecache;
-    char* edit;
     struct _AlarmEvent* event;
 };

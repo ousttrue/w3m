@@ -498,11 +498,11 @@ DEFUN(editBf, EDIT, "Edit local source")
     // }
 
     Str cmd;
-    if (ui->current_buffer->edit)
-        cmd = unquote_mailcap(ui->current_buffer->edit,
-            contentTypeStr(ui->current_buffer->content.cc.content_type), ui->current_buffer->content.sourcefile,
-            getHttpHeaderValue(ui->current_buffer->content.document_header, "Content-Type:"), NULL);
-    else
+    // if (ui->current_buffer->edit)
+    //     cmd = unquote_mailcap(ui->current_buffer->edit,
+    //         contentTypeStr(ui->current_buffer->content.cc.content_type), ui->current_buffer->content.sourcefile,
+    //         getHttpHeaderValue(ui->current_buffer->content.document_header, "Content-Type:"), NULL);
+    // else
         cmd = myEditor(Editor, shell_quote(ui->current_buffer->content.sourcefile), 1);
     exec_cmd(cmd->ptr);
 }
