@@ -21,13 +21,15 @@ struct Document {
 
     struct LineList* firstLine;
     int allLine;
+    // scroll y
     int topLineIndex;
     // cursor y in document
     int currentLineIndex;
 
     int cols;
-    // cursor x in document
+    // scroll x in document
     int currentColumn;
+    // byte pos in line
     int pos;
     int visualpos;
     struct BufferPos* undo;
