@@ -1210,7 +1210,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
             Str query;
             struct stat st;
             multipart = 1;
-            query_from_followform(ui->current_buffer, getBufferPosition(ui->current_buffer),
+            query_from_followform(&ui->current_buffer->document, getBufferPosition(ui->current_buffer),
                 &query, ui->current_buffer->form_submit, multipart);
             stat(post->body, &st);
             post->length = st.st_size;

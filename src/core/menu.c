@@ -1673,9 +1673,9 @@ int getMenuN(struct MenuList* list, const char* id)
 /* --- LinkMenu (END) --- */
 
 struct Anchor*
-accesskey_menu(struct UI *ui, struct Buffer* buf)
+accesskey_menu(struct UI *ui, struct Document* doc)
 {
-    struct AnchorList* al = buf->document.href;
+    struct AnchorList* al = doc->href;
     struct Anchor** ap;
     int i, n, nitem = 0, key = -1;
     unsigned char c;
@@ -1695,7 +1695,7 @@ accesskey_menu(struct UI *ui, struct Buffer* buf)
     for (i = 0, n = 0; i < al->nanchor; i++) {
         struct Anchor* a = &al->anchors[i];
         if (!a->slave && a->accesskey && IS_ASCII(a->accesskey)) {
-            const char* t = getAnchorText(&buf->document, al, a);
+            const char* t = getAnchorText(doc, al, a);
             label[n] = Sprintf("%c: %s", a->accesskey, t ? t : "")->ptr;
             ap[n] = a;
             n++;
@@ -1772,10 +1772,10 @@ lmSelect(struct UI *ui, char c)
 }
 
 struct Anchor*
-list_menu(struct UI *ui, struct Buffer* buf)
+list_menu(struct UI *ui, struct Document* doc)
 {
     struct Menu menu;
-    struct AnchorList* al = buf->document.href;
+    struct AnchorList* al = doc->href;
     struct Anchor** ap;
     int i, n, nitem = 0, key = -1, two = false;
     const char* t;
@@ -1800,7 +1800,7 @@ list_menu(struct UI *ui, struct Buffer* buf)
     for (i = 0, n = 0; i < al->nanchor; i++) {
         struct Anchor* a = &al->anchors[i];
         if (!a->slave) {
-            t = getAnchorText(buf, al, a);
+            t = getAnchorText(doc, al, a);
             if (!t)
                 t = "";
             if (two && n >= nlmKeys2 * nlmKeys)

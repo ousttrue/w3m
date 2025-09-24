@@ -1,5 +1,4 @@
 #include "display.h"
-#include "Buffer.h"
 #include "HtmlTagParsed.h"
 #include "form.h"
 #include "runtime.h"

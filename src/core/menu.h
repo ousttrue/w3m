@@ -49,9 +49,9 @@ struct MenuList {
     struct MenuItem* item;
 };
 
-struct Buffer;
-struct Anchor* accesskey_menu(struct UI *ui, struct Buffer* buf);
-struct Anchor* list_menu(struct UI *ui, struct Buffer* buf);
+struct Document;
+struct Anchor* accesskey_menu(struct UI *ui, struct Document *doc);
+struct Anchor* list_menu(struct UI *ui, struct Document* doc);
 void set_menu_frame(void);
 void new_menu(struct Menu* menu, struct MenuItem* item);
 void geom_menu(struct Menu* menu, int x, int y, int mselect);
