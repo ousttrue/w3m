@@ -7,6 +7,10 @@
 #include <wc.h>
 #include <wtf.h>
 
+Lineprop get_mctype(const char *c){
+    return ((Lineprop)wtf_type((wc_uchar*)(c)) << 8);
+}
+
 int Tabstop = 8;
 
 struct LineList* newLine(char* line, Lineprop* prop, Linecolor* color, int pos, int index)

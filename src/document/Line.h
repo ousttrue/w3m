@@ -5,6 +5,8 @@
 extern int Tabstop;
 
 typedef unsigned short Lineprop;
+Lineprop get_mctype(const char *c);
+
 typedef unsigned char Linecolor;
 
 /*

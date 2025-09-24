@@ -1,4 +1,3 @@
-
 #include "wc.h"
 #include "wtf.h"
 #include "sjis.h"
@@ -11,11 +10,11 @@
 #include "gb18030.h"
 #include "uhc.h"
 #include "ucs.h"
-#include "utf8.h"
 #include "ccs.h"
 #include <string.h>
 
-wc_uint8 WTF_WIDTH_MAP[ 0x100 ] = {
+
+static wc_uint8 WTF_WIDTH_MAP[ 0x100 ] = {
     1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,
     1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,
     1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,
@@ -26,6 +25,12 @@ wc_uint8 WTF_WIDTH_MAP[ 0x100 ] = {
     1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,
     1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,
 };
+int wtf_width(wc_uchar*p){ 
+    return WcOption.use_wide 
+        ? (int)WTF_WIDTH_MAP[(wc_uchar)*(p)]  
+        : (int)WTF_WIDTH_MAP[(wc_uchar)*(p)] ? 1 : 0;
+}
+
 
 wc_uint8 WTF_LEN_MAP[ 0x100 ] = {
     1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,
@@ -51,6 +56,8 @@ wc_uint8 WTF_TYPE_MAP[ 0x100 ] = {
     2,2,2,2,2,2,2,2, 2,2,2,2,2,2,2,2, 2,2,2,2,2,2,2,2, 2,2,2,2,2,2,2,2,
     2,2,2,2,2,2,2,2, 2,2,2,2,2,2,2,2, 2,2,2,2,2,2,2,2, 2,2,2,2,2,2,2,2,
 };
+int wtf_type(wc_uchar *p){ return WTF_TYPE_MAP[(wc_uchar) * (p)]; }
+
 
 static wc_uint16 CCS_MAP[ 33 ] = {
     WC_CCS_A_CS94    >> 8, WC_CCS_A_CS94W    >> 8,
@@ -153,14 +160,6 @@ wtf_len(wc_uchar *p)
 	q += WTF_LEN_MAP[*q];
     return q - p;
 }
-
-/*
-int
-wtf_type(wc_uchar *p)
-{
-    return (int)WTF_TYPE_MAP[*p];
-}
-*/
 
 #define wcs16_to_wtf(c, p) \
     ((p)[0] = (((c) >> 14) & 0x03) | 0x80), \
