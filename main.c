@@ -408,7 +408,7 @@ die_oom(size_t bytes)
     return NULL;
 }
 
-int main(int argc, char** argv)
+int w3m_main(int argc, char** argv)
 {
     Buffer* newbuf = NULL;
     char* p;
