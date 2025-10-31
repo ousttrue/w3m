@@ -2171,7 +2171,7 @@ void term_raw(void)
 #define TTY_MODE ISIG | ICANON | ECHO
 #endif /* not IEXTEN */
 {
-    ttymode_reset(TTY_MODE, IXON | IXOFF);
+    ttymode_reset(TTY_MODE, IXON | IXOFF | INLCR | IGNCR | ICRNL);
 #ifdef HAVE_TERMIOS_H
     set_cc(VMIN, 1);
 #else /* not HAVE_TERMIOS_H */
