@@ -4,6 +4,8 @@
 #include <signal.h>
 #include "fm.h"
 
+extern unsigned char last_key;
+
 /* *INDENT-OFF* */
 #ifdef USE_COLOR
 
@@ -340,6 +342,7 @@ make_lastline_message(Buffer* buf)
         Strcat(msg, Sprintf("%d/%d (%d%%)", cl, ll, r));
     } else
         /* FIXME: gettextize? */
+        msg = Sprintf("%s: code 0x%02x ", msg->ptr, last_key);
         Strcat_charp(msg, "Viewing");
 #ifdef USE_SSL
     if (buf->ssl_certificate)

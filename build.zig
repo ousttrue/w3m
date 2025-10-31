@@ -1,4 +1,5 @@
 const std = @import("std");
+const zcc = @import("compile_commands");
 
 const system_libs = [_][]const u8{
     "gc", "gpm", "ssl", "ncurses", "crypto",
@@ -81,12 +82,14 @@ const libwc_srcs = [_][]const u8{
 };
 
 pub fn build(b: *std.Build) void {
+    var targets = std.ArrayListUnmanaged(*std.Build.Step.Compile){};
+
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
     // const SHELL = "/bin/bash";
     const PACKAGE = "w3m";
     // const VERSION = "0.5.3";
-    const prefix = "/usr/local";
+    const prefix = "/usr";
     const exec_prefix = prefix;
     const datarootdir = b.fmt("{s}/share", .{prefix});
     // const bindir = b.fmt("{s}/bin", .{exec_prefix});
@@ -117,6 +120,7 @@ pub fn build(b: *std.Build) void {
         .name = "w3m",
         .root_module = mod,
     });
+    targets.append(b.allocator, exe) catch @panic("OOM");
     b.installArtifact(exe);
     exe.linkLibC();
     exe.addIncludePath(b.path("libwc"));
@@ -178,6 +182,8 @@ pub fn build(b: *std.Build) void {
 
         exe.step.dependOn(&install.step);
     }
+
+    _ = zcc.createStep(b, "cdb", targets.toOwnedSlice(b.allocator) catch @panic("OOM"));
 }
 
 fn gen_functable(b: *std.Build) *std.Build.Step.WriteFile {

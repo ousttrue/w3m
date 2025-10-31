@@ -37,6 +37,8 @@ extern int do_getch();
 #endif /* defined(USE_GPM) || defined(USE_SYSMOUSE) */
 #endif
 
+unsigned char last_key = 0;
+
 #include "util.h"
 
 #ifdef __MINGW32_VERSION
@@ -1204,6 +1206,7 @@ int main(int argc, char** argv)
         }
 #endif
         c = getch();
+        last_key = c;
 #ifdef USE_ALARM
         if (CurrentAlarm->sec > 0) {
             alarm(0);
@@ -1664,7 +1667,7 @@ DEFUN(ctrCsrV, CENTER_V, "Center on cursor line")
     int offsety;
     if (Currentbuf->firstLine == NULL)
         return;
-    offsety = Currentbuf->LINES / 2 - Currentbuf->cursorY;
+    offsety = /*Currentbuf->LINES / 2*/ - Currentbuf->cursorY;
     if (offsety != 0) {
 #if 0
 	Currentbuf->currentLine = lineSkip(Currentbuf,
