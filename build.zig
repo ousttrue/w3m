@@ -156,36 +156,38 @@ pub fn build(b: *std.Build) void {
         exe.linkSystemLibrary(lib);
     }
 
-    const wf = gen_functable(b);
-    {
-        const install = b.addInstallDirectory(.{
-            .source_dir = wf.getDirectory(),
-            .install_dir = .header,
-            .install_subdir = "",
-        });
-        b.getInstallStep().dependOn(&install.step);
+    const funcname_tab = gen_funcname_tab(b);
 
-        exe.step.dependOn(&install.step);
-        exe.addIncludePath(b.path("zig-out/include"));
-    }
+    const funcname_c = gen_funcname(b, funcname_tab.output, b.path("funcname0.awk"));
+    exe.installHeader(funcname_c.output, "funcname.c");
+
+    const funcname1_h = gen_funcname(b, funcname_tab.output, b.path("funcname1.awk"));
+    exe.installHeader(funcname1_h.output, "funcname1.h");
+
+    const funcname2_h = gen_funcname(b, funcname_tab.output, b.path("funcname2.awk"));
+    exe.installHeader(funcname2_h.output, "funcname2.h");
+
+    const functable_tab = gen_funcname(b, funcname_tab.output, b.path("functable.awk"));
 
     {
         const mktable = build_mktable(b, b.graph.host, .ReleaseSafe, &.{"gc"});
-        // {
-        //     b.installArtifact(mktable);
-        // }
         var run_mktable = b.addRunArtifact(mktable);
-        run_mktable.setCwd(wf.getDirectory());
         run_mktable.addArg("100");
-        // run_mktable.addFileArg(functable_tab.output);
-        run_mktable.addArg("functable.tab");
-        const install = b.addInstallFile(run_mktable.captureStdOut(), "include/functable.c");
-        b.getInstallStep().dependOn(&install.step);
-
-        exe.step.dependOn(&install.step);
+        run_mktable.addFileArg(functable_tab.output);
+        exe.installHeader(run_mktable.captureStdOut(), "functable.c");
+        exe.step.dependOn(&run_mktable.step);
     }
 
-    _ = zcc.createStep(b, "cdb", targets.toOwnedSlice(b.allocator) catch @panic("OOM"));
+    exe.addIncludePath(exe.getEmittedIncludeTree());
+
+    b.installDirectory(.{
+        .source_dir = exe.getEmittedIncludeTree(),
+        .install_dir = .header,
+        .install_subdir = "",
+    });
+
+    const cdb = zcc.createStep(b, "cdb", targets.toOwnedSlice(b.allocator) catch @panic("OOM"));
+    cdb.dependOn(&exe.step);
 }
 
 fn build_gcstr(
@@ -211,27 +213,6 @@ fn build_gcstr(
     });
     lib.installHeadersDirectory(b.path("gcstr"), "gcstr", .{});
     return lib;
-}
-
-fn gen_functable(b: *std.Build) *std.Build.Step.WriteFile {
-    const wf = b.addWriteFiles();
-
-    const funcname_tab = gen_funcname_tab(b);
-    _ = wf.addCopyFile(funcname_tab.output, "funcname.tab");
-
-    const funcname_c = gen_funcname(b, funcname_tab.output, b.path("funcname0.awk"));
-    _ = wf.addCopyFile(funcname_c.output, "funcname.c");
-
-    const funcname1_h = gen_funcname(b, funcname_tab.output, b.path("funcname1.awk"));
-    _ = wf.addCopyFile(funcname1_h.output, "funcname1.h");
-
-    const funcname2_h = gen_funcname(b, funcname_tab.output, b.path("funcname2.awk"));
-    _ = wf.addCopyFile(funcname2_h.output, "funcname2.h");
-
-    const functable_tab = gen_funcname(b, funcname_tab.output, b.path("functable.awk"));
-    _ = wf.addCopyFile(functable_tab.output, "functable.tab");
-
-    return wf;
 }
 
 fn build_mktable(

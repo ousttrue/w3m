@@ -49,11 +49,11 @@ defhashfunc(HashItem_ss*, int, hss_i)
     p = argv[2];
     if (strrchr(p, '/') != NULL)
         p = strrchr(p, '/') + 1;
-    fbase = Strnew_charp(p);
-    if (strchr(fbase->ptr, '.'))
-        while (Strlastchar(fbase) != '.')
-            Strshrink(fbase, 1);
-    Strshrink(fbase, 1);
+    // fbase = Strnew_charp(p);
+    // if (strchr(fbase->ptr, '.'))
+    //     while (Strlastchar(fbase) != '.')
+    //         Strshrink(fbase, 1);
+    // Strshrink(fbase, 1);
 
     hash = newHash_ss(size);
     printf("#include \"hash.h\"\n");
@@ -117,7 +117,7 @@ defhashfunc(HashItem_ss*, int, hss_i)
             printf("    NULL,\n");
     }
     printf("};\n\n");
-    printf("Hash_si %s = { %d, MyHashItemTbl };\n", fbase->ptr, hash->size);
+    printf("Hash_si functable = { %d, MyHashItemTbl };\n", hash->size);
 
     exit(0);
 }
