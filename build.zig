@@ -200,9 +200,11 @@ fn build_gcstr(
             .target = target,
             .optimize = optimize,
             .link_libc = true,
+            .root_source_file = b.path("gcstr/Str.zig"),
         }),
         .linkage = .dynamic,
     });
+    lib.addIncludePath(b.path("gcstr"));
     const gc_dep = b.dependency("gc", .{
         .target = target,
         .optimize = optimize,

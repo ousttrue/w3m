@@ -22,7 +22,6 @@
 #include <string.h>
 #include "myctype.h"
 
-#define INITIALStr_SIZE 32
 
 #ifdef STR_DEBUG
 /* This is obsolete, because "Str" can handle a '\0' character now. */
@@ -53,23 +52,9 @@ char* allocStr(const char* s, int len)
     return ptr;
 }
 
-Str Strnew()
-{
-    Str x = GC_MALLOC(sizeof(struct Str));
-    if (x == NULL)
-        exit(1);
-    x->ptr = GC_MALLOC_ATOMIC(INITIALStr_SIZE);
-    if (x->ptr == NULL)
-        exit(1);
-    x->ptr[0] = '\0';
-    x->area_size = INITIALStr_SIZE;
-    x->length = 0;
-    return x;
-}
-
 Str Strnew_size(int n)
 {
-    Str x = GC_MALLOC(sizeof(struct Str));
+    Str x = GC_MALLOC(sizeof(struct _Str));
     if (x == NULL)
         exit(1);
     if (n < 0 || n >= STR_SIZE_MAX)
@@ -92,7 +77,7 @@ Str Strnew_charp(const char* p)
 
     if (p == NULL)
         return Strnew();
-    x = GC_MALLOC(sizeof(struct Str));
+    x = GC_MALLOC(sizeof(struct _Str));
     if (x == NULL)
         exit(1);
     n = strlen(p) + 1;
@@ -132,7 +117,7 @@ Str Strnew_charp_n(const char* p, int n)
 
     if (p == NULL)
         return Strnew_size(n);
-    x = GC_MALLOC(sizeof(struct Str));
+    x = GC_MALLOC(sizeof(struct _Str));
     if (x == NULL)
         exit(1);
     if (n < 0 || n >= STR_SIZE_MAX)

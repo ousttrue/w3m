@@ -16,20 +16,21 @@
 #include <stdio.h>
 #include <limits.h>
 
+#define INITIALStr_SIZE 32
 #define STR_SIZE_MAX (INT_MAX / 32)
 
 #define GCSTR_DETAIL
 #ifdef GCSTR_DETAIL
-struct Str {
+struct _Str {
     char* ptr;
-    int length;
-    int area_size;
+    size_t length;
+    size_t area_size;
 };
 #else
-struct Str;
+struct _Str;
 #endif
 
-typedef struct Str* Str;
+typedef struct _Str* Str;
 
 char* allocStr(const char* s, int len);
 Str Strnew(void);

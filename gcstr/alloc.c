@@ -160,7 +160,7 @@ Str growbuf_to_Str(struct growbuf* gb)
     if (gb->free_proc == &w3m_GC_free) {
         growbuf_reserve(gb, gb->length + 1);
         gb->ptr[gb->length] = '\0';
-        s = New(struct Str);
+        s = New(struct _Str);
         s->ptr = gb->ptr;
         s->length = gb->length;
         s->area_size = gb->area_size;
