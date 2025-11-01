@@ -13,18 +13,16 @@
  * limited to warranty of fitness of purpose, or merchantability, or
  * results obtained from use of this software.
  */
+#include "Str.h"
+#include "alloc.h"
+#include <gc.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <gc.h>
 #include <stdarg.h>
 #include <string.h>
-#ifdef __EMX__ /* or include "fm.h" for HAVE_BCOPY? */
-#include <strings.h>
-#endif
-#include "Str.h"
 #include "myctype.h"
 
-#define INITIAL_STR_SIZE 32
+#define INITIALStr_SIZE 32
 
 #ifdef STR_DEBUG
 /* This is obsolete, because "Str" can handle a '\0' character now. */
@@ -35,29 +33,49 @@
 #define STR_LENGTH_CHECK(x)
 #endif /* not STR_DEBUG */
 
+char* allocStr(const char* s, int len)
+{
+    char* ptr;
+
+    if (s == NULL)
+        return NULL;
+    if (len < 0)
+        len = strlen(s);
+    if (len < 0 || len >= STR_SIZE_MAX)
+        len = STR_SIZE_MAX - 1;
+    ptr = NewAtom_N(char, len + 1);
+    if (ptr == NULL) {
+        fprintf(stderr, "fm: Can't allocate string. Give me more memory!\n");
+        exit(-1);
+    }
+    bcopy(s, ptr, len);
+    ptr[len] = '\0';
+    return ptr;
+}
+
 Str Strnew()
 {
-    Str x = GC_MALLOC(sizeof(struct _Str));
+    Str x = GC_MALLOC(sizeof(struct Str));
     if (x == NULL)
         exit(1);
-    x->ptr = GC_MALLOC_ATOMIC(INITIAL_STR_SIZE);
+    x->ptr = GC_MALLOC_ATOMIC(INITIALStr_SIZE);
     if (x->ptr == NULL)
         exit(1);
     x->ptr[0] = '\0';
-    x->area_size = INITIAL_STR_SIZE;
+    x->area_size = INITIALStr_SIZE;
     x->length = 0;
     return x;
 }
 
 Str Strnew_size(int n)
 {
-    Str x = GC_MALLOC(sizeof(struct _Str));
+    Str x = GC_MALLOC(sizeof(struct Str));
     if (x == NULL)
         exit(1);
     if (n < 0 || n >= STR_SIZE_MAX)
         n = STR_SIZE_MAX - 1;
-    else if (n + 1 < INITIAL_STR_SIZE)
-        n = INITIAL_STR_SIZE - 1;
+    else if (n + 1 < INITIALStr_SIZE)
+        n = INITIALStr_SIZE - 1;
     x->ptr = GC_MALLOC_ATOMIC(n + 1);
     if (x->ptr == NULL)
         exit(1);
@@ -74,15 +92,15 @@ Str Strnew_charp(const char* p)
 
     if (p == NULL)
         return Strnew();
-    x = GC_MALLOC(sizeof(struct _Str));
+    x = GC_MALLOC(sizeof(struct Str));
     if (x == NULL)
         exit(1);
     n = strlen(p) + 1;
     if (n <= 0 || n > STR_SIZE_MAX)
         n = STR_SIZE_MAX;
     len = n - 1;
-    if (n < INITIAL_STR_SIZE)
-        n = INITIAL_STR_SIZE;
+    if (n < INITIALStr_SIZE)
+        n = INITIALStr_SIZE;
     x->ptr = GC_MALLOC_ATOMIC(n);
     if (x->ptr == NULL)
         exit(1);
@@ -114,14 +132,14 @@ Str Strnew_charp_n(const char* p, int n)
 
     if (p == NULL)
         return Strnew_size(n);
-    x = GC_MALLOC(sizeof(struct _Str));
+    x = GC_MALLOC(sizeof(struct Str));
     if (x == NULL)
         exit(1);
     if (n < 0 || n >= STR_SIZE_MAX)
         n = STR_SIZE_MAX - 1;
     len = n;
-    if (n + 1 < INITIAL_STR_SIZE)
-        n = INITIAL_STR_SIZE - 1;
+    if (n + 1 < INITIALStr_SIZE)
+        n = INITIALStr_SIZE - 1;
     x->ptr = GC_MALLOC_ATOMIC(n + 1);
     if (x->ptr == NULL)
         exit(1);
@@ -275,8 +293,8 @@ void Strgrow(Str x)
         addlen = x->area_size;
     else
         addlen = x->area_size / 2;
-    if (addlen < INITIAL_STR_SIZE)
-        addlen = INITIAL_STR_SIZE;
+    if (addlen < INITIALStr_SIZE)
+        addlen = INITIALStr_SIZE;
     newlen = x->area_size + addlen;
     if (newlen <= 0 || newlen > STR_SIZE_MAX) {
         newlen = STR_SIZE_MAX;
@@ -290,6 +308,19 @@ void Strgrow(Str x)
         x->area_size = newlen;
     }
     x->ptr[x->length] = '\0';
+}
+
+Str Strcat_char(Str x, char y)
+{
+    if (x->length + 1 >= STR_SIZE_MAX) {
+        return 0;
+    }
+    if (x->length + 1 >= (x)->area_size) {
+        Strgrow(x);
+    }
+    x->ptr[x->length++] = y;
+    x->ptr[x->length] = 0;
+    return x;
 }
 
 Str Strsubstr(Str s, int beg, int len)
@@ -587,3 +618,15 @@ Str Strfgetall(FILE* f)
     }
     return s;
 }
+
+int Strcmp(Str x, Str y) { return strcmp(x->ptr, y->ptr); }
+int Strcmp_charp(Str x, const char* y) { return strcmp(x->ptr, y); }
+int Strncmp(Str x, Str y, size_t n) { return strncmp(x->ptr, y->ptr, n); }
+int Strncmp_charp(Str x, const char* y, size_t n) { return strncmp(x->ptr, y, n); }
+int Strcasecmp(Str x, Str y) { return strcasecmp(x->ptr, y->ptr); }
+int Strcasecmp_charp(Str x, const char* y) { return strcasecmp(x->ptr, y); }
+int Strncasecmp(Str x, Str y, size_t n) { return strncasecmp(x->ptr, y->ptr, n); }
+int Strncasecmp_charp(Str x, const char* y, size_t n) { return strncasecmp(x->ptr, y, n); }
+
+char Strlastchar(Str s) { return s->length > 0 ? s->ptr[s->length - 1] : '\0'; }
+int Strfputs(Str s, FILE* f) { return fwrite((s)->ptr, 1, (s)->length, (f)); }

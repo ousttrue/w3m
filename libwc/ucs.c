@@ -1,6 +1,5 @@
 
 
-#include <stdlib.h>
 #include "wc.h"
 #include "ucs.h"
 #include "search.h"
@@ -27,6 +26,8 @@
 #include "map/ucs_islower.map"
 #include "map/ucs_isupper.map"
 #include "map/ucs_case.map"
+#include <stdlib.h>
+#include <string.h>
 
 #define MAX_TAG_LEN (8 + 1 + 8)
 #define MAX_TAG_MAP 0x100

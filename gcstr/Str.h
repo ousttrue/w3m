@@ -1,4 +1,3 @@
-/* $Id: Str.h,v 1.6 2006/04/07 13:35:35 inu Exp $ */
 /*
  * String manipulation library for Boehm GC
  *
@@ -13,18 +12,26 @@
  * limited to warranty of fitness of purpose, or merchantability, or
  * results obtained from use of this software.
  */
-#ifndef GC_STR_H
-#define GC_STR_H
+#pragma once
 #include <stdio.h>
-#include <string.h>
 #include <limits.h>
 
-typedef struct _Str {
+#define STR_SIZE_MAX (INT_MAX / 32)
+
+#define GCSTR_DETAIL
+#ifdef GCSTR_DETAIL
+struct Str {
     char* ptr;
     int length;
     int area_size;
-}* Str;
+};
+#else
+struct Str;
+#endif
 
+typedef struct Str* Str;
+
+char* allocStr(const char* s, int len);
 Str Strnew(void);
 Str Strnew_size(int);
 Str Strnew_charp(const char*);
@@ -43,13 +50,14 @@ void Strcat_m_charp(Str, ...);
 Str Strsubstr(Str, int, int);
 void Strinsert_char(Str, int, char);
 void Strinsert_charp(Str, int, const char*);
+static inline void Strinsert(Str s, int n, Str p) { Strinsert_charp(s, n, p->ptr); }
 void Strdelete(Str, int, int);
+static inline void Strshrinkfirst(Str s, int n) { Strdelete(s, 0, n); }
 void Strtruncate(Str, int);
 void Strlower(Str);
 void Strupper(Str);
 void Strchop(Str);
 void Strshrink(Str, int);
-void Strshrinkfirst(Str, int);
 void Strremovefirstspaces(Str);
 void Strremovetrailingspaces(Str);
 Str Stralign_left(Str, int);
@@ -63,21 +71,18 @@ Str Strfgetall(FILE*);
 
 void Strgrow(Str s);
 
-#define STR_SIZE_MAX (INT_MAX / 32)
-#define Strcat_char(x, y) (((x)->length + 1 >= STR_SIZE_MAX) ? 0 : (((x)->length + 1 >= (x)->area_size) ? Strgrow(x), 0 : 0, (x)->ptr[(x)->length++] = (y), (x)->ptr[(x)->length] = 0))
-#define Strcatc(x, y) ((x)->ptr[(x)->length++] = (y))
-#define Strnulterm(x) ((x)->ptr[(x)->length] = 0)
-#define Strcmp(x, y) strcmp((x)->ptr, (y)->ptr)
-#define Strcmp_charp(x, y) strcmp((x)->ptr, (y))
-#define Strncmp(x, y, n) strncmp((x)->ptr, (y)->ptr, (n))
-#define Strncmp_charp(x, y, n) strncmp((x)->ptr, (y), (n))
-#define Strcasecmp(x, y) strcasecmp((x)->ptr, (y)->ptr)
-#define Strcasecmp_charp(x, y) strcasecmp((x)->ptr, (y))
-#define Strncasecmp(x, y, n) strncasecmp((x)->ptr, (y)->ptr, (n))
-#define Strncasecmp_charp(x, y, n) strncasecmp((x)->ptr, (y), (n))
+Str Strcat_char(Str x, char y);
+static inline void Strcatc(Str x, char y) { x->ptr[x->length++] = y; }
+static inline void Strnulterm(Str x) { x->ptr[x->length] = 0; }
 
-#define Strlastchar(s) ((s)->length > 0 ? (s)->ptr[(s)->length - 1] : '\0')
-#define Strinsert(s, n, p) Strinsert_charp((s), (n), (p)->ptr)
-#define Strshrinkfirst(s, n) Strdelete((s), 0, (n))
-#define Strfputs(s, f) fwrite((s)->ptr, 1, (s)->length, (f))
-#endif /* not GC_STR_H */
+int Strcmp(Str x, Str y);
+int Strcmp_charp(Str x, const char* y);
+int Strncmp(Str x, Str y, size_t n);
+int Strncmp_charp(Str x, const char* y, size_t n);
+int Strcasecmp(Str x, Str y);
+int Strcasecmp_charp(Str x, const char* y);
+int Strncasecmp(Str x, Str y, size_t n);
+int Strncasecmp_charp(Str x, const char* y, size_t n);
+
+char Strlastchar(Str s);
+int Strfputs(Str s, FILE* f);

@@ -1,7 +1,8 @@
 /* $Id: mktable.c,v 1.16 2010/12/15 10:50:24 htrb Exp $ */
+#include <gcstr/gcstr.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <gcstr/gcstr.h>
+#include <string.h>
 #include "config.h"
 
 int main(int argc, char* argv[])

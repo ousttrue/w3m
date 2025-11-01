@@ -110,26 +110,6 @@ void w3m_GC_free(void* ptr)
     GC_FREE(ptr);
 }
 
-char* allocStr(const char* s, int len)
-{
-    char* ptr;
-
-    if (s == NULL)
-        return NULL;
-    if (len < 0)
-        len = strlen(s);
-    if (len < 0 || len >= STR_SIZE_MAX)
-        len = STR_SIZE_MAX - 1;
-    ptr = NewAtom_N(char, len + 1);
-    if (ptr == NULL) {
-        fprintf(stderr, "fm: Can't allocate string. Give me more memory!\n");
-        exit(-1);
-    }
-    bcopy(s, ptr, len);
-    ptr[len] = '\0';
-    return ptr;
-}
-
 void* xrealloc(void* ptr, size_t size)
 {
     void* newptr = realloc(ptr, size);
@@ -180,7 +160,7 @@ Str growbuf_to_Str(struct growbuf* gb)
     if (gb->free_proc == &w3m_GC_free) {
         growbuf_reserve(gb, gb->length + 1);
         gb->ptr[gb->length] = '\0';
-        s = New(struct _Str);
+        s = New(struct Str);
         s->ptr = gb->ptr;
         s->length = gb->length;
         s->area_size = gb->area_size;
