@@ -2,6 +2,7 @@
 #include "fm.h"
 #include "myctype.h"
 #include "istream.h"
+#include "indep.h"
 #include <signal.h>
 #include <openssl/x509v3.h>
 
@@ -411,7 +412,7 @@ ssl_check_cert_ident(X509* x, char* hostname)
                      * be null terminated. Ensure we have a null terminated
                      * string that we can modify.
                      */
-                    char* asn = GC_MALLOC(sl + 1);
+                    char* asn = w3m_GC_alloc(sl + 1);
                     if (!asn)
                         exit(1);
                     bcopy(sn, asn, sl);

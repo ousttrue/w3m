@@ -1,8 +1,7 @@
 /* $Id: textlist.c,v 1.6 2003/04/07 16:27:11 ukai Exp $ */
 #include "textlist.h"
-#include "indep.h"
+#include "alloc.h"
 #include "Str.h"
-#include <gc.h>
 
 /* General doubly linked list */
 

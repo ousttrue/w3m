@@ -9,6 +9,7 @@ const w3m_srcs = [_][]const u8{
     "keybind.c",
     "util.c",
 
+    "alloc.c",
     "main.c",
     "file.c",
     "buffer.c",

@@ -2,6 +2,7 @@
 #include "fm.h"
 #include "local.h"
 #include "myctype.h"
+#include "indep.h"
 
 #ifdef USE_GPM
 #include <gpm.h>

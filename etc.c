@@ -1,4 +1,5 @@
 #include "fm.h"
+#include "indep.h"
 #include <pwd.h>
 #include "myctype.h"
 #include "html.h"

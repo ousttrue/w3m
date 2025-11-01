@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include "indep.h"
 #include "Str.h"
-#include <gc.h>
 #include "myctype.h"
 #include "entity.h"
 
@@ -329,26 +328,6 @@ void bzero(void* ptr, int len)
         *(p++) = 0;
 }
 #endif /* not HAVE_BCOPY */
-
-char* allocStr(const char* s, int len)
-{
-    char* ptr;
-
-    if (s == NULL)
-        return NULL;
-    if (len < 0)
-        len = strlen(s);
-    if (len < 0 || len >= STR_SIZE_MAX)
-        len = STR_SIZE_MAX - 1;
-    ptr = NewAtom_N(char, len + 1);
-    if (ptr == NULL) {
-        fprintf(stderr, "fm: Can't allocate string. Give me more memory!\n");
-        exit(-1);
-    }
-    bcopy(s, ptr, len);
-    ptr[len] = '\0';
-    return ptr;
-}
 
 int strCmp(const void* s1, const void* s2)
 {
@@ -911,101 +890,6 @@ char* shell_quote(char* str)
     if (tmp)
         return tmp->ptr;
     return str;
-}
-
-void* xrealloc(void* ptr, size_t size)
-{
-    void* newptr = realloc(ptr, size);
-    if (newptr == NULL) {
-        fprintf(stderr, "Out of memory\n");
-        exit(-1);
-    }
-    return newptr;
-}
-
-/* Define this as a separate function in case the free() has
- * an incompatible prototype. */
-void xfree(void* ptr)
-{
-    free(ptr);
-}
-
-void* w3m_GC_realloc_atomic(void* ptr, size_t size)
-{
-    return ptr ? GC_REALLOC(ptr, size) : GC_MALLOC_ATOMIC(size);
-}
-
-void w3m_GC_free(void* ptr)
-{
-    GC_FREE(ptr);
-}
-
-void growbuf_init(struct growbuf* gb)
-{
-    gb->ptr = NULL;
-    gb->length = 0;
-    gb->area_size = 0;
-    gb->realloc_proc = &w3m_GC_realloc_atomic;
-    gb->free_proc = &w3m_GC_free;
-}
-
-void growbuf_init_without_GC(struct growbuf* gb)
-{
-    gb->ptr = NULL;
-    gb->length = 0;
-    gb->area_size = 0;
-    gb->realloc_proc = &xrealloc;
-    gb->free_proc = &xfree;
-}
-
-void growbuf_clear(struct growbuf* gb)
-{
-    (*gb->free_proc)(gb->ptr);
-    gb->ptr = NULL;
-    gb->length = 0;
-    gb->area_size = 0;
-}
-
-Str growbuf_to_Str(struct growbuf* gb)
-{
-    Str s;
-
-    if (gb->free_proc == &w3m_GC_free) {
-        growbuf_reserve(gb, gb->length + 1);
-        gb->ptr[gb->length] = '\0';
-        s = New(struct _Str);
-        s->ptr = gb->ptr;
-        s->length = gb->length;
-        s->area_size = gb->area_size;
-    } else {
-        s = Strnew_charp_n(gb->ptr, gb->length);
-        (*gb->free_proc)(gb->ptr);
-    }
-    gb->ptr = NULL;
-    gb->length = 0;
-    gb->area_size = 0;
-    return s;
-}
-
-void growbuf_reserve(struct growbuf* gb, int leastarea)
-{
-    int newarea;
-
-    if (gb->area_size < leastarea) {
-        newarea = gb->area_size * 3 / 2;
-        if (newarea < leastarea)
-            newarea = leastarea;
-        newarea += 16;
-        gb->ptr = (*gb->realloc_proc)(gb->ptr, newarea);
-        gb->area_size = newarea;
-    }
-}
-
-void growbuf_append(struct growbuf* gb, const unsigned char* src, int len)
-{
-    growbuf_reserve(gb, gb->length + len);
-    memcpy(&gb->ptr[gb->length], src, len);
-    gb->length += len;
 }
 
 static char*

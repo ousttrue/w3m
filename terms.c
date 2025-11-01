@@ -243,7 +243,7 @@ void put_image_iterm2(char* url, int x, int y, int w, int h)
 
     writestr(buf->ptr);
 
-    cbuf = GC_MALLOC_ATOMIC(3072);
+    cbuf = w3m_GC_alloc_atomic(3072);
     if (!cbuf)
         goto cleanup;
     i = 0;
@@ -355,7 +355,7 @@ void put_image_kitty(char* url, int x, int y, int w, int h, int sx, int sy, int 
 
     MOVE(y, x);
 
-    cbuf = GC_MALLOC_ATOMIC(3072); /* base64-encoded chunks of 4096 bytes */
+    cbuf = w3m_GC_alloc_atomic(3072); /* base64-encoded chunks of 4096 bytes */
     if (!cbuf)
         goto cleanup;
     i = 0;
@@ -450,7 +450,7 @@ save_first_animation_frame(const char* path)
         return NULL;
     }
 
-    if (fstat(fd, &st) != 0 || !(header = GC_malloc(st.st_size))) {
+    if (fstat(fd, &st) != 0 || !(header = w3m_GC_alloc(st.st_size))) {
         close(fd);
         return NULL;
     }

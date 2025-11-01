@@ -1,6 +1,5 @@
 #include <stdint.h>
 #include <stdlib.h>
-#include <gc.h>
 #include "wc.h"
 #include "wtf.h"
 

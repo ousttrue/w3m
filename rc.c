@@ -5,6 +5,7 @@
 #include "fm.h"
 #include "myctype.h"
 #include "proto.h"
+#include "indep.h"
 #include <stdio.h>
 #include <errno.h>
 #include "parsetag.h"

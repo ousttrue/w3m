@@ -3,7 +3,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include "fm.h"
-#include <gc.h>
+#include "indep.h"
 #include "terms.h"
 
 /* Prototype declaration of internal functions */

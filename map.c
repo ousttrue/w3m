@@ -3,6 +3,7 @@
  * client-side image maps
  */
 #include "fm.h"
+#include "indep.h"
 #include <math.h>
 
 MapList*

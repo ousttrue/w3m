@@ -34,7 +34,6 @@
 
 #include "config.h"
 #include "matrix.h"
-#include "alloc.h"
 
 /*
  * Macros from "fm.h".

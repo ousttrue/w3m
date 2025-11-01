@@ -1,9 +1,9 @@
 /* $Id: indep.h,v 1.16 2003/09/22 21:02:19 ukai Exp $ */
 #ifndef INDEP_H
 #define INDEP_H
-#include "alloc.h"
 #include "Str.h"
 #include "config.h"
+#include <stdlib.h>
 
 #ifndef TRUE
 #define TRUE 1
@@ -11,14 +11,6 @@
 #ifndef FALSE
 #define FALSE 0
 #endif /* FALSE */
-
-struct growbuf {
-    char* ptr;
-    int length;
-    int area_size;
-    void* (*realloc_proc)(void*, size_t);
-    void (*free_proc)(void*);
-};
 
 #define RAW_MODE 0
 #define PAGER_MODE 1
@@ -44,7 +36,6 @@ extern clen_t strtoclen(const char* s);
 extern char* conv_entity(unsigned int ch);
 extern int getescapechar(char** s);
 extern char* getescapecmd(char** s);
-extern char* allocStr(const char* s, int len);
 extern int strCmp(const void* s1, const void* s2);
 extern char* currentdir(void);
 extern char* cleanupName(char* name);
@@ -73,27 +64,11 @@ extern Str Str_url_unquote(Str x, int is_form, int safe);
 extern Str Str_form_quote(Str x);
 #define Str_form_unquote(x) Str_url_unquote((x), TRUE, FALSE)
 extern char* shell_quote(char* str);
-#define xmalloc(s) xrealloc(NULL, s)
-extern void* xrealloc(void* ptr, size_t size);
-extern void xfree(void* ptr);
-extern void* w3m_GC_realloc_atomic(void* ptr, size_t size);
-extern void w3m_GC_free(void* ptr);
-extern void growbuf_init(struct growbuf* gb);
-extern void growbuf_init_without_GC(struct growbuf* gb);
-extern void growbuf_clear(struct growbuf* gb);
-extern Str growbuf_to_Str(struct growbuf* gb);
-extern void growbuf_reserve(struct growbuf* gb, int leastarea);
-extern void growbuf_append(struct growbuf* gb, const unsigned char* src, int len);
-#define GROWBUF_ADD_CHAR(gb, ch) ((((gb)->length >= (gb)->area_size) ? growbuf_reserve(gb, (gb)->length + 1) : (void)0), (void)((gb)->ptr[(gb)->length++] = (ch)))
 
 extern char* w3m_auxbin_dir(void);
 extern char* w3m_lib_dir(void);
 extern char* w3m_etc_dir(void);
 extern char* w3m_conf_dir(void);
 extern char* w3m_help_dir(void);
-
-#define NewWithoutGC(type) ((type*)xmalloc(sizeof(type)))
-#define NewWithoutGC_N(type, n) ((type*)xmalloc((n) * sizeof(type)))
-#define NewWithoutGC_Reuse(type, ptr, n) ((type*)xrealloc(ptr, (n) * sizeof(type)))
 
 #endif /* INDEP_H */

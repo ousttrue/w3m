@@ -2,7 +2,7 @@
 #ifndef IO_STREAM_H
 #define IO_STREAM_H
 
-#include "indep.h"
+#include "alloc.h"
 #include <stdio.h>
 #include <openssl/bio.h>
 #include <openssl/x509.h>
