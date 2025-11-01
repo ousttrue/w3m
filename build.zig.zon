@@ -6,6 +6,10 @@
             .url = "https://github.com/the-argus/zig-compile-commands/archive/70fb439897e12cae896c071717d7c9c382918689.tar.gz",
             .hash = "zig_compile_commands-0.0.1-OZg5-ULBAABTh3NXO3WXoSUX1474ez0EouuoT2yDANhz",
         },
+        .gc = .{
+            .url = "git+https://github.com/bdwgc/bdwgc.git#a863ed338db9c8ae267418b461c5d68d783ce8c0",
+            .hash = "bdwgc-8.3.0-8obE-ERqLgA8LFIjyPTBhSIYeuEEPY2fbP7sSe4UxOGP",
+        },
     },
     .minimum_zig_version = "0.15.1",
     .paths = .{""},

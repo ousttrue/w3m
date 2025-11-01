@@ -2,7 +2,7 @@ const std = @import("std");
 const zcc = @import("compile_commands");
 
 const system_libs = [_][]const u8{
-    "gc", "gpm", "ssl", "ncurses", "crypto",
+    "gpm", "ssl", "ncurses", "crypto",
 };
 
 const w3m_srcs = [_][]const u8{
@@ -125,7 +125,13 @@ pub fn build(b: *std.Build) void {
     exe.addIncludePath(b.path("libwc"));
     exe.addIncludePath(b.path("."));
 
-    const gcstr = build_gcstr(b, target, optimize);
+    const gc_dep = b.dependency("gc", .{
+        .target = target,
+        .optimize = optimize,
+    });
+    const gc = gc_dep.artifact("gc");
+    exe.linkLibrary(gc);
+    const gcstr = build_gcstr(b, target, optimize, gc);
     exe.linkLibrary(gcstr);
 
     const flags = [_][]const u8{
@@ -170,7 +176,7 @@ pub fn build(b: *std.Build) void {
     const functable_tab = gen_funcname(b, funcname_tab.output, b.path("functable.awk"));
 
     {
-        const mktable = build_mktable(b, b.graph.host, .ReleaseSafe, &.{"gc"});
+        const mktable = build_mktable(b, b.graph.host, .ReleaseSafe);
         var run_mktable = b.addRunArtifact(mktable);
         run_mktable.addArg("100");
         run_mktable.addFileArg(functable_tab.output);
@@ -194,6 +200,7 @@ fn build_gcstr(
     b: *std.Build,
     target: std.Build.ResolvedTarget,
     optimize: std.builtin.OptimizeMode,
+    gc: *std.Build.Step.Compile,
 ) *std.Build.Step.Compile {
     const lib = b.addLibrary(.{
         .name = "gcstr",
@@ -202,7 +209,9 @@ fn build_gcstr(
             .optimize = optimize,
             .link_libc = true,
         }),
+        .linkage = .dynamic,
     });
+    lib.linkLibrary(gc);
     lib.addCSourceFiles(.{
         .root = b.path("gcstr"),
         .files = &.{
@@ -219,7 +228,6 @@ fn build_mktable(
     b: *std.Build,
     target: std.Build.ResolvedTarget,
     optimize: std.builtin.OptimizeMode,
-    libs: []const []const u8,
 ) *std.Build.Step.Compile {
     const mod = b.addModule("mktable", .{
         .target = target,
@@ -238,11 +246,15 @@ fn build_mktable(
             "-DDUMMY",
         },
     });
-    for (libs) |lib| {
-        exe.linkSystemLibrary(lib);
-    }
 
-    const gcstr = build_gcstr(b, target, optimize);
+    const gc_dep = b.dependency("gc", .{
+        .target = target,
+        .optimize = optimize,
+    });
+    const gc = gc_dep.artifact("gc");
+    exe.linkLibrary(gc);
+
+    const gcstr = build_gcstr(b, target, optimize, gc);
     exe.linkLibrary(gcstr);
 
     return exe;
