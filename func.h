@@ -7,7 +7,7 @@
 #define FUNC_H
 
 #include "textlist.h"
-#include "hash.h"
+#include <gcstr/hash.h>
 
 #define KEY_HASH_SIZE 127
 

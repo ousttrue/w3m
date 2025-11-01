@@ -3,7 +3,7 @@
 #define HISTORY_H
 
 #include "textlist.h"
-#include "hash.h"
+#include <gcstr/hash.h>
 
 #define HIST_LIST_MAX GENERAL_LIST_MAX
 #define HIST_HASH_SIZE 127

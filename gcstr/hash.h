@@ -22,6 +22,8 @@ defhash(char*, int, si)
     defhash(char*, char*, ss)
         defhash(char*, void*, sv)
             defhash(int, void*, iv)
+                defhash(HashItem_ss*, int, hss_i)
+
 #define defhashfunc(keytype, type, sym)                                          \
     Hash_##sym*                                                                  \
     newHash_##sym(int size)                                                      \

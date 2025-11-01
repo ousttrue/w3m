@@ -1,5 +1,5 @@
 /* $Id$ */
-#include "hash.h"
+#include <gcstr/hash.h>
 static HashItem_si MyHashItem[] = {
     /* 0 */ {"veebar", 0x22BB, &MyHashItem[1]},
     /* 1 */ {"ulcorner", 0x231C, &MyHashItem[2]},

@@ -3,7 +3,6 @@
 #include <gcstr/gcstr.h>
 #include "indep.h"
 #include "parsetagx.h"
-#include "hash.h"
 
 #include "html.c"
 

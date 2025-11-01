@@ -3,3 +3,4 @@
 #include "alloc.h"
 #include "Str.h"
 #include "myctype.h"
+#include "hash.h"

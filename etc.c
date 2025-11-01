@@ -1,10 +1,9 @@
 #include "fm.h"
 #include "indep.h"
 #include <pwd.h>
-#include <gcstr/myctype.h>
+#include <gcstr/gcstr.h>
 #include "html.h"
 #include "local.h"
-#include "hash.h"
 
 #include <fcntl.h>
 #include <sys/types.h>

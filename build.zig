@@ -46,7 +46,6 @@ const w3m_srcs = [_][]const u8{
     "indep.c",
     "textlist.c",
     "parsetag.c",
-    "hash.c",
 
     "version.c",
 };
@@ -125,13 +124,7 @@ pub fn build(b: *std.Build) void {
     exe.addIncludePath(b.path("libwc"));
     exe.addIncludePath(b.path("."));
 
-    const gc_dep = b.dependency("gc", .{
-        .target = target,
-        .optimize = optimize,
-    });
-    const gc = gc_dep.artifact("gc");
-    exe.linkLibrary(gc);
-    const gcstr = build_gcstr(b, target, optimize, gc);
+    const gcstr = build_gcstr(b, target, optimize);
     exe.linkLibrary(gcstr);
 
     const flags = [_][]const u8{
@@ -200,7 +193,6 @@ fn build_gcstr(
     b: *std.Build,
     target: std.Build.ResolvedTarget,
     optimize: std.builtin.OptimizeMode,
-    gc: *std.Build.Step.Compile,
 ) *std.Build.Step.Compile {
     const lib = b.addLibrary(.{
         .name = "gcstr",
@@ -211,6 +203,11 @@ fn build_gcstr(
         }),
         .linkage = .dynamic,
     });
+    const gc_dep = b.dependency("gc", .{
+        .target = target,
+        .optimize = optimize,
+    });
+    const gc = gc_dep.artifact("gc");
     lib.linkLibrary(gc);
     lib.addCSourceFiles(.{
         .root = b.path("gcstr"),
@@ -218,6 +215,8 @@ fn build_gcstr(
             "alloc.c",
             "Str.c",
             "myctype.c",
+            "hash.c",
+            "hash_mktable.c",
         },
     });
     lib.installHeadersDirectory(b.path("gcstr"), "gcstr", .{});
@@ -240,21 +239,14 @@ fn build_mktable(
     });
     exe.addCSourceFiles(.{
         .files = &.{
-            "mktable.c", "entity.c", "hash.c",
+            "mktable.c", "entity.c",
         },
         .flags = &.{
             "-DDUMMY",
         },
     });
 
-    const gc_dep = b.dependency("gc", .{
-        .target = target,
-        .optimize = optimize,
-    });
-    const gc = gc_dep.artifact("gc");
-    exe.linkLibrary(gc);
-
-    const gcstr = build_gcstr(b, target, optimize, gc);
+    const gcstr = build_gcstr(b, target, optimize);
     exe.linkLibrary(gcstr);
 
     return exe;

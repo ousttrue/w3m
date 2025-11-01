@@ -12,7 +12,7 @@
 #include <unistd.h>
 #endif /* HAVE_READLINK */
 #include "local.h"
-#include "hash.h"
+#include <gcstr/hash.h>
 
 
 #define CGIFN_NORMAL 0

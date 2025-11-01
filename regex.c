@@ -13,14 +13,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <gc.h>
 #include "config.h"
 #include "wc.h"
 #include "wtf.h"
 #include "ucs.h"
 #include "regex.h"
 #include "config.h"
-#include <gcstr/myctype.h>
+#include <gcstr/gcstr.h>
 
 #ifndef NULL
 #define NULL 0
@@ -121,7 +120,7 @@ newRegex0(char** ex, int igncase, Regex* regex, char** msg, int level)
     longchar* st_ptr;
 
     if (regex == NULL)
-        regex = (Regex*)GC_malloc(sizeof(Regex));
+        regex = New(Regex);
     regex->alt_regex = NULL;
     re = regex->re;
     st_ptr = regex->storage;
@@ -374,8 +373,8 @@ regmatch_sub_anytime(struct MatchingContext2* c, Regex* regex,
     case 3:
         goto label3;
     }
-    c->ctx = GC_malloc(sizeof(struct MatchingContext1));
-    c->ctx2 = GC_malloc(sizeof(struct MatchingContext2));
+    c->ctx = New(struct MatchingContext1);
+    c->ctx2 = New(struct MatchingContext2);
     c->ctx->label = 0;
     c->regex = regex;
     c->n_any = 0;
@@ -455,7 +454,7 @@ regmatch_iter(struct MatchingContext1* c,
                 }
                 if (c->n_any >= 0) {
                     if (RE_MODE(c->re) == RE_SUBREGEX) {
-                        c->ctx2 = GC_malloc(sizeof(struct MatchingContext2));
+                        c->ctx2 = New(struct MatchingContext2);
                         c->ctx2->label = 0;
                         while (regmatch_sub_anytime(c->ctx2,
                             c->re->p.sub,
@@ -511,7 +510,7 @@ regmatch_iter(struct MatchingContext1* c,
             break;
         case RE_SUBREGEX:
             if (c->sub_ctx == NULL) {
-                c->sub_ctx = GC_malloc(sizeof(struct MatchingContext1));
+                c->sub_ctx = New(struct MatchingContext1);
             }
             c->sub_regex = c->re->p.sub;
             for (;;) {

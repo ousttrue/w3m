@@ -3,27 +3,11 @@
 #include <stdlib.h>
 #include <gcstr/gcstr.h>
 #include "config.h"
-#include "hash.h"
-#include <gc.h>
 
-/* *INDENT-OFF* */
-defhash(HashItem_ss*, int, hss_i)
-/* *INDENT-ON* */
-
-#define keycomp(x, y) ((x) == (y))
-
-    /* XXX: we assume sizeof(unsigned long) >= sizeof(void *) */
-    static unsigned long hashfunc(HashItem_ss* x)
+int main(int argc, char* argv[])
 {
-    return (unsigned long)x;
-}
+    alloc_init();
 
-/* *INDENT-OFF* */
-defhashfunc(HashItem_ss*, int, hss_i)
-    /* *INDENT-ON* */
-
-    int main(int argc, char* argv[])
-{
     FILE* f;
     Hash_ss* hash;
     HashItem_ss **hashitems, *hi;
@@ -32,7 +16,6 @@ defhashfunc(HashItem_ss*, int, hss_i)
     char* p;
     Hash_hss_i* rhash;
 
-    GC_INIT();
     if (argc != 3) {
         fprintf(stderr, "usage: %s hashsize file.tab > file.c\n", argv[0]);
         exit(1);
@@ -56,7 +39,7 @@ defhashfunc(HashItem_ss*, int, hss_i)
     // Strshrink(fbase, 1);
 
     hash = newHash_ss(size);
-    printf("#include \"hash.h\"\n");
+    printf("#include <gcstr/hash.h>\n");
     for (;;) {
         s = Strfgets(f);
         if (s->length == 0)
@@ -86,7 +69,7 @@ defhashfunc(HashItem_ss*, int, hss_i)
     }
     fclose(f);
 
-    hashitems = (HashItem_ss**)GC_malloc(sizeof(HashItem_ss*) * n);
+    hashitems = New_N(HashItem_ss*, n);
     rhash = newHash_hss_i(n * 2);
     j = 0;
     for (i = 0; i < hash->size; i++) {

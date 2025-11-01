@@ -1,4 +1,4 @@
-#include "hash.h"
+#include <gcstr/hash.h>
 #include <stdio.h>
 #include "html.h"
 static HashItem_si MyHashItem[] = {
