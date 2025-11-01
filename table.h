@@ -11,7 +11,7 @@
 #endif /* not MESCHACH */
 #endif /* MATRIX */
 
-#include "Str.h"
+#include <gcstr/Str.h>
 
 #define MAX_TABLE 20 /* maximum nest level of table */
 #define MAX_TABLE_N_LIMIT 2000

@@ -3,7 +3,7 @@
  * Initialization file etc.
  */
 #include "fm.h"
-#include "myctype.h"
+#include <gcstr/myctype.h>
 #include "proto.h"
 #include "indep.h"
 #include <stdio.h>

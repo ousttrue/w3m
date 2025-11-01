@@ -31,7 +31,7 @@
 
 #include "ctrlcode.h"
 #include "html.h"
-#include "Str.h"
+#include <gcstr/Str.h>
 #include "wc.h"
 #include "wtf.h"
 

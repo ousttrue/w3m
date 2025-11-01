@@ -7,7 +7,7 @@
 #include "fm.h"
 #include "menu.h"
 #include "func.h"
-#include "myctype.h"
+#include <gcstr/myctype.h>
 #include "regex.h"
 
 #ifdef USE_GPM

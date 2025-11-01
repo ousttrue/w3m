@@ -18,7 +18,7 @@
 #endif
 #include "display.h"
 #include "terms.h"
-#include "myctype.h"
+#include <gcstr/myctype.h>
 #include "regex.h"
 #include "rc.h"
 #include "wc.h"

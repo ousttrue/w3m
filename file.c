@@ -4,7 +4,7 @@
 #include "fm.h"
 #include "indep.h"
 #include <sys/types.h>
-#include "myctype.h"
+#include <gcstr/myctype.h>
 #include <signal.h>
 #include <setjmp.h>
 #if defined(HAVE_WAITPID) || defined(HAVE_WAIT3)

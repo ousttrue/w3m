@@ -2,7 +2,7 @@
 #ifndef _WC_TYPES_H
 #define _WC_TYPES_H
 
-#include <Str.h>
+#include <gcstr/Str.h>
 #include <config.h>
 #if defined(HAVE_STDINT_H)
 # include <stdint.h>

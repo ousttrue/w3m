@@ -1,7 +1,7 @@
 /* $Id: textlist.h,v 1.6 2003/01/20 15:30:22 ukai Exp $ */
 #ifndef TEXTLIST_H
 #define TEXTLIST_H
-#include "Str.h"
+#include <gcstr/Str.h>
 #include <limits.h>
 #define GENERAL_LIST_MAX (INT_MAX / 32)
 

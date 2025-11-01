@@ -3,7 +3,7 @@
 #define PARSETAGX_H
 
 #include "html.h"
-#include "Str.h"
+#include <gcstr/Str.h>
 
 /* Parsed Tag structure */
 

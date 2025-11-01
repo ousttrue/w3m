@@ -1,7 +1,7 @@
 #include "fm.h"
 #include "indep.h"
 #include <pwd.h>
-#include "myctype.h"
+#include <gcstr/myctype.h>
 #include "html.h"
 #include "local.h"
 #include "hash.h"

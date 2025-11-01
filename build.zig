@@ -9,7 +9,6 @@ const w3m_srcs = [_][]const u8{
     "keybind.c",
     "util.c",
 
-    "alloc.c",
     "main.c",
     "file.c",
     "buffer.c",
@@ -44,11 +43,9 @@ const w3m_srcs = [_][]const u8{
     "tagtable.c",
     "istream.c",
 
-    "Str.c",
     "indep.c",
     "textlist.c",
     "parsetag.c",
-    "myctype.c",
     "hash.c",
 
     "version.c",
@@ -128,6 +125,9 @@ pub fn build(b: *std.Build) void {
     exe.addIncludePath(b.path("libwc"));
     exe.addIncludePath(b.path("."));
 
+    const gcstr = build_gcstr(b, target, optimize);
+    exe.linkLibrary(gcstr);
+
     const flags = [_][]const u8{
         "-Wno-implicit-int",
         "-Wno-int-conversion",
@@ -188,6 +188,31 @@ pub fn build(b: *std.Build) void {
     _ = zcc.createStep(b, "cdb", targets.toOwnedSlice(b.allocator) catch @panic("OOM"));
 }
 
+fn build_gcstr(
+    b: *std.Build,
+    target: std.Build.ResolvedTarget,
+    optimize: std.builtin.OptimizeMode,
+) *std.Build.Step.Compile {
+    const lib = b.addLibrary(.{
+        .name = "gcstr",
+        .root_module = b.addModule("gcstr", .{
+            .target = target,
+            .optimize = optimize,
+            .link_libc = true,
+        }),
+    });
+    lib.addCSourceFiles(.{
+        .root = b.path("gcstr"),
+        .files = &.{
+            "alloc.c",
+            "Str.c",
+            "myctype.c",
+        },
+    });
+    lib.installHeadersDirectory(b.path("gcstr"), "gcstr", .{});
+    return lib;
+}
+
 fn gen_functable(b: *std.Build) *std.Build.Step.WriteFile {
     const wf = b.addWriteFiles();
 
@@ -218,6 +243,7 @@ fn build_mktable(
     const mod = b.addModule("mktable", .{
         .target = target,
         .optimize = optimize,
+        .link_libc = true,
     });
     const exe = b.addExecutable(.{
         .name = "mktable",
@@ -225,16 +251,19 @@ fn build_mktable(
     });
     exe.addCSourceFiles(.{
         .files = &.{
-            "mktable.c", "entity.c", "Str.c", "hash.c", "myctype.c",
+            "mktable.c", "entity.c", "hash.c",
         },
         .flags = &.{
             "-DDUMMY",
         },
     });
-    exe.linkLibC();
     for (libs) |lib| {
         exe.linkSystemLibrary(lib);
     }
+
+    const gcstr = build_gcstr(b, target, optimize);
+    exe.linkLibrary(gcstr);
+
     return exe;
 }
 

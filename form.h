@@ -5,7 +5,7 @@
 #ifndef FORM_H
 #define FORM_H
 
-#include "Str.h"
+#include <gcstr/Str.h>
 
 #define FORM_UNKNOWN -1
 #define FORM_INPUT_TEXT 0

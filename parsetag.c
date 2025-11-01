@@ -1,8 +1,6 @@
 /* $Id: parsetag.c,v 1.4 2001/11/20 17:49:23 ukai Exp $ */
-#include "myctype.h"
+#include <gcstr/gcstr.h>
 #include "indep.h"
-#include "alloc.h"
-#include "Str.h"
 #include "parsetag.h"
 
 char* tag_get_value(struct parsed_tagarg* t, char* arg)

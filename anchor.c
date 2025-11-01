@@ -1,6 +1,6 @@
 /* $Id: anchor.c,v 1.33 2006/04/08 11:33:16 inu Exp $ */
 #include "fm.h"
-#include "myctype.h"
+#include <gcstr/myctype.h>
 #include "regex.h"
 #include "indep.h"
 

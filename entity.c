@@ -1,6 +1,6 @@
 /* $Id: entity.c,v 1.7 2003/09/24 18:48:59 ukai Exp $ */
 #ifdef DUMMY
-#include "Str.h"
+#include <gcstr/Str.h>
 #define NBSP " "
 #define UseAltEntity 1
 #undef USE_M17N

@@ -7,7 +7,7 @@
 
 #include "fm.h"
 #include "func.h"
-#include "myctype.h"
+#include <gcstr/myctype.h>
 #include "regex.h"
 #include "rc.h"
 

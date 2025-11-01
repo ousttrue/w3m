@@ -20,7 +20,7 @@
 #include "ucs.h"
 #include "regex.h"
 #include "config.h"
-#include "myctype.h"
+#include <gcstr/myctype.h>
 
 #ifndef NULL
 #define NULL 0

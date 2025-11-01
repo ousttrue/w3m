@@ -40,7 +40,7 @@ static int tty;
 
 #include "terms.h"
 #include "fm.h"
-#include "myctype.h"
+#include <gcstr/myctype.h>
 
 char* getenv(const char*);
 void reset_exit(SIGNAL_ARG);

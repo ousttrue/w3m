@@ -9,8 +9,7 @@
 #include "fm.h"
 #include "html.h"
 #include "parsetagx.h"
-#include "Str.h"
-#include "myctype.h"
+#include <gcstr/gcstr.h>
 #include "indep.h"
 
 int symbol_width = 0;

@@ -1,14 +1,14 @@
 /* $Id: ftp.c,v 1.42 2010/12/15 10:50:24 htrb Exp $ */
+#include <gcstr/gcstr.h>
+
 #include <stdio.h>
 #include <pwd.h>
-#include <Str.h>
 #include <signal.h>
 #include <setjmp.h>
 #include <time.h>
 
 #include "fm.h"
 #include "html.h"
-#include "myctype.h"
 #include "indep.h"
 
 #ifdef DEBUG

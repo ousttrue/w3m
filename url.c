@@ -15,8 +15,7 @@
 #include <sys/stat.h>
 
 #include "html.h"
-#include "Str.h"
-#include "myctype.h"
+#include <gcstr/gcstr.h>
 #include "regex.h"
 
 #ifndef SSLEAY_VERSION_NUMBER

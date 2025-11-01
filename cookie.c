@@ -15,7 +15,7 @@
 #include <time.h>
 #include "local.h"
 #include "regex.h"
-#include "myctype.h"
+#include <gcstr/myctype.h>
 #include "indep.h"
 
 static int is_saved = 1;

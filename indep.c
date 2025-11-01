@@ -6,8 +6,7 @@
 #include <sys/types.h>
 #include <stdlib.h>
 #include "indep.h"
-#include "Str.h"
-#include "myctype.h"
+#include <gcstr/gcstr.h>
 #include "entity.h"
 
 unsigned char QUOTE_MAP[0x100] = {

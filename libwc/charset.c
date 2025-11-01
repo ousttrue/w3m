@@ -1,7 +1,7 @@
 
 #include <stdlib.h>
 #include <ctype.h>
-#include "../alloc.h"
+#include <gcstr/gcstr.h>
 
 #include "wc.h"
 

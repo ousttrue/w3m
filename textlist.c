@@ -1,7 +1,6 @@
 /* $Id: textlist.c,v 1.6 2003/04/07 16:27:11 ukai Exp $ */
 #include "textlist.h"
-#include "alloc.h"
-#include "Str.h"
+#include <gcstr/gcstr.h>
 
 /* General doubly linked list */
 
