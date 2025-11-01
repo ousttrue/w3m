@@ -38,3 +38,4 @@ zig-out
 .cache
 compile_commands.json
 funcname1.h
+*.pyc
