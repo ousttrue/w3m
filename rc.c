@@ -44,21 +44,15 @@ static int RC_table_size;
 #if defined(USE_SSL) && defined(USE_SSL_VERIFY)
 #define P_SSLPATH 5
 #endif
-#ifdef USE_COLOR
 #define P_COLOR 6
-#endif
-#ifdef USE_M17N
 #define P_CODE 7
-#endif
 #define P_PIXELS 8
 #define P_NZINT 9
 #define P_SCALE 10
 
 /* FIXME: gettextize here */
-#ifdef USE_M17N
 static wc_ces OptionCharset = WC_CES_US_ASCII; /* FIXME: charset of source code */
 static int OptionEncode = FALSE;
-#endif
 
 #define CMT_HELPER N_("External Viewer Setup")
 #define CMT_TABSTOP N_("Tab width in characters")
@@ -80,7 +74,6 @@ static int OptionEncode = FALSE;
 #define CMT_DISPLINEINFO N_("Display current line number")
 #define CMT_DISP_IMAGE N_("Display inline images")
 #define CMT_PSEUDO_INLINES N_("Display pseudo-ALTs for inline images with no ALT or TITLE string")
-#ifdef USE_IMAGE
 #define CMT_AUTO_IMAGE N_("Load inline images automatically")
 #define CMT_MAX_LOAD_IMAGE N_("Maximum processes for parallel image loading")
 #define CMT_EXT_IMAGE_VIEWER N_("Use external image viewer")
@@ -88,7 +81,6 @@ static int OptionEncode = FALSE;
 #define CMT_IMGDISPLAY N_("External command to display image")
 #define CMT_IMAGE_MAP_LIST N_("Use link list of image map")
 #define CMT_INLINE_IMG_PROTOCOL N_("Inline image display method")
-#endif
 #define CMT_MULTICOL N_("Display file names in multi-column format")
 #define CMT_ALT_ENTITY N_("Use ASCII equivalents to display entities")
 #define CMT_GRAPHIC_CHAR N_("Character type for border of table and menu")
@@ -110,21 +102,15 @@ static int OptionEncode = FALSE;
 #define CMT_MARK_COLOR N_("Color of mark")
 #define CMT_USE_PROXY N_("Use proxy")
 #define CMT_HTTP_PROXY N_("URL of HTTP proxy host")
-#ifdef USE_SSL
 #define CMT_HTTPS_PROXY N_("URL of HTTPS proxy host")
-#endif /* USE_SSL */
-#ifdef USE_GOPHER
 #define CMT_GOPHER_PROXY N_("URL of GOPHER proxy host")
-#endif /* USE_GOPHER */
 #define CMT_FTP_PROXY N_("URL of FTP proxy host")
 #define CMT_NO_PROXY N_("Domains to be accessed directly (no proxy)")
 #define CMT_NOPROXY_NETADDR N_("Check noproxy by network address")
 #define CMT_NO_CACHE N_("Disable cache")
-#ifdef USE_NNTP
 #define CMT_NNTP_SERVER N_("News server")
 #define CMT_NNTP_MODE N_("Mode of news server")
 #define CMT_MAX_NEWS N_("Number of news messages")
-#endif
 #define CMT_DNS_ORDER N_("Order of name resolution")
 #define CMT_DROOT N_("Directory corresponding to / (document root)")
 #define CMT_PDROOT N_("Directory corresponding to /~user")
@@ -172,11 +158,7 @@ static int OptionEncode = FALSE;
 #define CMT_WRAP N_("Wrap search")
 #define CMT_VIEW_UNSEENOBJECTS N_("Display unseen objects (e.g. bgimage tag)")
 #define CMT_AUTO_UNCOMPRESS N_("Uncompress compressed data automatically when downloading")
-#ifdef __EMX__
-#define CMT_BGEXTVIEW N_("Run external viewer in a separate session")
-#else
 #define CMT_BGEXTVIEW N_("Run external viewer in the background")
-#endif
 #define CMT_EXT_DIRLIST N_("Use external program for directory listing")
 #define CMT_DIRLIST_CMD N_("URL of directory listing command")
 #ifdef USE_DICT
@@ -201,7 +183,6 @@ static int OptionEncode = FALSE;
 #define CMT_CROSSORIGINREFERER N_("Exclude pathname and query string from `Referer:' header when cross domain communication")
 #define CMT_IGNORE_CASE N_("Search case-insensitively")
 #define CMT_USE_LESSOPEN N_("Use LESSOPEN")
-#ifdef USE_SSL
 #ifdef USE_SSL_VERIFY
 #define CMT_SSL_VERIFY_SERVER N_("Perform SSL server verification")
 #define CMT_SSL_CERT_FILE N_("PEM encoded certificate file of client")
@@ -215,7 +196,6 @@ static int OptionEncode = FALSE;
 #define CMT_SSL_MIN_VERSION N_("Minimum SSL version (all, TLSv1.0, TLSv1.1, TLSv1.2, or TLSv1.3)")
 #endif
 #define CMT_SSL_CIPHER N_("SSL ciphers for TLSv1.2 and below (e.g. DEFAULT:@SECLEVEL=2)")
-#endif /* USE_SSL */
 #ifdef USE_COOKIE
 #define CMT_USECOOKIE N_("Enable cookie processing")
 #define CMT_SHOWCOOKIE N_("Print a message when receiving a cookie")
@@ -234,7 +214,6 @@ static int OptionEncode = FALSE;
 #define CMT_MIGEMO_COMMAND N_("Migemo command")
 #endif /* USE_MIGEMO */
 
-#ifdef USE_M17N
 #define CMT_DISPLAY_CHARSET N_("Display charset")
 #define CMT_DOCUMENT_CHARSET N_("Default document charset")
 #define CMT_AUTO_DETECT N_("Automatic charset detection when loading")
@@ -258,16 +237,13 @@ static int OptionEncode = FALSE;
 #define CMT_STRICT_ISO2022 N_("Strict ISO-2022-JP/KR/CN")
 #define CMT_GB18030_AS_UCS N_("Treat 4 bytes char. of GB18030 as Unicode")
 #define CMT_SIMPLE_PRESERVE_SPACE N_("Simple Preserve space")
-#endif
 
 #define CMT_KEYMAP_FILE N_("keymap file")
 
 #define PI_TEXT 0
 #define PI_ONOFF 1
 #define PI_SEL_C 2
-#ifdef USE_M17N
 #define PI_CODE 3
-#endif
 
 struct sel_c {
     int value;
@@ -275,7 +251,6 @@ struct sel_c {
     char* text;
 };
 
-#ifdef USE_COLOR
 static struct sel_c colorstr[] = {
     { 0, "black", N_("black") },
     { 1, "red", N_("red") },
@@ -288,7 +263,6 @@ static struct sel_c colorstr[] = {
     { 8, "terminal", N_("terminal") },
     { 0, NULL, NULL }
 };
-#endif /* USE_COLOR */
 
 #if 1 /* ANSI-C ? */
 #define N_STR(x) #x
@@ -338,9 +312,6 @@ static struct sel_c dnsorders[] = {
 #ifdef USE_COOKIE
 static struct sel_c badcookiestr[] = {
     { N_S(ACCEPT_BAD_COOKIE_DISCARD), N_("discard") },
-#if 0
-    {N_S(ACCEPT_BAD_COOKIE_ACCEPT), N_("accept")},
-#endif
     { N_S(ACCEPT_BAD_COOKIE_ASK), N_("ask") },
     { 0, NULL, NULL }
 };
@@ -355,7 +326,6 @@ static struct sel_c mailtooptionsstr[] = {
     { 0, NULL, NULL }
 };
 
-#ifdef USE_M17N
 static wc_ces_list* display_charset_str = NULL;
 static wc_ces_list* document_charset_str = NULL;
 static wc_ces_list* system_charset_str = NULL;
@@ -365,7 +335,6 @@ static struct sel_c auto_detect_str[] = {
     { N_S(WC_OPT_DETECT_ON), N_("ON") },
     { 0, NULL, NULL }
 };
-#endif
 
 static struct sel_c graphic_char_str[] = {
     { N_S(GRAPHIC_CHAR_ASCII), N_("ASCII") },
@@ -374,7 +343,6 @@ static struct sel_c graphic_char_str[] = {
     { 0, NULL, NULL }
 };
 
-#ifdef USE_IMAGE
 static struct sel_c inlineimgstr[] = {
     { N_S(INLINE_IMG_NONE), N_("external command") },
     { N_S(INLINE_IMG_OSC5379), N_("OSC 5379 (mlterm)") },
@@ -383,7 +351,6 @@ static struct sel_c inlineimgstr[] = {
     { N_S(INLINE_IMG_KITTY), N_("kitty (ImageMagick)") },
     { 0, NULL, NULL }
 };
-#endif /* USE_IMAGE */
 
 struct param_ptr params1[] = {
     { "tabstop", P_NZINT, PI_TEXT, (void*)&Tabstop, CMT_TABSTOP, NULL },
@@ -391,10 +358,8 @@ struct param_ptr params1[] = {
         NULL },
     { "pixel_per_char", P_PIXELS, PI_TEXT, (void*)&pixel_per_char,
         CMT_PIXEL_PER_CHAR, NULL },
-#ifdef USE_IMAGE
     { "pixel_per_line", P_PIXELS, PI_TEXT, (void*)&pixel_per_line,
         CMT_PIXEL_PER_LINE, NULL },
-#endif
     { "frame", P_CHARINT, PI_ONOFF, (void*)&RenderFrame, CMT_FRAME, NULL },
     { "target_self", P_CHARINT, PI_ONOFF, (void*)&TargetSelf, CMT_TSELF, NULL },
     { "open_tab_blank", P_INT, PI_ONOFF, (void*)&open_tab_blank,
@@ -440,7 +405,6 @@ struct param_ptr params1[] = {
         NULL },
     { "pseudo_inlines", P_INT, PI_ONOFF, (void*)&pseudoInlines,
         CMT_PSEUDO_INLINES, NULL },
-#ifdef USE_IMAGE
     { "auto_image", P_INT, PI_ONOFF, (void*)&autoImage, CMT_AUTO_IMAGE, NULL },
     { "max_load_image", P_INT, PI_TEXT, (void*)&maxLoadImage,
         CMT_MAX_LOAD_IMAGE, NULL },
@@ -454,7 +418,6 @@ struct param_ptr params1[] = {
         NULL },
     { "image_map_list", P_INT, PI_ONOFF, (void*)&image_map_list,
         CMT_IMAGE_MAP_LIST, NULL },
-#endif
     { "fold_line", P_INT, PI_ONOFF, (void*)&FoldLine, CMT_FOLD_LINE, NULL },
     { "show_lnum", P_INT, PI_ONOFF, (void*)&showLineNum, CMT_SHOW_NUM, NULL },
     { "show_srch_str", P_INT, PI_ONOFF, (void*)&show_srch_str,
@@ -466,7 +429,6 @@ struct param_ptr params1[] = {
     { NULL, 0, 0, NULL, NULL, NULL },
 };
 
-#ifdef USE_COLOR
 struct param_ptr params2[] = {
     { "color", P_INT, PI_ONOFF, (void*)&useColor, CMT_COLOR, NULL },
     { "high-intensity", P_INT, PI_ONOFF, (void*)&highIntensityColors, CMT_HINTENSITY_COLOR, NULL },
@@ -478,12 +440,10 @@ struct param_ptr params2[] = {
         (void*)colorstr },
     { "form_color", P_COLOR, PI_SEL_C, (void*)&form_color, CMT_F_COLOR,
         (void*)colorstr },
-#ifdef USE_BG_COLOR
     { "mark_color", P_COLOR, PI_SEL_C, (void*)&mark_color, CMT_MARK_COLOR,
         (void*)colorstr },
     { "bg_color", P_COLOR, PI_SEL_C, (void*)&bg_color, CMT_BG_COLOR,
         (void*)colorstr },
-#endif /* USE_BG_COLOR */
     { "active_style", P_INT, PI_ONOFF, (void*)&useActiveColor,
         CMT_ACTIVE_STYLE, NULL },
     { "active_color", P_COLOR, PI_SEL_C, (void*)&active_color, CMT_C_COLOR,
@@ -494,7 +454,6 @@ struct param_ptr params2[] = {
         (void*)colorstr },
     { NULL, 0, 0, NULL, NULL, NULL },
 };
-#endif /* USE_COLOR */
 
 struct param_ptr params3[] = {
     { "pagerline", P_NZINT, PI_TEXT, (void*)&PagerMax, CMT_PAGERLINE, NULL },
@@ -558,14 +517,10 @@ struct param_ptr params4[] = {
         NULL },
     { "http_proxy", P_STRING, PI_TEXT, (void*)&HTTP_proxy, CMT_HTTP_PROXY,
         NULL },
-#ifdef USE_SSL
     { "https_proxy", P_STRING, PI_TEXT, (void*)&HTTPS_proxy, CMT_HTTPS_PROXY,
         NULL },
-#endif /* USE_SSL */
-#ifdef USE_GOPHER
     { "gopher_proxy", P_STRING, PI_TEXT, (void*)&GOPHER_proxy,
         CMT_GOPHER_PROXY, NULL },
-#endif /* USE_GOPHER */
     { "ftp_proxy", P_STRING, PI_TEXT, (void*)&FTP_proxy, CMT_FTP_PROXY, NULL },
     { "no_proxy", P_STRING, PI_TEXT, (void*)&NO_proxy, CMT_NO_PROXY, NULL },
     { "noproxy_netaddr", P_INT, PI_ONOFF, (void*)&NOproxy_netaddr,
@@ -622,7 +577,6 @@ struct param_ptr params6[] = {
     { NULL, 0, 0, NULL, NULL, NULL },
 };
 
-#ifdef USE_SSL
 struct param_ptr params7[] = {
     { "ssl_forbid_method", P_STRING, PI_TEXT, (void*)&ssl_forbid_method,
         CMT_SSL_FORBID_METHOD, NULL },
@@ -648,7 +602,6 @@ struct param_ptr params7[] = {
 #endif /* USE_SSL_VERIFY */
     { NULL, 0, 0, NULL, NULL, NULL },
 };
-#endif /* USE_SSL */
 
 #ifdef USE_COOKIE
 struct param_ptr params8[] = {
@@ -711,16 +664,13 @@ struct param_ptr params9[] = {
     { "dns_order", P_INT, PI_SEL_C, (void*)&DNS_order, CMT_DNS_ORDER,
         (void*)dnsorders },
 #endif /* INET6 */
-#ifdef USE_NNTP
     { "nntpserver", P_STRING, PI_TEXT, (void*)&NNTP_server, CMT_NNTP_SERVER,
         NULL },
     { "nntpmode", P_STRING, PI_TEXT, (void*)&NNTP_mode, CMT_NNTP_MODE, NULL },
     { "max_news", P_INT, PI_TEXT, (void*)&MaxNewsMessage, CMT_MAX_NEWS, NULL },
-#endif
     { NULL, 0, 0, NULL, NULL, NULL },
 };
 
-#ifdef USE_M17N
 struct param_ptr params10[] = {
     { "display_charset", P_CODE, PI_CODE, (void*)&DisplayCharset,
         CMT_DISPLAY_CHARSET, (void*)&display_charset_str },
@@ -738,24 +688,20 @@ struct param_ptr params10[] = {
         NULL },
     { "use_combining", P_CHARINT, PI_ONOFF, (void*)&WcOption.use_combining,
         CMT_USE_COMBINING, NULL },
-#ifdef USE_UNICODE
     { "east_asian_width", P_CHARINT, PI_ONOFF,
         (void*)&WcOption.east_asian_width, CMT_EAST_ASIAN_WIDTH, NULL },
     { "use_language_tag", P_CHARINT, PI_ONOFF,
         (void*)&WcOption.use_language_tag, CMT_USE_LANGUAGE_TAG, NULL },
     { "ucs_conv", P_CHARINT, PI_ONOFF, (void*)&WcOption.ucs_conv, CMT_UCS_CONV,
         NULL },
-#endif
     { "pre_conv", P_CHARINT, PI_ONOFF, (void*)&WcOption.pre_conv, CMT_PRE_CONV,
         NULL },
     { "search_conv", P_CHARINT, PI_ONOFF, (void*)&SearchConv, CMT_SEARCH_CONV,
         NULL },
     { "fix_width_conv", P_CHARINT, PI_ONOFF, (void*)&WcOption.fix_width_conv,
         CMT_FIX_WIDTH_CONV, NULL },
-#ifdef USE_UNICODE
     { "use_gb12345_map", P_CHARINT, PI_ONOFF, (void*)&WcOption.use_gb12345_map,
         CMT_USE_GB12345_MAP, NULL },
-#endif
     { "use_jisx0201", P_CHARINT, PI_ONOFF, (void*)&WcOption.use_jisx0201,
         CMT_USE_JISX0201, NULL },
     { "use_jisc6226", P_CHARINT, PI_ONOFF, (void*)&WcOption.use_jisc6226,
@@ -768,35 +714,26 @@ struct param_ptr params10[] = {
         CMT_USE_JISX0213, NULL },
     { "strict_iso2022", P_CHARINT, PI_ONOFF, (void*)&WcOption.strict_iso2022,
         CMT_STRICT_ISO2022, NULL },
-#ifdef USE_UNICODE
     { "gb18030_as_ucs", P_CHARINT, PI_ONOFF, (void*)&WcOption.gb18030_as_ucs,
         CMT_GB18030_AS_UCS, NULL },
-#endif
     { "simple_preserve_space", P_CHARINT, PI_ONOFF, (void*)&SimplePreserveSpace,
         CMT_SIMPLE_PRESERVE_SPACE, NULL },
     { NULL, 0, 0, NULL, NULL, NULL },
 };
-#endif
 
 struct param_section sections[] = {
     { N_("Display Settings"), params1 },
-#ifdef USE_COLOR
     { N_("Color Settings"), params2 },
-#endif /* USE_COLOR */
     { N_("Miscellaneous Settings"), params3 },
     { N_("Directory Settings"), params5 },
     { N_("External Program Settings"), params6 },
     { N_("Network Settings"), params9 },
     { N_("Proxy Settings"), params4 },
-#ifdef USE_SSL
     { N_("SSL Settings"), params7 },
-#endif
 #ifdef USE_COOKIE
     { N_("Cookie Settings"), params8 },
 #endif
-#ifdef USE_M17N
     { N_("Charset Settings"), params10 },
-#endif
     { NULL, NULL }
 };
 
@@ -896,21 +833,14 @@ void show_params(FILE* fp)
     const char* t = "";
     char* cmt;
 
-#ifdef USE_M17N
-#ifdef ENABLE_NLS
-    OptionCharset = SystemCharset; /* FIXME */
-#endif
-#endif
 
     fputs("\nconfiguration parameters\n", fp);
     for (j = 0; sections[j].name != NULL; j++) {
-#ifdef USE_M17N
         if (!OptionEncode)
             cmt = wc_conv(_(sections[j].name), OptionCharset,
                 InnerCharset)
                       ->ptr;
         else
-#endif
             cmt = sections[j].name;
         fprintf(fp, "  section[%d]: %s\n", j, conv_to_system(cmt));
         i = 0;
@@ -933,16 +863,12 @@ void show_params(FILE* fp)
                 t = "path";
                 break;
 #endif
-#ifdef USE_COLOR
             case P_COLOR:
                 t = "color";
                 break;
-#endif
-#ifdef USE_M17N
             case P_CODE:
                 t = "charset";
                 break;
-#endif
             case P_PIXELS:
                 t = "number";
                 break;
@@ -950,13 +876,11 @@ void show_params(FILE* fp)
                 t = "percent";
                 break;
             }
-#ifdef USE_M17N
             if (!OptionEncode)
                 cmt = wc_conv(_(sections[j].params[i].comment),
                     OptionCharset, InnerCharset)
                           ->ptr;
             else
-#endif
                 cmt = sections[j].params[i].comment;
             l = 30 - (strlen(sections[j].params[i].name) + strlen(t));
             if (l < 0)
@@ -995,7 +919,6 @@ int str_to_bool(char* value, int old)
     return 1;
 }
 
-#ifdef USE_COLOR
 static int
 str_to_color(char* value)
 {
@@ -1035,7 +958,6 @@ str_to_color(char* value)
     }
     return 8; /* terminal */
 }
-#endif
 
 static int
 set_param(char* name, char* value)
@@ -1084,16 +1006,12 @@ set_param(char* name, char* value)
         ssl_path_modified = 1;
         break;
 #endif
-#ifdef USE_COLOR
     case P_COLOR:
         *(int*)p->varptr = str_to_color(value);
         break;
-#endif
-#ifdef USE_M17N
     case P_CODE:
         *(wc_ces*)p->varptr = wc_guess_charset_short(value, *(wc_ces*)p->varptr);
         break;
-#endif
     case P_PIXELS:
         ppc = atof(value);
         if (ppc >= MINIMUM_PIXEL_PER_CHAR && ppc <= MAXIMUM_PIXEL_PER_CHAR * 2)
@@ -1182,14 +1100,10 @@ parse_proxy(void)
 {
     if (non_null(HTTP_proxy))
         parseURL(HTTP_proxy, &HTTP_proxy_parsed, NULL);
-#ifdef USE_SSL
     if (non_null(HTTPS_proxy))
         parseURL(HTTPS_proxy, &HTTPS_proxy_parsed, NULL);
-#endif /* USE_SSL */
-#ifdef USE_GOPHER
     if (non_null(GOPHER_proxy))
         parseURL(GOPHER_proxy, &GOPHER_proxy_parsed, NULL);
-#endif
     if (non_null(FTP_proxy))
         parseURL(FTP_proxy, &FTP_proxy_parsed, NULL);
     if (non_null(NO_proxy))
@@ -1210,30 +1124,7 @@ parse_cookie(void)
 }
 #endif
 
-#ifdef __EMX__
-static int
-do_mkdir(const char* dir, long mode)
-{
-    char *r, abs[_MAX_PATH];
-    size_t n;
-
-    _abspath(abs, rc_dir, _MAX_PATH); /* Translate '\\' to '/' */
-
-    if (!(n = strlen(abs)))
-        return -1;
-
-    if (*(r = abs + n - 1) == '/') /* Ignore tailing slash if it is */
-        *r = 0;
-
-    return mkdir(abs, mode);
-}
-#else /* not __EMX__ */
-#ifdef __MINGW32_VERSION
-#define do_mkdir(dir, mode) mkdir(dir)
-#else
 #define do_mkdir(dir, mode) mkdir(dir, mode)
-#endif /* not __MINW32_VERSION */
-#endif /* not __EMX__ */
 
 static int
 do_recursive_mkdir(const char* dir)
@@ -1303,12 +1194,8 @@ void sync_with_option(void)
 #ifdef USE_MIGEMO
     init_migemo();
 #endif
-#ifdef USE_IMAGE
     if (fmInitialized && (displayImage || enable_inline_image))
         initImage();
-#else
-    displayImage = FALSE; /* XXX */
-#endif
     loadPasswd();
     loadPreForm();
     loadSiteconf();
@@ -1325,20 +1212,14 @@ void sync_with_option(void)
         AcceptEncoding = acceptableEncoding();
     if (AcceptMedia == NULL || *AcceptMedia == '\0')
         AcceptMedia = acceptableMimeTypes();
-#ifdef USE_UNICODE
     update_utf8_symbol();
-#endif
-#ifdef USE_M17N
     wtf_init(DocumentCharset, DisplayCharset);
-#endif
     if (fmInitialized) {
         initKeymap(FALSE);
 #ifdef USE_MOUSE
         initMouseAction();
 #endif /* MOUSE */
-#ifdef USE_MENU
         initMenu();
-#endif /* MENU */
     }
 }
 
@@ -1361,11 +1242,9 @@ void init_rc(void)
     if (i > 1 && rc_dir[i - 1] == '/')
         rc_dir[i - 1] = '\0';
 
-#ifdef USE_M17N
     display_charset_str = wc_get_ces_list();
     document_charset_str = display_charset_str;
     system_charset_str = display_charset_str;
-#endif
 
     tmp_dir = rc_dir;
 
@@ -1459,13 +1338,9 @@ to_str(struct param_ptr* p)
 {
     switch (p->type) {
     case P_INT:
-#ifdef USE_COLOR
     case P_COLOR:
-#endif
-#ifdef USE_M17N
     case P_CODE:
         return Sprintf("%d", (int)(*(wc_ces*)p->varptr));
-#endif
     case P_NZINT:
         return Sprintf("%d", *(int*)p->varptr);
     case P_SHORT:
@@ -1494,9 +1369,7 @@ load_option_panel(void)
     Str src;
     struct param_ptr* p;
     struct sel_c* s;
-#ifdef USE_M17N
     wc_ces_list* c;
-#endif
     int x, i;
     Str tmp;
     Buffer* buf;
@@ -1504,10 +1377,6 @@ load_option_panel(void)
     if (optionpanel_str == NULL)
         optionpanel_str = Sprintf(optionpanel_src1, w3m_version,
             html_quote(localCookie()->ptr), _(CMT_HELPER));
-#ifdef USE_M17N
-#ifdef ENABLE_NLS
-    OptionCharset = SystemCharset; /* FIXME */
-#endif
     if (!OptionEncode) {
         optionpanel_str = wc_Str_conv(optionpanel_str, OptionCharset, InnerCharset);
         for (i = 0; sections[i].name != NULL; i++) {
@@ -1519,9 +1388,7 @@ load_option_panel(void)
                     InnerCharset)
                                  ->ptr;
                 if (p->inputtype == PI_SEL_C
-#ifdef USE_COLOR
                     && p->select != colorstr
-#endif
                 ) {
                     for (s = (struct sel_c*)p->select; s->text != NULL; s++) {
                         s->text = wc_conv(_(s->text), OptionCharset,
@@ -1531,15 +1398,12 @@ load_option_panel(void)
                 }
             }
         }
-#ifdef USE_COLOR
         for (s = colorstr; s->text; s++)
             s->text = wc_conv(_(s->text), OptionCharset,
                 InnerCharset)
                           ->ptr;
-#endif
         OptionEncode = TRUE;
     }
-#endif
     src = Strdup(optionpanel_str);
 
     Strcat_charp(src, "<table><tr><td>");
@@ -1580,7 +1444,6 @@ load_option_panel(void)
                 }
                 Strcat_charp(src, "</select>");
                 break;
-#ifdef USE_M17N
             case PI_CODE:
                 tmp = to_str(p);
                 Strcat_m_charp(src, "<select name=", p->name, ">", NULL);
@@ -1594,7 +1457,6 @@ load_option_panel(void)
                 }
                 Strcat_charp(src, "</select>");
                 break;
-#endif
             }
             Strcat_charp(src, "</td></tr>\n");
             p++;
@@ -1605,10 +1467,8 @@ load_option_panel(void)
     }
     Strcat_charp(src, "</table></form></body></html>");
     buf = loadHTMLString(src);
-#ifdef USE_M17N
     if (buf)
         buf->document_charset = OptionCharset;
-#endif
     return buf;
 }
 
@@ -1705,9 +1565,7 @@ struct siteconf_rec {
 
     char* substitute_url;
     char* user_agent;
-#ifdef USE_M17N
     wc_ces url_charset;
-#endif
     int no_referer_from;
     int no_referer_to;
 };
@@ -1732,9 +1590,7 @@ newSiteconfRec(void)
 
     ent->substitute_url = NULL;
     ent->user_agent = NULL;
-#ifdef USE_M17N
     ent->url_charset = 0;
-#endif
     return ent;
 }
 
@@ -1813,13 +1669,11 @@ loadSiteconf(void)
             ent->user_agent = getQWord(&p);
             SCONF_SET(ent, SCONF_USER_AGENT);
         }
-#ifdef USE_M17N
         else if (strcmp(s, "url_charset") == 0) {
             char* charset = getWord(&p);
             ent->url_charset = (charset && *charset) ? wc_charset_to_ces(charset) : 0;
             SCONF_SET(ent, SCONF_URL_CHARSET);
         }
-#endif /* USE_M17N */
         else if (strcmp(s, "no_referer_from") == 0) {
             ent->no_referer_from = str_to_bool(getWord(&p), 0);
             SCONF_SET(ent, SCONF_NO_REFERER_FROM);
@@ -1893,10 +1747,8 @@ url_found:
             return ent->user_agent;
         }
         return NULL;
-#ifdef USE_M17N
     case SCONF_URL_CHARSET:
         return &ent->url_charset;
-#endif
     case SCONF_NO_REFERER_FROM:
         return &ent->no_referer_from;
     case SCONF_NO_REFERER_TO:

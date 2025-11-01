@@ -29,7 +29,6 @@ extern int do_getch();
 #endif /* defined(USE_GPM) || defined(USE_SYSMOUSE) */
 #endif /* USE_MOUSE */
 
-#ifdef USE_MENU
 
 static char** FRAME;
 static int FRAME_WIDTH;
@@ -70,23 +69,10 @@ static int mSrchF(char c);
 static int mSrchB(char c);
 static int mSrchN(char c);
 static int mSrchP(char c);
-#ifdef __EMX__
-static int mPc(char c);
-#endif
 
 /* *INDENT-OFF* */
 static int (*MenuKeymap[128])(char c) = {
 /*  C-@     C-a     C-b     C-c     C-d     C-e     C-f     C-g      */
-#ifdef __EMX__
-    mPc,
-    mTop,
-    mPrev,
-    mClose,
-    mNull,
-    mLast,
-    mNext,
-    mNull,
-#else
     mNull,
     mTop,
     mPrev,
@@ -95,7 +81,6 @@ static int (*MenuKeymap[128])(char c) = {
     mLast,
     mNext,
     mNull,
-#endif
     /*  C-h     C-i     C-j     C-k     C-l     C-m     C-n     C-o      */
     mCancel,
     mNull,
@@ -641,62 +626,6 @@ static int (*MenuEscDKeymap[128])(char c) = {
     mNull,
 };
 
-#ifdef __EMX__
-static int (*MenuPcKeymap[256])(char c) = {
-    //			  Null
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull,
-    //							  S-Tab
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull,
-    // A-q	  A-w	  A-E	  A-r	  A-t	  A-y	  A-u	  A-i
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull,
-    // A-o	  A-p	  A-[	  A-]			  A-a	  A-s
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull,
-    // A-d	  A-f	  A-g	  A-h	  A-j	  A-k	  A-l	  A-;
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull,
-    // A-'    A-'		  A-\		  A-x	  A-c	  A-v
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mPrev,
-    // A-b	  A-n	  A-m	  A-,	  A-.	  A-/		  A-+
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull,
-    //			  F1	  F2	  F3	  F4	  F5
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull,
-    // F6	  F7	  F8	  F9	  F10			  Home
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mTop,
-    // Up	  PgUp	  A-/	  Left	  5	  Right	  C-*	  End
-    mUp, mUp, mNull, mCancel, mNull, mOk, mNull, mLast,
-    // Down	  PgDn	  Ins	  Del	  S-F1	  S-F2	  S-F3	  S-F4
-    mDown, mDown, mClose, mCancel, mNull, mNull, mNull, mNull,
-    // S-F5	  S-F6	  S-F7	  S-F8	  S-F9	  S-F10	  C-F1	  C-F2
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull,
-    // C-F3	  C-F4	  C-F5	  C-F6	  C-F7	  C-F8	  C-F9	  C-F10
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull,
-    // A-F1	  A-F2	  A-F3	  A-F4	  A-F5	  A-F6	  A-F7	  A-F8
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull,
-    // A-F9	  A-F10	  PrtSc	  C-Left  C-Right C-End	  C-PgDn  C-Home
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull,
-    // A-1	  A-2	  A-3	  A-4	  A-5	  A-6	  A-7/8	  A-9
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull,
-    // A-0	  A -	  A-=		  C-PgUp  F11	  F12	  S-F11
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull,
-    // S-F12  C-F11	  C-F12	  A-F11	  A-F12	  C-Up	  C-/	  C-5
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull,
-    // S-*	  C-Down  C-Ins	  C-Del	  C-Tab	  C -	  C-+
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull,
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull,
-    //				  A -	  A-Tab	  A-Enter
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull, // 160
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull, // 168
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull, // 176
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull, // 184
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull, // 192
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull, // 200
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull, // 208
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull, // 216
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull, // 224
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull, // 232
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull, // 240
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull // 248
-};
-#endif
 /* *INDENT-ON* */
 /* --- SelectMenu --- */
 
@@ -721,11 +650,9 @@ static int smDelTab(char c);
 /* --- MainMenu --- */
 
 static Menu MainMenu;
-#ifdef USE_M17N
 /* FIXME: gettextize here */
 static wc_ces MainMenuCharset = WC_CES_US_ASCII; /* FIXME: charset of source code */
 static int MainMenuEncode = FALSE;
-#endif
 
 static MenuItem MainMenuItem[] = {
     /* type        label           variable value func     popup keys data  */
@@ -1151,28 +1078,15 @@ set_menu_frame(void)
         FRAME = graph_symbol;
     } else {
         graph_mode = FALSE;
-#ifdef USE_M17N
         FRAME_WIDTH = 0;
         FRAME = get_symbol(DisplayCharset, &FRAME_WIDTH);
         if (!WcOption.use_wide)
             FRAME_WIDTH = 1;
-#else
-        FRAME_WIDTH = 1;
-        FRAME = get_symbol();
-#endif
     }
 }
 
 /* --- MenuFunctions --- */
 
-#ifdef __EMX__
-static int
-mPc(char c)
-{
-    c = getch();
-    return (MenuPcKeymap[(int)c](c));
-}
-#endif
 
 static int
 mEsc(char c)
@@ -1882,9 +1796,7 @@ smChBuf(void)
     for (buf = Firstbuf; buf != NULL; buf = buf->nextBuffer) {
         if (buf == Currentbuf)
             continue;
-#ifdef USE_IMAGE
         deleteImage(buf);
-#endif
         if (clear_buffer)
             tmpClearBuffer(buf);
     }
@@ -2034,9 +1946,7 @@ smChTab(void)
         if (tab == CurrentTab)
             continue;
         buf = tab->currentBuffer;
-#ifdef USE_IMAGE
         deleteImage(buf);
-#endif
         if (clear_buffer)
             tmpClearBuffer(buf);
     }
@@ -2107,9 +2017,7 @@ interpret_menu(FILE* mf)
     char *p, *s;
     int in_menu = 0, nmenu = 0, nitem = 0, type;
     MenuItem* item = NULL;
-#ifdef USE_M17N
     wc_ces charset = SystemCharset;
-#endif
 
     while (!feof(mf)) {
         line = Strfgets(mf);
@@ -2117,9 +2025,7 @@ interpret_menu(FILE* mf)
         Strremovefirstspaces(line);
         if (line->length == 0)
             continue;
-#ifdef USE_M17N
         line = wc_Str_conv(line, charset, InnerCharset);
-#endif
         p = line->ptr;
         s = getWord(&p);
         if (*s == '#') /* comment */
@@ -2149,14 +2055,12 @@ interpret_menu(FILE* mf)
             nitem = 0;
             item[nitem].type = MENU_END;
         }
-#ifdef USE_M17N
         else if (!strcmp(s, "charset") || !strcmp(s, "encoding")) {
             s = getQWord(&p);
             if (*s == '\0') /* error */
                 continue;
             charset = wc_guess_charset(s, charset);
         }
-#endif
     }
 }
 
@@ -2177,20 +2081,14 @@ void initMenu(void)
     w3mMenuList[2].item = NULL;
     w3mMenuList[3].id = NULL;
 
-#ifdef USE_M17N
     if (!MainMenuEncode) {
         MenuItem* item;
-#ifdef ENABLE_NLS
-        /* FIXME: charset that gettext(3) returns */
-        MainMenuCharset = SystemCharset;
-#endif
         for (item = MainMenuItem; item->type != MENU_END; item++)
             item->label = wc_conv(_(item->label), MainMenuCharset,
                 InnerCharset)
                               ->ptr;
         MainMenuEncode = TRUE;
     }
-#endif
     if ((mf = fopen(confFile(MENU_FILE), "rt")) != NULL) {
         interpret_menu(mf);
         fclose(mf);
@@ -2532,4 +2430,3 @@ list_menu(Buffer* buf)
     return (key >= 0) ? ap[key] : NULL;
 }
 
-#endif /* USE_MENU */

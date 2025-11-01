@@ -7,7 +7,6 @@
 #include <signal.h>
 #include <setjmp.h>
 
-#ifdef USE_NNTP
 
 #define NEWS_ENDLINE(p) \
     ((*(p) == '.' && ((p)[1] == '\n' || (p)[1] == '\r' || (p)[1] == '\0')) || *(p) == '\n' || *(p) == '\r' || *(p) == '\0')
@@ -24,11 +23,10 @@ static News current_news = { NULL, 0, NULL, NULL, NULL };
 
 static JMP_BUF AbortLoading;
 
-static MySignalHandler
+static void
 KeyAbort(SIGNAL_ARG)
 {
     LONGJMP(AbortLoading, 1);
-    SIGNAL_RETURN;
 }
 
 static Str
@@ -291,11 +289,7 @@ openNewsStream(ParsedURL* pu)
     return NULL;
 }
 
-#ifdef USE_M17N
 Str loadNewsgroup(ParsedURL* pu, wc_ces* charset)
-#else
-Str loadNewsgroup0(ParsedURL* pu)
-#endif
 {
     volatile Str page;
     Str tmp;
@@ -305,12 +299,10 @@ Str loadNewsgroup0(ParsedURL* pu)
     char* volatile scheme, * volatile group, * volatile list;
     int status, i, first, last;
     volatile int flag = 0, start = 0, end = 0;
-    MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
-#ifdef USE_M17N
+    MySignalHandler prevtrap = NULL;
     wc_ces doc_charset = DocumentCharset, mime_charset;
 
     *charset = WC_CES_US_ASCII;
-#endif
     if (current_news.host == NULL || !pu->file || *pu->file == '\0')
         return NULL;
     group = allocStr(pu->file, -1);
@@ -501,4 +493,3 @@ void disconnectNews(void)
     news_quit(&current_news);
 }
 
-#endif /* USE_NNTP */

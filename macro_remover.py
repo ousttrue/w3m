@@ -6,14 +6,30 @@ from typing import NamedTuple, Union, List, Optional
 
 
 CONTEXT = {
+    # charcode
     "USE_M17N": True,
+    "USE_UNICODE": True,
+    "ENABLE_NLS": False,
+    # windows / cygwin
+    "__EMX__": False,
+    "__CYGWIN__": False,
+    "__MINGW32_VERSION": False,
+    "__WATT32__": False,
+    # features
+    "USE_COLOR": True,
+    "USE_ANSI_COLOR": True,
+    "USE_BG_COLOR": True,
+    "USE_IMAGE": True,
+    "USE_SSL": True,
+    "USE_NNTP": True,
+    "USE_GOPHER": True,
+    "USE_MENU": True,
     # "SIGWINCH": True,
     # "SIGPIPE": True,
     # "SIGCHLD": True,
     # "SIGTSTP": True,
     # "USE_COOKIE": True,
     # "USE_ALARM": True,
-    # "USE_SSL": True,
     # "USE_SSL_VERIFY": True,
     # "USE_HELP_CGI": True,
     # "USE_DICT": True,
@@ -27,26 +43,13 @@ CONTEXT = {
     # "USE_MIGEMO": False,
     # "USE_W3MMAILER": False,
     # "USE_MARK": False,
-    # "__CYGWIN__": False,
     # "SUPPORT_WIN9X_CONSOLE_MBCS": False,
-    # "__MINGW32_VERSION": False,
-    # "__EMX__": False,
-    # "__WATT32__": False,
     # "USE_BINMODE_STREAM": False,
-    # "USE_UNICODE": False,
-    # "ENABLE_NLS": False,
-    # "USE_COLOR": False,
-    # "USE_ANSI_COLOR": False,
-    # "USE_BG_COLOR": False,
     # "USE_RAW_SCROLL": False,
-    # "USE_MENU": False,
     # "MENU_MAP": False,
     # "MENU_SELECT": False,
     # "USE_MOUSE": False,
     # "USE_GPM": False,
-    # "USE_IMAGE": False,
-    # "USE_NNTP": False,
-    # "USE_GOPHER": False,
     # "ID_EXT": False,
     # "MATRIX": True,
     # "FORMAT_NICE": True,
@@ -231,33 +234,37 @@ def main(path: pathlib.Path, debug=False):
     root = MacroNode(0, None)
     stack = [root]
     for i, l in enumerate(lines):
-        l = l.rstrip()
-        if l.startswith("#"):
-            match parse_macro(l):
-                case Include() as m:
-                    pass
-                    # print(f'[INCLUDE] => {m}')
-                case Define() as m:
-                    pass
-                    # print(f'[DEFINE] => {m}')
-                case If() | Ifndef() | Ifdef() as m:
-                    node = MacroNode(i, m)
-                    stack[-1].children.append(node)
-                    stack.append(node)
-                case Elif() | Else() as m:
-                    stack[-1].close(i, None)
-                    prev = stack.pop()
-                    # new node
-                    node = MacroNode(i, m, prev)
-                    stack[-1].children.append(node)
-                    stack.append(node)
-                case Endif() as m:
-                    stack[-1].close(i, m)
-                    stack.pop()
-                    pass
-                case _:
-                    print(l)
-                    # print(l)
+        try:
+            l = l.rstrip()
+            if l.startswith("#"):
+                match parse_macro(l):
+                    case Include() as m:
+                        pass
+                        # print(f'[INCLUDE] => {m}')
+                    case Define() as m:
+                        pass
+                        # print(f'[DEFINE] => {m}')
+                    case If() | Ifndef() | Ifdef() as m:
+                        node = MacroNode(i, m)
+                        stack[-1].children.append(node)
+                        stack.append(node)
+                    case Elif() | Else() as m:
+                        stack[-1].close(i, None)
+                        prev = stack.pop()
+                        # new node
+                        node = MacroNode(i, m, prev)
+                        stack[-1].children.append(node)
+                        stack.append(node)
+                    case Endif() as m:
+                        stack[-1].close(i, m)
+                        stack.pop()
+                        pass
+                    case _:
+                        print(l)
+                        # print(l)
+        except Exception as ex:
+            print(i, l)
+            raise ex
     assert len(stack) == 1
     root.close(len(lines) - 1, None)
     root.eval(CONTEXT)

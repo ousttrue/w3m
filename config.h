@@ -166,22 +166,19 @@ typedef long clen_t;
 
 #define HAVE_SIGSETJMP 1
 
-#define RETSIGTYPE void
-typedef RETSIGTYPE MySignalHandler;
+// #define RETSIGTYPE void
+// typedef RETSIGTYPE MySignalHandler;
+typedef void(*MySignalHandler)(int);
+extern MySignalHandler mySignal(int signal_number, MySignalHandler action);
+
 #define SIGNAL_ARG int _dummy /* XXX */
 #define SIGNAL_ARGLIST 0 /* XXX */
-#define SIGNAL_RETURN return
+extern void intTrap(SIGNAL_ARG);
 
 #ifdef HAVE_SIGSETJMP
-#ifdef __MINGW32_VERSION
-#define SETJMP(env) setjmp(env)
-#define LONGJMP(env, val) longjmp(env, val)
-#define JMP_BUF jmp_buf
-#else
 #define SETJMP(env) sigsetjmp(env, 1)
 #define LONGJMP(env, val) siglongjmp(env, val)
 #define JMP_BUF sigjmp_buf
-#endif /* __MINGW32_VERSION */
 #else
 #define SETJMP(env) setjmp(env)
 #define LONGJMP(env, val) longjmp(env, val)
@@ -252,12 +249,5 @@ typedef RETSIGTYPE MySignalHandler;
 #define INFLATE_NAME "inflate"
 #define BROTLI_NAME "brotli"
 
-#ifdef __MINGW32_VERSION
-#define SIGKILL SIGTERM
-#define S_IXGRP 0
-#define S_IXOTH 0
-#define S_IRWXG 0
-#define S_IRWXO 0
-#endif /* __MINGW32_VERSION */
 
 #endif /* CONFIG_H_SEEN */
