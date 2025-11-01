@@ -7,7 +7,6 @@ extern int LINES, COLS;
 extern int LASTLINE;
 #endif
 
-#ifdef USE_MOUSE
 /* Addition:mouse event */
 #define MOUSE_BTN1_DOWN 0
 #define MOUSE_BTN2_DOWN 1
@@ -18,7 +17,6 @@ extern int LASTLINE;
 #define MOUSE_BTN5_DOWN_XTERM 65
 #define MOUSE_BTN_UP 3
 #define MOUSE_BTN_RESET -1
-#endif
 
 
 extern void put_image_osc5379(char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh);

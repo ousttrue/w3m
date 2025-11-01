@@ -25,7 +25,6 @@
 
 
 
-#ifdef INET6
 /* see rc.c, "dns_order" and dnsorders[] */
 int ai_family_order_table[7][3] = {
     { PF_UNSPEC, PF_UNSPEC, PF_UNSPEC }, /* 0:unspec */
@@ -36,7 +35,6 @@ int ai_family_order_table[7][3] = {
     { PF_UNSPEC, PF_UNSPEC, PF_UNSPEC }, /* 5: --- */
     { PF_INET6, PF_UNSPEC, PF_UNSPEC }, /* 6:inet6 */
 };
-#endif /* INET6 */
 
 static JMP_BUF AbortLoading;
 
@@ -299,20 +297,13 @@ openSSLHandle(int sock, char* hostname, char** p_cert)
 {
     SSL* handle = NULL;
     static char* old_ssl_forbid_method = NULL;
-#ifdef USE_SSL_VERIFY
     static int old_ssl_verify_server = -1;
-#endif
 
     if (old_ssl_forbid_method != ssl_forbid_method
         && (!old_ssl_forbid_method || !ssl_forbid_method || strcmp(old_ssl_forbid_method, ssl_forbid_method))) {
         old_ssl_forbid_method = ssl_forbid_method;
-#ifdef USE_SSL_VERIFY
         ssl_path_modified = 1;
-#else
-        free_ssl_ctx();
-#endif
     }
-#ifdef USE_SSL_VERIFY
     if (old_ssl_verify_server != ssl_verify_server) {
         old_ssl_verify_server = ssl_verify_server;
         ssl_path_modified = 1;
@@ -321,7 +312,6 @@ openSSLHandle(int sock, char* hostname, char** p_cert)
         free_ssl_ctx();
         ssl_path_modified = 0;
     }
-#endif /* defined(USE_SSL_VERIFY) */
     if (ssl_ctx == NULL) {
         int option;
 #if OPENSSL_VERSION_NUMBER < 0x0800
@@ -386,7 +376,6 @@ openSSLHandle(int sock, char* hostname, char** p_cert)
         SSL_CTX_set_mode(ssl_ctx, SSL_MODE_RELEASE_BUFFERS);
 #endif
 
-#ifdef USE_SSL_VERIFY
         /* derived from openssl-0.9.5/apps/s_{client,cb}.c */
 #if 1 /* use SSL_get_verify_result() to verify cert */
         SSL_CTX_set_verify(ssl_ctx, SSL_VERIFY_NONE, NULL);
@@ -424,7 +413,6 @@ openSSLHandle(int sock, char* hostname, char** p_cert)
             if (ssl_ca_default)
                 SSL_CTX_set_default_verify_paths(ssl_ctx);
         }
-#endif /* defined(USE_SSL_VERIFY) */
 #endif /* SSLEAY_VERSION_NUMBER >= 0x0800 */
     }
     handle = SSL_new(ssl_ctx);
@@ -510,19 +498,10 @@ int openSocket(char* const hostname,
     char* remoteport_name, unsigned short remoteport_num)
 {
     volatile int sock = -1;
-#ifdef INET6
     int* af;
     struct addrinfo hints, *res0, *res;
     int error;
     char* hname;
-#else /* not INET6 */
-    struct sockaddr_in hostaddr;
-    struct hostent* entry;
-    struct protoent* proto;
-    unsigned short s_port;
-    int a1, a2, a3, a4;
-    unsigned long adr;
-#endif /* not INET6 */
     MySignalHandler prevtrap = NULL;
 
     if (fmInitialized) {
@@ -547,7 +526,6 @@ int openSocket(char* const hostname,
         goto error;
     }
 
-#ifdef INET6
     /* rfc2732 compliance */
     hname = hostname;
     if (hname != NULL && hname[0] == '[' && hname[strlen(hname) - 1] == ']') {
@@ -601,87 +579,6 @@ int openSocket(char* const hostname,
         freeaddrinfo(res0);
         break;
     }
-#else /* not INET6 */
-    s_port = htons(remoteport_num);
-    bzero((char*)&hostaddr, sizeof(struct sockaddr_in));
-    if ((proto = getprotobyname("tcp")) == NULL) {
-        /* protocol number of TCP is 6 */
-        proto = New(struct protoent);
-        proto->p_proto = 6;
-    }
-    if ((sock = socket(AF_INET, SOCK_STREAM, proto->p_proto)) < 0) {
-#ifdef SOCK_DEBUG
-        sock_log("openSocket: socket() failed. reason: %s\n", strerror(errno));
-#endif
-        goto error;
-    }
-    regexCompile("^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$", 0);
-    if (regexMatch(hostname, -1, 1)) {
-        sscanf(hostname, "%d.%d.%d.%d", &a1, &a2, &a3, &a4);
-        adr = htonl((a1 << 24) | (a2 << 16) | (a3 << 8) | a4);
-        bcopy((void*)&adr, (void*)&hostaddr.sin_addr, sizeof(long));
-        hostaddr.sin_family = AF_INET;
-        hostaddr.sin_port = s_port;
-        if (fmInitialized) {
-            message(Sprintf("Connecting to %s", hostname)->ptr, 0, 0);
-            refresh();
-        }
-        if (connect(sock, (struct sockaddr*)&hostaddr,
-                sizeof(struct sockaddr_in))
-            < 0) {
-#ifdef SOCK_DEBUG
-            sock_log("openSocket: connect() failed. reason: %s\n",
-                strerror(errno));
-#endif
-            goto error;
-        }
-    } else {
-        char** h_addr_list;
-        int result = -1;
-        if (fmInitialized) {
-            message(Sprintf("Performing hostname lookup on %s", hostname)->ptr,
-                0, 0);
-            refresh();
-        }
-        if ((entry = gethostbyname(hostname)) == NULL) {
-#ifdef SOCK_DEBUG
-            sock_log("openSocket: gethostbyname() failed. reason: %s\n",
-                strerror(errno));
-#endif
-            goto error;
-        }
-        hostaddr.sin_family = AF_INET;
-        hostaddr.sin_port = s_port;
-        for (h_addr_list = entry->h_addr_list; *h_addr_list; h_addr_list++) {
-            bcopy((void*)h_addr_list[0], (void*)&hostaddr.sin_addr,
-                entry->h_length);
-#ifdef SOCK_DEBUG
-            adr = ntohl(*(long*)&hostaddr.sin_addr);
-            sock_log("openSocket: connecting %d.%d.%d.%d\n",
-                (adr >> 24) & 0xff,
-                (adr >> 16) & 0xff, (adr >> 8) & 0xff, adr & 0xff);
-#endif
-            if (fmInitialized) {
-                message(Sprintf("Connecting to %s", hostname)->ptr, 0, 0);
-                refresh();
-            }
-            if ((result = connect(sock, (struct sockaddr*)&hostaddr,
-                     sizeof(struct sockaddr_in)))
-                == 0) {
-                break;
-            }
-#ifdef SOCK_DEBUG
-            else {
-                sock_log("openSocket: connect() failed. reason: %s\n",
-                    strerror(errno));
-            }
-#endif
-        }
-        if (result < 0) {
-            goto error;
-        }
-    }
-#endif /* not INET6 */
 
     TRAP_OFF;
     return sock;
@@ -828,7 +725,6 @@ void parseURL(char* url, ParsedURL* p_url, ParsedURL* current)
     /*          ^p is here  */
 analyze_url:
     q = p;
-#ifdef INET6
     if (*q == '[') { /* rfc2732,rfc2373 compliance */
         p++;
         while (IS_XDIGIT(*p) || *p == ':' || *p == '.')
@@ -836,7 +732,6 @@ analyze_url:
         if (*p != ']' || (*(p + 1) && strchr(":/?#", *(p + 1)) == NULL))
             p = q;
     }
-#endif
     while (*p && strchr(":/@?#", *p) == NULL)
         p++;
     switch (*p) {
@@ -1428,9 +1323,7 @@ HTTPrequest(ParsedURL* pu, ParsedURL* current, HRequest* hr, TextList* extra)
 {
     Str tmp;
     TextListItem* i;
-#ifdef USE_COOKIE
     Str cookie;
-#endif /* USE_COOKIE */
     tmp = HTTPrequestMethod(hr);
     Strcat_charp(tmp, " ");
     Strcat_charp(tmp, HTTPrequestURI(pu, hr)->ptr);
@@ -1457,7 +1350,6 @@ HTTPrequest(ParsedURL* pu, ParsedURL* current, HRequest* hr, TextList* extra)
             Strcat_charp(tmp, i->ptr);
         }
 
-#ifdef USE_COOKIE
     if (hr->command != HR_COMMAND_CONNECT && use_cookie && (cookie = find_cookie(pu))) {
         Strcat_charp(tmp, "Cookie: ");
         Strcat(tmp, cookie);
@@ -1466,7 +1358,6 @@ HTTPrequest(ParsedURL* pu, ParsedURL* current, HRequest* hr, TextList* extra)
         if (cookie->ptr[0] != '$')
             Strcat_charp(tmp, "Cookie2: $Version=\"1\"\r\n");
     }
-#endif /* USE_COOKIE */
     if (hr->command == HR_COMMAND_POST) {
         if (hr->request->enctype == FORM_ENCTYPE_MULTIPART) {
             Strcat_charp(tmp, "Content-Type: multipart/form-data; boundary=");
@@ -1993,32 +1884,6 @@ int check_no_proxy(char* domain)
     }
     TRAP_ON;
     {
-#ifndef INET6
-        struct hostent* he;
-        int n;
-        unsigned char** h_addr_list;
-        char addr[4 * 16], buf[5];
-
-        he = gethostbyname(domain);
-        if (!he) {
-            ret = 0;
-            goto end;
-        }
-        for (h_addr_list = (unsigned char**)he->h_addr_list; *h_addr_list;
-            h_addr_list++) {
-            sprintf(addr, "%d", h_addr_list[0][0]);
-            for (n = 1; n < he->h_length; n++) {
-                sprintf(buf, ".%d", h_addr_list[0][n]);
-                strcat(addr, buf);
-            }
-            for (tl = NO_proxy_domains->first; tl != NULL; tl = tl->next) {
-                if (strncmp(tl->ptr, addr, strlen(tl->ptr)) == 0) {
-                    ret = 1;
-                    goto end;
-                }
-            }
-        }
-#else /* INET6 */
         int error;
         struct addrinfo hints;
         struct addrinfo *res, *res0;
@@ -2064,7 +1929,6 @@ int check_no_proxy(char* domain)
                 break;
             }
         }
-#endif /* INET6 */
     }
 end:
     TRAP_OFF;

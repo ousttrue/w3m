@@ -127,7 +127,6 @@ static int cur_iseq;
 #define IMG_SYMBOL UL_SYMBOL(12)
 #define HR_SYMBOL 26
 
-#ifdef USE_COOKIE
 /* This array should be somewhere else */
 /* FIXME: gettextize? */
 char* violations[COO_EMAX] = {
@@ -141,7 +140,6 @@ char* violations[COO_EMAX] = {
     "RFC 2109 4.3.2 rule 4",
     "RFC XXXX 4.3.2 rule 5"
 };
-#endif
 
 /* *INDENT-OFF* */
 static struct compression_decoder {
@@ -535,9 +533,7 @@ xface2xpm(char* xface)
 void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
 {
     char *p, *q;
-#ifdef USE_COOKIE
     char* emsg;
-#endif
     char c;
     Str lineBuf2 = NULL;
     Str tmp;
@@ -693,7 +689,6 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
             }
             uf->content_encoding = uf->compression;
         }
-#ifdef USE_COOKIE
         else if (use_cookie && accept_cookie && pu && check_cookie_accept_domain(pu->host) && (!strncasecmp(lineBuf2->ptr, "Set-Cookie:", 11) || !strncasecmp(lineBuf2->ptr, "Set-Cookie2:", 12))) {
             Str name = Strnew(), value = Strnew(), domain = NULL, path = NULL,
                 comment = NULL, commentURL = NULL, port = NULL, tmp2;
@@ -815,7 +810,6 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
                 }
             }
         }
-#endif /* USE_COOKIE */
         else if (!strncasecmp(lineBuf2->ptr, "w3m-control:", 12) && uf->scheme == SCM_LOCAL_CGI) {
             Str funcname = Strnew();
             int f;
@@ -5739,7 +5733,6 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                     if (p && q && !strcasecmp(p, "refresh") && MetaRefresh) {
                         Str tmp = NULL;
                         int refresh_interval = getMetaRefreshParam(q, &tmp);
-#ifdef USE_ALARM
                         if (tmp) {
                             p = url_encode(remove_space(tmp->ptr), base,
                                 buf->document_charset);
@@ -5752,13 +5745,6 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                                 refresh_interval,
                                 AL_IMPLICIT,
                                 FUNCNAME_reload, NULL);
-#else
-                        if (tmp && refresh_interval == 0) {
-                            p = url_encode(remove_space(tmp->ptr), base,
-                                buf->document_charset);
-                            pushEvent(FUNCNAME_gorURL, p);
-                        }
-#endif
                     }
                     break;
                 case HTML_INTERNAL:

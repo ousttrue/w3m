@@ -484,7 +484,6 @@ last:
     return word;
 }
 
-#ifdef USE_MOUSE
 static MouseAction default_mouse_action = {
     NULL,
     "<=UpDn",
@@ -668,4 +667,3 @@ void initMouseAction(void)
         fclose(mf);
     }
 }
-#endif

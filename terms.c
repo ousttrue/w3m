@@ -18,7 +18,6 @@
 #include <sys/select.h>
 #endif
 #include <sys/ioctl.h>
-#ifdef USE_MOUSE
 #ifdef USE_GPM
 #include <gpm.h>
 #endif /* USE_GPM */
@@ -34,7 +33,6 @@ static int is_xterm = 0;
 
 void mouse_init(void), mouse_end(void);
 int mouseActive = 0;
-#endif /* USE_MOUSE */
 
 static char* title_str = NULL;
 
@@ -627,13 +625,9 @@ int get_pixel_per_cell(int* ppc, int* ppl)
     return 0;
 }
 
-#ifdef USE_MOUSE
 #define W3M_TERM_INFO(name, title, mouse) name, title, mouse
 #define NEED_XTERM_ON (1)
 #define NEED_XTERM_OFF (1 << 1)
-#else
-#define W3M_TERM_INFO(name, title, mouse) name, title
-#endif
 
 static char XTERM_TITLE[] = "\033]0;w3m: %s\007";
 static char SCREEN_TITLE[] = "\033k%s\033\134";
@@ -641,9 +635,7 @@ static char SCREEN_TITLE[] = "\033k%s\033\134";
 static struct w3m_term_info {
     char* term;
     char* title_str;
-#ifdef USE_MOUSE
     int mouse_flag;
-#endif
 } w3m_term_info_list[] = {
     { W3M_TERM_INFO("xterm", XTERM_TITLE, (NEED_XTERM_ON | NEED_XTERM_OFF)) },
     { W3M_TERM_INFO("kterm", XTERM_TITLE, (NEED_XTERM_ON | NEED_XTERM_OFF)) },
@@ -678,7 +670,6 @@ int set_tty(void)
             }
         }
     }
-#ifdef USE_MOUSE
     {
         char* term = getenv("TERM");
         if (term != NULL) {
@@ -691,7 +682,6 @@ int set_tty(void)
             }
         }
     }
-#endif
     return 0;
 }
 
@@ -778,10 +768,8 @@ void reset_tty(void)
 static void
 reset_exit_with_value(SIGNAL_ARG, int rval)
 {
-#ifdef USE_MOUSE
     if (mouseActive)
         mouse_end();
-#endif /* USE_MOUSE */
     reset_tty();
     w3m_exit(rval);
 }
@@ -1784,7 +1772,6 @@ char getch(void)
     return c;
 }
 
-#ifdef USE_MOUSE
 #ifdef USE_GPM
 char wgetch(void* p)
 {
@@ -1857,7 +1844,6 @@ sysmouse(SIGNAL_ARG)
     ioctl(tty, CONS_MOUSECTL, &mi);
 }
 #endif /* USE_SYSMOUSE */
-#endif /* USE_MOUSE */
 
 void bell(void)
 {
@@ -1872,7 +1858,6 @@ skip_escseq(void)
     c = getch();
     if (c == '[' || c == 'O') {
         c = getch();
-#ifdef USE_MOUSE
         if (is_xterm && c == 'M') {
             getch();
             getch();
@@ -1882,7 +1867,6 @@ skip_escseq(void)
             while (IS_DIGIT(c) || c == ';')
                 c = getch();
         } else
-#endif
             while (IS_DIGIT(c))
                 c = getch();
     }
@@ -1918,7 +1902,6 @@ int sleep_till_anykey(int sec, int purge)
     return ret;
 }
 
-#ifdef USE_MOUSE
 
 #define XTERM_ON                                          \
     {                                                     \
@@ -2083,7 +2066,6 @@ void mouse_inactive()
         mouse_end();
 }
 
-#endif /* USE_MOUSE */
 
 void flush_tty(void)
 {

@@ -110,13 +110,9 @@ extern void curlno(void);
 extern void execCmd(void);
 extern void dispI(void);
 extern void stopI(void);
-#ifdef USE_ALARM
 extern void setAlarm(void);
 extern AlarmEvent* setAlarmEvent(AlarmEvent* event, int sec, short status,
     int cmd, void* data);
-#else
-#define setAlarm nulcmd
-#endif
 extern void reinit(void);
 extern void defKey(void);
 extern void newT(void);
@@ -279,11 +275,7 @@ extern void disp_err_message(char* s, int redraw_current);
 extern void disp_message_nsec(char* s, int redraw_current, int sec, int purge,
     int mouse);
 extern void disp_message(char* s, int redraw_current);
-#ifdef USE_MOUSE
 extern void disp_message_nomouse(char* s, int redraw_current);
-#else
-#define disp_message_nomouse disp_message
-#endif
 extern void set_delayed_message(char* s);
 extern void cursorUp0(Buffer* buf, int n);
 extern void cursorUp(Buffer* buf, int n);
@@ -326,9 +318,7 @@ extern void multimap(void);
 extern char* inputLineHistSearch(char* prompt, char* def_str, int flag,
     Hist* hist, int (*incfunc)(int ch, Str buf, Lineprop* prop));
 extern Str unescape_spaces(Str s);
-#ifdef USE_HISTORY
 extern Buffer* historyBuffer(Hist* hist);
-#endif /* not USE_HISTORY */
 extern double log_like(int x);
 extern struct table* newTable(void);
 extern void pushdata(struct table* t, int row, int col, char* data);
@@ -573,7 +563,6 @@ extern char* url_unquote_conv(char* url, wc_ces charset);
 extern char* expandName(char* name);
 extern Str tmpfname(int type, char* ext);
 extern time_t mymktime(char* timestr);
-#ifdef USE_COOKIE
 extern char* FQDN(char* host);
 extern Str find_cookie(ParsedURL* pu);
 extern int add_cookie(ParsedURL* pu, Str name, Str value, time_t expires,
@@ -586,9 +575,6 @@ extern void cooLst(void);
 extern Buffer* cookie_list_panel(void);
 extern void set_cookie_flag(struct parsed_tagarg* arg);
 extern int check_cookie_accept_domain(char* domain);
-#else /* not USE_COOKIE */
-#define cooLst nulcmd
-#endif /* not USE_COOKIE */
 extern void docCSet(void);
 extern void defCSet(void);
 extern void change_charset(struct parsed_tagarg* arg);
@@ -605,7 +591,6 @@ extern void reMark(void);
 #define reMark nulcmd
 #endif /* not USE_MARK */
 
-#ifdef USE_MOUSE
 extern void mouse(void);
 extern void sgrmouse(void);
 extern void mouse_init(void);
@@ -617,15 +602,6 @@ extern void movMs(void);
 extern void menuMs(void);
 extern void tabMs(void);
 extern void closeTMs(void);
-#else /* not USE_MOUSE */
-#define mouse nulcmd
-#define sgrmouse nulcmd
-#define msToggle nulcmd
-#define movMs nulcmd
-#define menuMs nulcmd
-#define tabMs nulcmd
-#define closeTMs nulcmd
-#endif /* not USE_MOUSE */
 
 extern void initImage(void);
 extern void termImage(void);
@@ -645,9 +621,7 @@ extern char* getWord(char** str);
 extern char* getQWord(char** str);
 struct regex;
 extern char* getRegexWord(const char** str, struct regex** regex_ret);
-#ifdef USE_MOUSE
 extern void initMouseAction(void);
-#endif
 
 extern void new_menu(Menu* menu, MenuItem* item);
 extern void geom_menu(Menu* menu, int x, int y, int mselect);
@@ -687,9 +661,7 @@ extern void dictwordat(void);
 extern char* guess_save_name(Buffer* buf, char* file);
 
 extern void wrapToggle(void);
-#ifdef USE_BUFINFO
 extern void saveBufferInfo(void);
-#endif
 
 extern Str getLinkNumberStr(int correction);
 

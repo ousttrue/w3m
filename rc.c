@@ -171,32 +171,27 @@ static int OptionEncode = FALSE;
 #define CMT_DEFAULT_URL N_("Default value for open-URL command")
 #define CMT_DECODE_CTE N_("Decode Content-Transfer-Encoding when saving")
 #define CMT_PRESERVE_TIMESTAMP N_("Preserve timestamp when saving")
-#ifdef USE_MOUSE
 #define CMT_MOUSE N_("Enable mouse")
 #define CMT_REVERSE_MOUSE N_("Scroll in reverse direction of mouse drag")
 #define CMT_RELATIVE_WHEEL_SCROLL N_("Behavior of wheel scroll speed")
 #define CMT_RELATIVE_WHEEL_SCROLL_RATIO N_("(A only)Scroll by # (%) of screen")
 #define CMT_FIXED_WHEEL_SCROLL_COUNT N_("(B only)Scroll by # lines")
-#endif /* USE_MOUSE */
 #define CMT_CLEAR_BUF N_("Free memory of undisplayed buffers")
 #define CMT_NOSENDREFERER N_("Suppress `Referer:' header")
 #define CMT_CROSSORIGINREFERER N_("Exclude pathname and query string from `Referer:' header when cross domain communication")
 #define CMT_IGNORE_CASE N_("Search case-insensitively")
 #define CMT_USE_LESSOPEN N_("Use LESSOPEN")
-#ifdef USE_SSL_VERIFY
 #define CMT_SSL_VERIFY_SERVER N_("Perform SSL server verification")
 #define CMT_SSL_CERT_FILE N_("PEM encoded certificate file of client")
 #define CMT_SSL_KEY_FILE N_("PEM encoded private key file of client")
 #define CMT_SSL_CA_PATH N_("Path to directory for PEM encoded certificates of CAs")
 #define CMT_SSL_CA_FILE N_("File consisting of PEM encoded certificates of CAs")
 #define CMT_SSL_CA_DEFAULT N_("Use default locations for PEM encoded certificates of CAs")
-#endif /* USE_SSL_VERIFY */
 #define CMT_SSL_FORBID_METHOD N_("List of forbidden SSL methods (2: SSLv2, 3: SSLv3, t: TLSv1.0, 5: TLSv1.1, 6: TLSv1.2, 7: TLSv1.3)")
 #ifdef SSL_CTX_set_min_proto_version
 #define CMT_SSL_MIN_VERSION N_("Minimum SSL version (all, TLSv1.0, TLSv1.1, TLSv1.2, or TLSv1.3)")
 #endif
 #define CMT_SSL_CIPHER N_("SSL ciphers for TLSv1.2 and below (e.g. DEFAULT:@SECLEVEL=2)")
-#ifdef USE_COOKIE
 #define CMT_USECOOKIE N_("Enable cookie processing")
 #define CMT_SHOWCOOKIE N_("Print a message when receiving a cookie")
 #define CMT_ACCEPTCOOKIE N_("Accept cookies")
@@ -204,7 +199,6 @@ static int OptionEncode = FALSE;
 #define CMT_COOKIE_REJECT_DOMAINS N_("Domains to reject cookies from")
 #define CMT_COOKIE_ACCEPT_DOMAINS N_("Domains to accept cookies from")
 #define CMT_COOKIE_AVOID_WONG_NUMBER_OF_DOTS N_("Domains to avoid [wrong number of dots]")
-#endif
 #define CMT_FOLLOW_REDIRECTION N_("Number of redirections to follow")
 #define CMT_META_REFRESH N_("Enable processing of meta-refresh tag")
 #define CMT_LOCALHOST_ONLY N_("Restrict connections only to localhost")
@@ -290,15 +284,12 @@ static struct sel_c displayinsdel[] = {
     { 0, NULL, NULL }
 };
 
-#ifdef USE_MOUSE
 static struct sel_c wheelmode[] = {
     { TRUE, "1", N_("A:relative to screen height") },
     { FALSE, "0", N_("B:fixed speed") },
     { 0, NULL, NULL }
 };
-#endif /* MOUSE */
 
-#ifdef INET6
 static struct sel_c dnsorders[] = {
     { N_S(DNS_ORDER_UNSPEC), N_("unspecified") },
     { N_S(DNS_ORDER_INET_INET6), N_("inet inet6") },
@@ -307,15 +298,12 @@ static struct sel_c dnsorders[] = {
     { N_S(DNS_ORDER_INET6_ONLY), N_("inet6 only") },
     { 0, NULL, NULL }
 };
-#endif /* INET6 */
 
-#ifdef USE_COOKIE
 static struct sel_c badcookiestr[] = {
     { N_S(ACCEPT_BAD_COOKIE_DISCARD), N_("discard") },
     { N_S(ACCEPT_BAD_COOKIE_ASK), N_("ask") },
     { 0, NULL, NULL }
 };
-#endif /* USE_COOKIE */
 
 static struct sel_c mailtooptionsstr[] = {
 #ifdef USE_W3MMAILER
@@ -457,11 +445,9 @@ struct param_ptr params2[] = {
 
 struct param_ptr params3[] = {
     { "pagerline", P_NZINT, PI_TEXT, (void*)&PagerMax, CMT_PAGERLINE, NULL },
-#ifdef USE_HISTORY
     { "use_history", P_INT, PI_ONOFF, (void*)&UseHistory, CMT_HISTORY, NULL },
     { "history", P_INT, PI_TEXT, (void*)&URLHistSize, CMT_HISTSIZE, NULL },
     { "save_hist", P_INT, PI_ONOFF, (void*)&SaveURLHist, CMT_SAVEHIST, NULL },
-#endif /* USE_HISTORY */
     { "confirm_qq", P_INT, PI_ONOFF, (void*)&confirm_on_quit, CMT_CONFIRM_QQ,
         NULL },
     { "close_tab_back", P_INT, PI_ONOFF, (void*)&close_tab_back,
@@ -486,7 +472,6 @@ struct param_ptr params3[] = {
     { "migemo_command", P_STRING, PI_TEXT, (void*)&migemo_command,
         CMT_MIGEMO_COMMAND, NULL },
 #endif /* USE_MIGEMO */
-#ifdef USE_MOUSE
     { "use_mouse", P_INT, PI_ONOFF, (void*)&use_mouse, CMT_MOUSE, NULL },
     { "reverse_mouse", P_INT, PI_ONOFF, (void*)&reverse_mouse,
         CMT_REVERSE_MOUSE, NULL },
@@ -498,7 +483,6 @@ struct param_ptr params3[] = {
     { "fixed_wheel_scroll_count", P_INT, PI_TEXT,
         (void*)&fixed_wheel_scroll_count,
         CMT_FIXED_WHEEL_SCROLL_COUNT, NULL },
-#endif /* USE_MOUSE */
     { "clear_buffer", P_INT, PI_ONOFF, (void*)&clear_buffer, CMT_CLEAR_BUF,
         NULL },
     { "decode_cte", P_CHARINT, PI_ONOFF, (void*)&DecodeCTE, CMT_DECODE_CTE,
@@ -586,7 +570,6 @@ struct param_ptr params7[] = {
 #endif
     { "ssl_cipher", P_STRING, PI_TEXT, (void*)&ssl_cipher, CMT_SSL_CIPHER,
         NULL },
-#ifdef USE_SSL_VERIFY
     { "ssl_verify_server", P_INT, PI_ONOFF, (void*)&ssl_verify_server,
         CMT_SSL_VERIFY_SERVER, NULL },
     { "ssl_cert_file", P_SSLPATH, PI_TEXT, (void*)&ssl_cert_file,
@@ -599,11 +582,9 @@ struct param_ptr params7[] = {
         NULL },
     { "ssl_ca_default", P_INT, PI_ONOFF, (void*)&ssl_ca_default,
         CMT_SSL_CA_DEFAULT, NULL },
-#endif /* USE_SSL_VERIFY */
     { NULL, 0, 0, NULL, NULL, NULL },
 };
 
-#ifdef USE_COOKIE
 struct param_ptr params8[] = {
     { "use_cookie", P_INT, PI_ONOFF, (void*)&use_cookie, CMT_USECOOKIE, NULL },
     { "show_cookie", P_INT, PI_ONOFF, (void*)&show_cookie,
@@ -621,7 +602,6 @@ struct param_ptr params8[] = {
         CMT_COOKIE_AVOID_WONG_NUMBER_OF_DOTS, NULL },
     { NULL, 0, 0, NULL, NULL, NULL },
 };
-#endif
 
 struct param_ptr params9[] = {
     { "passwd_file", P_STRING, PI_TEXT, (void*)&passwd_file, CMT_PASSWDFILE,
@@ -660,10 +640,8 @@ struct param_ptr params9[] = {
         CMT_META_REFRESH, NULL },
     { "localhost_only", P_CHARINT, PI_ONOFF, (void*)&LocalhostOnly,
         CMT_LOCALHOST_ONLY, NULL },
-#ifdef INET6
     { "dns_order", P_INT, PI_SEL_C, (void*)&DNS_order, CMT_DNS_ORDER,
         (void*)dnsorders },
-#endif /* INET6 */
     { "nntpserver", P_STRING, PI_TEXT, (void*)&NNTP_server, CMT_NNTP_SERVER,
         NULL },
     { "nntpmode", P_STRING, PI_TEXT, (void*)&NNTP_mode, CMT_NNTP_MODE, NULL },
@@ -730,9 +708,7 @@ struct param_section sections[] = {
     { N_("Network Settings"), params9 },
     { N_("Proxy Settings"), params4 },
     { N_("SSL Settings"), params7 },
-#ifdef USE_COOKIE
     { N_("Cookie Settings"), params8 },
-#endif
     { N_("Charset Settings"), params10 },
     { NULL, NULL }
 };
@@ -1110,7 +1086,6 @@ parse_proxy(void)
         set_no_proxy(NO_proxy);
 }
 
-#ifdef USE_COOKIE
 static void
 parse_cookie(void)
 {
@@ -1122,7 +1097,6 @@ parse_cookie(void)
         Cookie_avoid_wrong_number_of_dots_domains
             = make_domain_list(cookie_avoid_wrong_number_of_dots);
 }
-#endif
 
 #define do_mkdir(dir, mode) mkdir(dir, mode)
 
@@ -1183,9 +1157,7 @@ void sync_with_option(void)
         PagerMax = LINES;
     WrapSearch = WrapDefault;
     parse_proxy();
-#ifdef USE_COOKIE
     parse_cookie();
-#endif
     initMailcap();
     initMimeTypes();
 #ifdef USE_EXTERNAL_URI_LOADER
@@ -1216,9 +1188,7 @@ void sync_with_option(void)
     wtf_init(DocumentCharset, DisplayCharset);
     if (fmInitialized) {
         initKeymap(FALSE);
-#ifdef USE_MOUSE
         initMouseAction();
-#endif /* MOUSE */
         initMenu();
     }
 }

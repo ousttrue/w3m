@@ -515,7 +515,6 @@ Str ssl_get_certificate(SSL* ssl, char* hostname)
         s = amsg ? amsg : Strnew_charp("valid certificate");
         return s;
     }
-#ifdef USE_SSL_VERIFY
     /* check the cert chain.
      * The chain length is automatically checked by OpenSSL when we
      * set the verify depth in the ctx.
@@ -547,7 +546,6 @@ Str ssl_get_certificate(SSL* ssl, char* hostname)
             }
         }
     }
-#endif
     emsg = ssl_check_cert_ident(x, hostname);
     if (emsg != NULL) {
         if (accept_this_site
@@ -648,7 +646,6 @@ ssl_read(struct ssl_handle* handle, char* buf, int len)
 {
     int status;
     if (handle->ssl) {
-#ifdef USE_SSL_VERIFY
         for (;;) {
             status = SSL_read(handle->ssl, buf, len);
             if (status > 0)
@@ -662,9 +659,6 @@ ssl_read(struct ssl_handle* handle, char* buf, int len)
             }
             break;
         }
-#else /* if !defined(USE_SSL_VERIFY) */
-        status = SSL_read(handle->ssl, buf, len);
-#endif /* !defined(USE_SSL_VERIFY) */
     } else
         status = read(handle->sock, buf, len);
     return status;

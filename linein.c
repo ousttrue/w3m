@@ -3,7 +3,6 @@
 #include "local.h"
 #include "myctype.h"
 
-#ifdef USE_MOUSE
 #ifdef USE_GPM
 #include <gpm.h>
 #endif
@@ -11,7 +10,6 @@
 extern int do_getch();
 #define getch() do_getch()
 #endif /* USE_GPM */
-#endif /* USE_MOUSE */
 
 
 #define STR_LEN 1024

@@ -476,9 +476,7 @@ typedef struct _Buffer {
     char need_reshape;
     Anchor* submit;
     struct _BufferPos* undo;
-#ifdef USE_ALARM
     struct _AlarmEvent* event;
-#endif
 } Buffer;
 
 typedef struct _BufferPos {
@@ -701,7 +699,6 @@ struct html_feed_environ {
     int blank_lines;
 };
 
-#ifdef USE_COOKIE
 struct portlist {
     unsigned short port;
     struct portlist* next;
@@ -742,7 +739,6 @@ struct cookie {
 #define COO_EBADHOST (8 | COO_OVERRIDE_OK) /* dot in matched host name in FQDN (version 1 case 4) */
 #define COO_EPORT (9) /* Port match failed (version 1' case 5) */
 #define COO_EMAX COO_EPORT
-#endif /* USE_COOKIE */
 
 /* modes for align() */
 
@@ -850,7 +846,6 @@ global ParsedURL GOPHER_proxy_parsed;
 global ParsedURL FTP_proxy_parsed;
 global char* NO_proxy init(NULL);
 global int NOproxy_netaddr init(TRUE);
-#ifdef INET6
 #define DNS_ORDER_UNSPEC 0
 #define DNS_ORDER_INET_INET6 1
 #define DNS_ORDER_INET6_INET 2
@@ -858,7 +853,6 @@ global int NOproxy_netaddr init(TRUE);
 #define DNS_ORDER_INET6_ONLY 6
 global int DNS_order init(DNS_ORDER_UNSPEC);
 extern int ai_family_order_table[7][3]; /* XXX */
-#endif /* INET6 */
 global TextList* NO_proxy_domains;
 global char NoCache init(FALSE);
 global char use_proxy init(TRUE);
@@ -1020,9 +1014,7 @@ global char* migemo_command init(DEF_MIGEMO_COMMAND);
 #endif /* USE_MIGEMO */
 
 global struct auth_cookie* Auth_cookie init(NULL);
-#ifdef USE_COOKIE
 global struct cookie* First_cookie init(NULL);
-#endif /* USE_COOKIE */
 
 global char* mailcap_files init(USER_MAILCAP ", " SYS_MAILCAP);
 global char* mimetypes_files init(USER_MIMETYPES ", " SYS_MIMETYPES);
@@ -1037,11 +1029,9 @@ extern Hist* SaveHist;
 extern Hist* URLHist;
 extern Hist* ShellHist;
 extern Hist* TextHist;
-#ifdef USE_HISTORY
 global int UseHistory init(TRUE);
 global int URLHistSize init(100);
 global int SaveURLHist init(TRUE);
-#endif /* USE_HISTORY */
 global int multicolList init(FALSE);
 
 global wc_ces InnerCharset init(WC_CES_WTF); /* Don't change */
@@ -1083,7 +1073,6 @@ global char* mkd_tmp_dir init(NULL);
 #endif
 global char* config_file init(NULL);
 
-#ifdef USE_MOUSE
 global int use_mouse init(TRUE);
 extern int mouseActive;
 global int reverse_mouse init(FALSE);
@@ -1111,9 +1100,7 @@ typedef struct _MouseAction {
 } MouseAction;
 global MouseAction mouse_action;
 #define LIMIT_MOUSE_MENU 100
-#endif /* USE_MOUSE */
 
-#ifdef USE_COOKIE
 global int default_use_cookie init(TRUE);
 global int use_cookie init(TRUE);
 global int show_cookie init(FALSE);
@@ -1128,7 +1115,6 @@ global char* cookie_avoid_wrong_number_of_dots init(NULL);
 global TextList* Cookie_reject_domains;
 global TextList* Cookie_accept_domains;
 global TextList* Cookie_avoid_wrong_number_of_dots_domains;
-#endif /* USE_COOKIE */
 
 global int view_unseenobject init(FALSE);
 
@@ -1180,7 +1166,6 @@ int backend(void);
 extern void deleteFiles(void);
 void w3m_exit(int i);
 
-#ifdef USE_ALARM
 #define AL_UNSET 0
 #define AL_EXPLICIT 1
 #define AL_IMPLICIT 2
@@ -1192,7 +1177,6 @@ typedef struct _AlarmEvent {
     int cmd;
     void* data;
 } AlarmEvent;
-#endif
 
 /*
  * Externals

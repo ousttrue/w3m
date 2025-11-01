@@ -216,9 +216,7 @@ show(TextList* argv)
 static void
 quit(TextList* argv)
 {
-#ifdef USE_COOKIE
     save_cookies();
-#endif /* USE_COOKIE */
     w3m_exit(0);
 }
 
@@ -275,9 +273,7 @@ int backend(void)
     w3m_dump = 0;
     if (COLS == 0)
         COLS = DEFAULT_COLS;
-#ifdef USE_MOUSE
     use_mouse = FALSE;
-#endif /* USE_MOUSE */
 
     if (backend_batch_commands) {
         while ((str = popText(backend_batch_commands)))

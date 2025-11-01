@@ -23,7 +23,6 @@
 #include "wc.h"
 #include "wtf.h"
 #include "ucs.h"
-#ifdef USE_MOUSE
 #ifdef USE_GPM
 #include <gpm.h>
 #endif /* USE_GPM */
@@ -31,12 +30,10 @@
 extern int do_getch();
 #define getch() do_getch()
 #endif /* defined(USE_GPM) || defined(USE_SYSMOUSE) */
-#endif
 
 unsigned char last_key = 0;
 
 #include "util.h"
-
 
 #define DSTR_LEN 256
 
@@ -54,23 +51,17 @@ typedef struct _Event {
 static Event* CurrentEvent = NULL;
 static Event* LastEvent = NULL;
 
-#ifdef USE_ALARM
 static AlarmEvent DefaultAlarm = {
     0, AL_UNSET, FUNCNAME_nulcmd, NULL
 };
 static AlarmEvent* CurrentAlarm = &DefaultAlarm;
 static void SigAlarm(SIGNAL_ARG);
-#endif
 
-#ifdef SIGWINCH
 static int need_resize_screen = FALSE;
 static void resize_hook(SIGNAL_ARG);
 static void resize_screen(void);
-#endif
 
-#ifdef SIGPIPE
 static void SigPipe(SIGNAL_ARG);
-#endif
 
 #ifdef USE_MARK
 static char* MarkString = NULL;
@@ -131,7 +122,6 @@ fversion(FILE* f)
         ",image"
         ",color"
         ",ansi-color"
-#ifdef USE_MOUSE
         ",mouse"
 #ifdef USE_GPM
         ",gpm"
@@ -139,15 +129,10 @@ fversion(FILE* f)
 #ifdef USE_SYSMOUSE
         ",sysmouse"
 #endif
-#endif
         ",menu"
-#ifdef USE_COOKIE
         ",cookie"
-#endif
         ",ssl"
-#ifdef USE_SSL_VERIFY
         ",ssl-verify"
-#endif
 #ifdef USE_EXTERNAL_URI_LOADER
         ",external-uri-loader"
 #endif
@@ -156,12 +141,8 @@ fversion(FILE* f)
 #endif
         ",nntp"
         ",gopher"
-#ifdef INET6
         ",ipv6"
-#endif
-#ifdef USE_ALARM
         ",alarm"
-#endif
 #ifdef USE_MARK
         ",mark"
 #endif
@@ -215,18 +196,12 @@ fusage(FILE* f, int err)
     fprintf(f, "    +<num>           goto <num> line\n");
     fprintf(f, "    -num             show line number\n");
     fprintf(f, "    -no-proxy        don't use proxy\n");
-#ifdef INET6
     fprintf(f, "    -4               IPv4 only (-o dns_order=4)\n");
     fprintf(f, "    -6               IPv6 only (-o dns_order=6)\n");
-#endif
     fprintf(f, "    -insecure        use insecure SSL config options\n");
-#ifdef USE_MOUSE
     fprintf(f, "    -no-mouse        don't use mouse\n");
-#endif /* USE_MOUSE */
-#ifdef USE_COOKIE
     fprintf(f,
         "    -cookie          use cookie (-no-cookie: don't use cookie)\n");
-#endif /* USE_COOKIE */
     fprintf(f, "    -graph           use DEC special graphics for border of table and menu\n");
     fprintf(f, "    -no-graph        use ASCII character for border of table and menu\n");
 #if 1 /* pager requires -s */
@@ -249,7 +224,6 @@ fusage(FILE* f, int err)
         show_params(f);
     exit(err);
 }
-
 
 static GC_warn_proc orig_GC_warn_proc = NULL;
 #define GC_WARN_KEEP_MAX (20)
@@ -296,7 +270,6 @@ wrap_GC_warn_proc(char* msg, GC_word arg)
         fprintf(stderr, msg, (unsigned long)arg);
 }
 
-#ifdef SIGCHLD
 static void
 sig_chld(int signo)
 {
@@ -325,7 +298,6 @@ sig_chld(int signo)
     mySignal(SIGCHLD, sig_chld);
     return;
 }
-#endif
 
 static Str
 make_optional_header_string(char* s)
@@ -492,8 +464,7 @@ int w3m_main(int argc, char** argv)
                     usage();
                 if (atoi(argv[i]) > 0)
                     PagerMax = atoi(argv[i]);
-            }
-            else if (!strncmp("-I", argv[i], 2)) {
+            } else if (!strncmp("-I", argv[i], 2)) {
                 if (argv[i][2] != '\0')
                     p = argv[i] + 2;
                 else {
@@ -513,8 +484,7 @@ int w3m_main(int argc, char** argv)
                     p = argv[i];
                 }
                 DisplayCharset = wc_guess_charset_short(p, DisplayCharset);
-            }
-            else if (!strcmp("-graph", argv[i]))
+            } else if (!strcmp("-graph", argv[i]))
                 UseGraphicChar = GRAPHIC_CHAR_DEC;
             else if (!strcmp("-no-graph", argv[i]))
                 UseGraphicChar = GRAPHIC_CHAR_ASCII;
@@ -593,8 +563,7 @@ int w3m_main(int argc, char** argv)
                     pixel_per_char = ppc;
                     set_pixel_per_char = TRUE;
                 }
-            }
-            else if (!strcmp("-ppl", argv[i])) {
+            } else if (!strcmp("-ppl", argv[i])) {
                 double ppc;
                 if (++i >= argc)
                     usage();
@@ -603,8 +572,7 @@ int w3m_main(int argc, char** argv)
                     pixel_per_line = ppc;
                     set_pixel_per_line = TRUE;
                 }
-            }
-            else if (!strcmp("-ri", argv[i])) {
+            } else if (!strcmp("-ri", argv[i])) {
                 enable_inline_image = INLINE_IMG_OSC5379;
             } else if (!strcmp("-sixel", argv[i])) {
                 enable_inline_image = INLINE_IMG_SIXEL;
@@ -612,10 +580,8 @@ int w3m_main(int argc, char** argv)
                 showLineNum = TRUE;
             else if (!strcmp("-no-proxy", argv[i]))
                 use_proxy = FALSE;
-#ifdef INET6
             else if (!strcmp("-4", argv[i]) || !strcmp("-6", argv[i]))
                 set_param_option(Sprintf("dns_order=%c", argv[i][1])->ptr);
-#endif
             else if (!strcmp("-post", argv[i])) {
                 if (++i >= argc)
                     usage();
@@ -634,26 +600,15 @@ int w3m_main(int argc, char** argv)
                     argv[i][0] = '\0';
                     argv[i]++;
                 }
-            }
-#ifdef USE_MOUSE
-            else if (!strcmp("-no-mouse", argv[i])) {
+            } else if (!strcmp("-no-mouse", argv[i])) {
                 use_mouse = FALSE;
-            }
-#endif /* USE_MOUSE */
-#ifdef USE_COOKIE
-            else if (!strcmp("-no-cookie", argv[i])) {
+            } else if (!strcmp("-no-cookie", argv[i])) {
                 use_cookie = FALSE;
                 accept_cookie = FALSE;
             } else if (!strcmp("-cookie", argv[i])) {
                 use_cookie = TRUE;
                 accept_cookie = TRUE;
-            }
-#endif /* USE_COOKIE */
-#if 1 /* pager requires -s */
-            else if (!strcmp("-s", argv[i]))
-#else
-            else if (!strcmp("-S", argv[i]))
-#endif
+            } else if (!strcmp("-s", argv[i]))
                 squeezeBlankLine = TRUE;
             else if (!strcmp("-X", argv[i]))
                 Do_not_use_ti_te = TRUE;
@@ -662,20 +617,11 @@ int w3m_main(int argc, char** argv)
             else if (!strncmp("-title=", argv[i], 7))
                 displayTitleTerm = argv[i] + 7;
             else if (!strcmp("-insecure", argv[i])) {
-#ifdef OPENSSL_TLS_SECURITY_LEVEL
-                set_param_option("ssl_cipher=ALL:eNULL:@SECLEVEL=0");
-#else
                 set_param_option("ssl_cipher=ALL:eNULL");
-#endif
-#ifdef SSL_CTX_set_min_proto_version
                 set_param_option("ssl_min_version=all");
-#endif
                 set_param_option("ssl_forbid_method=");
-#ifdef USE_SSL_VERIFY
                 set_param_option("ssl_verify_server=0");
-#endif
-            }
-            else if (!strcmp("-o", argv[i]) || !strcmp("-show-option", argv[i])) {
+            } else if (!strcmp("-o", argv[i]) || !strcmp("-show-option", argv[i])) {
                 if (!strcmp("-show-option", argv[i]) || ++i >= argc || !strcmp(argv[i], "?")) {
                     show_params(stdout);
                     exit(0);
@@ -694,15 +640,6 @@ int w3m_main(int argc, char** argv)
             } else if (!strcmp("-reqlog", argv[i])) {
                 w3m_reqlog = rcFile("request.log");
             }
-#if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
-            else if (!strcmp("-$$getimage", argv[i])) {
-                ++i;
-                getimage_args = argv + i;
-                i += 4;
-                if (i > argc)
-                    usage();
-            }
-#endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
             else {
                 usage();
             }
@@ -713,8 +650,6 @@ int w3m_main(int argc, char** argv)
         }
         i++;
     }
-
-
 
     FirstTab = NULL;
     LastTab = NULL;
@@ -733,29 +668,16 @@ int w3m_main(int argc, char** argv)
             COLS = DEFAULT_COLS;
     }
 
-#ifdef USE_BINMODE_STREAM
-    setmode(fileno(stdout), O_BINARY);
-#endif
     if (!w3m_dump && !w3m_backend) {
         fmInit();
-#ifdef SIGWINCH
         mySignal(SIGWINCH, resize_hook);
-#else /* not SIGWINCH */
-        setlinescols();
-        setupscreen();
-#endif /* not SIGWINCH */
-    }
-    else if (w3m_halfdump && displayImage)
+    } else if (w3m_halfdump && displayImage)
         activeImage = TRUE;
 
     sync_with_option();
-#ifdef USE_COOKIE
     initCookie();
-#endif /* USE_COOKIE */
-#ifdef USE_HISTORY
     if (UseHistory)
         loadHistory(URLHist);
-#endif /* not USE_HISTORY */
 
     /*  if (w3m_dump)
      *    WcOption.pre_conv = WC_TRUE;
@@ -763,45 +685,13 @@ int w3m_main(int argc, char** argv)
 
     if (w3m_backend)
         backend();
-#if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
-    if (getimage_args) {
-        char* image_url = conv_from_system(getimage_args[0]);
-        char* base_url = conv_from_system(getimage_args[1]);
-        ParsedURL base_pu;
-
-        parseURL2(base_url, &base_pu, NULL);
-        image_source = getimage_args[2];
-        newbuf = loadGeneralFile(image_url, &base_pu, NULL, 0, NULL);
-        if (!newbuf || !newbuf->real_type || strncasecmp(newbuf->real_type, "image/", 6))
-            unlink(getimage_args[2]);
-#if defined(HAVE_SYMLINK) && defined(HAVE_LSTAT)
-        symlink(getimage_args[2], getimage_args[3]);
-#else
-        {
-            FILE* f = fopen(getimage_args[3], "w");
-            if (f)
-                fclose(f);
-        }
-#endif
-        w3m_exit(0);
-    }
-#endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
-
     if (w3m_dump)
         mySignal(SIGINT, SIG_IGN);
-#ifdef SIGCHLD
     mySignal(SIGCHLD, sig_chld);
-#endif
-#ifdef SIGPIPE
     mySignal(SIGPIPE, SigPipe);
-#endif
 
-#if (GC_VERSION_MAJOR > 7) || ((GC_VERSION_MAJOR == 7) && (GC_VERSION_MINOR >= 2))
     orig_GC_warn_proc = GC_get_warn_proc();
     GC_set_warn_proc(wrap_GC_warn_proc);
-#else
-    orig_GC_warn_proc = GC_set_warn_proc(wrap_GC_warn_proc);
-#endif
     err_msg = Strnew();
     if (load_argc == 0) {
         /* no URL specified */
@@ -943,17 +833,13 @@ int w3m_main(int argc, char** argv)
             do_dump(Currentbuf);
         else {
             Currentbuf = newbuf;
-#ifdef USE_BUFINFO
             saveBufferInfo();
-#endif
         }
     }
     if (w3m_dump) {
         if (err_msg->length)
             fprintf(stderr, "%s", err_msg->ptr);
-#ifdef USE_COOKIE
         save_cookies();
-#endif /* USE_COOKIE */
         w3m_exit(0);
     }
 
@@ -984,9 +870,7 @@ int w3m_main(int argc, char** argv)
         if (err_msg->length)
             fprintf(stderr, "%s", err_msg->ptr);
         if (newbuf == NO_BUFFER) {
-#ifdef USE_COOKIE
             save_cookies();
-#endif /* USE_COOKIE */
             if (!err_msg->length)
                 w3m_exit(0);
         }
@@ -1029,7 +913,6 @@ int w3m_main(int argc, char** argv)
             continue;
         }
         /* get keypress event */
-#ifdef USE_ALARM
         if (Currentbuf->event) {
             if (Currentbuf->event->status != AL_UNSET) {
                 CurrentAlarm = Currentbuf->event;
@@ -1047,52 +930,35 @@ int w3m_main(int argc, char** argv)
         }
         if (!Currentbuf->event)
             CurrentAlarm = &DefaultAlarm;
-#endif
-#ifdef USE_MOUSE
         mouse_action.in_action = FALSE;
         if (use_mouse)
             mouse_active();
-#endif /* USE_MOUSE */
-#ifdef USE_ALARM
         if (CurrentAlarm->sec > 0) {
             mySignal(SIGALRM, SigAlarm);
             alarm(CurrentAlarm->sec);
         }
-#endif
-#ifdef SIGWINCH
         mySignal(SIGWINCH, resize_hook);
-#endif
         if (activeImage && displayImage && Currentbuf->img && !Currentbuf->image_loaded) {
             do {
-#ifdef SIGWINCH
                 if (need_resize_screen)
                     resize_screen();
-#endif
                 loadImage(Currentbuf, IMG_FLAG_NEXT);
             } while (sleep_till_anykey(1, 0) <= 0);
         }
-#ifdef SIGWINCH
         else
-#endif
-#ifdef SIGWINCH
         {
             do {
                 if (need_resize_screen)
                     resize_screen();
             } while (sleep_till_anykey(1, 0) <= 0);
         }
-#endif
         c = getch();
         last_key = c;
-#ifdef USE_ALARM
         if (CurrentAlarm->sec > 0) {
             alarm(0);
         }
-#endif
-#ifdef USE_MOUSE
         if (use_mouse)
             mouse_inactive();
-#endif /* USE_MOUSE */
         if (IS_ASCII(c)) { /* Ascii */
             if (('0' <= c) && (c <= '9') && (prec_num || (GlobalKeymap[c] == FUNCNAME_nulcmd))) {
                 prec_num = prec_num * 10 + (int)(c - '0');
@@ -1330,7 +1196,6 @@ void tmpClearBuffer(Buffer* buf)
 
 static Str currentURL(void);
 
-#ifdef USE_BUFINFO
 void saveBufferInfo()
 {
     FILE* fp;
@@ -1343,7 +1208,6 @@ void saveBufferInfo()
     fprintf(fp, "%s\n", currentURL()->ptr);
     fclose(fp);
 }
-#endif
 
 static void
 pushBuffer(Buffer* buf)
@@ -1361,9 +1225,7 @@ pushBuffer(Buffer* buf)
         buf->nextBuffer = Currentbuf;
         Currentbuf = buf;
     }
-#ifdef USE_BUFINFO
     saveBufferInfo();
-#endif
 }
 
 static void
@@ -1385,13 +1247,11 @@ repBuffer(Buffer* oldbuf, Buffer* buf)
     Currentbuf = buf;
 }
 
-void
-intTrap(SIGNAL_ARG)
+void intTrap(SIGNAL_ARG)
 { /* Interrupt catcher */
     LONGJMP(IntReturn, 0);
 }
 
-#ifdef SIGWINCH
 static void
 resize_hook(SIGNAL_ARG)
 {
@@ -1408,9 +1268,7 @@ resize_screen(void)
     if (CurrentTab)
         displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
-#endif /* SIGWINCH */
 
-#ifdef SIGPIPE
 static void
 SigPipe(SIGNAL_ARG)
 {
@@ -1419,7 +1277,6 @@ SigPipe(SIGNAL_ARG)
 #endif
     mySignal(SIGPIPE, SigPipe);
 }
-#endif
 
 /*
  * Command functions: These functions are called with a keystroke.
@@ -1522,7 +1379,7 @@ DEFUN(ctrCsrV, CENTER_V, "Center on cursor line")
     int offsety;
     if (Currentbuf->firstLine == NULL)
         return;
-    offsety = /*Currentbuf->LINES / 2*/ - Currentbuf->cursorY;
+    offsety = /*Currentbuf->LINES / 2*/ -Currentbuf->cursorY;
     if (offsety != 0) {
         Currentbuf->topLine = lineSkip(Currentbuf, Currentbuf->topLine, -offsety, FALSE);
         arrangeLine(Currentbuf);
@@ -2352,13 +2209,9 @@ _quitfm(int confirm)
     if (activeImage)
         termImage();
     fmTerm();
-#ifdef USE_COOKIE
     save_cookies();
-#endif /* USE_COOKIE */
-#ifdef USE_HISTORY
     if (UseHistory && SaveURLHist)
         saveHistory(URLHist, URLHistSize);
-#endif /* USE_HISTORY */
     w3m_exit(0);
 }
 
@@ -4041,8 +3894,7 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
     FormList* request;
 
     tmp = Sprintf("mode=panel&cookie=%s&bmark=%s&url=%s&title=%s"
-                  "&charset=%s"
-        ,
+                  "&charset=%s",
         (Str_form_quote(localCookie()))->ptr,
         (Str_form_quote(Strnew_charp(BookmarkFile)))->ptr,
         (Str_form_quote(parsedURL2Str(&Currentbuf->currentURL)))->ptr,
@@ -4225,7 +4077,6 @@ DEFUN(linkLst, LIST, "Show all URLs referenced")
     }
 }
 
-#ifdef USE_COOKIE
 /* cookie list */
 DEFUN(cooLst, COOKIE, "View cookie list")
 {
@@ -4235,15 +4086,12 @@ DEFUN(cooLst, COOKIE, "View cookie list")
     if (buf != NULL)
         cmd_loadBuffer(buf, BP_NO_URL, LB_NOLINK);
 }
-#endif /* USE_COOKIE */
 
-#ifdef USE_HISTORY
 /* History page */
 DEFUN(ldHist, HISTORY, "Show browsing history")
 {
     cmd_loadBuffer(historyBuffer(URLHist), BP_NO_URL, LB_NOLINK);
 }
-#endif /* USE_HISTORY */
 
 /* download HREF link */
 DEFUN(svA, SAVE_LINK, "Save hyperlink target")
@@ -4706,10 +4554,8 @@ void chkURLBuffer(Buffer* buf)
 #ifndef USE_W3MMAILER /* see also chkExternalURIBuffer() */
         "mailto:[^<> 	][^<> 	]*@[a-zA-Z0-9][a-zA-Z0-9\\-\\._]*[a-zA-Z0-9]",
 #endif
-#ifdef INET6
         "https?://[a-zA-Z0-9:%\\-\\./_@]*\\[[a-fA-F0-9:][a-fA-F0-9:\\.]*\\][a-zA-Z0-9:%\\-\\./?=~_\\&+@#,\\$;]*",
         "ftp://[a-zA-Z0-9:%\\-\\./_@]*\\[[a-fA-F0-9:][a-fA-F0-9:\\.]*\\][a-zA-Z0-9:%\\-\\./=_+@#,\\$]*",
-#endif /* INET6 */
         NULL
     };
     int i;
@@ -4947,8 +4793,6 @@ DEFUN(stopI, STOP_IMAGE, "Stop loading and drawing of images")
     displayBuffer(Currentbuf, B_REDRAW_IMAGE);
 }
 
-#ifdef USE_MOUSE
-
 static int
 mouse_scroll_line(void)
 {
@@ -5008,9 +4852,7 @@ do_mouse_action(int btn, int x, int y)
                 map = &mouse_action.lastline_map[btn][x];
         }
     } else if (y > ny) {
-        if (y == Currentbuf->cursorY + Currentbuf->rootY && (x == Currentbuf->cursorX + Currentbuf->rootX
-                || (WcOption.use_wide && Currentbuf->currentLine != NULL && (CharType(Currentbuf->currentLine->propBuf[Currentbuf->pos]) == PC_KANJI1) && x == Currentbuf->cursorX + Currentbuf->rootX + 1)
-                    )) {
+        if (y == Currentbuf->cursorY + Currentbuf->rootY && (x == Currentbuf->cursorX + Currentbuf->rootX || (WcOption.use_wide && Currentbuf->currentLine != NULL && (CharType(Currentbuf->currentLine->propBuf[Currentbuf->pos]) == PC_KANJI1) && x == Currentbuf->cursorX + Currentbuf->rootX + 1))) {
             if (retrieveCurrentAnchor(Currentbuf) || retrieveCurrentForm(Currentbuf)) {
                 map = &mouse_action.active_map[btn];
                 if (!(map && map->func))
@@ -5019,9 +4861,7 @@ do_mouse_action(int btn, int x, int y)
         } else {
             int cx = Currentbuf->cursorX, cy = Currentbuf->cursorY;
             cursorXY(Currentbuf, x - Currentbuf->rootX, y - Currentbuf->rootY);
-            if (y == Currentbuf->cursorY + Currentbuf->rootY && (x == Currentbuf->cursorX + Currentbuf->rootX
-                    || (WcOption.use_wide && Currentbuf->currentLine != NULL && (CharType(Currentbuf->currentLine->propBuf[Currentbuf->pos]) == PC_KANJI1) && x == Currentbuf->cursorX + Currentbuf->rootX + 1)
-                        )
+            if (y == Currentbuf->cursorY + Currentbuf->rootY && (x == Currentbuf->cursorX + Currentbuf->rootX || (WcOption.use_wide && Currentbuf->currentLine != NULL && (CharType(Currentbuf->currentLine->propBuf[Currentbuf->pos]) == PC_KANJI1) && x == Currentbuf->cursorX + Currentbuf->rootX + 1))
                 && (retrieveCurrentAnchor(Currentbuf) || retrieveCurrentForm(Currentbuf)))
                 map = &mouse_action.anchor_map[btn];
             cursorXY(Currentbuf, cx, cy);
@@ -5074,9 +4914,7 @@ process_mouse(int btn, int x, int y)
                         t = NULL; /* open new tab */
                     cursorXY(Currentbuf, press_x - Currentbuf->rootX,
                         press_y - Currentbuf->rootY);
-                    if (Currentbuf->cursorY == press_y - Currentbuf->rootY && (Currentbuf->cursorX == press_x - Currentbuf->rootX
-                            || (WcOption.use_wide && Currentbuf->currentLine != NULL && (CharType(Currentbuf->currentLine->propBuf[Currentbuf->pos]) == PC_KANJI1) && Currentbuf->cursorX == press_x - Currentbuf->rootX - 1)
-                                )) {
+                    if (Currentbuf->cursorY == press_y - Currentbuf->rootY && (Currentbuf->cursorX == press_x - Currentbuf->rootX || (WcOption.use_wide && Currentbuf->currentLine != NULL && (CharType(Currentbuf->currentLine->propBuf[Currentbuf->pos]) == PC_KANJI1) && Currentbuf->cursorX == press_x - Currentbuf->rootX - 1))) {
                         displayBuffer(Currentbuf, B_NORMAL);
                         followTab(t);
                     }
@@ -5339,7 +5177,6 @@ DEFUN(closeTMs, CLOSE_TAB_MOUSE, "Close tab at mouse pointer")
     deleteTab(tab);
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
-#endif /* USE_MOUSE */
 
 DEFUN(dispVer, VERSION, "Display the version of w3m")
 {
@@ -5532,7 +5369,6 @@ searchKeyNum(void)
     return n * PREC_NUM;
 }
 
-
 void deleteFiles()
 {
     Buffer* buf;
@@ -5604,21 +5440,16 @@ DEFUN(execCmd, COMMAND, "Invoke w3m function(s)")
         CurrentKey = -1;
         CurrentKeyData = NULL;
         CurrentCmdData = *p ? p : NULL;
-#ifdef USE_MOUSE
         if (use_mouse)
             mouse_inactive();
-#endif
         w3mFuncList[cmd].func();
-#ifdef USE_MOUSE
         if (use_mouse)
             mouse_active();
-#endif
         CurrentCmdData = NULL;
     }
     displayBuffer(Currentbuf, B_NORMAL);
 }
 
-#ifdef USE_ALARM
 static void
 SigAlarm(SIGNAL_ARG)
 {
@@ -5628,15 +5459,11 @@ SigAlarm(SIGNAL_ARG)
         CurrentKey = -1;
         CurrentKeyData = NULL;
         CurrentCmdData = data = (char*)CurrentAlarm->data;
-#ifdef USE_MOUSE
         if (use_mouse)
             mouse_inactive();
-#endif
         w3mFuncList[CurrentAlarm->cmd].func();
-#ifdef USE_MOUSE
         if (use_mouse)
             mouse_active();
-#endif
         CurrentCmdData = NULL;
         if (CurrentAlarm->status == AL_IMPLICIT_ONCE) {
             CurrentAlarm->sec = 0;
@@ -5700,7 +5527,6 @@ setAlarmEvent(AlarmEvent* event, int sec, short status, int cmd, void* data)
     event->data = data;
     return event;
 }
-#endif
 
 DEFUN(reinit, REINIT, "Reload configuration file")
 {
@@ -5709,9 +5535,7 @@ DEFUN(reinit, REINIT, "Reload configuration file")
     if (resource == NULL) {
         init_rc();
         sync_with_option();
-#ifdef USE_COOKIE
         initCookie();
-#endif
         displayBuffer(Currentbuf, B_REDRAW_IMAGE);
         return;
     }
@@ -5723,12 +5547,10 @@ DEFUN(reinit, REINIT, "Reload configuration file")
         return;
     }
 
-#ifdef USE_COOKIE
     if (!strcasecmp(resource, "COOKIE")) {
         initCookie();
         return;
     }
-#endif
 
     if (!strcasecmp(resource, "KEYMAP")) {
         initKeymap(TRUE);
@@ -5740,13 +5562,11 @@ DEFUN(reinit, REINIT, "Reload configuration file")
         return;
     }
 
-#ifdef USE_MOUSE
     if (!strcasecmp(resource, "MOUSE")) {
         initMouseAction();
         displayBuffer(Currentbuf, B_REDRAW_IMAGE);
         return;
     }
-#endif
 
     if (!strcasecmp(resource, "MENU")) {
         initMenu();
@@ -5858,9 +5678,7 @@ void calcTabPos(void)
     int lcol = 0, rcol = 0, col;
     int n1, n2, na, nx, ny, ix, iy;
 
-#ifdef USE_MOUSE
     lcol = mouse_action.menu_str ? mouse_action.menu_width : 0;
-#endif
 
     if (nTab <= 0)
         return;
@@ -6322,9 +6140,7 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
 {
     Buffer* buf;
     int replace = FALSE, new_tab = FALSE;
-#ifdef USE_ALARM
     int reload;
-#endif
 
     if (Currentbuf->bufferprop & BP_INTERNAL && !strcmp(Currentbuf->buffername, DOWNLOAD_LIST_TITLE))
         replace = TRUE;
@@ -6339,9 +6155,7 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
         }
         return;
     }
-#ifdef USE_ALARM
     reload = checkDownloadList();
-#endif
     buf = DownloadListBuffer();
     if (!buf) {
         displayBuffer(Currentbuf, B_NORMAL);
@@ -6359,11 +6173,9 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
     pushBuffer(buf);
     if (replace || new_tab)
         deletePrevBuf();
-#ifdef USE_ALARM
     if (reload)
         Currentbuf->event = setAlarmEvent(Currentbuf->event, 1, AL_IMPLICIT,
             FUNCNAME_reload, NULL);
-#endif
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
