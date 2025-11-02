@@ -31,6 +31,24 @@ fn allocStrBuf(_size: usize) []u8 {
     return buf;
 }
 
+fn allocStrBufFrom_charp_n(p: [*c]const u8, len: c_int) []u8 {
+    const p_len = std.mem.len(p);
+    if (len < 0) {
+        const buf = allocStrBuf(p_len + 1);
+        std.mem.copyForwards(u8, buf, p[0..p_len]);
+        buf[p_len] = 0;
+        return buf;
+    } else {
+        const size: usize = @intCast(len);
+        const buf = allocStrBuf(size + 1);
+        const ptr: [*]const u8 = @ptrCast(p);
+        const copy_len = @min(p_len, size);
+        std.mem.copyForwards(u8, buf[0..copy_len], ptr[0..copy_len]);
+        buf[copy_len] = 0;
+        return buf;
+    }
+}
+
 fn createStr(
     buf: []u8,
 ) c.Str {
@@ -75,6 +93,33 @@ test Strnew_size {
         const x = Strnew_size(@divTrunc(std.math.maxInt(c_int), 32) + 256);
         try std.testing.expectEqualSlices(u8, "", std.mem.sliceTo(x.*.ptr, 0));
         try std.testing.expectEqual(0, x.*.length);
+        try std.testing.expectEqual(c.STR_SIZE_MAX, x.*.area_size);
+    }
+}
+
+export fn Strnew_charp_n(_p: [*c]const u8, len: c_int) c.Str {
+    const p = _p orelse return Strnew();
+    const buf = allocStrBufFrom_charp_n(p, len);
+    return createStr(buf);
+}
+test Strnew_charp_n {
+    {
+        const x = Strnew_charp_n("abc", 3);
+        try std.testing.expectEqualSlices(u8, "abc", std.mem.sliceTo(x.*.ptr, 0));
+        try std.testing.expectEqual(3, x.*.length);
+        try std.testing.expectEqual(c.INITIALStr_SIZE, x.*.area_size);
+    }
+    {
+        const x = Strnew_charp_n("abc", 2);
+        try std.testing.expectEqualSlices(u8, "ab", std.mem.sliceTo(x.*.ptr, 0));
+        try std.testing.expectEqual(2, x.*.length);
+        try std.testing.expectEqual(c.INITIALStr_SIZE, x.*.area_size);
+    }
+    {
+        // INT_MAX / 32
+        const x = Strnew_charp_n("abc", @divTrunc(std.math.maxInt(c_int), 32) + 256);
+        try std.testing.expectEqualSlices(u8, "abc", std.mem.sliceTo(x.*.ptr, 0));
+        try std.testing.expectEqual(3, x.*.length);
         try std.testing.expectEqual(c.STR_SIZE_MAX, x.*.area_size);
     }
 }

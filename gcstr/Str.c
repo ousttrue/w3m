@@ -32,31 +32,6 @@
 #define STR_LENGTH_CHECK(x)
 #endif /* not STR_DEBUG */
 
-Str Strnew_charp_n(const char* p, int n)
-{
-    Str x;
-    int len;
-
-    if (p == NULL)
-        return Strnew_size(n);
-    x = GC_MALLOC(sizeof(struct _Str));
-    if (x == NULL)
-        exit(1);
-    if (n < 0 || n >= STR_SIZE_MAX)
-        n = STR_SIZE_MAX - 1;
-    len = n;
-    if (n + 1 < INITIALStr_SIZE)
-        n = INITIALStr_SIZE - 1;
-    x->ptr = GC_MALLOC_ATOMIC(n + 1);
-    if (x->ptr == NULL)
-        exit(1);
-    x->area_size = n + 1;
-    x->length = len;
-    bcopy((void*)p, (void*)x->ptr, len);
-    x->ptr[x->length] = '\0';
-    return x;
-}
-
 Str Strdup(Str s)
 {
     Str n = Strnew_size(s->length);
