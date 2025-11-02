@@ -35,17 +35,12 @@
 #define SP_PREC 1
 #define SP_PREC2 2
 
-Str Sprintf(char* fmt, ...)
+int vscpf(const char* fmt, va_list ap)
 {
     int len = 0;
     int status = SP_NORMAL;
     int p = 0;
-    char* f;
-    Str s;
-    va_list ap;
-
-    va_start(ap, fmt);
-    for (f = fmt; *f; f++) {
+    for (const char* f = fmt; *f; f++) {
     redo:
         switch (status) {
         case SP_NORMAL:
@@ -119,17 +114,8 @@ Str Sprintf(char* fmt, ...)
             break;
         }
     }
-    va_end(ap);
-    s = Strnew_size(len * 2);
-    va_start(ap, fmt);
-    vsprintf(s->ptr, fmt, ap);
-    va_end(ap);
-    s->length = strlen(s->ptr);
-    if (s->length > len * 2) {
-        fprintf(stderr, "Sprintf: string too long\n");
-        exit(1);
-    }
-    return s;
+
+    return len;
 }
 
 Str Strfgets(FILE* f)

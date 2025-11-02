@@ -622,3 +622,27 @@ export fn Stralign_center(s: c.Str, width: usize) c.Str {
     }
     return n;
 }
+
+export fn Sprintf(fmt: [*c]const u8, ...) c.Str {
+    const len = blk: {
+        var ap = @cVaStart();
+        defer @cVaEnd(&ap);
+        break :blk c.vscpf(fmt, @ptrCast(&ap));
+    };
+
+    {
+        const s = Strnew_size(len * 2);
+        var ap = @cVaStart();
+        defer @cVaEnd(&ap);
+        _ = c.vsprintf(s.*.ptr, fmt, @ptrCast(&ap));
+        s.*.length = std.mem.len(s.*.ptr);
+        if (s.*.length > len * 2) {
+            @panic("Sprintf: string too long");
+        }
+        return s;
+    }
+}
+test Sprintf {
+    const x = Sprintf("%d => hello %s", @as(c_int, 10), "world");
+    try std.testing.expectEqualSlices(u8, "10 => hello world", Strslice(x));
+}
