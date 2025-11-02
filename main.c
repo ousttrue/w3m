@@ -1,6 +1,7 @@
 /* $Id: main.c,v 1.270 2010/08/24 10:11:51 htrb Exp $ */
 #define MAINPROGRAM
 #include "fm.h"
+#include "AlarmEvent.h"
 #include "indep.h"
 #include <stdio.h>
 #include <signal.h>
@@ -52,10 +53,6 @@ typedef struct _Event {
 static Event* CurrentEvent = NULL;
 static Event* LastEvent = NULL;
 
-static AlarmEvent DefaultAlarm = {
-    0, AL_UNSET, FUNCNAME_nulcmd, NULL
-};
-static AlarmEvent* CurrentAlarm = &DefaultAlarm;
 static void SigAlarm(SIGNAL_ARG);
 
 static int need_resize_screen = FALSE;
@@ -871,7 +868,7 @@ int w3m_main(int argc, char** argv)
                 Currentbuf->event = NULL;
         }
         if (!Currentbuf->event)
-            CurrentAlarm = &DefaultAlarm;
+            setAlarmEventDefault();
         mouse_action.in_action = FALSE;
         if (use_mouse)
             mouse_active();
@@ -5416,7 +5413,7 @@ SigAlarm(SIGNAL_ARG)
                 Currentbuf->event = NULL;
         }
         if (!Currentbuf->event)
-            CurrentAlarm = &DefaultAlarm;
+            setAlarmEventDefault();
         if (CurrentAlarm->sec > 0) {
             mySignal(SIGALRM, SigAlarm);
             alarm(CurrentAlarm->sec);
@@ -5445,27 +5442,15 @@ DEFUN(setAlarm, ALARM, "Set alarm")
     }
     if (cmd >= 0) {
         data = getQWord(&data);
-        setAlarmEvent(&DefaultAlarm, sec, AL_EXPLICIT, cmd, data);
+        setAlarmEvent(0, sec, AL_EXPLICIT, cmd, data);
         disp_message_nsec(Sprintf("%dsec %s %s", sec, w3mFuncList[cmd].id,
                               data)
                               ->ptr,
             FALSE, 1, FALSE, TRUE);
     } else {
-        setAlarmEvent(&DefaultAlarm, 0, AL_UNSET, FUNCNAME_nulcmd, NULL);
+        setAlarmEvent(0, 0, AL_UNSET, FUNCNAME_nulcmd, NULL);
     }
     displayBuffer(Currentbuf, B_NORMAL);
-}
-
-AlarmEvent*
-setAlarmEvent(AlarmEvent* event, int sec, short status, int cmd, void* data)
-{
-    if (event == NULL)
-        event = New(AlarmEvent);
-    event->sec = sec;
-    event->status = status;
-    event->cmd = cmd;
-    event->data = data;
-    return event;
 }
 
 DEFUN(reinit, REINIT, "Reload configuration file")

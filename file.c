@@ -2,6 +2,7 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "display.h"
 #include "fm.h"
+#include "AlarmEvent.h"
 #include "indep.h"
 #include <sys/types.h>
 #include <gcstr/myctype.h>
@@ -5737,12 +5738,12 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                         if (tmp) {
                             p = url_encode(remove_space(tmp->ptr), base,
                                 buf->document_charset);
-                            buf->event = setAlarmEvent(buf->event,
+                            buf->event = setAlarmEvent(buf,
                                 refresh_interval,
                                 AL_IMPLICIT_ONCE,
                                 FUNCNAME_gorURL, p);
                         } else if (refresh_interval > 0)
-                            buf->event = setAlarmEvent(buf->event,
+                            buf->event = setAlarmEvent(buf,
                                 refresh_interval,
                                 AL_IMPLICIT,
                                 FUNCNAME_reload, NULL);

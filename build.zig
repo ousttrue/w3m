@@ -6,6 +6,7 @@ const system_libs = [_][]const u8{
 };
 
 const w3m_srcs = [_][]const u8{
+    "AlarmEvent.c",
     "keybind.c",
     "util.c",
 
