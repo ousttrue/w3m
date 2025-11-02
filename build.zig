@@ -127,6 +127,11 @@ pub fn build(b: *std.Build) void {
     const gcstr = build_gcstr(b, target, optimize);
     exe.linkLibrary(gcstr);
 
+    const test_exe = b.addTest(.{
+        .root_module = gcstr.root_module,
+    });
+    b.step("test", "gcstr test").dependOn(&b.addRunArtifact(test_exe).step);
+
     const flags = [_][]const u8{
         "-Wno-implicit-int",
         "-Wno-int-conversion",

@@ -5,6 +5,7 @@ const c = @cImport({
 });
 const GcAllocator = @import("GcAllocator.zig");
 
+/// use GC_MALLOC_ATOMIC
 export fn allocStr(_s: [*c]const u8, _len: c_int) [*c]u8 {
     const s = _s orelse return null;
 
@@ -19,18 +20,10 @@ export fn allocStr(_s: [*c]const u8, _len: c_int) [*c]u8 {
     return ptr;
 }
 
-fn sizeFromLen(len: c_int) usize {
-    if (len < c.INITIALStr_SIZE) {
-        return c.INITIALStr_SIZE;
-    }
-    if (len >= c.STR_SIZE_MAX) {
-        return c.STR_SIZE_MAX;
-    }
-    return @intCast(len);
-}
-
-fn makeStrBuf(size: usize) []u8 {
-    std.debug.assert(size > 0);
+/// use GC_MALLOC_ATOMIC
+fn allocStrBuf(_size: usize) []u8 {
+    std.debug.assert(_size > 0);
+    const size = @max(@min(_size, c.STR_SIZE_MAX), c.INITIALStr_SIZE);
     const p: [*c]u8 = @ptrCast(c.GC_MALLOC_ATOMIC(size));
     const ptr: [*]u8 = p orelse @panic("OOM");
     const buf = ptr[0..size];
@@ -38,22 +31,79 @@ fn makeStrBuf(size: usize) []u8 {
     return buf;
 }
 
-/// buf must 0 terminated
-fn makeStr(buf: []u8) c.Str {
+fn createStr(
+    buf: []u8,
+) c.Str {
     const allocator = GcAllocator.allocator();
     const x = allocator.create(c._Str) catch @panic("OOM");
     x.* = .{
         .ptr = buf.ptr,
         .area_size = buf.len,
-        .length = std.mem.indexOf(u8, buf, &.{0}) orelse @panic("must 0 terminated"),
+        .length = std.mem.indexOf(u8, buf, &.{0}) orelse 0,
     };
     return x;
 }
 
 export fn Strnew() c.Str {
-    return makeStr(makeStrBuf(c.INITIALStr_SIZE));
+    return createStr(allocStrBuf(c.INITIALStr_SIZE));
+}
+
+test Strnew {
+    const x = Strnew();
+    try std.testing.expectEqualSlices(u8, "", std.mem.sliceTo(x.*.ptr, 0));
+    try std.testing.expectEqual(0, x.*.length);
+    try std.testing.expectEqual(c.INITIALStr_SIZE, x.*.area_size);
 }
 
 export fn Strnew_size(len: c_int) c.Str {
-    return makeStr(makeStrBuf(sizeFromLen(len)));
+    return createStr(allocStrBuf(if (len < 0) 0 else @intCast(len)));
+}
+
+test Strnew_size {
+    {
+        const x = Strnew_size(4);
+        try std.testing.expectEqualSlices(u8, "", std.mem.sliceTo(x.*.ptr, 0));
+        try std.testing.expectEqual(0, x.*.length);
+        try std.testing.expectEqual(c.INITIALStr_SIZE, x.*.area_size);
+    }
+    {
+        const x = Strnew_size(40);
+        try std.testing.expectEqualSlices(u8, "", std.mem.sliceTo(x.*.ptr, 0));
+        try std.testing.expectEqual(0, x.*.length);
+        try std.testing.expectEqual(40, x.*.area_size);
+    }
+    {
+        // INT_MAX / 32
+        const x = Strnew_size(@divTrunc(std.math.maxInt(c_int), 32) + 256);
+        try std.testing.expectEqualSlices(u8, "", std.mem.sliceTo(x.*.ptr, 0));
+        try std.testing.expectEqual(0, x.*.length);
+        try std.testing.expectEqual(c.STR_SIZE_MAX, x.*.area_size);
+    }
+}
+
+export fn Strnew_charp(_p: [*c]const u8) c.Str {
+    const p = _p orelse return Strnew();
+
+    const len = std.mem.len(p);
+    const buf = allocStrBuf(len + 1);
+    const copy_len = @min(len, buf.len - 1);
+    std.mem.copyForwards(u8, buf[0..copy_len], p[0..copy_len]);
+    buf[copy_len] = 0;
+
+    const allocator = GcAllocator.allocator();
+    const x = allocator.create(c._Str) catch @panic("OOM");
+    x.* = .{
+        .ptr = buf.ptr,
+        .area_size = buf.len,
+        .length = copy_len,
+    };
+
+    return x;
+}
+
+test Strnew_charp {
+    const x = Strnew_charp("abc");
+    try std.testing.expectEqualSlices(u8, "abc", std.mem.sliceTo(x.*.ptr, 0));
+    try std.testing.expectEqual(3, x.*.length);
+    try std.testing.expectEqual(c.INITIALStr_SIZE, x.*.area_size);
 }
