@@ -646,3 +646,99 @@ test Sprintf {
     const x = Sprintf("%d => hello %s", @as(c_int, 10), "world");
     try std.testing.expectEqualSlices(u8, "10 => hello world", Strslice(x));
 }
+
+export fn Strfgets(f: *c.FILE) c.Str {
+    const s = Strnew();
+    while (true) {
+        const ch = c.fgetc(f);
+        if (ch == c.EOF) {
+            break;
+        }
+        Strcat_char(s, @intCast(ch));
+        if (ch == '\n') {
+            break;
+        }
+    }
+    return s;
+}
+
+export fn Strfgetall(f: *c.FILE) c.Str {
+    const s = Strnew();
+    while (true) {
+        const ch = c.fgetc(f);
+        if (ch != c.EOF) {
+            break;
+        }
+        Strcat_char(s, @intCast(ch));
+    }
+    return s;
+}
+
+export fn Strcmp(x: c.Str, y: c.Str) c_int {
+    return switch (std.mem.order(u8, std.mem.span(x.*.ptr), std.mem.span(y.*.ptr))) {
+        .gt => 1,
+        .eq => 0,
+        .lt => -1,
+    };
+}
+test Strcmp {
+    const c_import = @cImport({
+        @cInclude("string.h");
+    });
+    const Tmp = struct {
+        fn zigStrcmp(lhs: []const u8, rhs: []const u8) c_int {
+            return switch (std.mem.order(u8, lhs, rhs)) {
+                .gt => 1,
+                .eq => 0,
+                .lt => -1,
+            };
+        }
+    };
+    {
+        const a = "abc";
+        const b = "bcd";
+        try std.testing.expectEqual(c_import.strcmp(a, b), Tmp.zigStrcmp(a, b));
+    }
+    {
+        const b = "abc";
+        const a = "bcd";
+        try std.testing.expectEqual(c_import.strcmp(a, b), Tmp.zigStrcmp(a, b));
+    }
+    {
+        const a = "abc";
+        const b = "abc";
+        try std.testing.expectEqual(c_import.strcmp(a, b), Tmp.zigStrcmp(a, b));
+    }
+}
+export fn Strcmp_charp(x: c.Str, y: [*c]const u8) c_int {
+    return switch (std.mem.order(u8, std.mem.span(x.*.ptr), std.mem.span(y))) {
+        .gt => 1,
+        .eq => 0,
+        .lt => -1,
+    };
+}
+// int Strncmp(Str x, Str y, size_t n) { return strncmp(x.ptr, y.ptr, n); }
+// int Strncmp_charp(Str x, const char* y, size_t n) { return strncmp(x.ptr, y, n); }
+export fn Strcasecmp(x: c.Str, y: c.Str) c_int {
+    return switch (std.ascii.orderIgnoreCase(std.mem.span(x.*.ptr), std.mem.span(y.*.ptr))) {
+        .gt => 1,
+        .eq => 0,
+        .lt => -1,
+    };
+}
+export fn Strcasecmp_charp(x: c.Str, y: [*c]const u8) c_int {
+    return switch (std.ascii.orderIgnoreCase(std.mem.span(x.*.ptr), std.mem.span(y))) {
+        .gt => 1,
+        .eq => 0,
+        .lt => -1,
+    };
+}
+// int Strncasecmp(Str x, Str y, size_t n) { return strncasecmp(x.ptr, y.ptr, n); }
+// int Strncasecmp_charp(Str x, const char* y, size_t n) { return strncasecmp(x.ptr, y, n); }
+
+export fn Strlastchar(s: c.Str) u8 {
+    return if (s.*.length > 0) s.*.ptr[s.*.length - 1] else 0;
+}
+export fn Strfputs(s: c.Str, f: *c.FILE) c_int {
+    return @intCast(c.fwrite(s.*.ptr, 1, s.*.length, f));
+}

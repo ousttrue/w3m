@@ -219,8 +219,8 @@ fn build_gcstr(
     lib.addCSourceFiles(.{
         .root = b.path("gcstr"),
         .files = &.{
+            "gcstr.c",
             "alloc.c",
-            "Str.c",
             "myctype.c",
             "hash.c",
             "hash_mktable.c",

@@ -1,35 +1,5 @@
-/* $Id: Str.c,v 1.8 2002/12/24 17:20:46 ukai Exp $ */
-/*
- * String manipulation library for Boehm GC
- *
- * (C) Copyright 1998-1999 by Akinori Ito
- *
- * This software may be redistributed freely for this purpose, in full
- * or in part, provided that this entire copyright notice is included
- * on any copies of this software and applications and derivations thereof.
- *
- * This software is provided on an "as is" basis, without warranty of any
- * kind, either expressed or implied, as to any matter including, but not
- * limited to warranty of fitness of purpose, or merchantability, or
- * results obtained from use of this software.
- */
-#include "Str.h"
-#include "alloc.h"
-#include <gc.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
+#include "gcstr.h"
 #include <string.h>
-#include "myctype.h"
-
-#ifdef STR_DEBUG
-/* This is obsolete, because "Str" can handle a '\0' character now. */
-#define STR_LENGTH_CHECK(x)                                                       \
-    if (((x)->ptr == 0 && (x)->length != 0) || (strlen((x)->ptr) != (x)->length)) \
-        abort();
-#else /* not STR_DEBUG */
-#define STR_LENGTH_CHECK(x)
-#endif /* not STR_DEBUG */
 
 #define SP_NORMAL 0
 #define SP_PREC 1
@@ -117,37 +87,3 @@ int vscpf(const char* fmt, va_list ap)
 
     return len;
 }
-
-Str Strfgets(FILE* f)
-{
-    Str s = Strnew();
-    int c;
-    while ((c = fgetc(f)) != EOF) {
-        Strcat_char(s, c);
-        if (c == '\n')
-            break;
-    }
-    return s;
-}
-
-Str Strfgetall(FILE* f)
-{
-    Str s = Strnew();
-    int c;
-    while ((c = fgetc(f)) != EOF) {
-        Strcat_char(s, c);
-    }
-    return s;
-}
-
-int Strcmp(Str x, Str y) { return strcmp(x->ptr, y->ptr); }
-int Strcmp_charp(Str x, const char* y) { return strcmp(x->ptr, y); }
-int Strncmp(Str x, Str y, size_t n) { return strncmp(x->ptr, y->ptr, n); }
-int Strncmp_charp(Str x, const char* y, size_t n) { return strncmp(x->ptr, y, n); }
-int Strcasecmp(Str x, Str y) { return strcasecmp(x->ptr, y->ptr); }
-int Strcasecmp_charp(Str x, const char* y) { return strcasecmp(x->ptr, y); }
-int Strncasecmp(Str x, Str y, size_t n) { return strncasecmp(x->ptr, y->ptr, n); }
-int Strncasecmp_charp(Str x, const char* y, size_t n) { return strncasecmp(x->ptr, y, n); }
-
-char Strlastchar(Str s) { return s->length > 0 ? s->ptr[s->length - 1] : '\0'; }
-int Strfputs(Str s, FILE* f) { return fwrite((s)->ptr, 1, (s)->length, (f)); }
