@@ -47,7 +47,6 @@ fn createStr(
 export fn Strnew() c.Str {
     return createStr(allocStrBuf(c.INITIALStr_SIZE));
 }
-
 test Strnew {
     const x = Strnew();
     try std.testing.expectEqualSlices(u8, "", std.mem.sliceTo(x.*.ptr, 0));
@@ -58,7 +57,6 @@ test Strnew {
 export fn Strnew_size(len: c_int) c.Str {
     return createStr(allocStrBuf(if (len < 0) 0 else @intCast(len)));
 }
-
 test Strnew_size {
     {
         const x = Strnew_size(4);
@@ -100,10 +98,92 @@ export fn Strnew_charp(_p: [*c]const u8) c.Str {
 
     return x;
 }
-
 test Strnew_charp {
     const x = Strnew_charp("abc");
     try std.testing.expectEqualSlices(u8, "abc", std.mem.sliceTo(x.*.ptr, 0));
     try std.testing.expectEqual(3, x.*.length);
+    try std.testing.expectEqual(c.INITIALStr_SIZE, x.*.area_size);
+}
+
+export fn Strcat_charp_n(x: c.Str, _y: [*c]const u8, len: c_int) void {
+    const y = _y orelse return;
+    const copy_len: usize = if (len < 0) std.mem.len(y) else @intCast(len);
+    const new_len = x.*.length + copy_len;
+    const buf = if (new_len + 1 > x.*.area_size) blk: {
+        const allocator = GcAllocator.allocator();
+        break :blk allocator.realloc(x.*.ptr[0..x.*.area_size], new_len + 1) catch @panic("OOM");
+    } else x.*.ptr[0..x.*.area_size];
+    std.mem.copyForwards(u8, buf[x.*.length..new_len], y[0..copy_len]);
+    x.* = .{
+        .ptr = buf.ptr,
+        .area_size = buf.len,
+        .length = new_len,
+    };
+    buf[new_len] = 0;
+}
+test Strcat_charp_n {
+    const x = Strnew_charp("abc");
+    Strcat_charp_n(x, "def", 2);
+    try std.testing.expectEqualSlices(u8, "abcde", std.mem.sliceTo(x.*.ptr, 0));
+    try std.testing.expectEqual(5, x.*.length);
+    try std.testing.expectEqual(c.INITIALStr_SIZE, x.*.area_size);
+}
+
+export fn Strcat(x: c.Str, y: c.Str) void {
+    Strcat_charp_n(x, y.*.ptr, @intCast(y.*.length));
+}
+test Strcat {
+    const x = Strnew_charp("abc");
+    Strcat(x, Strnew_charp("de"));
+    try std.testing.expectEqualSlices(u8, "abcde", std.mem.sliceTo(x.*.ptr, 0));
+    try std.testing.expectEqual(5, x.*.length);
+    try std.testing.expectEqual(c.INITIALStr_SIZE, x.*.area_size);
+}
+
+export fn Strcat_charp(x: c.Str, _y: [*c]const u8) void {
+    if (_y) |y| {
+        Strcat_charp_n(x, y, @intCast(std.mem.len(y)));
+    }
+}
+
+test Strcat_charp {
+    const x = Strnew_charp("abc");
+    Strcat_charp(x, "de");
+    try std.testing.expectEqualSlices(u8, "abcde", std.mem.sliceTo(x.*.ptr, 0));
+    try std.testing.expectEqual(5, x.*.length);
+    try std.testing.expectEqual(c.INITIALStr_SIZE, x.*.area_size);
+}
+
+export fn Strcat_m_charp(x: c.Str, ...) void {
+    var ap = @cVaStart();
+    defer @cVaEnd(&ap);
+
+    while (@cVaArg(&ap, [*c]const u8)) |p| {
+        Strcat_charp_n(x, p, @intCast(std.mem.len(p)));
+    }
+}
+test Strcat_m_charp {
+    const x = Strnew_charp("abc");
+    // over 32 cause realloc
+    Strcat_m_charp(x, "abcdefghij", "abcdefghij", "abcdefghij", @as([*c]const u8, @ptrFromInt(0)));
+    try std.testing.expectEqualSlices(u8, "abcabcdefghijabcdefghijabcdefghij", std.mem.sliceTo(x.*.ptr, 0));
+    try std.testing.expectEqual(33, x.*.length);
+    try std.testing.expectEqual(33 + 1, x.*.area_size);
+}
+
+export fn Strnew_m_charp(p0: [*c]const u8, ...) c.Str {
+    var ap = @cVaStart();
+    defer @cVaEnd(&ap);
+
+    const r = Strnew_charp(p0);
+    while (@cVaArg(&ap, [*c]const u8)) |p| {
+        c.Strcat_charp(r, p);
+    }
+    return r;
+}
+test Strnew_m_charp {
+    const x = Strnew_m_charp("abc", "de", "fg");
+    try std.testing.expectEqualSlices(u8, "abcdefg", std.mem.sliceTo(x.*.ptr, 0));
+    try std.testing.expectEqual(7, x.*.length);
     try std.testing.expectEqual(c.INITIALStr_SIZE, x.*.area_size);
 }

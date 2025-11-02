@@ -32,20 +32,6 @@
 #define STR_LENGTH_CHECK(x)
 #endif /* not STR_DEBUG */
 
-Str Strnew_m_charp(const char* p, ...)
-{
-    va_list ap;
-    Str r = Strnew();
-
-    va_start(ap, p);
-    while (p != NULL) {
-        Strcat_charp(r, p);
-        p = va_arg(ap, char*);
-    }
-    va_end(ap);
-    return r;
-}
-
 Str Strnew_charp_n(const char* p, int n)
 {
     Str x;
@@ -150,60 +136,6 @@ void Strcopy_charp_n(Str x, const char* y, int n)
     bcopy((void*)y, (void*)x->ptr, len);
     x->ptr[len] = '\0';
     x->length = len;
-}
-
-void Strcat_charp_n(Str x, const char* y, int n)
-{
-    int newlen;
-
-    STR_LENGTH_CHECK(x);
-    if (y == NULL || n == 0)
-        return;
-    if (n < 0)
-        n = STR_SIZE_MAX - 1;
-    newlen = x->length + n + 1;
-    if (newlen <= 0 || newlen > STR_SIZE_MAX) {
-        newlen = STR_SIZE_MAX;
-        n = newlen - x->length - 1;
-        if (n <= 0)
-            return;
-    }
-    if (x->area_size < newlen) {
-        newlen += newlen / 2;
-        if (newlen <= 0 || newlen > STR_SIZE_MAX)
-            newlen = STR_SIZE_MAX;
-        x->ptr = GC_REALLOC(x->ptr, newlen);
-        if (x->ptr == NULL)
-            exit(1);
-        x->area_size = newlen;
-    }
-    bcopy((void*)y, (void*)&x->ptr[x->length], n);
-    x->length += n;
-    x->ptr[x->length] = '\0';
-}
-
-void Strcat(Str x, Str y)
-{
-    STR_LENGTH_CHECK(y);
-    Strcat_charp_n(x, y->ptr, y->length);
-}
-
-void Strcat_charp(Str x, const char* y)
-{
-    if (y == NULL)
-        return;
-    Strcat_charp_n(x, y, strlen(y));
-}
-
-void Strcat_m_charp(Str x, ...)
-{
-    va_list ap;
-    char* p;
-
-    va_start(ap, x);
-    while ((p = va_arg(ap, char*)) != NULL)
-        Strcat_charp_n(x, p, strlen(p));
-    va_end(ap);
 }
 
 void Strgrow(Str x)
