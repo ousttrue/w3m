@@ -32,44 +32,6 @@
 #define STR_LENGTH_CHECK(x)
 #endif /* not STR_DEBUG */
 
-char* allocStr(const char* s, int len)
-{
-    char* ptr;
-
-    if (s == NULL)
-        return NULL;
-    if (len < 0)
-        len = strlen(s);
-    if (len < 0 || len >= STR_SIZE_MAX)
-        len = STR_SIZE_MAX - 1;
-    ptr = NewAtom_N(char, len + 1);
-    if (ptr == NULL) {
-        fprintf(stderr, "fm: Can't allocate string. Give me more memory!\n");
-        exit(-1);
-    }
-    bcopy(s, ptr, len);
-    ptr[len] = '\0';
-    return ptr;
-}
-
-Str Strnew_size(int n)
-{
-    Str x = GC_MALLOC(sizeof(struct _Str));
-    if (x == NULL)
-        exit(1);
-    if (n < 0 || n >= STR_SIZE_MAX)
-        n = STR_SIZE_MAX - 1;
-    else if (n + 1 < INITIALStr_SIZE)
-        n = INITIALStr_SIZE - 1;
-    x->ptr = GC_MALLOC_ATOMIC(n + 1);
-    if (x->ptr == NULL)
-        exit(1);
-    x->ptr[0] = '\0';
-    x->area_size = n + 1;
-    x->length = 0;
-    return x;
-}
-
 Str Strnew_charp(const char* p)
 {
     Str x;
