@@ -31,6 +31,19 @@ fn allocStrBuf(_size: usize) []u8 {
     return buf;
 }
 
+fn reallocStrBuf(x: c.Str, _size: usize) []u8 {
+    if (x.*.area_size >= _size) {
+        return x.*.ptr[0..x.*.area_size];
+    }
+    std.debug.assert(_size > 0);
+    const size = @min(_size, c.STR_SIZE_MAX);
+    const p: [*c]u8 = @ptrCast(c.GC_REALLOC(x.*.ptr, size));
+    const ptr: [*]u8 = p orelse @panic("OOM");
+    const buf = ptr[0..size];
+    buf[0] = 0;
+    return buf;
+}
+
 fn allocStrBufFrom_charp_n(p: [*c]const u8, len: c_int) []u8 {
     const p_len = std.mem.len(p);
     if (len < 0) {
@@ -231,4 +244,92 @@ test Strnew_m_charp {
     try std.testing.expectEqualSlices(u8, "abcdefg", std.mem.sliceTo(x.*.ptr, 0));
     try std.testing.expectEqual(7, x.*.length);
     try std.testing.expectEqual(c.INITIALStr_SIZE, x.*.area_size);
+}
+
+export fn Strcopy(dst: c.Str, src: c.Str) void {
+    const copy_size = src.*.length;
+    const buf = reallocStrBuf(dst, copy_size + 1);
+    std.mem.copyForwards(u8, buf[0..copy_size], src.*.ptr[0..copy_size]);
+    buf[copy_size] = 0;
+    dst.* = .{
+        .ptr = buf.ptr,
+        .area_size = buf.len,
+        .length = copy_size,
+    };
+}
+
+export fn Strdup(s: c.Str) c.Str {
+    const n = Strnew_size(@intCast(s.*.length));
+    Strcopy(n, s);
+    return n;
+}
+
+export fn Strcopy_charp(dst: c.Str, _src: [*c]const u8) void {
+    const src = _src orelse {
+        dst.*.length = 0;
+        dst.*.ptr[0] = 0;
+        return;
+    };
+
+    const copy_size = std.mem.len(src);
+    const buf = reallocStrBuf(dst, copy_size + 1);
+    std.mem.copyForwards(u8, buf[0..copy_size], src[0..copy_size]);
+    buf[copy_size] = 0;
+    dst.* = .{
+        .ptr = buf.ptr,
+        .area_size = buf.len,
+        .length = copy_size,
+    };
+}
+
+export fn Strcopy_charp_n(dst: c.Str, _src: [*c]const u8, n: c_int) void {
+    const src = _src orelse {
+        dst.*.length = 0;
+        dst.*.ptr[0] = 0;
+        return;
+    };
+
+    const copy_size: usize = if (n < 0)
+        std.mem.len(src)
+    else
+        @min(@as(usize, @intCast(n)), std.mem.len(src));
+    const buf = reallocStrBuf(dst, copy_size + 1);
+    std.mem.copyForwards(u8, buf[0..copy_size], src[0..copy_size]);
+    buf[copy_size] = 0;
+    dst.* = .{
+        .ptr = buf.ptr,
+        .area_size = buf.len,
+        .length = copy_size,
+    };
+}
+
+export fn Strclear(s: c.Str) void {
+    s.*.length = 0;
+    s.*.ptr[0] = 0;
+}
+
+export fn Strfree(x: c.Str) void {
+    c.GC_free(x.*.ptr);
+    c.GC_free(x);
+}
+
+export fn Strgrow(x: c.Str) void {
+    var addlen: usize = if (x.*.area_size < 8192)
+        x.*.area_size
+    else
+        @divTrunc(x.*.area_size, 2);
+    if (addlen < c.INITIALStr_SIZE)
+        addlen = c.INITIALStr_SIZE;
+    var newlen = x.*.area_size + addlen;
+    if (newlen > c.STR_SIZE_MAX) {
+        newlen = c.STR_SIZE_MAX;
+        if (x.*.length + 1 >= newlen)
+            x.*.length = newlen - 2;
+    }
+    if (x.*.area_size < newlen) {
+        const allocator = GcAllocator.allocator();
+        x.*.ptr = &(allocator.realloc(x.*.ptr[0..x.*.area_size], newlen) catch @panic("OOM"))[0];
+        x.*.area_size = newlen;
+    }
+    x.*.ptr[x.*.length] = 0;
 }

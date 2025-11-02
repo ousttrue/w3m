@@ -22,7 +22,6 @@
 #include <string.h>
 #include "myctype.h"
 
-
 #ifdef STR_DEBUG
 /* This is obsolete, because "Str" can handle a '\0' character now. */
 #define STR_LENGTH_CHECK(x)                                                       \
@@ -32,111 +31,7 @@
 #define STR_LENGTH_CHECK(x)
 #endif /* not STR_DEBUG */
 
-Str Strdup(Str s)
-{
-    Str n = Strnew_size(s->length);
-    STR_LENGTH_CHECK(s);
-    Strcopy(n, s);
-    return n;
-}
 
-void Strclear(Str s)
-{
-    s->length = 0;
-    s->ptr[0] = '\0';
-}
-
-void Strfree(Str x)
-{
-    GC_free(x->ptr);
-    GC_free(x);
-}
-
-void Strcopy(Str x, Str y)
-{
-    STR_LENGTH_CHECK(x);
-    STR_LENGTH_CHECK(y);
-    if (x->area_size < y->length + 1) {
-        x->ptr = GC_REALLOC(x->ptr, y->length + 1);
-        if (x->ptr == NULL)
-            exit(1);
-        x->area_size = y->length + 1;
-    }
-    bcopy((void*)y->ptr, (void*)x->ptr, y->length + 1);
-    x->length = y->length;
-}
-
-void Strcopy_charp(Str x, const char* y)
-{
-    int len;
-
-    STR_LENGTH_CHECK(x);
-    if (y == NULL) {
-        x->length = 0;
-        x->ptr[0] = '\0';
-        return;
-    }
-    len = strlen(y);
-    if (len < 0 || len >= STR_SIZE_MAX)
-        len = STR_SIZE_MAX - 1;
-    if (x->area_size < len + 1) {
-        x->ptr = GC_REALLOC(x->ptr, len + 1);
-        if (x->ptr == NULL)
-            exit(1);
-        x->area_size = len + 1;
-    }
-    bcopy((void*)y, (void*)x->ptr, len);
-    x->ptr[len] = '\0';
-    x->length = len;
-}
-
-void Strcopy_charp_n(Str x, const char* y, int n)
-{
-    int len = n;
-
-    STR_LENGTH_CHECK(x);
-    if (y == NULL) {
-        x->length = 0;
-        x->ptr[0] = '\0';
-        return;
-    }
-    if (len < 0 || len >= STR_SIZE_MAX)
-        len = STR_SIZE_MAX - 1;
-    if (x->area_size < len + 1) {
-        x->ptr = GC_REALLOC(x->ptr, len + 1);
-        if (x->ptr == NULL)
-            exit(1);
-        x->area_size = len + 1;
-    }
-    bcopy((void*)y, (void*)x->ptr, len);
-    x->ptr[len] = '\0';
-    x->length = len;
-}
-
-void Strgrow(Str x)
-{
-    int newlen, addlen;
-
-    if (x->area_size < 8192)
-        addlen = x->area_size;
-    else
-        addlen = x->area_size / 2;
-    if (addlen < INITIALStr_SIZE)
-        addlen = INITIALStr_SIZE;
-    newlen = x->area_size + addlen;
-    if (newlen <= 0 || newlen > STR_SIZE_MAX) {
-        newlen = STR_SIZE_MAX;
-        if (x->length + 1 >= newlen)
-            x->length = newlen - 2;
-    }
-    if (x->area_size < newlen) {
-        x->ptr = GC_REALLOC(x->ptr, newlen);
-        if (x->ptr == NULL)
-            exit(1);
-        x->area_size = newlen;
-    }
-    x->ptr[x->length] = '\0';
-}
 
 Str Strcat_char(Str x, char y)
 {
