@@ -48,11 +48,11 @@ void Strcat_charp_n(Str, const char*, int);
 void Strcat(Str, Str);
 void Strcat_charp(Str, const char*);
 void Strcat_m_charp(Str, ...);
-Str Strsubstr(Str, int, int);
+Str Strsubstr(Str, size_t begin, size_t len);
 void Strinsert_char(Str, int, char);
 void Strinsert_charp(Str, int, const char*);
 static inline void Strinsert(Str s, int n, Str p) { Strinsert_charp(s, n, p->ptr); }
-void Strdelete(Str, int, int);
+void Strdelete(Str, size_t pos, int n);
 static inline void Strshrinkfirst(Str s, int n) { Strdelete(s, 0, n); }
 void Strtruncate(Str, int);
 void Strlower(Str);

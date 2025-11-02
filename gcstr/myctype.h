@@ -1,6 +1,6 @@
-/* $Id: myctype.h,v 1.6 2003/09/22 21:02:20 ukai Exp $ */
-#ifndef _MYCTYPE_H
-#define _MYCTYPE_H
+#pragma once
+#include <stdint.h>
+#include <stdbool.h>
 
 #define MYCTYPE_CNTRL 1
 #define MYCTYPE_SPACE 2
@@ -13,11 +13,14 @@
 #define MYCTYPE_ALNUM (MYCTYPE_ALPHA | MYCTYPE_DIGIT)
 #define MYCTYPE_XDIGIT (MYCTYPE_HEX | MYCTYPE_DIGIT)
 
-#define GET_MYCTYPE(x) (MYCTYPE_MAP[(int)(unsigned char)(x)])
+extern unsigned char MYCTYPE_MAP[];
+extern unsigned char MYCTYPE_DIGITMAP[];
+
+static inline unsigned char GET_MYCTYPE(uint8_t x) { return (MYCTYPE_MAP[(int)(unsigned char)(x)]); }
 #define GET_MYCDIGIT(x) (MYCTYPE_DIGITMAP[(int)(unsigned char)(x)])
 
 #define IS_CNTRL(x) (GET_MYCTYPE(x) & MYCTYPE_CNTRL)
-#define IS_SPACE(x) (GET_MYCTYPE(x) & MYCTYPE_SPACE)
+static inline bool IS_SPACE(uint8_t x) { return (GET_MYCTYPE(x) & MYCTYPE_SPACE); }
 #define IS_ALPHA(x) (GET_MYCTYPE(x) & MYCTYPE_ALPHA)
 #define IS_DIGIT(x) (GET_MYCTYPE(x) & MYCTYPE_DIGIT)
 #define IS_PRINT(x) (GET_MYCTYPE(x) & MYCTYPE_PRINT)
@@ -26,10 +29,5 @@
 #define IS_XDIGIT(x) (GET_MYCTYPE(x) & MYCTYPE_XDIGIT)
 #define IS_INTSPACE(x) (MYCTYPE_MAP[(unsigned char)(x)] & MYCTYPE_INTSPACE)
 
-extern unsigned char MYCTYPE_MAP[];
-extern unsigned char MYCTYPE_DIGITMAP[];
-
-#define TOLOWER(x) (IS_ALPHA(x) ? ((x) | 0x20) : (x))
-#define TOUPPER(x) (IS_ALPHA(x) ? ((x) & ~0x20) : (x))
-
-#endif
+static inline uint8_t TOLOWER(uint8_t x) { return (IS_ALPHA(x) ? ((x) | 0x20) : (x)); }
+static inline uint8_t TOUPPER(uint8_t x) { return (IS_ALPHA(x) ? ((x) & ~0x20) : (x)); }

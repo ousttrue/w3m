@@ -2,8 +2,58 @@ const std = @import("std");
 const c = @cImport({
     @cInclude("Str.h");
     @cInclude("gc.h");
+    @cInclude("myctype.h");
 });
 const GcAllocator = @import("GcAllocator.zig");
+
+fn StrLastChar(s: c.Str) ?u8 {
+    if (s.*.length > 0) {
+        return s.*.ptr[s.*.length - 1];
+    } else {
+        return null;
+    }
+}
+
+const StrIterator = struct {
+    str: c.Str,
+    pos: usize = 0,
+
+    fn init(s: c.Str) @This() {
+        return .{
+            .str = s,
+        };
+    }
+
+    fn next(this: *@This()) ?*u8 {
+        if (this.pos < this.str.*.length) {
+            defer this.pos += 1;
+            return &this.str.*.ptr[this.pos];
+        } else {
+            return null;
+        }
+    }
+};
+
+const StrReverseIterator = struct {
+    str: c.Str,
+    pos: i32,
+
+    fn init(s: c.Str) @This() {
+        return .{
+            .str = s,
+            .pos = @as(i32, @intCast(s.*.length)) - 1,
+        };
+    }
+
+    fn next(this: *@This()) ?*u8 {
+        if (this.pos >= 0) {
+            defer this.pos -= 1;
+            return &this.str.*.ptr[@intCast(this.pos)];
+        } else {
+            return null;
+        }
+    }
+};
 
 /// use GC_MALLOC_ATOMIC
 export fn allocStr(_s: [*c]const u8, _len: c_int) [*c]u8 {
@@ -198,6 +248,10 @@ test Strcat {
     try std.testing.expectEqual(c.INITIALStr_SIZE, x.*.area_size);
 }
 
+export fn Strcat_char(x: c.Str, y: u8) void {
+    Strcat_charp_n(x, &y, 1);
+}
+
 export fn Strcat_charp(x: c.Str, _y: [*c]const u8) void {
     if (_y) |y| {
         Strcat_charp_n(x, y, @intCast(std.mem.len(y)));
@@ -332,4 +386,239 @@ export fn Strgrow(x: c.Str) void {
         x.*.area_size = newlen;
     }
     x.*.ptr[x.*.length] = 0;
+}
+
+export fn Strsubstr(s: c.Str, begin: usize, len: usize) c.Str {
+    const new_s = Strnew();
+    for (0..len) |i| {
+        if (begin + i >= s.*.length) {
+            break;
+        }
+        Strcat_char(new_s, s.*.ptr[begin + i]);
+    }
+    return new_s;
+}
+test Strsubstr {
+    {
+        const x0 = Strnew_charp("abc");
+        const x1 = Strsubstr(x0, 1, 3);
+        try std.testing.expectEqualSlices(u8, "bc", std.mem.sliceTo(x1.*.ptr, 0));
+    }
+    {
+        const x0 = Strnew_charp("abc");
+        const x1 = Strsubstr(x0, 5, 3);
+        try std.testing.expectEqualSlices(u8, "", std.mem.sliceTo(x1.*.ptr, 0));
+    }
+}
+
+fn Strslice(s: c.Str) []u8 {
+    return s.*.ptr[0..s.*.length];
+}
+
+export fn Strlower(s: c.Str) void {
+    for (Strslice(s)) |*ch| {
+        ch.* = c.TOLOWER(ch.*);
+    }
+}
+
+export fn Strupper(s: c.Str) void {
+    for (Strslice(s)) |*ch| {
+        ch.* = c.TOUPPER(ch.*);
+    }
+}
+
+export fn Strchop(s: c.Str) void {
+    while (StrLastChar(s)) |ch| {
+        if (ch == '\n' or ch == '\r') {
+            s.*.length -= 1;
+        } else {
+            break;
+        }
+    }
+    s.*.ptr[s.*.length] = 0;
+}
+
+export fn Strinsert_char(s: c.Str, pos: usize, ch: u8) void {
+    if (pos < 0 or s.*.length < pos)
+        return;
+    if (s.*.length + 2 > s.*.area_size)
+        Strgrow(s);
+    if (s.*.length < pos)
+        return;
+
+    @memmove(s.*.ptr[pos + 1 .. s.*.length + 1], s.*.ptr[pos..s.*.length]);
+    s.*.length += 1;
+    s.*.ptr[s.*.length] = 0;
+    s.*.ptr[pos] = ch;
+}
+test Strinsert_char {
+    const x = Strnew_charp("abc");
+    Strinsert_char(x, 2, 'x');
+    try std.testing.expectEqualSlices(u8, "abxc", Strslice(x));
+}
+
+export fn Strinsert_charp(s: c.Str, pos: usize, p: [*c]const u8) void {
+    for (pos.., std.mem.span(p)) |i, ch| {
+        Strinsert_char(s, i, ch);
+    }
+}
+test Strinsert_charp {
+    const x = Strnew_charp("abc");
+    Strinsert_charp(x, 2, "xyz");
+    try std.testing.expectEqualSlices(u8, "abxyzc", Strslice(x));
+}
+
+fn subBeginToEnd(p: *u8, begin: usize, end: usize) []u8 {
+    return p[begin..end];
+}
+
+export fn Strdelete(s: c.Str, pos: usize, n: c_int) void {
+    if (pos < 0 or s.*.length < pos)
+        return;
+
+    const size: usize = if (n < 0)
+        s.*.length - pos
+    else
+        @intCast(n);
+
+    const new_length = if (s.*.length <= pos + size) pos else blk: {
+        const src = s.*.ptr[pos + size .. s.*.length];
+        const dst = s.*.ptr[pos .. pos + src.len];
+        @memmove(dst, src);
+        break :blk pos + src.len;
+    };
+    s.*.ptr[new_length] = 0;
+    s.*.length = new_length;
+}
+test Strdelete {
+    {
+        const x = Strnew_charp("abcdefg");
+        Strdelete(x, 0, 3);
+        try std.testing.expectEqualSlices(u8, "defg", Strslice(x));
+    }
+    {
+        const x = Strnew_charp("abcdefg");
+        Strdelete(x, 3, -1);
+        try std.testing.expectEqualSlices(u8, "abc", Strslice(x));
+    }
+    {
+        const x = Strnew_charp("abcdefg");
+        Strdelete(x, 3, 4);
+        try std.testing.expectEqualSlices(u8, "abc", Strslice(x));
+    }
+    {
+        const x = Strnew_charp("abcdefg");
+        Strdelete(x, 3, 2);
+        try std.testing.expectEqualSlices(u8, "abcfg", Strslice(x));
+    }
+}
+
+export fn Strtruncate(s: c.Str, n: c_int) void {
+    if (n < 0 or s.*.length < n)
+        return;
+    const i: usize = @intCast(n);
+    s.*.ptr[i] = 0;
+    s.*.length = i;
+}
+
+export fn Strshrink(s: c.Str, n: c_int) void {
+    if (n >= s.*.length) {
+        s.*.length = 0;
+        s.*.ptr[0] = 0;
+    } else if (n > 0) {
+        const i: usize = @intCast(n);
+        s.*.length -= i;
+        s.*.ptr[s.*.length] = 0;
+    }
+}
+
+export fn Strremovefirstspaces(s: c.Str) void {
+    var it = StrIterator.init(s);
+    var delete_len: usize = 0;
+    while (it.next()) |ch| {
+        if (!c.IS_SPACE(ch.*)) {
+            break;
+        }
+        delete_len += 1;
+    }
+    if (delete_len > 0) {
+        Strdelete(s, 0, @intCast(delete_len));
+    }
+}
+test Strremovefirstspaces {
+    {
+        const x = Strnew_charp("abc");
+        Strremovefirstspaces(x);
+        try std.testing.expectEqualSlices(u8, "abc", Strslice(x));
+    }
+    {
+        const x = Strnew_charp("\r\n abc \r\n");
+        Strremovefirstspaces(x);
+        try std.testing.expectEqualSlices(u8, "abc \r\n", Strslice(x));
+    }
+}
+
+export fn Strremovetrailingspaces(s: c.Str) void {
+    var it = StrReverseIterator.init(s);
+    var new_length = s.*.length;
+    while (it.next()) |ch| {
+        if (!c.IS_SPACE(ch.*)) {
+            break;
+        }
+        new_length -= 1;
+    }
+    s.*.length = new_length;
+    s.*.ptr[new_length] = 0;
+}
+test Strremovetrailingspaces {
+    {
+        const x = Strnew_charp("abc");
+        Strremovetrailingspaces(x);
+        try std.testing.expectEqualSlices(u8, "abc", Strslice(x));
+    }
+    {
+        const x = Strnew_charp("\r\n abc \r\n");
+        Strremovetrailingspaces(x);
+        try std.testing.expectEqualSlices(u8, "\r\n abc", Strslice(x));
+    }
+}
+
+/// for only bytelength equals column width
+export fn Stralign_left(s: c.Str, width: usize) c.Str {
+    if (s.*.length >= width)
+        return Strdup(s);
+    const n = Strnew_size(@intCast(width));
+    Strcopy(n, s);
+    for (s.*.length..width) |_| {
+        Strcat_char(n, ' ');
+    }
+    return n;
+}
+
+/// for only bytelength equals column width
+export fn Stralign_right(s: c.Str, width: usize) c.Str {
+    if (s.*.length >= width)
+        return Strdup(s);
+    const n = Strnew_size(@intCast(width));
+    for (s.*.length..width) |_| {
+        Strcat_char(n, ' ');
+    }
+    Strcat(n, s);
+    return n;
+}
+
+/// for only bytelength equals column width
+export fn Stralign_center(s: c.Str, width: usize) c.Str {
+    if (s.*.length >= width)
+        return Strdup(s);
+    const n = Strnew_size(@intCast(width));
+    const w = @divTrunc(width - s.*.length, 2);
+    for (0..w) |_| {
+        Strcat_char(n, ' ');
+    }
+    Strcat(n, s);
+    for (w + s.*.length..width) |_| {
+        Strcat_char(n, ' ');
+    }
+    return n;
 }
