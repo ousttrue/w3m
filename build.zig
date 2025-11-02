@@ -161,37 +161,44 @@ pub fn build(b: *std.Build) void {
     }
 
     const funcname_tab = gen_funcname_tab(b);
+    const funcname_gen = b.addLibrary(.{
+        .name = "funcname_gen",
+        .root_module = b.addModule("funcname_gen", .{
+            .target = target,
+        }),
+    });
+    funcname_gen.addCSourceFile(.{
+        .file = b.path("dummy.c"),
+    });
 
     const funcname_c = gen_funcname(b, funcname_tab.output, b.path("funcname0.awk"));
-    exe.installHeader(funcname_c.output, "funcname.c");
+    funcname_gen.installHeader(funcname_c.output, "funcname.c");
 
     const funcname1_h = gen_funcname(b, funcname_tab.output, b.path("funcname1.awk"));
-    exe.installHeader(funcname1_h.output, "funcname1.h");
+    funcname_gen.installHeader(funcname1_h.output, "funcname1.h");
 
     const funcname2_h = gen_funcname(b, funcname_tab.output, b.path("funcname2.awk"));
-    exe.installHeader(funcname2_h.output, "funcname2.h");
-
-    const functable_tab = gen_funcname(b, funcname_tab.output, b.path("functable.awk"));
+    funcname_gen.installHeader(funcname2_h.output, "funcname2.h");
 
     {
+        const functable_tab = gen_funcname(b, funcname_tab.output, b.path("functable.awk"));
         const mktable = build_mktable(b, b.graph.host, .ReleaseSafe);
         var run_mktable = b.addRunArtifact(mktable);
         run_mktable.addArg("100");
         run_mktable.addFileArg(functable_tab.output);
-        exe.installHeader(run_mktable.captureStdOut(), "functable.c");
-        exe.step.dependOn(&run_mktable.step);
+        funcname_gen.installHeader(run_mktable.captureStdOut(), "functable.c");
     }
 
-    exe.addIncludePath(exe.getEmittedIncludeTree());
+    exe.addIncludePath(funcname_gen.getEmittedIncludeTree());
 
-    b.installDirectory(.{
-        .source_dir = exe.getEmittedIncludeTree(),
+    const install = b.addInstallDirectory(.{
+        .source_dir = funcname_gen.getEmittedIncludeTree(),
         .install_dir = .header,
         .install_subdir = "",
     });
 
     const cdb = zcc.createStep(b, "cdb", targets.toOwnedSlice(b.allocator) catch @panic("OOM"));
-    cdb.dependOn(&exe.step);
+    cdb.dependOn(&install.step);
 }
 
 fn build_gcstr(
