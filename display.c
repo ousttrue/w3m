@@ -1,6 +1,7 @@
 /* $Id: display.c,v 1.71 2010/07/18 14:10:09 htrb Exp $ */
 #include "display.h"
 #include "indep.h"
+#include "map.h"
 
 #include <signal.h>
 #include "fm.h"
@@ -253,7 +254,7 @@ make_lastline_message(Buffer* buf)
     int sl = 0;
 
     if (displayLink) {
-        MapArea* a = retrieveCurrentMapArea(buf);
+        struct MapArea* a = retrieveCurrentMapArea(buf);
         if (a)
             s = make_lastline_link(buf, a->alt, a->url);
         else

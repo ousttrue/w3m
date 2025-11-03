@@ -14,6 +14,7 @@
 #define _GNU_SOURCE /* strcasestr() */
 #endif
 
+#include "anchor.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -27,7 +28,6 @@
 
 #define MENU_SELECT
 #define MENU_MAP
-
 
 #include "ctrlcode.h"
 #include "html.h"
@@ -264,16 +264,8 @@ extern int REV_LB[];
 #define inputFilenameHist(p, d, h) inputLineHist(p, d, IN_FILENAME, h)
 #define inputChar(p) inputLine(p, "", IN_CHAR)
 
-
-
-#define bpcmp(a, b) \
-    (((a).line - (b).line) ? ((a).line - (b).line) : ((a).pos - (b).pos))
-
 #define RELATIVE_WIDTH(w) (((w) >= 0) ? (int)((w) / pixel_per_char) : (w))
 #define REAL_WIDTH(w, limit) (((w) >= 0) ? (int)((w) / pixel_per_char) : -(w) * (limit) / 100)
-
-#define EOL(l) (&(l)->ptr[(l)->length])
-#define IS_EOL(p, l) ((p) == &(l)->ptr[(l)->length])
 
 #define INLINE_IMG_NONE 0
 #define INLINE_IMG_OSC5379 1
@@ -287,23 +279,6 @@ extern int REV_LB[];
 
 typedef unsigned short Lineprop;
 typedef unsigned char Linecolor;
-
-typedef struct _MapArea {
-    char* url;
-    char* target;
-    char* alt;
-    char shape;
-    short* coords;
-    int ncoords;
-    short center_x;
-    short center_y;
-} MapArea;
-
-typedef struct _MapList {
-    Str name;
-    GeneralList* area;
-    struct _MapList* next;
-} MapList;
 
 typedef struct _Line {
     char* lineBuf;
@@ -321,71 +296,7 @@ typedef struct _Line {
     int bwidth;
 } Line;
 
-typedef struct {
-    int line;
-    int pos;
-    int invalid;
-} BufferPoint;
-
-typedef struct _imageCache {
-    char* url;
-    ParsedURL* current;
-    char* file;
-    char* touch;
-    pid_t pid;
-    char loaded;
-    int index;
-    short width;
-    short height;
-    short a_width;
-    short a_height;
-} ImageCache;
-
-typedef struct _image {
-    char* url;
-    char* ext;
-    short width;
-    short height;
-    short xoffset;
-    short yoffset;
-    short y;
-    short rows;
-    char* map;
-    char ismap;
-    int touch;
-    ImageCache* cache;
-} Image;
-
-typedef struct _anchor {
-    char* url;
-    char* target;
-    char* referer;
-    char* title;
-    unsigned char accesskey;
-    BufferPoint start;
-    BufferPoint end;
-    int hseq;
-    char slave;
-    short y;
-    short rows;
-    Image* image;
-} Anchor;
-
 #define NO_REFERER ((char*)-1)
-
-typedef struct _anchorList {
-    Anchor* anchors;
-    int nanchor;
-    int anchormax;
-    int acache;
-} AnchorList;
-
-typedef struct {
-    BufferPoint* marks;
-    int nmark;
-    int markmax;
-    int prevhseq;
-} HmarkerList;
 
 #define LINK_TYPE_NONE 0
 #define LINK_TYPE_REL 1
@@ -423,15 +334,15 @@ typedef struct _Buffer {
     short COLS;
     short LINES;
     InputStream pagerSource;
-    AnchorList* href;
-    AnchorList* name;
-    AnchorList* img;
-    AnchorList* formitem;
+    struct _AnchorList* href;
+    struct _AnchorList* name;
+    struct _AnchorList* img;
+    struct _AnchorList* formitem;
     LinkList* linklist;
     FormList* formlist;
-    MapList* maplist;
-    HmarkerList* hmarklist;
-    HmarkerList* imarklist;
+    struct MapList* maplist;
+    struct _HmarkerList* hmarklist;
+    struct _HmarkerList* imarklist;
     ParsedURL currentURL;
     ParsedURL* baseURL;
     char* baseTarget;
@@ -456,7 +367,7 @@ typedef struct _Buffer {
     char image_flag;
     char image_loaded;
     char need_reshape;
-    Anchor* submit;
+    struct _Anchor* submit;
     struct _BufferPos* undo;
     struct AlarmEvent* event;
 } Buffer;

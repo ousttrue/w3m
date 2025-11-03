@@ -1,6 +1,8 @@
 /* $Id: main.c,v 1.270 2010/08/24 10:11:51 htrb Exp $ */
 #define MAINPROGRAM
 #include "fm.h"
+#include "map.h"
+#include "anchor.h"
 #include "AlarmEvent.h"
 #include "indep.h"
 #include <stdio.h>
@@ -3657,7 +3659,7 @@ DEFUN(backBf, BACK, "Close current buffer and return to the one below in stack")
             long top = buf->frameQ->top_linenumber;
             int pos = buf->frameQ->pos;
             int currentColumn = buf->frameQ->currentColumn;
-            AnchorList* formitem = buf->frameQ->formitem;
+            struct _AnchorList* formitem = buf->frameQ->formitem;
 
             fs = popFrameTree(&(buf->frameQ));
             deleteFrameSet(buf->frameset);
@@ -3901,9 +3903,9 @@ DEFUN(pginfo, INFO, "Display information about the current document")
 void follow_map(struct parsed_tagarg* arg)
 {
     char* name = tag_get_value(arg, "link");
-#if defined(MENU_MAP) || defined(USE_IMAGE)
+
     Anchor* an;
-    MapArea* a;
+    struct MapArea* a;
     int x, y;
     ParsedURL p_url;
 
@@ -3912,14 +3914,6 @@ void follow_map(struct parsed_tagarg* arg)
     y = Currentbuf->cursorY + Currentbuf->rootY;
     a = follow_map_menu(Currentbuf, name, an, x, y);
     if (a == NULL || a->url == NULL || *(a->url) == '\0') {
-#endif
-#ifndef MENU_MAP
-        Buffer* buf = follow_map_panel(Currentbuf, name);
-
-        if (buf != NULL)
-            cmd_loadBuffer(buf, BP_NORMAL, LB_NOLINK);
-#endif
-#if defined(MENU_MAP) || defined(USE_IMAGE)
         return;
     }
     if (*(a->url) == '#') {
@@ -3944,7 +3938,6 @@ void follow_map(struct parsed_tagarg* arg)
     }
     cmd_loadURL(a->url, baseURL(Currentbuf),
         parsedURL2Str(&Currentbuf->currentURL)->ptr, NULL);
-#endif
 }
 
 /* link menu */

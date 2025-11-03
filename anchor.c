@@ -1,8 +1,11 @@
-/* $Id: anchor.c,v 1.33 2006/04/08 11:33:16 inu Exp $ */
 #include "fm.h"
+#include "map.h"
 #include <gcstr/myctype.h>
 #include "regex.h"
 #include "indep.h"
+
+#define bpcmp(a, b) \
+    (((a).line - (b).line) ? ((a).line - (b).line) : ((a).pos - (b).pos))
 
 #define FIRST_ANCHOR_SIZE 30
 
@@ -796,14 +799,14 @@ link_list_panel(Buffer* buf)
             fi = (FormItemList*)a->url;
             fi = fi->parent->item;
             if (fi->parent->method == FORM_METHOD_INTERNAL && !Strcmp_charp(fi->parent->action, "map") && fi->value) {
-                MapList* ml = searchMapList(buf, fi->value->ptr);
+                struct MapList* ml = searchMapList(buf, fi->value->ptr);
                 ListItem* mi;
-                MapArea* m;
+                struct MapArea* m;
                 if (!ml)
                     continue;
                 Strcat_charp(tmp, "<br>\n<b>Image map</b>\n<ol>\n");
                 for (mi = ml->area->first; mi != NULL; mi = mi->next) {
-                    m = (MapArea*)mi->ptr;
+                    m = (struct MapArea*)mi->ptr;
                     if (!m)
                         continue;
                     parseURL2(m->url, &pu, baseURL(buf));

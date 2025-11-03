@@ -2,6 +2,7 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "display.h"
 #include "fm.h"
+#include "map.h"
 #include "AlarmEvent.h"
 #include "indep.h"
 #include <sys/types.h>
@@ -956,7 +957,7 @@ extract_auth_val(char** q)
     int quoted = 0;
     Str val = Strnew();
 
-    SKIP_BLANKS(&qq);
+    SKIP_BLANKS((char**)&qq);
     if (*qq == '"') {
         quoted = TRUE;
         Strcat_char(val, *qq++);
@@ -5656,7 +5657,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                     break;
                 case HTML_MAP:
                     if (parsedtag_get_value(tag, ATTR_NAME, &p)) {
-                        MapList* m = New(MapList);
+                        struct MapList* m = New(struct MapList);
                         m->name = Strnew_charp(p);
                         m->area = newGeneralList();
                         m->next = buf->maplist;
@@ -5670,7 +5671,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                     if (buf->maplist == NULL) /* outside of <map>..</map> */
                         break;
                     if (parsedtag_get_value(tag, ATTR_HREF, &p)) {
-                        MapArea* a;
+                        struct MapArea* a;
                         p = url_encode(remove_space(p), base,
                             buf->document_charset);
                         t = NULL;

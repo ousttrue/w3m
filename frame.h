@@ -22,7 +22,7 @@ struct frame_body {
     char* source;
     char* type;
     char* referer;
-    struct _anchorList* nameList;
+    struct _AnchorList* nameList;
     FormList* request;
     char* ssl_certificate;
 };
@@ -54,7 +54,7 @@ struct frameset_queue {
     long top_linenumber;
     int pos;
     int currentColumn;
-    struct _anchorList* formitem;
+    struct _AnchorList* formitem;
 };
 
 extern struct frameset* renderFrameSet;

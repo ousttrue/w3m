@@ -2,17 +2,18 @@
 /*
  * client-side image maps
  */
+#include "map.h"
 #include "fm.h"
 #include "indep.h"
 #include <math.h>
 
-MapList*
-searchMapList(Buffer* buf, char* name)
+struct MapList*
+searchMapList(Buffer* buf, const char* name)
 {
-    MapList* ml;
-
     if (name == NULL)
         return NULL;
+
+    struct MapList* ml;
     for (ml = buf->maplist; ml != NULL; ml = ml->next) {
         if (!Strcmp_charp(ml->name, name))
             break;
@@ -21,7 +22,7 @@ searchMapList(Buffer* buf, char* name)
 }
 
 static int
-inMapArea(MapArea* a, int x, int y)
+inMapArea(struct MapArea* a, int x, int y)
 {
     int i;
     double r1, r2, s, c, t;
@@ -67,16 +68,16 @@ inMapArea(MapArea* a, int x, int y)
 }
 
 static int
-nearestMapArea(MapList* ml, int x, int y)
+nearestMapArea(struct MapList* ml, int x, int y)
 {
     ListItem* al;
-    MapArea* a;
+    struct MapArea* a;
     int i, l, n = -1, min = -1, limit = pixel_per_char * pixel_per_char + pixel_per_line * pixel_per_line;
 
     if (!ml || !ml->area)
         return n;
     for (i = 0, al = ml->area->first; al != NULL; i++, al = al->next) {
-        a = (MapArea*)al->ptr;
+        a = (struct MapArea*)al->ptr;
         if (a) {
             l = (a->center_x - x) * (a->center_x - x)
                 + (a->center_y - y) * (a->center_y - y);
@@ -90,10 +91,10 @@ nearestMapArea(MapList* ml, int x, int y)
 }
 
 static int
-searchMapArea(Buffer* buf, MapList* ml, Anchor* a_img)
+searchMapArea(Buffer* buf, struct MapList* ml, Anchor* a_img)
 {
     ListItem* al;
-    MapArea* a;
+    struct MapArea* a;
     int i, n;
     int px, py;
 
@@ -103,7 +104,7 @@ searchMapArea(Buffer* buf, MapList* ml, Anchor* a_img)
         return -1;
     n = -ml->area->nitem;
     for (i = 0, al = ml->area->first; al != NULL; i++, al = al->next) {
-        a = (MapArea*)al->ptr;
+        a = (struct MapArea*)al->ptr;
         if (!a)
             continue;
         if (n < 0 && inMapArea(a, px, py)) {
@@ -121,14 +122,14 @@ searchMapArea(Buffer* buf, MapList* ml, Anchor* a_img)
     return n;
 }
 
-MapArea*
+struct MapArea*
 retrieveCurrentMapArea(Buffer* buf)
 {
     Anchor *a_img, *a_form;
     FormItemList* fi;
-    MapList* ml;
+    struct MapList* ml;
     ListItem* al;
-    MapArea* a;
+    struct MapArea* a;
     int i, n;
 
     a_img = retrieveCurrentImg(buf);
@@ -148,7 +149,7 @@ retrieveCurrentMapArea(Buffer* buf)
     if (n < 0)
         return NULL;
     for (i = 0, al = ml->area->first; al != NULL; i++, al = al->next) {
-        a = (MapArea*)al->ptr;
+        a = (struct MapArea*)al->ptr;
         if (a && i == n)
             return a;
     }
@@ -188,18 +189,15 @@ retrieveCurrentMap(Buffer* buf)
     return NULL;
 }
 
-#if defined(USE_IMAGE) || defined(MENU_MAP)
-MapArea*
+struct MapArea*
 follow_map_menu(Buffer* buf, char* name, Anchor* a_img, int x, int y)
 {
-    MapList* ml;
+    struct MapList* ml;
     ListItem* al;
     int i, selected = -1;
     int initial = 0;
-#ifdef MENU_MAP
-    MapArea* a;
+    struct MapArea* a;
     char** label;
-#endif
 
     ml = searchMapList(buf, name);
     if (ml == NULL || ml->area == NULL || ml->area->nitem == 0)
@@ -213,10 +211,9 @@ follow_map_menu(Buffer* buf, char* name, Anchor* a_img, int x, int y)
         goto map_end;
     }
 
-#ifdef MENU_MAP
     label = New_N(char*, ml->area->nitem + 1);
     for (i = 0, al = ml->area->first; al != NULL; i++, al = al->next) {
-        a = (MapArea*)al->ptr;
+        a = (struct MapArea*)al->ptr;
         if (a)
             label[i] = *a->alt ? a->alt : a->url;
         else
@@ -225,68 +222,22 @@ follow_map_menu(Buffer* buf, char* name, Anchor* a_img, int x, int y)
     label[ml->area->nitem] = NULL;
 
     optionMenu(x, y, label, &selected, initial, NULL);
-#endif
 
 map_end:
     if (selected >= 0) {
         for (i = 0, al = ml->area->first; al != NULL; i++, al = al->next) {
             if (al->ptr && i == selected)
-                return (MapArea*)al->ptr;
+                return (struct MapArea*)al->ptr;
         }
     }
     return NULL;
 }
-#endif
 
-#ifndef MENU_MAP
-char* map1 = "<HTML><HEAD><TITLE>Image map links</TITLE></HEAD>\
-<BODY><H1>Image map links</H1>\
-<table>";
 
-Buffer*
-follow_map_panel(Buffer* buf, char* name)
-{
-    Str mappage;
-    MapList* ml;
-    ListItem* al;
-    MapArea* a;
-    ParsedURL pu;
-    char *p, *q;
-    Buffer* newbuf;
-
-    ml = searchMapList(buf, name);
-    if (ml == NULL)
-        return NULL;
-
-    mappage = Strnew_charp(map1);
-    for (al = ml->area->first; al != NULL; al = al->next) {
-        a = (MapArea*)al->ptr;
-        if (!a)
-            continue;
-        parseURL2(a->url, &pu, baseURL(buf));
-        p = parsedURL2Str(&pu)->ptr;
-        q = html_quote(p);
-        if (DecodeURL)
-            p = html_quote(url_decode2(p, buf));
-        else
-            p = q;
-        Strcat_m_charp(mappage, "<tr valign=top><td><a href=\"", q, "\">",
-            html_quote(*a->alt ? a->alt : mybasename(a->url)),
-            "</a><td>", p, NULL);
-    }
-    Strcat_charp(mappage, "</table></body></html>");
-
-    newbuf = loadHTMLString(mappage);
-    if (newbuf)
-        newbuf->document_charset = buf->document_charset;
-    return newbuf;
-}
-#endif
-
-MapArea*
+struct MapArea*
 newMapArea(char* url, char* target, char* alt, char* shape, char* coords)
 {
-    MapArea* a = New(MapArea);
+    struct MapArea* a = New(struct MapArea);
     char* p;
     int i, max;
 
@@ -378,9 +329,9 @@ newMapArea(char* url, char* target, char* alt, char* shape, char* coords)
 static void
 append_map_info(Buffer* buf, Str tmp, FormItemList* fi)
 {
-    MapList* ml;
+    struct MapList* ml;
     ListItem* al;
-    MapArea* a;
+    struct MapArea* a;
     ParsedURL pu;
     char *p, *q;
 
@@ -392,7 +343,7 @@ append_map_info(Buffer* buf, Str tmp, FormItemList* fi)
         "<tr valign=top><td colspan=2>Links of current image map",
         "<tr valign=top><td colspan=2><table>", NULL);
     for (al = ml->area->first; al != NULL; al = al->next) {
-        a = (MapArea*)al->ptr;
+        a = (struct MapArea*)al->ptr;
         if (!a)
             continue;
         parseURL2(a->url, &pu, baseURL(buf));
