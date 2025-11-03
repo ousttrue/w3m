@@ -20,6 +20,7 @@ CONTEXT = {
     "SIGWINCH": True,
     "SIGPIPE": True,
     "SIGCHLD": True,
+    "TIOCGWINSZ": False,
     # features
     "USE_COLOR": True,
     "USE_ANSI_COLOR": True,
@@ -32,11 +33,18 @@ CONTEXT = {
     "USE_GOPHER": True,
     "USE_COOKIE": True,
     "USE_MENU": True,
-    "USE_MOUSE": True,
+
+    "USE_MOUSE": False,
+    "USE_GPM": False,
+    "USE_SYSMOUSE": False,
+
     "USE_HISTORY": True,
     "USE_BUFINFO": True,
     "USE_ALARM": True,
     "MENU_MAP": True,
+    "HAVE_TERMIOS_H": True,
+    "HAVE_TERMIO_H": False,
+    "HAVE_SGTTY_H": False,
     # "SIGTSTP": True,
     # "USE_HELP_CGI": True,
     # "USE_DICT": True,

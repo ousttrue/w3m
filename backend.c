@@ -273,7 +273,6 @@ int backend(void)
     w3m_dump = 0;
     if (COLS == 0)
         COLS = DEFAULT_COLS;
-    use_mouse = FALSE;
 
     if (backend_batch_commands) {
         while ((str = popText(backend_batch_commands)))

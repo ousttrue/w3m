@@ -4,15 +4,6 @@
 #include <gcstr/myctype.h>
 #include "indep.h"
 
-#ifdef USE_GPM
-#include <gpm.h>
-#endif
-#if defined(USE_GPM) || defined(USE_SYSMOUSE)
-extern int do_getch();
-#define getch() do_getch()
-#endif /* USE_GPM */
-
-
 #define STR_LEN 1024
 #define CLEN (COLS - 2)
 

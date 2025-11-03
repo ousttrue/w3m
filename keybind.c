@@ -125,7 +125,7 @@ unsigned char GlobalKeymap[128] = {
     movD,
     movU,
     movR,
-    msToggle,
+    nulcmd,
     srchnxt,
     ldOpt,
     /*  p       q       r       s       t       u       v       w        */
@@ -364,7 +364,7 @@ unsigned char EscBKeymap[128] = {
     nulcmd,
     nulcmd,
     nulcmd,
-    sgrmouse,
+    nulcmd,
     nulcmd,
     nulcmd,
     nulcmd,
@@ -383,7 +383,7 @@ unsigned char EscBKeymap[128] = {
     nulcmd,
     nulcmd,
     nulcmd,
-    mouse,
+    nulcmd,
     nulcmd,
     nulcmd,
     /*  P       Q       R       S       T       U       V       W        */

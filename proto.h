@@ -584,18 +584,6 @@ extern void reMark(void);
 #define reMark nulcmd
 #endif /* not USE_MARK */
 
-extern void mouse(void);
-extern void sgrmouse(void);
-extern void mouse_init(void);
-extern void mouse_end(void);
-extern void mouse_active(void);
-extern void mouse_inactive(void);
-extern void msToggle(void);
-extern void movMs(void);
-extern void menuMs(void);
-extern void tabMs(void);
-extern void closeTMs(void);
-
 extern void initImage(void);
 extern void termImage(void);
 extern void addImage(ImageCache* cache, int x, int y, int sx, int sy, int w,
@@ -614,7 +602,6 @@ extern char* getWord(char** str);
 extern char* getQWord(char** str);
 struct regex;
 extern char* getRegexWord(const char** str, struct regex** regex_ret);
-extern void initMouseAction(void);
 
 extern void new_menu(Menu* menu, MenuItem* item);
 extern void geom_menu(Menu* menu, int x, int y, int mselect);

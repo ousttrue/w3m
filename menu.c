@@ -10,24 +10,6 @@
 #include <gcstr/myctype.h>
 #include "regex.h"
 
-#ifdef USE_GPM
-#include <gpm.h>
-static int gpm_process_menu_mouse(Gpm_Event* event, void* data);
-extern int gpm_process_mouse(Gpm_Event*, void*);
-#endif /* USE_GPM */
-#ifdef USE_SYSMOUSE
-extern int (*sysm_handler)(int x, int y, int nbs, int obs);
-static int sysm_process_menu_mouse(int, int, int, int);
-extern int sysm_process_mouse(int, int, int, int);
-#endif /* USE_SYSMOUSE */
-#if defined(USE_GPM) || defined(USE_SYSMOUSE)
-#define X_MOUSE_SELECTED (char)0xff
-static int X_Mouse_Selection;
-extern int do_getch();
-#define getch() do_getch()
-#endif /* defined(USE_GPM) || defined(USE_SYSMOUSE) */
-
-
 static char** FRAME;
 static int FRAME_WIDTH;
 static int graph_mode = FALSE;
@@ -70,7 +52,7 @@ static int mSrchP(char c);
 
 /* *INDENT-OFF* */
 static int (*MenuKeymap[128])(char c) = {
-/*  C-@     C-a     C-b     C-c     C-d     C-e     C-f     C-g      */
+    /*  C-@     C-a     C-b     C-c     C-d     C-e     C-f     C-g      */
     mNull,
     mTop,
     mPrev,
@@ -931,18 +913,7 @@ int action_menu(Menu* menu)
     select_menu(menu, menu->select);
 
     while (1) {
-        if (use_mouse)
-            mouse_active();
         c = getch();
-        if (use_mouse)
-            mouse_inactive();
-#if defined(USE_GPM) || defined(USE_SYSMOUSE)
-        if (c == X_MOUSE_SELECTED) {
-            mselect = X_Mouse_Selection;
-            if (mselect != MENU_NOTHING)
-                break;
-        }
-#endif /* defined(USE_GPM) || defined(USE_SYSMOUSE) */
         if (IS_ASCII(c)) { /* Ascii */
             mselect = (*menu->keymap[(int)c])(c);
             if (mselect != MENU_NOTHING)
@@ -982,12 +953,6 @@ void popup_menu(Menu* parent, Menu* menu)
     if (menu->active)
         return;
 
-#ifdef USE_GPM
-    gpm_handler = gpm_process_menu_mouse;
-#endif /* USE_GPM */
-#ifdef USE_SYSMOUSE
-    sysm_handler = sysm_process_menu_mouse;
-#endif /* USE_SYSMOUSE */
     menu->parent = parent;
     menu->select = menu->initial;
     menu->offset = 0;
@@ -1006,14 +971,6 @@ void popup_menu(Menu* parent, Menu* menu)
     }
     menu->active = 0;
     CurrentMenu = parent;
-#ifdef USE_GPM
-    if (CurrentMenu == NULL)
-        gpm_handler = gpm_process_mouse;
-#endif /* USE_GPM */
-#ifdef USE_SYSMOUSE
-    if (CurrentMenu == NULL)
-        sysm_handler = sysm_process_mouse;
-#endif /* USE_SYSMOUSE */
 }
 
 void guess_menu_xy(Menu* parent, int width, int* x, int* y)
@@ -1076,7 +1033,6 @@ set_menu_frame(void)
 }
 
 /* --- MenuFunctions --- */
-
 
 static int
 mEsc(char c)
@@ -1577,55 +1533,6 @@ mSgrMouse(char c)
     return process_mMouse(btn, x, y);
 }
 
-#ifdef USE_GPM
-static int
-gpm_process_menu_mouse(Gpm_Event* event, void* data)
-{
-    int btn = MOUSE_BTN_RESET, x, y;
-    if (event->type & GPM_UP)
-        btn = MOUSE_BTN_UP;
-    else if (event->type & GPM_DOWN) {
-        switch (event->buttons) {
-        case GPM_B_LEFT:
-            btn = MOUSE_BTN1_DOWN;
-            break;
-        case GPM_B_MIDDLE:
-            btn = MOUSE_BTN2_DOWN;
-            break;
-        case GPM_B_RIGHT:
-            btn = MOUSE_BTN3_DOWN;
-            break;
-        }
-    } else {
-        GPM_DRAWPOINTER(event);
-        return 0;
-    }
-    x = event->x;
-    y = event->y;
-    X_Mouse_Selection = process_mMouse(btn, x - 1, y - 1);
-    return X_MOUSE_SELECTED;
-}
-#endif /* USE_GPM */
-
-#ifdef USE_SYSMOUSE
-static int
-sysm_process_menu_mouse(int x, int y, int nbs, int obs)
-{
-    int btn;
-    int bits;
-
-    if (obs & ~nbs)
-        btn = MOUSE_BTN_UP;
-    else if (nbs & ~obs) {
-        bits = nbs & ~obs;
-        btn = bits & 0x1 ? MOUSE_BTN1_DOWN : (bits & 0x2 ? MOUSE_BTN2_DOWN : (bits & 0x4 ? MOUSE_BTN3_DOWN : 0));
-    } else /* nbs == obs */
-        return 0;
-    X_Mouse_Selection = process_mMouse(btn, x, y);
-    return X_MOUSE_SELECTED;
-}
-#endif /* USE_SYSMOUSE */
-
 /* --- MenuFunctions (END) --- */
 
 /* --- MainMenu --- */
@@ -1665,10 +1572,6 @@ DEFUN(mainMn, MAIN_MENU MENU, "Pop up menu")
             return;
         menu = w3mMenuList[n].menu;
     }
-    if (mouse_action.in_action) {
-        x = mouse_action.cursorX;
-        y = mouse_action.cursorY;
-    }
     popupMenu(x, y, menu);
 }
 
@@ -1681,10 +1584,6 @@ DEFUN(selMn, SELECT_MENU, "Pop up buffer-stack menu")
     int x = Currentbuf->cursorX + Currentbuf->rootX,
         y = Currentbuf->cursorY + Currentbuf->rootY;
 
-    if (mouse_action.in_action) {
-        x = mouse_action.cursorX;
-        y = mouse_action.cursorY;
-    }
     popupMenu(x, y, &SelectMenu);
 }
 
@@ -1825,10 +1724,6 @@ DEFUN(tabMn, TAB_MENU, "Pop up tab selection menu")
     int x = Currentbuf->cursorX + Currentbuf->rootX,
         y = Currentbuf->cursorY + Currentbuf->rootY;
 
-    if (mouse_action.in_action) {
-        x = mouse_action.cursorX;
-        y = mouse_action.cursorY;
-    }
     popupMenu(x, y, &SelTabMenu);
 }
 
@@ -2024,8 +1919,7 @@ interpret_menu(FILE* mf)
             item = w3mMenuList[nmenu].item;
             nitem = 0;
             item[nitem].type = MENU_END;
-        }
-        else if (!strcmp(s, "charset") || !strcmp(s, "encoding")) {
+        } else if (!strcmp(s, "charset") || !strcmp(s, "encoding")) {
             s = getQWord(&p);
             if (*s == '\0') /* error */
                 continue;
@@ -2399,4 +2293,3 @@ list_menu(Buffer* buf)
 
     return (key >= 0) ? ap[key] : NULL;
 }
-

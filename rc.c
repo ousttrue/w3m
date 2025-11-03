@@ -473,9 +473,6 @@ struct param_ptr params3[] = {
     { "migemo_command", P_STRING, PI_TEXT, (void*)&migemo_command,
         CMT_MIGEMO_COMMAND, NULL },
 #endif /* USE_MIGEMO */
-    { "use_mouse", P_INT, PI_ONOFF, (void*)&use_mouse, CMT_MOUSE, NULL },
-    { "reverse_mouse", P_INT, PI_ONOFF, (void*)&reverse_mouse,
-        CMT_REVERSE_MOUSE, NULL },
     { "relative_wheel_scroll", P_INT, PI_SEL_C, (void*)&relative_wheel_scroll,
         CMT_RELATIVE_WHEEL_SCROLL, (void*)wheelmode },
     { "relative_wheel_scroll_ratio", P_INT, PI_TEXT,
@@ -1189,7 +1186,6 @@ void sync_with_option(void)
     wtf_init(DocumentCharset, DisplayCharset);
     if (fmInitialized) {
         initKeymap(FALSE);
-        initMouseAction();
         initMenu();
     }
 }

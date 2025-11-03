@@ -151,8 +151,6 @@ void fmTerm(void)
         refresh();
         if (activeImage)
             loadImage(NULL, IMG_FLAG_STOP);
-        if (use_mouse)
-            mouse_end();
         reset_tty();
         fmInitialized = FALSE;
     }
@@ -257,8 +255,7 @@ make_lastline_message(Buffer* buf)
         struct MapArea* a = retrieveCurrentMapArea(buf);
         if (a)
             s = make_lastline_link(buf, a->alt, a->url);
-        else
-        {
+        else {
             Anchor* a = retrieveCurrentAnchor(buf);
             char* p = NULL;
             if (a && a->title && *a->title)
@@ -278,10 +275,7 @@ make_lastline_message(Buffer* buf)
         }
     }
 
-    if (use_mouse && mouse_action.lastline_str)
-        msg = Strnew_charp(mouse_action.lastline_str);
-    else
-        msg = Strnew();
+    msg = Strnew();
     if (displayLineInfo && buf->currentLine != NULL && buf->lastLine != NULL) {
         int cl = buf->currentLine->real_linenumber;
         int ll = buf->lastLine->real_linenumber;
@@ -290,7 +284,7 @@ make_lastline_message(Buffer* buf)
     } else
         /* FIXME: gettextize? */
         msg = Sprintf("%s: code 0x%02x ", msg->ptr, last_key);
-        Strcat_charp(msg, "Viewing");
+    Strcat_charp(msg, "Viewing");
     if (buf->ssl_certificate)
         Strcat_charp(msg, "[SSL]");
     Strcat_charp(msg, " <");
@@ -348,9 +342,7 @@ void displayBuffer(Buffer* buf, int mode)
     } else
         buf->rootX = 0;
     buf->COLS = COLS - buf->rootX;
-    if (nTab > 1
-        || mouse_action.menu_str
-    ) {
+    if (nTab > 1) {
         if (mode == B_FORCE_REDRAW || mode == B_REDRAW_IMAGE)
             calcTabPos();
         ny = LastTab->y + 2;
@@ -366,8 +358,7 @@ void displayBuffer(Buffer* buf, int mode)
     if (mode == B_FORCE_REDRAW || mode == B_SCROLL || mode == B_REDRAW_IMAGE || cline != buf->topLine || ccolumn != buf->currentColumn) {
 #ifdef USE_RAW_SCROLL
         if (
-            !(activeImage && displayImage && draw_image_flag) &&
-            mode == B_SCROLL && cline && buf->currentColumn == ccolumn) {
+            !(activeImage && displayImage && draw_image_flag) && mode == B_SCROLL && cline && buf->currentColumn == ccolumn) {
             int n = buf->topLine->linenumber - cline->linenumber;
             if (n > 0 && n < buf->LINES) {
                 move(LASTLINE, 0);
@@ -530,15 +521,11 @@ redrawNLine(Buffer* buf, int n)
         EFFECT_ANCHOR_END_C;
         setbcolor(bg_color);
     }
-    if (nTab > 1
-        || mouse_action.menu_str
-    ) {
+    if (nTab > 1) {
         TabBuffer* t;
         int l;
 
         move(0, 0);
-        if (mouse_action.menu_str)
-            addstr(mouse_action.menu_str);
         clrtoeolx();
         for (t = FirstTab; t; t = t->nextTab) {
             move(t->y, t->x1);
@@ -1018,8 +1005,7 @@ void addMChar(char* p, Lineprop mode, size_t len)
             addch(c + '@');
             break;
         }
-    }
-    else if (mode & PC_UNKNOWN) {
+    } else if (mode & PC_UNKNOWN) {
         char buf[5];
         sprintf(buf, "[%.2X]",
             (unsigned char)wtf_get_code((wc_uchar*)p) | 0x80);
@@ -1094,11 +1080,7 @@ void disp_message_nsec(char* s, int redraw_current, int sec, int purge, int mous
     else
         message(s, LASTLINE, 0);
     refresh();
-    if (mouse && use_mouse)
-        mouse_active();
     sleep_till_anykey(sec, purge);
-    if (mouse && use_mouse)
-        mouse_inactive();
     if (CurrentTab != NULL && Currentbuf != NULL && redraw_current)
         displayBuffer(Currentbuf, B_NORMAL);
 }
