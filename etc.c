@@ -121,7 +121,7 @@ int gethtmlcmd(char** s)
     } else
         return HTML_UNKNOWN;
     if (p[-1] == '/')
-        SKIP_BLANKS(*s);
+        SKIP_BLANKS(s);
     while ((IS_ALNUM(**s) || **s == '_') && p - cmdstr < MAX_CMD_LEN) {
         *(p++) = TOLOWER(**s);
         (*s)++;
@@ -961,10 +961,10 @@ next_token(Str arg)
         return NULL;
     p = arg->ptr;
     q = p;
-    SKIP_NON_BLANKS(q);
+    SKIP_NON_BLANKS(&q);
     if (*q != '\0') {
         *q++ = '\0';
-        SKIP_BLANKS(q);
+        SKIP_BLANKS(&q);
         if (*q != '\0')
             narg = Strnew_charp(q);
     }

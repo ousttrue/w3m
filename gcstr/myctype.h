@@ -31,3 +31,18 @@ static inline bool IS_SPACE(uint8_t x) { return (GET_MYCTYPE(x) & MYCTYPE_SPACE)
 
 static inline uint8_t TOLOWER(uint8_t x) { return (IS_ALPHA(x) ? ((x) | 0x20) : (x)); }
 static inline uint8_t TOUPPER(uint8_t x) { return (IS_ALPHA(x) ? ((x) & ~0x20) : (x)); }
+
+static inline void SKIP_BLANKS(char** p)
+{
+    while (*(*p) && IS_SPACE(*(*p)))
+        (*p)++;
+}
+
+static inline void SKIP_NON_BLANKS(char** p)
+{
+    while (*(*p) && !IS_SPACE(*(*p)))
+        (*p)++;
+}
+
+#define IS_ENDL(c) ((c) == '\0' || (c) == '\r' || (c) == '\n')
+#define IS_ENDT(c) (IS_ENDL(c) || (c) == ';')

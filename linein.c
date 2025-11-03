@@ -246,7 +246,7 @@ char* inputLineHistSearch(char* prompt, char* def_str, int flag, Hist* hist,
     refresh();
     p = strBuf->ptr;
     if (flag & (IN_FILENAME | IN_COMMAND)) {
-        SKIP_BLANKS(p);
+        SKIP_BLANKS(&p);
     }
     if (use_hist && !(flag & IN_URL) && *p != '\0') {
         char* q = lastHist(hist);

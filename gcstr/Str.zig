@@ -313,9 +313,13 @@ export fn Strcopy(dst: c.Str, src: c.Str) void {
 }
 
 export fn Strdup(s: c.Str) c.Str {
-    const n = Strnew_size(@intCast(s.*.length));
-    Strcopy(n, s);
-    return n;
+    if (s.*.length == 0) {
+        return Strnew();
+    } else {
+        const n = Strnew_size(@intCast(s.*.length));
+        Strcopy(n, s);
+        return n;
+    }
 }
 
 export fn Strcopy_charp(dst: c.Str, _src: [*c]const u8) void {

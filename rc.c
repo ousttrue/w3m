@@ -1586,7 +1586,7 @@ loadSiteconf(void)
 
         Strchop(line);
         p = line->ptr;
-        SKIP_BLANKS(p);
+        SKIP_BLANKS(&p);
         if (*p == '#' || *p == '\0')
             continue;
         s = getWord(&p);
@@ -1607,7 +1607,7 @@ loadSiteconf(void)
             newent = newSiteconfRec();
             url = getRegexWord((const char**)&p, &newent->re_url);
             opt = getWord(&p);
-            SKIP_BLANKS(p);
+            SKIP_BLANKS(&p);
             if (!newent->re_url) {
                 ParsedURL pu;
                 if (!url || !*url)

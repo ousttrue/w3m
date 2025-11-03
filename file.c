@@ -467,12 +467,12 @@ int matchattr(char* p, char* attr, int len, Str* value)
 
     if (strncasecmp(p, attr, len) == 0) {
         p += len;
-        SKIP_BLANKS(p);
+        SKIP_BLANKS(&p);
         if (value) {
             *value = Strnew();
             if (*p == '=') {
                 p++;
-                SKIP_BLANKS(p);
+                SKIP_BLANKS(&p);
                 quoted = 0;
                 while (!IS_ENDL(*p) && (quoted || *p != ';')) {
                     if (!IS_SPACE(*p))
@@ -505,7 +505,7 @@ xface2xpm(char* xface)
     FILE* f;
     struct stat st;
 
-    SKIP_BLANKS(xface);
+    SKIP_BLANKS(&xface);
     image.url = xface;
     image.ext = ".xpm";
     image.width = 48;
@@ -614,7 +614,7 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
                 Str src = NULL;
                 if (!strncasecmp(tmp->ptr, "X-Image-URL:", 12)) {
                     tmpf = &tmp->ptr[12];
-                    SKIP_BLANKS(tmpf);
+                    SKIP_BLANKS(&tmpf);
                     src = Strnew_m_charp("<img src=\"", html_quote(tmpf),
                         "\" alt=\"X-Image-URL\">", NULL);
                 }
@@ -708,13 +708,13 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
 #ifdef DEBUG
             fprintf(stderr, "Set-Cookie: [%s]\n", p);
 #endif /* DEBUG */
-            SKIP_BLANKS(p);
+            SKIP_BLANKS(&p);
             while (*p != '=' && !IS_ENDT(*p))
                 Strcat_char(name, *(p++));
             Strremovetrailingspaces(name);
             if (*p == '=') {
                 p++;
-                SKIP_BLANKS(p);
+                SKIP_BLANKS(&p);
                 quoted = 0;
                 while (!IS_ENDL(*p) && (quoted || *p != ';')) {
                     if (!IS_SPACE(*p))
@@ -728,7 +728,7 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
             }
             while (*p == ';') {
                 p++;
-                SKIP_BLANKS(p);
+                SKIP_BLANKS(&p);
                 if (matchattr(p, "expires", 7, &tmp2)) {
                     /* version 0 */
                     expires = mymktime(tmp2->ptr);
@@ -817,10 +817,10 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
             int f;
 
             p = lineBuf2->ptr + 12;
-            SKIP_BLANKS(p);
+            SKIP_BLANKS(&p);
             while (*p && !IS_SPACE(*p))
                 Strcat_char(funcname, *(p++));
-            SKIP_BLANKS(p);
+            SKIP_BLANKS(&p);
             f = getFuncList(funcname->ptr);
             if (f >= 0) {
                 tmp = Strnew_charp(p);
@@ -870,10 +870,10 @@ checkContentType(Buffer* buf)
         Strcat_char(r, *p++);
     if ((p = strcasestr(p, "charset")) != NULL) {
         p += 7;
-        SKIP_BLANKS(p);
+        SKIP_BLANKS(&p);
         if (*p == '=') {
             p++;
-            SKIP_BLANKS(p);
+            SKIP_BLANKS(&p);
             if (*p == '"')
                 p++;
             content_charset = wc_guess_charset(p, 0);
@@ -956,7 +956,7 @@ extract_auth_val(char** q)
     int quoted = 0;
     Str val = Strnew();
 
-    SKIP_BLANKS(qq);
+    SKIP_BLANKS(&qq);
     if (*qq == '"') {
         quoted = TRUE;
         Strcat_char(val, *qq++);
@@ -1035,14 +1035,14 @@ extract_auth_param(char* q, struct auth_param* auth)
     }
 
     while (*q != '\0') {
-        SKIP_BLANKS(q);
+        SKIP_BLANKS(&q);
         for (ap = auth; ap->name != NULL; ap++) {
             size_t len;
 
             len = strlen(ap->name);
             if (strncasecmp(q, ap->name, len) == 0 && (IS_SPACE(q[len]) || q[len] == '=')) {
                 p = q + len;
-                SKIP_BLANKS(p);
+                SKIP_BLANKS(&p);
                 if (*p != '=')
                     return q;
                 q = p + 1;
@@ -1055,7 +1055,7 @@ extract_auth_param(char* q, struct auth_param* auth)
             int token_type;
             p = q;
             if ((token_type = skip_auth_token(&q)) == AUTHCHR_TOKEN && (IS_SPACE(*q) || *q == '=')) {
-                SKIP_BLANKS(q);
+                SKIP_BLANKS(&q);
                 if (*q != '=')
                     return p;
                 q++;
@@ -1064,7 +1064,7 @@ extract_auth_param(char* q, struct auth_param* auth)
                 return p;
         }
         if (*q != '\0') {
-            SKIP_BLANKS(q);
+            SKIP_BLANKS(&q);
             if (*q == ',')
                 q++;
             else
@@ -1176,7 +1176,7 @@ AuthDigestCred(struct http_auth* ha, Str uname, Str pw, ParsedURL* pu,
         size_t i;
 
         p = qop->ptr;
-        SKIP_BLANKS(p);
+        SKIP_BLANKS(&p);
 
         for (;;) {
             if ((i = strcspn(p, " \t,")) > 0) {
@@ -1191,7 +1191,7 @@ AuthDigestCred(struct http_auth* ha, Str uname, Str pw, ParsedURL* pu,
 
             if (p[i]) {
                 p += i + 1;
-                SKIP_BLANKS(p);
+                SKIP_BLANKS(&p);
             } else
                 break;
         }
@@ -1383,13 +1383,13 @@ findAuthentication(struct http_auth* hauth, Buffer* buf, char* auth_field)
     for (i = buf->document_header->first; i != NULL; i = i->next) {
         if (strncasecmp(i->ptr, auth_field, len) == 0) {
             for (p = i->ptr + len; p != NULL && *p != '\0';) {
-                SKIP_BLANKS(p);
+                SKIP_BLANKS(&p);
                 p0 = p;
                 for (ha = &www_auth[0]; ha->scheme != NULL; ha++) {
                     slen = strlen(ha->scheme);
                     if (strncasecmp(p, ha->scheme, slen) == 0) {
                         p += slen;
-                        SKIP_BLANKS(p);
+                        SKIP_BLANKS(&p);
                         if (hauth->pri < ha->pri) {
                             *hauth = *ha;
                             p = extract_auth_param(p, hauth->param);
@@ -1404,7 +1404,7 @@ findAuthentication(struct http_auth* hauth, Buffer* buf, char* auth_field)
                     /* all unknown auth failed */
                     int token_type;
                     if ((token_type = skip_auth_token(&p)) == AUTHCHR_TOKEN && IS_SPACE(*p)) {
-                        SKIP_BLANKS(p);
+                        SKIP_BLANKS(&p);
                         p = extract_auth_param(p, none_auth_param);
                     } else
                         break;
@@ -4966,14 +4966,14 @@ int HTMLtagproc1(struct parsed_tag* tag, struct html_feed_environ* h_env)
         parsedtag_get_value(tag, ATTR_CHARSET, &r);
         if (r) {
             /* <meta charset=""> */
-            SKIP_BLANKS(r);
+            SKIP_BLANKS(&r);
             meta_charset = wc_guess_charset(r, 0);
         } else if (p && q && !strcasecmp(p, "Content-Type") && (q = strcasestr(q, "charset")) != NULL) {
             q += 7;
-            SKIP_BLANKS(q);
+            SKIP_BLANKS(&q);
             if (*q == '=') {
                 q++;
-                SKIP_BLANKS(q);
+                SKIP_BLANKS(&q);
                 meta_charset = wc_guess_charset(q, 0);
             }
         } else
