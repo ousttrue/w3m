@@ -32,12 +32,32 @@ static char **CFileBuf = NULL;
 static int NCFileBuf;
 static int NCFileOffset;
 
-static void _noop(void),
-_mvR(void), _mvL(void), _mvRw(void), _mvLw(void), delC(void), insC(void),
-_mvB(void), _mvE(void), _enter(void), _quo(void), _bs(void), _bsw(void),
-killn(void), killb(void), _inbrk(void), _esc(void), _editor(void),
-_prev(void), _next(void), _compl(void), _tcompl(void),
-_dcompl(void), _rdcompl(void), _rcompl(void);
+static void _bs(void);
+static void _bsw(void);
+static void _compl(void);
+static void _dcompl(void);
+static void _editor(void);
+static void _enter(void);
+static void _esc(void);
+static void _inbrk(void);
+static void _mvB(void);
+static void _mvE(void);
+static void _mvL(void);
+static void _mvLw(void);
+static void _mvR(void);
+static void _mvRw(void);
+static void _next(void);
+static void _prev(void);
+static void _quo(void);
+static void _rcompl(void);
+static void _rdcompl(void);
+static void _tcompl(void);
+static void delC(void);
+static void insC(void);
+static void killb(void);
+static void killn(void);
+static void _noop(void);
+
 #ifdef __EMX__
 static int getcntrl(void);
 #endif
