@@ -1,8 +1,8 @@
-/* $Id: backend.c,v 1.15 2010/08/08 09:53:42 htrb Exp $ */
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
 #include "fm.h"
+#include "w3m_runtime.h"
 #include "indep.h"
 #include "terms.h"
 

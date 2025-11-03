@@ -1,14 +1,14 @@
 /*
  * w3m menu.c
  */
-#include <stdio.h>
-
 #include "fm.h"
+#include "w3m_runtime.h"
 #include "rc.h"
 #include "menu.h"
 #include "func.h"
-#include <gcstr/gcstr.h>
 #include "regex.h"
+#include <gcstr/gcstr.h>
+#include <stdio.h>
 
 static char** FRAME;
 static int FRAME_WIDTH;

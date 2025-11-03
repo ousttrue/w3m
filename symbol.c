@@ -1,6 +1,5 @@
-
 #include "fm.h"
-
+#include "w3m_runtime.h"
 #include "Symbols/alt.sym"
 #include "Symbols/graph.sym"
 #include "Symbols/eucjp.sym"

@@ -6,6 +6,7 @@ const system_libs = [_][]const u8{
 };
 
 const w3m_srcs = [_][]const u8{
+    "w3m_runtime.c",
     "AlarmEvent.c",
     "keybind.c",
     "util.c",
@@ -187,6 +188,8 @@ pub fn build(b: *std.Build) void {
     {
         const functable_tab = gen_funcname(b, funcname_tab.output, b.path("functable.awk"));
         const mktable = build_mktable(b, b.graph.host, .ReleaseSafe);
+        mktable.addIncludePath(b.path(""));
+
         var run_mktable = b.addRunArtifact(mktable);
         run_mktable.addArg("100");
         run_mktable.addFileArg(functable_tab.output);

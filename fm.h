@@ -922,22 +922,11 @@ global int URLHistSize init(100);
 global int SaveURLHist init(TRUE);
 global int multicolList init(FALSE);
 
-global wc_ces InnerCharset init(WC_CES_WTF); /* Don't change */
-global wc_ces DisplayCharset init(DISPLAY_CHARSET);
-global wc_ces DocumentCharset init(DOCUMENT_CHARSET);
-global wc_ces SystemCharset init(SYSTEM_CHARSET);
-global wc_ces BookmarkCharset init(SYSTEM_CHARSET);
 global char ExtHalfdump init(FALSE);
 global char FollowLocale init(TRUE);
 global char UseContentCharset init(TRUE);
 global char SearchConv init(TRUE);
 global char SimplePreserveSpace init(FALSE);
-#define Str_conv_from_system(x) wc_Str_conv((x), SystemCharset, InnerCharset)
-#define Str_conv_to_system(x) wc_Str_conv_strict((x), InnerCharset, SystemCharset)
-#define Str_conv_to_halfdump(x) (ExtHalfdump ? wc_Str_conv((x), InnerCharset, DisplayCharset) : (x))
-#define conv_from_system(x) wc_conv((x), SystemCharset, InnerCharset)->ptr
-#define conv_to_system(x) wc_conv_strict((x), InnerCharset, SystemCharset)->ptr
-#define url_quote_conv(x, c) url_quote(wc_conv_strict((x), InnerCharset, (c))->ptr)
 global char UseAltEntity init(FALSE);
 #define GRAPHIC_CHAR_ASCII 2
 #define GRAPHIC_CHAR_DEC 1

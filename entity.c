@@ -12,6 +12,7 @@
 #include "ucs.h"
 #include "utf8.h"
 #endif /* DUMMY */
+#include "w3m_runtime.h"
 
 extern char* conv_entity(unsigned int c);
 

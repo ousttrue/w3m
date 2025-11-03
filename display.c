@@ -1,10 +1,9 @@
-/* $Id: display.c,v 1.71 2010/07/18 14:10:09 htrb Exp $ */
 #include "display.h"
 #include "indep.h"
 #include "map.h"
-
-#include <signal.h>
 #include "fm.h"
+#include "w3m_runtime.h"
+#include <signal.h>
 
 extern unsigned char last_key;
 

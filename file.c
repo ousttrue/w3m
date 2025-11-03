@@ -1,7 +1,6 @@
-/* $Id: file.c,v 1.266 2012/05/22 09:45:56 inu Exp $ */
-/* vi: set sw=4 ts=8 ai sm noet : */
 #include "display.h"
 #include "fm.h"
+#include "w3m_runtime.h"
 #include "map.h"
 #include "AlarmEvent.h"
 #include "indep.h"
@@ -9,9 +8,7 @@
 #include <gcstr/myctype.h>
 #include <signal.h>
 #include <setjmp.h>
-#if defined(HAVE_WAITPID) || defined(HAVE_WAIT3)
 #include <sys/wait.h>
-#endif
 #include <stdio.h>
 #include <time.h>
 #include <sys/stat.h>

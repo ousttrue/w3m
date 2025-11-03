@@ -1,9 +1,9 @@
-/* $Id: map.c,v 1.30 2003/09/24 18:49:00 ukai Exp $ */
 /*
  * client-side image maps
  */
 #include "map.h"
 #include "fm.h"
+#include "w3m_runtime.h"
 #include "indep.h"
 #include <math.h>
 

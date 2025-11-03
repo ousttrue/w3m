@@ -36,9 +36,6 @@
 #define DEF_SAVE_FILE "index.html"
 
 /* User Configuration */
-#define DISPLAY_CHARSET WC_CES_UTF_8
-#define SYSTEM_CHARSET WC_CES_UTF_8
-#define DOCUMENT_CHARSET WC_CES_UTF_8
 #define USE_M17N 1
 #define USE_UNICODE 1
 #define W3M_LANG EN

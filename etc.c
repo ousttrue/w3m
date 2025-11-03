@@ -1,4 +1,5 @@
 #include "fm.h"
+#include "w3m_runtime.h"
 #include "indep.h"
 #include <pwd.h>
 #include <gcstr/gcstr.h>

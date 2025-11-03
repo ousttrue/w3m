@@ -1,5 +1,5 @@
-/* $Id: frame.c,v 1.34 2003/09/26 17:59:51 ukai Exp $ */
 #include "fm.h"
+#include "w3m_runtime.h"
 #include "parsetagx.h"
 #include <gcstr/myctype.h>
 #include "indep.h"

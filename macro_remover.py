@@ -45,6 +45,7 @@ CONTEXT = {
     "HAVE_TERMIOS_H": True,
     "HAVE_TERMIO_H": False,
     "HAVE_SGTTY_H": False,
+
     # "SIGTSTP": True,
     # "USE_HELP_CGI": True,
     # "USE_DICT": True,
