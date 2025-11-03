@@ -1,6 +1,7 @@
 /* $Id: main.c,v 1.270 2010/08/24 10:11:51 htrb Exp $ */
 #define MAINPROGRAM
 #include "fm.h"
+#include "keybind.h"
 #include "map.h"
 #include "anchor.h"
 #include "AlarmEvent.h"
@@ -16,7 +17,7 @@
 #include <time.h>
 #include "display.h"
 #include "terms.h"
-#include <gcstr/myctype.h>
+#include <gcstr/gcstr.h>
 #include "regex.h"
 #include "rc.h"
 #include "wc.h"
@@ -5071,7 +5072,7 @@ DEFUN(reinit, REINIT, "Reload configuration file")
     }
 
     if (!strcasecmp(resource, "KEYMAP")) {
-        initKeymap(TRUE);
+        initKeymap(SystemCharset, InnerCharset, TRUE);
         return;
     }
 

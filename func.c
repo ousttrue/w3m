@@ -1,34 +1,34 @@
-/* $Id: func.c,v 1.27 2003/09/26 17:59:51 ukai Exp $ */
-/*
- * w3m func.c
- */
-
-#include <stdio.h>
-
-#include "fm.h"
 #include "func.h"
-#include <gcstr/myctype.h>
+#include "textlist.h"
 #include "regex.h"
 #include "rc.h"
+#include "display.h"
+#include "keybind.h"
+#include "ctrlcode.h"
 
+#include <gcstr/gcstr.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/stat.h>
+
+#include "funcheader.h"
 #include "funcname.c"
 #include "functable.c"
 
+#define KEYMAP_FILE "keymap"
+char* keymap_file = KEYMAP_FILE;
 #define KEYDATA_HASH_SIZE 16
 static Hash_iv* keyData = NULL;
-static char keymap_initialized = FALSE;
+static char keymap_initialized = false;
 static struct stat sys_current_keymap_file;
 static struct stat current_keymap_file;
 
 void setKeymap(char* p, int lineno, int verbose)
 {
-    unsigned char* map = NULL;
-    char *s, *emsg;
-    int c, f;
-
-    s = getQWord(&p);
-    c = getKey(s);
+    char* s = getQWord(&p);
+    int c = getKey(s);
     if (c < 0) { /* error */
+        char* emsg;
         if (lineno > 0)
             /* FIXME: gettextize? */
             emsg = Sprintf("line %d: unknown key '%s'", lineno, s)->ptr;
@@ -37,12 +37,14 @@ void setKeymap(char* p, int lineno, int verbose)
             emsg = Sprintf("defkey: unknown key '%s'", s)->ptr;
         record_err_message(emsg);
         if (verbose)
-            disp_message_nsec(emsg, FALSE, 1, TRUE, FALSE);
+            disp_message_nsec(emsg, false, 1, true, false);
         return;
     }
+
     s = getWord(&p);
-    f = getFuncList(s);
+    int f = getFuncList(s);
     if (f < 0) {
+        char* emsg;
         if (lineno > 0)
             /* FIXME: gettextize? */
             emsg = Sprintf("line %d: invalid command '%s'", lineno, s)->ptr;
@@ -51,9 +53,11 @@ void setKeymap(char* p, int lineno, int verbose)
             emsg = Sprintf("defkey: invalid command '%s'", s)->ptr;
         record_err_message(emsg);
         if (verbose)
-            disp_message_nsec(emsg, FALSE, 1, TRUE, FALSE);
+            disp_message_nsec(emsg, false, 1, true, false);
         return;
     }
+
+    unsigned char* map = NULL;
     if (c & K_MULTI) {
         unsigned char** mmap = NULL;
         int i, j, m = MULTI_KEY(c);
@@ -113,14 +117,13 @@ void setKeymap(char* p, int lineno, int verbose)
 }
 
 static void
-interpret_keymap(FILE* kf, struct stat* current, int force)
+interpret_keymap(FILE* kf, struct stat* current, bool force, wc_ces charset, wc_ces inner_charset)
 {
     int fd;
     struct stat kstat;
     Str line;
     char *p, *s, *emsg;
     int lineno;
-    wc_ces charset = SystemCharset;
     int verbose = 1;
     extern int str_to_bool(char* value, int old);
 
@@ -136,7 +139,7 @@ interpret_keymap(FILE* kf, struct stat* current, int force)
         Strremovefirstspaces(line);
         if (line->length == 0)
             continue;
-        line = wc_Str_conv(line, charset, InnerCharset);
+        line = wc_Str_conv(line, charset, inner_charset);
         p = line->ptr;
         s = getWord(&p);
         if (*s == '#') /* comment */
@@ -157,31 +160,30 @@ interpret_keymap(FILE* kf, struct stat* current, int force)
             emsg = Sprintf("line %d: syntax error '%s'", lineno, s)->ptr;
             record_err_message(emsg);
             if (verbose)
-                disp_message_nsec(emsg, FALSE, 1, TRUE, FALSE);
+                disp_message_nsec(emsg, false, 1, true, false);
             continue;
         }
         setKeymap(p, lineno, verbose);
     }
 }
 
-void initKeymap(int force)
+void initKeymap(wc_ces charset, wc_ces inner_charset, bool force)
 {
     FILE* kf;
-
     if ((kf = fopen(confFile(KEYMAP_FILE), "rt")) != NULL) {
         interpret_keymap(kf, &sys_current_keymap_file,
-            force || !keymap_initialized);
+            force || !keymap_initialized, charset, inner_charset);
         fclose(kf);
     }
     if ((kf = fopen(rcFile(keymap_file), "rt")) != NULL) {
         interpret_keymap(kf, &current_keymap_file,
-            force || !keymap_initialized);
+            force || !keymap_initialized, charset, inner_charset);
         fclose(kf);
     }
-    keymap_initialized = TRUE;
+    keymap_initialized = true;
 }
 
-int getFuncList(char* id)
+int getFuncList(const char* id)
 {
     return getHash_si(&functable, id, -1);
 }
@@ -320,7 +322,7 @@ getKey2(char** str)
         return -1;
 }
 
-int getKey(char* s)
+int getKey(const char* s)
 {
     int c, c2;
 
@@ -336,67 +338,6 @@ int getKey(char* s)
         c = K_MULTI | (c << 16) | c2;
     }
     return c;
-}
-
-char* getWord(char** str)
-{
-    char *p, *s;
-
-    p = *str;
-    SKIP_BLANKS(&p);
-    for (s = p; *p && !IS_SPACE(*p) && *p != ';'; p++)
-        ;
-    *str = p;
-    return Strnew_charp_n(s, p - s)->ptr;
-}
-
-char* getQWord(char** str)
-{
-    Str tmp = Strnew();
-    char* p;
-    int in_q = 0, in_dq = 0, esc = 0;
-
-    p = *str;
-    SKIP_BLANKS(&p);
-    for (; *p; p++) {
-        if (esc) {
-            if (in_q) {
-                if (*p != '\\' && *p != '\'') /* '..\\..', '..\'..' */
-                    Strcat_char(tmp, '\\');
-            } else if (in_dq) {
-                if (*p != '\\' && *p != '"') /* "..\\..", "..\".." */
-                    Strcat_char(tmp, '\\');
-            } else {
-                if (*p != '\\' && *p != '\'' && /* ..\\.., ..\'.. */
-                    *p != '"' && !IS_SPACE(*p)) /* ..\".., ..\.. */
-                    Strcat_char(tmp, '\\');
-            }
-            Strcat_char(tmp, *p);
-            esc = 0;
-        } else if (*p == '\\') {
-            esc = 1;
-        } else if (in_q) {
-            if (*p == '\'')
-                in_q = 0;
-            else
-                Strcat_char(tmp, *p);
-        } else if (in_dq) {
-            if (*p == '"')
-                in_dq = 0;
-            else
-                Strcat_char(tmp, *p);
-        } else if (*p == '\'') {
-            in_q = 1;
-        } else if (*p == '"') {
-            in_dq = 1;
-        } else if (IS_SPACE(*p) || *p == ';') {
-            break;
-        } else {
-            Strcat_char(tmp, *p);
-        }
-    }
-    *str = p;
-    return tmp->ptr;
 }
 
 /* This extracts /regex/i or m@regex@i from the given string.

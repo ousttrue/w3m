@@ -723,11 +723,6 @@ global char TrapSignal init(TRUE);
             mySignal(SIGINT, prevtrap); \
     }
 
-extern unsigned char GlobalKeymap[];
-extern unsigned char EscKeymap[];
-extern unsigned char EscBKeymap[];
-extern unsigned char EscDKeymap[];
-extern FuncList w3mFuncList[];
 
 global char* HTTP_proxy init(NULL);
 global char* HTTPS_proxy init(NULL);
@@ -1018,7 +1013,6 @@ global int set_pixel_per_line init(FALSE);
 global double image_scale init(100);
 global int use_lessopen init(FALSE);
 
-global char* keymap_file init(KEYMAP_FILE);
 
 #define get_mctype(c) ((Lineprop)wtf_type((wc_uchar*)(c)) << 8)
 #define get_mclen(c) wtf_len1((wc_uchar*)(c))

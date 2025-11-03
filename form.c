@@ -6,7 +6,7 @@
 #include "fm.h"
 #include "parsetag.h"
 #include "parsetagx.h"
-#include <gcstr/myctype.h>
+#include <gcstr/gcstr.h>
 #include "local.h"
 #include "regex.h"
 #include "util.h"

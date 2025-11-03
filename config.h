@@ -18,7 +18,6 @@
 
 #define BOOKMARK "bookmark.html"
 #define CONFIG_FILE "config"
-#define KEYMAP_FILE "keymap"
 #define MENU_FILE "menu"
 #define MOUSE_FILE "mouse"
 #define COOKIE_FILE "cookie"

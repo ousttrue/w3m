@@ -181,6 +181,9 @@ pub fn build(b: *std.Build) void {
     const funcname2_h = gen_funcname(b, funcname_tab.output, b.path("funcname2.awk"));
     funcname_gen.installHeader(funcname2_h.output, "funcname2.h");
 
+    const funcheader_h = gen_funcname(b, funcname_tab.output, b.path("funcheader.awk"));
+    funcname_gen.installHeader(funcheader_h.output, "funcheader.h");
+
     {
         const functable_tab = gen_funcname(b, funcname_tab.output, b.path("functable.awk"));
         const mktable = build_mktable(b, b.graph.host, .ReleaseSafe);
@@ -200,6 +203,7 @@ pub fn build(b: *std.Build) void {
 
     const cdb = zcc.createStep(b, "cdb", targets.toOwnedSlice(b.allocator) catch @panic("OOM"));
     cdb.dependOn(&install.step);
+    exe.step.dependOn(cdb);
 }
 
 fn build_gcstr(
@@ -232,6 +236,7 @@ fn build_gcstr(
             "myctype.c",
             "hash.c",
             "hash_mktable.c",
+            "quote.c",
         },
     });
     lib.installHeadersDirectory(b.path("gcstr"), "gcstr", .{});

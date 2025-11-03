@@ -1,5 +1,5 @@
 BEGIN {
-  print "FuncList w3mFuncList[] = {";
+  print "struct FuncList w3mFuncList[] = {";
   n = 0;
 }
 /^#/ { next }

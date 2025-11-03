@@ -3,7 +3,7 @@
  * Initialization file etc.
  */
 #include "fm.h"
-#include <gcstr/myctype.h>
+#include <gcstr/gcstr.h>
 #include "proto.h"
 #include "indep.h"
 #include <stdio.h>
@@ -1185,7 +1185,7 @@ void sync_with_option(void)
     update_utf8_symbol();
     wtf_init(DocumentCharset, DisplayCharset);
     if (fmInitialized) {
-        initKeymap(FALSE);
+        initKeymap(SystemCharset, InnerCharset, false);
         initMenu();
     }
 }

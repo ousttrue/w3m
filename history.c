@@ -1,5 +1,5 @@
-/* $Id: history.c,v 1.11 2003/09/26 17:59:51 ukai Exp $ */
 #include "fm.h"
+#include "rc.h"
 #include "indep.h"
 
 /* Merge entries from their history into ours */

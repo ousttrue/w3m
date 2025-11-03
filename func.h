@@ -1,15 +1,8 @@
-/* $Id: func.h,v 1.4 2002/12/03 16:01:33 ukai Exp $ */
-/*
- * w3m func.h
- */
+#pragma once
+#include <wc.h>
+#include <stdbool.h>
 
-#ifndef FUNC_H
-#define FUNC_H
-
-#include "textlist.h"
-#include <gcstr/hash.h>
-
-#define KEY_HASH_SIZE 127
+extern char* keymap_file;
 
 #define K_ESC 0x100
 #define K_ESCB 0x200
@@ -17,9 +10,16 @@
 #define K_MULTI 0x10000000
 #define MULTI_KEY(c) (((c) >> 16) & 0x77F)
 
-typedef struct _FuncList {
-    char* id;
-    void (*func)();
-} FuncList;
+typedef void (*CommandFunc)();
 
-#endif /* not FUNC_H */
+struct FuncList {
+    const char* id;
+    CommandFunc func;
+};
+// funcname.c
+extern struct FuncList w3mFuncList[];
+
+void initKeymap(wc_ces charset, wc_ces inner_charset, bool force);
+int getFuncList(const char* id);
+int getKey(const char* s);
+char* getKeyData(int key);

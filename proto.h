@@ -266,12 +266,9 @@ extern int readBufferCache(Buffer* buf);
 extern void displayBuffer(Buffer* buf, int mode);
 extern void addChar(char c, Lineprop mode);
 extern void addMChar(char* c, Lineprop mode, size_t len);
-extern void record_err_message(char* s);
 extern Buffer* message_list_panel(void);
 extern void message(char* s, int return_x, int return_y);
 extern void disp_err_message(char* s, int redraw_current);
-extern void disp_message_nsec(char* s, int redraw_current, int sec, int purge,
-    int mouse);
 extern void disp_message(char* s, int redraw_current);
 extern void disp_message_nomouse(char* s, int redraw_current);
 extern void set_delayed_message(char* s);
@@ -521,9 +518,7 @@ extern void init_tmp(void);
 extern Buffer* load_option_panel(void);
 extern void panel_set_option(struct parsed_tagarg*);
 extern void sync_with_option(void);
-extern char* rcFile(char* base);
 extern char* etcFile(char* base);
-extern char* confFile(char* base);
 extern char* auxbinFile(char* base);
 extern char* libFile(char* base);
 extern char* helpFile(char* base);
@@ -594,12 +589,6 @@ extern void clearImage(void);
 extern char* searchKeyData(void);
 
 extern void setKeymap(char* p, int lineno, int verbose);
-extern void initKeymap(int force);
-extern int getFuncList(char* id);
-extern int getKey(char* s);
-extern char* getKeyData(int key);
-extern char* getWord(char** str);
-extern char* getQWord(char** str);
 struct regex;
 extern char* getRegexWord(const char** str, struct regex** regex_ret);
 

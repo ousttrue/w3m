@@ -1,7 +1,6 @@
-#ifndef RC_H
-#define RC_H
+#pragma once
 
 extern void show_params(FILE* fp);
 extern int str_to_bool(char* value, int old);
-
-#endif /* RC_H */
+extern char* confFile(char* base);
+extern char* rcFile(char* base);
