@@ -85,7 +85,7 @@ fn reallocStrBuf(x: c.Str, _size: usize) []u8 {
         return x.*.ptr[0..x.*.area_size];
     }
     std.debug.assert(_size > 0);
-    const size = @min(_size, c.STR_SIZE_MAX);
+    const size = @max(_size, c.INITIALStr_SIZE);
     const p: [*c]u8 = @ptrCast(c.GC_REALLOC(x.*.ptr, size));
     const ptr: [*]u8 = p orelse @panic("OOM");
     const buf = ptr[0..size];
@@ -216,17 +216,12 @@ export fn Strcat_charp_n(x: c.Str, _y: [*c]const u8, len: c_int) void {
     const y = _y orelse return;
     const copy_len: usize = if (len < 0) std.mem.len(y) else @intCast(len);
     const new_len = x.*.length + copy_len;
-    const buf = if (new_len + 1 > x.*.area_size) blk: {
-        const allocator = GcAllocator.allocator();
-        break :blk allocator.realloc(x.*.ptr[0..x.*.area_size], new_len + 1) catch @panic("OOM");
-    } else x.*.ptr[0..x.*.area_size];
-    std.mem.copyForwards(u8, buf[x.*.length..new_len], y[0..copy_len]);
-    x.* = .{
-        .ptr = buf.ptr,
-        .area_size = buf.len,
-        .length = new_len,
-    };
-    buf[new_len] = 0;
+    while (x.*.length + copy_len > x.*.area_size) {
+        Strgrow(x);
+    }
+    std.mem.copyForwards(u8, x.*.ptr[x.*.length..new_len], y[0..copy_len]);
+    x.*.length = new_len;
+    x.*.ptr[new_len] = 0;
 }
 test Strcat_charp_n {
     const x = Strnew_charp("abc");
@@ -367,21 +362,15 @@ export fn Strfree(x: c.Str) void {
 }
 
 export fn Strgrow(x: c.Str) void {
-    var addlen: usize = if (x.*.area_size < 8192)
+    const addlen: usize = if (x.*.area_size < 8192)
         x.*.area_size
     else
         @divTrunc(x.*.area_size, 2);
-    if (addlen < c.INITIALStr_SIZE)
-        addlen = c.INITIALStr_SIZE;
-    var newlen = x.*.area_size + addlen;
-    if (newlen > c.STR_SIZE_MAX) {
-        newlen = c.STR_SIZE_MAX;
-        if (x.*.length + 1 >= newlen)
-            x.*.length = newlen - 2;
-    }
+    const newlen = x.*.area_size + addlen;
     if (x.*.area_size < newlen) {
-        const allocator = GcAllocator.allocator();
-        x.*.ptr = &(allocator.realloc(x.*.ptr[0..x.*.area_size], newlen) catch @panic("OOM"))[0];
+        const buf = allocStrBuf(newlen);
+        std.mem.copyForwards(u8, buf, x.*.ptr[0..x.*.length]);
+        x.*.ptr = buf.ptr;
         x.*.area_size = newlen;
     }
     x.*.ptr[x.*.length] = 0;
