@@ -3907,7 +3907,7 @@ void follow_map(struct parsed_tagarg* arg)
 /* link menu */
 DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
 {
-    LinkList* l = link_menu(Currentbuf);
+    struct LinkList* l = link_menu(Currentbuf);
     ParsedURL p_url;
 
     if (!l || !l->url)

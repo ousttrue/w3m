@@ -2044,11 +2044,11 @@ int getMenuN(MenuList* list, char* id)
 
 /* --- InitMenu (END) --- */
 
-LinkList*
+struct LinkList*
 link_menu(Buffer* buf)
 {
     Menu menu;
-    LinkList* l;
+    struct LinkList* l;
     int i, nitem, len = 0, linkV = -1;
     char** label;
     Str str;

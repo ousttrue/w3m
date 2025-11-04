@@ -5613,7 +5613,7 @@ addLink(Buffer* buf, struct parsed_tag* tag)
 {
     char *href = NULL, *title = NULL, *ctype = NULL, *rel = NULL, *rev = NULL;
     char type = LINK_TYPE_NONE;
-    LinkList* l;
+    struct LinkList* l;
 
     parsedtag_get_value(tag, ATTR_HREF, &href);
     if (href)
@@ -5636,14 +5636,14 @@ addLink(Buffer* buf, struct parsed_tag* tag)
             title = rev;
     }
 
-    l = New(LinkList);
+    l = New(struct LinkList);
     l->url = href;
     l->title = title;
     l->ctype = ctype;
     l->type = type;
     l->next = NULL;
     if (buf->linklist) {
-        LinkList* i;
+        struct LinkList* i;
         for (i = buf->linklist; i->next; i = i->next)
             ;
         i->next = l;

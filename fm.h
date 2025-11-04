@@ -279,18 +279,8 @@ extern int REV_LB[];
 
 #define NO_REFERER ((char*)-1)
 
-#define LINK_TYPE_NONE 0
-#define LINK_TYPE_REL 1
-#define LINK_TYPE_REV 2
-typedef struct _LinkList {
-    char* url;
-    char* title; /* Next, Contents, ... */
-    char* ctype; /* Content-Type */
-    char type; /* Rel, Rev */
-    struct _LinkList* next;
-} LinkList;
-
 #include "Line.h"
+#include "LinkList.h"
 
 typedef struct _Buffer {
     char* filename;
@@ -321,7 +311,7 @@ typedef struct _Buffer {
     struct _AnchorList* name;
     struct _AnchorList* img;
     struct _AnchorList* formitem;
-    LinkList* linklist;
+    struct LinkList* linklist;
     FormList* formlist;
     struct MapList* maplist;
     struct _HmarkerList* hmarklist;

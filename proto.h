@@ -125,7 +125,7 @@ extern void tabL(void);
 extern void ldDL(void);
 extern void linkLst(void);
 extern void linkMn(void);
-extern LinkList* link_menu(Buffer* buf);
+extern struct LinkList* link_menu(Buffer* buf);
 extern void accessKey(void);
 extern Anchor* accesskey_menu(Buffer* buf);
 extern void listMn(void);

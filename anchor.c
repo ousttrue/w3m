@@ -709,7 +709,7 @@ char* getAnchorText(Buffer* buf, AnchorList* al, Anchor* a)
 Buffer*
 link_list_panel(Buffer* buf)
 {
-    LinkList* l;
+    struct LinkList* l;
     AnchorList* al;
     Anchor* a;
     FormItemList* fi;
