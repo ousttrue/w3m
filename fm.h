@@ -14,7 +14,6 @@
 #define _GNU_SOURCE /* strcasestr() */
 #endif
 
-#include "anchor.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -135,18 +134,6 @@
 #define CPL_ON 0x2
 #define CPL_ALWAYS 0x4
 #define CPL_URL 0x8
-
-#define IMG_FLAG_SKIP 1
-#define IMG_FLAG_AUTO 2
-
-#define IMG_FLAG_START 0
-#define IMG_FLAG_STOP 1
-#define IMG_FLAG_NEXT 2
-
-#define IMG_FLAG_UNLOADED 0
-#define IMG_FLAG_LOADED 1
-#define IMG_FLAG_ERROR 2
-#define IMG_FLAG_DONT_REMOVE 4
 
 #define IS_EMPTY_PARSED_URL(pu) ((pu)->scheme == SCM_UNKNOWN && !(pu)->file)
 

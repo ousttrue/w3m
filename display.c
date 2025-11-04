@@ -1,4 +1,5 @@
 #include "display.h"
+#include "image.h"
 #include "indep.h"
 #include "map.h"
 #include "fm.h"
@@ -738,10 +739,8 @@ redrawLineImage(Buffer* buf, struct Line* l, int i)
         }
         a = retrieveAnchor(buf->img, l->linenumber, pos + j);
         if (a && a->image && a->image->touch < image_touch) {
-            Image* image = a->image;
-            ImageCache* cache;
-
-            cache = image->cache = getImage(image, baseURL(buf),
+            struct Image* image = a->image;
+            struct ImageCache* cache = image->cache = getImage(image, baseURL(buf),
                 buf->image_flag);
             if (cache) {
                 if ((image->width < 0 && cache->width > 0) || (image->height < 0 && cache->height > 0)) {

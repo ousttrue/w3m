@@ -1,9 +1,11 @@
-#include "fm.h"
+#include "anchor.h"
+#include "image.h"
 #include "map.h"
-#include <gcstr/myctype.h>
 #include "regex.h"
 #include "indep.h"
 #include "buffer.h"
+#include <gcstr/myctype.h>
+#include "fm.h"
 
 #define bpcmp(a, b) \
     (((a).line - (b).line) ? ((a).line - (b).line) : ((a).pos - (b).pos))
@@ -542,7 +544,7 @@ void shiftAnchorPosition(AnchorList* al, HmarkerList* hl, int line, int pos,
 void addMultirowsImg(Buffer* buf, AnchorList* al)
 {
     int i, j, k, col, ecol, pos;
-    Image* img;
+    struct Image* img;
     Anchor a_img, a_href, a_form, *a;
     struct Line *l, *ls;
 

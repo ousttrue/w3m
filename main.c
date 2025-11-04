@@ -1,6 +1,8 @@
 #define MAINPROGRAM
 #include "fm.h"
 #include "buffer.h"
+#include "image.h"
+#include "file.h"
 #include "linein.h"
 #include "DownloadList.h"
 #include "cookie.h"

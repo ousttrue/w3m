@@ -2,6 +2,7 @@
  * client-side image maps
  */
 #include "map.h"
+#include "image.h"
 #include "buffer.h"
 #include "fm.h"
 #include "w3m_runtime.h"

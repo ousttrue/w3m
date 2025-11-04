@@ -152,8 +152,6 @@ extern void push_symbol(Str str, char symbol, int width, int n);
 extern void update_utf8_symbol(void);
 extern int is_boundary(unsigned char*, unsigned char*);
 extern int is_blank_line(char* line, int indent);
-extern ImageCache* getImage(Image* image, struct Url* current, int flag);
-extern int getImageSize(ImageCache* cache);
 extern Str process_img(struct parsed_tag* tag, int width);
 extern Str process_anchor(struct parsed_tag* tag, char* tagbuf);
 extern Str process_input(struct parsed_tag* tag);
@@ -319,18 +317,6 @@ extern InputStream openNewsStream(struct Url* pu);
 extern Str loadNewsgroup(struct Url* pu, wc_ces* charset);
 extern void closeNews(void);
 extern void disconnectNews(void);
-extern AnchorList* putAnchor(AnchorList* al, char* url, char* target,
-    Anchor** anchor_return, char* referer,
-    char* title, unsigned char key, int line,
-    int pos);
-extern int onAnchor(Anchor* a, int line, int pos);
-extern Anchor* retrieveAnchor(AnchorList* al, int line, int pos);
-extern Anchor* searchAnchor(AnchorList* al, char* str);
-extern Anchor* closest_next_anchor(AnchorList* a, Anchor* an, int x, int y);
-extern Anchor* closest_prev_anchor(AnchorList* a, Anchor* an, int x, int y);
-extern HmarkerList* putHmarker(HmarkerList* ml, int line, int pos, int seq);
-extern void shiftAnchorPosition(AnchorList* a, HmarkerList* hl, int line,
-    int pos, int shift);
 extern Str decodeB(char** ww);
 extern void decodeB_to_growbuf(struct growbuf* gb, char** ww);
 extern Str decodeQ(char** ww);
@@ -359,7 +345,7 @@ extern void loadPreForm(void);
 extern Str romanNumeral(int n);
 extern Str romanAlphabet(int n);
 extern void setup_child(int child, int i, int f);
-extern void myExec(char* command);
+extern void myExec(const char* command);
 extern void mySystem(char* command, int background);
 extern Str myExtCommand(char* cmd, char* arg, int redirect);
 extern Str myEditor(char* cmd, char* file, int line);
@@ -384,13 +370,6 @@ extern void reMark(void);
 #define prevMk nulcmd
 #define reMark nulcmd
 #endif /* not USE_MARK */
-
-extern void initImage(void);
-extern void termImage(void);
-extern void addImage(ImageCache* cache, int x, int y, int sx, int sy, int w,
-    int h);
-extern void drawImage(void);
-extern void clearImage(void);
 
 extern char* searchKeyData(void);
 

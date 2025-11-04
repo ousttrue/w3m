@@ -1,12 +1,13 @@
-#include <stdio.h>
-#include <string.h>
-#include <sys/types.h>
+#include "file.h"
 #include "fm.h"
 #include "cookie.h"
 #include "w3m_runtime.h"
 #include "indep.h"
 #include "terms.h"
 #include "buffer.h"
+#include <sys/types.h>
+#include <stdio.h>
+#include <string.h>
 
 /* Prototype declaration of internal functions */
 #ifdef HAVE_READLINE

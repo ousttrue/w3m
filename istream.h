@@ -136,16 +136,6 @@ extern Str ssl_get_certificate(SSL* ssl, char* hostname);
 
 #define openIS(path) newInputStream(open((path), O_RDONLY))
 
-/* flags for loadGeneralFile */
-#define RG_NOCACHE 1
-#define RG_FRAME 2
-#define RG_FRAME_SRC 4
-
-typedef struct {
-    char* referer;
-    int flag;
-} URLOption;
-
 union input_stream;
 struct URLFile {
     unsigned char scheme;
@@ -161,7 +151,18 @@ struct URLFile {
     time_t modtime;
 };
 
+enum LoadGeneralFlags {
+    RG_NOCACHE = 1,
+    RG_FRAME = 2,
+    RG_FRAME_SRC = 4,
+};
+
+struct UrlOption {
+    char* referer;
+    enum LoadGeneralFlags flag;
+};
+
 extern struct URLFile openURL(char* url, struct Url* pu, struct Url* current,
-    URLOption* option, FormList* request,
+    struct UrlOption* option, struct form_list* request,
     TextList* extra_header, struct URLFile* ouf,
     struct HttpRequest* hr, unsigned char* status);

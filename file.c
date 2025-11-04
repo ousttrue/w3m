@@ -1,4 +1,6 @@
+#include "file.h"
 #include "display.h"
+#include "image.h"
 #include "linein.h"
 #include "table.h"
 #include "DownloadList.h"
@@ -871,7 +873,7 @@ Str getLinkNumberStr(int correction)
 #define DO_EXTERNAL ((Buffer * (*)(struct URLFile*, Buffer*)) doExternal)
 Buffer*
 loadGeneralFile(char* path, struct Url* volatile current, char* referer,
-    int flag, FormList* volatile request)
+    enum LoadGeneralFlags flag, FormList* volatile request)
 {
     struct URLFile f, *volatile of = NULL;
     struct Url pu;
@@ -889,7 +891,7 @@ loadGeneralFile(char* path, struct Url* volatile current, char* referer,
     volatile Str realm = NULL;
     int volatile add_auth_cookie_flag;
     unsigned char status = HTST_NORMAL;
-    URLOption url_option;
+    struct UrlOption url_option;
     Str tmp;
     Str volatile page = NULL;
     int gopher_download = FALSE;
@@ -2290,11 +2292,11 @@ Str process_img(struct parsed_tag* tag, int width)
         w0 = w;
         i0 = i;
         if (w < 0 || i < 0) {
-            Image image;
             struct Url u;
-
             parseURL2(p, &u, cur_baseURL);
-            image.url = parsedURL2Str(&u)->ptr;
+            struct Image image = {
+                .url = parsedURL2Str(&u)->ptr,
+            };
             if (!uncompressed_file_type(u.file, &image.ext))
                 image.ext = filename_extension(u.file, TRUE);
             image.cache = NULL;
@@ -4648,10 +4650,9 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                         a_img->image = NULL;
                         if (iseq > 0) {
                             struct Url u;
-                            Image* image;
-
                             parseURL2(a_img->url, &u, base);
-                            a_img->image = image = New(Image);
+                            struct Image* image = New(struct Image);
+                            a_img->image = image;
                             image->url = parsedURL2Str(&u)->ptr;
                             if (!uncompressed_file_type(u.file, &image->ext))
                                 image->ext = filename_extension(u.file, TRUE);
@@ -6203,8 +6204,8 @@ _end:
 Buffer*
 loadImageBuffer(struct URLFile* uf, Buffer* newBuf)
 {
-    Image image;
-    ImageCache* cache;
+    struct Image image;
+    struct ImageCache* cache;
     Str tmp, tmpf;
     FILE* src = NULL;
     struct URLFile f;

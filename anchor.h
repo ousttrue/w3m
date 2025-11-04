@@ -1,35 +1,6 @@
 #pragma once
 #include <sys/types.h>
 
-typedef struct _ImageCache {
-    char* url;
-    struct _ParsedURL* current;
-    char* file;
-    char* touch;
-    pid_t pid;
-    char loaded;
-    int index;
-    short width;
-    short height;
-    short a_width;
-    short a_height;
-} ImageCache;
-
-typedef struct _image {
-    char* url;
-    char* ext;
-    short width;
-    short height;
-    short xoffset;
-    short yoffset;
-    short y;
-    short rows;
-    char* map;
-    char ismap;
-    int touch;
-    ImageCache* cache;
-} Image;
-
 typedef struct {
     int line;
     int pos;
@@ -48,7 +19,7 @@ typedef struct _Anchor {
     char slave;
     short y;
     short rows;
-    Image* image;
+    struct Image* image;
 } Anchor;
 
 typedef struct _AnchorList {
@@ -64,3 +35,16 @@ typedef struct _HmarkerList {
     int markmax;
     int prevhseq;
 } HmarkerList;
+
+AnchorList* putAnchor(AnchorList* al, char* url, char* target,
+    Anchor** anchor_return, char* referer,
+    char* title, unsigned char key, int line,
+    int pos);
+int onAnchor(Anchor* a, int line, int pos);
+Anchor* retrieveAnchor(AnchorList* al, int line, int pos);
+Anchor* searchAnchor(AnchorList* al, char* str);
+Anchor* closest_next_anchor(AnchorList* a, Anchor* an, int x, int y);
+Anchor* closest_prev_anchor(AnchorList* a, Anchor* an, int x, int y);
+HmarkerList* putHmarker(HmarkerList* ml, int line, int pos, int seq);
+void shiftAnchorPosition(AnchorList* a, HmarkerList* hl, int line,
+    int pos, int shift);

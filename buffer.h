@@ -134,8 +134,6 @@ struct _Anchor* accesskey_menu(Buffer* buf);
 struct _Anchor* list_menu(Buffer* buf);
 int currentLn(Buffer* buf);
 void tmpClearBuffer(Buffer* buf);
-Buffer* loadGeneralFile(char* path, struct Url* current, char* referer,
-    int flag, struct form_list* request);
 void deleteImage(Buffer* buf);
 void getAllImage(Buffer* buf);
 void HTMLlineproc2(Buffer* buf, TextLineList* tl);

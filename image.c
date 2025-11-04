@@ -1,4 +1,5 @@
 #include "image.h"
+#include "file.h"
 #include "fm.h"
 #include "display.h"
 #include "buffer.h"
@@ -18,7 +19,7 @@ static int image_index = 0;
 /* display image */
 
 typedef struct _termialImage {
-    ImageCache* cache;
+    struct ImageCache* cache;
     short x;
     short y;
     short sx;
@@ -71,7 +72,7 @@ getCharSize(void)
     if (!strchr(Imgdisplay, '/'))
         Strcat_m_charp(tmp, w3m_auxbin_dir(), "/", NULL);
     Strcat_m_charp(tmp, Imgdisplay, " -test 2>/dev/null", NULL);
-    FILE *f = popen(tmp->ptr, "r");
+    FILE* f = popen(tmp->ptr, "r");
     if (!f)
         return FALSE;
     int w = 0, h = 0;
@@ -144,7 +145,7 @@ closeImgdisplay(void)
     Imgdisplay_pid = 0;
 }
 
-void addImage(ImageCache* cache, int x, int y, int sx, int sy, int w, int h)
+void addImage(struct ImageCache* cache, int x, int y, int sx, int sy, int w, int h)
 {
     TerminalImage* i;
 
@@ -310,7 +311,7 @@ static int n_load_image = 0;
 static Hash_sv* image_hash = NULL;
 static Hash_sv* image_file = NULL;
 static GeneralList* image_list = NULL;
-static ImageCache** image_cache = NULL;
+static struct ImageCache** image_cache = NULL;
 static Buffer* image_buffer = NULL;
 
 void deleteImage(Buffer* buf)
@@ -383,9 +384,9 @@ showImageProgress(Buffer* buf)
     }
 }
 
-void loadImage(Buffer* buf, int flag)
+void loadImage(Buffer* buf, enum ImageLoadFlag flag)
 {
-    ImageCache* cache;
+    struct ImageCache* cache;
     struct stat st;
     int i, draw = FALSE;
     /* int wait_st; */
@@ -400,8 +401,8 @@ void loadImage(Buffer* buf, int flag)
     if (n_load_image == 0)
         n_load_image = maxLoadImage;
     if (!image_cache) {
-        image_cache = New_N(ImageCache*, MAX_LOAD_IMAGE);
-        bzero(image_cache, sizeof(ImageCache*) * MAX_LOAD_IMAGE);
+        image_cache = New_N(struct ImageCache*, MAX_LOAD_IMAGE);
+        bzero(image_cache, sizeof(struct ImageCache*) * MAX_LOAD_IMAGE);
     }
     for (i = 0; i < n_load_image; i++) {
         cache = image_cache[i];
@@ -476,7 +477,7 @@ void loadImage(Buffer* buf, int flag)
         if (image_cache[i])
             continue;
         while (1) {
-            cache = (ImageCache*)popValue(image_list);
+            cache = (struct ImageCache*)popValue(image_list);
             if (!cache) {
                 for (i = 0; i < n_load_image; i++) {
                     if (image_cache[i])
@@ -543,11 +544,11 @@ void loadImage(Buffer* buf, int flag)
     }
 }
 
-ImageCache*
-getImage(Image* image, struct Url* current, int flag)
+struct ImageCache*
+getImage(struct Image* image, struct Url* current, enum ImageGetFlags flag)
 {
     Str key = NULL;
-    ImageCache* cache;
+    struct ImageCache* cache;
 
     if (!activeImage)
         return NULL;
@@ -557,7 +558,7 @@ getImage(Image* image, struct Url* current, int flag)
         cache = image->cache;
     else {
         key = Sprintf("%d;%d;%s", image->width, image->height, image->url);
-        cache = (ImageCache*)getHash_sv(image_hash, key->ptr, NULL);
+        cache = (struct ImageCache*)getHash_sv(image_hash, key->ptr, NULL);
     }
     if (cache && cache->index && abs(cache->index) <= image_index - MAX_IMAGE) {
         struct stat st;
@@ -570,7 +571,7 @@ getImage(Image* image, struct Url* current, int flag)
         if (flag == IMG_FLAG_SKIP)
             return NULL;
 
-        cache = New(ImageCache);
+        cache = New(struct ImageCache);
         cache->url = image->url;
         cache->current = current;
         cache->file = tmpfname(TMPF_DFL, image->ext)->ptr;
@@ -691,7 +692,7 @@ success:
     return TRUE;
 }
 
-int getImageSize(ImageCache* cache)
+int getImageSize(struct ImageCache* cache)
 {
     Str tmp;
     FILE* f;
