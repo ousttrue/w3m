@@ -5,6 +5,7 @@
 #include "http_auth.h"
 #include "dns_order.h"
 #include "cookie.h"
+#include "buffer.h"
 #include "image.h"
 #include "w3m_runtime.h"
 #include <gcstr/gcstr.h>
@@ -168,10 +169,8 @@ static int OptionEncode = FALSE;
 #define CMT_BGEXTVIEW N_("Run external viewer in the background")
 #define CMT_EXT_DIRLIST N_("Use external program for directory listing")
 #define CMT_DIRLIST_CMD N_("URL of directory listing command")
-#ifdef USE_DICT
 #define CMT_USE_DICTCOMMAND N_("Enable dictionary lookup through CGI")
 #define CMT_DICTCOMMAND N_("URL of dictionary lookup command")
-#endif /* USE_DICT */
 #define CMT_IGNORE_NULL_IMG_ALT N_("Display link name for images lacking ALT")
 #define CMT_IFILE N_("Index file for directories")
 #define CMT_RETRY_HTTP N_("Prepend http:// to URL automatically")
@@ -210,10 +209,6 @@ static int OptionEncode = FALSE;
 #define CMT_META_REFRESH N_("Enable processing of meta-refresh tag")
 #define CMT_LOCALHOST_ONLY N_("Restrict connections only to localhost")
 
-#ifdef USE_MIGEMO
-#define CMT_USE_MIGEMO N_("Enable Migemo (Roma-ji search)")
-#define CMT_MIGEMO_COMMAND N_("Migemo command")
-#endif /* USE_MIGEMO */
 
 #define CMT_DISPLAY_CHARSET N_("Display charset")
 #define CMT_DOCUMENT_CHARSET N_("Default document charset")
@@ -372,12 +367,10 @@ struct param_ptr params1[] = {
         CMT_EXT_DIRLIST, NULL },
     { "dirlist_cmd", P_STRING, PI_TEXT, (void*)&DirBufferCommand,
         CMT_DIRLIST_CMD, NULL },
-#ifdef USE_DICT
     { "use_dictcommand", P_INT, PI_ONOFF, (void*)&UseDictCommand,
         CMT_USE_DICTCOMMAND, NULL },
     { "dictcommand", P_STRING, PI_TEXT, (void*)&DictCommand,
         CMT_DICTCOMMAND, NULL },
-#endif /* USE_DICT */
     { "multicol", P_INT, PI_ONOFF, (void*)&multicolList, CMT_MULTICOL, NULL },
     { "alt_entity", P_CHARINT, PI_ONOFF, (void*)&UseAltEntity, CMT_ALT_ENTITY,
         NULL },
@@ -473,12 +466,6 @@ struct param_ptr params3[] = {
     { "wrap_search", P_INT, PI_ONOFF, (void*)&WrapDefault, CMT_WRAP, NULL },
     { "ignorecase_search", P_INT, PI_ONOFF, (void*)&IgnoreCase,
         CMT_IGNORE_CASE, NULL },
-#ifdef USE_MIGEMO
-    { "use_migemo", P_INT, PI_ONOFF, (void*)&use_migemo, CMT_USE_MIGEMO,
-        NULL },
-    { "migemo_command", P_STRING, PI_TEXT, (void*)&migemo_command,
-        CMT_MIGEMO_COMMAND, NULL },
-#endif /* USE_MIGEMO */
     { "relative_wheel_scroll", P_INT, PI_SEL_C, (void*)&relative_wheel_scroll,
         CMT_RELATIVE_WHEEL_SCROLL, (void*)wheelmode },
     { "relative_wheel_scroll_ratio", P_INT, PI_TEXT,
@@ -1159,9 +1146,6 @@ void sync_with_option(void)
     parse_cookie();
     initMailcap();
     initMimeTypes();
-#ifdef USE_MIGEMO
-    init_migemo();
-#endif
     if (fmInitialized && (displayImage || enable_inline_image))
         initImage();
     loadPasswd();
@@ -1501,12 +1485,6 @@ char* confFile(char* base)
     return expandPath(Strnew_m_charp(w3m_conf_dir(), "/", base, NULL)->ptr);
 }
 
-#ifndef USE_HELP_CGI
-char* helpFile(char* base)
-{
-    return expandPath(Strnew_m_charp(w3m_help_dir(), "/", base, NULL)->ptr);
-}
-#endif
 
 /* siteconf */
 /*

@@ -1,4 +1,5 @@
 #include "http_auth.h"
+#include "buffer.h"
 #include <gcstr/gcstr.h>
 
 #include <stdio.h>
@@ -325,7 +326,7 @@ void closeFTP(void)
 }
 
 InputStream
-openFTPStream(struct Url* pu, URLFile* uf)
+openFTPStream(struct Url* pu, struct URLFile* uf)
 {
     Str tmp;
     int status;

@@ -1,5 +1,6 @@
 #include "AlarmEvent.h"
 #include "funcname1.h"
+#include "buffer.h"
 #include "fm.h"
 
 static struct AlarmEvent DefaultAlarm = (struct AlarmEvent) {

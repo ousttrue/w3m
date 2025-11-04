@@ -1,5 +1,6 @@
 #define MAINPROGRAM
 #include "fm.h"
+#include "buffer.h"
 #include "cookie.h"
 #include "w3m_runtime.h"
 #include "keybind.h"
@@ -30,12 +31,6 @@ unsigned char last_key = 0;
 #include "util.h"
 
 #define DSTR_LEN 256
-
-Hist* LoadHist;
-Hist* SaveHist;
-Hist* URLHist;
-Hist* ShellHist;
-Hist* TextHist;
 
 typedef struct _Event {
     int cmd;
@@ -125,9 +120,6 @@ fversion(FILE* f)
         ",alarm"
 #ifdef USE_MARK
         ",mark"
-#endif
-#ifdef USE_MIGEMO
-        ",migemo"
 #endif
     );
 }
@@ -1183,9 +1175,6 @@ resize_screen(void)
 static void
 SigPipe(SIGNAL_ARG)
 {
-#ifdef USE_MIGEMO
-    init_migemo();
-#endif
     mySignal(SIGPIPE, SigPipe);
 }
 
@@ -1391,12 +1380,6 @@ dispincsrch(int ch, Str buf, Lineprop* prop)
         do_next_search = TRUE;
         break;
 
-#ifdef USE_MIGEMO
-    case 034:
-        migemo_active = -migemo_active;
-        goto done;
-#endif
-
     default:
         if (ch >= 0)
             return ch; /* use InputKeymap */
@@ -1426,15 +1409,6 @@ dispincsrch(int ch, Str buf, Lineprop* prop)
     }
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
     clear_mark(Currentbuf->currentLine);
-#ifdef USE_MIGEMO
-done:
-    while (*str++ != '\0') {
-        if (migemo_active > 0)
-            *prop++ |= PE_UNDER;
-        else
-            *prop++ &= ~PE_UNDER;
-    }
-#endif
     return -1;
 }
 
@@ -1812,20 +1786,12 @@ DEFUN(ldfile, LOAD, "Open local file in a new buffer")
 /* Load help file */
 DEFUN(ldhelp, HELP, "Show help panel")
 {
-#ifdef USE_HELP_CGI
-    char* lang;
-    int n;
-    Str tmp;
-
-    lang = AcceptLang;
-    n = strcspn(lang, ";, \t");
-    tmp = Sprintf("file:///$LIB/" HELP_CGI CGI_EXTENSION "?version=%s&lang=%s",
+    const char* lang = AcceptLang;
+    int n = strcspn(lang, ";, \t");
+    Str tmp = Sprintf("file:///$LIB/" HELP_CGI CGI_EXTENSION "?version=%s&lang=%s",
         Str_form_quote(Strnew_charp(w3m_version))->ptr,
         Str_form_quote(Strnew_charp_n(lang, n))->ptr);
     cmd_loadURL(tmp->ptr, NULL, NO_REFERER, NULL);
-#else
-    cmd_loadURL(helpFile(HELP_FILE), NULL, NO_REFERER, NULL);
-#endif
 }
 
 static void
@@ -3687,7 +3653,7 @@ goURL0(char* prompt, int relative)
 
     url = searchKeyData();
     if (url == NULL) {
-        Hist* hist = copyHist(URLHist);
+        struct Hist* hist = copyHist(URLHist);
         Anchor* a;
 
         current = baseURL(Currentbuf);
@@ -4766,7 +4732,6 @@ GetWord(Buffer* buf)
     return NULL;
 }
 
-#ifdef USE_DICT
 static void
 execdict(char* word)
 {
@@ -4809,7 +4774,6 @@ DEFUN(dictwordat, DICT_WORD_AT,
 {
     execdict(GetWord(Currentbuf));
 }
-#endif /* USE_DICT */
 
 void set_buffer_environ(Buffer* buf)
 {
@@ -4919,9 +4883,6 @@ void deleteFiles()
 
 void w3m_exit(int i)
 {
-#ifdef USE_MIGEMO
-    init_migemo(); /* close pipe to migemo */
-#endif
     stopDownload();
     deleteFiles();
     free_ssl_ctx();
@@ -5077,7 +5038,6 @@ DEFUN(reinit, REINIT, "Reload configuration file")
         initMimeTypes();
         return;
     }
-
 
     disp_err_message(Sprintf("Don't know how to reinitialize '%s'", resource)->ptr, FALSE);
 }

@@ -3,6 +3,7 @@
 #include <gcstr/myctype.h>
 #include "regex.h"
 #include "indep.h"
+#include "buffer.h"
 
 #define bpcmp(a, b) \
     (((a).line - (b).line) ? ((a).line - (b).line) : ((a).pos - (b).pos))

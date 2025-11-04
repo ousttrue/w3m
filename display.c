@@ -3,6 +3,7 @@
 #include "map.h"
 #include "fm.h"
 #include "w3m_runtime.h"
+#include "buffer.h"
 #include <signal.h>
 
 extern unsigned char last_key;

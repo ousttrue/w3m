@@ -1,4 +1,5 @@
 #include "fm.h"
+#include "buffer.h"
 #include "w3m_runtime.h"
 #include "parsetagx.h"
 #include <gcstr/myctype.h>
@@ -394,7 +395,7 @@ createFrameFile(struct frameset* f, FILE* f1, Buffer* current, int level,
     int force_reload)
 {
     int r, c, t_stack;
-    URLFile f2;
+    struct URLFile f2;
     wc_ces charset, doc_charset;
     char *d_target, *p_target, *s_target, *t_target;
     struct Url *currentURL, base;

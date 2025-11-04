@@ -93,7 +93,7 @@ static struct table2 DefaultGuess[] = {
     { NULL, NULL }
 };
 
-static void add_index_file(struct Url* pu, URLFile* uf);
+static void add_index_file(struct Url* pu, struct URLFile* uf);
 static char* schemeNumToName(int scheme);
 
 /* #define HTTP_DEFAULT_FILE    "/index.html" */
@@ -468,22 +468,6 @@ write_from_file(int sock, char* file)
         }
         fclose(fd);
     }
-}
-
-struct Url*
-baseURL(Buffer* buf)
-{
-    if (buf->bufferprop & BP_NO_URL) {
-        /* no URL is defined for the buffer */
-        return NULL;
-    }
-    if (buf->baseURL != NULL) {
-        /* <BASE> tag is defined in the document */
-        return buf->baseURL;
-    } else if (IS_EMPTY_PARSED_URL(&buf->currentURL))
-        return NULL;
-    else
-        return &buf->currentURL;
 }
 
 int openSocket(char* const hostname,
@@ -1175,9 +1159,9 @@ schemeNumToName(int scheme)
     return NULL;
 }
 
-void init_stream(URLFile* uf, int scheme, InputStream stream)
+void init_stream(struct URLFile* uf, int scheme, InputStream stream)
 {
-    memset(uf, 0, sizeof(URLFile));
+    memset(uf, 0, sizeof(struct URLFile));
     uf->stream = stream;
     uf->scheme = scheme;
     uf->encoding = ENC_7BIT;
@@ -1189,10 +1173,10 @@ void init_stream(URLFile* uf, int scheme, InputStream stream)
     uf->modtime = -1;
 }
 
-URLFile
+struct URLFile
 openURL(char* url, struct Url* pu, struct Url* current,
     URLOption* option, FormList* request, TextList* extra_header,
-    URLFile* ouf, struct HttpRequest* hr, unsigned char* status)
+    struct URLFile* ouf, struct HttpRequest* hr, unsigned char* status)
 {
     Str tmp;
     int sock, scheme;
@@ -1200,7 +1184,7 @@ openURL(char* url, struct Url* pu, struct Url* current,
     Str gophertmp;
     char type;
     int n;
-    URLFile uf;
+    struct URLFile uf;
     struct HttpRequest hr0;
     SSL* sslh = NULL;
 
@@ -1529,7 +1513,7 @@ retry:
 
 /* add index_file if exists */
 static void
-add_index_file(struct Url* pu, URLFile* uf)
+add_index_file(struct Url* pu, struct URLFile* uf)
 {
     char *p, *q;
     TextList* index_file_list = NULL;
@@ -1800,12 +1784,10 @@ url_decode(const char *url, const struct Url *base, wc_ces doc_charset)
 }
 #endif
 
-char* url_decode2(const char* url, const Buffer* buf)
+char* url_decode2(const char* url, wc_ces url_charset)
 {
-    wc_ces url_charset;
-
     if (!DecodeURL)
         return (char*)url;
-    url_charset = buf ? url_to_charset(url, baseURL((Buffer*)buf), buf->document_charset) : url_to_charset(url, NULL, 0);
+
     return url_unquote_conv((char*)url, url_charset);
 }

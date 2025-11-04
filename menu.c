@@ -2,9 +2,11 @@
  * w3m menu.c
  */
 #include "fm.h"
+#include "buffer.h"
 #include "w3m_runtime.h"
 #include "rc.h"
 #include "menu.h"
+#include "display.h"
 #include "func.h"
 #include "regex.h"
 #include <gcstr/gcstr.h>

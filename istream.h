@@ -142,7 +142,7 @@ typedef struct {
 } URLOption;
 
 union input_stream;
-typedef struct {
+struct URLFile {
     unsigned char scheme;
     char is_cgi;
     char encoding;
@@ -154,9 +154,9 @@ typedef struct {
     char* ssl_certificate;
     char* url;
     time_t modtime;
-} URLFile;
+};
 
-extern URLFile openURL(char* url, struct Url* pu, struct Url* current,
+extern struct URLFile openURL(char* url, struct Url* pu, struct Url* current,
     URLOption* option, FormList* request,
-    TextList* extra_header, URLFile* ouf,
+    TextList* extra_header, struct URLFile* ouf,
     struct HttpRequest* hr, unsigned char* status);

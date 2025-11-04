@@ -1,5 +1,6 @@
 #include "fm.h"
 #include "w3m_runtime.h"
+#include "buffer.h"
 #include "indep.h"
 #include <pwd.h>
 #include <gcstr/gcstr.h>
@@ -493,26 +494,6 @@ char* lastFileName(char* path)
     return allocStr(q, -1);
 }
 
-#ifdef USE_INCLUDED_SRAND48
-static unsigned long R1 = 0x1234abcd;
-static unsigned long R2 = 0x330e;
-#define A1 0x5deec
-#define A2 0xe66d
-#define C 0xb
-
-void srand48(long seed)
-{
-    R1 = (unsigned long)seed;
-    R2 = 0x330e;
-}
-
-long lrand48(void)
-{
-    R1 = (A1 * R1 << 16) + A1 * R2 + A2 * R1 + ((A2 * R2 + C) >> 16);
-    R2 = (A2 * R2 + C) & 0xffff;
-    return (long)(R1 >> 1);
-}
-#endif
 
 char* mybasename(char* s)
 {

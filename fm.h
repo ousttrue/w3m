@@ -102,9 +102,7 @@
 #define SHELLBUFFERNAME "*Shellout*"
 #define PIPEBUFFERNAME "*stream*"
 #define CPIPEBUFFERNAME "*stream(closed)*"
-#ifdef USE_DICT
 #define DICTBUFFERNAME "*dictionary*"
-#endif /* USE_DICT */
 
 #ifndef HOST_NAME_MAX
 #define HOST_NAME_MAX 255
@@ -162,41 +160,10 @@
 #define B_SCROLL 3
 #define B_REDRAW_IMAGE 4
 
-/* Buffer Property */
-#define BP_NORMAL 0x0
-#define BP_PIPE 0x1
-#define BP_FRAME 0x2
-#define BP_INTERNAL 0x8
-#define BP_NO_URL 0x10
-#define BP_REDIRECTED 0x20
-#define BP_CLOSE 0x40
-
-/* Link Buffer */
-#define LB_NOLINK -1
-#define LB_FRAME 0 /* rFrame() */
-#define LB_N_FRAME 1
-#define LB_INFO 2 /* pginfo() */
-#define LB_N_INFO 3
-#define LB_SOURCE 4 /* vwSrc() */
-#define LB_N_SOURCE LB_SOURCE
-#define MAX_LB 5
-
 /* Search Result */
 #define SR_FOUND 0x1
 #define SR_NOTFOUND 0x2
 #define SR_WRAPPED 0x4
-
-#ifdef MAINPROGRAM
-int REV_LB[MAX_LB] = {
-    LB_N_FRAME,
-    LB_FRAME,
-    LB_N_INFO,
-    LB_INFO,
-    LB_N_SOURCE,
-};
-#else /* not MAINPROGRAM */
-extern int REV_LB[];
-#endif /* not MAINPROGRAM */
 
 /* mark URL, Message-ID */
 #define CHK_URL 1
@@ -265,93 +232,6 @@ extern int REV_LB[];
  * Types.
  */
 
-#include "Line.h"
-#include "LinkList.h"
-#include "Url.h"
-
-typedef struct _Buffer {
-    char* filename;
-    char* buffername;
-    struct Line* firstLine;
-    struct Line* topLine;
-    struct Line* currentLine;
-    struct Line* lastLine;
-    struct _Buffer* nextBuffer;
-    struct _Buffer* linkBuffer[MAX_LB];
-    short width;
-    short height;
-    char* type;
-    char* real_type;
-    int allLine;
-    short bufferprop;
-    int currentColumn;
-    short cursorX;
-    short cursorY;
-    int pos;
-    int visualpos;
-    short rootX;
-    short rootY;
-    short COLS;
-    short LINES;
-    InputStream pagerSource;
-    struct _AnchorList* href;
-    struct _AnchorList* name;
-    struct _AnchorList* img;
-    struct _AnchorList* formitem;
-    struct LinkList* linklist;
-    FormList* formlist;
-    struct MapList* maplist;
-    struct _HmarkerList* hmarklist;
-    struct _HmarkerList* imarklist;
-    struct Url currentURL;
-    struct Url* baseURL;
-    char* baseTarget;
-    int real_scheme;
-    char* sourcefile;
-    struct frameset* frameset;
-    struct frameset_queue* frameQ;
-    int* clone;
-    size_t trbyte;
-    char check_url;
-    wc_ces document_charset;
-    wc_uint8 auto_detect;
-    TextList* document_header;
-    FormItemList* form_submit;
-    char* savecache;
-    char* edit;
-    struct mailcap* mailcap;
-    char* mailcap_source;
-    char* header_source;
-    char search_header;
-    char* ssl_certificate;
-    char image_flag;
-    char image_loaded;
-    char need_reshape;
-    struct _Anchor* submit;
-    struct _BufferPos* undo;
-    struct AlarmEvent* event;
-} Buffer;
-
-typedef struct _BufferPos {
-    long top_linenumber;
-    long cur_linenumber;
-    int currentColumn;
-    int pos;
-    int bpos;
-    struct _BufferPos* next;
-    struct _BufferPos* prev;
-} BufferPos;
-
-typedef struct _TabBuffer {
-    struct _TabBuffer* nextTab;
-    struct _TabBuffer* prevTab;
-    Buffer* currentBuffer;
-    Buffer* firstBuffer;
-    short x1;
-    short x2;
-    short y;
-} TabBuffer;
-
 typedef struct _DownloadList {
     pid_t pid;
     char* url;
@@ -403,6 +283,8 @@ typedef struct _DownloadList {
 #define _INIT_BUFFER_WIDTH (COLS - (showLineNum ? 6 : 1))
 #define INIT_BUFFER_WIDTH ((_INIT_BUFFER_WIDTH > 0) ? _INIT_BUFFER_WIDTH : 0)
 #define FOLD_BUFFER_WIDTH (FoldLine ? (INIT_BUFFER_WIDTH + 1) : -1)
+
+#include "Line.h"
 
 struct input_alt_attr {
     int hseq;
@@ -647,21 +529,7 @@ global int CurrentPid;
 #if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
 global char* MyProgramName init("w3m");
 #endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
-/*
- * global Buffer *Currentbuf;
- * global Buffer *Firstbuf;
- */
-global TabBuffer* CurrentTab;
-global TabBuffer* FirstTab;
-global TabBuffer* LastTab;
-global int open_tab_blank init(FALSE);
-global int open_tab_dl_list init(FALSE);
-global int close_tab_back init(FALSE);
-global int nTab;
-global int TabCols init(10);
-#define NO_TABBUFFER ((TabBuffer*)1)
-#define Currentbuf (CurrentTab->currentBuffer)
-#define Firstbuf (CurrentTab->firstBuffer)
+
 global DownloadList* FirstDL init(NULL);
 global DownloadList* LastDL init(NULL);
 global int CurrentKey;
@@ -752,10 +620,8 @@ global int squeezeBlankLine init(FALSE);
 global char* BookmarkFile init(NULL);
 global int UseExternalDirBuffer init(TRUE);
 global char* DirBufferCommand init("file:///$LIB/dirlist" CGI_EXTENSION);
-#ifdef USE_DICT
 global int UseDictCommand init(TRUE);
 global char* DictCommand init("file:///$LIB/w3mdict" CGI_EXTENSION);
-#endif /* USE_DICT */
 global int ignore_null_img_alt init(TRUE);
 #define DISPLAY_INS_DEL_SIMPLE 0
 #define DISPLAY_INS_DEL_NORMAL 1
@@ -769,11 +635,6 @@ global int FoldLine init(FALSE);
 global int DefaultURLString init(DEFAULT_URL_CURRENT);
 global int MarkAllPages init(FALSE);
 
-#ifdef USE_MIGEMO
-global int use_migemo init(FALSE);
-global int migemo_active init(0);
-global char* migemo_command init(DEF_MIGEMO_COMMAND);
-#endif /* USE_MIGEMO */
 
 global struct auth_cookie* Auth_cookie init(NULL);
 
@@ -781,16 +642,6 @@ global char* mailcap_files init(USER_MAILCAP ", " SYS_MAILCAP);
 global char* mimetypes_files init(USER_MIMETYPES ", " SYS_MIMETYPES);
 
 global TextList* fileToDelete;
-
-extern Hist* LoadHist;
-extern Hist* SaveHist;
-extern Hist* URLHist;
-extern Hist* ShellHist;
-extern Hist* TextHist;
-global int UseHistory init(TRUE);
-global int URLHistSize init(100);
-global int SaveURLHist init(TRUE);
-global int multicolList init(FALSE);
 
 global char ExtHalfdump init(FALSE);
 global char FollowLocale init(TRUE);

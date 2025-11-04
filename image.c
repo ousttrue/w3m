@@ -1,5 +1,7 @@
 #include "image.h"
 #include "fm.h"
+#include "display.h"
+#include "buffer.h"
 #include "indep.h"
 #include <sys/types.h>
 #include <sys/stat.h>

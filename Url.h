@@ -1,5 +1,6 @@
 #pragma once
 #include <gcstr/Str.h>
+#include <wc.h>
 
 #define SCM_UNKNOWN 255
 #define SCM_MISSING 254
@@ -39,3 +40,4 @@ void parseURL2(char* url, struct Url* pu, struct Url* current);
 Str parsedURL2Str(struct Url* pu);
 Str parsedURL2RefererStr(struct Url* pu);
 Str _parsedURL2Str(struct Url* pu, int pass, int user, int label);
+char* url_decode2(const char* url, wc_ces url_charset);

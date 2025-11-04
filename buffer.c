@@ -1,7 +1,25 @@
+#include "buffer.h"
 #include "fm.h"
 #include "cookie.h"
 #include "w3m_runtime.h"
 #include "indep.h"
+
+TabBuffer* CurrentTab = 0;
+TabBuffer* FirstTab = 0;
+TabBuffer* LastTab = 0;
+int open_tab_blank = (FALSE);
+int open_tab_dl_list = (FALSE);
+int close_tab_back = (FALSE);
+int nTab = 0;
+int TabCols = (10);
+
+int REV_LB[MAX_LB] = {
+    LB_N_FRAME,
+    LB_FRAME,
+    LB_N_INFO,
+    LB_INFO,
+    LB_N_SOURCE,
+};
 
 char* NullLine = "";
 Lineprop NullProp[] = { 0 };
@@ -93,6 +111,22 @@ void discardBuffer(Buffer* buf)
         deleteFrameSet(buf->frameset);
         buf->frameset = popFrameTree(&(buf->frameQ));
     }
+}
+
+struct Url*
+baseURL(Buffer* buf)
+{
+    if (buf->bufferprop & BP_NO_URL) {
+        /* no URL is defined for the buffer */
+        return NULL;
+    }
+    if (buf->baseURL != NULL) {
+        /* <BASE> tag is defined in the document */
+        return buf->baseURL;
+    } else if (IS_EMPTY_PARSED_URL(&buf->currentURL))
+        return NULL;
+    else
+        return &buf->currentURL;
 }
 
 /*
@@ -452,7 +486,7 @@ selectBuffer(Buffer* firstbuf, Buffer* currentbuf, char* selectchar)
  */
 void reshapeBuffer(Buffer* buf)
 {
-    URLFile f;
+    struct URLFile f;
     Buffer sbuf;
     wc_uint8 old_auto_detect = WcOption.auto_detect;
 
@@ -488,7 +522,7 @@ void reshapeBuffer(Buffer* buf)
 
     if (buf->header_source) {
         if (buf->currentURL.scheme != SCM_LOCAL || buf->mailcap_source || !strcmp(buf->currentURL.file, "-")) {
-            URLFile h;
+            struct URLFile h;
             init_stream(&h, SCM_LOCAL, NULL);
             examineFile(buf->header_source, &h);
             if (h.stream) {
@@ -795,4 +829,9 @@ cookie_list_panel(void)
     }
     Strcat_charp(src, "</ol></form></body></html>");
     return loadHTMLString(src);
+}
+
+wc_ces urlCharset(Buffer* buf, const char* url)
+{
+    return buf ? url_to_charset(url, baseURL((Buffer*)buf), buf->document_charset) : url_to_charset(url, NULL, 0);
 }

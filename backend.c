@@ -6,6 +6,7 @@
 #include "w3m_runtime.h"
 #include "indep.h"
 #include "terms.h"
+#include "buffer.h"
 
 /* Prototype declaration of internal functions */
 #ifdef HAVE_READLINE
