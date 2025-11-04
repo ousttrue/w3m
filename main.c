@@ -1,6 +1,7 @@
 #define MAINPROGRAM
 #include "fm.h"
 #include "buffer.h"
+#include "linein.h"
 #include "DownloadList.h"
 #include "cookie.h"
 #include "w3m_runtime.h"

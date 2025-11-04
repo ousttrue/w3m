@@ -152,18 +152,6 @@ extern void push_symbol(Str str, char symbol, int width, int n);
 extern void update_utf8_symbol(void);
 extern int is_boundary(unsigned char*, unsigned char*);
 extern int is_blank_line(char* line, int indent);
-extern void push_render_image(Str str, int width, int limit,
-    struct html_feed_environ* h_env);
-extern void flushline(struct html_feed_environ* h_env, struct readbuffer* obuf,
-    int indent, int force, int width);
-extern void do_blankline(struct html_feed_environ* h_env,
-    struct readbuffer* obuf, int indent, int indent_incr,
-    int width);
-extern void purgeline(struct html_feed_environ* h_env);
-extern void save_fonteffect(struct html_feed_environ* h_env,
-    struct readbuffer* obuf);
-extern void restore_fonteffect(struct html_feed_environ* h_env,
-    struct readbuffer* obuf);
 extern ImageCache* getImage(Image* image, struct Url* current, int flag);
 extern int getImageSize(ImageCache* cache);
 extern Str process_img(struct parsed_tag* tag, int width);
@@ -181,17 +169,8 @@ extern void feed_textarea(char* str);
 extern Str process_form(struct parsed_tag* tag);
 extern Str process_n_form(void);
 extern int getMetaRefreshParam(char* q, Str* refresh_uri);
-extern int HTMLtagproc1(struct parsed_tag* tag,
-    struct html_feed_environ* h_env);
-extern void HTMLlineproc0(char* istr, struct html_feed_environ* h_env,
-    int internal);
-#define HTMLlineproc1(x, y) HTMLlineproc0(x, y, TRUE)
 
 extern void showProgress(long long* linelen, long long* trbyte);
-extern void init_henv(struct html_feed_environ*, struct readbuffer*,
-    struct environment*, int, TextLineList*, int, int);
-extern void completeHTMLstream(struct html_feed_environ*,
-    struct readbuffer*);
 extern Str loadGopherDir(struct URLFile* uf, struct Url* pu, wc_ces* charset);
 extern Str loadGopherSearch(struct URLFile* uf, struct Url* pu, wc_ces* charset);
 extern int save2tmp(struct URLFile uf, char* tmpf);
@@ -205,19 +184,7 @@ extern int checkOverWrite(char* path);
 extern char* inputAnswer(char* prompt);
 extern int matchattr(char* p, char* attr, int len, Str* value);
 extern void calcTabPos(void);
-extern void addChar(char c, Lineprop mode);
-extern void addMChar(char* c, Lineprop mode, size_t len);
-extern void message(char* s, int return_x, int return_y);
-extern void disp_err_message(char* s, int redraw_current);
-extern void disp_message(char* s, int redraw_current);
-extern void disp_message_nomouse(char* s, int redraw_current);
-extern void set_delayed_message(char* s);
-extern int columnPos(struct Line* line, int column);
-extern int columnLen(struct Line* line, int column);
 extern int gethtmlcmd(char** s);
-extern Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor);
-extern int calcPosition(char* l, Lineprop* pr, int len, int pos, int bpos,
-    int mode);
 extern char* lastFileName(char* path);
 extern char* mybasename(char* s);
 extern char* mydirname(char* s);
@@ -230,9 +197,6 @@ extern void escmap(void);
 extern void escbmap(void);
 extern void escdmap(char c);
 extern void multimap(void);
-struct Hist;
-extern char* inputLineHistSearch(char* prompt, char* def_str, int flag,
-    struct Hist* hist, int (*incfunc)(int ch, Str buf, Lineprop* prop));
 extern Str unescape_spaces(Str s);
 extern double log_like(int x);
 extern struct table* newTable(void);
@@ -243,17 +207,10 @@ extern void print_item(struct table* t, int row, int col, int width, Str buf);
 extern void print_sep(struct table* t, int row, int type, int maxcol, Str buf);
 extern void do_refill(struct table* tbl, int row, int col, int maxlimit);
 extern void initRenderTable(void);
-extern void renderTable(struct table* t, int max_width,
-    struct html_feed_environ* h_env);
 extern struct table* begin_table(int border, int spacing, int padding,
     int vspace);
 extern void end_table(struct table* tbl);
-extern void check_rowcol(struct table* tbl, struct table_mode* mode);
 extern int minimum_length(char* line);
-extern int feed_table(struct table* tbl, char* line, struct table_mode* mode,
-    int width, int internal);
-extern void feed_table1(struct table* tbl, Str tok, struct table_mode* mode,
-    int width);
 extern void pushTable(struct table*, struct table*);
 extern struct form_list* newFormList(char* action, char* method, char* charset,
     char* enctype, char* target, char* name,

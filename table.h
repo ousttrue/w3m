@@ -1,4 +1,7 @@
-/* $Id: table.h,v 1.12 2003/09/22 21:02:21 ukai Exp $ */
+#pragma once
+#include "Line.h"
+#include "textlist.h"
+
 #if (defined(MESCHACH) && !defined(MATRIX))
 #define MATRIX
 #endif /* (defined(MESCHACH) && !defined(MATRIX)) */
@@ -131,7 +134,11 @@ struct table_mode {
     unsigned char end_tag;
 };
 
-/* Local Variables:    */
-/* c-basic-offset: 4   */
-/* tab-width: 8        */
-/* End:                */
+struct html_feed_environ;
+void renderTable(struct table* t, int max_width,
+    struct html_feed_environ* h_env);
+void check_rowcol(struct table* tbl, struct table_mode* mode);
+int feed_table(struct table* tbl, char* line, struct table_mode* mode,
+    int width, int internal);
+void feed_table1(struct table* tbl, Str tok, struct table_mode* mode,
+    int width);

@@ -136,6 +136,11 @@ extern Str ssl_get_certificate(SSL* ssl, char* hostname);
 
 #define openIS(path) newInputStream(open((path), O_RDONLY))
 
+/* flags for loadGeneralFile */
+#define RG_NOCACHE 1
+#define RG_FRAME 2
+#define RG_FRAME_SRC 4
+
 typedef struct {
     char* referer;
     int flag;

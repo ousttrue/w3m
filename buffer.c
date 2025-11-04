@@ -3,6 +3,7 @@
 #include "cookie.h"
 #include "w3m_runtime.h"
 #include "indep.h"
+#include "display.h"
 
 TabBuffer* CurrentTab = 0;
 TabBuffer* FirstTab = 0;

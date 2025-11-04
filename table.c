@@ -1,16 +1,17 @@
-/* $Id: table.c,v 1.58 2010/08/09 11:59:19 htrb Exp $ */
 /*
  * HTML table
  */
+#include "table.h"
+#include "html_feed.h"
+#include "fm.h"
+#include "html.h"
+#include "parsetagx.h"
+#include "indep.h"
+#include <gcstr/gcstr.h>
 #include <sys/types.h>
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
-#include "fm.h"
-#include "html.h"
-#include "parsetagx.h"
-#include <gcstr/gcstr.h>
-#include "indep.h"
 
 int symbol_width = 0;
 int symbol_width0 = 0;

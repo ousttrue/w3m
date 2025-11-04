@@ -1,5 +1,7 @@
 #include "http_auth.h"
+#include "display.h"
 #include "buffer.h"
+#include "linein.h"
 #include <gcstr/gcstr.h>
 
 #include <stdio.h>

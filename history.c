@@ -1,4 +1,5 @@
 #include "fm.h"
+#include "display.h"
 #include "rc.h"
 #include "indep.h"
 #include "buffer.h"

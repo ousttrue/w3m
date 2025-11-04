@@ -74,7 +74,6 @@
 /*
  * Constants.
  */
-#define LINELEN 256 /* Initial line length */
 #define PAGER_MAX_LINE 10000 /* Maximum line kept as pager */
 
 #define MAXIMUM_COLS 1024
@@ -108,50 +107,6 @@
 #define HOST_NAME_MAX 255
 #endif
 
-/*
- * Line Property
- */
-
-#define P_CHARTYPE 0x3f00
-#define PC_ASCII (WTF_TYPE_ASCII << 8)
-#define PC_CTRL (WTF_TYPE_CTRL << 8)
-#define PC_WCHAR1 (WTF_TYPE_WCHAR1 << 8)
-#define PC_WCHAR2 (WTF_TYPE_WCHAR2 << 8)
-#define PC_KANJI (WTF_TYPE_WIDE << 8)
-#define PC_KANJI1 (PC_WCHAR1 | PC_KANJI)
-#define PC_KANJI2 (PC_WCHAR2 | PC_KANJI)
-#define PC_UNKNOWN (WTF_TYPE_UNKNOWN << 8)
-#define PC_UNDEF (WTF_TYPE_UNDEF << 8)
-#define PC_SYMBOL 0x8000
-
-/* Effect ( standout/underline ) */
-#define P_EFFECT 0x40ff
-#define PE_NORMAL 0x00
-#define PE_MARK 0x01
-#define PE_UNDER 0x02
-#define PE_STAND 0x04
-#define PE_BOLD 0x08
-#define PE_ANCHOR 0x10
-#define PE_EMPH 0x08
-#define PE_IMAGE 0x20
-#define PE_FORM 0x40
-#define PE_ACTIVE 0x80
-#define PE_VISITED 0x4000
-
-/* Extra effect */
-#define PE_EX_ITALIC 0x01
-#define PE_EX_INSERT 0x02
-#define PE_EX_STRIKE 0x04
-
-#define PE_EX_ITALIC_E PE_UNDER
-#define PE_EX_INSERT_E PE_UNDER
-#define PE_EX_STRIKE_E PE_STAND
-
-#define CharType(c) ((c) & P_CHARTYPE)
-#define CharEffect(c) ((c) & (P_EFFECT | PC_SYMBOL))
-#define SetCharType(v, c) ((v) = (((v) & ~P_CHARTYPE) | (c)))
-
-#define COLPOS(l, c) calcPosition(l->lineBuf, l->propBuf, l->len, c, 0, CP_AUTO)
 
 /* Flags for displayBuffer() */
 #define B_NORMAL 0
@@ -169,10 +124,6 @@
 #define CHK_URL 1
 #define CHK_NMID 2
 
-/* Flags for calcPosition() */
-#define CP_AUTO 0
-#define CP_FORCE 1
-
 /* Completion status. */
 #define CPL_OK 0
 #define CPL_AMBIG 1
@@ -184,14 +135,6 @@
 #define CPL_ON 0x2
 #define CPL_ALWAYS 0x4
 #define CPL_URL 0x8
-
-/* Flags for inputLine() */
-#define IN_STRING 0x10
-#define IN_FILENAME 0x20
-#define IN_PASSWORD 0x40
-#define IN_COMMAND 0x80
-#define IN_URL 0x100
-#define IN_CHAR 0x200
 
 #define IMG_FLAG_SKIP 1
 #define IMG_FLAG_AUTO 2
@@ -210,14 +153,6 @@
 /*
  * Macros.
  */
-
-#define inputLineHist(p, d, f, h) inputLineHistSearch(p, d, f, h, NULL)
-#define inputLine(p, d, f) inputLineHist(p, d, f, NULL)
-#define inputStr(p, d) inputLine(p, d, IN_STRING)
-#define inputStrHist(p, d, h) inputLineHist(p, d, IN_STRING, h)
-#define inputFilename(p, d) inputLine(p, d, IN_FILENAME)
-#define inputFilenameHist(p, d, h) inputLineHist(p, d, IN_FILENAME, h)
-#define inputChar(p) inputLine(p, "", IN_CHAR)
 
 #define RELATIVE_WIDTH(w) (((w) >= 0) ? (int)((w) / pixel_per_char) : (w))
 #define REAL_WIDTH(w, limit) (((w) >= 0) ? (int)((w) / pixel_per_char) : -(w) * (limit) / 100)
@@ -257,70 +192,9 @@
 
 #define NO_BUFFER ((Buffer*)1)
 
-#define RB_STACK_SIZE 10
-
-#define TAG_STACK_SIZE 10
-
-#define FONT_STACK_SIZE 5
-
-#define FONTSTAT_SIZE 7
-#define FONTSTAT_MAX 127
-
 #define _INIT_BUFFER_WIDTH (COLS - (showLineNum ? 6 : 1))
 #define INIT_BUFFER_WIDTH ((_INIT_BUFFER_WIDTH > 0) ? _INIT_BUFFER_WIDTH : 0)
 #define FOLD_BUFFER_WIDTH (FoldLine ? (INIT_BUFFER_WIDTH + 1) : -1)
-
-#include "Line.h"
-
-struct input_alt_attr {
-    int hseq;
-    int fid;
-    int in;
-    Str type, name, value;
-};
-
-typedef struct {
-    int pos;
-    int len;
-    int tlen;
-    long flag;
-    Anchor anchor;
-    Str img_alt;
-    struct input_alt_attr input_alt;
-    char fontstat[FONTSTAT_SIZE];
-    short nobr_level;
-    Lineprop prev_ctype;
-    char init_flag;
-    short top_margin;
-    short bottom_margin;
-} Breakpoint;
-
-struct readbuffer {
-    Str line;
-    Lineprop cprop;
-    short pos;
-    Str prevchar;
-    long flag;
-    long flag_stack[RB_STACK_SIZE];
-    int flag_sp;
-    int status;
-    unsigned char end_tag;
-    unsigned char q_level;
-    short table_level;
-    short nobr_level;
-    Anchor anchor;
-    Str img_alt;
-    struct input_alt_attr input_alt;
-    char fontstat[FONTSTAT_SIZE];
-    char fontstat_stack[FONT_STACK_SIZE][FONTSTAT_SIZE];
-    int fontstat_sp;
-    Lineprop prev_ctype;
-    Breakpoint bp;
-    struct cmdtable* tag_stack[TAG_STACK_SIZE];
-    int tag_sp;
-    short top_margin;
-    short bottom_margin;
-};
 
 #define in_bold fontstat[0]
 #define in_under fontstat[1]
@@ -397,26 +271,6 @@ struct readbuffer {
 #define REALLY_THE_BEGINNING_OF_A_TAG(p) \
     (IS_ALPHA(p[1]) || p[1] == '/' || p[1] == '!' || p[1] == '?' || p[1] == '\0' || p[1] == '_')
 
-/* flags for loadGeneralFile */
-#define RG_NOCACHE 1
-#define RG_FRAME 2
-#define RG_FRAME_SRC 4
-
-struct html_feed_environ {
-    struct readbuffer* obuf;
-    TextLineList* buf;
-    FILE* f;
-    Str tagbuf;
-    int limit;
-    int maxlimit;
-    struct environment* envs;
-    int nenv;
-    int envc;
-    int envc_real;
-    char* title;
-    int blank_lines;
-};
-
 /* modes for align() */
 
 #define ALIGN_CENTER 0
@@ -451,9 +305,7 @@ extern int LASTLINE;
 #define LASTLINE (LINES - 1)
 #endif /* not defined(__CYGWIN__) */
 
-global int Tabstop init(8);
 global int IndentIncr init(4);
-global int ShowEffect init(TRUE);
 global int PagerMax init(PAGER_MAX_LINE);
 
 global char SearchHeader init(FALSE);
@@ -685,12 +537,6 @@ global int set_pixel_per_line init(FALSE);
 global double image_scale init(100);
 global int use_lessopen init(FALSE);
 
-#define get_mctype(c) ((Lineprop)wtf_type((wc_uchar*)(c)) << 8)
-#define get_mclen(c) wtf_len1((wc_uchar*)(c))
-#define get_mcwidth(c) wtf_width((wc_uchar*)(c))
-#define get_strwidth(c) wtf_strwidth((wc_uchar*)(c))
-#define get_Str_strwidth(c) wtf_strwidth((wc_uchar*)((c)->ptr))
-
 global int FollowRedirection init(10);
 
 global int w3m_backend init(FALSE);
@@ -704,7 +550,6 @@ void w3m_exit(int i);
  * Externals
  */
 
-#include "table.h"
 #include "proto.h"
 
 #endif /* not FM_H */

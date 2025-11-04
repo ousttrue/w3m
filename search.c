@@ -1,6 +1,7 @@
 #include "fm.h"
 #include "buffer.h"
 #include "regex.h"
+#include "display.h"
 #include <signal.h>
 #include <errno.h>
 #include <unistd.h>

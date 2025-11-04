@@ -1,5 +1,8 @@
 #include "display.h"
+#include "linein.h"
+#include "table.h"
 #include "DownloadList.h"
+#include "html_feed.h"
 #include "buffer.h"
 #include "HttpRequest.h"
 #include "http_auth.h"
@@ -5571,11 +5574,11 @@ void showProgress(long long* linelen, long long* trbyte)
         last_time = cur_time;
         move(LASTLINE, 0);
         ratio = 100.0 * (*trbyte) / current_content_length;
-        fmtrbyte = convert_size2(*trbyte, current_content_length, 1);
+        fmtrbyte = convert_size2(*trbyte, current_content_length, 1)->ptr;
         duration = cur_time - start_time;
         if (duration) {
             rate = *trbyte / duration;
-            fmrate = convert_size(rate, 1);
+            fmrate = convert_size(rate, 1)->ptr;
             eta = rate ? (current_content_length - *trbyte) / rate : -1;
             messages = Sprintf("%11s %3.0f%% "
                                "%7s/s "
@@ -5611,10 +5614,10 @@ void showProgress(long long* linelen, long long* trbyte)
             return;
         last_time = cur_time;
         move(LASTLINE, 0);
-        fmtrbyte = convert_size(*trbyte, 1);
+        fmtrbyte = convert_size(*trbyte, 1)->ptr;
         duration = cur_time - start_time;
         if (duration) {
-            fmrate = convert_size(*trbyte / duration, 1);
+            fmrate = convert_size(*trbyte / duration, 1)->ptr;
             messages = Sprintf("%7s loaded %7s/s", fmtrbyte, fmrate);
         } else {
             messages = Sprintf("%7s loaded", fmtrbyte);
@@ -5880,7 +5883,7 @@ void loadHTMLstream(struct URLFile* f, Buffer* newBuf, FILE* src, int internal)
             Strfputs(lineBuf2, src);
         linelen += lineBuf2->length;
         if (w3m_dump & DUMP_EXTRA)
-            printf("W3m-in-progress: %s\n", convert_size2(linelen, current_content_length, TRUE));
+            printf("W3m-in-progress: %s\n", convert_size2(linelen, current_content_length, TRUE)->ptr);
         if (w3m_dump & DUMP_SOURCE)
             continue;
         showProgress(&linelen, &trbyte);
@@ -6164,7 +6167,7 @@ loadBuffer(struct URLFile* uf, Buffer* volatile newBuf)
             Strfputs(lineBuf2, src);
         linelen += lineBuf2->length;
         if (w3m_dump & DUMP_EXTRA)
-            printf("W3m-in-progress: %s\n", convert_size2(linelen, current_content_length, TRUE));
+            printf("W3m-in-progress: %s\n", convert_size2(linelen, current_content_length, TRUE)->ptr);
         if (w3m_dump & DUMP_SOURCE)
             continue;
         showProgress(&linelen, &trbyte);

@@ -1,4 +1,5 @@
 #include "fm.h"
+#include "display.h"
 #include "buffer.h"
 #include "w3m_runtime.h"
 #include <gcstr/myctype.h>
