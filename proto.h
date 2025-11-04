@@ -434,11 +434,7 @@ extern void free_ssl_ctx(void);
 extern struct Url* baseURL(Buffer* buf);
 extern int openSocket(char* hostname, char* remoteport_name,
     unsigned short remoteport_num);
-extern void parseURL(char* url, struct Url* p_url, struct Url* current);
-extern void copyParsedURL(struct Url* p, const struct Url* q);
-extern void parseURL2(char* url, struct Url* pu, struct Url* current);
-extern Str parsedURL2Str(struct Url* pu);
-extern Str parsedURL2RefererStr(struct Url* pu);
+
 extern int getURLScheme(char** url);
 extern void init_stream(URLFile* uf, int scheme, InputStream stream);
 Str HTTPrequestMethod(HRequest* hr);
@@ -547,7 +543,6 @@ extern char* url_unquote_conv(char* url, wc_ces charset);
 extern char* expandName(char* name);
 extern Str tmpfname(int type, char* ext);
 extern time_t mymktime(char* timestr);
-extern char* FQDN(char* host);
 extern Str find_cookie(struct Url* pu);
 extern int add_cookie(struct Url* pu, Str name, Str value, time_t expires,
     Str domain, Str path, int flag, Str comment, int version,

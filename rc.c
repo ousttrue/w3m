@@ -2,6 +2,8 @@
  * Initialization file etc.
  */
 #include "fm.h"
+#include "dns_order.h"
+#include "cookie.h"
 #include "image.h"
 #include "w3m_runtime.h"
 #include <gcstr/gcstr.h>
@@ -15,6 +17,8 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include "rc.h"
+
+int no_rc_dir = (FALSE);
 
 struct param_ptr {
     char* name;
@@ -804,7 +808,6 @@ void show_params(FILE* fp)
     const char* t = "";
     char* cmt;
 
-
     fputs("\nconfiguration parameters\n", fp);
     for (j = 0; sections[j].name != NULL; j++) {
         if (!OptionEncode)
@@ -1349,8 +1352,7 @@ load_option_panel(void)
                     InnerCharset)
                                  ->ptr;
                 if (p->inputtype == PI_SEL_C
-                    && p->select != colorstr
-                ) {
+                    && p->select != colorstr) {
                     for (s = (struct sel_c*)p->select; s->text != NULL; s++) {
                         s->text = wc_conv(_(s->text), OptionCharset,
                             InnerCharset)
@@ -1629,13 +1631,11 @@ loadSiteconf(void)
         if (strcmp(s, "user_agent") == 0) {
             ent->user_agent = getQWord(&p);
             SCONF_SET(ent, SCONF_USER_AGENT);
-        }
-        else if (strcmp(s, "url_charset") == 0) {
+        } else if (strcmp(s, "url_charset") == 0) {
             char* charset = getWord(&p);
             ent->url_charset = (charset && *charset) ? wc_charset_to_ces(charset) : 0;
             SCONF_SET(ent, SCONF_URL_CHARSET);
-        }
-        else if (strcmp(s, "no_referer_from") == 0) {
+        } else if (strcmp(s, "no_referer_from") == 0) {
             ent->no_referer_from = str_to_bool(getWord(&p), 0);
             SCONF_SET(ent, SCONF_NO_REFERER_FROM);
         } else if (strcmp(s, "no_referer_to") == 0) {

@@ -10,6 +10,7 @@ const w3m_srcs = [_][]const u8{
     "AlarmEvent.c",
     "keybind.c",
     "util.c",
+    "dns_order.c",
 
     "main.c",
     "file.c",

@@ -1,5 +1,6 @@
 #include "display.h"
 #include "fm.h"
+#include "cookie.h"
 #include "w3m_runtime.h"
 #include "map.h"
 #include "AlarmEvent.h"
@@ -122,20 +123,6 @@ static int cur_iseq;
 #define UL_SYMBOL_SQUARE UL_SYMBOL(11)
 #define IMG_SYMBOL UL_SYMBOL(12)
 #define HR_SYMBOL 26
-
-/* This array should be somewhere else */
-/* FIXME: gettextize? */
-char* violations[COO_EMAX] = {
-    "internal error",
-    "tail match failed",
-    "wrong number of dots",
-    "RFC 2109 4.3.2 rule 1",
-    "RFC 2109 4.3.2 rule 2.1",
-    "RFC 2109 4.3.2 rule 2.2",
-    "RFC 2109 4.3.2 rule 3",
-    "RFC 2109 4.3.2 rule 4",
-    "RFC XXXX 4.3.2 rule 5"
-};
 
 /* *INDENT-OFF* */
 static struct compression_decoder {
@@ -736,7 +723,7 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, struct Url* pu)
                         if (err >= 0 && err < COO_EMAX)
                             emsg = Sprintf("This cookie was rejected "
                                            "to prevent security violation. [%s]",
-                                violations[err])
+                                cookie_violations[err])
                                        ->ptr;
                         else
                             emsg = "This cookie was rejected to prevent security violation.";

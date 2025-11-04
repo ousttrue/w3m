@@ -6,20 +6,52 @@
  *   [RFC 2109] http://www.ics.uci.edu/pub/ietf/http/rfc2109.txt
  *   [DRAFT 12] http://www.ics.uci.edu/pub/ietf/http/draft-ietf-http-state-man-mec-12.txt
  */
-
-#include "fm.h"
+#include "cookie.h"
 #include "rc.h"
 #include "html.h"
-
-#include <time.h>
 #include "local.h"
 #include "regex.h"
-#include <gcstr/myctype.h>
 #include "indep.h"
+#include "dns_order.h"
+#include "parsetag.h"
+#include <gcstr/myctype.h>
+#include <time.h>
+#include <sys/socket.h>
+#include <netdb.h>
+
+int default_use_cookie = (TRUE);
+int use_cookie = (TRUE);
+int show_cookie = (FALSE);
+int accept_cookie = (TRUE);
+#define ACCEPT_BAD_COOKIE_DISCARD 0
+#define ACCEPT_BAD_COOKIE_ACCEPT 1
+#define ACCEPT_BAD_COOKIE_ASK 2
+int accept_bad_cookie = (ACCEPT_BAD_COOKIE_DISCARD);
+char* cookie_reject_domains = (NULL);
+char* cookie_accept_domains = (NULL);
+char* cookie_avoid_wrong_number_of_dots = (NULL);
+TextList* Cookie_reject_domains = 0;
+TextList* Cookie_accept_domains = 0;
+TextList* Cookie_avoid_wrong_number_of_dots_domains = 0;
 
 static int is_saved = 1;
+struct cookie* First_cookie = NULL;
 
 #define contain_no_dots(p, ep) (total_dot_number((p), (ep), 1) == 0)
+
+/* This array should be somewhere else */
+/* FIXME: gettextize? */
+char* cookie_violations[COO_EMAX] = {
+    "internal error",
+    "tail match failed",
+    "wrong number of dots",
+    "RFC 2109 4.3.2 rule 1",
+    "RFC 2109 4.3.2 rule 2.1",
+    "RFC 2109 4.3.2 rule 2.2",
+    "RFC 2109 4.3.2 rule 3",
+    "RFC 2109 4.3.2 rule 4",
+    "RFC XXXX 4.3.2 rule 5"
+};
 
 static unsigned int
 total_dot_number(char* p, char* ep, unsigned int max_count)
@@ -105,8 +137,7 @@ make_portlist(Str port)
     return first;
 }
 
-static Str
-portlist2str(struct portlist* first)
+Str portlist2str(struct portlist* first)
 {
     struct portlist* pl;
     Str tmp;
@@ -129,34 +160,7 @@ port_match(struct portlist* first, int port)
     return 0;
 }
 
-static void
-check_expired_cookies(void)
-{
-    struct cookie *p, *p1;
-    time_t now = time(NULL);
-
-    if (!First_cookie)
-        return;
-
-    if (First_cookie->expires != (time_t)-1 && First_cookie->expires < now) {
-        if (!(First_cookie->flag & COO_DISCARD))
-            is_saved = 0;
-        First_cookie = First_cookie->next;
-    }
-
-    for (p = First_cookie; p && p->next; p = p1) {
-        p1 = p->next;
-        if (p1->expires != (time_t)-1 && p1->expires < now) {
-            if (!(p1->flag & COO_DISCARD))
-                is_saved = 0;
-            p->next = p1->next;
-            p1 = p;
-        }
-    }
-}
-
-static Str
-make_cookie(struct cookie* cookie)
+Str make_cookie(struct cookie* cookie)
 {
     Str tmp = Strdup(cookie->name);
     Strcat_char(tmp, '=');
@@ -191,6 +195,85 @@ get_cookie_info(Str domain, Str path, Str name)
         if (Strcasecmp(p->domain, domain) == 0 && Strcmp(p->path, path) == 0 && Strcasecmp(p->name, name) == 0)
             return p;
     }
+    return NULL;
+}
+
+static void
+check_expired_cookies(void)
+{
+    struct cookie *p, *p1;
+    time_t now = time(NULL);
+
+    if (!First_cookie)
+        return;
+
+    if (First_cookie->expires != (time_t)-1 && First_cookie->expires < now) {
+        if (!(First_cookie->flag & COO_DISCARD))
+            is_saved = 0;
+        First_cookie = First_cookie->next;
+    }
+
+    for (p = First_cookie; p && p->next; p = p1) {
+        p1 = p->next;
+        if (p1->expires != (time_t)-1 && p1->expires < now) {
+            if (!(p1->flag & COO_DISCARD))
+                is_saved = 0;
+            p->next = p1->next;
+            p1 = p;
+        }
+    }
+}
+
+char* FQDN(char* host)
+{
+    char* p;
+    int* af;
+
+    if (host == NULL)
+        return NULL;
+
+    if (strcasecmp(host, "localhost") == 0)
+        return host;
+
+    for (p = host; *p && *p != '.'; p++)
+        ;
+
+    if (*p == '.')
+        return host;
+
+    for (af = ai_family_order_table[DNS_order];; af++) {
+        int error;
+        struct addrinfo hints;
+        struct addrinfo *res, *res0;
+        char* namebuf;
+
+        memset(&hints, 0, sizeof(hints));
+        hints.ai_flags = AI_CANONNAME;
+        hints.ai_family = *af;
+        hints.ai_socktype = SOCK_STREAM;
+        error = getaddrinfo(host, NULL, &hints, &res0);
+        if (error) {
+            if (*af == PF_UNSPEC) {
+                /* all done */
+                break;
+            }
+            /* try next address family */
+            continue;
+        }
+        for (res = res0; res != NULL; res = res->ai_next) {
+            if (res->ai_canonname) {
+                /* found */
+                namebuf = strdup(res->ai_canonname);
+                freeaddrinfo(res0);
+                return namebuf;
+            }
+        }
+        freeaddrinfo(res0);
+        if (*af == PF_UNSPEC) {
+            break;
+        }
+    }
+    /* all failed */
     return NULL;
 }
 
@@ -535,119 +618,6 @@ void initCookie(void)
     check_expired_cookies();
 }
 
-Buffer*
-cookie_list_panel(void)
-{
-    /* FIXME: gettextize? */
-    Str src = Strnew_charp("<html><head><title>Cookies</title></head>"
-                           "<body><center><b>Cookies</b></center>"
-                           "<p><form method=internal action=cookie>");
-    struct cookie* p;
-    int i;
-    char *tmp, tmp2[80];
-
-    if (!use_cookie || !First_cookie)
-        return NULL;
-
-    Strcat_charp(src, "<ol>");
-    for (p = First_cookie, i = 0; p; p = p->next, i++) {
-        tmp = html_quote(parsedURL2Str(&p->url)->ptr);
-        if (p->expires != (time_t)-1) {
-#ifdef HAVE_STRFTIME
-            strftime(tmp2, 80, "%a, %d %b %Y %H:%M:%S GMT",
-                gmtime(&p->expires));
-#else /* not HAVE_STRFTIME */
-            struct tm* gmt;
-            static char* dow[] = {
-                "Sun ", "Mon ", "Tue ", "Wed ", "Thu ", "Fri ", "Sat "
-            };
-            static char* month[] = {
-                "Jan ", "Feb ", "Mar ", "Apr ", "May ", "Jun ",
-                "Jul ", "Aug ", "Sep ", "Oct ", "Nov ", "Dec "
-            };
-            gmt = gmtime(&p->expires);
-            strcpy(tmp2, dow[gmt->tm_wday]);
-            sprintf(&tmp2[4], "%02d ", gmt->tm_mday);
-            strcpy(&tmp2[7], month[gmt->tm_mon]);
-            if (gmt->tm_year < 1900)
-                sprintf(&tmp2[11], "%04d %02d:%02d:%02d GMT",
-                    (gmt->tm_year) + 1900, gmt->tm_hour, gmt->tm_min,
-                    gmt->tm_sec);
-            else
-                sprintf(&tmp2[11], "%04d %02d:%02d:%02d GMT",
-                    gmt->tm_year, gmt->tm_hour, gmt->tm_min, gmt->tm_sec);
-#endif /* not HAVE_STRFTIME */
-        } else
-            tmp2[0] = '\0';
-        Strcat_charp(src, "<li>");
-        Strcat_charp(src, "<h1><a href=\"");
-        Strcat_charp(src, tmp);
-        Strcat_charp(src, "\">");
-        Strcat_charp(src, tmp);
-        Strcat_charp(src, "</a></h1>");
-
-        Strcat_charp(src, "<table cellpadding=0>");
-        if (!(p->flag & COO_SECURE)) {
-            Strcat_charp(src, "<tr><td width=\"80\"><b>Cookie:</b></td><td>");
-            Strcat_charp(src, html_quote(make_cookie(p)->ptr));
-            Strcat_charp(src, "</td></tr>");
-        }
-        if (p->comment) {
-            Strcat_charp(src, "<tr><td width=\"80\"><b>Comment:</b></td><td>");
-            Strcat_charp(src, html_quote(p->comment->ptr));
-            Strcat_charp(src, "</td></tr>");
-        }
-        if (p->commentURL) {
-            Strcat_charp(src,
-                "<tr><td width=\"80\"><b>CommentURL:</b></td><td>");
-            Strcat_charp(src, "<a href=\"");
-            Strcat_charp(src, html_quote(p->commentURL->ptr));
-            Strcat_charp(src, "\">");
-            Strcat_charp(src, html_quote(p->commentURL->ptr));
-            Strcat_charp(src, "</a>");
-            Strcat_charp(src, "</td></tr>");
-        }
-        if (tmp2[0]) {
-            Strcat_charp(src, "<tr><td width=\"80\"><b>Expires:</b></td><td>");
-            Strcat_charp(src, tmp2);
-            if (p->flag & COO_DISCARD)
-                Strcat_charp(src, " (Discard)");
-            Strcat_charp(src, "</td></tr>");
-        }
-        Strcat_charp(src, "<tr><td width=\"80\"><b>Version:</b></td><td>");
-        Strcat_charp(src, Sprintf("%d", p->version)->ptr);
-        Strcat_charp(src, "</td></tr><tr><td>");
-        if (p->domain) {
-            Strcat_charp(src, "<tr><td width=\"80\"><b>Domain:</b></td><td>");
-            Strcat_charp(src, html_quote(p->domain->ptr));
-            Strcat_charp(src, "</td></tr>");
-        }
-        if (p->path) {
-            Strcat_charp(src, "<tr><td width=\"80\"><b>Path:</b></td><td>");
-            Strcat_charp(src, html_quote(p->path->ptr));
-            Strcat_charp(src, "</td></tr>");
-        }
-        if (p->portl) {
-            Strcat_charp(src, "<tr><td width=\"80\"><b>Port:</b></td><td>");
-            Strcat_charp(src, html_quote(portlist2str(p->portl)->ptr));
-            Strcat_charp(src, "</td></tr>");
-        }
-        Strcat_charp(src, "<tr><td width=\"80\"><b>Secure:</b></td><td>");
-        Strcat_charp(src, (p->flag & COO_SECURE) ? "Yes" : "No");
-        Strcat_charp(src, "</td></tr><tr><td>");
-
-        Strcat(src, Sprintf("<tr><td width=\"80\"><b>Use:</b></td><td>"
-                            "<input type=radio name=\"%d\" value=1%s>Yes"
-                            "&nbsp;&nbsp;"
-                            "<input type=radio name=\"%d\" value=0%s>No",
-                        i, (p->flag & COO_USE) ? " checked" : "", i, (!(p->flag & COO_USE)) ? " checked" : ""));
-        Strcat_charp(src,
-            "</td></tr><tr><td><input type=submit value=\"OK\"></table><p>");
-    }
-    Strcat_charp(src, "</ol></form></body></html>");
-    return loadHTMLString(src);
-}
-
 void set_cookie_flag(struct parsed_tagarg* arg)
 {
     int n, v;
@@ -668,7 +638,7 @@ void set_cookie_flag(struct parsed_tagarg* arg)
         }
         arg = arg->next;
     }
-    backBf();
+    // backBf();
 }
 
 int check_cookie_accept_domain(char* domain)

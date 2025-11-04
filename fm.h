@@ -563,47 +563,6 @@ struct html_feed_environ {
     int blank_lines;
 };
 
-struct portlist {
-    unsigned short port;
-    struct portlist* next;
-};
-
-struct cookie {
-    struct Url url;
-    Str name;
-    Str value;
-    time_t expires;
-    Str path;
-    Str domain;
-    Str comment;
-    Str commentURL;
-    struct portlist* portl;
-    char version;
-    char flag;
-    struct cookie* next;
-};
-#define COO_USE 1
-#define COO_SECURE 2
-#define COO_DOMAIN 4
-#define COO_PATH 8
-#define COO_DISCARD 16
-#define COO_OVERRIDE 32 /* user chose to override security checks */
-
-#define COO_OVERRIDE_OK 32 /* flag to specify that an error is overridable */
-/* version 0 refers to the original cookie_spec.html */
-/* version 1 refers to RFC 2109 */
-/* version 1' refers to the Internet draft to obsolete RFC 2109 */
-#define COO_EINTERNAL (1) /* unknown error; probably forgot to convert "return 1" in cookie.c */
-#define COO_ETAIL (2 | COO_OVERRIDE_OK) /* tail match failed (version 0) */
-#define COO_ESPECIAL (3) /* special domain check failed (version 0) */
-#define COO_EPATH (4) /* Path attribute mismatch (version 1 case 1) */
-#define COO_ENODOT (5 | COO_OVERRIDE_OK) /* no embedded dots in Domain (version 1 case 2.1) */
-#define COO_ENOTV1DOM (6 | COO_OVERRIDE_OK) /* Domain does not start with a dot (version 1 case 2.2) */
-#define COO_EDOM (7 | COO_OVERRIDE_OK) /* domain-match failed (version 1 case 3) */
-#define COO_EBADHOST (8 | COO_OVERRIDE_OK) /* dot in matched host name in FQDN (version 1 case 4) */
-#define COO_EPORT (9) /* Port match failed (version 1' case 5) */
-#define COO_EMAX COO_EPORT
-
 /* modes for align() */
 
 #define ALIGN_CENTER 0
@@ -704,13 +663,7 @@ global struct Url GOPHER_proxy_parsed;
 global struct Url FTP_proxy_parsed;
 global char* NO_proxy init(NULL);
 global int NOproxy_netaddr init(TRUE);
-#define DNS_ORDER_UNSPEC 0
-#define DNS_ORDER_INET_INET6 1
-#define DNS_ORDER_INET6_INET 2
-#define DNS_ORDER_INET_ONLY 4
-#define DNS_ORDER_INET6_ONLY 6
-global int DNS_order init(DNS_ORDER_UNSPEC);
-extern int ai_family_order_table[7][3]; /* XXX */
+
 global TextList* NO_proxy_domains;
 global char NoCache init(FALSE);
 global char use_proxy init(TRUE);
@@ -871,7 +824,6 @@ global char* migemo_command init(DEF_MIGEMO_COMMAND);
 #endif /* USE_MIGEMO */
 
 global struct auth_cookie* Auth_cookie init(NULL);
-global struct cookie* First_cookie init(NULL);
 
 global char* mailcap_files init(USER_MAILCAP ", " SYS_MAILCAP);
 global char* mimetypes_files init(USER_MIMETYPES ", " SYS_MIMETYPES);
@@ -907,7 +859,6 @@ extern int symbol_width0;
 #define N_GRAPH_SYMBOL 32
 #define N_SYMBOL (N_GRAPH_SYMBOL + 14)
 #define SYMBOL_BASE 0x20
-global int no_rc_dir init(FALSE);
 global char* rc_dir init(NULL);
 global char* tmp_dir;
 global char* param_tmp_dir init(NULL);
@@ -919,21 +870,6 @@ global char* config_file init(NULL);
 global int relative_wheel_scroll init(FALSE);
 global int fixed_wheel_scroll_count init(5);
 global int relative_wheel_scroll_ratio init(30);
-
-global int default_use_cookie init(TRUE);
-global int use_cookie init(TRUE);
-global int show_cookie init(FALSE);
-global int accept_cookie init(TRUE);
-#define ACCEPT_BAD_COOKIE_DISCARD 0
-#define ACCEPT_BAD_COOKIE_ACCEPT 1
-#define ACCEPT_BAD_COOKIE_ASK 2
-global int accept_bad_cookie init(ACCEPT_BAD_COOKIE_DISCARD);
-global char* cookie_reject_domains init(NULL);
-global char* cookie_accept_domains init(NULL);
-global char* cookie_avoid_wrong_number_of_dots init(NULL);
-global TextList* Cookie_reject_domains;
-global TextList* Cookie_accept_domains;
-global TextList* Cookie_avoid_wrong_number_of_dots_domains;
 
 global int view_unseenobject init(FALSE);
 
