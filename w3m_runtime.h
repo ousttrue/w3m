@@ -1,6 +1,8 @@
 #pragma once
 #include "libwc/wc.h"
 
+extern const char* w3m_version;
+
 extern wc_ces InnerCharset; /* Don't change */
 extern wc_ces DisplayCharset;
 extern wc_ces DocumentCharset;

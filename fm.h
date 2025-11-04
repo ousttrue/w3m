@@ -239,18 +239,6 @@ extern int REV_LB[];
 #define IMG_FLAG_DONT_REMOVE 4
 
 #define IS_EMPTY_PARSED_URL(pu) ((pu)->scheme == SCM_UNKNOWN && !(pu)->file)
-#define SCONF_RESERVED 0
-#define SCONF_SUBSTITUTE_URL 1
-#define SCONF_URL_CHARSET 2
-#define SCONF_NO_REFERER_FROM 3
-#define SCONF_NO_REFERER_TO 4
-#define SCONF_USER_AGENT 5
-#define SCONF_N_FIELD 6
-#define query_SCONF_SUBSTITUTE_URL(pu) ((const char*)querySiteconf(pu, SCONF_SUBSTITUTE_URL))
-#define query_SCONF_USER_AGENT(pu) ((const char*)querySiteconf(pu, SCONF_USER_AGENT))
-#define query_SCONF_URL_CHARSET(pu) ((const wc_ces*)querySiteconf(pu, SCONF_URL_CHARSET))
-#define query_SCONF_NO_REFERER_FROM(pu) ((const int*)querySiteconf(pu, SCONF_NO_REFERER_FROM))
-#define query_SCONF_NO_REFERER_TO(pu) ((const int*)querySiteconf(pu, SCONF_NO_REFERER_TO))
 
 /*
  * Macros.
@@ -276,8 +264,6 @@ extern int REV_LB[];
 /*
  * Types.
  */
-
-#define NO_REFERER ((char*)-1)
 
 #include "Line.h"
 #include "LinkList.h"
@@ -576,26 +562,6 @@ struct html_feed_environ {
 #define VALIGN_TOP 1
 #define VALIGN_BOTTOM 2
 
-typedef struct http_request {
-    char command;
-    char flag;
-    char* referer;
-    FormList* request;
-} HRequest;
-
-#define HR_COMMAND_GET 0
-#define HR_COMMAND_POST 1
-#define HR_COMMAND_CONNECT 2
-#define HR_COMMAND_HEAD 3
-
-#define HR_FLAG_LOCAL 1
-#define HR_FLAG_PROXY 2
-
-#define HTST_UNKNOWN 255
-#define HTST_MISSING 254
-#define HTST_NORMAL 0
-#define HTST_CONNECT 1
-
 #define TMPF_DFL 0
 #define TMPF_SRC 1
 #define TMPF_FRAME 2
@@ -665,7 +631,6 @@ global char* NO_proxy init(NULL);
 global int NOproxy_netaddr init(TRUE);
 
 global TextList* NO_proxy_domains;
-global char NoCache init(FALSE);
 global char use_proxy init(TRUE);
 #define Do_not_use_proxy (!use_proxy)
 global int Do_not_use_ti_te init(FALSE);
@@ -704,7 +669,6 @@ global int CurrentKey;
 global char* CurrentKeyData;
 global char* CurrentCmdData;
 global char* w3m_reqlog;
-extern char* w3m_version;
 extern int enable_inline_image;
 
 #define DUMP_BUFFER 0x01
@@ -717,9 +681,6 @@ global int w3m_debug;
 global int w3m_dump init(0);
 #define w3m_halfdump (w3m_dump & DUMP_HALFDUMP)
 global int w3m_halfload init(FALSE);
-global Str header_string init(NULL);
-global int override_content_type init(FALSE);
-global int override_user_agent init(FALSE);
 
 global int useColor init(TRUE);
 global int highIntensityColors init(FALSE);
@@ -787,12 +748,6 @@ global char* ftppasswd init(NULL);
 global int ftppass_hostnamegen init(TRUE);
 global int do_download init(FALSE);
 global char* image_source init(NULL);
-global char* UserAgent init(NULL);
-global int NoSendReferer init(FALSE);
-global int CrossOriginReferer init(TRUE);
-global char* AcceptLang init(NULL);
-global char* AcceptEncoding init(NULL);
-global char* AcceptMedia init(NULL);
 global int WrapDefault init(FALSE);
 global int IgnoreCase init(TRUE);
 global int WrapSearch init(FALSE);

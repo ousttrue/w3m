@@ -11,6 +11,7 @@ const w3m_srcs = [_][]const u8{
     "keybind.c",
     "util.c",
     "dns_order.c",
+    "HttpRequest.c",
 
     "main.c",
     "file.c",
@@ -31,7 +32,7 @@ const w3m_srcs = [_][]const u8{
     "symbol.c",
     "entity.c",
     "terms.c",
-    "url.c",
+    "Url.c",
     "ftp.c",
     "mimehead.c",
     "regex.c",

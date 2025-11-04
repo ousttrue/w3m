@@ -2,6 +2,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include "fm.h"
+#include "cookie.h"
 #include "w3m_runtime.h"
 #include "indep.h"
 #include "terms.h"

@@ -437,12 +437,7 @@ extern int openSocket(char* hostname, char* remoteport_name,
 
 extern int getURLScheme(char** url);
 extern void init_stream(URLFile* uf, int scheme, InputStream stream);
-Str HTTPrequestMethod(HRequest* hr);
-Str HTTPrequestURI(struct Url* pu, HRequest* hr);
-extern URLFile openURL(char* url, struct Url* pu, struct Url* current,
-    URLOption* option, FormList* request,
-    TextList* extra_header, URLFile* ouf,
-    HRequest* hr, unsigned char* status);
+struct HttpRequest;
 extern int mailcapMatch(struct mailcap* mcap, char* type);
 extern struct mailcap* searchMailcap(struct mailcap* table, char* type);
 extern void initMailcap(void);
@@ -514,7 +509,6 @@ extern char* etcFile(char* base);
 extern char* auxbinFile(char* base);
 extern char* libFile(char* base);
 extern char* helpFile(char* base);
-extern const void* querySiteconf(const struct Url* query_pu, int field);
 extern Str localCookie(void);
 extern Str loadLocalDir(char* dirname);
 extern void set_environ(char* var, char* value);
@@ -543,17 +537,6 @@ extern char* url_unquote_conv(char* url, wc_ces charset);
 extern char* expandName(char* name);
 extern Str tmpfname(int type, char* ext);
 extern time_t mymktime(char* timestr);
-extern Str find_cookie(struct Url* pu);
-extern int add_cookie(struct Url* pu, Str name, Str value, time_t expires,
-    Str domain, Str path, int flag, Str comment, int version,
-    Str port, Str commentURL);
-extern void save_cookies(void);
-extern void load_cookies(void);
-extern void initCookie(void);
-extern void cooLst(void);
-extern Buffer* cookie_list_panel(void);
-extern void set_cookie_flag(struct parsed_tagarg* arg);
-extern int check_cookie_accept_domain(char* domain);
 extern void docCSet(void);
 extern void defCSet(void);
 extern void change_charset(struct parsed_tagarg* arg);

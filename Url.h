@@ -1,4 +1,24 @@
 #pragma once
+#include <gcstr/Str.h>
+
+#define SCM_UNKNOWN 255
+#define SCM_MISSING 254
+#define SCM_HTTP 0
+#define SCM_GOPHER 1
+#define SCM_FTP 2
+#define SCM_FTPDIR 3
+#define SCM_LOCAL 4
+#define SCM_LOCAL_CGI 5
+#define SCM_EXEC 6
+#define SCM_NNTP 7
+#define SCM_NNTP_GROUP 8
+#define SCM_NEWS 9
+#define SCM_NEWS_GROUP 10
+#define SCM_DATA 11
+#define SCM_MAILTO 12
+#define SCM_HTTPS 13
+
+extern int DefaultPort[];
 
 struct Url {
     int scheme;
@@ -13,8 +33,9 @@ struct Url {
     int is_nocache;
 };
 
-extern void parseURL(char* url, struct Url* p_url, struct Url* current);
-extern void copyParsedURL(struct Url* p, const struct Url* q);
-extern void parseURL2(char* url, struct Url* pu, struct Url* current);
-extern Str parsedURL2Str(struct Url* pu);
-extern Str parsedURL2RefererStr(struct Url* pu);
+void parseURL(char* url, struct Url* p_url, struct Url* current);
+void copyParsedURL(struct Url* p, const struct Url* q);
+void parseURL2(char* url, struct Url* pu, struct Url* current);
+Str parsedURL2Str(struct Url* pu);
+Str parsedURL2RefererStr(struct Url* pu);
+Str _parsedURL2Str(struct Url* pu, int pass, int user, int label);

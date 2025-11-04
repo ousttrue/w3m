@@ -1,4 +1,6 @@
 #pragma once
+#include "Url.h"
+#include "HttpRequest.h"
 #include <gcstr/alloc.h>
 #include <stdio.h>
 #include <openssl/bio.h>
@@ -153,3 +155,8 @@ typedef struct {
     char* url;
     time_t modtime;
 } URLFile;
+
+extern URLFile openURL(char* url, struct Url* pu, struct Url* current,
+    URLOption* option, FormList* request,
+    TextList* extra_header, URLFile* ouf,
+    struct HttpRequest* hr, unsigned char* status);

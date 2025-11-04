@@ -1,5 +1,7 @@
 #include "display.h"
+#include "HttpRequest.h"
 #include "fm.h"
+#include "rc.h"
 #include "cookie.h"
 #include "w3m_runtime.h"
 #include "map.h"
@@ -808,25 +810,6 @@ checkContentType(Buffer* buf)
     return r->ptr;
 }
 
-struct auth_param {
-    char* name;
-    Str val;
-};
-
-struct http_auth {
-    int pri;
-    char* scheme;
-    struct auth_param* param;
-    Str (*cred)(struct http_auth* ha, Str uname, Str pw, struct Url* pu,
-        HRequest* hr, FormList* request);
-};
-
-enum {
-    AUTHCHR_NUL,
-    AUTHCHR_SEP,
-    AUTHCHR_TOKEN,
-};
-
 static int
 skip_auth_token(char** pp)
 {
@@ -1013,7 +996,7 @@ get_auth_param(struct auth_param* auth, char* name)
 
 static Str
 AuthBasicCred(struct http_auth* ha, Str uname, Str pw, struct Url* pu,
-    HRequest* hr, FormList* request)
+    struct HttpRequest* hr, FormList* request)
 {
     Str s = Strdup(uname);
     Strcat_char(s, ':');
@@ -1069,7 +1052,7 @@ enum {
 
 static Str
 AuthDigestCred(struct http_auth* ha, Str uname, Str pw, struct Url* pu,
-    HRequest* hr, FormList* request)
+    struct HttpRequest* hr, FormList* request)
 {
     Str tmp, a1buf, a2buf, rd, s;
     unsigned char md5[MD5_DIGEST_LENGTH + 1];
@@ -1337,7 +1320,7 @@ findAuthentication(struct http_auth* hauth, Buffer* buf, char* auth_field)
 
 static void
 getAuthCookie(struct http_auth* hauth, char* auth_header,
-    TextList* extra_header, struct Url* pu, HRequest* hr,
+    TextList* extra_header, struct Url* pu, struct HttpRequest* hr,
     FormList* request,
     volatile Str* uname, volatile Str* pwd)
 {
@@ -1520,7 +1503,7 @@ loadGeneralFile(char* path, struct Url* volatile current, char* referer,
     Str volatile page = NULL;
     int gopher_download = FALSE;
     wc_ces charset = WC_CES_US_ASCII;
-    HRequest hr;
+    struct HttpRequest hr;
     struct Url* volatile auth_pu;
 
     tpath = path;
