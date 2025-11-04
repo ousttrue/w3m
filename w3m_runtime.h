@@ -2,6 +2,9 @@
 #include "libwc/wc.h"
 
 extern const char* w3m_version;
+extern const char* CurrentDir;
+extern int CurrentPid;
+extern const char* MyProgramName;
 
 extern wc_ces InnerCharset; /* Don't change */
 extern wc_ces DisplayCharset;

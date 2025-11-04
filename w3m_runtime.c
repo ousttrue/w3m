@@ -1,5 +1,9 @@
 #include "w3m_runtime.h"
 
+const char* CurrentDir;
+int CurrentPid;
+const char* MyProgramName = ("w3m");
+
 #define DISPLAY_CHARSET WC_CES_UTF_8
 #define DOCUMENT_CHARSET WC_CES_UTF_8
 #define SYSTEM_CHARSET WC_CES_UTF_8

@@ -1,4 +1,5 @@
 #include "display.h"
+#include "DownloadList.h"
 #include "buffer.h"
 #include "HttpRequest.h"
 #include "http_auth.h"
@@ -1036,7 +1037,7 @@ load_doc: {
         if ((p = checkHeader(t_buf, "WWW-Authenticate:")) != NULL && http_response_code == 401) {
             /* Authentication needed */
             struct http_auth hauth;
-            if (findAuthentication(&hauth, t_buf, "WWW-Authenticate:") != NULL
+            if (findAuthentication(&hauth, t_buf->document_header, "WWW-Authenticate:") != NULL
                 && (realm = get_auth_param(hauth.param, "realm")) != NULL) {
                 auth_pu = &pu;
                 getAuthCookie(&hauth, "Authorization:", extra_header,
@@ -1055,7 +1056,7 @@ load_doc: {
         if ((p = checkHeader(t_buf, "Proxy-Authenticate:")) != NULL && http_response_code == 407) {
             /* Authentication needed */
             struct http_auth hauth;
-            if (findAuthentication(&hauth, t_buf, "Proxy-Authenticate:")
+            if (findAuthentication(&hauth, t_buf->document_header, "Proxy-Authenticate:")
                     != NULL
                 && (realm = get_auth_param(hauth.param, "realm")) != NULL) {
                 auth_pu = schemeToProxy(pu.scheme);
@@ -5540,43 +5541,6 @@ loadHTMLBuffer(struct URLFile* f, Buffer* newBuf)
         fclose(src);
 
     return newBuf;
-}
-
-static char* _size_unit[] = { "b", "kb", "Mb", "Gb", "Tb",
-    "Pb", "Eb", "Zb", "Bb", "Yb", NULL };
-
-char* convert_size(long long size, int usefloat)
-{
-    float csize;
-    int sizepos = 0;
-    char** sizes = _size_unit;
-
-    csize = (float)size;
-    while (csize >= 999.495 && sizes[sizepos + 1]) {
-        csize = csize / 1024.0;
-        sizepos++;
-    }
-    return Sprintf(usefloat ? "%.3g%s" : "%.0f%s",
-        floor(csize * 100.0 + 0.5) / 100.0, sizes[sizepos])
-        ->ptr;
-}
-
-char* convert_size2(long long size1, long long size2, int usefloat)
-{
-    char** sizes = _size_unit;
-    float csize, factor = 1;
-    int sizepos = 0;
-
-    csize = (float)((size1 > size2) ? size1 : size2);
-    while (csize / factor >= 999.495 && sizes[sizepos + 1]) {
-        factor *= 1024.0;
-        sizepos++;
-    }
-    return Sprintf(usefloat ? "%.3g/%.3g%s" : "%.0f/%.0f%s",
-        floor(size1 / factor * 100.0 + 0.5) / 100.0,
-        floor(size2 / factor * 100.0 + 0.5) / 100.0,
-        sizes[sizepos])
-        ->ptr;
 }
 
 void showProgress(long long* linelen, long long* trbyte)

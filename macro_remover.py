@@ -61,8 +61,7 @@ CONTEXT = {
     "USE_MIGEMO": False,
     # "SIGTSTP": True,
     "USE_HELP_CGI": True,
-    # # # 'HAVE_WAITPID': True,
-    # # #
+    'HAVE_WAITPID': True,
     # # 'SIGSTOP': False,
     # "USE_W3MMAILER": False,
     # "USE_MARK": False,

@@ -232,20 +232,6 @@
  * Types.
  */
 
-typedef struct _DownloadList {
-    pid_t pid;
-    char* url;
-    char* save;
-    char* lock;
-    long long size;
-    time_t time;
-    int running;
-    int err;
-    struct _DownloadList* next;
-    struct _DownloadList* prev;
-} DownloadList;
-#define DOWNLOAD_LIST_TITLE "Download List Panel"
-
 #define COPY_BUFROOT(dstbuf, srcbuf)       \
     {                                      \
         (dstbuf)->rootX = (srcbuf)->rootX; \
@@ -524,14 +510,6 @@ global char* personal_document_root init(NULL);
 global char* cgi_bin init(NULL);
 global char* index_file init(NULL);
 
-global char* CurrentDir;
-global int CurrentPid;
-#if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
-global char* MyProgramName init("w3m");
-#endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
-
-global DownloadList* FirstDL init(NULL);
-global DownloadList* LastDL init(NULL);
 global int CurrentKey;
 global char* CurrentKeyData;
 global char* CurrentCmdData;

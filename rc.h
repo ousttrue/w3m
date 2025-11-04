@@ -19,4 +19,5 @@ extern char* rcFile(char* base);
 #define query_SCONF_NO_REFERER_FROM(pu) ((const int*)querySiteconf(pu, SCONF_NO_REFERER_FROM))
 #define query_SCONF_NO_REFERER_TO(pu) ((const int*)querySiteconf(pu, SCONF_NO_REFERER_TO))
 
+struct Url;
 extern const void* querySiteconf(const struct Url* query_pu, int field);

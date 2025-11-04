@@ -13,6 +13,7 @@ const w3m_srcs = [_][]const u8{
     "dns_order.c",
     "HttpRequest.c",
     "http_auth.c",
+    "DownloadList.c",
 
     "main.c",
     "file.c",

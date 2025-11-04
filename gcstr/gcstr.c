@@ -1,4 +1,5 @@
 #include "gcstr.h"
+#include <math.h>
 #include <string.h>
 
 #define SP_NORMAL 0
@@ -148,4 +149,36 @@ Str base64_encode(const char* src, size_t len)
     }
     Strnulterm(dest);
     return dest;
+}
+
+static const char* _size_unit[] = { "b", "kb", "Mb", "Gb", "Tb",
+    "Pb", "Eb", "Zb", "Bb", "Yb", NULL };
+
+Str convert_size(long long size, bool usefloat)
+{
+    const char** sizes = _size_unit;
+    float csize = (float)size;
+    int sizepos = 0;
+    while (csize >= 999.495 && sizes[sizepos + 1]) {
+        csize = csize / 1024.0;
+        sizepos++;
+    }
+    return Sprintf(usefloat ? "%.3g%s" : "%.0f%s",
+        floor(csize * 100.0 + 0.5) / 100.0, sizes[sizepos]);
+}
+
+Str convert_size2(long long size1, long long size2, bool usefloat)
+{
+    const char** sizes = _size_unit;
+    float csize = (float)((size1 > size2) ? size1 : size2);
+    float factor = 1;
+    int sizepos = 0;
+    while (csize / factor >= 999.495 && sizes[sizepos + 1]) {
+        factor *= 1024.0;
+        sizepos++;
+    }
+    return Sprintf(usefloat ? "%.3g/%.3g%s" : "%.0f/%.0f%s",
+        floor(size1 / factor * 100.0 + 0.5) / 100.0,
+        floor(size2 / factor * 100.0 + 0.5) / 100.0,
+        sizes[sizepos]);
 }
