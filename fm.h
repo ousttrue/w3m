@@ -281,6 +281,7 @@ extern int REV_LB[];
 
 #include "Line.h"
 #include "LinkList.h"
+#include "Url.h"
 
 typedef struct _Buffer {
     char* filename;
@@ -316,8 +317,8 @@ typedef struct _Buffer {
     struct MapList* maplist;
     struct _HmarkerList* hmarklist;
     struct _HmarkerList* imarklist;
-    ParsedURL currentURL;
-    ParsedURL* baseURL;
+    struct Url currentURL;
+    struct Url* baseURL;
     char* baseTarget;
     int real_scheme;
     char* sourcefile;
@@ -568,7 +569,7 @@ struct portlist {
 };
 
 struct cookie {
-    ParsedURL url;
+    struct Url url;
     Str name;
     Str value;
     time_t expires;
@@ -697,10 +698,10 @@ global char* HTTP_proxy init(NULL);
 global char* HTTPS_proxy init(NULL);
 global char* GOPHER_proxy init(NULL);
 global char* FTP_proxy init(NULL);
-global ParsedURL HTTP_proxy_parsed;
-global ParsedURL HTTPS_proxy_parsed;
-global ParsedURL GOPHER_proxy_parsed;
-global ParsedURL FTP_proxy_parsed;
+global struct Url HTTP_proxy_parsed;
+global struct Url HTTPS_proxy_parsed;
+global struct Url GOPHER_proxy_parsed;
+global struct Url FTP_proxy_parsed;
 global char* NO_proxy init(NULL);
 global int NOproxy_netaddr init(TRUE);
 #define DNS_ORDER_UNSPEC 0

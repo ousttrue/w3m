@@ -1599,7 +1599,7 @@ loadSiteconf(void)
             opt = getWord(&p);
             SKIP_BLANKS(&p);
             if (!newent->re_url) {
-                ParsedURL pu;
+                struct Url pu;
                 if (!url || !*url)
                     continue;
                 parseURL2(url, &pu, NULL);
@@ -1652,20 +1652,18 @@ loadSiteconf(void)
 }
 
 const void*
-querySiteconf(const ParsedURL* query_pu, int field)
+querySiteconf(const struct Url* query_pu, int field)
 {
-    const struct siteconf_rec* ent;
-    Str u;
-    char *firstp, *lastp;
-
     if (field < 0 || field >= SCONF_N_FIELD)
         return NULL;
     if (!query_pu || IS_EMPTY_PARSED_URL(query_pu))
         return NULL;
-    u = parsedURL2Str((ParsedURL*)query_pu);
+    Str u = parsedURL2Str((struct Url*)query_pu);
     if (u->length == 0)
         return NULL;
 
+    char *firstp, *lastp;
+    const struct siteconf_rec* ent;
     for (ent = siteconf_head; ent; ent = ent->next) {
         if (!SCONF_TEST(ent, field))
             continue;

@@ -715,7 +715,6 @@ link_list_panel(Buffer* buf)
     FormItemList* fi;
     int i;
     char *t, *u, *p;
-    ParsedURL pu;
     /* FIXME: gettextize? */
     Str tmp = Strnew_charp("<title>Link List</title>\
 <h1 align=center>Link List</h1>\n");
@@ -728,6 +727,7 @@ link_list_panel(Buffer* buf)
         Strcat_charp(tmp, "<hr><h2>Links</h2>\n<ol>\n");
         for (l = buf->linklist; l; l = l->next) {
             if (l->url) {
+                struct Url pu;
                 parseURL2(l->url, &pu, baseURL(buf));
                 p = parsedURL2Str(&pu)->ptr;
                 u = html_quote(p);
@@ -758,6 +758,7 @@ link_list_panel(Buffer* buf)
             a = &al->anchors[i];
             if (a->hseq < 0 || a->slave)
                 continue;
+            struct Url pu;
             parseURL2(a->url, &pu, baseURL(buf));
             p = parsedURL2Str(&pu)->ptr;
             u = html_quote(p);
@@ -780,6 +781,7 @@ link_list_panel(Buffer* buf)
             a = &al->anchors[i];
             if (a->slave)
                 continue;
+            struct Url pu;
             parseURL2(a->url, &pu, baseURL(buf));
             p = parsedURL2Str(&pu)->ptr;
             u = html_quote(p);

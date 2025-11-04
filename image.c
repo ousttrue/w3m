@@ -103,8 +103,7 @@ void termImage()
 static int
 openImgdisplay()
 {
-    char* cmd;
-
+    const char* cmd;
     if (!strchr(Imgdisplay, '/'))
         cmd = Strnew_m_charp(w3m_auxbin_dir(), "/", Imgdisplay, NULL)->ptr;
     else
@@ -334,7 +333,7 @@ void getAllImage(Buffer* buf)
 {
     AnchorList* al;
     Anchor* a;
-    ParsedURL* current;
+    struct Url* current;
     int i;
 
     image_buffer = buf;
@@ -543,7 +542,7 @@ void loadImage(Buffer* buf, int flag)
 }
 
 ImageCache*
-getImage(Image* image, ParsedURL* current, int flag)
+getImage(Image* image, struct Url* current, int flag)
 {
     Str key = NULL;
     ImageCache* cache;

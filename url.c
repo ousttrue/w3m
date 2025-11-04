@@ -23,8 +23,6 @@
 #endif
 #include <openssl/err.h>
 
-
-
 /* see rc.c, "dns_order" and dnsorders[] */
 int ai_family_order_table[7][3] = {
     { PF_UNSPEC, PF_UNSPEC, PF_UNSPEC }, /* 0:unspec */
@@ -77,6 +75,11 @@ struct cmdtable schemetable[] = {
     { NULL, SCM_UNKNOWN },
 };
 
+struct table2 {
+    char* item1;
+    char* item2;
+};
+
 static struct table2 DefaultGuess[] = {
     { "html", "text/html" },
     { "htm", "text/html" },
@@ -100,7 +103,7 @@ static struct table2 DefaultGuess[] = {
     { NULL, NULL }
 };
 
-static void add_index_file(ParsedURL* pu, URLFile* uf);
+static void add_index_file(struct Url* pu, URLFile* uf);
 static char* schemeNumToName(int scheme);
 
 /* #define HTTP_DEFAULT_FILE    "/index.html" */
@@ -461,7 +464,6 @@ SSL_write_from_file(SSL* ssl, char* file)
     }
 }
 
-
 static void
 write_from_file(int sock, char* file)
 {
@@ -478,7 +480,7 @@ write_from_file(int sock, char* file)
     }
 }
 
-ParsedURL*
+struct Url*
 baseURL(Buffer* buf)
 {
     if (buf->bufferprop & BP_NO_URL) {
@@ -621,7 +623,7 @@ copyPath(char* orgpath, int length, int option)
     return tmp->ptr;
 }
 
-void parseURL(char* url, ParsedURL* p_url, ParsedURL* current)
+void parseURL(char* url, struct Url* p_url, struct Url* current)
 {
     char *p, *q, *qq;
     Str tmp;
@@ -837,8 +839,7 @@ analyze_file:
         while (*p)
             p++;
         p_url->file = copyPath(tmp->ptr, -1, COPYPATH_SPC_IGNORE);
-    } else
-    {
+    } else {
         char* cgi = strchr(p, '?');
     again:
         while (*p && *p != '#' && p != cgi)
@@ -893,10 +894,10 @@ do_label:
 
 #define ALLOC_STR(s) ((s) == NULL ? NULL : allocStr(s, -1))
 
-void copyParsedURL(ParsedURL* p, const ParsedURL* q)
+void copyParsedURL(struct Url* p, const struct Url* q)
 {
     if (q == NULL) {
-        memset(p, 0, sizeof(ParsedURL));
+        memset(p, 0, sizeof(struct Url));
         p->scheme = SCM_UNKNOWN;
         return;
     }
@@ -912,7 +913,7 @@ void copyParsedURL(ParsedURL* p, const ParsedURL* q)
     p->query = ALLOC_STR(q->query);
 }
 
-void parseURL2(char* url, ParsedURL* pu, ParsedURL* current)
+void parseURL2(char* url, struct Url* pu, struct Url* current)
 {
     char* p;
     Str tmp;
@@ -968,14 +969,13 @@ void parseURL2(char* url, ParsedURL* pu, ParsedURL* current)
         pu->host = current->host;
         pu->port = current->port;
         if (pu->file && *pu->file) {
-                if (
-                    pu->scheme != SCM_GOPHER &&
-                    pu->file[0] != '/'
+            if (
+                pu->scheme != SCM_GOPHER && pu->file[0] != '/'
 #ifdef SUPPORT_DOS_DRIVE_PREFIX
-                    && !(pu->scheme == SCM_LOCAL && IS_ALPHA(pu->file[0])
-                        && pu->file[1] == ':')
+                && !(pu->scheme == SCM_LOCAL && IS_ALPHA(pu->file[0])
+                    && pu->file[1] == ':')
 #endif
-                ) {
+            ) {
                 /* file is relative [process 1] */
                 p = pu->file;
                 if (current->file) {
@@ -989,8 +989,7 @@ void parseURL2(char* url, ParsedURL* pu, ParsedURL* current)
                     pu->file = tmp->ptr;
                     relative_uri = TRUE;
                 }
-            }
-            else if (pu->scheme == SCM_GOPHER && pu->file[0] == '/') {
+            } else if (pu->scheme == SCM_GOPHER && pu->file[0] == '/') {
                 p = pu->file;
                 pu->file = allocStr(p + 1, -1);
             }
@@ -1014,10 +1013,8 @@ void parseURL2(char* url, ParsedURL* pu, ParsedURL* current)
                 Strcat_char(tmp, '/');
             Strcat_charp(tmp, file_unquote(pu->file));
             pu->file = file_quote(cleanupName(tmp->ptr));
-        }
-        else if (pu->scheme == SCM_HTTP
-            || pu->scheme == SCM_HTTPS
-        ) {
+        } else if (pu->scheme == SCM_HTTP
+            || pu->scheme == SCM_HTTPS) {
             if (relative_uri) {
                 /* In this case, pu->file is created by [process 1] above.
                  * pu->file may contain relative path (for example,
@@ -1029,8 +1026,7 @@ void parseURL2(char* url, ParsedURL* pu, ParsedURL* current)
                 pu->file = cleanupName(pu->file);
             }
         } else if (
-            pu->scheme != SCM_GOPHER &&
-            pu->file[0] == '/') {
+            pu->scheme != SCM_GOPHER && pu->file[0] == '/') {
             /*
              * this happens on the following conditions:
              * (1) ftp scheme (2) local, looks like absolute path.
@@ -1054,7 +1050,7 @@ void parseURL2(char* url, ParsedURL* pu, ParsedURL* current)
 }
 
 static Str
-_parsedURL2Str(ParsedURL* pu, int pass, int user, int label)
+_parsedURL2Str(struct Url* pu, int pass, int user, int label)
 {
     Str tmp;
     static char* scheme_str[] = {
@@ -1107,8 +1103,7 @@ _parsedURL2Str(ParsedURL* pu, int pass, int user, int label)
         Strcat_charp(tmp, pu->file);
         return tmp;
     }
-    if (pu->scheme != SCM_NEWS && pu->scheme != SCM_NEWS_GROUP)
-    {
+    if (pu->scheme != SCM_NEWS && pu->scheme != SCM_NEWS_GROUP) {
         Strcat_charp(tmp, "//");
     }
     if (user && pu->user) {
@@ -1127,12 +1122,11 @@ _parsedURL2Str(ParsedURL* pu, int pass, int user, int label)
         }
     }
     if (
-        pu->scheme != SCM_NEWS && pu->scheme != SCM_NEWS_GROUP &&
-        (pu->file == NULL || (pu->file[0] != '/'
+        pu->scheme != SCM_NEWS && pu->scheme != SCM_NEWS_GROUP && (pu->file == NULL || (pu->file[0] != '/'
 #ifdef SUPPORT_DOS_DRIVE_PREFIX
-             && !(IS_ALPHA(pu->file[0]) && pu->file[1] == ':' && pu->host == NULL)
+                                                                       && !(IS_ALPHA(pu->file[0]) && pu->file[1] == ':' && pu->host == NULL)
 #endif
-                 )))
+                                                                           )))
         Strcat_char(tmp, '/');
     Strcat_charp(tmp, pu->file);
     if (pu->scheme == SCM_FTPDIR && Strlastchar(tmp) != '/')
@@ -1148,13 +1142,13 @@ _parsedURL2Str(ParsedURL* pu, int pass, int user, int label)
     return tmp;
 }
 
-Str parsedURL2Str(ParsedURL* pu)
+Str parsedURL2Str(struct Url* pu)
 {
     return _parsedURL2Str(pu, FALSE, TRUE, TRUE);
 }
 
 static Str
-parsedURL2RefererOriginStr(ParsedURL* pu)
+parsedURL2RefererOriginStr(struct Url* pu)
 {
     Str s;
     char *f = pu->file, *q = pu->query;
@@ -1168,7 +1162,7 @@ parsedURL2RefererOriginStr(ParsedURL* pu)
     return s;
 }
 
-Str parsedURL2RefererStr(ParsedURL* pu)
+Str parsedURL2RefererStr(struct Url* pu)
 {
     return _parsedURL2Str(pu, FALSE, FALSE, FALSE);
 }
@@ -1208,7 +1202,7 @@ schemeNumToName(int scheme)
 }
 
 static char*
-otherinfo(ParsedURL* target, ParsedURL* current, char* referer)
+otherinfo(struct Url* target, struct Url* current, char* referer)
 {
     Str s = Strnew();
     const int* no_referer_ptr;
@@ -1252,8 +1246,7 @@ otherinfo(ParsedURL* target, ParsedURL* current, char* referer)
             cross_origin = TRUE;
         if (current && current->scheme == SCM_HTTPS && target->scheme != SCM_HTTPS) {
             /* Don't send Referer: if https:// -> http:// */
-        } else
-            if (referer == NULL && current && current->scheme != SCM_LOCAL && current->scheme != SCM_LOCAL_CGI && current->scheme != SCM_DATA && (current->scheme != SCM_FTP || (current->user == NULL && current->pass == NULL))) {
+        } else if (referer == NULL && current && current->scheme != SCM_LOCAL && current->scheme != SCM_LOCAL_CGI && current->scheme != SCM_DATA && (current->scheme != SCM_FTP || (current->user == NULL && current->pass == NULL))) {
             Strcat_charp(s, "Referer: ");
             if (cross_origin)
                 Strcat(s, parsedURL2RefererOriginStr(current));
@@ -1290,7 +1283,7 @@ Str HTTPrequestMethod(HRequest* hr)
     return NULL;
 }
 
-Str HTTPrequestURI(ParsedURL* pu, HRequest* hr)
+Str HTTPrequestURI(struct Url* pu, HRequest* hr)
 {
     Str tmp = Strnew();
     if (hr->command == HR_COMMAND_CONNECT) {
@@ -1308,7 +1301,7 @@ Str HTTPrequestURI(ParsedURL* pu, HRequest* hr)
 }
 
 static Str
-HTTPrequest(ParsedURL* pu, ParsedURL* current, HRequest* hr, TextList* extra)
+HTTPrequest(struct Url* pu, struct Url* current, HRequest* hr, TextList* extra)
 {
     Str tmp;
     TextListItem* i;
@@ -1394,7 +1387,7 @@ void init_stream(URLFile* uf, int scheme, InputStream stream)
 }
 
 URLFile
-openURL(char* url, ParsedURL* pu, ParsedURL* current,
+openURL(char* url, struct Url* pu, struct Url* current,
     URLOption* option, FormList* request, TextList* extra_header,
     URLFile* ouf, HRequest* hr, unsigned char* status)
 {
@@ -1539,8 +1532,7 @@ retry:
         if (request && request->method == FORM_METHOD_HEAD)
             hr->command = HR_COMMAND_HEAD;
         if ((
-                (pu->scheme == SCM_HTTPS) ? non_null(HTTPS_proxy) :
-                                          non_null(HTTP_proxy))
+                (pu->scheme == SCM_HTTPS) ? non_null(HTTPS_proxy) : non_null(HTTP_proxy))
             && !Do_not_use_proxy && pu->host != NULL && !check_no_proxy(pu->host)) {
             hr->flag |= HR_FLAG_PROXY;
             if (pu->scheme == SCM_HTTPS && *status == HTST_CONNECT) {
@@ -1577,8 +1569,7 @@ retry:
                     tmp = HTTPrequest(pu, current, hr, extra_header);
                     *status = HTST_NORMAL;
                 }
-            } else
-            {
+            } else {
                 tmp = HTTPrequest(pu, current, hr, extra_header);
                 *status = HTST_NORMAL;
             }
@@ -1623,8 +1614,7 @@ retry:
                     write_from_file(sock, request->body);
             }
             return uf;
-        } else
-        {
+        } else {
             write(sock, tmp->ptr, tmp->length);
             if (w3m_reqlog) {
                 FILE* ff = fopen(w3m_reqlog, "a");
@@ -1736,7 +1726,7 @@ retry:
 
 /* add index_file if exists */
 static void
-add_index_file(ParsedURL* pu, URLFile* uf)
+add_index_file(struct Url* pu, URLFile* uf)
 {
     char *p, *q;
     TextList* index_file_list = NULL;
@@ -1949,11 +1939,10 @@ char* filename_extension(char* path, int is_url)
         return last_dot;
 }
 
-
-ParsedURL*
+struct Url*
 schemeToProxy(int scheme)
 {
-    ParsedURL* pu = NULL; /* for gcc */
+    struct Url* pu = NULL; /* for gcc */
     switch (scheme) {
     case SCM_HTTP:
         pu = &HTTP_proxy_parsed;
@@ -1972,14 +1961,14 @@ schemeToProxy(int scheme)
 }
 
 wc_ces
-url_to_charset(const char* url, const ParsedURL* base, wc_ces doc_charset)
+url_to_charset(const char* url, const struct Url* base, wc_ces doc_charset)
 {
-    const ParsedURL* pu;
-    ParsedURL pu_buf;
+    const struct Url* pu;
+    struct Url pu_buf;
     const wc_ces* csptr;
 
     if (url && *url && *url != '#') {
-        parseURL2((char*)url, &pu_buf, (ParsedURL*)base);
+        parseURL2((char*)url, &pu_buf, (struct Url*)base);
         pu = &pu_buf;
     } else {
         pu = base;
@@ -1991,7 +1980,7 @@ url_to_charset(const char* url, const ParsedURL* base, wc_ces doc_charset)
                                                     : DocumentCharset;
 }
 
-char* url_encode(const char* url, const ParsedURL* base, wc_ces doc_charset)
+char* url_encode(const char* url, const struct Url* base, wc_ces doc_charset)
 {
     return url_quote_conv((char*)url,
         url_to_charset(url, base, doc_charset));
@@ -1999,7 +1988,7 @@ char* url_encode(const char* url, const ParsedURL* base, wc_ces doc_charset)
 
 #if 0 /* unused */
 char *
-url_decode(const char *url, const ParsedURL *base, wc_ces doc_charset)
+url_decode(const char *url, const struct Url *base, wc_ces doc_charset)
 {
     if (!DecodeURL)
 	return (char *)url;
@@ -2017,4 +2006,3 @@ char* url_decode2(const char* url, const Buffer* buf)
     url_charset = buf ? url_to_charset(url, baseURL((Buffer*)buf), buf->document_charset) : url_to_charset(url, NULL, 0);
     return url_unquote_conv((char*)url, url_charset);
 }
-

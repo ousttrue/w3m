@@ -40,44 +40,6 @@ struct mailcap {
 #define MCSTAT_REPTYPE 0x02
 #define MCSTAT_REPPARAM 0x04
 
-struct table2 {
-    char* item1;
-    char* item2;
-};
-
-typedef struct {
-    char* referer;
-    int flag;
-} URLOption;
-
-typedef struct _ParsedURL {
-    int scheme;
-    char* user;
-    char* pass;
-    char* host;
-    int port;
-    char* file;
-    char* real_file;
-    char* query;
-    char* label;
-    int is_nocache;
-} ParsedURL;
-
-union input_stream;
-typedef struct {
-    unsigned char scheme;
-    char is_cgi;
-    char encoding;
-    union input_stream* stream;
-    char* ext;
-    int compression;
-    int content_encoding;
-    char* guess_type;
-    char* ssl_certificate;
-    char* url;
-    time_t modtime;
-} URLFile;
-
 #define CMP_NOCOMPRESS 0
 #define CMP_COMPRESS 1
 #define CMP_GZIP 2

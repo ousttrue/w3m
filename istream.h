@@ -1,7 +1,4 @@
-/* $Id: istream.h,v 1.12 2003/10/20 16:41:56 ukai Exp $ */
-#ifndef IO_STREAM_H
-#define IO_STREAM_H
-
+#pragma once
 #include <gcstr/alloc.h>
 #include <stdio.h>
 #include <openssl/bio.h>
@@ -136,4 +133,23 @@ extern Str ssl_get_certificate(SSL* ssl, char* hostname);
 #define ssl_of(stream) ((stream)->ssl.handle->ssl)
 
 #define openIS(path) newInputStream(open((path), O_RDONLY))
-#endif
+
+typedef struct {
+    char* referer;
+    int flag;
+} URLOption;
+
+union input_stream;
+typedef struct {
+    unsigned char scheme;
+    char is_cgi;
+    char encoding;
+    union input_stream* stream;
+    char* ext;
+    int compression;
+    int content_encoding;
+    char* guess_type;
+    char* ssl_certificate;
+    char* url;
+    time_t modtime;
+} URLFile;
