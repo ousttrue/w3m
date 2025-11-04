@@ -237,7 +237,7 @@ typedef struct _DownloadList {
     char* url;
     char* save;
     char* lock;
-    clen_t size;
+    long long size;
     time_t time;
     int running;
     int err;

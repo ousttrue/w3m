@@ -5405,7 +5405,7 @@ DEFUN(tabL, TAB_LEFT, "Move left along the tab bar")
     moveTab(CurrentTab, tab ? tab : FirstTab, FALSE);
 }
 
-void addDownloadList(pid_t pid, char* url, char* save, char* lock, clen_t size)
+void addDownloadList(pid_t pid, char* url, char* save, char* lock, long long size)
 {
     DownloadList* d;
 
@@ -5445,7 +5445,7 @@ int checkDownloadList(void)
 }
 
 static char*
-convert_size3(clen_t size)
+convert_size3(long long size)
 {
     Str tmp = Strnew();
     int n;

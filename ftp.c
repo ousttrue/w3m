@@ -624,7 +624,7 @@ void disconnectFTP(void)
             goto done;                        \
     }
 
-static Str size_int2str(clen_t);
+static Str size_int2str(long long);
 
 static int
 ex_ftpdir_name_size_date(char* line, char** name, char** link, char** date,
@@ -632,7 +632,7 @@ ex_ftpdir_name_size_date(char* line, char** name, char** link, char** date,
 {
     int ftype = FTPDIR_NONE;
     char *cp = line, *p;
-    clen_t size;
+    long long size;
 
     if (strlen(cp) < 11)
         goto done;
@@ -712,7 +712,7 @@ done:
 }
 
 static Str
-size_int2str(clen_t size)
+size_int2str(long long size)
 {
     Str size_str;
     int unit;
