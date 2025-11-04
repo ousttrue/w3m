@@ -25,25 +25,23 @@ CONTEXT = {
     "USE_COLOR": True,
     "USE_ANSI_COLOR": True,
     "USE_BG_COLOR": True,
-
     "USE_IMAGE": True,
     "USE_W3MIMG_WIN": False,
     "USE_W3MIMG_X11": False,
     "USE_W3MIMG_FB": False,
     "W3MIMGDISPLAY_SETUID": False,
-
-    "INET6": True,
     "USE_SSL": True,
     "USE_SSL_VERIFY": True,
+    "USE_DIGEST_AUTH": True,
+    "INET6": True,
     "USE_NNTP": True,
     "USE_GOPHER": True,
     "USE_COOKIE": True,
     "USE_MENU": True,
-
+    "MENU_SELECT": True,
     "USE_MOUSE": False,
     "USE_GPM": False,
     "USE_SYSMOUSE": False,
-
     "USE_HISTORY": True,
     "USE_BUFINFO": True,
     "USE_ALARM": True,
@@ -51,11 +49,16 @@ CONTEXT = {
     "HAVE_TERMIOS_H": True,
     "HAVE_TERMIO_H": False,
     "HAVE_SGTTY_H": False,
-
+    "USE_XFACE": False,
+    "USE_EXTERNAL_URI_LOADER": False,
+    "FORMAT_NICE": False,
+    "ID_EXT": True,
+    "TABLE_EXPAND": False,
+    "ENABLE_REMOVE_TRAILINGSPACES": True,
+    "HAVE_SETPGRP": True,
     # "SIGTSTP": True,
     # "USE_HELP_CGI": True,
     # "USE_DICT": True,
-    # "USE_EXTERNAL_URI_LOADER": False,
     # # # 'HAVE_WAITPID': True,
     # # #
     # # 'SIGSTOP': False,
@@ -65,11 +68,8 @@ CONTEXT = {
     # "USE_MARK": False,
     # "SUPPORT_WIN9X_CONSOLE_MBCS": False,
     # "USE_RAW_SCROLL": False,
-    # "MENU_SELECT": False,
     # "USE_GPM": False,
-    # "ID_EXT": False,
     # "MATRIX": True,
-    # "FORMAT_NICE": True,
 }
 
 MACRO_PATTERN = re.compile(r"^#\s*(\S+)\s*(\S.*)?")

@@ -116,9 +116,6 @@ fversion(FILE* f)
         ",cookie"
         ",ssl"
         ",ssl-verify"
-#ifdef USE_EXTERNAL_URI_LOADER
-        ",external-uri-loader"
-#endif
 #ifdef USE_W3MMAILER
         ",w3mmailer"
 #endif
@@ -2745,11 +2742,9 @@ save_submit_formlist(FormItemList* src)
     FormItemList* srcitem;
     FormItemList* item;
     FormItemList* ret = NULL;
-#ifdef MENU_SELECT
     FormSelectOptionItem* opt;
     FormSelectOptionItem* curopt;
     FormSelectOptionItem* srcopt;
-#endif /* MENU_SELECT */
 
     if (src == NULL)
         return NULL;
@@ -2775,7 +2770,6 @@ save_submit_formlist(FormItemList* src)
         item->rows = srcitem->rows;
         item->maxlength = srcitem->maxlength;
         item->readonly = srcitem->readonly;
-#ifdef MENU_SELECT
         opt = curopt = NULL;
         for (srcopt = srcitem->select_option; srcopt; srcopt = srcopt->next) {
             if (!srcopt->checked)
@@ -2794,7 +2788,6 @@ save_submit_formlist(FormItemList* src)
         item->select_option = opt;
         if (srcitem->label)
             item->label = Strdup(srcitem->label);
-#endif /* MENU_SELECT */
         item->parent = list;
         item->next = NULL;
 
@@ -3040,7 +3033,6 @@ _followForm(int submit)
         fi->checked = !fi->checked;
         formUpdateBuffer(a, Currentbuf, fi);
         break;
-#ifdef MENU_SELECT
     case FORM_SELECT:
         if (submit)
             goto do_submit;
@@ -3052,7 +3044,6 @@ _followForm(int submit)
         if (fi->parent->nitems == 1)
             goto do_submit;
         break;
-#endif /* MENU_SELECT */
     case FORM_INPUT_IMAGE:
     case FORM_INPUT_SUBMIT:
     case FORM_INPUT_BUTTON:
@@ -3110,10 +3101,8 @@ _followForm(int submit)
             if (f2->parent == fi->parent && f2->name && f2->value && f2->type != FORM_INPUT_SUBMIT && f2->type != FORM_INPUT_HIDDEN && f2->type != FORM_INPUT_RESET) {
                 f2->value = f2->init_value;
                 f2->checked = f2->init_checked;
-#ifdef MENU_SELECT
                 f2->label = f2->init_label;
                 f2->selected = f2->init_selected;
-#endif /* MENU_SELECT */
                 formUpdateBuffer(a2, Currentbuf, f2);
             }
         }
@@ -4467,9 +4456,6 @@ void chkURLBuffer(Buffer* buf)
     for (i = 0; url_like_pat[i]; i++) {
         reAnchor(buf, url_like_pat[i]);
     }
-#ifdef USE_EXTERNAL_URI_LOADER
-    chkExternalURIBuffer(buf);
-#endif
     buf->check_url |= CHK_URL;
 }
 
@@ -5092,12 +5078,6 @@ DEFUN(reinit, REINIT, "Reload configuration file")
         return;
     }
 
-#ifdef USE_EXTERNAL_URI_LOADER
-    if (!strcasecmp(resource, "URIMETHODS")) {
-        initURIMethods();
-        return;
-    }
-#endif
 
     disp_err_message(Sprintf("Don't know how to reinitialize '%s'", resource)->ptr, FALSE);
 }

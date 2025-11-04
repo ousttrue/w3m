@@ -140,11 +140,6 @@ extern void cursorBottom(void);
 extern int currentLn(Buffer* buf);
 extern void tmpClearBuffer(Buffer* buf);
 extern char* filename_extension(char* patch, int is_url);
-#ifdef USE_EXTERNAL_URI_LOADER
-extern void initURIMethods(void);
-extern Str searchURIMethods(ParsedURL* pu);
-extern void chkExternalURIBuffer(Buffer* buf);
-#endif
 extern ParsedURL* schemeToProxy(int scheme);
 extern wc_ces url_to_charset(const char* url, const ParsedURL* base,
     wc_ces doc_charset);

@@ -14,11 +14,9 @@
 
 extern Str* textarea_str;
 extern int max_textarea;
-#ifdef MENU_SELECT
 extern FormSelectOption* select_option;
 extern int max_select;
 #include "menu.h"
-#endif /* MENU_SELECT */
 
 /* *INDENT-OFF* */
 struct {
@@ -115,25 +113,21 @@ formList_addInput(struct form_list* fl, struct parsed_tag* tag)
     if (parsedtag_get_value(tag, ATTR_TEXTAREANUMBER, &i)
         && i >= 0 && i < max_textarea)
         item->value = item->init_value = textarea_str[i];
-#ifdef MENU_SELECT
     if (parsedtag_get_value(tag, ATTR_SELECTNUMBER, &i)
         && i >= 0 && i < max_select)
         item->select_option = select_option[i].first;
-#endif /* MENU_SELECT */
     if (parsedtag_get_value(tag, ATTR_ROWS, &p))
         item->rows = atoi(p);
     if (item->type == FORM_UNKNOWN) {
         /* type attribute is missing. Ignore the tag. */
         return NULL;
     }
-#ifdef MENU_SELECT
     if (item->type == FORM_SELECT) {
         chooseSelectOption(item, item->select_option);
         item->init_selected = item->selected;
         item->init_value = item->value;
         item->init_label = item->label;
     }
-#endif /* MENU_SELECT */
     if (item->type == FORM_INPUT_FILE && item->value && item->value->length) {
         /* security hole ! */
         return NULL;
@@ -235,7 +229,6 @@ void formResetBuffer(Buffer* buf, AnchorList* formitem)
             f1->init_checked = f2->init_checked;
             break;
         case FORM_SELECT:
-#ifdef MENU_SELECT
             f1->select_option = f2->select_option;
             f1->value = f2->value;
             f1->label = f2->label;
@@ -243,7 +236,6 @@ void formResetBuffer(Buffer* buf, AnchorList* formitem)
             f1->init_value = f2->init_value;
             f1->init_label = f2->init_label;
             f1->init_selected = f2->init_selected;
-#endif /* MENU_SELECT */
             break;
         default:
             continue;
@@ -385,9 +377,7 @@ void formUpdateBuffer(Anchor* a, Buffer* buf, FormItemList* form)
     case FORM_INPUT_PASSWORD:
     case FORM_INPUT_CHECKBOX:
     case FORM_INPUT_RADIO:
-#ifdef MENU_SELECT
     case FORM_SELECT:
-#endif /* MENU_SELECT */
         spos = a->start.pos;
         epos = a->end.pos;
         break;
@@ -409,13 +399,11 @@ void formUpdateBuffer(Anchor* a, Buffer* buf, FormItemList* form)
     case FORM_INPUT_FILE:
     case FORM_INPUT_PASSWORD:
     case FORM_TEXTAREA:
-#ifdef MENU_SELECT
     case FORM_SELECT:
         if (form->type == FORM_SELECT) {
             p = form->label->ptr;
             updateSelectOption(form, form->select_option);
         } else
-#endif /* MENU_SELECT */
         {
             if (!form->value)
                 break;
@@ -591,7 +579,6 @@ void do_internal(char* action, char* data)
     }
 }
 
-#ifdef MENU_SELECT
 void addSelectOption(FormSelectOption* fso, Str value, Str label, int chk)
 {
     FormSelectOptionItem* o;
@@ -678,7 +665,6 @@ int formChooseOptionByMenu(struct form_item_list* fi, int x, int y)
     updateSelectOption(fi, fi->select_option);
     return 1;
 }
-#endif /* MENU_SELECT */
 
 void form_write_data(FILE* f, char* boundary, char* name, char* value)
 {
@@ -906,10 +892,8 @@ void preFormUpdateBuffer(Buffer* buf)
     Anchor* a;
     FormList* fl;
     FormItemList* fi;
-#ifdef MENU_SELECT
     FormSelectOptionItem* opt;
     int j;
-#endif
 
     if (!buf || !buf->formitem || !PreForm)
         return;
@@ -961,7 +945,6 @@ void preFormUpdateBuffer(Buffer* buf)
                     if (pi->value && fi->value && !Strcmp_charp(fi->value, pi->value))
                         formRecheckRadio(a, buf, fi);
                     break;
-#ifdef MENU_SELECT
                 case FORM_SELECT:
                     for (j = 0, opt = fi->select_option; opt != NULL;
                         j++, opt = opt->next) {
@@ -975,7 +958,6 @@ void preFormUpdateBuffer(Buffer* buf)
                         }
                     }
                     break;
-#endif
                 }
             }
         }
