@@ -31,7 +31,7 @@ int columnSkip(Buffer* buf, int offset)
     int i, maxColumn;
     int column = buf->currentColumn + offset;
     int nlines = buf->LINES + 1;
-    Line* l;
+    struct Line* l;
 
     maxColumn = 0;
     for (i = 0, l = buf->topLine; i < nlines && l != NULL; i++, l = l->next) {
@@ -52,7 +52,7 @@ int columnSkip(Buffer* buf, int offset)
     return 1;
 }
 
-int columnPos(Line* line, int column)
+int columnPos(struct Line* line, int column)
 {
     int i;
 
@@ -65,10 +65,10 @@ int columnPos(Line* line, int column)
     return i;
 }
 
-Line* lineSkip(Buffer* buf, Line* line, int offset, int last)
+struct Line* lineSkip(Buffer* buf, struct Line* line, int offset, int last)
 {
     int i;
-    Line* l;
+    struct Line* l;
 
     l = currentLineSkip(buf, line, offset, last);
     if (!nextpage_topline)
@@ -78,10 +78,10 @@ Line* lineSkip(Buffer* buf, Line* line, int offset, int last)
     return l;
 }
 
-Line* currentLineSkip(Buffer* buf, Line* line, int offset, int last)
+struct Line* currentLineSkip(Buffer* buf, struct Line* line, int offset, int last)
 {
     int i, n;
-    Line* l = line;
+    struct Line* l = line;
 
     if (buf->pagerSource && !(buf->bufferprop & BP_CLOSE)) {
         n = line->linenumber + offset + buf->LINES;
@@ -478,7 +478,7 @@ int calcPosition(char* l, Lineprop* pr, int len, int pos, int bpos, int mode)
     return realColumn[pos];
 }
 
-int columnLen(Line* line, int column)
+int columnLen(struct Line* line, int column)
 {
     int i, j;
 

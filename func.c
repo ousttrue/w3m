@@ -324,15 +324,13 @@ getKey2(char** str)
 
 int getKey(const char* s)
 {
-    int c, c2;
-
-    c = getKey2(&s);
+    int c = getKey2(&s);
     if (c < 0)
         return -1;
     if (*s == ' ' || *s == '-')
         s++;
     if (*s) {
-        c2 = getKey2(&s);
+        int c2 = getKey2(&s);
         if (c2 < 0)
             return -1;
         c = K_MULTI | (c << 16) | c2;
