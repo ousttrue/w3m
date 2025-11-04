@@ -5,6 +5,7 @@
 #include "dns_order.h"
 #include "cookie.h"
 #include "display.h"
+#include "istream.h"
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>

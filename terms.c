@@ -5,6 +5,8 @@
 #include "w3m_runtime.h"
 #include "config.h"
 #include "buffer.h"
+#include "ctrlcode.h"
+#include <gcstr/gcstr.h>
 #include <stdio.h>
 #include <signal.h>
 #include <sys/types.h>

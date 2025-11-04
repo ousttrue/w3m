@@ -1,4 +1,7 @@
 #include "file.h"
+#include "history.h"
+#include "mimehead.h"
+#include "ctrlcode.h"
 #include "display.h"
 #include "image.h"
 #include "linein.h"
@@ -24,6 +27,7 @@
 #include <time.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <unistd.h>
 #include <utime.h>
 /* foo */
 
@@ -7003,21 +7007,6 @@ int checkCopyFile(char* path1, char* path2)
     if (*path2 == '|' && PermitSaveToPipe)
         return 0;
     if ((stat(path1, &st1) == 0) && (stat(path2, &st2) == 0))
-        if (st1.st_ino == st2.st_ino)
-            return -1;
-    return 0;
-}
-
-int checkSaveFile(InputStream stream, char* path2)
-{
-    struct stat st1, st2;
-    int des = ISfileno(stream);
-
-    if (des < 0)
-        return 0;
-    if (*path2 == '|' && PermitSaveToPipe)
-        return 0;
-    if ((fstat(des, &st1) == 0) && (stat(path2, &st2) == 0))
         if (st1.st_ino == st2.st_ino)
             return -1;
     return 0;

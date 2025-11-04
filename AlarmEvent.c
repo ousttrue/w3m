@@ -2,6 +2,7 @@
 #include "funcname1.h"
 #include "buffer.h"
 #include "fm.h"
+#include <gcstr/gcstr.h>
 
 static struct AlarmEvent DefaultAlarm = (struct AlarmEvent) {
     .sec = 0,

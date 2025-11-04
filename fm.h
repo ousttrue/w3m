@@ -14,32 +14,7 @@
 #define _GNU_SOURCE /* strcasestr() */
 #endif
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <limits.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
 #include "config.h"
-#include "history.h"
-
-#define MENU_SELECT
-#define MENU_MAP
-
-#include "ctrlcode.h"
-#include "html.h"
-#include <gcstr/Str.h>
-#include "wc.h"
-#include "wtf.h"
-
-#ifdef HAVE_LOCALE_H
-#include <locale.h>
-#endif
-#if !HAVE_SETLOCALE
-#define setlocale(category, locale) /* empty */
-#endif
 
 #undef bindtextdomain
 #define bindtextdomain(Domain, Directory) /* empty */
@@ -49,6 +24,9 @@
 #define N_(Text) Text
 #define gettext(Text) Text
 
+#include <gcstr/Str.h>
+#include "wc.h"
+#include "wtf.h"
 #include "form.h"
 #include "frame.h"
 #include "parsetag.h"
@@ -58,7 +36,6 @@
 #include "textlist.h"
 #include "funcname1.h"
 #include "terms.h"
-#include "istream.h"
 
 #ifdef MAINPROGRAM
 #define global

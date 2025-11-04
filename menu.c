@@ -10,6 +10,7 @@
 #include "display.h"
 #include "func.h"
 #include "regex.h"
+#include "history.h"
 #include <gcstr/gcstr.h>
 #include <stdio.h>
 

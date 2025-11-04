@@ -13,6 +13,7 @@
 #include "utf8.h"
 #endif /* DUMMY */
 #include "w3m_runtime.h"
+#include "ctrlcode.h"
 
 extern char* conv_entity(unsigned int c);
 

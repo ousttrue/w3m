@@ -3,12 +3,14 @@
  */
 #include "fm.h"
 #include "http_auth.h"
+#include "history.h"
 #include "display.h"
 #include "dns_order.h"
 #include "cookie.h"
 #include "buffer.h"
 #include "image.h"
 #include "w3m_runtime.h"
+#include <fcntl.h>
 #include <gcstr/gcstr.h>
 #include "proto.h"
 #include "indep.h"
@@ -19,6 +21,7 @@
 #include "regex.h"
 #include <stdlib.h>
 #include <stddef.h>
+#include <unistd.h>
 #include "rc.h"
 
 int no_rc_dir = (FALSE);

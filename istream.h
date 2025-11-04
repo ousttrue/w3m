@@ -166,3 +166,8 @@ extern struct URLFile openURL(char* url, struct Url* pu, struct Url* current,
     struct UrlOption* option, struct form_list* request,
     TextList* extra_header, struct URLFile* ouf,
     struct HttpRequest* hr, unsigned char* status);
+
+int checkSaveFile(InputStream stream, char* path);
+void init_stream(struct URLFile* uf, int scheme, InputStream stream);
+InputStream openFTPStream(struct Url* pu, struct URLFile* uf);
+InputStream openNewsStream(struct Url* pu);

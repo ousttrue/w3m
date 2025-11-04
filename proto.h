@@ -177,7 +177,6 @@ extern int _doFileCopy(char* tmpf, char* defstr, int download);
 extern int doFileMove(char* tmpf, char* defstr);
 extern int doFileSave(struct URLFile uf, char* defstr);
 extern int checkCopyFile(char* path1, char* path2);
-extern int checkSaveFile(InputStream stream, char* path);
 extern int checkOverWrite(char* path);
 extern char* inputAnswer(char* prompt);
 extern int matchattr(char* p, char* attr, int len, Str* value);
@@ -297,7 +296,6 @@ extern int openSocket(char* hostname, char* remoteport_name,
     unsigned short remoteport_num);
 
 extern int getURLScheme(char** url);
-extern void init_stream(struct URLFile* uf, int scheme, InputStream stream);
 struct HttpRequest;
 extern int mailcapMatch(struct mailcap* mcap, char* type);
 extern struct mailcap* searchMailcap(struct mailcap* table, char* type);
@@ -309,23 +307,13 @@ extern Str unquote_mailcap(char* qstr, char* type, char* name, char* attr,
 extern char* guessContentType(char* filename);
 extern TextList* make_domain_list(char* domain_list);
 extern int check_no_proxy(char* domain);
-extern InputStream openFTPStream(struct Url* pu, struct URLFile* uf);
 extern Str loadFTPDir(struct Url* pu, wc_ces* charset);
 extern void closeFTP(void);
 extern void disconnectFTP(void);
-extern InputStream openNewsStream(struct Url* pu);
 extern Str loadNewsgroup(struct Url* pu, wc_ces* charset);
 extern void closeNews(void);
 extern void disconnectNews(void);
-extern Str decodeB(char** ww);
-extern void decodeB_to_growbuf(struct growbuf* gb, char** ww);
-extern Str decodeQ(char** ww);
-extern Str decodeQP(char** ww);
-extern void decodeQP_to_growbuf(struct growbuf* gb, char** ww);
-extern Str decodeU(char** ww);
-extern void decodeU_to_growbuf(struct growbuf* gb, char** ww);
-extern Str decodeWord(char** ow, wc_ces* charset);
-extern Str decodeMIME(Str orgstr, wc_ces* charset);
+
 extern int set_param_option(char* option);
 extern char* get_param_option(char* name);
 extern void init_rc(void);

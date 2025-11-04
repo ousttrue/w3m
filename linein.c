@@ -5,7 +5,9 @@
 #include "local.h"
 #include "display.h"
 #include "indep.h"
-#include <gcstr/myctype.h>
+#include "ctrlcode.h"
+#include "history.h"
+#include <gcstr/gcstr.h>
 
 #define STR_LEN 1024
 #define CLEN (COLS - 2)

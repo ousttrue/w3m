@@ -1,8 +1,11 @@
+#include "history.h"
 #include "fm.h"
 #include "display.h"
 #include "rc.h"
 #include "indep.h"
 #include "buffer.h"
+#include <sys/stat.h>
+#include <gcstr/gcstr.h>
 
 int UseHistory = TRUE;
 int URLHistSize = 100;

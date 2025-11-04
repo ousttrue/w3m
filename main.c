@@ -1,7 +1,9 @@
+#include <locale.h>
 #define MAINPROGRAM
 #include "fm.h"
 #include "buffer.h"
 #include "image.h"
+#include "history.h"
 #include "file.h"
 #include "linein.h"
 #include "DownloadList.h"
@@ -29,6 +31,7 @@
 #include "wc.h"
 #include "wtf.h"
 #include "ucs.h"
+
 
 unsigned char last_key = 0;
 

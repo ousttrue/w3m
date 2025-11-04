@@ -2,14 +2,15 @@
 #include "display.h"
 #include "buffer.h"
 #include "w3m_runtime.h"
-#include <gcstr/myctype.h>
+#include "istream.h"
 #include "indep.h"
+#include "mimehead.h"
+#include <gcstr/myctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <signal.h>
 #include <setjmp.h>
-
 
 #define NEWS_ENDLINE(p) \
     ((*(p) == '.' && ((p)[1] == '\n' || (p)[1] == '\r' || (p)[1] == '\0')) || *(p) == '\n' || *(p) == '\r' || *(p) == '\0')
@@ -18,7 +19,7 @@ typedef struct _News {
     char* host;
     int port;
     char* mode;
-    InputStream rf;
+    union input_stream* rf;
     FILE* wf;
 } News;
 
@@ -495,4 +496,3 @@ void disconnectNews(void)
 {
     news_quit(&current_news);
 }
-

@@ -1,6 +1,5 @@
-/* $Id: mailcap.c,v 1.13 2006/08/07 03:10:26 ukai Exp $ */
 #include "fm.h"
-#include <gcstr/myctype.h>
+#include <gcstr/gcstr.h>
 #include "indep.h"
 #include "parsetag.h"
 #include "local.h"

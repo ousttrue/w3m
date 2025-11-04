@@ -11,6 +11,7 @@
 #include "parsetag.h"
 #include "parsetagx.h"
 #include <gcstr/gcstr.h>
+#include <unistd.h>
 #include "local.h"
 #include "regex.h"
 #include "util.h"

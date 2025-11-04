@@ -1,10 +1,12 @@
 #include "display.h"
+#include "history.h"
 #include "image.h"
 #include "indep.h"
 #include "map.h"
 #include "fm.h"
 #include "w3m_runtime.h"
 #include "buffer.h"
+#include "ctrlcode.h"
 #include <math.h>
 #include <signal.h>
 

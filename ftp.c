@@ -2,38 +2,29 @@
 #include "display.h"
 #include "buffer.h"
 #include "linein.h"
+#include "istream.h"
+#include "fm.h"
+#include "w3m_runtime.h"
+#include "html.h"
+#include "indep.h"
 #include <gcstr/gcstr.h>
-
 #include <stdio.h>
 #include <pwd.h>
 #include <signal.h>
 #include <setjmp.h>
 #include <time.h>
-
-#include "fm.h"
-#include "w3m_runtime.h"
-#include "html.h"
-#include "indep.h"
-
-#ifdef DEBUG
-#include <malloc.h>
-#endif /* DEBUG */
-
+#include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
 #include <arpa/inet.h>
-
-#ifndef HAVE_SOCKLEN_T
-typedef int socklen_t;
-#endif
 
 typedef struct _FTP {
     char* host;
     int port;
     char* user;
     char* pass;
-    InputStream rf;
+    union input_stream* rf;
     FILE* wf;
     FILE* data;
 }* FTP;

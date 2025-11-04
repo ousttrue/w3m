@@ -1,11 +1,10 @@
-/* $Id: mimehead.c,v 1.10 2003/10/05 18:52:51 ukai Exp $ */
 /*
  * MIME header support by Akinori ITO
  */
-
-#include <sys/types.h>
+#include "mimehead.h"
 #include "fm.h"
 #include <gcstr/gcstr.h>
+#include <sys/types.h>
 
 #define MIME_ENCODED_LINE_LIMIT 80
 #define MIME_ENCODED_WORD_LENGTH_OFFSET 18

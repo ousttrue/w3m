@@ -4,7 +4,8 @@
 #include "regex.h"
 #include "indep.h"
 #include "buffer.h"
-#include <gcstr/myctype.h>
+#include "HttpRequest.h"
+#include <gcstr/gcstr.h>
 #include "fm.h"
 
 #define bpcmp(a, b) \

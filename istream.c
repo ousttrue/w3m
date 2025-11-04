@@ -1,8 +1,9 @@
 #include "fm.h"
 #include "display.h"
-#include <gcstr/myctype.h>
 #include "istream.h"
 #include "indep.h"
+#include "mimehead.h"
+#include <gcstr/myctype.h>
 #include <signal.h>
 #include <openssl/x509v3.h>
 
@@ -725,3 +726,19 @@ memchop(char* p, int* len)
     *len = q - p;
     return;
 }
+
+int checkSaveFile(InputStream stream, char* path2)
+{
+    struct stat st1, st2;
+    int des = ISfileno(stream);
+
+    if (des < 0)
+        return 0;
+    if (*path2 == '|' && PermitSaveToPipe)
+        return 0;
+    if ((fstat(des, &st1) == 0) && (stat(path2, &st2) == 0))
+        if (st1.st_ino == st2.st_ino)
+            return -1;
+    return 0;
+}
+
