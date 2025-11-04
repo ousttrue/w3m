@@ -1,5 +1,4 @@
-/* $Id: image.c,v 1.37 2010/12/21 10:13:55 htrb Exp $ */
-
+#include "image.h"
 #include "fm.h"
 #include "indep.h"
 #include <sys/types.h>
@@ -7,10 +6,10 @@
 #include <signal.h>
 #include <errno.h>
 #include <unistd.h>
-#ifdef HAVE_WAITPID
 #include <sys/wait.h>
-#endif
 
+#define IMGDISPLAY "w3mimgdisplay"
+const char* Imgdisplay = IMGDISPLAY;
 
 static int image_index = 0;
 
@@ -48,10 +47,6 @@ int get_pixel_per_cell(int* ppc, int* ppl);
 static int
 getCharSize(void)
 {
-    FILE* f;
-    Str tmp;
-    int w = 0, h = 0;
-
     set_environ("W3M_TTY", ttyname_tty());
 
     if (enable_inline_image) {
@@ -70,13 +65,14 @@ getCharSize(void)
         return TRUE;
     }
 
-    tmp = Strnew();
+    Str tmp = Strnew();
     if (!strchr(Imgdisplay, '/'))
         Strcat_m_charp(tmp, w3m_auxbin_dir(), "/", NULL);
     Strcat_m_charp(tmp, Imgdisplay, " -test 2>/dev/null", NULL);
-    f = popen(tmp->ptr, "r");
+    FILE *f = popen(tmp->ptr, "r");
     if (!f)
         return FALSE;
+    int w = 0, h = 0;
     while (fscanf(f, "%d %d", &w, &h) < 0) {
         if (feof(f))
             break;
@@ -230,7 +226,6 @@ void drawImage(void)
 
             int sw = (i->width + i->sx % pixel_per_char_i + pixel_per_char_i - 1) / pixel_per_char_i;
             int sh = (i->height + i->sy % pixel_per_line_i + pixel_per_line_i - 1) / pixel_per_line_i;
-
 
             if (enable_inline_image == INLINE_IMG_SIXEL) {
                 w = i->cache->a_width > 0 ? i->width : 0;

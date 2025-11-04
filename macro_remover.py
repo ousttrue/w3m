@@ -25,7 +25,13 @@ CONTEXT = {
     "USE_COLOR": True,
     "USE_ANSI_COLOR": True,
     "USE_BG_COLOR": True,
+
     "USE_IMAGE": True,
+    "USE_W3MIMG_WIN": False,
+    "USE_W3MIMG_X11": False,
+    "USE_W3MIMG_FB": False,
+    "W3MIMGDISPLAY_SETUID": False,
+
     "INET6": True,
     "USE_SSL": True,
     "USE_SSL_VERIFY": True,

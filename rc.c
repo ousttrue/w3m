@@ -2,6 +2,7 @@
  * Initialization file etc.
  */
 #include "fm.h"
+#include "image.h"
 #include "w3m_runtime.h"
 #include <gcstr/gcstr.h>
 #include "proto.h"

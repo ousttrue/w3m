@@ -72,7 +72,6 @@ export fn allocStr(_s: [*c]const u8, _len: c_int) [*c]u8 {
 
 /// use GC_MALLOC_ATOMIC
 fn allocStrBuf(_size: usize) []u8 {
-    std.debug.assert(_size > 0);
     const size = @max(@min(_size, c.STR_SIZE_MAX), c.INITIALStr_SIZE);
     const p: [*c]u8 = @ptrCast(c.GC_MALLOC_ATOMIC(size));
     const ptr: [*]u8 = p orelse @panic("OOM");
@@ -136,7 +135,7 @@ test Strnew {
 }
 
 export fn Strnew_size(len: c_int) c.Str {
-    return createStr(allocStrBuf(if (len < 0) 0 else @intCast(len)));
+    return createStr(allocStrBuf(if (len <= 0) 0 else @intCast(len)));
 }
 test Strnew_size {
     {
@@ -313,13 +312,9 @@ export fn Strcopy(dst: c.Str, src: c.Str) void {
 }
 
 export fn Strdup(s: c.Str) c.Str {
-    if (s.*.length == 0) {
-        return Strnew();
-    } else {
-        const n = Strnew_size(@intCast(s.*.length));
-        Strcopy(n, s);
-        return n;
-    }
+    const n = Strnew_size(@intCast(s.*.length));
+    Strcopy(n, s);
+    return n;
 }
 
 export fn Strcopy_charp(dst: c.Str, _src: [*c]const u8) void {

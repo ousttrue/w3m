@@ -8,10 +8,6 @@
 extern "C" {
 #endif
 
-#ifdef USE_W3MIMG_FB
-#include "w3mimg/fb/fb.h"
-#include "w3mimg/fb/fb_img.h"
-#endif
 
 typedef struct {
     void *pixmap;		/* driver specific */
@@ -43,15 +39,6 @@ typedef struct _w3mimg_op {
     int (*clear) (struct _w3mimg_op * self, int x, int y, int w, int h);
 } w3mimg_op;
 
-#ifdef USE_W3MIMG_X11
-extern w3mimg_op *w3mimg_x11open();
-#endif
-#ifdef USE_W3MIMG_FB
-extern w3mimg_op *w3mimg_fbopen();
-#endif
-#ifdef USE_W3MIMG_WIN
-extern w3mimg_op *w3mimg_winopen();
-#endif
 
 extern w3mimg_op *w3mimg_open();
 

@@ -827,7 +827,6 @@ global int DecodeURL init(FALSE);
 global int retryAsHttp init(TRUE);
 global int showLineNum init(FALSE);
 global int show_srch_str init(TRUE);
-global char* Imgdisplay init(IMGDISPLAY);
 global int activeImage init(FALSE);
 global int displayImage init(TRUE);
 global int autoImage init(TRUE);

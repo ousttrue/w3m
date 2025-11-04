@@ -207,6 +207,23 @@ pub fn build(b: *std.Build) void {
     const cdb = zcc.createStep(b, "cdb", targets.toOwnedSlice(b.allocator) catch @panic("OOM"));
     cdb.dependOn(&install.step);
     exe.step.dependOn(cdb);
+
+    const w3mimgdisplay = b.addExecutable(.{
+        .name = "w3mimgdisplay",
+        .root_module = b.addModule("w3mimgdisplay", .{
+            .target = target,
+            .optimize = optimize,
+            .link_libc = true,
+        }),
+    });
+    b.installArtifact(w3mimgdisplay);
+    w3mimgdisplay.addCSourceFiles(.{
+        .files = &.{
+            "w3mimgdisplay.c",
+            "w3mimg/w3mimg.c",
+        },
+    });
+    w3mimgdisplay.addIncludePath(b.path(""));
 }
 
 fn build_gcstr(

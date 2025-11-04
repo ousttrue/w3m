@@ -5686,7 +5686,7 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
     if (replace || new_tab)
         deletePrevBuf();
     if (reload)
-        Currentbuf->event = setAlarmEvent(Currentbuf->event, 1, AL_IMPLICIT,
+        Currentbuf->event = setAlarmEvent(Currentbuf, 1, AL_IMPLICIT,
             FUNCNAME_reload, NULL);
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
