@@ -39,25 +39,6 @@ struct HttpRequest {
 #define HTST_NORMAL 0
 #define HTST_CONNECT 1
 
-struct auth_param {
-    char* name;
-    Str val;
-};
-
-struct http_auth {
-    int pri;
-    char* scheme;
-    struct auth_param* param;
-    Str (*cred)(struct http_auth* ha, Str uname, Str pw, struct Url* pu,
-        struct HttpRequest* hr, struct form_list* request);
-};
-
-enum {
-    AUTHCHR_NUL,
-    AUTHCHR_SEP,
-    AUTHCHR_TOKEN,
-};
-
 Str HTTPrequestMethod(struct HttpRequest* hr);
 Str HTTPrequestURI(struct Url* pu, struct HttpRequest* hr);
 Str HTTPrequest(struct Url* pu, struct Url* current, struct HttpRequest* hr, TextList* extra);

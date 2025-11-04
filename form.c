@@ -3,6 +3,7 @@
  */
 #include "display.h"
 #include "fm.h"
+#include "http_auth.h"
 #include "cookie.h"
 #include "w3m_runtime.h"
 #include "parsetag.h"

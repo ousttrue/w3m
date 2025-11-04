@@ -1,11 +1,9 @@
-/* $Id: form.h,v 1.6 2003/09/22 21:02:18 ukai Exp $ */
 /*
  * HTML forms
  */
-#ifndef FORM_H
-#define FORM_H
-
+#pragma once
 #include <gcstr/Str.h>
+#include <wc.h>
 
 #define FORM_UNKNOWN -1
 #define FORM_INPUT_TEXT 0
@@ -87,5 +85,3 @@ typedef struct form_item_list {
     struct form_list* parent;
     struct form_item_list* next;
 } FormItemList;
-
-#endif /* not FORM_H */

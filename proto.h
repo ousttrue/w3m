@@ -514,15 +514,7 @@ extern Str loadLocalDir(char* dirname);
 extern void set_environ(char* var, char* value);
 extern FILE* localcgi_post(char*, char*, FormList*, char*);
 #define localcgi_get(u, q, r) localcgi_post((u), (q), NULL, (r))
-extern FILE* openSecretFile(char* fname);
-extern void loadPasswd(void);
 extern void loadPreForm(void);
-extern int find_auth_user_passwd(struct Url* pu, char* realm,
-    Str* uname, Str* pwd, int is_proxy);
-extern void add_auth_user_passwd(struct Url* pu, char* realm,
-    Str uname, Str pwd, int is_proxy);
-extern void invalidate_auth_user_passwd(struct Url* pu, char* realm,
-    Str uname, Str pwd, int is_proxy);
 extern char* last_modified(Buffer* buf);
 extern Str romanNumeral(int n);
 extern Str romanAlphabet(int n);
@@ -614,5 +606,3 @@ extern void dispVer(void);
 void srand48(long);
 long lrand48(void);
 #endif
-
-extern Str base64_encode(const char* src, size_t len);

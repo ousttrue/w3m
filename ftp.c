@@ -1,3 +1,4 @@
+#include "http_auth.h"
 #include <gcstr/gcstr.h>
 
 #include <stdio.h>

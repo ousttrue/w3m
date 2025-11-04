@@ -8,3 +8,4 @@
 #include "quote.h"
 
 int vscpf(const char* fmt, va_list ap);
+Str base64_encode(const char* src, size_t len);

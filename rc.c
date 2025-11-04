@@ -2,6 +2,7 @@
  * Initialization file etc.
  */
 #include "fm.h"
+#include "http_auth.h"
 #include "dns_order.h"
 #include "cookie.h"
 #include "image.h"
