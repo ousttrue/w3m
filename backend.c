@@ -1,3 +1,4 @@
+#include "backend.h"
 #include "file.h"
 #include "fm.h"
 #include "form.h"
@@ -9,6 +10,10 @@
 #include <sys/types.h>
 #include <stdio.h>
 #include <string.h>
+
+int w3m_backend = (FALSE);
+TextLineList* backend_halfdump_buf = 0;
+TextList* backend_batch_commands = (NULL);
 
 /* Prototype declaration of internal functions */
 #ifdef HAVE_READLINE

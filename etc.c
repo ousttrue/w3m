@@ -15,6 +15,8 @@
 #include <signal.h>
 #include <unistd.h>
 
+TextList* fileToDelete = 0;
+
 int columnSkip(Buffer* buf, int offset)
 {
     int i, maxColumn;

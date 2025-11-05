@@ -4,6 +4,7 @@
  */
 #include "w3m_runtime.h"
 #include "config.h"
+#include "etc.h"
 #include "buffer.h"
 #include "ctrlcode.h"
 #include <gcstr/gcstr.h>

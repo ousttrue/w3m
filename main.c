@@ -1,6 +1,8 @@
 #define MAINPROGRAM
 #include "fm.h"
 #include "parsetag.h"
+#include "backend.h"
+#include "etc.h"
 #include "local_cgi.h"
 #include "frame.h"
 #include "form.h"

@@ -13,7 +13,6 @@
 #include "wc.h"
 #include "wtf.h"
 #include "func.h"
-#include "textlist.h"
 #include "terms.h"
 
 #ifdef MAINPROGRAM
@@ -291,7 +290,6 @@ global struct Url FTP_proxy_parsed;
 global char* NO_proxy init(NULL);
 global int NOproxy_netaddr init(TRUE);
 
-global TextList* NO_proxy_domains;
 global char use_proxy init(TRUE);
 #define Do_not_use_proxy (!use_proxy)
 global int Do_not_use_ti_te init(FALSE);
@@ -410,7 +408,6 @@ global struct auth_cookie* Auth_cookie init(NULL);
 
 global char* mimetypes_files init(USER_MIMETYPES ", " SYS_MIMETYPES);
 
-global TextList* fileToDelete;
 
 global char ExtHalfdump init(FALSE);
 global char FollowLocale init(TRUE);
@@ -475,10 +472,6 @@ global int use_lessopen init(FALSE);
 
 global int FollowRedirection init(10);
 
-global int w3m_backend init(FALSE);
-global TextLineList* backend_halfdump_buf;
-global TextList* backend_batch_commands init(NULL);
-int backend(void);
 extern void deleteFiles(void);
 void w3m_exit(int i);
 

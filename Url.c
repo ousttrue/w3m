@@ -31,6 +31,7 @@
 #include <openssl/err.h>
 
 const char* ssl_min_version = (NULL);
+TextList* NO_proxy_domains = 0;
 
 static JMP_BUF AbortLoading;
 
