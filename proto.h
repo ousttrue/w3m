@@ -208,19 +208,7 @@ extern struct table* begin_table(int border, int spacing, int padding,
 extern void end_table(struct table* tbl);
 extern int minimum_length(char* line);
 extern void pushTable(struct table*, struct table*);
-extern struct form_list* newFormList(char* action, char* method, char* charset,
-    char* enctype, char* target, char* name,
-    struct form_list* _next);
-extern struct form_item_list* formList_addInput(struct form_list* fl,
-    struct parsed_tag* tag);
-extern char* form2str(FormItemList* fi);
-extern int formtype(char* typestr);
-extern Str textfieldrep(Str s, int width);
-extern void input_textarea(FormItemList* fi);
-extern void do_internal(char* action, char* data);
-extern void form_write_data(FILE* f, char* boundary, char* name, char* value);
-extern void form_write_from_file(FILE* f, char* boundary, char* name,
-    char* filename, char* file);
+
 extern void follow_map(struct parsed_tagarg* arg);
 extern struct MapArea* newMapArea(char* url, char* target, char* alt, char* shape,
     char* coords);
@@ -318,8 +306,6 @@ extern char* helpFile(char* base);
 extern Str localCookie(void);
 extern Str loadLocalDir(char* dirname);
 extern void set_environ(char* var, char* value);
-extern FILE* localcgi_post(char*, char*, FormList*, char*);
-#define localcgi_get(u, q, r) localcgi_post((u), (q), NULL, (r))
 extern void loadPreForm(void);
 extern Str romanNumeral(int n);
 extern Str romanAlphabet(int n);

@@ -23,7 +23,7 @@ struct frame_body {
     char* type;
     char* referer;
     struct _AnchorList* nameList;
-    FormList* request;
+    struct from_list* request;
     char* ssl_certificate;
 };
 

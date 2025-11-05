@@ -13,7 +13,6 @@
 #include <gcstr/Str.h>
 #include "wc.h"
 #include "wtf.h"
-#include "form.h"
 #include "frame.h"
 #include "parsetag.h"
 #include "parsetagx.h"

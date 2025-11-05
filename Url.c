@@ -1,5 +1,7 @@
 #include "fm.h"
+#include "local_cgi.h"
 #include "w3m_runtime.h"
+#include "form.h"
 #include "rc.h"
 #include "indep.h"
 #include "dns_order.h"

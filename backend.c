@@ -1,5 +1,6 @@
 #include "file.h"
 #include "fm.h"
+#include "form.h"
 #include "cookie.h"
 #include "w3m_runtime.h"
 #include "indep.h"

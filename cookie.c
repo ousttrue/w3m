@@ -9,7 +9,7 @@
 #include "cookie.h"
 #include "rc.h"
 #include "html.h"
-#include "local.h"
+#include "local_cgi.h"
 #include "regex.h"
 #include "indep.h"
 #include "dns_order.h"

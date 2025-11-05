@@ -2,7 +2,7 @@
 #include "textlist.h"
 #include "indep.h"
 #include "parsetag.h"
-#include "local.h"
+#include "local_cgi.h"
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>

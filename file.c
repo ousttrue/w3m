@@ -1,4 +1,5 @@
 #include "file.h"
+#include "form.h"
 #include "funcname1.h"
 #include "mailcap.h"
 #include "history.h"
@@ -20,6 +21,10 @@
 #include "map.h"
 #include "AlarmEvent.h"
 #include "indep.h"
+#include "html.h"
+#include "parsetagx.h"
+#include "local_cgi.h"
+#include "regex.h"
 #include <sys/types.h>
 #include <gcstr/myctype.h>
 #include <signal.h>
@@ -31,12 +36,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <utime.h>
-/* foo */
-
-#include "html.h"
-#include "parsetagx.h"
-#include "local.h"
-#include "regex.h"
 
 #ifndef max
 #define max(a, b) ((a) > (b) ? (a) : (b))

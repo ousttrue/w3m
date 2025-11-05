@@ -1,6 +1,7 @@
 #include <locale.h>
 #define MAINPROGRAM
 #include "fm.h"
+#include "form.h"
 #include "buffer.h"
 #include "mailcap.h"
 #include "menu.h"

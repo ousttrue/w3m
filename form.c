@@ -1,6 +1,4 @@
-/*
- * HTML forms
- */
+#include "form.h"
 #include "display.h"
 #include "fm.h"
 #include "buffer.h"
@@ -12,7 +10,7 @@
 #include "parsetagx.h"
 #include <gcstr/gcstr.h>
 #include <unistd.h>
-#include "local.h"
+#include "local_cgi.h"
 #include "regex.h"
 #include "util.h"
 #include "indep.h"

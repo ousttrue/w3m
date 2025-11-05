@@ -1,4 +1,6 @@
+#include "local_cgi.h"
 #include "fm.h"
+#include "form.h"
 #include "history.h"
 #include "w3m_runtime.h"
 #include "indep.h"
@@ -11,12 +13,8 @@
 #include <sys/stat.h>
 #include <signal.h>
 #include <errno.h>
-#ifdef HAVE_READLINK
 #include <unistd.h>
-#endif /* HAVE_READLINK */
-#include "local.h"
 #include <gcstr/hash.h>
-
 
 #define CGIFN_NORMAL 0
 #define CGIFN_LIBDIR 1

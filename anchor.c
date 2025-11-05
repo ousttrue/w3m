@@ -1,4 +1,5 @@
 #include "anchor.h"
+#include "form.h"
 #include "image.h"
 #include "map.h"
 #include "regex.h"

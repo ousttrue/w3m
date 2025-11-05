@@ -19,7 +19,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include "parsetag.h"
-#include "local.h"
+#include "local_cgi.h"
 #include "regex.h"
 #include <stdlib.h>
 #include <stddef.h>

@@ -5,7 +5,7 @@
 #include <pwd.h>
 #include <gcstr/gcstr.h>
 #include "html.h"
-#include "local.h"
+#include "local_cgi.h"
 
 #include <fcntl.h>
 #include <sys/types.h>

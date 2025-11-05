@@ -1,4 +1,3 @@
-/* $Id: local.h,v 1.3 2001/11/20 17:49:23 ukai Exp $ */
 /*
  * w3m local.h
  */
@@ -6,6 +5,7 @@
 #ifndef LOCAL_H
 #define LOCAL_H
 
+#include <stdio.h>
 #include <sys/types.h>
 #ifdef HAVE_DIRENT_H
 #include <dirent.h>
@@ -41,5 +41,9 @@ typedef struct direct Directory;
 #define S_ISLNK(m) (((m) & S_IFMT) == S_IFLNK)
 #endif /* not S_ISLNK */
 #endif /* not HAVE_READLINK */
+
+struct form_list;
+FILE* localcgi_post(char*, char*, struct form_list*, char*);
+#define localcgi_get(u, q, r) localcgi_post((u), (q), NULL, (r))
 
 #endif /* not LOCAL_H */

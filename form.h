@@ -85,3 +85,18 @@ typedef struct form_item_list {
     struct form_list* parent;
     struct form_item_list* next;
 } FormItemList;
+
+struct form_list* newFormList(char* action, char* method, char* charset,
+    char* enctype, char* target, char* name,
+    struct form_list* _next);
+struct parsed_tag;
+struct form_item_list* formList_addInput(struct form_list* fl,
+    struct parsed_tag* tag);
+char* form2str(FormItemList* fi);
+int formtype(char* typestr);
+Str textfieldrep(Str s, int width);
+void input_textarea(FormItemList* fi);
+void do_internal(char* action, char* data);
+void form_write_data(FILE* f, char* boundary, char* name, char* value);
+void form_write_from_file(FILE* f, char* boundary, char* name,
+    char* filename, char* file);

@@ -1,5 +1,6 @@
 #include "fm.h"
 #include "buffer.h"
+#include "form.h"
 #include "file.h"
 #include "w3m_runtime.h"
 #include "parsetagx.h"
