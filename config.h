@@ -24,7 +24,6 @@
 #define HISTORY_FILE "history"
 
 #define PRE_FORM_FILE RC_DIR "/pre_form"
-#define SITECONF_FILE RC_DIR "/siteconf"
 #define USER_MIMETYPES "~/.mime.types"
 #define SYS_MIMETYPES ETC_DIR "/mime.types"
 #define USER_URIMETHODMAP RC_DIR "/urimethodmap"

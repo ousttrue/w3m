@@ -432,8 +432,6 @@ Str convertLine(struct URLFile* uf, Str line, int mode, wc_ces* charset,
     return line;
 }
 
-
-
 void readHeader(struct URLFile* uf, Buffer* newBuf, int thru, struct Url* pu)
 {
     char *p, *q;
@@ -853,20 +851,8 @@ loadGeneralFile(char* path, struct Url* volatile current, char* referer,
 
     checkRedirection(NULL);
 
-load_doc: {
-    const char* sc_redirect;
+load_doc:
     parseURL2(tpath, &pu, current);
-    sc_redirect = query_SCONF_SUBSTITUTE_URL(&pu);
-    if (sc_redirect && *sc_redirect && checkRedirection(&pu)) {
-        tpath = (char*)sc_redirect;
-        request = NULL;
-        add_auth_cookie_flag = 0;
-        current = New(struct Url);
-        *current = pu;
-        status = HTST_NORMAL;
-        goto load_doc;
-    }
-}
     TRAP_OFF;
     url_option.referer = referer;
     url_option.flag = flag;

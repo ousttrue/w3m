@@ -386,7 +386,6 @@ global char* ExtBrowser8 init(NULL);
 global char* ExtBrowser9 init(NULL);
 global int BackgroundExtViewer init(TRUE);
 global char* pre_form_file init(PRE_FORM_FILE);
-global char* siteconf_file init(SITECONF_FILE);
 global char* ftppasswd init(NULL);
 global int ftppass_hostnamegen init(TRUE);
 global int do_download init(FALSE);

@@ -2451,28 +2451,23 @@ loadNormalBuf(Buffer* buf, int renderframe)
 static Buffer*
 loadLink(char* url, char* target, char* referer, FormList* request)
 {
-    Buffer *buf, *nfbuf;
-    union frameset_element* f_element = NULL;
-    int flag = 0;
-    struct Url *base, pu;
-    const int* no_referer_ptr;
-
     message(Sprintf("loading %s", url)->ptr, 0, 0);
     refresh();
 
-    no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->currentURL);
-    base = baseURL(Currentbuf);
-    if ((no_referer_ptr && *no_referer_ptr) || base == NULL || base->scheme == SCM_LOCAL || base->scheme == SCM_LOCAL_CGI || base->scheme == SCM_DATA)
+    struct Url *base = baseURL(Currentbuf);
+    if (base == NULL || base->scheme == SCM_LOCAL || base->scheme == SCM_LOCAL_CGI || base->scheme == SCM_DATA)
         referer = NO_REFERER;
     if (referer == NULL)
         referer = parsedURL2RefererStr(&Currentbuf->currentURL)->ptr;
-    buf = loadGeneralFile(url, baseURL(Currentbuf), referer, flag, request);
+    int flag = 0;
+    Buffer *buf = loadGeneralFile(url, baseURL(Currentbuf), referer, flag, request);
     if (buf == NULL) {
         char* emsg = Sprintf("Can't load %s", url)->ptr;
         disp_err_message(emsg, FALSE);
         return NULL;
     }
 
+    struct Url pu;
     parseURL2(url, &pu, base);
     pushHashHist(URLHist, parsedURL2Str(&pu)->ptr);
 
@@ -2491,12 +2486,13 @@ loadLink(char* url, char* target, char* referer, FormList* request)
     ) {
         return loadNormalBuf(buf, TRUE);
     }
-    nfbuf = Currentbuf->linkBuffer[LB_N_FRAME];
+    Buffer *nfbuf = Currentbuf->linkBuffer[LB_N_FRAME];
     if (nfbuf == NULL) {
         /* original page (that contains <frameset> tag) doesn't exist */
         return loadNormalBuf(buf, TRUE);
     }
 
+    union frameset_element* f_element = NULL;
     f_element = search_frame(nfbuf->frameset, target);
     if (f_element == NULL) {
         /* specified target doesn't exist in this frameset */
@@ -3650,7 +3646,6 @@ goURL0(char* prompt, int relative)
     char *url, *referer;
     struct Url p_url, *current;
     Buffer* cur_buf = Currentbuf;
-    const int* no_referer_ptr;
 
     url = searchKeyData();
     if (url == NULL) {
@@ -3680,9 +3675,8 @@ goURL0(char* prompt, int relative)
             SKIP_BLANKS(&url);
     }
     if (relative) {
-        no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->currentURL);
         current = baseURL(Currentbuf);
-        if ((no_referer_ptr && *no_referer_ptr) || current == NULL || current->scheme == SCM_LOCAL || current->scheme == SCM_LOCAL_CGI || current->scheme == SCM_DATA)
+        if (current == NULL || current->scheme == SCM_LOCAL || current->scheme == SCM_LOCAL_CGI || current->scheme == SCM_DATA)
             referer = NO_REFERER;
         else
             referer = parsedURL2RefererStr(&Currentbuf->currentURL)->ptr;

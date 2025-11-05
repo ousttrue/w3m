@@ -1736,9 +1736,7 @@ url_to_charset(const char* url, const struct Url* base, wc_ces doc_charset)
     }
     if (pu && (pu->scheme == SCM_LOCAL || pu->scheme == SCM_LOCAL_CGI))
         return SystemCharset;
-    csptr = query_SCONF_URL_CHARSET(pu);
-    return (csptr && *csptr) ? *csptr : doc_charset ? doc_charset
-                                                    : DocumentCharset;
+    return doc_charset ? doc_charset : DocumentCharset;
 }
 
 char* url_encode(const char* url, const struct Url* base, wc_ces doc_charset)

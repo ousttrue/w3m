@@ -70,15 +70,9 @@ static char*
 otherinfo(struct Url* target, struct Url* current, char* referer)
 {
     Str s = Strnew();
-    const int* no_referer_ptr;
-    int no_referer;
-    const char* url_user_agent = query_SCONF_USER_AGENT(target);
-
     if (!override_user_agent) {
         Strcat_charp(s, "User-Agent: ");
-        if (url_user_agent)
-            Strcat_charp(s, url_user_agent);
-        else if (UserAgent == NULL || *UserAgent == '\0')
+        if (UserAgent == NULL || *UserAgent == '\0')
             Strcat_charp(s, w3m_version);
         else
             Strcat_charp(s, UserAgent);
@@ -100,11 +94,7 @@ otherinfo(struct Url* target, struct Url* current, char* referer)
         Strcat_charp(s, "Pragma: no-cache\r\n");
         Strcat_charp(s, "Cache-control: no-cache\r\n");
     }
-    no_referer = NoSendReferer;
-    no_referer_ptr = query_SCONF_NO_REFERER_FROM(current);
-    no_referer = no_referer || (no_referer_ptr && *no_referer_ptr);
-    no_referer_ptr = query_SCONF_NO_REFERER_TO(target);
-    no_referer = no_referer || (no_referer_ptr && *no_referer_ptr);
+    int no_referer = NoSendReferer;
     if (!no_referer) {
         bool cross_origin = false;
         if (CrossOriginReferer && current && current->host && (!target || !target->host || strcasecmp(current->host, target->host) != 0 || current->port != target->port || current->scheme != target->scheme))
