@@ -212,15 +212,7 @@ extern void pushTable(struct table*, struct table*);
 extern void follow_map(struct parsed_tagarg* arg);
 extern struct MapArea* newMapArea(char* url, char* target, char* alt, char* shape,
     char* coords);
-extern struct frameset* newFrameSet(struct parsed_tag* tag);
-extern void addFrameSetElement(struct frameset* f,
-    union frameset_element element);
-extern void deleteFrame(struct frame_body* b);
-extern void deleteFrameSet(struct frameset* f);
-extern void deleteFrameSetElement(union frameset_element e);
-extern struct frameset* copyFrameSet(struct frameset* of);
-extern struct frameset* popFrameTree(struct frameset_queue** fqpp);
-extern union frameset_element* search_frame(struct frameset* fset, char* name);
+
 extern int set_tty(void);
 extern void set_cc(int spec, int val);
 extern void close_tty(void);

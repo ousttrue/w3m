@@ -1,6 +1,6 @@
-#include <locale.h>
 #define MAINPROGRAM
 #include "fm.h"
+#include "frame.h"
 #include "form.h"
 #include "buffer.h"
 #include "mailcap.h"
@@ -17,6 +17,14 @@
 #include "anchor.h"
 #include "AlarmEvent.h"
 #include "indep.h"
+#include "regex.h"
+#include "rc.h"
+#include "wc.h"
+#include "wtf.h"
+#include "ucs.h"
+#include "display.h"
+#include "terms.h"
+#include "funcname1.h"
 #include <stdio.h>
 #include <signal.h>
 #include <setjmp.h>
@@ -26,16 +34,8 @@
 #include <fcntl.h>
 #include <sys/wait.h>
 #include <time.h>
-#include "display.h"
-#include "terms.h"
-#include "funcname1.h"
 #include <gcstr/gcstr.h>
-#include "regex.h"
-#include "rc.h"
-#include "wc.h"
-#include "wtf.h"
-#include "ucs.h"
-
+#include <locale.h>
 
 unsigned char last_key = 0;
 
@@ -2455,13 +2455,13 @@ loadLink(char* url, char* target, char* referer, FormList* request)
     message(Sprintf("loading %s", url)->ptr, 0, 0);
     refresh();
 
-    struct Url *base = baseURL(Currentbuf);
+    struct Url* base = baseURL(Currentbuf);
     if (base == NULL || base->scheme == SCM_LOCAL || base->scheme == SCM_LOCAL_CGI || base->scheme == SCM_DATA)
         referer = NO_REFERER;
     if (referer == NULL)
         referer = parsedURL2RefererStr(&Currentbuf->currentURL)->ptr;
     int flag = 0;
-    Buffer *buf = loadGeneralFile(url, baseURL(Currentbuf), referer, flag, request);
+    Buffer* buf = loadGeneralFile(url, baseURL(Currentbuf), referer, flag, request);
     if (buf == NULL) {
         char* emsg = Sprintf("Can't load %s", url)->ptr;
         disp_err_message(emsg, FALSE);
@@ -2487,7 +2487,7 @@ loadLink(char* url, char* target, char* referer, FormList* request)
     ) {
         return loadNormalBuf(buf, TRUE);
     }
-    Buffer *nfbuf = Currentbuf->linkBuffer[LB_N_FRAME];
+    Buffer* nfbuf = Currentbuf->linkBuffer[LB_N_FRAME];
     if (nfbuf == NULL) {
         /* original page (that contains <frameset> tag) doesn't exist */
         return loadNormalBuf(buf, TRUE);

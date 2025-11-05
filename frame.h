@@ -58,3 +58,14 @@ struct frameset_queue {
 };
 
 extern struct frameset* renderFrameSet;
+
+struct parsed_tag;
+struct frameset* newFrameSet(struct parsed_tag* tag);
+void addFrameSetElement(struct frameset* f,
+    union frameset_element element);
+void deleteFrame(struct frame_body* b);
+void deleteFrameSet(struct frameset* f);
+void deleteFrameSetElement(union frameset_element e);
+struct frameset* copyFrameSet(struct frameset* of);
+struct frameset* popFrameTree(struct frameset_queue** fqpp);
+union frameset_element* search_frame(struct frameset* fset, char* name);

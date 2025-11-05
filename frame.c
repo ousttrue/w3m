@@ -1,11 +1,12 @@
+#include "frame.h"
 #include "fm.h"
 #include "buffer.h"
 #include "form.h"
 #include "file.h"
 #include "w3m_runtime.h"
 #include "parsetagx.h"
-#include <gcstr/myctype.h>
 #include "indep.h"
+#include <gcstr/gcstr.h>
 #include <signal.h>
 #include <setjmp.h>
 

@@ -1,5 +1,6 @@
 #include "buffer.h"
 #include "fm.h"
+#include "frame.h"
 #include "cookie.h"
 #include "w3m_runtime.h"
 #include "indep.h"
