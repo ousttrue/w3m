@@ -33,3 +33,4 @@ extern void showProgress(long long* linelen, long long* trbyte);
 extern Str loadGopherDir(struct URLFile* uf, struct Url* pu, wc_ces* charset);
 extern Str loadGopherSearch(struct URLFile* uf, struct Url* pu, wc_ces* charset);
 extern Str getLinkNumberStr(int correction);
+extern char* inputAnswer(char* prompt);

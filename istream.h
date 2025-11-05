@@ -10,6 +10,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+extern char PermitSaveToPipe;
+
 struct stream_buffer {
     unsigned char* buf;
     int size, cur, next;
@@ -171,3 +173,5 @@ int checkSaveFile(InputStream stream, char* path);
 void init_stream(struct URLFile* uf, int scheme, InputStream stream);
 InputStream openFTPStream(struct Url* pu, struct URLFile* uf);
 InputStream openNewsStream(struct Url* pu);
+int openSocket(char* hostname, char* remoteport_name, unsigned short remoteport_num);
+void free_ssl_ctx(void);

@@ -247,7 +247,6 @@ global char SearchHeader init(FALSE);
 global char* DefaultType init(0);
 global char RenderFrame init(FALSE);
 global char TargetSelf init(FALSE);
-global char PermitSaveToPipe init(FALSE);
 global char DecodeCTE init(FALSE);
 global char AutoUncompress init(FALSE);
 global char PreserveTimestamp init(TRUE);

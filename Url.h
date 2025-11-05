@@ -50,3 +50,4 @@ Str parsedURL2RefererStr(struct Url* pu);
 Str _parsedURL2Str(struct Url* pu, int pass, int user, int label);
 char* url_decode2(const char* url, wc_ces url_charset);
 char* url_unquote_conv(char* url, wc_ces charset);
+char* schemeNumToName(int scheme);

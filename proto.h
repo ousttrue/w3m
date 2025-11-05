@@ -151,7 +151,6 @@ extern int doFileMove(char* tmpf, char* defstr);
 extern int doFileSave(struct URLFile uf, char* defstr);
 extern int checkCopyFile(char* path1, char* path2);
 extern int checkOverWrite(char* path);
-extern char* inputAnswer(char* prompt);
 extern void calcTabPos(void);
 extern int gethtmlcmd(char** s);
 extern char* lastFileName(char* path);
@@ -180,9 +179,6 @@ extern struct MapArea* newMapArea(char* url, char* target, char* alt, char* shap
     char* coords);
 
 extern void initMimeTypes(void);
-extern void free_ssl_ctx(void);
-extern int openSocket(char* hostname, char* remoteport_name,
-    unsigned short remoteport_num);
 
 extern int getURLScheme(char** url);
 
