@@ -304,7 +304,7 @@ def traverse(dir: pathlib.Path):
                 continue
             traverse(item)
         else:
-            if item.suffix in [".h", ".c", ".cpp"]:
+            if item.suffix in [".h", ".c", ".cpp", ".sym"]:
                 main(item)
 
 

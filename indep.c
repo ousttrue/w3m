@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include "indep.h"
 #include <gcstr/gcstr.h>
+#include <unistd.h>
 #include "entity.h"
 
 unsigned char QUOTE_MAP[0x100] = {

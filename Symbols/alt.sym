@@ -8,9 +8,8 @@ static char *alt_symbol[] = {
     "=", "x", "%", "*", "o", "#",
     "#",
     "<=UpDn ",
-    NULL
+    0
 };
-#ifdef USE_M17N
 static char *alt2_symbol[] = {
     "-+", " |", "--", " +", "-|", " |", "-+", "",
     "--", " +", "--", "",   "-+", "",   "",   "",
@@ -21,6 +20,5 @@ static char *alt2_symbol[] = {
     " =", " x", " %", " *", " o", " #",
     " #",
     "<=UpDn ",
-    NULL
+    0
 };
-#endif

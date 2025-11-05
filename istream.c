@@ -6,6 +6,7 @@
 #include <gcstr/myctype.h>
 #include <signal.h>
 #include <openssl/x509v3.h>
+#include <unistd.h>
 
 #define uchar unsigned char
 

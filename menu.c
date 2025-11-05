@@ -14,6 +14,9 @@
 #include <gcstr/gcstr.h>
 #include <stdio.h>
 
+#define _(Text) Text
+#define N_(Text) Text
+
 static char** FRAME;
 static int FRAME_WIDTH;
 static int graph_mode = FALSE;

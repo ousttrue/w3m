@@ -11,6 +11,7 @@
 #include <time.h>
 #include <signal.h>
 #include <setjmp.h>
+#include <unistd.h>
 
 #define NEWS_ENDLINE(p) \
     ((*(p) == '.' && ((p)[1] == '\n' || (p)[1] == '\r' || (p)[1] == '\0')) || *(p) == '\n' || *(p) == '\r' || *(p) == '\0')

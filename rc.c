@@ -24,6 +24,9 @@
 #include <unistd.h>
 #include "rc.h"
 
+#define _(Text) Text
+#define N_(Text) Text
+
 int no_rc_dir = (FALSE);
 
 struct param_ptr {

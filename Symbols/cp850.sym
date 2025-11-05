@@ -8,5 +8,5 @@ static char *cp850_symbol[] = {
     "=", "x", "%", "*", "o", "#",
     "#",
     "<<UpDn ",
-    NULL
+    0
 };

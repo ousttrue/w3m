@@ -1,4 +1,3 @@
-/* $Id: fm.h,v 1.149 2010/08/20 09:47:09 htrb Exp $ */
 /*
  * w3m: WWW wo Miru utility
  *
@@ -10,19 +9,6 @@
 #ifndef FM_H
 #define FM_H
 
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE /* strcasestr() */
-#endif
-
-#include "config.h"
-
-#undef bindtextdomain
-#define bindtextdomain(Domain, Directory) /* empty */
-#undef textdomain
-#define textdomain(Domain) /* empty */
-#define _(Text) Text
-#define N_(Text) Text
-#define gettext(Text) Text
 
 #include <gcstr/Str.h>
 #include "wc.h"
