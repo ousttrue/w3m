@@ -150,24 +150,6 @@ char* mybasename(char* s)
     return allocStr(p, -1);
 }
 
-char* mydirname(char* s)
-{
-    char* p = s;
-    while (*p)
-        p++;
-    if (s != p)
-        p--;
-    while (s != p && *p == '/')
-        p--;
-    while (s != p && *p != '/')
-        p--;
-    if (*p != '/')
-        return ".";
-    while (s != p && *p == '/')
-        p--;
-    return allocStr(s, strlen(s) - strlen(p) + 1);
-}
-
 #ifndef HAVE_STRERROR
 char* strerror(int errno)
 {
@@ -751,46 +733,6 @@ Str myEditor(char* cmd, char* file, int line)
         Strcat_m_charp(tmp, " ", file, NULL);
     }
     return tmp;
-}
-
-char* expandName(char* name)
-{
-    char* p;
-    struct passwd *passent, *getpwnam(const char*);
-    Str extpath = NULL;
-
-    if (name == NULL)
-        return NULL;
-    p = name;
-    if (*p == '/') {
-        if ((*(p + 1) == '~' && IS_ALPHA(*(p + 2)))
-            && personal_document_root) {
-            char* q;
-            p += 2;
-            q = strchr(p, '/');
-            if (q) { /* /~user/dir... */
-                passent = getpwnam(allocStr(p, q - p));
-                p = q;
-            } else { /* /~user */
-                passent = getpwnam(p);
-                p = "";
-            }
-            if (!passent)
-                goto rest;
-            extpath = Strnew_m_charp(passent->pw_dir, "/",
-                personal_document_root, NULL);
-            if (*personal_document_root == '\0' && *p == '/')
-                p++;
-        } else
-            goto rest;
-        if (Strcmp_charp(extpath, "/") == 0 && *p == '/')
-            p++;
-        Strcat_charp(extpath, p);
-        return extpath->ptr;
-    } else
-        return expandPath(p);
-rest:
-    return name;
 }
 
 int is_localhost(const char* host)

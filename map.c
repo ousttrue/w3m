@@ -3,6 +3,7 @@
  */
 #include "map.h"
 #include "menu.h"
+#include "etc.h"
 #include "frame.h"
 #include "form.h"
 #include "image.h"

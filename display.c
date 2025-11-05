@@ -1,5 +1,6 @@
 #include "display.h"
 #include "history.h"
+#include "mailcap.h"
 #include "symbol.h"
 #include "terms.h"
 #include "image.h"

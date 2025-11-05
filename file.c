@@ -1,5 +1,6 @@
 #include "file.h"
 #include "news.h"
+#include "search.h"
 #include "mimetype.h"
 #include "terms.h"
 #include "symbol.h"
@@ -239,17 +240,6 @@ loadSomething(struct URLFile* f,
     return buf;
 }
 
-int dir_exist(char* path)
-{
-    struct stat stbuf;
-
-    if (path == NULL || *path == '\0')
-        return 0;
-    if (stat(path, &stbuf) == -1)
-        return 0;
-    return IS_DIRECTORY(stbuf.st_mode);
-}
-
 static void
 check_compression(char* path, struct URLFile* uf)
 {
@@ -286,12 +276,11 @@ compress_application_type(int compression)
     return NULL;
 }
 
-static char*
+static const char*
 uncompressed_file_type(char* path, char** ext)
 {
     int len, slen;
     Str fn;
-    char* t0;
     struct compression_decoder* d;
 
     if (path == NULL)
@@ -313,7 +302,8 @@ uncompressed_file_type(char* path, char** ext)
     Strshrink(fn, slen);
     if (ext)
         *ext = filename_extension(fn->ptr, 0);
-    t0 = guessContentType(fn->ptr);
+
+    const char* t0 = guessContentType(fn->ptr);
     if (t0 == NULL)
         t0 = "text/plain";
     return t0;

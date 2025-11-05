@@ -1,6 +1,9 @@
 #define MAINPROGRAM
 #include "fm.h"
 #include "search.h"
+#include "mimetype.h"
+#include "funcheader.h"
+#include "file.h"
 #include "ftp.h"
 #include "news.h"
 #include "parsetag.h"
@@ -132,8 +135,7 @@ fversion(FILE* f)
         ",gopher"
         ",ipv6"
         ",alarm"
-        ",mark"
-    );
+        ",mark");
 }
 
 static void
@@ -1056,18 +1058,6 @@ DEFUN(escmap, ESCMAP, "ESC map")
         escKeyProc((int)c, K_ESC, EscKeymap);
 }
 
-DEFUN(escbmap, ESCBMAP, "ESC [ map")
-{
-    char c;
-    c = getch();
-    if (IS_DIGIT(c)) {
-        escdmap(c);
-        return;
-    }
-    if (IS_ASCII(c))
-        escKeyProc((int)c, K_ESCB, EscBKeymap);
-}
-
 void escdmap(char c)
 {
     int d;
@@ -1079,6 +1069,18 @@ void escdmap(char c)
     }
     if (c == '~')
         escKeyProc((int)d, K_ESCD, EscDKeymap);
+}
+
+DEFUN(escbmap, ESCBMAP, "ESC [ map")
+{
+    char c;
+    c = getch();
+    if (IS_DIGIT(c)) {
+        escdmap(c);
+        return;
+    }
+    if (IS_ASCII(c))
+        escKeyProc((int)c, K_ESCB, EscBKeymap);
 }
 
 DEFUN(multimap, MULTIMAP, "multimap")
@@ -2319,7 +2321,6 @@ DEFUN(editScr, EDIT_SCREEN, "Edit rendered copy of document")
     unlink(tmpf);
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
-
 
 /* Set / unset mark */
 DEFUN(_mark, MARK, "Set/unset mark")

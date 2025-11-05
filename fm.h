@@ -454,10 +454,4 @@ global int FollowRedirection init(10);
 extern void deleteFiles(void);
 void w3m_exit(int i);
 
-/*
- * Externals
- */
-
-#include "proto.h"
-
 #endif /* not FM_H */

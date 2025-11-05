@@ -1,5 +1,7 @@
 #include "Url.h"
 #include "local_cgi.h"
+#include "etc.h"
+#include "file.h"
 #include "fm.h"
 #include "form.h"
 #include "config.h"
@@ -1233,6 +1235,17 @@ write_from_file(int sock, char* file)
         }
         fclose(fd);
     }
+}
+
+#define IS_DIRECTORY(m) (((m) & S_IFMT) == S_IFDIR)
+bool dir_exist(const char* path)
+{
+    if (path == NULL || *path == '\0')
+        return 0;
+    struct stat stbuf;
+    if (stat(path, &stbuf) == -1)
+        return 0;
+    return IS_DIRECTORY(stbuf.st_mode);
 }
 
 struct URLFile

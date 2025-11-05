@@ -32,3 +32,4 @@ Str unquote_mailcap(char* qstr, char* type, char* name, char* attr,
 bool is_text_type(const char* type);
 bool is_plain_text_type(const char* type);
 bool is_dump_text_type(const char* type);
+bool is_html_type(const char* type);

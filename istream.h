@@ -175,3 +175,4 @@ InputStream openFTPStream(struct Url* pu, struct URLFile* uf);
 InputStream openNewsStream(struct Url* pu);
 int openSocket(char* hostname, char* remoteport_name, unsigned short remoteport_num);
 void free_ssl_ctx(void);
+int check_no_proxy(char* domain);

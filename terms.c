@@ -8,6 +8,7 @@
 #include "etc.h"
 #include "buffer.h"
 #include "ctrlcode.h"
+#include "funcheader.h"
 #include <gcstr/gcstr.h>
 #include <stdio.h>
 #include <signal.h>

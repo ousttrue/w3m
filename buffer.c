@@ -1,5 +1,6 @@
 #include "buffer.h"
 #include "html.h"
+#include "mailcap.h"
 #include "file.h"
 #include "etc.h"
 #include "terms.h"

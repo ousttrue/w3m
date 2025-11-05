@@ -1,5 +1,6 @@
 #include "backend.h"
 #include "file.h"
+#include "mailcap.h"
 #include "fm.h"
 #include "form.h"
 #include "cookie.h"

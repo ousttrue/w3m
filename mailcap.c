@@ -470,7 +470,7 @@ bool is_plain_text_type(const char* type)
     return ((type && strcasecmp(type, "text/plain") == 0) || (is_text_type(type) && !is_dump_text_type(type)));
 }
 
-int is_html_type(char* type)
+bool is_html_type(const char* type)
 {
     return (type && (strcasecmp(type, "text/html") == 0 || strcasecmp(type, "application/xhtml+xml") == 0));
 }

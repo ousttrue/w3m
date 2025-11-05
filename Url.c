@@ -1,5 +1,6 @@
 #include "Url.h"
 #include "fm.h"
+#include "etc.h"
 #include "file.h"
 #include "local_cgi.h"
 #include "w3m_runtime.h"
@@ -13,6 +14,7 @@
 #include "terms.h"
 #include <unistd.h>
 #include <sys/types.h>
+#include <pwd.h>
 
 #include <signal.h>
 #include <errno.h>
@@ -439,6 +441,46 @@ void copyParsedURL(struct Url* p, const struct Url* q)
     p->real_file = ALLOC_STR(q->real_file);
     p->label = ALLOC_STR(q->label);
     p->query = ALLOC_STR(q->query);
+}
+
+char* expandName(char* name)
+{
+    char* p;
+    struct passwd *passent, *getpwnam(const char*);
+    Str extpath = NULL;
+
+    if (name == NULL)
+        return NULL;
+    p = name;
+    if (*p == '/') {
+        if ((*(p + 1) == '~' && IS_ALPHA(*(p + 2)))
+            && personal_document_root) {
+            char* q;
+            p += 2;
+            q = strchr(p, '/');
+            if (q) { /* /~user/dir... */
+                passent = getpwnam(allocStr(p, q - p));
+                p = q;
+            } else { /* /~user */
+                passent = getpwnam(p);
+                p = "";
+            }
+            if (!passent)
+                goto rest;
+            extpath = Strnew_m_charp(passent->pw_dir, "/",
+                personal_document_root, NULL);
+            if (*personal_document_root == '\0' && *p == '/')
+                p++;
+        } else
+            goto rest;
+        if (Strcmp_charp(extpath, "/") == 0 && *p == '/')
+            p++;
+        Strcat_charp(extpath, p);
+        return extpath->ptr;
+    } else
+        return expandPath(p);
+rest:
+    return name;
 }
 
 void parseURL2(char* url, struct Url* pu, struct Url* current)

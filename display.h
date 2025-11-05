@@ -14,3 +14,4 @@ void disp_err_message(char* s, int redraw_current);
 void disp_message(char* s, int redraw_current);
 void disp_message_nomouse(char* s, int redraw_current);
 void set_delayed_message(char* s);
+void calcTabPos(void);

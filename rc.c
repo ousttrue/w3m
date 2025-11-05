@@ -3,6 +3,10 @@
  */
 #include "fm.h"
 #include "http_auth.h"
+#include "symbol.h"
+#include "file.h"
+#include "form.h"
+#include "funcheader.h"
 #include "mimetype.h"
 #include "func.h"
 #include "mailcap.h"
@@ -16,7 +20,6 @@
 #include "w3m_runtime.h"
 #include <fcntl.h>
 #include <gcstr/gcstr.h>
-#include "proto.h"
 #include "indep.h"
 #include <stdio.h>
 #include <errno.h>

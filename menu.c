@@ -4,6 +4,8 @@
 #include "fm.h"
 #include "buffer.h"
 #include "search.h"
+#include "funcheader.h"
+#include "search.h"
 #include "file.h"
 #include "symbol.h"
 #include "terms.h"

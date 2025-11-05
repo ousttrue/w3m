@@ -51,3 +51,6 @@ Str _parsedURL2Str(struct Url* pu, int pass, int user, int label);
 char* url_decode2(const char* url, wc_ces url_charset);
 char* url_unquote_conv(char* url, wc_ces charset);
 char* schemeNumToName(int scheme);
+int getURLScheme(char** url);
+char* filename_extension(char* patch, int is_url);
+struct Url* schemeToProxy(int scheme);

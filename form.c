@@ -1,5 +1,9 @@
 #include "form.h"
 #include "display.h"
+#include "func.h"
+#include "rc.h"
+#include "buffer.h"
+#include "map.h"
 #include "mimetype.h"
 #include "file.h"
 #include "etc.h"
@@ -17,6 +21,7 @@
 #include "regex.h"
 #include "util.h"
 #include "indep.h"
+#include "funcheader.h"
 
 extern Str* textarea_str;
 extern int max_textarea;

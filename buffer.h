@@ -238,3 +238,5 @@ char* last_modified(Buffer* buf);
 char* guess_save_name(Buffer* buf, char* file);
 void saveBufferInfo(void);
 wc_ces urlCharset(Buffer* buf, const char* url);
+struct parsed_tagarg;
+void follow_map(struct parsed_tagarg* arg);
