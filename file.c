@@ -1,4 +1,5 @@
 #include "file.h"
+#include "funcname1.h"
 #include "history.h"
 #include "mimehead.h"
 #include "ctrlcode.h"

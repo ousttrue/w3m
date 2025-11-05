@@ -18,9 +18,7 @@
 #include "parsetag.h"
 #include "parsetagx.h"
 #include "func.h"
-#include "menu.h"
 #include "textlist.h"
-#include "funcname1.h"
 #include "terms.h"
 
 #ifdef MAINPROGRAM

@@ -2,6 +2,7 @@
 #define MAINPROGRAM
 #include "fm.h"
 #include "buffer.h"
+#include "menu.h"
 #include "image.h"
 #include "history.h"
 #include "file.h"
@@ -25,6 +26,7 @@
 #include <time.h>
 #include "display.h"
 #include "terms.h"
+#include "funcname1.h"
 #include <gcstr/gcstr.h>
 #include "regex.h"
 #include "rc.h"

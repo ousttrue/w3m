@@ -1,11 +1,7 @@
-/* $Id: menu.h,v 1.2 2001/11/20 17:49:23 ukai Exp $ */
 /*
  * w3m menu.h
  */
-
-#ifndef MENU_H
-#define MENU_H
-
+#pragma once
 #define MENU_END 0
 #define MENU_NOP 1
 #define MENU_VALUE 2
@@ -51,4 +47,28 @@ typedef struct _MenuList {
     MenuItem* item;
 } MenuList;
 
-#endif /* not MENU_H */
+void new_menu(Menu* menu, MenuItem* item);
+void geom_menu(Menu* menu, int x, int y, int mselect);
+void draw_all_menu(Menu* menu);
+void draw_menu(Menu* menu);
+void draw_menu_item(Menu* menu, int mselect);
+int select_menu(Menu* menu, int mselect);
+void goto_menu(Menu* menu, int mselect, int down);
+void up_menu(Menu* menu, int n);
+void down_menu(Menu* menu, int n);
+int action_menu(Menu* menu);
+void popup_menu(Menu* parent, Menu* menu);
+void guess_menu_xy(Menu* menu, int width, int* x, int* y);
+void new_option_menu(Menu* menu, char** label, int* variable,
+    void (*func)());
+int setMenuItem(MenuItem* item, char* type, char* line);
+int addMenuList(MenuList** list, char* id);
+int getMenuN(MenuList* list, char* id);
+void popupMenu(int x, int y, Menu* menu);
+void mainMenu(int x, int y);
+void mainMn(void);
+void selMn(void);
+void tabMn(void);
+void optionMenu(int x, int y, char** label, int* variable, int initial,
+    void (*func)());
+void initMenu(void);

@@ -2,6 +2,7 @@
  * client-side image maps
  */
 #include "map.h"
+#include "menu.h"
 #include "image.h"
 #include "buffer.h"
 #include "fm.h"

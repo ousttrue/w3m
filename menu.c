@@ -11,6 +11,7 @@
 #include "func.h"
 #include "regex.h"
 #include "history.h"
+#include "funcname1.h"
 #include <gcstr/gcstr.h>
 #include <stdio.h>
 

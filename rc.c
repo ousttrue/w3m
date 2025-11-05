@@ -3,6 +3,7 @@
  */
 #include "fm.h"
 #include "http_auth.h"
+#include "menu.h"
 #include "history.h"
 #include "display.h"
 #include "dns_order.h"

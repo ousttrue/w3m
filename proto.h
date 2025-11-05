@@ -365,33 +365,6 @@ extern void setKeymap(char* p, int lineno, int verbose);
 struct regex;
 extern char* getRegexWord(const char** str, struct regex** regex_ret);
 
-extern void new_menu(Menu* menu, MenuItem* item);
-extern void geom_menu(Menu* menu, int x, int y, int mselect);
-extern void draw_all_menu(Menu* menu);
-extern void draw_menu(Menu* menu);
-extern void draw_menu_item(Menu* menu, int mselect);
-extern int select_menu(Menu* menu, int mselect);
-extern void goto_menu(Menu* menu, int mselect, int down);
-extern void up_menu(Menu* menu, int n);
-extern void down_menu(Menu* menu, int n);
-extern int action_menu(Menu* menu);
-extern void popup_menu(Menu* parent, Menu* menu);
-extern void guess_menu_xy(Menu* menu, int width, int* x, int* y);
-extern void new_option_menu(Menu* menu, char** label, int* variable,
-    void (*func)());
-
-extern int setMenuItem(MenuItem* item, char* type, char* line);
-extern int addMenuList(MenuList** list, char* id);
-extern int getMenuN(MenuList* list, char* id);
-
-extern void popupMenu(int x, int y, Menu* menu);
-extern void mainMenu(int x, int y);
-extern void mainMn(void);
-extern void selMn(void);
-extern void tabMn(void);
-extern void optionMenu(int x, int y, char** label, int* variable, int initial,
-    void (*func)());
-extern void initMenu(void);
 extern void dictword(void);
 extern void dictwordat(void);
 extern void wrapToggle(void);
