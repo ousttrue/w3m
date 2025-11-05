@@ -1,5 +1,6 @@
 #include "file.h"
 #include "news.h"
+#include "mimetype.h"
 #include "terms.h"
 #include "symbol.h"
 #include "form.h"

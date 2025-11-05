@@ -3,6 +3,7 @@
  */
 #include "fm.h"
 #include "http_auth.h"
+#include "mimetype.h"
 #include "func.h"
 #include "mailcap.h"
 #include "menu.h"

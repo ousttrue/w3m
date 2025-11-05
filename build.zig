@@ -15,6 +15,7 @@ const w3m_srcs = [_][]const u8{
     "http_auth.c",
     "DownloadList.c",
     "Line.c",
+    "mimetype.c",
 
     "main.c",
     "file.c",

@@ -1,5 +1,6 @@
 #include "form.h"
 #include "display.h"
+#include "mimetype.h"
 #include "file.h"
 #include "etc.h"
 #include "fm.h"

@@ -396,10 +396,6 @@ global int MarkAllPages init(FALSE);
 
 global struct auth_cookie* Auth_cookie init(0);
 
-#define USER_MIMETYPES "~/.mime.types"
-#define SYS_MIMETYPES ETC_DIR "/mime.types"
-global char* mimetypes_files init(USER_MIMETYPES ", " SYS_MIMETYPES);
-
 global char ExtHalfdump init(FALSE);
 global char FollowLocale init(TRUE);
 global char UseContentCharset init(TRUE);

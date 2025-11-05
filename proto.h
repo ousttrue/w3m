@@ -186,7 +186,6 @@ extern int openSocket(char* hostname, char* remoteport_name,
 
 extern int getURLScheme(char** url);
 
-extern char* guessContentType(char* filename);
 extern int check_no_proxy(char* domain);
 
 extern int set_param_option(char* option);
