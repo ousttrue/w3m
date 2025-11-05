@@ -14,6 +14,7 @@
 #include "funcname1.h"
 #include <gcstr/gcstr.h>
 #include <stdio.h>
+#include <string.h>
 
 #define _(Text) Text
 #define N_(Text) Text

@@ -2,6 +2,8 @@
 #include <gcstr/Str.h>
 #include <wc.h>
 
+extern const char* ssl_min_version;
+
 #define SCM_UNKNOWN 255
 #define SCM_MISSING 254
 #define SCM_HTTP 0

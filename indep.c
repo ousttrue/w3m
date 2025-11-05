@@ -2,6 +2,7 @@
 #include "fm.h"
 #include <stdio.h>
 #include <pwd.h>
+#include <string.h>
 #include <sys/param.h>
 #include <sys/types.h>
 #include <stdlib.h>

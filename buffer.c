@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "html.h"
 #include "fm.h"
 #include "frame.h"
 #include "cookie.h"

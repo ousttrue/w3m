@@ -9,6 +9,7 @@
 #include "ctrlcode.h"
 #include "history.h"
 #include <gcstr/gcstr.h>
+#include <string.h>
 
 #define STR_LEN 1024
 #define CLEN (COLS - 2)

@@ -12,6 +12,7 @@
 #include "indep.h"
 #include <gcstr/gcstr.h>
 #include <math.h>
+#include <strings.h>
 
 struct MapList*
 searchMapList(Buffer* buf, const char* name)

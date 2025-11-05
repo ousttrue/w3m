@@ -1,5 +1,6 @@
 #include "fm.h"
 #include "display.h"
+#include "html.h"
 #include "istream.h"
 #include "indep.h"
 #include "mimehead.h"

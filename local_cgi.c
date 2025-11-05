@@ -1,5 +1,6 @@
 #include "local_cgi.h"
 #include "fm.h"
+#include "etc.h"
 #include "form.h"
 #include "history.h"
 #include "w3m_runtime.h"
@@ -13,6 +14,7 @@
 #include <sys/stat.h>
 #include <signal.h>
 #include <errno.h>
+#include <time.h>
 #include <unistd.h>
 #include <gcstr/hash.h>
 
@@ -190,7 +192,7 @@ check_local_cgi(char* file, int status)
     return -1;
 }
 
-void set_environ(char* var, char* value)
+void set_environ(const char* var, const char* value)
 {
 #ifdef HAVE_SETENV
     if (var != NULL && value != NULL)
@@ -241,7 +243,7 @@ void set_environ(char* var, char* value)
 }
 
 static void
-set_cgi_environ(char* name, char* fn, char* req_uri)
+set_cgi_environ(const char* name, const char* fn, const char* req_uri)
 {
     set_environ("SERVER_SOFTWARE", w3m_version);
     set_environ("SERVER_PROTOCOL", "HTTP/1.0");

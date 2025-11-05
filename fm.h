@@ -9,12 +9,9 @@
 #ifndef FM_H
 #define FM_H
 
-
 #include <gcstr/Str.h>
 #include "wc.h"
 #include "wtf.h"
-#include "parsetag.h"
-#include "parsetagx.h"
 #include "func.h"
 #include "textlist.h"
 #include "terms.h"
@@ -64,7 +61,6 @@
 #ifndef HOST_NAME_MAX
 #define HOST_NAME_MAX 255
 #endif
-
 
 /* Flags for displayBuffer() */
 #define B_NORMAL 0
@@ -410,7 +406,6 @@ global int FoldLine init(FALSE);
 global int DefaultURLString init(DEFAULT_URL_CURRENT);
 global int MarkAllPages init(FALSE);
 
-
 global struct auth_cookie* Auth_cookie init(NULL);
 
 global char* mimetypes_files init(USER_MIMETYPES ", " SYS_MIMETYPES);
@@ -461,9 +456,6 @@ global int ssl_path_modified init(FALSE);
 #endif /* defined(USE_SSL) && \
         * defined(USE_SSL_VERIFY) */
 global char* ssl_forbid_method init("2, 3, t, 5");
-#ifdef SSL_CTX_set_min_proto_version
-global char* ssl_min_version init(NULL);
-#endif
 #if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
 global char* ssl_cipher init("DEFAULT:!LOW:!RC4:!EXP");
 #else

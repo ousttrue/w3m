@@ -1,10 +1,4 @@
-/*
- * w3m local.h
- */
-
-#ifndef LOCAL_H
-#define LOCAL_H
-
+#pragma once
 #include <stdio.h>
 #include <sys/types.h>
 #ifdef HAVE_DIRENT_H
@@ -45,5 +39,5 @@ typedef struct direct Directory;
 struct form_list;
 FILE* localcgi_post(char*, char*, struct form_list*, char*);
 #define localcgi_get(u, q, r) localcgi_post((u), (q), NULL, (r))
+void set_environ(const char* var, const char* value);
 
-#endif /* not LOCAL_H */

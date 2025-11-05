@@ -7,6 +7,7 @@
 #include "buffer.h"
 #include "HttpRequest.h"
 #include <gcstr/gcstr.h>
+#include <string.h>
 #include "fm.h"
 
 #define bpcmp(a, b) \

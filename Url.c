@@ -30,6 +30,8 @@
 #endif
 #include <openssl/err.h>
 
+const char* ssl_min_version = (NULL);
+
 static JMP_BUF AbortLoading;
 
 /* XXX: note html.h SCM_ */

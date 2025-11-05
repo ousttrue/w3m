@@ -324,12 +324,6 @@ typedef struct tag_attribute_info {
 #define VTYPE_MLENGTH 9
 #define VTYPE_TYPE 10
 
-#define SHAPE_UNKNOWN 0
-#define SHAPE_DEFAULT 1
-#define SHAPE_RECT 2
-#define SHAPE_CIRCLE 3
-#define SHAPE_POLY 4
-
 extern TagInfo TagMAP[];
 extern TagAttrInfo AttrMAP[];
 

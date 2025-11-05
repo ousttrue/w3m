@@ -1,5 +1,7 @@
 #include "image.h"
+#include "local_cgi.h"
 #include "file.h"
+#include "etc.h"
 #include "fm.h"
 #include "display.h"
 #include "buffer.h"

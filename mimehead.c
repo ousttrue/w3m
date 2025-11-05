@@ -4,6 +4,7 @@
 #include "mimehead.h"
 #include "fm.h"
 #include <gcstr/gcstr.h>
+#include <string.h>
 #include <sys/types.h>
 
 #define MIME_ENCODED_LINE_LIMIT 80

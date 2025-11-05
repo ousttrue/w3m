@@ -2,6 +2,12 @@
 #include <gcstr/Str.h>
 #include "textlist.h"
 
+#define SHAPE_UNKNOWN 0
+#define SHAPE_DEFAULT 1
+#define SHAPE_RECT 2
+#define SHAPE_CIRCLE 3
+#define SHAPE_POLY 4
+
 struct MapArea {
     char* url;
     char* target;

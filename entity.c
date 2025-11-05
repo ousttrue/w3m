@@ -1,4 +1,5 @@
 /* $Id: entity.c,v 1.7 2003/09/24 18:48:59 ukai Exp $ */
+#include <string.h>
 #ifdef DUMMY
 #include <gcstr/Str.h>
 #define NBSP " "

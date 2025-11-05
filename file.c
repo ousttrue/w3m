@@ -1,6 +1,7 @@
 #include "file.h"
 #include "form.h"
 #include "funcname1.h"
+#include "etc.h"
 #include "frame.h"
 #include "mailcap.h"
 #include "history.h"
