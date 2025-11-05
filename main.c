@@ -2,6 +2,7 @@
 #define MAINPROGRAM
 #include "fm.h"
 #include "buffer.h"
+#include "mailcap.h"
 #include "menu.h"
 #include "image.h"
 #include "history.h"

@@ -580,18 +580,6 @@ char* remove_space(char* str)
     return p;
 }
 
-int non_null(char* s)
-{
-    if (s == NULL)
-        return FALSE;
-    while (*s) {
-        if (!IS_SPACE(*s))
-            return TRUE;
-        s++;
-    }
-    return FALSE;
-}
-
 void cleanup_line(Str s, int mode)
 {
     if (s->length >= 2 && s->ptr[s->length - 2] == '\r' && s->ptr[s->length - 1] == '\n') {

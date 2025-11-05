@@ -1,10 +1,17 @@
-#include "fm.h"
-#include <gcstr/gcstr.h>
+#include "mailcap.h"
+#include "textlist.h"
 #include "indep.h"
 #include "parsetag.h"
 #include "local.h"
 #include <stdio.h>
 #include <errno.h>
+#include <string.h>
+#include <strings.h>
+
+#define USER_MAILCAP RC_DIR "/mailcap"
+#define SYS_MAILCAP CONF_DIR "/mailcap"
+
+const char* mailcap_files = (USER_MAILCAP ", " SYS_MAILCAP);
 
 static struct mailcap DefaultMailcap[] = {
     { "image/*", DEF_IMAGE_VIEWER " %s", 0, NULL, NULL, NULL }, /* */
@@ -445,4 +452,25 @@ unquote_mailcap_loop(char* qstr, char* type, char* name, char* attr,
 Str unquote_mailcap(char* qstr, char* type, char* name, char* attr, int* mc_stat)
 {
     return unquote_mailcap_loop(qstr, type, name, attr, mc_stat, 0);
+}
+
+bool is_dump_text_type(const char* type)
+{
+    struct mailcap* mcap;
+    return (type && (mcap = searchExtViewer(type)) && (mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)));
+}
+
+bool is_text_type(const char* type)
+{
+    return (type == NULL || type[0] == '\0' || strncasecmp(type, "text/", 5) == 0 || (strncasecmp(type, "application/", 12) == 0 && strstr(type, "xhtml") != NULL) || strncasecmp(type, "message/", sizeof("message/") - 1) == 0);
+}
+
+bool is_plain_text_type(const char* type)
+{
+    return ((type && strcasecmp(type, "text/plain") == 0) || (is_text_type(type) && !is_dump_text_type(type)));
+}
+
+int is_html_type(char* type)
+{
+    return (type && (strcasecmp(type, "text/html") == 0 || strcasecmp(type, "application/xhtml+xml") == 0));
 }

@@ -179,7 +179,6 @@ extern int doFileSave(struct URLFile uf, char* defstr);
 extern int checkCopyFile(char* path1, char* path2);
 extern int checkOverWrite(char* path);
 extern char* inputAnswer(char* prompt);
-extern int matchattr(char* p, char* attr, int len, Str* value);
 extern void calcTabPos(void);
 extern int gethtmlcmd(char** s);
 extern char* lastFileName(char* path);
@@ -296,16 +295,8 @@ extern int openSocket(char* hostname, char* remoteport_name,
     unsigned short remoteport_num);
 
 extern int getURLScheme(char** url);
-struct HttpRequest;
-extern int mailcapMatch(struct mailcap* mcap, char* type);
-extern struct mailcap* searchMailcap(struct mailcap* table, char* type);
-extern void initMailcap(void);
-extern char* acceptableMimeTypes(void);
-extern struct mailcap* searchExtViewer(char* type);
-extern Str unquote_mailcap(char* qstr, char* type, char* name, char* attr,
-    int* mc_stat);
+
 extern char* guessContentType(char* filename);
-extern TextList* make_domain_list(char* domain_list);
 extern int check_no_proxy(char* domain);
 extern Str loadFTPDir(struct Url* pu, wc_ces* charset);
 extern void closeFTP(void);

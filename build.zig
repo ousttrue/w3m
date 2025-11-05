@@ -284,6 +284,7 @@ fn build_gcstr(
             "gcstr.c",
             "alloc.c",
             "myctype.c",
+            "myctype_table.c",
             "hash.c",
             "hash_mktable.c",
             "quote.c",

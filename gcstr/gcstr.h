@@ -12,3 +12,4 @@ int vscpf(const char* fmt, va_list ap);
 Str base64_encode(const char* src, size_t len);
 Str convert_size(long long size, bool usefloat);
 Str convert_size2(long long size1, long long size2, bool usefloat);
+bool matchattr(const char* p, const char* attr, int len, Str* value);

@@ -25,8 +25,6 @@
 
 #define PRE_FORM_FILE RC_DIR "/pre_form"
 #define SITECONF_FILE RC_DIR "/siteconf"
-#define USER_MAILCAP RC_DIR "/mailcap"
-#define SYS_MAILCAP CONF_DIR "/mailcap"
 #define USER_MIMETYPES "~/.mime.types"
 #define SYS_MIMETYPES ETC_DIR "/mime.types"
 #define USER_URIMETHODMAP RC_DIR "/urimethodmap"

@@ -1,5 +1,6 @@
 #include "file.h"
 #include "funcname1.h"
+#include "mailcap.h"
 #include "history.h"
 #include "mimehead.h"
 #include "ctrlcode.h"
@@ -241,30 +242,6 @@ int dir_exist(char* path)
     return IS_DIRECTORY(stbuf.st_mode);
 }
 
-static int
-is_dump_text_type(char* type)
-{
-    struct mailcap* mcap;
-    return (type && (mcap = searchExtViewer(type)) && (mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)));
-}
-
-static int
-is_text_type(char* type)
-{
-    return (type == NULL || type[0] == '\0' || strncasecmp(type, "text/", 5) == 0 || (strncasecmp(type, "application/", 12) == 0 && strstr(type, "xhtml") != NULL) || strncasecmp(type, "message/", sizeof("message/") - 1) == 0);
-}
-
-static int
-is_plain_text_type(char* type)
-{
-    return ((type && strcasecmp(type, "text/plain") == 0) || (is_text_type(type) && !is_dump_text_type(type)));
-}
-
-int is_html_type(char* type)
-{
-    return (type && (strcasecmp(type, "text/html") == 0 || strcasecmp(type, "application/xhtml+xml") == 0));
-}
-
 static void
 check_compression(char* path, struct URLFile* uf)
 {
@@ -455,41 +432,7 @@ Str convertLine(struct URLFile* uf, Str line, int mode, wc_ces* charset,
     return line;
 }
 
-int matchattr(char* p, char* attr, int len, Str* value)
-{
-    int quoted;
-    char* q = NULL;
 
-    if (strncasecmp(p, attr, len) == 0) {
-        p += len;
-        SKIP_BLANKS(&p);
-        if (value) {
-            *value = Strnew();
-            if (*p == '=') {
-                p++;
-                SKIP_BLANKS(&p);
-                quoted = 0;
-                while (!IS_ENDL(*p) && (quoted || *p != ';')) {
-                    if (!IS_SPACE(*p))
-                        q = p;
-                    if (*p == '"')
-                        quoted = (quoted) ? 0 : 1;
-                    else
-                        Strcat_char(*value, *p);
-                    p++;
-                }
-                if (q)
-                    Strshrink(*value, p - q - 1);
-            }
-            return 1;
-        } else {
-            if (IS_ENDT(*p)) {
-                return 1;
-            }
-        }
-    }
-    return 0;
-}
 
 void readHeader(struct URLFile* uf, Buffer* newBuf, int thru, struct Url* pu)
 {

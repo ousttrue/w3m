@@ -416,7 +416,6 @@ global int MarkAllPages init(FALSE);
 
 global struct auth_cookie* Auth_cookie init(NULL);
 
-global char* mailcap_files init(USER_MAILCAP ", " SYS_MAILCAP);
 global char* mimetypes_files init(USER_MIMETYPES ", " SYS_MIMETYPES);
 
 global TextList* fileToDelete;
