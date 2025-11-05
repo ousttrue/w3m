@@ -32,7 +32,7 @@ static char **CFileBuf = NULL;
 static int NCFileBuf;
 static int NCFileOffset;
 
-static void insertself(char c),
+static void _noop(void),
 _mvR(void), _mvL(void), _mvRw(void), _mvLw(void), delC(void), insC(void),
 _mvB(void), _mvE(void), _enter(void), _quo(void), _bs(void), _bsw(void),
 killn(void), killb(void), _inbrk(void), _esc(void), _editor(void),
@@ -43,7 +43,6 @@ static int getcntrl(void);
 #endif
 
 static int terminated(unsigned char c);
-#define iself ((void(*)(void))insertself)
 
 static void next_compl(int next);
 static void next_dcompl(int next);
@@ -54,11 +53,11 @@ void (*InputKeymap[32]) (void) = {
 /*  C-@     C-a     C-b     C-c     C-d     C-e     C-f     C-g     */
     _compl, _mvB,   _mvL,   _inbrk, delC,   _mvE,   _mvR,   _inbrk,
 /*  C-h     C-i     C-j     C-k     C-l     C-m     C-n     C-o     */
-    _bs,    iself,  _enter, killn,  iself,  _enter, _next,  _editor,
+    _bs,    _noop,  _enter, killn,  _noop,  _enter, _next,  _editor,
 /*  C-p     C-q     C-r     C-s     C-t     C-u     C-v     C-w     */
-    _prev,  _quo,   _bsw,   iself,  _mvLw,  killb,  _quo,   _bsw,
+    _prev,  _quo,   _bsw,   _noop,  _mvLw,  killb,  _quo,   _bsw,
 /*  C-x     C-y     C-z     C-[     C-\     C-]     C-^     C-_     */
-    _tcompl,_mvRw,  iself,  _esc,   iself,  iself,  iself,  iself,
+    _tcompl,_mvRw,  _noop,  _esc,   _noop,  _noop,  _noop,  _noop,
 };
 /* *INDENT-ON* */
 
@@ -572,14 +571,9 @@ _enter(void)
 }
 
 static void
-insertself(const char c)
+_noop(void)
 {
-    if (CLen >= STR_LEN)
-	return;
-    insC();
-    strBuf->ptr[CPos] = c;
-    strProp[CPos] = (is_passwd) ? PC_ASCII : PC_CTRL;
-    CPos++;
+    return;
 }
 
 static void
