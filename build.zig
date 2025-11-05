@@ -86,10 +86,97 @@ const libwc_srcs = [_][]const u8{
 };
 
 pub fn build(b: *std.Build) void {
-    var targets = std.ArrayListUnmanaged(*std.Build.Step.Compile){};
-
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
+
+    const mod = b.addModule("w3m", .{
+        .target = target,
+        .optimize = optimize,
+        .root_source_file = b.path("src/main.zig"),
+        .link_libc = true,
+    });
+    const exe = b.addExecutable(.{
+        .name = "w3m",
+        .root_module = mod,
+    });
+    b.installArtifact(exe);
+
+    const gcstr = build_gcstr(b, target, optimize);
+    exe.linkLibrary(gcstr);
+
+    const test_exe = b.addTest(.{
+        .root_module = gcstr.root_module,
+    });
+    b.step("test", "gcstr test").dependOn(&b.addRunArtifact(test_exe).step);
+
+    exe.linkLibrary(buildCore(b, target, optimize));
+    for (system_libs) |lib| {
+        exe.linkSystemLibrary(lib);
+    }
+
+    const w3mimgdisplay = b.addExecutable(.{
+        .name = "w3mimgdisplay",
+        .root_module = b.addModule("w3mimgdisplay", .{
+            .target = target,
+            .optimize = optimize,
+            .link_libc = true,
+        }),
+    });
+    b.installArtifact(w3mimgdisplay);
+    w3mimgdisplay.addCSourceFiles(.{
+        .files = &.{
+            "w3mimgdisplay.c",
+            "w3mimg/w3mimg.c",
+        },
+    });
+    w3mimgdisplay.addIncludePath(b.path(""));
+}
+
+fn genFuncTable(
+    b: *std.Build,
+    target: std.Build.ResolvedTarget,
+) std.Build.LazyPath {
+    const funcname_tab = gen_funcname_tab(b);
+    const funcname_gen = b.addLibrary(.{
+        .name = "funcname_gen",
+        .root_module = b.addModule("funcname_gen", .{
+            .target = target,
+        }),
+    });
+    funcname_gen.addCSourceFile(.{
+        .file = b.path("dummy.c"),
+    });
+    const funcname_c = gen_funcname(b, funcname_tab.output, b.path("funcname0.awk"));
+    funcname_gen.installHeader(funcname_c.output, "funcname.c");
+
+    const funcname1_h = gen_funcname(b, funcname_tab.output, b.path("funcname1.awk"));
+    funcname_gen.installHeader(funcname1_h.output, "funcname1.h");
+
+    const funcname2_h = gen_funcname(b, funcname_tab.output, b.path("funcname2.awk"));
+    funcname_gen.installHeader(funcname2_h.output, "funcname2.h");
+
+    const funcheader_h = gen_funcname(b, funcname_tab.output, b.path("funcheader.awk"));
+    funcname_gen.installHeader(funcheader_h.output, "funcheader.h");
+
+    {
+        const functable_tab = gen_funcname(b, funcname_tab.output, b.path("functable.awk"));
+        const mktable = build_mktable(b, b.graph.host, .ReleaseSafe);
+        mktable.addIncludePath(b.path(""));
+
+        var run_mktable = b.addRunArtifact(mktable);
+        run_mktable.addArg("100");
+        run_mktable.addFileArg(functable_tab.output);
+        funcname_gen.installHeader(run_mktable.captureStdOut(), "functable.c");
+    }
+
+    return funcname_gen.getEmittedIncludeTree();
+}
+
+fn buildCore(
+    b: *std.Build,
+    target: std.Build.ResolvedTarget,
+    optimize: std.builtin.OptimizeMode,
+) *std.Build.Step.Compile {
     // const SHELL = "/bin/bash";
     const PACKAGE = "w3m";
     // const VERSION = "0.5.3";
@@ -116,28 +203,16 @@ pub fn build(b: *std.Build) void {
     const ETC_DIR = sysconfdir;
     const CONF_DIR = b.fmt("{s}/{s}", .{ sysconfdir, PACKAGE });
 
-    const mod = b.addModule("w3m", .{
-        .target = target,
-        .optimize = optimize,
-        .root_source_file = b.path("src/main.zig"),
+    const lib = b.addLibrary(.{
+        .name = "core",
+        .root_module = b.addModule("core", .{
+            .target = target,
+            .optimize = optimize,
+            .link_libc = true,
+        }),
     });
-    const exe = b.addExecutable(.{
-        .name = "w3m",
-        .root_module = mod,
-    });
-    targets.append(b.allocator, exe) catch @panic("OOM");
-    b.installArtifact(exe);
-    exe.linkLibC();
-    exe.addIncludePath(b.path("libwc"));
-    exe.addIncludePath(b.path("."));
-
-    const gcstr = build_gcstr(b, target, optimize);
-    exe.linkLibrary(gcstr);
-
-    const test_exe = b.addTest(.{
-        .root_module = gcstr.root_module,
-    });
-    b.step("test", "gcstr test").dependOn(&b.addRunArtifact(test_exe).step);
+    lib.addIncludePath(b.path("libwc"));
+    lib.addIncludePath(b.path("."));
 
     const flags = [_][]const u8{
         "-Wno-implicit-int",
@@ -151,11 +226,11 @@ pub fn build(b: *std.Build) void {
         b.fmt("-DRC_DIR=\"{s}\"", .{RC_DIR}),
         b.fmt("-DLOCALEDIR=\"{s}\"", .{localedir}),
     };
-    exe.addCSourceFiles(.{
+    lib.addCSourceFiles(.{
         .files = &w3m_srcs,
         .flags = &flags,
     });
-    exe.addCSourceFiles(.{
+    lib.addCSourceFiles(.{
         .root = b.path("libwc"),
         .files = &libwc_srcs,
         .flags = &.{
@@ -163,72 +238,22 @@ pub fn build(b: *std.Build) void {
             "-DUSE_UNICODE",
         },
     });
-    for (system_libs) |lib| {
-        exe.linkSystemLibrary(lib);
-    }
 
-    const funcname_tab = gen_funcname_tab(b);
-    const funcname_gen = b.addLibrary(.{
-        .name = "funcname_gen",
-        .root_module = b.addModule("funcname_gen", .{
-            .target = target,
-        }),
-    });
-    funcname_gen.addCSourceFile(.{
-        .file = b.path("dummy.c"),
-    });
-
-    const funcname_c = gen_funcname(b, funcname_tab.output, b.path("funcname0.awk"));
-    funcname_gen.installHeader(funcname_c.output, "funcname.c");
-
-    const funcname1_h = gen_funcname(b, funcname_tab.output, b.path("funcname1.awk"));
-    funcname_gen.installHeader(funcname1_h.output, "funcname1.h");
-
-    const funcname2_h = gen_funcname(b, funcname_tab.output, b.path("funcname2.awk"));
-    funcname_gen.installHeader(funcname2_h.output, "funcname2.h");
-
-    const funcheader_h = gen_funcname(b, funcname_tab.output, b.path("funcheader.awk"));
-    funcname_gen.installHeader(funcheader_h.output, "funcheader.h");
-
-    {
-        const functable_tab = gen_funcname(b, funcname_tab.output, b.path("functable.awk"));
-        const mktable = build_mktable(b, b.graph.host, .ReleaseSafe);
-        mktable.addIncludePath(b.path(""));
-
-        var run_mktable = b.addRunArtifact(mktable);
-        run_mktable.addArg("100");
-        run_mktable.addFileArg(functable_tab.output);
-        funcname_gen.installHeader(run_mktable.captureStdOut(), "functable.c");
-    }
-
-    exe.addIncludePath(funcname_gen.getEmittedIncludeTree());
-
+    const include = genFuncTable(b, target);
+    lib.addIncludePath(include);
     const install = b.addInstallDirectory(.{
-        .source_dir = funcname_gen.getEmittedIncludeTree(),
+        .source_dir = include,
         .install_dir = .header,
         .install_subdir = "",
     });
 
+    var targets = std.ArrayListUnmanaged(*std.Build.Step.Compile){};
+    targets.append(b.allocator, lib) catch @panic("OOM");
     const cdb = zcc.createStep(b, "cdb", targets.toOwnedSlice(b.allocator) catch @panic("OOM"));
     cdb.dependOn(&install.step);
-    exe.step.dependOn(cdb);
+    lib.step.dependOn(cdb);
 
-    const w3mimgdisplay = b.addExecutable(.{
-        .name = "w3mimgdisplay",
-        .root_module = b.addModule("w3mimgdisplay", .{
-            .target = target,
-            .optimize = optimize,
-            .link_libc = true,
-        }),
-    });
-    b.installArtifact(w3mimgdisplay);
-    w3mimgdisplay.addCSourceFiles(.{
-        .files = &.{
-            "w3mimgdisplay.c",
-            "w3mimg/w3mimg.c",
-        },
-    });
-    w3mimgdisplay.addIncludePath(b.path(""));
+    return lib;
 }
 
 fn build_gcstr(
