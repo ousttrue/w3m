@@ -1,3 +1,4 @@
+#include "search.h"
 #include "fm.h"
 #include "buffer.h"
 #include "regex.h"

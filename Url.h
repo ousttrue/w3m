@@ -4,6 +4,10 @@
 #include "textlist.h"
 
 extern const char* ssl_min_version;
+extern int ssl_verify_server;
+extern int ssl_path_modified;
+extern char* ssl_cert_file;
+
 extern TextList* NO_proxy_domains;
 
 #define SCM_UNKNOWN 255
@@ -45,3 +49,4 @@ Str parsedURL2Str(struct Url* pu);
 Str parsedURL2RefererStr(struct Url* pu);
 Str _parsedURL2Str(struct Url* pu, int pass, int user, int label);
 char* url_decode2(const char* url, wc_ces url_charset);
+char* url_unquote_conv(char* url, wc_ces charset);

@@ -10,6 +10,7 @@
 
 #else /* DUMMY */
 #include "fm.h"
+#include <wc.h>
 #include "ucs.h"
 #include "utf8.h"
 #endif /* DUMMY */

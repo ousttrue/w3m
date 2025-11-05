@@ -23,9 +23,6 @@
 #define COOKIE_FILE "cookie"
 #define HISTORY_FILE "history"
 
-#define PRE_FORM_FILE RC_DIR "/pre_form"
-#define USER_MIMETYPES "~/.mime.types"
-#define SYS_MIMETYPES ETC_DIR "/mime.types"
 #define USER_URIMETHODMAP RC_DIR "/urimethodmap"
 #define SYS_URIMETHODMAP CONF_DIR "/urimethodmap"
 
@@ -54,7 +51,6 @@
 #define USE_DIGEST_AUTH 1
 #define USE_SSL 1
 #define USE_SSL_VERIFY 1
-#define DEF_CAFILE ""
 #define USE_HELP_CGI 1
 #define USE_EXTERNAL_URI_LOADER 1
 #define USE_W3MMAILER 1
@@ -89,9 +85,6 @@
 #define NOWRAP
 #define MATRIX
 
-#define DEF_EDITOR "/usr/bin/vi"
-#define DEF_MAILER "/usr/bin/mail"
-#define DEF_EXT_BROWSER "/usr/bin/firefox"
 
 /* fallback viewer. mailcap override these configuration */
 #define DEF_IMAGE_VIEWER "display"
@@ -204,17 +197,6 @@ extern void intTrap(SIGNAL_ARG);
 #define DEFAULT_TERM 0 /* XXX */
 #endif
 
-#if defined(__EMX__) /* use $extension? */
-#define GUNZIP_CMDNAME "gzip"
-#define BUNZIP2_CMDNAME "bzip2"
-#define INFLATE_CMDNAME "inflate.exe"
-#define W3MBOOKMARK_CMDNAME "w3mbookmark.exe"
-#define W3MHELPERPANEL_CMDNAME "w3mhelperpanel.exe"
-#define DEV_NULL_PATH "nul"
-#define DEV_TTY_PATH "con"
-#define CGI_EXTENSION ".cmd"
-#define USE_PATH_ENVVAR
-#else
 #define GUNZIP_CMDNAME "gunzip"
 #define BUNZIP2_CMDNAME "bunzip2"
 #define INFLATE_CMDNAME "inflate"
@@ -222,8 +204,6 @@ extern void intTrap(SIGNAL_ARG);
 #define W3MHELPERPANEL_CMDNAME "w3mhelperpanel"
 #define DEV_NULL_PATH "/dev/null"
 #define DEV_TTY_PATH "/dev/tty"
-#define CGI_EXTENSION ".cgi"
-#endif
 #define BROTLI_CMDNAME "brotli"
 
 #define PATH_SEPARATOR ':'

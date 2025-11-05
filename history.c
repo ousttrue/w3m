@@ -1,4 +1,5 @@
 #include "history.h"
+#include "etc.h"
 #include "fm.h"
 #include "display.h"
 #include "rc.h"

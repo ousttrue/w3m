@@ -1,4 +1,6 @@
+#include "Url.h"
 #include "fm.h"
+#include "file.h"
 #include "local_cgi.h"
 #include "w3m_runtime.h"
 #include "form.h"
@@ -8,6 +10,7 @@
 #include "cookie.h"
 #include "display.h"
 #include "istream.h"
+#include "terms.h"
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -31,6 +34,10 @@
 #include <openssl/err.h>
 
 const char* ssl_min_version = (NULL);
+int ssl_verify_server = (TRUE);
+int ssl_path_modified = (FALSE);
+char* ssl_cert_file = (NULL);
+
 TextList* NO_proxy_domains = 0;
 
 static JMP_BUF AbortLoading;
@@ -65,9 +72,7 @@ struct cmdtable schemetable[] = {
     { "news", SCM_NEWS },
     /*  {"news", SCM_NEWS_GROUP}, */
     { "data", SCM_DATA },
-#ifndef USE_W3MMAILER
     { "mailto", SCM_MAILTO },
-#endif
     { "https", SCM_HTTPS },
     { NULL, SCM_UNKNOWN },
 };
@@ -901,10 +906,8 @@ void parseURL2(char* url, struct Url* pu, struct Url* current)
     int relative_uri = FALSE;
 
     parseURL(url, pu, current);
-#ifndef USE_W3MMAILER
     if (pu->scheme == SCM_MAILTO)
         return;
-#endif
     if (pu->scheme == SCM_DATA)
         return;
     if (pu->scheme == SCM_NEWS || pu->scheme == SCM_NEWS_GROUP) {
@@ -1069,7 +1072,6 @@ Str _parsedURL2Str(struct Url* pu, int pass, int user, int label)
     }
     tmp = Strnew_charp(scheme_str[pu->scheme]);
     Strcat_char(tmp, ':');
-#ifndef USE_W3MMAILER
     if (pu->scheme == SCM_MAILTO) {
         Strcat_charp(tmp, pu->file);
         if (pu->query) {
@@ -1078,7 +1080,6 @@ Str _parsedURL2Str(struct Url* pu, int pass, int user, int label)
         }
         return tmp;
     }
-#endif
     if (pu->scheme == SCM_DATA) {
         Strcat_charp(tmp, pu->file);
         return tmp;
@@ -1750,17 +1751,6 @@ char* url_encode(const char* url, const struct Url* base, wc_ces doc_charset)
         url_to_charset(url, base, doc_charset));
 }
 
-#if 0 /* unused */
-char *
-url_decode(const char *url, const struct Url *base, wc_ces doc_charset)
-{
-    if (!DecodeURL)
-	return (char *)url;
-    return url_unquote_conv((char *)url,
-			    url_to_charset(url, base, doc_charset));
-}
-#endif
-
 char* url_decode2(const char* url, wc_ces url_charset)
 {
     if (!DecodeURL)
@@ -1768,3 +1758,17 @@ char* url_decode2(const char* url, wc_ces url_charset)
 
     return url_unquote_conv((char*)url, url_charset);
 }
+
+char* url_unquote_conv(char* url, wc_ces charset)
+{
+    wc_uint8 old_auto_detect = WcOption.auto_detect;
+    Str tmp;
+    tmp = Str_url_unquote(Strnew_charp(url), FALSE, TRUE);
+    if (!charset || charset == WC_CES_US_ASCII)
+        charset = SystemCharset;
+    WcOption.auto_detect = WC_OPT_DETECT_ON;
+    tmp = convertLine(NULL, tmp, RAW_MODE, &charset, charset);
+    WcOption.auto_detect = old_auto_detect;
+    return tmp->ptr;
+}
+

@@ -1,4 +1,5 @@
 #include "anchor.h"
+#include "file.h"
 #include "form.h"
 #include "image.h"
 #include "map.h"

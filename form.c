@@ -1,5 +1,7 @@
 #include "form.h"
 #include "display.h"
+#include "file.h"
+#include "etc.h"
 #include "fm.h"
 #include "buffer.h"
 #include "DownloadList.h"

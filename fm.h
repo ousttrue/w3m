@@ -9,12 +9,6 @@
 #ifndef FM_H
 #define FM_H
 
-#include <gcstr/Str.h>
-#include "wc.h"
-#include "wtf.h"
-#include "func.h"
-#include "terms.h"
-
 #ifdef MAINPROGRAM
 #define global
 #define init(x) = (x)
@@ -250,7 +244,7 @@ global int IndentIncr init(4);
 global int PagerMax init(PAGER_MAX_LINE);
 
 global char SearchHeader init(FALSE);
-global char* DefaultType init(NULL);
+global char* DefaultType init(0);
 global char RenderFrame init(FALSE);
 global char TargetSelf init(FALSE);
 global char PermitSaveToPipe init(FALSE);
@@ -260,7 +254,7 @@ global char PreserveTimestamp init(TRUE);
 global char ArgvIsURL init(TRUE);
 global char MetaRefresh init(FALSE);
 global char LocalhostOnly init(FALSE);
-global char* HostName init(NULL);
+global char* HostName init(0);
 
 global char fmInitialized init(FALSE);
 global char TrapSignal init(TRUE);
@@ -279,28 +273,28 @@ global char TrapSignal init(TRUE);
             mySignal(SIGINT, prevtrap); \
     }
 
-global char* HTTP_proxy init(NULL);
-global char* HTTPS_proxy init(NULL);
-global char* GOPHER_proxy init(NULL);
-global char* FTP_proxy init(NULL);
+global char* HTTP_proxy init(0);
+global char* HTTPS_proxy init(0);
+global char* GOPHER_proxy init(0);
+global char* FTP_proxy init(0);
 global struct Url HTTP_proxy_parsed;
 global struct Url HTTPS_proxy_parsed;
 global struct Url GOPHER_proxy_parsed;
 global struct Url FTP_proxy_parsed;
-global char* NO_proxy init(NULL);
+global char* NO_proxy init(0);
 global int NOproxy_netaddr init(TRUE);
 
 global char use_proxy init(TRUE);
 #define Do_not_use_proxy (!use_proxy)
 global int Do_not_use_ti_te init(FALSE);
-global char* NNTP_server init(NULL);
-global char* NNTP_mode init(NULL);
+global char* NNTP_server init(0);
+global char* NNTP_mode init(0);
 global int MaxNewsMessage init(50);
 
-global char* document_root init(NULL);
-global char* personal_document_root init(NULL);
-global char* cgi_bin init(NULL);
-global char* index_file init(NULL);
+global char* document_root init(0);
+global char* personal_document_root init(0);
+global char* cgi_bin init(0);
+global char* index_file init(0);
 
 global int CurrentKey;
 global char* CurrentKeyData;
@@ -332,15 +326,13 @@ global int active_color init(6); /* cyan */
 global int useVisitedColor init(FALSE);
 global int visited_color init(5); /* magenta  */
 global int confirm_on_quit init(TRUE);
-#ifdef USE_MARK
 global int use_mark init(FALSE);
-#endif
 global int emacs_like_lineedit init(FALSE);
 global int space_autocomplete init(FALSE);
 global int vi_prec_num init(FALSE);
 global int label_topline init(FALSE);
 global int nextpage_topline init(FALSE);
-global char* displayTitleTerm init(NULL);
+global char* displayTitleTerm init(0);
 global int displayLink init(FALSE);
 global int displayLinkNumber init(FALSE);
 global int displayLineInfo init(FALSE);
@@ -355,39 +347,37 @@ global int useExtImageViewer init(TRUE);
 global int maxLoadImage init(4);
 global int image_map_list init(TRUE);
 global int pseudoInlines init(TRUE);
+#define DEF_EDITOR "/usr/bin/vi"
+#define DEF_MAILER "/usr/bin/mail"
 global char* Editor init(DEF_EDITOR);
-#ifdef USE_W3MMAILER
-global char* Mailer init(NULL);
-#else
 global char* Mailer init(DEF_MAILER);
-#endif
-#ifdef USE_W3MMAILER
-#define MAILTO_OPTIONS_USE_W3MMAILER 0
-#endif
 #define MAILTO_OPTIONS_IGNORE 1
 #define MAILTO_OPTIONS_USE_MAILTO_URL 2
 global int MailtoOptions init(MAILTO_OPTIONS_IGNORE);
+#define DEF_EXT_BROWSER "/usr/bin/firefox"
 global char* ExtBrowser init(DEF_EXT_BROWSER);
-global char* ExtBrowser2 init(NULL);
-global char* ExtBrowser3 init(NULL);
-global char* ExtBrowser4 init(NULL);
-global char* ExtBrowser5 init(NULL);
-global char* ExtBrowser6 init(NULL);
-global char* ExtBrowser7 init(NULL);
-global char* ExtBrowser8 init(NULL);
-global char* ExtBrowser9 init(NULL);
+global char* ExtBrowser2 init(0);
+global char* ExtBrowser3 init(0);
+global char* ExtBrowser4 init(0);
+global char* ExtBrowser5 init(0);
+global char* ExtBrowser6 init(0);
+global char* ExtBrowser7 init(0);
+global char* ExtBrowser8 init(0);
+global char* ExtBrowser9 init(0);
 global int BackgroundExtViewer init(TRUE);
+#define PRE_FORM_FILE RC_DIR "/pre_form"
 global char* pre_form_file init(PRE_FORM_FILE);
-global char* ftppasswd init(NULL);
+global char* ftppasswd init(0);
 global int ftppass_hostnamegen init(TRUE);
 global int do_download init(FALSE);
-global char* image_source init(NULL);
+global char* image_source init(0);
 global int WrapDefault init(FALSE);
 global int IgnoreCase init(TRUE);
 global int WrapSearch init(FALSE);
 global int squeezeBlankLine init(FALSE);
-global char* BookmarkFile init(NULL);
+global char* BookmarkFile init(0);
 global int UseExternalDirBuffer init(TRUE);
+#define CGI_EXTENSION ".cgi"
 global char* DirBufferCommand init("file:///$LIB/dirlist" CGI_EXTENSION);
 global int UseDictCommand init(TRUE);
 global char* DictCommand init("file:///$LIB/w3mdict" CGI_EXTENSION);
@@ -404,10 +394,11 @@ global int FoldLine init(FALSE);
 global int DefaultURLString init(DEFAULT_URL_CURRENT);
 global int MarkAllPages init(FALSE);
 
-global struct auth_cookie* Auth_cookie init(NULL);
+global struct auth_cookie* Auth_cookie init(0);
 
+#define USER_MIMETYPES "~/.mime.types"
+#define SYS_MIMETYPES ETC_DIR "/mime.types"
 global char* mimetypes_files init(USER_MIMETYPES ", " SYS_MIMETYPES);
-
 
 global char ExtHalfdump init(FALSE);
 global char FollowLocale init(TRUE);
@@ -428,13 +419,11 @@ extern int symbol_width0;
 #define N_GRAPH_SYMBOL 32
 #define N_SYMBOL (N_GRAPH_SYMBOL + 14)
 #define SYMBOL_BASE 0x20
-global char* rc_dir init(NULL);
+global char* rc_dir init(0);
 global char* tmp_dir;
-global char* param_tmp_dir init(NULL);
-#ifdef HAVE_MKDTEMP
-global char* mkd_tmp_dir init(NULL);
-#endif
-global char* config_file init(NULL);
+global char* param_tmp_dir init(0);
+global char* mkd_tmp_dir init(0);
+global char* config_file init(0);
 
 global int relative_wheel_scroll init(FALSE);
 global int fixed_wheel_scroll_count init(5);
@@ -442,21 +431,16 @@ global int relative_wheel_scroll_ratio init(30);
 
 global int view_unseenobject init(FALSE);
 
-#if defined(USE_SSL) && defined(USE_SSL_VERIFY)
-global int ssl_verify_server init(TRUE);
-global char* ssl_cert_file init(NULL);
-global char* ssl_key_file init(NULL);
-global char* ssl_ca_path init(NULL);
+global char* ssl_key_file init(0);
+global char* ssl_ca_path init(0);
+#define DEF_CAFILE ""
 global char* ssl_ca_file init(DEF_CAFILE);
 global int ssl_ca_default init(TRUE);
-global int ssl_path_modified init(FALSE);
-#endif /* defined(USE_SSL) && \
-        * defined(USE_SSL_VERIFY) */
 global char* ssl_forbid_method init("2, 3, t, 5");
 #if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
 global char* ssl_cipher init("DEFAULT:!LOW:!RC4:!EXP");
 #else
-global char* ssl_cipher init(NULL);
+global char* ssl_cipher init(0);
 #endif
 
 global int is_redisplay init(FALSE);

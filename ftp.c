@@ -1,5 +1,7 @@
 #include "http_auth.h"
 #include "display.h"
+#include "file.h"
+#include "terms.h"
 #include "buffer.h"
 #include "linein.h"
 #include "istream.h"

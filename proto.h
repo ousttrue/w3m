@@ -135,43 +135,15 @@ extern void cursorBottom(void);
 extern char* filename_extension(char* patch, int is_url);
 struct Url;
 extern struct Url* schemeToProxy(int scheme);
-extern wc_ces url_to_charset(const char* url, const struct Url* base,
-    wc_ces doc_charset);
-extern char* url_encode(const char* url, const struct Url* base,
-    wc_ces doc_charset);
 struct URLFile;
 extern void examineFile(char* path, struct URLFile* uf);
 extern char* acceptableEncoding(void);
 extern int dir_exist(char* path);
 extern int is_html_type(char* type);
-extern char** get_symbol(wc_ces charset, int* width);
-extern char** set_symbol(int width);
-extern Str convertLine(struct URLFile* uf, Str line, int mode, wc_ces* charset,
-    wc_ces doc_charset);
-extern void push_symbol(Str str, char symbol, int width, int n);
 extern void update_utf8_symbol(void);
 extern int is_boundary(unsigned char*, unsigned char*);
 extern int is_blank_line(char* line, int indent);
-struct parsed_tag;
-extern Str process_img(struct parsed_tag* tag, int width);
-extern Str process_anchor(struct parsed_tag* tag, char* tagbuf);
-extern Str process_input(struct parsed_tag* tag);
-extern Str process_button(struct parsed_tag* tag);
-extern Str process_n_button(void);
-extern Str process_select(struct parsed_tag* tag);
-extern Str process_n_select(void);
-extern void feed_select(char* str);
-extern void process_option(void);
-extern Str process_textarea(struct parsed_tag* tag, int width);
-extern Str process_n_textarea(void);
-extern void feed_textarea(char* str);
-extern Str process_form(struct parsed_tag* tag);
-extern Str process_n_form(void);
-extern int getMetaRefreshParam(char* q, Str* refresh_uri);
 
-extern void showProgress(long long* linelen, long long* trbyte);
-extern Str loadGopherDir(struct URLFile* uf, struct Url* pu, wc_ces* charset);
-extern Str loadGopherSearch(struct URLFile* uf, struct Url* pu, wc_ces* charset);
 extern int save2tmp(struct URLFile uf, char* tmpf);
 extern int _doFileCopy(char* tmpf, char* defstr, int download);
 #define doFileCopy(tmpf, defstr) _doFileCopy(tmpf, defstr, FALSE);
@@ -186,21 +158,15 @@ extern char* lastFileName(char* path);
 extern char* mybasename(char* s);
 extern char* mydirname(char* s);
 extern int next_status(char c, int* status);
-extern int read_token(Str buf, char** instr, int* status, int pre, int append);
-extern Str correct_irrtag(int status);
-extern char* conv_search_string(char* str, wc_ces f_ces);
 extern void pcmap(void);
 extern void escmap(void);
 extern void escbmap(void);
 extern void escdmap(char c);
 extern void multimap(void);
-extern Str unescape_spaces(Str s);
 extern double log_like(int x);
 extern struct table* newTable(void);
 extern void pushdata(struct table* t, int row, int col, char* data);
 extern int visible_length(char* str);
-extern void print_item(struct table* t, int row, int col, int width, Str buf);
-extern void print_sep(struct table* t, int row, int type, int maxcol, Str buf);
 extern void do_refill(struct table* tbl, int row, int col, int maxlimit);
 extern void initRenderTable(void);
 extern struct table* begin_table(int border, int spacing, int padding,
@@ -213,61 +179,6 @@ extern void follow_map(struct parsed_tagarg* arg);
 extern struct MapArea* newMapArea(char* url, char* target, char* alt, char* shape,
     char* coords);
 
-extern int set_tty(void);
-extern void set_cc(int spec, int val);
-extern void close_tty(void);
-extern char* ttyname_tty(void);
-extern void reset_tty(void);
-extern void reset_exit(SIGNAL_ARG);
-extern void error_dump(SIGNAL_ARG);
-extern void set_int(void);
-extern void getTCstr(void);
-extern void setlinescols(void);
-extern void setupscreen(void);
-extern int initscr(void);
-extern void move(int line, int column);
-extern void addmch(char* p, size_t len);
-extern void addch(char c);
-extern void wrap(void);
-extern void touch_line(void);
-extern void standout(void);
-extern void standend(void);
-extern void bold(void);
-extern void boldend(void);
-extern void underline(void);
-extern void underlineend(void);
-extern void graphstart(void);
-extern void graphend(void);
-extern int graph_ok(void);
-extern void setfcolor(int color);
-extern void setbcolor(int color);
-extern void refresh(void);
-extern void clear(void);
-#ifdef USE_RAW_SCROLL
-extern void scroll(int);
-extern void rscroll(int);
-#endif
-extern void clrtoeol(void);
-extern void clrtoeolx(void);
-extern void clrtobot(void);
-extern void clrtobotx(void);
-extern void no_clrtoeol(void);
-extern void addstr(char* s);
-extern void addnstr(char* s, int n);
-extern void addnstr_sup(char* s, int n);
-extern void crmode(void);
-extern void nocrmode(void);
-extern void term_echo(void);
-extern void term_noecho(void);
-extern void term_raw(void);
-extern void term_cooked(void);
-extern void term_cbreak(void);
-extern void term_title(char* s);
-extern void flush_tty(void);
-extern void toggle_stand(void);
-extern void bell(void);
-extern int sleep_till_anykey(int sec, int purge);
-extern void touch_cursor(void);
 extern void initMimeTypes(void);
 extern void free_ssl_ctx(void);
 extern int openSocket(char* hostname, char* remoteport_name,
@@ -277,12 +188,6 @@ extern int getURLScheme(char** url);
 
 extern char* guessContentType(char* filename);
 extern int check_no_proxy(char* domain);
-extern Str loadFTPDir(struct Url* pu, wc_ces* charset);
-extern void closeFTP(void);
-extern void disconnectFTP(void);
-extern Str loadNewsgroup(struct Url* pu, wc_ces* charset);
-extern void closeNews(void);
-extern void disconnectNews(void);
 
 extern int set_param_option(char* option);
 extern char* get_param_option(char* name);
@@ -294,36 +199,21 @@ extern char* etcFile(char* base);
 extern char* auxbinFile(char* base);
 extern char* libFile(char* base);
 extern char* helpFile(char* base);
-extern Str localCookie(void);
-extern Str loadLocalDir(char* dirname);
 extern void loadPreForm(void);
-extern Str romanNumeral(int n);
-extern Str romanAlphabet(int n);
 extern void setup_child(int child, int i, int f);
 extern void myExec(const char* command);
 extern void mySystem(char* command, int background);
-extern Str myExtCommand(char* cmd, char* arg, int redirect);
-extern Str myEditor(char* cmd, char* file, int line);
 extern int is_localhost(const char* host);
 extern char* file_to_url(char* file);
-extern char* url_unquote_conv(char* url, wc_ces charset);
 extern char* expandName(char* name);
-extern Str tmpfname(int type, char* ext);
 extern void docCSet(void);
 extern void defCSet(void);
 extern void change_charset(struct parsed_tagarg* arg);
 
-#ifdef USE_MARK
 extern void _mark(void);
 extern void nextMk(void);
 extern void prevMk(void);
 extern void reMark(void);
-#else /* not USE_MARK */
-#define _mark nulcmd
-#define nextMk nulcmd
-#define prevMk nulcmd
-#define reMark nulcmd
-#endif /* not USE_MARK */
 
 extern char* searchKeyData(void);
 
@@ -334,5 +224,4 @@ extern char* getRegexWord(const char** str, struct regex** regex_ret);
 extern void dictword(void);
 extern void dictwordat(void);
 extern void wrapToggle(void);
-extern Str getLinkNumberStr(int correction);
 extern void dispVer(void);

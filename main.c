@@ -1,6 +1,11 @@
 #define MAINPROGRAM
 #include "fm.h"
+#include "search.h"
+#include "ftp.h"
+#include "news.h"
 #include "parsetag.h"
+#include "file.h"
+#include "func.h"
 #include "backend.h"
 #include "etc.h"
 #include "local_cgi.h"
@@ -63,9 +68,7 @@ static void resize_screen(void);
 
 static void SigPipe(SIGNAL_ARG);
 
-#ifdef USE_MARK
 static char* MarkString = NULL;
-#endif
 static char* SearchString = NULL;
 int (*searchRoutine)(Buffer*, char*);
 
@@ -125,16 +128,11 @@ fversion(FILE* f)
         ",cookie"
         ",ssl"
         ",ssl-verify"
-#ifdef USE_W3MMAILER
-        ",w3mmailer"
-#endif
         ",nntp"
         ",gopher"
         ",ipv6"
         ",alarm"
-#ifdef USE_MARK
         ",mark"
-#endif
     );
 }
 
@@ -2322,7 +2320,6 @@ DEFUN(editScr, EDIT_SCREEN, "Edit rendered copy of document")
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-#ifdef USE_MARK
 
 /* Set / unset mark */
 DEFUN(_mark, MARK, "Set/unset mark")
@@ -2442,7 +2439,6 @@ DEFUN(reMark, REG_MARK, "Mark all occurences of a pattern")
 
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
-#endif /* USE_MARK */
 
 static Buffer*
 loadNormalBuf(Buffer* buf, int renderframe)
@@ -2581,16 +2577,11 @@ handleMailto(char* url)
 
     if (strncasecmp(url, "mailto:", 7))
         return 0;
-#ifdef USE_W3MMAILER
-    if (!non_null(Mailer) || MailtoOptions == MAILTO_OPTIONS_USE_W3MMAILER)
-        return 0;
-#else
     if (!non_null(Mailer)) {
         /* FIXME: gettextize? */
         disp_err_message("no mailer is specified", TRUE);
         return 1;
     }
-#endif
 
     /* invoke external mailer */
     if (MailtoOptions == MAILTO_OPTIONS_USE_MAILTO_URL) {
@@ -4888,13 +4879,11 @@ void w3m_exit(int i)
     free_ssl_ctx();
     disconnectFTP();
     disconnectNews();
-#ifdef HAVE_MKDTEMP
     if (mkd_tmp_dir)
         if (rmdir(mkd_tmp_dir) != 0) {
             fprintf(stderr, "Can't remove temporary directory (%s)!\n", mkd_tmp_dir);
             exit(1);
         }
-#endif
     exit(i);
 }
 

@@ -1,5 +1,6 @@
 #include "image.h"
 #include "local_cgi.h"
+#include "terms.h"
 #include "file.h"
 #include "etc.h"
 #include "fm.h"

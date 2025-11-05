@@ -1,5 +1,7 @@
 #include "display.h"
 #include "history.h"
+#include "symbol.h"
+#include "terms.h"
 #include "image.h"
 #include "indep.h"
 #include "map.h"

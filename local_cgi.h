@@ -9,6 +9,7 @@ typedef struct dirent Directory;
 typedef struct direct Directory;
 #endif /* not HAVE_DIRENT_H */
 #include <sys/stat.h>
+#include <gcstr/gcstr.h>
 
 #ifndef S_IFMT
 #define S_IFMT 0170000
@@ -40,4 +41,5 @@ struct form_list;
 FILE* localcgi_post(char*, char*, struct form_list*, char*);
 #define localcgi_get(u, q, r) localcgi_post((u), (q), NULL, (r))
 void set_environ(const char* var, const char* value);
-
+Str localCookie(void);
+Str loadLocalDir(char* dirname);

@@ -20,3 +20,4 @@ char* inputLineHistSearch(char* prompt, char* def_str, int flag, struct Hist* hi
 #define inputFilenameHist(p, d, h) inputLineHist(p, d, IN_FILENAME, h)
 #define inputChar(p) inputLine(p, "", IN_CHAR)
 
+Str unescape_spaces(Str s);

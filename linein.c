@@ -1,5 +1,6 @@
 #include "linein.h"
 #include "fm.h"
+#include "terms.h"
 #include "form.h"
 #include "buffer.h"
 #include "w3m_runtime.h"

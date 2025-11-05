@@ -3,6 +3,10 @@
  */
 #include "fm.h"
 #include "buffer.h"
+#include "search.h"
+#include "file.h"
+#include "symbol.h"
+#include "terms.h"
 #include "w3m_runtime.h"
 #include "rc.h"
 #include "linein.h"

@@ -1,7 +1,10 @@
+#include "symbol.h"
 #include "fm.h"
 #include "w3m_runtime.h"
 #include "ctrlcode.h"
 #include "istream.h"
+#include <wc.h>
+#include <wtf.h>
 
 #include "Symbols/alt.sym"
 #include "Symbols/graph.sym"
@@ -150,7 +153,6 @@ void update_utf8_symbol(void)
         }
     }
 }
-
 
 void push_symbol(Str str, char symbol, int width, int n)
 {

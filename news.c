@@ -1,3 +1,6 @@
+#include "news.h"
+#include "file.h"
+#include "terms.h"
 #include "fm.h"
 #include "display.h"
 #include "etc.h"

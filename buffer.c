@@ -1,5 +1,8 @@
 #include "buffer.h"
 #include "html.h"
+#include "file.h"
+#include "etc.h"
+#include "terms.h"
 #include "fm.h"
 #include "frame.h"
 #include "cookie.h"

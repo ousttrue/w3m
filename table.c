@@ -2,7 +2,10 @@
  * HTML table
  */
 #include "table.h"
+#include "file.h"
+#include "etc.h"
 #include "html_feed.h"
+#include "symbol.h"
 #include "fm.h"
 #include "html.h"
 #include "parsetagx.h"

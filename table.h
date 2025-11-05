@@ -143,3 +143,5 @@ int feed_table(struct table* tbl, char* line, struct table_mode* mode,
 void feed_table1(struct table* tbl, Str tok, struct table_mode* mode,
     int width);
 void align(TextLine* lbuf, int width, int mode);
+void print_item(struct table* t, int row, int col, int width, Str buf);
+void print_sep(struct table* t, int row, int type, int maxcol, Str buf);

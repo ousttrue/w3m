@@ -1,5 +1,6 @@
 #include "etc.h"
 #include "fm.h"
+#include "terms.h"
 #include "w3m_runtime.h"
 #include "buffer.h"
 #include "indep.h"
@@ -847,19 +848,6 @@ char* file_to_url(char* file)
         Strcat_charp(tmp, drive);
 #endif
     Strcat_charp(tmp, file_quote(cleanupName(file)));
-    return tmp->ptr;
-}
-
-char* url_unquote_conv(char* url, wc_ces charset)
-{
-    wc_uint8 old_auto_detect = WcOption.auto_detect;
-    Str tmp;
-    tmp = Str_url_unquote(Strnew_charp(url), FALSE, TRUE);
-    if (!charset || charset == WC_CES_US_ASCII)
-        charset = SystemCharset;
-    WcOption.auto_detect = WC_OPT_DETECT_ON;
-    tmp = convertLine(NULL, tmp, RAW_MODE, &charset, charset);
-    WcOption.auto_detect = old_auto_detect;
     return tmp->ptr;
 }
 
