@@ -2,6 +2,7 @@
 /* 
  * HTML forms
  */
+#include "buffer.h"
 #include "cookie.h"
 #include "display.h"
 #include "fm.h"

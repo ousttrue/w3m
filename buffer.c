@@ -1,5 +1,25 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
+#include "buffer.h"
+
+#include "Str.h"
+#include "alloc.h"
+#include "config.h"
+#include "ctrlcode.h"
 #include "fm.h"
+#include "html.h"
+#include "terms.h"
+
+#ifdef USE_M17N
+#include "wc.h"
+#include "wc_types.h"
+#endif
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <strings.h>
+#include <unistd.h>
+
 
 #ifdef USE_MOUSE
 #ifdef USE_GPM
@@ -15,6 +35,7 @@ extern int do_getch(void);
 #include <sys/kbdscan.h>
 #include <strings.h>
 #endif
+
 const char *NullLine = "";
 Lineprop NullProp[] = { 0 };
 

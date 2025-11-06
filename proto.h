@@ -301,22 +301,6 @@ extern void addDownloadList(pid_t pid, char *url, char *save, char *lock,
 extern void stopDownload(void);
 extern int checkDownloadList(void);
 extern void download_action(struct parsed_tagarg *arg);
-extern Buffer *newBuffer(int width);
-extern Buffer *nullBuffer(void);
-extern void clearBuffer(Buffer *buf);
-extern void discardBuffer(Buffer *buf);
-extern Buffer *deleteBuffer(Buffer *first, Buffer *delbuf);
-extern Buffer *replaceBuffer(Buffer *first, Buffer *delbuf, Buffer *newbuf);
-extern Buffer *nthBuffer(Buffer *firstbuf, int n);
-extern void gotoRealLine(Buffer *buf, int n);
-extern void gotoLine(Buffer *buf, int n);
-extern Buffer *selectBuffer(Buffer *firstbuf, Buffer *currentbuf,
-			    char *selectchar);
-extern void reshapeBuffer(Buffer *buf);
-extern void copyBuffer(Buffer *a, Buffer *b);
-extern Buffer *prevBuffer(Buffer *first, const Buffer *buf);
-extern int writeBufferCache(Buffer *buf);
-extern int readBufferCache(Buffer *buf);
 extern void displayBuffer(Buffer *buf, int mode);
 extern void addChar(char c, Lineprop mode);
 #ifdef USE_M17N

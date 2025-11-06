@@ -1,6 +1,8 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
+#include "buffer.h"
 #include "fm.h"
 #include "regex.h"
+
 #include <signal.h>
 #include <errno.h>
 #include <unistd.h>

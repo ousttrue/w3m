@@ -39,6 +39,7 @@ extern int do_getch(void);
 #endif				/* defined(USE_GPM) || defined(USE_SYSMOUSE) */
 #endif
 
+#include "buffer.h"
 #include "cookie.h"
 #include "util.h"
 

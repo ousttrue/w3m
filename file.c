@@ -15,6 +15,7 @@
 #include <utime.h>
 /* foo */
 
+#include "buffer.h"
 #include "cookie.h"
 #include "html.h"
 #include "parsetagx.h"

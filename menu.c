@@ -2,13 +2,15 @@
 /* 
  * w3m menu.c
  */
-#include <stdio.h>
 
+#include "buffer.h"
 #include "fm.h"
-#include "menu.h"
 #include "func.h"
+#include "menu.h"
 #include "myctype.h"
 #include "regex.h"
+
+#include <stdio.h>
 
 #ifdef USE_MOUSE
 #ifdef USE_GPM

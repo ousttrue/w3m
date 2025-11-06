@@ -1,4 +1,5 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
+#include "buffer.h"
 #include "fm.h"
 #include "parsetagx.h"
 #include "myctype.h"
