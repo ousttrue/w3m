@@ -8,6 +8,7 @@
 #include "fm.h"
 #include "html.h"
 #include "terms.h"
+#include "util.h"
 
 #ifdef USE_M17N
 #include "wc.h"
@@ -761,4 +762,48 @@ readBufferCache(Buffer *buf)
     unlink(buf->savecache);
     buf->savecache = NULL;
     return 0;
+}
+
+char *
+getCurWord(Buffer *buf, int *spos, int *epos)
+{
+    char *p;
+    Line *l = buf->currentLine;
+    int b, e;
+
+    *spos = 0;
+    *epos = 0;
+    if (l == NULL)
+	return NULL;
+    p = l->lineBuf;
+    e = buf->pos;
+    while (e > 0 && !is_wordchar(getChar(&p[e])))
+	prevChar(e, l);
+    if (!is_wordchar(getChar(&p[e])))
+	return NULL;
+    b = e;
+    while (b > 0) {
+	int tmp = b;
+	prevChar(tmp, l);
+	if (!is_wordchar(getChar(&p[tmp])))
+	    break;
+	b = tmp;
+    }
+    while (e < l->len && is_wordchar(getChar(&p[e])))
+	nextChar(e, l);
+    *spos = b;
+    *epos = e;
+    return &p[b];
+}
+
+char *
+GetWord(Buffer *buf)
+{
+    int b, e;
+    char *p;
+
+    if ((p = getCurWord(buf, &b, &e)) != NULL) {
+	return Strnew_charp_n(p, e - b)->ptr;
+    }
+    return NULL;
 }

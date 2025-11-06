@@ -104,8 +104,6 @@ static void cmd_loadBuffer(Buffer *buf, int prop, int linkid);
 static void keyPressEventProc(int c);
 int show_params_p = 0;
 
-static char *getCurWord(Buffer *buf, int *spos, int *epos);
-
 static int display_ok = FALSE;
 static void do_dump(Buffer *);
 int prec_num = 0;
@@ -2466,33 +2464,6 @@ DEFUN(movR1, MOVE_RIGHT1, "Cursor right. With edge touched, slide")
  * From: Takashi Nishimoto <g96p0935@mse.waseda.ac.jp> Date: Mon, 14 Jun
  * 1999 09:29:56 +0900
  */
-#if defined(USE_M17N) && defined(USE_UNICODE)
-#define nextChar(s, l)	do { (s)++; } while ((s) < (l)->len && (l)->propBuf[s] & PC_WCHAR2)
-#define prevChar(s, l)	do { (s)--; } while ((s) > 0 && (l)->propBuf[s] & PC_WCHAR2)
-
-static wc_uint32
-getChar(const char *p)
-{
-    return wc_any_to_ucs(wtf_parse1((const wc_uchar **)&p));
-}
-
-static int
-is_wordchar(wc_uint32 c)
-{
-    return wc_is_ucs_alnum(c);
-}
-#else
-#define nextChar(s, l)	(s)++
-#define prevChar(s, l)	(s)--
-#define getChar(p)	((int)*(p))
-
-static int
-is_wordchar(int c)
-{
-    return IS_ALNUM(c);
-}
-#endif
-
 static int
 prev_nonnull_line(Line *line)
 {
@@ -5985,50 +5956,6 @@ DEFUN(wrapToggle, WRAP_TOGGLE, "Toggle wrapping mode in searches")
 	WrapSearch = TRUE;
 	disp_message(_("Wrap search on"), TRUE);
     }
-}
-
-static char *
-getCurWord(Buffer *buf, int *spos, int *epos)
-{
-    char *p;
-    Line *l = buf->currentLine;
-    int b, e;
-
-    *spos = 0;
-    *epos = 0;
-    if (l == NULL)
-	return NULL;
-    p = l->lineBuf;
-    e = buf->pos;
-    while (e > 0 && !is_wordchar(getChar(&p[e])))
-	prevChar(e, l);
-    if (!is_wordchar(getChar(&p[e])))
-	return NULL;
-    b = e;
-    while (b > 0) {
-	int tmp = b;
-	prevChar(tmp, l);
-	if (!is_wordchar(getChar(&p[tmp])))
-	    break;
-	b = tmp;
-    }
-    while (e < l->len && is_wordchar(getChar(&p[e])))
-	nextChar(e, l);
-    *spos = b;
-    *epos = e;
-    return &p[b];
-}
-
-static char *
-GetWord(Buffer *buf)
-{
-    int b, e;
-    char *p;
-
-    if ((p = getCurWord(buf, &b, &e)) != NULL) {
-	return Strnew_charp_n(p, e - b)->ptr;
-    }
-    return NULL;
 }
 
 #ifdef USE_DICT
