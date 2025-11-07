@@ -385,10 +385,10 @@ addStr(char *p, Lineprop *pr, int len, int offset, int limit)
     }
 }
 
-#ifdef USE_M17N
 static void
 ins_char(Str str)
 {
+#ifdef USE_M17N
     const char *p = str->ptr, *ep = p + str->length;
     Lineprop ctype;
     int len;
@@ -418,8 +418,22 @@ ins_char(Str str)
 	    }
 	}
     }
-}
+
+#else
+    char c;
+    int i;
+
+    for (i = 0, c = str->ptr[i]; c; c = str->ptr[++i]) {
+	    insC();
+	    strBuf->ptr[CPos] = c;
+	    if (!is_passwd && get_mctype(&c) == PC_CTRL)
+		strProp[CPos] = PC_CTRL;
+	    else
+		strProp[CPos] = PC_ASCII;
+	    CPos++;
+    }
 #endif
+}
 
 static void
 _esc(void)
