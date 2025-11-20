@@ -5426,8 +5426,8 @@ HTMLtagproc1(struct parsed_tag *tag, struct html_feed_environ *h_env)
     case HTML_N_BODY:
 	return 1;
     case HTML_MAIN:
-	Strcopy_charp(obuf->line, "<main>");
 	flushline(h_env, obuf, 0, 0, h_env->limit);
+	Strcat_charp(obuf->line, "<main>");
 	return 1;
     default:
 	/* obuf->prevchar = '\0'; */
