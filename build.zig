@@ -110,6 +110,13 @@ pub fn build(b: *std.Build) void {
     });
     b.step("test", "gcstr test").dependOn(&b.addRunArtifact(test_exe).step);
 
+    const lua_dep = b.dependency("zlua", .{
+        .target = target,
+        .optimize = optimize,
+        .lang = .lua51,
+    });
+    exe.root_module.addImport("zlua", lua_dep.module("zlua"));
+
     exe.linkLibrary(buildCore(b, target, optimize));
     for (system_libs) |lib| {
         exe.linkSystemLibrary(lib);

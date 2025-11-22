@@ -10,6 +10,10 @@
             .url = "git+https://github.com/bdwgc/bdwgc.git#a863ed338db9c8ae267418b461c5d68d783ce8c0",
             .hash = "bdwgc-8.3.0-8obE-ERqLgA8LFIjyPTBhSIYeuEEPY2fbP7sSe4UxOGP",
         },
+        .zlua = .{
+            .url = "git+https://github.com/natecraddock/ziglua#af970851f5412a32c9eceb1c4519679a242c6093",
+            .hash = "zlua-0.1.0-hGRpCx89BQCdTNT2LiQGKujXawO2jCgB4hGl0WEqj0cz",
+        },
     },
     .minimum_zig_version = "0.15.1",
     .paths = .{""},
