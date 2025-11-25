@@ -1173,14 +1173,15 @@ static void
 resize_screen(void)
 {
     need_resize_screen = FALSE;
-    setlinescols();
-    setupscreen();
+    struct TermSize size = get_term_size();
+    setlinescols(size.lines, size.cols);
+    setupscreen(size.lines, size.cols);
     if (CurrentTab)
         displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
 static void
-SigPipe(int)
+SigPipe(int _)
 {
     mySignal(SIGPIPE, SigPipe);
 }
@@ -4925,7 +4926,7 @@ DEFUN(execCmd, COMMAND, "Invoke w3m function(s)")
 }
 
 static void
-SigAlarm(int)
+SigAlarm(int _)
 {
     char* data;
 

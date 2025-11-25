@@ -66,7 +66,18 @@ char *T_cd, *T_ce, *T_kr, *T_kl, *T_cr, *T_bt, *T_ta, *T_sc, *T_rc,
     *T_so, *T_se, *T_us, *T_ue, *T_cl, *T_cm, *T_al, *T_sr, *T_md, *T_me,
     *T_ti, *T_te, *T_nd, *T_as, *T_ae, *T_eA, *T_ac, *T_op;
 
+#define MAX_LINE 200
+#define MAX_COLUMN 400
 int LINES, COLS;
+void setlinescols(int lines, int cols)
+{
+    LINES = lines;
+    COLS = cols;
+    if (COLS > MAX_COLUMN)
+        COLS = MAX_COLUMN;
+    if (LINES > MAX_LINE)
+        LINES = MAX_LINE;
+}
 
 static int graph_enabled = 0;
 
@@ -338,6 +349,25 @@ setgraphchar(void)
             v = allocStr(suc, -1); \
     }
 
+struct TermSize get_term_size()
+{
+    struct TermSize size = {
+        .lines = -1,
+        .cols = -1,
+    };
+    char* p;
+    int i;
+    if ((p = getenv("LINES")) != NULL && (i = atoi(p)) >= 0)
+        size.lines = i;
+    if ((p = getenv("COLUMNS")) != NULL && (i = atoi(p)) >= 0)
+        size.cols = i;
+    if (size.lines <= 0)
+        size.lines = tgetnum("li"); /* number of line */
+    if (size.cols <= 0)
+        size.cols = tgetnum("co"); /* number of column */
+    return size;
+}
+
 void getTCstr(void)
 {
     char* ent;
@@ -394,16 +424,10 @@ void getTCstr(void)
     GETSTR(T_ae, "ae"); /* alternative (graphic) charset end */
     GETSTR(T_ac, "ac"); /* graphics charset pairs */
     GETSTR(T_op, "op"); /* set default color pair to its original value */
-#if defined(CYGWIN) && CYGWIN < 1
-    /* for TERM=pcansi on MS-DOS prompt. */
-    T_eA = "";
-    T_as = "";
-    T_ae = "";
-    T_ac = "";
-#endif /* CYGWIN */
 
-    LINES = COLS = 0;
-    setlinescols();
+    // LINES = COLS = 0;
+    struct TermSize size = get_term_size();
+    setlinescols(size.lines, size.cols);
     setgraphchar();
 }
 
@@ -418,13 +442,10 @@ int initscr(void)
     getTCstr();
     if (T_ti && !Do_not_use_ti_te)
         writestr(T_ti);
-    setupscreen();
-    return 0;
-}
 
-void addch(char c)
-{
-    addmch(&c, 1);
+    struct TermSize size = get_term_size();
+    setupscreen(size.lines, size.cols);
+    return 0;
 }
 
 int graph_ok(void)
@@ -614,23 +635,6 @@ void refresh(void)
     wc_putc_end(ttyf);
     MOVE(sc.CurLine, sc.CurColumn);
     flush_tty();
-}
-
-void clear(void)
-{
-    int i, j;
-    uint16_t* p;
-    writestr(T_cl);
-    move(0, 0);
-    struct Screen sc = getScreen();
-    for (i = 0; i < LINES; i++) {
-        sc.ScreenImage[i]->isdirty = 0;
-        p = sc.ScreenImage[i]->lineprop;
-        for (j = 0; j < COLS; j++) {
-            p[j] = S_EOL;
-        }
-    }
-    set_screen_mode(C_ASCII);
 }
 
 #ifdef USE_RAW_SCROLL

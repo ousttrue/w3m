@@ -78,13 +78,17 @@ struct ScreenLine {
 
 struct Screen {
     struct ScreenLine** ScreenImage;
+    int lines;
+    int cols;
     int CurLine;
     int CurColumn;
+    int mode;
 };
 struct Screen getScreen();
 void set_screen_mode(uint16_t mode);
 
-void setupscreen(void);
+void setupscreen(int lines, int cols);
+void clear(void);
 bool is_need_redraw(const char* c1, uint16_t pr1, const char* c2, uint16_t pr2);
 void move(int line, int column);
 void touch_line(void);
@@ -97,7 +101,10 @@ void clrtobot(void);
 void clrtobotx(void);
 
 void addmch(const char* p, size_t len);
-void setlinescols(void);
+inline static void addch(char c)
+{
+    addmch(&c, 1);
+}
 void standout(void);
 void standend(void);
 void toggle_stand(void);
