@@ -22,8 +22,11 @@ extern void put_image_iterm2(char* url, int x, int y, int w, int h);
 extern void put_image_kitty(char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh, int c, int r);
 extern int get_pixel_per_cell(int* ppc, int* ppl);
 
+void ttymode_set(int mode, int imode);
+void ttymode_reset(int mode, int imode);
 char getch(void);
-
+void writestr(const char* s);
+void MOVE(int line, int column);
 int set_tty(void);
 void set_cc(int spec, int val);
 void close_tty(void);
@@ -76,6 +79,6 @@ void term_cbreak(void);
 void term_title(char* s);
 void flush_tty(void);
 void toggle_stand(void);
-void bell(void);
+void bell();
 int sleep_till_anykey(int sec, int purge);
 void touch_cursor(void);
