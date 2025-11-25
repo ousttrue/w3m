@@ -1,4 +1,5 @@
 #include "linein.h"
+#include "screen.h"
 #include "fm.h"
 #include "etc.h"
 #include "terms.h"

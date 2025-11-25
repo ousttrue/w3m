@@ -18,6 +18,7 @@
 #include "regex.h"
 #include "history.h"
 #include "funcname1.h"
+#include "screen.h"
 #include <gcstr/gcstr.h>
 #include <stdio.h>
 #include <string.h>

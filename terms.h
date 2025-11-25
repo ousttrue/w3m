@@ -1,4 +1,5 @@
 #pragma once
+#include <stddef.h>
 
 extern int LINES, COLS;
 #if defined(__CYGWIN__)
@@ -36,35 +37,16 @@ void reset_exit(int);
 void error_dump(int);
 void set_int(void);
 void getTCstr(void);
-void setlinescols(void);
-void setupscreen(void);
 int initscr(void);
-void move(int line, int column);
-void addmch(char* p, size_t len);
 void addch(char c);
 void wrap(void);
-void touch_line(void);
-void standout(void);
-void standend(void);
-void bold(void);
-void boldend(void);
-void underline(void);
-void underlineend(void);
-void graphstart(void);
-void graphend(void);
 int graph_ok(void);
-void setfcolor(int color);
-void setbcolor(int color);
 void refresh(void);
 void clear(void);
 #ifdef USE_RAW_SCROLL
 void scroll(int);
 void rscroll(int);
 #endif
-void clrtoeol(void);
-void clrtoeolx(void);
-void clrtobot(void);
-void clrtobotx(void);
 void no_clrtoeol(void);
 void addstr(char* s);
 void addnstr(char* s, int n);
@@ -78,7 +60,5 @@ void term_cooked(void);
 void term_cbreak(void);
 void term_title(char* s);
 void flush_tty(void);
-void toggle_stand(void);
 void bell();
 int sleep_till_anykey(int sec, int purge);
-void touch_cursor(void);

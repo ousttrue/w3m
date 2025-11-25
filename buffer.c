@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "screen.h"
 #include "html.h"
 #include "mailcap.h"
 #include "file.h"

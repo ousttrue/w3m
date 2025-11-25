@@ -16,6 +16,7 @@ const w3m_srcs = [_][]const u8{
     "DownloadList.c",
     "Line.c",
     "mimetype.c",
+    "screen.c",
 
     "main.c",
     "file.c",

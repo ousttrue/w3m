@@ -1,5 +1,6 @@
 #define MAINPROGRAM
 #include "fm.h"
+#include "screen.h"
 #include "search.h"
 #include "mimetype.h"
 #include "funcheader.h"
@@ -1156,13 +1157,13 @@ repBuffer(Buffer* oldbuf, Buffer* buf)
     Currentbuf = buf;
 }
 
-void intTrap(int)
+void intTrap(int _)
 { /* Interrupt catcher */
     LONGJMP(IntReturn, 0);
 }
 
 static void
-resize_hook(int)
+resize_hook(int _)
 {
     need_resize_screen = TRUE;
     mySignal(SIGWINCH, resize_hook);
