@@ -37,9 +37,9 @@ static int tty;
 #include <gcstr/myctype.h>
 
 char* getenv(const char*);
-void reset_exit(SIGNAL_ARG);
-void reset_error_exit(SIGNAL_ARG);
-void error_dump(SIGNAL_ARG);
+void reset_exit(int);
+void reset_error_exit(int);
+void error_dump(int);
 void setlinescols(void);
 void flush_tty(void);
 
@@ -248,7 +248,7 @@ void put_image_kitty(char* url, int x, int y, int w, int h, int sx, int sy, int 
     int sh, int cols, int rows)
 {
     Str buf, base64;
-    char *cbuf, *type, *tmpf;
+    char *cbuf, *tmpf;
     char* argv[4];
     FILE* fp;
     int c, i, j, m, t, is_anim;
@@ -261,7 +261,7 @@ void put_image_kitty(char* url, int x, int y, int w, int h, int sx, int sy, int 
     if (!url)
         return;
 
-    type = guessContentType(url);
+    const char* type = guessContentType(url);
     t = 100; /* always convert to png for now. */
 
     if (!(type && !strcasecmp(type, "image/png"))) {
@@ -662,7 +662,7 @@ void ttymode_set(int mode, int imode)
         if (errno == EINTR || errno == EAGAIN)
             continue;
         printf("Error occurred while set %x: errno=%d\n", mode, errno);
-        reset_error_exit(SIGNAL_ARGLIST);
+        reset_error_exit(0);
     }
 }
 
@@ -678,7 +678,7 @@ void ttymode_reset(int mode, int imode)
         if (errno == EINTR || errno == EAGAIN)
             continue;
         printf("Error occurred while reset %x: errno=%d\n", mode, errno);
-        reset_error_exit(SIGNAL_ARGLIST);
+        reset_error_exit(0);
     }
 }
 
@@ -692,7 +692,7 @@ void set_cc(int spec, int val)
         if (errno == EINTR || errno == EAGAIN)
             continue;
         printf("Error occurred: errno=%d\n", errno);
-        reset_error_exit(SIGNAL_ARGLIST);
+        reset_error_exit(0);
     }
 }
 
@@ -725,23 +725,23 @@ void reset_tty(void)
 }
 
 static void
-reset_exit_with_value(SIGNAL_ARG, int rval)
+reset_exit_with_value(int, int rval)
 {
     reset_tty();
     w3m_exit(rval);
 }
 
-void reset_error_exit(SIGNAL_ARG)
+void reset_error_exit(int)
 {
-    reset_exit_with_value(SIGNAL_ARGLIST, 1);
+    reset_exit_with_value(0, 1);
 }
 
-void reset_exit(SIGNAL_ARG)
+void reset_exit(int)
 {
-    reset_exit_with_value(SIGNAL_ARGLIST, 0);
+    reset_exit_with_value(0, 0);
 }
 
-void error_dump(SIGNAL_ARG)
+void error_dump(int)
 {
     mySignal(SIGIOT, SIG_DFL);
     reset_tty();
@@ -803,14 +803,14 @@ void getTCstr(void)
     ent = getenv("TERM") ? getenv("TERM") : DEFAULT_TERM;
     if (ent == NULL) {
         fprintf(stderr, "TERM is not set\n");
-        reset_error_exit(SIGNAL_ARGLIST);
+        reset_error_exit(0);
     }
 
     r = tgetent(bp, ent);
     if (r != 1) {
         /* Can't find termcap entry */
         fprintf(stderr, "Can't find termcap entry %s\n", ent);
-        reset_error_exit(SIGNAL_ARGLIST);
+        reset_error_exit(0);
     }
 
     GETSTR(T_ce, "ce"); /* clear to the end of line */
@@ -1735,7 +1735,7 @@ int sleep_till_anykey(int sec, int purge)
     er = TerminalSet(tty, &ioval);
     if (er == -1) {
         printf("Error occurred: errno=%d\n", errno);
-        reset_error_exit(SIGNAL_ARGLIST);
+        reset_error_exit(0);
     }
     return ret;
 }

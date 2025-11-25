@@ -63,13 +63,13 @@ typedef struct _Event {
 static Event* CurrentEvent = NULL;
 static Event* LastEvent = NULL;
 
-static void SigAlarm(SIGNAL_ARG);
+static void SigAlarm(int);
 
 static int need_resize_screen = FALSE;
-static void resize_hook(SIGNAL_ARG);
+static void resize_hook(int);
 static void resize_screen(void);
 
-static void SigPipe(SIGNAL_ARG);
+static void SigPipe(int);
 
 static char* MarkString = NULL;
 static char* SearchString = NULL;
@@ -1156,13 +1156,13 @@ repBuffer(Buffer* oldbuf, Buffer* buf)
     Currentbuf = buf;
 }
 
-void intTrap(SIGNAL_ARG)
+void intTrap(int)
 { /* Interrupt catcher */
     LONGJMP(IntReturn, 0);
 }
 
 static void
-resize_hook(SIGNAL_ARG)
+resize_hook(int)
 {
     need_resize_screen = TRUE;
     mySignal(SIGWINCH, resize_hook);
@@ -1179,7 +1179,7 @@ resize_screen(void)
 }
 
 static void
-SigPipe(SIGNAL_ARG)
+SigPipe(int)
 {
     mySignal(SIGPIPE, SigPipe);
 }
@@ -4924,7 +4924,7 @@ DEFUN(execCmd, COMMAND, "Invoke w3m function(s)")
 }
 
 static void
-SigAlarm(SIGNAL_ARG)
+SigAlarm(int)
 {
     char* data;
 

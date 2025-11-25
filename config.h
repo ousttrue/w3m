@@ -147,9 +147,7 @@
 typedef void(*MySignalHandler)(int);
 extern MySignalHandler mySignal(int signal_number, MySignalHandler action);
 
-#define SIGNAL_ARG int _dummy /* XXX */
-#define SIGNAL_ARGLIST 0 /* XXX */
-extern void intTrap(SIGNAL_ARG);
+extern void intTrap(int _dummy);
 
 #ifdef HAVE_SIGSETJMP
 #define SETJMP(env) sigsetjmp(env, 1)
