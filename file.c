@@ -543,7 +543,7 @@ void readHeader(struct URLFile* uf, Buffer* newBuf, int thru, struct Url* pu)
             http_response_code = atoi(p);
             if (fmInitialized) {
                 message(lineBuf2->ptr, 0, 0);
-                refresh();
+                tty_render_screen();
             }
         }
         if (!strncasecmp(lineBuf2->ptr, "content-transfer-encoding:", 26)) {
@@ -935,7 +935,7 @@ load_doc:
             term_cbreak();
             /* FIXME: gettextize? */
             message(Sprintf("%s contacted. Waiting for reply...", pu.host)->ptr, 0, 0);
-            refresh();
+            tty_render_screen();
         }
         if (t_buf == NULL)
             t_buf = newBuffer(INIT_BUFFER_WIDTH);
@@ -5534,7 +5534,7 @@ void showProgress(long long* linelen, long long* trbyte)
             scr_addch('|');
         scr_standend();
         /* no_clrtoeol(); */
-        refresh();
+        tty_render_screen();
     } else {
         cur_time = time(0);
         if (*trbyte == 0) {
@@ -5557,7 +5557,7 @@ void showProgress(long long* linelen, long long* trbyte)
             messages = Sprintf("%7s loaded", fmtrbyte);
         }
         message(messages->ptr, 0, 0);
-        refresh();
+        tty_render_screen();
     }
 }
 

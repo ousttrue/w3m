@@ -857,12 +857,12 @@ int w3m_main(int argc, char** argv)
                 if (need_resize_screen)
                     resize_screen();
                 loadImage(Currentbuf, IMG_FLAG_NEXT);
-            } while (sleep_till_anykey(1, 0) <= 0);
+            } while (tty_sleep_till_anykey(1, 0) <= 0);
         } else {
             do {
                 if (need_resize_screen)
                     resize_screen();
-            } while (sleep_till_anykey(1, 0) <= 0);
+            } while (tty_sleep_till_anykey(1, 0) <= 0);
         }
         c = getch();
         last_key = c;
@@ -2090,7 +2090,7 @@ _quitfm(int confirm)
         return;
     }
 
-    term_title(""); /* XXX */
+    tty_set_title(""); /* XXX */
     if (activeImage)
         termImage();
     fmTerm();
@@ -2166,7 +2166,7 @@ DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background")
 #endif /* not SIGSTOP */
     scr_move(LASTLINE, 0);
     scr_clrtoeolx();
-    refresh();
+    tty_render_screen();
     fmTerm();
 #ifndef SIGSTOP
     shell = getenv("SHELL");
@@ -2456,7 +2456,7 @@ static Buffer*
 loadLink(char* url, char* target, char* referer, FormList* request)
 {
     message(Sprintf("loading %s", url)->ptr, 0, 0);
-    refresh();
+    tty_render_screen();
 
     struct Url* base = baseURL(Currentbuf);
     if (base == NULL || base->scheme == SCM_LOCAL || base->scheme == SCM_LOCAL_CGI || base->scheme == SCM_DATA)
@@ -2684,7 +2684,7 @@ DEFUN(followI, VIEW_IMAGE, "Display image in viewer")
         return;
     /* FIXME: gettextize? */
     message(Sprintf("loading %s", a->url)->ptr, 0, 0);
-    refresh();
+    tty_render_screen();
     buf = loadGeneralFile(a->url, baseURL(Currentbuf), NULL, 0, NULL);
     if (buf == NULL) {
         /* FIXME: gettextize? */
@@ -3624,7 +3624,7 @@ cmd_loadURL(char* url, struct Url* current, char* referer, FormList* request)
     if (handleMailto(url))
         return;
 
-    refresh();
+    tty_render_screen();
     buf = loadGeneralFile(url, current, referer, 0, request);
     if (buf == NULL) {
         /* FIXME: gettextize? */
@@ -4241,7 +4241,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
     if (Currentbuf->bufferprop & BP_FRAME && (fbuf = Currentbuf->linkBuffer[LB_N_FRAME])) {
         if (fmInitialized) {
             message("Rendering frame", 0, 0);
-            refresh();
+            tty_render_screen();
         }
         if (!(buf = renderFrame(fbuf, 1))) {
             displayBuffer(Currentbuf, B_NORMAL);
@@ -4282,7 +4282,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
     url = parsedURL2Str(&Currentbuf->currentURL);
     /* FIXME: gettextize? */
     message("Reloading...", 0, 0);
-    refresh();
+    tty_render_screen();
     old_charset = DocumentCharset;
     if (Currentbuf->document_charset != WC_CES_US_ASCII)
         DocumentCharset = Currentbuf->document_charset;
@@ -4475,7 +4475,7 @@ DEFUN(rFrame, FRAME, "Toggle rendering HTML frames")
     }
     if (fmInitialized) {
         message("Rendering frame", 0, 0);
-        refresh();
+        tty_render_screen();
     }
     buf = renderFrame(Currentbuf, 0);
     if (buf == NULL) {

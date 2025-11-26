@@ -382,7 +382,7 @@ listBuffer(Buffer* top, Buffer* current)
     /*
      * move(LASTLINE, COLS - 1); */
     scr_move(c, 0);
-    refresh();
+    tty_render_screen();
     return buf->nextBuffer;
 }
 
@@ -488,7 +488,7 @@ selectBuffer(Buffer* firstbuf, Buffer* currentbuf, char* selectchar)
          * move(LASTLINE, COLS - 1);
          */
         scr_move(spoint, 0);
-        refresh();
+        tty_render_screen();
     }
 }
 

@@ -365,7 +365,7 @@ bcolor_seq(int colmode)
 #define RF_CR_OK 1
 #define RF_NONEED_TO_MOVE 2
 #define M_MEND (S_STANDOUT | S_UNDERLINE | S_BOLD | S_COLORED | S_BCOLORED | S_GRAPHICS)
-void refresh(void)
+void tty_render_screen(void)
 {
     struct Screen sc = scr_get();
 
@@ -573,7 +573,7 @@ void term_cbreak(void)
     term_noecho();
 }
 
-void term_title(char* s)
+void tty_set_title(const char* s)
 {
     if (!fmInitialized)
         return;
@@ -622,7 +622,7 @@ skip_escseq(void)
     }
 }
 
-int sleep_till_anykey(int sec, int purge)
+int tty_sleep_till_anykey(int sec, int purge)
 {
     fd_set rfd;
     struct timeval tim;

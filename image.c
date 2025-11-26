@@ -289,7 +289,7 @@ void drawImage(void)
         n_terminal_image = 0;
 
     scr_touch_cursor();
-    refresh();
+    tty_render_screen();
 }
 
 void clearImage()
@@ -395,7 +395,7 @@ showImageProgress(Buffer* buf)
             drawImage();
         message(Sprintf("%d/%d images loaded", l, n)->ptr,
             buf->cursorX + buf->rootX, buf->cursorY + buf->rootY);
-        refresh();
+        tty_render_screen();
     }
 }
 

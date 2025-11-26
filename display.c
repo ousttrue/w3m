@@ -156,7 +156,7 @@ void fmTerm(void)
     if (fmInitialized) {
         scr_move(LASTLINE, 0);
         scr_clrtoeolx();
-        refresh();
+        tty_render_screen();
         if (activeImage)
             loadImage(NULL, IMG_FLAG_STOP);
         reset_tty();
@@ -396,13 +396,13 @@ void displayBuffer(Buffer* buf, int mode)
     if (delayed_msg != NULL) {
         disp_message(delayed_msg, FALSE);
         delayed_msg = NULL;
-        refresh();
+        tty_render_screen();
     }
     scr_standout();
     message(msg->ptr, buf->cursorX + buf->rootX, buf->cursorY + buf->rootY);
     scr_standend();
-    term_title(conv_to_system(buf->buffername));
-    refresh();
+    tty_set_title(conv_to_system(buf->buffername));
+    tty_render_screen();
     if (activeImage && displayImage && buf->img && buf->image_loaded) {
         drawImage();
     }
@@ -1065,8 +1065,8 @@ void disp_message_nsec(char* s, int redraw_current, int sec, int purge, int mous
             Currentbuf->cursorY + Currentbuf->rootY);
     else
         message(s, LASTLINE, 0);
-    refresh();
-    sleep_till_anykey(sec, purge);
+    tty_render_screen();
+    tty_sleep_till_anykey(sec, purge);
     if (CurrentTab != NULL && Currentbuf != NULL && redraw_current)
         displayBuffer(Currentbuf, B_NORMAL);
 }

@@ -786,7 +786,7 @@ int openSocket(char* const hostname,
     if (fmInitialized) {
         /* FIXME: gettextize? */
         message(Sprintf("Opening socket...")->ptr, 0, 0);
-        refresh();
+        tty_render_screen();
     }
     if (SETJMP(AbortLoading) != 0) {
 #ifdef SOCK_DEBUG

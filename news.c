@@ -325,7 +325,7 @@ Str loadNewsgroup(struct Url* pu, wc_ces* charset)
     }
     if (fmInitialized) {
         message(Sprintf("Reading newsgroup %s...", group)->ptr, 0, 0);
-        refresh();
+        tty_render_screen();
     }
     qgroup = html_quote(group);
     group = file_unquote(group);

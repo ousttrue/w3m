@@ -865,7 +865,7 @@ int select_menu(Menu* menu, int mselect)
      * move(menu->cursorY, menu->cursorX); */
     scr_move(menu->y + mselect - menu->offset, menu->x);
     scr_toggle_stand();
-    refresh();
+    tty_render_screen();
 
     return (menu->select);
 }
