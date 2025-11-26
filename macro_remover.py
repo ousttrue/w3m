@@ -67,7 +67,7 @@ CONTEXT = {
     "USE_MARK": True,
     "HAVE_MKDTEMP": True,
     # "SUPPORT_WIN9X_CONSOLE_MBCS": False,
-    # "USE_RAW_SCROLL": False,
+    "USE_RAW_SCROLL": False,
     # "USE_GPM": False,
     # "MATRIX": True,
 }

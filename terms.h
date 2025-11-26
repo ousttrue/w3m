@@ -25,10 +25,6 @@ int initscr(void);
 void wrap(void);
 int graph_ok(void);
 void refresh(void);
-#ifdef USE_RAW_SCROLL
-void scroll(int);
-void rscroll(int);
-#endif
 void no_clrtoeol(void);
 void crmode(void);
 void nocrmode(void);

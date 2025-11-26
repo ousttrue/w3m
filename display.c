@@ -364,26 +364,6 @@ void displayBuffer(Buffer* buf, int mode)
         mode = B_REDRAW_IMAGE;
     }
     if (mode == B_FORCE_REDRAW || mode == B_SCROLL || mode == B_REDRAW_IMAGE || cline != buf->topLine || ccolumn != buf->currentColumn) {
-#ifdef USE_RAW_SCROLL
-        if (
-            !(activeImage && displayImage && draw_image_flag) && mode == B_SCROLL && cline && buf->currentColumn == ccolumn) {
-            int n = buf->topLine->linenumber - cline->linenumber;
-            if (n > 0 && n < buf->LINES) {
-                move(LASTLINE, 0);
-                clrtoeolx();
-                refresh();
-                scroll(n);
-            } else if (n < 0 && n > -buf->LINES) {
-#if 0 /* defined(__CYGWIN__) */
-		move(LASTLINE + n + 1, 0);
-		clrtoeolx();
-		refresh();
-#endif /* defined(__CYGWIN__) */
-                rscroll(-n);
-            }
-            redrawNLine(buf, n);
-        } else
-#endif
         {
             if (activeImage && (mode == B_REDRAW_IMAGE || cline != buf->topLine || ccolumn != buf->currentColumn)) {
                 if (draw_image_flag)
