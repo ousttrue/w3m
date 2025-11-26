@@ -8,6 +8,7 @@
 #include "ctrlcode.h"
 #include "funcheader.h"
 #include "screen.h"
+#include "term_entry.h"
 #include "fm.h"
 
 #include <wtf.h>
@@ -33,6 +34,8 @@ static int is_xterm = 0;
 
 static char* title_str = NULL;
 
+static struct TermEntry T_;
+
 #ifndef SIGIOT
 #define SIGIOT SIGABRT
 #endif /* not SIGIOT */
@@ -46,12 +49,6 @@ typedef struct termios TerminalMode;
 static TerminalMode d_ioval;
 static int tty = -1;
 static FILE* ttyf = NULL;
-
-static char bp[1024], funcstr[256];
-
-char *T_cd, *T_ce, *T_kr, *T_kl, *T_cr, *T_bt, *T_ta, *T_sc, *T_rc,
-    *T_so, *T_se, *T_us, *T_ue, *T_cl, *T_cm, *T_al, *T_sr, *T_md, *T_me,
-    *T_ti, *T_te, *T_nd, *T_as, *T_ae, *T_eA, *T_ac, *T_op;
 
 #define MAX_LINE 200
 #define MAX_COLUMN 400
@@ -85,12 +82,7 @@ void setlinescols(int lines, int cols)
 
 static int graph_enabled = 0;
 
-static char gcmap[96];
-
-void clear(void), wrap(void), touch_line(void);
-void clrtoeol(void); /* conflicts with curs_clear(3)? */
-
-static int write1(int c)
+static int tty_putc(int c)
 {
     putc(c, ttyf);
     return 0;
@@ -98,12 +90,12 @@ static int write1(int c)
 
 void tty_write(const char* s)
 {
-    tputs(s, 1, write1);
+    tputs(s, 1, tty_putc);
 }
 
 void tty_move(int line, int column)
 {
-    tty_write(tgoto(T_cm, column, line));
+    tty_write(tgoto(T_.cm, column, line));
 }
 
 int get_pixel_per_cell(int* ppc, int* ppl)
@@ -269,15 +261,15 @@ char* ttyname_tty(void)
 
 void reset_tty(void)
 {
-    tty_write(T_op); /* turn off */
-    tty_write(T_me);
+    tty_write(T_.op); /* turn off */
+    tty_write(T_.me);
     if (!Do_not_use_ti_te) {
-        if (T_te && *T_te)
-            tty_write(T_te);
+        if (T_.te && *T_.te)
+            tty_write(T_.te);
         else
-            tty_write(T_cl);
+            tty_write(T_.cl);
     }
-    tty_write(T_se); /* reset terminal */
+    tty_write(T_.se); /* reset terminal */
     tty_flush();
     TerminalSet(tty, &d_ioval);
     if (tty != 2)
@@ -306,35 +298,7 @@ void set_int(void)
     /* mySignal(SIGSEGV, error_dump); */
 }
 
-static void
-setgraphchar(void)
-{
-    int c, i, n;
-
-    for (c = 0; c < 96; c++)
-        gcmap[c] = (char)(c + ' ');
-
-    if (!T_ac)
-        return;
-
-    n = strlen(T_ac);
-    for (i = 0; i < n - 1; i += 2) {
-        c = (unsigned)T_ac[i] - ' ';
-        if (c >= 0 && c < 96)
-            gcmap[c] = T_ac[i + 1];
-    }
-}
-
-#define graphchar(c) (((unsigned)(c) >= ' ' && (unsigned)(c) < 128) ? gcmap[(c) - ' '] : (c))
-#define GETSTR(v, s)               \
-    {                              \
-        v = pt;                    \
-        suc = tgetstr(s, &pt);     \
-        if (!suc)                  \
-            v = "";                \
-        else                       \
-            v = allocStr(suc, -1); \
-    }
+#define graphchar(c) (((unsigned)(c) >= ' ' && (unsigned)(c) < 128) ? T_.gcmap[(c) - ' '] : (c))
 
 struct TermSize get_term_size()
 {
@@ -355,69 +319,6 @@ struct TermSize get_term_size()
     return size;
 }
 
-void getTCstr(void)
-{
-    char* ent;
-    char* suc;
-    char* pt = funcstr;
-    int r;
-
-    ent = getenv("TERM") ? getenv("TERM") : DEFAULT_TERM;
-    if (ent == NULL) {
-        fprintf(stderr, "TERM is not set\n");
-        reset_error_exit(0);
-    }
-
-    r = tgetent(bp, ent);
-    if (r != 1) {
-        /* Can't find termcap entry */
-        fprintf(stderr, "Can't find termcap entry %s\n", ent);
-        reset_error_exit(0);
-    }
-
-    GETSTR(T_ce, "ce"); /* clear to the end of line */
-    GETSTR(T_cd, "cd"); /* clear to the end of display */
-    GETSTR(T_kr, "nd"); /* cursor right */
-    if (suc == NULL)
-        GETSTR(T_kr, "kr");
-    if (tgetflag("bs"))
-        T_kl = "\b"; /* cursor left */
-    else {
-        GETSTR(T_kl, "le");
-        if (suc == NULL)
-            GETSTR(T_kl, "kb");
-        if (suc == NULL)
-            GETSTR(T_kl, "kl");
-    }
-    GETSTR(T_cr, "cr"); /* carriage return */
-    GETSTR(T_ta, "ta"); /* tab */
-    GETSTR(T_sc, "sc"); /* save cursor */
-    GETSTR(T_rc, "rc"); /* restore cursor */
-    GETSTR(T_so, "so"); /* standout mode */
-    GETSTR(T_se, "se"); /* standout mode end */
-    GETSTR(T_us, "us"); /* underline mode */
-    GETSTR(T_ue, "ue"); /* underline mode end */
-    GETSTR(T_md, "md"); /* bold mode */
-    GETSTR(T_me, "me"); /* bold mode end */
-    GETSTR(T_cl, "cl"); /* clear screen */
-    GETSTR(T_cm, "cm"); /* cursor move */
-    GETSTR(T_al, "al"); /* append line */
-    GETSTR(T_sr, "sr"); /* scroll reverse */
-    GETSTR(T_ti, "ti"); /* terminal init */
-    GETSTR(T_te, "te"); /* terminal end */
-    GETSTR(T_nd, "nd"); /* move right one space */
-    GETSTR(T_eA, "eA"); /* enable alternative charset */
-    GETSTR(T_as, "as"); /* alternative (graphic) charset start */
-    GETSTR(T_ae, "ae"); /* alternative (graphic) charset end */
-    GETSTR(T_ac, "ac"); /* graphics charset pairs */
-    GETSTR(T_op, "op"); /* set default color pair to its original value */
-
-    // LINES = COLS = 0;
-    struct TermSize size = get_term_size();
-    setlinescols(size.lines, size.cols);
-    setgraphchar();
-}
-
 /*
  * struct ScreenLine initialize
  */
@@ -426,9 +327,10 @@ int initscr(void)
     if (set_tty() < 0)
         return -1;
     set_int();
-    getTCstr();
-    if (T_ti && !Do_not_use_ti_te)
-        tty_write(T_ti);
+    getTCstr(&T_);
+
+    if (T_.ti && !Do_not_use_ti_te)
+        tty_write(T_.ti);
 
     struct TermSize size = get_term_size();
     setupscreen(size.lines, size.cols);
@@ -439,7 +341,7 @@ int graph_ok(void)
 {
     if (UseGraphicChar != GRAPHIC_CHAR_DEC)
         return 0;
-    return T_as[0] != 0 && T_ae[0] != 0 && T_ac[0] != 0;
+    return T_.as[0] != 0 && T_.ae[0] != 0 && T_.ac[0] != 0;
 }
 
 static char*
@@ -508,8 +410,8 @@ void refresh(void)
                     moved = RF_CR_OK;
                     break;
                 case RF_CR_OK:
-                    write1('\n');
-                    write1('\r');
+                    tty_putc('\n');
+                    tty_putc('\r');
                     break;
                 case RF_NONEED_TO_MOVE:
                     moved = RF_CR_OK;
@@ -520,7 +422,7 @@ void refresh(void)
                 moved = RF_CR_OK;
             }
             if (*dirty & (L_NEED_CE | L_CLRTOEOL)) {
-                tty_write(T_ce);
+                tty_write(T_.ce);
                 if (col != pcol)
                     tty_move(line, col);
             }
@@ -549,30 +451,30 @@ void refresh(void)
                     || (!(pr[col] & S_GRAPHICS) && (mode & S_GRAPHICS))) {
                     if ((mode & S_COLORED)
                         || (mode & S_BCOLORED))
-                        tty_write(T_op);
+                        tty_write(T_.op);
                     if (mode & S_GRAPHICS)
-                        tty_write(T_ae);
-                    tty_write(T_me);
+                        tty_write(T_.ae);
+                    tty_write(T_.me);
                     mode &= ~M_MEND;
                 }
                 if ((*dirty & L_NEED_CE && col >= sc.ScreenImage[line]->eol) ? scr_is_need_redraw(pc[col], pr[col], SPACE,
                                                                                    0)
                                                                              : (pr[col] & S_DIRTY)) {
                     if (pcol == col - 1)
-                        tty_write(T_nd);
+                        tty_write(T_.nd);
                     else if (pcol != col)
                         tty_move(line, col);
 
                     if ((pr[col] & S_STANDOUT) && !(mode & S_STANDOUT)) {
-                        tty_write(T_so);
+                        tty_write(T_.so);
                         mode |= S_STANDOUT;
                     }
                     if ((pr[col] & S_UNDERLINE) && !(mode & S_UNDERLINE)) {
-                        tty_write(T_us);
+                        tty_write(T_.us);
                         mode |= S_UNDERLINE;
                     }
                     if ((pr[col] & S_BOLD) && !(mode & S_BOLD)) {
-                        tty_write(T_md);
+                        tty_write(T_.md);
                         mode |= S_BOLD;
                     }
                     if ((pr[col] & S_COLORED) && (pr[col] ^ mode) & COL_FCOLOR) {
@@ -590,13 +492,13 @@ void refresh(void)
                         wc_putc_end(ttyf);
                         if (!graph_enabled) {
                             graph_enabled = 1;
-                            tty_write(T_eA);
+                            tty_write(T_.eA);
                         }
-                        tty_write(T_as);
+                        tty_write(T_.as);
                         mode |= S_GRAPHICS;
                     }
                     if (pr[col] & S_GRAPHICS)
-                        write1(graphchar(*pc[col]));
+                        tty_putc(graphchar(*pc[col]));
                     else if (CHMODE(pr[col]) != C_WCHAR2)
                         wc_putc(pc[col], ttyf);
                     pcol = col + 1;
@@ -610,12 +512,12 @@ void refresh(void)
         *dirty &= ~(L_NEED_CE | L_CLRTOEOL);
         if (mode & M_MEND) {
             if (mode & (S_COLORED | S_BCOLORED))
-                tty_write(T_op);
+                tty_write(T_.op);
             if (mode & S_GRAPHICS) {
-                tty_write(T_ae);
+                tty_write(T_.ae);
                 wc_putc_clear_status();
             }
-            tty_write(T_me);
+            tty_write(T_.me);
             mode &= ~M_MEND;
         }
     }
@@ -693,14 +595,14 @@ void rscroll(int n)
         }
         ScreenImage[i] = t;
     } while (k);
-    if (T_sr && *T_sr) {
+    if (T_.sr && *T_.sr) {
         tty_move(0, 0);
         for (i = 0; i < n; i++) {
             t = ScreenImage[i];
             t->isdirty = 0;
             for (j = 0; j < COLS; j++)
                 t->lineprop[j] = S_EOL;
-            tty_write(T_sr);
+            tty_write(T_.sr);
         }
         move(cli, cco);
     } else {
@@ -783,9 +685,9 @@ char getch(void)
     return c;
 }
 
-void bell()
+void tty_bell()
 {
-    write1(7);
+    tty_putc(7);
 }
 
 static void

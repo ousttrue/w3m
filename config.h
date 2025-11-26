@@ -172,29 +172,6 @@ extern void intTrap(int _dummy);
 #define lstat stat
 #endif
 
-#if defined(__CYGWIN32__) && !defined(__CYGWIN__)
-#define __CYGWIN__
-#endif
-
-#if defined(__CYGWIN__) || defined(__EMX__)
-#define SUPPORT_DOS_DRIVE_PREFIX 1
-#endif
-
-#if defined(__CYGWIN__)
-#define SUPPORT_NETBIOS_SHARE 1
-#define SUPPORT_WIN9X_CONSOLE_MBCS 1
-#endif
-
-#if defined(__CYGWIN__) && defined(__x86_64__)
-#define DONT_CALL_GC_AFTER_FORK
-#endif
-
-#if defined(__DJGPP__)
-#define DEFAULT_TERM "dosansi"
-#else
-#define DEFAULT_TERM 0 /* XXX */
-#endif
-
 #define GUNZIP_CMDNAME "gunzip"
 #define BUNZIP2_CMDNAME "bunzip2"
 #define INFLATE_CMDNAME "inflate"

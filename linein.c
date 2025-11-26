@@ -607,7 +607,7 @@ next_compl(int next)
         return;
 
     if (status != CPL_OK && status != CPL_MENU)
-        bell();
+        tty_bell();
     if (status == CPL_FAIL)
         return;
 
