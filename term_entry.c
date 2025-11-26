@@ -5,6 +5,27 @@
 #include <string.h>
 #include <termcap.h>
 
+enum GraphicCharType UseGraphicChar =(GRAPHIC_CHAR_CHARSET);
+
+struct TermEntry T_;
+
+static void
+setgraphchar()
+{
+    for (int c = 0; c < 96; c++)
+        T_.gcmap[c] = (char)(c + ' ');
+
+    if (!T_.ac)
+        return;
+
+    int n = strlen(T_.ac);
+    for (int i = 0; i < n - 1; i += 2) {
+        int c = (unsigned)T_.ac[i] - ' ';
+        if (c >= 0 && c < 96)
+            T_.gcmap[c] = T_.ac[i + 1];
+    }
+}
+
 #define GETSTR(v, s)               \
     {                              \
         v = pt;                    \
@@ -15,30 +36,8 @@
             v = allocStr(suc, -1); \
     }
 
-static void
-setgraphchar(struct TermEntry* T)
+void getTCstr()
 {
-    for (int c = 0; c < 96; c++)
-        T->gcmap[c] = (char)(c + ' ');
-
-    if (!T->ac)
-        return;
-
-    int n = strlen(T->ac);
-    for (int i = 0; i < n - 1; i += 2) {
-        int c = (unsigned)T->ac[i] - ' ';
-        if (c >= 0 && c < 96)
-            T->gcmap[c] = T->ac[i + 1];
-    }
-}
-
-void getTCstr(struct TermEntry* T)
-{
-    char* suc;
-
-    // for GETSTR macro
-    char* pt = T->funcstr;
-
     char* ent = getenv("TERM");
     if (ent == NULL) {
         fprintf(stderr, "TERM is not set\n");
@@ -46,7 +45,7 @@ void getTCstr(struct TermEntry* T)
         exit(-1);
     }
 
-    int r = tgetent(T->bp, ent);
+    int r = tgetent(T_.bp, ent);
     if (r != 1) {
         /* Can't find termcap entry */
         fprintf(stderr, "Can't find termcap entry %s\n", ent);
@@ -54,42 +53,54 @@ void getTCstr(struct TermEntry* T)
         exit(-1);
     }
 
-    GETSTR(T->ce, "ce"); /* clear to the end of line */
-    GETSTR(T->cd, "cd"); /* clear to the end of display */
-    GETSTR(T->kr, "nd"); /* cursor right */
-    if (suc == NULL)
-        GETSTR(T->kr, "kr");
-    if (tgetflag("bs"))
-        T->kl = "\b"; /* cursor left */
-    else {
-        GETSTR(T->kl, "le");
-        if (suc == NULL)
-            GETSTR(T->kl, "kb");
-        if (suc == NULL)
-            GETSTR(T->kl, "kl");
-    }
-    GETSTR(T->cr, "cr"); /* carriage return */
-    GETSTR(T->ta, "ta"); /* tab */
-    GETSTR(T->sc, "sc"); /* save cursor */
-    GETSTR(T->rc, "rc"); /* restore cursor */
-    GETSTR(T->so, "so"); /* standout mode */
-    GETSTR(T->se, "se"); /* standout mode end */
-    GETSTR(T->us, "us"); /* underline mode */
-    GETSTR(T->ue, "ue"); /* underline mode end */
-    GETSTR(T->md, "md"); /* bold mode */
-    GETSTR(T->me, "me"); /* bold mode end */
-    GETSTR(T->cl, "cl"); /* clear screen */
-    GETSTR(T->cm, "cm"); /* cursor move */
-    GETSTR(T->al, "al"); /* append line */
-    GETSTR(T->sr, "sr"); /* scroll reverse */
-    GETSTR(T->ti, "ti"); /* terminal init */
-    GETSTR(T->te, "te"); /* terminal end */
-    GETSTR(T->nd, "nd"); /* move right one space */
-    GETSTR(T->eA, "eA"); /* enable alternative charset */
-    GETSTR(T->as, "as"); /* alternative (graphic) charset start */
-    GETSTR(T->ae, "ae"); /* alternative (graphic) charset end */
-    GETSTR(T->ac, "ac"); /* graphics charset pairs */
-    GETSTR(T->op, "op"); /* set default color pair to its original value */
+    // for GETSTR macro
+    char* suc;
+    char* pt = T_.funcstr;
 
-    setgraphchar(T);
+    GETSTR(T_.ce, "ce"); /* clear to the end of line */
+    GETSTR(T_.cd, "cd"); /* clear to the end of display */
+    GETSTR(T_.kr, "nd"); /* cursor right */
+    if (suc == NULL)
+        GETSTR(T_.kr, "kr");
+    if (tgetflag("bs"))
+        T_.kl = "\b"; /* cursor left */
+    else {
+        GETSTR(T_.kl, "le");
+        if (suc == NULL)
+            GETSTR(T_.kl, "kb");
+        if (suc == NULL)
+            GETSTR(T_.kl, "kl");
+    }
+    GETSTR(T_.cr, "cr"); /* carriage return */
+    GETSTR(T_.ta, "ta"); /* tab */
+    GETSTR(T_.sc, "sc"); /* save cursor */
+    GETSTR(T_.rc, "rc"); /* restore cursor */
+    GETSTR(T_.so, "so"); /* standout mode */
+    GETSTR(T_.se, "se"); /* standout mode end */
+    GETSTR(T_.us, "us"); /* underline mode */
+    GETSTR(T_.ue, "ue"); /* underline mode end */
+    GETSTR(T_.md, "md"); /* bold mode */
+    GETSTR(T_.me, "me"); /* bold mode end */
+    GETSTR(T_.cl, "cl"); /* clear screen */
+    GETSTR(T_.cm, "cm"); /* cursor move */
+    GETSTR(T_.al, "al"); /* append line */
+    GETSTR(T_.sr, "sr"); /* scroll reverse */
+    GETSTR(T_.ti, "ti"); /* terminal init */
+    GETSTR(T_.te, "te"); /* terminal end */
+    GETSTR(T_.nd, "nd"); /* move right one space */
+    GETSTR(T_.eA, "eA"); /* enable alternative charset */
+    GETSTR(T_.as, "as"); /* alternative (graphic) charset start */
+    GETSTR(T_.ae, "ae"); /* alternative (graphic) charset end */
+    GETSTR(T_.ac, "ac"); /* graphics charset pairs */
+    GETSTR(T_.op, "op"); /* set default color pair to its original value */
+
+    setgraphchar();
 }
+
+bool graph_ok()
+{
+    if (UseGraphicChar != GRAPHIC_CHAR_DEC)
+        return 0;
+    return T_.as[0] != 0 && T_.ae[0] != 0 && T_.ac[0] != 0;
+}
+

@@ -1,4 +1,13 @@
 #pragma once
+#include <stdbool.h>
+
+enum GraphicCharType {
+    GRAPHIC_CHAR_CHARSET = 0,
+    GRAPHIC_CHAR_DEC = 1,
+    GRAPHIC_CHAR_ASCII = 2,
+};
+
+extern enum GraphicCharType UseGraphicChar;
 
 struct TermEntry {
     char bp[1024], funcstr[256];
@@ -7,5 +16,7 @@ struct TermEntry {
         *ti, *te, *nd, *as, *ae, *eA, *ac, *op;
     char gcmap[96];
 };
+extern struct TermEntry T_;
 
-void getTCstr(struct TermEntry* T);
+void getTCstr();
+bool graph_ok();

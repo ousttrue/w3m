@@ -1,4 +1,5 @@
 #include "display.h"
+#include "term_entry.h"
 #include "screen.h"
 #include "history.h"
 #include "mailcap.h"

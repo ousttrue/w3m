@@ -34,8 +34,6 @@ static int is_xterm = 0;
 
 static char* title_str = NULL;
 
-static struct TermEntry T_;
-
 #ifndef SIGIOT
 #define SIGIOT SIGABRT
 #endif /* not SIGIOT */
@@ -327,7 +325,7 @@ int initscr(void)
     if (set_tty() < 0)
         return -1;
     set_int();
-    getTCstr(&T_);
+    getTCstr();
 
     if (T_.ti && !Do_not_use_ti_te)
         tty_write(T_.ti);
@@ -335,13 +333,6 @@ int initscr(void)
     struct TermSize size = get_term_size();
     setupscreen(size.lines, size.cols);
     return 0;
-}
-
-int graph_ok(void)
-{
-    if (UseGraphicChar != GRAPHIC_CHAR_DEC)
-        return 0;
-    return T_.as[0] != 0 && T_.ae[0] != 0 && T_.ac[0] != 0;
 }
 
 static char*
@@ -527,14 +518,14 @@ void tty_render_screen(void)
 }
 
 
-void crmode(void)
+void tty_crmode(void)
 {
     ttymode_reset(ICANON, IXON);
     ttymode_set(ISIG, 0);
     set_cc(VMIN, 1);
 }
 
-void nocrmode(void)
+void tty_nocrmode(void)
 {
     ttymode_set(ICANON, 0);
     set_cc(VMIN, 4);

@@ -2,6 +2,7 @@
  * w3m menu.c
  */
 #include "fm.h"
+#include "term_entry.h"
 #include "buffer.h"
 #include "search.h"
 #include "funcheader.h"

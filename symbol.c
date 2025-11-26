@@ -1,4 +1,5 @@
 #include "symbol.h"
+#include "term_entry.h"
 #include "fm.h"
 #include "w3m_runtime.h"
 #include "ctrlcode.h"

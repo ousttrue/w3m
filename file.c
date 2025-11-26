@@ -1,4 +1,5 @@
 #include "file.h"
+#include "term_entry.h"
 #include "screen.h"
 #include "news.h"
 #include "search.h"

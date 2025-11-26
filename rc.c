@@ -2,6 +2,7 @@
  * Initialization file etc.
  */
 #include "fm.h"
+#include "term_entry.h"
 #include "http_auth.h"
 #include "symbol.h"
 #include "file.h"

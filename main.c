@@ -1,5 +1,6 @@
 #define MAINPROGRAM
 #include "fm.h"
+#include "term_entry.h"
 #include "screen.h"
 #include "search.h"
 #include "mimetype.h"
@@ -1339,7 +1340,7 @@ srchcore(char* volatile str, int (*func)(Buffer*, char*))
 
     str = conv_search_string(SearchString, DisplayCharset);
     MySignalHandler prevtrap = mySignal(SIGINT, intTrap);
-    crmode();
+    tty_crmode();
     if (SETJMP(IntReturn) == 0) {
         for (i = 0; i < PREC_NUM; i++) {
             result = func(Currentbuf, str);
@@ -1730,7 +1731,7 @@ DEFUN(readsh, READ_SHELL, "Execute shell command and display output")
         return;
     }
     MySignalHandler prevtrap = mySignal(SIGINT, intTrap);
-    crmode();
+    tty_crmode();
     buf = getshell(cmd);
     mySignal(SIGINT, prevtrap);
     term_raw();
