@@ -6624,7 +6624,7 @@ doExternal(struct URLFile uf, char* type, Buffer* defaultbuf)
     }
 
     if (!(mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)) && !(mcap->flags & MAILCAP_NEEDSTERMINAL) && BackgroundExtViewer) {
-        flush_tty();
+        tty_flush();
         if (!fork()) {
             setup_child(FALSE, 0, UFfileno(&uf));
             if (save2tmp(uf, tmpf->ptr) < 0)
@@ -6773,7 +6773,7 @@ int _doFileCopy(char* tmpf, char* defstr, int download)
         }
         lock = tmpfname(TMPF_DFL, ".lock")->ptr;
         symlink(p, lock);
-        flush_tty();
+        tty_flush();
         pid = fork();
         if (!pid) {
             setup_child(FALSE, 0, -1);
@@ -6869,7 +6869,7 @@ int doFileSave(struct URLFile uf, char* defstr)
          */
         lock = tmpfname(TMPF_DFL, ".lock")->ptr;
         symlink(p, lock);
-        flush_tty();
+        tty_flush();
         pid = fork();
         if (!pid) {
             int err;

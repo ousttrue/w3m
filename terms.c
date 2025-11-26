@@ -2,14 +2,14 @@
  * An original curses library for EUC-kanji by Akinori ITO,     December 1989
  * revised by Akinori ITO, January 1995
  */
+#include "terms.h"
 #include "w3m_runtime.h"
 #include "config.h"
-// #include "mimetype.h"
-// #include "etc.h"
-// #include "buffer.h"
 #include "ctrlcode.h"
 #include "funcheader.h"
 #include "screen.h"
+#include "fm.h"
+
 #include <wtf.h>
 #include <gcstr/gcstr.h>
 #include <stdio.h>
@@ -26,30 +26,17 @@
 #include <sys/select.h>
 #include <sys/ioctl.h>
 #include <termcap.h>
+#include <termios.h>
+#include <unistd.h>
 
 static int is_xterm = 0;
 
-void mouse_init(void), mouse_end(void);
-
 static char* title_str = NULL;
-
-static int tty;
-
-#include "terms.h"
-#include "fm.h"
-
-char* getenv(const char*);
-void reset_exit(int);
-void reset_error_exit(int);
-void error_dump(int);
-void flush_tty(void);
 
 #ifndef SIGIOT
 #define SIGIOT SIGABRT
 #endif /* not SIGIOT */
 
-#include <termios.h>
-#include <unistd.h>
 typedef struct termios TerminalMode;
 #define TerminalSet(fd, x) tcsetattr(fd, TCSANOW, x)
 #define TerminalGet(fd, x) tcgetattr(fd, x)
@@ -69,6 +56,23 @@ char *T_cd, *T_ce, *T_kr, *T_kl, *T_cr, *T_bt, *T_ta, *T_sc, *T_rc,
 #define MAX_LINE 200
 #define MAX_COLUMN 400
 int LINES, COLS;
+
+static void reset_exit_with_value(int _, int rval)
+{
+    reset_tty();
+    w3m_exit(rval);
+}
+
+static void reset_error_exit(int _)
+{
+    reset_exit_with_value(0, 1);
+}
+
+static void reset_exit(int _)
+{
+    reset_exit_with_value(0, 0);
+}
+
 void setlinescols(int lines, int cols)
 {
     LINES = lines;
@@ -92,14 +96,14 @@ static int write1(int c)
     return 0;
 }
 
-void writestr(const char* s)
+void tty_write(const char* s)
 {
     tputs(s, 1, write1);
 }
 
-void MOVE(int line, int column)
+void tty_move(int line, int column)
 {
-    writestr(tgoto(T_cm, column, line));
+    tty_write(tgoto(T_cm, column, line));
 }
 
 int get_pixel_per_cell(int* ppc, int* ppl)
@@ -114,7 +118,7 @@ int get_pixel_per_cell(int* ppc, int* ppl)
     int i;
 
     fputs("\x1b[14t\x1b[18t", ttyf);
-    flush_tty();
+    tty_flush();
 
     p = buf;
     left = sizeof(buf) - 1;
@@ -265,39 +269,22 @@ char* ttyname_tty(void)
 
 void reset_tty(void)
 {
-    writestr(T_op); /* turn off */
-    writestr(T_me);
+    tty_write(T_op); /* turn off */
+    tty_write(T_me);
     if (!Do_not_use_ti_te) {
         if (T_te && *T_te)
-            writestr(T_te);
+            tty_write(T_te);
         else
-            writestr(T_cl);
+            tty_write(T_cl);
     }
-    writestr(T_se); /* reset terminal */
-    flush_tty();
+    tty_write(T_se); /* reset terminal */
+    tty_flush();
     TerminalSet(tty, &d_ioval);
     if (tty != 2)
         close_tty();
 }
 
-static void
-reset_exit_with_value(int _, int rval)
-{
-    reset_tty();
-    w3m_exit(rval);
-}
-
-void reset_error_exit(int _)
-{
-    reset_exit_with_value(0, 1);
-}
-
-void reset_exit(int _)
-{
-    reset_exit_with_value(0, 0);
-}
-
-void error_dump(int _)
+static void error_dump(int _)
 {
     mySignal(SIGIOT, SIG_DFL);
     reset_tty();
@@ -441,7 +428,7 @@ int initscr(void)
     set_int();
     getTCstr();
     if (T_ti && !Do_not_use_ti_te)
-        writestr(T_ti);
+        tty_write(T_ti);
 
     struct TermSize size = get_term_size();
     setupscreen(size.lines, size.cols);
@@ -517,7 +504,7 @@ void refresh(void)
             if (line < LINES - 2 && pline == line - 1 && pcol == 0) {
                 switch (moved) {
                 case RF_NEED_TO_MOVE:
-                    MOVE(line, 0);
+                    tty_move(line, 0);
                     moved = RF_CR_OK;
                     break;
                 case RF_CR_OK:
@@ -529,13 +516,13 @@ void refresh(void)
                     break;
                 }
             } else {
-                MOVE(line, pcol);
+                tty_move(line, pcol);
                 moved = RF_CR_OK;
             }
             if (*dirty & (L_NEED_CE | L_CLRTOEOL)) {
-                writestr(T_ce);
+                tty_write(T_ce);
                 if (col != pcol)
-                    MOVE(line, col);
+                    tty_move(line, col);
             }
             pline = line;
             pcol = col;
@@ -562,50 +549,50 @@ void refresh(void)
                     || (!(pr[col] & S_GRAPHICS) && (mode & S_GRAPHICS))) {
                     if ((mode & S_COLORED)
                         || (mode & S_BCOLORED))
-                        writestr(T_op);
+                        tty_write(T_op);
                     if (mode & S_GRAPHICS)
-                        writestr(T_ae);
-                    writestr(T_me);
+                        tty_write(T_ae);
+                    tty_write(T_me);
                     mode &= ~M_MEND;
                 }
                 if ((*dirty & L_NEED_CE && col >= sc.ScreenImage[line]->eol) ? scr_is_need_redraw(pc[col], pr[col], SPACE,
                                                                                    0)
                                                                              : (pr[col] & S_DIRTY)) {
                     if (pcol == col - 1)
-                        writestr(T_nd);
+                        tty_write(T_nd);
                     else if (pcol != col)
-                        MOVE(line, col);
+                        tty_move(line, col);
 
                     if ((pr[col] & S_STANDOUT) && !(mode & S_STANDOUT)) {
-                        writestr(T_so);
+                        tty_write(T_so);
                         mode |= S_STANDOUT;
                     }
                     if ((pr[col] & S_UNDERLINE) && !(mode & S_UNDERLINE)) {
-                        writestr(T_us);
+                        tty_write(T_us);
                         mode |= S_UNDERLINE;
                     }
                     if ((pr[col] & S_BOLD) && !(mode & S_BOLD)) {
-                        writestr(T_md);
+                        tty_write(T_md);
                         mode |= S_BOLD;
                     }
                     if ((pr[col] & S_COLORED) && (pr[col] ^ mode) & COL_FCOLOR) {
                         color = (pr[col] & COL_FCOLOR);
                         mode = ((mode & ~COL_FCOLOR) | color);
-                        writestr(color_seq(color));
+                        tty_write(color_seq(color));
                     }
                     if ((pr[col] & S_BCOLORED)
                         && (pr[col] ^ mode) & COL_BCOLOR) {
                         bcolor = (pr[col] & COL_BCOLOR);
                         mode = ((mode & ~COL_BCOLOR) | bcolor);
-                        writestr(bcolor_seq(bcolor));
+                        tty_write(bcolor_seq(bcolor));
                     }
                     if ((pr[col] & S_GRAPHICS) && !(mode & S_GRAPHICS)) {
                         wc_putc_end(ttyf);
                         if (!graph_enabled) {
                             graph_enabled = 1;
-                            writestr(T_eA);
+                            tty_write(T_eA);
                         }
-                        writestr(T_as);
+                        tty_write(T_as);
                         mode |= S_GRAPHICS;
                     }
                     if (pr[col] & S_GRAPHICS)
@@ -623,25 +610,25 @@ void refresh(void)
         *dirty &= ~(L_NEED_CE | L_CLRTOEOL);
         if (mode & M_MEND) {
             if (mode & (S_COLORED | S_BCOLORED))
-                writestr(T_op);
+                tty_write(T_op);
             if (mode & S_GRAPHICS) {
-                writestr(T_ae);
+                tty_write(T_ae);
                 wc_putc_clear_status();
             }
-            writestr(T_me);
+            tty_write(T_me);
             mode &= ~M_MEND;
         }
     }
     wc_putc_end(ttyf);
-    MOVE(sc.CurLine, sc.CurColumn);
-    flush_tty();
+    tty_move(sc.CurLine, sc.CurColumn);
+    tty_flush();
 }
 
 #ifdef USE_RAW_SCROLL
 static void
 scroll_raw(void)
 { /* raw scroll */
-    MOVE(LINES - 1, 0);
+    tty_move(LINES - 1, 0);
     write1('\n');
 }
 
@@ -707,13 +694,13 @@ void rscroll(int n)
         ScreenImage[i] = t;
     } while (k);
     if (T_sr && *T_sr) {
-        MOVE(0, 0);
+        tty_move(0, 0);
         for (i = 0; i < n; i++) {
             t = ScreenImage[i];
             t->isdirty = 0;
             for (j = 0; j < COLS; j++)
                 t->lineprop[j] = S_EOL;
-            writestr(T_sr);
+            tty_write(T_sr);
         }
         move(cli, cco);
     } else {
@@ -853,7 +840,7 @@ int sleep_till_anykey(int sec, int purge)
     return ret;
 }
 
-void flush_tty(void)
+void tty_flush(void)
 {
     if (ttyf)
         fflush(ttyf);

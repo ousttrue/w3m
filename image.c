@@ -503,7 +503,7 @@ void loadImage(Buffer* buf, enum ImageLoadFlag flag)
             continue;
         }
 
-        flush_tty();
+        tty_flush();
 #ifdef DONT_CALL_GC_AFTER_FORK
         loadargs[0] = MyProgramName;
         loadargs[1] = "-$$getimage";
@@ -764,10 +764,10 @@ void put_image_osc5379(char* url, int x, int y, int w, int h, int sx, int sy, in
     else
         size = "";
 
-    MOVE(y, x);
+    tty_move(y, x);
     buf = Sprintf("\x1b]5379;show_picture %s %s %dx%d+%d+%d\x07", url, size, sw, sh, sx, sy);
-    writestr(buf->ptr);
-    MOVE(Currentbuf->cursorY, Currentbuf->cursorX);
+    tty_write(buf->ptr);
+    tty_move(Currentbuf->cursorY, Currentbuf->cursorX);
 }
 
 void put_image_iterm2(char* url, int x, int y, int w, int h)
@@ -796,9 +796,9 @@ void put_image_iterm2(char* url, int x, int y, int w, int h)
                   ":",
         url, st.st_size, w, h);
 
-    MOVE(y, x);
+    tty_move(y, x);
 
-    writestr(buf->ptr);
+    tty_write(buf->ptr);
 
     cbuf = w3m_GC_alloc_atomic(3072);
     if (!cbuf)
@@ -808,20 +808,20 @@ void put_image_iterm2(char* url, int x, int y, int w, int h)
         cbuf[i++] = c;
         if (i == 3072) {
             buf = base64_encode(cbuf, i);
-            writestr(buf->ptr);
+            tty_write(buf->ptr);
             i = 0;
         }
     }
 
     if (i) {
         buf = base64_encode(cbuf, i);
-        writestr(buf->ptr);
+        tty_write(buf->ptr);
     }
 
 cleanup:
     fclose(fp);
-    writestr("\a");
-    MOVE(Currentbuf->cursorY, Currentbuf->cursorX);
+    tty_write("\a");
+    tty_move(Currentbuf->cursorY, Currentbuf->cursorX);
 }
 
 void put_image_kitty(char* url, int x, int y, int w, int h, int sx, int sy, int sw,
@@ -859,7 +859,7 @@ void put_image_kitty(char* url, int x, int y, int w, int h, int sx, int sy, int 
             if (stat(url, &st))
                 return;
 
-            flush_tty();
+            tty_flush();
 
             previntr = mySignal(SIGINT, SIG_IGN);
             prevquit = mySignal(SIGQUIT, SIG_IGN);
@@ -907,7 +907,7 @@ void put_image_kitty(char* url, int x, int y, int w, int h, int sx, int sy, int 
     if (!fp)
         return;
 
-    MOVE(y, x);
+    tty_move(y, x);
 
     cbuf = w3m_GC_alloc_atomic(3072); /* base64-encoded chunks of 4096 bytes */
     if (!cbuf)
@@ -926,7 +926,7 @@ void put_image_kitty(char* url, int x, int y, int w, int h, int sx, int sy, int 
     buf = Sprintf("\x1b_Gf=%d,s=%d,v=%d,a=T,m=%d,x=%d,y=%d,w=%d,h=%d,c=%d,r=%d;"
                   "%s\x1b\\",
         t, w, h, m, sx, sy, sw, sh, cols, rows, base64->ptr);
-    writestr(buf->ptr);
+    tty_write(buf->ptr);
 
     if (m) {
         i = 0;
@@ -935,7 +935,7 @@ void put_image_kitty(char* url, int x, int y, int w, int h, int sx, int sy, int 
             if (j) {
                 base64 = base64_encode(cbuf, i);
                 buf = Sprintf("\x1b_Gm=1;%s\x1b\\", base64->ptr);
-                writestr(buf->ptr);
+                tty_write(buf->ptr);
                 i = 0;
                 j = 0;
             }
@@ -947,12 +947,12 @@ void put_image_kitty(char* url, int x, int y, int w, int h, int sx, int sy, int 
         if (i) {
             base64 = base64_encode(cbuf, i);
             buf = Sprintf("\x1b_Gm=0;%s\x1b\\", base64->ptr);
-            writestr(buf->ptr);
+            tty_write(buf->ptr);
         }
     }
 cleanup:
     fclose(fp);
-    MOVE(Currentbuf->cursorY, Currentbuf->cursorX);
+    tty_move(Currentbuf->cursorY, Currentbuf->cursorX);
 }
 
 static void
@@ -1052,8 +1052,8 @@ void put_image_sixel(char* url, int x, int y, int w, int h, int sx, int sy, int 
     MySignalHandler prevquit;
     MySignalHandler prevstop;
 
-    MOVE(y, x);
-    flush_tty();
+    tty_move(y, x);
+    tty_flush();
 
     do_anim = (n_terminal_image == 1 && x == 0 && y == 0 && sx == 0 && sy == 0);
 
@@ -1071,7 +1071,7 @@ void put_image_sixel(char* url, int x, int y, int w, int h, int sx, int sy, int 
 
         close(STDERR_FILENO); /* Don't output error message. */
         if (do_anim) {
-            writestr("\x1b[?80h");
+            tty_write("\x1b[?80h");
         } else if (!strstr(url, "://") && strcmp(url + strlen(url) - 4, ".gif") == 0 && (str_url = save_first_animation_frame(url))) {
             url = str_url->ptr;
         }
@@ -1119,9 +1119,9 @@ void put_image_sixel(char* url, int x, int y, int w, int h, int sx, int sy, int 
         mySignal(SIGQUIT, prevquit);
         mySignal(SIGTSTP, prevstop);
         if (do_anim) {
-            writestr("\x1b[?80l");
+            tty_write("\x1b[?80l");
         }
     }
 
-    MOVE(Currentbuf->cursorY, Currentbuf->cursorX);
+    tty_move(Currentbuf->cursorY, Currentbuf->cursorX);
 }
