@@ -279,7 +279,7 @@ void drawImage(void)
     } else
         n_terminal_image = 0;
 
-    touch_cursor();
+    scr_touch_cursor();
     refresh();
 }
 

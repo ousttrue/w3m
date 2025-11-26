@@ -36,9 +36,6 @@ void scroll(int);
 void rscroll(int);
 #endif
 void no_clrtoeol(void);
-void addstr(char* s);
-void addnstr(char* s, int n);
-void addnstr_sup(char* s, int n);
 void crmode(void);
 void nocrmode(void);
 void term_echo(void);

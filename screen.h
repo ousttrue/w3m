@@ -84,35 +84,52 @@ struct Screen {
     int CurColumn;
     int mode;
 };
-struct Screen getScreen();
-void set_screen_mode(uint16_t mode);
+struct Screen scr_get();
 
 void setupscreen(int lines, int cols);
-void clear(void);
-bool is_need_redraw(const char* c1, uint16_t pr1, const char* c2, uint16_t pr2);
-void move(int line, int column);
-void touch_line(void);
-void touch_column(int);
-void touch_cursor(void);
+void scr_clear(void);
+bool scr_is_need_redraw(const char* c1, uint16_t pr1, const char* c2, uint16_t pr2);
+void scr_move(int line, int column);
+void scr_touch_line(void);
+void scr_touch_column(int);
+void scr_touch_cursor(void);
 
-void clrtoeol(void);
-void clrtoeolx(void);
-void clrtobot(void);
-void clrtobotx(void);
+void scr_clrtoeol(void);
+void scr_clrtoeolx(void);
+void scr_clrtobot(void);
+void scr_clrtobotx(void);
 
-void addmch(const char* p, size_t len);
-inline static void addch(char c)
+void scr_addmch(const char* p, size_t len);
+inline static void scr_addch(char c)
 {
-    addmch(&c, 1);
+    scr_addmch(&c, 1);
 }
-void standout(void);
-void standend(void);
-void toggle_stand(void);
-void bold(void);
-void boldend(void);
-void underline(void);
-void underlineend(void);
-void graphstart(void);
-void graphend(void);
-void setfcolor(int color);
-void setbcolor(int color);
+void scr_addstr(const char* s);
+void scr_addnstr(const char* s, int n);
+void scr_addnstr_sup(const char* s, int n);
+inline static void scr_mvaddch(int y, int x, char c)
+{
+    scr_move(y, x);
+    scr_addch(c);
+}
+inline static void scr_mvaddstr(int y, int x, const char* str)
+{
+    scr_move(y, x);
+    scr_addstr(str);
+}
+inline static void scr_mvaddnstr(int y, int x, const char* str, int n)
+{
+    scr_move(y, x);
+    scr_addnstr_sup(str, n);
+}
+void scr_standout(void);
+void scr_standend(void);
+void scr_toggle_stand(void);
+void scr_bold(void);
+void scr_boldend(void);
+void scr_underline(void);
+void scr_underlineend(void);
+void scr_graphstart(void);
+void scr_graphend(void);
+void scr_setfcolor(int color);
+void scr_setbcolor(int color);

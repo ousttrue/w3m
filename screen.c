@@ -21,14 +21,9 @@ static struct Screen g_screen = {
     .mode = 0,
 };
 
-struct Screen getScreen()
+struct Screen scr_get()
 {
     return g_screen;
-}
-
-void set_screen_mode(uint16_t mode)
-{
-    g_screen.mode = mode;
 }
 
 void setupscreen(int lines, int cols)
@@ -62,27 +57,25 @@ void setupscreen(int lines, int cols)
         ScreenElem[i].isdirty = L_UNUSED;
     }
 
-    clear();
+    scr_clear();
 }
 
-void clear(void)
+void scr_clear(void)
 {
     // writestr(T_cl);
-    // move(0, 0);
-    int i, j;
-    uint16_t* p;
-    struct Screen sc = getScreen();
-    for (i = 0; i < g_screen.lines; i++) {
+    scr_move(0, 0);
+    struct Screen sc = scr_get();
+    for (int i = 0; i < g_screen.lines; i++) {
         sc.ScreenImage[i]->isdirty = 0;
-        p = sc.ScreenImage[i]->lineprop;
-        for (j = 0; j < g_screen.cols; j++) {
+        uint16_t* p = sc.ScreenImage[i]->lineprop;
+        for (int j = 0; j < g_screen.cols; j++) {
             p[j] = S_EOL;
         }
     }
-    set_screen_mode(C_ASCII);
+    g_screen.mode = C_ASCII;
 }
 
-void move(int line, int column)
+void scr_move(int line, int column)
 {
     if (line >= 0 && line < g_screen.lines)
         g_screen.CurLine = line;
@@ -90,7 +83,7 @@ void move(int line, int column)
         g_screen.CurColumn = column;
 }
 
-void wrap(void)
+void scr_wrap(void)
 {
     if (g_screen.CurLine == g_screen.lines - 1)
         return;
@@ -98,29 +91,29 @@ void wrap(void)
     g_screen.CurColumn = 0;
 }
 
-void touch_cursor(void)
+void scr_touch_cursor(void)
 {
     int i;
-    touch_line();
+    scr_touch_line();
     for (i = g_screen.CurColumn; i >= 0; i--) {
-        touch_column(i);
+        scr_touch_column(i);
         if (CHMODE(g_screen.ScreenImage[g_screen.CurLine]->lineprop[i]) != C_WCHAR2)
             break;
     }
     for (i = g_screen.CurColumn + 1; i < g_screen.cols; i++) {
         if (CHMODE(g_screen.ScreenImage[g_screen.CurLine]->lineprop[i]) != C_WCHAR2)
             break;
-        touch_column(i);
+        scr_touch_column(i);
     }
 }
 
-void touch_column(int col)
+void scr_touch_column(int col)
 {
     if (col >= 0 && col < g_screen.cols)
         g_screen.ScreenImage[g_screen.CurLine]->lineprop[col] |= S_DIRTY;
 }
 
-void touch_line(void)
+void scr_touch_line(void)
 {
     if (!(g_screen.ScreenImage[g_screen.CurLine]->isdirty & L_DIRTY)) {
         int i;
@@ -131,7 +124,7 @@ void touch_line(void)
 }
 
 /* XXX: conflicts with curses's clrtoeol(3) ? */
-void clrtoeol(void)
+void scr_clrtoeol(void)
 { /* Clear to the end of line */
     int i;
     uint16_t* lprop = g_screen.ScreenImage[g_screen.CurLine]->lineprop;
@@ -143,7 +136,7 @@ void clrtoeol(void)
         g_screen.ScreenImage[g_screen.CurLine]->eol = g_screen.CurColumn;
 
     g_screen.ScreenImage[g_screen.CurLine]->isdirty |= L_CLRTOEOL;
-    touch_line();
+    scr_touch_line();
     for (i = g_screen.CurColumn; i < g_screen.cols && !(lprop[i] & S_EOL); i++) {
         lprop[i] = S_EOL | S_DIRTY;
     }
@@ -156,7 +149,7 @@ clrtoeol_with_bcolor(void)
     uint16_t pr;
 
     if (!(g_screen.mode & S_BCOLORED)) {
-        clrtoeol();
+        scr_clrtoeol();
         return;
     }
     cli = g_screen.CurLine;
@@ -164,12 +157,12 @@ clrtoeol_with_bcolor(void)
     pr = g_screen.mode;
     g_screen.mode = (g_screen.mode & (M_CEOL | S_BCOLORED)) | C_ASCII;
     for (i = g_screen.CurColumn; i < g_screen.cols; i++)
-        addch(' ');
-    move(cli, cco);
+        scr_addch(' ');
+    scr_move(cli, cco);
     g_screen.mode = pr;
 }
 
-void clrtoeolx(void)
+void scr_clrtoeolx(void)
 {
     clrtoeol_with_bcolor();
 }
@@ -190,17 +183,17 @@ clrtobot_eol(void (*clrtoeol)())
     g_screen.CurColumn = c;
 }
 
-void clrtobot(void)
+void scr_clrtobot(void)
 {
-    clrtobot_eol(clrtoeol);
+    clrtobot_eol(scr_clrtoeol);
 }
 
-void clrtobotx(void)
+void scr_clrtobotx(void)
 {
-    clrtobot_eol(clrtoeolx);
+    clrtobot_eol(scr_clrtoeolx);
 }
 
-bool is_need_redraw(const char* c1, uint16_t pr1, const char* c2, uint16_t pr2)
+bool scr_is_need_redraw(const char* c1, uint16_t pr1, const char* c2, uint16_t pr2)
 {
     if (!c1 || !c2 || strcmp(c1, c2))
         return 1;
@@ -213,7 +206,7 @@ bool is_need_redraw(const char* c1, uint16_t pr1, const char* c2, uint16_t pr2)
     return 0;
 }
 
-void addmch(const char* pc, size_t len)
+void scr_addmch(const char* pc, size_t len)
 {
     uint16_t* pr;
     int dest, i;
@@ -228,7 +221,7 @@ void addmch(const char* pc, size_t len)
     pc = tmp->ptr;
 
     if (g_screen.CurColumn == g_screen.cols)
-        wrap();
+        scr_wrap();
     if (g_screen.CurColumn >= g_screen.cols)
         return;
     p = g_screen.ScreenImage[g_screen.CurLine]->lineimage;
@@ -257,84 +250,84 @@ void addmch(const char* pc, size_t len)
     /* Required to erase bold or underlined character for some * terminal
      * emulators. */
     i = g_screen.CurColumn + width - 1;
-    if (i < g_screen.cols && (((pr[i] & S_BOLD) && is_need_redraw(p[i], pr[i], pc, g_screen.mode)) || ((pr[i] & S_UNDERLINE) && !(g_screen.mode & S_UNDERLINE)))) {
-        touch_line();
+    if (i < g_screen.cols && (((pr[i] & S_BOLD) && scr_is_need_redraw(p[i], pr[i], pc, g_screen.mode)) || ((pr[i] & S_UNDERLINE) && !(g_screen.mode & S_UNDERLINE)))) {
+        scr_touch_line();
         i++;
         if (i < g_screen.cols) {
-            touch_column(i);
+            scr_touch_column(i);
             if (pr[i] & S_EOL) {
                 SETCH(p[i], SPACE, 1);
                 SETPROP(pr[i], (pr[i] & M_CEOL) | C_ASCII);
             } else {
                 for (i++; i < g_screen.cols && CHMODE(pr[i]) == C_WCHAR2; i++)
-                    touch_column(i);
+                    scr_touch_column(i);
             }
         }
     }
 
     if (g_screen.CurColumn + width > g_screen.cols) {
-        touch_line();
+        scr_touch_line();
         for (i = g_screen.CurColumn; i < g_screen.cols; i++) {
             SETCH(p[i], SPACE, 1);
             SETPROP(pr[i], (pr[i] & ~C_WHICHCHAR) | C_ASCII);
-            touch_column(i);
+            scr_touch_column(i);
         }
-        wrap();
+        scr_wrap();
         if (g_screen.CurColumn + width > g_screen.cols)
             return;
         p = g_screen.ScreenImage[g_screen.CurLine]->lineimage;
         pr = g_screen.ScreenImage[g_screen.CurLine]->lineprop;
     }
     if (CHMODE(pr[g_screen.CurColumn]) == C_WCHAR2) {
-        touch_line();
+        scr_touch_line();
         for (i = g_screen.CurColumn - 1; i >= 0; i--) {
             uint16_t l = CHMODE(pr[i]);
             SETCH(p[i], SPACE, 1);
             SETPROP(pr[i], (pr[i] & ~C_WHICHCHAR) | C_ASCII);
-            touch_column(i);
+            scr_touch_column(i);
             if (l != C_WCHAR2)
                 break;
         }
     }
     if (CHMODE(g_screen.mode) != C_CTRL) {
-        if (is_need_redraw(p[g_screen.CurColumn], pr[g_screen.CurColumn], pc, g_screen.mode)) {
+        if (scr_is_need_redraw(p[g_screen.CurColumn], pr[g_screen.CurColumn], pc, g_screen.mode)) {
             SETCH(p[g_screen.CurColumn], pc, len);
             SETPROP(pr[g_screen.CurColumn], g_screen.mode);
-            touch_line();
-            touch_column(g_screen.CurColumn);
+            scr_touch_line();
+            scr_touch_column(g_screen.CurColumn);
             SETCHMODE(g_screen.mode, C_WCHAR2);
             for (i = g_screen.CurColumn + 1; i < g_screen.CurColumn + width; i++) {
                 SETCH(p[i], SPACE, 1);
                 SETPROP(pr[i], (pr[g_screen.CurColumn] & ~C_WHICHCHAR) | C_WCHAR2);
-                touch_column(i);
+                scr_touch_column(i);
             }
             for (; i < g_screen.cols && CHMODE(pr[i]) == C_WCHAR2; i++) {
                 SETCH(p[i], SPACE, 1);
                 SETPROP(pr[i], (pr[i] & ~C_WHICHCHAR) | C_ASCII);
-                touch_column(i);
+                scr_touch_column(i);
             }
         }
         g_screen.CurColumn += width;
     } else if (c == '\t') {
         dest = (g_screen.CurColumn + tab_step) / tab_step * tab_step;
         if (dest >= g_screen.cols) {
-            wrap();
-            touch_line();
+            scr_wrap();
+            scr_touch_line();
             dest = tab_step;
             p = g_screen.ScreenImage[g_screen.CurLine]->lineimage;
             pr = g_screen.ScreenImage[g_screen.CurLine]->lineprop;
         }
         for (i = g_screen.CurColumn; i < dest; i++) {
-            if (is_need_redraw(p[i], pr[i], SPACE, g_screen.mode)) {
+            if (scr_is_need_redraw(p[i], pr[i], SPACE, g_screen.mode)) {
                 SETCH(p[i], SPACE, 1);
                 SETPROP(pr[i], g_screen.mode);
-                touch_line();
-                touch_column(i);
+                scr_touch_line();
+                scr_touch_column(i);
             }
         }
         g_screen.CurColumn = i;
     } else if (c == '\n') {
-        wrap();
+        scr_wrap();
     } else if (c == '\r') { /* Carriage return */
         g_screen.CurColumn = 0;
     } else if (c == '\b' && g_screen.CurColumn > 0) { /* Backspace */
@@ -344,17 +337,57 @@ void addmch(const char* pc, size_t len)
     }
 }
 
-void standout(void)
+void scr_addstr(const char* s)
+{
+    while (*s != '\0') {
+        int len = wtf_len((wc_uchar*)s);
+        scr_addmch(s, len);
+        s += len;
+    }
+}
+
+void scr_addnstr(const char* s, int n)
+{
+    int i;
+    for (i = 0; *s != '\0';) {
+        int width = wtf_width((wc_uchar*)s);
+        if (i + width > n)
+            break;
+        int len = wtf_len((wc_uchar*)s);
+        scr_addmch(s, len);
+        s += len;
+        i += width;
+    }
+}
+
+/// space padding
+void scr_addnstr_sup(const char* s, int n)
+{
+    int i;
+    for (i = 0; *s != '\0';) {
+        int width = wtf_width((wc_uchar*)s);
+        if (i + width > n)
+            break;
+        int len = wtf_len((wc_uchar*)s);
+        scr_addmch(s, len);
+        s += len;
+        i += width;
+    }
+    for (; i < n; i++)
+        scr_addch(' ');
+}
+
+void scr_standout(void)
 {
     g_screen.mode |= S_STANDOUT;
 }
 
-void standend(void)
+void scr_standend(void)
 {
     g_screen.mode &= ~S_STANDOUT;
 }
 
-void toggle_stand(void)
+void scr_toggle_stand(void)
 {
     int i;
     uint16_t* pr = g_screen.ScreenImage[g_screen.CurLine]->lineprop;
@@ -365,44 +398,44 @@ void toggle_stand(void)
     }
 }
 
-void bold(void)
+void scr_bold(void)
 {
     g_screen.mode |= S_BOLD;
 }
 
-void boldend(void)
+void scr_boldend(void)
 {
     g_screen.mode &= ~S_BOLD;
 }
 
-void underline(void)
+void scr_underline(void)
 {
     g_screen.mode |= S_UNDERLINE;
 }
 
-void underlineend(void)
+void scr_underlineend(void)
 {
     g_screen.mode &= ~S_UNDERLINE;
 }
 
-void graphstart(void)
+void scr_graphstart(void)
 {
     g_screen.mode |= S_GRAPHICS;
 }
 
-void graphend(void)
+void scr_graphend(void)
 {
     g_screen.mode &= ~S_GRAPHICS;
 }
 
-void setfcolor(int color)
+void scr_setfcolor(int color)
 {
     g_screen.mode &= ~COL_FCOLOR;
     if ((color & 0xf) <= 7)
         g_screen.mode |= (((color & 7) | 8) << 8);
 }
 
-void setbcolor(int color)
+void scr_setbcolor(int color)
 {
     g_screen.mode &= ~COL_BCOLOR;
     if ((color & 0xf) <= 7)

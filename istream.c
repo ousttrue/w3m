@@ -42,7 +42,7 @@ char PermitSaveToPipe = (FALSE);
 static JMP_BUF AbortLoading;
 
 static void
-KeyAbort(SIGNAL_ARG)
+KeyAbort(int _)
 {
     LONGJMP(AbortLoading, 1);
 }

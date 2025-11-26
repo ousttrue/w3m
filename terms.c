@@ -478,7 +478,7 @@ bcolor_seq(int colmode)
 #define M_MEND (S_STANDOUT | S_UNDERLINE | S_BOLD | S_COLORED | S_BCOLORED | S_GRAPHICS)
 void refresh(void)
 {
-    struct Screen sc = getScreen();
+    struct Screen sc = scr_get();
 
     int line, col, pcol;
     int pline = sc.CurLine;
@@ -498,7 +498,7 @@ void refresh(void)
             pr = sc.ScreenImage[line]->lineprop;
             for (col = 0; col < COLS && !(pr[col] & S_EOL); col++) {
                 if (*dirty & L_NEED_CE && col >= sc.ScreenImage[line]->eol) {
-                    if (is_need_redraw(pc[col], pr[col], SPACE, 0))
+                    if (scr_is_need_redraw(pc[col], pr[col], SPACE, 0))
                         break;
                 } else {
                     if (pr[col] & S_DIRTY)
@@ -568,7 +568,7 @@ void refresh(void)
                     writestr(T_me);
                     mode &= ~M_MEND;
                 }
-                if ((*dirty & L_NEED_CE && col >= sc.ScreenImage[line]->eol) ? is_need_redraw(pc[col], pr[col], SPACE,
+                if ((*dirty & L_NEED_CE && col >= sc.ScreenImage[line]->eol) ? scr_is_need_redraw(pc[col], pr[col], SPACE,
                                                                                    0)
                                                                              : (pr[col] & S_DIRTY)) {
                     if (pcol == col - 1)
@@ -678,7 +678,7 @@ void scroll(int n)
             t->lineprop[j] = S_EOL;
         scroll_raw();
     }
-    move(cli, cco);
+    scr_move(cli, cco);
 }
 
 void rscroll(int n)
@@ -727,51 +727,6 @@ void rscroll(int n)
     }
 }
 #endif
-
-void addstr(char* s)
-{
-    int len;
-
-    while (*s != '\0') {
-        len = wtf_len((wc_uchar*)s);
-        addmch(s, len);
-        s += len;
-    }
-}
-
-void addnstr(char* s, int n)
-{
-    int i;
-    int len, width;
-
-    for (i = 0; *s != '\0';) {
-        width = wtf_width((wc_uchar*)s);
-        if (i + width > n)
-            break;
-        len = wtf_len((wc_uchar*)s);
-        addmch(s, len);
-        s += len;
-        i += width;
-    }
-}
-
-void addnstr_sup(char* s, int n)
-{
-    int i;
-    int len, width;
-
-    for (i = 0; *s != '\0';) {
-        width = wtf_width((wc_uchar*)s);
-        if (i + width > n)
-            break;
-        len = wtf_len((wc_uchar*)s);
-        addmch(s, len);
-        s += len;
-        i += width;
-    }
-    for (; i < n; i++)
-        addch(' ');
-}
 
 void crmode(void)
 {

@@ -16,7 +16,7 @@ static JMP_BUF AbortLoading;
 struct frameset* renderFrameSet = NULL;
 
 static void
-KeyAbort(SIGNAL_ARG)
+KeyAbort(int _)
 {
     LONGJMP(AbortLoading, 1);
 }
