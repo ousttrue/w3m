@@ -22,6 +22,17 @@ const char* Imgdisplay = IMGDISPLAY;
 
 static int image_index = 0;
 
+#define DEFAULT_PIXEL_PER_CHAR 7.0 /* arbitrary */
+#define DEFAULT_PIXEL_PER_LINE 14.0 /* arbitrary */
+
+double pixel_per_char = (DEFAULT_PIXEL_PER_CHAR);
+int pixel_per_char_i = (DEFAULT_PIXEL_PER_CHAR);
+int set_pixel_per_char = (FALSE);
+double pixel_per_line = (DEFAULT_PIXEL_PER_LINE);
+int pixel_per_line_i = (DEFAULT_PIXEL_PER_LINE);
+int set_pixel_per_line = (FALSE);
+double image_scale = (100);
+
 /* display image */
 
 typedef struct _termialImage {
@@ -51,17 +62,15 @@ void initImage()
         activeImage = TRUE;
 }
 
-int get_pixel_per_cell(int* ppc, int* ppl);
-
 static int
 getCharSize(void)
 {
-    set_environ("W3M_TTY", ttyname_tty());
+    set_environ("W3M_TTY", tty_name());
 
     if (enable_inline_image) {
         int ppc, ppl;
 
-        if (get_pixel_per_cell(&ppc, &ppl)) {
+        if (tty_get_pixel_per_cell(&ppc, &ppl)) {
             pixel_per_char_i = ppc;
             pixel_per_line_i = ppl;
             pixel_per_char = (double)ppc;

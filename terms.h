@@ -11,17 +11,14 @@ struct TermSize {
 void setlinescols(int lines, int cols);
 struct TermSize get_term_size();
 
-int get_pixel_per_cell(int* ppc, int* ppl);
+int tty_get_pixel_per_cell(int* ppc, int* ppl);
 
 void ttymode_set(int mode, int imode);
 void ttymode_reset(int mode, int imode);
 char getch(void);
 void tty_write(const char* s);
 void tty_move(int line, int column);
-int set_tty(void);
-void set_cc(int spec, int val);
-void close_tty(void);
-char* ttyname_tty(void);
+char* tty_name(void);
 void reset_tty(void);
 void set_int(void);
 int initscr(void);

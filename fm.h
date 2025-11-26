@@ -30,11 +30,6 @@
 #define MAX_IMAGE 1000
 #define MAX_IMAGE_SIZE 2048
 
-#define DEFAULT_PIXEL_PER_CHAR 7.0 /* arbitrary */
-#define DEFAULT_PIXEL_PER_LINE 14.0 /* arbitrary */
-#define MINIMUM_PIXEL_PER_CHAR 4.0
-#define MAXIMUM_PIXEL_PER_CHAR 32.0
-
 #ifdef FALSE
 #undef FALSE
 #endif
@@ -436,13 +431,7 @@ global char* ssl_cipher init(0);
 
 global int is_redisplay init(FALSE);
 global int clear_buffer init(TRUE);
-global double pixel_per_char init(DEFAULT_PIXEL_PER_CHAR);
-global int pixel_per_char_i init(DEFAULT_PIXEL_PER_CHAR);
-global int set_pixel_per_char init(FALSE);
-global double pixel_per_line init(DEFAULT_PIXEL_PER_LINE);
-global int pixel_per_line_i init(DEFAULT_PIXEL_PER_LINE);
-global int set_pixel_per_line init(FALSE);
-global double image_scale init(100);
+
 global int use_lessopen init(FALSE);
 
 global int FollowRedirection init(10);

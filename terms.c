@@ -98,7 +98,7 @@ void tty_move(int line, int column)
     tty_write(tgoto(T_.cm, column, line));
 }
 
-int get_pixel_per_cell(int* ppc, int* ppl)
+int tty_get_pixel_per_cell(int* ppc, int* ppl)
 {
     fd_set rfd;
     struct timeval tval;
@@ -254,7 +254,7 @@ void close_tty(void)
         close(tty);
 }
 
-char* ttyname_tty(void)
+char* tty_name(void)
 {
     return ttyname(tty);
 }

@@ -2,6 +2,17 @@
 #include "Url.h"
 #include <sys/types.h>
 
+#define MINIMUM_PIXEL_PER_CHAR 4.0
+#define MAXIMUM_PIXEL_PER_CHAR 32.0
+
+extern double pixel_per_char;
+extern int pixel_per_char_i;
+extern int set_pixel_per_char;
+extern double pixel_per_line;
+extern int pixel_per_line_i;
+extern int set_pixel_per_line;
+extern double image_scale;
+
 #define IMG_FLAG_UNLOADED 0
 #define IMG_FLAG_LOADED 1
 #define IMG_FLAG_ERROR 2
@@ -64,4 +75,3 @@ void put_image_osc5379(char* url, int x, int y, int w, int h, int sx, int sy, in
 void put_image_sixel(char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh, int n_terminal_image);
 void put_image_iterm2(char* url, int x, int y, int w, int h);
 void put_image_kitty(char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh, int c, int r);
-
