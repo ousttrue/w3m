@@ -1,4 +1,5 @@
 #include "image.h"
+#include "signal_jmp.h"
 #include "tui.h"
 #include "screen.h"
 #include "local_cgi.h"
@@ -134,7 +135,7 @@ openImgdisplay()
         goto err0;
     if (Imgdisplay_pid == 0) {
         /* child */
-        setup_child(FALSE, 2, -1);
+        tui_setup_child(FALSE, 2, -1);
         myExec(cmd);
         /* XXX: ifdef __EMX__, use start /f ? */
     }
@@ -537,7 +538,7 @@ void loadImage(Buffer* buf, enum ImageLoadFlag flag)
             /*
              * setup_child(TRUE, 0, -1);
              */
-            setup_child(FALSE, 0, -1);
+            tui_setup_child(FALSE, 0, -1);
             image_source = cache->file;
             loadGeneralFile(cache->url, cache->current, NULL, 0, NULL);
             /* TODO make sure removing this didn't break anything

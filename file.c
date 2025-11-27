@@ -1,4 +1,5 @@
 #include "file.h"
+#include "signal_jmp.h"
 #include "tui.h"
 #include "term_entry.h"
 #include "screen.h"
@@ -6625,7 +6626,7 @@ doExternal(struct URLFile uf, char* type, Buffer* defaultbuf)
     if (!(mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)) && !(mcap->flags & MAILCAP_NEEDSTERMINAL) && BackgroundExtViewer) {
         tty_flush();
         if (!fork()) {
-            setup_child(FALSE, 0, UFfileno(&uf));
+            tui_setup_child(FALSE, 0, UFfileno(&uf));
             if (save2tmp(uf, tmpf->ptr) < 0)
                 exit(1);
             UFclose(&uf);
@@ -6775,7 +6776,7 @@ int _doFileCopy(char* tmpf, char* defstr, int download)
         tty_flush();
         pid = fork();
         if (!pid) {
-            setup_child(FALSE, 0, -1);
+            tui_setup_child(FALSE, 0, -1);
             if (!_MoveFile(tmpf, p) && PreserveTimestamp && !is_pipe && !stat(tmpf, &st))
                 setModtime(p, st.st_mtime);
             unlink(lock);
@@ -6877,7 +6878,7 @@ int doFileSave(struct URLFile uf, char* defstr)
                 if (tmpf)
                     unlink(tmpf);
             }
-            setup_child(FALSE, 0, UFfileno(&uf));
+            tui_setup_child(FALSE, 0, UFfileno(&uf));
             err = save2tmp(uf, p);
             if (err == 0 && PreserveTimestamp && uf.modtime != -1)
                 setModtime(p, uf.modtime);
@@ -7030,7 +7031,7 @@ uncompress_stream(struct URLFile* uf, char** src)
             int count;
             FILE* f = NULL;
 
-            setup_child(TRUE, 2, UFfileno(uf));
+            tui_setup_child(TRUE, 2, UFfileno(uf));
             if (tmpf)
                 f = fopen(tmpf, "wb");
             while ((count = ISread_n(uf->stream, buf, SAVE_BUF_SIZE)) > 0) {
@@ -7047,7 +7048,7 @@ uncompress_stream(struct URLFile* uf, char** src)
         }
         /* child1 */
         dup2(1, 2); /* stderr>&stdout */
-        setup_child(TRUE, -1, -1);
+        tui_setup_child(TRUE, -1, -1);
         if (use_d_arg)
             execlp(expand_cmd, expand_name, "-d", NULL);
         else

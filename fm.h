@@ -239,8 +239,6 @@ global char MetaRefresh init(FALSE);
 global char LocalhostOnly init(FALSE);
 global char* HostName init(0);
 
-global char TrapSignal init(TRUE);
-
 #define TRAP_ON                                \
     if (TrapSignal) {                          \
         prevtrap = mySignal(SIGINT, KeyAbort); \

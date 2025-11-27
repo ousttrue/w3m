@@ -1,4 +1,5 @@
 #include "etc.h"
+#include "signal_jmp.h"
 #include "tui.h"
 #include "fm.h"
 #include "terms.h"
@@ -537,68 +538,11 @@ Str romanAlphabet(int n)
     return r;
 }
 
-#ifndef SIGIOT
-#define SIGIOT SIGABRT
-#endif /* not SIGIOT */
 
-static void
-reset_signals(void)
-{
-#ifdef SIGHUP
-    mySignal(SIGHUP, SIG_DFL); /* terminate process */
-#endif
-    mySignal(SIGINT, SIG_DFL); /* terminate process */
-#ifdef SIGQUIT
-    mySignal(SIGQUIT, SIG_DFL); /* terminate process */
-#endif
-    mySignal(SIGTERM, SIG_DFL); /* terminate process */
-    mySignal(SIGILL, SIG_DFL); /* create core image */
-    mySignal(SIGIOT, SIG_DFL); /* create core image */
-    mySignal(SIGFPE, SIG_DFL); /* create core image */
-#ifdef SIGBUS
-    mySignal(SIGBUS, SIG_DFL); /* create core image */
-#endif /* SIGBUS */
-    mySignal(SIGCHLD, SIG_IGN);
-    mySignal(SIGPIPE, SIG_IGN);
-}
 
-#ifndef FOPEN_MAX
-#define FOPEN_MAX 1024 /* XXX */
-#endif
 
-static void
-close_all_fds_except(int i, int f)
-{
-    switch (i) { /* fall through */
-    case 0:
-        dup2(open(DEV_NULL_PATH, O_RDONLY), 0);
-    case 1:
-        dup2(open(DEV_NULL_PATH, O_WRONLY), 1);
-    case 2:
-        dup2(open(DEV_NULL_PATH, O_WRONLY), 2);
-    }
-    /* close all other file descriptors (socket, ...) */
-    for (i = 3; i < FOPEN_MAX; i++) {
-        if (i != f)
-            close(i);
-    }
-}
 
-void setup_child(int child, int i, int f)
-{
-    reset_signals();
-    mySignal(SIGINT, SIG_IGN);
-    if (!child)
-        SETPGRP();
-    /*
-     * I don't know why but close_tty() sometimes interrupts loadGeneralFile() in loadImage()
-     * and corrupt image data can be cached in ~/.w3m.
-     */
-    close_all_fds_except(i, f);
-    // QuietMessage = TRUE;
-    fmInitialized = FALSE;
-    TrapSignal = FALSE;
-}
+
 
 pid_t open_pipe_rw(FILE** fr, FILE** fw)
 {
@@ -654,25 +598,6 @@ err1:
     }
 err0:
     return (pid_t)-1;
-}
-
-void myExec(const char* command)
-{
-    mySignal(SIGINT, SIG_DFL);
-    execl("/bin/sh", "sh", "-c", command, NULL);
-    exit(127);
-}
-
-void mySystem(char* command, int background)
-{
-    if (background) {
-        tty_flush();
-        if (!fork()) {
-            setup_child(FALSE, 0, -1);
-            myExec(command);
-        }
-    } else
-        system(command);
 }
 
 Str myExtCommand(char* cmd, char* arg, int redirect)
@@ -1066,25 +991,4 @@ mymktime(const char* timestr)
     return (time_t)((day * 60 * 60 * 24) + (hour * 60 * 60) + (min * 60) + sec);
 }
 
-void (*mySignal(int signal_number, void (*action)(int)))(int)
-{
-#ifdef SA_RESTART
-    struct sigaction new_action, old_action;
 
-    sigemptyset(&new_action.sa_mask);
-    new_action.sa_handler = action;
-    if (signal_number == SIGALRM) {
-#ifdef SA_INTERRUPT
-        new_action.sa_flags = SA_INTERRUPT;
-#else
-        new_action.sa_flags = 0;
-#endif
-    } else {
-        new_action.sa_flags = SA_RESTART;
-    }
-    sigaction(signal_number, &new_action, &old_action);
-    return (old_action.sa_handler);
-#else
-    return (signal(signal_number, action));
-#endif
-}

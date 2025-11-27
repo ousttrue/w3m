@@ -1,4 +1,5 @@
 #include "frame.h"
+#include "signal_jmp.h"
 #include "tui.h"
 #include "etc.h"
 #include "fm.h"

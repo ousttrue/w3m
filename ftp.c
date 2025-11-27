@@ -1,4 +1,5 @@
 #include "http_auth.h"
+#include "signal_jmp.h"
 #include "tui.h"
 #include "display.h"
 #include "file.h"

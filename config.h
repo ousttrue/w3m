@@ -131,23 +131,10 @@
 #define HAVE_SETLOCALE 1
 #define HAVE_LANGINFO_CODESET 1
 
-#define SETPGRP_VOID 1
-#ifdef SETPGRP_VOID
-#define SETPGRP() setpgrp()
-#else
-#define SETPGRP() setpgrp(0, 0)
-#endif
 #define HAVE_FLOAT_H 1
 #define HAVE_SYS_SELECT_H 1
 
 #define HAVE_SIGSETJMP 1
-
-// #define RETSIGTYPE void
-// typedef RETSIGTYPE MySignalHandler;
-typedef void(*MySignalHandler)(int);
-extern MySignalHandler mySignal(int signal_number, MySignalHandler action);
-
-extern void intTrap(int _dummy);
 
 #ifdef HAVE_SIGSETJMP
 #define SETJMP(env) sigsetjmp(env, 1)
@@ -177,7 +164,6 @@ extern void intTrap(int _dummy);
 #define INFLATE_CMDNAME "inflate"
 #define W3MBOOKMARK_CMDNAME "w3mbookmark"
 #define W3MHELPERPANEL_CMDNAME "w3mhelperpanel"
-#define DEV_NULL_PATH "/dev/null"
 #define DEV_TTY_PATH "/dev/tty"
 #define BROTLI_CMDNAME "brotli"
 

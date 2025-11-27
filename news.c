@@ -1,4 +1,5 @@
 #include "news.h"
+#include "signal_jmp.h"
 #include "tui.h"
 #include "file.h"
 #include "terms.h"

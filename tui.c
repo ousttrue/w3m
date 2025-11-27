@@ -1,4 +1,5 @@
 #include "tui.h"
+#include "signal_jmp.h"
 #include "w3m_runtime.h"
 #include "terms.h"
 #include "term_entry.h"
@@ -8,8 +9,11 @@
 #include "image.h"
 #include "buffer.h"
 #include "indep.h"
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <signal.h>
+#include <unistd.h>
 
 int fmInitialized = false;
 int highIntensityColors = false;
@@ -56,6 +60,25 @@ int tui_exec(const char* cmd)
     tui_enter();
 
     return 0;
+}
+
+void myExec(const char* command)
+{
+    mySignal(SIGINT, SIG_DFL);
+    execl("/bin/sh", "sh", "-c", command, NULL);
+    exit(127);
+}
+
+void mySystem(const char* command, int background)
+{
+    if (background) {
+        tty_flush();
+        if (!fork()) {
+            tui_setup_child(FALSE, 0, -1);
+            myExec(command);
+        }
+    } else
+        system(command);
 }
 
 void tui_record_err_message(char* s)
@@ -338,4 +361,68 @@ void tui_render_screen(void)
     tty_wc_putc_end();
     tty_move(sc.CurLine, sc.CurColumn);
     tty_flush();
+}
+
+static void
+reset_signals(void)
+{
+#ifdef SIGHUP
+    mySignal(SIGHUP, SIG_DFL); /* terminate process */
+#endif
+    mySignal(SIGINT, SIG_DFL); /* terminate process */
+#ifdef SIGQUIT
+    mySignal(SIGQUIT, SIG_DFL); /* terminate process */
+#endif
+    mySignal(SIGTERM, SIG_DFL); /* terminate process */
+    mySignal(SIGILL, SIG_DFL); /* create core image */
+    mySignal(SIGIOT, SIG_DFL); /* create core image */
+    mySignal(SIGFPE, SIG_DFL); /* create core image */
+#ifdef SIGBUS
+    mySignal(SIGBUS, SIG_DFL); /* create core image */
+#endif /* SIGBUS */
+    mySignal(SIGCHLD, SIG_IGN);
+    mySignal(SIGPIPE, SIG_IGN);
+}
+
+#define SETPGRP_VOID 1
+#ifdef SETPGRP_VOID
+#define SETPGRP() setpgrp()
+#else
+#define SETPGRP() setpgrp(0, 0)
+#endif
+
+#define DEV_NULL_PATH "/dev/null"
+
+static void
+close_all_fds_except(int i, int f)
+{
+    switch (i) { /* fall through */
+    case 0:
+        dup2(open(DEV_NULL_PATH, O_RDONLY), 0);
+    case 1:
+        dup2(open(DEV_NULL_PATH, O_WRONLY), 1);
+    case 2:
+        dup2(open(DEV_NULL_PATH, O_WRONLY), 2);
+    }
+    /* close all other file descriptors (socket, ...) */
+    for (i = 3; i < FOPEN_MAX; i++) {
+        if (i != f)
+            close(i);
+    }
+}
+
+void tui_setup_child(int child, int i, int f)
+{
+    reset_signals();
+    mySignal(SIGINT, SIG_IGN);
+    if (!child)
+        SETPGRP();
+    /*
+     * I don't know why but close_tty() sometimes interrupts loadGeneralFile() in loadImage()
+     * and corrupt image data can be cached in ~/.w3m.
+     */
+    close_all_fds_except(i, f);
+    // QuietMessage = TRUE;
+    fmInitialized = FALSE;
+    TrapSignal = FALSE;
 }

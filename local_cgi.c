@@ -1,4 +1,6 @@
 #include "local_cgi.h"
+#include "tui.h"
+#include "signal_jmp.h"
 #include "fm.h"
 #include "etc.h"
 #include "form.h"
@@ -17,6 +19,8 @@
 #include <time.h>
 #include <unistd.h>
 #include <gcstr/hash.h>
+
+#define DEV_NULL_PATH "/dev/null"
 
 #define CGIFN_NORMAL 0
 #define CGIFN_LIBDIR 1
@@ -386,7 +390,7 @@ FILE* localcgi_post(char* uri, char* qstr, FormList* request, char* referer)
         return fr;
     }
     /* child */
-    setup_child(TRUE, 2, fw ? fileno(fw) : -1);
+    tui_setup_child(TRUE, 2, fw ? fileno(fw) : -1);
 
     set_cgi_environ(name, file, uri);
     if (path_info)

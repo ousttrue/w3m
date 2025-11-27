@@ -24,6 +24,8 @@ static void DrawImage(char* buf, int redraw);
 static void TermImage(void);
 static void ClearImage(char* buf);
 
+#define DEV_NULL_PATH "/dev/null"
+
 int main(int argc, char** argv)
 {
     int len;
