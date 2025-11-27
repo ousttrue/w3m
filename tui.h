@@ -2,9 +2,11 @@
 #include <stdbool.h>
 #include <gcstr/gcstr.h>
 
-extern int fmInitialized;
 extern int highIntensityColors;
 extern int QuietMessage;
+extern char PermitSaveToPipe;
+extern char PreserveTimestamp;
+extern char AutoUncompress;
 
 void tui_enter();
 void tui_exit();
@@ -27,4 +29,16 @@ const char* inputAnswer(const char* prompt);
 void tui_input_user_pw(const char* realm, Str* uname, Str* pwd);
 Str tui_input_pw();
 void tui_GC_warn_proc(const char* msg, unsigned long arg);
+
+char* searchKeyData(void);
+int tui_doFileCopy(const char* tmpf, const char* defstr, bool download);
+inline static int doFileCopy(const char* tmpf, const char* defstr)
+{
+    return tui_doFileCopy(tmpf, defstr, false);
+}
+int doFileMove(char* tmpf, char* defstr);
+int tui_checkOverWrite(const char* path);
+int tui_checkCopyFile(const char* path1, const char* path2);
+struct URLFile;
+int tui_doFileSave(struct URLFile* uf, const char* defstr);
 

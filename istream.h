@@ -10,7 +10,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-extern char PermitSaveToPipe;
 
 struct stream_buffer {
     unsigned char* buf;

@@ -207,14 +207,6 @@
 #define VALIGN_TOP 1
 #define VALIGN_BOTTOM 2
 
-#define TMPF_DFL 0
-#define TMPF_SRC 1
-#define TMPF_FRAME 2
-#define TMPF_CACHE 3
-#define TMPF_COOKIE 4
-#define TMPF_HIST 5
-#define MAX_TMPF_TYPE 6
-
 #define set_no_proxy(domains) (NO_proxy_domains = make_domain_list(domains))
 
 /*
@@ -232,8 +224,6 @@ global char* DefaultType init(0);
 global char RenderFrame init(FALSE);
 global char TargetSelf init(FALSE);
 global char DecodeCTE init(FALSE);
-global char AutoUncompress init(FALSE);
-global char PreserveTimestamp init(TRUE);
 global char ArgvIsURL init(TRUE);
 global char MetaRefresh init(FALSE);
 global char LocalhostOnly init(FALSE);

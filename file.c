@@ -62,8 +62,6 @@
 static int frame_source = 0;
 static int need_number = 0;
 
-static int _MoveFile(char* path1, char* path2);
-static void uncompress_stream(struct URLFile* uf, char** src);
 static FILE* lessopen_stream(char* path);
 static Buffer* loadcmdout(char* cmd,
     Buffer* (*loadproc)(struct URLFile*, Buffer*),
@@ -309,20 +307,6 @@ uncompressed_file_type(char* path, char** ext)
     if (t0 == NULL)
         t0 = "text/plain";
     return t0;
-}
-
-static int
-setModtime(char* path, time_t modtime)
-{
-    struct utimbuf t;
-    struct stat st;
-
-    if (stat(path, &st) == 0)
-        t.actime = st.st_atime;
-    else
-        t.actime = time(NULL);
-    t.modtime = modtime;
-    return utime(path, &t);
 }
 
 void examineFile(char* path, struct URLFile* uf)
@@ -830,7 +814,7 @@ loadGeneralFile(char* path, struct Url* volatile current, char* referer,
     int volatile searchHeader_through = TRUE;
     MySignalHandler prevtrap = NULL;
     TextList* extra_header = newTextList();
-    volatile Str uname = NULL;
+    Str uname = NULL;
     volatile Str pwd = NULL;
     volatile Str realm = NULL;
     int volatile add_auth_cookie_flag;
@@ -1178,7 +1162,7 @@ page_loaded:
             file = conv_from_system(guess_save_name(NULL, pu.real_file));
         } else
             file = guess_save_name(t_buf, pu.file);
-        if (doFileSave(f, file) == 0)
+        if (tui_doFileSave(&f, file) == 0)
             UFhalfclose(&f);
         else
             UFclose(&f);
@@ -1203,7 +1187,7 @@ page_loaded:
         Buffer* b = NULL;
         if (IStype(f.stream) != IST_ENCODED)
             f.stream = newEncodedStream(f.stream, f.encoding);
-        if (save2tmp(f, image_source) == 0) {
+        if (save2tmp(&f, image_source) == 0) {
             b = newBuffer(INIT_BUFFER_WIDTH);
             b->sourcefile = image_source;
             b->real_type = t;
@@ -1228,12 +1212,12 @@ page_loaded:
             TRAP_OFF;
             if (pu.scheme == SCM_LOCAL) {
                 UFclose(&f);
-                _doFileCopy(pu.real_file,
+                tui_doFileCopy(pu.real_file,
                     conv_from_system(guess_save_name(NULL, pu.real_file)), TRUE);
             } else {
                 if (DecodeCTE && IStype(f.stream) != IST_ENCODED)
                     f.stream = newEncodedStream(f.stream, f.encoding);
-                if (doFileSave(f, guess_save_name(t_buf, pu.file)) == 0)
+                if (tui_doFileSave(&f, guess_save_name(t_buf, pu.file)) == 0)
                     UFhalfclose(&f);
                 else
                     UFclose(&f);
@@ -6073,7 +6057,7 @@ loadImageBuffer(struct URLFile* uf, Buffer* newBuf)
     if (IStype(uf->stream) != IST_ENCODED)
         uf->stream = newEncodedStream(uf->stream, uf->encoding);
     TRAP_ON;
-    if (save2tmp(*uf, cache->file) < 0) {
+    if (save2tmp(uf, cache->file) < 0) {
         TRAP_OFF;
         return NULL;
     }
@@ -6445,7 +6429,7 @@ pager_end:
     return last;
 }
 
-int save2tmp(struct URLFile uf, char* tmpf)
+int save2tmp(struct URLFile *uf, char* tmpf)
 {
     FILE* ff;
     long long linelen = 0, trbyte = 0;
@@ -6465,11 +6449,11 @@ int save2tmp(struct URLFile uf, char* tmpf)
     }
     TRAP_ON;
     int check = 0;
-    if (uf.scheme == SCM_NEWS) {
+    if (uf->scheme == SCM_NEWS) {
         char c;
-        if (!uf.stream)
+        if (!uf->stream)
             return -1;
-        while (c = UFgetc(&uf), !iseos(uf.stream)) {
+        while (c = UFgetc(uf), !iseos(uf->stream)) {
             if (c == '\n') {
                 if (check == 0)
                     check++;
@@ -6489,7 +6473,7 @@ int save2tmp(struct URLFile uf, char* tmpf)
         int count;
 
         buf = NewWithoutGC_N(char, SAVE_BUF_SIZE);
-        while ((count = ISread_n(uf.stream, buf, SAVE_BUF_SIZE)) > 0) {
+        while ((count = ISread_n(uf->stream, buf, SAVE_BUF_SIZE)) > 0) {
             if (fwrite(buf, 1, count, ff) != count) {
                 retval = -2;
                 goto _end;
@@ -6541,14 +6525,14 @@ doExternal(struct URLFile uf, char* type, Buffer* defaultbuf)
         tty_flush();
         if (!fork()) {
             tui_setup_child(FALSE, 0, UFfileno(&uf));
-            if (save2tmp(uf, tmpf->ptr) < 0)
+            if (save2tmp(&uf, tmpf->ptr) < 0)
                 exit(1);
             UFclose(&uf);
             myExec(command->ptr);
         }
         return NO_BUFFER;
     } else {
-        if (save2tmp(uf, tmpf->ptr) < 0) {
+        if (save2tmp(&uf, tmpf->ptr) < 0) {
             return NULL;
         }
     }
@@ -6597,281 +6581,7 @@ doExternal(struct URLFile uf, char* type, Buffer* defaultbuf)
     return buf;
 }
 
-static int
-_MoveFile(char* path1, char* path2)
-{
-    InputStream f1;
-    FILE* f2;
-    int is_pipe;
-    long long linelen = 0, trbyte = 0;
-    char* buf = NULL;
-    int count;
-
-    f1 = openIS(path1);
-    if (f1 == NULL)
-        return -1;
-    if (*path2 == '|' && PermitSaveToPipe) {
-        is_pipe = TRUE;
-        f2 = popen(path2 + 1, "w");
-    } else {
-        is_pipe = FALSE;
-        f2 = fopen(path2, "wb");
-    }
-    if (f2 == NULL) {
-        ISclose(f1);
-        return -1;
-    }
-    current_content_length = 0;
-    buf = NewWithoutGC_N(char, SAVE_BUF_SIZE);
-    while ((count = ISread_n(f1, buf, SAVE_BUF_SIZE)) > 0) {
-        fwrite(buf, 1, count, f2);
-        linelen += count;
-        tui_showProgress(current_content_length, &linelen, &trbyte);
-    }
-    xfree(buf);
-    ISclose(f1);
-    if (is_pipe)
-        pclose(f2);
-    else
-        fclose(f2);
-    return 0;
-}
-
-int _doFileCopy(char* tmpf, char* defstr, int download)
-{
-    Str msg;
-    Str filen;
-    char *p, *q = NULL;
-    pid_t pid;
-    char* lock;
-    FILE* f;
-    struct stat st;
-    long long size = 0;
-    int is_pipe = FALSE;
-
-    if (fmInitialized) {
-        p = searchKeyData();
-        if (p == NULL || *p == '\0') {
-            /* FIXME: gettextize? */
-            q = inputLineHist("(Download)Save file to: ",
-                defstr, IN_COMMAND, SaveHist);
-            if (q == NULL || *q == '\0')
-                return FALSE;
-            p = conv_to_system(q);
-        }
-        if (*p == '|' && PermitSaveToPipe)
-            is_pipe = TRUE;
-        else {
-            if (q) {
-                p = unescape_spaces(Strnew_charp(q))->ptr;
-                p = conv_to_system(p);
-            }
-            p = expandPath(p);
-            if (checkOverWrite(p) < 0)
-                return -1;
-        }
-        if (checkCopyFile(tmpf, p) < 0) {
-            /* FIXME: gettextize? */
-            msg = Sprintf("Can't copy. %s and %s are identical.",
-                conv_from_system(tmpf), conv_from_system(p));
-            tui_disp_err_message(msg->ptr, FALSE);
-            return -1;
-        }
-        if (!download) {
-            if (_MoveFile(tmpf, p) < 0) {
-                /* FIXME: gettextize? */
-                msg = Sprintf("Can't save to %s", conv_from_system(p));
-                tui_disp_err_message(msg->ptr, FALSE);
-            }
-            return -1;
-        }
-        lock = tmpfname(TMPF_DFL, ".lock")->ptr;
-        symlink(p, lock);
-        tty_flush();
-        pid = fork();
-        if (!pid) {
-            tui_setup_child(FALSE, 0, -1);
-            if (!_MoveFile(tmpf, p) && PreserveTimestamp && !is_pipe && !stat(tmpf, &st))
-                setModtime(p, st.st_mtime);
-            unlink(lock);
-            exit(0);
-        }
-        if (!stat(tmpf, &st))
-            size = st.st_size;
-        addDownloadList(pid, conv_from_system(tmpf), p, lock, size);
-    } else {
-        q = searchKeyData();
-        if (q == NULL || *q == '\0') {
-            /* FIXME: gettextize? */
-            printf("(Download)Save file to: ");
-            fflush(stdout);
-            filen = Strfgets(stdin);
-            if (filen->length == 0)
-                return -1;
-            q = filen->ptr;
-        }
-        for (p = q + strlen(q) - 1; IS_SPACE(*p); p--)
-            ;
-        *(p + 1) = '\0';
-        if (*q == '\0')
-            return -1;
-        p = q;
-        if (*p == '|' && PermitSaveToPipe)
-            is_pipe = TRUE;
-        else {
-            p = expandPath(p);
-            if (checkOverWrite(p) < 0)
-                return -1;
-        }
-        if (checkCopyFile(tmpf, p) < 0) {
-            /* FIXME: gettextize? */
-            printf("Can't copy. %s and %s are identical.", tmpf, p);
-            return -1;
-        }
-        if (_MoveFile(tmpf, p) < 0) {
-            /* FIXME: gettextize? */
-            printf("Can't save to %s\n", p);
-            return -1;
-        }
-        if (PreserveTimestamp && !is_pipe && !stat(tmpf, &st))
-            setModtime(p, st.st_mtime);
-    }
-    return 0;
-}
-
-int doFileMove(char* tmpf, char* defstr)
-{
-    int ret = doFileCopy(tmpf, defstr);
-    unlink(tmpf);
-    return ret;
-}
-
-int doFileSave(struct URLFile uf, char* defstr)
-{
-    Str msg;
-    Str filen;
-    char *p, *q;
-    pid_t pid;
-    char* lock;
-    char* tmpf = NULL;
-    FILE* f;
-
-    if (fmInitialized) {
-        p = searchKeyData();
-        if (p == NULL || *p == '\0') {
-            /* FIXME: gettextize? */
-            p = inputLineHist("(Download)Save file to: ",
-                defstr, IN_FILENAME, SaveHist);
-            if (p == NULL || *p == '\0')
-                return -1;
-            p = conv_to_system(p);
-        }
-        if (checkOverWrite(p) < 0)
-            return -1;
-        if (checkSaveFile(uf.stream, p) < 0) {
-            /* FIXME: gettextize? */
-            msg = Sprintf("Can't save. Load file and %s are identical.",
-                conv_from_system(p));
-            tui_disp_err_message(msg->ptr, FALSE);
-            return -1;
-        }
-        /*
-         * if (save2tmp(uf, p) < 0) {
-         * msg = Sprintf("Can't save to %s", conv_from_system(p));
-         * disp_err_message(msg->ptr, FALSE);
-         * }
-         */
-        lock = tmpfname(TMPF_DFL, ".lock")->ptr;
-        symlink(p, lock);
-        tty_flush();
-        pid = fork();
-        if (!pid) {
-            int err;
-            if ((uf.content_encoding != CMP_NOCOMPRESS) && AutoUncompress) {
-                uncompress_stream(&uf, &tmpf);
-                if (tmpf)
-                    unlink(tmpf);
-            }
-            tui_setup_child(FALSE, 0, UFfileno(&uf));
-            err = save2tmp(uf, p);
-            if (err == 0 && PreserveTimestamp && uf.modtime != -1)
-                setModtime(p, uf.modtime);
-            UFclose(&uf);
-            unlink(lock);
-            if (err != 0)
-                exit(-err);
-            exit(0);
-        }
-        addDownloadList(pid, uf.url, p, lock, current_content_length);
-    } else {
-        q = searchKeyData();
-        if (q == NULL || *q == '\0') {
-            /* FIXME: gettextize? */
-            printf("(Download)Save file to: ");
-            fflush(stdout);
-            filen = Strfgets(stdin);
-            if (filen->length == 0)
-                return -1;
-            q = filen->ptr;
-        }
-        for (p = q + strlen(q) - 1; IS_SPACE(*p); p--)
-            ;
-        *(p + 1) = '\0';
-        if (*q == '\0')
-            return -1;
-        p = expandPath(q);
-        if (checkOverWrite(p) < 0)
-            return -1;
-        if (checkSaveFile(uf.stream, p) < 0) {
-            /* FIXME: gettextize? */
-            printf("Can't save. Load file and %s are identical.", p);
-            return -1;
-        }
-        if (uf.content_encoding != CMP_NOCOMPRESS && AutoUncompress) {
-            uncompress_stream(&uf, &tmpf);
-            if (tmpf)
-                unlink(tmpf);
-        }
-        if (save2tmp(uf, p) < 0) {
-            /* FIXME: gettextize? */
-            printf("Can't save to %s\n", p);
-            return -1;
-        }
-        if (PreserveTimestamp && uf.modtime != -1)
-            setModtime(p, uf.modtime);
-    }
-    return 0;
-}
-
-int checkCopyFile(char* path1, char* path2)
-{
-    struct stat st1, st2;
-
-    if (*path2 == '|' && PermitSaveToPipe)
-        return 0;
-    if ((stat(path1, &st1) == 0) && (stat(path2, &st2) == 0))
-        if (st1.st_ino == st2.st_ino)
-            return -1;
-    return 0;
-}
-
-int checkOverWrite(char* path)
-{
-    struct stat st;
-    char* ans;
-
-    if (stat(path, &st) < 0)
-        return 0;
-    /* FIXME: gettextize? */
-    ans = inputAnswer("File exists. Overwrite? (y/n)");
-    if (ans && TOLOWER(*ans) == 'y')
-        return 0;
-    else
-        return -1;
-}
-
-static void
-uncompress_stream(struct URLFile* uf, char** src)
+void uncompress_stream(struct URLFile* uf, char** src)
 {
     pid_t pid1;
     FILE* f1;

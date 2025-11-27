@@ -715,7 +715,7 @@ static char* tmpf_base[MAX_TMPF_TYPE] = {
 };
 static unsigned int tmpf_seq[MAX_TMPF_TYPE];
 
-Str tmpfname(int type, char* ext)
+Str tmpfname(int type, const char* ext)
 {
     Str tmpf;
     char* dir;

@@ -3965,7 +3965,7 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document")
             file = conv_to_system(file);
         }
         file = expandPath(file);
-        if (checkOverWrite(file) < 0) {
+        if (tui_checkOverWrite(file) < 0) {
             displayBuffer(Currentbuf, B_NORMAL);
             return;
         }

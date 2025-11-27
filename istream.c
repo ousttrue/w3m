@@ -30,8 +30,6 @@
 #include <openssl/crypto.h> /* SSLEAY_VERSION_NUMBER may be here */
 #include <openssl/err.h>
 
-char PermitSaveToPipe = (FALSE);
-
 #define uchar unsigned char
 
 #define STREAM_BUF_SIZE 8192

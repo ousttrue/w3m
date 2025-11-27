@@ -35,15 +35,10 @@ extern Str getLinkNumberStr(int correction);
 extern void examineFile(char* path, struct URLFile* uf);
 extern int is_boundary(unsigned char*, unsigned char*);
 extern void pushEvent(int cmd, void* data);
-extern int checkOverWrite(char* path);
-extern int doFileMove(char* tmpf, char* defstr);
-extern int doFileSave(struct URLFile uf, char* defstr);
-extern int _doFileCopy(char* tmpf, char* defstr, int download);
-#define doFileCopy(tmpf, defstr) _doFileCopy(tmpf, defstr, FALSE);
-extern int save2tmp(struct URLFile uf, char* tmpf);
-extern int checkCopyFile(char* path1, char* path2);
+
+
+extern int save2tmp(struct URLFile *uf, char* tmpf);
 extern int gethtmlcmd(char** s);
 char* acceptableEncoding(void);
 
-
-
+void uncompress_stream(struct URLFile* uf, char** src);

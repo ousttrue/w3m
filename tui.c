@@ -1,4 +1,6 @@
 #include "tui.h"
+#include "file.h"
+#include "DownloadList.h"
 #include "signal_jmp.h"
 #include "w3m_runtime.h"
 #include "terms.h"
@@ -10,6 +12,11 @@
 #include "buffer.h"
 #include "indep.h"
 #include "linein.h"
+#include "history.h"
+#include "istream.h"
+#include "html.h"
+// tmpfname
+#include "etc.h"
 #include <gcstr/gcstr.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -17,10 +24,14 @@
 #include <signal.h>
 #include <time.h>
 #include <unistd.h>
+#include <utime.h>
 
 int fmInitialized = false;
 int highIntensityColors = false;
 int QuietMessage = false;
+char PermitSaveToPipe = false;
+char PreserveTimestamp = true;
+char AutoUncompress = false;
 
 static GeneralList* message_list = NULL;
 static char* delayed_msg = NULL;
@@ -634,4 +645,292 @@ void tui_GC_warn_proc(const char* msg, unsigned long arg)
     //     orig_GC_warn_proc(msg, arg);
     else
         fprintf(stderr, msg, (unsigned long)arg);
+}
+
+static long long current_content_length;
+#define SAVE_BUF_SIZE 1536
+
+static int
+_MoveFile(const char* path1, const char* path2)
+{
+    InputStream f1;
+    FILE* f2;
+    int is_pipe;
+    long long linelen = 0, trbyte = 0;
+    char* buf = NULL;
+    int count;
+
+    f1 = openIS(path1);
+    if (f1 == NULL)
+        return -1;
+    if (*path2 == '|' && PermitSaveToPipe) {
+        is_pipe = TRUE;
+        f2 = popen(path2 + 1, "w");
+    } else {
+        is_pipe = FALSE;
+        f2 = fopen(path2, "wb");
+    }
+    if (f2 == NULL) {
+        ISclose(f1);
+        return -1;
+    }
+    current_content_length = 0;
+    buf = NewWithoutGC_N(char, SAVE_BUF_SIZE);
+    while ((count = ISread_n(f1, buf, SAVE_BUF_SIZE)) > 0) {
+        fwrite(buf, 1, count, f2);
+        linelen += count;
+        tui_showProgress(current_content_length, &linelen, &trbyte);
+    }
+    xfree(buf);
+    ISclose(f1);
+    if (is_pipe)
+        pclose(f2);
+    else
+        fclose(f2);
+    return 0;
+}
+
+static int
+setModtime(const char* path, time_t modtime)
+{
+    struct utimbuf t;
+    struct stat st;
+    if (stat(path, &st) == 0)
+        t.actime = st.st_atime;
+    else
+        t.actime = time(NULL);
+    t.modtime = modtime;
+    return utime(path, &t);
+}
+
+int tui_doFileCopy(const char* tmpf, const char* defstr, bool download)
+{
+    Str msg;
+    Str filen;
+    const char* q = NULL;
+    pid_t pid;
+    char* lock;
+    FILE* f;
+    struct stat st;
+    long long size = 0;
+    int is_pipe = FALSE;
+
+    if (fmInitialized) {
+        const char* p = searchKeyData();
+        if (p == NULL || *p == '\0') {
+            /* FIXME: gettextize? */
+            q = inputLineHist("(Download)Save file to: ",
+                defstr, IN_COMMAND, SaveHist);
+            if (q == NULL || *q == '\0')
+                return FALSE;
+            p = conv_to_system(q);
+        }
+        if (*p == '|' && PermitSaveToPipe)
+            is_pipe = TRUE;
+        else {
+            if (q) {
+                p = unescape_spaces(Strnew_charp(q))->ptr;
+                p = conv_to_system(p);
+            }
+            p = expandPath(p);
+            if (tui_checkOverWrite(p) < 0)
+                return -1;
+        }
+        if (tui_checkCopyFile(tmpf, p) < 0) {
+            /* FIXME: gettextize? */
+            msg = Sprintf("Can't copy. %s and %s are identical.",
+                conv_from_system(tmpf), conv_from_system(p));
+            tui_disp_err_message(msg->ptr, FALSE);
+            return -1;
+        }
+        if (!download) {
+            if (_MoveFile(tmpf, p) < 0) {
+                /* FIXME: gettextize? */
+                msg = Sprintf("Can't save to %s", conv_from_system(p));
+                tui_disp_err_message(msg->ptr, FALSE);
+            }
+            return -1;
+        }
+        lock = tmpfname(TMPF_DFL, ".lock")->ptr;
+        symlink(p, lock);
+        tty_flush();
+        pid = fork();
+        if (!pid) {
+            tui_setup_child(FALSE, 0, -1);
+            if (!_MoveFile(tmpf, p) && PreserveTimestamp && !is_pipe && !stat(tmpf, &st))
+                setModtime(p, st.st_mtime);
+            unlink(lock);
+            exit(0);
+        }
+        if (!stat(tmpf, &st))
+            size = st.st_size;
+        addDownloadList(pid, conv_from_system(tmpf), p, lock, size);
+    } else {
+        q = searchKeyData();
+        if (q == NULL || *q == '\0') {
+            /* FIXME: gettextize? */
+            printf("(Download)Save file to: ");
+            fflush(stdout);
+            filen = Strfgets(stdin);
+            if (filen->length == 0)
+                return -1;
+            q = filen->ptr;
+        }
+        char* p;
+        for (p = q + strlen(q) - 1; IS_SPACE(*p); p--)
+            ;
+        *(p + 1) = '\0';
+        if (*q == '\0')
+            return -1;
+        p = q;
+        if (*p == '|' && PermitSaveToPipe)
+            is_pipe = TRUE;
+        else {
+            p = expandPath(p);
+            if (tui_checkOverWrite(p) < 0)
+                return -1;
+        }
+        if (tui_checkCopyFile(tmpf, p) < 0) {
+            /* FIXME: gettextize? */
+            printf("Can't copy. %s and %s are identical.", tmpf, p);
+            return -1;
+        }
+        if (_MoveFile(tmpf, p) < 0) {
+            /* FIXME: gettextize? */
+            printf("Can't save to %s\n", p);
+            return -1;
+        }
+        if (PreserveTimestamp && !is_pipe && !stat(tmpf, &st))
+            setModtime(p, st.st_mtime);
+    }
+    return 0;
+}
+
+int doFileMove(char* tmpf, char* defstr)
+{
+    int ret = doFileCopy(tmpf, defstr);
+    unlink(tmpf);
+    return ret;
+}
+
+int tui_checkOverWrite(const char* path)
+{
+    struct stat st;
+    if (stat(path, &st) < 0)
+        return 0;
+
+    const char* ans = inputAnswer("File exists. Overwrite? (y/n)");
+    if (ans && TOLOWER(*ans) == 'y')
+        return 0;
+    else
+        return -1;
+}
+
+int tui_checkCopyFile(const char* path1, const char* path2)
+{
+    struct stat st1, st2;
+
+    if (*path2 == '|' && PermitSaveToPipe)
+        return 0;
+    if ((stat(path1, &st1) == 0) && (stat(path2, &st2) == 0))
+        if (st1.st_ino == st2.st_ino)
+            return -1;
+    return 0;
+}
+
+int tui_doFileSave(struct URLFile* uf, const char* defstr)
+{
+    Str msg;
+    Str filen;
+    char *p, *q;
+    pid_t pid;
+    char* lock;
+    char* tmpf = NULL;
+    FILE* f;
+
+    if (fmInitialized) {
+        p = searchKeyData();
+        if (p == NULL || *p == '\0') {
+            /* FIXME: gettextize? */
+            p = inputLineHist("(Download)Save file to: ",
+                defstr, IN_FILENAME, SaveHist);
+            if (p == NULL || *p == '\0')
+                return -1;
+            p = conv_to_system(p);
+        }
+        if (tui_checkOverWrite(p) < 0)
+            return -1;
+        if (checkSaveFile(uf->stream, p) < 0) {
+            /* FIXME: gettextize? */
+            msg = Sprintf("Can't save. Load file and %s are identical.",
+                conv_from_system(p));
+            tui_disp_err_message(msg->ptr, FALSE);
+            return -1;
+        }
+        /*
+         * if (save2tmp(uf, p) < 0) {
+         * msg = Sprintf("Can't save to %s", conv_from_system(p));
+         * disp_err_message(msg->ptr, FALSE);
+         * }
+         */
+        lock = tmpfname(TMPF_DFL, ".lock")->ptr;
+        symlink(p, lock);
+        tty_flush();
+        pid = fork();
+        if (!pid) {
+            int err;
+            if ((uf->content_encoding != CMP_NOCOMPRESS) && AutoUncompress) {
+                uncompress_stream(&uf, &tmpf);
+                if (tmpf)
+                    unlink(tmpf);
+            }
+            tui_setup_child(FALSE, 0, UFfileno(uf));
+            err = save2tmp(uf, p);
+            if (err == 0 && PreserveTimestamp && uf->modtime != -1)
+                setModtime(p, uf->modtime);
+            UFclose(uf);
+            unlink(lock);
+            if (err != 0)
+                exit(-err);
+            exit(0);
+        }
+        addDownloadList(pid, uf->url, p, lock, current_content_length);
+    } else {
+        q = searchKeyData();
+        if (q == NULL || *q == '\0') {
+            /* FIXME: gettextize? */
+            printf("(Download)Save file to: ");
+            fflush(stdout);
+            filen = Strfgets(stdin);
+            if (filen->length == 0)
+                return -1;
+            q = filen->ptr;
+        }
+        for (p = q + strlen(q) - 1; IS_SPACE(*p); p--)
+            ;
+        *(p + 1) = '\0';
+        if (*q == '\0')
+            return -1;
+        p = expandPath(q);
+        if (tui_checkOverWrite(p) < 0)
+            return -1;
+        if (checkSaveFile(uf->stream, p) < 0) {
+            /* FIXME: gettextize? */
+            printf("Can't save. Load file and %s are identical.", p);
+            return -1;
+        }
+        if (uf->content_encoding != CMP_NOCOMPRESS && AutoUncompress) {
+            uncompress_stream(&uf, &tmpf);
+            if (tmpf)
+                unlink(tmpf);
+        }
+        if (save2tmp(uf, p) < 0) {
+            /* FIXME: gettextize? */
+            printf("Can't save to %s\n", p);
+            return -1;
+        }
+        if (PreserveTimestamp && uf->modtime != -1)
+            setModtime(p, uf->modtime);
+    }
+    return 0;
 }
