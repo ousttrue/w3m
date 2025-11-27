@@ -268,17 +268,6 @@ global char* CurrentCmdData;
 global char* w3m_reqlog;
 extern int enable_inline_image;
 
-#define DUMP_BUFFER 0x01
-#define DUMP_HEAD 0x02
-#define DUMP_SOURCE 0x04
-#define DUMP_EXTRA 0x08
-#define DUMP_HALFDUMP 0x10
-#define DUMP_FRAME 0x20
-global int w3m_debug;
-global int w3m_dump init(0);
-#define w3m_halfdump (w3m_dump & DUMP_HALFDUMP)
-global int w3m_halfload init(FALSE);
-
 global int confirm_on_quit init(TRUE);
 global int use_mark init(FALSE);
 global int emacs_like_lineedit init(FALSE);
