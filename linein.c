@@ -1,4 +1,5 @@
 #include "linein.h"
+#include "tui.h"
 #include "screen.h"
 #include "fm.h"
 #include "etc.h"
@@ -178,7 +179,7 @@ char* inputLineHistSearch(char* prompt, char* def_str, int flag, struct Hist* hi
             addStr(strBuf->ptr, strProp, CLen, offset, COLS - opos);
         scr_clrtoeolx();
         scr_move(LASTLINE, opos + x - offset);
-        tty_render_screen();
+        tui_render_screen();
 
     next_char:
         c = getch();
@@ -244,7 +245,7 @@ char* inputLineHistSearch(char* prompt, char* def_str, int flag, struct Hist* hi
         return NULL;
 
     scr_move(LASTLINE, 0);
-    tty_render_screen();
+    tui_render_screen();
     p = strBuf->ptr;
     if (flag & (IN_FILENAME | IN_COMMAND)) {
         SKIP_BLANKS(&p);

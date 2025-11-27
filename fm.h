@@ -50,13 +50,6 @@
 #define HOST_NAME_MAX 255
 #endif
 
-/* Flags for displayBuffer() */
-#define B_NORMAL 0
-#define B_FORCE_REDRAW 1
-#define B_REDRAW 2
-#define B_SCROLL 3
-#define B_REDRAW_IMAGE 4
-
 /* Search Result */
 #define SR_FOUND 0x1
 #define SR_NOTFOUND 0x2
@@ -246,7 +239,6 @@ global char MetaRefresh init(FALSE);
 global char LocalhostOnly init(FALSE);
 global char* HostName init(0);
 
-global char fmInitialized init(FALSE);
 global char TrapSignal init(TRUE);
 
 #define TRAP_ON                                \
@@ -304,7 +296,6 @@ global int w3m_dump init(0);
 global int w3m_halfload init(FALSE);
 
 global int useColor init(TRUE);
-global int highIntensityColors init(FALSE);
 global int basic_color init(8); /* don't change */
 global int anchor_color init(4); /* blue  */
 global int image_color init(2); /* green */
@@ -330,8 +321,6 @@ global int DecodeURL init(FALSE);
 global int retryAsHttp init(TRUE);
 global int showLineNum init(FALSE);
 global int show_srch_str init(TRUE);
-global int activeImage init(FALSE);
-global int displayImage init(TRUE);
 global int autoImage init(TRUE);
 global int useExtImageViewer init(TRUE);
 global int maxLoadImage init(4);

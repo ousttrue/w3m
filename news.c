@@ -1,4 +1,5 @@
 #include "news.h"
+#include "tui.h"
 #include "file.h"
 #include "terms.h"
 #include "fm.h"
@@ -324,8 +325,8 @@ Str loadNewsgroup(struct Url* pu, wc_ces* charset)
         *list++ = '\0';
     }
     if (fmInitialized) {
-        message(Sprintf("Reading newsgroup %s...", group)->ptr, 0, 0);
-        tty_render_screen();
+        tui_message(Sprintf("Reading newsgroup %s...", group)->ptr, 0, 0);
+        tui_render_screen();
     }
     qgroup = html_quote(group);
     group = file_unquote(group);

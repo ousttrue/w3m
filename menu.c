@@ -1,7 +1,5 @@
-/*
- * w3m menu.c
- */
 #include "fm.h"
+#include "tui.h"
 #include "term_entry.h"
 #include "buffer.h"
 #include "search.h"
@@ -866,7 +864,7 @@ int select_menu(Menu* menu, int mselect)
      * move(menu->cursorY, menu->cursorX); */
     scr_move(menu->y + mselect - menu->offset, menu->x);
     scr_toggle_stand();
-    tty_render_screen();
+    tui_render_screen();
 
     return (menu->select);
 }
@@ -1256,14 +1254,14 @@ int (*menuSearchRoutine)(Menu*, char*, int);
 static int
 menuForwardSearch(Menu* menu, char* str, int from)
 {
-    int i;
     char* p;
     if ((p = regexCompile(str, IgnoreCase)) != NULL) {
-        message(p, 0, 0);
+        tui_message(p, 0, 0);
         return -1;
     }
     if (from < 0)
         from = 0;
+    int i;
     for (i = from; i < menu->nitem; i++)
         if (menu->item[i].type != MENU_NOP && regexMatch(menu->item[i].label, -1, 1) == 1)
             return i;
@@ -1288,7 +1286,7 @@ menu_search_forward(Menu* menu, int from)
         found = menuForwardSearch(menu, str, 0);
     if (found >= 0)
         return found;
-    disp_message("Not found", TRUE);
+    tui_disp_message("Not found", TRUE);
     return -1;
 }
 
@@ -1308,7 +1306,7 @@ menuBackwardSearch(Menu* menu, char* str, int from)
     int i;
     char* p;
     if ((p = regexCompile(str, IgnoreCase)) != NULL) {
-        message(p, 0, 0);
+        tui_message(p, 0, 0);
         return -1;
     }
     if (from >= menu->nitem)
@@ -1337,7 +1335,7 @@ menu_search_backward(Menu* menu, int from)
         found = menuBackwardSearch(menu, str, menu->nitem);
     if (found >= 0)
         return found;
-    disp_message("Not found", TRUE);
+    tui_disp_message("Not found", TRUE);
     return -1;
 }
 
@@ -1358,13 +1356,13 @@ menu_search_next_previous(Menu* menu, int from, int reverse)
     static int (*routine[2])(Menu*, char*, int) = {
         menuForwardSearch, menuBackwardSearch
     };
-    char* str;
 
     if (menuSearchRoutine == NULL) {
-        disp_message("No previous regular expression", TRUE);
+        tui_disp_message("No previous regular expression", TRUE);
         return -1;
     }
-    str = conv_search_string(SearchString, DisplayCharset);
+
+    char* str = conv_search_string(SearchString, DisplayCharset);
     if (reverse != 0)
         reverse = 1;
     if (menuSearchRoutine == menuBackwardSearch)
@@ -1375,7 +1373,7 @@ menu_search_next_previous(Menu* menu, int from, int reverse)
         found = (*routine[reverse])(menu, str, reverse * menu->nitem);
     if (found >= 0)
         return found;
-    disp_message("Not found", TRUE);
+    tui_disp_message("Not found", TRUE);
     return -1;
 }
 

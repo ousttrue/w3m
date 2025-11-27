@@ -12,6 +12,8 @@ extern double pixel_per_line;
 extern int pixel_per_line_i;
 extern int set_pixel_per_line;
 extern double image_scale;
+extern int activeImage;
+extern int displayImage;
 
 #define IMG_FLAG_UNLOADED 0
 #define IMG_FLAG_LOADED 1

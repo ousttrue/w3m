@@ -1,4 +1,5 @@
 #include "http_auth.h"
+#include "tui.h"
 #include "display.h"
 #include "file.h"
 #include "etc.h"
@@ -157,11 +158,11 @@ ftp_login(FTP ftp)
     if (status != 220)
         goto open_err;
     if (fmInitialized) {
-        message(Sprintf("Sending FTP username (%s) to remote server.",
+        tui_message(Sprintf("Sending FTP username (%s) to remote server.",
                     ftp->user)
                     ->ptr,
             0, 0);
-        tty_render_screen();
+        tui_render_screen();
     }
     ftp_command(ftp, "USER", ftp->user, &status);
     /*
@@ -172,8 +173,8 @@ ftp_login(FTP ftp)
     if (status != 331)
         goto open_err;
     if (fmInitialized) {
-        message("Sending FTP password to remote server.", 0, 0);
-        tty_render_screen();
+        tui_message("Sending FTP password to remote server.", 0, 0);
+        tui_render_screen();
     }
     ftp_command(ftp, "PASS", ftp->pass, &status);
     if (status != 230)

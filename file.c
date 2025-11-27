@@ -1,4 +1,5 @@
 #include "file.h"
+#include "tui.h"
 #include "term_entry.h"
 #include "screen.h"
 #include "news.h"
@@ -542,10 +543,8 @@ void readHeader(struct URLFile* uf, Buffer* newBuf, int thru, struct Url* pu)
             while (*p && IS_SPACE(*p))
                 p++;
             http_response_code = atoi(p);
-            if (fmInitialized) {
-                message(lineBuf2->ptr, 0, 0);
-                tty_render_screen();
-            }
+                tui_message(lineBuf2->ptr, 0, 0);
+                tui_render_screen();
         }
         if (!strncasecmp(lineBuf2->ptr, "content-transfer-encoding:", 26)) {
             p = lineBuf2->ptr + 26;
@@ -649,10 +648,10 @@ void readHeader(struct URLFile* uf, Buffer* newBuf, int thru, struct Url* pu)
                 int err;
                 if (show_cookie) {
                     if (flag & COO_SECURE)
-                        disp_message_nsec("Received a secured cookie", FALSE, 1,
+                        tui_disp_message_nsec("Received a secured cookie", FALSE, 1,
                             TRUE, FALSE);
                     else
-                        disp_message_nsec(Sprintf("Received cookie: %s=%s",
+                        tui_disp_message_nsec(Sprintf("Received cookie: %s=%s",
                                               name->ptr, value->ptr)
                                               ->ptr,
                             FALSE, 1, TRUE, FALSE);
@@ -683,11 +682,11 @@ void readHeader(struct URLFile* uf, Buffer* newBuf, int thru, struct Url* pu)
                                        ->ptr;
                         else
                             emsg = "This cookie was rejected to prevent security violation.";
-                        record_err_message(emsg);
+                        tui_record_err_message(emsg);
                         if (show_cookie)
-                            disp_message_nsec(emsg, FALSE, 1, TRUE, FALSE);
+                            tui_disp_message_nsec(emsg, FALSE, 1, TRUE, FALSE);
                     } else if (show_cookie)
-                        disp_message_nsec(Sprintf("Accepting invalid cookie: %s=%s",
+                        tui_disp_message_nsec(Sprintf("Accepting invalid cookie: %s=%s",
                                               name->ptr, value->ptr)
                                               ->ptr,
                             FALSE,
@@ -789,13 +788,13 @@ checkRedirection(struct Url* pu)
         /* FIXME: gettextize? */
         tmp = Sprintf("Number of redirections exceeded %d at %s",
             FollowRedirection, parsedURL2Str(pu)->ptr);
-        disp_err_message(tmp->ptr, FALSE);
+        tui_disp_err_message(tmp->ptr, FALSE);
         return FALSE;
     } else if (nredir_size > 0 && (same_url_p(pu, &puv[(nredir - 1) % nredir_size]) || (!(nredir % 2) && same_url_p(pu, &puv[(nredir / 2) % nredir_size])))) {
         /* FIXME: gettextize? */
         tmp = Sprintf("Redirection loop detected (%s)",
             parsedURL2Str(pu)->ptr);
-        disp_err_message(tmp->ptr, FALSE);
+        tui_disp_err_message(tmp->ptr, FALSE);
         return FALSE;
     }
     if (!puv) {
@@ -894,7 +893,7 @@ load_doc:
             break;
         case SCM_UNKNOWN:
             /* FIXME: gettextize? */
-            disp_err_message(Sprintf("Unknown URI: %s",
+            tui_disp_err_message(Sprintf("Unknown URI: %s",
                                  parsedURL2Str(&pu)->ptr)
                                  ->ptr,
                 FALSE);
@@ -934,9 +933,8 @@ load_doc:
 
         if (fmInitialized) {
             term_cbreak();
-            /* FIXME: gettextize? */
-            message(Sprintf("%s contacted. Waiting for reply...", pu.host)->ptr, 0, 0);
-            tty_render_screen();
+            tui_message(Sprintf("%s contacted. Waiting for reply...", pu.host)->ptr, 0, 0);
+            tui_render_screen();
         }
         if (t_buf == NULL)
             t_buf = newBuffer(INIT_BUFFER_WIDTH);
@@ -5535,7 +5533,7 @@ void showProgress(long long* linelen, long long* trbyte)
             scr_addch('|');
         scr_standend();
         /* no_clrtoeol(); */
-        tty_render_screen();
+        tui_render_screen();
     } else {
         cur_time = time(0);
         if (*trbyte == 0) {
@@ -5557,8 +5555,8 @@ void showProgress(long long* linelen, long long* trbyte)
         } else {
             messages = Sprintf("%7s loaded", fmtrbyte);
         }
-        message(messages->ptr, 0, 0);
-        tty_render_screen();
+        tui_message(messages->ptr, 0, 0);
+        tui_render_screen();
     }
 }
 
@@ -6665,9 +6663,9 @@ doExternal(struct URLFile uf, char* type, Buffer* defaultbuf)
         }
     } else {
         if (mcap->flags & MAILCAP_NEEDSTERMINAL || !BackgroundExtViewer) {
-            fmTerm();
+            tui_fmTerm();
             mySystem(command->ptr, 0);
-            fmInit();
+            tui_fmInit();
             if (CurrentTab && Currentbuf)
                 displayBuffer(Currentbuf, B_FORCE_REDRAW);
         } else {
@@ -6761,14 +6759,14 @@ int _doFileCopy(char* tmpf, char* defstr, int download)
             /* FIXME: gettextize? */
             msg = Sprintf("Can't copy. %s and %s are identical.",
                 conv_from_system(tmpf), conv_from_system(p));
-            disp_err_message(msg->ptr, FALSE);
+            tui_disp_err_message(msg->ptr, FALSE);
             return -1;
         }
         if (!download) {
             if (_MoveFile(tmpf, p) < 0) {
                 /* FIXME: gettextize? */
                 msg = Sprintf("Can't save to %s", conv_from_system(p));
-                disp_err_message(msg->ptr, FALSE);
+                tui_disp_err_message(msg->ptr, FALSE);
             }
             return -1;
         }
@@ -6859,7 +6857,7 @@ int doFileSave(struct URLFile uf, char* defstr)
             /* FIXME: gettextize? */
             msg = Sprintf("Can't save. Load file and %s are identical.",
                 conv_from_system(p));
-            disp_err_message(msg->ptr, FALSE);
+            tui_disp_err_message(msg->ptr, FALSE);
             return -1;
         }
         /*

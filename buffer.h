@@ -173,7 +173,6 @@ void copyBuffer(Buffer* a, Buffer* b);
 Buffer* prevBuffer(Buffer* first, Buffer* buf);
 int writeBufferCache(Buffer* buf);
 int readBufferCache(Buffer* buf);
-Buffer* message_list_panel(void);
 void cursorUp0(Buffer* buf, int n);
 void cursorUp(Buffer* buf, int n);
 void cursorDown0(Buffer* buf, int n);

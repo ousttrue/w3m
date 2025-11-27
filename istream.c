@@ -1,4 +1,5 @@
 #include "Url.h"
+#include "tui.h"
 #include "local_cgi.h"
 #include "etc.h"
 #include "file.h"
@@ -537,12 +538,12 @@ Str ssl_get_certificate(SSL* ssl, char* hostname)
             /* FIXME: gettextize? */
             char* e = "This SSL session was rejected "
                       "to prevent security violation: no peer certificate";
-            disp_err_message(e, FALSE);
+            tui_disp_err_message(e, FALSE);
             free_ssl_ctx();
             return NULL;
         }
         if (amsg)
-            disp_err_message(amsg->ptr, FALSE);
+            tui_disp_err_message(amsg->ptr, FALSE);
         ssl_accept_this_site(hostname);
         /* FIXME: gettextize? */
         s = amsg ? amsg : Strnew_charp("valid certificate");
@@ -573,7 +574,7 @@ Str ssl_get_certificate(SSL* ssl, char* hostname)
             } else {
                 /* FIXME: gettextize? */
                 char* e = Sprintf("This SSL session was rejected: %s", em)->ptr;
-                disp_err_message(e, FALSE);
+                tui_disp_err_message(e, FALSE);
                 free_ssl_ctx();
                 return NULL;
             }
@@ -599,13 +600,13 @@ Str ssl_get_certificate(SSL* ssl, char* hostname)
             /* FIXME: gettextize? */
             char* e = "This SSL session was rejected "
                       "to prevent security violation";
-            disp_err_message(e, FALSE);
+            tui_disp_err_message(e, FALSE);
             free_ssl_ctx();
             return NULL;
         }
     }
     if (amsg)
-        disp_err_message(amsg->ptr, FALSE);
+        tui_disp_err_message(amsg->ptr, FALSE);
     ssl_accept_this_site(hostname);
     /* FIXME: gettextize? */
     s = amsg ? amsg : Strnew_charp("valid certificate");
@@ -785,8 +786,8 @@ int openSocket(char* const hostname,
 
     if (fmInitialized) {
         /* FIXME: gettextize? */
-        message(Sprintf("Opening socket...")->ptr, 0, 0);
-        tty_render_screen();
+        tui_message(Sprintf("Opening socket...")->ptr, 0, 0);
+        tui_render_screen();
     }
     if (SETJMP(AbortLoading) != 0) {
 #ifdef SOCK_DEBUG
@@ -1198,9 +1199,9 @@ eend:
     if (handle)
         SSL_free(handle);
     /* FIXME: gettextize? */
-    disp_err_message(Sprintf("SSL error: %s, a workaround might be: w3m -insecure",
-                         ERR_error_string(ERR_get_error(), NULL))
-                         ->ptr,
+    tui_disp_err_message(Sprintf("SSL error: %s, a workaround might be: w3m -insecure",
+                             ERR_error_string(ERR_get_error(), NULL))
+                             ->ptr,
         FALSE);
     return NULL;
 }

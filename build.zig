@@ -6,10 +6,10 @@ const system_libs = [_][]const u8{
 };
 
 const w3m_srcs = [_][]const u8{
+    "tui.c",
     "w3m_runtime.c",
     "AlarmEvent.c",
     "keybind.c",
-    "util.c",
     "dns_order.c",
     "HttpRequest.c",
     "http_auth.c",

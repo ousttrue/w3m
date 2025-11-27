@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "tui.h"
 #include "screen.h"
 #include "html.h"
 #include "mailcap.h"
@@ -275,7 +276,7 @@ void gotoLine(Buffer* buf, int n)
     if (l->linenumber > n) {
         /* FIXME: gettextize? */
         sprintf(msg, "First line is #%ld", l->linenumber);
-        set_delayed_message(msg);
+        tui_set_delayed_message(msg);
         buf->topLine = buf->currentLine = l;
         return;
     }
@@ -283,7 +284,7 @@ void gotoLine(Buffer* buf, int n)
         l = buf->lastLine;
         /* FIXME: gettextize? */
         sprintf(msg, "Last line is #%ld", buf->lastLine->linenumber);
-        set_delayed_message(msg);
+        tui_set_delayed_message(msg);
         buf->currentLine = l;
         buf->topLine = lineSkip(buf, buf->currentLine, -(buf->LINES - 1),
             FALSE);
@@ -318,7 +319,7 @@ void gotoRealLine(Buffer* buf, int n)
     if (l->real_linenumber > n) {
         /* FIXME: gettextize? */
         sprintf(msg, "First line is #%ld", l->real_linenumber);
-        set_delayed_message(msg);
+        tui_set_delayed_message(msg);
         buf->topLine = buf->currentLine = l;
         return;
     }
@@ -326,7 +327,7 @@ void gotoRealLine(Buffer* buf, int n)
         l = buf->lastLine;
         /* FIXME: gettextize? */
         sprintf(msg, "Last line is #%ld", buf->lastLine->real_linenumber);
-        set_delayed_message(msg);
+        tui_set_delayed_message(msg);
         buf->currentLine = l;
         buf->topLine = lineSkip(buf, buf->currentLine, -(buf->LINES - 1),
             FALSE);
@@ -376,13 +377,13 @@ listBuffer(Buffer* top, Buffer* current)
     }
     scr_standout();
     /* FIXME: gettextize? */
-    message("Buffer selection mode: SPC for select / D for delete buffer", 0,
+    tui_message("Buffer selection mode: SPC for select / D for delete buffer", 0,
         0);
     scr_standend();
     /*
      * move(LASTLINE, COLS - 1); */
     scr_move(c, 0);
-    tty_render_screen();
+    tui_render_screen();
     return buf->nextBuffer;
 }
 
@@ -488,7 +489,7 @@ selectBuffer(Buffer* firstbuf, Buffer* currentbuf, char* selectchar)
          * move(LASTLINE, COLS - 1);
          */
         scr_move(spoint, 0);
-        tty_render_screen();
+        tui_render_screen();
     }
 }
 

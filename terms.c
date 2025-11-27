@@ -78,12 +78,20 @@ void setlinescols(int lines, int cols)
         LINES = MAX_LINE;
 }
 
-static int graph_enabled = 0;
-
-static int tty_putc(int c)
+int tty_putc(int c)
 {
     putc(c, ttyf);
     return 0;
+}
+
+void tty_wc_putc(char* c)
+{
+    wc_putc(c, ttyf);
+}
+
+void tty_wc_putc_end()
+{
+    wc_putc_end(ttyf);
 }
 
 void tty_write(const char* s)
@@ -296,8 +304,6 @@ void set_int(void)
     /* mySignal(SIGSEGV, error_dump); */
 }
 
-#define graphchar(c) (((unsigned)(c) >= ' ' && (unsigned)(c) < 128) ? T_.gcmap[(c) - ' '] : (c))
-
 struct TermSize get_term_size()
 {
     struct TermSize size = {
@@ -334,189 +340,6 @@ int initscr(void)
     setupscreen(size.lines, size.cols);
     return 0;
 }
-
-static char*
-color_seq(int colmode)
-{
-    static char seqbuf[32];
-    sprintf(seqbuf, "\033[%dm", ((colmode >> 8) & 7) + (highIntensityColors ? 90 : 30));
-    return seqbuf;
-}
-
-static char*
-bcolor_seq(int colmode)
-{
-    static char seqbuf[32];
-    sprintf(seqbuf, "\033[%dm", ((colmode >> 12) & 7) + 40);
-    return seqbuf;
-}
-
-#define SPACE " "
-#define RF_NEED_TO_MOVE 0
-#define RF_CR_OK 1
-#define RF_NONEED_TO_MOVE 2
-#define M_MEND (S_STANDOUT | S_UNDERLINE | S_BOLD | S_COLORED | S_BCOLORED | S_GRAPHICS)
-void tty_render_screen(void)
-{
-    struct Screen sc = scr_get();
-
-    int line, col, pcol;
-    int pline = sc.CurLine;
-    int moved = RF_NEED_TO_MOVE;
-    uint16_t *pr, mode = 0;
-    uint16_t color = COL_FTERM;
-    uint16_t bcolor = COL_BTERM;
-    short* dirty;
-
-    wc_putc_init(InnerCharset, DisplayCharset);
-    for (line = 0; line <= LASTLINE; line++) {
-        dirty = &sc.ScreenImage[line]->isdirty;
-        if (*dirty & L_DIRTY) {
-            *dirty &= ~L_DIRTY;
-            char** pc;
-            pc = sc.ScreenImage[line]->lineimage;
-            pr = sc.ScreenImage[line]->lineprop;
-            for (col = 0; col < COLS && !(pr[col] & S_EOL); col++) {
-                if (*dirty & L_NEED_CE && col >= sc.ScreenImage[line]->eol) {
-                    if (scr_is_need_redraw(pc[col], pr[col], SPACE, 0))
-                        break;
-                } else {
-                    if (pr[col] & S_DIRTY)
-                        break;
-                }
-            }
-            if (*dirty & (L_NEED_CE | L_CLRTOEOL)) {
-                pcol = sc.ScreenImage[line]->eol;
-                if (pcol >= COLS) {
-                    *dirty &= ~(L_NEED_CE | L_CLRTOEOL);
-                    pcol = col;
-                }
-            } else {
-                pcol = col;
-            }
-            if (line < LINES - 2 && pline == line - 1 && pcol == 0) {
-                switch (moved) {
-                case RF_NEED_TO_MOVE:
-                    tty_move(line, 0);
-                    moved = RF_CR_OK;
-                    break;
-                case RF_CR_OK:
-                    tty_putc('\n');
-                    tty_putc('\r');
-                    break;
-                case RF_NONEED_TO_MOVE:
-                    moved = RF_CR_OK;
-                    break;
-                }
-            } else {
-                tty_move(line, pcol);
-                moved = RF_CR_OK;
-            }
-            if (*dirty & (L_NEED_CE | L_CLRTOEOL)) {
-                tty_write(T_.ce);
-                if (col != pcol)
-                    tty_move(line, col);
-            }
-            pline = line;
-            pcol = col;
-            for (; col < COLS; col++) {
-                if (pr[col] & S_EOL)
-                    break;
-
-                /*
-                 * some terminal emulators do linefeed when a
-                 * character is put on COLS-th column. this behavior
-                 * is different from one of vt100, but such terminal
-                 * emulators are used as vt100-compatible
-                 * emulators. This behaviour causes scroll when a
-                 * character is drawn on (COLS-1,LINES-1) point.  To
-                 * avoid the scroll, I prohibit to draw character on
-                 * (COLS-1,LINES-1).
-                 */
-#if !defined(USE_BG_COLOR) || defined(__CYGWIN__)
-                if (line == LINES - 1 && col == COLS - 1)
-                    break;
-#endif /* !defined(USE_BG_COLOR) || defined(__CYGWIN__) */
-                if ((!(pr[col] & S_STANDOUT) && (mode & S_STANDOUT)) || (!(pr[col] & S_UNDERLINE) && (mode & S_UNDERLINE)) || (!(pr[col] & S_BOLD) && (mode & S_BOLD)) || (!(pr[col] & S_COLORED) && (mode & S_COLORED))
-                    || (!(pr[col] & S_BCOLORED) && (mode & S_BCOLORED))
-                    || (!(pr[col] & S_GRAPHICS) && (mode & S_GRAPHICS))) {
-                    if ((mode & S_COLORED)
-                        || (mode & S_BCOLORED))
-                        tty_write(T_.op);
-                    if (mode & S_GRAPHICS)
-                        tty_write(T_.ae);
-                    tty_write(T_.me);
-                    mode &= ~M_MEND;
-                }
-                if ((*dirty & L_NEED_CE && col >= sc.ScreenImage[line]->eol) ? scr_is_need_redraw(pc[col], pr[col], SPACE,
-                                                                                   0)
-                                                                             : (pr[col] & S_DIRTY)) {
-                    if (pcol == col - 1)
-                        tty_write(T_.nd);
-                    else if (pcol != col)
-                        tty_move(line, col);
-
-                    if ((pr[col] & S_STANDOUT) && !(mode & S_STANDOUT)) {
-                        tty_write(T_.so);
-                        mode |= S_STANDOUT;
-                    }
-                    if ((pr[col] & S_UNDERLINE) && !(mode & S_UNDERLINE)) {
-                        tty_write(T_.us);
-                        mode |= S_UNDERLINE;
-                    }
-                    if ((pr[col] & S_BOLD) && !(mode & S_BOLD)) {
-                        tty_write(T_.md);
-                        mode |= S_BOLD;
-                    }
-                    if ((pr[col] & S_COLORED) && (pr[col] ^ mode) & COL_FCOLOR) {
-                        color = (pr[col] & COL_FCOLOR);
-                        mode = ((mode & ~COL_FCOLOR) | color);
-                        tty_write(color_seq(color));
-                    }
-                    if ((pr[col] & S_BCOLORED)
-                        && (pr[col] ^ mode) & COL_BCOLOR) {
-                        bcolor = (pr[col] & COL_BCOLOR);
-                        mode = ((mode & ~COL_BCOLOR) | bcolor);
-                        tty_write(bcolor_seq(bcolor));
-                    }
-                    if ((pr[col] & S_GRAPHICS) && !(mode & S_GRAPHICS)) {
-                        wc_putc_end(ttyf);
-                        if (!graph_enabled) {
-                            graph_enabled = 1;
-                            tty_write(T_.eA);
-                        }
-                        tty_write(T_.as);
-                        mode |= S_GRAPHICS;
-                    }
-                    if (pr[col] & S_GRAPHICS)
-                        tty_putc(graphchar(*pc[col]));
-                    else if (CHMODE(pr[col]) != C_WCHAR2)
-                        wc_putc(pc[col], ttyf);
-                    pcol = col + 1;
-                }
-            }
-            if (col == COLS)
-                moved = RF_NEED_TO_MOVE;
-            for (; col < COLS && !(pr[col] & S_EOL); col++)
-                pr[col] |= S_EOL;
-        }
-        *dirty &= ~(L_NEED_CE | L_CLRTOEOL);
-        if (mode & M_MEND) {
-            if (mode & (S_COLORED | S_BCOLORED))
-                tty_write(T_.op);
-            if (mode & S_GRAPHICS) {
-                tty_write(T_.ae);
-                wc_putc_clear_status();
-            }
-            tty_write(T_.me);
-            mode &= ~M_MEND;
-        }
-    }
-    wc_putc_end(ttyf);
-    tty_move(sc.CurLine, sc.CurColumn);
-    tty_flush();
-}
-
 
 void tty_crmode(void)
 {
@@ -566,8 +389,6 @@ void term_cbreak(void)
 
 void tty_set_title(const char* s)
 {
-    if (!fmInitialized)
-        return;
     if (title_str != NULL) {
         fprintf(ttyf, title_str, s);
     }

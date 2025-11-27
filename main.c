@@ -1,5 +1,6 @@
 #define MAINPROGRAM
 #include "fm.h"
+#include "tui.h"
 #include "term_entry.h"
 #include "screen.h"
 #include "search.h"
@@ -52,8 +53,6 @@
 #include <locale.h>
 
 unsigned char last_key = 0;
-
-#include "util.h"
 
 #define DSTR_LEN 256
 
@@ -589,7 +588,7 @@ int w3m_main(int argc, char** argv)
     }
 
     if (!w3m_dump && !w3m_backend) {
-        fmInit();
+        tui_fmInit();
         mySignal(SIGWINCH, resize_hook);
     } else if (w3m_halfdump && displayImage)
         activeImage = TRUE;
@@ -644,12 +643,12 @@ int w3m_main(int argc, char** argv)
                 pushHashHist(URLHist, parsedURL2Str(&newbuf->currentURL)->ptr);
         } else {
             if (fmInitialized)
-                fmTerm();
+                tui_fmTerm();
             usage();
         }
         if (newbuf == NULL) {
             if (fmInitialized)
-                fmTerm();
+                tui_fmTerm();
             if (err_msg->length)
                 fprintf(stderr, "%s", err_msg->ptr);
             w3m_exit(2);
@@ -784,7 +783,7 @@ int w3m_main(int argc, char** argv)
                 inputChar("Hit any key to quit w3m:");
         }
         if (fmInitialized)
-            fmTerm();
+            tui_fmTerm();
         if (err_msg->length)
             fprintf(stderr, "%s", err_msg->ptr);
         if (newbuf == NO_BUFFER) {
@@ -795,7 +794,7 @@ int w3m_main(int argc, char** argv)
         w3m_exit(2);
     }
     if (err_msg->length)
-        disp_message_nsec(err_msg->ptr, FALSE, 1, TRUE, FALSE);
+        tui_disp_message_nsec(err_msg->ptr, FALSE, 1, TRUE, FALSE);
 
     SearchHeader = FALSE;
     DefaultType = NULL;
@@ -1359,11 +1358,11 @@ disp_srchresult(int result, char* prompt, char* str)
     if (str == NULL)
         str = "";
     if (result & SR_NOTFOUND)
-        disp_message(Sprintf("Not found: %s", str)->ptr, TRUE);
+        tui_disp_message(Sprintf("Not found: %s", str)->ptr, TRUE);
     else if (result & SR_WRAPPED)
-        disp_message(Sprintf("Search wrapped: %s", str)->ptr, TRUE);
+        tui_disp_message(Sprintf("Search wrapped: %s", str)->ptr, TRUE);
     else if (show_srch_str)
-        disp_message(Sprintf("%s%s", prompt, str)->ptr, TRUE);
+        tui_disp_message(Sprintf("%s%s", prompt, str)->ptr, TRUE);
 }
 
 static int
@@ -1506,7 +1505,7 @@ srch_nxtprv(int reverse)
 
     if (searchRoutine == NULL) {
         /* FIXME: gettextize? */
-        disp_message("No previous regular expression", TRUE);
+        tui_disp_message("No previous regular expression", TRUE);
         return;
     }
     if (reverse != 0)
@@ -1660,14 +1659,14 @@ DEFUN(pipeBuf, PIPE_BUF, "Pipe current buffer through a shell command and displa
     f = fopen(tmpf, "w");
     if (f == NULL) {
         /* FIXME: gettextize? */
-        disp_message(Sprintf("Can't save buffer to %s", cmd)->ptr, TRUE);
+        tui_disp_message(Sprintf("Can't save buffer to %s", cmd)->ptr, TRUE);
         return;
     }
     saveBuffer(Currentbuf, f, TRUE);
     fclose(f);
     buf = getpipe(myExtCommand(cmd, shell_quote(tmpf), TRUE)->ptr);
     if (buf == NULL) {
-        disp_message("Execution failed", TRUE);
+        tui_disp_message("Execution failed", TRUE);
         return;
     } else {
         buf->filename = cmd;
@@ -1702,7 +1701,7 @@ DEFUN(pipesh, PIPE_SHELL, "Execute shell command and display output")
     }
     buf = getpipe(cmd);
     if (buf == NULL) {
-        disp_message("Execution failed", TRUE);
+        tui_disp_message("Execution failed", TRUE);
         return;
     } else {
         buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
@@ -1737,7 +1736,7 @@ DEFUN(readsh, READ_SHELL, "Execute shell command and display output")
     term_raw();
     if (buf == NULL) {
         /* FIXME: gettextize? */
-        disp_message("Execution failed", TRUE);
+        tui_disp_message("Execution failed", TRUE);
         return;
     } else {
         buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
@@ -1751,23 +1750,21 @@ DEFUN(readsh, READ_SHELL, "Execute shell command and display output")
 /* Execute shell command */
 DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output")
 {
-    char* cmd;
-
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    cmd = searchKeyData();
+    char* cmd = searchKeyData();
     if (cmd == NULL || *cmd == '\0') {
         cmd = inputLineHist("(exec shell)!", "", IN_COMMAND, ShellHist);
     }
     if (cmd != NULL)
         cmd = conv_to_system(cmd);
     if (cmd != NULL && *cmd != '\0') {
-        fmTerm();
+        tui_fmTerm();
         printf("\n");
         (void)!system(cmd); /* We do not care about the exit code here! */
         /* FIXME: gettextize? */
         printf("\n[Hit any key]");
         fflush(stdout);
-        fmInit();
+        tui_fmInit();
         getch();
     }
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
@@ -1812,7 +1809,7 @@ cmd_loadfile(char* fn)
     if (buf == NULL) {
         /* FIXME: gettextize? */
         char* emsg = Sprintf("%s not found", conv_from_system(fn))->ptr;
-        disp_err_message(emsg, FALSE);
+        tui_disp_err_message(emsg, FALSE);
     } else if (buf != NO_BUFFER) {
         pushBuffer(buf);
         if (RenderFrame && Currentbuf->frameset != NULL)
@@ -2094,7 +2091,7 @@ _quitfm(int confirm)
     tty_set_title(""); /* XXX */
     if (activeImage)
         termImage();
-    fmTerm();
+    tui_fmTerm();
     save_cookies();
     if (UseHistory && SaveURLHist)
         saveHistory(URLHist, URLHistSize);
@@ -2162,20 +2159,10 @@ DEFUN(selBuf, SELECT, "Display buffer-stack panel")
 /* Suspend (on BSD), or run interactive shell (on SysV) */
 DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background")
 {
-#ifndef SIGSTOP
-    char* shell;
-#endif /* not SIGSTOP */
     scr_move(LASTLINE, 0);
     scr_clrtoeolx();
-    tty_render_screen();
-    fmTerm();
-#ifndef SIGSTOP
-    shell = getenv("SHELL");
-    if (shell == NULL)
-        shell = "/bin/sh";
-    system(shell);
-#else /* SIGSTOP */
-#ifdef SIGTSTP
+    tui_render_screen();
+    tui_fmTerm();
     signal(SIGTSTP, SIG_DFL); /* just in case */
     /*
      * Note: If susp() was called from SIGTSTP handler,
@@ -2183,11 +2170,7 @@ DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background")
      * Currently not.
      */
     kill(0, SIGTSTP); /* stop whole job, not a single process */
-#else
-    kill((pid_t)0, SIGSTOP);
-#endif
-#endif /* SIGSTOP */
-    fmInit();
+    tui_fmInit();
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
@@ -2288,7 +2271,7 @@ DEFUN(editBf, EDIT, "Edit local source")
         (Currentbuf->type == NULL && Currentbuf->edit == NULL) || /* Reading shell */
         Currentbuf->real_scheme != SCM_LOCAL || !strcmp(Currentbuf->currentURL.file, "-") || /* file is std input  */
         Currentbuf->bufferprop & BP_FRAME) { /* Frame */
-        disp_err_message("Can't edit other than local file", TRUE);
+        tui_disp_err_message("Can't edit other than local file", TRUE);
         return;
     }
     if (Currentbuf->edit)
@@ -2297,7 +2280,7 @@ DEFUN(editBf, EDIT, "Edit local source")
     else
         cmd = myEditor(Editor, shell_quote(fn),
             cur_real_linenumber(Currentbuf));
-    exec_cmd(cmd->ptr);
+    tui_exec(cmd->ptr);
 
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
     reload();
@@ -2313,12 +2296,12 @@ DEFUN(editScr, EDIT_SCREEN, "Edit rendered copy of document")
     f = fopen(tmpf, "w");
     if (f == NULL) {
         /* FIXME: gettextize? */
-        disp_err_message(Sprintf("Can't open %s", tmpf)->ptr, TRUE);
+        tui_disp_err_message(Sprintf("Can't open %s", tmpf)->ptr, TRUE);
         return;
     }
     saveBuffer(Currentbuf, f, TRUE);
     fclose(f);
-    exec_cmd(myEditor(Editor, shell_quote(tmpf),
+    tui_exec(myEditor(Editor, shell_quote(tmpf),
         cur_real_linenumber(Currentbuf))
             ->ptr);
     unlink(tmpf);
@@ -2367,8 +2350,7 @@ DEFUN(nextMk, NEXT_MARK, "Go to the next mark")
         l = l->next;
         i = 0;
     }
-    /* FIXME: gettextize? */
-    disp_message("No mark exist after here", TRUE);
+    tui_disp_message("No mark exist after here", TRUE);
 }
 
 /* Go to previous mark */
@@ -2402,8 +2384,7 @@ DEFUN(prevMk, PREV_MARK, "Go to the previous mark")
         if (l != NULL)
             i = l->len - 1;
     }
-    /* FIXME: gettextize? */
-    disp_message("No mark exist before here", TRUE);
+    tui_disp_message("No mark exist before here", TRUE);
 }
 
 /* Mark place to which the regular expression matches */
@@ -2425,7 +2406,7 @@ DEFUN(reMark, REG_MARK, "Mark all occurences of a pattern")
     }
     str = conv_search_string(str, DisplayCharset);
     if ((str = regexCompile(str, 1)) != NULL) {
-        disp_message(str, TRUE);
+        tui_disp_message(str, TRUE);
         return;
     }
     MarkString = str;
@@ -2456,8 +2437,8 @@ loadNormalBuf(Buffer* buf, int renderframe)
 static Buffer*
 loadLink(char* url, char* target, char* referer, FormList* request)
 {
-    message(Sprintf("loading %s", url)->ptr, 0, 0);
-    tty_render_screen();
+    tui_message(Sprintf("loading %s", url)->ptr, 0, 0);
+    tui_render_screen();
 
     struct Url* base = baseURL(Currentbuf);
     if (base == NULL || base->scheme == SCM_LOCAL || base->scheme == SCM_LOCAL_CGI || base->scheme == SCM_DATA)
@@ -2468,7 +2449,7 @@ loadLink(char* url, char* target, char* referer, FormList* request)
     Buffer* buf = loadGeneralFile(url, baseURL(Currentbuf), referer, flag, request);
     if (buf == NULL) {
         char* emsg = Sprintf("Can't load %s", url)->ptr;
-        disp_err_message(emsg, FALSE);
+        tui_disp_err_message(emsg, FALSE);
         return NULL;
     }
 
@@ -2550,7 +2531,7 @@ gotoLabel(char* label)
     al = searchURLLabel(Currentbuf, label);
     if (al == NULL) {
         /* FIXME: gettextize? */
-        disp_message(Sprintf("%s is not found", label)->ptr, TRUE);
+        tui_disp_message(Sprintf("%s is not found", label)->ptr, TRUE);
         return;
     }
     buf = newBuffer(Currentbuf->width);
@@ -2583,7 +2564,7 @@ handleMailto(char* url)
         return 0;
     if (!non_null(Mailer)) {
         /* FIXME: gettextize? */
-        disp_err_message("no mailer is specified", TRUE);
+        tui_disp_err_message("no mailer is specified", TRUE);
         return 1;
     }
 
@@ -2595,7 +2576,7 @@ handleMailto(char* url)
         if ((pos = strchr(to->ptr, '?')) != NULL)
             Strtruncate(to, pos - to->ptr);
     }
-    exec_cmd(myExtCommand(Mailer, shell_quote(file_unquote(to->ptr)),
+    tui_exec(myExtCommand(Mailer, shell_quote(file_unquote(to->ptr)),
         FALSE)
             ->ptr);
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
@@ -2684,13 +2665,13 @@ DEFUN(followI, VIEW_IMAGE, "Display image in viewer")
     if (a == NULL)
         return;
     /* FIXME: gettextize? */
-    message(Sprintf("loading %s", a->url)->ptr, 0, 0);
-    tty_render_screen();
+    tui_message(Sprintf("loading %s", a->url)->ptr, 0, 0);
+    tui_render_screen();
     buf = loadGeneralFile(a->url, baseURL(Currentbuf), NULL, 0, NULL);
     if (buf == NULL) {
         /* FIXME: gettextize? */
         char* emsg = Sprintf("Can't load %s", a->url)->ptr;
-        disp_err_message(emsg, FALSE);
+        tui_disp_err_message(emsg, FALSE);
     } else if (buf != NO_BUFFER) {
         pushBuffer(buf);
     }
@@ -2922,7 +2903,7 @@ _followForm(int submit)
             goto do_submit;
         if (fi->readonly)
             /* FIXME: gettextize? */
-            disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
+            tui_disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
         /* FIXME: gettextize? */
         p = inputStrHist("TEXT:", fi->value ? fi->value->ptr : NULL, TextHist);
         if (p == NULL || fi->readonly)
@@ -2937,7 +2918,7 @@ _followForm(int submit)
             goto do_submit;
         if (fi->readonly)
             /* FIXME: gettextize? */
-            disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
+            tui_disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
         /* FIXME: gettextize? */
         p = inputFilenameHist("Filename:", fi->value ? fi->value->ptr : NULL,
             NULL);
@@ -2953,7 +2934,7 @@ _followForm(int submit)
             goto do_submit;
         if (fi->readonly) {
             /* FIXME: gettextize? */
-            disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
+            tui_disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
             break;
         }
         /* FIXME: gettextize? */
@@ -2971,7 +2952,7 @@ _followForm(int submit)
             goto do_submit;
         if (fi->readonly)
             /* FIXME: gettextize? */
-            disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
+            tui_disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
         input_textarea(fi);
         formUpdateBuffer(a, Currentbuf, fi);
         break;
@@ -2980,7 +2961,7 @@ _followForm(int submit)
             goto do_submit;
         if (fi->readonly) {
             /* FIXME: gettextize? */
-            disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
+            tui_disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
             break;
         }
         formRecheckRadio(a, Currentbuf, fi);
@@ -2990,7 +2971,7 @@ _followForm(int submit)
             goto do_submit;
         if (fi->readonly) {
             /* FIXME: gettextize? */
-            disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
+            tui_disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
             break;
         }
         fi->checked = !fi->checked;
@@ -3053,7 +3034,7 @@ _followForm(int submit)
         } else if ((fi->parent->method == FORM_METHOD_INTERNAL && (!Strcmp_charp(fi->parent->action, "map") || !Strcmp_charp(fi->parent->action, "none"))) || Currentbuf->bufferprop & BP_INTERNAL) { /* internal */
             do_internal(tmp2->ptr, tmp->ptr);
         } else {
-            disp_err_message("Can't send form because of illegal method.",
+            tui_disp_err_message("Can't send form because of illegal method.",
                 FALSE);
         }
         break;
@@ -3573,7 +3554,7 @@ DEFUN(backBf, BACK, "Close current buffer and return to the one below in stack")
             displayBuffer(Currentbuf, B_FORCE_REDRAW);
         } else
             /* FIXME: gettextize? */
-            disp_message("Can't go back...", TRUE);
+            tui_disp_message("Can't go back...", TRUE);
         return;
     }
 
@@ -3620,17 +3601,15 @@ DEFUN(deletePrevBuf, DELETE_PREVBUF, "Delete previous buffer (mainly for local C
 static void
 cmd_loadURL(char* url, struct Url* current, char* referer, FormList* request)
 {
-    Buffer* buf;
-
     if (handleMailto(url))
         return;
 
-    tty_render_screen();
-    buf = loadGeneralFile(url, current, referer, 0, request);
+    tui_render_screen();
+    Buffer* buf = loadGeneralFile(url, current, referer, 0, request);
     if (buf == NULL) {
         /* FIXME: gettextize? */
         char* emsg = Sprintf("Can't load %s", conv_from_system(url))->ptr;
-        disp_err_message(emsg, FALSE);
+        tui_disp_err_message(emsg, FALSE);
     } else if (buf != NO_BUFFER) {
         pushBuffer(buf);
         if (RenderFrame && Currentbuf->frameset != NULL)
@@ -3731,7 +3710,7 @@ static void
 cmd_loadBuffer(Buffer* buf, int prop, int linkid)
 {
     if (buf == NULL) {
-        disp_err_message("Can't load string", FALSE);
+        tui_disp_err_message("Can't load string", FALSE);
     } else if (buf != NO_BUFFER) {
         buf->bufferprop |= (BP_INTERNAL | prop);
         if (!(buf->bufferprop & BP_NO_URL))
@@ -3783,10 +3762,8 @@ DEFUN(ldOpt, OPTIONS, "Display options setting panel")
 /* set an option */
 DEFUN(setOpt, SET_OPTION, "Set option")
 {
-    char* opt;
-
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    opt = searchKeyData();
+    char* opt = searchKeyData();
     if (opt == NULL || *opt == '\0' || strchr(opt, '=') == NULL) {
         if (opt != NULL && *opt != '\0') {
             char* v = get_param_option(opt);
@@ -3806,7 +3783,7 @@ DEFUN(setOpt, SET_OPTION, "Set option")
 /* error message list */
 DEFUN(msgs, MSGS, "Display error messages")
 {
-    cmd_loadBuffer(message_list_panel(), BP_NO_URL, LB_NOLINK);
+    cmd_loadBuffer(tui_message_list_panel(), BP_NO_URL, LB_NOLINK);
 }
 
 /* page info */
@@ -4003,7 +3980,7 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document")
     if (f == NULL) {
         /* FIXME: gettextize? */
         char* emsg = Sprintf("Can't open %s", conv_from_system(file))->ptr;
-        disp_err_message(emsg, TRUE);
+        tui_disp_err_message(emsg, TRUE);
         return;
     }
     saveBuffer(Currentbuf, f, TRUE);
@@ -4081,7 +4058,7 @@ disp:
         offset = (n - 1) * (COLS - 1);
     while (offset < s->length && p[offset] & PC_WCHAR2)
         offset++;
-    disp_message_nomouse(&s->ptr[offset], TRUE);
+    tui_disp_message_nomouse(&s->ptr[offset], TRUE);
 }
 
 /* peek URL */
@@ -4133,7 +4110,7 @@ DEFUN(curURL, PEEK, "Show current address")
         offset = (n - 1) * (COLS - 1);
     while (offset < s->length && p[offset] & PC_WCHAR2)
         offset++;
-    disp_message_nomouse(&s->ptr[offset], TRUE);
+    tui_disp_message_nomouse(&s->ptr[offset], TRUE);
 }
 /* view HTML source */
 
@@ -4229,20 +4206,20 @@ DEFUN(reload, RELOAD, "Load current document anew")
             return;
         }
         /* FIXME: gettextize? */
-        disp_err_message("Can't reload...", TRUE);
+        tui_disp_err_message("Can't reload...", TRUE);
         return;
     }
     if (Currentbuf->currentURL.scheme == SCM_LOCAL && !strcmp(Currentbuf->currentURL.file, "-")) {
         /* file is std input */
         /* FIXME: gettextize? */
-        disp_err_message("Can't reload stdin", TRUE);
+        tui_disp_err_message("Can't reload stdin", TRUE);
         return;
     }
     copyBuffer(&sbuf, Currentbuf);
     if (Currentbuf->bufferprop & BP_FRAME && (fbuf = Currentbuf->linkBuffer[LB_N_FRAME])) {
         if (fmInitialized) {
-            message("Rendering frame", 0, 0);
-            tty_render_screen();
+            tui_message("Rendering frame", 0, 0);
+            tui_render_screen();
         }
         if (!(buf = renderFrame(fbuf, 1))) {
             displayBuffer(Currentbuf, B_NORMAL);
@@ -4282,8 +4259,8 @@ DEFUN(reload, RELOAD, "Load current document anew")
     }
     url = parsedURL2Str(&Currentbuf->currentURL);
     /* FIXME: gettextize? */
-    message("Reloading...", 0, 0);
-    tty_render_screen();
+    tui_message("Reloading...", 0, 0);
+    tui_render_screen();
     old_charset = DocumentCharset;
     if (Currentbuf->document_charset != WC_CES_US_ASCII)
         DocumentCharset = Currentbuf->document_charset;
@@ -4298,7 +4275,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
         unlink(request->body);
     if (buf == NULL) {
         /* FIXME: gettextize? */
-        disp_err_message("Can't reload...", TRUE);
+        tui_disp_err_message("Can't reload...", TRUE);
         return;
     } else if (buf == NO_BUFFER) {
         displayBuffer(Currentbuf, B_NORMAL);
@@ -4335,7 +4312,7 @@ _docCSet(wc_ces charset)
     if (Currentbuf->bufferprop & BP_INTERNAL)
         return;
     if (Currentbuf->sourcefile == NULL) {
-        disp_message("Can't reload...", FALSE);
+        tui_disp_message("Can't reload...", FALSE);
         return;
     }
     Currentbuf->document_charset = charset;
@@ -4475,8 +4452,8 @@ DEFUN(rFrame, FRAME, "Toggle rendering HTML frames")
         return;
     }
     if (fmInitialized) {
-        message("Rendering frame", 0, 0);
-        tty_render_screen();
+        tui_message("Rendering frame", 0, 0);
+        tui_render_screen();
     }
     buf = renderFrame(Currentbuf, 0);
     if (buf == NULL) {
@@ -4550,9 +4527,9 @@ invoke_browser(char* url)
     }
     cmd = myExtCommand(browser, shell_quote(url), FALSE);
     Strremovetrailingspaces(cmd);
-    fmTerm();
+    tui_fmTerm();
     mySystem(cmd->ptr, bg);
-    fmInit();
+    tui_fmInit();
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
@@ -4560,13 +4537,13 @@ DEFUN(extbrz, EXTERN, "Display using an external browser")
 {
     if (Currentbuf->bufferprop & BP_INTERNAL) {
         /* FIXME: gettextize? */
-        disp_err_message("Can't browse...", TRUE);
+        tui_disp_err_message("Can't browse...", TRUE);
         return;
     }
     if (Currentbuf->currentURL.scheme == SCM_LOCAL && !strcmp(Currentbuf->currentURL.file, "-")) {
         /* file is std input */
         /* FIXME: gettextize? */
-        disp_err_message("Can't browse stdin", TRUE);
+        tui_disp_err_message("Can't browse stdin", TRUE);
         return;
     }
     invoke_browser(parsedURL2Str(&Currentbuf->currentURL)->ptr);
@@ -4614,7 +4591,7 @@ DEFUN(curlno, LINE_INFO, "Display current position in document")
     Strcat_charp(tmp, "  ");
     Strcat_charp(tmp, wc_ces_to_charset_desc(Currentbuf->document_charset));
 
-    disp_message(tmp->ptr, FALSE);
+    tui_disp_message(tmp->ptr, FALSE);
 }
 
 DEFUN(dispI, DISPLAY_IMAGE, "Restart loading and drawing of images")
@@ -4667,7 +4644,7 @@ posTab(int x, int y)
 
 DEFUN(dispVer, VERSION, "Display the version of w3m")
 {
-    disp_message(Sprintf("w3m version %s", w3m_version)->ptr, TRUE);
+    tui_disp_message(Sprintf("w3m version %s", w3m_version)->ptr, TRUE);
 }
 
 DEFUN(wrapToggle, WRAP_TOGGLE, "Toggle wrapping mode in searches")
@@ -4675,11 +4652,11 @@ DEFUN(wrapToggle, WRAP_TOGGLE, "Toggle wrapping mode in searches")
     if (WrapSearch) {
         WrapSearch = FALSE;
         /* FIXME: gettextize? */
-        disp_message("Wrap search off", TRUE);
+        tui_disp_message("Wrap search off", TRUE);
     } else {
         WrapSearch = TRUE;
         /* FIXME: gettextize? */
-        disp_message("Wrap search on", TRUE);
+        tui_disp_message("Wrap search on", TRUE);
     }
 }
 
@@ -4747,7 +4724,7 @@ execdict(char* word)
                   ->ptr;
     buf = loadGeneralFile(dictcmd, NULL, NO_REFERER, 0, NULL);
     if (buf == NULL) {
-        disp_message("Execution failed", TRUE);
+        tui_disp_message("Execution failed", TRUE);
         return;
     } else if (buf != NO_BUFFER) {
         buf->filename = w;
@@ -4978,7 +4955,7 @@ DEFUN(setAlarm, ALARM, "Set alarm")
     if (cmd >= 0) {
         data = getQWord(&data);
         setAlarmEvent(0, sec, AL_EXPLICIT, cmd, data);
-        disp_message_nsec(Sprintf("%dsec %s %s", sec, w3mFuncList[cmd].id,
+        tui_disp_message_nsec(Sprintf("%dsec %s %s", sec, w3mFuncList[cmd].id,
                               data)
                               ->ptr,
             FALSE, 1, FALSE, TRUE);
@@ -5032,7 +5009,7 @@ DEFUN(reinit, REINIT, "Reload configuration file")
         return;
     }
 
-    disp_err_message(Sprintf("Don't know how to reinitialize '%s'", resource)->ptr, FALSE);
+    tui_disp_err_message(Sprintf("Don't know how to reinitialize '%s'", resource)->ptr, FALSE);
 }
 
 DEFUN(defKey, DEFINE_KEY, "Define a binding between a key stroke combination and a command")

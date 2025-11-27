@@ -1,4 +1,5 @@
 #include "form.h"
+#include "tui.h"
 #include "display.h"
 #include "func.h"
 #include "rc.h"
@@ -19,7 +20,6 @@
 #include <unistd.h>
 #include "local_cgi.h"
 #include "regex.h"
-#include "util.h"
 #include "indep.h"
 #include "funcheader.h"
 
@@ -539,22 +539,21 @@ void input_textarea(FormItemList* fi)
     f = fopen(tmpf, "w");
     if (f == NULL) {
         /* FIXME: gettextize? */
-        disp_err_message("Can't open temporary file", FALSE);
+        tui_disp_err_message("Can't open temporary file", FALSE);
         return;
     }
     if (fi->value)
         form_fputs_decode(fi->value, f);
     fclose(f);
 
-    if (exec_cmd(myEditor(Editor, tmpf, 1)->ptr))
+    if (tui_exec(myEditor(Editor, tmpf, 1)->ptr))
         goto input_end;
 
     if (fi->readonly)
         goto input_end;
     f = fopen(tmpf, "r");
     if (f == NULL) {
-        /* FIXME: gettextize? */
-        disp_err_message("Can't open temporary file", FALSE);
+        tui_disp_err_message("Can't open temporary file", FALSE);
         goto input_end;
     }
     fi->value = Strnew();

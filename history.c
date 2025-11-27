@@ -1,4 +1,5 @@
 #include "history.h"
+#include "tui.h"
 #include "etc.h"
 #include "fm.h"
 #include "display.h"
@@ -110,7 +111,7 @@ void saveHistory(struct Hist* hist, size_t size)
     if (hist->mtime != (long long)st.st_mtime) {
         fhist = newHist();
         if (loadHistory(fhist) || mergeHistory(fhist, hist))
-            disp_err_message("Can't merge history", FALSE);
+            tui_disp_err_message("Can't merge history", FALSE);
         else
             hist = fhist;
     }
@@ -132,7 +133,7 @@ void saveHistory(struct Hist* hist, size_t size)
     return;
 
 fail:
-    disp_err_message("Can't open history", FALSE);
+    tui_disp_err_message("Can't open history", FALSE);
     return;
 }
 

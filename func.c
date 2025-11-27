@@ -1,4 +1,5 @@
 #include "func.h"
+#include "tui.h"
 #include "textlist.h"
 #include "regex.h"
 #include "rc.h"
@@ -35,9 +36,9 @@ void setKeymap(char* p, int lineno, int verbose)
         else
             /* FIXME: gettextize? */
             emsg = Sprintf("defkey: unknown key '%s'", s)->ptr;
-        record_err_message(emsg);
+        tui_record_err_message(emsg);
         if (verbose)
-            disp_message_nsec(emsg, false, 1, true, false);
+            tui_disp_message_nsec(emsg, false, 1, true, false);
         return;
     }
 
@@ -51,9 +52,9 @@ void setKeymap(char* p, int lineno, int verbose)
         else
             /* FIXME: gettextize? */
             emsg = Sprintf("defkey: invalid command '%s'", s)->ptr;
-        record_err_message(emsg);
+        tui_record_err_message(emsg);
         if (verbose)
-            disp_message_nsec(emsg, false, 1, true, false);
+            tui_disp_message_nsec(emsg, false, 1, true, false);
         return;
     }
 
@@ -158,9 +159,9 @@ interpret_keymap(FILE* kf, struct stat* current, bool force, wc_ces charset, wc_
             continue;
         } else { /* error */
             emsg = Sprintf("line %d: syntax error '%s'", lineno, s)->ptr;
-            record_err_message(emsg);
+            tui_record_err_message(emsg);
             if (verbose)
-                disp_message_nsec(emsg, false, 1, true, false);
+                tui_disp_message_nsec(emsg, false, 1, true, false);
             continue;
         }
         setKeymap(p, lineno, verbose);

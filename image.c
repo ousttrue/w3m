@@ -1,4 +1,5 @@
 #include "image.h"
+#include "tui.h"
 #include "screen.h"
 #include "local_cgi.h"
 #include "terms.h"
@@ -32,6 +33,8 @@ double pixel_per_line = (DEFAULT_PIXEL_PER_LINE);
 int pixel_per_line_i = (DEFAULT_PIXEL_PER_LINE);
 int set_pixel_per_line = (FALSE);
 double image_scale = (100);
+int activeImage = (FALSE);
+int displayImage = (TRUE);
 
 /* display image */
 
@@ -289,7 +292,7 @@ void drawImage(void)
         n_terminal_image = 0;
 
     scr_touch_cursor();
-    tty_render_screen();
+    tui_render_screen();
 }
 
 void clearImage()
@@ -393,9 +396,9 @@ showImageProgress(Buffer* buf)
     if (n) {
         if (enable_inline_image && n == l)
             drawImage();
-        message(Sprintf("%d/%d images loaded", l, n)->ptr,
+        tui_message(Sprintf("%d/%d images loaded", l, n)->ptr,
             buf->cursorX + buf->rootX, buf->cursorY + buf->rootY);
-        tty_render_screen();
+        tui_render_screen();
     }
 }
 

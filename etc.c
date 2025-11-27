@@ -1,4 +1,5 @@
 #include "etc.h"
+#include "tui.h"
 #include "fm.h"
 #include "terms.h"
 #include "w3m_runtime.h"

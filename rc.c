@@ -2,6 +2,7 @@
  * Initialization file etc.
  */
 #include "fm.h"
+#include "tui.h"
 #include "term_entry.h"
 #include "http_auth.h"
 #include "symbol.h"
@@ -1426,11 +1427,11 @@ void panel_set_option(struct parsed_tagarg* arg)
     Str s = Strnew(), tmp;
 
     if (config_file == NULL) {
-        disp_message("There's no config file... config not saved", FALSE);
+        tui_disp_message("There's no config file... config not saved", FALSE);
     } else {
         f = fopen(config_file, "wt");
         if (f == NULL) {
-            disp_message("Can't write option!", FALSE);
+            tui_disp_message("Can't write option!", FALSE);
         }
     }
     while (arg) {

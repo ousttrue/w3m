@@ -1,4 +1,5 @@
 #include "display.h"
+#include "tui.h"
 #include "term_entry.h"
 #include "screen.h"
 #include "history.h"
@@ -150,36 +151,6 @@ static void EFFECT_VISITED_END
     }
 }
 
-/* *INDENT-ON* */
-
-void fmTerm(void)
-{
-    if (fmInitialized) {
-        scr_move(LASTLINE, 0);
-        scr_clrtoeolx();
-        tty_render_screen();
-        if (activeImage)
-            loadImage(NULL, IMG_FLAG_STOP);
-        reset_tty();
-        fmInitialized = FALSE;
-    }
-}
-
-/*
- * Initialize routine.
- */
-void fmInit(void)
-{
-    if (!fmInitialized) {
-        initscr();
-        term_raw();
-        term_noecho();
-        if (displayImage)
-            initImage();
-    }
-    fmInitialized = TRUE;
-}
-
 /*
  * Display some lines.
  */
@@ -192,8 +163,6 @@ static int anch_mode = 0, emph_mode = 0, imag_mode = 0, form_mode = 0,
 static Linecolor color_mode = 0;
 
 static Buffer* save_current_buf = NULL;
-
-static char* delayed_msg = NULL;
 
 static void drawAnchorCursor(Buffer* buf);
 #define redrawBuffer(buf) redrawNLine(buf, LASTLINE)
@@ -319,7 +288,7 @@ make_lastline_message(Buffer* buf)
     return msg;
 }
 
-void displayBuffer(Buffer* buf, int mode)
+void displayBuffer(Buffer* buf, enum DisplayMode mode)
 {
     Str msg;
     int ny = 0;
@@ -394,16 +363,12 @@ void displayBuffer(Buffer* buf, int mode)
         /* FIXME: gettextize? */
         Strcat_charp(msg, "\tNo Line");
     }
-    if (delayed_msg != NULL) {
-        disp_message(delayed_msg, FALSE);
-        delayed_msg = NULL;
-        tty_render_screen();
-    }
+    tui_render_delayed_msg();
     scr_standout();
-    message(msg->ptr, buf->cursorX + buf->rootX, buf->cursorY + buf->rootY);
+    tui_message(msg->ptr, buf->cursorX + buf->rootX, buf->cursorY + buf->rootY);
     scr_standend();
     tty_set_title(conv_to_system(buf->buffername));
-    tty_render_screen();
+    tui_render_screen();
     if (activeImage && displayImage && buf->img && buf->image_loaded) {
         drawImage();
     }
@@ -999,91 +964,6 @@ void addMChar(char* p, Lineprop mode, size_t len)
         scr_addstr(buf);
     } else
         scr_addmch(p, len);
-}
-
-static GeneralList* message_list = NULL;
-
-void record_err_message(char* s)
-{
-    if (fmInitialized) {
-        if (!message_list)
-            message_list = newGeneralList();
-        if (message_list->nitem >= LINES)
-            popValue(message_list);
-        pushValue(message_list, allocStr(s, -1));
-    }
-}
-
-/*
- * List of error messages
- */
-Buffer*
-message_list_panel(void)
-{
-    Str tmp = Strnew_size(LINES * COLS);
-    ListItem* p;
-
-    /* FIXME: gettextize? */
-    Strcat_charp(tmp,
-        "<html><head><title>List of error messages</title></head><body>"
-        "<h1>List of error messages</h1><table cellpadding=0>\n");
-    if (message_list)
-        for (p = message_list->last; p; p = p->prev)
-            Strcat_m_charp(tmp, "<tr><td><pre>", html_quote(p->ptr),
-                "</pre></td></tr>\n", NULL);
-    else
-        Strcat_charp(tmp, "<tr><td>(no message recorded)</td></tr>\n");
-    Strcat_charp(tmp, "</table></body></html>");
-    return loadHTMLString(tmp);
-}
-
-void message(char* s, int return_x, int return_y)
-{
-    if (!fmInitialized)
-        return;
-    scr_move(LASTLINE, 0);
-    scr_addnstr(s, COLS - 1);
-    scr_clrtoeolx();
-    scr_move(return_y, return_x);
-}
-
-void disp_err_message(char* s, int redraw_current)
-{
-    record_err_message(s);
-    disp_message(s, redraw_current);
-}
-
-void disp_message_nsec(char* s, int redraw_current, int sec, int purge, int mouse)
-{
-    // if (QuietMessage)
-    //     return;
-    if (!fmInitialized) {
-        fprintf(stderr, "%s\n", conv_to_system(s));
-        return;
-    }
-    if (CurrentTab != NULL && Currentbuf != NULL)
-        message(s, Currentbuf->cursorX + Currentbuf->rootX,
-            Currentbuf->cursorY + Currentbuf->rootY);
-    else
-        message(s, LASTLINE, 0);
-    tty_render_screen();
-    tty_sleep_till_anykey(sec, purge);
-    if (CurrentTab != NULL && Currentbuf != NULL && redraw_current)
-        displayBuffer(Currentbuf, B_NORMAL);
-}
-
-void disp_message(char* s, int redraw_current)
-{
-    disp_message_nsec(s, redraw_current, 10, FALSE, TRUE);
-}
-void disp_message_nomouse(char* s, int redraw_current)
-{
-    disp_message_nsec(s, redraw_current, 10, FALSE, FALSE);
-}
-
-void set_delayed_message(char* s)
-{
-    delayed_msg = allocStr(s, -1);
 }
 
 void cursorUp0(Buffer* buf, int n)
