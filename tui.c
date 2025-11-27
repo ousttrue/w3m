@@ -115,17 +115,18 @@ Buffer* tui_message_list_panel()
     return loadHTMLString(tmp);
 }
 
-void tui_message(char* s, int return_x, int return_y)
+void tui_message(const char* s)
 {
     if (!fmInitialized)
         return;
 
     // term_cbreak();
 
+    struct Screen screen = scr_get();
     scr_move(LINES - 1, 0);
     scr_addnstr(s, COLS - 1);
     scr_clrtoeolx();
-    scr_move(return_y, return_x);
+    scr_move(screen.CurLine, screen.CurColumn);
 
     // tui_render_screen();
 }
@@ -138,17 +139,16 @@ void tui_disp_err_message(char* s, int redraw_current)
 
 void tui_disp_message_nsec(char* s, int redraw_current, int sec, int purge, int mouse)
 {
-    // if (QuietMessage)
-    //     return;
+    if (QuietMessage)
+        return;
+
     if (!fmInitialized) {
         fprintf(stderr, "%s\n", conv_to_system(s));
         return;
     }
-    if (CurrentTab != NULL && Currentbuf != NULL)
-        tui_message(s, Currentbuf->cursorX + Currentbuf->rootX,
-            Currentbuf->cursorY + Currentbuf->rootY);
-    else
-        tui_message(s, LINES - 1, 0);
+
+    tui_message(s);
+
     tui_render_screen();
     tty_sleep_till_anykey(sec, purge);
     if (CurrentTab != NULL && Currentbuf != NULL && redraw_current)
@@ -511,7 +511,7 @@ void tui_showProgress(long long current_content_length, long long* linelen, long
         } else {
             messages = Sprintf("%7s loaded", fmtrbyte);
         }
-        tui_message(messages->ptr, 0, 0);
+        tui_message(messages->ptr);
         tui_render_screen();
     }
 }

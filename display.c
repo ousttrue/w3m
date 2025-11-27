@@ -364,7 +364,8 @@ void displayBuffer(Buffer* buf, enum DisplayMode mode)
     }
     tui_render_delayed_msg();
     scr_standout();
-    tui_message(msg->ptr, buf->cursorX + buf->rootX, buf->cursorY + buf->rootY);
+    tui_message(msg->ptr);
+    scr_move(buf->cursorY + buf->rootY, buf->cursorX + buf->rootX);
     scr_standend();
     tty_set_title(conv_to_system(buf->buffername));
     tui_render_screen();

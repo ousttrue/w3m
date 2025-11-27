@@ -14,7 +14,7 @@ void mySystem(const char* command, int background);
 void tui_setup_child(int child, int i, int f);
 void tui_record_err_message(char* s);
 void tui_disp_message_nsec(char* s, int redraw_current, int sec, int purge, int mouse);
-void tui_message(char* s, int return_x, int return_y);
+void tui_message(const char* s);
 void tui_disp_err_message(char* s, int redraw_current);
 void tui_disp_message(char* s, int redraw_current);
 void tui_disp_message_nomouse(char* s, int redraw_current);

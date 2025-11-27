@@ -1254,9 +1254,9 @@ int (*menuSearchRoutine)(Menu*, char*, int);
 static int
 menuForwardSearch(Menu* menu, char* str, int from)
 {
-    char* p;
-    if ((p = regexCompile(str, IgnoreCase)) != NULL) {
-        tui_message(p, 0, 0);
+    const char* p= regexCompile(str, IgnoreCase);
+    if (p) {
+        tui_message(p);
         return -1;
     }
     if (from < 0)
@@ -1303,15 +1303,14 @@ mSrchF(char c)
 static int
 menuBackwardSearch(Menu* menu, char* str, int from)
 {
-    int i;
-    char* p;
-    if ((p = regexCompile(str, IgnoreCase)) != NULL) {
-        tui_message(p, 0, 0);
+    const char* p= regexCompile(str, IgnoreCase);
+    if (p) {
+        tui_message(p);
         return -1;
     }
     if (from >= menu->nitem)
         from = menu->nitem - 1;
-    for (i = from; i >= 0; i--)
+    for (int i = from; i >= 0; i--)
         if (menu->item[i].type != MENU_NOP && regexMatch(menu->item[i].label, -1, 1) == 1)
             return i;
     return -1;

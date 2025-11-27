@@ -954,7 +954,7 @@ dump_extra(Buffer* buf)
         wc_ces_to_charset(buf->document_charset));
     if (buf->ssl_certificate) {
         Str tmp = Strnew();
-        char* p;
+        const char* p;
         for (p = buf->ssl_certificate; *p; p++) {
             Strcat_char(tmp, *p);
             if (*p == '\n') {
@@ -2264,7 +2264,7 @@ cur_real_linenumber(Buffer* buf)
 /* Run editor on the current buffer */
 DEFUN(editBf, EDIT, "Edit local source")
 {
-    char* fn = Currentbuf->filename;
+    const char* fn = Currentbuf->filename;
     Str cmd;
 
     if (fn == NULL || Currentbuf->pagerSource != NULL || /* Behaving as a pager */
@@ -2437,7 +2437,7 @@ loadNormalBuf(Buffer* buf, int renderframe)
 static Buffer*
 loadLink(char* url, char* target, char* referer, FormList* request)
 {
-    tui_message(Sprintf("loading %s", url)->ptr, 0, 0);
+    tui_message(Sprintf("loading %s", url)->ptr);
     tui_render_screen();
 
     struct Url* base = baseURL(Currentbuf);
@@ -2655,19 +2655,16 @@ void bufferA(void)
 /* view inline image */
 DEFUN(followI, VIEW_IMAGE, "Display image in viewer")
 {
-    Anchor* a;
-    Buffer* buf;
-
     if (Currentbuf->firstLine == NULL)
         return;
 
-    a = retrieveCurrentImg(Currentbuf);
+    Anchor* a = retrieveCurrentImg(Currentbuf);
     if (a == NULL)
         return;
-    /* FIXME: gettextize? */
-    tui_message(Sprintf("loading %s", a->url)->ptr, 0, 0);
+
+    tui_message(Sprintf("loading %s", a->url)->ptr);
     tui_render_screen();
-    buf = loadGeneralFile(a->url, baseURL(Currentbuf), NULL, 0, NULL);
+    Buffer* buf = loadGeneralFile(a->url, baseURL(Currentbuf), NULL, 0, NULL);
     if (buf == NULL) {
         /* FIXME: gettextize? */
         char* emsg = Sprintf("Can't load %s", a->url)->ptr;
@@ -4217,10 +4214,9 @@ DEFUN(reload, RELOAD, "Load current document anew")
     }
     copyBuffer(&sbuf, Currentbuf);
     if (Currentbuf->bufferprop & BP_FRAME && (fbuf = Currentbuf->linkBuffer[LB_N_FRAME])) {
-        if (fmInitialized) {
-            tui_message("Rendering frame", 0, 0);
-            tui_render_screen();
-        }
+
+        tui_message("Rendering frame");
+
         if (!(buf = renderFrame(fbuf, 1))) {
             displayBuffer(Currentbuf, B_NORMAL);
             return;
@@ -4259,7 +4255,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
     }
     url = parsedURL2Str(&Currentbuf->currentURL);
     /* FIXME: gettextize? */
-    tui_message("Reloading...", 0, 0);
+    tui_message("Reloading...");
     tui_render_screen();
     old_charset = DocumentCharset;
     if (Currentbuf->document_charset != WC_CES_US_ASCII)
@@ -4451,10 +4447,9 @@ DEFUN(rFrame, FRAME, "Toggle rendering HTML frames")
         }
         return;
     }
-    if (fmInitialized) {
-        tui_message("Rendering frame", 0, 0);
-        tui_render_screen();
-    }
+
+    tui_message("Rendering frame");
+
     buf = renderFrame(Currentbuf, 0);
     if (buf == NULL) {
         displayBuffer(Currentbuf, B_NORMAL);

@@ -397,8 +397,7 @@ showImageProgress(Buffer* buf)
     if (n) {
         if (enable_inline_image && n == l)
             drawImage();
-        tui_message(Sprintf("%d/%d images loaded", l, n)->ptr,
-            buf->cursorX + buf->rootX, buf->cursorY + buf->rootY);
+        tui_message(Sprintf("%d/%d images loaded", l, n)->ptr);
         tui_render_screen();
     }
 }

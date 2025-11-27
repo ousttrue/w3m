@@ -325,10 +325,9 @@ Str loadNewsgroup(struct Url* pu, wc_ces* charset)
         /* <newsgroup>/<start-number>-<end-number> */
         *list++ = '\0';
     }
-    if (fmInitialized) {
-        tui_message(Sprintf("Reading newsgroup %s...", group)->ptr, 0, 0);
-        tui_render_screen();
-    }
+
+    tui_message(Sprintf("Reading newsgroup %s...", group)->ptr);
+
     qgroup = html_quote(group);
     group = file_unquote(group);
     page = Strnew_m_charp("<html>\n<head>\n<base href=\"",

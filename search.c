@@ -15,7 +15,6 @@ set_mark(struct Line* l, int pos, int epos)
         l->propBuf[pos] |= PE_MARK;
 }
 
-
 /* normalize search string */
 char* conv_search_string(char* str, wc_ces f_ces)
 {
@@ -31,8 +30,8 @@ int forwardSearch(Buffer* buf, char* str)
     int wrapped = FALSE;
     int pos;
 
-        if ((p = regexCompile(str, IgnoreCase)) != NULL) {
-        tui_message(p, 0, 0);
+    if ((p = regexCompile(str, IgnoreCase)) != NULL) {
+        tui_message(p);
         return SR_NOTFOUND;
     }
     l = buf->currentLine;
@@ -110,8 +109,8 @@ int backwardSearch(Buffer* buf, char* str)
     int wrapped = FALSE;
     int pos;
 
-        if ((p = regexCompile(str, IgnoreCase)) != NULL) {
-        tui_message(p, 0, 0);
+    if ((p = regexCompile(str, IgnoreCase)) != NULL) {
+        tui_message(p);
         return SR_NOTFOUND;
     }
     l = buf->currentLine;

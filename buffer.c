@@ -375,12 +375,10 @@ listBuffer(Buffer* top, Buffer* current)
         buf = buf->nextBuffer;
     }
     scr_standout();
-    /* FIXME: gettextize? */
-    tui_message("Buffer selection mode: SPC for select / D for delete buffer", 0,
-        0);
+
+    tui_message("Buffer selection mode: SPC for select / D for delete buffer");
     scr_standend();
-    /*
-     * move(LASTLINE, COLS - 1); */
+    /* move(LASTLINE, COLS - 1); */
     scr_move(c, 0);
     tui_render_screen();
     return buf->nextBuffer;

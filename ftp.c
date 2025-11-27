@@ -158,13 +158,11 @@ ftp_login(FTP ftp)
     ftp_command(ftp, NULL, NULL, &status);
     if (status != 220)
         goto open_err;
-    if (fmInitialized) {
-        tui_message(Sprintf("Sending FTP username (%s) to remote server.",
-                    ftp->user)
-                    ->ptr,
-            0, 0);
-        tui_render_screen();
-    }
+
+    tui_message(Sprintf("Sending FTP username (%s) to remote server.",
+        ftp->user)
+            ->ptr);
+
     ftp_command(ftp, "USER", ftp->user, &status);
     /*
      * Some ftp daemons(e.g. publicfile) return code 230 for user command.
@@ -173,10 +171,9 @@ ftp_login(FTP ftp)
         goto succeed;
     if (status != 331)
         goto open_err;
-    if (fmInitialized) {
-        tui_message("Sending FTP password to remote server.", 0, 0);
-        tui_render_screen();
-    }
+
+    tui_message("Sending FTP password to remote server.");
+
     ftp_command(ftp, "PASS", ftp->pass, &status);
     if (status != 230)
         goto open_err;

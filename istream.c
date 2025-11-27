@@ -785,25 +785,15 @@ int openSocket(char* const hostname,
     char* hname;
     MySignalHandler prevtrap = NULL;
 
-    if (fmInitialized) {
-        /* FIXME: gettextize? */
-        tui_message(Sprintf("Opening socket...")->ptr, 0, 0);
-        tui_render_screen();
-    }
+    tui_message(Sprintf("Opening socket...")->ptr);
+
     if (SETJMP(AbortLoading) != 0) {
-#ifdef SOCK_DEBUG
-        sock_log("openSocket() failed. reason: user abort\n");
-#endif
         if (sock >= 0)
             close(sock);
         goto error;
     }
     TRAP_ON;
     if (hostname == NULL) {
-#ifdef SOCK_DEBUG
-        sock_log("openSocket() failed. reason: Bad hostname \"%s\"\n",
-            hostname);
-#endif
         goto error;
     }
 

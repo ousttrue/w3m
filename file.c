@@ -353,7 +353,7 @@ void examineFile(char* path, struct URLFile* uf)
         }
         check_compression(path, uf);
         if (uf->compression != CMP_NOCOMPRESS) {
-            char* ext = uf->ext;
+            const char* ext = uf->ext;
             const char* t0 = uncompressed_file_type(path, &ext);
             uf->guess_type = t0;
             uf->ext = ext;
@@ -543,7 +543,7 @@ void readHeader(struct URLFile* uf, Buffer* newBuf, int thru, struct Url* pu)
             while (*p && IS_SPACE(*p))
                 p++;
             http_response_code = atoi(p);
-            tui_message(lineBuf2->ptr, 0, 0);
+            tui_message(lineBuf2->ptr);
             tui_render_screen();
         }
         if (!strncasecmp(lineBuf2->ptr, "content-transfer-encoding:", 26)) {
@@ -932,7 +932,7 @@ load_doc:
     if (pu.scheme == SCM_HTTP || pu.scheme == SCM_HTTPS || (((pu.scheme == SCM_GOPHER && non_null(GOPHER_proxy)) || (pu.scheme == SCM_FTP && non_null(FTP_proxy))) && !Do_not_use_proxy && !check_no_proxy(pu.host))) {
 
         term_cbreak();
-        tui_message(Sprintf("%s contacted. Waiting for reply...", pu.host)->ptr, 0, 0);
+        tui_message(Sprintf("%s contacted. Waiting for reply...", pu.host)->ptr);
         tui_render_screen();
 
         if (t_buf == NULL)
