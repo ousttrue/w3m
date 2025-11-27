@@ -28,8 +28,8 @@ extern int REV_LB[];
 #define MAX_LB 5
 
 typedef struct _Buffer {
-    char* filename;
-    char* buffername;
+    const char* filename;
+    const char* buffername;
     struct Line* firstLine;
     struct Line* topLine;
     struct Line* currentLine;
@@ -38,8 +38,8 @@ typedef struct _Buffer {
     struct _Buffer* linkBuffer[MAX_LB];
     short width;
     short height;
-    char* type;
-    char* real_type;
+    const char* type;
+    const char* real_type;
     int allLine;
     short bufferprop;
     int currentColumn;
@@ -63,9 +63,9 @@ typedef struct _Buffer {
     struct _HmarkerList* imarklist;
     struct Url currentURL;
     struct Url* baseURL;
-    char* baseTarget;
+    const char* baseTarget;
     int real_scheme;
-    char* sourcefile;
+    const char* sourcefile;
     struct frameset* frameset;
     struct frameset_queue* frameQ;
     int* clone;
@@ -75,13 +75,13 @@ typedef struct _Buffer {
     wc_uint8 auto_detect;
     TextList* document_header;
     struct form_item_list* form_submit;
-    char* savecache;
-    char* edit;
+    const char* savecache;
+    const char* edit;
     struct mailcap* mailcap;
-    char* mailcap_source;
-    char* header_source;
+    const char* mailcap_source;
+    const char* header_source;
     char search_header;
-    char* ssl_certificate;
+    const char* ssl_certificate;
     char image_flag;
     char image_loaded;
     char need_reshape;

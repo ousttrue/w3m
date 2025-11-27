@@ -444,11 +444,10 @@ char* expandPath(char* name)
             if (!passent)
                 goto rest;
             extpath = Strnew_charp(passent->pw_dir);
+        } else if (*p == '/' || *p == '\0') { /* ~/dir... or ~ */
+            extpath = Strnew_charp(getenv("HOME"));
         } else
-            if (*p == '/' || *p == '\0') { /* ~/dir... or ~ */
-                extpath = Strnew_charp(getenv("HOME"));
-            } else
-                goto rest;
+            goto rest;
         if (Strcmp_charp(extpath, "/") == 0 && *p == '/')
             p++;
         Strcat_charp(extpath, p);
@@ -564,21 +563,6 @@ int strmatchlen(const char* s1, const char* s2, int maxlen)
             break;
     }
     return i;
-}
-
-char* remove_space(char* str)
-{
-    char *p, *q;
-
-    for (p = str; *p && IS_SPACE(*p); p++)
-        ;
-    for (q = p; *q; q++)
-        ;
-    for (; q > p && IS_SPACE(*(q - 1)); q--)
-        ;
-    if (*q != '\0')
-        return Strnew_charp_n(p, q - p)->ptr;
-    return p;
 }
 
 void cleanup_line(Str s, int mode)

@@ -218,3 +218,17 @@ bool matchattr(const char* p, const char* attr, int len, Str* value)
     }
     return 0;
 }
+
+const char* remove_space(const char* str)
+{
+    const char *p, *q;
+    for (p = str; *p && IS_SPACE(*p); p++)
+        ;
+    for (q = p; *q; q++)
+        ;
+    for (; q > p && IS_SPACE(*(q - 1)); q--)
+        ;
+    if (*q != '\0')
+        return Strnew_charp_n(p, q - p)->ptr;
+    return p;
+}
