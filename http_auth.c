@@ -1,4 +1,5 @@
 #include "http_auth.h"
+#include "tui.h"
 #include "form.h"
 #include "indep.h"
 #include <openssl/md5.h>
@@ -9,7 +10,6 @@
 
 #define PASSWD_FILE RC_DIR "/passwd"
 
-int QuietMessage = (false);
 int disable_secret_security_check = (false);
 const char* passwd_file = (PASSWD_FILE);
 
@@ -236,14 +236,13 @@ parsePasswd(FILE* fp, int netrc)
 /* FIXME: gettextize? */
 #define FILE_IS_READABLE_MSG "SECURITY NOTE: file %s must not be accessible by others"
 
-FILE* openSecretFile(char* fname)
+FILE* openSecretFile(const char* fname)
 {
-    char* efname;
-    struct stat st;
-
     if (fname == NULL)
         return NULL;
-    efname = expandPath(fname);
+
+    const char* efname = expandPath(fname);
+    struct stat st;
     if (stat(efname, &st) < 0)
         return NULL;
 
@@ -276,10 +275,8 @@ FILE* openSecretFile(char* fname)
 
 void loadPasswd(void)
 {
-    FILE* fp;
-
     passwords = NULL;
-    fp = openSecretFile(passwd_file);
+    FILE* fp = openSecretFile(passwd_file);
     if (fp != NULL) {
         parsePasswd(fp, 0);
         fclose(fp);
@@ -764,52 +761,7 @@ void getAuthCookie(struct http_auth* hauth, char* auth_header,
     if (!a_found && find_auth_user_passwd(pu, realm, (Str*)uname, (Str*)pwd, proxy)) {
         /* found username & password in passwd file */;
     } else {
-        if (QuietMessage)
-            return;
-        /* input username and password */
-        sleep(2);
-        // if (fmInitialized) {
-        //     char* pp;
-        //     term_raw();
-        //     /* FIXME: gettextize? */
-        //     if ((pp = inputStr(Sprintf("Username for %s: ", realm)->ptr,
-        //              NULL))
-        //         == NULL)
-        //         return;
-        //     *uname = Str_conv_to_system(Strnew_charp(pp));
-        //     if ((pp = inputLine(Sprintf("Password for %s: ", realm)->ptr, NULL,
-        //              IN_PASSWORD))
-        //         == NULL) {
-        //         *uname = NULL;
-        //         return;
-        //     }
-        //     *pwd = Str_conv_to_system(Strnew_charp(pp));
-        //     term_cbreak();
-        // } else
-        {
-            /*
-             * If post file is specified as '-', stdin is closed at this
-             * point.
-             * In this case, w3m cannot read username from stdin.
-             * So exit with error message.
-             * (This is same behavior as lwp-request.)
-             */
-            if (feof(stdin) || ferror(stdin)) {
-                /* FIXME: gettextize? */
-                fprintf(stderr, "w3m: Authorization required for %s\n",
-                    realm);
-                exit(1);
-            }
-
-            /* FIXME: gettextize? */
-            printf(proxy ? "Proxy Username for %s: " : "Username for %s: ",
-                realm);
-            fflush(stdout);
-            *uname = Strfgets(stdin);
-            Strchop(*uname);
-            *pwd = Strnew_charp((char*)
-                    getpass(proxy ? "Proxy Password: " : "Password: "));
-        }
+        tui_input_pw(realm, uname, pwd);
     }
     ss = hauth->cred(hauth, *uname, *pwd, pu, hr, request);
     if (ss) {

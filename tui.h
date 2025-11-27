@@ -1,8 +1,10 @@
 #pragma once
 #include <stdbool.h>
+#include <gcstr/gcstr.h>
 
 extern int fmInitialized;
 extern int highIntensityColors;
+extern int QuietMessage;
 
 void tui_enter();
 void tui_exit();
@@ -21,3 +23,5 @@ void tui_render_delayed_msg();
 struct _Buffer* tui_message_list_panel();
 void tui_render_screen();
 void tui_showProgress(long long current_content_length, long long* linelen, long long* trbyte);
+const char* inputAnswer(const char* prompt);
+void tui_input_pw(const char* realm, Str* uname, Str* pwd);

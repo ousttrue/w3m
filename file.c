@@ -5653,7 +5653,7 @@ void loadHTMLstream(struct URLFile* f, Buffer* newBuf, FILE* src, int internal)
     int volatile image_flag;
     MySignalHandler prevtrap = NULL;
 
-    if (fmInitialized && graph_ok()) {
+    if (graph_ok()) {
         symbol_width = symbol_width0 = 1;
     } else {
         symbol_width0 = 0;
@@ -6872,23 +6872,6 @@ int checkOverWrite(char* path)
         return 0;
     else
         return -1;
-}
-
-char* inputAnswer(char* prompt)
-{
-    char* ans;
-
-    if (QuietMessage)
-        return "n";
-    if (fmInitialized) {
-        term_raw();
-        ans = inputChar(prompt);
-    } else {
-        printf("%s", prompt);
-        fflush(stdout);
-        ans = Strfgets(stdin)->ptr;
-    }
-    return ans;
 }
 
 static void

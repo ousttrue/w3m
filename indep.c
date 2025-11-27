@@ -1,4 +1,4 @@
-/* $Id: indep.c,v 1.38 2007/05/23 15:06:05 inu Exp $ */
+#include "indep.h"
 #include "fm.h"
 #include <stdio.h>
 #include <pwd.h>
@@ -6,7 +6,6 @@
 #include <sys/param.h>
 #include <sys/types.h>
 #include <stdlib.h>
-#include "indep.h"
 #include <gcstr/gcstr.h>
 #include <unistd.h>
 #include "entity.h"
@@ -421,7 +420,7 @@ char* cleanupName(char* name)
     return buf;
 }
 
-char* expandPath(char* name)
+const char* expandPath(const char* name)
 {
     char* p;
     struct passwd *passent, *getpwnam(const char*);

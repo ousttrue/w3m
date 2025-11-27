@@ -1,7 +1,6 @@
 #pragma once
 #include "HttpRequest.h"
 
-extern int QuietMessage;
 extern int disable_secret_security_check;
 extern const char* passwd_file;
 
@@ -34,4 +33,4 @@ findAuthentication(struct http_auth* hauth, TextList* document_header, char* aut
 void add_auth_user_passwd(struct Url* pu, char* realm, Str uname, Str pwd, int is_proxy);
 int find_auth_user_passwd(struct Url* pu, char* realm, Str* uname, Str* pwd, int is_proxy);
 void loadPasswd(void);
-FILE* openSecretFile(char* fname);
+FILE* openSecretFile(const char* fname);

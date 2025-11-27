@@ -9,6 +9,7 @@
 #include "image.h"
 #include "buffer.h"
 #include "indep.h"
+#include "linein.h"
 #include <gcstr/gcstr.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -19,6 +20,7 @@
 
 int fmInitialized = false;
 int highIntensityColors = false;
+int QuietMessage = false;
 
 static GeneralList* message_list = NULL;
 static char* delayed_msg = NULL;
@@ -511,5 +513,68 @@ void tui_showProgress(long long current_content_length, long long* linelen, long
         }
         tui_message(messages->ptr, 0, 0);
         tui_render_screen();
+    }
+}
+
+const char* inputAnswer(const char* prompt)
+{
+    if (QuietMessage)
+        return "n";
+
+    const char* ans;
+    if (fmInitialized) {
+        term_raw();
+        ans = inputChar(prompt);
+    } else {
+        printf("%s", prompt);
+        fflush(stdout);
+        ans = Strfgets(stdin)->ptr;
+    }
+    return ans;
+}
+
+void tui_input_pw(const char* realm, Str* uname, Str* pwd)
+{
+    if (QuietMessage)
+        return;
+
+    sleep(2);
+    if (fmInitialized) {
+        char* pp;
+        term_raw();
+        if ((pp = inputStr(Sprintf("Username for %s: ", realm)->ptr,
+                 NULL))
+            == NULL)
+            return;
+        *uname = Str_conv_to_system(Strnew_charp(pp));
+        if ((pp = inputLine(Sprintf("Password for %s: ", realm)->ptr, NULL,
+                 IN_PASSWORD))
+            == NULL) {
+            *uname = NULL;
+            return;
+        }
+        *pwd = Str_conv_to_system(Strnew_charp(pp));
+        term_cbreak();
+    } else {
+        /*
+         * If post file is specified as '-', stdin is closed at this
+         * point.
+         * In this case, w3m cannot read username from stdin.
+         * So exit with error message.
+         * (This is same behavior as lwp-request.)
+         */
+        if (feof(stdin) || ferror(stdin)) {
+            fprintf(stderr, "w3m: Authorization required for %s\n",
+                realm);
+            exit(1);
+        }
+
+        printf(/*proxy ? "Proxy Username for %s: " :*/ "Username for %s: ",
+            realm);
+        fflush(stdout);
+        *uname = Strfgets(stdin);
+        Strchop(*uname);
+        *pwd = Strnew_charp((char*)
+                getpass(/*proxy ? "Proxy Password: " :*/ "Password: "));
     }
 }
