@@ -17,151 +17,9 @@
 
 extern unsigned char last_key;
 
-/* *INDENT-OFF* */
-
-#define EFFECT_ANCHOR_START effect_anchor_start()
-#define EFFECT_ANCHOR_END effect_anchor_end()
-#define EFFECT_IMAGE_START effect_image_start()
-#define EFFECT_IMAGE_END effect_image_end()
-#define EFFECT_FORM_START effect_form_start()
-#define EFFECT_FORM_END effect_form_end()
-#define EFFECT_ACTIVE_START effect_active_start()
-#define EFFECT_ACTIVE_END effect_active_end()
-#define EFFECT_VISITED_START effect_visited_start()
-#define EFFECT_VISITED_END effect_visited_end()
-#define EFFECT_MARK_START effect_mark_start()
-#define EFFECT_MARK_END effect_mark_end()
-
-/*-
- * color:
- *     0  black
- *     1  red
- *     2  green
- *     3  yellow
- *     4  blue
- *     5  magenta
- *     6  cyan
- *     7  white
- */
-
-#define EFFECT_ANCHOR_START_C scr_setfcolor(anchor_color)
-#define EFFECT_IMAGE_START_C scr_setfcolor(image_color)
-#define EFFECT_FORM_START_C scr_setfcolor(form_color)
-#define EFFECT_ACTIVE_START_C (scr_setfcolor(active_color), scr_underline())
-#define EFFECT_VISITED_START_C scr_setfcolor(visited_color)
-#define EFFECT_MARK_START_C scr_setbcolor(mark_color)
-
-#define EFFECT_IMAGE_END_C scr_setfcolor(basic_color)
-#define EFFECT_ANCHOR_END_C scr_setfcolor(basic_color)
-#define EFFECT_FORM_END_C scr_setfcolor(basic_color)
-#define EFFECT_ACTIVE_END_C (scr_setfcolor(basic_color), scr_underlineend())
-#define EFFECT_VISITED_END_C scr_setfcolor(basic_color)
-#define EFFECT_MARK_END_C scr_setbcolor(bg_color)
-
-#define EFFECT_ANCHOR_START_M scr_underline()
-#define EFFECT_ANCHOR_END_M scr_underlineend()
-#define EFFECT_IMAGE_START_M scr_standout()
-#define EFFECT_IMAGE_END_M scr_standend()
-#define EFFECT_FORM_START_M scr_standout()
-#define EFFECT_FORM_END_M scr_standend()
-#define EFFECT_ACTIVE_START_NC scr_underline()
-#define EFFECT_ACTIVE_END_NC scr_underlineend()
-#define EFFECT_ACTIVE_START_M scr_bold()
-#define EFFECT_ACTIVE_END_M scr_boldend()
-#define EFFECT_VISITED_START_M /**/
-#define EFFECT_VISITED_END_M /**/
-#define EFFECT_MARK_START_M scr_standout()
-#define EFFECT_MARK_END_M scr_standend()
-#define define_effect(name_start, name_end, color_start, color_end, mono_start, mono_end) \
-    static void name_start                                                                \
-    {                                                                                     \
-        if (useColor) {                                                                   \
-            color_start;                                                                  \
-        } else {                                                                          \
-            mono_start;                                                                   \
-        }                                                                                 \
-    }                                                                                     \
-    static void name_end                                                                  \
-    {                                                                                     \
-        if (useColor) {                                                                   \
-            color_end;                                                                    \
-        } else {                                                                          \
-            mono_end;                                                                     \
-        }                                                                                 \
-    }
-
-define_effect(EFFECT_ANCHOR_START, EFFECT_ANCHOR_END, EFFECT_ANCHOR_START_C,
-    EFFECT_ANCHOR_END_C, EFFECT_ANCHOR_START_M, EFFECT_ANCHOR_END_M)
-    define_effect(EFFECT_IMAGE_START, EFFECT_IMAGE_END, EFFECT_IMAGE_START_C,
-        EFFECT_IMAGE_END_C, EFFECT_IMAGE_START_M, EFFECT_IMAGE_END_M)
-        define_effect(EFFECT_FORM_START, EFFECT_FORM_END, EFFECT_FORM_START_C,
-            EFFECT_FORM_END_C, EFFECT_FORM_START_M, EFFECT_FORM_END_M)
-            define_effect(EFFECT_MARK_START, EFFECT_MARK_END, EFFECT_MARK_START_C,
-                EFFECT_MARK_END_C, EFFECT_MARK_START_M, EFFECT_MARK_END_M)
-
-    /*****************/
-    static void EFFECT_ACTIVE_START
-{
-    if (useColor) {
-        if (useActiveColor) {
-            {
-                EFFECT_ACTIVE_START_C;
-            }
-        } else {
-            EFFECT_ACTIVE_START_NC;
-        }
-    } else {
-        EFFECT_ACTIVE_START_M;
-    }
-}
-
-static void EFFECT_ACTIVE_END
-{
-    if (useColor) {
-        if (useActiveColor) {
-            EFFECT_ACTIVE_END_C;
-        } else {
-            EFFECT_ACTIVE_END_NC;
-        }
-    } else {
-        EFFECT_ACTIVE_END_M;
-    }
-}
-
-static void EFFECT_VISITED_START
-{
-    if (useVisitedColor) {
-        if (useColor) {
-            EFFECT_VISITED_START_C;
-        } else {
-            EFFECT_VISITED_START_M;
-        }
-    }
-}
-
-static void EFFECT_VISITED_END
-{
-    if (useVisitedColor) {
-        if (useColor) {
-            EFFECT_VISITED_END_C;
-        } else {
-            EFFECT_VISITED_END_M;
-        }
-    }
-}
-
-/*
- * Display some lines.
- */
+static struct Buffer* save_current_buf = NULL;
 static struct Line* cline = NULL;
 static int ccolumn = -1;
-
-static int ulmode = 0, somode = 0, bomode = 0;
-static int anch_mode = 0, emph_mode = 0, imag_mode = 0, form_mode = 0,
-           active_mode = 0, visited_mode = 0, mark_mode = 0, graph_mode = 0;
-static Linecolor color_mode = 0;
-
-static struct Buffer* save_current_buf = NULL;
 
 static void drawAnchorCursor(struct Buffer* buf);
 #define redrawBuffer(buf) redrawNLine(buf, LASTLINE)
@@ -171,8 +29,6 @@ static int image_touch = 0;
 static int draw_image_flag = FALSE;
 static struct Line* redrawLineImage(struct Buffer* buf, struct Line* l, int i);
 static int redrawLineRegion(struct Buffer* buf, struct Line* l, int i, int bpos, int epos);
-static void do_effects(Lineprop m);
-static void do_color(Linecolor c);
 
 static Str
 make_lastline_link(struct Buffer* buf, char* title, char* url)
@@ -471,10 +327,7 @@ redrawNLine(struct Buffer* buf, int n)
     struct Line* l;
     int i;
 
-    if (useColor) {
-        EFFECT_ANCHOR_END_C;
-        scr_setbcolor(bg_color);
-    }
+    scr_init_color();
     if (nTab > 1) {
         TabBuffer* t;
         int l;
@@ -492,10 +345,10 @@ redrawNLine(struct Buffer* buf, int n)
             if (l / 2 > 0)
                 scr_addnstr_sup(" ", l / 2);
             if (t == CurrentTab)
-                EFFECT_ACTIVE_START;
+                scr_active_start();
             scr_addnstr(t->currentBuffer->buffername, t->x2 - t->x1 - l);
             if (t == CurrentTab)
-                EFFECT_ACTIVE_END;
+                scr_active_end();
             if ((l + 1) / 2 > 0)
                 scr_addnstr_sup(" ", (l + 1) / 2);
             scr_move(t->y, t->x2);
@@ -605,64 +458,18 @@ redrawLine(struct Buffer* buf, struct Line* l, int i)
             do_color(pc[j]);
         if (rcol < column) {
             for (rcol = column; rcol < ncol; rcol++)
-                addChar(' ', 0);
+                scr_addChar(' ', 0);
             continue;
         }
         if (p[j] == '\t') {
             for (; rcol < ncol; rcol++)
-                addChar(' ', 0);
+                scr_addChar(' ', 0);
         } else {
-            addMChar(&p[j], pr[j], delta);
+            scr_addMChar(&p[j], pr[j], delta);
         }
         rcol = ncol;
     }
-    if (somode) {
-        somode = FALSE;
-        scr_standend();
-    }
-    if (ulmode) {
-        ulmode = FALSE;
-        scr_underlineend();
-    }
-    if (bomode) {
-        bomode = FALSE;
-        scr_boldend();
-    }
-    if (emph_mode) {
-        emph_mode = FALSE;
-        scr_boldend();
-    }
-
-    if (anch_mode) {
-        anch_mode = FALSE;
-        EFFECT_ANCHOR_END;
-    }
-    if (imag_mode) {
-        imag_mode = FALSE;
-        EFFECT_IMAGE_END;
-    }
-    if (form_mode) {
-        form_mode = FALSE;
-        EFFECT_FORM_END;
-    }
-    if (visited_mode) {
-        visited_mode = FALSE;
-        EFFECT_VISITED_END;
-    }
-    if (active_mode) {
-        active_mode = FALSE;
-        EFFECT_ACTIVE_END;
-    }
-    if (mark_mode) {
-        mark_mode = FALSE;
-        EFFECT_MARK_END;
-    }
-    if (graph_mode) {
-        graph_mode = FALSE;
-        scr_graphend();
-    }
-    if (color_mode)
-        do_color(0);
+    scr_line_finalize();
     if (rcol - column < buf->COLS)
         scr_clrtoeolx();
     return l;
@@ -784,186 +591,20 @@ redrawLineRegion(struct Buffer* buf, struct Line* l, int i, int bpos, int epos)
             if (rcol < column) {
                 scr_move(i, buf->rootX);
                 for (rcol = column; rcol < ncol; rcol++)
-                    addChar(' ', 0);
+                    scr_addChar(' ', 0);
                 continue;
             }
             scr_move(i, rcol - column + buf->rootX);
             if (p[j] == '\t') {
                 for (; rcol < ncol; rcol++)
-                    addChar(' ', 0);
+                    scr_addChar(' ', 0);
             } else
-                addMChar(&p[j], pr[j], delta);
+                scr_addMChar(&p[j], pr[j], delta);
         }
         rcol = ncol;
     }
-    if (somode) {
-        somode = FALSE;
-        scr_standend();
-    }
-    if (ulmode) {
-        ulmode = FALSE;
-        scr_underlineend();
-    }
-    if (bomode) {
-        bomode = FALSE;
-        scr_boldend();
-    }
-    if (emph_mode) {
-        emph_mode = FALSE;
-        scr_boldend();
-    }
-
-    if (anch_mode) {
-        anch_mode = FALSE;
-        EFFECT_ANCHOR_END;
-    }
-    if (imag_mode) {
-        imag_mode = FALSE;
-        EFFECT_IMAGE_END;
-    }
-    if (form_mode) {
-        form_mode = FALSE;
-        EFFECT_FORM_END;
-    }
-    if (visited_mode) {
-        visited_mode = FALSE;
-        EFFECT_VISITED_END;
-    }
-    if (active_mode) {
-        active_mode = FALSE;
-        EFFECT_ACTIVE_END;
-    }
-    if (mark_mode) {
-        mark_mode = FALSE;
-        EFFECT_MARK_END;
-    }
-    if (graph_mode) {
-        graph_mode = FALSE;
-        scr_graphend();
-    }
-    if (color_mode)
-        do_color(0);
+    scr_line_finalize();
     return rcol - column;
-}
-
-#define do_effect1(effect, modeflag, action_start, action_end) \
-    if (m & effect) {                                          \
-        if (!modeflag) {                                       \
-            action_start;                                      \
-            modeflag = TRUE;                                   \
-        }                                                      \
-    }
-
-#define do_effect2(effect, modeflag, action_start, action_end) \
-    if (modeflag) {                                            \
-        action_end;                                            \
-        modeflag = FALSE;                                      \
-    }
-
-static void
-do_effects(Lineprop m)
-{
-    /* effect end */
-    do_effect2(PE_UNDER, ulmode, scr_underline(), scr_underlineend());
-    do_effect2(PE_STAND, somode, scr_standout(), scr_standend());
-    do_effect2(PE_BOLD, bomode, scr_bold(), scr_boldend());
-    do_effect2(PE_EMPH, emph_mode, scr_bold(), scr_boldend());
-    do_effect2(PE_ANCHOR, anch_mode, EFFECT_ANCHOR_START, EFFECT_ANCHOR_END);
-    do_effect2(PE_IMAGE, imag_mode, EFFECT_IMAGE_START, EFFECT_IMAGE_END);
-    do_effect2(PE_FORM, form_mode, EFFECT_FORM_START, EFFECT_FORM_END);
-    do_effect2(PE_VISITED, visited_mode, EFFECT_VISITED_START,
-        EFFECT_VISITED_END);
-    do_effect2(PE_ACTIVE, active_mode, EFFECT_ACTIVE_START, EFFECT_ACTIVE_END);
-    do_effect2(PE_MARK, mark_mode, EFFECT_MARK_START, EFFECT_MARK_END);
-    if (graph_mode) {
-        scr_graphend();
-        graph_mode = FALSE;
-    }
-
-    /* effect start */
-    do_effect1(PE_UNDER, ulmode, scr_underline(), scr_underlineend());
-    do_effect1(PE_STAND, somode, scr_standout(), scr_standend());
-    do_effect1(PE_BOLD, bomode, scr_bold(), scr_boldend());
-    do_effect1(PE_EMPH, emph_mode, scr_bold(), scr_boldend());
-    do_effect1(PE_ANCHOR, anch_mode, EFFECT_ANCHOR_START, EFFECT_ANCHOR_END);
-    do_effect1(PE_IMAGE, imag_mode, EFFECT_IMAGE_START, EFFECT_IMAGE_END);
-    do_effect1(PE_FORM, form_mode, EFFECT_FORM_START, EFFECT_FORM_END);
-    do_effect1(PE_VISITED, visited_mode, EFFECT_VISITED_START,
-        EFFECT_VISITED_END);
-    do_effect1(PE_ACTIVE, active_mode, EFFECT_ACTIVE_START, EFFECT_ACTIVE_END);
-    do_effect1(PE_MARK, mark_mode, EFFECT_MARK_START, EFFECT_MARK_END);
-}
-
-static void
-do_color(Linecolor c)
-{
-    if (c & 0x8)
-        scr_setfcolor(c & 0x7);
-    else if (color_mode & 0x8)
-        scr_setfcolor(basic_color);
-    if (c & 0x80)
-        scr_setbcolor((c >> 4) & 0x7);
-    else if (color_mode & 0x80)
-        scr_setbcolor(bg_color);
-    color_mode = c;
-}
-
-void addChar(char c, Lineprop mode)
-{
-    addMChar(&c, mode, 1);
-}
-
-void addMChar(char* p, Lineprop mode, size_t len)
-{
-    Lineprop m = CharEffect(mode);
-    char c = *p;
-
-    if (mode & PC_WCHAR2)
-        return;
-    do_effects(m);
-    if (mode & PC_SYMBOL) {
-        char** symbol;
-        int w = (mode & PC_KANJI) ? 2 : 1;
-
-        c = ((char)wtf_get_code((wc_uchar*)p) & 0x7f) - SYMBOL_BASE;
-        if (graph_ok() && c < N_GRAPH_SYMBOL) {
-            if (!graph_mode) {
-                scr_graphstart();
-                graph_mode = TRUE;
-            }
-            if (w == 2 && WcOption.use_wide)
-                scr_addstr(graph2_symbol[(unsigned char)c % N_GRAPH_SYMBOL]);
-            else
-                scr_addch(*graph_symbol[(unsigned char)c % N_GRAPH_SYMBOL]);
-        } else {
-            symbol = get_symbol(DisplayCharset, &w);
-            scr_addstr(symbol[(unsigned char)c % N_SYMBOL]);
-        }
-    } else if (mode & PC_CTRL) {
-        switch (c) {
-        case '\t':
-            scr_addch(c);
-            break;
-        case '\n':
-            scr_addch(' ');
-            break;
-        case '\r':
-            break;
-        case DEL_CODE:
-            scr_addstr("^?");
-            break;
-        default:
-            scr_addch('^');
-            scr_addch(c + '@');
-            break;
-        }
-    } else if (mode & PC_UNKNOWN) {
-        char buf[5];
-        sprintf(buf, "[%.2X]",
-            (unsigned char)wtf_get_code((wc_uchar*)p) | 0x80);
-        scr_addstr(buf);
-    } else
-        scr_addmch(p, len);
 }
 
 void cursorUp0(struct Buffer* buf, int n)
@@ -1228,8 +869,3 @@ void restorePosition(struct Buffer* buf, struct Buffer* orig)
     buf->currentColumn = orig->currentColumn;
     arrangeCursor(buf);
 }
-
-/* Local Variables:    */
-/* c-basic-offset: 4   */
-/* tab-width: 8        */
-/* End:                */

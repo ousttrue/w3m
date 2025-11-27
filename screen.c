@@ -1,4 +1,7 @@
 #include "screen.h"
+#include "symbol.h"
+#include "term_entry.h"
+#include "w3m_runtime.h"
 #include <gcstr/gcstr.h>
 #include <stdlib.h>
 #include <wc.h>
@@ -6,6 +9,18 @@
 #include <string.h>
 
 #define SPACE " "
+
+int useColor = true;
+int useActiveColor = false;
+int basic_color = (8); /* don't change */
+int anchor_color = (4); /* blue  */
+int image_color = (2); /* green */
+int form_color = (1); /* red   */
+int bg_color = (8); /* don't change */
+int mark_color = (6); /* cyan */
+int active_color = (6); /* cyan */
+int useVisitedColor = (false);
+int visited_color = (5); /* magenta  */
 
 static int tab_step = 8;
 static int max_LINES = 0;
@@ -24,6 +39,226 @@ static struct Screen g_screen = {
 struct Screen scr_get()
 {
     return g_screen;
+}
+
+#define EFFECT_ANCHOR_START effect_anchor_start()
+#define EFFECT_ANCHOR_END effect_anchor_end()
+#define EFFECT_IMAGE_START effect_image_start()
+#define EFFECT_IMAGE_END effect_image_end()
+#define EFFECT_FORM_START effect_form_start()
+#define EFFECT_FORM_END effect_form_end()
+#define EFFECT_ACTIVE_START effect_active_start()
+#define EFFECT_ACTIVE_END effect_active_end()
+#define EFFECT_VISITED_START effect_visited_start()
+#define EFFECT_VISITED_END effect_visited_end()
+#define EFFECT_MARK_START effect_mark_start()
+#define EFFECT_MARK_END effect_mark_end()
+
+/*-
+ * color:
+ *     0  black
+ *     1  red
+ *     2  green
+ *     3  yellow
+ *     4  blue
+ *     5  magenta
+ *     6  cyan
+ *     7  white
+ */
+
+#define EFFECT_ANCHOR_START_C scr_setfcolor(anchor_color)
+#define EFFECT_IMAGE_START_C scr_setfcolor(image_color)
+#define EFFECT_FORM_START_C scr_setfcolor(form_color)
+#define EFFECT_ACTIVE_START_C (scr_setfcolor(active_color), scr_underline())
+#define EFFECT_VISITED_START_C scr_setfcolor(visited_color)
+#define EFFECT_MARK_START_C scr_setbcolor(mark_color)
+
+#define EFFECT_IMAGE_END_C scr_setfcolor(basic_color)
+#define EFFECT_ANCHOR_END_C scr_setfcolor(basic_color)
+#define EFFECT_FORM_END_C scr_setfcolor(basic_color)
+#define EFFECT_ACTIVE_END_C (scr_setfcolor(basic_color), scr_underlineend())
+#define EFFECT_VISITED_END_C scr_setfcolor(basic_color)
+#define EFFECT_MARK_END_C scr_setbcolor(bg_color)
+
+#define EFFECT_ANCHOR_START_M scr_underline()
+#define EFFECT_ANCHOR_END_M scr_underlineend()
+#define EFFECT_IMAGE_START_M scr_standout()
+#define EFFECT_IMAGE_END_M scr_standend()
+#define EFFECT_FORM_START_M scr_standout()
+#define EFFECT_FORM_END_M scr_standend()
+#define EFFECT_ACTIVE_START_NC scr_underline()
+#define EFFECT_ACTIVE_END_NC scr_underlineend()
+#define EFFECT_ACTIVE_START_M scr_bold()
+#define EFFECT_ACTIVE_END_M scr_boldend()
+#define EFFECT_VISITED_START_M /**/
+#define EFFECT_VISITED_END_M /**/
+#define EFFECT_MARK_START_M scr_standout()
+#define EFFECT_MARK_END_M scr_standend()
+#define define_effect(name_start, name_end, color_start, color_end, mono_start, mono_end) \
+    static void name_start                                                                \
+    {                                                                                     \
+        if (useColor) {                                                                   \
+            color_start;                                                                  \
+        } else {                                                                          \
+            mono_start;                                                                   \
+        }                                                                                 \
+    }                                                                                     \
+    static void name_end                                                                  \
+    {                                                                                     \
+        if (useColor) {                                                                   \
+            color_end;                                                                    \
+        } else {                                                                          \
+            mono_end;                                                                     \
+        }                                                                                 \
+    }
+
+define_effect(EFFECT_ANCHOR_START, EFFECT_ANCHOR_END, EFFECT_ANCHOR_START_C,
+    EFFECT_ANCHOR_END_C, EFFECT_ANCHOR_START_M, EFFECT_ANCHOR_END_M)
+    define_effect(EFFECT_IMAGE_START, EFFECT_IMAGE_END, EFFECT_IMAGE_START_C,
+        EFFECT_IMAGE_END_C, EFFECT_IMAGE_START_M, EFFECT_IMAGE_END_M)
+        define_effect(EFFECT_FORM_START, EFFECT_FORM_END, EFFECT_FORM_START_C,
+            EFFECT_FORM_END_C, EFFECT_FORM_START_M, EFFECT_FORM_END_M)
+            define_effect(EFFECT_MARK_START, EFFECT_MARK_END, EFFECT_MARK_START_C,
+                EFFECT_MARK_END_C, EFFECT_MARK_START_M, EFFECT_MARK_END_M)
+
+    /*****************/
+    static void EFFECT_ACTIVE_START
+{
+    if (useColor) {
+        if (useActiveColor) {
+            {
+                EFFECT_ACTIVE_START_C;
+            }
+        } else {
+            EFFECT_ACTIVE_START_NC;
+        }
+    } else {
+        EFFECT_ACTIVE_START_M;
+    }
+}
+
+static void EFFECT_ACTIVE_END
+{
+    if (useColor) {
+        if (useActiveColor) {
+            EFFECT_ACTIVE_END_C;
+        } else {
+            EFFECT_ACTIVE_END_NC;
+        }
+    } else {
+        EFFECT_ACTIVE_END_M;
+    }
+}
+
+static void EFFECT_VISITED_START
+{
+    if (useVisitedColor) {
+        if (useColor) {
+            EFFECT_VISITED_START_C;
+        } else {
+            EFFECT_VISITED_START_M;
+        }
+    }
+}
+
+static void EFFECT_VISITED_END
+{
+    if (useVisitedColor) {
+        if (useColor) {
+            EFFECT_VISITED_END_C;
+        } else {
+            EFFECT_VISITED_END_M;
+        }
+    }
+}
+
+/*
+ * Display some lines.
+ */
+static int ulmode = 0, somode = 0, bomode = 0;
+static int anch_mode = 0, emph_mode = 0, imag_mode = 0, form_mode = 0,
+           active_mode = 0, visited_mode = 0, mark_mode = 0, graph_mode = 0;
+static Linecolor color_mode = 0;
+
+void scr_init_color()
+{
+    if (useColor) {
+        EFFECT_ANCHOR_END_C;
+        scr_setbcolor(bg_color);
+    }
+}
+
+void scr_active_start()
+{
+    EFFECT_ACTIVE_START;
+}
+void scr_active_end()
+{
+    EFFECT_ACTIVE_END;
+}
+
+void do_color(Linecolor c)
+{
+    if (c & 0x8)
+        scr_setfcolor(c & 0x7);
+    else if (color_mode & 0x8)
+        scr_setfcolor(basic_color);
+    if (c & 0x80)
+        scr_setbcolor((c >> 4) & 0x7);
+    else if (color_mode & 0x80)
+        scr_setbcolor(bg_color);
+    color_mode = c;
+}
+
+void scr_line_finalize()
+{
+    if (somode) {
+        somode = false;
+        scr_standend();
+    }
+    if (ulmode) {
+        ulmode = false;
+        scr_underlineend();
+    }
+    if (bomode) {
+        bomode = false;
+        scr_boldend();
+    }
+    if (emph_mode) {
+        emph_mode = false;
+        scr_boldend();
+    }
+
+    if (anch_mode) {
+        anch_mode = false;
+        EFFECT_ANCHOR_END;
+    }
+    if (imag_mode) {
+        imag_mode = false;
+        EFFECT_IMAGE_END;
+    }
+    if (form_mode) {
+        form_mode = false;
+        EFFECT_FORM_END;
+    }
+    if (visited_mode) {
+        visited_mode = false;
+        EFFECT_VISITED_END;
+    }
+    if (active_mode) {
+        active_mode = false;
+        EFFECT_ACTIVE_END;
+    }
+    if (mark_mode) {
+        mark_mode = false;
+        EFFECT_MARK_END;
+    }
+    if (graph_mode) {
+        graph_mode = false;
+        scr_graphend();
+    }
+    if (color_mode)
+        do_color(0);
 }
 
 void setupscreen(int lines, int cols)
@@ -374,6 +609,107 @@ void scr_addnstr_sup(const char* s, int n)
     }
     for (; i < n; i++)
         scr_addch(' ');
+}
+
+#define do_effect1(effect, modeflag, action_start, action_end) \
+    if (m & effect) {                                          \
+        if (!modeflag) {                                       \
+            action_start;                                      \
+            modeflag = true;                                   \
+        }                                                      \
+    }
+
+#define do_effect2(effect, modeflag, action_start, action_end) \
+    if (modeflag) {                                            \
+        action_end;                                            \
+        modeflag = false;                                      \
+    }
+
+static void
+do_effects(Lineprop m)
+{
+    /* effect end */
+    do_effect2(PE_UNDER, ulmode, scr_underline(), scr_underlineend());
+    do_effect2(PE_STAND, somode, scr_standout(), scr_standend());
+    do_effect2(PE_BOLD, bomode, scr_bold(), scr_boldend());
+    do_effect2(PE_EMPH, emph_mode, scr_bold(), scr_boldend());
+    do_effect2(PE_ANCHOR, anch_mode, EFFECT_ANCHOR_START, EFFECT_ANCHOR_END);
+    do_effect2(PE_IMAGE, imag_mode, EFFECT_IMAGE_START, EFFECT_IMAGE_END);
+    do_effect2(PE_FORM, form_mode, EFFECT_FORM_START, EFFECT_FORM_END);
+    do_effect2(PE_VISITED, visited_mode, EFFECT_VISITED_START,
+        EFFECT_VISITED_END);
+    do_effect2(PE_ACTIVE, active_mode, EFFECT_ACTIVE_START, EFFECT_ACTIVE_END);
+    do_effect2(PE_MARK, mark_mode, EFFECT_MARK_START, EFFECT_MARK_END);
+    if (graph_mode) {
+        scr_graphend();
+        graph_mode = false;
+    }
+
+    /* effect start */
+    do_effect1(PE_UNDER, ulmode, scr_underline(), scr_underlineend());
+    do_effect1(PE_STAND, somode, scr_standout(), scr_standend());
+    do_effect1(PE_BOLD, bomode, scr_bold(), scr_boldend());
+    do_effect1(PE_EMPH, emph_mode, scr_bold(), scr_boldend());
+    do_effect1(PE_ANCHOR, anch_mode, EFFECT_ANCHOR_START, EFFECT_ANCHOR_END);
+    do_effect1(PE_IMAGE, imag_mode, EFFECT_IMAGE_START, EFFECT_IMAGE_END);
+    do_effect1(PE_FORM, form_mode, EFFECT_FORM_START, EFFECT_FORM_END);
+    do_effect1(PE_VISITED, visited_mode, EFFECT_VISITED_START,
+        EFFECT_VISITED_END);
+    do_effect1(PE_ACTIVE, active_mode, EFFECT_ACTIVE_START, EFFECT_ACTIVE_END);
+    do_effect1(PE_MARK, mark_mode, EFFECT_MARK_START, EFFECT_MARK_END);
+}
+
+void scr_addMChar(char* p, Lineprop mode, size_t len)
+{
+    Lineprop m = CharEffect(mode);
+    char c = *p;
+
+    if (mode & PC_WCHAR2)
+        return;
+    do_effects(m);
+    if (mode & PC_SYMBOL) {
+        char** symbol;
+        int w = (mode & PC_KANJI) ? 2 : 1;
+
+        c = ((char)wtf_get_code((wc_uchar*)p) & 0x7f) - SYMBOL_BASE;
+        if (graph_ok() && c < N_GRAPH_SYMBOL) {
+            if (!graph_mode) {
+                scr_graphstart();
+                graph_mode = true;
+            }
+            if (w == 2 && WcOption.use_wide)
+                scr_addstr(graph2_symbol[(unsigned char)c % N_GRAPH_SYMBOL]);
+            else
+                scr_addch(*graph_symbol[(unsigned char)c % N_GRAPH_SYMBOL]);
+        } else {
+            symbol = get_symbol(DisplayCharset, &w);
+            scr_addstr(symbol[(unsigned char)c % N_SYMBOL]);
+        }
+    } else if (mode & PC_CTRL) {
+        switch (c) {
+        case '\t':
+            scr_addch(c);
+            break;
+        case '\n':
+            scr_addch(' ');
+            break;
+        case '\r':
+            break;
+        case DEL_CODE:
+            scr_addstr("^?");
+            break;
+        default:
+            scr_addch('^');
+            scr_addch(c + '@');
+            break;
+        }
+    } else if (mode & PC_UNKNOWN) {
+        char buf[5];
+        sprintf(buf, "[%.2X]",
+            (unsigned char)wtf_get_code((wc_uchar*)p) | 0x80);
+        scr_addstr(buf);
+    } else
+        scr_addmch(p, len);
 }
 
 void scr_standout(void)

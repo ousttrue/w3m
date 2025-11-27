@@ -1,7 +1,20 @@
 #pragma once
+#include "Line.h"
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+
+extern int useColor;
+extern int useActiveColor;
+extern int basic_color; /* don't change */
+extern int anchor_color; /* blue  */
+extern int image_color; /* green */
+extern int form_color; /* red   */
+extern int bg_color; /* don't change */
+extern int mark_color; /* cyan */
+extern int active_color; /* cyan */
+extern int useVisitedColor;
+extern int visited_color; /* magenta  */
 
 /* struct ScreenLine properties */
 #define S_SCREENPROP 0x0f
@@ -87,6 +100,12 @@ struct Screen {
 struct Screen scr_get();
 
 void setupscreen(int lines, int cols);
+void scr_init_color();
+void scr_active_start();
+void scr_active_end();
+void do_color(Linecolor c);
+void scr_line_finalize();
+
 void scr_clear(void);
 bool scr_is_need_redraw(const char* c1, uint16_t pr1, const char* c2, uint16_t pr2);
 void scr_move(int line, int column);
@@ -122,6 +141,14 @@ inline static void scr_mvaddnstr(int y, int x, const char* str, int n)
     scr_move(y, x);
     scr_addnstr_sup(str, n);
 }
+
+void scr_addMChar(char* c, Lineprop mode, size_t len);
+
+inline static void scr_addChar(char c, Lineprop mode)
+{
+    scr_addMChar(&c, mode, 1);
+}
+
 void scr_standout(void);
 void scr_standend(void);
 void scr_toggle_stand(void);

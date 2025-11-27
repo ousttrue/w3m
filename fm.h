@@ -279,17 +279,6 @@ global int w3m_dump init(0);
 #define w3m_halfdump (w3m_dump & DUMP_HALFDUMP)
 global int w3m_halfload init(FALSE);
 
-global int useColor init(TRUE);
-global int basic_color init(8); /* don't change */
-global int anchor_color init(4); /* blue  */
-global int image_color init(2); /* green */
-global int form_color init(1); /* red   */
-global int bg_color init(8); /* don't change */
-global int mark_color init(6); /* cyan */
-global int useActiveColor init(FALSE);
-global int active_color init(6); /* cyan */
-global int useVisitedColor init(FALSE);
-global int visited_color init(5); /* magenta  */
 global int confirm_on_quit init(TRUE);
 global int use_mark init(FALSE);
 global int emacs_like_lineedit init(FALSE);
@@ -367,13 +356,8 @@ global char SimplePreserveSpace init(FALSE);
 global char UseAltEntity init(FALSE);
 global char DisplayBorders init(FALSE);
 global char DisableCenter init(FALSE);
-extern char* graph_symbol[];
-extern char* graph2_symbol[];
 extern int symbol_width;
 extern int symbol_width0;
-#define N_GRAPH_SYMBOL 32
-#define N_SYMBOL (N_GRAPH_SYMBOL + 14)
-#define SYMBOL_BASE 0x20
 global char* rc_dir init(0);
 global char* tmp_dir;
 global char* param_tmp_dir init(0);

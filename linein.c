@@ -232,7 +232,6 @@ const char* inputLineHistSearch(const char* prompt, const char* def_str, enum In
             displayBuffer(Currentbuf, B_FORCE_REDRAW);
     }
 
-
     if (i_broken)
         return NULL;
 
@@ -262,11 +261,11 @@ addPasswd(char* p, Lineprop* pr, int len, int offset, int limit)
     if (ncol > offset + limit)
         ncol = offset + limit;
     if (offset) {
-        addChar('{', 0);
+        scr_addChar('{', 0);
         rcol = offset + 1;
     }
     for (; rcol < ncol; rcol++)
-        addChar('*', 0);
+        scr_addChar('*', 0);
 }
 
 static void
@@ -283,11 +282,11 @@ addStr(char* p, Lineprop* pr, int len, int offset, int limit)
             return;
         while (pr[i] & PC_WCHAR2)
             i++;
-        addChar('{', 0);
+        scr_addChar('{', 0);
         rcol = offset + 1;
         ncol = calcPosition(p, pr, len, i, 0, CP_AUTO);
         for (; rcol < ncol; rcol++)
-            addChar(' ', 0);
+            scr_addChar(' ', 0);
     }
     for (; i < len; i += delta) {
         delta = wtf_len((wc_uchar*)&p[i]);
@@ -296,10 +295,10 @@ addStr(char* p, Lineprop* pr, int len, int offset, int limit)
             break;
         if (p[i] == '\t') {
             for (; rcol < ncol; rcol++)
-                addChar(' ', 0);
+                scr_addChar(' ', 0);
             continue;
         } else {
-            addMChar(&p[i], pr[i], delta);
+            scr_addMChar(&p[i], pr[i], delta);
         }
         rcol = ncol;
     }
