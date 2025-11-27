@@ -1,5 +1,4 @@
 #pragma once
-#include "Line.h"
 
 enum DisplayMode {
     B_NORMAL = 0,
@@ -11,4 +10,3 @@ enum DisplayMode {
 
 struct Buffer;
 void displayBuffer(struct Buffer* buf, enum DisplayMode mode);
-void calcTabPos(void);

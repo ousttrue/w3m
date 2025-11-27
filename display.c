@@ -1,24 +1,24 @@
 #include "display.h"
+#include "Line.h"
+#include "Url.h"
+#include <gcstr/gcstr.h>
+#include <stdbool.h>
 #include "tui.h"
-#include "term_entry.h"
 #include "screen.h"
 #include "history.h"
 #include "mailcap.h"
-#include "symbol.h"
 #include "terms.h"
 #include "image.h"
-#include "indep.h"
 #include "map.h"
 #include "fm.h"
 #include "w3m_runtime.h"
 #include "buffer.h"
 #include <math.h>
-#include <signal.h>
 
 extern unsigned char last_key;
 
-static struct Buffer* save_current_buf = NULL;
-static struct Line* cline = NULL;
+static struct Buffer* save_current_buf = 0;
+static struct Line* cline = 0;
 static int ccolumn = -1;
 
 static void drawAnchorCursor(struct Buffer* buf);
@@ -26,21 +26,21 @@ static void drawAnchorCursor(struct Buffer* buf);
 static void redrawNLine(struct Buffer* buf, int n);
 static struct Line* redrawLine(struct Buffer* buf, struct Line* l, int i);
 static int image_touch = 0;
-static int draw_image_flag = FALSE;
+static int draw_image_flag = false;
 static struct Line* redrawLineImage(struct Buffer* buf, struct Line* l, int i);
 static int redrawLineRegion(struct Buffer* buf, struct Line* l, int i, int bpos, int epos);
 
 static Str
 make_lastline_link(struct Buffer* buf, char* title, char* url)
 {
-    Str s = NULL, u;
+    Str s = 0, u;
     Lineprop* pr;
     struct Url pu;
     char* p;
     int l = COLS - 1, i;
 
     if (title && *title) {
-        s = Strnew_m_charp("[", title, "]", NULL);
+        s = Strnew_m_charp("[", title, "]", 0);
         for (p = s->ptr; *p; p++) {
             if (IS_CNTRL(*p) || IS_SPACE(*p))
                 *p = ' ';
@@ -57,7 +57,7 @@ make_lastline_link(struct Buffer* buf, char* title, char* url)
     u = parsedURL2Str(&pu);
     if (DecodeURL)
         u = Strnew_charp(url_decode2(u->ptr, buf));
-    u = checkType(u, &pr, NULL);
+    u = checkType(u, &pr, 0);
     if (l <= 4 || l >= get_Str_strwidth(u)) {
         if (!s)
             return u;
@@ -81,7 +81,7 @@ make_lastline_link(struct Buffer* buf, char* title, char* url)
 static Str
 make_lastline_message(struct Buffer* buf)
 {
-    Str msg, s = NULL;
+    Str msg, s = 0;
     int sl = 0;
 
     if (displayLink) {
@@ -90,7 +90,7 @@ make_lastline_message(struct Buffer* buf)
             s = make_lastline_link(buf, a->alt, a->url);
         else {
             Anchor* a = retrieveCurrentAnchor(buf);
-            char* p = NULL;
+            char* p = 0;
             if (a && a->title && *a->title)
                 p = a->title;
             else {
@@ -99,7 +99,7 @@ make_lastline_message(struct Buffer* buf)
                     p = a_img->title;
             }
             if (p || a)
-                s = make_lastline_link(buf, p, a ? a->url : NULL);
+                s = make_lastline_link(buf, p, a ? a->url : 0);
         }
         if (s) {
             sl = get_Str_strwidth(s);
@@ -109,7 +109,7 @@ make_lastline_message(struct Buffer* buf)
     }
 
     msg = Strnew();
-    if (displayLineInfo && buf->currentLine != NULL && buf->lastLine != NULL) {
+    if (displayLineInfo && buf->currentLine != 0 && buf->lastLine != 0) {
         int cl = buf->currentLine->real_linenumber;
         int ll = buf->lastLine->real_linenumber;
         int r = (int)((double)cl * 100.0 / (double)(ll ? ll : 1) + 0.5);
@@ -143,6 +143,52 @@ make_lastline_message(struct Buffer* buf)
     return msg;
 }
 
+static void calcTabPos(void)
+{
+    TabBuffer* tab;
+    int lcol = 0, rcol = 0, col;
+    int n1, n2, na, nx, ny, ix, iy;
+
+    if (nTab <= 0)
+        return;
+    n1 = (COLS - rcol - lcol) / TabCols;
+    if (n1 >= nTab) {
+        n2 = 1;
+        ny = 1;
+    } else {
+        if (n1 < 0)
+            n1 = 0;
+        n2 = COLS / TabCols;
+        if (n2 == 0)
+            n2 = 1;
+        ny = (nTab - n1 - 1) / n2 + 2;
+    }
+    na = n1 + n2 * (ny - 1);
+    n1 -= (na - nTab) / ny;
+    if (n1 < 0)
+        n1 = 0;
+    na = n1 + n2 * (ny - 1);
+    tab = FirstTab;
+    for (iy = 0; iy < ny && tab; iy++) {
+        if (iy == 0) {
+            nx = n1;
+            col = COLS - rcol - lcol;
+        } else {
+            nx = n2 - (na - nTab + (iy - 1)) / (ny - 1);
+            col = COLS;
+        }
+        for (ix = 0; ix < nx && tab; ix++, tab = tab->nextTab) {
+            tab->x1 = col * ix / nx;
+            tab->x2 = col * (ix + 1) / nx - 1;
+            tab->y = iy;
+            if (iy == 0) {
+                tab->x1 += lcol;
+                tab->x2 += lcol;
+            }
+        }
+    }
+}
+
 void displayBuffer(struct Buffer* buf, enum DisplayMode mode)
 {
     Str msg;
@@ -150,7 +196,7 @@ void displayBuffer(struct Buffer* buf, enum DisplayMode mode)
 
     if (!buf)
         return;
-    if (buf->topLine == NULL && readBufferCache(buf) == 0) { /* clear_buffer */
+    if (buf->topLine == 0 && readBufferCache(buf) == 0) { /* clear_buffer */
         mode = B_FORCE_REDRAW;
     }
 
@@ -203,7 +249,7 @@ void displayBuffer(struct Buffer* buf, enum DisplayMode mode)
         cline = buf->topLine;
         ccolumn = buf->currentColumn;
     }
-    if (buf->topLine == NULL)
+    if (buf->topLine == 0)
         buf->topLine = buf->firstLine;
 
     if (buf->need_reshape) {
@@ -214,7 +260,7 @@ void displayBuffer(struct Buffer* buf, enum DisplayMode mode)
     drawAnchorCursor(buf);
 
     msg = make_lastline_message(buf);
-    if (buf->firstLine == NULL) {
+    if (buf->firstLine == 0) {
         /* FIXME: gettextize? */
         Strcat_charp(msg, "\tNo Line");
     }
@@ -254,7 +300,7 @@ drawAnchorCursor0(struct Buffer* buf, AnchorList* al, int hseq, int prevhseq,
         if (an->start.line >= eline)
             return;
         for (;; l = l->next) {
-            if (l == NULL)
+            if (l == 0)
                 return;
             if (l->linenumber == an->start.line)
                 break;
@@ -363,7 +409,7 @@ redrawNLine(struct Buffer* buf, int n)
     for (i = 0, l = buf->topLine; i < buf->LINES; i++, l = l->next) {
         if (i >= buf->LINES - n || i < -n)
             l = redrawLine(buf, l, i + buf->rootY);
-        if (l == NULL)
+        if (l == 0)
             break;
     }
     if (n > 0) {
@@ -393,13 +439,13 @@ redrawLine(struct Buffer* buf, struct Line* l, int i)
     struct Url url;
     int k, vpos = -1;
 
-    if (l == NULL) {
+    if (l == 0) {
         if (buf->pagerSource) {
             l = getNextPage(buf, buf->LINES + buf->rootY - i);
-            if (l == NULL)
-                return NULL;
+            if (l == 0)
+                return 0;
         } else
-            return NULL;
+            return 0;
     }
     scr_move(i, 0);
     if (showLineNum) {
@@ -435,7 +481,7 @@ redrawLine(struct Buffer* buf, struct Line* l, int i)
     if (useColor && l->colorBuf)
         pc = &(l->colorBuf[pos]);
     else
-        pc = NULL;
+        pc = 0;
     rcol = COLPOS(l, pos);
 
     for (j = 0; rcol - column < buf->COLS && pos + j < l->len; j += delta) {
@@ -483,8 +529,8 @@ redrawLineImage(struct Buffer* buf, struct Line* l, int i)
     Anchor* a;
     int x, y, sx, sy, w, h;
 
-    if (l == NULL)
-        return NULL;
+    if (l == 0)
+        return 0;
     if (l->width < 0)
         l->width = COLPOS(l, l->len);
     if (l->len == 0 || l->width - 1 < column)
@@ -556,7 +602,7 @@ redrawLineRegion(struct Buffer* buf, struct Line* l, int i, int bpos, int epos)
     struct Url url;
     int k, vpos = -1;
 
-    if (l == NULL)
+    if (l == 0)
         return 0;
     pos = columnPos(l, column);
     p = &(l->lineBuf[pos]);
@@ -564,7 +610,7 @@ redrawLineRegion(struct Buffer* buf, struct Line* l, int i, int bpos, int epos)
     if (useColor && l->colorBuf)
         pc = &(l->colorBuf[pos]);
     else
-        pc = NULL;
+        pc = 0;
     rcol = COLPOS(l, pos);
     bcol = bpos - pos;
     ecol = epos - pos;
@@ -613,7 +659,7 @@ void cursorUp0(struct Buffer* buf, int n)
         cursorUpDown(buf, -1);
     else {
         buf->topLine = lineSkip(buf, buf->topLine, -n, FALSE);
-        if (buf->currentLine->prev != NULL)
+        if (buf->currentLine->prev != 0)
             buf->currentLine = buf->currentLine->prev;
         arrangeLine(buf);
     }
@@ -622,7 +668,7 @@ void cursorUp0(struct Buffer* buf, int n)
 void cursorUp(struct Buffer* buf, int n)
 {
     struct Line* l = buf->currentLine;
-    if (buf->firstLine == NULL)
+    if (buf->firstLine == 0)
         return;
     while (buf->currentLine->prev && buf->currentLine->bpos)
         cursorUp0(buf, n);
@@ -642,7 +688,7 @@ void cursorDown0(struct Buffer* buf, int n)
         cursorUpDown(buf, 1);
     else {
         buf->topLine = lineSkip(buf, buf->topLine, n, FALSE);
-        if (buf->currentLine->next != NULL)
+        if (buf->currentLine->next != 0)
             buf->currentLine = buf->currentLine->next;
         arrangeLine(buf);
     }
@@ -651,7 +697,7 @@ void cursorDown0(struct Buffer* buf, int n)
 void cursorDown(struct Buffer* buf, int n)
 {
     struct Line* l = buf->currentLine;
-    if (buf->firstLine == NULL)
+    if (buf->firstLine == 0)
         return;
     while (buf->currentLine->next && buf->currentLine->next->bpos)
         cursorDown0(buf, n);
@@ -669,7 +715,7 @@ void cursorUpDown(struct Buffer* buf, int n)
 {
     struct Line* cl = buf->currentLine;
 
-    if (buf->firstLine == NULL)
+    if (buf->firstLine == 0)
         return;
     if ((buf->currentLine = currentLineSkip(buf, cl, n, FALSE)) == cl)
         return;
@@ -681,7 +727,7 @@ void cursorRight(struct Buffer* buf, int n)
     int i, delta = 1, cpos, vpos2;
     struct Line* l = buf->currentLine;
 
-    if (buf->firstLine == NULL)
+    if (buf->firstLine == 0)
         return;
     if (buf->pos == l->len && !(l->next && l->next->bpos))
         return;
@@ -721,7 +767,7 @@ void cursorLeft(struct Buffer* buf, int n)
     int i, delta = 1, cpos;
     struct Line* l = buf->currentLine;
 
-    if (buf->firstLine == NULL)
+    if (buf->firstLine == 0)
         return;
     i = buf->pos;
     Lineprop* p = l->propBuf;
@@ -760,7 +806,7 @@ void arrangeCursor(struct Buffer* buf)
 {
     int col, col2, pos;
     int delta = 1;
-    if (buf == NULL || buf->currentLine == NULL)
+    if (buf == 0 || buf->currentLine == 0)
         return;
     /* Arrange line */
     if (buf->currentLine->linenumber - buf->topLine->linenumber >= buf->LINES
@@ -812,7 +858,7 @@ void arrangeLine(struct Buffer* buf)
 {
     int i, cpos;
 
-    if (buf->firstLine == NULL)
+    if (buf->firstLine == 0)
         return;
     buf->cursorY = buf->currentLine->linenumber - buf->topLine->linenumber;
     i = columnPos(buf->currentLine, buf->currentColumn + buf->visualpos - buf->currentLine->bwidth);
