@@ -99,7 +99,7 @@ static Str strCurrentBuf;
 static int use_hist;
 static void ins_char(Str str);
 
-char* inputLineHistSearch(char* prompt, char* def_str, int flag, struct Hist* hist,
+const char* inputLineHistSearch(const char* prompt, const char* def_str, enum InputFlags flag, struct Hist* hist,
     int (*incrfunc)(int ch, Str str, Lineprop* prop))
 {
     int opos, x, y, lpos, rpos, epos;
@@ -211,8 +211,7 @@ char* inputLineHistSearch(char* prompt, char* def_str, int flag, struct Hist* hi
                 cm_next = FALSE;
             if (cm_disp_clear)
                 cm_disp_next = -1;
-        }
-        else {
+        } else {
             tmp = wc_char_conv(c);
             if (tmp == NULL) {
                 i_quote = TRUE;
@@ -259,7 +258,6 @@ char* inputLineHistSearch(char* prompt, char* def_str, int flag, struct Hist* hi
     else
         return allocStr(p, -1);
 }
-
 
 static void
 addPasswd(char* p, Lineprop* pr, int len, int offset, int limit)
@@ -775,27 +773,6 @@ escape_spaces(Str s)
         }
         if (tmp)
             Strcat_char(tmp, *p);
-    }
-    if (tmp)
-        return tmp;
-    return s;
-}
-
-Str unescape_spaces(Str s)
-{
-    Str tmp = NULL;
-    char* p;
-
-    if (s == NULL)
-        return s;
-    for (p = s->ptr; *p; p++) {
-        if (*p == '\\' && (*(p + 1) == ' ' || *(p + 1) == CTRL_I)) {
-            if (tmp == NULL)
-                tmp = Strnew_charp_n(s->ptr, (int)(p - s->ptr));
-        } else {
-            if (tmp)
-                Strcat_char(tmp, *p);
-        }
     }
     if (tmp)
         return tmp;

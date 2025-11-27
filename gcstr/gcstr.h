@@ -17,3 +17,4 @@ bool matchattr(const char* p, const char* attr, int len, Str* value);
 const char* remove_space(const char* str);
 Str mybasename(const char* s);
 Str guess_filename(const char* file);
+Str unescape_spaces(Str s);
