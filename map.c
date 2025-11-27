@@ -16,7 +16,7 @@
 #include <strings.h>
 
 struct MapList*
-searchMapList(Buffer* buf, const char* name)
+searchMapList(struct Buffer* buf, const char* name)
 {
     if (name == NULL)
         return NULL;
@@ -99,7 +99,7 @@ nearestMapArea(struct MapList* ml, int x, int y)
 }
 
 static int
-searchMapArea(Buffer* buf, struct MapList* ml, Anchor* a_img)
+searchMapArea(struct Buffer* buf, struct MapList* ml, Anchor* a_img)
 {
     ListItem* al;
     struct MapArea* a;
@@ -131,7 +131,7 @@ searchMapArea(Buffer* buf, struct MapList* ml, Anchor* a_img)
 }
 
 struct MapArea*
-retrieveCurrentMapArea(Buffer* buf)
+retrieveCurrentMapArea(struct Buffer* buf)
 {
     Anchor *a_img, *a_form;
     FormItemList* fi;
@@ -164,7 +164,7 @@ retrieveCurrentMapArea(Buffer* buf)
     return NULL;
 }
 
-int getMapXY(Buffer* buf, Anchor* a, int* x, int* y)
+int getMapXY(struct Buffer* buf, Anchor* a, int* x, int* y)
 {
     if (!buf || !a || !a->image || !x || !y)
         return 0;
@@ -183,7 +183,7 @@ int getMapXY(Buffer* buf, Anchor* a, int* x, int* y)
 }
 
 Anchor*
-retrieveCurrentMap(Buffer* buf)
+retrieveCurrentMap(struct Buffer* buf)
 {
     Anchor* a;
     FormItemList* fi;
@@ -198,7 +198,7 @@ retrieveCurrentMap(Buffer* buf)
 }
 
 struct MapArea*
-follow_map_menu(Buffer* buf, char* name, Anchor* a_img, int x, int y)
+follow_map_menu(struct Buffer* buf, char* name, Anchor* a_img, int x, int y)
 {
     struct MapList* ml;
     ListItem* al;
@@ -335,7 +335,7 @@ newMapArea(char* url, char* target, char* alt, char* shape, char* coords)
 
 /* append image map links */
 static void
-append_map_info(Buffer* buf, Str tmp, FormItemList* fi)
+append_map_info(struct Buffer* buf, Str tmp, FormItemList* fi)
 {
     struct MapList* ml;
     ListItem* al;
@@ -367,7 +367,7 @@ append_map_info(Buffer* buf, Str tmp, FormItemList* fi)
 
 /* append links */
 static void
-append_link_info(Buffer* buf, Str html, struct LinkList* link)
+append_link_info(struct Buffer* buf, Str html, struct LinkList* link)
 {
     struct LinkList* l;
     struct Url pu;
@@ -404,7 +404,7 @@ append_link_info(Buffer* buf, Str html, struct LinkList* link)
 
 /* append frame URL */
 static void
-append_frame_info(Buffer* buf, Str html, struct frameset* set, int level)
+append_frame_info(struct Buffer* buf, Str html, struct frameset* set, int level)
 {
     char *p, *q;
     int i, j;
@@ -452,8 +452,8 @@ append_frame_info(Buffer* buf, Str html, struct frameset* set, int level)
 /*
  * information of current page and link
  */
-Buffer*
-page_info_panel(Buffer* buf)
+struct Buffer*
+page_info_panel(struct Buffer* buf)
 {
     Str tmp = Strnew_size(1024);
     Anchor* a;
@@ -464,7 +464,7 @@ page_info_panel(Buffer* buf)
     char *p, *q;
     wc_ces_list* list;
     char charset[16];
-    Buffer* newbuf;
+    struct Buffer* newbuf;
 
     Strcat_charp(tmp, "<html><head>\
 <title>Information about current page</title>\

@@ -24,5 +24,5 @@ void stopDownload();
 int checkDownloadList();
 struct parsed_tagarg;
 void download_action(struct parsed_tagarg* arg);
-struct _Buffer;
-struct _Buffer* DownloadListBuffer();
+struct Buffer;
+struct Buffer* DownloadListBuffer();

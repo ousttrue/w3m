@@ -72,7 +72,7 @@ convert_size3(long long size)
     return tmp->ptr;
 }
 
-Buffer*
+struct Buffer*
 DownloadListBuffer(void)
 {
     struct DownloadList* d;

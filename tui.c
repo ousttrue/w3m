@@ -107,7 +107,7 @@ void tui_record_err_message(char* s)
     }
 }
 
-Buffer* tui_message_list_panel()
+struct Buffer* tui_message_list_panel()
 {
     Str tmp = Strnew_size(LINES * COLS);
     ListItem* p;

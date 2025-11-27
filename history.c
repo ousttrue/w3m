@@ -33,7 +33,7 @@ mergeHistory(struct Hist* ours, struct Hist* theirs)
     return 0;
 }
 
-Buffer*
+struct Buffer*
 historyBuffer(struct Hist* hist)
 {
     Str src = Strnew();

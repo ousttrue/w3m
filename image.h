@@ -57,14 +57,14 @@ enum ImageGetFlags {
 };
 struct ImageCache* getImage(struct Image* image, struct Url* current, enum ImageGetFlags flag);
 int getImageSize(struct ImageCache* cache);
-struct _Buffer;
+struct Buffer;
 
 enum ImageLoadFlag {
     IMG_FLAG_START = 0,
     IMG_FLAG_STOP = 1,
     IMG_FLAG_NEXT = 2,
 };
-void loadImage(struct _Buffer* buf, enum ImageLoadFlag flag);
+void loadImage(struct Buffer* buf, enum ImageLoadFlag flag);
 
 void initImage(void);
 void termImage(void);

@@ -4,9 +4,9 @@
 #include <wc.h>
 #include <gcstr/gcstr.h>
 
-struct _Buffer;
+struct Buffer;
 struct form_list;
-struct _Buffer* loadGeneralFile(char* path, struct Url* current, char* referer, enum LoadGeneralFlags flag, struct form_list* request);
+struct Buffer* loadGeneralFile(char* path, struct Url* current, char* referer, enum LoadGeneralFlags flag, struct form_list* request);
 wc_ces url_to_charset(const char* url, const struct Url* base,
     wc_ces doc_charset);
 char* url_encode(const char* url, const struct Url* base,

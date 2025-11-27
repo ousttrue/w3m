@@ -73,7 +73,7 @@ void save_cookies(void);
 void load_cookies(void);
 void initCookie(void);
 void cooLst(void);
-struct _Buffer* cookie_list_panel(void);
+struct Buffer* cookie_list_panel(void);
 struct parsed_tagarg;
 void set_cookie_flag(struct parsed_tagarg* arg);
 int check_cookie_accept_domain(char* domain);

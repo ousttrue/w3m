@@ -23,7 +23,7 @@ char* conv_search_string(char* str, wc_ces f_ces)
     return str;
 }
 
-int forwardSearch(Buffer* buf, char* str)
+int forwardSearch(struct Buffer* buf, char* str)
 {
     char *p, *first, *last;
     struct Line *l, *begin;
@@ -102,7 +102,7 @@ int forwardSearch(Buffer* buf, char* str)
     return SR_NOTFOUND;
 }
 
-int backwardSearch(Buffer* buf, char* str)
+int backwardSearch(struct Buffer* buf, char* str)
 {
     char *p, *q, *found, *found_last, *first, *last;
     struct Line *l, *begin;

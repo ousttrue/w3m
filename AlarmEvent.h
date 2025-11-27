@@ -18,5 +18,5 @@ extern struct AlarmEvent* CurrentAlarm;
 
 void setAlarmEventDefault();
 
-struct _Buffer;
-struct AlarmEvent* setAlarmEvent(struct _Buffer* buf, int sec, enum AlarmStatus status, int cmd, void* data);
+struct Buffer;
+struct AlarmEvent* setAlarmEvent(struct Buffer* buf, int sec, enum AlarmStatus status, int cmd, void* data);

@@ -27,15 +27,15 @@ extern int REV_LB[];
 #define LB_N_SOURCE LB_SOURCE
 #define MAX_LB 5
 
-typedef struct _Buffer {
+struct Buffer {
     const char* filename;
     const char* buffername;
     struct Line* firstLine;
     struct Line* topLine;
     struct Line* currentLine;
     struct Line* lastLine;
-    struct _Buffer* nextBuffer;
-    struct _Buffer* linkBuffer[MAX_LB];
+    struct Buffer* nextBuffer;
+    struct Buffer* linkBuffer[MAX_LB];
     short width;
     short height;
     const char* type;
@@ -88,7 +88,7 @@ typedef struct _Buffer {
     struct _Anchor* submit;
     struct _BufferPos* undo;
     struct AlarmEvent* event;
-} Buffer;
+};
 
 typedef struct _BufferPos {
     long top_linenumber;
@@ -103,8 +103,8 @@ typedef struct _BufferPos {
 typedef struct _TabBuffer {
     struct _TabBuffer* nextTab;
     struct _TabBuffer* prevTab;
-    Buffer* currentBuffer;
-    Buffer* firstBuffer;
+    struct Buffer* currentBuffer;
+    struct Buffer* firstBuffer;
     short x1;
     short x2;
     short y;
@@ -126,116 +126,116 @@ extern int TabCols;
 #define Currentbuf (CurrentTab->currentBuffer)
 #define Firstbuf (CurrentTab->firstBuffer)
 
-void chkURLBuffer(Buffer* buf);
-void chkNMIDBuffer(Buffer* buf);
-struct LinkList* link_menu(Buffer* buf);
+void chkURLBuffer(struct Buffer* buf);
+void chkNMIDBuffer(struct Buffer* buf);
+struct LinkList* link_menu(struct Buffer* buf);
 struct _Anchor;
-struct _Anchor* accesskey_menu(Buffer* buf);
-struct _Anchor* list_menu(Buffer* buf);
-int currentLn(Buffer* buf);
-void tmpClearBuffer(Buffer* buf);
-void deleteImage(Buffer* buf);
-void getAllImage(Buffer* buf);
-void HTMLlineproc2(Buffer* buf, TextLineList* tl);
+struct _Anchor* accesskey_menu(struct Buffer* buf);
+struct _Anchor* list_menu(struct Buffer* buf);
+int currentLn(struct Buffer* buf);
+void tmpClearBuffer(struct Buffer* buf);
+void deleteImage(struct Buffer* buf);
+void getAllImage(struct Buffer* buf);
+void HTMLlineproc2(struct Buffer* buf, TextLineList* tl);
 struct URLFile;
-Buffer* loadHTMLBuffer(struct URLFile* f, Buffer* newBuf);
-void loadHTMLstream(struct URLFile* f, Buffer* newBuf, FILE* src,
+struct Buffer* loadHTMLBuffer(struct URLFile* f, struct Buffer* newBuf);
+void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src,
     int internal);
-Buffer* loadHTMLString(Str page);
-Buffer* loadBuffer(struct URLFile* uf, Buffer* newBuf);
-Buffer* loadImageBuffer(struct URLFile* uf, Buffer* newBuf);
-void saveBuffer(Buffer* buf, FILE* f, int cont);
-void saveBufferBody(Buffer* buf, FILE* f, int cont);
-Buffer* getshell(char* cmd);
-Buffer* getpipe(char* cmd);
-Buffer* openPagerBuffer(union input_stream* stream, Buffer* buf);
-Buffer* openGeneralPagerBuffer(union input_stream* stream);
-struct Line* getNextPage(Buffer* buf, int plen);
-Buffer* doExternal(struct URLFile uf, char* type, Buffer* defaultbuf);
-void readHeader(struct URLFile* uf, Buffer* newBuf, int thru, struct Url* pu);
-char* checkHeader(Buffer* buf, char* field);
+struct Buffer* loadHTMLString(Str page);
+struct Buffer* loadBuffer(struct URLFile* uf, struct Buffer* newBuf);
+struct Buffer* loadImageBuffer(struct URLFile* uf, struct Buffer* newBuf);
+void saveBuffer(struct Buffer* buf, FILE* f, int cont);
+void saveBufferBody(struct Buffer* buf, FILE* f, int cont);
+struct Buffer* getshell(char* cmd);
+struct Buffer* getpipe(char* cmd);
+struct Buffer* openPagerBuffer(union input_stream* stream, struct Buffer* buf);
+struct Buffer* openGeneralPagerBuffer(union input_stream* stream);
+struct Line* getNextPage(struct Buffer* buf, int plen);
+struct Buffer* doExternal(struct URLFile uf, char* type, struct Buffer* defaultbuf);
+void readHeader(struct URLFile* uf, struct Buffer* newBuf, int thru, struct Url* pu);
+char* checkHeader(struct Buffer* buf, char* field);
 TabBuffer* newTab(void);
 TabBuffer* deleteTab(TabBuffer* tab);
-Buffer* newBuffer(int width);
-Buffer* nullBuffer(void);
-void clearBuffer(Buffer* buf);
-void discardBuffer(Buffer* buf);
-Buffer* namedBuffer(Buffer* first, char* name);
-Buffer* deleteBuffer(Buffer* first, Buffer* delbuf);
-Buffer* replaceBuffer(Buffer* first, Buffer* delbuf, Buffer* newbuf);
-Buffer* nthBuffer(Buffer* firstbuf, int n);
-void gotoRealLine(Buffer* buf, int n);
-void gotoLine(Buffer* buf, int n);
-Buffer* selectBuffer(Buffer* firstbuf, Buffer* currentbuf,
+struct Buffer* newBuffer(int width);
+struct Buffer* nullBuffer(void);
+void clearBuffer(struct Buffer* buf);
+void discardBuffer(struct Buffer* buf);
+struct Buffer* namedBuffer(struct Buffer* first, char* name);
+struct Buffer* deleteBuffer(struct Buffer* first, struct Buffer* delbuf);
+struct Buffer* replaceBuffer(struct Buffer* first, struct Buffer* delbuf, struct Buffer* newbuf);
+struct Buffer* nthBuffer(struct Buffer* firstbuf, int n);
+void gotoRealLine(struct Buffer* buf, int n);
+void gotoLine(struct Buffer* buf, int n);
+struct Buffer* selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf,
     char* selectchar);
-void reshapeBuffer(Buffer* buf);
-void copyBuffer(Buffer* a, Buffer* b);
-Buffer* prevBuffer(Buffer* first, Buffer* buf);
-int writeBufferCache(Buffer* buf);
-int readBufferCache(Buffer* buf);
-void cursorUp0(Buffer* buf, int n);
-void cursorUp(Buffer* buf, int n);
-void cursorDown0(Buffer* buf, int n);
-void cursorDown(Buffer* buf, int n);
-void cursorUpDown(Buffer* buf, int n);
-void cursorRight(Buffer* buf, int n);
-void cursorLeft(Buffer* buf, int n);
-void cursorHome(Buffer* buf);
-void arrangeCursor(Buffer* buf);
-void arrangeLine(Buffer* buf);
-void cursorXY(Buffer* buf, int x, int y);
-void restorePosition(Buffer* buf, Buffer* orig);
-int columnSkip(Buffer* buf, int offset);
-struct Line* lineSkip(Buffer* buf, struct Line* line, int offset, int last);
-struct Line* currentLineSkip(Buffer* buf, struct Line* line, int offset, int last);
-int forwardSearch(Buffer* buf, char* str);
-int backwardSearch(Buffer* buf, char* str);
+void reshapeBuffer(struct Buffer* buf);
+void copyBuffer(struct Buffer* a, struct Buffer* b);
+struct Buffer* prevBuffer(struct Buffer* first, struct Buffer* buf);
+int writeBufferCache(struct Buffer* buf);
+int readBufferCache(struct Buffer* buf);
+void cursorUp0(struct Buffer* buf, int n);
+void cursorUp(struct Buffer* buf, int n);
+void cursorDown0(struct Buffer* buf, int n);
+void cursorDown(struct Buffer* buf, int n);
+void cursorUpDown(struct Buffer* buf, int n);
+void cursorRight(struct Buffer* buf, int n);
+void cursorLeft(struct Buffer* buf, int n);
+void cursorHome(struct Buffer* buf);
+void arrangeCursor(struct Buffer* buf);
+void arrangeLine(struct Buffer* buf);
+void cursorXY(struct Buffer* buf, int x, int y);
+void restorePosition(struct Buffer* buf, struct Buffer* orig);
+int columnSkip(struct Buffer* buf, int offset);
+struct Line* lineSkip(struct Buffer* buf, struct Line* line, int offset, int last);
+struct Line* currentLineSkip(struct Buffer* buf, struct Line* line, int offset, int last);
+int forwardSearch(struct Buffer* buf, char* str);
+int backwardSearch(struct Buffer* buf, char* str);
 struct Hist;
-Buffer* historyBuffer(struct Hist* hist);
-void formRecheckRadio(Anchor* a, Buffer* buf, struct form_item_list* form);
-void formResetBuffer(Buffer* buf, AnchorList* formitem);
-void formUpdateBuffer(Anchor* a, Buffer* buf, struct form_item_list* form);
-void preFormUpdateBuffer(Buffer* buf);
-struct MapArea* follow_map_menu(Buffer* buf, char* name, Anchor* a_img, int x,
+struct Buffer* historyBuffer(struct Hist* hist);
+void formRecheckRadio(Anchor* a, struct Buffer* buf, struct form_item_list* form);
+void formResetBuffer(struct Buffer* buf, AnchorList* formitem);
+void formUpdateBuffer(Anchor* a, struct Buffer* buf, struct form_item_list* form);
+void preFormUpdateBuffer(struct Buffer* buf);
+struct MapArea* follow_map_menu(struct Buffer* buf, char* name, Anchor* a_img, int x,
     int y);
-Buffer* follow_map_panel(Buffer* buf, char* name);
-int getMapXY(Buffer* buf, Anchor* a, int* x, int* y);
-struct MapArea* retrieveCurrentMapArea(Buffer* buf);
-Anchor* retrieveCurrentMap(Buffer* buf);
-Buffer* page_info_panel(Buffer* buf);
+struct Buffer* follow_map_panel(struct Buffer* buf, char* name);
+int getMapXY(struct Buffer* buf, Anchor* a, int* x, int* y);
+struct MapArea* retrieveCurrentMapArea(struct Buffer* buf);
+Anchor* retrieveCurrentMap(struct Buffer* buf);
+struct Buffer* page_info_panel(struct Buffer* buf);
 struct parsed_tag;
-struct frame_body* newFrame(struct parsed_tag* tag, Buffer* buf);
+struct frame_body* newFrame(struct parsed_tag* tag, struct Buffer* buf);
 void pushFrameTree(struct frameset_queue** fqpp, struct frameset* fs,
-    Buffer* buf);
+    struct Buffer* buf);
 union frameset_element;
-void resetFrameElement(union frameset_element* f_element, Buffer* buf,
+void resetFrameElement(union frameset_element* f_element, struct Buffer* buf,
     char* referer, struct form_list* request);
-Buffer* renderFrame(Buffer* Cbuf, int force_reload);
-struct Url* baseURL(Buffer* buf);
-Anchor* registerHref(Buffer* buf, char* url, char* target,
+struct Buffer* renderFrame(struct Buffer* Cbuf, int force_reload);
+struct Url* baseURL(struct Buffer* buf);
+Anchor* registerHref(struct Buffer* buf, char* url, char* target,
     char* referer, char* title, unsigned char key,
     int line, int pos);
-Anchor* registerName(Buffer* buf, char* url, int line, int pos);
-Anchor* registerImg(Buffer* buf, char* url, char* title, int line,
+Anchor* registerName(struct Buffer* buf, char* url, int line, int pos);
+Anchor* registerImg(struct Buffer* buf, char* url, char* title, int line,
     int pos);
-Anchor* registerForm(Buffer* buf, struct form_list* flist,
+Anchor* registerForm(struct Buffer* buf, struct form_list* flist,
     struct parsed_tag* tag, int line, int pos);
-Anchor* retrieveCurrentAnchor(Buffer* buf);
-Anchor* retrieveCurrentImg(Buffer* buf);
-Anchor* retrieveCurrentForm(Buffer* buf);
-Anchor* searchURLLabel(Buffer* buf, char* url);
-void reAnchorWord(Buffer* buf, struct Line* l, int spos, int epos);
-char* reAnchor(Buffer* buf, char* re);
-char* reAnchorNews(Buffer* buf, char* re);
-char* reAnchorNewsheader(Buffer* buf);
-void addMultirowsForm(Buffer* buf, AnchorList* al);
-void addMultirowsImg(Buffer* buf, AnchorList* al);
-char* getAnchorText(Buffer* buf, AnchorList* al, Anchor* a);
-Buffer* link_list_panel(Buffer* buf);
-Buffer* load_option_panel(void);
-char* last_modified(Buffer* buf);
-char* guess_save_name(Buffer* buf, char* file);
+Anchor* retrieveCurrentAnchor(struct Buffer* buf);
+Anchor* retrieveCurrentImg(struct Buffer* buf);
+Anchor* retrieveCurrentForm(struct Buffer* buf);
+Anchor* searchURLLabel(struct Buffer* buf, char* url);
+void reAnchorWord(struct Buffer* buf, struct Line* l, int spos, int epos);
+char* reAnchor(struct Buffer* buf, char* re);
+char* reAnchorNews(struct Buffer* buf, char* re);
+char* reAnchorNewsheader(struct Buffer* buf);
+void addMultirowsForm(struct Buffer* buf, AnchorList* al);
+void addMultirowsImg(struct Buffer* buf, AnchorList* al);
+char* getAnchorText(struct Buffer* buf, AnchorList* al, Anchor* a);
+struct Buffer* link_list_panel(struct Buffer* buf);
+struct Buffer* load_option_panel(void);
+char* last_modified(struct Buffer* buf);
+char* guess_save_name(struct Buffer* buf, char* file);
 void saveBufferInfo(void);
-wc_ces urlCharset(Buffer* buf, const char* url);
+wc_ces urlCharset(struct Buffer* buf, const char* url);
 struct parsed_tagarg;
 void follow_map(struct parsed_tagarg* arg);

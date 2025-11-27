@@ -161,21 +161,21 @@ static int anch_mode = 0, emph_mode = 0, imag_mode = 0, form_mode = 0,
            active_mode = 0, visited_mode = 0, mark_mode = 0, graph_mode = 0;
 static Linecolor color_mode = 0;
 
-static Buffer* save_current_buf = NULL;
+static struct Buffer* save_current_buf = NULL;
 
-static void drawAnchorCursor(Buffer* buf);
+static void drawAnchorCursor(struct Buffer* buf);
 #define redrawBuffer(buf) redrawNLine(buf, LASTLINE)
-static void redrawNLine(Buffer* buf, int n);
-static struct Line* redrawLine(Buffer* buf, struct Line* l, int i);
+static void redrawNLine(struct Buffer* buf, int n);
+static struct Line* redrawLine(struct Buffer* buf, struct Line* l, int i);
 static int image_touch = 0;
 static int draw_image_flag = FALSE;
-static struct Line* redrawLineImage(Buffer* buf, struct Line* l, int i);
-static int redrawLineRegion(Buffer* buf, struct Line* l, int i, int bpos, int epos);
+static struct Line* redrawLineImage(struct Buffer* buf, struct Line* l, int i);
+static int redrawLineRegion(struct Buffer* buf, struct Line* l, int i, int bpos, int epos);
 static void do_effects(Lineprop m);
 static void do_color(Linecolor c);
 
 static Str
-make_lastline_link(Buffer* buf, char* title, char* url)
+make_lastline_link(struct Buffer* buf, char* title, char* url)
 {
     Str s = NULL, u;
     Lineprop* pr;
@@ -223,7 +223,7 @@ make_lastline_link(Buffer* buf, char* title, char* url)
 }
 
 static Str
-make_lastline_message(Buffer* buf)
+make_lastline_message(struct Buffer* buf)
 {
     Str msg, s = NULL;
     int sl = 0;
@@ -287,7 +287,7 @@ make_lastline_message(Buffer* buf)
     return msg;
 }
 
-void displayBuffer(Buffer* buf, enum DisplayMode mode)
+void displayBuffer(struct Buffer* buf, enum DisplayMode mode)
 {
     Str msg;
     int ny = 0;
@@ -383,7 +383,7 @@ void displayBuffer(Buffer* buf, enum DisplayMode mode)
 }
 
 static void
-drawAnchorCursor0(Buffer* buf, AnchorList* al, int hseq, int prevhseq,
+drawAnchorCursor0(struct Buffer* buf, AnchorList* al, int hseq, int prevhseq,
     int tline, int eline, int active)
 {
     int i, j;
@@ -432,7 +432,7 @@ drawAnchorCursor0(Buffer* buf, AnchorList* al, int hseq, int prevhseq,
 }
 
 static void
-drawAnchorCursor(Buffer* buf)
+drawAnchorCursor(struct Buffer* buf)
 {
     Anchor* an;
     int hseq, prevhseq;
@@ -466,7 +466,7 @@ drawAnchorCursor(Buffer* buf)
 }
 
 static void
-redrawNLine(Buffer* buf, int n)
+redrawNLine(struct Buffer* buf, int n)
 {
     struct Line* l;
     int i;
@@ -529,7 +529,7 @@ redrawNLine(Buffer* buf, int n)
 }
 
 static struct Line*
-redrawLine(Buffer* buf, struct Line* l, int i)
+redrawLine(struct Buffer* buf, struct Line* l, int i)
 {
     int j, pos, rcol, ncol, delta = 1;
     int column = buf->currentColumn;
@@ -669,7 +669,7 @@ redrawLine(Buffer* buf, struct Line* l, int i)
 }
 
 static struct Line*
-redrawLineImage(Buffer* buf, struct Line* l, int i)
+redrawLineImage(struct Buffer* buf, struct Line* l, int i)
 {
     int j, pos, rcol;
     int column = buf->currentColumn;
@@ -737,7 +737,7 @@ redrawLineImage(Buffer* buf, struct Line* l, int i)
 }
 
 static int
-redrawLineRegion(Buffer* buf, struct Line* l, int i, int bpos, int epos)
+redrawLineRegion(struct Buffer* buf, struct Line* l, int i, int bpos, int epos)
 {
     int j, pos, rcol, ncol, delta = 1;
     int column = buf->currentColumn;
@@ -966,7 +966,7 @@ void addMChar(char* p, Lineprop mode, size_t len)
         scr_addmch(p, len);
 }
 
-void cursorUp0(Buffer* buf, int n)
+void cursorUp0(struct Buffer* buf, int n)
 {
     if (buf->cursorY > 0)
         cursorUpDown(buf, -1);
@@ -978,7 +978,7 @@ void cursorUp0(Buffer* buf, int n)
     }
 }
 
-void cursorUp(Buffer* buf, int n)
+void cursorUp(struct Buffer* buf, int n)
 {
     struct Line* l = buf->currentLine;
     if (buf->firstLine == NULL)
@@ -995,7 +995,7 @@ void cursorUp(Buffer* buf, int n)
         cursorUp0(buf, n);
 }
 
-void cursorDown0(Buffer* buf, int n)
+void cursorDown0(struct Buffer* buf, int n)
 {
     if (buf->cursorY < buf->LINES - 1)
         cursorUpDown(buf, 1);
@@ -1007,7 +1007,7 @@ void cursorDown0(Buffer* buf, int n)
     }
 }
 
-void cursorDown(Buffer* buf, int n)
+void cursorDown(struct Buffer* buf, int n)
 {
     struct Line* l = buf->currentLine;
     if (buf->firstLine == NULL)
@@ -1024,7 +1024,7 @@ void cursorDown(Buffer* buf, int n)
         cursorDown0(buf, n);
 }
 
-void cursorUpDown(Buffer* buf, int n)
+void cursorUpDown(struct Buffer* buf, int n)
 {
     struct Line* cl = buf->currentLine;
 
@@ -1035,7 +1035,7 @@ void cursorUpDown(Buffer* buf, int n)
     arrangeLine(buf);
 }
 
-void cursorRight(Buffer* buf, int n)
+void cursorRight(struct Buffer* buf, int n)
 {
     int i, delta = 1, cpos, vpos2;
     struct Line* l = buf->currentLine;
@@ -1075,7 +1075,7 @@ void cursorRight(Buffer* buf, int n)
     buf->cursorX = buf->visualpos - l->bwidth;
 }
 
-void cursorLeft(Buffer* buf, int n)
+void cursorLeft(struct Buffer* buf, int n)
 {
     int i, delta = 1, cpos;
     struct Line* l = buf->currentLine;
@@ -1105,7 +1105,7 @@ void cursorLeft(Buffer* buf, int n)
     buf->cursorX = buf->visualpos - l->bwidth;
 }
 
-void cursorHome(Buffer* buf)
+void cursorHome(struct Buffer* buf)
 {
     buf->visualpos = 0;
     buf->cursorX = buf->cursorY = 0;
@@ -1115,7 +1115,7 @@ void cursorHome(Buffer* buf)
  * Arrange line,column and cursor position according to current line and
  * current position.
  */
-void arrangeCursor(Buffer* buf)
+void arrangeCursor(struct Buffer* buf)
 {
     int col, col2, pos;
     int delta = 1;
@@ -1167,7 +1167,7 @@ void arrangeCursor(Buffer* buf)
 #endif
 }
 
-void arrangeLine(Buffer* buf)
+void arrangeLine(struct Buffer* buf)
 {
     int i, cpos;
 
@@ -1194,7 +1194,7 @@ void arrangeLine(Buffer* buf)
 #endif
 }
 
-void cursorXY(Buffer* buf, int x, int y)
+void cursorXY(struct Buffer* buf, int x, int y)
 {
     int oldX;
 
@@ -1217,7 +1217,7 @@ void cursorXY(Buffer* buf, int x, int y)
     }
 }
 
-void restorePosition(Buffer* buf, Buffer* orig)
+void restorePosition(struct Buffer* buf, struct Buffer* orig)
 {
     buf->topLine = lineSkip(buf, buf->firstLine, TOP_LINENUMBER(orig) - 1,
         FALSE);

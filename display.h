@@ -9,8 +9,8 @@ enum DisplayMode {
     B_REDRAW_IMAGE = 4,
 };
 
-struct _Buffer;
-void displayBuffer(struct _Buffer* buf, enum DisplayMode mode);
+struct Buffer;
+void displayBuffer(struct Buffer* buf, enum DisplayMode mode);
 void addChar(char c, Lineprop mode);
 void addMChar(char* c, Lineprop mode, size_t len);
 void calcTabPos(void);

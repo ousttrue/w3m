@@ -663,7 +663,7 @@ static int MainMenuEncode = FALSE;
 static MenuItem MainMenuItem[] = {
     /* type        label           variable value func     popup keys data  */
     { MENU_FUNC, N_(" Back         (b) "), NULL, 0, backBf, NULL, "b", NULL },
-    { MENU_POPUP, N_(" Select Buffer(s) "), NULL, 0, NULL, &SelectMenu, "s",
+    { MENU_POPUP, N_(" Select struct Buffer(s) "), NULL, 0, NULL, &SelectMenu, "s",
         NULL },
     { MENU_POPUP, N_(" Select Tab   (t) "), NULL, 0, NULL, &SelTabMenu, "tT",
         NULL },
@@ -1611,7 +1611,7 @@ static void
 initSelectMenu(void)
 {
     int i, nitem, len = 0, l;
-    Buffer* buf;
+    struct Buffer* buf;
     Str str;
     char** label;
     char* p;
@@ -1677,7 +1677,7 @@ static void
 smChBuf(void)
 {
     int i;
-    Buffer* buf;
+    struct Buffer* buf;
 
     if (SelectV < 0 || SelectV >= SelectMenu.nitem)
         return;
@@ -1697,7 +1697,7 @@ static int
 smDelBuf(char c)
 {
     int i, x, y, mselect;
-    Buffer* buf;
+    struct Buffer* buf;
 
     if (CurrentMenu->select < 0 || CurrentMenu->select >= SelectMenu.nitem)
         return (MENU_NOTHING);
@@ -1752,7 +1752,7 @@ initSelTabMenu(void)
 {
     int i, nitem, len = 0, l;
     TabBuffer* tab;
-    Buffer* buf;
+    struct Buffer* buf;
     Str str;
     char** label;
     char* p;
@@ -1819,7 +1819,7 @@ smChTab(void)
 {
     int i;
     TabBuffer* tab;
-    Buffer* buf;
+    struct Buffer* buf;
 
     if (SelTabV < 0 || SelTabV >= SelTabMenu.nitem)
         return;
@@ -2065,7 +2065,7 @@ int getMenuN(MenuList* list, char* id)
 /* --- InitMenu (END) --- */
 
 struct LinkList*
-link_menu(Buffer* buf)
+link_menu(struct Buffer* buf)
 {
     Menu menu;
     struct LinkList* l;
@@ -2124,7 +2124,7 @@ link_menu(Buffer* buf)
 /* --- LinkMenu (END) --- */
 
 Anchor*
-accesskey_menu(Buffer* buf)
+accesskey_menu(struct Buffer* buf)
 {
     Menu menu;
     AnchorList* al = buf->href;
@@ -2225,7 +2225,7 @@ lmSelect(char c)
 }
 
 Anchor*
-list_menu(Buffer* buf)
+list_menu(struct Buffer* buf)
 {
     Menu menu;
     AnchorList* al = buf->href;
