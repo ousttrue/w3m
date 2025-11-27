@@ -559,7 +559,7 @@ Str loadFTPDir(struct Url* pu, wc_ces* charset)
     } else {
         while (tmp = Strfgets(current_ftp.data), tmp->length > 0) {
             Strchop(tmp);
-            flist[nfile++] = mybasename(tmp->ptr);
+            flist[nfile++] = mybasename(tmp->ptr)->ptr;
             if (nfile == nfile_max) {
                 nfile_max *= 2;
                 flist = New_Reuse(char*, flist, nfile_max);

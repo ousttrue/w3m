@@ -15,7 +15,8 @@ Str romanAlphabet(int n);
 Str myExtCommand(char* cmd, char* arg, int redirect);
 Str myEditor(char* cmd, char* file, int line);
 Str tmpfname(int type, char* ext);
-char* mybasename(char* s);
+
+
 int is_localhost(const char* host);
 char* file_to_url(char* file);
 char* lastFileName(char* path);

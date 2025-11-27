@@ -138,20 +138,6 @@ char* lastFileName(char* path)
     return allocStr(q, -1);
 }
 
-char* mybasename(char* s)
-{
-    char* p = s;
-    while (*p)
-        p++;
-    while (s <= p && *p != '/')
-        p--;
-    if (*p == '/')
-        p++;
-    else
-        p = s;
-    return allocStr(p, -1);
-}
-
 #ifndef HAVE_STRERROR
 char* strerror(int errno)
 {

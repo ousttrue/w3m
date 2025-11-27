@@ -359,7 +359,7 @@ append_map_info(Buffer* buf, Str tmp, FormItemList* fi)
         p = html_quote(url_decode2(a->url, buf));
         Strcat_m_charp(tmp, "<tr valign=top><td>&nbsp;&nbsp;<td><a href=\"",
             q, "\">",
-            html_quote(*a->alt ? a->alt : mybasename(a->url)),
+            html_quote(*a->alt ? a->alt : mybasename(a->url)->ptr),
             "</a><td>", p, "\n", NULL);
     }
     Strcat_charp(tmp, "</table>");

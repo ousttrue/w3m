@@ -694,7 +694,7 @@ void form_write_from_file(FILE* f, char* boundary, char* name, char* filename,
     fprintf(f, "--%s\r\n", boundary);
     fprintf(f,
         "Content-Disposition: form-data; name=\"%s\"; filename=\"%s\"\r\n",
-        name, mybasename(filename));
+        name, mybasename(filename)->ptr);
     type = guessContentType(file);
     fprintf(f, "Content-Type: %s\r\n\r\n",
         type ? type : "application/octet-stream");

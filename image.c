@@ -857,7 +857,7 @@ void put_image_kitty(char* url, int x, int y, int w, int h, int sx, int sy, int 
     t = 100; /* always convert to png for now. */
 
     if (!(type && !strcasecmp(type, "image/png"))) {
-        tmpf = Sprintf("%s/%s.png", tmp_dir, mybasename(url))->ptr;
+        tmpf = Sprintf("%s/%s.png", tmp_dir, mybasename(url)->ptr)->ptr;
 
         if (type && !strcasecmp(type, "image/gif")) {
             is_anim = 1;

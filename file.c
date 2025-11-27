@@ -62,7 +62,6 @@
 static int frame_source = 0;
 static int need_number = 0;
 
-static char* guess_filename(char* file);
 static int _MoveFile(char* path1, char* path2);
 static void uncompress_stream(struct URLFile* uf, char** src);
 static FILE* lessopen_stream(char* path);
@@ -1137,10 +1136,9 @@ page_loaded:
             fclose(src);
         }
         if (do_download || gopher_download) {
-            char* file;
             if (!src)
                 return NULL;
-            file = guess_filename(pu.file);
+            char* file = guess_filename(pu.file)->ptr;
             if (f.scheme == SCM_GOPHER)
                 file = Sprintf("%s.html", file)->ptr;
             if (f.scheme == SCM_NEWS_GROUP)
@@ -7012,28 +7010,6 @@ lessopen_stream(char* path)
     return fp;
 }
 
-static char*
-guess_filename(char* file)
-{
-    char *p = NULL, *s;
-
-    if (file != NULL)
-        p = mybasename(file);
-    if (p == NULL || *p == '\0')
-        return DEF_SAVE_FILE;
-    s = p;
-    if (*p == '#')
-        p++;
-    while (*p != '\0') {
-        if ((*p == '#' && *(p + 1) != '\0') || *p == '?') {
-            *p = '\0';
-            break;
-        }
-        p++;
-    }
-    return s;
-}
-
 char* guess_save_name(Buffer* buf, char* path)
 {
     if (buf && buf->document_header) {
@@ -7044,7 +7020,7 @@ char* guess_save_name(Buffer* buf, char* path)
         else if ((p = checkHeader(buf, "Content-Type:")) != NULL && (q = strcasestr(p, "name")) != NULL && (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') && matchattr(q, "name", 4, &name))
             path = name->ptr;
     }
-    return guess_filename(path);
+    return guess_filename(path)->ptr;
 }
 
 /* Local Variables:    */

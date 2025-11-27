@@ -44,3 +44,6 @@ extern int save2tmp(struct URLFile uf, char* tmpf);
 extern int checkCopyFile(char* path1, char* path2);
 extern int gethtmlcmd(char** s);
 char* acceptableEncoding(void);
+
+
+

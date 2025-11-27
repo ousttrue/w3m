@@ -26,8 +26,6 @@
 #define USER_URIMETHODMAP RC_DIR "/urimethodmap"
 #define SYS_URIMETHODMAP CONF_DIR "/urimethodmap"
 
-#define DEF_SAVE_FILE "index.html"
-
 /* User Configuration */
 #define USE_M17N 1
 #define USE_UNICODE 1

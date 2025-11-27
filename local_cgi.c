@@ -376,7 +376,7 @@ FILE* localcgi_post(char* uri, char* qstr, FormList* request, char* referer)
 #ifdef HAVE_CHDIR
     cgi_dir = mydirname(file);
 #endif
-    cgi_basename = mybasename(file);
+    cgi_basename = mybasename(file)->ptr;
     pid = open_pipe_rw(&fr, NULL); /* open_pipe_rw() forks */
     /* Don't invoke gc after here, or the program might crash in some platforms */
     if (pid < 0) {

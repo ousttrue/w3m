@@ -232,3 +232,41 @@ const char* remove_space(const char* str)
         return Strnew_charp_n(p, q - p)->ptr;
     return p;
 }
+
+Str mybasename(const char* s)
+{
+    const char* p = s;
+    while (*p)
+        p++;
+    while (s <= p && *p != '/')
+        p--;
+    if (*p == '/')
+        p++;
+    else
+        p = s;
+    return Strnew_charp(p);
+}
+
+#define DEF_SAVE_FILE "index.html"
+
+Str guess_filename(const char* file)
+{
+    Str s = NULL;
+    if (file != NULL)
+        s = mybasename(file);
+    if (s == NULL || s->length == 0)
+        return Strnew_charp(DEF_SAVE_FILE);
+
+    char* p = s->ptr;
+    if (*p == '#')
+        p++;
+    while (*p != '\0') {
+        if ((*p == '#' && *(p + 1) != '\0') || *p == '?') {
+            *p = '\0';
+            break;
+        }
+        p++;
+    }
+    return s;
+}
+
