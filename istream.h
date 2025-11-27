@@ -147,7 +147,7 @@ struct URLFile {
     char* ext;
     int compression;
     int content_encoding;
-    char* guess_type;
+    const char* guess_type;
     char* ssl_certificate;
     char* url;
     time_t modtime;

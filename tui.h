@@ -20,3 +20,4 @@ void tui_set_delayed_message(char* s);
 void tui_render_delayed_msg();
 struct _Buffer* tui_message_list_panel();
 void tui_render_screen();
+void tui_showProgress(long long current_content_length, long long* linelen, long long* trbyte);

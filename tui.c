@@ -9,10 +9,12 @@
 #include "image.h"
 #include "buffer.h"
 #include "indep.h"
+#include <gcstr/gcstr.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <time.h>
 #include <unistd.h>
 
 int fmInitialized = false;
@@ -115,10 +117,15 @@ void tui_message(char* s, int return_x, int return_y)
 {
     if (!fmInitialized)
         return;
+
+    // term_cbreak();
+
     scr_move(LINES - 1, 0);
     scr_addnstr(s, COLS - 1);
     scr_clrtoeolx();
     scr_move(return_y, return_x);
+
+    // tui_render_screen();
 }
 
 void tui_disp_err_message(char* s, int redraw_current)
@@ -425,4 +432,84 @@ void tui_setup_child(int child, int i, int f)
     // QuietMessage = TRUE;
     fmInitialized = FALSE;
     TrapSignal = FALSE;
+}
+
+void tui_showProgress(long long current_content_length, long long* linelen, long long* trbyte)
+{
+    int i, j, rate, duration, eta, pos;
+    static time_t last_time, start_time;
+    Str messages;
+    char *fmtrbyte, *fmrate;
+
+    if (!fmInitialized)
+        return;
+
+    if (*linelen < 1024)
+        return;
+    if (current_content_length > 0) {
+        double ratio;
+        time_t cur_time = time(0);
+        if (*trbyte == 0) {
+            scr_move(LINES - 1, 0);
+            scr_clrtoeolx();
+            start_time = cur_time;
+        }
+        *trbyte += *linelen;
+        *linelen = 0;
+        if (cur_time == last_time)
+            return;
+        last_time = cur_time;
+        scr_move(LINES - 1, 0);
+        ratio = 100.0 * (*trbyte) / current_content_length;
+        fmtrbyte = convert_size2(*trbyte, current_content_length, 1)->ptr;
+        duration = cur_time - start_time;
+        if (duration) {
+            rate = *trbyte / duration;
+            fmrate = convert_size(rate, 1)->ptr;
+            eta = rate ? (current_content_length - *trbyte) / rate : -1;
+            messages = Sprintf("%11s %3.0f%% "
+                               "%7s/s "
+                               "eta %02d:%02d:%02d     ",
+                fmtrbyte, ratio,
+                fmrate,
+                eta / (60 * 60), (eta / 60) % 60, eta % 60);
+        } else {
+            messages = Sprintf("%11s %3.0f%%                          ",
+                fmtrbyte, ratio);
+        }
+        scr_addstr(messages->ptr);
+        pos = 42;
+        i = pos + (COLS - pos - 1) * (*trbyte) / current_content_length;
+        scr_move(LINES - 1, pos);
+        scr_standout();
+        scr_addch(' ');
+        for (j = pos + 1; j <= i; j++)
+            scr_addch('|');
+        scr_standend();
+        /* no_clrtoeol(); */
+        tui_render_screen();
+    } else {
+        time_t cur_time = time(0);
+        if (*trbyte == 0) {
+            scr_move(LINES - 1, 0);
+            scr_clrtoeolx();
+            start_time = cur_time;
+        }
+        *trbyte += *linelen;
+        *linelen = 0;
+        if (cur_time == last_time)
+            return;
+        last_time = cur_time;
+        scr_move(LINES - 1, 0);
+        fmtrbyte = convert_size(*trbyte, 1)->ptr;
+        duration = cur_time - start_time;
+        if (duration) {
+            fmrate = convert_size(*trbyte / duration, 1)->ptr;
+            messages = Sprintf("%7s loaded %7s/s", fmtrbyte, fmrate);
+        } else {
+            messages = Sprintf("%7s loaded", fmtrbyte);
+        }
+        tui_message(messages->ptr, 0, 0);
+        tui_render_screen();
+    }
 }

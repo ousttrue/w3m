@@ -544,8 +544,8 @@ void readHeader(struct URLFile* uf, Buffer* newBuf, int thru, struct Url* pu)
             while (*p && IS_SPACE(*p))
                 p++;
             http_response_code = atoi(p);
-                tui_message(lineBuf2->ptr, 0, 0);
-                tui_render_screen();
+            tui_message(lineBuf2->ptr, 0, 0);
+            tui_render_screen();
         }
         if (!strncasecmp(lineBuf2->ptr, "content-transfer-encoding:", 26)) {
             p = lineBuf2->ptr + 26;
@@ -653,8 +653,8 @@ void readHeader(struct URLFile* uf, Buffer* newBuf, int thru, struct Url* pu)
                             TRUE, FALSE);
                     else
                         tui_disp_message_nsec(Sprintf("Received cookie: %s=%s",
-                                              name->ptr, value->ptr)
-                                              ->ptr,
+                                                  name->ptr, value->ptr)
+                                                  ->ptr,
                             FALSE, 1, TRUE, FALSE);
                 }
                 err = add_cookie(pu, name, value, expires, domain, path, flag,
@@ -663,7 +663,7 @@ void readHeader(struct URLFile* uf, Buffer* newBuf, int thru, struct Url* pu)
                     char* ans = (accept_bad_cookie == ACCEPT_BAD_COOKIE_ACCEPT)
                         ? "y"
                         : NULL;
-                    if (fmInitialized && (err & COO_OVERRIDE_OK) && accept_bad_cookie == ACCEPT_BAD_COOKIE_ASK) {
+                    if ((err & COO_OVERRIDE_OK) && accept_bad_cookie == ACCEPT_BAD_COOKIE_ASK) {
                         Str msg = Sprintf("Accept bad cookie from %s for %s?",
                             pu->host,
                             ((domain && domain->ptr)
@@ -688,8 +688,8 @@ void readHeader(struct URLFile* uf, Buffer* newBuf, int thru, struct Url* pu)
                             tui_disp_message_nsec(emsg, FALSE, 1, TRUE, FALSE);
                     } else if (show_cookie)
                         tui_disp_message_nsec(Sprintf("Accepting invalid cookie: %s=%s",
-                                              name->ptr, value->ptr)
-                                              ->ptr,
+                                                  name->ptr, value->ptr)
+                                                  ->ptr,
                             FALSE,
                             1, TRUE, FALSE);
                 }
@@ -895,8 +895,8 @@ load_doc:
         case SCM_UNKNOWN:
             /* FIXME: gettextize? */
             tui_disp_err_message(Sprintf("Unknown URI: %s",
-                                 parsedURL2Str(&pu)->ptr)
-                                 ->ptr,
+                                     parsedURL2Str(&pu)->ptr)
+                                     ->ptr,
                 FALSE);
             break;
         }
@@ -932,11 +932,10 @@ load_doc:
     TRAP_ON;
     if (pu.scheme == SCM_HTTP || pu.scheme == SCM_HTTPS || (((pu.scheme == SCM_GOPHER && non_null(GOPHER_proxy)) || (pu.scheme == SCM_FTP && non_null(FTP_proxy))) && !Do_not_use_proxy && !check_no_proxy(pu.host))) {
 
-        if (fmInitialized) {
-            term_cbreak();
-            tui_message(Sprintf("%s contacted. Waiting for reply...", pu.host)->ptr, 0, 0);
-            tui_render_screen();
-        }
+        term_cbreak();
+        tui_message(Sprintf("%s contacted. Waiting for reply...", pu.host)->ptr, 0, 0);
+        tui_render_screen();
+
         if (t_buf == NULL)
             t_buf = newBuffer(INIT_BUFFER_WIDTH);
         readHeader(&f, t_buf, FALSE, &pu);
@@ -5480,87 +5479,6 @@ loadHTMLBuffer(struct URLFile* f, Buffer* newBuf)
     return newBuf;
 }
 
-void showProgress(long long* linelen, long long* trbyte)
-{
-    int i, j, rate, duration, eta, pos;
-    static time_t last_time, start_time;
-    time_t cur_time;
-    Str messages;
-    char *fmtrbyte, *fmrate;
-
-    if (!fmInitialized)
-        return;
-
-    if (*linelen < 1024)
-        return;
-    if (current_content_length > 0) {
-        double ratio;
-        cur_time = time(0);
-        if (*trbyte == 0) {
-            scr_move(LASTLINE, 0);
-            scr_clrtoeolx();
-            start_time = cur_time;
-        }
-        *trbyte += *linelen;
-        *linelen = 0;
-        if (cur_time == last_time)
-            return;
-        last_time = cur_time;
-        scr_move(LASTLINE, 0);
-        ratio = 100.0 * (*trbyte) / current_content_length;
-        fmtrbyte = convert_size2(*trbyte, current_content_length, 1)->ptr;
-        duration = cur_time - start_time;
-        if (duration) {
-            rate = *trbyte / duration;
-            fmrate = convert_size(rate, 1)->ptr;
-            eta = rate ? (current_content_length - *trbyte) / rate : -1;
-            messages = Sprintf("%11s %3.0f%% "
-                               "%7s/s "
-                               "eta %02d:%02d:%02d     ",
-                fmtrbyte, ratio,
-                fmrate,
-                eta / (60 * 60), (eta / 60) % 60, eta % 60);
-        } else {
-            messages = Sprintf("%11s %3.0f%%                          ",
-                fmtrbyte, ratio);
-        }
-        scr_addstr(messages->ptr);
-        pos = 42;
-        i = pos + (COLS - pos - 1) * (*trbyte) / current_content_length;
-        scr_move(LASTLINE, pos);
-        scr_standout();
-        scr_addch(' ');
-        for (j = pos + 1; j <= i; j++)
-            scr_addch('|');
-        scr_standend();
-        /* no_clrtoeol(); */
-        tui_render_screen();
-    } else {
-        cur_time = time(0);
-        if (*trbyte == 0) {
-            scr_move(LASTLINE, 0);
-            scr_clrtoeolx();
-            start_time = cur_time;
-        }
-        *trbyte += *linelen;
-        *linelen = 0;
-        if (cur_time == last_time)
-            return;
-        last_time = cur_time;
-        scr_move(LASTLINE, 0);
-        fmtrbyte = convert_size(*trbyte, 1)->ptr;
-        duration = cur_time - start_time;
-        if (duration) {
-            fmrate = convert_size(*trbyte / duration, 1)->ptr;
-            messages = Sprintf("%7s loaded %7s/s", fmtrbyte, fmrate);
-        } else {
-            messages = Sprintf("%7s loaded", fmtrbyte);
-        }
-        tui_message(messages->ptr, 0, 0);
-        tui_render_screen();
-    }
-}
-
 void init_henv(struct html_feed_environ* h_env, struct readbuffer* obuf,
     struct environment* envs, int nenv, TextLineList* buf,
     int limit, int indent)
@@ -5820,7 +5738,7 @@ void loadHTMLstream(struct URLFile* f, Buffer* newBuf, FILE* src, int internal)
             printf("W3m-in-progress: %s\n", convert_size2(linelen, current_content_length, TRUE)->ptr);
         if (w3m_dump & DUMP_SOURCE)
             continue;
-        showProgress(&linelen, &trbyte);
+        tui_showProgress(current_content_length, &linelen, &trbyte);
         /*
          * if (frame_source)
          * continue;
@@ -6104,7 +6022,7 @@ loadBuffer(struct URLFile* uf, Buffer* volatile newBuf)
             printf("W3m-in-progress: %s\n", convert_size2(linelen, current_content_length, TRUE)->ptr);
         if (w3m_dump & DUMP_SOURCE)
             continue;
-        showProgress(&linelen, &trbyte);
+        tui_showProgress(current_content_length, &linelen, &trbyte);
         if (frame_source)
             continue;
         lineBuf2 = convertLine(uf, lineBuf2, PAGER_MODE, &charset, doc_charset);
@@ -6478,7 +6396,7 @@ struct Line* getNextPage(Buffer* buf, int plen)
             break;
         }
         linelen += lineBuf2->length;
-        showProgress(&linelen, &trbyte);
+        tui_showProgress(current_content_length, &linelen, &trbyte);
         lineBuf2 = convertLine(&uf, lineBuf2, PAGER_MODE, &charset, doc_charset);
         if (squeezeBlankLine) {
             squeeze_flag = FALSE;
@@ -6569,7 +6487,7 @@ int save2tmp(struct URLFile uf, char* tmpf)
                 check = 0;
             putc(c, ff);
             linelen += sizeof(c);
-            showProgress(&linelen, &trbyte);
+            tui_showProgress(current_content_length, &linelen, &trbyte);
         }
     } else {
         int count;
@@ -6581,7 +6499,7 @@ int save2tmp(struct URLFile uf, char* tmpf)
                 goto _end;
             }
             linelen += count;
-            showProgress(&linelen, &trbyte);
+            tui_showProgress(current_content_length, &linelen, &trbyte);
         }
     }
 _end:
@@ -6712,7 +6630,7 @@ _MoveFile(char* path1, char* path2)
     while ((count = ISread_n(f1, buf, SAVE_BUF_SIZE)) > 0) {
         fwrite(buf, 1, count, f2);
         linelen += count;
-        showProgress(&linelen, &trbyte);
+        tui_showProgress(current_content_length, &linelen, &trbyte);
     }
     xfree(buf);
     ISclose(f1);

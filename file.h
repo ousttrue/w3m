@@ -29,7 +29,6 @@ extern void feed_textarea(char* str);
 extern Str process_form(struct parsed_tag* tag);
 extern Str process_n_form(void);
 extern int getMetaRefreshParam(char* q, Str* refresh_uri);
-extern void showProgress(long long* linelen, long long* trbyte);
 extern Str loadGopherDir(struct URLFile* uf, struct Url* pu, wc_ces* charset);
 extern Str loadGopherSearch(struct URLFile* uf, struct Url* pu, wc_ces* charset);
 extern Str getLinkNumberStr(int correction);
