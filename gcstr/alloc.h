@@ -1,7 +1,7 @@
 #pragma once
 #include <stddef.h>
 
-void alloc_init();
+void alloc_init(void* warn_proc);
 
 size_t
 z_mult_no_oflow_(size_t n, size_t size);

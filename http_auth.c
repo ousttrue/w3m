@@ -258,14 +258,8 @@ FILE* openSecretFile(const char* fname)
     if (disable_secret_security_check)
         /* do nothing */;
     else if ((st.st_mode & (S_IRWXG | S_IRWXO)) != 0) {
-        // if (fmInitialized) {
-        //     message(Sprintf(FILE_IS_READABLE_MSG, fname)->ptr, 0, 0);
-        //     refresh();
-        // } else
-        {
-            fputs(Sprintf(FILE_IS_READABLE_MSG, fname)->ptr, stderr);
-            fputc('\n', stderr);
-        }
+        tui_message(Sprintf(FILE_IS_READABLE_MSG, fname)->ptr);
+
         sleep(2);
         return NULL;
     }
@@ -717,7 +711,7 @@ void invalidate_auth_user_passwd(struct Url* pu, char* realm, Str uname, Str pwd
 void getAuthCookie(struct http_auth* hauth, char* auth_header,
     TextList* extra_header, struct Url* pu, struct HttpRequest* hr,
     FormList* request,
-    volatile Str* uname, volatile Str* pwd)
+    Str* uname, Str* pwd)
 {
     Str ss = NULL;
     Str tmp;
@@ -745,11 +739,8 @@ void getAuthCookie(struct http_auth* hauth, char* auth_header,
         /* This means that *-Authenticate: header is received after
          * Authorization: header is sent to the server.
          */
-        // if (fmInitialized) {
-        //     message("Wrong username or password", 0, 0);
-        //     refresh();
-        // } else
-        fprintf(stderr, "Wrong username or password\n");
+        tui_message("Wrong username or password");
+
         sleep(1);
         /* delete Authenticate: header from extra_header */
         delText(extra_header, i);
@@ -761,7 +752,7 @@ void getAuthCookie(struct http_auth* hauth, char* auth_header,
     if (!a_found && find_auth_user_passwd(pu, realm, (Str*)uname, (Str*)pwd, proxy)) {
         /* found username & password in passwd file */;
     } else {
-        tui_input_pw(realm, uname, pwd);
+        tui_input_user_pw(realm, uname, pwd);
     }
     ss = hauth->cred(hauth, *uname, *pwd, pu, hr, request);
     if (ss) {

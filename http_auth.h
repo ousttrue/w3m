@@ -26,7 +26,7 @@ struct http_auth {
 void getAuthCookie(struct http_auth* hauth, char* auth_header,
     TextList* extra_header, struct Url* pu, struct HttpRequest* hr,
     struct form_list* request,
-    volatile Str* uname, volatile Str* pwd);
+    Str* uname, Str* pwd);
 Str get_auth_param(struct auth_param* auth, char* name);
 struct http_auth*
 findAuthentication(struct http_auth* hauth, TextList* document_header, char* auth_field);

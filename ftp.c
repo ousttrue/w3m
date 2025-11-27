@@ -369,14 +369,7 @@ openFTPStream(struct Url* pu, struct URLFile* uf)
         pwd = NULL;
         find_auth_user_passwd(pu, NULL, &uname, &pwd, 0);
         if (pwd == NULL) {
-            if (fmInitialized) {
-                term_raw();
-                pwd = Strnew_charp(inputLine("Password: ", NULL, IN_PASSWORD));
-                pwd = Str_conv_to_system(pwd);
-                term_cbreak();
-            } else {
-                pwd = Strnew_charp((char*)getpass("Password: "));
-            }
+            pwd = tui_input_pw();
             add_auth_cookie_flag = TRUE;
         }
         pass = pwd->ptr;

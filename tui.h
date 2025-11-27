@@ -24,4 +24,7 @@ struct _Buffer* tui_message_list_panel();
 void tui_render_screen();
 void tui_showProgress(long long current_content_length, long long* linelen, long long* trbyte);
 const char* inputAnswer(const char* prompt);
-void tui_input_pw(const char* realm, Str* uname, Str* pwd);
+void tui_input_user_pw(const char* realm, Str* uname, Str* pwd);
+Str tui_input_pw();
+void tui_GC_warn_proc(const char* msg, unsigned long arg);
+

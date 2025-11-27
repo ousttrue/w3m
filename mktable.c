@@ -4,9 +4,14 @@
 #include <string.h>
 #include "config.h"
 
+void GC_warn_proc_callback(const char* msg, unsigned long arg)
+{
+    fprintf(stderr, msg, (unsigned long)arg);
+}
+
 int main(int argc, char* argv[])
 {
-    alloc_init();
+    alloc_init(&GC_warn_proc_callback);
 
     FILE* f;
     Hash_ss* hash;

@@ -117,18 +117,18 @@ Buffer* tui_message_list_panel()
 
 void tui_message(const char* s)
 {
-    if (!fmInitialized)
-        return;
-
-    // term_cbreak();
-
-    struct Screen screen = scr_get();
-    scr_move(LINES - 1, 0);
-    scr_addnstr(s, COLS - 1);
-    scr_clrtoeolx();
-    scr_move(screen.CurLine, screen.CurColumn);
-
-    // tui_render_screen();
+    if (fmInitialized) {
+        // term_cbreak();
+        struct Screen screen = scr_get();
+        scr_move(LINES - 1, 0);
+        scr_addnstr(s, COLS - 1);
+        scr_clrtoeolx();
+        scr_move(screen.CurLine, screen.CurColumn);
+        // tui_render_screen();
+    } else {
+        fputs(s, stderr);
+        fputc('\n', stderr);
+    }
 }
 
 void tui_disp_err_message(char* s, int redraw_current)
@@ -533,7 +533,7 @@ const char* inputAnswer(const char* prompt)
     return ans;
 }
 
-void tui_input_pw(const char* realm, Str* uname, Str* pwd)
+void tui_input_user_pw(const char* realm, Str* uname, Str* pwd)
 {
     if (QuietMessage)
         return;
@@ -577,4 +577,61 @@ void tui_input_pw(const char* realm, Str* uname, Str* pwd)
         *pwd = Strnew_charp((char*)
                 getpass(/*proxy ? "Proxy Password: " :*/ "Password: "));
     }
+}
+
+Str tui_input_pw()
+{
+    Str pwd;
+    if (fmInitialized) {
+        term_raw();
+        pwd = Strnew_charp(inputLine("Password: ", NULL, IN_PASSWORD));
+        pwd = Str_conv_to_system(pwd);
+        term_cbreak();
+    } else {
+        pwd = Strnew_charp((char*)getpass("Password: "));
+    }
+    return pwd;
+}
+
+#define GC_WARN_KEEP_MAX (20)
+
+void tui_GC_warn_proc(const char* msg, unsigned long arg)
+{
+    if (fmInitialized) {
+
+        static struct {
+            char* msg;
+            unsigned long arg;
+        } msg_ring[GC_WARN_KEEP_MAX];
+
+        static int i = 0;
+        static int n = 0;
+        static int lock = 0;
+
+        int j = (i + n) % (sizeof(msg_ring) / sizeof(msg_ring[0]));
+        msg_ring[j].msg = msg;
+        msg_ring[j].arg = arg;
+
+        if (n < sizeof(msg_ring) / sizeof(msg_ring[0]))
+            ++n;
+        else
+            ++i;
+
+        if (!lock) {
+            lock = 1;
+
+            for (; n > 0; --n, ++i) {
+                i %= sizeof(msg_ring) / sizeof(msg_ring[0]);
+
+                printf(msg_ring[i].msg, (unsigned long)msg_ring[i].arg);
+                tty_sleep_till_anykey(1, 1);
+            }
+
+            lock = 0;
+        }
+    }
+    // else if (orig_GC_warn_proc)
+    //     orig_GC_warn_proc(msg, arg);
+    else
+        fprintf(stderr, msg, (unsigned long)arg);
 }

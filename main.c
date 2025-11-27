@@ -282,7 +282,7 @@ int w3m_main(int argc, char** argv)
     if (!getenv("GC_LARGE_ALLOC_WARN_INTERVAL"))
         set_environ("GC_LARGE_ALLOC_WARN_INTERVAL", "30000");
 
-    alloc_init();
+    alloc_init(&tui_GC_warn_proc);
 
     setlocale(LC_ALL, "");
 
@@ -779,9 +779,7 @@ int w3m_main(int argc, char** argv)
         CurrentTab = FirstTab;
     if (!FirstTab || !Firstbuf || Firstbuf == NO_BUFFER) {
         if (newbuf == NO_BUFFER) {
-            if (fmInitialized)
-                /* FIXME: gettextize? */
-                inputChar("Hit any key to quit w3m:");
+            inputChar("Hit any key to quit w3m:");
         }
         tui_exit();
         if (err_msg->length)
@@ -4458,7 +4456,7 @@ DEFUN(rFrame, FRAME, "Toggle rendering HTML frames")
     buf->linkBuffer[LB_N_FRAME] = Currentbuf;
     Currentbuf->linkBuffer[LB_FRAME] = buf;
     pushBuffer(buf);
-    if (fmInitialized && display_ok)
+    if (display_ok)
         displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
