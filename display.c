@@ -12,7 +12,6 @@
 #include "fm.h"
 #include "w3m_runtime.h"
 #include "buffer.h"
-#include "ctrlcode.h"
 #include <math.h>
 #include <signal.h>
 

@@ -1,6 +1,5 @@
-/* $Id: ctrlcode.h,v 1.3 2003/09/22 21:02:17 ukai Exp $ */
+#pragma once
 /* control characters */
-
 #define CTRL_A 1
 #define CTRL_B 2
 #define CTRL_C 3
@@ -136,10 +135,3 @@
 #define NBSP "\xa0"
 #define ANSP "\x9e"
 #define IMSP "\x9f"
-
-#include <gcstr/myctype.h>
-
-/* Local Variables:    */
-/* c-basic-offset: 4   */
-/* tab-width: 8        */
-/* End:                */

@@ -10,7 +10,6 @@
 #include "local_cgi.h"
 #include "display.h"
 #include "indep.h"
-#include "ctrlcode.h"
 #include "history.h"
 #include <gcstr/gcstr.h>
 #include <string.h>

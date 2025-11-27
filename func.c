@@ -5,7 +5,6 @@
 #include "rc.h"
 #include "display.h"
 #include "keybind.h"
-#include "ctrlcode.h"
 
 #include <gcstr/gcstr.h>
 #include <stdio.h>

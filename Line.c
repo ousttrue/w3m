@@ -1,5 +1,4 @@
 #include "Line.h"
-#include "ctrlcode.h"
 #include <gcstr/gcstr.h>
 #include <stdlib.h>
 #include <string.h>

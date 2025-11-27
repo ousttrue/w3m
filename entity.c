@@ -1,7 +1,7 @@
 /* $Id: entity.c,v 1.7 2003/09/24 18:48:59 ukai Exp $ */
 #include <string.h>
+#include <gcstr/gcstr.h>
 #ifdef DUMMY
-#include <gcstr/Str.h>
 #define NBSP " "
 #define UseAltEntity 1
 #undef USE_M17N
@@ -15,7 +15,6 @@
 #include "utf8.h"
 #endif /* DUMMY */
 #include "w3m_runtime.h"
-#include "ctrlcode.h"
 
 extern char* conv_entity(unsigned int c);
 

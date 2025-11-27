@@ -3,6 +3,7 @@
 #include "alloc.h"
 #include "Str.h"
 #include "myctype.h"
+#include "ctrlcode.h"
 #include "hash.h"
 #include "quote.h"
 #include <stdarg.h>

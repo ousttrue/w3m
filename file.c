@@ -18,7 +18,6 @@
 #include "mailcap.h"
 #include "history.h"
 #include "mimehead.h"
-#include "ctrlcode.h"
 #include "display.h"
 #include "image.h"
 #include "linein.h"

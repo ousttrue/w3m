@@ -12,7 +12,6 @@
 #include "w3m_runtime.h"
 #include "indep.h"
 #include "display.h"
-#include "ctrlcode.h"
 #include "istream.h"
 #include <unistd.h>
 

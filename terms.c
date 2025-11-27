@@ -6,7 +6,6 @@
 #include "signal_jmp.h"
 #include "w3m_runtime.h"
 #include "config.h"
-#include "ctrlcode.h"
 #include "funcheader.h"
 #include "screen.h"
 #include "term_entry.h"
