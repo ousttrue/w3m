@@ -64,10 +64,9 @@ void scr_clear(void)
 {
     // writestr(T_cl);
     scr_move(0, 0);
-    struct Screen sc = scr_get();
     for (int i = 0; i < g_screen.lines; i++) {
-        sc.ScreenImage[i]->isdirty = 0;
-        uint16_t* p = sc.ScreenImage[i]->lineprop;
+        g_screen.ScreenImage[i]->isdirty = 0;
+        uint16_t* p = g_screen.ScreenImage[i]->lineprop;
         for (int j = 0; j < g_screen.cols; j++) {
             p[j] = S_EOL;
         }
