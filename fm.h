@@ -242,13 +242,9 @@ global char* HostName init(0);
 #define TRAP_ON                                \
     if (TrapSignal) {                          \
         prevtrap = mySignal(SIGINT, KeyAbort); \
-        if (fmInitialized)                     \
-            term_cbreak();                     \
     }
 #define TRAP_OFF                        \
     if (TrapSignal) {                   \
-        if (fmInitialized)              \
-            term_raw();                 \
         if (prevtrap)                   \
             mySignal(SIGINT, prevtrap); \
     }

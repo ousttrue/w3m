@@ -931,7 +931,6 @@ load_doc:
     TRAP_ON;
     if (pu.scheme == SCM_HTTP || pu.scheme == SCM_HTTPS || (((pu.scheme == SCM_GOPHER && non_null(GOPHER_proxy)) || (pu.scheme == SCM_FTP && non_null(FTP_proxy))) && !Do_not_use_proxy && !check_no_proxy(pu.host))) {
 
-        term_cbreak();
         tui_message(Sprintf("%s contacted. Waiting for reply...", pu.host)->ptr);
         tui_render_screen();
 

@@ -1151,7 +1151,7 @@ void sync_with_option(void)
     parse_cookie();
     initMailcap();
     initMimeTypes();
-    if (fmInitialized && (displayImage || enable_inline_image))
+    if ((displayImage || enable_inline_image))
         initImage();
     loadPasswd();
     loadPreForm();
@@ -1170,10 +1170,9 @@ void sync_with_option(void)
         AcceptMedia = acceptableMimeTypes();
     update_utf8_symbol();
     wtf_init(DocumentCharset, DisplayCharset);
-    if (fmInitialized) {
-        initKeymap(SystemCharset, InnerCharset, false);
-        initMenu();
-    }
+
+    initKeymap(SystemCharset, InnerCharset, false);
+    initMenu();
 }
 
 void init_rc(void)
