@@ -54,7 +54,7 @@ int LINES, COLS;
 
 static void reset_exit_with_value(int _, int rval)
 {
-    reset_tty();
+    tty_reset();
     w3m_exit(rval);
 }
 
@@ -265,7 +265,7 @@ char* tty_name(void)
     return ttyname(tty);
 }
 
-void reset_tty(void)
+void tty_reset(void)
 {
     tty_write(T_.op); /* turn off */
     tty_write(T_.me);
@@ -285,7 +285,7 @@ void reset_tty(void)
 static void error_dump(int _)
 {
     mySignal(SIGIOT, SIG_DFL);
-    reset_tty();
+    tty_reset();
     abort();
 }
 

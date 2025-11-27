@@ -6663,9 +6663,9 @@ doExternal(struct URLFile uf, char* type, Buffer* defaultbuf)
         }
     } else {
         if (mcap->flags & MAILCAP_NEEDSTERMINAL || !BackgroundExtViewer) {
-            tui_fmTerm();
+            tui_exit();
             mySystem(command->ptr, 0);
-            tui_fmInit();
+            tui_enter();
             if (CurrentTab && Currentbuf)
                 displayBuffer(Currentbuf, B_FORCE_REDRAW);
         } else {

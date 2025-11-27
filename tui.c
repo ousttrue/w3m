@@ -17,7 +17,7 @@ int highIntensityColors = false;
 static GeneralList* message_list = NULL;
 static char* delayed_msg = NULL;
 
-void tui_fmInit()
+void tui_enter()
 {
     if (!fmInitialized) {
         initscr();
@@ -29,7 +29,7 @@ void tui_fmInit()
     fmInitialized = true;
 }
 
-void tui_fmTerm()
+void tui_exit()
 {
     if (fmInitialized) {
         scr_move(LINES - 1, 0);
@@ -37,25 +37,23 @@ void tui_fmTerm()
         tui_render_screen();
         if (activeImage)
             loadImage(NULL, IMG_FLAG_STOP);
-        reset_tty();
+        tty_reset();
         fmInitialized = false;
     }
 }
 
 int tui_exec(const char* cmd)
 {
-    int rv;
-
-    tui_fmTerm();
-    if ((rv = system(cmd))) {
+    tui_exit();
+    int rv = system(cmd);
+    if (rv) {
         printf("\n[Hit any key]");
         fflush(stdout);
-        tui_fmInit();
+        tui_exit();
         getch();
-
         return rv;
     }
-    tui_fmInit();
+    tui_enter();
 
     return 0;
 }

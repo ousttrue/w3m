@@ -4,8 +4,8 @@
 extern int fmInitialized;
 extern int highIntensityColors;
 
-void tui_fmInit();
-void tui_fmTerm();
+void tui_enter();
+void tui_exit();
 int tui_exec(const char* cmd);
 void tui_record_err_message(char* s);
 void tui_disp_message_nsec(char* s, int redraw_current, int sec, int purge, int mouse);

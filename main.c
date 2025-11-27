@@ -587,12 +587,14 @@ int w3m_main(int argc, char** argv)
             COLS = DEFAULT_COLS;
     }
 
-    if (!w3m_dump && !w3m_backend) {
-        tui_fmInit();
+    if (w3m_dump || w3m_backend) {
+        if (w3m_halfdump && displayImage) {
+            activeImage = TRUE;
+        }
+    } else {
+        tui_enter();
         mySignal(SIGWINCH, resize_hook);
-    } else if (w3m_halfdump && displayImage)
-        activeImage = TRUE;
-
+    }
     sync_with_option();
     initCookie();
     if (UseHistory)
@@ -642,13 +644,11 @@ int w3m_main(int argc, char** argv)
             else if (newbuf != NO_BUFFER)
                 pushHashHist(URLHist, parsedURL2Str(&newbuf->currentURL)->ptr);
         } else {
-            if (fmInitialized)
-                tui_fmTerm();
+            tui_exit();
             usage();
         }
         if (newbuf == NULL) {
-            if (fmInitialized)
-                tui_fmTerm();
+            tui_exit();
             if (err_msg->length)
                 fprintf(stderr, "%s", err_msg->ptr);
             w3m_exit(2);
@@ -782,8 +782,7 @@ int w3m_main(int argc, char** argv)
                 /* FIXME: gettextize? */
                 inputChar("Hit any key to quit w3m:");
         }
-        if (fmInitialized)
-            tui_fmTerm();
+        tui_exit();
         if (err_msg->length)
             fprintf(stderr, "%s", err_msg->ptr);
         if (newbuf == NO_BUFFER) {
@@ -1758,13 +1757,13 @@ DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output")
     if (cmd != NULL)
         cmd = conv_to_system(cmd);
     if (cmd != NULL && *cmd != '\0') {
-        tui_fmTerm();
+        tui_exit();
         printf("\n");
         (void)!system(cmd); /* We do not care about the exit code here! */
         /* FIXME: gettextize? */
         printf("\n[Hit any key]");
         fflush(stdout);
-        tui_fmInit();
+        tui_enter();
         getch();
     }
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
@@ -2091,7 +2090,7 @@ _quitfm(int confirm)
     tty_set_title(""); /* XXX */
     if (activeImage)
         termImage();
-    tui_fmTerm();
+    tui_exit();
     save_cookies();
     if (UseHistory && SaveURLHist)
         saveHistory(URLHist, URLHistSize);
@@ -2162,7 +2161,7 @@ DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background")
     scr_move(LASTLINE, 0);
     scr_clrtoeolx();
     tui_render_screen();
-    tui_fmTerm();
+    tui_exit();
     signal(SIGTSTP, SIG_DFL); /* just in case */
     /*
      * Note: If susp() was called from SIGTSTP handler,
@@ -2170,7 +2169,7 @@ DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background")
      * Currently not.
      */
     kill(0, SIGTSTP); /* stop whole job, not a single process */
-    tui_fmInit();
+    tui_enter();
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
@@ -4527,9 +4526,9 @@ invoke_browser(char* url)
     }
     cmd = myExtCommand(browser, shell_quote(url), FALSE);
     Strremovetrailingspaces(cmd);
-    tui_fmTerm();
+    tui_exit();
     mySystem(cmd->ptr, bg);
-    tui_fmInit();
+    tui_enter();
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
@@ -4956,8 +4955,8 @@ DEFUN(setAlarm, ALARM, "Set alarm")
         data = getQWord(&data);
         setAlarmEvent(0, sec, AL_EXPLICIT, cmd, data);
         tui_disp_message_nsec(Sprintf("%dsec %s %s", sec, w3mFuncList[cmd].id,
-                              data)
-                              ->ptr,
+                                  data)
+                                  ->ptr,
             FALSE, 1, FALSE, TRUE);
     } else {
         setAlarmEvent(0, 0, AL_UNSET, FUNCNAME_nulcmd, NULL);
