@@ -99,7 +99,7 @@ struct Screen {
 };
 struct Screen scr_get();
 
-void setupscreen(int lines, int cols);
+void scr_setup(int lines, int cols);
 void scr_init_color();
 void scr_active_start();
 void scr_active_end();

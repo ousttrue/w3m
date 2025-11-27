@@ -320,6 +320,9 @@ struct TermSize get_term_size()
         size.lines = tgetnum("li"); /* number of line */
     if (size.cols <= 0)
         size.cols = tgetnum("co"); /* number of column */
+
+    setlinescols(size.lines, size.cols);
+
     return size;
 }
 
@@ -337,7 +340,7 @@ int initscr(void)
         tty_write(T_.ti);
 
     struct TermSize size = get_term_size();
-    setupscreen(size.lines, size.cols);
+    scr_setup(size.lines, size.cols);
     return 0;
 }
 

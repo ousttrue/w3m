@@ -8,7 +8,6 @@ struct TermSize {
     int cols;
 };
 
-void setlinescols(int lines, int cols);
 struct TermSize get_term_size();
 
 int tty_get_pixel_per_cell(int* ppc, int* ppl);

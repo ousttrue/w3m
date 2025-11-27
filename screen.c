@@ -261,10 +261,8 @@ void scr_line_finalize()
         do_color(0);
 }
 
-void setupscreen(int lines, int cols)
+void scr_setup(int lines, int cols)
 {
-    int i;
-
     if (lines + 1 > max_LINES) {
         max_LINES = lines + 1;
         max_COLS = 0;
@@ -275,6 +273,7 @@ void setupscreen(int lines, int cols)
 
     if (cols + 1 > max_COLS) {
         max_COLS = cols + 1;
+        int i;
         for (i = 0; i < max_LINES; i++) {
             ScreenElem[i].lineimage = New_N(char*, max_COLS);
             memset(ScreenElem[i].lineimage, 0, max_COLS * sizeof(char*));
@@ -283,7 +282,8 @@ void setupscreen(int lines, int cols)
     }
     g_screen.cols = cols;
 
-    for (i = 0; i < g_screen.lines; i++) {
+    int i = 0;
+    for (; i < g_screen.lines; i++) {
         g_screen.ScreenImage[i] = &ScreenElem[i];
         g_screen.ScreenImage[i]->lineprop[0] = S_EOL;
         g_screen.ScreenImage[i]->isdirty = 0;

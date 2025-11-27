@@ -1005,8 +1005,7 @@ resize_screen(void)
 {
     need_resize_screen = FALSE;
     struct TermSize size = get_term_size();
-    setlinescols(size.lines, size.cols);
-    setupscreen(size.lines, size.cols);
+    scr_setup(size.lines, size.cols);
     if (CurrentTab)
         displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
