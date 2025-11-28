@@ -337,7 +337,6 @@ global int MarkAllPages init(FALSE);
 
 global struct auth_cookie* Auth_cookie init(0);
 
-global char ExtHalfdump init(FALSE);
 global char FollowLocale init(TRUE);
 global char UseContentCharset init(TRUE);
 global char SearchConv init(TRUE);

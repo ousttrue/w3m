@@ -655,8 +655,6 @@ struct param_ptr params10[] = {
         CMT_SYSTEM_CHARSET, (void*)&system_charset_str },
     { "follow_locale", P_CHARINT, PI_ONOFF, (void*)&FollowLocale,
         CMT_FOLLOW_LOCALE, NULL },
-    { "ext_halfdump", P_CHARINT, PI_ONOFF, (void*)&ExtHalfdump,
-        CMT_EXT_HALFDUMP, NULL },
     { "use_wide", P_CHARINT, PI_ONOFF, (void*)&WcOption.use_wide, CMT_USE_WIDE,
         NULL },
     { "use_combining", P_CHARINT, PI_ONOFF, (void*)&WcOption.use_combining,
