@@ -1,6 +1,6 @@
 #pragma once
 #include <wc/wc.h>
-#include <gcstr/gcstr.h>
+#include <gcstr.h>
 
 #define N_GRAPH_SYMBOL 32
 #define N_SYMBOL (N_GRAPH_SYMBOL + 14)

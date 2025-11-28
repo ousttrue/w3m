@@ -11,7 +11,7 @@
 #include "display.h"
 #include "indep.h"
 #include "history.h"
-#include <gcstr/gcstr.h>
+#include <gcstr.h>
 #include <string.h>
 
 #define STR_LEN 1024

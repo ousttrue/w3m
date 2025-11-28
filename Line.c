@@ -1,5 +1,5 @@
 #include "Line.h"
-#include <gcstr/gcstr.h>
+#include <gcstr.h>
 #include <stdlib.h>
 #include <string.h>
 

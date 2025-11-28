@@ -2,7 +2,7 @@
 #include "Url.h"
 #include "istream.h"
 #include <wc/wc.h>
-#include <gcstr/gcstr.h>
+#include <gcstr.h>
 
 struct Buffer;
 struct form_list;

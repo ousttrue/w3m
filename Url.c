@@ -22,7 +22,7 @@
 #include <sys/stat.h>
 
 #include "html.h"
-#include <gcstr/gcstr.h>
+#include <gcstr.h>
 #include "regex.h"
 
 const char* ssl_min_version = (NULL);

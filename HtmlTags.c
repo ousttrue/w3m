@@ -1,5 +1,5 @@
 #include "HtmlTags.h"
-#include <gcstr/gcstr.h>
+#include <gcstr.h>
 
 #define ARR_SZ(arr) (sizeof(arr) / sizeof(arr[0]))
 

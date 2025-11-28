@@ -1,7 +1,7 @@
 #include "mimetype.h"
 #include "textlist.h"
 #include "indep.h"
-#include <gcstr/gcstr.h>
+#include <gcstr.h>
 #include <string.h>
 
 #define USER_MIMETYPES "~/.mime.types"

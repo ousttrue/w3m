@@ -11,7 +11,7 @@
 #include "fm.h"
 #include "w3m_runtime.h"
 #include "indep.h"
-#include <gcstr/gcstr.h>
+#include <gcstr.h>
 #include <math.h>
 #include <strings.h>
 

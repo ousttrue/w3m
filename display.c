@@ -1,7 +1,7 @@
 #include "display.h"
 #include "Line.h"
 #include "Url.h"
-#include <gcstr/gcstr.h>
+#include <gcstr.h>
 #include <stdbool.h>
 #include "tui.h"
 #include "screen.h"

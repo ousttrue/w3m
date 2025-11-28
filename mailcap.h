@@ -1,5 +1,5 @@
 #pragma once
-#include <gcstr/gcstr.h>
+#include <gcstr.h>
 #include <stdbool.h>
 
 extern const char* mailcap_files;

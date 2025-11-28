@@ -18,7 +18,7 @@
 #include "history.h"
 #include "funcname1.h"
 #include "screen.h"
-#include <gcstr/gcstr.h>
+#include <gcstr.h>
 #include <stdio.h>
 #include <string.h>
 

@@ -6,7 +6,7 @@
 #include <sys/param.h>
 #include <sys/types.h>
 #include <stdlib.h>
-#include <gcstr/gcstr.h>
+#include <gcstr.h>
 #include <unistd.h>
 #include "entity.h"
 

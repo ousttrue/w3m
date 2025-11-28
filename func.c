@@ -6,7 +6,7 @@
 #include "display.h"
 #include "keybind.h"
 
-#include <gcstr/gcstr.h>
+#include <gcstr.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>

@@ -7,7 +7,7 @@
 #include "buffer.h"
 #include "indep.h"
 #include <pwd.h>
-#include <gcstr/gcstr.h>
+#include <gcstr.h>
 #include "html.h"
 #include "local_cgi.h"
 

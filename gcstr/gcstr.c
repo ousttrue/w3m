@@ -2,6 +2,8 @@
 #include <math.h>
 #include <string.h>
 
+wc_ces InnerCharset = WC_CES_WTF; /* Don't change */
+
 #define SP_NORMAL 0
 #define SP_PREC 1
 #define SP_PREC2 2
@@ -219,7 +221,7 @@ bool matchattr(const char* p, const char* attr, int len, Str* value)
     return 0;
 }
 
-const char* remove_space(const char* str)
+Str remove_space(const char* str)
 {
     const char *p, *q;
     for (p = str; *p && IS_SPACE(*p); p++)
@@ -229,8 +231,8 @@ const char* remove_space(const char* str)
     for (; q > p && IS_SPACE(*(q - 1)); q--)
         ;
     if (*q != '\0')
-        return Strnew_charp_n(p, q - p)->ptr;
-    return p;
+        return Strnew_charp_n(p, q - p);
+    return Strnew_charp(p);
 }
 
 Str mybasename(const char* s)

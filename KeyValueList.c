@@ -1,6 +1,6 @@
 #include "KeyValueList.h"
 #include <strings.h>
-#include <gcstr/gcstr.h>
+#include <gcstr.h>
 #include "indep.h"
 // #include "parsetag.h"
 // #include <string.h>

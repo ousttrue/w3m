@@ -9,7 +9,7 @@ typedef struct dirent Directory;
 typedef struct direct Directory;
 #endif /* not HAVE_DIRENT_H */
 #include <sys/stat.h>
-#include <gcstr/gcstr.h>
+#include <gcstr.h>
 
 #ifndef S_IFMT
 #define S_IFMT 0170000

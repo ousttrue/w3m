@@ -1,7 +1,7 @@
 
 #include <stdlib.h>
 #include <ctype.h>
-#include <gcstr/gcstr.h>
+#include <gcstr.h>
 #include <string.h>
 
 #include "wc.h"

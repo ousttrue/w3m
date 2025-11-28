@@ -7,7 +7,7 @@
 #include "indep.h"
 #include "buffer.h"
 #include "HttpRequest.h"
-#include <gcstr/gcstr.h>
+#include <gcstr.h>
 #include <string.h>
 #include "fm.h"
 

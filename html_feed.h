@@ -2,7 +2,7 @@
 #include "Line.h"
 #include "anchor.h"
 #include "textlist.h"
-#include <gcstr/gcstr.h>
+#include <gcstr.h>
 
 #define RB_STACK_SIZE 10
 #define TAG_STACK_SIZE 10

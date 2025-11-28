@@ -12,7 +12,7 @@
 #include "w3m_runtime.h"
 #include "html.h"
 #include "indep.h"
-#include <gcstr/gcstr.h>
+#include <gcstr.h>
 #include <stdio.h>
 #include <pwd.h>
 #include <signal.h>

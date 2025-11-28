@@ -12,7 +12,7 @@
 #include "fm.h"
 
 #include <wc/wtf.h>
-#include <gcstr/gcstr.h>
+#include <gcstr.h>
 #include <stdio.h>
 #include <signal.h>
 #include <stdlib.h>

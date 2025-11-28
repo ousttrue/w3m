@@ -7,7 +7,7 @@
 #include "indep.h"
 #include "buffer.h"
 #include <sys/stat.h>
-#include <gcstr/gcstr.h>
+#include <gcstr.h>
 
 int UseHistory = TRUE;
 int URLHistSize = 100;

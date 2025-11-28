@@ -8,7 +8,7 @@
 #include "w3m_runtime.h"
 #include "indep.h"
 #include "HttpRequest.h"
-#include <gcstr/gcstr.h>
+#include <gcstr.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>

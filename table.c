@@ -11,7 +11,7 @@
 #include "html.h"
 #include "HtmlTag.h"
 #include "indep.h"
-#include <gcstr/gcstr.h>
+#include <gcstr.h>
 #include <sys/types.h>
 #include <stdio.h>
 #include <string.h>

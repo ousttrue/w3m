@@ -19,7 +19,7 @@
 #include <wc/ucs.h>
 #include "regex.h"
 #include "config.h"
-#include <gcstr/gcstr.h>
+#include <gcstr.h>
 
 #ifndef NULL
 #define NULL 0

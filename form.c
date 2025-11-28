@@ -16,7 +16,7 @@
 #include "w3m_runtime.h"
 #include "KeyValueList.h"
 #include "HtmlTag.h"
-#include <gcstr/gcstr.h>
+#include <gcstr.h>
 #include <unistd.h>
 #include "local_cgi.h"
 #include "regex.h"

@@ -10,7 +10,7 @@
 #include "w3m_runtime.h"
 #include "HtmlTag.h"
 #include "indep.h"
-#include <gcstr/gcstr.h>
+#include <gcstr.h>
 #include <signal.h>
 #include <setjmp.h>
 
@@ -100,7 +100,7 @@ newFrame(struct HtmlTag* tag, struct Buffer* buf)
     body->baseURL = baseURL(buf);
     if (tag) {
         if (parsedtag_get_value(tag, ATTR_SRC, &p))
-            body->url = url_encode(remove_space(p), body->baseURL,
+            body->url = url_encode(remove_space(p)->ptr, body->baseURL,
                 buf->document_charset);
         if (parsedtag_get_value(tag, ATTR_NAME, &p) && *p != '_')
             body->name = url_quote_conv(p, buf->document_charset);
@@ -622,7 +622,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
                         case HTML_BASE:
                             /* "BASE" is prohibit tag */
                             if (parsedtag_get_value(tag, ATTR_HREF, &q)) {
-                                q = url_encode(remove_space(q), NULL, charset);
+                                q = url_encode(remove_space(q)->ptr, NULL, charset);
                                 parseURL(q, &base, NULL);
                             }
                             if (parsedtag_get_value(tag, ATTR_TARGET, &q)) {
@@ -744,7 +744,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
                             case ATTR_ACTION:
                                 if (!tag->value[j])
                                     break;
-                                tag->value[j] = url_encode(remove_space(tag->value[j]),
+                                tag->value[j] = url_encode(remove_space(tag->value[j])->ptr,
                                     &base, charset);
                                 tag->need_reconstruct = TRUE;
                                 parseURL2(tag->value[j], &url, &base);

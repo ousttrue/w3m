@@ -49,7 +49,7 @@
 #include <fcntl.h>
 #include <sys/wait.h>
 #include <time.h>
-#include <gcstr/gcstr.h>
+#include <gcstr.h>
 #include <locale.h>
 
 unsigned char last_key = 0;

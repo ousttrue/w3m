@@ -1,5 +1,5 @@
 #include "term_entry.h"
-#include <gcstr/gcstr.h>
+#include <gcstr.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

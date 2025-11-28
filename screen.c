@@ -2,7 +2,7 @@
 #include "symbol.h"
 #include "term_entry.h"
 #include "w3m_runtime.h"
-#include <gcstr/gcstr.h>
+#include <gcstr.h>
 #include <stdlib.h>
 #include <wc/wc.h>
 #include <wc/wtf.h>

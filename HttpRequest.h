@@ -1,7 +1,7 @@
 #pragma once
 #include "Url.h"
 #include "textlist.h"
-#include <gcstr/gcstr.h>
+#include <gcstr.h>
 #include <stdbool.h>
 
 typedef int _bool;

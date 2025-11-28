@@ -1,5 +1,5 @@
 #pragma once
-#include <gcstr/gcstr.h>
+#include <gcstr.h>
 #include <time.h>
 #include "Url.h"
 #include "textlist.h"

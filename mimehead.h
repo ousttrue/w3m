@@ -1,5 +1,5 @@
 #pragma once
-#include <gcstr/gcstr.h>
+#include <gcstr.h>
 #include <wc/wc.h>
 
 Str decodeB(char** ww);

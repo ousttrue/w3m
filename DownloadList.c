@@ -8,7 +8,7 @@
 // ldDL
 #include "funcheader.h"
 
-#include <gcstr/gcstr.h>
+#include <gcstr.h>
 #include <signal.h>
 #include <string.h>
 #include <time.h>

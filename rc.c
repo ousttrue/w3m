@@ -22,7 +22,7 @@
 #include "image.h"
 #include "w3m_runtime.h"
 #include <fcntl.h>
-#include <gcstr/gcstr.h>
+#include <gcstr.h>
 #include "indep.h"
 #include <stdio.h>
 #include <errno.h>

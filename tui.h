@@ -1,6 +1,6 @@
 #pragma once
 #include <stdbool.h>
-#include <gcstr/gcstr.h>
+#include <gcstr.h>
 
 extern int highIntensityColors;
 extern int QuietMessage;

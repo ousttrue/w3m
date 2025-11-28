@@ -1,6 +1,6 @@
 #include "HtmlTag.h"
 #include "fm.h"
-#include <gcstr/gcstr.h>
+#include <gcstr.h>
 #include <string.h>
 #include "indep.h"
 
