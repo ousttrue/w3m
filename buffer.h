@@ -237,5 +237,5 @@ char* last_modified(struct Buffer* buf);
 char* guess_save_name(struct Buffer* buf, char* file);
 void saveBufferInfo(void);
 wc_ces urlCharset(struct Buffer* buf, const char* url);
-struct parsed_tagarg;
-void follow_map(struct parsed_tagarg* arg);
+struct KeyValueList;
+void follow_map(struct KeyValueList* arg);

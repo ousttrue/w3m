@@ -1,4 +1,5 @@
 #pragma once
+#include <stdio.h>
 
 extern int no_rc_dir;
 
@@ -7,8 +8,8 @@ void show_params(FILE* fp);
 int str_to_bool(char* value, int old);
 char* confFile(char* base);
 char* rcFile(char* base);
-struct parsed_tagarg;
-void panel_set_option(struct parsed_tagarg*);
+struct KeyValueList;
+void panel_set_option(struct KeyValueList*);
 int set_param_option(char* option);
 void sync_with_option(void);
 char* get_param_option(char* name);

@@ -13,7 +13,7 @@
 #include "regex.h"
 #include "indep.h"
 #include "dns_order.h"
-#include "parsetag.h"
+#include "KeyValueList.h"
 #include <gcstr/myctype.h>
 #include <time.h>
 #include <sys/socket.h>
@@ -618,7 +618,7 @@ void initCookie(void)
     check_expired_cookies();
 }
 
-void set_cookie_flag(struct parsed_tagarg* arg)
+void set_cookie_flag(struct KeyValueList* arg)
 {
     int n, v;
     struct cookie* p;

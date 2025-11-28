@@ -1,19 +1,20 @@
-/* $Id: parsetag.c,v 1.4 2001/11/20 17:49:23 ukai Exp $ */
+#include "KeyValueList.h"
+#include <strings.h>
 #include <gcstr/gcstr.h>
 #include "indep.h"
-#include "parsetag.h"
-#include <string.h>
+// #include "parsetag.h"
+// #include <string.h>
 
-char* tag_get_value(struct parsed_tagarg* t, char* arg)
+const char* tag_get_value(struct KeyValueList* t, const char* arg)
 {
     for (; t; t = t->next) {
         if (!strcasecmp(t->arg, arg))
             return t->value;
     }
-    return NULL;
+    return 0;
 }
 
-int tag_exists(struct parsed_tagarg* t, char* arg)
+bool tag_exists(struct KeyValueList* t, const char* arg)
 {
     for (; t; t = t->next) {
         if (!strcasecmp(t->arg, arg))
@@ -22,16 +23,15 @@ int tag_exists(struct parsed_tagarg* t, char* arg)
     return 0;
 }
 
-struct parsed_tagarg*
-cgistr2tagarg(char* cgistr)
+struct KeyValueList*
+cgistr2tagarg(const char* cgistr)
 {
     Str tag;
     Str value;
-    struct parsed_tagarg *t0, *t;
-
-    t = t0 = NULL;
+    struct KeyValueList* t0 = 0;
+    struct KeyValueList* t = 0;
     do {
-        t = New(struct parsed_tagarg);
+        t = New(struct KeyValueList);
         t->next = t0;
         t0 = t;
         tag = Strnew();

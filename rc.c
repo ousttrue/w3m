@@ -26,7 +26,7 @@
 #include "indep.h"
 #include <stdio.h>
 #include <errno.h>
-#include "parsetag.h"
+#include "KeyValueList.h"
 #include "local_cgi.h"
 #include "regex.h"
 #include <stdlib.h>
@@ -1418,7 +1418,7 @@ load_option_panel(void)
     return buf;
 }
 
-void panel_set_option(struct parsed_tagarg* arg)
+void panel_set_option(struct KeyValueList* arg)
 {
     FILE* f = NULL;
     char* p;

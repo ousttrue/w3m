@@ -10,7 +10,7 @@
 #include "file.h"
 #include "ftp.h"
 #include "news.h"
-#include "parsetag.h"
+#include "KeyValueList.h"
 #include "file.h"
 #include "func.h"
 #include "etc.h"
@@ -3629,7 +3629,7 @@ DEFUN(pginfo, INFO, "Display information about the current document")
     cmd_loadBuffer(buf, BP_NORMAL, LB_INFO);
 }
 
-void follow_map(struct parsed_tagarg* arg)
+void follow_map(struct KeyValueList* arg)
 {
     char* name = tag_get_value(arg, "link");
 
@@ -4146,18 +4146,18 @@ _docCSet(wc_ces charset)
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-void change_charset(struct parsed_tagarg* arg)
+void change_charset(struct KeyValueList* arg)
 {
     struct Buffer* buf = Currentbuf->linkBuffer[LB_N_INFO];
-    wc_ces charset;
-
     if (buf == NULL)
         return;
+
     delBuffer(Currentbuf);
     Currentbuf = buf;
     if (Currentbuf->bufferprop & BP_INTERNAL)
         return;
-    charset = Currentbuf->document_charset;
+
+    wc_ces charset = Currentbuf->document_charset;
     for (; arg; arg = arg->next) {
         if (!strcmp(arg->arg, "charset"))
             charset = atoi(arg->value);

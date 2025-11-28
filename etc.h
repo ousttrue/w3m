@@ -23,10 +23,9 @@ Str myEditor(char* cmd, char* file, int line);
 #define TMPF_HIST 5
 #define MAX_TMPF_TYPE 6
 
-
 Str tmpfname(int type, const char* ext);
 
 int is_localhost(const char* host);
 char* file_to_url(char* file);
-struct parsed_tagarg;
-void change_charset(struct parsed_tagarg* arg);
+struct KeyValueList;
+void change_charset(struct KeyValueList* arg);

@@ -3,7 +3,7 @@
 #include "indep.h"
 #include "buffer.h"
 #include "terms.h"
-#include "parsetag.h"
+#include "KeyValueList.h"
 
 // ldDL
 #include "funcheader.h"
@@ -156,7 +156,7 @@ DownloadListBuffer(void)
     return loadHTMLString(src);
 }
 
-void download_action(struct parsed_tagarg* arg)
+void download_action(struct KeyValueList* arg)
 {
     struct DownloadList* d;
     pid_t pid;

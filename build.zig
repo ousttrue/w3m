@@ -55,7 +55,7 @@ const w3m_srcs = [_][]const u8{
 
     "indep.c",
     "textlist.c",
-    "parsetag.c",
+    "KeyValueList.c",
 
     "version.c",
 };

@@ -14,7 +14,7 @@
 #include "http_auth.h"
 #include "cookie.h"
 #include "w3m_runtime.h"
-#include "parsetag.h"
+#include "KeyValueList.h"
 #include "parsetagx.h"
 #include <gcstr/gcstr.h>
 #include <unistd.h>
@@ -29,10 +29,9 @@ extern FormSelectOption* select_option;
 extern int max_select;
 #include "menu.h"
 
-/* *INDENT-OFF* */
 struct {
-    char* action;
-    void (*rout)(struct parsed_tagarg*);
+    const char* action;
+    void (*rout)(struct KeyValueList*);
 } internal_action[] = {
     { "map", follow_map },
     { "option", panel_set_option },
@@ -42,7 +41,6 @@ struct {
     { "none", NULL },
     { NULL, NULL },
 };
-/* *INDENT-ON* */
 
 struct form_list*
 newFormList(char* action, char* method, char* charset, char* enctype,

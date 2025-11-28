@@ -1,7 +1,7 @@
 #include "mailcap.h"
 #include "textlist.h"
 #include "indep.h"
-#include "parsetag.h"
+#include "KeyValueList.h"
 #include "local_cgi.h"
 #include <stdio.h>
 #include <errno.h>
