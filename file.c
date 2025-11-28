@@ -1642,7 +1642,6 @@ void flushline(struct html_feed_environ* h_env, struct readbuffer* obuf, int ind
     int force, int width)
 {
     TextLineList* buf = h_env->buf;
-    FILE* f = h_env->f;
     Str line = obuf->line, pass = NULL;
     char *hidden_anchor = NULL, *hidden_img = NULL, *hidden_bold = NULL,
          *hidden_under = NULL, *hidden_italic = NULL, *hidden_strike = NULL,
@@ -1765,10 +1764,6 @@ void flushline(struct html_feed_environ* h_env, struct readbuffer* obuf, int ind
             h_env->maxlimit = lbuf->pos;
         if (buf)
             pushTextLine(buf, lbuf);
-        else if (f) {
-            Strfputs(Str_conv_to_halfdump(lbuf->line), f);
-            fputc('\n', f);
-        }
         if (obuf->flag & RB_SPECIAL || obuf->flag & RB_NFLUSHED)
             h_env->blank_lines = 0;
         else
@@ -1777,11 +1772,9 @@ void flushline(struct html_feed_environ* h_env, struct readbuffer* obuf, int ind
         char *p = line->ptr, *q;
         Str tmp = Strnew(), tmp2 = Strnew();
 
-#define APPEND(str)                    \
-    if (buf)                           \
-        appendTextLine(buf, (str), 0); \
-    else if (f)                        \
-    Strfputs((str), f)
+#define APPEND(str) \
+    if (buf)        \
+        appendTextLine(buf, (str), 0);
 
         while (*p) {
             q = p;
@@ -5454,7 +5447,6 @@ void init_henv(struct html_feed_environ* h_env, struct readbuffer* obuf,
     set_breakpoint(obuf, 0);
 
     h_env->buf = buf;
-    h_env->f = NULL;
     h_env->obuf = obuf;
     h_env->tagbuf = Strnew();
     h_env->limit = limit;
@@ -5569,11 +5561,6 @@ print_internal_information(struct html_feed_environ* henv)
 
     if (henv->buf)
         appendTextLineList(henv->buf, tl);
-    else if (henv->f) {
-        TextLineListItem* p;
-        for (p = tl->first; p; p = p->next)
-            fprintf(henv->f, "%s\n", Str_conv_to_halfdump(p->ptr->line)->ptr);
-    }
 }
 
 void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int internal)
