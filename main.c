@@ -259,7 +259,7 @@ make_optional_header_string(char* s)
     return hs;
 }
 
-int w3m_main(int argc, char** argv)
+int w3m_parse_arg(int argc, char** argv)
 {
     struct Buffer* newbuf = NULL;
     char* p;
@@ -739,6 +739,12 @@ int w3m_main(int argc, char** argv)
     if (line_str) {
         _goLine(line_str);
     }
+
+    return TRUE;;
+}
+
+int w3m_loop()
+{
     for (;;) {
         if (add_download_list) {
             add_download_list = FALSE;
@@ -797,7 +803,7 @@ int w3m_main(int argc, char** argv)
                     resize_screen();
             } while (tty_sleep_till_anykey(1, 0) <= 0);
         }
-        c = getch();
+        int c = getch();
         last_key = c;
         if (CurrentAlarm->sec > 0) {
             alarm(0);
@@ -3583,7 +3589,11 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
 /* option setting */
 DEFUN(ldOpt, OPTIONS, "Display options setting panel")
 {
-    cmd_loadBuffer(load_option_panel(), BP_NO_URL, LB_NOLINK);
+    Str src = load_option_panel();
+    struct Buffer* buf = loadHTMLString(src);
+    if (buf)
+        buf->document_charset = WC_CES_US_ASCII;
+    cmd_loadBuffer(buf, BP_NO_URL, LB_NOLINK);
 }
 
 /* set an option */

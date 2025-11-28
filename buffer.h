@@ -233,7 +233,6 @@ void addMultirowsForm(struct Buffer* buf, AnchorList* al);
 void addMultirowsImg(struct Buffer* buf, AnchorList* al);
 char* getAnchorText(struct Buffer* buf, AnchorList* al, Anchor* a);
 struct Buffer* link_list_panel(struct Buffer* buf);
-struct Buffer* load_option_panel(void);
 char* last_modified(struct Buffer* buf);
 char* guess_save_name(struct Buffer* buf, char* file);
 void saveBufferInfo(void);

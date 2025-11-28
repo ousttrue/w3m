@@ -1,5 +1,6 @@
 #pragma once
 #include <stdio.h>
+#include <gcstr.h>
 
 extern int no_rc_dir;
 
@@ -16,3 +17,4 @@ char* get_param_option(char* name);
 char* auxbinFile(char* base);
 void init_tmp(void);
 char* etcFile(char* base);
+Str load_option_panel(void);
