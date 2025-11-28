@@ -48,3 +48,10 @@ static inline void SKIP_NON_BLANKS(char** p)
 #define IS_ENDT(c) (IS_ENDL(c) || (c) == ';')
 
 bool non_null(const char* s);
+
+bool is_html_quote(int c);
+bool is_shell_unsafe(int c);
+bool is_url_quote(int c);
+bool is_file_quote(int c);
+bool is_url_unsafe(int c);
+const char* html_quote_char(int c);
