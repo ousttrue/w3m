@@ -63,7 +63,6 @@ struct readbuffer {
 struct html_feed_environ {
     struct readbuffer* obuf;
     TextLineList* buf;
-    // FILE* f;
     Str tagbuf;
     int limit;
     int maxlimit;

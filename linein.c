@@ -816,7 +816,7 @@ doComplete(Str ifn, int* status, int next)
                 CompleteBuf = escape_spaces(CompleteBuf);
             return CompleteBuf;
         }
-        fn = lastFileName(ifn->ptr);
+        fn = lastFileName(ifn->ptr)->ptr;
         fl = strlen(fn);
         CFileName = Strnew();
         for (;;) {

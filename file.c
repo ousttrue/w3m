@@ -6485,7 +6485,7 @@ doExternal(struct URLFile uf, char* type, struct Buffer* defaultbuf)
     }
     if (buf && buf != NO_BUFFER) {
         if ((buf->buffername == NULL || buf->buffername[0] == '\0') && buf->filename)
-            buf->buffername = conv_from_system(lastFileName(buf->filename));
+            buf->buffername = conv_from_system(lastFileName(buf->filename)->ptr);
         buf->edit = mcap->edit;
         buf->mailcap = mcap;
     }

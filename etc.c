@@ -124,20 +124,6 @@ int gethtmlcmd(char** s)
     return cmd;
 }
 
-char* lastFileName(char* path)
-{
-    char *p, *q;
-
-    p = q = path;
-    while (*p != '\0') {
-        if (*p == '/')
-            q = p + 1;
-        p++;
-    }
-
-    return allocStr(q, -1);
-}
-
 #ifndef HAVE_STRERROR
 char* strerror(int errno)
 {

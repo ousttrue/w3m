@@ -28,6 +28,5 @@ Str tmpfname(int type, const char* ext);
 
 int is_localhost(const char* host);
 char* file_to_url(char* file);
-char* lastFileName(char* path);
 struct parsed_tagarg;
 void change_charset(struct parsed_tagarg* arg);

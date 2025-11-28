@@ -291,5 +291,14 @@ Str unescape_spaces(Str s)
     return s;
 }
 
-
-
+Str lastFileName(const char* path)
+{
+    const char* p = path;
+    const char* q = path;
+    while (*p != '\0') {
+        if (*p == '/')
+            q = p + 1;
+        p++;
+    }
+    return Strnew_charp(q);
+}
