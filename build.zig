@@ -20,6 +20,10 @@ const w3m_srcs = [_][]const u8{
     "screen.c",
     "term_entry.c",
 
+    "HtmlTag.c",
+    "HtmlTags.c",
+    "HtmlTagAttributes.c",
+
     "main.c",
     "file.c",
     "buffer.c",
@@ -49,7 +53,6 @@ const w3m_srcs = [_][]const u8{
     "history.c",
 
     "anchor.c",
-    "HtmlTag.c",
     "tagtable.c",
     "istream.c",
 

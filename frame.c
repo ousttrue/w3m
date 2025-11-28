@@ -292,12 +292,11 @@ popFrameTree(struct frameset_queue** fqpp)
 }
 
 void resetFrameElement(union frameset_element* f_element,
-    struct Buffer* buf, char* referer, FormList* request)
+    struct Buffer* buf, char* referer, struct form_list* request)
 {
-    char* f_name;
     struct frame_body* f_body;
 
-    f_name = f_element->element->name;
+    const char* f_name = f_element->element->name;
     if (buf->frameset) {
         /* frame cascade */
         deleteFrameSetElement(*f_element);
@@ -749,9 +748,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
                                     &base, charset);
                                 tag->need_reconstruct = TRUE;
                                 parseURL2(tag->value[j], &url, &base);
-                                if (url.scheme == SCM_UNKNOWN ||
-                                    url.scheme == SCM_MAILTO ||
-                                    url.scheme == SCM_MISSING)
+                                if (url.scheme == SCM_UNKNOWN || url.scheme == SCM_MAILTO || url.scheme == SCM_MISSING)
                                     break;
                                 a_target |= 1;
                                 tag->value[j] = parsedURL2Str(&url)->ptr;

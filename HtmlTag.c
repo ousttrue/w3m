@@ -1,9 +1,8 @@
 #include "HtmlTag.h"
 #include "fm.h"
 #include <gcstr/gcstr.h>
+#include <string.h>
 #include "indep.h"
-
-#include "html.c"
 
 /* parse HTML tag */
 
@@ -106,19 +105,14 @@ toVAlign(char* oval, void* valign)
 extern Hash_si tagtable;
 #define MAX_TAG_LEN 64
 
-struct HtmlTag*
-parse_tag(char** s, int internal)
+struct HtmlTag* parse_tag(const char** s, bool internal)
 {
-    struct HtmlTag* tag = NULL;
-    int tag_id;
-    char tagname[MAX_TAG_LEN], attrname[MAX_TAG_LEN];
-    char *p, *q;
-    int i, attr_id = 0, nattr;
+    char tagname[MAX_TAG_LEN];
+    tagname[0] = '\0';
+    char* p = tagname;
 
     /* Parse tag name */
-    tagname[0] = '\0';
-    q = (*s) + 1;
-    p = tagname;
+    const char* q = (*s) + 1;
     if (*q == '/') {
         *(p++) = *(q++);
         SKIP_BLANKS(&q);
@@ -131,8 +125,9 @@ parse_tag(char** s, int internal)
     while (*q && !IS_SPACE(*q) && !(tagname[0] != '/' && *q == '/') && *q != '>')
         q++;
 
-    tag_id = getHash_si(&tagtable, tagname, HTML_UNKNOWN);
+    enum HtmlTags tag_id = getHash_si(&tagtable, tagname, HTML_UNKNOWN);
 
+    struct HtmlTag* tag = NULL;
     if (tag_id == HTML_UNKNOWN || (!internal && TagMAP[tag_id].flag & TFLG_INT))
         goto skip_parse_tagarg;
 
@@ -140,17 +135,20 @@ parse_tag(char** s, int internal)
     bzero(tag, sizeof(struct HtmlTag));
     tag->tagid = tag_id;
 
+    int nattr;
     if ((nattr = TagMAP[tag_id].max_attribute) > 0) {
-        tag->attrid = NewAtom_N(unsigned char, nattr);
+        tag->attrid = NewAtom_N(enum HtmlTagAttributes, nattr);
         tag->value = New_N(char*, nattr);
-        tag->map = NewAtom_N(unsigned char, MAX_TAGATTR);
-        memset(tag->map, MAX_TAGATTR, MAX_TAGATTR);
-        memset(tag->attrid, ATTR_UNKNOWN, nattr);
-        for (i = 0; i < nattr; i++)
+        tag->map = NewAtom_N(enum HtmlTagAttributes, MAX_TAGATTR);
+        memset(tag->map, MAX_TAGATTR, MAX_TAGATTR * sizeof(enum HtmlTagAttributes));
+        memset(tag->attrid, ATTR_UNKNOWN, nattr * sizeof(enum HtmlTagAttributes));
+        for (int i = 0; i < nattr; i++)
             tag->map[TagMAP[tag_id].accept_attribute[i]] = i;
     }
 
     /* Parse tag arguments */
+    char attrname[MAX_TAG_LEN];
+    // int i, attr_id = 0,
     SKIP_BLANKS(&q);
     while (1) {
         Str value = NULL, value_tmp = NULL;
@@ -199,6 +197,9 @@ parse_tag(char** s, int internal)
                 }
             }
         }
+
+        int i;
+        enum HtmlTagAttributes attr_id;
         for (i = 0; i < nattr; i++) {
             if ((tag)->attrid[i] == ATTR_UNKNOWN && strcmp(AttrMAP[TagMAP[tag_id].accept_attribute[i]].name, attrname) == 0) {
                 attr_id = TagMAP[tag_id].accept_attribute[i];

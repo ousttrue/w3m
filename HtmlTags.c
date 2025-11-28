@@ -1,72 +1,70 @@
-/* $Id: html.c,v 1.33 2012/05/22 09:45:56 inu Exp $ */
-#include "html.h"
+#include "HtmlTags.h"
+#include <gcstr/gcstr.h>
 
 #define ARR_SZ(arr) (sizeof(arr) / sizeof(arr[0]))
 
-/* Define HTML Tag Infomation Table */
-
 #define ATTR_CORE ATTR_ID
-unsigned char ALST_ID[] = { ATTR_CORE };
-unsigned char ALST_A[] = {
+enum HtmlTagAttributes ALST_ID[] = { ATTR_CORE };
+enum HtmlTagAttributes ALST_A[] = {
     ATTR_NAME, ATTR_HREF, ATTR_REL, ATTR_CHARSET, ATTR_TARGET, ATTR_HSEQ,
     ATTR_REFERER,
     ATTR_FRAMENAME, ATTR_TITLE, ATTR_ACCESSKEY, ATTR_CORE
 };
-unsigned char ALST_P[] = { ATTR_ALIGN, ATTR_CORE };
-unsigned char ALST_UL[] = { ATTR_START, ATTR_TYPE, ATTR_CORE };
-unsigned char ALST_LI[] = { ATTR_TYPE, ATTR_VALUE, ATTR_CORE };
-unsigned char ALST_HR[] = { ATTR_WIDTH, ATTR_ALIGN, ATTR_CORE };
-unsigned char ALST_LINK[] = { ATTR_HREF, ATTR_HSEQ, ATTR_REL, ATTR_REV,
+enum HtmlTagAttributes ALST_P[] = { ATTR_ALIGN, ATTR_CORE };
+enum HtmlTagAttributes ALST_UL[] = { ATTR_START, ATTR_TYPE, ATTR_CORE };
+enum HtmlTagAttributes ALST_LI[] = { ATTR_TYPE, ATTR_VALUE, ATTR_CORE };
+enum HtmlTagAttributes ALST_HR[] = { ATTR_WIDTH, ATTR_ALIGN, ATTR_CORE };
+enum HtmlTagAttributes ALST_LINK[] = { ATTR_HREF, ATTR_HSEQ, ATTR_REL, ATTR_REV,
     ATTR_TITLE, ATTR_TYPE, ATTR_CORE };
-unsigned char ALST_DL[] = { ATTR_COMPACT, ATTR_CORE };
-unsigned char ALST_PRE[] = { ATTR_FOR_TABLE, ATTR_CORE };
-unsigned char ALST_IMG[] = { ATTR_SRC, ATTR_ALT, ATTR_WIDTH, ATTR_HEIGHT, ATTR_ALIGN, ATTR_USEMAP,
+enum HtmlTagAttributes ALST_DL[] = { ATTR_COMPACT, ATTR_CORE };
+enum HtmlTagAttributes ALST_PRE[] = { ATTR_FOR_TABLE, ATTR_CORE };
+enum HtmlTagAttributes ALST_IMG[] = { ATTR_SRC, ATTR_ALT, ATTR_WIDTH, ATTR_HEIGHT, ATTR_ALIGN, ATTR_USEMAP,
     ATTR_ISMAP, ATTR_TITLE, ATTR_PRE_INT, ATTR_CORE };
-unsigned char ALST_TABLE[] = { ATTR_BORDER, ATTR_WIDTH, ATTR_HBORDER, ATTR_CELLSPACING,
+enum HtmlTagAttributes ALST_TABLE[] = { ATTR_BORDER, ATTR_WIDTH, ATTR_HBORDER, ATTR_CELLSPACING,
     ATTR_CELLPADDING, ATTR_VSPACE, ATTR_CORE };
-unsigned char ALST_DOCTYPE[] = { ATTR_PUBLIC }; /* only (html and) public should be checked */
-unsigned char ALST_META[] = { ATTR_HTTP_EQUIV, ATTR_CONTENT, ATTR_CHARSET, ATTR_CORE };
-unsigned char ALST_FRAME[] = { ATTR_SRC, ATTR_NAME, ATTR_CORE };
-unsigned char ALST_FRAMESET[] = { ATTR_COLS, ATTR_ROWS, ATTR_CORE };
-unsigned char ALST_NOFRAMES[] = { ATTR_CORE };
-unsigned char ALST_FORM[] = { ATTR_METHOD, ATTR_ACTION, ATTR_CHARSET, ATTR_ACCEPT_CHARSET,
+enum HtmlTagAttributes ALST_DOCTYPE[] = { ATTR_PUBLIC }; /* only (html and) public should be checked */
+enum HtmlTagAttributes ALST_META[] = { ATTR_HTTP_EQUIV, ATTR_CONTENT, ATTR_CHARSET, ATTR_CORE };
+enum HtmlTagAttributes ALST_FRAME[] = { ATTR_SRC, ATTR_NAME, ATTR_CORE };
+enum HtmlTagAttributes ALST_FRAMESET[] = { ATTR_COLS, ATTR_ROWS, ATTR_CORE };
+enum HtmlTagAttributes ALST_NOFRAMES[] = { ATTR_CORE };
+enum HtmlTagAttributes ALST_FORM[] = { ATTR_METHOD, ATTR_ACTION, ATTR_CHARSET, ATTR_ACCEPT_CHARSET,
     ATTR_ENCTYPE, ATTR_TARGET, ATTR_NAME, ATTR_CORE };
-unsigned char ALST_INPUT[] = { ATTR_TYPE, ATTR_VALUE, ATTR_NAME, ATTR_CHECKED, ATTR_ACCEPT, ATTR_SIZE,
+enum HtmlTagAttributes ALST_INPUT[] = { ATTR_TYPE, ATTR_VALUE, ATTR_NAME, ATTR_CHECKED, ATTR_ACCEPT, ATTR_SIZE,
     ATTR_MAXLENGTH, ATTR_ALT, ATTR_READONLY, ATTR_SRC, ATTR_WIDTH, ATTR_HEIGHT,
     ATTR_CORE };
-unsigned char ALST_BUTTON[] = { ATTR_TYPE, ATTR_VALUE, ATTR_NAME, ATTR_CORE };
-unsigned char ALST_TEXTAREA[] = { ATTR_COLS, ATTR_ROWS, ATTR_NAME, ATTR_READONLY, ATTR_CORE };
-unsigned char ALST_SELECT[] = { ATTR_NAME, ATTR_MULTIPLE, ATTR_CORE };
-unsigned char ALST_OPTION[] = { ATTR_VALUE, ATTR_LABEL, ATTR_SELECTED, ATTR_CORE };
-unsigned char ALST_ISINDEX[] = { ATTR_ACTION, ATTR_PROMPT, ATTR_CORE };
-unsigned char ALST_MAP[] = { ATTR_NAME, ATTR_CORE };
-unsigned char ALST_AREA[] = { ATTR_HREF, ATTR_TARGET, ATTR_ALT, ATTR_SHAPE, ATTR_COORDS, ATTR_CORE };
-unsigned char ALST_BASE[] = { ATTR_HREF, ATTR_TARGET, ATTR_CORE };
-unsigned char ALST_BODY[] = { ATTR_BACKGROUND, ATTR_CORE };
-unsigned char ALST_TR[] = { ATTR_ALIGN, ATTR_VALIGN, ATTR_CORE };
-unsigned char ALST_TD[] = { ATTR_COLSPAN, ATTR_ROWSPAN, ATTR_ALIGN, ATTR_VALIGN, ATTR_WIDTH,
+enum HtmlTagAttributes ALST_BUTTON[] = { ATTR_TYPE, ATTR_VALUE, ATTR_NAME, ATTR_CORE };
+enum HtmlTagAttributes ALST_TEXTAREA[] = { ATTR_COLS, ATTR_ROWS, ATTR_NAME, ATTR_READONLY, ATTR_CORE };
+enum HtmlTagAttributes ALST_SELECT[] = { ATTR_NAME, ATTR_MULTIPLE, ATTR_CORE };
+enum HtmlTagAttributes ALST_OPTION[] = { ATTR_VALUE, ATTR_LABEL, ATTR_SELECTED, ATTR_CORE };
+enum HtmlTagAttributes ALST_ISINDEX[] = { ATTR_ACTION, ATTR_PROMPT, ATTR_CORE };
+enum HtmlTagAttributes ALST_MAP[] = { ATTR_NAME, ATTR_CORE };
+enum HtmlTagAttributes ALST_AREA[] = { ATTR_HREF, ATTR_TARGET, ATTR_ALT, ATTR_SHAPE, ATTR_COORDS, ATTR_CORE };
+enum HtmlTagAttributes ALST_BASE[] = { ATTR_HREF, ATTR_TARGET, ATTR_CORE };
+enum HtmlTagAttributes ALST_BODY[] = { ATTR_BACKGROUND, ATTR_CORE };
+enum HtmlTagAttributes ALST_TR[] = { ATTR_ALIGN, ATTR_VALIGN, ATTR_CORE };
+enum HtmlTagAttributes ALST_TD[] = { ATTR_COLSPAN, ATTR_ROWSPAN, ATTR_ALIGN, ATTR_VALIGN, ATTR_WIDTH,
     ATTR_NOWRAP, ATTR_CORE };
-unsigned char ALST_BGSOUND[] = { ATTR_SRC, ATTR_CORE };
-unsigned char ALST_APPLET[] = { ATTR_ARCHIVE, ATTR_CORE };
-unsigned char ALST_EMBED[] = { ATTR_SRC, ATTR_CORE };
+enum HtmlTagAttributes ALST_BGSOUND[] = { ATTR_SRC, ATTR_CORE };
+enum HtmlTagAttributes ALST_APPLET[] = { ATTR_ARCHIVE, ATTR_CORE };
+enum HtmlTagAttributes ALST_EMBED[] = { ATTR_SRC, ATTR_CORE };
 
-unsigned char ALST_TEXTAREA_INT[] = { ATTR_TEXTAREANUMBER };
-unsigned char ALST_SELECT_INT[] = { ATTR_SELECTNUMBER };
-unsigned char ALST_TABLE_ALT[] = { ATTR_TID };
-unsigned char ALST_SYMBOL[] = { ATTR_TYPE };
-unsigned char ALST_TITLE_ALT[] = { ATTR_TITLE };
-unsigned char ALST_FORM_INT[] = { ATTR_METHOD, ATTR_ACTION, ATTR_CHARSET, ATTR_ACCEPT_CHARSET,
+enum HtmlTagAttributes ALST_TEXTAREA_INT[] = { ATTR_TEXTAREANUMBER };
+enum HtmlTagAttributes ALST_SELECT_INT[] = { ATTR_SELECTNUMBER };
+enum HtmlTagAttributes ALST_TABLE_ALT[] = { ATTR_TID };
+enum HtmlTagAttributes ALST_SYMBOL[] = { ATTR_TYPE };
+enum HtmlTagAttributes ALST_TITLE_ALT[] = { ATTR_TITLE };
+enum HtmlTagAttributes ALST_FORM_INT[] = { ATTR_METHOD, ATTR_ACTION, ATTR_CHARSET, ATTR_ACCEPT_CHARSET,
     ATTR_ENCTYPE, ATTR_TARGET, ATTR_NAME, ATTR_FID };
-unsigned char ALST_INPUT_ALT[] = { ATTR_HSEQ, ATTR_FID, ATTR_NO_EFFECT, ATTR_TYPE, ATTR_NAME, ATTR_VALUE,
+enum HtmlTagAttributes ALST_INPUT_ALT[] = { ATTR_HSEQ, ATTR_FID, ATTR_NO_EFFECT, ATTR_TYPE, ATTR_NAME, ATTR_VALUE,
     ATTR_CHECKED, ATTR_ACCEPT, ATTR_SIZE, ATTR_MAXLENGTH, ATTR_READONLY,
     ATTR_TEXTAREANUMBER,
     ATTR_SELECTNUMBER, ATTR_ROWS, ATTR_TOP_MARGIN, ATTR_BOTTOM_MARGIN };
-unsigned char ALST_IMG_ALT[] = { ATTR_SRC, ATTR_WIDTH, ATTR_HEIGHT, ATTR_USEMAP, ATTR_ISMAP, ATTR_HSEQ,
+enum HtmlTagAttributes ALST_IMG_ALT[] = { ATTR_SRC, ATTR_WIDTH, ATTR_HEIGHT, ATTR_USEMAP, ATTR_ISMAP, ATTR_HSEQ,
     ATTR_XOFFSET, ATTR_YOFFSET, ATTR_TOP_MARGIN, ATTR_BOTTOM_MARGIN,
     ATTR_TITLE };
-unsigned char ALST_NOP[] = { ATTR_CORE };
+enum HtmlTagAttributes ALST_NOP[] = { ATTR_CORE };
 
-TagInfo TagMAP[MAX_HTMLTAG] = {
+struct TagInfo TagMAP[MAX_HTMLTAG] = {
     { NULL, NULL, 0, 0 }, /*   0 HTML_UNKNOWN    */
     { "a", ALST_A, ARR_SZ(ALST_A), 0 }, /*   1 HTML_A          */
     { "/a", NULL, 0, TFLG_END }, /*   2 HTML_N_A        */
@@ -258,82 +256,41 @@ TagInfo TagMAP[MAX_HTMLTAG] = {
     { "/div_int", NULL, 0, TFLG_INT | TFLG_END }, /* 184 HTML_N_DIV_INT      */
 };
 
-TagAttrInfo AttrMAP[MAX_TAGATTR] = {
-    { NULL, VTYPE_NONE, 0 }, /*  0 ATTR_UNKNOWN        */
-    { "accept", VTYPE_NONE, 0 }, /*  1 ATTR_ACCEPT         */
-    { "accept-charset", VTYPE_STR, 0 }, /*  2 ATTR_ACCEPT_CHARSET */
-    { "action", VTYPE_ACTION, 0 }, /*  3 ATTR_ACTION         */
-    { "align", VTYPE_ALIGN, 0 }, /*  4 ATTR_ALIGN          */
-    { "alt", VTYPE_STR, 0 }, /*  5 ATTR_ALT            */
-    { "archive", VTYPE_STR, 0 }, /*  6 ATTR_ARCHIVE        */
-    { "background", VTYPE_STR, 0 }, /*  7 ATTR_BACKGROUND     */
-    { "border", VTYPE_NUMBER, 0 }, /*  8 ATTR_BORDER         */
-    { "cellpadding", VTYPE_NUMBER, 0 }, /*  9 ATTR_CELLPADDING    */
-    { "cellspacing", VTYPE_NUMBER, 0 }, /* 10 ATTR_CELLSPACING    */
-    { "charset", VTYPE_STR, 0 }, /* 11 ATTR_CHARSET        */
-    { "checked", VTYPE_NONE, 0 }, /* 12 ATTR_CHECKED        */
-    { "cols", VTYPE_MLENGTH, 0 }, /* 13 ATTR_COLS           */
-    { "colspan", VTYPE_NUMBER, 0 }, /* 14 ATTR_COLSPAN        */
-    { "content", VTYPE_STR, 0 }, /* 15 ATTR_CONTENT        */
-    { "enctype", VTYPE_ENCTYPE, 0 }, /* 16 ATTR_ENCTYPE        */
-    { "height", VTYPE_LENGTH, 0 }, /* 17 ATTR_HEIGHT         */
-    { "href", VTYPE_STR, 0 }, /* 18 ATTR_HREF           */
-    { "http-equiv", VTYPE_STR, 0 }, /* 19 ATTR_HTTP_EQUIV     */
-    { "id", VTYPE_STR, 0 }, /* 20 ATTR_ID             */
-    { "link", VTYPE_STR, 0 }, /* 21 ATTR_LINK           */
-    { "maxlength", VTYPE_NUMBER, 0 }, /* 22 ATTR_MAXLENGTH      */
-    { "method", VTYPE_METHOD, 0 }, /* 23 ATTR_METHOD         */
-    { "multiple", VTYPE_NONE, 0 }, /* 24 ATTR_MULTIPLE       */
-    { "name", VTYPE_STR, 0 }, /* 25 ATTR_NAME           */
-    { "nowrap", VTYPE_NONE, 0 }, /* 26 ATTR_NOWRAP         */
-    { "prompt", VTYPE_STR, 0 }, /* 27 ATTR_PROMPT         */
-    { "rows", VTYPE_MLENGTH, 0 }, /* 28 ATTR_ROWS           */
-    { "rowspan", VTYPE_NUMBER, 0 }, /* 29 ATTR_ROWSPAN        */
-    { "size", VTYPE_NUMBER, 0 }, /* 30 ATTR_SIZE           */
-    { "src", VTYPE_STR, 0 }, /* 31 ATTR_SRC            */
-    { "target", VTYPE_STR, 0 }, /* 32 ATTR_TARGET         */
-    { "type", VTYPE_TYPE, 0 }, /* 33 ATTR_TYPE           */
-    { "usemap", VTYPE_STR, 0 }, /* 34 ATTR_USEMAP         */
-    { "valign", VTYPE_VALIGN, 0 }, /* 35 ATTR_VALIGN         */
-    { "value", VTYPE_STR, 0 }, /* 36 ATTR_VALUE          */
-    { "vspace", VTYPE_NUMBER, 0 }, /* 37 ATTR_VSPACE         */
-    { "width", VTYPE_LENGTH, 0 }, /* 38 ATTR_WIDTH          */
-    { "compact", VTYPE_NONE, 0 }, /* 39 ATTR_COMPACT        */
-    { "start", VTYPE_NUMBER, 0 }, /* 40 ATTR_START          */
-    { "selected", VTYPE_NONE, 0 }, /* 41 ATTR_SELECTED       */
-    { "label", VTYPE_STR, 0 }, /* 42 ATTR_LABEL          */
-    { "readonly", VTYPE_NONE, 0 }, /* 43 ATTR_READONLY       */
-    { "shape", VTYPE_STR, 0 }, /* 44 ATTR_SHAPE          */
-    { "coords", VTYPE_STR, 0 }, /* 45 ATTR_COORDS         */
-    { "ismap", VTYPE_NONE, 0 }, /* 46 ATTR_ISMAP          */
-    { "rel", VTYPE_STR, 0 }, /* 47 ATTR_REL            */
-    { "rev", VTYPE_STR, 0 }, /* 48 ATTR_REV            */
-    { "title", VTYPE_STR, 0 }, /* 49 ATTR_TITLE          */
-    { "accesskey", VTYPE_STR, 0 }, /* 50 ATTR_ACCESSKEY      */
-    { "public", VTYPE_NONE, 0 }, /* 51 ATTR_PUBLIC         */
-    { NULL, VTYPE_NONE, 0 }, /* 52 Undefined           */
-    { NULL, VTYPE_NONE, 0 }, /* 53 Undefined           */
-    { NULL, VTYPE_NONE, 0 }, /* 54 Undefined           */
-    { NULL, VTYPE_NONE, 0 }, /* 55 Undefined           */
-    { NULL, VTYPE_NONE, 0 }, /* 56 Undefined           */
-    { NULL, VTYPE_NONE, 0 }, /* 57 Undefined           */
-    { NULL, VTYPE_NONE, 0 }, /* 58 Undefined           */
-    { NULL, VTYPE_NONE, 0 }, /* 59 Undefined           */
+#define MAX_CMD_LEN 128
 
-    /* Internal attribute */
-    { "xoffset", VTYPE_NUMBER, AFLG_INT }, /* 60 ATTR_XOFFSET        */
-    { "yoffset", VTYPE_NUMBER, AFLG_INT }, /* 61 ATTR_YOFFSET        */
-    { "top_margin", VTYPE_NUMBER, AFLG_INT }, /* 62 ATTR_TOP_MARGIN,    */
-    { "bottom_margin", VTYPE_NUMBER, AFLG_INT }, /* 63 ATTR_BOTTOM_MARGIN, */
-    { "tid", VTYPE_NUMBER, AFLG_INT }, /* 64 ATTR_TID            */
-    { "fid", VTYPE_NUMBER, AFLG_INT }, /* 65 ATTR_FID            */
-    { "for_table", VTYPE_NONE, AFLG_INT }, /* 66 ATTR_FOR_TABLE      */
-    { "framename", VTYPE_STR, AFLG_INT }, /* 67 ATTR_FRAMENAME      */
-    { "hborder", VTYPE_NONE, 0 }, /* 68 ATTR_HBORDER        */
-    { "hseq", VTYPE_NUMBER, AFLG_INT }, /* 69 ATTR_HSEQ           */
-    { "no_effect", VTYPE_NONE, AFLG_INT }, /* 70 ATTR_NO_EFFECT      */
-    { "referer", VTYPE_STR, AFLG_INT }, /* 71 ATTR_REFERER        */
-    { "selectnumber", VTYPE_NUMBER, AFLG_INT }, /* 72 ATTR_SELECTNUMBER   */
-    { "textareanumber", VTYPE_NUMBER, AFLG_INT }, /* 73 ATTR_TEXTAREANUMBER */
-    { "pre_int", VTYPE_NONE, AFLG_INT }, /* 74 ATTR_PRE_INT        */
-};
+enum HtmlTags gethtmlcmd(const char** s)
+{
+    extern Hash_si tagtable;
+    char cmdstr[MAX_CMD_LEN];
+    char* p = cmdstr;
+    const char* save = *s;
+    int cmd;
+
+    (*s)++;
+    /* first character */
+    if (IS_ALNUM(**s) || **s == '_' || **s == '/') {
+        *(p++) = TOLOWER(**s);
+        (*s)++;
+    } else
+        return HTML_UNKNOWN;
+    if (p[-1] == '/')
+        SKIP_BLANKS(s);
+    while ((IS_ALNUM(**s) || **s == '_') && p - cmdstr < MAX_CMD_LEN) {
+        *(p++) = TOLOWER(**s);
+        (*s)++;
+    }
+    if (p - cmdstr == MAX_CMD_LEN) {
+        /* buffer overflow: perhaps caused by bad HTML source */
+        *s = save + 1;
+        return HTML_UNKNOWN;
+    }
+    *p = '\0';
+
+    /* hash search */
+    cmd = getHash_si(&tagtable, cmdstr, HTML_UNKNOWN);
+    while (**s && **s != '>')
+        (*s)++;
+    if (**s == '>')
+        (*s)++;
+    return cmd;
+}

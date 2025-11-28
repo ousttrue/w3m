@@ -9,22 +9,22 @@ struct frame_element {
 #define F_BODY 0x01
 #define F_FRAMESET 0x02
     char dummy;
-    char* name;
+    const char* name;
 };
 
 struct frame_body {
     char attr;
     char flags;
 #define FB_NO_BUFFER 0x01
-    char* name;
-    char* url;
+    const char* name;
+    const char* url;
     struct Url* baseURL;
-    char* source;
-    char* type;
-    char* referer;
+    const char* source;
+    const char* type;
+    const char* referer;
     struct _AnchorList* nameList;
-    struct from_list* request;
-    char* ssl_certificate;
+    struct form_list* request;
+    const char* ssl_certificate;
 };
 
 union frameset_element {
@@ -36,7 +36,7 @@ union frameset_element {
 struct frameset {
     char attr;
     char dummy;
-    char* name;
+    const char* name;
     struct Url* currentURL;
     char** width;
     char** height;

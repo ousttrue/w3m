@@ -38,7 +38,6 @@ extern void pushEvent(int cmd, void* data);
 
 
 extern int save2tmp(struct URLFile *uf, char* tmpf);
-extern int gethtmlcmd(char** s);
 char* acceptableEncoding(void);
 
 void uncompress_stream(struct URLFile* uf, char** src);

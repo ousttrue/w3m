@@ -1,10 +1,11 @@
 #pragma once
-#include "html.h"
+#include "HtmlTags.h"
 #include <gcstr/Str.h>
+#include <stdbool.h>
 
 struct HtmlTag {
-    unsigned char tagid;
-    unsigned char* attrid;
+    enum HtmlTags tagid;
+    enum HtmlTagAttributes* attrid;
     char** value;
     unsigned char* map;
     char need_reconstruct;
@@ -16,7 +17,8 @@ struct HtmlTag {
 #define parsedtag_need_reconstruct(tag) ((tag)->need_reconstruct)
 #define parsedtag_attname(tag, i) (AttrMAP[(tag)->attrid[i]].name)
 
-extern struct HtmlTag* parse_tag(char** s, int internal);
+extern struct HtmlTag* parse_tag(const char** s, bool internal);
 extern int parsedtag_get_value(struct HtmlTag* tag, int id, void* value);
 extern int parsedtag_set_value(struct HtmlTag* tag, int id, char* value);
 extern Str parsedtag2str(struct HtmlTag* tag);
+
