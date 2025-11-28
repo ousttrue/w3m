@@ -8,7 +8,7 @@
 #include "form.h"
 #include "file.h"
 #include "w3m_runtime.h"
-#include "parsetagx.h"
+#include "HtmlTag.h"
 #include "indep.h"
 #include <gcstr/gcstr.h>
 #include <signal.h>
@@ -64,7 +64,7 @@ parseFrameSetLength(char* s, char*** ret)
 }
 
 struct frameset*
-newFrameSet(struct parsed_tag* tag)
+newFrameSet(struct HtmlTag* tag)
 {
     struct frameset* f;
     int i;
@@ -88,7 +88,7 @@ newFrameSet(struct parsed_tag* tag)
 }
 
 struct frame_body*
-newFrame(struct parsed_tag* tag, struct Buffer* buf)
+newFrame(struct HtmlTag* tag, struct Buffer* buf)
 {
     struct frame_body* body;
     char* p;
@@ -534,7 +534,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
                 do {
                     int is_tag = FALSE;
                     char* q;
-                    struct parsed_tag* tag;
+                    struct HtmlTag* tag;
 
                     do {
                         if (*p == '\0') {

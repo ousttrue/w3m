@@ -86,8 +86,8 @@ void save_fonteffect(struct html_feed_environ* h_env,
     struct readbuffer* obuf);
 void restore_fonteffect(struct html_feed_environ* h_env,
     struct readbuffer* obuf);
-struct parsed_tag;
-int HTMLtagproc1(struct parsed_tag* tag, struct html_feed_environ* h_env);
+struct HtmlTag;
+int HTMLtagproc1(struct HtmlTag* tag, struct html_feed_environ* h_env);
 void HTMLlineproc0(char* istr, struct html_feed_environ* h_env, int internal);
 #define HTMLlineproc1(x, y) HTMLlineproc0(x, y, TRUE)
 void init_henv(struct html_feed_environ*, struct readbuffer*,

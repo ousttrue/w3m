@@ -15,7 +15,7 @@
 #include "cookie.h"
 #include "w3m_runtime.h"
 #include "KeyValueList.h"
-#include "parsetagx.h"
+#include "HtmlTag.h"
 #include <gcstr/gcstr.h>
 #include <unistd.h>
 #include "local_cgi.h"
@@ -86,7 +86,7 @@ newFormList(char* action, char* method, char* charset, char* enctype,
  * add <input> element to form_list
  */
 struct form_item_list*
-formList_addInput(struct form_list* fl, struct parsed_tag* tag)
+formList_addInput(struct form_list* fl, struct HtmlTag* tag)
 {
     struct form_item_list* item;
     char* p;

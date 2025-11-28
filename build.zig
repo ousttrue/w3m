@@ -49,7 +49,7 @@ const w3m_srcs = [_][]const u8{
     "history.c",
 
     "anchor.c",
-    "parsetagx.c",
+    "HtmlTag.c",
     "tagtable.c",
     "istream.c",
 

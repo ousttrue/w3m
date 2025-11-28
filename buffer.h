@@ -203,8 +203,8 @@ int getMapXY(struct Buffer* buf, Anchor* a, int* x, int* y);
 struct MapArea* retrieveCurrentMapArea(struct Buffer* buf);
 Anchor* retrieveCurrentMap(struct Buffer* buf);
 struct Buffer* page_info_panel(struct Buffer* buf);
-struct parsed_tag;
-struct frame_body* newFrame(struct parsed_tag* tag, struct Buffer* buf);
+struct HtmlTag;
+struct frame_body* newFrame(struct HtmlTag* tag, struct Buffer* buf);
 void pushFrameTree(struct frameset_queue** fqpp, struct frameset* fs,
     struct Buffer* buf);
 union frameset_element;
@@ -219,7 +219,7 @@ Anchor* registerName(struct Buffer* buf, char* url, int line, int pos);
 Anchor* registerImg(struct Buffer* buf, char* url, char* title, int line,
     int pos);
 Anchor* registerForm(struct Buffer* buf, struct form_list* flist,
-    struct parsed_tag* tag, int line, int pos);
+    struct HtmlTag* tag, int line, int pos);
 Anchor* retrieveCurrentAnchor(struct Buffer* buf);
 Anchor* retrieveCurrentImg(struct Buffer* buf);
 Anchor* retrieveCurrentForm(struct Buffer* buf);
