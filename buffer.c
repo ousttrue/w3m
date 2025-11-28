@@ -46,7 +46,7 @@ newBuffer(int width)
     n = New(struct Buffer);
     if (n == NULL)
         exit(3);
-    bzero((void*)n, sizeof(struct Buffer));
+    memset((void*)n, 0, sizeof(struct Buffer));
     n->width = width;
     n->COLS = COLS;
     n->LINES = LASTLINE;

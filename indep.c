@@ -26,30 +26,6 @@ strtoclen(const char* s)
 #endif
 }
 
-#ifndef HAVE_BCOPY
-void bcopy(const void* src, void* dest, int len)
-{
-    int i;
-    if (src == dest)
-        return;
-    if (src < dest) {
-        for (i = len - 1; i >= 0; i--)
-            ((char*)dest)[i] = ((const char*)src)[i];
-    } else { /* src > dest */
-        for (i = 0; i < len; i++)
-            ((char*)dest)[i] = ((const char*)src)[i];
-    }
-}
-
-void bzero(void* ptr, int len)
-{
-    int i;
-    char* p = ptr;
-    for (i = 0; i < len; i++)
-        *(p++) = 0;
-}
-#endif /* not HAVE_BCOPY */
-
 int strCmp(const void* s1, const void* s2)
 {
     return strcmp(*(const char**)s1, *(const char**)s2);

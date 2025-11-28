@@ -167,7 +167,7 @@ parsePasswd(FILE* fp, int netrc)
     struct auth_pass ent;
     Str line = NULL;
 
-    bzero(&ent, sizeof(struct auth_pass));
+    memset(&ent, 0, sizeof(struct auth_pass));
     while (1) {
         Str arg = NULL;
         char* p;
@@ -188,7 +188,7 @@ parsePasswd(FILE* fp, int netrc)
         if (!strcmp(p, "machine") || !strcmp(p, "host")
             || (netrc && !strcmp(p, "default"))) {
             add_auth_pass_entry(&ent, netrc, 0);
-            bzero(&ent, sizeof(struct auth_pass));
+            memset(&ent, 0, sizeof(struct auth_pass));
             if (netrc)
                 ent.port = 21; /* XXX: getservbyname("ftp"); ? */
             if (strcmp(p, "default") != 0) {
@@ -784,7 +784,7 @@ findAuthentication(struct http_auth* hauth, TextList* document_header, char* aut
     TextListItem* i;
     char *p0, *p;
 
-    bzero(hauth, sizeof(struct http_auth));
+    memset(hauth, 0, sizeof(struct http_auth));
     for (i = document_header->first; i != NULL; i = i->next) {
         if (strncasecmp(i->ptr, auth_field, len) == 0) {
             for (p = i->ptr + len; p != NULL && *p != '\0';) {

@@ -94,7 +94,7 @@ newFrame(struct HtmlTag* tag, struct Buffer* buf)
     char* p;
 
     body = New(struct frame_body);
-    bzero((void*)body, sizeof(*body));
+    memset((void*)body, 0, sizeof(*body));
     body->attr = F_UNLOADED;
     body->flags = 0;
     body->baseURL = baseURL(buf);
@@ -119,7 +119,7 @@ void deleteFrame(struct frame_body* b)
     if (b == NULL)
         return;
     unloadFrame(b);
-    bzero((void*)b, sizeof(*b));
+    memset((void*)b, 0, sizeof(*b));
 }
 
 void addFrameSetElement(struct frameset* f, union frameset_element element)
@@ -287,7 +287,7 @@ popFrameTree(struct frameset_queue** fqpp)
         (rfq = cfq->back)->next = cfq->next;
     }
     *fqpp = rfq;
-    bzero((void*)cfq, sizeof(struct frameset_queue));
+    memset((void*)cfq, 0, sizeof(struct frameset_queue));
     return rfs;
 }
 
