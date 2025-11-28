@@ -20,15 +20,234 @@ extern unsigned char last_key;
 static struct Buffer* save_current_buf = 0;
 static struct Line* cline = 0;
 static int ccolumn = -1;
-
-static void drawAnchorCursor(struct Buffer* buf);
-#define redrawBuffer(buf) redrawNLine(buf, LASTLINE)
-static void redrawNLine(struct Buffer* buf, int n);
-static struct Line* redrawLine(struct Buffer* buf, struct Line* l, int i);
 static int image_touch = 0;
-static int draw_image_flag = false;
-static struct Line* redrawLineImage(struct Buffer* buf, struct Line* l, int i);
-static int redrawLineRegion(struct Buffer* buf, struct Line* l, int i, int bpos, int epos);
+static bool draw_image_flag = false;
+
+static struct Line*
+redrawLineImage(struct Buffer* buf, struct Line* l, int i)
+{
+    int j, pos, rcol;
+    int column = buf->currentColumn;
+    Anchor* a;
+    int x, y, sx, sy, w, h;
+
+    if (l == 0)
+        return 0;
+    if (l->width < 0)
+        l->width = COLPOS(l, l->len);
+    if (l->len == 0 || l->width - 1 < column)
+        return l;
+    pos = columnPos(l, column);
+    rcol = COLPOS(l, pos);
+    for (j = 0; rcol - column < buf->COLS && pos + j < l->len; j++) {
+        if (rcol - column < 0) {
+            rcol = COLPOS(l, pos + j + 1);
+            continue;
+        }
+        a = retrieveAnchor(buf->img, l->linenumber, pos + j);
+        if (a && a->image && a->image->touch < image_touch) {
+            struct Image* image = a->image;
+            struct ImageCache* cache = image->cache = getImage(image, baseURL(buf),
+                buf->image_flag);
+            if (cache) {
+                if ((image->width < 0 && cache->width > 0) || (image->height < 0 && cache->height > 0)) {
+                    image->width = cache->width;
+                    image->height = cache->height;
+                    buf->need_reshape = TRUE;
+                }
+                x = (int)((rcol - column + buf->rootX) * pixel_per_char);
+                y = (int)(i * pixel_per_line);
+                sx = (int)((rcol - COLPOS(l, a->start.pos)) * pixel_per_char);
+                sy = (int)((l->linenumber - image->y) * pixel_per_line);
+                if (!enable_inline_image) {
+                    if (sx == 0 && x + image->xoffset >= 0)
+                        x += image->xoffset;
+                    else
+                        sx -= image->xoffset;
+                    if (sy == 0 && y + image->yoffset >= 0)
+                        y += image->yoffset;
+                    else
+                        sy -= image->yoffset;
+                }
+                if (image->width > 0)
+                    w = image->width - sx;
+                else
+                    w = (int)(8 * pixel_per_char - sx);
+                if (image->height > 0)
+                    h = image->height - sy;
+                else
+                    h = (int)(pixel_per_line - sy);
+                if (w > (int)((buf->rootX + buf->COLS) * pixel_per_char - x))
+                    w = (int)((buf->rootX + buf->COLS) * pixel_per_char - x);
+                if (h > (int)(LASTLINE * pixel_per_line - y))
+                    h = (int)(LASTLINE * pixel_per_line - y);
+                addImage(cache, x, y, sx, sy, w, h);
+                image->touch = image_touch;
+                draw_image_flag = TRUE;
+            }
+        }
+        rcol = COLPOS(l, pos + j + 1);
+    }
+    return l;
+}
+
+static struct Line*
+redrawLine(struct Buffer* buf, struct Line* l, int i)
+{
+    int j, pos, rcol, ncol, delta = 1;
+    int column = buf->currentColumn;
+    char* p;
+    Lineprop* pr;
+    Linecolor* pc;
+    Anchor* a;
+    struct Url url;
+    int k, vpos = -1;
+
+    if (l == 0) {
+        if (buf->pagerSource) {
+            l = getNextPage(buf, buf->LINES + buf->rootY - i);
+            if (l == 0)
+                return 0;
+        } else
+            return 0;
+    }
+    scr_move(i, 0);
+    if (showLineNum) {
+        char tmp[16];
+        if (!buf->rootX) {
+            if (buf->lastLine->real_linenumber > 0)
+                buf->rootX = (int)(log(buf->lastLine->real_linenumber + 0.1)
+                                 / log(10))
+                    + 2;
+            if (buf->rootX < 5)
+                buf->rootX = 5;
+            if (buf->rootX > COLS)
+                buf->rootX = COLS;
+            buf->COLS = COLS - buf->rootX;
+        }
+        if (l->real_linenumber && !l->bpos)
+            sprintf(tmp, "%*ld:", buf->rootX - 1, l->real_linenumber);
+        else
+            sprintf(tmp, "%*s ", buf->rootX - 1, "");
+        scr_addstr(tmp);
+    }
+    scr_move(i, buf->rootX);
+    if (l->width < 0)
+        l->width = COLPOS(l, l->len);
+    if (l->len == 0 || l->width - 1 < column) {
+        scr_clrtoeolx();
+        return l;
+    }
+    /* need_clrtoeol(); */
+    pos = columnPos(l, column);
+    p = &(l->lineBuf[pos]);
+    pr = &(l->propBuf[pos]);
+    if (useColor && l->colorBuf)
+        pc = &(l->colorBuf[pos]);
+    else
+        pc = 0;
+    rcol = COLPOS(l, pos);
+
+    for (j = 0; rcol - column < buf->COLS && pos + j < l->len; j += delta) {
+        if (useVisitedColor && vpos <= pos + j && !(pr[j] & PE_VISITED)) {
+            a = retrieveAnchor(buf->href, l->linenumber, pos + j);
+            if (a) {
+                parseURL2(a->url, &url, baseURL(buf));
+                if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
+                    for (k = a->start.pos; k < a->end.pos; k++)
+                        pr[k - pos] |= PE_VISITED;
+                }
+                vpos = a->end.pos;
+            }
+        }
+        delta = wtf_len((wc_uchar*)&p[j]);
+        ncol = COLPOS(l, pos + j + delta);
+        if (ncol - column > buf->COLS)
+            break;
+        if (pc)
+            do_color(pc[j]);
+        if (rcol < column) {
+            for (rcol = column; rcol < ncol; rcol++)
+                scr_addChar(' ', 0);
+            continue;
+        }
+        if (p[j] == '\t') {
+            for (; rcol < ncol; rcol++)
+                scr_addChar(' ', 0);
+        } else {
+            scr_addMChar(&p[j], pr[j], delta);
+        }
+        rcol = ncol;
+    }
+    scr_line_finalize();
+    if (rcol - column < buf->COLS)
+        scr_clrtoeolx();
+    return l;
+}
+
+static void redrawNLine(struct Buffer* buf, int n)
+{
+    struct Line* l;
+    int i;
+
+    scr_init_color();
+    if (nTab > 1) {
+        TabBuffer* t;
+        int l;
+
+        scr_move(0, 0);
+        scr_clrtoeolx();
+        for (t = FirstTab; t; t = t->nextTab) {
+            scr_move(t->y, t->x1);
+            if (t == CurrentTab)
+                scr_bold();
+            scr_addch('[');
+            l = t->x2 - t->x1 - 1 - get_strwidth(t->currentBuffer->buffername);
+            if (l < 0)
+                l = 0;
+            if (l / 2 > 0)
+                scr_addnstr_sup(" ", l / 2);
+            if (t == CurrentTab)
+                scr_active_start();
+            scr_addnstr(t->currentBuffer->buffername, t->x2 - t->x1 - l);
+            if (t == CurrentTab)
+                scr_active_end();
+            if ((l + 1) / 2 > 0)
+                scr_addnstr_sup(" ", (l + 1) / 2);
+            scr_move(t->y, t->x2);
+            scr_addch(']');
+            if (t == CurrentTab)
+                scr_boldend();
+        }
+        scr_move(LastTab->y + 1, 0);
+        for (i = 0; i < COLS; i++)
+            scr_addch('~');
+    }
+    for (i = 0, l = buf->topLine; i < buf->LINES; i++, l = l->next) {
+        if (i >= buf->LINES - n || i < -n)
+            l = redrawLine(buf, l, i + buf->rootY);
+        if (l == 0)
+            break;
+    }
+    if (n > 0) {
+        scr_move(i + buf->rootY, 0);
+        scr_clrtobotx();
+    }
+
+    if (!(activeImage && displayImage && buf->img))
+        return;
+    scr_move(buf->cursorY + buf->rootY, buf->cursorX + buf->rootX);
+    for (i = 0, l = buf->topLine; i < buf->LINES && l; i++, l = l->next) {
+        if (i >= buf->LINES - n || i < -n)
+            redrawLineImage(buf, l, i + buf->rootY);
+    }
+    getAllImage(buf);
+}
+
+static void redrawBuffer(struct Buffer* buf)
+{
+    redrawNLine(buf, LASTLINE);
+}
 
 static Str
 make_lastline_link(struct Buffer* buf, char* title, char* url)
@@ -189,99 +408,68 @@ static void calcTabPos(void)
     }
 }
 
-void displayBuffer(struct Buffer* buf, enum DisplayMode mode)
+static int
+redrawLineRegion(struct Buffer* buf, struct Line* l, int i, int bpos, int epos)
 {
-    Str msg;
-    int ny = 0;
+    int j, pos, rcol, ncol, delta = 1;
+    int column = buf->currentColumn;
+    char* p;
+    Lineprop* pr;
+    Linecolor* pc;
+    int bcol, ecol;
+    Anchor* a;
+    struct Url url;
+    int k, vpos = -1;
 
-    if (!buf)
-        return;
-    if (buf->topLine == 0 && readBufferCache(buf) == 0) { /* clear_buffer */
-        mode = B_FORCE_REDRAW;
-    }
+    if (l == 0)
+        return 0;
+    pos = columnPos(l, column);
+    p = &(l->lineBuf[pos]);
+    pr = &(l->propBuf[pos]);
+    if (useColor && l->colorBuf)
+        pc = &(l->colorBuf[pos]);
+    else
+        pc = 0;
+    rcol = COLPOS(l, pos);
+    bcol = bpos - pos;
+    ecol = epos - pos;
 
-    if (buf->width == 0)
-        buf->width = INIT_BUFFER_WIDTH;
-    if (buf->height == 0)
-        buf->height = LASTLINE + 1;
-    if ((buf->width != INIT_BUFFER_WIDTH && (is_html_type(buf->type) || FoldLine))
-        || buf->need_reshape) {
-        buf->need_reshape = TRUE;
-        reshapeBuffer(buf);
-    }
-    if (showLineNum) {
-        if (buf->lastLine && buf->lastLine->real_linenumber > 0)
-            buf->rootX = (int)(log(buf->lastLine->real_linenumber + 0.1)
-                             / log(10))
-                + 2;
-        if (buf->rootX < 5)
-            buf->rootX = 5;
-        if (buf->rootX > COLS)
-            buf->rootX = COLS;
-    } else
-        buf->rootX = 0;
-    buf->COLS = COLS - buf->rootX;
-    if (nTab > 1) {
-        if (mode == B_FORCE_REDRAW || mode == B_REDRAW_IMAGE)
-            calcTabPos();
-        ny = LastTab->y + 2;
-        if (ny > LASTLINE)
-            ny = LASTLINE;
-    }
-    if (buf->rootY != ny || buf->LINES != LASTLINE - ny) {
-        buf->rootY = ny;
-        buf->LINES = LASTLINE - ny;
-        arrangeCursor(buf);
-        mode = B_REDRAW_IMAGE;
-    }
-    if (mode == B_FORCE_REDRAW || mode == B_SCROLL || mode == B_REDRAW_IMAGE || cline != buf->topLine || ccolumn != buf->currentColumn) {
-        {
-            if (activeImage && (mode == B_REDRAW_IMAGE || cline != buf->topLine || ccolumn != buf->currentColumn)) {
-                if (draw_image_flag)
-                    scr_clear();
-                clearImage();
-                loadImage(buf, IMG_FLAG_STOP);
-                image_touch++;
-                draw_image_flag = FALSE;
+    for (j = 0; rcol - column < buf->COLS && pos + j < l->len; j += delta) {
+        if (useVisitedColor && vpos <= pos + j && !(pr[j] & PE_VISITED)) {
+            a = retrieveAnchor(buf->href, l->linenumber, pos + j);
+            if (a) {
+                parseURL2(a->url, &url, baseURL(buf));
+                if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
+                    for (k = a->start.pos; k < a->end.pos; k++)
+                        pr[k - pos] |= PE_VISITED;
+                }
+                vpos = a->end.pos;
             }
-            redrawBuffer(buf);
         }
-        cline = buf->topLine;
-        ccolumn = buf->currentColumn;
+        delta = wtf_len((wc_uchar*)&p[j]);
+        ncol = COLPOS(l, pos + j + delta);
+        if (ncol - column > buf->COLS)
+            break;
+        if (pc)
+            do_color(pc[j]);
+        if (j >= bcol && j < ecol) {
+            if (rcol < column) {
+                scr_move(i, buf->rootX);
+                for (rcol = column; rcol < ncol; rcol++)
+                    scr_addChar(' ', 0);
+                continue;
+            }
+            scr_move(i, rcol - column + buf->rootX);
+            if (p[j] == '\t') {
+                for (; rcol < ncol; rcol++)
+                    scr_addChar(' ', 0);
+            } else
+                scr_addMChar(&p[j], pr[j], delta);
+        }
+        rcol = ncol;
     }
-    if (buf->topLine == 0)
-        buf->topLine = buf->firstLine;
-
-    if (buf->need_reshape) {
-        displayBuffer(buf, B_FORCE_REDRAW);
-        return;
-    }
-
-    drawAnchorCursor(buf);
-
-    msg = make_lastline_message(buf);
-    if (buf->firstLine == 0) {
-        /* FIXME: gettextize? */
-        Strcat_charp(msg, "\tNo Line");
-    }
-    tui_render_delayed_msg();
-    scr_standout();
-    tui_message(msg->ptr);
-    scr_move(buf->cursorY + buf->rootY, buf->cursorX + buf->rootX);
-    scr_standend();
-    tty_set_title(conv_to_system(buf->buffername));
-    tui_render_screen();
-    if (activeImage && displayImage && buf->img && buf->image_loaded) {
-        drawImage();
-    }
-    if (buf != save_current_buf) {
-        saveBufferInfo();
-        save_current_buf = buf;
-    }
-    if (mode == B_FORCE_REDRAW && (buf->check_url & CHK_URL)) {
-        chkURLBuffer(buf);
-        displayBuffer(buf, B_NORMAL);
-    }
+    scr_line_finalize();
+    return rcol - column;
 }
 
 static void
@@ -367,551 +555,97 @@ drawAnchorCursor(struct Buffer* buf)
     buf->hmarklist->prevhseq = hseq;
 }
 
-static void
-redrawNLine(struct Buffer* buf, int n)
+void displayBuffer(struct Buffer* buf, enum DisplayMode mode)
 {
-    struct Line* l;
-    int i;
-
-    scr_init_color();
-    if (nTab > 1) {
-        TabBuffer* t;
-        int l;
-
-        scr_move(0, 0);
-        scr_clrtoeolx();
-        for (t = FirstTab; t; t = t->nextTab) {
-            scr_move(t->y, t->x1);
-            if (t == CurrentTab)
-                scr_bold();
-            scr_addch('[');
-            l = t->x2 - t->x1 - 1 - get_strwidth(t->currentBuffer->buffername);
-            if (l < 0)
-                l = 0;
-            if (l / 2 > 0)
-                scr_addnstr_sup(" ", l / 2);
-            if (t == CurrentTab)
-                scr_active_start();
-            scr_addnstr(t->currentBuffer->buffername, t->x2 - t->x1 - l);
-            if (t == CurrentTab)
-                scr_active_end();
-            if ((l + 1) / 2 > 0)
-                scr_addnstr_sup(" ", (l + 1) / 2);
-            scr_move(t->y, t->x2);
-            scr_addch(']');
-            if (t == CurrentTab)
-                scr_boldend();
-        }
-        scr_move(LastTab->y + 1, 0);
-        for (i = 0; i < COLS; i++)
-            scr_addch('~');
-    }
-    for (i = 0, l = buf->topLine; i < buf->LINES; i++, l = l->next) {
-        if (i >= buf->LINES - n || i < -n)
-            l = redrawLine(buf, l, i + buf->rootY);
-        if (l == 0)
-            break;
-    }
-    if (n > 0) {
-        scr_move(i + buf->rootY, 0);
-        scr_clrtobotx();
-    }
-
-    if (!(activeImage && displayImage && buf->img))
+    if (!buf)
         return;
-    scr_move(buf->cursorY + buf->rootY, buf->cursorX + buf->rootX);
-    for (i = 0, l = buf->topLine; i < buf->LINES && l; i++, l = l->next) {
-        if (i >= buf->LINES - n || i < -n)
-            redrawLineImage(buf, l, i + buf->rootY);
-    }
-    getAllImage(buf);
-}
 
-static struct Line*
-redrawLine(struct Buffer* buf, struct Line* l, int i)
-{
-    int j, pos, rcol, ncol, delta = 1;
-    int column = buf->currentColumn;
-    char* p;
-    Lineprop* pr;
-    Linecolor* pc;
-    Anchor* a;
-    struct Url url;
-    int k, vpos = -1;
-
-    if (l == 0) {
-        if (buf->pagerSource) {
-            l = getNextPage(buf, buf->LINES + buf->rootY - i);
-            if (l == 0)
-                return 0;
-        } else
-            return 0;
+    if (buf->topLine == 0 && !readBufferCache(buf)) { /* clear_buffer */
+        mode = B_FORCE_REDRAW;
     }
-    scr_move(i, 0);
+
+    if (buf->width == 0)
+        buf->width = INIT_BUFFER_WIDTH;
+    if (buf->height == 0)
+        buf->height = LASTLINE + 1;
+    if ((buf->width != INIT_BUFFER_WIDTH && (is_html_type(buf->type) || FoldLine))
+        || buf->need_reshape) {
+        buf->need_reshape = TRUE;
+        reshapeBuffer(buf);
+    }
     if (showLineNum) {
-        char tmp[16];
-        if (!buf->rootX) {
-            if (buf->lastLine->real_linenumber > 0)
-                buf->rootX = (int)(log(buf->lastLine->real_linenumber + 0.1)
-                                 / log(10))
-                    + 2;
-            if (buf->rootX < 5)
-                buf->rootX = 5;
-            if (buf->rootX > COLS)
-                buf->rootX = COLS;
-            buf->COLS = COLS - buf->rootX;
-        }
-        if (l->real_linenumber && !l->bpos)
-            sprintf(tmp, "%*ld:", buf->rootX - 1, l->real_linenumber);
-        else
-            sprintf(tmp, "%*s ", buf->rootX - 1, "");
-        scr_addstr(tmp);
-    }
-    scr_move(i, buf->rootX);
-    if (l->width < 0)
-        l->width = COLPOS(l, l->len);
-    if (l->len == 0 || l->width - 1 < column) {
-        scr_clrtoeolx();
-        return l;
-    }
-    /* need_clrtoeol(); */
-    pos = columnPos(l, column);
-    p = &(l->lineBuf[pos]);
-    pr = &(l->propBuf[pos]);
-    if (useColor && l->colorBuf)
-        pc = &(l->colorBuf[pos]);
-    else
-        pc = 0;
-    rcol = COLPOS(l, pos);
-
-    for (j = 0; rcol - column < buf->COLS && pos + j < l->len; j += delta) {
-        if (useVisitedColor && vpos <= pos + j && !(pr[j] & PE_VISITED)) {
-            a = retrieveAnchor(buf->href, l->linenumber, pos + j);
-            if (a) {
-                parseURL2(a->url, &url, baseURL(buf));
-                if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
-                    for (k = a->start.pos; k < a->end.pos; k++)
-                        pr[k - pos] |= PE_VISITED;
-                }
-                vpos = a->end.pos;
-            }
-        }
-        delta = wtf_len((wc_uchar*)&p[j]);
-        ncol = COLPOS(l, pos + j + delta);
-        if (ncol - column > buf->COLS)
-            break;
-        if (pc)
-            do_color(pc[j]);
-        if (rcol < column) {
-            for (rcol = column; rcol < ncol; rcol++)
-                scr_addChar(' ', 0);
-            continue;
-        }
-        if (p[j] == '\t') {
-            for (; rcol < ncol; rcol++)
-                scr_addChar(' ', 0);
-        } else {
-            scr_addMChar(&p[j], pr[j], delta);
-        }
-        rcol = ncol;
-    }
-    scr_line_finalize();
-    if (rcol - column < buf->COLS)
-        scr_clrtoeolx();
-    return l;
-}
-
-static struct Line*
-redrawLineImage(struct Buffer* buf, struct Line* l, int i)
-{
-    int j, pos, rcol;
-    int column = buf->currentColumn;
-    Anchor* a;
-    int x, y, sx, sy, w, h;
-
-    if (l == 0)
-        return 0;
-    if (l->width < 0)
-        l->width = COLPOS(l, l->len);
-    if (l->len == 0 || l->width - 1 < column)
-        return l;
-    pos = columnPos(l, column);
-    rcol = COLPOS(l, pos);
-    for (j = 0; rcol - column < buf->COLS && pos + j < l->len; j++) {
-        if (rcol - column < 0) {
-            rcol = COLPOS(l, pos + j + 1);
-            continue;
-        }
-        a = retrieveAnchor(buf->img, l->linenumber, pos + j);
-        if (a && a->image && a->image->touch < image_touch) {
-            struct Image* image = a->image;
-            struct ImageCache* cache = image->cache = getImage(image, baseURL(buf),
-                buf->image_flag);
-            if (cache) {
-                if ((image->width < 0 && cache->width > 0) || (image->height < 0 && cache->height > 0)) {
-                    image->width = cache->width;
-                    image->height = cache->height;
-                    buf->need_reshape = TRUE;
-                }
-                x = (int)((rcol - column + buf->rootX) * pixel_per_char);
-                y = (int)(i * pixel_per_line);
-                sx = (int)((rcol - COLPOS(l, a->start.pos)) * pixel_per_char);
-                sy = (int)((l->linenumber - image->y) * pixel_per_line);
-                if (!enable_inline_image) {
-                    if (sx == 0 && x + image->xoffset >= 0)
-                        x += image->xoffset;
-                    else
-                        sx -= image->xoffset;
-                    if (sy == 0 && y + image->yoffset >= 0)
-                        y += image->yoffset;
-                    else
-                        sy -= image->yoffset;
-                }
-                if (image->width > 0)
-                    w = image->width - sx;
-                else
-                    w = (int)(8 * pixel_per_char - sx);
-                if (image->height > 0)
-                    h = image->height - sy;
-                else
-                    h = (int)(pixel_per_line - sy);
-                if (w > (int)((buf->rootX + buf->COLS) * pixel_per_char - x))
-                    w = (int)((buf->rootX + buf->COLS) * pixel_per_char - x);
-                if (h > (int)(LASTLINE * pixel_per_line - y))
-                    h = (int)(LASTLINE * pixel_per_line - y);
-                addImage(cache, x, y, sx, sy, w, h);
-                image->touch = image_touch;
-                draw_image_flag = TRUE;
-            }
-        }
-        rcol = COLPOS(l, pos + j + 1);
-    }
-    return l;
-}
-
-static int
-redrawLineRegion(struct Buffer* buf, struct Line* l, int i, int bpos, int epos)
-{
-    int j, pos, rcol, ncol, delta = 1;
-    int column = buf->currentColumn;
-    char* p;
-    Lineprop* pr;
-    Linecolor* pc;
-    int bcol, ecol;
-    Anchor* a;
-    struct Url url;
-    int k, vpos = -1;
-
-    if (l == 0)
-        return 0;
-    pos = columnPos(l, column);
-    p = &(l->lineBuf[pos]);
-    pr = &(l->propBuf[pos]);
-    if (useColor && l->colorBuf)
-        pc = &(l->colorBuf[pos]);
-    else
-        pc = 0;
-    rcol = COLPOS(l, pos);
-    bcol = bpos - pos;
-    ecol = epos - pos;
-
-    for (j = 0; rcol - column < buf->COLS && pos + j < l->len; j += delta) {
-        if (useVisitedColor && vpos <= pos + j && !(pr[j] & PE_VISITED)) {
-            a = retrieveAnchor(buf->href, l->linenumber, pos + j);
-            if (a) {
-                parseURL2(a->url, &url, baseURL(buf));
-                if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
-                    for (k = a->start.pos; k < a->end.pos; k++)
-                        pr[k - pos] |= PE_VISITED;
-                }
-                vpos = a->end.pos;
-            }
-        }
-        delta = wtf_len((wc_uchar*)&p[j]);
-        ncol = COLPOS(l, pos + j + delta);
-        if (ncol - column > buf->COLS)
-            break;
-        if (pc)
-            do_color(pc[j]);
-        if (j >= bcol && j < ecol) {
-            if (rcol < column) {
-                scr_move(i, buf->rootX);
-                for (rcol = column; rcol < ncol; rcol++)
-                    scr_addChar(' ', 0);
-                continue;
-            }
-            scr_move(i, rcol - column + buf->rootX);
-            if (p[j] == '\t') {
-                for (; rcol < ncol; rcol++)
-                    scr_addChar(' ', 0);
-            } else
-                scr_addMChar(&p[j], pr[j], delta);
-        }
-        rcol = ncol;
-    }
-    scr_line_finalize();
-    return rcol - column;
-}
-
-void cursorUp0(struct Buffer* buf, int n)
-{
-    if (buf->cursorY > 0)
-        cursorUpDown(buf, -1);
-    else {
-        buf->topLine = lineSkip(buf, buf->topLine, -n, FALSE);
-        if (buf->currentLine->prev != 0)
-            buf->currentLine = buf->currentLine->prev;
-        arrangeLine(buf);
-    }
-}
-
-void cursorUp(struct Buffer* buf, int n)
-{
-    struct Line* l = buf->currentLine;
-    if (buf->firstLine == 0)
-        return;
-    while (buf->currentLine->prev && buf->currentLine->bpos)
-        cursorUp0(buf, n);
-    if (buf->currentLine == buf->firstLine) {
-        gotoLine(buf, l->linenumber);
-        arrangeLine(buf);
-        return;
-    }
-    cursorUp0(buf, n);
-    while (buf->currentLine->prev && buf->currentLine->bpos && buf->currentLine->bwidth >= buf->currentColumn + buf->visualpos)
-        cursorUp0(buf, n);
-}
-
-void cursorDown0(struct Buffer* buf, int n)
-{
-    if (buf->cursorY < buf->LINES - 1)
-        cursorUpDown(buf, 1);
-    else {
-        buf->topLine = lineSkip(buf, buf->topLine, n, FALSE);
-        if (buf->currentLine->next != 0)
-            buf->currentLine = buf->currentLine->next;
-        arrangeLine(buf);
-    }
-}
-
-void cursorDown(struct Buffer* buf, int n)
-{
-    struct Line* l = buf->currentLine;
-    if (buf->firstLine == 0)
-        return;
-    while (buf->currentLine->next && buf->currentLine->next->bpos)
-        cursorDown0(buf, n);
-    if (buf->currentLine == buf->lastLine) {
-        gotoLine(buf, l->linenumber);
-        arrangeLine(buf);
-        return;
-    }
-    cursorDown0(buf, n);
-    while (buf->currentLine->next && buf->currentLine->next->bpos && buf->currentLine->bwidth + buf->currentLine->width < buf->currentColumn + buf->visualpos)
-        cursorDown0(buf, n);
-}
-
-void cursorUpDown(struct Buffer* buf, int n)
-{
-    struct Line* cl = buf->currentLine;
-
-    if (buf->firstLine == 0)
-        return;
-    if ((buf->currentLine = currentLineSkip(buf, cl, n, FALSE)) == cl)
-        return;
-    arrangeLine(buf);
-}
-
-void cursorRight(struct Buffer* buf, int n)
-{
-    int i, delta = 1, cpos, vpos2;
-    struct Line* l = buf->currentLine;
-
-    if (buf->firstLine == 0)
-        return;
-    if (buf->pos == l->len && !(l->next && l->next->bpos))
-        return;
-    i = buf->pos;
-    Lineprop* p = l->propBuf;
-    while (i + delta < l->len && p[i + delta] & PC_WCHAR2)
-        delta++;
-    if (i + delta < l->len) {
-        buf->pos = i + delta;
-    } else if (l->len == 0) {
-        buf->pos = 0;
-    } else if (l->next && l->next->bpos) {
-        cursorDown0(buf, 1);
-        buf->pos = 0;
-        arrangeCursor(buf);
-        return;
-    } else {
-        buf->pos = l->len - 1;
-        while (buf->pos && p[buf->pos] & PC_WCHAR2)
-            buf->pos--;
-    }
-    cpos = COLPOS(l, buf->pos);
-    buf->visualpos = l->bwidth + cpos - buf->currentColumn;
-    delta = 1;
-    while (buf->pos + delta < l->len && p[buf->pos + delta] & PC_WCHAR2)
-        delta++;
-    vpos2 = COLPOS(l, buf->pos + delta) - buf->currentColumn - 1;
-    if (vpos2 >= buf->COLS && n) {
-        columnSkip(buf, n + (vpos2 - buf->COLS) - (vpos2 - buf->COLS) % n);
-        buf->visualpos = l->bwidth + cpos - buf->currentColumn;
-    }
-    buf->cursorX = buf->visualpos - l->bwidth;
-}
-
-void cursorLeft(struct Buffer* buf, int n)
-{
-    int i, delta = 1, cpos;
-    struct Line* l = buf->currentLine;
-
-    if (buf->firstLine == 0)
-        return;
-    i = buf->pos;
-    Lineprop* p = l->propBuf;
-    while (i - delta > 0 && p[i - delta] & PC_WCHAR2)
-        delta++;
-    if (i >= delta)
-        buf->pos = i - delta;
-    else if (l->prev && l->bpos) {
-        cursorUp0(buf, -1);
-        buf->pos = buf->currentLine->len - 1;
-        arrangeCursor(buf);
-        return;
+        if (buf->lastLine && buf->lastLine->real_linenumber > 0)
+            buf->rootX = (int)(log(buf->lastLine->real_linenumber + 0.1)
+                             / log(10))
+                + 2;
+        if (buf->rootX < 5)
+            buf->rootX = 5;
+        if (buf->rootX > COLS)
+            buf->rootX = COLS;
     } else
-        buf->pos = 0;
-    cpos = COLPOS(l, buf->pos);
-    buf->visualpos = l->bwidth + cpos - buf->currentColumn;
-    if (buf->visualpos - l->bwidth < 0 && n) {
-        columnSkip(buf,
-            -n + buf->visualpos - l->bwidth - (buf->visualpos - l->bwidth) % n);
-        buf->visualpos = l->bwidth + cpos - buf->currentColumn;
+        buf->rootX = 0;
+
+    buf->COLS = COLS - buf->rootX;
+    int ny = 0;
+    if (nTab > 1) {
+        if (mode == B_FORCE_REDRAW || mode == B_REDRAW_IMAGE)
+            calcTabPos();
+        ny = LastTab->y + 2;
+        if (ny > LASTLINE)
+            ny = LASTLINE;
     }
-    buf->cursorX = buf->visualpos - l->bwidth;
-}
-
-void cursorHome(struct Buffer* buf)
-{
-    buf->visualpos = 0;
-    buf->cursorX = buf->cursorY = 0;
-}
-
-/*
- * Arrange line,column and cursor position according to current line and
- * current position.
- */
-void arrangeCursor(struct Buffer* buf)
-{
-    int col, col2, pos;
-    int delta = 1;
-    if (buf == 0 || buf->currentLine == 0)
-        return;
-    /* Arrange line */
-    if (buf->currentLine->linenumber - buf->topLine->linenumber >= buf->LINES
-        || buf->currentLine->linenumber < buf->topLine->linenumber) {
-        /*
-         * buf->topLine = buf->currentLine;
-         */
-        buf->topLine = lineSkip(buf, buf->currentLine, 0, FALSE);
+    if (buf->rootY != ny || buf->LINES != LASTLINE - ny) {
+        buf->rootY = ny;
+        buf->LINES = LASTLINE - ny;
+        arrangeCursor(buf);
+        mode = B_REDRAW_IMAGE;
     }
-    /* Arrange column */
-    while (buf->pos < 0 && buf->currentLine->prev && buf->currentLine->bpos) {
-        pos = buf->pos + buf->currentLine->prev->len;
-        cursorUp0(buf, 1);
-        buf->pos = pos;
-    }
-    while (buf->pos >= buf->currentLine->len && buf->currentLine->next && buf->currentLine->next->bpos) {
-        pos = buf->pos - buf->currentLine->len;
-        cursorDown0(buf, 1);
-        buf->pos = pos;
-    }
-    if (buf->currentLine->len == 0 || buf->pos < 0)
-        buf->pos = 0;
-    else if (buf->pos >= buf->currentLine->len)
-        buf->pos = buf->currentLine->len - 1;
-    while (buf->pos > 0 && buf->currentLine->propBuf[buf->pos] & PC_WCHAR2)
-        buf->pos--;
-    col = COLPOS(buf->currentLine, buf->pos);
-    while (buf->pos + delta < buf->currentLine->len && buf->currentLine->propBuf[buf->pos + delta] & PC_WCHAR2)
-        delta++;
-    col2 = COLPOS(buf->currentLine, buf->pos + delta);
-    if (col < buf->currentColumn || col2 > buf->COLS + buf->currentColumn) {
-        buf->currentColumn = 0;
-        if (col2 > buf->COLS)
-            columnSkip(buf, col);
-    }
-    /* Arrange cursor */
-    buf->cursorY = buf->currentLine->linenumber - buf->topLine->linenumber;
-    buf->visualpos = buf->currentLine->bwidth + COLPOS(buf->currentLine, buf->pos) - buf->currentColumn;
-    buf->cursorX = buf->visualpos - buf->currentLine->bwidth;
-#ifdef DISPLAY_DEBUG
-    fprintf(stderr,
-        "arrangeCursor: column=%d, cursorX=%d, visualpos=%d, pos=%d, len=%d\n",
-        buf->currentColumn, buf->cursorX, buf->visualpos, buf->pos,
-        buf->currentLine->len);
-#endif
-}
 
-void arrangeLine(struct Buffer* buf)
-{
-    int i, cpos;
-
-    if (buf->firstLine == 0)
-        return;
-    buf->cursorY = buf->currentLine->linenumber - buf->topLine->linenumber;
-    i = columnPos(buf->currentLine, buf->currentColumn + buf->visualpos - buf->currentLine->bwidth);
-    cpos = COLPOS(buf->currentLine, i) - buf->currentColumn;
-    if (cpos >= 0) {
-        buf->cursorX = cpos;
-        buf->pos = i;
-    } else if (buf->currentLine->len > i) {
-        buf->cursorX = 0;
-        buf->pos = i + 1;
-    } else {
-        buf->cursorX = 0;
-        buf->pos = 0;
-    }
-#ifdef DISPLAY_DEBUG
-    fprintf(stderr,
-        "arrangeLine: column=%d, cursorX=%d, visualpos=%d, pos=%d, len=%d\n",
-        buf->currentColumn, buf->cursorX, buf->visualpos, buf->pos,
-        buf->currentLine->len);
-#endif
-}
-
-void cursorXY(struct Buffer* buf, int x, int y)
-{
-    int oldX;
-
-    cursorUpDown(buf, y - buf->cursorY);
-
-    if (buf->cursorX > x) {
-        while (buf->cursorX > x)
-            cursorLeft(buf, buf->COLS / 2);
-    } else if (buf->cursorX < x) {
-        while (buf->cursorX < x) {
-            oldX = buf->cursorX;
-
-            cursorRight(buf, buf->COLS / 2);
-
-            if (oldX == buf->cursorX)
-                break;
+    if (mode == B_FORCE_REDRAW || mode == B_SCROLL || mode == B_REDRAW_IMAGE || cline != buf->topLine || ccolumn != buf->currentColumn) {
+        {
+            if (activeImage && (mode == B_REDRAW_IMAGE || cline != buf->topLine || ccolumn != buf->currentColumn)) {
+                if (draw_image_flag)
+                    scr_clear();
+                clearImage();
+                loadImage(buf, IMG_FLAG_STOP);
+                image_touch++;
+                draw_image_flag = false;
+            }
+            redrawBuffer(buf);
         }
-        if (buf->cursorX > x)
-            cursorLeft(buf, buf->COLS / 2);
+        cline = buf->topLine;
+        ccolumn = buf->currentColumn;
     }
-}
+    if (buf->topLine == 0)
+        buf->topLine = buf->firstLine;
 
-void restorePosition(struct Buffer* buf, struct Buffer* orig)
-{
-    buf->topLine = lineSkip(buf, buf->firstLine, TOP_LINENUMBER(orig) - 1,
-        FALSE);
-    gotoLine(buf, CUR_LINENUMBER(orig));
-    buf->pos = orig->pos;
-    if (buf->currentLine && orig->currentLine)
-        buf->pos += orig->currentLine->bpos - buf->currentLine->bpos;
-    buf->currentColumn = orig->currentColumn;
-    arrangeCursor(buf);
+    if (buf->need_reshape) {
+        displayBuffer(buf, B_FORCE_REDRAW);
+        return;
+    }
+
+    drawAnchorCursor(buf);
+
+    Str msg = make_lastline_message(buf);
+    if (buf->firstLine == 0) {
+        Strcat_charp(msg, "\tNo Line");
+    }
+    tui_render_delayed_msg();
+    scr_standout();
+    tui_message(msg->ptr);
+    scr_move(buf->cursorY + buf->rootY, buf->cursorX + buf->rootX);
+    scr_standend();
+    tty_set_title(conv_to_system(buf->buffername));
+    tui_render_screen();
+    if (activeImage && displayImage && buf->img && buf->image_loaded) {
+        drawImage();
+    }
+    if (buf != save_current_buf) {
+        saveBufferInfo();
+        save_current_buf = buf;
+    }
+    if (mode == B_FORCE_REDRAW && (buf->check_url & CHK_URL)) {
+        chkURLBuffer(buf);
+        displayBuffer(buf, B_NORMAL);
+    }
 }

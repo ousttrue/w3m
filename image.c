@@ -2,7 +2,7 @@
 #include "w3m_runtime.h"
 #include "signal_jmp.h"
 #include "tui.h"
-#include "screen.h"
+// #include "screen.h"
 #include "local_cgi.h"
 #include "terms.h"
 #include "file.h"
@@ -210,16 +210,16 @@ err:
 void drawImage(void)
 {
     static char buf[64];
-    int j, draw = FALSE;
-    TerminalImage* i;
-    struct stat st;
 
     if (!activeImage)
         return;
     if (!n_terminal_image)
         return;
-    for (j = 0; j < n_terminal_image; j++) {
-        i = &terminal_image[j];
+
+    struct stat st;
+    bool draw = FALSE;
+    for (int j = 0; j < n_terminal_image; j++) {
+        TerminalImage* i = &terminal_image[j];
 
         if (enable_inline_image) {
             /*
@@ -281,7 +281,7 @@ void drawImage(void)
         fputs(buf, Imgdisplay_wf);
         fputs(i->cache->file, Imgdisplay_wf);
         fputs("\n", Imgdisplay_wf);
-        draw = TRUE;
+        draw = true;
     }
 
     if (!enable_inline_image) {
@@ -291,8 +291,8 @@ void drawImage(void)
     } else
         n_terminal_image = 0;
 
-    scr_touch_cursor();
-    tui_render_screen();
+    // scr_touch_cursor();
+    // tui_render_screen();
 }
 
 void clearImage()

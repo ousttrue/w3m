@@ -5,6 +5,7 @@
 #include "textlist.h"
 #include "anchor.h"
 #include <wc/wc.h>
+#include <stdbool.h>
 
 extern int REV_LB[];
 
@@ -84,7 +85,7 @@ struct Buffer {
     const char* ssl_certificate;
     char image_flag;
     char image_loaded;
-    char need_reshape;
+    bool need_reshape;
     struct _Anchor* submit;
     struct _BufferPos* undo;
     struct AlarmEvent* event;
