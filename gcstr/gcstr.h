@@ -19,3 +19,4 @@ Str mybasename(const char* s);
 Str guess_filename(const char* file);
 Str unescape_spaces(Str s);
 Str lastFileName(const char* path);
+Str url_quote(const char* str);

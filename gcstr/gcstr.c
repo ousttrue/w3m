@@ -302,3 +302,22 @@ Str lastFileName(const char* path)
     }
     return Strnew_charp(q);
 }
+
+Str url_quote(const char* str)
+{
+    static const char xdigit[0x10] = "0123456789ABCDEF";
+    Str tmp = NULL;
+    for (const char* p = str; *p; p++) {
+        if (is_url_quote(*p)) {
+            if (tmp == NULL)
+                tmp = Strnew_charp_n(str, (int)(p - str));
+            Strcat_char(tmp, '%');
+            Strcat_char(tmp, xdigit[((unsigned char)*p >> 4) & 0xF]);
+            Strcat_char(tmp, xdigit[(unsigned char)*p & 0xF]);
+        } else {
+            if (tmp)
+                Strcat_char(tmp, *p);
+        }
+    }
+    return tmp ? tmp : Strnew_charp(str);
+}

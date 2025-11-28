@@ -158,7 +158,7 @@ void parseURL(char* url, struct Url* p_url, struct Url* current)
     char *p, *q, *qq;
     Str tmp;
 
-    url = url_quote(url); /* quote 0x01-0x20, 0x7F-0xFF */
+    url = url_quote(url)->ptr; /* quote 0x01-0x20, 0x7F-0xFF */
 
     p = url;
     copyParsedURL(p_url, NULL);

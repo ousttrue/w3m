@@ -86,7 +86,7 @@ int loadHistory(struct Hist* hist)
         Strremovetrailingspaces(line);
         if (line->length == 0)
             continue;
-        pushHist(hist, url_quote(line->ptr));
+        pushHist(hist, url_quote(line->ptr)->ptr);
     }
     fclose(f);
     return 0;
