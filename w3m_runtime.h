@@ -1,5 +1,5 @@
 #pragma once
-#include "libwc/wc.h"
+#include <wc/wc.h>
 
 extern const char* w3m_version;
 extern const char* CurrentDir;

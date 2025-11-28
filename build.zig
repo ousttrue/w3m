@@ -109,6 +109,8 @@ pub fn build(b: *std.Build) void {
 
     const gcstr = build_gcstr(b, target, optimize);
     exe.linkLibrary(gcstr);
+    const gcstr_header = gcstr.getEmittedIncludeTree();
+    exe.addIncludePath(gcstr_header);
 
     const test_exe = b.addTest(.{
         .root_module = gcstr.root_module,
@@ -121,8 +123,20 @@ pub fn build(b: *std.Build) void {
         .lang = .lua51,
     });
     exe.root_module.addImport("zlua", lua_dep.module("zlua"));
+    exe.addIncludePath(b.path("gcstr"));
 
-    exe.linkLibrary(buildCore(b, target, optimize));
+    var targets = std.ArrayListUnmanaged(*std.Build.Step.Compile){};
+
+    // lib.step.dependOn(cdb);
+    targets.append(b.allocator, exe) catch @panic("OOM");
+    const core = buildCore(b, target, optimize);
+    core.addIncludePath(gcstr_header);
+
+    const cdb = zcc.createStep(b, "cdb", targets.toOwnedSlice(b.allocator) catch @panic("OOM"));
+    cdb.dependOn(&core.step);
+    cdb.dependOn(&exe.step);
+
+    exe.linkLibrary(core);
     for (system_libs) |lib| {
         exe.linkSystemLibrary(lib);
     }
@@ -224,7 +238,6 @@ fn buildCore(
             .link_libc = true,
         }),
     });
-    lib.addIncludePath(b.path("libwc"));
     lib.addIncludePath(b.path("."));
 
     const flags = [_][]const u8{
@@ -243,14 +256,6 @@ fn buildCore(
         .files = &w3m_srcs,
         .flags = &flags,
     });
-    lib.addCSourceFiles(.{
-        .root = b.path("libwc"),
-        .files = &libwc_srcs,
-        .flags = &.{
-            "-DHAVE_CONFIG_H",
-            "-DUSE_UNICODE",
-        },
-    });
 
     const include = genFuncTable(b, target);
     lib.addIncludePath(include);
@@ -259,12 +264,7 @@ fn buildCore(
         .install_dir = .header,
         .install_subdir = "",
     });
-
-    var targets = std.ArrayListUnmanaged(*std.Build.Step.Compile){};
-    targets.append(b.allocator, lib) catch @panic("OOM");
-    const cdb = zcc.createStep(b, "cdb", targets.toOwnedSlice(b.allocator) catch @panic("OOM"));
-    cdb.dependOn(&install.step);
-    lib.step.dependOn(cdb);
+    lib.step.dependOn(&install.step);
 
     return lib;
 }
@@ -280,11 +280,11 @@ fn build_gcstr(
             .target = target,
             .optimize = optimize,
             .link_libc = true,
-            .root_source_file = b.path("gcstr/Str.zig"),
+            .root_source_file = b.path("gcstr/gcstr/Str.zig"),
         }),
         .linkage = .dynamic,
     });
-    lib.addIncludePath(b.path("gcstr"));
+    lib.addIncludePath(b.path("gcstr/gcstr"));
     const gc_dep = b.dependency("gc", .{
         .target = target,
         .optimize = optimize,
@@ -292,7 +292,7 @@ fn build_gcstr(
     const gc = gc_dep.artifact("gc");
     lib.linkLibrary(gc);
     lib.addCSourceFiles(.{
-        .root = b.path("gcstr"),
+        .root = b.path("gcstr/gcstr"),
         .files = &.{
             "gcstr.c",
             "alloc.c",
@@ -303,7 +303,19 @@ fn build_gcstr(
             "quote.c",
         },
     });
-    lib.installHeadersDirectory(b.path("gcstr"), "gcstr", .{});
+
+    lib.addCSourceFiles(.{
+        .root = b.path("gcstr/wc"),
+        .files = &libwc_srcs,
+        .flags = &.{
+            "-DHAVE_CONFIG_H",
+            "-DUSE_UNICODE",
+        },
+    });
+
+    lib.installHeadersDirectory(b.path("gcstr"), "", .{});
+    lib.addIncludePath(b.path("gcstr"));
+
     return lib;
 }
 
@@ -331,6 +343,7 @@ fn build_mktable(
     });
 
     const gcstr = build_gcstr(b, target, optimize);
+    exe.addIncludePath(gcstr.getEmittedIncludeTree());
     exe.linkLibrary(gcstr);
 
     return exe;

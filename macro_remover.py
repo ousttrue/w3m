@@ -71,7 +71,7 @@ CONTEXT = {
     "USE_RAW_SCROLL": False,
     "SUPPORT_NETBIOS_SHARE": False,
     # "USE_GPM": False,
-    # "MATRIX": True,
+    "MATRIX": True,
 }
 
 MACRO_PATTERN = re.compile(r"^#\s*(\S+)\s*(\S.*)?")

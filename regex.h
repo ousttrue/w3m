@@ -1,5 +1,5 @@
 #pragma once
-#include <wc.h>
+#include <wc/wc.h>
 #define REGEX_MAX 64
 #define STORAGE_MAX 256
 
@@ -32,7 +32,7 @@ int RegexMatch(Regex* re, char* str, int len, int firstp);
 void MatchedPosition(Regex* re, char** first, char** last);
 
 /* backward compatibility */
-char* regexCompile(char* ex, int igncase);
+char* regexCompile(const char* ex, int igncase);
 
 int regexMatch(char* str, int len, int firstp);
 

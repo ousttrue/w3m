@@ -11,7 +11,7 @@
 #include "term_entry.h"
 #include "fm.h"
 
-#include <wtf.h>
+#include <wc/wtf.h>
 #include <gcstr/gcstr.h>
 #include <stdio.h>
 #include <signal.h>

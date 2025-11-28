@@ -4,8 +4,8 @@
 #include "w3m_runtime.h"
 #include <gcstr/gcstr.h>
 #include <stdlib.h>
-#include <wc.h>
-#include <wtf.h>
+#include <wc/wc.h>
+#include <wc/wtf.h>
 #include <string.h>
 
 #define SPACE " "

@@ -1,5 +1,5 @@
 #pragma once
-#include <wc.h>
+#include <wc/wc.h>
 #include <gcstr/gcstr.h>
 
 #define N_GRAPH_SYMBOL 32

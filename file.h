@@ -1,7 +1,7 @@
 #pragma once
 #include "Url.h"
 #include "istream.h"
-#include <wc.h>
+#include <wc/wc.h>
 #include <gcstr/gcstr.h>
 
 struct Buffer;

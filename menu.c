@@ -22,6 +22,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#define MENU_FILE "menu"
+
 /* Addition:mouse event */
 #define MOUSE_BTN1_DOWN 0
 #define MOUSE_BTN2_DOWN 1
@@ -1247,12 +1249,12 @@ mSusp(char c)
     return (MENU_NOTHING);
 }
 
-static char* SearchString = NULL;
+static const char* SearchString = NULL;
 
-int (*menuSearchRoutine)(Menu*, char*, int);
+int (*menuSearchRoutine)(Menu*, const char*, int);
 
 static int
-menuForwardSearch(Menu* menu, char* str, int from)
+menuForwardSearch(Menu* menu, const char* str, int from)
 {
     const char* p= regexCompile(str, IgnoreCase);
     if (p) {
@@ -1271,9 +1273,8 @@ menuForwardSearch(Menu* menu, char* str, int from)
 static int
 menu_search_forward(Menu* menu, int from)
 {
-    char* str;
     int found;
-    str = inputStrHist("Forward: ", NULL, TextHist);
+    const char* str = inputStrHist("Forward: ", NULL, TextHist);
     if (str != NULL && *str == '\0')
         str = SearchString;
     if (str == NULL || *str == '\0')
@@ -1301,7 +1302,7 @@ mSrchF(char c)
 }
 
 static int
-menuBackwardSearch(Menu* menu, char* str, int from)
+menuBackwardSearch(Menu* menu, const char* str, int from)
 {
     const char* p= regexCompile(str, IgnoreCase);
     if (p) {
@@ -1319,9 +1320,8 @@ menuBackwardSearch(Menu* menu, char* str, int from)
 static int
 menu_search_backward(Menu* menu, int from)
 {
-    char* str;
     int found;
-    str = inputStrHist("Backward: ", NULL, TextHist);
+    const char* str = inputStrHist("Backward: ", NULL, TextHist);
     if (str != NULL && *str == '\0')
         str = SearchString;
     if (str == NULL || *str == '\0')
@@ -1352,7 +1352,7 @@ static int
 menu_search_next_previous(Menu* menu, int from, int reverse)
 {
     int found;
-    static int (*routine[2])(Menu*, char*, int) = {
+    static int (*routine[2])(Menu*, const char*, int) = {
         menuForwardSearch, menuBackwardSearch
     };
 

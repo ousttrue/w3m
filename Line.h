@@ -1,6 +1,6 @@
 #pragma once
-#include <wc.h>
-#include <libwc/wtf.h>
+#include <wc/wc.h>
+#include <wc/wtf.h>
 
 extern int Tabstop;
 extern int ShowEffect;

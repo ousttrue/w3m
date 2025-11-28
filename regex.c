@@ -14,9 +14,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include "config.h"
-#include "wc.h"
-#include "wtf.h"
-#include "ucs.h"
+#include <wc/wc.h>
+#include <wc/wtf.h>
+#include <wc/ucs.h>
 #include "regex.h"
 #include "config.h"
 #include <gcstr/gcstr.h>
@@ -103,7 +103,7 @@ static int match_range_longchar(longchar*, longchar*, longchar*, int);
 /*
  * regexCompile: compile regular expression
  */
-char* regexCompile(char* ex, int igncase)
+char* regexCompile(const char* ex, int igncase)
 {
     char* msg;
     newRegex(ex, igncase, &DefaultRegex, &msg);

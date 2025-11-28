@@ -1,6 +1,6 @@
 #pragma once
 #include <gcstr/gcstr.h>
-#include <wc.h>
+#include <wc/wc.h>
 
 Str decodeB(char** ww);
 void decodeB_to_growbuf(struct growbuf* gb, char** ww);

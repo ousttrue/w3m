@@ -1,6 +1,6 @@
 #pragma once
 #include <gcstr/Str.h>
-#include <wc.h>
+#include <wc/wc.h>
 #include "textlist.h"
 
 extern const char* ssl_min_version;

@@ -1,4 +1,4 @@
 #pragma once
-#include <wc.h>
+#include <wc/wc.h>
 
-char* conv_search_string(char* str, wc_ces f_ces);
+char* conv_search_string(const char* str, wc_ces f_ces);

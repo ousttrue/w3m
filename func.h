@@ -1,5 +1,5 @@
 #pragma once
-#include <wc.h>
+#include <wc/wc.h>
 #include <stdbool.h>
 
 extern char* keymap_file;

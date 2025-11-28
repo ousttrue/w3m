@@ -3,7 +3,7 @@
  */
 #pragma once
 #include <gcstr/Str.h>
-#include <wc.h>
+#include <wc/wc.h>
 
 #define FORM_UNKNOWN -1
 #define FORM_INPUT_TEXT 0

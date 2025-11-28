@@ -3,8 +3,8 @@
 #include "fm.h"
 #include "w3m_runtime.h"
 #include "istream.h"
-#include <wc.h>
-#include <wtf.h>
+#include <wc/wc.h>
+#include <wc/wtf.h>
 
 #include "Symbols/alt.sym"
 #include "Symbols/graph.sym"

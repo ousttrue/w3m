@@ -1,7 +1,7 @@
 #pragma once
 #include <stdio.h>
 #include <sys/types.h>
-#include <wc.h>
+#include <wc/wc.h>
 #include "textlist.h"
 
 extern TextList* fileToDelete;

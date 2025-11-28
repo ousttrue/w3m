@@ -4,7 +4,7 @@
 #include "Url.h"
 #include "textlist.h"
 #include "anchor.h"
-#include <wc.h>
+#include <wc/wc.h>
 
 extern int REV_LB[];
 

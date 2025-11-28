@@ -34,9 +34,9 @@
 #include "indep.h"
 #include "regex.h"
 #include "rc.h"
-#include "wc.h"
-#include "wtf.h"
-#include "ucs.h"
+#include <wc/wc.h>
+#include <wc/wtf.h>
+#include <wc/ucs.h>
 #include "display.h"
 #include "terms.h"
 #include "funcname1.h"

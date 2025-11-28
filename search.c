@@ -16,7 +16,7 @@ set_mark(struct Line* l, int pos, int epos)
 }
 
 /* normalize search string */
-char* conv_search_string(char* str, wc_ces f_ces)
+char* conv_search_string(const char* str, wc_ces f_ces)
 {
     if (SearchConv && !WcOption.pre_conv && Currentbuf->document_charset != f_ces)
         str = wtf_conv_fit(str, Currentbuf->document_charset);

@@ -1,19 +1,19 @@
 /* $Id: entity.c,v 1.7 2003/09/24 18:48:59 ukai Exp $ */
 #include <string.h>
 #include <gcstr/gcstr.h>
-#ifdef DUMMY
-#define NBSP " "
-#define UseAltEntity 1
-#undef USE_M17N
-
-#define wc_conv_n(is, n, f_ces, t_ces) Strnew_charp_n((is), (n))
-
-#else /* DUMMY */
+// #ifdef DUMMY
+// #define NBSP " "
+// #define UseAltEntity 1
+// #undef USE_M17N
+//
+// #define wc_conv_n(is, n, f_ces, t_ces) Strnew_charp_n((is), (n))
+//
+// #else /* DUMMY */
 #include "fm.h"
-#include <wc.h>
-#include "ucs.h"
-#include "utf8.h"
-#endif /* DUMMY */
+#include <wc/wc.h>
+#include <wc/ucs.h>
+#include <wc/utf8.h>
+// #endif /* DUMMY */
 #include "w3m_runtime.h"
 
 extern char* conv_entity(unsigned int c);
