@@ -1,4 +1,5 @@
 #include "gcstr.h"
+#include "entity.h"
 #include <math.h>
 #include <string.h>
 
@@ -328,3 +329,180 @@ Str url_quote_conv(const char* x, wc_ces c)
 {
     return url_quote(wc_conv_strict((x), InnerCharset, (c))->ptr);
 }
+
+char* html_quote(const char* str)
+{
+    Str tmp = NULL;
+    char* p;
+    for (p = str; *p; p++) {
+        const char* q = html_quote_char(*p);
+        if (q) {
+            if (tmp == NULL)
+                tmp = Strnew_charp_n(str, (int)(p - str));
+            Strcat_charp(tmp, q);
+        } else {
+            if (tmp)
+                Strcat_char(tmp, *p);
+        }
+    }
+    if (tmp)
+        return tmp->ptr;
+    return str;
+}
+
+char* html_unquote(char* str)
+{
+    Str tmp = NULL;
+    char *p;
+    for (p = str; *p;) {
+        if (*p == '&') {
+            if (tmp == NULL)
+                tmp = Strnew_charp_n(str, (int)(p - str));
+            const char* q = getescapecmd(&p);
+            Strcat_charp(tmp, q);
+        } else {
+            if (tmp)
+                Strcat_char(tmp, *p);
+            p++;
+        }
+    }
+
+    if (tmp)
+        return tmp->ptr;
+    return str;
+}
+
+#define url_unquote_char(pstr) \
+    ((IS_XDIGIT((*(pstr))[1]) && IS_XDIGIT((*(pstr))[2])) ? (*(pstr) += 3, (GET_MYCDIGIT((*(pstr))[-2]) << 4) | GET_MYCDIGIT((*(pstr))[-1])) : -1)
+
+char* file_quote(char* str)
+{
+    Str tmp = NULL;
+    char* p;
+    char buf[4];
+
+    for (p = str; *p; p++) {
+        if (is_file_quote(*p)) {
+            if (tmp == NULL)
+                tmp = Strnew_charp_n(str, (int)(p - str));
+            sprintf(buf, "%%%02X", (unsigned char)*p);
+            Strcat_charp(tmp, buf);
+        } else {
+            if (tmp)
+                Strcat_char(tmp, *p);
+        }
+    }
+    if (tmp)
+        return tmp->ptr;
+    return str;
+}
+
+char* file_unquote(char* str)
+{
+    Str tmp = NULL;
+    char *p, *q;
+    int c;
+
+    for (p = str; *p;) {
+        if (*p == '%') {
+            q = p;
+            c = url_unquote_char(&q);
+            if (c >= 0) {
+                if (tmp == NULL)
+                    tmp = Strnew_charp_n(str, (int)(p - str));
+                if (c != '\0' && c != '\n' && c != '\r')
+                    Strcat_char(tmp, (char)c);
+                p = q;
+                continue;
+            }
+        }
+        if (tmp)
+            Strcat_char(tmp, *p);
+        p++;
+    }
+    if (tmp)
+        return tmp->ptr;
+    return str;
+}
+
+Str Str_form_quote(Str x)
+{
+    Str tmp = NULL;
+    char *p = x->ptr, *ep = x->ptr + x->length;
+    char buf[4];
+
+    for (; p < ep; p++) {
+        if (*p == ' ') {
+            if (tmp == NULL)
+                tmp = Strnew_charp_n(x->ptr, (int)(p - x->ptr));
+            Strcat_char(tmp, '+');
+        } else if (is_url_unsafe(*p)) {
+            if (tmp == NULL)
+                tmp = Strnew_charp_n(x->ptr, (int)(p - x->ptr));
+            sprintf(buf, "%%%02X", (unsigned char)*p);
+            Strcat_charp(tmp, buf);
+        } else {
+            if (tmp)
+                Strcat_char(tmp, *p);
+        }
+    }
+    if (tmp)
+        return tmp;
+    return x;
+}
+
+Str Str_url_unquote(Str x, int is_form, int safe)
+{
+    Str tmp = NULL;
+    char *p = x->ptr, *ep = x->ptr + x->length, *q;
+    int c;
+
+    for (; p < ep;) {
+        if (is_form && *p == '+') {
+            if (tmp == NULL)
+                tmp = Strnew_charp_n(x->ptr, (int)(p - x->ptr));
+            Strcat_char(tmp, ' ');
+            p++;
+            continue;
+        } else if (*p == '%') {
+            q = p;
+            c = url_unquote_char(&q);
+            if (c >= 0 && (!safe || !IS_ASCII(c) || !is_file_quote(c))) {
+                if (tmp == NULL)
+                    tmp = Strnew_charp_n(x->ptr, (int)(p - x->ptr));
+                Strcat_char(tmp, (char)c);
+                p = q;
+                continue;
+            }
+        }
+        if (tmp)
+            Strcat_char(tmp, *p);
+        p++;
+    }
+    if (tmp)
+        return tmp;
+    return x;
+}
+
+char* shell_quote(char* str)
+{
+    Str tmp = NULL;
+    char* p;
+
+    for (p = str; *p; p++) {
+        if (is_shell_unsafe(*p)) {
+            if (tmp == NULL)
+                tmp = Strnew_charp_n(str, (int)(p - str));
+            Strcat_char(tmp, '\\');
+            Strcat_char(tmp, *p);
+        } else {
+            if (tmp)
+                Strcat_char(tmp, *p);
+        }
+    }
+    if (tmp)
+        return tmp->ptr;
+    return str;
+}
+
+

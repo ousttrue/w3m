@@ -12,7 +12,14 @@ wc_ces url_to_charset(const char* url, const struct Url* base,
 char* url_encode(const char* url, const struct Url* base,
     wc_ces doc_charset);
 struct URLFile;
+
+#define RAW_MODE 0
+#define PAGER_MODE 1
+#define HTML_MODE 2
+#define HEADER_MODE 3
+void cleanup_line(Str s, int mode);
 Str convertLine(struct URLFile* uf, Str line, int mode, wc_ces* charset, wc_ces doc_charset);
+
 struct HtmlTag;
 extern Str process_img(struct HtmlTag* tag, int width);
 extern Str process_anchor(struct HtmlTag* tag, char* tagbuf);

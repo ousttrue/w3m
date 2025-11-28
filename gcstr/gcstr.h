@@ -29,3 +29,12 @@ Str unescape_spaces(Str s);
 Str lastFileName(const char* path);
 Str url_quote(const char* str);
 Str url_quote_conv(const char* x, wc_ces c);
+
+char* html_quote(const char* str);
+char* html_unquote(char* str);
+char* file_quote(char* str);
+char* file_unquote(char* str);
+Str Str_url_unquote(Str x, int is_form, int safe);
+Str Str_form_quote(Str x);
+inline static Str Str_form_unquote(Str x) { return Str_url_unquote(x, true, false); }
+char* shell_quote(char* str);

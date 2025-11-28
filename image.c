@@ -1,4 +1,5 @@
 #include "image.h"
+#include "w3m_runtime.h"
 #include "signal_jmp.h"
 #include "tui.h"
 #include "screen.h"
@@ -9,12 +10,10 @@
 #include "fm.h"
 #include "display.h"
 #include "buffer.h"
-#include "indep.h"
 #include "mimetype.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <signal.h>
-// #include <errno.h>
 #include <termios.h>
 #include <unistd.h>
 #include <sys/wait.h>
