@@ -18,9 +18,6 @@
 #define HEADER_MODE 3
 
 extern long long strtoclen(const char* s);
-extern char* conv_entity(unsigned int ch);
-extern int getescapechar(char** s);
-extern char* getescapecmd(char** s);
 extern int strCmp(const void* s1, const void* s2);
 extern char* currentdir(void);
 extern char* cleanupName(char* name);
@@ -38,7 +35,7 @@ extern char* strcasestr(const char* s1, const char* s2);
 extern int strcasemstr(char* str, char* srch[], char** ret_ptr);
 int strmatchlen(const char* s1, const char* s2, int maxlen);
 extern void cleanup_line(Str s, int mode);
-extern char* html_quote(char* str);
+extern char* html_quote(const char* str);
 extern char* html_unquote(char* str);
 extern char* file_quote(char* str);
 extern char* file_unquote(char* str);

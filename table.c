@@ -2,6 +2,7 @@
  * HTML table
  */
 #include "table.h"
+#include "entity.h"
 #include "image.h"
 #include "file.h"
 #include "etc.h"

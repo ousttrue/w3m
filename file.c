@@ -1,4 +1,5 @@
 #include "file.h"
+#include "entity.h"
 #include "signal_jmp.h"
 #include "tui.h"
 #include "term_entry.h"
@@ -225,7 +226,7 @@ loadSomething(struct URLFile* f,
     if (buf->buffername == NULL || buf->buffername[0] == '\0') {
         buf->buffername = checkHeader(buf, "Subject:");
         if (buf->buffername == NULL && buf->filename != NULL)
-            buf->buffername = conv_from_system(lastFileName(buf->filename));
+            buf->buffername = conv_from_system(lastFileName(buf->filename)->ptr);
     }
     if (buf->currentURL.scheme == SCM_UNKNOWN)
         buf->currentURL.scheme = f->scheme;
@@ -276,7 +277,7 @@ compress_application_type(int compression)
 }
 
 static const char*
-uncompressed_file_type(char* path, char** ext)
+uncompressed_file_type(const char* path, const char** ext)
 {
     int len, slen;
     Str fn;
@@ -424,7 +425,6 @@ void readHeader(struct URLFile* uf, struct Buffer* newBuf, int thru, struct Url*
     Str tmp;
     TextList* headerlist;
     wc_ces charset = WC_CES_US_ASCII, mime_charset;
-    char* tmpf;
     FILE* src = NULL;
     Lineprop* propBuffer;
 
@@ -437,7 +437,7 @@ void readHeader(struct URLFile* uf, struct Buffer* newBuf, int thru, struct Url*
 
     if (thru && !newBuf->header_source
         && !image_source) {
-        tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
+        const char* tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
         src = fopen(tmpf, "w");
         if (src)
             newBuf->header_source = tmpf;
@@ -494,7 +494,7 @@ void readHeader(struct URLFile* uf, struct Buffer* newBuf, int thru, struct Url*
             if (thru && activeImage && displayImage) {
                 Str src = NULL;
                 if (!strncasecmp(tmp->ptr, "X-Image-URL:", 12)) {
-                    tmpf = &tmp->ptr[12];
+                    const char* tmpf = &tmp->ptr[12];
                     SKIP_BLANKS(&tmpf);
                     src = Strnew_m_charp("<img src=\"", html_quote(tmpf),
                         "\" alt=\"X-Image-URL\">", NULL);

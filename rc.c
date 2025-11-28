@@ -2,6 +2,7 @@
  * Initialization file etc.
  */
 #include "fm.h"
+#include "entity.h"
 #include "screen.h"
 #include "tui.h"
 #include "term_entry.h"

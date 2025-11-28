@@ -41,7 +41,6 @@ const w3m_srcs = [_][]const u8{
     "mailcap.c",
     "image.c",
     "symbol.c",
-    "entity.c",
     "terms.c",
     "Url.c",
     "ftp.c",
@@ -295,6 +294,7 @@ fn build_gcstr(
         .root = b.path("gcstr/gcstr"),
         .files = &.{
             "../gcstr.c",
+            "../entity.c",
             "alloc.c",
             "myctype.c",
             "myctype_table.c",
@@ -335,7 +335,7 @@ fn build_mktable(
     });
     exe.addCSourceFiles(.{
         .files = &.{
-            "mktable.c", "entity.c",
+            "mktable.c",
         },
         .flags = &.{
             "-DDUMMY",

@@ -341,7 +341,6 @@ global char FollowLocale init(TRUE);
 global char UseContentCharset init(TRUE);
 global char SearchConv init(TRUE);
 global char SimplePreserveSpace init(FALSE);
-global char UseAltEntity init(FALSE);
 global char DisplayBorders init(FALSE);
 global char DisableCenter init(FALSE);
 extern int symbol_width;
