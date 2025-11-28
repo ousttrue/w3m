@@ -14,7 +14,3 @@ wc_ces DocumentCharset = DOCUMENT_CHARSET;
 wc_ces SystemCharset = SYSTEM_CHARSET;
 wc_ces BookmarkCharset = SYSTEM_CHARSET;
 
-char* url_quote_conv(const char* x, wc_ces c)
-{
-    return url_quote(wc_conv_strict((x), InnerCharset, (c))->ptr)->ptr;
-}

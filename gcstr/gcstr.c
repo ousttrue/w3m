@@ -323,3 +323,8 @@ Str url_quote(const char* str)
     }
     return tmp ? tmp : Strnew_charp(str);
 }
+
+Str url_quote_conv(const char* x, wc_ces c)
+{
+    return url_quote(wc_conv_strict((x), InnerCharset, (c))->ptr);
+}

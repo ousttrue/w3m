@@ -4413,7 +4413,7 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
                     break;
                 case HTML_A:
                     if (renderFrameSet && parsedtag_get_value(tag, ATTR_FRAMENAME, &p)) {
-                        p = url_quote_conv(p, buf->document_charset);
+                        p = url_quote_conv(p, buf->document_charset)->ptr;
                         if (!idFrame || strcmp(idFrame->body->name, p)) {
                             idFrame = search_frame(renderFrameSet, p);
                             if (idFrame && idFrame->body->attr != F_BODY)
@@ -4426,14 +4426,14 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
                     hseq = 0;
                     id = NULL;
                     if (parsedtag_get_value(tag, ATTR_NAME, &id)) {
-                        id = url_quote_conv(id, name_charset);
+                        id = url_quote_conv(id, name_charset)->ptr;
                         registerName(buf, id, currentLn(buf), pos);
                     }
                     if (parsedtag_get_value(tag, ATTR_HREF, &p))
                         p = url_encode(remove_space(p)->ptr, base,
                             buf->document_charset);
                     if (parsedtag_get_value(tag, ATTR_TARGET, &q))
-                        q = url_quote_conv(q, buf->document_charset);
+                        q = url_quote_conv(q, buf->document_charset)->ptr;
                     if (parsedtag_get_value(tag, ATTR_REFERER, &r))
                         r = url_encode(r, base,
                             buf->document_charset);
@@ -4505,7 +4505,7 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
                         s = NULL;
                         parsedtag_get_value(tag, ATTR_TITLE, &s);
                         p = url_quote_conv(remove_space(p)->ptr,
-                            buf->document_charset);
+                            buf->document_charset)->ptr;
                         a_img = registerImg(buf, p, s, currentLn(buf), pos);
                         a_img->hseq = iseq;
                         a_img->image = NULL;
@@ -4702,7 +4702,7 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
                         base = buf->baseURL;
                     }
                     if (parsedtag_get_value(tag, ATTR_TARGET, &p))
-                        buf->baseTarget = url_quote_conv(p, buf->document_charset);
+                        buf->baseTarget = url_quote_conv(p, buf->document_charset)->ptr;
                     break;
                 case HTML_META:
                     p = q = NULL;
@@ -4795,11 +4795,11 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
                 }
                 id = NULL;
                 if (parsedtag_get_value(tag, ATTR_ID, &id)) {
-                    id = url_quote_conv(id, name_charset);
+                    id = url_quote_conv(id, name_charset)->ptr;
                     registerName(buf, id, currentLn(buf), pos);
                 }
                 if (renderFrameSet && parsedtag_get_value(tag, ATTR_FRAMENAME, &p)) {
-                    p = url_quote_conv(p, buf->document_charset);
+                    p = url_quote_conv(p, buf->document_charset)->ptr;
                     if (!idFrame || strcmp(idFrame->body->name, p)) {
                         idFrame = search_frame(renderFrameSet, p);
                         if (idFrame && idFrame->body->attr != F_BODY)

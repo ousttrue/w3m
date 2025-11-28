@@ -103,7 +103,7 @@ newFrame(struct HtmlTag* tag, struct Buffer* buf)
             body->url = url_encode(remove_space(p)->ptr, body->baseURL,
                 buf->document_charset);
         if (parsedtag_get_value(tag, ATTR_NAME, &p) && *p != '_')
-            body->name = url_quote_conv(p, buf->document_charset);
+            body->name = url_quote_conv(p, buf->document_charset)->ptr;
     }
     return body;
 }
@@ -631,7 +631,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
                                 else if (!strcasecmp(q, "_parent"))
                                     d_target = p_target;
                                 else
-                                    d_target = url_quote_conv(q, charset);
+                                    d_target = url_quote_conv(q, charset)->ptr;
                             }
                             Strshrinkfirst(tok, 1);
                             Strshrink(tok, 1);

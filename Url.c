@@ -798,7 +798,7 @@ url_to_charset(const char* url, const struct Url* base, wc_ces doc_charset)
 char* url_encode(const char* url, const struct Url* base, wc_ces doc_charset)
 {
     return url_quote_conv((char*)url,
-        url_to_charset(url, base, doc_charset));
+        url_to_charset(url, base, doc_charset))->ptr;
 }
 
 char* url_decode2(const char* url, wc_ces url_charset)
