@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <gcstr.h>
 
-extern int no_rc_dir;
 
 void init_rc(void);
 void show_params(FILE* fp);

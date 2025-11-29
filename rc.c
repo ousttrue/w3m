@@ -24,8 +24,6 @@
 #define CONFIG_FILE "config"
 #define W3MCONFIG "w3mconfig"
 
-int no_rc_dir = (FALSE);
-
 static void
 parse_proxy(void)
 {
@@ -148,8 +146,9 @@ void init_rc(void)
     rc_dir = allocStr(getenv("W3M_DIR"), -1);
     if (rc_dir == NULL || *rc_dir == '\0')
         rc_dir = allocStr(RC_DIR, -1);
-    if (rc_dir == NULL || *rc_dir == '\0')
-        goto rc_dir_err;
+    if (rc_dir == NULL || *rc_dir == '\0') {
+        exit(1);
+    }
     rc_dir = expandPath(rc_dir)->ptr;
 
     i = strlen(rc_dir);
@@ -158,10 +157,9 @@ void init_rc(void)
 
     tmp_dir = rc_dir;
 
-    if (do_recursive_mkdir(rc_dir) == -1)
-        goto rc_dir_err;
-
-    no_rc_dir = FALSE;
+    if (do_recursive_mkdir(rc_dir) == -1) {
+        exit(1);
+    }
 
     if (config_file == NULL)
         config_file = rcFile(CONFIG_FILE);
@@ -182,12 +180,6 @@ open_rc:
         config_load(f);
         fclose(f);
     }
-    return;
-
-rc_dir_err:
-    no_rc_dir = TRUE;
-    config_initialize();
-    goto open_rc;
 }
 
 void init_tmp(void)
@@ -200,8 +192,6 @@ void init_tmp(void)
         tmp_dir = rc_dir;
 
     if (strcmp(tmp_dir, rc_dir) == 0) {
-        if (no_rc_dir)
-            goto tmp_dir_err;
         return;
     }
 
