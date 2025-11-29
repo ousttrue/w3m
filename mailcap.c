@@ -1,15 +1,17 @@
 #include "mailcap.h"
+#include "w3m_runtime.h"
 #include "textlist.h"
-#include "indep.h"
-#include "KeyValueList.h"
-#include "local_cgi.h"
+// #include "local_cgi.h"
 #include <stdio.h>
-#include <errno.h>
+// #include <errno.h>
+#include <stdlib.h>
 #include <string.h>
 #include <strings.h>
 
 #define USER_MAILCAP RC_DIR "/mailcap"
 #define SYS_MAILCAP CONF_DIR "/mailcap"
+#define DEF_IMAGE_VIEWER "display"
+#define DEF_AUDIO_PLAYER "showaudio"
 
 const char* mailcap_files = (USER_MAILCAP ", " SYS_MAILCAP);
 
@@ -77,10 +79,10 @@ searchMailcap(struct mailcap* table, char* type)
 }
 
 static int
-matchMailcapAttr(char* p, char* attr, size_t len, Str* value)
+matchMailcapAttr(const char* p, const char* attr, size_t len, Str* value)
 {
     int quoted;
-    char* q = NULL;
+    const char* q = NULL;
 
     if (strncasecmp(p, attr, len) == 0) {
         p += len;
@@ -115,15 +117,14 @@ matchMailcapAttr(char* p, char* attr, size_t len, Str* value)
 }
 
 static int
-extractMailcapEntry(char* mcap_entry, struct mailcap* mcap)
+extractMailcapEntry(const char* mcap_entry, struct mailcap* mcap)
 {
     int j, k;
-    char* p;
     int quoted;
     Str tmp;
 
     memset(mcap, 0, sizeof(struct mailcap));
-    p = mcap_entry;
+    const char *p = mcap_entry;
     SKIP_BLANKS(&p);
     k = -1;
     for (j = 0; p[j] && p[j] != ';'; j++) {

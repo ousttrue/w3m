@@ -1,5 +1,8 @@
 #include "w3m_runtime.h"
 #include <gcstr.h>
+#include <pwd.h>
+#include <stdlib.h>
+#include <string.h>
 
 const char* CurrentDir;
 int CurrentPid;
@@ -49,4 +52,39 @@ char* w3m_conf_dir(void)
 char* w3m_help_dir(void)
 {
     return w3m_dir("W3M_HELP_DIR", HELP_DIR);
+}
+
+Str expandPath(const char* name)
+{
+    if (name == NULL)
+        return NULL;
+
+    const char* p = name;
+    if (*p == '~') {
+        p++;
+        Str extpath = NULL;
+        if (IS_ALPHA(*p)) {
+            struct passwd* passent;
+            char* q = strchr(p, '/');
+            if (q) { /* ~user/dir... */
+                passent = getpwnam(allocStr(p, q - p));
+                p = q;
+            } else { /* ~user */
+                passent = getpwnam(p);
+                p = "";
+            }
+            if (!passent)
+                goto rest;
+            extpath = Strnew_charp(passent->pw_dir);
+        } else if (*p == '/' || *p == '\0') { /* ~/dir... or ~ */
+            extpath = Strnew_charp(getenv("HOME"));
+        } else
+            goto rest;
+        if (Strcmp_charp(extpath, "/") == 0 && *p == '/')
+            p++;
+        Strcat_charp(extpath, p);
+        return extpath;
+    }
+rest:
+    return Strnew_charp(name);
 }

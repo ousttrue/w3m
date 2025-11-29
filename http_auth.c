@@ -1,7 +1,7 @@
 #include "http_auth.h"
 #include "tui.h"
 #include "form.h"
-#include "indep.h"
+#include "w3m_runtime.h"
 #include <openssl/md5.h>
 #include <stdlib.h>
 #include <string.h>
@@ -146,12 +146,13 @@ int find_auth_user_passwd(struct Url* pu, char* realm, Str* uname, Str* pwd, int
 static Str
 next_token(Str arg)
 {
-    Str narg = NULL;
-    char *p, *q;
     if (arg == NULL || arg->length == 0)
         return NULL;
-    p = arg->ptr;
-    q = p;
+
+    char*p = arg->ptr;
+    char*q = p;
+
+    Str narg = NULL;
     SKIP_NON_BLANKS(&q);
     if (*q != '\0') {
         *q++ = '\0';
@@ -161,6 +162,7 @@ next_token(Str arg)
     }
     return narg;
 }
+
 static void
 parsePasswd(FILE* fp, int netrc)
 {

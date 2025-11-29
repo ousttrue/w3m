@@ -1,6 +1,6 @@
 #include "mimetype.h"
 #include "textlist.h"
-#include "indep.h"
+#include "w3m_runtime.h"
 #include <gcstr.h>
 #include <string.h>
 

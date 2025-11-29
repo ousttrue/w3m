@@ -83,10 +83,6 @@
 #define MATRIX
 
 
-/* fallback viewer. mailcap override these configuration */
-#define DEF_IMAGE_VIEWER "display"
-#define DEF_AUDIO_PLAYER "showaudio"
-
 /* for USE_MIGEMO */
 #define DEF_MIGEMO_COMMAND ""
 

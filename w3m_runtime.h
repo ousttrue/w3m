@@ -16,10 +16,13 @@ inline static Str Str_conv_to_system(Str x) { return wc_Str_conv_strict((x), Inn
 inline static char* conv_from_system(const char* x) { return wc_conv((x), SystemCharset, InnerCharset)->ptr; }
 inline static char* conv_to_system(const char* x) { return wc_conv_strict((x), InnerCharset, SystemCharset)->ptr; }
 
-extern char* w3m_auxbin_dir(void);
-extern char* w3m_lib_dir(void);
-extern char* w3m_etc_dir(void);
-extern char* w3m_conf_dir(void);
-extern char* w3m_help_dir(void);
+char* w3m_auxbin_dir(void);
+char* w3m_lib_dir(void);
+char* w3m_etc_dir(void);
+char* w3m_conf_dir(void);
+char* w3m_help_dir(void);
+
+/// expand '~'
+Str expandPath(const char* name);
 
 
