@@ -40,7 +40,7 @@
 
 static char** FRAME;
 static int FRAME_WIDTH;
-static int graph_mode = FALSE;
+static int graph_mode = false;
 #define G_start           \
     {                     \
         if (graph_mode)   \
@@ -660,7 +660,7 @@ static int smDelTab(char c);
 static Menu MainMenu;
 /* FIXME: gettextize here */
 static wc_ces MainMenuCharset = WC_CES_US_ASCII; /* FIXME: charset of source code */
-static int MainMenuEncode = FALSE;
+static int MainMenuEncode = false;
 
 static MenuItem MainMenuItem[] = {
     /* type        label           variable value func     popup keys data  */
@@ -1043,11 +1043,11 @@ static void
 set_menu_frame(void)
 {
     if (graph_ok()) {
-        graph_mode = TRUE;
+        graph_mode = true;
         FRAME_WIDTH = 1;
         FRAME = graph_symbol;
     } else {
-        graph_mode = FALSE;
+        graph_mode = false;
         FRAME_WIDTH = 0;
         FRAME = get_symbol(DisplayCharset, &FRAME_WIDTH);
         if (!WcOption.use_wide)
@@ -1287,7 +1287,7 @@ menu_search_forward(Menu* menu, int from)
         found = menuForwardSearch(menu, str, 0);
     if (found >= 0)
         return found;
-    tui_disp_message("Not found", TRUE);
+    tui_disp_message("Not found", true);
     return -1;
 }
 
@@ -1334,7 +1334,7 @@ menu_search_backward(Menu* menu, int from)
         found = menuBackwardSearch(menu, str, menu->nitem);
     if (found >= 0)
         return found;
-    tui_disp_message("Not found", TRUE);
+    tui_disp_message("Not found", true);
     return -1;
 }
 
@@ -1357,7 +1357,7 @@ menu_search_next_previous(Menu* menu, int from, int reverse)
     };
 
     if (menuSearchRoutine == NULL) {
-        tui_disp_message("No previous regular expression", TRUE);
+        tui_disp_message("No previous regular expression", true);
         return -1;
     }
 
@@ -1372,7 +1372,7 @@ menu_search_next_previous(Menu* menu, int from, int reverse)
         found = (*routine[reverse])(menu, str, reverse * menu->nitem);
     if (found >= 0)
         return found;
-    tui_disp_message("Not found", TRUE);
+    tui_disp_message("Not found", true);
     return -1;
 }
 
@@ -1971,7 +1971,7 @@ void initMenu(void)
             item->label = wc_conv(_(item->label), MainMenuCharset,
                 InnerCharset)
                               ->ptr;
-        MainMenuEncode = TRUE;
+        MainMenuEncode = true;
     }
     if ((mf = fopen(confFile(MENU_FILE), "rt")) != NULL) {
         interpret_menu(mf);
@@ -2231,7 +2231,7 @@ list_menu(struct Buffer* buf)
     AnchorList* al = buf->href;
     Anchor* a;
     Anchor** ap;
-    int i, n, nitem = 0, key = -1, two = FALSE;
+    int i, n, nitem = 0, key = -1, two = false;
     char** label;
     char* t;
     unsigned char c;
@@ -2247,7 +2247,7 @@ list_menu(struct Buffer* buf)
         return NULL;
 
     if (nitem >= nlmKeys)
-        two = TRUE;
+        two = true;
     label = New_N(char*, nitem + 1);
     ap = New_N(Anchor*, nitem);
     for (i = 0, n = 0; i < al->nanchor; i++) {

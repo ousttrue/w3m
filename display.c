@@ -53,7 +53,7 @@ redrawLineImage(struct Buffer* buf, struct Line* l, int i)
                 if ((image->width < 0 && cache->width > 0) || (image->height < 0 && cache->height > 0)) {
                     image->width = cache->width;
                     image->height = cache->height;
-                    buf->need_reshape = TRUE;
+                    buf->need_reshape = true;
                 }
                 x = (int)((rcol - column + buf->rootX) * pixel_per_char);
                 y = (int)(i * pixel_per_line);
@@ -83,7 +83,7 @@ redrawLineImage(struct Buffer* buf, struct Line* l, int i)
                     h = (int)(LASTLINE * pixel_per_line - y);
                 addImage(cache, x, y, sx, sy, w, h);
                 image->touch = image_touch;
-                draw_image_flag = TRUE;
+                draw_image_flag = true;
             }
         }
         rcol = COLPOS(l, pos + j + 1);
@@ -570,7 +570,7 @@ void displayBuffer(struct Buffer* buf, enum DisplayMode mode)
         buf->height = LASTLINE + 1;
     if ((buf->width != INIT_BUFFER_WIDTH && (is_html_type(buf->type) || FoldLine))
         || buf->need_reshape) {
-        buf->need_reshape = TRUE;
+        buf->need_reshape = true;
         reshapeBuffer(buf);
     }
     if (showLineNum) {

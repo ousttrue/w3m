@@ -26,8 +26,8 @@
 #include "regex.h"
 
 const char* ssl_min_version = (NULL);
-int ssl_verify_server = (TRUE);
-int ssl_path_modified = (FALSE);
+int ssl_verify_server = (true);
+int ssl_path_modified = (false);
 char* ssl_cert_file = (NULL);
 
 TextList* NO_proxy_domains = 0;
@@ -479,7 +479,7 @@ void parseURL2(char* url, struct Url* pu, struct Url* current)
 {
     char* p;
     Str tmp;
-    int relative_uri = FALSE;
+    int relative_uri = false;
 
     parseURL(url, pu, current);
     if (pu->scheme == SCM_MAILTO)
@@ -543,7 +543,7 @@ void parseURL2(char* url, struct Url* pu, struct Url* current)
                     }
                     Strcat_charp(tmp, p);
                     pu->file = tmp->ptr;
-                    relative_uri = TRUE;
+                    relative_uri = true;
                 }
             } else if (pu->scheme == SCM_GOPHER && pu->file[0] == '/') {
                 p = pu->file;
@@ -687,12 +687,12 @@ Str _parsedURL2Str(struct Url* pu, int pass, int user, int label)
 
 Str parsedURL2Str(struct Url* pu)
 {
-    return _parsedURL2Str(pu, FALSE, TRUE, TRUE);
+    return _parsedURL2Str(pu, false, true, true);
 }
 
 Str parsedURL2RefererStr(struct Url* pu)
 {
-    return _parsedURL2Str(pu, FALSE, FALSE, FALSE);
+    return _parsedURL2Str(pu, false, false, false);
 }
 
 int getURLScheme(char** url)
@@ -723,7 +723,7 @@ void init_stream(struct URLFile* uf, int scheme, InputStream stream)
     uf->stream = stream;
     uf->scheme = scheme;
     uf->encoding = ENC_7BIT;
-    uf->is_cgi = FALSE;
+    uf->is_cgi = false;
     uf->compression = CMP_NOCOMPRESS;
     uf->content_encoding = CMP_NOCOMPRESS;
     uf->guess_type = NULL;
@@ -813,7 +813,7 @@ char* url_unquote_conv(char* url, wc_ces charset)
 {
     wc_uint8 old_auto_detect = WcOption.auto_detect;
     Str tmp;
-    tmp = Str_url_unquote(Strnew_charp(url), FALSE, TRUE);
+    tmp = Str_url_unquote(Strnew_charp(url), false, true);
     if (!charset || charset == WC_CES_US_ASCII)
         charset = SystemCharset;
     WcOption.auto_detect = WC_OPT_DETECT_ON;

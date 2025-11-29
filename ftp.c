@@ -178,10 +178,10 @@ ftp_login(FTP ftp)
     if (status != 230)
         goto open_err;
 succeed:
-    return TRUE;
+    return true;
 open_err:
     ftp_close(ftp);
-    return FALSE;
+    return false;
 }
 
 static int
@@ -329,7 +329,7 @@ openFTPStream(struct Url* pu, struct URLFile* uf)
     char* pass = NULL;
     Str uname = NULL;
     Str pwd = NULL;
-    int add_auth_cookie_flag = FALSE;
+    int add_auth_cookie_flag = false;
     char* realpathname = NULL;
 
     if (!pu->host)
@@ -370,7 +370,7 @@ openFTPStream(struct Url* pu, struct URLFile* uf)
         find_auth_user_passwd(pu, NULL, &uname, &pwd, 0);
         if (pwd == NULL) {
             pwd = tui_input_pw();
-            add_auth_cookie_flag = TRUE;
+            add_auth_cookie_flag = true;
         }
         pass = pwd->ptr;
     } else if (ftppasswd != NULL && *ftppasswd != '\0')

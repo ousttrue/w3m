@@ -70,7 +70,7 @@ do_update(BaseStream base)
     base->stream.cur = base->stream.next = 0;
     len = (*base->read)(base->handle, base->stream.buf, base->stream.size);
     if (len <= 0)
-        base->iseos = TRUE;
+        base->iseos = true;
     else
         base->stream.next += len;
 }
@@ -101,7 +101,7 @@ init_buffer(BaseStream base, char* buf, int bufsize)
     } else {
         sb->next = 0;
     }
-    base->iseos = FALSE;
+    base->iseos = false;
 }
 
 static void
@@ -326,7 +326,7 @@ int ISread_n(InputStream stream, char* dst, int count)
     if (MUST_BE_UPDATED(base)) {
         l = (*base->read)(base->handle, &dst[len], count - len);
         if (l <= 0) {
-            base->iseos = TRUE;
+            base->iseos = true;
         } else {
             len += l;
         }
@@ -384,7 +384,7 @@ ssl_match_cert_ident(char* ident, int ilen, char* hostname)
 
     /* Is this an exact match? */
     if ((ilen == hlen) && strncasecmp(ident, hostname, hlen) == 0)
-        return TRUE;
+        return true;
 
     for (i = 0; i < ilen; i++) {
         if (ident[i] == '*' && ident[i + 1] == '.') {
@@ -394,7 +394,7 @@ ssl_match_cert_ident(char* ident, int ilen, char* hostname)
             i++;
         } else {
             if (ident[i] != *hostname++)
-                return FALSE;
+                return false;
         }
     }
     return *hostname == '\0';
@@ -405,7 +405,7 @@ ssl_check_cert_ident(X509* x, char* hostname)
 {
     int i;
     Str ret = NULL;
-    int match_ident = FALSE;
+    int match_ident = false;
     /*
      * All we need to do here is check that the CN matches.
      *
@@ -469,7 +469,7 @@ ssl_check_cert_ident(X509* x, char* hostname)
             X509V3_EXT_get(ex);
             sk_GENERAL_NAME_free(alt);
             if (i < n) /* Found a match */
-                match_ident = TRUE;
+                match_ident = true;
             else if (seen_dnsname)
                 /* FIXME: gettextize? */
                 ret = Sprintf("Bad cert ident from %s: dNSName=%s", hostname,
@@ -477,7 +477,7 @@ ssl_check_cert_ident(X509* x, char* hostname)
         }
     }
 
-    if (match_ident == FALSE && ret == NULL) {
+    if (match_ident == false && ret == NULL) {
         X509_NAME* xn;
         char buf[2048];
         int slen;
@@ -537,12 +537,12 @@ Str ssl_get_certificate(SSL* ssl, char* hostname)
             /* FIXME: gettextize? */
             char* e = "This SSL session was rejected "
                       "to prevent security violation: no peer certificate";
-            tui_disp_err_message(e, FALSE);
+            tui_disp_err_message(e, false);
             free_ssl_ctx();
             return NULL;
         }
         if (amsg)
-            tui_disp_err_message(amsg->ptr, FALSE);
+            tui_disp_err_message(amsg->ptr, false);
         ssl_accept_this_site(hostname);
         /* FIXME: gettextize? */
         s = amsg ? amsg : Strnew_charp("valid certificate");
@@ -573,7 +573,7 @@ Str ssl_get_certificate(SSL* ssl, char* hostname)
             } else {
                 /* FIXME: gettextize? */
                 char* e = Sprintf("This SSL session was rejected: %s", em)->ptr;
-                tui_disp_err_message(e, FALSE);
+                tui_disp_err_message(e, false);
                 free_ssl_ctx();
                 return NULL;
             }
@@ -599,13 +599,13 @@ Str ssl_get_certificate(SSL* ssl, char* hostname)
             /* FIXME: gettextize? */
             char* e = "This SSL session was rejected "
                       "to prevent security violation";
-            tui_disp_err_message(e, FALSE);
+            tui_disp_err_message(e, false);
             free_ssl_ctx();
             return NULL;
         }
     }
     if (amsg)
-        tui_disp_err_message(amsg->ptr, FALSE);
+        tui_disp_err_message(amsg->ptr, false);
     ssl_accept_this_site(hostname);
     /* FIXME: gettextize? */
     s = amsg ? amsg : Strnew_charp("valid certificate");
@@ -712,14 +712,14 @@ ens_read(struct ens_handle* handle, char* buf, int len)
         char* p;
         struct growbuf gbtmp;
 
-        ISgets_to_growbuf(handle->is, &handle->gb, TRUE);
+        ISgets_to_growbuf(handle->is, &handle->gb, true);
         if (handle->gb.length == 0)
             return 0;
         if (handle->encoding == ENC_BASE64)
             memchop(handle->gb.ptr, &handle->gb.length);
         else if (handle->encoding == ENC_UUENCODE) {
             if (handle->gb.length >= 5 && !strncmp(handle->gb.ptr, "begin", 5))
-                ISgets_to_growbuf(handle->is, &handle->gb, TRUE);
+                ISgets_to_growbuf(handle->is, &handle->gb, true);
             memchop(handle->gb.ptr, &handle->gb.length);
         }
         growbuf_init_without_GC(&gbtmp);
@@ -1191,7 +1191,7 @@ eend:
     tui_disp_err_message(Sprintf("SSL error: %s, a workaround might be: w3m -insecure",
                              ERR_error_string(ERR_get_error(), NULL))
                              ->ptr,
-        FALSE);
+        false);
     return NULL;
 }
 
@@ -1314,7 +1314,7 @@ retry:
                                           option->referer),
                 (void (*)())fclose);
         if (uf.stream) {
-            uf.is_cgi = TRUE;
+            uf.is_cgi = true;
             uf.scheme = pu->scheme = SCM_LOCAL_CGI;
             return uf;
         }
@@ -1564,7 +1564,7 @@ retry:
             *q = '\0';
             uf.encoding = ENC_BASE64;
         } else
-            tmp = Str_url_unquote(tmp, FALSE, FALSE);
+            tmp = Str_url_unquote(tmp, false, false);
         uf.stream = newStrStream(tmp);
         uf.guess_type = (*p != '\0') ? p : "text/plain";
         return uf;

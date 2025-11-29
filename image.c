@@ -28,13 +28,13 @@ static int image_index = 0;
 
 double pixel_per_char = (DEFAULT_PIXEL_PER_CHAR);
 int pixel_per_char_i = (DEFAULT_PIXEL_PER_CHAR);
-int set_pixel_per_char = (FALSE);
+int set_pixel_per_char = false;
 double pixel_per_line = (DEFAULT_PIXEL_PER_LINE);
 int pixel_per_line_i = (DEFAULT_PIXEL_PER_LINE);
-int set_pixel_per_line = (FALSE);
+int set_pixel_per_line = false;
 double image_scale = (100);
-int activeImage = (FALSE);
-int displayImage = (TRUE);
+int activeImage = false;
+int displayImage = true;
 
 /* display image */
 
@@ -62,7 +62,7 @@ void initImage()
     if (activeImage)
         return;
     if (getCharSize())
-        activeImage = TRUE;
+        activeImage = true;
 }
 
 static int
@@ -83,7 +83,7 @@ getCharSize(void)
             pixel_per_line_i = (int)pixel_per_line;
         }
 
-        return TRUE;
+        return true;
     }
 
     Str tmp = Strnew();
@@ -92,7 +92,7 @@ getCharSize(void)
     Strcat_m_charp(tmp, Imgdisplay, " -test 2>/dev/null", NULL);
     FILE* f = popen(tmp->ptr, "r");
     if (!f)
-        return FALSE;
+        return false;
     int w = 0, h = 0;
     while (fscanf(f, "%d %d", &w, &h) < 0) {
         if (feof(f))
@@ -101,12 +101,12 @@ getCharSize(void)
     pclose(f);
 
     if (!(w > 0 && h > 0))
-        return FALSE;
+        return false;
     if (!set_pixel_per_char)
         pixel_per_char = (int)(1.0 * w / COLS + 0.5);
     if (!set_pixel_per_line)
         pixel_per_line = (int)(1.0 * h / LINES + 0.5);
-    return TRUE;
+    return true;
 }
 
 void termImage()
@@ -134,16 +134,16 @@ openImgdisplay()
         goto err0;
     if (Imgdisplay_pid == 0) {
         /* child */
-        tui_setup_child(FALSE, 2, -1);
+        tui_setup_child(false, 2, -1);
         myExec(cmd);
         /* XXX: ifdef __EMX__, use start /f ? */
     }
-    activeImage = TRUE;
-    return TRUE;
+    activeImage = true;
+    return true;
 err0:
     Imgdisplay_pid = 0;
-    activeImage = FALSE;
-    return FALSE;
+    activeImage = false;
+    return false;
 }
 
 static void
@@ -217,7 +217,7 @@ void drawImage(void)
         return;
 
     struct stat st;
-    bool draw = FALSE;
+    bool draw = false;
     for (int j = 0; j < n_terminal_image; j++) {
         TerminalImage* i = &terminal_image[j];
 
@@ -360,7 +360,7 @@ void getAllImage(struct Buffer* buf)
     image_buffer = buf;
     if (!buf)
         return;
-    buf->image_loaded = TRUE;
+    buf->image_loaded = true;
     al = buf->img;
     if (!al)
         return;
@@ -369,7 +369,7 @@ void getAllImage(struct Buffer* buf)
         if (a->image) {
             a->image->cache = getImage(a->image, current, buf->image_flag);
             if (a->image->cache && a->image->cache->loaded == IMG_FLAG_UNLOADED)
-                buf->image_loaded = FALSE;
+                buf->image_loaded = false;
         }
     }
 }
@@ -405,7 +405,7 @@ void loadImage(struct Buffer* buf, enum ImageLoadFlag flag)
 {
     struct ImageCache* cache;
     struct stat st;
-    int i, draw = FALSE;
+    int i, draw = false;
     /* int wait_st; */
 #ifdef DONT_CALL_GC_AFTER_FORK
     char* loadargs[7];
@@ -442,9 +442,9 @@ void loadImage(struct Buffer* buf, enum ImageLoadFlag flag)
             cache->loaded = IMG_FLAG_LOADED;
             if (getImageSize(cache)) {
                 if (image_buffer)
-                    image_buffer->need_reshape = TRUE;
+                    image_buffer->need_reshape = true;
             }
-            draw = TRUE;
+            draw = true;
         } else
             cache->loaded = IMG_FLAG_ERROR;
         unlink(cache->touch);
@@ -524,7 +524,7 @@ void loadImage(struct Buffer* buf, enum ImageLoadFlag flag)
         loadargs[5] = cache->touch;
         loadargs[6] = NULL;
         if ((cache->pid = fork()) == 0) {
-            setup_child(FALSE, 0, -1);
+            setup_child(false, 0, -1);
             execvp(MyProgramName, loadargs);
             exit(1);
         } else if (cache->pid < 0) {
@@ -534,9 +534,9 @@ void loadImage(struct Buffer* buf, enum ImageLoadFlag flag)
 #else /* !DONT_CALL_GC_AFTER_FORK */
         if ((cache->pid = fork()) == 0) {
             /*
-             * setup_child(TRUE, 0, -1);
+             * setup_child(true, 0, -1);
              */
-            tui_setup_child(FALSE, 0, -1);
+            tui_setup_child(false, 0, -1);
             image_source = cache->file;
             loadGeneralFile(cache->url, cache->current, NULL, 0, NULL);
             /* TODO make sure removing this didn't break anything
@@ -636,7 +636,7 @@ parseImageHeader(char* path, u_int* width, u_int* height)
     u_char buf[8];
 
     if (!(fp = fopen(path, "r")))
-        return FALSE;
+        return false;
 
     if (fread(buf, 1, 2, fp) != 2)
         goto error;
@@ -702,11 +702,11 @@ parseImageHeader(char* path, u_int* width, u_int* height)
 
 error:
     fclose(fp);
-    return FALSE;
+    return false;
 
 success:
     fclose(fp);
-    return TRUE;
+    return true;
 }
 
 int getImageSize(struct ImageCache* cache)
@@ -716,9 +716,9 @@ int getImageSize(struct ImageCache* cache)
     unsigned int w = 0, h = 0;
 
     if (!activeImage)
-        return FALSE;
+        return false;
     if (!cache || !(cache->loaded & IMG_FLAG_LOADED) || (cache->width > 0 && cache->height > 0))
-        return FALSE;
+        return false;
 
     if (parseImageHeader(cache->file, &w, &h))
         goto got_image_size;
@@ -729,7 +729,7 @@ int getImageSize(struct ImageCache* cache)
     Strcat_m_charp(tmp, Imgdisplay, " -size ", shell_quote(cache->file), NULL);
     f = popen(tmp->ptr, "r");
     if (!f)
-        return FALSE;
+        return false;
     while (fscanf(f, "%u %u", &w, &h) < 0) {
         if (feof(f))
             break;
@@ -737,7 +737,7 @@ int getImageSize(struct ImageCache* cache)
     pclose(f);
 
     if (!(w > 0 && h > 0))
-        return FALSE;
+        return false;
 
 got_image_size:
     w = (int)(w * image_scale / 100 + 0.5);
@@ -762,7 +762,7 @@ got_image_size:
         cache->height = 1;
     tmp = Sprintf("%d;%d;%s", cache->width, cache->height, cache->url);
     putHash_sv(image_hash, tmp->ptr, (void*)cache);
-    return TRUE;
+    return true;
 }
 
 void put_image_osc5379(char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh)

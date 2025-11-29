@@ -1,14 +1,6 @@
 #pragma once
 #include <gcstr/Str.h>
 #include "config.h"
-#include <stdlib.h>
-
-#ifndef TRUE
-#define TRUE 1
-#endif /* TRUE */
-#ifndef FALSE
-#define FALSE 0
-#endif /* FALSE */
 
 extern long long strtoclen(const char* s);
 extern int strCmp(const void* s1, const void* s2);

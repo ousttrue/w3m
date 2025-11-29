@@ -24,7 +24,7 @@ static wc_ces_list* document_charset_str = NULL;
 static wc_ces_list* system_charset_str = NULL;
 static wc_ces OptionCharset = WC_CES_US_ASCII; /* FIXME: charset of source code */
 
-static int OptionEncode = FALSE;
+static int OptionEncode = false;
 
 #define _(Text) Text
 #define N_(Text) Text

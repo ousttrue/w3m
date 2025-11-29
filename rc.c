@@ -224,11 +224,11 @@ void panel_set_option(struct KeyValueList* arg)
     Str s = Strnew(), tmp;
 
     if (config_file == NULL) {
-        tui_disp_message("There's no config file... config not saved", FALSE);
+        tui_disp_message("There's no config file... config not saved", false);
     } else {
         f = fopen(config_file, "wt");
         if (f == NULL) {
-            tui_disp_message("Can't write option!", FALSE);
+            tui_disp_message("Can't write option!", false);
         }
     }
     while (arg) {

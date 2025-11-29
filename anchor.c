@@ -58,7 +58,7 @@ putAnchor(AnchorList* al, char* url, char* target, Anchor** anchor_return,
     a->referer = referer;
     a->title = title;
     a->accesskey = key;
-    a->slave = FALSE;
+    a->slave = false;
     a->start = bp;
     a->end = bp;
     al->nanchor++;
@@ -402,7 +402,7 @@ char* reAnchorNewsheader(struct Buffer* buf)
         "Newsgroups:", NULL
     };
     char **header, **q;
-    int i, search = FALSE;
+    int i, search = false;
 
     if (!buf || !buf->firstLine)
         return NULL;
@@ -420,10 +420,10 @@ char* reAnchorNewsheader(struct Buffer* buf)
                 continue;
             p = l->lineBuf;
             if (!IS_SPACE(*p)) {
-                search = FALSE;
+                search = false;
                 for (q = header; *q; q++) {
                     if (!strncasecmp(p, *q, strlen(*q))) {
-                        search = TRUE;
+                        search = true;
                         p = strchr(p, ':') + 1;
                         break;
                     }
@@ -595,7 +595,7 @@ void addMultirowsImg(struct Buffer* buf, AnchorList* al)
             pos = columnPos(l, col);
             a = registerImg(buf, a_img.url, a_img.title, l->linenumber, pos);
             a->hseq = -a_img.hseq;
-            a->slave = TRUE;
+            a->slave = true;
             a->image = img;
             a->end.pos = pos + ecol - col;
             for (k = pos; k < a->end.pos; k++)
@@ -605,7 +605,7 @@ void addMultirowsImg(struct Buffer* buf, AnchorList* al)
                     a_href.referer, a_href.title,
                     a_href.accesskey, l->linenumber, pos);
                 a->hseq = a_href.hseq;
-                a->slave = TRUE;
+                a->slave = true;
                 a->end.pos = pos + ecol - col;
                 for (k = pos; k < a->end.pos; k++)
                     l->propBuf[k] |= PE_ANCHOR;

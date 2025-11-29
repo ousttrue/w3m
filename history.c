@@ -9,10 +9,10 @@
 #include <sys/stat.h>
 #include <gcstr.h>
 
-int UseHistory = TRUE;
+int UseHistory = true;
 int URLHistSize = 100;
-int SaveURLHist = TRUE;
-int multicolList = FALSE;
+int SaveURLHist = true;
+int multicolList = false;
 struct Hist* LoadHist;
 struct Hist* SaveHist;
 struct Hist* URLHist;
@@ -111,7 +111,7 @@ void saveHistory(struct Hist* hist, size_t size)
     if (hist->mtime != (long long)st.st_mtime) {
         fhist = newHist();
         if (loadHistory(fhist) || mergeHistory(fhist, hist))
-            tui_disp_err_message("Can't merge history", FALSE);
+            tui_disp_err_message("Can't merge history", false);
         else
             hist = fhist;
     }
@@ -133,7 +133,7 @@ void saveHistory(struct Hist* hist, size_t size)
     return;
 
 fail:
-    tui_disp_err_message("Can't open history", FALSE);
+    tui_disp_err_message("Can't open history", false);
     return;
 }
 

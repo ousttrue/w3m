@@ -391,7 +391,7 @@ FILE* localcgi_post(char* uri, char* qstr, FormList* request, char* referer)
         return fr;
     }
     /* child */
-    tui_setup_child(TRUE, 2, fw ? fileno(fw) : -1);
+    tui_setup_child(true, 2, fw ? fileno(fw) : -1);
 
     set_cgi_environ(name, file, uri);
     if (path_info)

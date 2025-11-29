@@ -20,9 +20,9 @@
 TabBuffer* CurrentTab = 0;
 TabBuffer* FirstTab = 0;
 TabBuffer* LastTab = 0;
-int open_tab_blank = (FALSE);
-int open_tab_dl_list = (FALSE);
-int close_tab_back = (FALSE);
+int open_tab_blank = (false);
+int open_tab_dl_list = (false);
+int close_tab_back = (false);
 int nTab = 0;
 int TabCols = (10);
 
@@ -288,14 +288,14 @@ void gotoLine(struct Buffer* buf, int n)
         tui_set_delayed_message(msg);
         buf->currentLine = l;
         buf->topLine = lineSkip(buf, buf->currentLine, -(buf->LINES - 1),
-            FALSE);
+            false);
         return;
     }
     for (; l != NULL; l = l->next) {
         if (l->linenumber >= n) {
             buf->currentLine = l;
             if (n < buf->topLine->linenumber || buf->topLine->linenumber + buf->LINES <= n)
-                buf->topLine = lineSkip(buf, l, -(buf->LINES + 1) / 2, FALSE);
+                buf->topLine = lineSkip(buf, l, -(buf->LINES + 1) / 2, false);
             break;
         }
     }
@@ -331,14 +331,14 @@ void gotoRealLine(struct Buffer* buf, int n)
         tui_set_delayed_message(msg);
         buf->currentLine = l;
         buf->topLine = lineSkip(buf, buf->currentLine, -(buf->LINES - 1),
-            FALSE);
+            false);
         return;
     }
     for (; l != NULL; l = l->next) {
         if (l->real_linenumber >= n) {
             buf->currentLine = l;
             if (n < buf->topLine->real_linenumber || buf->topLine->real_linenumber + buf->LINES <= n)
-                buf->topLine = lineSkip(buf, l, -(buf->LINES + 1) / 2, FALSE);
+                buf->topLine = lineSkip(buf, l, -(buf->LINES + 1) / 2, false);
             break;
         }
     }
@@ -503,7 +503,7 @@ void reshapeBuffer(struct Buffer* buf)
 
     if (!buf->need_reshape)
         return;
-    buf->need_reshape = FALSE;
+    buf->need_reshape = false;
     buf->width = INIT_BUFFER_WIDTH;
     if (buf->sourcefile == NULL)
         return;
@@ -537,22 +537,22 @@ void reshapeBuffer(struct Buffer* buf)
             init_stream(&h, SCM_LOCAL, NULL);
             examineFile(buf->header_source, &h);
             if (h.stream) {
-                readHeader(&h, buf, TRUE, NULL);
+                readHeader(&h, buf, true, NULL);
                 UFclose(&h);
             }
         } else if (buf->search_header) /* -m option */
-            readHeader(&f, buf, TRUE, NULL);
+            readHeader(&f, buf, true, NULL);
     }
 
     WcOption.auto_detect = WC_OPT_DETECT_OFF;
-    UseContentCharset = FALSE;
+    UseContentCharset = false;
     if (is_html_type(buf->type))
         loadHTMLBuffer(&f, buf);
     else
         loadBuffer(&f, buf);
     UFclose(&f);
     WcOption.auto_detect = old_auto_detect;
-    UseContentCharset = TRUE;
+    UseContentCharset = true;
 
     buf->height = LASTLINE + 1;
     if (buf->firstLine && sbuf.firstLine) {
@@ -569,7 +569,7 @@ void reshapeBuffer(struct Buffer* buf)
         n = (buf->currentLine->linenumber - buf->topLine->linenumber)
             - (cur->linenumber - sbuf.topLine->linenumber);
         if (n) {
-            buf->topLine = lineSkip(buf, buf->topLine, n, FALSE);
+            buf->topLine = lineSkip(buf, buf->topLine, n, false);
             if (cur->real_linenumber > 0)
                 gotoRealLine(buf, cur->real_linenumber);
             else
@@ -852,7 +852,7 @@ void cursorUp0(struct Buffer* buf, int n)
     if (buf->cursorY > 0)
         cursorUpDown(buf, -1);
     else {
-        buf->topLine = lineSkip(buf, buf->topLine, -n, FALSE);
+        buf->topLine = lineSkip(buf, buf->topLine, -n, false);
         if (buf->currentLine->prev != 0)
             buf->currentLine = buf->currentLine->prev;
         arrangeLine(buf);
@@ -881,7 +881,7 @@ void cursorDown0(struct Buffer* buf, int n)
     if (buf->cursorY < buf->LINES - 1)
         cursorUpDown(buf, 1);
     else {
-        buf->topLine = lineSkip(buf, buf->topLine, n, FALSE);
+        buf->topLine = lineSkip(buf, buf->topLine, n, false);
         if (buf->currentLine->next != 0)
             buf->currentLine = buf->currentLine->next;
         arrangeLine(buf);
@@ -911,7 +911,7 @@ void cursorUpDown(struct Buffer* buf, int n)
 
     if (buf->firstLine == 0)
         return;
-    if ((buf->currentLine = currentLineSkip(buf, cl, n, FALSE)) == cl)
+    if ((buf->currentLine = currentLineSkip(buf, cl, n, false)) == cl)
         return;
     arrangeLine(buf);
 }
@@ -1008,7 +1008,7 @@ void arrangeCursor(struct Buffer* buf)
         /*
          * buf->topLine = buf->currentLine;
          */
-        buf->topLine = lineSkip(buf, buf->currentLine, 0, FALSE);
+        buf->topLine = lineSkip(buf, buf->currentLine, 0, false);
     }
     /* Arrange column */
     while (buf->pos < 0 && buf->currentLine->prev && buf->currentLine->bpos) {
@@ -1101,7 +1101,7 @@ void cursorXY(struct Buffer* buf, int x, int y)
 void restorePosition(struct Buffer* buf, struct Buffer* orig)
 {
     buf->topLine = lineSkip(buf, buf->firstLine, TOP_LINENUMBER(orig) - 1,
-        FALSE);
+        false);
     gotoLine(buf, CUR_LINENUMBER(orig));
     buf->pos = orig->pos;
     if (buf->currentLine && orig->currentLine)

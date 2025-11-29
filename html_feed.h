@@ -54,7 +54,6 @@
             RB_SET_ALIGN(obuf, (obuf)->flag_stack[--(obuf)->flag_sp]); \
     }
 
-
 struct input_alt_attr {
     int hseq;
     int fid;
@@ -134,7 +133,7 @@ void restore_fonteffect(struct html_feed_environ* h_env,
 struct HtmlTag;
 int HTMLtagproc1(struct HtmlTag* tag, struct html_feed_environ* h_env);
 void HTMLlineproc0(char* istr, struct html_feed_environ* h_env, int internal);
-#define HTMLlineproc1(x, y) HTMLlineproc0(x, y, TRUE)
+inline static void HTMLlineproc1(char* x, struct html_feed_environ* y) { HTMLlineproc0(x, y, true); }
 void init_henv(struct html_feed_environ*, struct readbuffer*,
     struct environment*, int, TextLineList*, int, int);
 void completeHTMLstream(struct html_feed_environ*,

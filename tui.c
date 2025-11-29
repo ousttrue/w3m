@@ -89,7 +89,7 @@ void mySystem(const char* command, int background)
     if (background) {
         tty_flush();
         if (!fork()) {
-            tui_setup_child(FALSE, 0, -1);
+            tui_setup_child(false, 0, -1);
             myExec(command);
         }
     } else
@@ -168,12 +168,12 @@ void tui_disp_message_nsec(char* s, int redraw_current, int sec, int purge, int 
 
 void tui_disp_message(char* s, int redraw_current)
 {
-    tui_disp_message_nsec(s, redraw_current, 10, FALSE, TRUE);
+    tui_disp_message_nsec(s, redraw_current, 10, false, true);
 }
 
 void tui_disp_message_nomouse(char* s, int redraw_current)
 {
-    tui_disp_message_nsec(s, redraw_current, 10, FALSE, FALSE);
+    tui_disp_message_nsec(s, redraw_current, 10, false, false);
 }
 
 void tui_set_delayed_message(char* s)
@@ -184,7 +184,7 @@ void tui_set_delayed_message(char* s)
 void tui_render_delayed_msg()
 {
     if (delayed_msg != NULL) {
-        tui_disp_message(delayed_msg, FALSE);
+        tui_disp_message(delayed_msg, false);
         delayed_msg = NULL;
         tui_render_screen();
     }
@@ -438,9 +438,9 @@ void tui_setup_child(int child, int i, int f)
      * and corrupt image data can be cached in ~/.w3m.
      */
     close_all_fds_except(i, f);
-    // QuietMessage = TRUE;
-    fmInitialized = FALSE;
-    TrapSignal = FALSE;
+    // QuietMessage = true;
+    fmInitialized = false;
+    TrapSignal = false;
 }
 
 void tui_showProgress(long long current_content_length, long long* linelen, long long* trbyte)
@@ -659,10 +659,10 @@ _MoveFile(const char* path1, const char* path2)
     if (f1 == NULL)
         return -1;
     if (*path2 == '|' && PermitSaveToPipe) {
-        is_pipe = TRUE;
+        is_pipe = true;
         f2 = popen(path2 + 1, "w");
     } else {
-        is_pipe = FALSE;
+        is_pipe = false;
         f2 = fopen(path2, "wb");
     }
     if (f2 == NULL) {
@@ -707,7 +707,7 @@ int tui_doFileCopy(const char* tmpf, const char* defstr, bool download)
     FILE* f;
     struct stat st;
     long long size = 0;
-    int is_pipe = FALSE;
+    int is_pipe = false;
 
     if (fmInitialized) {
         const char* p = searchKeyData();
@@ -716,11 +716,11 @@ int tui_doFileCopy(const char* tmpf, const char* defstr, bool download)
             q = inputLineHist("(Download)Save file to: ",
                 defstr, IN_COMMAND, SaveHist)->ptr;
             if (q == NULL || *q == '\0')
-                return FALSE;
+                return false;
             p = conv_to_system(q);
         }
         if (*p == '|' && PermitSaveToPipe)
-            is_pipe = TRUE;
+            is_pipe = true;
         else {
             if (q) {
                 p = unescape_spaces(Strnew_charp(q))->ptr;
@@ -734,14 +734,14 @@ int tui_doFileCopy(const char* tmpf, const char* defstr, bool download)
             /* FIXME: gettextize? */
             msg = Sprintf("Can't copy. %s and %s are identical.",
                 conv_from_system(tmpf), conv_from_system(p));
-            tui_disp_err_message(msg->ptr, FALSE);
+            tui_disp_err_message(msg->ptr, false);
             return -1;
         }
         if (!download) {
             if (_MoveFile(tmpf, p) < 0) {
                 /* FIXME: gettextize? */
                 msg = Sprintf("Can't save to %s", conv_from_system(p));
-                tui_disp_err_message(msg->ptr, FALSE);
+                tui_disp_err_message(msg->ptr, false);
             }
             return -1;
         }
@@ -750,7 +750,7 @@ int tui_doFileCopy(const char* tmpf, const char* defstr, bool download)
         tty_flush();
         pid = fork();
         if (!pid) {
-            tui_setup_child(FALSE, 0, -1);
+            tui_setup_child(false, 0, -1);
             if (!_MoveFile(tmpf, p) && PreserveTimestamp && !is_pipe && !stat(tmpf, &st))
                 setModtime(p, st.st_mtime);
             unlink(lock);
@@ -778,7 +778,7 @@ int tui_doFileCopy(const char* tmpf, const char* defstr, bool download)
             return -1;
         p = q;
         if (*p == '|' && PermitSaveToPipe)
-            is_pipe = TRUE;
+            is_pipe = true;
         else {
             p = expandPath(p)->ptr;
             if (tui_checkOverWrite(p) < 0)
@@ -858,13 +858,13 @@ int tui_doFileSave(struct URLFile* uf, const char* defstr)
             /* FIXME: gettextize? */
             msg = Sprintf("Can't save. Load file and %s are identical.",
                 conv_from_system(p));
-            tui_disp_err_message(msg->ptr, FALSE);
+            tui_disp_err_message(msg->ptr, false);
             return -1;
         }
         /*
          * if (save2tmp(uf, p) < 0) {
          * msg = Sprintf("Can't save to %s", conv_from_system(p));
-         * disp_err_message(msg->ptr, FALSE);
+         * disp_err_message(msg->ptr, false);
          * }
          */
         lock = tmpfname(TMPF_DFL, ".lock")->ptr;
@@ -878,7 +878,7 @@ int tui_doFileSave(struct URLFile* uf, const char* defstr)
                 if (tmpf)
                     unlink(tmpf);
             }
-            tui_setup_child(FALSE, 0, UFfileno(uf));
+            tui_setup_child(false, 0, UFfileno(uf));
             err = save2tmp(uf, p);
             if (err == 0 && PreserveTimestamp && uf->modtime != -1)
                 setModtime(p, uf->modtime);

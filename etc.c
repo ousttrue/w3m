@@ -271,14 +271,14 @@ Str myExtCommand(char* cmd, char* arg, int redirect)
 {
     Str tmp = NULL;
     char* p;
-    int set_arg = FALSE;
+    int set_arg = false;
 
     for (p = cmd; *p; p++) {
         if (*p == '%' && *(p + 1) == 's' && !set_arg) {
             if (tmp == NULL)
                 tmp = Strnew_charp_n(cmd, (int)(p - cmd));
             Strcat_charp(tmp, arg);
-            set_arg = TRUE;
+            set_arg = true;
             p++;
         } else {
             if (tmp)
@@ -298,20 +298,20 @@ Str myEditor(char* cmd, char* file, int line)
 {
     Str tmp = NULL;
     char* p;
-    int set_file = FALSE, set_line = FALSE;
+    int set_file = false, set_line = false;
 
     for (p = cmd; *p; p++) {
         if (*p == '%' && *(p + 1) == 's' && !set_file) {
             if (tmp == NULL)
                 tmp = Strnew_charp_n(cmd, (int)(p - cmd));
             Strcat_charp(tmp, file);
-            set_file = TRUE;
+            set_file = true;
             p++;
         } else if (*p == '%' && *(p + 1) == 'd' && !set_line && line > 0) {
             if (tmp == NULL)
                 tmp = Strnew_charp_n(cmd, (int)(p - cmd));
             Strcat(tmp, Sprintf("%d", line));
-            set_line = TRUE;
+            set_line = true;
             p++;
         } else {
             if (tmp)
@@ -331,8 +331,8 @@ Str myEditor(char* cmd, char* file, int line)
 int is_localhost(const char* host)
 {
     if (!host || !strcasecmp(host, "localhost") || !strcmp(host, "127.0.0.1") || (HostName && !strcasecmp(host, HostName)) || !strcmp(host, "[::1]"))
-        return TRUE;
-    return FALSE;
+        return true;
+    return false;
 }
 
 char* file_to_url(char* file)

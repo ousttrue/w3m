@@ -7,6 +7,7 @@
 
 #include <gcstr.h>
 #include <signal.h>
+#include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <sys/stat.h>
@@ -38,7 +39,7 @@ void dl_add(pid_t pid, const char* url, const char* save, const char* lock, size
     d->lock = lock;
     d->size = size;
     d->time = time(0);
-    d->running = TRUE;
+    d->running = true;
     d->err = 0;
     d->next = NULL;
     d->prev = LastDL;
@@ -47,7 +48,7 @@ void dl_add(pid_t pid, const char* url, const char* save, const char* lock, size
     else
         FirstDL = d;
     LastDL = d;
-    add_download_list = TRUE;
+    add_download_list = true;
 }
 
 bool dl_has_active(void)
@@ -56,12 +57,12 @@ bool dl_has_active(void)
     struct stat st;
 
     if (!FirstDL)
-        return FALSE;
+        return false;
     for (d = FirstDL; d != NULL; d = d->next) {
         if (d->running && !lstat(d->lock, &st))
-            return TRUE;
+            return true;
     }
-    return FALSE;
+    return false;
 }
 
 static char*
@@ -90,7 +91,7 @@ Str DownloadListBuffer(int cols)
     for (struct DownloadList* d = LastDL; d != NULL; d = d->prev) {
         struct stat st;
         if (lstat(d->lock, &st))
-            d->running = FALSE;
+            d->running = false;
         Strcat_charp(src, "<pre>\n");
         Strcat(src, Sprintf("%s\n  --&gt; %s\n  ", html_quote(d->url), html_quote(conv_from_system(d->save))));
         int duration = cur_time - d->time;

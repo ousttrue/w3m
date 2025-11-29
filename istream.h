@@ -20,7 +20,6 @@
     }
 #define UFfileno(f) ISfileno((f)->stream)
 
-
 struct stream_buffer {
     unsigned char* buf;
     int size, cur, next;
@@ -117,12 +116,9 @@ extern int ISclose(InputStream stream);
 extern int ISgetc(InputStream stream);
 extern int ISundogetc(InputStream stream);
 extern Str StrISgets2(InputStream stream, char crnl);
-#define StrISgets(stream) StrISgets2(stream, FALSE)
-#define StrmyISgets(stream) StrISgets2(stream, TRUE)
+inline static Str StrISgets(InputStream stream) { return StrISgets2(stream, false); }
+inline static Str StrmyISgets(InputStream stream) { return StrISgets2(stream, true); }
 void ISgets_to_growbuf(InputStream stream, struct growbuf* gb, char crnl);
-#ifdef unused
-extern int ISread(InputStream stream, Str buf, int count);
-#endif
 int ISread_n(InputStream stream, char* dst, int bufsize);
 extern int ISfileno(InputStream stream);
 extern int ISeos(InputStream stream);

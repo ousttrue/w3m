@@ -27,7 +27,7 @@ int forwardSearch(struct Buffer* buf, char* str)
 {
     char *p, *first, *last;
     struct Line *l, *begin;
-    int wrapped = FALSE;
+    int wrapped = false;
     int pos;
 
     if ((p = regexCompile(str, IgnoreCase)) != NULL) {
@@ -68,14 +68,14 @@ int forwardSearch(struct Buffer* buf, char* str)
                 if (l == NULL) {
                     if (WrapSearch && !wrapped) {
                         l = buf->firstLine;
-                        wrapped = TRUE;
+                        wrapped = true;
                     } else {
                         break;
                     }
                 }
             } else if (WrapSearch) {
                 l = buf->firstLine;
-                wrapped = TRUE;
+                wrapped = true;
             } else {
                 break;
             }
@@ -106,7 +106,7 @@ int backwardSearch(struct Buffer* buf, char* str)
 {
     char *p, *q, *found, *found_last, *first, *last;
     struct Line *l, *begin;
-    int wrapped = FALSE;
+    int wrapped = false;
     int pos;
 
     if ((p = regexCompile(str, IgnoreCase)) != NULL) {
@@ -165,7 +165,7 @@ int backwardSearch(struct Buffer* buf, char* str)
         if (l == NULL) {
             if (WrapSearch) {
                 l = buf->lastLine;
-                wrapped = TRUE;
+                wrapped = true;
             } else {
                 break;
             }
