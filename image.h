@@ -2,6 +2,12 @@
 #include "Url.h"
 #include <sys/types.h>
 
+#define INLINE_IMG_NONE 0
+#define INLINE_IMG_OSC5379 1
+#define INLINE_IMG_SIXEL 2
+#define INLINE_IMG_ITERM2 3
+#define INLINE_IMG_KITTY 4
+
 #define MINIMUM_PIXEL_PER_CHAR 4.0
 #define MAXIMUM_PIXEL_PER_CHAR 32.0
 

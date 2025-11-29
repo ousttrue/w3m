@@ -6,7 +6,6 @@ extern int no_rc_dir;
 
 void init_rc(void);
 void show_params(FILE* fp);
-int str_to_bool(char* value, int old);
 char* confFile(char* base);
 char* rcFile(char* base);
 struct KeyValueList;

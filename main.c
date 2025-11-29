@@ -1255,7 +1255,7 @@ isrch(int (*func)(struct Buffer*, char*), char* prompt)
     dispincsrch(0, NULL, NULL); /* initialize incremental search state */
 
     searchRoutine = func;
-    const char* str = inputLineHistSearch(prompt, NULL, IN_STRING, TextHist, dispincsrch);
+    Str str = inputLineHistSearch(prompt, NULL, IN_STRING, TextHist, dispincsrch);
     if (str == NULL) {
         RESTORE_BUFPOSITION(&sbuf);
     }
@@ -2380,36 +2380,6 @@ gotoLabel(char* label)
     return;
 }
 
-static int
-handleMailto(char* url)
-{
-    Str to;
-    char* pos;
-
-    if (strncasecmp(url, "mailto:", 7))
-        return 0;
-    if (!non_null(Mailer)) {
-        /* FIXME: gettextize? */
-        tui_disp_err_message("no mailer is specified", TRUE);
-        return 1;
-    }
-
-    /* invoke external mailer */
-    if (MailtoOptions == MAILTO_OPTIONS_USE_MAILTO_URL) {
-        to = Strnew_charp(html_unquote(url));
-    } else {
-        to = Strnew_charp(url + 7);
-        if ((pos = strchr(to->ptr, '?')) != NULL)
-            Strtruncate(to, pos - to->ptr);
-    }
-    tui_exec(myExtCommand(Mailer, shell_quote(file_unquote(to->ptr)),
-        FALSE)
-            ->ptr);
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
-    pushHashHist(URLHist, url);
-    return 1;
-}
-
 /* follow HREF link */
 DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
 {
@@ -2447,8 +2417,6 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
             return;
         }
     }
-    if (handleMailto(a->url))
-        return;
     url = a->url;
     if (map)
         url = Sprintf("%s?%d,%d", a->url, x, y)->ptr;
@@ -3424,9 +3392,6 @@ DEFUN(deletePrevBuf, DELETE_PREVBUF, "Delete previous buffer (mainly for local C
 static void
 cmd_loadURL(char* url, struct Url* current, char* referer, FormList* request)
 {
-    if (handleMailto(url))
-        return;
-
     tui_render_screen();
     struct Buffer* buf = loadGeneralFile(url, current, referer, 0, request);
     if (buf == NULL) {

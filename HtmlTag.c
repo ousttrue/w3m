@@ -5,6 +5,7 @@
 #include "indep.h"
 
 /* parse HTML tag */
+int IndentIncr =(4);
 
 static int noConv(char*, void*);
 static int toNumber(char*, void*);

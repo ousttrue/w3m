@@ -80,12 +80,6 @@
 #define RELATIVE_WIDTH(w) (((w) >= 0) ? (int)((w) / pixel_per_char) : (w))
 #define REAL_WIDTH(w, limit) (((w) >= 0) ? (int)((w) / pixel_per_char) : -(w) * (limit) / 100)
 
-#define INLINE_IMG_NONE 0
-#define INLINE_IMG_OSC5379 1
-#define INLINE_IMG_SIXEL 2
-#define INLINE_IMG_ITERM2 3
-#define INLINE_IMG_KITTY 4
-
 /*
  * Types.
  */
@@ -216,7 +210,6 @@
 extern int LINES, COLS;
 #define LASTLINE (LINES - 1)
 
-global int IndentIncr init(4);
 global int PagerMax init(PAGER_MAX_LINE);
 
 global char SearchHeader init(FALSE);
@@ -292,9 +285,6 @@ global int pseudoInlines init(TRUE);
 #define DEF_MAILER "/usr/bin/mail"
 global char* Editor init(DEF_EDITOR);
 global char* Mailer init(DEF_MAILER);
-#define MAILTO_OPTIONS_IGNORE 1
-#define MAILTO_OPTIONS_USE_MAILTO_URL 2
-global int MailtoOptions init(MAILTO_OPTIONS_IGNORE);
 #define DEF_EXT_BROWSER "/usr/bin/firefox"
 global char* ExtBrowser init(DEF_EXT_BROWSER);
 global char* ExtBrowser2 init(0);
@@ -323,15 +313,19 @@ global char* DirBufferCommand init("file:///$LIB/dirlist" CGI_EXTENSION);
 global int UseDictCommand init(TRUE);
 global char* DictCommand init("file:///$LIB/w3mdict" CGI_EXTENSION);
 global int ignore_null_img_alt init(TRUE);
+
 #define DISPLAY_INS_DEL_SIMPLE 0
 #define DISPLAY_INS_DEL_NORMAL 1
 #define DISPLAY_INS_DEL_FONTIFY 2
+
 global int displayInsDel init(DISPLAY_INS_DEL_NORMAL);
 global int FoldTextarea init(FALSE);
 global int FoldLine init(FALSE);
+
 #define DEFAULT_URL_EMPTY 0
 #define DEFAULT_URL_CURRENT 1
 #define DEFAULT_URL_LINK 2
+
 global int DefaultURLString init(DEFAULT_URL_CURRENT);
 global int MarkAllPages init(FALSE);
 
