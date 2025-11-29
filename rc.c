@@ -1340,7 +1340,7 @@ Str load_option_panel(void)
         struct param_section* section = &sections[i];
         Strcat_m_charp(src, "<h1>", section->name, "</h1>", NULL);
         Strcat_charp(src, "<table width=100% cellpadding=0>");
-        for (struct param_ptr* p = sections->params; p->name; ++p) {
+        for (struct param_ptr* p = section->params; p->name; ++p) {
             Strcat_m_charp(src, "<tr><td>", p->comment, NULL);
             Strcat(src, Sprintf("</td><td width=%d>", (int)(28 * pixel_per_char)));
             switch (p->inputtype) {
