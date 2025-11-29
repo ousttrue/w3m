@@ -1,10 +1,11 @@
 const std = @import("std");
-const c = @cImport({
+pub const c = @cImport({
     @cInclude("Str.h");
     @cInclude("gc.h");
     @cInclude("myctype.h");
+    @cInclude("../gcstr.h");
 });
-const GcAllocator = @import("GcAllocator.zig");
+pub const GcAllocator = @import("GcAllocator.zig");
 
 fn StrLastChar(s: c.Str) ?u8 {
     if (s.*.length > 0) {
@@ -124,7 +125,7 @@ fn createStr(
     return x;
 }
 
-export fn Strnew() c.Str {
+pub export fn Strnew() c.Str {
     return createStr(allocStrBuf(c.INITIALStr_SIZE));
 }
 test Strnew {
@@ -159,7 +160,7 @@ test Strnew_size {
     }
 }
 
-export fn Strnew_charp_n(_p: [*c]const u8, len: c_int) c.Str {
+pub export fn Strnew_charp_n(_p: [*c]const u8, len: c_int) c.Str {
     const p = _p orelse return Strnew();
     const buf = allocStrBufFrom_charp_n(p, len);
     return createStr(buf);
@@ -186,7 +187,7 @@ test Strnew_charp_n {
     }
 }
 
-export fn Strnew_charp(_p: [*c]const u8) c.Str {
+pub export fn Strnew_charp(_p: [*c]const u8) c.Str {
     const p = _p orelse return Strnew();
 
     const len = std.mem.len(p);
@@ -274,7 +275,7 @@ test Strcat_m_charp {
     Strcat_m_charp(x, "abcdefghij", "abcdefghij", "abcdefghij", @as([*c]const u8, @ptrFromInt(0)));
     try std.testing.expectEqualSlices(u8, "abcabcdefghijabcdefghijabcdefghij", std.mem.sliceTo(x.*.ptr, 0));
     try std.testing.expectEqual(33, x.*.length);
-    try std.testing.expectEqual(33 + 1, x.*.area_size);
+    try std.testing.expectEqual(64, x.*.area_size);
 }
 
 export fn Strnew_m_charp(p0: [*c]const u8, ...) c.Str {

@@ -55,4 +55,5 @@ bool config_set_param(const char* name, const char* value);
 bool str_to_bool(const char* value, bool old);
 const char* config_get_param_option(const char* name);
 bool config_set_param_option(const char* option);
-Str config_panel_html();
+extern Str config_panel_html();
+Str _config_panel_html();

@@ -946,7 +946,7 @@ static char optionpanel_src1[] = "<html><head><title>Option Setting Panel</title
 </form><br>\
 <form method=internal action=option>";
 
-Str config_panel_html(void)
+Str _config_panel_html(void)
 {
     if (optionpanel_str == NULL)
         optionpanel_str = Sprintf(optionpanel_src1, w3m_version,

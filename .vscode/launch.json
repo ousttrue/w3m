@@ -8,7 +8,7 @@
             "type": "lldb",
             "request": "launch",
             "name": "lldb",
-            "program": "${workspaceFolder}/zig-out/bin/w3m",
+            "program": "${workspaceFolder}/zig-out/bin/test",
             "args": [],
             "cwd": "${workspaceFolder}",
             "env": {

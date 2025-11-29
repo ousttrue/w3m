@@ -102,6 +102,8 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/main.zig"),
         .link_libc = true,
     });
+    mod.addIncludePath(b.path(""));
+
     const exe = b.addExecutable(.{
         .name = "w3m",
         .root_module = mod,
@@ -112,11 +114,17 @@ pub fn build(b: *std.Build) void {
     exe.linkLibrary(gcstr);
     const gcstr_header = gcstr.getEmittedIncludeTree();
     exe.addIncludePath(gcstr_header);
+    mod.addImport("gcstr", gcstr.root_module);
 
     const test_exe = b.addTest(.{
-        .root_module = gcstr.root_module,
+        .name = "test",
+        .root_module = mod,
     });
-    b.step("test", "gcstr test").dependOn(&b.addRunArtifact(test_exe).step);
+    test_exe.linkLibrary(gcstr);
+    const test_install = b.addInstallArtifact(test_exe, .{});
+    const test_run = b.addRunArtifact(test_exe);
+    test_run.step.dependOn(&test_install.step);
+    b.step("test", "test").dependOn(&test_run.step);
 
     const lua_dep = b.dependency("zlua", .{
         .target = target,
