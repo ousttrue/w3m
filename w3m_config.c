@@ -758,12 +758,6 @@ static struct param_ptr* config_search_param(const char* name)
     return NULL;
 }
 
-const char* config_get_param(const char* name)
-{
-    struct param_ptr* p = config_search_param(name);
-    return p ? to_str(p)->ptr : NULL;
-}
-
 static int
 str_to_color(const char* value)
 {
@@ -878,11 +872,16 @@ bool config_set_param(const char* name, const char* value)
     return true;
 }
 
-int set_param_option(char* option)
+const char* config_get_param_option(const char* name)
+{
+    struct param_ptr* p = config_search_param(name);
+    return p ? to_str(p)->ptr : NULL;
+}
+
+bool config_set_param_option(const char* option)
 {
     Str tmp = Strnew();
-    char *p = option, *q;
-
+    const char* p = option;
     while (*p && !IS_SPACE(*p) && *p != '=')
         Strcat_char(tmp, *p++);
     while (*p && IS_SPACE(*p))
@@ -893,9 +892,11 @@ int set_param_option(char* option)
             p++;
     }
     Strlower(tmp);
-    if (config_set_param(tmp->ptr, p))
-        goto option_assigned;
-    q = tmp->ptr;
+    if (config_set_param(tmp->ptr, p)) {
+        return 1;
+        // goto option_assigned;
+    }
+    char* q = tmp->ptr;
     if (!strncmp(q, "no", 2)) { /* -o noxxx, -o no-xxx, -o no_xxx */
         q += 2;
         if (*q == '-' || *q == '_')
@@ -904,11 +905,11 @@ int set_param_option(char* option)
         q++;
     else
         return 0;
-    if (config_set_param(q, "0"))
-        goto option_assigned;
+    if (config_set_param(q, "0")) {
+        // goto option_assigned;
+        return 1;
+    }
     return 0;
-option_assigned:
-    return 1;
 }
 
 void config_load(FILE* f)
@@ -945,7 +946,7 @@ static char optionpanel_src1[] = "<html><head><title>Option Setting Panel</title
 </form><br>\
 <form method=internal action=option>";
 
-Str load_option_panel(void)
+Str config_panel_html(void)
 {
     if (optionpanel_str == NULL)
         optionpanel_str = Sprintf(optionpanel_src1, w3m_version,

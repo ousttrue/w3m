@@ -1,6 +1,5 @@
 #pragma once
-#include <stdbool.h>
-#include <stdio.h>
+#include <gcstr.h>
 
 enum ParamTypes {
     P_INT = 0,
@@ -53,5 +52,7 @@ extern struct W3mConfig w3m_config;
 void config_initialize();
 void config_load(FILE* f);
 bool config_set_param(const char* name, const char* value);
-const char* config_get_param(const char* name);
 bool str_to_bool(const char* value, bool old);
+const char* config_get_param_option(const char* name);
+bool config_set_param_option(const char* option);
+Str config_panel_html();

@@ -480,7 +480,7 @@ int w3m_parse_arg(int argc, char** argv)
             else if (!strcmp("-no-proxy", argv[i]))
                 use_proxy = false;
             else if (!strcmp("-4", argv[i]) || !strcmp("-6", argv[i]))
-                set_param_option(Sprintf("dns_order=%c", argv[i][1])->ptr);
+                config_set_param_option(Sprintf("dns_order=%c", argv[i][1])->ptr);
             else if (!strcmp("-post", argv[i])) {
                 if (++i >= argc)
                     usage();
@@ -514,16 +514,16 @@ int w3m_parse_arg(int argc, char** argv)
             else if (!strncmp("-title=", argv[i], 7))
                 displayTitleTerm = argv[i] + 7;
             else if (!strcmp("-insecure", argv[i])) {
-                set_param_option("ssl_cipher=ALL:eNULL");
-                set_param_option("ssl_min_version=all");
-                set_param_option("ssl_forbid_method=");
-                set_param_option("ssl_verify_server=0");
+                config_set_param_option("ssl_cipher=ALL:eNULL");
+                config_set_param_option("ssl_min_version=all");
+                config_set_param_option("ssl_forbid_method=");
+                config_set_param_option("ssl_verify_server=0");
             } else if (!strcmp("-o", argv[i]) || !strcmp("-show-option", argv[i])) {
                 if (!strcmp("-show-option", argv[i]) || ++i >= argc || !strcmp(argv[i], "?")) {
                     show_params(stdout);
                     exit(0);
                 }
-                if (!set_param_option(argv[i])) {
+                if (!config_set_param_option(argv[i])) {
                     /* option set failed */
                     /* FIXME: gettextize? */
                     fprintf(stderr, "%s: bad option\n", argv[i]);
@@ -3533,10 +3533,7 @@ DEFUN(ldBmark, BOOKMARK VIEW_BOOKMARK, "View bookmarks")
 /* Add current to bookmark */
 DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
 {
-    Str tmp;
-    FormList* request;
-
-    tmp = Sprintf("mode=panel&cookie=%s&bmark=%s&url=%s&title=%s"
+    Str tmp = Sprintf("mode=panel&cookie=%s&bmark=%s&url=%s&title=%s"
                   "&charset=%s",
         (Str_form_quote(localCookie()))->ptr,
         (Str_form_quote(Strnew_charp(BookmarkFile)))->ptr,
@@ -3546,7 +3543,8 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
              BookmarkCharset)))
             ->ptr,
         wc_ces_to_charset(BookmarkCharset));
-    request = newFormList(NULL, "post", NULL, NULL, NULL, NULL, NULL);
+
+    FormList* request = newFormList(NULL, "post", NULL, NULL, NULL, NULL, NULL);
     request->body = tmp->ptr;
     request->length = tmp->length;
     cmd_loadURL("file:///$LIB/" W3MBOOKMARK_CMDNAME, NULL, NO_REFERER,
@@ -3556,7 +3554,7 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
 /* option setting */
 DEFUN(ldOpt, OPTIONS, "Display options setting panel")
 {
-    Str src = load_option_panel();
+    Str src = config_panel_html();
     struct Buffer* buf = loadHTMLString(src);
     if (buf)
         buf->document_charset = WC_CES_US_ASCII;
@@ -3570,7 +3568,7 @@ DEFUN(setOpt, SET_OPTION, "Set option")
     char* opt = searchKeyData();
     if (opt == NULL || *opt == '\0' || strchr(opt, '=') == NULL) {
         if (opt != NULL && *opt != '\0') {
-            const char* v = config_get_param(opt);
+            const char* v = config_get_param_option(opt);
             opt = Sprintf("%s=%s", opt, v ? v : "")->ptr;
         }
         opt = inputStrHist("Set option: ", opt, TextHist)->ptr;
@@ -3579,7 +3577,7 @@ DEFUN(setOpt, SET_OPTION, "Set option")
             return;
         }
     }
-    if (set_param_option(opt))
+    if (config_set_param_option(opt))
         sync_with_option();
     displayBuffer(Currentbuf, B_REDRAW_IMAGE);
 }
