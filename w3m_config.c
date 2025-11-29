@@ -448,7 +448,7 @@ struct param_ptr params5[] = {
         (void*)&personal_document_root, CMT_PDROOT, NULL },
     { "cgi_bin", P_STRING, PI_TEXT, (void*)&cgi_bin, CMT_CGIBIN, NULL },
     { "index_file", P_STRING, PI_TEXT, (void*)&index_file, CMT_IFILE, NULL },
-    { "tmp_dir", P_STRING, PI_TEXT, (void*)&param_tmp_dir, CMT_TMP, NULL },
+    { "tmp_dir", P_STRING, PI_TEXT, (void*)&w3m_config.param_tmp_dir, CMT_TMP, NULL },
     { NULL, 0, 0, NULL, NULL, NULL },
 };
 
@@ -630,8 +630,10 @@ static struct param_section sections[] = {
     { NULL, NULL }
 };
 
-struct W3mConfig g_config = {
+struct W3mConfig w3m_config = {
     .sections = sections,
+    .config_file = 0,
+    .param_tmp_dir = 0,
 };
 
 static Str to_str(struct param_ptr* p)
@@ -684,9 +686,9 @@ void config_initialize()
 
     /* count table size */
     RC_table_size = 0;
-    for (int j = 0; g_config.sections[j].name != NULL; j++) {
+    for (int j = 0; w3m_config.sections[j].name != NULL; j++) {
         int i = 0;
-        while (g_config.sections[j].params[i].name) {
+        while (w3m_config.sections[j].params[i].name) {
             i++;
             RC_table_size++;
         }
@@ -694,10 +696,10 @@ void config_initialize()
 
     RC_search_table = New_N(struct rc_search_table, RC_table_size);
     int k = 0;
-    for (int j = 0; g_config.sections[j].name != NULL; j++) {
+    for (int j = 0; w3m_config.sections[j].name != NULL; j++) {
         int i = 0;
-        while (g_config.sections[j].params[i].name) {
-            RC_search_table[k].param = &g_config.sections[j].params[i];
+        while (w3m_config.sections[j].params[i].name) {
+            RC_search_table[k].param = &w3m_config.sections[j].params[i];
             k++;
             i++;
         }
@@ -1039,24 +1041,24 @@ Str load_option_panel(void)
 void show_params(FILE* fp)
 {
     fputs("\nconfiguration parameters\n", fp);
-    for (int j = 0; g_config.sections[j].name != NULL; j++) {
+    for (int j = 0; w3m_config.sections[j].name != NULL; j++) {
         const char* cmt;
         if (!OptionEncode)
-            cmt = wc_conv(g_config.sections[j].name, OptionCharset,
+            cmt = wc_conv(w3m_config.sections[j].name, OptionCharset,
                 InnerCharset)
                       ->ptr;
         else
-            cmt = g_config.sections[j].name;
+            cmt = w3m_config.sections[j].name;
         fprintf(fp, "  section[%d]: %s\n", j, conv_to_system(cmt));
         int i = 0;
-        while (g_config.sections[j].params[i].name) {
+        while (w3m_config.sections[j].params[i].name) {
             const char* t = "";
-            switch (g_config.sections[j].params[i].type) {
+            switch (w3m_config.sections[j].params[i].type) {
             case P_INT:
             case P_SHORT:
             case P_CHARINT:
             case P_NZINT:
-                t = (g_config.sections[j].params[i].inputtype == PI_ONOFF) ? "bool" : "number";
+                t = (w3m_config.sections[j].params[i].inputtype == PI_ONOFF) ? "bool" : "number";
                 break;
             case P_CHAR:
                 t = "char";
@@ -1081,16 +1083,16 @@ void show_params(FILE* fp)
                 break;
             }
             if (!OptionEncode)
-                cmt = wc_conv(g_config.sections[j].params[i].comment,
+                cmt = wc_conv(w3m_config.sections[j].params[i].comment,
                     OptionCharset, InnerCharset)
                           ->ptr;
             else
-                cmt = g_config.sections[j].params[i].comment;
-            int l = 30 - (strlen(g_config.sections[j].params[i].name) + strlen(t));
+                cmt = w3m_config.sections[j].params[i].comment;
+            int l = 30 - (strlen(w3m_config.sections[j].params[i].name) + strlen(t));
             if (l < 0)
                 l = 1;
             fprintf(fp, "    -o %s=<%s>%*s%s\n",
-                g_config.sections[j].params[i].name, t, l, " ",
+                w3m_config.sections[j].params[i].name, t, l, " ",
                 conv_to_system(cmt));
             i++;
         }

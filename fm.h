@@ -142,11 +142,6 @@ global char DisableCenter init(false);
 extern int symbol_width;
 extern int symbol_width0;
 
-global char* rc_dir init(0);
-global char* tmp_dir;
-global char* param_tmp_dir init(0);
-global char* config_file init(0);
-
 global int relative_wheel_scroll init(false);
 global int fixed_wheel_scroll_count init(5);
 global int relative_wheel_scroll_ratio init(30);

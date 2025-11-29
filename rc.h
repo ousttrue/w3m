@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <gcstr.h>
 
-
 void init_rc(void);
 void show_params(FILE* fp);
 char* confFile(char* base);

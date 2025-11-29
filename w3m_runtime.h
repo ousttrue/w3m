@@ -7,6 +7,10 @@ struct w3m {
     const char* CurrentDir;
     int CurrentPid;
     const char* MyProgramName;
+    /// ~/.w3m
+    char* rc_dir;
+    /// ~/.w3m
+    char* tmp_dir;
 };
 extern struct w3m w3m;
 

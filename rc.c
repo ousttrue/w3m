@@ -143,29 +143,29 @@ void init_rc(void)
     int i;
     FILE* f;
 
-    if (rc_dir != NULL)
+    if (w3m.rc_dir != NULL)
         goto open_rc;
 
-    rc_dir = allocStr(getenv("W3M_DIR"), -1);
-    if (rc_dir == NULL || *rc_dir == '\0')
-        rc_dir = allocStr(RC_DIR, -1);
-    if (rc_dir == NULL || *rc_dir == '\0') {
+    w3m.rc_dir = allocStr(getenv("W3M_DIR"), -1);
+    if (w3m.rc_dir == NULL || *w3m.rc_dir == '\0')
+        w3m.rc_dir = allocStr(RC_DIR, -1);
+    if (w3m.rc_dir == NULL || *w3m.rc_dir == '\0') {
         exit(1);
     }
-    rc_dir = expandPath(rc_dir)->ptr;
+    w3m.rc_dir = expandPath(w3m.rc_dir)->ptr;
 
-    i = strlen(rc_dir);
-    if (i > 1 && rc_dir[i - 1] == '/')
-        rc_dir[i - 1] = '\0';
+    i = strlen(w3m.rc_dir);
+    if (i > 1 && w3m.rc_dir[i - 1] == '/')
+        w3m.rc_dir[i - 1] = '\0';
 
-    tmp_dir = rc_dir;
+    w3m.tmp_dir = w3m.rc_dir;
 
-    if (do_recursive_mkdir(rc_dir) == -1) {
+    if (do_recursive_mkdir(w3m.rc_dir) == -1) {
         exit(1);
     }
 
-    if (config_file == NULL)
-        config_file = rcFile(CONFIG_FILE);
+    if (w3m_config.config_file == NULL)
+        w3m_config.config_file = rcFile(CONFIG_FILE);
 
     config_initialize();
 
@@ -179,7 +179,7 @@ open_rc:
         config_load(f);
         fclose(f);
     }
-    if (config_file && (f = fopen(config_file, "rt")) != NULL) {
+    if (w3m_config.config_file && (f = fopen(w3m_config.config_file, "rt")) != NULL) {
         config_load(f);
         fclose(f);
     }
@@ -189,31 +189,31 @@ void init_tmp(void)
 {
     int i;
 
-    if (param_tmp_dir)
-        tmp_dir = param_tmp_dir;
-    if (*tmp_dir == '\0')
-        tmp_dir = rc_dir;
+    if (w3m_config.param_tmp_dir)
+        w3m.tmp_dir = w3m_config.param_tmp_dir;
+    if (*w3m.tmp_dir == '\0')
+        w3m.tmp_dir = w3m.rc_dir;
 
-    if (strcmp(tmp_dir, rc_dir) == 0) {
+    if (strcmp(w3m.tmp_dir, w3m.rc_dir) == 0) {
         return;
     }
 
-    tmp_dir = expandPath(tmp_dir)->ptr;
-    i = strlen(tmp_dir);
-    if (i > 1 && tmp_dir[i - 1] == '/')
-        tmp_dir[i - 1] = '\0';
-    if (do_recursive_mkdir(tmp_dir) == -1)
+    w3m.tmp_dir = expandPath(w3m.tmp_dir)->ptr;
+    i = strlen(w3m.tmp_dir);
+    if (i > 1 && w3m.tmp_dir[i - 1] == '/')
+        w3m.tmp_dir[i - 1] = '\0';
+    if (do_recursive_mkdir(w3m.tmp_dir) == -1)
         goto tmp_dir_err;
     return;
 
 tmp_dir_err:
-    if (((tmp_dir = getenv("TMPDIR")) == NULL || *tmp_dir == '\0') && ((tmp_dir = getenv("TMP")) == NULL || *tmp_dir == '\0') && ((tmp_dir = getenv("TEMP")) == NULL || *tmp_dir == '\0'))
-        tmp_dir = "/tmp";
-    tmp_dir = mkdtemp(Strnew_m_charp(tmp_dir, "/w3m-XXXXXX", NULL)->ptr);
-    if (tmp_dir)
+    if (((w3m.tmp_dir = getenv("TMPDIR")) == NULL || *w3m.tmp_dir == '\0') && ((w3m.tmp_dir = getenv("TMP")) == NULL || *w3m.tmp_dir == '\0') && ((w3m.tmp_dir = getenv("TEMP")) == NULL || *w3m.tmp_dir == '\0'))
+        w3m.tmp_dir = "/tmp";
+    w3m.tmp_dir = mkdtemp(Strnew_m_charp(w3m.tmp_dir, "/w3m-XXXXXX", NULL)->ptr);
+    if (w3m.tmp_dir)
         ;
     else
-        tmp_dir = rc_dir;
+        w3m.tmp_dir = w3m.rc_dir;
     return;
 }
 
@@ -223,10 +223,10 @@ void panel_set_option(struct KeyValueList* arg)
     char* p;
     Str s = Strnew(), tmp;
 
-    if (config_file == NULL) {
+    if (w3m_config.config_file == NULL) {
         tui_disp_message("There's no config file... config not saved", false);
     } else {
-        f = fopen(config_file, "wt");
+        f = fopen(w3m_config.config_file, "wt");
         if (f == NULL) {
             tui_disp_message("Can't write option!", false);
         }
@@ -256,7 +256,7 @@ char* rcFile(char* base)
     if (base && (base[0] == '/' || (base[0] == '.' && (base[1] == '/' || (base[1] == '.' && base[2] == '/'))) || (base[0] == '~' && base[1] == '/')))
         /* /file, ./file, ../file, ~/file */
         return expandPath(base)->ptr;
-    return expandPath(Strnew_m_charp(rc_dir, "/", base, NULL)->ptr)->ptr;
+    return expandPath(Strnew_m_charp(w3m.rc_dir, "/", base, NULL)->ptr)->ptr;
 }
 
 char* auxbinFile(char* base)

@@ -377,7 +377,7 @@ Str tmpfname(int type, const char* ext)
 
     switch (type) {
     case TMPF_HIST:
-        dir = rc_dir;
+        dir = w3m.rc_dir;
         break;
     case TMPF_DFL:
     case TMPF_COOKIE:
@@ -385,7 +385,7 @@ Str tmpfname(int type, const char* ext)
     case TMPF_FRAME:
     case TMPF_CACHE:
     default:
-        dir = tmp_dir;
+        dir = w3m.tmp_dir;
     }
 
     tmpf = Sprintf("%s/w3m%s%d-%d%s",

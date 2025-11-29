@@ -42,8 +42,13 @@ struct param_section {
 };
 
 struct W3mConfig {
+    char* param_tmp_dir;
+    /// ~/.w3m/config
+    const char* config_file;
+
     struct param_section* sections;
 };
+extern struct W3mConfig w3m_config;
 
 void config_initialize();
 void config_load(FILE* f);

@@ -1,5 +1,6 @@
 #define MAINPROGRAM
 #include "signal_jmp.h"
+#include "w3m_config.h"
 #include "fm.h"
 #include "tui.h"
 #include "term_entry.h"
@@ -296,7 +297,6 @@ int w3m_parse_arg(int argc, char** argv)
     w3m.CurrentDir = currentdir();
     w3m.CurrentPid = (int)getpid();
     BookmarkFile = NULL;
-    config_file = NULL;
 
     {
         char hostname[HOST_NAME_MAX + 2];
@@ -317,7 +317,7 @@ int w3m_parse_arg(int argc, char** argv)
                 argv[i] = "-dummy";
                 if (++i >= argc)
                     usage();
-                config_file = argv[i];
+                w3m_config.config_file = argv[i];
                 argv[i] = "-dummy";
             } else if (!strcmp("-h", argv[i]) || !strcmp("-help", argv[i]))
                 help();
