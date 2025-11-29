@@ -2,9 +2,13 @@
 #include <gcstr.h>
 
 extern const char* w3m_version;
-extern const char* CurrentDir;
-extern int CurrentPid;
-extern const char* MyProgramName;
+
+struct w3m {
+    const char* CurrentDir;
+    int CurrentPid;
+    const char* MyProgramName;
+};
+extern struct w3m w3m;
 
 extern wc_ces DisplayCharset;
 extern wc_ces DocumentCharset;
@@ -24,5 +28,3 @@ char* w3m_help_dir(void);
 
 /// expand '~'
 Str expandPath(const char* name);
-
-

@@ -33,7 +33,7 @@ void dl_add(pid_t pid, const char* url, const char* save, const char* lock, size
     d->pid = pid;
     d->url = url;
     if (save[0] != '/' && save[0] != '~')
-        save = Strnew_m_charp(CurrentDir, "/", save, NULL)->ptr;
+        save = Strnew_m_charp(w3m.CurrentDir, "/", save, NULL)->ptr;
     d->save = expandPath(save)->ptr;
     d->lock = lock;
     d->size = size;

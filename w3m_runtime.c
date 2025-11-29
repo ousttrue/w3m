@@ -4,9 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-const char* CurrentDir;
-int CurrentPid;
-const char* MyProgramName = ("w3m");
+struct w3m w3m = { 0 };
 
 #define DISPLAY_CHARSET WC_CES_UTF_8
 #define DOCUMENT_CHARSET WC_CES_UTF_8

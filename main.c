@@ -284,8 +284,8 @@ int w3m_parse_arg(int argc, char** argv)
     load_argv = New_N(char*, argc - 1);
     load_argc = 0;
 
-    CurrentDir = currentdir();
-    CurrentPid = (int)getpid();
+    w3m.CurrentDir = currentdir();
+    w3m.CurrentPid = (int)getpid();
     BookmarkFile = NULL;
     config_file = NULL;
 
@@ -424,7 +424,7 @@ int w3m_parse_arg(int argc, char** argv)
                     usage();
                 BookmarkFile = argv[i];
                 if (BookmarkFile[0] != '~' && BookmarkFile[0] != '/') {
-                    Str tmp = Strnew_charp(CurrentDir);
+                    Str tmp = Strnew_charp(w3m.CurrentDir);
                     if (Strlastchar(tmp) != '/')
                         Strcat_char(tmp, '/');
                     Strcat_charp(tmp, BookmarkFile);
@@ -2565,7 +2565,7 @@ query_from_followform(Str* query, FormItemList* fi, int multipart)
             return;
         }
         fi->parent->body = (*query)->ptr;
-        fi->parent->boundary = Sprintf("------------------------------%d%ld%ld%ld", CurrentPid,
+        fi->parent->boundary = Sprintf("------------------------------%d%ld%ld%ld", w3m.CurrentPid,
             fi->parent, fi->parent->body, fi->parent->boundary)
                                    ->ptr;
     }

@@ -615,7 +615,7 @@ char* file_to_url(char* file)
         file += 2;
     } else
         if (file[0] != '/') {
-        tmp = Strnew_charp(CurrentDir);
+        tmp = Strnew_charp(w3m.CurrentDir);
         if (Strlastchar(tmp) != '/')
             Strcat_char(tmp, '/');
         Strcat_charp(tmp, file);
@@ -659,7 +659,7 @@ Str tmpfname(int type, const char* ext)
     tmpf = Sprintf("%s/w3m%s%d-%d%s",
         dir,
         tmpf_base[type],
-        CurrentPid, tmpf_seq[type]++, (ext) ? ext : "");
+        w3m.CurrentPid, tmpf_seq[type]++, (ext) ? ext : "");
     pushText(fileToDelete, tmpf->ptr);
     return tmpf;
 }

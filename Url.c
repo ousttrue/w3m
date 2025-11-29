@@ -564,7 +564,7 @@ void parseURL2(char* url, struct Url* pu, struct Url* current)
 #endif
             strcmp(pu->file, "-")) {
             /* local file, relative path */
-            tmp = Strnew_charp(CurrentDir);
+            tmp = Strnew_charp(w3m.CurrentDir);
             if (Strlastchar(tmp) != '/')
                 Strcat_char(tmp, '/');
             Strcat_charp(tmp, file_unquote(pu->file));
