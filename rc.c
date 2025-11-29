@@ -1,5 +1,6 @@
 #include "rc.h"
 #include "fm.h"
+#include "terms.h"
 #include "w3m_runtime.h"
 #include "Url.h"
 #include "tui.h"
@@ -23,6 +24,8 @@
 
 #define CONFIG_FILE "config"
 #define W3MCONFIG "w3mconfig"
+
+#define set_no_proxy(domains) (NO_proxy_domains = make_domain_list(domains))
 
 static void
 parse_proxy(void)

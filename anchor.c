@@ -1,5 +1,6 @@
 #include "anchor.h"
 #include "file.h"
+#include "terms.h"
 #include "form.h"
 #include "image.h"
 #include "map.h"

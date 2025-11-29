@@ -3,6 +3,17 @@
 #include <gcstr/Str.h>
 #include <stdbool.h>
 
+#define ALIGN_CENTER 0
+#define ALIGN_LEFT 1
+#define ALIGN_RIGHT 2
+#define ALIGN_MIDDLE 4
+#define ALIGN_TOP 5
+#define ALIGN_BOTTOM 6
+
+#define VALIGN_MIDDLE 0
+#define VALIGN_TOP 1
+#define VALIGN_BOTTOM 2
+
 struct HtmlTag {
     enum HtmlTags tagid;
     enum HtmlTagAttributes* attrid;
@@ -21,4 +32,3 @@ extern struct HtmlTag* parse_tag(const char** s, bool internal);
 extern int parsedtag_get_value(struct HtmlTag* tag, int id, void* value);
 extern int parsedtag_set_value(struct HtmlTag* tag, int id, char* value);
 extern Str parsedtag2str(struct HtmlTag* tag);
-

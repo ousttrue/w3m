@@ -2,6 +2,7 @@
 #include <stddef.h>
 
 extern int LINES, COLS;
+#define LASTLINE (LINES - 1)
 
 struct TermSize {
     int lines;

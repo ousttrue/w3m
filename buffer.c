@@ -15,6 +15,8 @@
 #include "istream.h"
 #include <unistd.h>
 
+#define IS_EMPTY_PARSED_URL(pu) ((pu)->scheme == SCM_UNKNOWN && !(pu)->file)
+
 TabBuffer* CurrentTab = 0;
 TabBuffer* FirstTab = 0;
 TabBuffer* LastTab = 0;

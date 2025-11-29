@@ -1,4 +1,5 @@
 #include "frame.h"
+#include "html_feed.h"
 #include "html_read_token.h"
 #include "signal_jmp.h"
 #include "tui.h"

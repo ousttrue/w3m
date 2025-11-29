@@ -51,6 +51,17 @@
 #include <unistd.h>
 #include <utime.h>
 
+#define in_bold fontstat[0]
+#define in_under fontstat[1]
+#define in_italic fontstat[2]
+#define in_strike fontstat[3]
+#define in_ins fontstat[4]
+#define in_stand fontstat[5]
+
+#define REAL_WIDTH(w, limit) (((w) >= 0) ? (int)((w) / pixel_per_char) : -(w) * (limit) / 100)
+#define SHELLBUFFERNAME "*Shellout*"
+#define CPIPEBUFFERNAME "*stream(closed)*"
+
 #ifndef max
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #endif /* not max */
@@ -420,7 +431,6 @@ void cleanup_line(Str s, int mode)
         }
     }
 }
-
 
 /*
  * convert line
@@ -4525,7 +4535,8 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
                         s = NULL;
                         parsedtag_get_value(tag, ATTR_TITLE, &s);
                         p = url_quote_conv(remove_space(p)->ptr,
-                            buf->document_charset)->ptr;
+                            buf->document_charset)
+                                ->ptr;
                         a_img = registerImg(buf, p, s, currentLn(buf), pos);
                         a_img->hseq = iseq;
                         a_img->image = NULL;

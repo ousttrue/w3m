@@ -52,6 +52,15 @@
 #include <gcstr.h>
 #include <locale.h>
 
+#define MAXIMUM_COLS 1024
+#define DEFAULT_COLS 80
+
+#ifndef HOST_NAME_MAX
+#define HOST_NAME_MAX 255
+#endif
+
+#define DICTBUFFERNAME "*dictionary*"
+
 unsigned char last_key = 0;
 
 #define DSTR_LEN 256

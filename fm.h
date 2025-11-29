@@ -5,10 +5,7 @@
  *
  * You can use,copy,modify and distribute this program without any permission.
  */
-
-#ifndef FM_H
-#define FM_H
-
+#pragma once
 #ifdef MAINPROGRAM
 #define global
 #define init(x) = (x)
@@ -18,17 +15,6 @@
 #endif /* not MAINPROGRAM */
 
 #define DEFUN(funcname, macroname, docstring) void funcname(void)
-
-/*
- * Constants.
- */
-#define PAGER_MAX_LINE 10000 /* Maximum line kept as pager */
-
-#define MAXIMUM_COLS 1024
-#define DEFAULT_COLS 80
-
-#define MAX_IMAGE 1000
-#define MAX_IMAGE_SIZE 2048
 
 #ifdef FALSE
 #undef FALSE
@@ -41,151 +27,11 @@
 #define FALSE 0
 #define TRUE 1
 
-#define SHELLBUFFERNAME "*Shellout*"
-#define PIPEBUFFERNAME "*stream*"
-#define CPIPEBUFFERNAME "*stream(closed)*"
-#define DICTBUFFERNAME "*dictionary*"
-
-#ifndef HOST_NAME_MAX
-#define HOST_NAME_MAX 255
-#endif
-
-/* Search Result */
-#define SR_FOUND 0x1
-#define SR_NOTFOUND 0x2
-#define SR_WRAPPED 0x4
-
-/* mark URL, Message-ID */
-#define CHK_URL 1
-#define CHK_NMID 2
-
-/* Completion status. */
-#define CPL_OK 0
-#define CPL_AMBIG 1
-#define CPL_FAIL 2
-#define CPL_MENU 3
-
-#define CPL_NEVER 0x0
-#define CPL_OFF 0x1
-#define CPL_ON 0x2
-#define CPL_ALWAYS 0x4
-#define CPL_URL 0x8
-
-#define IS_EMPTY_PARSED_URL(pu) ((pu)->scheme == SCM_UNKNOWN && !(pu)->file)
-
-/*
- * Macros.
- */
-
-#define RELATIVE_WIDTH(w) (((w) >= 0) ? (int)((w) / pixel_per_char) : (w))
-#define REAL_WIDTH(w, limit) (((w) >= 0) ? (int)((w) / pixel_per_char) : -(w) * (limit) / 100)
-
-/*
- * Types.
- */
-
-#define COPY_BUFROOT(dstbuf, srcbuf)       \
-    {                                      \
-        (dstbuf)->rootX = (srcbuf)->rootX; \
-        (dstbuf)->rootY = (srcbuf)->rootY; \
-        (dstbuf)->COLS = (srcbuf)->COLS;   \
-        (dstbuf)->LINES = (srcbuf)->LINES; \
-    }
-
-#define COPY_BUFPOSITION(dstbuf, srcbuf)                   \
-    {                                                      \
-        (dstbuf)->topLine = (srcbuf)->topLine;             \
-        (dstbuf)->currentLine = (srcbuf)->currentLine;     \
-        (dstbuf)->pos = (srcbuf)->pos;                     \
-        (dstbuf)->cursorX = (srcbuf)->cursorX;             \
-        (dstbuf)->cursorY = (srcbuf)->cursorY;             \
-        (dstbuf)->visualpos = (srcbuf)->visualpos;         \
-        (dstbuf)->currentColumn = (srcbuf)->currentColumn; \
-    }
-#define SAVE_BUFPOSITION(sbufp) COPY_BUFPOSITION(sbufp, Currentbuf)
-#define RESTORE_BUFPOSITION(sbufp) COPY_BUFPOSITION(Currentbuf, sbufp)
-#define TOP_LINENUMBER(buf) ((buf)->topLine ? (buf)->topLine->linenumber : 1)
-#define CUR_LINENUMBER(buf) ((buf)->currentLine ? (buf)->currentLine->linenumber : 1)
-
-#define NO_BUFFER ((struct Buffer*)1)
-
-#define _INIT_BUFFER_WIDTH (COLS - (showLineNum ? 6 : 1))
-#define INIT_BUFFER_WIDTH ((_INIT_BUFFER_WIDTH > 0) ? _INIT_BUFFER_WIDTH : 0)
-#define FOLD_BUFFER_WIDTH (FoldLine ? (INIT_BUFFER_WIDTH + 1) : -1)
-
-#define in_bold fontstat[0]
-#define in_under fontstat[1]
-#define in_italic fontstat[2]
-#define in_strike fontstat[3]
-#define in_ins fontstat[4]
-#define in_stand fontstat[5]
-
-#define RB_PRE 0x01
-#define RB_SCRIPT 0x02
-#define RB_STYLE 0x04
-#define RB_PLAIN 0x08
-#define RB_LEFT 0x10
-#define RB_CENTER 0x20
-#define RB_RIGHT 0x40
-#define RB_ALIGN (RB_LEFT | RB_CENTER | RB_RIGHT)
-#define RB_NOBR 0x80
-#define RB_P 0x100
-#define RB_PRE_INT 0x200
-#define RB_IN_DT 0x400
-#define RB_INTXTA 0x800
-#define RB_INSELECT 0x1000
-#define RB_IGNORE_P 0x2000
-#define RB_TITLE 0x4000
-#define RB_NFLUSHED 0x8000
-#define RB_NOFRAMES 0x10000
-#define RB_INTABLE 0x20000
-#define RB_PREMODE (RB_PRE | RB_PRE_INT | RB_SCRIPT | RB_STYLE | RB_PLAIN | RB_INTXTA)
-#define RB_SPECIAL (RB_PRE | RB_PRE_INT | RB_SCRIPT | RB_STYLE | RB_PLAIN | RB_NOBR)
-#define RB_PLAIN_PRE 0x40000
-
-#define RB_DEL 0x100000
-#define RB_S 0x200000
-#define RB_HTML5 0x400000
-
-#define RB_GET_ALIGN(obuf) ((obuf)->flag & RB_ALIGN)
-#define RB_SET_ALIGN(obuf, align)  \
-    do {                           \
-        (obuf)->flag &= ~RB_ALIGN; \
-        (obuf)->flag |= (align);   \
-    } while (0)
-#define RB_SAVE_FLAG(obuf)                                              \
-    {                                                                   \
-        if ((obuf)->flag_sp < RB_STACK_SIZE)                            \
-            (obuf)->flag_stack[(obuf)->flag_sp++] = RB_GET_ALIGN(obuf); \
-    }
-#define RB_RESTORE_FLAG(obuf)                                          \
-    {                                                                  \
-        if ((obuf)->flag_sp > 0)                                       \
-            RB_SET_ALIGN(obuf, (obuf)->flag_stack[--(obuf)->flag_sp]); \
-    }
-
-/* modes for align() */
-
-#define ALIGN_CENTER 0
-#define ALIGN_LEFT 1
-#define ALIGN_RIGHT 2
-#define ALIGN_MIDDLE 4
-#define ALIGN_TOP 5
-#define ALIGN_BOTTOM 6
-
-#define VALIGN_MIDDLE 0
-#define VALIGN_TOP 1
-#define VALIGN_BOTTOM 2
-
-#define set_no_proxy(domains) (NO_proxy_domains = make_domain_list(domains))
-
 /*
  * Globals.
  */
 
-extern int LINES, COLS;
-#define LASTLINE (LINES - 1)
-
+#define PAGER_MAX_LINE 10000 /* Maximum line kept as pager */
 global int PagerMax init(PAGER_MAX_LINE);
 
 global char SearchHeader init(FALSE);
@@ -197,16 +43,6 @@ global char ArgvIsURL init(TRUE);
 global char MetaRefresh init(FALSE);
 global char LocalhostOnly init(FALSE);
 global char* HostName init(0);
-
-#define TRAP_ON                                \
-    if (TrapSignal) {                          \
-        prevtrap = mySignal(SIGINT, KeyAbort); \
-    }
-#define TRAP_OFF                        \
-    if (TrapSignal) {                   \
-        if (prevtrap)                   \
-            mySignal(SIGINT, prevtrap); \
-    }
 
 global char* HTTP_proxy init(0);
 global char* HTTPS_proxy init(0);
@@ -348,5 +184,3 @@ global int FollowRedirection init(10);
 
 extern void deleteFiles(void);
 void w3m_exit(int i);
-
-#endif /* not FM_H */

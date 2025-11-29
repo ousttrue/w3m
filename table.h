@@ -2,6 +2,8 @@
 #include "Line.h"
 #include "textlist.h"
 
+#define RELATIVE_WIDTH(w) (((w) >= 0) ? (int)((w) / pixel_per_char) : (w))
+
 #if (defined(MESCHACH) && !defined(MATRIX))
 #define MATRIX
 #endif /* (defined(MESCHACH) && !defined(MATRIX)) */

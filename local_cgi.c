@@ -1,5 +1,6 @@
 #include "local_cgi.h"
 #include "tui.h"
+#include "terms.h"
 #include "signal_jmp.h"
 #include "fm.h"
 #include "etc.h"

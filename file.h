@@ -4,6 +4,8 @@
 #include <wc/wc.h>
 #include <gcstr.h>
 
+#define PIPEBUFFERNAME "*stream*"
+
 struct Buffer;
 struct form_list;
 struct Buffer* loadGeneralFile(char* path, struct Url* current, char* referer, enum LoadGeneralFlags flag, struct form_list* request);
@@ -43,8 +45,7 @@ extern void examineFile(char* path, struct URLFile* uf);
 extern int is_boundary(unsigned char*, unsigned char*);
 extern void pushEvent(int cmd, void* data);
 
-
-extern int save2tmp(struct URLFile *uf, char* tmpf);
+extern int save2tmp(struct URLFile* uf, char* tmpf);
 char* acceptableEncoding(void);
 
 void uncompress_stream(struct URLFile* uf, char** src);

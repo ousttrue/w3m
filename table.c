@@ -3,6 +3,7 @@
  */
 #include "table.h"
 #include "html_read_token.h"
+#include "terms.h"
 #include "entity.h"
 #include "image.h"
 #include "file.h"
