@@ -1188,7 +1188,7 @@ void init_rc(void)
         rc_dir = allocStr(RC_DIR, -1);
     if (rc_dir == NULL || *rc_dir == '\0')
         goto rc_dir_err;
-    rc_dir = expandPath(rc_dir);
+    rc_dir = expandPath(rc_dir)->ptr;
 
     i = strlen(rc_dir);
     if (i > 1 && rc_dir[i - 1] == '/')
@@ -1247,7 +1247,7 @@ void init_tmp(void)
         return;
     }
 
-    tmp_dir = expandPath(tmp_dir);
+    tmp_dir = expandPath(tmp_dir)->ptr;
     i = strlen(tmp_dir);
     if (i > 1 && tmp_dir[i - 1] == '/')
         tmp_dir[i - 1] = '\0';
@@ -1439,21 +1439,21 @@ char* rcFile(char* base)
 {
     if (base && (base[0] == '/' || (base[0] == '.' && (base[1] == '/' || (base[1] == '.' && base[2] == '/'))) || (base[0] == '~' && base[1] == '/')))
         /* /file, ./file, ../file, ~/file */
-        return expandPath(base);
-    return expandPath(Strnew_m_charp(rc_dir, "/", base, NULL)->ptr);
+        return expandPath(base)->ptr;
+    return expandPath(Strnew_m_charp(rc_dir, "/", base, NULL)->ptr)->ptr;
 }
 
 char* auxbinFile(char* base)
 {
-    return expandPath(Strnew_m_charp(w3m_auxbin_dir(), "/", base, NULL)->ptr);
+    return expandPath(Strnew_m_charp(w3m_auxbin_dir(), "/", base, NULL)->ptr)->ptr;
 }
 
 char* etcFile(char* base)
 {
-    return expandPath(Strnew_m_charp(w3m_etc_dir(), "/", base, NULL)->ptr);
+    return expandPath(Strnew_m_charp(w3m_etc_dir(), "/", base, NULL)->ptr)->ptr;
 }
 
 char* confFile(char* base)
 {
-    return expandPath(Strnew_m_charp(w3m_conf_dir(), "/", base, NULL)->ptr);
+    return expandPath(Strnew_m_charp(w3m_conf_dir(), "/", base, NULL)->ptr)->ptr;
 }

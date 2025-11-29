@@ -117,13 +117,15 @@ char* cleanupName(char* name)
     return buf;
 }
 
-const char* expandPath(const char* name)
+Str expandPath(const char* name)
 {
-    struct passwd *passent, *getpwnam(const char*);
-    Str extpath = NULL;
-
     if (name == NULL)
         return NULL;
+
+    struct passwd *passent;
+    // , *getpwnam(const char*);
+    Str extpath = NULL;
+
     const char* p = name;
     if (*p == '~') {
         p++;
@@ -146,10 +148,10 @@ const char* expandPath(const char* name)
         if (Strcmp_charp(extpath, "/") == 0 && *p == '/')
             p++;
         Strcat_charp(extpath, p);
-        return extpath->ptr;
+        return extpath;
     }
 rest:
-    return name;
+    return Strnew_charp(name);
 }
 
 #ifndef HAVE_STRCHR

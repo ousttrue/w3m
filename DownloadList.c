@@ -34,7 +34,7 @@ void dl_add(pid_t pid, const char* url, const char* save, const char* lock, size
     d->url = url;
     if (save[0] != '/' && save[0] != '~')
         save = Strnew_m_charp(CurrentDir, "/", save, NULL)->ptr;
-    d->save = expandPath(save);
+    d->save = expandPath(save)->ptr;
     d->lock = lock;
     d->size = size;
     d->time = time(0);

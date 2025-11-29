@@ -204,7 +204,7 @@ int main(void)
     }
 
     mode = tag_get_value(cgiarg, "mode");
-    mailcapfile = Strnew_charp(expandPath(USER_MAILCAP));
+    mailcapfile = Strnew_charp(expandPath(USER_MAILCAP)->ptr);
     if (mode && !strcmp(mode, "edit")) {
         char* referer;
         /* check if I can edit my mailcap */

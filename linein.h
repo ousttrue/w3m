@@ -12,34 +12,33 @@ enum InputFlags {
 
 struct Hist;
 typedef int (*IncFunc)(int ch, Str buf, Lineprop* prop);
-const char* inputLineHistSearch(const char* prompt, const char* def_str, enum InputFlags flag, struct Hist* hist, IncFunc incfunc);
+Str inputLineHistSearch(const char* prompt, const char* def_str, enum InputFlags flag, struct Hist* hist, IncFunc incfunc);
 
-inline static const char* inputLineHist(const char* p, const char* d, enum InputFlags f, struct Hist* h)
+inline static Str inputLineHist(const char* p, const char* d, enum InputFlags f, struct Hist* h)
 {
-    return inputLineHistSearch(p, d, f, h, NULL);
+    return (inputLineHistSearch(p, d, f, h, NULL));
 }
-inline static const char* inputLine(const char* p, const char* d, enum InputFlags f)
+inline static Str inputLine(const char* p, const char* d, enum InputFlags f)
 {
-    return inputLineHist(p, d, f, NULL);
+    return (inputLineHist(p, d, f, NULL));
 }
-inline static const char* inputStr(const char* p, const char* d)
+inline static Str inputStr(const char* p, const char* d)
 {
-    return inputLine(p, d, IN_STRING);
+    return (inputLine(p, d, IN_STRING));
 }
-inline static const char* inputStrHist(const char* p, const char* d, struct Hist* h)
+inline static Str inputStrHist(const char* p, const char* d, struct Hist* h)
 {
-    return inputLineHist(p, d, IN_STRING, h);
+    return (inputLineHist(p, d, IN_STRING, h));
 }
-inline static const char* inputFilename(const char* p, const char* d)
+inline static Str inputFilename(const char* p, const char* d)
 {
-    return inputLine(p, d, IN_FILENAME);
+    return (inputLine(p, d, IN_FILENAME));
 }
-inline static const char* inputFilenameHist(const char* p, const char* d, struct Hist* h)
+inline static Str inputFilenameHist(const char* p, const char* d, struct Hist* h)
 {
-    return inputLineHist(p, d, IN_FILENAME, h);
+    return (inputLineHist(p, d, IN_FILENAME, h));
 }
-inline static const char* inputChar(const char* p)
+inline static Str inputChar(const char* p)
 {
-    return inputLine(p, "", IN_CHAR);
+    return (inputLine(p, "", IN_CHAR));
 }
-

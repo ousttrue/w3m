@@ -25,7 +25,7 @@ loadMimeTypes(char* filename)
     Str tmp;
     struct KeyValue* mtypes;
 
-    FILE* f = fopen(expandPath(filename), "r");
+    FILE* f = fopen(expandPath(filename)->ptr, "r");
     if (f == NULL)
         return NULL;
     n = 0;

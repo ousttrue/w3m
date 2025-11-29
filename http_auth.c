@@ -241,7 +241,7 @@ FILE* openSecretFile(const char* fname)
     if (fname == NULL)
         return NULL;
 
-    const char* efname = expandPath(fname);
+    const char* efname = expandPath(fname)->ptr;
     struct stat st;
     if (stat(efname, &st) < 0)
         return NULL;

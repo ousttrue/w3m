@@ -43,8 +43,8 @@ static void next_compl(int next);
 static void next_dcompl(int next);
 static Str doComplete(Str ifn, int* status, int next);
 
-/* *INDENT-OFF* */
-void (*InputKeymap[32])() = {
+typedef void (*InputKeyFunc)();
+InputKeyFunc InputKeymap[32] = {
     /*  C-@     C-a     C-b     C-c     C-d     C-e     C-f     C-g     */
     _compl,
     _mvB,
@@ -82,7 +82,6 @@ void (*InputKeymap[32])() = {
     iself,
     iself,
 };
-/* *INDENT-ON* */
 
 static int setStrType(Str str, Lineprop* prop);
 static void addPasswd(char* p, Lineprop* pr, int len, int pos, int limit);
@@ -99,7 +98,7 @@ static Str strCurrentBuf;
 static int use_hist;
 static void ins_char(Str str);
 
-const char* inputLineHistSearch(const char* prompt, const char* def_str, enum InputFlags flag, struct Hist* hist,
+Str inputLineHistSearch(const char* prompt, const char* def_str, enum InputFlags flag, struct Hist* hist,
     int (*incrfunc)(int ch, Str str, Lineprop* prop))
 {
     int opos, x, y, lpos, rpos, epos;
@@ -249,7 +248,7 @@ const char* inputLineHistSearch(const char* prompt, const char* def_str, enum In
     if (flag & IN_FILENAME)
         return expandPath(p);
     else
-        return allocStr(p, -1);
+        return Strnew_charp(p);
 }
 
 static void
@@ -731,7 +730,7 @@ disp_next:
             f = Strdup(d);
             Strcat_charp(f, CFileBuf[n]);
             scr_addstr(conv_from_system(CFileBuf[n]));
-            if (stat(expandPath(f->ptr), &st) != -1 && S_ISDIR(st.st_mode))
+            if (stat(expandPath(f->ptr)->ptr, &st) != -1 && S_ISDIR(st.st_mode))
                 scr_addstr("/");
         }
         y++;
@@ -809,7 +808,7 @@ doComplete(Str ifn, int* status, int next)
         if (Strlastchar(CompleteBuf) == '/' && CompleteBuf->length > 1) {
             Strshrink(CompleteBuf, 1);
         }
-        if ((d = opendir(expandPath(CompleteBuf->ptr))) == NULL) {
+        if ((d = opendir(expandPath(CompleteBuf->ptr)->ptr)) == NULL) {
             CompleteBuf = Strdup(ifn);
             *status = CPL_FAIL;
             if (cm_mode & CPL_ON)
@@ -875,7 +874,7 @@ doComplete(Str ifn, int* status, int next)
             else if (strncmp(p, "file:/", 6) == 0 && p[6] != '/')
                 p = &p[5];
         }
-        if (stat(expandPath(p), &st) != -1 && S_ISDIR(st.st_mode))
+        if (stat(expandPath(p)->ptr, &st) != -1 && S_ISDIR(st.st_mode))
             Strcat_char(CompleteBuf, '/');
     }
     if (cm_mode & CPL_ON)

@@ -528,10 +528,10 @@ const char* inputAnswer(const char* prompt)
     if (QuietMessage)
         return "n";
 
-    const char* ans;
+    char* ans;
     if (fmInitialized) {
         term_raw();
-        ans = inputChar(prompt);
+        ans = inputChar(prompt)->ptr;
     } else {
         printf("%s", prompt);
         fflush(stdout);
@@ -549,12 +549,12 @@ void tui_input_user_pw(const char* realm, Str* uname, Str* pwd)
     if (fmInitialized) {
         term_raw();
         const char* pp = inputStr(Sprintf("Username for %s: ", realm)->ptr,
-            NULL);
+            NULL)->ptr;
         if (!pp)
             return;
         *uname = Str_conv_to_system(Strnew_charp(pp));
         if ((pp = inputLine(Sprintf("Password for %s: ", realm)->ptr, NULL,
-                 IN_PASSWORD))
+                 IN_PASSWORD)->ptr)
             == NULL) {
             *uname = NULL;
             return;
@@ -590,7 +590,7 @@ Str tui_input_pw()
     Str pwd;
     if (fmInitialized) {
         term_raw();
-        pwd = Strnew_charp(inputLine("Password: ", NULL, IN_PASSWORD));
+        pwd = Strnew_charp(inputLine("Password: ", NULL, IN_PASSWORD)->ptr);
         pwd = Str_conv_to_system(pwd);
         term_cbreak();
     } else {
@@ -714,7 +714,7 @@ int tui_doFileCopy(const char* tmpf, const char* defstr, bool download)
         const char* q = NULL;
         if (p == NULL || *p == '\0') {
             q = inputLineHist("(Download)Save file to: ",
-                defstr, IN_COMMAND, SaveHist);
+                defstr, IN_COMMAND, SaveHist)->ptr;
             if (q == NULL || *q == '\0')
                 return FALSE;
             p = conv_to_system(q);
@@ -726,7 +726,7 @@ int tui_doFileCopy(const char* tmpf, const char* defstr, bool download)
                 p = unescape_spaces(Strnew_charp(q))->ptr;
                 p = conv_to_system(p);
             }
-            p = expandPath(p);
+            p = expandPath(p)->ptr;
             if (tui_checkOverWrite(p) < 0)
                 return -1;
         }
@@ -780,7 +780,7 @@ int tui_doFileCopy(const char* tmpf, const char* defstr, bool download)
         if (*p == '|' && PermitSaveToPipe)
             is_pipe = TRUE;
         else {
-            p = expandPath(p);
+            p = expandPath(p)->ptr;
             if (tui_checkOverWrite(p) < 0)
                 return -1;
         }
@@ -847,7 +847,7 @@ int tui_doFileSave(struct URLFile* uf, const char* defstr)
         if (p == NULL || *p == '\0') {
             /* FIXME: gettextize? */
             p = inputLineHist("(Download)Save file to: ",
-                defstr, IN_FILENAME, SaveHist);
+                defstr, IN_FILENAME, SaveHist)->ptr;
             if (p == NULL || *p == '\0')
                 return -1;
             p = conv_to_system(p);
@@ -906,7 +906,7 @@ int tui_doFileSave(struct URLFile* uf, const char* defstr)
         *(p + 1) = '\0';
         if (*q == '\0')
             return -1;
-        p = expandPath(q);
+        p = expandPath(q)->ptr;
         if (tui_checkOverWrite(p) < 0)
             return -1;
         if (checkSaveFile(uf->stream, p) < 0) {

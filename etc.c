@@ -608,7 +608,7 @@ char* file_to_url(char* file)
     Str tmp;
     char* drive = NULL;
 
-    if (!(file = expandPath(file)))
+    if (!(file = expandPath(file)->ptr))
         return NULL;
     if (IS_ALPHA(file[0]) && file[1] == ':') {
         drive = allocStr(file, 2);

@@ -1274,7 +1274,7 @@ static int
 menu_search_forward(Menu* menu, int from)
 {
     int found;
-    const char* str = inputStrHist("Forward: ", NULL, TextHist);
+    const char* str = inputStrHist("Forward: ", NULL, TextHist)->ptr;
     if (str != NULL && *str == '\0')
         str = SearchString;
     if (str == NULL || *str == '\0')
@@ -1321,7 +1321,7 @@ static int
 menu_search_backward(Menu* menu, int from)
 {
     int found;
-    const char* str = inputStrHist("Backward: ", NULL, TextHist);
+    const char* str = inputStrHist("Backward: ", NULL, TextHist)->ptr;
     if (str != NULL && *str == '\0')
         str = SearchString;
     if (str == NULL || *str == '\0')

@@ -470,7 +470,7 @@ char* expandName(char* name)
         Strcat_charp(extpath, p);
         return extpath->ptr;
     } else
-        return expandPath(p);
+        return expandPath(p)->ptr;
 rest:
     return name;
 }
