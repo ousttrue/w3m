@@ -22,9 +22,6 @@
 
 #include "funcheader.h"
 
-#define CONFIG_FILE "config"
-#define W3MCONFIG "w3mconfig"
-
 #define set_no_proxy(domains) (NO_proxy_domains = make_domain_list(domains))
 
 static void
@@ -52,56 +49,6 @@ parse_cookie(void)
     if (non_null(cookie_avoid_wrong_number_of_dots))
         Cookie_avoid_wrong_number_of_dots_domains
             = make_domain_list(cookie_avoid_wrong_number_of_dots);
-}
-
-#define do_mkdir(dir, mode) mkdir(dir, mode)
-
-static int
-do_recursive_mkdir(const char* dir)
-{
-    char *ch, *dircpy, tmp;
-    struct stat st;
-
-    if (*dir == '\0')
-        return -1;
-
-    dircpy = Strnew_charp(dir)->ptr;
-    ch = dircpy + 1;
-    do {
-        while (!(*ch == '/' || *ch == '\0')) {
-            ch++;
-        }
-
-        tmp = *ch;
-        *ch = '\0';
-
-        if (stat(dircpy, &st) < 0) {
-            if (errno != ENOENT) { /* no directory */
-                return -1;
-            }
-            if (do_mkdir(dircpy, 0700) < 0) {
-                return -1;
-            }
-            stat(dircpy, &st);
-        }
-        if (!S_ISDIR(st.st_mode)) {
-            /* not a directory */
-            return -1;
-        }
-        if (!(st.st_mode & S_IWUSR)) {
-            return -1;
-        }
-
-        *ch = tmp;
-
-    } while (*ch++ != '\0');
-#ifdef HAVE_FACCESSAT
-    if (faccessat(AT_FDCWD, dir, W_OK | X_OK, AT_EACCESS) < 0) {
-        return -1;
-    }
-#endif
-
-    return 0;
 }
 
 void sync_with_option(void)
@@ -138,85 +85,6 @@ void sync_with_option(void)
     initMenu();
 }
 
-void init_rc(void)
-{
-    int i;
-    FILE* f;
-
-    if (w3m.rc_dir != NULL)
-        goto open_rc;
-
-    w3m.rc_dir = allocStr(getenv("W3M_DIR"), -1);
-    if (w3m.rc_dir == NULL || *w3m.rc_dir == '\0')
-        w3m.rc_dir = allocStr(RC_DIR, -1);
-    if (w3m.rc_dir == NULL || *w3m.rc_dir == '\0') {
-        exit(1);
-    }
-    w3m.rc_dir = expandPath(w3m.rc_dir)->ptr;
-
-    i = strlen(w3m.rc_dir);
-    if (i > 1 && w3m.rc_dir[i - 1] == '/')
-        w3m.rc_dir[i - 1] = '\0';
-
-    w3m.tmp_dir = w3m.rc_dir;
-
-    if (do_recursive_mkdir(w3m.rc_dir) == -1) {
-        exit(1);
-    }
-
-    if (w3m_config.config_file == NULL)
-        w3m_config.config_file = rcFile(CONFIG_FILE);
-
-    config_initialize();
-
-open_rc:
-    /* open config file */
-    if ((f = fopen(etcFile(W3MCONFIG), "rt")) != NULL) {
-        config_load(f);
-        fclose(f);
-    }
-    if ((f = fopen(confFile(CONFIG_FILE), "rt")) != NULL) {
-        config_load(f);
-        fclose(f);
-    }
-    if (w3m_config.config_file && (f = fopen(w3m_config.config_file, "rt")) != NULL) {
-        config_load(f);
-        fclose(f);
-    }
-}
-
-void init_tmp(void)
-{
-    int i;
-
-    if (w3m_config.param_tmp_dir)
-        w3m.tmp_dir = w3m_config.param_tmp_dir;
-    if (*w3m.tmp_dir == '\0')
-        w3m.tmp_dir = w3m.rc_dir;
-
-    if (strcmp(w3m.tmp_dir, w3m.rc_dir) == 0) {
-        return;
-    }
-
-    w3m.tmp_dir = expandPath(w3m.tmp_dir)->ptr;
-    i = strlen(w3m.tmp_dir);
-    if (i > 1 && w3m.tmp_dir[i - 1] == '/')
-        w3m.tmp_dir[i - 1] = '\0';
-    if (do_recursive_mkdir(w3m.tmp_dir) == -1)
-        goto tmp_dir_err;
-    return;
-
-tmp_dir_err:
-    if (((w3m.tmp_dir = getenv("TMPDIR")) == NULL || *w3m.tmp_dir == '\0') && ((w3m.tmp_dir = getenv("TMP")) == NULL || *w3m.tmp_dir == '\0') && ((w3m.tmp_dir = getenv("TEMP")) == NULL || *w3m.tmp_dir == '\0'))
-        w3m.tmp_dir = "/tmp";
-    w3m.tmp_dir = mkdtemp(Strnew_m_charp(w3m.tmp_dir, "/w3m-XXXXXX", NULL)->ptr);
-    if (w3m.tmp_dir)
-        ;
-    else
-        w3m.tmp_dir = w3m.rc_dir;
-    return;
-}
-
 void panel_set_option(struct KeyValueList* arg)
 {
     FILE* f = NULL;
@@ -251,25 +119,9 @@ void panel_set_option(struct KeyValueList* arg)
     backBf();
 }
 
-char* rcFile(char* base)
-{
-    if (base && (base[0] == '/' || (base[0] == '.' && (base[1] == '/' || (base[1] == '.' && base[2] == '/'))) || (base[0] == '~' && base[1] == '/')))
-        /* /file, ./file, ../file, ~/file */
-        return expandPath(base)->ptr;
-    return expandPath(Strnew_m_charp(w3m.rc_dir, "/", base, NULL)->ptr)->ptr;
-}
-
 char* auxbinFile(char* base)
 {
     return expandPath(Strnew_m_charp(w3m_auxbin_dir(), "/", base, NULL)->ptr)->ptr;
 }
 
-char* etcFile(char* base)
-{
-    return expandPath(Strnew_m_charp(w3m_etc_dir(), "/", base, NULL)->ptr)->ptr;
-}
 
-char* confFile(char* base)
-{
-    return expandPath(Strnew_m_charp(w3m_conf_dir(), "/", base, NULL)->ptr)->ptr;
-}

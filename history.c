@@ -3,11 +3,12 @@
 #include "etc.h"
 #include "fm.h"
 #include "display.h"
-#include "rc.h"
-#include "indep.h"
+#include "w3m_runtime.h"
 #include "buffer.h"
 #include <sys/stat.h>
 #include <gcstr.h>
+
+#define HISTORY_FILE "history"
 
 int UseHistory = true;
 int URLHistSize = 100;
@@ -70,7 +71,7 @@ int loadHistory(struct Hist* hist)
 
     if (hist == NULL)
         return 1;
-    if ((f = fopen(rcFile(HISTORY_FILE), "rt")) == NULL)
+    if ((f = fopen(rcFile(HISTORY_FILE)->ptr, "rt")) == NULL)
         return 1;
 
     if (fstat(fileno(f), &st) == -1) {
@@ -105,7 +106,7 @@ void saveHistory(struct Hist* hist, size_t size)
     if (hist == NULL || hist->list == NULL)
         return;
 
-    histf = rcFile(HISTORY_FILE);
+    histf = rcFile(HISTORY_FILE)->ptr;
     if (stat(histf, &st) == -1)
         goto fail;
     if (hist->mtime != (long long)st.st_mtime) {
@@ -126,7 +127,7 @@ void saveHistory(struct Hist* hist, size_t size)
         fprintf(f, "%s\n", (char*)item->ptr);
     if (fclose(f) == EOF)
         goto fail;
-    rename_ret = rename(tmpf, rcFile(HISTORY_FILE));
+    rename_ret = rename(tmpf, rcFile(HISTORY_FILE)->ptr);
     if (rename_ret != 0)
         goto fail;
 

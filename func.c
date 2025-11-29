@@ -1,9 +1,10 @@
 #include "func.h"
+#include "w3m_runtime.h"
 #include "tui.h"
-#include "textlist.h"
+// #include "textlist.h"
 #include "regex.h"
 #include "rc.h"
-#include "display.h"
+// #include "display.h"
 #include "keybind.h"
 
 #include <gcstr.h>
@@ -175,7 +176,7 @@ void initKeymap(wc_ces charset, wc_ces inner_charset, bool force)
             force || !keymap_initialized, charset, inner_charset);
         fclose(kf);
     }
-    if ((kf = fopen(rcFile(keymap_file), "rt")) != NULL) {
+    if ((kf = fopen(rcFile(keymap_file)->ptr, "rt")) != NULL) {
         interpret_keymap(kf, &current_keymap_file,
             force || !keymap_initialized, charset, inner_charset);
         fclose(kf);

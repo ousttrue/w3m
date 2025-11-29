@@ -758,13 +758,11 @@ static struct param_ptr* config_search_param(const char* name)
     return NULL;
 }
 
-char* get_param_option(char* name)
+const char* config_get_param(const char* name)
 {
     struct param_ptr* p = config_search_param(name);
     return p ? to_str(p)->ptr : NULL;
 }
-
-extern char* rcFile(char* base);
 
 static int
 str_to_color(const char* value)
@@ -850,7 +848,7 @@ bool config_set_param(const char* name, const char* value)
 
     case P_SSLPATH:
         if (value != NULL && value[0] != '\0')
-            *(char**)p->varptr = rcFile(value);
+            *(char**)p->varptr = rcFile(value)->ptr;
         else
             *(char**)p->varptr = NULL;
         ssl_path_modified = 1;

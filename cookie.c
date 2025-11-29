@@ -8,16 +8,22 @@
  */
 #include "cookie.h"
 #include "rc.h"
-#include "html.h"
-#include "local_cgi.h"
+#include "w3m_runtime.h"
+// #include "html.h"
+// #include "local_cgi.h"
 #include "regex.h"
-#include "indep.h"
+// #include "indep.h"
 #include "dns_order.h"
 #include "KeyValueList.h"
 #include <gcstr/myctype.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
 #include <time.h>
 #include <sys/socket.h>
 #include <netdb.h>
+
+#define COOKIE_FILE "cookie"
 
 int default_use_cookie = (true);
 int use_cookie = (true);
@@ -506,7 +512,7 @@ void save_cookies(void)
     if (!First_cookie || is_saved)
         return;
 
-    cookie_file = rcFile(COOKIE_FILE);
+    cookie_file = rcFile(COOKIE_FILE)->ptr;
     if (!(fp = fopen(cookie_file, "w")))
         return;
 
@@ -543,7 +549,7 @@ void load_cookies(void)
     Str line;
     char* str;
 
-    if (!(fp = fopen(rcFile(COOKIE_FILE), "r")))
+    if (!(fp = fopen(rcFile(COOKIE_FILE)->ptr, "r")))
         return;
 
     if (First_cookie) {

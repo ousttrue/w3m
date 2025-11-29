@@ -335,7 +335,7 @@ int w3m_parse_arg(int argc, char** argv)
     }
 
     /* initializations */
-    init_rc();
+    w3m_initialize();
 
     LoadHist = newHist();
     SaveHist = newHist();
@@ -533,7 +533,7 @@ int w3m_parse_arg(int argc, char** argv)
             } else if (!strcmp("-", argv[i]) || !strcmp("-dummy", argv[i])) {
                 /* do nothing */
             } else if (!strcmp("-reqlog", argv[i])) {
-                w3m_reqlog = rcFile("request.log");
+                w3m_reqlog = rcFile("request.log")->ptr;
             } else {
                 usage();
             }
@@ -551,7 +551,7 @@ int w3m_parse_arg(int argc, char** argv)
     CurrentTab = NULL;
     CurrentKey = -1;
     if (BookmarkFile == NULL)
-        BookmarkFile = rcFile(BOOKMARK);
+        BookmarkFile = rcFile(BOOKMARK)->ptr;
 
     tui_enter();
     mySignal(SIGWINCH, resize_hook);
@@ -948,7 +948,7 @@ static Str currentURL(void);
 
 void saveBufferInfo()
 {
-    FILE* fp = fopen(rcFile("bufinfo"), "w");
+    FILE* fp = fopen(rcFile("bufinfo")->ptr, "w");
     if (!fp) {
         return;
     }
@@ -3570,7 +3570,7 @@ DEFUN(setOpt, SET_OPTION, "Set option")
     char* opt = searchKeyData();
     if (opt == NULL || *opt == '\0' || strchr(opt, '=') == NULL) {
         if (opt != NULL && *opt != '\0') {
-            char* v = get_param_option(opt);
+            const char* v = config_get_param(opt);
             opt = Sprintf("%s=%s", opt, v ? v : "")->ptr;
         }
         opt = inputStrHist("Set option: ", opt, TextHist)->ptr;
@@ -4769,7 +4769,7 @@ DEFUN(reinit, REINIT, "Reload configuration file")
     char* resource = searchKeyData();
 
     if (resource == NULL) {
-        init_rc();
+        w3m_initialize();
         sync_with_option();
         initCookie();
         displayBuffer(Currentbuf, B_REDRAW_IMAGE);
@@ -4777,7 +4777,7 @@ DEFUN(reinit, REINIT, "Reload configuration file")
     }
 
     if (!strcasecmp(resource, "CONFIG") || !strcasecmp(resource, "RC")) {
-        init_rc();
+        w3m_initialize();
         sync_with_option();
         displayBuffer(Currentbuf, B_REDRAW_IMAGE);
         return;

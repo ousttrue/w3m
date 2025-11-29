@@ -53,4 +53,5 @@ extern struct W3mConfig w3m_config;
 void config_initialize();
 void config_load(FILE* f);
 bool config_set_param(const char* name, const char* value);
+const char* config_get_param(const char* name);
 bool str_to_bool(const char* value, bool old);

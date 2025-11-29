@@ -17,8 +17,6 @@
 
 #define BOOKMARK "bookmark.html"
 #define MOUSE_FILE "mouse"
-#define COOKIE_FILE "cookie"
-#define HISTORY_FILE "history"
 
 #define USER_URIMETHODMAP RC_DIR "/urimethodmap"
 #define SYS_URIMETHODMAP CONF_DIR "/urimethodmap"
