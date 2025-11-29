@@ -36,7 +36,7 @@ struct {
     { "map", follow_map },
     { "option", panel_set_option },
     { "cookie", set_cookie_flag },
-    { "download", download_action },
+    { "download", dl_action },
     { "charset", change_charset },
     { "none", NULL },
     { NULL, NULL },

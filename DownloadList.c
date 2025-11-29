@@ -1,10 +1,7 @@
 #include "DownloadList.h"
 #include "w3m_runtime.h"
 #include "indep.h"
-#include "buffer.h"
-#include "terms.h"
 #include "KeyValueList.h"
-
 // ldDL
 #include "funcheader.h"
 
@@ -15,11 +12,20 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-struct DownloadList* FirstDL = (0);
-struct DownloadList* LastDL = (0);
-int add_download_list = FALSE;
+struct DownloadList* FirstDL = 0;
+struct DownloadList* LastDL = 0;
 
-void addDownloadList(pid_t pid, char* url, char* save, char* lock, long long size)
+bool add_download_list = false;
+
+void dl_update()
+{
+    if (add_download_list) {
+        add_download_list = false;
+        ldDL();
+    }
+}
+
+void dl_add(pid_t pid, const char* url, const char* save, const char* lock, size_t size)
 {
     struct DownloadList* d;
 
@@ -44,7 +50,7 @@ void addDownloadList(pid_t pid, char* url, char* save, char* lock, long long siz
     add_download_list = TRUE;
 }
 
-int checkDownloadList(void)
+bool dl_has_active(void)
 {
     struct DownloadList* d;
     struct stat st;
@@ -72,29 +78,23 @@ convert_size3(long long size)
     return tmp->ptr;
 }
 
-struct Buffer*
-DownloadListBuffer(void)
+Str DownloadListBuffer(int cols)
 {
-    struct DownloadList* d;
-    Str src = NULL;
-    struct stat st;
-    time_t cur_time;
-    int duration, rate, eta;
-    size_t size;
-
     if (!FirstDL)
         return NULL;
-    cur_time = time(0);
-    /* FIXME: gettextize? */
-    src = Strnew_charp("<html><head><title>" DOWNLOAD_LIST_TITLE
-                       "</title></head>\n<body><h1 align=center>" DOWNLOAD_LIST_TITLE "</h1>\n"
-                       "<form method=internal action=download><hr>\n");
-    for (d = LastDL; d != NULL; d = d->prev) {
+
+    time_t cur_time = time(0);
+    Str src = Strnew_charp("<html><head><title>" DOWNLOAD_LIST_TITLE
+                           "</title></head>\n<body><h1 align=center>" DOWNLOAD_LIST_TITLE "</h1>\n"
+                           "<form method=internal action=download><hr>\n");
+    for (struct DownloadList* d = LastDL; d != NULL; d = d->prev) {
+        struct stat st;
         if (lstat(d->lock, &st))
             d->running = FALSE;
         Strcat_charp(src, "<pre>\n");
         Strcat(src, Sprintf("%s\n  --&gt; %s\n  ", html_quote(d->url), html_quote(conv_from_system(d->save))));
-        duration = cur_time - d->time;
+        int duration = cur_time - d->time;
+        size_t size = 0;
         if (!stat(d->save, &st)) {
             size = st.st_size;
             if (!d->running) {
@@ -102,10 +102,10 @@ DownloadListBuffer(void)
                     d->size = size;
                 duration = st.st_mtime - d->time;
             }
-        } else
-            size = 0;
+        }
+
         if (d->size) {
-            int i, l = COLS - 6;
+            int i, l = cols - 6;
             if (size < d->size)
                 i = 1.0 * l * size / d->size;
             else
@@ -122,10 +122,10 @@ DownloadListBuffer(void)
         else
             Strcat(src, Sprintf("  %s bytes loaded", convert_size3(size)));
         if (duration > 0) {
-            rate = size / duration;
+            int rate = size / duration;
             Strcat(src, Sprintf("  %02d:%02d:%02d  rate %s/sec", duration / (60 * 60), (duration / 60) % 60, duration % 60, convert_size(rate, 1)));
             if (d->running && size < d->size && rate) {
-                eta = (d->size - size) / rate;
+                int eta = (d->size - size) / rate;
                 Strcat(src, Sprintf("  eta %02d:%02d:%02d", eta / (60 * 60), (eta / 60) % 60, eta % 60));
             }
         }
@@ -153,15 +153,13 @@ DownloadListBuffer(void)
         Strcat_charp(src, "\n</pre><hr>\n");
     }
     Strcat_charp(src, "</form></body></html>");
-    return loadHTMLString(src);
+    return src;
 }
 
-void download_action(struct KeyValueList* arg)
+void dl_action(struct KeyValueList* arg)
 {
-    struct DownloadList* d;
-    pid_t pid;
-
     for (; arg; arg = arg->next) {
+        pid_t pid;
         if (!strncmp(arg->arg, "stop", 4)) {
             pid = (pid_t)atoi(&arg->arg[4]);
             kill(pid, SIGKILL);
@@ -169,7 +167,7 @@ void download_action(struct KeyValueList* arg)
             pid = (pid_t)atoi(&arg->arg[2]);
         else
             continue;
-        for (d = FirstDL; d; d = d->next) {
+        for (struct DownloadList* d = FirstDL; d; d = d->next) {
             if (d->pid == pid) {
                 unlink(d->lock);
                 if (d->prev)
@@ -187,7 +185,7 @@ void download_action(struct KeyValueList* arg)
     ldDL();
 }
 
-void stopDownload(void)
+void dl_stop(void)
 {
     struct DownloadList* d;
 
@@ -198,5 +196,16 @@ void stopDownload(void)
             continue;
         kill(d->pid, SIGKILL);
         unlink(d->lock);
+    }
+}
+
+void dl_exit_status(pid_t pid, int p_stat)
+{
+    struct DownloadList* d;
+    for (d = FirstDL; d != NULL; d = d->next) {
+        if (d->pid == pid) {
+            d->err = WEXITSTATUS(p_stat);
+            break;
+        }
     }
 }

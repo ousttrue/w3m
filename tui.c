@@ -237,8 +237,7 @@ void tui_render_screen(void)
     wc_putc_init(InnerCharset, DisplayCharset);
     for (line = 0; line <= LINES - 1; line++) {
         dirty = &sc.ScreenImage[line]->isdirty;
-        if (*dirty & L_DIRTY) 
-        {
+        if (*dirty & L_DIRTY) {
             *dirty &= ~L_DIRTY;
             char** pc;
             pc = sc.ScreenImage[line]->lineimage;
@@ -548,11 +547,10 @@ void tui_input_user_pw(const char* realm, Str* uname, Str* pwd)
 
     sleep(2);
     if (fmInitialized) {
-        char* pp;
         term_raw();
-        if ((pp = inputStr(Sprintf("Username for %s: ", realm)->ptr,
-                 NULL))
-            == NULL)
+        const char* pp = inputStr(Sprintf("Username for %s: ", realm)->ptr,
+            NULL);
+        if (!pp)
             return;
         *uname = Str_conv_to_system(Strnew_charp(pp));
         if ((pp = inputLine(Sprintf("Password for %s: ", realm)->ptr, NULL,
@@ -608,7 +606,7 @@ void tui_GC_warn_proc(const char* msg, unsigned long arg)
     if (fmInitialized) {
 
         static struct {
-            char* msg;
+            const char* msg;
             unsigned long arg;
         } msg_ring[GC_WARN_KEEP_MAX];
 
@@ -704,7 +702,6 @@ int tui_doFileCopy(const char* tmpf, const char* defstr, bool download)
 {
     Str msg;
     Str filen;
-    const char* q = NULL;
     pid_t pid;
     char* lock;
     FILE* f;
@@ -714,8 +711,8 @@ int tui_doFileCopy(const char* tmpf, const char* defstr, bool download)
 
     if (fmInitialized) {
         const char* p = searchKeyData();
+        const char* q = NULL;
         if (p == NULL || *p == '\0') {
-            /* FIXME: gettextize? */
             q = inputLineHist("(Download)Save file to: ",
                 defstr, IN_COMMAND, SaveHist);
             if (q == NULL || *q == '\0')
@@ -761,9 +758,9 @@ int tui_doFileCopy(const char* tmpf, const char* defstr, bool download)
         }
         if (!stat(tmpf, &st))
             size = st.st_size;
-        addDownloadList(pid, conv_from_system(tmpf), p, lock, size);
+        dl_add(pid, conv_from_system(tmpf), p, lock, size);
     } else {
-        q = searchKeyData();
+        char* q = searchKeyData();
         if (q == NULL || *q == '\0') {
             /* FIXME: gettextize? */
             printf("(Download)Save file to: ");
@@ -839,14 +836,14 @@ int tui_doFileSave(struct URLFile* uf, const char* defstr)
 {
     Str msg;
     Str filen;
-    char *p, *q;
+    char* q;
     pid_t pid;
     char* lock;
     char* tmpf = NULL;
     FILE* f;
 
     if (fmInitialized) {
-        p = searchKeyData();
+        char* p = searchKeyData();
         if (p == NULL || *p == '\0') {
             /* FIXME: gettextize? */
             p = inputLineHist("(Download)Save file to: ",
@@ -891,7 +888,7 @@ int tui_doFileSave(struct URLFile* uf, const char* defstr)
                 exit(-err);
             exit(0);
         }
-        addDownloadList(pid, uf->url, p, lock, current_content_length);
+        dl_add(pid, uf->url, p, lock, current_content_length);
     } else {
         q = searchKeyData();
         if (q == NULL || *q == '\0') {
@@ -903,7 +900,8 @@ int tui_doFileSave(struct URLFile* uf, const char* defstr)
                 return -1;
             q = filen->ptr;
         }
-        for (p = q + strlen(q) - 1; IS_SPACE(*p); p--)
+        char* p = q + strlen(q) - 1;
+        for (; IS_SPACE(*p); p--)
             ;
         *(p + 1) = '\0';
         if (*q == '\0')

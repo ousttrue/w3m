@@ -217,15 +217,8 @@ sig_chld(int signo)
     int p_stat;
     pid_t pid;
     while ((pid = waitpid(-1, &p_stat, WNOHANG)) > 0) {
-
         if (WIFEXITED(p_stat)) {
-            struct DownloadList* d;
-            for (d = FirstDL; d != NULL; d = d->next) {
-                if (d->pid == pid) {
-                    d->err = WEXITSTATUS(p_stat);
-                    break;
-                }
-            }
+            dl_exit_status(pid, p_stat);
         }
     }
     mySignal(SIGCHLD, sig_chld);
@@ -235,16 +228,16 @@ sig_chld(int signo)
 static Str
 make_optional_header_string(char* s)
 {
-    char* p;
-    Str hs;
-
     if (strchr(s, '\n') || strchr(s, '\r'))
         return NULL;
+
+    const char* p;
     for (p = s; *p && *p != ':'; p++)
         ;
     if (*p != ':' || p == s)
         return NULL;
-    hs = Strnew_size(strlen(s) + 3);
+
+    Str hs = Strnew_size(strlen(s) + 3);
     Strcopy_charp_n(hs, s, p - s);
     if (!Strcasecmp_charp(hs, "content-type"))
         override_content_type = TRUE;
@@ -740,16 +733,14 @@ int w3m_parse_arg(int argc, char** argv)
         _goLine(line_str);
     }
 
-    return TRUE;;
+    return TRUE;
+    ;
 }
 
 int w3m_loop()
 {
     for (;;) {
-        if (add_download_list) {
-            add_download_list = FALSE;
-            ldDL();
-        }
+        dl_update();
         if (Currentbuf->submit) {
             Anchor* a = Currentbuf->submit;
             Currentbuf->submit = NULL;
@@ -1259,13 +1250,12 @@ dispincsrch(int ch, Str buf, Lineprop* prop)
 static void
 isrch(int (*func)(struct Buffer*, char*), char* prompt)
 {
-    char* str;
     struct Buffer sbuf;
     SAVE_BUFPOSITION(&sbuf);
     dispincsrch(0, NULL, NULL); /* initialize incremental search state */
 
     searchRoutine = func;
-    str = inputLineHistSearch(prompt, NULL, IN_STRING, TextHist, dispincsrch);
+    const char* str = inputLineHistSearch(prompt, NULL, IN_STRING, TextHist, dispincsrch);
     if (str == NULL) {
         RESTORE_BUFPOSITION(&sbuf);
     }
@@ -1912,7 +1902,7 @@ _quitfm(int confirm)
 {
     char* ans = "y";
 
-    if (checkDownloadList())
+    if (dl_has_active())
         /* FIXME: gettextize? */
         ans = inputChar("Download process retains. "
                         "Do you want to exit w3m? (y/n)");
@@ -4690,7 +4680,7 @@ void deleteFiles()
 
 void w3m_exit(int i)
 {
-    stopDownload();
+    dl_stop();
     deleteFiles();
     free_ssl_ctx();
     disconnectFTP();
@@ -5167,12 +5157,10 @@ DEFUN(tabL, TAB_LEFT, "Move left along the tab bar")
 /* download panel */
 DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
 {
-    struct Buffer* buf;
-    int replace = FALSE, new_tab = FALSE;
-    int reload;
-
+    bool replace = FALSE;
     if (Currentbuf->bufferprop & BP_INTERNAL && !strcmp(Currentbuf->buffername, DOWNLOAD_LIST_TITLE))
         replace = TRUE;
+
     if (!FirstDL) {
         if (replace) {
             if (Currentbuf == Firstbuf && Currentbuf->nextBuffer == NULL) {
@@ -5184,8 +5172,10 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
         }
         return;
     }
-    reload = checkDownloadList();
-    buf = DownloadListBuffer();
+
+    bool reload = dl_has_active();
+    Str src = DownloadListBuffer(COLS);
+    struct Buffer* buf = loadHTMLString(src);
     if (!buf) {
         displayBuffer(Currentbuf, B_NORMAL);
         return;
@@ -5195,6 +5185,8 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
         COPY_BUFROOT(buf, Currentbuf);
         restorePosition(buf, Currentbuf);
     }
+
+    bool new_tab = FALSE;
     if (!replace && open_tab_dl_list) {
         _newT();
         new_tab = TRUE;
