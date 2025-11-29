@@ -24,6 +24,7 @@ const w3m_srcs = [_][]const u8{
     "HtmlTag.c",
     "HtmlTags.c",
     "HtmlTagAttributes.c",
+    "html_read_token.c",
 
     "main.c",
     "file.c",

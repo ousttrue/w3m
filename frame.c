@@ -1,4 +1,5 @@
 #include "frame.h"
+#include "html_read_token.h"
 #include "signal_jmp.h"
 #include "tui.h"
 #include "etc.h"
@@ -438,7 +439,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
             struct frameset* f_frameset;
             int i = c + r * f->col;
             char* p = "";
-            int status = R_ST_NORMAL;
+            enum ReadTokenStatus status = R_ST_NORMAL;
             Str tok = Strnew();
             int pre_mode = 0;
             int end_tag = 0;

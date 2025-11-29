@@ -1,4 +1,5 @@
 #include "file.h"
+#include "html_read_token.h"
 #include "entity.h"
 #include "signal_jmp.h"
 #include "tui.h"

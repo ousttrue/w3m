@@ -2,6 +2,7 @@
  * HTML table
  */
 #include "table.h"
+#include "html_read_token.h"
 #include "entity.h"
 #include "image.h"
 #include "file.h"
@@ -338,7 +339,7 @@ int visible_length_offset = 0;
 int visible_length(char* str)
 {
     int len = 0, n, max_len = 0;
-    int status = R_ST_NORMAL;
+    enum ReadTokenStatus status = R_ST_NORMAL;
     int prev_status = status;
     Str tagbuf = Strnew();
     char *t, *r2;

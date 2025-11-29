@@ -139,7 +139,6 @@ void feed_table1(struct table* tbl, Str tok, struct table_mode* mode,
 void align(TextLine* lbuf, int width, int mode);
 void print_item(struct table* t, int row, int col, int width, Str buf);
 void print_sep(struct table* t, int row, int type, int maxcol, Str buf);
-int next_status(char c, int* status);
 struct table* begin_table(int border, int spacing, int padding,
     int vspace);
 void end_table(struct table* tbl);
