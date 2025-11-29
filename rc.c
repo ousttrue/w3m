@@ -204,15 +204,11 @@ void init_tmp(void)
     return;
 
 tmp_dir_err:
-    if (mkd_tmp_dir) {
-        tmp_dir = mkd_tmp_dir;
-        return;
-    }
     if (((tmp_dir = getenv("TMPDIR")) == NULL || *tmp_dir == '\0') && ((tmp_dir = getenv("TMP")) == NULL || *tmp_dir == '\0') && ((tmp_dir = getenv("TEMP")) == NULL || *tmp_dir == '\0'))
         tmp_dir = "/tmp";
     tmp_dir = mkdtemp(Strnew_m_charp(tmp_dir, "/w3m-XXXXXX", NULL)->ptr);
     if (tmp_dir)
-        mkd_tmp_dir = tmp_dir;
+        ;
     else
         tmp_dir = rc_dir;
     return;

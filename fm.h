@@ -339,10 +339,10 @@ global char DisplayBorders init(FALSE);
 global char DisableCenter init(FALSE);
 extern int symbol_width;
 extern int symbol_width0;
+
 global char* rc_dir init(0);
 global char* tmp_dir;
 global char* param_tmp_dir init(0);
-global char* mkd_tmp_dir init(0);
 global char* config_file init(0);
 
 global int relative_wheel_scroll init(FALSE);

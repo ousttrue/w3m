@@ -1905,7 +1905,8 @@ _quitfm(int confirm)
     if (dl_has_active())
         /* FIXME: gettextize? */
         ans = inputChar("Download process retains. "
-                        "Do you want to exit w3m? (y/n)")->ptr;
+                        "Do you want to exit w3m? (y/n)")
+                  ->ptr;
     else if (confirm)
         /* FIXME: gettextize? */
         ans = inputChar("Do you want to exit w3m? (y/n)")->ptr;
@@ -2712,7 +2713,8 @@ _followForm(int submit)
             tui_disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
         /* FIXME: gettextize? */
         p = inputFilenameHist("Filename:", fi->value ? fi->value->ptr : NULL,
-            NULL)->ptr;
+            NULL)
+                ->ptr;
         if (p == NULL || fi->readonly)
             break;
         fi->value = Strnew_charp(p);
@@ -2730,7 +2732,8 @@ _followForm(int submit)
         }
         /* FIXME: gettextize? */
         p = inputLine("Password:", fi->value ? fi->value->ptr : NULL,
-            IN_PASSWORD)->ptr;
+            IN_PASSWORD)
+                ->ptr;
         if (p == NULL)
             break;
         fi->value = Strnew_charp(p);
@@ -4139,7 +4142,8 @@ DEFUN(docCSet, CHARSET, "Change the character encoding for the current document"
     if (cs == NULL || *cs == '\0')
         /* FIXME: gettextize? */
         cs = inputStr("Document charset: ",
-            wc_ces_to_charset(Currentbuf->document_charset))->ptr;
+            wc_ces_to_charset(Currentbuf->document_charset))
+                 ->ptr;
     charset = wc_guess_charset_short(cs, 0);
     if (charset == 0) {
         displayBuffer(Currentbuf, B_NORMAL);
@@ -4157,7 +4161,8 @@ DEFUN(defCSet, DEFAULT_CHARSET, "Change the default character encoding")
     if (cs == NULL || *cs == '\0')
         /* FIXME: gettextize? */
         cs = inputStr("Default document charset: ",
-            wc_ces_to_charset(DocumentCharset))->ptr;
+            wc_ces_to_charset(DocumentCharset))
+                 ->ptr;
     charset = wc_guess_charset_short(cs, 0);
     if (charset != 0)
         DocumentCharset = charset;
@@ -4650,11 +4655,6 @@ void w3m_exit(int i)
     free_ssl_ctx();
     disconnectFTP();
     disconnectNews();
-    if (mkd_tmp_dir)
-        if (rmdir(mkd_tmp_dir) != 0) {
-            fprintf(stderr, "Can't remove temporary directory (%s)!\n", mkd_tmp_dir);
-            exit(1);
-        }
     exit(i);
 }
 
