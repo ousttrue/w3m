@@ -210,3 +210,117 @@ extern fn w3m_initialize() void;
 //     const z_span: []const u8 = z_ver.*.ptr[0..z_ver.*.length];
 //     try std.testing.expectEqualSlices(u8, c_span, z_span);
 // }
+
+export fn str_to_bool(_value: [*c]const u8, old: bool) bool {
+    if (_value == null)
+        return true;
+
+    const value = std.mem.span(_value);
+    return switch (std.ascii.toLower(value[0])) {
+        '0',
+        'f', // false
+        'n', // no
+        'u', // undef
+        => false,
+        'o' => if (std.ascii.toLower(value[1]) == 'f') // off
+            false
+        else // on
+            true,
+        't' => if (std.ascii.toLower(value[1]) == 'o') // toggle */
+            !old
+        else
+            true, // true
+        '!',
+        'r', // reverse
+        'x', // exchange
+        => return !old,
+        else => true,
+    };
+}
+
+test "str_to_bool" {
+    {
+        try std.testing.expectEqual(false, str_to_bool("0", true));
+        try std.testing.expectEqual(false, str_to_bool("false", true));
+        try std.testing.expectEqual(false, str_to_bool("no", true));
+        try std.testing.expectEqual(false, str_to_bool("undef", true));
+        try std.testing.expectEqual(false, str_to_bool("off", true));
+        try std.testing.expectEqual(true, str_to_bool("on", true));
+        try std.testing.expectEqual(false, str_to_bool("toggle", true));
+        try std.testing.expectEqual(true, str_to_bool("true", true));
+        try std.testing.expectEqual(false, str_to_bool("!", true));
+        try std.testing.expectEqual(false, str_to_bool("reverse", true));
+        try std.testing.expectEqual(false, str_to_bool("x", true));
+    }
+    {
+        try std.testing.expectEqual(false, str_to_bool("0", false));
+        try std.testing.expectEqual(false, str_to_bool("false", false));
+        try std.testing.expectEqual(false, str_to_bool("no", false));
+        try std.testing.expectEqual(false, str_to_bool("undef", false));
+        try std.testing.expectEqual(false, str_to_bool("off", false));
+        try std.testing.expectEqual(true, str_to_bool("on", false));
+        try std.testing.expectEqual(true, str_to_bool("true", false));
+        try std.testing.expectEqual(true, str_to_bool("toggle", false));
+        try std.testing.expectEqual(true, str_to_bool("!", false));
+        try std.testing.expectEqual(true, str_to_bool("reverse", false));
+        try std.testing.expectEqual(true, str_to_bool("x", false));
+    }
+    {
+        try std.testing.expectEqual(false, str_to_bool("f", false));
+        try std.testing.expectEqual(false, str_to_bool("n", false));
+        try std.testing.expectEqual(false, str_to_bool("u", false));
+        try std.testing.expectEqual(true, str_to_bool("o", false));
+        try std.testing.expectEqual(true, str_to_bool("o", false));
+        try std.testing.expectEqual(true, str_to_bool("t", false));
+        try std.testing.expectEqual(true, str_to_bool("r", false));
+    }
+}
+
+// show parameter with bad options invokation
+export fn show_params(handle: std.fs.File.Handle) void {
+    const file = std.fs.File{
+        .handle = handle,
+    };
+    var buf: [1024]u8 = undefined;
+    var writer = file.writer(&buf);
+    write_show_params(&writer.interface) catch @panic("show_params");
+}
+
+fn write_show_params(writer: *std.io.Writer) !void {
+    defer writer.flush() catch @panic("OOM");
+    try writer.writeAll("\nconfiguration parameters\n");
+    var sit = SectionIterator{
+        .sections = c.w3m_config.sections,
+    };
+    var j: usize = 0;
+    const padding = " " ** 64;
+    while (sit.next()) |section| : (j += 1) {
+        try writer.print("  section[{}]: {s}\n", .{ j, section.name });
+        var pit = ParamIterator{
+            .params = section.params,
+        };
+        while (pit.next()) |p| {
+            const t = switch (p.type) {
+                c.P_INT, c.P_SHORT, c.P_CHARINT, c.P_NZINT => if (p.inputtype == c.PI_ONOFF) "bool" else "number",
+                c.P_CHAR => "char",
+                c.P_STRING => "string",
+                c.P_SSLPATH => "path",
+                c.P_COLOR => "color",
+                c.P_CODE => "charset",
+                c.P_PIXELS => "number",
+                c.P_SCALE => "percent",
+                else => unreachable,
+            };
+            const name = std.mem.span(p.name);
+            var l: c_int = 30 - @as(c_int, @intCast(name.len + t.len));
+            if (l < 0)
+                l = 1;
+            try writer.print("    -o {s}=<{s}>{s}{s}\n", .{
+                name,
+                t,
+                padding[0..@intCast(l)],
+                p.comment,
+            });
+        }
+    }
+}

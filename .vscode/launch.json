@@ -8,6 +8,18 @@
             "type": "lldb",
             "request": "launch",
             "name": "lldb",
+            "program": "${workspaceFolder}/zig-out/bin/w3m",
+            "args": ["-show-option"],
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "HTTP_HOME": "${env:HOME}/.w3m/bookmark.html",
+                "TERM": "xterm",
+            }
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "test",
             "program": "${workspaceFolder}/zig-out/bin/test",
             "args": [],
             "cwd": "${workspaceFolder}",

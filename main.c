@@ -95,7 +95,6 @@ static void cmd_loadURL(char* url, struct Url* current, char* referer,
 static void cmd_loadBuffer(struct Buffer* buf, int prop, int linkid);
 static void keyPressEventProc(int c);
 int show_params_p = 0;
-void show_params(FILE* fp);
 
 static char* getCurWord(struct Buffer* buf, int* spos, int* epos);
 
@@ -217,7 +216,7 @@ fusage(FILE* f, int err)
     fprintf(f, "    -help            print this usage message\n");
     fprintf(f, "    -version         print w3m version\n");
     if (show_params_p)
-        show_params(f);
+        show_params(fileno(f));
     exit(err);
 }
 
@@ -520,7 +519,7 @@ int w3m_parse_arg(int argc, char** argv)
                 config_set_param_option("ssl_verify_server=0");
             } else if (!strcmp("-o", argv[i]) || !strcmp("-show-option", argv[i])) {
                 if (!strcmp("-show-option", argv[i]) || ++i >= argc || !strcmp(argv[i], "?")) {
-                    show_params(stdout);
+                    show_params(fileno(stdout));
                     exit(0);
                 }
                 if (!config_set_param_option(argv[i])) {
@@ -3534,7 +3533,7 @@ DEFUN(ldBmark, BOOKMARK VIEW_BOOKMARK, "View bookmarks")
 DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
 {
     Str tmp = Sprintf("mode=panel&cookie=%s&bmark=%s&url=%s&title=%s"
-                  "&charset=%s",
+                      "&charset=%s",
         (Str_form_quote(localCookie()))->ptr,
         (Str_form_quote(Strnew_charp(BookmarkFile)))->ptr,
         (Str_form_quote(parsedURL2Str(&Currentbuf->currentURL)))->ptr,

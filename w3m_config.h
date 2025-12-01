@@ -63,3 +63,4 @@ const char* config_get_param_option(const char* name);
 bool config_set_param_option(const char* option);
 extern Str config_panel_html();
 Str to_str(struct param_ptr* p);
+void show_params(int fd);
