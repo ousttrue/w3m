@@ -324,3 +324,60 @@ fn write_show_params(writer: *std.io.Writer) !void {
         }
     }
 }
+
+export fn config_load(handle: std.fs.File.Handle) void {
+    const file = std.fs.File{
+        .handle = handle,
+    };
+    var linebuf: [512]u8 = undefined;
+    var reader = file.reader(&linebuf);
+    read_config(&reader.interface) catch @panic("config_load");
+}
+
+fn get_lower_key(line: []const u8, buf: []u8) ?[]const u8 {
+    for (line, 0..) |ch, i| {
+        if (std.ascii.isWhitespace(ch)) {
+            buf[i] = 0;
+            return buf[0..i];
+        } else {
+            buf[i] = std.ascii.toLower(ch);
+        }
+    }
+    return null;
+}
+
+fn read_config(reader: *std.io.Reader) !void {
+    var i: usize = 0;
+    while (try reader.takeDelimiter('\n')) |_line| : (i += 1) {
+        const line = std.mem.trimLeft(u8, _line, &std.ascii.whitespace);
+        if (line.len == 0) {
+            continue;
+        }
+        if (line[0] == '#') {
+            // comment
+            continue;
+        }
+
+        var _key: [64]u8 = undefined;
+        const key = get_lower_key(line, &_key) orelse {
+            std.log.err("{}: [parse error]{s}", .{ i, line });
+            @panic("config: line has no space");
+        };
+
+        var sp_end = key.len + 1;
+        while (sp_end < line.len) : (sp_end += 1) {
+            if (!std.ascii.isWhitespace(line[sp_end])) {
+                break;
+            }
+        }
+
+        if (sp_end < line.len) {
+            std.log.debug("{s} => {s}", .{ key, line[sp_end..] });
+            _ = c.config_set_param(&key[0], &line[sp_end]);
+        } else {
+            std.log.debug("{s} -- empty ", .{key});
+            _ = c.config_set_param(&key[0], "");
+        }
+    }
+    // @panic("X");
+}

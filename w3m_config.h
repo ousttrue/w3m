@@ -56,11 +56,11 @@ struct W3mConfig {
 extern struct W3mConfig w3m_config;
 
 void config_initialize();
-void config_load(FILE* f);
+void config_load(int r);
 bool config_set_param(const char* name, const char* value);
 bool str_to_bool(const char* value, bool old);
 const char* config_get_param_option(const char* name);
 bool config_set_param_option(const char* option);
 extern Str config_panel_html();
 Str to_str(struct param_ptr* p);
-void show_params(int fd);
+void show_params(int w);

@@ -9,7 +9,9 @@
             "request": "launch",
             "name": "lldb",
             "program": "${workspaceFolder}/zig-out/bin/w3m",
-            "args": ["-show-option"],
+            "args": [
+                // "-show-option"
+            ],
             "cwd": "${workspaceFolder}",
             "env": {
                 "HTTP_HOME": "${env:HOME}/.w3m/bookmark.html",

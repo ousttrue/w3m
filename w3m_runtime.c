@@ -109,15 +109,15 @@ void w3m_initialize()
     /* open config file */
     FILE* f;
     if ((f = fopen(etcFile(W3MCONFIG)->ptr, "rt")) != NULL) {
-        config_load(f);
+        config_load(fileno(f));
         fclose(f);
     }
     if ((f = fopen(confFile(CONFIG_FILE)->ptr, "rt")) != NULL) {
-        config_load(f);
+        config_load(fileno(f));
         fclose(f);
     }
     if (w3m_config.config_file && (f = fopen(w3m_config.config_file, "rt")) != NULL) {
-        config_load(f);
+        config_load(fileno(f));
         fclose(f);
     }
 

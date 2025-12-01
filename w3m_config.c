@@ -903,29 +903,3 @@ bool config_set_param_option(const char* option)
     return 0;
 }
 
-void config_load(FILE* f)
-{
-    for (;;) {
-        Str line = Strfgets(f);
-        if (line->length == 0) /* end of file */
-            break;
-        Strchop(line);
-        if (line->length == 0) /* blank line */
-            continue;
-        Strremovefirstspaces(line);
-        if (line->ptr[0] == '#') /* comment */
-            continue;
-        Str tmp = Strnew();
-        char* p = line->ptr;
-        while (*p && !IS_SPACE(*p))
-            Strcat_char(tmp, *p++);
-        while (*p && IS_SPACE(*p))
-            p++;
-        Strlower(tmp);
-        config_set_param(tmp->ptr, p);
-    }
-}
-
-
-
-
