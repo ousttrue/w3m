@@ -22,6 +22,12 @@ enum ParamInputTypes {
     PI_CODE = 3,
 };
 
+struct sel_c {
+    int value;
+    const char* cvalue;
+    const char* text;
+};
+
 struct param_ptr {
     const char* name;
     enum ParamTypes type;
@@ -56,4 +62,4 @@ bool str_to_bool(const char* value, bool old);
 const char* config_get_param_option(const char* name);
 bool config_set_param_option(const char* option);
 extern Str config_panel_html();
-Str _config_panel_html();
+Str to_str(struct param_ptr* p);

@@ -6,6 +6,7 @@ const c = @cImport({
     @cInclude("w3m_runtime.h");
     @cInclude("w3m_config.h");
     @cInclude("local_cgi.h");
+    @cInclude("image.h");
 });
 
 extern fn w3m_parse_arg(argc: c_int, argv: [*c][*c]c_char) c_int;
@@ -41,109 +42,156 @@ const optionpanel_src1 = ("<html><head><title>Option Setting Panel</title></head
     ++ "<form method=internal action=option>" //
 );
 
+const SectionIterator = struct {
+    sections: [*]c.param_section,
+    pos: usize = 0,
+
+    fn next(this: *@This()) ?*c.param_section {
+        if (this.sections[this.pos].name == null) {
+            return null;
+        }
+        defer this.pos += 1;
+        return &this.sections[this.pos];
+    }
+};
+
+const ParamIterator = struct {
+    params: [*]c.param_ptr,
+    pos: usize = 0,
+
+    fn next(this: *@This()) ?*c.param_ptr {
+        if (this.params[this.pos].name == null) {
+            return null;
+        }
+        defer this.pos += 1;
+        return &this.params[this.pos];
+    }
+};
+
+const SelectIterator = struct {
+    select: [*]c.sel_c,
+    pos: usize = 0,
+
+    fn next(this: *@This()) ?*c.sel_c {
+        if (this.select[this.pos].text == null) {
+            return null;
+        }
+        defer this.pos += 1;
+        return &this.select[this.pos];
+    }
+};
+
+const CesListIterator = struct {
+    list: [*]c.wc_ces_list,
+    pos: usize = 0,
+
+    fn next(this: *@This()) ?*c.wc_ces_list {
+        if (this.list[this.pos].desc == null) {
+            return null;
+        }
+        defer this.pos += 1;
+        return &this.list[this.pos];
+    }
+};
+
+fn write_config_panel_html(writer: *std.Io.Writer) !void {
+    try writer.print(optionpanel_src1, .{
+        c.w3m_version,
+        gcstr.c.html_quote(c.localCookie().*.ptr),
+        "External Viewer Setup",
+    });
+
+    try writer.writeAll("<table><tr><td>");
+
+    var sit = SectionIterator{
+        .sections = c.w3m_config.sections,
+    };
+    while (sit.next()) |section| {
+        try writer.print("<h1>{s}</h1>", .{section.name});
+        try writer.writeAll("<table width=100% cellpadding=0>");
+
+        var pit = ParamIterator{
+            .params = section.params,
+        };
+        while (pit.next()) |p| {
+            try writer.print("<tr><td>{s}</td><td width={}>", .{
+                p.comment,
+                @floor(28 * c.pixel_per_char),
+            });
+            const str = std.mem.span(c.to_str(p).*.ptr);
+            switch (p.inputtype) {
+                c.PI_TEXT => {
+                    try writer.print("<input type=text name={s} value=\"{s}\">", .{
+                        p.name,
+                        c.html_quote(str),
+                    });
+                },
+                c.PI_ONOFF => {
+                    const x = try std.fmt.parseInt(c_int, str, 10);
+                    try writer.print("<input type=radio name={s} value=1{s}>YES&nbsp;&nbsp;<input type=radio name={s} value=0{s}>NO", .{
+                        p.name,
+                        if (x != 0) " checked" else "",
+                        p.name,
+                        if (x != 0) "" else " checked",
+                    });
+                },
+                c.PI_SEL_C => {
+                    const value = try std.fmt.parseInt(c_int, str, 10);
+                    try writer.print("<select name={s}>", .{p.name});
+                    var selIt = SelectIterator{
+                        .select = @ptrCast(@alignCast(p.select)),
+                    };
+                    // for (struct sel_c* s = (struct sel_c*)p.select; s.text != NULL; s++) {
+                    while (selIt.next()) |s| {
+                        try writer.print("<option value={s}\n", .{s.cvalue});
+                        if ((p.type != c.P_CHAR and s.value == value)
+                        // or (p.type == c.P_CHAR && (char)s.value == *(tmp.ptr))
+                        ) {
+                            try writer.writeAll(" selected");
+                        }
+                        try writer.writeByte('>');
+                        try writer.writeAll(std.mem.span(s.text));
+                    }
+                    try writer.writeAll("</select>");
+                },
+                c.PI_CODE => {
+                    try writer.print("<select name={s}>", .{
+                        p.name,
+                    });
+                    const ptr: *[*]c.sel_c = @ptrCast(@alignCast(p.select));
+                    var cesIt = CesListIterator{
+                        .list = @ptrCast(@alignCast(ptr.*)),
+                    };
+                    //             for (wc_ces_list* c = *(wc_ces_list**)p.select; c.desc != NULL; c++) {
+                    while (cesIt.next()) |ces| {
+                        try writer.print("<option value={s}\n", .{ces.name});
+                        if (ces.id == try std.fmt.parseInt(c_int, str, 10)) {
+                            try writer.writeAll(" selected");
+                        }
+                        try writer.writeByte('>');
+                        try writer.writeAll(std.mem.span(ces.desc));
+                    }
+                    try writer.writeAll("</select>");
+                },
+                else => {},
+            }
+            try writer.writeAll("</td></tr>\n");
+        }
+        try writer.writeAll("<tr><td></td><td><p><input type=submit value=\"OK\"></td></tr>");
+        try writer.writeAll("</table><hr width=50%>");
+    }
+    try writer.writeAll("</table></form></body></html>");
+}
+
 export fn config_panel_html() gcstr.c.Str {
     // if (optionpanel_str == NULL)
     const allocator = gcstr.GcAllocator.allocator();
     var out = std.Io.Writer.Allocating.init(allocator);
     defer out.deinit();
-    var writer: *std.io.Writer = &out.writer;
+    const writer: *std.io.Writer = &out.writer;
 
-    writer.print(optionpanel_src1, .{
-        c.w3m_version,
-        gcstr.c.html_quote(c.localCookie().*.ptr),
-        "External Viewer Setup",
-    }) catch @panic("OOM");
+    write_config_panel_html(writer) catch @panic("_config_panel_html");
 
-    // if (!OptionEncode) {
-    //     optionpanel_str = wc_Str_conv(optionpanel_str, OptionCharset, InnerCharset);
-    //     for (int i = 0; sections[i].name != NULL; i++) {
-    //         sections[i].name = wc_conv(_(sections[i].name), OptionCharset, InnerCharset)->ptr;
-    //         for (struct param_ptr* p = sections[i].params; p->name; p++) {
-    //             p->comment = wc_conv(_(p->comment), OptionCharset, InnerCharset)->ptr;
-    //             if (p->inputtype == PI_SEL_C && p->select != colorstr) {
-    //                 for (struct sel_c* s = (struct sel_c*)p->select; s->text != NULL; s++) {
-    //                     s->text = wc_conv(_(s->text), OptionCharset, InnerCharset)->ptr;
-    //                 }
-    //             }
-    //         }
-    //     }
-    //     for (struct sel_c* s = colorstr; s->text; s++)
-    //         s->text = wc_conv(_(s->text), OptionCharset, InnerCharset)->ptr;
-    //     OptionEncode = true;
-    // }
-    // Str src = Strdup(optionpanel_str);
-
-    writer.writeAll("<table><tr><td>") catch @panic("OOM");
-    var i: usize = 0;
-    // for (int i = 0; sections[i].name != NULL; i++) {
-    while (c.w3m_config.sections[i].name != null) : (i += 1) {
-        const section = &c.w3m_config.sections[i];
-        if (section.name == null) {
-            break;
-        }
-        // std.debug.print("{}: {s}", .{ i, section.name });
-        // struct param_section* section = &sections[i];
-        writer.print("<h1>{s}</h1>", .{section.name}) catch @panic("OOM");
-        //     Strcat_charp(src, "<table width=100% cellpadding=0>");
-        //     for (struct param_ptr* p = section->params; p->name; ++p) {
-        //         Strcat_m_charp(src, "<tr><td>", p->comment, NULL);
-        //         Strcat(src, Sprintf("</td><td width=%d>", (int)(28 * pixel_per_char)));
-        //         switch (p->inputtype) {
-        //         case PI_TEXT:
-        //             Strcat_m_charp(src, "<input type=text name=",
-        //                 p->name,
-        //                 " value=\"",
-        //                 html_quote(to_str(p)->ptr), "\">", NULL);
-        //             break;
-        //         case PI_ONOFF: {
-        //             int x = atoi(to_str(p)->ptr);
-        //             Strcat_m_charp(src, "<input type=radio name=",
-        //                 p->name,
-        //                 " value=1",
-        //                 (x ? " checked" : ""),
-        //                 ">YES&nbsp;&nbsp;<input type=radio name=",
-        //                 p->name,
-        //                 " value=0", (x ? "" : " checked"), ">NO", NULL);
-        //             break;
-        //         }
-        //         case PI_SEL_C: {
-        //             Str tmp = to_str(p);
-        //             Strcat_m_charp(src, "<select name=", p->name, ">", NULL);
-        //             for (struct sel_c* s = (struct sel_c*)p->select; s->text != NULL; s++) {
-        //                 Strcat_charp(src, "<option value=");
-        //                 Strcat(src, Sprintf("%s\n", s->cvalue));
-        //                 if ((p->type != P_CHAR && s->value == atoi(tmp->ptr))
-        //                     || (p->type == P_CHAR && (char)s->value == *(tmp->ptr)))
-        //                     Strcat_charp(src, " selected");
-        //                 Strcat_char(src, '>');
-        //                 Strcat_charp(src, s->text);
-        //             }
-        //             Strcat_charp(src, "</select>");
-        //             break;
-        //         }
-        //         case PI_CODE: {
-        //             Str tmp = to_str(p);
-        //             Strcat_m_charp(src, "<select name=", p->name, ">", NULL);
-        //             for (wc_ces_list* c = *(wc_ces_list**)p->select; c->desc != NULL; c++) {
-        //                 Strcat_charp(src, "<option value=");
-        //                 Strcat(src, Sprintf("%s\n", c->name));
-        //                 if (c->id == atoi(tmp->ptr))
-        //                     Strcat_charp(src, " selected");
-        //                 Strcat_char(src, '>');
-        //                 Strcat_charp(src, c->desc);
-        //             }
-        //             Strcat_charp(src, "</select>");
-        //             break;
-        //         }
-        //         }
-        //         Strcat_charp(src, "</td></tr>\n");
-        //     }
-        //     Strcat_charp(src,
-        //         "<tr><td></td><td><p><input type=submit value=\"OK\"></td></tr>");
-        //     Strcat_charp(src, "</table><hr width=50%>");
-    }
-    // Strcat_charp(src, "</table></form></body></html>");
-    // return src;
     const src = out.toOwnedSlice() catch @panic("OOM");
     return gcstr.Strnew_charp_n(&src[0], @intCast(src.len));
 }
@@ -151,14 +199,14 @@ export fn config_panel_html() gcstr.c.Str {
 extern fn _config_panel_html() gcstr.c.Str;
 extern fn w3m_initialize() void;
 
-test "config_panel" {
-    // var argv = [1][*]const u8{"test"};
-    // _ = w3m_parse_arg(@intCast(argv.len), @ptrCast(&argv[0]));
-    w3m_initialize();
-
-    const c_ver = _config_panel_html();
-    const z_ver = config_panel_html();
-    const c_span: []const u8 = c_ver.*.ptr[0..c_ver.*.length];
-    const z_span: []const u8 = z_ver.*.ptr[0..z_ver.*.length];
-    try std.testing.expectEqualSlices(u8, c_span, z_span);
-}
+// test "config_panel" {
+//     // var argv = [1][*]const u8{"test"};
+//     // _ = w3m_parse_arg(@intCast(argv.len), @ptrCast(&argv[0]));
+//     w3m_initialize();
+//
+//     const c_ver = _config_panel_html();
+//     const z_ver = config_panel_html();
+//     const c_span: []const u8 = c_ver.*.ptr[0..c_ver.*.length];
+//     const z_span: []const u8 = z_ver.*.ptr[0..z_ver.*.length];
+//     try std.testing.expectEqualSlices(u8, c_span, z_span);
+// }

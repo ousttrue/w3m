@@ -22,18 +22,9 @@
 static wc_ces_list* display_charset_str = NULL;
 static wc_ces_list* document_charset_str = NULL;
 static wc_ces_list* system_charset_str = NULL;
-static wc_ces OptionCharset = WC_CES_US_ASCII; /* FIXME: charset of source code */
-
-static int OptionEncode = false;
 
 #define _(Text) Text
 #define N_(Text) Text
-
-struct sel_c {
-    int value;
-    const char* cvalue;
-    const char* text;
-};
 
 static struct sel_c colorstr[] = {
     { 0, "black", N_("black") },
@@ -636,7 +627,7 @@ struct W3mConfig w3m_config = {
     .param_tmp_dir = 0,
 };
 
-static Str to_str(struct param_ptr* p)
+Str to_str(struct param_ptr* p)
 {
     switch (p->type) {
     case P_INT:
@@ -837,7 +828,7 @@ bool config_set_param(const char* name, const char* value)
         break;
 
     case P_STRING:
-        *(char**)p->varptr = value;
+        *(const char**)p->varptr = value;
         break;
 
     case P_SSLPATH:
@@ -935,119 +926,12 @@ void config_load(FILE* f)
     }
 }
 
-static Str optionpanel_str = NULL;
-
-static char optionpanel_src1[] = "<html><head><title>Option Setting Panel</title></head><body>\
-<h1 align=center>Option Setting Panel<br>(w3m version %s)</b></h1>\
-<form method=post action=\"file:///$LIB/" W3MHELPERPANEL_CMDNAME "\">\
-<input type=hidden name=mode value=panel>\
-<input type=hidden name=cookie value=\"%s\">\
-<input type=submit value=\"%s\">\
-</form><br>\
-<form method=internal action=option>";
-
-Str _config_panel_html(void)
-{
-    if (optionpanel_str == NULL)
-        optionpanel_str = Sprintf(optionpanel_src1, w3m_version,
-            html_quote(localCookie()->ptr), _(CMT_HELPER));
-    if (!OptionEncode) {
-        optionpanel_str = wc_Str_conv(optionpanel_str, OptionCharset, InnerCharset);
-        for (int i = 0; sections[i].name != NULL; i++) {
-            sections[i].name = wc_conv(_(sections[i].name), OptionCharset, InnerCharset)->ptr;
-            for (struct param_ptr* p = sections[i].params; p->name; p++) {
-                p->comment = wc_conv(_(p->comment), OptionCharset, InnerCharset)->ptr;
-                if (p->inputtype == PI_SEL_C && p->select != colorstr) {
-                    for (struct sel_c* s = (struct sel_c*)p->select; s->text != NULL; s++) {
-                        s->text = wc_conv(_(s->text), OptionCharset, InnerCharset)->ptr;
-                    }
-                }
-            }
-        }
-        for (struct sel_c* s = colorstr; s->text; s++)
-            s->text = wc_conv(_(s->text), OptionCharset, InnerCharset)->ptr;
-        OptionEncode = true;
-    }
-    Str src = Strdup(optionpanel_str);
-
-    Strcat_charp(src, "<table><tr><td>");
-    for (int i = 0; sections[i].name != NULL; i++) {
-        struct param_section* section = &sections[i];
-        Strcat_m_charp(src, "<h1>", section->name, "</h1>", NULL);
-        Strcat_charp(src, "<table width=100% cellpadding=0>");
-        for (struct param_ptr* p = section->params; p->name; ++p) {
-            Strcat_m_charp(src, "<tr><td>", p->comment, NULL);
-            Strcat(src, Sprintf("</td><td width=%d>", (int)(28 * pixel_per_char)));
-            switch (p->inputtype) {
-            case PI_TEXT:
-                Strcat_m_charp(src, "<input type=text name=",
-                    p->name,
-                    " value=\"",
-                    html_quote(to_str(p)->ptr), "\">", NULL);
-                break;
-            case PI_ONOFF: {
-                int x = atoi(to_str(p)->ptr);
-                Strcat_m_charp(src, "<input type=radio name=",
-                    p->name,
-                    " value=1",
-                    (x ? " checked" : ""),
-                    ">YES&nbsp;&nbsp;<input type=radio name=",
-                    p->name,
-                    " value=0", (x ? "" : " checked"), ">NO", NULL);
-                break;
-            }
-            case PI_SEL_C: {
-                Str tmp = to_str(p);
-                Strcat_m_charp(src, "<select name=", p->name, ">", NULL);
-                for (struct sel_c* s = (struct sel_c*)p->select; s->text != NULL; s++) {
-                    Strcat_charp(src, "<option value=");
-                    Strcat(src, Sprintf("%s\n", s->cvalue));
-                    if ((p->type != P_CHAR && s->value == atoi(tmp->ptr))
-                        || (p->type == P_CHAR && (char)s->value == *(tmp->ptr)))
-                        Strcat_charp(src, " selected");
-                    Strcat_char(src, '>');
-                    Strcat_charp(src, s->text);
-                }
-                Strcat_charp(src, "</select>");
-                break;
-            }
-            case PI_CODE: {
-                Str tmp = to_str(p);
-                Strcat_m_charp(src, "<select name=", p->name, ">", NULL);
-                for (wc_ces_list* c = *(wc_ces_list**)p->select; c->desc != NULL; c++) {
-                    Strcat_charp(src, "<option value=");
-                    Strcat(src, Sprintf("%s\n", c->name));
-                    if (c->id == atoi(tmp->ptr))
-                        Strcat_charp(src, " selected");
-                    Strcat_char(src, '>');
-                    Strcat_charp(src, c->desc);
-                }
-                Strcat_charp(src, "</select>");
-                break;
-            }
-            }
-            Strcat_charp(src, "</td></tr>\n");
-        }
-        Strcat_charp(src,
-            "<tr><td></td><td><p><input type=submit value=\"OK\"></td></tr>");
-        Strcat_charp(src, "</table><hr width=50%>");
-    }
-    Strcat_charp(src, "</table></form></body></html>");
-    return src;
-}
-
 /* show parameter with bad options invokation */
 void show_params(FILE* fp)
 {
     fputs("\nconfiguration parameters\n", fp);
     for (int j = 0; w3m_config.sections[j].name != NULL; j++) {
-        const char* cmt;
-        if (!OptionEncode)
-            cmt = wc_conv(w3m_config.sections[j].name, OptionCharset,
-                InnerCharset)
-                      ->ptr;
-        else
-            cmt = w3m_config.sections[j].name;
+        const char* cmt = w3m_config.sections[j].name;
         fprintf(fp, "  section[%d]: %s\n", j, conv_to_system(cmt));
         int i = 0;
         while (w3m_config.sections[j].params[i].name) {
@@ -1081,12 +965,7 @@ void show_params(FILE* fp)
                 t = "percent";
                 break;
             }
-            if (!OptionEncode)
-                cmt = wc_conv(w3m_config.sections[j].params[i].comment,
-                    OptionCharset, InnerCharset)
-                          ->ptr;
-            else
-                cmt = w3m_config.sections[j].params[i].comment;
+            cmt = w3m_config.sections[j].params[i].comment;
             int l = 30 - (strlen(w3m_config.sections[j].params[i].name) + strlen(t));
             if (l < 0)
                 l = 1;
