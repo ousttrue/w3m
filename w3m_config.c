@@ -654,19 +654,6 @@ Str to_str(struct param_ptr* p)
     return NULL;
 }
 
-struct rc_search_table {
-    struct param_ptr* param;
-    short uniq_pos;
-};
-static struct rc_search_table* RC_search_table;
-static int RC_table_size;
-
-static int
-compare_table(struct rc_search_table* a, struct rc_search_table* b)
-{
-    return strcmp(a->param->name, b->param->name);
-}
-
 void config_initialize()
 {
     if (!display_charset_str) {
@@ -675,78 +662,7 @@ void config_initialize()
         system_charset_str = display_charset_str;
     }
 
-    /* count table size */
-    RC_table_size = 0;
-    for (int j = 0; w3m_config.sections[j].name != NULL; j++) {
-        int i = 0;
-        while (w3m_config.sections[j].params[i].name) {
-            i++;
-            RC_table_size++;
-        }
-    }
-
-    RC_search_table = New_N(struct rc_search_table, RC_table_size);
-    int k = 0;
-    for (int j = 0; w3m_config.sections[j].name != NULL; j++) {
-        int i = 0;
-        while (w3m_config.sections[j].params[i].name) {
-            RC_search_table[k].param = &w3m_config.sections[j].params[i];
-            k++;
-            i++;
-        }
-    }
-
-    qsort(RC_search_table, RC_table_size, sizeof(struct rc_search_table),
-        (int (*)(const void*, const void*))compare_table);
-
-    int diff2 = 0;
-    for (int i = 0; i < RC_table_size - 1; i++) {
-        const char* p = RC_search_table[i].param->name;
-        const char* q = RC_search_table[i + 1].param->name;
-        int j = 0;
-        for (; p[j] != '\0' && q[j] != '\0' && p[j] == q[j]; j++)
-            ;
-        int diff1 = j;
-        if (diff1 > diff2)
-            RC_search_table[i].uniq_pos = diff1 + 1;
-        else
-            RC_search_table[i].uniq_pos = diff2 + 1;
-        diff2 = diff1;
-    }
-}
-
-static struct param_ptr* config_search_param(const char* name)
-{
-    size_t b, e, i;
-    int cmp;
-    int len = strlen(name);
-
-    for (b = 0, e = RC_table_size - 1; b <= e;) {
-        i = (b + e) / 2;
-        cmp = strncmp(name, RC_search_table[i].param->name, len);
-
-        if (!cmp) {
-            if (len >= RC_search_table[i].uniq_pos) {
-                return RC_search_table[i].param;
-            } else {
-                while ((cmp = strcmp(name, RC_search_table[i].param->name)) <= 0)
-                    if (!cmp)
-                        return RC_search_table[i].param;
-                    else if (i == 0)
-                        return NULL;
-                    else
-                        i--;
-                /* ambiguous */
-                return NULL;
-            }
-        } else if (cmp < 0) {
-            if (i == 0)
-                return NULL;
-            e = i - 1;
-        } else
-            b = i + 1;
-    }
-    return NULL;
+    config_make_rc_table();
 }
 
 static int
@@ -902,4 +818,3 @@ bool config_set_param_option(const char* option)
     }
     return 0;
 }
-

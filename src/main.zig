@@ -94,6 +94,42 @@ const CesListIterator = struct {
     }
 };
 
+var RC_search_table: ?std.StringHashMap(*c.param_ptr) = null;
+
+fn make_rc_table() !void {
+    var map = std.StringHashMap(*c.param_ptr).init(gcstr.GcAllocator.allocator());
+    defer RC_search_table = map;
+    var sit = SectionIterator{
+        .sections = c.w3m_config.sections,
+    };
+    while (sit.next()) |section| {
+        var pit = ParamIterator{
+            .params = section.params,
+        };
+        while (pit.next()) |p| {
+            const name = std.mem.span(p.name);
+            try map.put(name, p);
+        }
+    }
+}
+
+export fn config_make_rc_table() void {
+    make_rc_table() catch @panic("config_make_rc_table");
+}
+
+export fn config_search_param(_name: [*c]const u8) [*c]c.param_ptr {
+    if (_name) |name| {
+        if (RC_search_table) |*table| {
+            const span = std.mem.span(name);
+            return table.get(span);
+        } else {
+            @panic("RC_search_table not initialized");
+        }
+    } else {
+        return null;
+    }
+}
+
 fn write_config_panel_html(writer: *std.Io.Writer) !void {
     try writer.print(optionpanel_src1, .{
         c.w3m_version,
