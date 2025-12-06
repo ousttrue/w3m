@@ -57,6 +57,7 @@ extern struct W3mConfig w3m_config;
 
 void config_initialize();
 void config_make_rc_table();
+int str_to_color(const char* value);
 void config_load(int r);
 bool config_set_param(const char* name, const char* value);
 bool str_to_bool(const char* value, bool old);

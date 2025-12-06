@@ -247,6 +247,41 @@ extern fn w3m_initialize() void;
 //     try std.testing.expectEqualSlices(u8, c_span, z_span);
 // }
 
+/// return color code
+///
+/// 0 black
+/// 1 red
+/// 2 green
+/// 3 yellow
+/// 4 blue
+/// 5 magenta
+/// 6 cyan
+/// 7 white
+///
+/// 8 terminal
+fn strToColorCode(value: [*c]const u8) u8 {
+    if (value == null) {
+        // terminal
+        return 8;
+    }
+    return switch (std.ascii.toLower(value[0])) {
+        '0' => 0, // black
+        '1', 'r' => 1, // red
+        '2', 'g' => 2, // green
+        '3', 'y' => 3, // yellow
+        '4' => 4, // blue
+        '5', 'm' => 5, // magenta
+        '6', 'c' => 6, // cyan
+        '7', 'w' => 7, // white
+        '8', 't' => 8, // terminal
+        'b' => if (std.mem.startsWith(u8, std.mem.span(value), "blu"))
+            4 // blue
+        else
+            0, // black
+        else => 8, // terminal
+    };
+}
+
 export fn str_to_bool(_value: [*c]const u8, old: bool) bool {
     if (_value == null)
         return true;
@@ -380,6 +415,111 @@ fn get_lower_key(line: []const u8, buf: []u8) ?[]const u8 {
         }
     }
     return null;
+}
+
+fn atoi(T: type, _value: [*c]const u8) T {
+    const value: []const u8 = std.mem.span(_value);
+    return std.fmt.parseInt(T, value, 10) catch 0;
+}
+
+fn atof(T: type, _value: [*c]const u8) T {
+    const value: []const u8 = std.mem.span(_value);
+    return std.fmt.parseFloat(T, value) catch 0;
+}
+
+fn setVal(T: type, p: *c.param_ptr, val: T) void {
+    const ptr: *T = @ptrCast(@alignCast(p.*.varptr));
+    ptr.* = val;
+}
+
+fn getVal(T: type, p: *c.param_ptr) T {
+    const ptr: *T = @ptrCast(@alignCast(p.*.varptr));
+    return ptr.*;
+}
+
+fn getBool(T: type, p: *c.param_ptr) bool {
+    const val = getVal(T, p);
+    return val != 0;
+}
+
+export fn config_set_param(name: [*c]const u8, value: [*c]const u8) bool {
+    const p: *c.param_ptr = config_search_param(name) orelse {
+        return false;
+    };
+
+    switch (p.type) {
+        c.P_INT => {
+            if (p.inputtype == c.PI_ONOFF) {
+                const bool_val = str_to_bool(value, getBool(c_int, p));
+                setVal(c_int, p, if (bool_val) 1 else 0);
+            } else {
+                const int_val = atoi(c_int, value);
+                setVal(c_int, p, int_val);
+            }
+        },
+        c.P_NZINT => {
+            const int_val = atoi(c_int, value);
+            if (int_val > 0) {
+                setVal(c_int, p, int_val);
+            }
+        },
+        c.P_SHORT => {
+            if (p.inputtype == c.PI_ONOFF) {
+                const bool_val = str_to_bool(&value[0], getBool(c_short, p));
+                setVal(c_short, p, if (bool_val) 1 else 0);
+            } else {
+                const short_val = atoi(c_short, value);
+                setVal(c_short, p, short_val);
+            }
+        },
+        c.P_CHARINT => {
+            if (p.inputtype == c.PI_ONOFF) {
+                const bool_val = str_to_bool(&value[0], getBool(c_char, p));
+                setVal(c_char, p, if (bool_val) 1 else 0);
+            } else {
+                const char_val = atoi(c_char, value);
+                setVal(c_char, p, char_val);
+            }
+        },
+        c.P_CHAR => {
+            setVal(c_char, p, @intCast(value[0]));
+        },
+        c.P_STRING => {
+            setVal([*c]const u8, p, @ptrCast(&value[0]));
+        },
+        c.P_SSLPATH => {
+            if (value != null and value[0] != 0) {
+                setVal([*c]const u8, p, c.rcFile(&value[0]).*.ptr);
+            } else {
+                setVal([*c]const u8, p, null);
+                c.ssl_path_modified = 1;
+            }
+        },
+        c.P_COLOR => {
+            const int_val = strToColorCode(value);
+            setVal(c_int, p, int_val);
+        },
+        c.P_CODE => {
+            const wc_val = c.wc_guess_charset_short(value, getVal(c.wc_ces, p));
+            setVal(c.wc_ces, p, wc_val);
+        },
+        c.P_PIXELS => {
+            const ppc = atof(f64, value);
+            if (ppc >= c.MINIMUM_PIXEL_PER_CHAR and ppc <= c.MAXIMUM_PIXEL_PER_CHAR * 2) {
+                setVal(f64, p, ppc);
+            }
+        },
+        c.P_SCALE => {
+            const ppc = atof(f64, value);
+            if (ppc >= 10 and ppc <= 1000) {
+                setVal(f64, p, ppc);
+            }
+        },
+        else => {
+            unreachable;
+        },
+    }
+    return true;
 }
 
 fn read_config(reader: *std.io.Reader) !void {
