@@ -12,6 +12,8 @@ struct w3m {
     char* rc_dir;
     /// ~/.w3m
     char* tmp_dir;
+
+    bool UseContentCharset;
 };
 extern struct w3m w3m;
 

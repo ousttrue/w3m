@@ -4,7 +4,6 @@
 #include "signal_jmp.h"
 #include "tui.h"
 #include "etc.h"
-#include "fm.h"
 #include "terms.h"
 #include "buffer.h"
 #include "form.h"
@@ -15,6 +14,9 @@
 #include <gcstr.h>
 #include <signal.h>
 #include <setjmp.h>
+
+int is_redisplay = (false);
+char TargetSelf = (false);
 
 static JMP_BUF AbortLoading;
 struct frameset* renderFrameSet = NULL;
@@ -653,7 +655,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
                                     }
                                 }
                             }
-                            if (UseContentCharset && parsedtag_get_value(tag, ATTR_HTTP_EQUIV, &q)
+                            if (w3m.UseContentCharset && parsedtag_get_value(tag, ATTR_HTTP_EQUIV, &q)
                                 && !strcasecmp(q, "Content-Type")
                                 && parsedtag_get_value(tag, ATTR_CONTENT, &q)
                                 && (q = strcasestr(q, "charset")) != NULL) {

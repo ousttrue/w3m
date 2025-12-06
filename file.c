@@ -5655,7 +5655,7 @@ void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int int
         else if (newBuf->document_charset)
             charset = doc_charset = newBuf->document_charset;
     }
-    if (content_charset && UseContentCharset)
+    if (content_charset && w3m.UseContentCharset)
         doc_charset = content_charset;
     else if (f->guess_type && !strcasecmp(f->guess_type, "application/xhtml+xml"))
         doc_charset = WC_CES_UTF_8;
@@ -5681,7 +5681,7 @@ void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int int
          * continue;
          */
         if (meta_charset) { /* <META> */
-            if (content_charset == 0 && UseContentCharset) {
+            if (content_charset == 0 && w3m.UseContentCharset) {
                 doc_charset = meta_charset;
                 charset = WC_CES_US_ASCII;
             }
@@ -5925,7 +5925,7 @@ loadBuffer(struct URLFile* uf, struct Buffer* volatile newBuf)
     }
     if (newBuf->document_charset)
         charset = doc_charset = newBuf->document_charset;
-    if (content_charset && UseContentCharset)
+    if (content_charset && w3m.UseContentCharset)
         doc_charset = content_charset;
 
     nlines = 0;
@@ -6190,7 +6190,7 @@ openPagerBuffer(InputStream stream, struct Buffer* buf)
     else
         buf->buffername = conv_from_system(buf->buffername);
     buf->bufferprop |= BP_PIPE;
-    if (content_charset && UseContentCharset)
+    if (content_charset && w3m.UseContentCharset)
         buf->document_charset = content_charset;
     else
         buf->document_charset = WC_CES_US_ASCII;
@@ -6288,7 +6288,7 @@ struct Line* getNextPage(struct Buffer* buf, int plen)
     charset = buf->document_charset;
     if (buf->document_charset != WC_CES_US_ASCII)
         doc_charset = buf->document_charset;
-    else if (UseContentCharset) {
+    else if (w3m.UseContentCharset) {
         content_charset = 0;
         checkContentType(buf);
         if (content_charset)

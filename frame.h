@@ -3,6 +3,9 @@
  */
 #include "Url.h"
 
+extern int is_redisplay;
+extern char TargetSelf;
+
 struct frame_element {
     char attr;
 #define F_UNLOADED 0x00

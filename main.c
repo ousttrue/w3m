@@ -396,7 +396,7 @@ int w3m_parse_arg(int argc, char** argv)
                 }
                 DocumentCharset = wc_guess_charset_short(p, DocumentCharset);
                 WcOption.auto_detect = WC_OPT_DETECT_OFF;
-                UseContentCharset = false;
+                w3m.UseContentCharset = false;
             } else if (!strncmp("-O", argv[i], 2)) {
                 if (argv[i][2] != '\0')
                     p = argv[i] + 2;
@@ -731,7 +731,7 @@ int w3m_parse_arg(int argc, char** argv)
 
     SearchHeader = false;
     DefaultType = NULL;
-    UseContentCharset = true;
+    w3m.UseContentCharset = true;
     WcOption.auto_detect = auto_detect;
 
     Currentbuf = Firstbuf;

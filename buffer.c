@@ -545,14 +545,14 @@ void reshapeBuffer(struct Buffer* buf)
     }
 
     WcOption.auto_detect = WC_OPT_DETECT_OFF;
-    UseContentCharset = false;
+    w3m.UseContentCharset = false;
     if (is_html_type(buf->type))
         loadHTMLBuffer(&f, buf);
     else
         loadBuffer(&f, buf);
     UFclose(&f);
     WcOption.auto_detect = old_auto_detect;
-    UseContentCharset = true;
+    w3m.UseContentCharset = true;
 
     buf->height = LASTLINE + 1;
     if (buf->firstLine && sbuf.firstLine) {

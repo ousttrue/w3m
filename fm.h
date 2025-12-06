@@ -27,7 +27,6 @@ global int PagerMax init(PAGER_MAX_LINE);
 global char SearchHeader init(false);
 global char* DefaultType init(0);
 global char RenderFrame init(false);
-global char TargetSelf init(false);
 global char DecodeCTE init(false);
 global char ArgvIsURL init(true);
 global char MetaRefresh init(false);
@@ -132,7 +131,6 @@ global int MarkAllPages init(false);
 global struct auth_cookie* Auth_cookie init(0);
 
 global char FollowLocale init(true);
-global char UseContentCharset init(true);
 global char SearchConv init(true);
 global char SimplePreserveSpace init(false);
 global char DisplayBorders init(false);
@@ -158,7 +156,6 @@ global char* ssl_cipher init("DEFAULT:!LOW:!RC4:!EXP");
 global char* ssl_cipher init(0);
 #endif
 
-global int is_redisplay init(false);
 global int clear_buffer init(true);
 
 global int use_lessopen init(false);

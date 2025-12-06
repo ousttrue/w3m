@@ -1,7 +1,6 @@
 #include "etc.h"
 #include "signal_jmp.h"
 #include "tui.h"
-// #include "fm.h"
 #include "terms.h"
 #include "w3m_runtime.h"
 #include "buffer.h"
