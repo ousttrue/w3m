@@ -1,10 +1,9 @@
 #include "func.h"
 #include "w3m_runtime.h"
+#include "w3m_config.h"
 #include "tui.h"
-// #include "textlist.h"
 #include "regex.h"
 #include "rc.h"
-// #include "display.h"
 #include "keybind.h"
 
 #include <gcstr.h>
@@ -126,7 +125,6 @@ interpret_keymap(FILE* kf, struct stat* current, bool force, wc_ces charset, wc_
     char *p, *s, *emsg;
     int lineno;
     int verbose = 1;
-    extern int str_to_bool(char* value, int old);
 
     if ((fd = fileno(kf)) < 0 || fstat(fd, &kstat) || (!force && kstat.st_mtime == current->st_mtime && kstat.st_dev == current->st_dev && kstat.st_ino == current->st_ino && kstat.st_size == current->st_size))
         return;

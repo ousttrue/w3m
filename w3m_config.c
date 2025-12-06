@@ -627,33 +627,6 @@ struct W3mConfig w3m_config = {
     .param_tmp_dir = 0,
 };
 
-Str to_str(struct param_ptr* p)
-{
-    switch (p->type) {
-    case P_INT:
-    case P_COLOR:
-    case P_CODE:
-        return Sprintf("%d", (int)(*(wc_ces*)p->varptr));
-    case P_NZINT:
-        return Sprintf("%d", *(int*)p->varptr);
-    case P_SHORT:
-        return Sprintf("%d", *(short*)p->varptr);
-    case P_CHARINT:
-        return Sprintf("%d", *(char*)p->varptr);
-    case P_CHAR:
-        return Sprintf("%c", *(char*)p->varptr);
-    case P_STRING:
-    case P_SSLPATH:
-        /*  SystemCharset -> InnerCharset */
-        return Strnew_charp(conv_from_system(*(char**)p->varptr));
-    case P_PIXELS:
-    case P_SCALE:
-        return Sprintf("%g", *(double*)p->varptr);
-    }
-    /* not reached */
-    return NULL;
-}
-
 void config_initialize()
 {
     if (!display_charset_str) {
@@ -663,44 +636,4 @@ void config_initialize()
     }
 
     config_make_rc_table();
-}
-
-const char* config_get_param_option(const char* name)
-{
-    struct param_ptr* p = config_search_param(name);
-    return p ? to_str(p)->ptr : NULL;
-}
-
-bool config_set_param_option(const char* option)
-{
-    Str tmp = Strnew();
-    const char* p = option;
-    while (*p && !IS_SPACE(*p) && *p != '=')
-        Strcat_char(tmp, *p++);
-    while (*p && IS_SPACE(*p))
-        p++;
-    if (*p == '=') {
-        p++;
-        while (*p && IS_SPACE(*p))
-            p++;
-    }
-    Strlower(tmp);
-    if (config_set_param(tmp->ptr, p)) {
-        return 1;
-        // goto option_assigned;
-    }
-    char* q = tmp->ptr;
-    if (!strncmp(q, "no", 2)) { /* -o noxxx, -o no-xxx, -o no_xxx */
-        q += 2;
-        if (*q == '-' || *q == '_')
-            q++;
-    } else if (tmp->ptr[0] == '-') /* -o -xxx */
-        q++;
-    else
-        return 0;
-    if (config_set_param(q, "0")) {
-        // goto option_assigned;
-        return 1;
-    }
-    return 0;
 }
