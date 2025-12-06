@@ -1,4 +1,5 @@
 #include "Url.h"
+#include "w3m_runtime.h"
 #include "signal_jmp.h"
 #include "tui.h"
 #include "local_cgi.h"
@@ -516,7 +517,7 @@ Str ssl_get_certificate(SSL* ssl, char* hostname)
     char buf[2048];
     Str amsg = NULL;
     Str emsg;
-    char* ans;
+    const char* ans;
 
     if (ssl == NULL)
         return NULL;
@@ -966,8 +967,8 @@ add_index_file(struct Url* pu, struct URLFile* uf)
     TextList* index_file_list = NULL;
     TextListItem* ti;
 
-    if (non_null(index_file))
-        index_file_list = make_domain_list(index_file);
+    if (non_null(w3m_config.index_file))
+        index_file_list = make_domain_list(w3m_config.index_file);
     if (index_file_list == NULL) {
         uf->stream = NULL;
         return;
@@ -1324,8 +1325,8 @@ retry:
                 add_index_file(pu, &uf);
                 if (uf.stream == NULL)
                     return uf;
-            } else if (document_root != NULL) {
-                tmp = Strnew_charp(document_root);
+            } else if (w3m_config.document_root != NULL) {
+                tmp = Strnew_charp(w3m_config.document_root);
                 if (Strlastchar(tmp) != '/' && pu->file[0] != '/')
                     Strcat_char(tmp, '/');
                 Strcat_charp(tmp, pu->file);

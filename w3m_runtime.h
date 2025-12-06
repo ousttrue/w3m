@@ -21,6 +21,11 @@ struct W3mConfig {
     char* param_tmp_dir;
     /// ~/.w3m/config
     const char* config_file;
+
+    const char* cgi_bin;
+    const char* document_root;
+    const char* personal_document_root;
+    const char* index_file;
 };
 extern struct W3mConfig w3m_config;
 

@@ -446,7 +446,7 @@ char* expandName(char* name)
     p = name;
     if (*p == '/') {
         if ((*(p + 1) == '~' && IS_ALPHA(*(p + 2)))
-            && personal_document_root) {
+            && w3m_config.personal_document_root) {
             char* q;
             p += 2;
             q = strchr(p, '/');
@@ -460,8 +460,8 @@ char* expandName(char* name)
             if (!passent)
                 goto rest;
             extpath = Strnew_m_charp(passent->pw_dir, "/",
-                personal_document_root, NULL);
-            if (*personal_document_root == '\0' && *p == '/')
+                w3m_config.personal_document_root, NULL);
+            if (*w3m_config.personal_document_root == '\0' && *p == '/')
                 p++;
         } else
             goto rest;

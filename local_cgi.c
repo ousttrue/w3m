@@ -3,7 +3,6 @@
 #include "tui.h"
 #include "terms.h"
 #include "signal_jmp.h"
-#include "fm.h"
 #include "etc.h"
 #include "form.h"
 #include "history.h"
@@ -265,7 +264,7 @@ set_cgi_environ(const char* name, const char* fn, const char* req_uri)
 }
 
 static Str
-checkPath(char* fn, char* path)
+checkPath(const char* fn, const char* path)
 {
     char* p;
     Str tmp;
@@ -297,11 +296,11 @@ cgi_filename(char* uri, char** fn, char** name, char** path_info)
     *name = uri;
     *path_info = NULL;
 
-    if (cgi_bin != NULL && strncmp(uri, "/cgi-bin/", 9) == 0) {
+    if (w3m_config.cgi_bin != NULL && strncmp(uri, "/cgi-bin/", 9) == 0) {
         offset = 9;
         if ((*path_info = strchr(uri + offset, '/')))
             *name = allocStr(uri, *path_info - uri);
-        tmp = checkPath(*name + offset, cgi_bin);
+        tmp = checkPath(*name + offset, w3m_config.cgi_bin);
         if (tmp == NULL)
             return CGIFN_NORMAL;
         *fn = tmp->ptr;
@@ -315,8 +314,8 @@ cgi_filename(char* uri, char** fn, char** name, char** path_info)
         offset = 6;
     else if (strncmp(uri, tmp->ptr, tmp->length) == 0)
         offset = tmp->length;
-    else if (*uri == '/' && document_root != NULL) {
-        Str tmp2 = Strnew_charp(document_root);
+    else if (*uri == '/' && w3m_config.document_root != NULL) {
+        Str tmp2 = Strnew_charp(w3m_config.document_root);
         if (Strlastchar(tmp2) != '/')
             Strcat_char(tmp2, '/');
         Strcat_charp(tmp2, uri + 1);

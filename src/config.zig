@@ -381,10 +381,10 @@ const params4 = [_]param_ptr{
 };
 
 const params5 = [_]param_ptr{
-    .{ .name = "document_root", .type = .P_STRING, .inputtype = .PI_TEXT, .varptr = @ptrCast(&c.document_root), .comment = CMT_DROOT },
-    .{ .name = "personal_document_root", .type = .P_STRING, .inputtype = .PI_TEXT, .varptr = @ptrCast(&c.personal_document_root), .comment = CMT_PDROOT },
-    .{ .name = "cgi_bin", .type = .P_STRING, .inputtype = .PI_TEXT, .varptr = @ptrCast(&c.cgi_bin), .comment = CMT_CGIBIN },
-    .{ .name = "index_file", .type = .P_STRING, .inputtype = .PI_TEXT, .varptr = @ptrCast(&c.index_file), .comment = CMT_IFILE },
+    .{ .name = "document_root", .type = .P_STRING, .inputtype = .PI_TEXT, .varptr = @ptrCast(&c.w3m_config.document_root), .comment = CMT_DROOT },
+    .{ .name = "personal_document_root", .type = .P_STRING, .inputtype = .PI_TEXT, .varptr = @ptrCast(&c.w3m_config.personal_document_root), .comment = CMT_PDROOT },
+    .{ .name = "cgi_bin", .type = .P_STRING, .inputtype = .PI_TEXT, .varptr = @ptrCast(&c.w3m_config.cgi_bin), .comment = CMT_CGIBIN },
+    .{ .name = "index_file", .type = .P_STRING, .inputtype = .PI_TEXT, .varptr = @ptrCast(&c.w3m_config.index_file), .comment = CMT_IFILE },
     .{ .name = "tmp_dir", .type = .P_STRING, .inputtype = .PI_TEXT, .varptr = @ptrCast(&c.w3m_config.param_tmp_dir), .comment = CMT_TMP },
 };
 

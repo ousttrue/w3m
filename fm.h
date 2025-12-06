@@ -50,11 +50,6 @@ global char* NNTP_server init(0);
 global char* NNTP_mode init(0);
 global int MaxNewsMessage init(50);
 
-global char* document_root init(0);
-global char* personal_document_root init(0);
-global char* cgi_bin init(0);
-global char* index_file init(0);
-
 global int CurrentKey;
 global char* CurrentKeyData;
 global char* CurrentCmdData;
