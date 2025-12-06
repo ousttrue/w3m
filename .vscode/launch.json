@@ -3,11 +3,36 @@
     // Hover to view descriptions of existing attributes.
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
-    "configurations": [
+    "configurations": [        
         {
+            "name": "gdb",
+            "type": "gdb",
+            "request": "launch",
+            "target": "${workspaceFolder}/zig-out/bin/w3m",
+            "arguments": "${env:HOME}/.w3m/bookmark.html",
+            "cwd": "${workspaceRoot}",
+            "env": {
+                "HTTP_HOME": "${env:HOME}/.w3m/bookmark.html",
+                "TERM": "xterm",
+            },
+            "valuesFormatting": "parseText"
+        },
+        {
+            "name": "lldb-mi",
+            "type": "lldb-mi",
+            "request": "launch",
+            "target": "${workspaceFolder}/zig-out/bin/w3m",
+            "cwd": "${workspaceRoot}",
+            "env": {
+                "HTTP_HOME": "${env:HOME}/.w3m/bookmark.html",
+                "TERM": "xterm",
+            },
+            "valuesFormatting": "parseText"
+        },
+        {
+            "name": "lldb",
             "type": "lldb",
             "request": "launch",
-            "name": "lldb",
             "program": "${workspaceFolder}/zig-out/bin/w3m",
             "args": [
                 // "-show-option"
@@ -19,9 +44,9 @@
             }
         },
         {
+            "name": "test",
             "type": "lldb",
             "request": "launch",
-            "name": "test",
             "program": "${workspaceFolder}/zig-out/bin/test",
             "args": [],
             "cwd": "${workspaceFolder}",
@@ -31,7 +56,7 @@
             }
         },
         {
-            "name": "gdb",
+            "name": "cppdbg",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/zig-out/bin/w3m",

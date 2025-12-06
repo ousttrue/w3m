@@ -107,6 +107,8 @@ pub fn build(b: *std.Build) void {
     const exe = b.addExecutable(.{
         .name = "w3m",
         .root_module = mod,
+        // for debug break point
+        .use_llvm = true,
     });
     b.installArtifact(exe);
 

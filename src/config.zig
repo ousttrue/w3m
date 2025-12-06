@@ -42,25 +42,25 @@ const param_ptr = struct {
     /// comment
     comment: []const u8,
     /// enum values
-    select: ?*anyopaque = null,
+    select: []const sel_c = &.{},
 };
 
 const param_section = struct {
     name: []const u8,
     /// param list
-    params: []param_ptr,
+    params: []const param_ptr,
 };
 
 const colorstr = [_]sel_c{
-    .{ 0, "black", "black" },
-    .{ 1, "red", "red" },
-    .{ 2, "green", "green" },
-    .{ 3, "yellow", "yellow" },
-    .{ 4, "blue", "blue" },
-    .{ 5, "magenta", "magenta" },
-    .{ 6, "cyan", "cyan" },
-    .{ 7, "white", "white" },
-    .{ 8, "terminal", "terminal" },
+    .{ .value = 0, .cvalue = "black", .text = "black" },
+    .{ .value = 1, .cvalue = "red", .text = "red" },
+    .{ .value = 2, .cvalue = "green", .text = "green" },
+    .{ .value = 3, .cvalue = "yellow", .text = "yellow" },
+    .{ .value = 4, .cvalue = "blue", .text = "blue" },
+    .{ .value = 5, .cvalue = "magenta", .text = "magenta" },
+    .{ .value = 6, .cvalue = "cyan", .text = "cyan" },
+    .{ .value = 7, .cvalue = "white", .text = "white" },
+    .{ .value = 8, .cvalue = "terminal", .text = "terminal" },
 };
 
 // #define N_STR(x) #x
@@ -72,14 +72,13 @@ const colorstr = [_]sel_c{
 //     { N_S(DEFAULT_URL_LINK), N_("link URL") },
 //     { 0, NULL, NULL }
 // };
-//
-// static struct sel_c displayinsdel[] = {
-//     { N_S(DISPLAY_INS_DEL_SIMPLE), N_("simple") },
-//     { N_S(DISPLAY_INS_DEL_NORMAL), N_("use tag") },
-//     { N_S(DISPLAY_INS_DEL_FONTIFY), N_("fontify") },
-//     { 0, NULL, NULL }
-// };
-//
+
+const displayinsdel = [_]sel_c{
+    .{ .value = c.DISPLAY_INS_DEL_SIMPLE, .cvalue = &.{c.DISPLAY_INS_DEL_SIMPLE + '0'}, .text = "simple" },
+    .{ .value = c.DISPLAY_INS_DEL_NORMAL, .cvalue = &.{c.DISPLAY_INS_DEL_NORMAL + '0'}, .text = "use tag" },
+    .{ .value = c.DISPLAY_INS_DEL_FONTIFY, .cvalue = &.{c.DISPLAY_INS_DEL_FONTIFY + '0'}, .text = "fontify" },
+};
+
 // static struct sel_c wheelmode[] = {
 //     { true, "1", N_("A:relative to screen height") },
 //     { false, "0", N_("B:fixed speed") },
@@ -107,532 +106,490 @@ const colorstr = [_]sel_c{
 //     { N_S(WC_OPT_DETECT_ON), N_("ON") },
 //     { 0, NULL, NULL }
 // };
-//
-// static struct sel_c graphic_char_str[] = {
-//     { N_S(GRAPHIC_CHAR_ASCII), N_("ASCII") },
-//     { N_S(GRAPHIC_CHAR_CHARSET), N_("charset specific") },
-//     { N_S(GRAPHIC_CHAR_DEC), N_("DEC special graphics") },
-//     { 0, NULL, NULL }
-// };
-//
-// static struct sel_c inlineimgstr[] = {
-//     { N_S(INLINE_IMG_NONE), N_("external command") },
-//     { N_S(INLINE_IMG_OSC5379), N_("OSC 5379 (mlterm)") },
-//     { N_S(INLINE_IMG_SIXEL), N_("sixel (img2sixel)") },
-//     { N_S(INLINE_IMG_ITERM2), N_("OSC 1337 (iTerm2)") },
-//     { N_S(INLINE_IMG_KITTY), N_("kitty (ImageMagick)") },
-//     { 0, NULL, NULL }
-// };
+
+const graphic_char_str = [_]sel_c{
+    .{ .value = c.GRAPHIC_CHAR_ASCII, .cvalue = &.{c.GRAPHIC_CHAR_ASCII + '0'}, .text = "ASCII" },
+    .{ .value = c.GRAPHIC_CHAR_CHARSET, .cvalue = &.{c.GRAPHIC_CHAR_CHARSET + '0'}, .text = "charset specific" },
+    .{ .value = c.GRAPHIC_CHAR_DEC, .cvalue = &.{c.GRAPHIC_CHAR_DEC + '0'}, .text = "DEC special graphics" },
+};
+
+const inlineimgstr = [_]sel_c{
+    .{ .value = c.INLINE_IMG_NONE, .cvalue = &.{c.INLINE_IMG_NONE + '0'}, .text = "external command" },
+    .{ .value = c.INLINE_IMG_OSC5379, .cvalue = &.{c.INLINE_IMG_OSC5379 + '0'}, .text = "OSC 5379 (mlterm)" },
+    .{ .value = c.INLINE_IMG_SIXEL, .cvalue = &.{c.INLINE_IMG_SIXEL + '0'}, .text = "sixel (img2sixel)" },
+    .{ .value = c.INLINE_IMG_ITERM2, .cvalue = &.{c.INLINE_IMG_ITERM2 + '0'}, .text = "OSC 1337 (iTerm2)" },
+    .{ .value = c.INLINE_IMG_KITTY, .cvalue = &.{c.INLINE_IMG_KITTY + '0'}, .text = "kitty (ImageMagick)" },
+};
 
 // #define CMT_HELPER N_("External Viewer Setup")
 const CMT_TABSTOP = "Tab width in characters";
-// #define CMT_INDENT_INCR N_("Indent for HTML rendering")
-// #define CMT_PIXEL_PER_CHAR N_("Number of pixels per character (4.0...32.0)")
-// #define CMT_PIXEL_PER_LINE N_("Number of pixels per line (4.0...64.0)")
-// #define CMT_PAGERLINE N_("Number of remembered lines when used as a pager")
-// #define CMT_HISTORY N_("Use URL history")
-// #define CMT_HISTSIZE N_("Number of remembered URL")
-// #define CMT_SAVEHIST N_("Save URL history")
-// #define CMT_FRAME N_("Render frames automatically")
-// #define CMT_ARGV_IS_URL N_("Treat argument without scheme as URL")
-// #define CMT_TSELF N_("Use _self as default target")
-// #define CMT_OPEN_TAB_BLANK N_("Open link on new tab if target is _blank or _new")
-// #define CMT_OPEN_TAB_DL_LIST N_("Open download list panel on new tab")
-// #define CMT_DISPLINK N_("Display link URL automatically")
-// #define CMT_DISPLINKNUMBER N_("Display link numbers")
-// #define CMT_DECODE_URL N_("Display decoded URL")
-// #define CMT_DISPLINEINFO N_("Display current line number")
-// #define CMT_DISP_IMAGE N_("Display inline images")
-// #define CMT_PSEUDO_INLINES N_("Display pseudo-ALTs for inline images with no ALT or TITLE string")
-// #define CMT_AUTO_IMAGE N_("Load inline images automatically")
-// #define CMT_MAX_LOAD_IMAGE N_("Maximum processes for parallel image loading")
-// #define CMT_EXT_IMAGE_VIEWER N_("Use external image viewer")
-// #define CMT_IMAGE_SCALE N_("Scale of image (%)")
-// #define CMT_IMGDISPLAY N_("External command to display image")
-// #define CMT_IMAGE_MAP_LIST N_("Use link list of image map")
-// #define CMT_INLINE_IMG_PROTOCOL N_("Inline image display method")
-// #define CMT_MULTICOL N_("Display file names in multi-column format")
-// #define CMT_ALT_ENTITY N_("Use ASCII equivalents to display entities")
-// #define CMT_GRAPHIC_CHAR N_("Character type for border of table and menu")
-// #define CMT_DISP_BORDERS N_("Display table borders, ignore value of BORDER")
-// #define CMT_DISABLE_CENTER N_("Disable center alignment")
-// #define CMT_FOLD_TEXTAREA N_("Fold lines in TEXTAREA")
-// #define CMT_DISP_INS_DEL N_("Display INS, DEL, S and STRIKE element")
-// #define CMT_COLOR N_("Display with color")
-// #define CMT_HINTENSITY_COLOR N_("Use high-intensity colors")
-// #define CMT_B_COLOR N_("Color of normal character")
-// #define CMT_A_COLOR N_("Color of anchor")
-// #define CMT_I_COLOR N_("Color of image link")
-// #define CMT_F_COLOR N_("Color of form")
-// #define CMT_ACTIVE_STYLE N_("Enable coloring of active link")
-// #define CMT_C_COLOR N_("Color of currently active link")
-// #define CMT_VISITED_ANCHOR N_("Use visited link color")
-// #define CMT_V_COLOR N_("Color of visited link")
-// #define CMT_BG_COLOR N_("Color of background")
-// #define CMT_MARK_COLOR N_("Color of mark")
-// #define CMT_USE_PROXY N_("Use proxy")
-// #define CMT_HTTP_PROXY N_("URL of HTTP proxy host")
-// #define CMT_HTTPS_PROXY N_("URL of HTTPS proxy host")
-// #define CMT_GOPHER_PROXY N_("URL of GOPHER proxy host")
-// #define CMT_FTP_PROXY N_("URL of FTP proxy host")
-// #define CMT_NO_PROXY N_("Domains to be accessed directly (no proxy)")
-// #define CMT_NOPROXY_NETADDR N_("Check noproxy by network address")
-// #define CMT_NO_CACHE N_("Disable cache")
-// #define CMT_NNTP_SERVER N_("News server")
-// #define CMT_NNTP_MODE N_("Mode of news server")
-// #define CMT_MAX_NEWS N_("Number of news messages")
-// #define CMT_DNS_ORDER N_("Order of name resolution")
-// #define CMT_DROOT N_("Directory corresponding to / (document root)")
-// #define CMT_PDROOT N_("Directory corresponding to /~user")
-// #define CMT_CGIBIN N_("Directory corresponding to /cgi-bin")
-// #define CMT_TMP N_("Directory for temporary files")
-// #define CMT_CONFIRM_QQ N_("Confirm when quitting with q")
-// #define CMT_CLOSE_TAB_BACK N_("Close tab if buffer is last when back")
-// #define CMT_USE_MARK N_("Enable mark operations")
-// #define CMT_EMACS_LIKE_LINEEDIT N_("Enable Emacs-style line editing")
-// #define CMT_SPACE_AUTOCOMPLETE N_("Space key triggers file completion while editing URLs")
-// #define CMT_VI_PREC_NUM N_("Enable vi-like numeric prefix")
-// #define CMT_LABEL_TOPLINE N_("Move cursor to top line when going to label")
-// #define CMT_NEXTPAGE_TOPLINE N_("Move cursor to top line when moving to next page")
-// #define CMT_FOLD_LINE N_("Fold lines of plain text file")
-// #define CMT_SHOW_NUM N_("Show line numbers")
-// #define CMT_SHOW_SRCH_STR N_("Show search string")
-// #define CMT_MIMETYPES N_("List of mime.types files")
-// #define CMT_MAILCAP N_("List of mailcap files")
-// #define CMT_URIMETHODMAP N_("List of urimethodmap files")
-// #define CMT_EDITOR N_("Editor")
-// #define CMT_MAILER N_("Mailer")
-// #define CMT_MAILTO_OPTIONS N_("How to call Mailer for mailto URLs with options")
-// #define CMT_EXTBRZ N_("External browser")
-// #define CMT_EXTBRZ2 N_("2nd external browser")
-// #define CMT_EXTBRZ3 N_("3rd external browser")
-// #define CMT_EXTBRZ4 N_("4th external browser")
-// #define CMT_EXTBRZ5 N_("5th external browser")
-// #define CMT_EXTBRZ6 N_("6th external browser")
-// #define CMT_EXTBRZ7 N_("7th external browser")
-// #define CMT_EXTBRZ8 N_("8th external browser")
-// #define CMT_EXTBRZ9 N_("9th external browser")
-// #define CMT_DISABLE_SECRET_SECURITY_CHECK N_("Disable secret file security check")
-// #define CMT_PASSWDFILE N_("Password file")
-// #define CMT_PRE_FORM_FILE N_("File for setting form on loading")
-// #define CMT_SITECONF_FILE N_("File for preferences for each site")
-// #define CMT_FTPPASS N_("Password for anonymous FTP (your mail address)")
-// #define CMT_FTPPASS_HOSTNAMEGEN N_("Generate domain part of password for FTP")
-// #define CMT_USERAGENT N_("User-Agent identification string")
-// #define CMT_ACCEPTENCODING N_("Accept-Encoding header")
-// #define CMT_ACCEPTMEDIA N_("Accept header")
-// #define CMT_ACCEPTLANG N_("Accept-Language header")
-// #define CMT_MARK_ALL_PAGES N_("Treat URL-like strings as links in all pages")
-// #define CMT_WRAP N_("Wrap search")
-// #define CMT_VIEW_UNSEENOBJECTS N_("Display unseen objects (e.g. bgimage tag)")
-// #define CMT_AUTO_UNCOMPRESS N_("Uncompress compressed data automatically when downloading")
-// #define CMT_BGEXTVIEW N_("Run external viewer in the background")
-// #define CMT_EXT_DIRLIST N_("Use external program for directory listing")
-// #define CMT_DIRLIST_CMD N_("URL of directory listing command")
-// #define CMT_USE_DICTCOMMAND N_("Enable dictionary lookup through CGI")
-// #define CMT_DICTCOMMAND N_("URL of dictionary lookup command")
-// #define CMT_IGNORE_NULL_IMG_ALT N_("Display link name for images lacking ALT")
-// #define CMT_IFILE N_("Index file for directories")
-// #define CMT_RETRY_HTTP N_("Prepend http:// to URL automatically")
-// #define CMT_DEFAULT_URL N_("Default value for open-URL command")
-// #define CMT_DECODE_CTE N_("Decode Content-Transfer-Encoding when saving")
-// #define CMT_PRESERVE_TIMESTAMP N_("Preserve timestamp when saving")
-// #define CMT_MOUSE N_("Enable mouse")
-// #define CMT_REVERSE_MOUSE N_("Scroll in reverse direction of mouse drag")
-// #define CMT_RELATIVE_WHEEL_SCROLL N_("Behavior of wheel scroll speed")
-// #define CMT_RELATIVE_WHEEL_SCROLL_RATIO N_("(A only)Scroll by # (%) of screen")
-// #define CMT_FIXED_WHEEL_SCROLL_COUNT N_("(B only)Scroll by # lines")
-// #define CMT_CLEAR_BUF N_("Free memory of undisplayed buffers")
-// #define CMT_NOSENDREFERER N_("Suppress `Referer:' header")
-// #define CMT_CROSSORIGINREFERER N_("Exclude pathname and query string from `Referer:' header when cross domain communication")
-// #define CMT_IGNORE_CASE N_("Search case-insensitively")
-// #define CMT_USE_LESSOPEN N_("Use LESSOPEN")
-// #define CMT_SSL_VERIFY_SERVER N_("Perform SSL server verification")
-// #define CMT_SSL_CERT_FILE N_("PEM encoded certificate file of client")
-// #define CMT_SSL_KEY_FILE N_("PEM encoded private key file of client")
-// #define CMT_SSL_CA_PATH N_("Path to directory for PEM encoded certificates of CAs")
-// #define CMT_SSL_CA_FILE N_("File consisting of PEM encoded certificates of CAs")
-// #define CMT_SSL_CA_DEFAULT N_("Use default locations for PEM encoded certificates of CAs")
-// #define CMT_SSL_FORBID_METHOD N_("List of forbidden SSL methods (2: SSLv2, 3: SSLv3, t: TLSv1.0, 5: TLSv1.1, 6: TLSv1.2, 7: TLSv1.3)")
+const CMT_INDENT_INCR = "Indent for HTML rendering";
+const CMT_PIXEL_PER_CHAR = "Number of pixels per character (4.0...32.0)";
+const CMT_PIXEL_PER_LINE = "Number of pixels per line (4.0...64.0)";
+const CMT_PAGERLINE = "Number of remembered lines when used as a pager";
+const CMT_HISTORY = "Use URL history";
+const CMT_HISTSIZE = "Number of remembered URL";
+const CMT_SAVEHIST = "Save URL history";
+const CMT_FRAME = "Render frames automatically";
+const CMT_ARGV_IS_URL = "Treat argument without scheme as URL";
+const CMT_TSELF = "Use _self as default target";
+const CMT_OPEN_TAB_BLANK = "Open link on new tab if target is _blank or _new";
+const CMT_OPEN_TAB_DL_LIST = "Open download list panel on new tab";
+const CMT_DISPLINK = "Display link URL automatically";
+const CMT_DISPLINKNUMBER = "Display link numbers";
+const CMT_DECODE_URL = "Display decoded URL";
+const CMT_DISPLINEINFO = "Display current line number";
+const CMT_DISP_IMAGE = "Display inline images";
+const CMT_PSEUDO_INLINES = "Display pseudo-ALTs for inline images with no ALT or TITLE string";
+const CMT_AUTO_IMAGE = "Load inline images automatically";
+const CMT_MAX_LOAD_IMAGE = "Maximum processes for parallel image loading";
+const CMT_EXT_IMAGE_VIEWER = "Use external image viewer";
+const CMT_IMAGE_SCALE = "Scale of image (%)";
+const CMT_IMGDISPLAY = "External command to display image";
+const CMT_IMAGE_MAP_LIST = "Use link list of image map";
+const CMT_INLINE_IMG_PROTOCOL = "Inline image display method";
+const CMT_MULTICOL = "Display file names in multi-column format";
+const CMT_ALT_ENTITY = "Use ASCII equivalents to display entities";
+const CMT_GRAPHIC_CHAR = "Character type for border of table and menu";
+const CMT_DISP_BORDERS = "Display table borders, ignore value of BORDER";
+const CMT_DISABLE_CENTER = "Disable center alignment";
+const CMT_FOLD_TEXTAREA = "Fold lines in TEXTAREA";
+const CMT_DISP_INS_DEL = "Display INS, DEL, S and STRIKE element";
+const CMT_COLOR = "Display with color";
+const CMT_HINTENSITY_COLOR = "Use high-intensity colors";
+const CMT_B_COLOR = "Color of normal character";
+const CMT_A_COLOR = "Color of anchor";
+const CMT_I_COLOR = "Color of image link";
+const CMT_F_COLOR = "Color of form";
+const CMT_ACTIVE_STYLE = "Enable coloring of active link";
+const CMT_C_COLOR = "Color of currently active link";
+const CMT_VISITED_ANCHOR = "Use visited link color";
+const CMT_V_COLOR = "Color of visited link";
+const CMT_BG_COLOR = "Color of background";
+const CMT_MARK_COLOR = "Color of mark";
+const CMT_USE_PROXY = "Use proxy";
+const CMT_HTTP_PROXY = "URL of HTTP proxy host";
+const CMT_HTTPS_PROXY = "URL of HTTPS proxy host";
+const CMT_GOPHER_PROXY = "URL of GOPHER proxy host";
+const CMT_FTP_PROXY = "URL of FTP proxy host";
+const CMT_NO_PROXY = "Domains to be accessed directly (no proxy)";
+const CMT_NOPROXY_NETADDR = "Check noproxy by network address";
+const CMT_NO_CACHE = "Disable cache";
+const CMT_NNTP_SERVER = "News server";
+const CMT_NNTP_MODE = "Mode of news server";
+const CMT_MAX_NEWS = "Number of news messages";
+const CMT_DNS_ORDER = "Order of name resolution";
+const CMT_DROOT = "Directory corresponding to / (document root)";
+const CMT_PDROOT = "Directory corresponding to /~user";
+const CMT_CGIBIN = "Directory corresponding to /cgi-bin";
+const CMT_TMP = "Directory for temporary files";
+const CMT_CONFIRM_QQ = "Confirm when quitting with q";
+const CMT_CLOSE_TAB_BACK = "Close tab if buffer is last when back";
+const CMT_USE_MARK = "Enable mark operations";
+const CMT_EMACS_LIKE_LINEEDIT = "Enable Emacs-style line editing";
+const CMT_SPACE_AUTOCOMPLETE = "Space key triggers file completion while editing URLs";
+const CMT_VI_PREC_NUM = "Enable vi-like numeric prefix";
+const CMT_LABEL_TOPLINE = "Move cursor to top line when going to label";
+const CMT_NEXTPAGE_TOPLINE = "Move cursor to top line when moving to next page";
+const CMT_FOLD_LINE = "Fold lines of plain text file";
+const CMT_SHOW_NUM = "Show line numbers";
+const CMT_SHOW_SRCH_STR = "Show search string";
+const CMT_MIMETYPES = "List of mime.types files";
+const CMT_MAILCAP = "List of mailcap files";
+const CMT_URIMETHODMAP = "List of urimethodmap files";
+const CMT_EDITOR = "Editor";
+const CMT_MAILER = "Mailer";
+const CMT_MAILTO_OPTIONS = "How to call Mailer for mailto URLs with options";
+const CMT_EXTBRZ = "External browser";
+const CMT_EXTBRZ2 = "2nd external browser";
+const CMT_EXTBRZ3 = "3rd external browser";
+const CMT_EXTBRZ4 = "4th external browser";
+const CMT_EXTBRZ5 = "5th external browser";
+const CMT_EXTBRZ6 = "6th external browser";
+const CMT_EXTBRZ7 = "7th external browser";
+const CMT_EXTBRZ8 = "8th external browser";
+const CMT_EXTBRZ9 = "9th external browser";
+const CMT_DISABLE_SECRET_SECURITY_CHECK = "Disable secret file security check";
+const CMT_PASSWDFILE = "Password file";
+const CMT_PRE_FORM_FILE = "File for setting form on loading";
+const CMT_SITECONF_FILE = "File for preferences for each site";
+const CMT_FTPPASS = "Password for anonymous FTP (your mail address)";
+const CMT_FTPPASS_HOSTNAMEGEN = "Generate domain part of password for FTP";
+const CMT_USERAGENT = "User-Agent identification string";
+const CMT_ACCEPTENCODING = "Accept-Encoding header";
+const CMT_ACCEPTMEDIA = "Accept header";
+const CMT_ACCEPTLANG = "Accept-Language header";
+const CMT_MARK_ALL_PAGES = "Treat URL-like strings as links in all pages";
+const CMT_WRAP = "Wrap search";
+const CMT_VIEW_UNSEENOBJECTS = "Display unseen objects (e.g. bgimage tag)";
+const CMT_AUTO_UNCOMPRESS = "Uncompress compressed data automatically when downloading";
+const CMT_BGEXTVIEW = "Run external viewer in the background";
+const CMT_EXT_DIRLIST = "Use external program for directory listing";
+const CMT_DIRLIST_CMD = "URL of directory listing command";
+const CMT_USE_DICTCOMMAND = "Enable dictionary lookup through CGI";
+const CMT_DICTCOMMAND = "URL of dictionary lookup command";
+const CMT_IGNORE_NULL_IMG_ALT = "Display link name for images lacking ALT";
+const CMT_IFILE = "Index file for directories";
+const CMT_RETRY_HTTP = "Prepend http:// to URL automatically";
+const CMT_DEFAULT_URL = "Default value for open-URL command";
+const CMT_DECODE_CTE = "Decode Content-Transfer-Encoding when saving";
+const CMT_PRESERVE_TIMESTAMP = "Preserve timestamp when saving";
+const CMT_MOUSE = "Enable mouse";
+const CMT_REVERSE_MOUSE = "Scroll in reverse direction of mouse drag";
+const CMT_RELATIVE_WHEEL_SCROLL = "Behavior of wheel scroll speed";
+const CMT_RELATIVE_WHEEL_SCROLL_RATIO = "(A only)Scroll by # (%) of screen";
+const CMT_FIXED_WHEEL_SCROLL_COUNT = "(B only)Scroll by # lines";
+const CMT_CLEAR_BUF = "Free memory of undisplayed buffers";
+const CMT_NOSENDREFERER = "Suppress `Referer:' header";
+const CMT_CROSSORIGINREFERER = "Exclude pathname and query string from `Referer:' header when cross domain communication";
+const CMT_IGNORE_CASE = "Search case-insensitively";
+const CMT_USE_LESSOPEN = "Use LESSOPEN";
+const CMT_SSL_VERIFY_SERVER = "Perform SSL server verification";
+const CMT_SSL_CERT_FILE = "PEM encoded certificate file of client";
+const CMT_SSL_KEY_FILE = "PEM encoded private key file of client";
+const CMT_SSL_CA_PATH = "Path to directory for PEM encoded certificates of CAs";
+const CMT_SSL_CA_FILE = "File consisting of PEM encoded certificates of CAs";
+const CMT_SSL_CA_DEFAULT = "Use default locations for PEM encoded certificates of CAs";
+const CMT_SSL_FORBID_METHOD = "List of forbidden SSL methods (2: SSLv2, 3: SSLv3, t: TLSv1.0, 5: TLSv1.1, 6: TLSv1.2, 7: TLSv1.3)";
 // #ifdef SSL_CTX_set_min_proto_version
-// #define CMT_SSL_MIN_VERSION N_("Minimum SSL version (all, TLSv1.0, TLSv1.1, TLSv1.2, or TLSv1.3)")
+const CMT_SSL_MIN_VERSION = "Minimum SSL version (all, TLSv1.0, TLSv1.1, TLSv1.2, or TLSv1.3)";
 // #endif
-// #define CMT_SSL_CIPHER N_("SSL ciphers for TLSv1.2 and below (e.g. DEFAULT:@SECLEVEL=2)")
-// #define CMT_USECOOKIE N_("Enable cookie processing")
-// #define CMT_SHOWCOOKIE N_("Print a message when receiving a cookie")
-// #define CMT_ACCEPTCOOKIE N_("Accept cookies")
-// #define CMT_ACCEPTBADCOOKIE N_("Action to be taken on invalid cookie")
-// #define CMT_COOKIE_REJECT_DOMAINS N_("Domains to reject cookies from")
-// #define CMT_COOKIE_ACCEPT_DOMAINS N_("Domains to accept cookies from")
-// #define CMT_COOKIE_AVOID_WONG_NUMBER_OF_DOTS N_("Domains to avoid [wrong number of dots]")
-// #define CMT_FOLLOW_REDIRECTION N_("Number of redirections to follow")
-// #define CMT_META_REFRESH N_("Enable processing of meta-refresh tag")
-// #define CMT_LOCALHOST_ONLY N_("Restrict connections only to localhost")
+const CMT_SSL_CIPHER = "SSL ciphers for TLSv1.2 and below (e.g. DEFAULT:@SECLEVEL=2)";
+const CMT_USECOOKIE = "Enable cookie processing";
+const CMT_SHOWCOOKIE = "Print a message when receiving a cookie";
+const CMT_ACCEPTCOOKIE = "Accept cookies";
+const CMT_ACCEPTBADCOOKIE = "Action to be taken on invalid cookie";
+const CMT_COOKIE_REJECT_DOMAINS = "Domains to reject cookies from";
+const CMT_COOKIE_ACCEPT_DOMAINS = "Domains to accept cookies from";
+const CMT_COOKIE_AVOID_WONG_NUMBER_OF_DOTS = "Domains to avoid [wrong number of dots]";
+const CMT_FOLLOW_REDIRECTION = "Number of redirections to follow";
+const CMT_META_REFRESH = "Enable processing of meta-refresh tag";
+const CMT_LOCALHOST_ONLY = "Restrict connections only to localhost";
 //
-// #define CMT_DISPLAY_CHARSET N_("Display charset")
-// #define CMT_DOCUMENT_CHARSET N_("Default document charset")
-// #define CMT_AUTO_DETECT N_("Automatic charset detection when loading")
-// #define CMT_SYSTEM_CHARSET N_("System charset")
-// #define CMT_FOLLOW_LOCALE N_("System charset follows locale(LC_CTYPE)")
-// #define CMT_EXT_HALFDUMP N_("Output halfdump with display charset")
-// #define CMT_USE_WIDE N_("Use multi-column characters")
-// #define CMT_USE_COMBINING N_("Use combining characters")
-// #define CMT_EAST_ASIAN_WIDTH N_("Use double width for some Unicode characters")
-// #define CMT_USE_LANGUAGE_TAG N_("Use Unicode language tags")
-// #define CMT_UCS_CONV N_("Charset conversion using Unicode map")
-// #define CMT_PRE_CONV N_("Charset conversion when loading")
-// #define CMT_SEARCH_CONV N_("Adjust search string for document charset")
-// #define CMT_FIX_WIDTH_CONV N_("Fix character width when converting")
-// #define CMT_USE_GB12345_MAP N_("Use GB 12345 Unicode map instead of GB 2312's")
-// #define CMT_USE_JISX0201 N_("Use JIS X 0201 Roman for ISO-2022-JP")
-// #define CMT_USE_JISC6226 N_("Use JIS C 6226:1978 for ISO-2022-JP")
-// #define CMT_USE_JISX0201K N_("Use JIS X 0201 Katakana")
-// #define CMT_USE_JISX0212 N_("Use JIS X 0212:1990 (Supplemental Kanji)")
-// #define CMT_USE_JISX0213 N_("Use JIS X 0213:2000 (2000JIS)")
-// #define CMT_STRICT_ISO2022 N_("Strict ISO-2022-JP/KR/CN")
-// #define CMT_GB18030_AS_UCS N_("Treat 4 bytes char. of GB18030 as Unicode")
-// #define CMT_SIMPLE_PRESERVE_SPACE N_("Simple Preserve space")
-//
-// #define CMT_KEYMAP_FILE N_("keymap file")
+const CMT_DISPLAY_CHARSET = "Display charset";
+const CMT_DOCUMENT_CHARSET = "Default document charset";
+const CMT_AUTO_DETECT = "Automatic charset detection when loading";
+const CMT_SYSTEM_CHARSET = "System charset";
+const CMT_FOLLOW_LOCALE = "System charset follows locale(LC_CTYPE)";
+const CMT_EXT_HALFDUMP = "Output halfdump with display charset";
+const CMT_USE_WIDE = "Use multi-column characters";
+const CMT_USE_COMBINING = "Use combining characters";
+const CMT_EAST_ASIAN_WIDTH = "Use double width for some Unicode characters";
+const CMT_USE_LANGUAGE_TAG = "Use Unicode language tags";
+const CMT_UCS_CONV = "Charset conversion using Unicode map";
+const CMT_PRE_CONV = "Charset conversion when loading";
+const CMT_SEARCH_CONV = "Adjust search string for document charset";
+const CMT_FIX_WIDTH_CONV = "Fix character width when converting";
+const CMT_USE_GB12345_MAP = "Use GB 12345 Unicode map instead of GB 2312's";
+const CMT_USE_JISX0201 = "Use JIS X 0201 Roman for ISO-2022-JP";
+const CMT_USE_JISC6226 = "Use JIS C 6226:1978 for ISO-2022-JP";
+const CMT_USE_JISX0201K = "Use JIS X 0201 Katakana";
+const CMT_USE_JISX0212 = "Use JIS X 0212:1990 (Supplemental Kanji)";
+const CMT_USE_JISX0213 = "Use JIS X 0213:2000 (2000JIS)";
+const CMT_STRICT_ISO2022 = "Strict ISO-2022-JP/KR/CN";
+const CMT_GB18030_AS_UCS = "Treat 4 bytes char. of GB18030 as Unicode";
+const CMT_SIMPLE_PRESERVE_SPACE = "Simple Preserve space";
 
-var params1 = [_]param_ptr{
+const CMT_KEYMAP_FILE = "keymap file";
+
+const params1 = [_]param_ptr{
     .{ .name = "tabstop", .type = .P_NZINT, .inputtype = .PI_TEXT, .varptr = &c.Tabstop, .comment = CMT_TABSTOP },
-    //     { "indent_incr", P_NZINT, PI_TEXT, (void*)&IndentIncr, CMT_INDENT_INCR, NULL },
-    //     { "pixel_per_char", P_PIXELS, PI_TEXT, (void*)&pixel_per_char,
-    //         CMT_PIXEL_PER_CHAR, NULL },
-    //     { "pixel_per_line", P_PIXELS, PI_TEXT, (void*)&pixel_per_line,
-    //         CMT_PIXEL_PER_LINE, NULL },
-    //     { "frame", P_CHARINT, PI_ONOFF, (void*)&RenderFrame, CMT_FRAME, NULL },
-    //     { "target_self", P_CHARINT, PI_ONOFF, (void*)&TargetSelf, CMT_TSELF, NULL },
-    //     { "open_tab_blank", P_INT, PI_ONOFF, (void*)&open_tab_blank,
-    //         CMT_OPEN_TAB_BLANK, NULL },
-    //     { "open_tab_dl_list", P_INT, PI_ONOFF, (void*)&open_tab_dl_list,
-    //         CMT_OPEN_TAB_DL_LIST, NULL },
-    //     { "display_link", P_INT, PI_ONOFF, (void*)&displayLink, CMT_DISPLINK,
-    //         NULL },
-    //     { "display_link_number", P_INT, PI_ONOFF, (void*)&displayLinkNumber,
-    //         CMT_DISPLINKNUMBER, NULL },
-    //     { "decode_url", P_INT, PI_ONOFF, (void*)&DecodeURL, CMT_DECODE_URL, NULL },
-    //     { "display_lineinfo", P_INT, PI_ONOFF, (void*)&displayLineInfo,
-    //         CMT_DISPLINEINFO, NULL },
-    //     { "ext_dirlist", P_INT, PI_ONOFF, (void*)&UseExternalDirBuffer,
-    //         CMT_EXT_DIRLIST, NULL },
-    //     { "dirlist_cmd", P_STRING, PI_TEXT, (void*)&DirBufferCommand,
-    //         CMT_DIRLIST_CMD, NULL },
-    //     { "use_dictcommand", P_INT, PI_ONOFF, (void*)&UseDictCommand,
-    //         CMT_USE_DICTCOMMAND, NULL },
-    //     { "dictcommand", P_STRING, PI_TEXT, (void*)&DictCommand,
-    //         CMT_DICTCOMMAND, NULL },
-    //     { "multicol", P_INT, PI_ONOFF, (void*)&multicolList, CMT_MULTICOL, NULL },
-    //     { "alt_entity", P_CHARINT, PI_ONOFF, (void*)&UseAltEntity, CMT_ALT_ENTITY,
-    //         NULL },
-    //     { "graphic_char", P_CHARINT, PI_SEL_C, (void*)&UseGraphicChar,
-    //         CMT_GRAPHIC_CHAR, (void*)graphic_char_str },
-    //     { "display_borders", P_CHARINT, PI_ONOFF, (void*)&DisplayBorders,
-    //         CMT_DISP_BORDERS, NULL },
-    //     { "disable_center", P_CHARINT, PI_ONOFF, (void*)&DisableCenter,
-    //         CMT_DISABLE_CENTER, NULL },
-    //     { "fold_textarea", P_CHARINT, PI_ONOFF, (void*)&FoldTextarea,
-    //         CMT_FOLD_TEXTAREA, NULL },
-    //     { "display_ins_del", P_INT, PI_SEL_C, (void*)&displayInsDel,
-    //         CMT_DISP_INS_DEL, displayinsdel },
-    //     { "ignore_null_img_alt", P_INT, PI_ONOFF, (void*)&ignore_null_img_alt,
-    //         CMT_IGNORE_NULL_IMG_ALT, NULL },
-    //     { "view_unseenobject", P_INT, PI_ONOFF, (void*)&view_unseenobject,
-    //         CMT_VIEW_UNSEENOBJECTS, NULL },
-    //     /* XXX: emacs-w3m force to off display_image even if image options off */
-    //     { "display_image", P_INT, PI_ONOFF, (void*)&displayImage, CMT_DISP_IMAGE,
-    //         NULL },
-    //     { "pseudo_inlines", P_INT, PI_ONOFF, (void*)&pseudoInlines,
-    //         CMT_PSEUDO_INLINES, NULL },
-    //     { "auto_image", P_INT, PI_ONOFF, (void*)&autoImage, CMT_AUTO_IMAGE, NULL },
-    //     { "max_load_image", P_INT, PI_TEXT, (void*)&maxLoadImage,
-    //         CMT_MAX_LOAD_IMAGE, NULL },
-    //     { "ext_image_viewer", P_INT, PI_ONOFF, (void*)&useExtImageViewer,
-    //         CMT_EXT_IMAGE_VIEWER, NULL },
-    //     { "image_scale", P_SCALE, PI_TEXT, (void*)&image_scale, CMT_IMAGE_SCALE,
-    //         NULL },
-    //     { "inline_img_protocol", P_INT, PI_SEL_C, (void*)&enable_inline_image,
-    //         CMT_INLINE_IMG_PROTOCOL, (void*)inlineimgstr },
-    //     { "imgdisplay", P_STRING, PI_TEXT, (void*)&Imgdisplay, CMT_IMGDISPLAY,
-    //         NULL },
-    //     { "image_map_list", P_INT, PI_ONOFF, (void*)&image_map_list,
-    //         CMT_IMAGE_MAP_LIST, NULL },
-    //     { "fold_line", P_INT, PI_ONOFF, (void*)&FoldLine, CMT_FOLD_LINE, NULL },
-    //     { "show_lnum", P_INT, PI_ONOFF, (void*)&showLineNum, CMT_SHOW_NUM, NULL },
-    //     { "show_srch_str", P_INT, PI_ONOFF, (void*)&show_srch_str,
-    //         CMT_SHOW_SRCH_STR, NULL },
-    //     { "label_topline", P_INT, PI_ONOFF, (void*)&label_topline,
-    //         CMT_LABEL_TOPLINE, NULL },
-    //     { "nextpage_topline", P_INT, PI_ONOFF, (void*)&nextpage_topline,
-    //         CMT_NEXTPAGE_TOPLINE, NULL },
-    //     { NULL, 0, 0, NULL, NULL, NULL },
-    // };
-    //
-    // struct param_ptr params2[] = {
-    //     { "color", P_INT, PI_ONOFF, (void*)&useColor, CMT_COLOR, NULL },
-    //     { "high-intensity", P_INT, PI_ONOFF, (void*)&highIntensityColors, CMT_HINTENSITY_COLOR, NULL },
-    //     { "basic_color", P_COLOR, PI_SEL_C, (void*)&basic_color, CMT_B_COLOR,
-    //         (void*)colorstr },
-    //     { "anchor_color", P_COLOR, PI_SEL_C, (void*)&anchor_color, CMT_A_COLOR,
-    //         (void*)colorstr },
-    //     { "image_color", P_COLOR, PI_SEL_C, (void*)&image_color, CMT_I_COLOR,
-    //         (void*)colorstr },
-    //     { "form_color", P_COLOR, PI_SEL_C, (void*)&form_color, CMT_F_COLOR,
-    //         (void*)colorstr },
-    //     { "mark_color", P_COLOR, PI_SEL_C, (void*)&mark_color, CMT_MARK_COLOR,
-    //         (void*)colorstr },
-    //     { "bg_color", P_COLOR, PI_SEL_C, (void*)&bg_color, CMT_BG_COLOR,
-    //         (void*)colorstr },
-    //     { "active_style", P_INT, PI_ONOFF, (void*)&useActiveColor,
-    //         CMT_ACTIVE_STYLE, NULL },
-    //     { "active_color", P_COLOR, PI_SEL_C, (void*)&active_color, CMT_C_COLOR,
-    //         (void*)colorstr },
-    //     { "visited_anchor", P_INT, PI_ONOFF, (void*)&useVisitedColor,
-    //         CMT_VISITED_ANCHOR, NULL },
-    //     { "visited_color", P_COLOR, PI_SEL_C, (void*)&visited_color, CMT_V_COLOR,
-    //         (void*)colorstr },
-    //     { NULL, 0, 0, NULL, NULL, NULL },
-    // };
-    //
-    // struct param_ptr params3[] = {
-    //     { "pagerline", P_NZINT, PI_TEXT, (void*)&PagerMax, CMT_PAGERLINE, NULL },
-    //     { "use_history", P_INT, PI_ONOFF, (void*)&UseHistory, CMT_HISTORY, NULL },
-    //     { "history", P_INT, PI_TEXT, (void*)&URLHistSize, CMT_HISTSIZE, NULL },
-    //     { "save_hist", P_INT, PI_ONOFF, (void*)&SaveURLHist, CMT_SAVEHIST, NULL },
-    //     { "confirm_qq", P_INT, PI_ONOFF, (void*)&confirm_on_quit, CMT_CONFIRM_QQ,
-    //         NULL },
-    //     { "close_tab_back", P_INT, PI_ONOFF, (void*)&close_tab_back,
-    //         CMT_CLOSE_TAB_BACK, NULL },
-    //     { "mark", P_INT, PI_ONOFF, (void*)&use_mark, CMT_USE_MARK, NULL },
-    //     { "emacs_like_lineedit", P_INT, PI_ONOFF, (void*)&emacs_like_lineedit,
-    //         CMT_EMACS_LIKE_LINEEDIT, NULL },
-    //     { "space_autocomplete", P_INT, PI_ONOFF, (void*)&space_autocomplete,
-    //         CMT_SPACE_AUTOCOMPLETE, NULL },
-    //     { "vi_prec_num", P_INT, PI_ONOFF, (void*)&vi_prec_num, CMT_VI_PREC_NUM,
-    //         NULL },
-    //     { "mark_all_pages", P_INT, PI_ONOFF, (void*)&MarkAllPages,
-    //         CMT_MARK_ALL_PAGES, NULL },
-    //     { "wrap_search", P_INT, PI_ONOFF, (void*)&WrapDefault, CMT_WRAP, NULL },
-    //     { "ignorecase_search", P_INT, PI_ONOFF, (void*)&IgnoreCase,
-    //         CMT_IGNORE_CASE, NULL },
-    //     { "relative_wheel_scroll", P_INT, PI_SEL_C, (void*)&relative_wheel_scroll,
-    //         CMT_RELATIVE_WHEEL_SCROLL, (void*)wheelmode },
-    //     { "relative_wheel_scroll_ratio", P_INT, PI_TEXT,
-    //         (void*)&relative_wheel_scroll_ratio,
-    //         CMT_RELATIVE_WHEEL_SCROLL_RATIO, NULL },
-    //     { "fixed_wheel_scroll_count", P_INT, PI_TEXT,
-    //         (void*)&fixed_wheel_scroll_count,
-    //         CMT_FIXED_WHEEL_SCROLL_COUNT, NULL },
-    //     { "clear_buffer", P_INT, PI_ONOFF, (void*)&clear_buffer, CMT_CLEAR_BUF,
-    //         NULL },
-    //     { "decode_cte", P_CHARINT, PI_ONOFF, (void*)&DecodeCTE, CMT_DECODE_CTE,
-    //         NULL },
-    //     { "auto_uncompress", P_CHARINT, PI_ONOFF, (void*)&AutoUncompress,
-    //         CMT_AUTO_UNCOMPRESS, NULL },
-    //     { "preserve_timestamp", P_CHARINT, PI_ONOFF, (void*)&PreserveTimestamp,
-    //         CMT_PRESERVE_TIMESTAMP, NULL },
-    //     { "keymap_file", P_STRING, PI_TEXT, (void*)&keymap_file, CMT_KEYMAP_FILE,
-    //         NULL },
-    //     { NULL, 0, 0, NULL, NULL, NULL },
-    // };
-    //
-    // struct param_ptr params4[] = {
-    //     { "use_proxy", P_CHARINT, PI_ONOFF, (void*)&use_proxy, CMT_USE_PROXY,
-    //         NULL },
-    //     { "http_proxy", P_STRING, PI_TEXT, (void*)&HTTP_proxy, CMT_HTTP_PROXY,
-    //         NULL },
-    //     { "https_proxy", P_STRING, PI_TEXT, (void*)&HTTPS_proxy, CMT_HTTPS_PROXY,
-    //         NULL },
-    //     { "gopher_proxy", P_STRING, PI_TEXT, (void*)&GOPHER_proxy,
-    //         CMT_GOPHER_PROXY, NULL },
-    //     { "ftp_proxy", P_STRING, PI_TEXT, (void*)&FTP_proxy, CMT_FTP_PROXY, NULL },
-    //     { "no_proxy", P_STRING, PI_TEXT, (void*)&NO_proxy, CMT_NO_PROXY, NULL },
-    //     { "noproxy_netaddr", P_INT, PI_ONOFF, (void*)&NOproxy_netaddr,
-    //         CMT_NOPROXY_NETADDR, NULL },
-    //     { "no_cache", P_CHARINT, PI_ONOFF, (void*)&NoCache, CMT_NO_CACHE, NULL },
-    //
-    //     { NULL, 0, 0, NULL, NULL, NULL },
-    // };
-    //
-    // struct param_ptr params5[] = {
-    //     { "document_root", P_STRING, PI_TEXT, (void*)&document_root, CMT_DROOT,
-    //         NULL },
-    //     { "personal_document_root", P_STRING, PI_TEXT,
-    //         (void*)&personal_document_root, CMT_PDROOT, NULL },
-    //     { "cgi_bin", P_STRING, PI_TEXT, (void*)&cgi_bin, CMT_CGIBIN, NULL },
-    //     { "index_file", P_STRING, PI_TEXT, (void*)&index_file, CMT_IFILE, NULL },
-    //     { "tmp_dir", P_STRING, PI_TEXT, (void*)&w3m_config.param_tmp_dir, CMT_TMP, NULL },
-    //     { NULL, 0, 0, NULL, NULL, NULL },
-    // };
-    //
-    // struct param_ptr params6[] = {
-    //     { "mime_types", P_STRING, PI_TEXT, (void*)&mimetypes_files, CMT_MIMETYPES,
-    //         NULL },
-    //     { "mailcap", P_STRING, PI_TEXT, (void*)&mailcap_files, CMT_MAILCAP, NULL },
-    //     { "editor", P_STRING, PI_TEXT, (void*)&Editor, CMT_EDITOR, NULL },
-    //     { "mailer", P_STRING, PI_TEXT, (void*)&Mailer, CMT_MAILER, NULL },
-    //     { "extbrowser", P_STRING, PI_TEXT, (void*)&ExtBrowser, CMT_EXTBRZ, NULL },
-    //     { "extbrowser2", P_STRING, PI_TEXT, (void*)&ExtBrowser2, CMT_EXTBRZ2,
-    //         NULL },
-    //     { "extbrowser3", P_STRING, PI_TEXT, (void*)&ExtBrowser3, CMT_EXTBRZ3,
-    //         NULL },
-    //     { "extbrowser4", P_STRING, PI_TEXT, (void*)&ExtBrowser4, CMT_EXTBRZ4,
-    //         NULL },
-    //     { "extbrowser5", P_STRING, PI_TEXT, (void*)&ExtBrowser5, CMT_EXTBRZ5,
-    //         NULL },
-    //     { "extbrowser6", P_STRING, PI_TEXT, (void*)&ExtBrowser6, CMT_EXTBRZ6,
-    //         NULL },
-    //     { "extbrowser7", P_STRING, PI_TEXT, (void*)&ExtBrowser7, CMT_EXTBRZ7,
-    //         NULL },
-    //     { "extbrowser8", P_STRING, PI_TEXT, (void*)&ExtBrowser8, CMT_EXTBRZ8,
-    //         NULL },
-    //     { "extbrowser9", P_STRING, PI_TEXT, (void*)&ExtBrowser9, CMT_EXTBRZ9,
-    //         NULL },
-    //     { "bgextviewer", P_INT, PI_ONOFF, (void*)&BackgroundExtViewer,
-    //         CMT_BGEXTVIEW, NULL },
-    //     { "use_lessopen", P_INT, PI_ONOFF, (void*)&use_lessopen, CMT_USE_LESSOPEN,
-    //         NULL },
-    //     { NULL, 0, 0, NULL, NULL, NULL },
-    // };
-    //
-    // struct param_ptr params7[] = {
-    //     { "ssl_forbid_method", P_STRING, PI_TEXT, (void*)&ssl_forbid_method,
-    //         CMT_SSL_FORBID_METHOD, NULL },
-    // #ifdef SSL_CTX_set_min_proto_version
-    //     { "ssl_min_version", P_STRING, PI_TEXT, (void*)&ssl_min_version,
-    //         CMT_SSL_MIN_VERSION, NULL },
-    // #endif
-    //     { "ssl_cipher", P_STRING, PI_TEXT, (void*)&ssl_cipher, CMT_SSL_CIPHER,
-    //         NULL },
-    //     { "ssl_verify_server", P_INT, PI_ONOFF, (void*)&ssl_verify_server,
-    //         CMT_SSL_VERIFY_SERVER, NULL },
-    //     { "ssl_cert_file", P_SSLPATH, PI_TEXT, (void*)&ssl_cert_file,
-    //         CMT_SSL_CERT_FILE, NULL },
-    //     { "ssl_key_file", P_SSLPATH, PI_TEXT, (void*)&ssl_key_file,
-    //         CMT_SSL_KEY_FILE, NULL },
-    //     { "ssl_ca_path", P_SSLPATH, PI_TEXT, (void*)&ssl_ca_path, CMT_SSL_CA_PATH,
-    //         NULL },
-    //     { "ssl_ca_file", P_SSLPATH, PI_TEXT, (void*)&ssl_ca_file, CMT_SSL_CA_FILE,
-    //         NULL },
-    //     { "ssl_ca_default", P_INT, PI_ONOFF, (void*)&ssl_ca_default,
-    //         CMT_SSL_CA_DEFAULT, NULL },
-    //     { NULL, 0, 0, NULL, NULL, NULL },
-    // };
-    //
-    // struct param_ptr params8[] = {
-    //     { "use_cookie", P_INT, PI_ONOFF, (void*)&use_cookie, CMT_USECOOKIE, NULL },
-    //     { "show_cookie", P_INT, PI_ONOFF, (void*)&show_cookie,
-    //         CMT_SHOWCOOKIE, NULL },
-    //     { "accept_cookie", P_INT, PI_ONOFF, (void*)&accept_cookie,
-    //         CMT_ACCEPTCOOKIE, NULL },
-    //     { "accept_bad_cookie", P_INT, PI_SEL_C, (void*)&accept_bad_cookie,
-    //         CMT_ACCEPTBADCOOKIE, (void*)badcookiestr },
-    //     { "cookie_reject_domains", P_STRING, PI_TEXT,
-    //         (void*)&cookie_reject_domains, CMT_COOKIE_REJECT_DOMAINS, NULL },
-    //     { "cookie_accept_domains", P_STRING, PI_TEXT,
-    //         (void*)&cookie_accept_domains, CMT_COOKIE_ACCEPT_DOMAINS, NULL },
-    //     { "cookie_avoid_wrong_number_of_dots", P_STRING, PI_TEXT,
-    //         (void*)&cookie_avoid_wrong_number_of_dots,
-    //         CMT_COOKIE_AVOID_WONG_NUMBER_OF_DOTS, NULL },
-    //     { NULL, 0, 0, NULL, NULL, NULL },
-    // };
-    //
-    // struct param_ptr params9[] = {
-    //     { "passwd_file", P_STRING, PI_TEXT, (void*)&passwd_file, CMT_PASSWDFILE,
-    //         NULL },
-    //     { "disable_secret_security_check", P_INT, PI_ONOFF,
-    //         (void*)&disable_secret_security_check, CMT_DISABLE_SECRET_SECURITY_CHECK,
-    //         NULL },
-    //     { "ftppasswd", P_STRING, PI_TEXT, (void*)&ftppasswd, CMT_FTPPASS, NULL },
-    //     { "ftppass_hostnamegen", P_INT, PI_ONOFF, (void*)&ftppass_hostnamegen,
-    //         CMT_FTPPASS_HOSTNAMEGEN, NULL },
-    //     { "pre_form_file", P_STRING, PI_TEXT, (void*)&pre_form_file,
-    //         CMT_PRE_FORM_FILE, NULL },
-    //     { "user_agent", P_STRING, PI_TEXT, (void*)&UserAgent, CMT_USERAGENT, NULL },
-    //     { "no_referer", P_INT, PI_ONOFF, (void*)&NoSendReferer, CMT_NOSENDREFERER,
-    //         NULL },
-    //     { "cross_origin_referer", P_INT, PI_ONOFF, (void*)&CrossOriginReferer,
-    //         CMT_CROSSORIGINREFERER, NULL },
-    //     { "accept_language", P_STRING, PI_TEXT, (void*)&AcceptLang, CMT_ACCEPTLANG,
-    //         NULL },
-    //     { "accept_encoding", P_STRING, PI_TEXT, (void*)&AcceptEncoding,
-    //         CMT_ACCEPTENCODING,
-    //         NULL },
-    //     { "accept_media", P_STRING, PI_TEXT, (void*)&AcceptMedia, CMT_ACCEPTMEDIA,
-    //         NULL },
-    //     { "argv_is_url", P_CHARINT, PI_ONOFF, (void*)&ArgvIsURL, CMT_ARGV_IS_URL,
-    //         NULL },
-    //     { "retry_http", P_INT, PI_ONOFF, (void*)&retryAsHttp, CMT_RETRY_HTTP,
-    //         NULL },
-    //     { "default_url", P_INT, PI_SEL_C, (void*)&DefaultURLString,
-    //         CMT_DEFAULT_URL, (void*)defaulturls },
-    //     { "follow_redirection", P_INT, PI_TEXT, &FollowRedirection,
-    //         CMT_FOLLOW_REDIRECTION, NULL },
-    //     { "meta_refresh", P_CHARINT, PI_ONOFF, (void*)&MetaRefresh,
-    //         CMT_META_REFRESH, NULL },
-    //     { "localhost_only", P_CHARINT, PI_ONOFF, (void*)&LocalhostOnly,
-    //         CMT_LOCALHOST_ONLY, NULL },
-    //     { "dns_order", P_INT, PI_SEL_C, (void*)&DNS_order, CMT_DNS_ORDER,
-    //         (void*)dnsorders },
-    //     { "nntpserver", P_STRING, PI_TEXT, (void*)&NNTP_server, CMT_NNTP_SERVER,
-    //         NULL },
-    //     { "nntpmode", P_STRING, PI_TEXT, (void*)&NNTP_mode, CMT_NNTP_MODE, NULL },
-    //     { "max_news", P_INT, PI_TEXT, (void*)&MaxNewsMessage, CMT_MAX_NEWS, NULL },
-    //     { NULL, 0, 0, NULL, NULL, NULL },
-    // };
-    //
-    // struct param_ptr params10[] = {
-    //     { "display_charset", P_CODE, PI_CODE, (void*)&DisplayCharset,
-    //         CMT_DISPLAY_CHARSET, (void*)&display_charset_str },
-    //     { "document_charset", P_CODE, PI_CODE, (void*)&DocumentCharset,
-    //         CMT_DOCUMENT_CHARSET, (void*)&document_charset_str },
-    //     { "auto_detect", P_CHARINT, PI_SEL_C, (void*)&WcOption.auto_detect,
-    //         CMT_AUTO_DETECT, (void*)auto_detect_str },
-    //     { "system_charset", P_CODE, PI_CODE, (void*)&SystemCharset,
-    //         CMT_SYSTEM_CHARSET, (void*)&system_charset_str },
-    //     { "follow_locale", P_CHARINT, PI_ONOFF, (void*)&FollowLocale,
-    //         CMT_FOLLOW_LOCALE, NULL },
-    //     { "use_wide", P_CHARINT, PI_ONOFF, (void*)&WcOption.use_wide, CMT_USE_WIDE,
-    //         NULL },
-    //     { "use_combining", P_CHARINT, PI_ONOFF, (void*)&WcOption.use_combining,
-    //         CMT_USE_COMBINING, NULL },
-    //     { "east_asian_width", P_CHARINT, PI_ONOFF,
-    //         (void*)&WcOption.east_asian_width, CMT_EAST_ASIAN_WIDTH, NULL },
-    //     { "use_language_tag", P_CHARINT, PI_ONOFF,
-    //         (void*)&WcOption.use_language_tag, CMT_USE_LANGUAGE_TAG, NULL },
-    //     { "ucs_conv", P_CHARINT, PI_ONOFF, (void*)&WcOption.ucs_conv, CMT_UCS_CONV,
-    //         NULL },
-    //     { "pre_conv", P_CHARINT, PI_ONOFF, (void*)&WcOption.pre_conv, CMT_PRE_CONV,
-    //         NULL },
-    //     { "search_conv", P_CHARINT, PI_ONOFF, (void*)&SearchConv, CMT_SEARCH_CONV,
-    //         NULL },
-    //     { "fix_width_conv", P_CHARINT, PI_ONOFF, (void*)&WcOption.fix_width_conv,
-    //         CMT_FIX_WIDTH_CONV, NULL },
-    //     { "use_gb12345_map", P_CHARINT, PI_ONOFF, (void*)&WcOption.use_gb12345_map,
-    //         CMT_USE_GB12345_MAP, NULL },
-    //     { "use_jisx0201", P_CHARINT, PI_ONOFF, (void*)&WcOption.use_jisx0201,
-    //         CMT_USE_JISX0201, NULL },
-    //     { "use_jisc6226", P_CHARINT, PI_ONOFF, (void*)&WcOption.use_jisc6226,
-    //         CMT_USE_JISC6226, NULL },
-    //     { "use_jisx0201k", P_CHARINT, PI_ONOFF, (void*)&WcOption.use_jisx0201k,
-    //         CMT_USE_JISX0201K, NULL },
-    //     { "use_jisx0212", P_CHARINT, PI_ONOFF, (void*)&WcOption.use_jisx0212,
-    //         CMT_USE_JISX0212, NULL },
-    //     { "use_jisx0213", P_CHARINT, PI_ONOFF, (void*)&WcOption.use_jisx0213,
-    //         CMT_USE_JISX0213, NULL },
-    //     { "strict_iso2022", P_CHARINT, PI_ONOFF, (void*)&WcOption.strict_iso2022,
-    //         CMT_STRICT_ISO2022, NULL },
-    //     { "gb18030_as_ucs", P_CHARINT, PI_ONOFF, (void*)&WcOption.gb18030_as_ucs,
-    //         CMT_GB18030_AS_UCS, NULL },
-    //     { "simple_preserve_space", P_CHARINT, PI_ONOFF, (void*)&SimplePreserveSpace,
-    //         CMT_SIMPLE_PRESERVE_SPACE, NULL },
-    //     { NULL, 0, 0, NULL, NULL, NULL },
+    .{ .name = "indent_incr", .type = .P_NZINT, .inputtype = .PI_TEXT, .varptr = &c.IndentIncr, .comment = CMT_INDENT_INCR },
+    .{ .name = "pixel_per_char", .type = .P_PIXELS, .inputtype = .PI_TEXT, .varptr = &c.pixel_per_char, .comment = CMT_PIXEL_PER_CHAR },
+    .{ .name = "pixel_per_line", .type = .P_PIXELS, .inputtype = .PI_TEXT, .varptr = &c.pixel_per_line, .comment = CMT_PIXEL_PER_LINE },
+    .{ .name = "frame", .type = .P_CHARINT, .inputtype = .PI_ONOFF, .varptr = &c.RenderFrame, .comment = CMT_FRAME },
+    .{ .name = "target_self", .type = .P_CHARINT, .inputtype = .PI_ONOFF, .varptr = &c.TargetSelf, .comment = CMT_TSELF },
+    .{ .name = "open_tab_blank", .type = .P_INT, .inputtype = .PI_ONOFF, .varptr = &c.open_tab_blank, .comment = CMT_OPEN_TAB_BLANK },
+    .{ .name = "open_tab_dl_list", .type = .P_INT, .inputtype = .PI_ONOFF, .varptr = &c.open_tab_dl_list, .comment = CMT_OPEN_TAB_DL_LIST },
+    .{ .name = "display_link", .type = .P_INT, .inputtype = .PI_ONOFF, .varptr = &c.displayLink, .comment = CMT_DISPLINK },
+    .{ .name = "display_link_number", .type = .P_INT, .inputtype = .PI_ONOFF, .varptr = &c.displayLinkNumber, .comment = CMT_DISPLINKNUMBER },
+    .{ .name = "decode_url", .type = .P_INT, .inputtype = .PI_ONOFF, .varptr = &c.DecodeURL, .comment = CMT_DECODE_URL },
+
+    .{ .name = "display_lineinfo", .type = .P_INT, .inputtype = .PI_ONOFF, .varptr = &c.displayLineInfo, .comment = CMT_DISPLINEINFO },
+    .{ .name = "ext_dirlist", .type = .P_INT, .inputtype = .PI_ONOFF, .varptr = &c.UseExternalDirBuffer, .comment = CMT_EXT_DIRLIST },
+    .{ .name = "dirlist_cmd", .type = .P_STRING, .inputtype = .PI_TEXT, .varptr = @ptrCast(&c.DirBufferCommand), .comment = CMT_DIRLIST_CMD },
+    .{ .name = "use_dictcommand", .type = .P_INT, .inputtype = .PI_ONOFF, .varptr = &c.UseDictCommand, .comment = CMT_USE_DICTCOMMAND },
+    .{ .name = "dictcommand", .type = .P_STRING, .inputtype = .PI_TEXT, .varptr = @ptrCast(&c.DictCommand), .comment = CMT_DICTCOMMAND },
+    .{ .name = "multicol", .type = .P_INT, .inputtype = .PI_ONOFF, .varptr = &c.multicolList, .comment = CMT_MULTICOL },
+    .{ .name = "alt_entity", .type = .P_CHARINT, .inputtype = .PI_ONOFF, .varptr = &c.UseAltEntity, .comment = CMT_ALT_ENTITY },
+    .{ .name = "graphic_char", .type = .P_CHARINT, .inputtype = .PI_SEL_C, .varptr = &c.UseGraphicChar, .comment = CMT_GRAPHIC_CHAR, .select = &graphic_char_str },
+    .{ .name = "display_borders", .type = .P_CHARINT, .inputtype = .PI_ONOFF, .varptr = &c.DisplayBorders, .comment = CMT_DISP_BORDERS },
+    .{ .name = "disable_center", .type = .P_CHARINT, .inputtype = .PI_ONOFF, .varptr = &c.DisableCenter, .comment = CMT_DISABLE_CENTER },
+
+    .{ .name = "fold_textarea", .type = .P_CHARINT, .inputtype = .PI_ONOFF, .varptr = &c.FoldTextarea, .comment = CMT_FOLD_TEXTAREA },
+    .{ .name = "display_ins_del", .type = .P_INT, .inputtype = .PI_SEL_C, .varptr = &c.displayInsDel, .comment = CMT_DISP_INS_DEL, .select = &displayinsdel },
+    .{ .name = "ignore_null_img_alt", .type = .P_INT, .inputtype = .PI_ONOFF, .varptr = &c.ignore_null_img_alt, .comment = CMT_IGNORE_NULL_IMG_ALT },
+    .{ .name = "view_unseenobject", .type = .P_INT, .inputtype = .PI_ONOFF, .varptr = &c.view_unseenobject, .comment = CMT_VIEW_UNSEENOBJECTS },
+    .{ .name = "display_image", .type = .P_INT, .inputtype = .PI_ONOFF, .varptr = &c.displayImage, .comment = CMT_DISP_IMAGE },
+    .{ .name = "pseudo_inlines", .type = .P_INT, .inputtype = .PI_ONOFF, .varptr = &c.pseudoInlines, .comment = CMT_PSEUDO_INLINES },
+    .{ .name = "auto_image", .type = .P_INT, .inputtype = .PI_ONOFF, .varptr = &c.autoImage, .comment = CMT_AUTO_IMAGE },
+    .{ .name = "max_load_image", .type = .P_INT, .inputtype = .PI_TEXT, .varptr = &c.maxLoadImage, .comment = CMT_MAX_LOAD_IMAGE },
+    .{ .name = "ext_image_viewer", .type = .P_INT, .inputtype = .PI_ONOFF, .varptr = &c.useExtImageViewer, .comment = CMT_EXT_IMAGE_VIEWER },
+    .{ .name = "image_scale", .type = .P_SCALE, .inputtype = .PI_TEXT, .varptr = &c.image_scale, .comment = CMT_IMAGE_SCALE },
+
+    .{ .name = "inline_img_protocol", .type = .P_INT, .inputtype = .PI_SEL_C, .varptr = &c.enable_inline_image, .comment = CMT_INLINE_IMG_PROTOCOL, .select = &inlineimgstr },
+    .{ .name = "imgdisplay", .type = .P_STRING, .inputtype = .PI_TEXT, .varptr = @ptrCast(&c.Imgdisplay), .comment = CMT_IMGDISPLAY },
+    .{ .name = "image_map_list", .type = .P_INT, .inputtype = .PI_ONOFF, .varptr = &c.image_map_list, .comment = CMT_IMAGE_MAP_LIST },
+    .{ .name = "fold_line", .type = .P_INT, .inputtype = .PI_ONOFF, .varptr = &c.FoldLine, .comment = CMT_FOLD_LINE },
+    .{ .name = "show_lnum", .type = .P_INT, .inputtype = .PI_ONOFF, .varptr = &c.showLineNum, .comment = CMT_SHOW_NUM },
+    .{ .name = "show_srch_str", .type = .P_INT, .inputtype = .PI_ONOFF, .varptr = &c.show_srch_str, .comment = CMT_SHOW_SRCH_STR },
+    .{ .name = "label_topline", .type = .P_INT, .inputtype = .PI_ONOFF, .varptr = &c.label_topline, .comment = CMT_LABEL_TOPLINE },
+    .{ .name = "nextpage_topline", .type = .P_INT, .inputtype = .PI_ONOFF, .varptr = &c.nextpage_topline, .comment = CMT_NEXTPAGE_TOPLINE },
 };
 
-var sections = [_]param_section{
+const params2 = [_]param_ptr{
+    .{ .name = "color", .type = .P_INT, .inputtype = .PI_ONOFF, .varptr = &c.useColor, .comment = CMT_COLOR },
+    .{ .name = "high-intensity", .type = .P_INT, .inputtype = .PI_ONOFF, .varptr = &c.highIntensityColors, .comment = CMT_HINTENSITY_COLOR },
+    .{ .name = "basic_color", .type = .P_COLOR, .inputtype = .PI_SEL_C, .varptr = &c.basic_color, .comment = CMT_B_COLOR, .select = &colorstr },
+    .{ .name = "anchor_color", .type = .P_COLOR, .inputtype = .PI_SEL_C, .varptr = &c.anchor_color, .comment = CMT_A_COLOR, .select = &colorstr },
+    .{ .name = "image_color", .type = .P_COLOR, .inputtype = .PI_SEL_C, .varptr = &c.image_color, .comment = CMT_I_COLOR, .select = &colorstr },
+    .{ .name = "form_color", .type = .P_COLOR, .inputtype = .PI_SEL_C, .varptr = &c.form_color, .comment = CMT_F_COLOR, .select = &colorstr },
+    .{ .name = "mark_color", .type = .P_COLOR, .inputtype = .PI_SEL_C, .varptr = &c.mark_color, .comment = CMT_MARK_COLOR, .select = &colorstr },
+    .{ .name = "bg_color", .type = .P_COLOR, .inputtype = .PI_SEL_C, .varptr = &c.bg_color, .comment = CMT_BG_COLOR, .select = &colorstr },
+    .{ .name = "active_style", .type = .P_INT, .inputtype = .PI_ONOFF, .varptr = &c.useActiveColor, .comment = CMT_ACTIVE_STYLE },
+    .{ .name = "active_color", .type = .P_COLOR, .inputtype = .PI_SEL_C, .varptr = &c.active_color, .comment = CMT_C_COLOR, .select = &colorstr },
+    .{ .name = "visited_anchor", .type = .P_INT, .inputtype = .PI_ONOFF, .varptr = &c.useVisitedColor, .comment = CMT_VISITED_ANCHOR },
+    .{ .name = "visited_color", .type = .P_COLOR, .inputtype = .PI_SEL_C, .varptr = &c.visited_color, .comment = CMT_V_COLOR, .select = &colorstr },
+};
+
+// struct param_ptr params3[] = {
+//     { "pagerline", .type = .P_NZINT, .inputtype = .PI_TEXT, (void*)&PagerMax, .comment = CMT_PAGERLINE },
+//     { "use_history", .type = .P_INT, .inputtype = .PI_ONOFF, (void*)&UseHistory, .comment = CMT_HISTORY },
+//     { "history", .type = .P_INT, .inputtype = .PI_TEXT, (void*)&URLHistSize, .comment = CMT_HISTSIZE },
+//     { "save_hist", .type = .P_INT, .inputtype = .PI_ONOFF, (void*)&SaveURLHist, .comment = CMT_SAVEHIST },
+//     { "confirm_qq", .type = .P_INT, .inputtype = .PI_ONOFF, (void*)&confirm_on_quit, .comment = CMT_CONFIRM_QQ,
+//         NULL },
+//     { "close_tab_back", .type = .P_INT, .inputtype = .PI_ONOFF, (void*)&close_tab_back,
+//         CMT_CLOSE_TAB_BACK },
+//     { "mark", .type = .P_INT, .inputtype = .PI_ONOFF, (void*)&use_mark, .comment = CMT_USE_MARK },
+//     { "emacs_like_lineedit", .type = .P_INT, .inputtype = .PI_ONOFF, (void*)&emacs_like_lineedit,
+//         CMT_EMACS_LIKE_LINEEDIT },
+//     { "space_autocomplete", .type = .P_INT, .inputtype = .PI_ONOFF, (void*)&space_autocomplete,
+//         CMT_SPACE_AUTOCOMPLETE },
+//     { "vi_prec_num", .type = .P_INT, .inputtype = .PI_ONOFF, (void*)&vi_prec_num, .comment = CMT_VI_PREC_NUM,
+//         NULL },
+//     { "mark_all_pages", .type = .P_INT, .inputtype = .PI_ONOFF, (void*)&MarkAllPages,
+//         CMT_MARK_ALL_PAGES },
+//     { "wrap_search", .type = .P_INT, .inputtype = .PI_ONOFF, (void*)&WrapDefault, .comment = CMT_WRAP },
+//     { "ignorecase_search", .type = .P_INT, .inputtype = .PI_ONOFF, (void*)&IgnoreCase,
+//         CMT_IGNORE_CASE },
+//     { "relative_wheel_scroll", .type = .P_INT, .inputtype = .PI_SEL_C, (void*)&relative_wheel_scroll,
+//         CMT_RELATIVE_WHEEL_SCROLL, (void*)wheelmode },
+//     { "relative_wheel_scroll_ratio", .type = .P_INT, .inputtype = .PI_TEXT,
+//         (void*)&relative_wheel_scroll_ratio,
+//         CMT_RELATIVE_WHEEL_SCROLL_RATIO },
+//     { "fixed_wheel_scroll_count", .type = .P_INT, .inputtype = .PI_TEXT,
+//         (void*)&fixed_wheel_scroll_count,
+//         CMT_FIXED_WHEEL_SCROLL_COUNT },
+//     { "clear_buffer", .type = .P_INT, .inputtype = .PI_ONOFF, (void*)&clear_buffer, .comment = CMT_CLEAR_BUF,
+//         NULL },
+//     { "decode_cte", .type = .P_CHARINT, .inputtype = .PI_ONOFF, (void*)&DecodeCTE, .comment = CMT_DECODE_CTE,
+//         NULL },
+//     { "auto_uncompress", .type = .P_CHARINT, .inputtype = .PI_ONOFF, (void*)&AutoUncompress,
+//         CMT_AUTO_UNCOMPRESS },
+//     { "preserve_timestamp", .type = .P_CHARINT, .inputtype = .PI_ONOFF, (void*)&PreserveTimestamp,
+//         CMT_PRESERVE_TIMESTAMP },
+//     { "keymap_file", .type = .P_STRING, .inputtype = .PI_TEXT, (void*)&keymap_file, .comment = CMT_KEYMAP_FILE,
+//         NULL },
+//     { NULL, 0, 0, NULL, NULL },
+// };
+//
+// struct param_ptr params4[] = {
+//     { "use_proxy", .type = .P_CHARINT, .inputtype = .PI_ONOFF, (void*)&use_proxy, .comment = CMT_USE_PROXY,
+//         NULL },
+//     { "http_proxy", .type = .P_STRING, .inputtype = .PI_TEXT, (void*)&HTTP_proxy, .comment = CMT_HTTP_PROXY,
+//         NULL },
+//     { "https_proxy", .type = .P_STRING, .inputtype = .PI_TEXT, (void*)&HTTPS_proxy, .comment = CMT_HTTPS_PROXY,
+//         NULL },
+//     { "gopher_proxy", .type = .P_STRING, .inputtype = .PI_TEXT, (void*)&GOPHER_proxy,
+//         CMT_GOPHER_PROXY },
+//     { "ftp_proxy", .type = .P_STRING, .inputtype = .PI_TEXT, (void*)&FTP_proxy, .comment = CMT_FTP_PROXY },
+//     { "no_proxy", .type = .P_STRING, .inputtype = .PI_TEXT, (void*)&NO_proxy, .comment = CMT_NO_PROXY },
+//     { "noproxy_netaddr", .type = .P_INT, .inputtype = .PI_ONOFF, (void*)&NOproxy_netaddr,
+//         CMT_NOPROXY_NETADDR },
+//     { "no_cache", .type = .P_CHARINT, .inputtype = .PI_ONOFF, (void*)&NoCache, .comment = CMT_NO_CACHE },
+//
+//     { NULL, 0, 0, NULL, NULL },
+// };
+//
+// struct param_ptr params5[] = {
+//     { "document_root", .type = .P_STRING, .inputtype = .PI_TEXT, (void*)&document_root, .comment = CMT_DROOT,
+//         NULL },
+//     { "personal_document_root", .type = .P_STRING, .inputtype = .PI_TEXT,
+//         (void*)&personal_document_root, .comment = CMT_PDROOT },
+//     { "cgi_bin", .type = .P_STRING, .inputtype = .PI_TEXT, (void*)&cgi_bin, .comment = CMT_CGIBIN },
+//     { "index_file", .type = .P_STRING, .inputtype = .PI_TEXT, (void*)&index_file, .comment = CMT_IFILE },
+//     { "tmp_dir", .type = .P_STRING, .inputtype = .PI_TEXT, (void*)&w3m_config.param_tmp_dir, .comment = CMT_TMP },
+//     { NULL, 0, 0, NULL, NULL },
+// };
+//
+// struct param_ptr params6[] = {
+//     { "mime_types", .type = .P_STRING, .inputtype = .PI_TEXT, (void*)&mimetypes_files, .comment = CMT_MIMETYPES,
+//         NULL },
+//     { "mailcap", .type = .P_STRING, .inputtype = .PI_TEXT, (void*)&mailcap_files, .comment = CMT_MAILCAP },
+//     { "editor", .type = .P_STRING, .inputtype = .PI_TEXT, (void*)&Editor, .comment = CMT_EDITOR },
+//     { "mailer", .type = .P_STRING, .inputtype = .PI_TEXT, (void*)&Mailer, .comment = CMT_MAILER },
+//     { "extbrowser", .type = .P_STRING, .inputtype = .PI_TEXT, (void*)&ExtBrowser, .comment = CMT_EXTBRZ },
+//     { "extbrowser2", .type = .P_STRING, .inputtype = .PI_TEXT, (void*)&ExtBrowser2, .comment = CMT_EXTBRZ2,
+//         NULL },
+//     { "extbrowser3", .type = .P_STRING, .inputtype = .PI_TEXT, (void*)&ExtBrowser3, .comment = CMT_EXTBRZ3,
+//         NULL },
+//     { "extbrowser4", .type = .P_STRING, .inputtype = .PI_TEXT, (void*)&ExtBrowser4, .comment = CMT_EXTBRZ4,
+//         NULL },
+//     { "extbrowser5", .type = .P_STRING, .inputtype = .PI_TEXT, (void*)&ExtBrowser5, .comment = CMT_EXTBRZ5,
+//         NULL },
+//     { "extbrowser6", .type = .P_STRING, .inputtype = .PI_TEXT, (void*)&ExtBrowser6, .comment = CMT_EXTBRZ6,
+//         NULL },
+//     { "extbrowser7", .type = .P_STRING, .inputtype = .PI_TEXT, (void*)&ExtBrowser7, .comment = CMT_EXTBRZ7,
+//         NULL },
+//     { "extbrowser8", .type = .P_STRING, .inputtype = .PI_TEXT, (void*)&ExtBrowser8, .comment = CMT_EXTBRZ8,
+//         NULL },
+//     { "extbrowser9", .type = .P_STRING, .inputtype = .PI_TEXT, (void*)&ExtBrowser9, .comment = CMT_EXTBRZ9,
+//         NULL },
+//     { "bgextviewer", .type = .P_INT, .inputtype = .PI_ONOFF, (void*)&BackgroundExtViewer,
+//         CMT_BGEXTVIEW },
+//     { "use_lessopen", .type = .P_INT, .inputtype = .PI_ONOFF, (void*)&use_lessopen, .comment = CMT_USE_LESSOPEN,
+//         NULL },
+//     { NULL, 0, 0, NULL, NULL },
+// };
+//
+// struct param_ptr params7[] = {
+//     { "ssl_forbid_method", .type = .P_STRING, .inputtype = .PI_TEXT, (void*)&ssl_forbid_method,
+//         CMT_SSL_FORBID_METHOD },
+// #ifdef SSL_CTX_set_min_proto_version
+//     { "ssl_min_version", .type = .P_STRING, .inputtype = .PI_TEXT, (void*)&ssl_min_version,
+//         CMT_SSL_MIN_VERSION },
+// #endif
+//     { "ssl_cipher", .type = .P_STRING, .inputtype = .PI_TEXT, (void*)&ssl_cipher, .comment = CMT_SSL_CIPHER,
+//         NULL },
+//     { "ssl_verify_server", .type = .P_INT, .inputtype = .PI_ONOFF, (void*)&ssl_verify_server,
+//         CMT_SSL_VERIFY_SERVER },
+//     { "ssl_cert_file", .type = .P_SSLPATH, .inputtype = .PI_TEXT, (void*)&ssl_cert_file,
+//         CMT_SSL_CERT_FILE },
+//     { "ssl_key_file", .type = .P_SSLPATH, .inputtype = .PI_TEXT, (void*)&ssl_key_file,
+//         CMT_SSL_KEY_FILE },
+//     { "ssl_ca_path", .type = .P_SSLPATH, .inputtype = .PI_TEXT, (void*)&ssl_ca_path, .comment = CMT_SSL_CA_PATH,
+//         NULL },
+//     { "ssl_ca_file", .type = .P_SSLPATH, .inputtype = .PI_TEXT, (void*)&ssl_ca_file, .comment = CMT_SSL_CA_FILE,
+//         NULL },
+//     { "ssl_ca_default", .type = .P_INT, .inputtype = .PI_ONOFF, (void*)&ssl_ca_default,
+//         CMT_SSL_CA_DEFAULT },
+//     { NULL, 0, 0, NULL, NULL },
+// };
+//
+// struct param_ptr params8[] = {
+//     { "use_cookie", .type = .P_INT, .inputtype = .PI_ONOFF, (void*)&use_cookie, .comment = CMT_USECOOKIE },
+//     { "show_cookie", .type = .P_INT, .inputtype = .PI_ONOFF, (void*)&show_cookie,
+//         CMT_SHOWCOOKIE },
+//     { "accept_cookie", .type = .P_INT, .inputtype = .PI_ONOFF, (void*)&accept_cookie,
+//         CMT_ACCEPTCOOKIE },
+//     { "accept_bad_cookie", .type = .P_INT, .inputtype = .PI_SEL_C, (void*)&accept_bad_cookie,
+//         CMT_ACCEPTBADCOOKIE, (void*)badcookiestr },
+//     { "cookie_reject_domains", .type = .P_STRING, .inputtype = .PI_TEXT,
+//         (void*)&cookie_reject_domains, .comment = CMT_COOKIE_REJECT_DOMAINS },
+//     { "cookie_accept_domains", .type = .P_STRING, .inputtype = .PI_TEXT,
+//         (void*)&cookie_accept_domains, .comment = CMT_COOKIE_ACCEPT_DOMAINS },
+//     { "cookie_avoid_wrong_number_of_dots", .type = .P_STRING, .inputtype = .PI_TEXT,
+//         (void*)&cookie_avoid_wrong_number_of_dots,
+//         CMT_COOKIE_AVOID_WONG_NUMBER_OF_DOTS },
+//     { NULL, 0, 0, NULL, NULL },
+// };
+//
+// struct param_ptr params9[] = {
+//     { "passwd_file", .type = .P_STRING, .inputtype = .PI_TEXT, (void*)&passwd_file, .comment = CMT_PASSWDFILE,
+//         NULL },
+//     { "disable_secret_security_check", .type = .P_INT, .inputtype = .PI_ONOFF,
+//         (void*)&disable_secret_security_check, .comment = CMT_DISABLE_SECRET_SECURITY_CHECK,
+//         NULL },
+//     { "ftppasswd", .type = .P_STRING, .inputtype = .PI_TEXT, (void*)&ftppasswd, .comment = CMT_FTPPASS },
+//     { "ftppass_hostnamegen", .type = .P_INT, .inputtype = .PI_ONOFF, (void*)&ftppass_hostnamegen,
+//         CMT_FTPPASS_HOSTNAMEGEN },
+//     { "pre_form_file", .type = .P_STRING, .inputtype = .PI_TEXT, (void*)&pre_form_file,
+//         CMT_PRE_FORM_FILE },
+//     { "user_agent", .type = .P_STRING, .inputtype = .PI_TEXT, (void*)&UserAgent, .comment = CMT_USERAGENT },
+//     { "no_referer", .type = .P_INT, .inputtype = .PI_ONOFF, (void*)&NoSendReferer, .comment = CMT_NOSENDREFERER,
+//         NULL },
+//     { "cross_origin_referer", .type = .P_INT, .inputtype = .PI_ONOFF, (void*)&CrossOriginReferer,
+//         CMT_CROSSORIGINREFERER },
+//     { "accept_language", .type = .P_STRING, .inputtype = .PI_TEXT, (void*)&AcceptLang, .comment = CMT_ACCEPTLANG,
+//         NULL },
+//     { "accept_encoding", .type = .P_STRING, .inputtype = .PI_TEXT, (void*)&AcceptEncoding,
+//         CMT_ACCEPTENCODING,
+//         NULL },
+//     { "accept_media", .type = .P_STRING, .inputtype = .PI_TEXT, (void*)&AcceptMedia, .comment = CMT_ACCEPTMEDIA,
+//         NULL },
+//     { "argv_is_url", .type = .P_CHARINT, .inputtype = .PI_ONOFF, (void*)&ArgvIsURL, .comment = CMT_ARGV_IS_URL,
+//         NULL },
+//     { "retry_http", .type = .P_INT, .inputtype = .PI_ONOFF, (void*)&retryAsHttp, .comment = CMT_RETRY_HTTP,
+//         NULL },
+//     { "default_url", .type = .P_INT, .inputtype = .PI_SEL_C, (void*)&DefaultURLString,
+//         CMT_DEFAULT_URL, (void*)defaulturls },
+//     { "follow_redirection", .type = .P_INT, .inputtype = .PI_TEXT, &FollowRedirection,
+//         CMT_FOLLOW_REDIRECTION },
+//     { "meta_refresh", .type = .P_CHARINT, .inputtype = .PI_ONOFF, (void*)&MetaRefresh,
+//         CMT_META_REFRESH },
+//     { "localhost_only", .type = .P_CHARINT, .inputtype = .PI_ONOFF, (void*)&LocalhostOnly,
+//         CMT_LOCALHOST_ONLY },
+//     { "dns_order", .type = .P_INT, .inputtype = .PI_SEL_C, (void*)&DNS_order, .comment = CMT_DNS_ORDER,
+//         (void*)dnsorders },
+//     { "nntpserver", .type = .P_STRING, .inputtype = .PI_TEXT, (void*)&NNTP_server, .comment = CMT_NNTP_SERVER,
+//         NULL },
+//     { "nntpmode", .type = .P_STRING, .inputtype = .PI_TEXT, (void*)&NNTP_mode, .comment = CMT_NNTP_MODE },
+//     { "max_news", .type = .P_INT, .inputtype = .PI_TEXT, (void*)&MaxNewsMessage, .comment = CMT_MAX_NEWS },
+//     { NULL, 0, 0, NULL, NULL },
+// };
+//
+// struct param_ptr params10[] = {
+//     { "display_charset", .type = .P_CODE, .inputtype = .PI_CODE, (void*)&DisplayCharset,
+//         CMT_DISPLAY_CHARSET, (void*)&display_charset_str },
+//     { "document_charset", .type = .P_CODE, .inputtype = .PI_CODE, (void*)&DocumentCharset,
+//         CMT_DOCUMENT_CHARSET, (void*)&document_charset_str },
+//     { "auto_detect", .type = .P_CHARINT, .inputtype = .PI_SEL_C, (void*)&WcOption.auto_detect,
+//         CMT_AUTO_DETECT, (void*)auto_detect_str },
+//     { "system_charset", .type = .P_CODE, .inputtype = .PI_CODE, (void*)&SystemCharset,
+//         CMT_SYSTEM_CHARSET, (void*)&system_charset_str },
+//     { "follow_locale", .type = .P_CHARINT, .inputtype = .PI_ONOFF, (void*)&FollowLocale,
+//         CMT_FOLLOW_LOCALE },
+//     { "use_wide", .type = .P_CHARINT, .inputtype = .PI_ONOFF, (void*)&WcOption.use_wide, .comment = CMT_USE_WIDE,
+//         NULL },
+//     { "use_combining", .type = .P_CHARINT, .inputtype = .PI_ONOFF, (void*)&WcOption.use_combining,
+//         CMT_USE_COMBINING },
+//     { "east_asian_width", .type = .P_CHARINT, .inputtype = .PI_ONOFF,
+//         (void*)&WcOption.east_asian_width, .comment = CMT_EAST_ASIAN_WIDTH },
+//     { "use_language_tag", .type = .P_CHARINT, .inputtype = .PI_ONOFF,
+//         (void*)&WcOption.use_language_tag, .comment = CMT_USE_LANGUAGE_TAG },
+//     { "ucs_conv", .type = .P_CHARINT, .inputtype = .PI_ONOFF, (void*)&WcOption.ucs_conv, .comment = CMT_UCS_CONV,
+//         NULL },
+//     { "pre_conv", .type = .P_CHARINT, .inputtype = .PI_ONOFF, (void*)&WcOption.pre_conv, .comment = CMT_PRE_CONV,
+//         NULL },
+//     { "search_conv", .type = .P_CHARINT, .inputtype = .PI_ONOFF, (void*)&SearchConv, .comment = CMT_SEARCH_CONV,
+//         NULL },
+//     { "fix_width_conv", .type = .P_CHARINT, .inputtype = .PI_ONOFF, (void*)&WcOption.fix_width_conv,
+//         CMT_FIX_WIDTH_CONV },
+//     { "use_gb12345_map", .type = .P_CHARINT, .inputtype = .PI_ONOFF, (void*)&WcOption.use_gb12345_map,
+//         CMT_USE_GB12345_MAP },
+//     { "use_jisx0201", .type = .P_CHARINT, .inputtype = .PI_ONOFF, (void*)&WcOption.use_jisx0201,
+//         CMT_USE_JISX0201 },
+//     { "use_jisc6226", .type = .P_CHARINT, .inputtype = .PI_ONOFF, (void*)&WcOption.use_jisc6226,
+//         CMT_USE_JISC6226 },
+//     { "use_jisx0201k", .type = .P_CHARINT, .inputtype = .PI_ONOFF, (void*)&WcOption.use_jisx0201k,
+//         CMT_USE_JISX0201K },
+//     { "use_jisx0212", .type = .P_CHARINT, .inputtype = .PI_ONOFF, (void*)&WcOption.use_jisx0212,
+//         CMT_USE_JISX0212 },
+//     { "use_jisx0213", .type = .P_CHARINT, .inputtype = .PI_ONOFF, (void*)&WcOption.use_jisx0213,
+//         CMT_USE_JISX0213 },
+//     { "strict_iso2022", .type = .P_CHARINT, .inputtype = .PI_ONOFF, (void*)&WcOption.strict_iso2022,
+//         CMT_STRICT_ISO2022 },
+//     { "gb18030_as_ucs", .type = .P_CHARINT, .inputtype = .PI_ONOFF, (void*)&WcOption.gb18030_as_ucs,
+//         CMT_GB18030_AS_UCS },
+//     { "simple_preserve_space", .type = .P_CHARINT, .inputtype = .PI_ONOFF, (void*)&SimplePreserveSpace,
+//         CMT_SIMPLE_PRESERVE_SPACE },
+//     { NULL, 0, 0, NULL, NULL },
+// };
+
+const sections = [_]param_section{
     .{ .name = "Display Settings", .params = &params1 },
-    // { "Color Settings", params2 },
+    .{ .name = "Color Settings", .params = &params2 },
     // { "Miscellaneous Settings", params3 },
     // { "Directory Settings", params5 },
     // { "External Program Settings", params6 },
@@ -644,7 +601,7 @@ var sections = [_]param_section{
     // { NULL, NULL }
 };
 
-fn setVal(T: type, p: *param_ptr, val: T) void {
+fn setVal(T: type, p: *const param_ptr, val: T) void {
     const ptr: *T = @ptrCast(@alignCast(p.*.varptr));
     ptr.* = val;
 }
@@ -654,16 +611,16 @@ fn getVal(T: type, p: *const param_ptr) T {
     return ptr.*;
 }
 
-fn getBool(T: type, p: *param_ptr) bool {
+fn getBool(T: type, p: *const param_ptr) bool {
     const val = getVal(T, p);
     return val != 0;
 }
 
 const ParamIterator = struct {
-    params: []param_ptr,
+    params: []const param_ptr,
     pos: usize = 0,
 
-    fn next(this: *@This()) ?*param_ptr {
+    fn next(this: *@This()) ?*const param_ptr {
         if (this.pos >= this.params.len) {
             return null;
         }
@@ -673,10 +630,10 @@ const ParamIterator = struct {
 };
 
 const SectionIterator = struct {
-    sections: []param_section,
+    sections: []const param_section,
     pos: usize = 0,
 
-    fn next(this: *@This()) ?*param_section {
+    fn next(this: *@This()) ?*const param_section {
         if (this.pos >= this.sections.len) {
             return null;
         }
@@ -698,20 +655,20 @@ const SelectIterator = struct {
     }
 };
 
-const CesListIterator = struct {
-    list: [*]c.wc_ces_list,
-    pos: usize = 0,
+// const CesListIterator = struct {
+//     list: [*]c.wc_ces_list,
+//     pos: usize = 0,
+//
+//     fn next(this: *@This()) ?*c.wc_ces_list {
+//         if (this.list[this.pos].desc == null) {
+//             return null;
+//         }
+//         defer this.pos += 1;
+//         return &this.list[this.pos];
+//     }
+// };
 
-    fn next(this: *@This()) ?*c.wc_ces_list {
-        if (this.list[this.pos].desc == null) {
-            return null;
-        }
-        defer this.pos += 1;
-        return &this.list[this.pos];
-    }
-};
-
-var RC_search_table: ?std.StringHashMap(*param_ptr) = null;
+var RC_search_table: ?std.StringHashMap(*const param_ptr) = null;
 
 fn make_rc_table() !void {
     if (display_charset_str == null) {
@@ -720,7 +677,7 @@ fn make_rc_table() !void {
         system_charset_str = display_charset_str;
     }
 
-    var map = std.StringHashMap(*param_ptr).init(gcstr.GcAllocator.allocator());
+    var map = std.StringHashMap(*const param_ptr).init(gcstr.GcAllocator.allocator());
     defer RC_search_table = map;
     var sit = SectionIterator{
         .sections = &sections,
@@ -735,7 +692,7 @@ fn make_rc_table() !void {
     }
 }
 
-fn config_search_param(_name: [*c]const u8) ?*param_ptr {
+fn config_search_param(_name: [*c]const u8) ?*const param_ptr {
     if (_name) |name| {
         if (RC_search_table) |table| {
             const span = std.mem.span(name);
@@ -806,17 +763,14 @@ fn write_config_panel_html(writer: *std.Io.Writer) !void {
                     });
                 },
                 .PI_SEL_C => {
-                    const value = try std.fmt.parseInt(c_int, str, 10);
                     try writer.print("<select name={s}>", .{p.name});
                     var selIt = SelectIterator{
-                        .select = @ptrCast(@alignCast(p.select)),
+                        .select = p.select,
                     };
-                    // for (struct sel_c* s = (struct sel_c*)p.select; s.text != NULL; s++) {
+                    const value = try std.fmt.parseInt(c_int, str, 10);
                     while (selIt.next()) |s| {
                         try writer.print("<option value={s}\n", .{s.cvalue});
-                        if ((p.type != .P_CHAR and s.value == value)
-                        // or (p.type == c.P_CHAR && (char)s.value == *(tmp.ptr))
-                        ) {
+                        if (p.type != .P_CHAR and s.value == value) {
                             try writer.writeAll(" selected");
                         }
                         try writer.writeByte('>');
@@ -825,21 +779,18 @@ fn write_config_panel_html(writer: *std.Io.Writer) !void {
                     try writer.writeAll("</select>");
                 },
                 .PI_CODE => {
-                    try writer.print("<select name={s}>", .{
-                        p.name,
-                    });
-                    const ptr: *[*]sel_c = @ptrCast(@alignCast(p.select));
-                    var cesIt = CesListIterator{
-                        .list = @ptrCast(@alignCast(ptr.*)),
+                    try writer.print("<select name={s}>", .{p.name});
+                    var cesIt = SelectIterator{
+                        .select = p.select,
                     };
-                    //             for (wc_ces_list* c = *(wc_ces_list**)p.select; c.desc != NULL; c++) {
+                    const value = try std.fmt.parseInt(c_int, str, 10);
                     while (cesIt.next()) |ces| {
-                        try writer.print("<option value={s}\n", .{ces.name});
-                        if (ces.id == try std.fmt.parseInt(c_int, str, 10)) {
+                        try writer.print("<option value={s}\n", .{ces.text});
+                        if (ces.value == value) {
                             try writer.writeAll(" selected");
                         }
                         try writer.writeByte('>');
-                        try writer.writeAll(std.mem.span(ces.desc));
+                        try writer.writeAll(ces.text);
                     }
                     try writer.writeAll("</select>");
                 },
