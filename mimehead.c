@@ -2,7 +2,7 @@
  * MIME header support by Akinori ITO
  */
 #include "mimehead.h"
-#include "fm.h"
+// #include "fm.h"
 #include <gcstr.h>
 #include <string.h>
 #include <sys/types.h>

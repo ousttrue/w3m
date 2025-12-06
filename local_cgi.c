@@ -1,4 +1,5 @@
 #include "local_cgi.h"
+#include "w3m_runtime.h"
 #include "tui.h"
 #include "terms.h"
 #include "signal_jmp.h"
@@ -54,7 +55,7 @@ Str localCookie()
     if (Local_cookie)
         return Local_cookie;
     srand48((long)New(char) + (long)time(NULL));
-    Local_cookie = Sprintf("%ld@%s", lrand48(), HostName ? HostName : "localhost");
+    Local_cookie = Sprintf("%ld@%s", lrand48(), w3m.HostName ? w3m.HostName : "localhost");
     return Local_cookie;
 }
 

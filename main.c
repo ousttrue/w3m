@@ -304,7 +304,7 @@ int w3m_parse_arg(int argc, char** argv)
             hostname[HOST_NAME_MAX + 1] = '\0';
             hostname_len = strlen(hostname);
             if (hostname_len <= HOST_NAME_MAX && hostname_len < STR_SIZE_MAX)
-                HostName = allocStr(hostname, (int)hostname_len);
+                w3m.HostName = allocStr(hostname, (int)hostname_len);
         }
     }
 

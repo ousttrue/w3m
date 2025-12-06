@@ -1,7 +1,7 @@
 #include "etc.h"
 #include "signal_jmp.h"
 #include "tui.h"
-#include "fm.h"
+// #include "fm.h"
 #include "terms.h"
 #include "w3m_runtime.h"
 #include "buffer.h"
@@ -19,6 +19,7 @@
 #include <unistd.h>
 
 TextList* fileToDelete = 0;
+int nextpage_topline = (false);
 
 int columnSkip(struct Buffer* buf, int offset)
 {
@@ -85,8 +86,6 @@ struct Line* currentLineSkip(struct Buffer* buf, struct Line* line, int offset, 
     return l;
 }
 
-
-
 #ifndef HAVE_STRERROR
 char* strerror(int errno)
 {
@@ -94,10 +93,6 @@ char* strerror(int errno)
     return sys_errlist[errno];
 }
 #endif /* not HAVE_STRERROR */
-
-
-
-
 
 /* get last modified time */
 char* last_modified(struct Buffer* buf)
@@ -204,12 +199,6 @@ Str romanAlphabet(int n)
 
     return r;
 }
-
-
-
-
-
-
 
 pid_t open_pipe_rw(FILE** fr, FILE** fw)
 {
@@ -330,7 +319,7 @@ Str myEditor(char* cmd, char* file, int line)
 
 int is_localhost(const char* host)
 {
-    if (!host || !strcasecmp(host, "localhost") || !strcmp(host, "127.0.0.1") || (HostName && !strcasecmp(host, HostName)) || !strcmp(host, "[::1]"))
+    if (!host || !strcasecmp(host, "localhost") || !strcmp(host, "127.0.0.1") || (w3m.HostName && !strcasecmp(host, w3m.HostName)) || !strcmp(host, "[::1]"))
         return true;
     return false;
 }
@@ -345,8 +334,7 @@ char* file_to_url(char* file)
     if (IS_ALPHA(file[0]) && file[1] == ':') {
         drive = allocStr(file, 2);
         file += 2;
-    } else
-        if (file[0] != '/') {
+    } else if (file[0] != '/') {
         tmp = Strnew_charp(w3m.CurrentDir);
         if (Strlastchar(tmp) != '/')
             Strcat_char(tmp, '/');
@@ -631,5 +619,3 @@ mymktime(const char* timestr)
     min -= z_min;
     return (time_t)((day * 60 * 60 * 24) + (hour * 60 * 60) + (min * 60) + sec);
 }
-
-

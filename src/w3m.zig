@@ -18,4 +18,5 @@ pub const c = @cImport({
     @cInclude("mimetype.h");
     @cInclude("mailcap.h");
     @cInclude("http_auth.h");
+    @cInclude("etc.h");
 });

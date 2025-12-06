@@ -32,7 +32,6 @@ global char DecodeCTE init(false);
 global char ArgvIsURL init(true);
 global char MetaRefresh init(false);
 global char LocalhostOnly init(false);
-global char* HostName init(0);
 
 global char* HTTP_proxy init(0);
 global char* HTTPS_proxy init(0);
@@ -69,7 +68,6 @@ global int emacs_like_lineedit init(false);
 global int space_autocomplete init(false);
 global int vi_prec_num init(false);
 global int label_topline init(false);
-global int nextpage_topline init(false);
 global char* displayTitleTerm init(0);
 global int displayLink init(false);
 global int displayLinkNumber init(false);

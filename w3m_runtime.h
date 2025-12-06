@@ -4,6 +4,7 @@
 extern const char* w3m_version;
 
 struct w3m {
+    const char* HostName;
     const char* CurrentDir;
     int CurrentPid;
     const char* MyProgramName;

@@ -5,6 +5,7 @@
 #include "textlist.h"
 
 extern TextList* fileToDelete;
+extern int nextpage_topline;
 
 pid_t open_pipe_rw(FILE** fr, FILE** fw);
 time_t mymktime(const char* timestr);
