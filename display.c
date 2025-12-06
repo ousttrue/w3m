@@ -274,7 +274,7 @@ make_lastline_link(struct Buffer* buf, char* title, char* url)
         return s;
     parseURL2(url, &pu, baseURL(buf));
     u = parsedURL2Str(&pu);
-    if (DecodeURL)
+    if (w3m_config.DecodeURL)
         u = Strnew_charp(url_decode2(u->ptr, buf));
     u = checkType(u, &pr, 0);
     if (l <= 4 || l >= get_Str_strwidth(u)) {

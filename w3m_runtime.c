@@ -10,7 +10,10 @@
 #define W3MCONFIG "w3mconfig"
 
 struct w3m w3m = { 0 };
-struct W3mConfig w3m_config = { 0 };
+struct W3mConfig w3m_config = {
+    0,
+    .image_map_list = true,
+};
 
 #define DISPLAY_CHARSET WC_CES_UTF_8
 #define DOCUMENT_CHARSET WC_CES_UTF_8

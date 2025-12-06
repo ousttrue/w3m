@@ -1,4 +1,5 @@
 #include "anchor.h"
+#include "w3m_runtime.h"
 #include "file.h"
 #include "terms.h"
 #include "form.h"
@@ -739,7 +740,7 @@ link_list_panel(struct Buffer* buf)
                 parseURL2(l->url, &pu, baseURL(buf));
                 p = parsedURL2Str(&pu)->ptr;
                 u = html_quote(p);
-                if (DecodeURL)
+                if (w3m_config.DecodeURL)
                     p = html_quote(url_decode2(p, buf));
                 else
                     p = u;
@@ -770,7 +771,7 @@ link_list_panel(struct Buffer* buf)
             parseURL2(a->url, &pu, baseURL(buf));
             p = parsedURL2Str(&pu)->ptr;
             u = html_quote(p);
-            if (DecodeURL)
+            if (w3m_config.DecodeURL)
                 p = html_quote(url_decode2(p, buf));
             else
                 p = u;
@@ -793,7 +794,7 @@ link_list_panel(struct Buffer* buf)
             parseURL2(a->url, &pu, baseURL(buf));
             p = parsedURL2Str(&pu)->ptr;
             u = html_quote(p);
-            if (DecodeURL)
+            if (w3m_config.DecodeURL)
                 p = html_quote(url_decode2(p, buf));
             else
                 p = u;
@@ -822,7 +823,7 @@ link_list_panel(struct Buffer* buf)
                     parseURL2(m->url, &pu, baseURL(buf));
                     p = parsedURL2Str(&pu)->ptr;
                     u = html_quote(p);
-                    if (DecodeURL)
+                    if (w3m_config.DecodeURL)
                         p = html_quote(url_decode2(p, buf));
                     else
                         p = u;

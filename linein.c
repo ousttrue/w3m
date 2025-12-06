@@ -901,7 +901,7 @@ _prev(void)
             return;
         strCurrentBuf = strBuf;
     }
-    if (DecodeURL && (cm_mode & CPL_URL))
+    if (w3m_config.DecodeURL && (cm_mode & CPL_URL))
         p = url_decode2(p, NULL);
     strBuf = Strnew_charp(p);
     CLen = CPos = setStrType(strBuf, strProp);
@@ -920,7 +920,7 @@ _next(void)
         return;
     p = nextHist(hist);
     if (p) {
-        if (DecodeURL && (cm_mode & CPL_URL))
+        if (w3m_config.DecodeURL && (cm_mode & CPL_URL))
             p = url_decode2(p, NULL);
         strBuf = Strnew_charp(p);
     } else {

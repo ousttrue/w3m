@@ -803,13 +803,13 @@ char* url_encode(const char* url, const struct Url* base, wc_ces doc_charset)
 
 char* url_decode2(const char* url, wc_ces url_charset)
 {
-    if (!DecodeURL)
+    if (!w3m_config.DecodeURL)
         return (char*)url;
 
     return url_unquote_conv((char*)url, url_charset);
 }
 
-char* url_unquote_conv(char* url, wc_ces charset)
+char* url_unquote_conv(const char* url, wc_ces charset)
 {
     wc_uint8 old_auto_detect = WcOption.auto_detect;
     Str tmp;

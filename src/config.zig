@@ -296,7 +296,7 @@ const params1 = [_]param_ptr{
     .{ .name = "open_tab_dl_list", .type = .P_INT, .inputtype = .PI_ONOFF, .varptr = &c.open_tab_dl_list, .comment = CMT_OPEN_TAB_DL_LIST },
     .{ .name = "display_link", .type = .P_INT, .inputtype = .PI_ONOFF, .varptr = &c.displayLink, .comment = CMT_DISPLINK },
     .{ .name = "display_link_number", .type = .P_INT, .inputtype = .PI_ONOFF, .varptr = &c.displayLinkNumber, .comment = CMT_DISPLINKNUMBER },
-    .{ .name = "decode_url", .type = .P_INT, .inputtype = .PI_ONOFF, .varptr = &c.DecodeURL, .comment = CMT_DECODE_URL },
+    .{ .name = "decode_url", .type = .P_INT, .inputtype = .PI_ONOFF, .varptr = &c.w3m_config.DecodeURL, .comment = CMT_DECODE_URL },
 
     .{ .name = "display_lineinfo", .type = .P_INT, .inputtype = .PI_ONOFF, .varptr = &c.displayLineInfo, .comment = CMT_DISPLINEINFO },
     .{ .name = "ext_dirlist", .type = .P_INT, .inputtype = .PI_ONOFF, .varptr = &c.UseExternalDirBuffer, .comment = CMT_EXT_DIRLIST },
@@ -322,7 +322,7 @@ const params1 = [_]param_ptr{
 
     .{ .name = "inline_img_protocol", .type = .P_INT, .inputtype = .PI_SEL_C, .varptr = &c.enable_inline_image, .comment = CMT_INLINE_IMG_PROTOCOL, .select = &inlineimgstr },
     .{ .name = "imgdisplay", .type = .P_STRING, .inputtype = .PI_TEXT, .varptr = @ptrCast(&c.Imgdisplay), .comment = CMT_IMGDISPLAY },
-    .{ .name = "image_map_list", .type = .P_INT, .inputtype = .PI_ONOFF, .varptr = &c.image_map_list, .comment = CMT_IMAGE_MAP_LIST },
+    .{ .name = "image_map_list", .type = .P_INT, .inputtype = .PI_ONOFF, .varptr = &c.w3m_config.image_map_list, .comment = CMT_IMAGE_MAP_LIST },
     .{ .name = "fold_line", .type = .P_INT, .inputtype = .PI_ONOFF, .varptr = &c.FoldLine, .comment = CMT_FOLD_LINE },
     .{ .name = "show_lnum", .type = .P_INT, .inputtype = .PI_ONOFF, .varptr = &c.showLineNum, .comment = CMT_SHOW_NUM },
     .{ .name = "show_srch_str", .type = .P_INT, .inputtype = .PI_ONOFF, .varptr = &c.show_srch_str, .comment = CMT_SHOW_SRCH_STR },

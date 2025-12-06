@@ -3847,7 +3847,7 @@ _peekURL(int only_img)
         parseURL2(a->url, &pu, baseURL(Currentbuf));
         s = parsedURL2Str(&pu);
     }
-    if (DecodeURL)
+    if (w3m_config.DecodeURL)
         s = Strnew_charp(url_decode2(s->ptr, Currentbuf));
     s = checkType(s, &pp, NULL);
     p = NewAtom_N(Lineprop, s->length);
@@ -3899,7 +3899,7 @@ DEFUN(curURL, PEEK, "Show current address")
     } else {
         offset = 0;
         s = currentURL();
-        if (DecodeURL)
+        if (w3m_config.DecodeURL)
             s = Strnew_charp(url_decode2(s->ptr, NULL));
         s = checkType(s, &pp, NULL);
         p = NewAtom_N(Lineprop, s->length);

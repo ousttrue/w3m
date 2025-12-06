@@ -66,14 +66,12 @@ global char* displayTitleTerm init(0);
 global int displayLink init(false);
 global int displayLinkNumber init(false);
 global int displayLineInfo init(false);
-global int DecodeURL init(false);
 global int retryAsHttp init(true);
 global int showLineNum init(false);
 global int show_srch_str init(true);
 global int autoImage init(true);
 global int useExtImageViewer init(true);
 global int maxLoadImage init(4);
-global int image_map_list init(true);
 global int pseudoInlines init(true);
 #define DEF_EDITOR "/usr/bin/vi"
 #define DEF_MAILER "/usr/bin/mail"

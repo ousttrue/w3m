@@ -8,7 +8,6 @@
 #include "form.h"
 #include "image.h"
 #include "buffer.h"
-#include "fm.h"
 #include "w3m_runtime.h"
 #include "indep.h"
 #include <gcstr.h>
@@ -215,7 +214,7 @@ follow_map_menu(struct Buffer* buf, char* name, Anchor* a_img, int x, int y)
     initial = searchMapArea(buf, ml, a_img);
     if (initial < 0)
         initial = 0;
-    else if (!image_map_list) {
+    else if (!w3m_config.image_map_list) {
         selected = initial;
         goto map_end;
     }
@@ -431,7 +430,7 @@ append_frame_info(struct Buffer* buf, Str html, struct frameset* set, int level)
                         buf->document_charset));
                     Strcat_charp(html, p);
                 }
-                if (DecodeURL)
+                if (w3m_config.DecodeURL)
                     p = html_quote(url_decode2(frame.body->url, buf));
                 else
                     p = q;
@@ -512,7 +511,7 @@ page_info_panel(struct Buffer* buf)
         parseURL2(a->url, &pu, baseURL(buf));
         p = parsedURL2Str(&pu)->ptr;
         q = html_quote(p);
-        if (DecodeURL)
+        if (w3m_config.DecodeURL)
             p = html_quote(url_decode2(p, buf));
         else
             p = q;
@@ -525,7 +524,7 @@ page_info_panel(struct Buffer* buf)
         parseURL2(a->url, &pu, baseURL(buf));
         p = parsedURL2Str(&pu)->ptr;
         q = html_quote(p);
-        if (DecodeURL)
+        if (w3m_config.DecodeURL)
             p = html_quote(url_decode2(p, buf));
         else
             p = q;

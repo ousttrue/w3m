@@ -26,6 +26,10 @@ struct W3mConfig {
     const char* document_root;
     const char* personal_document_root;
     const char* index_file;
+
+    int image_map_list; // init(true);
+
+    int DecodeURL;
 };
 extern struct W3mConfig w3m_config;
 
