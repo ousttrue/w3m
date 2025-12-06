@@ -166,19 +166,19 @@ interpret_keymap(FILE* kf, struct stat* current, bool force, wc_ces charset, wc_
     }
 }
 
+static void initKeymap_file(wc_ces charset, wc_ces inner_charset, bool force, const char* path, struct stat* pStat)
+{
+    FILE* kf = fopen(path, "rt");
+    if (kf) {
+        interpret_keymap(kf, pStat, force || !keymap_initialized, charset, inner_charset);
+        fclose(kf);
+    }
+}
+
 void initKeymap(wc_ces charset, wc_ces inner_charset, bool force)
 {
-    FILE* kf;
-    if ((kf = fopen(confFile(KEYMAP_FILE), "rt")) != NULL) {
-        interpret_keymap(kf, &sys_current_keymap_file,
-            force || !keymap_initialized, charset, inner_charset);
-        fclose(kf);
-    }
-    if ((kf = fopen(rcFile(keymap_file)->ptr, "rt")) != NULL) {
-        interpret_keymap(kf, &current_keymap_file,
-            force || !keymap_initialized, charset, inner_charset);
-        fclose(kf);
-    }
+    initKeymap_file(charset, inner_charset, force, confFile(KEYMAP_FILE), &sys_current_keymap_file);
+    initKeymap_file(charset, inner_charset, force, rcFile(keymap_file)->ptr, &current_keymap_file);
     keymap_initialized = true;
 }
 

@@ -167,12 +167,8 @@ Str rcFile(const char* base)
 static const char*
 w3m_dir(const char* name, const char* dft)
 {
-#ifdef USE_PATH_ENVVAR
     char* value = getenv(name);
     return value ? value : dft;
-#else
-    return dft;
-#endif
 }
 
 const char* w3m_auxbin_dir()
