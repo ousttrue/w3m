@@ -1,5 +1,4 @@
 #include "w3m_runtime.h"
-#include "w3m_config.h"
 #include <gcstr.h>
 #include <pwd.h>
 #include <stdlib.h>
@@ -11,6 +10,11 @@
 #define W3MCONFIG "w3mconfig"
 
 struct w3m w3m = { 0 };
+
+struct W3mConfig w3m_config = {
+    .config_file = 0,
+    .param_tmp_dir = 0,
+};
 
 #define DISPLAY_CHARSET WC_CES_UTF_8
 #define DOCUMENT_CHARSET WC_CES_UTF_8

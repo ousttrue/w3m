@@ -1,6 +1,5 @@
 #define MAINPROGRAM
 #include "signal_jmp.h"
-#include "w3m_config.h"
 #include "fm.h"
 #include "tui.h"
 #include "term_entry.h"

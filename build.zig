@@ -9,7 +9,6 @@ const w3m_srcs = [_][]const u8{
     "signal_jmp.c",
     "tui.c",
     "w3m_runtime.c",
-    "w3m_config.c",
     "AlarmEvent.c",
     "keybind.c",
     "dns_order.c",

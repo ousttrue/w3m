@@ -17,7 +17,6 @@
 #include <wc/wtf.h>
 #include <errno.h>
 #include "KeyValueList.h"
-#include "w3m_config.h"
 #include <sys/stat.h>
 
 #include "funcheader.h"

@@ -1,6 +1,5 @@
 #include "func.h"
 #include "w3m_runtime.h"
-#include "w3m_config.h"
 #include "tui.h"
 #include "regex.h"
 #include "rc.h"
