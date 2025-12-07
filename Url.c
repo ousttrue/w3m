@@ -176,6 +176,170 @@ static void do_query(struct Url* p_url, const char* p)
     do_label(p_url, p);
 }
 
+static void analyze_file(struct Url* p_url, char* p)
+{
+    if (p_url->scheme == SCM_LOCAL && p_url->user == NULL && p_url->host != NULL && *p_url->host != '\0' && !is_localhost(p_url->host)) {
+        /*
+         * In the environments other than CYGWIN, a URL like
+         * file://host/file is regarded as ftp://host/file.
+         * On the other hand, file://host/file on CYGWIN is
+         * regarded as local access to the file //host/file.
+         * `host' is a netbios-hostname, drive, or any other
+         * name; It is CYGWIN system call who interprets that.
+         */
+
+        p_url->scheme = SCM_FTP; /* ftp://host/... */
+        if (p_url->port == 0)
+            p_url->port = DefaultPort[SCM_FTP];
+    }
+    if ((*p == '\0' || *p == '#' || *p == '?') && p_url->host == NULL) {
+        p_url->file = "";
+        do_query(p_url, p);
+        return;
+    }
+    if (p_url->scheme == SCM_LOCAL) {
+        char* q = p;
+        if (*q == '/')
+            q++;
+        if (IS_ALPHA(q[0]) && (q[1] == ':' || q[1] == '|')) {
+            if (q[1] == '|') {
+                p = allocStr(q, -1);
+                p[1] = ':';
+            } else
+                p = q;
+        }
+    }
+
+    char* q = p;
+    if (p_url->scheme == SCM_GOPHER) {
+        if (*q == '/')
+            q++;
+        if (*q && q[0] != '/' && q[1] != '/' && q[2] == '/')
+            q++;
+    }
+    if (*p == '/')
+        p++;
+    if (*p == '\0' || *p == '#' || *p == '?') { /* scheme://host[:port]/ */
+        p_url->file = DefaultFile(p_url->scheme);
+        do_query(p_url, p);
+        return;
+    }
+    if (p_url->scheme == SCM_GOPHER && *p == 'R') {
+        if (!*++p) {
+            p_url->file = "";
+            do_query(p_url, p);
+            return;
+        }
+        Str tmp = Strnew();
+        Strcat_char(tmp, *(p++));
+        while (*p && *p != '/')
+            p++;
+        Strcat_charp(tmp, p);
+        while (*p)
+            p++;
+        p_url->file = copyPath(tmp->ptr, -1, COPYPATH_SPC_IGNORE);
+    } else {
+        char* cgi = strchr(p, '?');
+
+        while (true) {
+            while (*p && *p != '#' && p != cgi)
+                p++;
+            if (*p == '#' && p_url->scheme == SCM_LOCAL) {
+                /*
+                 * According to RFC2396, # means the beginning of
+                 * URI-reference, and # should be escaped.  But,
+                 * if the scheme is SCM_LOCAL, the special
+                 * treatment will apply to # for convinience.
+                 */
+                if (p > q && *(p - 1) == '/' && (cgi == NULL || p < cgi)) {
+                    /*
+                     * # comes as the first character of the file name
+                     * that means, # is not a label but a part of the file
+                     * name.
+                     */
+                    p++;
+                    continue;
+                } else if (*(p + 1) == '\0') {
+                    /*
+                     * # comes as the last character of the file name that
+                     * means, # is not a label but a part of the file
+                     * name.
+                     */
+                    p++;
+                }
+            }
+            break;
+        }
+
+        if (p_url->scheme == SCM_LOCAL || p_url->scheme == SCM_MISSING)
+            p_url->file = copyPath(q, p - q, COPYPATH_SPC_ALLOW);
+        else
+            p_url->file = copyPath(q, p - q, COPYPATH_SPC_IGNORE);
+    }
+
+    do_query(p_url, p);
+}
+
+static void analyze_url(struct Url* p_url, char* p)
+{
+    char* q = p;
+    if (*q == '[') { /* rfc2732,rfc2373 compliance */
+        p++;
+        while (IS_XDIGIT(*p) || *p == ':' || *p == '.')
+            p++;
+        if (*p != ']' || (*(p + 1) && strchr(":/?#", *(p + 1)) == NULL))
+            p = q;
+    }
+    while (*p && strchr(":/@?#", *p) == NULL)
+        p++;
+    switch (*p) {
+    case ':': {
+        /* scheme://user:pass@host or
+         * scheme://host:port
+         */
+        const char* qq = q;
+        q = ++p;
+        while (*p && strchr("@/?#", *p) == NULL)
+            p++;
+        if (*p == '@') {
+            /* scheme://user:pass@...       */
+            p_url->user = copyPath(qq, q - 1 - qq, COPYPATH_SPC_IGNORE);
+            p_url->pass = copyPath(q, p - q, COPYPATH_SPC_ALLOW);
+            p++;
+            analyze_url(p_url, p);
+            return;
+        }
+        /* scheme://host:port/ */
+        p_url->host = copyPath(qq, q - 1 - qq,
+            COPYPATH_SPC_IGNORE | COPYPATH_LOWERCASE);
+        Str tmp = Strnew_charp_n(q, p - q);
+        p_url->port = atoi(tmp->ptr);
+        /* *p is one of ['\0', '/', '?', '#'] */
+        break;
+    }
+    case '@':
+        /* scheme://user@...            */
+        p_url->user = copyPath(q, p - q, COPYPATH_SPC_IGNORE);
+        p++;
+        analyze_url(p_url, p);
+        return;
+    case '\0':
+        /* scheme://host                */
+    case '/':
+    case '?':
+    case '#':
+        p_url->host = copyPath(q, p - q,
+            COPYPATH_SPC_IGNORE | COPYPATH_LOWERCASE);
+        if (p_url->scheme != SCM_UNKNOWN)
+            p_url->port = DefaultPort[p_url->scheme];
+        else
+            p_url->port = 0;
+        break;
+    }
+
+    analyze_file(p_url, p);
+}
+
 void parseURL(char* url, struct Url* p_url, struct Url* current)
 {
     char *p, *q, *qq;
@@ -198,7 +362,8 @@ void parseURL(char* url, struct Url* p_url, struct Url* current)
     }
     if (IS_ALPHA(*p) && (p[1] == ':' || p[1] == '|')) {
         p_url->scheme = SCM_LOCAL;
-        goto analyze_file;
+        analyze_file(p_url, p);
+        return;
     }
     /* search for scheme */
     p_url->scheme = getURLScheme(&p);
@@ -236,10 +401,12 @@ void parseURL(char* url, struct Url* p_url, struct Url* current)
             /* URL begins with // */
             /* it means that 'scheme:' is abbreviated */
             p += 2;
-            goto analyze_url;
+            analyze_url(p_url, p);
+            return;
         }
         /* the url doesn't begin with '//' */
-        goto analyze_file;
+        analyze_file(p_url, p);
+        return;
     }
     /* scheme part has been found */
     if (p_url->scheme == SCM_UNKNOWN) {
@@ -253,7 +420,8 @@ void parseURL(char* url, struct Url* p_url, struct Url* current)
             p_url->port = DefaultPort[p_url->scheme];
         else
             p_url->port = 0;
-        goto analyze_file;
+        analyze_file(p_url, p);
+        return;
     }
     /* after here, p begins with // */
     if (p_url->scheme == SCM_LOCAL) { /* file://foo           */
@@ -263,160 +431,14 @@ void parseURL(char* url, struct Url* p_url, struct Url* current)
             /* <A HREF="file://DRIVE/foo">file://DRIVE/foo</A> */
         ) {
             p += 2;
-            goto analyze_file;
+            analyze_file(p_url, p);
+            return;
         }
     }
     p += 2; /* scheme://foo         */
     /*          ^p is here  */
-analyze_url:
-    q = p;
-    if (*q == '[') { /* rfc2732,rfc2373 compliance */
-        p++;
-        while (IS_XDIGIT(*p) || *p == ':' || *p == '.')
-            p++;
-        if (*p != ']' || (*(p + 1) && strchr(":/?#", *(p + 1)) == NULL))
-            p = q;
-    }
-    while (*p && strchr(":/@?#", *p) == NULL)
-        p++;
-    switch (*p) {
-    case ':':
-        /* scheme://user:pass@host or
-         * scheme://host:port
-         */
-        qq = q;
-        q = ++p;
-        while (*p && strchr("@/?#", *p) == NULL)
-            p++;
-        if (*p == '@') {
-            /* scheme://user:pass@...       */
-            p_url->user = copyPath(qq, q - 1 - qq, COPYPATH_SPC_IGNORE);
-            p_url->pass = copyPath(q, p - q, COPYPATH_SPC_ALLOW);
-            p++;
-            goto analyze_url;
-        }
-        /* scheme://host:port/ */
-        p_url->host = copyPath(qq, q - 1 - qq,
-            COPYPATH_SPC_IGNORE | COPYPATH_LOWERCASE);
-        tmp = Strnew_charp_n(q, p - q);
-        p_url->port = atoi(tmp->ptr);
-        /* *p is one of ['\0', '/', '?', '#'] */
-        break;
-    case '@':
-        /* scheme://user@...            */
-        p_url->user = copyPath(q, p - q, COPYPATH_SPC_IGNORE);
-        p++;
-        goto analyze_url;
-    case '\0':
-        /* scheme://host                */
-    case '/':
-    case '?':
-    case '#':
-        p_url->host = copyPath(q, p - q,
-            COPYPATH_SPC_IGNORE | COPYPATH_LOWERCASE);
-        if (p_url->scheme != SCM_UNKNOWN)
-            p_url->port = DefaultPort[p_url->scheme];
-        else
-            p_url->port = 0;
-        break;
-    }
-analyze_file:
-    if (p_url->scheme == SCM_LOCAL && p_url->user == NULL && p_url->host != NULL && *p_url->host != '\0' && !is_localhost(p_url->host)) {
-        /*
-         * In the environments other than CYGWIN, a URL like
-         * file://host/file is regarded as ftp://host/file.
-         * On the other hand, file://host/file on CYGWIN is
-         * regarded as local access to the file //host/file.
-         * `host' is a netbios-hostname, drive, or any other
-         * name; It is CYGWIN system call who interprets that.
-         */
 
-        p_url->scheme = SCM_FTP; /* ftp://host/... */
-        if (p_url->port == 0)
-            p_url->port = DefaultPort[SCM_FTP];
-    }
-    if ((*p == '\0' || *p == '#' || *p == '?') && p_url->host == NULL) {
-        p_url->file = "";
-        do_query(p_url, p);
-        return;
-    }
-    if (p_url->scheme == SCM_LOCAL) {
-        q = p;
-        if (*q == '/')
-            q++;
-        if (IS_ALPHA(q[0]) && (q[1] == ':' || q[1] == '|')) {
-            if (q[1] == '|') {
-                p = allocStr(q, -1);
-                p[1] = ':';
-            } else
-                p = q;
-        }
-    }
-
-    q = p;
-    if (p_url->scheme == SCM_GOPHER) {
-        if (*q == '/')
-            q++;
-        if (*q && q[0] != '/' && q[1] != '/' && q[2] == '/')
-            q++;
-    }
-    if (*p == '/')
-        p++;
-    if (*p == '\0' || *p == '#' || *p == '?') { /* scheme://host[:port]/ */
-        p_url->file = DefaultFile(p_url->scheme);
-        do_query(p_url, p);
-        return;
-    }
-    if (p_url->scheme == SCM_GOPHER && *p == 'R') {
-        if (!*++p) {
-            p_url->file = "";
-            do_query(p_url, p);
-            return;
-        }
-        tmp = Strnew();
-        Strcat_char(tmp, *(p++));
-        while (*p && *p != '/')
-            p++;
-        Strcat_charp(tmp, p);
-        while (*p)
-            p++;
-        p_url->file = copyPath(tmp->ptr, -1, COPYPATH_SPC_IGNORE);
-    } else {
-        char* cgi = strchr(p, '?');
-    again:
-        while (*p && *p != '#' && p != cgi)
-            p++;
-        if (*p == '#' && p_url->scheme == SCM_LOCAL) {
-            /*
-             * According to RFC2396, # means the beginning of
-             * URI-reference, and # should be escaped.  But,
-             * if the scheme is SCM_LOCAL, the special
-             * treatment will apply to # for convinience.
-             */
-            if (p > q && *(p - 1) == '/' && (cgi == NULL || p < cgi)) {
-                /*
-                 * # comes as the first character of the file name
-                 * that means, # is not a label but a part of the file
-                 * name.
-                 */
-                p++;
-                goto again;
-            } else if (*(p + 1) == '\0') {
-                /*
-                 * # comes as the last character of the file name that
-                 * means, # is not a label but a part of the file
-                 * name.
-                 */
-                p++;
-            }
-        }
-        if (p_url->scheme == SCM_LOCAL || p_url->scheme == SCM_MISSING)
-            p_url->file = copyPath(q, p - q, COPYPATH_SPC_ALLOW);
-        else
-            p_url->file = copyPath(q, p - q, COPYPATH_SPC_IGNORE);
-    }
-
-    do_query(p_url, p);
+    analyze_url(p_url, p);
 }
 
 #define ALLOC_STR(s) ((s) == NULL ? NULL : allocStr(s, -1))
@@ -463,21 +485,21 @@ char* expandName(char* name)
                 p = "";
             }
             if (!passent)
-                goto rest;
+                return name;
+
             extpath = Strnew_m_charp(passent->pw_dir, "/",
                 w3m_config.personal_document_root, NULL);
             if (*w3m_config.personal_document_root == '\0' && *p == '/')
                 p++;
         } else
-            goto rest;
+            return name;
         if (Strcmp_charp(extpath, "/") == 0 && *p == '/')
             p++;
         Strcat_charp(extpath, p);
         return extpath->ptr;
-    } else
+    } else {
         return expandPath(p)->ptr;
-rest:
-    return name;
+    }
 }
 
 void parseURL2(char* url, struct Url* pu, struct Url* current)
