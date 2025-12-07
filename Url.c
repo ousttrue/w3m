@@ -126,7 +126,7 @@ DefaultFile(int scheme)
 #define COPYPATH_LOWERCASE 4
 
 static char*
-copyPath(char* orgpath, int length, int option)
+copyPath(const char* orgpath, int length, int option)
 {
     Str tmp = Strnew();
     char ch;
@@ -153,7 +153,7 @@ copyPath(char* orgpath, int length, int option)
     return tmp->ptr;
 }
 
-void do_label(struct Url* p_url, const char* p)
+static void do_label(struct Url* p_url, const char* p)
 {
     if (p_url->scheme == SCM_MISSING) {
         p_url->scheme = SCM_LOCAL;
@@ -163,6 +163,17 @@ void do_label(struct Url* p_url, const char* p)
         p_url->label = allocStr(p + 1, -1);
     else
         p_url->label = NULL;
+}
+
+static void do_query(struct Url* p_url, const char* p)
+{
+    if (*p == '?') {
+        const char* q = ++p;
+        while (*p && *p != '#')
+            p++;
+        p_url->query = copyPath(q, p - q, COPYPATH_SPC_ALLOW);
+    }
+    do_label(p_url, p);
 }
 
 void parseURL(char* url, struct Url* p_url, struct Url* current)
@@ -326,7 +337,8 @@ analyze_file:
     }
     if ((*p == '\0' || *p == '#' || *p == '?') && p_url->host == NULL) {
         p_url->file = "";
-        goto do_query;
+        do_query(p_url, p);
+        return;
     }
     if (p_url->scheme == SCM_LOCAL) {
         q = p;
@@ -352,12 +364,14 @@ analyze_file:
         p++;
     if (*p == '\0' || *p == '#' || *p == '?') { /* scheme://host[:port]/ */
         p_url->file = DefaultFile(p_url->scheme);
-        goto do_query;
+        do_query(p_url, p);
+        return;
     }
     if (p_url->scheme == SCM_GOPHER && *p == 'R') {
         if (!*++p) {
             p_url->file = "";
-            goto do_query;
+            do_query(p_url, p);
+            return;
         }
         tmp = Strnew();
         Strcat_char(tmp, *(p++));
@@ -402,14 +416,7 @@ analyze_file:
             p_url->file = copyPath(q, p - q, COPYPATH_SPC_IGNORE);
     }
 
-do_query:
-    if (*p == '?') {
-        q = ++p;
-        while (*p && *p != '#')
-            p++;
-        p_url->query = copyPath(q, p - q, COPYPATH_SPC_ALLOW);
-    }
-    do_label(p_url, p);
+    do_query(p_url, p);
 }
 
 #define ALLOC_STR(s) ((s) == NULL ? NULL : allocStr(s, -1))
