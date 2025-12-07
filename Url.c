@@ -153,6 +153,18 @@ copyPath(char* orgpath, int length, int option)
     return tmp->ptr;
 }
 
+void do_label(struct Url* p_url, const char* p)
+{
+    if (p_url->scheme == SCM_MISSING) {
+        p_url->scheme = SCM_LOCAL;
+        p_url->file = allocStr(p, -1);
+        p_url->label = NULL;
+    } else if (*p == '#')
+        p_url->label = allocStr(p + 1, -1);
+    else
+        p_url->label = NULL;
+}
+
 void parseURL(char* url, struct Url* p_url, struct Url* current)
 {
     char *p, *q, *qq;
@@ -170,15 +182,9 @@ void parseURL(char* url, struct Url* p_url, struct Url* current)
     if (*url == '\0' || *url == '#') {
         if (current)
             copyParsedURL(p_url, current);
-        goto do_label;
+        do_label(p_url, p);
+        return;
     }
-#if defined(__EMX__) || defined(__CYGWIN__)
-    if (!strncasecmp(url, "file://localhost/", 17)) {
-        p_url->scheme = SCM_LOCAL;
-        p += 17 - 1;
-        url += 17 - 1;
-    }
-#endif
     if (IS_ALPHA(*p) && (p[1] == ':' || p[1] == '|')) {
         p_url->scheme = SCM_LOCAL;
         goto analyze_file;
@@ -241,9 +247,9 @@ void parseURL(char* url, struct Url* p_url, struct Url* current)
     /* after here, p begins with // */
     if (p_url->scheme == SCM_LOCAL) { /* file://foo           */
         if (p[2] == '/' || p[2] == '~'
-        /* <A HREF="file:///foo">file:///foo</A>  or <A HREF="file://~user">file://~user</A> */
+            /* <A HREF="file:///foo">file:///foo</A>  or <A HREF="file://~user">file://~user</A> */
             || (IS_ALPHA(p[2]) && (p[3] == ':' || p[3] == '|'))
-        /* <A HREF="file://DRIVE/foo">file://DRIVE/foo</A> */
+            /* <A HREF="file://DRIVE/foo">file://DRIVE/foo</A> */
         ) {
             p += 2;
             goto analyze_file;
@@ -403,15 +409,7 @@ do_query:
             p++;
         p_url->query = copyPath(q, p - q, COPYPATH_SPC_ALLOW);
     }
-do_label:
-    if (p_url->scheme == SCM_MISSING) {
-        p_url->scheme = SCM_LOCAL;
-        p_url->file = allocStr(p, -1);
-        p_url->label = NULL;
-    } else if (*p == '#')
-        p_url->label = allocStr(p + 1, -1);
-    else
-        p_url->label = NULL;
+    do_label(p_url, p);
 }
 
 #define ALLOC_STR(s) ((s) == NULL ? NULL : allocStr(s, -1))
@@ -530,8 +528,7 @@ void parseURL2(char* url, struct Url* pu, struct Url* current)
             if (
                 pu->scheme != SCM_GOPHER && pu->file[0] != '/'
                 && !(pu->scheme == SCM_LOCAL && IS_ALPHA(pu->file[0])
-                    && pu->file[1] == ':')
-            ) {
+                    && pu->file[1] == ':')) {
                 /* file is relative [process 1] */
                 p = pu->file;
                 if (current->file) {
@@ -592,7 +589,7 @@ void parseURL2(char* url, struct Url* pu, struct Url* current)
             pu->file = cleanupName(pu->file);
         }
         if (pu->scheme == SCM_LOCAL) {
-                pu->real_file = cleanupName(file_unquote(pu->file));
+            pu->real_file = cleanupName(file_unquote(pu->file));
         }
     }
 }
@@ -667,9 +664,7 @@ Str _parsedURL2Str(struct Url* pu, int pass, int user, int label)
         }
     }
     if (
-        pu->scheme != SCM_NEWS && pu->scheme != SCM_NEWS_GROUP && (pu->file == NULL || (pu->file[0] != '/'
-                                                                       && !(IS_ALPHA(pu->file[0]) && pu->file[1] == ':' && pu->host == NULL)
-                                                                           )))
+        pu->scheme != SCM_NEWS && pu->scheme != SCM_NEWS_GROUP && (pu->file == NULL || (pu->file[0] != '/' && !(IS_ALPHA(pu->file[0]) && pu->file[1] == ':' && pu->host == NULL))))
         Strcat_char(tmp, '/');
     Strcat_charp(tmp, pu->file);
     if (pu->scheme == SCM_FTPDIR && Strlastchar(tmp) != '/')
@@ -798,7 +793,8 @@ url_to_charset(const char* url, const struct Url* base, wc_ces doc_charset)
 char* url_encode(const char* url, const struct Url* base, wc_ces doc_charset)
 {
     return url_quote_conv((char*)url,
-        url_to_charset(url, base, doc_charset))->ptr;
+        url_to_charset(url, base, doc_charset))
+        ->ptr;
 }
 
 char* url_decode2(const char* url, wc_ces url_charset)
