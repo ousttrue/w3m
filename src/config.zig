@@ -1,6 +1,7 @@
 const std = @import("std");
 const gcstr = @import("gcstr");
 const c = @import("w3m.zig").c;
+const util = @import("util.zig");
 
 var display_charset_str: [*c]c.wc_ces_list = null;
 var document_charset_str: [*c]c.wc_ces_list = null;
@@ -894,16 +895,6 @@ fn get_lower_key(line: []const u8, buf: []u8) ?[]const u8 {
     return null;
 }
 
-fn atoi(T: type, _value: [*c]const u8) T {
-    const value: []const u8 = std.mem.span(_value);
-    return std.fmt.parseInt(T, value, 10) catch 0;
-}
-
-fn atof(T: type, _value: [*c]const u8) T {
-    const value: []const u8 = std.mem.span(_value);
-    return std.fmt.parseFloat(T, value) catch 0;
-}
-
 export fn config_get_param_option(name: [*c]const u8) [*c]const u8 {
     if (config_search_param(name)) |p| {
         return to_str(p).*.ptr;
@@ -962,12 +953,12 @@ export fn config_set_param(name: [*c]const u8, value: [*c]const u8) bool {
                 const bool_val = str_to_bool(value, getBool(c_int, p));
                 setVal(c_int, p, if (bool_val) 1 else 0);
             } else {
-                const int_val = atoi(c_int, value);
+                const int_val = util.atoi(c_int, value);
                 setVal(c_int, p, int_val);
             }
         },
         .P_NZINT => {
-            const int_val = atoi(c_int, value);
+            const int_val = util.atoi(c_int, value);
             if (int_val > 0) {
                 setVal(c_int, p, int_val);
             }
@@ -977,7 +968,7 @@ export fn config_set_param(name: [*c]const u8, value: [*c]const u8) bool {
                 const bool_val = str_to_bool(&value[0], getBool(c_short, p));
                 setVal(c_short, p, if (bool_val) 1 else 0);
             } else {
-                const short_val = atoi(c_short, value);
+                const short_val = util.atoi(c_short, value);
                 setVal(c_short, p, short_val);
             }
         },
@@ -986,7 +977,7 @@ export fn config_set_param(name: [*c]const u8, value: [*c]const u8) bool {
                 const bool_val = str_to_bool(&value[0], getBool(c_char, p));
                 setVal(c_char, p, if (bool_val) 1 else 0);
             } else {
-                const char_val = atoi(c_char, value);
+                const char_val = util.atoi(c_char, value);
                 setVal(c_char, p, char_val);
             }
         },
@@ -1013,13 +1004,13 @@ export fn config_set_param(name: [*c]const u8, value: [*c]const u8) bool {
             setVal(c.wc_ces, p, wc_val);
         },
         .P_PIXELS => {
-            const ppc = atof(f64, value);
+            const ppc = util.atof(f64, value);
             if (ppc >= c.MINIMUM_PIXEL_PER_CHAR and ppc <= c.MAXIMUM_PIXEL_PER_CHAR * 2) {
                 setVal(f64, p, ppc);
             }
         },
         .P_SCALE => {
-            const ppc = atof(f64, value);
+            const ppc = util.atof(f64, value);
             if (ppc >= 10 and ppc <= 1000) {
                 setVal(f64, p, ppc);
             }

@@ -10,39 +10,41 @@ extern char* ssl_cert_file;
 
 extern TextList* NO_proxy_domains;
 
-#define SCM_UNKNOWN 255
-#define SCM_MISSING 254
-#define SCM_HTTP 0
-#define SCM_GOPHER 1
-#define SCM_FTP 2
-#define SCM_FTPDIR 3
-#define SCM_LOCAL 4
-#define SCM_LOCAL_CGI 5
-#define SCM_EXEC 6
-#define SCM_NNTP 7
-#define SCM_NNTP_GROUP 8
-#define SCM_NEWS 9
-#define SCM_NEWS_GROUP 10
-#define SCM_DATA 11
-#define SCM_MAILTO 12
-#define SCM_HTTPS 13
+enum UrlScheme {
+    SCM_UNKNOWN = 255,
+    SCM_MISSING = 254,
+    SCM_HTTP = 0,
+    SCM_GOPHER = 1,
+    SCM_FTP = 2,
+    SCM_FTPDIR = 3,
+    SCM_LOCAL = 4,
+    SCM_LOCAL_CGI = 5,
+    SCM_EXEC = 6,
+    SCM_NNTP = 7,
+    SCM_NNTP_GROUP = 8,
+    SCM_NEWS = 9,
+    SCM_NEWS_GROUP = 10,
+    SCM_DATA = 11,
+    SCM_MAILTO = 12,
+    SCM_HTTPS = 13,
+};
 
 extern int DefaultPort[];
 
 struct Url {
-    int scheme;
-    char* user;
-    char* pass;
-    char* host;
+    enum UrlScheme scheme;
+    const char* user;
+    const char* pass;
+    const char* host;
     int port;
-    char* file;
-    char* real_file;
-    char* query;
-    char* label;
+    const char* file;
+    const char* real_file;
+    const char* query;
+    const char* label;
     int is_nocache;
 };
 
-void parseURL(char* url, struct Url* p_url, struct Url* current);
+void parseURL(const char* url, struct Url* p_url, struct Url* current);
 void copyParsedURL(struct Url* p, const struct Url* q);
 void parseURL2(char* url, struct Url* pu, struct Url* current);
 Str parsedURL2Str(struct Url* pu);
@@ -51,6 +53,6 @@ Str _parsedURL2Str(struct Url* pu, int pass, int user, int label);
 char* url_decode2(const char* url, wc_ces url_charset);
 char* url_unquote_conv(const char* url, wc_ces charset);
 char* schemeNumToName(int scheme);
-int getURLScheme(char** url);
+enum UrlScheme getURLScheme(const char** url);
 char* filename_extension(char* patch, int is_url);
 struct Url* schemeToProxy(int scheme);

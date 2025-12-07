@@ -26,7 +26,7 @@ static inline bool IS_SPACE(uint8_t x) { return (GET_MYCTYPE(x) & MYCTYPE_SPACE)
 #define IS_PRINT(x) (GET_MYCTYPE(x) & MYCTYPE_PRINT)
 #define IS_ASCII(x) (GET_MYCTYPE(x) & MYCTYPE_ASCII)
 #define IS_ALNUM(x) (GET_MYCTYPE(x) & MYCTYPE_ALNUM)
-#define IS_XDIGIT(x) (GET_MYCTYPE(x) & MYCTYPE_XDIGIT)
+static inline bool IS_XDIGIT(uint8_t x) { return (GET_MYCTYPE(x) & MYCTYPE_XDIGIT); }
 #define IS_INTSPACE(x) (MYCTYPE_MAP[(unsigned char)(x)] & MYCTYPE_INTSPACE)
 
 static inline uint8_t TOLOWER(uint8_t x) { return (IS_ALPHA(x) ? ((x) | 0x20) : (x)); }
