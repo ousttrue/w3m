@@ -5,7 +5,7 @@
 extern long long strtoclen(const char* s);
 extern int strCmp(const void* s1, const void* s2);
 extern char* currentdir(void);
-extern char* cleanupName(char* name);
+extern char* cleanupName(const char* name);
 
 #ifndef HAVE_STRCHR
 extern char* strchr(const char* s, int c);

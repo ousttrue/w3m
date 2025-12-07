@@ -366,3 +366,173 @@ pub fn parseURL(_url: [*c]const u8, p_url: *c.Url, _current: [*c]c.Url) void {
 
     analyze_url(p_url, p);
 }
+
+fn expandName(name: [*c]const u8) c.Str {
+    if (name == null) {
+        return null;
+    }
+    var p = name;
+    if (p[0] != '/') {
+        return c.expandPath(p);
+    }
+
+    if ((p[1] == '~' and std.ascii.isAlphabetic(p[2])) and c.w3m_config.personal_document_root != null) {
+        p += 2;
+
+        var passent: [*c]c.passwd = null;
+        if (std.mem.indexOfScalar(u8, std.mem.span(p), '/')) |found| {
+            // /~user/dir...
+            passent = c.getpwnam(c.allocStr(p, @intCast(found)));
+            p = p + found;
+        } else {
+            // /~user
+            passent = c.getpwnam(p);
+            p = "";
+        }
+
+        if (passent == null)
+            return c.Strnew_charp(name);
+
+        const extpath = c.Strnew_m_charp(
+            passent.*.pw_dir,
+            "/",
+            c.w3m_config.personal_document_root,
+            @as([*c]const u8, null),
+        );
+        if (c.w3m_config.personal_document_root[0] == 0 and p[0] == '/')
+            p += 1;
+
+        if (c.Strcmp_charp(extpath, "/") == 0 and p[0] == '/')
+            p += 1;
+        c.Strcat_charp(extpath, p);
+        return extpath;
+    } else {
+        return c.Strnew_charp(name);
+    }
+}
+
+pub fn parseURL2(url: [*c]const u8, pu: *c.Url, current: [*c]c.Url) void {
+    parseURL(url, pu, current);
+    if (pu.scheme == c.SCM_MAILTO)
+        return;
+    if (pu.scheme == c.SCM_DATA)
+        return;
+    if (pu.scheme == c.SCM_NEWS or pu.scheme == c.SCM_NEWS_GROUP) {
+        pu.scheme = c.SCM_NEWS;
+        if (pu.file != null) {
+            const file = std.mem.span(pu.file);
+            if (!std.mem.containsAtLeastScalar(u8, file, 1, '@')) {
+                if (std.mem.lastIndexOfScalar(u8, file, '/')) |pos| {
+                    const p = file[pos..];
+                    if (std.mem.containsAtLeastScalar(u8, p[1..], 1, '-')) {
+                        pu.scheme = c.SCM_NEWS_GROUP;
+                    } else if (p[1] == 0) {
+                        pu.scheme = c.SCM_NEWS_GROUP;
+                    }
+                } else {
+                    pu.scheme = c.SCM_NEWS_GROUP;
+                }
+            }
+        }
+        return;
+    }
+    if (pu.scheme == c.SCM_NNTP or pu.scheme == c.SCM_NNTP_GROUP) {
+        //         if (pu.file and *pu.file == '/')
+        //             pu.file = allocStr(pu.file + 1, -1);
+        //         if (pu.file and !strchr(pu.file, '@') and (!(p = strchr(pu.file, '/')) or strchr(p + 1, '-') or *(p + 1) == '\0'))
+        //             pu.scheme = SCM_NNTP_GROUP;
+        //         else
+        //             pu.scheme = SCM_NNTP;
+        //         if (current and (current.scheme == SCM_NNTP or current.scheme == SCM_NNTP_GROUP)) {
+        //             if (pu.host == NULL) {
+        //                 pu.host = current.host;
+        //                 pu.port = current.port;
+        //             }
+        //         }
+        return;
+    }
+    if (pu.scheme == c.SCM_LOCAL) {
+        const q = expandName(c.file_unquote(pu.file)).*.ptr;
+        if (std.ascii.isAlphabetic(q[0]) and q[1] == ':') {
+            const drive = c.Strnew_charp_n(q, 2);
+            c.Strcat_charp(drive, c.file_quote(q + 2));
+            pu.file = drive.*.ptr;
+        } else {
+            pu.file = c.file_quote(q);
+        }
+    }
+
+    var relative_uri = false;
+    if (current != null and
+        (pu.scheme == current.*.scheme or
+            (pu.scheme == c.SCM_FTP and current.*.scheme == c.SCM_FTPDIR) and
+                (pu.scheme == c.SCM_LOCAL and current.*.scheme == c.SCM_LOCAL_CGI)) and pu.host == null)
+    {
+        // Copy omitted element from the current URL */
+        pu.user = current.*.user;
+        pu.pass = current.*.pass;
+        pu.host = current.*.host;
+        pu.port = current.*.port;
+        if (pu.file != 0 and pu.file[0] != 0) {
+            if (pu.scheme != c.SCM_GOPHER and
+                pu.file[0] != '/' and
+                !(pu.scheme == c.SCM_LOCAL and std.ascii.isAlphabetic(pu.file[0]) and pu.file[1] == ':'))
+            {
+                // file is relative [process 1]
+                const p = pu.file;
+                if (current.*.file != null) {
+                    const tmp = c.Strnew_charp(current.*.file);
+                    while (tmp.*.length > 0) {
+                        if (c.Strlastchar(tmp) == '/')
+                            break;
+                        c.Strshrink(tmp, 1);
+                    }
+                    c.Strcat_charp(tmp, p);
+                    pu.file = tmp.*.ptr;
+                    relative_uri = true;
+                }
+            } else if (pu.scheme == c.SCM_GOPHER and pu.file[0] == '/') {
+                const p = pu.file;
+                pu.file = c.allocStr(p + 1, -1);
+            }
+        } else { // scheme:[?query][#label]
+            pu.file = current.*.file;
+            if (pu.query == null)
+                pu.query = current.*.query;
+        }
+        // comment: query part need not to be completed
+        // from the current URL. */
+    }
+    if (pu.file != 0) {
+        if (pu.scheme == c.SCM_LOCAL and pu.file[0] != '/' and
+            !(std.ascii.isAlphabetic(pu.file[0]) and pu.file[1] == ':') and
+            !std.mem.eql(u8, std.mem.span(pu.file), "-"))
+        {
+            // local file, relative path
+            const tmp = c.Strnew_charp(c.w3m.CurrentDir);
+            if (c.Strlastchar(tmp) != '/')
+                _ = c.Strcat_char(tmp, '/');
+            c.Strcat_charp(tmp, c.file_unquote(pu.file));
+            pu.file = c.file_quote(c.cleanupName(tmp.*.ptr));
+        } else if (pu.scheme == c.SCM_HTTP or pu.scheme == c.SCM_HTTPS) {
+            if (relative_uri) {
+                // In this case, pu.file is created by [process 1] above.
+                // pu.file may contain relative path (for example,
+                // "/foo/../bar/./baz.html"), cleanupName() must be applied.
+                // When the entire abs_path is given, it still may contain
+                // elements like `//', `..' or `.' in the pu.file. It is
+                // server's responsibility to canonicalize such path.
+                pu.file = c.cleanupName(pu.file);
+            }
+        } else if (pu.scheme != c.SCM_GOPHER and pu.file[0] == '/') {
+            // this happens on the following conditions:
+            // (1) ftp scheme (2) local, looks like absolute path.
+            // In both case, there must be no side effect with
+            // cleanupName(). (I hope so...)
+            pu.file = c.cleanupName(pu.file);
+        }
+        if (pu.scheme == c.SCM_LOCAL) {
+            pu.real_file = c.cleanupName(c.file_unquote(pu.file));
+        }
+    }
+}

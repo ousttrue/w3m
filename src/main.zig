@@ -36,8 +36,12 @@ export fn config_load(handle: std.fs.File.Handle) void {
     config.read_config(&reader.interface) catch @panic("config_load");
 }
 
-export fn parseURL(_url: [*c]const u8, p_url: *c.Url, _current: [*c]c.Url) void {
-    url.parseURL(_url, p_url, _current);
+export fn parseURL(src: [*c]const u8, p_url: *c.Url, current: [*c]c.Url) void {
+    url.parseURL(src, p_url, current);
+}
+
+export fn parseURL2(src: [*c]const u8, pu: *c.Url, current: [*c]c.Url) void {
+    url.parseURL2(src, pu, current);
 }
 
 test "Url" {

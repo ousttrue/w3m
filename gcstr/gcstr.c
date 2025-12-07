@@ -397,7 +397,7 @@ char* file_quote(char* str)
     return str;
 }
 
-char* file_unquote(char* str)
+char* file_unquote(const char* str)
 {
     Str tmp = NULL;
     char *p, *q;

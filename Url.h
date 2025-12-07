@@ -46,7 +46,7 @@ struct Url {
 
 void parseURL(const char* url, struct Url* p_url, struct Url* current);
 void copyParsedURL(struct Url* p, const struct Url* q);
-void parseURL2(char* url, struct Url* pu, struct Url* current);
+void parseURL2(const char* url, struct Url* pu, struct Url* current);
 Str parsedURL2Str(struct Url* pu);
 Str parsedURL2RefererStr(struct Url* pu);
 Str _parsedURL2Str(struct Url* pu, int pass, int user, int label);

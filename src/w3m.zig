@@ -21,4 +21,9 @@ pub const c = @cImport({
 
     @cInclude("etc.h");
     @cInclude("frame.h");
+
+    // getpwnam
+    @cInclude("sys/types.h");
+    @cInclude("pwd.h");
+    @cInclude("indep.h");
 });
