@@ -5,6 +5,7 @@ const config = @import("config.zig");
 const c = @import("w3m.zig").c;
 const util = @import("util.zig");
 const url = @import("url.zig");
+const local_cgi = @import("local_cgi.zig");
 
 extern fn w3m_parse_arg(argc: c_int, argv: [*c][*c]c_char) c_int;
 extern fn w3m_loop() c_int;
@@ -57,5 +58,24 @@ test "Url" {
         parseURL(src, &pu, null);
         try std.testing.expectEqual(pu.scheme, c.SCM_HTTPS);
         try std.testing.expectEqualSlices(u8, "search.yahoo.co.jp", std.mem.span(pu.host));
+    }
+}
+
+export fn localcgi_post(
+    uri: [*c]const u8,
+    qstr: [*c]const u8,
+    request: [*c]c.FormList,
+    referer: [*c]const u8,
+) ?*c.FILE {
+    return local_cgi.post(uri, qstr, request, referer);
+}
+
+export fn localCookie() c.Str {
+    return local_cgi.localCookie();
+}
+
+export fn set_environ(name: [*c]const u8, value: [*c]const u8) void {
+    if (name != null and value != null) {
+        _ = c.setenv(name, value, 1);
     }
 }
