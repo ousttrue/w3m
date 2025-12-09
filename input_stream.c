@@ -65,7 +65,7 @@ static void ens_close(struct ens_handle* handle);
 static void memchop(char* p, int* len);
 
 static void
-do_update(BaseStream base)
+do_update(struct base_stream* base)
 {
     int len;
     base->stream.cur = base->stream.next = 0;
@@ -77,7 +77,7 @@ do_update(BaseStream base)
 }
 
 static int
-buffer_read(StreamBuffer sb, char* obuf, int count)
+buffer_read(struct stream_buffer* sb, char* obuf, int count)
 {
     int len = sb->next - sb->cur;
     if (len > 0) {
@@ -90,9 +90,9 @@ buffer_read(StreamBuffer sb, char* obuf, int count)
 }
 
 static void
-init_buffer(BaseStream base, char* buf, int bufsize)
+init_buffer(struct base_stream* base, char* buf, int bufsize)
 {
-    StreamBuffer sb = &base->stream;
+    struct stream_buffer* sb = &base->stream;
     sb->size = bufsize;
     sb->cur = 0;
     sb->buf = NewWithoutGC_N(uchar, bufsize);
@@ -107,13 +107,13 @@ init_buffer(BaseStream base, char* buf, int bufsize)
 }
 
 static void
-init_base_stream(BaseStream base, int bufsize)
+init_base_stream(struct base_stream* base, int bufsize)
 {
     init_buffer(base, NULL, bufsize);
 }
 
 static void
-init_str_stream(BaseStream base, Str s)
+init_str_stream(struct base_stream* base, Str s)
 {
     init_buffer(base, s->ptr, s->length);
 }
@@ -225,7 +225,7 @@ int ISclose(union input_stream* stream)
 
 int ISgetc(union input_stream* stream)
 {
-    BaseStream base;
+    struct base_stream* base;
     if (stream == NULL)
         return '\0';
     base = &stream->base;
@@ -236,7 +236,7 @@ int ISgetc(union input_stream* stream)
 
 int ISundogetc(union input_stream* stream)
 {
-    StreamBuffer sb;
+    struct stream_buffer* sb;
     if (stream == NULL)
         return -1;
     sb = &stream->base.stream;
@@ -260,8 +260,8 @@ Str StrISgets2(union input_stream* stream, char crnl)
 
 void ISgets_to_growbuf(union input_stream* stream, struct growbuf* gb, char crnl)
 {
-    BaseStream base = &stream->base;
-    StreamBuffer sb = &base->stream;
+    struct base_stream* base = &stream->base;
+    struct stream_buffer* sb = &base->stream;
     int i;
 
     gb->length = 0;
@@ -317,7 +317,7 @@ int ISread(union input_stream* stream, Str buf, int count)
 int ISread_n(union input_stream* stream, char* dst, int count)
 {
     int len, l;
-    BaseStream base;
+    struct base_stream* base;
 
     if (stream == NULL || count <= 0)
         return -1;
@@ -356,7 +356,7 @@ int ISfileno(union input_stream* stream)
 
 int ISeos(union input_stream* stream)
 {
-    BaseStream base = &stream->base;
+    struct base_stream* base = &stream->base;
     if (!base->iseos && MUST_BE_UPDATED(base))
         do_update(base);
     return base->iseos;
