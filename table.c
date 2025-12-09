@@ -2827,7 +2827,7 @@ feed_table_tag(struct table* tbl, char* line, struct table_mode* mode,
     return TAG_ACTION_NONE;
 }
 
-int feed_table(struct table* tbl, char* line, struct table_mode* mode,
+int feed_table(struct table* tbl, const char* line, struct table_mode* mode,
     int width, int internal)
 {
     int i;
@@ -2984,14 +2984,11 @@ int feed_table(struct table* tbl, char* line, struct table_mode* mode,
 
 void feed_table1(struct table* tbl, Str tok, struct table_mode* mode, int width)
 {
-    Str tokbuf;
-    int status;
-    char* line;
     if (!tok)
         return;
-    tokbuf = Strnew();
-    status = R_ST_NORMAL;
-    line = tok->ptr;
+    Str tokbuf = Strnew();
+    enum ReadTokenStatus status = R_ST_NORMAL;
+    const char* line = tok->ptr;
     while (read_token(tokbuf, &line, &status, mode->pre_mode & TBLM_PREMODE, 0))
         feed_table(tbl, tokbuf->ptr, mode, width, true);
 }

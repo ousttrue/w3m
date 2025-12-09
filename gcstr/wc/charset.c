@@ -73,13 +73,12 @@ wc_codepage(int n)
 }
 
 wc_ces
-wc_guess_charset(char *charset, wc_ces orig)
+wc_guess_charset(const char *charset, wc_ces orig)
 {
-    wc_ces guess;
 
     if (charset == NULL || *charset == '\0')
 	return orig;
-    guess = wc_charset_to_ces(charset);
+    wc_ces guess = wc_charset_to_ces(charset);
     return guess ? guess : orig;
 }
 
@@ -106,7 +105,7 @@ wc_guess_locale_charset(char *locale, wc_ces orig)
 }
 
 wc_ces
-wc_charset_to_ces(char *charset)
+wc_charset_to_ces(const char *charset)
 {
     char *p = charset;
     char buf[16];

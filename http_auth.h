@@ -23,7 +23,7 @@ struct http_auth {
         struct HttpRequest* hr, struct form_list* request);
 };
 
-void getAuthCookie(struct http_auth* hauth, char* auth_header,
+void getAuthCookie(struct http_auth* hauth, const char* auth_header,
     TextList* extra_header, struct Url* pu, struct HttpRequest* hr,
     struct form_list* request,
     Str* uname, Str* pwd);

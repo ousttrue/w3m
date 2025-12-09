@@ -19,7 +19,7 @@ void setAlarmEventDefault()
 }
 
 struct AlarmEvent*
-setAlarmEvent(struct Buffer* buf, int sec, enum AlarmStatus status, int cmd, void* data)
+setAlarmEvent(struct Buffer* buf, int sec, enum AlarmStatus status, int cmd, const void* data)
 {
     struct AlarmEvent* event = (buf)
         ? (buf->event ? buf->event : New(struct AlarmEvent))

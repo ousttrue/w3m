@@ -41,4 +41,4 @@ FILE* localcgi_post(char*, char*, struct form_list*, char*);
 #define localcgi_get(u, q, r) localcgi_post((u), (q), NULL, (r))
 void set_environ(const char* var, const char* value);
 Str localCookie(void);
-Str loadLocalDir(char* dirname);
+Str loadLocalDir(const char* dirname);

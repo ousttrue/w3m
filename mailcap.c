@@ -281,7 +281,7 @@ char* acceptableMimeTypes(void)
 }
 
 struct mailcap*
-searchExtViewer(char* type)
+searchExtViewer(const char* type)
 {
     struct mailcap* p;
     int i;

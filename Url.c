@@ -248,7 +248,7 @@ void init_stream(struct URLFile* uf, int scheme, union input_stream* stream)
     uf->modtime = -1;
 }
 
-char* filename_extension(char* path, int is_url)
+char* filename_extension(const char* path, int is_url)
 {
     char *last_dot = "", *p = path;
     int i;

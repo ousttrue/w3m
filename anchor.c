@@ -69,7 +69,7 @@ putAnchor(AnchorList* al, char* url, char* target, Anchor** anchor_return,
 }
 
 Anchor*
-registerHref(struct Buffer* buf, char* url, char* target, char* referer, char* title,
+registerHref(struct Buffer* buf, const char* url, const char* target, const char* referer, const char* title,
     unsigned char key, int line, int pos)
 {
     Anchor* a;
@@ -88,7 +88,7 @@ registerName(struct Buffer* buf, char* url, int line, int pos)
 }
 
 Anchor*
-registerImg(struct Buffer* buf, char* url, char* title, int line, int pos)
+registerImg(struct Buffer* buf, const char* url, const char* title, int line, int pos)
 {
     Anchor* a;
     buf->img = putAnchor(buf->img, url, NULL, &a, NULL, title, '\0', line,
@@ -195,7 +195,7 @@ searchAnchor(AnchorList* al, char* str)
 }
 
 Anchor*
-searchURLLabel(struct Buffer* buf, char* url)
+searchURLLabel(struct Buffer* buf, const char* url)
 {
     return searchAnchor(buf->name, url);
 }

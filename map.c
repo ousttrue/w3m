@@ -243,7 +243,7 @@ map_end:
 
 
 struct MapArea*
-newMapArea(char* url, char* target, char* alt, char* shape, char* coords)
+newMapArea(const char* url, const char* target, const char* alt, const char* shape, const char* coords)
 {
     struct MapArea* a = New(struct MapArea);
     char* p;

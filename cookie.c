@@ -647,7 +647,7 @@ void set_cookie_flag(struct KeyValueList* arg)
     // backBf();
 }
 
-int check_cookie_accept_domain(char* domain)
+int check_cookie_accept_domain(const char* domain)
 {
     TextListItem* tl;
 

@@ -134,7 +134,7 @@ struct html_feed_environ;
 void renderTable(struct table* t, int max_width,
     struct html_feed_environ* h_env);
 void check_rowcol(struct table* tbl, struct table_mode* mode);
-int feed_table(struct table* tbl, char* line, struct table_mode* mode,
+int feed_table(struct table* tbl, const char* line, struct table_mode* mode,
     int width, int internal);
 void feed_table1(struct table* tbl, Str tok, struct table_mode* mode,
     int width);

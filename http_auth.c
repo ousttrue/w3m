@@ -710,7 +710,7 @@ void invalidate_auth_user_passwd(struct Url* pu, char* realm, Str uname, Str pwd
     return;
 }
 
-void getAuthCookie(struct http_auth* hauth, char* auth_header,
+void getAuthCookie(struct http_auth* hauth, const char* auth_header,
     TextList* extra_header, struct Url* pu, struct HttpRequest* hr,
     FormList* request,
     Str* uname, Str* pwd)

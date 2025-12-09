@@ -1,4 +1,5 @@
 #pragma once
+#include "ReadTokenStatus.h"
 #include "Line.h"
 #include "anchor.h"
 #include "textlist.h"
@@ -85,7 +86,7 @@ struct readbuffer {
     long flag;
     long flag_stack[RB_STACK_SIZE];
     int flag_sp;
-    int status;
+    enum ReadTokenStatus status;
     unsigned char end_tag;
     unsigned char q_level;
     short table_level;
@@ -132,8 +133,8 @@ void restore_fonteffect(struct html_feed_environ* h_env,
     struct readbuffer* obuf);
 struct HtmlTag;
 int HTMLtagproc1(struct HtmlTag* tag, struct html_feed_environ* h_env);
-void HTMLlineproc0(char* istr, struct html_feed_environ* h_env, int internal);
-inline static void HTMLlineproc1(char* x, struct html_feed_environ* y) { HTMLlineproc0(x, y, true); }
+void HTMLlineproc0(const char* istr, struct html_feed_environ* h_env, int internal);
+inline static void HTMLlineproc1(const char* x, struct html_feed_environ* y) { HTMLlineproc0(x, y, true); }
 void init_henv(struct html_feed_environ*, struct readbuffer*,
     struct environment*, int, TextLineList*, int, int);
 void completeHTMLstream(struct html_feed_environ*,

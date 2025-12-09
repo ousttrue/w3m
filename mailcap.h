@@ -25,7 +25,7 @@ int mailcapMatch(struct mailcap* mcap, char* type);
 struct mailcap* searchMailcap(struct mailcap* table, char* type);
 void initMailcap(void);
 char* acceptableMimeTypes(void);
-struct mailcap* searchExtViewer(char* type);
+struct mailcap* searchExtViewer(const char* type);
 Str unquote_mailcap(const char* qstr, const char* type, const char* name, const char* attr,
     int* mc_stat);
 

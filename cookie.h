@@ -76,4 +76,4 @@ void cooLst(void);
 struct Buffer* cookie_list_panel(void);
 struct KeyValueList;
 void set_cookie_flag(struct KeyValueList* arg);
-int check_cookie_accept_domain(char* domain);
+int check_cookie_accept_domain(const char* domain);

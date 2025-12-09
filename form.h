@@ -41,14 +41,14 @@ typedef struct form_list {
     struct form_item_list* lastitem;
     int method;
     Str action;
-    char* target;
-    char* name;
+    const char* target;
+    const char* name;
     wc_ces charset;
     int enctype;
     struct form_list* next;
     int nitems;
-    char* body;
-    char* boundary;
+    const char* body;
+    const char* boundary;
     unsigned long length;
 } FormList;
 

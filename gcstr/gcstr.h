@@ -31,7 +31,7 @@ Str url_quote(const char* str);
 Str url_quote_conv(const char* x, wc_ces c);
 
 char* html_quote(const char* str);
-char* html_unquote(char* str);
+char* html_unquote(const char* str);
 char* file_quote(char* str);
 char* file_unquote(const char* str);
 Str Str_url_unquote(Str x, int is_form, int safe);

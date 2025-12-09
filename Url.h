@@ -54,5 +54,5 @@ char* url_decode2(const char* url, wc_ces url_charset);
 char* url_unquote_conv(const char* url, wc_ces charset);
 char* schemeNumToName(int scheme);
 enum UrlScheme getURLScheme(const char** url);
-char* filename_extension(char* patch, int is_url);
+char* filename_extension(const char* patch, int is_url);
 struct Url* schemeToProxy(int scheme);

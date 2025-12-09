@@ -44,15 +44,15 @@ struct ImageCache {
 };
 
 struct Image {
-    char* url;
-    char* ext;
+    const char* url;
+    const char* ext;
     short width;
     short height;
     short xoffset;
     short yoffset;
     short y;
     short rows;
-    char* map;
+    const char* map;
     char ismap;
     int touch;
     struct ImageCache* cache;

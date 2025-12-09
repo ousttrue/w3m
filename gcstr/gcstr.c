@@ -350,7 +350,7 @@ char* html_quote(const char* str)
     return str;
 }
 
-char* html_unquote(char* str)
+char* html_unquote(const char* str)
 {
     Str tmp = NULL;
     char *p;

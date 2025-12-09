@@ -185,7 +185,6 @@ struct Buffer* getpipe(char* cmd);
 struct Buffer* openPagerBuffer(union input_stream* stream, struct Buffer* buf);
 struct Buffer* openGeneralPagerBuffer(union input_stream* stream);
 struct Line* getNextPage(struct Buffer* buf, int plen);
-struct Buffer* doExternal(struct URLFile uf, char* type, struct Buffer* defaultbuf);
 void readHeader(struct URLFile* uf, struct Buffer* newBuf, int thru, struct Url* pu);
 char* checkHeader(struct Buffer* buf, char* field);
 TabBuffer* newTab(void);
@@ -246,18 +245,18 @@ void resetFrameElement(union frameset_element* f_element, struct Buffer* buf,
     char* referer, struct form_list* request);
 struct Buffer* renderFrame(struct Buffer* Cbuf, int force_reload);
 struct Url* baseURL(struct Buffer* buf);
-Anchor* registerHref(struct Buffer* buf, char* url, char* target,
-    char* referer, char* title, unsigned char key,
+Anchor* registerHref(struct Buffer* buf, const char* url, const char* target,
+    const char* referer, const char* title, unsigned char key,
     int line, int pos);
 Anchor* registerName(struct Buffer* buf, char* url, int line, int pos);
-Anchor* registerImg(struct Buffer* buf, char* url, char* title, int line,
+Anchor* registerImg(struct Buffer* buf, const char* url, const char* title, int line,
     int pos);
 Anchor* registerForm(struct Buffer* buf, struct form_list* flist,
     struct HtmlTag* tag, int line, int pos);
 Anchor* retrieveCurrentAnchor(struct Buffer* buf);
 Anchor* retrieveCurrentImg(struct Buffer* buf);
 Anchor* retrieveCurrentForm(struct Buffer* buf);
-Anchor* searchURLLabel(struct Buffer* buf, char* url);
+Anchor* searchURLLabel(struct Buffer* buf, const char* url);
 void reAnchorWord(struct Buffer* buf, struct Line* l, int spos, int epos);
 char* reAnchor(struct Buffer* buf, char* re);
 char* reAnchorNews(struct Buffer* buf, char* re);
@@ -267,7 +266,6 @@ void addMultirowsImg(struct Buffer* buf, AnchorList* al);
 char* getAnchorText(struct Buffer* buf, AnchorList* al, Anchor* a);
 struct Buffer* link_list_panel(struct Buffer* buf);
 char* last_modified(struct Buffer* buf);
-char* guess_save_name(struct Buffer* buf, char* file);
 void saveBufferInfo(void);
 wc_ces urlCharset(struct Buffer* buf, const char* url);
 struct KeyValueList;

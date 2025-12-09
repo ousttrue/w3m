@@ -4,9 +4,7 @@
 #include "signal_jmp.h"
 #include "tui.h"
 #include "term_entry.h"
-#include "screen.h"
 #include "news.h"
-#include "search.h"
 #include "mimetype.h"
 #include "terms.h"
 #include "symbol.h"
@@ -17,13 +15,10 @@
 #include "func.h"
 #include "frame.h"
 #include "mailcap.h"
-#include "history.h"
 #include "mimehead.h"
 #include "display.h"
 #include "image.h"
-#include "linein.h"
 #include "table.h"
-#include "DownloadList.h"
 #include "html_feed.h"
 #include "buffer.h"
 #include "HttpRequest.h"
@@ -38,10 +33,8 @@
 #include "html.h"
 #include "HtmlTag.h"
 #include "local_cgi.h"
-#include "regex.h"
 #include <sys/types.h>
 #include <gcstr/myctype.h>
-#include <signal.h>
 #include <setjmp.h>
 #include <sys/wait.h>
 #include <stdio.h>
@@ -100,7 +93,7 @@ static Str cur_option;
 static Str cur_option_value;
 static Str cur_option_label;
 static int cur_option_selected;
-static int cur_status;
+static enum ReadTokenStatus cur_status;
 /* menu based <select>  */
 FormSelectOption* select_option;
 int max_select = MAX_SELECT;
@@ -448,7 +441,8 @@ Str convertLine(struct URLFile* uf, Str line, int mode, wc_ces* charset,
 
 void readHeader(struct URLFile* uf, struct Buffer* newBuf, int thru, struct Url* pu)
 {
-    char *p, *q;
+    const char* p;
+    const char* q;
     char* emsg;
     char c;
     Str lineBuf2 = NULL;
@@ -669,7 +663,7 @@ void readHeader(struct URLFile* uf, struct Buffer* newBuf, int thru, struct Url*
                 err = add_cookie(pu, name, value, expires, domain, path, flag,
                     comment, version, port, commentURL);
                 if (err) {
-                    char* ans = (accept_bad_cookie == ACCEPT_BAD_COOKIE_ACCEPT)
+                    const char* ans = (accept_bad_cookie == ACCEPT_BAD_COOKIE_ACCEPT)
                         ? "y"
                         : NULL;
                     if ((err & COO_OVERRIDE_OK) && accept_bad_cookie == ACCEPT_BAD_COOKIE_ASK) {
@@ -751,9 +745,8 @@ char* checkHeader(struct Buffer* buf, char* field)
 static char*
 checkContentType(struct Buffer* buf)
 {
-    char* p;
     Str r;
-    p = checkHeader(buf, "Content-Type:");
+    const char* p = checkHeader(buf, "Content-Type:");
     if (p == NULL)
         return NULL;
     r = Strnew();
@@ -825,6 +818,97 @@ Str getLinkNumberStr(int correction)
 /*
  * loadGeneralFile: load file to buffer
  */
+static struct Buffer*
+doExternal(struct URLFile uf, const char* type, struct Buffer* defaultbuf)
+{
+    Str tmpf, command;
+    struct mailcap* mcap;
+    int mc_stat;
+    struct Buffer* buf = NULL;
+    char* header;
+    const char* src = NULL;
+    const char* ext = uf.ext;
+
+    if (!(mcap = searchExtViewer(type)))
+        return NULL;
+
+    if (mcap->nametemplate) {
+        tmpf = unquote_mailcap(mcap->nametemplate, NULL, "", NULL, NULL);
+        if (tmpf->ptr[0] == '.')
+            ext = tmpf->ptr;
+    }
+    tmpf = tmpfname(TMPF_DFL, (ext && *ext) ? ext : NULL);
+
+    if (IStype(uf.stream) != IST_ENCODED)
+        uf.stream = newEncodedStream(uf.stream, uf.encoding);
+    header = checkHeader(defaultbuf, "Content-Type:");
+    if (header)
+        header = conv_to_system(header);
+    command = unquote_mailcap(mcap->viewer, type, tmpf->ptr, header, &mc_stat);
+    if (!(mc_stat & MCSTAT_REPNAME)) {
+        Str tmp = Sprintf("(%s) < %s", command->ptr, shell_quote(tmpf->ptr));
+        command = tmp;
+    }
+
+    if (!(mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)) && !(mcap->flags & MAILCAP_NEEDSTERMINAL) && BackgroundExtViewer) {
+        tty_flush();
+        if (!fork()) {
+            tui_setup_child(false, 0, UFfileno(&uf));
+            if (save2tmp(&uf, tmpf->ptr) < 0)
+                exit(1);
+            UFclose(&uf);
+            myExec(command->ptr);
+        }
+        return NO_BUFFER;
+    } else {
+        if (save2tmp(&uf, tmpf->ptr) < 0) {
+            return NULL;
+        }
+    }
+    if (mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)) {
+        if (defaultbuf == NULL)
+            defaultbuf = newBuffer(INIT_BUFFER_WIDTH);
+        if (defaultbuf->sourcefile)
+            src = defaultbuf->sourcefile;
+        else
+            src = tmpf->ptr;
+        defaultbuf->sourcefile = NULL;
+        defaultbuf->mailcap = mcap;
+    }
+    if (mcap->flags & MAILCAP_HTMLOUTPUT) {
+        buf = loadcmdout(command->ptr, loadHTMLBuffer, defaultbuf);
+        if (buf && buf != NO_BUFFER) {
+            buf->type = "text/html";
+            buf->mailcap_source = buf->sourcefile;
+            buf->sourcefile = src;
+        }
+    } else if (mcap->flags & MAILCAP_COPIOUSOUTPUT) {
+        buf = loadcmdout(command->ptr, loadBuffer, defaultbuf);
+        if (buf && buf != NO_BUFFER) {
+            buf->type = "text/plain";
+            buf->mailcap_source = buf->sourcefile;
+            buf->sourcefile = src;
+        }
+    } else {
+        if (mcap->flags & MAILCAP_NEEDSTERMINAL || !BackgroundExtViewer) {
+            tui_exit();
+            mySystem(command->ptr, 0);
+            tui_enter();
+            if (CurrentTab && Currentbuf)
+                displayBuffer(Currentbuf, B_FORCE_REDRAW);
+        } else {
+            mySystem(command->ptr, 1);
+        }
+        buf = NO_BUFFER;
+    }
+    if (buf && buf != NO_BUFFER) {
+        if ((buf->buffername == NULL || buf->buffername[0] == '\0') && buf->filename)
+            buf->buffername = conv_from_system(lastFileName(buf->filename)->ptr);
+        buf->edit = mcap->edit;
+        buf->mailcap = mcap;
+    }
+    return buf;
+}
 #define DO_EXTERNAL ((struct Buffer * (*)(struct URLFile*, struct Buffer*)) doExternal)
 struct Buffer*
 loadGeneralFile(char* path, struct Url* volatile current, char* referer,
@@ -835,14 +919,14 @@ loadGeneralFile(char* path, struct Url* volatile current, char* referer,
     struct Buffer* b = NULL;
     struct Buffer* (*volatile proc)(struct URLFile*, struct Buffer*) = loadBuffer;
     char* volatile tpath;
-    char* volatile t = "text/plain", *p, * volatile real_type = NULL;
+    const char* volatile t = "text/plain", *p, * volatile real_type = NULL;
     struct Buffer* volatile t_buf = NULL;
     int volatile searchHeader = SearchHeader;
     int volatile searchHeader_through = true;
     MySignalHandler prevtrap = NULL;
     TextList* extra_header = newTextList();
     Str uname = NULL;
-    volatile Str pwd = NULL;
+    Str pwd = NULL;
     volatile Str realm = NULL;
     int volatile add_auth_cookie_flag;
     unsigned char status = HTST_NORMAL;
@@ -1082,7 +1166,7 @@ load_doc:
     } else if (pu.scheme == SCM_FTP) {
         check_compression(path, &f);
         if (f.compression != CMP_NOCOMPRESS) {
-            char* t1 = uncompressed_file_type(pu.file, NULL);
+            const char* t1 = uncompressed_file_type(pu.file, NULL);
             real_type = f.guess_type;
             if (t1)
                 t = t1;
@@ -1517,7 +1601,7 @@ push_tag(struct readbuffer* obuf, char* cmdname, int cmd)
 
 static void
 push_nchars(struct readbuffer* obuf, int width,
-    char* str, int len, Lineprop mode)
+    const char* str, int len, Lineprop mode)
 {
     append_tags(obuf);
     Strcat_charp_n(obuf->line, str, len);
@@ -1536,7 +1620,7 @@ push_nchars(struct readbuffer* obuf, int width,
     push_nchars(obuf, width, str->ptr, str->length, mode)
 
 static void
-check_breakpoint(struct readbuffer* obuf, int pre_mode, char* ch)
+check_breakpoint(struct readbuffer* obuf, int pre_mode, const char* ch)
 {
     int tlen, len = obuf->line->length;
 
@@ -1581,7 +1665,7 @@ push_spaces(struct readbuffer* obuf, int pre_mode, int width)
 
 static void
 proc_mchar(struct readbuffer* obuf, int pre_mode,
-    int width, char** str, Lineprop mode)
+    int width, const char** str, Lineprop mode)
 {
     check_breakpoint(obuf, pre_mode, *str);
     obuf->pos += width;
@@ -1639,7 +1723,7 @@ passthrough(struct readbuffer* obuf, char* str, int back)
     while (*str) {
         str_bak = str;
         if (sloppy_parse_line(&str)) {
-            char* q = str_bak;
+            const char* q = str_bak;
             cmd = gethtmlcmd(&q);
             if (back) {
                 struct link_stack* p;
@@ -1883,7 +1967,7 @@ void flushline(struct html_feed_environ* h_env, struct readbuffer* obuf, int ind
             Strcat_charp(tmp, html_quote(obuf->anchor.title));
         }
         if (obuf->anchor.accesskey) {
-            char* c = html_quote_char(obuf->anchor.accesskey);
+            const char* c = html_quote_char(obuf->anchor.accesskey);
             Strcat_charp(tmp, "\" ACCESSKEY=\"");
             if (c)
                 Strcat_charp(tmp, c);
@@ -2087,7 +2171,7 @@ process_n_title(struct HtmlTag* tag)
 }
 
 static void
-feed_title(char* str)
+feed_title(const char* str)
 {
     if (pre_title)
         return;
@@ -2095,7 +2179,7 @@ feed_title(char* str)
         return;
     while (*str) {
         if (*str == '&')
-            Strcat_charp(cur_title, getescapecmd(&str));
+            Strcat_charp(cur_title, getescapecmd(&str)->ptr);
         else if (*str == '\n' || *str == '\r') {
             Strcat_char(cur_title, ' ');
             str++;
@@ -2106,7 +2190,7 @@ feed_title(char* str)
 
 Str process_img(struct HtmlTag* tag, int width)
 {
-    char *p, *q, *r, *r2 = NULL, *s, *t;
+    char *p, *q, *r, *r2 = NULL, *t;
     int w, i, nw, ni = 1, n, w0 = -1, i0 = -1;
     int align, xoffset, yoffset, top, bottom, ismap = 0;
     int use_image = activeImage && displayImage;
@@ -2182,7 +2266,7 @@ Str process_img(struct HtmlTag* tag, int width)
     if (r) {
         Str tmp2;
         r2 = strchr(r, '#');
-        s = "<form_int method=internal action=map>";
+        const char* s = "<form_int method=internal action=map>";
         tmp2 = process_form(parse_tag(&s, true));
         if (tmp2)
             Strcat(tmp, tmp2);
@@ -2425,7 +2509,7 @@ Str process_input(struct HtmlTag* tag)
     int qlen = 0;
 
     if (cur_form_id < 0) {
-        char* s = "<form_int method=internal action=none>";
+        const char* s = "<form_int method=internal action=none>";
         tmp = process_form(parse_tag(&s, true));
     }
     if (tmp == NULL)
@@ -2608,7 +2692,7 @@ Str process_button(struct HtmlTag* tag)
     int v;
 
     if (cur_form_id < 0) {
-        char* s = "<form_int method=internal action=none>";
+        const char* s = "<form_int method=internal action=none>";
         tmp = process_form(parse_tag(&s, true));
     }
     if (tmp == NULL)
@@ -2672,7 +2756,7 @@ Str process_select(struct HtmlTag* tag)
     char* p;
 
     if (cur_form_id < 0) {
-        char* s = "<form_int method=internal action=none>";
+        const char* s = "<form_int method=internal action=none>";
         tmp = process_form(parse_tag(&s, true));
     }
 
@@ -2724,22 +2808,21 @@ Str process_n_select(void)
     return select_str;
 }
 
-void feed_select(char* str)
+void feed_select(const char* str)
 {
     Str tmp = Strnew();
-    int prev_status = cur_status;
+    enum ReadTokenStatus prev_status = cur_status;
     static int prev_spaces = -1;
-    char* p;
 
     if (cur_select == NULL)
         return;
     while (read_token(tmp, &str, &cur_status, 0, 0)) {
         if (cur_status != R_ST_NORMAL || prev_status != R_ST_NORMAL)
             continue;
-        p = tmp->ptr;
+        const char* p = tmp->ptr;
         if (tmp->ptr[0] == '<' && Strlastchar(tmp) == '>') {
             struct HtmlTag* tag;
-            char* q;
+            const char* q;
             if (!(tag = parse_tag(&p, false)))
                 continue;
             switch (tag->tagid) {
@@ -2776,7 +2859,7 @@ void feed_select(char* str)
                     else
                         prev_spaces = 0;
                     if (*p == '&')
-                        Strcat_charp(cur_option, getescapecmd(&p));
+                        Strcat_charp(cur_option, getescapecmd(&p)->ptr);
                     else
                         Strcat_char(cur_option, *(p++));
                 }
@@ -2832,7 +2915,7 @@ Str process_textarea(struct HtmlTag* tag, int width)
 #define TEXTAREA_ATTR_ROWS_MAX 4096
 
     if (cur_form_id < 0) {
-        char* s = "<form_int method=internal action=none>";
+        const char* s = "<form_int method=internal action=none>";
         tmp = process_form(parse_tag(&s, true));
     }
 
@@ -2896,7 +2979,7 @@ Str process_n_textarea(void)
     return tmp;
 }
 
-void feed_textarea(char* str)
+void feed_textarea(const char* str)
 {
     if (cur_textarea == NULL)
         return;
@@ -2909,7 +2992,7 @@ void feed_textarea(char* str)
     ignore_nl_textarea = false;
     while (*str) {
         if (*str == '&')
-            Strcat_charp(textarea_str[n_textarea], getescapecmd(&str));
+            Strcat_charp(textarea_str[n_textarea], getescapecmd(&str)->ptr);
         else if (*str == '\n') {
             Strcat_charp(textarea_str[n_textarea], "\r\n");
             str++;
@@ -3177,10 +3260,9 @@ ul_type(struct HtmlTag* tag, int default_type)
     return default_type;
 }
 
-int getMetaRefreshParam(char* q, Str* refresh_uri)
+int getMetaRefreshParam(const char* q, Str* refresh_uri)
 {
     int refresh_interval;
-    char* r;
     Str s_tmp = NULL;
 
     if (q == NULL || refresh_uri == NULL)
@@ -3195,7 +3277,7 @@ int getMetaRefreshParam(char* q, Str* refresh_uri)
             q += 4;
             if (*q == '\"' || *q == '\'') /* " or ' */
                 q++;
-            r = q;
+            const char* r = q;
             while (*r && !IS_SPACE(*r) && *r != ';')
                 r++;
             s_tmp = Strnew_charp_n(q, r - q);
@@ -4291,7 +4373,7 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
     static Lineprop* outp = NULL;
     static int out_size = 0;
     Anchor *a_href = NULL, *a_img = NULL, *a_form = NULL;
-    char *p, *q, *r, *s, *t, *str;
+    const char *p, *q, *r, *s, *t, *str;
     Lineprop mode, effect, ex_effect;
     int pos;
     int nlines;
@@ -4301,7 +4383,7 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
     char* id = NULL;
     int hseq, form_id;
     Str line;
-    char* endp;
+    const char* endp;
     char symbol = '\0';
     int internal = 0;
     Anchor** a_textarea = NULL;
@@ -4383,7 +4465,7 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
                 /*
                  * & escape processing
                  */
-                p = getescapecmd(&str);
+                p = getescapecmd(&str)->ptr;
                 while (*p) {
                     PSIZE;
                     mode = get_mctype((unsigned char*)p);
@@ -4823,6 +4905,9 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
                 case HTML_N_SYMBOL:
                     effect &= ~PC_SYMBOL;
                     break;
+
+                default:
+                    break;
                 }
                 id = NULL;
                 if (parsedtag_get_value(tag, ATTR_ID, &id)) {
@@ -4933,9 +5018,9 @@ HTMLlineproc3(struct Buffer* buf, union input_stream* stream)
 }
 
 static void
-proc_escape(struct readbuffer* obuf, char** str_return)
+proc_escape(struct readbuffer* obuf, const char** str_return)
 {
-    char *str = *str_return, *estr;
+    const char *str = *str_return, *estr;
     int ech = getescapechar(str_return);
     int width, n_add = *str_return - str;
     Lineprop mode = PC_ASCII;
@@ -4997,7 +5082,7 @@ table_width(struct html_feed_environ* h_env, int table_level)
 }
 
 /* HTML processing first pass */
-void HTMLlineproc0(char* line, struct html_feed_environ* h_env, int internal)
+void HTMLlineproc0(const char* line, struct html_feed_environ* h_env, int internal)
 {
     Lineprop mode;
     int cmd;
@@ -5021,7 +5106,7 @@ table_start:
     }
 
     while (*line != '\0') {
-        char *str, *p;
+        const char *str, *p;
         int is_tag = false;
         int pre_mode = (obuf->table_level >= 0 && tbl_mode) ? tbl_mode->pre_mode : obuf->flag;
         int end_tag = (obuf->table_level >= 0 && tbl_mode) ? tbl_mode->end_tag : obuf->end_tag;
@@ -5196,7 +5281,7 @@ table_start:
             if (obuf->flag & (RB_SPECIAL & ~RB_NOBR)) {
                 char ch = *str;
                 if (!(obuf->flag & RB_PLAIN) && (*str == '&')) {
-                    char* p = str;
+                    const char* p = str;
                     int ech = getescapechar(&p);
                     if (ech == '\n' || ech == '\r') {
                         ch = '\n';
@@ -5227,7 +5312,7 @@ table_start:
                         != 0);
                     str++;
                 } else if (obuf->flag & RB_PLAIN) {
-                    char* p = html_quote_char(*str);
+                    const char* p = html_quote_char(*str);
                     if (p) {
                         push_charp(obuf, 1, p, PC_ASCII);
                         str++;
@@ -6433,97 +6518,7 @@ _end:
     return retval;
 }
 
-struct Buffer*
-doExternal(struct URLFile uf, char* type, struct Buffer* defaultbuf)
-{
-    Str tmpf, command;
-    struct mailcap* mcap;
-    int mc_stat;
-    struct Buffer* buf = NULL;
-    char *header, *src = NULL, *ext = uf.ext;
-
-    if (!(mcap = searchExtViewer(type)))
-        return NULL;
-
-    if (mcap->nametemplate) {
-        tmpf = unquote_mailcap(mcap->nametemplate, NULL, "", NULL, NULL);
-        if (tmpf->ptr[0] == '.')
-            ext = tmpf->ptr;
-    }
-    tmpf = tmpfname(TMPF_DFL, (ext && *ext) ? ext : NULL);
-
-    if (IStype(uf.stream) != IST_ENCODED)
-        uf.stream = newEncodedStream(uf.stream, uf.encoding);
-    header = checkHeader(defaultbuf, "Content-Type:");
-    if (header)
-        header = conv_to_system(header);
-    command = unquote_mailcap(mcap->viewer, type, tmpf->ptr, header, &mc_stat);
-    if (!(mc_stat & MCSTAT_REPNAME)) {
-        Str tmp = Sprintf("(%s) < %s", command->ptr, shell_quote(tmpf->ptr));
-        command = tmp;
-    }
-
-    if (!(mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)) && !(mcap->flags & MAILCAP_NEEDSTERMINAL) && BackgroundExtViewer) {
-        tty_flush();
-        if (!fork()) {
-            tui_setup_child(false, 0, UFfileno(&uf));
-            if (save2tmp(&uf, tmpf->ptr) < 0)
-                exit(1);
-            UFclose(&uf);
-            myExec(command->ptr);
-        }
-        return NO_BUFFER;
-    } else {
-        if (save2tmp(&uf, tmpf->ptr) < 0) {
-            return NULL;
-        }
-    }
-    if (mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)) {
-        if (defaultbuf == NULL)
-            defaultbuf = newBuffer(INIT_BUFFER_WIDTH);
-        if (defaultbuf->sourcefile)
-            src = defaultbuf->sourcefile;
-        else
-            src = tmpf->ptr;
-        defaultbuf->sourcefile = NULL;
-        defaultbuf->mailcap = mcap;
-    }
-    if (mcap->flags & MAILCAP_HTMLOUTPUT) {
-        buf = loadcmdout(command->ptr, loadHTMLBuffer, defaultbuf);
-        if (buf && buf != NO_BUFFER) {
-            buf->type = "text/html";
-            buf->mailcap_source = buf->sourcefile;
-            buf->sourcefile = src;
-        }
-    } else if (mcap->flags & MAILCAP_COPIOUSOUTPUT) {
-        buf = loadcmdout(command->ptr, loadBuffer, defaultbuf);
-        if (buf && buf != NO_BUFFER) {
-            buf->type = "text/plain";
-            buf->mailcap_source = buf->sourcefile;
-            buf->sourcefile = src;
-        }
-    } else {
-        if (mcap->flags & MAILCAP_NEEDSTERMINAL || !BackgroundExtViewer) {
-            tui_exit();
-            mySystem(command->ptr, 0);
-            tui_enter();
-            if (CurrentTab && Currentbuf)
-                displayBuffer(Currentbuf, B_FORCE_REDRAW);
-        } else {
-            mySystem(command->ptr, 1);
-        }
-        buf = NO_BUFFER;
-    }
-    if (buf && buf != NO_BUFFER) {
-        if ((buf->buffername == NULL || buf->buffername[0] == '\0') && buf->filename)
-            buf->buffername = conv_from_system(lastFileName(buf->filename)->ptr);
-        buf->edit = mcap->edit;
-        buf->mailcap = mcap;
-    }
-    return buf;
-}
-
-void uncompress_stream(struct URLFile* uf, char** src)
+void uncompress_stream(struct URLFile* uf, const char** src)
 {
     pid_t pid1;
     FILE* f1;
@@ -6662,7 +6657,7 @@ lessopen_stream(char* path)
     return fp;
 }
 
-char* guess_save_name(struct Buffer* buf, char* path)
+char* guess_save_name(struct Buffer* buf, const char* path)
 {
     if (buf && buf->document_header) {
         Str name = NULL;

@@ -71,4 +71,4 @@ void deleteFrameSet(struct frameset* f);
 void deleteFrameSetElement(union frameset_element e);
 struct frameset* copyFrameSet(struct frameset* of);
 struct frameset* popFrameTree(struct frameset_queue** fqpp);
-union frameset_element* search_frame(struct frameset* fset, char* name);
+union frameset_element* search_frame(struct frameset* fset, const char* name);

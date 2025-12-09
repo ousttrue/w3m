@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-Str loadLocalDir(char* dname)
+Str loadLocalDir(const char* dname)
 {
     Str tmp;
     DIR* d;

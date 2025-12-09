@@ -884,7 +884,7 @@ domain_match(char* pat, char* domain)
     }
 }
 
-int check_no_proxy(char* domain)
+int check_no_proxy(const char* domain)
 {
     TextListItem* tl;
     volatile int ret = 0;

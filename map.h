@@ -27,4 +27,4 @@ struct MapList {
 
 struct Buffer;
 struct MapList* searchMapList(struct Buffer* buf, const char* name);
-struct MapArea* newMapArea(char* url, char* target, char* alt, char* shape, char* coords);
+struct MapArea* newMapArea(const char* url, const char* target, const char* alt, const char* shape, const char* coords);
