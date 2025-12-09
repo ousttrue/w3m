@@ -10,7 +10,6 @@
 #include "dns_order.h"
 #include "cookie.h"
 #include "display.h"
-#include "istream.h"
 #include "terms.h"
 #include <unistd.h>
 #include <sys/types.h>

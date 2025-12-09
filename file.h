@@ -1,6 +1,6 @@
 #pragma once
 #include "Url.h"
-#include "istream.h"
+#include "input_stream.h"
 #include <wc/wc.h>
 #include <gcstr.h>
 

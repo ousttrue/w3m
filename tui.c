@@ -13,9 +13,7 @@
 #include "indep.h"
 #include "linein.h"
 #include "history.h"
-#include "istream.h"
 #include "html.h"
-// tmpfname
 #include "etc.h"
 #include <gcstr.h>
 #include <fcntl.h>

@@ -12,7 +12,6 @@
 #include "w3m_runtime.h"
 #include "indep.h"
 #include "display.h"
-#include "istream.h"
 #include <unistd.h>
 
 #define IS_EMPTY_PARSED_URL(pu) ((pu)->scheme == SCM_UNKNOWN && !(pu)->file)

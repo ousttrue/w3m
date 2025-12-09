@@ -7,7 +7,6 @@
 #include "terms.h"
 #include "buffer.h"
 #include "linein.h"
-#include "istream.h"
 #include "fm.h"
 #include "w3m_runtime.h"
 #include "html.h"

@@ -1,3 +1,4 @@
+#include "input_stream.h"
 #include "Url.h"
 #include "w3m_runtime.h"
 #include "signal_jmp.h"
@@ -12,7 +13,6 @@
 #include "file.h"
 #include "display.h"
 #include "html.h"
-#include "istream.h"
 #include "indep.h"
 #include "mimehead.h"
 #include "dns_order.h"

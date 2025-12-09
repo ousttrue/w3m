@@ -2,7 +2,7 @@
 #include "term_entry.h"
 #include "fm.h"
 #include "w3m_runtime.h"
-#include "istream.h"
+#include "input_stream.h"
 #include <wc/wc.h>
 #include <wc/wtf.h>
 

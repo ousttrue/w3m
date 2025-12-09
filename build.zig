@@ -54,7 +54,7 @@ const w3m_srcs = [_][]const u8{
 
     "anchor.c",
     "tagtable.c",
-    "istream.c",
+    "input_stream.c",
 
     "indep.c",
     "textlist.c",
