@@ -32,10 +32,12 @@ static inline bool IS_XDIGIT(uint8_t x) { return (GET_MYCTYPE(x) & MYCTYPE_XDIGI
 static inline uint8_t TOLOWER(uint8_t x) { return (IS_ALPHA(x) ? ((x) | 0x20) : (x)); }
 static inline uint8_t TOUPPER(uint8_t x) { return (IS_ALPHA(x) ? ((x) & ~0x20) : (x)); }
 
-static inline void SKIP_BLANKS(const char** p)
+static inline const char* skip_blanks(const char* _p)
 {
-    while (*(*p) && IS_SPACE(*(*p)))
-        (*p)++;
+    const char* p = _p;
+    while (*p && IS_SPACE(*p))
+        ++p;
+    return p;
 }
 
 static inline void SKIP_NON_BLANKS(char** p)

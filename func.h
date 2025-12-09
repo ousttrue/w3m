@@ -25,4 +25,4 @@ int getKey(const char* s);
 char* getKeyData(int key);
 struct regex;
 char* getRegexWord(const char** str, struct regex** regex_ret);
-void setKeymap(char* p, int lineno, int verbose);
+void setKeymap(const char* p, int lineno, int verbose);

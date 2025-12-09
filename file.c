@@ -519,7 +519,7 @@ void readHeader(struct URLFile* uf, struct Buffer* newBuf, int thru, struct Url*
                 Str src = NULL;
                 if (!strncasecmp(tmp->ptr, "X-Image-URL:", 12)) {
                     const char* tmpf = &tmp->ptr[12];
-                    SKIP_BLANKS(&tmpf);
+                    tmpf = skip_blanks(tmpf);
                     src = Strnew_m_charp("<img src=\"", html_quote(tmpf),
                         "\" alt=\"X-Image-URL\">", NULL);
                 }
@@ -594,13 +594,13 @@ void readHeader(struct URLFile* uf, struct Buffer* newBuf, int thru, struct Url*
                 p = lineBuf2->ptr + 11;
                 version = 0;
             }
-            SKIP_BLANKS(&p);
+            p = skip_blanks(p);
             while (*p != '=' && !IS_ENDT(*p))
                 Strcat_char(name, *(p++));
             Strremovetrailingspaces(name);
             if (*p == '=') {
                 p++;
-                SKIP_BLANKS(&p);
+                p = skip_blanks(p);
                 quoted = 0;
                 while (!IS_ENDL(*p) && (quoted || *p != ';')) {
                     if (!IS_SPACE(*p))
@@ -614,7 +614,7 @@ void readHeader(struct URLFile* uf, struct Buffer* newBuf, int thru, struct Url*
             }
             while (*p == ';') {
                 p++;
-                SKIP_BLANKS(&p);
+                p = skip_blanks(p);
                 if (matchattr(p, "expires", 7, &tmp2)) {
                     /* version 0 */
                     expires = mymktime(tmp2->ptr);
@@ -702,10 +702,10 @@ void readHeader(struct URLFile* uf, struct Buffer* newBuf, int thru, struct Url*
             int f;
 
             p = lineBuf2->ptr + 12;
-            SKIP_BLANKS(&p);
+            p = skip_blanks(p);
             while (*p && !IS_SPACE(*p))
                 Strcat_char(funcname, *(p++));
-            SKIP_BLANKS(&p);
+            p = skip_blanks(p);
             f = getFuncList(funcname->ptr);
             if (f >= 0) {
                 tmp = Strnew_charp(p);
@@ -754,10 +754,10 @@ checkContentType(struct Buffer* buf)
         Strcat_char(r, *p++);
     if ((p = strcasestr(p, "charset")) != NULL) {
         p += 7;
-        SKIP_BLANKS(&p);
+        p = skip_blanks(p);
         if (*p == '=') {
             p++;
-            SKIP_BLANKS(&p);
+            p = skip_blanks(p);
             if (*p == '"')
                 p++;
             content_charset = wc_guess_charset(p, 0);
@@ -4092,14 +4092,14 @@ int HTMLtagproc1(struct HtmlTag* tag, struct html_feed_environ* h_env)
         parsedtag_get_value(tag, ATTR_CHARSET, &r);
         if (r) {
             /* <meta charset=""> */
-            SKIP_BLANKS(&r);
+            r = skip_blanks(r);
             meta_charset = wc_guess_charset(r, 0);
         } else if (p && q && !strcasecmp(p, "Content-Type") && (q = strcasestr(q, "charset")) != NULL) {
             q += 7;
-            SKIP_BLANKS(&q);
+            q = skip_blanks(q);
             if (*q == '=') {
                 q++;
-                SKIP_BLANKS(&q);
+                q = skip_blanks(q);
                 meta_charset = wc_guess_charset(q, 0);
             }
         } else if (p && q && !strcasecmp(p, "refresh")) {

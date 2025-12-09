@@ -44,7 +44,7 @@ parseFrameSetLength(char* s, char*** ret)
     lv = New_N(char*, i);
 
     for (i = 0, p = s;; ++p) {
-        SKIP_BLANKS(&p);
+        p = skip_blanks(p);
         len = strtol(p, &q, 10);
 
         switch (*q) {
@@ -660,11 +660,11 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
                                 && parsedtag_get_value(tag, ATTR_CONTENT, &q)
                                 && (q = strcasestr(q, "charset")) != NULL) {
                                 q += 7;
-                                SKIP_BLANKS(&q);
+                                q = skip_blanks(q);
                                 if (*q == '=') {
                                     wc_ces c;
                                     q++;
-                                    SKIP_BLANKS(&q);
+                                    q = skip_blanks(q);
                                     if ((c = wc_guess_charset(q, 0)) != 0) {
                                         doc_charset = c;
                                         charset = WC_CES_US_ASCII;

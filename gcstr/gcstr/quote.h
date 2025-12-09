@@ -1,6 +1,6 @@
 #pragma once
 #include "Str.h"
 
-char* getWord(char** str);
-char* getQWord(char** str);
+char* getWord(const char** str);
+char* getQWord(const char** str);
 Str qstr_unquote(Str s);

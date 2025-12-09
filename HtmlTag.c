@@ -117,7 +117,7 @@ struct HtmlTag* parse_tag(const char** s, bool internal)
     const char* q = (*s) + 1;
     if (*q == '/') {
         *(p++) = *(q++);
-        SKIP_BLANKS(&q);
+        q = skip_blanks(q);
     }
     while (*q && !IS_SPACE(*q) && !(tagname[0] != '/' && *q == '/') && *q != '>' && p - tagname < MAX_TAG_LEN - 1) {
         *(p++) = TOLOWER(*q);
@@ -151,7 +151,7 @@ struct HtmlTag* parse_tag(const char** s, bool internal)
     /* Parse tag arguments */
     char attrname[MAX_TAG_LEN];
     // int i, attr_id = 0,
-    SKIP_BLANKS(&q);
+    q = skip_blanks(q);
     while (1) {
         Str value = NULL, value_tmp = NULL;
         if (*q == '>' || *q == '\0')
@@ -164,12 +164,12 @@ struct HtmlTag* parse_tag(const char** s, bool internal)
         *p = '\0';
         while (*q && *q != '=' && !IS_SPACE(*q) && *q != '>')
             q++;
-        SKIP_BLANKS(&q);
+        q = skip_blanks(q);
         if (*q == '=') {
             /* get value */
             value_tmp = Strnew();
             q++;
-            SKIP_BLANKS(&q);
+            q = skip_blanks(q);
             if (*q == '"') {
                 q++;
                 while (*q && *q != '"') {

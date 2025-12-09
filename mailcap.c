@@ -86,12 +86,12 @@ matchMailcapAttr(const char* p, const char* attr, size_t len, Str* value)
 
     if (strncasecmp(p, attr, len) == 0) {
         p += len;
-        SKIP_BLANKS(&p);
+        p = skip_blanks(p);
         if (value) {
             *value = Strnew();
             if (*p == '=') {
                 p++;
-                SKIP_BLANKS(&p);
+                p = skip_blanks(p);
                 quoted = 0;
                 while (*p && (quoted || *p != ';')) {
                     if (quoted || !IS_SPACE(*p))
@@ -125,7 +125,7 @@ extractMailcapEntry(const char* mcap_entry, struct mailcap* mcap)
 
     memset(mcap, 0, sizeof(struct mailcap));
     const char *p = mcap_entry;
-    SKIP_BLANKS(&p);
+    p = skip_blanks(p);
     k = -1;
     for (j = 0; p[j] && p[j] != ';'; j++) {
         if (!IS_SPACE(p[j]))
@@ -136,7 +136,7 @@ extractMailcapEntry(const char* mcap_entry, struct mailcap* mcap)
         return 0;
     p += j + 1;
 
-    SKIP_BLANKS(&p);
+    p = skip_blanks(p);
     k = -1;
     quoted = 0;
     for (j = 0; p[j] && (quoted || p[j] != ';'); j++) {
@@ -152,7 +152,7 @@ extractMailcapEntry(const char* mcap_entry, struct mailcap* mcap)
 
     while (*p == ';') {
         p++;
-        SKIP_BLANKS(&p);
+        p = skip_blanks(p);
         if (matchMailcapAttr(p, "needsterminal", 13, NULL)) {
             mcap->flags |= MAILCAP_NEEDSTERMINAL;
         } else if (matchMailcapAttr(p, "copiousoutput", 13, NULL)) {

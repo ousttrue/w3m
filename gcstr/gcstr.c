@@ -193,12 +193,12 @@ bool matchattr(const char* p, const char* attr, int len, Str* value)
 
     if (strncasecmp(p, attr, len) == 0) {
         p += len;
-        SKIP_BLANKS(&p);
+        p = skip_blanks(p);
         if (value) {
             *value = Strnew();
             if (*p == '=') {
                 p++;
-                SKIP_BLANKS(&p);
+                p = skip_blanks(p);
                 quoted = 0;
                 while (!IS_ENDL(*p) && (quoted || *p != ';')) {
                     if (!IS_SPACE(*p))

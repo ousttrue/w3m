@@ -123,10 +123,10 @@ name_from_address(char* str, int n)
     int l, space = true;
 
     s = allocStr(str, -1);
-    SKIP_BLANKS(&s);
+    s = skip_blanks(s);
     if (*s == '<' && (p = strchr(s, '>'))) {
         *p++ = '\0';
-        SKIP_BLANKS(&p);
+        p = skip_blanks(p);
         if (*p == '\0') /* <address> */
             s++;
         else /* <address> name ? */

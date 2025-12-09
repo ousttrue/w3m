@@ -22,9 +22,9 @@ static char keymap_initialized = false;
 static struct stat sys_current_keymap_file;
 static struct stat current_keymap_file;
 
-void setKeymap(char* p, int lineno, int verbose)
+void setKeymap(const char* p, int lineno, int verbose)
 {
-    char* s = getQWord(&p);
+    const char* s = getQWord(&p);
     int c = getKey(s);
     if (c < 0) { /* error */
         char* emsg;
@@ -121,7 +121,7 @@ interpret_keymap(FILE* kf, struct stat* current, bool force, wc_ces charset, wc_
     int fd;
     struct stat kstat;
     Str line;
-    char *p, *s, *emsg;
+    const char *p, *s, *emsg;
     int lineno;
     int verbose = 1;
 
@@ -354,7 +354,7 @@ char* getRegexWord(const char** str, Regex** regex_ret)
     int igncase = 0;
 
     p = *str;
-    SKIP_BLANKS(&p);
+    p = skip_blanks(p);
     headp = p;
 
     /* Get the opening delimiter */

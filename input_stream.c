@@ -103,6 +103,7 @@ init_buffer(BaseStream base, char* buf, int bufsize)
         sb->next = 0;
     }
     base->iseos = false;
+    base->unclose = false;
 }
 
 static void

@@ -274,7 +274,7 @@ enum HtmlTags gethtmlcmd(const char** s)
     } else
         return HTML_UNKNOWN;
     if (p[-1] == '/')
-        SKIP_BLANKS(s);
+        *s = skip_blanks(*s);
     while ((IS_ALNUM(**s) || **s == '_') && p - cmdstr < MAX_CMD_LEN) {
         *(p++) = TOLOWER(**s);
         (*s)++;
