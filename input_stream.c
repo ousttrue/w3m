@@ -210,7 +210,7 @@ int ISclose(union input_stream* stream)
     if (stream == NULL)
         return -1;
     if (stream->base.close != NULL) {
-        if (stream->base.type & IST_UNCLOSE) {
+        if (stream->base.unclose) {
             return -1;
         }
         prevtrap = mySignal(SIGINT, SIG_IGN);
@@ -339,7 +339,7 @@ int ISfileno(union input_stream* stream)
 {
     if (stream == NULL)
         return -1;
-    switch (IStype(stream) & ~IST_UNCLOSE) {
+    switch (IStype(stream)) {
     case IST_BASIC:
         return *(int*)stream->base.handle;
     case IST_FILE:

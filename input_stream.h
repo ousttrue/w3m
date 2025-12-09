@@ -53,6 +53,7 @@ struct base_stream {
     char iseos;
     int (*read)(void*, void*, int);
     void (*close)(void*);
+    bool unclose;
 };
 
 struct file_stream {
@@ -62,6 +63,7 @@ struct file_stream {
     char iseos;
     int (*read)();
     void (*close)();
+    bool unclose;
 };
 
 struct str_stream {
@@ -71,6 +73,7 @@ struct str_stream {
     char iseos;
     int (*read)();
     void (*close)();
+    bool unclose;
 };
 
 struct ssl_stream {
@@ -80,6 +83,7 @@ struct ssl_stream {
     char iseos;
     int (*read)();
     void (*close)();
+    bool unclose;
 };
 
 struct encoded_stream {
@@ -89,6 +93,7 @@ struct encoded_stream {
     char iseos;
     int (*read)();
     void (*close)();
+    bool unclose;
 };
 
 union input_stream {
@@ -128,18 +133,23 @@ extern Str ssl_get_certificate(SSL* ssl, char* hostname);
 #define IST_STR 2
 #define IST_SSL 3
 #define IST_ENCODED 4
-#define IST_UNCLOSE 0x10
 
 #define IStype(stream) ((stream)->base.type)
-#define is_eos(stream) ISeos(stream)
-#define iseos(stream) ((stream)->base.iseos)
-#define file_of(stream) ((stream)->file.handle->f)
-#define set_close(stream, closep) ((IStype(stream) == IST_FILE) ? ((stream)->file.handle->close = (closep)) : 0)
-#define str_of(stream) ((stream)->str.handle)
-#define ssl_socket_of(stream) ((stream)->ssl.handle->sock)
-#define ssl_of(stream) ((stream)->ssl.handle->ssl)
 
-#define openIS(path) newInputStream(open((path), O_RDONLY))
+static inline bool iseos(union input_stream* stream)
+{
+    return ((stream)->base.iseos);
+}
+
+static inline int ssl_socket_of(union input_stream* stream)
+{
+    return ((stream)->ssl.handle->sock);
+}
+
+static inline union input_stream* openIS(const char* path)
+{
+    return newInputStream(open((path), O_RDONLY));
+}
 
 union input_stream;
 struct URLFile {

@@ -69,7 +69,7 @@ news_close(News* news)
     if (!news->host)
         return;
     if (news->rf) {
-        IStype(news->rf) &= ~IST_UNCLOSE;
+        news->rf->base.unclose = false;
         ISclose(news->rf);
         news->rf = NULL;
     }
@@ -94,7 +94,7 @@ news_open(News* news)
     news->wf = fdopen(fd, "wb");
     if (!news->rf || !news->wf)
         goto open_err;
-    IStype(news->rf) |= IST_UNCLOSE;
+    news->rf->base.unclose = true;
     news_command(news, NULL, NULL, &status);
     if (status != 200 && status != 201)
         goto open_err;
