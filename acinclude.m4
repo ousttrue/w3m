@@ -4,8 +4,8 @@ dnl w3m autoconf macros
 # AC_W3M_VERSION
 # ----------------------------------------------------------------
 AC_DEFUN([AC_W3M_VERSION],
-[AC_SUBST(CURRENT_VERSION)
- CURRENT_VERSION=`sed -n 's/.*define CURRENT_VERSION *"w3m\/\(.*\)".*$/\1/p' version.h`])
+[AC_SUBST(W3M_VERSION)
+ W3M_VERSION=`sed -n 's/.*define W3M_VERSION *"w3m\/\(.*\)".*$/\1/p' version.h`])
 #
 # ----------------------------------------------------------------
 # AC_W3M_COLOR

@@ -1,10 +1,9 @@
 dnl w3m autoconf
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT([w3m],[0.5.5])
+AC_INIT([w3m], m4_esyscmd([sed -n 's/.*define W3M_VERSION *"w3m\/\(.*\)".*$/\1/p' version.h]))
 PACKAGE=w3m
-VERSION=0.5.5
 AC_DEFINE_UNQUOTED(PACKAGE, "$PACKAGE")
-AC_DEFINE_UNQUOTED(VERSION, "$VERSION")
+AC_DEFINE_UNQUOTED(W3M_VERSION, "$W3M_VERSION")
 AC_SUBST(PACKAGE)
 AC_SUBST(VERSION)
 

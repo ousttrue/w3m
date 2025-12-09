@@ -5,7 +5,7 @@
 @SET_MAKE@
 SHELL=@SHELL@
 PACKAGE = @PACKAGE@
-VERSION = @VERSION@
+W3M_VERSION = @W3M_VERSION@
 DOMAIN = $(PACKAGE)
 prefix = @prefix@
 exec_prefix = @exec_prefix@
@@ -90,7 +90,6 @@ HELP_FILE = @HELP_FILE@
 KEYBIND_SRC = @KEYMAP_FILE@.c
 KEYBIND_OBJ = @KEYMAP_FILE@.o
 
-VERSION=@CURRENT_VERSION@
 MODEL=@W3M_TARGET@-@W3M_LANG@
 
 SRCS=main.c file.c buffer.c display.c etc.c search.c linein.c table.c local.c \
@@ -327,8 +326,8 @@ depend:
 	makedepend $(CFLAGS) *.c
 
 dist:
-	git archive --format=tar --prefix=w3m-$(VERSION)/ HEAD | xz -9e > ../w3m-$(VERSION).tar.xz
+	git archive --format=tar --prefix=w3m-$(W3M_VERSION)/ HEAD | xz -9e > ../w3m-$(W3M_VERSION).tar.xz
 
 bindist:
-	cd ..; tar cvfz w3m-$(VERSION)-$(MODEL).tar.gz w3m/w3m* w3m/doc* w3m/Bonus* w3m/README w3m/scripts 
+	cd ..; tar cvfz w3m-$(W3M_VERSION)-$(MODEL).tar.gz w3m/w3m* w3m/doc* w3m/Bonus* w3m/README w3m/scripts
 

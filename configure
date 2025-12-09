@@ -648,7 +648,7 @@ ac_includes_default="\
 ac_header_c_list=
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
-CURRENT_VERSION
+W3M_VERSION
 DOCDIRS
 RC_DIR
 HELP_DIR
@@ -3018,10 +3018,9 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 PACKAGE=w3m
-VERSION=0.5.5
 printf "%s\n" "#define PACKAGE \"$PACKAGE\"" >>confdefs.h
 
-printf "%s\n" "#define VERSION \"$VERSION\"" >>confdefs.h
+printf "%s\n" "#define W3M_VERSION \"$W3M_VERSION\"" >>confdefs.h
 
 
 
@@ -10425,7 +10424,7 @@ printf "%s\n" "#define DOCDIRS \"$DOCDIRS\"" >>confdefs.h
 
 
 
- CURRENT_VERSION=`sed -n 's/.*define CURRENT_VERSION *"w3m\/\(.*\)".*$/\1/p' version.h`
+ W3M_VERSION=`sed -n 's/.*define W3M_VERSION *"w3m\/\(.*\)".*$/\1/p' version.h`
 ac_config_files="$ac_config_files Makefile posubst po/Makefile.in scripts/Makefile scripts/dirlist.cgi scripts/w3mhelp.cgi scripts/w3mmail.cgi scripts/xface2xpm scripts/multipart/Makefile scripts/multipart/multipart.cgi scripts/w3mman/Makefile scripts/w3mman/w3mman scripts/w3mman/w3mman.1 scripts/w3mman/w3mman.de.1 scripts/w3mman/w3mman2html.cgi libwc/Makefile w3mimg/Makefile w3mimg/fb/Makefile w3mimg/x11/Makefile w3mimg/win/Makefile w3mhelp-w3m_en.html w3mhelp-w3m_ja.html w3mhelp-lynx_en.html w3mhelp-lynx_ja.html"
 
 cat >confcache <<\_ACEOF
