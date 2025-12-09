@@ -232,7 +232,7 @@ add_news_message(Str str, int index, char* date, char* name, char* subject,
  * <message-id> = <unique>@<full_domain_name>
  */
 
-InputStream
+union input_stream*
 openNewsStream(struct Url* pu)
 {
     char *host, *mode, *group, *p;

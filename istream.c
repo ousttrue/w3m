@@ -117,10 +117,10 @@ init_str_stream(BaseStream base, Str s)
     init_buffer(base, s->ptr, s->length);
 }
 
-InputStream
+union input_stream*
 newInputStream(int des)
 {
-    InputStream stream;
+    union input_stream* stream;
     if (des < 0)
         return NULL;
     stream = NewWithoutGC(union input_stream);
@@ -133,10 +133,10 @@ newInputStream(int des)
     return stream;
 }
 
-InputStream
+union input_stream*
 newFileStream(FILE* f, void (*closep)())
 {
-    InputStream stream;
+    union input_stream* stream;
     if (f == NULL)
         return NULL;
     stream = NewWithoutGC(union input_stream);
@@ -153,10 +153,10 @@ newFileStream(FILE* f, void (*closep)())
     return stream;
 }
 
-InputStream
+union input_stream*
 newStrStream(Str s)
 {
-    InputStream stream;
+    union input_stream* stream;
     if (s == NULL)
         return NULL;
     stream = NewWithoutGC(union input_stream);
@@ -168,10 +168,10 @@ newStrStream(Str s)
     return stream;
 }
 
-InputStream
+union input_stream*
 newSSLStream(SSL* ssl, int sock)
 {
-    InputStream stream;
+    union input_stream* stream;
     if (sock < 0)
         return NULL;
     stream = NewWithoutGC(union input_stream);
@@ -185,10 +185,10 @@ newSSLStream(SSL* ssl, int sock)
     return stream;
 }
 
-InputStream
-newEncodedStream(InputStream is, char encoding)
+union input_stream*
+newEncodedStream(union input_stream* is, char encoding)
 {
-    InputStream stream;
+    union input_stream* stream;
     if (is == NULL || (encoding != ENC_QUOTE && encoding != ENC_BASE64 && encoding != ENC_UUENCODE))
         return is;
     stream = NewWithoutGC(union input_stream);
@@ -204,7 +204,7 @@ newEncodedStream(InputStream is, char encoding)
     return stream;
 }
 
-int ISclose(InputStream stream)
+int ISclose(union input_stream* stream)
 {
     MySignalHandler prevtrap;
     if (stream == NULL)
@@ -222,7 +222,7 @@ int ISclose(InputStream stream)
     return 0;
 }
 
-int ISgetc(InputStream stream)
+int ISgetc(union input_stream* stream)
 {
     BaseStream base;
     if (stream == NULL)
@@ -233,7 +233,7 @@ int ISgetc(InputStream stream)
     return POP_CHAR(base);
 }
 
-int ISundogetc(InputStream stream)
+int ISundogetc(union input_stream* stream)
 {
     StreamBuffer sb;
     if (stream == NULL)
@@ -246,7 +246,7 @@ int ISundogetc(InputStream stream)
     return -1;
 }
 
-Str StrISgets2(InputStream stream, char crnl)
+Str StrISgets2(union input_stream* stream, char crnl)
 {
     struct growbuf gb;
 
@@ -257,7 +257,7 @@ Str StrISgets2(InputStream stream, char crnl)
     return growbuf_to_Str(&gb);
 }
 
-void ISgets_to_growbuf(InputStream stream, struct growbuf* gb, char crnl)
+void ISgets_to_growbuf(union input_stream* stream, struct growbuf* gb, char crnl)
 {
     BaseStream base = &stream->base;
     StreamBuffer sb = &base->stream;
@@ -295,7 +295,7 @@ void ISgets_to_growbuf(InputStream stream, struct growbuf* gb, char crnl)
 }
 
 #ifdef unused
-int ISread(InputStream stream, Str buf, int count)
+int ISread(union input_stream* stream, Str buf, int count)
 {
     int len;
 
@@ -313,7 +313,7 @@ int ISread(InputStream stream, Str buf, int count)
 }
 #endif
 
-int ISread_n(InputStream stream, char* dst, int count)
+int ISread_n(union input_stream* stream, char* dst, int count)
 {
     int len, l;
     BaseStream base;
@@ -335,7 +335,7 @@ int ISread_n(InputStream stream, char* dst, int count)
     return len;
 }
 
-int ISfileno(InputStream stream)
+int ISfileno(union input_stream* stream)
 {
     if (stream == NULL)
         return -1;
@@ -353,7 +353,7 @@ int ISfileno(InputStream stream)
     }
 }
 
-int ISeos(InputStream stream)
+int ISeos(union input_stream* stream)
 {
     BaseStream base = &stream->base;
     if (!base->iseos && MUST_BE_UPDATED(base))
@@ -759,7 +759,7 @@ memchop(char* p, int* len)
     return;
 }
 
-int checkSaveFile(InputStream stream, char* path2)
+int checkSaveFile(union input_stream* stream, char* path2)
 {
     struct stat st1, st2;
     int des = ISfileno(stream);

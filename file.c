@@ -4911,7 +4911,7 @@ void HTMLlineproc2(struct Buffer* buf, TextLineList* tl)
     HTMLlineproc2body(buf, textlist_feed, -1);
 }
 
-static InputStream _file_lp2;
+static union input_stream* _file_lp2;
 
 static Str
 file_feed(void)
@@ -4926,7 +4926,7 @@ file_feed(void)
 }
 
 static void
-HTMLlineproc3(struct Buffer* buf, InputStream stream)
+HTMLlineproc3(struct Buffer* buf, union input_stream* stream)
 {
     _file_lp2 = stream;
     HTMLlineproc2body(buf, file_feed, -1);
@@ -6178,7 +6178,7 @@ getpipe(char* cmd)
  * Open pager buffer
  */
 struct Buffer*
-openPagerBuffer(InputStream stream, struct Buffer* buf)
+openPagerBuffer(union input_stream* stream, struct Buffer* buf)
 {
 
     if (buf == NULL)
@@ -6200,7 +6200,7 @@ openPagerBuffer(InputStream stream, struct Buffer* buf)
 }
 
 struct Buffer*
-openGeneralPagerBuffer(InputStream stream)
+openGeneralPagerBuffer(union input_stream* stream)
 {
     struct Buffer* buf;
     char* t = "text/plain";

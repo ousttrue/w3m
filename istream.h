@@ -105,23 +105,21 @@ typedef struct str_stream* StrStream;
 typedef struct ssl_stream* SSLStream;
 typedef struct encoded_stream* EncodedStrStream;
 
-typedef union input_stream* InputStream;
-
-extern InputStream newInputStream(int des);
-extern InputStream newFileStream(FILE* f, void (*closep)());
-extern InputStream newStrStream(Str s);
-extern InputStream newSSLStream(SSL* ssl, int sock);
-extern InputStream newEncodedStream(InputStream is, char encoding);
-extern int ISclose(InputStream stream);
-extern int ISgetc(InputStream stream);
-extern int ISundogetc(InputStream stream);
-extern Str StrISgets2(InputStream stream, char crnl);
-inline static Str StrISgets(InputStream stream) { return StrISgets2(stream, false); }
-inline static Str StrmyISgets(InputStream stream) { return StrISgets2(stream, true); }
-void ISgets_to_growbuf(InputStream stream, struct growbuf* gb, char crnl);
-int ISread_n(InputStream stream, char* dst, int bufsize);
-extern int ISfileno(InputStream stream);
-extern int ISeos(InputStream stream);
+extern union input_stream* newInputStream(int des);
+extern union input_stream* newFileStream(FILE* f, void (*closep)());
+extern union input_stream* newStrStream(Str s);
+extern union input_stream* newSSLStream(SSL* ssl, int sock);
+extern union input_stream* newEncodedStream(union input_stream* is, char encoding);
+extern int ISclose(union input_stream* stream);
+extern int ISgetc(union input_stream* stream);
+extern int ISundogetc(union input_stream* stream);
+extern Str StrISgets2(union input_stream* stream, char crnl);
+inline static Str StrISgets(union input_stream* stream) { return StrISgets2(stream, false); }
+inline static Str StrmyISgets(union input_stream* stream) { return StrISgets2(stream, true); }
+void ISgets_to_growbuf(union input_stream* stream, struct growbuf* gb, char crnl);
+int ISread_n(union input_stream* stream, char* dst, int bufsize);
+extern int ISfileno(union input_stream* stream);
+extern int ISeos(union input_stream* stream);
 extern void ssl_accept_this_site(char* hostname);
 extern Str ssl_get_certificate(SSL* ssl, char* hostname);
 
@@ -174,10 +172,10 @@ extern struct URLFile openURL(char* url, struct Url* pu, struct Url* current,
     TextList* extra_header, struct URLFile* ouf,
     struct HttpRequest* hr, unsigned char* status);
 
-int checkSaveFile(InputStream stream, char* path);
-void init_stream(struct URLFile* uf, int scheme, InputStream stream);
-InputStream openFTPStream(struct Url* pu, struct URLFile* uf);
-InputStream openNewsStream(struct Url* pu);
+int checkSaveFile(union input_stream* stream, char* path);
+void init_stream(struct URLFile* uf, int scheme, union input_stream* stream);
+union input_stream* openFTPStream(struct Url* pu, struct URLFile* uf);
+union input_stream* openNewsStream(struct Url* pu);
 int openSocket(char* hostname, char* remoteport_name, unsigned short remoteport_num);
 void free_ssl_ctx(void);
 int check_no_proxy(char* domain);

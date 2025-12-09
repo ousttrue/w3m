@@ -648,7 +648,7 @@ static long long current_content_length;
 static int
 _MoveFile(const char* path1, const char* path2)
 {
-    InputStream f1;
+    union input_stream* f1;
     FILE* f2;
     int is_pipe;
     long long linelen = 0, trbyte = 0;

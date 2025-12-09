@@ -265,7 +265,7 @@ int w3m_parse_arg(int argc, char** argv)
     struct Buffer* newbuf = NULL;
     char* p;
     int c, i;
-    InputStream redin;
+    union input_stream* redin;
     char* line_str = NULL;
     char** load_argv;
     FormList* request;

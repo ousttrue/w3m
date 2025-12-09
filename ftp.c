@@ -320,7 +320,7 @@ void closeFTP(void)
     ftp_close(&current_ftp);
 }
 
-InputStream
+union input_stream*
 openFTPStream(struct Url* pu, struct URLFile* uf)
 {
     Str tmp;
