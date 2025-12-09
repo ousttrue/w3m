@@ -106,3 +106,6 @@ int ISgetc(union input_stream* stream);
 Str StrISgets(union input_stream* stream);
 Str StrmyISgets(union input_stream* stream);
 int ISread_n(union input_stream* stream, char* dst, int bufsize);
+
+// zig
+void init_buffer(struct base_stream* base, char* buf, size_t bufsize);

@@ -24,6 +24,7 @@ pub const c = @cImport({
     @cInclude("form.h");
     @cInclude("sys/stat.h");
     @cInclude("unistd.h");
+    @cInclude("ist.h");
 
     // getpwnam
     @cInclude("sys/types.h");

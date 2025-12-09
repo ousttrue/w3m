@@ -6,6 +6,7 @@ const c = @import("w3m.zig").c;
 const util = @import("util.zig");
 const url = @import("url.zig");
 const local_cgi = @import("local_cgi.zig");
+const input_stream = @import("input_stream.zig");
 
 extern fn w3m_parse_arg(argc: c_int, argv: [*c][*c]c_char) c_int;
 extern fn w3m_loop() c_int;
@@ -78,4 +79,8 @@ export fn set_environ(name: [*c]const u8, value: [*c]const u8) void {
     if (name != null and value != null) {
         _ = c.setenv(name, value, 1);
     }
+}
+
+export fn init_buffer(base: *c.base_stream, buf: ?[*]u8, bufsize: usize) void {
+    input_stream.init_buffer(base, buf, bufsize);
 }

@@ -10,23 +10,6 @@
 #define SSL_BUF_SIZE 1536
 
 static void
-init_buffer(struct base_stream* base, char* buf, int bufsize)
-{
-    struct stream_buffer* sb = &base->stream;
-    sb->size = bufsize;
-    sb->cur = 0;
-    sb->buf = NewWithoutGC_N(uint8_t, bufsize);
-    if (buf) {
-        memcpy(sb->buf, buf, bufsize);
-        sb->next = bufsize;
-    } else {
-        sb->next = 0;
-    }
-    base->iseos = false;
-    base->unclose = false;
-}
-
-static void
 init_base_stream(struct base_stream* base, int bufsize)
 {
     init_buffer(base, NULL, bufsize);
