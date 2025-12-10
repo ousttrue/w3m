@@ -50,7 +50,7 @@ newBuffer(int width)
     memset((void*)n, 0, sizeof(struct Buffer));
     n->width = width;
     n->COLS = COLS;
-    n->LINES = LASTLINE;
+    n->LINES = LINES-1;
     n->currentURL.scheme = SCM_UNKNOWN;
     n->baseURL = NULL;
     n->baseTarget = NULL;
@@ -355,7 +355,7 @@ listBuffer(struct Buffer* top, struct Buffer* current)
         scr_setbcolor(bg_color);
     }
     scr_clrtobotx();
-    for (i = 0; i < LASTLINE; i++) {
+    for (i = 0; i < LINES-1; i++) {
         if (buf == current) {
             c = i;
             scr_standout();
@@ -393,7 +393,7 @@ selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectcha
 {
     int i, cpoint, /* Current struct Buffer Number */
         spoint, /* Current Line on Screen */
-        maxbuf, sclimit = LASTLINE; /* Upper limit of line * number in
+        maxbuf, sclimit = LINES-1; /* Upper limit of line * number in
                                      * the * screen */
     struct Buffer *buf, *topbuf;
     char c;
@@ -553,7 +553,7 @@ void reshapeBuffer(struct Buffer* buf)
     WcOption.auto_detect = old_auto_detect;
     w3m.UseContentCharset = true;
 
-    buf->height = LASTLINE + 1;
+    buf->height = LINES-1 + 1;
     if (buf->firstLine && sbuf.firstLine) {
         struct Line* cur = sbuf.currentLine;
         int n;

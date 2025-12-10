@@ -41,7 +41,7 @@ extern int getMetaRefreshParam(const char* q, Str* refresh_uri);
 extern Str loadGopherDir(struct URLFile* uf, struct Url* pu, wc_ces* charset);
 extern Str loadGopherSearch(struct URLFile* uf, struct Url* pu, wc_ces* charset);
 extern Str getLinkNumberStr(int correction);
-extern void examineFile(char* path, struct URLFile* uf);
+extern void examineFile(const char* path, struct URLFile* uf);
 extern int is_boundary(unsigned char*, unsigned char*);
 extern void pushEvent(int cmd, void* data);
 

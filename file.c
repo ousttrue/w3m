@@ -314,7 +314,7 @@ uncompressed_file_type(const char* path, const char** ext)
     return t0;
 }
 
-void examineFile(char* path, struct URLFile* uf)
+void examineFile(const char* path, struct URLFile* uf)
 {
     struct stat stbuf;
 

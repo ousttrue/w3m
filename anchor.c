@@ -363,7 +363,7 @@ reAnchorAny(struct Buffer* buf, char* re,
     if ((re = regexCompile(re, 1)) != NULL) {
         return re;
     }
-    for (l = MarkAllPages ? buf->firstLine : buf->topLine; l != NULL && (MarkAllPages || l->linenumber < buf->topLine->linenumber + LASTLINE);
+    for (l = MarkAllPages ? buf->firstLine : buf->topLine; l != NULL && (MarkAllPages || l->linenumber < buf->topLine->linenumber + LINES-1);
         l = l->next) {
         if (p && l->bpos)
             goto next_line;

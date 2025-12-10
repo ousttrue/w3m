@@ -1993,7 +1993,7 @@ DEFUN(selBuf, SELECT, "Display buffer-stack panel")
 /* Suspend (on BSD), or run interactive shell (on SysV) */
 DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background")
 {
-    scr_move(LASTLINE, 0);
+    scr_move(LINES-1, 0);
     scr_clrtoeolx();
     tui_render_screen();
     tui_exit();
@@ -2332,7 +2332,7 @@ loadLink(char* url, char* target, char* referer, FormList* request)
     rFrame();
     {
         Anchor* al = NULL;
-        char* label = pu.label;
+        const char* label = pu.label;
 
         if (label && f_element->element->attr == F_BODY) {
             al = searchAnchor(f_element->body->nameList, label);

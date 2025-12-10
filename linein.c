@@ -167,14 +167,14 @@ Str inputLineHistSearch(const char* prompt, const char* def_str, enum InputFlags
             else
                 offset = 0;
         }
-        scr_move(LASTLINE, 0);
+        scr_move(LINES-1, 0);
         scr_addstr(prompt);
         if (is_passwd)
             addPasswd(strBuf->ptr, strProp, CLen, offset, COLS - opos);
         else
             addStr(strBuf->ptr, strProp, CLen, offset, COLS - opos);
         scr_clrtoeolx();
-        scr_move(LASTLINE, opos + x - offset);
+        scr_move(LINES-1, opos + x - offset);
         tui_render_screen();
 
     next_char:
@@ -235,7 +235,7 @@ Str inputLineHistSearch(const char* prompt, const char* def_str, enum InputFlags
     if (i_broken)
         return NULL;
 
-    scr_move(LASTLINE, 0);
+    scr_move(LINES-1, 0);
     tui_render_screen();
     p = strBuf->ptr;
     if (flag & (IN_FILENAME | IN_COMMAND)) {
@@ -638,12 +638,12 @@ next_dcompl(int next)
     cm_disp_clear = false;
     if (CurrentTab)
         displayBuffer(Currentbuf, B_FORCE_REDRAW);
-    if (LASTLINE >= 3) {
+    if (LINES-1 >= 3) {
         comment = true;
-        nline = LASTLINE - 2;
-    } else if (LASTLINE) {
+        nline = LINES-1 - 2;
+    } else if (LINES-1) {
         comment = false;
-        nline = LASTLINE;
+        nline = LINES-1;
     } else {
         return;
     }
@@ -736,7 +736,7 @@ disp_next:
         }
         y++;
     }
-    if (comment && y == LASTLINE - 1) {
+    if (comment && y == LINES-1 - 1) {
         scr_move(y, 0);
         scr_clrtoeolx();
         scr_bold();

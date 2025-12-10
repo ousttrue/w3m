@@ -33,9 +33,6 @@ static int is_xterm = 0;
 
 static char* title_str = NULL;
 
-#define MODEFLAG(d) ((d).c_lflag)
-#define IMODEFLAG(d) ((d).c_iflag)
-
 static struct termios d_ioval;
 static int tty = -1;
 static FILE* ttyf = NULL;
@@ -205,8 +202,8 @@ void ttymode_set(int mode, int imode)
     struct termios ioval;
 
     tcgetattr(tty, &ioval);
-    MODEFLAG(ioval) |= mode;
-    IMODEFLAG(ioval) |= imode;
+    ioval.c_lflag |= mode;
+    ioval.c_iflag |= imode;
 
     while (tcsetattr(tty, TCSANOW, &ioval) == -1) {
         if (errno == EINTR || errno == EAGAIN)
@@ -221,8 +218,8 @@ void ttymode_reset(int mode, int imode)
     struct termios ioval;
 
     tcgetattr(tty, &ioval);
-    MODEFLAG(ioval) &= ~mode;
-    IMODEFLAG(ioval) &= ~imode;
+    ioval.c_lflag &= ~mode;
+    ioval.c_iflag &= ~imode;
 
     while (tcsetattr(tty, TCSANOW, &ioval) == -1) {
         if (errno == EINTR || errno == EAGAIN)

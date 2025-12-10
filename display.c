@@ -79,8 +79,8 @@ redrawLineImage(struct Buffer* buf, struct Line* l, int i)
                     h = (int)(pixel_per_line - sy);
                 if (w > (int)((buf->rootX + buf->COLS) * pixel_per_char - x))
                     w = (int)((buf->rootX + buf->COLS) * pixel_per_char - x);
-                if (h > (int)(LASTLINE * pixel_per_line - y))
-                    h = (int)(LASTLINE * pixel_per_line - y);
+                if (h > (int)(LINES-1 * pixel_per_line - y))
+                    h = (int)(LINES-1 * pixel_per_line - y);
                 addImage(cache, x, y, sx, sy, w, h);
                 image->touch = image_touch;
                 draw_image_flag = true;
@@ -246,7 +246,7 @@ static void redrawNLine(struct Buffer* buf, int n)
 
 static void redrawBuffer(struct Buffer* buf)
 {
-    redrawNLine(buf, LASTLINE);
+    redrawNLine(buf, LINES-1);
 }
 
 static Str
@@ -567,7 +567,7 @@ void displayBuffer(struct Buffer* buf, enum DisplayMode mode)
     if (buf->width == 0)
         buf->width = INIT_BUFFER_WIDTH;
     if (buf->height == 0)
-        buf->height = LASTLINE + 1;
+        buf->height = LINES-1 + 1;
     if ((buf->width != INIT_BUFFER_WIDTH && (is_html_type(buf->type) || FoldLine))
         || buf->need_reshape) {
         buf->need_reshape = true;
@@ -591,12 +591,12 @@ void displayBuffer(struct Buffer* buf, enum DisplayMode mode)
         if (mode == B_FORCE_REDRAW || mode == B_REDRAW_IMAGE)
             calcTabPos();
         ny = LastTab->y + 2;
-        if (ny > LASTLINE)
-            ny = LASTLINE;
+        if (ny > LINES-1)
+            ny = LINES-1;
     }
-    if (buf->rootY != ny || buf->LINES != LASTLINE - ny) {
+    if (buf->rootY != ny || buf->LINES != LINES-1 - ny) {
         buf->rootY = ny;
-        buf->LINES = LASTLINE - ny;
+        buf->LINES = LINES-1 - ny;
         arrangeCursor(buf);
         mode = B_REDRAW_IMAGE;
     }
