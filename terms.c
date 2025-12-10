@@ -4,7 +4,6 @@
  */
 #include "terms.h"
 #include "signal_jmp.h"
-#include "w3m_runtime.h"
 #include "config.h"
 #include "funcheader.h"
 #include "screen.h"
@@ -34,17 +33,10 @@ static int is_xterm = 0;
 
 static char* title_str = NULL;
 
-#ifndef SIGIOT
-#define SIGIOT SIGABRT
-#endif /* not SIGIOT */
-
-typedef struct termios TerminalMode;
-#define TerminalSet(fd, x) tcsetattr(fd, TCSANOW, x)
-#define TerminalGet(fd, x) tcgetattr(fd, x)
 #define MODEFLAG(d) ((d).c_lflag)
 #define IMODEFLAG(d) ((d).c_iflag)
 
-static TerminalMode d_ioval;
+static struct termios d_ioval;
 static int tty = -1;
 static FILE* ttyf = NULL;
 
@@ -183,7 +175,7 @@ int set_tty(void)
         tty = 2;
     }
     ttyf = fdopen(tty, "w");
-    TerminalGet(tty, &d_ioval);
+    tcgetattr(tty, &d_ioval);
     if (displayTitleTerm != NULL) {
         struct w3m_term_info* p;
         for (p = w3m_term_info_list; p->term != NULL; p++) {
@@ -210,13 +202,13 @@ int set_tty(void)
 
 void ttymode_set(int mode, int imode)
 {
-    TerminalMode ioval;
+    struct termios ioval;
 
-    TerminalGet(tty, &ioval);
+    tcgetattr(tty, &ioval);
     MODEFLAG(ioval) |= mode;
     IMODEFLAG(ioval) |= imode;
 
-    while (TerminalSet(tty, &ioval) == -1) {
+    while (tcsetattr(tty, TCSANOW, &ioval) == -1) {
         if (errno == EINTR || errno == EAGAIN)
             continue;
         printf("Error occurred while set %x: errno=%d\n", mode, errno);
@@ -226,13 +218,13 @@ void ttymode_set(int mode, int imode)
 
 void ttymode_reset(int mode, int imode)
 {
-    TerminalMode ioval;
+    struct termios ioval;
 
-    TerminalGet(tty, &ioval);
+    tcgetattr(tty, &ioval);
     MODEFLAG(ioval) &= ~mode;
     IMODEFLAG(ioval) &= ~imode;
 
-    while (TerminalSet(tty, &ioval) == -1) {
+    while (tcsetattr(tty, TCSANOW, &ioval) == -1) {
         if (errno == EINTR || errno == EAGAIN)
             continue;
         printf("Error occurred while reset %x: errno=%d\n", mode, errno);
@@ -242,11 +234,11 @@ void ttymode_reset(int mode, int imode)
 
 void set_cc(int spec, int val)
 {
-    TerminalMode ioval;
+    struct termios ioval;
 
-    TerminalGet(tty, &ioval);
+    tcgetattr(tty, &ioval);
     ioval.c_cc[spec] = val;
-    while (TerminalSet(tty, &ioval) == -1) {
+    while (tcsetattr(tty, TCSANOW, &ioval) == -1) {
         if (errno == EINTR || errno == EAGAIN)
             continue;
         printf("Error occurred: errno=%d\n", errno);
@@ -277,7 +269,7 @@ void tty_reset(void)
     }
     tty_write(T_.se); /* reset terminal */
     tty_flush();
-    TerminalSet(tty, &d_ioval);
+    tcsetattr(tty, TCSANOW, &d_ioval);
     if (tty != 2)
         close_tty();
 }
@@ -374,7 +366,7 @@ void term_raw(void)
 #define TTY_MODE ISIG | ICANON | ECHO
 #endif /* not IEXTEN */
 {
-    ttymode_reset(TTY_MODE, IXON | IXOFF | INLCR | IGNCR | ICRNL);
+    ttymode_reset(TTY_MODE, IXON | IXOFF | IGNCR | INLCR | ICRNL);
     set_cc(VMIN, 1);
 }
 
@@ -418,9 +410,7 @@ void tty_bell()
 static void
 skip_escseq(void)
 {
-    int c;
-
-    c = getch();
+    int c = getch();
     if (c == '[' || c == 'O') {
         c = getch();
         if (is_xterm && c == 'M') {
@@ -442,9 +432,9 @@ int tty_sleep_till_anykey(int sec, int purge)
     fd_set rfd;
     struct timeval tim;
     int er, c, ret;
-    TerminalMode ioval;
+    struct termios ioval;
 
-    TerminalGet(tty, &ioval);
+    tcgetattr(tty, &ioval);
     term_raw();
 
     tim.tv_sec = sec;
@@ -459,7 +449,7 @@ int tty_sleep_till_anykey(int sec, int purge)
         if (c == ESC_CODE)
             skip_escseq();
     }
-    er = TerminalSet(tty, &ioval);
+    er = tcsetattr(tty, TCSANOW, &ioval);
     if (er == -1) {
         printf("Error occurred: errno=%d\n", errno);
         reset_error_exit(0);
