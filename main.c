@@ -89,8 +89,6 @@ JMP_BUF IntReturn;
 
 static void delBuffer(struct Buffer* buf);
 static void cmd_loadfile(char* path);
-static void cmd_loadURL(char* url, struct Url* current, char* referer,
-    FormList* request);
 static void cmd_loadBuffer(struct Buffer* buf, int prop, int linkid);
 static void keyPressEventProc(int c);
 int show_params_p = 0;
@@ -444,14 +442,16 @@ int w3m_parse_arg(int argc, char** argv)
                     WrapDefault = false;
                 else
                     WrapDefault = true;
-            } else if (!strcmp("-cols", argv[i])) {
-                if (++i >= argc)
-                    usage();
-                COLS = atoi(argv[i]);
-                if (COLS > MAXIMUM_COLS) {
-                    COLS = MAXIMUM_COLS;
-                }
-            } else if (!strcmp("-ppc", argv[i])) {
+            } 
+            // else if (!strcmp("-cols", argv[i])) {
+            //     if (++i >= argc)
+            //         usage();
+            //     COLS = atoi(argv[i]);
+            //     if (COLS > MAXIMUM_COLS) {
+            //         COLS = MAXIMUM_COLS;
+            //     }
+            // } 
+            else if (!strcmp("-ppc", argv[i])) {
                 double ppc;
                 if (++i >= argc)
                     usage();
@@ -611,10 +611,8 @@ int w3m_parse_arg(int argc, char** argv)
         if (i >= 0) {
             SearchHeader = search_header;
             DefaultType = default_type;
-            char* url;
             int retry = 0;
-
-            url = load_argv[i];
+            const char *url = load_argv[i];
             if (getURLScheme(&url) == SCM_MISSING && !ArgvIsURL)
             retry_as_local_file:
                 url = file_to_url(load_argv[i]);
@@ -1008,7 +1006,8 @@ static void
 resize_screen(void)
 {
     need_resize_screen = false;
-    struct TermSize size = get_term_size();
+    tty_update_size();
+    struct TermSize size = tty_current_size(); 
     scr_setup(size.lines, size.cols);
     if (CurrentTab)
         displayBuffer(Currentbuf, B_FORCE_REDRAW);
@@ -1043,7 +1042,7 @@ nscroll(int n, int mode)
             lnum = buf->lastLine->linenumber;
     } else {
         tlnum = buf->topLine->linenumber;
-        llnum = buf->topLine->linenumber + buf->LINES - 1;
+        llnum = buf->topLine->linenumber + buf->lines - 1;
         if (nextpage_topline)
             diff_n = 0;
         else
@@ -1077,30 +1076,30 @@ nscroll(int n, int mode)
 DEFUN(pgFore, NEXT_PAGE, "Scroll down one page")
 {
     if (vi_prec_num)
-        nscroll(searchKeyNum() * (Currentbuf->LINES - 1), B_NORMAL);
+        nscroll(searchKeyNum() * (Currentbuf->lines - 1), B_NORMAL);
     else
-        nscroll(prec_num ? searchKeyNum() : searchKeyNum() * (Currentbuf->LINES - 1), prec_num ? B_SCROLL : B_NORMAL);
+        nscroll(prec_num ? searchKeyNum() : searchKeyNum() * (Currentbuf->lines - 1), prec_num ? B_SCROLL : B_NORMAL);
 }
 
 /* Move page backward */
 DEFUN(pgBack, PREV_PAGE, "Scroll up one page")
 {
     if (vi_prec_num)
-        nscroll(-searchKeyNum() * (Currentbuf->LINES - 1), B_NORMAL);
+        nscroll(-searchKeyNum() * (Currentbuf->lines - 1), B_NORMAL);
     else
-        nscroll(-(prec_num ? searchKeyNum() : searchKeyNum() * (Currentbuf->LINES - 1)), prec_num ? B_SCROLL : B_NORMAL);
+        nscroll(-(prec_num ? searchKeyNum() : searchKeyNum() * (Currentbuf->lines - 1)), prec_num ? B_SCROLL : B_NORMAL);
 }
 
 /* Move half page forward */
 DEFUN(hpgFore, NEXT_HALF_PAGE, "Scroll down half a page")
 {
-    nscroll(searchKeyNum() * (Currentbuf->LINES / 2 - 1), B_NORMAL);
+    nscroll(searchKeyNum() * (Currentbuf->lines / 2 - 1), B_NORMAL);
 }
 
 /* Move half page backward */
 DEFUN(hpgBack, PREV_HALF_PAGE, "Scroll up half a page")
 {
-    nscroll(-searchKeyNum() * (Currentbuf->LINES / 2 - 1), B_NORMAL);
+    nscroll(-searchKeyNum() * (Currentbuf->lines / 2 - 1), B_NORMAL);
 }
 
 /* 1 line up */
@@ -1121,7 +1120,7 @@ DEFUN(ctrCsrV, CENTER_V, "Center on cursor line")
     int offsety;
     if (Currentbuf->firstLine == NULL)
         return;
-    offsety = /*Currentbuf->LINES / 2*/ -Currentbuf->cursorY;
+    offsety = /*Currentbuf->lines / 2*/ -Currentbuf->cursorY;
     if (offsety != 0) {
         Currentbuf->topLine = lineSkip(Currentbuf, Currentbuf->topLine, -offsety, false);
         arrangeLine(Currentbuf);
@@ -1134,7 +1133,7 @@ DEFUN(ctrCsrH, CENTER_H, "Center on cursor column")
     int offsetx;
     if (Currentbuf->firstLine == NULL)
         return;
-    offsetx = Currentbuf->cursorX - Currentbuf->COLS / 2;
+    offsetx = Currentbuf->cursorX - Currentbuf->cols / 2;
     if (offsetx != 0) {
         columnSkip(Currentbuf, offsetx);
         arrangeCursor(Currentbuf);
@@ -1376,8 +1375,8 @@ shiftvisualpos(struct Buffer* buf, int shift)
 {
     struct Line* l = buf->currentLine;
     buf->visualpos -= shift;
-    if (buf->visualpos - l->bwidth >= buf->COLS)
-        buf->visualpos = l->bwidth + buf->COLS - 1;
+    if (buf->visualpos - l->bwidth >= buf->cols)
+        buf->visualpos = l->bwidth + buf->cols - 1;
     else if (buf->visualpos - l->bwidth < 0)
         buf->visualpos = l->bwidth;
     arrangeLine(buf);
@@ -1393,7 +1392,7 @@ DEFUN(shiftl, SHIFT_LEFT, "Shift screen left")
     if (Currentbuf->firstLine == NULL)
         return;
     column = Currentbuf->currentColumn;
-    columnSkip(Currentbuf, searchKeyNum() * (-Currentbuf->COLS + 1) + 1);
+    columnSkip(Currentbuf, searchKeyNum() * (-Currentbuf->cols + 1) + 1);
     shiftvisualpos(Currentbuf, Currentbuf->currentColumn - column);
     displayBuffer(Currentbuf, B_NORMAL);
 }
@@ -1406,7 +1405,7 @@ DEFUN(shiftr, SHIFT_RIGHT, "Shift screen right")
     if (Currentbuf->firstLine == NULL)
         return;
     column = Currentbuf->currentColumn;
-    columnSkip(Currentbuf, searchKeyNum() * (Currentbuf->COLS - 1) - 1);
+    columnSkip(Currentbuf, searchKeyNum() * (Currentbuf->cols - 1) - 1);
     shiftvisualpos(Currentbuf, Currentbuf->currentColumn - column);
     displayBuffer(Currentbuf, B_NORMAL);
 }
@@ -1622,6 +1621,23 @@ DEFUN(ldfile, LOAD, "Open local file in a new buffer")
     cmd_loadfile(fn);
 }
 
+static void
+cmd_loadURL(const char* url, struct Url* current, const char* referer, FormList* request)
+{
+    tui_render_screen();
+    struct Buffer* buf = loadGeneralFile(url, current, referer, 0, request);
+    if (buf == NULL) {
+        /* FIXME: gettextize? */
+        char* emsg = Sprintf("Can't load %s", conv_from_system(url))->ptr;
+        tui_disp_err_message(emsg, false);
+    } else if (buf != NO_BUFFER) {
+        pushBuffer(buf);
+        if (RenderFrame && Currentbuf->frameset != NULL)
+            rFrame();
+    }
+    displayBuffer(Currentbuf, B_NORMAL);
+}
+
 /* Load help file */
 DEFUN(ldhelp, HELP, "Show help panel")
 {
@@ -1665,7 +1681,7 @@ _movL(int n)
 
 DEFUN(movL, MOVE_LEFT, "Cursor left")
 {
-    _movL(Currentbuf->COLS / 2);
+    _movL(Currentbuf->cols / 2);
 }
 
 DEFUN(movL1, MOVE_LEFT1, "Cursor left. With edge touched, slide")
@@ -1687,7 +1703,7 @@ _movD(int n)
 
 DEFUN(movD, MOVE_DOWN, "Cursor down")
 {
-    _movD((Currentbuf->LINES + 1) / 2);
+    _movD((Currentbuf->lines + 1) / 2);
 }
 
 DEFUN(movD1, MOVE_DOWN1, "Cursor down. With edge touched, slide")
@@ -1709,7 +1725,7 @@ _movU(int n)
 
 DEFUN(movU, MOVE_UP, "Cursor up")
 {
-    _movU((Currentbuf->LINES + 1) / 2);
+    _movU((Currentbuf->lines + 1) / 2);
 }
 
 DEFUN(movU1, MOVE_UP1, "Cursor up. With edge touched, slide")
@@ -1731,7 +1747,7 @@ _movR(int n)
 
 DEFUN(movR, MOVE_RIGHT, "Cursor right")
 {
-    _movR(Currentbuf->COLS / 2);
+    _movR(Currentbuf->cols / 2);
 }
 
 DEFUN(movR1, MOVE_RIGHT1, "Cursor right. With edge touched, slide")
@@ -2023,7 +2039,7 @@ _goLine(char* l)
         Currentbuf->topLine = Currentbuf->currentLine = Currentbuf->firstLine;
     } else if (*l == '$') {
         Currentbuf->topLine = lineSkip(Currentbuf, Currentbuf->lastLine,
-            -(Currentbuf->LINES + 1) / 2, true);
+            -(Currentbuf->lines + 1) / 2, true);
         Currentbuf->currentLine = Currentbuf->lastLine;
     } else
         gotoRealLine(Currentbuf, atoi(l));
@@ -2356,7 +2372,7 @@ loadLink(char* url, char* target, char* referer, FormList* request)
 }
 
 static void
-gotoLabel(char* label)
+gotoLabel(const char* label)
 {
     struct Buffer* buf;
     Anchor* al;
@@ -3399,28 +3415,11 @@ DEFUN(deletePrevBuf, DELETE_PREVBUF, "Delete previous buffer (mainly for local C
         delBuffer(buf);
 }
 
-static void
-cmd_loadURL(char* url, struct Url* current, char* referer, FormList* request)
-{
-    tui_render_screen();
-    struct Buffer* buf = loadGeneralFile(url, current, referer, 0, request);
-    if (buf == NULL) {
-        /* FIXME: gettextize? */
-        char* emsg = Sprintf("Can't load %s", conv_from_system(url))->ptr;
-        tui_disp_err_message(emsg, false);
-    } else if (buf != NO_BUFFER) {
-        pushBuffer(buf);
-        if (RenderFrame && Currentbuf->frameset != NULL)
-            rFrame();
-    }
-    displayBuffer(Currentbuf, B_NORMAL);
-}
-
 /* go to specified URL */
 static void
 goURL0(char* prompt, int relative)
 {
-    char *url, *referer;
+    const char *url, *referer;
     struct Url p_url, *current;
     struct Buffer* cur_buf = Currentbuf;
 
@@ -3485,7 +3484,7 @@ DEFUN(goURL, GOTO, "Open specified document in a new buffer")
 
 DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer")
 {
-    char* url;
+    const char* url;
     if ((url = getenv("HTTP_HOME")) != NULL || (url = getenv("WWW_HOME")) != NULL) {
         struct Url p_url;
         struct Buffer* cur_buf = Currentbuf;
@@ -3604,7 +3603,7 @@ DEFUN(pginfo, INFO, "Display information about the current document")
 
 void follow_map(struct KeyValueList* arg)
 {
-    char* name = tag_get_value(arg, "link");
+    const char* name = tag_get_value(arg, "link");
 
     Anchor* an;
     struct MapArea* a;
@@ -5253,7 +5252,7 @@ DEFUN(cursorMiddle, CURSOR_MIDDLE, "Move cursor to the middle of the screen")
     int offsety;
     if (Currentbuf->firstLine == NULL)
         return;
-    offsety = (Currentbuf->LINES - 1) / 2;
+    offsety = (Currentbuf->lines - 1) / 2;
     Currentbuf->currentLine = currentLineSkip(Currentbuf, Currentbuf->topLine,
         offsety, false);
     arrangeLine(Currentbuf);
@@ -5265,7 +5264,7 @@ DEFUN(cursorBottom, CURSOR_BOTTOM, "Move cursor to the bottom of the screen")
     int offsety;
     if (Currentbuf->firstLine == NULL)
         return;
-    offsety = Currentbuf->LINES - 1;
+    offsety = Currentbuf->lines - 1;
     Currentbuf->currentLine = currentLineSkip(Currentbuf, Currentbuf->topLine,
         offsety, false);
     arrangeLine(Currentbuf);

@@ -86,18 +86,18 @@ typedef struct form_item_list {
     struct form_item_list* next;
 } FormItemList;
 
-struct form_list* newFormList(char* action, char* method, char* charset,
-    char* enctype, char* target, char* name,
+struct form_list* newFormList(const char* action, const char* method, const char* charset,
+    const char* enctype, const char* target, const char* name,
     struct form_list* _next);
 struct HtmlTag;
 struct form_item_list* formList_addInput(struct form_list* fl,
     struct HtmlTag* tag);
 char* form2str(FormItemList* fi);
-int formtype(char* typestr);
+int formtype(const char* typestr);
 Str textfieldrep(Str s, int width);
 void input_textarea(FormItemList* fi);
-void do_internal(char* action, char* data);
-void form_write_data(FILE* f, char* boundary, char* name, char* value);
-void form_write_from_file(FILE* f, char* boundary, char* name,
-    char* filename, char* file);
+void do_internal(const char* action, const char* data);
+void form_write_data(FILE* f, const char* boundary, const char* name, const char* value);
+void form_write_from_file(FILE* f, const char* boundary, const char* name,
+    const char* filename, const char* file);
 void loadPreForm(void);

@@ -37,4 +37,4 @@ char* file_unquote(const char* str);
 Str Str_url_unquote(Str x, int is_form, int safe);
 Str Str_form_quote(Str x);
 inline static Str Str_form_unquote(Str x) { return Str_url_unquote(x, true, false); }
-char* shell_quote(char* str);
+char* shell_quote(const char* str);

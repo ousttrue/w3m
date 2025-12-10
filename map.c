@@ -198,7 +198,7 @@ retrieveCurrentMap(struct Buffer* buf)
 }
 
 struct MapArea*
-follow_map_menu(struct Buffer* buf, char* name, Anchor* a_img, int x, int y)
+follow_map_menu(struct Buffer* buf, const char* name, Anchor* a_img, int x, int y)
 {
     struct MapList* ml;
     ListItem* al;

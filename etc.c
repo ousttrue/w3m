@@ -24,7 +24,7 @@ int columnSkip(struct Buffer* buf, int offset)
 {
     int i, maxColumn;
     int column = buf->currentColumn + offset;
-    int nlines = buf->LINES + 1;
+    int nlines = buf->lines + 1;
     struct Line* l;
 
     maxColumn = 0;
@@ -34,7 +34,7 @@ int columnSkip(struct Buffer* buf, int offset)
         if (l->width - 1 > maxColumn)
             maxColumn = l->width - 1;
     }
-    maxColumn -= buf->COLS - 1;
+    maxColumn -= buf->cols - 1;
     if (column < maxColumn)
         maxColumn = column;
     if (maxColumn < 0)
@@ -53,7 +53,7 @@ struct Line* lineSkip(struct Buffer* buf, struct Line* line, int offset, int las
 
     l = currentLineSkip(buf, line, offset, last);
     if (!nextpage_topline)
-        for (i = buf->LINES - 1 - (buf->lastLine->linenumber - l->linenumber);
+        for (i = buf->lines - 1 - (buf->lastLine->linenumber - l->linenumber);
             i > 0 && l->prev != NULL; i--, l = l->prev)
             ;
     return l;
@@ -65,7 +65,7 @@ struct Line* currentLineSkip(struct Buffer* buf, struct Line* line, int offset, 
     struct Line* l = line;
 
     if (buf->pagerSource && !(buf->bufferprop & BP_CLOSE)) {
-        n = line->linenumber + offset + buf->LINES;
+        n = line->linenumber + offset + buf->lines;
         if (buf->lastLine->linenumber < n)
             getNextPage(buf, n - buf->lastLine->linenumber);
         while ((last || (buf->lastLine->linenumber < n)) && (getNextPage(buf, 1) != NULL))

@@ -1,14 +1,15 @@
 #pragma once
 #include <stddef.h>
 
-extern int LINES, COLS;
-
 struct TermSize {
     int lines;
     int cols;
 };
+struct TermSize tty_current_size();
+void tty_update_size();
 
-struct TermSize get_term_size();
+#define LINES tty_current_size().lines
+#define COLS tty_current_size().cols
 
 int tty_get_pixel_per_cell(int* ppc, int* ppl);
 

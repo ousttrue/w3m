@@ -168,7 +168,7 @@ struct Hist* copyHist(struct Hist* hist)
 }
 
 HistItem*
-unshiftHist(struct Hist* hist, char* ptr)
+unshiftHist(struct Hist* hist, const char* ptr)
 {
     HistItem* item;
 
@@ -186,7 +186,7 @@ unshiftHist(struct Hist* hist, char* ptr)
 }
 
 HistItem*
-pushHist(struct Hist* hist, char* ptr)
+pushHist(struct Hist* hist, const char* ptr)
 {
     HistItem* item;
 
@@ -206,7 +206,7 @@ pushHist(struct Hist* hist, char* ptr)
 /* Don't mix pushHashHist() and pushHist()/unshiftHist(). */
 
 HistItem*
-pushHashHist(struct Hist* hist, char* ptr)
+pushHashHist(struct Hist* hist, const char* ptr)
 {
     HistItem* item;
 
@@ -230,7 +230,7 @@ pushHashHist(struct Hist* hist, char* ptr)
 }
 
 HistItem*
-getHashHist(struct Hist* hist, char* ptr)
+getHashHist(struct Hist* hist, const char* ptr)
 {
     HistItem* item;
 

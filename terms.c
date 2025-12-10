@@ -39,7 +39,15 @@ static FILE* ttyf = NULL;
 
 #define MAX_LINE 200
 #define MAX_COLUMN 400
-int LINES, COLS;
+
+struct TermSize g_size = {
+    0,
+    0,
+};
+struct TermSize tty_current_size()
+{
+    return g_size;
+}
 
 static void reset_exit_with_value(int _, int rval)
 {
@@ -59,12 +67,12 @@ static void reset_exit(int _)
 
 void setlinescols(int lines, int cols)
 {
-    LINES = lines;
-    COLS = cols;
-    if (COLS > MAX_COLUMN)
-        COLS = MAX_COLUMN;
-    if (LINES > MAX_LINE)
-        LINES = MAX_LINE;
+    g_size.lines = lines;
+    g_size.cols = cols;
+    if (g_size.cols > MAX_COLUMN)
+        g_size.cols = MAX_COLUMN;
+    if (g_size.lines > MAX_LINE)
+        g_size.lines = MAX_LINE;
 }
 
 int tty_putc(int c)
@@ -293,7 +301,7 @@ void set_int(void)
     /* mySignal(SIGSEGV, error_dump); */
 }
 
-struct TermSize get_term_size()
+void tty_update_size()
 {
     struct TermSize size = {
         .lines = -1,
@@ -311,8 +319,6 @@ struct TermSize get_term_size()
         size.cols = tgetnum("co"); /* number of column */
 
     setlinescols(size.lines, size.cols);
-
-    return size;
 }
 
 /*
@@ -328,8 +334,8 @@ int initscr(void)
     if (T_.ti && !Do_not_use_ti_te)
         tty_write(T_.ti);
 
-    struct TermSize size = get_term_size();
-    scr_setup(size.lines, size.cols);
+    tty_current_size();
+    scr_setup(g_size.lines, g_size.cols);
     return 0;
 }
 

@@ -19,8 +19,8 @@
 #define FIRST_ANCHOR_SIZE 30
 
 AnchorList*
-putAnchor(AnchorList* al, char* url, char* target, Anchor** anchor_return,
-    char* referer, char* title, unsigned char key, int line, int pos)
+putAnchor(AnchorList* al, const char* url, const char* target, Anchor** anchor_return,
+    const char* referer, const char* title, unsigned char key, int line, int pos)
 {
     int n, i, j;
     Anchor* a;
@@ -178,7 +178,7 @@ retrieveCurrentForm(struct Buffer* buf)
 }
 
 Anchor*
-searchAnchor(AnchorList* al, char* str)
+searchAnchor(AnchorList* al, const char* str)
 {
     int i;
     Anchor* a;

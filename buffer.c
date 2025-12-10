@@ -49,8 +49,8 @@ newBuffer(int width)
         exit(3);
     memset((void*)n, 0, sizeof(struct Buffer));
     n->width = width;
-    n->COLS = COLS;
-    n->LINES = LINES-1;
+    n->cols = COLS;
+    n->lines = LINES-1;
     n->currentURL.scheme = SCM_UNKNOWN;
     n->baseURL = NULL;
     n->baseTarget = NULL;
@@ -286,15 +286,15 @@ void gotoLine(struct Buffer* buf, int n)
         sprintf(msg, "Last line is #%ld", buf->lastLine->linenumber);
         tui_set_delayed_message(msg);
         buf->currentLine = l;
-        buf->topLine = lineSkip(buf, buf->currentLine, -(buf->LINES - 1),
+        buf->topLine = lineSkip(buf, buf->currentLine, -(buf->lines - 1),
             false);
         return;
     }
     for (; l != NULL; l = l->next) {
         if (l->linenumber >= n) {
             buf->currentLine = l;
-            if (n < buf->topLine->linenumber || buf->topLine->linenumber + buf->LINES <= n)
-                buf->topLine = lineSkip(buf, l, -(buf->LINES + 1) / 2, false);
+            if (n < buf->topLine->linenumber || buf->topLine->linenumber + buf->lines <= n)
+                buf->topLine = lineSkip(buf, l, -(buf->lines + 1) / 2, false);
             break;
         }
     }
@@ -329,15 +329,15 @@ void gotoRealLine(struct Buffer* buf, int n)
         sprintf(msg, "Last line is #%ld", buf->lastLine->real_linenumber);
         tui_set_delayed_message(msg);
         buf->currentLine = l;
-        buf->topLine = lineSkip(buf, buf->currentLine, -(buf->LINES - 1),
+        buf->topLine = lineSkip(buf, buf->currentLine, -(buf->lines - 1),
             false);
         return;
     }
     for (; l != NULL; l = l->next) {
         if (l->real_linenumber >= n) {
             buf->currentLine = l;
-            if (n < buf->topLine->real_linenumber || buf->topLine->real_linenumber + buf->LINES <= n)
-                buf->topLine = lineSkip(buf, l, -(buf->LINES + 1) / 2, false);
+            if (n < buf->topLine->real_linenumber || buf->topLine->real_linenumber + buf->lines <= n)
+                buf->topLine = lineSkip(buf, l, -(buf->lines + 1) / 2, false);
             break;
         }
     }
@@ -877,7 +877,7 @@ void cursorUp(struct Buffer* buf, int n)
 
 void cursorDown0(struct Buffer* buf, int n)
 {
-    if (buf->cursorY < buf->LINES - 1)
+    if (buf->cursorY < buf->lines - 1)
         cursorUpDown(buf, 1);
     else {
         buf->topLine = lineSkip(buf, buf->topLine, n, false);
@@ -948,8 +948,8 @@ void cursorRight(struct Buffer* buf, int n)
     while (buf->pos + delta < l->len && p[buf->pos + delta] & PC_WCHAR2)
         delta++;
     vpos2 = COLPOS(l, buf->pos + delta) - buf->currentColumn - 1;
-    if (vpos2 >= buf->COLS && n) {
-        columnSkip(buf, n + (vpos2 - buf->COLS) - (vpos2 - buf->COLS) % n);
+    if (vpos2 >= buf->cols && n) {
+        columnSkip(buf, n + (vpos2 - buf->cols) - (vpos2 - buf->cols) % n);
         buf->visualpos = l->bwidth + cpos - buf->currentColumn;
     }
     buf->cursorX = buf->visualpos - l->bwidth;
@@ -1002,7 +1002,7 @@ void arrangeCursor(struct Buffer* buf)
     if (buf == 0 || buf->currentLine == 0)
         return;
     /* Arrange line */
-    if (buf->currentLine->linenumber - buf->topLine->linenumber >= buf->LINES
+    if (buf->currentLine->linenumber - buf->topLine->linenumber >= buf->lines
         || buf->currentLine->linenumber < buf->topLine->linenumber) {
         /*
          * buf->topLine = buf->currentLine;
@@ -1030,9 +1030,9 @@ void arrangeCursor(struct Buffer* buf)
     while (buf->pos + delta < buf->currentLine->len && buf->currentLine->propBuf[buf->pos + delta] & PC_WCHAR2)
         delta++;
     col2 = COLPOS(buf->currentLine, buf->pos + delta);
-    if (col < buf->currentColumn || col2 > buf->COLS + buf->currentColumn) {
+    if (col < buf->currentColumn || col2 > buf->cols + buf->currentColumn) {
         buf->currentColumn = 0;
-        if (col2 > buf->COLS)
+        if (col2 > buf->cols)
             columnSkip(buf, col);
     }
     /* Arrange cursor */
@@ -1082,18 +1082,18 @@ void cursorXY(struct Buffer* buf, int x, int y)
 
     if (buf->cursorX > x) {
         while (buf->cursorX > x)
-            cursorLeft(buf, buf->COLS / 2);
+            cursorLeft(buf, buf->cols / 2);
     } else if (buf->cursorX < x) {
         while (buf->cursorX < x) {
             oldX = buf->cursorX;
 
-            cursorRight(buf, buf->COLS / 2);
+            cursorRight(buf, buf->cols / 2);
 
             if (oldX == buf->cursorX)
                 break;
         }
         if (buf->cursorX > x)
-            cursorLeft(buf, buf->COLS / 2);
+            cursorLeft(buf, buf->cols / 2);
     }
 }
 

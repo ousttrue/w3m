@@ -911,7 +911,7 @@ doExternal(struct URLFile uf, const char* type, struct Buffer* defaultbuf)
 }
 #define DO_EXTERNAL ((struct Buffer * (*)(struct URLFile*, struct Buffer*)) doExternal)
 struct Buffer*
-loadGeneralFile(char* path, struct Url* volatile current, char* referer,
+loadGeneralFile(const char* path, struct Url* volatile current, const char* referer,
     enum LoadGeneralFlags flag, FormList* volatile request)
 {
     struct URLFile f, *volatile of = NULL;

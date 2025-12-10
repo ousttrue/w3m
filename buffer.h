@@ -36,8 +36,8 @@ extern int REV_LB[];
     {                                      \
         (dstbuf)->rootX = (srcbuf)->rootX; \
         (dstbuf)->rootY = (srcbuf)->rootY; \
-        (dstbuf)->COLS = (srcbuf)->COLS;   \
-        (dstbuf)->LINES = (srcbuf)->LINES; \
+        (dstbuf)->cols = (srcbuf)->cols;   \
+        (dstbuf)->lines = (srcbuf)->lines; \
     }
 
 #define COPY_BUFPOSITION(dstbuf, srcbuf)                   \
@@ -83,8 +83,8 @@ struct Buffer {
     int visualpos;
     short rootX;
     short rootY;
-    short COLS;
-    short LINES;
+    short cols;
+    short lines;
     union input_stream* pagerSource;
     struct _AnchorList* href;
     struct _AnchorList* name;
@@ -229,7 +229,7 @@ void formRecheckRadio(Anchor* a, struct Buffer* buf, struct form_item_list* form
 void formResetBuffer(struct Buffer* buf, AnchorList* formitem);
 void formUpdateBuffer(Anchor* a, struct Buffer* buf, struct form_item_list* form);
 void preFormUpdateBuffer(struct Buffer* buf);
-struct MapArea* follow_map_menu(struct Buffer* buf, char* name, Anchor* a_img, int x,
+struct MapArea* follow_map_menu(struct Buffer* buf, const char* name, Anchor* a_img, int x,
     int y);
 struct Buffer* follow_map_panel(struct Buffer* buf, char* name);
 int getMapXY(struct Buffer* buf, Anchor* a, int* x, int* y);
