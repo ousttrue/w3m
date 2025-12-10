@@ -37,7 +37,10 @@ static char* delayed_msg = NULL;
 void tui_enter()
 {
     if (!fmInitialized) {
-        initscr();
+        if(!initscr()){
+            return;
+        }
+        set_int();
         term_raw();
         term_noecho();
         if (displayImage)
@@ -547,12 +550,14 @@ void tui_input_user_pw(const char* realm, Str* uname, Str* pwd)
     if (fmInitialized) {
         term_raw();
         const char* pp = inputStr(Sprintf("Username for %s: ", realm)->ptr,
-            NULL)->ptr;
+            NULL)
+                             ->ptr;
         if (!pp)
             return;
         *uname = Str_conv_to_system(Strnew_charp(pp));
         if ((pp = inputLine(Sprintf("Password for %s: ", realm)->ptr, NULL,
-                 IN_PASSWORD)->ptr)
+                 IN_PASSWORD)
+                    ->ptr)
             == NULL) {
             *uname = NULL;
             return;
@@ -712,7 +717,8 @@ int tui_doFileCopy(const char* tmpf, const char* defstr, bool download)
         const char* q = NULL;
         if (p == NULL || *p == '\0') {
             q = inputLineHist("(Download)Save file to: ",
-                defstr, IN_COMMAND, SaveHist)->ptr;
+                defstr, IN_COMMAND, SaveHist)
+                    ->ptr;
             if (q == NULL || *q == '\0')
                 return false;
             p = conv_to_system(q);
@@ -845,7 +851,8 @@ int tui_doFileSave(struct URLFile* uf, const char* defstr)
         if (p == NULL || *p == '\0') {
             /* FIXME: gettextize? */
             p = inputLineHist("(Download)Save file to: ",
-                defstr, IN_FILENAME, SaveHist)->ptr;
+                defstr, IN_FILENAME, SaveHist)
+                    ->ptr;
             if (p == NULL || *p == '\0')
                 return -1;
             p = conv_to_system(p);

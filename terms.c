@@ -3,7 +3,6 @@
  * revised by Akinori ITO, January 1995
  */
 #include "terms.h"
-#include "signal_jmp.h"
 #include "config.h"
 #include "funcheader.h"
 #include "screen.h"
@@ -13,7 +12,6 @@
 #include <wc/wtf.h>
 #include <gcstr.h>
 #include <stdio.h>
-#include <signal.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -41,38 +39,35 @@ static FILE* ttyf = NULL;
 #define MAX_COLUMN 400
 
 struct TermSize g_size = {
-    0,
-    0,
+    .lines = 0,
+    .cols = 0,
 };
 struct TermSize tty_current_size()
 {
     return g_size;
 }
 
-static void reset_exit_with_value(int _, int rval)
+void tty_immediate_setattr(struct termios* p)
 {
-    tty_reset();
-    w3m_exit(rval);
-}
+    while (true) {
+        if (tcsetattr(tty, TCSANOW, p) == 0) {
+            // success
+            break;
+        }
 
-static void reset_error_exit(int _)
-{
-    reset_exit_with_value(0, 1);
-}
+        switch (errno) {
+        case EINTR:
+        case EAGAIN:
+            // retry
+            continue;
 
-static void reset_exit(int _)
-{
-    reset_exit_with_value(0, 0);
-}
-
-void setlinescols(int lines, int cols)
-{
-    g_size.lines = lines;
-    g_size.cols = cols;
-    if (g_size.cols > MAX_COLUMN)
-        g_size.cols = MAX_COLUMN;
-    if (g_size.lines > MAX_LINE)
-        g_size.lines = MAX_LINE;
+        default:
+            // exit
+            fprintf(stderr, "[error] tcsetattr: %d => %s\n", errno, strerror(errno));
+            w3m_exit(1);
+            break;
+        }
+    }
 }
 
 int tty_putc(int c)
@@ -208,33 +203,19 @@ int set_tty(void)
 void ttymode_set(int mode, int imode)
 {
     struct termios ioval;
-
     tcgetattr(tty, &ioval);
     ioval.c_lflag |= mode;
     ioval.c_iflag |= imode;
-
-    while (tcsetattr(tty, TCSANOW, &ioval) == -1) {
-        if (errno == EINTR || errno == EAGAIN)
-            continue;
-        printf("Error occurred while set %x: errno=%d\n", mode, errno);
-        reset_error_exit(0);
-    }
+    tty_immediate_setattr(&ioval);
 }
 
 void ttymode_reset(int mode, int imode)
 {
     struct termios ioval;
-
     tcgetattr(tty, &ioval);
     ioval.c_lflag &= ~mode;
     ioval.c_iflag &= ~imode;
-
-    while (tcsetattr(tty, TCSANOW, &ioval) == -1) {
-        if (errno == EINTR || errno == EAGAIN)
-            continue;
-        printf("Error occurred while reset %x: errno=%d\n", mode, errno);
-        reset_error_exit(0);
-    }
+    tty_immediate_setattr(&ioval);
 }
 
 void set_cc(int spec, int val)
@@ -247,7 +228,7 @@ void set_cc(int spec, int val)
         if (errno == EINTR || errno == EAGAIN)
             continue;
         printf("Error occurred: errno=%d\n", errno);
-        reset_error_exit(0);
+        w3m_exit(0);
     }
 }
 
@@ -279,35 +260,16 @@ void tty_reset(void)
         close_tty();
 }
 
-static void error_dump(int _)
-{
-    mySignal(SIGIOT, SIG_DFL);
-    tty_reset();
-    abort();
-}
-
-void set_int(void)
-{
-    mySignal(SIGHUP, reset_exit);
-    mySignal(SIGINT, reset_exit);
-    mySignal(SIGQUIT, reset_exit);
-    mySignal(SIGTERM, reset_exit);
-    mySignal(SIGILL, error_dump);
-    mySignal(SIGIOT, error_dump);
-    mySignal(SIGFPE, error_dump);
-#ifdef SIGBUS
-    mySignal(SIGBUS, error_dump);
-#endif /* SIGBUS */
-    /* mySignal(SIGSEGV, error_dump); */
-}
-
 void tty_update_size()
 {
     struct TermSize size = {
         .lines = -1,
         .cols = -1,
     };
-    char* p;
+
+    // TODO: termios
+
+    const char* p;
     int i;
     if ((p = getenv("LINES")) != NULL && (i = atoi(p)) >= 0)
         size.lines = i;
@@ -318,25 +280,33 @@ void tty_update_size()
     if (size.cols <= 0)
         size.cols = tgetnum("co"); /* number of column */
 
-    setlinescols(size.lines, size.cols);
+    g_size = size;
+    if (g_size.cols > MAX_COLUMN)
+        g_size.cols = MAX_COLUMN;
+    if (g_size.lines > MAX_LINE)
+        g_size.lines = MAX_LINE;
 }
 
 /*
  * struct ScreenLine initialize
  */
-int initscr(void)
+bool initscr(void)
 {
-    if (set_tty() < 0)
-        return -1;
-    set_int();
+    if (set_tty() < 0){
+        return false;
+    }
+
+    // termcap
     getTCstr();
-
-    if (T_.ti && !Do_not_use_ti_te)
+    if (T_.ti && !Do_not_use_ti_te){
         tty_write(T_.ti);
+    }
 
+    // screen
     tty_current_size();
     scr_setup(g_size.lines, g_size.cols);
-    return 0;
+
+    return true;
 }
 
 void tty_crmode(void)
@@ -455,7 +425,7 @@ int tty_sleep_till_anykey(int sec, int purge)
     er = tcsetattr(tty, TCSANOW, &ioval);
     if (er == -1) {
         printf("Error occurred: errno=%d\n", errno);
-        reset_error_exit(0);
+        w3m_exit(0);
     }
     return ret;
 }

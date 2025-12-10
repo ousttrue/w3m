@@ -61,6 +61,14 @@
 
 #define DICTBUFFERNAME "*dictionary*"
 
+bool g_running = true;
+int g_exitcode = 0;
+void w3m_exit(int exitcode)
+{
+    g_exitcode = exitcode;
+    g_running = false;
+}
+
 unsigned char last_key = 0;
 
 #define DSTR_LEN 256
@@ -442,7 +450,7 @@ int w3m_parse_arg(int argc, char** argv)
                     WrapDefault = false;
                 else
                     WrapDefault = true;
-            } 
+            }
             // else if (!strcmp("-cols", argv[i])) {
             //     if (++i >= argc)
             //         usage();
@@ -450,7 +458,7 @@ int w3m_parse_arg(int argc, char** argv)
             //     if (COLS > MAXIMUM_COLS) {
             //         COLS = MAXIMUM_COLS;
             //     }
-            // } 
+            // }
             else if (!strcmp("-ppc", argv[i])) {
                 double ppc;
                 if (++i >= argc)
@@ -612,7 +620,7 @@ int w3m_parse_arg(int argc, char** argv)
             SearchHeader = search_header;
             DefaultType = default_type;
             int retry = 0;
-            const char *url = load_argv[i];
+            const char* url = load_argv[i];
             if (getURLScheme(&url) == SCM_MISSING && !ArgvIsURL)
             retry_as_local_file:
                 url = file_to_url(load_argv[i]);
@@ -744,7 +752,7 @@ int w3m_parse_arg(int argc, char** argv)
 
 int w3m_loop()
 {
-    for (;;) {
+    while (g_running) {
         dl_update();
         if (Currentbuf->submit) {
             Anchor* a = Currentbuf->submit;
@@ -820,6 +828,16 @@ int w3m_loop()
         CurrentKey = -1;
         CurrentKeyData = NULL;
     }
+
+    tty_reset();
+
+    dl_stop();
+    deleteFiles();
+    free_ssl_ctx();
+    disconnectFTP();
+    disconnectNews();
+
+    return g_exitcode;
 }
 
 static void
@@ -1007,7 +1025,7 @@ resize_screen(void)
 {
     need_resize_screen = false;
     tty_update_size();
-    struct TermSize size = tty_current_size(); 
+    struct TermSize size = tty_current_size();
     scr_setup(size.lines, size.cols);
     if (CurrentTab)
         displayBuffer(Currentbuf, B_FORCE_REDRAW);
@@ -2009,7 +2027,7 @@ DEFUN(selBuf, SELECT, "Display buffer-stack panel")
 /* Suspend (on BSD), or run interactive shell (on SysV) */
 DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background")
 {
-    scr_move(LINES-1, 0);
+    scr_move(LINES - 1, 0);
     scr_clrtoeolx();
     tui_render_screen();
     tui_exit();
@@ -4650,16 +4668,6 @@ void deleteFiles()
             unlink(firstframe->ptr);
         }
     }
-}
-
-void w3m_exit(int i)
-{
-    dl_stop();
-    deleteFiles();
-    free_ssl_ctx();
-    disconnectFTP();
-    disconnectNews();
-    exit(i);
 }
 
 DEFUN(execCmd, COMMAND, "Invoke w3m function(s)")

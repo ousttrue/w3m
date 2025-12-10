@@ -1,5 +1,7 @@
 #pragma once
 #include <stddef.h>
+#include <termios.h>
+#include <stdbool.h>
 
 struct TermSize {
     int lines;
@@ -12,6 +14,7 @@ void tty_update_size();
 #define COLS tty_current_size().cols
 
 int tty_get_pixel_per_cell(int* ppc, int* ppl);
+void tty_immediate_setattr(struct termios* p);
 
 void ttymode_set(int mode, int imode);
 void ttymode_reset(int mode, int imode);
@@ -23,8 +26,7 @@ void tty_write(const char* s);
 void tty_move(int line, int column);
 char* tty_name(void);
 void tty_reset(void);
-void set_int(void);
-int initscr(void);
+bool initscr(void);
 void wrap(void);
 void tty_crmode(void);
 void tty_nocrmode(void);

@@ -1,4 +1,7 @@
 #include "w3m_runtime.h"
+#include "signal_jmp.h"
+#include "terms.h"
+#include <signal.h>
 #include <gcstr.h>
 #include <pwd.h>
 #include <stdlib.h>
@@ -23,6 +26,43 @@ wc_ces DisplayCharset = DISPLAY_CHARSET;
 wc_ces DocumentCharset = DOCUMENT_CHARSET;
 wc_ces SystemCharset = SYSTEM_CHARSET;
 wc_ces BookmarkCharset = SYSTEM_CHARSET;
+
+static void reset_exit_with_value(int _, int rval)
+{
+    w3m_exit(rval);
+}
+
+static void reset_error_exit(int _)
+{
+    reset_exit_with_value(0, 1);
+}
+
+static void reset_exit(int _)
+{
+    reset_exit_with_value(0, 0);
+}
+
+static void error_dump(int _)
+{
+    mySignal(SIGIOT, SIG_DFL);
+    tty_reset();
+    abort();
+}
+
+void set_int(void)
+{
+    mySignal(SIGHUP, reset_exit);
+    mySignal(SIGINT, reset_exit);
+    mySignal(SIGQUIT, reset_exit);
+    mySignal(SIGTERM, reset_exit);
+    mySignal(SIGILL, error_dump);
+    mySignal(SIGIOT, error_dump);
+    mySignal(SIGFPE, error_dump);
+#ifdef SIGBUS
+    mySignal(SIGBUS, error_dump);
+#endif /* SIGBUS */
+    /* mySignal(SIGSEGV, error_dump); */
+}
 
 #define do_mkdir(dir, mode) mkdir(dir, mode)
 

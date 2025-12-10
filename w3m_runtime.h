@@ -33,6 +33,8 @@ struct W3mConfig {
 };
 extern struct W3mConfig w3m_config;
 
+void set_int(void);
+void w3m_exit(int exitcode);
 void config_initialize();
 void config_load(int r);
 bool config_set_param(const char* name, const char* value);
