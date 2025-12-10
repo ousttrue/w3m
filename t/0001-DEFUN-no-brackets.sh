@@ -6,5 +6,4 @@ then
 	        cd t || exit 2
 fi
 
-grep '^DEFUN' ../*.c | grep '{$'
-test $? -eq 1 || exit 1
+! grep '^DEFUN.*{$' ../*.c
