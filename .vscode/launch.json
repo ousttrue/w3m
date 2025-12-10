@@ -36,6 +36,7 @@
             "program": "${workspaceFolder}/zig-out/bin/w3m",
             "args": [
                 // "-show-option"
+                "http://yahoo.co.jp",
             ],
             "cwd": "${workspaceFolder}",
             "env": {

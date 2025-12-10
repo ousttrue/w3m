@@ -229,7 +229,7 @@ void drawImage(void)
             if (!i->cache->touch || stat(i->cache->file, &st))
                 return;
 
-            char* url = i->cache->file;
+            const char* url = i->cache->file;
 
             int x = i->x / pixel_per_char_i;
             int y = i->y / pixel_per_line_i;
@@ -630,7 +630,7 @@ getImage(struct Image* image, struct Url* current, enum ImageGetFlags flag)
 }
 
 static int
-parseImageHeader(char* path, u_int* width, u_int* height)
+parseImageHeader(const char* path, u_int* width, u_int* height)
 {
     FILE* fp;
     u_char buf[8];
@@ -765,7 +765,7 @@ got_image_size:
     return true;
 }
 
-void put_image_osc5379(char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh)
+void put_image_osc5379(const char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh)
 {
     Str buf;
     char* size;
@@ -781,7 +781,7 @@ void put_image_osc5379(char* url, int x, int y, int w, int h, int sx, int sy, in
     tty_move(Currentbuf->cursorY, Currentbuf->cursorX);
 }
 
-void put_image_iterm2(char* url, int x, int y, int w, int h)
+void put_image_iterm2(const char* url, int x, int y, int w, int h)
 {
     Str buf;
     char* cbuf;
@@ -835,7 +835,7 @@ cleanup:
     tty_move(Currentbuf->cursorY, Currentbuf->cursorX);
 }
 
-void put_image_kitty(char* url, int x, int y, int w, int h, int sx, int sy, int sw,
+void put_image_kitty(const char* url, int x, int y, int w, int h, int sx, int sy, int sw,
     int sh, int cols, int rows)
 {
     Str buf, base64;
@@ -880,7 +880,7 @@ void put_image_kitty(char* url, int x, int y, int w, int h, int sx, int sy, int 
                 i = 0;
 
                 close(STDERR_FILENO); /* Don't output error message. */
-                ttymode_set(ISIG, 0);
+                ttymode_add(ISIG, 0);
 
                 if ((cbuf = getenv("W3M_KITTY_TO_PNG")))
                     argv[i++] = cbuf;
@@ -900,7 +900,7 @@ void put_image_kitty(char* url, int x, int y, int w, int h, int sx, int sy, int 
                 exit(0);
             } else if (pid > 0) {
                 waitpid(pid, &i, 0);
-                ttymode_reset(ISIG, 0);
+                ttymode_remove(ISIG, 0);
                 mySignal(SIGINT, previntr);
                 mySignal(SIGQUIT, prevquit);
                 mySignal(SIGTSTP, prevstop);
@@ -1055,7 +1055,7 @@ save_first_animation_frame(const char* path)
     return NULL;
 }
 
-void put_image_sixel(char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh, int n_terminal_image)
+void put_image_sixel(const char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh, int n_terminal_image)
 {
     pid_t pid;
     int do_anim;
@@ -1086,7 +1086,7 @@ void put_image_sixel(char* url, int x, int y, int w, int h, int sx, int sy, int 
         } else if (!strstr(url, "://") && strcmp(url + strlen(url) - 4, ".gif") == 0 && (str_url = save_first_animation_frame(url))) {
             url = str_url->ptr;
         }
-        ttymode_set(ISIG, 0);
+        ttymode_add(ISIG, 0);
 
         if ((env = getenv("W3M_IMG2SIXEL"))) {
             char* p;
@@ -1125,7 +1125,7 @@ void put_image_sixel(char* url, int x, int y, int w, int h, int sx, int sy, int 
     } else if (pid > 0) {
         int status;
         waitpid(pid, &status, 0);
-        ttymode_reset(ISIG, 0);
+        ttymode_remove(ISIG, 0);
         mySignal(SIGINT, previntr);
         mySignal(SIGQUIT, prevquit);
         mySignal(SIGTSTP, prevstop);

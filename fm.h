@@ -93,7 +93,7 @@ global char* pre_form_file init(PRE_FORM_FILE);
 global char* ftppasswd init(0);
 global int ftppass_hostnamegen init(true);
 global int do_download init(false);
-global char* image_source init(0);
+global const char* image_source init(0);
 global int WrapDefault init(false);
 global int IgnoreCase init(true);
 global int WrapSearch init(false);

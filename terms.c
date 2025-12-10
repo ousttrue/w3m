@@ -55,18 +55,15 @@ void tty_immediate_setattr(struct termios* p)
             break;
         }
 
-        switch (errno) {
-        case EINTR:
-        case EAGAIN:
+        if (errno == EINTR || errno == EAGAIN) {
             // retry
             continue;
-
-        default:
-            // exit
-            fprintf(stderr, "[error] tcsetattr: %d => %s\n", errno, strerror(errno));
-            w3m_exit(1);
-            break;
         }
+
+        // exit
+        fprintf(stderr, "[error] tcsetattr: %d => %s\n", errno, strerror(errno));
+        w3m_exit(1);
+        break;
     }
 }
 
@@ -200,21 +197,21 @@ int set_tty(void)
     return 0;
 }
 
-void ttymode_set(int mode, int imode)
+void ttymode_add(int local_mode, int input_mode)
 {
     struct termios ioval;
     tcgetattr(tty, &ioval);
-    ioval.c_lflag |= mode;
-    ioval.c_iflag |= imode;
+    ioval.c_lflag |= local_mode;
+    ioval.c_iflag |= input_mode;
     tty_immediate_setattr(&ioval);
 }
 
-void ttymode_reset(int mode, int imode)
+void ttymode_remove(int local_mode, int input_mode)
 {
     struct termios ioval;
     tcgetattr(tty, &ioval);
-    ioval.c_lflag &= ~mode;
-    ioval.c_iflag &= ~imode;
+    ioval.c_lflag &= ~local_mode;
+    ioval.c_iflag &= ~input_mode;
     tty_immediate_setattr(&ioval);
 }
 
@@ -292,67 +289,62 @@ void tty_update_size()
  */
 bool initscr(void)
 {
-    if (set_tty() < 0){
+    if (set_tty() < 0) {
         return false;
     }
 
     // termcap
     getTCstr();
-    if (T_.ti && !Do_not_use_ti_te){
+    if (T_.ti && !Do_not_use_ti_te) {
         tty_write(T_.ti);
     }
 
     // screen
-    tty_current_size();
+    tty_update_size();
     scr_setup(g_size.lines, g_size.cols);
 
     return true;
 }
 
-void tty_crmode(void)
-{
-    ttymode_reset(ICANON, IXON);
-    ttymode_set(ISIG, 0);
-    set_cc(VMIN, 1);
-}
+// void tty_crmode(void)
+// {
+//     ttymode_reset(ICANON, IXON);
+//     ttymode_set(ISIG, 0);
+//     set_cc(VMIN, 1);
+// }
 
 void tty_nocrmode(void)
 {
-    ttymode_set(ICANON, 0);
+    ttymode_add(ICANON, 0);
     set_cc(VMIN, 4);
 }
 
-void term_echo(void)
+void tty_echo(void)
 {
-    ttymode_set(ECHO, 0);
+    ttymode_add(ECHO, 0);
 }
 
-void term_noecho(void)
+void tty_noecho(void)
 {
-    ttymode_reset(ECHO, 0);
+    ttymode_remove(ECHO, 0);
 }
 
-void term_raw(void)
-#ifdef IEXTEN
-#define TTY_MODE ISIG | ICANON | ECHO | IEXTEN
-#else /* not IEXTEN */
-#define TTY_MODE ISIG | ICANON | ECHO
-#endif /* not IEXTEN */
+void tty_raw(void)
 {
-    ttymode_reset(TTY_MODE, IXON | IXOFF | IGNCR | INLCR | ICRNL);
+    ttymode_remove(ISIG | ICANON | ECHO | IEXTEN, IXON | IXOFF | IGNCR | INLCR | ICRNL);
     set_cc(VMIN, 1);
 }
 
-void term_cooked(void)
+void tty_cooked(void)
 {
-    ttymode_set(TTY_MODE, 0);
+    ttymode_add(ISIG | ICANON | ECHO | IEXTEN, 0);
     set_cc(VMIN, 4);
 }
 
-void term_cbreak(void)
+void tty_cbreak(void)
 {
-    term_cooked();
-    term_noecho();
+    tty_cooked();
+    tty_noecho();
 }
 
 void tty_set_title(const char* s)
@@ -408,7 +400,7 @@ int tty_sleep_till_anykey(int sec, int purge)
     struct termios ioval;
 
     tcgetattr(tty, &ioval);
-    term_raw();
+    tty_raw();
 
     tim.tv_sec = sec;
     tim.tv_usec = 0;

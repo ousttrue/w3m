@@ -1190,7 +1190,7 @@ srchcore(char* volatile str, int (*func)(struct Buffer*, char*))
 
     str = conv_search_string(SearchString, DisplayCharset);
     MySignalHandler prevtrap = mySignal(SIGINT, intTrap);
-    tty_crmode();
+    tty_raw();
     if (SETJMP(IntReturn) == 0) {
         for (i = 0; i < PREC_NUM; i++) {
             result = func(Currentbuf, str);
@@ -1199,7 +1199,7 @@ srchcore(char* volatile str, int (*func)(struct Buffer*, char*))
         }
     }
     mySignal(SIGINT, prevtrap);
-    term_raw();
+    tty_raw();
     return result;
 }
 
@@ -1580,10 +1580,10 @@ DEFUN(readsh, READ_SHELL, "Execute shell command and display output")
         return;
     }
     MySignalHandler prevtrap = mySignal(SIGINT, intTrap);
-    tty_crmode();
+    tty_raw();
     buf = getshell(cmd);
     mySignal(SIGINT, prevtrap);
-    term_raw();
+    tty_raw();
     if (buf == NULL) {
         /* FIXME: gettextize? */
         tui_disp_message("Execution failed", true);

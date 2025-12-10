@@ -41,8 +41,8 @@ void tui_enter()
             return;
         }
         set_int();
-        term_raw();
-        term_noecho();
+        tty_raw();
+        tty_noecho();
         if (displayImage)
             initImage();
     }
@@ -531,7 +531,7 @@ const char* inputAnswer(const char* prompt)
 
     char* ans;
     if (fmInitialized) {
-        term_raw();
+        tty_raw();
         ans = inputChar(prompt)->ptr;
     } else {
         printf("%s", prompt);
@@ -548,7 +548,7 @@ void tui_input_user_pw(const char* realm, Str* uname, Str* pwd)
 
     sleep(2);
     if (fmInitialized) {
-        term_raw();
+        tty_raw();
         const char* pp = inputStr(Sprintf("Username for %s: ", realm)->ptr,
             NULL)
                              ->ptr;
@@ -563,7 +563,7 @@ void tui_input_user_pw(const char* realm, Str* uname, Str* pwd)
             return;
         }
         *pwd = Str_conv_to_system(Strnew_charp(pp));
-        term_cbreak();
+        tty_cbreak();
     } else {
         /*
          * If post file is specified as '-', stdin is closed at this
@@ -592,10 +592,10 @@ Str tui_input_pw()
 {
     Str pwd;
     if (fmInitialized) {
-        term_raw();
+        tty_raw();
         pwd = Strnew_charp(inputLine("Password: ", NULL, IN_PASSWORD)->ptr);
         pwd = Str_conv_to_system(pwd);
-        term_cbreak();
+        tty_cbreak();
     } else {
         pwd = Strnew_charp((char*)getpass("Password: "));
     }

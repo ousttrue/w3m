@@ -30,10 +30,10 @@ extern int displayImage;
 #define IMG_FLAG_DONT_REMOVE 4
 
 struct ImageCache {
-    char* url;
+    const char* url;
     struct Url* current;
-    char* file;
-    char* touch;
+    const char* file;
+    const char* touch;
     pid_t pid;
     char loaded;
     int index;
@@ -82,7 +82,7 @@ void addImage(struct ImageCache* cache, int x, int y, int sx, int sy, int w,
 void drawImage(void);
 void clearImage(void);
 
-void put_image_osc5379(char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh);
-void put_image_sixel(char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh, int n_terminal_image);
-void put_image_iterm2(char* url, int x, int y, int w, int h);
-void put_image_kitty(char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh, int c, int r);
+void put_image_osc5379(const char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh);
+void put_image_sixel(const char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh, int n_terminal_image);
+void put_image_iterm2(const char* url, int x, int y, int w, int h);
+void put_image_kitty(const char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh, int c, int r);

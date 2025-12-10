@@ -3,5 +3,11 @@
         "build",
         "test",
         "-Dtest-filter=${filter}"
-    ]
+    ],
+    "clangd.arguments": [
+        "--compile-commands-dir=${workspaceFolder}/build",
+        "--header-insertion=never",
+        "--clang-tidy",
+        "--enable-config",
+    ],
 }
