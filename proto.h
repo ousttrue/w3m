@@ -576,16 +576,16 @@ extern void shiftAnchorPosition(AnchorList *a, HmarkerList *hl, int line,
 extern char *getAnchorText(Buffer *buf, AnchorList *al, Anchor *a);
 extern Buffer *link_list_panel(Buffer *buf);
 
-extern Str decodeB(const char *ww);
-extern void decodeB_to_growbuf(struct growbuf *gb, const char *ww);
-extern Str decodeQ(const char *ww);
-extern void decodeQP_to_growbuf(struct growbuf *gb, const char *ww);
-extern void decodeU_to_growbuf(struct growbuf *gb, const char *ww);
+extern Str decodeB(char **ww);
+extern void decodeB_to_growbuf(struct growbuf *gb, char **ww);
+extern Str decodeQ(char **ww);
+extern void decodeQP_to_growbuf(struct growbuf *gb, char **ww);
+extern void decodeU_to_growbuf(struct growbuf *gb, char **ww);
 #ifdef USE_M17N
-extern Str decodeWord(const char *ow, wc_ces * charset);
+extern Str decodeWord(char **ow, wc_ces * charset);
 extern Str decodeMIME(Str orgstr, wc_ces * charset);
 #else
-extern Str decodeWord0(const char *ow);
+extern Str decodeWord0(char **ow);
 extern Str decodeMIME0(Str orgstr);
 #define decodeWord(ow,charset) decodeWord0(ow)
 #define decodeMIME(orgstr,charset) decodeMIME0(orgstr)
