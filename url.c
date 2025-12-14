@@ -2494,7 +2494,7 @@ url_decode2(char *url, Buffer *buf)
 #else /* !defined(USE_M17N) */
 
 char *
-url_decode0(const char *url)
+url_decode0(char *url)
 {
     if (!DecodeURL)
 	return (char *)url;

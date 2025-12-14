@@ -183,7 +183,7 @@ extern char *url_encode(char *url, ParsedURL *base,
 extern char *url_decode2(char *url, Buffer *buf);
 #else /* !defined(USE_M17N) */
 #define url_encode(url, base, cs) url_quote(url)
-extern char *url_decode0(const char *url);
+extern char *url_decode0(char *url);
 #define url_decode2(url, buf) url_decode0(url)
 #endif /* !defined(USE_M17N) */
 extern void examineFile(char *path, URLFile *uf);

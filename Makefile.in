@@ -36,11 +36,18 @@ ETC_DIR = $(sysconfdir)
 CONF_DIR = $(sysconfdir)/$(PACKAGE)
 
 WARNINGS  = -Wall
+WARNINGS += -Wcast-qual
 WARNINGS += -Werror=vla
-WARNINGS += -Wnull-dereference
 WARNINGS += -Wimplicit-function-declaration
 WARNINGS += -Wimplicit-int
+WARNINGS += -Wnull-dereference
+WARNINGS += -Wold-style-definition
+WARNINGS += -Wredundant-decls
 WARNINGS += -Wstrict-prototypes
+WARNINGS += -Wstring-compare
+WARNINGS += -Wtype-limits
+WARNINGS += -Wuninitialized
+WARNINGS += -Wunused
 
 CFLAGS = $(WARNINGS) -I. -I$(top_srcdir) @CFLAGS@ $(CPPFLAGS) $(DEFS) $(OPTS)
 WCCFLAGS = @WCCFLAGS@
