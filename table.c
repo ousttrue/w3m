@@ -422,7 +422,7 @@ visible_length(const char *str)
 {
     int len = 0, n, max_len = 0;
     int status = R_ST_NORMAL;
-    int prev_status = status;
+    int prev_status;
     Str tagbuf = Strnew();
     char *t, *r2;
 

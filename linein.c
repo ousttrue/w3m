@@ -453,7 +453,7 @@ _esc(void)
     switch (c = getch()) {
     case '[':
     case 'O':
-	switch (c = getch()) {
+	switch (getch()) {
 	case 'A':
 	    _prev();
 	    break;

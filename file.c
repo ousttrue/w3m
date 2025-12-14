@@ -1876,7 +1876,7 @@ loadGeneralFile(char *path, ParsedURL *volatile current, char *referer,
 				  0);
 	    add_auth_cookie_flag = 0;
 	}
-	if ((p = checkHeader(t_buf, "WWW-Authenticate:")) != NULL &&
+	if ((checkHeader(t_buf, "WWW-Authenticate:")) != NULL &&
 	    http_response_code == 401) {
 	    /* Authentication needed */
 	    struct http_auth hauth;
@@ -1896,7 +1896,7 @@ loadGeneralFile(char *path, ParsedURL *volatile current, char *referer,
 		goto load_doc;
 	    }
 	}
-	if ((p = checkHeader(t_buf, "Proxy-Authenticate:")) != NULL &&
+	if ((checkHeader(t_buf, "Proxy-Authenticate:")) != NULL &&
 	    http_response_code == 407) {
 	    /* Authentication needed */
 	    struct http_auth hauth;

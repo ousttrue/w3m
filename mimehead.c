@@ -216,7 +216,7 @@ decodeWord0(char **ow)
 #endif
     char *p, *w = *ow;
     char method;
-    Str a = Strnew();
+    Str a;
     Str tmp = Strnew();
 
     if (*w != '=' || *(w + 1) != '?')
