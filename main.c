@@ -1,6 +1,7 @@
 /* $Id: main.c,v 1.270 2010/08/24 10:11:51 htrb Exp $ */
 #define MAINPROGRAM
 #include "fm.h"
+#include <stdbool.h>
 #include <stdio.h>
 #include <signal.h>
 #include <setjmp.h>
@@ -408,7 +409,8 @@ die_oom(size_t bytes)
     return NULL;
 }
 
-int w3m_main(int argc, char** argv)
+/// return ture if enter main loop
+bool w3m_args(int argc, char** argv)
 {
     Buffer* newbuf = NULL;
     char* p;
@@ -1126,6 +1128,11 @@ int w3m_main(int argc, char** argv)
     if (line_str) {
         _goLine(line_str);
     }
+
+    return true;
+}
+
+void w3m_loop(){
     for (;;) {
         if (add_download_list) {
             add_download_list = FALSE;
@@ -1205,7 +1212,7 @@ int w3m_main(int argc, char** argv)
             } while (sleep_till_anykey(1, 0) <= 0);
         }
 #endif
-        c = getch();
+        int c = getch();
         last_key = c;
 #ifdef USE_ALARM
         if (CurrentAlarm->sec > 0) {
