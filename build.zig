@@ -115,6 +115,7 @@ pub fn build(b: *std.Build) void {
     const mod = b.addModule("w3m", .{
         .target = target,
         .optimize = optimize,
+        .root_source_file = b.path("main.zig"),
     });
     const exe = b.addExecutable(.{
         .name = "w3m",
