@@ -412,6 +412,8 @@ die_oom(size_t bytes)
 /// return ture if enter main loop
 bool w3m_args(int argc, char** argv)
 {
+    init_tty();
+
     Buffer* newbuf = NULL;
     char* p;
     int c, i;

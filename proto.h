@@ -459,9 +459,7 @@ extern void resetFrameElement(union frameset_element* f_element, Buffer* buf,
     char* referer, FormList* request);
 extern Buffer* renderFrame(Buffer* Cbuf, int force_reload);
 extern union frameset_element* search_frame(struct frameset* fset, char* name);
-extern int set_tty(void);
 extern void set_cc(int spec, int val);
-extern void close_tty(void);
 extern char* ttyname_tty(void);
 extern void reset_tty(void);
 extern MySignalHandler reset_exit(SIGNAL_ARG);

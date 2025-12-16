@@ -47,7 +47,7 @@ int mouseActive = 0;
 
 static char* title_str = NULL;
 
-static int tty;
+static int tty = -1;
 
 #include "terms.h"
 #include "fm.h"
@@ -415,9 +415,18 @@ typedef struct scline {
 } Screen;
 
 static TerminalMode d_ioval;
-static int tty = -1;
 static FILE* ttyf = NULL;
 
+void init_tty(){
+    // stdin
+    tty = 0;
+    // stdout
+    ttyf = stdout;
+
+    TerminalGet(tty, &d_ioval);
+
+    getTCstr();
+}
 static char bp[1024], funcstr[256];
 
 char *T_cd, *T_ce, *T_kr, *T_kl, *T_cr, *T_bt, *T_ta, *T_sc, *T_rc,
@@ -930,50 +939,6 @@ static struct w3m_term_info {
 #undef W3M_TERM_INFO
 /* *INDENT-ON * */
 
-int set_tty(void)
-{
-    char* ttyn;
-
-    if (isatty(0)) /* stdin */
-        ttyn = ttyname(0);
-    else
-        ttyn = DEV_TTY_PATH;
-    tty = open(ttyn, O_RDWR);
-    if (tty < 0) {
-        /* use stderr instead of stdin... is it OK???? */
-        tty = 2;
-    }
-    ttyf = fdopen(tty, "w");
-#ifdef __CYGWIN__
-    check_cygwin_console();
-#endif
-    TerminalGet(tty, &d_ioval);
-    if (displayTitleTerm != NULL) {
-        struct w3m_term_info* p;
-        for (p = w3m_term_info_list; p->term != NULL; p++) {
-            if (!strncmp(displayTitleTerm, p->term, strlen(p->term))) {
-                title_str = p->title_str;
-                break;
-            }
-        }
-    }
-#ifdef USE_MOUSE
-    {
-        char* term = getenv("TERM");
-        if (term != NULL) {
-            struct w3m_term_info* p;
-            for (p = w3m_term_info_list; p->term != NULL; p++) {
-                if (!strncmp(term, p->term, strlen(p->term))) {
-                    is_xterm = p->mouse_flag;
-                    break;
-                }
-            }
-        }
-    }
-#endif
-    return 0;
-}
-
 void ttymode_set(int mode, int imode)
 {
 #ifndef __MINGW32_VERSION
@@ -1030,12 +995,6 @@ void set_cc(int spec, int val)
 }
 #endif /* not HAVE_SGTTY_H */
 
-void close_tty(void)
-{
-    if (tty > 2)
-        close(tty);
-}
-
 char* ttyname_tty(void)
 {
     return ttyname(tty);
@@ -1054,8 +1013,6 @@ void reset_tty(void)
     writestr(T_se); /* reset terminal */
     flush_tty();
     TerminalSet(tty, &d_ioval);
-    if (tty != 2)
-        close_tty();
 }
 
 static MySignalHandler
@@ -1295,10 +1252,7 @@ void setupscreen(void)
  */
 int initscr(void)
 {
-    if (set_tty() < 0)
-        return -1;
     set_int();
-    getTCstr();
     if (T_ti && !Do_not_use_ti_te)
         writestr(T_ti);
     setupscreen();

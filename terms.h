@@ -1,7 +1,3 @@
-/* $Id: terms.h,v 1.10 2004/07/15 16:32:39 ukai Exp $ */
-#ifndef TERMS_H
-#define TERMS_H
-
 extern int LINES, COLS;
 #if defined(__CYGWIN__)
 extern int LASTLINE;
@@ -38,6 +34,5 @@ extern void put_image_kitty(char* url, int x, int y, int w, int h, int sx, int s
 extern int get_pixel_per_cell(int* ppc, int* ppl);
 #endif
 
+void init_tty();
 char getch(void);
-
-#endif /* not TERMS_H */
