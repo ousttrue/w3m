@@ -173,7 +173,7 @@ static void EFFECT_VISITED_END
 void fmTerm(void)
 {
     if (fmInitialized) {
-        move(LASTLINE, 0);
+        move(LASTLINE(), 0);
         clrtoeolx();
         refresh();
 #ifdef USE_IMAGE
@@ -226,7 +226,7 @@ static Buffer* save_current_buf = NULL;
 static char* delayed_msg = NULL;
 
 static void drawAnchorCursor(Buffer* buf);
-#define redrawBuffer(buf) redrawNLine(buf, LASTLINE)
+#define redrawBuffer(buf) redrawNLine(buf, LASTLINE())
 static void redrawNLine(Buffer* buf, int n);
 static Line* redrawLine(Buffer* buf, Line* l, int i);
 #ifdef USE_IMAGE
@@ -249,7 +249,7 @@ make_lastline_link(Buffer* buf, char* title, char* url)
 #endif
     ParsedURL pu;
     char* p;
-    int l = COLS - 1, i;
+    int l = TTY_COLS() - 1, i;
 
     if (title && *title) {
         s = Strnew_m_charp("[", title, "]", NULL);
@@ -279,7 +279,7 @@ make_lastline_link(Buffer* buf, char* title, char* url)
         return s;
     }
     if (!s)
-        s = Strnew_size(COLS);
+        s = Strnew_size(TTY_COLS());
     i = (l - 2) / 2;
 #ifdef USE_M17N
     while (i && pr[i] & PC_WCHAR2)
@@ -287,7 +287,7 @@ make_lastline_link(Buffer* buf, char* title, char* url)
 #endif
     Strcat_charp_n(s, u->ptr, i);
     Strcat_charp(s, "..");
-    i = get_Str_strwidth(u) - (COLS - 1 - get_Str_strwidth(s));
+    i = get_Str_strwidth(u) - (TTY_COLS() - 1 - get_Str_strwidth(s));
 #ifdef USE_M17N
     while (i < u->length && pr[i] & PC_WCHAR2)
         i++;
@@ -324,7 +324,7 @@ make_lastline_message(Buffer* buf)
         }
         if (s) {
             sl = get_Str_strwidth(s);
-            if (sl >= COLS - 3)
+            if (sl >= TTY_COLS() - 3)
                 return s;
         }
     }
@@ -352,7 +352,7 @@ make_lastline_message(Buffer* buf)
     Strcat_charp(msg, buf->buffername);
 
     if (s) {
-        int l = COLS - 3 - sl;
+        int l = TTY_COLS() - 3 - sl;
         if (get_Str_strwidth(msg) > l) {
 #ifdef USE_M17N
             char* p;
@@ -387,7 +387,7 @@ void displayBuffer(Buffer* buf, int mode)
     if (buf->width == 0)
         buf->width = INIT_BUFFER_WIDTH;
     if (buf->height == 0)
-        buf->height = LASTLINE + 1;
+        buf->height = LASTLINE() + 1;
     if ((buf->width != INIT_BUFFER_WIDTH && (is_html_type(buf->type) || FoldLine))
         || buf->need_reshape) {
         buf->need_reshape = TRUE;
@@ -400,11 +400,11 @@ void displayBuffer(Buffer* buf, int mode)
                 + 2;
         if (buf->rootX < 5)
             buf->rootX = 5;
-        if (buf->rootX > COLS)
-            buf->rootX = COLS;
+        if (buf->rootX > TTY_COLS())
+            buf->rootX = TTY_COLS();
     } else
         buf->rootX = 0;
-    buf->COLS = COLS - buf->rootX;
+    buf->COLS = TTY_COLS() - buf->rootX;
     if (nTab > 1
 #ifdef USE_MOUSE
         || mouse_action.menu_str
@@ -413,12 +413,12 @@ void displayBuffer(Buffer* buf, int mode)
         if (mode == B_FORCE_REDRAW || mode == B_REDRAW_IMAGE)
             calcTabPos();
         ny = LastTab->y + 2;
-        if (ny > LASTLINE)
-            ny = LASTLINE;
+        if (ny > LASTLINE())
+            ny = LASTLINE();
     }
-    if (buf->rootY != ny || buf->LINES != LASTLINE - ny) {
+    if (buf->rootY != ny || buf->LINES != LASTLINE() - ny) {
         buf->rootY = ny;
-        buf->LINES = LASTLINE - ny;
+        buf->LINES = LASTLINE() - ny;
         arrangeCursor(buf);
         mode = B_REDRAW_IMAGE;
     }
@@ -431,13 +431,13 @@ void displayBuffer(Buffer* buf, int mode)
             mode == B_SCROLL && cline && buf->currentColumn == ccolumn) {
             int n = buf->topLine->linenumber - cline->linenumber;
             if (n > 0 && n < buf->LINES) {
-                move(LASTLINE, 0);
+                move(LASTLINE(), 0);
                 clrtoeolx();
                 refresh();
                 scroll(n);
             } else if (n < 0 && n > -buf->LINES) {
 #if 0 /* defined(__CYGWIN__) */
-		move(LASTLINE + n + 1, 0);
+		move(LASTLINE() + n + 1, 0);
 		clrtoeolx();
 		refresh();
 #endif /* defined(__CYGWIN__) */
@@ -639,12 +639,8 @@ redrawNLine(Buffer* buf, int n)
             if (t == CurrentTab)
                 boldend();
         }
-#if 0
-	move(0, COLS - 2);
-	addstr(" x");
-#endif
         move(LastTab->y + 1, 0);
-        for (i = 0; i < COLS; i++)
+        for (i = 0; i < TTY_COLS(); i++)
             addch('~');
     }
     for (i = 0, l = buf->topLine; i < buf->LINES; i++, l = l->next) {
@@ -704,9 +700,9 @@ redrawLine(Buffer* buf, Line* l, int i)
                     + 2;
             if (buf->rootX < 5)
                 buf->rootX = 5;
-            if (buf->rootX > COLS)
-                buf->rootX = COLS;
-            buf->COLS = COLS - buf->rootX;
+            if (buf->rootX > TTY_COLS())
+                buf->rootX = TTY_COLS();
+            buf->COLS = TTY_COLS() - buf->rootX;
         }
         if (l->real_linenumber && !l->bpos)
             sprintf(tmp, "%*ld:", buf->rootX - 1, l->real_linenumber);
@@ -887,8 +883,8 @@ redrawLineImage(Buffer* buf, Line* l, int i)
                     h = (int)(pixel_per_line - sy);
                 if (w > (int)((buf->rootX + buf->COLS) * pixel_per_char - x))
                     w = (int)((buf->rootX + buf->COLS) * pixel_per_char - x);
-                if (h > (int)(LASTLINE * pixel_per_line - y))
-                    h = (int)(LASTLINE * pixel_per_line - y);
+                if (h > (int)(LASTLINE() * pixel_per_line - y))
+                    h = (int)(LASTLINE() * pixel_per_line - y);
                 addImage(cache, x, y, sx, sy, w, h);
                 image->touch = image_touch;
                 draw_image_flag = TRUE;
@@ -1184,7 +1180,7 @@ void record_err_message(char* s)
     if (fmInitialized) {
         if (!message_list)
             message_list = newGeneralList();
-        if (message_list->nitem >= LINES)
+        if (message_list->nitem >= TTY_LINES())
             popValue(message_list);
         pushValue(message_list, allocStr(s, -1));
     }
@@ -1196,7 +1192,7 @@ void record_err_message(char* s)
 Buffer*
 message_list_panel(void)
 {
-    Str tmp = Strnew_size(LINES * COLS);
+    Str tmp = Strnew_size(TTY_LINES() * TTY_COLS());
     ListItem* p;
 
     /* FIXME: gettextize? */
@@ -1217,8 +1213,8 @@ void message(char* s, int return_x, int return_y)
 {
     if (!fmInitialized)
         return;
-    move(LASTLINE, 0);
-    addnstr(s, COLS - 1);
+    move(LASTLINE(), 0);
+    addnstr(s, TTY_COLS() - 1);
     clrtoeolx();
     move(return_y, return_x);
 }
@@ -1241,7 +1237,7 @@ void disp_message_nsec(char* s, int redraw_current, int sec, int purge, int mous
         message(s, Currentbuf->cursorX + Currentbuf->rootX,
             Currentbuf->cursorY + Currentbuf->rootY);
     else
-        message(s, LASTLINE, 0);
+        message(s, LASTLINE(), 0);
     refresh();
 #ifdef USE_MOUSE
     if (mouse && use_mouse)

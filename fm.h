@@ -102,7 +102,6 @@ void bzero(void*, int);
 #define LINELEN 256 /* Initial line length */
 #define PAGER_MAX_LINE 10000 /* Maximum line kept as pager */
 
-#define MAXIMUM_COLS 1024
 #define DEFAULT_COLS 80
 
 #ifdef USE_IMAGE
@@ -596,7 +595,7 @@ typedef struct _DownloadList {
 #define FONTSTAT_SIZE 7
 #define FONTSTAT_MAX 127
 
-#define _INIT_BUFFER_WIDTH (COLS - (showLineNum ? 6 : 1))
+#define _INIT_BUFFER_WIDTH (TTY_COLS() - (showLineNum ? 6 : 1))
 #define INIT_BUFFER_WIDTH ((_INIT_BUFFER_WIDTH > 0) ? _INIT_BUFFER_WIDTH : 0)
 #define FOLD_BUFFER_WIDTH (FoldLine ? (INIT_BUFFER_WIDTH + 1) : -1)
 
@@ -837,13 +836,6 @@ typedef struct http_request {
 /*
  * Globals.
  */
-
-extern int LINES, COLS;
-#if defined(__CYGWIN__)
-extern int LASTLINE;
-#else /* not defined(__CYGWIN__) */
-#define LASTLINE (LINES - 1)
-#endif /* not defined(__CYGWIN__) */
 
 global int Tabstop init(8);
 global int IndentIncr init(4);

@@ -6,6 +6,8 @@
 #include <gc.h>
 #include "terms.h"
 
+static int LINES, COLS;
+
 /* Prototype declaration of internal functions */
 #ifdef HAVE_READLINE
 #include <readline/readline.h>

@@ -1,7 +1,15 @@
-extern int LINES, COLS;
-#if defined(__CYGWIN__)
-extern int LASTLINE;
-#endif
+#pragma once
+
+struct Runtime {
+    int lines;
+    int cols;
+};
+struct Runtime* getRuntime();
+
+inline static int TTY_LINES() { return getRuntime()->lines; }
+inline static int TTY_COLS() { return getRuntime()->cols; }
+inline static int LASTLINE() { return getRuntime()->lines - 1; }
+void tty_set_cols(int cols);
 
 #ifdef USE_MOUSE
 /* Addition:mouse event */

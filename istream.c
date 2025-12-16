@@ -567,8 +567,8 @@ Str ssl_get_certificate(SSL* ssl, char* hostname)
             ans = "y";
         else {
             Str ep = Strdup(emsg);
-            if (ep->length > COLS - 16)
-                Strshrink(ep, ep->length - (COLS - 16));
+            if (ep->length > TTY_COLS() - 16)
+                Strshrink(ep, ep->length - (TTY_COLS() - 16));
             Strcat_charp(ep, ": accept? (y/n)");
             ans = inputAnswer(ep->ptr);
         }

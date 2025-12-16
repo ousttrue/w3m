@@ -31,8 +31,8 @@ newBuffer(int width)
         exit(3);
     bzero((void*)n, sizeof(Buffer));
     n->width = width;
-    n->COLS = COLS;
-    n->LINES = LASTLINE;
+    n->COLS = TTY_COLS();
+    n->LINES = LASTLINE();
     n->currentURL.scheme = SCM_UNKNOWN;
     n->baseURL = NULL;
     n->baseTarget = NULL;
@@ -60,7 +60,7 @@ nullBuffer(void)
 {
     Buffer* b;
 
-    b = newBuffer(COLS);
+    b = newBuffer(TTY_COLS());
     b->buffername = "*Null*";
     return b;
 }
@@ -226,7 +226,7 @@ writeBufferName(Buffer* buf, int n)
             break;
         }
     }
-    addnstr_sup(msg->ptr, COLS - 1);
+    addnstr_sup(msg->ptr, TTY_COLS() - 1);
 }
 
 /*
@@ -331,7 +331,7 @@ listBuffer(Buffer* top, Buffer* current)
     }
 #endif /* USE_COLOR */
     clrtobotx();
-    for (i = 0; i < LASTLINE; i++) {
+    for (i = 0; i < LASTLINE(); i++) {
         if (buf == current) {
             c = i;
             standout();
@@ -357,7 +357,7 @@ listBuffer(Buffer* top, Buffer* current)
         0);
     standend();
     /*
-     * move(LASTLINE, COLS - 1); */
+     * move(LASTLINE(), COLS - 1); */
     move(c, 0);
     refresh();
     return buf->nextBuffer;
@@ -371,7 +371,7 @@ selectBuffer(Buffer* firstbuf, Buffer* currentbuf, char* selectchar)
 {
     int i, cpoint, /* Current Buffer Number */
         spoint, /* Current Line on Screen */
-        maxbuf, sclimit = LASTLINE; /* Upper limit of line * number in
+        maxbuf, sclimit = LASTLINE(); /* Upper limit of line * number in
                                      * the * screen */
     Buffer *buf, *topbuf;
     char c;
@@ -478,7 +478,7 @@ selectBuffer(Buffer* firstbuf, Buffer* currentbuf, char* selectchar)
             return currentbuf;
         }
         /*
-         * move(LASTLINE, COLS - 1);
+         * move(LASTLINE(), COLS - 1);
          */
         move(spoint, 0);
         refresh();
@@ -553,7 +553,7 @@ void reshapeBuffer(Buffer* buf)
     UseContentCharset = TRUE;
 #endif
 
-    buf->height = LASTLINE + 1;
+    buf->height = LASTLINE() + 1;
     if (buf->firstLine && sbuf.firstLine) {
         Line* cur = sbuf.currentLine;
         int n;

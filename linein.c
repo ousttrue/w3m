@@ -18,7 +18,7 @@ extern int do_getch();
 #endif
 
 #define STR_LEN 1024
-#define CLEN (COLS - 2)
+#define CLEN (TTY_COLS() - 2)
 
 static Str strBuf;
 static Lineprop strProp[STR_LEN];
@@ -182,14 +182,14 @@ char* inputLineHistSearch(char* prompt, char* def_str, int flag, Hist* hist,
             else
                 offset = 0;
         }
-        move(LASTLINE, 0);
+        move(LASTLINE(), 0);
         addstr(prompt);
         if (is_passwd)
-            addPasswd(strBuf->ptr, strProp, CLen, offset, COLS - opos);
+            addPasswd(strBuf->ptr, strProp, CLen, offset, TTY_COLS() - opos);
         else
-            addStr(strBuf->ptr, strProp, CLen, offset, COLS - opos);
+            addStr(strBuf->ptr, strProp, CLen, offset, TTY_COLS() - opos);
         clrtoeolx();
-        move(LASTLINE, opos + x - offset);
+        move(LASTLINE(), opos + x - offset);
         refresh();
 
     next_char:
@@ -280,7 +280,7 @@ char* inputLineHistSearch(char* prompt, char* def_str, int flag, Hist* hist,
     if (i_broken)
         return NULL;
 
-    move(LASTLINE, 0);
+    move(LASTLINE(), 0);
     refresh();
     p = strBuf->ptr;
     if (flag & (IN_FILENAME | IN_COMMAND)) {
@@ -735,12 +735,12 @@ next_dcompl(int next)
     cm_disp_clear = FALSE;
     if (CurrentTab)
         displayBuffer(Currentbuf, B_FORCE_REDRAW);
-    if (LASTLINE >= 3) {
+    if (LASTLINE() >= 3) {
         comment = TRUE;
-        nline = LASTLINE - 2;
-    } else if (LASTLINE) {
+        nline = LASTLINE() - 2;
+    } else if (LASTLINE()) {
         comment = FALSE;
-        nline = LASTLINE;
+        nline = LASTLINE();
     } else {
         return;
     }
@@ -785,8 +785,8 @@ next_dcompl(int next)
         if (len < n)
             len = n;
     }
-    if (len > 0 && COLS > len)
-        col = COLS / len;
+    if (len > 0 && TTY_COLS() > len)
+        col = TTY_COLS() / len;
     else
         col = 1;
     row = (NCFileBuf + col - 1) / col;
@@ -833,7 +833,7 @@ disp_next:
         }
         y++;
     }
-    if (comment && y == LASTLINE - 1) {
+    if (comment && y == LASTLINE() - 1) {
         move(y, 0);
         clrtoeolx();
         bold();

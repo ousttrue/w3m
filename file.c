@@ -831,8 +831,8 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
                             ((domain && domain->ptr)
                                     ? domain->ptr
                                     : "<localdomain>"));
-                        if (msg->length > COLS - 10)
-                            Strshrink(msg, msg->length - (COLS - 10));
+                        if (msg->length > TTY_COLS() - 10)
+                            Strshrink(msg, msg->length - (TTY_COLS() - 10));
                         Strcat_charp(msg, " (y/n)");
                         ans = inputAnswer(msg->ptr);
                     }
@@ -6776,7 +6776,7 @@ void showProgress(clen_t* linelen, clen_t* trbyte)
         double ratio;
         cur_time = time(0);
         if (*trbyte == 0) {
-            move(LASTLINE, 0);
+            move(LASTLINE(), 0);
             clrtoeolx();
             start_time = cur_time;
         }
@@ -6785,7 +6785,7 @@ void showProgress(clen_t* linelen, clen_t* trbyte)
         if (cur_time == last_time)
             return;
         last_time = cur_time;
-        move(LASTLINE, 0);
+        move(LASTLINE(), 0);
         ratio = 100.0 * (*trbyte) / current_content_length;
         fmtrbyte = convert_size2(*trbyte, current_content_length, 1);
         duration = cur_time - start_time;
@@ -6805,8 +6805,8 @@ void showProgress(clen_t* linelen, clen_t* trbyte)
         }
         addstr(messages->ptr);
         pos = 42;
-        i = pos + (COLS - pos - 1) * (*trbyte) / current_content_length;
-        move(LASTLINE, pos);
+        i = pos + (TTY_COLS() - pos - 1) * (*trbyte) / current_content_length;
+        move(LASTLINE(), pos);
         standout();
         addch(' ');
         for (j = pos + 1; j <= i; j++)
@@ -6817,7 +6817,7 @@ void showProgress(clen_t* linelen, clen_t* trbyte)
     } else {
         cur_time = time(0);
         if (*trbyte == 0) {
-            move(LASTLINE, 0);
+            move(LASTLINE(), 0);
             clrtoeolx();
             start_time = cur_time;
         }
@@ -6826,7 +6826,7 @@ void showProgress(clen_t* linelen, clen_t* trbyte)
         if (cur_time == last_time)
             return;
         last_time = cur_time;
-        move(LASTLINE, 0);
+        move(LASTLINE(), 0);
         fmtrbyte = convert_size(*trbyte, 1);
         duration = cur_time - start_time;
         if (duration) {

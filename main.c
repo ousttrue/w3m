@@ -672,14 +672,13 @@ bool w3m_args(int argc, char** argv)
                 if (!backend_batch_commands)
                     backend_batch_commands = newTextList();
                 pushText(backend_batch_commands, argv[i]);
-            } else if (!strcmp("-cols", argv[i])) {
+            } 
+            else if (!strcmp("-cols", argv[i])) {
                 if (++i >= argc)
                     usage();
-                COLS = atoi(argv[i]);
-                if (COLS > MAXIMUM_COLS) {
-                    COLS = MAXIMUM_COLS;
-                }
-            } else if (!strcmp("-ppc", argv[i])) {
+                tty_set_cols(atoi(argv[i]));
+            } 
+            else if (!strcmp("-ppc", argv[i])) {
                 double ppc;
                 if (++i >= argc)
                     usage();
@@ -848,8 +847,8 @@ bool w3m_args(int argc, char** argv)
         w3m_dump = DUMP_BUFFER;
     }
     if (w3m_dump) {
-        if (COLS == 0)
-            COLS = DEFAULT_COLS;
+        if (TTY_COLS() == 0)
+            tty_set_cols(DEFAULT_COLS);
     }
 
 #ifdef USE_BINMODE_STREAM
@@ -2589,7 +2588,7 @@ DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background")
 #ifndef SIGSTOP
     char* shell;
 #endif /* not SIGSTOP */
-    move(LASTLINE, 0);
+    move(LASTLINE(), 0);
     clrtoeolx();
     refresh();
     fmTerm();
@@ -4557,7 +4556,7 @@ _peekURL(int only_img)
     if (Currentbuf->firstLine == NULL)
         return;
     if (CurrentKey == prev_key && s != NULL) {
-        if (s->length - offset >= COLS)
+        if (s->length - offset >= TTY_COLS())
             offset++;
         else if (s->length <= offset) /* bug ? */
             offset = 0;
@@ -4589,8 +4588,8 @@ _peekURL(int only_img)
 #endif
 disp:
     n = searchKeyNum();
-    if (n > 1 && s->length > (n - 1) * (COLS - 1))
-        offset = (n - 1) * (COLS - 1);
+    if (n > 1 && s->length > (n - 1) * (TTY_COLS() - 1))
+        offset = (n - 1) * (TTY_COLS() - 1);
 #ifdef USE_M17N
     while (offset < s->length && p[offset] & PC_WCHAR2)
         offset++;
@@ -4631,7 +4630,7 @@ DEFUN(curURL, PEEK, "Show current address")
     if (Currentbuf->bufferprop & BP_INTERNAL)
         return;
     if (CurrentKey == prev_key && s != NULL) {
-        if (s->length - offset >= COLS)
+        if (s->length - offset >= TTY_COLS())
             offset++;
         else if (s->length <= offset) /* bug ? */
             offset = 0;
@@ -4647,8 +4646,8 @@ DEFUN(curURL, PEEK, "Show current address")
 #endif
     }
     n = searchKeyNum();
-    if (n > 1 && s->length > (n - 1) * (COLS - 1))
-        offset = (n - 1) * (COLS - 1);
+    if (n > 1 && s->length > (n - 1) * (TTY_COLS() - 1))
+        offset = (n - 1) * (TTY_COLS() - 1);
 #ifdef USE_M17N
     while (offset < s->length && p[offset] & PC_WCHAR2)
         offset++;
@@ -5202,7 +5201,7 @@ static int
 mouse_scroll_line(void)
 {
     if (relative_wheel_scroll)
-        return (relative_wheel_scroll_ratio * LASTLINE + 99) / 100;
+        return (relative_wheel_scroll_ratio * LASTLINE() + 99) / 100;
     else
         return fixed_wheel_scroll_count;
 }
@@ -5251,7 +5250,7 @@ do_mouse_action(int btn, int x, int y)
                 map = &mouse_action.menu_map[btn][x];
         } else
             map = &mouse_action.tab_map[btn];
-    } else if (y == LASTLINE) {
+    } else if (y == LASTLINE()) {
         if (mouse_action.lastline_str && x >= 0 && x < mouse_action.lastline_width) {
             if (mouse_action.lastline_map[btn])
                 map = &mouse_action.lastline_map[btn][x];
@@ -5428,7 +5427,7 @@ DEFUN(mouse, MOUSE, "mouse operation")
     if (y < 0)
         y += 0x100;
 
-    if (x < 0 || x >= COLS || y < 0 || y > LASTLINE)
+    if (x < 0 || x >= TTY_COLS() || y < 0 || y > LASTLINE())
         return;
     process_mouse(btn, x, y);
 }
@@ -5484,7 +5483,7 @@ DEFUN(sgrmouse, SGRMOUSE, "SGR 1006 mouse operation")
     if (y > 0)
         y--;
 
-    if (x < 0 || x >= COLS || y < 0 || y > LASTLINE)
+    if (x < 0 || x >= TTY_COLS() || y < 0 || y > LASTLINE())
         return;
     process_mouse(btn, x, y);
 }
@@ -5542,7 +5541,7 @@ DEFUN(movMs, MOVE_MOUSE, "Move cursor to mouse pointer")
         return;
     if ((nTab > 1 || mouse_action.menu_str) && mouse_action.cursorY < LastTab->y + 1)
         return;
-    else if (mouse_action.cursorX >= Currentbuf->rootX && mouse_action.cursorY < LASTLINE) {
+    else if (mouse_action.cursorX >= Currentbuf->rootX && mouse_action.cursorY < LASTLINE()) {
         cursorXY(Currentbuf, mouse_action.cursorX - Currentbuf->rootX,
             mouse_action.cursorY - Currentbuf->rootY);
     }
@@ -5562,7 +5561,7 @@ DEFUN(menuMs, MENU_MOUSE, "Pop up menu at mouse pointer")
         return;
     if ((nTab > 1 || mouse_action.menu_str) && mouse_action.cursorY < LastTab->y + 1)
         mouse_action.cursorX -= FRAME_WIDTH + 1;
-    else if (mouse_action.cursorX >= Currentbuf->rootX && mouse_action.cursorY < LASTLINE) {
+    else if (mouse_action.cursorX >= Currentbuf->rootX && mouse_action.cursorY < LASTLINE()) {
         cursorXY(Currentbuf, mouse_action.cursorX - Currentbuf->rootX,
             mouse_action.cursorY - Currentbuf->rootY);
         displayBuffer(Currentbuf, B_NORMAL);
@@ -6150,14 +6149,14 @@ void calcTabPos(void)
 
     if (nTab <= 0)
         return;
-    n1 = (COLS - rcol - lcol) / TabCols;
+    n1 = (TTY_COLS() - rcol - lcol) / TabCols;
     if (n1 >= nTab) {
         n2 = 1;
         ny = 1;
     } else {
         if (n1 < 0)
             n1 = 0;
-        n2 = COLS / TabCols;
+        n2 = TTY_COLS() / TabCols;
         if (n2 == 0)
             n2 = 1;
         ny = (nTab - n1 - 1) / n2 + 2;
@@ -6171,10 +6170,10 @@ void calcTabPos(void)
     for (iy = 0; iy < ny && tab; iy++) {
         if (iy == 0) {
             nx = n1;
-            col = COLS - rcol - lcol;
+            col = TTY_COLS() - rcol - lcol;
         } else {
             nx = n2 - (na - nTab + (iy - 1)) / (ny - 1);
-            col = COLS;
+            col = TTY_COLS();
         }
         for (ix = 0; ix < nx && tab; ix++, tab = tab->nextTab) {
             tab->x1 = col * ix / nx;
@@ -6509,7 +6508,7 @@ DownloadListBuffer(void)
         } else
             size = 0;
         if (d->size) {
-            int i, l = COLS - 6;
+            int i, l = TTY_COLS() - 6;
             if (size < d->size)
                 i = 1.0 * l * size / d->size;
             else

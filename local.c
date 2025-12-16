@@ -105,7 +105,7 @@ Str loadLocalDir(char* dname)
     closedir(d);
 
     if (multicolList) {
-        l = COLS / (maxlen + 2);
+        l = TTY_COLS() / (maxlen + 2);
         if (!l)
             l = 1;
         nrow = (n + l - 1) / l;

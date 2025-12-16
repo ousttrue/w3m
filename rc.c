@@ -1288,8 +1288,8 @@ static void loadSiteconf(void);
 void sync_with_option(void)
 {
     init_tmp();
-    if (PagerMax < LINES)
-        PagerMax = LINES;
+    if (PagerMax < TTY_LINES())
+        PagerMax = TTY_LINES();
     WrapSearch = WrapDefault;
     parse_proxy();
 #ifdef USE_COOKIE

@@ -86,9 +86,9 @@ getCharSize(void)
     if (!(w > 0 && h > 0))
         return FALSE;
     if (!set_pixel_per_char)
-        pixel_per_char = (int)(1.0 * w / COLS + 0.5);
+        pixel_per_char = (int)(1.0 * w / TTY_COLS() + 0.5);
     if (!set_pixel_per_line)
-        pixel_per_line = (int)(1.0 * h / LINES + 0.5);
+        pixel_per_line = (int)(1.0 * h / TTY_LINES() + 0.5);
     return TRUE;
 }
 

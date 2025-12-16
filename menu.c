@@ -816,12 +816,12 @@ void geom_menu(Menu* menu, int x, int y, int mselect)
         menu->width = (menu->width / FRAME_WIDTH + 1) * FRAME_WIDTH;
     win_x = menu->x - FRAME_WIDTH;
     win_w = menu->width + 2 * FRAME_WIDTH;
-    if (win_x + win_w > COLS)
-        win_x = COLS - win_w;
+    if (win_x + win_w > TTY_COLS())
+        win_x = TTY_COLS() - win_w;
     if (win_x < 0) {
         win_x = 0;
-        if (win_w > COLS) {
-            menu->width = COLS - 2 * FRAME_WIDTH;
+        if (win_w > TTY_COLS()) {
+            menu->width = TTY_COLS() - 2 * FRAME_WIDTH;
             menu->width -= menu->width % FRAME_WIDTH;
         }
     }
@@ -829,12 +829,12 @@ void geom_menu(Menu* menu, int x, int y, int mselect)
 
     win_y = menu->y - mselect - 1;
     win_h = menu->height + 2;
-    if (win_y + win_h > LASTLINE)
-        win_y = LASTLINE - win_h;
+    if (win_y + win_h > LASTLINE())
+        win_y = LASTLINE() - win_h;
     if (win_y < 0) {
         win_y = 0;
-        if (win_y + win_h > LASTLINE) {
-            win_h = LASTLINE - win_y;
+        if (win_y + win_h > LASTLINE()) {
+            win_h = LASTLINE() - win_y;
             menu->height = win_h - 2;
             if (menu->height <= mselect)
                 menu->offset = mselect - menu->height + 1;
@@ -1102,9 +1102,9 @@ void popup_menu(Menu* parent, Menu* menu)
 void guess_menu_xy(Menu* parent, int width, int* x, int* y)
 {
     *x = parent->x + parent->width + FRAME_WIDTH - 1;
-    if (*x + width + FRAME_WIDTH > COLS) {
-        *x = COLS - width - FRAME_WIDTH;
-        if ((parent->x + parent->width / 2 > *x) && (parent->x + parent->width / 2 > COLS / 2))
+    if (*x + width + FRAME_WIDTH > TTY_COLS()) {
+        *x = TTY_COLS() - width - FRAME_WIDTH;
+        if ((parent->x + parent->width / 2 > *x) && (parent->x + parent->width / 2 > TTY_COLS() / 2))
             *x = parent->x - width - FRAME_WIDTH + 1;
     }
     *y = parent->y + parent->select - parent->offset;
@@ -1548,7 +1548,7 @@ process_mMouse(int btn, int x, int y)
 
     menu = CurrentMenu;
 
-    if (x < 0 || x >= COLS || y < 0 || y > LASTLINE)
+    if (x < 0 || x >= TTY_COLS() || y < 0 || y > LASTLINE())
         return (MENU_NOTHING);
 
     if (btn == MOUSE_BTN_UP) {
@@ -1668,7 +1668,7 @@ mSgrMouse(char c)
     if (y > 0)
         y--;
 
-    if (x < 0 || x >= COLS || y < 0 || y > LASTLINE)
+    if (x < 0 || x >= TTY_COLS() || y < 0 || y > LASTLINE())
         return MENU_NOTHING;
 
     return process_mMouse(btn, x, y);
@@ -1848,8 +1848,8 @@ initSelectMenu(void)
     l = get_strwidth(comment);
     if (len < l + 4)
         len = l + 4;
-    if (len > COLS - 2 * FRAME_WIDTH)
-        len = COLS - 2 * FRAME_WIDTH;
+    if (len > TTY_COLS() - 2 * FRAME_WIDTH)
+        len = TTY_COLS() - 2 * FRAME_WIDTH;
     len = (len > 1) ? ((len - l + 1) / 2) : 0;
     str = Strnew();
     for (i = 0; i < len; i++)
@@ -1997,8 +1997,8 @@ initSelTabMenu(void)
     l = strlen(comment);
     if (len < l + 4)
         len = l + 4;
-    if (len > COLS - 2 * FRAME_WIDTH)
-        len = COLS - 2 * FRAME_WIDTH;
+    if (len > TTY_COLS() - 2 * FRAME_WIDTH)
+        len = TTY_COLS() - 2 * FRAME_WIDTH;
     len = (len > 1) ? ((len - l + 1) / 2) : 0;
     str = Strnew();
     for (i = 0; i < len; i++)
@@ -2087,8 +2087,8 @@ void optionMenu(int x, int y, char** label, int* variable, int initial,
     set_menu_frame();
 
     new_option_menu(&menu, label, variable, func);
-    menu.cursorX = COLS - 1;
-    menu.cursorY = LASTLINE;
+    menu.cursorX = TTY_COLS() - 1;
+    menu.cursorY = LASTLINE();
     menu.x = x;
     menu.y = y;
     menu.initial = initial;

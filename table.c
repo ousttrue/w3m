@@ -70,16 +70,16 @@ static double
 weight(int x)
 {
 
-    if (x < COLS)
+    if (x < TTY_COLS())
         return (double)x;
     else
-        return COLS * (log((double)x / COLS) + 1.);
+        return TTY_COLS() * (log((double)x / TTY_COLS()) + 1.);
 }
 
 static double
 weight2(int a)
 {
-    return (double)a / COLS * 4 + 1.;
+    return (double)a / TTY_COLS() * 4 + 1.;
 }
 
 #define sigma_td(a) (0.5 * weight2(a)) /* <td width=...> */

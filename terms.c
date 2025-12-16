@@ -1,8 +1,24 @@
-/* $Id: terms.c,v 1.63 2010/08/20 09:34:47 htrb Exp $ */
 /*
  * An original curses library for EUC-kanji by Akinori ITO,     December 1989
  * revised by Akinori ITO, January 1995
  */
+#include "terms.h"
+struct Runtime g_runtime = {
+    .lines = 0,
+    .cols = 0,
+};
+struct Runtime *getRuntime()
+{
+    return &g_runtime;
+}
+#define MAXIMUM_COLS 1024
+void tty_set_cols(int cols){
+    g_runtime.cols=cols;
+    if (g_runtime.cols > MAXIMUM_COLS) {
+        g_runtime.cols = MAXIMUM_COLS;
+    }
+}
+
 #include <stdio.h>
 #include <signal.h>
 #include <sys/types.h>
@@ -49,7 +65,7 @@ static char* title_str = NULL;
 
 static int tty = -1;
 
-#include "terms.h"
+
 #include "fm.h"
 #include "myctype.h"
 
@@ -432,11 +448,6 @@ static char bp[1024], funcstr[256];
 char *T_cd, *T_ce, *T_kr, *T_kl, *T_cr, *T_bt, *T_ta, *T_sc, *T_rc,
     *T_so, *T_se, *T_us, *T_ue, *T_cl, *T_cm, *T_al, *T_sr, *T_md, *T_me,
     *T_ti, *T_te, *T_nd, *T_as, *T_ae, *T_eA, *T_ac, *T_op;
-
-int LINES, COLS;
-#if defined(__CYGWIN__)
-int LASTLINE;
-#endif /* defined(__CYGWIN__) */
 
 static int max_LINES = 0, max_COLS = 0;
 static int tab_step = 8;
@@ -1163,68 +1174,32 @@ void getTCstr(void)
     T_ac = "";
 #endif /* CYGWIN */
 
-    LINES = COLS = 0;
     setlinescols();
     setgraphchar();
 }
 
 void setlinescols(void)
 {
-    char* p;
-    int i;
-#ifdef __EMX__
-    {
-        int s[2];
-        _scrsize(s);
-        COLS = s[0];
-        LINES = s[1];
-
-        if (getenv("WINDOWID")) {
-            FILE* fd = popen("scrsize", "rt");
-            if (fd) {
-                fscanf(fd, "%i %i", &COLS, &LINES);
-                pclose(fd);
-            }
-        }
-    }
-#elif defined(HAVE_TERMIOS_H) && defined(TIOCGWINSZ)
     struct winsize wins;
-
-    i = ioctl(tty, TIOCGWINSZ, &wins);
+    int i = ioctl(tty, TIOCGWINSZ, &wins);
     if (i >= 0 && wins.ws_row != 0 && wins.ws_col != 0) {
-        LINES = wins.ws_row;
-        COLS = wins.ws_col;
+        g_runtime.lines = wins.ws_row;
+        g_runtime.cols = wins.ws_col;
     }
-#endif /* defined(HAVE-TERMIOS_H) && defined(TIOCGWINSZ) */
-    if (LINES <= 0 && (p = getenv("LINES")) != NULL && (i = atoi(p)) >= 0)
-        LINES = i;
-    if (COLS <= 0 && (p = getenv("COLUMNS")) != NULL && (i = atoi(p)) >= 0)
-        COLS = i;
-    if (LINES <= 0)
-        LINES = tgetnum("li"); /* number of line */
-    if (COLS <= 0)
-        COLS = tgetnum("co"); /* number of column */
-    if (COLS > MAX_COLUMN)
-        COLS = MAX_COLUMN;
-    if (LINES > MAX_LINE)
-        LINES = MAX_LINE;
-#if defined(__CYGWIN__)
-    LASTLINE = LINES - (isWinConsole == TERM_CYGWIN_RESERVE_IME ? 2 : 1);
-#endif /* defined(__CYGWIN__) */
 }
 
 void setupscreen(void)
 {
     int i;
 
-    if (LINES + 1 > max_LINES) {
-        max_LINES = LINES + 1;
+    if (g_runtime.lines + 1 > max_LINES) {
+        max_LINES = g_runtime.lines + 1;
         max_COLS = 0;
         ScreenElem = New_N(Screen, max_LINES);
         ScreenImage = New_N(Screen*, max_LINES);
     }
-    if (COLS + 1 > max_COLS) {
-        max_COLS = COLS + 1;
+    if (g_runtime.cols + 1 > max_COLS) {
+        max_COLS = g_runtime.cols + 1;
         for (i = 0; i < max_LINES; i++) {
 #ifdef USE_M17N
             ScreenElem[i].lineimage = New_N(char*, max_COLS);
@@ -1235,7 +1210,7 @@ void setupscreen(void)
             ScreenElem[i].lineprop = New_N(l_prop, max_COLS);
         }
     }
-    for (i = 0; i < LINES; i++) {
+    for (i = 0; i < g_runtime.lines; i++) {
         ScreenImage[i] = &ScreenElem[i];
         ScreenImage[i]->lineprop[0] = S_EOL;
         ScreenImage[i]->isdirty = 0;
@@ -1271,9 +1246,9 @@ write1(char c)
 
 void move(int line, int column)
 {
-    if (line >= 0 && line < LINES)
+    if (line >= 0 && line < g_runtime.lines)
         CurLine = line;
-    if (column >= 0 && column < COLS)
+    if (column >= 0 && column < g_runtime.cols)
         CurColumn = column;
 }
 
@@ -1341,9 +1316,9 @@ void addch(char pc)
     char c = pc;
 #endif
 
-    if (CurColumn == COLS)
+    if (CurColumn == g_runtime.cols)
         wrap();
-    if (CurColumn >= COLS)
+    if (CurColumn >= g_runtime.cols)
         return;
     p = ScreenImage[CurLine]->lineimage;
     pr = ScreenImage[CurLine]->lineprop;
@@ -1384,10 +1359,10 @@ void addch(char pc)
 #else
     i = CurColumn;
 #endif
-    if (i < COLS && (((pr[i] & S_BOLD) && need_redraw(p[i], pr[i], pc, CurrentMode)) || ((pr[i] & S_UNDERLINE) && !(CurrentMode & S_UNDERLINE)))) {
+    if (i < g_runtime.cols && (((pr[i] & S_BOLD) && need_redraw(p[i], pr[i], pc, CurrentMode)) || ((pr[i] & S_UNDERLINE) && !(CurrentMode & S_UNDERLINE)))) {
         touch_line();
         i++;
-        if (i < COLS) {
+        if (i < g_runtime.cols) {
             touch_column(i);
             if (pr[i] & S_EOL) {
                 SETCH(p[i], SPACE, 1);
@@ -1395,7 +1370,7 @@ void addch(char pc)
             }
 #ifdef USE_M17N
             else {
-                for (i++; i < COLS && CHMODE(pr[i]) == C_WCHAR2; i++)
+                for (i++; i < g_runtime.cols && CHMODE(pr[i]) == C_WCHAR2; i++)
                     touch_column(i);
             }
 #endif
@@ -1403,15 +1378,15 @@ void addch(char pc)
     }
 
 #ifdef USE_M17N
-    if (CurColumn + width > COLS) {
+    if (CurColumn + width > g_runtime.cols) {
         touch_line();
-        for (i = CurColumn; i < COLS; i++) {
+        for (i = CurColumn; i < g_runtime.cols; i++) {
             SETCH(p[i], SPACE, 1);
             SETPROP(pr[i], (pr[i] & ~C_WHICHCHAR) | C_ASCII);
             touch_column(i);
         }
         wrap();
-        if (CurColumn + width > COLS)
+        if (CurColumn + width > g_runtime.cols)
             return;
         p = ScreenImage[CurLine]->lineimage;
         pr = ScreenImage[CurLine]->lineprop;
@@ -1441,7 +1416,7 @@ void addch(char pc)
                 SETPROP(pr[i], (pr[CurColumn] & ~C_WHICHCHAR) | C_WCHAR2);
                 touch_column(i);
             }
-            for (; i < COLS && CHMODE(pr[i]) == C_WCHAR2; i++) {
+            for (; i < g_runtime.cols && CHMODE(pr[i]) == C_WCHAR2; i++) {
                 SETCH(p[i], SPACE, 1);
                 SETPROP(pr[i], (pr[i] & ~C_WHICHCHAR) | C_ASCII);
                 touch_column(i);
@@ -1454,7 +1429,7 @@ void addch(char pc)
 #endif
     } else if (c == '\t') {
         dest = (CurColumn + tab_step) / tab_step * tab_step;
-        if (dest >= COLS) {
+        if (dest >= g_runtime.cols) {
             wrap();
             touch_line();
             dest = tab_step;
@@ -1485,7 +1460,7 @@ void addch(char pc)
 
 void wrap(void)
 {
-    if (CurLine == LASTLINE)
+    if (CurLine == LASTLINE())
         return;
     CurLine++;
     CurColumn = 0;
@@ -1493,7 +1468,7 @@ void wrap(void)
 
 void touch_column(int col)
 {
-    if (col >= 0 && col < COLS)
+    if (col >= 0 && col < g_runtime.cols)
         ScreenImage[CurLine]->lineprop[col] |= S_DIRTY;
 }
 
@@ -1501,7 +1476,7 @@ void touch_line(void)
 {
     if (!(ScreenImage[CurLine]->isdirty & L_DIRTY)) {
         int i;
-        for (i = 0; i < COLS; i++)
+        for (i = 0; i < g_runtime.cols; i++)
             ScreenImage[CurLine]->lineprop[i] &= ~S_DIRTY;
         ScreenImage[CurLine]->isdirty |= L_DIRTY;
     }
@@ -1629,13 +1604,13 @@ void refresh(void)
 #ifdef USE_M17N
     wc_putc_init(InnerCharset, DisplayCharset);
 #endif
-    for (line = 0; line <= LASTLINE; line++) {
+    for (line = 0; line <= LASTLINE(); line++) {
         dirty = &ScreenImage[line]->isdirty;
         if (*dirty & L_DIRTY) {
             *dirty &= ~L_DIRTY;
             pc = ScreenImage[line]->lineimage;
             pr = ScreenImage[line]->lineprop;
-            for (col = 0; col < COLS && !(pr[col] & S_EOL); col++) {
+            for (col = 0; col < g_runtime.cols && !(pr[col] & S_EOL); col++) {
                 if (*dirty & L_NEED_CE && col >= ScreenImage[line]->eol) {
                     if (need_redraw(pc[col], pr[col], SPACE, 0))
                         break;
@@ -1646,14 +1621,14 @@ void refresh(void)
             }
             if (*dirty & (L_NEED_CE | L_CLRTOEOL)) {
                 pcol = ScreenImage[line]->eol;
-                if (pcol >= COLS) {
+                if (pcol >= g_runtime.cols) {
                     *dirty &= ~(L_NEED_CE | L_CLRTOEOL);
                     pcol = col;
                 }
             } else {
                 pcol = col;
             }
-            if (line < LINES - 2 && pline == line - 1 && pcol == 0) {
+            if (line < g_runtime.lines - 2 && pline == line - 1 && pcol == 0) {
                 switch (moved) {
                 case RF_NEED_TO_MOVE:
                     MOVE(line, 0);
@@ -1678,7 +1653,7 @@ void refresh(void)
             }
             pline = line;
             pcol = col;
-            for (; col < COLS; col++) {
+            for (; col < g_runtime.cols; col++) {
                 if (pr[col] & S_EOL)
                     break;
 
@@ -1770,9 +1745,9 @@ void refresh(void)
                     pcol = col + 1;
                 }
             }
-            if (col == COLS)
+            if (col == g_runtime.cols)
                 moved = RF_NEED_TO_MOVE;
-            for (; col < COLS && !(pr[col] & S_EOL); col++)
+            for (; col < g_runtime.cols && !(pr[col] & S_EOL); col++)
                 pr[col] |= S_EOL;
         }
         *dirty &= ~(L_NEED_CE | L_CLRTOEOL);
@@ -1806,10 +1781,10 @@ void clear(void)
     l_prop* p;
     writestr(T_cl);
     move(0, 0);
-    for (i = 0; i < LINES; i++) {
+    for (i = 0; i < g_runtime.lines; i++) {
         ScreenImage[i]->isdirty = 0;
         p = ScreenImage[i]->lineprop;
-        for (j = 0; j < COLS; j++) {
+        for (j = 0; j < g_runtime.cols; j++) {
             p[j] = S_EOL;
         }
     }
@@ -1939,7 +1914,7 @@ void clrtoeol(void)
 
     ScreenImage[CurLine]->isdirty |= L_CLRTOEOL;
     touch_line();
-    for (i = CurColumn; i < COLS && !(lprop[i] & S_EOL); i++) {
+    for (i = CurColumn; i < g_runtime.cols && !(lprop[i] & S_EOL); i++) {
         lprop[i] = S_EOL | S_DIRTY;
     }
 }
@@ -1959,7 +1934,7 @@ clrtoeol_with_bcolor(void)
     cco = CurColumn;
     pr = CurrentMode;
     CurrentMode = (CurrentMode & (M_CEOL | S_BCOLORED)) | C_ASCII;
-    for (i = CurColumn; i < COLS; i++)
+    for (i = CurColumn; i < g_runtime.cols; i++)
         addch(' ');
     move(cli, cco);
     CurrentMode = pr;
@@ -1987,7 +1962,7 @@ clrtobot_eol(void (*clrtoeol)())
     (*clrtoeol)();
     CurColumn = 0;
     CurLine++;
-    for (; CurLine < LINES; CurLine++)
+    for (; CurLine < g_runtime.lines; CurLine++)
         (*clrtoeol)();
     CurLine = l;
     CurColumn = c;
@@ -2536,7 +2511,7 @@ void touch_cursor(void)
         if (CHMODE(ScreenImage[CurLine]->lineprop[i]) != C_WCHAR2)
             break;
     }
-    for (i = CurColumn + 1; i < COLS; i++) {
+    for (i = CurColumn + 1; i < g_runtime.cols; i++) {
         if (CHMODE(ScreenImage[CurLine]->lineprop[i]) != C_WCHAR2)
             break;
         touch_column(i);
