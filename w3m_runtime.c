@@ -18,6 +18,8 @@
 #include <unistd.h>
 
 static struct termios d_ioval;
+// stdout
+// static FILE* tty_output_f = NULL;
 
 struct Runtime g_runtime = {
     .lines = 0,
@@ -226,20 +228,24 @@ void init_tty()
 {
     // stdin
     g_runtime.tty_input = 0;
-
-    // stdout
-    g_runtime.tty_output_f = stdout;
-
     tcgetattr(g_runtime.tty_input, &d_ioval);
+    // stdout
+    g_runtime.tty_output = 1;
 
     getTCstr();
 }
 
 int write1(int c)
 {
-    putc(c, g_runtime.tty_output_f);
-    return 0;
+    // putc(c, tty_output_f);
+    return write(g_runtime.tty_output, &c, 1);
 }
+
+// size_t writeN(const uint8_t *p, size_t n)
+// {
+//     // return fwrite(p, 1, n, tty_output_f);
+//     return write(tty_output, p, n);
+// }
 
 void writestr(const char* s)
 {
@@ -366,8 +372,9 @@ skip_escseq(void)
 
 void flush_tty(void)
 {
-    if (g_runtime.tty_output_f)
-        fflush(g_runtime.tty_output_f);
+    // if (tty_output_f){
+    //     fflush(tty_output_f);
+    // }
 }
 
 void tty_MOVE(int line, int column)
@@ -765,7 +772,9 @@ int get_pixel_per_cell(int* ppc, int* ppl)
         return 1;
     }
 
-    fputs("\x1b[14t\x1b[18t", g_runtime.tty_output_f);
+    const char* str = "\x1b[14t\x1b[18t";
+    // fputs(, tty_output_f);
+    write(g_runtime.tty_output, str, strlen(str));
     flush_tty();
 
     p = buf;
@@ -863,7 +872,7 @@ void term_title(const char* s)
     if (!fmInitialized())
         return;
     if (title_str != NULL) {
-        fprintf(getRuntime()->tty_output_f, title_str, s);
+        // fprintf(tty_output_f, title_str, s);
     }
 }
 

@@ -3,6 +3,8 @@
 /// tty
 /// signal
 #include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 
 #define TRAP_ON                                \
     if (TrapSignal) {                          \
@@ -21,7 +23,7 @@
 #include <stdio.h>
 struct Runtime {
     int tty_input;
-    FILE* tty_output_f;
+    int tty_output;
     int lines;
     int cols;
 

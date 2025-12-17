@@ -653,7 +653,7 @@ void refresh(void)
 #endif /* USE_BG_COLOR */
                     if ((pr[col] & S_GRAPHICS) && !(mode & S_GRAPHICS)) {
 #ifdef USE_M17N
-                        wc_putc_end(getRuntime()->tty_output_f);
+                        wc_putc_end(getRuntime()->tty_output);
 #endif
                         if (!graph_enabled) {
                             graph_enabled = 1;
@@ -666,7 +666,7 @@ void refresh(void)
                     if (pr[col] & S_GRAPHICS)
                         write1(graphchar(*pc[col]));
                     else if (CHMODE(pr[col]) != C_WCHAR2)
-                        wc_putc(pc[col], getRuntime()->tty_output_f);
+                        wc_putc(pc[col], getRuntime()->tty_output);
 #else
                     write1((pr[col] & S_GRAPHICS) ? graphchar(pc[col]) : pc[col]);
 #endif
@@ -697,7 +697,7 @@ void refresh(void)
         }
     }
 #ifdef USE_M17N
-    wc_putc_end(getRuntime()->tty_output_f);
+    wc_putc_end(getRuntime()->tty_output);
 #endif
     tty_MOVE(CurLine, CurColumn);
     flush_tty();
