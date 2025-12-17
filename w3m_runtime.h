@@ -28,7 +28,6 @@ extern char UseGraphicChar;
 
 struct Runtime {
     int tty_input;
-    int tty_output;
     int lines;
     int cols;
 
@@ -42,7 +41,7 @@ struct Runtime {
 
 };
 struct Runtime* getRuntime(void);
-
+int getOutputHandle();
 void reset_error_exit(int);
 char graphchar(char c);
 void writestr(const char* s);

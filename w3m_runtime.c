@@ -225,27 +225,8 @@ void init_tty()
     // stdin
     g_runtime.tty_input = 0;
     tcgetattr(g_runtime.tty_input, &d_ioval);
-    // stdout
-    g_runtime.tty_output = 1;
 
     getTCstr();
-}
-
-int write1(int c)
-{
-    // putc(c, tty_output_f);
-    return write(g_runtime.tty_output, &c, 1);
-}
-
-// size_t writeN(const uint8_t *p, size_t n)
-// {
-//     // return fwrite(p, 1, n, tty_output_f);
-//     return write(tty_output, p, n);
-// }
-
-void writestr(const char* s)
-{
-    tputs(s, 1, write1);
 }
 
 char* ttyname_tty(void)
@@ -364,69 +345,9 @@ skip_escseq(void)
 //     return ret;
 // }
 
-void flush_tty(void)
-{
-    // if (tty_output_f){
-    //     fflush(tty_output_f);
-    // }
-}
-
 void tty_MOVE(int line, int column)
 {
     writestr(tgoto(g_runtime.T_cm, column, line));
-}
-
-int get_pixel_per_cell(int* ppc, int* ppl)
-{
-    fd_set rfd;
-    struct timeval tval;
-    char buf[100];
-    char* p;
-    ssize_t len;
-    ssize_t left;
-    int wp, hp, wc, hc;
-    int i;
-
-    struct winsize ws;
-    if (ioctl(g_runtime.tty_input, TIOCGWINSZ, &ws) == 0 && ws.ws_ypixel > 0 && ws.ws_row > 0 && ws.ws_xpixel > 0 && ws.ws_col > 0) {
-        *ppc = ws.ws_xpixel / ws.ws_col;
-        *ppl = ws.ws_ypixel / ws.ws_row;
-        return 1;
-    }
-
-    const char* str = "\x1b[14t\x1b[18t";
-    // fputs(, tty_output_f);
-    write(g_runtime.tty_output, str, strlen(str));
-    flush_tty();
-
-    p = buf;
-    left = sizeof(buf) - 1;
-    for (i = 0; i < 10; i++) {
-        tval.tv_usec = 200000; /* 0.2 sec * 10 */
-        tval.tv_sec = 0;
-        FD_ZERO(&rfd);
-        FD_SET(g_runtime.tty_input, &rfd);
-        if (select(g_runtime.tty_input + 1, &rfd, NULL, NULL, &tval) <= 0 || !FD_ISSET(g_runtime.tty_input, &rfd))
-            continue;
-
-        if ((len = read(g_runtime.tty_input, p, left)) <= 0)
-            continue;
-        p[len] = '\0';
-
-        if (sscanf(buf, "\x1b[4;%d;%dt\x1b[8;%d;%dt", &hp, &wp, &hc, &wc) == 4) {
-            if (wp > 0 && wc > 0 && hp > 0 && hc > 0) {
-                *ppc = wp / wc;
-                *ppl = hp / hc;
-                return 1;
-            } else {
-                return 0;
-            }
-        }
-        p += len;
-        left -= len;
-    }
-
-    return 0;
 }
 
 int initscr(void)
