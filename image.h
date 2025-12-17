@@ -1,4 +1,5 @@
 #pragma once
+#include "Str.h"
 
 void initImage(void);
 void termImage(void);
@@ -20,3 +21,4 @@ struct _image;
 struct _ParsedURL;
 struct _imageCache* getImage(struct _image* image, struct _ParsedURL* current, int flag);
 int getImageSize(struct _imageCache* cache);
+

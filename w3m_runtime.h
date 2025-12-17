@@ -20,7 +20,12 @@
             mySignal(SIGINT, prevtrap); \
     }
 
-#include <stdio.h>
+#define GRAPHIC_CHAR_ASCII 2
+#define GRAPHIC_CHAR_DEC 1
+#define GRAPHIC_CHAR_CHARSET 0
+
+extern char UseGraphicChar;
+
 struct Runtime {
     int tty_input;
     int tty_output;
@@ -34,6 +39,7 @@ struct Runtime {
 
     bool fmInitialized;
     int Do_not_use_ti_te;
+
 };
 struct Runtime* getRuntime(void);
 
@@ -76,9 +82,6 @@ void term_cooked(void);
 void term_cbreak(void);
 void term_title(const char* s);
 void bell(void);
+void quitfm(void);
 
-void put_image_osc5379(char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh);
-void put_image_sixel(char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh, int n_terminal_image);
-void put_image_iterm2(char* url, int x, int y, int w, int h);
-void put_image_kitty(char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh, int c, int r);
 int get_pixel_per_cell(int* ppc, int* ppl);

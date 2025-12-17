@@ -419,7 +419,7 @@ struct param_ptr params1[] = {
     { "multicol", P_INT, PI_ONOFF, (void*)&multicolList, CMT_MULTICOL, NULL },
     { "alt_entity", P_CHARINT, PI_ONOFF, (void*)&UseAltEntity, CMT_ALT_ENTITY,
         NULL },
-    { "graphic_char", P_CHARINT, PI_SEL_C, (void*)&UseGraphicChar,
+    { "graphic_char", P_CHARINT, PI_SEL_C, &UseGraphicChar,
         CMT_GRAPHIC_CHAR, (void*)graphic_char_str },
     { "display_borders", P_CHARINT, PI_ONOFF, (void*)&DisplayBorders,
         CMT_DISP_BORDERS, NULL },

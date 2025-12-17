@@ -1,4 +1,4 @@
-
+#include "w3m_runtime.h"
 #include "fm.h"
 
 #include "Symbols/alt.sym"

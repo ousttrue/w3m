@@ -5025,7 +5025,7 @@ DEFUN(rFrame, FRAME, "Toggle rendering HTML frames")
     buf->linkBuffer[LB_N_FRAME] = Currentbuf;
     Currentbuf->linkBuffer[LB_FRAME] = buf;
     pushBuffer(buf);
-    if (fmInitialized && display_ok)
+    if (fmInitialized() && display_ok)
         displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
