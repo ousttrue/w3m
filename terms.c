@@ -3,22 +3,9 @@
  * revised by Akinori ITO, January 1995
  */
 #include "terms.h"
-struct Runtime g_runtime = {
-    .lines = 0,
-    .cols = 0,
-};
-struct Runtime *getRuntime()
-{
-    return &g_runtime;
-}
-#define MAXIMUM_COLS 1024
-void tty_set_cols(int cols){
-    g_runtime.cols=cols;
-    if (g_runtime.cols > MAXIMUM_COLS) {
-        g_runtime.cols = MAXIMUM_COLS;
-    }
-}
-
+#include "fm.h"
+#include "config.h"
+#include "myctype.h"
 #include <stdio.h>
 #include <signal.h>
 #include <sys/types.h>
@@ -27,320 +14,34 @@ void tty_set_cols(int cols){
 #include <errno.h>
 #include <sys/time.h>
 #include <unistd.h>
-#include "config.h"
+#include <termios.h>
 #include <string.h>
 #include <sys/wait.h>
-#ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>
-#endif
-#ifndef __MINGW32_VERSION
 #include <sys/ioctl.h>
-#else
-#include <winsock.h>
-#endif /* __MINGW32_VERSION */
-#ifdef USE_MOUSE
-#ifdef USE_GPM
-#include <gpm.h>
-#endif /* USE_GPM */
-#ifdef USE_SYSMOUSE
-#include <osreldate.h>
-#if (__FreeBSD_version >= 400017) || (__FreeBSD_kernel_version >= 400017)
-#include <sys/consio.h>
-#include <sys/fbio.h>
-#else
-#include <machine/console.h>
-#endif
-int (*sysm_handler)(int x, int y, int nbs, int obs);
-static int cwidth = 8, cheight = 16;
-static int xpix, ypix, nbs, obs = 0;
-#endif /* use_SYSMOUSE */
 
-static int is_xterm = 0;
-
-void mouse_init(void), mouse_end(void);
-int mouseActive = 0;
-#endif /* USE_MOUSE */
+struct Runtime g_runtime = {
+    .lines = 0,
+    .cols = 0,
+};
+struct Runtime* getRuntime()
+{
+    return &g_runtime;
+}
+#define MAXIMUM_COLS 1024
+void tty_set_cols(int cols)
+{
+    g_runtime.cols = cols;
+    if (g_runtime.cols > MAXIMUM_COLS) {
+        g_runtime.cols = MAXIMUM_COLS;
+    }
+}
 
 static char* title_str = NULL;
 
-static int tty = -1;
-
-
-#include "fm.h"
-#include "myctype.h"
-
-#ifdef __EMX__
-#define INCL_DOSNLS
-#include <os2.h>
-#endif /* __EMX__ */
-
-#if defined(__CYGWIN__)
-#include <windows.h>
-#include <sys/cygwin.h>
-static int isWinConsole = 0;
-#define TERM_CYGWIN 1
-#define TERM_CYGWIN_RESERVE_IME 2
-static int isLocalConsole = 0;
-
-#if CYGWIN_VERSION_DLL_MAJOR < 1005 && defined(USE_MOUSE)
-int cygwin_mouse_btn_swapped = 0;
-#endif
-
-#if defined(SUPPORT_WIN9X_CONSOLE_MBCS)
-static HANDLE hConIn = INVALID_HANDLE_VALUE;
-static int isWin95 = 0;
-static char* ConInV;
-static int iConIn, nConIn, nConInMax;
-
-static void
-check_win9x(void)
-{
-    OSVERSIONINFO winVersionInfo;
-
-    winVersionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-    if (GetVersionEx(&winVersionInfo) == 0) {
-        fprintf(stderr, "can't get Windows version information.\n");
-        exit(1);
-    }
-    if (winVersionInfo.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) {
-        isWin95 = 1;
-    } else {
-        isWin95 = 0;
-    }
-}
-
-void enable_win9x_console_input(void)
-{
-    if (isWin95 && isWinConsole && isLocalConsole && hConIn == INVALID_HANDLE_VALUE) {
-        hConIn = CreateFile("CONIN$", GENERIC_READ | GENERIC_WRITE,
-            FILE_SHARE_READ | FILE_SHARE_WRITE,
-            NULL, OPEN_EXISTING, 0, NULL);
-        if (hConIn != INVALID_HANDLE_VALUE) {
-            getch();
-        }
-    }
-}
-
-void disable_win9x_console_input(void)
-{
-    if (hConIn != INVALID_HANDLE_VALUE) {
-        CloseHandle(hConIn);
-        hConIn = INVALID_HANDLE_VALUE;
-    }
-}
-
-static void
-expand_win32_console_input_buffer(int n)
-{
-    if (nConIn + n >= nConInMax) {
-        char* oldv;
-
-        nConInMax = ((nConIn + n) / 2 + 1) * 3;
-        oldv = ConInV;
-        ConInV = GC_MALLOC_ATOMIC(nConInMax);
-        memcpy(ConInV, oldv, nConIn);
-    }
-}
-
-static int
-read_win32_console_input(void)
-{
-    INPUT_RECORD rec;
-    DWORD nevents;
-
-    if (PeekConsoleInput(hConIn, &rec, 1, &nevents) && nevents) {
-        switch (rec.EventType) {
-        case KEY_EVENT:
-            expand_win32_console_input_buffer(3);
-
-            if (ReadConsole(hConIn, &ConInV[nConIn], 1, &nevents, NULL)) {
-                nConIn += nevents;
-                return nevents;
-            }
-
-            break;
-        default:
-            break;
-        }
-
-        ReadConsoleInput(hConIn, &rec, 1, &nevents);
-    }
-    return 0;
-}
-
-static int
-read_win32_console(char* s, int n)
-{
-    KEY_EVENT_RECORD* ker;
-
-    if (hConIn == INVALID_HANDLE_VALUE)
-        return read(tty, s, n);
-
-    if (n > 0)
-        for (;;) {
-            if (iConIn < nConIn) {
-                if (n > nConIn - iConIn)
-                    n = nConIn - iConIn;
-
-                memcpy(s, ConInV, n);
-
-                if ((iConIn += n) >= nConIn)
-                    iConIn = nConIn = 0;
-
-                break;
-            }
-
-            iConIn = nConIn = 0;
-
-            while (!read_win32_console_input())
-                ;
-        }
-
-    return n;
-}
-
-#endif /* SUPPORT_WIN9X_CONSOLE_MBCS */
-
-static HWND
-GetConsoleHwnd(void)
-{
-#define MY_BUFSIZE 1024
-    HWND hwndFound;
-    char pszNewWindowTitle[MY_BUFSIZE];
-    char pszOldWindowTitle[MY_BUFSIZE];
-
-    GetConsoleTitle(pszOldWindowTitle, MY_BUFSIZE);
-    wsprintf(pszNewWindowTitle, "%d/%d",
-        GetTickCount(), GetCurrentProcessId());
-    SetConsoleTitle(pszNewWindowTitle);
-    Sleep(40);
-    hwndFound = FindWindow(NULL, pszNewWindowTitle);
-    SetConsoleTitle(pszOldWindowTitle);
-    return (hwndFound);
-}
-
-#if CYGWIN_VERSION_DLL_MAJOR < 1005 && defined(USE_MOUSE)
-static unsigned long
-cygwin_version(void)
-{
-    struct per_process* p;
-
-    p = (struct per_process*)cygwin_internal(CW_USER_DATA);
-    if (p != NULL) {
-        return (p->dll_major * 1000) + p->dll_minor;
-    }
-    return 0;
-}
-#endif
-
-static void
-check_cygwin_console(void)
-{
-    char* term = getenv("TERM");
-    char* ctype;
-    HANDLE hWnd;
-
-    if (term == NULL)
-        term = DEFAULT_TERM;
-    if (term && strncmp(term, "cygwin", 6) == 0) {
-        isWinConsole = TERM_CYGWIN;
-    }
-    if (isWinConsole) {
-        hWnd = GetConsoleHwnd();
-        if (hWnd != INVALID_HANDLE_VALUE) {
-            if (IsWindowVisible(hWnd)) {
-                isLocalConsole = 1;
-            }
-        }
-        if (((ctype = getenv("LC_ALL")) || (ctype = getenv("LC_CTYPE")) || (ctype = getenv("LANG"))) && strncmp(ctype, "ja", 2) == 0) {
-            isWinConsole = TERM_CYGWIN_RESERVE_IME;
-        }
-#ifdef SUPPORT_WIN9X_CONSOLE_MBCS
-        check_win9x();
-        if (isWin95 && ttyslot() != -1) {
-            isLocalConsole = 0;
-        }
-#endif
-    }
-#if CYGWIN_VERSION_DLL_MAJOR < 1005 && defined(USE_MOUSE)
-    if (cygwin_version() <= 1003015) {
-        /* cygwin DLL 1.3.15 or earler */
-        cygwin_mouse_btn_swapped = 1;
-    }
-#endif
-}
-#endif /* __CYGWIN__ */
-
-char* getenv(const char*);
-MySignalHandler reset_exit(SIGNAL_ARG), reset_error_exit(SIGNAL_ARG), error_dump(SIGNAL_ARG);
-void setlinescols(void);
-void flush_tty(void);
-
-#ifndef SIGIOT
-#define SIGIOT SIGABRT
-#endif /* not SIGIOT */
-
-#ifdef HAVE_TERMIO_H
-#include <termio.h>
-typedef struct termio TerminalMode;
-#define TerminalSet(fd, x) ioctl(fd, TCSETA, x)
-#define TerminalGet(fd, x) ioctl(fd, TCGETA, x)
-#define MODEFLAG(d) ((d).c_lflag)
-#define IMODEFLAG(d) ((d).c_iflag)
-#endif /* HAVE_TERMIO_H */
-
-#ifdef HAVE_TERMIOS_H
-#include <termios.h>
-#include <unistd.h>
-typedef struct termios TerminalMode;
-#define TerminalSet(fd, x) tcsetattr(fd, TCSANOW, x)
-#define TerminalGet(fd, x) tcgetattr(fd, x)
-#define MODEFLAG(d) ((d).c_lflag)
-#define IMODEFLAG(d) ((d).c_iflag)
-#endif /* HAVE_TERMIOS_H */
-
-#ifdef HAVE_SGTTY_H
-#include <sgtty.h>
-typedef struct sgttyb TerminalMode;
-#define TerminalSet(fd, x) ioctl(fd, TIOCSETP, x)
-#define TerminalGet(fd, x) ioctl(fd, TIOCGETP, x)
-#define MODEFLAG(d) ((d).sg_flags)
-#endif /* HAVE_SGTTY_H */
-
-#ifdef __MINGW32_VERSION
-/* dummy struct */
-typedef unsigned char cc_t;
-typedef unsigned int speed_t;
-typedef unsigned int tcflag_t;
-
-#define NCCS 32
-struct termios {
-    tcflag_t c_iflag; /* input mode flags */
-    tcflag_t c_oflag; /* output mode flags */
-    tcflag_t c_cflag; /* control mode flags */
-    tcflag_t c_lflag; /* local mode flags */
-    cc_t c_line; /* line discipline */
-    cc_t c_cc[NCCS]; /* control characters */
-    speed_t c_ispeed; /* input speed */
-    speed_t c_ospeed; /* output speed */
-};
-typedef struct termios TerminalMode;
-#define TerminalSet(fd, x) (0)
-#define TerminalGet(fd, x) (0)
-#define MODEFLAG(d) (0)
-
-/* dummy defines */
-#define SIGHUP (0)
-#define SIGQUIT (0)
-#define ECHO (0)
-#define ISIG (0)
-#define VEOF (0)
-#define ICANON (0)
-#define IXON (0)
-#define IXOFF (0)
-
-char* ttyname(int);
-#endif /* __MINGW32_VERSION */
+MySignalHandler reset_exit(SIGNAL_ARG);
+MySignalHandler reset_error_exit(SIGNAL_ARG);
+MySignalHandler error_dump(SIGNAL_ARG);
 
 #define MAX_LINE 200
 #define MAX_COLUMN 400
@@ -430,16 +131,18 @@ typedef struct scline {
     short eol;
 } Screen;
 
-static TerminalMode d_ioval;
+static struct termios d_ioval;
 static FILE* ttyf = NULL;
 
-void init_tty(){
+void init_tty()
+{
     // stdin
-    tty = 0;
+    g_runtime.tty_input = 0;
+
     // stdout
     ttyf = stdout;
 
-    TerminalGet(tty, &d_ioval);
+    tcgetattr(g_runtime.tty_input, &d_ioval);
 
     getTCstr();
 }
@@ -465,9 +168,6 @@ extern char* tgetstr(char*, char**);
 extern char* tgoto(char*, int, int);
 extern int tputs(char*, int, int (*)(char));
 void clear(void), wrap(void), touch_line(void), touch_column(int);
-#if 0
-void need_clrtoeol(void);
-#endif
 void clrtoeol(void); /* conflicts with curs_clear(3)? */
 
 static int write1(char);
@@ -869,7 +569,7 @@ int get_pixel_per_cell(int* ppc, int* ppl)
 
 #ifdef TIOCGWINSZ
     struct winsize ws;
-    if (ioctl(tty, TIOCGWINSZ, &ws) == 0 && ws.ws_ypixel > 0 && ws.ws_row > 0 && ws.ws_xpixel > 0 && ws.ws_col > 0) {
+    if (ioctl(g_runtime.tty_input, TIOCGWINSZ, &ws) == 0 && ws.ws_ypixel > 0 && ws.ws_row > 0 && ws.ws_xpixel > 0 && ws.ws_col > 0) {
         *ppc = ws.ws_xpixel / ws.ws_col;
         *ppl = ws.ws_ypixel / ws.ws_row;
         return 1;
@@ -885,11 +585,11 @@ int get_pixel_per_cell(int* ppc, int* ppl)
         tval.tv_usec = 200000; /* 0.2 sec * 10 */
         tval.tv_sec = 0;
         FD_ZERO(&rfd);
-        FD_SET(tty, &rfd);
-        if (select(tty + 1, &rfd, NULL, NULL, &tval) <= 0 || !FD_ISSET(tty, &rfd))
+        FD_SET(g_runtime.tty_input, &rfd);
+        if (select(g_runtime.tty_input + 1, &rfd, NULL, NULL, &tval) <= 0 || !FD_ISSET(g_runtime.tty_input, &rfd))
             continue;
 
-        if ((len = read(tty, p, left)) <= 0)
+        if ((len = read(g_runtime.tty_input, p, left)) <= 0)
             continue;
         p[len] = '\0';
 
@@ -910,31 +610,15 @@ int get_pixel_per_cell(int* ppc, int* ppl)
 }
 #endif /* USE_IMAGE */
 
-#ifdef USE_MOUSE
-#define W3M_TERM_INFO(name, title, mouse) name, title, mouse
-#define NEED_XTERM_ON (1)
-#define NEED_XTERM_OFF (1 << 1)
-#ifdef __CYGWIN__
-#define NEED_CYGWIN_ON (1 << 2)
-#define NEED_CYGWIN_OFF (1 << 3)
-#endif
-#else
 #define W3M_TERM_INFO(name, title, mouse) name, title
-#endif
 
 static char XTERM_TITLE[] = "\033]0;w3m: %s\007";
 static char SCREEN_TITLE[] = "\033k%s\033\134";
-#ifdef __CYGWIN__
-static char CYGWIN_TITLE[] = "w3m: %s";
-#endif
 
 /* *INDENT-OFF* */
 static struct w3m_term_info {
     char* term;
     char* title_str;
-#ifdef USE_MOUSE
-    int mouse_flag;
-#endif
 } w3m_term_info_list[] = {
     { W3M_TERM_INFO("xterm", XTERM_TITLE, (NEED_XTERM_ON | NEED_XTERM_OFF)) },
     { W3M_TERM_INFO("kterm", XTERM_TITLE, (NEED_XTERM_ON | NEED_XTERM_OFF)) },
@@ -942,9 +626,6 @@ static struct w3m_term_info {
     { W3M_TERM_INFO("Eterm", XTERM_TITLE, (NEED_XTERM_ON | NEED_XTERM_OFF)) },
     { W3M_TERM_INFO("mlterm", XTERM_TITLE, (NEED_XTERM_ON | NEED_XTERM_OFF)) },
     { W3M_TERM_INFO("screen", SCREEN_TITLE, 0) },
-#ifdef __CYGWIN__
-    { W3M_TERM_INFO("cygwin", CYGWIN_TITLE, (NEED_CYGWIN_ON | NEED_CYGWIN_OFF)) },
-#endif
     { W3M_TERM_INFO(NULL, NULL, 0) }
 };
 #undef W3M_TERM_INFO
@@ -952,63 +633,48 @@ static struct w3m_term_info {
 
 void ttymode_set(int mode, int imode)
 {
-#ifndef __MINGW32_VERSION
-    TerminalMode ioval;
-
-    TerminalGet(tty, &ioval);
-    MODEFLAG(ioval) |= mode;
-#ifndef HAVE_SGTTY_H
-    IMODEFLAG(ioval) |= imode;
-#endif /* not HAVE_SGTTY_H */
-
-    while (TerminalSet(tty, &ioval) == -1) {
+    struct termios ioval;
+    tcgetattr(g_runtime.tty_input, &ioval);
+    ioval.c_lflag |= mode;
+    ioval.c_iflag |= imode;
+    while (tcsetattr(g_runtime.tty_input, TCSANOW, &ioval) == -1) {
         if (errno == EINTR || errno == EAGAIN)
             continue;
         printf("Error occurred while set %x: errno=%d\n", mode, errno);
         reset_error_exit(SIGNAL_ARGLIST);
     }
-#endif
 }
 
 void ttymode_reset(int mode, int imode)
 {
-#ifndef __MINGW32_VERSION
-    TerminalMode ioval;
-
-    TerminalGet(tty, &ioval);
-    MODEFLAG(ioval) &= ~mode;
-#ifndef HAVE_SGTTY_H
-    IMODEFLAG(ioval) &= ~imode;
-#endif /* not HAVE_SGTTY_H */
-
-    while (TerminalSet(tty, &ioval) == -1) {
+    struct termios ioval;
+    tcgetattr(g_runtime.tty_input, &ioval);
+    ioval.c_lflag &= ~mode;
+    ioval.c_iflag &= ~imode;
+    while (tcsetattr(g_runtime.tty_input, TCSANOW, &ioval) == -1) {
         if (errno == EINTR || errno == EAGAIN)
             continue;
         printf("Error occurred while reset %x: errno=%d\n", mode, errno);
         reset_error_exit(SIGNAL_ARGLIST);
     }
-#endif /* __MINGW32_VERSION */
 }
 
-#ifndef HAVE_SGTTY_H
 void set_cc(int spec, int val)
 {
-    TerminalMode ioval;
-
-    TerminalGet(tty, &ioval);
+    struct termios ioval;
+    tcgetattr(g_runtime.tty_input, &ioval);
     ioval.c_cc[spec] = val;
-    while (TerminalSet(tty, &ioval) == -1) {
+    while (tcsetattr(g_runtime.tty_input, TCSANOW, &ioval) == -1) {
         if (errno == EINTR || errno == EAGAIN)
             continue;
         printf("Error occurred: errno=%d\n", errno);
         reset_error_exit(SIGNAL_ARGLIST);
     }
 }
-#endif /* not HAVE_SGTTY_H */
 
 char* ttyname_tty(void)
 {
-    return ttyname(tty);
+    return ttyname(g_runtime.tty_input);
 }
 
 void reset_tty(void)
@@ -1023,16 +689,12 @@ void reset_tty(void)
     }
     writestr(T_se); /* reset terminal */
     flush_tty();
-    TerminalSet(tty, &d_ioval);
+    tcsetattr(g_runtime.tty_input, TCSANOW, &d_ioval);
 }
 
 static MySignalHandler
 reset_exit_with_value(SIGNAL_ARG, int rval)
 {
-#ifdef USE_MOUSE
-    if (mouseActive)
-        mouse_end();
-#endif /* USE_MOUSE */
     reset_tty();
     w3m_exit(rval);
     SIGNAL_RETURN;
@@ -1181,7 +843,7 @@ void getTCstr(void)
 void setlinescols(void)
 {
     struct winsize wins;
-    int i = ioctl(tty, TIOCGWINSZ, &wins);
+    int i = ioctl(g_runtime.tty_input, TIOCGWINSZ, &wins);
     if (i >= 0 && wins.ws_row != 0 && wins.ws_col != 0) {
         g_runtime.lines = wins.ws_row;
         g_runtime.cols = wins.ws_col;
@@ -1667,13 +1329,6 @@ void refresh(void)
                  * avoid the scroll, I prohibit to draw character on
                  * (COLS-1,LINES-1).
                  */
-#if !defined(USE_BG_COLOR) || defined(__CYGWIN__)
-#ifdef __CYGWIN__
-                if (isWinConsole)
-#endif
-                    if (line == LINES - 1 && col == COLS - 1)
-                        break;
-#endif /* !defined(USE_BG_COLOR) || defined(__CYGWIN__) */
                 if ((!(pr[col] & S_STANDOUT) && (mode & S_STANDOUT)) || (!(pr[col] & S_UNDERLINE) && (mode & S_UNDERLINE)) || (!(pr[col] & S_BOLD) && (mode & S_BOLD)) || (!(pr[col] & S_COLORED) && (mode & S_COLORED))
 #ifdef USE_BG_COLOR
                     || (!(pr[col] & S_BCOLORED) && (mode & S_BCOLORED))
@@ -1882,24 +1537,6 @@ void rscroll(int n)
 }
 #endif
 
-#if 0
-void
-need_clrtoeol(void)
-{
-    /* Clear to the end of line as the need arises */
-    l_prop *lprop = ScreenImage[CurLine]->lineprop;
-
-    if (lprop[CurColumn] & S_EOL)
-	return;
-
-    if (!(ScreenImage[CurLine]->isdirty & (L_NEED_CE | L_CLRTOEOL)) ||
-	ScreenImage[CurLine]->eol > CurColumn)
-	ScreenImage[CurLine]->eol = CurColumn;
-
-    ScreenImage[CurLine]->isdirty |= L_NEED_CE;
-}
-#endif /* 0 */
-
 /* XXX: conflicts with curses's clrtoeol(3) ? */
 void clrtoeol(void)
 { /* Clear to the end of line */
@@ -1919,7 +1556,6 @@ void clrtoeol(void)
     }
 }
 
-#ifdef USE_BG_COLOR
 static void
 clrtoeol_with_bcolor(void)
 {
@@ -1944,13 +1580,6 @@ void clrtoeolx(void)
 {
     clrtoeol_with_bcolor();
 }
-#else /* not USE_BG_COLOR */
-
-void clrtoeolx(void)
-{
-    clrtoeol();
-}
-#endif /* not USE_BG_COLOR */
 
 static void
 clrtobot_eol(void (*clrtoeol)())
@@ -1977,17 +1606,6 @@ void clrtobotx(void)
 {
     clrtobot_eol(clrtoeolx);
 }
-
-#if 0
-void
-no_clrtoeol(void)
-{
-    int i;
-    l_prop *lprop = ScreenImage[CurLine]->lineprop;
-
-    ScreenImage[CurLine]->isdirty &= ~L_CLRTOEOL;
-}
-#endif /* 0 */
 
 void addstr(char* s)
 {
@@ -2050,37 +1668,17 @@ void addnstr_sup(char* s, int n)
 }
 
 void crmode(void)
-#ifndef HAVE_SGTTY_H
 {
     ttymode_reset(ICANON, IXON);
     ttymode_set(ISIG, 0);
-#ifdef HAVE_TERMIOS_H
     set_cc(VMIN, 1);
-#else /* not HAVE_TERMIOS_H */
-    set_cc(VEOF, 1);
-#endif /* not HAVE_TERMIOS_H */
 }
-#else /* HAVE_SGTTY_H */
-{
-    ttymode_set(CBREAK, 0);
-}
-#endif /* HAVE_SGTTY_H */
 
 void nocrmode(void)
-#ifndef HAVE_SGTTY_H
 {
     ttymode_set(ICANON, 0);
-#ifdef HAVE_TERMIOS_H
     set_cc(VMIN, 4);
-#else /* not HAVE_TERMIOS_H */
-    set_cc(VEOF, 4);
-#endif /* not HAVE_TERMIOS_H */
 }
-#else /* HAVE_SGTTY_H */
-{
-    ttymode_reset(CBREAK, 0);
-}
-#endif /* HAVE_SGTTY_H */
 
 void term_echo(void)
 {
@@ -2092,49 +1690,18 @@ void term_noecho(void)
     ttymode_reset(ECHO, 0);
 }
 
-void term_raw(void)
-#ifndef HAVE_SGTTY_H
-#ifdef IEXTEN
 #define TTY_MODE ISIG | ICANON | ECHO | IEXTEN
-#else /* not IEXTEN */
-#define TTY_MODE ISIG | ICANON | ECHO
-#endif /* not IEXTEN */
+void term_raw(void)
 {
     ttymode_reset(TTY_MODE, IXON | IXOFF | INLCR | IGNCR | ICRNL);
-#ifdef HAVE_TERMIOS_H
     set_cc(VMIN, 1);
-#else /* not HAVE_TERMIOS_H */
-    set_cc(VEOF, 1);
-#endif /* not HAVE_TERMIOS_H */
 }
-#else /* HAVE_SGTTY_H */
-{
-    ttymode_set(RAW, 0);
-}
-#endif /* HAVE_SGTTY_H */
 
 void term_cooked(void)
-#ifndef HAVE_SGTTY_H
 {
-#ifdef __EMX__
-    /* On XFree86/OS2, some scrambled characters
-     * will appear when asserting IEXTEN flag.
-     */
-    ttymode_set((TTY_MODE) & ~IEXTEN, 0);
-#else
     ttymode_set(TTY_MODE, 0);
-#endif
-#ifdef HAVE_TERMIOS_H
     set_cc(VMIN, 4);
-#else /* not HAVE_TERMIOS_H */
-    set_cc(VEOF, 4);
-#endif /* not HAVE_TERMIOS_H */
 }
-#else /* HAVE_SGTTY_H */
-{
-    ttymode_reset(RAW, 0);
-}
-#endif /* HAVE_SGTTY_H */
 
 void term_cbreak(void)
 {
@@ -2147,17 +1714,7 @@ void term_title(char* s)
     if (!fmInitialized)
         return;
     if (title_str != NULL) {
-#ifdef __CYGWIN__
-        if (isLocalConsole && title_str == CYGWIN_TITLE) {
-            Str buff;
-            buff = Sprintf(title_str, s);
-            if (buff->length > 1024) {
-                Strtruncate(buff, 1024);
-            }
-            SetConsoleTitle(buff->ptr);
-        } else if (isLocalConsole || !isWinConsole)
-#endif
-            fprintf(ttyf, title_str, s);
+        fprintf(ttyf, title_str, s);
     }
 }
 
@@ -2166,11 +1723,7 @@ char getch(void)
     char c;
 
     while (
-#ifdef SUPPORT_WIN9X_CONSOLE_MBCS
-        read_win32_console(&c, 1)
-#else
-        read(tty, &c, 1)
-#endif
+        read(g_runtime.tty_input, &c, 1)
         < (int)1) {
         if (errno == EINTR || errno == EAGAIN)
             continue;
@@ -2180,81 +1733,6 @@ char getch(void)
     }
     return c;
 }
-
-#ifdef USE_MOUSE
-#ifdef USE_GPM
-char wgetch(void* p)
-{
-    char c;
-
-    /* read(tty, &c, 1); */
-    while (read(tty, &c, 1) < (ssize_t)1) {
-        if (errno == EINTR || errno == EAGAIN)
-            continue;
-        /* error happend on read(2) */
-        quitfm();
-        break; /* unreachable */
-    }
-    return c;
-}
-
-int do_getch()
-{
-    if (is_xterm || !gpm_handler)
-        return getch();
-    else
-        return Gpm_Wgetch();
-}
-#endif /* USE_GPM */
-
-#ifdef USE_SYSMOUSE
-int sysm_getch()
-{
-    fd_set rfd;
-    int key, x, y;
-
-    FD_ZERO(&rfd);
-    FD_SET(tty, &rfd);
-    while (select(tty + 1, &rfd, NULL, NULL, NULL) <= 0) {
-        if (errno == EINTR) {
-            x = xpix / cwidth;
-            y = ypix / cheight;
-            key = (*sysm_handler)(x, y, nbs, obs);
-            if (key != 0)
-                return key;
-        }
-    }
-    return getch();
-}
-
-int do_getch()
-{
-    if (is_xterm || !sysm_handler)
-        return getch();
-    else
-        return sysm_getch();
-}
-
-MySignalHandler
-sysmouse(SIGNAL_ARG)
-{
-    struct mouse_info mi;
-
-    mi.operation = MOUSE_GETINFO;
-    if (ioctl(tty, CONS_MOUSECTL, &mi) == -1)
-        return;
-    xpix = mi.u.data.x;
-    ypix = mi.u.data.y;
-    obs = nbs;
-    nbs = mi.u.data.buttons & 0x7;
-    /* for cosmetic bug in syscons.c on FreeBSD 3.[34] */
-    mi.operation = MOUSE_HIDE;
-    ioctl(tty, CONS_MOUSECTL, &mi);
-    mi.operation = MOUSE_SHOW;
-    ioctl(tty, CONS_MOUSECTL, &mi);
-}
-#endif /* USE_SYSMOUSE */
-#endif /* USE_MOUSE */
 
 void bell(void)
 {
@@ -2269,19 +1747,8 @@ skip_escseq(void)
     c = getch();
     if (c == '[' || c == 'O') {
         c = getch();
-#ifdef USE_MOUSE
-        if (is_xterm && c == 'M') {
-            getch();
-            getch();
-            getch();
-        } else if (is_xterm && c == '<') {
+        while (IS_DIGIT(c))
             c = getch();
-            while (IS_DIGIT(c) || c == ';')
-                c = getch();
-        } else
-#endif
-            while (IS_DIGIT(c))
-                c = getch();
     }
 }
 
@@ -2290,207 +1757,30 @@ int sleep_till_anykey(int sec, int purge)
     fd_set rfd;
     struct timeval tim;
     int er, c, ret;
-    TerminalMode ioval;
+    struct termios ioval;
 
-    TerminalGet(tty, &ioval);
+    tcgetattr(g_runtime.tty_input, &ioval);
     term_raw();
 
     tim.tv_sec = sec;
     tim.tv_usec = 0;
 
     FD_ZERO(&rfd);
-    FD_SET(tty, &rfd);
+    FD_SET(g_runtime.tty_input, &rfd);
 
-    ret = select(tty + 1, &rfd, 0, 0, &tim);
+    ret = select(g_runtime.tty_input + 1, &rfd, 0, 0, &tim);
     if (ret > 0 && purge) {
         c = getch();
         if (c == ESC_CODE)
             skip_escseq();
     }
-    er = TerminalSet(tty, &ioval);
+    er = tcsetattr(g_runtime.tty_input, TCSANOW, &ioval);
     if (er == -1) {
         printf("Error occurred: errno=%d\n", errno);
         reset_error_exit(SIGNAL_ARGLIST);
     }
     return ret;
 }
-
-#ifdef USE_MOUSE
-
-#define XTERM_ON                                          \
-    {                                                     \
-        fputs("\033[?1001s\033[?1000h\033[?1006h", ttyf); \
-        flush_tty();                                      \
-    }
-#define XTERM_OFF                                         \
-    {                                                     \
-        fputs("\033[?1006l\033[?1000l\033[?1001r", ttyf); \
-        flush_tty();                                      \
-    }
-#define CYGWIN_ON                   \
-    {                               \
-        fputs("\033[?1000h", ttyf); \
-        flush_tty();                \
-    }
-#define CYGWIN_OFF                  \
-    {                               \
-        fputs("\033[?1000l", ttyf); \
-        flush_tty();                \
-    }
-
-#ifdef USE_GPM
-/* Linux console with GPM support */
-
-void mouse_init()
-{
-    Gpm_Connect conn;
-    extern int gpm_process_mouse(Gpm_Event*, void*);
-    int r;
-
-    if (mouseActive)
-        return;
-    conn.eventMask = ~0;
-    conn.defaultMask = 0;
-    conn.maxMod = 0;
-    conn.minMod = 0;
-
-    gpm_handler = NULL;
-    r = Gpm_Open(&conn, 0);
-    if (r == -2) {
-        /*
-         * If Gpm_Open() success, returns >= 0
-         * Gpm_Open() returns -2 in case of xterm.
-         * Gpm_Close() is necessary here. Otherwise,
-         * xterm is being left in the mode where the mouse clicks are
-         * passed through to the application.
-         */
-        Gpm_Close();
-        is_xterm = (NEED_XTERM_ON | NEED_XTERM_OFF);
-    } else if (r >= 0) {
-        gpm_handler = gpm_process_mouse;
-        is_xterm = 0;
-    }
-    if (is_xterm) {
-        XTERM_ON;
-    }
-    mouseActive = 1;
-}
-
-void mouse_end()
-{
-    if (mouseActive == 0)
-        return;
-    if (is_xterm) {
-        XTERM_OFF;
-    } else
-        Gpm_Close();
-    mouseActive = 0;
-}
-
-#elif defined(USE_SYSMOUSE)
-/* *BSD console with sysmouse support */
-void mouse_init()
-{
-    mouse_info_t mi;
-    extern int sysm_process_mouse();
-
-    if (mouseActive)
-        return;
-    if (is_xterm) {
-        XTERM_ON;
-    } else {
-#if defined(FBIO_MODEINFO) || defined(CONS_MODEINFO) /* FreeBSD > 2.x */
-#ifndef FBIO_GETMODE /* FreeBSD 3.x */
-#define FBIO_GETMODE CONS_GET
-#define FBIO_MODEINFO CONS_MODEINFO
-#endif /* FBIO_GETMODE */
-        video_info_t vi;
-
-        if (ioctl(tty, FBIO_GETMODE, &vi.vi_mode) != -1 && ioctl(tty, FBIO_MODEINFO, &vi) != -1) {
-            cwidth = vi.vi_cwidth;
-            cheight = vi.vi_cheight;
-        }
-#endif /* defined(FBIO_MODEINFO) || \
-        * defined(CONS_MODEINFO) */
-        mySignal(SIGUSR2, SIG_IGN);
-        mi.operation = MOUSE_MODE;
-        mi.u.mode.mode = 0;
-        mi.u.mode.signal = SIGUSR2;
-        sysm_handler = NULL;
-        if (ioctl(tty, CONS_MOUSECTL, &mi) != -1) {
-            mySignal(SIGUSR2, sysmouse);
-            mi.operation = MOUSE_SHOW;
-            ioctl(tty, CONS_MOUSECTL, &mi);
-            sysm_handler = sysm_process_mouse;
-        }
-    }
-    mouseActive = 1;
-}
-
-void mouse_end()
-{
-    if (mouseActive == 0)
-        return;
-    if (is_xterm) {
-        XTERM_OFF;
-    } else {
-        mouse_info_t mi;
-        mi.operation = MOUSE_MODE;
-        mi.u.mode.mode = 0;
-        mi.u.mode.signal = 0;
-        ioctl(tty, CONS_MOUSECTL, &mi);
-    }
-    mouseActive = 0;
-}
-
-#else
-/* not GPM nor SYSMOUSE, but use mouse with xterm */
-
-void mouse_init()
-{
-    if (mouseActive)
-        return;
-    if (is_xterm & NEED_XTERM_ON) {
-        XTERM_ON;
-    }
-#ifdef __CYGWIN__
-    else if (is_xterm & NEED_CYGWIN_ON) {
-        CYGWIN_ON;
-    }
-#endif
-    mouseActive = 1;
-}
-
-void mouse_end()
-{
-    if (mouseActive == 0)
-        return;
-    if (is_xterm & NEED_XTERM_OFF) {
-        XTERM_OFF;
-    }
-#ifdef __CYGWIN__
-    else if (is_xterm & NEED_CYGWIN_OFF) {
-        CYGWIN_OFF;
-    }
-#endif
-    mouseActive = 0;
-}
-
-#endif /* not USE_GPM nor USE_SYSMOUSE */
-
-void mouse_active()
-{
-    if (!mouseActive)
-        mouse_init();
-}
-
-void mouse_inactive()
-{
-    if (mouseActive && is_xterm)
-        mouse_end();
-}
-
-#endif /* USE_MOUSE */
 
 void flush_tty(void)
 {
@@ -2521,40 +1811,3 @@ void touch_cursor(void)
 #endif
 }
 #endif
-
-#ifdef __MINGW32_VERSION
-
-int tgetent(char* bp, char* name)
-{
-    return 0;
-}
-
-int tgetnum(char* id)
-{
-    return -1;
-}
-
-int tgetflag(char* id)
-{
-    return 0;
-}
-
-char* tgetstr(char* id, char** area)
-{
-    id = "";
-}
-
-char* tgoto(char* cap, int col, int row)
-{
-}
-
-int tputs(char* str, int affcnt, int (*putc)(char))
-{
-}
-
-char* ttyname(int tty)
-{
-    return "CON";
-}
-
-#endif /* __MINGW32_VERSION */

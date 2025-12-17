@@ -86,6 +86,9 @@ pub fn build(b: *std.Build) void {
 
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
+
+    // ./configure --prefix=$HOME/local --enable-image=fb --disable-mouse
+
     // const SHELL = "/bin/bash";
     const PACKAGE = "w3m";
     // const VERSION = "0.5.3";

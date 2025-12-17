@@ -1,6 +1,7 @@
 #pragma once
 
 struct Runtime {
+    int tty_input;
     int lines;
     int cols;
 };
