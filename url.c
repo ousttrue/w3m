@@ -1,4 +1,4 @@
-/* $Id: url.c,v 1.100 2010/12/15 10:50:24 htrb Exp $ */
+#include "w3m_runtime.h"
 #include "fm.h"
 #ifndef __MINGW32_VERSION
 #include <unistd.h>
@@ -552,7 +552,7 @@ int openSocket(char* const hostname,
 #endif /* not INET6 */
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
 
-    if (fmInitialized) {
+    if (fmInitialized()) {
         /* FIXME: gettextize? */
         message(Sprintf("Opening socket...")->ptr, 0, 0);
         refresh();

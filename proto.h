@@ -447,17 +447,12 @@ extern void resetFrameElement(union frameset_element* f_element, Buffer* buf,
     char* referer, FormList* request);
 extern Buffer* renderFrame(Buffer* Cbuf, int force_reload);
 extern union frameset_element* search_frame(struct frameset* fset, char* name);
-extern void set_cc(int spec, int val);
-extern char* ttyname_tty(void);
-extern void reset_tty(void);
 extern MySignalHandler reset_exit(SIGNAL_ARG);
 extern MySignalHandler error_dump(SIGNAL_ARG);
 extern void set_int(void);
-extern void getTCstr(void);
 extern void setlinescols(void);
 extern void setupscreen(void);
 extern pid_t open_pipe_rw(FILE** fr, FILE** fw);
-extern int initscr(void);
 extern void move(int line, int column);
 #ifdef USE_M17N
 extern void addmch(char* p, size_t len);
@@ -473,7 +468,6 @@ extern void underline(void);
 extern void underlineend(void);
 extern void graphstart(void);
 extern void graphend(void);
-extern int graph_ok(void);
 #ifdef USE_COLOR
 extern void setfcolor(int color);
 #ifdef USE_BG_COLOR
@@ -505,7 +499,6 @@ extern void term_raw(void);
 extern void term_cooked(void);
 extern void term_cbreak(void);
 extern void term_title(char* s);
-extern void flush_tty(void);
 extern void toggle_stand(void);
 extern void bell(void);
 extern int sleep_till_anykey(int sec, int purge);
@@ -660,7 +653,6 @@ extern char* url_unquote_conv0(char* url);
 extern char* expandName(char* name);
 extern Str tmpfname(int type, char* ext);
 extern time_t mymktime(char* timestr);
-extern void (*mySignal(int signal_number, void (*action)(int)))(int);
 #ifdef USE_COOKIE
 extern char* FQDN(char* host);
 extern Str find_cookie(ParsedURL* pu);

@@ -1,4 +1,4 @@
-/* $Id: etc.c,v 1.81 2007/05/23 15:06:05 inu Exp $ */
+#include "w3m_runtime.h"
 #include "fm.h"
 #ifndef __MINGW32_VERSION
 #include <pwd.h>
@@ -1160,7 +1160,7 @@ FILE* openSecretFile(char* fname)
     if (disable_secret_security_check)
         /* do nothing */;
     else if ((st.st_mode & (S_IRWXG | S_IRWXO)) != 0) {
-        if (fmInitialized) {
+        if (fmInitialized()) {
             message(Sprintf(FILE_IS_READABLE_MSG, fname)->ptr, 0, 0);
             refresh();
         } else {
@@ -1361,7 +1361,7 @@ void setup_child(int child, int i, int f)
 #endif /* __MINGW32_VERSION */
     close_all_fds_except(i, f);
     QuietMessage = TRUE;
-    fmInitialized = FALSE;
+    getRuntime()->fmInitialized = FALSE;
     TrapSignal = FALSE;
 }
 

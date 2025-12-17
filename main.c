@@ -300,7 +300,7 @@ static GC_warn_proc orig_GC_warn_proc = NULL;
 static void
 wrap_GC_warn_proc(char* msg, GC_word arg)
 {
-    if (fmInitialized) {
+    if (fmInitialized()) {
         /* *INDENT-OFF* */
         static struct {
             char* msg;
@@ -752,7 +752,7 @@ bool w3m_args(int argc, char** argv)
 #endif
                 squeezeBlankLine = TRUE;
             else if (!strcmp("-X", argv[i]))
-                Do_not_use_ti_te = TRUE;
+                getRuntime()->Do_not_use_ti_te = TRUE;
             else if (!strcmp("-title", argv[i]))
                 displayTitleTerm = getenv("TERM");
             else if (!strncmp("-title=", argv[i], 7))

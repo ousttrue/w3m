@@ -1,4 +1,4 @@
-/* $Id: ftp.c,v 1.42 2010/12/15 10:50:24 htrb Exp $ */
+#include "w3m_runtime.h"
 #include <stdio.h>
 #ifndef __MINGW32_VERSION
 #include <pwd.h>
@@ -180,7 +180,7 @@ ftp_login(FTP ftp)
     ftp_command(ftp, NULL, NULL, &status);
     if (status != 220)
         goto open_err;
-    if (fmInitialized) {
+    if (fmInitialized()) {
         message(Sprintf("Sending FTP username (%s) to remote server.",
                     ftp->user)
                     ->ptr,
@@ -195,7 +195,7 @@ ftp_login(FTP ftp)
         goto succeed;
     if (status != 331)
         goto open_err;
-    if (fmInitialized) {
+    if (fmInitialized()) {
         message("Sending FTP password to remote server.", 0, 0);
         refresh();
     }
@@ -402,7 +402,7 @@ openFTPStream(ParsedURL* pu, URLFile* uf)
         pwd = NULL;
         find_auth_user_passwd(pu, NULL, &uname, &pwd, 0);
         if (pwd == NULL) {
-            if (fmInitialized) {
+            if (fmInitialized()) {
                 term_raw();
                 pwd = Strnew_charp(inputLine("Password: ", NULL, IN_PASSWORD));
                 pwd = Str_conv_to_system(pwd);

@@ -855,22 +855,8 @@ global char MetaRefresh init(FALSE);
 global char LocalhostOnly init(FALSE);
 global char* HostName init(NULL);
 
-global char fmInitialized init(FALSE);
 global char QuietMessage init(FALSE);
 global char TrapSignal init(TRUE);
-#define TRAP_ON                                \
-    if (TrapSignal) {                          \
-        prevtrap = mySignal(SIGINT, KeyAbort); \
-        if (fmInitialized)                     \
-            term_cbreak();                     \
-    }
-#define TRAP_OFF                        \
-    if (TrapSignal) {                   \
-        if (fmInitialized)              \
-            term_raw();                 \
-        if (prevtrap)                   \
-            mySignal(SIGINT, prevtrap); \
-    }
 
 extern unsigned char GlobalKeymap[];
 extern unsigned char EscKeymap[];
@@ -912,7 +898,6 @@ global TextList* NO_proxy_domains;
 global char NoCache init(FALSE);
 global char use_proxy init(TRUE);
 #define Do_not_use_proxy (!use_proxy)
-global int Do_not_use_ti_te init(FALSE);
 #ifdef USE_NNTP
 global char* NNTP_server init(NULL);
 global char* NNTP_mode init(NULL);
@@ -1266,7 +1251,6 @@ global TextLineList* backend_halfdump_buf;
 global TextList* backend_batch_commands init(NULL);
 int backend(void);
 extern void deleteFiles(void);
-void w3m_exit(int i);
 
 #ifdef USE_ALARM
 #define AL_UNSET 0

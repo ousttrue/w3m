@@ -186,7 +186,7 @@ void fmTerm(void)
             mouse_end();
 #endif /* USE_MOUSE */
         reset_tty();
-        fmInitialized = FALSE;
+        getRuntime()->fmInitialized = FALSE;
     }
 }
 
@@ -195,7 +195,7 @@ void fmTerm(void)
  */
 void fmInit(void)
 {
-    if (!fmInitialized) {
+    if (!fmInitialized()) {
         initscr();
         term_raw();
         term_noecho();
@@ -204,7 +204,7 @@ void fmInit(void)
             initImage();
 #endif
     }
-    fmInitialized = TRUE;
+    getRuntime()->fmInitialized = TRUE;
 }
 
 /*
