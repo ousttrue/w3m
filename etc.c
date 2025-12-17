@@ -1355,13 +1355,11 @@ void setup_child(int child, int i, int f)
 {
     reset_signals();
     mySignal(SIGINT, SIG_IGN);
-#ifndef __MINGW32_VERSION
     if (!child)
         SETPGRP();
-#endif /* __MINGW32_VERSION */
     close_all_fds_except(i, f);
     QuietMessage = TRUE;
-    getRuntime()->fmInitialized = FALSE;
+    // getRuntime()->fmInitialized = FALSE;
     TrapSignal = FALSE;
 }
 

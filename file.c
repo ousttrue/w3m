@@ -1471,28 +1471,23 @@ getAuthCookie(struct http_auth* hauth, char* auth_header,
     FormList* request,
     volatile Str* uname, volatile Str* pwd)
 {
-    Str ss = NULL;
-    Str tmp;
-    TextListItem* i;
-    int a_found;
-    int auth_header_len = strlen(auth_header);
     char* realm = NULL;
-    int proxy;
-
     if (hauth)
         realm = qstr_unquote(get_auth_param(hauth->param, "realm"))->ptr;
 
     if (!realm)
         return;
 
-    a_found = FALSE;
+    int auth_header_len = strlen(auth_header);
+    bool a_found = FALSE;
+    TextListItem* i;
     for (i = extra_header->first; i != NULL; i = i->next) {
         if (!strncasecmp(i->ptr, auth_header, auth_header_len)) {
             a_found = TRUE;
             break;
         }
     }
-    proxy = !strncasecmp("Proxy-Authorization:", auth_header,
+    int proxy = !strncasecmp("Proxy-Authorization:", auth_header,
         auth_header_len);
     if (a_found) {
         /* This means that *-Authenticate: header is received after
@@ -1520,7 +1515,7 @@ getAuthCookie(struct http_auth* hauth, char* auth_header,
         sleep(2);
         if (fmInitialized()) {
             char* pp;
-            term_raw();
+            enterRawMode();
             /* FIXME: gettextize? */
             if ((pp = inputStr(Sprintf("Username for %s: ", realm)->ptr,
                      NULL))
@@ -1534,7 +1529,7 @@ getAuthCookie(struct http_auth* hauth, char* auth_header,
                 return;
             }
             *pwd = Str_conv_to_system(Strnew_charp(pp));
-            term_cbreak();
+            exitRawMode();
         } else {
             /*
              * If post file is specified as '-', stdin is closed at this
@@ -1567,14 +1562,15 @@ getAuthCookie(struct http_auth* hauth, char* auth_header,
             term_raw();
             *pwd = Strnew_charp((char*)
                     inputLine(proxy ? "Proxy Password: " : "Password: ", NULL, IN_PASSWORD));
-            term_cbreak();
+            exitRawMode();
 #endif /* __MINGW32_VERSION */
 #endif
         }
     }
-    ss = hauth->cred(hauth, *uname, *pwd, pu, hr, request);
+
+    Str ss = hauth->cred(hauth, *uname, *pwd, pu, hr, request);
     if (ss) {
-        tmp = Strnew_charp(auth_header);
+        Str tmp = Strnew_charp(auth_header);
         Strcat_m_charp(tmp, " ", ss->ptr, "\r\n", NULL);
         pushText(extra_header, tmp->ptr);
     } else {
@@ -1793,7 +1789,7 @@ load_doc: {
             && !Do_not_use_proxy && !check_no_proxy(pu.host))) {
 
         if (fmInitialized()) {
-            term_cbreak();
+            exitRawMode();
             /* FIXME: gettextize? */
             message(Sprintf("%s contacted. Waiting for reply...", pu.host)->ptr, 0, 0);
             refresh();
@@ -8418,7 +8414,7 @@ char* inputAnswer(char* prompt)
     if (QuietMessage)
         return "n";
     if (fmInitialized()) {
-        term_raw();
+        enterRawMode();
         ans = inputChar(prompt);
     } else {
         printf("%s", prompt);

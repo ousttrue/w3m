@@ -23,14 +23,13 @@ char UseGraphicChar = GRAPHIC_CHAR_CHARSET;
 struct Runtime g_runtime = {
     .lines = 0,
     .cols = 0,
-    .fmInitialized = false,
     .Do_not_use_ti_te = false,
 };
 struct Runtime* getRuntime()
 {
     return &g_runtime;
 }
-bool fmInitialized() { return g_runtime.fmInitialized; }
+
 #define MAXIMUM_COLS 1024
 void tty_set_cols(int cols)
 {
@@ -40,32 +39,9 @@ void tty_set_cols(int cols)
     }
 }
 
-void enterRawMode(void)
-{
-    if (!g_runtime.fmInitialized) {
-        initscr();
-        term_raw();
-        term_noecho();
-        initImage();
-    }
-    g_runtime.fmInitialized = TRUE;
-}
-
-void exitRawMode(void)
-{
-    if (g_runtime.fmInitialized) {
-        move(LASTLINE(), 0);
-        clrtoeolx();
-        refresh();
-        loadImage(NULL, IMG_FLAG_STOP);
-        reset_tty();
-        g_runtime.fmInitialized = FALSE;
-    }
-}
-
 static MySignalHandler reset_exit_with_value(SIGNAL_ARG, int rval)
 {
-    reset_tty();
+    exitRawMode();
     w3m_exit(rval);
     SIGNAL_RETURN;
 }
@@ -85,7 +61,7 @@ MySignalHandler
 error_dump(SIGNAL_ARG)
 {
     mySignal(SIGIOT, SIG_DFL);
-    reset_tty();
+    exitRawMode();
     abort();
     SIGNAL_RETURN;
 }
@@ -108,6 +84,7 @@ void set_int(void)
 static void
 setgraphchar(void)
 {
+
     for (int c = 0; c < 96; c++)
         g_runtime.gcmap[c] = (char)(c + ' ');
 
@@ -136,16 +113,6 @@ char graphchar(char c)
         else                       \
             v = allocStr(suc, -1); \
     }
-
-void setlinescols(void)
-{
-    struct winsize wins;
-    int i = ioctl(g_runtime.tty_input, TIOCGWINSZ, &wins);
-    if (i >= 0 && wins.ws_row != 0 && wins.ws_col != 0) {
-        g_runtime.lines = wins.ws_row;
-        g_runtime.cols = wins.ws_col;
-    }
-}
 
 static char bp[1024], funcstr[256];
 
@@ -222,88 +189,13 @@ static void getTCstr(void)
 
 void init_tty()
 {
-    // stdin
-    g_runtime.tty_input = 0;
-    tcgetattr(g_runtime.tty_input, &d_ioval);
-
     getTCstr();
 }
 
 char* ttyname_tty(void)
 {
-    return ttyname(g_runtime.tty_input);
-}
-
-void reset_tty(void)
-{
-    writestr(g_runtime.T_op); /* turn off */
-    writestr(g_runtime.T_me);
-    if (!g_runtime.Do_not_use_ti_te) {
-        if (g_runtime.T_te && *g_runtime.T_te)
-            writestr(g_runtime.T_te);
-        else
-            writestr(g_runtime.T_cl);
-    }
-    writestr(g_runtime.T_se); /* reset terminal */
-    flush_tty();
-    tcsetattr(g_runtime.tty_input, TCSANOW, &d_ioval);
-}
-
-void ttymode_set(int mode, int imode)
-{
-    struct termios ioval;
-    tcgetattr(g_runtime.tty_input, &ioval);
-    ioval.c_lflag |= mode;
-    ioval.c_iflag |= imode;
-    while (tcsetattr(g_runtime.tty_input, TCSANOW, &ioval) == -1) {
-        if (errno == EINTR || errno == EAGAIN)
-            continue;
-        printf("Error occurred while set %x: errno=%d\n", mode, errno);
-        reset_error_exit(SIGNAL_ARGLIST);
-    }
-}
-
-void ttymode_reset(int mode, int imode)
-{
-    struct termios ioval;
-    tcgetattr(g_runtime.tty_input, &ioval);
-    ioval.c_lflag &= ~mode;
-    ioval.c_iflag &= ~imode;
-    while (tcsetattr(g_runtime.tty_input, TCSANOW, &ioval) == -1) {
-        if (errno == EINTR || errno == EAGAIN)
-            continue;
-        printf("Error occurred while reset %x: errno=%d\n", mode, errno);
-        reset_error_exit(SIGNAL_ARGLIST);
-    }
-}
-
-void set_cc(int spec, int val)
-{
-    struct termios ioval;
-    tcgetattr(g_runtime.tty_input, &ioval);
-    ioval.c_cc[spec] = val;
-    while (tcsetattr(g_runtime.tty_input, TCSANOW, &ioval) == -1) {
-        if (errno == EINTR || errno == EAGAIN)
-            continue;
-        printf("Error occurred: errno=%d\n", errno);
-        reset_error_exit(SIGNAL_ARGLIST);
-    }
-}
-
-char getch(void)
-{
-    char c;
-
-    while (
-        read(getRuntime()->tty_input, &c, 1)
-        < (int)1) {
-        if (errno == EINTR || errno == EAGAIN)
-            continue;
-        /* error happend on read(2) */
-        quitfm();
-        break; /* unreachable */
-    }
-    return c;
+    return ttyname(0);
+        // g_runtime.tty_input);
 }
 
 static void
@@ -350,13 +242,12 @@ void tty_MOVE(int line, int column)
     writestr(tgoto(g_runtime.T_cm, column, line));
 }
 
-int initscr(void)
+void initscr(void)
 {
     set_int();
     if (g_runtime.T_ti && !g_runtime.Do_not_use_ti_te)
         writestr(g_runtime.T_ti);
     setupscreen();
-    return 0;
 }
 
 int graph_ok(void)
@@ -364,48 +255,6 @@ int graph_ok(void)
     if (UseGraphicChar != GRAPHIC_CHAR_DEC)
         return 0;
     return g_runtime.T_as[0] != 0 && g_runtime.T_ae[0] != 0 && g_runtime.T_ac[0] != 0;
-}
-
-void crmode(void)
-{
-    ttymode_reset(ICANON, IXON);
-    ttymode_set(ISIG, 0);
-    set_cc(VMIN, 1);
-}
-
-void nocrmode(void)
-{
-    ttymode_set(ICANON, 0);
-    set_cc(VMIN, 4);
-}
-
-void term_echo(void)
-{
-    ttymode_set(ECHO, 0);
-}
-
-void term_noecho(void)
-{
-    ttymode_reset(ECHO, 0);
-}
-
-#define TTY_MODE ISIG | ICANON | ECHO | IEXTEN
-void term_raw(void)
-{
-    ttymode_reset(TTY_MODE, IXON | IXOFF | INLCR | IGNCR | ICRNL);
-    set_cc(VMIN, 1);
-}
-
-void term_cooked(void)
-{
-    ttymode_set(TTY_MODE, 0);
-    set_cc(VMIN, 4);
-}
-
-void term_cbreak(void)
-{
-    term_cooked();
-    term_noecho();
 }
 
 static const char* title_str = NULL;

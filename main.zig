@@ -2,6 +2,8 @@ const std = @import("std");
 const c = @cImport({
     @cInclude("w3m_runtime.h");
     @cInclude("termcap.h");
+    @cInclude("image.h");
+    @cInclude("terms.h");
 });
 const vaxis = @import("vaxis");
 
@@ -32,6 +34,21 @@ const RawMode = struct {
         this.loop.stop();
         this.vx.deinit(allocator, this.tty.writer());
         this.tty.deinit();
+    }
+
+    /// return unicode codepoint
+    fn getch(this: *@This()) u32 {
+        while (true) {
+            const event = this.loop.nextEvent();
+            switch (event) {
+                .key_press => |key| {
+                    return key.codepoint;
+                },
+                .winsize => |ws| {
+                    _ = ws;
+                },
+            }
+        }
     }
 };
 
@@ -82,6 +99,165 @@ pub fn main() void {
     }
 }
 
+//
+// input(rawmode)
+//
+
+export fn fmInitialized() bool {
+    return g_term.rawmode != null;
+}
+
+export fn enterRawMode() void {
+    if (g_term.rawmode == null) {
+        // term_raw();
+        // term_noecho();
+        g_term.enterRawMode() catch @panic("enterRawMode");
+        c.initscr();
+        c.initImage();
+    }
+}
+
+export fn exitRawMode() void {
+    if (g_term.rawmode != null) {
+        c.move(c.LASTLINE(), 0);
+        c.clrtoeolx();
+        c.refresh();
+        c.loadImage(null, c.IMG_FLAG_STOP);
+        reset_tty();
+    }
+}
+
+export fn reset_tty() void {
+    const g_runtime: *c.Runtime = c.getRuntime() orelse {
+        unreachable;
+    };
+    writestr(g_runtime.T_op); // turn off
+    writestr(g_runtime.T_me);
+    if (g_runtime.Do_not_use_ti_te == 0) {
+        if (g_runtime.T_te != null and g_runtime.T_te[0] != 0) {
+            writestr(g_runtime.T_te);
+        } else {
+            writestr(g_runtime.T_cl);
+        }
+    }
+    writestr(g_runtime.T_se); // reset terminal
+    flush_tty();
+    // tcsetattr(g_runtime.tty_input, TCSANOW, &d_ioval);
+    g_term.exitRawMode();
+}
+
+export fn tty_add_ISIG() void {
+    // ttymode_set(ISIG, 0);
+}
+
+export fn tty_remove_ISIG() void {
+    // ttymode_reset(ISIG, 0);
+}
+
+// void ttymode_set(int mode, int imode)
+// {
+//     struct termios ioval;
+//     tcgetattr(g_runtime.tty_input, &ioval);
+//     ioval.c_lflag |= mode;
+//     ioval.c_iflag |= imode;
+//     while (tcsetattr(g_runtime.tty_input, TCSANOW, &ioval) == -1) {
+//         if (errno == EINTR || errno == EAGAIN)
+//             continue;
+//         printf("Error occurred while set %x: errno=%d\n", mode, errno);
+//         reset_error_exit(SIGNAL_ARGLIST);
+//     }
+// }
+//
+// void ttymode_reset(int mode, int imode)
+// {
+//     struct termios ioval;
+//     tcgetattr(g_runtime.tty_input, &ioval);
+//     ioval.c_lflag &= ~mode;
+//     ioval.c_iflag &= ~imode;
+//     while (tcsetattr(g_runtime.tty_input, TCSANOW, &ioval) == -1) {
+//         if (errno == EINTR || errno == EAGAIN)
+//             continue;
+//         printf("Error occurred while reset %x: errno=%d\n", mode, errno);
+//         reset_error_exit(SIGNAL_ARGLIST);
+//     }
+// }
+//
+// void set_cc(int spec, int val)
+// {
+//     struct termios ioval;
+//     tcgetattr(g_runtime.tty_input, &ioval);
+//     ioval.c_cc[spec] = val;
+//     while (tcsetattr(g_runtime.tty_input, TCSANOW, &ioval) == -1) {
+//         if (errno == EINTR || errno == EAGAIN)
+//             continue;
+//         printf("Error occurred: errno=%d\n", errno);
+//         reset_error_exit(SIGNAL_ARGLIST);
+//     }
+// }
+
+// void crmode(void)
+// {
+//     ttymode_reset(ICANON, IXON);
+//     ttymode_set(ISIG, 0);
+//     set_cc(VMIN, 1);
+// }
+//
+// void nocrmode(void)
+// {
+//     ttymode_set(ICANON, 0);
+//     set_cc(VMIN, 4);
+// }
+//
+// void term_echo(void)
+// {
+//     ttymode_set(ECHO, 0);
+// }
+//
+// void term_noecho(void)
+// {
+//     ttymode_reset(ECHO, 0);
+// }
+
+// #define TTY_MODE ISIG | ICANON | ECHO | IEXTEN
+// export fn term_raw() void {
+//     ttymode_reset(TTY_MODE, IXON | IXOFF | INLCR | IGNCR | ICRNL);
+//     set_cc(VMIN, 1);
+// }
+
+// void term_cooked(void)
+// {
+//     ttymode_set(TTY_MODE, 0);
+//     set_cc(VMIN, 4);
+// }
+
+// export fn term_cbreak() void {
+// term_cooked();
+// term_noecho();
+// }
+
+export fn getch() c_int {
+    if (g_term.rawmode) |rawmode| {
+        return @intCast(rawmode.getch());
+    } else {
+        unreachable;
+    }
+    // char c;
+    //
+    // while (
+    //     read(getRuntime()->tty_input, &c, 1)
+    //     < (int)1) {
+    //     if (errno == EINTR || errno == EAGAIN)
+    //         continue;
+    //     /* error happend on read(2) */
+    //     quitfm();
+    //     break; /* unreachable */
+    // }
+    // return c;
+}
+
+//
+// output
+//
 export fn getOutputHandle() c_int {
     return std.fs.File.stdout().handle;
 }
@@ -109,6 +285,40 @@ export fn write1(ch: c_int) c_int {
 export fn writestr(s: [*c]const u8) void {
     _ = c.tputs(s, 1, c.write1);
 }
+
+//
+// size
+//
+
+export fn setlinescols() void {
+    // struct winsize wins;
+    // int i = ioctl(g_runtime.tty_input, TIOCGWINSZ, &wins);
+    // if (i >= 0 && wins.ws_row != 0 && wins.ws_col != 0) {
+    //     g_runtime.lines = wins.ws_row;
+    //     g_runtime.cols = wins.ws_col;
+    // }
+    if (g_term.rawmode) |rawmode| {
+        if (vaxis.tty.PosixTty.getWinsize(rawmode.tty.fd)) |ws| {
+            const rt = c.getRuntime();
+            rt.*.lines = ws.rows;
+            rt.*.cols = ws.cols;
+        } else |e| {
+            @panic(@errorName(e));
+        }
+    } else {
+        if (vaxis.tty.PosixTty.getWinsize(std.fs.File.stdin().handle)) |ws| {
+            const rt = c.getRuntime();
+            rt.*.lines = ws.rows;
+            rt.*.cols = ws.cols;
+        } else |e| {
+            @panic(@errorName(e));
+        }
+    }
+}
+
+//
+// image
+//
 
 export fn get_pixel_per_cell(ppc: *c_int, ppl: *c_int) c_int {
     _ = ppc;

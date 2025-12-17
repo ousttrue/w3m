@@ -443,7 +443,6 @@ extern union frameset_element* search_frame(struct frameset* fset, char* name);
 extern MySignalHandler reset_exit(SIGNAL_ARG);
 extern MySignalHandler error_dump(SIGNAL_ARG);
 extern void set_int(void);
-extern void setlinescols(void);
 extern pid_t open_pipe_rw(FILE** fr, FILE** fw);
 
 extern void initMimeTypes(void);

@@ -1725,7 +1725,7 @@ srchcore(char* volatile str, int (*func)(Buffer*, char*))
 
     str = conv_search_string(SearchString, DisplayCharset);
     auto prevtrap = mySignal(SIGINT, intTrap);
-    crmode();
+    exitRawMode();
     if (SETJMP(IntReturn) == 0) {
         for (i = 0; i < PREC_NUM; i++) {
             result = func(Currentbuf, str);
@@ -1734,7 +1734,7 @@ srchcore(char* volatile str, int (*func)(Buffer*, char*))
         }
     }
     mySignal(SIGINT, prevtrap);
-    term_raw();
+    enterRawMode();
     return result;
 }
 
@@ -2131,10 +2131,10 @@ DEFUN(readsh, READ_SHELL, "Execute shell command and display output")
         return;
     }
     auto prevtrap = mySignal(SIGINT, intTrap);
-    crmode();
+    exitRawMode();
     buf = getshell(cmd);
     mySignal(SIGINT, prevtrap);
-    term_raw();
+    enterRawMode();
     if (buf == NULL) {
         /* FIXME: gettextize? */
         disp_message("Execution failed", TRUE);

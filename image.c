@@ -222,7 +222,6 @@ save_gif(const char* path, u_char* header, size_t header_size, u_char* body, siz
     }
 }
 
-
 static Str
 save_first_animation_frame(const char* path)
 {
@@ -316,7 +315,7 @@ static void put_image_sixel(char* url, int x, int y, int w, int h, int sx, int s
         } else if (!strstr(url, "://") && strcmp(url + strlen(url) - 4, ".gif") == 0 && (str_url = save_first_animation_frame(url))) {
             url = str_url->ptr;
         }
-        ttymode_set(ISIG, 0);
+        tty_add_ISIG();
 
         if ((env = getenv("W3M_IMG2SIXEL"))) {
             char* p;
@@ -355,7 +354,7 @@ static void put_image_sixel(char* url, int x, int y, int w, int h, int sx, int s
     } else if (pid > 0) {
         int status;
         waitpid(pid, &status, 0);
-        ttymode_reset(ISIG, 0);
+        tty_remove_ISIG();
         mySignal(SIGINT, previntr);
         mySignal(SIGQUIT, prevquit);
         mySignal(SIGTSTP, prevstop);
@@ -477,7 +476,7 @@ static void put_image_kitty(char* url, int x, int y, int w, int h, int sx, int s
                 i = 0;
 
                 close(STDERR_FILENO); /* Don't output error message. */
-                ttymode_set(ISIG, 0);
+                tty_add_ISIG();
 
                 if ((cbuf = getenv("W3M_KITTY_TO_PNG")))
                     argv[i++] = cbuf;
@@ -497,7 +496,7 @@ static void put_image_kitty(char* url, int x, int y, int w, int h, int sx, int s
                 exit(0);
             } else if (pid > 0) {
                 waitpid(pid, &i, 0);
-                ttymode_reset(ISIG, 0);
+                tty_remove_ISIG();
                 mySignal(SIGINT, previntr);
                 mySignal(SIGQUIT, prevquit);
                 mySignal(SIGTSTP, prevstop);
