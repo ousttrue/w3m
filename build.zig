@@ -126,6 +126,12 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
         .root_source_file = b.path("main.zig"),
     });
+    const vaxis_dep = b.dependency("vaxis", .{
+        .target = target,
+        .optimize = optimize,
+    });
+    mod.addImport("vaxis", vaxis_dep.module("vaxis"));
+
     const exe = b.addExecutable(.{
         .name = "w3m",
         .root_module = mod,

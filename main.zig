@@ -5,23 +5,38 @@ const c = @cImport({
 const vaxis = @import("vaxis");
 
 const RawMode = struct {
-    fn create(allocator: std.mem.Allocator) !*@This()
-    {
+    const Event = union(enum) {
+        key_press: vaxis.Key,
+        winsize: vaxis.Winsize,
+        // focus_in,
+        // foo: u8,
+    };
+
+    buffer: [1024]u8 = undefined,
+    tty: vaxis.Tty = undefined,
+    vx: vaxis.Vaxis = undefined,
+    loop: vaxis.Loop(Event) = undefined,
+    fn create(allocator: std.mem.Allocator) !*@This() {
         const this = try allocator.create(@This());
-        this.* = .{
-        };
+        this.* = .{};
+        this.tty = try vaxis.Tty.init(&this.buffer);
+        this.vx = try vaxis.init(allocator, .{});
+        this.loop = .{ .tty = &this.tty, .vaxis = &this.vx };
+        try this.loop.init();
+        try this.loop.start();
         return this;
     }
 
-    fn destroy(this: *@This(), allocator: std.mem.Allocator)void
-    {
-        _ = this;
-        _ = allocator;
+    fn destroy(this: *@This(), allocator: std.mem.Allocator) void {
+        this.loop.stop();
+        this.vx.deinit(allocator, this.tty.writer());
+        this.tty.deinit();
     }
 };
 
 const Term = struct {
     allocator: std.mem.Allocator,
+    rawmode: ?*RawMode = null,
 
     fn init(allocator: std.mem.Allocator) @This() {
         return .{
@@ -31,6 +46,19 @@ const Term = struct {
 
     fn deinit(this: *const @This()) void {
         _ = this;
+    }
+
+    fn enterRawMode(this: *@This()) !void {
+        if (this.rawmode == null) {
+            this.rawmode = try RawMode.create(this.allocator);
+        }
+    }
+
+    fn exitRawMode(this: *@This()) void {
+        if (this.rawmode) |rawmode| {
+            rawmode.destroy(this.allocator);
+            this.rawmode = null;
+        }
     }
 };
 var g_term: Term = undefined;
