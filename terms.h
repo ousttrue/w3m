@@ -1,7 +1,9 @@
 #pragma once
+#include <stdio.h>
 
 struct Runtime {
     int tty_input;
+    FILE* tty_output_f;
     int lines;
     int cols;
 };

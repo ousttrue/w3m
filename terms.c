@@ -132,7 +132,6 @@ typedef struct scline {
 } Screen;
 
 static struct termios d_ioval;
-static FILE* ttyf = NULL;
 
 void init_tty()
 {
@@ -140,7 +139,7 @@ void init_tty()
     g_runtime.tty_input = 0;
 
     // stdout
-    ttyf = stdout;
+    g_runtime.tty_output_f = stdout;
 
     tcgetattr(g_runtime.tty_input, &d_ioval);
 
@@ -576,7 +575,7 @@ int get_pixel_per_cell(int* ppc, int* ppl)
     }
 #endif
 
-    fputs("\x1b[14t\x1b[18t", ttyf);
+    fputs("\x1b[14t\x1b[18t", g_runtime.tty_output_f);
     flush_tty();
 
     p = buf;
@@ -899,7 +898,7 @@ int initscr(void)
 static int
 write1(char c)
 {
-    putc(c, ttyf);
+    putc(c, g_runtime.tty_output_f);
 #ifdef SCREEN_DEBUG
     flush_tty();
 #endif /* SCREEN_DEBUG */
@@ -1380,7 +1379,7 @@ void refresh(void)
 #endif /* USE_BG_COLOR */
                     if ((pr[col] & S_GRAPHICS) && !(mode & S_GRAPHICS)) {
 #ifdef USE_M17N
-                        wc_putc_end(ttyf);
+                        wc_putc_end(g_runtime.tty_output_f);
 #endif
                         if (!graph_enabled) {
                             graph_enabled = 1;
@@ -1393,7 +1392,7 @@ void refresh(void)
                     if (pr[col] & S_GRAPHICS)
                         write1(graphchar(*pc[col]));
                     else if (CHMODE(pr[col]) != C_WCHAR2)
-                        wc_putc(pc[col], ttyf);
+                        wc_putc(pc[col], g_runtime.tty_output_f);
 #else
                     write1((pr[col] & S_GRAPHICS) ? graphchar(pc[col]) : pc[col]);
 #endif
@@ -1424,7 +1423,7 @@ void refresh(void)
         }
     }
 #ifdef USE_M17N
-    wc_putc_end(ttyf);
+    wc_putc_end(g_runtime.tty_output_f);
 #endif
     MOVE(CurLine, CurColumn);
     flush_tty();
@@ -1714,7 +1713,7 @@ void term_title(char* s)
     if (!fmInitialized)
         return;
     if (title_str != NULL) {
-        fprintf(ttyf, title_str, s);
+        fprintf(g_runtime.tty_output_f, title_str, s);
     }
 }
 
@@ -1784,8 +1783,8 @@ int sleep_till_anykey(int sec, int purge)
 
 void flush_tty(void)
 {
-    if (ttyf)
-        fflush(ttyf);
+    if (g_runtime.tty_output_f)
+        fflush(g_runtime.tty_output_f);
 }
 
 #ifdef USE_IMAGE
