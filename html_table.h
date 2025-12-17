@@ -1,4 +1,6 @@
-/* $Id: table.h,v 1.12 2003/09/22 21:02:21 ukai Exp $ */
+#pragma once
+#include "fm.h"
+
 #if (defined(MESCHACH) && !defined(MATRIX))
 #define MATRIX
 #endif /* (defined(MESCHACH) && !defined(MATRIX)) */
@@ -137,6 +139,21 @@ struct table_mode {
     short anchor_offset;
     unsigned char end_tag;
 };
+
+struct html_feed_environ;
+extern void initRenderTable(void);
+extern void renderTable(struct table* t, int max_width,
+    struct html_feed_environ* h_env);
+extern struct table* begin_table(int border, int spacing, int padding,
+    int vspace);
+extern void end_table(struct table* tbl);
+extern void check_rowcol(struct table* tbl, struct table_mode* mode);
+extern int minimum_length(char* line);
+extern int feed_table(struct table* tbl, char* line, struct table_mode* mode,
+    int width, int internal);
+extern void feed_table1(struct table* tbl, Str tok, struct table_mode* mode,
+    int width);
+extern void pushTable(struct table*, struct table*);
 
 /* Local Variables:    */
 /* c-basic-offset: 4   */

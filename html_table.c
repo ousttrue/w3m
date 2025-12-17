@@ -1,7 +1,5 @@
-/* $Id: table.c,v 1.58 2010/08/09 11:59:19 htrb Exp $ */
-/*
- * HTML table
- */
+#include "html_table.h"
+#include "w3m_runtime.h"
 #include <sys/types.h>
 #include <stdio.h>
 #include <string.h>

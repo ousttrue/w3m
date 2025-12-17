@@ -1,4 +1,4 @@
-/* $Id: local.c,v 1.35 2007/05/23 15:06:05 inu Exp $ */
+#include "w3m_runtime.h"
 #include "fm.h"
 #include <string.h>
 #include <stdio.h>

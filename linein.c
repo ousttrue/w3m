@@ -1,4 +1,4 @@
-/* $Id: linein.c,v 1.35 2007/05/23 12:14:24 inu Exp $ */
+#include "w3m_runtime.h"
 #include "fm.h"
 #include "local.h"
 #include "myctype.h"

@@ -1,41 +1,4 @@
 #pragma once
-#include <stdio.h>
-
-struct Runtime {
-    int tty_input;
-    FILE* tty_output_f;
-    int lines;
-    int cols;
-};
-struct Runtime* getRuntime();
-
-inline static int TTY_LINES() { return getRuntime()->lines; }
-inline static int TTY_COLS() { return getRuntime()->cols; }
-inline static int LASTLINE() { return getRuntime()->lines - 1; }
-void tty_set_cols(int cols);
-
-#ifdef USE_MOUSE
-/* Addition:mouse event */
-#define MOUSE_BTN1_DOWN 0
-#define MOUSE_BTN2_DOWN 1
-#define MOUSE_BTN3_DOWN 2
-#define MOUSE_BTN4_DOWN_RXVT 3
-#define MOUSE_BTN5_DOWN_RXVT 4
-#define MOUSE_BTN4_DOWN_XTERM 64
-#define MOUSE_BTN5_DOWN_XTERM 65
-#define MOUSE_BTN_UP 3
-#define MOUSE_BTN_RESET -1
-#endif
-
-#ifdef __CYGWIN__
-#if CYGWIN_VERSION_DLL_MAJOR < 1005 && defined(USE_MOUSE)
-extern int cygwin_mouse_btn_swapped;
-#endif
-#ifdef SUPPORT_WIN9X_CONSOLE_MBCS
-extern void enable_win9x_console_input(void);
-extern void disable_win9x_console_input(void);
-#endif
-#endif
 
 #ifdef USE_IMAGE
 extern void put_image_osc5379(char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh);

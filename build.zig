@@ -16,7 +16,7 @@ const w3m_srcs = [_][]const u8{
     "etc.c",
     "search.c",
     "linein.c",
-    "table.c",
+    "html_table.c",
     "local.c",
     "form.c",
     "map.c",

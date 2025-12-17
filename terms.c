@@ -3,6 +3,7 @@
  * revised by Akinori ITO, January 1995
  */
 #include "terms.h"
+#include "w3m_runtime.h"
 #include "fm.h"
 #include "config.h"
 #include "myctype.h"
