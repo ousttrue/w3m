@@ -104,7 +104,10 @@ pub fn build(b: *std.Build) void {
     // const libdir = b.fmt("{s}/lib", .{exec_prefix});
     // const includedir = b.fmt("{s}/include", .{prefix});
     // const infodir = b.fmt("{s}/info", .{datarootdir});
-    const libexecdir = b.fmt("{s}/libexec", .{exec_prefix});
+
+    // w3mbookmark
+    const libexecdir = b.fmt("{s}/lib", .{exec_prefix});
+
     // const localstatedir = b.fmt("{s}/var", .{prefix});
     // const mandir = b.fmt("{s}/man", .{datarootdir});
     // const oldincludedir = "/usr/include";
@@ -126,6 +129,7 @@ pub fn build(b: *std.Build) void {
     const exe = b.addExecutable(.{
         .name = "w3m",
         .root_module = mod,
+        .use_llvm = true,
     });
     targets.append(b.allocator, exe) catch @panic("OOM");
     b.installArtifact(exe);
