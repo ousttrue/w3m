@@ -43,6 +43,7 @@ bool fmInitialized(void);
 void init_tty();
 // input
 char getch(void);
+// int sleep_till_anykey(int sec, bool purge);
 // output
 void flush_tty(void);
 void reset_tty(void);
@@ -73,7 +74,6 @@ void term_cooked(void);
 void term_cbreak(void);
 void term_title(const char* s);
 void bell(void);
-int sleep_till_anykey(int sec, int purge);
 
 void put_image_osc5379(char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh);
 void put_image_sixel(char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh, int n_terminal_image);

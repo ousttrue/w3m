@@ -325,6 +325,45 @@ char getch(void)
     return c;
 }
 
+static void
+skip_escseq(void)
+{
+    int c = getch();
+    if (c == '[' || c == 'O') {
+        c = getch();
+        while (IS_DIGIT(c))
+            c = getch();
+    }
+}
+
+// int sleep_till_anykey(int sec, bool purge)
+// {
+//     struct termios ioval;
+//     tcgetattr(getRuntime()->tty_input, &ioval);
+//     term_raw();
+//
+//     struct timeval tim;
+//     tim.tv_sec = sec;
+//     tim.tv_usec = 0;
+//
+//     fd_set rfd;
+//     FD_ZERO(&rfd);
+//     FD_SET(getRuntime()->tty_input, &rfd);
+//
+//     int ret = select(getRuntime()->tty_input + 1, &rfd, 0, 0, &tim);
+//     if (ret > 0 && purge) {
+//         int c = getch();
+//         if (c == ESC_CODE)
+//             skip_escseq();
+//     }
+//     int er = tcsetattr(getRuntime()->tty_input, TCSANOW, &ioval);
+//     if (er == -1) {
+//         printf("Error occurred: errno=%d\n", errno);
+//         reset_error_exit(SIGNAL_ARGLIST);
+//     }
+//     return ret;
+// }
+
 void flush_tty(void)
 {
     if (g_runtime.tty_output_f)

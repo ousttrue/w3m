@@ -940,49 +940,6 @@ void addnstr_sup(char* s, int n)
         addch(' ');
 }
 
-static void
-skip_escseq(void)
-{
-    int c;
-
-    c = getch();
-    if (c == '[' || c == 'O') {
-        c = getch();
-        while (IS_DIGIT(c))
-            c = getch();
-    }
-}
-
-int sleep_till_anykey(int sec, int purge)
-{
-    fd_set rfd;
-    struct timeval tim;
-    int er, c, ret;
-    struct termios ioval;
-
-    tcgetattr(getRuntime()->tty_input, &ioval);
-    term_raw();
-
-    tim.tv_sec = sec;
-    tim.tv_usec = 0;
-
-    FD_ZERO(&rfd);
-    FD_SET(getRuntime()->tty_input, &rfd);
-
-    ret = select(getRuntime()->tty_input + 1, &rfd, 0, 0, &tim);
-    if (ret > 0 && purge) {
-        c = getch();
-        if (c == ESC_CODE)
-            skip_escseq();
-    }
-    er = tcsetattr(getRuntime()->tty_input, TCSANOW, &ioval);
-    if (er == -1) {
-        printf("Error occurred: errno=%d\n", errno);
-        reset_error_exit(SIGNAL_ARGLIST);
-    }
-    return ret;
-}
-
 #ifdef USE_IMAGE
 void touch_cursor(void)
 {

@@ -329,7 +329,7 @@ wrap_GC_warn_proc(char* msg, GC_word arg)
                 i %= sizeof(msg_ring) / sizeof(msg_ring[0]);
 
                 printf(msg_ring[i].msg, (unsigned long)msg_ring[i].arg);
-                sleep_till_anykey(1, 1);
+                // sleep_till_anykey(1, 1);
             }
 
             lock = 0;
@@ -1181,28 +1181,31 @@ void w3m_loop()
 #ifdef SIGWINCH
         mySignal(SIGWINCH, resize_hook);
 #endif
-#ifdef USE_IMAGE
-        if (activeImage && displayImage && Currentbuf->img && !Currentbuf->image_loaded) {
-            do {
-#ifdef SIGWINCH
-                if (need_resize_screen)
-                    resize_screen();
-#endif
-                loadImage(Currentbuf, IMG_FLAG_NEXT);
-            } while (sleep_till_anykey(1, 0) <= 0);
-        }
-#ifdef SIGWINCH
-        else
-#endif
-#endif
-#ifdef SIGWINCH
-        {
-            do {
-                if (need_resize_screen)
-                    resize_screen();
-            } while (sleep_till_anykey(1, 0) <= 0);
-        }
-#endif
+
+// #ifdef USE_IMAGE
+//         if (activeImage && displayImage && Currentbuf->img && !Currentbuf->image_loaded) {
+//             do {
+// #ifdef SIGWINCH
+//                 if (need_resize_screen)
+//                     resize_screen();
+// #endif
+//                 loadImage(Currentbuf, IMG_FLAG_NEXT);
+//             } while (sleep_till_anykey(1, 0) <= 0);
+//         }
+// #ifdef SIGWINCH
+//         else
+// #endif
+// #endif
+
+// #ifdef SIGWINCH
+//         {
+//             do {
+//                 if (need_resize_screen)
+//                     resize_screen();
+//             } while (sleep_till_anykey(1, 0) <= 0);
+//         }
+// #endif
+
         int c = getch();
         last_key = c;
 #ifdef USE_ALARM

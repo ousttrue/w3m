@@ -1209,7 +1209,7 @@ void disp_message_nsec(char* s, int redraw_current, int sec, int purge, int mous
     if (mouse && use_mouse)
         mouse_active();
 #endif
-    sleep_till_anykey(sec, purge);
+    // sleep_till_anykey(sec, purge);
 #ifdef USE_MOUSE
     if (mouse && use_mouse)
         mouse_inactive();
