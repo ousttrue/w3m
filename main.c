@@ -672,13 +672,11 @@ bool w3m_args(int argc, char** argv)
                 if (!backend_batch_commands)
                     backend_batch_commands = newTextList();
                 pushText(backend_batch_commands, argv[i]);
-            } 
-            else if (!strcmp("-cols", argv[i])) {
+            } else if (!strcmp("-cols", argv[i])) {
                 if (++i >= argc)
                     usage();
                 tty_set_cols(atoi(argv[i]));
-            } 
-            else if (!strcmp("-ppc", argv[i])) {
+            } else if (!strcmp("-ppc", argv[i])) {
                 double ppc;
                 if (++i >= argc)
                     usage();
@@ -851,22 +849,12 @@ bool w3m_args(int argc, char** argv)
             tty_set_cols(DEFAULT_COLS);
     }
 
-#ifdef USE_BINMODE_STREAM
-    setmode(fileno(stdout), O_BINARY);
-#endif
     if (!w3m_dump && !w3m_backend) {
-        fmInit();
-#ifdef SIGWINCH
+        enterRawMode();
         mySignal(SIGWINCH, resize_hook);
-#else /* not SIGWINCH */
-        setlinescols();
-        setupscreen();
-#endif /* not SIGWINCH */
-    }
-#ifdef USE_IMAGE
-    else if (w3m_halfdump && displayImage)
+    } else if (w3m_halfdump && displayImage) {
         activeImage = TRUE;
-#endif
+    }
 
     sync_with_option();
 #ifdef USE_COOKIE
@@ -958,12 +946,12 @@ bool w3m_args(int argc, char** argv)
                 pushHashHist(URLHist, parsedURL2Str(&newbuf->currentURL)->ptr);
         } else {
             if (fmInitialized)
-                fmTerm();
+                exitRawMode();
             usage();
         }
         if (newbuf == NULL) {
             if (fmInitialized)
-                fmTerm();
+                exitRawMode();
             if (err_msg->length)
                 fprintf(stderr, "%s", err_msg->ptr);
             w3m_exit(2);
@@ -1102,7 +1090,7 @@ bool w3m_args(int argc, char** argv)
                 inputChar("Hit any key to quit w3m:");
         }
         if (fmInitialized)
-            fmTerm();
+            exitRawMode();
         if (err_msg->length)
             fprintf(stderr, "%s", err_msg->ptr);
         if (newbuf == NO_BUFFER) {
@@ -1133,7 +1121,8 @@ bool w3m_args(int argc, char** argv)
     return true;
 }
 
-void w3m_loop(){
+void w3m_loop()
+{
     for (;;) {
         if (add_download_list) {
             add_download_list = FALSE;
@@ -1675,7 +1664,7 @@ DEFUN(ctrCsrV, CENTER_V, "Center on cursor line")
     int offsety;
     if (Currentbuf->firstLine == NULL)
         return;
-    offsety = /*Currentbuf->LINES / 2*/ - Currentbuf->cursorY;
+    offsety = /*Currentbuf->LINES / 2*/ -Currentbuf->cursorY;
     if (offsety != 0) {
 #if 0
 	Currentbuf->currentLine = lineSkip(Currentbuf,
@@ -2168,13 +2157,13 @@ DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output")
     if (cmd != NULL)
         cmd = conv_to_system(cmd);
     if (cmd != NULL && *cmd != '\0') {
-        fmTerm();
+        exitRawMode();
         printf("\n");
         (void)!system(cmd); /* We do not care about the exit code here! */
         /* FIXME: gettextize? */
         printf("\n[Hit any key]");
         fflush(stdout);
-        fmInit();
+        enterRawMode();
         getch();
     }
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
@@ -2511,7 +2500,7 @@ _quitfm(int confirm)
     if (activeImage)
         termImage();
 #endif
-    fmTerm();
+    exitRawMode();
 #ifdef USE_COOKIE
     save_cookies();
 #endif /* USE_COOKIE */
@@ -2591,7 +2580,7 @@ DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background")
     move(LASTLINE(), 0);
     clrtoeolx();
     refresh();
-    fmTerm();
+    exitRawMode();
 #ifndef SIGSTOP
     shell = getenv("SHELL");
     if (shell == NULL)
@@ -2610,7 +2599,7 @@ DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background")
     kill((pid_t)0, SIGSTOP);
 #endif
 #endif /* SIGSTOP */
-    fmInit();
+    enterRawMode();
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
@@ -5096,9 +5085,9 @@ invoke_browser(char* url)
     }
     cmd = myExtCommand(browser, shell_quote(url), FALSE);
     Strremovetrailingspaces(cmd);
-    fmTerm();
+    exitRawMode();
     mySystem(cmd->ptr, bg);
-    fmInit();
+    enterRawMode();
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 

@@ -1,25 +1,23 @@
 #include "util.h"
-
-#include "display.h"
-#include "terms.h"
+#include "w3m_runtime.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 
 int exec_cmd(char* cmd)
 {
-    int rv;
-
-    fmTerm();
-    if ((rv = system(cmd))) {
+    exitRawMode();
+    int rv = system(cmd);
+    if (rv == 0) {
+        // success
+        enterRawMode();
+        return 0;
+    } else {
+        // error
         printf("\n[Hit any key]");
         fflush(stdout);
-        fmInit();
+        enterRawMode();
         getch();
-
         return rv;
     }
-    fmInit();
-
-    return 0;
 }

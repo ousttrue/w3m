@@ -21,8 +21,6 @@
 #include <sys/select.h>
 #include <sys/ioctl.h>
 
-static char* title_str = NULL;
-
 MySignalHandler reset_exit(SIGNAL_ARG);
 MySignalHandler error_dump(SIGNAL_ARG);
 
@@ -940,78 +938,6 @@ void addnstr_sup(char* s, int n)
 #endif
     for (; i < n; i++)
         addch(' ');
-}
-
-void crmode(void)
-{
-    ttymode_reset(ICANON, IXON);
-    ttymode_set(ISIG, 0);
-    set_cc(VMIN, 1);
-}
-
-void nocrmode(void)
-{
-    ttymode_set(ICANON, 0);
-    set_cc(VMIN, 4);
-}
-
-void term_echo(void)
-{
-    ttymode_set(ECHO, 0);
-}
-
-void term_noecho(void)
-{
-    ttymode_reset(ECHO, 0);
-}
-
-#define TTY_MODE ISIG | ICANON | ECHO | IEXTEN
-void term_raw(void)
-{
-    ttymode_reset(TTY_MODE, IXON | IXOFF | INLCR | IGNCR | ICRNL);
-    set_cc(VMIN, 1);
-}
-
-void term_cooked(void)
-{
-    ttymode_set(TTY_MODE, 0);
-    set_cc(VMIN, 4);
-}
-
-void term_cbreak(void)
-{
-    term_cooked();
-    term_noecho();
-}
-
-void term_title(char* s)
-{
-    if (!fmInitialized())
-        return;
-    if (title_str != NULL) {
-        fprintf(getRuntime()->tty_output_f, title_str, s);
-    }
-}
-
-char getch(void)
-{
-    char c;
-
-    while (
-        read(getRuntime()->tty_input, &c, 1)
-        < (int)1) {
-        if (errno == EINTR || errno == EAGAIN)
-            continue;
-        /* error happend on read(2) */
-        quitfm();
-        break; /* unreachable */
-    }
-    return c;
-}
-
-void bell(void)
-{
-    write1(7);
 }
 
 static void

@@ -37,6 +37,31 @@ void tty_set_cols(int cols)
     }
 }
 
+void enterRawMode(void)
+{
+    if (!g_runtime.fmInitialized) {
+        initscr();
+        term_raw();
+        term_noecho();
+        if (displayImage)
+            initImage();
+    }
+    g_runtime.fmInitialized = TRUE;
+}
+
+void exitRawMode(void)
+{
+    if (g_runtime.fmInitialized) {
+        move(LASTLINE(), 0);
+        clrtoeolx();
+        refresh();
+        if (activeImage)
+            loadImage(NULL, IMG_FLAG_STOP);
+        reset_tty();
+        g_runtime.fmInitialized = FALSE;
+    }
+}
+
 static MySignalHandler reset_exit_with_value(SIGNAL_ARG, int rval)
 {
     reset_tty();
@@ -282,6 +307,22 @@ void set_cc(int spec, int val)
     }
 }
 
+char getch(void)
+{
+    char c;
+
+    while (
+        read(getRuntime()->tty_input, &c, 1)
+        < (int)1) {
+        if (errno == EINTR || errno == EAGAIN)
+            continue;
+        /* error happend on read(2) */
+        quitfm();
+        break; /* unreachable */
+    }
+    return c;
+}
+
 void flush_tty(void)
 {
     if (g_runtime.tty_output_f)
@@ -362,9 +403,6 @@ cleanup:
     writestr("\a");
     tty_MOVE(Currentbuf->cursorY, Currentbuf->cursorX);
 }
-
-void ttymode_set(int mode, int imode);
-void ttymode_reset(int mode, int imode);
 
 void put_image_kitty(char* url, int x, int y, int w, int h, int sx, int sy, int sw,
     int sh, int cols, int rows)
@@ -733,4 +771,62 @@ int graph_ok(void)
     if (UseGraphicChar != GRAPHIC_CHAR_DEC)
         return 0;
     return g_runtime.T_as[0] != 0 && g_runtime.T_ae[0] != 0 && g_runtime.T_ac[0] != 0;
+}
+
+void crmode(void)
+{
+    ttymode_reset(ICANON, IXON);
+    ttymode_set(ISIG, 0);
+    set_cc(VMIN, 1);
+}
+
+void nocrmode(void)
+{
+    ttymode_set(ICANON, 0);
+    set_cc(VMIN, 4);
+}
+
+void term_echo(void)
+{
+    ttymode_set(ECHO, 0);
+}
+
+void term_noecho(void)
+{
+    ttymode_reset(ECHO, 0);
+}
+
+#define TTY_MODE ISIG | ICANON | ECHO | IEXTEN
+void term_raw(void)
+{
+    ttymode_reset(TTY_MODE, IXON | IXOFF | INLCR | IGNCR | ICRNL);
+    set_cc(VMIN, 1);
+}
+
+void term_cooked(void)
+{
+    ttymode_set(TTY_MODE, 0);
+    set_cc(VMIN, 4);
+}
+
+void term_cbreak(void)
+{
+    term_cooked();
+    term_noecho();
+}
+
+static const char* title_str = NULL;
+
+void term_title(const char* s)
+{
+    if (!fmInitialized())
+        return;
+    if (title_str != NULL) {
+        fprintf(getRuntime()->tty_output_f, title_str, s);
+    }
+}
+
+void bell(void)
+{
+    write1(7);
 }

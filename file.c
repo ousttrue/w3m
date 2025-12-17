@@ -699,7 +699,7 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
             while (*p && IS_SPACE(*p))
                 p++;
             http_response_code = atoi(p);
-            if (fmInitialized) {
+            if (fmInitialized()) {
                 message(lineBuf2->ptr, 0, 0);
                 refresh();
             }
@@ -825,7 +825,7 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
                     char* ans = (accept_bad_cookie == ACCEPT_BAD_COOKIE_ACCEPT)
                         ? "y"
                         : NULL;
-                    if (fmInitialized && (err & COO_OVERRIDE_OK) && accept_bad_cookie == ACCEPT_BAD_COOKIE_ASK) {
+                    if (fmInitialized() && (err & COO_OVERRIDE_OK) && accept_bad_cookie == ACCEPT_BAD_COOKIE_ASK) {
                         Str msg = Sprintf("Accept bad cookie from %s for %s?",
                             pu->host,
                             ((domain && domain->ptr)
@@ -1496,7 +1496,7 @@ getAuthCookie(struct http_auth* hauth, char* auth_header,
         /* This means that *-Authenticate: header is received after
          * Authorization: header is sent to the server.
          */
-        if (fmInitialized) {
+        if (fmInitialized()) {
             message("Wrong username or password", 0, 0);
             refresh();
         } else
@@ -1516,7 +1516,7 @@ getAuthCookie(struct http_auth* hauth, char* auth_header,
             return;
         /* input username and password */
         sleep(2);
-        if (fmInitialized) {
+        if (fmInitialized()) {
             char* pp;
             term_raw();
             /* FIXME: gettextize? */
@@ -1790,7 +1790,7 @@ load_doc: {
              (pu.scheme == SCM_FTP && non_null(FTP_proxy)))
             && !Do_not_use_proxy && !check_no_proxy(pu.host))) {
 
-        if (fmInitialized) {
+        if (fmInitialized()) {
             term_cbreak();
             /* FIXME: gettextize? */
             message(Sprintf("%s contacted. Waiting for reply...", pu.host)->ptr, 0, 0);
@@ -6767,7 +6767,7 @@ void showProgress(clen_t* linelen, clen_t* trbyte)
     Str messages;
     char *fmtrbyte, *fmrate;
 
-    if (!fmInitialized)
+    if (!fmInitialized())
         return;
 
     if (*linelen < 1024)
@@ -7047,7 +7047,7 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
 
 #ifdef USE_M17N
-    if (fmInitialized && graph_ok()) {
+    if (fmInitialized() && graph_ok()) {
         symbol_width = symbol_width0 = 1;
     } else {
         symbol_width0 = 0;
@@ -8082,9 +8082,9 @@ doExternal(URLFile uf, char* type, Buffer* defaultbuf)
         }
     } else {
         if (mcap->flags & MAILCAP_NEEDSTERMINAL || !BackgroundExtViewer) {
-            fmTerm();
+            exitRawMode();
             mySystem(command->ptr, 0);
-            fmInit();
+            enterRawMode();
             if (CurrentTab && Currentbuf)
                 displayBuffer(Currentbuf, B_FORCE_REDRAW);
         } else {
@@ -8156,7 +8156,7 @@ int _doFileCopy(char* tmpf, char* defstr, int download)
     clen_t size = 0;
     int is_pipe = FALSE;
 
-    if (fmInitialized) {
+    if (fmInitialized()) {
         p = searchKeyData();
         if (p == NULL || *p == '\0') {
             /* FIXME: gettextize? */

@@ -1,11 +1,29 @@
 #pragma once
+#include <stddef.h>
 
-#ifdef USE_IMAGE
-extern void put_image_osc5379(char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh);
-extern void put_image_sixel(char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh, int n_terminal_image);
-extern void put_image_iterm2(char* url, int x, int y, int w, int h);
-extern void put_image_kitty(char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh, int c, int r);
-extern int get_pixel_per_cell(int* ppc, int* ppl);
-#endif
-
-char getch(void);
+void move(int line, int column);
+void addmch(char* p, size_t len);
+void addch(char c);
+void wrap(void);
+void touch_line(void);
+void standout(void);
+void standend(void);
+void toggle_stand(void);
+void bold(void);
+void boldend(void);
+void underline(void);
+void underlineend(void);
+void graphstart(void);
+void graphend(void);
+void setfcolor(int color);
+void setbcolor(int color);
+void refresh(void);
+void clear(void);
+void clrtoeol(void);
+void clrtoeolx(void);
+void clrtobot(void);
+void clrtobotx(void);
+void addstr(char* s);
+void addnstr(char* s, int n);
+void addnstr_sup(char* s, int n);
+void touch_cursor(void);

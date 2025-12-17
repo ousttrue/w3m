@@ -171,42 +171,6 @@ static void EFFECT_VISITED_END
 #endif /* not USE_COLOR */
 /* *INDENT-ON* */
 
-void fmTerm(void)
-{
-    if (fmInitialized) {
-        move(LASTLINE(), 0);
-        clrtoeolx();
-        refresh();
-#ifdef USE_IMAGE
-        if (activeImage)
-            loadImage(NULL, IMG_FLAG_STOP);
-#endif
-#ifdef USE_MOUSE
-        if (use_mouse)
-            mouse_end();
-#endif /* USE_MOUSE */
-        reset_tty();
-        getRuntime()->fmInitialized = FALSE;
-    }
-}
-
-/*
- * Initialize routine.
- */
-void fmInit(void)
-{
-    if (!fmInitialized()) {
-        initscr();
-        term_raw();
-        term_noecho();
-#ifdef USE_IMAGE
-        if (displayImage)
-            initImage();
-#endif
-    }
-    getRuntime()->fmInitialized = TRUE;
-}
-
 /*
  * Display some lines.
  */

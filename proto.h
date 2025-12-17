@@ -453,58 +453,7 @@ extern void set_int(void);
 extern void setlinescols(void);
 extern void setupscreen(void);
 extern pid_t open_pipe_rw(FILE** fr, FILE** fw);
-extern void move(int line, int column);
-#ifdef USE_M17N
-extern void addmch(char* p, size_t len);
-#endif
-extern void addch(char c);
-extern void wrap(void);
-extern void touch_line(void);
-extern void standout(void);
-extern void standend(void);
-extern void bold(void);
-extern void boldend(void);
-extern void underline(void);
-extern void underlineend(void);
-extern void graphstart(void);
-extern void graphend(void);
-#ifdef USE_COLOR
-extern void setfcolor(int color);
-#ifdef USE_BG_COLOR
-extern void setbcolor(int color);
-#endif /* USE_BG_COLOR */
-#endif /* USE_COLOR */
-extern void refresh(void);
-extern void clear(void);
-#ifdef USE_RAW_SCROLL
-extern void scroll(int);
-extern void rscroll(int);
-#endif
-#if 0
-extern void need_clrtoeol(void);
-#endif
-extern void clrtoeol(void);
-extern void clrtoeolx(void);
-extern void clrtobot(void);
-extern void clrtobotx(void);
-extern void no_clrtoeol(void);
-extern void addstr(char* s);
-extern void addnstr(char* s, int n);
-extern void addnstr_sup(char* s, int n);
-extern void crmode(void);
-extern void nocrmode(void);
-extern void term_echo(void);
-extern void term_noecho(void);
-extern void term_raw(void);
-extern void term_cooked(void);
-extern void term_cbreak(void);
-extern void term_title(char* s);
-extern void toggle_stand(void);
-extern void bell(void);
-extern int sleep_till_anykey(int sec, int purge);
-#ifdef USE_IMAGE
-extern void touch_cursor(void);
-#endif
+
 extern void initMimeTypes(void);
 extern void free_ssl_ctx(void);
 extern ParsedURL* baseURL(Buffer* buf);

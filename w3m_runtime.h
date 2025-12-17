@@ -41,6 +41,9 @@ void writestr(const char* s);
 int write1(int c);
 bool fmInitialized(void);
 void init_tty();
+// input
+char getch(void);
+// output
 void flush_tty(void);
 void reset_tty(void);
 void ttymode_set(int mode, int imode);
@@ -52,8 +55,28 @@ int initscr(void);
 void tty_MOVE(int line, int column);
 void (*mySignal(int signal_number, void (*action)(int)))(int);
 
+void enterRawMode(void);
+void exitRawMode(void);
+
 inline static int TTY_LINES(void) { return getRuntime()->lines; }
 inline static int TTY_COLS(void) { return getRuntime()->cols; }
 inline static int LASTLINE(void) { return getRuntime()->lines - 1; }
 void tty_set_cols(int cols);
 int graph_ok(void);
+
+void crmode(void);
+void nocrmode(void);
+void term_echo(void);
+void term_noecho(void);
+void term_raw(void);
+void term_cooked(void);
+void term_cbreak(void);
+void term_title(const char* s);
+void bell(void);
+int sleep_till_anykey(int sec, int purge);
+
+void put_image_osc5379(char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh);
+void put_image_sixel(char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh, int n_terminal_image);
+void put_image_iterm2(char* url, int x, int y, int w, int h);
+void put_image_kitty(char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh, int c, int r);
+int get_pixel_per_cell(int* ppc, int* ppl);
