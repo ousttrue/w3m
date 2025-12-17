@@ -1,4 +1,6 @@
 #include "w3m_runtime.h"
+#include "etc.h"
+#include "image.h"
 #include "fm.h"
 #include "html_table.h"
 #include "display.h"
@@ -8273,7 +8275,7 @@ int doFileSave(URLFile uf, char* defstr)
     FILE* f;
 #endif
 
-    if (fmInitialized) {
+    if (fmInitialized()) {
         p = searchKeyData();
         if (p == NULL || *p == '\0') {
             /* FIXME: gettextize? */
@@ -8415,7 +8417,7 @@ char* inputAnswer(char* prompt)
 
     if (QuietMessage)
         return "n";
-    if (fmInitialized) {
+    if (fmInitialized()) {
         term_raw();
         ans = inputChar(prompt);
     } else {

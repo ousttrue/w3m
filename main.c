@@ -1,5 +1,6 @@
-#define MAINPROGRAM
 #include "w3m_runtime.h"
+#include "image.h"
+#define MAINPROGRAM
 #include "fm.h"
 #include <stdbool.h>
 #include <stdio.h>
@@ -945,12 +946,12 @@ bool w3m_args(int argc, char** argv)
             else if (newbuf != NO_BUFFER)
                 pushHashHist(URLHist, parsedURL2Str(&newbuf->currentURL)->ptr);
         } else {
-            if (fmInitialized)
+            if (fmInitialized())
                 exitRawMode();
             usage();
         }
         if (newbuf == NULL) {
-            if (fmInitialized)
+            if (fmInitialized())
                 exitRawMode();
             if (err_msg->length)
                 fprintf(stderr, "%s", err_msg->ptr);
@@ -1085,11 +1086,11 @@ bool w3m_args(int argc, char** argv)
         CurrentTab = FirstTab;
     if (!FirstTab || !Firstbuf || Firstbuf == NO_BUFFER) {
         if (newbuf == NO_BUFFER) {
-            if (fmInitialized)
+            if (fmInitialized())
                 /* FIXME: gettextize? */
                 inputChar("Hit any key to quit w3m:");
         }
-        if (fmInitialized)
+        if (fmInitialized())
             exitRawMode();
         if (err_msg->length)
             fprintf(stderr, "%s", err_msg->ptr);
@@ -4758,7 +4759,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
     }
     copyBuffer(&sbuf, Currentbuf);
     if (Currentbuf->bufferprop & BP_FRAME && (fbuf = Currentbuf->linkBuffer[LB_N_FRAME])) {
-        if (fmInitialized) {
+        if (fmInitialized()) {
             message("Rendering frame", 0, 0);
             refresh();
         }
@@ -5009,7 +5010,7 @@ DEFUN(rFrame, FRAME, "Toggle rendering HTML frames")
         }
         return;
     }
-    if (fmInitialized) {
+    if (fmInitialized()) {
         message("Rendering frame", 0, 0);
         refresh();
     }

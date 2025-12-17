@@ -262,10 +262,6 @@ extern int REV_LB[];
 #define IMG_FLAG_SKIP 1
 #define IMG_FLAG_AUTO 2
 
-#define IMG_FLAG_START 0
-#define IMG_FLAG_STOP 1
-#define IMG_FLAG_NEXT 2
-
 #define IMG_FLAG_UNLOADED 0
 #define IMG_FLAG_LOADED 1
 #define IMG_FLAG_ERROR 2

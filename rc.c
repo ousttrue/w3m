@@ -1,4 +1,5 @@
 #include "w3m_runtime.h"
+#include "image.h"
 #include "fm.h"
 #include "myctype.h"
 #include "proto.h"
@@ -1301,7 +1302,7 @@ void sync_with_option(void)
     init_migemo();
 #endif
 #ifdef USE_IMAGE
-    if (fmInitialized && (displayImage || enable_inline_image))
+    if (fmInitialized() && (displayImage || enable_inline_image))
         initImage();
 #else
     displayImage = FALSE; /* XXX */
@@ -1328,7 +1329,7 @@ void sync_with_option(void)
 #ifdef USE_M17N
     wtf_init(DocumentCharset, DisplayCharset);
 #endif
-    if (fmInitialized) {
+    if (fmInitialized()) {
         initKeymap(FALSE);
 #ifdef USE_MOUSE
         initMouseAction();

@@ -1,4 +1,5 @@
 #include "w3m_runtime.h"
+#include "image.h"
 #include "fm.h"
 
 #ifdef USE_MOUSE

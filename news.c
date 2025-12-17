@@ -322,7 +322,7 @@ Str loadNewsgroup0(ParsedURL* pu)
         /* <newsgroup>/<start-number>-<end-number> */
         *list++ = '\0';
     }
-    if (fmInitialized) {
+    if (fmInitialized()) {
         message(Sprintf("Reading newsgroup %s...", group)->ptr, 0, 0);
         refresh();
     }

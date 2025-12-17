@@ -649,7 +649,7 @@ int openSocket(char* const hostname,
         bcopy((void*)&adr, (void*)&hostaddr.sin_addr, sizeof(long));
         hostaddr.sin_family = AF_INET;
         hostaddr.sin_port = s_port;
-        if (fmInitialized) {
+        if (fmInitialized()) {
             message(Sprintf("Connecting to %s", hostname)->ptr, 0, 0);
             refresh();
         }
@@ -665,7 +665,7 @@ int openSocket(char* const hostname,
     } else {
         char** h_addr_list;
         int result = -1;
-        if (fmInitialized) {
+        if (fmInitialized()) {
             message(Sprintf("Performing hostname lookup on %s", hostname)->ptr,
                 0, 0);
             refresh();
@@ -688,7 +688,7 @@ int openSocket(char* const hostname,
                 (adr >> 24) & 0xff,
                 (adr >> 16) & 0xff, (adr >> 8) & 0xff, adr & 0xff);
 #endif
-            if (fmInitialized) {
+            if (fmInitialized()) {
                 message(Sprintf("Connecting to %s", hostname)->ptr, 0, 0);
                 refresh();
             }

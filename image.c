@@ -1,3 +1,4 @@
+#include "image.h"
 #include "w3m_runtime.h"
 #include "fm.h"
 #include <sys/types.h>
@@ -36,10 +37,12 @@ static int getCharSize(void);
 
 void initImage()
 {
-    if (activeImage)
-        return;
-    if (getCharSize())
-        activeImage = TRUE;
+    if (displayImage) {
+        if (activeImage)
+            return;
+        if (getCharSize())
+            activeImage = TRUE;
+    }
 }
 
 int get_pixel_per_cell(int* ppc, int* ppl);
@@ -394,6 +397,9 @@ showImageProgress(Buffer* buf)
 
 void loadImage(Buffer* buf, int flag)
 {
+    if (!activeImage) {
+        return;
+    }
     ImageCache* cache;
     struct stat st;
     int i, draw = FALSE;

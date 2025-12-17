@@ -221,13 +221,6 @@ extern void save_fonteffect(struct html_feed_environ* h_env,
     struct readbuffer* obuf);
 extern void restore_fonteffect(struct html_feed_environ* h_env,
     struct readbuffer* obuf);
-#ifdef USE_IMAGE
-extern void deleteImage(Buffer* buf);
-extern void getAllImage(Buffer* buf);
-extern void loadImage(Buffer* buf, int flag);
-extern ImageCache* getImage(Image* image, ParsedURL* current, int flag);
-extern int getImageSize(ImageCache* cache);
-#endif
 extern Str process_img(struct parsed_tag* tag, int width);
 extern Str process_anchor(struct parsed_tag* tag, char* tagbuf);
 extern Str process_input(struct parsed_tag* tag);
@@ -451,7 +444,6 @@ extern MySignalHandler reset_exit(SIGNAL_ARG);
 extern MySignalHandler error_dump(SIGNAL_ARG);
 extern void set_int(void);
 extern void setlinescols(void);
-extern void setupscreen(void);
 extern pid_t open_pipe_rw(FILE** fr, FILE** fw);
 
 extern void initMimeTypes(void);
@@ -665,15 +657,6 @@ extern void closeTMs(void);
 #define closeTMs nulcmd
 #endif /* not USE_MOUSE */
 
-#ifdef USE_IMAGE
-extern void initImage(void);
-extern void termImage(void);
-extern void addImage(ImageCache* cache, int x, int y, int sx, int sy, int w,
-    int h);
-extern void drawImage(void);
-extern void clearImage(void);
-#endif
-
 extern char* searchKeyData(void);
 
 extern void setKeymap(char* p, int lineno, int verbose);
@@ -749,4 +732,3 @@ void srand48(long);
 long lrand48(void);
 #endif
 
-extern Str base64_encode(const char* src, size_t len);

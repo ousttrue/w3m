@@ -1,8 +1,10 @@
 #include "w3m_runtime.h"
-// #include "terms.h"
+#include "image.h"
+#include "terms.h"
 #include "config.h"
 #include "Str.h"
 #include "indep.h"
+#include "etc.h"
 #include "fm.h"
 #include <signal.h>
 #include <stdlib.h>
@@ -43,8 +45,7 @@ void enterRawMode(void)
         initscr();
         term_raw();
         term_noecho();
-        if (displayImage)
-            initImage();
+        initImage();
     }
     g_runtime.fmInitialized = TRUE;
 }
@@ -55,8 +56,7 @@ void exitRawMode(void)
         move(LASTLINE(), 0);
         clrtoeolx();
         refresh();
-        if (activeImage)
-            loadImage(NULL, IMG_FLAG_STOP);
+        loadImage(NULL, IMG_FLAG_STOP);
         reset_tty();
         g_runtime.fmInitialized = FALSE;
     }
@@ -306,6 +306,8 @@ void set_cc(int spec, int val)
         reset_error_exit(SIGNAL_ARGLIST);
     }
 }
+
+void quitfm(void);
 
 char getch(void)
 {

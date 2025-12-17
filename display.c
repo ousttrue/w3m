@@ -1,4 +1,5 @@
 #include "display.h"
+#include "image.h"
 #include "w3m_runtime.h"
 
 #include <math.h>
@@ -1142,7 +1143,7 @@ static GeneralList* message_list = NULL;
 
 void record_err_message(char* s)
 {
-    if (fmInitialized) {
+    if (fmInitialized()) {
         if (!message_list)
             message_list = newGeneralList();
         if (message_list->nitem >= TTY_LINES())
@@ -1176,7 +1177,7 @@ message_list_panel(void)
 
 void message(char* s, int return_x, int return_y)
 {
-    if (!fmInitialized)
+    if (!fmInitialized())
         return;
     move(LASTLINE(), 0);
     addnstr(s, TTY_COLS() - 1);
@@ -1194,7 +1195,7 @@ void disp_message_nsec(char* s, int redraw_current, int sec, int purge, int mous
 {
     if (QuietMessage)
         return;
-    if (!fmInitialized) {
+    if (!fmInitialized()) {
         fprintf(stderr, "%s\n", conv_to_system(s));
         return;
     }
