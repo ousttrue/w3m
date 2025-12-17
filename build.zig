@@ -2,7 +2,10 @@ const std = @import("std");
 const zcc = @import("compile_commands");
 
 const system_libs = [_][]const u8{
-    "gc", "gpm", "ssl", "ncurses", "crypto",
+    "gc", "ssl", 
+    // "ncurses", 
+    "crypto",
+    "termcap",
 };
 
 const w3m_srcs = [_][]const u8{

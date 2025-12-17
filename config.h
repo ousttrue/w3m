@@ -71,14 +71,14 @@
 #define USE_ALARM 1
 #define USE_IMAGE 1
 /* #undef USE_W3MIMG_X11 */
-#define USE_W3MIMG_FB 1
+/* #undef USE_W3MIMG_FB */
 /* #undef USE_W3MIMG_WIN */
 /* #undef W3MIMGDISPLAY_SETUID */
 /* #undef USE_IMLIB */
 /* #undef USE_GDKPIXBUF */
 /* #undef USE_GTK2 */
 /* #undef X_DISPLAY_MISSING */
-#define USE_IMLIB2 1
+/* #undef USE_IMLIB2 */
 #define USE_XFACE 1
 #define USE_DICT 1
 #define USE_HISTORY 1
