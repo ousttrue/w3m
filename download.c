@@ -1,4 +1,5 @@
 #include "download.h"
+#include "buffer.h"
 #include "display.h"
 #include "w3m_runtime.h"
 #include "tab.h"
@@ -39,7 +40,7 @@ static const char* convert_size3(size_t size)
     return tmp->ptr;
 }
 
-static Buffer* DownloadListBuffer(void)
+static struct Buffer* DownloadListBuffer(void)
 {
     DownloadList* d;
     Str src = NULL;
@@ -139,7 +140,7 @@ void download_panel()
         return;
     }
     bool reload = download_checkList();
-    Buffer* buf = DownloadListBuffer();
+    struct Buffer* buf = DownloadListBuffer();
     if (!buf) {
         displayBuffer(Currentbuf, B_NORMAL);
         return;

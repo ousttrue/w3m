@@ -1,4 +1,4 @@
 #pragma once
 
-struct _Buffer;
-void displayBuffer(struct _Buffer* buf, int mode);
+struct Buffer;
+void displayBuffer(struct Buffer* buf, int mode);

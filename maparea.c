@@ -1,4 +1,5 @@
 #include "maparea.h"
+#include "buffer.h"
 #include "anchor.h"
 #include "image.h"
 #include "libwc/wc.h"
@@ -6,7 +7,7 @@
 #include <math.h>
 
 struct MapList*
-searchMapList(Buffer* buf, char* name)
+searchMapList(struct Buffer* buf, char* name)
 {
     struct MapList* ml;
 
@@ -89,7 +90,7 @@ nearestMapArea(struct MapList* ml, int x, int y)
 }
 
 static int
-searchMapArea(Buffer* buf, struct MapList* ml, struct Anchor* a_img)
+searchMapArea(struct Buffer* buf, struct MapList* ml, struct Anchor* a_img)
 {
     ListItem* al;
     struct MapArea* a;
@@ -121,7 +122,7 @@ searchMapArea(Buffer* buf, struct MapList* ml, struct Anchor* a_img)
 }
 
 struct MapArea*
-retrieveCurrentMapArea(Buffer* buf)
+retrieveCurrentMapArea(struct Buffer* buf)
 {
     struct Anchor *a_img, *a_form;
     FormItemList* fi;
@@ -154,7 +155,7 @@ retrieveCurrentMapArea(Buffer* buf)
     return NULL;
 }
 
-int getMapXY(Buffer* buf, struct Anchor* a, int* x, int* y)
+int getMapXY(struct Buffer* buf, struct Anchor* a, int* x, int* y)
 {
     if (!buf || !a || !a->image || !x || !y)
         return 0;
@@ -173,7 +174,7 @@ int getMapXY(Buffer* buf, struct Anchor* a, int* x, int* y)
 }
 
 struct Anchor*
-retrieveCurrentMap(Buffer* buf)
+retrieveCurrentMap(struct Buffer* buf)
 {
     struct Anchor* a;
     FormItemList* fi;
@@ -188,7 +189,7 @@ retrieveCurrentMap(Buffer* buf)
 }
 
 struct MapArea*
-follow_map_menu(Buffer* buf, char* name, struct Anchor* a_img, int x, int y)
+follow_map_menu(struct Buffer* buf, char* name, struct Anchor* a_img, int x, int y)
 {
     struct MapList* ml;
     ListItem* al;
@@ -242,8 +243,8 @@ char* map1 = "<HTML><HEAD><TITLE>Image map links</TITLE></HEAD>\
 <BODY><H1>Image map links</H1>\
 <table>";
 
-Buffer*
-follow_map_panel(Buffer* buf, char* name)
+struct Buffer*
+follow_map_panel(struct Buffer* buf, char* name)
 {
     Str mappage;
     MapList* ml;
@@ -251,7 +252,7 @@ follow_map_panel(Buffer* buf, char* name)
     MapArea* a;
     struct Url pu;
     char *p, *q;
-    Buffer* newbuf;
+    struct Buffer* newbuf;
 
     ml = searchMapList(buf, name);
     if (ml == NULL)
@@ -381,7 +382,7 @@ newMapArea(char* url, char* target, char* alt, char* shape, char* coords)
 
 /* append image map links */
 static void
-append_map_info(Buffer* buf, Str tmp, FormItemList* fi)
+append_map_info(struct Buffer* buf, Str tmp, FormItemList* fi)
 {
     struct MapList* ml;
     ListItem* al;
@@ -413,9 +414,9 @@ append_map_info(Buffer* buf, Str tmp, FormItemList* fi)
 
 /* append links */
 static void
-append_link_info(Buffer* buf, Str html, LinkList* link)
+append_link_info(struct Buffer* buf, Str html, struct LinkList* link)
 {
-    LinkList* l;
+    struct LinkList* l;
     struct Url pu;
     char* url;
 
@@ -450,7 +451,7 @@ append_link_info(Buffer* buf, Str html, LinkList* link)
 
 /* append frame URL */
 static void
-append_frame_info(Buffer* buf, Str html, struct frameset* set, int level)
+append_frame_info(struct Buffer* buf, Str html, struct frameset* set, int level)
 {
     char *p, *q;
     int i, j;
@@ -500,8 +501,8 @@ append_frame_info(Buffer* buf, Str html, struct frameset* set, int level)
 /*
  * information of current page and link
  */
-Buffer*
-page_info_panel(Buffer* buf)
+struct Buffer*
+page_info_panel(struct Buffer* buf)
 {
     Str tmp = Strnew_size(1024);
     struct Anchor* a;
@@ -512,7 +513,7 @@ page_info_panel(Buffer* buf)
     char *p, *q;
     wc_ces_list* list;
     char charset[16];
-    Buffer* newbuf;
+    struct Buffer* newbuf;
 
     Strcat_charp(tmp, "<html><head>\
 <title>Information about current page</title>\

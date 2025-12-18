@@ -1,4 +1,5 @@
 #include "tab.h"
+#include "buffer.h"
 #include "w3m_runtime.h"
 #include "image.h"
 #include "fm.h"
@@ -14,13 +15,13 @@ struct TabBuffer* newTab(void)
     return n;
 }
 
-void pushBuffer(Buffer* buf)
+void pushBuffer(struct Buffer* buf)
 {
     deleteImage(Currentbuf);
     if (clear_buffer)
         tmpClearBuffer(Currentbuf);
 
-    Buffer* b;
+    struct Buffer* b;
     if (Firstbuf == Currentbuf) {
         buf->nextBuffer = Firstbuf;
         Firstbuf = Currentbuf = buf;

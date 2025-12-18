@@ -1,4 +1,5 @@
 #include "w3m_runtime.h"
+#include "buffer.h"
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
@@ -61,7 +62,7 @@ struct {
 /* *INDENT-ON* */
 
 static void
-print_headers(Buffer* buf, int len)
+print_headers(struct Buffer* buf, int len)
 {
     TextListItem* tp;
 
@@ -86,7 +87,7 @@ static void
 internal_get(char* url, int flag, FormList* request)
 {
     backend_halfdump_buf = NULL;
-    Buffer* buf = loadGeneralFile(url, NULL, NO_REFERER, 0, request, flag);
+    struct Buffer* buf = loadGeneralFile(url, NULL, NO_REFERER, 0, request, flag);
     if (buf != NULL && buf != NO_BUFFER) {
         if (is_html_type(buf->type) && backend_halfdump_buf) {
             TextLineListItem* p;

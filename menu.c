@@ -1,4 +1,5 @@
 #include "menu.h"
+#include "buffer.h"
 #include "anchor.h"
 #include "w3m_runtime.h"
 #include "display.h"
@@ -1807,7 +1808,7 @@ static void
 initSelectMenu(void)
 {
     int i, nitem, len = 0, l;
-    Buffer* buf;
+    struct Buffer* buf;
     Str str;
     char** label;
     char* p;
@@ -1873,7 +1874,7 @@ static void
 smChBuf(void)
 {
     int i;
-    Buffer* buf;
+    struct Buffer* buf;
 
     if (SelectV < 0 || SelectV >= SelectMenu.nitem)
         return;
@@ -1895,7 +1896,7 @@ static int
 smDelBuf(char c)
 {
     int i, x, y, mselect;
-    Buffer* buf;
+    struct Buffer* buf;
 
     if (CurrentMenu->select < 0 || CurrentMenu->select >= SelectMenu.nitem)
         return (MENU_NOTHING);
@@ -1967,7 +1968,7 @@ initSelTabMenu(void)
     int len=0;
     i = 0;
     for (struct TabBuffer* tab = LastTab(); i < nitem; i++, tab = tab->prevTab) {
-        Buffer* buf = tab->currentBuffer;
+        struct Buffer* buf = tab->currentBuffer;
         Str str = Sprintf("<%s>", buf->buffername);
         if (buf->filename != NULL) {
             switch (buf->currentURL.scheme) {
@@ -2020,7 +2021,7 @@ smChTab(void)
 {
     int i;
     struct TabBuffer* tab;
-    Buffer* buf;
+    struct Buffer* buf;
 
     if (SelTabV < 0 || SelTabV >= SelTabMenu.nitem)
         return;
@@ -2280,11 +2281,11 @@ int getMenuN(MenuList* list, char* id)
 
 /* --- InitMenu (END) --- */
 
-LinkList*
-link_menu(Buffer* buf)
+struct LinkList*
+link_menu(struct Buffer* buf)
 {
     Menu menu;
-    LinkList* l;
+    struct LinkList* l;
     int i, nitem, len = 0, linkV = -1;
     char** label;
     Str str;
@@ -2340,7 +2341,7 @@ link_menu(Buffer* buf)
 /* --- LinkMenu (END) --- */
 
 struct Anchor*
-accesskey_menu(Buffer* buf)
+accesskey_menu(struct Buffer* buf)
 {
     Menu menu;
     struct AnchorList* al = buf->href;
@@ -2441,7 +2442,7 @@ lmSelect(char c)
 }
 
 struct Anchor*
-list_menu(Buffer* buf)
+list_menu(struct Buffer* buf)
 {
     Menu menu;
     struct AnchorList* al = buf->href;

@@ -1,4 +1,5 @@
 #include "image.h"
+#include "buffer.h"
 #include "anchor.h"
 #include "display.h"
 #include "tab.h"
@@ -563,7 +564,7 @@ cleanup:
     tty_MOVE(Currentbuf->cursorY, Currentbuf->cursorX);
 }
 
-void drawImage(struct _Buffer* currentbuf)
+void drawImage(struct Buffer* currentbuf)
 {
     static char buf[64];
     int j, draw = FALSE;
@@ -697,9 +698,9 @@ static Hash_sv* image_hash = NULL;
 static Hash_sv* image_file = NULL;
 static GeneralList* image_list = NULL;
 static struct ImageCache** image_cache = NULL;
-static Buffer* image_buffer = NULL;
+static struct Buffer* image_buffer = NULL;
 
-void deleteImage(Buffer* buf)
+void deleteImage(struct Buffer* buf)
 {
     struct AnchorList* al;
     struct Anchor* a;
@@ -717,7 +718,7 @@ void deleteImage(Buffer* buf)
     loadImage(NULL, IMG_FLAG_STOP);
 }
 
-void getAllImage(Buffer* buf)
+void getAllImage(struct Buffer* buf)
 {
     struct AnchorList* al;
     struct Anchor* a;
@@ -742,7 +743,7 @@ void getAllImage(Buffer* buf)
 }
 
 static void
-showImageProgress(Buffer* buf)
+showImageProgress(struct Buffer* buf)
 {
     struct AnchorList* al;
     struct Anchor* a;
@@ -769,7 +770,7 @@ showImageProgress(Buffer* buf)
     }
 }
 
-void loadImage(Buffer* buf, int flag)
+void loadImage(struct Buffer* buf, int flag)
 {
     if (!activeImage) {
         return;

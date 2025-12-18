@@ -1,4 +1,5 @@
 #include "w3m_runtime.h"
+#include "buffer.h"
 #include "fm.h"
 #ifndef __MINGW32_VERSION
 #include <pwd.h>
@@ -35,7 +36,7 @@ struct auth_pass {
 
 struct auth_pass* passwords = NULL;
 
-int columnSkip(Buffer* buf, int offset)
+int columnSkip(struct Buffer* buf, int offset)
 {
     int i, maxColumn;
     int column = buf->currentColumn + offset;
@@ -78,7 +79,7 @@ int columnPos(struct Line* line, int column)
 #endif
 }
 
-struct Line* lineSkip(Buffer* buf, struct Line* line, int offset, int last)
+struct Line* lineSkip(struct Buffer* buf, struct Line* line, int offset, int last)
 {
     int i;
     struct Line* l;
@@ -91,7 +92,7 @@ struct Line* lineSkip(Buffer* buf, struct Line* line, int offset, int last)
     return l;
 }
 
-struct Line* currentLineSkip(Buffer* buf, struct Line* line, int offset, int last)
+struct Line* currentLineSkip(struct Buffer* buf, struct Line* line, int offset, int last)
 {
     int i, n;
     struct Line* l = line;
@@ -1195,7 +1196,7 @@ void loadPasswd(void)
 }
 
 /* get last modified time */
-char* last_modified(Buffer* buf)
+char* last_modified(struct Buffer* buf)
 {
     TextListItem* ti;
     struct stat st;

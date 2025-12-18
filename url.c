@@ -1,4 +1,5 @@
 #include "w3m_runtime.h"
+#include "buffer.h"
 #include "fm.h"
 #ifndef __MINGW32_VERSION
 #include <unistd.h>
@@ -518,7 +519,7 @@ write_from_file(int sock, char* file)
 }
 
 struct Url*
-baseURL(Buffer* buf)
+baseURL(struct Buffer* buf)
 {
     if (buf->bufferprop & BP_NO_URL) {
         /* no URL is defined for the buffer */
@@ -2315,7 +2316,7 @@ Str searchURIMethods(struct Url* pu)
  */
 
 #define URI_PATTERN "([-;/?:@&=+$,a-zA-Z0-9_.!~*'()]|%[0-9A-Fa-f][0-9A-Fa-f])*"
-void chkExternalURIBuffer(Buffer* buf)
+void chkExternalURIBuffer(struct Buffer* buf)
 {
     int i;
     struct table2* ump;
@@ -2398,13 +2399,13 @@ url_decode(const char *url, const struct Url *base, wc_ces doc_charset)
 }
 #endif
 
-char* url_decode2(const char* url, const Buffer* buf)
+char* url_decode2(const char* url, const struct Buffer* buf)
 {
     wc_ces url_charset;
 
     if (!DecodeURL)
         return (char*)url;
-    url_charset = buf ? url_to_charset(url, baseURL((Buffer*)buf), buf->document_charset) : url_to_charset(url, NULL, 0);
+    url_charset = buf ? url_to_charset(url, baseURL((struct Buffer*)buf), buf->document_charset) : url_to_charset(url, NULL, 0);
     return url_unquote_conv((char*)url, url_charset);
 }
 

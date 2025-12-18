@@ -2,6 +2,7 @@
  * HTML forms
  */
 #include "display.h"
+#include "buffer.h"
 #include "anchor.h"
 #include "fm.h"
 #include "parsetag.h"
@@ -196,7 +197,7 @@ int formtype(char* typestr)
     return FORM_INPUT_TEXT;
 }
 
-void formRecheckRadio(struct Anchor* a, Buffer* buf, FormItemList* fi)
+void formRecheckRadio(struct Anchor* a, struct Buffer* buf, FormItemList* fi)
 {
     int i;
     struct Anchor* a2;
@@ -214,7 +215,7 @@ void formRecheckRadio(struct Anchor* a, Buffer* buf, FormItemList* fi)
     formUpdateBuffer(a, buf, fi);
 }
 
-void formResetBuffer(Buffer* buf, struct AnchorList* formitem)
+void formResetBuffer(struct Buffer* buf, struct AnchorList* formitem)
 {
     int i;
     struct Anchor* a;
@@ -394,9 +395,9 @@ form_update_line(struct Line* line, char** str, int spos, int epos, int width,
     return pos;
 }
 
-void formUpdateBuffer(struct Anchor* a, Buffer* buf, FormItemList* form)
+void formUpdateBuffer(struct Anchor* a, struct Buffer* buf, FormItemList* form)
 {
-    Buffer save;
+    struct Buffer save;
     char* p;
     int spos, epos, rows, c_rows, pos, col = 0;
     struct Line* l;
@@ -933,7 +934,7 @@ void loadPreForm(void)
     fclose(fp);
 }
 
-void preFormUpdateBuffer(Buffer* buf)
+void preFormUpdateBuffer(struct Buffer* buf)
 {
     struct pre_form* pf;
     struct pre_form_item* pi;

@@ -321,7 +321,7 @@ void _newT(void)
     if (!tag)
         return;
 
-    Buffer* buf = newBuffer(Currentbuf->width);
+    struct Buffer* buf = newBuffer(Currentbuf->width);
     copyBuffer(buf, Currentbuf);
     buf->nextBuffer = NULL;
     for (int i = 0; i < MAX_LB; i++)
@@ -397,7 +397,7 @@ void calcTabPos(void)
 }
 
 static Str
-conv_form_encoding(Str val, FormItemList* fi, Buffer* buf)
+conv_form_encoding(Str val, FormItemList* fi, struct Buffer* buf)
 {
     wc_ces charset = SystemCharset;
 
@@ -519,8 +519,8 @@ void query_from_followform(Str* query, FormItemList* fi, int multipart)
     }
 }
 
-static Buffer*
-loadNormalBuf(Buffer* buf, int renderframe)
+static struct Buffer*
+loadNormalBuf(struct Buffer* buf, int renderframe)
 {
     pushBuffer(buf);
     if (renderframe && RenderFrame && Currentbuf->frameset != NULL)
@@ -528,9 +528,9 @@ loadNormalBuf(Buffer* buf, int renderframe)
     return buf;
 }
 
-Buffer* loadLink(char* url, char* target, char* referer, FormList* request, bool on_target, bool do_download)
+struct Buffer* loadLink(char* url, char* target, char* referer, FormList* request, bool on_target, bool do_download)
 {
-    Buffer *buf, *nfbuf;
+    struct Buffer *buf, *nfbuf;
     union frameset_element* f_element = NULL;
     int flag = 0;
     struct Url *base, pu;
@@ -826,7 +826,7 @@ void _followForm(bool submit, bool on_target, bool do_download)
             Strcat(tmp2, tmp);
             loadLink(tmp2->ptr, a->target, NULL, NULL, on_target, do_download);
         } else if (fi->parent->method == FORM_METHOD_POST) {
-            Buffer* buf;
+            struct Buffer* buf;
             if (multipart) {
                 struct stat st;
                 stat(fi->parent->body, &st);
@@ -968,7 +968,7 @@ wc_uint32 getChar(char* p)
     return wc_any_to_ucs(wtf_parse1((wc_uchar**)&p));
 }
 
-char* getCurWord(Buffer* buf, int* spos, int* epos)
+char* getCurWord(struct Buffer* buf, int* spos, int* epos)
 {
     char* p;
     struct Line* l = buf->currentLine;
@@ -999,7 +999,7 @@ char* getCurWord(Buffer* buf, int* spos, int* epos)
     return &p[b];
 }
 
-char* GetWord(Buffer* buf)
+char* GetWord(struct Buffer* buf)
 {
     int b, e;
     char* p;
@@ -1009,9 +1009,9 @@ char* GetWord(Buffer* buf)
     return NULL;
 }
 
-static void set_buffer_environ(Buffer* buf)
+static void set_buffer_environ(struct Buffer* buf)
 {
-    static Buffer* prev_buf = NULL;
+    static struct Buffer* prev_buf = NULL;
     static struct Line* prev_line = NULL;
     static int prev_pos = -1;
     struct Line* l;
@@ -1065,15 +1065,15 @@ static void set_buffer_environ(Buffer* buf)
 }
 
 static void
-save_buffer_position(Buffer* buf)
+save_buffer_position(struct Buffer* buf)
 {
-    BufferPos* b = buf->undo;
+    struct BufferPos* b = buf->undo;
 
     if (!buf->firstLine)
         return;
     if (b && b->top_linenumber == TOP_LINENUMBER(buf) && b->cur_linenumber == CUR_LINENUMBER(buf) && b->currentColumn == buf->currentColumn && b->pos == buf->pos)
         return;
-    b = New(BufferPos);
+    b = New(struct BufferPos);
     b->top_linenumber = TOP_LINENUMBER(buf);
     b->cur_linenumber = CUR_LINENUMBER(buf);
     b->currentColumn = buf->currentColumn;

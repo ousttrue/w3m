@@ -31,21 +31,21 @@ struct Image {
     struct ImageCache* cache;
 };
 
-struct _Buffer;
+struct Buffer;
 void initImage(void);
 void termImage(void);
 void addImage(struct ImageCache* cache, int x, int y, int sx, int sy, int w, int h);
-void drawImage(struct _Buffer* currentbuf);
+void drawImage(struct Buffer* currentbuf);
 void clearImage(void);
 
-struct _Buffer;
-extern void deleteImage(struct _Buffer* buf);
-extern void getAllImage(struct _Buffer* buf);
+struct Buffer;
+extern void deleteImage(struct Buffer* buf);
+extern void getAllImage(struct Buffer* buf);
 
 #define IMG_FLAG_START 0
 #define IMG_FLAG_STOP 1
 #define IMG_FLAG_NEXT 2
-extern void loadImage(struct _Buffer* buf, int flag);
+extern void loadImage(struct Buffer* buf, int flag);
 
 struct ImageCache* getImage(struct Image* image, struct Url* current, int flag);
 int getImageSize(struct ImageCache* cache);
