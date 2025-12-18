@@ -1,4 +1,5 @@
 const std = @import("std");
+const EpollQueue = @import("EpollQueue.zig");
 
 allocator: std.mem.Allocator,
 input: std.fs.File,
@@ -6,20 +7,27 @@ is_tty: bool,
 is_rawmode: bool = false,
 termios: ?std.posix.termios = null,
 buffer: [256]u8 = undefined,
+queue: *EpollQueue,
 
 pub fn init(allocator: std.mem.Allocator, input: std.fs.File) !@This() {
     var this = @This(){
         .allocator = allocator,
         .input = input,
         .is_tty = std.c.isatty(input.handle) != 0,
+        .queue = try .create(allocator),
     };
     if (this.is_tty) {
         this.termios = try std.posix.tcgetattr(this.input.handle);
     }
+
+    this.queue.add_fd(this.input.handle);
+    try this.queue.start();
+
     return this;
 }
 
 pub fn deinit(this: *@This()) void {
+    this.queue.destroy();
     this.exitRawMode();
 }
 
@@ -76,14 +84,25 @@ pub fn getWinsize(this: @This()) !std.posix.winsize {
 }
 
 pub fn getch(this: *@This()) u8 {
-    var buf: [1]u8 = undefined;
-    if (this.input.read(&buf)) |size| {
-        if (size == 1) {
-            return buf[0];
-        } else {
-            return 0;
+    // var buf: [1]u8 = undefined;
+    // if (this.input.read(&buf)) |size| {
+    //     if (size == 1) {
+    //         return buf[0];
+    //     } else {
+    //         return 0;
+    //     }
+    // } else |err| {
+    //     @panic(@errorName(err));
+    // }
+    while (true) {
+        const event = this.queue.nextEvent();
+        switch (event) {
+            .key => |key| {
+                return key;
+            },
+            .idle => {
+                //
+            },
         }
-    } else |err| {
-        @panic(@errorName(err));
     }
 }
