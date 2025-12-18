@@ -238,7 +238,7 @@ writeBufferName(Buffer* buf, int n)
 void gotoLine(Buffer* buf, int n)
 {
     char msg[36];
-    Line* l = buf->firstLine;
+    struct Line* l = buf->firstLine;
 
     if (l == NULL)
         return;
@@ -281,7 +281,7 @@ void gotoLine(Buffer* buf, int n)
 void gotoRealLine(Buffer* buf, int n)
 {
     char msg[36];
-    Line* l = buf->firstLine;
+    struct Line* l = buf->firstLine;
 
     if (l == NULL)
         return;
@@ -558,7 +558,7 @@ void reshapeBuffer(Buffer* buf)
 
     buf->height = LASTLINE() + 1;
     if (buf->firstLine && sbuf.firstLine) {
-        Line* cur = sbuf.currentLine;
+        struct Line* cur = sbuf.currentLine;
         int n;
 
         buf->pos = sbuf.pos + cur->bpos;
@@ -619,7 +619,7 @@ int writeBufferCache(Buffer* buf)
 {
     Str tmp;
     FILE* cache = NULL;
-    Line* l;
+    struct Line* l;
 #ifdef USE_ANSI_COLOR
     int colorflag;
 #endif
@@ -672,7 +672,7 @@ _error1:
 int readBufferCache(Buffer* buf)
 {
     FILE* cache;
-    Line *l = NULL, *prevl = NULL, *basel = NULL;
+    struct Line *l = NULL, *prevl = NULL, *basel = NULL;
     long lnum = 0, clnum, tlnum;
 #ifdef USE_ANSI_COLOR
     int colorflag;
@@ -692,7 +692,7 @@ int readBufferCache(Buffer* buf)
     while (!feof(cache)) {
         lnum++;
         prevl = l;
-        l = New(Line);
+        l = New(struct Line);
         l->prev = prevl;
         if (prevl)
             prevl->next = l;

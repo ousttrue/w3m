@@ -291,7 +291,7 @@ reseq_anchor(Buffer* buf)
 }
 
 static char*
-reAnchorPos(Buffer* buf, Line* l, char* p1, char* p2,
+reAnchorPos(Buffer* buf, struct Line* l, char* p1, char* p2,
     Anchor* (*anchorproc)(Buffer*, char*, char*, int, int))
 {
     Anchor* a;
@@ -332,7 +332,7 @@ reAnchorPos(Buffer* buf, Line* l, char* p1, char* p2,
     return p2;
 }
 
-void reAnchorWord(Buffer* buf, Line* l, int spos, int epos)
+void reAnchorWord(Buffer* buf, struct Line* l, int spos, int epos)
 {
     reAnchorPos(buf, l, &l->lineBuf[spos], &l->lineBuf[epos], _put_anchor_all);
 }
@@ -343,7 +343,7 @@ static char*
 reAnchorAny(Buffer* buf, char* re,
     Anchor* (*anchorproc)(Buffer*, char*, char*, int, int))
 {
-    Line* l;
+    struct Line* l;
     char *p = NULL, *p1, *p2;
 
     if (re == NULL || *re == '\0') {
@@ -384,7 +384,7 @@ char* reAnchorNews(Buffer* buf, char* re)
 
 char* reAnchorNewsheader(Buffer* buf)
 {
-    Line* l;
+    struct Line* l;
     char *p, *p1, *p2;
     static char* header_mid[] = {
         "Message-Id:", "References:", "In-Reply-To:", NULL
@@ -544,7 +544,7 @@ void addMultirowsImg(Buffer* buf, AnchorList* al)
     int i, j, k, col, ecol, pos;
     Image* img;
     Anchor a_img, a_href, a_form, *a;
-    Line *l, *ls;
+    struct Line *l, *ls;
 
     if (al == NULL || al->nanchor == 0)
         return;
@@ -620,7 +620,7 @@ void addMultirowsForm(Buffer* buf, AnchorList* al)
 {
     int i, j, k, col, ecol, pos;
     Anchor a_form, *a;
-    Line *l, *ls;
+    struct Line *l, *ls;
 
     if (al == NULL || al->nanchor == 0)
         return;
@@ -675,7 +675,7 @@ void addMultirowsForm(Buffer* buf, AnchorList* al)
 char* getAnchorText(Buffer* buf, AnchorList* al, Anchor* a)
 {
     int hseq, i;
-    Line* l;
+    struct Line* l;
     Str tmp = NULL;
     char *p, *ep;
 

@@ -331,22 +331,17 @@ extern int REV_LB[];
  * Types.
  */
 
-typedef unsigned short Lineprop;
-#ifdef USE_ANSI_COLOR
-typedef unsigned char Linecolor;
-#endif
+#include "line.h"
 
 typedef struct _MapArea {
     char* url;
     char* target;
     char* alt;
-#ifdef USE_IMAGE
     char shape;
     short* coords;
     int ncoords;
     short center_x;
     short center_y;
-#endif
 } MapArea;
 
 typedef struct _MapList {
@@ -354,24 +349,6 @@ typedef struct _MapList {
     GeneralList* area;
     struct _MapList* next;
 } MapList;
-
-typedef struct _Line {
-    char* lineBuf;
-    Lineprop* propBuf;
-#ifdef USE_ANSI_COLOR
-    Linecolor* colorBuf;
-#endif
-    struct _Line* next;
-    struct _Line* prev;
-    int len;
-    int width;
-    long linenumber; /* on buffer */
-    long real_linenumber; /* on file */
-    unsigned short usrflags;
-    int size;
-    int bpos;
-    int bwidth;
-} Line;
 
 typedef struct {
     int line;
@@ -457,10 +434,10 @@ typedef struct _LinkList {
 typedef struct _Buffer {
     char* filename;
     char* buffername;
-    Line* firstLine;
-    Line* topLine;
-    Line* currentLine;
-    Line* lastLine;
+    struct Line* firstLine;
+    struct Line* topLine;
+    struct Line* currentLine;
+    struct Line* lastLine;
     struct _Buffer* nextBuffer;
     struct _Buffer* linkBuffer[MAX_LB];
     short width;

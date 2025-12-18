@@ -969,7 +969,7 @@ wc_uint32 getChar(char* p)
 char* getCurWord(Buffer* buf, int* spos, int* epos)
 {
     char* p;
-    Line* l = buf->currentLine;
+    struct Line* l = buf->currentLine;
     int b, e;
 
     *spos = 0;
@@ -1010,9 +1010,9 @@ char* GetWord(Buffer* buf)
 static void set_buffer_environ(Buffer* buf)
 {
     static Buffer* prev_buf = NULL;
-    static Line* prev_line = NULL;
+    static struct Line* prev_line = NULL;
     static int prev_pos = -1;
-    Line* l;
+    struct Line* l;
 
     if (buf == NULL)
         return;

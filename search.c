@@ -7,7 +7,7 @@
 #include <unistd.h>
 
 static void
-set_mark(Line* l, int pos, int epos)
+set_mark(struct Line* l, int pos, int epos)
 {
     for (; pos < epos && pos < l->size; pos++)
         l->propBuf[pos] |= PE_MARK;
@@ -94,7 +94,7 @@ char* conv_search_string(char* str, wc_ces f_ces)
 int forwardSearch(Buffer* buf, char* str)
 {
     char *p, *first, *last;
-    Line *l, *begin;
+    struct Line *l, *begin;
     int wrapped = FALSE;
     int pos;
 
@@ -184,7 +184,7 @@ int forwardSearch(Buffer* buf, char* str)
 int backwardSearch(Buffer* buf, char* str)
 {
     char *p, *q, *found, *found_last, *first, *last;
-    Line *l, *begin;
+    struct Line *l, *begin;
     int wrapped = FALSE;
     int pos;
 

@@ -1373,7 +1373,7 @@ static void
 nscroll(int n, int mode)
 {
     Buffer* buf = Currentbuf;
-    Line *top = buf->topLine, *cur = buf->currentLine;
+    struct Line *top = buf->topLine, *cur = buf->currentLine;
     int lnum, tlnum, llnum, diff_n;
 
     if (buf->firstLine == NULL)
@@ -1501,7 +1501,7 @@ DEFUN(rdrwSc, REDRAW, "Draw the screen anew")
 }
 
 static void
-clear_mark(Line* l)
+clear_mark(struct Line* l)
 {
     int pos;
     if (!l)
@@ -1740,7 +1740,7 @@ DEFUN(srchprv, SEARCH_PREV, "Continue search backward")
 static void
 shiftvisualpos(Buffer* buf, int shift)
 {
-    Line* l = buf->currentLine;
+    struct Line* l = buf->currentLine;
     buf->visualpos -= shift;
     if (buf->visualpos - l->bwidth >= buf->COLS)
         buf->visualpos = l->bwidth + buf->COLS - 1;
@@ -1780,7 +1780,7 @@ DEFUN(shiftr, SHIFT_RIGHT, "Shift screen right")
 DEFUN(col1R, RIGHT, "Shift screen one column right")
 {
     Buffer* buf = Currentbuf;
-    Line* l = buf->currentLine;
+    struct Line* l = buf->currentLine;
     int j, column, n = searchKeyNum();
 
     if (l == NULL)
@@ -1798,7 +1798,7 @@ DEFUN(col1R, RIGHT, "Shift screen one column right")
 DEFUN(col1L, LEFT, "Shift screen one column left")
 {
     Buffer* buf = Currentbuf;
-    Line* l = buf->currentLine;
+    struct Line* l = buf->currentLine;
     int j, n = searchKeyNum();
 
     if (l == NULL)
@@ -2109,9 +2109,9 @@ DEFUN(movR1, MOVE_RIGHT1, "Cursor right. With edge touched, slide")
  */
 
 static int
-prev_nonnull_line(Line* line)
+prev_nonnull_line(struct Line* line)
 {
-    Line* l;
+    struct Line* l;
 
     for (l = line; l != NULL && l->len == 0; l = l->prev)
         ;
@@ -2127,7 +2127,7 @@ prev_nonnull_line(Line* line)
 DEFUN(movLW, PREV_WORD, "Move to the previous word")
 {
     char* lb;
-    Line *pline, *l;
+    struct Line *pline, *l;
     int ppos;
     int i, n = searchKeyNum();
 
@@ -2177,9 +2177,9 @@ end:
 }
 
 static int
-next_nonnull_line(Line* line)
+next_nonnull_line(struct Line* line)
 {
-    Line* l;
+    struct Line* l;
 
     for (l = line; l != NULL && l->len == 0; l = l->next)
         ;
@@ -2196,7 +2196,7 @@ next_nonnull_line(Line* line)
 DEFUN(movRW, NEXT_WORD, "Move to the next word")
 {
     char* lb;
-    Line *pline, *l;
+    struct Line *pline, *l;
     int ppos;
     int i, n = searchKeyNum();
 
@@ -2432,7 +2432,7 @@ DEFUN(linend, LINE_END, "Go to the end of the line")
 static int
 cur_real_linenumber(Buffer* buf)
 {
-    Line *l, *cur = buf->currentLine;
+    struct Line *l, *cur = buf->currentLine;
     int n;
 
     if (!cur)
@@ -2497,7 +2497,7 @@ DEFUN(editScr, EDIT_SCREEN, "Edit rendered copy of document")
 /* Set / unset mark */
 DEFUN(_mark, MARK, "Set/unset mark")
 {
-    Line* l;
+    struct Line* l;
     if (!use_mark)
         return;
     if (Currentbuf->firstLine == NULL)
@@ -2510,7 +2510,7 @@ DEFUN(_mark, MARK, "Set/unset mark")
 /* Go to next mark */
 DEFUN(nextMk, NEXT_MARK, "Go to the next mark")
 {
-    Line* l;
+    struct Line* l;
     int i;
 
     if (!use_mark)
@@ -2543,7 +2543,7 @@ DEFUN(nextMk, NEXT_MARK, "Go to the next mark")
 /* Go to previous mark */
 DEFUN(prevMk, PREV_MARK, "Go to the previous mark")
 {
-    Line* l;
+    struct Line* l;
     int i;
 
     if (!use_mark)
@@ -2578,7 +2578,7 @@ DEFUN(prevMk, PREV_MARK, "Go to the previous mark")
 /* Mark place to which the regular expression matches */
 DEFUN(reMark, REG_MARK, "Mark all occurences of a pattern")
 {
-    Line* l;
+    struct Line* l;
     char* str;
     char *p, *p1, *p2;
 
@@ -3087,7 +3087,7 @@ nextX(int d, int dy)
 {
     HmarkerList* hl = Currentbuf->hmarklist;
     Anchor *an, *pan;
-    Line* l;
+    struct Line* l;
     int i, x, y, n = searchKeyNum();
 
     if (Currentbuf->firstLine == NULL)
@@ -4353,7 +4353,7 @@ DEFUN(linkbrz, EXTERN_LINK, "Display target using an external browser")
 /* show current line number and number of lines in the entire document */
 DEFUN(curlno, LINE_INFO, "Display current position in document")
 {
-    Line* l = Currentbuf->currentLine;
+    struct Line* l = Currentbuf->currentLine;
     Str tmp;
     int cur = 0, all = 0, col = 0, len = 0;
 
@@ -5475,7 +5475,7 @@ static void
 resetPos(BufferPos* b)
 {
     Buffer buf;
-    Line top, cur;
+    struct Line top, cur;
 
     top.linenumber = b->top_linenumber;
     cur.linenumber = b->cur_linenumber;
