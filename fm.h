@@ -333,42 +333,7 @@ extern int REV_LB[];
 
 #include "line.h"
 
-struct BufferPoint {
-    int line;
-    int pos;
-    int invalid;
-};
-
-typedef struct _anchor {
-    char* url;
-    char* target;
-    char* referer;
-    char* title;
-    unsigned char accesskey;
-    struct BufferPoint start;
-    struct BufferPoint end;
-    int hseq;
-    char slave;
-    short y;
-    short rows;
-    struct Image* image;
-} Anchor;
-
 #define NO_REFERER ((char*)-1)
-
-typedef struct _anchorList {
-    Anchor* anchors;
-    int nanchor;
-    int anchormax;
-    int acache;
-} AnchorList;
-
-struct HmarkerList {
-    struct BufferPoint* marks;
-    int nmark;
-    int markmax;
-    int prevhseq;
-};
 
 #define LINK_TYPE_NONE 0
 #define LINK_TYPE_REL 1
@@ -406,10 +371,10 @@ typedef struct _Buffer {
     short COLS;
     short LINES;
     InputStream pagerSource;
-    AnchorList* href;
-    AnchorList* name;
-    AnchorList* img;
-    AnchorList* formitem;
+    struct AnchorList* href;
+    struct AnchorList* name;
+    struct AnchorList* img;
+    struct AnchorList* formitem;
     LinkList* linklist;
     FormList* formlist;
     struct MapList* maplist;
@@ -425,10 +390,8 @@ typedef struct _Buffer {
     int* clone;
     size_t trbyte;
     char check_url;
-#ifdef USE_M17N
     wc_ces document_charset;
     wc_uint8 auto_detect;
-#endif
     TextList* document_header;
     FormItemList* form_submit;
     char* savecache;
@@ -437,17 +400,13 @@ typedef struct _Buffer {
     char* mailcap_source;
     char* header_source;
     char search_header;
-#ifdef USE_SSL
     char* ssl_certificate;
-#endif
     char image_flag;
     char image_loaded;
     char need_reshape;
-    Anchor* submit;
+    struct Anchor* submit;
     struct _BufferPos* undo;
-#ifdef USE_ALARM
     struct _AlarmEvent* event;
-#endif
 } Buffer;
 
 typedef struct _BufferPos {
@@ -499,68 +458,14 @@ typedef struct _DownloadList {
 
 #define NO_BUFFER ((Buffer*)1)
 
-#define RB_STACK_SIZE 10
 
-#define TAG_STACK_SIZE 10
 
-#define FONT_STACK_SIZE 5
 
-#define FONTSTAT_SIZE 7
 #define FONTSTAT_MAX 127
 
 #define _INIT_BUFFER_WIDTH (TTY_COLS() - (showLineNum ? 6 : 1))
 #define INIT_BUFFER_WIDTH ((_INIT_BUFFER_WIDTH > 0) ? _INIT_BUFFER_WIDTH : 0)
 #define FOLD_BUFFER_WIDTH (FoldLine ? (INIT_BUFFER_WIDTH + 1) : -1)
-
-struct input_alt_attr {
-    int hseq;
-    int fid;
-    int in;
-    Str type, name, value;
-};
-
-typedef struct {
-    int pos;
-    int len;
-    int tlen;
-    long flag;
-    Anchor anchor;
-    Str img_alt;
-    struct input_alt_attr input_alt;
-    char fontstat[FONTSTAT_SIZE];
-    short nobr_level;
-    Lineprop prev_ctype;
-    char init_flag;
-    short top_margin;
-    short bottom_margin;
-} Breakpoint;
-
-struct readbuffer {
-    Str line;
-    Lineprop cprop;
-    short pos;
-    Str prevchar;
-    long flag;
-    long flag_stack[RB_STACK_SIZE];
-    int flag_sp;
-    int status;
-    unsigned char end_tag;
-    unsigned char q_level;
-    short table_level;
-    short nobr_level;
-    Anchor anchor;
-    Str img_alt;
-    struct input_alt_attr input_alt;
-    char fontstat[FONTSTAT_SIZE];
-    char fontstat_stack[FONT_STACK_SIZE][FONTSTAT_SIZE];
-    int fontstat_sp;
-    Lineprop prev_ctype;
-    Breakpoint bp;
-    struct cmdtable* tag_stack[TAG_STACK_SIZE];
-    int tag_sp;
-    short top_margin;
-    short bottom_margin;
-};
 
 #define in_bold fontstat[0]
 #define in_under fontstat[1]

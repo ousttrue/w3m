@@ -145,10 +145,10 @@ extern void linkLst(void);
 extern void linkMn(void);
 extern LinkList* link_menu(Buffer* buf);
 extern void accessKey(void);
-extern Anchor* accesskey_menu(Buffer* buf);
+extern struct Anchor* accesskey_menu(Buffer* buf);
 extern void listMn(void);
 extern void movlistMn(void);
-extern Anchor* list_menu(Buffer* buf);
+extern struct Anchor* list_menu(Buffer* buf);
 #else
 #define linkMn nulcmd
 #define accessKey nulcmd
@@ -393,9 +393,9 @@ extern struct form_item_list* formList_addInput(struct form_list* fl,
     struct parsed_tag* tag);
 extern char* form2str(FormItemList* fi);
 extern int formtype(char* typestr);
-extern void formRecheckRadio(Anchor* a, Buffer* buf, FormItemList* form);
-extern void formResetBuffer(Buffer* buf, AnchorList* formitem);
-extern void formUpdateBuffer(Anchor* a, Buffer* buf, FormItemList* form);
+extern void formRecheckRadio(struct Anchor* a, Buffer* buf, FormItemList* form);
+extern void formResetBuffer(Buffer* buf, struct AnchorList* formitem);
+extern void formUpdateBuffer(struct Anchor* a, Buffer* buf, FormItemList* form);
 extern void preFormUpdateBuffer(Buffer* buf);
 extern Str textfieldrep(Str s, int width);
 extern void input_textarea(FormItemList* fi);
@@ -406,17 +406,17 @@ extern void form_write_from_file(FILE* f, char* boundary, char* name,
 extern struct MapList* searchMapList(Buffer* buf, char* name);
 extern void follow_map(struct parsed_tagarg* arg);
 #if defined(MENU_MAP) || defined(USE_IMAGE)
-extern struct MapArea* follow_map_menu(Buffer* buf, char* name, Anchor* a_img, int x,
+extern struct MapArea* follow_map_menu(Buffer* buf, char* name, struct Anchor* a_img, int x,
     int y);
 #endif
 #ifndef MENU_MAP
 extern Buffer* follow_map_panel(Buffer* buf, char* name);
 #endif
 #ifdef USE_IMAGE
-extern int getMapXY(Buffer* buf, Anchor* a, int* x, int* y);
+extern int getMapXY(Buffer* buf, struct Anchor* a, int* x, int* y);
 extern struct MapArea* retrieveCurrentMapArea(Buffer* buf);
 #endif
-extern Anchor* retrieveCurrentMap(Buffer* buf);
+extern struct Anchor* retrieveCurrentMap(Buffer* buf);
 extern struct MapArea* newMapArea(char* url, char* target, char* alt, char* shape,
     char* coords);
 extern Buffer* page_info_panel(Buffer* buf);
@@ -476,39 +476,39 @@ extern InputStream openNewsStream(struct Url* pu);
 extern Str loadNewsgroup(struct Url* pu, wc_ces* charset, bool do_download);
 extern void closeNews(void);
 extern void disconnectNews(void);
-extern AnchorList* putAnchor(AnchorList* al, char* url, char* target,
-    Anchor** anchor_return, char* referer,
+extern struct AnchorList* putAnchor(struct AnchorList* al, char* url, char* target,
+    struct Anchor** anchor_return, char* referer,
     char* title, unsigned char key, int line,
     int pos);
-extern Anchor* registerHref(Buffer* buf, char* url, char* target,
+extern struct Anchor* registerHref(Buffer* buf, char* url, char* target,
     char* referer, char* title, unsigned char key,
     int line, int pos);
-extern Anchor* registerName(Buffer* buf, char* url, int line, int pos);
-extern Anchor* registerImg(Buffer* buf, char* url, char* title, int line,
+extern struct Anchor* registerName(Buffer* buf, char* url, int line, int pos);
+extern struct Anchor* registerImg(Buffer* buf, char* url, char* title, int line,
     int pos);
-extern Anchor* registerForm(Buffer* buf, FormList* flist,
+extern struct Anchor* registerForm(Buffer* buf, FormList* flist,
     struct parsed_tag* tag, int line, int pos);
-extern int onAnchor(Anchor* a, int line, int pos);
-extern Anchor* retrieveAnchor(AnchorList* al, int line, int pos);
-extern Anchor* retrieveCurrentAnchor(Buffer* buf);
-extern Anchor* retrieveCurrentImg(Buffer* buf);
-extern Anchor* retrieveCurrentForm(Buffer* buf);
-extern Anchor* searchAnchor(AnchorList* al, char* str);
-extern Anchor* searchURLLabel(Buffer* buf, char* url);
+extern int onAnchor(struct Anchor* a, int line, int pos);
+extern struct Anchor* retrieveAnchor(struct AnchorList* al, int line, int pos);
+extern struct Anchor* retrieveCurrentAnchor(Buffer* buf);
+extern struct Anchor* retrieveCurrentImg(Buffer* buf);
+extern struct Anchor* retrieveCurrentForm(Buffer* buf);
+extern struct Anchor* searchAnchor(struct AnchorList* al, char* str);
+extern struct Anchor* searchURLLabel(Buffer* buf, char* url);
 extern void reAnchorWord(Buffer* buf, struct Line* l, int spos, int epos);
 extern char* reAnchor(Buffer* buf, char* re);
 #ifdef USE_NNTP
 extern char* reAnchorNews(Buffer* buf, char* re);
 extern char* reAnchorNewsheader(Buffer* buf);
 #endif /* USE_NNTP */
-extern void addMultirowsForm(Buffer* buf, AnchorList* al);
-extern Anchor* closest_next_anchor(AnchorList* a, Anchor* an, int x, int y);
-extern Anchor* closest_prev_anchor(AnchorList* a, Anchor* an, int x, int y);
-void addMultirowsImg(Buffer* buf, AnchorList* al);
+extern void addMultirowsForm(Buffer* buf, struct AnchorList* al);
+extern struct Anchor* closest_next_anchor(struct AnchorList* a, struct Anchor* an, int x, int y);
+extern struct Anchor* closest_prev_anchor(struct AnchorList* a, struct Anchor* an, int x, int y);
+void addMultirowsImg(Buffer* buf, struct AnchorList* al);
 extern struct HmarkerList* putHmarker(struct HmarkerList* ml, int line, int pos, int seq);
-extern void shiftAnchorPosition(AnchorList* a, struct HmarkerList* hl, int line,
+extern void shiftAnchorPosition(struct AnchorList* a, struct HmarkerList* hl, int line,
     int pos, int shift);
-extern char* getAnchorText(Buffer* buf, AnchorList* al, Anchor* a);
+extern char* getAnchorText(Buffer* buf, struct AnchorList* al, struct Anchor* a);
 extern Buffer* link_list_panel(Buffer* buf);
 
 extern Str decodeB(char** ww);

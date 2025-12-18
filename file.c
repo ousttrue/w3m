@@ -1,4 +1,5 @@
 #include "w3m_runtime.h"
+#include "anchor.h"
 #include "maparea.h"
 #include "download.h"
 #include "tab.h"
@@ -2216,7 +2217,7 @@ page_loaded:
             b->type = allocStr(t, -1);
         if (pu.label) {
             if (proc == loadHTMLBuffer) {
-                Anchor* a;
+                struct Anchor* a;
                 a = searchURLLabel(b, pu.label);
                 if (a != NULL) {
                     gotoLine(b, a->start.line);
@@ -5442,7 +5443,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
     static char* outc = NULL;
     static Lineprop* outp = NULL;
     static int out_size = 0;
-    Anchor *a_href = NULL, *a_img = NULL, *a_form = NULL;
+    struct Anchor *a_href = NULL, *a_img = NULL, *a_form = NULL;
     char *p, *q, *r, *s, *t, *str;
     Lineprop mode, effect, ex_effect;
     int pos;
@@ -5459,9 +5460,9 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
     char* endp;
     char symbol = '\0';
     int internal = 0;
-    Anchor** a_textarea = NULL;
+    struct Anchor** a_textarea = NULL;
 #ifdef MENU_SELECT
-    Anchor** a_select = NULL;
+    struct Anchor** a_select = NULL;
 #endif
 #if defined(USE_M17N) || defined(USE_IMAGE)
     struct Url* base = baseURL(buf);
@@ -5481,14 +5482,14 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
     if (!max_textarea) { /* halfload */
         max_textarea = MAX_TEXTAREA;
         textarea_str = New_N(Str, max_textarea);
-        a_textarea = New_N(Anchor*, max_textarea);
+        a_textarea = New_N(struct Anchor*, max_textarea);
     }
 #ifdef MENU_SELECT
     n_select = -1;
     if (!max_select) { /* halfload */
         max_select = MAX_SELECT;
         select_option = New_N(FormSelectOption, max_select);
-        a_select = New_N(Anchor*, max_select);
+        a_select = New_N(struct Anchor*, max_select);
     }
 #endif
 
@@ -5689,7 +5690,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                     }
                     if (id && idFrame)
                         idFrame->body->nameList = putAnchor(idFrame->body->nameList, id, NULL,
-                            (Anchor**)NULL, NULL, NULL, '\0',
+                            (struct Anchor**)NULL, NULL, NULL, '\0',
                             currentLn(buf), pos);
                     if (p) {
                         effect |= PE_ANCHOR;
@@ -5774,7 +5775,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                                 IMG_FLAG_SKIP);
                         } else if (iseq < 0) {
                             struct BufferPoint* po = buf->imarklist->marks - iseq - 1;
-                            Anchor* a = retrieveAnchor(buf->img,
+                            struct Anchor* a = retrieveAnchor(buf->img,
                                 po->line, po->pos);
                             if (a) {
                                 a_img->url = a->url;
@@ -5836,7 +5837,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                             max_textarea = 2 * textareanumber;
                             textarea_str = New_Reuse(Str, textarea_str,
                                 max_textarea);
-                            a_textarea = New_Reuse(Anchor*, a_textarea,
+                            a_textarea = New_Reuse(struct Anchor*, a_textarea,
                                 max_textarea);
                         }
                     }
@@ -5847,7 +5848,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                             select_option = New_Reuse(FormSelectOption,
                                 select_option,
                                 max_select);
-                            a_select = New_Reuse(Anchor*, a_select,
+                            a_select = New_Reuse(struct Anchor*, a_select,
                                 max_select);
                         }
                     }
@@ -6069,7 +6070,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                 }
                 if (id && idFrame)
                     idFrame->body->nameList = putAnchor(idFrame->body->nameList, id, NULL,
-                        (Anchor**)NULL, NULL, NULL, '\0',
+                        (struct Anchor**)NULL, NULL, NULL, '\0',
                         currentLn(buf), pos);
 #endif /* ID_EXT */
             }

@@ -1,4 +1,4 @@
-/* $Id: frame.h,v 1.6 2003/01/25 17:42:17 ukai Exp $ */
+#pragma once
 /*
  * frame support
  */
@@ -23,10 +23,8 @@ struct frame_body {
     char* type;
     char* referer;
     struct _anchorList* nameList;
-    FormList* request;
-#ifdef USE_SSL
+    struct FormList* request;
     char* ssl_certificate;
-#endif
 };
 
 union frameset_element {

@@ -1,4 +1,5 @@
 #include "image.h"
+#include "anchor.h"
 #include "display.h"
 #include "tab.h"
 #include "etc.h"
@@ -700,8 +701,8 @@ static Buffer* image_buffer = NULL;
 
 void deleteImage(Buffer* buf)
 {
-    AnchorList* al;
-    Anchor* a;
+    struct AnchorList* al;
+    struct Anchor* a;
     int i;
 
     if (!buf)
@@ -718,8 +719,8 @@ void deleteImage(Buffer* buf)
 
 void getAllImage(Buffer* buf)
 {
-    AnchorList* al;
-    Anchor* a;
+    struct AnchorList* al;
+    struct Anchor* a;
     struct Url* current;
     int i;
 
@@ -743,8 +744,8 @@ void getAllImage(Buffer* buf)
 static void
 showImageProgress(Buffer* buf)
 {
-    AnchorList* al;
-    Anchor* a;
+    struct AnchorList* al;
+    struct Anchor* a;
     int i, l, n;
 
     if (!buf)

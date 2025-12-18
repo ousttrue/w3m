@@ -1,4 +1,5 @@
 #include "maparea.h"
+#include "anchor.h"
 #include "w3m_runtime.h"
 #include "download.h"
 #include "tab.h"
@@ -1193,7 +1194,7 @@ dump_extra(Buffer* buf)
 static int
 cmp_anchor_hseq(const void* a, const void* b)
 {
-    return (*((const Anchor**)a))->hseq - (*((const Anchor**)b))->hseq;
+    return (*((const struct Anchor**)a))->hseq - (*((const struct Anchor**)b))->hseq;
 }
 
 static void
@@ -1218,10 +1219,10 @@ do_dump(Buffer* buf)
         if (displayLinkNumber && buf->href) {
             int nanchor = buf->href->nanchor;
             printf("\nReferences:\n\n");
-            Anchor** in_order = New_N(Anchor*, buf->href->nanchor);
+            struct Anchor** in_order = New_N(struct Anchor*, buf->href->nanchor);
             for (i = 0; i < nanchor; i++)
                 in_order[i] = buf->href->anchors + i;
-            qsort(in_order, nanchor, sizeof(Anchor*), cmp_anchor_hseq);
+            qsort(in_order, nanchor, sizeof(struct Anchor*), cmp_anchor_hseq);
             for (i = 0; i < nanchor; i++) {
                 struct Url pu;
                 char* url;
@@ -2619,7 +2620,7 @@ static void
 gotoLabel(char* label)
 {
     Buffer* buf;
-    Anchor* al;
+    struct Anchor* al;
     int i;
 
     al = searchURLLabel(Currentbuf, label);
@@ -2685,7 +2686,7 @@ handleMailto(char* url)
 
 void _followA(bool on_target, bool do_download)
 {
-    Anchor* a = retrieveCurrentImg(Currentbuf);
+    struct Anchor* a = retrieveCurrentImg(Currentbuf);
     if (a && a->image && a->image->map) {
         _followForm(FALSE, on_target, do_download);
         return;
@@ -2759,7 +2760,7 @@ void _followI(bool do_download)
     if (Currentbuf->firstLine == NULL)
         return;
 
-    Anchor* a = retrieveCurrentImg(Currentbuf);
+    struct Anchor* a = retrieveCurrentImg(Currentbuf);
     if (a == NULL)
         return;
     /* FIXME: gettextize? */
@@ -2799,7 +2800,7 @@ DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink")
 {
     struct HmarkerList* hl = Currentbuf->hmarklist;
     struct BufferPoint* po;
-    Anchor* an;
+    struct Anchor* an;
     int hseq = 0;
 
     if (Currentbuf->firstLine == NULL)
@@ -2846,7 +2847,7 @@ DEFUN(lastA, LINK_END, "Move to the last hyperlink")
         hseq = hl->nmark - 1;
 
     struct BufferPoint* po;
-    Anchor* an;
+    struct Anchor* an;
     do {
         if (hseq < 0)
             return;
@@ -2868,7 +2869,7 @@ DEFUN(nthA, LINK_N, "Go to the nth link")
 {
     struct HmarkerList* hl = Currentbuf->hmarklist;
     struct BufferPoint* po;
-    Anchor* an;
+    struct Anchor* an;
 
     int n = searchKeyNum();
     if (n < 0 || n > hl->nmark)
@@ -2922,7 +2923,7 @@ _nextA(int visited)
 {
     struct HmarkerList* hl = Currentbuf->hmarklist;
     struct BufferPoint* po;
-    Anchor *an, *pan;
+    struct Anchor *an, *pan;
     int i, x, y, n = searchKeyNum();
     struct Url url;
 
@@ -3005,7 +3006,7 @@ _prevA(int visited)
 {
     struct HmarkerList* hl = Currentbuf->hmarklist;
     struct BufferPoint* po;
-    Anchor *an, *pan;
+    struct Anchor *an, *pan;
     int i, x, y, n = searchKeyNum();
     struct Url url;
 
@@ -3087,7 +3088,7 @@ static void
 nextX(int d, int dy)
 {
     struct HmarkerList* hl = Currentbuf->hmarklist;
-    Anchor *an, *pan;
+    struct Anchor *an, *pan;
     struct Line* l;
     int i, x, y, n = searchKeyNum();
 
@@ -3143,7 +3144,7 @@ static void
 nextY(int d)
 {
     struct HmarkerList* hl = Currentbuf->hmarklist;
-    Anchor *an, *pan;
+    struct Anchor *an, *pan;
     int i, x, y, n = searchKeyNum();
     int hseq;
 
@@ -3304,7 +3305,7 @@ DEFUN(backBf, BACK, "Close current buffer and return to the one below in stack")
             long top = buf->frameQ->top_linenumber;
             int pos = buf->frameQ->pos;
             int currentColumn = buf->frameQ->currentColumn;
-            AnchorList* formitem = buf->frameQ->formitem;
+            struct AnchorList* formitem = buf->frameQ->formitem;
 
             fs = popFrameTree(&(buf->frameQ));
             deleteFrameSet(buf->frameset);
@@ -3367,7 +3368,7 @@ goURL0(char* prompt, int relative)
     url = searchKeyData();
     if (url == NULL) {
         Hist* hist = copyHist(URLHist);
-        Anchor* a;
+        struct Anchor* a;
 
         current = baseURL(Currentbuf);
         if (current) {
@@ -3551,7 +3552,7 @@ DEFUN(pginfo, INFO, "Display information about the current document")
 void follow_map(struct parsed_tagarg* arg)
 {
     char* name = tag_get_value(arg, "link");
-    Anchor* an;
+    struct Anchor* an;
     int x, y;
     struct Url p_url;
 
@@ -3615,9 +3616,9 @@ DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
 }
 
 static void
-anchorMn(Anchor* (*menu_func)(Buffer*), int go)
+anchorMn(struct Anchor* (*menu_func)(Buffer*), int go)
 {
-    Anchor* a;
+    struct Anchor* a;
     struct BufferPoint* po;
 
     if (!Currentbuf->href || !Currentbuf->hmarklist)
@@ -3771,7 +3772,7 @@ static void
 _peekURL(int only_img)
 {
 
-    Anchor* a;
+    struct Anchor* a;
     struct Url pu;
     static Str s = NULL;
     static Lineprop* p = NULL;
@@ -4337,7 +4338,7 @@ DEFUN(extbrz, EXTERN, "Display using an external browser")
 
 DEFUN(linkbrz, EXTERN_LINK, "Display target using an external browser")
 {
-    Anchor* a;
+    struct Anchor* a;
     struct Url pu;
 
     if (Currentbuf->firstLine == NULL)
@@ -5260,7 +5261,7 @@ static void
 followTab(struct TabBuffer* tab)
 {
     Buffer* buf;
-    Anchor* a;
+    struct Anchor* a;
 
 #ifdef USE_IMAGE
     a = retrieveCurrentImg(Currentbuf);

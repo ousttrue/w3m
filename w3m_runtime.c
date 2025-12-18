@@ -1,4 +1,6 @@
 #include "w3m_runtime.h"
+#include "anchor.h"
+#include "frame.h"
 #include "fm.h"
 #include "tab.h"
 #include "buffer.h"
@@ -592,7 +594,7 @@ Buffer* loadLink(char* url, char* target, char* referer, FormList* request, bool
     discardBuffer(buf);
     rFrame();
     {
-        Anchor* al = NULL;
+        struct Anchor* al = NULL;
         char* label = pu.label;
 
         if (label && f_element->element->attr == F_BODY) {
@@ -695,7 +697,7 @@ save_submit_formlist(FormItemList* src)
 
 void _followForm(bool submit, bool on_target, bool do_download)
 {
-    Anchor *a, *a2;
+    struct Anchor *a, *a2;
     char* p;
     FormItemList *fi, *f2;
     Str tmp, tmp2;
@@ -873,7 +875,7 @@ void _followForm(bool submit, bool on_target, bool do_download)
 
 bool currentBufferSubmit()
 {
-    Anchor* a = Currentbuf->submit;
+    struct Anchor* a = Currentbuf->submit;
     if (!a) {
         return false;
     }
@@ -1026,7 +1028,7 @@ static void set_buffer_environ(Buffer* buf)
     }
     l = buf->currentLine;
     if (l && (buf != prev_buf || l != prev_line || buf->pos != prev_pos)) {
-        Anchor* a;
+        struct Anchor* a;
         struct Url pu;
         char* s = GetWord(buf);
         set_environ("W3M_CURRENT_WORD", s ? s : "");

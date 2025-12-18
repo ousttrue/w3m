@@ -1,4 +1,5 @@
 #include "display.h"
+#include "anchor.h"
 #include "maparea.h"
 #include "tab.h"
 #include "image.h"
@@ -276,12 +277,12 @@ make_lastline_message(Buffer* buf)
         else
 #endif
         {
-            Anchor* a = retrieveCurrentAnchor(buf);
+            struct Anchor* a = retrieveCurrentAnchor(buf);
             char* p = NULL;
             if (a && a->title && *a->title)
                 p = a->title;
             else {
-                Anchor* a_img = retrieveCurrentImg(buf);
+                struct Anchor* a_img = retrieveCurrentImg(buf);
                 if (a_img && a_img->title && *a_img->title)
                     p = a_img->title;
             }
@@ -440,12 +441,12 @@ void displayBuffer(Buffer* buf, int mode)
 }
 
 static void
-drawAnchorCursor0(Buffer* buf, AnchorList* al, int hseq, int prevhseq,
+drawAnchorCursor0(Buffer* buf, struct AnchorList* al, int hseq, int prevhseq,
     int tline, int eline, int active)
 {
     int i, j;
     struct Line* l;
-    Anchor* an;
+    struct Anchor* an;
 
     l = buf->topLine;
     for (j = 0; j < al->nanchor; j++) {
@@ -491,7 +492,7 @@ drawAnchorCursor0(Buffer* buf, AnchorList* al, int hseq, int prevhseq,
 static void
 drawAnchorCursor(Buffer* buf)
 {
-    Anchor* an;
+    struct Anchor* an;
     int hseq, prevhseq;
     int tline, eline;
 
@@ -603,7 +604,7 @@ redrawLine(Buffer* buf, struct Line* l, int i)
     Linecolor* pc;
 #endif
 #ifdef USE_COLOR
-    Anchor* a;
+    struct Anchor* a;
     struct Url url;
     int k, vpos = -1;
 #endif
@@ -756,7 +757,7 @@ redrawLineImage(Buffer* buf, struct Line* l, int i)
 {
     int j, pos, rcol;
     int column = buf->currentColumn;
-    Anchor* a;
+    struct Anchor* a;
     int x, y, sx, sy, w, h;
 
     if (l == NULL)
@@ -834,7 +835,7 @@ redrawLineRegion(Buffer* buf, struct Line* l, int i, int bpos, int epos)
 #endif
     int bcol, ecol;
 #ifdef USE_COLOR
-    Anchor* a;
+    struct Anchor* a;
     struct Url url;
     int k, vpos = -1;
 #endif

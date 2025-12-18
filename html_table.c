@@ -1,4 +1,5 @@
 #include "html_table.h"
+#include "anchor.h"
 #include "w3m_runtime.h"
 #include <sys/types.h>
 #include <stdio.h>

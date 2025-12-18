@@ -1,4 +1,5 @@
 #include "menu.h"
+#include "anchor.h"
 #include "w3m_runtime.h"
 #include "display.h"
 #include "tab.h"
@@ -2047,7 +2048,7 @@ smDelTab(char c)
 
     if (CurrentMenu->select < 0 || CurrentMenu->select >= SelTabMenu.nitem)
         return (MENU_NOTHING);
-    for (i = 0, tab = LastTab; i < CurrentMenu->select && tab != NULL;
+    for (i = 0, tab = LastTab(); i < CurrentMenu->select && tab != NULL;
         i++, tab = tab->prevTab)
         ;
     deleteTab(tab);
@@ -2338,13 +2339,13 @@ link_menu(Buffer* buf)
 
 /* --- LinkMenu (END) --- */
 
-Anchor*
+struct Anchor*
 accesskey_menu(Buffer* buf)
 {
     Menu menu;
-    AnchorList* al = buf->href;
-    Anchor* a;
-    Anchor** ap;
+    struct AnchorList* al = buf->href;
+    struct Anchor* a;
+    struct Anchor** ap;
     int i, n, nitem = 0, key = -1;
     char** label;
     char* t;
@@ -2361,7 +2362,7 @@ accesskey_menu(Buffer* buf)
         return NULL;
 
     label = New_N(char*, nitem + 1);
-    ap = New_N(Anchor*, nitem);
+    ap = New_N(struct Anchor*, nitem);
     for (i = 0, n = 0; i < al->nanchor; i++) {
         a = &al->anchors[i];
         if (!a->slave && a->accesskey && IS_ASCII(a->accesskey)) {
@@ -2439,13 +2440,13 @@ lmSelect(char c)
         return (MENU_NOTHING);
 }
 
-Anchor*
+struct Anchor*
 list_menu(Buffer* buf)
 {
     Menu menu;
-    AnchorList* al = buf->href;
-    Anchor* a;
-    Anchor** ap;
+    struct AnchorList* al = buf->href;
+    struct Anchor* a;
+    struct Anchor** ap;
     int i, n, nitem = 0, key = -1, two = FALSE;
     char** label;
     char* t;
@@ -2464,7 +2465,7 @@ list_menu(Buffer* buf)
     if (nitem >= nlmKeys)
         two = TRUE;
     label = New_N(char*, nitem + 1);
-    ap = New_N(Anchor*, nitem);
+    ap = New_N(struct Anchor*, nitem);
     for (i = 0, n = 0; i < al->nanchor; i++) {
         a = &al->anchors[i];
         if (!a->slave) {
