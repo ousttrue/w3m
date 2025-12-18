@@ -1,4 +1,5 @@
 #include "w3m_runtime.h"
+#include "download.h"
 #include "tab.h"
 #include "etc.h"
 #include "image.h"

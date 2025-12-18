@@ -113,7 +113,6 @@ static void do_dump(Buffer*);
 int prec_num = 0;
 int prev_key = -1;
 int on_target = 1;
-static int add_download_list = FALSE;
 
 void set_buffer_environ(Buffer*);
 static void save_buffer_position(Buffer* buf);
@@ -1069,22 +1068,11 @@ bool w3m_args(int argc, char** argv)
         w3m_exit(0);
     }
 
-    if (add_download_list) {
-        add_download_list = FALSE;
-        CurrentTab = LastTab;
-        if (!FirstTab) {
-            FirstTab = LastTab = CurrentTab = newTab();
-            nTab = 1;
-        }
-        if (!Firstbuf || Firstbuf == NO_BUFFER) {
-            Firstbuf = Currentbuf = newBuffer(INIT_BUFFER_WIDTH);
-            Currentbuf->bufferprop = BP_INTERNAL | BP_NO_URL;
-            Currentbuf->buffername = DOWNLOAD_LIST_TITLE;
-        } else
-            Currentbuf = Firstbuf;
-        ldDL();
-    } else
+    if(hasDownloadList()){
+    } else {
         CurrentTab = FirstTab;
+    }
+
     if (!FirstTab || !Firstbuf || Firstbuf == NO_BUFFER) {
         if (newbuf == NO_BUFFER) {
             if (fmInitialized())
@@ -1126,10 +1114,7 @@ bool w3m_args(int argc, char** argv)
 void w3m_loop()
 {
     for (;;) {
-        if (add_download_list) {
-            add_download_list = FALSE;
-            ldDL();
-        }
+        download_update();
         if (Currentbuf->submit) {
             Anchor* a = Currentbuf->submit;
             Currentbuf->submit = NULL;
@@ -1486,8 +1471,6 @@ void saveBufferInfo()
     fclose(fp);
 }
 #endif
-
-
 
 static void
 repBuffer(Buffer* oldbuf, Buffer* buf)
@@ -2453,9 +2436,8 @@ end:
 static void
 _quitfm(int confirm)
 {
-    char* ans = "y";
-
-    if (checkDownloadList())
+    const char* ans = "y";
+    if (download_checkList())
         /* FIXME: gettextize? */
         ans = inputChar("Download process retains. "
                         "Do you want to exit w3m? (y/n)");
@@ -6283,31 +6265,6 @@ DEFUN(tabL, TAB_LEFT, "Move left along the tab bar")
         tab = tab->prevTab, i++)
         ;
     moveTab(CurrentTab, tab ? tab : FirstTab, FALSE);
-}
-
-void addDownloadList(pid_t pid, char* url, char* save, char* lock, clen_t size)
-{
-    DownloadList* d;
-
-    d = New(DownloadList);
-    d->pid = pid;
-    d->url = url;
-    if (save[0] != '/' && save[0] != '~')
-        save = Strnew_m_charp(CurrentDir, "/", save, NULL)->ptr;
-    d->save = expandPath(save);
-    d->lock = lock;
-    d->size = size;
-    d->time = time(0);
-    d->running = TRUE;
-    d->err = 0;
-    d->next = NULL;
-    d->prev = LastDL;
-    if (LastDL)
-        LastDL->next = d;
-    else
-        FirstDL = d;
-    LastDL = d;
-    add_download_list = TRUE;
 }
 
 void download_action(struct parsed_tagarg* arg)

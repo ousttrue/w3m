@@ -5,7 +5,17 @@
 #include "image.h"
 #include "fm.h"
 
-bool checkDownloadList(void)
+static bool add_download_list = false;
+
+void download_update()
+{
+    if (add_download_list) {
+        add_download_list = false;
+        ldDL();
+    }
+}
+
+bool download_checkList(void)
 {
     if (!FirstDL)
         return false;
@@ -127,7 +137,7 @@ void download_panel()
         }
         return;
     }
-    bool reload = checkDownloadList();
+    bool reload = download_checkList();
     Buffer* buf = DownloadListBuffer();
     if (!buf) {
         displayBuffer(Currentbuf, B_NORMAL);
@@ -150,4 +160,51 @@ void download_panel()
         Currentbuf->event = setAlarmEvent(Currentbuf->event, 1, AL_IMPLICIT,
             FUNCNAME_reload, NULL);
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
+}
+
+void addDownloadList(pid_t pid, char* url, char* save, char* lock, size_t size)
+{
+    DownloadList* d;
+
+    d = New(DownloadList);
+    d->pid = pid;
+    d->url = url;
+    if (save[0] != '/' && save[0] != '~')
+        save = Strnew_m_charp(CurrentDir, "/", save, NULL)->ptr;
+    d->save = expandPath(save);
+    d->lock = lock;
+    d->size = size;
+    d->time = time(0);
+    d->running = TRUE;
+    d->err = 0;
+    d->next = NULL;
+    d->prev = LastDL;
+    if (LastDL)
+        LastDL->next = d;
+    else
+        FirstDL = d;
+    LastDL = d;
+    add_download_list = TRUE;
+}
+
+bool hasDownloadList()
+{
+    if (add_download_list) {
+        add_download_list = FALSE;
+        CurrentTab = LastTab;
+        if (!FirstTab) {
+            FirstTab = LastTab = CurrentTab = newTab();
+            nTab = 1;
+        }
+        if (!Firstbuf || Firstbuf == NO_BUFFER) {
+            Firstbuf = Currentbuf = newBuffer(INIT_BUFFER_WIDTH);
+            Currentbuf->bufferprop = BP_INTERNAL | BP_NO_URL;
+            Currentbuf->buffername = DOWNLOAD_LIST_TITLE;
+        } else
+            Currentbuf = Firstbuf;
+        ldDL();
+        return true;
+    } else {
+        return false;
+    }
 }
