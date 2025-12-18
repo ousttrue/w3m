@@ -1,4 +1,7 @@
 #include "w3m_runtime.h"
+#include "download.h"
+#include "tab.h"
+#include "buffer.h"
 #include "image.h"
 #define MAINPROGRAM
 #include "fm.h"
@@ -95,7 +98,6 @@ JMP_BUF IntReturn;
 _JBTYPE IntReturn[_JBLEN];
 #endif /* __MINGW32_VERSION */
 
-static void delBuffer(Buffer* buf);
 static void cmd_loadfile(char* path);
 static void cmd_loadURL(char* url, ParsedURL* current, char* referer,
     FormList* request);
@@ -118,9 +120,8 @@ static void save_buffer_position(Buffer* buf);
 
 static void _followForm(int);
 static void _goLine(char*);
-static void _newT(void);
-static void followTab(TabBuffer* tab);
-static void moveTab(TabBuffer* t, TabBuffer* t2, int right);
+static void followTab(struct TabBuffer* tab);
+static void moveTab(struct TabBuffer* t, struct TabBuffer* t2, int right);
 static void _nextA(int);
 static void _prevA(int);
 static int check_target = TRUE;
@@ -1182,29 +1183,29 @@ void w3m_loop()
         mySignal(SIGWINCH, resize_hook);
 #endif
 
-// #ifdef USE_IMAGE
-//         if (activeImage && displayImage && Currentbuf->img && !Currentbuf->image_loaded) {
-//             do {
-// #ifdef SIGWINCH
-//                 if (need_resize_screen)
-//                     resize_screen();
-// #endif
-//                 loadImage(Currentbuf, IMG_FLAG_NEXT);
-//             } while (sleep_till_anykey(1, 0) <= 0);
-//         }
-// #ifdef SIGWINCH
-//         else
-// #endif
-// #endif
+        // #ifdef USE_IMAGE
+        //         if (activeImage && displayImage && Currentbuf->img && !Currentbuf->image_loaded) {
+        //             do {
+        // #ifdef SIGWINCH
+        //                 if (need_resize_screen)
+        //                     resize_screen();
+        // #endif
+        //                 loadImage(Currentbuf, IMG_FLAG_NEXT);
+        //             } while (sleep_till_anykey(1, 0) <= 0);
+        //         }
+        // #ifdef SIGWINCH
+        //         else
+        // #endif
+        // #endif
 
-// #ifdef SIGWINCH
-//         {
-//             do {
-//                 if (need_resize_screen)
-//                     resize_screen();
-//             } while (sleep_till_anykey(1, 0) <= 0);
-//         }
-// #endif
+        // #ifdef SIGWINCH
+        //         {
+        //             do {
+        //                 if (need_resize_screen)
+        //                     resize_screen();
+        //             } while (sleep_till_anykey(1, 0) <= 0);
+        //         }
+        // #endif
 
         int c = getch();
         last_key = c;
@@ -1486,40 +1487,7 @@ void saveBufferInfo()
 }
 #endif
 
-static void
-pushBuffer(Buffer* buf)
-{
-    Buffer* b;
 
-#ifdef USE_IMAGE
-    deleteImage(Currentbuf);
-#endif
-    if (clear_buffer)
-        tmpClearBuffer(Currentbuf);
-    if (Firstbuf == Currentbuf) {
-        buf->nextBuffer = Firstbuf;
-        Firstbuf = Currentbuf = buf;
-    } else if ((b = prevBuffer(Firstbuf, Currentbuf)) != NULL) {
-        b->nextBuffer = buf;
-        buf->nextBuffer = Currentbuf;
-        Currentbuf = buf;
-    }
-#ifdef USE_BUFINFO
-    saveBufferInfo();
-#endif
-}
-
-static void
-delBuffer(Buffer* buf)
-{
-    if (buf == NULL)
-        return;
-    if (Currentbuf == buf)
-        Currentbuf = buf->nextBuffer;
-    Firstbuf = deleteBuffer(Firstbuf, buf);
-    if (!Currentbuf)
-        Currentbuf = Firstbuf;
-}
 
 static void
 repBuffer(Buffer* oldbuf, Buffer* buf)
@@ -5199,10 +5167,10 @@ mouse_scroll_line(void)
         return fixed_wheel_scroll_count;
 }
 
-static TabBuffer*
+static struct TabBuffer*
 posTab(int x, int y)
 {
-    TabBuffer* tab;
+    struct TabBuffer* tab;
 
     if (mouse_action.menu_str && x < mouse_action.menu_width && y == 0)
         return NO_TABBUFFER;
@@ -5293,7 +5261,7 @@ process_mouse(int btn, int x, int y)
 {
     int delta_x, delta_y, i;
     static int press_btn = MOUSE_BTN_RESET, press_x, press_y;
-    TabBuffer* t;
+    struct TabBuffer* t;
     int ny = -1;
 
     if (nTab > 1 || mouse_action.menu_str)
@@ -5565,7 +5533,7 @@ DEFUN(menuMs, MENU_MOUSE, "Pop up menu at mouse pointer")
 
 DEFUN(tabMs, TAB_MOUSE, "Select tab by mouse action")
 {
-    TabBuffer* tab;
+    struct TabBuffer* tab;
 
     if (!mouse_action.in_action)
         return;
@@ -5578,7 +5546,7 @@ DEFUN(tabMs, TAB_MOUSE, "Select tab by mouse action")
 
 DEFUN(closeTMs, CLOSE_TAB_MOUSE, "Close tab at mouse pointer")
 {
-    TabBuffer* tab;
+    struct TabBuffer* tab;
 
     if (!mouse_action.in_action)
         return;
@@ -6059,60 +6027,16 @@ DEFUN(defKey, DEFINE_KEY, "Define a binding between a key stroke combination and
     displayBuffer(Currentbuf, B_NORMAL);
 }
 
-TabBuffer*
-newTab(void)
-{
-    TabBuffer* n;
-
-    n = New(TabBuffer);
-    if (n == NULL)
-        return NULL;
-    n->nextTab = NULL;
-    n->currentBuffer = NULL;
-    n->firstBuffer = NULL;
-    return n;
-}
-
-static void
-_newT(void)
-{
-    TabBuffer* tag;
-    Buffer* buf;
-    int i;
-
-    tag = newTab();
-    if (!tag)
-        return;
-
-    buf = newBuffer(Currentbuf->width);
-    copyBuffer(buf, Currentbuf);
-    buf->nextBuffer = NULL;
-    for (i = 0; i < MAX_LB; i++)
-        buf->linkBuffer[i] = NULL;
-    (*buf->clone)++;
-    tag->firstBuffer = tag->currentBuffer = buf;
-
-    tag->nextTab = CurrentTab->nextTab;
-    tag->prevTab = CurrentTab;
-    if (CurrentTab->nextTab)
-        CurrentTab->nextTab->prevTab = tag;
-    else
-        LastTab = tag;
-    CurrentTab->nextTab = tag;
-    CurrentTab = tag;
-    nTab++;
-}
-
 DEFUN(newT, NEW_TAB, "Open a new tab (with current document)")
 {
     _newT();
     displayBuffer(Currentbuf, B_REDRAW_IMAGE);
 }
 
-static TabBuffer*
+static struct TabBuffer*
 numTab(int n)
 {
-    TabBuffer* tab;
+    struct TabBuffer* tab;
     int i;
 
     if (n == 0)
@@ -6126,62 +6050,8 @@ numTab(int n)
     return tab;
 }
 
-void calcTabPos(void)
-{
-    TabBuffer* tab;
-#if 0
-    int lcol = 0, rcol = 2, col;
-#else
-    int lcol = 0, rcol = 0, col;
-#endif
-    int n1, n2, na, nx, ny, ix, iy;
-
-#ifdef USE_MOUSE
-    lcol = mouse_action.menu_str ? mouse_action.menu_width : 0;
-#endif
-
-    if (nTab <= 0)
-        return;
-    n1 = (TTY_COLS() - rcol - lcol) / TabCols;
-    if (n1 >= nTab) {
-        n2 = 1;
-        ny = 1;
-    } else {
-        if (n1 < 0)
-            n1 = 0;
-        n2 = TTY_COLS() / TabCols;
-        if (n2 == 0)
-            n2 = 1;
-        ny = (nTab - n1 - 1) / n2 + 2;
-    }
-    na = n1 + n2 * (ny - 1);
-    n1 -= (na - nTab) / ny;
-    if (n1 < 0)
-        n1 = 0;
-    na = n1 + n2 * (ny - 1);
-    tab = FirstTab;
-    for (iy = 0; iy < ny && tab; iy++) {
-        if (iy == 0) {
-            nx = n1;
-            col = TTY_COLS() - rcol - lcol;
-        } else {
-            nx = n2 - (na - nTab + (iy - 1)) / (ny - 1);
-            col = TTY_COLS();
-        }
-        for (ix = 0; ix < nx && tab; ix++, tab = tab->nextTab) {
-            tab->x1 = col * ix / nx;
-            tab->x2 = col * (ix + 1) / nx - 1;
-            tab->y = iy;
-            if (iy == 0) {
-                tab->x1 += lcol;
-                tab->x2 += lcol;
-            }
-        }
-    }
-}
-
-TabBuffer*
-deleteTab(TabBuffer* tab)
+struct TabBuffer*
+deleteTab(struct TabBuffer* tab)
 {
     Buffer *buf, *next;
 
@@ -6213,7 +6083,7 @@ deleteTab(TabBuffer* tab)
 
 DEFUN(closeT, CLOSE_TAB, "Close tab")
 {
-    TabBuffer* tab;
+    struct TabBuffer* tab;
 
     if (nTab <= 1)
         return;
@@ -6257,7 +6127,7 @@ DEFUN(prevT, PREV_TAB, "Switch to the previous tab")
 }
 
 static void
-followTab(TabBuffer* tab)
+followTab(struct TabBuffer* tab)
 {
     Buffer* buf;
     Anchor* a;
@@ -6310,7 +6180,7 @@ DEFUN(tabA, TAB_LINK, "Follow current hyperlink in a new tab")
 }
 
 static void
-tabURL0(TabBuffer* tab, char* prompt, int relative)
+tabURL0(struct TabBuffer* tab, char* prompt, int relative)
 {
     Buffer* buf;
 
@@ -6357,7 +6227,7 @@ DEFUN(tabrURL, TAB_GOTO_RELATIVE, "Open relative address in a new tab")
 }
 
 static void
-moveTab(TabBuffer* t, TabBuffer* t2, int right)
+moveTab(struct TabBuffer* t, struct TabBuffer* t2, int right)
 {
     if (t2 == NO_TABBUFFER)
         t2 = FirstTab;
@@ -6395,7 +6265,7 @@ moveTab(TabBuffer* t, TabBuffer* t2, int right)
 
 DEFUN(tabR, TAB_RIGHT, "Move right along the tab bar")
 {
-    TabBuffer* tab;
+    struct TabBuffer* tab;
     int i;
 
     for (tab = CurrentTab, i = 0; tab && i < PREC_NUM;
@@ -6406,7 +6276,7 @@ DEFUN(tabR, TAB_RIGHT, "Move right along the tab bar")
 
 DEFUN(tabL, TAB_LEFT, "Move left along the tab bar")
 {
-    TabBuffer* tab;
+    struct TabBuffer* tab;
     int i;
 
     for (tab = CurrentTab, i = 0; tab && i < PREC_NUM;
@@ -6438,118 +6308,6 @@ void addDownloadList(pid_t pid, char* url, char* save, char* lock, clen_t size)
         FirstDL = d;
     LastDL = d;
     add_download_list = TRUE;
-}
-
-int checkDownloadList(void)
-{
-    DownloadList* d;
-    struct stat st;
-
-    if (!FirstDL)
-        return FALSE;
-    for (d = FirstDL; d != NULL; d = d->next) {
-        if (d->running && !lstat(d->lock, &st))
-            return TRUE;
-    }
-    return FALSE;
-}
-
-static char*
-convert_size3(clen_t size)
-{
-    Str tmp = Strnew();
-    int n;
-
-    do {
-        n = size % 1000;
-        size /= 1000;
-        tmp = Sprintf(size ? ",%.3d%s" : "%d%s", n, tmp->ptr);
-    } while (size);
-    return tmp->ptr;
-}
-
-static Buffer*
-DownloadListBuffer(void)
-{
-    DownloadList* d;
-    Str src = NULL;
-    struct stat st;
-    time_t cur_time;
-    int duration, rate, eta;
-    size_t size;
-
-    if (!FirstDL)
-        return NULL;
-    cur_time = time(0);
-    /* FIXME: gettextize? */
-    src = Strnew_charp("<html><head><title>" DOWNLOAD_LIST_TITLE
-                       "</title></head>\n<body><h1 align=center>" DOWNLOAD_LIST_TITLE "</h1>\n"
-                       "<form method=internal action=download><hr>\n");
-    for (d = LastDL; d != NULL; d = d->prev) {
-        if (lstat(d->lock, &st))
-            d->running = FALSE;
-        Strcat_charp(src, "<pre>\n");
-        Strcat(src, Sprintf("%s\n  --&gt; %s\n  ", html_quote(d->url), html_quote(conv_from_system(d->save))));
-        duration = cur_time - d->time;
-        if (!stat(d->save, &st)) {
-            size = st.st_size;
-            if (!d->running) {
-                if (!d->err)
-                    d->size = size;
-                duration = st.st_mtime - d->time;
-            }
-        } else
-            size = 0;
-        if (d->size) {
-            int i, l = TTY_COLS() - 6;
-            if (size < d->size)
-                i = 1.0 * l * size / d->size;
-            else
-                i = l;
-            l -= i;
-            while (i-- > 0)
-                Strcat_char(src, '#');
-            while (l-- > 0)
-                Strcat_char(src, '_');
-            Strcat_char(src, '\n');
-        }
-        if ((d->running || d->err) && size < d->size)
-            Strcat(src, Sprintf("  %s / %s bytes (%d%%)", convert_size3(size), convert_size3(d->size), (int)(100.0 * size / d->size)));
-        else
-            Strcat(src, Sprintf("  %s bytes loaded", convert_size3(size)));
-        if (duration > 0) {
-            rate = size / duration;
-            Strcat(src, Sprintf("  %02d:%02d:%02d  rate %s/sec", duration / (60 * 60), (duration / 60) % 60, duration % 60, convert_size(rate, 1)));
-            if (d->running && size < d->size && rate) {
-                eta = (d->size - size) / rate;
-                Strcat(src, Sprintf("  eta %02d:%02d:%02d", eta / (60 * 60), (eta / 60) % 60, eta % 60));
-            }
-        }
-        Strcat_char(src, '\n');
-        if (!d->running) {
-            Strcat(src, Sprintf("<input type=submit name=ok%d value=OK>", d->pid));
-            switch (d->err) {
-            case 0:
-                if (size < d->size)
-                    Strcat_charp(src, " Download ended but probably not complete");
-                else
-                    Strcat_charp(src, " Download complete");
-                break;
-            case 1:
-                Strcat_charp(src, " Error: could not open destination file");
-                break;
-            case 2:
-                Strcat_charp(src, " Error: could not write to file (disk full)");
-                break;
-            default:
-                Strcat_charp(src, " Error: unknown reason");
-            }
-        } else
-            Strcat(src, Sprintf("<input type=submit name=stop%d value=STOP>", d->pid));
-        Strcat_charp(src, "\n</pre><hr>\n");
-    }
-    Strcat_charp(src, "</form></body></html>");
-    return loadHTMLString(src);
 }
 
 void download_action(struct parsed_tagarg* arg)
@@ -6604,51 +6362,7 @@ void stopDownload(void)
 /* download panel */
 DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
 {
-    Buffer* buf;
-    int replace = FALSE, new_tab = FALSE;
-#ifdef USE_ALARM
-    int reload;
-#endif
-
-    if (Currentbuf->bufferprop & BP_INTERNAL && !strcmp(Currentbuf->buffername, DOWNLOAD_LIST_TITLE))
-        replace = TRUE;
-    if (!FirstDL) {
-        if (replace) {
-            if (Currentbuf == Firstbuf && Currentbuf->nextBuffer == NULL) {
-                if (nTab > 1)
-                    deleteTab(CurrentTab);
-            } else
-                delBuffer(Currentbuf);
-            displayBuffer(Currentbuf, B_FORCE_REDRAW);
-        }
-        return;
-    }
-#ifdef USE_ALARM
-    reload = checkDownloadList();
-#endif
-    buf = DownloadListBuffer();
-    if (!buf) {
-        displayBuffer(Currentbuf, B_NORMAL);
-        return;
-    }
-    buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
-    if (replace) {
-        COPY_BUFROOT(buf, Currentbuf);
-        restorePosition(buf, Currentbuf);
-    }
-    if (!replace && open_tab_dl_list) {
-        _newT();
-        new_tab = TRUE;
-    }
-    pushBuffer(buf);
-    if (replace || new_tab)
-        deletePrevBuf();
-#ifdef USE_ALARM
-    if (reload)
-        Currentbuf->event = setAlarmEvent(Currentbuf->event, 1, AL_IMPLICIT,
-            FUNCNAME_reload, NULL);
-#endif
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    download_panel();
 }
 
 static void

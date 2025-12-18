@@ -1,5 +1,5 @@
-/* $Id: search.c,v 1.31 2004/03/23 16:44:02 ukai Exp $ */
 #include "fm.h"
+#include "tab.h"
 #include "regex.h"
 #include <signal.h>
 #include <errno.h>

@@ -1,11 +1,12 @@
 #pragma once
 #include "Str.h"
 
+struct _Buffer;
+struct _imageCache;
 void initImage(void);
 void termImage(void);
-struct _imageCache;
 void addImage(struct _imageCache* cache, int x, int y, int sx, int sy, int w, int h);
-void drawImage(void);
+void drawImage(struct _Buffer* currentbuf);
 void clearImage(void);
 
 struct _Buffer;

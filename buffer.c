@@ -1,3 +1,5 @@
+#include "buffer.h"
+#include "tab.h"
 #include "w3m_runtime.h"
 #include "image.h"
 #include "fm.h"
@@ -373,7 +375,7 @@ selectBuffer(Buffer* firstbuf, Buffer* currentbuf, char* selectchar)
     int i, cpoint, /* Current Buffer Number */
         spoint, /* Current Line on Screen */
         maxbuf, sclimit = LASTLINE(); /* Upper limit of line * number in
-                                     * the * screen */
+                                       * the * screen */
     Buffer *buf, *topbuf;
     char c;
 
@@ -737,4 +739,15 @@ int readBufferCache(Buffer* buf)
     unlink(buf->savecache);
     buf->savecache = NULL;
     return 0;
+}
+
+void delBuffer(Buffer* buf)
+{
+    if (buf == NULL)
+        return;
+    if (Currentbuf == buf)
+        Currentbuf = buf->nextBuffer;
+    Firstbuf = deleteBuffer(Firstbuf, buf);
+    if (!Currentbuf)
+        Currentbuf = Firstbuf;
 }

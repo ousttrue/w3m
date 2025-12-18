@@ -1,4 +1,5 @@
 #include "menu.h"
+#include "tab.h"
 #include "w3m_runtime.h"
 #include "image.h"
 #include "fm.h"
@@ -1950,25 +1951,21 @@ DEFUN(tabMn, TAB_MENU, "Pop up tab selection menu")
 static void
 initSelTabMenu(void)
 {
-    int i, nitem, len = 0, l;
-    TabBuffer* tab;
-    Buffer* buf;
-    Str str;
-    char** label;
-    char* p;
     static char* comment = " SPC for select / D for delete tab ";
-
     SelTabV = -1;
-    for (i = 0, tab = LastTab; tab != NULL; i++, tab = tab->prevTab) {
+    int i = 0;
+    for (struct TabBuffer* tab = LastTab; tab != NULL; i++, tab = tab->prevTab) {
         if (tab == CurrentTab)
             SelTabV = i;
     }
-    nitem = i;
+    int nitem = i;
 
-    label = New_N(char*, nitem + 2);
-    for (i = 0, tab = LastTab; i < nitem; i++, tab = tab->prevTab) {
-        buf = tab->currentBuffer;
-        str = Sprintf("<%s>", buf->buffername);
+    char** label = New_N(char*, nitem + 2);
+    int len=0;
+    i = 0;
+    for (struct TabBuffer* tab = LastTab; i < nitem; i++, tab = tab->prevTab) {
+        Buffer* buf = tab->currentBuffer;
+        Str str = Sprintf("<%s>", buf->buffername);
         if (buf->filename != NULL) {
             switch (buf->currentURL.scheme) {
             case SCM_LOCAL:
@@ -1981,23 +1978,24 @@ initSelTabMenu(void)
                 /* case SCM_UNKNOWN: */
             case SCM_MISSING:
                 break;
-            default:
-                p = url_decode2(parsedURL2Str(&buf->currentURL)->ptr, NULL);
+            default: {
+                char* p = url_decode2(parsedURL2Str(&buf->currentURL)->ptr, NULL);
                 Strcat_charp(str, p);
                 break;
+            }
             }
         }
         label[i] = str->ptr;
         if (len < str->length)
             len = str->length;
     }
-    l = strlen(comment);
+    int l = strlen(comment);
     if (len < l + 4)
         len = l + 4;
     if (len > TTY_COLS() - 2 * FRAME_WIDTH)
         len = TTY_COLS() - 2 * FRAME_WIDTH;
     len = (len > 1) ? ((len - l + 1) / 2) : 0;
-    str = Strnew();
+    Str str = Strnew();
     for (i = 0; i < len; i++)
         Strcat_char(str, '-');
     Strcat_charp(str, comment);
@@ -2018,7 +2016,7 @@ static void
 smChTab(void)
 {
     int i;
-    TabBuffer* tab;
+    struct TabBuffer* tab;
     Buffer* buf;
 
     if (SelTabV < 0 || SelTabV >= SelTabMenu.nitem)
@@ -2043,7 +2041,7 @@ static int
 smDelTab(char c)
 {
     int i, x, y, mselect;
-    TabBuffer* tab;
+    struct TabBuffer* tab;
 
     if (CurrentMenu->select < 0 || CurrentMenu->select >= SelTabMenu.nitem)
         return (MENU_NOTHING);

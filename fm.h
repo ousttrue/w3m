@@ -533,16 +533,6 @@ typedef struct _BufferPos {
     struct _BufferPos* prev;
 } BufferPos;
 
-typedef struct _TabBuffer {
-    struct _TabBuffer* nextTab;
-    struct _TabBuffer* prevTab;
-    Buffer* currentBuffer;
-    Buffer* firstBuffer;
-    short x1;
-    short x2;
-    short y;
-} TabBuffer;
-
 typedef struct _DownloadList {
     pid_t pid;
     char* url;
@@ -914,17 +904,12 @@ global char* MyProgramName init("w3m");
  * global Buffer *Currentbuf;
  * global Buffer *Firstbuf;
  */
-global TabBuffer* CurrentTab;
-global TabBuffer* FirstTab;
-global TabBuffer* LastTab;
 global int open_tab_blank init(FALSE);
 global int open_tab_dl_list init(FALSE);
 global int close_tab_back init(FALSE);
 global int nTab;
 global int TabCols init(10);
-#define NO_TABBUFFER ((TabBuffer*)1)
-#define Currentbuf (CurrentTab->currentBuffer)
-#define Firstbuf (CurrentTab->firstBuffer)
+#define NO_TABBUFFER ((struct TabBuffer*)1)
 global DownloadList* FirstDL init(NULL);
 global DownloadList* LastDL init(NULL);
 global int CurrentKey;

@@ -1,4 +1,5 @@
 #include "image.h"
+#include "tab.h"
 #include "etc.h"
 #include "w3m_runtime.h"
 #include "fm.h"
@@ -362,8 +363,6 @@ static void put_image_sixel(char* url, int x, int y, int w, int h, int sx, int s
             writestr("\x1b[?80l");
         }
     }
-
-    tty_MOVE(Currentbuf->cursorY, Currentbuf->cursorX);
 }
 
 static Str get_image_osc5379(char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh)
@@ -562,7 +561,7 @@ cleanup:
     tty_MOVE(Currentbuf->cursorY, Currentbuf->cursorX);
 }
 
-void drawImage(void)
+void drawImage(struct _Buffer* currentbuf)
 {
     static char buf[64];
     int j, draw = FALSE;
@@ -613,6 +612,7 @@ void drawImage(void)
                 w = i->cache->a_width > 0 ? i->width : 0;
                 h = i->cache->a_height > 0 ? i->height : 0;
                 put_image_sixel(url, x, y, w, h, i->sx, i->sy, sw * pixel_per_char, sh * pixel_per_line_i, n_terminal_image);
+                tty_MOVE(Currentbuf->cursorY, Currentbuf->cursorX);
             } else if (enable_inline_image == INLINE_IMG_OSC5379) {
                 Str buf = get_image_osc5379(url, x, y, w, h, sx, sy, sw, sh);
                 tty_MOVE(y, x);
@@ -760,7 +760,7 @@ showImageProgress(Buffer* buf)
     }
     if (n) {
         if (enable_inline_image && n == l)
-            drawImage();
+            drawImage(buf);
         message(Sprintf("%d/%d images loaded", l, n)->ptr,
             buf->cursorX + buf->rootX, buf->cursorY + buf->rootY);
         refresh();
@@ -851,7 +851,7 @@ void loadImage(Buffer* buf, int flag)
 
     if (draw && image_buffer) {
         if (!enable_inline_image)
-            drawImage();
+            drawImage(buf);
         showImageProgress(image_buffer);
     }
 

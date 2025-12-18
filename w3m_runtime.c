@@ -195,7 +195,7 @@ void init_tty()
 char* ttyname_tty(void)
 {
     return ttyname(0);
-        // g_runtime.tty_input);
+    // g_runtime.tty_input);
 }
 
 static void

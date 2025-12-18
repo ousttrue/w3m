@@ -7,27 +7,22 @@ is_tty: bool,
 is_rawmode: bool = false,
 termios: ?std.posix.termios = null,
 buffer: [256]u8 = undefined,
-queue: *EpollQueue,
+queue: ?*EpollQueue = null,
 
 pub fn init(allocator: std.mem.Allocator, input: std.fs.File) !@This() {
     var this = @This(){
         .allocator = allocator,
         .input = input,
         .is_tty = std.c.isatty(input.handle) != 0,
-        .queue = try .create(allocator),
     };
     if (this.is_tty) {
         this.termios = try std.posix.tcgetattr(this.input.handle);
     }
 
-    this.queue.add_fd(this.input.handle);
-    try this.queue.start();
-
     return this;
 }
 
 pub fn deinit(this: *@This()) void {
-    this.queue.destroy();
     this.exitRawMode();
 }
 
@@ -59,11 +54,20 @@ pub fn enterRawMode(this: *@This()) !void {
         raw.cc[@intFromEnum(std.posix.V.TIME)] = 0;
         try std.posix.tcsetattr(this.input.handle, .FLUSH, raw);
         this.is_rawmode = true;
+
+        const queue = try EpollQueue.create(this.allocator);
+        queue.add_fd(this.input.handle);
+        try queue.start();
+        this.queue = queue;
     }
 }
 
 pub fn exitRawMode(this: *@This()) void {
     if (this.termios) |termios| {
+        if (this.queue) |queue| {
+            queue.destroy();
+            this.queue = null;
+        }
         std.posix.tcsetattr(this.input.handle, .FLUSH, termios) catch @panic("exitRawMode");
         this.is_rawmode = false;
     }
@@ -84,25 +88,28 @@ pub fn getWinsize(this: @This()) !std.posix.winsize {
 }
 
 pub fn getch(this: *@This()) u8 {
-    // var buf: [1]u8 = undefined;
-    // if (this.input.read(&buf)) |size| {
-    //     if (size == 1) {
-    //         return buf[0];
-    //     } else {
-    //         return 0;
-    //     }
-    // } else |err| {
-    //     @panic(@errorName(err));
-    // }
-    while (true) {
-        const event = this.queue.nextEvent();
-        switch (event) {
-            .key => |key| {
-                return key;
-            },
-            .idle => {
-                //
-            },
+    if (this.queue) |queue| {
+        while (true) {
+            const event = queue.nextEvent();
+            switch (event) {
+                .key => |key| {
+                    return key;
+                },
+                .idle => {
+                    //
+                },
+            }
+        }
+    } else {
+        var buf: [1]u8 = undefined;
+        if (this.input.read(&buf)) |size| {
+            if (size == 1) {
+                return buf[0];
+            } else {
+                return 0;
+            }
+        } else |err| {
+            @panic(@errorName(err));
         }
     }
 }

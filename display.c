@@ -1,4 +1,5 @@
 #include "display.h"
+#include "tab.h"
 #include "image.h"
 #include "w3m_runtime.h"
 
@@ -309,7 +310,7 @@ make_lastline_message(Buffer* buf)
     } else
         /* FIXME: gettextize? */
         msg = Sprintf("%s: code 0x%02x ", msg->ptr, last_key);
-        Strcat_charp(msg, "Viewing");
+    Strcat_charp(msg, "Viewing");
 #ifdef USE_SSL
     if (buf->ssl_certificate)
         Strcat_charp(msg, "[SSL]");
@@ -457,7 +458,7 @@ void displayBuffer(Buffer* buf, int mode)
     refresh();
 #ifdef USE_IMAGE
     if (activeImage && displayImage && buf->img && buf->image_loaded) {
-        drawImage();
+        drawImage(buf);
     }
 #endif
 #ifdef USE_BUFINFO
@@ -574,21 +575,14 @@ redrawNLine(Buffer* buf, int n)
         || mouse_action.menu_str
 #endif
     ) {
-        TabBuffer* t;
-        int l;
-
         move(0, 0);
-#ifdef USE_MOUSE
-        if (mouse_action.menu_str)
-            addstr(mouse_action.menu_str);
-#endif
         clrtoeolx();
-        for (t = FirstTab; t; t = t->nextTab) {
+        for (struct TabBuffer* t = FirstTab; t; t = t->nextTab) {
             move(t->y, t->x1);
             if (t == CurrentTab)
                 bold();
             addch('[');
-            l = t->x2 - t->x1 - 1 - get_strwidth(t->currentBuffer->buffername);
+            int l = t->x2 - t->x1 - 1 - get_strwidth(t->currentBuffer->buffername);
             if (l < 0)
                 l = 0;
             if (l / 2 > 0)
