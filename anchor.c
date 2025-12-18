@@ -1,4 +1,5 @@
 #include "w3m_runtime.h"
+#include "image.h"
 #include "maparea.h"
 #include "fm.h"
 #include "myctype.h"
@@ -543,7 +544,7 @@ void shiftAnchorPosition(AnchorList* al, struct HmarkerList* hl, int line, int p
 void addMultirowsImg(Buffer* buf, AnchorList* al)
 {
     int i, j, k, col, ecol, pos;
-    Image* img;
+    struct Image* img;
     Anchor a_img, a_href, a_form, *a;
     struct Line *l, *ls;
 
@@ -718,7 +719,7 @@ link_list_panel(Buffer* buf)
     FormItemList* fi;
     int i;
     char *t, *u, *p;
-    ParsedURL pu;
+    struct Url pu;
     /* FIXME: gettextize? */
     Str tmp = Strnew_charp("<title>Link List</title>\
 <h1 align=center>Link List</h1>\n");

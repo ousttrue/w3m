@@ -213,7 +213,7 @@ make_lastline_link(Buffer* buf, char* title, char* url)
 #ifdef USE_M17N
     Lineprop* pr;
 #endif
-    ParsedURL pu;
+    struct Url pu;
     char* p;
     int l = TTY_COLS() - 1, i;
 
@@ -604,7 +604,7 @@ redrawLine(Buffer* buf, struct Line* l, int i)
 #endif
 #ifdef USE_COLOR
     Anchor* a;
-    ParsedURL url;
+    struct Url url;
     int k, vpos = -1;
 #endif
 
@@ -774,8 +774,8 @@ redrawLineImage(Buffer* buf, struct Line* l, int i)
         }
         a = retrieveAnchor(buf->img, l->linenumber, pos + j);
         if (a && a->image && a->image->touch < image_touch) {
-            Image* image = a->image;
-            ImageCache* cache;
+            struct Image* image = a->image;
+            struct ImageCache* cache;
 
             cache = image->cache = getImage(image, baseURL(buf),
                 buf->image_flag);
@@ -835,7 +835,7 @@ redrawLineRegion(Buffer* buf, struct Line* l, int i, int bpos, int epos)
     int bcol, ecol;
 #ifdef USE_COLOR
     Anchor* a;
-    ParsedURL url;
+    struct Url url;
     int k, vpos = -1;
 #endif
 

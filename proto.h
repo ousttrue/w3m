@@ -166,17 +166,17 @@ extern void tmpClearBuffer(Buffer* buf);
 extern char* filename_extension(char* patch, int is_url);
 #ifdef USE_EXTERNAL_URI_LOADER
 extern void initURIMethods(void);
-extern Str searchURIMethods(ParsedURL* pu);
+extern Str searchURIMethods(struct Url* pu);
 extern void chkExternalURIBuffer(Buffer* buf);
 #endif
-extern ParsedURL* schemeToProxy(int scheme);
+extern struct Url* schemeToProxy(int scheme);
 #ifdef USE_M17N
-extern wc_ces url_to_charset(const char* url, const ParsedURL* base,
+extern wc_ces url_to_charset(const char* url, const struct Url* base,
     wc_ces doc_charset);
-extern char* url_encode(const char* url, const ParsedURL* base,
+extern char* url_encode(const char* url, const struct Url* base,
     wc_ces doc_charset);
 #if 0
-extern char *url_decode(const char *url, const ParsedURL *base,
+extern char *url_decode(const char *url, const struct Url *base,
 			wc_ces doc_charset);
 #endif
 extern char* url_decode2(const char* url, const Buffer* buf);
@@ -206,7 +206,7 @@ extern void push_symbol(Str str, char symbol, int width, int n);
 #ifdef USE_UNICODE
 extern void update_utf8_symbol(void);
 #endif
-extern Buffer* loadGeneralFile(char* path, ParsedURL* current, char* referer,
+extern Buffer* loadGeneralFile(char* path, struct Url* current, char* referer,
     int flag, FormList* request, bool do_download);
 extern int is_boundary(unsigned char*, unsigned char*);
 extern int is_blank_line(char* line, int indent);
@@ -256,11 +256,11 @@ extern void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src,
 extern Buffer* loadHTMLString(Str page);
 #ifdef USE_GOPHER
 #ifdef USE_M17N
-extern Str loadGopherDir(URLFile* uf, ParsedURL* pu, wc_ces* charset);
-extern Str loadGopherSearch(URLFile* uf, ParsedURL* pu, wc_ces* charset);
+extern Str loadGopherDir(URLFile* uf, struct Url* pu, wc_ces* charset);
+extern Str loadGopherSearch(URLFile* uf, struct Url* pu, wc_ces* charset);
 #else
-extern Str loadGopherDir0(URLFile* uf, ParsedURL* pu);
-extern Str loadGopherSearch0(URLFile* uf, ParsedURL* pu);
+extern Str loadGopherDir0(URLFile* uf, struct Url* pu);
+extern Str loadGopherSearch0(URLFile* uf, struct Url* pu);
 #define loadGopherDir(uf, pu, charset) loadGopherDir0(uf, pu)
 #define loadGopherSearch(uf, pu, charset) loadGopherSearch0(uf, pu)
 #endif
@@ -287,7 +287,7 @@ extern int checkSaveFile(InputStream stream, char* path);
 extern int checkOverWrite(char* path);
 extern char* inputAnswer(char* prompt);
 extern int matchattr(char* p, char* attr, int len, Str* value);
-extern void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu);
+extern void readHeader(URLFile* uf, Buffer* newBuf, int thru, struct Url* pu);
 extern char* checkHeader(Buffer* buf, char* field);
 
 extern void stopDownload(void);
@@ -442,19 +442,19 @@ extern pid_t open_pipe_rw(FILE** fr, FILE** fw);
 
 extern void initMimeTypes(void);
 extern void free_ssl_ctx(void);
-extern ParsedURL* baseURL(Buffer* buf);
+extern struct Url* baseURL(Buffer* buf);
 extern int openSocket(char* hostname, char* remoteport_name,
     unsigned short remoteport_num);
-extern void parseURL(char* url, ParsedURL* p_url, ParsedURL* current);
-extern void copyParsedURL(ParsedURL* p, const ParsedURL* q);
-extern void parseURL2(char* url, ParsedURL* pu, ParsedURL* current);
-extern Str parsedURL2Str(ParsedURL* pu);
-extern Str parsedURL2RefererStr(ParsedURL* pu);
+extern void parseURL(char* url, struct Url* p_url, struct Url* current);
+extern void copyParsedURL(struct Url* p, const struct Url* q);
+extern void parseURL2(char* url, struct Url* pu, struct Url* current);
+extern Str parsedURL2Str(struct Url* pu);
+extern Str parsedURL2RefererStr(struct Url* pu);
 extern int getURLScheme(char** url);
 extern void init_stream(URLFile* uf, int scheme, InputStream stream);
 Str HTTPrequestMethod(HRequest* hr);
-Str HTTPrequestURI(ParsedURL* pu, HRequest* hr);
-extern URLFile openURL(char* url, ParsedURL* pu, ParsedURL* current,
+Str HTTPrequestURI(struct Url* pu, HRequest* hr);
+extern URLFile openURL(char* url, struct Url* pu, struct Url* current,
     URLOption* option, FormList* request,
     TextList* extra_header, URLFile* ouf,
     HRequest* hr, unsigned char* status, bool do_download);
@@ -468,12 +468,12 @@ extern Str unquote_mailcap(char* qstr, char* type, char* name, char* attr,
 extern char* guessContentType(char* filename);
 extern TextList* make_domain_list(char* domain_list);
 extern int check_no_proxy(char* domain);
-extern InputStream openFTPStream(ParsedURL* pu, URLFile* uf);
-extern Str loadFTPDir(ParsedURL* pu, wc_ces* charset, bool do_download);
+extern InputStream openFTPStream(struct Url* pu, URLFile* uf);
+extern Str loadFTPDir(struct Url* pu, wc_ces* charset, bool do_download);
 extern void closeFTP(void);
 extern void disconnectFTP(void);
-extern InputStream openNewsStream(ParsedURL* pu);
-extern Str loadNewsgroup(ParsedURL* pu, wc_ces* charset, bool do_download);
+extern InputStream openNewsStream(struct Url* pu);
+extern Str loadNewsgroup(struct Url* pu, wc_ces* charset, bool do_download);
 extern void closeNews(void);
 extern void disconnectNews(void);
 extern AnchorList* putAnchor(AnchorList* al, char* url, char* target,
@@ -540,7 +540,7 @@ extern char* confFile(char* base);
 extern char* auxbinFile(char* base);
 extern char* libFile(char* base);
 extern char* helpFile(char* base);
-extern const void* querySiteconf(const ParsedURL* query_pu, int field);
+extern const void* querySiteconf(const struct Url* query_pu, int field);
 extern Str localCookie(void);
 extern Str loadLocalDir(char* dirname);
 extern void set_environ(char* var, char* value);
@@ -549,11 +549,11 @@ extern FILE* localcgi_post(char*, char*, FormList*, char*);
 extern FILE* openSecretFile(char* fname);
 extern void loadPasswd(void);
 extern void loadPreForm(void);
-extern int find_auth_user_passwd(ParsedURL* pu, char* realm,
+extern int find_auth_user_passwd(struct Url* pu, char* realm,
     Str* uname, Str* pwd, int is_proxy);
-extern void add_auth_user_passwd(ParsedURL* pu, char* realm,
+extern void add_auth_user_passwd(struct Url* pu, char* realm,
     Str uname, Str pwd, int is_proxy);
-extern void invalidate_auth_user_passwd(ParsedURL* pu, char* realm,
+extern void invalidate_auth_user_passwd(struct Url* pu, char* realm,
     Str uname, Str pwd, int is_proxy);
 extern char* last_modified(Buffer* buf);
 extern Str romanNumeral(int n);
@@ -576,8 +576,8 @@ extern Str tmpfname(int type, char* ext);
 extern time_t mymktime(char* timestr);
 #ifdef USE_COOKIE
 extern char* FQDN(char* host);
-extern Str find_cookie(ParsedURL* pu);
-extern int add_cookie(ParsedURL* pu, Str name, Str value, time_t expires,
+extern Str find_cookie(struct Url* pu);
+extern int add_cookie(struct Url* pu, Str name, Str value, time_t expires,
     Str domain, Str path, int flag, Str comment, int version,
     Str port, Str commentURL);
 extern void save_cookies(void);

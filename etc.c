@@ -985,7 +985,7 @@ find_auth_pass_entry(char* host, int port, char* realm, char* uname,
     return NULL;
 }
 
-int find_auth_user_passwd(ParsedURL* pu, char* realm,
+int find_auth_user_passwd(struct Url* pu, char* realm,
     Str* uname, Str* pwd, int is_proxy)
 {
     struct auth_pass* ent;
@@ -1004,7 +1004,7 @@ int find_auth_user_passwd(ParsedURL* pu, char* realm,
     return 0;
 }
 
-void add_auth_user_passwd(ParsedURL* pu, char* realm, Str uname, Str pwd,
+void add_auth_user_passwd(struct Url* pu, char* realm, Str uname, Str pwd,
     int is_proxy)
 {
     struct auth_pass ent;
@@ -1019,7 +1019,7 @@ void add_auth_user_passwd(ParsedURL* pu, char* realm, Str uname, Str pwd,
     add_auth_pass_entry(&ent, 0, 1);
 }
 
-void invalidate_auth_user_passwd(ParsedURL* pu, char* realm, Str uname, Str pwd,
+void invalidate_auth_user_passwd(struct Url* pu, char* realm, Str uname, Str pwd,
     int is_proxy)
 {
     struct auth_pass* ent;

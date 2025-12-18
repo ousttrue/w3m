@@ -354,7 +354,7 @@ void closeFTP(void)
 }
 
 InputStream
-openFTPStream(ParsedURL* pu, URLFile* uf)
+openFTPStream(struct Url* pu, URLFile* uf)
 {
     Str tmp;
     int status;
@@ -467,7 +467,7 @@ ftp_dir:
     return NULL;
 }
 
-Str loadFTPDir(ParsedURL* pu, wc_ces* charset, bool do_download)
+Str loadFTPDir(struct Url* pu, wc_ces* charset, bool do_download)
 {
     Str FTPDIRtmp;
     Str tmp;

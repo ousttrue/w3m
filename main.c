@@ -91,7 +91,7 @@ _JBTYPE IntReturn[_JBLEN];
 #endif /* __MINGW32_VERSION */
 
 static void cmd_loadfile(char* path);
-static void cmd_loadURL(char* url, ParsedURL* current, char* referer,
+static void cmd_loadURL(char* url, struct Url* current, char* referer,
     FormList* request);
 static void cmd_loadBuffer(Buffer* buf, int prop, int linkid);
 int show_params_p = 0;
@@ -854,7 +854,7 @@ bool w3m_args(int argc, char** argv)
     if (getimage_args) {
         char* image_url = conv_from_system(getimage_args[0]);
         char* base_url = conv_from_system(getimage_args[1]);
-        ParsedURL base_pu;
+        struct Url base_pu;
 
         parseURL2(base_url, &base_pu, NULL);
         image_source = getimage_args[2];
@@ -1223,7 +1223,7 @@ do_dump(Buffer* buf)
                 in_order[i] = buf->href->anchors + i;
             qsort(in_order, nanchor, sizeof(Anchor*), cmp_anchor_hseq);
             for (i = 0; i < nanchor; i++) {
-                ParsedURL pu;
+                struct Url pu;
                 char* url;
                 if (in_order[i]->slave)
                     continue;
@@ -2707,7 +2707,7 @@ void _followA(bool on_target, bool do_download)
         return;
     }
 
-    ParsedURL u;
+    struct Url u;
     parseURL2(a->url, &u, baseURL(Currentbuf));
     if (Strcmp(parsedURL2Str(&u), parsedURL2Str(&Currentbuf->currentURL)) == 0) {
         /* index within this buffer */
@@ -2924,7 +2924,7 @@ _nextA(int visited)
     struct BufferPoint* po;
     Anchor *an, *pan;
     int i, x, y, n = searchKeyNum();
-    ParsedURL url;
+    struct Url url;
 
     if (Currentbuf->firstLine == NULL)
         return;
@@ -3007,7 +3007,7 @@ _prevA(int visited)
     struct BufferPoint* po;
     Anchor *an, *pan;
     int i, x, y, n = searchKeyNum();
-    ParsedURL url;
+    struct Url url;
 
     if (Currentbuf->firstLine == NULL)
         return;
@@ -3336,7 +3336,7 @@ DEFUN(deletePrevBuf, DELETE_PREVBUF, "Delete previous buffer (mainly for local C
 }
 
 static void
-cmd_loadURL(char* url, ParsedURL* current, char* referer, FormList* request)
+cmd_loadURL(char* url, struct Url* current, char* referer, FormList* request)
 {
     if (handleMailto(url))
         return;
@@ -3360,7 +3360,7 @@ static void
 goURL0(char* prompt, int relative)
 {
     char *url, *referer;
-    ParsedURL p_url, *current;
+    struct Url p_url, *current;
     Buffer* cur_buf = Currentbuf;
     const int* no_referer_ptr;
 
@@ -3428,7 +3428,7 @@ DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer")
 {
     char* url;
     if ((url = getenv("HTTP_HOME")) != NULL || (url = getenv("WWW_HOME")) != NULL) {
-        ParsedURL p_url;
+        struct Url p_url;
         Buffer* cur_buf = Currentbuf;
         SKIP_BLANKS(url);
         url = url_encode(url, NULL, 0);
@@ -3553,7 +3553,7 @@ void follow_map(struct parsed_tagarg* arg)
     char* name = tag_get_value(arg, "link");
     Anchor* an;
     int x, y;
-    ParsedURL p_url;
+    struct Url p_url;
 
     an = retrieveCurrentImg(Currentbuf);
     x = Currentbuf->cursorX + Currentbuf->rootX;
@@ -3600,7 +3600,7 @@ void follow_map(struct parsed_tagarg* arg)
 DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
 {
     LinkList* l = link_menu(Currentbuf);
-    ParsedURL p_url;
+    struct Url p_url;
 
     if (!l || !l->url)
         return;
@@ -3772,7 +3772,7 @@ _peekURL(int only_img)
 {
 
     Anchor* a;
-    ParsedURL pu;
+    struct Url pu;
     static Str s = NULL;
     static Lineprop* p = NULL;
     Lineprop* pp;
@@ -4338,7 +4338,7 @@ DEFUN(extbrz, EXTERN, "Display using an external browser")
 DEFUN(linkbrz, EXTERN_LINK, "Display target using an external browser")
 {
     Anchor* a;
-    ParsedURL pu;
+    struct Url pu;
 
     if (Currentbuf->firstLine == NULL)
         return;

@@ -18,7 +18,7 @@ struct frame_body {
 #define FB_NO_BUFFER 0x01
     char* name;
     char* url;
-    ParsedURL* baseURL;
+    struct Url* baseURL;
     char* source;
     char* type;
     char* referer;
@@ -39,7 +39,7 @@ struct frameset {
     char attr;
     char dummy;
     char* name;
-    ParsedURL* currentURL;
+    struct Url* currentURL;
     char** width;
     char** height;
     int col;

@@ -1,6 +1,7 @@
-#include "fm.h"
 #include "maparea.h"
+#include "image.h"
 #include "libwc/wc.h"
+#include "fm.h"
 #include <math.h>
 
 struct MapList*
@@ -247,7 +248,7 @@ follow_map_panel(Buffer* buf, char* name)
     MapList* ml;
     ListItem* al;
     MapArea* a;
-    ParsedURL pu;
+    struct Url pu;
     char *p, *q;
     Buffer* newbuf;
 
@@ -384,7 +385,7 @@ append_map_info(Buffer* buf, Str tmp, FormItemList* fi)
     struct MapList* ml;
     ListItem* al;
     struct MapArea* a;
-    ParsedURL pu;
+    struct Url pu;
     char *p, *q;
 
     ml = searchMapList(buf, fi->value ? fi->value->ptr : NULL);
@@ -414,7 +415,7 @@ static void
 append_link_info(Buffer* buf, Str html, LinkList* link)
 {
     LinkList* l;
-    ParsedURL pu;
+    struct Url pu;
     char* url;
 
     if (!link)
@@ -503,7 +504,7 @@ page_info_panel(Buffer* buf)
 {
     Str tmp = Strnew_size(1024);
     Anchor* a;
-    ParsedURL pu;
+    struct Url pu;
     TextListItem* ti;
     struct frameset* f_set = NULL;
     int all;

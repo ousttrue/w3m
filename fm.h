@@ -339,37 +339,6 @@ struct BufferPoint {
     int invalid;
 };
 
-#ifdef USE_IMAGE
-typedef struct _imageCache {
-    char* url;
-    ParsedURL* current;
-    char* file;
-    char* touch;
-    pid_t pid;
-    char loaded;
-    int index;
-    short width;
-    short height;
-    short a_width;
-    short a_height;
-} ImageCache;
-
-typedef struct _image {
-    char* url;
-    char* ext;
-    short width;
-    short height;
-    short xoffset;
-    short yoffset;
-    short y;
-    short rows;
-    char* map;
-    char ismap;
-    int touch;
-    ImageCache* cache;
-} Image;
-#endif
-
 typedef struct _anchor {
     char* url;
     char* target;
@@ -382,7 +351,7 @@ typedef struct _anchor {
     char slave;
     short y;
     short rows;
-    Image* image;
+    struct Image* image;
 } Anchor;
 
 #define NO_REFERER ((char*)-1)
@@ -446,8 +415,8 @@ typedef struct _Buffer {
     struct MapList* maplist;
     struct HmarkerList* hmarklist;
     struct HmarkerList* imarklist;
-    ParsedURL currentURL;
-    ParsedURL* baseURL;
+    struct Url currentURL;
+    struct Url* baseURL;
     char* baseTarget;
     int real_scheme;
     char* sourcefile;
@@ -698,7 +667,7 @@ struct portlist {
 };
 
 struct cookie {
-    ParsedURL url;
+    struct Url url;
     Str name;
     Str value;
     time_t expires;
@@ -819,14 +788,14 @@ global char* HTTPS_proxy init(NULL);
 global char* GOPHER_proxy init(NULL);
 #endif /* USE_GOPHER */
 global char* FTP_proxy init(NULL);
-global ParsedURL HTTP_proxy_parsed;
+global struct Url HTTP_proxy_parsed;
 #ifdef USE_SSL
-global ParsedURL HTTPS_proxy_parsed;
+global struct Url HTTPS_proxy_parsed;
 #endif /* USE_SSL */
 #ifdef USE_GOPHER
-global ParsedURL GOPHER_proxy_parsed;
+global struct Url GOPHER_proxy_parsed;
 #endif /* USE_GOPHER */
-global ParsedURL FTP_proxy_parsed;
+global struct Url FTP_proxy_parsed;
 global char* NO_proxy init(NULL);
 global int NOproxy_netaddr init(TRUE);
 #ifdef INET6

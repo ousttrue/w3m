@@ -531,7 +531,7 @@ Buffer* loadLink(char* url, char* target, char* referer, FormList* request, bool
     Buffer *buf, *nfbuf;
     union frameset_element* f_element = NULL;
     int flag = 0;
-    ParsedURL *base, pu;
+    struct Url *base, pu;
     const int* no_referer_ptr;
 
     message(Sprintf("loading %s", url)->ptr, 0, 0);
@@ -1022,14 +1022,12 @@ static void set_buffer_environ(Buffer* buf)
         set_environ("W3M_TITLE", buf->buffername);
         set_environ("W3M_URL", parsedURL2Str(&buf->currentURL)->ptr);
         set_environ("W3M_TYPE", buf->real_type ? buf->real_type : "unknown");
-#ifdef USE_M17N
         set_environ("W3M_CHARSET", wc_ces_to_charset(buf->document_charset));
-#endif
     }
     l = buf->currentLine;
     if (l && (buf != prev_buf || l != prev_line || buf->pos != prev_pos)) {
         Anchor* a;
-        ParsedURL pu;
+        struct Url pu;
         char* s = GetWord(buf);
         set_environ("W3M_CURRENT_WORD", s ? s : "");
         a = retrieveCurrentAnchor(buf);

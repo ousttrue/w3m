@@ -58,7 +58,7 @@ static struct table* tables[MAX_TABLE];
 static struct table_mode table_mode[MAX_TABLE];
 
 #if defined(USE_M17N) || defined(USE_IMAGE)
-static ParsedURL* cur_baseURL = NULL;
+static struct Url* cur_baseURL = NULL;
 #endif
 #ifdef USE_M17N
 static wc_ces cur_document_charset = 0;
@@ -530,8 +530,8 @@ int matchattr(char* p, char* attr, int len, Str* value)
 static char*
 xface2xpm(char* xface)
 {
-    Image image;
-    ImageCache* cache;
+    struct Image image;
+    struct ImageCache* cache;
     FILE* f;
     struct stat st;
 
@@ -563,7 +563,7 @@ xface2xpm(char* xface)
 #endif
 #endif
 
-void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
+void readHeader(URLFile* uf, Buffer* newBuf, int thru, struct Url* pu)
 {
     char *p, *q;
 #ifdef USE_COOKIE
@@ -944,7 +944,7 @@ struct http_auth {
     int pri;
     char* scheme;
     struct auth_param* param;
-    Str (*cred)(struct http_auth* ha, Str uname, Str pw, ParsedURL* pu,
+    Str (*cred)(struct http_auth* ha, Str uname, Str pw, struct Url* pu,
         HRequest* hr, FormList* request);
 };
 
@@ -1139,7 +1139,7 @@ get_auth_param(struct auth_param* auth, char* name)
 }
 
 static Str
-AuthBasicCred(struct http_auth* ha, Str uname, Str pw, ParsedURL* pu,
+AuthBasicCred(struct http_auth* ha, Str uname, Str pw, struct Url* pu,
     HRequest* hr, FormList* request)
 {
     Str s = Strdup(uname);
@@ -1196,7 +1196,7 @@ enum {
 };
 
 static Str
-AuthDigestCred(struct http_auth* ha, Str uname, Str pw, ParsedURL* pu,
+AuthDigestCred(struct http_auth* ha, Str uname, Str pw, struct Url* pu,
     HRequest* hr, FormList* request)
 {
     Str tmp, a1buf, a2buf, rd, s;
@@ -1470,7 +1470,7 @@ findAuthentication(struct http_auth* hauth, Buffer* buf, char* auth_field)
 
 static void
 getAuthCookie(struct http_auth* hauth, char* auth_header,
-    TextList* extra_header, ParsedURL* pu, HRequest* hr,
+    TextList* extra_header, struct Url* pu, HRequest* hr,
     FormList* request,
     volatile Str* uname, volatile Str* pwd)
 {
@@ -1584,16 +1584,16 @@ getAuthCookie(struct http_auth* hauth, char* auth_header,
 }
 
 static int
-same_url_p(ParsedURL* pu1, ParsedURL* pu2)
+same_url_p(struct Url* pu1, struct Url* pu2)
 {
     return (pu1->scheme == pu2->scheme && pu1->port == pu2->port && (pu1->host ? pu2->host ? !strcasecmp(pu1->host, pu2->host) : 0 : 1)
         && (pu1->file ? pu2->file ? !strcmp(pu1->file, pu2->file) : 0 : 1));
 }
 
 static int
-checkRedirection(ParsedURL* pu)
+checkRedirection(struct Url* pu)
 {
-    static ParsedURL* puv = NULL;
+    static struct Url* puv = NULL;
     static int nredir = 0;
     static int nredir_size = 0;
     Str tmp;
@@ -1619,8 +1619,8 @@ checkRedirection(ParsedURL* pu)
     }
     if (!puv) {
         nredir_size = FollowRedirection / 2 + 1;
-        puv = New_N(ParsedURL, nredir_size);
-        memset(puv, 0, sizeof(ParsedURL) * nredir_size);
+        puv = New_N(struct Url, nredir_size);
+        memset(puv, 0, sizeof(struct Url) * nredir_size);
     }
     copyParsedURL(&puv[nredir % nredir_size], pu);
     nredir++;
@@ -1637,11 +1637,11 @@ Str getLinkNumberStr(int correction)
  */
 #define DO_EXTERNAL ((Buffer * (*)(URLFile*, Buffer*)) doExternal)
 Buffer*
-loadGeneralFile(char* path, ParsedURL* volatile current, char* referer,
+loadGeneralFile(char* path, struct Url* volatile current, char* referer,
     int flag, FormList* volatile request, bool do_download)
 {
     URLFile f, *volatile of = NULL;
-    ParsedURL pu;
+    struct Url pu;
     Buffer* b = NULL;
     Buffer* (*volatile proc)(URLFile*, Buffer*) = loadBuffer;
     char* volatile tpath;
@@ -1666,7 +1666,7 @@ loadGeneralFile(char* path, ParsedURL* volatile current, char* referer,
     wc_ces charset = WC_CES_US_ASCII;
 #endif
     HRequest hr;
-    ParsedURL* volatile auth_pu;
+    struct Url* volatile auth_pu;
 
     tpath = path;
     prevtrap = NULL;
@@ -1682,7 +1682,7 @@ load_doc: {
         tpath = (char*)sc_redirect;
         request = NULL;
         add_auth_cookie_flag = 0;
-        current = New(ParsedURL);
+        current = New(struct Url);
         *current = pu;
         status = HTST_NORMAL;
         goto load_doc;
@@ -1821,7 +1821,7 @@ load_doc: {
             tpath = url_encode(p, NULL, 0);
             request = NULL;
             UFclose(&f);
-            current = New(ParsedURL);
+            current = New(struct Url);
             copyParsedURL(current, &pu);
             t_buf = newBuffer(INIT_BUFFER_WIDTH);
             t_buf->bufferprop |= BP_REDIRECTED;
@@ -1997,7 +1997,7 @@ load_doc: {
             request = NULL;
             UFclose(&f);
             add_auth_cookie_flag = 0;
-            current = New(ParsedURL);
+            current = New(struct Url);
             copyParsedURL(current, &pu);
             t_buf = newBuffer(INIT_BUFFER_WIDTH);
             t_buf->bufferprop |= BP_REDIRECTED;
@@ -3286,8 +3286,8 @@ Str process_img(struct parsed_tag* tag, int width)
         w0 = w;
         i0 = i;
         if (w < 0 || i < 0) {
-            Image image;
-            ParsedURL u;
+            struct Image image;
+            struct Url u;
 
             parseURL2(p, &u, cur_baseURL);
             image.url = parsedURL2Str(&u)->ptr;
@@ -5196,7 +5196,7 @@ int HTMLtagproc1(struct parsed_tag* tag, struct html_feed_environ* h_env)
 #if defined(USE_M17N) || defined(USE_IMAGE)
         p = NULL;
         if (parsedtag_get_value(tag, ATTR_HREF, &p)) {
-            cur_baseURL = New(ParsedURL);
+            cur_baseURL = New(struct Url);
             parseURL(p, cur_baseURL, NULL);
         }
 #endif
@@ -5464,7 +5464,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
     Anchor** a_select = NULL;
 #endif
 #if defined(USE_M17N) || defined(USE_IMAGE)
-    ParsedURL* base = baseURL(buf);
+    struct Url* base = baseURL(buf);
 #endif
 #ifdef USE_M17N
     wc_ces name_charset = url_to_charset(NULL, &buf->currentURL,
@@ -5748,11 +5748,11 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                         a_img->hseq = iseq;
                         a_img->image = NULL;
                         if (iseq > 0) {
-                            ParsedURL u;
-                            Image* image;
+                            struct Url u;
+                            struct Image* image;
 
                             parseURL2(a_img->url, &u, base);
-                            a_img->image = image = New(Image);
+                            a_img->image = image = New(struct Image);
                             image->url = parsedURL2Str(&u)->ptr;
                             if (!uncompressed_file_type(u.file, &image->ext))
                                 image->ext = filename_extension(u.file, TRUE);
@@ -5945,7 +5945,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                         p = url_encode(remove_space(p), NULL,
                             buf->document_charset);
                         if (!buf->baseURL)
-                            buf->baseURL = New(ParsedURL);
+                            buf->baseURL = New(struct Url);
                         parseURL2(p, buf->baseURL, &buf->currentURL);
 #if defined(USE_M17N) || defined(USE_IMAGE)
                         base = buf->baseURL;
@@ -7259,9 +7259,9 @@ loadHTMLString(Str page)
  * loadGopherDir: get gopher directory
  */
 #ifdef USE_M17N
-Str loadGopherDir(URLFile* uf, ParsedURL* pu, wc_ces* charset)
+Str loadGopherDir(URLFile* uf, struct Url* pu, wc_ces* charset)
 #else
-Str loadGopherDir0(URLFile* uf, ParsedURL* pu)
+Str loadGopherDir0(URLFile* uf, struct Url* pu)
 #endif
 {
     Str volatile tmp;
@@ -7385,9 +7385,9 @@ gopher_end:
 }
 
 #ifdef USE_M17N
-Str loadGopherSearch(URLFile* uf, ParsedURL* pu, wc_ces* charset)
+Str loadGopherSearch(URLFile* uf, struct Url* pu, wc_ces* charset)
 #else
-Str loadGopherSearch0(URLFile* uf, ParsedURL* pu)
+Str loadGopherSearch0(URLFile* uf, struct Url* pu)
 #endif
 {
     Str tmp;
@@ -7513,14 +7513,14 @@ _end:
 Buffer*
 loadImageBuffer(URLFile* uf, Buffer* newBuf)
 {
-    Image image;
-    ImageCache* cache;
+    struct Image image;
+    struct ImageCache* cache;
     Str tmp, tmpf;
     FILE* src = NULL;
     URLFile f;
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
     struct stat st;
-    const ParsedURL* pu = newBuf ? &newBuf->currentURL : NULL;
+    const struct Url* pu = newBuf ? &newBuf->currentURL : NULL;
 
     loadImage(newBuf, IMG_FLAG_STOP);
     image.url = uf->url;
@@ -7528,7 +7528,7 @@ loadImageBuffer(URLFile* uf, Buffer* newBuf)
     image.width = -1;
     image.height = -1;
     image.cache = NULL;
-    cache = getImage(&image, (ParsedURL*)pu, IMG_FLAG_AUTO);
+    cache = getImage(&image, (struct Url*)pu, IMG_FLAG_AUTO);
     if (!(pu && pu->is_nocache) && cache->loaded & IMG_FLAG_LOADED && !stat(cache->file, &st))
         goto image_buffer;
 
