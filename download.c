@@ -1,4 +1,5 @@
 #include "download.h"
+#include "display.h"
 #include "w3m_runtime.h"
 #include "tab.h"
 #include "buffer.h"

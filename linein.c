@@ -1,4 +1,5 @@
 #include "w3m_runtime.h"
+#include "display.h"
 #include "tab.h"
 #include "fm.h"
 #include "local.h"

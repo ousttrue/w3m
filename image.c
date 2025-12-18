@@ -1,4 +1,5 @@
 #include "image.h"
+#include "display.h"
 #include "tab.h"
 #include "etc.h"
 #include "w3m_runtime.h"

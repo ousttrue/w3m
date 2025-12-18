@@ -1,4 +1,5 @@
 #include "menu.h"
+#include "display.h"
 #include "tab.h"
 #include "w3m_runtime.h"
 #include "image.h"

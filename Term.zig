@@ -87,7 +87,7 @@ pub fn getWinsize(this: @This()) !std.posix.winsize {
     return error.IoctlError;
 }
 
-pub fn getch(this: *@This()) u8 {
+pub fn getch(this: *@This(), onIdle: *const fn () callconv(.c) void) u8 {
     if (this.queue) |queue| {
         while (true) {
             const event = queue.nextEvent();
@@ -96,7 +96,7 @@ pub fn getch(this: *@This()) u8 {
                     return key;
                 },
                 .idle => {
-                    //
+                    onIdle();
                 },
             }
         }

@@ -1068,7 +1068,7 @@ bool w3m_args(int argc, char** argv)
         w3m_exit(0);
     }
 
-    if(hasDownloadList()){
+    if (hasDownloadList()) {
     } else {
         CurrentTab = FirstTab;
     }
@@ -1111,10 +1111,18 @@ bool w3m_args(int argc, char** argv)
     return true;
 }
 
+void w3m_idle()
+{
+    if (activeImage && displayImage && Currentbuf->img && !Currentbuf->image_loaded) {
+        loadImage(Currentbuf, IMG_FLAG_NEXT);
+    }
+}
+
 void w3m_loop()
 {
     for (;;) {
         download_update();
+
         if (Currentbuf->submit) {
             Anchor* a = Currentbuf->submit;
             Currentbuf->submit = NULL;
@@ -1123,7 +1131,7 @@ void w3m_loop()
             _followForm(TRUE);
             continue;
         }
-        /* event processing */
+        // event processing
         if (CurrentEvent) {
             CurrentKey = -1;
             CurrentKeyData = NULL;
@@ -1133,8 +1141,7 @@ void w3m_loop()
             CurrentEvent = CurrentEvent->next;
             continue;
         }
-        /* get keypress event */
-#ifdef USE_ALARM
+        // get keypress event
         if (Currentbuf->event) {
             if (Currentbuf->event->status != AL_UNSET) {
                 CurrentAlarm = Currentbuf->event;
@@ -1152,58 +1159,17 @@ void w3m_loop()
         }
         if (!Currentbuf->event)
             CurrentAlarm = &DefaultAlarm;
-#endif
-#ifdef USE_MOUSE
-        mouse_action.in_action = FALSE;
-        if (use_mouse)
-            mouse_active();
-#endif /* USE_MOUSE */
-#ifdef USE_ALARM
+
         if (CurrentAlarm->sec > 0) {
             mySignal(SIGALRM, SigAlarm);
             alarm(CurrentAlarm->sec);
         }
-#endif
-#ifdef SIGWINCH
+
         mySignal(SIGWINCH, resize_hook);
-#endif
-
-        // #ifdef USE_IMAGE
-        //         if (activeImage && displayImage && Currentbuf->img && !Currentbuf->image_loaded) {
-        //             do {
-        // #ifdef SIGWINCH
-        //                 if (need_resize_screen)
-        //                     resize_screen();
-        // #endif
-        //                 loadImage(Currentbuf, IMG_FLAG_NEXT);
-        //             } while (sleep_till_anykey(1, 0) <= 0);
-        //         }
-        // #ifdef SIGWINCH
-        //         else
-        // #endif
-        // #endif
-
-        // #ifdef SIGWINCH
-        //         {
-        //             do {
-        //                 if (need_resize_screen)
-        //                     resize_screen();
-        //             } while (sleep_till_anykey(1, 0) <= 0);
-        //         }
-        // #endif
 
         int c = getch();
         last_key = c;
-#ifdef USE_ALARM
-        if (CurrentAlarm->sec > 0) {
-            alarm(0);
-        }
-#endif
-#ifdef USE_MOUSE
-        if (use_mouse)
-            mouse_inactive();
-#endif /* USE_MOUSE */
-        if (IS_ASCII(c)) { /* Ascii */
+        if (IS_ASCII(c)) {
             if (('0' <= c) && (c <= '9') && (prec_num || (GlobalKeymap[c] == FUNCNAME_nulcmd))) {
                 prec_num = prec_num * 10 + (int)(c - '0');
                 if (prec_num > PREC_LIMIT)

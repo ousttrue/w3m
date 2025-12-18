@@ -342,8 +342,6 @@ make_lastline_message(Buffer* buf)
 
 void displayBuffer(Buffer* buf, int mode)
 {
-    Str msg;
-    int ny = 0;
 
     if (!buf)
         return;
@@ -372,11 +370,8 @@ void displayBuffer(Buffer* buf, int mode)
     } else
         buf->rootX = 0;
     buf->COLS = TTY_COLS() - buf->rootX;
-    if (nTab > 1
-#ifdef USE_MOUSE
-        || mouse_action.menu_str
-#endif
-    ) {
+    int ny = 0;
+    if (nTab > 1) {
         if (mode == B_FORCE_REDRAW || mode == B_REDRAW_IMAGE)
             calcTabPos();
         ny = LastTab->y + 2;
@@ -390,58 +385,30 @@ void displayBuffer(Buffer* buf, int mode)
         mode = B_REDRAW_IMAGE;
     }
     if (mode == B_FORCE_REDRAW || mode == B_SCROLL || mode == B_REDRAW_IMAGE || cline != buf->topLine || ccolumn != buf->currentColumn) {
-#ifdef USE_RAW_SCROLL
-        if (
-#ifdef USE_IMAGE
-            !(activeImage && displayImage && draw_image_flag) &&
-#endif
-            mode == B_SCROLL && cline && buf->currentColumn == ccolumn) {
-            int n = buf->topLine->linenumber - cline->linenumber;
-            if (n > 0 && n < buf->LINES) {
-                move(LASTLINE(), 0);
-                clrtoeolx();
-                refresh();
-                scroll(n);
-            } else if (n < 0 && n > -buf->LINES) {
-#if 0 /* defined(__CYGWIN__) */
-		move(LASTLINE() + n + 1, 0);
-		clrtoeolx();
-		refresh();
-#endif /* defined(__CYGWIN__) */
-                rscroll(-n);
-            }
-            redrawNLine(buf, n);
-        } else
-#endif
-        {
-#ifdef USE_IMAGE
-            if (activeImage && (mode == B_REDRAW_IMAGE || cline != buf->topLine || ccolumn != buf->currentColumn)) {
-                if (draw_image_flag)
-                    clear();
-                clearImage();
-                loadImage(buf, IMG_FLAG_STOP);
-                image_touch++;
-                draw_image_flag = FALSE;
-            }
-#endif
-            redrawBuffer(buf);
+        if (activeImage && (mode == B_REDRAW_IMAGE || cline != buf->topLine || ccolumn != buf->currentColumn)) {
+            if (draw_image_flag)
+                clear();
+            clearImage();
+            loadImage(buf, IMG_FLAG_STOP);
+            image_touch++;
+            draw_image_flag = FALSE;
         }
+        redrawBuffer(buf);
+
         cline = buf->topLine;
         ccolumn = buf->currentColumn;
     }
     if (buf->topLine == NULL)
         buf->topLine = buf->firstLine;
 
-#ifdef USE_IMAGE
     if (buf->need_reshape) {
         displayBuffer(buf, B_FORCE_REDRAW);
         return;
     }
-#endif
 
     drawAnchorCursor(buf);
 
-    msg = make_lastline_message(buf);
+    Str msg = make_lastline_message(buf);
     if (buf->firstLine == NULL) {
         /* FIXME: gettextize? */
         Strcat_charp(msg, "\tNo Line");
@@ -456,11 +423,11 @@ void displayBuffer(Buffer* buf, int mode)
     standend();
     term_title(conv_to_system(buf->buffername));
     refresh();
-#ifdef USE_IMAGE
+
     if (activeImage && displayImage && buf->img && buf->image_loaded) {
         drawImage(buf);
     }
-#endif
+
 #ifdef USE_BUFINFO
     if (buf != save_current_buf) {
         saveBufferInfo();

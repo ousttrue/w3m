@@ -33,7 +33,7 @@ struct Runtime {
         *T_ti, *T_te, *T_nd, *T_as, *T_ae, *T_eA, *T_ac, *T_op;
     char gcmap[96];
 
-    int Do_not_use_ti_te;
+    bool Do_not_use_ti_te;
 };
 struct Runtime* getRuntime(void);
 int getOutputHandle();

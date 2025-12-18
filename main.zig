@@ -14,6 +14,8 @@ extern fn w3m_args(argc: c_int, argv: [*c]const [*:0]u8) bool;
 
 extern fn w3m_loop() void;
 
+extern fn w3m_idle() void;
+
 pub fn main() void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.detectLeaks();
@@ -62,7 +64,7 @@ export fn reset_tty() void {
     };
     writestr(g_runtime.T_op); // turn off
     writestr(g_runtime.T_me);
-    if (g_runtime.Do_not_use_ti_te == 0) {
+    if (g_runtime.Do_not_use_ti_te) {
         if (g_runtime.T_te != null and g_runtime.T_te[0] != 0) {
             writestr(g_runtime.T_te);
         } else {
@@ -165,19 +167,7 @@ export fn tty_remove_ISIG() void {
 // }
 
 export fn getch() c_int {
-    return @intCast(g_term.getch());
-    // char c;
-    //
-    // while (
-    //     read(getRuntime()->tty_input, &c, 1)
-    //     < (int)1) {
-    //     if (errno == EINTR || errno == EAGAIN)
-    //         continue;
-    //     /* error happend on read(2) */
-    //     quitfm();
-    //     break; /* unreachable */
-    // }
-    // return c;
+    return @intCast(g_term.getch(&w3m_idle));
 }
 
 //
