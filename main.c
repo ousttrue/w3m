@@ -5,6 +5,7 @@
 #include "image.h"
 #define MAINPROGRAM
 #include "fm.h"
+#include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <signal.h>
@@ -833,10 +834,6 @@ bool w3m_args(int argc, char** argv)
     }
 #endif
 
-    FirstTab = NULL;
-    LastTab = NULL;
-    nTab = 0;
-    CurrentTab = NULL;
     CurrentKey = -1;
     if (BookmarkFile == NULL)
         BookmarkFile = rcFile(BOOKMARK);
@@ -1030,13 +1027,14 @@ bool w3m_args(int argc, char** argv)
             continue;
         if (newbuf->pagerSource || (newbuf->real_scheme == SCM_LOCAL && newbuf->header_source && newbuf->currentURL.file && strcmp(newbuf->currentURL.file, "-")))
             newbuf->search_header = search_header;
-        if (CurrentTab == NULL) {
-            FirstTab = LastTab = CurrentTab = newTab();
-            if (!FirstTab) {
+
+        if (CurrentTab() == NULL) {
+            getRuntime()->FirstTab = getRuntime()->LastTab = getRuntime()->CurrentTab = newTab();
+            if (!FirstTab()) {
                 fprintf(stderr, "%s\n", "Can't allocated memory");
                 exit(1);
             }
-            nTab = 1;
+            getRuntime()->nTab = 1;
             Firstbuf = Currentbuf = newbuf;
         } else if (open_new_tab) {
             _newT();
@@ -1046,6 +1044,9 @@ bool w3m_args(int argc, char** argv)
             Currentbuf->nextBuffer = newbuf;
             Currentbuf = newbuf;
         }
+        assert(Currentbuf);
+        assert(Firstbuf);
+
         if (!w3m_dump || w3m_dump == DUMP_BUFFER) {
             if (Currentbuf->frameset != NULL && RenderFrame)
                 rFrame();
@@ -1062,18 +1063,16 @@ bool w3m_args(int argc, char** argv)
     if (w3m_dump) {
         if (err_msg->length)
             fprintf(stderr, "%s", err_msg->ptr);
-#ifdef USE_COOKIE
         save_cookies();
-#endif /* USE_COOKIE */
         w3m_exit(0);
     }
 
     if (hasDownloadList()) {
     } else {
-        CurrentTab = FirstTab;
+        getRuntime()->CurrentTab = FirstTab();
     }
 
-    if (!FirstTab || !Firstbuf || Firstbuf == NO_BUFFER) {
+    if (!FirstTab() || !Firstbuf || Firstbuf == NO_BUFFER) {
         if (newbuf == NO_BUFFER) {
             if (fmInitialized())
                 /* FIXME: gettextize? */
@@ -1092,6 +1091,7 @@ bool w3m_args(int argc, char** argv)
         }
         w3m_exit(2);
     }
+
     if (err_msg->length)
         disp_message_nsec(err_msg->ptr, FALSE, 1, TRUE, FALSE);
 
@@ -1467,7 +1467,7 @@ resize_screen(void)
     need_resize_screen = FALSE;
     setlinescols();
     setupscreen();
-    if (CurrentTab)
+    if (CurrentTab())
         displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 #endif /* SIGWINCH */
@@ -3019,7 +3019,7 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
         if (buf != Currentbuf)
             delBuffer(buf);
         else
-            deleteTab(CurrentTab);
+            deleteTab(CurrentTab());
         displayBuffer(Currentbuf, B_FORCE_REDRAW);
         return;
     }
@@ -3950,8 +3950,8 @@ DEFUN(backBf, BACK, "Close current buffer and return to the one below in stack")
     Buffer* buf = Currentbuf->linkBuffer[LB_N_FRAME];
 
     if (!checkBackBuffer(Currentbuf)) {
-        if (close_tab_back && nTab >= 1) {
-            deleteTab(CurrentTab);
+        if (close_tab_back && nTab() >= 1) {
+            deleteTab(CurrentTab());
             displayBuffer(Currentbuf, B_FORCE_REDRAW);
         } else
             /* FIXME: gettextize? */
@@ -4264,7 +4264,7 @@ void follow_map(struct parsed_tagarg* arg)
         if (buf != Currentbuf)
             delBuffer(buf);
         else
-            deleteTab(CurrentTab);
+            deleteTab(CurrentTab());
         displayBuffer(Currentbuf, B_FORCE_REDRAW);
         return;
     }
@@ -5718,7 +5718,7 @@ void deleteFiles()
     Buffer* buf;
     char* f;
 
-    for (CurrentTab = FirstTab; CurrentTab; CurrentTab = CurrentTab->nextTab) {
+    for (struct TabBuffer* CurrentTab = FirstTab(); CurrentTab; CurrentTab = CurrentTab->nextTab) {
         while (Firstbuf && Firstbuf != NO_BUFFER) {
             buf = Firstbuf->nextBuffer;
             discardBuffer(Firstbuf);
@@ -5988,12 +5988,12 @@ numTab(int n)
     int i;
 
     if (n == 0)
-        return CurrentTab;
+        return CurrentTab();
     if (n == 1)
-        return FirstTab;
-    if (nTab <= 1)
+        return FirstTab();
+    if (nTab() <= 1)
         return NULL;
-    for (tab = FirstTab, i = 1; tab && i < n; tab = tab->nextTab, i++)
+    for (tab = FirstTab(), i = 1; tab && i < n; tab = tab->nextTab, i++)
         ;
     return tab;
 }
@@ -6003,42 +6003,42 @@ deleteTab(struct TabBuffer* tab)
 {
     Buffer *buf, *next;
 
-    if (nTab <= 1)
-        return FirstTab;
+    if (nTab() <= 1)
+        return FirstTab();
     if (tab->prevTab) {
         if (tab->nextTab)
             tab->nextTab->prevTab = tab->prevTab;
         else
-            LastTab = tab->prevTab;
+            getRuntime()->LastTab = tab->prevTab;
         tab->prevTab->nextTab = tab->nextTab;
-        if (tab == CurrentTab)
-            CurrentTab = tab->prevTab;
+        if (tab == CurrentTab())
+            getRuntime()->CurrentTab = tab->prevTab;
     } else { /* tab == FirstTab */
         tab->nextTab->prevTab = NULL;
-        FirstTab = tab->nextTab;
-        if (tab == CurrentTab)
-            CurrentTab = tab->nextTab;
+        getRuntime()->FirstTab = tab->nextTab;
+        if (tab == CurrentTab())
+            getRuntime()->CurrentTab = tab->nextTab;
     }
-    nTab--;
+    getRuntime()->nTab--;
     buf = tab->firstBuffer;
     while (buf && buf != NO_BUFFER) {
         next = buf->nextBuffer;
         discardBuffer(buf);
         buf = next;
     }
-    return FirstTab;
+    return FirstTab();
 }
 
 DEFUN(closeT, CLOSE_TAB, "Close tab")
 {
     struct TabBuffer* tab;
 
-    if (nTab <= 1)
+    if (nTab() <= 1)
         return;
     if (prec_num)
         tab = numTab(PREC_NUM);
     else
-        tab = CurrentTab;
+        tab = CurrentTab();
     if (tab)
         deleteTab(tab);
     displayBuffer(Currentbuf, B_REDRAW_IMAGE);
@@ -6048,13 +6048,13 @@ DEFUN(nextT, NEXT_TAB, "Switch to the next tab")
 {
     int i;
 
-    if (nTab <= 1)
+    if (nTab() <= 1)
         return;
     for (i = 0; i < PREC_NUM; i++) {
-        if (CurrentTab->nextTab)
-            CurrentTab = CurrentTab->nextTab;
+        if (CurrentTab()->nextTab)
+            getRuntime()->CurrentTab = CurrentTab()->nextTab;
         else
-            CurrentTab = FirstTab;
+            getRuntime()->CurrentTab = FirstTab();
     }
     displayBuffer(Currentbuf, B_REDRAW_IMAGE);
 }
@@ -6063,13 +6063,13 @@ DEFUN(prevT, PREV_TAB, "Switch to the previous tab")
 {
     int i;
 
-    if (nTab <= 1)
+    if (nTab() <= 1)
         return;
     for (i = 0; i < PREC_NUM; i++) {
-        if (CurrentTab->prevTab)
-            CurrentTab = CurrentTab->prevTab;
+        if (CurrentTab()->prevTab)
+            getRuntime()->CurrentTab = CurrentTab()->prevTab;
         else
-            CurrentTab = LastTab;
+            getRuntime()->CurrentTab = LastTab();
     }
     displayBuffer(Currentbuf, B_REDRAW_IMAGE);
 }
@@ -6088,7 +6088,7 @@ followTab(struct TabBuffer* tab)
     if (a == NULL)
         return;
 
-    if (tab == CurrentTab) {
+    if (tab == CurrentTab()) {
         check_target = FALSE;
         followA();
         check_target = TRUE;
@@ -6103,7 +6103,7 @@ followTab(struct TabBuffer* tab)
         if (buf != Currentbuf)
             delBuffer(buf);
         else
-            deleteTab(CurrentTab);
+            deleteTab(CurrentTab());
     } else if (buf != Currentbuf) {
         /* buf <- p <- ... <- Currentbuf = c */
         Buffer *c, *p;
@@ -6112,8 +6112,8 @@ followTab(struct TabBuffer* tab)
         if ((p = prevBuffer(c, buf)))
             p->nextBuffer = NULL;
         Firstbuf = buf;
-        deleteTab(CurrentTab);
-        CurrentTab = tab;
+        deleteTab(CurrentTab());
+        getRuntime()->CurrentTab = tab;
         for (buf = p; buf; buf = p) {
             p = prevBuffer(c, buf);
             pushBuffer(buf);
@@ -6132,7 +6132,7 @@ tabURL0(struct TabBuffer* tab, char* prompt, int relative)
 {
     Buffer* buf;
 
-    if (tab == CurrentTab) {
+    if (tab == CurrentTab()) {
         goURL0(prompt, relative);
         return;
     }
@@ -6143,7 +6143,7 @@ tabURL0(struct TabBuffer* tab, char* prompt, int relative)
         if (buf != Currentbuf)
             delBuffer(buf);
         else
-            deleteTab(CurrentTab);
+            deleteTab(CurrentTab());
     } else if (buf != Currentbuf) {
         /* buf <- p <- ... <- Currentbuf = c */
         Buffer *c, *p;
@@ -6152,8 +6152,8 @@ tabURL0(struct TabBuffer* tab, char* prompt, int relative)
         if ((p = prevBuffer(c, buf)))
             p->nextBuffer = NULL;
         Firstbuf = buf;
-        deleteTab(CurrentTab);
-        CurrentTab = tab;
+        deleteTab(CurrentTab());
+        getRuntime()->CurrentTab = tab;
         for (buf = p; buf; buf = p) {
             p = prevBuffer(c, buf);
             pushBuffer(buf);
@@ -6178,18 +6178,18 @@ static void
 moveTab(struct TabBuffer* t, struct TabBuffer* t2, int right)
 {
     if (t2 == NO_TABBUFFER)
-        t2 = FirstTab;
+        t2 = FirstTab();
     if (!t || !t2 || t == t2 || t == NO_TABBUFFER)
         return;
     if (t->prevTab) {
         if (t->nextTab)
             t->nextTab->prevTab = t->prevTab;
         else
-            LastTab = t->prevTab;
+            getRuntime()->LastTab = t->prevTab;
         t->prevTab->nextTab = t->nextTab;
     } else {
         t->nextTab->prevTab = NULL;
-        FirstTab = t->nextTab;
+        getRuntime()->FirstTab = t->nextTab;
     }
     if (right) {
         t->nextTab = t2->nextTab;
@@ -6197,7 +6197,7 @@ moveTab(struct TabBuffer* t, struct TabBuffer* t2, int right)
         if (t2->nextTab)
             t2->nextTab->prevTab = t;
         else
-            LastTab = t;
+            getRuntime()->LastTab = t;
         t2->nextTab = t;
     } else {
         t->prevTab = t2->prevTab;
@@ -6205,7 +6205,7 @@ moveTab(struct TabBuffer* t, struct TabBuffer* t2, int right)
         if (t2->prevTab)
             t2->prevTab->nextTab = t;
         else
-            FirstTab = t;
+            getRuntime()->FirstTab = t;
         t2->prevTab = t;
     }
     displayBuffer(Currentbuf, B_FORCE_REDRAW);

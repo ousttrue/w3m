@@ -130,8 +130,8 @@ void download_panel()
     if (!FirstDL) {
         if (replace) {
             if (Currentbuf == Firstbuf && Currentbuf->nextBuffer == NULL) {
-                if (nTab > 1)
-                    deleteTab(CurrentTab);
+                if (nTab() > 1)
+                    deleteTab(CurrentTab());
             } else
                 delBuffer(Currentbuf);
             displayBuffer(Currentbuf, B_FORCE_REDRAW);
@@ -192,11 +192,9 @@ bool hasDownloadList()
 {
     if (add_download_list) {
         add_download_list = FALSE;
-        CurrentTab = LastTab;
-        if (!FirstTab) {
-            FirstTab = LastTab = CurrentTab = newTab();
-            nTab = 1;
-        }
+
+        tabs_prepare();
+
         if (!Firstbuf || Firstbuf == NO_BUFFER) {
             Firstbuf = Currentbuf = newBuffer(INIT_BUFFER_WIDTH);
             Currentbuf->bufferprop = BP_INTERNAL | BP_NO_URL;

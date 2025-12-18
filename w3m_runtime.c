@@ -1,4 +1,6 @@
 #include "w3m_runtime.h"
+#include "fm.h"
+#include "tab.h"
 #include "image.h"
 #include "terms.h"
 #include "config.h"
@@ -24,10 +26,31 @@ struct Runtime g_runtime = {
     .lines = 0,
     .cols = 0,
     .Do_not_use_ti_te = false,
+
+    .CurrentTab = 0,
+    .FirstTab = 0,
+    .LastTab = 0,
+    .nTab = 0,
 };
 struct Runtime* getRuntime()
 {
     return &g_runtime;
+}
+struct TabBuffer* CurrentTab()
+{
+    return g_runtime.CurrentTab;
+}
+struct TabBuffer* FirstTab()
+{
+    return g_runtime.FirstTab;
+}
+struct TabBuffer* LastTab()
+{
+    return g_runtime.LastTab;
+}
+int nTab()
+{
+    return g_runtime.nTab;
 }
 
 #define MAXIMUM_COLS 1024
@@ -271,4 +294,87 @@ void term_title(const char* s)
 void bell(void)
 {
     write1(7);
+}
+
+//
+// tab
+//
+void _newT(void)
+{
+    struct TabBuffer* tag = newTab();
+    if (!tag)
+        return;
+
+    Buffer* buf = newBuffer(Currentbuf->width);
+    copyBuffer(buf, Currentbuf);
+    buf->nextBuffer = NULL;
+    for (int i = 0; i < MAX_LB; i++)
+        buf->linkBuffer[i] = NULL;
+    (*buf->clone)++;
+    tag->firstBuffer = tag->currentBuffer = buf;
+
+    tag->nextTab = g_runtime.CurrentTab->nextTab;
+    tag->prevTab = g_runtime.CurrentTab;
+    if (g_runtime.CurrentTab->nextTab)
+        g_runtime.CurrentTab->nextTab->prevTab = tag;
+    else
+        g_runtime.LastTab = tag;
+    g_runtime.CurrentTab->nextTab = tag;
+    g_runtime.CurrentTab = tag;
+    g_runtime.nTab++;
+}
+
+void tabs_prepare()
+{
+    g_runtime.CurrentTab = g_runtime.LastTab;
+    if (!g_runtime.FirstTab) {
+        g_runtime.FirstTab = g_runtime.LastTab = g_runtime.CurrentTab = newTab();
+        g_runtime.nTab = 1;
+    }
+}
+
+void calcTabPos(void)
+{
+    struct TabBuffer* tab;
+    int lcol = 0, rcol = 0, col;
+    int n1, n2, na, nx, ny, ix, iy;
+
+    if (nTab <= 0)
+        return;
+    n1 = (TTY_COLS() - rcol - lcol) / TabCols;
+    if (n1 >= g_runtime.nTab) {
+        n2 = 1;
+        ny = 1;
+    } else {
+        if (n1 < 0)
+            n1 = 0;
+        n2 = TTY_COLS() / TabCols;
+        if (n2 == 0)
+            n2 = 1;
+        ny = (g_runtime.nTab - n1 - 1) / n2 + 2;
+    }
+    na = n1 + n2 * (ny - 1);
+    n1 -= (na - g_runtime.nTab) / ny;
+    if (n1 < 0)
+        n1 = 0;
+    na = n1 + n2 * (ny - 1);
+    tab = g_runtime.FirstTab;
+    for (iy = 0; iy < ny && tab; iy++) {
+        if (iy == 0) {
+            nx = n1;
+            col = TTY_COLS() - rcol - lcol;
+        } else {
+            nx = n2 - (na - g_runtime.nTab + (iy - 1)) / (ny - 1);
+            col = TTY_COLS();
+        }
+        for (ix = 0; ix < nx && tab; ix++, tab = tab->nextTab) {
+            tab->x1 = col * ix / nx;
+            tab->x2 = col * (ix + 1) / nx - 1;
+            tab->y = iy;
+            if (iy == 0) {
+                tab->x1 += lcol;
+                tab->x2 += lcol;
+            }
+        }
+    }
 }

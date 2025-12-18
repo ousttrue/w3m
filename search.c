@@ -1,4 +1,5 @@
 #include "fm.h"
+#include "w3m_runtime.h"
 #include "tab.h"
 #include "regex.h"
 #include <signal.h>

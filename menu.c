@@ -1,4 +1,5 @@
 #include "menu.h"
+#include "w3m_runtime.h"
 #include "display.h"
 #include "tab.h"
 #include "w3m_runtime.h"
@@ -1955,8 +1956,8 @@ initSelTabMenu(void)
     static char* comment = " SPC for select / D for delete tab ";
     SelTabV = -1;
     int i = 0;
-    for (struct TabBuffer* tab = LastTab; tab != NULL; i++, tab = tab->prevTab) {
-        if (tab == CurrentTab)
+    for (struct TabBuffer* tab = LastTab(); tab != NULL; i++, tab = tab->prevTab) {
+        if (tab == CurrentTab())
             SelTabV = i;
     }
     int nitem = i;
@@ -1964,7 +1965,7 @@ initSelTabMenu(void)
     char** label = New_N(char*, nitem + 2);
     int len=0;
     i = 0;
-    for (struct TabBuffer* tab = LastTab; i < nitem; i++, tab = tab->prevTab) {
+    for (struct TabBuffer* tab = LastTab(); i < nitem; i++, tab = tab->prevTab) {
         Buffer* buf = tab->currentBuffer;
         Str str = Sprintf("<%s>", buf->buffername);
         if (buf->filename != NULL) {
@@ -2022,12 +2023,12 @@ smChTab(void)
 
     if (SelTabV < 0 || SelTabV >= SelTabMenu.nitem)
         return;
-    for (i = 0, tab = LastTab; i < SelTabV && tab != NULL;
+    for (i = 0, tab = LastTab(); i < SelTabV && tab != NULL;
         i++, tab = tab->prevTab)
         ;
-    CurrentTab = tab;
-    for (tab = LastTab; tab != NULL; tab = tab->prevTab) {
-        if (tab == CurrentTab)
+    getRuntime()->CurrentTab = tab;
+    for (tab = LastTab(); tab != NULL; tab = tab->prevTab) {
+        if (tab == CurrentTab())
             continue;
         buf = tab->currentBuffer;
 #ifdef USE_IMAGE

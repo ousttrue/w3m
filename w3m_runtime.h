@@ -34,8 +34,21 @@ struct Runtime {
     char gcmap[96];
 
     bool Do_not_use_ti_te;
+
+    struct TabBuffer* CurrentTab;
+    struct TabBuffer* FirstTab;
+    struct TabBuffer* LastTab;
+    int nTab;
 };
 struct Runtime* getRuntime(void);
+struct TabBuffer* CurrentTab();
+struct TabBuffer* FirstTab();
+struct TabBuffer* LastTab();
+int nTab();
+
+#define Currentbuf (getRuntime()->CurrentTab->currentBuffer)
+#define Firstbuf (getRuntime()->CurrentTab->firstBuffer)
+
 int getOutputHandle();
 void reset_error_exit(int);
 char graphchar(char c);
@@ -83,3 +96,5 @@ void bell(void);
 void quitfm(void);
 
 int get_pixel_per_cell(int* ppc, int* ppl);
+
+void tabs_prepare();
