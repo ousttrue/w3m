@@ -12,7 +12,7 @@ putAnchor(AnchorList* al, char* url, char* target, Anchor** anchor_return,
 {
     int n, i, j;
     Anchor* a;
-    BufferPoint bp = { 0 };
+    struct BufferPoint bp = { 0 };
     if (al == NULL) {
         al = New(AnchorList);
         al->anchors = NULL;
@@ -101,7 +101,7 @@ registerForm(Buffer* buf, FormList* flist, struct parsed_tag* tag, int line,
 
 int onAnchor(Anchor* a, int line, int pos)
 {
-    BufferPoint bp;
+    struct BufferPoint bp;
     bp.line = line;
     bp.pos = pos;
 
@@ -242,7 +242,7 @@ reseq_anchor(Buffer* buf)
     int i, j, n, nmark = (buf->hmarklist) ? buf->hmarklist->nmark : 0;
     short* seqmap;
     Anchor *a, *a1;
-    HmarkerList* ml = NULL;
+    struct HmarkerList* ml = NULL;
 
     if (!buf->href)
         return;
@@ -439,11 +439,11 @@ char* reAnchorNewsheader(Buffer* buf)
 #endif /* USE_NNTP */
 
 #define FIRST_MARKER_SIZE 30
-HmarkerList*
-putHmarker(HmarkerList* ml, int line, int pos, int seq)
+struct HmarkerList*
+putHmarker(struct HmarkerList* ml, int line, int pos, int seq)
 {
     if (ml == NULL) {
-        ml = New(HmarkerList);
+        ml = New(struct HmarkerList);
         ml->marks = NULL;
         ml->nmark = 0;
         ml->markmax = 0;
@@ -451,14 +451,14 @@ putHmarker(HmarkerList* ml, int line, int pos, int seq)
     }
     if (ml->markmax == 0) {
         ml->markmax = FIRST_MARKER_SIZE;
-        ml->marks = NewAtom_N(BufferPoint, ml->markmax);
-        bzero(ml->marks, sizeof(BufferPoint) * ml->markmax);
+        ml->marks = NewAtom_N(struct BufferPoint, ml->markmax);
+        bzero(ml->marks, sizeof(struct BufferPoint) * ml->markmax);
     }
     if (seq + 1 > ml->nmark)
         ml->nmark = seq + 1;
     if (ml->nmark >= ml->markmax) {
         ml->markmax = ml->nmark * 2;
-        ml->marks = New_Reuse(BufferPoint, ml->marks, ml->markmax);
+        ml->marks = New_Reuse(struct BufferPoint, ml->marks, ml->markmax);
     }
     ml->marks[seq].line = line;
     ml->marks[seq].pos = pos;
@@ -502,7 +502,7 @@ closest_prev_anchor(AnchorList* a, Anchor* an, int x, int y)
     return an;
 }
 
-void shiftAnchorPosition(AnchorList* al, HmarkerList* hl, int line, int pos,
+void shiftAnchorPosition(AnchorList* al, struct HmarkerList* hl, int line, int pos,
     int shift)
 {
     Anchor* a;

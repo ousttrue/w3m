@@ -333,11 +333,11 @@ extern int REV_LB[];
 
 #include "line.h"
 
-typedef struct {
+struct BufferPoint {
     int line;
     int pos;
     int invalid;
-} BufferPoint;
+};
 
 #ifdef USE_IMAGE
 typedef struct _imageCache {
@@ -376,15 +376,13 @@ typedef struct _anchor {
     char* referer;
     char* title;
     unsigned char accesskey;
-    BufferPoint start;
-    BufferPoint end;
+    struct BufferPoint start;
+    struct BufferPoint end;
     int hseq;
     char slave;
     short y;
     short rows;
-#ifdef USE_IMAGE
     Image* image;
-#endif
 } Anchor;
 
 #define NO_REFERER ((char*)-1)
@@ -396,12 +394,12 @@ typedef struct _anchorList {
     int acache;
 } AnchorList;
 
-typedef struct {
-    BufferPoint* marks;
+struct HmarkerList {
+    struct BufferPoint* marks;
     int nmark;
     int markmax;
     int prevhseq;
-} HmarkerList;
+};
 
 #define LINK_TYPE_NONE 0
 #define LINK_TYPE_REL 1
@@ -446,8 +444,8 @@ typedef struct _Buffer {
     LinkList* linklist;
     FormList* formlist;
     struct MapList* maplist;
-    HmarkerList* hmarklist;
-    HmarkerList* imarklist;
+    struct HmarkerList* hmarklist;
+    struct HmarkerList* imarklist;
     ParsedURL currentURL;
     ParsedURL* baseURL;
     char* baseTarget;

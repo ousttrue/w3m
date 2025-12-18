@@ -5773,7 +5773,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                             image->cache = getImage(image, base,
                                 IMG_FLAG_SKIP);
                         } else if (iseq < 0) {
-                            BufferPoint* po = buf->imarklist->marks - iseq - 1;
+                            struct BufferPoint* po = buf->imarklist->marks - iseq - 1;
                             Anchor* a = retrieveAnchor(buf->img,
                                 po->line, po->pos);
                             if (a) {

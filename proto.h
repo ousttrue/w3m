@@ -504,11 +504,9 @@ extern char* reAnchorNewsheader(Buffer* buf);
 extern void addMultirowsForm(Buffer* buf, AnchorList* al);
 extern Anchor* closest_next_anchor(AnchorList* a, Anchor* an, int x, int y);
 extern Anchor* closest_prev_anchor(AnchorList* a, Anchor* an, int x, int y);
-#ifdef USE_IMAGE
 void addMultirowsImg(Buffer* buf, AnchorList* al);
-#endif
-extern HmarkerList* putHmarker(HmarkerList* ml, int line, int pos, int seq);
-extern void shiftAnchorPosition(AnchorList* a, HmarkerList* hl, int line,
+extern struct HmarkerList* putHmarker(struct HmarkerList* ml, int line, int pos, int seq);
+extern void shiftAnchorPosition(AnchorList* a, struct HmarkerList* hl, int line,
     int pos, int shift);
 extern char* getAnchorText(Buffer* buf, AnchorList* al, Anchor* a);
 extern Buffer* link_list_panel(Buffer* buf);
