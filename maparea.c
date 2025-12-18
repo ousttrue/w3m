@@ -1,14 +1,12 @@
-/* $Id: map.c,v 1.30 2003/09/24 18:49:00 ukai Exp $ */
-/*
- * client-side image maps
- */
 #include "fm.h"
+#include "maparea.h"
+#include "libwc/wc.h"
 #include <math.h>
 
-MapList*
+struct MapList*
 searchMapList(Buffer* buf, char* name)
 {
-    MapList* ml;
+    struct MapList* ml;
 
     if (name == NULL)
         return NULL;
@@ -19,9 +17,8 @@ searchMapList(Buffer* buf, char* name)
     return ml;
 }
 
-#ifdef USE_IMAGE
 static int
-inMapArea(MapArea* a, int x, int y)
+inMapArea(struct MapArea* a, int x, int y)
 {
     int i;
     double r1, r2, s, c, t;
@@ -67,16 +64,16 @@ inMapArea(MapArea* a, int x, int y)
 }
 
 static int
-nearestMapArea(MapList* ml, int x, int y)
+nearestMapArea(struct MapList* ml, int x, int y)
 {
     ListItem* al;
-    MapArea* a;
+    struct MapArea* a;
     int i, l, n = -1, min = -1, limit = pixel_per_char * pixel_per_char + pixel_per_line * pixel_per_line;
 
     if (!ml || !ml->area)
         return n;
     for (i = 0, al = ml->area->first; al != NULL; i++, al = al->next) {
-        a = (MapArea*)al->ptr;
+        a = (struct MapArea*)al->ptr;
         if (a) {
             l = (a->center_x - x) * (a->center_x - x)
                 + (a->center_y - y) * (a->center_y - y);
@@ -90,10 +87,10 @@ nearestMapArea(MapList* ml, int x, int y)
 }
 
 static int
-searchMapArea(Buffer* buf, MapList* ml, Anchor* a_img)
+searchMapArea(Buffer* buf, struct MapList* ml, Anchor* a_img)
 {
     ListItem* al;
-    MapArea* a;
+    struct MapArea* a;
     int i, n;
     int px, py;
 
@@ -103,7 +100,7 @@ searchMapArea(Buffer* buf, MapList* ml, Anchor* a_img)
         return -1;
     n = -ml->area->nitem;
     for (i = 0, al = ml->area->first; al != NULL; i++, al = al->next) {
-        a = (MapArea*)al->ptr;
+        a = (struct MapArea*)al->ptr;
         if (!a)
             continue;
         if (n < 0 && inMapArea(a, px, py)) {
@@ -121,14 +118,14 @@ searchMapArea(Buffer* buf, MapList* ml, Anchor* a_img)
     return n;
 }
 
-MapArea*
+struct MapArea*
 retrieveCurrentMapArea(Buffer* buf)
 {
     Anchor *a_img, *a_form;
     FormItemList* fi;
-    MapList* ml;
+    struct MapList* ml;
     ListItem* al;
-    MapArea* a;
+    struct MapArea* a;
     int i, n;
 
     a_img = retrieveCurrentImg(buf);
@@ -148,7 +145,7 @@ retrieveCurrentMapArea(Buffer* buf)
     if (n < 0)
         return NULL;
     for (i = 0, al = ml->area->first; al != NULL; i++, al = al->next) {
-        a = (MapArea*)al->ptr;
+        a = (struct MapArea*)al->ptr;
         if (a && i == n)
             return a;
     }
@@ -172,7 +169,6 @@ int getMapXY(Buffer* buf, Anchor* a, int* x, int* y)
         *y = 1;
     return 1;
 }
-#endif
 
 Anchor*
 retrieveCurrentMap(Buffer* buf)
@@ -189,18 +185,15 @@ retrieveCurrentMap(Buffer* buf)
     return NULL;
 }
 
-#if defined(USE_IMAGE) || defined(MENU_MAP)
-MapArea*
+struct MapArea*
 follow_map_menu(Buffer* buf, char* name, Anchor* a_img, int x, int y)
 {
-    MapList* ml;
+    struct MapList* ml;
     ListItem* al;
     int i, selected = -1;
     int initial = 0;
-#ifdef MENU_MAP
-    MapArea* a;
+    struct MapArea* a;
     char** label;
-#endif
 
     ml = searchMapList(buf, name);
     if (ml == NULL || ml->area == NULL || ml->area->nitem == 0)
@@ -219,7 +212,7 @@ follow_map_menu(Buffer* buf, char* name, Anchor* a_img, int x, int y)
 #ifdef MENU_MAP
     label = New_N(char*, ml->area->nitem + 1);
     for (i = 0, al = ml->area->first; al != NULL; i++, al = al->next) {
-        a = (MapArea*)al->ptr;
+        a = (struct MapArea*)al->ptr;
         if (a)
             label[i] = *a->alt ? a->alt : a->url;
         else
@@ -236,12 +229,11 @@ map_end:
     if (selected >= 0) {
         for (i = 0, al = ml->area->first; al != NULL; i++, al = al->next) {
             if (al->ptr && i == selected)
-                return (MapArea*)al->ptr;
+                return (struct MapArea*)al->ptr;
         }
     }
     return NULL;
 }
-#endif
 
 #ifndef MENU_MAP
 char* map1 = "<HTML><HEAD><TITLE>Image map links</TITLE></HEAD>\
@@ -290,10 +282,10 @@ follow_map_panel(Buffer* buf, char* name)
 }
 #endif
 
-MapArea*
+struct MapArea*
 newMapArea(char* url, char* target, char* alt, char* shape, char* coords)
 {
-    MapArea* a = New(MapArea);
+    struct MapArea* a = New(struct MapArea);
 #ifdef USE_IMAGE
     char* p;
     int i, max;
@@ -389,9 +381,9 @@ newMapArea(char* url, char* target, char* alt, char* shape, char* coords)
 static void
 append_map_info(Buffer* buf, Str tmp, FormItemList* fi)
 {
-    MapList* ml;
+    struct MapList* ml;
     ListItem* al;
-    MapArea* a;
+    struct MapArea* a;
     ParsedURL pu;
     char *p, *q;
 
@@ -403,7 +395,7 @@ append_map_info(Buffer* buf, Str tmp, FormItemList* fi)
         "<tr valign=top><td colspan=2>Links of current image map",
         "<tr valign=top><td colspan=2><table>", NULL);
     for (al = ml->area->first; al != NULL; al = al->next) {
-        a = (MapArea*)al->ptr;
+        a = (struct MapArea*)al->ptr;
         if (!a)
             continue;
         parseURL2(a->url, &pu, baseURL(buf));
@@ -516,10 +508,8 @@ page_info_panel(Buffer* buf)
     struct frameset* f_set = NULL;
     int all;
     char *p, *q;
-#ifdef USE_M17N
     wc_ces_list* list;
     char charset[16];
-#endif
     Buffer* newbuf;
 
     Strcat_charp(tmp, "<html><head>\
@@ -544,7 +534,6 @@ page_info_panel(Buffer* buf)
         buf->real_type ? html_quote(buf->real_type) : "unknown",
         "<tr valign=top><td nowrap>Last Modified<td>",
         html_quote(last_modified(buf)), NULL);
-#ifdef USE_M17N
     if (buf->document_charset != InnerCharset) {
         list = wc_get_ces_list();
         Strcat_charp(tmp,
@@ -559,7 +548,7 @@ page_info_panel(Buffer* buf)
         Strcat_charp(tmp, "</select>");
         Strcat_charp(tmp, "<tr><td><td><input type=submit value=Change>");
     }
-#endif
+
     Strcat_m_charp(tmp,
         "<tr valign=top><td nowrap>Number of lines<td>",
         Sprintf("%d", all)->ptr,

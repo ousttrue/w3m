@@ -1,4 +1,5 @@
 #include "w3m_runtime.h"
+#include "maparea.h"
 #include "download.h"
 #include "tab.h"
 #include "etc.h"
@@ -5879,7 +5880,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                     break;
                 case HTML_MAP:
                     if (parsedtag_get_value(tag, ATTR_NAME, &p)) {
-                        MapList* m = New(MapList);
+                        struct MapList* m = New(struct MapList);
                         m->name = Strnew_charp(p);
                         m->area = newGeneralList();
                         m->next = buf->maplist;
@@ -5893,7 +5894,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                     if (buf->maplist == NULL) /* outside of <map>..</map> */
                         break;
                     if (parsedtag_get_value(tag, ATTR_HREF, &p)) {
-                        MapArea* a;
+                        struct MapArea* a;
                         p = url_encode(remove_space(p), base,
                             buf->document_charset);
                         t = NULL;
@@ -8085,7 +8086,7 @@ doExternal(URLFile uf, char* type, Buffer* defaultbuf)
             exitRawMode();
             mySystem(command->ptr, 0);
             enterRawMode();
-            if (CurrentTab && Currentbuf)
+            if (CurrentTab() && Currentbuf)
                 displayBuffer(Currentbuf, B_FORCE_REDRAW);
         } else {
             mySystem(command->ptr, 1);

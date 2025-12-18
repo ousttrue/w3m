@@ -333,23 +333,6 @@ extern int REV_LB[];
 
 #include "line.h"
 
-typedef struct _MapArea {
-    char* url;
-    char* target;
-    char* alt;
-    char shape;
-    short* coords;
-    int ncoords;
-    short center_x;
-    short center_y;
-} MapArea;
-
-typedef struct _MapList {
-    Str name;
-    GeneralList* area;
-    struct _MapList* next;
-} MapList;
-
 typedef struct {
     int line;
     int pos;
@@ -462,7 +445,7 @@ typedef struct _Buffer {
     AnchorList* formitem;
     LinkList* linklist;
     FormList* formlist;
-    MapList* maplist;
+    struct MapList* maplist;
     HmarkerList* hmarklist;
     HmarkerList* imarklist;
     ParsedURL currentURL;

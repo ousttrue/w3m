@@ -1,4 +1,5 @@
 #include "w3m_runtime.h"
+#include "maparea.h"
 #include "fm.h"
 #include "myctype.h"
 #include "regex.h"
@@ -801,14 +802,14 @@ link_list_panel(Buffer* buf)
             fi = (FormItemList*)a->url;
             fi = fi->parent->item;
             if (fi->parent->method == FORM_METHOD_INTERNAL && !Strcmp_charp(fi->parent->action, "map") && fi->value) {
-                MapList* ml = searchMapList(buf, fi->value->ptr);
+                struct MapList* ml = searchMapList(buf, fi->value->ptr);
                 ListItem* mi;
-                MapArea* m;
+                struct MapArea* m;
                 if (!ml)
                     continue;
                 Strcat_charp(tmp, "<br>\n<b>Image map</b>\n<ol>\n");
                 for (mi = ml->area->first; mi != NULL; mi = mi->next) {
-                    m = (MapArea*)mi->ptr;
+                    m = (struct MapArea*)mi->ptr;
                     if (!m)
                         continue;
                     parseURL2(m->url, &pu, baseURL(buf));

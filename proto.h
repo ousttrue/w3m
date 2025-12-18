@@ -403,10 +403,10 @@ extern void do_internal(char* action, char* data);
 extern void form_write_data(FILE* f, char* boundary, char* name, char* value);
 extern void form_write_from_file(FILE* f, char* boundary, char* name,
     char* filename, char* file);
-extern MapList* searchMapList(Buffer* buf, char* name);
+extern struct MapList* searchMapList(Buffer* buf, char* name);
 extern void follow_map(struct parsed_tagarg* arg);
 #if defined(MENU_MAP) || defined(USE_IMAGE)
-extern MapArea* follow_map_menu(Buffer* buf, char* name, Anchor* a_img, int x,
+extern struct MapArea* follow_map_menu(Buffer* buf, char* name, Anchor* a_img, int x,
     int y);
 #endif
 #ifndef MENU_MAP
@@ -414,10 +414,10 @@ extern Buffer* follow_map_panel(Buffer* buf, char* name);
 #endif
 #ifdef USE_IMAGE
 extern int getMapXY(Buffer* buf, Anchor* a, int* x, int* y);
-extern MapArea* retrieveCurrentMapArea(Buffer* buf);
+extern struct MapArea* retrieveCurrentMapArea(Buffer* buf);
 #endif
 extern Anchor* retrieveCurrentMap(Buffer* buf);
-extern MapArea* newMapArea(char* url, char* target, char* alt, char* shape,
+extern struct MapArea* newMapArea(char* url, char* target, char* alt, char* shape,
     char* coords);
 extern Buffer* page_info_panel(Buffer* buf);
 extern struct frame_body* newFrame(struct parsed_tag* tag, Buffer* buf);

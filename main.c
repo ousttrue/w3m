@@ -1,3 +1,4 @@
+#include "maparea.h"
 #include "w3m_runtime.h"
 #include "download.h"
 #include "tab.h"
@@ -3550,18 +3551,16 @@ DEFUN(pginfo, INFO, "Display information about the current document")
 void follow_map(struct parsed_tagarg* arg)
 {
     char* name = tag_get_value(arg, "link");
-#if defined(MENU_MAP) || defined(USE_IMAGE)
     Anchor* an;
-    MapArea* a;
     int x, y;
     ParsedURL p_url;
 
     an = retrieveCurrentImg(Currentbuf);
     x = Currentbuf->cursorX + Currentbuf->rootX;
     y = Currentbuf->cursorY + Currentbuf->rootY;
-    a = follow_map_menu(Currentbuf, name, an, x, y);
+    struct MapArea* a = follow_map_menu(Currentbuf, name, an, x, y);
     if (a == NULL || a->url == NULL || *(a->url) == '\0') {
-#endif
+
 #ifndef MENU_MAP
         Buffer* buf = follow_map_panel(Currentbuf, name);
 
