@@ -1,4 +1,6 @@
 #include "w3m_runtime.h"
+#include "siteconf.h"
+#include "http_request.h"
 #include "buffer.h"
 #include "anchor.h"
 #include "maparea.h"
@@ -947,7 +949,7 @@ struct http_auth {
     char* scheme;
     struct auth_param* param;
     Str (*cred)(struct http_auth* ha, Str uname, Str pw, struct Url* pu,
-        HRequest* hr, FormList* request);
+        struct HttpRequest* hr, FormList* request);
 };
 
 enum {
@@ -1142,7 +1144,7 @@ get_auth_param(struct auth_param* auth, char* name)
 
 static Str
 AuthBasicCred(struct http_auth* ha, Str uname, Str pw, struct Url* pu,
-    HRequest* hr, FormList* request)
+    struct HttpRequest* hr, FormList* request)
 {
     Str s = Strdup(uname);
     Strcat_char(s, ':');
@@ -1199,7 +1201,7 @@ enum {
 
 static Str
 AuthDigestCred(struct http_auth* ha, Str uname, Str pw, struct Url* pu,
-    HRequest* hr, FormList* request)
+    struct HttpRequest* hr, FormList* request)
 {
     Str tmp, a1buf, a2buf, rd, s;
     unsigned char md5[MD5_DIGEST_LENGTH + 1];
@@ -1472,7 +1474,7 @@ findAuthentication(struct http_auth* hauth, struct Buffer* buf, char* auth_field
 
 static void
 getAuthCookie(struct http_auth* hauth, char* auth_header,
-    TextList* extra_header, struct Url* pu, HRequest* hr,
+    TextList* extra_header, struct Url* pu, struct HttpRequest* hr,
     FormList* request,
     volatile Str* uname, volatile Str* pwd)
 {
@@ -1667,7 +1669,7 @@ loadGeneralFile(char* path, struct Url* volatile current, char* referer,
 #ifdef USE_M17N
     wc_ces charset = WC_CES_US_ASCII;
 #endif
-    HRequest hr;
+    struct HttpRequest hr;
     struct Url* volatile auth_pu;
 
     tpath = path;

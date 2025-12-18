@@ -257,19 +257,6 @@ extern int REV_LB[];
 #define IMG_FLAG_ERROR 2
 #define IMG_FLAG_DONT_REMOVE 4
 
-#define IS_EMPTY_PARSED_URL(pu) ((pu)->scheme == SCM_UNKNOWN && !(pu)->file)
-#define SCONF_RESERVED 0
-#define SCONF_SUBSTITUTE_URL 1
-#define SCONF_URL_CHARSET 2
-#define SCONF_NO_REFERER_FROM 3
-#define SCONF_NO_REFERER_TO 4
-#define SCONF_USER_AGENT 5
-#define SCONF_N_FIELD 6
-#define query_SCONF_SUBSTITUTE_URL(pu) ((const char*)querySiteconf(pu, SCONF_SUBSTITUTE_URL))
-#define query_SCONF_USER_AGENT(pu) ((const char*)querySiteconf(pu, SCONF_USER_AGENT))
-#define query_SCONF_URL_CHARSET(pu) ((const wc_ces*)querySiteconf(pu, SCONF_URL_CHARSET))
-#define query_SCONF_NO_REFERER_FROM(pu) ((const int*)querySiteconf(pu, SCONF_NO_REFERER_FROM))
-#define query_SCONF_NO_REFERER_TO(pu) ((const int*)querySiteconf(pu, SCONF_NO_REFERER_TO))
 
 /*
  * Macros.
@@ -288,19 +275,6 @@ extern int REV_LB[];
 #define strcasecmp stricmp
 #define strncasecmp strnicmp
 #endif /* __EMX__ */
-
-#define SKIP_BLANKS(p)                 \
-    {                                  \
-        while (*(p) && IS_SPACE(*(p))) \
-            (p)++;                     \
-    }
-#define SKIP_NON_BLANKS(p)              \
-    {                                   \
-        while (*(p) && !IS_SPACE(*(p))) \
-            (p)++;                      \
-    }
-#define IS_ENDL(c) ((c) == '\0' || (c) == '\r' || (c) == '\n')
-#define IS_ENDT(c) (IS_ENDL(c) || (c) == ';')
 
 #define bpcmp(a, b) \
     (((a).line - (b).line) ? ((a).line - (b).line) : ((a).pos - (b).pos))
@@ -360,7 +334,6 @@ typedef struct _DownloadList {
 #define RESTORE_BUFPOSITION(sbufp) COPY_BUFPOSITION(Currentbuf, sbufp)
 #define TOP_LINENUMBER(buf) ((buf)->topLine ? (buf)->topLine->linenumber : 1)
 #define CUR_LINENUMBER(buf) ((buf)->currentLine ? (buf)->currentLine->linenumber : 1)
-
 
 #define FONTSTAT_MAX 127
 
@@ -522,21 +495,6 @@ struct cookie {
 #define VALIGN_TOP 1
 #define VALIGN_BOTTOM 2
 
-typedef struct http_request {
-    char command;
-    char flag;
-    char* referer;
-    FormList* request;
-} HRequest;
-
-#define HR_COMMAND_GET 0
-#define HR_COMMAND_POST 1
-#define HR_COMMAND_CONNECT 2
-#define HR_COMMAND_HEAD 3
-
-#define HR_FLAG_LOCAL 1
-#define HR_FLAG_PROXY 2
-
 #define HTST_UNKNOWN 255
 #define HTST_MISSING 254
 #define HTST_NORMAL 0
@@ -584,7 +542,7 @@ extern unsigned char EscDKeymap[];
 #ifdef __EMX__
 extern unsigned char PcKeymap[];
 #endif
-extern FuncList w3mFuncList[];
+extern struct FuncList w3mFuncList[];
 
 global char* HTTP_proxy init(NULL);
 #ifdef USE_SSL
@@ -732,7 +690,6 @@ global int BackgroundExtViewer init(TRUE);
 global int disable_secret_security_check init(FALSE);
 global char* passwd_file init(PASSWD_FILE);
 global char* pre_form_file init(PRE_FORM_FILE);
-global char* siteconf_file init(SITECONF_FILE);
 global char* ftppasswd init(NULL);
 global int ftppass_hostnamegen init(TRUE);
 #ifdef USE_IMAGE

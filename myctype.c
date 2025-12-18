@@ -1,3 +1,5 @@
+#include "myctype.h"
+
 /* $Id: myctype.c,v 1.7 2003/09/22 21:02:20 ukai Exp $ */
 unsigned char MYCTYPE_MAP[0x100] = {
     /* NUL SOH STX ETX EOT ENQ ACK BEL   BS  HT  LF  VT  FF  CR  SO  SI */
@@ -534,3 +536,31 @@ unsigned char MYCTYPE_DIGITMAP[0x100] = {
     255,
     255,
 };
+
+int str_to_bool(char* value, int old)
+{
+    if (value == 0)
+        return 1;
+    switch (TOLOWER(*value)) {
+    case '0':
+    case 'f': /* false */
+    case 'n': /* no */
+    case 'u': /* undef */
+        return 0;
+    case 'o':
+        if (TOLOWER(value[1]) == 'f') /* off */
+            return 0;
+        return 1; /* on */
+    case 't':
+        if (TOLOWER(value[1]) == 'o') /* toggle */
+            return !old;
+        return 1; /* true */
+    case '!':
+    case 'r': /* reverse */
+    case 'x': /* exchange */
+        return !old;
+    }
+    return 1;
+}
+
+

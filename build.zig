@@ -17,6 +17,9 @@ const w3m_srcs = [_][]const u8{
     "keybind.c",
     "util.c",
 
+    "urlscheme.c",
+    "siteconf.c",
+    "http_request.c",
     "main.c",
     "file.c",
     "display.c",

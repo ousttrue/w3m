@@ -449,17 +449,14 @@ extern int openSocket(char* hostname, char* remoteport_name,
     unsigned short remoteport_num);
 extern void parseURL(char* url, struct Url* p_url, struct Url* current);
 extern void copyParsedURL(struct Url* p, const struct Url* q);
-extern void parseURL2(char* url, struct Url* pu, struct Url* current);
-extern Str parsedURL2Str(struct Url* pu);
 extern Str parsedURL2RefererStr(struct Url* pu);
 extern int getURLScheme(char** url);
 extern void init_stream(URLFile* uf, int scheme, InputStream stream);
-Str HTTPrequestMethod(HRequest* hr);
-Str HTTPrequestURI(struct Url* pu, HRequest* hr);
+struct HttpRequest;
 extern URLFile openURL(char* url, struct Url* pu, struct Url* current,
     URLOption* option, FormList* request,
     TextList* extra_header, URLFile* ouf,
-    HRequest* hr, unsigned char* status, bool do_download);
+    struct HttpRequest* hr, unsigned char* status, bool do_download);
 extern int mailcapMatch(struct mailcap* mcap, char* type);
 extern struct mailcap* searchMailcap(struct mailcap* table, char* type);
 extern void initMailcap(void);
@@ -542,7 +539,6 @@ extern char* confFile(char* base);
 extern char* auxbinFile(char* base);
 extern char* libFile(char* base);
 extern char* helpFile(char* base);
-extern const void* querySiteconf(const struct Url* query_pu, int field);
 extern Str localCookie(void);
 extern Str loadLocalDir(char* dirname);
 extern void set_environ(char* var, char* value);
@@ -646,10 +642,6 @@ extern void initKeymap(int force);
 extern int getFuncList(char* id);
 extern int getKey(char* s);
 extern char* getKeyData(int key);
-extern char* getWord(char** str);
-extern char* getQWord(char** str);
-struct regex;
-extern char* getRegexWord(const char** str, struct regex** regex_ret);
 #ifdef USE_MOUSE
 extern void initMouseAction(void);
 #endif

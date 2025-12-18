@@ -1,4 +1,5 @@
 #include "w3m_runtime.h"
+#include "siteconf.h"
 #include "anchor.h"
 #include "frame.h"
 #include "fm.h"
