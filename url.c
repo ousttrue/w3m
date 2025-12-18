@@ -1585,7 +1585,7 @@ void init_stream(URLFile* uf, int scheme, InputStream stream)
 URLFile
 openURL(char* url, ParsedURL* pu, ParsedURL* current,
     URLOption* option, FormList* request, TextList* extra_header,
-    URLFile* ouf, HRequest* hr, unsigned char* status)
+    URLFile* ouf, HRequest* hr, unsigned char* status, bool do_download)
 {
     Str tmp;
     int sock, scheme;
@@ -1666,7 +1666,7 @@ retry:
             uf.scheme = pu->scheme = SCM_LOCAL_CGI;
             return uf;
         }
-        examineFile(pu->real_file, &uf);
+        examineFile(pu->real_file, &uf, false);
         if (uf.stream == NULL) {
             if (dir_exist(pu->real_file)) {
                 add_index_file(pu, &uf);
@@ -1687,7 +1687,7 @@ retry:
                         return uf;
                     }
                 } else {
-                    examineFile(q, &uf);
+                    examineFile(q, &uf, do_download);
                     if (uf.stream) {
                         pu->file = p;
                         pu->real_file = q;
@@ -1963,7 +1963,7 @@ add_index_file(ParsedURL* pu, URLFile* uf)
         p = Strnew_m_charp(pu->file, "/", file_quote(ti->ptr), NULL)->ptr;
         p = cleanupName(p);
         q = cleanupName(file_unquote(p));
-        examineFile(q, uf);
+        examineFile(q, uf, false);
         if (uf->stream != NULL) {
             pu->file = p;
             pu->real_file = q;

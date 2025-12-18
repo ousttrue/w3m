@@ -507,7 +507,7 @@ void reshapeBuffer(Buffer* buf)
         return;
     init_stream(&f, SCM_LOCAL, NULL);
     examineFile(buf->mailcap_source ? buf->mailcap_source : buf->sourcefile,
-        &f);
+        &f, false);
     if (f.stream == NULL)
         return;
     copyBuffer(&sbuf, buf);
@@ -533,7 +533,7 @@ void reshapeBuffer(Buffer* buf)
         if (buf->currentURL.scheme != SCM_LOCAL || buf->mailcap_source || !strcmp(buf->currentURL.file, "-")) {
             URLFile h;
             init_stream(&h, SCM_LOCAL, NULL);
-            examineFile(buf->header_source, &h);
+            examineFile(buf->header_source, &h, false);
             if (h.stream) {
                 readHeader(&h, buf, TRUE, NULL);
                 UFclose(&h);

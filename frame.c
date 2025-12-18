@@ -331,16 +331,13 @@ frame_download_source(struct frame_body* b, ParsedURL* currentURL,
     parseURL2(b->url, &url, currentURL);
     switch (url.scheme) {
     case SCM_LOCAL:
-#if 0
-	b->source = url.real_file;
-#endif
         b->flags = 0;
     default:
         is_redisplay = TRUE;
         w3m_dump |= DUMP_FRAME;
         buf = loadGeneralFile(b->url,
             baseURL ? baseURL : currentURL,
-            b->referer, flag | RG_FRAME_SRC, b->request);
+            b->referer, flag | RG_FRAME_SRC, b->request, false);
 #ifdef USE_SSL
         /* XXX certificate? */
         if (buf && buf != NO_BUFFER)
@@ -488,7 +485,7 @@ createFrameFile(struct frameset* f, FILE* f1, Buffer* current, int level,
                 init_stream(&f2, SCM_LOCAL, NULL);
                 if (frame.body->source) {
                     fflush(f1);
-                    examineFile(frame.body->source, &f2);
+                    examineFile(frame.body->source, &f2, false);
                 }
                 if (f2.stream == NULL) {
                     frame.body->attr = F_UNLOADED;
@@ -884,7 +881,7 @@ renderFrame(Buffer* Cbuf, int force_reload)
 #ifdef USE_M17N
     DocumentCharset = InnerCharset;
 #endif
-    buf = loadGeneralFile(tmp->ptr, NULL, NULL, flag, NULL);
+    buf = loadGeneralFile(tmp->ptr, NULL, NULL, flag, NULL, false);
 #ifdef USE_M17N
     DocumentCharset = doc_charset;
 #endif

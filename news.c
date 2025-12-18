@@ -291,11 +291,7 @@ openNewsStream(ParsedURL* pu)
     return NULL;
 }
 
-#ifdef USE_M17N
-Str loadNewsgroup(ParsedURL* pu, wc_ces* charset)
-#else
-Str loadNewsgroup0(ParsedURL* pu)
-#endif
+Str loadNewsgroup(ParsedURL* pu, wc_ces* charset, bool do_download)
 {
     volatile Str page;
     Str tmp;

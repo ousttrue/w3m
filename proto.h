@@ -5,9 +5,10 @@
  *
  *   Created: Wed Feb 10 12:47:03 1999
  */
+#include <stdbool.h>
+
 extern int main(int argc, char** argv);
 extern void nulcmd(void);
-extern void pushEvent(int cmd, void* data);
 extern MySignalHandler intTrap(SIGNAL_ARG);
 extern void pgFore(void);
 extern void pgBack(void);
@@ -187,7 +188,7 @@ extern char* url_decode0(const char* url);
 #endif
 #define url_decode2(url, buf) url_decode0(url)
 #endif /* !defined(USE_M17N) */
-extern void examineFile(char* path, URLFile* uf);
+extern void examineFile(char* path, URLFile* uf, bool do_download);
 extern char* acceptableEncoding(void);
 extern int dir_exist(char* path);
 extern int is_html_type(char* type);
@@ -206,7 +207,7 @@ extern void push_symbol(Str str, char symbol, int width, int n);
 extern void update_utf8_symbol(void);
 #endif
 extern Buffer* loadGeneralFile(char* path, ParsedURL* current, char* referer,
-    int flag, FormList* request);
+    int flag, FormList* request, bool do_download);
 extern int is_boundary(unsigned char*, unsigned char*);
 extern int is_blank_line(char* line, int indent);
 extern void push_render_image(Str str, int width, int limit,
@@ -456,7 +457,7 @@ Str HTTPrequestURI(ParsedURL* pu, HRequest* hr);
 extern URLFile openURL(char* url, ParsedURL* pu, ParsedURL* current,
     URLOption* option, FormList* request,
     TextList* extra_header, URLFile* ouf,
-    HRequest* hr, unsigned char* status);
+    HRequest* hr, unsigned char* status, bool do_download);
 extern int mailcapMatch(struct mailcap* mcap, char* type);
 extern struct mailcap* searchMailcap(struct mailcap* table, char* type);
 extern void initMailcap(void);
@@ -468,25 +469,13 @@ extern char* guessContentType(char* filename);
 extern TextList* make_domain_list(char* domain_list);
 extern int check_no_proxy(char* domain);
 extern InputStream openFTPStream(ParsedURL* pu, URLFile* uf);
-#ifdef USE_M17N
-extern Str loadFTPDir(ParsedURL* pu, wc_ces* charset);
-#else
-extern Str loadFTPDir0(ParsedURL* pu);
-#define loadFTPDir(pu, charset) loadFTPDir0(pu)
-#endif
+extern Str loadFTPDir(ParsedURL* pu, wc_ces* charset, bool do_download);
 extern void closeFTP(void);
 extern void disconnectFTP(void);
-#ifdef USE_NNTP
 extern InputStream openNewsStream(ParsedURL* pu);
-#ifdef USE_M17N
-extern Str loadNewsgroup(ParsedURL* pu, wc_ces* charset);
-#else
-extern Str loadNewsgroup0(ParsedURL* pu);
-#define loadNewsgroup(pu, charset) loadNewsgroup0(pu)
-#endif
+extern Str loadNewsgroup(ParsedURL* pu, wc_ces* charset, bool do_download);
 extern void closeNews(void);
 extern void disconnectNews(void);
-#endif
 extern AnchorList* putAnchor(AnchorList* al, char* url, char* target,
     Anchor** anchor_return, char* referer,
     char* title, unsigned char key, int line,

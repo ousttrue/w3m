@@ -7,8 +7,6 @@
 #include <signal.h>
 #include "fm.h"
 
-extern unsigned char last_key;
-
 /* *INDENT-OFF* */
 #ifdef USE_COLOR
 
@@ -307,9 +305,9 @@ make_lastline_message(Buffer* buf)
         int ll = buf->lastLine->real_linenumber;
         int r = (int)((double)cl * 100.0 / (double)(ll ? ll : 1) + 0.5);
         Strcat(msg, Sprintf("%d/%d (%d%%)", cl, ll, r));
-    } else
-        /* FIXME: gettextize? */
-        msg = Sprintf("%s: code 0x%02x ", msg->ptr, last_key);
+    } else {
+        msg = Sprintf("%s", msg->ptr);
+    }
     Strcat_charp(msg, "Viewing");
 #ifdef USE_SSL
     if (buf->ssl_certificate)

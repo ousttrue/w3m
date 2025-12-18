@@ -2,9 +2,21 @@
 /// process
 /// tty
 /// signal
+#include "Str.h"
+#include <wc.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+
+#define nextChar(s, l) \
+    do {               \
+        (s)++;         \
+    } while ((s) < (l)->len && (l)->propBuf[s] & PC_WCHAR2)
+
+#define prevChar(s, l) \
+    do {               \
+        (s)--;         \
+    } while ((s) > 0 && (l)->propBuf[s] & PC_WCHAR2)
 
 #define TRAP_ON                                \
     if (TrapSignal) {                          \
@@ -24,6 +36,12 @@
 
 extern char UseGraphicChar;
 
+struct Event {
+    int cmd;
+    void* data;
+    struct Event* next;
+};
+
 struct Runtime {
     int lines;
     int cols;
@@ -39,6 +57,14 @@ struct Runtime {
     struct TabBuffer* FirstTab;
     struct TabBuffer* LastTab;
     int nTab;
+
+    int CurrentKey;
+    int prec_num;
+    int prev_key;
+    const char* CurrentKeyData;
+    const char* CurrentCmdData;
+    struct Event* CurrentEvent;
+    struct Event* LastEvent;
 };
 struct Runtime* getRuntime(void);
 struct TabBuffer* CurrentTab();
@@ -98,3 +124,19 @@ void quitfm(void);
 int get_pixel_per_cell(int* ppc, int* ppl);
 
 void tabs_prepare();
+bool currentBufferSubmit();
+void _followForm(bool submit, bool on_target, bool do_download);
+struct form_list;
+struct _Buffer* loadLink(char* url, char* target, char* referer, struct form_list* request, bool on_target, bool do_download);
+struct form_item_list;
+void query_from_followform(Str* query, struct form_item_list* fi, int multipart);
+void pushEvent(int cmd, void* data);
+void keyPressEventProc(int c);
+void escKeyProc(int c, int esc, unsigned char* map);
+bool eventUpdate();
+void w3m_end_frame();
+void w3m_on_key(uint8_t ch);
+char* getCurWord(struct _Buffer* buf, int* spos, int* epos);
+char* GetWord(struct _Buffer* buf);
+int is_wordchar(wc_uint32 c);
+wc_uint32 getChar(char* p);

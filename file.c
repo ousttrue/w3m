@@ -373,7 +373,7 @@ setModtime(char* path, time_t modtime)
     return utime(path, &t);
 }
 
-void examineFile(char* path, URLFile* uf)
+void examineFile(char* path, URLFile* uf, bool do_download)
 {
     struct stat stbuf;
 
@@ -1637,7 +1637,7 @@ Str getLinkNumberStr(int correction)
 #define DO_EXTERNAL ((Buffer * (*)(URLFile*, Buffer*)) doExternal)
 Buffer*
 loadGeneralFile(char* path, ParsedURL* volatile current, char* referer,
-    int flag, FormList* volatile request)
+    int flag, FormList* volatile request, bool do_download)
 {
     URLFile f, *volatile of = NULL;
     ParsedURL pu;
@@ -1691,7 +1691,7 @@ load_doc: {
     url_option.referer = referer;
     url_option.flag = flag;
     f = openURL(tpath, &pu, current, &url_option, request, extra_header, of,
-        &hr, &status);
+        &hr, &status, do_download);
     of = NULL;
 #ifdef USE_M17N
     content_charset = 0;
@@ -1707,7 +1707,7 @@ load_doc: {
                     Str cmd = Sprintf("%s?dir=%s#current",
                         DirBufferCommand, pu.file);
                     b = loadGeneralFile(cmd->ptr, NULL, NO_REFERER, 0,
-                        NULL);
+                        NULL, do_download);
                     if (b != NULL && b != NO_BUFFER) {
                         copyParsedURL(&b->currentURL, &pu);
                         b->filename = b->currentURL.real_file;
@@ -1723,12 +1723,12 @@ load_doc: {
             }
         } break;
         case SCM_FTPDIR:
-            page = loadFTPDir(&pu, &charset);
+            page = loadFTPDir(&pu, &charset, do_download);
             t = "ftp:directory";
             break;
 #ifdef USE_NNTP
         case SCM_NEWS_GROUP:
-            page = loadNewsgroup(&pu, &charset);
+            page = loadNewsgroup(&pu, &charset, do_download);
             t = "news:group";
             break;
 #endif
@@ -1736,7 +1736,7 @@ load_doc: {
 #ifdef USE_EXTERNAL_URI_LOADER
             tmp = searchURIMethods(&pu);
             if (tmp != NULL) {
-                b = loadGeneralFile(tmp->ptr, current, referer, flag, request);
+                b = loadGeneralFile(tmp->ptr, current, referer, flag, request, do_download);
                 if (b != NULL && b != NO_BUFFER)
                     copyParsedURL(&b->currentURL, &pu);
                 return b;

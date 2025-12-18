@@ -467,11 +467,7 @@ ftp_dir:
     return NULL;
 }
 
-#ifdef USE_M17N
-Str loadFTPDir(ParsedURL* pu, wc_ces* charset)
-#else
-Str loadFTPDir0(ParsedURL* pu)
-#endif
+Str loadFTPDir(ParsedURL* pu, wc_ces* charset, bool do_download)
 {
     Str FTPDIRtmp;
     Str tmp;

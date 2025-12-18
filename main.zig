@@ -4,6 +4,7 @@ const c = @cImport({
     @cInclude("termcap.h");
     @cInclude("image.h");
     @cInclude("terms.h");
+    @cInclude("download.h");
 });
 
 const Term = @import("Term.zig");
@@ -11,8 +12,6 @@ var g_term: Term = undefined;
 
 /// return ture if enter main loop
 extern fn w3m_args(argc: c_int, argv: [*c]const [*:0]u8) bool;
-
-extern fn w3m_loop() void;
 
 extern fn w3m_idle() void;
 
@@ -25,8 +24,25 @@ pub fn main() void {
         @panic("Term.init");
     defer g_term.deinit();
 
-    if (w3m_args(@intCast(std.os.argv.len), &std.os.argv[0])) {
-        w3m_loop();
+    if (!w3m_args(@intCast(std.os.argv.len), &std.os.argv[0])) {
+        return;
+    }
+
+    while (true) {
+        c.download_update();
+
+        if (c.currentBufferSubmit()) {
+            continue;
+        }
+
+        if (c.eventUpdate()) {
+            continue;
+        }
+
+        // get keypress event
+        const ch = g_term.getch(&w3m_idle);
+        c.w3m_on_key(ch);
+        c.w3m_end_frame();
     }
 }
 

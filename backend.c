@@ -85,12 +85,8 @@ print_headers(Buffer* buf, int len)
 static void
 internal_get(char* url, int flag, FormList* request)
 {
-    Buffer* buf;
-
     backend_halfdump_buf = NULL;
-    do_download = flag;
-    buf = loadGeneralFile(url, NULL, NO_REFERER, 0, request);
-    do_download = FALSE;
+    Buffer* buf = loadGeneralFile(url, NULL, NO_REFERER, 0, request, flag);
     if (buf != NULL && buf != NO_BUFFER) {
         if (is_html_type(buf->type) && backend_halfdump_buf) {
             TextLineListItem* p;

@@ -1039,11 +1039,11 @@ int action_menu(Menu* menu)
         if (item.type & MENU_VALUE)
             *item.variable = item.value;
         if (item.type & MENU_FUNC) {
-            CurrentKey = -1;
-            CurrentKeyData = NULL;
-            CurrentCmdData = item.data;
+            getRuntime()->CurrentKey = -1;
+            getRuntime()->CurrentKeyData = NULL;
+            getRuntime()->CurrentCmdData = item.data;
             (*item.func)();
-            CurrentCmdData = NULL;
+            getRuntime()->CurrentCmdData = NULL;
         }
     } else if (mselect == MENU_CLOSE) {
         if (menu->parent != NULL)

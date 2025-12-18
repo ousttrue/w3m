@@ -43,8 +43,6 @@ extern int do_getch();
 #endif /* defined(USE_GPM) || defined(USE_SYSMOUSE) */
 #endif
 
-unsigned char last_key = 0;
-
 #include "util.h"
 
 #ifdef __MINGW32_VERSION
@@ -60,14 +58,6 @@ Hist* SaveHist;
 Hist* URLHist;
 Hist* ShellHist;
 Hist* TextHist;
-
-typedef struct _Event {
-    int cmd;
-    void* data;
-    struct _Event* next;
-} Event;
-static Event* CurrentEvent = NULL;
-static Event* LastEvent = NULL;
 
 #ifdef USE_ALARM
 static AlarmEvent DefaultAlarm = {
@@ -103,30 +93,19 @@ static void cmd_loadfile(char* path);
 static void cmd_loadURL(char* url, ParsedURL* current, char* referer,
     FormList* request);
 static void cmd_loadBuffer(Buffer* buf, int prop, int linkid);
-static void keyPressEventProc(int c);
 int show_params_p = 0;
 void show_params(FILE* fp);
 
-static char* getCurWord(Buffer* buf, int* spos, int* epos);
-
 static int display_ok = FALSE;
 static void do_dump(Buffer*);
-int prec_num = 0;
-int prev_key = -1;
-int on_target = 1;
 
-void set_buffer_environ(Buffer*);
-static void save_buffer_position(Buffer* buf);
-
-static void _followForm(int);
 static void _goLine(char*);
 static void followTab(struct TabBuffer* tab);
 static void moveTab(struct TabBuffer* t, struct TabBuffer* t2, int right);
 static void _nextA(int);
 static void _prevA(int);
 static int check_target = TRUE;
-#define PREC_NUM (prec_num ? prec_num : 1)
-#define PREC_LIMIT 10000
+#define PREC_NUM (getRuntime()->prec_num ? getRuntime()->prec_num : 1)
 static int searchKeyNum(void);
 
 #define help() fusage(stdout, 0)
@@ -834,7 +813,6 @@ bool w3m_args(int argc, char** argv)
     }
 #endif
 
-    CurrentKey = -1;
     if (BookmarkFile == NULL)
         BookmarkFile = rcFile(BOOKMARK);
 
@@ -918,7 +896,7 @@ bool w3m_args(int argc, char** argv)
             newbuf = openGeneralPagerBuffer(redin);
             dup2(1, 0);
         } else if (load_bookmark) {
-            newbuf = loadGeneralFile(BookmarkFile, NULL, NO_REFERER, 0, NULL);
+            newbuf = loadGeneralFile(BookmarkFile, NULL, NO_REFERER, 0, NULL, false);
             if (newbuf == NULL)
                 Strcat_charp(err_msg, "w3m: Can't load bookmark.\n");
         } else if (visual_start) {
@@ -937,7 +915,7 @@ bool w3m_args(int argc, char** argv)
             else if (newbuf != NO_BUFFER)
                 newbuf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
         } else if ((p = getenv("HTTP_HOME")) != NULL || (p = getenv("WWW_HOME")) != NULL) {
-            newbuf = loadGeneralFile(p, NULL, NO_REFERER, 0, NULL);
+            newbuf = loadGeneralFile(p, NULL, NO_REFERER, 0, NULL, false);
             if (newbuf == NULL)
                 Strcat(err_msg, Sprintf("w3m: Can't load %s.\n", p));
             else if (newbuf != NO_BUFFER)
@@ -974,7 +952,7 @@ bool w3m_args(int argc, char** argv)
             if (w3m_dump == DUMP_HEAD) {
                 request = New(FormList);
                 request->method = FORM_METHOD_HEAD;
-                newbuf = loadGeneralFile(url, NULL, NO_REFERER, 0, request);
+                newbuf = loadGeneralFile(url, NULL, NO_REFERER, 0, request, false);
             } else {
                 if (post_file && i == 0) {
                     FILE* fp;
@@ -1000,7 +978,7 @@ bool w3m_args(int argc, char** argv)
                 } else {
                     request = NULL;
                 }
-                newbuf = loadGeneralFile(url, NULL, NO_REFERER, 0, request);
+                newbuf = loadGeneralFile(url, NULL, NO_REFERER, 0, request, false);
             }
             if (newbuf == NULL) {
                 if (ArgvIsURL && !retry) {
@@ -1116,97 +1094,30 @@ void w3m_idle()
     if (activeImage && displayImage && Currentbuf->img && !Currentbuf->image_loaded) {
         loadImage(Currentbuf, IMG_FLAG_NEXT);
     }
-}
 
-void w3m_loop()
-{
-    for (;;) {
-        download_update();
-
-        if (Currentbuf->submit) {
-            Anchor* a = Currentbuf->submit;
-            Currentbuf->submit = NULL;
-            gotoLine(Currentbuf, a->start.line);
-            Currentbuf->pos = a->start.pos;
-            _followForm(TRUE);
-            continue;
-        }
-        // event processing
-        if (CurrentEvent) {
-            CurrentKey = -1;
-            CurrentKeyData = NULL;
-            CurrentCmdData = (char*)CurrentEvent->data;
-            w3mFuncList[CurrentEvent->cmd].func();
-            CurrentCmdData = NULL;
-            CurrentEvent = CurrentEvent->next;
-            continue;
-        }
-        // get keypress event
-        if (Currentbuf->event) {
-            if (Currentbuf->event->status != AL_UNSET) {
-                CurrentAlarm = Currentbuf->event;
-                if (CurrentAlarm->sec == 0) { /* refresh (0sec) */
-                    Currentbuf->event = NULL;
-                    CurrentKey = -1;
-                    CurrentKeyData = NULL;
-                    CurrentCmdData = (char*)CurrentAlarm->data;
-                    w3mFuncList[CurrentAlarm->cmd].func();
-                    CurrentCmdData = NULL;
-                    continue;
-                }
-            } else
-                Currentbuf->event = NULL;
-        }
-        if (!Currentbuf->event)
-            CurrentAlarm = &DefaultAlarm;
-
-        if (CurrentAlarm->sec > 0) {
-            mySignal(SIGALRM, SigAlarm);
-            alarm(CurrentAlarm->sec);
-        }
-
-        mySignal(SIGWINCH, resize_hook);
-
-        int c = getch();
-        last_key = c;
-        if (IS_ASCII(c)) {
-            if (('0' <= c) && (c <= '9') && (prec_num || (GlobalKeymap[c] == FUNCNAME_nulcmd))) {
-                prec_num = prec_num * 10 + (int)(c - '0');
-                if (prec_num > PREC_LIMIT)
-                    prec_num = PREC_LIMIT;
-            } else {
-                set_buffer_environ(Currentbuf);
-                save_buffer_position(Currentbuf);
-                keyPressEventProc((int)c);
-                prec_num = 0;
-            }
-        }
-        prev_key = CurrentKey;
-        CurrentKey = -1;
-        CurrentKeyData = NULL;
-    }
-}
-
-static void
-keyPressEventProc(int c)
-{
-    CurrentKey = c;
-    w3mFuncList[(int)GlobalKeymap[c]].func();
-}
-
-void pushEvent(int cmd, void* data)
-{
-    Event* event;
-
-    event = New(Event);
-    event->cmd = cmd;
-    event->data = data;
-    event->next = NULL;
-    if (CurrentEvent)
-        LastEvent->next = event;
-    else
-        CurrentEvent = event;
-    LastEvent = event;
+    // idle timer event
+    //     if (Currentbuf->event) {
+    //         if (Currentbuf->event->status != AL_UNSET) {
+    //             CurrentAlarm = Currentbuf->event;
+    //             if (CurrentAlarm->sec == 0) { /* refresh (0sec) */
+    //                 Currentbuf->event = NULL;
+    //                 CurrentKey = -1;
+    //                 CurrentKeyData = NULL;
+    //                 CurrentCmdData = (char*)CurrentAlarm->data;
+    //                 w3mFuncList[CurrentAlarm->cmd].func();
+    //                 CurrentCmdData = NULL;
+    //                 continue;
+    //             }
+    //         } else
+    //             Currentbuf->event = NULL;
+    //     }
+    //     if (!Currentbuf->event)
+    //         CurrentAlarm = &DefaultAlarm;
+    //
+    //     if (CurrentAlarm->sec > 0) {
+    //         mySignal(SIGALRM, SigAlarm);
+    //         alarm(CurrentAlarm->sec);
+    //     }
 }
 
 static void
@@ -1339,35 +1250,6 @@ void pcmap(void)
 }
 #endif
 
-static void
-escKeyProc(int c, int esc, unsigned char* map)
-{
-    if (CurrentKey >= 0 && CurrentKey & K_MULTI) {
-        unsigned char** mmap;
-        mmap = (unsigned char**)getKeyData(MULTI_KEY(CurrentKey));
-        if (!mmap)
-            return;
-        switch (esc) {
-        case K_ESCD:
-            map = mmap[3];
-            break;
-        case K_ESCB:
-            map = mmap[2];
-            break;
-        case K_ESC:
-            map = mmap[1];
-            break;
-        default:
-            map = mmap[0];
-            break;
-        }
-        esc |= (CurrentKey & ~0xFFFF);
-    }
-    CurrentKey = esc | c;
-    if (map)
-        w3mFuncList[(int)map[c]].func();
-}
-
 DEFUN(escmap, ESCMAP, "ESC map")
 {
     char c;
@@ -1403,10 +1285,9 @@ void escdmap(char c)
 
 DEFUN(multimap, MULTIMAP, "multimap")
 {
-    char c;
-    c = getch();
+    char c = getch();
     if (IS_ASCII(c)) {
-        CurrentKey = K_MULTI | (CurrentKey << 16) | c;
+        getRuntime()->CurrentKey = K_MULTI | (getRuntime()->CurrentKey << 16) | c;
         escKeyProc((int)c, 0, NULL);
     }
 }
@@ -1543,7 +1424,7 @@ DEFUN(pgFore, NEXT_PAGE, "Scroll down one page")
     if (vi_prec_num)
         nscroll(searchKeyNum() * (Currentbuf->LINES - 1), B_NORMAL);
     else
-        nscroll(prec_num ? searchKeyNum() : searchKeyNum() * (Currentbuf->LINES - 1), prec_num ? B_SCROLL : B_NORMAL);
+        nscroll(getRuntime()->prec_num ? searchKeyNum() : searchKeyNum() * (Currentbuf->LINES - 1), getRuntime()->prec_num ? B_SCROLL : B_NORMAL);
 }
 
 /* Move page backward */
@@ -1552,7 +1433,7 @@ DEFUN(pgBack, PREV_PAGE, "Scroll up one page")
     if (vi_prec_num)
         nscroll(-searchKeyNum() * (Currentbuf->LINES - 1), B_NORMAL);
     else
-        nscroll(-(prec_num ? searchKeyNum() : searchKeyNum() * (Currentbuf->LINES - 1)), prec_num ? B_SCROLL : B_NORMAL);
+        nscroll(-(getRuntime()->prec_num ? searchKeyNum() : searchKeyNum() * (Currentbuf->LINES - 1)), getRuntime()->prec_num ? B_SCROLL : B_NORMAL);
 }
 
 /* Move half page forward */
@@ -1933,11 +1814,8 @@ DEFUN(col1L, LEFT, "Shift screen one column left")
 
 DEFUN(setEnv, SETENV, "Set environment variable")
 {
-    char* env;
-    char *var, *value;
-
-    CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    env = searchKeyData();
+    getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
+    char* env = searchKeyData();
     if (env == NULL || *env == '\0' || strchr(env, '=') == NULL) {
         if (env != NULL && *env != '\0')
             env = Sprintf("%s=", env)->ptr;
@@ -1947,6 +1825,8 @@ DEFUN(setEnv, SETENV, "Set environment variable")
             return;
         }
     }
+
+    char *var, *value;
     if ((value = strchr(env, '=')) != NULL && value > env) {
         var = allocStr(env, value - env);
         value++;
@@ -1957,12 +1837,8 @@ DEFUN(setEnv, SETENV, "Set environment variable")
 
 DEFUN(pipeBuf, PIPE_BUF, "Pipe current buffer through a shell command and display output")
 {
-    Buffer* buf;
-    char *cmd, *tmpf;
-    FILE* f;
-
-    CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    cmd = searchKeyData();
+    getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
+    char* cmd = searchKeyData();
     if (cmd == NULL || *cmd == '\0') {
         /* FIXME: gettextize? */
         cmd = inputLineHist("Pipe buffer to: ", "", IN_COMMAND, ShellHist);
@@ -1973,8 +1849,9 @@ DEFUN(pipeBuf, PIPE_BUF, "Pipe current buffer through a shell command and displa
         displayBuffer(Currentbuf, B_NORMAL);
         return;
     }
-    tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
-    f = fopen(tmpf, "w");
+
+    char* tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
+    FILE* f = fopen(tmpf, "w");
     if (f == NULL) {
         /* FIXME: gettextize? */
         disp_message(Sprintf("Can't save buffer to %s", cmd)->ptr, TRUE);
@@ -1982,7 +1859,7 @@ DEFUN(pipeBuf, PIPE_BUF, "Pipe current buffer through a shell command and displa
     }
     saveBuffer(Currentbuf, f, TRUE);
     fclose(f);
-    buf = getpipe(myExtCommand(cmd, shell_quote(tmpf), TRUE)->ptr);
+    Buffer* buf = getpipe(myExtCommand(cmd, shell_quote(tmpf), TRUE)->ptr);
     if (buf == NULL) {
         disp_message("Execution failed", TRUE);
         return;
@@ -2003,11 +1880,8 @@ DEFUN(pipeBuf, PIPE_BUF, "Pipe current buffer through a shell command and displa
 /* Execute shell command and read output ac pipe. */
 DEFUN(pipesh, PIPE_SHELL, "Execute shell command and display output")
 {
-    Buffer* buf;
-    char* cmd;
-
-    CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    cmd = searchKeyData();
+    getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
+    char* cmd = searchKeyData();
     if (cmd == NULL || *cmd == '\0') {
         cmd = inputLineHist("(read shell[pipe])!", "", IN_COMMAND, ShellHist);
     }
@@ -2017,7 +1891,8 @@ DEFUN(pipesh, PIPE_SHELL, "Execute shell command and display output")
         displayBuffer(Currentbuf, B_NORMAL);
         return;
     }
-    buf = getpipe(cmd);
+
+    Buffer* buf = getpipe(cmd);
     if (buf == NULL) {
         disp_message("Execution failed", TRUE);
         return;
@@ -2033,11 +1908,8 @@ DEFUN(pipesh, PIPE_SHELL, "Execute shell command and display output")
 /* Execute shell command and load entire output to buffer */
 DEFUN(readsh, READ_SHELL, "Execute shell command and display output")
 {
-    Buffer* buf;
-    char* cmd;
-
-    CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    cmd = searchKeyData();
+    getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
+    char* cmd = searchKeyData();
     if (cmd == NULL || *cmd == '\0') {
         cmd = inputLineHist("(read shell)!", "", IN_COMMAND, ShellHist);
     }
@@ -2049,7 +1921,7 @@ DEFUN(readsh, READ_SHELL, "Execute shell command and display output")
     }
     auto prevtrap = mySignal(SIGINT, intTrap);
     exitRawMode();
-    buf = getshell(cmd);
+    Buffer* buf = getshell(cmd);
     mySignal(SIGINT, prevtrap);
     enterRawMode();
     if (buf == NULL) {
@@ -2068,10 +1940,8 @@ DEFUN(readsh, READ_SHELL, "Execute shell command and display output")
 /* Execute shell command */
 DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output")
 {
-    char* cmd;
-
-    CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    cmd = searchKeyData();
+    getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
+    char* cmd = searchKeyData();
     if (cmd == NULL || *cmd == '\0') {
         cmd = inputLineHist("(exec shell)!", "", IN_COMMAND, ShellHist);
     }
@@ -2131,9 +2001,7 @@ DEFUN(ldhelp, HELP, "Show help panel")
 static void
 cmd_loadfile(char* fn)
 {
-    Buffer* buf;
-
-    buf = loadGeneralFile(file_to_url(fn), NULL, NO_REFERER, 0, NULL);
+    Buffer* buf = loadGeneralFile(file_to_url(fn), NULL, NO_REFERER, 0, NULL, false);
     if (buf == NULL) {
         /* FIXME: gettextize? */
         char* emsg = Sprintf("%s not found", conv_from_system(fn))->ptr;
@@ -2239,38 +2107,6 @@ DEFUN(movR1, MOVE_RIGHT1, "Cursor right. With edge touched, slide")
  * From: Takashi Nishimoto <g96p0935@mse.waseda.ac.jp> Date: Mon, 14 Jun
  * 1999 09:29:56 +0900
  */
-#if defined(USE_M17N) && defined(USE_UNICODE)
-#define nextChar(s, l) \
-    do {               \
-        (s)++;         \
-    } while ((s) < (l)->len && (l)->propBuf[s] & PC_WCHAR2)
-#define prevChar(s, l) \
-    do {               \
-        (s)--;         \
-    } while ((s) > 0 && (l)->propBuf[s] & PC_WCHAR2)
-
-static wc_uint32
-getChar(char* p)
-{
-    return wc_any_to_ucs(wtf_parse1((wc_uchar**)&p));
-}
-
-static int
-is_wordchar(wc_uint32 c)
-{
-    return wc_is_ucs_alnum(c);
-}
-#else
-#define nextChar(s, l) (s)++
-#define prevChar(s, l) (s)--
-#define getChar(p) ((int)*(p))
-
-static int
-is_wordchar(int c)
-{
-    return IS_ALNUM(c);
-}
-#endif
 
 static int
 prev_nonnull_line(Line* line)
@@ -2532,8 +2368,8 @@ _goLine(char* l)
         return;
     }
     Currentbuf->pos = 0;
-    if (((*l == '^') || (*l == '$')) && prec_num) {
-        gotoRealLine(Currentbuf, prec_num);
+    if (((*l == '^') || (*l == '$')) && getRuntime()->prec_num) {
+        gotoRealLine(Currentbuf, getRuntime()->prec_num);
     } else if (*l == '^') {
         Currentbuf->topLine = Currentbuf->currentLine = Currentbuf->firstLine;
     } else if (*l == '$') {
@@ -2548,9 +2384,8 @@ _goLine(char* l)
 
 DEFUN(goLine, GOTO_LINE, "Go to the specified line")
 {
-
     char* str = searchKeyData();
-    if (prec_num)
+    if (getRuntime()->prec_num)
         _goLine("^");
     else if (str)
         _goLine(str);
@@ -2779,106 +2614,6 @@ DEFUN(reMark, REG_MARK, "Mark all occurences of a pattern")
 }
 #endif /* USE_MARK */
 
-static Buffer*
-loadNormalBuf(Buffer* buf, int renderframe)
-{
-    pushBuffer(buf);
-    if (renderframe && RenderFrame && Currentbuf->frameset != NULL)
-        rFrame();
-    return buf;
-}
-
-static Buffer*
-loadLink(char* url, char* target, char* referer, FormList* request)
-{
-    Buffer *buf, *nfbuf;
-    union frameset_element* f_element = NULL;
-    int flag = 0;
-    ParsedURL *base, pu;
-    const int* no_referer_ptr;
-
-    message(Sprintf("loading %s", url)->ptr, 0, 0);
-    refresh();
-
-    no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->currentURL);
-    base = baseURL(Currentbuf);
-    if ((no_referer_ptr && *no_referer_ptr) || base == NULL || base->scheme == SCM_LOCAL || base->scheme == SCM_LOCAL_CGI || base->scheme == SCM_DATA)
-        referer = NO_REFERER;
-    if (referer == NULL)
-        referer = parsedURL2RefererStr(&Currentbuf->currentURL)->ptr;
-    buf = loadGeneralFile(url, baseURL(Currentbuf), referer, flag, request);
-    if (buf == NULL) {
-        char* emsg = Sprintf("Can't load %s", url)->ptr;
-        disp_err_message(emsg, FALSE);
-        return NULL;
-    }
-
-    parseURL2(url, &pu, base);
-    pushHashHist(URLHist, parsedURL2Str(&pu)->ptr);
-
-    if (buf == NO_BUFFER) {
-        return NULL;
-    }
-    if (!on_target) /* open link as an indivisual page */
-        return loadNormalBuf(buf, TRUE);
-
-    if (do_download) /* download (thus no need to render frames) */
-        return loadNormalBuf(buf, FALSE);
-
-    if (target == NULL || /* no target specified (that means this page is not a frame page) */
-        !strcmp(target, "_top") || /* this link is specified to be opened as an indivisual * page */
-        !(Currentbuf->bufferprop & BP_FRAME) /* This page is not a frame page */
-    ) {
-        return loadNormalBuf(buf, TRUE);
-    }
-    nfbuf = Currentbuf->linkBuffer[LB_N_FRAME];
-    if (nfbuf == NULL) {
-        /* original page (that contains <frameset> tag) doesn't exist */
-        return loadNormalBuf(buf, TRUE);
-    }
-
-    f_element = search_frame(nfbuf->frameset, target);
-    if (f_element == NULL) {
-        /* specified target doesn't exist in this frameset */
-        return loadNormalBuf(buf, TRUE);
-    }
-
-    /* frame page */
-
-    /* stack current frameset */
-    pushFrameTree(&(nfbuf->frameQ), copyFrameSet(nfbuf->frameset), Currentbuf);
-    /* delete frame view buffer */
-    delBuffer(Currentbuf);
-    Currentbuf = nfbuf;
-    /* nfbuf->frameset = copyFrameSet(nfbuf->frameset); */
-    resetFrameElement(f_element, buf, referer, request);
-    discardBuffer(buf);
-    rFrame();
-    {
-        Anchor* al = NULL;
-        char* label = pu.label;
-
-        if (label && f_element->element->attr == F_BODY) {
-            al = searchAnchor(f_element->body->nameList, label);
-        }
-        if (!al) {
-            label = Strnew_m_charp("_", target, NULL)->ptr;
-            al = searchURLLabel(Currentbuf, label);
-        }
-        if (al) {
-            gotoLine(Currentbuf, al->start.line);
-            if (label_topline)
-                Currentbuf->topLine = lineSkip(Currentbuf, Currentbuf->topLine,
-                    Currentbuf->currentLine->linenumber - Currentbuf->topLine->linenumber,
-                    FALSE);
-            Currentbuf->pos = al->start.pos;
-            arrangeCursor(Currentbuf);
-        }
-    }
-    displayBuffer(Currentbuf, B_NORMAL);
-    return buf;
-}
-
 static void
 gotoLabel(char* label)
 {
@@ -2947,45 +2682,31 @@ handleMailto(char* url)
     return 1;
 }
 
-/* follow HREF link */
-DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
+void _followA(bool on_target, bool do_download)
 {
-    Anchor* a;
-    ParsedURL u;
-#ifdef USE_IMAGE
-    int x = 0, y = 0, map = 0;
-#endif
-    char* url;
-
-    if (Currentbuf->firstLine == NULL)
-        return;
-
-#ifdef USE_IMAGE
-    a = retrieveCurrentImg(Currentbuf);
+    Anchor* a = retrieveCurrentImg(Currentbuf);
     if (a && a->image && a->image->map) {
-        _followForm(FALSE);
+        _followForm(FALSE, on_target, do_download);
         return;
     }
+
+    int x = 0, y = 0, map = 0;
     if (a && a->image && a->image->ismap) {
         getMapXY(Currentbuf, a, &x, &y);
         map = 1;
     }
-#else
-    a = retrieveCurrentMap(Currentbuf);
-    if (a) {
-        _followForm(FALSE);
-        return;
-    }
-#endif
+
     a = retrieveCurrentAnchor(Currentbuf);
     if (a == NULL) {
-        _followForm(FALSE);
+        _followForm(FALSE, on_target, do_download);
         return;
     }
     if (*a->url == '#') { /* index within this buffer */
         gotoLabel(a->url + 1);
         return;
     }
+
+    ParsedURL u;
     parseURL2(a->url, &u, baseURL(Currentbuf));
     if (Strcmp(parsedURL2Str(&u), parsedURL2Str(&Currentbuf->currentURL)) == 0) {
         /* index within this buffer */
@@ -2996,26 +2717,17 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
     }
     if (handleMailto(a->url))
         return;
-#if 0
-    else if (!strncasecmp(a->url, "news:", 5) && strchr(a->url, '@') == NULL) {
-	/* news:newsgroup is not supported */
-	/* FIXME: gettextize? */
-	disp_err_message("news:newsgroup_name is not supported", TRUE);
-	return;
-    }
-#endif /* USE_NNTP */
-    url = a->url;
-#ifdef USE_IMAGE
+
+    char* url = a->url;
     if (map)
         url = Sprintf("%s?%d,%d", a->url, x, y)->ptr;
-#endif
 
     if (check_target && open_tab_blank && a->target && (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
         Buffer* buf;
 
         _newT();
         buf = Currentbuf;
-        loadLink(url, a->target, a->referer, NULL);
+        loadLink(url, a->target, a->referer, NULL, on_target, do_download);
         if (buf != Currentbuf)
             delBuffer(buf);
         else
@@ -3023,34 +2735,36 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
         displayBuffer(Currentbuf, B_FORCE_REDRAW);
         return;
     }
-    loadLink(url, a->target, a->referer, NULL);
+    loadLink(url, a->target, a->referer, NULL, on_target, do_download);
     displayBuffer(Currentbuf, B_NORMAL);
+}
+
+/* follow HREF link */
+DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
+{
+    if (Currentbuf->firstLine == NULL)
+        return;
+    _followA(true, false);
 }
 
 /* follow HREF link in the buffer */
 void bufferA(void)
 {
-    on_target = FALSE;
-    followA();
-    on_target = TRUE;
+    _followA(false, false);
 }
 
-/* view inline image */
-DEFUN(followI, VIEW_IMAGE, "Display image in viewer")
+void _followI(bool do_download)
 {
-    Anchor* a;
-    Buffer* buf;
-
     if (Currentbuf->firstLine == NULL)
         return;
 
-    a = retrieveCurrentImg(Currentbuf);
+    Anchor* a = retrieveCurrentImg(Currentbuf);
     if (a == NULL)
         return;
     /* FIXME: gettextize? */
     message(Sprintf("loading %s", a->url)->ptr, 0, 0);
     refresh();
-    buf = loadGeneralFile(a->url, baseURL(Currentbuf), NULL, 0, NULL);
+    Buffer* buf = loadGeneralFile(a->url, baseURL(Currentbuf), NULL, 0, NULL, do_download);
     if (buf == NULL) {
         /* FIXME: gettextize? */
         char* emsg = Sprintf("Can't load %s", a->url)->ptr;
@@ -3061,402 +2775,22 @@ DEFUN(followI, VIEW_IMAGE, "Display image in viewer")
     displayBuffer(Currentbuf, B_NORMAL);
 }
 
-static FormItemList*
-save_submit_formlist(FormItemList* src)
+/* view inline image */
+DEFUN(followI, VIEW_IMAGE, "Display image in viewer")
 {
-    FormList* list;
-    FormList* srclist;
-    FormItemList* srcitem;
-    FormItemList* item;
-    FormItemList* ret = NULL;
-#ifdef MENU_SELECT
-    FormSelectOptionItem* opt;
-    FormSelectOptionItem* curopt;
-    FormSelectOptionItem* srcopt;
-#endif /* MENU_SELECT */
-
-    if (src == NULL)
-        return NULL;
-    srclist = src->parent;
-    list = New(FormList);
-    list->method = srclist->method;
-    list->action = Strdup(srclist->action);
-#ifdef USE_M17N
-    list->charset = srclist->charset;
-#endif
-    list->enctype = srclist->enctype;
-    list->nitems = srclist->nitems;
-    list->body = srclist->body;
-    list->boundary = srclist->boundary;
-    list->length = srclist->length;
-
-    for (srcitem = srclist->item; srcitem; srcitem = srcitem->next) {
-        item = New(FormItemList);
-        item->type = srcitem->type;
-        item->name = Strdup(srcitem->name);
-        item->value = Strdup(srcitem->value);
-        item->checked = srcitem->checked;
-        item->accept = srcitem->accept;
-        item->size = srcitem->size;
-        item->rows = srcitem->rows;
-        item->maxlength = srcitem->maxlength;
-        item->readonly = srcitem->readonly;
-#ifdef MENU_SELECT
-        opt = curopt = NULL;
-        for (srcopt = srcitem->select_option; srcopt; srcopt = srcopt->next) {
-            if (!srcopt->checked)
-                continue;
-            opt = New(FormSelectOptionItem);
-            opt->value = Strdup(srcopt->value);
-            opt->label = Strdup(srcopt->label);
-            opt->checked = srcopt->checked;
-            if (item->select_option == NULL) {
-                item->select_option = curopt = opt;
-            } else {
-                curopt->next = opt;
-                curopt = curopt->next;
-            }
-        }
-        item->select_option = opt;
-        if (srcitem->label)
-            item->label = Strdup(srcitem->label);
-#endif /* MENU_SELECT */
-        item->parent = list;
-        item->next = NULL;
-
-        if (list->lastitem == NULL) {
-            list->item = list->lastitem = item;
-        } else {
-            list->lastitem->next = item;
-            list->lastitem = item;
-        }
-
-        if (srcitem == src)
-            ret = item;
-    }
-
-    return ret;
-}
-
-#ifdef USE_M17N
-static Str
-conv_form_encoding(Str val, FormItemList* fi, Buffer* buf)
-{
-    wc_ces charset = SystemCharset;
-
-    if (fi->parent->charset)
-        charset = fi->parent->charset;
-    else if (buf->document_charset && buf->document_charset != WC_CES_US_ASCII)
-        charset = buf->document_charset;
-    return wc_Str_conv_strict(val, InnerCharset, charset);
-}
-#else
-#define conv_form_encoding(val, fi, buf) (val)
-#endif
-
-static void
-query_from_followform(Str* query, FormItemList* fi, int multipart)
-{
-    FormItemList* f2;
-    FILE* body = NULL;
-
-    if (multipart) {
-        *query = tmpfname(TMPF_DFL, NULL);
-        body = fopen((*query)->ptr, "w");
-        if (body == NULL) {
-            return;
-        }
-        fi->parent->body = (*query)->ptr;
-        fi->parent->boundary = Sprintf("------------------------------%d%ld%ld%ld", CurrentPid,
-            fi->parent, fi->parent->body, fi->parent->boundary)
-                                   ->ptr;
-    }
-    *query = Strnew();
-    for (f2 = fi->parent->item; f2; f2 = f2->next) {
-        if (f2->name == NULL)
-            continue;
-        /* <ISINDEX> is translated into single text form */
-        if (f2->name->length == 0 && (multipart || f2->type != FORM_INPUT_TEXT))
-            continue;
-        switch (f2->type) {
-        case FORM_INPUT_RESET:
-            /* do nothing */
-            continue;
-        case FORM_INPUT_SUBMIT:
-        case FORM_INPUT_IMAGE:
-            if (f2 != fi || f2->value == NULL)
-                continue;
-            break;
-        case FORM_INPUT_RADIO:
-        case FORM_INPUT_CHECKBOX:
-            if (!f2->checked)
-                continue;
-        }
-        if (multipart) {
-            if (f2->type == FORM_INPUT_IMAGE) {
-                int x = 0, y = 0;
-#ifdef USE_IMAGE
-                getMapXY(Currentbuf, retrieveCurrentImg(Currentbuf), &x, &y);
-#endif
-                *query = Strdup(conv_form_encoding(f2->name, fi, Currentbuf));
-                Strcat_charp(*query, ".x");
-                form_write_data(body, fi->parent->boundary, (*query)->ptr,
-                    Sprintf("%d", x)->ptr);
-                *query = Strdup(conv_form_encoding(f2->name, fi, Currentbuf));
-                Strcat_charp(*query, ".y");
-                form_write_data(body, fi->parent->boundary, (*query)->ptr,
-                    Sprintf("%d", y)->ptr);
-            } else if (f2->name && f2->name->length > 0 && f2->value != NULL) {
-                /* not IMAGE */
-                *query = conv_form_encoding(f2->value, fi, Currentbuf);
-                if (f2->type == FORM_INPUT_FILE)
-                    form_write_from_file(body, fi->parent->boundary,
-                        conv_form_encoding(f2->name, fi,
-                            Currentbuf)
-                            ->ptr,
-                        (*query)->ptr,
-                        Str_conv_to_system(f2->value)->ptr);
-                else
-                    form_write_data(body, fi->parent->boundary,
-                        conv_form_encoding(f2->name, fi,
-                            Currentbuf)
-                            ->ptr,
-                        (*query)->ptr);
-            }
-        } else {
-            /* not multipart */
-            if (f2->type == FORM_INPUT_IMAGE) {
-                int x = 0, y = 0;
-#ifdef USE_IMAGE
-                getMapXY(Currentbuf, retrieveCurrentImg(Currentbuf), &x, &y);
-#endif
-                Strcat(*query,
-                    Str_form_quote(conv_form_encoding(f2->name, fi, Currentbuf)));
-                Strcat(*query, Sprintf(".x=%d&", x));
-                Strcat(*query,
-                    Str_form_quote(conv_form_encoding(f2->name, fi, Currentbuf)));
-                Strcat(*query, Sprintf(".y=%d", y));
-            } else {
-                /* not IMAGE */
-                if (f2->name && f2->name->length > 0) {
-                    Strcat(*query,
-                        Str_form_quote(conv_form_encoding(f2->name, fi, Currentbuf)));
-                    Strcat_char(*query, '=');
-                }
-                if (f2->value != NULL) {
-                    if (fi->parent->method == FORM_METHOD_INTERNAL)
-                        Strcat(*query, Str_form_quote(f2->value));
-                    else {
-                        Strcat(*query,
-                            Str_form_quote(conv_form_encoding(f2->value, fi, Currentbuf)));
-                    }
-                }
-            }
-            if (f2->next)
-                Strcat_char(*query, '&');
-        }
-    }
-    if (multipart) {
-        fprintf(body, "--%s--\r\n", fi->parent->boundary);
-        fclose(body);
-    } else {
-        /* remove trailing & */
-        while (Strlastchar(*query) == '&')
-            Strshrink(*query, 1);
-    }
+    _followI(false);
 }
 
 /* submit form */
 DEFUN(submitForm, SUBMIT, "Submit form")
 {
-    _followForm(TRUE);
+    _followForm(TRUE, true, false);
 }
 
 /* process form */
 void followForm(void)
 {
-    _followForm(FALSE);
-}
-
-static void
-_followForm(int submit)
-{
-    Anchor *a, *a2;
-    char* p;
-    FormItemList *fi, *f2;
-    Str tmp, tmp2;
-    int multipart = 0, i;
-
-    if (Currentbuf->firstLine == NULL)
-        return;
-
-    a = retrieveCurrentForm(Currentbuf);
-    if (a == NULL)
-        return;
-    fi = (FormItemList*)a->url;
-    switch (fi->type) {
-    case FORM_INPUT_TEXT:
-        if (submit)
-            goto do_submit;
-        if (fi->readonly)
-            /* FIXME: gettextize? */
-            disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
-        /* FIXME: gettextize? */
-        p = inputStrHist("TEXT:", fi->value ? fi->value->ptr : NULL, TextHist);
-        if (p == NULL || fi->readonly)
-            break;
-        fi->value = Strnew_charp(p);
-        formUpdateBuffer(a, Currentbuf, fi);
-        if (fi->accept || fi->parent->nitems == 1)
-            goto do_submit;
-        break;
-    case FORM_INPUT_FILE:
-        if (submit)
-            goto do_submit;
-        if (fi->readonly)
-            /* FIXME: gettextize? */
-            disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
-        /* FIXME: gettextize? */
-        p = inputFilenameHist("Filename:", fi->value ? fi->value->ptr : NULL,
-            NULL);
-        if (p == NULL || fi->readonly)
-            break;
-        fi->value = Strnew_charp(p);
-        formUpdateBuffer(a, Currentbuf, fi);
-        if (fi->accept || fi->parent->nitems == 1)
-            goto do_submit;
-        break;
-    case FORM_INPUT_PASSWORD:
-        if (submit)
-            goto do_submit;
-        if (fi->readonly) {
-            /* FIXME: gettextize? */
-            disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
-            break;
-        }
-        /* FIXME: gettextize? */
-        p = inputLine("Password:", fi->value ? fi->value->ptr : NULL,
-            IN_PASSWORD);
-        if (p == NULL)
-            break;
-        fi->value = Strnew_charp(p);
-        formUpdateBuffer(a, Currentbuf, fi);
-        if (fi->accept)
-            goto do_submit;
-        break;
-    case FORM_TEXTAREA:
-        if (submit)
-            goto do_submit;
-        if (fi->readonly)
-            /* FIXME: gettextize? */
-            disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
-        input_textarea(fi);
-        formUpdateBuffer(a, Currentbuf, fi);
-        break;
-    case FORM_INPUT_RADIO:
-        if (submit)
-            goto do_submit;
-        if (fi->readonly) {
-            /* FIXME: gettextize? */
-            disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
-            break;
-        }
-        formRecheckRadio(a, Currentbuf, fi);
-        break;
-    case FORM_INPUT_CHECKBOX:
-        if (submit)
-            goto do_submit;
-        if (fi->readonly) {
-            /* FIXME: gettextize? */
-            disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
-            break;
-        }
-        fi->checked = !fi->checked;
-        formUpdateBuffer(a, Currentbuf, fi);
-        break;
-#ifdef MENU_SELECT
-    case FORM_SELECT:
-        if (submit)
-            goto do_submit;
-        if (!formChooseOptionByMenu(fi,
-                Currentbuf->cursorX - Currentbuf->pos + a->start.pos + Currentbuf->rootX,
-                Currentbuf->cursorY + Currentbuf->rootY))
-            break;
-        formUpdateBuffer(a, Currentbuf, fi);
-        if (fi->parent->nitems == 1)
-            goto do_submit;
-        break;
-#endif /* MENU_SELECT */
-    case FORM_INPUT_IMAGE:
-    case FORM_INPUT_SUBMIT:
-    case FORM_INPUT_BUTTON:
-    do_submit:
-        tmp = Strnew();
-        multipart = (fi->parent->method == FORM_METHOD_POST && fi->parent->enctype == FORM_ENCTYPE_MULTIPART);
-        query_from_followform(&tmp, fi, multipart);
-
-        tmp2 = Strdup(fi->parent->action);
-        if (!Strcmp_charp(tmp2, "!CURRENT_URL!")) {
-            /* It means "current URL" */
-            tmp2 = parsedURL2Str(&Currentbuf->currentURL);
-            if ((p = strchr(tmp2->ptr, '?')) != NULL)
-                Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
-        }
-
-        if (fi->parent->method == FORM_METHOD_GET) {
-            if ((p = strchr(tmp2->ptr, '?')) != NULL)
-                Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
-            Strcat_charp(tmp2, "?");
-            Strcat(tmp2, tmp);
-            loadLink(tmp2->ptr, a->target, NULL, NULL);
-        } else if (fi->parent->method == FORM_METHOD_POST) {
-            Buffer* buf;
-            if (multipart) {
-                struct stat st;
-                stat(fi->parent->body, &st);
-                fi->parent->length = st.st_size;
-            } else {
-                fi->parent->body = tmp->ptr;
-                fi->parent->length = tmp->length;
-            }
-            buf = loadLink(tmp2->ptr, a->target, NULL, fi->parent);
-            if (multipart) {
-                unlink(fi->parent->body);
-            }
-            if (buf && !(buf->bufferprop & BP_REDIRECTED)) { /* buf must be Currentbuf */
-                /* BP_REDIRECTED means that the buffer is obtained through
-                 * Location: header. In this case, buf->form_submit must not be set
-                 * because the page is not loaded by POST method but GET method.
-                 */
-                buf->form_submit = save_submit_formlist(fi);
-            }
-        } else if ((fi->parent->method == FORM_METHOD_INTERNAL && (!Strcmp_charp(fi->parent->action, "map") || !Strcmp_charp(fi->parent->action, "none"))) || Currentbuf->bufferprop & BP_INTERNAL) { /* internal */
-            do_internal(tmp2->ptr, tmp->ptr);
-        } else {
-            disp_err_message("Can't send form because of illegal method.",
-                FALSE);
-        }
-        break;
-    case FORM_INPUT_RESET:
-        for (i = 0; i < Currentbuf->formitem->nanchor; i++) {
-            a2 = &Currentbuf->formitem->anchors[i];
-            f2 = (FormItemList*)a2->url;
-            if (f2->parent == fi->parent && f2->name && f2->value && f2->type != FORM_INPUT_SUBMIT && f2->type != FORM_INPUT_HIDDEN && f2->type != FORM_INPUT_RESET) {
-                f2->value = f2->init_value;
-                f2->checked = f2->init_checked;
-#ifdef MENU_SELECT
-                f2->label = f2->init_label;
-                f2->selected = f2->init_selected;
-#endif /* MENU_SELECT */
-                formUpdateBuffer(a2, Currentbuf, f2);
-            }
-        }
-        break;
-    case FORM_INPUT_HIDDEN:
-    default:
-        break;
-    }
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    _followForm(FALSE, true, false);
 }
 
 /* go to the top anchor */
@@ -3472,10 +2806,10 @@ DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink")
     if (!hl || hl->nmark == 0)
         return;
 
-    if (prec_num > hl->nmark)
+    if (getRuntime()->prec_num > hl->nmark)
         hseq = hl->nmark - 1;
-    else if (prec_num > 0)
-        hseq = prec_num - 1;
+    else if (getRuntime()->prec_num > 0)
+        hseq = getRuntime()->prec_num - 1;
     do {
         if (hseq >= hl->nmark)
             return;
@@ -3495,22 +2829,23 @@ DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink")
 /* go to the last anchor */
 DEFUN(lastA, LINK_END, "Move to the last hyperlink")
 {
-    HmarkerList* hl = Currentbuf->hmarklist;
-    BufferPoint* po;
-    Anchor* an;
-    int hseq;
-
     if (Currentbuf->firstLine == NULL)
         return;
+
+    HmarkerList* hl = Currentbuf->hmarklist;
     if (!hl || hl->nmark == 0)
         return;
 
-    if (prec_num >= hl->nmark)
+    int hseq;
+    if (getRuntime()->prec_num >= hl->nmark)
         hseq = 0;
-    else if (prec_num > 0)
-        hseq = hl->nmark - prec_num;
+    else if (getRuntime()->prec_num > 0)
+        hseq = hl->nmark - getRuntime()->prec_num;
     else
         hseq = hl->nmark - 1;
+
+    BufferPoint* po;
+    Anchor* an;
     do {
         if (hseq < 0)
             return;
@@ -4002,21 +3337,11 @@ DEFUN(deletePrevBuf, DELETE_PREVBUF, "Delete previous buffer (mainly for local C
 static void
 cmd_loadURL(char* url, ParsedURL* current, char* referer, FormList* request)
 {
-    Buffer* buf;
-
     if (handleMailto(url))
         return;
-#if 0
-    if (!strncasecmp(url, "news:", 5) && strchr(url, '@') == NULL) {
-	/* news:newsgroup is not supported */
-	/* FIXME: gettextize? */
-	disp_err_message("news:newsgroup_name is not supported", TRUE);
-	return;
-    }
-#endif /* USE_NNTP */
 
     refresh();
-    buf = loadGeneralFile(url, current, referer, 0, request);
+    Buffer* buf = loadGeneralFile(url, current, referer, 0, request, false);
     if (buf == NULL) {
         /* FIXME: gettextize? */
         char* emsg = Sprintf("Can't load %s", conv_from_system(url))->ptr;
@@ -4182,10 +3507,8 @@ DEFUN(ldOpt, OPTIONS, "Display options setting panel")
 /* set an option */
 DEFUN(setOpt, SET_OPTION, "Set option")
 {
-    char* opt;
-
-    CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    opt = searchKeyData();
+    getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
+    char* opt = searchKeyData();
     if (opt == NULL || *opt == '\0' || strchr(opt, '=') == NULL) {
         if (opt != NULL && *opt != '\0') {
             char* v = get_param_option(opt);
@@ -4367,30 +3690,24 @@ DEFUN(ldHist, HISTORY, "Show browsing history")
 /* download HREF link */
 DEFUN(svA, SAVE_LINK, "Save hyperlink target")
 {
-    CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    do_download = TRUE;
-    followA();
-    do_download = FALSE;
+    getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
+    _followA(true, false);
 }
 
 /* download IMG link */
 DEFUN(svI, SAVE_IMAGE, "Save inline image")
 {
-    CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    do_download = TRUE;
-    followI();
-    do_download = FALSE;
+    getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
+    _followI(true);
 }
 
 /* save buffer */
 DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document")
 {
-    char *qfile = NULL, *file;
-    FILE* f;
-    int is_pipe;
+    getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
 
-    CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    file = searchKeyData();
+    char* file = searchKeyData();
+    char* qfile = NULL;
     if (file == NULL || *file == '\0') {
         /* FIXME: gettextize? */
         qfile = inputLineHist("Save buffer to: ", NULL, IN_COMMAND, SaveHist);
@@ -4400,6 +3717,9 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document")
         }
     }
     file = conv_to_system(qfile ? qfile : file);
+
+    FILE* f;
+    bool is_pipe;
     if (*file == '|') {
         is_pipe = TRUE;
         f = popen(file + 1, "w");
@@ -4433,12 +3753,11 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document")
 /* save source */
 DEFUN(svSrc, DOWNLOAD SAVE, "Save document source")
 {
-    char* file;
-
     if (Currentbuf->sourcefile == NULL)
         return;
-    CurrentKeyData = NULL; /* not allowed in w3m-control: */
+    getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
     PermitSaveToPipe = TRUE;
+    char* file;
     if (Currentbuf->real_scheme == SCM_LOCAL)
         file = conv_from_system(guess_save_name(NULL,
             Currentbuf->currentURL.real_file));
@@ -4456,15 +3775,15 @@ _peekURL(int only_img)
     Anchor* a;
     ParsedURL pu;
     static Str s = NULL;
-#ifdef USE_M17N
     static Lineprop* p = NULL;
     Lineprop* pp;
-#endif
+
     static int offset = 0, n;
 
     if (Currentbuf->firstLine == NULL)
         return;
-    if (CurrentKey == prev_key && s != NULL) {
+
+    if (getRuntime()->CurrentKey == getRuntime()->prev_key && s != NULL) {
         if (s->length - offset >= TTY_COLS())
             offset++;
         else if (s->length <= offset) /* bug ? */
@@ -4530,15 +3849,14 @@ currentURL(void)
 DEFUN(curURL, PEEK, "Show current address")
 {
     static Str s = NULL;
-#ifdef USE_M17N
     static Lineprop* p = NULL;
     Lineprop* pp;
-#endif
+
     static int offset = 0, n;
 
     if (Currentbuf->bufferprop & BP_INTERNAL)
         return;
-    if (CurrentKey == prev_key && s != NULL) {
+    if (getRuntime()->CurrentKey == getRuntime()->prev_key && s != NULL) {
         if (s->length - offset >= TTY_COLS())
             offset++;
         else if (s->length <= offset) /* bug ? */
@@ -4654,9 +3972,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
 DEFUN(reload, RELOAD, "Load current document anew")
 {
     Buffer *buf, *fbuf = NULL, sbuf;
-#ifdef USE_M17N
     wc_ces old_charset;
-#endif
     Str url;
     FormList* request;
     int multipart;
@@ -4722,17 +4038,13 @@ DEFUN(reload, RELOAD, "Load current document anew")
     /* FIXME: gettextize? */
     message("Reloading...", 0, 0);
     refresh();
-#ifdef USE_M17N
     old_charset = DocumentCharset;
     if (Currentbuf->document_charset != WC_CES_US_ASCII)
         DocumentCharset = Currentbuf->document_charset;
-#endif
     SearchHeader = Currentbuf->search_header;
     DefaultType = Currentbuf->real_type;
-    buf = loadGeneralFile(url->ptr, NULL, NO_REFERER, RG_NOCACHE, request);
-#ifdef USE_M17N
+    buf = loadGeneralFile(url->ptr, NULL, NO_REFERER, RG_NOCACHE, request, false);
     DocumentCharset = old_charset;
-#endif
     SearchHeader = FALSE;
     DefaultType = NULL;
 
@@ -4949,14 +4261,10 @@ DEFUN(rFrame, FRAME, "Toggle rendering HTML frames")
 static void
 invoke_browser(char* url)
 {
-    Str cmd;
-    char* browser = NULL;
-    int bg = 0, len;
-
-    CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    browser = searchKeyData();
+    getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
+    char* browser = searchKeyData();
     if (browser == NULL || *browser == '\0') {
-        switch (prec_num) {
+        switch (getRuntime()->prec_num) {
         case 0:
         case 1:
             browser = ExtBrowser;
@@ -4999,11 +4307,12 @@ invoke_browser(char* url)
         return;
     }
 
+    int bg = 0, len;
     if ((len = strlen(browser)) >= 2 && browser[len - 1] == '&' && browser[len - 2] != '\\') {
         browser = allocStr(browser, len - 2);
         bg = 1;
     }
-    cmd = myExtCommand(browser, shell_quote(url), FALSE);
+    Str cmd = myExtCommand(browser, shell_quote(url), FALSE);
     Strremovetrailingspaces(cmd);
     exitRawMode();
     mySystem(cmd->ptr, bg);
@@ -5524,70 +4833,25 @@ DEFUN(wrapToggle, WRAP_TOGGLE, "Toggle wrapping mode in searches")
     }
 }
 
-static char*
-getCurWord(Buffer* buf, int* spos, int* epos)
-{
-    char* p;
-    Line* l = buf->currentLine;
-    int b, e;
-
-    *spos = 0;
-    *epos = 0;
-    if (l == NULL)
-        return NULL;
-    p = l->lineBuf;
-    e = buf->pos;
-    while (e > 0 && !is_wordchar(getChar(&p[e])))
-        prevChar(e, l);
-    if (!is_wordchar(getChar(&p[e])))
-        return NULL;
-    b = e;
-    while (b > 0) {
-        int tmp = b;
-        prevChar(tmp, l);
-        if (!is_wordchar(getChar(&p[tmp])))
-            break;
-        b = tmp;
-    }
-    while (e < l->len && is_wordchar(getChar(&p[e])))
-        nextChar(e, l);
-    *spos = b;
-    *epos = e;
-    return &p[b];
-}
-
-static char*
-GetWord(Buffer* buf)
-{
-    int b, e;
-    char* p;
-
-    if ((p = getCurWord(buf, &b, &e)) != NULL) {
-        return Strnew_charp_n(p, e - b)->ptr;
-    }
-    return NULL;
-}
-
 #ifdef USE_DICT
 static void
 execdict(char* word)
 {
-    char *w, *dictcmd;
-    Buffer* buf;
-
     if (!UseDictCommand || word == NULL || *word == '\0') {
         displayBuffer(Currentbuf, B_NORMAL);
         return;
     }
-    w = conv_to_system(word);
+    char* w = conv_to_system(word);
     if (*w == '\0') {
         displayBuffer(Currentbuf, B_NORMAL);
         return;
     }
-    dictcmd = Sprintf("%s?%s", DictCommand,
+
+    char* dictcmd = Sprintf("%s?%s", DictCommand,
         Str_form_quote(Strnew_charp(w))->ptr)
-                  ->ptr;
-    buf = loadGeneralFile(dictcmd, NULL, NO_REFERER, 0, NULL);
+                        ->ptr;
+
+    Buffer* buf = loadGeneralFile(dictcmd, NULL, NO_REFERER, 0, NULL, false);
     if (buf == NULL) {
         disp_message("Execution failed", TRUE);
         return;
@@ -5613,75 +4877,17 @@ DEFUN(dictwordat, DICT_WORD_AT,
 }
 #endif /* USE_DICT */
 
-void set_buffer_environ(Buffer* buf)
-{
-    static Buffer* prev_buf = NULL;
-    static Line* prev_line = NULL;
-    static int prev_pos = -1;
-    Line* l;
-
-    if (buf == NULL)
-        return;
-    if (buf != prev_buf) {
-        set_environ("W3M_SOURCEFILE", buf->sourcefile);
-        set_environ("W3M_FILENAME", buf->filename);
-        set_environ("W3M_TITLE", buf->buffername);
-        set_environ("W3M_URL", parsedURL2Str(&buf->currentURL)->ptr);
-        set_environ("W3M_TYPE", buf->real_type ? buf->real_type : "unknown");
-#ifdef USE_M17N
-        set_environ("W3M_CHARSET", wc_ces_to_charset(buf->document_charset));
-#endif
-    }
-    l = buf->currentLine;
-    if (l && (buf != prev_buf || l != prev_line || buf->pos != prev_pos)) {
-        Anchor* a;
-        ParsedURL pu;
-        char* s = GetWord(buf);
-        set_environ("W3M_CURRENT_WORD", s ? s : "");
-        a = retrieveCurrentAnchor(buf);
-        if (a) {
-            parseURL2(a->url, &pu, baseURL(buf));
-            set_environ("W3M_CURRENT_LINK", parsedURL2Str(&pu)->ptr);
-        } else
-            set_environ("W3M_CURRENT_LINK", "");
-        a = retrieveCurrentImg(buf);
-        if (a) {
-            parseURL2(a->url, &pu, baseURL(buf));
-            set_environ("W3M_CURRENT_IMG", parsedURL2Str(&pu)->ptr);
-        } else
-            set_environ("W3M_CURRENT_IMG", "");
-        a = retrieveCurrentForm(buf);
-        if (a)
-            set_environ("W3M_CURRENT_FORM", form2str((FormItemList*)a->url));
-        else
-            set_environ("W3M_CURRENT_FORM", "");
-        set_environ("W3M_CURRENT_LINE", Sprintf("%ld", l->real_linenumber)->ptr);
-        set_environ("W3M_CURRENT_COLUMN", Sprintf("%d", buf->currentColumn + buf->cursorX + 1)->ptr);
-    } else if (!l) {
-        set_environ("W3M_CURRENT_WORD", "");
-        set_environ("W3M_CURRENT_LINK", "");
-        set_environ("W3M_CURRENT_IMG", "");
-        set_environ("W3M_CURRENT_FORM", "");
-        set_environ("W3M_CURRENT_LINE", "0");
-        set_environ("W3M_CURRENT_COLUMN", "0");
-    }
-    prev_buf = buf;
-    prev_line = l;
-    prev_pos = buf->pos;
-}
-
 char* searchKeyData(void)
 {
-    char* data = NULL;
-
-    if (CurrentKeyData != NULL && *CurrentKeyData != '\0')
-        data = CurrentKeyData;
-    else if (CurrentCmdData != NULL && *CurrentCmdData != '\0')
-        data = CurrentCmdData;
-    else if (CurrentKey >= 0)
-        data = getKeyData(CurrentKey);
-    CurrentKeyData = NULL;
-    CurrentCmdData = NULL;
+    const char* data = NULL;
+    if (getRuntime()->CurrentKeyData != NULL && *getRuntime()->CurrentKeyData != '\0')
+        data = getRuntime()->CurrentKeyData;
+    else if (getRuntime()->CurrentCmdData != NULL && *getRuntime()->CurrentCmdData != '\0')
+        data = getRuntime()->CurrentCmdData;
+    else if (getRuntime()->CurrentKey >= 0)
+        data = getKeyData(getRuntime()->CurrentKey);
+    getRuntime()->CurrentKeyData = NULL;
+    getRuntime()->CurrentCmdData = NULL;
     if (data == NULL || *data == '\0')
         return NULL;
     return allocStr(data, -1);
@@ -5764,11 +4970,8 @@ void w3m_exit(int i)
 
 DEFUN(execCmd, COMMAND, "Invoke w3m function(s)")
 {
-    char *data, *p;
-    int cmd;
-
-    CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    data = searchKeyData();
+    getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
+    char* data = searchKeyData();
     if (data == NULL || *data == '\0') {
         data = inputStrHist("command [; ...]: ", "", TextHist);
         if (data == NULL) {
@@ -5783,24 +4986,16 @@ DEFUN(execCmd, COMMAND, "Invoke w3m function(s)")
             data++;
             continue;
         }
-        p = getWord(&data);
-        cmd = getFuncList(p);
+        char* p = getWord(&data);
+        int cmd = getFuncList(p);
         if (cmd < 0)
             break;
         p = getQWord(&data);
-        CurrentKey = -1;
-        CurrentKeyData = NULL;
-        CurrentCmdData = *p ? p : NULL;
-#ifdef USE_MOUSE
-        if (use_mouse)
-            mouse_inactive();
-#endif
+        getRuntime()->CurrentKey = -1;
+        getRuntime()->CurrentKeyData = NULL;
+        getRuntime()->CurrentCmdData = *p ? p : NULL;
         w3mFuncList[cmd].func();
-#ifdef USE_MOUSE
-        if (use_mouse)
-            mouse_active();
-#endif
-        CurrentCmdData = NULL;
+        getRuntime()->CurrentCmdData = NULL;
     }
     displayBuffer(Currentbuf, B_NORMAL);
 }
@@ -5812,19 +5007,11 @@ SigAlarm(SIGNAL_ARG)
     char* data;
 
     if (CurrentAlarm->sec > 0) {
-        CurrentKey = -1;
-        CurrentKeyData = NULL;
-        CurrentCmdData = data = (char*)CurrentAlarm->data;
-#ifdef USE_MOUSE
-        if (use_mouse)
-            mouse_inactive();
-#endif
+        getRuntime()->CurrentKey = -1;
+        getRuntime()->CurrentKeyData = NULL;
+        getRuntime()->CurrentCmdData = data = (char*)CurrentAlarm->data;
         w3mFuncList[CurrentAlarm->cmd].func();
-#ifdef USE_MOUSE
-        if (use_mouse)
-            mouse_active();
-#endif
-        CurrentCmdData = NULL;
+        getRuntime()->CurrentCmdData = NULL;
         if (CurrentAlarm->status == AL_IMPLICIT_ONCE) {
             CurrentAlarm->sec = 0;
             CurrentAlarm->status = AL_UNSET;
@@ -5847,11 +5034,8 @@ SigAlarm(SIGNAL_ARG)
 
 DEFUN(setAlarm, ALARM, "Set alarm")
 {
-    char* data;
-    int sec = 0, cmd = -1;
-
-    CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    data = searchKeyData();
+    getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
+    char* data = searchKeyData();
     if (data == NULL || *data == '\0') {
         data = inputStrHist("(Alarm)sec command: ", "", TextHist);
         if (data == NULL) {
@@ -5859,6 +5043,7 @@ DEFUN(setAlarm, ALARM, "Set alarm")
             return;
         }
     }
+    int sec = 0, cmd = -1;
     if (*data != '\0') {
         sec = atoi(getWord(&data));
         if (sec > 0)
@@ -5960,10 +5145,8 @@ DEFUN(reinit, REINIT, "Reload configuration file")
 
 DEFUN(defKey, DEFINE_KEY, "Define a binding between a key stroke combination and a command")
 {
-    char* data;
-
-    CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    data = searchKeyData();
+    getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
+    char* data = searchKeyData();
     if (data == NULL || *data == '\0') {
         data = inputStrHist("Key definition: ", "", TextHist);
         if (data == NULL || *data == '\0') {
@@ -6035,7 +5218,7 @@ DEFUN(closeT, CLOSE_TAB, "Close tab")
 
     if (nTab() <= 1)
         return;
-    if (prec_num)
+    if (getRuntime()->prec_num)
         tab = numTab(PREC_NUM);
     else
         tab = CurrentTab();
@@ -6124,7 +5307,7 @@ followTab(struct TabBuffer* tab)
 
 DEFUN(tabA, TAB_LINK, "Follow current hyperlink in a new tab")
 {
-    followTab(prec_num ? numTab(PREC_NUM) : NULL);
+    followTab(getRuntime()->prec_num ? numTab(PREC_NUM) : NULL);
 }
 
 static void
@@ -6164,13 +5347,13 @@ tabURL0(struct TabBuffer* tab, char* prompt, int relative)
 
 DEFUN(tabURL, TAB_GOTO, "Open specified document in a new tab")
 {
-    tabURL0(prec_num ? numTab(PREC_NUM) : NULL,
+    tabURL0(getRuntime()->prec_num ? numTab(PREC_NUM) : NULL,
         "Goto URL on new tab: ", FALSE);
 }
 
 DEFUN(tabrURL, TAB_GOTO_RELATIVE, "Open relative address in a new tab")
 {
-    tabURL0(prec_num ? numTab(PREC_NUM) : NULL,
+    tabURL0(getRuntime()->prec_num ? numTab(PREC_NUM) : NULL,
         "Goto relative URL on new tab: ", TRUE);
 }
 
@@ -6286,28 +5469,6 @@ void stopDownload(void)
 DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
 {
     download_panel();
-}
-
-static void
-save_buffer_position(Buffer* buf)
-{
-    BufferPos* b = buf->undo;
-
-    if (!buf->firstLine)
-        return;
-    if (b && b->top_linenumber == TOP_LINENUMBER(buf) && b->cur_linenumber == CUR_LINENUMBER(buf) && b->currentColumn == buf->currentColumn && b->pos == buf->pos)
-        return;
-    b = New(BufferPos);
-    b->top_linenumber = TOP_LINENUMBER(buf);
-    b->cur_linenumber = CUR_LINENUMBER(buf);
-    b->currentColumn = buf->currentColumn;
-    b->pos = buf->pos;
-    b->bpos = buf->currentLine ? buf->currentLine->bpos : 0;
-    b->next = NULL;
-    b->prev = buf->undo;
-    if (buf->undo)
-        buf->undo->next = b;
-    buf->undo = b;
 }
 
 static void

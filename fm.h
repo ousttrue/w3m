@@ -911,9 +911,6 @@ global int TabCols init(10);
 #define NO_TABBUFFER ((struct TabBuffer*)1)
 global DownloadList* FirstDL init(NULL);
 global DownloadList* LastDL init(NULL);
-global int CurrentKey;
-global char* CurrentKeyData;
-global char* CurrentCmdData;
 global char* w3m_reqlog;
 extern char* w3m_version;
 extern int enable_inline_image;
@@ -1005,7 +1002,6 @@ global char* pre_form_file init(PRE_FORM_FILE);
 global char* siteconf_file init(SITECONF_FILE);
 global char* ftppasswd init(NULL);
 global int ftppass_hostnamegen init(TRUE);
-global int do_download init(FALSE);
 #ifdef USE_IMAGE
 global char* image_source init(NULL);
 #endif
