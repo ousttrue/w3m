@@ -5,80 +5,8 @@ const c = @cImport({
     @cInclude("image.h");
     @cInclude("terms.h");
 });
-const vaxis = @import("vaxis");
 
-const RawMode = struct {
-    const Event = union(enum) {
-        key_press: vaxis.Key,
-        winsize: vaxis.Winsize,
-        // focus_in,
-        // foo: u8,
-    };
-
-    buffer: [1024]u8 = undefined,
-    tty: vaxis.Tty = undefined,
-    vx: vaxis.Vaxis = undefined,
-    loop: vaxis.Loop(Event) = undefined,
-    fn create(allocator: std.mem.Allocator) !*@This() {
-        const this = try allocator.create(@This());
-        this.* = .{};
-        this.tty = try vaxis.Tty.init(&this.buffer);
-        this.vx = try vaxis.init(allocator, .{});
-        this.loop = .{ .tty = &this.tty, .vaxis = &this.vx };
-        try this.loop.init();
-        try this.loop.start();
-        return this;
-    }
-
-    fn destroy(this: *@This(), allocator: std.mem.Allocator) void {
-        this.loop.stop();
-        this.vx.deinit(allocator, this.tty.writer());
-        this.tty.deinit();
-    }
-
-    /// return unicode codepoint
-    fn getch(this: *@This()) u32 {
-        while (true) {
-            const event = this.loop.nextEvent();
-            switch (event) {
-                .key_press => |key| {
-                    return key.codepoint;
-                },
-                .winsize => |ws| {
-                    _ = ws;
-                },
-            }
-        }
-    }
-};
-
-const Term = struct {
-    allocator: std.mem.Allocator,
-    rawmode: ?*RawMode = null,
-
-    fn init(allocator: std.mem.Allocator) @This() {
-        return .{
-            .allocator = allocator,
-        };
-    }
-
-    fn deinit(this: *const @This()) void {
-        _ = this;
-    }
-
-    fn enterRawMode(this: *@This()) !void {
-        if (this.rawmode == null) {
-            this.rawmode = try RawMode.create(this.allocator);
-        }
-    }
-
-    fn exitRawMode(this: *@This()) void {
-        if (this.rawmode) |rawmode| {
-            rawmode.destroy(this.allocator);
-            this.rawmode = null;
-        }
-    }
-};
+const Term = @import("Term.zig");
 var g_term: Term = undefined;
 
 /// return ture if enter main loop
@@ -91,7 +19,8 @@ pub fn main() void {
     defer _ = gpa.detectLeaks();
     const allocator = gpa.allocator();
 
-    g_term = Term.init(allocator);
+    g_term = Term.init(allocator, std.fs.File.stdin()) catch
+        @panic("Term.init");
     defer g_term.deinit();
 
     if (w3m_args(@intCast(std.os.argv.len), &std.os.argv[0])) {
@@ -104,11 +33,11 @@ pub fn main() void {
 //
 
 export fn fmInitialized() bool {
-    return g_term.rawmode != null;
+    return g_term.is_rawmode;
 }
 
 export fn enterRawMode() void {
-    if (g_term.rawmode == null) {
+    if (!g_term.is_rawmode) {
         // term_raw();
         // term_noecho();
         g_term.enterRawMode() catch @panic("enterRawMode");
@@ -118,7 +47,7 @@ export fn enterRawMode() void {
 }
 
 export fn exitRawMode() void {
-    if (g_term.rawmode != null) {
+    if (g_term.is_rawmode) {
         c.move(c.LASTLINE(), 0);
         c.clrtoeolx();
         c.refresh();
@@ -236,11 +165,7 @@ export fn tty_remove_ISIG() void {
 // }
 
 export fn getch() c_int {
-    if (g_term.rawmode) |rawmode| {
-        return @intCast(rawmode.getch());
-    } else {
-        unreachable;
-    }
+    return @intCast(g_term.getch());
     // char c;
     //
     // while (
@@ -297,22 +222,13 @@ export fn setlinescols() void {
     //     g_runtime.lines = wins.ws_row;
     //     g_runtime.cols = wins.ws_col;
     // }
-    if (g_term.rawmode) |rawmode| {
-        if (vaxis.tty.PosixTty.getWinsize(rawmode.tty.fd)) |ws| {
-            const rt = c.getRuntime();
-            rt.*.lines = ws.rows;
-            rt.*.cols = ws.cols;
-        } else |e| {
-            @panic(@errorName(e));
-        }
-    } else {
-        if (vaxis.tty.PosixTty.getWinsize(std.fs.File.stdin().handle)) |ws| {
-            const rt = c.getRuntime();
-            rt.*.lines = ws.rows;
-            rt.*.cols = ws.cols;
-        } else |e| {
-            @panic(@errorName(e));
-        }
+
+    if (g_term.getWinsize()) |ws| {
+        const rt = c.getRuntime();
+        rt.*.lines = ws.row;
+        rt.*.cols = ws.col;
+    } else |e| {
+        @panic(@errorName(e));
     }
 }
 
