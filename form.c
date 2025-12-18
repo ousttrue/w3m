@@ -2,6 +2,7 @@
  * HTML forms
  */
 #include "display.h"
+#include "download.h"
 #include "buffer.h"
 #include "anchor.h"
 #include "fm.h"

@@ -298,20 +298,6 @@ extern int REV_LB[];
 #include "line.h"
 #include "url.h"
 
-typedef struct _DownloadList {
-    pid_t pid;
-    char* url;
-    char* save;
-    char* lock;
-    clen_t size;
-    time_t time;
-    int running;
-    int err;
-    struct _DownloadList* next;
-    struct _DownloadList* prev;
-} DownloadList;
-#define DOWNLOAD_LIST_TITLE "Download List Panel"
-
 #define COPY_BUFROOT(dstbuf, srcbuf)       \
     {                                      \
         (dstbuf)->rootX = (srcbuf)->rootX; \
@@ -600,8 +586,8 @@ global int open_tab_dl_list init(FALSE);
 global int close_tab_back init(FALSE);
 global int TabCols init(10);
 #define NO_TABBUFFER ((struct TabBuffer*)1)
-global DownloadList* FirstDL init(NULL);
-global DownloadList* LastDL init(NULL);
+global struct DownloadList* FirstDL init(NULL);
+global struct DownloadList* LastDL init(NULL);
 global char* w3m_reqlog;
 extern char* w3m_version;
 extern int enable_inline_image;

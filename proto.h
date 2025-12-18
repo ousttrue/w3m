@@ -291,8 +291,6 @@ extern int matchattr(char* p, char* attr, int len, Str* value);
 extern void readHeader(URLFile* uf, struct Buffer* newBuf, int thru, struct Url* pu);
 extern char* checkHeader(struct Buffer* buf, char* field);
 
-extern void stopDownload(void);
-extern void download_action(struct parsed_tagarg* arg);
 extern struct Buffer* newBuffer(int width);
 extern struct Buffer* nullBuffer(void);
 extern void clearBuffer(struct Buffer* buf);

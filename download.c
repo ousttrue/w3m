@@ -6,6 +6,7 @@
 #include "buffer.h"
 #include "image.h"
 #include "fm.h"
+#include <signal.h>
 
 static bool add_download_list = false;
 
@@ -21,7 +22,7 @@ bool download_checkList(void)
 {
     if (!FirstDL)
         return false;
-    for (DownloadList* d = FirstDL; d != NULL; d = d->next) {
+    for (struct DownloadList* d = FirstDL; d != NULL; d = d->next) {
         struct stat st;
         if (d->running && !lstat(d->lock, &st))
             return true;
@@ -42,7 +43,7 @@ static const char* convert_size3(size_t size)
 
 static struct Buffer* DownloadListBuffer(void)
 {
-    DownloadList* d;
+    struct DownloadList* d;
     Str src = NULL;
     struct stat st;
     time_t cur_time;
@@ -166,9 +167,9 @@ void download_panel()
 
 void addDownloadList(pid_t pid, char* url, char* save, char* lock, size_t size)
 {
-    DownloadList* d;
+    struct DownloadList* d;
 
-    d = New(DownloadList);
+    d = New(struct DownloadList);
     d->pid = pid;
     d->url = url;
     if (save[0] != '/' && save[0] != '~')
@@ -206,5 +207,52 @@ bool hasDownloadList()
         return true;
     } else {
         return false;
+    }
+}
+
+void download_action(struct parsed_tagarg* arg)
+{
+    struct DownloadList* d;
+    pid_t pid;
+
+    for (; arg; arg = arg->next) {
+        if (!strncmp(arg->arg, "stop", 4)) {
+            pid = (pid_t)atoi(&arg->arg[4]);
+            kill(pid, SIGKILL);
+        } else if (!strncmp(arg->arg, "ok", 2))
+            pid = (pid_t)atoi(&arg->arg[2]);
+        else
+            continue;
+        for (d = FirstDL; d; d = d->next) {
+            if (d->pid == pid) {
+                unlink(d->lock);
+                if (d->prev)
+                    d->prev->next = d->next;
+                else
+                    FirstDL = d->next;
+                if (d->next)
+                    d->next->prev = d->prev;
+                else
+                    LastDL = d->prev;
+                break;
+            }
+        }
+    }
+    ldDL();
+}
+
+void stopDownload(void)
+{
+    struct DownloadList* d;
+
+    if (!FirstDL)
+        return;
+    for (d = FirstDL; d != NULL; d = d->next) {
+        if (!d->running)
+            continue;
+#ifndef __MINGW32_VERSION
+        kill(d->pid, SIGKILL);
+#endif
+        unlink(d->lock);
     }
 }
