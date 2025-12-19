@@ -1,7 +1,7 @@
 #pragma once
 #include <stddef.h>
 
-void setupscreen(void);
+void setupscreen(int lines, int cols);
 void move(int line, int column);
 void addmch(char* p, size_t len);
 void addch(char c);

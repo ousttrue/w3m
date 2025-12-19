@@ -302,7 +302,7 @@ void initscr(void)
     set_int();
     if (g_runtime.T_ti && !g_runtime.Do_not_use_ti_te)
         writestr(g_runtime.T_ti);
-    setupscreen();
+    setupscreen(g_runtime.lines, g_runtime.cols);
 }
 
 int graph_ok(void)

@@ -71,12 +71,6 @@ static AlarmEvent* CurrentAlarm = &DefaultAlarm;
 static MySignalHandler SigAlarm(SIGNAL_ARG);
 #endif
 
-#ifdef SIGWINCH
-static int need_resize_screen = FALSE;
-static MySignalHandler resize_hook(SIGNAL_ARG);
-static void resize_screen(void);
-#endif
-
 #ifdef SIGPIPE
 static MySignalHandler SigPipe(SIGNAL_ARG);
 #endif
@@ -831,7 +825,7 @@ bool w3m_args(int argc, char** argv)
 
     if (!w3m_dump && !w3m_backend) {
         enterRawMode();
-        mySignal(SIGWINCH, resize_hook);
+        // mySignal(SIGWINCH, resize_hook);
     } else if (w3m_halfdump && displayImage) {
         activeImage = TRUE;
     }
@@ -1336,26 +1330,6 @@ intTrap(SIGNAL_ARG)
     LONGJMP(IntReturn, 0);
     SIGNAL_RETURN;
 }
-
-#ifdef SIGWINCH
-static MySignalHandler
-resize_hook(SIGNAL_ARG)
-{
-    need_resize_screen = TRUE;
-    mySignal(SIGWINCH, resize_hook);
-    SIGNAL_RETURN;
-}
-
-static void
-resize_screen(void)
-{
-    need_resize_screen = FALSE;
-    setlinescols();
-    setupscreen();
-    if (CurrentTab())
-        displayBuffer(Currentbuf, B_FORCE_REDRAW);
-}
-#endif /* SIGWINCH */
 
 #ifdef SIGPIPE
 static MySignalHandler

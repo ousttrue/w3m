@@ -3,27 +3,15 @@
  * revised by Akinori ITO, January 1995
  */
 #include "terms.h"
+#include "alloc.h"
+#include "Str.h"
+#include "wc.h"
+#include "wtf.h"
 #include "w3m_rc.h"
 #include "fm.h"
-#include "config.h"
 #include "myctype.h"
-#include <stdio.h>
-#include <signal.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <sys/time.h>
-#include <unistd.h>
-#include <termios.h>
 #include <string.h>
-#include <sys/wait.h>
-#include <sys/select.h>
-#include <sys/ioctl.h>
-#include <locale.h>
-
-MySignalHandler reset_exit(SIGNAL_ARG);
-MySignalHandler error_dump(SIGNAL_ARG);
+#include <stdbool.h>
 
 #define MAX_LINE 200
 #define MAX_COLUMN 400
@@ -39,20 +27,14 @@ MySignalHandler error_dump(SIGNAL_ARG);
 /* Sort of Character */
 #define C_WHICHCHAR 0xc0
 #define C_ASCII 0x00
-#ifdef USE_M17N
 #define C_WCHAR1 0x40
 #define C_WCHAR2 0x80
-#endif
 #define C_CTRL 0xc0
 
 #define CHMODE(c) ((c) & C_WHICHCHAR)
 #define SETCHMODE(var, mode) ((var) = (((var) & ~C_WHICHCHAR) | mode))
-#ifdef USE_M17N
 #define SETCH(var, ch, len) ((var) = New_Reuse(char, (var), (len) + 1), \
     strncpy((var), (ch), (len + 1)))
-#else
-#define SETCH(var, ch, len) ((var) = (ch))
-#endif
 
 /* Charactor Color */
 #define COL_FCOLOR 0xf00
@@ -101,17 +83,18 @@ MySignalHandler error_dump(SIGNAL_ARG);
 typedef unsigned short l_prop;
 
 typedef struct scline {
-#ifdef USE_M17N
     char** lineimage;
-#else
-    char* lineimage;
-#endif
     l_prop* lineprop;
     short isdirty;
     short eol;
 } Screen;
 
-static int max_LINES = 0, max_COLS = 0;
+static int g_lines = 0;
+static int g_lines_capacity = 0;
+
+static int g_cols = 0;
+static int g_cols_capacity = 0;
+
 static int tab_step = 8;
 static int CurLine, CurColumn;
 static Screen *ScreenElem = NULL, **ScreenImage = NULL;
@@ -127,92 +110,57 @@ extern int tputs(char*, int, int (*)(char));
 void clear(void), wrap(void), touch_line(void), touch_column(int);
 void clrtoeol(void); /* conflicts with curs_clear(3)? */
 
-#define W3M_TERM_INFO(name, title, mouse) name, title
-
-static char XTERM_TITLE[] = "\033]0;w3m: %s\007";
-static char SCREEN_TITLE[] = "\033k%s\033\134";
-
-/* *INDENT-OFF* */
-static struct w3m_term_info {
-    char* term;
-    char* title_str;
-} w3m_term_info_list[] = {
-    { W3M_TERM_INFO("xterm", XTERM_TITLE, (NEED_XTERM_ON | NEED_XTERM_OFF)) },
-    { W3M_TERM_INFO("kterm", XTERM_TITLE, (NEED_XTERM_ON | NEED_XTERM_OFF)) },
-    { W3M_TERM_INFO("rxvt", XTERM_TITLE, (NEED_XTERM_ON | NEED_XTERM_OFF)) },
-    { W3M_TERM_INFO("Eterm", XTERM_TITLE, (NEED_XTERM_ON | NEED_XTERM_OFF)) },
-    { W3M_TERM_INFO("mlterm", XTERM_TITLE, (NEED_XTERM_ON | NEED_XTERM_OFF)) },
-    { W3M_TERM_INFO("screen", SCREEN_TITLE, 0) },
-    { W3M_TERM_INFO(NULL, NULL, 0) }
-};
-#undef W3M_TERM_INFO
-/* *INDENT-ON * */
-
-void setupscreen(void)
+void setupscreen(int lines, int cols)
 {
-    int i;
-
-    if (getRuntime()->lines + 1 > max_LINES) {
-        max_LINES = getRuntime()->lines + 1;
-        max_COLS = 0;
-        ScreenElem = New_N(Screen, max_LINES);
-        ScreenImage = New_N(Screen*, max_LINES);
+    if (lines + 1 > g_lines_capacity) {
+        g_lines_capacity = lines + 1;
+        g_cols_capacity = 0;
+        ScreenElem = New_N(Screen, g_lines_capacity);
+        ScreenImage = New_N(Screen*, g_lines_capacity);
     }
-    if (getRuntime()->cols + 1 > max_COLS) {
-        max_COLS = getRuntime()->cols + 1;
-        for (i = 0; i < max_LINES; i++) {
-#ifdef USE_M17N
-            ScreenElem[i].lineimage = New_N(char*, max_COLS);
-            bzero((void*)ScreenElem[i].lineimage, max_COLS * sizeof(char*));
-#else
-            ScreenElem[i].lineimage = New_N(char, max_COLS);
-#endif
-            ScreenElem[i].lineprop = New_N(l_prop, max_COLS);
+    g_lines = lines;
+
+    if (cols + 1 > g_cols_capacity) {
+        g_cols_capacity = cols + 1;
+        for (int i = 0; i < g_lines_capacity; i++) {
+            ScreenElem[i].lineimage = New_N(char*, g_cols_capacity);
+            memset(ScreenElem[i].lineimage, 0, g_cols_capacity * sizeof(char*));
+            ScreenElem[i].lineprop = New_N(l_prop, g_cols_capacity);
         }
     }
-    for (i = 0; i < getRuntime()->lines; i++) {
-        ScreenImage[i] = &ScreenElem[i];
-        ScreenImage[i]->lineprop[0] = S_EOL;
-        ScreenImage[i]->isdirty = 0;
-    }
-    for (; i < max_LINES; i++) {
-        ScreenElem[i].isdirty = L_UNUSED;
+    g_cols = cols;
+
+    {
+        int i = 0;
+        for (; i < lines; i++) {
+            ScreenImage[i] = &ScreenElem[i];
+            ScreenImage[i]->lineprop[0] = S_EOL;
+            ScreenImage[i]->isdirty = 0;
+        }
+        for (; i < g_lines_capacity; i++) {
+            ScreenElem[i].isdirty = L_UNUSED;
+        }
     }
 
     clear();
 }
 
-/*
- * Screen initialize
- */
 void move(int line, int column)
 {
-    if (line >= 0 && line < getRuntime()->lines)
+    if (line >= 0 && line < g_lines)
         CurLine = line;
-    if (column >= 0 && column < getRuntime()->cols)
+    if (column >= 0 && column < g_cols)
         CurColumn = column;
 }
 
-#ifdef USE_BG_COLOR
 #define M_SPACE (S_SCREENPROP | S_COLORED | S_BCOLORED | S_GRAPHICS)
-#else /* not USE_BG_COLOR */
-#define M_SPACE (S_SCREENPROP | S_COLORED | S_GRAPHICS)
-#endif /* not USE_BG_COLOR */
 
 static int
-#ifdef USE_M17N
 need_redraw(char* c1, l_prop pr1, char* c2, l_prop pr2)
 {
     if (!c1 || !c2 || strcmp(c1, c2))
         return 1;
     if (*c1 == ' ')
-#else
-need_redraw(char c1, l_prop pr1, char c2, l_prop pr2)
-{
-    if (c1 != c2)
-        return 1;
-    if (c1 == ' ')
-#endif
         return (pr1 ^ pr2) & M_SPACE & ~S_DIRTY;
 
     if ((pr1 ^ pr2) & ~S_DIRTY)
@@ -223,26 +171,18 @@ need_redraw(char c1, l_prop pr1, char c2, l_prop pr2)
 
 #define M_CEOL (~(M_SPACE | C_WHICHCHAR))
 
-#ifdef USE_M17N
 #define SPACE " "
-#else
-#define SPACE ' '
-#endif
 
-#ifdef USE_M17N
 void addch(char c)
 {
     addmch(&c, 1);
 }
 
 void addmch(char* pc, size_t len)
-#else
-void addch(char pc)
-#endif
 {
     l_prop* pr;
     int dest, i;
-#ifdef USE_M17N
+
     static Str tmp = NULL;
     char** p;
     char c = *pc;
@@ -252,24 +192,13 @@ void addch(char pc)
         tmp = Strnew();
     Strcopy_charp_n(tmp, pc, len);
     pc = tmp->ptr;
-#else
-    char* p;
-    char c = pc;
-#endif
 
-    if (CurColumn == getRuntime()->cols)
+    if (CurColumn == g_cols)
         wrap();
-    if (CurColumn >= getRuntime()->cols)
+    if (CurColumn >= g_cols)
         return;
     p = ScreenImage[CurLine]->lineimage;
     pr = ScreenImage[CurLine]->lineprop;
-
-#ifndef USE_M17N
-    /* Eliminate unprintables according to * iso-8859-*.
-     * Particularly 0x96 messes up T.Dickey's * (xfree-)xterm */
-    if (IS_INTSPACE(c))
-        c = ' ';
-#endif
 
     if (pr[CurColumn] & S_EOL) {
         if (c == ' ' && !(CurrentMode & M_SPACE)) {
@@ -284,10 +213,8 @@ void addch(char pc)
 
     if (c == '\t' || c == '\n' || c == '\r' || c == '\b')
         SETCHMODE(CurrentMode, C_CTRL);
-#ifdef USE_M17N
     else if (len > 1)
         SETCHMODE(CurrentMode, C_WCHAR1);
-#endif
     else if (!IS_CNTRL(c))
         SETCHMODE(CurrentMode, C_ASCII);
     else
@@ -295,39 +222,31 @@ void addch(char pc)
 
     /* Required to erase bold or underlined character for some * terminal
      * emulators. */
-#ifdef USE_M17N
     i = CurColumn + width - 1;
-#else
-    i = CurColumn;
-#endif
-    if (i < getRuntime()->cols && (((pr[i] & S_BOLD) && need_redraw(p[i], pr[i], pc, CurrentMode)) || ((pr[i] & S_UNDERLINE) && !(CurrentMode & S_UNDERLINE)))) {
+    if (i < g_cols && (((pr[i] & S_BOLD) && need_redraw(p[i], pr[i], pc, CurrentMode)) || ((pr[i] & S_UNDERLINE) && !(CurrentMode & S_UNDERLINE)))) {
         touch_line();
         i++;
-        if (i < getRuntime()->cols) {
+        if (i < g_cols) {
             touch_column(i);
             if (pr[i] & S_EOL) {
                 SETCH(p[i], SPACE, 1);
                 SETPROP(pr[i], (pr[i] & M_CEOL) | C_ASCII);
-            }
-#ifdef USE_M17N
-            else {
-                for (i++; i < getRuntime()->cols && CHMODE(pr[i]) == C_WCHAR2; i++)
+            } else {
+                for (i++; i < g_cols && CHMODE(pr[i]) == C_WCHAR2; i++)
                     touch_column(i);
             }
-#endif
         }
     }
 
-#ifdef USE_M17N
-    if (CurColumn + width > getRuntime()->cols) {
+    if (CurColumn + width > g_cols) {
         touch_line();
-        for (i = CurColumn; i < getRuntime()->cols; i++) {
+        for (i = CurColumn; i < g_cols; i++) {
             SETCH(p[i], SPACE, 1);
             SETPROP(pr[i], (pr[i] & ~C_WHICHCHAR) | C_ASCII);
             touch_column(i);
         }
         wrap();
-        if (CurColumn + width > getRuntime()->cols)
+        if (CurColumn + width > g_cols)
             return;
         p = ScreenImage[CurLine]->lineimage;
         pr = ScreenImage[CurLine]->lineprop;
@@ -343,34 +262,28 @@ void addch(char pc)
                 break;
         }
     }
-#endif
     if (CHMODE(CurrentMode) != C_CTRL) {
         if (need_redraw(p[CurColumn], pr[CurColumn], pc, CurrentMode)) {
             SETCH(p[CurColumn], pc, len);
             SETPROP(pr[CurColumn], CurrentMode);
             touch_line();
             touch_column(CurColumn);
-#ifdef USE_M17N
             SETCHMODE(CurrentMode, C_WCHAR2);
             for (i = CurColumn + 1; i < CurColumn + width; i++) {
                 SETCH(p[i], SPACE, 1);
                 SETPROP(pr[i], (pr[CurColumn] & ~C_WHICHCHAR) | C_WCHAR2);
                 touch_column(i);
             }
-            for (; i < getRuntime()->cols && CHMODE(pr[i]) == C_WCHAR2; i++) {
+            for (; i < g_cols && CHMODE(pr[i]) == C_WCHAR2; i++) {
                 SETCH(p[i], SPACE, 1);
                 SETPROP(pr[i], (pr[i] & ~C_WHICHCHAR) | C_ASCII);
                 touch_column(i);
             }
         }
         CurColumn += width;
-#else
-        }
-        CurColumn++;
-#endif
     } else if (c == '\t') {
         dest = (CurColumn + tab_step) / tab_step * tab_step;
-        if (dest >= getRuntime()->cols) {
+        if (dest >= g_cols) {
             wrap();
             touch_line();
             dest = tab_step;
@@ -392,16 +305,14 @@ void addch(char pc)
         CurColumn = 0;
     } else if (c == '\b' && CurColumn > 0) { /* Backspace */
         CurColumn--;
-#ifdef USE_M17N
         while (CurColumn > 0 && CHMODE(pr[CurColumn]) == C_WCHAR2)
             CurColumn--;
-#endif
     }
 }
 
 void wrap(void)
 {
-    if (CurLine == LASTLINE())
+    if (CurLine == g_lines - 1)
         return;
     CurLine++;
     CurColumn = 0;
@@ -409,7 +320,7 @@ void wrap(void)
 
 void touch_column(int col)
 {
-    if (col >= 0 && col < getRuntime()->cols)
+    if (col >= 0 && col < g_cols)
         ScreenImage[CurLine]->lineprop[col] |= S_DIRTY;
 }
 
@@ -417,7 +328,7 @@ void touch_line(void)
 {
     if (!(ScreenImage[CurLine]->isdirty & L_DIRTY)) {
         int i;
-        for (i = 0; i < getRuntime()->cols; i++)
+        for (i = 0; i < g_cols; i++)
             ScreenImage[CurLine]->lineprop[i] &= ~S_DIRTY;
         ScreenImage[CurLine]->isdirty |= L_DIRTY;
     }
@@ -435,17 +346,13 @@ void standend(void)
 
 void toggle_stand(void)
 {
-#ifdef USE_M17N
     int i;
-#endif
     l_prop* pr = ScreenImage[CurLine]->lineprop;
     pr[CurColumn] ^= S_STANDOUT;
-#ifdef USE_M17N
     if (CHMODE(pr[CurColumn]) != C_WCHAR2) {
         for (i = CurColumn + 1; CHMODE(pr[i]) == C_WCHAR2; i++)
             pr[i] ^= S_STANDOUT;
     }
-#endif
 }
 
 void bold(void)
@@ -493,7 +400,6 @@ color_seq(int colmode)
     return seqbuf;
 }
 
-#ifdef USE_BG_COLOR
 void setbcolor(int color)
 {
     CurrentMode &= ~COL_BCOLOR;
@@ -508,43 +414,31 @@ bcolor_seq(int colmode)
     sprintf(seqbuf, "\033[%dm", ((colmode >> 12) & 7) + 40);
     return seqbuf;
 }
-#endif /* USE_BG_COLOR */
 
 #define RF_NEED_TO_MOVE 0
 #define RF_CR_OK 1
 #define RF_NONEED_TO_MOVE 2
-#ifdef USE_BG_COLOR
 #define M_MEND (S_STANDOUT | S_UNDERLINE | S_BOLD | S_COLORED | S_BCOLORED | S_GRAPHICS)
-#else /* not USE_BG_COLOR */
-#define M_MEND (S_STANDOUT | S_UNDERLINE | S_BOLD | S_COLORED | S_GRAPHICS)
-#endif /* not USE_BG_COLOR */
 void refresh(void)
 {
     int line, col, pcol;
     int pline = CurLine;
     int moved = RF_NEED_TO_MOVE;
-#ifdef USE_M17N
     char** pc;
-#else
-    char* pc;
-#endif
     l_prop *pr, mode = 0;
     l_prop color = COL_FTERM;
-#ifdef USE_BG_COLOR
     l_prop bcolor = COL_BTERM;
-#endif /* USE_BG_COLOR */
     short* dirty;
 
-#ifdef USE_M17N
     wc_putc_init(InnerCharset, DisplayCharset);
-#endif
-    for (line = 0; line <= LASTLINE(); line++) {
+
+    for (line = 0; line < g_lines; line++) {
         dirty = &ScreenImage[line]->isdirty;
         if (*dirty & L_DIRTY) {
             *dirty &= ~L_DIRTY;
             pc = ScreenImage[line]->lineimage;
             pr = ScreenImage[line]->lineprop;
-            for (col = 0; col < getRuntime()->cols && !(pr[col] & S_EOL); col++) {
+            for (col = 0; col < g_cols && !(pr[col] & S_EOL); col++) {
                 if (*dirty & L_NEED_CE && col >= ScreenImage[line]->eol) {
                     if (need_redraw(pc[col], pr[col], SPACE, 0))
                         break;
@@ -555,14 +449,14 @@ void refresh(void)
             }
             if (*dirty & (L_NEED_CE | L_CLRTOEOL)) {
                 pcol = ScreenImage[line]->eol;
-                if (pcol >= getRuntime()->cols) {
+                if (pcol >= g_cols) {
                     *dirty &= ~(L_NEED_CE | L_CLRTOEOL);
                     pcol = col;
                 }
             } else {
                 pcol = col;
             }
-            if (line < getRuntime()->lines - 2 && pline == line - 1 && pcol == 0) {
+            if (line < g_lines - 2 && pline == line - 1 && pcol == 0) {
                 switch (moved) {
                 case RF_NEED_TO_MOVE:
                     tty_MOVE(line, 0);
@@ -602,15 +496,10 @@ void refresh(void)
                  * (COLS-1,LINES-1).
                  */
                 if ((!(pr[col] & S_STANDOUT) && (mode & S_STANDOUT)) || (!(pr[col] & S_UNDERLINE) && (mode & S_UNDERLINE)) || (!(pr[col] & S_BOLD) && (mode & S_BOLD)) || (!(pr[col] & S_COLORED) && (mode & S_COLORED))
-#ifdef USE_BG_COLOR
                     || (!(pr[col] & S_BCOLORED) && (mode & S_BCOLORED))
-#endif /* USE_BG_COLOR */
                     || (!(pr[col] & S_GRAPHICS) && (mode & S_GRAPHICS))) {
                     if ((mode & S_COLORED)
-#ifdef USE_BG_COLOR
-                        || (mode & S_BCOLORED)
-#endif /* USE_BG_COLOR */
-                    )
+                        || (mode & S_BCOLORED))
                         writestr(getRuntime()->T_op);
                     if (mode & S_GRAPHICS)
                         writestr(getRuntime()->T_ae);
@@ -642,18 +531,16 @@ void refresh(void)
                         mode = ((mode & ~COL_FCOLOR) | color);
                         writestr(color_seq(color));
                     }
-#ifdef USE_BG_COLOR
+
                     if ((pr[col] & S_BCOLORED)
                         && (pr[col] ^ mode) & COL_BCOLOR) {
                         bcolor = (pr[col] & COL_BCOLOR);
                         mode = ((mode & ~COL_BCOLOR) | bcolor);
                         writestr(bcolor_seq(bcolor));
                     }
-#endif /* USE_BG_COLOR */
+
                     if ((pr[col] & S_GRAPHICS) && !(mode & S_GRAPHICS)) {
-#ifdef USE_M17N
                         wc_putc_end(getOutputHandle());
-#endif
                         if (!graph_enabled) {
                             graph_enabled = 1;
                             writestr(getRuntime()->T_eA);
@@ -661,14 +548,10 @@ void refresh(void)
                         writestr(getRuntime()->T_as);
                         mode |= S_GRAPHICS;
                     }
-#ifdef USE_M17N
                     if (pr[col] & S_GRAPHICS)
                         write1(graphchar(*pc[col]));
                     else if (CHMODE(pr[col]) != C_WCHAR2)
                         wc_putc(pc[col], getOutputHandle());
-#else
-                    write1((pr[col] & S_GRAPHICS) ? graphchar(pc[col]) : pc[col]);
-#endif
                     pcol = col + 1;
                 }
             }
@@ -679,25 +562,17 @@ void refresh(void)
         }
         *dirty &= ~(L_NEED_CE | L_CLRTOEOL);
         if (mode & M_MEND) {
-            if (mode & (S_COLORED
-#ifdef USE_BG_COLOR
-                    | S_BCOLORED
-#endif /* USE_BG_COLOR */
-                    ))
+            if (mode & (S_COLORED | S_BCOLORED))
                 writestr(getRuntime()->T_op);
             if (mode & S_GRAPHICS) {
                 writestr(getRuntime()->T_ae);
-#ifdef USE_M17N
                 wc_putc_clear_status();
-#endif
             }
             writestr(getRuntime()->T_me);
             mode &= ~M_MEND;
         }
     }
-#ifdef USE_M17N
     wc_putc_end(getOutputHandle());
-#endif
     tty_MOVE(CurLine, CurColumn);
     flush_tty();
 }
@@ -717,97 +592,6 @@ void clear(void)
     }
     CurrentMode = C_ASCII;
 }
-
-#ifdef USE_RAW_SCROLL
-static void
-scroll_raw(void)
-{ /* raw scroll */
-    MOVE(LINES - 1, 0);
-    write1('\n');
-}
-
-void scroll(int n)
-{ /* scroll up */
-    int cli = CurLine, cco = CurColumn;
-    Screen* t;
-    int i, j, k;
-
-    i = LINES;
-    j = n;
-    do {
-        k = j;
-        j = i % k;
-        i = k;
-    } while (j);
-    do {
-        k--;
-        i = k;
-        j = (i + n) % LINES;
-        t = ScreenImage[k];
-        while (j != k) {
-            ScreenImage[i] = ScreenImage[j];
-            i = j;
-            j = (i + n) % LINES;
-        }
-        ScreenImage[i] = t;
-    } while (k);
-
-    for (i = 0; i < n; i++) {
-        t = ScreenImage[LINES - 1 - i];
-        t->isdirty = 0;
-        for (j = 0; j < COLS; j++)
-            t->lineprop[j] = S_EOL;
-        scroll_raw();
-    }
-    move(cli, cco);
-}
-
-void rscroll(int n)
-{ /* scroll down */
-    int cli = CurLine, cco = CurColumn;
-    Screen* t;
-    int i, j, k;
-
-    i = LINES;
-    j = n;
-    do {
-        k = j;
-        j = i % k;
-        i = k;
-    } while (j);
-    do {
-        k--;
-        i = k;
-        j = (LINES + i - n) % LINES;
-        t = ScreenImage[k];
-        while (j != k) {
-            ScreenImage[i] = ScreenImage[j];
-            i = j;
-            j = (LINES + i - n) % LINES;
-        }
-        ScreenImage[i] = t;
-    } while (k);
-    if (T_sr && *T_sr) {
-        MOVE(0, 0);
-        for (i = 0; i < n; i++) {
-            t = ScreenImage[i];
-            t->isdirty = 0;
-            for (j = 0; j < COLS; j++)
-                t->lineprop[j] = S_EOL;
-            writestr(T_sr);
-        }
-        move(cli, cco);
-    } else {
-        for (i = 0; i < LINES; i++) {
-            t = ScreenImage[i];
-            t->isdirty |= L_DIRTY | L_NEED_CE;
-            for (j = 0; j < COLS; j++) {
-                t->lineprop[j] |= S_DIRTY;
-            }
-        }
-    }
-}
-#endif
 
 /* XXX: conflicts with curses's clrtoeol(3) ? */
 void clrtoeol(void)
@@ -881,7 +665,6 @@ void clrtobotx(void)
 
 void addstr(char* s)
 {
-#ifdef USE_M17N
     int len;
 
     while (*s != '\0') {
@@ -889,16 +672,11 @@ void addstr(char* s)
         addmch(s, len);
         s += len;
     }
-#else
-    while (*s != '\0')
-        addch(*(s++));
-#endif
 }
 
 void addnstr(char* s, int n)
 {
     int i;
-#ifdef USE_M17N
     int len, width;
 
     for (i = 0; *s != '\0';) {
@@ -910,16 +688,11 @@ void addnstr(char* s, int n)
         s += len;
         i += width;
     }
-#else
-    for (i = 0; i < n && *s != '\0'; i++)
-        addch(*(s++));
-#endif
 }
 
 void addnstr_sup(char* s, int n)
 {
     int i;
-#ifdef USE_M17N
     int len, width;
 
     for (i = 0; *s != '\0';) {
@@ -931,22 +704,14 @@ void addnstr_sup(char* s, int n)
         s += len;
         i += width;
     }
-#else
-    for (i = 0; i < n && *s != '\0'; i++)
-        addch(*(s++));
-#endif
     for (; i < n; i++)
         addch(' ');
 }
 
-#ifdef USE_IMAGE
 void touch_cursor(void)
 {
-#ifdef USE_M17N
     int i;
-#endif
     touch_line();
-#ifdef USE_M17N
     for (i = CurColumn; i >= 0; i--) {
         touch_column(i);
         if (CHMODE(ScreenImage[CurLine]->lineprop[i]) != C_WCHAR2)
@@ -957,8 +722,4 @@ void touch_cursor(void)
             break;
         touch_column(i);
     }
-#else
-    touch_column(CurColumn);
-#endif
 }
-#endif
