@@ -1,4 +1,4 @@
-#include "w3m_runtime.h"
+#include "w3m_rc.h"
 #include "buffer.h"
 #include "fm.h"
 #ifndef __MINGW32_VERSION

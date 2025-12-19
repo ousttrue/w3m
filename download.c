@@ -1,7 +1,7 @@
 #include "download.h"
 #include "buffer.h"
 #include "display.h"
-#include "w3m_runtime.h"
+#include "w3m_rc.h"
 #include "tab.h"
 #include "buffer.h"
 #include "image.h"

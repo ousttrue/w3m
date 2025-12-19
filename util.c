@@ -1,5 +1,5 @@
 #include "util.h"
-#include "w3m_runtime.h"
+#include "w3m_rc.h"
 
 #include <stdio.h>
 #include <stdlib.h>

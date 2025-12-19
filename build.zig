@@ -9,7 +9,7 @@ const system_libs = [_][]const u8{
 };
 
 const w3m_srcs = [_][]const u8{
-    "w3m_runtime.c",
+    "w3m_rc.c",
 
     "tab.c",
     "buffer.c",
@@ -31,7 +31,6 @@ const w3m_srcs = [_][]const u8{
     "local.c",
     "maparea.c",
     "frame.c",
-    "rc.c",
     "menu.c",
     "mailcap.c",
     "image.c",

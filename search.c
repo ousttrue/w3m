@@ -1,6 +1,6 @@
 #include "fm.h"
 #include "buffer.h"
-#include "w3m_runtime.h"
+#include "w3m_rc.h"
 #include "tab.h"
 #include "regex.h"
 #include <signal.h>

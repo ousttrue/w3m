@@ -1,9 +1,12 @@
 #pragma once
+/// w3m_rc: w3m run command ?
+///
+/// config
 /// process
 /// tty
 /// signal
 #include "Str.h"
-#include <wc.h>
+#include "libwc/wc.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -140,3 +143,5 @@ char* getCurWord(struct Buffer* buf, int* spos, int* epos);
 char* GetWord(struct Buffer* buf);
 int is_wordchar(wc_uint32 c);
 wc_uint32 getChar(char* p);
+
+void show_params(FILE* fp);

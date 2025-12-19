@@ -2,7 +2,7 @@
 #include "html_form.h"
 #include "siteconf.h"
 #include "anchor.h"
-#include "w3m_runtime.h"
+#include "w3m_rc.h"
 #include "download.h"
 #include "tab.h"
 #include "buffer.h"
@@ -29,7 +29,6 @@
 #include "terms.h"
 #include "myctype.h"
 #include "regex.h"
-#include "rc.h"
 #ifdef USE_M17N
 #include "wc.h"
 #include "wtf.h"

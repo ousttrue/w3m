@@ -1,6 +1,6 @@
 const std = @import("std");
 const c = @cImport({
-    @cInclude("w3m_runtime.h");
+    @cInclude("w3m_rc.h");
     @cInclude("termcap.h");
     @cInclude("image.h");
     @cInclude("terms.h");

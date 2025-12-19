@@ -4,7 +4,7 @@
 #include "maparea.h"
 #include "tab.h"
 #include "image.h"
-#include "w3m_runtime.h"
+#include "w3m_rc.h"
 
 #include <math.h>
 #include <signal.h>
