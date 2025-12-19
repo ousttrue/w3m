@@ -1,17 +1,9 @@
 #include "terms.h"
 #include "alloc.h"
 #include "Str.h"
-#include <wc.h>
-#include <wtf.h>
 #include "myctype.h"
-#include <string.h>
-#include <stdbool.h>
-
-#define MAX_LINE 200
-#define MAX_COLUMN 400
 
 #define M_SPACE (S_SCREENPROP | S_COLORED | S_BCOLORED | S_GRAPHICS)
-
 #define M_CEOL (~(M_SPACE | C_WHICHCHAR))
 
 struct Screen g_screen = {
@@ -84,7 +76,7 @@ void screen_move(int line, int column)
         g_screen.x = column;
 }
 
-void screen_addmch(char* pc, size_t len)
+void screen_addmch(const char* pc, size_t len, int width)
 {
     static Str tmp = NULL;
     if (tmp == NULL)
@@ -122,7 +114,7 @@ void screen_addmch(char* pc, size_t len)
 
     /* Required to erase bold or underlined character for some * terminal
      * emulators. */
-    int width = wtf_width(pc);
+    // int width = wtf_width(pc);
     int i = g_screen.x + width - 1;
     if (i < g_screen.cols
         && (((pr[i] & S_BOLD) && screen_need_redraw(p[i], pr[i], pc, g_screen.mode))
@@ -213,6 +205,11 @@ void screen_addmch(char* pc, size_t len)
     }
 }
 
+void screen_add_tab()
+{
+    screen_addmch("\t", 1, g_screen.tab_step);
+}
+
 void screen_wrap(void)
 {
     if (g_screen.y == g_screen.lines - 1)
@@ -230,8 +227,7 @@ void screen_touch_column(int col)
 void screen_touch_line(void)
 {
     if (!(g_screen.cells[g_screen.y].isdirty & L_DIRTY)) {
-        int i;
-        for (i = 0; i < g_screen.cols; i++)
+        for (int i = 0; i < g_screen.cols; i++)
             g_screen.cells[g_screen.y].lineprop[i] &= ~S_DIRTY;
         g_screen.cells[g_screen.y].isdirty |= L_DIRTY;
     }
@@ -249,11 +245,10 @@ void screen_standend(void)
 
 void screen_toggle_stand(void)
 {
-    int i;
     l_prop* pr = g_screen.cells[g_screen.y].lineprop;
     pr[g_screen.x] ^= S_STANDOUT;
     if (CHMODE(pr[g_screen.x]) != C_WCHAR2) {
-        for (i = g_screen.x + 1; CHMODE(pr[i]) == C_WCHAR2; i++)
+        for (int i = g_screen.x + 1; CHMODE(pr[i]) == C_WCHAR2; i++)
             pr[i] ^= S_STANDOUT;
     }
 }
@@ -316,9 +311,9 @@ void screen_clear(void)
 }
 
 /* XXX: conflicts with curses's clrtoeol(3) ? */
+/* Clear to the end of line */
 void screen_clrtoeol(void)
-{ /* Clear to the end of line */
-    int i;
+{
     l_prop* lprop = g_screen.cells[g_screen.y].lineprop;
 
     if (lprop[g_screen.x] & S_EOL)
@@ -329,7 +324,7 @@ void screen_clrtoeol(void)
 
     g_screen.cells[g_screen.y].isdirty |= L_CLRTOEOL;
     screen_touch_line();
-    for (i = g_screen.x; i < g_screen.cols && !(lprop[i] & S_EOL); i++) {
+    for (int i = g_screen.x; i < g_screen.cols && !(lprop[i] & S_EOL); i++) {
         lprop[i] = S_EOL | S_DIRTY;
     }
 }
@@ -337,19 +332,16 @@ void screen_clrtoeol(void)
 static void
 screen_clrtoeol_with_bcolor(void)
 {
-    int i, cli, cco;
-    l_prop pr;
-
     if (!(g_screen.mode & S_BCOLORED)) {
         screen_clrtoeol();
         return;
     }
-    cli = g_screen.y;
-    cco = g_screen.x;
-    pr = g_screen.mode;
+    int cli = g_screen.y;
+    int cco = g_screen.x;
+    l_prop pr = g_screen.mode;
     g_screen.mode = (g_screen.mode & (M_CEOL | S_BCOLORED)) | C_ASCII;
-    for (i = g_screen.x; i < g_screen.cols; i++)
-        addch(' ');
+    for (int i = g_screen.x; i < g_screen.cols; i++)
+        screen_add_whitespace();
     screen_move(cli, cco);
     g_screen.mode = pr;
 }
@@ -362,10 +354,8 @@ void screen_clrtoeolx(void)
 static void
 screen_clrtobot_eol(void (*clrtoeol)())
 {
-    int l, c;
-
-    l = g_screen.y;
-    c = g_screen.x;
+    int l = g_screen.y;
+    int c = g_screen.x;
     (*clrtoeol)();
     g_screen.x = 0;
     g_screen.y++;
@@ -378,46 +368,6 @@ screen_clrtobot_eol(void (*clrtoeol)())
 void screen_clrtobotx(void)
 {
     screen_clrtobot_eol(screen_clrtoeolx);
-}
-
-void screen_addstr(char* s)
-{
-    int len;
-
-    while (*s != '\0') {
-        len = wtf_len((wc_uchar*)s);
-        screen_addmch(s, len);
-        s += len;
-    }
-}
-
-void screen_addnstr(char* s, int n)
-{
-    for (int i = 0; *s != '\0';) {
-        int width = wtf_width(s);
-        if (i + width > n)
-            break;
-        int len = wtf_len((wc_uchar*)s);
-        screen_addmch(s, len);
-        s += len;
-        i += width;
-    }
-}
-
-void screen_addnstr_sup(char* s, int n)
-{
-    int i = 0;
-    for (; *s != '\0';) {
-        int width = wtf_width(s);
-        if (i + width > n)
-            break;
-        int len = wtf_len((wc_uchar*)s);
-        screen_addmch(s, len);
-        s += len;
-        i += width;
-    }
-    for (; i < n; i++)
-        addch(' ');
 }
 
 void screen_touch_cursor(void)

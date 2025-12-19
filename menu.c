@@ -763,9 +763,9 @@ static MenuList* w3mMenuList;
 
 static Menu* CurrentMenu = NULL;
 
-#define mvaddch(y, x, c) (screen_move(y, x), addch(c))
-#define mvaddstr(y, x, str) (screen_move(y, x), screen_addstr(str))
-#define mvaddnstr(y, x, str, n) (screen_move(y, x), screen_addnstr_sup(str, n))
+#define mvaddch(y, x, c) (screen_move(y, x), screen_addch(c, 1))
+#define mvaddstr(y, x, str) (screen_move(y, x), screen_wc_addstr(str))
+#define mvaddnstr(y, x, str, n) (screen_move(y, x), screen_wc_addnstr_sup(str, n))
 
 void new_menu(Menu* menu, MenuItem* item)
 {

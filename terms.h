@@ -95,10 +95,16 @@ struct Screen* screen_get();
 bool screen_need_redraw(char* c1, l_prop pr1, char* c2, l_prop pr2);
 void screen_setup(int lines, int cols);
 void screen_move(int line, int column);
-void screen_addmch(char* p, size_t len);
-inline static void addch(char c)
+void screen_addmch(const char* p, size_t len, int width);
+static inline void screen_add_whitespace()
 {
-    screen_addmch(&c, 1);
+    const char* white_space = " ";
+    screen_addmch(white_space, 1, 1);
+}
+void screen_add_tab();
+inline static void screen_addch(char c, int width)
+{
+    screen_addmch(&c, 1, width);
 }
 void screen_wrap(void);
 void screen_touch_line(void);
@@ -118,8 +124,6 @@ void screen_clrtoeol(void);
 void screen_clrtoeolx(void);
 void screen_clrtobot(void);
 void screen_clrtobotx(void);
-void screen_addstr(char* s);
-void screen_addnstr(char* s, int n);
-void screen_addnstr_sup(char* s, int n);
+
 void screen_touch_cursor(void);
 void screen_touch_column(int col);

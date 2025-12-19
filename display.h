@@ -10,3 +10,7 @@ enum DisplayMode {
 
 struct Buffer;
 void displayBuffer(struct Buffer* buf, enum DisplayMode mode);
+
+void screen_wc_addstr(char* s);
+void screen_wc_addstr_width(char* s, int width);
+void screen_wc_addnstr_sup(char* s, int n);

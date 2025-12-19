@@ -6735,14 +6735,14 @@ void showProgress(clen_t* linelen, clen_t* trbyte)
             messages = Sprintf("%11s %3.0f%%                          ",
                 fmtrbyte, ratio);
         }
-        screen_addstr(messages->ptr);
+        screen_wc_addstr(messages->ptr);
         pos = 42;
         i = pos + (TTY_COLS() - pos - 1) * (*trbyte) / current_content_length;
         screen_move(LASTLINE(), pos);
         screen_standout();
-        addch(' ');
+        screen_addch(' ', 1);
         for (j = pos + 1; j <= i; j++)
-            addch('|');
+            screen_addch('|', 1);
         screen_standend();
         /* no_clrtoeol(); */
         tty_refresh();

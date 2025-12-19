@@ -258,7 +258,7 @@ writeBufferName(struct Buffer* buf, int n)
             break;
         }
     }
-    screen_addnstr_sup(msg->ptr, TTY_COLS() - 1);
+    screen_wc_addnstr_sup(msg->ptr, TTY_COLS() - 1);
 }
 
 /*

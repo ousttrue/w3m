@@ -380,7 +380,7 @@ void displayBuffer(struct Buffer* buf, enum DisplayMode mode)
     }
     if (mode == B_FORCE_REDRAW || mode == B_SCROLL || mode == B_REDRAW_IMAGE || cline != buf->topLine || ccolumn != buf->currentColumn) {
         if (activeImage && (mode == B_REDRAW_IMAGE || cline != buf->topLine || ccolumn != buf->currentColumn)) {
-            if (draw_image_flag){
+            if (draw_image_flag) {
                 tty_clear();
                 screen_clear();
             }
@@ -537,27 +537,27 @@ redrawNLine(struct Buffer* buf, int n)
             screen_move(t->y, t->x1);
             if (t == CurrentTab())
                 screen_bold();
-            addch('[');
+            screen_addch('[', 1);
             int l = t->x2 - t->x1 - 1 - get_strwidth(t->currentBuffer->buffername);
             if (l < 0)
                 l = 0;
             if (l / 2 > 0)
-                screen_addnstr_sup(" ", l / 2);
+                screen_wc_addnstr_sup(" ", l / 2);
             if (t == CurrentTab())
                 EFFECT_ACTIVE_START;
-            screen_addnstr(t->currentBuffer->buffername, t->x2 - t->x1 - l);
+            screen_wc_addstr_width(t->currentBuffer->buffername, t->x2 - t->x1 - l);
             if (t == CurrentTab())
                 EFFECT_ACTIVE_END;
             if ((l + 1) / 2 > 0)
-                screen_addnstr_sup(" ", (l + 1) / 2);
+                screen_wc_addnstr_sup(" ", (l + 1) / 2);
             screen_move(t->y, t->x2);
-            addch(']');
+            screen_addch(']', 1);
             if (t == CurrentTab())
                 screen_boldend();
         }
         screen_move(LastTab()->y + 1, 0);
         for (i = 0; i < TTY_COLS(); i++)
-            addch('~');
+            screen_addch('~', 1);
     }
     for (i = 0, l = buf->topLine; i < buf->LINES; i++, l = l->next) {
         if (i >= buf->LINES - n || i < -n)
@@ -622,7 +622,7 @@ redrawLine(struct Buffer* buf, struct Line* l, int i)
             sprintf(tmp, "%*ld:", buf->rootX - 1, l->real_linenumber);
         else
             sprintf(tmp, "%*s ", buf->rootX - 1, "");
-        screen_addstr(tmp);
+        screen_wc_addstr(tmp);
     }
     screen_move(i, buf->rootX);
     if (l->width < 0)
@@ -1002,87 +1002,69 @@ do_color(Linecolor c)
 }
 #endif
 
-#ifdef USE_M17N
 void addChar(char c, Lineprop mode)
 {
     addMChar(&c, mode, 1);
 }
 
 void addMChar(char* p, Lineprop mode, size_t len)
-#else
-void addChar(char c, Lineprop mode)
-#endif
 {
     Lineprop m = CharEffect(mode);
-#ifdef USE_M17N
+
     char c = *p;
 
     if (mode & PC_WCHAR2)
         return;
-#endif
+
     do_effects(m);
     if (mode & PC_SYMBOL) {
         char** symbol;
-#ifdef USE_M17N
+
         int w = (mode & PC_KANJI) ? 2 : 1;
 
         c = ((char)wtf_get_code((wc_uchar*)p) & 0x7f) - SYMBOL_BASE;
-#else
-        c -= SYMBOL_BASE;
-#endif
         if (graph_ok() && c < N_GRAPH_SYMBOL) {
             if (!graph_mode) {
                 screen_graphstart();
                 graph_mode = TRUE;
             }
-#ifdef USE_M17N
+
             if (w == 2 && WcOption.use_wide)
-                screen_addstr(graph2_symbol[(unsigned char)c % N_GRAPH_SYMBOL]);
+                screen_wc_addstr(graph2_symbol[(unsigned char)c % N_GRAPH_SYMBOL]);
             else
-#endif
-                addch(*graph_symbol[(unsigned char)c % N_GRAPH_SYMBOL]);
+                screen_addch(*graph_symbol[(unsigned char)c % N_GRAPH_SYMBOL], 1);
         } else {
-#ifdef USE_M17N
             symbol = get_symbol(DisplayCharset, &w);
-            screen_addstr(symbol[(unsigned char)c % N_SYMBOL]);
-#else
-            symbol = get_symbol();
-            addch(*symbol[(unsigned char)c % N_SYMBOL]);
-#endif
+            screen_wc_addstr(symbol[(unsigned char)c % N_SYMBOL]);
         }
     } else if (mode & PC_CTRL) {
         switch (c) {
         case '\t':
-            addch(c);
+            screen_add_tab();
             break;
         case '\n':
-            addch(' ');
+            screen_addch(' ', 1);
             break;
         case '\r':
             break;
         case DEL_CODE:
-            screen_addstr("^?");
+            screen_wc_addstr("^?");
             break;
         default:
-            addch('^');
-            addch(c + '@');
+            screen_addch('^', 1);
+            screen_addch(c + '@', 1);
             break;
         }
     }
-#ifdef USE_M17N
+
     else if (mode & PC_UNKNOWN) {
         char buf[5];
         sprintf(buf, "[%.2X]",
             (unsigned char)wtf_get_code((wc_uchar*)p) | 0x80);
-        screen_addstr(buf);
-    } else
-        screen_addmch(p, len);
-#else
-    else if (0x80 <= (unsigned char)c && (unsigned char)c <= NBSP_CODE)
-        addch(' ');
-    else
-        addch(c);
-#endif
+        screen_wc_addstr(buf);
+    } else {
+        screen_addmch(p, len, wtf_width(p));
+    }
 }
 
 static GeneralList* message_list = NULL;
@@ -1126,7 +1108,7 @@ void message(char* s, int return_x, int return_y)
     if (!fmInitialized())
         return;
     screen_move(LASTLINE(), 0);
-    screen_addnstr(s, TTY_COLS() - 1);
+    screen_wc_addstr_width(s, TTY_COLS() - 1);
     screen_clrtoeolx();
     screen_move(return_y, return_x);
 }
@@ -1455,7 +1437,41 @@ void restorePosition(struct Buffer* buf, struct Buffer* orig)
     arrangeCursor(buf);
 }
 
-/* Local Variables:    */
-/* c-basic-offset: 4   */
-/* tab-width: 8        */
-/* End:                */
+void screen_wc_addstr(char* s)
+{
+    while (*s != '\0') {
+        int len = wtf_len((wc_uchar*)s);
+        int width = wtf_width(s);
+        screen_addmch(s, len, width);
+        s += len;
+    }
+}
+
+void screen_wc_addstr_width(char* s, int n)
+{
+    for (int i = 0; *s != '\0';) {
+        int width = wtf_width(s);
+        if (i + width > n)
+            break;
+        int len = wtf_len((wc_uchar*)s);
+        screen_addmch(s, len, width);
+        s += len;
+        i += width;
+    }
+}
+
+void screen_wc_addnstr_sup(char* s, int n)
+{
+    int i = 0;
+    for (; *s != '\0';) {
+        int width = wtf_width(s);
+        if (i + width > n)
+            break;
+        int len = wtf_len((wc_uchar*)s);
+        screen_addmch(s, len, width);
+        s += len;
+        i += width;
+    }
+    for (; i < n; i++)
+        screen_add_whitespace();
+}

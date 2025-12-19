@@ -186,7 +186,7 @@ char* inputLineHistSearch(char* prompt, char* def_str, int flag, struct Hist* hi
                 offset = 0;
         }
         screen_move(LASTLINE(), 0);
-        screen_addstr(prompt);
+        screen_wc_addstr(prompt);
         if (is_passwd)
             addPasswd(strBuf->ptr, strProp, CLen, offset, TTY_COLS() - opos);
         else
@@ -817,7 +817,7 @@ disp_next:
         screen_clrtoeolx();
         screen_bold();
         /* FIXME: gettextize? */
-        screen_addstr("----- Completion list -----");
+        screen_wc_addstr("----- Completion list -----");
         screen_boldend();
         y++;
     }
@@ -830,9 +830,9 @@ disp_next:
             screen_clrtoeolx();
             f = Strdup(d);
             Strcat_charp(f, CFileBuf[n]);
-            screen_addstr(conv_from_system(CFileBuf[n]));
+            screen_wc_addstr(conv_from_system(CFileBuf[n]));
             if (stat(expandPath(f->ptr), &st) != -1 && S_ISDIR(st.st_mode))
-                screen_addstr("/");
+                screen_wc_addstr("/");
         }
         y++;
     }
@@ -842,10 +842,10 @@ disp_next:
         screen_bold();
         if (emacs_like_lineedit)
             /* FIXME: gettextize? */
-            screen_addstr("----- Press TAB to continue -----");
+            screen_wc_addstr("----- Press TAB to continue -----");
         else
             /* FIXME: gettextize? */
-            screen_addstr("----- Press CTRL-D to continue -----");
+            screen_wc_addstr("----- Press CTRL-D to continue -----");
         screen_boldend();
     }
 }
