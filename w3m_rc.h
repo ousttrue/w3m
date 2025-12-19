@@ -126,6 +126,7 @@ inline static int TTY_COLS(void) { return getRuntime()->cols; }
 inline static int LASTLINE(void) { return getRuntime()->lines - 1; }
 void tty_set_cols(int cols);
 int graph_ok(void);
+void tty_clear();
 
 // void crmode(void);
 // void nocrmode(void);

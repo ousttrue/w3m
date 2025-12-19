@@ -380,8 +380,10 @@ void displayBuffer(struct Buffer* buf, enum DisplayMode mode)
     }
     if (mode == B_FORCE_REDRAW || mode == B_SCROLL || mode == B_REDRAW_IMAGE || cline != buf->topLine || ccolumn != buf->currentColumn) {
         if (activeImage && (mode == B_REDRAW_IMAGE || cline != buf->topLine || ccolumn != buf->currentColumn)) {
-            if (draw_image_flag)
+            if (draw_image_flag){
+                tty_clear();
                 screen_clear();
+            }
             clearImage();
             loadImage(buf, IMG_FLAG_STOP);
             image_touch++;

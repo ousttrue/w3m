@@ -315,6 +315,7 @@ void initscr(void)
     if (g_runtime.T_ti && !g_runtime.Do_not_use_ti_te)
         writestr(g_runtime.T_ti);
     screen_setup(g_runtime.lines, g_runtime.cols);
+    tty_clear();
 }
 
 int graph_ok(void)
@@ -2771,3 +2772,8 @@ char* helpFile(char* base)
     return expandPath(Strnew_m_charp(w3m_help_dir(), "/", base, NULL)->ptr);
 }
 #endif
+
+void tty_clear()
+{
+    writestr(g_runtime.T_cl);
+}

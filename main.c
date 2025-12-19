@@ -1422,6 +1422,7 @@ DEFUN(ctrCsrH, CENTER_H, "Center on cursor column")
 /* Redraw screen */
 DEFUN(rdrwSc, REDRAW, "Draw the screen anew")
 {
+    tty_clear();
     screen_clear();
     arrangeCursor(Currentbuf);
     displayBuffer(Currentbuf, B_FORCE_REDRAW);

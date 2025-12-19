@@ -570,14 +570,11 @@ void refresh(void)
 
 void screen_clear(void)
 {
-    int i, j;
-    l_prop* p;
-    writestr(getRuntime()->T_cl);
     screen_move(0, 0);
-    for (i = 0; i < getRuntime()->lines; i++) {
+    for (int i = 0; i < getRuntime()->lines; i++) {
         ScreenElem[i].isdirty = 0;
-        p = ScreenElem[i].lineprop;
-        for (j = 0; j < getRuntime()->cols; j++) {
+        l_prop* p = ScreenElem[i].lineprop;
+        for (int j = 0; j < getRuntime()->cols; j++) {
             p[j] = S_EOL;
         }
     }
