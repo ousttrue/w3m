@@ -82,13 +82,6 @@
 
 typedef unsigned short l_prop;
 
-typedef struct scline {
-    char** lineimage;
-    l_prop* lineprop;
-    short isdirty;
-    short eol;
-} Screen;
-
 static int g_lines = 0;
 static int g_lines_capacity = 0;
 
@@ -97,7 +90,15 @@ static int g_cols_capacity = 0;
 
 static int tab_step = 8;
 static int CurLine, CurColumn;
-static Screen *ScreenElem = NULL, **ScreenImage = NULL;
+
+struct ScreenLine {
+    char** lineimage;
+    l_prop* lineprop;
+    short isdirty;
+    short eol;
+};
+static struct ScreenLine* ScreenElem = NULL;
+
 static l_prop CurrentMode = 0;
 static int graph_enabled = 0;
 
@@ -115,8 +116,7 @@ void setupscreen(int lines, int cols)
     if (lines + 1 > g_lines_capacity) {
         g_lines_capacity = lines + 1;
         g_cols_capacity = 0;
-        ScreenElem = New_N(Screen, g_lines_capacity);
-        ScreenImage = New_N(Screen*, g_lines_capacity);
+        ScreenElem = New_N(struct ScreenLine, g_lines_capacity);
     }
     g_lines = lines;
 
@@ -133,9 +133,8 @@ void setupscreen(int lines, int cols)
     {
         int i = 0;
         for (; i < lines; i++) {
-            ScreenImage[i] = &ScreenElem[i];
-            ScreenImage[i]->lineprop[0] = S_EOL;
-            ScreenImage[i]->isdirty = 0;
+            ScreenElem[i].lineprop[0] = S_EOL;
+            ScreenElem[i].isdirty = 0;
         }
         for (; i < g_lines_capacity; i++) {
             ScreenElem[i].isdirty = L_UNUSED;
@@ -173,21 +172,9 @@ need_redraw(char* c1, l_prop pr1, char* c2, l_prop pr2)
 
 #define SPACE " "
 
-void addch(char c)
-{
-    addmch(&c, 1);
-}
-
 void addmch(char* pc, size_t len)
 {
-    l_prop* pr;
-    int dest, i;
-
     static Str tmp = NULL;
-    char** p;
-    char c = *pc;
-    int width = wtf_width((wc_uchar*)pc);
-
     if (tmp == NULL)
         tmp = Strnew();
     Strcopy_charp_n(tmp, pc, len);
@@ -197,15 +184,16 @@ void addmch(char* pc, size_t len)
         wrap();
     if (CurColumn >= g_cols)
         return;
-    p = ScreenImage[CurLine]->lineimage;
-    pr = ScreenImage[CurLine]->lineprop;
+    char** p = ScreenElem[CurLine].lineimage;
+    l_prop* pr = ScreenElem[CurLine].lineprop;
 
+    char c = *pc;
     if (pr[CurColumn] & S_EOL) {
         if (c == ' ' && !(CurrentMode & M_SPACE)) {
             CurColumn++;
             return;
         }
-        for (i = CurColumn; i >= 0 && (pr[i] & S_EOL); i--) {
+        for (int i = CurColumn; i >= 0 && (pr[i] & S_EOL); i--) {
             SETCH(p[i], SPACE, 1);
             SETPROP(pr[i], (pr[i] & M_CEOL) | C_ASCII);
         }
@@ -222,8 +210,11 @@ void addmch(char* pc, size_t len)
 
     /* Required to erase bold or underlined character for some * terminal
      * emulators. */
-    i = CurColumn + width - 1;
-    if (i < g_cols && (((pr[i] & S_BOLD) && need_redraw(p[i], pr[i], pc, CurrentMode)) || ((pr[i] & S_UNDERLINE) && !(CurrentMode & S_UNDERLINE)))) {
+    int width = wtf_width(pc);
+    int i = CurColumn + width - 1;
+    if (i < g_cols
+        && (((pr[i] & S_BOLD) && need_redraw(p[i], pr[i], pc, CurrentMode))
+            || ((pr[i] & S_UNDERLINE) && !(CurrentMode & S_UNDERLINE)))) {
         touch_line();
         i++;
         if (i < g_cols) {
@@ -248,8 +239,8 @@ void addmch(char* pc, size_t len)
         wrap();
         if (CurColumn + width > g_cols)
             return;
-        p = ScreenImage[CurLine]->lineimage;
-        pr = ScreenImage[CurLine]->lineprop;
+        p = ScreenElem[CurLine].lineimage;
+        pr = ScreenElem[CurLine].lineprop;
     }
     if (CHMODE(pr[CurColumn]) == C_WCHAR2) {
         touch_line();
@@ -282,13 +273,13 @@ void addmch(char* pc, size_t len)
         }
         CurColumn += width;
     } else if (c == '\t') {
-        dest = (CurColumn + tab_step) / tab_step * tab_step;
+        int dest = (CurColumn + tab_step) / tab_step * tab_step;
         if (dest >= g_cols) {
             wrap();
             touch_line();
             dest = tab_step;
-            p = ScreenImage[CurLine]->lineimage;
-            pr = ScreenImage[CurLine]->lineprop;
+            p = ScreenElem[CurLine].lineimage;
+            pr = ScreenElem[CurLine].lineprop;
         }
         for (i = CurColumn; i < dest; i++) {
             if (need_redraw(p[i], pr[i], SPACE, CurrentMode)) {
@@ -321,16 +312,16 @@ void wrap(void)
 void touch_column(int col)
 {
     if (col >= 0 && col < g_cols)
-        ScreenImage[CurLine]->lineprop[col] |= S_DIRTY;
+        ScreenElem[CurLine].lineprop[col] |= S_DIRTY;
 }
 
 void touch_line(void)
 {
-    if (!(ScreenImage[CurLine]->isdirty & L_DIRTY)) {
+    if (!(ScreenElem[CurLine].isdirty & L_DIRTY)) {
         int i;
         for (i = 0; i < g_cols; i++)
-            ScreenImage[CurLine]->lineprop[i] &= ~S_DIRTY;
-        ScreenImage[CurLine]->isdirty |= L_DIRTY;
+            ScreenElem[CurLine].lineprop[i] &= ~S_DIRTY;
+        ScreenElem[CurLine].isdirty |= L_DIRTY;
     }
 }
 
@@ -347,7 +338,7 @@ void standend(void)
 void toggle_stand(void)
 {
     int i;
-    l_prop* pr = ScreenImage[CurLine]->lineprop;
+    l_prop* pr = ScreenElem[CurLine].lineprop;
     pr[CurColumn] ^= S_STANDOUT;
     if (CHMODE(pr[CurColumn]) != C_WCHAR2) {
         for (i = CurColumn + 1; CHMODE(pr[i]) == C_WCHAR2; i++)
@@ -433,13 +424,13 @@ void refresh(void)
     wc_putc_init(InnerCharset, DisplayCharset);
 
     for (line = 0; line < g_lines; line++) {
-        dirty = &ScreenImage[line]->isdirty;
+        dirty = &ScreenElem[line].isdirty;
         if (*dirty & L_DIRTY) {
             *dirty &= ~L_DIRTY;
-            pc = ScreenImage[line]->lineimage;
-            pr = ScreenImage[line]->lineprop;
+            pc = ScreenElem[line].lineimage;
+            pr = ScreenElem[line].lineprop;
             for (col = 0; col < g_cols && !(pr[col] & S_EOL); col++) {
-                if (*dirty & L_NEED_CE && col >= ScreenImage[line]->eol) {
+                if (*dirty & L_NEED_CE && col >= ScreenElem[line].eol) {
                     if (need_redraw(pc[col], pr[col], SPACE, 0))
                         break;
                 } else {
@@ -448,7 +439,7 @@ void refresh(void)
                 }
             }
             if (*dirty & (L_NEED_CE | L_CLRTOEOL)) {
-                pcol = ScreenImage[line]->eol;
+                pcol = ScreenElem[line].eol;
                 if (pcol >= g_cols) {
                     *dirty &= ~(L_NEED_CE | L_CLRTOEOL);
                     pcol = col;
@@ -506,7 +497,7 @@ void refresh(void)
                     writestr(getRuntime()->T_me);
                     mode &= ~M_MEND;
                 }
-                if ((*dirty & L_NEED_CE && col >= ScreenImage[line]->eol) ? need_redraw(pc[col], pr[col], SPACE,
+                if ((*dirty & L_NEED_CE && col >= ScreenElem[line].eol) ? need_redraw(pc[col], pr[col], SPACE,
                                                                                 0)
                                                                           : (pr[col] & S_DIRTY)) {
                     if (pcol == col - 1)
@@ -584,8 +575,8 @@ void clear(void)
     writestr(getRuntime()->T_cl);
     move(0, 0);
     for (i = 0; i < getRuntime()->lines; i++) {
-        ScreenImage[i]->isdirty = 0;
-        p = ScreenImage[i]->lineprop;
+        ScreenElem[i].isdirty = 0;
+        p = ScreenElem[i].lineprop;
         for (j = 0; j < getRuntime()->cols; j++) {
             p[j] = S_EOL;
         }
@@ -597,15 +588,15 @@ void clear(void)
 void clrtoeol(void)
 { /* Clear to the end of line */
     int i;
-    l_prop* lprop = ScreenImage[CurLine]->lineprop;
+    l_prop* lprop = ScreenElem[CurLine].lineprop;
 
     if (lprop[CurColumn] & S_EOL)
         return;
 
-    if (!(ScreenImage[CurLine]->isdirty & (L_NEED_CE | L_CLRTOEOL)) || ScreenImage[CurLine]->eol > CurColumn)
-        ScreenImage[CurLine]->eol = CurColumn;
+    if (!(ScreenElem[CurLine].isdirty & (L_NEED_CE | L_CLRTOEOL)) || ScreenElem[CurLine].eol > CurColumn)
+        ScreenElem[CurLine].eol = CurColumn;
 
-    ScreenImage[CurLine]->isdirty |= L_CLRTOEOL;
+    ScreenElem[CurLine].isdirty |= L_CLRTOEOL;
     touch_line();
     for (i = CurColumn; i < getRuntime()->cols && !(lprop[i] & S_EOL); i++) {
         lprop[i] = S_EOL | S_DIRTY;
@@ -676,14 +667,11 @@ void addstr(char* s)
 
 void addnstr(char* s, int n)
 {
-    int i;
-    int len, width;
-
-    for (i = 0; *s != '\0';) {
-        width = wtf_width((wc_uchar*)s);
+    for (int i = 0; *s != '\0';) {
+        int width = wtf_width(s);
         if (i + width > n)
             break;
-        len = wtf_len((wc_uchar*)s);
+        int len = wtf_len((wc_uchar*)s);
         addmch(s, len);
         s += len;
         i += width;
@@ -692,14 +680,12 @@ void addnstr(char* s, int n)
 
 void addnstr_sup(char* s, int n)
 {
-    int i;
-    int len, width;
-
-    for (i = 0; *s != '\0';) {
-        width = wtf_width((wc_uchar*)s);
+    int i = 0;
+    for (; *s != '\0';) {
+        int width = wtf_width(s);
         if (i + width > n)
             break;
-        len = wtf_len((wc_uchar*)s);
+        int len = wtf_len((wc_uchar*)s);
         addmch(s, len);
         s += len;
         i += width;
@@ -714,11 +700,11 @@ void touch_cursor(void)
     touch_line();
     for (i = CurColumn; i >= 0; i--) {
         touch_column(i);
-        if (CHMODE(ScreenImage[CurLine]->lineprop[i]) != C_WCHAR2)
+        if (CHMODE(ScreenElem[CurLine].lineprop[i]) != C_WCHAR2)
             break;
     }
     for (i = CurColumn + 1; i < getRuntime()->cols; i++) {
-        if (CHMODE(ScreenImage[CurLine]->lineprop[i]) != C_WCHAR2)
+        if (CHMODE(ScreenElem[CurLine].lineprop[i]) != C_WCHAR2)
             break;
         touch_column(i);
     }

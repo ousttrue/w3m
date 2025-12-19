@@ -2,6 +2,7 @@
  * HTML forms
  */
 #include "html_form.h"
+#include "w3m_rc.h"
 #include "display.h"
 #include "download.h"
 #include "buffer.h"
@@ -273,10 +274,8 @@ form_update_line(struct Line* line, char** str, int spos, int epos, int width,
 
     for (p = *str, w = 0, pos = 0; *p && w < width;) {
         c_type = get_mctype((unsigned char*)p);
-#ifdef USE_M17N
         c_len = get_mclen(p);
         c_width = get_mcwidth(p);
-#endif
         if (c_type == PC_CTRL) {
             if (newline && *p == '\n')
                 break;
@@ -285,20 +284,16 @@ form_update_line(struct Line* line, char** str, int spos, int epos, int width,
                 pos++;
             }
         } else if (password) {
-#ifdef USE_M17N
             if (w + c_width > width)
                 break;
-#endif
             w += c_width;
             pos += c_width;
-#ifdef USE_M17N
         } else if (c_type & PC_UNKNOWN) {
             w++;
             pos++;
         } else {
             if (w + c_width > width)
                 break;
-#endif
             w += c_width;
             pos += c_len;
         }

@@ -130,20 +130,6 @@ void bzero(void*, int);
  * Macros.
  */
 
-#define inputLineHist(p, d, f, h) inputLineHistSearch(p, d, f, h, NULL)
-#define inputLine(p, d, f) inputLineHist(p, d, f, NULL)
-#define inputStr(p, d) inputLine(p, d, IN_STRING)
-#define inputStrHist(p, d, h) inputLineHist(p, d, IN_STRING, h)
-#define inputFilename(p, d) inputLine(p, d, IN_FILENAME)
-#define inputFilenameHist(p, d, h) inputLineHist(p, d, IN_FILENAME, h)
-#define inputChar(p) inputLine(p, "", IN_CHAR)
-
-#ifdef __EMX__
-#define HAVE_STRCASECMP
-#define strcasecmp stricmp
-#define strncasecmp strnicmp
-#endif /* __EMX__ */
-
 #define bpcmp(a, b) \
     (((a).line - (b).line) ? ((a).line - (b).line) : ((a).pos - (b).pos))
 
@@ -597,16 +583,6 @@ global char* urimethodmap_files init(USER_URIMETHODMAP ", " SYS_URIMETHODMAP);
 
 global TextList* fileToDelete;
 
-extern Hist* LoadHist;
-extern Hist* SaveHist;
-extern Hist* URLHist;
-extern Hist* ShellHist;
-extern Hist* TextHist;
-#ifdef USE_HISTORY
-global int UseHistory init(TRUE);
-global int URLHistSize init(100);
-global int SaveURLHist init(TRUE);
-#endif /* USE_HISTORY */
 global int multicolList init(FALSE);
 
 #ifdef USE_M17N
@@ -654,36 +630,6 @@ global char* param_tmp_dir init(NULL);
 global char* mkd_tmp_dir init(NULL);
 #endif
 global char* config_file init(NULL);
-
-#ifdef USE_MOUSE
-global int use_mouse init(TRUE);
-extern int mouseActive;
-global int reverse_mouse init(FALSE);
-global int relative_wheel_scroll init(FALSE);
-global int fixed_wheel_scroll_count init(5);
-global int relative_wheel_scroll_ratio init(30);
-typedef struct _MouseActionMap {
-    void (*func)();
-    char* data;
-} MouseActionMap;
-typedef struct _MouseAction {
-    char* menu_str;
-    char* lastline_str;
-    int menu_width;
-    int lastline_width;
-    int in_action;
-    int cursorX;
-    int cursorY;
-    MouseActionMap default_map[3];
-    MouseActionMap anchor_map[3];
-    MouseActionMap active_map[3];
-    MouseActionMap tab_map[3];
-    MouseActionMap* menu_map[3];
-    MouseActionMap* lastline_map[3];
-} MouseAction;
-global MouseAction mouse_action;
-#define LIMIT_MOUSE_MENU 100
-#endif /* USE_MOUSE */
 
 #ifdef USE_COOKIE
 global int default_use_cookie init(TRUE);
@@ -744,20 +690,6 @@ global double image_scale init(100);
 global int use_lessopen init(FALSE);
 
 global char* keymap_file init(KEYMAP_FILE);
-
-#ifdef USE_M17N
-#define get_mctype(c) ((Lineprop)wtf_type((wc_uchar*)(c)) << 8)
-#define get_mclen(c) wtf_len1((wc_uchar*)(c))
-#define get_mcwidth(c) wtf_width((wc_uchar*)(c))
-#define get_strwidth(c) wtf_strwidth((wc_uchar*)(c))
-#define get_Str_strwidth(c) wtf_strwidth((wc_uchar*)((c)->ptr))
-#else
-#define get_mctype(c) (IS_CNTRL(*(c)) ? PC_CTRL : PC_ASCII)
-#define get_mclen(c) 1
-#define get_mcwidth(c) 1
-#define get_strwidth(c) strlen(c)
-#define get_Str_strwidth(c) ((c)->length)
-#endif
 
 global int FollowRedirection init(10);
 

@@ -1,3 +1,4 @@
+#include "linein.h"
 #include "w3m_rc.h"
 #include "ctrlcode.h"
 #include "html_form.h"
@@ -104,14 +105,12 @@ static int cm_mode, cm_next, cm_clear, cm_disp_next, cm_disp_clear;
 static int need_redraw, is_passwd;
 static int move_word;
 
-static Hist* CurrentHist;
+static struct Hist* CurrentHist;
 static Str strCurrentBuf;
 static int use_hist;
-#ifdef USE_M17N
 static void ins_char(Str str);
-#endif
 
-char* inputLineHistSearch(char* prompt, char* def_str, int flag, Hist* hist,
+char* inputLineHistSearch(char* prompt, char* def_str, int flag, struct Hist* hist,
     int (*incrfunc)(int ch, Str str, Lineprop* prop))
 {
     int opos, x, y, lpos, rpos, epos;
@@ -1008,7 +1007,7 @@ doComplete(Str ifn, int* status, int next)
 static void
 _prev(void)
 {
-    Hist* hist = CurrentHist;
+    struct Hist* hist = CurrentHist;
     char* p;
 
     if (!use_hist)
@@ -1033,7 +1032,7 @@ _prev(void)
 static void
 _next(void)
 {
-    Hist* hist = CurrentHist;
+    struct Hist* hist = CurrentHist;
     char* p;
 
     if (!use_hist)

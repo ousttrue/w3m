@@ -1,9 +1,8 @@
 #include "w3m_rc.h"
+#include "linein.h"
 #include <stdio.h>
 #include <unistd.h>
-#ifndef __MINGW32_VERSION
 #include <pwd.h>
-#endif /* __MINGW32_VERSION */
 #include <Str.h>
 #include <signal.h>
 #include <setjmp.h>

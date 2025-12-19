@@ -1,4 +1,5 @@
 #include "menu.h"
+#include "linein.h"
 #include "search.h"
 #include "buffer.h"
 #include "anchor.h"
@@ -1394,7 +1395,7 @@ menu_search_forward(Menu* menu, int from)
 {
     char* str;
     int found;
-    str = inputStrHist("Forward: ", NULL, TextHist);
+    str = inputStrHist("Forward: ", NULL, getRuntime()->TextHist);
     if (str != NULL && *str == '\0')
         str = SearchString;
     if (str == NULL || *str == '\0')
@@ -1441,9 +1442,7 @@ menuBackwardSearch(Menu* menu, char* str, int from)
 static int
 menu_search_backward(Menu* menu, int from)
 {
-    char* str;
-    int found;
-    str = inputStrHist("Backward: ", NULL, TextHist);
+    char* str = inputStrHist("Backward: ", NULL, getRuntime()->TextHist);
     if (str != NULL && *str == '\0')
         str = SearchString;
     if (str == NULL || *str == '\0')
@@ -1451,7 +1450,7 @@ menu_search_backward(Menu* menu, int from)
     SearchString = str;
     str = conv_search_string(str, DisplayCharset);
     menuSearchRoutine = menuBackwardSearch;
-    found = menuBackwardSearch(menu, str, from - 1);
+    int found = menuBackwardSearch(menu, str, from - 1);
     if (WrapSearch && found == -1)
         found = menuBackwardSearch(menu, str, menu->nitem);
     if (found >= 0)

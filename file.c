@@ -1,4 +1,5 @@
 #include "w3m_rc.h"
+#include "linein.h"
 #include "ctrlcode.h"
 #include "html_form.h"
 #include "siteconf.h"
@@ -5539,27 +5540,16 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
                 p = getescapecmd(&str);
                 while (*p) {
                     PSIZE;
-                    mode = get_mctype((unsigned char*)p);
-#ifdef USE_M17N
+                    mode = get_mctype(p);
                     if (mode == PC_CTRL || mode == PC_UNDEF) {
-#else
-                    if (mode == PC_CTRL || IS_INTSPACE(*str)) {
-#endif
                         PPUSH(PC_ASCII | effect | ex_efct(ex_effect), ' ');
                         p++;
-                    }
-#ifdef USE_M17N
-                    else if (mode & PC_UNKNOWN) {
+                    } else if (mode & PC_UNKNOWN) {
                         PPUSH(PC_ASCII | effect | ex_efct(ex_effect), ' ');
                         p += get_mclen(p);
-                    }
-#endif
-                    else {
-#ifdef USE_M17N
+                    } else {
                         int len = get_mclen(p);
-#endif
                         PPUSH(mode | effect | ex_efct(ex_effect), *(p++));
-#ifdef USE_M17N
                         if (--len) {
                             mode = (mode & ~PC_WCHAR1) | PC_WCHAR2;
                             while (len--) {
@@ -5567,7 +5557,6 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
                                 PPUSH(mode | effect | ex_efct(ex_effect), *(p++));
                             }
                         }
-#endif
                     }
                 }
             } else {
@@ -8104,7 +8093,7 @@ int _doFileCopy(char* tmpf, char* defstr, int download)
         if (p == NULL || *p == '\0') {
             /* FIXME: gettextize? */
             q = inputLineHist("(Download)Save file to: ",
-                defstr, IN_COMMAND, SaveHist);
+                defstr, IN_COMMAND, getRuntime()->SaveHist);
             if (q == NULL || *q == '\0')
                 return FALSE;
             p = conv_to_system(q);
@@ -8221,7 +8210,7 @@ int doFileSave(URLFile uf, char* defstr)
         if (p == NULL || *p == '\0') {
             /* FIXME: gettextize? */
             p = inputLineHist("(Download)Save file to: ",
-                defstr, IN_FILENAME, SaveHist);
+                defstr, IN_FILENAME, getRuntime()->SaveHist);
             if (p == NULL || *p == '\0')
                 return -1;
             p = conv_to_system(p);

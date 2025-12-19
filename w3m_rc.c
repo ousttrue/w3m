@@ -1,4 +1,5 @@
 #include "w3m_rc.h"
+#include "linein.h"
 #include "siteconf.h"
 #include "buffer.h"
 #include "image.h"
@@ -47,6 +48,15 @@ char UseGraphicChar = GRAPHIC_CHAR_CHARSET;
 
 struct Runtime g_runtime = {
     .Tabstop = 8,
+
+    .UseHistory = (TRUE),
+    .URLHistSize = (100),
+    .SaveURLHist = (TRUE),
+    .LoadHist = 0,
+    .SaveHist = 0,
+    .URLHist = 0,
+    .ShellHist = 0,
+    .TextHist = 0,
 
     .lines = 0,
     .cols = 0,
@@ -571,7 +581,7 @@ struct Buffer* loadLink(char* url, char* target, char* referer, struct FormList*
     }
 
     parseURL2(url, &pu, base);
-    pushHashHist(URLHist, parsedURL2Str(&pu)->ptr);
+    pushHashHist(g_runtime.URLHist, parsedURL2Str(&pu)->ptr);
 
     if (buf == NO_BUFFER) {
         return NULL;
@@ -732,7 +742,7 @@ void _followForm(bool submit, bool on_target, bool do_download)
             /* FIXME: gettextize? */
             disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
         /* FIXME: gettextize? */
-        p = inputStrHist("TEXT:", fi->value ? fi->value->ptr : NULL, TextHist);
+        p = inputStrHist("TEXT:", fi->value ? fi->value->ptr : NULL, g_runtime.TextHist);
         if (p == NULL || fi->readonly)
             break;
         fi->value = Strnew_charp(p);
@@ -1600,11 +1610,9 @@ struct param_ptr params2[] = {
 
 struct param_ptr params3[] = {
     { "pagerline", P_NZINT, PI_TEXT, (void*)&PagerMax, CMT_PAGERLINE, NULL },
-#ifdef USE_HISTORY
-    { "use_history", P_INT, PI_ONOFF, (void*)&UseHistory, CMT_HISTORY, NULL },
-    { "history", P_INT, PI_TEXT, (void*)&URLHistSize, CMT_HISTSIZE, NULL },
-    { "save_hist", P_INT, PI_ONOFF, (void*)&SaveURLHist, CMT_SAVEHIST, NULL },
-#endif /* USE_HISTORY */
+    { "use_history", P_INT, PI_ONOFF, (void*)&g_runtime.UseHistory, CMT_HISTORY, NULL },
+    { "history", P_INT, PI_TEXT, (void*)&g_runtime.URLHistSize, CMT_HISTSIZE, NULL },
+    { "save_hist", P_INT, PI_ONOFF, (void*)&g_runtime.SaveURLHist, CMT_SAVEHIST, NULL },
     { "confirm_qq", P_INT, PI_ONOFF, (void*)&confirm_on_quit, CMT_CONFIRM_QQ,
         NULL },
     { "close_tab_back", P_INT, PI_ONOFF, (void*)&close_tab_back,
@@ -2418,6 +2426,14 @@ void sync_with_option(void)
 
 void init_rc(void)
 {
+    g_runtime.LoadHist = newHist();
+    g_runtime.SaveHist = newHist();
+    g_runtime.ShellHist = newHist();
+    g_runtime.TextHist = newHist();
+    g_runtime.URLHist = newHist();
+    if (g_runtime.UseHistory)
+        loadHistory(g_runtime.URLHist);
+
     int i;
     FILE* f;
 

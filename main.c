@@ -1,4 +1,6 @@
 #include "maparea.h"
+#include "linein.h"
+#include "history.h"
 #include "search.h"
 #include "html_form.h"
 #include "siteconf.h"
@@ -57,12 +59,6 @@ WSADATA WSAData;
 #endif
 
 #define DSTR_LEN 256
-
-Hist* LoadHist;
-Hist* SaveHist;
-Hist* URLHist;
-Hist* ShellHist;
-Hist* TextHist;
 
 #ifdef USE_ALARM
 static AlarmEvent DefaultAlarm = {
@@ -480,36 +476,21 @@ bool w3m_args(int argc, char** argv)
         }
     }
 
-#ifdef USE_M17N
     if (non_null(Locale = getenv("LC_ALL")) || non_null(Locale = getenv("LC_CTYPE")) || non_null(Locale = getenv("LANG"))) {
         DisplayCharset = wc_guess_locale_charset(Locale, DisplayCharset);
         DocumentCharset = wc_guess_locale_charset(Locale, DocumentCharset);
         SystemCharset = wc_guess_locale_charset(Locale, SystemCharset);
     }
-#ifdef __EMX__
-    CodePage = wc_guess_charset(getCodePage(), 0);
-    if (CodePage)
-        DisplayCharset = DocumentCharset = SystemCharset = CodePage;
-#endif
-#endif
 
     /* initializations */
     init_rc();
 
-    LoadHist = newHist();
-    SaveHist = newHist();
-    ShellHist = newHist();
-    TextHist = newHist();
-    URLHist = newHist();
-
-#ifdef USE_M17N
     if (FollowLocale && Locale) {
         DisplayCharset = wc_guess_locale_charset(Locale, DisplayCharset);
         SystemCharset = wc_guess_locale_charset(Locale, SystemCharset);
     }
     auto_detect = WcOption.auto_detect;
     BookmarkCharset = DocumentCharset;
-#endif
 
     if (!non_null(HTTP_proxy) && ((p = getenv("HTTP_PROXY")) || (p = getenv("http_proxy")) || (p = getenv("HTTP_proxy"))))
         HTTP_proxy = p;
@@ -790,28 +771,6 @@ bool w3m_args(int argc, char** argv)
         i++;
     }
 
-#ifdef __WATT32__
-    if (w3m_debug)
-        dbug_init();
-    sock_init();
-#endif
-
-#ifdef __MINGW32_VERSION
-    {
-        int err;
-        WORD wVerReq;
-
-        wVerReq = MAKEWORD(1, 1);
-
-        err = WSAStartup(wVerReq, &WSAData);
-        if (err != 0) {
-            fprintf(stderr, "Can't find winsock\n");
-            return 1;
-        }
-        _fmode = _O_BINARY;
-    }
-#endif
-
     if (BookmarkFile == NULL)
         BookmarkFile = rcFile(BOOKMARK);
 
@@ -832,19 +791,8 @@ bool w3m_args(int argc, char** argv)
     }
 
     sync_with_option();
-#ifdef USE_COOKIE
-    initCookie();
-#endif /* USE_COOKIE */
-#ifdef USE_HISTORY
-    if (UseHistory)
-        loadHistory(URLHist);
-#endif /* not USE_HISTORY */
 
-#ifdef USE_M17N
-    /*  if (w3m_dump)
-     *    WcOption.pre_conv = WC_TRUE;
-     */
-#endif
+    initCookie();
 
     if (w3m_backend)
         backend();
@@ -918,7 +866,7 @@ bool w3m_args(int argc, char** argv)
             if (newbuf == NULL)
                 Strcat(err_msg, Sprintf("w3m: Can't load %s.\n", p));
             else if (newbuf != NO_BUFFER)
-                pushHashHist(URLHist, parsedURL2Str(&newbuf->currentURL)->ptr);
+                pushHashHist(getRuntime()->URLHist, parsedURL2Str(&newbuf->currentURL)->ptr);
         } else {
             if (fmInitialized())
                 exitRawMode();
@@ -995,9 +943,9 @@ bool w3m_args(int argc, char** argv)
                 break;
             case SCM_LOCAL:
             case SCM_LOCAL_CGI:
-                unshiftHist(LoadHist, url);
+                unshiftHist(getRuntime()->LoadHist, url);
             default:
-                pushHashHist(URLHist, parsedURL2Str(&newbuf->currentURL)->ptr);
+                pushHashHist(getRuntime()->URLHist, parsedURL2Str(&newbuf->currentURL)->ptr);
                 break;
             }
         } else if (newbuf == NO_BUFFER)
@@ -1607,7 +1555,7 @@ isrch(SearchFunc func, char* prompt)
     dispincsrch(0, NULL, NULL); /* initialize incremental search state */
 
     searchRoutine = func;
-    str = inputLineHistSearch(prompt, NULL, IN_STRING, TextHist, dispincsrch);
+    str = inputLineHistSearch(prompt, NULL, IN_STRING, getRuntime()->TextHist, dispincsrch);
     if (str == NULL) {
         RESTORE_BUFPOSITION(&sbuf);
     }
@@ -1624,7 +1572,7 @@ srch(SearchFunc func, char* prompt)
 
     str = searchKeyData();
     if (str == NULL || *str == '\0') {
-        str = inputStrHist(prompt, NULL, TextHist);
+        str = inputStrHist(prompt, NULL, getRuntime()->TextHist);
         if (str != NULL && *str == '\0')
             str = SearchString;
         if (str == NULL) {
@@ -1798,7 +1746,7 @@ DEFUN(setEnv, SETENV, "Set environment variable")
     if (env == NULL || *env == '\0' || strchr(env, '=') == NULL) {
         if (env != NULL && *env != '\0')
             env = Sprintf("%s=", env)->ptr;
-        env = inputStrHist("Set environ: ", env, TextHist);
+        env = inputStrHist("Set environ: ", env, getRuntime()->TextHist);
         if (env == NULL || *env == '\0') {
             displayBuffer(Currentbuf, B_NORMAL);
             return;
@@ -1820,7 +1768,7 @@ DEFUN(pipeBuf, PIPE_BUF, "Pipe current buffer through a shell command and displa
     char* cmd = searchKeyData();
     if (cmd == NULL || *cmd == '\0') {
         /* FIXME: gettextize? */
-        cmd = inputLineHist("Pipe buffer to: ", "", IN_COMMAND, ShellHist);
+        cmd = inputLineHist("Pipe buffer to: ", "", IN_COMMAND, getRuntime()->ShellHist);
     }
     if (cmd != NULL)
         cmd = conv_to_system(cmd);
@@ -1831,7 +1779,14 @@ DEFUN(pipeBuf, PIPE_BUF, "Pipe current buffer through a shell command and displa
 
     char* tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
     FILE* f = fopen(tmpf, "w");
-    if (f == NULL) {
+    if (f == NULL)
+        if (getRuntime()->UseHistory)
+            loadHistory(getRuntime()->URLHist);
+
+    if (getRuntime()->UseHistory)
+        loadHistory(getRuntime()->URLHist);
+
+    {
         /* FIXME: gettextize? */
         disp_message(Sprintf("Can't save buffer to %s", cmd)->ptr, TRUE);
         return;
@@ -1862,7 +1817,7 @@ DEFUN(pipesh, PIPE_SHELL, "Execute shell command and display output")
     getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
     char* cmd = searchKeyData();
     if (cmd == NULL || *cmd == '\0') {
-        cmd = inputLineHist("(read shell[pipe])!", "", IN_COMMAND, ShellHist);
+        cmd = inputLineHist("(read shell[pipe])!", "", IN_COMMAND, getRuntime()->ShellHist);
     }
     if (cmd != NULL)
         cmd = conv_to_system(cmd);
@@ -1890,7 +1845,7 @@ DEFUN(readsh, READ_SHELL, "Execute shell command and display output")
     getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
     char* cmd = searchKeyData();
     if (cmd == NULL || *cmd == '\0') {
-        cmd = inputLineHist("(read shell)!", "", IN_COMMAND, ShellHist);
+        cmd = inputLineHist("(read shell)!", "", IN_COMMAND, getRuntime()->ShellHist);
     }
     if (cmd != NULL)
         cmd = conv_to_system(cmd);
@@ -1922,7 +1877,7 @@ DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output")
     getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
     char* cmd = searchKeyData();
     if (cmd == NULL || *cmd == '\0') {
-        cmd = inputLineHist("(exec shell)!", "", IN_COMMAND, ShellHist);
+        cmd = inputLineHist("(exec shell)!", "", IN_COMMAND, getRuntime()->ShellHist);
     }
     if (cmd != NULL)
         cmd = conv_to_system(cmd);
@@ -1947,7 +1902,7 @@ DEFUN(ldfile, LOAD, "Open local file in a new buffer")
     fn = searchKeyData();
     if (fn == NULL || *fn == '\0') {
         /* FIXME: gettextize? */
-        fn = inputFilenameHist("(Load)Filename? ", NULL, LoadHist);
+        fn = inputFilenameHist("(Load)Filename? ", NULL, getRuntime()->LoadHist);
     }
     if (fn != NULL)
         fn = conv_to_system(fn);
@@ -2231,18 +2186,14 @@ _quitfm(int confirm)
     }
 
     term_title(""); /* XXX */
-#ifdef USE_IMAGE
     if (activeImage)
         termImage();
-#endif
     exitRawMode();
-#ifdef USE_COOKIE
     save_cookies();
-#endif /* USE_COOKIE */
-#ifdef USE_HISTORY
-    if (UseHistory && SaveURLHist)
-        saveHistory(URLHist, URLHistSize);
-#endif /* USE_HISTORY */
+
+    if (getRuntime()->UseHistory && getRuntime()->SaveURLHist)
+        saveHistory(getRuntime()->URLHist, getRuntime()->URLHistSize);
+
     w3m_exit(0);
 }
 
@@ -2565,7 +2516,7 @@ DEFUN(reMark, REG_MARK, "Mark all occurences of a pattern")
         return;
     str = searchKeyData();
     if (str == NULL || *str == '\0') {
-        str = inputStrHist("(Mark)Regexp: ", MarkString, TextHist);
+        str = inputStrHist("(Mark)Regexp: ", MarkString, getRuntime()->TextHist);
         if (str == NULL || *str == '\0') {
             displayBuffer(Currentbuf, B_NORMAL);
             return;
@@ -2611,7 +2562,7 @@ gotoLabel(char* label)
     for (i = 0; i < MAX_LB; i++)
         buf->linkBuffer[i] = NULL;
     buf->currentURL.label = allocStr(label, -1);
-    pushHashHist(URLHist, parsedURL2Str(&buf->currentURL)->ptr);
+    pushHashHist(getRuntime()->URLHist, parsedURL2Str(&buf->currentURL)->ptr);
     (*buf->clone)++;
     pushBuffer(buf);
     gotoLine(Currentbuf, al->start.line);
@@ -2657,7 +2608,7 @@ handleMailto(char* url)
         FALSE)
             ->ptr);
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
-    pushHashHist(URLHist, url);
+    pushHashHist(getRuntime()->URLHist, url);
     return 1;
 }
 
@@ -2939,7 +2890,7 @@ _nextA(int visited)
                 hseq++;
                 if (visited == TRUE && an) {
                     parseURL2(an->url, &url, baseURL(Currentbuf));
-                    if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
+                    if (getHashHist(getRuntime()->URLHist, parsedURL2Str(&url)->ptr)) {
                         goto _end;
                     }
                 }
@@ -2958,7 +2909,7 @@ _nextA(int visited)
             y = an->start.line;
             if (visited == TRUE) {
                 parseURL2(an->url, &url, baseURL(Currentbuf));
-                if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
+                if (getHashHist(getRuntime()->URLHist, parsedURL2Str(&url)->ptr)) {
                     goto _end;
                 }
             }
@@ -3022,7 +2973,7 @@ _prevA(int visited)
                 hseq--;
                 if (visited == TRUE && an) {
                     parseURL2(an->url, &url, baseURL(Currentbuf));
-                    if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
+                    if (getHashHist(getRuntime()->URLHist, parsedURL2Str(&url)->ptr)) {
                         goto _end;
                     }
                 }
@@ -3041,7 +2992,7 @@ _prevA(int visited)
             y = an->start.line;
             if (visited == TRUE && an) {
                 parseURL2(an->url, &url, baseURL(Currentbuf));
-                if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
+                if (getHashHist(getRuntime()->URLHist, parsedURL2Str(&url)->ptr)) {
                     goto _end;
                 }
             }
@@ -3344,7 +3295,7 @@ goURL0(char* prompt, int relative)
 
     url = searchKeyData();
     if (url == NULL) {
-        Hist* hist = copyHist(URLHist);
+        struct Hist* hist = copyHist(getRuntime()->URLHist);
         struct Anchor* a;
 
         current = baseURL(Currentbuf);
@@ -3391,10 +3342,10 @@ goURL0(char* prompt, int relative)
         return;
     }
     parseURL2(url, &p_url, current);
-    pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
+    pushHashHist(getRuntime()->URLHist, parsedURL2Str(&p_url)->ptr);
     cmd_loadURL(url, current, referer, NULL);
     if (Currentbuf != cur_buf) /* success */
-        pushHashHist(URLHist, parsedURL2Str(&Currentbuf->currentURL)->ptr);
+        pushHashHist(getRuntime()->URLHist, parsedURL2Str(&Currentbuf->currentURL)->ptr);
 }
 
 DEFUN(goURL, GOTO, "Open specified document in a new buffer")
@@ -3411,10 +3362,10 @@ DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer")
         SKIP_BLANKS(url);
         url = url_encode(url, NULL, 0);
         parseURL2(url, &p_url, NULL);
-        pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
+        pushHashHist(getRuntime()->URLHist, parsedURL2Str(&p_url)->ptr);
         cmd_loadURL(url, NULL, NULL, NULL);
         if (Currentbuf != cur_buf) /* success */
-            pushHashHist(URLHist, parsedURL2Str(&Currentbuf->currentURL)->ptr);
+            pushHashHist(getRuntime()->URLHist, parsedURL2Str(&Currentbuf->currentURL)->ptr);
     }
 }
 
@@ -3475,7 +3426,7 @@ DEFUN(setOpt, SET_OPTION, "Set option")
             char* v = get_param_option(opt);
             opt = Sprintf("%s=%s", opt, v ? v : "")->ptr;
         }
-        opt = inputStrHist("Set option: ", opt, TextHist);
+        opt = inputStrHist("Set option: ", opt, getRuntime()->TextHist);
         if (opt == NULL || *opt == '\0') {
             displayBuffer(Currentbuf, B_NORMAL);
             return;
@@ -3535,7 +3486,7 @@ void follow_map(struct parsed_tagarg* arg)
         return;
     }
     parseURL2(a->url, &p_url, baseURL(Currentbuf));
-    pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
+    pushHashHist(getRuntime()->URLHist, parsedURL2Str(&p_url)->ptr);
     if (check_target && open_tab_blank && a->target && (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
         struct Buffer* buf;
 
@@ -3569,7 +3520,7 @@ DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
         return;
     }
     parseURL2(l->url, &p_url, baseURL(Currentbuf));
-    pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
+    pushHashHist(getRuntime()->URLHist, parsedURL2Str(&p_url)->ptr);
     cmd_loadURL(l->url, baseURL(Currentbuf),
         parsedURL2Str(&Currentbuf->currentURL)->ptr, NULL);
 }
@@ -3642,7 +3593,7 @@ DEFUN(cooLst, COOKIE, "View cookie list")
 /* History page */
 DEFUN(ldHist, HISTORY, "Show browsing history")
 {
-    cmd_loadBuffer(historyBuffer(URLHist), BP_NO_URL, LB_NOLINK);
+    cmd_loadBuffer(historyBuffer(getRuntime()->URLHist), BP_NO_URL, LB_NOLINK);
 }
 #endif /* USE_HISTORY */
 
@@ -3669,7 +3620,7 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document")
     char* qfile = NULL;
     if (file == NULL || *file == '\0') {
         /* FIXME: gettextize? */
-        qfile = inputLineHist("Save buffer to: ", NULL, IN_COMMAND, SaveHist);
+        qfile = inputLineHist("Save buffer to: ", NULL, IN_COMMAND, getRuntime()->SaveHist);
         if (qfile == NULL || *qfile == '\0') {
             displayBuffer(Currentbuf, B_NORMAL);
             return;
@@ -4932,7 +4883,7 @@ DEFUN(execCmd, COMMAND, "Invoke w3m function(s)")
     getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
     char* data = searchKeyData();
     if (data == NULL || *data == '\0') {
-        data = inputStrHist("command [; ...]: ", "", TextHist);
+        data = inputStrHist("command [; ...]: ", "", getRuntime()->TextHist);
         if (data == NULL) {
             displayBuffer(Currentbuf, B_NORMAL);
             return;
@@ -4996,7 +4947,7 @@ DEFUN(setAlarm, ALARM, "Set alarm")
     getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
     char* data = searchKeyData();
     if (data == NULL || *data == '\0') {
-        data = inputStrHist("(Alarm)sec command: ", "", TextHist);
+        data = inputStrHist("(Alarm)sec command: ", "", getRuntime()->TextHist);
         if (data == NULL) {
             displayBuffer(Currentbuf, B_NORMAL);
             return;
@@ -5107,7 +5058,7 @@ DEFUN(defKey, DEFINE_KEY, "Define a binding between a key stroke combination and
     getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
     char* data = searchKeyData();
     if (data == NULL || *data == '\0') {
-        data = inputStrHist("Key definition: ", "", TextHist);
+        data = inputStrHist("Key definition: ", "", getRuntime()->TextHist);
         if (data == NULL || *data == '\0') {
             displayBuffer(Currentbuf, B_NORMAL);
             return;

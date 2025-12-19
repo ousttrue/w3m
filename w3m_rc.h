@@ -6,7 +6,8 @@
 /// tty
 /// signal
 #include "Str.h"
-#include "libwc/wc.h"
+#include <wc.h>
+#include <wtf.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -58,6 +59,15 @@ struct Runtime {
 
     bool Do_not_use_ti_te;
 
+    int UseHistory;
+    int URLHistSize;
+    int SaveURLHist;
+    struct Hist* LoadHist;
+    struct Hist* SaveHist;
+    struct Hist* URLHist;
+    struct Hist* ShellHist;
+    struct Hist* TextHist;
+
     struct TabBuffer* CurrentTab;
     struct TabBuffer* FirstTab;
     struct TabBuffer* LastTab;
@@ -76,6 +86,9 @@ struct TabBuffer* CurrentTab();
 struct TabBuffer* FirstTab();
 struct TabBuffer* LastTab();
 int nTab();
+
+#define get_strwidth(c) wtf_strwidth((wc_uchar*)(c))
+#define get_Str_strwidth(c) wtf_strwidth((wc_uchar*)((c)->ptr))
 
 #define Currentbuf (getRuntime()->CurrentTab->currentBuffer)
 #define Firstbuf (getRuntime()->CurrentTab->firstBuffer)

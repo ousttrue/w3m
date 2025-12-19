@@ -1,10 +1,14 @@
 #pragma once
 #include <stddef.h>
+#include <stdint.h>
 
 void setupscreen(int lines, int cols);
 void move(int line, int column);
 void addmch(char* p, size_t len);
-void addch(char c);
+inline static void addch(char c)
+{
+    addmch(&c, 1);
+}
 void wrap(void);
 void touch_line(void);
 void standout(void);
