@@ -66,8 +66,8 @@ export fn enterRawMode() void {
 
 export fn exitRawMode() void {
     if (g_term.is_rawmode) {
-        c.move(c.LASTLINE(), 0);
-        c.clrtoeolx();
+        c.screen_move(c.LASTLINE(), 0);
+        c.screen_clrtoeolx();
         c.refresh();
         c.loadImage(null, c.IMG_FLAG_STOP);
         reset_tty();

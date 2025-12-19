@@ -1422,7 +1422,7 @@ DEFUN(ctrCsrH, CENTER_H, "Center on cursor column")
 /* Redraw screen */
 DEFUN(rdrwSc, REDRAW, "Draw the screen anew")
 {
-    clear();
+    screen_clear();
     arrangeCursor(Currentbuf);
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
@@ -2263,8 +2263,8 @@ DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background")
 #ifndef SIGSTOP
     char* shell;
 #endif /* not SIGSTOP */
-    move(LASTLINE(), 0);
-    clrtoeolx();
+    screen_move(LASTLINE(), 0);
+    screen_clrtoeolx();
     refresh();
     exitRawMode();
 #ifndef SIGSTOP

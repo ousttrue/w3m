@@ -37,15 +37,15 @@ extern int do_getch();
 static char** FRAME;
 static int FRAME_WIDTH;
 static int graph_mode = FALSE;
-#define G_start           \
-    {                     \
-        if (graph_mode)   \
-            graphstart(); \
+#define G_start                  \
+    {                            \
+        if (graph_mode)          \
+            screen_graphstart(); \
     }
-#define G_end           \
-    {                   \
-        if (graph_mode) \
-            graphend(); \
+#define G_end                  \
+    {                          \
+        if (graph_mode)        \
+            screen_graphend(); \
     }
 
 static int mEsc(char c);
@@ -763,9 +763,9 @@ static MenuList* w3mMenuList;
 
 static Menu* CurrentMenu = NULL;
 
-#define mvaddch(y, x, c) (move(y, x), addch(c))
-#define mvaddstr(y, x, str) (move(y, x), addstr(str))
-#define mvaddnstr(y, x, str, n) (move(y, x), addnstr_sup(str, n))
+#define mvaddch(y, x, c) (screen_move(y, x), addch(c))
+#define mvaddstr(y, x, str) (screen_move(y, x), screen_addstr(str))
+#define mvaddnstr(y, x, str, n) (screen_move(y, x), screen_addnstr_sup(str, n))
 
 void new_menu(Menu* menu, MenuItem* item)
 {
@@ -932,13 +932,13 @@ int select_menu(Menu* menu, int mselect)
     if (menu->select >= menu->offset && menu->select < menu->offset + menu->height)
         draw_menu_item(menu, menu->select);
     menu->select = mselect;
-    standout();
+    screen_standout();
     draw_menu_item(menu, menu->select);
-    standend();
+    screen_standend();
     /*
      * move(menu->cursorY, menu->cursorX); */
-    move(menu->y + mselect - menu->offset, menu->x);
-    toggle_stand();
+    screen_move(menu->y + mselect - menu->offset, menu->x);
+    screen_toggle_stand();
     refresh();
 
     return (menu->select);
@@ -1964,7 +1964,7 @@ initSelTabMenu(void)
     int nitem = i;
 
     char** label = New_N(char*, nitem + 2);
-    int len=0;
+    int len = 0;
     i = 0;
     for (struct TabBuffer* tab = LastTab(); i < nitem; i++, tab = tab->prevTab) {
         struct Buffer* buf = tab->currentBuffer;

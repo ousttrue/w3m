@@ -33,7 +33,6 @@ void cmd_loadBuffer(struct Buffer* buf, int prop, enum LinkBufferID linkid)
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-
 #ifdef USE_MOUSE
 #ifdef USE_GPM
 #include <gpm.h>
@@ -238,7 +237,7 @@ writeBufferName(struct Buffer* buf, int n)
     all = buf->allLine;
     if (all == 0 && buf->lastLine != NULL)
         all = buf->lastLine->linenumber;
-    move(n, 0);
+    screen_move(n, 0);
     /* FIXME: gettextize? */
     msg = Sprintf("<%s> [%d lines]", buf->buffername, all);
     if (buf->filename != NULL) {
@@ -259,7 +258,7 @@ writeBufferName(struct Buffer* buf, int n)
             break;
         }
     }
-    addnstr_sup(msg->ptr, TTY_COLS() - 1);
+    screen_addnstr_sup(msg->ptr, TTY_COLS() - 1);
 }
 
 /*
@@ -354,44 +353,40 @@ listBuffer(struct Buffer* top, struct Buffer* current)
     int i, c = 0;
     struct Buffer* buf = top;
 
-    move(0, 0);
-#ifdef USE_COLOR
+    screen_move(0, 0);
     if (useColor) {
-        setfcolor(basic_color);
-#ifdef USE_BG_COLOR
-        setbcolor(bg_color);
-#endif /* USE_BG_COLOR */
+        screen_setfcolor(basic_color);
+        screen_setbcolor(bg_color);
     }
-#endif /* USE_COLOR */
-    clrtobotx();
+    screen_clrtobotx();
     for (i = 0; i < LASTLINE(); i++) {
         if (buf == current) {
             c = i;
-            standout();
+            screen_standout();
         }
         writeBufferName(buf, i);
         if (buf == current) {
-            standend();
-            clrtoeolx();
-            move(i, 0);
-            toggle_stand();
+            screen_standend();
+            screen_clrtoeolx();
+            screen_move(i, 0);
+            screen_toggle_stand();
         } else
-            clrtoeolx();
+            screen_clrtoeolx();
         if (buf->nextBuffer == NULL) {
-            move(i + 1, 0);
-            clrtobotx();
+            screen_move(i + 1, 0);
+            screen_clrtobotx();
             break;
         }
         buf = buf->nextBuffer;
     }
-    standout();
+    screen_standout();
     /* FIXME: gettextize? */
     message("Buffer selection mode: SPC for select / D for delete buffer", 0,
         0);
-    standend();
+    screen_standend();
     /*
      * move(LASTLINE(), COLS - 1); */
-    move(c, 0);
+    screen_move(c, 0);
     refresh();
     return buf->nextBuffer;
 }
@@ -471,11 +466,11 @@ selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectcha
                 currentbuf = currentbuf->nextBuffer;
                 cpoint++;
                 spoint++;
-                standout();
+                screen_standout();
                 writeBufferName(currentbuf, spoint);
-                standend();
-                move(spoint, 0);
-                toggle_stand();
+                screen_standend();
+                screen_move(spoint, 0);
+                screen_toggle_stand();
             } else if (cpoint < maxbuf - 1) {
                 topbuf = currentbuf;
                 currentbuf = currentbuf->nextBuffer;
@@ -490,11 +485,11 @@ selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectcha
                 writeBufferName(currentbuf, spoint);
                 currentbuf = nthBuffer(topbuf, --spoint);
                 cpoint--;
-                standout();
+                screen_standout();
                 writeBufferName(currentbuf, spoint);
-                standend();
-                move(spoint, 0);
-                toggle_stand();
+                screen_standend();
+                screen_move(spoint, 0);
+                screen_toggle_stand();
             } else if (cpoint > 0) {
                 i = cpoint - sclimit;
                 if (i < 0)
@@ -513,7 +508,7 @@ selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectcha
         /*
          * move(LASTLINE(), COLS - 1);
          */
-        move(spoint, 0);
+        screen_move(spoint, 0);
         refresh();
     }
 }

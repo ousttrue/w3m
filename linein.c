@@ -185,14 +185,14 @@ char* inputLineHistSearch(char* prompt, char* def_str, int flag, struct Hist* hi
             else
                 offset = 0;
         }
-        move(LASTLINE(), 0);
-        addstr(prompt);
+        screen_move(LASTLINE(), 0);
+        screen_addstr(prompt);
         if (is_passwd)
             addPasswd(strBuf->ptr, strProp, CLen, offset, TTY_COLS() - opos);
         else
             addStr(strBuf->ptr, strProp, CLen, offset, TTY_COLS() - opos);
-        clrtoeolx();
-        move(LASTLINE(), opos + x - offset);
+        screen_clrtoeolx();
+        screen_move(LASTLINE(), opos + x - offset);
         refresh();
 
     next_char:
@@ -283,7 +283,7 @@ char* inputLineHistSearch(char* prompt, char* def_str, int flag, struct Hist* hi
     if (i_broken)
         return NULL;
 
-    move(LASTLINE(), 0);
+    screen_move(LASTLINE(), 0);
     refresh();
     p = strBuf->ptr;
     if (flag & (IN_FILENAME | IN_COMMAND)) {
@@ -809,16 +809,16 @@ disp_next:
             y = nline - row - 1;
     }
     if (y) {
-        move(y - 1, 0);
-        clrtoeolx();
+        screen_move(y - 1, 0);
+        screen_clrtoeolx();
     }
     if (comment) {
-        move(y, 0);
-        clrtoeolx();
-        bold();
+        screen_move(y, 0);
+        screen_clrtoeolx();
+        screen_bold();
         /* FIXME: gettextize? */
-        addstr("----- Completion list -----");
-        boldend();
+        screen_addstr("----- Completion list -----");
+        screen_boldend();
         y++;
     }
     for (i = 0; i < row; i++) {
@@ -826,27 +826,27 @@ disp_next:
             n = cm_disp_next + j * row + i;
             if (n >= NCFileBuf)
                 break;
-            move(y, j * len);
-            clrtoeolx();
+            screen_move(y, j * len);
+            screen_clrtoeolx();
             f = Strdup(d);
             Strcat_charp(f, CFileBuf[n]);
-            addstr(conv_from_system(CFileBuf[n]));
+            screen_addstr(conv_from_system(CFileBuf[n]));
             if (stat(expandPath(f->ptr), &st) != -1 && S_ISDIR(st.st_mode))
-                addstr("/");
+                screen_addstr("/");
         }
         y++;
     }
     if (comment && y == LASTLINE() - 1) {
-        move(y, 0);
-        clrtoeolx();
-        bold();
+        screen_move(y, 0);
+        screen_clrtoeolx();
+        screen_bold();
         if (emacs_like_lineedit)
             /* FIXME: gettextize? */
-            addstr("----- Press TAB to continue -----");
+            screen_addstr("----- Press TAB to continue -----");
         else
             /* FIXME: gettextize? */
-            addstr("----- Press CTRL-D to continue -----");
-        boldend();
+            screen_addstr("----- Press CTRL-D to continue -----");
+        screen_boldend();
     }
 }
 

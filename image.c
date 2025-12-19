@@ -659,7 +659,7 @@ void drawImage(struct Buffer* currentbuf)
     } else
         n_terminal_image = 0;
 
-    touch_cursor();
+    screen_touch_cursor();
     refresh();
 }
 

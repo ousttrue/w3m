@@ -6708,8 +6708,8 @@ void showProgress(clen_t* linelen, clen_t* trbyte)
         double ratio;
         cur_time = time(0);
         if (*trbyte == 0) {
-            move(LASTLINE(), 0);
-            clrtoeolx();
+            screen_move(LASTLINE(), 0);
+            screen_clrtoeolx();
             start_time = cur_time;
         }
         *trbyte += *linelen;
@@ -6717,7 +6717,7 @@ void showProgress(clen_t* linelen, clen_t* trbyte)
         if (cur_time == last_time)
             return;
         last_time = cur_time;
-        move(LASTLINE(), 0);
+        screen_move(LASTLINE(), 0);
         ratio = 100.0 * (*trbyte) / current_content_length;
         fmtrbyte = convert_size2(*trbyte, current_content_length, 1);
         duration = cur_time - start_time;
@@ -6735,22 +6735,22 @@ void showProgress(clen_t* linelen, clen_t* trbyte)
             messages = Sprintf("%11s %3.0f%%                          ",
                 fmtrbyte, ratio);
         }
-        addstr(messages->ptr);
+        screen_addstr(messages->ptr);
         pos = 42;
         i = pos + (TTY_COLS() - pos - 1) * (*trbyte) / current_content_length;
-        move(LASTLINE(), pos);
-        standout();
+        screen_move(LASTLINE(), pos);
+        screen_standout();
         addch(' ');
         for (j = pos + 1; j <= i; j++)
             addch('|');
-        standend();
+        screen_standend();
         /* no_clrtoeol(); */
         refresh();
     } else {
         cur_time = time(0);
         if (*trbyte == 0) {
-            move(LASTLINE(), 0);
-            clrtoeolx();
+            screen_move(LASTLINE(), 0);
+            screen_clrtoeolx();
             start_time = cur_time;
         }
         *trbyte += *linelen;
@@ -6758,7 +6758,7 @@ void showProgress(clen_t* linelen, clen_t* trbyte)
         if (cur_time == last_time)
             return;
         last_time = cur_time;
-        move(LASTLINE(), 0);
+        screen_move(LASTLINE(), 0);
         fmtrbyte = convert_size(*trbyte, 1);
         duration = cur_time - start_time;
         if (duration) {
