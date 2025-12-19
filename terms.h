@@ -79,14 +79,14 @@ struct ScreenLine {
 };
 
 struct Screen {
-    int lines;
-    int lines_capacity;
-    int cols;
-    int cols_capacity;
-    int tab_step;
+    int line_count;
+    int line_capacity;
+    int col_count;
+    int col_capacity;
+    struct ScreenLine* lines;
     int y;
     int x;
-    struct ScreenLine* cells;
+    int tab_step;
     l_prop mode;
 };
 

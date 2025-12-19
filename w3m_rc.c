@@ -2814,14 +2814,14 @@ void tty_refresh(void)
 
     wc_putc_init(InnerCharset, DisplayCharset);
 
-    for (line = 0; line < sc->lines; line++) {
-        dirty = &sc->cells[line].isdirty;
+    for (line = 0; line < sc->line_count; line++) {
+        dirty = &sc->lines[line].isdirty;
         if (*dirty & L_DIRTY) {
             *dirty &= ~L_DIRTY;
-            pc = sc->cells[line].lineimage;
-            pr = sc->cells[line].lineprop;
-            for (col = 0; col < sc->cols && !(pr[col] & S_EOL); col++) {
-                if (*dirty & L_NEED_CE && col >= sc->cells[line].eol) {
+            pc = sc->lines[line].lineimage;
+            pr = sc->lines[line].lineprop;
+            for (col = 0; col < sc->col_count && !(pr[col] & S_EOL); col++) {
+                if (*dirty & L_NEED_CE && col >= sc->lines[line].eol) {
                     if (screen_need_redraw(pc[col], pr[col], SCREEN_SPACE, 0))
                         break;
                 } else {
@@ -2830,15 +2830,15 @@ void tty_refresh(void)
                 }
             }
             if (*dirty & (L_NEED_CE | L_CLRTOEOL)) {
-                pcol = sc->cells[line].eol;
-                if (pcol >= sc->cols) {
+                pcol = sc->lines[line].eol;
+                if (pcol >= sc->col_count) {
                     *dirty &= ~(L_NEED_CE | L_CLRTOEOL);
                     pcol = col;
                 }
             } else {
                 pcol = col;
             }
-            if (line < sc->lines - 2 && pline == line - 1 && pcol == 0) {
+            if (line < sc->line_count - 2 && pline == line - 1 && pcol == 0) {
                 switch (moved) {
                 case RF_NEED_TO_MOVE:
                     tty_MOVE(line, 0);
@@ -2888,7 +2888,7 @@ void tty_refresh(void)
                     writestr(getRuntime()->T_me);
                     mode &= ~M_MEND;
                 }
-                if ((*dirty & L_NEED_CE && col >= sc->cells[line].eol)
+                if ((*dirty & L_NEED_CE && col >= sc->lines[line].eol)
                         ? screen_need_redraw(pc[col], pr[col], SCREEN_SPACE, 0)
                         : (pr[col] & S_DIRTY)) {
                     if (pcol == col - 1)
