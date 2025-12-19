@@ -193,7 +193,7 @@ char* inputLineHistSearch(char* prompt, char* def_str, int flag, struct Hist* hi
             addStr(strBuf->ptr, strProp, CLen, offset, TTY_COLS() - opos);
         screen_clrtoeolx();
         screen_move(LASTLINE(), opos + x - offset);
-        refresh();
+        tty_refresh();
 
     next_char:
         c = getch();
@@ -284,7 +284,7 @@ char* inputLineHistSearch(char* prompt, char* def_str, int flag, struct Hist* hi
         return NULL;
 
     screen_move(LASTLINE(), 0);
-    refresh();
+    tty_refresh();
     p = strBuf->ptr;
     if (flag & (IN_FILENAME | IN_COMMAND)) {
         SKIP_BLANKS(p);

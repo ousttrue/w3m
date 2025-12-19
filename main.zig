@@ -71,7 +71,7 @@ export fn exitRawMode() void {
     if (g_term.is_rawmode) {
         c.screen_move(c.LASTLINE(), 0);
         c.screen_clrtoeolx();
-        c.refresh();
+        c.tty_refresh();
         c.loadImage(null, c.IMG_FLAG_STOP);
         reset_tty();
     }
@@ -242,7 +242,7 @@ export fn setlinescols() void {
 // image
 //
 
-export fn get_pixel_per_cell(ppc: *c_int, ppl: *c_int) c_int {
+export fn get_pixel_per_cell(ppc: *c_int, ppl: *c_int) bool {
     _ = ppc;
     _ = ppl;
     //     fd_set rfd;
@@ -293,5 +293,5 @@ export fn get_pixel_per_cell(ppc: *c_int, ppl: *c_int) c_int {
     //         left -= len;
     //     }
     //
-    return 0;
+    return false;
 }

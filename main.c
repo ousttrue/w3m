@@ -2266,7 +2266,7 @@ DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background")
 #endif /* not SIGSTOP */
     screen_move(LASTLINE(), 0);
     screen_clrtoeolx();
-    refresh();
+    tty_refresh();
     exitRawMode();
 #ifndef SIGSTOP
     shell = getenv("SHELL");
@@ -2694,7 +2694,7 @@ void _followI(bool do_download)
         return;
     /* FIXME: gettextize? */
     message(Sprintf("loading %s", a->url)->ptr, 0, 0);
-    refresh();
+    tty_refresh();
     struct Buffer* buf = loadGeneralFile(a->url, baseURL(Currentbuf), NULL, 0, NULL, do_download);
     if (buf == NULL) {
         /* FIXME: gettextize? */
@@ -3271,7 +3271,7 @@ cmd_loadURL(char* url, struct Url* current, char* referer, struct FormList* requ
     if (handleMailto(url))
         return;
 
-    refresh();
+    tty_refresh();
     struct Buffer* buf = loadGeneralFile(url, current, referer, 0, request, false);
     if (buf == NULL) {
         /* FIXME: gettextize? */
@@ -3907,7 +3907,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
     if (Currentbuf->bufferprop & BP_FRAME && (fbuf = Currentbuf->linkBuffer[LB_N_FRAME])) {
         if (fmInitialized()) {
             message("Rendering frame", 0, 0);
-            refresh();
+            tty_refresh();
         }
         if (!(buf = renderFrame(fbuf, 1))) {
             displayBuffer(Currentbuf, B_NORMAL);
@@ -3948,7 +3948,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
     url = parsedURL2Str(&Currentbuf->currentURL);
     /* FIXME: gettextize? */
     message("Reloading...", 0, 0);
-    refresh();
+    tty_refresh();
     old_charset = DocumentCharset;
     if (Currentbuf->document_charset != WC_CES_US_ASCII)
         DocumentCharset = Currentbuf->document_charset;
@@ -4154,7 +4154,7 @@ DEFUN(rFrame, FRAME, "Toggle rendering HTML frames")
     }
     if (fmInitialized()) {
         message("Rendering frame", 0, 0);
-        refresh();
+        tty_refresh();
     }
     buf = renderFrame(Currentbuf, 0);
     if (buf == NULL) {

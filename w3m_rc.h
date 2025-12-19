@@ -127,7 +127,8 @@ inline static int TTY_COLS(void) { return getRuntime()->cols; }
 inline static int LASTLINE(void) { return getRuntime()->lines - 1; }
 void tty_set_cols(int cols);
 int graph_ok(void);
-void tty_clear();
+void tty_clear(void);
+void tty_refresh(void);
 
 // void crmode(void);
 // void nocrmode(void);
@@ -141,7 +142,7 @@ void term_title(const char* s);
 void bell(void);
 void quitfm(void);
 
-int get_pixel_per_cell(int* ppc, int* ppl);
+bool get_pixel_per_cell(int* ppc, int* ppl);
 
 void tabs_prepare();
 bool currentBufferSubmit();

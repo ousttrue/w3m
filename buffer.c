@@ -387,7 +387,7 @@ listBuffer(struct Buffer* top, struct Buffer* current)
     /*
      * move(LASTLINE(), COLS - 1); */
     screen_move(c, 0);
-    refresh();
+    tty_refresh();
     return buf->nextBuffer;
 }
 
@@ -509,7 +509,7 @@ selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectcha
          * move(LASTLINE(), COLS - 1);
          */
         screen_move(spoint, 0);
-        refresh();
+        tty_refresh();
     }
 }
 

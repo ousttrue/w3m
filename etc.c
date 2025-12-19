@@ -1057,7 +1057,7 @@ FILE* openSecretFile(char* fname)
     else if ((st.st_mode & (S_IRWXG | S_IRWXO)) != 0) {
         if (fmInitialized()) {
             message(Sprintf(FILE_IS_READABLE_MSG, fname)->ptr, 0, 0);
-            refresh();
+            tty_refresh();
         } else {
             fputs(Sprintf(FILE_IS_READABLE_MSG, fname)->ptr, stderr);
             fputc('\n', stderr);

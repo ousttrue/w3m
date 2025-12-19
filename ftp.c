@@ -185,7 +185,7 @@ ftp_login(FTP ftp)
                     ftp->user)
                     ->ptr,
             0, 0);
-        refresh();
+        tty_refresh();
     }
     ftp_command(ftp, "USER", ftp->user, &status);
     /*
@@ -197,7 +197,7 @@ ftp_login(FTP ftp)
         goto open_err;
     if (fmInitialized()) {
         message("Sending FTP password to remote server.", 0, 0);
-        refresh();
+        tty_refresh();
     }
     ftp_command(ftp, "PASS", ftp->pass, &status);
     if (status != 230)

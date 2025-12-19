@@ -939,7 +939,7 @@ int select_menu(Menu* menu, int mselect)
      * move(menu->cursorY, menu->cursorX); */
     screen_move(menu->y + mselect - menu->offset, menu->x);
     screen_toggle_stand();
-    refresh();
+    tty_refresh();
 
     return (menu->select);
 }

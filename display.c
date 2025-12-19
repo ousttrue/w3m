@@ -412,13 +412,13 @@ void displayBuffer(struct Buffer* buf, enum DisplayMode mode)
     if (delayed_msg != NULL) {
         disp_message(delayed_msg, FALSE);
         delayed_msg = NULL;
-        refresh();
+        tty_refresh();
     }
     screen_standout();
     message(msg->ptr, buf->cursorX + buf->rootX, buf->cursorY + buf->rootY);
     screen_standend();
     term_title(conv_to_system(buf->buffername));
-    refresh();
+    tty_refresh();
 
     if (activeImage && displayImage && buf->img && buf->image_loaded) {
         drawImage(buf);
@@ -1150,7 +1150,7 @@ void disp_message_nsec(char* s, int redraw_current, int sec, int purge, int mous
             Currentbuf->cursorY + Currentbuf->rootY);
     else
         message(s, LASTLINE(), 0);
-    refresh();
+    tty_refresh();
 #ifdef USE_MOUSE
     if (mouse && use_mouse)
         mouse_active();

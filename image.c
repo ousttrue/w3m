@@ -12,11 +12,8 @@
 #include <errno.h>
 #include <termios.h>
 #include <unistd.h>
-#ifdef HAVE_WAITPID
 #include <sys/wait.h>
-#endif
-
-#ifdef USE_IMAGE
+#include <stdbool.h>
 
 static int image_index = 0;
 
@@ -50,8 +47,6 @@ void initImage()
             activeImage = TRUE;
     }
 }
-
-int get_pixel_per_cell(int* ppc, int* ppl);
 
 static int
 getCharSize(void)
@@ -660,7 +655,7 @@ void drawImage(struct Buffer* currentbuf)
         n_terminal_image = 0;
 
     screen_touch_cursor();
-    refresh();
+    tty_refresh();
 }
 
 void clearImage()
@@ -766,7 +761,7 @@ showImageProgress(struct Buffer* buf)
             drawImage(buf);
         message(Sprintf("%d/%d images loaded", l, n)->ptr,
             buf->cursorX + buf->rootX, buf->cursorY + buf->rootY);
-        refresh();
+        tty_refresh();
     }
 }
 
@@ -1136,4 +1131,3 @@ got_image_size:
     putHash_sv(image_hash, tmp->ptr, (void*)cache);
     return TRUE;
 }
-#endif
