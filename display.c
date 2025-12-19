@@ -5,6 +5,7 @@
 #include "tab.h"
 #include "image.h"
 #include "w3m_rc.h"
+#include "ctrlcode.h"
 
 #include <math.h>
 #include <signal.h>

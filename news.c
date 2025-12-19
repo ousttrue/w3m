@@ -6,6 +6,7 @@
 #include <time.h>
 #include <signal.h>
 #include <setjmp.h>
+#include <unistd.h>
 
 #ifdef USE_NNTP
 

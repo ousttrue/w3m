@@ -1,9 +1,11 @@
 #include "buffer.h"
+#include "ctrlcode.h"
 #include "anchor.h"
 #include "tab.h"
 #include "w3m_rc.h"
 #include "image.h"
 #include "fm.h"
+#include <unistd.h>
 
 #ifdef USE_MOUSE
 #ifdef USE_GPM

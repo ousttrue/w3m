@@ -1,4 +1,5 @@
 #include "w3m_rc.h"
+#include "ctrlcode.h"
 #include "html_form.h"
 #include "siteconf.h"
 #include "http_request.h"
@@ -16,6 +17,7 @@
 #include "myctype.h"
 #include <signal.h>
 #include <setjmp.h>
+#include <unistd.h>
 #if defined(HAVE_WAITPID) || defined(HAVE_WAIT3)
 #include <sys/wait.h>
 #endif
@@ -86,7 +88,6 @@ struct FormSelectOption* select_option;
 int max_select = MAX_SELECT;
 static int n_select;
 static int cur_option_maxwidth;
-
 
 static Str cur_textarea;
 Str* textarea_str;
@@ -1559,20 +1560,9 @@ getAuthCookie(struct http_auth* hauth, char* auth_header,
             fflush(stdout);
             *uname = Strfgets(stdin);
             Strchop(*uname);
-#ifdef HAVE_GETPASSPHRASE
-            *pwd = Strnew_charp((char*)
-                    getpassphrase(proxy ? "Proxy Password: " : "Password: "));
-#else
-#ifndef __MINGW32_VERSION
+
             *pwd = Strnew_charp((char*)
                     getpass(proxy ? "Proxy Password: " : "Password: "));
-#else
-            term_raw();
-            *pwd = Strnew_charp((char*)
-                    inputLine(proxy ? "Proxy Password: " : "Password: ", NULL, IN_PASSWORD));
-            exitRawMode();
-#endif /* __MINGW32_VERSION */
-#endif
         }
     }
 

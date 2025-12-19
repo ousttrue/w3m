@@ -14,6 +14,7 @@
 #include "regex.h"
 #include "util.h"
 #include "menu.h"
+#include <unistd.h>
 
 extern Str* textarea_str;
 extern int max_textarea;
@@ -606,9 +607,7 @@ void input_textarea(struct FormItemList* fi)
         tmp = convertLine(NULL, tmp, RAW_MODE, &charset, DisplayCharset);
         Strcat(fi->value, tmp);
     }
-#ifdef USE_M17N
     WcOption.auto_detect = auto_detect;
-#endif
     fclose(f);
 input_end:
     unlink(tmpf);

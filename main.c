@@ -9,6 +9,7 @@
 #include "image.h"
 #define MAINPROGRAM
 #include "fm.h"
+#include <locale.h>
 #include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -431,9 +432,9 @@ bool w3m_args(int argc, char** argv)
 #else
     GC_oom_fn = die_oom;
 #endif
-#if defined(ENABLE_NLS) || (defined(USE_M17N) && defined(HAVE_LANGINFO_CODESET))
+
     setlocale(LC_ALL, "");
-#endif
+
 #ifdef ENABLE_NLS
     bindtextdomain(PACKAGE, LOCALEDIR);
     textdomain(PACKAGE);

@@ -12,6 +12,7 @@
 #include "utf8.h"
 #endif
 #endif
+#include "ctrlcode.h"
 #endif /* DUMMY */
 
 extern char* conv_entity(unsigned int c);

@@ -3,6 +3,7 @@
 #include "myctype.h"
 #include "istream.h"
 #include <signal.h>
+#include <unistd.h>
 #ifdef USE_SSL
 #include <openssl/x509v3.h>
 #endif
@@ -618,11 +619,7 @@ Str ssl_get_certificate(SSL* ssl, char* hostname)
 static void
 basic_close(int* handle)
 {
-#ifdef __MINGW32_VERSION
-    closesocket(*(int*)handle);
-#else
     close(*(int*)handle);
-#endif
     xfree(handle);
 }
 

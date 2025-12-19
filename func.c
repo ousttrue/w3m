@@ -10,6 +10,7 @@
 #include "myctype.h"
 #include "regex.h"
 #include "w3m_rc.h"
+#include "ctrlcode.h"
 
 #include "funcname.c"
 #include "functable.c"

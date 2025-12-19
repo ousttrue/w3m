@@ -1,4 +1,5 @@
 #include "w3m_rc.h"
+#include "ctrlcode.h"
 #include "html_form.h"
 #include "display.h"
 #include "tab.h"

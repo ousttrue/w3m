@@ -1,26 +1,19 @@
 #include "w3m_rc.h"
+#include "ctrlcode.h"
 #include "buffer.h"
 #include "fm.h"
-#ifndef __MINGW32_VERSION
-#include <pwd.h>
-#endif
 #include "myctype.h"
 #include "html.h"
 #include "local.h"
 #include "hash.h"
 
+#include <pwd.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <time.h>
-#if defined(HAVE_WAITPID) || defined(HAVE_WAIT3)
 #include <sys/wait.h>
-#endif
 #include <signal.h>
-
-#ifdef __WATT32__
-#define read(a, b, c) read_s(a, b, c)
-#define close(x) close_s(x)
-#endif /* __WATT32__ */
+#include <unistd.h>
 
 struct auth_pass {
     int bad;

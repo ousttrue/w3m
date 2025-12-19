@@ -14,41 +14,15 @@
 #define _GNU_SOURCE /* strcasestr() */
 #endif
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <limits.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
 #include "config.h"
 #include "history.h"
 
-#ifdef USE_MENU
 #define MENU_SELECT
 #define MENU_MAP
-#endif /* USE_MENU */
 
-#ifndef USE_COLOR
-#undef USE_ANSI_COLOR
-#undef USE_BG_COLOR
-#endif
-
-#include "ctrlcode.h"
-#include "html.h"
-#include <gc.h>
-#include "Str.h"
-#ifdef USE_M17N
 #include "wc.h"
 #include "wtf.h"
-#else
-typedef int wc_ces; /* XXX: not used */
-#endif
 
-#ifdef HAVE_LOCALE_H
-#include <locale.h>
-#endif
 #if !HAVE_SETLOCALE
 #define setlocale(category, locale) /* empty */
 #endif

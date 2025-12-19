@@ -1,5 +1,6 @@
 #include "w3m_rc.h"
 #include "fm.h"
+#include "ctrlcode.h"
 
 #include "Symbols/alt.sym"
 #include "Symbols/graph.sym"

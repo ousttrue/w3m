@@ -20,6 +20,7 @@
 #include <sys/wait.h>
 #include <sys/select.h>
 #include <sys/ioctl.h>
+#include <locale.h>
 
 MySignalHandler reset_exit(SIGNAL_ARG);
 MySignalHandler error_dump(SIGNAL_ARG);
@@ -67,7 +68,6 @@ MySignalHandler error_dump(SIGNAL_ARG);
 
 #define S_COLORED 0xf00
 
-#ifdef USE_BG_COLOR
 /* Background Color */
 #define COL_BCOLOR 0xf000
 #define COL_BBLACK 0x8000
@@ -81,7 +81,6 @@ MySignalHandler error_dump(SIGNAL_ARG);
 #define COL_BTERM 0x0000
 
 #define S_BCOLORED 0xf000
-#endif /* USE_BG_COLOR */
 
 #define S_GRAPHICS 0x10
 
