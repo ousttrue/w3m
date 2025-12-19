@@ -1,4 +1,5 @@
 #include "w3m_runtime.h"
+#include "html_form.h"
 #include "siteconf.h"
 #include "anchor.h"
 #include "frame.h"
@@ -627,11 +628,9 @@ save_submit_formlist(struct FormItemList* src)
     struct FormItemList* srcitem;
     struct FormItemList* item;
     struct FormItemList* ret = NULL;
-#ifdef MENU_SELECT
-    FormSelectOptionItem* opt;
-    FormSelectOptionItem* curopt;
-    FormSelectOptionItem* srcopt;
-#endif /* MENU_SELECT */
+    struct FormSelectOptionItem* opt;
+    struct FormSelectOptionItem* curopt;
+    struct FormSelectOptionItem* srcopt;
 
     if (src == NULL)
         return NULL;
@@ -639,9 +638,7 @@ save_submit_formlist(struct FormItemList* src)
     list = New(struct FormList);
     list->method = srclist->method;
     list->action = Strdup(srclist->action);
-#ifdef USE_M17N
     list->charset = srclist->charset;
-#endif
     list->enctype = srclist->enctype;
     list->nitems = srclist->nitems;
     list->body = srclist->body;
@@ -659,12 +656,12 @@ save_submit_formlist(struct FormItemList* src)
         item->rows = srcitem->rows;
         item->maxlength = srcitem->maxlength;
         item->readonly = srcitem->readonly;
-#ifdef MENU_SELECT
+
         opt = curopt = NULL;
         for (srcopt = srcitem->select_option; srcopt; srcopt = srcopt->next) {
             if (!srcopt->checked)
                 continue;
-            opt = New(FormSelectOptionItem);
+            opt = New(struct FormSelectOptionItem);
             opt->value = Strdup(srcopt->value);
             opt->label = Strdup(srcopt->label);
             opt->checked = srcopt->checked;
@@ -678,7 +675,7 @@ save_submit_formlist(struct FormItemList* src)
         item->select_option = opt;
         if (srcitem->label)
             item->label = Strdup(srcitem->label);
-#endif /* MENU_SELECT */
+
         item->parent = list;
         item->next = NULL;
 

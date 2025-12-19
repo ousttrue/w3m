@@ -1,7 +1,7 @@
 /*
  * HTML forms
  */
-#include "form.h"
+#include "html_form.h"
 #include "display.h"
 #include "download.h"
 #include "buffer.h"
@@ -13,14 +13,12 @@
 #include "local.h"
 #include "regex.h"
 #include "util.h"
+#include "menu.h"
 
 extern Str* textarea_str;
 extern int max_textarea;
-#ifdef MENU_SELECT
-extern FormSelectOption* select_option;
+extern struct FormSelectOption* select_option;
 extern int max_select;
-#include "menu.h"
-#endif /* MENU_SELECT */
 
 /* *INDENT-OFF* */
 struct {
@@ -630,10 +628,10 @@ void do_internal(char* action, char* data)
 }
 
 #ifdef MENU_SELECT
-void addSelectOption(FormSelectOption* fso, Str value, Str label, int chk)
+void addSelectOption(struct FormSelectOption* fso, Str value, Str label, int chk)
 {
-    FormSelectOptionItem* o;
-    o = New(FormSelectOptionItem);
+    struct FormSelectOptionItem* o;
+    o = New(struct FormSelectOptionItem);
     if (value == NULL)
         value = label;
     o->value = value;
@@ -650,9 +648,9 @@ void addSelectOption(FormSelectOption* fso, Str value, Str label, int chk)
     }
 }
 
-void chooseSelectOption(struct FormItemList* fi, FormSelectOptionItem* item)
+void chooseSelectOption(struct FormItemList* fi, struct FormSelectOptionItem* item)
 {
-    FormSelectOptionItem* opt;
+    struct FormSelectOptionItem* opt;
     int i;
 
     fi->selected = 0;
@@ -674,7 +672,7 @@ void chooseSelectOption(struct FormItemList* fi, FormSelectOptionItem* item)
     updateSelectOption(fi, item);
 }
 
-void updateSelectOption(struct FormItemList* fi, FormSelectOptionItem* item)
+void updateSelectOption(struct FormItemList* fi, struct FormSelectOptionItem* item)
 {
     int i;
 
@@ -691,7 +689,7 @@ void updateSelectOption(struct FormItemList* fi, FormSelectOptionItem* item)
 int formChooseOptionByMenu(struct FormItemList* fi, int x, int y)
 {
     int i, n, selected = -1, init_select = fi->selected;
-    FormSelectOptionItem* opt;
+    struct FormSelectOptionItem* opt;
     char** label;
 
     for (n = 0, opt = fi->select_option; opt != NULL; n++, opt = opt->next)
@@ -944,10 +942,8 @@ void preFormUpdateBuffer(struct Buffer* buf)
     struct Anchor* a;
     struct FormList* fl;
     struct FormItemList* fi;
-#ifdef MENU_SELECT
-    FormSelectOptionItem* opt;
+    struct FormSelectOptionItem* opt;
     int j;
-#endif
 
     if (!buf || !buf->formitem || !PreForm)
         return;

@@ -1,4 +1,5 @@
 #include "w3m_runtime.h"
+#include "html_form.h"
 #include "urlscheme.h"
 #include "siteconf.h"
 #include "http_request.h"

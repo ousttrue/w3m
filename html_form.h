@@ -3,7 +3,7 @@
  */
 #pragma once
 #include "Str.h"
-#include "libwc/wc.h"
+#include "libwc/wc_types.h"
 
 #define FORM_UNKNOWN -1
 #define FORM_INPUT_TEXT 0
@@ -36,12 +36,17 @@
 #define MAX_SELECT 10 /* max number of <select>..</select> \
                        * within one document */
 
-typedef struct form_select_option_item {
+struct FormSelectOptionItem {
     Str value;
     Str label;
     int checked;
-    struct form_select_option_item* next;
-} FormSelectOptionItem;
+    struct FormSelectOptionItem* next;
+};
+
+struct FormSelectOption {
+    struct FormSelectOptionItem* first;
+    struct FormSelectOptionItem* last;
+};
 
 struct FormItemList {
     int type;
@@ -53,7 +58,7 @@ struct FormItemList {
     int rows;
     int maxlength;
     int readonly;
-    FormSelectOptionItem* select_option;
+    struct FormSelectOptionItem* select_option;
     Str label, init_label;
     int selected, init_selected;
     struct FormList* parent;
@@ -76,12 +81,7 @@ struct FormList {
     unsigned long length;
 };
 
-typedef struct form_select_option {
-    FormSelectOptionItem* first;
-    FormSelectOptionItem* last;
-} FormSelectOption;
-
-void addSelectOption(FormSelectOption* fso, Str value, Str label, int chk);
-void chooseSelectOption(struct FormItemList* fi, FormSelectOptionItem* item);
-void updateSelectOption(struct FormItemList* fi, FormSelectOptionItem* item);
+void addSelectOption(struct FormSelectOption* fso, Str value, Str label, int chk);
+void chooseSelectOption(struct FormItemList* fi, struct FormSelectOptionItem* item);
+void updateSelectOption(struct FormItemList* fi, struct FormSelectOptionItem* item);
 int formChooseOptionByMenu(struct FormItemList* fi, int x, int y);

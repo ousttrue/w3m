@@ -1,4 +1,5 @@
 #include "anchor.h"
+#include "html_form.h"
 #include "buffer.h"
 #include "w3m_runtime.h"
 #include "image.h"

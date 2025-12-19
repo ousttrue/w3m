@@ -67,7 +67,6 @@ typedef int wc_ces; /* XXX: not used */
 #define gettext(Text) Text
 #endif
 
-#include "form.h"
 #include "frame.h"
 #include "parsetag.h"
 #include "parsetagx.h"

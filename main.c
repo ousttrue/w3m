@@ -1,4 +1,5 @@
 #include "maparea.h"
+#include "html_form.h"
 #include "siteconf.h"
 #include "anchor.h"
 #include "w3m_runtime.h"

@@ -1,4 +1,5 @@
 #include "w3m_runtime.h"
+#include "html_form.h"
 #include "buffer.h"
 #include <stdio.h>
 #include <string.h>

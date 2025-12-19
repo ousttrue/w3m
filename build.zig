@@ -16,6 +16,7 @@ const w3m_srcs = [_][]const u8{
     "download.c",
     "keybind.c",
     "util.c",
+    "html_form.c",
 
     "urlscheme.c",
     "siteconf.c",
@@ -28,7 +29,6 @@ const w3m_srcs = [_][]const u8{
     "linein.c",
     "html_table.c",
     "local.c",
-    "form.c",
     "maparea.c",
     "frame.c",
     "rc.c",

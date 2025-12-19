@@ -1,4 +1,5 @@
 #include "w3m_runtime.h"
+#include "html_form.h"
 #include "display.h"
 #include "tab.h"
 #include "fm.h"
