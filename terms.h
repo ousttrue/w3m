@@ -62,13 +62,18 @@ enum ScreenLineFlags : uint16_t {
 };
 
 enum ScreenCellProperty CHAR_MODE(enum ScreenCellProperty c);
-void SET_CHAR(char** var, const char* ch, size_t len);
+
+struct ScreenCell {
+    char str[8];
+    enum ScreenCellProperty prop;
+};
+
+void SET_CHAR(struct ScreenCell* p, const char* ch, size_t len);
 void SET_CHAR_MODE(enum ScreenCellProperty* var, enum ScreenCellProperty mode);
-void SET_PROP(enum ScreenCellProperty* var, enum ScreenCellProperty prop);
+void SET_PROP(struct ScreenCell* p, enum ScreenCellProperty prop);
 
 struct ScreenLine {
-    char** lineimage;
-    enum ScreenCellProperty* lineprop;
+    struct ScreenCell* cells;
     enum ScreenLineFlags isdirty;
     size_t eol;
 };

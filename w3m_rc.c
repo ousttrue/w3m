@@ -2806,26 +2806,24 @@ void tty_refresh(void)
     int line, col, pcol;
     int pline = sc->y;
     int moved = RF_NEED_TO_MOVE;
-    char** pc;
-    enum ScreenCellProperty *pr, mode = 0;
+    enum ScreenCellProperty mode = 0;
     enum ScreenCellProperty color = COL_FTERM;
     enum ScreenCellProperty bcolor = COL_BTERM;
-    short* dirty;
 
     wc_putc_init(InnerCharset, DisplayCharset);
 
     for (line = 0; line < sc->line_count; line++) {
-        dirty = &sc->lines[line].isdirty;
+        struct ScreenLine* pLine = &sc->lines[line];
+        struct ScreenCell* p = pLine->cells;
+        enum ScreenLineFlags* dirty = &pLine->isdirty;
         if (*dirty & L_DIRTY) {
             *dirty &= ~L_DIRTY;
-            pc = sc->lines[line].lineimage;
-            pr = sc->lines[line].lineprop;
-            for (col = 0; col < sc->col_count && !(pr[col] & S_EOL); col++) {
+            for (col = 0; col < sc->col_count && !(p[col].prop & S_EOL); col++) {
                 if (*dirty & L_NEED_CE && col >= sc->lines[line].eol) {
-                    if (screen_need_redraw(pc[col], pr[col], SCREEN_SPACE, 0))
+                    if (screen_need_redraw(p[col].str, p[col].prop, SCREEN_SPACE, 0))
                         break;
                 } else {
-                    if (pr[col] & S_DIRTY)
+                    if (p[col].prop & S_DIRTY)
                         break;
                 }
             }
@@ -2864,7 +2862,7 @@ void tty_refresh(void)
             pline = line;
             pcol = col;
             for (; col < getRuntime()->cols; col++) {
-                if (pr[col] & S_EOL)
+                if (p[col].prop & S_EOL)
                     break;
 
                 /*
@@ -2877,9 +2875,9 @@ void tty_refresh(void)
                  * avoid the scroll, I prohibit to draw character on
                  * (COLS-1,LINES-1).
                  */
-                if ((!(pr[col] & S_STANDOUT) && (mode & S_STANDOUT)) || (!(pr[col] & S_UNDERLINE) && (mode & S_UNDERLINE)) || (!(pr[col] & S_BOLD) && (mode & S_BOLD)) || (!(pr[col] & S_COLORED) && (mode & S_COLORED))
-                    || (!(pr[col] & S_BCOLORED) && (mode & S_BCOLORED))
-                    || (!(pr[col] & S_GRAPHICS) && (mode & S_GRAPHICS))) {
+                if ((!(p[col].prop & S_STANDOUT) && (mode & S_STANDOUT)) || (!(p[col].prop & S_UNDERLINE) && (mode & S_UNDERLINE)) || (!(p[col].prop & S_BOLD) && (mode & S_BOLD)) || (!(p[col].prop & S_COLORED) && (mode & S_COLORED))
+                    || (!(p[col].prop & S_BCOLORED) && (mode & S_BCOLORED))
+                    || (!(p[col].prop & S_GRAPHICS) && (mode & S_GRAPHICS))) {
                     if ((mode & S_COLORED)
                         || (mode & S_BCOLORED))
                         writestr(getRuntime()->T_op);
@@ -2889,39 +2887,39 @@ void tty_refresh(void)
                     mode &= ~M_MEND;
                 }
                 if ((*dirty & L_NEED_CE && col >= sc->lines[line].eol)
-                        ? screen_need_redraw(pc[col], pr[col], SCREEN_SPACE, 0)
-                        : (pr[col] & S_DIRTY)) {
+                        ? screen_need_redraw(p[col].str, p[col].prop, SCREEN_SPACE, 0)
+                        : (p[col].prop & S_DIRTY)) {
                     if (pcol == col - 1)
                         writestr(getRuntime()->T_nd);
                     else if (pcol != col)
                         tty_MOVE(line, col);
 
-                    if ((pr[col] & S_STANDOUT) && !(mode & S_STANDOUT)) {
+                    if ((p[col].prop & S_STANDOUT) && !(mode & S_STANDOUT)) {
                         writestr(getRuntime()->T_so);
                         mode |= S_STANDOUT;
                     }
-                    if ((pr[col] & S_UNDERLINE) && !(mode & S_UNDERLINE)) {
+                    if ((p[col].prop & S_UNDERLINE) && !(mode & S_UNDERLINE)) {
                         writestr(getRuntime()->T_us);
                         mode |= S_UNDERLINE;
                     }
-                    if ((pr[col] & S_BOLD) && !(mode & S_BOLD)) {
+                    if ((p[col].prop & S_BOLD) && !(mode & S_BOLD)) {
                         writestr(getRuntime()->T_md);
                         mode |= S_BOLD;
                     }
-                    if ((pr[col] & S_COLORED) && (pr[col] ^ mode) & COL_FCOLOR) {
-                        color = (pr[col] & COL_FCOLOR);
+                    if ((p[col].prop & S_COLORED) && (p[col].prop ^ mode) & COL_FCOLOR) {
+                        color = (p[col].prop & COL_FCOLOR);
                         mode = ((mode & ~COL_FCOLOR) | color);
                         writestr(color_seq(color));
                     }
 
-                    if ((pr[col] & S_BCOLORED)
-                        && (pr[col] ^ mode) & COL_BCOLOR) {
-                        bcolor = (pr[col] & COL_BCOLOR);
+                    if ((p[col].prop & S_BCOLORED)
+                        && (p[col].prop ^ mode) & COL_BCOLOR) {
+                        bcolor = (p[col].prop & COL_BCOLOR);
                         mode = ((mode & ~COL_BCOLOR) | bcolor);
                         writestr(bcolor_seq(bcolor));
                     }
 
-                    if ((pr[col] & S_GRAPHICS) && !(mode & S_GRAPHICS)) {
+                    if ((p[col].prop & S_GRAPHICS) && !(mode & S_GRAPHICS)) {
                         wc_putc_end(getOutputHandle());
                         if (!graph_enabled) {
                             graph_enabled = 1;
@@ -2930,17 +2928,17 @@ void tty_refresh(void)
                         writestr(getRuntime()->T_as);
                         mode |= S_GRAPHICS;
                     }
-                    if (pr[col] & S_GRAPHICS)
-                        write1(graphchar(*pc[col]));
-                    else if (CHAR_MODE(pr[col]) != C_WCHAR2)
-                        wc_putc(pc[col], getOutputHandle());
+                    if (p[col].prop & S_GRAPHICS)
+                        write1(graphchar(*p[col].str));
+                    else if (CHAR_MODE(p[col].prop) != C_WCHAR2)
+                        wc_putc(p[col].str, getOutputHandle());
                     pcol = col + 1;
                 }
             }
             if (col == getRuntime()->cols)
                 moved = RF_NEED_TO_MOVE;
-            for (; col < getRuntime()->cols && !(pr[col] & S_EOL); col++)
-                pr[col] |= S_EOL;
+            for (; col < getRuntime()->cols && !(p[col].prop & S_EOL); col++)
+                p[col].prop |= S_EOL;
         }
         *dirty &= ~(L_NEED_CE | L_CLRTOEOL);
         if (mode & M_MEND) {
