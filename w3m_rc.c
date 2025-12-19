@@ -2807,9 +2807,9 @@ void tty_refresh(void)
     int pline = sc->y;
     int moved = RF_NEED_TO_MOVE;
     char** pc;
-    l_prop *pr, mode = 0;
-    l_prop color = COL_FTERM;
-    l_prop bcolor = COL_BTERM;
+    enum ScreenCellProperty *pr, mode = 0;
+    enum ScreenCellProperty color = COL_FTERM;
+    enum ScreenCellProperty bcolor = COL_BTERM;
     short* dirty;
 
     wc_putc_init(InnerCharset, DisplayCharset);
@@ -2932,7 +2932,7 @@ void tty_refresh(void)
                     }
                     if (pr[col] & S_GRAPHICS)
                         write1(graphchar(*pc[col]));
-                    else if (CHMODE(pr[col]) != C_WCHAR2)
+                    else if (CHAR_MODE(pr[col]) != C_WCHAR2)
                         wc_putc(pc[col], getOutputHandle());
                     pcol = col + 1;
                 }

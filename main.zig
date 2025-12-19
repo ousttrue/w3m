@@ -295,3 +295,25 @@ export fn get_pixel_per_cell(ppc: *c_int, ppl: *c_int) bool {
     //
     return false;
 }
+
+//
+// screen
+//
+
+var g_screen: c.Screen = .{
+    .lines = null,
+    .line_count = 0,
+    .line_capacity = 0,
+    .col_count = 0,
+    .col_capacity = 0,
+    .tab_step = 8,
+    .y = 0,
+    .x = 0,
+    .mode = 0,
+};
+export fn screen_get() *c.Screen
+{
+    return &g_screen;
+}
+
+

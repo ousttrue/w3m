@@ -6,23 +6,24 @@
 #define M_SPACE (S_SCREENPROP | S_COLORED | S_BCOLORED | S_GRAPHICS)
 #define M_CEOL (~(M_SPACE | C_WHICHCHAR))
 
-struct Screen g_screen = {
-    .lines = NULL,
-    .line_count = 0,
-    .line_capacity = 0,
-    .col_count = 0,
-    .col_capacity = 0,
-    .tab_step = 8,
-    .y = 0,
-    .x = 0,
-    .mode = 0,
-};
-struct Screen* screen_get()
+void SET_CHAR(char** var, const char* ch, size_t len)
 {
-    return &g_screen;
+    *var = New_Reuse(char, *var, len + 1);
+    strncpy(*var, ch, len + 1);
 }
 
-bool screen_need_redraw(char* c1, l_prop pr1, char* c2, l_prop pr2)
+enum ScreenCellProperty CHAR_MODE(enum ScreenCellProperty c) { return ((c)&C_WHICHCHAR); }
+
+void SET_CHAR_MODE(enum ScreenCellProperty* var, enum ScreenCellProperty mode)
+{
+    *var = (*var & ~C_WHICHCHAR) | mode;
+}
+void SET_PROP(enum ScreenCellProperty* var, enum ScreenCellProperty prop)
+{
+    *var = (*var & S_DIRTY) | prop;
+}
+
+bool screen_need_redraw(char* c1, enum ScreenCellProperty pr1, char* c2, enum ScreenCellProperty pr2)
 {
     if (!c1 || !c2 || strcmp(c1, c2))
         return 1;
@@ -37,31 +38,31 @@ bool screen_need_redraw(char* c1, l_prop pr1, char* c2, l_prop pr2)
 
 void screen_setup(int line_count, int col_count)
 {
-    if (line_count + 1 > g_screen.line_capacity) {
-        g_screen.line_capacity = line_count + 1;
-        g_screen.col_capacity = 0;
-        g_screen.lines = New_N(struct ScreenLine, g_screen.line_capacity);
+    if (line_count + 1 > screen_get()->line_capacity) {
+        screen_get()->line_capacity = line_count + 1;
+        screen_get()->col_capacity = 0;
+        screen_get()->lines = New_N(struct ScreenLine, screen_get()->line_capacity);
     }
-    g_screen.line_count = line_count;
+    screen_get()->line_count = line_count;
 
-    if (col_count + 1 > g_screen.col_capacity) {
-        g_screen.col_capacity = col_count + 1;
-        for (int i = 0; i < g_screen.line_capacity; i++) {
-            g_screen.lines[i].lineimage = New_N(char*, g_screen.col_capacity);
-            memset(g_screen.lines[i].lineimage, 0, g_screen.col_capacity * sizeof(char*));
-            g_screen.lines[i].lineprop = New_N(l_prop, g_screen.col_capacity);
+    if (col_count + 1 > screen_get()->col_capacity) {
+        screen_get()->col_capacity = col_count + 1;
+        for (int i = 0; i < screen_get()->line_capacity; i++) {
+            screen_get()->lines[i].lineimage = New_N(char*, screen_get()->col_capacity);
+            memset(screen_get()->lines[i].lineimage, 0, screen_get()->col_capacity * sizeof(char*));
+            screen_get()->lines[i].lineprop = New_N(enum ScreenCellProperty, screen_get()->col_capacity);
         }
     }
-    g_screen.col_count = col_count;
+    screen_get()->col_count = col_count;
 
     {
         int i = 0;
         for (; i < line_count; i++) {
-            g_screen.lines[i].lineprop[0] = S_EOL;
-            g_screen.lines[i].isdirty = 0;
+            screen_get()->lines[i].lineprop[0] = S_EOL;
+            screen_get()->lines[i].isdirty = 0;
         }
-        for (; i < g_screen.line_capacity; i++) {
-            g_screen.lines[i].isdirty = L_UNUSED;
+        for (; i < screen_get()->line_capacity; i++) {
+            screen_get()->lines[i].isdirty = L_UNUSED;
         }
     }
 
@@ -70,10 +71,10 @@ void screen_setup(int line_count, int col_count)
 
 void screen_move(int line, int column)
 {
-    if (line >= 0 && line < g_screen.line_count)
-        g_screen.y = line;
-    if (column >= 0 && column < g_screen.col_count)
-        g_screen.x = column;
+    if (line >= 0 && line < screen_get()->line_count)
+        screen_get()->y = line;
+    if (column >= 0 && column < screen_get()->col_count)
+        screen_get()->x = column;
 }
 
 void screen_addmch(const char* pc, size_t len, int width)
@@ -84,247 +85,247 @@ void screen_addmch(const char* pc, size_t len, int width)
     Strcopy_charp_n(tmp, pc, len);
     pc = tmp->ptr;
 
-    if (g_screen.x == g_screen.col_count)
+    if (screen_get()->x == screen_get()->col_count)
         screen_wrap();
-    if (g_screen.x >= g_screen.col_count)
+    if (screen_get()->x >= screen_get()->col_count)
         return;
-    char** p = g_screen.lines[g_screen.y].lineimage;
-    l_prop* pr = g_screen.lines[g_screen.y].lineprop;
+    char** p = screen_get()->lines[screen_get()->y].lineimage;
+    enum ScreenCellProperty* pr = screen_get()->lines[screen_get()->y].lineprop;
 
     char c = *pc;
-    if (pr[g_screen.x] & S_EOL) {
-        if (c == ' ' && !(g_screen.mode & M_SPACE)) {
-            g_screen.x++;
+    if (pr[screen_get()->x] & S_EOL) {
+        if (c == ' ' && !(screen_get()->mode & M_SPACE)) {
+            screen_get()->x++;
             return;
         }
-        for (int i = g_screen.x; i >= 0 && (pr[i] & S_EOL); i--) {
-            SETCH(p[i], SCREEN_SPACE, 1);
-            SETPROP(pr[i], (pr[i] & M_CEOL) | C_ASCII);
+        for (int i = screen_get()->x; i >= 0 && (pr[i] & S_EOL); i--) {
+            SET_CHAR(&p[i], SCREEN_SPACE, 1);
+            SET_PROP(&pr[i], (pr[i] & M_CEOL) | C_ASCII);
         }
     }
 
     if (c == '\t' || c == '\n' || c == '\r' || c == '\b')
-        SETCHMODE(g_screen.mode, C_CTRL);
+        SET_CHAR_MODE(&screen_get()->mode, C_CTRL);
     else if (len > 1)
-        SETCHMODE(g_screen.mode, C_WCHAR1);
+        SET_CHAR_MODE(&screen_get()->mode, C_WCHAR1);
     else if (!IS_CNTRL(c))
-        SETCHMODE(g_screen.mode, C_ASCII);
+        SET_CHAR_MODE(&screen_get()->mode, C_ASCII);
     else
         return;
 
-    /* Required to erase bold or underlined character for some * terminal
-     * emulators. */
+    // Required to erase bold or underlined character for some * terminal
+    // emulators.
     // int width = wtf_width(pc);
-    int i = g_screen.x + width - 1;
-    if (i < g_screen.col_count
-        && (((pr[i] & S_BOLD) && screen_need_redraw(p[i], pr[i], pc, g_screen.mode))
-            || ((pr[i] & S_UNDERLINE) && !(g_screen.mode & S_UNDERLINE)))) {
+    int i = screen_get()->x + width - 1;
+    if (i < screen_get()->col_count
+        && (((pr[i] & S_BOLD) && screen_need_redraw(p[i], pr[i], (char*)pc, screen_get()->mode))
+            || ((pr[i] & S_UNDERLINE) && !(screen_get()->mode & S_UNDERLINE)))) {
         screen_touch_line();
         i++;
-        if (i < g_screen.col_count) {
+        if (i < screen_get()->col_count) {
             screen_touch_column(i);
             if (pr[i] & S_EOL) {
-                SETCH(p[i], SCREEN_SPACE, 1);
-                SETPROP(pr[i], (pr[i] & M_CEOL) | C_ASCII);
+                SET_CHAR(&p[i], SCREEN_SPACE, 1);
+                SET_PROP(&pr[i], (pr[i] & M_CEOL) | C_ASCII);
             } else {
-                for (i++; i < g_screen.col_count && CHMODE(pr[i]) == C_WCHAR2; i++)
+                for (i++; i < screen_get()->col_count && CHAR_MODE(pr[i]) == C_WCHAR2; i++)
                     screen_touch_column(i);
             }
         }
     }
 
-    if (g_screen.x + width > g_screen.col_count) {
+    if (screen_get()->x + width > screen_get()->col_count) {
         screen_touch_line();
-        for (i = g_screen.x; i < g_screen.col_count; i++) {
-            SETCH(p[i], SCREEN_SPACE, 1);
-            SETPROP(pr[i], (pr[i] & ~C_WHICHCHAR) | C_ASCII);
+        for (i = screen_get()->x; i < screen_get()->col_count; i++) {
+            SET_CHAR(&p[i], SCREEN_SPACE, 1);
+            SET_PROP(&pr[i], (pr[i] & ~C_WHICHCHAR) | C_ASCII);
             screen_touch_column(i);
         }
         screen_wrap();
-        if (g_screen.x + width > g_screen.col_count)
+        if (screen_get()->x + width > screen_get()->col_count)
             return;
-        p = g_screen.lines[g_screen.y].lineimage;
-        pr = g_screen.lines[g_screen.y].lineprop;
+        p = screen_get()->lines[screen_get()->y].lineimage;
+        pr = screen_get()->lines[screen_get()->y].lineprop;
     }
-    if (CHMODE(pr[g_screen.x]) == C_WCHAR2) {
+    if (CHAR_MODE(pr[screen_get()->x]) == C_WCHAR2) {
         screen_touch_line();
-        for (i = g_screen.x - 1; i >= 0; i--) {
-            l_prop l = CHMODE(pr[i]);
-            SETCH(p[i], SCREEN_SPACE, 1);
-            SETPROP(pr[i], (pr[i] & ~C_WHICHCHAR) | C_ASCII);
+        for (i = screen_get()->x - 1; i >= 0; i--) {
+            enum ScreenCellProperty l = CHAR_MODE(pr[i]);
+            SET_CHAR(&p[i], SCREEN_SPACE, 1);
+            SET_PROP(&pr[i], (pr[i] & ~C_WHICHCHAR) | C_ASCII);
             screen_touch_column(i);
             if (l != C_WCHAR2)
                 break;
         }
     }
-    if (CHMODE(g_screen.mode) != C_CTRL) {
-        if (screen_need_redraw(p[g_screen.x], pr[g_screen.x], pc, g_screen.mode)) {
-            SETCH(p[g_screen.x], pc, len);
-            SETPROP(pr[g_screen.x], g_screen.mode);
+    if (CHAR_MODE(screen_get()->mode) != C_CTRL) {
+        if (screen_need_redraw(p[screen_get()->x], pr[screen_get()->x], (char*)pc, screen_get()->mode)) {
+            SET_CHAR(&p[screen_get()->x], pc, len);
+            SET_PROP(&pr[screen_get()->x], screen_get()->mode);
             screen_touch_line();
-            screen_touch_column(g_screen.x);
-            SETCHMODE(g_screen.mode, C_WCHAR2);
-            for (i = g_screen.x + 1; i < g_screen.x + width; i++) {
-                SETCH(p[i], SCREEN_SPACE, 1);
-                SETPROP(pr[i], (pr[g_screen.x] & ~C_WHICHCHAR) | C_WCHAR2);
+            screen_touch_column(screen_get()->x);
+            SET_CHAR_MODE(&screen_get()->mode, C_WCHAR2);
+            for (i = screen_get()->x + 1; i < screen_get()->x + width; i++) {
+                SET_CHAR(&p[i], SCREEN_SPACE, 1);
+                SET_PROP(&pr[i], (pr[screen_get()->x] & ~C_WHICHCHAR) | C_WCHAR2);
                 screen_touch_column(i);
             }
-            for (; i < g_screen.col_count && CHMODE(pr[i]) == C_WCHAR2; i++) {
-                SETCH(p[i], SCREEN_SPACE, 1);
-                SETPROP(pr[i], (pr[i] & ~C_WHICHCHAR) | C_ASCII);
+            for (; i < screen_get()->col_count && CHAR_MODE(pr[i]) == C_WCHAR2; i++) {
+                SET_CHAR(&p[i], SCREEN_SPACE, 1);
+                SET_PROP(&pr[i], (pr[i] & ~C_WHICHCHAR) | C_ASCII);
                 screen_touch_column(i);
             }
         }
-        g_screen.x += width;
+        screen_get()->x += width;
     } else if (c == '\t') {
-        int dest = (g_screen.x + g_screen.tab_step) / g_screen.tab_step * g_screen.tab_step;
-        if (dest >= g_screen.col_count) {
+        int dest = (screen_get()->x + screen_get()->tab_step) / screen_get()->tab_step * screen_get()->tab_step;
+        if (dest >= screen_get()->col_count) {
             screen_wrap();
             screen_touch_line();
-            dest = g_screen.tab_step;
-            p = g_screen.lines[g_screen.y].lineimage;
-            pr = g_screen.lines[g_screen.y].lineprop;
+            dest = screen_get()->tab_step;
+            p = screen_get()->lines[screen_get()->y].lineimage;
+            pr = screen_get()->lines[screen_get()->y].lineprop;
         }
-        for (i = g_screen.x; i < dest; i++) {
-            if (screen_need_redraw(p[i], pr[i], SCREEN_SPACE, g_screen.mode)) {
-                SETCH(p[i], SCREEN_SPACE, 1);
-                SETPROP(pr[i], g_screen.mode);
+        for (i = screen_get()->x; i < dest; i++) {
+            if (screen_need_redraw(p[i], pr[i], SCREEN_SPACE, screen_get()->mode)) {
+                SET_CHAR(&p[i], SCREEN_SPACE, 1);
+                SET_PROP(&pr[i], screen_get()->mode);
                 screen_touch_line();
                 screen_touch_column(i);
             }
         }
-        g_screen.x = i;
+        screen_get()->x = i;
     } else if (c == '\n') {
         screen_wrap();
-    } else if (c == '\r') { /* Carriage return */
-        g_screen.x = 0;
-    } else if (c == '\b' && g_screen.x > 0) { /* Backspace */
-        g_screen.x--;
-        while (g_screen.x > 0 && CHMODE(pr[g_screen.x]) == C_WCHAR2)
-            g_screen.x--;
+    } else if (c == '\r') { // Carriage return
+        screen_get()->x = 0;
+    } else if (c == '\b' && screen_get()->x > 0) { // Backspace
+        screen_get()->x--;
+        while (screen_get()->x > 0 && CHAR_MODE(pr[screen_get()->x]) == C_WCHAR2)
+            screen_get()->x--;
     }
 }
 
 void screen_add_tab()
 {
-    screen_addmch("\t", 1, g_screen.tab_step);
+    screen_addmch("\t", 1, screen_get()->tab_step);
 }
 
 void screen_wrap(void)
 {
-    if (g_screen.y == g_screen.line_count - 1)
+    if (screen_get()->y == screen_get()->line_count - 1)
         return;
-    g_screen.y++;
-    g_screen.x = 0;
+    screen_get()->y++;
+    screen_get()->x = 0;
 }
 
 void screen_touch_column(int col)
 {
-    if (col >= 0 && col < g_screen.col_count)
-        g_screen.lines[g_screen.y].lineprop[col] |= S_DIRTY;
+    if (col >= 0 && col < screen_get()->col_count)
+        screen_get()->lines[screen_get()->y].lineprop[col] |= S_DIRTY;
 }
 
 void screen_touch_line(void)
 {
-    if (!(g_screen.lines[g_screen.y].isdirty & L_DIRTY)) {
-        for (int i = 0; i < g_screen.col_count; i++)
-            g_screen.lines[g_screen.y].lineprop[i] &= ~S_DIRTY;
-        g_screen.lines[g_screen.y].isdirty |= L_DIRTY;
+    if (!(screen_get()->lines[screen_get()->y].isdirty & L_DIRTY)) {
+        for (int i = 0; i < screen_get()->col_count; i++)
+            screen_get()->lines[screen_get()->y].lineprop[i] &= ~S_DIRTY;
+        screen_get()->lines[screen_get()->y].isdirty |= L_DIRTY;
     }
 }
 
 void screen_standout(void)
 {
-    g_screen.mode |= S_STANDOUT;
+    screen_get()->mode |= S_STANDOUT;
 }
 
 void screen_standend(void)
 {
-    g_screen.mode &= ~S_STANDOUT;
+    screen_get()->mode &= ~S_STANDOUT;
 }
 
 void screen_toggle_stand(void)
 {
-    l_prop* pr = g_screen.lines[g_screen.y].lineprop;
-    pr[g_screen.x] ^= S_STANDOUT;
-    if (CHMODE(pr[g_screen.x]) != C_WCHAR2) {
-        for (int i = g_screen.x + 1; CHMODE(pr[i]) == C_WCHAR2; i++)
+    enum ScreenCellProperty* pr = screen_get()->lines[screen_get()->y].lineprop;
+    pr[screen_get()->x] ^= S_STANDOUT;
+    if (CHAR_MODE(pr[screen_get()->x]) != C_WCHAR2) {
+        for (int i = screen_get()->x + 1; CHAR_MODE(pr[i]) == C_WCHAR2; i++)
             pr[i] ^= S_STANDOUT;
     }
 }
 
 void screen_bold(void)
 {
-    g_screen.mode |= S_BOLD;
+    screen_get()->mode |= S_BOLD;
 }
 
 void screen_boldend(void)
 {
-    g_screen.mode &= ~S_BOLD;
+    screen_get()->mode &= ~S_BOLD;
 }
 
 void screen_underline(void)
 {
-    g_screen.mode |= S_UNDERLINE;
+    screen_get()->mode |= S_UNDERLINE;
 }
 
 void screen_underlineend(void)
 {
-    g_screen.mode &= ~S_UNDERLINE;
+    screen_get()->mode &= ~S_UNDERLINE;
 }
 
 void screen_graphstart(void)
 {
-    g_screen.mode |= S_GRAPHICS;
+    screen_get()->mode |= S_GRAPHICS;
 }
 
 void screen_graphend(void)
 {
-    g_screen.mode &= ~S_GRAPHICS;
+    screen_get()->mode &= ~S_GRAPHICS;
 }
 
 void screen_setfcolor(int color)
 {
-    g_screen.mode &= ~COL_FCOLOR;
+    screen_get()->mode &= ~COL_FCOLOR;
     if ((color & 0xf) <= 7)
-        g_screen.mode |= (((color & 7) | 8) << 8);
+        screen_get()->mode |= (((color & 7) | 8) << 8);
 }
 
 void screen_setbcolor(int color)
 {
-    g_screen.mode &= ~COL_BCOLOR;
+    screen_get()->mode &= ~COL_BCOLOR;
     if ((color & 0xf) <= 7)
-        g_screen.mode |= (((color & 7) | 8) << 12);
+        screen_get()->mode |= (((color & 7) | 8) << 12);
 }
 
 void screen_clear(void)
 {
     screen_move(0, 0);
-    for (int i = 0; i < g_screen.line_count; i++) {
-        g_screen.lines[i].isdirty = 0;
-        l_prop* p = g_screen.lines[i].lineprop;
-        for (int j = 0; j < g_screen.col_count; j++) {
+    for (int i = 0; i < screen_get()->line_count; i++) {
+        screen_get()->lines[i].isdirty = 0;
+        enum ScreenCellProperty* p = screen_get()->lines[i].lineprop;
+        for (int j = 0; j < screen_get()->col_count; j++) {
             p[j] = S_EOL;
         }
     }
-    g_screen.mode = C_ASCII;
+    screen_get()->mode = C_ASCII;
 }
 
-/* XXX: conflicts with curses's clrtoeol(3) ? */
-/* Clear to the end of line */
+// XXX: conflicts with curses's clrtoeol(3) ?
+// Clear to the end of line
 void screen_clrtoeol(void)
 {
-    l_prop* lprop = g_screen.lines[g_screen.y].lineprop;
+    enum ScreenCellProperty* lprop = screen_get()->lines[screen_get()->y].lineprop;
 
-    if (lprop[g_screen.x] & S_EOL)
+    if (lprop[screen_get()->x] & S_EOL)
         return;
 
-    if (!(g_screen.lines[g_screen.y].isdirty & (L_NEED_CE | L_CLRTOEOL)) || g_screen.lines[g_screen.y].eol > g_screen.x)
-        g_screen.lines[g_screen.y].eol = g_screen.x;
+    if (!(screen_get()->lines[screen_get()->y].isdirty & (L_NEED_CE | L_CLRTOEOL)) || screen_get()->lines[screen_get()->y].eol > screen_get()->x)
+        screen_get()->lines[screen_get()->y].eol = screen_get()->x;
 
-    g_screen.lines[g_screen.y].isdirty |= L_CLRTOEOL;
+    screen_get()->lines[screen_get()->y].isdirty |= L_CLRTOEOL;
     screen_touch_line();
-    for (int i = g_screen.x; i < g_screen.col_count && !(lprop[i] & S_EOL); i++) {
+    for (int i = screen_get()->x; i < screen_get()->col_count && !(lprop[i] & S_EOL); i++) {
         lprop[i] = S_EOL | S_DIRTY;
     }
 }
@@ -332,18 +333,18 @@ void screen_clrtoeol(void)
 static void
 screen_clrtoeol_with_bcolor(void)
 {
-    if (!(g_screen.mode & S_BCOLORED)) {
+    if (!(screen_get()->mode & S_BCOLORED)) {
         screen_clrtoeol();
         return;
     }
-    int cli = g_screen.y;
-    int cco = g_screen.x;
-    l_prop pr = g_screen.mode;
-    g_screen.mode = (g_screen.mode & (M_CEOL | S_BCOLORED)) | C_ASCII;
-    for (int i = g_screen.x; i < g_screen.col_count; i++)
+    int cli = screen_get()->y;
+    int cco = screen_get()->x;
+    enum ScreenCellProperty pr = screen_get()->mode;
+    screen_get()->mode = (screen_get()->mode & (M_CEOL | S_BCOLORED)) | C_ASCII;
+    for (int i = screen_get()->x; i < screen_get()->col_count; i++)
         screen_add_whitespace();
     screen_move(cli, cco);
-    g_screen.mode = pr;
+    screen_get()->mode = pr;
 }
 
 void screen_clrtoeolx(void)
@@ -354,15 +355,15 @@ void screen_clrtoeolx(void)
 static void
 screen_clrtobot_eol(void (*clrtoeol)())
 {
-    int l = g_screen.y;
-    int c = g_screen.x;
+    int l = screen_get()->y;
+    int c = screen_get()->x;
     (*clrtoeol)();
-    g_screen.x = 0;
-    g_screen.y++;
-    for (; g_screen.y < g_screen.line_count; g_screen.y++)
+    screen_get()->x = 0;
+    screen_get()->y++;
+    for (; screen_get()->y < screen_get()->line_count; screen_get()->y++)
         (*clrtoeol)();
-    g_screen.y = l;
-    g_screen.x = c;
+    screen_get()->y = l;
+    screen_get()->x = c;
 }
 
 void screen_clrtobotx(void)
@@ -374,13 +375,13 @@ void screen_touch_cursor(void)
 {
     int i;
     screen_touch_line();
-    for (i = g_screen.x; i >= 0; i--) {
+    for (i = screen_get()->x; i >= 0; i--) {
         screen_touch_column(i);
-        if (CHMODE(g_screen.lines[g_screen.y].lineprop[i]) != C_WCHAR2)
+        if (CHAR_MODE(screen_get()->lines[screen_get()->y].lineprop[i]) != C_WCHAR2)
             break;
     }
-    for (i = g_screen.x + 1; i < g_screen.col_count; i++) {
-        if (CHMODE(g_screen.lines[g_screen.y].lineprop[i]) != C_WCHAR2)
+    for (i = screen_get()->x + 1; i < screen_get()->col_count; i++) {
+        if (CHAR_MODE(screen_get()->lines[screen_get()->y].lineprop[i]) != C_WCHAR2)
             break;
         screen_touch_column(i);
     }
