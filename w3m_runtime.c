@@ -398,7 +398,7 @@ void calcTabPos(void)
 }
 
 static Str
-conv_form_encoding(Str val, FormItemList* fi, struct Buffer* buf)
+conv_form_encoding(Str val, struct FormItemList* fi, struct Buffer* buf)
 {
     wc_ces charset = SystemCharset;
 
@@ -409,9 +409,9 @@ conv_form_encoding(Str val, FormItemList* fi, struct Buffer* buf)
     return wc_Str_conv_strict(val, InnerCharset, charset);
 }
 
-void query_from_followform(Str* query, FormItemList* fi, int multipart)
+void query_from_followform(Str* query, struct FormItemList* fi, int multipart)
 {
-    FormItemList* f2;
+    struct FormItemList* f2;
     FILE* body = NULL;
 
     if (multipart) {
@@ -619,14 +619,14 @@ struct Buffer* loadLink(char* url, char* target, char* referer, struct FormList*
     return buf;
 }
 
-static FormItemList*
-save_submit_formlist(FormItemList* src)
+static struct FormItemList*
+save_submit_formlist(struct FormItemList* src)
 {
     struct FormList* list;
     struct FormList* srclist;
-    FormItemList* srcitem;
-    FormItemList* item;
-    FormItemList* ret = NULL;
+    struct FormItemList* srcitem;
+    struct FormItemList* item;
+    struct FormItemList* ret = NULL;
 #ifdef MENU_SELECT
     FormSelectOptionItem* opt;
     FormSelectOptionItem* curopt;
@@ -649,7 +649,7 @@ save_submit_formlist(FormItemList* src)
     list->length = srclist->length;
 
     for (srcitem = srclist->item; srcitem; srcitem = srcitem->next) {
-        item = New(FormItemList);
+        item = New(struct FormItemList);
         item->type = srcitem->type;
         item->name = Strdup(srcitem->name);
         item->value = Strdup(srcitem->value);
@@ -700,7 +700,7 @@ void _followForm(bool submit, bool on_target, bool do_download)
 {
     struct Anchor *a, *a2;
     char* p;
-    FormItemList *fi, *f2;
+    struct FormItemList *fi, *f2;
     Str tmp, tmp2;
     int multipart = 0, i;
 
@@ -710,7 +710,7 @@ void _followForm(bool submit, bool on_target, bool do_download)
     a = retrieveCurrentForm(Currentbuf);
     if (a == NULL)
         return;
-    fi = (FormItemList*)a->url;
+    fi = (struct FormItemList*)a->url;
     switch (fi->type) {
     case FORM_INPUT_TEXT:
         if (submit)
@@ -857,7 +857,7 @@ void _followForm(bool submit, bool on_target, bool do_download)
     case FORM_INPUT_RESET:
         for (i = 0; i < Currentbuf->formitem->nanchor; i++) {
             a2 = &Currentbuf->formitem->anchors[i];
-            f2 = (FormItemList*)a2->url;
+            f2 = (struct FormItemList*)a2->url;
             if (f2->parent == fi->parent && f2->name && f2->value && f2->type != FORM_INPUT_SUBMIT && f2->type != FORM_INPUT_HIDDEN && f2->type != FORM_INPUT_RESET) {
                 f2->value = f2->init_value;
                 f2->checked = f2->init_checked;
@@ -1047,7 +1047,7 @@ static void set_buffer_environ(struct Buffer* buf)
             set_environ("W3M_CURRENT_IMG", "");
         a = retrieveCurrentForm(buf);
         if (a)
-            set_environ("W3M_CURRENT_FORM", form2str((FormItemList*)a->url));
+            set_environ("W3M_CURRENT_FORM", form2str((struct FormItemList*)a->url));
         else
             set_environ("W3M_CURRENT_FORM", "");
         set_environ("W3M_CURRENT_LINE", Sprintf("%ld", l->real_linenumber)->ptr);

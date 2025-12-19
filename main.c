@@ -3802,7 +3802,7 @@ _peekURL(int only_img)
             if (a == NULL)
                 return;
         } else
-            s = Strnew_charp(form2str((FormItemList*)a->url));
+            s = Strnew_charp(form2str((struct FormItemList*)a->url));
     }
     if (s == NULL) {
         parseURL2(a->url, &pu, baseURL(Currentbuf));

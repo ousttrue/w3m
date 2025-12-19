@@ -388,17 +388,17 @@ extern void do_refill(struct table* tbl, int row, int col, int maxlimit);
 extern struct FormList* newFormList(char* action, char* method, char* charset,
     char* enctype, char* target, char* name,
     struct FormList* _next);
-extern struct form_item_list* formList_addInput(struct FormList* fl,
+extern struct FormItemList* formList_addInput(struct FormList* fl,
     struct parsed_tag* tag);
-extern char* form2str(FormItemList* fi);
+extern char* form2str(struct FormItemList* fi);
 extern int formtype(char* typestr);
-extern void formRecheckRadio(struct Anchor* a, struct Buffer* buf, FormItemList* form);
+extern void formRecheckRadio(struct Anchor* a, struct Buffer* buf, struct FormItemList* form);
 struct AnchorList;
 extern void formResetBuffer(struct Buffer* buf, struct AnchorList* formitem);
-extern void formUpdateBuffer(struct Anchor* a, struct Buffer* buf, FormItemList* form);
+extern void formUpdateBuffer(struct Anchor* a, struct Buffer* buf, struct FormItemList* form);
 extern void preFormUpdateBuffer(struct Buffer* buf);
 extern Str textfieldrep(Str s, int width);
-extern void input_textarea(FormItemList* fi);
+extern void input_textarea(struct FormItemList* fi);
 extern void do_internal(char* action, char* data);
 extern void form_write_data(FILE* f, char* boundary, char* name, char* value);
 extern void form_write_from_file(FILE* f, char* boundary, char* name,

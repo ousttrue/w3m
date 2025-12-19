@@ -270,7 +270,7 @@ char* inputLineHistSearch(char* prompt, char* def_str, int flag, Hist* hist,
             break;
     } while (i_cont);
 
-    if (CurrentTab) {
+    if (CurrentTab()) {
         if (need_redraw)
             displayBuffer(Currentbuf, B_FORCE_REDRAW);
     }
@@ -735,7 +735,7 @@ next_dcompl(int next)
     if (cm_mode == CPL_NEVER || cm_mode & CPL_OFF)
         return;
     cm_disp_clear = FALSE;
-    if (CurrentTab)
+    if (CurrentTab())
         displayBuffer(Currentbuf, B_FORCE_REDRAW);
     if (LASTLINE() >= 3) {
         comment = TRUE;
@@ -1106,7 +1106,7 @@ terminated(unsigned char c)
 static void
 _editor(void)
 {
-    FormItemList fi;
+    struct FormItemList fi;
     char* p;
 
     if (is_passwd)
@@ -1125,6 +1125,6 @@ _editor(void)
         Strcat_char(strBuf, *p);
     }
     CLen = CPos = setStrType(strBuf, strProp);
-    if (CurrentTab)
+    if (CurrentTab())
         displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }

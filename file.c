@@ -3816,7 +3816,7 @@ Str process_n_select(void)
 #ifdef MENU_SELECT
     if (!select_is_multiple) {
         if (select_option[n_select].first) {
-            FormItemList sitem;
+            struct FormItemList sitem;
             chooseSelectOption(&sitem, select_option[n_select].first);
             Strcat(select_str, textfieldrep(sitem.label, cur_option_maxwidth));
         }
@@ -6007,7 +6007,7 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
                     break;
                 case HTML_N_TEXTAREA_INT:
                     if (a_textarea && n_textarea >= 0) {
-                        FormItemList* item = (FormItemList*)a_textarea[n_textarea]->url;
+                        struct FormItemList* item = (struct FormItemList*)a_textarea[n_textarea]->url;
                         item->init_value = item->value = textarea_str[n_textarea];
                     }
                     break;
@@ -6022,7 +6022,7 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
                     break;
                 case HTML_N_SELECT_INT:
                     if (a_select && n_select >= 0) {
-                        FormItemList* item = (FormItemList*)a_select[n_select]->url;
+                        struct FormItemList* item = (struct FormItemList*)a_select[n_select]->url;
                         item->select_option = select_option[n_select].first;
                         chooseSelectOption(item, item->select_option);
                         item->init_selected = item->selected;

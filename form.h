@@ -36,22 +36,6 @@
 #define MAX_SELECT 10 /* max number of <select>..</select> \
                        * within one document */
 
-struct FormList {
-    struct form_item_list* item;
-    struct form_item_list* lastitem;
-    int method;
-    Str action;
-    char* target;
-    char* name;
-    wc_ces charset;
-    int enctype;
-    struct FormList* next;
-    int nitems;
-    char* body;
-    char* boundary;
-    unsigned long length;
-};
-
 typedef struct form_select_option_item {
     Str value;
     Str label;
@@ -59,17 +43,7 @@ typedef struct form_select_option_item {
     struct form_select_option_item* next;
 } FormSelectOptionItem;
 
-typedef struct form_select_option {
-    FormSelectOptionItem* first;
-    FormSelectOptionItem* last;
-} FormSelectOption;
-
-void addSelectOption(FormSelectOption* fso, Str value, Str label, int chk);
-void chooseSelectOption(struct form_item_list* fi, FormSelectOptionItem* item);
-void updateSelectOption(struct form_item_list* fi, FormSelectOptionItem* item);
-int formChooseOptionByMenu(struct form_item_list* fi, int x, int y);
-
-typedef struct form_item_list {
+struct FormItemList {
     int type;
     Str name;
     Str value, init_value;
@@ -83,5 +57,31 @@ typedef struct form_item_list {
     Str label, init_label;
     int selected, init_selected;
     struct FormList* parent;
-    struct form_item_list* next;
-} FormItemList;
+    struct FormItemList* next;
+};
+
+struct FormList {
+    struct FormItemList* item;
+    struct FormItemList* lastitem;
+    int method;
+    Str action;
+    char* target;
+    char* name;
+    wc_ces charset;
+    int enctype;
+    struct FormList* next;
+    int nitems;
+    char* body;
+    char* boundary;
+    unsigned long length;
+};
+
+typedef struct form_select_option {
+    FormSelectOptionItem* first;
+    FormSelectOptionItem* last;
+} FormSelectOption;
+
+void addSelectOption(FormSelectOption* fso, Str value, Str label, int chk);
+void chooseSelectOption(struct FormItemList* fi, FormSelectOptionItem* item);
+void updateSelectOption(struct FormItemList* fi, FormSelectOptionItem* item);
+int formChooseOptionByMenu(struct FormItemList* fi, int x, int y);

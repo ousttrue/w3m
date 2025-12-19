@@ -92,7 +92,7 @@ registerForm(struct Buffer* buf, struct FormList* flist, struct parsed_tag* tag,
     int pos)
 {
     struct Anchor* a;
-    FormItemList* fi;
+    struct FormItemList* fi;
 
     fi = formList_addInput(flist, tag);
     if (fi == NULL)
@@ -718,7 +718,7 @@ link_list_panel(struct Buffer* buf)
     struct LinkList* l;
     struct AnchorList* al;
     struct Anchor* a;
-    FormItemList* fi;
+    struct FormItemList* fi;
     int i;
     char *t, *u, *p;
     struct Url pu;
@@ -802,7 +802,7 @@ link_list_panel(struct Buffer* buf)
             a = retrieveAnchor(buf->formitem, a->start.line, a->start.pos);
             if (!a)
                 continue;
-            fi = (FormItemList*)a->url;
+            fi = (struct FormItemList*)a->url;
             fi = fi->parent->item;
             if (fi->parent->method == FORM_METHOD_INTERNAL && !Strcmp_charp(fi->parent->action, "map") && fi->value) {
                 struct MapList* ml = searchMapList(buf, fi->value->ptr);
