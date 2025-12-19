@@ -1,7 +1,11 @@
 #pragma once
+#include <wc.h>
+#include <wtf.h>
 
 typedef unsigned short Lineprop;
 typedef unsigned char Linecolor;
+
+#define LINELEN 256 /* Initial line length */
 
 #define P_CHARTYPE 0x3f00
 #define PC_ASCII (WTF_TYPE_ASCII << 8)
@@ -45,8 +49,6 @@ typedef unsigned char Linecolor;
 
 #define COLPOS(l, c) calcPosition(l->lineBuf, l->propBuf, l->len, c, 0, CP_AUTO)
 
-
-
 struct Line {
     char* lineBuf;
     Lineprop* propBuf;
@@ -62,3 +64,13 @@ struct Line {
     int bpos;
     int bwidth;
 };
+
+/* Flags for calcPosition() */
+enum CalcPositionMode {
+    CP_AUTO = 0,
+    CP_FORCE = 1,
+};
+
+int calcPosition(char* l, Lineprop* pr, int len, int pos, int bpos, enum CalcPositionMode mode);
+int columnPos(struct Line* line, int column);
+int columnLen(struct Line* line, int column);

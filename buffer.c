@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "display.h"
 #include "ctrlcode.h"
 #include "anchor.h"
 #include "tab.h"
@@ -6,6 +7,32 @@
 #include "image.h"
 #include "fm.h"
 #include <unistd.h>
+
+int REV_LB[MAX_LB] = {
+    LB_N_FRAME,
+    LB_FRAME,
+    LB_N_INFO,
+    LB_INFO,
+    LB_N_SOURCE,
+};
+
+void cmd_loadBuffer(struct Buffer* buf, int prop, enum LinkBufferID linkid)
+{
+    if (buf == NULL) {
+        disp_err_message("Can't load string", FALSE);
+    } else if (buf != NO_BUFFER) {
+        buf->bufferprop |= (BP_INTERNAL | prop);
+        if (!(buf->bufferprop & BP_NO_URL))
+            copyParsedURL(&buf->currentURL, &Currentbuf->currentURL);
+        if (linkid != LB_NOLINK) {
+            buf->linkBuffer[REV_LB[linkid]] = Currentbuf;
+            Currentbuf->linkBuffer[linkid] = buf;
+        }
+        pushBuffer(buf);
+    }
+    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+}
+
 
 #ifdef USE_MOUSE
 #ifdef USE_GPM

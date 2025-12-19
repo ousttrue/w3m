@@ -46,6 +46,8 @@ struct Event {
 };
 
 struct Runtime {
+    int Tabstop;
+
     int lines;
     int cols;
 

@@ -46,6 +46,8 @@ static struct termios d_ioval;
 char UseGraphicChar = GRAPHIC_CHAR_CHARSET;
 
 struct Runtime g_runtime = {
+    .Tabstop = 8,
+
     .lines = 0,
     .cols = 0,
     .Do_not_use_ti_te = false,
@@ -1486,7 +1488,7 @@ static struct sel_c inlineimgstr[] = {
 #endif /* USE_IMAGE */
 
 struct param_ptr params1[] = {
-    { "tabstop", P_NZINT, PI_TEXT, (void*)&Tabstop, CMT_TABSTOP, NULL },
+    { "tabstop", P_NZINT, PI_TEXT, (void*)&g_runtime.Tabstop, CMT_TABSTOP, NULL },
     { "indent_incr", P_NZINT, PI_TEXT, (void*)&IndentIncr, CMT_INDENT_INCR,
         NULL },
     { "pixel_per_char", P_PIXELS, PI_TEXT, (void*)&pixel_per_char,
@@ -2753,5 +2755,3 @@ char* helpFile(char* base)
     return expandPath(Strnew_m_charp(w3m_help_dir(), "/", base, NULL)->ptr);
 }
 #endif
-
-

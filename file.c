@@ -6421,7 +6421,7 @@ table_start:
                     do {
                         PUSH(' ');
                     } while ((h_env->envs[h_env->envc].indent + obuf->pos)
-                            % Tabstop
+                            % getRuntime()->Tabstop
                         != 0);
                     str++;
                 } else if (obuf->flag & RB_PLAIN) {

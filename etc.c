@@ -55,23 +55,6 @@ int columnSkip(struct Buffer* buf, int offset)
     return 1;
 }
 
-int columnPos(struct Line* line, int column)
-{
-    int i;
-
-    for (i = 1; i < line->len; i++) {
-        if (COLPOS(line, i) > column)
-            break;
-    }
-#ifdef USE_M17N
-    for (i--; i > 0 && line->propBuf[i] & PC_WCHAR2; i--)
-        ;
-    return i;
-#else
-    return i - 1;
-#endif
-}
-
 struct Line* lineSkip(struct Buffer* buf, struct Line* line, int offset, int last)
 {
     int i;
@@ -493,88 +476,6 @@ Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor)
         *ocolor = check_color ? color_buffer : NULL;
 #endif
     return s;
-}
-
-static int
-nextColumn(int n, char* p, Lineprop* pr)
-{
-    if (*pr & PC_CTRL) {
-        if (*p == '\t')
-            return (n + Tabstop) / Tabstop * Tabstop;
-        else if (*p == '\n')
-            return n + 1;
-        else if (*p != '\r')
-            return n + 2;
-        return n;
-    }
-#ifdef USE_M17N
-    if (*pr & PC_UNKNOWN)
-        return n + 4;
-    return n + wtf_width((wc_uchar*)p);
-#else
-    return n + 1;
-#endif
-}
-
-int calcPosition(char* l, Lineprop* pr, int len, int pos, int bpos, int mode)
-{
-    static int* realColumn = NULL;
-    static int size = 0;
-    static char* prevl = NULL;
-    int i, j;
-
-    if (l == NULL || len == 0 || pos < 0)
-        return bpos;
-    if (l == prevl && mode == CP_AUTO) {
-        if (pos <= len)
-            return realColumn[pos];
-    }
-    if (size < len + 1) {
-        size = (len + 1 > LINELEN) ? (len + 1) : LINELEN;
-        realColumn = New_N(int, size);
-    }
-    prevl = l;
-    i = 0;
-    j = bpos;
-#ifdef USE_M17N
-    if (pr[i] & PC_WCHAR2) {
-        for (; i < len && pr[i] & PC_WCHAR2; i++)
-            realColumn[i] = j;
-        if (i > 0 && pr[i - 1] & PC_KANJI && WcOption.use_wide)
-            j++;
-    }
-#endif
-    while (1) {
-        realColumn[i] = j;
-        if (i == len)
-            break;
-        j = nextColumn(j, &l[i], &pr[i]);
-        i++;
-#ifdef USE_M17N
-        for (; i < len && pr[i] & PC_WCHAR2; i++)
-            realColumn[i] = realColumn[i - 1];
-#endif
-    }
-    if (pos >= i)
-        return j;
-    return realColumn[pos];
-}
-
-int columnLen(struct Line* line, int column)
-{
-    int i, j;
-
-    for (i = 0, j = 0; i < line->len;) {
-        j = nextColumn(j, &line->lineBuf[i], &line->propBuf[i]);
-        if (j > column)
-            return i;
-        i++;
-#ifdef USE_M17N
-        while (i < line->len && line->propBuf[i] & PC_WCHAR2)
-            i++;
-#endif
-    }
-    return line->len;
 }
 
 char* lastFileName(char* path)

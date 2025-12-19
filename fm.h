@@ -69,7 +69,6 @@ void bzero(void*, int);
 /*
  * Constants.
  */
-#define LINELEN 256 /* Initial line length */
 #define PAGER_MAX_LINE 10000 /* Maximum line kept as pager */
 
 #define DEFAULT_COLS 80
@@ -97,26 +96,6 @@ void bzero(void*, int);
 /*
  * Line Property
  */
-
-#ifdef MAINPROGRAM
-int REV_LB[MAX_LB] = {
-    LB_N_FRAME,
-    LB_FRAME,
-    LB_N_INFO,
-    LB_INFO,
-    LB_N_SOURCE,
-};
-#else /* not MAINPROGRAM */
-extern int REV_LB[];
-#endif /* not MAINPROGRAM */
-
-/* mark URL, Message-ID */
-#define CHK_URL 1
-#define CHK_NMID 2
-
-/* Flags for calcPosition() */
-#define CP_AUTO 0
-#define CP_FORCE 1
 
 /* Completion status. */
 #define CPL_OK 0
@@ -389,7 +368,6 @@ struct cookie {
  * Globals.
  */
 
-global int Tabstop init(8);
 global int IndentIncr init(4);
 global int ShowEffect init(TRUE);
 global int PagerMax init(PAGER_MAX_LINE);

@@ -91,7 +91,7 @@ _JBTYPE IntReturn[_JBLEN];
 static void cmd_loadfile(char* path);
 static void cmd_loadURL(char* url, struct Url* current, char* referer,
     struct FormList* request);
-static void cmd_loadBuffer(struct Buffer* buf, int prop, int linkid);
+
 int show_params_p = 0;
 void show_params(FILE* fp);
 
@@ -547,7 +547,7 @@ bool w3m_args(int argc, char** argv)
                 if (++i >= argc)
                     usage();
                 if (atoi(argv[i]) > 0)
-                    Tabstop = atoi(argv[i]);
+                    getRuntime()->Tabstop = atoi(argv[i]);
             } else if (!strcmp("-r", argv[i]))
                 ShowEffect = FALSE;
             else if (!strcmp("-l", argv[i])) {
@@ -3421,24 +3421,6 @@ DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer")
 DEFUN(gorURL, GOTO_RELATIVE, "Go to relative address")
 {
     goURL0("Goto relative URL: ", TRUE);
-}
-
-static void
-cmd_loadBuffer(struct Buffer* buf, int prop, int linkid)
-{
-    if (buf == NULL) {
-        disp_err_message("Can't load string", FALSE);
-    } else if (buf != NO_BUFFER) {
-        buf->bufferprop |= (BP_INTERNAL | prop);
-        if (!(buf->bufferprop & BP_NO_URL))
-            copyParsedURL(&buf->currentURL, &Currentbuf->currentURL);
-        if (linkid != LB_NOLINK) {
-            buf->linkBuffer[REV_LB[linkid]] = Currentbuf;
-            Currentbuf->linkBuffer[linkid] = buf;
-        }
-        pushBuffer(buf);
-    }
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
 /* load bookmark */

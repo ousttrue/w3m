@@ -18,14 +18,16 @@ struct LinkList {
 };
 
 /* Link Buffer */
-#define LB_NOLINK -1
-#define LB_FRAME 0 /* rFrame() */
-#define LB_N_FRAME 1
-#define LB_INFO 2 /* pginfo() */
-#define LB_N_INFO 3
-#define LB_SOURCE 4 /* vwSrc() */
-#define LB_N_SOURCE LB_SOURCE
-#define MAX_LB 5
+enum LinkBufferID {
+    LB_NOLINK = -1,
+    LB_FRAME = 0, /* rFrame() */
+    LB_N_FRAME = 1,
+    LB_INFO = 2, /* pginfo() */
+    LB_N_INFO = 3,
+    LB_SOURCE = 4, /* vwSrc() */
+    LB_N_SOURCE = LB_SOURCE,
+    MAX_LB = 5,
+};
 
 struct BufferPos {
     long top_linenumber;
@@ -45,6 +47,10 @@ struct BufferPos {
 #define BP_NO_URL 0x10
 #define BP_REDIRECTED 0x20
 #define BP_CLOSE 0x40
+
+/* mark URL, Message-ID */
+#define CHK_URL 1
+#define CHK_NMID 2
 
 struct Buffer {
     char* filename;
@@ -110,3 +116,4 @@ struct Buffer {
 };
 
 void delBuffer(struct Buffer* buf);
+void cmd_loadBuffer(struct Buffer* buf, int prop, enum LinkBufferID linkid);
