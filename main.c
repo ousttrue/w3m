@@ -1,4 +1,5 @@
 #include "maparea.h"
+#include "search.h"
 #include "html_form.h"
 #include "siteconf.h"
 #include "anchor.h"
@@ -79,7 +80,7 @@ static MySignalHandler SigPipe(SIGNAL_ARG);
 static char* MarkString = NULL;
 #endif
 static char* SearchString = NULL;
-int (*searchRoutine)(struct Buffer*, char*);
+SearchFunc searchRoutine = NULL;
 
 #ifndef __MINGW32_VERSION
 JMP_BUF IntReturn;
@@ -1490,7 +1491,7 @@ clear_mark(struct Line* l)
 
 /* search by regular expression */
 static int
-srchcore(char* volatile str, int (*func)(struct Buffer*, char*))
+srchcore(char* volatile str, SearchFunc func)
 {
     volatile int i, result = SR_NOTFOUND;
 
@@ -1598,7 +1599,7 @@ done:
 }
 
 static void
-isrch(int (*func)(struct Buffer*, char*), char* prompt)
+isrch(SearchFunc func, char* prompt)
 {
     char* str;
     struct Buffer sbuf;
@@ -1614,7 +1615,7 @@ isrch(int (*func)(struct Buffer*, char*), char* prompt)
 }
 
 static void
-srch(int (*func)(struct Buffer*, char*), char* prompt)
+srch(SearchFunc func, char* prompt)
 {
     char* str;
     int result;
@@ -1675,7 +1676,7 @@ srch_nxtprv(int reverse)
 {
     int result;
     /* *INDENT-OFF* */
-    static int (*routine[2])(struct Buffer*, char*) = {
+    static SearchFunc routine[2] = {
         forwardSearch, backwardSearch
     };
     /* *INDENT-ON* */

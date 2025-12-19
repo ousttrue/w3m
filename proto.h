@@ -355,16 +355,11 @@ extern char* mydirname(char* s);
 extern int next_status(char c, int* status);
 extern int read_token(Str buf, char** instr, int* status, int pre, int append);
 extern Str correct_irrtag(int status);
+
 #ifdef USE_MIGEMO
 extern void init_migemo(void);
 #endif
-#ifdef USE_M17N
-extern char* conv_search_string(char* str, wc_ces f_ces);
-#else
-#define conv_search_string(str, f_ces) str
-#endif
-extern int forwardSearch(struct Buffer* buf, char* str);
-extern int backwardSearch(struct Buffer* buf, char* str);
+
 extern void pcmap(void);
 extern void escmap(void);
 extern void escbmap(void);

@@ -2,6 +2,15 @@
 #include "Str.h"
 #include <sys/types.h>
 
+#define MAX_IMAGE 1000
+#define MAX_IMAGE_SIZE 2048
+
+#define DEFAULT_PIXEL_PER_CHAR 7.0 /* arbitrary */
+#define DEFAULT_PIXEL_PER_LINE 14.0 /* arbitrary */
+
+#define MINIMUM_PIXEL_PER_CHAR 4.0
+#define MAXIMUM_PIXEL_PER_CHAR 32.0
+
 struct ImageCache {
     char* url;
     struct Url* current;

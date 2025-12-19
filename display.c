@@ -342,7 +342,7 @@ make_lastline_message(struct Buffer* buf)
     return msg;
 }
 
-void displayBuffer(struct Buffer* buf, int mode)
+void displayBuffer(struct Buffer* buf, enum DisplayMode mode)
 {
 
     if (!buf)

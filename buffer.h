@@ -35,7 +35,16 @@ struct BufferPos {
     int bpos;
     struct BufferPos* next;
     struct BufferPos* prev;
-} ;
+};
+
+/* Buffer Property */
+#define BP_NORMAL 0x0
+#define BP_PIPE 0x1
+#define BP_FRAME 0x2
+#define BP_INTERNAL 0x8
+#define BP_NO_URL 0x10
+#define BP_REDIRECTED 0x20
+#define BP_CLOSE 0x40
 
 struct Buffer {
     char* filename;
