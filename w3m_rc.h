@@ -25,11 +25,11 @@
 #define TRAP_ON                                \
     if (TrapSignal) {                          \
         prevtrap = mySignal(SIGINT, KeyAbort); \
-        exitRawMode();                         \
+        tty_cbreak(true);                      \
     }
 #define TRAP_OFF                        \
     if (TrapSignal) {                   \
-        enterRawMode();                 \
+        tty_cbreak(false);              \
         if (prevtrap)                   \
             mySignal(SIGINT, prevtrap); \
     }
@@ -119,6 +119,7 @@ void (*mySignal(int signal_number, void (*action)(int)))(int);
 
 void enterRawMode(void);
 void exitRawMode(void);
+void tty_cbreak(bool);
 void setlinescols(void);
 
 inline static int TTY_LINES(void) { return getRuntime()->lines; }

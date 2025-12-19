@@ -55,6 +55,12 @@ pub fn enterRawMode(this: *@This()) !void {
         try std.posix.tcsetattr(this.input.handle, .FLUSH, raw);
         this.is_rawmode = true;
 
+        if(this.queue)|queue|{
+            // drop input queue
+            queue.destroy();
+            this.queue = null;
+        }
+
         const queue = try EpollQueue.create(this.allocator);
         queue.add_fd(this.input.handle);
         try queue.start();
@@ -70,6 +76,18 @@ pub fn exitRawMode(this: *@This()) void {
         }
         std.posix.tcsetattr(this.input.handle, .FLUSH, termios) catch @panic("exitRawMode");
         this.is_rawmode = false;
+    }
+}
+
+pub fn cbreakMode(this: *@This()) !void {
+    if (!this.is_rawmode) {
+        return;
+    }
+    if (this.termios) |_| {
+        var cbreak = try std.posix.tcgetattr(this.input.handle);
+        cbreak.lflag.ISIG = true;
+        // cbreak.cc[@intFromEnum(std.posix.V.MIN)] = 4;
+        std.posix.tcsetattr(this.input.handle, .FLUSH, cbreak) catch @panic("exitRawMode");
     }
 }
 

@@ -15,7 +15,7 @@ extern fn w3m_args(argc: c_int, argv: [*c]const [*:0]u8) bool;
 
 extern fn w3m_idle() void;
 
-pub fn main() void {
+pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.detectLeaks();
     const allocator = gpa.allocator();
@@ -23,6 +23,9 @@ pub fn main() void {
     g_term = Term.init(allocator, std.fs.File.stdin()) catch
         @panic("Term.init");
     defer g_term.deinit();
+
+    const ws = try g_term.getWinsize();
+    c.screen_setup(ws.row, ws.col);
 
     if (!w3m_args(@intCast(std.os.argv.len), &std.os.argv[0])) {
         return;
@@ -171,16 +174,13 @@ export fn tty_remove_ISIG() void {
 //     set_cc(VMIN, 1);
 // }
 
-// void term_cooked(void)
-// {
-//     ttymode_set(TTY_MODE, 0);
-//     set_cc(VMIN, 4);
-// }
-
-// export fn term_cbreak() void {
-// term_cooked();
-// term_noecho();
-// }
+export fn tty_cbreak(enable: bool) void {
+    if (enable) {
+        g_term.cbreakMode() catch @panic("tty_cbreak");
+    } else {
+        g_term.enterRawMode() catch @panic("tty_cbreak");
+    }
+}
 
 export fn getch() c_int {
     return @intCast(g_term.getch(&w3m_idle));
