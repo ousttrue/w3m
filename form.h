@@ -1,11 +1,9 @@
-/* $Id: form.h,v 1.6 2003/09/22 21:02:18 ukai Exp $ */
 /*
  * HTML forms
  */
-#ifndef FORM_H
-#define FORM_H
-
+#pragma once
 #include "Str.h"
+#include "libwc/wc.h"
 
 #define FORM_UNKNOWN -1
 #define FORM_INPUT_TEXT 0
@@ -35,30 +33,25 @@
 
 #define MAX_TEXTAREA 10 /* max number of <textarea>..</textarea> \
                          * within one document */
-#ifdef MENU_SELECT
 #define MAX_SELECT 10 /* max number of <select>..</select> \
                        * within one document */
-#endif /* MENU_SELECT */
 
-typedef struct form_list {
+struct FormList {
     struct form_item_list* item;
     struct form_item_list* lastitem;
     int method;
     Str action;
     char* target;
     char* name;
-#ifdef USE_M17N
     wc_ces charset;
-#endif
     int enctype;
-    struct form_list* next;
+    struct FormList* next;
     int nitems;
     char* body;
     char* boundary;
     unsigned long length;
-} FormList;
+};
 
-#ifdef MENU_SELECT
 typedef struct form_select_option_item {
     Str value;
     Str label;
@@ -75,7 +68,6 @@ void addSelectOption(FormSelectOption* fso, Str value, Str label, int chk);
 void chooseSelectOption(struct form_item_list* fi, FormSelectOptionItem* item);
 void updateSelectOption(struct form_item_list* fi, FormSelectOptionItem* item);
 int formChooseOptionByMenu(struct form_item_list* fi, int x, int y);
-#endif /* MENU_SELECT */
 
 typedef struct form_item_list {
     int type;
@@ -87,13 +79,9 @@ typedef struct form_item_list {
     int rows;
     int maxlength;
     int readonly;
-#ifdef MENU_SELECT
     FormSelectOptionItem* select_option;
     Str label, init_label;
     int selected, init_selected;
-#endif /* MENU_SELECT */
-    struct form_list* parent;
+    struct FormList* parent;
     struct form_item_list* next;
 } FormItemList;
-
-#endif /* not FORM_H */

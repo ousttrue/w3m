@@ -94,7 +94,7 @@ _JBTYPE IntReturn[_JBLEN];
 
 static void cmd_loadfile(char* path);
 static void cmd_loadURL(char* url, struct Url* current, char* referer,
-    FormList* request);
+    struct FormList* request);
 static void cmd_loadBuffer(struct Buffer* buf, int prop, int linkid);
 int show_params_p = 0;
 void show_params(FILE* fp);
@@ -404,7 +404,7 @@ bool w3m_args(int argc, char** argv)
     InputStream redin;
     char* line_str = NULL;
     char** load_argv;
-    FormList* request;
+    struct FormList* request;
     int load_argc = 0;
     int load_bookmark = FALSE;
     int visual_start = FALSE;
@@ -953,7 +953,7 @@ bool w3m_args(int argc, char** argv)
             else
                 url = url_encode(conv_from_system(load_argv[i]), NULL, 0);
             if (w3m_dump == DUMP_HEAD) {
-                request = New(FormList);
+                request = New(struct FormList);
                 request->method = FORM_METHOD_HEAD;
                 newbuf = loadGeneralFile(url, NULL, NO_REFERER, 0, request, false);
             } else {
@@ -3338,7 +3338,7 @@ DEFUN(deletePrevBuf, DELETE_PREVBUF, "Delete previous buffer (mainly for local C
 }
 
 static void
-cmd_loadURL(char* url, struct Url* current, char* referer, FormList* request)
+cmd_loadURL(char* url, struct Url* current, char* referer, struct FormList* request)
 {
     if (handleMailto(url))
         return;
@@ -3475,7 +3475,7 @@ DEFUN(ldBmark, BOOKMARK VIEW_BOOKMARK, "View bookmarks")
 DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
 {
     Str tmp;
-    FormList* request;
+    struct FormList* request;
 
     tmp = Sprintf("mode=panel&cookie=%s&bmark=%s&url=%s&title=%s"
 #ifdef USE_M17N
@@ -3975,7 +3975,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
     struct Buffer *buf, *fbuf = NULL, sbuf;
     wc_ces old_charset;
     Str url;
-    FormList* request;
+    struct FormList* request;
     int multipart;
 
     if (Currentbuf->bufferprop & BP_INTERNAL) {

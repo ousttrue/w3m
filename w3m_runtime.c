@@ -529,7 +529,7 @@ loadNormalBuf(struct Buffer* buf, int renderframe)
     return buf;
 }
 
-struct Buffer* loadLink(char* url, char* target, char* referer, FormList* request, bool on_target, bool do_download)
+struct Buffer* loadLink(char* url, char* target, char* referer, struct FormList* request, bool on_target, bool do_download)
 {
     struct Buffer *buf, *nfbuf;
     union frameset_element* f_element = NULL;
@@ -622,8 +622,8 @@ struct Buffer* loadLink(char* url, char* target, char* referer, FormList* reques
 static FormItemList*
 save_submit_formlist(FormItemList* src)
 {
-    FormList* list;
-    FormList* srclist;
+    struct FormList* list;
+    struct FormList* srclist;
     FormItemList* srcitem;
     FormItemList* item;
     FormItemList* ret = NULL;
@@ -636,7 +636,7 @@ save_submit_formlist(FormItemList* src)
     if (src == NULL)
         return NULL;
     srclist = src->parent;
-    list = New(FormList);
+    list = New(struct FormList);
     list->method = srclist->method;
     list->action = Strdup(srclist->action);
 #ifdef USE_M17N

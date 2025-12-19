@@ -1,6 +1,7 @@
 /*
  * HTML forms
  */
+#include "form.h"
 #include "display.h"
 #include "download.h"
 #include "buffer.h"
@@ -40,11 +41,11 @@ struct {
 };
 /* *INDENT-ON* */
 
-struct form_list*
+struct FormList*
 newFormList(char* action, char* method, char* charset, char* enctype,
-    char* target, char* name, struct form_list* _next)
+    char* target, char* name, struct FormList* _next)
 {
-    struct form_list* l;
+    struct FormList* l;
     Str a = Strnew_charp(action);
     int m = FORM_METHOD_GET;
     int e = FORM_ENCTYPE_URLENCODED;
@@ -69,7 +70,7 @@ newFormList(char* action, char* method, char* charset, char* enctype,
         c = wc_guess_charset(charset, 0);
 #endif
 
-    l = New(struct form_list);
+    l = New(struct FormList);
     l->item = l->lastitem = NULL;
     l->action = a;
     l->method = m;
@@ -87,10 +88,10 @@ newFormList(char* action, char* method, char* charset, char* enctype,
 }
 
 /*
- * add <input> element to form_list
+ * add <input> element to FormList
  */
 struct form_item_list*
-formList_addInput(struct form_list* fl, struct parsed_tag* tag)
+formList_addInput(struct FormList* fl, struct parsed_tag* tag)
 {
     struct form_item_list* item;
     char* p;
@@ -941,7 +942,7 @@ void preFormUpdateBuffer(struct Buffer* buf)
     struct pre_form_item* pi;
     int i;
     struct Anchor* a;
-    FormList* fl;
+    struct FormList* fl;
     FormItemList* fi;
 #ifdef MENU_SELECT
     FormSelectOptionItem* opt;

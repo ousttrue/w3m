@@ -1368,7 +1368,7 @@ void init_stream(URLFile* uf, int scheme, InputStream stream)
 
 URLFile
 openURL(char* url, struct Url* pu, struct Url* current,
-    URLOption* option, FormList* request, TextList* extra_header,
+    URLOption* option, struct FormList* request, TextList* extra_header,
     URLFile* ouf, struct HttpRequest* hr, unsigned char* status, bool do_download)
 {
     Str tmp;

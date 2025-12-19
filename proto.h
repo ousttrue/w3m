@@ -208,7 +208,7 @@ extern void push_symbol(Str str, char symbol, int width, int n);
 extern void update_utf8_symbol(void);
 #endif
 extern struct Buffer* loadGeneralFile(char* path, struct Url* current, char* referer,
-    int flag, FormList* request, bool do_download);
+    int flag, struct FormList* request, bool do_download);
 extern int is_boundary(unsigned char*, unsigned char*);
 extern int is_blank_line(char* line, int indent);
 extern void push_render_image(Str str, int width, int limit,
@@ -385,10 +385,10 @@ extern void print_item(struct table* t, int row, int col, int width, Str buf);
 extern void print_sep(struct table* t, int row, int type, int maxcol, Str buf);
 extern void do_refill(struct table* tbl, int row, int col, int maxlimit);
 
-extern struct form_list* newFormList(char* action, char* method, char* charset,
+extern struct FormList* newFormList(char* action, char* method, char* charset,
     char* enctype, char* target, char* name,
-    struct form_list* _next);
-extern struct form_item_list* formList_addInput(struct form_list* fl,
+    struct FormList* _next);
+extern struct form_item_list* formList_addInput(struct FormList* fl,
     struct parsed_tag* tag);
 extern char* form2str(FormItemList* fi);
 extern int formtype(char* typestr);
@@ -432,7 +432,7 @@ extern void pushFrameTree(struct frameset_queue** fqpp, struct frameset* fs,
     struct Buffer* buf);
 extern struct frameset* popFrameTree(struct frameset_queue** fqpp);
 extern void resetFrameElement(union frameset_element* f_element, struct Buffer* buf,
-    char* referer, FormList* request);
+    char* referer, struct FormList* request);
 extern struct Buffer* renderFrame(struct Buffer* Cbuf, int force_reload);
 extern union frameset_element* search_frame(struct frameset* fset, char* name);
 extern MySignalHandler reset_exit(SIGNAL_ARG);
@@ -452,7 +452,7 @@ extern int getURLScheme(char** url);
 extern void init_stream(URLFile* uf, int scheme, InputStream stream);
 struct HttpRequest;
 extern URLFile openURL(char* url, struct Url* pu, struct Url* current,
-    URLOption* option, FormList* request,
+    URLOption* option, struct FormList* request,
     TextList* extra_header, URLFile* ouf,
     struct HttpRequest* hr, unsigned char* status, bool do_download);
 extern int mailcapMatch(struct mailcap* mcap, char* type);
@@ -483,7 +483,7 @@ extern struct Anchor* registerHref(struct Buffer* buf, char* url, char* target,
 extern struct Anchor* registerName(struct Buffer* buf, char* url, int line, int pos);
 extern struct Anchor* registerImg(struct Buffer* buf, char* url, char* title, int line,
     int pos);
-extern struct Anchor* registerForm(struct Buffer* buf, FormList* flist,
+extern struct Anchor* registerForm(struct Buffer* buf, struct FormList* flist,
     struct parsed_tag* tag, int line, int pos);
 extern int onAnchor(struct Anchor* a, int line, int pos);
 extern struct Anchor* retrieveAnchor(struct AnchorList* al, int line, int pos);
@@ -540,7 +540,7 @@ extern char* helpFile(char* base);
 extern Str localCookie(void);
 extern Str loadLocalDir(char* dirname);
 extern void set_environ(char* var, char* value);
-extern FILE* localcgi_post(char*, char*, FormList*, char*);
+extern FILE* localcgi_post(char*, char*, struct FormList*, char*);
 #define localcgi_get(u, q, r) localcgi_post((u), (q), NULL, (r))
 extern FILE* openSecretFile(char* fname);
 extern void loadPasswd(void);

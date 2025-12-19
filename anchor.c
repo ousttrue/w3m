@@ -88,7 +88,7 @@ registerImg(struct Buffer* buf, char* url, char* title, int line, int pos)
 }
 
 struct Anchor*
-registerForm(struct Buffer* buf, FormList* flist, struct parsed_tag* tag, int line,
+registerForm(struct Buffer* buf, struct FormList* flist, struct parsed_tag* tag, int line,
     int pos)
 {
     struct Anchor* a;

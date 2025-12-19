@@ -125,7 +125,7 @@ static struct link_stack* link_stack = NULL;
 #endif /* USE_NNTP */
 
 #define INITIAL_FORM_SIZE 10
-static FormList** forms;
+static struct FormList** forms;
 static int* form_stack;
 static int form_max = -1;
 static int forms_size = 0;
@@ -949,7 +949,7 @@ struct http_auth {
     char* scheme;
     struct auth_param* param;
     Str (*cred)(struct http_auth* ha, Str uname, Str pw, struct Url* pu,
-        struct HttpRequest* hr, FormList* request);
+        struct HttpRequest* hr, struct FormList* request);
 };
 
 enum {
@@ -1144,7 +1144,7 @@ get_auth_param(struct auth_param* auth, char* name)
 
 static Str
 AuthBasicCred(struct http_auth* ha, Str uname, Str pw, struct Url* pu,
-    struct HttpRequest* hr, FormList* request)
+    struct HttpRequest* hr, struct FormList* request)
 {
     Str s = Strdup(uname);
     Strcat_char(s, ':');
@@ -1201,7 +1201,7 @@ enum {
 
 static Str
 AuthDigestCred(struct http_auth* ha, Str uname, Str pw, struct Url* pu,
-    struct HttpRequest* hr, FormList* request)
+    struct HttpRequest* hr, struct FormList* request)
 {
     Str tmp, a1buf, a2buf, rd, s;
     unsigned char md5[MD5_DIGEST_LENGTH + 1];
@@ -1475,7 +1475,7 @@ findAuthentication(struct http_auth* hauth, struct Buffer* buf, char* auth_field
 static void
 getAuthCookie(struct http_auth* hauth, char* auth_header,
     TextList* extra_header, struct Url* pu, struct HttpRequest* hr,
-    FormList* request,
+    struct FormList* request,
     volatile Str* uname, volatile Str* pwd)
 {
     char* realm = NULL;
@@ -1642,7 +1642,7 @@ Str getLinkNumberStr(int correction)
 #define DO_EXTERNAL ((struct Buffer * (*)(URLFile*, struct Buffer*)) doExternal)
 struct Buffer*
 loadGeneralFile(char* path, struct Url* volatile current, char* referer,
-    int flag, FormList* volatile request, bool do_download)
+    int flag, struct FormList* volatile request, bool do_download)
 {
     URLFile f, *volatile of = NULL;
     struct Url pu;
@@ -4130,12 +4130,12 @@ process_form_int(struct parsed_tag* tag, int fid)
     }
     if (forms_size == 0) {
         forms_size = INITIAL_FORM_SIZE;
-        forms = New_N(FormList*, forms_size);
+        forms = New_N(struct FormList*, forms_size);
         form_stack = NewAtom_N(int, forms_size);
     }
     if (forms_size <= form_max) {
         forms_size += form_max;
-        forms = New_Reuse(FormList*, forms, forms_size);
+        forms = New_Reuse(struct FormList*, forms, forms_size);
         form_stack = New_Reuse(int, form_stack, forms_size);
     }
     form_stack[form_sp] = fid;
@@ -5798,7 +5798,7 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
                     a_img = NULL;
                     break;
                 case HTML_INPUT_ALT: {
-                    FormList* form;
+                    struct FormList* form;
                     int top = 0, bottom = 0;
                     int textareanumber = -1;
 #ifdef MENU_SELECT

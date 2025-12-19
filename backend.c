@@ -84,7 +84,7 @@ print_headers(struct Buffer* buf, int len)
 }
 
 static void
-internal_get(char* url, int flag, FormList* request)
+internal_get(char* url, int flag, struct FormList* request)
 {
     backend_halfdump_buf = NULL;
     struct Buffer* buf = loadGeneralFile(url, NULL, NO_REFERER, 0, request, flag);
@@ -147,7 +147,7 @@ get(TextList* argv)
 static void
 post(TextList* argv)
 {
-    FormList* request;
+    struct FormList* request;
     char *p, *target = NULL, *charset = NULL,
              *enctype = NULL, *body = NULL, *boundary = NULL, *url = NULL;
     int flag = FALSE, length = 0;
