@@ -140,7 +140,7 @@ void setlinescols(void);
 
 inline static int TTY_LINES(void) { return getRuntime()->lines; }
 inline static int TTY_COLS(void) { return getRuntime()->cols; }
-inline static int LASTLINE(void) { return getRuntime()->lines - 1; }
+inline static size_t LASTLINE(void) { return getRuntime()->lines > 0 ? getRuntime()->lines - 1 : 0; }
 void tty_set_cols(int cols);
 int graph_ok(void);
 void tty_clear(void);

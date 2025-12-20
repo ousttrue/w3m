@@ -69,8 +69,8 @@ struct ScreenCell {
 };
 
 void SET_CHAR(struct ScreenCell* p, const char* ch, size_t len);
-void SET_CHAR_MODE(enum ScreenCellProperty* var, enum ScreenCellProperty mode);
 void SET_PROP(struct ScreenCell* p, enum ScreenCellProperty prop);
+void SET_CHAR_MODE(enum ScreenCellProperty* var, enum ScreenCellProperty mode);
 
 struct ScreenLine {
     struct ScreenCell* cells;
@@ -86,16 +86,17 @@ struct Screen {
     struct ScreenLine* lines;
     size_t y;
     size_t x;
-    int tab_step;
+    size_t tab_step;
     enum ScreenCellProperty mode;
 };
 
 struct Screen* screen_get();
 
 bool screen_need_redraw(char* c1, enum ScreenCellProperty pr1, const char* c2, enum ScreenCellProperty pr2);
-void screen_setup(int lines, int cols);
-void screen_move(int line, int column);
-void screen_addmch(const char* p, size_t len, int width);
+void screen_setup(size_t lines, size_t cols);
+void screen_move(size_t line, size_t column);
+void screen_addmch(const char* p, size_t len, size_t width);
+void screen_addmchz(const char* pc, size_t len, size_t width);
 static inline void screen_add_whitespace()
 {
     const char* white_space = " ";
@@ -117,12 +118,12 @@ void screen_underline(void);
 void screen_underlineend(void);
 void screen_graphstart(void);
 void screen_graphend(void);
-void screen_setfcolor(int color);
-void screen_setbcolor(int color);
+void screen_setfcolor(uint16_t color);
+void screen_setbcolor(uint16_t color);
 void screen_clear(void);
 void screen_clrtoeol(void);
 void screen_clrtoeolx(void);
 void screen_clrtobot(void);
 void screen_clrtobotx(void);
 void screen_touch_cursor(void);
-void screen_touch_column(int col);
+void screen_touch_column(size_t col);

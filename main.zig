@@ -9,6 +9,7 @@ const c = @cImport({
 
 const Term = @import("Term.zig");
 var g_term: Term = undefined;
+var g_allocator: std.mem.Allocator = undefined;
 
 /// return ture if enter main loop
 extern fn w3m_args(argc: c_int, argv: [*c]const [*:0]u8) bool;
@@ -18,9 +19,9 @@ extern fn w3m_idle() void;
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.detectLeaks();
-    const allocator = gpa.allocator();
+    g_allocator = gpa.allocator();
 
-    g_term = Term.init(allocator, std.fs.File.stdin()) catch
+    g_term = Term.init(g_allocator, std.fs.File.stdin()) catch
         @panic("Term.init");
     defer g_term.deinit();
 
@@ -313,6 +314,261 @@ var g_screen: c.Screen = .{
 };
 export fn screen_get() *c.Screen {
     return &g_screen;
+}
+export fn screen_need_redraw(
+    c1: [*c]const u8,
+    pr1: c.ScreenCellProperty,
+    c2: [*c]const u8,
+    pr2: c.ScreenCellProperty,
+) bool {
+    if (c1 != null and c2 != null and std.mem.eql(u8, std.mem.span(c1), std.mem.span(c2))) {
+        if (c1[0] == ' ') {
+            return ((pr1 ^ pr2) & M_SPACE & ~c.S_DIRTY) != 0;
+        } else {
+            return ((pr1 ^ pr2) & ~c.S_DIRTY) != 0;
+        }
+    } else {
+        return true;
+    }
+}
+
+fn screen_deinit(this: *c.Screen, allocator: std.mem.Allocator) void {
+    if (this.line_capacity > 0) {
+        for (this.lines[0..this.line_capacity]) |l| {
+            allocator.free(l.cells[0..this.col_capacity]);
+        }
+        allocator.free(this.lines[0..this.line_capacity]);
+    }
+    this.line_capacity = 0;
+    this.col_capacity = 0;
+}
+
+export fn screen_setup(line_count: usize, col_count: usize) void {
+    screen_deinit(&g_screen, g_allocator);
+
+    g_screen.line_capacity = line_count + 1;
+    g_screen.lines = (g_allocator.alloc(c.ScreenLine, g_screen.line_capacity) catch @panic("OOM")).ptr;
+    g_screen.line_count = line_count;
+
+    g_screen.col_capacity = col_count + 1;
+    for (g_screen.lines[0..g_screen.line_capacity]) |*l| {
+        l.cells = (g_allocator.alloc(c.ScreenCell, g_screen.col_capacity) catch @panic("OOM")).ptr;
+    }
+    g_screen.col_count = col_count;
+
+    screen_clear();
+}
+
+export fn screen_addmch(pc: [*c]const u8, len: usize, width: usize) void {
+    // copy for zero terminate
+    var buf: [8]u8 = undefined;
+    std.debug.assert(len < @sizeOf(@TypeOf(buf)));
+    std.mem.copyForwards(u8, &buf, pc[0..len]);
+    buf[len] = 0;
+    c.screen_addmchz((&buf).ptr, len, width);
+}
+
+export fn screen_move(line: usize, column: usize) void {
+    if (line >= 0 and line < g_screen.line_count)
+        g_screen.y = line;
+    if (column >= 0 and column < g_screen.col_count)
+        g_screen.x = column;
+}
+
+export fn SET_CHAR(p: *c.ScreenCell, ch: [*c]const u8, len: usize) void {
+    std.mem.copyForwards(u8, p.str[0 .. len + 1], ch[0 .. len + 1]);
+}
+
+export fn CHAR_MODE(prop: c.ScreenCellProperty) c.ScreenCellProperty {
+    return (prop & c.C_WHICHCHAR);
+}
+
+export fn SET_CHAR_MODE(prop: *c.ScreenCellProperty, mode: c.ScreenCellProperty) void {
+    prop.* = (prop.* & ~c.C_WHICHCHAR) | mode;
+}
+
+export fn SET_PROP(p: *c.ScreenCell, prop: c.ScreenCellProperty) void {
+    p.prop = (p.prop & c.S_DIRTY) | prop;
+}
+
+export fn screen_add_tab() void {
+    c.screen_addmch("\t", 1, g_screen.tab_step);
+}
+
+export fn screen_wrap() void {
+    if (g_screen.y == g_screen.line_count - 1)
+        return;
+    g_screen.y += 1;
+    g_screen.x = 0;
+}
+
+export fn screen_touch_column(col: usize) void {
+    if (col >= 0 and col < g_screen.col_count) {
+        g_screen.lines[g_screen.y].cells[col].prop |= c.S_DIRTY;
+    }
+}
+
+export fn screen_touch_line() void {
+    if (0 == (g_screen.lines[g_screen.y].isdirty & c.L_DIRTY)) {
+        for (0..g_screen.col_count) |i| {
+            g_screen.lines[g_screen.y].cells[i].prop &= ~c.S_DIRTY;
+        }
+        g_screen.lines[g_screen.y].isdirty |= c.L_DIRTY;
+    }
+}
+
+export fn screen_standout() void {
+    g_screen.mode |= c.S_STANDOUT;
+}
+
+export fn screen_standend() void {
+    g_screen.mode &= ~c.S_STANDOUT;
+}
+
+export fn screen_toggle_stand() void {
+    const p = g_screen.lines[g_screen.y].cells;
+    p[g_screen.x].prop ^= c.S_STANDOUT;
+    if (c.CHAR_MODE(p[g_screen.x].prop) != c.C_WCHAR2) {
+        var i = g_screen.x + 1;
+        while (c.CHAR_MODE(p[i].prop) == c.C_WCHAR2) : (i += 1) {
+            p[i].prop ^= c.S_STANDOUT;
+        }
+    }
+}
+
+const M_SPACE = (c.S_SCREENPROP | c.S_COLORED | c.S_BCOLORED | c.S_GRAPHICS);
+const M_CEOL = (~(M_SPACE | c.C_WHICHCHAR));
+
+export fn screen_bold() void {
+    g_screen.mode |= c.S_BOLD;
+}
+
+export fn screen_boldend() void {
+    g_screen.mode &= ~c.S_BOLD;
+}
+
+export fn screen_underline() void {
+    g_screen.mode |= c.S_UNDERLINE;
+}
+
+export fn screen_underlineend() void {
+    g_screen.mode &= ~c.S_UNDERLINE;
+}
+
+export fn screen_graphstart() void {
+    g_screen.mode |= c.S_GRAPHICS;
+}
+
+export fn screen_graphend() void {
+    g_screen.mode &= ~c.S_GRAPHICS;
+}
+
+export fn screen_setfcolor(color: u16) void {
+    g_screen.mode &= ~c.COL_FCOLOR;
+    if ((color & 0xf) <= 7)
+        g_screen.mode |= (((color & 7) | 8) << 8);
+}
+
+export fn screen_setbcolor(color: u16) void {
+    g_screen.mode &= ~c.COL_BCOLOR;
+    if ((color & 0xf) <= 7)
+        g_screen.mode |= (((color & 7) | 8) << 12);
+}
+
+export fn screen_clear() void {
+    var i: usize = 0;
+    while (i < g_screen.line_count) : (i += 1) {
+        for (g_screen.lines[i].cells[0..g_screen.col_capacity]) |*cell| {
+            cell.* = .{
+                .prop = c.S_EOL,
+            };
+        }
+        g_screen.lines[i].cells[0].prop = c.S_EOL;
+        g_screen.lines[i].isdirty = 0;
+    }
+    while (i < g_screen.line_capacity) : (i += 1) {
+        g_screen.lines[i].isdirty = c.L_UNUSED;
+    }
+
+    c.screen_move(0, 0);
+    g_screen.mode = c.C_ASCII;
+}
+
+// XXX: conflicts with curses's clrtoeol(3) ?
+// Clear to the end of line
+export fn screen_clrtoeol() void {
+    const p = g_screen.lines[g_screen.y].cells;
+
+    if (p[g_screen.x].prop & c.S_EOL != 0)
+        return;
+
+    if (0 == (g_screen.lines[g_screen.y].isdirty & (c.L_NEED_CE | c.L_CLRTOEOL)) or
+        g_screen.lines[g_screen.y].eol > g_screen.x)
+        g_screen.lines[g_screen.y].eol = g_screen.x;
+
+    g_screen.lines[g_screen.y].isdirty |= c.L_CLRTOEOL;
+    c.screen_touch_line();
+    for (g_screen.x..g_screen.col_count) |i| {
+        if (p[i].prop & c.S_EOL != 0) {
+            break;
+        }
+        p[i].prop = c.S_EOL | c.S_DIRTY;
+    }
+}
+
+fn screen_clrtoeol_with_bcolor() void {
+    if (0 == (g_screen.mode & c.S_BCOLORED)) {
+        c.screen_clrtoeol();
+        return;
+    }
+    const cli = g_screen.y;
+    const cco = g_screen.x;
+    const pr = g_screen.mode;
+    g_screen.mode = (g_screen.mode & (M_CEOL | c.S_BCOLORED)) | c.C_ASCII;
+    for (g_screen.x..g_screen.col_count) |_| {
+        c.screen_add_whitespace();
+    }
+    c.screen_move(cli, cco);
+    g_screen.mode = pr;
+}
+
+export fn screen_clrtoeolx() void {
+    screen_clrtoeol_with_bcolor();
+}
+
+fn screen_clrtobot_eol(clrtoeol: fn () callconv(.c) void) void {
+    const y = g_screen.y;
+    const x = g_screen.x;
+    clrtoeol();
+    g_screen.x = 0;
+    g_screen.y += 1;
+    while (g_screen.y < g_screen.line_count) : (g_screen.y += 1) {
+        clrtoeol();
+    }
+    g_screen.y = y;
+    g_screen.x = x;
+}
+
+export fn screen_clrtobotx() void {
+    screen_clrtobot_eol(screen_clrtoeolx);
+}
+
+export fn screen_touch_cursor() void {
+    // int i;
+    c.screen_touch_line();
+    {
+        var i = g_screen.x;
+        while (i >= 0) : (i -= 1) {
+            c.screen_touch_column(i);
+            if (c.CHAR_MODE(g_screen.lines[g_screen.y].cells[i].prop) != c.C_WCHAR2)
+                break;
+        }
+    }
+    for (g_screen.x + 1..g_screen.col_count) |i| {
+        if (c.CHAR_MODE(g_screen.lines[g_screen.y].cells[i].prop) != c.C_WCHAR2)
+            break;
+        c.screen_touch_column(i);
+    }
 }
 
 const RefreshStatus = enum {
