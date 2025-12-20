@@ -1509,24 +1509,20 @@ char* file_to_url(char* file)
     return tmp->ptr;
 }
 
-#ifdef USE_M17N
 char* url_unquote_conv(char* url, wc_ces charset)
-#else
-char* url_unquote_conv0(char* url)
-#endif
 {
-#ifdef USE_M17N
+
     wc_uint8 old_auto_detect = WcOption.auto_detect;
-#endif
+
     Str tmp;
     tmp = Str_url_unquote(Strnew_charp(url), FALSE, TRUE);
-#ifdef USE_M17N
+
     if (!charset || charset == WC_CES_US_ASCII)
-        charset = SystemCharset;
+        charset = getRuntime()->SystemCharset;
     WcOption.auto_detect = WC_OPT_DETECT_ON;
     tmp = convertLine(NULL, tmp, RAW_MODE, &charset, charset);
     WcOption.auto_detect = old_auto_detect;
-#endif
+
     return tmp->ptr;
 }
 

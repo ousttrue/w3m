@@ -4,7 +4,7 @@ const zcc = @import("compile_commands");
 const system_libs = [_][]const u8{
     "gc", "ssl", "crypto",
 
-    "ncurses", 
+    "ncurses",
     // "termcap",
 };
 
@@ -188,6 +188,9 @@ pub fn build(b: *std.Build) void {
 
     {
         const mktable = build_mktable(b, b.graph.host, .ReleaseSafe, &.{"gc"});
+        mktable.addIncludePath(b.path("libwc"));
+        mktable.addIncludePath(b.path("."));
+
         // {
         //     b.installArtifact(mktable);
         // }

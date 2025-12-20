@@ -477,11 +477,11 @@ Str loadFTPDir(struct Url* pu, wc_ces* charset, bool do_download)
     char** flist;
     int i, nfile, nfile_max;
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
-#ifdef USE_M17N
-    wc_ces doc_charset = DocumentCharset;
+
+    wc_ces doc_charset = getRuntime()->DocumentCharset;
 
     *charset = WC_CES_US_ASCII;
-#endif
+
     if (current_ftp.data == NULL)
         return NULL;
     tmp = ftp_command(&current_ftp, "SYST", NULL, &status);

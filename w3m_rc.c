@@ -48,6 +48,15 @@ static int graph_enabled = 0;
 char UseGraphicChar = GRAPHIC_CHAR_CHARSET;
 
 struct Runtime g_runtime = {
+    // Don't change
+    .InnerCharset = (WC_CES_WTF),
+
+    .DisplayCharset = (DISPLAY_CHARSET),
+    .DocumentCharset = (DOCUMENT_CHARSET),
+    .SystemCharset = (SYSTEM_CHARSET),
+    .BookmarkCharset = (SYSTEM_CHARSET),
+
+    .ExtHalfdump = (FALSE),
     .Tabstop = 8,
 
     .UseHistory = (TRUE),
@@ -81,6 +90,39 @@ struct Runtime* getRuntime()
 {
     return &g_runtime;
 }
+
+char* url_quote_conv(const char* x, wc_ces c)
+{
+    return url_quote(wc_conv_strict(x, g_runtime.InnerCharset, c)->ptr);
+}
+
+char* conv_from_system(const char* x)
+{
+    return wc_conv(x, g_runtime.SystemCharset, g_runtime.InnerCharset)->ptr;
+}
+
+char* conv_to_system(const char* x)
+{
+    return wc_conv_strict(x, g_runtime.InnerCharset, g_runtime.SystemCharset)->ptr;
+}
+
+Str Str_conv_to_system(Str x)
+{
+    return wc_Str_conv_strict(x, g_runtime.InnerCharset, g_runtime.SystemCharset);
+}
+
+Str Str_conv_to_halfdump(Str x)
+{
+    return (g_runtime.ExtHalfdump
+            ? wc_Str_conv((x), g_runtime.InnerCharset, g_runtime.DisplayCharset)
+            : (x));
+}
+
+Str Str_conv_from_system(Str x)
+{
+    return wc_Str_conv((x), g_runtime.SystemCharset, g_runtime.InnerCharset);
+}
+
 struct TabBuffer* CurrentTab()
 {
     return g_runtime.CurrentTab;
@@ -429,13 +471,12 @@ void calcTabPos(void)
 static Str
 conv_form_encoding(Str val, struct FormItemList* fi, struct Buffer* buf)
 {
-    wc_ces charset = SystemCharset;
-
+    wc_ces charset = g_runtime.SystemCharset;
     if (fi->parent->charset)
         charset = fi->parent->charset;
     else if (buf->document_charset && buf->document_charset != WC_CES_US_ASCII)
         charset = buf->document_charset;
-    return wc_Str_conv_strict(val, InnerCharset, charset);
+    return wc_Str_conv_strict(val, g_runtime.InnerCharset, charset);
 }
 
 void query_from_followform(Str* query, struct FormItemList* fi, int multipart)
@@ -1834,17 +1875,17 @@ struct param_ptr params9[] = {
 
 #ifdef USE_M17N
 struct param_ptr params10[] = {
-    { "display_charset", P_CODE, PI_CODE, (void*)&DisplayCharset,
+    { "display_charset", P_CODE, PI_CODE, (void*)&g_runtime.DisplayCharset,
         CMT_DISPLAY_CHARSET, (void*)&display_charset_str },
-    { "document_charset", P_CODE, PI_CODE, (void*)&DocumentCharset,
+    { "document_charset", P_CODE, PI_CODE, (void*)&g_runtime.DocumentCharset,
         CMT_DOCUMENT_CHARSET, (void*)&document_charset_str },
     { "auto_detect", P_CHARINT, PI_SEL_C, (void*)&WcOption.auto_detect,
         CMT_AUTO_DETECT, (void*)auto_detect_str },
-    { "system_charset", P_CODE, PI_CODE, (void*)&SystemCharset,
+    { "system_charset", P_CODE, PI_CODE, (void*)&g_runtime.SystemCharset,
         CMT_SYSTEM_CHARSET, (void*)&system_charset_str },
     { "follow_locale", P_CHARINT, PI_ONOFF, (void*)&FollowLocale,
         CMT_FOLLOW_LOCALE, NULL },
-    { "ext_halfdump", P_CHARINT, PI_ONOFF, (void*)&ExtHalfdump,
+    { "ext_halfdump", P_CHARINT, PI_ONOFF, (void*)&g_runtime.ExtHalfdump,
         CMT_EXT_HALFDUMP, NULL },
     { "use_wide", P_CHARINT, PI_ONOFF, (void*)&WcOption.use_wide, CMT_USE_WIDE,
         NULL },
@@ -2008,21 +2049,15 @@ void show_params(FILE* fp)
     const char* t = "";
     char* cmt;
 
-#ifdef USE_M17N
-#ifdef ENABLE_NLS
-    OptionCharset = SystemCharset; /* FIXME */
-#endif
-#endif
+    OptionCharset = g_runtime.SystemCharset; /* FIXME */
 
     fputs("\nconfiguration parameters\n", fp);
     for (j = 0; sections[j].name != NULL; j++) {
-#ifdef USE_M17N
         if (!OptionEncode)
             cmt = wc_conv(_(sections[j].name), OptionCharset,
-                InnerCharset)
+                g_runtime.InnerCharset)
                       ->ptr;
         else
-#endif
             cmt = sections[j].name;
         fprintf(fp, "  section[%d]: %s\n", j, conv_to_system(cmt));
         i = 0;
@@ -2040,21 +2075,19 @@ void show_params(FILE* fp)
             case P_STRING:
                 t = "string";
                 break;
-#if defined(USE_SSL) && defined(USE_SSL_VERIFY)
+
             case P_SSLPATH:
                 t = "path";
                 break;
-#endif
-#ifdef USE_COLOR
+
             case P_COLOR:
                 t = "color";
                 break;
-#endif
-#ifdef USE_M17N
+
             case P_CODE:
                 t = "charset";
                 break;
-#endif
+
             case P_PIXELS:
                 t = "number";
                 break;
@@ -2062,13 +2095,13 @@ void show_params(FILE* fp)
                 t = "percent";
                 break;
             }
-#ifdef USE_M17N
+
             if (!OptionEncode)
                 cmt = wc_conv(_(sections[j].params[i].comment),
-                    OptionCharset, InnerCharset)
+                    OptionCharset, g_runtime.InnerCharset)
                           ->ptr;
             else
-#endif
+
                 cmt = sections[j].params[i].comment;
             l = 30 - (strlen(sections[j].params[i].name) + strlen(t));
             if (l < 0)
@@ -2409,20 +2442,14 @@ void sync_with_option(void)
         AcceptEncoding = acceptableEncoding();
     if (AcceptMedia == NULL || *AcceptMedia == '\0')
         AcceptMedia = acceptableMimeTypes();
-#ifdef USE_UNICODE
+
     update_utf8_symbol();
-#endif
-#ifdef USE_M17N
-    wtf_init(DocumentCharset, DisplayCharset);
-#endif
+
+    wtf_init(g_runtime.DocumentCharset, g_runtime.DisplayCharset);
+
     if (fmInitialized()) {
         initKeymap(FALSE);
-#ifdef USE_MOUSE
-        initMouseAction();
-#endif /* MOUSE */
-#ifdef USE_MENU
         initMenu();
-#endif /* MENU */
     }
 }
 
@@ -2567,9 +2594,7 @@ to_str(struct param_ptr* p)
     case P_CHAR:
         return Sprintf("%c", *(char*)p->varptr);
     case P_STRING:
-#if defined(USE_SSL) && defined(USE_SSL_VERIFY)
     case P_SSLPATH:
-#endif
         /*  SystemCharset -> InnerCharset */
         return Strnew_charp(conv_from_system(*(char**)p->varptr));
     case P_PIXELS:
@@ -2594,42 +2619,37 @@ load_option_panel(void)
     if (optionpanel_str == NULL)
         optionpanel_str = Sprintf(optionpanel_src1, w3m_version,
             html_quote(localCookie()->ptr), _(CMT_HELPER));
-#ifdef USE_M17N
-#ifdef ENABLE_NLS
-    OptionCharset = SystemCharset; /* FIXME */
-#endif
+
+    OptionCharset = g_runtime.SystemCharset; /* FIXME */
     if (!OptionEncode) {
-        optionpanel_str = wc_Str_conv(optionpanel_str, OptionCharset, InnerCharset);
+        optionpanel_str = wc_Str_conv(optionpanel_str, OptionCharset, g_runtime.InnerCharset);
         for (i = 0; sections[i].name != NULL; i++) {
             sections[i].name = wc_conv(_(sections[i].name), OptionCharset,
-                InnerCharset)
+                g_runtime.InnerCharset)
                                    ->ptr;
             for (p = sections[i].params; p->name; p++) {
                 p->comment = wc_conv(_(p->comment), OptionCharset,
-                    InnerCharset)
+                    g_runtime.InnerCharset)
                                  ->ptr;
                 if (p->inputtype == PI_SEL_C
-#ifdef USE_COLOR
-                    && p->select != colorstr
-#endif
-                ) {
+                    && p->select != colorstr) {
                     for (s = (struct sel_c*)p->select; s->text != NULL; s++) {
                         s->text = wc_conv(_(s->text), OptionCharset,
-                            InnerCharset)
+                            g_runtime.InnerCharset)
                                       ->ptr;
                     }
                 }
             }
         }
-#ifdef USE_COLOR
+
         for (s = colorstr; s->text; s++)
             s->text = wc_conv(_(s->text), OptionCharset,
-                InnerCharset)
+                g_runtime.InnerCharset)
                           ->ptr;
-#endif
+
         OptionEncode = TRUE;
     }
-#endif
+
     src = Strdup(optionpanel_str);
 
     Strcat_charp(src, "<table><tr><td>");
@@ -2810,7 +2830,7 @@ void tty_refresh(void)
     enum ScreenCellProperty color = COL_FTERM;
     enum ScreenCellProperty bcolor = COL_BTERM;
 
-    wc_putc_init(InnerCharset, DisplayCharset);
+    wc_putc_init(g_runtime.InnerCharset, g_runtime.DisplayCharset);
 
     for (line = 0; line < sc->line_count; line++) {
         struct ScreenLine* pLine = &sc->lines[line];

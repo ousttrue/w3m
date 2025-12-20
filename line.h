@@ -4,7 +4,7 @@
 
 typedef unsigned short Lineprop;
 typedef unsigned char Linecolor;
-inline static Lineprop get_mctype(const char* c)
+inline static Lineprop get_mctype(const uint8_t* c)
 {
     return ((Lineprop)wtf_type((wc_uchar*)(c)) << 8);
 }

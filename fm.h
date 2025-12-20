@@ -585,33 +585,11 @@ global TextList* fileToDelete;
 
 global int multicolList init(FALSE);
 
-#ifdef USE_M17N
-global wc_ces InnerCharset init(WC_CES_WTF); /* Don't change */
-global wc_ces DisplayCharset init(DISPLAY_CHARSET);
-global wc_ces DocumentCharset init(DOCUMENT_CHARSET);
-global wc_ces SystemCharset init(SYSTEM_CHARSET);
-global wc_ces BookmarkCharset init(SYSTEM_CHARSET);
-global char ExtHalfdump init(FALSE);
 global char FollowLocale init(TRUE);
 global char UseContentCharset init(TRUE);
 global char SearchConv init(TRUE);
 global char SimplePreserveSpace init(FALSE);
-#define Str_conv_from_system(x) wc_Str_conv((x), SystemCharset, InnerCharset)
-#define Str_conv_to_system(x) wc_Str_conv_strict((x), InnerCharset, SystemCharset)
-#define Str_conv_to_halfdump(x) (ExtHalfdump ? wc_Str_conv((x), InnerCharset, DisplayCharset) : (x))
-#define conv_from_system(x) wc_conv((x), SystemCharset, InnerCharset)->ptr
-#define conv_to_system(x) wc_conv_strict((x), InnerCharset, SystemCharset)->ptr
-#define url_quote_conv(x, c) url_quote(wc_conv_strict((x), InnerCharset, (c))->ptr)
-#else
-#define Str_conv_from_system(x) (x)
-#define Str_conv_to_system(x) (x)
-#define Str_conv_to_halfdump(x) (x)
-#define conv_from_system(x) (x)
-#define conv_to_system(x) (x)
-#define url_quote_conv(x, c) url_quote(x)
-#define wc_Str_conv(x, charset0, charset1) (x)
-#define wc_Str_conv_strict(x, charset0, charset1) (x)
-#endif
+
 global char UseAltEntity init(FALSE);
 global char DisplayBorders init(FALSE);
 global char DisableCenter init(FALSE);

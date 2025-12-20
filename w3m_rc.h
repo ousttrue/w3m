@@ -47,6 +47,14 @@ struct Event {
 };
 
 struct Runtime {
+    // Don't change
+    wc_ces InnerCharset;
+    wc_ces DisplayCharset;
+    wc_ces DocumentCharset;
+    wc_ces SystemCharset;
+    wc_ces BookmarkCharset;
+
+    char ExtHalfdump;
     int Tabstop;
 
     int lines;
@@ -86,6 +94,13 @@ struct TabBuffer* CurrentTab();
 struct TabBuffer* FirstTab();
 struct TabBuffer* LastTab();
 int nTab();
+
+char* conv_from_system(const char* x);
+char* conv_to_system(const char* x);
+char* url_quote_conv(const char* x, wc_ces c);
+Str Str_conv_to_halfdump(Str x);
+Str Str_conv_to_system(Str x);
+Str Str_conv_from_system(Str x);
 
 #define get_strwidth(c) wtf_strwidth((wc_uchar*)(c))
 #define get_Str_strwidth(c) wtf_strwidth((wc_uchar*)((c)->ptr))

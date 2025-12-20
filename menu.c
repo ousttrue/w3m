@@ -1154,15 +1154,11 @@ set_menu_frame(void)
         FRAME = graph_symbol;
     } else {
         graph_mode = FALSE;
-#ifdef USE_M17N
+
         FRAME_WIDTH = 0;
-        FRAME = get_symbol(DisplayCharset, &FRAME_WIDTH);
+        FRAME = get_symbol(getRuntime()->DisplayCharset, &FRAME_WIDTH);
         if (!WcOption.use_wide)
             FRAME_WIDTH = 1;
-#else
-        FRAME_WIDTH = 1;
-        FRAME = get_symbol();
-#endif
     }
 }
 
@@ -1401,7 +1397,7 @@ menu_search_forward(Menu* menu, int from)
     if (str == NULL || *str == '\0')
         return -1;
     SearchString = str;
-    str = conv_search_string(str, DisplayCharset);
+    str = conv_search_string(str, getRuntime()->DisplayCharset);
     menuSearchRoutine = menuForwardSearch;
     found = menuForwardSearch(menu, str, from + 1);
     if (WrapSearch && found == -1)
@@ -1448,7 +1444,7 @@ menu_search_backward(Menu* menu, int from)
     if (str == NULL || *str == '\0')
         return -1;
     SearchString = str;
-    str = conv_search_string(str, DisplayCharset);
+    str = conv_search_string(str, getRuntime()->DisplayCharset);
     menuSearchRoutine = menuBackwardSearch;
     int found = menuBackwardSearch(menu, str, from - 1);
     if (WrapSearch && found == -1)
@@ -1482,7 +1478,7 @@ menu_search_next_previous(Menu* menu, int from, int reverse)
         disp_message("No previous regular expression", TRUE);
         return -1;
     }
-    str = conv_search_string(SearchString, DisplayCharset);
+    str = conv_search_string(SearchString, getRuntime()->DisplayCharset);
     if (reverse != 0)
         reverse = 1;
     if (menuSearchRoutine == menuBackwardSearch)
@@ -2105,9 +2101,8 @@ interpret_menu(FILE* mf)
     char *p, *s;
     int in_menu = 0, nmenu = 0, nitem = 0, type;
     MenuItem* item = NULL;
-#ifdef USE_M17N
-    wc_ces charset = SystemCharset;
-#endif
+
+    wc_ces charset = getRuntime()->SystemCharset;
 
     while (!feof(mf)) {
         line = Strfgets(mf);
@@ -2115,9 +2110,9 @@ interpret_menu(FILE* mf)
         Strremovefirstspaces(line);
         if (line->length == 0)
             continue;
-#ifdef USE_M17N
-        line = wc_Str_conv(line, charset, InnerCharset);
-#endif
+
+        line = wc_Str_conv(line, charset, getRuntime()->InnerCharset);
+
         p = line->ptr;
         s = getWord(&p);
         if (*s == '#') /* comment */
@@ -2175,20 +2170,20 @@ void initMenu(void)
     w3mMenuList[2].item = NULL;
     w3mMenuList[3].id = NULL;
 
-#ifdef USE_M17N
+
     if (!MainMenuEncode) {
         MenuItem* item;
-#ifdef ENABLE_NLS
+
         /* FIXME: charset that gettext(3) returns */
-        MainMenuCharset = SystemCharset;
-#endif
+        MainMenuCharset = getRuntime()->SystemCharset;
+
         for (item = MainMenuItem; item->type != MENU_END; item++)
             item->label = wc_conv(_(item->label), MainMenuCharset,
-                InnerCharset)
+                getRuntime()->InnerCharset)
                               ->ptr;
         MainMenuEncode = TRUE;
     }
-#endif
+
     if ((mf = fopen(confFile(MENU_FILE), "rt")) != NULL) {
         interpret_menu(mf);
         fclose(mf);

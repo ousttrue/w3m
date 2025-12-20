@@ -477,20 +477,20 @@ bool w3m_args(int argc, char** argv)
     }
 
     if (non_null(Locale = getenv("LC_ALL")) || non_null(Locale = getenv("LC_CTYPE")) || non_null(Locale = getenv("LANG"))) {
-        DisplayCharset = wc_guess_locale_charset(Locale, DisplayCharset);
-        DocumentCharset = wc_guess_locale_charset(Locale, DocumentCharset);
-        SystemCharset = wc_guess_locale_charset(Locale, SystemCharset);
+        getRuntime()->DisplayCharset = wc_guess_locale_charset(Locale, getRuntime()->DisplayCharset);
+        getRuntime()->DocumentCharset = wc_guess_locale_charset(Locale, getRuntime()->DocumentCharset);
+        getRuntime()->SystemCharset = wc_guess_locale_charset(Locale, getRuntime()->SystemCharset);
     }
 
     /* initializations */
     init_rc();
 
     if (FollowLocale && Locale) {
-        DisplayCharset = wc_guess_locale_charset(Locale, DisplayCharset);
-        SystemCharset = wc_guess_locale_charset(Locale, SystemCharset);
+        getRuntime()->DisplayCharset = wc_guess_locale_charset(Locale, getRuntime()->DisplayCharset);
+        getRuntime()->SystemCharset = wc_guess_locale_charset(Locale, getRuntime()->SystemCharset);
     }
     auto_detect = WcOption.auto_detect;
-    BookmarkCharset = DocumentCharset;
+    getRuntime()->BookmarkCharset = getRuntime()->DocumentCharset;
 
     if (!non_null(HTTP_proxy) && ((p = getenv("HTTP_PROXY")) || (p = getenv("http_proxy")) || (p = getenv("HTTP_proxy"))))
         HTTP_proxy = p;
@@ -554,7 +554,7 @@ bool w3m_args(int argc, char** argv)
                         usage();
                     p = argv[i];
                 }
-                DocumentCharset = wc_guess_charset_short(p, DocumentCharset);
+                getRuntime()->DocumentCharset = wc_guess_charset_short(p, getRuntime()->DocumentCharset);
                 WcOption.auto_detect = WC_OPT_DETECT_OFF;
                 UseContentCharset = FALSE;
             } else if (!strncmp("-O", argv[i], 2)) {
@@ -565,7 +565,7 @@ bool w3m_args(int argc, char** argv)
                         usage();
                     p = argv[i];
                 }
-                DisplayCharset = wc_guess_charset_short(p, DisplayCharset);
+                getRuntime()->DisplayCharset = wc_guess_charset_short(p, getRuntime()->DisplayCharset);
             }
 #endif
             else if (!strcmp("-graph", argv[i]))
@@ -1086,22 +1086,17 @@ dump_source(struct Buffer* buf)
 static void
 dump_head(struct Buffer* buf)
 {
-    TextListItem* ti;
-
     if (buf->document_header == NULL) {
         if (w3m_dump & DUMP_EXTRA)
             printf("\n");
         return;
     }
+    TextListItem* ti;
     for (ti = buf->document_header->first; ti; ti = ti->next) {
-#ifdef USE_M17N
         printf("%s",
-            wc_conv_strict(ti->ptr, InnerCharset,
+            wc_conv_strict(ti->ptr, getRuntime()->InnerCharset,
                 buf->document_charset)
                 ->ptr);
-#else
-        printf("%s", ti->ptr);
-#endif
     }
     puts("");
 }
@@ -1449,7 +1444,7 @@ srchcore(char* volatile str, SearchFunc func)
     if (SearchString == NULL || *SearchString == '\0')
         return SR_NOTFOUND;
 
-    str = conv_search_string(SearchString, DisplayCharset);
+    str = conv_search_string(SearchString, getRuntime()->DisplayCharset);
     auto prevtrap = mySignal(SIGINT, intTrap);
     exitRawMode();
     if (SETJMP(IntReturn) == 0) {
@@ -2523,7 +2518,7 @@ DEFUN(reMark, REG_MARK, "Mark all occurences of a pattern")
             return;
         }
     }
-    str = conv_search_string(str, DisplayCharset);
+    str = conv_search_string(str, getRuntime()->DisplayCharset);
     if ((str = regexCompile(str, 1)) != NULL) {
         disp_message(str, TRUE);
         return;
@@ -3388,22 +3383,17 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
     struct FormList* request;
 
     tmp = Sprintf("mode=panel&cookie=%s&bmark=%s&url=%s&title=%s"
-#ifdef USE_M17N
-                  "&charset=%s"
-#endif
-        ,
+                  "&charset=%s",
         (Str_form_quote(localCookie()))->ptr,
         (Str_form_quote(Strnew_charp(BookmarkFile)))->ptr,
         (Str_form_quote(parsedURL2Str(&Currentbuf->currentURL)))->ptr,
-#ifdef USE_M17N
+
         (Str_form_quote(wc_conv_strict(Currentbuf->buffername,
-             InnerCharset,
-             BookmarkCharset)))
+             getRuntime()->InnerCharset,
+             getRuntime()->BookmarkCharset)))
             ->ptr,
-        wc_ces_to_charset(BookmarkCharset));
-#else
-        (Str_form_quote(Strnew_charp(Currentbuf->buffername)))->ptr);
-#endif
+        wc_ces_to_charset(getRuntime()->BookmarkCharset));
+
     request = newFormList(NULL, "post", NULL, NULL, NULL, NULL, NULL);
     request->body = tmp->ptr;
     request->length = tmp->length;
@@ -3807,28 +3797,27 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
     }
     if (Currentbuf->sourcefile == NULL) {
         if (Currentbuf->pagerSource && !strcasecmp(Currentbuf->type, "text/plain")) {
-#ifdef USE_M17N
             wc_ces old_charset;
             wc_bool old_fix_width_conv;
-#endif
+
             FILE* f;
             Str tmpf = tmpfname(TMPF_SRC, NULL);
             f = fopen(tmpf->ptr, "w");
             if (f == NULL)
                 return;
-#ifdef USE_M17N
-            old_charset = DisplayCharset;
+
+            old_charset = getRuntime()->DisplayCharset;
             old_fix_width_conv = WcOption.fix_width_conv;
-            DisplayCharset = (Currentbuf->document_charset != WC_CES_US_ASCII)
+            getRuntime()->DisplayCharset = (Currentbuf->document_charset != WC_CES_US_ASCII)
                 ? Currentbuf->document_charset
                 : 0;
             WcOption.fix_width_conv = WC_FALSE;
-#endif
+
             saveBufferBody(Currentbuf, f, TRUE);
-#ifdef USE_M17N
-            DisplayCharset = old_charset;
+
+            getRuntime()->DisplayCharset = old_charset;
             WcOption.fix_width_conv = old_fix_width_conv;
-#endif
+
             fclose(f);
             Currentbuf->sourcefile = tmpf->ptr;
         } else {
@@ -3949,13 +3938,13 @@ DEFUN(reload, RELOAD, "Load current document anew")
     /* FIXME: gettextize? */
     message("Reloading...", 0, 0);
     tty_refresh();
-    old_charset = DocumentCharset;
+    old_charset = getRuntime()->DocumentCharset;
     if (Currentbuf->document_charset != WC_CES_US_ASCII)
-        DocumentCharset = Currentbuf->document_charset;
+        getRuntime()->DocumentCharset = Currentbuf->document_charset;
     SearchHeader = Currentbuf->search_header;
     DefaultType = Currentbuf->real_type;
     buf = loadGeneralFile(url->ptr, NULL, NO_REFERER, RG_NOCACHE, request, false);
-    DocumentCharset = old_charset;
+    getRuntime()->DocumentCharset = old_charset;
     SearchHeader = FALSE;
     DefaultType = NULL;
 
@@ -4055,10 +4044,10 @@ DEFUN(defCSet, DEFAULT_CHARSET, "Change the default character encoding")
     if (cs == NULL || *cs == '\0')
         /* FIXME: gettextize? */
         cs = inputStr("Default document charset: ",
-            wc_ces_to_charset(DocumentCharset));
+            wc_ces_to_charset(getRuntime()->DocumentCharset));
     charset = wc_guess_charset_short(cs, 0);
     if (charset != 0)
-        DocumentCharset = charset;
+        getRuntime()->DocumentCharset = charset;
     displayBuffer(Currentbuf, B_NORMAL);
 }
 #endif

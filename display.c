@@ -1034,7 +1034,7 @@ void addMChar(char* p, Lineprop mode, size_t len)
             else
                 screen_addch(*graph_symbol[(unsigned char)c % N_GRAPH_SYMBOL], 1);
         } else {
-            symbol = get_symbol(DisplayCharset, &w);
+            symbol = get_symbol(getRuntime()->DisplayCharset, &w);
             screen_wc_addstr(symbol[(unsigned char)c % N_SYMBOL]);
         }
     } else if (mode & PC_CTRL) {

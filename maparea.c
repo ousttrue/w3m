@@ -1,4 +1,5 @@
 #include "maparea.h"
+#include "w3m_rc.h"
 #include "ctrlcode.h"
 #include "html_form.h"
 #include "buffer.h"
@@ -539,7 +540,7 @@ page_info_panel(struct Buffer* buf)
         buf->real_type ? html_quote(buf->real_type) : "unknown",
         "<tr valign=top><td nowrap>Last Modified<td>",
         html_quote(last_modified(buf)), NULL);
-    if (buf->document_charset != InnerCharset) {
+    if (buf->document_charset != getRuntime()->InnerCharset) {
         list = wc_get_ces_list();
         Strcat_charp(tmp,
             "<tr><td nowrap>Document Charset<td><select name=charset>");

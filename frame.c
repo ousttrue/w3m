@@ -511,13 +511,13 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
                 s_target = frame.body->name;
                 t_target = "_blank";
                 d_target = TargetSelf ? s_target : t_target;
-#ifdef USE_M17N
+
                 charset = WC_CES_US_ASCII;
                 if (current->document_charset != WC_CES_US_ASCII)
                     doc_charset = current->document_charset;
                 else
-                    doc_charset = DocumentCharset;
-#endif
+                    doc_charset = getRuntime()->DocumentCharset;
+
                 t_stack = 0;
                 if (frame.body->type && !strcasecmp(frame.body->type, "text/plain")) {
                     Str tmp;
@@ -858,9 +858,8 @@ renderFrame(struct Buffer* Cbuf, int force_reload)
     struct Buffer* buf;
     int flag;
     struct frameset* fset;
-#ifdef USE_M17N
-    wc_ces doc_charset = DocumentCharset;
-#endif
+
+    wc_ces doc_charset = getRuntime()->DocumentCharset;
 
     tmp = tmpfname(TMPF_FRAME, ".html");
     f = fopen(tmp->ptr, "w");
@@ -879,13 +878,13 @@ renderFrame(struct Buffer* Cbuf, int force_reload)
         flag |= RG_NOCACHE;
     renderFrameSet = Cbuf->frameset;
     flushFrameSet(renderFrameSet);
-#ifdef USE_M17N
-    DocumentCharset = InnerCharset;
-#endif
+
+    getRuntime()->DocumentCharset = getRuntime()->InnerCharset;
+
     buf = loadGeneralFile(tmp->ptr, NULL, NULL, flag, NULL, false);
-#ifdef USE_M17N
-    DocumentCharset = doc_charset;
-#endif
+
+    getRuntime()->DocumentCharset = doc_charset;
+
     renderFrameSet = NULL;
     if (buf == NULL || buf == NO_BUFFER)
         return NULL;

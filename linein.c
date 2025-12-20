@@ -158,9 +158,6 @@ char* inputLineHistSearch(char* prompt, char* def_str, int flag, struct Hist* hi
         CLen = CPos = 0;
     }
 
-#ifdef SUPPORT_WIN9X_CONSOLE_MBCS
-    enable_win9x_console_input();
-#endif
     i_cont = TRUE;
     i_broken = FALSE;
     i_quote = FALSE;
@@ -168,9 +165,8 @@ char* inputLineHistSearch(char* prompt, char* def_str, int flag, struct Hist* hi
     cm_disp_next = -1;
     need_redraw = FALSE;
 
-#ifdef USE_M17N
-    wc_char_conv_init(wc_guess_8bit_charset(DisplayCharset), InnerCharset);
-#endif
+    wc_char_conv_init(wc_guess_8bit_charset(getRuntime()->DisplayCharset), getRuntime()->InnerCharset);
+
     do {
         x = calcPosition(strBuf->ptr, strProp, CLen, CPos, 0, CP_FORCE);
         if (x - rpos > offset) {

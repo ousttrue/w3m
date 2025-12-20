@@ -273,7 +273,7 @@ form_update_line(struct Line* line, char** str, int spos, int epos, int width,
     Lineprop c_type, effect, *prop;
 
     for (p = *str, w = 0, pos = 0; *p && w < width;) {
-        c_type = get_mctype((unsigned char*)p);
+        c_type = get_mctype(p);
         c_len = get_mclen(p);
         c_width = get_mcwidth(p);
         if (c_type == PC_CTRL) {
@@ -310,11 +310,9 @@ form_update_line(struct Line* line, char** str, int spos, int epos, int width,
 
     effect = CharEffect(line->propBuf[spos]);
     for (p = *str, w = 0, pos = spos; *p && w < width;) {
-        c_type = get_mctype((unsigned char*)p);
-#ifdef USE_M17N
+        c_type = get_mctype(p);
         c_len = get_mclen(p);
         c_width = get_mcwidth(p);
-#endif
         if (c_type == PC_CTRL) {
             if (newline && *p == '\n')
                 break;
@@ -325,17 +323,14 @@ form_update_line(struct Line* line, char** str, int spos, int epos, int width,
                 w++;
             }
         } else if (password) {
-#ifdef USE_M17N
             if (w + c_width > width)
                 break;
-#endif
             for (i = 0; i < c_width; i++) {
                 buf[pos] = '*';
                 prop[pos] = effect | PC_ASCII;
                 pos++;
                 w++;
             }
-#ifdef USE_M17N
         } else if (c_type & PC_UNKNOWN) {
             buf[pos] = ' ';
             prop[pos] = effect | PC_ASCII;
@@ -344,20 +339,15 @@ form_update_line(struct Line* line, char** str, int spos, int epos, int width,
         } else {
             if (w + c_width > width)
                 break;
-#else
-        } else {
-#endif
             buf[pos] = *p;
             prop[pos] = effect | c_type;
             pos++;
-#ifdef USE_M17N
             c_type = (c_type & ~PC_WCHAR1) | PC_WCHAR2;
             for (i = 1; i < c_len; i++) {
                 buf[pos] = p[i];
                 prop[pos] = effect | c_type;
                 pos++;
             }
-#endif
             w += c_width;
         }
         p += c_len;
@@ -500,7 +490,7 @@ Str textfieldrep(Str s, int width)
 
     j = 0;
     for (i = 0; i < s->length; i += c_len) {
-        c_type = get_mctype((unsigned char*)&s->ptr[i]);
+        c_type = get_mctype(&s->ptr[i]);
         c_len = get_mclen(&s->ptr[i]);
         if (s->ptr[i] == '\r')
             continue;
@@ -509,10 +499,8 @@ Str textfieldrep(Str s, int width)
             break;
         if (c_type == PC_CTRL)
             Strcat_char(n, ' ');
-#ifdef USE_M17N
         else if (c_type & PC_UNKNOWN)
             Strcat_char(n, ' ');
-#endif
         else if (s->ptr[i] == '&')
             Strcat_charp(n, "&amp;");
         else if (s->ptr[i] == '<')
@@ -549,9 +537,9 @@ form_fputs_decode(Str s, FILE* f)
             break;
         }
     }
-#ifdef USE_M17N
-    z = wc_Str_conv_strict(z, InnerCharset, DisplayCharset);
-#endif
+
+    z = wc_Str_conv_strict(z, getRuntime()->InnerCharset, getRuntime()->DisplayCharset);
+
     Strfputs(z, f);
 }
 
@@ -560,10 +548,8 @@ void input_textarea(struct FormItemList* fi)
     char* tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
     Str tmp;
     FILE* f;
-#ifdef USE_M17N
-    wc_ces charset = DisplayCharset;
+    wc_ces charset = getRuntime()->DisplayCharset;
     wc_uint8 auto_detect;
-#endif
 
     f = fopen(tmpf, "w");
     if (f == NULL) {
@@ -599,7 +585,7 @@ void input_textarea(struct FormItemList* fi)
             Strshrink(tmp, 1);
             Strcat_charp(tmp, "\r\n");
         }
-        tmp = convertLine(NULL, tmp, RAW_MODE, &charset, DisplayCharset);
+        tmp = convertLine(NULL, tmp, RAW_MODE, &charset, getRuntime()->DisplayCharset);
         Strcat(fi->value, tmp);
     }
     WcOption.auto_detect = auto_detect;

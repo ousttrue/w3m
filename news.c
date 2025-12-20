@@ -303,11 +303,10 @@ Str loadNewsgroup(struct Url* pu, wc_ces* charset, bool do_download)
     int status, i, first, last;
     volatile int flag = 0, start = 0, end = 0;
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
-#ifdef USE_M17N
-    wc_ces doc_charset = DocumentCharset, mime_charset;
+    wc_ces doc_charset = getRuntime()->DocumentCharset;
 
     *charset = WC_CES_US_ASCII;
-#endif
+
     if (current_news.host == NULL || !pu->file || *pu->file == '\0')
         return NULL;
     group = allocStr(pu->file, -1);
@@ -401,6 +400,7 @@ Str loadNewsgroup(struct Url* pu, wc_ces* charset, bool do_download)
             if (!(q = strchr(p, '>')) && !(q = strchr(p, '\t')))
                 continue;
             *q = '\0';
+            wc_ces mime_charset;
             tmp = decodeMIME(Strnew_charp(s), &mime_charset);
             s = convertLine(&f, tmp, HEADER_MODE,
                 mime_charset ? &mime_charset : charset,
