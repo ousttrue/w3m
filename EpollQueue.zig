@@ -106,6 +106,12 @@ fn readThread(this: *@This()) !void {
             this.postEvent(.{ .idle = void{} });
             continue;
         }
+        if (event_count >= events.len) {
+            // debugger ? error ?
+            // time out ?
+            this.postEvent(.{ .idle = void{} });
+            continue;
+        }
 
         // var write_buffer: [WRITE_BUFSIZE]u8 = .{};
 
