@@ -224,7 +224,7 @@ export fn writestr(s: [*c]const u8) void {
 export fn setlinescols() void {
     // struct winsize wins;
     // int i = ioctl(g_runtime.tty_input, TIOCGWINSZ, &wins);
-    // if (i >= 0 && wins.ws_row != 0 && wins.ws_col != 0) {
+    // if (i >= 0 and wins.ws_row != 0 and wins.ws_col != 0) {
     //     g_runtime.lines = wins.ws_row;
     //     g_runtime.cols = wins.ws_col;
     // }
@@ -255,7 +255,7 @@ export fn get_pixel_per_cell(ppc: *c_int, ppl: *c_int) bool {
     //     int i;
     //
     //     struct winsize ws;
-    //     if (ioctl(g_runtime.tty_input, TIOCGWINSZ, &ws) == 0 && ws.ws_ypixel > 0 && ws.ws_row > 0 && ws.ws_xpixel > 0 && ws.ws_col > 0) {
+    //     if (ioctl(g_runtime.tty_input, TIOCGWINSZ, &ws) == 0 and ws.ws_ypixel > 0 and ws.ws_row > 0 and ws.ws_xpixel > 0 and ws.ws_col > 0) {
     //         *ppc = ws.ws_xpixel / ws.ws_col;
     //         *ppl = ws.ws_ypixel / ws.ws_row;
     //         return 1;
@@ -281,7 +281,7 @@ export fn get_pixel_per_cell(ppc: *c_int, ppl: *c_int) bool {
     //         p[len] = '\0';
     //
     //         if (sscanf(buf, "\x1b[4;%d;%dt\x1b[8;%d;%dt", &hp, &wp, &hc, &wc) == 4) {
-    //             if (wp > 0 && wc > 0 && hp > 0 && hc > 0) {
+    //             if (wp > 0 and wc > 0 and hp > 0 and hc > 0) {
     //                 *ppc = wp / wc;
     //                 *ppl = hp / hc;
     //                 return 1;
@@ -311,9 +311,211 @@ var g_screen: c.Screen = .{
     .x = 0,
     .mode = 0,
 };
-export fn screen_get() *c.Screen
-{
+export fn screen_get() *c.Screen {
     return &g_screen;
 }
 
+const RefreshStatus = enum {
+    RF_NEED_TO_MOVE,
+    RF_CR_OK,
+    RF_NONEED_TO_MOVE,
+};
 
+const M_MEND = (c.S_STANDOUT | c.S_UNDERLINE | c.S_BOLD | c.S_COLORED | c.S_BCOLORED | c.S_GRAPHICS);
+
+fn color_seq(buf: []u8, colmode: c_int, highIntensityColors: bool) [:0]const u8 {
+    // static char seqbuf[32];
+    // sprintf(seqbuf, "\033[%dm", ((colmode >> 8) & 7) + (highIntensityColors ? 90 : 30));
+    // return seqbuf;
+    var val: c_int = (if (highIntensityColors) 90 else 30);
+    val += ((colmode >> 8) & 7);
+    return std.fmt.bufPrintZ(buf, "\x1b[{}m", .{val}) catch @panic("color_seq");
+}
+
+fn bcolor_seq(buf: []u8, colmode: c_int) [:0]const u8 {
+    // static char seqbuf[32];
+    // sprintf(seqbuf, "\033[%dm", ((colmode >> 12) & 7) + 40);
+    // return seqbuf;
+    const val = ((colmode >> 12) & 7) + 40;
+    return std.fmt.bufPrintZ(buf, "\x1b[{}m", .{val}) catch @panic("bcolor_seq");
+}
+
+export fn tty_refresh() void {
+    const sc: *c.Screen = c.screen_get();
+
+    // int line, col;
+    var pline: usize = sc.y;
+    var moved = RefreshStatus.RF_NEED_TO_MOVE;
+    var mode: c.ScreenCellProperty = 0;
+    var color = c.COL_FTERM;
+    var bcolor = c.COL_BTERM;
+    var graph_enabled = false;
+
+    const g_runtime: *c.Runtime = c.getRuntime();
+    c.wc_putc_init(g_runtime.InnerCharset, g_runtime.DisplayCharset);
+
+    for (0..sc.line_count) |line| {
+        const pLine = &sc.lines[line];
+        const p = pLine.cells;
+        const dirty = &pLine.isdirty;
+        if (dirty.* & c.L_DIRTY != 0) {
+            dirty.* &= ~c.L_DIRTY;
+            var col: usize = 0;
+            while (col < sc.col_count) : (col += 1) {
+                if (p[col].prop & c.S_EOL != 0) {
+                    break;
+                }
+                if (dirty.* & c.L_NEED_CE != 0 and col >= sc.lines[line].eol) {
+                    if (c.screen_need_redraw(
+                        &p[col].str[0],
+                        p[col].prop,
+                        @ptrCast(&c.SCREEN_SPACE[0]),
+                        0,
+                    ))
+                        break;
+                } else {
+                    if (p[col].prop & c.S_DIRTY != 0)
+                        break;
+                }
+            }
+            var pcol: usize = undefined;
+            if (dirty.* & (c.L_NEED_CE | c.L_CLRTOEOL) != 0) {
+                pcol = sc.lines[line].eol;
+                if (pcol >= sc.col_count) {
+                    dirty.* &= ~(c.L_NEED_CE | c.L_CLRTOEOL);
+                    pcol = col;
+                }
+            } else {
+                pcol = col;
+            }
+            if (line < sc.line_count - 2 and (line > 0 and pline == line - 1) and pcol == 0) {
+                switch (moved) {
+                    .RF_NEED_TO_MOVE => {
+                        c.tty_MOVE(@intCast(line), 0);
+                        moved = .RF_CR_OK;
+                    },
+                    .RF_CR_OK => {
+                        _ = write1('\n');
+                        _ = write1('\r');
+                    },
+                    .RF_NONEED_TO_MOVE => {
+                        moved = .RF_CR_OK;
+                    },
+                }
+            } else {
+                c.tty_MOVE(@intCast(line), @intCast(pcol));
+                moved = .RF_CR_OK;
+            }
+            if (dirty.* & (c.L_NEED_CE | c.L_CLRTOEOL) != 0) {
+                writestr(g_runtime.T_ce);
+                if (col != pcol)
+                    c.tty_MOVE(@intCast(line), @intCast(col));
+            }
+            pline = line;
+            pcol = col;
+            while (col < g_runtime.cols) : (col += 1) {
+                if (p[col].prop & c.S_EOL != 0)
+                    break;
+
+                // some terminal emulators do linefeed when a
+                // character is put on COLS-th column. this behavior
+                // is different from one of vt100, but such terminal
+                // emulators are used as vt100-compatible
+                // emulators. This behaviour causes scroll when a
+                // character is drawn on (COLS-1,LINES-1) point.  To
+                // avoid the scroll, I prohibit to draw character on
+                // (COLS-1,LINES-1).
+                if ((0 == (p[col].prop & c.S_STANDOUT) and (mode & c.S_STANDOUT) != 0) //
+                or (0 == (p[col].prop & c.S_UNDERLINE) and (mode & c.S_UNDERLINE) != 0) //
+                or (0 == (p[col].prop & c.S_BOLD) and (mode & c.S_BOLD) != 0) //
+                or (0 == (p[col].prop & c.S_COLORED) and (mode & c.S_COLORED) != 0) //
+                or (0 == (p[col].prop & c.S_BCOLORED) and (mode & c.S_BCOLORED) != 0) //
+                or (0 == (p[col].prop & c.S_GRAPHICS) and (mode & c.S_GRAPHICS) != 0)) {
+                    if ((mode & c.S_COLORED) != 0 or (mode & c.S_BCOLORED) != 0)
+                        writestr(g_runtime.T_op);
+                    if (mode & c.S_GRAPHICS != 0)
+                        writestr(g_runtime.T_ae);
+                    writestr(g_runtime.T_me);
+                    mode &= ~M_MEND;
+                }
+                if (if (dirty.* & c.L_NEED_CE != 0 and col >= sc.lines[line].eol)
+                    c.screen_need_redraw(
+                        &p[col].str[0],
+                        p[col].prop,
+                        c.SCREEN_SPACE,
+                        0,
+                    )
+                else
+                    (p[col].prop & c.S_DIRTY != 0))
+                {
+                    if (col > 0 and pcol == col - 1) {
+                        writestr(g_runtime.T_nd);
+                    } else if (pcol != col) {
+                        c.tty_MOVE(@intCast(line), @intCast(col));
+                    }
+
+                    if ((p[col].prop & c.S_STANDOUT != 0) and 0 == (mode & c.S_STANDOUT)) {
+                        writestr(g_runtime.T_so);
+                        mode |= c.S_STANDOUT;
+                    }
+                    if ((p[col].prop & c.S_UNDERLINE != 0) and 0 == (mode & c.S_UNDERLINE)) {
+                        writestr(g_runtime.T_us);
+                        mode |= c.S_UNDERLINE;
+                    }
+                    if ((p[col].prop & c.S_BOLD != 0) and 0 == (mode & c.S_BOLD)) {
+                        writestr(g_runtime.T_md);
+                        mode |= c.S_BOLD;
+                    }
+                    if ((p[col].prop & c.S_COLORED != 0) and (p[col].prop ^ mode) & c.COL_FCOLOR != 0) {
+                        color = (p[col].prop & c.COL_FCOLOR);
+                        mode = ((mode & ~c.COL_FCOLOR) | color);
+                        var buf: [32]u8 = undefined;
+                        writestr(color_seq(&buf, color, g_runtime.highIntensityColors != 0).ptr);
+                    }
+                    if ((p[col].prop & c.S_BCOLORED != 0) and (p[col].prop ^ mode) & c.COL_BCOLOR != 0) {
+                        bcolor = (p[col].prop & c.COL_BCOLOR);
+                        mode = ((mode & ~c.COL_BCOLOR) | bcolor);
+                        var buf: [32]u8 = undefined;
+                        writestr(bcolor_seq(&buf, bcolor).ptr);
+                    }
+
+                    if ((p[col].prop & c.S_GRAPHICS != 0) and 0 == (mode & c.S_GRAPHICS)) {
+                        c.wc_putc_end(getOutputHandle());
+                        if (!graph_enabled) {
+                            graph_enabled = true;
+                            writestr(g_runtime.T_eA);
+                        }
+                        writestr(g_runtime.T_as);
+                        mode |= c.S_GRAPHICS;
+                    }
+                    if (p[col].prop & c.S_GRAPHICS != 0) {
+                        _ = write1(c.graphchar(p[col].str[0]));
+                    } else if (c.CHAR_MODE(p[col].prop) != c.C_WCHAR2) {
+                        c.wc_putc(&p[col].str[0], getOutputHandle());
+                    }
+                    pcol = col + 1;
+                }
+            }
+            if (col == g_runtime.cols)
+                moved = .RF_NEED_TO_MOVE;
+            while (col < g_runtime.cols and 0 == (p[col].prop & c.S_EOL)) : (col += 1) {
+                p[col].prop |= c.S_EOL;
+            }
+        }
+        dirty.* &= ~(c.L_NEED_CE | c.L_CLRTOEOL);
+        if (mode & M_MEND != 0) {
+            if (mode & (c.S_COLORED | c.S_BCOLORED) != 0)
+                writestr(g_runtime.T_op);
+            if (mode & c.S_GRAPHICS != 0) {
+                writestr(g_runtime.T_ae);
+                c.wc_putc_clear_status();
+            }
+            writestr(g_runtime.T_me);
+            mode &= ~M_MEND;
+        }
+    }
+    c.wc_putc_end(getOutputHandle());
+    c.tty_MOVE(@intCast(sc.y), @intCast(sc.x));
+
+    flush_tty();
+}

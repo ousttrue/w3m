@@ -92,7 +92,7 @@ struct Screen {
 
 struct Screen* screen_get();
 
-bool screen_need_redraw(char* c1, enum ScreenCellProperty pr1, char* c2, enum ScreenCellProperty pr2);
+bool screen_need_redraw(char* c1, enum ScreenCellProperty pr1, const char* c2, enum ScreenCellProperty pr2);
 void screen_setup(int lines, int cols);
 void screen_move(int line, int column);
 void screen_addmch(const char* p, size_t len, int width);

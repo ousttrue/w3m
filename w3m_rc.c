@@ -42,7 +42,6 @@
 #include <unistd.h>
 
 static struct termios d_ioval;
-static int graph_enabled = 0;
 
 // rc
 char UseGraphicChar = GRAPHIC_CHAR_CHARSET;
@@ -58,6 +57,7 @@ struct Runtime g_runtime = {
 
     .ExtHalfdump = (FALSE),
     .Tabstop = 8,
+    .highIntensityColors = (FALSE),
 
     .UseHistory = (TRUE),
     .URLHistSize = (100),
@@ -1624,7 +1624,7 @@ struct param_ptr params1[] = {
 #ifdef USE_COLOR
 struct param_ptr params2[] = {
     { "color", P_INT, PI_ONOFF, (void*)&useColor, CMT_COLOR, NULL },
-    { "high-intensity", P_INT, PI_ONOFF, (void*)&highIntensityColors, CMT_HINTENSITY_COLOR, NULL },
+    { "high-intensity", P_INT, PI_ONOFF, (void*)&g_runtime.highIntensityColors, CMT_HINTENSITY_COLOR, NULL },
     { "basic_color", P_COLOR, PI_SEL_C, (void*)&basic_color, CMT_B_COLOR,
         (void*)colorstr },
     { "anchor_color", P_COLOR, PI_SEL_C, (void*)&anchor_color, CMT_A_COLOR,
@@ -2799,180 +2799,160 @@ void tty_clear()
     writestr(g_runtime.T_cl);
 }
 
-static char*
-color_seq(int colmode)
-{
-    static char seqbuf[32];
-    sprintf(seqbuf, "\033[%dm", ((colmode >> 8) & 7) + (highIntensityColors ? 90 : 30));
-    return seqbuf;
-}
-
-static char*
-bcolor_seq(int colmode)
-{
-    static char seqbuf[32];
-    sprintf(seqbuf, "\033[%dm", ((colmode >> 12) & 7) + 40);
-    return seqbuf;
-}
-
-#define RF_NEED_TO_MOVE 0
-#define RF_CR_OK 1
-#define RF_NONEED_TO_MOVE 2
-#define M_MEND (S_STANDOUT | S_UNDERLINE | S_BOLD | S_COLORED | S_BCOLORED | S_GRAPHICS)
-void tty_refresh(void)
-{
-    struct Screen* sc = screen_get();
-
-    int line, col, pcol;
-    int pline = sc->y;
-    int moved = RF_NEED_TO_MOVE;
-    enum ScreenCellProperty mode = 0;
-    enum ScreenCellProperty color = COL_FTERM;
-    enum ScreenCellProperty bcolor = COL_BTERM;
-
-    wc_putc_init(g_runtime.InnerCharset, g_runtime.DisplayCharset);
-
-    for (line = 0; line < sc->line_count; line++) {
-        struct ScreenLine* pLine = &sc->lines[line];
-        struct ScreenCell* p = pLine->cells;
-        enum ScreenLineFlags* dirty = &pLine->isdirty;
-        if (*dirty & L_DIRTY) {
-            *dirty &= ~L_DIRTY;
-            for (col = 0; col < sc->col_count && !(p[col].prop & S_EOL); col++) {
-                if (*dirty & L_NEED_CE && col >= sc->lines[line].eol) {
-                    if (screen_need_redraw(p[col].str, p[col].prop, SCREEN_SPACE, 0))
-                        break;
-                } else {
-                    if (p[col].prop & S_DIRTY)
-                        break;
-                }
-            }
-            if (*dirty & (L_NEED_CE | L_CLRTOEOL)) {
-                pcol = sc->lines[line].eol;
-                if (pcol >= sc->col_count) {
-                    *dirty &= ~(L_NEED_CE | L_CLRTOEOL);
-                    pcol = col;
-                }
-            } else {
-                pcol = col;
-            }
-            if (line < sc->line_count - 2 && pline == line - 1 && pcol == 0) {
-                switch (moved) {
-                case RF_NEED_TO_MOVE:
-                    tty_MOVE(line, 0);
-                    moved = RF_CR_OK;
-                    break;
-                case RF_CR_OK:
-                    write1('\n');
-                    write1('\r');
-                    break;
-                case RF_NONEED_TO_MOVE:
-                    moved = RF_CR_OK;
-                    break;
-                }
-            } else {
-                tty_MOVE(line, pcol);
-                moved = RF_CR_OK;
-            }
-            if (*dirty & (L_NEED_CE | L_CLRTOEOL)) {
-                writestr(getRuntime()->T_ce);
-                if (col != pcol)
-                    tty_MOVE(line, col);
-            }
-            pline = line;
-            pcol = col;
-            for (; col < getRuntime()->cols; col++) {
-                if (p[col].prop & S_EOL)
-                    break;
-
-                /*
-                 * some terminal emulators do linefeed when a
-                 * character is put on COLS-th column. this behavior
-                 * is different from one of vt100, but such terminal
-                 * emulators are used as vt100-compatible
-                 * emulators. This behaviour causes scroll when a
-                 * character is drawn on (COLS-1,LINES-1) point.  To
-                 * avoid the scroll, I prohibit to draw character on
-                 * (COLS-1,LINES-1).
-                 */
-                if ((!(p[col].prop & S_STANDOUT) && (mode & S_STANDOUT)) || (!(p[col].prop & S_UNDERLINE) && (mode & S_UNDERLINE)) || (!(p[col].prop & S_BOLD) && (mode & S_BOLD)) || (!(p[col].prop & S_COLORED) && (mode & S_COLORED))
-                    || (!(p[col].prop & S_BCOLORED) && (mode & S_BCOLORED))
-                    || (!(p[col].prop & S_GRAPHICS) && (mode & S_GRAPHICS))) {
-                    if ((mode & S_COLORED)
-                        || (mode & S_BCOLORED))
-                        writestr(getRuntime()->T_op);
-                    if (mode & S_GRAPHICS)
-                        writestr(getRuntime()->T_ae);
-                    writestr(getRuntime()->T_me);
-                    mode &= ~M_MEND;
-                }
-                if ((*dirty & L_NEED_CE && col >= sc->lines[line].eol)
-                        ? screen_need_redraw(p[col].str, p[col].prop, SCREEN_SPACE, 0)
-                        : (p[col].prop & S_DIRTY)) {
-                    if (pcol == col - 1)
-                        writestr(getRuntime()->T_nd);
-                    else if (pcol != col)
-                        tty_MOVE(line, col);
-
-                    if ((p[col].prop & S_STANDOUT) && !(mode & S_STANDOUT)) {
-                        writestr(getRuntime()->T_so);
-                        mode |= S_STANDOUT;
-                    }
-                    if ((p[col].prop & S_UNDERLINE) && !(mode & S_UNDERLINE)) {
-                        writestr(getRuntime()->T_us);
-                        mode |= S_UNDERLINE;
-                    }
-                    if ((p[col].prop & S_BOLD) && !(mode & S_BOLD)) {
-                        writestr(getRuntime()->T_md);
-                        mode |= S_BOLD;
-                    }
-                    if ((p[col].prop & S_COLORED) && (p[col].prop ^ mode) & COL_FCOLOR) {
-                        color = (p[col].prop & COL_FCOLOR);
-                        mode = ((mode & ~COL_FCOLOR) | color);
-                        writestr(color_seq(color));
-                    }
-
-                    if ((p[col].prop & S_BCOLORED)
-                        && (p[col].prop ^ mode) & COL_BCOLOR) {
-                        bcolor = (p[col].prop & COL_BCOLOR);
-                        mode = ((mode & ~COL_BCOLOR) | bcolor);
-                        writestr(bcolor_seq(bcolor));
-                    }
-
-                    if ((p[col].prop & S_GRAPHICS) && !(mode & S_GRAPHICS)) {
-                        wc_putc_end(getOutputHandle());
-                        if (!graph_enabled) {
-                            graph_enabled = 1;
-                            writestr(getRuntime()->T_eA);
-                        }
-                        writestr(getRuntime()->T_as);
-                        mode |= S_GRAPHICS;
-                    }
-                    if (p[col].prop & S_GRAPHICS)
-                        write1(graphchar(*p[col].str));
-                    else if (CHAR_MODE(p[col].prop) != C_WCHAR2)
-                        wc_putc(p[col].str, getOutputHandle());
-                    pcol = col + 1;
-                }
-            }
-            if (col == getRuntime()->cols)
-                moved = RF_NEED_TO_MOVE;
-            for (; col < getRuntime()->cols && !(p[col].prop & S_EOL); col++)
-                p[col].prop |= S_EOL;
-        }
-        *dirty &= ~(L_NEED_CE | L_CLRTOEOL);
-        if (mode & M_MEND) {
-            if (mode & (S_COLORED | S_BCOLORED))
-                writestr(getRuntime()->T_op);
-            if (mode & S_GRAPHICS) {
-                writestr(getRuntime()->T_ae);
-                wc_putc_clear_status();
-            }
-            writestr(getRuntime()->T_me);
-            mode &= ~M_MEND;
-        }
-    }
-    wc_putc_end(getOutputHandle());
-    tty_MOVE(sc->y, sc->x);
-    flush_tty();
-}
+// void tty_refresh(void)
+// {
+//     struct Screen* sc = screen_get();
+//
+//     int line, col, pcol;
+//     int pline = sc->y;
+//     int moved = RF_NEED_TO_MOVE;
+//     enum ScreenCellProperty mode = 0;
+//     enum ScreenCellProperty color = COL_FTERM;
+//     enum ScreenCellProperty bcolor = COL_BTERM;
+//
+//     wc_putc_init(g_runtime.InnerCharset, g_runtime.DisplayCharset);
+//
+//     for (line = 0; line < sc->line_count; line++) {
+//         struct ScreenLine* pLine = &sc->lines[line];
+//         struct ScreenCell* p = pLine->cells;
+//         enum ScreenLineFlags* dirty = &pLine->isdirty;
+//         if (*dirty & L_DIRTY) {
+//             *dirty &= ~L_DIRTY;
+//             for (col = 0; col < sc->col_count && !(p[col].prop & S_EOL); col++) {
+//                 if (*dirty & L_NEED_CE && col >= sc->lines[line].eol) {
+//                     if (screen_need_redraw(p[col].str, p[col].prop, SCREEN_SPACE, 0))
+//                         break;
+//                 } else {
+//                     if (p[col].prop & S_DIRTY)
+//                         break;
+//                 }
+//             }
+//             if (*dirty & (L_NEED_CE | L_CLRTOEOL)) {
+//                 pcol = sc->lines[line].eol;
+//                 if (pcol >= sc->col_count) {
+//                     *dirty &= ~(L_NEED_CE | L_CLRTOEOL);
+//                     pcol = col;
+//                 }
+//             } else {
+//                 pcol = col;
+//             }
+//             if (line < sc->line_count - 2 && pline == line - 1 && pcol == 0) {
+//                 switch (moved) {
+//                 case RF_NEED_TO_MOVE:
+//                     tty_MOVE(line, 0);
+//                     moved = RF_CR_OK;
+//                     break;
+//                 case RF_CR_OK:
+//                     write1('\n');
+//                     write1('\r');
+//                     break;
+//                 case RF_NONEED_TO_MOVE:
+//                     moved = RF_CR_OK;
+//                     break;
+//                 }
+//             } else {
+//                 tty_MOVE(line, pcol);
+//                 moved = RF_CR_OK;
+//             }
+//             if (*dirty & (L_NEED_CE | L_CLRTOEOL)) {
+//                 writestr(getRuntime()->T_ce);
+//                 if (col != pcol)
+//                     tty_MOVE(line, col);
+//             }
+//             pline = line;
+//             pcol = col;
+//             for (; col < getRuntime()->cols; col++) {
+//                 if (p[col].prop & S_EOL)
+//                     break;
+//
+//                 /*
+//                  * some terminal emulators do linefeed when a
+//                  * character is put on COLS-th column. this behavior
+//                  * is different from one of vt100, but such terminal
+//                  * emulators are used as vt100-compatible
+//                  * emulators. This behaviour causes scroll when a
+//                  * character is drawn on (COLS-1,LINES-1) point.  To
+//                  * avoid the scroll, I prohibit to draw character on
+//                  * (COLS-1,LINES-1).
+//                  */
+//                 if ((!(p[col].prop & S_STANDOUT) && (mode & S_STANDOUT)) || (!(p[col].prop & S_UNDERLINE) && (mode & S_UNDERLINE)) || (!(p[col].prop & S_BOLD) && (mode & S_BOLD)) || (!(p[col].prop & S_COLORED) && (mode & S_COLORED))
+//                     || (!(p[col].prop & S_BCOLORED) && (mode & S_BCOLORED))
+//                     || (!(p[col].prop & S_GRAPHICS) && (mode & S_GRAPHICS))) {
+//                     if ((mode & S_COLORED)
+//                         || (mode & S_BCOLORED))
+//                         writestr(getRuntime()->T_op);
+//                     if (mode & S_GRAPHICS)
+//                         writestr(getRuntime()->T_ae);
+//                     writestr(getRuntime()->T_me);
+//                     mode &= ~M_MEND;
+//                 }
+//                 if ((*dirty & L_NEED_CE && col >= sc->lines[line].eol)
+//                         ? screen_need_redraw(p[col].str, p[col].prop, SCREEN_SPACE, 0)
+//                         : (p[col].prop & S_DIRTY)) {
+//                     if (pcol == col - 1)
+//                         writestr(getRuntime()->T_nd);
+//                     else if (pcol != col)
+//                         tty_MOVE(line, col);
+//
+//                     if ((p[col].prop & S_STANDOUT) && !(mode & S_STANDOUT)) {
+//                         writestr(getRuntime()->T_so);
+//                         mode |= S_STANDOUT;
+//                     }
+//                     if ((p[col].prop & S_UNDERLINE) && !(mode & S_UNDERLINE)) {
+//                         writestr(getRuntime()->T_us);
+//                         mode |= S_UNDERLINE;
+//                     }
+//                     if ((p[col].prop & S_BOLD) && !(mode & S_BOLD)) {
+//                         writestr(getRuntime()->T_md);
+//                         mode |= S_BOLD;
+//                     }
+//                     if ((p[col].prop & S_COLORED) && (p[col].prop ^ mode) & COL_FCOLOR) {
+//                         color = (p[col].prop & COL_FCOLOR);
+//                         mode = ((mode & ~COL_FCOLOR) | color);
+//                         writestr(color_seq(color));
+//                     }
+//
+//                     if ((p[col].prop & S_BCOLORED)
+//                         && (p[col].prop ^ mode) & COL_BCOLOR) {
+//                         bcolor = (p[col].prop & COL_BCOLOR);
+//                         mode = ((mode & ~COL_BCOLOR) | bcolor);
+//                         writestr(bcolor_seq(bcolor));
+//                     }
+//
+//                     if ((p[col].prop & S_GRAPHICS) && !(mode & S_GRAPHICS)) {
+//                         wc_putc_end(getOutputHandle());
+//                         if (!graph_enabled) {
+//                             graph_enabled = 1;
+//                             writestr(getRuntime()->T_eA);
+//                         }
+//                         writestr(getRuntime()->T_as);
+//                         mode |= S_GRAPHICS;
+//                     }
+//                     if (p[col].prop & S_GRAPHICS)
+//                         write1(graphchar(*p[col].str));
+//                     else if (CHAR_MODE(p[col].prop) != C_WCHAR2)
+//                         wc_putc(p[col].str, getOutputHandle());
+//                     pcol = col + 1;
+//                 }
+//             }
+//             if (col == getRuntime()->cols)
+//                 moved = RF_NEED_TO_MOVE;
+//             for (; col < getRuntime()->cols && !(p[col].prop & S_EOL); col++)
+//                 p[col].prop |= S_EOL;
+//         }
+//         *dirty &= ~(L_NEED_CE | L_CLRTOEOL);
+//         if (mode & M_MEND) {
+//             if (mode & (S_COLORED | S_BCOLORED))
+//                 writestr(getRuntime()->T_op);
+//             if (mode & S_GRAPHICS) {
+//                 writestr(getRuntime()->T_ae);
+//                 wc_putc_clear_status();
+//             }
+//             writestr(getRuntime()->T_me);
+//             mode &= ~M_MEND;
+//         }
+//     }
+//     wc_putc_end(getOutputHandle());
+//     tty_MOVE(sc->y, sc->x);
+//     flush_tty();
+// }

@@ -22,7 +22,7 @@ void SET_PROP(struct ScreenCell* p, enum ScreenCellProperty prop)
     p->prop = (p->prop & S_DIRTY) | prop;
 }
 
-bool screen_need_redraw(char* c1, enum ScreenCellProperty pr1, char* c2, enum ScreenCellProperty pr2)
+bool screen_need_redraw(char* c1, enum ScreenCellProperty pr1, const char* c2, enum ScreenCellProperty pr2)
 {
     if (!c1 || !c2 || strcmp(c1, c2))
         return 1;

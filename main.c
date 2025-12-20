@@ -582,12 +582,12 @@ bool w3m_args(int argc, char** argv)
                 visual_start = TRUE;
             else if (!strcmp("-N", argv[i]))
                 open_new_tab = TRUE;
-#ifdef USE_COLOR
+
             else if (!strcmp("-M", argv[i]))
                 useColor = FALSE;
             else if (!strcmp("-H", argv[i]))
-                highIntensityColors = TRUE;
-#endif /* USE_COLOR */
+                getRuntime()->highIntensityColors = TRUE;
+
             else if (!strcmp("-B", argv[i]))
                 load_bookmark = TRUE;
             else if (!strcmp("-bookmark", argv[i])) {

@@ -66,6 +66,7 @@ struct Runtime {
     char gcmap[96];
 
     bool Do_not_use_ti_te;
+    int highIntensityColors;
 
     int UseHistory;
     int URLHistSize;
