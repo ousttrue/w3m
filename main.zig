@@ -5,9 +5,8 @@ const c = @cImport({
     @cInclude("image.h");
     @cInclude("terms.h");
     @cInclude("download.h");
-    @cInclude("putc.h");
 });
-
+const PutcStatus = @import("PutcStatus.zig");
 
 const Term = @import("Term.zig");
 var g_term: Term = undefined;
@@ -610,7 +609,13 @@ export fn tty_refresh() void {
     var graph_enabled = false;
 
     const g_runtime: *c.Runtime = c.getRuntime();
-    var putc_status = c.wc_putc_init(g_runtime.InnerCharset, g_runtime.DisplayCharset);
+    var putc_status = PutcStatus.init(g_runtime.InnerCharset, g_runtime.DisplayCharset);
+
+    defer {
+        putc_status.end(getOutputHandle());
+        c.tty_MOVE(@intCast(sc.y), @intCast(sc.x));
+        flush_tty();
+    }
 
     for (0..sc.line_count) |line| {
         const pLine = &sc.lines[line];
@@ -738,7 +743,7 @@ export fn tty_refresh() void {
                     }
 
                     if ((p[col].prop & c.S_GRAPHICS != 0) and 0 == (mode & c.S_GRAPHICS)) {
-                        c.wc_putc_end(&putc_status, getOutputHandle());
+                        putc_status.end(getOutputHandle());
                         if (!graph_enabled) {
                             graph_enabled = true;
                             writestr(g_runtime.T_eA);
@@ -749,7 +754,7 @@ export fn tty_refresh() void {
                     if (p[col].prop & c.S_GRAPHICS != 0) {
                         _ = write1(c.graphchar(p[col].str[0]));
                     } else if (c.CHAR_MODE(p[col].prop) != c.C_WCHAR2) {
-                        c.wc_putc(&putc_status, &p[col].str[0], getOutputHandle());
+                        putc_status.putc(&p[col].str[0], getOutputHandle());
                     }
                     pcol = col + 1;
                 }
@@ -766,14 +771,10 @@ export fn tty_refresh() void {
                 writestr(g_runtime.T_op);
             if (mode & c.S_GRAPHICS != 0) {
                 writestr(g_runtime.T_ae);
-                c.wc_putc_clear_status(&putc_status);
+                putc_status.clear();
             }
             writestr(g_runtime.T_me);
             mode &= ~M_MEND;
         }
     }
-    c.wc_putc_end(&putc_status, getOutputHandle());
-    c.tty_MOVE(@intCast(sc.y), @intCast(sc.x));
-
-    flush_tty();
 }

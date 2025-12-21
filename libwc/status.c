@@ -59,10 +59,8 @@ void wc_input_init(wc_ces ces, wc_status* st)
         }
     }
 
-#ifdef USE_UNICODE
     st->tag = NULL;
     st->ntag = 0;
-#endif
 }
 
 void wc_output_init(wc_ces ces, wc_status* st)
