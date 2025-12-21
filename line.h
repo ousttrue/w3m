@@ -1,6 +1,5 @@
 #pragma once
-#include <wc.h>
-#include <wtf.h>
+#include <libwc/wtf.h>
 
 typedef unsigned short Lineprop;
 typedef unsigned char Linecolor;

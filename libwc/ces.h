@@ -1,5 +1,4 @@
 #pragma once
-#include "ccs.h"
 
 extern char* WcReplace;
 extern char* WcReplaceW;

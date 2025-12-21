@@ -1,6 +1,5 @@
 #include "history.h"
 #include "fm.h"
-#include "wc.h"
 
 /* Merge entries from their history into ours */
 static int

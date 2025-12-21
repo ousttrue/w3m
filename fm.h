@@ -20,9 +20,6 @@
 #define MENU_SELECT
 #define MENU_MAP
 
-#include "wc.h"
-#include "wtf.h"
-
 #if !HAVE_SETLOCALE
 #define setlocale(category, locale) /* empty */
 #endif

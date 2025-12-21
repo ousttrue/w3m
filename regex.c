@@ -16,7 +16,6 @@
 #include <gc.h>
 #include "config.h"
 
-#include <libwc/wc.h>
 #include <libwc/wtf.h>
 #include <libwc/ucs.h>
 #include <libwc/ccs.h>

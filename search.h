@@ -1,5 +1,5 @@
 #pragma once
-#include <wc.h>
+#include <libwc/wc_types.h>
 
 struct Buffer;
 char* conv_search_string(char* str, wc_ces f_ces);

@@ -6,8 +6,7 @@
 /// tty
 /// signal
 #include "Str.h"
-#include <wc.h>
-#include <wtf.h>
+#include <libwc/wtf.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>

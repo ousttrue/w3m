@@ -31,7 +31,6 @@
 #include "myctype.h"
 #include "regex.h"
 
-#include <libwc/wc.h>
 #include <libwc/wtf.h>
 #include <libwc/ucs.h>
 #include <libwc/charset.h>

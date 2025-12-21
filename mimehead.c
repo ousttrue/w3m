@@ -7,9 +7,8 @@
 #include "fm.h"
 #include "myctype.h"
 #include "Str.h"
-#include <wc.h>
-#include <wtf.h>
-#include <charset.h>
+#include <libwc/wtf.h>
+#include <libwc/charset.h>
 
 #define MIME_ENCODED_LINE_LIMIT 80
 #define MIME_ENCODED_WORD_LENGTH_OFFSET 18

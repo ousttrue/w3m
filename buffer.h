@@ -1,8 +1,8 @@
 #pragma once
 #include "url.h"
 #include "textlist.h"
-#include "libwc/wc.h"
 #include <stddef.h>
+#include <libwc/wc_types.h>
 
 #define NO_BUFFER ((struct Buffer*)1)
 

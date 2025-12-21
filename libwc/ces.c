@@ -1,4 +1,5 @@
 #include "ces.h"
+#include "ccs.h"
 #include "iso2022.h"
 #include "sjis.h"
 #include "hz.h"

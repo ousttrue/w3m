@@ -4,7 +4,6 @@
 #include "w3m_rc.h"
 #include "tab.h"
 #include "regex.h"
-#include "wc.h"
 #include <signal.h>
 #include <errno.h>
 #include <unistd.h>

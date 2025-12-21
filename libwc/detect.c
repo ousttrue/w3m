@@ -1,5 +1,6 @@
 #include "detect.h"
 #include "status.h"
+#include "ccs.h"
 #include "ces.h"
 #include "iso2022.h"
 #include "sjis.h"

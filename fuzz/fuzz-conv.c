@@ -1,7 +1,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <gc.h>
-#include "wc.h"
 #include "wtf.h"
 
 static void *die_oom(size_t bytes) {

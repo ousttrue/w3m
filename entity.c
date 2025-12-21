@@ -8,7 +8,6 @@
 #endif
 
 #include "Str.h"
-#include <libwc/wc.h>
 #include <libwc/wtf.h>
 #include <libwc/conv.h>
 #include <libwc/ucs.h>

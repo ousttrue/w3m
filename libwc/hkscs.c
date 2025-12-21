@@ -1,4 +1,5 @@
 #include "hkscs.h"
+#include "ccs.h"
 #include "ces.h"
 #include "big5.h"
 #include "wtf.h"

@@ -2,6 +2,7 @@
 #include "fm.h"
 #include "ctrlcode.h"
 #include <libwc/conv.h>
+#include <libwc/ccs.h>
 #include <libwc/ces.h>
 
 #include "Symbols/alt.sym"

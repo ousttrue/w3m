@@ -1,6 +1,5 @@
 #include "combining.h"
 #include "ccs.h"
-#include "wc.h"
 #include "ucs.h"
 #include "map/iso88596_combining.map"
 #include "map/iso885911_combining.map"
