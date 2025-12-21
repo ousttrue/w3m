@@ -1,5 +1,6 @@
-
-#include "wc.h"
+#include "priv.h"
+#include "ccs.h"
+#include "status.h"
 #include "wtf.h"
 
 Str

@@ -1,5 +1,7 @@
 #include "maparea.h"
 #include "linein.h"
+#include <libwc/conv.h>
+#include <libwc/ces.h>
 #include "history.h"
 #include "search.h"
 #include "html_form.h"
@@ -22,24 +24,18 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <fcntl.h>
-#if defined(HAVE_WAITPID) || defined(HAVE_WAIT3)
 #include <sys/wait.h>
-#endif
 #include <time.h>
-#if defined(__CYGWIN__) && defined(USE_BINMODE_STREAM)
-#include <io.h>
-#endif
 #include "display.h"
 #include "terms.h"
 #include "myctype.h"
 #include "regex.h"
-#ifdef USE_M17N
-#include "wc.h"
-#include "wtf.h"
-#ifdef USE_UNICODE
-#include "ucs.h"
-#endif
-#endif
+
+#include <libwc/wc.h>
+#include <libwc/wtf.h>
+#include <libwc/ucs.h>
+#include <libwc/charset.h>
+
 #ifdef USE_MOUSE
 #ifdef USE_GPM
 #include <gpm.h>

@@ -1,6 +1,6 @@
-
-#ifndef _WC_PRIV_H
-#define _WC_PRIV_H
+#pragma once
+#include "wc_types.h"
+#include "Str.h"
 
 #define WC_F_SPECIAL	0x00
 #define WC_F_CP437	0x01
@@ -91,4 +91,3 @@ extern Str  wc_char_conv_from_priv1(wc_uchar c, wc_status *st);
 extern Str  wc_conv_from_ascii(Str is, wc_ces ces);
 extern void wc_push_to_raw(Str os, wc_wchar_t cc, wc_status *st);
 
-#endif

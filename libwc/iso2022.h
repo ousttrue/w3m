@@ -1,6 +1,5 @@
-
-#ifndef _WC_ISO2022_H
-#define _WC_ISO2022_H
+#pragma once
+#include "wc_types.h"
 
 #define WC_C_ESC	0x1B	/* '\033' */
 #define WC_C_SS2	0x4E	/* ESC 'N' */
@@ -124,4 +123,3 @@ extern void wc_push_iso2022_esc(Str os, wc_ccs ccs, wc_uchar g, wc_uint8 invoke,
 extern void wc_create_gmap(wc_status *st);
 extern Str  wc_char_conv_from_iso2022(wc_uchar c, wc_status *st);
 
-#endif

@@ -11,19 +11,16 @@
 #include "fm.h"
 #include "html.h"
 #include "myctype.h"
+#include <libwc/ces.h>
 
 #ifdef DEBUG
 #include <malloc.h>
 #endif /* DEBUG */
 
-#ifndef __MINGW32_VERSION
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
 #include <arpa/inet.h>
-#else
-#include <winsock.h>
-#endif /* __MINGW32_VERSION */
 
 #ifndef HAVE_SOCKLEN_T
 typedef int socklen_t;

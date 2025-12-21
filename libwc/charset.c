@@ -1,14 +1,10 @@
-
-#include <stdlib.h>
-#include <ctype.h>
-#include <string.h>
+#include "charset.h"
+#include "status.h"
+#include "ces.h"
 #include "../alloc.h"
-
-#include "wc.h"
-
-#ifdef HAVE_LANGINFO_CODESET
+#include <stdlib.h>
+#include <string.h>
 #include <langinfo.h>
-#endif
 
 wc_locale WcLocale = 0;
 

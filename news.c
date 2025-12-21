@@ -7,6 +7,7 @@
 #include <signal.h>
 #include <setjmp.h>
 #include <unistd.h>
+#include <libwc/ces.h>
 
 #ifdef USE_NNTP
 

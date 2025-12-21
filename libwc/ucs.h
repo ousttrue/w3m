@@ -1,6 +1,5 @@
-
-#ifndef _WC_UCS_H
-#define _WC_UCS_H
+#pragma once
+#include "wc_types.h"
 
 #define WC_C_UCS2_NBSP		0xA0
 #define WC_C_UCS2_BOM		0xFEFF
@@ -62,4 +61,3 @@ extern int        wc_ucs_put_tag(char *tag);
 extern char      *wc_ucs_get_tag(int ntag);
 extern void       wtf_push_ucs(Str os, wc_uint32 ucs, wc_status *st);
 
-#endif

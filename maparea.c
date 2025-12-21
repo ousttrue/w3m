@@ -5,7 +5,8 @@
 #include "buffer.h"
 #include "anchor.h"
 #include "image.h"
-#include "libwc/wc.h"
+#include <libwc/wc.h>
+#include <libwc/charset.h>
 #include "fm.h"
 #include <math.h>
 

@@ -1,6 +1,5 @@
-
-#ifndef _WC_JOHAB_H
-#define _WC_JOHAB_H
+#pragma once
+#include "wc_types.h"
 
 #define WC_C_JOHAB_ERROR	0xFFFFFFFFU
 
@@ -60,4 +59,3 @@ extern Str        wc_conv_from_johab(Str is, wc_ces ces);
 extern void       wc_push_to_johab(Str os, wc_wchar_t cc, wc_status *st);
 extern Str        wc_char_conv_from_johab(wc_uchar c, wc_status *st);
 
-#endif

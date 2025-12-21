@@ -1,6 +1,5 @@
-
-#ifndef _WC_UTF8_H
-#define _WC_UTF8_H
+#pragma once
+#include "wc_types.h"
 
 #define WC_C_UTF8_L2	0x80
 #define WC_C_UTF8_L3	0x800
@@ -20,4 +19,3 @@ extern void      wc_push_to_utf8(Str os, wc_wchar_t cc, wc_status *st);
 extern void      wc_push_to_utf8_end(Str os, wc_status *st);
 extern Str       wc_char_conv_from_utf8(wc_uchar c, wc_status *st);
 
-#endif

@@ -1,11 +1,9 @@
-
-#include "wc.h"
 #include "gbk.h"
-#include "search.h"
+#include "ces.h"
+#include "ccs.h"
 #include "wtf.h"
-#ifdef USE_UNICODE
 #include "ucs.h"
-#endif
+#include "wc_search.h"
 
 #include "map/gb2312_gbk.map"
 

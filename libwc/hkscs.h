@@ -1,6 +1,5 @@
-
-#ifndef _WC_HKSCS_H
-#define _WC_HKSCS_H
+#pragma once
+#include "wc_types.h"
 
 #define WC_HKSCS_NOSTATE	0
 #define WC_HKSCS_MBYTE1	1	/* 0x88 - 0xFE */
@@ -35,4 +34,3 @@ extern Str        wc_conv_from_hkscs(Str is, wc_ces ces);
 extern void       wc_push_to_hkscs(Str os, wc_wchar_t cc, wc_status *st);
 extern Str        wc_char_conv_from_hkscs(wc_uchar c, wc_status *st);
 
-#endif

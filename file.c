@@ -1,4 +1,5 @@
 #include "w3m_rc.h"
+#include <libwc/conv.h>
 #include "linein.h"
 #include "ctrlcode.h"
 #include "html_form.h"
@@ -19,16 +20,15 @@
 #include <signal.h>
 #include <setjmp.h>
 #include <unistd.h>
-#if defined(HAVE_WAITPID) || defined(HAVE_WAIT3)
 #include <sys/wait.h>
-#endif
 #include <stdio.h>
 #include <time.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <utime.h>
-/* foo */
+#include <libwc/ces.h>
 
+#include <libwc/charset.h>
 #include "html.h"
 #include "parsetagx.h"
 #include "local.h"
@@ -568,45 +568,40 @@ xface2xpm(char* xface)
 void readHeader(URLFile* uf, struct Buffer* newBuf, int thru, struct Url* pu)
 {
     char *p, *q;
-#ifdef USE_COOKIE
+
     char* emsg;
-#endif
+
     char c;
     Str lineBuf2 = NULL;
     Str tmp;
     TextList* headerlist;
-#ifdef USE_M17N
+
     wc_ces charset = WC_CES_US_ASCII, mime_charset;
-#endif
+
     char* tmpf;
     FILE* src = NULL;
     Lineprop* propBuffer;
 
     headerlist = newBuf->document_header = newTextList();
     if (uf->scheme == SCM_HTTP
-#ifdef USE_SSL
+
         || uf->scheme == SCM_HTTPS
-#endif /* USE_SSL */
+
     )
         http_response_code = -1;
     else
         http_response_code = 0;
 
     if (thru && !newBuf->header_source
-#ifdef USE_IMAGE
-        && !image_source
-#endif
-    ) {
+        && !image_source) {
         tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
         src = fopen(tmpf, "w");
         if (src)
             newBuf->header_source = tmpf;
     }
     while ((tmp = StrmyUFgets(uf)) && tmp->length) {
-#ifdef USE_NNTP
         if (uf->scheme == SCM_NEWS && tmp->ptr[0] == '.')
             Strshrinkfirst(tmp, 1);
-#endif
         if (w3m_reqlog) {
             FILE* ff;
             ff = fopen(w3m_reqlog, "a");
@@ -653,7 +648,6 @@ void readHeader(URLFile* uf, struct Buffer* newBuf, int thru, struct Url* pu)
                 for (; *q && (*q == '\r' || *q == '\n'); q++)
                     ;
             }
-#ifdef USE_IMAGE
             if (thru && activeImage && displayImage) {
                 Str src = NULL;
                 if (!strncasecmp(tmp->ptr, "X-Image-URL:", 12)) {
@@ -662,42 +656,25 @@ void readHeader(URLFile* uf, struct Buffer* newBuf, int thru, struct Url* pu)
                     src = Strnew_m_charp("<img src=\"", html_quote(tmpf),
                         "\" alt=\"X-Image-URL\">", NULL);
                 }
-#ifdef USE_XFACE
-                else if (!strncasecmp(tmp->ptr, "X-Face:", 7)) {
-                    tmpf = xface2xpm(&tmp->ptr[7]);
-                    if (tmpf)
-                        src = Strnew_m_charp("<img src=\"file:",
-                            html_quote(tmpf),
-                            "\" alt=\"X-Face\"",
-                            " width=48 height=48>", NULL);
-                }
-#endif
                 if (src) {
                     URLFile f;
                     struct Line* l;
-#ifdef USE_M17N
                     wc_ces old_charset = newBuf->document_charset;
-#endif
                     init_stream(&f, SCM_LOCAL, newStrStream(src));
                     loadHTMLstream(&f, newBuf, NULL, TRUE);
                     UFclose(&f);
                     for (l = newBuf->lastLine; l && l->real_linenumber;
                         l = l->prev)
                         l->real_linenumber = 0;
-#ifdef USE_M17N
                     newBuf->document_charset = old_charset;
-#endif
                 }
             }
-#endif
             lineBuf2 = tmp;
         } else {
             lineBuf2 = tmp;
         }
         if ((uf->scheme == SCM_HTTP
-#ifdef USE_SSL
                 || uf->scheme == SCM_HTTPS
-#endif /* USE_SSL */
                 )
             && http_response_code == -1) {
             p = lineBuf2->ptr;
@@ -742,7 +719,6 @@ void readHeader(URLFile* uf, struct Buffer* newBuf, int thru, struct Url* pu)
             }
             uf->content_encoding = uf->compression;
         }
-#ifdef USE_COOKIE
         else if (use_cookie && accept_cookie && pu && check_cookie_accept_domain(pu->host) && (!strncasecmp(lineBuf2->ptr, "Set-Cookie:", 11) || !strncasecmp(lineBuf2->ptr, "Set-Cookie2:", 12))) {
             Str name = Strnew(), value = Strnew(), domain = NULL, path = NULL,
                 comment = NULL, commentURL = NULL, port = NULL, tmp2;
@@ -757,9 +733,6 @@ void readHeader(URLFile* uf, struct Buffer* newBuf, int thru, struct Url* pu)
                 p = lineBuf2->ptr + 11;
                 version = 0;
             }
-#ifdef DEBUG
-            fprintf(stderr, "Set-Cookie: [%s]\n", p);
-#endif /* DEBUG */
             SKIP_BLANKS(p);
             while (*p != '=' && !IS_ENDT(*p))
                 Strcat_char(name, *(p++));
@@ -864,7 +837,6 @@ void readHeader(URLFile* uf, struct Buffer* newBuf, int thru, struct Url* pu)
                 }
             }
         }
-#endif /* USE_COOKIE */
         else if (!strncasecmp(lineBuf2->ptr, "w3m-control:", 12) && uf->scheme == SCM_LOCAL_CGI) {
             Str funcname = Strnew();
             int f;
@@ -921,7 +893,7 @@ checkContentType(struct Buffer* buf)
     r = Strnew();
     while (*p && *p != ';' && !IS_SPACE(*p))
         Strcat_char(r, *p++);
-#ifdef USE_M17N
+
     if ((p = strcasestr(p, "charset")) != NULL) {
         p += 7;
         SKIP_BLANKS(p);
@@ -933,7 +905,7 @@ checkContentType(struct Buffer* buf)
             content_charset = wc_guess_charset(p, 0);
         }
     }
-#endif
+
     return r->ptr;
 }
 
@@ -5468,16 +5440,13 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
                     }
                 }
                 str += symbol_width;
-            }
-            else if (mode == PC_CTRL || mode == PC_UNDEF) {
+            } else if (mode == PC_CTRL || mode == PC_UNDEF) {
                 PPUSH(PC_ASCII | effect | ex_efct(ex_effect), ' ');
                 str++;
-            }
-            else if (mode & PC_UNKNOWN) {
+            } else if (mode & PC_UNKNOWN) {
                 PPUSH(PC_ASCII | effect | ex_efct(ex_effect), ' ');
                 str += get_mclen(str);
-            }
-            else if (*str != '<' && *str != '&') {
+            } else if (*str != '<' && *str != '&') {
                 int len = get_mclen(str);
                 PPUSH(mode | effect | ex_efct(ex_effect), *(str++));
                 if (--len) {

@@ -1,6 +1,5 @@
-
-#ifndef _WC_UHC_H
-#define _WC_UHC_H
+#pragma once
+#include "wc_types.h"
 
 #define WC_C_UHC_END	0xC6FE
 
@@ -35,4 +34,3 @@ extern Str        wc_conv_from_uhc(Str is, wc_ces ces);
 extern void       wc_push_to_uhc(Str os, wc_wchar_t cc, wc_status *st);
 extern Str        wc_char_conv_from_uhc(wc_uchar c, wc_status *st);
 
-#endif

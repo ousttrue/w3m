@@ -1,11 +1,9 @@
-
-#include "wc.h"
 #include "gb18030.h"
-#include "search.h"
+#include "ces.h"
+#include "ccs.h"
+#include "wc_search.h"
 #include "wtf.h"
-#ifdef USE_UNICODE
 #include "ucs.h"
-#endif
 #include "map/gb18030_ucs.map"
 
 #define C0 WC_GB18030_MAP_C0

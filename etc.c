@@ -7,6 +7,8 @@
 #include "local.h"
 #include "hash.h"
 
+#include <libwc/ces.h>
+
 #include <pwd.h>
 #include <fcntl.h>
 #include <sys/types.h>
@@ -420,7 +422,6 @@ Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor)
                 bs = memchr(str, '\b', endp - str);
 #endif
         }
-#ifdef USE_ANSI_COLOR
         if (es != NULL) {
             if (str == es) {
                 int ok = parse_ansi_color(&str, &ceffect, &cmode);
@@ -434,17 +435,15 @@ Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor)
             } else if (str > es)
                 es = memchr(str, ESC_CODE, endp - str);
         }
-#endif
 
-        mode = get_mctype(str) | effect;
-#ifdef USE_ANSI_COLOR
+        mode = get_mctype((const uint8_t*)str) | effect;
+
         if (color) {
             *(color++) = cmode;
             mode |= ceffect;
         }
-#endif
+
         *(prop++) = mode;
-#ifdef USE_M17N
         plen = get_mclen(str);
         if (str + plen > endp)
             plen = endp - str;
@@ -453,16 +452,13 @@ Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor)
             mode = (mode & ~PC_WCHAR1) | PC_WCHAR2;
             for (i = 1; i < plen; i++) {
                 *(prop++) = mode;
-#ifdef USE_ANSI_COLOR
                 if (color)
                     *(color++) = cmode;
-#endif
             }
             if (do_copy)
                 Strcat_charp_n(s, (char*)str, plen);
             str += plen;
         } else
-#endif
         {
             if (do_copy)
                 Strcat_char(s, (char)*str);
@@ -1511,7 +1507,6 @@ char* file_to_url(char* file)
 
 char* url_unquote_conv(char* url, wc_ces charset)
 {
-
     wc_uint8 old_auto_detect = WcOption.auto_detect;
 
     Str tmp;

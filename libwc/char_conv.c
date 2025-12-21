@@ -1,5 +1,6 @@
-
-#include "wc.h"
+#include "char_conv.h"
+#include "status.h"
+#include "conv.h"
 
 static wc_ces char_conv_f_ces = 0, char_conv_t_ces = WC_CES_WTF;
 static wc_status char_conv_st;

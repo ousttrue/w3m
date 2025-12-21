@@ -11,7 +11,8 @@
 #include "regex.h"
 #include "w3m_rc.h"
 #include "ctrlcode.h"
-
+#include <libwc/charset.h>
+#include <libwc/conv.h>
 #include "funcname.c"
 #include "functable.c"
 

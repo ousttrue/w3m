@@ -1,6 +1,5 @@
-
-#ifndef _WC_BIG5_H
-#define _WC_BIG5_H
+#pragma once
+#include "wc_types.h"
 
 #define WC_C_BIG5_2_BASE	(0x28 * 0x9D)
 
@@ -28,4 +27,3 @@ extern Str        wc_conv_from_big5(Str is, wc_ces ces);
 extern void       wc_push_to_big5(Str os, wc_wchar_t cc, wc_status *st);
 extern Str        wc_char_conv_from_big5(wc_uchar c, wc_status *st);
 
-#endif

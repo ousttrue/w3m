@@ -15,13 +15,12 @@
 #include <string.h>
 #include <gc.h>
 #include "config.h"
-#ifdef USE_M17N
-#include "wc.h"
-#include "wtf.h"
-#ifdef USE_UNICODE
-#include "ucs.h"
-#endif
-#endif
+
+#include <libwc/wc.h>
+#include <libwc/wtf.h>
+#include <libwc/ucs.h>
+#include <libwc/ccs.h>
+
 #include "regex.h"
 #include "config.h"
 #include "myctype.h"

@@ -1,6 +1,6 @@
-
-#ifndef _WC_HZ_H
-#define _WC_HZ_H
+#pragma once
+#include "wc_types.h"
+#include "Str.h"
 
 #define WC_C_HZ_TILDA	'~'
 #define WC_C_HZ_SI	'{'
@@ -17,4 +17,3 @@ extern Str  wc_conv_from_hz(Str is, wc_ces ces);
 extern void wc_push_to_hz(Str os, wc_wchar_t cc, wc_status *st);
 extern void wc_push_to_hz_end(Str os, wc_status *st);
 
-#endif

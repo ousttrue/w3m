@@ -7,8 +7,9 @@
 #include "fm.h"
 #include "myctype.h"
 #include "Str.h"
-#include "wc.h"
-#include "wtf.h"
+#include <wc.h>
+#include <wtf.h>
+#include <charset.h>
 
 #define MIME_ENCODED_LINE_LIMIT 80
 #define MIME_ENCODED_WORD_LENGTH_OFFSET 18
@@ -233,15 +234,9 @@ Str decodeWord0(char** ow)
             goto convert_fail;
         Strcat_char(tmp, *w);
     }
-#ifdef USE_M17N
     c = wc_guess_charset(tmp->ptr, 0);
     if (!c)
         goto convert_fail;
-#else
-    if (strcasecmp(tmp->ptr, "ISO-8859-1") != 0 && strcasecmp(tmp->ptr, "US_ASCII") != 0)
-        /* NOT ISO-8859-1 encoding ... don't convert */
-        goto convert_fail;
-#endif
     w++;
     method = *(w++);
     if (*w != '?')
@@ -266,9 +261,7 @@ Str decodeWord0(char** ow)
             w++;
     }
     *ow = w;
-#ifdef USE_M17N
     *charset = c;
-#endif
     return a;
 
 convert_fail:

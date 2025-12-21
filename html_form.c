@@ -15,6 +15,8 @@
 #include "regex.h"
 #include "util.h"
 #include "menu.h"
+#include <libwc/charset.h>
+#include <libwc/conv.h>
 #include <unistd.h>
 
 extern Str* textarea_str;
@@ -65,18 +67,14 @@ newFormList(char* action, char* method, char* charset, char* enctype,
         e = FORM_ENCTYPE_MULTIPART;
     }
 
-#ifdef USE_M17N
     if (charset != NULL)
         c = wc_guess_charset(charset, 0);
-#endif
 
     l = New(struct FormList);
     l->item = l->lastitem = NULL;
     l->action = a;
     l->method = m;
-#ifdef USE_M17N
     l->charset = c;
-#endif
     l->enctype = e;
     l->target = target;
     l->name = name;

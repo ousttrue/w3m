@@ -1,12 +1,8 @@
-
-#include "wc.h"
-#include "big5.h"
 #include "hkscs.h"
-#include "search.h"
+#include "ces.h"
+#include "big5.h"
 #include "wtf.h"
-#ifdef USE_UNICODE
 #include "ucs.h"
-#endif
 
 #define C0 WC_HKSCS_MAP_C0
 #define GL WC_HKSCS_MAP_GL

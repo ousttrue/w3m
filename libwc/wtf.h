@@ -1,7 +1,6 @@
-#ifndef _WC_WTF_H
-#define _WC_WTF_H
-
-#include "wc.h"
+#pragma once
+#include "wc_types.h"
+#include "status.h"
 
 #define WTF_C_CS94 0x80
 #define WTF_C_CS94W 0x81
@@ -57,12 +56,12 @@ extern wc_ccs wtf_gr_ccs;
 extern void wtf_init(wc_ces ces1, wc_ces ces2);
 
 /* extern int     wtf_width(wc_uchar *p); */
-inline static int wtf_width(const char* p)
+inline static int wtf_width(const wc_uchar* p)
 {
     return WcOption.use_wide ? (int)WTF_WIDTH_MAP[(wc_uchar) * (p)]
                              : ((int)WTF_WIDTH_MAP[(wc_uchar) * (p)] ? 1 : 0);
 }
-inline static int get_mcwidth(const char* c)
+inline static int get_mcwidth(const wc_uchar* c)
 {
     return wtf_width(c);
 }
@@ -91,4 +90,3 @@ extern wc_bool wtf_is_hangul(wc_uchar* p);
 
 extern char* wtf_conv_fit(char* s, wc_ces ces);
 
-#endif

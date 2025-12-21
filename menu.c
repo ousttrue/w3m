@@ -1,4 +1,5 @@
 #include "menu.h"
+#include "conv.h"
 #include "linein.h"
 #include "search.h"
 #include "buffer.h"
@@ -11,26 +12,9 @@
 #include "func.h"
 #include "myctype.h"
 #include "regex.h"
+#include <libwc/ces.h>
+#include <libwc/charset.h>
 #include <stdio.h>
-
-#ifdef USE_MOUSE
-#ifdef USE_GPM
-#include <gpm.h>
-static int gpm_process_menu_mouse(Gpm_Event* event, void* data);
-extern int gpm_process_mouse(Gpm_Event*, void*);
-#endif /* USE_GPM */
-#ifdef USE_SYSMOUSE
-extern int (*sysm_handler)(int x, int y, int nbs, int obs);
-static int sysm_process_menu_mouse(int, int, int, int);
-extern int sysm_process_mouse(int, int, int, int);
-#endif /* USE_SYSMOUSE */
-#if defined(USE_GPM) || defined(USE_SYSMOUSE)
-#define X_MOUSE_SELECTED (char)0xff
-static int X_Mouse_Selection;
-extern int do_getch();
-#define getch() do_getch()
-#endif /* defined(USE_GPM) || defined(USE_SYSMOUSE) */
-#endif /* USE_MOUSE */
 
 #ifdef USE_MENU
 

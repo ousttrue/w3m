@@ -1,11 +1,8 @@
-
+#include "status.h"
+#include "ces.h"
+#include "ucs.h"
 #include <string.h>
 #include "../alloc.h"
-
-#include "wc.h"
-#ifdef USE_UNICODE
-#include "ucs.h"
-#endif
 
 wc_option WcOption = {
     WC_OPT_DETECT_ON, /* auto_detect */

@@ -1,8 +1,10 @@
-
-#ifndef _WC_CES_H
-#define _WC_CES_H
-
+#pragma once
 #include "ccs.h"
+
+extern char* WcReplace;
+extern char* WcReplaceW;
+#define WC_REPLACE WcReplace
+#define WC_REPLACE_W WcReplaceW
 
 #define WC_CES_T_INDEX		0x0000ff
 #define WC_CES_T_TYPE		0x31ff00
@@ -199,4 +201,3 @@ enum {
 
 #define WC_CES_END		WC_CES_N_UTF_7
 
-#endif

@@ -7,11 +7,13 @@
 #include "fm.h"
 #endif
 
-#include <wc.h>
-#include <wtf.h>
 #include "Str.h"
-#include "ucs.h"
-#include "utf8.h"
+#include <libwc/wc.h>
+#include <libwc/wtf.h>
+#include <libwc/conv.h>
+#include <libwc/ucs.h>
+#include <libwc/utf8.h>
+#include <libwc/ces.h>
 #include "ctrlcode.h"
 #include "w3m_rc.h"
 #include <string.h>

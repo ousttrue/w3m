@@ -28,7 +28,10 @@
 #include "indep.h"
 #include "myctype.h"
 
+#include <libwc/conv.h>
 #include <libwc/ucs.h>
+#include <libwc/charset.h>
+#include <libwc/ces.h>
 
 #include <signal.h>
 #include <stdlib.h>

@@ -1,10 +1,8 @@
-
-#include "wc.h"
 #include "uhc.h"
+#include "ces.h"
+#include "ccs.h"
 #include "wtf.h"
-#ifdef USE_UNICODE
 #include "ucs.h"
-#endif
 
 #define C0 WC_UHC_MAP_C0
 #define GL WC_UHC_MAP_GL

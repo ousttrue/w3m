@@ -1,14 +1,10 @@
-
-#ifndef _WC_TYPES_H
-#define _WC_TYPES_H
-
+#pragma once
 #include <Str.h>
 #include <config.h>
-#if defined(HAVE_STDINT_H)
 # include <stdint.h>
-#elif defined(HAVE_INTTYPES_H)
-# include <inttypes.h>
-#endif
+
+#define WC_FALSE 0
+#define WC_TRUE 1
 
 typedef unsigned char  wc_uchar;
 #if defined(HAVE_STDINT_H) || defined(HAVE_INTTYPES_H)
@@ -115,4 +111,3 @@ typedef struct {
 #endif
 } wc_status;
 
-#endif

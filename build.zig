@@ -79,7 +79,7 @@ const libwc_srcs = [_][]const u8{
     "jis.c",
     "johab.c",
     "priv.c",
-    "search.c",
+    "wc_search.c",
     "sjis.c",
     "status.c",
     "ucs.c",
@@ -167,6 +167,7 @@ pub fn build(b: *std.Build) void {
         b.fmt("-DCONF_DIR=\"{s}\"", .{CONF_DIR}),
         b.fmt("-DRC_DIR=\"{s}\"", .{RC_DIR}),
         b.fmt("-DLOCALEDIR=\"{s}\"", .{localedir}),
+        "-Wno-deprecated",
     };
     exe.addCSourceFiles(.{
         .files = &w3m_srcs,

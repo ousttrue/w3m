@@ -3,6 +3,8 @@
 #include "fm.h"
 #include "parsetagx.h"
 #include "myctype.h"
+#include <libwc/ces.h>
+#include <charset.h>
 #include <signal.h>
 #include <setjmp.h>
 

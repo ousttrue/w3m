@@ -6,6 +6,7 @@
 #include <sys/types.h>
 #include "fm.h"
 #include <gc.h>
+#include <charset.h>
 #include "terms.h"
 
 static int LINES, COLS;

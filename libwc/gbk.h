@@ -1,6 +1,5 @@
-
-#ifndef _WC_GBK_H
-#define _WC_GBK_H
+#pragma once
+#include "wc_types.h"
 
 #define WC_GBK_NOSTATE	0
 #define WC_GBK_MBYTE1	1	/* 0x81 - 0xA0, 0xA1 - 0xFE */
@@ -35,4 +34,3 @@ extern Str        wc_conv_from_gbk(Str is, wc_ces ces);
 extern void       wc_push_to_gbk(Str os, wc_wchar_t cc, wc_status *st);
 extern Str        wc_char_conv_from_gbk(wc_uchar c, wc_status *st);
 
-#endif

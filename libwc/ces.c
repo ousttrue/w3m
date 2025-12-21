@@ -1,5 +1,4 @@
-
-#include "wc.h"
+#include "ces.h"
 #include "iso2022.h"
 #include "sjis.h"
 #include "hz.h"
@@ -11,10 +10,8 @@
 #include "uhc.h"
 #include "viet.h"
 #include "priv.h"
-#ifdef USE_UNICODE
 #include "utf8.h"
 #include "utf7.h"
-#endif
 
 static wc_gset gset_usascii[] = {
     { WC_CCS_US_ASCII, WC_C_G0_CS94, 1 },

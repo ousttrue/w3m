@@ -1,6 +1,5 @@
-
-#ifndef _WC_VIET_H
-#define _WC_VIET_H
+#pragma once
+#include "wc_types.h"
 
 extern wc_uint8 wc_c0_tcvn57122_map[];
 extern wc_uint8 wc_c0_viscii112_map[];
@@ -13,5 +12,3 @@ extern wc_wchar_t wc_tcvn57123_to_tcvn5712(wc_wchar_t cc);
 extern wc_uint32 wc_tcvn5712_precompose(wc_uchar c1, wc_uchar c2);
 extern wc_uint32 wc_cp1258_precompose(wc_uchar c1, wc_uchar c2);
 extern Str       wc_char_conv_from_viet(wc_uchar c, wc_status *st);
-
-#endif

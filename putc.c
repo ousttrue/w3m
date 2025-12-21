@@ -1,5 +1,7 @@
 #include "putc.h"
-#include "wc.h"
+#include "ces.h"
+#include "conv.h"
+#include "status.h"
 #include "wtf.h"
 #include <unistd.h>
 

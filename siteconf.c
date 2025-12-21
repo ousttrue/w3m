@@ -6,6 +6,7 @@
 #include "indep.h"
 #include "myctype.h"
 #include <libwc/wc.h>
+#include <libwc/charset.h>
 #include <string.h>
 
 #define SITECONF_FILE	RC_DIR "/siteconf"

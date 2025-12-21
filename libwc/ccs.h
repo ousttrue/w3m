@@ -1,7 +1,4 @@
-
-#ifndef _WC_CCS_H
-#define _WC_CCS_H
-
+#pragma once
 #include "iso2022.h"
 #include "priv.h"
 
@@ -206,7 +203,3 @@
 #define WC_CCS_UNKNOWN_W	WC_CCS_A_UNKNOWN_W
 
 #define WC_CCS_IS_UNICODE(c)	(WC_CCS_SET(c) == WC_CCS_UCS2 || WC_CCS_SET(c) == WC_CCS_UCS4 || WC_CCS_SET(c) == WC_CCS_UCS_TAG)
-
-extern wc_bool wc_is_combining(wc_wchar_t cc);
-
-#endif

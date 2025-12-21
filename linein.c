@@ -5,6 +5,8 @@
 #include "display.h"
 #include "tab.h"
 #include "fm.h"
+#include <libwc/char_conv.h>
+#include <libwc/charset.h>
 #include "local.h"
 #include "myctype.h"
 

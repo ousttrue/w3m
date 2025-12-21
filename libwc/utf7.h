@@ -1,6 +1,5 @@
-
-#ifndef _WC_UTF7_H
-#define _WC_UTF7_H
+#pragma once
+#include "wc_types.h"
 
 #define WC_C_UTF7_PLUS	'+'
 #define WC_C_UTF7_MINUS	'-'
@@ -25,4 +24,3 @@ extern void      wc_push_to_utf7(Str os, wc_wchar_t cc, wc_status *st);
 extern void      wc_push_to_utf7_end(Str os, wc_status *st);
 extern Str       wc_char_conv_from_utf7(wc_uchar c, wc_status *st);
 
-#endif
