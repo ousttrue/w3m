@@ -1,4 +1,5 @@
 #include "w3m_rc.h"
+#include "termcap_util.h"
 #include "linein.h"
 #include "siteconf.h"
 #include "buffer.h"
@@ -6,13 +7,8 @@
 #include "fm.h"
 #include "myctype.h"
 #include "proto.h"
-#include <stdio.h>
-#include <errno.h>
 #include "parsetag.h"
-#include "local.h"
 #include "regex.h"
-#include <stdlib.h>
-#include <stddef.h>
 
 #include "html_form.h"
 #include "siteconf.h"
@@ -33,15 +29,16 @@
 #include <libwc/charset.h>
 #include <libwc/ces.h>
 
-#include <signal.h>
+#include <stdio.h>
+#include <errno.h>
 #include <stdlib.h>
+#include <stddef.h>
+#include <signal.h>
 #include <sys/ioctl.h>
 #include <sys/select.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <termios.h>
-#include <errno.h>
-#include <termcap.h>
 #include <unistd.h>
 
 static struct termios d_ioval;
@@ -197,110 +194,25 @@ void set_int(void)
     /* mySignal(SIGSEGV, error_dump); */
 }
 
-static void
-setgraphchar(void)
-{
-
-    for (int c = 0; c < 96; c++)
-        g_runtime.gcmap[c] = (char)(c + ' ');
-
-    if (!getRuntime()->T_ac)
-        return;
-
-    int n = strlen(getRuntime()->T_ac);
-    for (int i = 0; i < n - 1; i += 2) {
-        int c = (unsigned)getRuntime()->T_ac[i] - ' ';
-        if (c >= 0 && c < 96)
-            g_runtime.gcmap[c] = getRuntime()->T_ac[i + 1];
-    }
-}
-
 char graphchar(char c)
 {
-    return (((unsigned)(c) >= ' ' && (unsigned)(c) < 128) ? g_runtime.gcmap[(c) - ' '] : (c));
+    return (((unsigned)(c) >= ' ' && (unsigned)(c) < 128) ? g_runtime.termcap.gcmap[(c) - ' '] : (c));
 }
-
-#define GETSTR(v, s)               \
-    {                              \
-        v = pt;                    \
-        suc = tgetstr(s, &pt);     \
-        if (!suc)                  \
-            v = "";                \
-        else                       \
-            v = allocStr(suc, -1); \
-    }
-
-static char bp[1024], funcstr[256];
 
 void tty_init_termcap(void)
 {
-    char* ent = getenv("TERM") ? getenv("TERM") : DEFAULT_TERM;
+    const char* ent = getenv("TERM") ? getenv("TERM") : DEFAULT_TERM;
     if (ent == NULL) {
         fprintf(stderr, "TERM is not set\n");
         reset_error_exit(SIGNAL_ARGLIST);
     }
 
-    int r = tgetent(bp, ent);
-    if (r != 1) {
-        /* Can't find termcap entry */
-        fprintf(stderr, "Can't find termcap entry %s\n", ent);
+    if (!termcap_read(&g_runtime.termcap, ent)) {
+        fprintf(stderr, "fail to init: %s\n", ent);
         reset_error_exit(SIGNAL_ARGLIST);
     }
 
-    char* suc;
-    char* pt = funcstr;
-    GETSTR(g_runtime.T_ce, "ce"); /* clear to the end of line */
-    GETSTR(g_runtime.T_cd, "cd"); /* clear to the end of display */
-    GETSTR(g_runtime.T_kr, "nd"); /* cursor right */
-    if (suc == NULL)
-        GETSTR(g_runtime.T_kr, "kr");
-    if (tgetflag("bs"))
-        g_runtime.T_kl = "\b"; /* cursor left */
-    else {
-        GETSTR(g_runtime.T_kl, "le");
-        if (suc == NULL)
-            GETSTR(g_runtime.T_kl, "kb");
-        if (suc == NULL)
-            GETSTR(g_runtime.T_kl, "kl");
-    }
-    GETSTR(g_runtime.T_cr, "cr"); /* carriage return */
-    GETSTR(g_runtime.T_ta, "ta"); /* tab */
-    GETSTR(g_runtime.T_sc, "sc"); /* save cursor */
-    GETSTR(g_runtime.T_rc, "rc"); /* restore cursor */
-    GETSTR(g_runtime.T_so, "so"); /* standout mode */
-    GETSTR(g_runtime.T_se, "se"); /* standout mode end */
-    GETSTR(g_runtime.T_us, "us"); /* underline mode */
-    GETSTR(g_runtime.T_ue, "ue"); /* underline mode end */
-    GETSTR(g_runtime.T_md, "md"); /* bold mode */
-    GETSTR(g_runtime.T_me, "me"); /* bold mode end */
-    GETSTR(g_runtime.T_cl, "cl"); /* clear screen */
-    GETSTR(g_runtime.T_cm, "cm"); /* cursor move */
-    GETSTR(g_runtime.T_al, "al"); /* append line */
-    GETSTR(g_runtime.T_sr, "sr"); /* scroll reverse */
-    GETSTR(g_runtime.T_ti, "ti"); /* terminal init */
-    GETSTR(g_runtime.T_te, "te"); /* terminal end */
-    GETSTR(g_runtime.T_nd, "nd"); /* move right one space */
-    GETSTR(g_runtime.T_eA, "eA"); /* enable alternative charset */
-    GETSTR(g_runtime.T_as, "as"); /* alternative (graphic) charset start */
-    GETSTR(g_runtime.T_ae, "ae"); /* alternative (graphic) charset end */
-    GETSTR(g_runtime.T_ac, "ac"); /* graphics charset pairs */
-    GETSTR(g_runtime.T_op, "op"); /* set default color pair to its original value */
-#if defined(CYGWIN) && CYGWIN < 1
-    /* for TERM=pcansi on MS-DOS prompt. */
-#if 0
-    T_eA = "";
-    T_as = "\033[12m";
-    T_ae = "\033[10m";
-    T_ac = "l\001k\002m\003j\004x\005q\006n\020a\024v\025w\026u\027t\031";
-#endif
-    T_eA = "";
-    T_as = "";
-    T_ae = "";
-    T_ac = "";
-#endif /* CYGWIN */
-
     setlinescols();
-    setgraphchar();
 }
 
 char* ttyname_tty(void)
@@ -350,14 +262,17 @@ skip_escseq(void)
 
 void tty_MOVE(int line, int column)
 {
-    writestr(tgoto(g_runtime.T_cm, column, line));
+    writestr(termcap_str_move(&g_runtime.termcap, (struct TermPosition) {
+                                                      .column = column,
+                                                      .line = line,
+                                                  }));
 }
 
 void initscr(void)
 {
     set_int();
-    if (g_runtime.T_ti && !g_runtime.Do_not_use_ti_te)
-        writestr(g_runtime.T_ti);
+    if (g_runtime.termcap._ti && !g_runtime.Do_not_use_ti_te)
+        writestr(g_runtime.termcap._ti);
     screen_setup(g_runtime.lines, g_runtime.cols);
     tty_clear();
 }
@@ -366,7 +281,9 @@ int graph_ok(void)
 {
     if (UseGraphicChar != GRAPHIC_CHAR_DEC)
         return 0;
-    return g_runtime.T_as[0] != 0 && g_runtime.T_ae[0] != 0 && g_runtime.T_ac[0] != 0;
+    return g_runtime.termcap._as[0] != 0 //
+        && g_runtime.termcap._ae[0] != 0 //
+        && g_runtime.termcap._ac[0] != 0;
 }
 
 static const char* title_str = NULL;
@@ -2797,5 +2714,5 @@ char* helpFile(char* base)
 
 void tty_clear()
 {
-    writestr(g_runtime.T_cl);
+    writestr(g_runtime.termcap._cl);
 }

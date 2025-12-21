@@ -83,16 +83,16 @@ export fn reset_tty() void {
     const g_runtime: *c.Runtime = c.getRuntime() orelse {
         unreachable;
     };
-    writestr(g_runtime.T_op); // turn off
-    writestr(g_runtime.T_me);
+    writestr(g_runtime.termcap._op); // turn off
+    writestr(g_runtime.termcap._me);
     if (g_runtime.Do_not_use_ti_te) {
-        if (g_runtime.T_te != null and g_runtime.T_te[0] != 0) {
-            writestr(g_runtime.T_te);
+        if (g_runtime.termcap._te != null and g_runtime.termcap._te[0] != 0) {
+            writestr(g_runtime.termcap._te);
         } else {
-            writestr(g_runtime.T_cl);
+            writestr(g_runtime.termcap._cl);
         }
     }
-    writestr(g_runtime.T_se); // reset terminal
+    writestr(g_runtime.termcap._se); // reset terminal
     flush_tty();
     // tcsetattr(g_runtime.tty_input, TCSANOW, &d_ioval);
     g_term.exitRawMode();
@@ -670,7 +670,7 @@ export fn tty_refresh() void {
                 moved = .RF_CR_OK;
             }
             if (dirty.* & (c.L_NEED_CE | c.L_CLRTOEOL) != 0) {
-                writestr(g_runtime.T_ce);
+                writestr(g_runtime.termcap._ce);
                 if (col != pcol)
                     c.tty_MOVE(@intCast(line), @intCast(col));
             }
@@ -695,10 +695,10 @@ export fn tty_refresh() void {
                 or (0 == (p[col].prop & c.S_BCOLORED) and (mode & c.S_BCOLORED) != 0) //
                 or (0 == (p[col].prop & c.S_GRAPHICS) and (mode & c.S_GRAPHICS) != 0)) {
                     if ((mode & c.S_COLORED) != 0 or (mode & c.S_BCOLORED) != 0)
-                        writestr(g_runtime.T_op);
+                        writestr(g_runtime.termcap._op);
                     if (mode & c.S_GRAPHICS != 0)
-                        writestr(g_runtime.T_ae);
-                    writestr(g_runtime.T_me);
+                        writestr(g_runtime.termcap._ae);
+                    writestr(g_runtime.termcap._me);
                     mode &= ~M_MEND;
                 }
                 if (if (dirty.* & c.L_NEED_CE != 0 and col >= sc.lines[line].eol)
@@ -712,21 +712,21 @@ export fn tty_refresh() void {
                     (p[col].prop & c.S_DIRTY != 0))
                 {
                     if (col > 0 and pcol == col - 1) {
-                        writestr(g_runtime.T_nd);
+                        writestr(g_runtime.termcap._nd);
                     } else if (pcol != col) {
                         c.tty_MOVE(@intCast(line), @intCast(col));
                     }
 
                     if ((p[col].prop & c.S_STANDOUT != 0) and 0 == (mode & c.S_STANDOUT)) {
-                        writestr(g_runtime.T_so);
+                        writestr(g_runtime.termcap._so);
                         mode |= c.S_STANDOUT;
                     }
                     if ((p[col].prop & c.S_UNDERLINE != 0) and 0 == (mode & c.S_UNDERLINE)) {
-                        writestr(g_runtime.T_us);
+                        writestr(g_runtime.termcap._us);
                         mode |= c.S_UNDERLINE;
                     }
                     if ((p[col].prop & c.S_BOLD != 0) and 0 == (mode & c.S_BOLD)) {
-                        writestr(g_runtime.T_md);
+                        writestr(g_runtime.termcap._md);
                         mode |= c.S_BOLD;
                     }
                     if ((p[col].prop & c.S_COLORED != 0) and (p[col].prop ^ mode) & c.COL_FCOLOR != 0) {
@@ -746,9 +746,9 @@ export fn tty_refresh() void {
                         putc_status.end(getOutputHandle());
                         if (!graph_enabled) {
                             graph_enabled = true;
-                            writestr(g_runtime.T_eA);
+                            writestr(g_runtime.termcap._eA);
                         }
-                        writestr(g_runtime.T_as);
+                        writestr(g_runtime.termcap._as);
                         mode |= c.S_GRAPHICS;
                     }
                     if (p[col].prop & c.S_GRAPHICS != 0) {
@@ -768,12 +768,12 @@ export fn tty_refresh() void {
         dirty.* &= ~(c.L_NEED_CE | c.L_CLRTOEOL);
         if (mode & M_MEND != 0) {
             if (mode & (c.S_COLORED | c.S_BCOLORED) != 0)
-                writestr(g_runtime.T_op);
+                writestr(g_runtime.termcap._op);
             if (mode & c.S_GRAPHICS != 0) {
-                writestr(g_runtime.T_ae);
+                writestr(g_runtime.termcap._ae);
                 putc_status.clear();
             }
-            writestr(g_runtime.T_me);
+            writestr(g_runtime.termcap._me);
             mode &= ~M_MEND;
         }
     }
