@@ -3,7 +3,6 @@
 ///
 /// config
 /// process
-/// tty
 /// signal
 #include "Str.h"
 #include <libwc/wtf.h>
@@ -120,7 +119,7 @@ char graphchar(char c);
 void writestr(const char* s);
 int write1(int c);
 bool fmInitialized(void);
-void init_tty();
+void tty_init_termcap(void);
 // input
 int getch(void);
 // int sleep_till_anykey(int sec, bool purge);

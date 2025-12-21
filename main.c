@@ -383,7 +383,7 @@ die_oom(size_t bytes)
 /// return ture if enter main loop
 bool w3m_args(int argc, char** argv)
 {
-    init_tty();
+    tty_init_termcap();
 
     struct Buffer* newbuf = NULL;
     char* p;

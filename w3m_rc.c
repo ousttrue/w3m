@@ -232,7 +232,7 @@ char graphchar(char c)
 
 static char bp[1024], funcstr[256];
 
-static void getTCstr(void)
+void tty_init_termcap(void)
 {
     char* ent = getenv("TERM") ? getenv("TERM") : DEFAULT_TERM;
     if (ent == NULL) {
@@ -301,11 +301,6 @@ static void getTCstr(void)
 
     setlinescols();
     setgraphchar();
-}
-
-void init_tty()
-{
-    getTCstr();
 }
 
 char* ttyname_tty(void)
