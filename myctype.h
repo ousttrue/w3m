@@ -1,6 +1,7 @@
 #pragma once
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdarg.h>
 
 enum MYCTYPE_TYPES : uint8_t {
     MYCTYPE_CNTRL = 1,
@@ -46,3 +47,8 @@ inline static bool IS_ENDL(uint8_t c) { return ((c) == '\0' || (c) == '\r' || (c
 inline static bool IS_ENDT(uint8_t c) { return (IS_ENDL(c) || (c) == ';'); }
 
 int str_to_bool(char* value, int old);
+
+#define SP_NORMAL 0
+#define SP_PREC 1
+#define SP_PREC2 2
+int vscpf(const char* fmt, va_list ap);

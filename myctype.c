@@ -1,4 +1,5 @@
 #include "myctype.h"
+#include <string.h>
 
 /* $Id: myctype.c,v 1.7 2003/09/22 21:02:20 ukai Exp $ */
 static enum MYCTYPE_TYPES MYCTYPE_MAP[0x100] = {
@@ -564,3 +565,90 @@ int str_to_bool(char* value, int old)
     }
     return 1;
 }
+
+int vscpf(const char* fmt, va_list ap)
+{
+    int len = 0;
+    int status = SP_NORMAL;
+    int p = 0;
+    for (const char* f = fmt; *f; f++) {
+    redo:
+        switch (status) {
+        case SP_NORMAL:
+            if (*f == '%') {
+                status = SP_PREC;
+                p = 0;
+            } else
+                len++;
+            break;
+        case SP_PREC:
+            if (IS_ALPHA(*f)) {
+                /* conversion char. */
+                int vi;
+                char* vs;
+
+                switch (*f) {
+                case 'l':
+                case 'h':
+                case 'L':
+                case 'w':
+                    continue;
+                case 'd':
+                case 'i':
+                case 'o':
+                case 'x':
+                case 'X':
+                case 'u':
+                    vi = va_arg(ap, int);
+                    len += (p > 0) ? p : 10;
+                    break;
+                case 'f':
+                case 'g':
+                case 'e':
+                case 'G':
+                case 'E':
+                    va_arg(ap, double);
+                    len += (p > 0) ? p : 15;
+                    break;
+                case 'c':
+                    len += 1;
+                    vi = va_arg(ap, int);
+                    break;
+                case 's':
+                    vs = va_arg(ap, char*);
+                    vi = strlen(vs);
+                    len += (p > vi) ? p : vi;
+                    break;
+                case 'p':
+                    va_arg(ap, void*);
+                    len += 10;
+                    break;
+                case 'n':
+                    va_arg(ap, void*);
+                    break;
+                }
+                status = SP_NORMAL;
+            } else if (IS_DIGIT(*f))
+                p = p * 10 + *f - '0';
+            else if (*f == '.')
+                status = SP_PREC2;
+            else if (*f == '%') {
+                status = SP_NORMAL;
+                len++;
+            }
+            break;
+        case SP_PREC2:
+            if (IS_ALPHA(*f)) {
+                status = SP_PREC;
+                goto redo;
+            }
+            break;
+        }
+    }
+
+    return len;
+}
+
+
+
+

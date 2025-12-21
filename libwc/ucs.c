@@ -2,6 +2,7 @@
 #ifdef USE_UNICODE
 
 #include <stdlib.h>
+#include <string.h>
 #include "wc.h"
 #include "ucs.h"
 #include "search.h"

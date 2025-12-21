@@ -14,6 +14,7 @@
 #include "utf8.h"
 #include "ctrlcode.h"
 #include "w3m_rc.h"
+#include <string.h>
 
 extern char* conv_entity(unsigned int c);
 

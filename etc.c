@@ -1957,3 +1957,4 @@ Str base64_encode(const char* src, size_t len)
     Strnulterm(dest);
     return dest;
 }
+

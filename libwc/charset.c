@@ -1,6 +1,7 @@
 
 #include <stdlib.h>
 #include <ctype.h>
+#include <string.h>
 #include "../alloc.h"
 
 #include "wc.h"

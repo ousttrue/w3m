@@ -7,6 +7,7 @@
 #include "myctype.h"
 #include "Str.h"
 #include <gc.h>
+#include <string.h>
 
 /* *INDENT-OFF* */
 defhash(HashItem_ss*, int, hss_i)

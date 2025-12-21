@@ -53,7 +53,6 @@ const w3m_srcs = [_][]const u8{
     "tagtable.c",
     "istream.c",
 
-    "Str.c",
     "indep.c",
     "textlist.c",
     "parsetag.c",
@@ -133,7 +132,6 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
         .root_source_file = b.path("main.zig"),
     });
-
     const exe = b.addExecutable(.{
         .name = "w3m",
         .root_module = mod,
@@ -144,6 +142,19 @@ pub fn build(b: *std.Build) void {
     exe.linkLibC();
     exe.addIncludePath(b.path("libwc"));
     exe.addIncludePath(b.path("."));
+
+    const Str_mod = b.addModule("Str", .{
+        .target = target,
+        .optimize = optimize,
+        .root_source_file = b.path("Str.zig"),
+        .link_libc = true,
+    });
+    Str_mod.addIncludePath(b.path(""));
+    const Str_lib = b.addLibrary(.{
+        .name = "Str",
+        .root_module = Str_mod,
+    });
+    exe.linkLibrary(Str_lib);
 
     const flags = [_][]const u8{
         "-Wno-implicit-int",
@@ -190,6 +201,7 @@ pub fn build(b: *std.Build) void {
         const mktable = build_mktable(b, b.graph.host, .ReleaseSafe, &.{"gc"});
         mktable.addIncludePath(b.path("libwc"));
         mktable.addIncludePath(b.path("."));
+        mktable.linkLibrary(Str_lib);
 
         // {
         //     b.installArtifact(mktable);
@@ -245,7 +257,7 @@ fn build_mktable(
     });
     exe.addCSourceFiles(.{
         .files = &.{
-            "mktable.c", "entity.c", "Str.c", "hash.c", "myctype.c",
+            "mktable.c", "entity.c", "hash.c", "myctype.c",
         },
         .flags = &.{
             "-DDUMMY",

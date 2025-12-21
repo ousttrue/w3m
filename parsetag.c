@@ -3,6 +3,7 @@
 #include "indep.h"
 #include "Str.h"
 #include "parsetag.h"
+#include <string.h>
 
 char* tag_get_value(struct parsed_tagarg* t, char* arg)
 {
