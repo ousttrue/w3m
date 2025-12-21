@@ -1,7 +1,7 @@
 #include "myctype.h"
 
 /* $Id: myctype.c,v 1.7 2003/09/22 21:02:20 ukai Exp $ */
-unsigned char MYCTYPE_MAP[0x100] = {
+static enum MYCTYPE_TYPES MYCTYPE_MAP[0x100] = {
     /* NUL SOH STX ETX EOT ENQ ACK BEL   BS  HT  LF  VT  FF  CR  SO  SI */
     1,
     1,
@@ -268,6 +268,7 @@ unsigned char MYCTYPE_MAP[0x100] = {
     0,
     0,
 };
+enum MYCTYPE_TYPES GET_MYCTYPE(uint8_t x) { return (MYCTYPE_MAP[(int)(unsigned char)(x)]); }
 
 unsigned char MYCTYPE_DIGITMAP[0x100] = {
     /* NUL SOH STX ETX EOT ENQ ACK BEL   BS  HT  LF  VT  FF  CR  SO  SI */
@@ -536,6 +537,7 @@ unsigned char MYCTYPE_DIGITMAP[0x100] = {
     255,
     255,
 };
+uint8_t GET_MYCDIGIT(uint8_t x) { return (MYCTYPE_DIGITMAP[(int)(unsigned char)(x)]); }
 
 int str_to_bool(char* value, int old)
 {
@@ -562,5 +564,3 @@ int str_to_bool(char* value, int old)
     }
     return 1;
 }
-
-
