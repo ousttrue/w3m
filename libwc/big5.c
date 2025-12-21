@@ -1,5 +1,5 @@
 #include "big5.h"
-#include "ces.h"
+#include "conv.h"
 #include "ccs.h"
 #include "wtf.h"
 #include "ucs.h"
@@ -105,7 +105,7 @@ wc_conv_from_big5(Str is, wc_ces ces)
 }
 
 void
-wc_push_to_big5(Str os, wc_wchar_t cc, wc_status *st)
+wc_push_to_big5(Str os, wc_wchar_t cc, struct wc_status *st)
 {
   while (1) {
     switch (cc.ccs) {
@@ -140,7 +140,7 @@ wc_push_to_big5(Str os, wc_wchar_t cc, wc_status *st)
 }
 
 Str
-wc_char_conv_from_big5(wc_uchar c, wc_status *st)
+wc_char_conv_from_big5(wc_uchar c, struct wc_status *st)
 {
     static Str os;
     static wc_uchar big5u;

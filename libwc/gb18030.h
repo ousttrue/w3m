@@ -41,7 +41,7 @@ extern wc_uint32  wc_gb18030_to_ucs(wc_wchar_t cc);
 extern wc_wchar_t wc_ucs_to_gb18030(wc_uint32 ucs);
 #endif
 extern Str        wc_conv_from_gb18030(Str is, wc_ces ces);
-extern void       wc_push_to_gb18030(Str os, wc_wchar_t cc, wc_status *st);
-extern Str        wc_char_conv_from_gb18030(wc_uchar c, wc_status *st);
+extern void       wc_push_to_gb18030(Str os, wc_wchar_t cc, struct wc_status *st);
+extern Str        wc_char_conv_from_gb18030(wc_uchar c, struct wc_status *st);
 
 #endif

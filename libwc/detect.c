@@ -78,7 +78,7 @@ wc_auto_detect(char *is, size_t len, wc_ces hint)
     wc_uchar *ep = p + len;
     wc_uchar *q;
     wc_ces euc = 0, priv = 0;
-    wc_status st;
+    struct wc_status st;
     int euc_state = 0, sjis_state = 0, big5_state = 0, hz_state = 0;
     int iso_detect = DETECT_ERROR, euc_detect = DETECT_ERROR,
         sjis_detect = DETECT_ERROR, big5_detect = DETECT_ERROR,
@@ -164,7 +164,7 @@ wc_auto_detect(char *is, size_t len, wc_ces hint)
         possible++;
     }
 
-    wc_input_init(WC_CES_US_ASCII, &st);
+    wc_input_init(&st, WC_CES_US_ASCII);
 
     for (; p < ep; p++) {
         if (possible == 0 || (possible == 1 && ok))

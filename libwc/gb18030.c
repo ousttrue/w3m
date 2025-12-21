@@ -1,5 +1,5 @@
 #include "gb18030.h"
-#include "ces.h"
+#include "conv.h"
 #include "ccs.h"
 #include "wc_search.h"
 #include "wtf.h"
@@ -250,7 +250,7 @@ wc_conv_from_gb18030(Str is, wc_ces ces)
 }
 
 void
-wc_push_to_gb18030(Str os, wc_wchar_t cc, wc_status *st)
+wc_push_to_gb18030(Str os, wc_wchar_t cc, struct wc_status *st)
 {
   while (1) {
     switch (WC_CCS_SET(cc.ccs)) {
@@ -302,7 +302,7 @@ wc_push_to_gb18030(Str os, wc_wchar_t cc, wc_status *st)
 }
 
 Str
-wc_char_conv_from_gb18030(wc_uchar c, wc_status *st)
+wc_char_conv_from_gb18030(wc_uchar c, struct wc_status *st)
 {
     static Str os;
     static wc_uchar gb[4];

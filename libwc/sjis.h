@@ -30,8 +30,9 @@ extern wc_uint32  wc_sjis_ext1_to_N(wc_uint32 cc);
 extern wc_uint32  wc_sjis_ext2_to_N(wc_uint32 cc);
 extern Str        wc_conv_from_sjis(Str is, wc_ces ces);
 extern Str        wc_conv_from_sjisx0213(Str is, wc_ces ces);
-extern void       wc_push_to_sjis(Str os, wc_wchar_t cc, wc_status *st);
-extern void       wc_push_to_sjisx0213(Str os, wc_wchar_t cc, wc_status *st);
-extern Str        wc_char_conv_from_sjis(wc_uchar c, wc_status *st);
-extern Str        wc_char_conv_from_sjisx0213(wc_uchar c, wc_status *st);
+struct wc_status;
+extern void       wc_push_to_sjis(Str os, wc_wchar_t cc, struct wc_status *st);
+extern void       wc_push_to_sjisx0213(Str os, wc_wchar_t cc, struct wc_status *st);
+extern Str        wc_char_conv_from_sjis(wc_uchar c, struct wc_status *st);
+extern Str        wc_char_conv_from_sjisx0213(wc_uchar c, struct wc_status *st);
 

@@ -1,5 +1,5 @@
 #include "utf8.h"
-#include "ces.h"
+#include "conv.h"
 #include "ccs.h"
 #include "ucs.h"
 #include "wtf.h"
@@ -142,7 +142,7 @@ wc_conv_from_utf8(Str is, wc_ces ces)
     int state = WC_UTF8_NOSTATE;
     size_t next = 0;
     wc_uint32 ucs;
-    wc_status st;
+    struct wc_status st;
 
     for (p = sp; p < ep && *p < 0x80; p++)
         ;
@@ -227,7 +227,7 @@ wc_push_tag_to_utf8(Str os, int ntag)
 }
 
 void
-wc_push_to_utf8(Str os, wc_wchar_t cc, wc_status *st)
+wc_push_to_utf8(Str os, wc_wchar_t cc, struct wc_status *st)
 {
   while (1) {
     switch (WC_CCS_SET(cc.ccs)) {
@@ -281,7 +281,7 @@ wc_push_to_utf8(Str os, wc_wchar_t cc, wc_status *st)
 }
 
 void
-wc_push_to_utf8_end(Str os, wc_status *st)
+wc_push_to_utf8_end(Str os, struct wc_status *st)
 {
     if (st->ntag)
         st->ntag = wc_push_tag_to_utf8(os, 0);
@@ -289,7 +289,7 @@ wc_push_to_utf8_end(Str os, wc_status *st)
 }
 
 Str
-wc_char_conv_from_utf8(wc_uchar c, wc_status *st)
+wc_char_conv_from_utf8(wc_uchar c, struct wc_status *st)
 {
     static Str os;
     static wc_uchar buf[6];

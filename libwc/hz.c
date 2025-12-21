@@ -1,6 +1,6 @@
 #include "hz.h"
 #include "ccs.h"
-#include "ces.h"
+#include "conv.h"
 #include "iso2022.h"
 #include "wtf.h"
 #include "ucs.h"
@@ -93,7 +93,7 @@ wc_conv_from_hz(Str is, wc_ces ces)
 }
 
 void
-wc_push_to_hz(Str os, wc_wchar_t cc, wc_status *st)
+wc_push_to_hz(Str os, wc_wchar_t cc, struct wc_status *st)
 {
   while (1) {
     switch (cc.ccs) {
@@ -149,7 +149,7 @@ wc_push_to_hz(Str os, wc_wchar_t cc, wc_status *st)
 }
 
 void
-wc_push_to_hz_end(Str os, wc_status *st)
+wc_push_to_hz_end(Str os, struct wc_status *st)
 {
     if (st->gl) {
         Strcat_char(os, WC_C_HZ_TILDA);

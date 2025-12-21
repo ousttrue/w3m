@@ -38,8 +38,9 @@ extern wc_wchar_t wc_ucs_to_any(wc_uint32 ucs, wc_table *t);
 extern wc_uint32  wc_any_to_ucs(wc_wchar_t cc);
 extern wc_wchar_t wc_any_to_any(wc_wchar_t cc, wc_table *t);
 extern wc_wchar_t wc_ucs_to_any_list(wc_uint32 ucs, wc_table **tlist);
-extern wc_wchar_t wc_any_to_any_ces(wc_wchar_t cc, wc_status *st);
-extern wc_wchar_t wc_any_to_iso2022(wc_wchar_t cc, wc_status *st);
+struct wc_status;
+extern wc_wchar_t wc_any_to_any_ces(wc_wchar_t cc, struct wc_status *st);
+extern wc_wchar_t wc_any_to_iso2022(wc_wchar_t cc, struct wc_status *st);
 extern wc_wchar_t wc_ucs_to_iso2022(wc_uint32 ucs);
 extern wc_wchar_t wc_ucs_to_iso2022w(wc_uint32 ucs);
 extern wc_ccs     wc_ucs_to_ccs(wc_uint32 ucs);
@@ -59,5 +60,5 @@ extern wc_uint32  wc_ucs_precompose(wc_uint32 ucs1, wc_uint32 ucs2);
 extern wc_uint32  wc_ucs_to_fullwidth(wc_uint32 ucs);
 extern int        wc_ucs_put_tag(char *tag);
 extern char      *wc_ucs_get_tag(int ntag);
-extern void       wtf_push_ucs(Str os, wc_uint32 ucs, wc_status *st);
+extern void       wtf_push_ucs(Str os, wc_uint32 ucs, struct wc_status *st);
 

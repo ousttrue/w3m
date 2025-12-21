@@ -9,13 +9,12 @@
 #include "utf8.h"
 #include "utf7.h"
 
-char *WcReplace = "?";
-char *WcReplaceW = "??";
+char* WcReplace = "?";
+char* WcReplaceW = "??";
 
 static Str wc_conv_to_ces(Str is, wc_ces ces);
 
-Str
-wc_Str_conv(Str is, wc_ces f_ces, wc_ces t_ces)
+Str wc_Str_conv(Str is, wc_ces f_ces, wc_ces t_ces)
 {
     if (f_ces != WC_CES_WTF)
         is = (*WcCesInfo[WC_CES_INDEX(f_ces)].conv_from)(is, f_ces);
@@ -25,11 +24,10 @@ wc_Str_conv(Str is, wc_ces f_ces, wc_ces t_ces)
         return is;
 }
 
-Str
-wc_Str_conv_strict(Str is, wc_ces f_ces, wc_ces t_ces)
+Str wc_Str_conv_strict(Str is, wc_ces f_ces, wc_ces t_ces)
 {
     Str os;
-    wc_option opt = WcOption;
+    struct wc_option opt = WcOption;
 
     WcOption.strict_iso2022 = WC_TRUE;
     WcOption.no_replace = WC_TRUE;
@@ -43,10 +41,10 @@ static Str
 wc_conv_to_ces(Str is, wc_ces ces)
 {
     Str os;
-    wc_uchar *sp = (wc_uchar *)is->ptr;
-    wc_uchar *ep = sp + is->length;
-    wc_uchar *p;
-    wc_status st;
+    wc_uchar* sp = (wc_uchar*)is->ptr;
+    wc_uchar* ep = sp + is->length;
+    wc_uchar* p;
+    struct wc_status st;
 
     switch (ces) {
     case WC_CES_HZ_GB_2312:
@@ -69,11 +67,11 @@ wc_conv_to_ces(Str is, wc_ces ces)
 
     os = Strnew_size(is->length);
     if (p > sp)
-        p--;        /* for precompose */
+        p--; /* for precompose */
     if (p > sp)
         Strcat_charp_n(os, is->ptr, (int)(p - sp));
 
-    wc_output_init(ces, &st);
+    wc_output_init(&st, ces);
 
     switch (ces) {
     case WC_CES_ISO_2022_JP:
@@ -101,13 +99,12 @@ wc_conv_to_ces(Str is, wc_ces ces)
         break;
     }
 
-    wc_push_end(os, &st);
+    wc_push_end(&st, os);
 
     return os;
 }
 
-Str
-wc_Str_conv_with_detect(Str is, wc_ces *f_ces, wc_ces hint, wc_ces t_ces)
+Str wc_Str_conv_with_detect(Str is, wc_ces* f_ces, wc_ces hint, wc_ces t_ces)
 {
     wc_ces detect;
 
@@ -122,19 +119,17 @@ wc_Str_conv_with_detect(Str is, wc_ces *f_ces, wc_ces hint, wc_ces t_ces)
             hint = *f_ces;
         detect = wc_auto_detect(is->ptr, is->length, hint);
         if (WcOption.auto_detect == WC_OPT_DETECT_ON) {
-            if ((detect & WC_CES_T_8BIT) ||
-                ((detect & WC_CES_T_NASCII) && ! (*f_ces & WC_CES_T_8BIT)))
+            if ((detect & WC_CES_T_8BIT) || ((detect & WC_CES_T_NASCII) && !(*f_ces & WC_CES_T_8BIT)))
                 *f_ces = detect;
         } else {
-            if ((detect & WC_CES_T_ISO_2022) && ! (*f_ces & WC_CES_T_8BIT))
+            if ((detect & WC_CES_T_ISO_2022) && !(*f_ces & WC_CES_T_8BIT))
                 *f_ces = detect;
         }
     }
     return wc_Str_conv(is, detect, t_ces);
 }
 
-void
-wc_push_end(Str os, wc_status *st)
+void wc_push_end(struct wc_status* st, Str os)
 {
     if (st->ces_info->id & WC_CES_T_ISO_2022)
         wc_push_to_iso2022_end(os, st);
@@ -145,4 +140,3 @@ wc_push_end(Str os, wc_status *st)
     else if (st->ces_info->id == WC_CES_UTF_7)
         wc_push_to_utf7_end(os, st);
 }
-

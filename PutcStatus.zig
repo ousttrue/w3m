@@ -17,7 +17,7 @@ pub fn init(f_ces: c.wc_ces, t_ces: c.wc_ces) @This() {
         .putc_f_ces = f_ces,
         .putc_t_ces = t_ces,
     };
-    c.wc_output_init(t_ces, &this.putc_st);
+    c.wc_output_init(&this.putc_st, t_ces);
     return this;
 }
 
@@ -38,7 +38,7 @@ pub fn putc(this: *@This(), ch: [*c]u8, fd: c_int) void {
 
 pub fn end(this: *@This(), fd: c_int) void {
     c.Strclear(this.putc_str);
-    c.wc_push_end(this.putc_str, &this.putc_st);
+    c.wc_push_end(&this.putc_st, this.putc_str);
     if (this.putc_str.*.length > 0) {
         _ = std.c.write(fd, this.putc_str.*.ptr, this.putc_str.*.length);
     }

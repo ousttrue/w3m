@@ -1,4 +1,5 @@
 #include "viet.h"
+#include "conv.h"
 #include "ccs.h"
 #include "ces.h"
 #include "detect.h"
@@ -149,7 +150,7 @@ wc_conv_from_viet(Str is, wc_ces ces)
 }
 
 void
-wc_push_to_viet(Str os, wc_wchar_t cc, wc_status *st)
+wc_push_to_viet(Str os, wc_wchar_t cc, struct wc_status *st)
 {
     wc_ccs ccs1 = st->ces_info->gset[1].ccs;
     wc_ccs ccs2 = 0, ccs3 = 0;
@@ -212,7 +213,7 @@ wc_push_to_viet(Str os, wc_wchar_t cc, wc_status *st)
 }
 
 Str
-wc_char_conv_from_viet(wc_uchar c, wc_status *st)
+wc_char_conv_from_viet(wc_uchar c, struct wc_status *st)
 {
     Str os = Strnew_size(1);
     wc_uint8 *map = NULL;

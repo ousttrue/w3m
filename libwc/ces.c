@@ -284,7 +284,7 @@ static wc_gset gset_raw[] = {
 #define wc_char_conv_from_vps	wc_char_conv_from_viet
 #define wc_char_conv_from_raw	wc_char_conv_from_priv1
 
-wc_ces_info WcCesInfo[] = {
+struct wc_ces_info WcCesInfo[] = {
     ces_ascii(US_ASCII, "US-ASCII", "Latin (US-ASCII)"),
 
     ces_iso8859(ISO_8859_1,  "ISO-8859-1",  "Latin 1 (ISO-8859-1)",        1),

@@ -514,7 +514,7 @@ static wc_ces_list* list = NULL;
 wc_ces_list*
 wc_get_ces_list(void)
 {
-    wc_ces_info* info;
+    struct wc_ces_info* info;
     size_t n;
 
     if (list)

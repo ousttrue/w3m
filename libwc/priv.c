@@ -1,4 +1,5 @@
 #include "priv.h"
+#include "ces.h"
 #include "ccs.h"
 #include "status.h"
 #include "wtf.h"
@@ -30,7 +31,7 @@ wc_conv_from_priv1(Str is, wc_ces ces)
 }
 
 Str
-wc_char_conv_from_priv1(wc_uchar c, wc_status *st)
+wc_char_conv_from_priv1(wc_uchar c, struct wc_status *st)
 {
     Str os = Strnew_size(1);
 
@@ -67,7 +68,7 @@ wc_conv_from_ascii(Str is, wc_ces ces)
 }
 
 void
-wc_push_to_raw(Str os, wc_wchar_t cc, wc_status *st)
+wc_push_to_raw(Str os, wc_wchar_t cc, struct wc_status *st)
 {
 
     switch (cc.ccs) {

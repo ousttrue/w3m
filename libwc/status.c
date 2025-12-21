@@ -5,34 +5,36 @@
 #include <string.h>
 #include "../alloc.h"
 
-wc_option WcOption = {
-    WC_OPT_DETECT_ON, /* auto_detect */
-    WC_TRUE, /* use_combining */
-    WC_TRUE, /* use_language_tag */
-    WC_TRUE, /* ucs_conv */
-    WC_FALSE, /* pre_conv */
-    WC_TRUE, /* fix_width_conv */
-    WC_FALSE, /* use_gb12345_map */
-    WC_FALSE, /* use_jisx0201 */
-    WC_FALSE, /* use_jisc6226 */
-    WC_FALSE, /* use_jisx0201k */
-    WC_FALSE, /* use_jisx0212 */
-    WC_FALSE, /* use_jisx0213 */
-    WC_TRUE, /* strict_iso2022 */
-    WC_FALSE, /* gb18030_as_ucs */
-    WC_FALSE, /* no_replace */
-    WC_TRUE, /* use_wide */
-    WC_FALSE, /* east_asian_width */
+struct wc_option WcOption = {
+    .auto_detect = WC_OPT_DETECT_ON,
+    .use_combining = WC_TRUE,
+    .use_language_tag = WC_TRUE,
+    .ucs_conv = WC_TRUE,
+    .pre_conv = WC_FALSE,
+    .fix_width_conv = WC_TRUE,
+    .use_gb12345_map = WC_FALSE,
+    .use_jisx0201 = WC_FALSE,
+    .use_jisc6226 = WC_FALSE,
+    .use_jisx0201k = WC_FALSE,
+    .use_jisx0212 = WC_FALSE,
+    .use_jisx0213 = WC_FALSE,
+    .strict_iso2022 = WC_TRUE,
+    .gb18030_as_ucs = WC_FALSE,
+    .no_replace = WC_FALSE,
+    .use_wide = WC_TRUE,
+    .east_asian_width = WC_FALSE,
 };
 
-static wc_status output_st;
-static wc_option output_option;
+static struct wc_status output_st;
+static struct wc_option output_option;
 static wc_bool output_set = WC_FALSE;
 
-#define wc_option_cmp(opt1, opt2) \
-    memcmp((void*)(opt1), (void*)(opt2), sizeof(wc_option))
+int wc_option_cmp(struct wc_option* opt1, struct wc_option* opt2)
+{
+    return memcmp(opt1, opt2, sizeof(struct wc_option));
+}
 
-void wc_input_init(wc_ces ces, wc_status* st)
+void wc_input_init(struct wc_status* st, wc_ces ces)
 {
     wc_gset* gset;
     int i, g;
@@ -63,7 +65,7 @@ void wc_input_init(wc_ces ces, wc_status* st)
     st->ntag = 0;
 }
 
-void wc_output_init(wc_ces ces, wc_status* st)
+void wc_output_init(struct wc_status* st, wc_ces ces)
 {
     wc_gset* gset;
     size_t i, n, nw;
@@ -152,7 +154,7 @@ void wc_output_init(wc_ces ces, wc_status* st)
 }
 
 wc_bool
-wc_ces_has_ccs(wc_ccs ccs, wc_status* st)
+wc_ces_has_ccs(struct wc_status* st, wc_ccs ccs)
 {
     wc_gset* gset = st->ces_info->gset;
     int i;
