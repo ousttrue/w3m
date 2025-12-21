@@ -75,6 +75,9 @@ struct Runtime g_runtime = {
     .cols = 0,
     .Do_not_use_ti_te = false,
 
+    .showLineNum = (FALSE),
+    .FoldLine = (FALSE),
+
     .CurrentTab = 0,
     .FirstTab = 0,
     .LastTab = 0,
@@ -1613,8 +1616,8 @@ struct param_ptr params1[] = {
     { "image_map_list", P_INT, PI_ONOFF, (void*)&image_map_list,
         CMT_IMAGE_MAP_LIST, NULL },
 #endif
-    { "fold_line", P_INT, PI_ONOFF, (void*)&FoldLine, CMT_FOLD_LINE, NULL },
-    { "show_lnum", P_INT, PI_ONOFF, (void*)&showLineNum, CMT_SHOW_NUM, NULL },
+    { "fold_line", P_INT, PI_ONOFF, (void*)&g_runtime.FoldLine, CMT_FOLD_LINE, NULL },
+    { "show_lnum", P_INT, PI_ONOFF, (void*)&g_runtime.showLineNum, CMT_SHOW_NUM, NULL },
     { "show_srch_str", P_INT, PI_ONOFF, (void*)&show_srch_str,
         CMT_SHOW_SRCH_STR, NULL },
     { "label_topline", P_INT, PI_ONOFF, (void*)&label_topline,

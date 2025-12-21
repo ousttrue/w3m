@@ -174,10 +174,6 @@ void bzero(void*, int);
 
 #define FONTSTAT_MAX 127
 
-#define _INIT_BUFFER_WIDTH (TTY_COLS() - (showLineNum ? 6 : 1))
-#define INIT_BUFFER_WIDTH ((_INIT_BUFFER_WIDTH > 0) ? _INIT_BUFFER_WIDTH : 0)
-#define FOLD_BUFFER_WIDTH (FoldLine ? (INIT_BUFFER_WIDTH + 1) : -1)
-
 #define in_bold fontstat[0]
 #define in_under fontstat[1]
 #define in_italic fontstat[2]
@@ -485,7 +481,6 @@ global int displayLinkNumber init(FALSE);
 global int displayLineInfo init(FALSE);
 global int DecodeURL init(FALSE);
 global int retryAsHttp init(TRUE);
-global int showLineNum init(FALSE);
 global int show_srch_str init(TRUE);
 #ifdef USE_IMAGE
 global char* Imgdisplay init(IMGDISPLAY);
@@ -552,7 +547,6 @@ global int ignore_null_img_alt init(TRUE);
 #define DISPLAY_INS_DEL_FONTIFY 2
 global int displayInsDel init(DISPLAY_INS_DEL_NORMAL);
 global int FoldTextarea init(FALSE);
-global int FoldLine init(FALSE);
 #define DEFAULT_URL_EMPTY 0
 #define DEFAULT_URL_CURRENT 1
 #define DEFAULT_URL_LINK 2

@@ -307,7 +307,6 @@ extern void reshapeBuffer(struct Buffer* buf);
 extern void copyBuffer(struct Buffer* a, struct Buffer* b);
 extern struct Buffer* prevBuffer(struct Buffer* first, struct Buffer* buf);
 extern int writeBufferCache(struct Buffer* buf);
-extern int readBufferCache(struct Buffer* buf);
 extern void addChar(char c, Lineprop mode);
 #ifdef USE_M17N
 extern void addMChar(char* c, Lineprop mode, size_t len);

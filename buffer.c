@@ -603,7 +603,7 @@ void reshapeBuffer(struct Buffer* buf)
                 gotoLine(buf, cur->linenumber);
         }
         buf->pos -= buf->currentLine->bpos;
-        if (FoldLine && !is_html_type(buf->type))
+        if (getRuntime()->FoldLine && !is_html_type(buf->type))
             buf->currentColumn = 0;
         else
             buf->currentColumn = sbuf.currentColumn;
@@ -694,26 +694,26 @@ _error1:
     return -1;
 }
 
-int readBufferCache(struct Buffer* buf)
+bool readBufferCache(struct Buffer* buf)
 {
-    FILE* cache;
-    struct Line *l = NULL, *prevl = NULL, *basel = NULL;
-    long lnum = 0, clnum, tlnum;
-#ifdef USE_ANSI_COLOR
-    int colorflag;
-#endif
-
-    if (buf->savecache == NULL)
-        return -1;
-
-    cache = fopen(buf->savecache, "r");
-    if (cache == NULL || fread1(clnum, cache) || fread1(tlnum, cache)) {
-        if (cache != NULL)
-            fclose(cache);
-        buf->savecache = NULL;
-        return -1;
+    if (!buf->savecache) {
+        return false;
     }
 
+    long clnum, tlnum;
+    FILE* cache = fopen(buf->savecache, "r");
+    if (!cache || fread1(clnum, cache) || fread1(tlnum, cache)) {
+        if (cache) {
+            fclose(cache);
+        }
+        buf->savecache = NULL;
+        return false;
+    }
+
+    struct Line* l = NULL;
+    struct Line* prevl = NULL;
+    struct Line* basel = NULL;
+    int lnum = 0;
     while (!feof(cache)) {
         lnum++;
         prevl = l;
@@ -742,7 +742,8 @@ int readBufferCache(struct Buffer* buf)
             l->propBuf = basel->propBuf + l->bpos;
         } else
             break;
-#ifdef USE_ANSI_COLOR
+
+        int colorflag;
         if (fread1(colorflag, cache))
             break;
         if (colorflag) {
@@ -754,7 +755,6 @@ int readBufferCache(struct Buffer* buf)
         } else {
             l->colorBuf = NULL;
         }
-#endif
     }
     if (prevl) {
         buf->lastLine = prevl;
@@ -763,7 +763,7 @@ int readBufferCache(struct Buffer* buf)
     fclose(cache);
     unlink(buf->savecache);
     buf->savecache = NULL;
-    return 0;
+    return true;
 }
 
 void delBuffer(struct Buffer* buf)

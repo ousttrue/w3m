@@ -659,13 +659,11 @@ bool w3m_args(int argc, char** argv)
             } else if (!strcmp("-sixel", argv[i])) {
                 enable_inline_image = INLINE_IMG_SIXEL;
             } else if (!strcmp("-num", argv[i]))
-                showLineNum = TRUE;
+                getRuntime()->showLineNum = TRUE;
             else if (!strcmp("-no-proxy", argv[i]))
                 use_proxy = FALSE;
-#ifdef INET6
             else if (!strcmp("-4", argv[i]) || !strcmp("-6", argv[i]))
                 set_param_option(Sprintf("dns_order=%c", argv[i][1])->ptr);
-#endif
             else if (!strcmp("-post", argv[i])) {
                 if (++i >= argc)
                     usage();

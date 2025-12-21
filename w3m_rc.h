@@ -55,6 +55,8 @@ struct Runtime {
 
     char ExtHalfdump;
     int Tabstop;
+    int showLineNum;
+    int FoldLine;
 
     int lines;
     int cols;
@@ -101,6 +103,10 @@ char* url_quote_conv(const char* x, wc_ces c);
 Str Str_conv_to_halfdump(Str x);
 Str Str_conv_to_system(Str x);
 Str Str_conv_from_system(Str x);
+
+#define _INIT_BUFFER_WIDTH (TTY_COLS() - (getRuntime()->showLineNum ? 6 : 1))
+#define INIT_BUFFER_WIDTH ((_INIT_BUFFER_WIDTH > 0) ? _INIT_BUFFER_WIDTH : 0)
+#define FOLD_BUFFER_WIDTH (getRuntime()->FoldLine ? (INIT_BUFFER_WIDTH + 1) : -1)
 
 #define get_strwidth(c) wtf_strwidth((wc_uchar*)(c))
 #define get_Str_strwidth(c) wtf_strwidth((wc_uchar*)((c)->ptr))

@@ -315,15 +315,15 @@ make_lastline_message(struct Buffer* buf)
     if (s) {
         int l = TTY_COLS() - 3 - sl;
         if (get_Str_strwidth(msg) > l) {
-#ifdef USE_M17N
-            char* p;
+
+            const char* p;
             for (p = msg->ptr; *p; p += get_mclen(p)) {
                 l -= get_mcwidth(p);
                 if (l < 0)
                     break;
             }
             l = p - msg->ptr;
-#endif
+
             Strtruncate(msg, l);
         }
         Strcat_charp(msg, "> ");
@@ -336,10 +336,11 @@ make_lastline_message(struct Buffer* buf)
 
 void displayBuffer(struct Buffer* buf, enum DisplayMode mode)
 {
-
-    if (!buf)
+    if (!buf) {
         return;
-    if (buf->topLine == NULL && readBufferCache(buf) == 0) { /* clear_buffer */
+    }
+
+    if (buf->topLine == NULL && readBufferCache(buf)) {
         mode = B_FORCE_REDRAW;
     }
 
@@ -347,12 +348,12 @@ void displayBuffer(struct Buffer* buf, enum DisplayMode mode)
         buf->width = INIT_BUFFER_WIDTH;
     if (buf->height == 0)
         buf->height = LASTLINE() + 1;
-    if ((buf->width != INIT_BUFFER_WIDTH && (is_html_type(buf->type) || FoldLine))
+    if ((buf->width != INIT_BUFFER_WIDTH && (is_html_type(buf->type) || getRuntime()->FoldLine))
         || buf->need_reshape) {
         buf->need_reshape = TRUE;
         reshapeBuffer(buf);
     }
-    if (showLineNum) {
+    if (getRuntime()->showLineNum) {
         if (buf->lastLine && buf->lastLine->real_linenumber > 0)
             buf->rootX = (int)(log(buf->lastLine->real_linenumber + 0.1)
                              / log(10))
@@ -605,7 +606,7 @@ redrawLine(struct Buffer* buf, struct Line* l, int i)
             return NULL;
     }
     screen_move(i, 0);
-    if (showLineNum) {
+    if (getRuntime()->showLineNum) {
         char tmp[16];
         if (!buf->rootX) {
             if (buf->lastLine->real_linenumber > 0)

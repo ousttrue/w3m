@@ -117,3 +117,4 @@ struct Buffer {
 
 void delBuffer(struct Buffer* buf);
 void cmd_loadBuffer(struct Buffer* buf, int prop, enum LinkBufferID linkid);
+bool readBufferCache(struct Buffer* buf);
