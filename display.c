@@ -430,10 +430,6 @@ void displayBuffer(struct Buffer* buf, enum DisplayMode mode)
         save_current_buf = buf;
     }
 #endif
-    if (mode == B_FORCE_REDRAW && (buf->check_url & CHK_URL)) {
-        chkURLBuffer(buf);
-        displayBuffer(buf, B_NORMAL);
-    }
 }
 
 static void
@@ -1133,17 +1129,6 @@ void disp_message_nsec(char* s, int redraw_current, int sec, int purge, int mous
     else
         message(s, LASTLINE(), 0);
     tty_refresh();
-#ifdef USE_MOUSE
-    if (mouse && use_mouse)
-        mouse_active();
-#endif
-    // sleep_till_anykey(sec, purge);
-#ifdef USE_MOUSE
-    if (mouse && use_mouse)
-        mouse_inactive();
-#endif
-    if (CurrentTab() != NULL && Currentbuf != NULL && redraw_current)
-        displayBuffer(Currentbuf, B_NORMAL);
 }
 
 void disp_message(char* s, int redraw_current)

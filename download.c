@@ -144,7 +144,6 @@ void download_panel()
     bool reload = download_checkList();
     struct Buffer* buf = DownloadListBuffer();
     if (!buf) {
-        displayBuffer(Currentbuf, B_NORMAL);
         return;
     }
     buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);

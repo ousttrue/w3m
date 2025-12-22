@@ -1029,6 +1029,10 @@ bool w3m_args(int argc, char** argv)
 
 void w3m_idle()
 {
+    // if (mode == B_FORCE_REDRAW && (buf->check_url & CHK_URL)) {
+    //     chkURLBuffer(buf);
+    // }
+
     if (activeImage && displayImage && Currentbuf->img) {
         if (!Currentbuf->image_loaded) {
             loadImage(Currentbuf, IMG_FLAG_NEXT);
@@ -1381,19 +1385,12 @@ DEFUN(ldown1, DOWN, "Scroll the screen down one line")
 /* move cursor position to the center of screen */
 DEFUN(ctrCsrV, CENTER_V, "Center on cursor line")
 {
-    int offsety;
     if (Currentbuf->firstLine == NULL)
         return;
-    offsety = /*Currentbuf->LINES / 2*/ -Currentbuf->cursorY;
+    int offsety = /*Currentbuf->LINES / 2*/ -Currentbuf->cursorY;
     if (offsety != 0) {
-#if 0
-	Currentbuf->currentLine = lineSkip(Currentbuf,
-					   Currentbuf->currentLine, offsety,
-					   FALSE);
-#endif
         Currentbuf->topLine = lineSkip(Currentbuf, Currentbuf->topLine, -offsety, FALSE);
         arrangeLine(Currentbuf);
-        displayBuffer(Currentbuf, B_NORMAL);
     }
 }
 
@@ -1406,7 +1403,6 @@ DEFUN(ctrCsrH, CENTER_H, "Center on cursor column")
     if (offsetx != 0) {
         columnSkip(Currentbuf, offsetx);
         arrangeCursor(Currentbuf);
-        displayBuffer(Currentbuf, B_NORMAL);
     }
 }
 
@@ -1442,7 +1438,7 @@ srchcore(char* volatile str, SearchFunc func)
 
     str = conv_search_string(SearchString, getRuntime()->DisplayCharset);
     auto prevtrap = mySignal(SIGINT, intTrap);
-    exitRawMode();
+    tty_cbreak(true);
     if (SETJMP(IntReturn) == 0) {
         for (i = 0; i < PREC_NUM; i++) {
             result = func(Currentbuf, str);
@@ -1451,7 +1447,7 @@ srchcore(char* volatile str, SearchFunc func)
         }
     }
     mySignal(SIGINT, prevtrap);
-    enterRawMode();
+    tty_cbreak(false);
     return result;
 }
 
@@ -1568,7 +1564,6 @@ srch(SearchFunc func, char* prompt)
         if (str != NULL && *str == '\0')
             str = SearchString;
         if (str == NULL) {
-            displayBuffer(Currentbuf, B_NORMAL);
             return;
         }
         disp = TRUE;
@@ -1581,7 +1576,6 @@ srch(SearchFunc func, char* prompt)
         clear_mark(Currentbuf->currentLine);
     else
         Currentbuf->pos = pos;
-    displayBuffer(Currentbuf, B_NORMAL);
     if (disp)
         disp_srchresult(result, prompt, str);
     searchRoutine = func;

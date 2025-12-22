@@ -603,7 +603,6 @@ struct Buffer* loadLink(char* url, char* target, char* referer, struct FormList*
             arrangeCursor(Currentbuf);
         }
     }
-    displayBuffer(Currentbuf, B_NORMAL);
     return buf;
 }
 
