@@ -1,5 +1,6 @@
 #pragma once
 #include "wc_types.h"
+#include "Str.h"
 
 #define WC_C_UTF8_L2	0x80
 #define WC_C_UTF8_L3	0x800

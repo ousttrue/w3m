@@ -8,7 +8,6 @@
 #include "ctrlcode.h"
 
 #include <math.h>
-#include <signal.h>
 #include "fm.h"
 
 /* *INDENT-OFF* */

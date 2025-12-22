@@ -1,5 +1,6 @@
 #pragma once
 #include "wc_types.h"
+#include "Str.h"
 
 #define WC_C_JOHAB_ERROR	0xFFFFFFFFU
 

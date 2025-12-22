@@ -1,5 +1,6 @@
 #pragma once
 #include "wc_types.h"
+#include "Str.h"
 
 #define WC_C_SJIS_ERROR		0xFFFFFFFFU
 

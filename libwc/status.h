@@ -1,5 +1,6 @@
 #pragma once
 #include "wc_types.h"
+#include "Str.h"
 
 enum WC_OPT_DETECT_MODE : wc_uint8 {
     WC_OPT_DETECT_OFF = 0,

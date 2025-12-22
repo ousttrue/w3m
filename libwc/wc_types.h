@@ -1,7 +1,7 @@
 #pragma once
-#include <Str.h>
 #include <config.h>
 #include <stdint.h>
+#include <stddef.h>
 
 #define WC_FALSE 0
 #define WC_TRUE 1
@@ -52,5 +52,3 @@ typedef struct {
     char* name;
     char* desc;
 } wc_ces_list;
-
-

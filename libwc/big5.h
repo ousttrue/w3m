@@ -1,5 +1,6 @@
 #pragma once
 #include "wc_types.h"
+#include "Str.h"
 
 #define WC_C_BIG5_2_BASE	(0x28 * 0x9D)
 

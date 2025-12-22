@@ -1,5 +1,6 @@
 #pragma once
 #include "wc_types.h"
+#include "Str.h"
 
 #define WC_C_ESC	0x1B	/* '\033' */
 #define WC_C_SS2	0x4E	/* ESC 'N' */

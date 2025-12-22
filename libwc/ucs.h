@@ -1,5 +1,6 @@
 #pragma once
 #include "wc_types.h"
+#include "Str.h"
 
 #define WC_C_UCS2_NBSP		0xA0
 #define WC_C_UCS2_BOM		0xFEFF

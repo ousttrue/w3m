@@ -1,5 +1,6 @@
 #pragma once
 #include "wc_types.h"
+#include "Str.h"
 
 #define WC_GBK_NOSTATE	0
 #define WC_GBK_MBYTE1	1	/* 0x81 - 0xA0, 0xA1 - 0xFE */

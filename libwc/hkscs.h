@@ -1,5 +1,6 @@
 #pragma once
 #include "wc_types.h"
+#include "Str.h"
 
 #define WC_HKSCS_NOSTATE	0
 #define WC_HKSCS_MBYTE1	1	/* 0x88 - 0xFE */

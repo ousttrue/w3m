@@ -1,5 +1,6 @@
 #pragma once
 #include "wc_types.h"
+#include "Str.h"
 
 extern wc_uint8 wc_c0_tcvn57122_map[];
 extern wc_uint8 wc_c0_viscii112_map[];

@@ -1,5 +1,6 @@
 #pragma once
 #include "wc_types.h"
+#include "Str.h"
 
 typedef Str (*ConvFromFunc)(Str is, wc_ces f_ces);
 typedef void (*PushToFunc)(Str os, wc_wchar_t, void*);
