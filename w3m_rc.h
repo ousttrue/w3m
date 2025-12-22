@@ -182,3 +182,4 @@ wc_uint32 getChar(char* p);
 
 void show_params(FILE* fp);
 int exec_cmd(const char *cmd);
+uint8_t blockChild(const char *cmd);

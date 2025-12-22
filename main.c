@@ -2381,7 +2381,7 @@ DEFUN(editBf, EDIT, "Edit local source")
     else
         cmd = myEditor(Editor, shell_quote(fn),
             cur_real_linenumber(Currentbuf));
-    exec_cmd(cmd->ptr);
+    blockChild(cmd->ptr);
 
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
     reload();

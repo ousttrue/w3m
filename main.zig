@@ -781,6 +781,110 @@ export fn tty_refresh() void {
     }
 }
 
+const ArgSplitter = struct {
+    seq: []const u8,
+    pos: usize = 0,
+
+    fn init(seq: []const u8) @This() {
+        return .{
+            .seq = seq,
+        };
+    }
+
+    fn isEnd(this: @This()) bool {
+        return this.pos >= this.seq.len;
+    }
+
+    fn next(this: *@This()) ?[]const u8 {
+        if (this.pos >= this.seq.len) {
+            return null;
+        }
+
+        // skip white space
+        while (this.pos < this.seq.len //
+        and std.ascii.isWhitespace(this.seq[this.pos])) {
+            this.pos += 1;
+        }
+        const begin = this.pos;
+
+        // search end
+        while (this.pos < this.seq.len //
+        and !std.ascii.isWhitespace(this.seq[this.pos])) {
+            this.pos += 1;
+        }
+        const end = this.pos;
+
+        if (begin < end) {
+            return this.seq[begin..end];
+        } else {
+            return null;
+        }
+    }
+};
+
+test "ArgSplitter" {
+    {
+        var sp = ArgSplitter.init("nvim \"hoge.txt\"");
+        try std.testing.expectEqualSlices(u8, "nvim", sp.next().?);
+        try std.testing.expectEqualSlices(u8, "\"hoge.txt\"", sp.next().?);
+        try std.testing.expectEqual(null, sp.next());
+        try std.testing.expect(sp.isEnd());
+    }
+    {
+        var sp = ArgSplitter.init(" a b c ");
+        try std.testing.expectEqualSlices(u8, "a", sp.next().?);
+        try std.testing.expectEqualSlices(u8, "b", sp.next().?);
+        try std.testing.expectEqualSlices(u8, "c", sp.next().?);
+        try std.testing.expectEqual(null, sp.next());
+        try std.testing.expect(sp.isEnd());
+    }
+}
+
+fn allocArgv(allocator: std.mem.Allocator, src: []const u8) ![]const []const u8 {
+    var argv: std.ArrayList([]const u8) = .{};
+    defer argv.deinit(allocator);
+
+    var it = ArgSplitter.init(src);
+    while (it.next()) |arg| {
+        try argv.append(allocator, arg);
+    }
+
+    return try argv.toOwnedSlice(allocator);
+}
+
+test "allocArgv" {
+    const cmd = "vim hoge";
+    const cmd_argv: []const []const u8 = &.{ "vim", "hoge" };
+    const argv = try allocArgv(std.testing.allocator, cmd);
+    defer std.testing.allocator.free(argv);
+
+    // try std.testing.expectEqual(cmd_argv.len, argv.len);
+    for (cmd_argv, argv) |l, r| {
+        try std.testing.expectEqualSlices(u8, l, r);
+    }
+}
+
+export fn blockChild(cmd: [*c]const u8) u8 {
+    const argv = allocArgv(g_allocator, std.mem.span(cmd)) catch @panic("blockChild");
+    defer g_allocator.free(argv);
+    var child = std.process.Child.init(argv, g_allocator);
+    child.stdin_behavior = .Inherit;
+    child.stdout_behavior = .Inherit;
+    child.stderr_behavior = .Inherit;
+
+    exitRawMode();
+    defer enterRawMode();
+
+    if (child.spawnAndWait()) |ret| {
+        return ret.Exited;
+    } else |_| {
+        std.debug.print("\n[Hit any key]", .{});
+        flush_tty();
+        _ = getch();
+        return 1;
+    }
+}
+
 export fn exec_cmd(cmd: [*c]const u8) c_int {
     exitRawMode();
     const rv = c.system(cmd);
