@@ -176,9 +176,7 @@ static int ccolumn = -1;
 static int ulmode = 0, somode = 0, bomode = 0;
 static int anch_mode = 0, emph_mode = 0, imag_mode = 0, form_mode = 0,
            active_mode = 0, visited_mode = 0, mark_mode = 0, graph_mode = 0;
-#ifdef USE_ANSI_COLOR
 static Linecolor color_mode = 0;
-#endif
 
 #ifdef USE_BUFINFO
 static struct Buffer* save_current_buf = NULL;
@@ -190,24 +188,21 @@ static void drawAnchorCursor(struct Buffer* buf);
 #define redrawBuffer(buf) redrawNLine(buf, LASTLINE())
 static void redrawNLine(struct Buffer* buf, int n);
 static struct Line* redrawLine(struct Buffer* buf, struct Line* l, int i);
-#ifdef USE_IMAGE
+
 static int image_touch = 0;
 static int draw_image_flag = FALSE;
 static struct Line* redrawLineImage(struct Buffer* buf, struct Line* l, int i);
-#endif
+
 static int redrawLineRegion(struct Buffer* buf, struct Line* l, int i, int bpos, int epos);
 static void do_effects(Lineprop m);
-#ifdef USE_ANSI_COLOR
+
 static void do_color(Linecolor c);
-#endif
 
 static Str
 make_lastline_link(struct Buffer* buf, char* title, char* url)
 {
     Str s = NULL, u;
-#ifdef USE_M17N
     Lineprop* pr;
-#endif
     struct Url pu;
     char* p;
     int l = TTY_COLS() - 1, i;
@@ -230,9 +225,7 @@ make_lastline_link(struct Buffer* buf, char* title, char* url)
     u = parsedURL2Str(&pu);
     if (DecodeURL)
         u = Strnew_charp(url_decode2(u->ptr, buf));
-#ifdef USE_M17N
     u = checkType(u, &pr, NULL);
-#endif
     if (l <= 4 || l >= get_Str_strwidth(u)) {
         if (!s)
             return u;
@@ -242,17 +235,13 @@ make_lastline_link(struct Buffer* buf, char* title, char* url)
     if (!s)
         s = Strnew_size(TTY_COLS());
     i = (l - 2) / 2;
-#ifdef USE_M17N
     while (i && pr[i] & PC_WCHAR2)
         i--;
-#endif
     Strcat_charp_n(s, u->ptr, i);
     Strcat_charp(s, "..");
     i = get_Str_strwidth(u) - (TTY_COLS() - 1 - get_Str_strwidth(s));
-#ifdef USE_M17N
     while (i < u->length && pr[i] & PC_WCHAR2)
         i++;
-#endif
     Strcat_charp(s, &u->ptr[i]);
     return s;
 }
@@ -264,13 +253,10 @@ make_lastline_message(struct Buffer* buf)
     int sl = 0;
 
     if (displayLink) {
-#ifdef USE_IMAGE
         struct MapArea* a = retrieveCurrentMapArea(buf);
         if (a)
             s = make_lastline_link(buf, a->alt, a->url);
-        else
-#endif
-        {
+        else {
             struct Anchor* a = retrieveCurrentAnchor(buf);
             char* p = NULL;
             if (a && a->title && *a->title)
@@ -290,12 +276,7 @@ make_lastline_message(struct Buffer* buf)
         }
     }
 
-#ifdef USE_MOUSE
-    if (use_mouse && mouse_action.lastline_str)
-        msg = Strnew_charp(mouse_action.lastline_str);
-    else
-#endif /* not USE_MOUSE */
-        msg = Strnew();
+    msg = Strnew();
     if (displayLineInfo && buf->currentLine != NULL && buf->lastLine != NULL) {
         int cl = buf->currentLine->real_linenumber;
         int ll = buf->lastLine->real_linenumber;
@@ -305,10 +286,8 @@ make_lastline_message(struct Buffer* buf)
         msg = Sprintf("%s", msg->ptr);
     }
     Strcat_charp(msg, "Viewing");
-#ifdef USE_SSL
     if (buf->ssl_certificate)
         Strcat_charp(msg, "[SSL]");
-#endif
     Strcat_charp(msg, " <");
     Strcat_charp(msg, buf->buffername);
 
@@ -348,11 +327,18 @@ void displayBuffer(struct Buffer* buf, enum DisplayMode mode)
         buf->width = INIT_BUFFER_WIDTH;
     if (buf->height == 0)
         buf->height = LASTLINE() + 1;
-    if ((buf->width != INIT_BUFFER_WIDTH && (is_html_type(buf->type) || getRuntime()->FoldLine))
+
+    // reshape
+    if ((
+            buf->width != INIT_BUFFER_WIDTH //
+            && (is_html_type(buf->type) || getRuntime()->FoldLine) //
+            )
         || buf->need_reshape) {
         buf->need_reshape = TRUE;
         reshapeBuffer(buf);
     }
+
+    // rootX
     if (getRuntime()->showLineNum) {
         if (buf->lastLine && buf->lastLine->real_linenumber > 0)
             buf->rootX = (int)(log(buf->lastLine->real_linenumber + 0.1)
@@ -362,9 +348,12 @@ void displayBuffer(struct Buffer* buf, enum DisplayMode mode)
             buf->rootX = 5;
         if (buf->rootX > TTY_COLS())
             buf->rootX = TTY_COLS();
-    } else
+    } else {
         buf->rootX = 0;
+    }
     buf->COLS = TTY_COLS() - buf->rootX;
+
+    // rootY
     int ny = 0;
     if (nTab() > 1) {
         if (mode == B_FORCE_REDRAW || mode == B_REDRAW_IMAGE)
@@ -379,7 +368,14 @@ void displayBuffer(struct Buffer* buf, enum DisplayMode mode)
         arrangeCursor(buf);
         mode = B_REDRAW_IMAGE;
     }
-    if (mode == B_FORCE_REDRAW || mode == B_SCROLL || mode == B_REDRAW_IMAGE || cline != buf->topLine || ccolumn != buf->currentColumn) {
+
+    // check viewport ?
+    if (mode == B_FORCE_REDRAW //
+        || mode == B_SCROLL //
+        || mode == B_REDRAW_IMAGE //
+        || cline != buf->topLine //
+        || ccolumn != buf->currentColumn) {
+
         if (activeImage && (mode == B_REDRAW_IMAGE || cline != buf->topLine || ccolumn != buf->currentColumn)) {
             if (draw_image_flag) {
                 tty_clear();
@@ -395,6 +391,7 @@ void displayBuffer(struct Buffer* buf, enum DisplayMode mode)
         cline = buf->topLine;
         ccolumn = buf->currentColumn;
     }
+
     if (buf->topLine == NULL)
         buf->topLine = buf->firstLine;
 

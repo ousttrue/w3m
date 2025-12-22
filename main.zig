@@ -186,8 +186,10 @@ export fn tty_cbreak(enable: bool) void {
     }
 }
 
+export fn w3m_nop() void {}
+
 export fn getch() c_int {
-    return @intCast(g_term.getch(&w3m_idle));
+    return @intCast(g_term.getch(&w3m_nop));
 }
 
 //

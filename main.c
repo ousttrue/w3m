@@ -1029,9 +1029,14 @@ bool w3m_args(int argc, char** argv)
 
 void w3m_idle()
 {
-    if (activeImage && displayImage && Currentbuf->img && !Currentbuf->image_loaded) {
-        loadImage(Currentbuf, IMG_FLAG_NEXT);
+    if (activeImage && displayImage && Currentbuf->img) {
+        if (!Currentbuf->image_loaded) {
+            loadImage(Currentbuf, IMG_FLAG_NEXT);
+        }
     }
+
+    displayBuffer(Currentbuf, B_NORMAL);
+    tty_refresh();
 
     // idle timer event
     //     if (Currentbuf->event) {
