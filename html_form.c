@@ -13,7 +13,6 @@
 #include "myctype.h"
 #include "local.h"
 #include "regex.h"
-#include "util.h"
 #include "menu.h"
 #include <libwc/charset.h>
 #include <libwc/conv.h>

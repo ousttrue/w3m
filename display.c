@@ -421,8 +421,10 @@ void displayBuffer(struct Buffer* buf, enum DisplayMode mode)
     term_title(conv_to_system(buf->buffername));
     tty_refresh();
 
-    if (activeImage && displayImage && buf->img && buf->image_loaded) {
-        drawImage(buf);
+    if (activeImage && displayImage && buf->img) {
+        if (buf->image_loaded) {
+            drawImage(buf);
+        }
     }
 
 #ifdef USE_BUFINFO

@@ -17,7 +17,6 @@ const w3m_srcs = [_][]const u8{
     "buffer.c",
     "download.c",
     "keybind.c",
-    "util.c",
     "html_form.c",
     "line.c",
 

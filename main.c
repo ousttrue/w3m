@@ -45,8 +45,6 @@ extern int do_getch();
 #endif /* defined(USE_GPM) || defined(USE_SYSMOUSE) */
 #endif
 
-#include "util.h"
-
 #ifdef __MINGW32_VERSION
 #include <winsock.h>
 

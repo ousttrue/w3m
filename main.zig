@@ -5,6 +5,8 @@ const c = @cImport({
     @cInclude("image.h");
     @cInclude("terms.h");
     @cInclude("download.h");
+
+    @cInclude("stdlib.h");
 });
 const PutcStatus = @import("PutcStatus.zig");
 
@@ -776,5 +778,22 @@ export fn tty_refresh() void {
             writestr(g_runtime.termcap._me);
             mode &= ~M_MEND;
         }
+    }
+}
+
+export fn exec_cmd(cmd: [*c]const u8) c_int {
+    exitRawMode();
+    const rv = c.system(cmd);
+    if (rv == 0) {
+        // success
+        enterRawMode();
+        return 0;
+    } else {
+        // error
+        std.debug.print("\n[Hit any key]", .{});
+        flush_tty();
+        _ = getch();
+        enterRawMode();
+        return rv;
     }
 }
