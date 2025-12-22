@@ -1,5 +1,5 @@
 const std = @import("std");
-const EpollQueue = @import("EpollQueue.zig");
+const Epoll = @import("Epoll.zig");
 
 allocator: std.mem.Allocator,
 input: std.fs.File,
@@ -7,17 +7,19 @@ is_tty: bool,
 is_rawmode: bool = false,
 termios: ?std.posix.termios = null,
 buffer: [256]u8 = undefined,
-queue: ?*EpollQueue = null,
+epoll: Epoll,
 
 pub fn init(allocator: std.mem.Allocator, input: std.fs.File) !@This() {
     var this = @This(){
         .allocator = allocator,
         .input = input,
         .is_tty = std.c.isatty(input.handle) != 0,
+        .epoll = .init(),
     };
     if (this.is_tty) {
         this.termios = try std.posix.tcgetattr(this.input.handle);
     }
+    this.epoll.add_fd(input.handle);
 
     return this;
 }
@@ -54,27 +56,13 @@ pub fn enterRawMode(this: *@This()) !void {
         raw.cc[@intFromEnum(std.posix.V.TIME)] = 0;
         try std.posix.tcsetattr(this.input.handle, .FLUSH, raw);
         this.is_rawmode = true;
-
-        if(this.queue)|queue|{
-            // drop input queue
-            queue.destroy();
-            this.queue = null;
-        }
-
-        const queue = try EpollQueue.create(this.allocator);
-        queue.add_fd(this.input.handle);
-        try queue.start();
-        this.queue = queue;
     }
 }
 
 pub fn exitRawMode(this: *@This()) void {
     if (this.termios) |termios| {
-        if (this.queue) |queue| {
-            queue.destroy();
-            this.queue = null;
-        }
-        std.posix.tcsetattr(this.input.handle, .FLUSH, termios) catch @panic("exitRawMode");
+        std.posix.tcsetattr(this.input.handle, .FLUSH, termios) catch
+            @panic("exitRawMode");
         this.is_rawmode = false;
     }
 }
@@ -87,7 +75,8 @@ pub fn cbreakMode(this: *@This()) !void {
         var cbreak = try std.posix.tcgetattr(this.input.handle);
         cbreak.lflag.ISIG = true;
         // cbreak.cc[@intFromEnum(std.posix.V.MIN)] = 4;
-        std.posix.tcsetattr(this.input.handle, .FLUSH, cbreak) catch @panic("exitRawMode");
+        std.posix.tcsetattr(this.input.handle, .FLUSH, cbreak) catch
+            @panic("exitRawMode");
     }
 }
 
@@ -106,28 +95,22 @@ pub fn getWinsize(this: @This()) !std.posix.winsize {
 }
 
 pub fn getch(this: *@This(), onIdle: *const fn () callconv(.c) void) u8 {
-    if (this.queue) |queue| {
-        while (true) {
-            const event = queue.nextEvent();
-            switch (event) {
-                .key => |key| {
-                    return key;
-                },
-                .idle => {
-                    onIdle();
-                },
-            }
-        }
-    } else {
-        var buf: [1]u8 = undefined;
-        if (this.input.read(&buf)) |size| {
-            if (size == 1) {
-                return buf[0];
-            } else {
-                return 0;
-            }
-        } else |err| {
-            @panic(@errorName(err));
+    while (true) {
+        const has_input = this.epoll.next(80) catch {
+            // error ?
+            continue;
+        };
+        if (has_input) |_| {
+            var buf: [1]u8 = undefined;
+            const readsize = std.posix.read(
+                this.input.handle,
+                &buf,
+            ) catch @panic("getch");
+            std.debug.assert(readsize == 1);
+            return buf[0];
+        } else {
+            // timeout
+            onIdle();
         }
     }
 }
