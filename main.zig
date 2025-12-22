@@ -5,7 +5,7 @@ const c = @cImport({
     @cInclude("image.h");
     @cInclude("terms.h");
     @cInclude("download.h");
-
+    @cInclude("myctype.h");
     @cInclude("stdlib.h");
 });
 const PutcStatus = @import("PutcStatus.zig");
@@ -317,9 +317,7 @@ var g_screen: c.Screen = .{
     .x = 0,
     .mode = 0,
 };
-export fn screen_get() *c.Screen {
-    return &g_screen;
-}
+
 export fn screen_need_redraw(
     c1: [*c]const u8,
     pr1: c.ScreenCellProperty,
@@ -364,13 +362,184 @@ export fn screen_setup(line_count: usize, col_count: usize) void {
     screen_clear();
 }
 
+fn screen_cell_set(
+    cell: *c.ScreenCell,
+    ch: [*c]const u8,
+    len: usize,
+    prop: c.ScreenCellProperty,
+) void {
+    SET_CHAR(cell, ch, len);
+    SET_PROP(cell, prop);
+}
+
+fn screen_addmchz(pc: [*c]const u8, len: usize, width: usize) void {
+    if (pc == null or len == 0) {
+        return;
+    }
+    if (g_screen.x == g_screen.col_count)
+        screen_wrap();
+    if (g_screen.x >= g_screen.col_count)
+        return;
+
+    const ch = pc[0];
+
+    var line = g_screen.lines[g_screen.y].cells[0..g_screen.col_count];
+    if (line[g_screen.x].prop & c.S_EOL != 0) {
+        if (ch == ' ' and 0 == (g_screen.mode & M_SPACE)) {
+            // advnce cursor
+            g_screen.x += 1;
+            return;
+        }
+        // drop tail space
+        var _i: i32 = @intCast(g_screen.x);
+        while (_i >= 0) : (_i -= 1) {
+            const i: usize = @intCast(_i);
+            if (0 == (line[i].prop & c.S_EOL)) {
+                break;
+            }
+            screen_cell_set(
+                &line[i],
+                c.SCREEN_SPACE,
+                1,
+                (line[i].prop & M_CEOL) | c.C_ASCII,
+            );
+        }
+    }
+
+    if (ch == '\t' or ch == '\n' or ch == '\r' or ch == 0x8 //'\b'
+    ) {
+        SET_CHAR_MODE(&g_screen.mode, c.C_CTRL);
+    } else if (len > 1) {
+        SET_CHAR_MODE(&g_screen.mode, c.C_WCHAR1);
+    } else if (!c.IS_CNTRL(ch)) {
+        SET_CHAR_MODE(&g_screen.mode, c.C_ASCII);
+    } else {
+        return;
+    }
+
+    // Required to erase bold or underlined character for some terminal emulators.
+    {
+        var i = g_screen.x + width - 1;
+        if (i < g_screen.col_count //
+        and (((line[i].prop & c.S_BOLD) != 0 and screen_need_redraw(
+            (&line[i].str).ptr,
+            line[i].prop,
+            pc,
+            g_screen.mode,
+        )) //
+            or ((line[i].prop & c.S_UNDERLINE) != 0 and 0 == (g_screen.mode & c.S_UNDERLINE))))
+        {
+            screen_touch_line();
+            i += 1;
+            if (i < g_screen.col_count) {
+                screen_touch_column(i);
+                if (line[i].prop & c.S_EOL != 0) {
+                    screen_cell_set(&line[i], c.SCREEN_SPACE, 1, (line[i].prop & M_CEOL) | c.C_ASCII);
+                } else {
+                    i += 1;
+                    while (i < g_screen.col_count //
+                    and CHAR_MODE(line[i].prop) == c.C_WCHAR2) : (i += 1) {
+                        screen_touch_column(i);
+                    }
+                }
+            }
+        }
+    }
+
+    if (g_screen.x + width > g_screen.col_count) {
+        // 全角 身切れ
+        screen_touch_line();
+        for (g_screen.x..g_screen.col_count) |i| {
+            screen_cell_set(&line[i], c.SCREEN_SPACE, 1, (line[i].prop & ~c.C_WHICHCHAR) | c.C_ASCII);
+            screen_touch_column(i);
+        }
+
+        // new line and get first cell
+        screen_wrap();
+        if (g_screen.x + width > g_screen.col_count)
+            return;
+        line = g_screen.lines[g_screen.y].cells[0..g_screen.col_count];
+    }
+
+    if (CHAR_MODE(line[g_screen.x].prop) == c.C_WCHAR2) {
+        // 全角文字の先頭以外。前の文字をクリア
+        screen_touch_line();
+        var _i: i32 = @intCast(g_screen.x - 1);
+        while (_i >= 0) : (_i -= 1) {
+            const i: usize = @intCast(_i);
+            const l = CHAR_MODE(line[i].prop);
+            screen_cell_set(&line[i], c.SCREEN_SPACE, 1, (line[i].prop & ~c.C_WHICHCHAR) | c.C_ASCII);
+            screen_touch_column(i);
+            if (l != c.C_WCHAR2)
+                break;
+        }
+    }
+
+    if (CHAR_MODE(g_screen.mode) != c.C_CTRL) {
+        if (screen_need_redraw(
+            (&line[g_screen.x].str).ptr,
+            line[g_screen.x].prop,
+            pc,
+            g_screen.mode,
+        )) {
+            screen_cell_set(&line[g_screen.x], pc, len, g_screen.mode);
+            screen_touch_line();
+            screen_touch_column(g_screen.x);
+            SET_CHAR_MODE(&g_screen.mode, c.C_WCHAR2);
+            var i = g_screen.x + 1;
+            while (i < g_screen.x + width) : (i += 1) {
+                // 全角文字の後続cell
+                screen_cell_set(&line[i], c.SCREEN_SPACE, 1, (line[g_screen.x].prop & ~c.C_WHICHCHAR) | c.C_WCHAR2);
+                screen_touch_column(i);
+            }
+            while (i < g_screen.col_count and CHAR_MODE(line[i].prop) == c.C_WCHAR2) : (i += 1) {
+                // 下にあった全角文字の後続を消す
+                screen_cell_set(&line[i], c.SCREEN_SPACE, 1, (line[i].prop & ~c.C_WHICHCHAR) | c.C_ASCII);
+                screen_touch_column(i);
+            }
+        }
+        g_screen.x += width;
+    } else if (ch == '\t') {
+        var dest = (g_screen.x + g_screen.tab_step) / g_screen.tab_step * g_screen.tab_step;
+        if (dest >= g_screen.col_count) {
+            screen_wrap();
+            screen_touch_line();
+            dest = g_screen.tab_step;
+            line = g_screen.lines[g_screen.y].cells[0..g_screen.col_count];
+        }
+        var i = g_screen.x;
+        while (i < dest) : (i += 1) {
+            if (screen_need_redraw(
+                (&line[i].str).ptr,
+                line[i].prop,
+                c.SCREEN_SPACE,
+                g_screen.mode,
+            )) {
+                screen_cell_set(&line[i], c.SCREEN_SPACE, 1, g_screen.mode);
+                screen_touch_line();
+                screen_touch_column(i);
+            }
+        }
+        g_screen.x = i;
+    } else if (ch == '\n') {
+        screen_wrap();
+    } else if (ch == '\r') { // Carriage return
+        g_screen.x = 0;
+    } else if (ch == 0x8 //'\b'
+    and g_screen.x > 0) { // Backspace
+        g_screen.x -= 1;
+        while (g_screen.x > 0 and CHAR_MODE(line[g_screen.x].prop) == c.C_WCHAR2)
+            g_screen.x -= 1;
+    }
+}
+
 export fn screen_addmch(pc: [*c]const u8, len: usize, width: usize) void {
     // copy for zero terminate
     var buf: [8]u8 = undefined;
     std.debug.assert(len < @sizeOf(@TypeOf(buf)));
     std.mem.copyForwards(u8, &buf, pc[0..len]);
     buf[len] = 0;
-    c.screen_addmchz((&buf).ptr, len, width);
+    screen_addmchz((&buf).ptr, len, width);
 }
 
 export fn screen_move(line: usize, column: usize) void {
@@ -602,10 +771,8 @@ fn bcolor_seq(buf: []u8, colmode: c_int) [:0]const u8 {
 }
 
 export fn tty_refresh() void {
-    const sc: *c.Screen = c.screen_get();
-
     // int line, col;
-    var pline: usize = sc.y;
+    var pline: usize = g_screen.y;
     var moved = RefreshStatus.RF_NEED_TO_MOVE;
     var mode: c.ScreenCellProperty = 0;
     var color = c.COL_FTERM;
@@ -617,22 +784,22 @@ export fn tty_refresh() void {
 
     defer {
         putc_status.end(getOutputHandle());
-        c.tty_MOVE(@intCast(sc.y), @intCast(sc.x));
+        c.tty_MOVE(@intCast(g_screen.y), @intCast(g_screen.x));
         flush_tty();
     }
 
-    for (0..sc.line_count) |line| {
-        const pLine = &sc.lines[line];
+    for (0..g_screen.line_count) |line| {
+        const pLine = &g_screen.lines[line];
         const p = pLine.cells;
         const dirty = &pLine.isdirty;
         if (dirty.* & c.L_DIRTY != 0) {
             dirty.* &= ~c.L_DIRTY;
             var col: usize = 0;
-            while (col < sc.col_count) : (col += 1) {
+            while (col < g_screen.col_count) : (col += 1) {
                 if (p[col].prop & c.S_EOL != 0) {
                     break;
                 }
-                if (dirty.* & c.L_NEED_CE != 0 and col >= sc.lines[line].eol) {
+                if (dirty.* & c.L_NEED_CE != 0 and col >= g_screen.lines[line].eol) {
                     if (c.screen_need_redraw(
                         &p[col].str[0],
                         p[col].prop,
@@ -647,15 +814,15 @@ export fn tty_refresh() void {
             }
             var pcol: usize = undefined;
             if (dirty.* & (c.L_NEED_CE | c.L_CLRTOEOL) != 0) {
-                pcol = sc.lines[line].eol;
-                if (pcol >= sc.col_count) {
+                pcol = g_screen.lines[line].eol;
+                if (pcol >= g_screen.col_count) {
                     dirty.* &= ~(c.L_NEED_CE | c.L_CLRTOEOL);
                     pcol = col;
                 }
             } else {
                 pcol = col;
             }
-            if (line < sc.line_count - 2 and (line > 0 and pline == line - 1) and pcol == 0) {
+            if (line < g_screen.line_count - 2 and (line > 0 and pline == line - 1) and pcol == 0) {
                 switch (moved) {
                     .RF_NEED_TO_MOVE => {
                         c.tty_MOVE(@intCast(line), 0);
@@ -705,7 +872,7 @@ export fn tty_refresh() void {
                     writestr(g_runtime.termcap._me);
                     mode &= ~M_MEND;
                 }
-                if (if (dirty.* & c.L_NEED_CE != 0 and col >= sc.lines[line].eol)
+                if (if (dirty.* & c.L_NEED_CE != 0 and col >= g_screen.lines[line].eol)
                     c.screen_need_redraw(
                         &p[col].str[0],
                         p[col].prop,

@@ -37,7 +37,6 @@ const w3m_srcs = [_][]const u8{
     "image.c",
     "symbol.c",
     "entity.c",
-    "terms.c",
     "url.c",
     "ftp.c",
     "mimehead.c",

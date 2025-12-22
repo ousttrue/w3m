@@ -90,8 +90,6 @@ struct Screen {
     enum ScreenCellProperty mode;
 };
 
-struct Screen* screen_get();
-
 bool screen_need_redraw(char* c1, enum ScreenCellProperty pr1, const char* c2, enum ScreenCellProperty pr2);
 void screen_setup(size_t lines, size_t cols);
 void screen_move(size_t line, size_t column);
