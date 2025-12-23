@@ -61,35 +61,6 @@ enum ScreenLineFlags : uint16_t {
     L_CLRTOEOL = 0x08,
 };
 
-enum ScreenCellProperty CHAR_MODE(enum ScreenCellProperty c);
-
-struct ScreenCell {
-    char str[8];
-    enum ScreenCellProperty prop;
-};
-
-void SET_CHAR(struct ScreenCell* p, const char* ch, size_t len);
-void SET_PROP(struct ScreenCell* p, enum ScreenCellProperty prop);
-void SET_CHAR_MODE(enum ScreenCellProperty* var, enum ScreenCellProperty mode);
-
-struct ScreenLine {
-    struct ScreenCell* cells;
-    enum ScreenLineFlags isdirty;
-    size_t eol;
-};
-
-struct Screen {
-    size_t line_count;
-    size_t line_capacity;
-    size_t col_count;
-    size_t col_capacity;
-    struct ScreenLine* lines;
-    size_t y;
-    size_t x;
-    size_t tab_step;
-    enum ScreenCellProperty mode;
-};
-
 bool screen_need_redraw(char* c1, enum ScreenCellProperty pr1, const char* c2, enum ScreenCellProperty pr2);
 void screen_setup(size_t lines, size_t cols);
 void screen_move(size_t line, size_t column);

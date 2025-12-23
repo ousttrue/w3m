@@ -305,18 +305,30 @@ export fn get_pixel_per_cell(ppc: *c_int, ppl: *c_int) bool {
 //
 // screen
 //
-
-var g_screen: c.Screen = .{
-    .lines = null,
-    .line_count = 0,
-    .line_capacity = 0,
-    .col_count = 0,
-    .col_capacity = 0,
-    .tab_step = 8,
-    .y = 0,
-    .x = 0,
-    .mode = 0,
+const ScreenCell = struct {
+    str: [8]u8,
+    prop: c.ScreenCellProperty,
 };
+
+const ScreenLine = struct {
+    cells: [*]ScreenCell,
+    isdirty: c.ScreenLineFlags,
+    eol: usize,
+};
+
+const Screen = struct {
+    line_count: usize = 0,
+    line_capacity: usize = 0,
+    col_count: usize = 0,
+    col_capacity: usize = 0,
+    lines: [*]ScreenLine = undefined,
+    y: usize = 0,
+    x: usize = 0,
+    tab_step: usize = 8,
+    mode: c.ScreenCellProperty = 0,
+};
+
+var g_screen = Screen{};
 
 export fn screen_need_redraw(
     c1: [*c]const u8,
@@ -335,7 +347,7 @@ export fn screen_need_redraw(
     }
 }
 
-fn screen_deinit(this: *c.Screen, allocator: std.mem.Allocator) void {
+fn screen_deinit(this: *Screen, allocator: std.mem.Allocator) void {
     if (this.line_capacity > 0) {
         for (this.lines[0..this.line_capacity]) |l| {
             allocator.free(l.cells[0..this.col_capacity]);
@@ -350,12 +362,12 @@ export fn screen_setup(line_count: usize, col_count: usize) void {
     screen_deinit(&g_screen, g_allocator);
 
     g_screen.line_capacity = line_count + 1;
-    g_screen.lines = (g_allocator.alloc(c.ScreenLine, g_screen.line_capacity) catch @panic("OOM")).ptr;
+    g_screen.lines = (g_allocator.alloc(ScreenLine, g_screen.line_capacity) catch @panic("OOM")).ptr;
     g_screen.line_count = line_count;
 
     g_screen.col_capacity = col_count + 1;
     for (g_screen.lines[0..g_screen.line_capacity]) |*l| {
-        l.cells = (g_allocator.alloc(c.ScreenCell, g_screen.col_capacity) catch @panic("OOM")).ptr;
+        l.cells = (g_allocator.alloc(ScreenCell, g_screen.col_capacity) catch @panic("OOM")).ptr;
     }
     g_screen.col_count = col_count;
 
@@ -363,7 +375,7 @@ export fn screen_setup(line_count: usize, col_count: usize) void {
 }
 
 fn screen_cell_set(
-    cell: *c.ScreenCell,
+    cell: *ScreenCell,
     ch: [*c]const u8,
     len: usize,
     prop: c.ScreenCellProperty,
@@ -549,7 +561,7 @@ export fn screen_move(line: usize, column: usize) void {
         g_screen.x = column;
 }
 
-export fn SET_CHAR(p: *c.ScreenCell, ch: [*c]const u8, len: usize) void {
+export fn SET_CHAR(p: *ScreenCell, ch: [*c]const u8, len: usize) void {
     std.mem.copyForwards(u8, p.str[0 .. len + 1], ch[0 .. len + 1]);
 }
 
@@ -561,7 +573,7 @@ export fn SET_CHAR_MODE(prop: *c.ScreenCellProperty, mode: c.ScreenCellProperty)
     prop.* = (prop.* & ~c.C_WHICHCHAR) | mode;
 }
 
-export fn SET_PROP(p: *c.ScreenCell, prop: c.ScreenCellProperty) void {
+export fn SET_PROP(p: *ScreenCell, prop: c.ScreenCellProperty) void {
     p.prop = (p.prop & c.S_DIRTY) | prop;
 }
 
@@ -602,9 +614,9 @@ export fn screen_standend() void {
 export fn screen_toggle_stand() void {
     const p = g_screen.lines[g_screen.y].cells;
     p[g_screen.x].prop ^= c.S_STANDOUT;
-    if (c.CHAR_MODE(p[g_screen.x].prop) != c.C_WCHAR2) {
+    if (CHAR_MODE(p[g_screen.x].prop) != c.C_WCHAR2) {
         var i = g_screen.x + 1;
-        while (c.CHAR_MODE(p[i].prop) == c.C_WCHAR2) : (i += 1) {
+        while (CHAR_MODE(p[i].prop) == c.C_WCHAR2) : (i += 1) {
             p[i].prop ^= c.S_STANDOUT;
         }
     }
@@ -654,6 +666,7 @@ export fn screen_clear() void {
     while (i < g_screen.line_count) : (i += 1) {
         for (g_screen.lines[i].cells[0..g_screen.col_capacity]) |*cell| {
             cell.* = .{
+                .str = [1]u8{0} ** 8,
                 .prop = c.S_EOL,
             };
         }
@@ -734,12 +747,12 @@ export fn screen_touch_cursor() void {
         var i = g_screen.x;
         while (i >= 0) : (i -= 1) {
             c.screen_touch_column(i);
-            if (c.CHAR_MODE(g_screen.lines[g_screen.y].cells[i].prop) != c.C_WCHAR2)
+            if (CHAR_MODE(g_screen.lines[g_screen.y].cells[i].prop) != c.C_WCHAR2)
                 break;
         }
     }
     for (g_screen.x + 1..g_screen.col_count) |i| {
-        if (c.CHAR_MODE(g_screen.lines[g_screen.y].cells[i].prop) != c.C_WCHAR2)
+        if (CHAR_MODE(g_screen.lines[g_screen.y].cells[i].prop) != c.C_WCHAR2)
             break;
         c.screen_touch_column(i);
     }
@@ -924,7 +937,7 @@ export fn tty_refresh() void {
                     }
                     if (p[col].prop & c.S_GRAPHICS != 0) {
                         _ = write1(c.graphchar(p[col].str[0]));
-                    } else if (c.CHAR_MODE(p[col].prop) != c.C_WCHAR2) {
+                    } else if (CHAR_MODE(p[col].prop) != c.C_WCHAR2) {
                         putc_status.putc(&p[col].str[0], getOutputHandle());
                     }
                     pcol = col + 1;
