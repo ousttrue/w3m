@@ -48,7 +48,6 @@ void cmd_loadBuffer(struct Buffer* buf, int prop, enum LinkBufferID linkid)
         }
         pushBuffer(buf);
     }
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
 #ifdef USE_MOUSE

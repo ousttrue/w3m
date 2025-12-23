@@ -7895,8 +7895,6 @@ doExternal(URLFile uf, char* type, struct Buffer* defaultbuf)
             exitRawMode();
             mySystem(command->ptr, 0);
             enterRawMode();
-            if (CurrentTab() && Currentbuf)
-                displayBuffer(Currentbuf, B_FORCE_REDRAW);
         } else {
             mySystem(command->ptr, 1);
         }
