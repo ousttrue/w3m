@@ -115,6 +115,8 @@ struct Buffer {
     struct _AlarmEvent* event;
 };
 
+struct Url* baseURL(struct Buffer* buf);
+char* url_decode2(const char* url, const struct Buffer* buf);
 void delBuffer(struct Buffer* buf);
 void cmd_loadBuffer(struct Buffer* buf, int prop, enum LinkBufferID linkid);
 bool readBufferCache(struct Buffer* buf);
@@ -133,3 +135,11 @@ void arrangeLine(struct Buffer* buf);
 int columnSkip(struct Buffer* buf, int offset);
 struct Line* lineSkip(struct Buffer* buf, struct Line* line, int offset, int last);
 struct Line* currentLineSkip(struct Buffer* buf, struct Line* line, int offset, int last);
+int getMapXY(struct Buffer* buf, struct Anchor* a, int* x, int* y);
+struct MapArea* retrieveCurrentMapArea(struct Buffer* buf);
+extern struct Anchor* retrieveAnchor(struct AnchorList* al, int line, int pos);
+extern struct Anchor* retrieveCurrentAnchor(struct Buffer* buf);
+extern struct Anchor* retrieveCurrentImg(struct Buffer* buf);
+extern struct Anchor* retrieveCurrentForm(struct Buffer* buf);
+extern struct Anchor* retrieveCurrentMap(struct Buffer* buf);
+extern void reshapeBuffer(struct Buffer* buf);

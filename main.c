@@ -101,8 +101,6 @@ static int searchKeyNum(void);
 #define help() fusage(stdout, 0)
 #define usage() fusage(stderr, 1)
 
-int enable_inline_image;
-
 static void
 fversion(FILE* f)
 {
@@ -525,22 +523,13 @@ bool w3m_args(int argc, char** argv)
                 if (atoi(argv[i]) > 0)
                     getRuntime()->Tabstop = atoi(argv[i]);
             } else if (!strcmp("-r", argv[i]))
-                ShowEffect = FALSE;
+                getRuntime()->ShowEffect = false;
             else if (!strcmp("-l", argv[i])) {
                 if (++i >= argc)
                     usage();
                 if (atoi(argv[i]) > 0)
                     PagerMax = atoi(argv[i]);
             }
-#ifdef USE_M17N
-#if 0 /* use -O{s|j|e} instead */
-	    else if (!strcmp("-s", argv[i]))
-		DisplayCharset = WC_CES_SHIFT_JIS;
-	    else if (!strcmp("-j", argv[i]))
-		DisplayCharset = WC_CES_ISO_2022_JP;
-	    else if (!strcmp("-e", argv[i]))
-		DisplayCharset = WC_CES_EUC_JP;
-#endif
             else if (!strncmp("-I", argv[i], 2)) {
                 if (argv[i][2] != '\0')
                     p = argv[i] + 2;
@@ -562,7 +551,6 @@ bool w3m_args(int argc, char** argv)
                 }
                 getRuntime()->DisplayCharset = wc_guess_charset_short(p, getRuntime()->DisplayCharset);
             }
-#endif
             else if (!strcmp("-graph", argv[i]))
                 UseGraphicChar = GRAPHIC_CHAR_DEC;
             else if (!strcmp("-no-graph", argv[i]))
@@ -638,26 +626,26 @@ bool w3m_args(int argc, char** argv)
                     usage();
                 ppc = atof(argv[i]);
                 if (ppc >= MINIMUM_PIXEL_PER_CHAR && ppc <= MAXIMUM_PIXEL_PER_CHAR) {
-                    pixel_per_char = ppc;
-                    set_pixel_per_char = TRUE;
+                    getRuntime()->pixel_per_char = ppc;
+                    getRuntime()->set_pixel_per_char = true;
                 }
             }
-#ifdef USE_IMAGE
+
             else if (!strcmp("-ppl", argv[i])) {
                 double ppc;
                 if (++i >= argc)
                     usage();
                 ppc = atof(argv[i]);
                 if (ppc >= MINIMUM_PIXEL_PER_CHAR && ppc <= MAXIMUM_PIXEL_PER_CHAR * 2) {
-                    pixel_per_line = ppc;
-                    set_pixel_per_line = TRUE;
+                    getRuntime()->pixel_per_line = ppc;
+                    getRuntime()->set_pixel_per_line = TRUE;
                 }
             }
-#endif
+
             else if (!strcmp("-ri", argv[i])) {
-                enable_inline_image = INLINE_IMG_OSC5379;
+                getRuntime()->enable_inline_image = INLINE_IMG_OSC5379;
             } else if (!strcmp("-sixel", argv[i])) {
-                enable_inline_image = INLINE_IMG_SIXEL;
+                getRuntime()->enable_inline_image = INLINE_IMG_SIXEL;
             } else if (!strcmp("-num", argv[i]))
                 getRuntime()->showLineNum = TRUE;
             else if (!strcmp("-no-proxy", argv[i]))
@@ -779,8 +767,8 @@ bool w3m_args(int argc, char** argv)
     if (!w3m_dump && !w3m_backend) {
         enterRawMode();
         // mySignal(SIGWINCH, resize_hook);
-    } else if (w3m_halfdump && displayImage) {
-        activeImage = TRUE;
+    } else if (w3m_halfdump && getRuntime()->displayImage) {
+        getRuntime()->activeImage = true;
     }
 
     sync_with_option();
@@ -1035,7 +1023,7 @@ void w3m_idle()
     //     chkURLBuffer(buf);
     // }
 
-    if (activeImage && displayImage && Currentbuf->img) {
+    if (getRuntime()->activeImage && getRuntime()->displayImage && Currentbuf->img) {
         if (!Currentbuf->image_loaded) {
             loadImage(Currentbuf, IMG_FLAG_NEXT);
         }
@@ -2155,7 +2143,7 @@ _quitfm(int confirm)
     }
 
     term_title(""); /* XXX */
-    if (activeImage)
+    if (getRuntime()->activeImage)
         termImage();
     exitRawMode();
     save_cookies();
@@ -3659,7 +3647,7 @@ _peekURL(int only_img)
         parseURL2(a->url, &pu, baseURL(Currentbuf));
         s = parsedURL2Str(&pu);
     }
-    if (DecodeURL)
+    if (getRuntime()->DecodeURL)
         s = Strnew_charp(url_decode2(s->ptr, Currentbuf));
     s = checkType(s, &pp, NULL);
     p = NewAtom_N(Lineprop, s->length);
@@ -3712,7 +3700,7 @@ DEFUN(curURL, PEEK, "Show current address")
     } else {
         offset = 0;
         s = currentURL();
-        if (DecodeURL)
+        if (getRuntime()->DecodeURL)
             s = Strnew_charp(url_decode2(s->ptr, NULL));
         s = checkType(s, &pp, NULL);
         p = NewAtom_N(Lineprop, s->length);
@@ -4212,14 +4200,13 @@ DEFUN(curlno, LINE_INFO, "Display current position in document")
     disp_message(tmp->ptr, FALSE);
 }
 
-#ifdef USE_IMAGE
 DEFUN(dispI, DISPLAY_IMAGE, "Restart loading and drawing of images")
 {
-    if (!displayImage)
+    if (!getRuntime()->displayImage)
         initImage();
-    if (!activeImage)
+    if (!getRuntime()->activeImage)
         return;
-    displayImage = TRUE;
+    getRuntime()->displayImage = true;
     /*
      * if (!(Currentbuf->type && is_html_type(Currentbuf->type)))
      * return;
@@ -4231,7 +4218,7 @@ DEFUN(dispI, DISPLAY_IMAGE, "Restart loading and drawing of images")
 
 DEFUN(stopI, STOP_IMAGE, "Stop loading and drawing of images")
 {
-    if (!activeImage)
+    if (!getRuntime()->activeImage)
         return;
     /*
      * if (!(Currentbuf->type && is_html_type(Currentbuf->type)))
@@ -4240,7 +4227,7 @@ DEFUN(stopI, STOP_IMAGE, "Stop loading and drawing of images")
     Currentbuf->image_flag = IMG_FLAG_SKIP;
     displayBuffer(Currentbuf, B_REDRAW_IMAGE);
 }
-#endif
+
 
 #ifdef USE_MOUSE
 
@@ -4757,7 +4744,7 @@ void deleteFiles()
     }
     while ((f = popText(fileToDelete)) != NULL) {
         unlink(f);
-        if (enable_inline_image == INLINE_IMG_SIXEL && strcmp(f + strlen(f) - 4, ".gif") == 0) {
+        if (getRuntime()->enable_inline_image == INLINE_IMG_SIXEL && strcmp(f + strlen(f) - 4, ".gif") == 0) {
             Str firstframe = Strnew_charp(f);
             Strcat_charp(firstframe, "-1");
             unlink(firstframe->ptr);

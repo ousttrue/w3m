@@ -19,3 +19,4 @@ struct MapList {
     GeneralList* area;
     struct MapList* next;
 };
+

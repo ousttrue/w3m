@@ -171,28 +171,13 @@ extern Str searchURIMethods(struct Url* pu);
 extern void chkExternalURIBuffer(struct Buffer* buf);
 #endif
 extern struct Url* schemeToProxy(int scheme);
-#ifdef USE_M17N
 extern wc_ces url_to_charset(const char* url, const struct Url* base,
     wc_ces doc_charset);
 extern char* url_encode(const char* url, const struct Url* base,
     wc_ces doc_charset);
-#if 0
-extern char *url_decode(const char *url, const struct Url *base,
-			wc_ces doc_charset);
-#endif
-extern char* url_decode2(const char* url, const struct Buffer* buf);
-#else /* !defined(USE_M17N) */
-#define url_encode(url, base, cs) url_quote(url)
-extern char* url_decode0(const char* url);
-#if 0
-#define url_decode(url, base, cs) url_decode0(url)
-#endif
-#define url_decode2(url, buf) url_decode0(url)
-#endif /* !defined(USE_M17N) */
 extern void examineFile(char* path, URLFile* uf, bool do_download);
 extern char* acceptableEncoding(void);
 extern int dir_exist(char* path);
-extern int is_html_type(char* type);
 
 extern struct Buffer* loadGeneralFile(char* path, struct Url* current, char* referer,
     int flag, struct FormList* request, bool do_download);
@@ -262,7 +247,6 @@ extern struct Buffer* getshell(char* cmd);
 extern struct Buffer* getpipe(char* cmd);
 extern struct Buffer* openPagerBuffer(InputStream stream, struct Buffer* buf);
 extern struct Buffer* openGeneralPagerBuffer(InputStream stream);
-extern struct Line* getNextPage(struct Buffer* buf, int plen);
 extern int save2tmp(URLFile uf, char* tmpf);
 extern struct Buffer* doExternal(URLFile uf, char* type, struct Buffer* defaultbuf);
 extern int _doFileCopy(char* tmpf, char* defstr, int download);
@@ -289,16 +273,11 @@ extern void gotoRealLine(struct Buffer* buf, int n);
 extern void gotoLine(struct Buffer* buf, int n);
 extern struct Buffer* selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf,
     char* selectchar);
-extern void reshapeBuffer(struct Buffer* buf);
 extern void copyBuffer(struct Buffer* a, struct Buffer* b);
 extern struct Buffer* prevBuffer(struct Buffer* first, struct Buffer* buf);
 extern int writeBufferCache(struct Buffer* buf);
 
 extern int gethtmlcmd(char** s);
-#ifndef USE_ANSI_COLOR
-#define checkType(a, b, c) _checkType(a, b)
-#endif
-extern Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor);
 extern char* lastFileName(char* path);
 extern char* mybasename(char* s);
 extern char* mydirname(char* s);
@@ -354,11 +333,7 @@ extern struct MapArea* follow_map_menu(struct Buffer* buf, char* name, struct An
 #ifndef MENU_MAP
 extern struct Buffer* follow_map_panel(struct Buffer* buf, char* name);
 #endif
-#ifdef USE_IMAGE
-extern int getMapXY(struct Buffer* buf, struct Anchor* a, int* x, int* y);
-extern struct MapArea* retrieveCurrentMapArea(struct Buffer* buf);
-#endif
-extern struct Anchor* retrieveCurrentMap(struct Buffer* buf);
+
 extern struct MapArea* newMapArea(char* url, char* target, char* alt, char* shape,
     char* coords);
 extern struct Buffer* page_info_panel(struct Buffer* buf);
@@ -384,7 +359,6 @@ extern pid_t open_pipe_rw(FILE** fr, FILE** fw);
 
 extern void initMimeTypes(void);
 extern void free_ssl_ctx(void);
-extern struct Url* baseURL(struct Buffer* buf);
 extern int openSocket(char* hostname, char* remoteport_name,
     unsigned short remoteport_num);
 extern void parseURL(char* url, struct Url* p_url, struct Url* current);
@@ -428,10 +402,6 @@ extern struct Anchor* registerImg(struct Buffer* buf, char* url, char* title, in
 extern struct Anchor* registerForm(struct Buffer* buf, struct FormList* flist,
     struct parsed_tag* tag, int line, int pos);
 extern int onAnchor(struct Anchor* a, int line, int pos);
-extern struct Anchor* retrieveAnchor(struct AnchorList* al, int line, int pos);
-extern struct Anchor* retrieveCurrentAnchor(struct Buffer* buf);
-extern struct Anchor* retrieveCurrentImg(struct Buffer* buf);
-extern struct Anchor* retrieveCurrentForm(struct Buffer* buf);
 extern struct Anchor* searchAnchor(struct AnchorList* al, char* str);
 extern struct Anchor* searchURLLabel(struct Buffer* buf, char* url);
 extern void reAnchorWord(struct Buffer* buf, struct Line* l, int spos, int epos);

@@ -1,4 +1,7 @@
 #include "display.h"
+#include "file.h"
+#include "terms.h"
+#include "history.h"
 #include "message.h"
 #include "buffer.h"
 #include "anchor.h"
@@ -7,7 +10,7 @@
 #include "image.h"
 #include "w3m_rc.h"
 #include "ctrlcode.h"
-#include "fm.h"
+// #include "fm.h"
 #include <math.h>
 
 /*
@@ -28,7 +31,7 @@ static void redrawNLine(struct Buffer* buf, int n);
 static struct Line* redrawLine(struct Buffer* buf, struct Line* l, int i);
 
 static int image_touch = 0;
-static int draw_image_flag = FALSE;
+static bool draw_image_flag = false;
 
 static Str
 make_lastline_link(struct Buffer* buf, char* title, char* url)
@@ -55,7 +58,7 @@ make_lastline_link(struct Buffer* buf, char* title, char* url)
         return s;
     parseURL2(url, &pu, baseURL(buf));
     u = parsedURL2Str(&pu);
-    if (DecodeURL)
+    if (getRuntime()->DecodeURL)
         u = Strnew_charp(url_decode2(u->ptr, buf));
     u = checkType(u, &pr, NULL);
     if (l <= 4 || l >= get_Str_strwidth(u)) {
@@ -84,7 +87,7 @@ make_lastline_message(struct Buffer* buf)
     Str msg, s = NULL;
     int sl = 0;
 
-    if (displayLink) {
+    if (getRuntime()->displayLink) {
         struct MapArea* a = retrieveCurrentMapArea(buf);
         if (a)
             s = make_lastline_link(buf, a->alt, a->url);
@@ -109,7 +112,7 @@ make_lastline_message(struct Buffer* buf)
     }
 
     msg = Strnew();
-    if (displayLineInfo && buf->currentLine != NULL && buf->lastLine != NULL) {
+    if (getRuntime()->displayLineInfo && buf->currentLine != NULL && buf->lastLine != NULL) {
         int cl = buf->currentLine->real_linenumber;
         int ll = buf->lastLine->real_linenumber;
         int r = (int)((double)cl * 100.0 / (double)(ll ? ll : 1) + 0.5);
@@ -234,7 +237,7 @@ drawAnchorCursor0(struct Buffer* buf, struct AnchorList* al, int hseq, int prevh
             int start_pos = an->start.pos;
             int end_pos = an->end.pos;
             for (i = an->start.pos; i < an->end.pos; i++) {
-                if (enable_inline_image && (l->propBuf[i] & PE_IMAGE)) {
+                if (getRuntime()->enable_inline_image && (l->propBuf[i] & PE_IMAGE)) {
                     if (start_pos == i)
                         start_pos = i + 1;
                     else if (end_pos == an->end.pos)
@@ -313,7 +316,7 @@ void displayBuffer(struct Buffer* buf, enum DisplayMode mode)
             && (is_html_type(buf->type) || getRuntime()->FoldLine) //
             )
         || buf->need_reshape) {
-        buf->need_reshape = TRUE;
+        buf->need_reshape = true;
         reshapeBuffer(buf);
     }
 
@@ -355,7 +358,7 @@ void displayBuffer(struct Buffer* buf, enum DisplayMode mode)
         || cline != buf->topLine //
         || ccolumn != buf->currentColumn) {
 
-        if (activeImage && (mode == B_REDRAW_IMAGE || cline != buf->topLine || ccolumn != buf->currentColumn)) {
+        if (getRuntime()->activeImage && (mode == B_REDRAW_IMAGE || cline != buf->topLine || ccolumn != buf->currentColumn)) {
             if (draw_image_flag) {
                 tty_clear();
                 screen_clear();
@@ -363,7 +366,7 @@ void displayBuffer(struct Buffer* buf, enum DisplayMode mode)
             clearImage();
             loadImage(buf, IMG_FLAG_STOP);
             image_touch++;
-            draw_image_flag = FALSE;
+            draw_image_flag = false;
         }
         redrawBuffer(buf);
 
@@ -393,7 +396,7 @@ void displayBuffer(struct Buffer* buf, enum DisplayMode mode)
     term_title(conv_to_system(buf->buffername));
     tty_refresh();
 
-    if (activeImage && displayImage && buf->img) {
+    if (getRuntime()->activeImage && getRuntime()->displayImage && buf->img) {
         if (buf->image_loaded) {
             drawImage(buf);
         }
@@ -439,13 +442,13 @@ redrawLineImage(struct Buffer* buf, struct Line* l, int i)
                 if ((image->width < 0 && cache->width > 0) || (image->height < 0 && cache->height > 0)) {
                     image->width = cache->width;
                     image->height = cache->height;
-                    buf->need_reshape = TRUE;
+                    buf->need_reshape = true;
                 }
-                x = (int)((rcol - column + buf->rootX) * pixel_per_char);
-                y = (int)(i * pixel_per_line);
-                sx = (int)((rcol - COLPOS(l, a->start.pos)) * pixel_per_char);
-                sy = (int)((l->linenumber - image->y) * pixel_per_line);
-                if (!enable_inline_image) {
+                x = (int)((rcol - column + buf->rootX) * getRuntime()->pixel_per_char);
+                y = (int)(i * getRuntime()->pixel_per_line);
+                sx = (int)((rcol - COLPOS(l, a->start.pos)) * getRuntime()->pixel_per_char);
+                sy = (int)((l->linenumber - image->y) * getRuntime()->pixel_per_line);
+                if (!getRuntime()->enable_inline_image) {
                     if (sx == 0 && x + image->xoffset >= 0)
                         x += image->xoffset;
                     else
@@ -458,18 +461,18 @@ redrawLineImage(struct Buffer* buf, struct Line* l, int i)
                 if (image->width > 0)
                     w = image->width - sx;
                 else
-                    w = (int)(8 * pixel_per_char - sx);
+                    w = (int)(8 * getRuntime()->pixel_per_char - sx);
                 if (image->height > 0)
                     h = image->height - sy;
                 else
-                    h = (int)(pixel_per_line - sy);
-                if (w > (int)((buf->rootX + buf->COLS) * pixel_per_char - x))
-                    w = (int)((buf->rootX + buf->COLS) * pixel_per_char - x);
-                if (h > (int)(LASTLINE() * pixel_per_line - y))
-                    h = (int)(LASTLINE() * pixel_per_line - y);
+                    h = (int)(getRuntime()->pixel_per_line - sy);
+                if (w > (int)((buf->rootX + buf->COLS) * getRuntime()->pixel_per_char - x))
+                    w = (int)((buf->rootX + buf->COLS) * getRuntime()->pixel_per_char - x);
+                if (h > (int)(LASTLINE() * getRuntime()->pixel_per_line - y))
+                    h = (int)(LASTLINE() * getRuntime()->pixel_per_line - y);
                 addImage(cache, x, y, sx, sy, w, h);
                 image->touch = image_touch;
-                draw_image_flag = TRUE;
+                draw_image_flag = true;
             }
         }
         rcol = COLPOS(l, pos + j + 1);
@@ -525,7 +528,7 @@ redrawNLine(struct Buffer* buf, int n)
         screen_clrtobotx();
     }
 
-    if (!(activeImage && displayImage && buf->img))
+    if (!(getRuntime()->activeImage && getRuntime()->displayImage && buf->img))
         return;
     screen_move(buf->cursorY + buf->rootY, buf->cursorX + buf->rootX);
     for (i = 0, l = buf->topLine; i < buf->LINES && l; i++, l = l->next) {

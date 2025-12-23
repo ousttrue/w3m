@@ -651,7 +651,7 @@ void readHeader(URLFile* uf, struct Buffer* newBuf, int thru, struct Url* pu)
                 for (; *q && (*q == '\r' || *q == '\n'); q++)
                     ;
             }
-            if (thru && activeImage && displayImage) {
+            if (thru && getRuntime()->activeImage && getRuntime()->displayImage) {
                 Str src = NULL;
                 if (!strncasecmp(tmp->ptr, "X-Image-URL:", 12)) {
                     tmpf = &tmp->ptr[12];
@@ -2113,7 +2113,7 @@ page_loaded:
     else if (is_plain_text_type(t))
         proc = loadBuffer;
 #ifdef USE_IMAGE
-    else if (activeImage && displayImage && !useExtImageViewer && !(w3m_dump & ~DUMP_FRAME) && !strncasecmp(t, "image/", 6))
+    else if (getRuntime()->activeImage && getRuntime()->displayImage && !useExtImageViewer && !(w3m_dump & ~DUMP_FRAME) && !strncasecmp(t, "image/", 6))
         proc = loadImageBuffer;
 #endif
     else if (w3m_backend)
@@ -3099,13 +3099,10 @@ feed_title(char* str)
 Str process_img(struct parsed_tag* tag, int width)
 {
     char *p, *q, *r, *r2 = NULL, *s, *t;
-#ifdef USE_IMAGE
+
     int w, i, nw, ni = 1, n, w0 = -1, i0 = -1;
     int align, xoffset, yoffset, top, bottom, ismap = 0;
-    int use_image = activeImage && displayImage;
-#else
-    int w, i, nw, n;
-#endif
+    int use_image = getRuntime()->activeImage && getRuntime()->displayImage;
     int pre_int = FALSE, ext_pre_int = FALSE;
     Str tmp = Strnew();
 
@@ -3122,7 +3119,7 @@ Str process_img(struct parsed_tag* tag, int width)
     if (parsedtag_get_value(tag, ATTR_WIDTH, &w)) {
         if (w < 0) {
             if (width > 0)
-                w = (int)(-width * pixel_per_char * w / 100 + 0.5);
+                w = (int)(-width * getRuntime()->pixel_per_char * w / 100 + 0.5);
             else
                 w = -1;
         }
@@ -3218,16 +3215,16 @@ Str process_img(struct parsed_tag* tag, int width)
                 i = i0 = image.cache->height;
             }
             if (w < 0)
-                w = 8 * pixel_per_char;
+                w = 8 * getRuntime()->pixel_per_char;
             if (i < 0)
-                i = pixel_per_line;
+                i = getRuntime()->pixel_per_line;
         }
-        if (enable_inline_image) {
-            nw = (w > 1) ? ((w - 1) / pixel_per_char_i + 1) : 1;
-            ni = (i > 1) ? ((i - 1) / pixel_per_line_i + 1) : 1;
+        if (getRuntime()->enable_inline_image) {
+            nw = (w > 1) ? ((w - 1) / getRuntime()->pixel_per_char_i + 1) : 1;
+            ni = (i > 1) ? ((i - 1) / getRuntime()->pixel_per_line_i + 1) : 1;
         } else {
-            nw = (w > 3) ? (int)((w - 3) / pixel_per_char + 1) : 1;
-            ni = (i > 3) ? (int)((i - 3) / pixel_per_line + 1) : 1;
+            nw = (w > 3) ? (int)((w - 3) / getRuntime()->pixel_per_char + 1) : 1;
+            ni = (i > 3) ? (int)((i - 3) / getRuntime()->pixel_per_line + 1) : 1;
         }
         Strcat(tmp,
             Sprintf("<pre_int><img_alt hseq=\"%d\" src=\"", cur_iseq++));
@@ -3236,8 +3233,8 @@ Str process_img(struct parsed_tag* tag, int width)
 #endif
     {
         if (w < 0)
-            w = 12 * pixel_per_char;
-        nw = w ? (int)((w - 1) / pixel_per_char + 1) : 1;
+            w = 12 * getRuntime()->pixel_per_char;
+        nw = w ? (int)((w - 1) / getRuntime()->pixel_per_char + 1) : 1;
         if (r) {
             Strcat_charp(tmp, "<pre_int>");
             pre_int = TRUE;
@@ -3251,7 +3248,6 @@ Str process_img(struct parsed_tag* tag, int width)
         Strcat_charp(tmp, html_quote(t));
         Strcat_charp(tmp, "\"");
     }
-#ifdef USE_IMAGE
     if (use_image) {
         if (w0 >= 0)
             Strcat(tmp, Sprintf(" width=%d", w0));
@@ -3259,13 +3255,13 @@ Str process_img(struct parsed_tag* tag, int width)
             Strcat(tmp, Sprintf(" height=%d", i0));
         switch (align) {
         case ALIGN_MIDDLE:
-            if (!enable_inline_image) {
+            if (!getRuntime()->enable_inline_image) {
                 top = ni / 2;
                 bottom = top;
                 if (top * 2 == ni)
-                    yoffset = (int)(((ni + 1) * pixel_per_line - i) / 2);
+                    yoffset = (int)(((ni + 1) * getRuntime()->pixel_per_line - i) / 2);
                 else
-                    yoffset = (int)((ni * pixel_per_line - i) / 2);
+                    yoffset = (int)((ni * getRuntime()->pixel_per_line - i) / 2);
                 break;
             }
         case ALIGN_TOP:
@@ -3276,25 +3272,25 @@ Str process_img(struct parsed_tag* tag, int width)
         case ALIGN_BOTTOM:
             top = ni - 1;
             bottom = 0;
-            yoffset = (int)(ni * pixel_per_line - i);
+            yoffset = (int)(ni * getRuntime()->pixel_per_line - i);
             break;
         default:
             top = ni - 1;
             bottom = 0;
-            if (ni == 1 && ni * pixel_per_line > i)
+            if (ni == 1 && ni * getRuntime()->pixel_per_line > i)
                 yoffset = 0;
             else {
-                yoffset = (int)(ni * pixel_per_line - i);
+                yoffset = (int)(ni * getRuntime()->pixel_per_line - i);
                 if (yoffset <= -2)
                     yoffset++;
             }
             break;
         }
 
-        if (enable_inline_image)
+        if (getRuntime()->enable_inline_image)
             xoffset = 0;
         else
-            xoffset = (int)((nw * pixel_per_char - w) / 2);
+            xoffset = (int)((nw * getRuntime()->pixel_per_char - w) / 2);
 
         if (xoffset)
             Strcat(tmp, Sprintf(" xoffset=%d", xoffset));
@@ -3312,7 +3308,7 @@ Str process_img(struct parsed_tag* tag, int width)
         if (ismap)
             Strcat_charp(tmp, " ismap");
     }
-#endif
+
     Strcat_charp(tmp, ">");
     if (q != NULL && *q == '\0' && ignore_null_img_alt)
         q = NULL;
@@ -3361,7 +3357,7 @@ Str process_img(struct parsed_tag* tag, int width)
                 Strcat_charp(tmp, "<pre_int>");
                 pre_int = TRUE;
             }
-            w = w / pixel_per_char / symbol_width;
+            w = w / getRuntime()->pixel_per_char / symbol_width;
             if (w <= 0)
                 w = 1;
             push_symbol(tmp, HR_SYMBOL, symbol_width, w);
@@ -6922,7 +6918,7 @@ void loadHTMLstream(URLFile* f, struct Buffer* newBuf, FILE* src, int internal)
     cur_iseq = 1;
     if (newBuf->image_flag)
         image_flag = newBuf->image_flag;
-    else if (activeImage && displayImage && autoImage)
+    else if (getRuntime()->activeImage && getRuntime()->displayImage && autoImage)
         image_flag = IMG_FLAG_AUTO;
     else
         image_flag = IMG_FLAG_SKIP;
@@ -7611,12 +7607,12 @@ openGeneralPagerBuffer(InputStream stream)
         buf = openPagerBuffer(stream, t_buf);
         buf->type = "text/plain";
     }
-#ifdef USE_IMAGE
-    else if (activeImage && displayImage && !useExtImageViewer && !(w3m_dump & ~DUMP_FRAME) && !strncasecmp(t, "image/", 6)) {
+
+    else if (getRuntime()->activeImage && getRuntime()->displayImage && !useExtImageViewer && !(w3m_dump & ~DUMP_FRAME) && !strncasecmp(t, "image/", 6)) {
         buf = loadImageBuffer(&uf, t_buf);
         buf->type = "text/html";
     }
-#endif
+
     else {
         if (searchExtViewer(t)) {
             buf = doExternal(uf, t, t_buf);

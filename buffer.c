@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "file.h"
 #include "message.h"
 #include "display.h"
 #include "ctrlcode.h"
@@ -16,6 +17,22 @@ int REV_LB[MAX_LB] = {
     LB_INFO,
     LB_N_SOURCE,
 };
+
+struct Url*
+baseURL(struct Buffer* buf)
+{
+    if (buf->bufferprop & BP_NO_URL) {
+        /* no URL is defined for the buffer */
+        return NULL;
+    }
+    if (buf->baseURL != NULL) {
+        /* <BASE> tag is defined in the document */
+        return buf->baseURL;
+    } else if (IS_EMPTY_PARSED_URL(&buf->currentURL))
+        return NULL;
+    else
+        return &buf->currentURL;
+}
 
 void cmd_loadBuffer(struct Buffer* buf, int prop, enum LinkBufferID linkid)
 {

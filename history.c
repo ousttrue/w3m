@@ -1,4 +1,6 @@
 #include "history.h"
+#include "buffer.h"
+#include "w3m_rc.h"
 #include "file.h"
 #include "message.h"
 #include "fm.h"
@@ -30,7 +32,7 @@ historyBuffer(struct Hist* hist)
     if (hist && hist->list) {
         for (item = hist->list->last; item; item = item->prev) {
             q = html_quote((char*)item->ptr);
-            if (DecodeURL)
+            if (getRuntime()->DecodeURL)
                 p = html_quote(url_decode2((char*)item->ptr, NULL));
             else
                 p = q;

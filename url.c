@@ -501,22 +501,6 @@ write_from_file(int sock, char* file)
     }
 }
 
-struct Url*
-baseURL(struct Buffer* buf)
-{
-    if (buf->bufferprop & BP_NO_URL) {
-        /* no URL is defined for the buffer */
-        return NULL;
-    }
-    if (buf->baseURL != NULL) {
-        /* <BASE> tag is defined in the document */
-        return buf->baseURL;
-    } else if (IS_EMPTY_PARSED_URL(&buf->currentURL))
-        return NULL;
-    else
-        return &buf->currentURL;
-}
-
 int openSocket(char* const hostname,
     char* remoteport_name, unsigned short remoteport_num)
 {
@@ -2169,24 +2153,13 @@ char* url_encode(const char* url, const struct Url* base, wc_ces doc_charset)
         url_to_charset(url, base, doc_charset));
 }
 
-#if 0 /* unused */
-char *
-url_decode(const char *url, const struct Url *base, wc_ces doc_charset)
-{
-    if (!DecodeURL)
-	return (char *)url;
-    return url_unquote_conv((char *)url,
-			    url_to_charset(url, base, doc_charset));
-}
-#endif
-
 char* url_decode2(const char* url, const struct Buffer* buf)
 {
-    wc_ces url_charset;
-
-    if (!DecodeURL)
+    if (!getRuntime()->DecodeURL)
         return (char*)url;
-    url_charset = buf ? url_to_charset(url, baseURL((struct Buffer*)buf), buf->document_charset) : url_to_charset(url, NULL, 0);
+    wc_ces url_charset = buf
+        ? url_to_charset(url, baseURL((struct Buffer*)buf), buf->document_charset)
+        : url_to_charset(url, NULL, 0);
     return url_unquote_conv((char*)url, url_charset);
 }
 

@@ -41,11 +41,11 @@ static int getCharSize(void);
 
 void initImage()
 {
-    if (displayImage) {
-        if (activeImage)
+    if (getRuntime()->displayImage) {
+        if (getRuntime()->activeImage)
             return;
         if (getCharSize())
-            activeImage = TRUE;
+            getRuntime()->activeImage = TRUE;
     }
 }
 
@@ -58,17 +58,17 @@ getCharSize(void)
 
     set_environ("W3M_TTY", ttyname_tty());
 
-    if (enable_inline_image) {
+    if (getRuntime()->enable_inline_image) {
         int ppc, ppl;
 
         if (get_pixel_per_cell(&ppc, &ppl)) {
-            pixel_per_char_i = ppc;
-            pixel_per_line_i = ppl;
-            pixel_per_char = (double)ppc;
-            pixel_per_line = (double)ppl;
+            getRuntime()->pixel_per_char_i = ppc;
+            getRuntime()->pixel_per_line_i = ppl;
+            getRuntime()->pixel_per_char = (double)ppc;
+            getRuntime()->pixel_per_line = (double)ppl;
         } else {
-            pixel_per_char_i = (int)pixel_per_char;
-            pixel_per_line_i = (int)pixel_per_line;
+            getRuntime()->pixel_per_char_i = (int)getRuntime()->pixel_per_char;
+            getRuntime()->pixel_per_line_i = (int)getRuntime()->pixel_per_line;
         }
 
         return TRUE;
@@ -89,16 +89,16 @@ getCharSize(void)
 
     if (!(w > 0 && h > 0))
         return FALSE;
-    if (!set_pixel_per_char)
-        pixel_per_char = (int)(1.0 * w / TTY_COLS() + 0.5);
-    if (!set_pixel_per_line)
-        pixel_per_line = (int)(1.0 * h / TTY_LINES() + 0.5);
+    if (!getRuntime()->set_pixel_per_char)
+        getRuntime()->pixel_per_char = (int)(1.0 * w / TTY_COLS() + 0.5);
+    if (!getRuntime()->set_pixel_per_line)
+        getRuntime()->pixel_per_line = (int)(1.0 * h / TTY_LINES() + 0.5);
     return TRUE;
 }
 
 void termImage()
 {
-    if (!activeImage)
+    if (!getRuntime()->activeImage)
         return;
     clearImage();
     if (Imgdisplay_wf) {
@@ -126,11 +126,11 @@ openImgdisplay()
         myExec(cmd);
         /* XXX: ifdef __EMX__, use start /f ? */
     }
-    activeImage = TRUE;
+    getRuntime()->activeImage = TRUE;
     return TRUE;
 err0:
     Imgdisplay_pid = 0;
-    activeImage = FALSE;
+    getRuntime()->activeImage = FALSE;
     return FALSE;
 }
 
@@ -155,7 +155,7 @@ void addImage(struct ImageCache* cache, int x, int y, int sx, int sy, int w, int
 {
     struct TerminalImage* i;
 
-    if (!activeImage)
+    if (!getRuntime()->activeImage)
         return;
     if (n_terminal_image >= max_terminal_image) {
         max_terminal_image = max_terminal_image ? (2 * max_terminal_image) : 8;
@@ -176,7 +176,7 @@ void addImage(struct ImageCache* cache, int x, int y, int sx, int sy, int w, int
 static void
 syncImage(void)
 {
-    if (enable_inline_image) {
+    if (getRuntime()->enable_inline_image) {
         return;
     }
 
@@ -567,14 +567,14 @@ void drawImage(struct Buffer* currentbuf)
     struct TerminalImage* i;
     struct stat st;
 
-    if (!activeImage)
+    if (!getRuntime()->activeImage)
         return;
     if (!n_terminal_image)
         return;
     for (j = 0; j < n_terminal_image; j++) {
         i = &terminal_image[j];
 
-        if (enable_inline_image) {
+        if (getRuntime()->enable_inline_image) {
             /*
              * So this shouldn't ever happen, but if it does then at least let's
              * not have external programs fetch images from the Internet...
@@ -584,43 +584,36 @@ void drawImage(struct Buffer* currentbuf)
 
             char* url = i->cache->file;
 
-            int x = i->x / pixel_per_char_i;
-            int y = i->y / pixel_per_line_i;
+            int x = i->x / getRuntime()->pixel_per_char_i;
+            int y = i->y / getRuntime()->pixel_per_line_i;
 
             int w = i->cache->a_width > 0 ? (
-                                                (i->cache->width + i->x % pixel_per_char_i + pixel_per_char_i - 1) / pixel_per_char_i)
+                                                (i->cache->width + i->x % getRuntime()->pixel_per_char_i + getRuntime()->pixel_per_char_i - 1) / getRuntime()->pixel_per_char_i)
                                           : 0;
             int h = i->cache->a_height > 0 ? (
-                                                 (i->cache->height + i->y % pixel_per_line_i + pixel_per_line_i - 1) / pixel_per_line_i)
+                                                 (i->cache->height + i->y % getRuntime()->pixel_per_line_i + getRuntime()->pixel_per_line_i - 1) / getRuntime()->pixel_per_line_i)
                                            : 0;
 
-            int sx = i->sx / pixel_per_char_i;
-            int sy = i->sy / pixel_per_line_i;
+            int sx = i->sx / getRuntime()->pixel_per_char_i;
+            int sy = i->sy / getRuntime()->pixel_per_line_i;
 
-            int sw = (i->width + i->sx % pixel_per_char_i + pixel_per_char_i - 1) / pixel_per_char_i;
-            int sh = (i->height + i->sy % pixel_per_line_i + pixel_per_line_i - 1) / pixel_per_line_i;
+            int sw = (i->width + i->sx % getRuntime()->pixel_per_char_i + getRuntime()->pixel_per_char_i - 1) / getRuntime()->pixel_per_char_i;
+            int sh = (i->height + i->sy % getRuntime()->pixel_per_line_i + getRuntime()->pixel_per_line_i - 1) / getRuntime()->pixel_per_line_i;
 
-#if 0
-	    fprintf(stderr,"file %s x %d y %d w %d h %d sx %d sy %d sw %d sh %d (ppc %d ppl %d)\n",
-		i->cache->file,
-		x, y, w, h, sx, sy, sw, sh,
-		pixel_per_char_i, pixel_per_line_i);
-#endif
-
-            if (enable_inline_image == INLINE_IMG_SIXEL) {
+            if (getRuntime()->enable_inline_image == INLINE_IMG_SIXEL) {
                 w = i->cache->a_width > 0 ? i->width : 0;
                 h = i->cache->a_height > 0 ? i->height : 0;
-                put_image_sixel(url, x, y, w, h, i->sx, i->sy, sw * pixel_per_char, sh * pixel_per_line_i, n_terminal_image);
+                put_image_sixel(url, x, y, w, h, i->sx, i->sy, sw * getRuntime()->pixel_per_char, sh * getRuntime()->pixel_per_line_i, n_terminal_image);
                 tty_MOVE(Currentbuf->cursorY, Currentbuf->cursorX);
-            } else if (enable_inline_image == INLINE_IMG_OSC5379) {
+            } else if (getRuntime()->enable_inline_image == INLINE_IMG_OSC5379) {
                 Str buf = get_image_osc5379(url, x, y, w, h, sx, sy, sw, sh);
                 tty_MOVE(y, x);
                 writestr(buf->ptr);
                 tty_MOVE(Currentbuf->cursorY, Currentbuf->cursorX);
-            } else if (enable_inline_image == INLINE_IMG_ITERM2) {
+            } else if (getRuntime()->enable_inline_image == INLINE_IMG_ITERM2) {
                 put_image_iterm2(url, x, y, sw, sh);
-            } else if (enable_inline_image == INLINE_IMG_KITTY) {
-                put_image_kitty(url, x, y, i->width, i->height, i->sx, i->sy, sw * pixel_per_char, sh * pixel_per_line_i, sw, sh);
+            } else if (getRuntime()->enable_inline_image == INLINE_IMG_KITTY) {
+                put_image_kitty(url, x, y, i->width, i->height, i->sx, i->sy, sw * getRuntime()->pixel_per_char, sh * getRuntime()->pixel_per_line_i, sw, sh);
             }
 
             continue;
@@ -648,7 +641,7 @@ void drawImage(struct Buffer* currentbuf)
         draw = TRUE;
     }
 
-    if (!enable_inline_image) {
+    if (!getRuntime()->enable_inline_image) {
         if (!draw)
             return;
         syncImage();
@@ -665,7 +658,7 @@ void clearImage()
     int j;
     struct TerminalImage* i;
 
-    if (!activeImage)
+    if (!getRuntime()->activeImage)
         return;
     if (!n_terminal_image)
         return;
@@ -758,7 +751,7 @@ showImageProgress(struct Buffer* buf)
         }
     }
     if (n) {
-        if (enable_inline_image && n == l)
+        if (getRuntime()->enable_inline_image && n == l)
             drawImage(buf);
         message(Sprintf("%d/%d images loaded", l, n)->ptr,
             buf->cursorX + buf->rootX, buf->cursorY + buf->rootY);
@@ -768,7 +761,7 @@ showImageProgress(struct Buffer* buf)
 
 void loadImage(struct Buffer* buf, int flag)
 {
-    if (!activeImage) {
+    if (!getRuntime()->activeImage) {
         return;
     }
     struct ImageCache* cache;
@@ -849,7 +842,7 @@ void loadImage(struct Buffer* buf, int flag)
     }
 
     if (draw && image_buffer) {
-        if (!enable_inline_image)
+        if (!getRuntime()->enable_inline_image)
             drawImage(buf);
         showImageProgress(image_buffer);
     }
@@ -933,7 +926,7 @@ getImage(struct Image* image, struct Url* current, int flag)
     Str key = NULL;
     struct ImageCache* cache;
 
-    if (!activeImage)
+    if (!getRuntime()->activeImage)
         return NULL;
     if (!image_hash)
         image_hash = newHash_sv(100);
@@ -961,12 +954,12 @@ getImage(struct Image* image, struct Url* current, int flag)
         cache->pid = 0;
         cache->index = 0;
         cache->loaded = IMG_FLAG_UNLOADED;
-        if (enable_inline_image == INLINE_IMG_OSC5379) {
-            if (image->width > 0 && image->width % pixel_per_char_i > 0)
-                image->width += (pixel_per_char_i - image->width % pixel_per_char_i);
+        if (getRuntime()->enable_inline_image == INLINE_IMG_OSC5379) {
+            if (image->width > 0 && image->width % getRuntime()->pixel_per_char_i > 0)
+                image->width += (getRuntime()->pixel_per_char_i - image->width % getRuntime()->pixel_per_char_i);
 
-            if (image->height > 0 && image->height % pixel_per_line_i > 0)
-                image->height += (pixel_per_line_i - image->height % pixel_per_line_i);
+            if (image->height > 0 && image->height % getRuntime()->pixel_per_line_i > 0)
+                image->height += (getRuntime()->pixel_per_line_i - image->height % getRuntime()->pixel_per_line_i);
         }
         cache->touch = tmpfname(TMPF_DFL, NULL)->ptr;
 
@@ -1081,7 +1074,7 @@ int getImageSize(struct ImageCache* cache)
     FILE* f;
     unsigned int w = 0, h = 0;
 
-    if (!activeImage)
+    if (!getRuntime()->activeImage)
         return FALSE;
     if (!cache || !(cache->loaded & IMG_FLAG_LOADED) || (cache->width > 0 && cache->height > 0))
         return FALSE;

@@ -75,7 +75,7 @@ nearestMapArea(struct MapList* ml, int x, int y)
 {
     ListItem* al;
     struct MapArea* a;
-    int i, l, n = -1, min = -1, limit = pixel_per_char * pixel_per_char + pixel_per_line * pixel_per_line;
+    int i, l, n = -1, min = -1, limit = getRuntime()->pixel_per_char * getRuntime()->pixel_per_char + getRuntime()->pixel_per_line * getRuntime()->pixel_per_line;
 
     if (!ml || !ml->area)
         return n;
@@ -165,10 +165,10 @@ int getMapXY(struct Buffer* buf, struct Anchor* a, int* x, int* y)
         return 0;
     *x = (int)((buf->currentColumn + buf->cursorX
                    - COLPOS(buf->currentLine, a->start.pos) + 0.5)
-             * pixel_per_char)
+             * getRuntime()->pixel_per_char)
         - a->image->xoffset;
     *y = (int)((buf->currentLine->linenumber - a->image->y + 0.5)
-             * pixel_per_line)
+             * getRuntime()->pixel_per_line)
         - a->image->yoffset;
     if (*x <= 0)
         *x = 1;
@@ -481,7 +481,7 @@ append_frame_info(struct Buffer* buf, Str html, struct frameset* set, int level)
                         buf->document_charset));
                     Strcat_charp(html, p);
                 }
-                if (DecodeURL)
+                if (getRuntime()->DecodeURL)
                     p = html_quote(url_decode2(frame.body->url, buf));
                 else
                     p = q;
@@ -567,7 +567,7 @@ page_info_panel(struct Buffer* buf)
         parseURL2(a->url, &pu, baseURL(buf));
         p = parsedURL2Str(&pu)->ptr;
         q = html_quote(p);
-        if (DecodeURL)
+        if (getRuntime()->DecodeURL)
             p = html_quote(url_decode2(p, buf));
         else
             p = q;
@@ -580,7 +580,7 @@ page_info_panel(struct Buffer* buf)
         parseURL2(a->url, &pu, baseURL(buf));
         p = parsedURL2Str(&pu)->ptr;
         q = html_quote(p);
-        if (DecodeURL)
+        if (getRuntime()->DecodeURL)
             p = html_quote(url_decode2(p, buf));
         else
             p = q;

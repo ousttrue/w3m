@@ -130,8 +130,8 @@ void bzero(void*, int);
 #define bpcmp(a, b) \
     (((a).line - (b).line) ? ((a).line - (b).line) : ((a).pos - (b).pos))
 
-#define RELATIVE_WIDTH(w) (((w) >= 0) ? (int)((w) / pixel_per_char) : (w))
-#define REAL_WIDTH(w, limit) (((w) >= 0) ? (int)((w) / pixel_per_char) : -(w) * (limit) / 100)
+#define RELATIVE_WIDTH(w) (((w) >= 0) ? (int)((w) / getRuntime()->pixel_per_char) : (w))
+#define REAL_WIDTH(w, limit) (((w) >= 0) ? (int)((w) / getRuntime()->pixel_per_char) : -(w) * (limit) / 100)
 
 #define EOL(l) (&(l)->ptr[(l)->length])
 #define IS_EOL(p, l) ((p) == &(l)->ptr[(l)->length])
@@ -348,7 +348,6 @@ struct cookie {
  */
 
 global int IndentIncr init(4);
-global int ShowEffect init(TRUE);
 global int PagerMax init(PAGER_MAX_LINE);
 
 global char SearchHeader init(FALSE);
@@ -435,7 +434,6 @@ global struct DownloadList* FirstDL init(NULL);
 global struct DownloadList* LastDL init(NULL);
 global char* w3m_reqlog;
 extern char* w3m_version;
-extern int enable_inline_image;
 
 #define DUMP_BUFFER 0x01
 #define DUMP_HEAD 0x02
@@ -461,16 +459,11 @@ global int vi_prec_num init(FALSE);
 global int label_topline init(FALSE);
 global int nextpage_topline init(FALSE);
 global char* displayTitleTerm init(NULL);
-global int displayLink init(FALSE);
 global int displayLinkNumber init(FALSE);
-global int displayLineInfo init(FALSE);
-global int DecodeURL init(FALSE);
 global int retryAsHttp init(TRUE);
 global int show_srch_str init(TRUE);
 #ifdef USE_IMAGE
 global char* Imgdisplay init(IMGDISPLAY);
-global int activeImage init(FALSE);
-global int displayImage init(TRUE);
 global int autoImage init(TRUE);
 global int useExtImageViewer init(TRUE);
 global int maxLoadImage init(4);
@@ -624,15 +617,7 @@ global char* ssl_cipher init(NULL);
 
 global int is_redisplay init(FALSE);
 global int clear_buffer init(TRUE);
-global double pixel_per_char init(DEFAULT_PIXEL_PER_CHAR);
-global int pixel_per_char_i init(DEFAULT_PIXEL_PER_CHAR);
-global int set_pixel_per_char init(FALSE);
-#ifdef USE_IMAGE
-global double pixel_per_line init(DEFAULT_PIXEL_PER_LINE);
-global int pixel_per_line_i init(DEFAULT_PIXEL_PER_LINE);
-global int set_pixel_per_line init(FALSE);
 global double image_scale init(100);
-#endif
 global int use_lessopen init(FALSE);
 
 global char* keymap_file init(KEYMAP_FILE);

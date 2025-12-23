@@ -77,3 +77,8 @@ enum CalcPositionMode {
 int calcPosition(char* l, Lineprop* pr, int len, int pos, int bpos, enum CalcPositionMode mode);
 int columnPos(struct Line* line, int column);
 int columnLen(struct Line* line, int column);
+
+/*
+ * Check character type
+ */
+Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor);

@@ -1985,8 +1985,8 @@ begin_table(int border, int spacing, int padding, int vspace)
     struct table* t;
     int mincell = minimum_cellspacing(border);
     int rcellspacing;
-    int mincell_pixels = round(mincell * pixel_per_char);
-    int ppc = round(pixel_per_char);
+    int mincell_pixels = round(mincell * getRuntime()->pixel_per_char);
+    int ppc = round(getRuntime()->pixel_per_char);
 
     t = newTable();
     t->row = t->col = -1;

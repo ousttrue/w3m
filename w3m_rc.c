@@ -50,8 +50,20 @@ static struct termios d_ioval;
 char UseGraphicChar = GRAPHIC_CHAR_CHARSET;
 
 struct Runtime g_runtime = {
+    .DecodeURL = (FALSE),
     .QuietMessage = (FALSE),
+    .ShowEffect = (TRUE),
+    .displayLink = (FALSE),
     .useColor = (TRUE),
+    .displayImage = (TRUE),
+    .displayLineInfo = (FALSE),
+    .activeImage = (FALSE),
+    .pixel_per_char = (DEFAULT_PIXEL_PER_CHAR),
+    .pixel_per_char_i = (DEFAULT_PIXEL_PER_CHAR),
+    .set_pixel_per_char = (FALSE),
+    .pixel_per_line = (DEFAULT_PIXEL_PER_LINE),
+    .pixel_per_line_i = (DEFAULT_PIXEL_PER_LINE),
+    .set_pixel_per_line = (FALSE),
     .basic_color = (8), /* don't change */
     .anchor_color = (4), /* blue  */
     .image_color = (2), /* green */
@@ -1477,24 +1489,22 @@ struct param_ptr params1[] = {
     { "tabstop", P_NZINT, PI_TEXT, (void*)&g_runtime.Tabstop, CMT_TABSTOP, NULL },
     { "indent_incr", P_NZINT, PI_TEXT, (void*)&IndentIncr, CMT_INDENT_INCR,
         NULL },
-    { "pixel_per_char", P_PIXELS, PI_TEXT, (void*)&pixel_per_char,
+    { "pixel_per_char", P_PIXELS, PI_TEXT, (void*)&g_runtime.pixel_per_char,
         CMT_PIXEL_PER_CHAR, NULL },
-#ifdef USE_IMAGE
-    { "pixel_per_line", P_PIXELS, PI_TEXT, (void*)&pixel_per_line,
+    { "pixel_per_line", P_PIXELS, PI_TEXT, (void*)&g_runtime.pixel_per_line,
         CMT_PIXEL_PER_LINE, NULL },
-#endif
     { "frame", P_CHARINT, PI_ONOFF, (void*)&RenderFrame, CMT_FRAME, NULL },
     { "target_self", P_CHARINT, PI_ONOFF, (void*)&TargetSelf, CMT_TSELF, NULL },
     { "open_tab_blank", P_INT, PI_ONOFF, (void*)&open_tab_blank,
         CMT_OPEN_TAB_BLANK, NULL },
     { "open_tab_dl_list", P_INT, PI_ONOFF, (void*)&open_tab_dl_list,
         CMT_OPEN_TAB_DL_LIST, NULL },
-    { "display_link", P_INT, PI_ONOFF, (void*)&displayLink, CMT_DISPLINK,
+    { "display_link", P_INT, PI_ONOFF, (void*)&g_runtime.displayLink, CMT_DISPLINK,
         NULL },
     { "display_link_number", P_INT, PI_ONOFF, (void*)&displayLinkNumber,
         CMT_DISPLINKNUMBER, NULL },
-    { "decode_url", P_INT, PI_ONOFF, (void*)&DecodeURL, CMT_DECODE_URL, NULL },
-    { "display_lineinfo", P_INT, PI_ONOFF, (void*)&displayLineInfo,
+    { "decode_url", P_INT, PI_ONOFF, (void*)&g_runtime.DecodeURL, CMT_DECODE_URL, NULL },
+    { "display_lineinfo", P_INT, PI_ONOFF, (void*)&g_runtime.displayLineInfo,
         CMT_DISPLINEINFO, NULL },
     { "ext_dirlist", P_INT, PI_ONOFF, (void*)&UseExternalDirBuffer,
         CMT_EXT_DIRLIST, NULL },
@@ -1524,7 +1534,7 @@ struct param_ptr params1[] = {
     { "view_unseenobject", P_INT, PI_ONOFF, (void*)&view_unseenobject,
         CMT_VIEW_UNSEENOBJECTS, NULL },
     /* XXX: emacs-w3m force to off display_image even if image options off */
-    { "display_image", P_INT, PI_ONOFF, (void*)&displayImage, CMT_DISP_IMAGE,
+    { "display_image", P_INT, PI_ONOFF, (void*)&g_runtime.displayImage, CMT_DISP_IMAGE,
         NULL },
     { "pseudo_inlines", P_INT, PI_ONOFF, (void*)&pseudoInlines,
         CMT_PSEUDO_INLINES, NULL },
@@ -1536,7 +1546,7 @@ struct param_ptr params1[] = {
         CMT_EXT_IMAGE_VIEWER, NULL },
     { "image_scale", P_SCALE, PI_TEXT, (void*)&image_scale, CMT_IMAGE_SCALE,
         NULL },
-    { "inline_img_protocol", P_INT, PI_SEL_C, (void*)&enable_inline_image,
+    { "inline_img_protocol", P_INT, PI_SEL_C, (void*)&g_runtime.enable_inline_image,
         CMT_INLINE_IMG_PROTOCOL, (void*)inlineimgstr },
     { "imgdisplay", P_STRING, PI_TEXT, (void*)&Imgdisplay, CMT_IMGDISPLAY,
         NULL },
@@ -2342,9 +2352,7 @@ void sync_with_option(void)
         PagerMax = TTY_LINES();
     WrapSearch = WrapDefault;
     parse_proxy();
-#ifdef USE_COOKIE
     parse_cookie();
-#endif
     initMailcap();
     initMimeTypes();
 #ifdef USE_EXTERNAL_URI_LOADER
@@ -2353,12 +2361,9 @@ void sync_with_option(void)
 #ifdef USE_MIGEMO
     init_migemo();
 #endif
-#ifdef USE_IMAGE
-    if (fmInitialized() && (displayImage || enable_inline_image))
+
+    if (fmInitialized() && (getRuntime()->displayImage || getRuntime()->enable_inline_image))
         initImage();
-#else
-    displayImage = FALSE; /* XXX */
-#endif
     loadPasswd();
     loadPreForm();
     loadSiteconf();
@@ -2592,7 +2597,7 @@ load_option_panel(void)
         Strcat_charp(src, "<table width=100% cellpadding=0>");
         while (p->name) {
             Strcat_m_charp(src, "<tr><td>", p->comment, NULL);
-            Strcat(src, Sprintf("</td><td width=%d>", (int)(28 * pixel_per_char)));
+            Strcat(src, Sprintf("</td><td width=%d>", (int)(28 * getRuntime()->pixel_per_char)));
             switch (p->inputtype) {
             case PI_TEXT:
                 Strcat_m_charp(src, "<input type=text name=",

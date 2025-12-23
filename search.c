@@ -1,4 +1,5 @@
 #include "search.h"
+#include "file.h"
 #include "message.h"
 #include "fm.h"
 #include "buffer.h"

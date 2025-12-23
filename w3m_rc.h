@@ -46,8 +46,21 @@ struct Event {
 };
 
 struct Runtime {
+    int DecodeURL;
     char QuietMessage;
+    int ShowEffect;
+    int displayLink;
+    int displayLineInfo;
     int useColor;
+    int displayImage;
+    int enable_inline_image;
+    int activeImage;
+    double pixel_per_char;
+    int pixel_per_char_i;
+    int set_pixel_per_char;
+    double pixel_per_line;
+    int pixel_per_line_i;
+    int set_pixel_per_line;
     int basic_color; /* don't change */
     int anchor_color; /* blue  */
     int image_color; /* green */
