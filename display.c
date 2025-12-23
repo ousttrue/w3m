@@ -312,7 +312,6 @@ redrawLineImage(struct Buffer* buf, struct Line* l, int i)
                 if ((image->width < 0 && cache->width > 0) || (image->height < 0 && cache->height > 0)) {
                     image->width = cache->width;
                     image->height = cache->height;
-                    buf->need_reshape = true;
                 }
                 x = (int)((rcol - column + buf->rootX) * getRuntime()->pixel_per_char);
                 y = (int)(i * getRuntime()->pixel_per_line);
@@ -516,18 +515,12 @@ void displayBuffer(struct Buffer* buf, enum DisplayMode mode)
 
     if (buf->width == 0)
         buf->width = INIT_BUFFER_WIDTH;
-    if (buf->height == 0)
-        buf->height = LASTLINE() + 1;
 
     // reshape
-    if ((
-            buf->width != INIT_BUFFER_WIDTH //
-            && (is_html_type(buf->type) || getRuntime()->FoldLine) //
-            )
-        || buf->need_reshape) {
-        buf->need_reshape = true;
-        reshapeBuffer(buf);
-    }
+    // if (buf->width != INIT_BUFFER_WIDTH && (is_html_type(buf->type) || getRuntime()->FoldLine)) {
+    //     buf->need_reshape = true;
+    //     reshapeBuffer(buf);
+    // }
 
     // rootX
     if (getRuntime()->showLineNum) {

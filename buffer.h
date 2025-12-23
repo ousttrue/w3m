@@ -62,7 +62,6 @@ struct Buffer {
     struct Buffer* nextBuffer;
     struct Buffer* linkBuffer[MAX_LB];
     short width;
-    short height;
     char* type;
     char* real_type;
     int allLine;
@@ -109,7 +108,6 @@ struct Buffer {
     char* ssl_certificate;
     char image_flag;
     char image_loaded;
-    char need_reshape;
     struct Anchor* submit;
     struct BufferPos* undo;
     struct _AlarmEvent* event;

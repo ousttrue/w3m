@@ -3758,8 +3758,6 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
     buf->document_charset = Currentbuf->document_charset;
     buf->clone = Currentbuf->clone;
     (*buf->clone)++;
-
-    buf->need_reshape = TRUE;
     reshapeBuffer(buf);
     pushBuffer(buf);
 }
@@ -3870,7 +3868,6 @@ DEFUN(reload, RELOAD, "Load current document anew")
 /* reshape */
 DEFUN(reshape, RESHAPE, "Re-render document")
 {
-    Currentbuf->need_reshape = TRUE;
     reshapeBuffer(Currentbuf);
 }
 
@@ -3884,7 +3881,6 @@ _docCSet(wc_ces charset)
         return;
     }
     Currentbuf->document_charset = charset;
-    Currentbuf->need_reshape = TRUE;
 }
 
 void change_charset(struct parsed_tagarg* arg)
@@ -4171,7 +4167,6 @@ DEFUN(dispI, DISPLAY_IMAGE, "Restart loading and drawing of images")
      * return;
      */
     Currentbuf->image_flag = IMG_FLAG_AUTO;
-    Currentbuf->need_reshape = TRUE;
 }
 
 DEFUN(stopI, STOP_IMAGE, "Stop loading and drawing of images")

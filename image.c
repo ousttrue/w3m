@@ -802,8 +802,6 @@ void loadImage(struct Buffer* buf, int flag)
         if (!stat(cache->file, &st)) {
             cache->loaded = IMG_FLAG_LOADED;
             if (getImageSize(cache)) {
-                if (image_buffer)
-                    image_buffer->need_reshape = TRUE;
             }
             draw = TRUE;
         } else

@@ -9,6 +9,7 @@
 #include "image.h"
 #include "fm.h"
 #include <unistd.h>
+#include <assert.h>
 
 int REV_LB[MAX_LB] = {
     LB_N_FRAME,
@@ -50,34 +51,13 @@ void cmd_loadBuffer(struct Buffer* buf, int prop, enum LinkBufferID linkid)
     }
 }
 
-#ifdef USE_MOUSE
-#ifdef USE_GPM
-#include <gpm.h>
-#endif
-#if defined(USE_GPM) || defined(USE_SYSMOUSE)
-extern int do_getch();
-#define getch() do_getch()
-#endif /* USE_GPM */
-#endif /* USE_MOUSE */
-
-#ifdef __EMX__
-#include <sys/kbdscan.h>
-#include <strings.h>
-#endif
 char* NullLine = "";
 Lineprop NullProp[] = { 0 };
 
-/*
- * Buffer creation
- */
-struct Buffer*
-newBuffer(int width)
+struct Buffer* newBuffer(int width)
 {
-    struct Buffer* n;
-
-    n = New(struct Buffer);
-    if (n == NULL)
-        exit(3);
+    struct Buffer* n = New(struct Buffer);
+    assert(n);
     bzero((void*)n, sizeof(struct Buffer));
     n->width = width;
     n->COLS = TTY_COLS();
@@ -90,14 +70,9 @@ newBuffer(int width)
     n->clone = New(int);
     *n->clone = 1;
     n->trbyte = 0;
-#ifdef USE_SSL
     n->ssl_certificate = NULL;
-#endif
-#ifdef USE_M17N
     n->auto_detect = WcOption.auto_detect;
-#endif
     n->check_url = MarkAllPages; /* use default from -o mark_all_pages */
-    n->need_reshape = 1; /* always reshape new buffers to mark URLs */
     return n;
 }
 
@@ -530,28 +505,20 @@ selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectcha
     }
 }
 
-/*
- * Reshape HTML buffer
- */
 void reshapeBuffer(struct Buffer* buf)
 {
-    URLFile f;
-    struct Buffer sbuf;
-#ifdef USE_M17N
-    wc_uint8 old_auto_detect = WcOption.auto_detect;
-#endif
 
-    if (!buf->need_reshape)
-        return;
-    buf->need_reshape = FALSE;
     buf->width = INIT_BUFFER_WIDTH;
-    if (buf->sourcefile == NULL)
+    if (!buf->sourcefile)
         return;
+
+    URLFile f;
     init_stream(&f, SCM_LOCAL, NULL);
-    examineFile(buf->mailcap_source ? buf->mailcap_source : buf->sourcefile,
-        &f, false);
-    if (f.stream == NULL)
+    examineFile(buf->mailcap_source ? buf->mailcap_source : buf->sourcefile, &f, false);
+    if (!f.stream)
         return;
+
+    struct Buffer sbuf;
     copyBuffer(&sbuf, buf);
     clearBuffer(buf);
     while (buf->frameset) {
@@ -584,21 +551,19 @@ void reshapeBuffer(struct Buffer* buf)
             readHeader(&f, buf, TRUE, NULL);
     }
 
-#ifdef USE_M17N
-    WcOption.auto_detect = WC_OPT_DETECT_OFF;
-    UseContentCharset = FALSE;
-#endif
-    if (is_html_type(buf->type))
-        loadHTMLBuffer(&f, buf);
-    else
-        loadBuffer(&f, buf);
-    UFclose(&f);
-#ifdef USE_M17N
-    WcOption.auto_detect = old_auto_detect;
-    UseContentCharset = TRUE;
-#endif
+    {
+        wc_uint8 old_auto_detect = WcOption.auto_detect;
+        WcOption.auto_detect = WC_OPT_DETECT_OFF;
+        UseContentCharset = FALSE;
+        if (is_html_type(buf->type))
+            loadHTMLBuffer(&f, buf);
+        else
+            loadBuffer(&f, buf);
+        UFclose(&f);
+        WcOption.auto_detect = old_auto_detect;
+        UseContentCharset = TRUE;
+    }
 
-    buf->height = LASTLINE() + 1;
     if (buf->firstLine && sbuf.firstLine) {
         struct Line* cur = sbuf.currentLine;
         int n;
@@ -628,12 +593,10 @@ void reshapeBuffer(struct Buffer* buf)
     }
     if (buf->check_url & CHK_URL)
         chkURLBuffer(buf);
-#ifdef USE_NNTP
     if (buf->check_url & CHK_NMID)
         chkNMIDBuffer(buf);
     if (buf->real_scheme == SCM_NNTP || buf->real_scheme == SCM_NEWS)
         reAnchorNewsheader(buf);
-#endif
     formResetBuffer(buf, sbuf.formitem);
 }
 
