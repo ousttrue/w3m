@@ -115,7 +115,7 @@ enum SearchResult forwardSearch(struct Buffer* buf, char* str)
         message(p, 0, 0);
         return SR_NOTFOUND;
     }
-    l = buf->currentLine;
+    l = buf->doc.currentLine;
     if (l == NULL) {
         return SR_NOTFOUND;
     }
@@ -138,7 +138,7 @@ enum SearchResult forwardSearch(struct Buffer* buf, char* str)
             l = l->next;
         }
         buf->pos = pos;
-        if (l != buf->currentLine)
+        if (l != buf->doc.currentLine)
             gotoLine(buf, l->linenumber);
         arrangeCursor(buf);
         set_mark(l, pos, pos + last - first);
@@ -150,14 +150,14 @@ enum SearchResult forwardSearch(struct Buffer* buf, char* str)
                 l = getNextPage(buf, 1);
                 if (l == NULL) {
                     if (WrapSearch && !wrapped) {
-                        l = buf->firstLine;
+                        l = buf->doc.firstLine;
                         wrapped = TRUE;
                     } else {
                         break;
                     }
                 }
             } else if (WrapSearch) {
-                l = buf->firstLine;
+                l = buf->doc.firstLine;
                 wrapped = TRUE;
             } else {
                 break;
@@ -173,7 +173,7 @@ enum SearchResult forwardSearch(struct Buffer* buf, char* str)
                 l = l->next;
             }
             buf->pos = pos;
-            buf->currentLine = l;
+            buf->doc.currentLine = l;
             gotoLine(buf, l->linenumber);
             arrangeCursor(buf);
             set_mark(l, pos, pos + last - first);
@@ -205,7 +205,7 @@ enum SearchResult backwardSearch(struct Buffer* buf, char* str)
         message(p, 0, 0);
         return SR_NOTFOUND;
     }
-    l = buf->currentLine;
+    l = buf->doc.currentLine;
     if (l == NULL) {
         return SR_NOTFOUND;
     }
@@ -250,7 +250,7 @@ enum SearchResult backwardSearch(struct Buffer* buf, char* str)
                 l = l->next;
             }
             buf->pos = pos;
-            if (l != buf->currentLine)
+            if (l != buf->doc.currentLine)
                 gotoLine(buf, l->linenumber);
             arrangeCursor(buf);
             set_mark(l, pos, pos + found_last - found);
@@ -260,7 +260,7 @@ enum SearchResult backwardSearch(struct Buffer* buf, char* str)
     for (l = l->prev;; l = l->prev) {
         if (l == NULL) {
             if (WrapSearch) {
-                l = buf->lastLine;
+                l = buf->doc.lastLine;
                 wrapped = TRUE;
             } else {
                 break;

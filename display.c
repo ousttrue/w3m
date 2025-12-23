@@ -95,9 +95,9 @@ make_lastline_message(struct Buffer* buf)
     }
 
     msg = Strnew();
-    if (getRuntime()->displayLineInfo && buf->currentLine != NULL && buf->lastLine != NULL) {
-        int cl = buf->currentLine->real_linenumber;
-        int ll = buf->lastLine->real_linenumber;
+    if (getRuntime()->displayLineInfo && buf->doc.currentLine != NULL && buf->doc.lastLine != NULL) {
+        int cl = buf->doc.currentLine->real_linenumber;
+        int ll = buf->doc.lastLine->real_linenumber;
         int r = (int)((double)cl * 100.0 / (double)(ll ? ll : 1) + 0.5);
         Strcat(msg, Sprintf("%d/%d (%d%%)", cl, ll, r));
     } else {
@@ -205,7 +205,7 @@ drawAnchorCursor0(struct Buffer* buf, struct AnchorList* al, int hseq, int prevh
     struct Line* l;
     struct Anchor* an;
 
-    l = buf->topLine;
+    l = buf->doc.topLine;
     for (j = 0; j < al->nanchor; j++) {
         an = &al->anchors[j];
         if (an->start.line < tline)
@@ -253,7 +253,7 @@ drawAnchorCursor(struct Buffer* buf)
     int hseq, prevhseq;
     int tline, eline;
 
-    if (!buf->firstLine || !buf->hmarklist)
+    if (!buf->doc.firstLine || !buf->hmarklist)
         return;
     if (!buf->href && !buf->formitem)
         return;
@@ -265,7 +265,7 @@ drawAnchorCursor(struct Buffer* buf)
         hseq = an->hseq;
     else
         hseq = -1;
-    tline = buf->topLine->linenumber;
+    tline = buf->doc.topLine->linenumber;
     eline = tline + buf->LINES;
     prevhseq = buf->hmarklist->prevhseq;
 
@@ -375,8 +375,8 @@ redrawLine(struct Buffer* buf, struct Line* l, int i)
     if (getRuntime()->showLineNum) {
         char tmp[16];
         if (!buf->rootX) {
-            if (buf->lastLine->real_linenumber > 0)
-                buf->rootX = (int)(log(buf->lastLine->real_linenumber + 0.1)
+            if (buf->doc.lastLine->real_linenumber > 0)
+                buf->rootX = (int)(log(buf->doc.lastLine->real_linenumber + 0.1)
                                  / log(10))
                     + 2;
             if (buf->rootX < 5)
@@ -482,7 +482,7 @@ redrawNLine(struct Buffer* buf, int n)
         for (i = 0; i < TTY_COLS(); i++)
             screen_addch('~', 1);
     }
-    for (i = 0, l = buf->topLine; i < buf->LINES; i++, l = l->next) {
+    for (i = 0, l = buf->doc.topLine; i < buf->LINES; i++, l = l->next) {
         if (i >= buf->LINES - n || i < -n)
             l = redrawLine(buf, l, i + buf->rootY);
         if (l == NULL)
@@ -496,7 +496,7 @@ redrawNLine(struct Buffer* buf, int n)
     if (!(getRuntime()->activeImage && getRuntime()->displayImage && buf->img))
         return;
     screen_move(buf->cursorY + buf->rootY, buf->cursorX + buf->rootX);
-    for (i = 0, l = buf->topLine; i < buf->LINES && l; i++, l = l->next) {
+    for (i = 0, l = buf->doc.topLine; i < buf->LINES && l; i++, l = l->next) {
         if (i >= buf->LINES - n || i < -n)
             redrawLineImage(buf, l, i + buf->rootY);
     }
@@ -509,7 +509,7 @@ void displayBuffer(struct Buffer* buf, enum DisplayMode mode)
         return;
     }
 
-    if (buf->topLine == NULL && readBufferCache(buf)) {
+    if (buf->doc.topLine == NULL && readBufferCache(buf)) {
         mode = B_FORCE_REDRAW;
     }
 
@@ -524,8 +524,8 @@ void displayBuffer(struct Buffer* buf, enum DisplayMode mode)
 
     // rootX
     if (getRuntime()->showLineNum) {
-        if (buf->lastLine && buf->lastLine->real_linenumber > 0)
-            buf->rootX = (int)(log(buf->lastLine->real_linenumber + 0.1)
+        if (buf->doc.lastLine && buf->doc.lastLine->real_linenumber > 0)
+            buf->rootX = (int)(log(buf->doc.lastLine->real_linenumber + 0.1)
                              / log(10))
                 + 2;
         if (buf->rootX < 5)
@@ -559,10 +559,10 @@ void displayBuffer(struct Buffer* buf, enum DisplayMode mode)
     if (mode == B_FORCE_REDRAW //
         || mode == B_SCROLL //
         || mode == B_REDRAW_IMAGE //
-        || cline != buf->topLine //
+        || cline != buf->doc.topLine //
         || ccolumn != buf->currentColumn) {
 
-        if (getRuntime()->activeImage && (mode == B_REDRAW_IMAGE || cline != buf->topLine || ccolumn != buf->currentColumn)) {
+        if (getRuntime()->activeImage && (mode == B_REDRAW_IMAGE || cline != buf->doc.topLine || ccolumn != buf->currentColumn)) {
             if (draw_image_flag) {
                 tty_clear();
                 screen_clear();
@@ -574,17 +574,17 @@ void displayBuffer(struct Buffer* buf, enum DisplayMode mode)
         }
         redrawNLine(buf, LASTLINE());
 
-        cline = buf->topLine;
+        cline = buf->doc.topLine;
         ccolumn = buf->currentColumn;
     }
 
-    if (buf->topLine == NULL)
-        buf->topLine = buf->firstLine;
+    if (buf->doc.topLine == NULL)
+        buf->doc.topLine = buf->doc.firstLine;
 
     drawAnchorCursor(buf);
 
     Str msg = make_lastline_message(buf);
-    if (buf->firstLine == NULL) {
+    if (buf->doc.firstLine == NULL) {
         Strcat_charp(msg, "\tNo Line");
     }
     displayDelayedMessage();

@@ -159,8 +159,8 @@ void bzero(void*, int);
 
 #define COPY_BUFPOSITION(dstbuf, srcbuf)                   \
     {                                                      \
-        (dstbuf)->topLine = (srcbuf)->topLine;             \
-        (dstbuf)->currentLine = (srcbuf)->currentLine;     \
+        (dstbuf)->doc.topLine = (srcbuf)->doc.topLine;             \
+        (dstbuf)->doc.currentLine = (srcbuf)->doc.currentLine;     \
         (dstbuf)->pos = (srcbuf)->pos;                     \
         (dstbuf)->cursorX = (srcbuf)->cursorX;             \
         (dstbuf)->cursorY = (srcbuf)->cursorY;             \
@@ -169,8 +169,8 @@ void bzero(void*, int);
     }
 #define SAVE_BUFPOSITION(sbufp) COPY_BUFPOSITION(sbufp, Currentbuf)
 #define RESTORE_BUFPOSITION(sbufp) COPY_BUFPOSITION(Currentbuf, sbufp)
-#define TOP_LINENUMBER(buf) ((buf)->topLine ? (buf)->topLine->linenumber : 1)
-#define CUR_LINENUMBER(buf) ((buf)->currentLine ? (buf)->currentLine->linenumber : 1)
+#define TOP_LINENUMBER(buf) ((buf)->doc.topLine ? (buf)->doc.topLine->linenumber : 1)
+#define CUR_LINENUMBER(buf) ((buf)->doc.currentLine ? (buf)->doc.currentLine->linenumber : 1)
 
 #define FONTSTAT_MAX 127
 

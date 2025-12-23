@@ -230,9 +230,9 @@ UFhalfclose(URLFile* f)
 
 int currentLn(struct Buffer* buf)
 {
-    if (buf->currentLine)
-        /*     return buf->currentLine->real_linenumber + 1;      */
-        return buf->currentLine->linenumber + 1;
+    if (buf->doc.currentLine)
+        /*     return buf->doc.currentLine->real_linenumber + 1;      */
+        return buf->doc.currentLine->linenumber + 1;
     else
         return 1;
 }
@@ -666,7 +666,7 @@ void readHeader(URLFile* uf, struct Buffer* newBuf, int thru, struct Url* pu)
                     init_stream(&f, SCM_LOCAL, newStrStream(src));
                     loadHTMLstream(&f, newBuf, NULL, TRUE);
                     UFclose(&f);
-                    for (l = newBuf->lastLine; l && l->real_linenumber;
+                    for (l = newBuf->doc.lastLine; l && l->real_linenumber;
                         l = l->prev)
                         l->real_linenumber = 0;
                     newBuf->document_charset = old_charset;
@@ -2175,9 +2175,9 @@ page_loaded:
                 if (a != NULL) {
                     gotoLine(b, a->start.line);
                     if (label_topline)
-                        b->topLine = lineSkip(b, b->topLine,
-                            b->currentLine->linenumber
-                                - b->topLine->linenumber,
+                        b->doc.topLine = lineSkip(b, b->doc.topLine,
+                            b->doc.currentLine->linenumber
+                                - b->doc.topLine->linenumber,
                             FALSE);
                     b->pos = a->start.pos;
                     arrangeCursor(b);
@@ -6455,17 +6455,17 @@ addnewline2(struct Buffer* buf, char* line, Lineprop* prop, Linecolor* color, in
     l->size = pos;
     l->bpos = 0;
     l->bwidth = 0;
-    l->prev = buf->currentLine;
-    if (buf->currentLine) {
-        l->next = buf->currentLine->next;
-        buf->currentLine->next = l;
+    l->prev = buf->doc.currentLine;
+    if (buf->doc.currentLine) {
+        l->next = buf->doc.currentLine->next;
+        buf->doc.currentLine->next = l;
     } else
         l->next = NULL;
-    if (buf->lastLine == NULL || buf->lastLine == buf->currentLine)
-        buf->lastLine = l;
-    buf->currentLine = l;
-    if (buf->firstLine == NULL)
-        buf->firstLine = l;
+    if (buf->doc.lastLine == NULL || buf->doc.lastLine == buf->doc.currentLine)
+        buf->doc.lastLine = l;
+    buf->doc.currentLine = l;
+    if (buf->doc.firstLine == NULL)
+        buf->doc.firstLine = l;
     l->linenumber = ++buf->allLine;
     if (nlines < 0) {
         /*     l->real_linenumber = l->linenumber;     */
@@ -6510,7 +6510,7 @@ addnewline(struct Buffer* buf, char* line, Lineprop* prop, Linecolor* color, int
     bpos = 0;
     bwidth = 0;
     while (1) {
-        l = buf->currentLine;
+        l = buf->doc.currentLine;
         l->bpos = bpos;
         l->bwidth = bwidth;
         i = columnLen(l, width);
@@ -6558,9 +6558,9 @@ loadHTMLBuffer(URLFile* f, struct Buffer* newBuf)
 
     loadHTMLstream(f, newBuf, src, newBuf->bufferprop & BP_FRAME);
 
-    newBuf->topLine = newBuf->firstLine;
-    newBuf->lastLine = newBuf->currentLine;
-    newBuf->currentLine = newBuf->firstLine;
+    newBuf->doc.topLine = newBuf->doc.firstLine;
+    newBuf->doc.lastLine = newBuf->doc.currentLine;
+    newBuf->doc.currentLine = newBuf->doc.firstLine;
     if (n_textarea)
         formResetBuffer(newBuf, newBuf->formitem);
     if (src)
@@ -7070,9 +7070,9 @@ loadHTMLString(Str page)
 
     TRAP_OFF;
     UFclose(&f);
-    newBuf->topLine = newBuf->firstLine;
-    newBuf->lastLine = newBuf->currentLine;
-    newBuf->currentLine = newBuf->firstLine;
+    newBuf->doc.topLine = newBuf->doc.firstLine;
+    newBuf->doc.lastLine = newBuf->doc.currentLine;
+    newBuf->doc.currentLine = newBuf->doc.firstLine;
     newBuf->type = "text/html";
     newBuf->real_type = newBuf->type;
     if (n_textarea)
@@ -7316,9 +7316,9 @@ loadBuffer(URLFile* uf, struct Buffer* volatile newBuf)
     }
 _end:
     TRAP_OFF;
-    newBuf->topLine = newBuf->firstLine;
-    newBuf->lastLine = newBuf->currentLine;
-    newBuf->currentLine = newBuf->firstLine;
+    newBuf->doc.topLine = newBuf->doc.firstLine;
+    newBuf->doc.lastLine = newBuf->doc.currentLine;
+    newBuf->doc.currentLine = newBuf->doc.firstLine;
     newBuf->trbyte = trbyte + linelen;
 #ifdef USE_M17N
     newBuf->document_charset = charset;
@@ -7384,9 +7384,9 @@ image_buffer:
     if (src)
         fclose(src);
 
-    newBuf->topLine = newBuf->firstLine;
-    newBuf->lastLine = newBuf->currentLine;
-    newBuf->currentLine = newBuf->firstLine;
+    newBuf->doc.topLine = newBuf->doc.firstLine;
+    newBuf->doc.lastLine = newBuf->doc.currentLine;
+    newBuf->doc.currentLine = newBuf->doc.firstLine;
     newBuf->image_flag = IMG_FLAG_AUTO;
     return newBuf;
 }
@@ -7464,12 +7464,12 @@ pager_next:
 
 void saveBuffer(struct Buffer* buf, FILE* f, int cont)
 {
-    _saveBuffer(buf, buf->firstLine, f, cont);
+    _saveBuffer(buf, buf->doc.firstLine, f, cont);
 }
 
 void saveBufferBody(struct Buffer* buf, FILE* f, int cont)
 {
-    struct Line* l = buf->firstLine;
+    struct Line* l = buf->doc.firstLine;
 
     while (l != NULL && l->real_linenumber == 0)
         l = l->next;
@@ -7562,7 +7562,7 @@ openPagerBuffer(InputStream stream, struct Buffer* buf)
     else
         buf->document_charset = WC_CES_US_ASCII;
 #endif
-    buf->currentLine = buf->firstLine;
+    buf->doc.currentLine = buf->doc.firstLine;
 
     return buf;
 }
@@ -7590,8 +7590,8 @@ openGeneralPagerBuffer(InputStream stream)
         if (t == NULL)
             t = "text/plain";
         if (t_buf) {
-            t_buf->topLine = t_buf->firstLine;
-            t_buf->currentLine = t_buf->lastLine;
+            t_buf->doc.topLine = t_buf->doc.firstLine;
+            t_buf->doc.currentLine = t_buf->doc.lastLine;
         }
         SearchHeader = FALSE;
     } else if (DefaultType) {
@@ -7632,7 +7632,7 @@ openGeneralPagerBuffer(InputStream stream)
 
 struct Line* getNextPage(struct Buffer* buf, int plen)
 {
-    struct Line* volatile top = buf->topLine, * volatile last = buf->lastLine, * volatile cur = buf->currentLine;
+    struct Line* volatile top = buf->doc.topLine, * volatile last = buf->doc.lastLine, * volatile cur = buf->doc.currentLine;
     int i;
     int volatile nlines = 0;
     clen_t linelen = 0, trbyte = buf->trbyte;
@@ -7658,10 +7658,9 @@ struct Line* getNextPage(struct Buffer* buf, int plen)
         pre_lbuf = *(last->lineBuf);
         if (pre_lbuf == '\0')
             pre_lbuf = '\n';
-        buf->currentLine = last;
+        buf->doc.currentLine = last;
     }
 
-#ifdef USE_M17N
     charset = buf->document_charset;
     if (buf->document_charset != WC_CES_US_ASCII)
         doc_charset = buf->document_charset;
@@ -7672,7 +7671,6 @@ struct Line* getNextPage(struct Buffer* buf, int plen)
             doc_charset = content_charset;
     }
     WcOption.auto_detect = buf->auto_detect;
-#endif
 
     if (SETJMP(AbortLoading) != 0) {
         goto pager_end;
@@ -7714,12 +7712,12 @@ struct Line* getNextPage(struct Buffer* buf, int plen)
         addnewline(buf, lineBuf2->ptr, propBuffer, colorBuffer,
             lineBuf2->length, FOLD_BUFFER_WIDTH, nlines);
         if (!top) {
-            top = buf->firstLine;
+            top = buf->doc.firstLine;
             cur = top;
         }
-        if (buf->lastLine->real_linenumber - buf->firstLine->real_linenumber
+        if (buf->doc.lastLine->real_linenumber - buf->doc.firstLine->real_linenumber
             >= PagerMax) {
-            struct Line* l = buf->firstLine;
+            struct Line* l = buf->doc.firstLine;
             do {
                 if (top == l)
                     top = l->next;
@@ -7729,23 +7727,21 @@ struct Line* getNextPage(struct Buffer* buf, int plen)
                     last = NULL;
                 l = l->next;
             } while (l && l->bpos);
-            buf->firstLine = l;
+            buf->doc.firstLine = l;
             if (l)
-                buf->firstLine->prev = NULL;
+                buf->doc.firstLine->prev = NULL;
         }
     }
 pager_end:
     TRAP_OFF;
 
     buf->trbyte = trbyte + linelen;
-#ifdef USE_M17N
     buf->document_charset = charset;
     WcOption.auto_detect = old_auto_detect;
-#endif
-    buf->topLine = top;
-    buf->currentLine = cur;
+    buf->doc.topLine = top;
+    buf->doc.currentLine = cur;
     if (!last)
-        last = buf->firstLine;
+        last = buf->doc.firstLine;
     else if (last && (last->next || !squeeze_flag))
         last = last->next;
     return last;

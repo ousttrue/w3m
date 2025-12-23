@@ -113,7 +113,7 @@ internal_get(char* url, int flag, struct FormList* request)
             if (!strcasecmp(buf->type, "text/plain")) {
                 struct Line* lp;
                 int len = 0;
-                for (lp = buf->firstLine; lp; lp = lp->next) {
+                for (lp = buf->doc.firstLine; lp; lp = lp->next) {
                     len += lp->len;
                     if (lp->lineBuf[lp->len - 1] != '\n')
                         len++;

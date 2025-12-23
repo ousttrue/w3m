@@ -244,10 +244,10 @@ void pushFrameTree(struct frameset_queue** fqpp, struct frameset* fs, struct Buf
 
     rfq = New(struct frameset_queue);
     rfq->linenumber = (buf
-                          && buf->currentLine)
-        ? buf->currentLine->linenumber
+                          && buf->doc.currentLine)
+        ? buf->doc.currentLine->linenumber
         : 1;
-    rfq->top_linenumber = (buf && buf->topLine) ? buf->topLine->linenumber : 1;
+    rfq->top_linenumber = (buf && buf->doc.topLine) ? buf->doc.topLine->linenumber : 1;
     rfq->pos = buf ? buf->pos : 0;
     rfq->currentColumn = buf ? buf->currentColumn : 0;
     rfq->formitem = buf ? buf->formitem : NULL;

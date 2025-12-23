@@ -164,10 +164,10 @@ int getMapXY(struct Buffer* buf, struct Anchor* a, int* x, int* y)
     if (!buf || !a || !a->image || !x || !y)
         return 0;
     *x = (int)((buf->currentColumn + buf->cursorX
-                   - COLPOS(buf->currentLine, a->start.pos) + 0.5)
+                   - COLPOS(buf->doc.currentLine, a->start.pos) + 0.5)
              * getRuntime()->pixel_per_char)
         - a->image->xoffset;
-    *y = (int)((buf->currentLine->linenumber - a->image->y + 0.5)
+    *y = (int)((buf->doc.currentLine->linenumber - a->image->y + 0.5)
              * getRuntime()->pixel_per_line)
         - a->image->yoffset;
     if (*x <= 0)
@@ -526,8 +526,8 @@ page_info_panel(struct Buffer* buf)
     if (buf == NULL)
         goto end;
     all = buf->allLine;
-    if (all == 0 && buf->lastLine)
-        all = buf->lastLine->linenumber;
+    if (all == 0 && buf->doc.lastLine)
+        all = buf->doc.lastLine->linenumber;
 #ifdef USE_M17N
     Strcat_charp(tmp, "<form method=internal action=charset>");
 #endif

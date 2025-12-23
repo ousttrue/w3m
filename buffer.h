@@ -52,13 +52,12 @@ struct BufferPos {
 #define CHK_URL 1
 #define CHK_NMID 2
 
+#include "document.h"
+
 struct Buffer {
     char* filename;
     char* buffername;
-    struct Line* firstLine;
-    struct Line* topLine;
-    struct Line* currentLine;
-    struct Line* lastLine;
+    struct Document doc;
     struct Buffer* nextBuffer;
     struct Buffer* linkBuffer[MAX_LB];
     short width;

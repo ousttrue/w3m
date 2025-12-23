@@ -148,26 +148,26 @@ retrieveAnchor(struct AnchorList* al, int line, int pos)
 struct Anchor*
 retrieveCurrentAnchor(struct Buffer* buf)
 {
-    if (buf->currentLine == NULL)
+    if (buf->doc.currentLine == NULL)
         return NULL;
-    return retrieveAnchor(buf->href, buf->currentLine->linenumber, buf->pos);
+    return retrieveAnchor(buf->href, buf->doc.currentLine->linenumber, buf->pos);
 }
 
 struct Anchor*
 retrieveCurrentImg(struct Buffer* buf)
 {
-    if (buf->currentLine == NULL)
+    if (buf->doc.currentLine == NULL)
         return NULL;
-    return retrieveAnchor(buf->img, buf->currentLine->linenumber, buf->pos);
+    return retrieveAnchor(buf->img, buf->doc.currentLine->linenumber, buf->pos);
 }
 
 struct Anchor*
 retrieveCurrentForm(struct Buffer* buf)
 {
-    if (buf->currentLine == NULL)
+    if (buf->doc.currentLine == NULL)
         return NULL;
     return retrieveAnchor(buf->formitem,
-        buf->currentLine->linenumber, buf->pos);
+        buf->doc.currentLine->linenumber, buf->pos);
 }
 
 struct Anchor*
@@ -358,7 +358,7 @@ reAnchorAny(struct Buffer* buf, char* re,
     if ((re = regexCompile(re, 1)) != NULL) {
         return re;
     }
-    for (l = MarkAllPages ? buf->firstLine : buf->topLine; l != NULL && (MarkAllPages || l->linenumber < buf->topLine->linenumber + LASTLINE());
+    for (l = MarkAllPages ? buf->doc.firstLine : buf->doc.topLine; l != NULL && (MarkAllPages || l->linenumber < buf->doc.topLine->linenumber + LASTLINE());
         l = l->next) {
         if (p && l->bpos)
             goto next_line;
@@ -401,7 +401,7 @@ char* reAnchorNewsheader(struct Buffer* buf)
     char **header, **q;
     int i, search = FALSE;
 
-    if (!buf || !buf->firstLine)
+    if (!buf || !buf->doc.firstLine)
         return NULL;
     for (i = 0; i <= 1; i++) {
         if (i == 0) {
@@ -411,7 +411,7 @@ char* reAnchorNewsheader(struct Buffer* buf)
             regexCompile("[a-zA-Z0-9\\.\\-_]+", 1);
             header = header_group;
         }
-        for (l = buf->firstLine; l != NULL && l->real_linenumber == 0;
+        for (l = buf->doc.firstLine; l != NULL && l->real_linenumber == 0;
             l = l->next) {
             if (l->bpos)
                 continue;
@@ -559,7 +559,7 @@ void addMultirowsImg(struct Buffer* buf, struct AnchorList* al)
         img = a_img.image;
         if (a_img.hseq < 0 || !img || img->rows <= 1)
             continue;
-        for (l = buf->firstLine; l != NULL; l = l->next) {
+        for (l = buf->doc.firstLine; l != NULL; l = l->next) {
             if (l->linenumber == img->y)
                 break;
         }
@@ -635,7 +635,7 @@ void addMultirowsForm(struct Buffer* buf, struct AnchorList* al)
         al->anchors[i].rows = 1;
         if (a_form.hseq < 0 || a_form.rows <= 1)
             continue;
-        for (l = buf->firstLine; l != NULL; l = l->next) {
+        for (l = buf->doc.firstLine; l != NULL; l = l->next) {
             if (l->linenumber == a_form.y)
                 break;
         }
@@ -688,7 +688,7 @@ char* getAnchorText(struct Buffer* buf, struct AnchorList* al, struct Anchor* a)
     if (!a || a->hseq < 0)
         return NULL;
     hseq = a->hseq;
-    l = buf->firstLine;
+    l = buf->doc.firstLine;
     for (i = 0; i < al->nanchor; i++) {
         a = &al->anchors[i];
         if (a->hseq != hseq)

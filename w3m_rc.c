@@ -624,8 +624,8 @@ struct Buffer* loadLink(char* url, char* target, char* referer, struct FormList*
         if (al) {
             gotoLine(Currentbuf, al->start.line);
             if (label_topline)
-                Currentbuf->topLine = lineSkip(Currentbuf, Currentbuf->topLine,
-                    Currentbuf->currentLine->linenumber - Currentbuf->topLine->linenumber,
+                Currentbuf->doc.topLine = lineSkip(Currentbuf, Currentbuf->doc.topLine,
+                    Currentbuf->doc.currentLine->linenumber - Currentbuf->doc.topLine->linenumber,
                     FALSE);
             Currentbuf->pos = al->start.pos;
             arrangeCursor(Currentbuf);
@@ -715,7 +715,7 @@ void _followForm(bool submit, bool on_target, bool do_download)
     Str tmp, tmp2;
     int multipart = 0, i;
 
-    if (Currentbuf->firstLine == NULL)
+    if (Currentbuf->doc.firstLine == NULL)
         return;
 
     a = retrieveCurrentForm(Currentbuf);
@@ -982,7 +982,7 @@ wc_uint32 getChar(char* p)
 char* getCurWord(struct Buffer* buf, int* spos, int* epos)
 {
     char* p;
-    struct Line* l = buf->currentLine;
+    struct Line* l = buf->doc.currentLine;
     int b, e;
 
     *spos = 0;
@@ -1037,7 +1037,7 @@ static void set_buffer_environ(struct Buffer* buf)
         set_environ("W3M_TYPE", buf->real_type ? buf->real_type : "unknown");
         set_environ("W3M_CHARSET", wc_ces_to_charset(buf->document_charset));
     }
-    l = buf->currentLine;
+    l = buf->doc.currentLine;
     if (l && (buf != prev_buf || l != prev_line || buf->pos != prev_pos)) {
         struct Anchor* a;
         struct Url pu;
@@ -1080,7 +1080,7 @@ save_buffer_position(struct Buffer* buf)
 {
     struct BufferPos* b = buf->undo;
 
-    if (!buf->firstLine)
+    if (!buf->doc.firstLine)
         return;
     if (b && b->top_linenumber == TOP_LINENUMBER(buf) && b->cur_linenumber == CUR_LINENUMBER(buf) && b->currentColumn == buf->currentColumn && b->pos == buf->pos)
         return;
@@ -1089,7 +1089,7 @@ save_buffer_position(struct Buffer* buf)
     b->cur_linenumber = CUR_LINENUMBER(buf);
     b->currentColumn = buf->currentColumn;
     b->pos = buf->pos;
-    b->bpos = buf->currentLine ? buf->currentLine->bpos : 0;
+    b->bpos = buf->doc.currentLine ? buf->doc.currentLine->bpos : 0;
     b->next = NULL;
     b->prev = buf->undo;
     if (buf->undo)
