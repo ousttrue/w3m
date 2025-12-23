@@ -1,4 +1,5 @@
 #include "w3m_rc.h"
+#include "message.h"
 #include "linein.h"
 #include <stdio.h>
 #include <unistd.h>

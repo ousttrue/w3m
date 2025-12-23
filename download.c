@@ -1,4 +1,5 @@
 #include "download.h"
+#include "file.h"
 #include "buffer.h"
 #include "display.h"
 #include "w3m_rc.h"

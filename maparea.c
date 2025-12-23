@@ -1,4 +1,5 @@
 #include "maparea.h"
+#include "file.h"
 #include "w3m_rc.h"
 #include "ctrlcode.h"
 #include "html_form.h"

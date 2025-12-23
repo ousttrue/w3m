@@ -1,7 +1,5 @@
-/*
- * HTML forms
- */
 #include "html_form.h"
+#include "message.h"
 #include "w3m_rc.h"
 #include "display.h"
 #include "download.h"

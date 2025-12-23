@@ -1,4 +1,5 @@
 #include "w3m_rc.h"
+#include "message.h"
 #include "ctrlcode.h"
 #include "buffer.h"
 #include "fm.h"
@@ -436,7 +437,7 @@ Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor)
                 es = memchr(str, ESC_CODE, endp - str);
         }
 
-        mode = get_mctype((const uint8_t*)str) | effect;
+        mode = get_mctype(str) | effect;
 
         if (color) {
             *(color++) = cmode;
@@ -1249,7 +1250,7 @@ void setup_child(int child, int i, int f)
     if (!child)
         SETPGRP();
     close_all_fds_except(i, f);
-    QuietMessage = TRUE;
+    getRuntime()->QuietMessage = TRUE;
     // getRuntime()->fmInitialized = FALSE;
     TrapSignal = FALSE;
 }

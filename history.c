@@ -1,4 +1,6 @@
 #include "history.h"
+#include "file.h"
+#include "message.h"
 #include "fm.h"
 
 /* Merge entries from their history into ours */

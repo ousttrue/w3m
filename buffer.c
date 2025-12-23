@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "message.h"
 #include "display.h"
 #include "ctrlcode.h"
 #include "anchor.h"

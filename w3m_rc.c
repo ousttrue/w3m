@@ -1,4 +1,6 @@
 #include "w3m_rc.h"
+#include "file.h"
+#include "message.h"
 #include "termcap_util.h"
 #include "linein.h"
 #include "siteconf.h"
@@ -47,6 +49,8 @@ static struct termios d_ioval;
 char UseGraphicChar = GRAPHIC_CHAR_CHARSET;
 
 struct Runtime g_runtime = {
+    .QuietMessage = (FALSE),
+
     // Don't change
     .InnerCharset = (WC_CES_WTF),
 
@@ -2607,7 +2611,6 @@ load_option_panel(void)
                 }
                 Strcat_charp(src, "</select>");
                 break;
-#ifdef USE_M17N
             case PI_CODE:
                 tmp = to_str(p);
                 Strcat_m_charp(src, "<select name=", p->name, ">", NULL);
@@ -2621,7 +2624,6 @@ load_option_panel(void)
                 }
                 Strcat_charp(src, "</select>");
                 break;
-#endif
             }
             Strcat_charp(src, "</td></tr>\n");
             p++;
@@ -2632,10 +2634,8 @@ load_option_panel(void)
     }
     Strcat_charp(src, "</table></form></body></html>");
     buf = loadHTMLString(src);
-#ifdef USE_M17N
     if (buf)
         buf->document_charset = OptionCharset;
-#endif
     return buf;
 }
 

@@ -254,7 +254,6 @@ extern void completeHTMLstream(struct html_feed_environ*,
     struct readbuffer*);
 extern void loadHTMLstream(URLFile* f, struct Buffer* newBuf, FILE* src,
     int internal);
-extern struct Buffer* loadHTMLString(Str page);
 #ifdef USE_GOPHER
 #ifdef USE_M17N
 extern Str loadGopherDir(URLFile* uf, struct Url* pu, wc_ces* charset);
@@ -308,22 +307,7 @@ extern void copyBuffer(struct Buffer* a, struct Buffer* b);
 extern struct Buffer* prevBuffer(struct Buffer* first, struct Buffer* buf);
 extern int writeBufferCache(struct Buffer* buf);
 extern void addChar(char c, Lineprop mode);
-#ifdef USE_M17N
 extern void addMChar(char* c, Lineprop mode, size_t len);
-#endif
-extern void record_err_message(char* s);
-extern struct Buffer* message_list_panel(void);
-extern void message(char* s, int return_x, int return_y);
-extern void disp_err_message(char* s, int redraw_current);
-extern void disp_message_nsec(char* s, int redraw_current, int sec, int purge,
-    int mouse);
-extern void disp_message(char* s, int redraw_current);
-#ifdef USE_MOUSE
-extern void disp_message_nomouse(char* s, int redraw_current);
-#else
-#define disp_message_nomouse disp_message
-#endif
-extern void set_delayed_message(char* s);
 
 extern int gethtmlcmd(char** s);
 #ifndef USE_ANSI_COLOR

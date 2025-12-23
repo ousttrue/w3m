@@ -46,6 +46,8 @@ struct Event {
 };
 
 struct Runtime {
+    char QuietMessage;
+
     // Don't change
     wc_ces InnerCharset;
     wc_ces DisplayCharset;
@@ -181,5 +183,5 @@ int is_wordchar(wc_uint32 c);
 wc_uint32 getChar(char* p);
 
 void show_params(FILE* fp);
-int exec_cmd(const char *cmd);
-uint8_t blockChild(const char *cmd);
+int exec_cmd(const char* cmd);
+uint8_t blockChild(const char* cmd);

@@ -1,18 +1,14 @@
-/* $Id: func.c,v 1.27 2003/09/26 17:59:51 ukai Exp $ */
-/*
- * w3m func.c
- */
-
-#include <stdio.h>
-
-#include "fm.h"
 #include "func.h"
+#include "message.h"
+#include "fm.h"
 #include "myctype.h"
 #include "regex.h"
 #include "w3m_rc.h"
 #include "ctrlcode.h"
 #include <libwc/charset.h>
 #include <libwc/conv.h>
+#include <stdio.h>
+
 #include "funcname.c"
 #include "functable.c"
 

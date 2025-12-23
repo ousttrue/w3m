@@ -1,3 +1,5 @@
+#include "file.h"
+#include "message.h"
 #include "w3m_rc.h"
 #include <libwc/conv.h>
 #include "linein.h"
@@ -674,8 +676,7 @@ void readHeader(URLFile* uf, struct Buffer* newBuf, int thru, struct Url* pu)
             lineBuf2 = tmp;
         }
         if ((uf->scheme == SCM_HTTP
-                || uf->scheme == SCM_HTTPS
-                )
+                || uf->scheme == SCM_HTTPS)
             && http_response_code == -1) {
             p = lineBuf2->ptr;
             while (*p && !IS_SPACE(*p))
@@ -718,8 +719,7 @@ void readHeader(URLFile* uf, struct Buffer* newBuf, int thru, struct Url* pu)
                     break;
             }
             uf->content_encoding = uf->compression;
-        }
-        else if (use_cookie && accept_cookie && pu && check_cookie_accept_domain(pu->host) && (!strncasecmp(lineBuf2->ptr, "Set-Cookie:", 11) || !strncasecmp(lineBuf2->ptr, "Set-Cookie2:", 12))) {
+        } else if (use_cookie && accept_cookie && pu && check_cookie_accept_domain(pu->host) && (!strncasecmp(lineBuf2->ptr, "Set-Cookie:", 11) || !strncasecmp(lineBuf2->ptr, "Set-Cookie2:", 12))) {
             Str name = Strnew(), value = Strnew(), domain = NULL, path = NULL,
                 comment = NULL, commentURL = NULL, port = NULL, tmp2;
             int version, quoted, flag = 0;
@@ -836,8 +836,7 @@ void readHeader(URLFile* uf, struct Buffer* newBuf, int thru, struct Url* pu)
                             1, TRUE, FALSE);
                 }
             }
-        }
-        else if (!strncasecmp(lineBuf2->ptr, "w3m-control:", 12) && uf->scheme == SCM_LOCAL_CGI) {
+        } else if (!strncasecmp(lineBuf2->ptr, "w3m-control:", 12) && uf->scheme == SCM_LOCAL_CGI) {
             Str funcname = Strnew();
             int f;
 
@@ -1486,7 +1485,7 @@ getAuthCookie(struct http_auth* hauth, char* auth_header,
     if (!a_found && find_auth_user_passwd(pu, realm, (Str*)uname, (Str*)pwd, proxy)) {
         /* found username & password in passwd file */;
     } else {
-        if (QuietMessage)
+        if (getRuntime()->QuietMessage)
             return;
         /* input username and password */
         sleep(2);
@@ -2278,9 +2277,9 @@ is_beginning_char(unsigned char* ch)
 }
 
 static int
-is_word_char(const uint8_t* ch)
+is_word_char(const unsigned char* ch)
 {
-    Lineprop ctype = get_mctype(ch);
+    Lineprop ctype = get_mctype((const char*)ch);
 
     if (ctype & (PC_CTRL | PC_KANJI | PC_UNKNOWN))
         return 0;
@@ -2306,22 +2305,20 @@ is_word_char(const uint8_t* ch)
     case '_':
         return 1;
     }
-    if (*ch == NBSP_CODE)
+    if (*ch == ' ' // NBSP_CODE
+    )
         return 1;
     return 0;
 }
 
-#ifdef USE_M17N
-static int
-is_combining_char(unsigned char* ch)
+static int is_combining_char(const unsigned char* ch)
 {
-    Lineprop ctype = get_mctype(ch);
+    Lineprop ctype = get_mctype((const char*)ch);
 
     if (ctype & PC_WCHAR2)
         return 1;
     return 0;
 }
-#endif
 
 int is_boundary(unsigned char* ch1, unsigned char* ch2)
 {
@@ -2337,10 +2334,8 @@ int is_boundary(unsigned char* ch1, unsigned char* ch2)
     if (*ch2 != ' ' && is_beginning_char(ch1))
         return 0;
 
-#ifdef USE_M17N
     if (is_combining_char(ch2))
         return 0;
-#endif
     if (is_word_char(ch1) && is_word_char(ch2))
         return 0;
 
@@ -5423,14 +5418,14 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
         endp = str + line->length;
         while (str < endp) {
             PSIZE;
-            mode = get_mctype((const uint8_t*)str);
+            mode = get_mctype(str);
             if ((effect | ex_efct(ex_effect)) & PC_SYMBOL && *str != '<') {
                 char** buf = set_symbol(symbol_width0);
                 int len;
 
                 p = buf[(int)symbol];
                 len = get_mclen(p);
-                mode = get_mctype((const uint8_t*)p);
+                mode = get_mctype(p);
                 PPUSH(mode | effect | ex_efct(ex_effect), *(p++));
                 if (--len) {
                     mode = (mode & ~PC_WCHAR1) | PC_WCHAR2;
@@ -5463,7 +5458,7 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
                 p = getescapecmd(&str);
                 while (*p) {
                     PSIZE;
-                    mode = get_mctype((const uint8_t*)p);
+                    mode = get_mctype(p);
                     if (mode == PC_CTRL || mode == PC_UNDEF) {
                         PPUSH(PC_ASCII | effect | ex_efct(ex_effect), ' ');
                         p++;
@@ -6301,7 +6296,7 @@ table_start:
         if (obuf->flag & (RB_DEL | RB_S))
             continue;
         while (*str) {
-            mode = get_mctype((const uint8_t*)str);
+            mode = get_mctype(str);
             delta = get_mcwidth(str);
             if (obuf->flag & (RB_SPECIAL & ~RB_NOBR)) {
                 char ch = *str;
@@ -8229,10 +8224,10 @@ int checkOverWrite(char* path)
 
 char* inputAnswer(char* prompt)
 {
-    char* ans;
-
-    if (QuietMessage)
+    if (getRuntime()->QuietMessage)
         return "n";
+
+    char* ans;
     if (fmInitialized()) {
         enterRawMode();
         ans = inputChar(prompt);

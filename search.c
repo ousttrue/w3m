@@ -1,4 +1,5 @@
 #include "search.h"
+#include "message.h"
 #include "fm.h"
 #include "buffer.h"
 #include "w3m_rc.h"

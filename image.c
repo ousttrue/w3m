@@ -1,4 +1,5 @@
 #include "image.h"
+#include "message.h"
 #include "buffer.h"
 #include "anchor.h"
 #include "display.h"

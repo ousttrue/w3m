@@ -1,4 +1,6 @@
 #include "maparea.h"
+#include "file.h"
+#include "message.h"
 #include "linein.h"
 #include <libwc/conv.h>
 #include <libwc/ces.h>
@@ -3659,20 +3661,16 @@ _peekURL(int only_img)
     }
     if (DecodeURL)
         s = Strnew_charp(url_decode2(s->ptr, Currentbuf));
-#ifdef USE_M17N
     s = checkType(s, &pp, NULL);
     p = NewAtom_N(Lineprop, s->length);
     bcopy((void*)pp, (void*)p, s->length * sizeof(Lineprop));
-#endif
 disp:
     n = searchKeyNum();
     if (n > 1 && s->length > (n - 1) * (TTY_COLS() - 1))
         offset = (n - 1) * (TTY_COLS() - 1);
-#ifdef USE_M17N
     while (offset < s->length && p[offset] & PC_WCHAR2)
         offset++;
-#endif
-    disp_message_nomouse(&s->ptr[offset], TRUE);
+    disp_message(&s->ptr[offset], TRUE);
 }
 
 /* peek URL */
@@ -3716,20 +3714,16 @@ DEFUN(curURL, PEEK, "Show current address")
         s = currentURL();
         if (DecodeURL)
             s = Strnew_charp(url_decode2(s->ptr, NULL));
-#ifdef USE_M17N
         s = checkType(s, &pp, NULL);
         p = NewAtom_N(Lineprop, s->length);
         bcopy((void*)pp, (void*)p, s->length * sizeof(Lineprop));
-#endif
     }
     n = searchKeyNum();
     if (n > 1 && s->length > (n - 1) * (TTY_COLS() - 1))
         offset = (n - 1) * (TTY_COLS() - 1);
-#ifdef USE_M17N
     while (offset < s->length && p[offset] & PC_WCHAR2)
         offset++;
-#endif
-    disp_message_nomouse(&s->ptr[offset], TRUE);
+    disp_message(&s->ptr[offset], TRUE);
 }
 /* view HTML source */
 

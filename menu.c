@@ -1,4 +1,5 @@
 #include "menu.h"
+#include "message.h"
 #include "conv.h"
 #include "linein.h"
 #include "search.h"

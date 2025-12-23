@@ -364,7 +364,6 @@ global char MetaRefresh init(FALSE);
 global char LocalhostOnly init(FALSE);
 global char* HostName init(NULL);
 
-global char QuietMessage init(FALSE);
 global char TrapSignal init(TRUE);
 
 extern unsigned char GlobalKeymap[];

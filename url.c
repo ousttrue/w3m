@@ -1,4 +1,5 @@
 #include "w3m_rc.h"
+#include "message.h"
 #include "html_form.h"
 #include "urlscheme.h"
 #include "siteconf.h"
