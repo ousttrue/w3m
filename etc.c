@@ -1,4 +1,5 @@
 #include "w3m_rc.h"
+#include "symbol.h"
 #include "message.h"
 #include "ctrlcode.h"
 #include "buffer.h"

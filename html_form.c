@@ -1,4 +1,5 @@
 #include "html_form.h"
+#include "symbol.h"
 #include "message.h"
 #include "w3m_rc.h"
 #include "display.h"

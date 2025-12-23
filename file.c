@@ -1,4 +1,5 @@
 #include "file.h"
+#include "symbol.h"
 #include "message.h"
 #include "w3m_rc.h"
 #include <libwc/conv.h>

@@ -1,4 +1,5 @@
 #include "w3m_rc.h"
+#include "symbol.h"
 #include "file.h"
 #include "message.h"
 #include "termcap_util.h"
@@ -50,6 +51,17 @@ char UseGraphicChar = GRAPHIC_CHAR_CHARSET;
 
 struct Runtime g_runtime = {
     .QuietMessage = (FALSE),
+    .useColor = (TRUE),
+    .basic_color = (8), /* don't change */
+    .anchor_color = (4), /* blue  */
+    .image_color = (2), /* green */
+    .form_color = (1), /* red   */
+    .bg_color = (8), /* don't change */
+    .mark_color = (6), /* cyan */
+    .useActiveColor = (FALSE),
+    .active_color = (6), /* cyan */
+    .useVisitedColor = (FALSE),
+    .visited_color = (5), /* magenta  */
 
     // Don't change
     .InnerCharset = (WC_CES_WTF),
@@ -1544,29 +1556,29 @@ struct param_ptr params1[] = {
 
 #ifdef USE_COLOR
 struct param_ptr params2[] = {
-    { "color", P_INT, PI_ONOFF, (void*)&useColor, CMT_COLOR, NULL },
+    { "color", P_INT, PI_ONOFF, (void*)&g_runtime.useColor, CMT_COLOR, NULL },
     { "high-intensity", P_INT, PI_ONOFF, (void*)&g_runtime.highIntensityColors, CMT_HINTENSITY_COLOR, NULL },
-    { "basic_color", P_COLOR, PI_SEL_C, (void*)&basic_color, CMT_B_COLOR,
+    { "basic_color", P_COLOR, PI_SEL_C, (void*)&g_runtime.basic_color, CMT_B_COLOR,
         (void*)colorstr },
-    { "anchor_color", P_COLOR, PI_SEL_C, (void*)&anchor_color, CMT_A_COLOR,
+    { "anchor_color", P_COLOR, PI_SEL_C, (void*)&g_runtime.anchor_color, CMT_A_COLOR,
         (void*)colorstr },
-    { "image_color", P_COLOR, PI_SEL_C, (void*)&image_color, CMT_I_COLOR,
+    { "image_color", P_COLOR, PI_SEL_C, (void*)&g_runtime.image_color, CMT_I_COLOR,
         (void*)colorstr },
-    { "form_color", P_COLOR, PI_SEL_C, (void*)&form_color, CMT_F_COLOR,
+    { "form_color", P_COLOR, PI_SEL_C, (void*)&g_runtime.form_color, CMT_F_COLOR,
         (void*)colorstr },
 #ifdef USE_BG_COLOR
-    { "mark_color", P_COLOR, PI_SEL_C, (void*)&mark_color, CMT_MARK_COLOR,
+    { "mark_color", P_COLOR, PI_SEL_C, (void*)&g_runtime.mark_color, CMT_MARK_COLOR,
         (void*)colorstr },
-    { "bg_color", P_COLOR, PI_SEL_C, (void*)&bg_color, CMT_BG_COLOR,
+    { "bg_color", P_COLOR, PI_SEL_C, (void*)&g_runtime.bg_color, CMT_BG_COLOR,
         (void*)colorstr },
 #endif /* USE_BG_COLOR */
-    { "active_style", P_INT, PI_ONOFF, (void*)&useActiveColor,
+    { "active_style", P_INT, PI_ONOFF, (void*)&g_runtime.useActiveColor,
         CMT_ACTIVE_STYLE, NULL },
-    { "active_color", P_COLOR, PI_SEL_C, (void*)&active_color, CMT_C_COLOR,
+    { "active_color", P_COLOR, PI_SEL_C, (void*)&g_runtime.active_color, CMT_C_COLOR,
         (void*)colorstr },
-    { "visited_anchor", P_INT, PI_ONOFF, (void*)&useVisitedColor,
+    { "visited_anchor", P_INT, PI_ONOFF, (void*)&g_runtime.useVisitedColor,
         CMT_VISITED_ANCHOR, NULL },
-    { "visited_color", P_COLOR, PI_SEL_C, (void*)&visited_color, CMT_V_COLOR,
+    { "visited_color", P_COLOR, PI_SEL_C, (void*)&g_runtime.visited_color, CMT_V_COLOR,
         (void*)colorstr },
     { NULL, 0, 0, NULL, NULL, NULL },
 };

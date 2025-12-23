@@ -579,7 +579,7 @@ bool w3m_args(int argc, char** argv)
                 open_new_tab = TRUE;
 
             else if (!strcmp("-M", argv[i]))
-                useColor = FALSE;
+                getRuntime()->useColor = FALSE;
             else if (!strcmp("-H", argv[i]))
                 getRuntime()->highIntensityColors = TRUE;
 

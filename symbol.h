@@ -1,0 +1,19 @@
+#pragma once
+#include "Str.h"
+#include "html.h"
+#include <libwc/wc_types.h>
+
+#define SYMBOL_BASE 0x20
+#define N_GRAPH_SYMBOL 32
+#define N_SYMBOL (N_GRAPH_SYMBOL + 14)
+
+extern char* graph_symbol[];
+extern char* graph2_symbol[];
+extern int symbol_width;
+extern int symbol_width0;
+
+char** get_symbol(wc_ces charset, int* width);
+char** set_symbol(int width);
+Str convertLine(URLFile* uf, Str line, int mode, wc_ces* charset, wc_ces doc_charset);
+void push_symbol(Str str, char symbol, int width, int n);
+void update_utf8_symbol(void);

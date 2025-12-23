@@ -47,6 +47,17 @@ struct Event {
 
 struct Runtime {
     char QuietMessage;
+    int useColor;
+    int basic_color; /* don't change */
+    int anchor_color; /* blue  */
+    int image_color; /* green */
+    int form_color; /* red   */
+    int bg_color; /* don't change */
+    int mark_color; /* cyan */
+    int useActiveColor;
+    int active_color; /* cyan */
+    int useVisitedColor;
+    int visited_color; /* magenta  */
 
     // Don't change
     wc_ces InnerCharset;

@@ -355,9 +355,9 @@ listBuffer(struct Buffer* top, struct Buffer* current)
     struct Buffer* buf = top;
 
     screen_move(0, 0);
-    if (useColor) {
-        screen_setfcolor(basic_color);
-        screen_setbcolor(bg_color);
+    if (getRuntime()->useColor) {
+        screen_setfcolor(getRuntime()->basic_color);
+        screen_setbcolor(getRuntime()->bg_color);
     }
     screen_clrtobotx();
     for (i = 0; i < LASTLINE(); i++) {

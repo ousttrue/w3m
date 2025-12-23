@@ -4,6 +4,7 @@
 #include "html_form.h"
 #include "display.h"
 #include "tab.h"
+#include "LineWriter.h"
 #include "fm.h"
 #include <libwc/char_conv.h>
 #include <libwc/charset.h>
@@ -98,8 +99,6 @@ void (*InputKeymap[32])() = {
 /* *INDENT-ON* */
 
 static int setStrType(Str str, Lineprop* prop);
-static void addPasswd(char* p, Lineprop* pr, int len, int pos, int limit);
-static void addStr(char* p, Lineprop* pr, int len, int pos, int limit);
 
 static int CPos, CLen, offset;
 static int i_cont, i_broken, i_quote;
@@ -185,10 +184,11 @@ char* inputLineHistSearch(char* prompt, char* def_str, int flag, struct Hist* hi
         }
         screen_move(LASTLINE(), 0);
         screen_wc_addstr(prompt);
+        struct LineWriter w;
         if (is_passwd)
-            addPasswd(strBuf->ptr, strProp, CLen, offset, TTY_COLS() - opos);
+            addPasswd(&w, strBuf->ptr, strProp, CLen, offset, TTY_COLS() - opos);
         else
-            addStr(strBuf->ptr, strProp, CLen, offset, TTY_COLS() - opos);
+            addStr(&w, strBuf->ptr, strProp, CLen, offset, TTY_COLS() - opos);
         screen_clrtoeolx();
         screen_move(LASTLINE(), opos + x - offset);
         tty_refresh();
@@ -328,65 +328,7 @@ getcntrl(void)
 }
 #endif
 
-static void
-addPasswd(char* p, Lineprop* pr, int len, int offset, int limit)
-{
-    int rcol = 0, ncol;
 
-    ncol = calcPosition(p, pr, len, len, 0, CP_AUTO);
-    if (ncol > offset + limit)
-        ncol = offset + limit;
-    if (offset) {
-        addChar('{', 0);
-        rcol = offset + 1;
-    }
-    for (; rcol < ncol; rcol++)
-        addChar('*', 0);
-}
-
-static void
-addStr(char* p, Lineprop* pr, int len, int offset, int limit)
-{
-    int i = 0, rcol = 0, ncol, delta = 1;
-
-    if (offset) {
-        for (i = 0; i < len; i++) {
-            if (calcPosition(p, pr, len, i, 0, CP_AUTO) > offset)
-                break;
-        }
-        if (i >= len)
-            return;
-#ifdef USE_M17N
-        while (pr[i] & PC_WCHAR2)
-            i++;
-#endif
-        addChar('{', 0);
-        rcol = offset + 1;
-        ncol = calcPosition(p, pr, len, i, 0, CP_AUTO);
-        for (; rcol < ncol; rcol++)
-            addChar(' ', 0);
-    }
-    for (; i < len; i += delta) {
-#ifdef USE_M17N
-        delta = wtf_len((wc_uchar*)&p[i]);
-#endif
-        ncol = calcPosition(p, pr, len, i + delta, 0, CP_AUTO);
-        if (ncol - offset > limit)
-            break;
-        if (p[i] == '\t') {
-            for (; rcol < ncol; rcol++)
-                addChar(' ', 0);
-            continue;
-        } else {
-#ifdef USE_M17N
-            addMChar(&p[i], pr[i], delta);
-#else
-            addChar(p[i], pr[i]);
-#endif
-        }
-        rcol = ncol;
-    }
-}
 
 #ifdef USE_M17N
 static void

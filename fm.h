@@ -451,20 +451,6 @@ global Str header_string init(NULL);
 global int override_content_type init(FALSE);
 global int override_user_agent init(FALSE);
 
-global int useColor init(TRUE);
-global int basic_color init(8); /* don't change */
-global int anchor_color init(4); /* blue  */
-global int image_color init(2); /* green */
-global int form_color init(1); /* red   */
-#ifdef USE_BG_COLOR
-global int bg_color init(8); /* don't change */
-global int mark_color init(6); /* cyan */
-#endif /* USE_BG_COLOR */
-global int useActiveColor init(FALSE);
-global int active_color init(6); /* cyan */
-global int useVisitedColor init(FALSE);
-global int visited_color init(5); /* magenta  */
-
 global int confirm_on_quit init(TRUE);
 #ifdef USE_MARK
 global int use_mark init(FALSE);
@@ -581,13 +567,7 @@ global char SimplePreserveSpace init(FALSE);
 global char UseAltEntity init(FALSE);
 global char DisplayBorders init(FALSE);
 global char DisableCenter init(FALSE);
-extern char* graph_symbol[];
-extern char* graph2_symbol[];
-extern int symbol_width;
-extern int symbol_width0;
-#define N_GRAPH_SYMBOL 32
-#define N_SYMBOL (N_GRAPH_SYMBOL + 14)
-#define SYMBOL_BASE 0x20
+
 global int no_rc_dir init(FALSE);
 global char* rc_dir init(NULL);
 global char* tmp_dir;

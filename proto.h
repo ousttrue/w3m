@@ -193,20 +193,7 @@ extern void examineFile(char* path, URLFile* uf, bool do_download);
 extern char* acceptableEncoding(void);
 extern int dir_exist(char* path);
 extern int is_html_type(char* type);
-#ifdef USE_M17N
-extern char** get_symbol(wc_ces charset, int* width);
-extern char** set_symbol(int width);
-extern Str convertLine(URLFile* uf, Str line, int mode, wc_ces* charset,
-    wc_ces doc_charset);
-#else
-extern char** get_symbol(void);
-extern Str convertLine0(URLFile* uf, Str line, int mode);
-#define convertLine(uf, line, mode, charset, dcharset) convertLine0(uf, line, mode)
-#endif
-extern void push_symbol(Str str, char symbol, int width, int n);
-#ifdef USE_UNICODE
-extern void update_utf8_symbol(void);
-#endif
+
 extern struct Buffer* loadGeneralFile(char* path, struct Url* current, char* referer,
     int flag, struct FormList* request, bool do_download);
 extern int is_boundary(unsigned char*, unsigned char*);
@@ -306,8 +293,6 @@ extern void reshapeBuffer(struct Buffer* buf);
 extern void copyBuffer(struct Buffer* a, struct Buffer* b);
 extern struct Buffer* prevBuffer(struct Buffer* first, struct Buffer* buf);
 extern int writeBufferCache(struct Buffer* buf);
-extern void addChar(char c, Lineprop mode);
-extern void addMChar(char* c, Lineprop mode, size_t len);
 
 extern int gethtmlcmd(char** s);
 #ifndef USE_ANSI_COLOR
