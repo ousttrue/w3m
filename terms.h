@@ -3,8 +3,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define SCREEN_SPACE " "
-
 enum ScreenCellProperty : uint16_t {
     // Screen properties
     S_SCREENPROP = 0x0f,
@@ -61,11 +59,9 @@ enum ScreenLineFlags : uint16_t {
     L_CLRTOEOL = 0x08,
 };
 
-bool screen_need_redraw(char* c1, enum ScreenCellProperty pr1, const char* c2, enum ScreenCellProperty pr2);
 void screen_setup(size_t lines, size_t cols);
 void screen_move(size_t line, size_t column);
 void screen_addmch(const char* p, size_t len, size_t width);
-void screen_addmchz(const char* pc, size_t len, size_t width);
 static inline void screen_add_whitespace()
 {
     const char* white_space = " ";
@@ -76,8 +72,6 @@ inline static void screen_addch(char c, int width)
 {
     screen_addmch(&c, 1, width);
 }
-void screen_wrap(void);
-void screen_touch_line(void);
 void screen_standout(void);
 void screen_standend(void);
 void screen_toggle_stand(void);
@@ -95,4 +89,3 @@ void screen_clrtoeolx(void);
 void screen_clrtobot(void);
 void screen_clrtobotx(void);
 void screen_touch_cursor(void);
-void screen_touch_column(size_t col);

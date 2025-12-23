@@ -305,9 +305,21 @@ export fn get_pixel_per_cell(ppc: *c_int, ppl: *c_int) bool {
 //
 // screen
 //
+const SCREEN_SPACE = " ";
+
 const ScreenCell = struct {
     str: [8]u8,
     prop: c.ScreenCellProperty,
+
+    fn set(
+        this: *@This(),
+        ch: [*c]const u8,
+        len: usize,
+        prop: c.ScreenCellProperty,
+    ) void {
+        std.mem.copyForwards(u8, this.str[0 .. len + 1], ch[0 .. len + 1]);
+        this.prop = (this.prop & c.S_DIRTY) | prop;
+    }
 };
 
 const ScreenLine = struct {
@@ -326,11 +338,22 @@ const Screen = struct {
     x: usize = 0,
     tab_step: usize = 8,
     mode: c.ScreenCellProperty = 0,
+
+    fn deinit(this: *@This(), allocator: std.mem.Allocator) void {
+        if (this.line_capacity > 0) {
+            for (this.lines[0..this.line_capacity]) |l| {
+                allocator.free(l.cells[0..this.col_capacity]);
+            }
+            allocator.free(this.lines[0..this.line_capacity]);
+        }
+        this.line_capacity = 0;
+        this.col_capacity = 0;
+    }
 };
 
 var g_screen = Screen{};
 
-export fn screen_need_redraw(
+fn screen_need_redraw(
     c1: [*c]const u8,
     pr1: c.ScreenCellProperty,
     c2: [*c]const u8,
@@ -347,19 +370,8 @@ export fn screen_need_redraw(
     }
 }
 
-fn screen_deinit(this: *Screen, allocator: std.mem.Allocator) void {
-    if (this.line_capacity > 0) {
-        for (this.lines[0..this.line_capacity]) |l| {
-            allocator.free(l.cells[0..this.col_capacity]);
-        }
-        allocator.free(this.lines[0..this.line_capacity]);
-    }
-    this.line_capacity = 0;
-    this.col_capacity = 0;
-}
-
 export fn screen_setup(line_count: usize, col_count: usize) void {
-    screen_deinit(&g_screen, g_allocator);
+    g_screen.deinit(g_allocator);
 
     g_screen.line_capacity = line_count + 1;
     g_screen.lines = (g_allocator.alloc(ScreenLine, g_screen.line_capacity) catch @panic("OOM")).ptr;
@@ -372,16 +384,6 @@ export fn screen_setup(line_count: usize, col_count: usize) void {
     g_screen.col_count = col_count;
 
     screen_clear();
-}
-
-fn screen_cell_set(
-    cell: *ScreenCell,
-    ch: [*c]const u8,
-    len: usize,
-    prop: c.ScreenCellProperty,
-) void {
-    SET_CHAR(cell, ch, len);
-    SET_PROP(cell, prop);
 }
 
 fn screen_addmchz(pc: [*c]const u8, len: usize, width: usize) void {
@@ -409,9 +411,8 @@ fn screen_addmchz(pc: [*c]const u8, len: usize, width: usize) void {
             if (0 == (line[i].prop & c.S_EOL)) {
                 break;
             }
-            screen_cell_set(
-                &line[i],
-                c.SCREEN_SPACE,
+            line[i].set(
+                SCREEN_SPACE,
                 1,
                 (line[i].prop & M_CEOL) | c.C_ASCII,
             );
@@ -446,7 +447,7 @@ fn screen_addmchz(pc: [*c]const u8, len: usize, width: usize) void {
             if (i < g_screen.col_count) {
                 screen_touch_column(i);
                 if (line[i].prop & c.S_EOL != 0) {
-                    screen_cell_set(&line[i], c.SCREEN_SPACE, 1, (line[i].prop & M_CEOL) | c.C_ASCII);
+                    line[i].set(SCREEN_SPACE, 1, (line[i].prop & M_CEOL) | c.C_ASCII);
                 } else {
                     i += 1;
                     while (i < g_screen.col_count //
@@ -462,7 +463,7 @@ fn screen_addmchz(pc: [*c]const u8, len: usize, width: usize) void {
         // 全角 身切れ
         screen_touch_line();
         for (g_screen.x..g_screen.col_count) |i| {
-            screen_cell_set(&line[i], c.SCREEN_SPACE, 1, (line[i].prop & ~c.C_WHICHCHAR) | c.C_ASCII);
+            line[i].set(SCREEN_SPACE, 1, (line[i].prop & ~c.C_WHICHCHAR) | c.C_ASCII);
             screen_touch_column(i);
         }
 
@@ -480,7 +481,7 @@ fn screen_addmchz(pc: [*c]const u8, len: usize, width: usize) void {
         while (_i >= 0) : (_i -= 1) {
             const i: usize = @intCast(_i);
             const l = CHAR_MODE(line[i].prop);
-            screen_cell_set(&line[i], c.SCREEN_SPACE, 1, (line[i].prop & ~c.C_WHICHCHAR) | c.C_ASCII);
+            line[i].set(SCREEN_SPACE, 1, (line[i].prop & ~c.C_WHICHCHAR) | c.C_ASCII);
             screen_touch_column(i);
             if (l != c.C_WCHAR2)
                 break;
@@ -494,19 +495,19 @@ fn screen_addmchz(pc: [*c]const u8, len: usize, width: usize) void {
             pc,
             g_screen.mode,
         )) {
-            screen_cell_set(&line[g_screen.x], pc, len, g_screen.mode);
+            line[g_screen.x].set(pc, len, g_screen.mode);
             screen_touch_line();
             screen_touch_column(g_screen.x);
             SET_CHAR_MODE(&g_screen.mode, c.C_WCHAR2);
             var i = g_screen.x + 1;
             while (i < g_screen.x + width) : (i += 1) {
                 // 全角文字の後続cell
-                screen_cell_set(&line[i], c.SCREEN_SPACE, 1, (line[g_screen.x].prop & ~c.C_WHICHCHAR) | c.C_WCHAR2);
+                line[i].set(SCREEN_SPACE, 1, (line[g_screen.x].prop & ~c.C_WHICHCHAR) | c.C_WCHAR2);
                 screen_touch_column(i);
             }
             while (i < g_screen.col_count and CHAR_MODE(line[i].prop) == c.C_WCHAR2) : (i += 1) {
                 // 下にあった全角文字の後続を消す
-                screen_cell_set(&line[i], c.SCREEN_SPACE, 1, (line[i].prop & ~c.C_WHICHCHAR) | c.C_ASCII);
+                line[i].set(SCREEN_SPACE, 1, (line[i].prop & ~c.C_WHICHCHAR) | c.C_ASCII);
                 screen_touch_column(i);
             }
         }
@@ -524,10 +525,10 @@ fn screen_addmchz(pc: [*c]const u8, len: usize, width: usize) void {
             if (screen_need_redraw(
                 (&line[i].str).ptr,
                 line[i].prop,
-                c.SCREEN_SPACE,
+                SCREEN_SPACE,
                 g_screen.mode,
             )) {
-                screen_cell_set(&line[i], c.SCREEN_SPACE, 1, g_screen.mode);
+                line[i].set(SCREEN_SPACE, 1, g_screen.mode);
                 screen_touch_line();
                 screen_touch_column(i);
             }
@@ -561,40 +562,32 @@ export fn screen_move(line: usize, column: usize) void {
         g_screen.x = column;
 }
 
-export fn SET_CHAR(p: *ScreenCell, ch: [*c]const u8, len: usize) void {
-    std.mem.copyForwards(u8, p.str[0 .. len + 1], ch[0 .. len + 1]);
-}
-
-export fn CHAR_MODE(prop: c.ScreenCellProperty) c.ScreenCellProperty {
+fn CHAR_MODE(prop: c.ScreenCellProperty) c.ScreenCellProperty {
     return (prop & c.C_WHICHCHAR);
 }
 
-export fn SET_CHAR_MODE(prop: *c.ScreenCellProperty, mode: c.ScreenCellProperty) void {
+fn SET_CHAR_MODE(prop: *c.ScreenCellProperty, mode: c.ScreenCellProperty) void {
     prop.* = (prop.* & ~c.C_WHICHCHAR) | mode;
-}
-
-export fn SET_PROP(p: *ScreenCell, prop: c.ScreenCellProperty) void {
-    p.prop = (p.prop & c.S_DIRTY) | prop;
 }
 
 export fn screen_add_tab() void {
     c.screen_addmch("\t", 1, g_screen.tab_step);
 }
 
-export fn screen_wrap() void {
+fn screen_wrap() void {
     if (g_screen.y == g_screen.line_count - 1)
         return;
     g_screen.y += 1;
     g_screen.x = 0;
 }
 
-export fn screen_touch_column(col: usize) void {
+fn screen_touch_column(col: usize) void {
     if (col >= 0 and col < g_screen.col_count) {
         g_screen.lines[g_screen.y].cells[col].prop |= c.S_DIRTY;
     }
 }
 
-export fn screen_touch_line() void {
+fn screen_touch_line() void {
     if (0 == (g_screen.lines[g_screen.y].isdirty & c.L_DIRTY)) {
         for (0..g_screen.col_count) |i| {
             g_screen.lines[g_screen.y].cells[i].prop &= ~c.S_DIRTY;
@@ -694,7 +687,7 @@ export fn screen_clrtoeol() void {
         g_screen.lines[g_screen.y].eol = g_screen.x;
 
     g_screen.lines[g_screen.y].isdirty |= c.L_CLRTOEOL;
-    c.screen_touch_line();
+    screen_touch_line();
     for (g_screen.x..g_screen.col_count) |i| {
         if (p[i].prop & c.S_EOL != 0) {
             break;
@@ -742,11 +735,11 @@ export fn screen_clrtobotx() void {
 
 export fn screen_touch_cursor() void {
     // int i;
-    c.screen_touch_line();
+    screen_touch_line();
     {
         var i = g_screen.x;
         while (i >= 0) : (i -= 1) {
-            c.screen_touch_column(i);
+            screen_touch_column(i);
             if (CHAR_MODE(g_screen.lines[g_screen.y].cells[i].prop) != c.C_WCHAR2)
                 break;
         }
@@ -754,9 +747,13 @@ export fn screen_touch_cursor() void {
     for (g_screen.x + 1..g_screen.col_count) |i| {
         if (CHAR_MODE(g_screen.lines[g_screen.y].cells[i].prop) != c.C_WCHAR2)
             break;
-        c.screen_touch_column(i);
+        screen_touch_column(i);
     }
 }
+
+//
+// write screen
+//
 
 const RefreshStatus = enum {
     RF_NEED_TO_MOVE,
@@ -813,10 +810,10 @@ export fn tty_refresh() void {
                     break;
                 }
                 if (dirty.* & c.L_NEED_CE != 0 and col >= g_screen.lines[line].eol) {
-                    if (c.screen_need_redraw(
+                    if (screen_need_redraw(
                         &p[col].str[0],
                         p[col].prop,
-                        @ptrCast(&c.SCREEN_SPACE[0]),
+                        SCREEN_SPACE,
                         0,
                     ))
                         break;
@@ -886,10 +883,10 @@ export fn tty_refresh() void {
                     mode &= ~M_MEND;
                 }
                 if (if (dirty.* & c.L_NEED_CE != 0 and col >= g_screen.lines[line].eol)
-                    c.screen_need_redraw(
+                    screen_need_redraw(
                         &p[col].str[0],
                         p[col].prop,
-                        c.SCREEN_SPACE,
+                        SCREEN_SPACE,
                         0,
                     )
                 else
@@ -963,6 +960,9 @@ export fn tty_refresh() void {
     }
 }
 
+//
+// child process
+//
 const ArgSplitter = struct {
     seq: []const u8,
     pos: usize = 0,
