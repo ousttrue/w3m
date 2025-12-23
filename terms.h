@@ -62,11 +62,7 @@ enum ScreenLineFlags : uint16_t {
 void screen_setup(size_t lines, size_t cols);
 void screen_move(size_t line, size_t column);
 void screen_addmch(const char* p, size_t len, size_t width);
-static inline void screen_add_whitespace()
-{
-    const char* white_space = " ";
-    screen_addmch(white_space, 1, 1);
-}
+
 void screen_add_tab();
 inline static void screen_addch(char c, int width)
 {
@@ -89,3 +85,7 @@ void screen_clrtoeolx(void);
 void screen_clrtobot(void);
 void screen_clrtobotx(void);
 void screen_touch_cursor(void);
+
+void screen_wc_addstr(char* s);
+void screen_wc_addstr_width(char* s, size_t width);
+void screen_wc_addnstr_sup(char* s, size_t n);

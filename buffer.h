@@ -118,3 +118,18 @@ struct Buffer {
 void delBuffer(struct Buffer* buf);
 void cmd_loadBuffer(struct Buffer* buf, int prop, enum LinkBufferID linkid);
 bool readBufferCache(struct Buffer* buf);
+void restorePosition(struct Buffer* buf, struct Buffer* orig);
+void cursorXY(struct Buffer* buf, int x, int y);
+void cursorUp0(struct Buffer* buf, int n);
+void cursorUp(struct Buffer* buf, int n);
+void cursorDown0(struct Buffer* buf, int n);
+void cursorDown(struct Buffer* buf, int n);
+void cursorUpDown(struct Buffer* buf, int n);
+void cursorRight(struct Buffer* buf, int n);
+void cursorLeft(struct Buffer* buf, int n);
+void cursorHome(struct Buffer* buf);
+void arrangeCursor(struct Buffer* buf);
+void arrangeLine(struct Buffer* buf);
+int columnSkip(struct Buffer* buf, int offset);
+struct Line* lineSkip(struct Buffer* buf, struct Line* line, int offset, int last);
+struct Line* currentLineSkip(struct Buffer* buf, struct Line* line, int offset, int last);

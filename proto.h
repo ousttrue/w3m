@@ -324,21 +324,7 @@ extern void disp_message_nomouse(char* s, int redraw_current);
 #define disp_message_nomouse disp_message
 #endif
 extern void set_delayed_message(char* s);
-extern void cursorUp0(struct Buffer* buf, int n);
-extern void cursorUp(struct Buffer* buf, int n);
-extern void cursorDown0(struct Buffer* buf, int n);
-extern void cursorDown(struct Buffer* buf, int n);
-extern void cursorUpDown(struct Buffer* buf, int n);
-extern void cursorRight(struct Buffer* buf, int n);
-extern void cursorLeft(struct Buffer* buf, int n);
-extern void cursorHome(struct Buffer* buf);
-extern void arrangeCursor(struct Buffer* buf);
-extern void arrangeLine(struct Buffer* buf);
-extern void cursorXY(struct Buffer* buf, int x, int y);
-extern void restorePosition(struct Buffer* buf, struct Buffer* orig);
-extern int columnSkip(struct Buffer* buf, int offset);
-extern struct Line* lineSkip(struct Buffer* buf, struct Line* line, int offset, int last);
-extern struct Line* currentLineSkip(struct Buffer* buf, struct Line* line, int offset, int last);
+
 extern int gethtmlcmd(char** s);
 #ifndef USE_ANSI_COLOR
 #define checkType(a, b, c) _checkType(a, b)

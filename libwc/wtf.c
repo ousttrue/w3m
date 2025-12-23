@@ -900,7 +900,7 @@ wtf_len1(wc_uchar* p)
 }
 
 size_t
-wtf_len(wc_uchar* p)
+wtf_len(const wc_uchar* p)
 {
     wc_uchar* q = p;
     wc_uchar* strz = p + strlen((char*)p);

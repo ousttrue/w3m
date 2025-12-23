@@ -706,7 +706,7 @@ fn screen_clrtoeol_with_bcolor() void {
     const pr = g_screen.mode;
     g_screen.mode = (g_screen.mode & (M_CEOL | c.S_BCOLORED)) | c.C_ASCII;
     for (g_screen.x..g_screen.col_count) |_| {
-        c.screen_add_whitespace();
+        screen_add_whitespace();
     }
     c.screen_move(cli, cco);
     g_screen.mode = pr;
@@ -1081,5 +1081,51 @@ export fn exec_cmd(cmd: [*c]const u8) c_int {
         _ = getch();
         enterRawMode();
         return rv;
+    }
+}
+
+fn screen_add_whitespace() void {
+    const white_space = " ";
+    screen_addmch(white_space, 1, 1);
+}
+
+export fn screen_wc_addstr(_s: [*c]const u8) void {
+    var s = _s;
+    while (s[0] != 0) {
+        const len = c.wtf_len(s);
+        const width = c.wtf_width(s);
+        screen_addmch(s, len, width);
+        s += len;
+    }
+}
+
+export fn screen_wc_addstr_width(_s: [*c]const u8, n: usize) void {
+    var s = _s;
+    var i: usize = 0;
+    while (s[0] != 0) {
+        const width = c.wtf_width(s);
+        if (i + width > n)
+            break;
+        const len = c.wtf_len(s);
+        screen_addmch(s, len, width);
+        s += len;
+        i += width;
+    }
+}
+
+export fn screen_wc_addnstr_sup(_s: [*c]const u8, n: usize) void {
+    var i: usize = 0;
+    var s = _s;
+    while (s[0] != 0) {
+        const width: usize = @intCast(c.wtf_width(s));
+        if (i + width > n)
+            break;
+        const len = c.wtf_len(s);
+        screen_addmch(s, len, width);
+        s += len;
+        i += width;
+    }
+    while (i < n) : (i += 1) {
+        screen_add_whitespace();
     }
 }
