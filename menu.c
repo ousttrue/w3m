@@ -1804,7 +1804,7 @@ initSelectMenu(void)
     label = New_N(char*, nitem + 2);
     for (i = 0, buf = Firstbuf; i < nitem; i++, buf = buf->nextBuffer) {
         str = Sprintf("<%s>", buf->buffername);
-        if (buf->filename != NULL) {
+        if (buf->content.filename != NULL) {
             switch (buf->currentURL.scheme) {
             case SCM_LOCAL:
                 if (strcmp(buf->currentURL.file, "-")) {
@@ -1948,7 +1948,7 @@ initSelTabMenu(void)
     for (struct TabBuffer* tab = LastTab(); i < nitem; i++, tab = tab->prevTab) {
         struct Buffer* buf = tab->currentBuffer;
         Str str = Sprintf("<%s>", buf->buffername);
-        if (buf->filename != NULL) {
+        if (buf->content.filename != NULL) {
             switch (buf->currentURL.scheme) {
             case SCM_LOCAL:
                 if (strcmp(buf->currentURL.file, "-")) {

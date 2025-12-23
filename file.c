@@ -248,13 +248,13 @@ loadSomething(URLFile* f,
 
     if (buf->buffername == NULL || buf->buffername[0] == '\0') {
         buf->buffername = checkHeader(buf, "Subject:");
-        if (buf->buffername == NULL && buf->filename != NULL)
-            buf->buffername = conv_from_system(lastFileName(buf->filename));
+        if (buf->buffername == NULL && buf->content.filename != NULL)
+            buf->buffername = conv_from_system(lastFileName(buf->content.filename));
     }
     if (buf->currentURL.scheme == SCM_UNKNOWN)
         buf->currentURL.scheme = f->scheme;
     if (f->scheme == SCM_LOCAL && buf->sourcefile == NULL)
-        buf->sourcefile = buf->filename;
+        buf->sourcefile = buf->content.filename;
     if (loadproc == loadHTMLBuffer
 #ifdef USE_IMAGE
         || loadproc == loadImageBuffer
@@ -1674,7 +1674,7 @@ load_doc: {
                         NULL, do_download);
                     if (b != NULL && b != NO_BUFFER) {
                         copyParsedURL(&b->currentURL, &pu);
-                        b->filename = b->currentURL.real_file;
+                        b->content.filename = b->currentURL.real_file;
                     }
                     return b;
                 } else {
@@ -2147,8 +2147,8 @@ page_loaded:
     if (t_buf == NULL)
         t_buf = newBuffer(INIT_BUFFER_WIDTH);
     copyParsedURL(&t_buf->currentURL, &pu);
-    t_buf->filename = pu.real_file ? pu.real_file : pu.file ? conv_to_system(pu.file)
-                                                            : NULL;
+    t_buf->content.filename = pu.real_file ? pu.real_file : pu.file ? conv_to_system(pu.file)
+                                                                    : NULL;
     if (flag & RG_FRAME) {
         t_buf->bufferprop |= BP_FRAME;
     }
@@ -7506,7 +7506,7 @@ getshell(char* cmd)
     buf = loadcmdout(cmd, loadBuffer, NULL);
     if (buf == NULL)
         return NULL;
-    buf->filename = cmd;
+    buf->content.filename = cmd;
     buf->buffername = Sprintf("%s %s", SHELLBUFFERNAME,
         conv_from_system(cmd))
                           ->ptr;
@@ -7529,7 +7529,7 @@ getpipe(char* cmd)
         return NULL;
     buf = newBuffer(INIT_BUFFER_WIDTH);
     buf->pagerSource = newFileStream(f, (void (*)())pclose);
-    buf->filename = cmd;
+    buf->content.filename = cmd;
     buf->buffername = Sprintf("%s %s", PIPEBUFFERNAME,
         conv_from_system(cmd))
                           ->ptr;
@@ -7682,11 +7682,11 @@ struct Line* getNextPage(struct Buffer* buf, int plen)
         if (!(lineBuf2 = StrmyISgets(buf->pagerSource)))
             return NULL;
         if (lineBuf2->length == 0) {
-            /* Assume that `cmd == buf->filename' */
-            if (buf->filename)
+            /* Assume that `cmd == buf->content.filename' */
+            if (buf->content.filename)
                 buf->buffername = Sprintf("%s %s",
                     CPIPEBUFFERNAME,
-                    conv_from_system(buf->filename))
+                    conv_from_system(buf->content.filename))
                                       ->ptr;
             else if (getenv("MAN_PN") == NULL)
                 buf->buffername = CPIPEBUFFERNAME;
@@ -7897,8 +7897,8 @@ doExternal(URLFile uf, char* type, struct Buffer* defaultbuf)
         buf = NO_BUFFER;
     }
     if (buf && buf != NO_BUFFER) {
-        if ((buf->buffername == NULL || buf->buffername[0] == '\0') && buf->filename)
-            buf->buffername = conv_from_system(lastFileName(buf->filename));
+        if ((buf->buffername == NULL || buf->buffername[0] == '\0') && buf->content.filename)
+            buf->buffername = conv_from_system(lastFileName(buf->content.filename));
         buf->edit = mcap->edit;
         buf->mailcap = mcap;
     }
@@ -8339,7 +8339,7 @@ lessopen_stream(char* path)
     if (lessopen == NULL || lessopen[0] == '\0')
         return NULL;
 
-    if (lessopen[0] != '|') /* filename mode, not supported m(__)m */
+    if (lessopen[0] != '|') /* content.filename mode, not supported m(__)m */
         return NULL;
 
     /* pipe mode */
@@ -8443,8 +8443,3 @@ char* guess_save_name(struct Buffer* buf, char* path)
     }
     return guess_filename(path);
 }
-
-/* Local Variables:    */
-/* c-basic-offset: 4   */
-/* tab-width: 8        */
-/* End:                */

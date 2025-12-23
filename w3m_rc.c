@@ -1031,7 +1031,7 @@ static void set_buffer_environ(struct Buffer* buf)
         return;
     if (buf != prev_buf) {
         set_environ("W3M_SOURCEFILE", buf->sourcefile);
-        set_environ("W3M_FILENAME", buf->filename);
+        set_environ("W3M_FILENAME", buf->content.filename);
         set_environ("W3M_TITLE", buf->buffername);
         set_environ("W3M_URL", parsedURL2Str(&buf->currentURL)->ptr);
         set_environ("W3M_TYPE", buf->real_type ? buf->real_type : "unknown");

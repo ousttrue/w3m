@@ -52,10 +52,11 @@ struct BufferPos {
 #define CHK_URL 1
 #define CHK_NMID 2
 
+#include "content.h"
 #include "document.h"
 
 struct Buffer {
-    char* filename;
+    struct Content content;
     char* buffername;
     struct Document doc;
     struct Buffer* nextBuffer;

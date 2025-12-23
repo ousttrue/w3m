@@ -232,7 +232,7 @@ writeBufferName(struct Buffer* buf, int n)
     screen_move(n, 0);
     /* FIXME: gettextize? */
     msg = Sprintf("<%s> [%d lines]", buf->buffername, all);
-    if (buf->filename != NULL) {
+    if (buf->content.filename != NULL) {
         switch (buf->currentURL.scheme) {
         case SCM_LOCAL:
         case SCM_LOCAL_CGI:

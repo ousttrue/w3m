@@ -175,7 +175,7 @@ fusage(FILE* f, int err)
 {
     fversion(f);
     /* FIXME: gettextize? */
-    fprintf(f, "usage: w3m [options] [URL or filename]\noptions:\n");
+    fprintf(f, "usage: w3m [options] [URL or content.filename]\noptions:\n");
     fprintf(f, "    -t tab           set tab width\n");
     fprintf(f, "    -r               ignore backspace effect\n");
     fprintf(f, "    -l line          # of preserved line (default 10000)\n");
@@ -1760,7 +1760,7 @@ DEFUN(pipeBuf, PIPE_BUF, "Pipe current buffer through a shell command and displa
         disp_message("Execution failed", TRUE);
         return;
     } else {
-        buf->filename = cmd;
+        buf->content.filename = cmd;
         buf->buffername = Sprintf("%s %s", PIPEBUFFERNAME,
             conv_from_system(cmd))
                               ->ptr;
@@ -2319,7 +2319,7 @@ cur_real_linenumber(struct Buffer* buf)
 /* Run editor on the current buffer */
 DEFUN(editBf, EDIT, "Edit local source")
 {
-    char* fn = Currentbuf->filename;
+    char* fn = Currentbuf->content.filename;
     Str cmd;
 
     if (fn == NULL || Currentbuf->pagerSource != NULL || /* Behaving as a pager */
@@ -3751,7 +3751,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
     }
     buf->currentURL = Currentbuf->currentURL;
     buf->real_scheme = Currentbuf->real_scheme;
-    buf->filename = Currentbuf->filename;
+    buf->content.filename = Currentbuf->content.filename;
     buf->sourcefile = Currentbuf->sourcefile;
     buf->header_source = Currentbuf->header_source;
     buf->search_header = Currentbuf->search_header;
@@ -4615,7 +4615,7 @@ execdict(char* word)
         disp_message("Execution failed", TRUE);
         return;
     } else if (buf != NO_BUFFER) {
-        buf->filename = w;
+        buf->content.filename = w;
         buf->buffername = Sprintf("%s %s", DICTBUFFERNAME, word)->ptr;
         if (buf->type == NULL)
             buf->type = "text/plain";
