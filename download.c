@@ -138,7 +138,6 @@ void download_panel()
                     deleteTab(CurrentTab());
             } else
                 delBuffer(Currentbuf);
-            displayBuffer(Currentbuf, B_FORCE_REDRAW);
         }
         return;
     }
@@ -163,7 +162,6 @@ void download_panel()
     if (reload)
         Currentbuf->event = setAlarmEvent(Currentbuf->event, 1, AL_IMPLICIT,
             FUNCNAME_reload, NULL);
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
 void addDownloadList(pid_t pid, char* url, char* save, char* lock, size_t size)

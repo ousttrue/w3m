@@ -10,25 +10,8 @@
 #include "image.h"
 #include "w3m_rc.h"
 #include "ctrlcode.h"
-// #include "fm.h"
-#include <math.h>
-
-/*
- * Display some lines.
- */
-static struct Line* cline = NULL;
-static int ccolumn = -1;
-
 #include "LineWriter.h"
-struct LineWriter g = { 0 };
-
-#ifdef USE_BUFINFO
-static struct Buffer* save_current_buf = NULL;
-#endif
-
-#define redrawBuffer(buf) redrawNLine(buf, LASTLINE())
-static void redrawNLine(struct Buffer* buf, int n);
-static struct Line* redrawLine(struct Buffer* buf, struct Line* l, int i);
+#include <math.h>
 
 static int image_touch = 0;
 static bool draw_image_flag = false;
@@ -151,6 +134,8 @@ make_lastline_message(struct Buffer* buf)
 static int
 redrawLineRegion(struct Buffer* buf, struct Line* l, int i, int bpos, int epos)
 {
+    struct LineWriter g = { 0 };
+
     int j, pos, rcol, ncol, delta = 1;
     int column = buf->currentColumn;
     char* p;
@@ -295,121 +280,6 @@ drawAnchorCursor(struct Buffer* buf)
     buf->hmarklist->prevhseq = hseq;
 }
 
-void displayBuffer(struct Buffer* buf, enum DisplayMode mode)
-{
-    if (!buf) {
-        return;
-    }
-
-    if (buf->topLine == NULL && readBufferCache(buf)) {
-        mode = B_FORCE_REDRAW;
-    }
-
-    if (buf->width == 0)
-        buf->width = INIT_BUFFER_WIDTH;
-    if (buf->height == 0)
-        buf->height = LASTLINE() + 1;
-
-    // reshape
-    if ((
-            buf->width != INIT_BUFFER_WIDTH //
-            && (is_html_type(buf->type) || getRuntime()->FoldLine) //
-            )
-        || buf->need_reshape) {
-        buf->need_reshape = true;
-        reshapeBuffer(buf);
-    }
-
-    // rootX
-    if (getRuntime()->showLineNum) {
-        if (buf->lastLine && buf->lastLine->real_linenumber > 0)
-            buf->rootX = (int)(log(buf->lastLine->real_linenumber + 0.1)
-                             / log(10))
-                + 2;
-        if (buf->rootX < 5)
-            buf->rootX = 5;
-        if (buf->rootX > TTY_COLS())
-            buf->rootX = TTY_COLS();
-    } else {
-        buf->rootX = 0;
-    }
-    buf->COLS = TTY_COLS() - buf->rootX;
-
-    // rootY
-    int ny = 0;
-    if (nTab() > 1) {
-        if (mode == B_FORCE_REDRAW || mode == B_REDRAW_IMAGE)
-            calcTabPos();
-        ny = LastTab()->y + 2;
-        if (ny > LASTLINE())
-            ny = LASTLINE();
-    }
-    if (buf->rootY != ny || buf->LINES != LASTLINE() - ny) {
-        buf->rootY = ny;
-        buf->LINES = LASTLINE() - ny;
-        arrangeCursor(buf);
-        mode = B_REDRAW_IMAGE;
-    }
-
-    // check viewport ?
-    if (mode == B_FORCE_REDRAW //
-        || mode == B_SCROLL //
-        || mode == B_REDRAW_IMAGE //
-        || cline != buf->topLine //
-        || ccolumn != buf->currentColumn) {
-
-        if (getRuntime()->activeImage && (mode == B_REDRAW_IMAGE || cline != buf->topLine || ccolumn != buf->currentColumn)) {
-            if (draw_image_flag) {
-                tty_clear();
-                screen_clear();
-            }
-            clearImage();
-            loadImage(buf, IMG_FLAG_STOP);
-            image_touch++;
-            draw_image_flag = false;
-        }
-        redrawBuffer(buf);
-
-        cline = buf->topLine;
-        ccolumn = buf->currentColumn;
-    }
-
-    if (buf->topLine == NULL)
-        buf->topLine = buf->firstLine;
-
-    if (buf->need_reshape) {
-        displayBuffer(buf, B_FORCE_REDRAW);
-        return;
-    }
-
-    drawAnchorCursor(buf);
-
-    Str msg = make_lastline_message(buf);
-    if (buf->firstLine == NULL) {
-        /* FIXME: gettextize? */
-        Strcat_charp(msg, "\tNo Line");
-    }
-    displayDelayedMessage();
-    screen_standout();
-    message(msg->ptr, buf->cursorX + buf->rootX, buf->cursorY + buf->rootY);
-    screen_standend();
-    term_title(conv_to_system(buf->buffername));
-    tty_refresh();
-
-    if (getRuntime()->activeImage && getRuntime()->displayImage && buf->img) {
-        if (buf->image_loaded) {
-            drawImage(buf);
-        }
-    }
-
-#ifdef USE_BUFINFO
-    if (buf != save_current_buf) {
-        saveBufferInfo();
-        save_current_buf = buf;
-    }
-#endif
-}
-
 static struct Line*
 redrawLineImage(struct Buffer* buf, struct Line* l, int i)
 {
@@ -480,67 +350,11 @@ redrawLineImage(struct Buffer* buf, struct Line* l, int i)
     return l;
 }
 
-static void
-redrawNLine(struct Buffer* buf, int n)
-{
-    struct Line* l;
-    int i;
-
-    beginLine();
-
-    if (nTab() > 1) {
-        screen_move(0, 0);
-        screen_clrtoeolx();
-        for (struct TabBuffer* t = FirstTab(); t; t = t->nextTab) {
-            screen_move(t->y, t->x1);
-            if (t == CurrentTab())
-                screen_bold();
-            screen_addch('[', 1);
-            int l = t->x2 - t->x1 - 1 - get_strwidth(t->currentBuffer->buffername);
-            if (l < 0)
-                l = 0;
-            if (l / 2 > 0)
-                screen_wc_addnstr_sup(" ", l / 2);
-            // if (t == CurrentTab())
-            //     EFFECT_ACTIVE_START;
-            screen_wc_addstr_width(t->currentBuffer->buffername, t->x2 - t->x1 - l);
-            // if (t == CurrentTab())
-            //     EFFECT_ACTIVE_END;
-            if ((l + 1) / 2 > 0)
-                screen_wc_addnstr_sup(" ", (l + 1) / 2);
-            screen_move(t->y, t->x2);
-            screen_addch(']', 1);
-            if (t == CurrentTab())
-                screen_boldend();
-        }
-        screen_move(LastTab()->y + 1, 0);
-        for (i = 0; i < TTY_COLS(); i++)
-            screen_addch('~', 1);
-    }
-    for (i = 0, l = buf->topLine; i < buf->LINES; i++, l = l->next) {
-        if (i >= buf->LINES - n || i < -n)
-            l = redrawLine(buf, l, i + buf->rootY);
-        if (l == NULL)
-            break;
-    }
-    if (n > 0) {
-        screen_move(i + buf->rootY, 0);
-        screen_clrtobotx();
-    }
-
-    if (!(getRuntime()->activeImage && getRuntime()->displayImage && buf->img))
-        return;
-    screen_move(buf->cursorY + buf->rootY, buf->cursorX + buf->rootX);
-    for (i = 0, l = buf->topLine; i < buf->LINES && l; i++, l = l->next) {
-        if (i >= buf->LINES - n || i < -n)
-            redrawLineImage(buf, l, i + buf->rootY);
-    }
-    getAllImage(buf);
-}
-
 static struct Line*
 redrawLine(struct Buffer* buf, struct Line* l, int i)
 {
+    struct LineWriter g = { 0 };
+
     int j, pos, rcol, ncol, delta = 1;
     int column = buf->currentColumn;
     char* p;
@@ -630,4 +444,166 @@ redrawLine(struct Buffer* buf, struct Line* l, int i)
     if (rcol - column < buf->COLS)
         screen_clrtoeolx();
     return l;
+}
+
+static void
+redrawNLine(struct Buffer* buf, int n)
+{
+    struct Line* l;
+    int i;
+
+    beginLine();
+
+    if (nTab() > 1) {
+        screen_move(0, 0);
+        screen_clrtoeolx();
+        for (struct TabBuffer* t = FirstTab(); t; t = t->nextTab) {
+            screen_move(t->y, t->x1);
+            if (t == CurrentTab())
+                screen_bold();
+            screen_addch('[', 1);
+            int l = t->x2 - t->x1 - 1 - get_strwidth(t->currentBuffer->buffername);
+            if (l < 0)
+                l = 0;
+            if (l / 2 > 0)
+                screen_wc_addnstr_sup(" ", l / 2);
+            // if (t == CurrentTab())
+            //     EFFECT_ACTIVE_START;
+            screen_wc_addstr_width(t->currentBuffer->buffername, t->x2 - t->x1 - l);
+            // if (t == CurrentTab())
+            //     EFFECT_ACTIVE_END;
+            if ((l + 1) / 2 > 0)
+                screen_wc_addnstr_sup(" ", (l + 1) / 2);
+            screen_move(t->y, t->x2);
+            screen_addch(']', 1);
+            if (t == CurrentTab())
+                screen_boldend();
+        }
+        screen_move(LastTab()->y + 1, 0);
+        for (i = 0; i < TTY_COLS(); i++)
+            screen_addch('~', 1);
+    }
+    for (i = 0, l = buf->topLine; i < buf->LINES; i++, l = l->next) {
+        if (i >= buf->LINES - n || i < -n)
+            l = redrawLine(buf, l, i + buf->rootY);
+        if (l == NULL)
+            break;
+    }
+    if (n > 0) {
+        screen_move(i + buf->rootY, 0);
+        screen_clrtobotx();
+    }
+
+    if (!(getRuntime()->activeImage && getRuntime()->displayImage && buf->img))
+        return;
+    screen_move(buf->cursorY + buf->rootY, buf->cursorX + buf->rootX);
+    for (i = 0, l = buf->topLine; i < buf->LINES && l; i++, l = l->next) {
+        if (i >= buf->LINES - n || i < -n)
+            redrawLineImage(buf, l, i + buf->rootY);
+    }
+    getAllImage(buf);
+}
+
+void displayBuffer(struct Buffer* buf, enum DisplayMode mode)
+{
+    if (!buf) {
+        return;
+    }
+
+    if (buf->topLine == NULL && readBufferCache(buf)) {
+        mode = B_FORCE_REDRAW;
+    }
+
+    if (buf->width == 0)
+        buf->width = INIT_BUFFER_WIDTH;
+    if (buf->height == 0)
+        buf->height = LASTLINE() + 1;
+
+    // reshape
+    if ((
+            buf->width != INIT_BUFFER_WIDTH //
+            && (is_html_type(buf->type) || getRuntime()->FoldLine) //
+            )
+        || buf->need_reshape) {
+        buf->need_reshape = true;
+        reshapeBuffer(buf);
+    }
+
+    // rootX
+    if (getRuntime()->showLineNum) {
+        if (buf->lastLine && buf->lastLine->real_linenumber > 0)
+            buf->rootX = (int)(log(buf->lastLine->real_linenumber + 0.1)
+                             / log(10))
+                + 2;
+        if (buf->rootX < 5)
+            buf->rootX = 5;
+        if (buf->rootX > TTY_COLS())
+            buf->rootX = TTY_COLS();
+    } else {
+        buf->rootX = 0;
+    }
+    buf->COLS = TTY_COLS() - buf->rootX;
+
+    // rootY
+    int ny = 0;
+    if (nTab() > 1) {
+        if (mode == B_FORCE_REDRAW || mode == B_REDRAW_IMAGE)
+            calcTabPos();
+        ny = LastTab()->y + 2;
+        if (ny > LASTLINE())
+            ny = LASTLINE();
+    }
+    if (buf->rootY != ny || buf->LINES != LASTLINE() - ny) {
+        buf->rootY = ny;
+        buf->LINES = LASTLINE() - ny;
+        arrangeCursor(buf);
+        mode = B_REDRAW_IMAGE;
+    }
+
+    // check viewport ?
+    static struct Line* cline = NULL;
+    static int ccolumn = -1;
+    if (mode == B_FORCE_REDRAW //
+        || mode == B_SCROLL //
+        || mode == B_REDRAW_IMAGE //
+        || cline != buf->topLine //
+        || ccolumn != buf->currentColumn) {
+
+        if (getRuntime()->activeImage && (mode == B_REDRAW_IMAGE || cline != buf->topLine || ccolumn != buf->currentColumn)) {
+            if (draw_image_flag) {
+                tty_clear();
+                screen_clear();
+            }
+            clearImage();
+            loadImage(buf, IMG_FLAG_STOP);
+            image_touch++;
+            draw_image_flag = false;
+        }
+        redrawNLine(buf, LASTLINE());
+
+        cline = buf->topLine;
+        ccolumn = buf->currentColumn;
+    }
+
+    if (buf->topLine == NULL)
+        buf->topLine = buf->firstLine;
+
+    drawAnchorCursor(buf);
+
+    Str msg = make_lastline_message(buf);
+    if (buf->firstLine == NULL) {
+        Strcat_charp(msg, "\tNo Line");
+    }
+    displayDelayedMessage();
+    screen_standout();
+    message(msg->ptr, buf->cursorX + buf->rootX, buf->cursorY + buf->rootY);
+    screen_standend();
+    term_title(conv_to_system(buf->buffername));
+    tty_refresh();
+
+    if (getRuntime()->activeImage && getRuntime()->displayImage && buf->img) {
+        if (buf->image_loaded) {
+            drawImage(buf);
+        }
+    }
 }

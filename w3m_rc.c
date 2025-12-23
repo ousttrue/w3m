@@ -882,7 +882,6 @@ void _followForm(bool submit, bool on_target, bool do_download)
     default:
         break;
     }
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
 bool currentBufferSubmit()
