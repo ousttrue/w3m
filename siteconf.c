@@ -84,7 +84,7 @@ void loadSiteconf(void)
 
         Strchop(line);
         p = line->ptr;
-        SKIP_BLANKS(p);
+        p = skip_blanks(p);
         if (*p == '#' || *p == '\0')
             continue;
         s = getWord(&p);
@@ -105,7 +105,7 @@ void loadSiteconf(void)
             newent = newSiteconfRec();
             url = getRegexWord((const char**)&p, &newent->re_url);
             opt = getWord(&p);
-            SKIP_BLANKS(p);
+            p = skip_blanks(p);
             if (!newent->re_url) {
                 struct Url pu;
                 if (!url || !*url)

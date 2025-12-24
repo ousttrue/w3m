@@ -32,11 +32,13 @@ inline static bool IS_INTSPACE(uint8_t x) { return (GET_MYCTYPE((unsigned char)(
 inline static uint8_t TOLOWER(uint8_t x) { return (IS_ALPHA(x) ? ((x) | 0x20) : (x)); }
 inline static uint8_t TOUPPER(uint8_t x) { return (IS_ALPHA(x) ? ((x) & ~0x20) : (x)); }
 
-#define SKIP_BLANKS(p)                 \
-    {                                  \
-        while (*(p) && IS_SPACE(*(p))) \
-            (p)++;                     \
-    }
+inline static const char* skip_blanks(const char* p)
+{
+    while (IS_SPACE(p[0]))
+        ++p;
+    return p;
+}
+
 #define SKIP_NON_BLANKS(p)              \
     {                                   \
         while (*(p) && !IS_SPACE(*(p))) \

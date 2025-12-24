@@ -364,7 +364,7 @@ make_optional_header_string(char* s)
         override_user_agent = TRUE;
     Strcat_charp(hs, ": ");
     if (*(++p)) { /* not null header */
-        SKIP_BLANKS(p); /* skip white spaces */
+        p = skip_blanks(p); /* skip white spaces */
         Strcat_charp(hs, p);
     }
     Strcat_charp(hs, "\r\n");
@@ -3235,7 +3235,7 @@ goURL0(char* prompt, int relative)
         }
         url = inputLineHist(prompt, url, IN_URL, hist);
         if (url != NULL)
-            SKIP_BLANKS(url);
+            url = skip_blanks(url);
     }
     if (relative) {
         no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->currentURL);
@@ -3275,7 +3275,7 @@ DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer")
     if ((url = getenv("HTTP_HOME")) != NULL || (url = getenv("WWW_HOME")) != NULL) {
         struct Url p_url;
         struct Buffer* cur_buf = Currentbuf;
-        SKIP_BLANKS(url);
+        url = skip_blanks(url);
         url = url_encode(url, NULL, 0);
         parseURL2(url, &p_url, NULL);
         pushHashHist(getRuntime()->URLHist, parsedURL2Str(&p_url)->ptr);
@@ -4741,7 +4741,7 @@ DEFUN(execCmd, COMMAND, "Invoke w3m function(s)")
     }
     /* data: FUNC [DATA] [; FUNC [DATA] ...] */
     while (*data) {
-        SKIP_BLANKS(data);
+        data = skip_blanks(data);
         if (*data == ';') {
             data++;
             continue;

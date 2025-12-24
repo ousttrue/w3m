@@ -348,7 +348,7 @@ char* getWord(char** str)
     char *p, *s;
 
     p = *str;
-    SKIP_BLANKS(p);
+    p = skip_blanks(p);
     for (s = p; *p && !IS_SPACE(*p) && *p != ';'; p++)
         ;
     *str = p;
@@ -362,7 +362,7 @@ char* getQWord(char** str)
     int in_q = 0, in_dq = 0, esc = 0;
 
     p = *str;
-    SKIP_BLANKS(p);
+    p = skip_blanks(p);
     for (; *p; p++) {
         if (esc) {
             if (in_q) {
@@ -422,7 +422,7 @@ char* getRegexWord(const char** str, Regex** regex_ret)
     int igncase = 0;
 
     p = *str;
-    SKIP_BLANKS(p);
+    p = skip_blanks(p);
     headp = p;
 
     /* Get the opening delimiter */
@@ -621,7 +621,7 @@ interpret_mouse_action(FILE* mf)
         b = atoi(s) - 1;
         if (!(b >= 0 && b <= 2))
             continue; /* error */
-        SKIP_BLANKS(p);
+        p = skip_blanks(p);
         if (IS_DIGIT(*p))
             s = "menu";
         else
