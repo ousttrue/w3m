@@ -1,4 +1,5 @@
 #include "w3m_rc.h"
+#include "readbuffer.h"
 #include "message.h"
 #include "html_form.h"
 #include "urlscheme.h"
@@ -31,12 +32,10 @@
 #include "myctype.h"
 #include "regex.h"
 
-#ifdef USE_SSL
 #ifndef SSLEAY_VERSION_NUMBER
 #include <openssl/crypto.h> /* SSLEAY_VERSION_NUMBER may be here */
 #endif
 #include <openssl/err.h>
-#endif
 
 #ifdef __WATT32__
 #define write(a, b, c) write_s(a, b, c)
@@ -92,24 +91,6 @@ static void add_index_file(struct Url* pu, URLFile* uf);
 #ifndef HTTP_DEFAULT_FILE
 #define HTTP_DEFAULT_FILE "/"
 #endif /* not HTTP_DEFAULT_FILE */
-
-#ifdef SOCK_DEBUG
-#include <stdarg.h>
-
-static void
-sock_log(char* message, ...)
-{
-    FILE* f = fopen("zzzsocklog", "a");
-    va_list va;
-
-    if (f == NULL)
-        return;
-    va_start(va, message);
-    vfprintf(f, message, va);
-    fclose(f);
-}
-
-#endif
 
 static TextList* mimetypes_list;
 static struct table2** UserMimeTypes;
@@ -185,14 +166,10 @@ DefaultFile(int scheme)
 {
     switch (scheme) {
     case SCM_HTTP:
-#ifdef USE_SSL
     case SCM_HTTPS:
-#endif /* USE_SSL */
         return allocStr(HTTP_DEFAULT_FILE, -1);
-#ifdef USE_GOPHER
     case SCM_GOPHER:
         return allocStr("1", -1);
-#endif /* USE_GOPHER */
     case SCM_LOCAL:
     case SCM_LOCAL_CGI:
     case SCM_FTP:
@@ -209,7 +186,6 @@ KeyAbort(SIGNAL_ARG)
     SIGNAL_RETURN;
 }
 
-#ifdef USE_SSL
 SSL_CTX* ssl_ctx = NULL;
 
 void free_ssl_ctx(void)
@@ -461,8 +437,6 @@ SSL_write_from_file(SSL* ssl, char* file)
     }
 }
 
-#endif /* USE_SSL */
-
 static void
 write_from_file(int sock, char* file)
 {
@@ -504,19 +478,12 @@ int openSocket(char* const hostname,
         tty_refresh();
     }
     if (SETJMP(AbortLoading) != 0) {
-#ifdef SOCK_DEBUG
-        sock_log("openSocket() failed. reason: user abort\n");
-#endif
         if (sock >= 0)
             close(sock);
         goto error;
     }
     TRAP_ON;
     if (hostname == NULL) {
-#ifdef SOCK_DEBUG
-        sock_log("openSocket() failed. reason: Bad hostname \"%s\"\n",
-            hostname);
-#endif
         goto error;
     }
 
@@ -583,9 +550,6 @@ int openSocket(char* const hostname,
         proto->p_proto = 6;
     }
     if ((sock = socket(AF_INET, SOCK_STREAM, proto->p_proto)) < 0) {
-#ifdef SOCK_DEBUG
-        sock_log("openSocket: socket() failed. reason: %s\n", strerror(errno));
-#endif
         goto error;
     }
     regexCompile("^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$", 0);
@@ -602,10 +566,6 @@ int openSocket(char* const hostname,
         if (connect(sock, (struct sockaddr*)&hostaddr,
                 sizeof(struct sockaddr_in))
             < 0) {
-#ifdef SOCK_DEBUG
-            sock_log("openSocket: connect() failed. reason: %s\n",
-                strerror(errno));
-#endif
             goto error;
         }
     } else {
@@ -617,10 +577,6 @@ int openSocket(char* const hostname,
             tty_refresh();
         }
         if ((entry = gethostbyname(hostname)) == NULL) {
-#ifdef SOCK_DEBUG
-            sock_log("openSocket: gethostbyname() failed. reason: %s\n",
-                strerror(errno));
-#endif
             goto error;
         }
         hostaddr.sin_family = AF_INET;
@@ -628,12 +584,6 @@ int openSocket(char* const hostname,
         for (h_addr_list = entry->h_addr_list; *h_addr_list; h_addr_list++) {
             bcopy((void*)h_addr_list[0], (void*)&hostaddr.sin_addr,
                 entry->h_length);
-#ifdef SOCK_DEBUG
-            adr = ntohl(*(long*)&hostaddr.sin_addr);
-            sock_log("openSocket: connecting %d.%d.%d.%d\n",
-                (adr >> 24) & 0xff,
-                (adr >> 16) & 0xff, (adr >> 8) & 0xff, adr & 0xff);
-#endif
             if (fmInitialized()) {
                 message(Sprintf("Connecting to %s", hostname)->ptr, 0, 0);
                 tty_refresh();
@@ -643,12 +593,6 @@ int openSocket(char* const hostname,
                 == 0) {
                 break;
             }
-#ifdef SOCK_DEBUG
-            else {
-                sock_log("openSocket: connect() failed. reason: %s\n",
-                    strerror(errno));
-            }
-#endif
         }
         if (result < 0) {
             goto error;
@@ -699,8 +643,8 @@ copyPath(const char* orgpath, int length, int option)
 
 void parseURL(char* url, struct Url* p_url, struct Url* current)
 {
-    const char *q;
-    const char *qq;
+    const char* q;
+    const char* qq;
     Str tmp;
 
     url = url_quote(url); /* quote 0x01-0x20, 0x7F-0xFF */
@@ -1132,10 +1076,7 @@ void parseURL2(char* url, struct Url* pu, struct Url* current)
         }
 #endif
         else if (pu->scheme == SCM_HTTP
-#ifdef USE_SSL
-            || pu->scheme == SCM_HTTPS
-#endif
-        ) {
+            || pu->scheme == SCM_HTTPS) {
             if (relative_uri) {
                 /* In this case, pu->file is created by [process 1] above.
                  * pu->file may contain relative path (for example,
@@ -1190,9 +1131,7 @@ Str _parsedURL2Str(struct Url* pu, bool pass, bool user, bool label)
         "news",
         "data",
         "mailto",
-#ifdef USE_SSL
         "https",
-#endif /* USE_SSL */
     };
 
     if (pu->scheme == SCM_MISSING) {
@@ -1339,9 +1278,6 @@ retry:
             pu->label = NULL;
         } else {
             /* given URL must be null string */
-#ifdef SOCK_DEBUG
-            sock_log("given URL must be null string\n");
-#endif
             return uf;
         }
     }
@@ -1435,9 +1371,7 @@ retry:
         }
         break;
     case SCM_HTTP:
-#ifdef USE_SSL
     case SCM_HTTPS:
-#endif /* USE_SSL */
         if (pu->file == NULL)
             pu->file = allocStr("/", -1);
         if (request && request->method == FORM_METHOD_POST && request->body)
@@ -1445,13 +1379,9 @@ retry:
         if (request && request->method == FORM_METHOD_HEAD)
             hr->command = HR_COMMAND_HEAD;
         if ((
-#ifdef USE_SSL
-                (pu->scheme == SCM_HTTPS) ? non_null(HTTPS_proxy) :
-#endif /* USE_SSL */
-                                          non_null(HTTP_proxy))
+                (pu->scheme == SCM_HTTPS) ? non_null(HTTPS_proxy) : non_null(HTTP_proxy))
             && !Do_not_use_proxy && pu->host != NULL && !check_no_proxy(pu->host)) {
             hr->flag |= HR_FLAG_PROXY;
-#ifdef USE_SSL
             if (pu->scheme == SCM_HTTPS && *status == HTST_CONNECT) {
                 sock = ssl_socket_of(ouf->stream);
                 if (!(sslh = openSSLHandle(sock, pu->host,
@@ -1465,21 +1395,14 @@ retry:
                     HTTPS_proxy_parsed.port);
                 sslh = NULL;
             } else {
-#endif /* USE_SSL */
                 sock = openSocket(HTTP_proxy_parsed.host,
                     schemeNumToName(HTTP_proxy_parsed.scheme),
                     HTTP_proxy_parsed.port);
-#ifdef USE_SSL
                 sslh = NULL;
             }
-#endif /* USE_SSL */
             if (sock < 0) {
-#ifdef SOCK_DEBUG
-                sock_log("Can't open socket\n");
-#endif
                 return uf;
             }
-#ifdef USE_SSL
             if (pu->scheme == SCM_HTTPS) {
                 if (*status == HTST_NORMAL) {
                     hr->command = HR_COMMAND_CONNECT;
@@ -1490,9 +1413,7 @@ retry:
                     tmp = HTTPrequest(pu, current, hr, extra_header);
                     *status = HTST_NORMAL;
                 }
-            } else
-#endif /* USE_SSL */
-            {
+            } else {
                 tmp = HTTPrequest(pu, current, hr, extra_header);
                 *status = HTST_NORMAL;
             }
@@ -1502,7 +1423,6 @@ retry:
                 *status = HTST_MISSING;
                 return uf;
             }
-#ifdef USE_SSL
             if (pu->scheme == SCM_HTTPS) {
                 if (!(sslh = openSSLHandle(sock, pu->host,
                           &uf.ssl_certificate))) {
@@ -1510,12 +1430,10 @@ retry:
                     return uf;
                 }
             }
-#endif /* USE_SSL */
             hr->flag |= HR_FLAG_LOCAL;
             tmp = HTTPrequest(pu, current, hr, extra_header);
             *status = HTST_NORMAL;
         }
-#ifdef USE_SSL
         if (pu->scheme == SCM_HTTPS) {
             uf.stream = newSSLStream(sslh, sock);
             if (sslh)
@@ -1540,9 +1458,7 @@ retry:
                     write_from_file(sock, request->body);
             }
             return uf;
-        } else
-#endif /* USE_SSL */
-        {
+        } else {
             write(sock, tmp->ptr, tmp->length);
             if (w3m_reqlog) {
                 FILE* ff = fopen(w3m_reqlog, "a");
@@ -2050,23 +1966,15 @@ schemeToProxy(int scheme)
     case SCM_HTTP:
         pu = &HTTP_proxy_parsed;
         break;
-#ifdef USE_SSL
     case SCM_HTTPS:
         pu = &HTTPS_proxy_parsed;
         break;
-#endif
     case SCM_FTP:
         pu = &FTP_proxy_parsed;
         break;
-#ifdef USE_GOPHER
     case SCM_GOPHER:
         pu = &GOPHER_proxy_parsed;
         break;
-#endif
-#ifdef DEBUG
-    default:
-        abort();
-#endif
     }
     return pu;
 }

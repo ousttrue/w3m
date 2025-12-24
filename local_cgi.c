@@ -1,6 +1,8 @@
+#include "local_cgi.h"
 #include "w3m_rc.h"
 #include "html_form.h"
 #include "fm.h"
+#include "hash.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,18 +10,7 @@
 #include <sys/stat.h>
 #include <signal.h>
 #include <errno.h>
-#ifdef HAVE_READLINK
 #include <unistd.h>
-#endif /* HAVE_READLINK */
-#ifdef __EMX__
-#include <limits.h> /* _MAX_PATH ? */
-#endif /* __EMX__ */
-#include "local.h"
-#include "hash.h"
-
-#ifdef __MINGW32_VERSION
-#include <winsock.h>
-#endif
 
 #define CGIFN_NORMAL 0
 #define CGIFN_LIBDIR 1
@@ -56,7 +47,7 @@ Str localCookie()
     return Local_cookie;
 }
 
-Str loadLocalDir(char* dname)
+Str loadLocalDir(const char* dname)
 {
     Str tmp;
     DIR* d;

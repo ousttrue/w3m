@@ -1,4 +1,6 @@
 #include "linein.h"
+#include "local_cgi.h"
+#include "etc.h"
 #include "buffer.h"
 #include "w3m_rc.h"
 #include "ctrlcode.h"
@@ -6,11 +8,11 @@
 #include "display.h"
 #include "tab.h"
 #include "LineWriter.h"
+#include "myctype.h"
 #include "fm.h"
+#include <dirent.h>
 #include <libwc/char_conv.h>
 #include <libwc/charset.h>
-#include "local.h"
-#include "myctype.h"
 
 #ifdef USE_MOUSE
 #ifdef USE_GPM

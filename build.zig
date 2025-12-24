@@ -11,6 +11,7 @@ const system_libs = [_][]const u8{
 const w3m_srcs = [_][]const u8{
     "w3m_rc.c",
 
+    "readbuffer.c",
     "LineWriter.c",
     "message.c",
     "termcap_util.c",
@@ -31,7 +32,7 @@ const w3m_srcs = [_][]const u8{
     "search.c",
     "linein.c",
     "html_table.c",
-    "local.c",
+    "local_cgi.c",
     "maparea.c",
     "frame.c",
     "menu.c",

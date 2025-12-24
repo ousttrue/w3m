@@ -2,3 +2,4 @@
 #include "Str.h"
 
 Str base64_encode(const char* src, size_t len);
+char* lastFileName(const char* path);

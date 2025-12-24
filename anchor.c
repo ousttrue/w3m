@@ -11,6 +11,7 @@
 
 #define FIRST_ANCHOR_SIZE 30
 
+
 struct AnchorList*
 putAnchor(struct AnchorList* al, char* url, char* target, struct Anchor** anchor_return,
     char* referer, char* title, unsigned char key, int line, int pos)

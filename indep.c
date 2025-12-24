@@ -876,7 +876,7 @@ Str Str_url_unquote(Str x, int is_form, int safe)
     return x;
 }
 
-char* shell_quote(char* str)
+char* shell_quote(const char* str)
 {
     Str tmp = NULL;
     char* p;

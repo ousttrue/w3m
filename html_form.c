@@ -10,7 +10,7 @@
 #include "parsetag.h"
 #include "parsetagx.h"
 #include "myctype.h"
-#include "local.h"
+#include "local_cgi.h"
 #include "regex.h"
 #include "menu.h"
 #include <libwc/charset.h>

@@ -1,10 +1,5 @@
-/* $Id: local.h,v 1.3 2001/11/20 17:49:23 ukai Exp $ */
-/*
- * w3m local.h
- */
-
-#ifndef LOCAL_H
-#define LOCAL_H
+#pragma once
+#include "Str.h"
 
 #include <sys/types.h>
 #ifdef HAVE_DIRENT_H
@@ -42,4 +37,4 @@ typedef struct direct Directory;
 #endif /* not S_ISLNK */
 #endif /* not HAVE_READLINK */
 
-#endif /* not LOCAL_H */
+extern Str loadLocalDir(const char* dirname);

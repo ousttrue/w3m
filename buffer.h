@@ -89,7 +89,7 @@ struct Buffer {
     struct Url* baseURL;
     char* baseTarget;
     int real_scheme;
-    char* sourcefile;
+    const char* sourcefile;
     struct frameset* frameset;
     struct frameset_queue* frameQ;
     int* clone;

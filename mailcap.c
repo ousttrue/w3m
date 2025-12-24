@@ -1,10 +1,10 @@
-/* $Id: mailcap.c,v 1.13 2006/08/07 03:10:26 ukai Exp $ */
+#include "mailcap.h"
 #include "fm.h"
 #include "myctype.h"
+#include "parsetag.h"
+#include "local_cgi.h"
 #include <stdio.h>
 #include <errno.h>
-#include "parsetag.h"
-#include "local.h"
 
 static struct mailcap DefaultMailcap[] = {
     { "image/*", DEF_IMAGE_VIEWER " %s", 0, NULL, NULL, NULL }, /* */
@@ -442,7 +442,7 @@ unquote_mailcap_loop(char* qstr, char* type, char* name, char* attr,
     return str;
 }
 
-Str unquote_mailcap(char* qstr, char* type, char* name, char* attr, int* mc_stat)
+Str unquote_mailcap(const char* qstr, const char* type, const char* name, const char* attr, int* mc_stat)
 {
     return unquote_mailcap_loop(qstr, type, name, attr, mc_stat, 0);
 }

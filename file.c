@@ -1,4 +1,6 @@
 #include "file.h"
+#include "mailcap.h"
+#include "readbuffer.h"
 #include "symbol.h"
 #include "message.h"
 #include "w3m_rc.h"
@@ -18,8 +20,15 @@
 #include "fm.h"
 #include "html_table.h"
 #include "display.h"
-#include <sys/types.h>
+#include "html.h"
+#include "parsetagx.h"
+#include "local_cgi.h"
+#include "regex.h"
 #include "myctype.h"
+
+#include <libwc/ces.h>
+
+#include <sys/types.h>
 #include <signal.h>
 #include <setjmp.h>
 #include <unistd.h>
@@ -29,13 +38,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <utime.h>
-#include <libwc/ces.h>
 
 #include <libwc/charset.h>
-#include "html.h"
-#include "parsetagx.h"
-#include "local.h"
-#include "regex.h"
 
 #ifndef max
 #define max(a, b) ((a) > (b) ? (a) : (b))
@@ -51,7 +55,6 @@ static int need_number = 0;
 
 static char* guess_filename(char* file);
 static int _MoveFile(char* path1, char* path2);
-static void uncompress_stream(URLFile* uf, char** src);
 static FILE* lessopen_stream(char* path);
 static struct Buffer* loadcmdout(char* cmd,
     struct Buffer* (*loadproc)(URLFile*, struct Buffer*),
@@ -255,11 +258,7 @@ loadSomething(URLFile* f,
         buf->currentURL.scheme = f->scheme;
     if (f->scheme == SCM_LOCAL && buf->sourcefile == NULL)
         buf->sourcefile = buf->content.filename;
-    if (loadproc == loadHTMLBuffer
-#ifdef USE_IMAGE
-        || loadproc == loadImageBuffer
-#endif
-    )
+    if (loadproc == loadHTMLBuffer || loadproc == loadImageBuffer)
         buf->type = "text/html";
     else
         buf->type = "text/plain";
@@ -382,6 +381,103 @@ setModtime(char* path, time_t modtime)
         t.actime = time(NULL);
     t.modtime = modtime;
     return utime(path, &t);
+}
+
+static void
+uncompress_stream(URLFile* uf, const char** src)
+{
+#ifndef __MINGW32_VERSION
+    pid_t pid1;
+    FILE* f1;
+    char* expand_cmd = GUNZIP_CMDNAME;
+    char* expand_name = GUNZIP_NAME;
+    char* tmpf = NULL;
+    char* ext = NULL;
+    struct compression_decoder* d;
+    int use_d_arg = 0;
+
+    if (IStype(uf->stream) != IST_ENCODED) {
+        uf->stream = newEncodedStream(uf->stream, uf->encoding);
+        uf->encoding = ENC_7BIT;
+    }
+    for (d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
+        if (uf->compression == d->type) {
+            if (d->auxbin_p)
+                expand_cmd = auxbinFile(d->cmd);
+            else
+                expand_cmd = d->cmd;
+            expand_name = d->name;
+            ext = d->ext;
+            use_d_arg = d->use_d_arg;
+            break;
+        }
+    }
+    uf->compression = CMP_NOCOMPRESS;
+
+    if (uf->scheme != SCM_LOCAL
+#ifdef USE_IMAGE
+        && !image_source
+#endif
+    ) {
+        tmpf = tmpfname(TMPF_DFL, ext)->ptr;
+    }
+
+    /* child1 -- stdout|f1=uf -> parent */
+    pid1 = open_pipe_rw(&f1, NULL);
+    if (pid1 < 0) {
+        UFclose(uf);
+        return;
+    }
+    if (pid1 == 0) {
+        /* child */
+        pid_t pid2;
+        FILE* f2 = stdin;
+
+        /* uf -> child2 -- stdout|stdin -> child1 */
+        pid2 = open_pipe_rw(&f2, NULL);
+        if (pid2 < 0) {
+            UFclose(uf);
+            exit(1);
+        }
+        if (pid2 == 0) {
+            /* child2 */
+            char* buf = NewWithoutGC_N(char, SAVE_BUF_SIZE);
+            int count;
+            FILE* f = NULL;
+
+            setup_child(TRUE, 2, UFfileno(uf));
+            if (tmpf)
+                f = fopen(tmpf, "wb");
+            while ((count = ISread_n(uf->stream, buf, SAVE_BUF_SIZE)) > 0) {
+                if (fwrite(buf, 1, count, stdout) != count)
+                    break;
+                if (f && fwrite(buf, 1, count, f) != count)
+                    break;
+            }
+            UFclose(uf);
+            if (f)
+                fclose(f);
+            xfree(buf);
+            exit(0);
+        }
+        /* child1 */
+        dup2(1, 2); /* stderr>&stdout */
+        setup_child(TRUE, -1, -1);
+        if (use_d_arg)
+            execlp(expand_cmd, expand_name, "-d", NULL);
+        else
+            execlp(expand_cmd, expand_name, NULL);
+        exit(1);
+    }
+    if (tmpf) {
+        if (src)
+            *src = tmpf;
+        else
+            uf->scheme = SCM_LOCAL;
+    }
+    UFhalfclose(uf);
+    uf->stream = newFileStream(f1, (void (*)())fclose);
+#endif /* __MINGW32_VERSION */
 }
 
 void examineFile(char* path, URLFile* uf, bool do_download)
@@ -8171,103 +8267,6 @@ char* inputAnswer(char* prompt)
         ans = Strfgets(stdin)->ptr;
     }
     return ans;
-}
-
-static void
-uncompress_stream(URLFile* uf, char** src)
-{
-#ifndef __MINGW32_VERSION
-    pid_t pid1;
-    FILE* f1;
-    char* expand_cmd = GUNZIP_CMDNAME;
-    char* expand_name = GUNZIP_NAME;
-    char* tmpf = NULL;
-    char* ext = NULL;
-    struct compression_decoder* d;
-    int use_d_arg = 0;
-
-    if (IStype(uf->stream) != IST_ENCODED) {
-        uf->stream = newEncodedStream(uf->stream, uf->encoding);
-        uf->encoding = ENC_7BIT;
-    }
-    for (d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
-        if (uf->compression == d->type) {
-            if (d->auxbin_p)
-                expand_cmd = auxbinFile(d->cmd);
-            else
-                expand_cmd = d->cmd;
-            expand_name = d->name;
-            ext = d->ext;
-            use_d_arg = d->use_d_arg;
-            break;
-        }
-    }
-    uf->compression = CMP_NOCOMPRESS;
-
-    if (uf->scheme != SCM_LOCAL
-#ifdef USE_IMAGE
-        && !image_source
-#endif
-    ) {
-        tmpf = tmpfname(TMPF_DFL, ext)->ptr;
-    }
-
-    /* child1 -- stdout|f1=uf -> parent */
-    pid1 = open_pipe_rw(&f1, NULL);
-    if (pid1 < 0) {
-        UFclose(uf);
-        return;
-    }
-    if (pid1 == 0) {
-        /* child */
-        pid_t pid2;
-        FILE* f2 = stdin;
-
-        /* uf -> child2 -- stdout|stdin -> child1 */
-        pid2 = open_pipe_rw(&f2, NULL);
-        if (pid2 < 0) {
-            UFclose(uf);
-            exit(1);
-        }
-        if (pid2 == 0) {
-            /* child2 */
-            char* buf = NewWithoutGC_N(char, SAVE_BUF_SIZE);
-            int count;
-            FILE* f = NULL;
-
-            setup_child(TRUE, 2, UFfileno(uf));
-            if (tmpf)
-                f = fopen(tmpf, "wb");
-            while ((count = ISread_n(uf->stream, buf, SAVE_BUF_SIZE)) > 0) {
-                if (fwrite(buf, 1, count, stdout) != count)
-                    break;
-                if (f && fwrite(buf, 1, count, f) != count)
-                    break;
-            }
-            UFclose(uf);
-            if (f)
-                fclose(f);
-            xfree(buf);
-            exit(0);
-        }
-        /* child1 */
-        dup2(1, 2); /* stderr>&stdout */
-        setup_child(TRUE, -1, -1);
-        if (use_d_arg)
-            execlp(expand_cmd, expand_name, "-d", NULL);
-        else
-            execlp(expand_cmd, expand_name, NULL);
-        exit(1);
-    }
-    if (tmpf) {
-        if (src)
-            *src = tmpf;
-        else
-            uf->scheme = SCM_LOCAL;
-    }
-    UFhalfclose(uf);
-    uf->stream = newFileStream(f1, (void (*)())fclose);
-#endif /* __MINGW32_VERSION */
 }
 
 static FILE*

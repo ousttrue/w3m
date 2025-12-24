@@ -11,12 +11,10 @@
 #include "fm.h"
 #include "file.h"
 #include "html.h"
-
-#ifdef USE_COOKIE
-#include <time.h>
-#include "local.h"
+#include "local_cgi.h"
 #include "regex.h"
 #include "myctype.h"
+#include <time.h>
 
 static int is_saved = 1;
 
@@ -698,4 +696,3 @@ int check_cookie_accept_domain(char* domain)
     }
     return 1;
 }
-#endif /* USE_COOKIE */

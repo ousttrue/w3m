@@ -1,4 +1,6 @@
 #include "maparea.h"
+#include "readbuffer.h"
+#include "mailcap.h"
 #include "file.h"
 #include "message.h"
 #include "linein.h"
@@ -2319,9 +2321,7 @@ cur_real_linenumber(struct Buffer* buf)
 /* Run editor on the current buffer */
 DEFUN(editBf, EDIT, "Edit local source")
 {
-    char* fn = Currentbuf->content.filename;
-    Str cmd;
-
+    const char* fn = Currentbuf->content.filename;
     if (fn == NULL || Currentbuf->pagerSource != NULL || /* Behaving as a pager */
         (Currentbuf->type == NULL && Currentbuf->edit == NULL) || /* Reading shell */
         Currentbuf->real_scheme != SCM_LOCAL || !strcmp(Currentbuf->currentURL.file, "-") || /* file is std input  */
@@ -2329,14 +2329,16 @@ DEFUN(editBf, EDIT, "Edit local source")
         disp_err_message("Can't edit other than local file", TRUE);
         return;
     }
+
+    Str cmd;
     if (Currentbuf->edit)
         cmd = unquote_mailcap(Currentbuf->edit, Currentbuf->real_type, fn,
             checkHeader(Currentbuf, "Content-Type:"), NULL);
     else
-        cmd = myEditor(Editor, shell_quote(fn),
-            cur_real_linenumber(Currentbuf));
+        cmd = myEditor(Editor, shell_quote(fn), cur_real_linenumber(Currentbuf));
     blockChild(cmd->ptr);
 
+    // buffer is modified. so reload
     reload();
 }
 

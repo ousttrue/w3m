@@ -179,22 +179,12 @@ extern void examineFile(char* path, URLFile* uf, bool do_download);
 extern char* acceptableEncoding(void);
 extern int dir_exist(char* path);
 
+struct FormList;
 extern struct Buffer* loadGeneralFile(char* path, struct Url* current, char* referer,
     int flag, struct FormList* request, bool do_download);
 extern int is_boundary(unsigned char*, unsigned char*);
 extern int is_blank_line(char* line, int indent);
-extern void push_render_image(Str str, int width, int limit,
-    struct html_feed_environ* h_env);
-extern void flushline(struct html_feed_environ* h_env, struct readbuffer* obuf,
-    int indent, int force, int width);
-extern void do_blankline(struct html_feed_environ* h_env,
-    struct readbuffer* obuf, int indent, int indent_incr,
-    int width);
-extern void purgeline(struct html_feed_environ* h_env);
-extern void save_fonteffect(struct html_feed_environ* h_env,
-    struct readbuffer* obuf);
-extern void restore_fonteffect(struct html_feed_environ* h_env,
-    struct readbuffer* obuf);
+
 extern Str process_img(struct parsed_tag* tag, int width);
 extern Str process_anchor(struct parsed_tag* tag, char* tagbuf);
 extern Str process_input(struct parsed_tag* tag);
@@ -210,20 +200,12 @@ extern void feed_textarea(char* str);
 extern Str process_form(struct parsed_tag* tag);
 extern Str process_n_form(void);
 extern int getMetaRefreshParam(char* q, Str* refresh_uri);
-extern int HTMLtagproc1(struct parsed_tag* tag,
-    struct html_feed_environ* h_env);
 extern void HTMLlineproc2(struct Buffer* buf, TextLineList* tl);
-extern void HTMLlineproc0(char* istr, struct html_feed_environ* h_env,
-    int internal);
 #define HTMLlineproc1(x, y) HTMLlineproc0(x, y, TRUE)
 extern struct Buffer* loadHTMLBuffer(URLFile* f, struct Buffer* newBuf);
 extern char* convert_size(clen_t size, int usefloat);
 extern char* convert_size2(clen_t size1, clen_t size2, int usefloat);
 extern void showProgress(clen_t* linelen, clen_t* trbyte);
-extern void init_henv(struct html_feed_environ*, struct readbuffer*,
-    struct environment*, int, TextLineList*, int, int);
-extern void completeHTMLstream(struct html_feed_environ*,
-    struct readbuffer*);
 extern void loadHTMLstream(URLFile* f, struct Buffer* newBuf, FILE* src,
     int internal);
 #ifdef USE_GOPHER
@@ -278,12 +260,8 @@ extern struct Buffer* prevBuffer(struct Buffer* first, struct Buffer* buf);
 extern int writeBufferCache(struct Buffer* buf);
 
 extern int gethtmlcmd(char** s);
-extern char* lastFileName(char* path);
 extern char* mybasename(char* s);
 extern char* mydirname(char* s);
-extern int next_status(char c, int* status);
-extern int read_token(Str buf, char** instr, int* status, int pre, int append);
-extern Str correct_irrtag(int status);
 
 #ifdef USE_MIGEMO
 extern void init_migemo(void);
@@ -375,8 +353,6 @@ extern struct mailcap* searchMailcap(struct mailcap* table, char* type);
 extern void initMailcap(void);
 extern char* acceptableMimeTypes(void);
 extern struct mailcap* searchExtViewer(char* type);
-extern Str unquote_mailcap(char* qstr, char* type, char* name, char* attr,
-    int* mc_stat);
 extern char* guessContentType(char* filename);
 extern TextList* make_domain_list(char* domain_list);
 extern int check_no_proxy(char* domain);
@@ -449,7 +425,6 @@ extern char* auxbinFile(char* base);
 extern char* libFile(char* base);
 extern char* helpFile(char* base);
 extern Str localCookie(void);
-extern Str loadLocalDir(char* dirname);
 extern void set_environ(char* var, char* value);
 extern FILE* localcgi_post(char*, char*, struct FormList*, char*);
 #define localcgi_get(u, q, r) localcgi_post((u), (q), NULL, (r))
