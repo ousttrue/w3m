@@ -46,10 +46,11 @@ pub fn main() !void {
             continue;
         }
 
-        // get keypress event
-        const ch = g_term.getch(&w3m_idle);
-        c.w3m_on_key(ch);
-        c.w3m_end_frame();
+        if (g_term.getch()) |ch| {
+            c.w3m_on_key(ch);
+            c.w3m_end_frame();
+        }
+        w3m_idle();
     }
 }
 
@@ -186,10 +187,12 @@ export fn tty_cbreak(enable: bool) void {
     }
 }
 
-export fn w3m_nop() void {}
-
 export fn getch() c_int {
-    return @intCast(g_term.getch(&w3m_nop));
+    if (g_term.getch()) |ch| {
+        return ch;
+    } else {
+        return 0;
+    }
 }
 
 //

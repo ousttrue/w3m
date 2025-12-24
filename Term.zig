@@ -94,7 +94,7 @@ pub fn getWinsize(this: @This()) !std.posix.winsize {
     return error.IoctlError;
 }
 
-pub fn getch(this: *@This(), onIdle: *const fn () callconv(.c) void) u8 {
+pub fn getch(this: *@This()) ?u8 {
     while (true) {
         const has_input = this.epoll.next(80) catch {
             // error ?
@@ -110,7 +110,7 @@ pub fn getch(this: *@This(), onIdle: *const fn () callconv(.c) void) u8 {
             return buf[0];
         } else {
             // timeout
-            onIdle();
+            return null;
         }
     }
 }
