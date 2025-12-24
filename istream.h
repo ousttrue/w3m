@@ -1,6 +1,13 @@
-/* $Id: istream.h,v 1.12 2003/10/20 16:41:56 ukai Exp $ */
-#ifndef IO_STREAM_H
-#define IO_STREAM_H
+#pragma once
+
+#include <stdint.h>
+
+enum EncodingType : uint8_t {
+    ENC_7BIT = 0,
+    ENC_BASE64 = 1,
+    ENC_QUOTE = 2,
+    ENC_UUENCODE = 3,
+};
 
 #include "indep.h"
 #include <stdio.h>
@@ -156,4 +163,3 @@ extern Str ssl_get_certificate(SSL* ssl, char* hostname);
 #else
 #define openIS(path) newInputStream(open((path), O_RDONLY))
 #endif /* USE_BINMODE_STREAM */
-#endif

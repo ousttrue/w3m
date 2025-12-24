@@ -1,4 +1,6 @@
 #include "w3m_rc.h"
+#include "ftp.h"
+#include "URLFile.h"
 #include "file.h"
 #include "etc.h"
 #include "local_cgi.h"
@@ -87,7 +89,7 @@ static struct table2 DefaultGuess[] = {
     { NULL, NULL }
 };
 
-static void add_index_file(struct Url* pu, URLFile* uf);
+static void add_index_file(struct Url* pu, struct URLFile* uf);
 
 /* #define HTTP_DEFAULT_FILE    "/index.html" */
 
@@ -457,7 +459,7 @@ write_from_file(int sock, char* file)
 }
 
 int openSocket(char* const hostname,
-    char* remoteport_name, unsigned short remoteport_num)
+    const char* remoteport_name, unsigned short remoteport_num)
 {
     volatile int sock = -1;
 #ifdef INET6
@@ -1225,21 +1227,7 @@ Str parsedURL2RefererStr(struct Url* pu)
     return _parsedURL2Str(pu, FALSE, FALSE, FALSE);
 }
 
-void init_stream(URLFile* uf, int scheme, InputStream stream)
-{
-    memset(uf, 0, sizeof(URLFile));
-    uf->stream = stream;
-    uf->scheme = scheme;
-    uf->encoding = ENC_7BIT;
-    uf->is_cgi = FALSE;
-    uf->compression = CMP_NOCOMPRESS;
-    uf->content_encoding = CMP_NOCOMPRESS;
-    uf->guess_type = NULL;
-    uf->ext = NULL;
-    uf->modtime = -1;
-}
-
-URLFile
+struct URLFile
 openURL(const char* url, struct Url* pu, struct Url* current,
     URLOption* option, struct FormList* request, TextList* extra_header,
     URLFile* ouf, struct HttpRequest* hr, unsigned char* status, bool do_download)

@@ -19,3 +19,4 @@ inline static int doFileCopy(const char* tmpf, const char* defstr)
 }
 int doFileMove(const char* tmpf, const char* defstr);
 void examineFile(const char* path, struct URLFile* uf, bool do_download);
+int dir_exist(const char* path);

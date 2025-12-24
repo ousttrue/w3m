@@ -1,3 +1,5 @@
+#include "ftp.h"
+#include "URLFile.h"
 #include "w3m_rc.h"
 #include "etc.h"
 #include "symbol.h"
@@ -354,7 +356,7 @@ void closeFTP(void)
 }
 
 InputStream
-openFTPStream(struct Url* pu, URLFile* uf)
+openFTPStream(struct Url* pu, struct URLFile* uf)
 {
     Str tmp;
     int status;

@@ -1,4 +1,5 @@
 #include "w3m_rc.h"
+#include "URLFile.h"
 #include "etc.h"
 #include "file.h"
 #include "readbuffer.h"

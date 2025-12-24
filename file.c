@@ -1,4 +1,5 @@
 #include "file.h"
+#include "URLFile.h"
 #include "mailcap.h"
 #include "readbuffer.h"
 #include "symbol.h"
@@ -55,7 +56,7 @@ static int need_number = 0;
 
 static int _MoveFile(char* path1, char* path2);
 static struct Buffer* loadcmdout(char* cmd,
-    struct Buffer* (*loadproc)(URLFile*, struct Buffer*),
+    struct Buffer* (*loadproc)(struct URLFile*, struct Buffer*),
     struct Buffer* defaultbuf);
 #ifndef USE_ANSI_COLOR
 #define addnewline(a, b, c, d, e, f, g) _addnewline(a, b, c, e, f, g)
@@ -211,7 +212,7 @@ KeyAbort(SIGNAL_ARG)
 }
 
 static void
-UFhalfclose(URLFile* f)
+UFhalfclose(struct URLFile* f)
 {
     switch (f->scheme) {
     case SCM_FTP:
@@ -263,7 +264,7 @@ loadSomething(URLFile* f,
     return buf;
 }
 
-int dir_exist(char* path)
+int dir_exist(const char* path)
 {
     struct stat stbuf;
 

@@ -176,7 +176,6 @@ extern wc_ces url_to_charset(const char* url, const struct Url* base,
 extern char* url_encode(const char* url, const struct Url* base,
     wc_ces doc_charset);
 extern char* acceptableEncoding(void);
-extern int dir_exist(char* path);
 
 struct FormList;
 extern int is_boundary(unsigned char*, unsigned char*);
@@ -199,34 +198,17 @@ extern Str process_n_form(void);
 extern int getMetaRefreshParam(char* q, Str* refresh_uri);
 extern void HTMLlineproc2(struct Buffer* buf, TextLineList* tl);
 #define HTMLlineproc1(x, y) HTMLlineproc0(x, y, TRUE)
-extern struct Buffer* loadHTMLBuffer(URLFile* f, struct Buffer* newBuf);
+
 extern char* convert_size(clen_t size, int usefloat);
 extern char* convert_size2(clen_t size1, clen_t size2, int usefloat);
 extern void showProgress(clen_t* linelen, clen_t* trbyte);
-extern void loadHTMLstream(URLFile* f, struct Buffer* newBuf, FILE* src,
-    int internal);
-#ifdef USE_GOPHER
-#ifdef USE_M17N
-extern Str loadGopherDir(URLFile* uf, struct Url* pu, wc_ces* charset);
-extern Str loadGopherSearch(URLFile* uf, struct Url* pu, wc_ces* charset);
-#else
-extern Str loadGopherDir0(URLFile* uf, struct Url* pu);
-extern Str loadGopherSearch0(URLFile* uf, struct Url* pu);
-#define loadGopherDir(uf, pu, charset) loadGopherDir0(uf, pu)
-#define loadGopherSearch(uf, pu, charset) loadGopherSearch0(uf, pu)
-#endif
-#endif /* USE_GOPHER */
-extern struct Buffer* loadBuffer(URLFile* uf, struct Buffer* newBuf);
-#ifdef USE_IMAGE
-extern struct Buffer* loadImageBuffer(URLFile* uf, struct Buffer* newBuf);
-#endif
+
 extern void saveBuffer(struct Buffer* buf, FILE* f, int cont);
 extern void saveBufferBody(struct Buffer* buf, FILE* f, int cont);
 extern struct Buffer* getshell(char* cmd);
 extern struct Buffer* getpipe(char* cmd);
 extern struct Buffer* openPagerBuffer(InputStream stream, struct Buffer* buf);
 extern struct Buffer* openGeneralPagerBuffer(InputStream stream);
-extern int save2tmp(URLFile uf, char* tmpf);
 
 extern int checkCopyFile(char* path1, char* path2);
 extern int checkSaveFile(InputStream stream, char* path);
@@ -322,17 +304,13 @@ extern void set_int(void);
 
 extern void initMimeTypes(void);
 extern void free_ssl_ctx(void);
-extern int openSocket(char* hostname, char* remoteport_name,
-    unsigned short remoteport_num);
 extern void copyParsedURL(struct Url* p, const struct Url* q);
 extern Str parsedURL2RefererStr(struct Url* pu);
-extern void init_stream(URLFile* uf, int scheme, InputStream stream);
 struct HttpRequest;
 extern char* acceptableMimeTypes(void);
 extern char* guessContentType(char* filename);
 extern TextList* make_domain_list(char* domain_list);
 extern int check_no_proxy(char* domain);
-extern InputStream openFTPStream(struct Url* pu, URLFile* uf);
 extern Str loadFTPDir(struct Url* pu, wc_ces* charset, bool do_download);
 extern void closeFTP(void);
 extern void disconnectFTP(void);

@@ -1,4 +1,5 @@
 #include "w3m_rc.h"
+#include "URLFile.h"
 #include "etc.h"
 #include "file.h"
 #include "buffer.h"
@@ -119,14 +120,14 @@ news_quit(News* news)
 static char*
 name_from_address(char* str, int n)
 {
-    char *s, *p;
     int l, space = TRUE;
 
-    s = allocStr(str, -1);
-    s = skip_blanks(s);
+    char* s = allocStr(str, -1);
+    char* p;
+    s = (char*)skip_blanks(s);
     if (*s == '<' && (p = strchr(s, '>'))) {
         *p++ = '\0';
-        p = skip_blanks(p);
+        p = (char*)skip_blanks(p);
         if (*p == '\0') /* <address> */
             s++;
         else /* <address> name ? */

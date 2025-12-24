@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "URLFile.h"
 #include "etc.h"
 #include "file.h"
 #include "message.h"
@@ -513,7 +514,7 @@ void reshapeBuffer(struct Buffer* buf)
     if (!buf->sourcefile)
         return;
 
-    URLFile f;
+    struct URLFile f;
     init_stream(&f, SCM_LOCAL, NULL);
     examineFile(buf->mailcap_source ? buf->mailcap_source : buf->sourcefile, &f, false);
     if (!f.stream)
