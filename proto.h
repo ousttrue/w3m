@@ -231,7 +231,6 @@ extern int save2tmp(URLFile uf, char* tmpf);
 extern int checkCopyFile(char* path1, char* path2);
 extern int checkSaveFile(InputStream stream, char* path);
 extern int checkOverWrite(char* path);
-extern char* inputAnswer(char* prompt);
 
 extern struct Buffer* newBuffer(int width);
 extern struct Buffer* nullBuffer(void);
@@ -285,7 +284,6 @@ extern void formResetBuffer(struct Buffer* buf, struct AnchorList* formitem);
 extern void formUpdateBuffer(struct Anchor* a, struct Buffer* buf, struct FormItemList* form);
 extern void preFormUpdateBuffer(struct Buffer* buf);
 extern Str textfieldrep(Str s, int width);
-extern void input_textarea(struct FormItemList* fi);
 extern void do_internal(char* action, char* data);
 extern void form_write_data(FILE* f, char* boundary, char* name, char* value);
 extern void form_write_from_file(FILE* f, char* boundary, char* name,

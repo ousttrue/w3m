@@ -86,6 +86,6 @@ void screen_clrtobot(void);
 void screen_clrtobotx(void);
 void screen_touch_cursor(void);
 
-void screen_wc_addstr(char* s);
-void screen_wc_addstr_width(char* s, size_t width);
-void screen_wc_addnstr_sup(char* s, size_t n);
+void screen_wc_addstr(const char* s);
+void screen_wc_addstr_width(const char* s, size_t width);
+void screen_wc_addnstr_sup(const char* s, size_t n);

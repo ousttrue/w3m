@@ -1,13 +1,45 @@
 #pragma once
 #include "line.h"
 
-struct Hist;
-char* inputLineHistSearch(char* prompt, char* def_str, int flag, struct Hist* hist, int (*incfunc)(int ch, Str buf, Lineprop* prop));
+enum LineInputFlags {
+    IN_STRING = 0x10,
+    IN_FILENAME = 0x20,
+    IN_PASSWORD = 0x40,
+    IN_COMMAND = 0x80,
+    IN_URL = 0x100,
+    IN_CHAR = 0x200,
+};
 
-#define inputLineHist(p, d, f, h) inputLineHistSearch(p, d, f, h, NULL)
-#define inputLine(p, d, f) inputLineHist(p, d, f, NULL)
-#define inputStr(p, d) inputLine(p, d, IN_STRING)
-#define inputStrHist(p, d, h) inputLineHist(p, d, IN_STRING, h)
-#define inputFilename(p, d) inputLine(p, d, IN_FILENAME)
-#define inputFilenameHist(p, d, h) inputLineHist(p, d, IN_FILENAME, h)
-#define inputChar(p) inputLine(p, "", IN_CHAR)
+typedef int (*IncFunc)(int ch, Str buf, Lineprop* prop);
+
+struct Hist;
+char* inputLineHistSearch(const char* prompt, const char* def_str, enum LineInputFlags flag, struct Hist* hist, IncFunc incfunc);
+inline static char* inputLineHist(const char* p, const char* d, enum LineInputFlags f, struct Hist* h)
+{
+    return inputLineHistSearch(p, d, f, h, NULL);
+}
+inline static char* inputLine(const char* p, const char* d, enum LineInputFlags f)
+{
+    return inputLineHist(p, d, f, NULL);
+}
+inline static char* inputStr(const char* p, const char* d)
+{
+    return inputLine(p, d, IN_STRING);
+}
+inline static char* inputStrHist(const char* p, const char* d, struct Hist* h)
+{
+    return inputLineHist(p, d, IN_STRING, h);
+}
+inline static char* inputFilename(const char* p, const char* d)
+{
+    return inputLine(p, d, IN_FILENAME);
+}
+inline static char* inputFilenameHist(const char* p, const char* d, struct Hist* h)
+{
+    return inputLineHist(p, d, IN_FILENAME, h);
+}
+inline static char* inputChar(const char* p)
+{
+    return inputLine(p, "", IN_CHAR);
+}
+char* inputAnswer(const char* prompt);

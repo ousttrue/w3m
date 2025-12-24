@@ -1,32 +1,20 @@
 #include "linein.h"
+#include "history.h"
+#include "indep.h"
 #include "local_cgi.h"
 #include "etc.h"
 #include "buffer.h"
+#include "terms.h"
 #include "w3m_rc.h"
 #include "ctrlcode.h"
 #include "html_form.h"
-#include "display.h"
-#include "tab.h"
 #include "LineWriter.h"
-#include "myctype.h"
-#include "fm.h"
-#include <dirent.h>
 #include <libwc/char_conv.h>
 #include <libwc/charset.h>
 
-#ifdef USE_MOUSE
-#ifdef USE_GPM
-#include <gpm.h>
-#endif
-#if defined(USE_GPM) || defined(USE_SYSMOUSE)
-extern int do_getch();
-#define getch() do_getch()
-#endif /* USE_GPM */
-#endif /* USE_MOUSE */
-
-#ifdef __EMX__
-#include <sys/kbdscan.h>
-#endif
+#include <dirent.h>
+#include <stdbool.h>
+#include <string.h>
 
 #define STR_LEN 1024
 #define CLEN (TTY_COLS() - 2)
@@ -49,9 +37,6 @@ static void insertself(char c),
     killn(void), killb(void), _inbrk(void), _esc(void), _editor(void),
     _prev(void), _next(void), _compl(void), _tcompl(void),
     _dcompl(void), _rdcompl(void), _rcompl(void);
-#ifdef __EMX__
-static int getcntrl(void);
-#endif
 
 static int terminated(unsigned char c);
 #define iself ((void (*)())insertself)
@@ -106,7 +91,7 @@ static int setStrType(Str str, Lineprop* prop);
 static int CPos, CLen, offset;
 static int i_cont, i_broken, i_quote;
 static int cm_mode, cm_next, cm_clear, cm_disp_next, cm_disp_clear;
-static int need_redraw, is_passwd;
+static bool need_redraw, is_passwd;
 static int move_word;
 
 static struct Hist* CurrentHist;
@@ -114,23 +99,34 @@ static Str strCurrentBuf;
 static int use_hist;
 static void ins_char(Str str);
 
-char* inputLineHistSearch(char* prompt, char* def_str, int flag, struct Hist* hist,
-    int (*incrfunc)(int ch, Str str, Lineprop* prop))
+/* Completion status. */
+#define CPL_OK 0
+#define CPL_AMBIG 1
+#define CPL_FAIL 2
+#define CPL_MENU 3
+
+#define CPL_NEVER 0x0
+#define CPL_OFF 0x1
+#define CPL_ON 0x2
+#define CPL_ALWAYS 0x4
+#define CPL_URL 0x8
+
+char* inputLineHistSearch(const char* prompt, const char* def_str, enum LineInputFlags flag, struct Hist* hist, IncFunc incrfunc)
 {
     int opos, x, y, lpos, rpos, epos;
     unsigned char c;
     char* p;
     Str tmp;
 
-    is_passwd = FALSE;
-    move_word = TRUE;
+    is_passwd = false;
+    move_word = true;
 
     CurrentHist = hist;
     if (hist != NULL) {
-        use_hist = TRUE;
+        use_hist = true;
         strCurrentBuf = NULL;
     } else {
-        use_hist = FALSE;
+        use_hist = false;
     }
     if (flag & IN_URL) {
         cm_mode = CPL_ALWAYS | CPL_URL;
@@ -138,8 +134,8 @@ char* inputLineHistSearch(char* prompt, char* def_str, int flag, struct Hist* hi
         cm_mode = CPL_ALWAYS;
     } else if (flag & IN_PASSWORD) {
         cm_mode = CPL_NEVER;
-        is_passwd = TRUE;
-        move_word = FALSE;
+        is_passwd = true;
+        move_word = false;
     } else if (flag & IN_COMMAND)
         cm_mode = CPL_ON;
     else
@@ -160,12 +156,12 @@ char* inputLineHistSearch(char* prompt, char* def_str, int flag, struct Hist* hi
         CLen = CPos = 0;
     }
 
-    i_cont = TRUE;
-    i_broken = FALSE;
-    i_quote = FALSE;
-    cm_next = FALSE;
+    i_cont = true;
+    i_broken = false;
+    i_quote = false;
+    cm_next = false;
     cm_disp_next = -1;
-    need_redraw = FALSE;
+    need_redraw = false;
 
     wc_char_conv_init(wc_guess_8bit_charset(getRuntime()->DisplayCharset), getRuntime()->InnerCharset);
 
@@ -196,24 +192,24 @@ char* inputLineHistSearch(char* prompt, char* def_str, int flag, struct Hist* hi
 
     next_char:
         c = getch();
-        cm_clear = TRUE;
-        cm_disp_clear = TRUE;
-        if (!i_quote && (((cm_mode & CPL_ALWAYS) && (c == CTRL_I || (space_autocomplete && c == ' '))) || ((cm_mode & CPL_ON) && (c == CTRL_I)))) {
-            if (emacs_like_lineedit && cm_next) {
+        cm_clear = true;
+        cm_disp_clear = true;
+        if (!i_quote && (((cm_mode & CPL_ALWAYS) && (c == CTRL_I || (getRuntime()->space_autocomplete && c == ' '))) || ((cm_mode & CPL_ON) && (c == CTRL_I)))) {
+            if (getRuntime()->emacs_like_lineedit && cm_next) {
                 _dcompl();
-                need_redraw = TRUE;
+                need_redraw = true;
             } else {
                 _compl();
                 cm_disp_next = -1;
             }
         } else if (!i_quote && CLen == CPos && (cm_mode & CPL_ALWAYS || cm_mode & CPL_ON) && c == CTRL_D) {
-            if (!emacs_like_lineedit) {
+            if (!getRuntime()->emacs_like_lineedit) {
                 _dcompl();
-                need_redraw = TRUE;
+                need_redraw = true;
             }
         } else if (!i_quote && c == DEL_CODE) {
             _bs();
-            cm_next = FALSE;
+            cm_next = false;
             cm_disp_next = -1;
         } else if (!i_quote && c < 0x20) { /* Control code */
             if (incrfunc == NULL
@@ -222,17 +218,17 @@ char* inputLineHistSearch(char* prompt, char* def_str, int flag, struct Hist* hi
             if (incrfunc && c != (unsigned char)-1 && c != CTRL_J)
                 incrfunc(-1, strBuf, strProp);
             if (cm_clear)
-                cm_next = FALSE;
+                cm_next = false;
             if (cm_disp_clear)
                 cm_disp_next = -1;
         } else {
             tmp = wc_char_conv(c);
             if (tmp == NULL) {
-                i_quote = TRUE;
+                i_quote = true;
                 goto next_char;
             }
-            i_quote = FALSE;
-            cm_next = FALSE;
+            i_quote = false;
+            cm_next = false;
             cm_disp_next = -1;
             if (CLen + tmp->length > STR_LEN || !tmp->length)
                 goto next_char;
@@ -323,7 +319,7 @@ _esc(void)
         break;
     case CTRL_I:
     case ' ':
-        if (emacs_like_lineedit) {
+        if (getRuntime()->emacs_like_lineedit) {
             _rdcompl();
             cm_clear = FALSE;
             need_redraw = TRUE;
@@ -331,20 +327,20 @@ _esc(void)
             _rcompl();
         break;
     case CTRL_D:
-        if (!emacs_like_lineedit)
+        if (!getRuntime()->emacs_like_lineedit)
             _rdcompl();
         need_redraw = TRUE;
         break;
     case 'f':
-        if (emacs_like_lineedit)
+        if (getRuntime()->emacs_like_lineedit)
             _mvRw();
         break;
     case 'b':
-        if (emacs_like_lineedit)
+        if (getRuntime()->emacs_like_lineedit)
             _mvLw();
         break;
     case CTRL_H:
-        if (emacs_like_lineedit)
+        if (getRuntime()->emacs_like_lineedit)
             _bsw();
         break;
     default:
@@ -698,7 +694,7 @@ disp_next:
         screen_move(y, 0);
         screen_clrtoeolx();
         screen_bold();
-        if (emacs_like_lineedit)
+        if (getRuntime()->emacs_like_lineedit)
             /* FIXME: gettextize? */
             screen_wc_addstr("----- Press TAB to continue -----");
         else
@@ -976,4 +972,21 @@ _editor(void)
         Strcat_char(strBuf, *p);
     }
     CLen = CPos = setStrType(strBuf, strProp);
+}
+
+char* inputAnswer(const char* prompt)
+{
+    if (getRuntime()->QuietMessage)
+        return "n";
+
+    char* ans;
+    if (fmInitialized()) {
+        enterRawMode();
+        ans = inputChar(prompt);
+    } else {
+        printf("%s", prompt);
+        fflush(stdout);
+        ans = Strfgets(stdin)->ptr;
+    }
+    return ans;
 }

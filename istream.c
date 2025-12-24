@@ -1,16 +1,12 @@
 #include "w3m_rc.h"
+#include "linein.h"
 #include "message.h"
 #include "fm.h"
 #include "myctype.h"
 #include "istream.h"
 #include <signal.h>
 #include <unistd.h>
-#ifdef USE_SSL
 #include <openssl/x509v3.h>
-#endif
-#ifdef __MINGW32_VERSION
-#include <winsock.h>
-#endif
 
 #define uchar unsigned char
 

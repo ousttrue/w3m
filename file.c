@@ -54,7 +54,6 @@ static int frame_source = 0;
 static int need_number = 0;
 
 static int _MoveFile(char* path1, char* path2);
-static FILE* lessopen_stream(char* path);
 static struct Buffer* loadcmdout(char* cmd,
     struct Buffer* (*loadproc)(URLFile*, struct Buffer*),
     struct Buffer* defaultbuf);
@@ -477,6 +476,49 @@ uncompress_stream(URLFile* uf, const char** src)
     UFhalfclose(uf);
     uf->stream = newFileStream(f1, (void (*)())fclose);
 #endif /* __MINGW32_VERSION */
+}
+
+static FILE*
+lessopen_stream(char* path)
+{
+    const char* lessopen = getenv("LESSOPEN");
+    if (!lessopen || lessopen[0] == '\0')
+        return NULL;
+    if (lessopen[0] != '|') /* content.filename mode, not supported m(__)m */
+        return NULL;
+
+    /* pipe mode */
+    ++lessopen;
+
+    /* LESSOPEN must contain one conversion specifier for strings ('%s'). */
+    int n = 0;
+    for (const char* f = lessopen; *f; f++) {
+        if (*f == '%') {
+            if (f[1] == '%') /* Literal % */
+                f++;
+            else if (*++f == 's') {
+                if (n)
+                    return NULL;
+                n++;
+            } else
+                return NULL;
+        }
+    }
+    if (!n)
+        return NULL;
+
+    Str tmpf = Sprintf(lessopen, shell_quote(path));
+    FILE* fp = popen(tmpf->ptr, "r");
+    if (fp == NULL) {
+        return NULL;
+    }
+    int c = getc(fp);
+    if (c == EOF) {
+        pclose(fp);
+        return NULL;
+    }
+    ungetc(c, fp);
+    return fp;
 }
 
 void examineFile(const char* path, URLFile* uf, bool do_download)
@@ -2058,7 +2100,7 @@ page_loaded:
     proc = loadBuffer;
 
     current_content_length = 0;
-    if ((p = checkHeader(t_buf ? t_buf->content: (struct Content){}, "Content-Length:")) != NULL)
+    if ((p = checkHeader(t_buf ? t_buf->content : (struct Content) {}, "Content-Length:")) != NULL)
         current_content_length = strtoclen(p);
 
     if (do_download || gopher_download) {
@@ -8160,101 +8202,3 @@ int checkOverWrite(char* path)
         return -1;
 }
 
-char* inputAnswer(char* prompt)
-{
-    if (getRuntime()->QuietMessage)
-        return "n";
-
-    char* ans;
-    if (fmInitialized()) {
-        enterRawMode();
-        ans = inputChar(prompt);
-    } else {
-        printf("%s", prompt);
-        fflush(stdout);
-        ans = Strfgets(stdin)->ptr;
-    }
-    return ans;
-}
-
-static FILE*
-lessopen_stream(char* path)
-{
-    char* lessopen;
-    FILE* fp;
-    Str tmpf;
-    int c, n = 0;
-
-    lessopen = getenv("LESSOPEN");
-    if (lessopen == NULL || lessopen[0] == '\0')
-        return NULL;
-
-    if (lessopen[0] != '|') /* content.filename mode, not supported m(__)m */
-        return NULL;
-
-    /* pipe mode */
-    ++lessopen;
-
-    /* LESSOPEN must contain one conversion specifier for strings ('%s'). */
-    for (const char* f = lessopen; *f; f++) {
-        if (*f == '%') {
-            if (f[1] == '%') /* Literal % */
-                f++;
-            else if (*++f == 's') {
-                if (n)
-                    return NULL;
-                n++;
-            } else
-                return NULL;
-        }
-    }
-    if (!n)
-        return NULL;
-
-    tmpf = Sprintf(lessopen, shell_quote(path));
-    fp = popen(tmpf->ptr, "r");
-    if (fp == NULL) {
-        return NULL;
-    }
-    c = getc(fp);
-    if (c == EOF) {
-        pclose(fp);
-        return NULL;
-    }
-    ungetc(c, fp);
-    return fp;
-}
-
-#if 0
-void
-reloadBuffer(struct Buffer *buf)
-{
-    URLFile uf;
-
-    if (buf->sourcefile == NULL || buf->pagerSource != NULL)
-	return;
-    init_stream(&uf, SCM_UNKNOWN, NULL);
-    examineFile(buf->mailcap_source ? buf->mailcap_source : buf->sourcefile,
-		&uf);
-    if (uf.stream == NULL)
-	return;
-    is_redisplay = TRUE;
-    buf->allLine = 0;
-    buf->href = NULL;
-    buf->name = NULL;
-    buf->img = NULL;
-    buf->formitem = NULL;
-    buf->linklist = NULL;
-    buf->maplist = NULL;
-    if (buf->hmarklist)
-	buf->hmarklist->nmark = 0;
-    if (buf->imarklist)
-	buf->imarklist->nmark = 0;
-    if (is_html_type(buf->type))
-	loadHTMLBuffer(&uf, buf);
-    else
-	loadBuffer(&uf, buf);
-    UFclose(&uf);
-    is_redisplay = FALSE;
-}
-#endif

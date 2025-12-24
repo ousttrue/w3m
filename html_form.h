@@ -85,3 +85,4 @@ void addSelectOption(struct FormSelectOption* fso, Str value, Str label, int chk
 void chooseSelectOption(struct FormItemList* fi, struct FormSelectOptionItem* item);
 void updateSelectOption(struct FormItemList* fi, struct FormSelectOptionItem* item);
 int formChooseOptionByMenu(struct FormItemList* fi, int x, int y);
+void input_textarea(struct FormItemList* fi);

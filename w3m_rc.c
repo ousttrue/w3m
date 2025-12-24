@@ -78,6 +78,9 @@ struct Runtime g_runtime = {
     .useVisitedColor = (FALSE),
     .visited_color = (5), /* magenta  */
 
+    .space_autocomplete = (FALSE),
+    .emacs_like_lineedit = (FALSE),
+
     // Don't change
     .InnerCharset = (WC_CES_WTF),
 
@@ -1608,9 +1611,9 @@ struct param_ptr params3[] = {
 #ifdef USE_MARK
     { "mark", P_INT, PI_ONOFF, (void*)&use_mark, CMT_USE_MARK, NULL },
 #endif
-    { "emacs_like_lineedit", P_INT, PI_ONOFF, (void*)&emacs_like_lineedit,
+    { "emacs_like_lineedit", P_INT, PI_ONOFF, (void*)&g_runtime.emacs_like_lineedit,
         CMT_EMACS_LIKE_LINEEDIT, NULL },
-    { "space_autocomplete", P_INT, PI_ONOFF, (void*)&space_autocomplete,
+    { "space_autocomplete", P_INT, PI_ONOFF, (void*)&g_runtime.space_autocomplete,
         CMT_SPACE_AUTOCOMPLETE, NULL },
     { "vi_prec_num", P_INT, PI_ONOFF, (void*)&vi_prec_num, CMT_VI_PREC_NUM,
         NULL },

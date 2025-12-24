@@ -72,6 +72,9 @@ struct Runtime {
     int useVisitedColor;
     int visited_color; /* magenta  */
 
+    int space_autocomplete;
+    int emacs_like_lineedit;
+
     // Don't change
     wc_ces InnerCharset;
     wc_ces DisplayCharset;
