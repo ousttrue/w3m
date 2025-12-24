@@ -1,14 +1,13 @@
 #include "local_cgi.h"
+#include "etc.h"
 #include "w3m_rc.h"
 #include "html_form.h"
 #include "fm.h"
-#include "hash.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <signal.h>
 #include <errno.h>
 #include <unistd.h>
 
@@ -171,7 +170,7 @@ Str loadLocalDir(const char* dname)
 }
 
 static int
-check_local_cgi(char* file, int status)
+check_local_cgi(const char* file, int status)
 {
     struct stat st;
 
@@ -181,14 +180,12 @@ check_local_cgi(char* file, int status)
         return -1;
     if (S_ISDIR(st.st_mode))
         return -1;
-#ifndef __MINGW32_VERSION
     if ((st.st_uid == geteuid() && (st.st_mode & S_IXUSR)) || (st.st_gid == getegid() && (st.st_mode & S_IXGRP)) || (st.st_mode & S_IXOTH)) /* executable */
         return 0;
-#endif
     return -1;
 }
 
-void set_environ(char* var, char* value)
+void set_environ(const char* var, const char* value)
 {
 #ifdef HAVE_SETENV
     if (var != NULL && value != NULL)
@@ -239,7 +236,7 @@ void set_environ(char* var, char* value)
 }
 
 static void
-set_cgi_environ(char* name, char* fn, char* req_uri)
+set_cgi_environ(const char* name, const char* fn, const char* req_uri)
 {
     set_environ("SERVER_SOFTWARE", w3m_version);
     set_environ("SERVER_PROTOCOL", "HTTP/1.0");
@@ -255,7 +252,7 @@ set_cgi_environ(char* name, char* fn, char* req_uri)
 }
 
 static Str
-checkPath(char* fn, char* path)
+checkPath(const char* fn, const char* path)
 {
     char* p;
     Str tmp;
@@ -278,7 +275,7 @@ checkPath(char* fn, char* path)
 }
 
 static int
-cgi_filename(char* uri, char** fn, char** name, char** path_info)
+cgi_filename(const char* uri, const char** fn, const char** name, const char** path_info)
 {
     Str tmp;
     int offset;
@@ -332,24 +329,18 @@ cgi_filename(char* uri, char** fn, char** name, char** path_info)
     return CGIFN_LIBDIR;
 }
 
-FILE* localcgi_post(char* uri, char* qstr, struct FormList* request, char* referer)
+FILE* localcgi_post(const char* uri, const char* qstr, struct FormList* request, const char* referer)
 {
-    FILE *fr = NULL, *fw = NULL;
-    int status;
-    pid_t pid;
-    char *file = uri, *name = uri, *path_info = NULL, *tmpf = NULL;
-#ifdef HAVE_CHDIR
-    char* cgi_dir;
-#endif
-    char* cgi_basename;
-
-#ifdef __MINGW32_VERSION
-    return NULL;
-#else
-    status = cgi_filename(uri, &file, &name, &path_info);
+    const char* file = uri;
+    const char* name = uri;
+    const char* path_info = NULL;
+    int status = cgi_filename(uri, &file, &name, &path_info);
     if (check_local_cgi(file, status) < 0)
         return NULL;
+
     writeLocalCookie();
+    const char* tmpf = NULL;
+    FILE* fw = NULL;
     if (request && request->enctype != FORM_ENCTYPE_MULTIPART) {
         tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
         fw = fopen(tmpf, "w");
@@ -358,12 +349,15 @@ FILE* localcgi_post(char* uri, char* qstr, struct FormList* request, char* refer
     }
     if (qstr)
         uri = Strnew_m_charp(uri, "?", qstr, NULL)->ptr;
-#ifdef HAVE_CHDIR
-    cgi_dir = mydirname(file);
-#endif
-    cgi_basename = mybasename(file);
-    pid = open_pipe_rw(&fr, NULL); /* open_pipe_rw() forks */
-    /* Don't invoke gc after here, or the program might crash in some platforms */
+
+    const char* cgi_dir = mydirname(file);
+    const char* cgi_basename = mybasename(file);
+
+    //
+    // fork
+    //
+    FILE* fr = NULL;
+    pid_t pid = open_pipe_rw(&fr, NULL);
     if (pid < 0) {
         if (fw)
             fclose(fw);
@@ -374,7 +368,8 @@ FILE* localcgi_post(char* uri, char* qstr, struct FormList* request, char* refer
             fclose(fw);
         return fr;
     }
-    /* child */
+
+    // child
     setup_child(TRUE, 2, fw ? fileno(fw) : -1);
 
     set_cgi_environ(name, file, uri);
@@ -405,17 +400,15 @@ FILE* localcgi_post(char* uri, char* qstr, struct FormList* request, char* refer
         freopen(DEV_NULL_PATH, "r", stdin);
     }
 
-#ifdef HAVE_CHDIR /* ifndef __EMX__ ? */
     if (chdir(cgi_dir) == -1) {
         fprintf(stderr, "failed to chdir to %s: %s\n", cgi_dir, strerror(errno));
         exit(1);
     }
-#endif
     execl(file, cgi_basename, NULL);
     fprintf(stderr, "execl(\"%s\", \"%s\", NULL): %s\n",
         file, cgi_basename, strerror(errno));
     exit(1);
-#endif
+
     /*
      * Suppress compiler warning: function might return no value
      * This code is never reached.

@@ -37,4 +37,12 @@ typedef struct direct Directory;
 #endif /* not S_ISLNK */
 #endif /* not HAVE_READLINK */
 
-extern Str loadLocalDir(const char* dirname);
+Str loadLocalDir(const char* dirname);
+Str localCookie(void);
+void set_environ(const char* var, const char* value);
+struct FormList;
+FILE* localcgi_post(const char* url, const char* query, struct FormList*, const char* referer);
+inline static FILE* localcgi_get(const char* url, const char* query, const char* referer)
+{
+    return localcgi_post(url, query, NULL, referer);
+}

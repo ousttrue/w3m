@@ -173,9 +173,9 @@ long lrand48(void)
 }
 #endif
 
-char* mybasename(char* s)
+char* mybasename(const char* s)
 {
-    char* p = s;
+    const char* p = s;
     while (*p)
         p++;
     while (s <= p && *p != '/')
@@ -187,9 +187,9 @@ char* mybasename(char* s)
     return allocStr(p, -1);
 }
 
-char* mydirname(char* s)
+char* mydirname(const char* s)
 {
-    char* p = s;
+    const char* p = s;
     while (*p)
         p++;
     if (s != p)
@@ -650,7 +650,6 @@ void setup_child(int child, int i, int f)
     TrapSignal = FALSE;
 }
 
-#ifndef __MINGW32_VERSION
 pid_t open_pipe_rw(FILE** fr, FILE** fw)
 {
     int fdr[2];
@@ -706,7 +705,6 @@ err1:
 err0:
     return (pid_t)-1;
 }
-#endif /* __MINGW32_VERSION */
 
 void myExec(char* command)
 {

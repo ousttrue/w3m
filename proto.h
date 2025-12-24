@@ -260,8 +260,6 @@ extern struct Buffer* prevBuffer(struct Buffer* first, struct Buffer* buf);
 extern int writeBufferCache(struct Buffer* buf);
 
 extern int gethtmlcmd(char** s);
-extern char* mybasename(char* s);
-extern char* mydirname(char* s);
 
 #ifdef USE_MIGEMO
 extern void init_migemo(void);
@@ -333,13 +331,11 @@ extern union frameset_element* search_frame(struct frameset* fset, char* name);
 extern MySignalHandler reset_exit(SIGNAL_ARG);
 extern MySignalHandler error_dump(SIGNAL_ARG);
 extern void set_int(void);
-extern pid_t open_pipe_rw(FILE** fr, FILE** fw);
 
 extern void initMimeTypes(void);
 extern void free_ssl_ctx(void);
 extern int openSocket(char* hostname, char* remoteport_name,
     unsigned short remoteport_num);
-extern void parseURL(char* url, struct Url* p_url, struct Url* current);
 extern void copyParsedURL(struct Url* p, const struct Url* q);
 extern Str parsedURL2RefererStr(struct Url* pu);
 extern void init_stream(URLFile* uf, int scheme, InputStream stream);
@@ -348,11 +344,7 @@ extern URLFile openURL(char* url, struct Url* pu, struct Url* current,
     URLOption* option, struct FormList* request,
     TextList* extra_header, URLFile* ouf,
     struct HttpRequest* hr, unsigned char* status, bool do_download);
-extern int mailcapMatch(struct mailcap* mcap, char* type);
-extern struct mailcap* searchMailcap(struct mailcap* table, char* type);
-extern void initMailcap(void);
 extern char* acceptableMimeTypes(void);
-extern struct mailcap* searchExtViewer(char* type);
 extern char* guessContentType(char* filename);
 extern TextList* make_domain_list(char* domain_list);
 extern int check_no_proxy(char* domain);
@@ -424,10 +416,6 @@ extern char* confFile(char* base);
 extern char* auxbinFile(char* base);
 extern char* libFile(char* base);
 extern char* helpFile(char* base);
-extern Str localCookie(void);
-extern void set_environ(char* var, char* value);
-extern FILE* localcgi_post(char*, char*, struct FormList*, char*);
-#define localcgi_get(u, q, r) localcgi_post((u), (q), NULL, (r))
 extern FILE* openSecretFile(char* fname);
 extern void loadPasswd(void);
 extern void loadPreForm(void);

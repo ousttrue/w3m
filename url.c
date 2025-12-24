@@ -1,4 +1,5 @@
 #include "w3m_rc.h"
+#include "local_cgi.h"
 #include "readbuffer.h"
 #include "message.h"
 #include "html_form.h"
@@ -641,7 +642,7 @@ copyPath(const char* orgpath, int length, int option)
     return tmp->ptr;
 }
 
-void parseURL(char* url, struct Url* p_url, struct Url* current)
+void parseURL(const char* url, struct Url* p_url, struct Url* current)
 {
     const char* q;
     const char* qq;
@@ -946,7 +947,7 @@ void copyParsedURL(struct Url* p, const struct Url* q)
     p->query = ALLOC_STR(q->query);
 }
 
-void parseURL2(char* url, struct Url* pu, struct Url* current)
+void parseURL2(const char* url, struct Url* pu, struct Url* current)
 {
     char* p;
     Str tmp;
@@ -1243,7 +1244,7 @@ openURL(char* url, struct Url* pu, struct Url* current,
 {
     Str tmp;
     int sock, scheme;
-    char *p, *q, *u;
+    char *p, *q;
     Str gophertmp;
     char type;
     int n;
@@ -1260,7 +1261,7 @@ openURL(char* url, struct Url* pu, struct Url* current,
         init_stream(&uf, SCM_MISSING, NULL);
     }
 
-    u = url;
+    const char* u = url;
     scheme = getURLScheme(&u);
     if (current == NULL && scheme == SCM_MISSING && !ArgvIsURL)
         u = file_to_url(url); /* force to local file */

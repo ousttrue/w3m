@@ -1,10 +1,7 @@
 #include "mailcap.h"
 #include "fm.h"
 #include "myctype.h"
-#include "parsetag.h"
-#include "local_cgi.h"
 #include <stdio.h>
-#include <errno.h>
 
 static struct mailcap DefaultMailcap[] = {
     { "image/*", DEF_IMAGE_VIEWER " %s", 0, NULL, NULL, NULL }, /* */
@@ -15,7 +12,7 @@ static struct mailcap DefaultMailcap[] = {
 static TextList* mailcap_list;
 static struct mailcap** UserMailcap;
 
-int mailcapMatch(struct mailcap* mcap, char* type)
+int mailcapMatch(struct mailcap* mcap, const char* type)
 {
     char *cap = mcap->type, *p;
     int level;
@@ -46,7 +43,7 @@ int mailcapMatch(struct mailcap* mcap, char* type)
 }
 
 struct mailcap*
-searchMailcap(struct mailcap* table, char* type)
+searchMailcap(struct mailcap* table, const char* type)
 {
     int level = 0;
     struct mailcap* mcap = NULL;
@@ -271,7 +268,7 @@ char* acceptableMimeTypes(void)
 }
 
 struct mailcap*
-searchExtViewer(char* type)
+searchExtViewer(const char* type)
 {
     struct mailcap* p;
     int i;

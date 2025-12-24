@@ -745,7 +745,7 @@ static char xdigit[0x10] = "0123456789ABCDEF";
 #define url_unquote_char(pstr) \
     ((IS_XDIGIT((*(pstr))[1]) && IS_XDIGIT((*(pstr))[2])) ? (*(pstr) += 3, (GET_MYCDIGIT((*(pstr))[-2]) << 4) | GET_MYCDIGIT((*(pstr))[-1])) : -1)
 
-char* url_quote(char* str)
+char* url_quote(const char* str)
 {
     Str tmp = NULL;
     char* p;

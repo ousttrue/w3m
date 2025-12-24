@@ -1,4 +1,5 @@
 #include "maparea.h"
+#include "local_cgi.h"
 #include "readbuffer.h"
 #include "mailcap.h"
 #include "file.h"
