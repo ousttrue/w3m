@@ -62,27 +62,6 @@ int ai_family_order_table[7][3] = {
 
 static JMP_BUF AbortLoading;
 
-struct cmdtable schemetable[] = {
-    { "http", SCM_HTTP },
-    { "gopher", SCM_GOPHER },
-    { "ftp", SCM_FTP },
-    { "local", SCM_LOCAL },
-    { "file", SCM_LOCAL },
-    /*  {"exec", SCM_EXEC}, */
-    { "nntp", SCM_NNTP },
-    /*  {"nntp", SCM_NNTP_GROUP}, */
-    { "news", SCM_NEWS },
-    /*  {"news", SCM_NEWS_GROUP}, */
-    { "data", SCM_DATA },
-#ifndef USE_W3MMAILER
-    { "mailto", SCM_MAILTO },
-#endif
-#ifdef USE_SSL
-    { "https", SCM_HTTPS },
-#endif /* USE_SSL */
-    { NULL, SCM_UNKNOWN },
-};
-
 static struct table2 DefaultGuess[] = {
     { "html", "text/html" },
     { "htm", "text/html" },
@@ -107,7 +86,6 @@ static struct table2 DefaultGuess[] = {
 };
 
 static void add_index_file(struct Url* pu, URLFile* uf);
-static char* schemeNumToName(int scheme);
 
 /* #define HTTP_DEFAULT_FILE    "/index.html" */
 
@@ -692,7 +670,7 @@ error:
 #define COPYPATH_LOWERCASE 4
 
 static char*
-copyPath(char* orgpath, int length, int option)
+copyPath(const char* orgpath, int length, int option)
 {
     Str tmp = Strnew();
     char ch;
@@ -721,12 +699,13 @@ copyPath(char* orgpath, int length, int option)
 
 void parseURL(char* url, struct Url* p_url, struct Url* current)
 {
-    char *p, *q, *qq;
+    const char *q;
+    const char *qq;
     Str tmp;
 
     url = url_quote(url); /* quote 0x01-0x20, 0x7F-0xFF */
 
-    p = url;
+    const char* p = url;
     copyParsedURL(p_url, NULL);
     p_url->scheme = SCM_MISSING;
 
@@ -1302,40 +1281,6 @@ Str parsedURL2Str(struct Url* pu)
 Str parsedURL2RefererStr(struct Url* pu)
 {
     return _parsedURL2Str(pu, FALSE, FALSE, FALSE);
-}
-
-int getURLScheme(char** url)
-{
-    char *p = *url, *q;
-    int i;
-    int scheme = SCM_MISSING;
-
-    while (*p && (IS_ALNUM(*p) || *p == '.' || *p == '+' || *p == '-'))
-        p++;
-    if (*p == ':') { /* scheme found */
-        scheme = SCM_UNKNOWN;
-        for (i = 0; (q = schemetable[i].cmdname) != NULL; i++) {
-            int len = strlen(q);
-            if (!strncasecmp(q, *url, len) && (*url)[len] == ':') {
-                scheme = schemetable[i].cmd;
-                *url = p + 1;
-                break;
-            }
-        }
-    }
-    return scheme;
-}
-
-static char*
-schemeNumToName(int scheme)
-{
-    int i;
-
-    for (i = 0; schemetable[i].cmdname != NULL; i++) {
-        if (schemetable[i].cmd == scheme)
-            return schemetable[i].cmdname;
-    }
-    return NULL;
 }
 
 void init_stream(URLFile* uf, int scheme, InputStream stream)

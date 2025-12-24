@@ -62,6 +62,11 @@ struct Breakpoint {
     short bottom_margin;
 };
 
+struct cmdtable {
+    char* cmdname;
+    int cmd;
+};
+
 #define RB_STACK_SIZE 10
 #define FONT_STACK_SIZE 5
 #define TAG_STACK_SIZE 10
@@ -91,5 +96,3 @@ struct readbuffer {
     short top_margin;
     short bottom_margin;
 };
-
-

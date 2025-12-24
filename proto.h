@@ -364,7 +364,6 @@ extern int openSocket(char* hostname, char* remoteport_name,
 extern void parseURL(char* url, struct Url* p_url, struct Url* current);
 extern void copyParsedURL(struct Url* p, const struct Url* q);
 extern Str parsedURL2RefererStr(struct Url* pu);
-extern int getURLScheme(char** url);
 extern void init_stream(URLFile* uf, int scheme, InputStream stream);
 struct HttpRequest;
 extern URLFile openURL(char* url, struct Url* pu, struct Url* current,

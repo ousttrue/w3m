@@ -20,11 +20,6 @@
     }
 #define UFfileno(f) ISfileno((f)->stream)
 
-struct cmdtable {
-    char* cmdname;
-    int cmd;
-};
-
 struct mailcap {
     char* type;
     char* viewer;
