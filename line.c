@@ -21,7 +21,7 @@ nextColumn(int n, char* p, Lineprop* pr, int Tabstop)
     return n + wtf_width(p);
 }
 
-int calcPosition(char* l, Lineprop* pr, int len, int pos, int bpos, enum CalcPositionMode mode)
+size_t calcPosition(char* l, Lineprop* pr, int len, int pos, int bpos, enum CalcPositionMode mode)
 {
     static int* realColumn = 0;
     static int size = 0;

@@ -10,16 +10,18 @@ inline static Lineprop get_mctype(const char* c)
 
 #define LINELEN 256 /* Initial line length */
 
-#define P_CHARTYPE 0x3f00
-#define PC_ASCII (WTF_TYPE_ASCII << 8)
-#define PC_CTRL (WTF_TYPE_CTRL << 8)
-#define PC_WCHAR1 (WTF_TYPE_WCHAR1 << 8)
-#define PC_WCHAR2 (WTF_TYPE_WCHAR2 << 8)
-#define PC_KANJI (WTF_TYPE_WIDE << 8)
-#define PC_KANJI1 (PC_WCHAR1 | PC_KANJI)
-#define PC_KANJI2 (PC_WCHAR2 | PC_KANJI)
-#define PC_UNKNOWN (WTF_TYPE_UNKNOWN << 8)
-#define PC_UNDEF (WTF_TYPE_UNDEF << 8)
+enum LinepropFlags : uint16_t {
+    P_CHARTYPE = 0x3f00,
+    PC_ASCII = (WTF_TYPE_ASCII << 8),
+    PC_CTRL = (WTF_TYPE_CTRL << 8),
+    PC_WCHAR1 = (WTF_TYPE_WCHAR1 << 8),
+    PC_WCHAR2 = (WTF_TYPE_WCHAR2 << 8),
+    PC_KANJI = (WTF_TYPE_WIDE << 8),
+    PC_KANJI1 = (PC_WCHAR1 | PC_KANJI),
+    PC_KANJI2 = (PC_WCHAR2 | PC_KANJI),
+    PC_UNKNOWN = (WTF_TYPE_UNKNOWN << 8),
+    PC_UNDEF = (WTF_TYPE_UNDEF << 8),
+};
 
 #define PC_SYMBOL 0x8000
 
@@ -74,7 +76,7 @@ enum CalcPositionMode {
     CP_FORCE = 1,
 };
 
-int calcPosition(char* l, Lineprop* pr, int len, int pos, int bpos, enum CalcPositionMode mode);
+size_t calcPosition(char* l, Lineprop* pr, int len, int pos, int bpos, enum CalcPositionMode mode);
 int columnPos(struct Line* line, int column);
 int columnLen(struct Line* line, int column);
 

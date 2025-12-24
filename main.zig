@@ -1,13 +1,5 @@
 const std = @import("std");
-const c = @cImport({
-    @cInclude("w3m_rc.h");
-    @cInclude("termcap.h");
-    @cInclude("image.h");
-    @cInclude("terms.h");
-    @cInclude("download.h");
-    @cInclude("myctype.h");
-    @cInclude("stdlib.h");
-});
+const c = @import("c_include.zig").c;
 const PutcStatus = @import("PutcStatus.zig");
 
 const Term = @import("Term.zig");
@@ -1130,5 +1122,38 @@ export fn screen_wc_addnstr_sup(_s: [*c]const u8, n: usize) void {
     }
     while (i < n) : (i += 1) {
         screen_add_whitespace();
+    }
+}
+
+const LineInput = @import("LineInput.zig");
+var g_linein = LineInput{};
+
+export fn inputLineHistSearch(
+    prompt: [*c]const u8,
+    def_str: [*c]const u8,
+    flag: c.LineInputFlags,
+    hist: ?*c.Hist,
+    incrfunc: c.IncFunc,
+) [*c]const u8 {
+    return g_linein.input(.{
+        .prompt = prompt,
+        .def_str = def_str,
+        .flag = flag,
+        .hist = hist,
+        .incrfunc = incrfunc,
+    });
+}
+
+export fn inputAnswer(prompt: [*c]const u8) [*c]const u8 {
+    if (c.getRuntime().*.QuietMessage != 0)
+        return "n";
+
+    if (fmInitialized()) {
+        c.enterRawMode();
+        return c.inputChar(prompt);
+    } else {
+        c.writestr(prompt);
+        c.flush_tty();
+        return c.Strfgets(c.stdin).*.ptr;
     }
 }
