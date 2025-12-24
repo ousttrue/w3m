@@ -1,9 +1,9 @@
 #include "URLFile.h"
 #include <string.h>
 
-void init_stream(URLFile* uf, int scheme, union input_stream* stream)
+void init_stream(struct URLFile* uf, int scheme, union input_stream* stream)
 {
-    memset(uf, 0, sizeof(URLFile));
+    memset(uf, 0, sizeof(struct URLFile));
     uf->stream = stream;
     uf->scheme = scheme;
     uf->encoding = ENC_7BIT;

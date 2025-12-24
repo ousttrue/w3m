@@ -542,7 +542,7 @@ void reshapeBuffer(struct Buffer* buf)
 
     if (buf->header_source) {
         if (buf->currentURL.scheme != SCM_LOCAL || buf->mailcap_source || !strcmp(buf->currentURL.file, "-")) {
-            URLFile h;
+            struct URLFile h;
             init_stream(&h, SCM_LOCAL, NULL);
             examineFile(buf->header_source, &h, false);
             if (h.stream) {

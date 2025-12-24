@@ -401,7 +401,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
     int force_reload)
 {
     int r, c, t_stack;
-    URLFile f2;
+    struct URLFile f2;
 #ifdef USE_M17N
     wc_ces charset, doc_charset;
 #endif

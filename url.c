@@ -1229,8 +1229,8 @@ Str parsedURL2RefererStr(struct Url* pu)
 
 struct URLFile
 openURL(const char* url, struct Url* pu, struct Url* current,
-    URLOption* option, struct FormList* request, TextList* extra_header,
-    URLFile* ouf, struct HttpRequest* hr, unsigned char* status, bool do_download)
+    struct URLOption* option, struct FormList* request, TextList* extra_header,
+    struct URLFile* ouf, struct HttpRequest* hr, unsigned char* status, bool do_download)
 {
     Str tmp;
     int sock, scheme;
@@ -1238,7 +1238,7 @@ openURL(const char* url, struct Url* pu, struct Url* current,
     Str gophertmp;
     char type;
     int n;
-    URLFile uf;
+    struct URLFile uf;
     struct HttpRequest hr0;
     SSL* sslh = NULL;
 
@@ -1565,7 +1565,7 @@ retry:
 
 /* add index_file if exists */
 static void
-add_index_file(struct Url* pu, URLFile* uf)
+add_index_file(struct Url* pu, struct URLFile* uf)
 {
     char *p, *q;
     TextList* index_file_list = NULL;
