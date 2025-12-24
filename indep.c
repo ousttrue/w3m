@@ -570,7 +570,7 @@ int strmatchlen(const char* s1, const char* s2, int maxlen)
     return i;
 }
 
-char* remove_space(char* str)
+char* remove_space(const char* str)
 {
     char *p, *q;
 
@@ -696,7 +696,7 @@ char* getescapecmd(char** s)
     return tmp->ptr;
 }
 
-char* html_quote(char* str)
+char* html_quote(const char* str)
 {
     Str tmp = NULL;
     char *p, *q;

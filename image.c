@@ -1,4 +1,5 @@
 #include "image.h"
+#include "file.h"
 #include "local_cgi.h"
 #include "message.h"
 #include "buffer.h"

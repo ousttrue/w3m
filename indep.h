@@ -1,6 +1,4 @@
-/* $Id: indep.h,v 1.16 2003/09/22 21:02:19 ukai Exp $ */
-#ifndef INDEP_H
-#define INDEP_H
+#pragma once
 #include "alloc.h"
 #include "Str.h"
 #include "config.h"
@@ -61,10 +59,9 @@ extern char* strcasestr(const char* s1, const char* s2);
 #endif
 extern int strcasemstr(char* str, char* srch[], char** ret_ptr);
 int strmatchlen(const char* s1, const char* s2, int maxlen);
-extern char* remove_space(char* str);
+extern char* remove_space(const char* str);
 extern int non_null(char* s);
 extern void cleanup_line(Str s, int mode);
-extern char* html_quote(char* str);
 extern char* html_unquote(char* str);
 extern char* file_quote(char* str);
 extern char* file_unquote(char* str);
@@ -96,4 +93,5 @@ extern char* w3m_help_dir(void);
 #define NewWithoutGC_N(type, n) ((type*)xmalloc((n) * sizeof(type)))
 #define NewWithoutGC_Reuse(type, ptr, n) ((type*)xrealloc(ptr, (n) * sizeof(type)))
 
-#endif /* INDEP_H */
+char* html_quote(const char* str);
+

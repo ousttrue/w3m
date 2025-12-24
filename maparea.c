@@ -512,7 +512,6 @@ page_info_panel(struct Buffer* buf)
     Str tmp = Strnew_size(1024);
     struct Anchor* a;
     struct Url pu;
-    TextListItem* ti;
     struct frameset* f_set = NULL;
     int all;
     char *p, *q;
@@ -602,15 +601,14 @@ page_info_panel(struct Buffer* buf)
             append_map_info(buf, tmp, fi->parent->item);
     }
     Strcat_charp(tmp, "</table>\n");
-#ifdef USE_M17N
     Strcat_charp(tmp, "</form>");
-#endif
 
     append_link_info(buf, tmp, buf->linklist);
 
-    if (buf->document_header != NULL) {
+    if (buf->content.document_header != NULL) {
         Strcat_charp(tmp, "<hr width=50%><h1>Header information</h1><pre>\n");
-        for (ti = buf->document_header->first; ti != NULL; ti = ti->next)
+        TextListItem* ti;
+        for (ti = buf->content.document_header->first; ti != NULL; ti = ti->next)
             Strcat_m_charp(tmp, "<pre_int>", html_quote(ti->ptr),
                 "</pre_int>\n", NULL);
         Strcat_charp(tmp, "</pre>\n");

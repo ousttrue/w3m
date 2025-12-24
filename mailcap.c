@@ -1,4 +1,5 @@
 #include "mailcap.h"
+#include "content.h"
 #include "fm.h"
 #include "myctype.h"
 #include <stdio.h>

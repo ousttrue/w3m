@@ -233,14 +233,6 @@ struct cookie {
 #define HTST_NORMAL 0
 #define HTST_CONNECT 1
 
-#define TMPF_DFL 0
-#define TMPF_SRC 1
-#define TMPF_FRAME 2
-#define TMPF_CACHE 3
-#define TMPF_COOKIE 4
-#define TMPF_HIST 5
-#define MAX_TMPF_TYPE 6
-
 #define set_no_proxy(domains) (NO_proxy_domains = make_domain_list(domains))
 
 /*

@@ -1,4 +1,6 @@
 #include "maparea.h"
+#include "etc.h"
+#include "content.h"
 #include "local_cgi.h"
 #include "readbuffer.h"
 #include "mailcap.h"
@@ -869,10 +871,8 @@ bool w3m_args(int argc, char** argv)
         if (i >= 0) {
             SearchHeader = search_header;
             DefaultType = default_type;
-            char* url;
             int retry = 0;
-
-            url = load_argv[i];
+            const char* url = load_argv[i];
             if (getURLScheme(&url) == SCM_MISSING && !ArgvIsURL)
             retry_as_local_file:
                 url = file_to_url(load_argv[i]);
@@ -1078,13 +1078,13 @@ dump_source(struct Buffer* buf)
 static void
 dump_head(struct Buffer* buf)
 {
-    if (buf->document_header == NULL) {
+    if (buf->content.document_header == NULL) {
         if (w3m_dump & DUMP_EXTRA)
             printf("\n");
         return;
     }
     TextListItem* ti;
-    for (ti = buf->document_header->first; ti; ti = ti->next) {
+    for (ti = buf->content.document_header->first; ti; ti = ti->next) {
         printf("%s",
             wc_conv_strict(ti->ptr, getRuntime()->InnerCharset,
                 buf->document_charset)
@@ -2334,7 +2334,7 @@ DEFUN(editBf, EDIT, "Edit local source")
     Str cmd;
     if (Currentbuf->edit)
         cmd = unquote_mailcap(Currentbuf->edit, Currentbuf->real_type, fn,
-            checkHeader(Currentbuf, "Content-Type:"), NULL);
+            checkHeader(Currentbuf->content, "Content-Type:"), NULL);
     else
         cmd = myEditor(Editor, shell_quote(fn), cur_real_linenumber(Currentbuf));
     blockChild(cmd->ptr);
@@ -3570,12 +3570,12 @@ DEFUN(svSrc, DOWNLOAD SAVE, "Save document source")
         return;
     getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
     PermitSaveToPipe = TRUE;
-    char* file;
+    const char* file;
     if (Currentbuf->real_scheme == SCM_LOCAL)
-        file = conv_from_system(guess_save_name(NULL,
+        file = conv_from_system(guess_save_name((struct Content) { 0 },
             Currentbuf->currentURL.real_file));
     else
-        file = guess_save_name(Currentbuf, Currentbuf->currentURL.file);
+        file = guess_save_name(Currentbuf->content, Currentbuf->currentURL.file);
     doFileCopy(Currentbuf->sourcefile, file);
     PermitSaveToPipe = FALSE;
 }

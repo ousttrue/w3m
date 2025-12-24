@@ -19,7 +19,7 @@ struct frame_body {
     char* name;
     char* url;
     struct Url* baseURL;
-    char* source;
+    const char* source;
     char* type;
     char* referer;
     struct AnchorList* nameList;

@@ -57,13 +57,13 @@ struct BufferPos {
 
 struct Buffer {
     struct Content content;
-    char* buffername;
+    const char* buffername;
     struct Document doc;
     struct Buffer* nextBuffer;
     struct Buffer* linkBuffer[MAX_LB];
     short width;
     char* type;
-    char* real_type;
+    const char* real_type;
     int allLine;
     short bufferprop;
     int currentColumn;
@@ -97,7 +97,6 @@ struct Buffer {
     char check_url;
     wc_ces document_charset;
     wc_uint8 auto_detect;
-    TextList* document_header;
     struct FormItemList* form_submit;
     char* savecache;
     char* edit;

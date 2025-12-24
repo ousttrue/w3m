@@ -1,4 +1,8 @@
 #include "w3m_rc.h"
+#include "etc.h"
+#include "file.h"
+#include "buffer.h"
+#include "content.h"
 #include "symbol.h"
 #include "message.h"
 #include "fm.h"
@@ -426,17 +430,17 @@ Str loadNewsgroup(struct Url* pu, wc_ces* charset, bool do_download)
             if (status != 221)
                 continue;
             readHeader(&f, buf, FALSE, NULL);
-            if (!(p = checkHeader(buf, "Message-ID:")))
+            if (!(p = checkHeader(buf->content, "Message-ID:")))
                 continue;
             if (*p == '<')
                 p++;
             if ((q = strchr(p, '>')) || (q = strchr(p, '\t')))
                 *q = '\0';
-            if (!(s = checkHeader(buf, "Subject:")))
+            if (!(s = checkHeader(buf->content, "Subject:")))
                 continue;
-            if (!(n = checkHeader(buf, "From:")))
+            if (!(n = checkHeader(buf->content, "From:")))
                 continue;
-            if (!(t = checkHeader(buf, "Date:")))
+            if (!(t = checkHeader(buf->content, "Date:")))
                 continue;
             add_news_message(page, i, t, n, s, p, scheme,
                 pu->scheme == SCM_NNTP_GROUP ? qgroup : NULL);

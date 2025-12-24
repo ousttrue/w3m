@@ -1,4 +1,5 @@
 #include "w3m_rc.h"
+#include "etc.h"
 #include "mailcap.h"
 #include "local_cgi.h"
 #include "symbol.h"

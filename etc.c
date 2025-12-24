@@ -1,3 +1,4 @@
+#include "etc.h"
 #include "w3m_rc.h"
 #include "file.h"
 #include "symbol.h"
@@ -140,15 +141,13 @@ int gethtmlcmd(char** s)
 
 char* lastFileName(const char* path)
 {
-    char *p, *q;
-
+    const char *p, *q;
     p = q = path;
     while (*p != '\0') {
         if (*p == '/')
             q = p + 1;
         p++;
     }
-
     return allocStr(q, -1);
 }
 
@@ -212,10 +211,6 @@ char* strerror(int errno)
     return sys_errlist[errno];
 }
 #endif /* not HAVE_STRERROR */
-
-
-
-
 
 /*
  * RFC2617: 1.2 Access Authentication Framework
@@ -484,17 +479,16 @@ void loadPasswd(void)
 /* get last modified time */
 char* last_modified(struct Buffer* buf)
 {
-    TextListItem* ti;
-    struct stat st;
-
-    if (buf->document_header) {
-        for (ti = buf->document_header->first; ti; ti = ti->next) {
+    if (buf->content.document_header) {
+        TextListItem* ti;
+        for (ti = buf->content.document_header->first; ti; ti = ti->next) {
             if (strncasecmp(ti->ptr, "Last-modified: ", 15) == 0) {
                 return ti->ptr + 15;
             }
         }
         return "unknown";
     } else if (buf->currentURL.scheme == SCM_LOCAL) {
+        struct stat st;
         if (stat(buf->currentURL.file, &st) < 0)
             return "unknown";
         return ctime(&st.st_mtime);
@@ -848,7 +842,7 @@ int is_localhost(const char* host)
     return FALSE;
 }
 
-char* file_to_url(char* file)
+char* file_to_url(const char* file)
 {
     Str tmp;
 #ifdef SUPPORT_DOS_DRIVE_PREFIX
@@ -925,7 +919,7 @@ static char* tmpf_base[MAX_TMPF_TYPE] = {
 };
 static unsigned int tmpf_seq[MAX_TMPF_TYPE];
 
-Str tmpfname(int type, char* ext)
+Str tmpfname(enum TmpFileTypes type, const char* ext)
 {
     Str tmpf;
     char* dir;
@@ -1101,9 +1095,9 @@ get_zone(char** s, int* z_hour, int* z_min)
 
 /* RFC 1123 or RFC 850 or ANSI C asctime() format string -> time_t */
 time_t
-mymktime(char* timestr)
+mymktime(const char* timestr)
 {
-    char* s;
+    const char* s;
     int day, mon, year, hour, min, sec, z_hour = 0, z_min = 0;
 
     if (!(timestr && *timestr))
@@ -1346,4 +1340,3 @@ Str base64_encode(const char* src, size_t len)
     Strnulterm(dest);
     return dest;
 }
-

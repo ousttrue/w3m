@@ -1,4 +1,6 @@
 #include "w3m_rc.h"
+#include "file.h"
+#include "etc.h"
 #include "local_cgi.h"
 #include "readbuffer.h"
 #include "message.h"
@@ -1238,7 +1240,7 @@ void init_stream(URLFile* uf, int scheme, InputStream stream)
 }
 
 URLFile
-openURL(char* url, struct Url* pu, struct Url* current,
+openURL(const char* url, struct Url* pu, struct Url* current,
     URLOption* option, struct FormList* request, TextList* extra_header,
     URLFile* ouf, struct HttpRequest* hr, unsigned char* status, bool do_download)
 {

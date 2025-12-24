@@ -1,4 +1,6 @@
 #include "w3m_rc.h"
+#include "etc.h"
+#include "file.h"
 #include "readbuffer.h"
 #include "symbol.h"
 #include "buffer.h"

@@ -1,13 +1,10 @@
-/* $Id: html.h,v 1.31 2010/08/14 01:29:40 htrb Exp $ */
-#ifndef _HTML_H
-#define _HTML_H
+#pragma once
 #include "config.h"
-#ifdef USE_SSL
+#include "textlist.h"
 #include <openssl/bio.h>
 #include <openssl/x509.h>
 #include <openssl/ssl.h>
-#endif /* USE_SSL */
-
+#include <stdbool.h>
 #include <time.h>
 
 #define StrUFgets(f) StrISgets((f)->stream)
@@ -31,7 +28,7 @@ typedef struct {
 } URLOption;
 
 union input_stream;
-typedef struct {
+typedef struct URLFile {
     unsigned char scheme;
     char is_cgi;
     char encoding;
@@ -39,13 +36,20 @@ typedef struct {
     char* ext;
     int compression;
     int content_encoding;
-    char* guess_type;
-#ifdef USE_SSL
+    const char* guess_type;
     char* ssl_certificate;
-#endif
     char* url;
     time_t modtime;
 } URLFile;
+int doFileSave(URLFile uf, const char* defstr);
+struct Url;
+struct FormList;
+struct HttpRequest;
+struct URLFile openURL(const char* url, struct Url* pu, struct Url* current,
+    URLOption* option, struct FormList* request,
+    TextList* extra_header, URLFile* ouf,
+    struct HttpRequest* hr, unsigned char* status, bool do_download);
+struct Buffer* doExternal(URLFile uf, const char* type, struct Buffer* defaultbuf);
 
 #define CMP_NOCOMPRESS 0
 #define CMP_COMPRESS 1
@@ -368,5 +372,3 @@ struct environment {
 #define MAX_INDENT_LEVEL 10
 
 #define INDENT_INCR IndentIncr
-
-#endif /* _HTML_H */

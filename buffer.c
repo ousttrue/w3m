@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "etc.h"
 #include "file.h"
 #include "message.h"
 #include "display.h"
@@ -622,12 +623,9 @@ prevBuffer(struct Buffer* first, struct Buffer* buf)
 
 int writeBufferCache(struct Buffer* buf)
 {
-    Str tmp;
     FILE* cache = NULL;
     struct Line* l;
-#ifdef USE_ANSI_COLOR
     int colorflag;
-#endif
 
     if (buf->savecache)
         return -1;
@@ -635,7 +633,7 @@ int writeBufferCache(struct Buffer* buf)
     if (buf->doc.firstLine == NULL)
         goto _error1;
 
-    tmp = tmpfname(TMPF_CACHE, NULL);
+    Str tmp = tmpfname(TMPF_CACHE, NULL);
     buf->savecache = tmp->ptr;
     cache = fopen(buf->savecache, "w");
     if (!cache)

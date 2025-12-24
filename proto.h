@@ -175,13 +175,10 @@ extern wc_ces url_to_charset(const char* url, const struct Url* base,
     wc_ces doc_charset);
 extern char* url_encode(const char* url, const struct Url* base,
     wc_ces doc_charset);
-extern void examineFile(char* path, URLFile* uf, bool do_download);
 extern char* acceptableEncoding(void);
 extern int dir_exist(char* path);
 
 struct FormList;
-extern struct Buffer* loadGeneralFile(char* path, struct Url* current, char* referer,
-    int flag, struct FormList* request, bool do_download);
 extern int is_boundary(unsigned char*, unsigned char*);
 extern int is_blank_line(char* line, int indent);
 
@@ -230,18 +227,11 @@ extern struct Buffer* getpipe(char* cmd);
 extern struct Buffer* openPagerBuffer(InputStream stream, struct Buffer* buf);
 extern struct Buffer* openGeneralPagerBuffer(InputStream stream);
 extern int save2tmp(URLFile uf, char* tmpf);
-extern struct Buffer* doExternal(URLFile uf, char* type, struct Buffer* defaultbuf);
-extern int _doFileCopy(char* tmpf, char* defstr, int download);
-#define doFileCopy(tmpf, defstr) _doFileCopy(tmpf, defstr, FALSE);
-extern int doFileMove(char* tmpf, char* defstr);
-extern int doFileSave(URLFile uf, char* defstr);
+
 extern int checkCopyFile(char* path1, char* path2);
 extern int checkSaveFile(InputStream stream, char* path);
 extern int checkOverWrite(char* path);
 extern char* inputAnswer(char* prompt);
-extern int matchattr(char* p, char* attr, int len, Str* value);
-extern void readHeader(URLFile* uf, struct Buffer* newBuf, int thru, struct Url* pu);
-extern char* checkHeader(struct Buffer* buf, char* field);
 
 extern struct Buffer* newBuffer(int width);
 extern struct Buffer* nullBuffer(void);
@@ -340,10 +330,6 @@ extern void copyParsedURL(struct Url* p, const struct Url* q);
 extern Str parsedURL2RefererStr(struct Url* pu);
 extern void init_stream(URLFile* uf, int scheme, InputStream stream);
 struct HttpRequest;
-extern URLFile openURL(char* url, struct Url* pu, struct Url* current,
-    URLOption* option, struct FormList* request,
-    TextList* extra_header, URLFile* ouf,
-    struct HttpRequest* hr, unsigned char* status, bool do_download);
 extern char* acceptableMimeTypes(void);
 extern char* guessContentType(char* filename);
 extern TextList* make_domain_list(char* domain_list);
@@ -434,7 +420,6 @@ extern void mySystem(char* command, int background);
 extern Str myExtCommand(char* cmd, char* arg, int redirect);
 extern Str myEditor(char* cmd, char* file, int line);
 extern int is_localhost(const char* host);
-extern char* file_to_url(char* file);
 #ifdef USE_M17N
 extern char* url_unquote_conv(char* url, wc_ces charset);
 #else
@@ -442,8 +427,6 @@ extern char* url_unquote_conv0(char* url);
 #define url_unquote_conv(url, charset) url_unquote_conv0(url)
 #endif
 extern char* expandName(char* name);
-extern Str tmpfname(int type, char* ext);
-extern time_t mymktime(char* timestr);
 #ifdef USE_COOKIE
 extern char* FQDN(char* host);
 extern Str find_cookie(struct Url* pu);
@@ -562,7 +545,6 @@ extern void dictwordat(void);
 #if 0
 extern void reloadBuffer(Buffer *buf);
 #endif
-extern char* guess_save_name(struct Buffer* buf, char* file);
 
 extern void wrapToggle(void);
 #ifdef USE_BUFINFO

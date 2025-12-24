@@ -1,7 +1,21 @@
 #pragma once
 #include "Str.h"
+#include <stdbool.h>
 
 struct Buffer* loadHTMLString(Str page);
-extern int is_html_type(char* type);
+int is_html_type(const char* type);
 struct Line* getNextPage(struct Buffer* buf, int plen);
 
+struct Url;
+struct FormList;
+struct Buffer* loadGeneralFile(const char* path, struct Url* current, char* referer, int flag, struct FormList* request, bool do_download);
+struct URLFile;
+void readHeader(struct URLFile* uf, struct Buffer* newBuf, bool thru, struct Url* pu);
+
+int _doFileCopy(const char* tmpf, const char* defstr, bool download);
+inline static int doFileCopy(const char* tmpf, const char* defstr)
+{
+    return _doFileCopy(tmpf, defstr, false);
+}
+int doFileMove(const char* tmpf, const char* defstr);
+void examineFile(const char* path, struct URLFile* uf, bool do_download);

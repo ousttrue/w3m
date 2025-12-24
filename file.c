@@ -53,7 +53,6 @@
 static int frame_source = 0;
 static int need_number = 0;
 
-static char* guess_filename(char* file);
 static int _MoveFile(char* path1, char* path2);
 static FILE* lessopen_stream(char* path);
 static struct Buffer* loadcmdout(char* cmd,
@@ -250,7 +249,7 @@ loadSomething(URLFile* f,
         return NULL;
 
     if (buf->buffername == NULL || buf->buffername[0] == '\0') {
-        buf->buffername = checkHeader(buf, "Subject:");
+        buf->buffername = checkHeader(buf->content, "Subject:");
         if (buf->buffername == NULL && buf->content.filename != NULL)
             buf->buffername = conv_from_system(lastFileName(buf->content.filename));
     }
@@ -277,31 +276,31 @@ int dir_exist(char* path)
 }
 
 static int
-is_dump_text_type(char* type)
+is_dump_text_type(const char* type)
 {
     struct mailcap* mcap;
     return (type && (mcap = searchExtViewer(type)) && (mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)));
 }
 
 static int
-is_text_type(char* type)
+is_text_type(const char* type)
 {
     return (type == NULL || type[0] == '\0' || strncasecmp(type, "text/", 5) == 0 || (strncasecmp(type, "application/", 12) == 0 && strstr(type, "xhtml") != NULL) || strncasecmp(type, "message/", sizeof("message/") - 1) == 0);
 }
 
 static int
-is_plain_text_type(char* type)
+is_plain_text_type(const char* type)
 {
     return ((type && strcasecmp(type, "text/plain") == 0) || (is_text_type(type) && !is_dump_text_type(type)));
 }
 
-int is_html_type(char* type)
+int is_html_type(const char* type)
 {
     return (type && (strcasecmp(type, "text/html") == 0 || strcasecmp(type, "application/xhtml+xml") == 0));
 }
 
 static void
-check_compression(char* path, URLFile* uf)
+check_compression(const char* path, URLFile* uf)
 {
     int len;
     struct compression_decoder* d;
@@ -480,7 +479,7 @@ uncompress_stream(URLFile* uf, const char** src)
 #endif /* __MINGW32_VERSION */
 }
 
-void examineFile(char* path, URLFile* uf, bool do_download)
+void examineFile(const char* path, URLFile* uf, bool do_download)
 {
     struct stat stbuf;
 
@@ -590,42 +589,6 @@ Str convertLine(URLFile* uf, Str line, int mode, wc_ces* charset,
     return line;
 }
 
-int matchattr(char* p, char* attr, int len, Str* value)
-{
-    int quoted;
-    char* q = NULL;
-
-    if (strncasecmp(p, attr, len) == 0) {
-        p += len;
-        SKIP_BLANKS(p);
-        if (value) {
-            *value = Strnew();
-            if (*p == '=') {
-                p++;
-                SKIP_BLANKS(p);
-                quoted = 0;
-                while (!IS_ENDL(*p) && (quoted || *p != ';')) {
-                    if (!IS_SPACE(*p))
-                        q = p;
-                    if (*p == '"')
-                        quoted = (quoted) ? 0 : 1;
-                    else
-                        Strcat_char(*value, *p);
-                    p++;
-                }
-                if (q)
-                    Strshrink(*value, p - q - 1);
-            }
-            return 1;
-        } else {
-            if (IS_ENDT(*p)) {
-                return 1;
-            }
-        }
-    }
-    return 0;
-}
-
 #ifdef USE_IMAGE
 #ifdef USE_XFACE
 static char*
@@ -664,7 +627,7 @@ xface2xpm(char* xface)
 #endif
 #endif
 
-void readHeader(URLFile* uf, struct Buffer* newBuf, int thru, struct Url* pu)
+void readHeader(struct URLFile* uf, struct Buffer* newBuf, bool thru, struct Url* pu)
 {
     char *p, *q;
 
@@ -673,7 +636,6 @@ void readHeader(URLFile* uf, struct Buffer* newBuf, int thru, struct Url* pu)
     char c;
     Str lineBuf2 = NULL;
     Str tmp;
-    TextList* headerlist;
 
     wc_ces charset = WC_CES_US_ASCII, mime_charset;
 
@@ -681,7 +643,7 @@ void readHeader(URLFile* uf, struct Buffer* newBuf, int thru, struct Url* pu)
     FILE* src = NULL;
     Lineprop* propBuffer;
 
-    headerlist = newBuf->document_header = newTextList();
+    TextList* headerlist = newBuf->content.document_header = newTextList();
     if (uf->scheme == SCM_HTTP
 
         || uf->scheme == SCM_HTTPS
@@ -960,33 +922,14 @@ void readHeader(URLFile* uf, struct Buffer* newBuf, int thru, struct Url* pu)
         fclose(src);
 }
 
-char* checkHeader(struct Buffer* buf, char* field)
-{
-    int len;
-    TextListItem* i;
-    char* p;
-
-    if (buf == NULL || field == NULL || buf->document_header == NULL)
-        return NULL;
-    len = strlen(field);
-    for (i = buf->document_header->first; i != NULL; i = i->next) {
-        if (!strncasecmp(i->ptr, field, len)) {
-            p = i->ptr + len;
-            return remove_space(p);
-        }
-    }
-    return NULL;
-}
-
 static char*
 checkContentType(struct Buffer* buf)
 {
-    char* p;
-    Str r;
-    p = checkHeader(buf, "Content-Type:");
-    if (p == NULL)
+    const char* p = checkHeader(buf->content, "Content-Type:");
+    if (!p)
         return NULL;
-    r = Strnew();
+
+    Str r = Strnew();
     while (*p && *p != ';' && !IS_SPACE(*p))
         Strcat_char(r, *p++);
 
@@ -1503,7 +1446,7 @@ findAuthentication(struct http_auth* hauth, struct Buffer* buf, char* auth_field
     char *p0, *p;
 
     bzero(hauth, sizeof(struct http_auth));
-    for (i = buf->document_header->first; i != NULL; i = i->next) {
+    for (i = buf->content.document_header->first; i != NULL; i = i->next) {
         if (strncasecmp(i->ptr, auth_field, len) == 0) {
             for (p = i->ptr + len; p != NULL && *p != '\0';) {
                 SKIP_BLANKS(p);
@@ -1696,15 +1639,15 @@ Str getLinkNumberStr(int correction)
  */
 #define DO_EXTERNAL ((struct Buffer * (*)(URLFile*, struct Buffer*)) doExternal)
 struct Buffer*
-loadGeneralFile(char* path, struct Url* volatile current, char* referer,
+loadGeneralFile(const char* path, struct Url* volatile current, char* referer,
     int flag, struct FormList* volatile request, bool do_download)
 {
     URLFile f, *volatile of = NULL;
     struct Url pu;
     struct Buffer* b = NULL;
     struct Buffer* (*volatile proc)(URLFile*, struct Buffer*) = loadBuffer;
-    char* volatile tpath;
-    char* volatile t = "text/plain", *p, * volatile real_type = NULL;
+    const char* t = "text/plain";
+    const char *p, *real_type = NULL;
     struct Buffer* volatile t_buf = NULL;
     int volatile searchHeader = SearchHeader;
     int volatile searchHeader_through = TRUE;
@@ -1718,16 +1661,12 @@ loadGeneralFile(char* path, struct Url* volatile current, char* referer,
     URLOption url_option;
     Str tmp;
     Str volatile page = NULL;
-#ifdef USE_GOPHER
     int gopher_download = FALSE;
-#endif
-#ifdef USE_M17N
     wc_ces charset = WC_CES_US_ASCII;
-#endif
     struct HttpRequest hr;
     struct Url* volatile auth_pu;
 
-    tpath = path;
+    const char* tpath = path;
     prevtrap = NULL;
     add_auth_cookie_flag = 0;
 
@@ -1857,19 +1796,10 @@ load_doc: {
         }
         if (t_buf == NULL)
             t_buf = newBuffer(INIT_BUFFER_WIDTH);
-#if 0 /* USE_SSL */
-	if (IStype(f.stream) == IST_SSL) {
-	    Str s = ssl_get_certificate(f.stream, pu.host);
-	    if (s == NULL)
-		return NULL;
-	    else
-		t_buf->ssl_certificate = s->ptr;
-	}
-#endif
         readHeader(&f, t_buf, FALSE, &pu);
         if (((http_response_code >= 301 && http_response_code <= 303)
                 || http_response_code == 307)
-            && (p = checkHeader(t_buf, "Location:")) != NULL
+            && (p = checkHeader(t_buf->content, "Location:")) != NULL
             && checkRedirection(&pu)) {
             /* document moved */
             /* 301: Moved Permanently */
@@ -1899,7 +1829,7 @@ load_doc: {
                 0);
             add_auth_cookie_flag = 0;
         }
-        if ((p = checkHeader(t_buf, "WWW-Authenticate:")) != NULL && http_response_code == 401) {
+        if ((p = checkHeader(t_buf->content, "WWW-Authenticate:")) != NULL && http_response_code == 401) {
             /* Authentication needed */
             struct http_auth hauth;
             if (findAuthentication(&hauth, t_buf, "WWW-Authenticate:") != NULL
@@ -1918,7 +1848,7 @@ load_doc: {
                 goto load_doc;
             }
         }
-        if ((p = checkHeader(t_buf, "Proxy-Authenticate:")) != NULL && http_response_code == 407) {
+        if ((p = checkHeader(t_buf->content, "Proxy-Authenticate:")) != NULL && http_response_code == 407) {
             /* Authentication needed */
             struct http_auth hauth;
             if (findAuthentication(&hauth, t_buf, "Proxy-Authenticate:")
@@ -1947,7 +1877,7 @@ load_doc: {
             goto load_doc;
         }
 
-        f.modtime = mymktime(checkHeader(t_buf, "Last-Modified:"));
+        f.modtime = mymktime(checkHeader(t_buf->content, "Last-Modified:"));
     }
 #ifdef USE_NNTP
     else if (pu.scheme == SCM_NEWS || pu.scheme == SCM_NNTP) {
@@ -2049,7 +1979,7 @@ load_doc: {
         if (t_buf == NULL)
             t_buf = newBuffer(INIT_BUFFER_WIDTH);
         readHeader(&f, t_buf, searchHeader_through, &pu);
-        if (f.is_cgi && (p = checkHeader(t_buf, "Location:")) != NULL && checkRedirection(&pu)) {
+        if (f.is_cgi && (p = checkHeader(t_buf->content, "Location:")) != NULL && checkRedirection(&pu)) {
             /* document moved */
             tpath = url_encode(remove_space(p), NULL, 0);
             request = NULL;
@@ -2062,27 +1992,6 @@ load_doc: {
             status = HTST_NORMAL;
             goto load_doc;
         }
-#ifdef AUTH_DEBUG
-        if ((p = checkHeader(t_buf, "WWW-Authenticate:")) != NULL) {
-            /* Authentication needed */
-            struct http_auth hauth;
-            if (findAuthentication(&hauth, t_buf, "WWW-Authenticate:") != NULL
-                && (realm = get_auth_param(hauth.param, "realm")) != NULL) {
-                auth_pu = &pu;
-                getAuthCookie(&hauth, "Authorization:", extra_header,
-                    auth_pu, &hr, request, &uname, &pwd);
-                if (uname == NULL) {
-                    /* abort */
-                    TRAP_OFF;
-                    goto page_loaded;
-                }
-                UFclose(&f);
-                add_auth_cookie_flag = 1;
-                status = HTST_NORMAL;
-                goto load_doc;
-            }
-        }
-#endif /* defined(AUTH_DEBUG) */
         t = checkContentType(t_buf);
         if (t == NULL)
             t = "text/plain";
@@ -2119,11 +2028,9 @@ page_loaded:
         }
 
         if (do_download || gopher_download) {
-            char* file;
             if (!src)
                 return NULL;
-            file = guess_filename(pu.file);
-
+            const char* file = guess_filename(pu.file);
             if (f.scheme == SCM_GOPHER)
                 file = Sprintf("%s.html", file)->ptr;
 
@@ -2151,12 +2058,12 @@ page_loaded:
     proc = loadBuffer;
 
     current_content_length = 0;
-    if ((p = checkHeader(t_buf, "Content-Length:")) != NULL)
+    if ((p = checkHeader(t_buf ? t_buf->content: (struct Content){}, "Content-Length:")) != NULL)
         current_content_length = strtoclen(p);
 
     if (do_download || gopher_download) {
         /* download only */
-        char* file;
+        const char* file;
         TRAP_OFF;
         if (DecodeCTE && IStype(f.stream) != IST_ENCODED)
             f.stream = newEncodedStream(f.stream, f.encoding);
@@ -2164,9 +2071,9 @@ page_loaded:
             struct stat st;
             if (PreserveTimestamp && !stat(pu.real_file, &st))
                 f.modtime = st.st_mtime;
-            file = conv_from_system(guess_save_name(NULL, pu.real_file));
+            file = conv_from_system(guess_save_name((struct Content) { 0 }, pu.real_file));
         } else
-            file = guess_save_name(t_buf, pu.file);
+            file = guess_save_name(t_buf->content, pu.file);
         if (doFileSave(f, file) == 0)
             UFhalfclose(&f);
         else
@@ -2226,11 +2133,11 @@ page_loaded:
             if (pu.scheme == SCM_LOCAL) {
                 UFclose(&f);
                 _doFileCopy(pu.real_file,
-                    conv_from_system(guess_save_name(NULL, pu.real_file)), TRUE);
+                    conv_from_system(guess_save_name((struct Content) { 0 }, pu.real_file)), TRUE);
             } else {
                 if (DecodeCTE && IStype(f.stream) != IST_ENCODED)
                     f.stream = newEncodedStream(f.stream, f.encoding);
-                if (doFileSave(f, guess_save_name(t_buf, pu.file)) == 0)
+                if (doFileSave(f, guess_save_name(t_buf->content, pu.file)) == 0)
                     UFhalfclose(&f);
                 else
                     UFclose(&f);
@@ -7852,27 +7759,28 @@ _end:
 }
 
 struct Buffer*
-doExternal(URLFile uf, char* type, struct Buffer* defaultbuf)
+doExternal(URLFile uf, const char* type, struct Buffer* defaultbuf)
 {
-    Str tmpf, command;
+    Str command;
     struct mailcap* mcap;
     int mc_stat;
     struct Buffer* buf = NULL;
-    char *header, *src = NULL, *ext = uf.ext;
+    const char* src = NULL;
+    const char* ext = uf.ext;
 
     if (!(mcap = searchExtViewer(type)))
         return NULL;
 
     if (mcap->nametemplate) {
-        tmpf = unquote_mailcap(mcap->nametemplate, NULL, "", NULL, NULL);
-        if (tmpf->ptr[0] == '.')
-            ext = tmpf->ptr;
+        Str _tmp = unquote_mailcap(mcap->nametemplate, NULL, "", NULL, NULL);
+        if (_tmp->ptr[0] == '.')
+            ext = _tmp->ptr;
     }
-    tmpf = tmpfname(TMPF_DFL, (ext && *ext) ? ext : NULL);
 
+    Str tmpf = tmpfname(TMPF_DFL, (ext && *ext) ? ext : NULL);
     if (IStype(uf.stream) != IST_ENCODED)
         uf.stream = newEncodedStream(uf.stream, uf.encoding);
-    header = checkHeader(defaultbuf, "Content-Type:");
+    const char* header = checkHeader(defaultbuf->content, "Content-Type:");
     if (header)
         header = conv_to_system(header);
     command = unquote_mailcap(mcap->viewer, type, tmpf->ptr, header, &mc_stat);
@@ -7984,7 +7892,7 @@ _MoveFile(char* path1, char* path2)
     return 0;
 }
 
-int _doFileCopy(char* tmpf, char* defstr, int download)
+int _doFileCopy(const char* tmpf, const char* defstr, bool download)
 {
 #ifndef __MINGW32_VERSION
     Str msg;
@@ -8096,14 +8004,14 @@ int _doFileCopy(char* tmpf, char* defstr, int download)
     return 0;
 }
 
-int doFileMove(char* tmpf, char* defstr)
+int doFileMove(const char* tmpf, const char* defstr)
 {
     int ret = doFileCopy(tmpf, defstr);
     unlink(tmpf);
     return ret;
 }
 
-int doFileSave(URLFile uf, char* defstr)
+int doFileSave(URLFile uf, const char* defstr)
 {
 #ifndef __MINGW32_VERSION
     Str msg;
@@ -8350,38 +8258,3 @@ reloadBuffer(struct Buffer *buf)
     is_redisplay = FALSE;
 }
 #endif
-
-static char*
-guess_filename(char* file)
-{
-    char *p = NULL, *s;
-
-    if (file != NULL)
-        p = mybasename(file);
-    if (p == NULL || *p == '\0')
-        return DEF_SAVE_FILE;
-    s = p;
-    if (*p == '#')
-        p++;
-    while (*p != '\0') {
-        if ((*p == '#' && *(p + 1) != '\0') || *p == '?') {
-            *p = '\0';
-            break;
-        }
-        p++;
-    }
-    return s;
-}
-
-char* guess_save_name(struct Buffer* buf, char* path)
-{
-    if (buf && buf->document_header) {
-        Str name = NULL;
-        char *p, *q;
-        if ((p = checkHeader(buf, "Content-Disposition:")) != NULL && (q = strcasestr(p, "filename")) != NULL && (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') && matchattr(q, "filename", 8, &name))
-            path = name->ptr;
-        else if ((p = checkHeader(buf, "Content-Type:")) != NULL && (q = strcasestr(p, "name")) != NULL && (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') && matchattr(q, "name", 4, &name))
-            path = name->ptr;
-    }
-    return guess_filename(path);
-}

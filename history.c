@@ -1,4 +1,5 @@
 #include "history.h"
+#include "etc.h"
 #include "buffer.h"
 #include "w3m_rc.h"
 #include "file.h"
@@ -152,7 +153,7 @@ struct Hist* copyHist(struct Hist* hist)
 }
 
 HistItem*
-unshiftHist(struct Hist* hist, char* ptr)
+unshiftHist(struct Hist* hist, const char* ptr)
 {
     HistItem* item;
 
