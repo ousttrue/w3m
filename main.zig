@@ -9,8 +9,6 @@ var g_allocator: std.mem.Allocator = undefined;
 /// return ture if enter main loop
 extern fn w3m_args(argc: c_int, argv: [*c]const [*:0]u8) bool;
 
-extern fn w3m_idle() void;
-
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.detectLeaks();
@@ -42,7 +40,7 @@ pub fn main() !void {
             c.w3m_on_key(ch);
             c.w3m_end_frame();
         }
-        w3m_idle();
+        onFrame();
     }
 }
 
@@ -99,6 +97,70 @@ export fn tty_add_ISIG() void {
 
 export fn tty_remove_ISIG() void {
     // ttymode_reset(ISIG, 0);
+}
+
+var cline: ?*c.Line = null;
+var ccolumn: c_int = -1;
+
+export fn onFrame() void {
+    // if (mode == B_FORCE_REDRAW && (buf->check_url & CHK_URL)) {
+    //     chkURLBuffer(buf);
+    // }
+
+    const buf: *c.Buffer = c.getRuntime().*.CurrentTab.*.currentBuffer;
+    c.bufferPosition(buf);
+
+    // check viewport ?
+    if (cline != buf.*.doc.topLine or ccolumn != buf.currentColumn) {
+        // render
+        c.screen_from_lines(buf);
+
+        cline = buf.doc.topLine;
+        ccolumn = buf.currentColumn;
+
+        tty_write_screen();
+
+        // getAllImage(buf);
+
+        c.loadImage(buf, c.IMG_FLAG_NEXT);
+    }
+
+    c.displayMsg(buf);
+
+    const pos = screen_position();
+    c.drawAnchorCursor(buf);
+
+    if (buf.img != null) {
+        // && buf->image_loaded
+        c.drawImage(buf);
+    }
+
+    c.tty_MOVE(@intCast(pos.y), @intCast(pos.x));
+    flush_tty();
+
+    // idle timer event
+    //     if (Currentbuf->event) {
+    //         if (Currentbuf->event->status != AL_UNSET) {
+    //             CurrentAlarm = Currentbuf->event;
+    //             if (CurrentAlarm->sec == 0) { /* refresh (0sec) */
+    //                 Currentbuf->event = NULL;
+    //                 CurrentKey = -1;
+    //                 CurrentKeyData = NULL;
+    //                 CurrentCmdData = (char*)CurrentAlarm->data;
+    //                 w3mFuncList[CurrentAlarm->cmd].func();
+    //                 CurrentCmdData = NULL;
+    //                 continue;
+    //             }
+    //         } else
+    //             Currentbuf->event = NULL;
+    //     }
+    //     if (!Currentbuf->event)
+    //         CurrentAlarm = &DefaultAlarm;
+    //
+    //     if (CurrentAlarm->sec > 0) {
+    //         mySignal(SIGALRM, SigAlarm);
+    //         alarm(CurrentAlarm->sec);
+    //     }
 }
 
 // void ttymode_set(int mode, int imode)

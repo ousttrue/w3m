@@ -13,6 +13,8 @@ pub const c = @cImport({
     @cInclude("ctrlcode.h");
     @cInclude("buffer.h");
     @cInclude("html_form.h");
+    @cInclude("tab.h");
+    @cInclude("display.h");
     // wc
     @cInclude("char_conv.h");
     @cInclude("charset.h");
