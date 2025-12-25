@@ -103,12 +103,12 @@ struct Line* currentLineSkip(struct Buffer* buf, struct Line* line, int offset, 
 
 #define MAX_CMD_LEN 128
 
-int gethtmlcmd(char** s)
+int gethtmlcmd(const char** s)
 {
     extern Hash_si tagtable;
     char cmdstr[MAX_CMD_LEN];
     char* p = cmdstr;
-    char* save = *s;
+    const char* save = *s;
     int cmd;
 
     (*s)++;
@@ -329,16 +329,15 @@ void invalidate_auth_user_passwd(struct Url* pu, char* realm, Str uname, Str pwd
 static Str
 next_token(Str arg)
 {
-    Str narg = NULL;
-    char *p, *q;
     if (arg == NULL || arg->length == 0)
         return NULL;
-    p = arg->ptr;
-    q = p;
+    Str narg = NULL;
+    char* p = arg->ptr;
+    char* q = p;
     SKIP_NON_BLANKS(q);
     if (*q != '\0') {
         *q++ = '\0';
-        q = skip_blanks(q);
+        q = (char*)skip_blanks(q);
         if (*q != '\0')
             narg = Strnew_charp(q);
     }
@@ -445,7 +444,6 @@ FILE* openSecretFile(char* fname)
     else if ((st.st_mode & (S_IRWXG | S_IRWXO)) != 0) {
         if (fmInitialized()) {
             message(Sprintf(FILE_IS_READABLE_MSG, fname)->ptr, 0, 0);
-            tty_refresh();
         } else {
             fputs(Sprintf(FILE_IS_READABLE_MSG, fname)->ptr, stderr);
             fputc('\n', stderr);
@@ -1362,5 +1360,3 @@ Str unescape_spaces(Str s)
         return tmp;
     return s;
 }
-
-

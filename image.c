@@ -651,7 +651,6 @@ void drawImage(struct Buffer* currentbuf)
         n_terminal_image = 0;
 
     screen_touch_cursor();
-    tty_refresh();
 }
 
 void clearImage()
@@ -757,7 +756,6 @@ showImageProgress(struct Buffer* buf)
             drawImage(buf);
         message(Sprintf("%d/%d images loaded", l, n)->ptr,
             buf->cursorX + buf->rootX, buf->cursorY + buf->rootY);
-        tty_refresh();
     }
 }
 

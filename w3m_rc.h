@@ -178,7 +178,7 @@ inline static size_t LASTLINE(void) { return getRuntime()->lines > 0 ? getRuntim
 void tty_set_cols(int cols);
 int graph_ok(void);
 void tty_clear(void);
-void tty_refresh(void);
+void tty_write_screen(void);
 
 // void crmode(void);
 // void nocrmode(void);

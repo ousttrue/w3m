@@ -68,7 +68,7 @@ export fn exitRawMode() void {
     if (g_term.is_rawmode) {
         c.screen_move(c.LASTLINE(), 0);
         c.screen_clrtoeolx();
-        c.tty_refresh();
+        c.tty_write_screen();
         c.loadImage(null, c.IMG_FLAG_STOP);
         reset_tty();
     }
@@ -775,7 +775,7 @@ fn bcolor_seq(buf: []u8, colmode: c_int) [:0]const u8 {
     return std.fmt.bufPrintZ(buf, "\x1b[{}m", .{val}) catch @panic("bcolor_seq");
 }
 
-export fn tty_refresh() void {
+export fn tty_write_screen() void {
     // int line, col;
     var pline: usize = g_screen.y;
     var moved = RefreshStatus.RF_NEED_TO_MOVE;

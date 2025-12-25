@@ -34,3 +34,6 @@ struct HmarkerList {
     int markmax;
     int prevhseq;
 };
+
+struct Buffer;
+struct Anchor* searchURLLabel(struct Buffer* buf, const char* url);

@@ -463,25 +463,15 @@ int openSocket(char* const hostname,
     const char* remoteport_name, unsigned short remoteport_num)
 {
     volatile int sock = -1;
-#ifdef INET6
     int* af;
     struct addrinfo hints, *res0, *res;
     int error;
     char* hname;
-#else /* not INET6 */
-    struct sockaddr_in hostaddr;
-    struct hostent* entry;
-    struct protoent* proto;
-    unsigned short s_port;
-    int a1, a2, a3, a4;
-    unsigned long adr;
-#endif /* not INET6 */
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
 
     if (fmInitialized()) {
         /* FIXME: gettextize? */
         message(Sprintf("Opening socket...")->ptr, 0, 0);
-        tty_refresh();
     }
     if (SETJMP(AbortLoading) != 0) {
         if (sock >= 0)

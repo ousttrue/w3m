@@ -169,7 +169,7 @@ pub fn input(this: *@This(), opts: Options) [*c]const u8 {
         }
         c.screen_clrtoeolx();
         c.screen_move(c.LASTLINE(), @as(usize, @intCast(opos)) + x - this.offset);
-        c.tty_refresh();
+        c.tty_write_screen();
 
         // next_char:
         while (true) {
@@ -241,7 +241,7 @@ pub fn input(this: *@This(), opts: Options) [*c]const u8 {
         return null;
 
     c.screen_move(c.LASTLINE(), 0);
-    c.tty_refresh();
+    c.tty_write_screen();
     var p = this.strBuf.*.ptr;
     if (opts.flag & (c.IN_FILENAME | c.IN_COMMAND) != 0) {
         p = @constCast(c.skip_blanks(p));

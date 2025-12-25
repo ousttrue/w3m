@@ -228,7 +228,6 @@ extern void copyBuffer(struct Buffer* a, struct Buffer* b);
 extern struct Buffer* prevBuffer(struct Buffer* first, struct Buffer* buf);
 extern int writeBufferCache(struct Buffer* buf);
 
-extern int gethtmlcmd(char** s);
 
 #ifdef USE_MIGEMO
 extern void init_migemo(void);
@@ -323,7 +322,6 @@ extern struct Anchor* registerForm(struct Buffer* buf, struct FormList* flist,
     struct parsed_tag* tag, int line, int pos);
 extern int onAnchor(struct Anchor* a, int line, int pos);
 extern struct Anchor* searchAnchor(struct AnchorList* al, char* str);
-extern struct Anchor* searchURLLabel(struct Buffer* buf, char* url);
 extern void reAnchorWord(struct Buffer* buf, struct Line* l, int spos, int epos);
 extern char* reAnchor(struct Buffer* buf, char* re);
 #ifdef USE_NNTP

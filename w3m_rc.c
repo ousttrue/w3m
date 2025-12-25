@@ -562,7 +562,6 @@ struct Buffer* loadLink(char* url, char* target, char* referer, struct FormList*
     const int* no_referer_ptr;
 
     message(Sprintf("loading %s", url)->ptr, 0, 0);
-    tty_refresh();
 
     no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->currentURL);
     base = baseURL(Currentbuf);

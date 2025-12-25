@@ -188,7 +188,7 @@ searchAnchor(struct AnchorList* al, char* str)
 }
 
 struct Anchor*
-searchURLLabel(struct Buffer* buf, char* url)
+searchURLLabel(struct Buffer* buf, const char* url)
 {
     return searchAnchor(buf->name, url);
 }

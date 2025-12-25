@@ -482,7 +482,6 @@ void readHeader(struct URLFile* uf, struct Buffer* newBuf, bool thru, struct Url
             http_response_code = atoi(p);
             if (fmInitialized()) {
                 message(lineBuf2->ptr, 0, 0);
-                tty_refresh();
             }
         }
         if (!strncasecmp(lineBuf2->ptr, "content-transfer-encoding:", 26)) {
@@ -1236,7 +1235,6 @@ getAuthCookie(struct http_auth* hauth, char* auth_header,
          */
         if (fmInitialized()) {
             message("Wrong username or password", 0, 0);
-            tty_refresh();
         } else
             fprintf(stderr, "Wrong username or password\n");
         sleep(1);
@@ -1517,7 +1515,6 @@ load_doc: {
             exitRawMode();
             /* FIXME: gettextize? */
             message(Sprintf("%s contacted. Waiting for reply...", pu.host)->ptr, 0, 0);
-            tty_refresh();
         }
         if (t_buf == NULL)
             t_buf = newBuffer(INIT_BUFFER_WIDTH);
@@ -6323,7 +6320,6 @@ void showProgress(clen_t* linelen, clen_t* trbyte)
             screen_addch('|', 1);
         screen_standend();
         /* no_clrtoeol(); */
-        tty_refresh();
     } else {
         cur_time = time(0);
         if (*trbyte == 0) {
@@ -6346,7 +6342,6 @@ void showProgress(clen_t* linelen, clen_t* trbyte)
             messages = Sprintf("%7s loaded", fmtrbyte);
         }
         message(messages->ptr, 0, 0);
-        tty_refresh();
     }
 }
 

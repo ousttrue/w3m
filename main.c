@@ -88,8 +88,6 @@ _JBTYPE IntReturn[_JBLEN];
 #endif /* __MINGW32_VERSION */
 
 static void cmd_loadfile(char* path);
-static void cmd_loadURL(char* url, struct Url* current, char* referer,
-    struct FormList* request);
 
 int show_params_p = 0;
 void show_params(FILE* fp);
@@ -1055,7 +1053,7 @@ void w3m_idle()
         }
     }
 
-    tty_refresh();
+    tty_write_screen();
 
     // idle timer event
     //     if (Currentbuf->event) {
@@ -1893,6 +1891,55 @@ DEFUN(ldfile, LOAD, "Open local file in a new buffer")
     cmd_loadfile(fn);
 }
 
+static int
+handleMailto(const char* url)
+{
+    Str to;
+    char* pos;
+
+    if (strncasecmp(url, "mailto:", 7))
+        return 0;
+#ifdef USE_W3MMAILER
+    if (!non_null(Mailer) || MailtoOptions == MAILTO_OPTIONS_USE_W3MMAILER)
+        return 0;
+#else
+    if (!non_null(Mailer)) {
+        /* FIXME: gettextize? */
+        disp_err_message("no mailer is specified", TRUE);
+        return 1;
+    }
+#endif
+
+    /* invoke external mailer */
+    if (MailtoOptions == MAILTO_OPTIONS_USE_MAILTO_URL) {
+        to = Strnew_charp(html_unquote(url));
+    } else {
+        to = Strnew_charp(url + 7);
+        if ((pos = strchr(to->ptr, '?')) != NULL)
+            Strtruncate(to, pos - to->ptr);
+    }
+    exec_cmd(myExtCommand(Mailer, shell_quote(file_unquote(to->ptr)), FALSE)->ptr);
+    pushHashHist(getRuntime()->URLHist, url);
+    return 1;
+}
+
+static void
+cmd_loadURL(const char* url, struct Url* current, const char* referer, struct FormList* request)
+{
+    if (handleMailto(url))
+        return;
+
+    struct Buffer* buf = loadGeneralFile(url, current, referer, 0, request, false);
+    if (buf == NULL) {
+        char* emsg = Sprintf("Can't load %s", conv_from_system(url))->ptr;
+        disp_err_message(emsg, FALSE);
+    } else if (buf != NO_BUFFER) {
+        pushBuffer(buf);
+        if (RenderFrame && Currentbuf->frameset != NULL)
+            rFrame();
+    }
+}
+
 /* Load help file */
 DEFUN(ldhelp, HELP, "Show help panel")
 {
@@ -2231,31 +2278,14 @@ DEFUN(selBuf, SELECT, "Display buffer-stack panel")
 /* Suspend (on BSD), or run interactive shell (on SysV) */
 DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background")
 {
-#ifndef SIGSTOP
-    char* shell;
-#endif /* not SIGSTOP */
     screen_move(LASTLINE(), 0);
     screen_clrtoeolx();
-    tty_refresh();
+    tty_write_screen();
     exitRawMode();
-#ifndef SIGSTOP
-    shell = getenv("SHELL");
+    char* shell = getenv("SHELL");
     if (shell == NULL)
         shell = "/bin/sh";
     system(shell);
-#else /* SIGSTOP */
-#ifdef SIGTSTP
-    signal(SIGTSTP, SIG_DFL); /* just in case */
-    /*
-     * Note: If susp() was called from SIGTSTP handler,
-     * unblocking SIGTSTP would be required here.
-     * Currently not.
-     */
-    kill(0, SIGTSTP); /* stop whole job, not a single process */
-#else
-    kill((pid_t)0, SIGSTOP);
-#endif
-#endif /* SIGSTOP */
     enterRawMode();
 }
 
@@ -2503,7 +2533,7 @@ DEFUN(reMark, REG_MARK, "Mark all occurences of a pattern")
 #endif /* USE_MARK */
 
 static void
-gotoLabel(char* label)
+gotoLabel(const char* label)
 {
     struct Buffer* buf;
     struct Anchor* al;
@@ -2532,38 +2562,6 @@ gotoLabel(char* label)
     Currentbuf->pos = al->start.pos;
     arrangeCursor(Currentbuf);
     return;
-}
-
-static int
-handleMailto(char* url)
-{
-    Str to;
-    char* pos;
-
-    if (strncasecmp(url, "mailto:", 7))
-        return 0;
-#ifdef USE_W3MMAILER
-    if (!non_null(Mailer) || MailtoOptions == MAILTO_OPTIONS_USE_W3MMAILER)
-        return 0;
-#else
-    if (!non_null(Mailer)) {
-        /* FIXME: gettextize? */
-        disp_err_message("no mailer is specified", TRUE);
-        return 1;
-    }
-#endif
-
-    /* invoke external mailer */
-    if (MailtoOptions == MAILTO_OPTIONS_USE_MAILTO_URL) {
-        to = Strnew_charp(html_unquote(url));
-    } else {
-        to = Strnew_charp(url + 7);
-        if ((pos = strchr(to->ptr, '?')) != NULL)
-            Strtruncate(to, pos - to->ptr);
-    }
-    exec_cmd(myExtCommand(Mailer, shell_quote(file_unquote(to->ptr)), FALSE)->ptr);
-    pushHashHist(getRuntime()->URLHist, url);
-    return 1;
 }
 
 void _followA(bool on_target, bool do_download)
@@ -2643,9 +2641,7 @@ void _followI(bool do_download)
     struct Anchor* a = retrieveCurrentImg(Currentbuf);
     if (a == NULL)
         return;
-    /* FIXME: gettextize? */
     message(Sprintf("loading %s", a->url)->ptr, 0, 0);
-    tty_refresh();
     struct Buffer* buf = loadGeneralFile(a->url, baseURL(Currentbuf), NULL, 0, NULL, do_download);
     if (buf == NULL) {
         /* FIXME: gettextize? */
@@ -3204,30 +3200,11 @@ DEFUN(deletePrevBuf, DELETE_PREVBUF, "Delete previous buffer (mainly for local C
         delBuffer(buf);
 }
 
-static void
-cmd_loadURL(char* url, struct Url* current, char* referer, struct FormList* request)
-{
-    if (handleMailto(url))
-        return;
-
-    tty_refresh();
-    struct Buffer* buf = loadGeneralFile(url, current, referer, 0, request, false);
-    if (buf == NULL) {
-        /* FIXME: gettextize? */
-        char* emsg = Sprintf("Can't load %s", conv_from_system(url))->ptr;
-        disp_err_message(emsg, FALSE);
-    } else if (buf != NO_BUFFER) {
-        pushBuffer(buf);
-        if (RenderFrame && Currentbuf->frameset != NULL)
-            rFrame();
-    }
-}
-
 /* go to specified URL */
 static void
 goURL0(char* prompt, int relative)
 {
-    char *url, *referer;
+    const char *url, *referer;
     struct Url p_url, *current;
     struct Buffer* cur_buf = Currentbuf;
     const int* no_referer_ptr;
@@ -3815,7 +3792,6 @@ DEFUN(reload, RELOAD, "Load current document anew")
     if (Currentbuf->bufferprop & BP_FRAME && (fbuf = Currentbuf->linkBuffer[LB_N_FRAME])) {
         if (fmInitialized()) {
             message("Rendering frame", 0, 0);
-            tty_refresh();
         }
         if (!(buf = renderFrame(fbuf, 1))) {
             return;
@@ -3854,7 +3830,6 @@ DEFUN(reload, RELOAD, "Load current document anew")
     url = parsedURL2Str(&Currentbuf->currentURL);
     /* FIXME: gettextize? */
     message("Reloading...", 0, 0);
-    tty_refresh();
     old_charset = getRuntime()->DocumentCharset;
     if (Currentbuf->document_charset != WC_CES_US_ASCII)
         getRuntime()->DocumentCharset = Currentbuf->document_charset;
@@ -4045,7 +4020,6 @@ DEFUN(rFrame, FRAME, "Toggle rendering HTML frames")
     }
     if (fmInitialized()) {
         message("Rendering frame", 0, 0);
-        tty_refresh();
     }
     buf = renderFrame(Currentbuf, 0);
     if (buf == NULL) {
