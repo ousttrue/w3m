@@ -349,16 +349,16 @@ sig_chld(int signo)
 static Str
 make_optional_header_string(char* s)
 {
-    char* p;
-    Str hs;
-
     if (strchr(s, '\n') || strchr(s, '\r'))
         return NULL;
+
+    const char* p;
     for (p = s; *p && *p != ':'; p++)
         ;
     if (*p != ':' || p == s)
         return NULL;
-    hs = Strnew_size(strlen(s) + 3);
+
+    Str hs = Strnew_size(strlen(s) + 3);
     Strcopy_charp_n(hs, s, p - s);
     if (!Strcasecmp_charp(hs, "content-type"))
         override_content_type = TRUE;
@@ -1010,7 +1010,7 @@ bool w3m_args(int argc, char** argv)
     WcOption.auto_detect = auto_detect;
 
     Currentbuf = Firstbuf;
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(Currentbuf);
     if (line_str) {
         _goLine(line_str);
     }
@@ -1033,7 +1033,7 @@ void w3m_idle()
         }
     }
 
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(Currentbuf);
     tty_refresh();
 
     // idle timer event
@@ -1285,8 +1285,7 @@ SigPipe(SIGNAL_ARG)
  * Command functions: These functions are called with a keystroke.
  */
 
-static void
-nscroll(int n, int mode)
+static void nscroll(int n)
 {
     struct Buffer* buf = Currentbuf;
     struct Line *top = buf->doc.topLine, *cur = buf->doc.currentLine;
@@ -1337,42 +1336,42 @@ nscroll(int n, int mode)
 DEFUN(pgFore, NEXT_PAGE, "Scroll down one page")
 {
     if (vi_prec_num)
-        nscroll(searchKeyNum() * (Currentbuf->LINES - 1), B_NORMAL);
+        nscroll(searchKeyNum() * (Currentbuf->LINES - 1));
     else
-        nscroll(getRuntime()->prec_num ? searchKeyNum() : searchKeyNum() * (Currentbuf->LINES - 1), getRuntime()->prec_num ? B_SCROLL : B_NORMAL);
+        nscroll(getRuntime()->prec_num ? searchKeyNum() : searchKeyNum() * (Currentbuf->LINES - 1));
 }
 
 /* Move page backward */
 DEFUN(pgBack, PREV_PAGE, "Scroll up one page")
 {
     if (vi_prec_num)
-        nscroll(-searchKeyNum() * (Currentbuf->LINES - 1), B_NORMAL);
+        nscroll(-searchKeyNum() * (Currentbuf->LINES - 1));
     else
-        nscroll(-(getRuntime()->prec_num ? searchKeyNum() : searchKeyNum() * (Currentbuf->LINES - 1)), getRuntime()->prec_num ? B_SCROLL : B_NORMAL);
+        nscroll(-(getRuntime()->prec_num ? searchKeyNum() : searchKeyNum() * (Currentbuf->LINES - 1)));
 }
 
 /* Move half page forward */
 DEFUN(hpgFore, NEXT_HALF_PAGE, "Scroll down half a page")
 {
-    nscroll(searchKeyNum() * (Currentbuf->LINES / 2 - 1), B_NORMAL);
+    nscroll(searchKeyNum() * (Currentbuf->LINES / 2 - 1));
 }
 
 /* Move half page backward */
 DEFUN(hpgBack, PREV_HALF_PAGE, "Scroll up half a page")
 {
-    nscroll(-searchKeyNum() * (Currentbuf->LINES / 2 - 1), B_NORMAL);
+    nscroll(-searchKeyNum() * (Currentbuf->LINES / 2 - 1));
 }
 
 /* 1 line up */
 DEFUN(lup1, UP, "Scroll the screen up one line")
 {
-    nscroll(searchKeyNum(), B_SCROLL);
+    nscroll(searchKeyNum());
 }
 
 /* 1 line down */
 DEFUN(ldown1, DOWN, "Scroll the screen down one line")
 {
-    nscroll(-searchKeyNum(), B_SCROLL);
+    nscroll(-searchKeyNum());
 }
 
 /* move cursor position to the center of screen */

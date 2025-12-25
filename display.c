@@ -503,14 +503,10 @@ redrawNLine(struct Buffer* buf, int n)
     getAllImage(buf);
 }
 
-void displayBuffer(struct Buffer* buf, enum DisplayMode mode)
+void displayBuffer(struct Buffer* buf)
 {
     if (!buf) {
         return;
-    }
-
-    if (buf->doc.topLine == NULL && readBufferCache(buf)) {
-        mode = B_FORCE_REDRAW;
     }
 
     if (buf->width == 0)
@@ -540,8 +536,7 @@ void displayBuffer(struct Buffer* buf, enum DisplayMode mode)
     // rootY
     int ny = 0;
     if (nTab() > 1) {
-        if (mode == B_FORCE_REDRAW || mode == B_REDRAW_IMAGE)
-            calcTabPos();
+        calcTabPos();
         ny = LastTab()->y + 2;
         if (ny > LASTLINE())
             ny = LASTLINE();
@@ -550,19 +545,13 @@ void displayBuffer(struct Buffer* buf, enum DisplayMode mode)
         buf->rootY = ny;
         buf->LINES = LASTLINE() - ny;
         arrangeCursor(buf);
-        mode = B_REDRAW_IMAGE;
     }
 
     // check viewport ?
     static struct Line* cline = NULL;
     static int ccolumn = -1;
-    if (mode == B_FORCE_REDRAW //
-        || mode == B_SCROLL //
-        || mode == B_REDRAW_IMAGE //
-        || cline != buf->doc.topLine //
-        || ccolumn != buf->currentColumn) {
-
-        if (getRuntime()->activeImage && (mode == B_REDRAW_IMAGE || cline != buf->doc.topLine || ccolumn != buf->currentColumn)) {
+    if (cline != buf->doc.topLine || ccolumn != buf->currentColumn) {
+        if (getRuntime()->activeImage) {
             if (draw_image_flag) {
                 tty_clear();
                 screen_clear();
