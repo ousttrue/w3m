@@ -197,9 +197,7 @@ redrawLineRegion(struct Buffer* buf, struct Line* l, int i, int bpos, int epos)
     return rcol - column;
 }
 
-static void
-drawAnchorCursor0(struct Buffer* buf, struct AnchorList* al, int hseq, int prevhseq,
-    int tline, int eline, int active)
+void drawAnchorCursor0(struct Buffer* buf, struct AnchorList* al, int hseq, int prevhseq, int tline, int eline, int active)
 {
     int i, j;
     struct Line* l;
@@ -246,8 +244,7 @@ drawAnchorCursor0(struct Buffer* buf, struct AnchorList* al, int hseq, int prevh
     }
 }
 
-static void
-drawAnchorCursor(struct Buffer* buf)
+void drawAnchorCursor(struct Buffer* buf)
 {
     struct Anchor* an;
     int hseq, prevhseq;
@@ -503,21 +500,36 @@ redrawNLine(struct Buffer* buf, int n)
     getAllImage(buf);
 }
 
-void displayBuffer(struct Buffer* buf)
+void screen_from_lines(struct Buffer* buf)
 {
-    if (!buf) {
-        return;
+    if (getRuntime()->activeImage) {
+        if (draw_image_flag) {
+            tty_clear();
+            screen_clear();
+        }
+        clearImage();
+        loadImage(buf, IMG_FLAG_STOP);
+        image_touch++;
+        draw_image_flag = false;
     }
+    redrawNLine(buf, LASTLINE());
+}
 
-    if (buf->width == 0)
-        buf->width = INIT_BUFFER_WIDTH;
+void displayMsg(struct Buffer* buf)
+{
+    Str msg = make_lastline_message(buf);
+    if (buf->doc.firstLine == NULL) {
+        Strcat_charp(msg, "\tNo Line");
+    }
+    displayDelayedMessage();
+    screen_standout();
+    message(msg->ptr, buf->cursorX + buf->rootX, buf->cursorY + buf->rootY);
+    screen_standend();
+    term_title(conv_to_system(buf->buffername));
+}
 
-    // reshape
-    // if (buf->width != INIT_BUFFER_WIDTH && (is_html_type(buf->type) || getRuntime()->FoldLine)) {
-    //     buf->need_reshape = true;
-    //     reshapeBuffer(buf);
-    // }
-
+void bufferPosition(struct Buffer* buf)
+{
     // rootX
     if (getRuntime()->showLineNum) {
         if (buf->doc.lastLine && buf->doc.lastLine->real_linenumber > 0)
@@ -545,47 +557,5 @@ void displayBuffer(struct Buffer* buf)
         buf->rootY = ny;
         buf->LINES = LASTLINE() - ny;
         arrangeCursor(buf);
-    }
-
-    // check viewport ?
-    static struct Line* cline = NULL;
-    static int ccolumn = -1;
-    if (cline != buf->doc.topLine || ccolumn != buf->currentColumn) {
-        if (getRuntime()->activeImage) {
-            if (draw_image_flag) {
-                tty_clear();
-                screen_clear();
-            }
-            clearImage();
-            loadImage(buf, IMG_FLAG_STOP);
-            image_touch++;
-            draw_image_flag = false;
-        }
-        redrawNLine(buf, LASTLINE());
-
-        cline = buf->doc.topLine;
-        ccolumn = buf->currentColumn;
-    }
-
-    if (buf->doc.topLine == NULL)
-        buf->doc.topLine = buf->doc.firstLine;
-
-    drawAnchorCursor(buf);
-
-    Str msg = make_lastline_message(buf);
-    if (buf->doc.firstLine == NULL) {
-        Strcat_charp(msg, "\tNo Line");
-    }
-    displayDelayedMessage();
-    screen_standout();
-    message(msg->ptr, buf->cursorX + buf->rootX, buf->cursorY + buf->rootY);
-    screen_standend();
-    term_title(conv_to_system(buf->buffername));
-    tty_refresh();
-
-    if (getRuntime()->activeImage && getRuntime()->displayImage && buf->img) {
-        if (buf->image_loaded) {
-            drawImage(buf);
-        }
     }
 }

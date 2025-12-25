@@ -11,6 +11,7 @@
 #include "linein.h"
 #include <libwc/conv.h>
 #include <libwc/ces.h>
+#include <math.h>
 #include "history.h"
 #include "search.h"
 #include "html_form.h"
@@ -1010,7 +1011,7 @@ bool w3m_args(int argc, char** argv)
     WcOption.auto_detect = auto_detect;
 
     Currentbuf = Firstbuf;
-    displayBuffer(Currentbuf);
+    screen_from_lines(Currentbuf);
     if (line_str) {
         _goLine(line_str);
     }
@@ -1024,16 +1025,36 @@ void w3m_idle()
     //     chkURLBuffer(buf);
     // }
 
-    // if (Currentbuf->need_reshape) {
-    // }
-
     if (getRuntime()->activeImage && getRuntime()->displayImage && Currentbuf->img) {
         if (!Currentbuf->image_loaded) {
             loadImage(Currentbuf, IMG_FLAG_NEXT);
         }
     }
 
-    displayBuffer(Currentbuf);
+    struct Buffer* buf = getRuntime()->CurrentTab->currentBuffer;
+    bufferPosition(buf);
+
+    // check viewport ?
+    static struct Line* cline = NULL;
+    static int ccolumn = -1;
+    if (cline != buf->doc.topLine || ccolumn != buf->currentColumn) {
+        // render
+        screen_from_lines(buf);
+
+        cline = buf->doc.topLine;
+        ccolumn = buf->currentColumn;
+    }
+
+    drawAnchorCursor(buf);
+
+    displayMsg(buf);
+
+    if (getRuntime()->activeImage && getRuntime()->displayImage && buf->img) {
+        if (buf->image_loaded) {
+            drawImage(buf);
+        }
+    }
+
     tty_refresh();
 
     // idle timer event
