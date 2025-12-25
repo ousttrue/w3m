@@ -102,7 +102,7 @@ struct Buffer {
     char* edit;
     struct mailcap* mailcap;
     char* mailcap_source;
-    char* header_source;
+    const char* header_source;
     char search_header;
     char* ssl_certificate;
     char image_flag;

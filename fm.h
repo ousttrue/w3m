@@ -369,9 +369,6 @@ global char* passwd_file init(PASSWD_FILE);
 global char* pre_form_file init(PRE_FORM_FILE);
 global char* ftppasswd init(NULL);
 global int ftppass_hostnamegen init(TRUE);
-#ifdef USE_IMAGE
-global char* image_source init(NULL);
-#endif
 global char* UserAgent init(NULL);
 global int NoSendReferer init(FALSE);
 global int CrossOriginReferer init(TRUE);

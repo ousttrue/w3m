@@ -23,3 +23,5 @@ void parseURL(const char* url, struct Url* p_url, struct Url* current);
 Str _parsedURL2Str(struct Url* pu, bool pass, bool user, bool label);
 Str parsedURL2Str(struct Url* pu);
 int openSocket(char* hostname, const char* remoteport_name, unsigned short remoteport_num);
+char* guessContentType(const char* filename);
+char* filename_extension(const char* patch, int is_url);

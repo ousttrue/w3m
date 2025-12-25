@@ -21,3 +21,4 @@ enum TmpFileTypes {
 
 Str tmpfname(enum TmpFileTypes type, const char* ext);
 char* file_to_url(const char* file);
+void setup_child(int child, int i, int f);

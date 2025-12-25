@@ -1,26 +1,19 @@
 #pragma once
 #include "textlist.h"
 #include "istream.h"
+#include "compression.h"
+#include "urlscheme.h"
 #include <time.h>
 #include <stdbool.h>
 #include <libwc/wc_types.h>
 
-enum CompressionType {
-    CMP_NOCOMPRESS = 0,
-    CMP_COMPRESS = 1,
-    CMP_GZIP = 2,
-    CMP_BZIP2 = 3,
-    CMP_DEFLATE = 4,
-    CMP_BROTLI = 5,
-};
-
 union input_stream;
 struct URLFile {
-    unsigned char scheme;
+    enum UrlScheme scheme;
     char is_cgi;
     enum EncodingType encoding;
     union input_stream* stream;
-    char* ext;
+    const char* ext;
     enum CompressionType compression;
     int content_encoding;
     const char* guess_type;
@@ -33,6 +26,16 @@ struct URLOption {
     char* referer;
     int flag;
 };
+
+#define StrUFgets(f) StrISgets((f)->stream)
+#define StrmyUFgets(f) StrmyISgets((f)->stream)
+#define UFgetc(f) ISgetc((f)->stream)
+#define UFundogetc(f) ISundogetc((f)->stream)
+#define UFclose(f)                   \
+    if (ISclose((f)->stream) == 0) { \
+        (f)->stream = NULL;          \
+    }
+#define UFfileno(f) ISfileno((f)->stream)
 
 struct Url;
 struct FormList;
@@ -53,3 +56,4 @@ Str convertLine(struct URLFile* uf, Str line, int mode, wc_ces* charset, wc_ces 
 Str loadGopherDir(struct URLFile* uf, struct Url* pu, wc_ces* charset);
 Str loadGopherSearch(struct URLFile* uf, struct Url* pu, wc_ces* charset);
 int save2tmp(struct URLFile uf, char* tmpf);
+void UFhalfclose(struct URLFile* f);

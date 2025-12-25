@@ -164,7 +164,6 @@ extern void cursorBottom(void);
 
 extern int currentLn(struct Buffer* buf);
 extern void tmpClearBuffer(struct Buffer* buf);
-extern char* filename_extension(char* patch, int is_url);
 #ifdef USE_EXTERNAL_URI_LOADER
 extern void initURIMethods(void);
 extern Str searchURIMethods(struct Url* pu);
@@ -175,7 +174,6 @@ extern wc_ces url_to_charset(const char* url, const struct Url* base,
     wc_ces doc_charset);
 extern char* url_encode(const char* url, const struct Url* base,
     wc_ces doc_charset);
-extern char* acceptableEncoding(void);
 
 struct FormList;
 extern int is_boundary(unsigned char*, unsigned char*);
@@ -308,16 +306,9 @@ extern void copyParsedURL(struct Url* p, const struct Url* q);
 extern Str parsedURL2RefererStr(struct Url* pu);
 struct HttpRequest;
 extern char* acceptableMimeTypes(void);
-extern char* guessContentType(char* filename);
 extern TextList* make_domain_list(char* domain_list);
 extern int check_no_proxy(char* domain);
-extern Str loadFTPDir(struct Url* pu, wc_ces* charset, bool do_download);
-extern void closeFTP(void);
-extern void disconnectFTP(void);
-extern InputStream openNewsStream(struct Url* pu);
-extern Str loadNewsgroup(struct Url* pu, wc_ces* charset, bool do_download);
-extern void closeNews(void);
-extern void disconnectNews(void);
+
 extern struct AnchorList* putAnchor(struct AnchorList* al, char* url, char* target,
     struct Anchor** anchor_return, char* referer,
     char* title, unsigned char key, int line,
@@ -375,7 +366,6 @@ extern void sync_with_option(void);
 extern char* rcFile(char* base);
 extern char* etcFile(char* base);
 extern char* confFile(char* base);
-extern char* auxbinFile(char* base);
 extern char* libFile(char* base);
 extern char* helpFile(char* base);
 extern FILE* openSecretFile(char* fname);
@@ -390,7 +380,6 @@ extern void invalidate_auth_user_passwd(struct Url* pu, char* realm,
 extern char* last_modified(struct Buffer* buf);
 extern Str romanNumeral(int n);
 extern Str romanAlphabet(int n);
-extern void setup_child(int child, int i, int f);
 extern void myExec(char* command);
 extern void mySystem(char* command, int background);
 extern Str myExtCommand(char* cmd, char* arg, int redirect);

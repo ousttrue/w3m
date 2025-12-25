@@ -11,6 +11,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#define SAVE_BUF_SIZE 1536
+
 #define nextChar(s, l) \
     do {               \
         (s)++;         \
@@ -46,6 +48,7 @@ struct Event {
 };
 
 struct Runtime {
+    const char* image_source;
     int DecodeURL;
     char QuietMessage;
     int ShowEffect;

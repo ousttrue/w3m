@@ -1,4 +1,6 @@
 #include "maparea.h"
+#include "news.h"
+#include "ftp.h"
 #include "etc.h"
 #include "content.h"
 #include "local_cgi.h"

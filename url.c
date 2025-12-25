@@ -1,4 +1,5 @@
 #include "w3m_rc.h"
+#include "news.h"
 #include "ftp.h"
 #include "URLFile.h"
 #include "file.h"
@@ -1614,7 +1615,7 @@ guessContentTypeFromTable(struct table2* table, char* filename)
     return NULL;
 }
 
-char* guessContentType(char* filename)
+char* guessContentType(const char* filename)
 {
     char* ret;
     int i;
@@ -1780,7 +1781,7 @@ end:
     return ret;
 }
 
-char* filename_extension(char* path, int is_url)
+char* filename_extension(const char* path, int is_url)
 {
     char *last_dot = "", *p = path;
     int i;

@@ -1,4 +1,5 @@
 #include "w3m_rc.h"
+#include "compression.h"
 #include "etc.h"
 #include "mailcap.h"
 #include "local_cgi.h"
@@ -53,6 +54,7 @@ static struct termios d_ioval;
 char UseGraphicChar = GRAPHIC_CHAR_CHARSET;
 
 struct Runtime g_runtime = {
+    .image_source = (NULL),
     .DecodeURL = (FALSE),
     .QuietMessage = (FALSE),
     .ShowEffect = (TRUE),
@@ -2701,11 +2703,6 @@ char* rcFile(char* base)
         /* /file, ./file, ../file, ~/file */
         return expandPath(base);
     return expandPath(Strnew_m_charp(rc_dir, "/", base, NULL)->ptr);
-}
-
-char* auxbinFile(char* base)
-{
-    return expandPath(Strnew_m_charp(w3m_auxbin_dir(), "/", base, NULL)->ptr);
 }
 
 #if 0 /* not used */

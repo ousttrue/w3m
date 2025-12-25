@@ -7,16 +7,6 @@
 #include <stdbool.h>
 #include <time.h>
 
-#define StrUFgets(f) StrISgets((f)->stream)
-#define StrmyUFgets(f) StrmyISgets((f)->stream)
-#define UFgetc(f) ISgetc((f)->stream)
-#define UFundogetc(f) ISundogetc((f)->stream)
-#define UFclose(f)                   \
-    if (ISclose((f)->stream) == 0) { \
-        (f)->stream = NULL;          \
-    }
-#define UFfileno(f) ISfileno((f)->stream)
-
 struct table2 {
     char* item1;
     char* item2;

@@ -896,7 +896,7 @@ void loadImage(struct Buffer* buf, int flag)
              * setup_child(TRUE, 0, -1);
              */
             setup_child(FALSE, 0, -1);
-            image_source = cache->file;
+            getRuntime()->image_source = cache->file;
             loadGeneralFile(cache->url, cache->current, NULL, 0, NULL, false);
             /* TODO make sure removing this didn't break anything
             if (!b || !b->real_type || strncasecmp(b->real_type, "image/", 6))
