@@ -49,7 +49,7 @@ void clearImage(void);
 
 struct Buffer;
 extern void deleteImage(struct Buffer* buf);
-extern void getAllImage(struct Buffer* buf);
+// extern void getAllImage(struct Buffer* buf);
 
 #define IMG_FLAG_START 0
 #define IMG_FLAG_STOP 1

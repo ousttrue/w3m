@@ -497,7 +497,6 @@ redrawNLine(struct Buffer* buf, int n)
         if (i >= buf->LINES - n || i < -n)
             redrawLineImage(buf, l, i + buf->rootY);
     }
-    getAllImage(buf);
 }
 
 void screen_from_lines(struct Buffer* buf)

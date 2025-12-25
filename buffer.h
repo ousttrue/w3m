@@ -106,7 +106,7 @@ struct Buffer {
     char search_header;
     char* ssl_certificate;
     char image_flag;
-    char image_loaded;
+    // char image_loaded;
     struct Anchor* submit;
     struct BufferPos* undo;
     struct _AlarmEvent* event;

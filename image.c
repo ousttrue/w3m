@@ -564,58 +564,55 @@ cleanup:
 
 void drawImage(struct Buffer* currentbuf)
 {
-    static char buf[64];
-    int j, draw = FALSE;
-    struct TerminalImage* i;
-    struct stat st;
-
-    if (!getRuntime()->activeImage)
+    struct Runtime* rt = getRuntime();
+    if (!rt->activeImage)
         return;
     if (!n_terminal_image)
         return;
-    for (j = 0; j < n_terminal_image; j++) {
-        i = &terminal_image[j];
 
-        if (getRuntime()->enable_inline_image) {
+    bool draw = false;
+    for (int j = 0; j < n_terminal_image; j++) {
+        struct TerminalImage* i = &terminal_image[j];
+
+        if (rt->enable_inline_image) {
             /*
              * So this shouldn't ever happen, but if it does then at least let's
              * not have external programs fetch images from the Internet...
              */
-            if (!i->cache->touch || stat(i->cache->file, &st))
+            if (!i->cache->touch)
+                return;
+            struct stat st;
+            if (stat(i->cache->file, &st) != 0)
                 return;
 
-            char* url = i->cache->file;
+            const char* url = i->cache->file;
+            int x = i->x / rt->pixel_per_char_i;
+            int y = i->y / rt->pixel_per_line_i;
+            int w = (i->cache->a_width > 0) //
+                ? ((i->cache->width + i->x % rt->pixel_per_char_i + rt->pixel_per_char_i - 1) / rt->pixel_per_char_i)
+                : 0;
+            int h = (i->cache->a_height > 0) //
+                ? ((i->cache->height + i->y % rt->pixel_per_line_i + rt->pixel_per_line_i - 1) / rt->pixel_per_line_i)
+                : 0;
+            int sx = i->sx / rt->pixel_per_char_i;
+            int sy = i->sy / rt->pixel_per_line_i;
+            int sw = (i->width + i->sx % rt->pixel_per_char_i + rt->pixel_per_char_i - 1) / rt->pixel_per_char_i;
+            int sh = (i->height + i->sy % rt->pixel_per_line_i + rt->pixel_per_line_i - 1) / rt->pixel_per_line_i;
 
-            int x = i->x / getRuntime()->pixel_per_char_i;
-            int y = i->y / getRuntime()->pixel_per_line_i;
-
-            int w = i->cache->a_width > 0 ? (
-                                                (i->cache->width + i->x % getRuntime()->pixel_per_char_i + getRuntime()->pixel_per_char_i - 1) / getRuntime()->pixel_per_char_i)
-                                          : 0;
-            int h = i->cache->a_height > 0 ? (
-                                                 (i->cache->height + i->y % getRuntime()->pixel_per_line_i + getRuntime()->pixel_per_line_i - 1) / getRuntime()->pixel_per_line_i)
-                                           : 0;
-
-            int sx = i->sx / getRuntime()->pixel_per_char_i;
-            int sy = i->sy / getRuntime()->pixel_per_line_i;
-
-            int sw = (i->width + i->sx % getRuntime()->pixel_per_char_i + getRuntime()->pixel_per_char_i - 1) / getRuntime()->pixel_per_char_i;
-            int sh = (i->height + i->sy % getRuntime()->pixel_per_line_i + getRuntime()->pixel_per_line_i - 1) / getRuntime()->pixel_per_line_i;
-
-            if (getRuntime()->enable_inline_image == INLINE_IMG_SIXEL) {
+            if (rt->enable_inline_image == INLINE_IMG_SIXEL) {
                 w = i->cache->a_width > 0 ? i->width : 0;
                 h = i->cache->a_height > 0 ? i->height : 0;
-                put_image_sixel(url, x, y, w, h, i->sx, i->sy, sw * getRuntime()->pixel_per_char, sh * getRuntime()->pixel_per_line_i, n_terminal_image);
+                put_image_sixel(url, x, y, w, h, i->sx, i->sy, sw * rt->pixel_per_char, sh * rt->pixel_per_line_i, n_terminal_image);
                 tty_MOVE(Currentbuf->cursorY, Currentbuf->cursorX);
-            } else if (getRuntime()->enable_inline_image == INLINE_IMG_OSC5379) {
+            } else if (rt->enable_inline_image == INLINE_IMG_OSC5379) {
                 Str buf = get_image_osc5379(url, x, y, w, h, sx, sy, sw, sh);
                 tty_MOVE(y, x);
                 writestr(buf->ptr);
                 tty_MOVE(Currentbuf->cursorY, Currentbuf->cursorX);
-            } else if (getRuntime()->enable_inline_image == INLINE_IMG_ITERM2) {
+            } else if (rt->enable_inline_image == INLINE_IMG_ITERM2) {
                 put_image_iterm2(url, x, y, sw, sh);
-            } else if (getRuntime()->enable_inline_image == INLINE_IMG_KITTY) {
-                put_image_kitty(url, x, y, i->width, i->height, i->sx, i->sy, sw * getRuntime()->pixel_per_char, sh * getRuntime()->pixel_per_line_i, sw, sh);
+            } else if (rt->enable_inline_image == INLINE_IMG_KITTY) {
+                put_image_kitty(url, x, y, i->width, i->height, i->sx, i->sy, sw * rt->pixel_per_char, sh * rt->pixel_per_line_i, sw, sh);
             }
 
             continue;
@@ -632,6 +629,8 @@ void drawImage(struct Buffer* currentbuf)
             fputs("0;", Imgdisplay_wf); /* DrawImage() */
         } else
             fputs("1;", Imgdisplay_wf); /* DrawImage(redraw) */
+
+        char buf[64];
         sprintf(buf, "%d;%d;%d;%d;%d;%d;%d;%d;%d;",
             (-i->cache->index - 1) % MAX_IMAGE + 1, i->x, i->y,
             (i->cache->width > 0) ? i->cache->width : 0,
@@ -643,7 +642,7 @@ void drawImage(struct Buffer* currentbuf)
         draw = TRUE;
     }
 
-    if (!getRuntime()->enable_inline_image) {
+    if (!rt->enable_inline_image) {
         if (!draw)
             return;
         syncImage();
@@ -688,7 +687,7 @@ static Hash_sv* image_hash = NULL;
 static Hash_sv* image_file = NULL;
 static GeneralList* image_list = NULL;
 static struct ImageCache** image_cache = NULL;
-static struct Buffer* image_buffer = NULL;
+// static struct Buffer* image_buffer = NULL;
 
 void deleteImage(struct Buffer* buf)
 {
@@ -708,29 +707,29 @@ void deleteImage(struct Buffer* buf)
     loadImage(NULL, IMG_FLAG_STOP);
 }
 
-void getAllImage(struct Buffer* buf)
-{
-    struct AnchorList* al;
-    struct Anchor* a;
-    struct Url* current;
-    int i;
-
-    image_buffer = buf;
-    if (!buf)
-        return;
-    buf->image_loaded = TRUE;
-    al = buf->img;
-    if (!al)
-        return;
-    current = baseURL(buf);
-    for (i = 0, a = al->anchors; i < al->nanchor; i++, a++) {
-        if (a->image) {
-            a->image->cache = getImage(a->image, current, buf->image_flag);
-            if (a->image->cache && a->image->cache->loaded == IMG_FLAG_UNLOADED)
-                buf->image_loaded = FALSE;
-        }
-    }
-}
+// void getAllImage(struct Buffer* buf)
+// {
+//     struct AnchorList* al;
+//     struct Anchor* a;
+//     struct Url* current;
+//     int i;
+//
+//     image_buffer = buf;
+//     if (!buf)
+//         return;
+//     buf->image_loaded = TRUE;
+//     al = buf->img;
+//     if (!al)
+//         return;
+//     current = baseURL(buf);
+//     for (i = 0, a = al->anchors; i < al->nanchor; i++, a++) {
+//         if (a->image) {
+//             a->image->cache = getImage(a->image, current, buf->image_flag);
+//             if (a->image->cache && a->image->cache->loaded == IMG_FLAG_UNLOADED)
+//                 buf->image_loaded = FALSE;
+//         }
+//     }
+// }
 
 static void
 showImageProgress(struct Buffer* buf)
@@ -764,13 +763,15 @@ void loadImage(struct Buffer* buf, int flag)
     if (!getRuntime()->activeImage) {
         return;
     }
-    struct ImageCache* cache;
-    struct stat st;
-    int i, draw = FALSE;
-    /* int wait_st; */
-#ifdef DONT_CALL_GC_AFTER_FORK
-    char* loadargs[7];
-#endif
+    if (!buf) {
+        return;
+    }
+    if (!buf->img) {
+        return;
+    }
+    // if (buf->image_loaded) {
+    //     return;
+    // }
 
     if (maxLoadImage > MAX_LOAD_IMAGE)
         maxLoadImage = MAX_LOAD_IMAGE;
@@ -782,13 +783,17 @@ void loadImage(struct Buffer* buf, int flag)
         image_cache = New_N(struct ImageCache*, MAX_LOAD_IMAGE);
         bzero(image_cache, sizeof(struct ImageCache*) * MAX_LOAD_IMAGE);
     }
-    for (i = 0; i < n_load_image; i++) {
-        cache = image_cache[i];
+
+    bool draw = false;
+    for (int i = 0; i < n_load_image; i++) {
+        struct ImageCache* cache = image_cache[i];
         if (!cache || !cache->touch)
             continue;
-        if (lstat(cache->touch, &st))
+        struct stat st;
+        if (lstat(cache->touch, &st) != 0)
             continue;
         if (cache->pid) {
+            continue;
             kill(cache->pid, SIGKILL);
             /*
              * #ifdef HAVE_WAITPID
@@ -799,19 +804,19 @@ void loadImage(struct Buffer* buf, int flag)
              */
             cache->pid = 0;
         }
-        if (!stat(cache->file, &st)) {
+        if (stat(cache->file, &st) == 0) {
             cache->loaded = IMG_FLAG_LOADED;
-            if (getImageSize(cache)) {
-            }
-            draw = TRUE;
-        } else
+            getImageSize(cache);
+            draw = true;
+        } else {
             cache->loaded = IMG_FLAG_ERROR;
+        }
         unlink(cache->touch);
         image_cache[i] = NULL;
     }
 
-    for (i = (buf != image_buffer) ? 0 : maxLoadImage; i < n_load_image; i++) {
-        cache = image_cache[i];
+    for (int i = 0; i < n_load_image; i++) {
+        struct ImageCache* cache = image_cache[i];
         if (!cache || !cache->touch)
             continue;
         if (cache->pid) {
@@ -835,23 +840,25 @@ void loadImage(struct Buffer* buf, int flag)
         image_list = NULL;
         image_file = NULL;
         n_load_image = maxLoadImage;
-        image_buffer = NULL;
+        // image_buffer = NULL;
         return;
     }
 
-    if (draw && image_buffer) {
+    if (draw) {
         if (!getRuntime()->enable_inline_image)
             drawImage(buf);
-        showImageProgress(image_buffer);
+        showImageProgress(buf);
     }
 
-    image_buffer = buf;
+    // image_buffer = buf;
 
     if (!image_list)
         return;
-    for (i = 0; i < n_load_image; i++) {
+    for (int i = 0; i < n_load_image; i++) {
         if (image_cache[i])
             continue;
+
+        struct ImageCache* cache = 0;
         while (1) {
             cache = (struct ImageCache*)popValue(image_list);
             if (!cache) {
@@ -872,23 +879,6 @@ void loadImage(struct Buffer* buf, int flag)
         }
 
         flush_tty();
-#ifdef DONT_CALL_GC_AFTER_FORK
-        loadargs[0] = MyProgramName;
-        loadargs[1] = "-$$getimage";
-        loadargs[2] = conv_to_system(cache->url);
-        loadargs[3] = conv_to_system(parsedURL2Str(cache->current)->ptr);
-        loadargs[4] = cache->file;
-        loadargs[5] = cache->touch;
-        loadargs[6] = NULL;
-        if ((cache->pid = fork()) == 0) {
-            setup_child(FALSE, 0, -1);
-            execvp(MyProgramName, loadargs);
-            exit(1);
-        } else if (cache->pid < 0) {
-            cache->pid = 0;
-            return;
-        }
-#else /* !DONT_CALL_GC_AFTER_FORK */
         if ((cache->pid = fork()) == 0) {
             /*
              * setup_child(TRUE, 0, -1);
@@ -900,21 +890,12 @@ void loadImage(struct Buffer* buf, int flag)
             if (!b || !b->real_type || strncasecmp(b->real_type, "image/", 6))
                 unlink(cache->file);
             */
-#if defined(HAVE_SYMLINK) && defined(HAVE_LSTAT)
             symlink(cache->file, cache->touch);
-#else
-            {
-                FILE* f = fopen(cache->touch, "w");
-                if (f)
-                    fclose(f);
-            }
-#endif
             exit(0);
         } else if (cache->pid < 0) {
             cache->pid = 0;
             return;
         }
-#endif /* !DONT_CALL_GC_AFTER_FORK */
     }
 }
 

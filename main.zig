@@ -348,6 +348,13 @@ const Screen = struct {
 
 var g_screen = Screen{};
 
+export fn screen_position() c.Vec2 {
+    return .{
+        .x = g_screen.x,
+        .y = g_screen.y,
+    };
+}
+
 fn screen_need_redraw(
     c1: [*c]const u8,
     pr1: c.ScreenCellProperty,
@@ -787,11 +794,7 @@ export fn tty_write_screen() void {
     const g_runtime: *c.Runtime = c.getRuntime();
     var putc_status = PutcStatus.init(g_runtime.InnerCharset, g_runtime.DisplayCharset);
 
-    defer {
-        putc_status.end(getOutputHandle());
-        c.tty_MOVE(@intCast(g_screen.y), @intCast(g_screen.x));
-        flush_tty();
-    }
+    defer putc_status.end(getOutputHandle());
 
     for (0..g_screen.line_count) |line| {
         const pLine = &g_screen.lines[line];

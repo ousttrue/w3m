@@ -925,6 +925,7 @@ int select_menu(Menu* menu, int mselect)
      * move(menu->cursorY, menu->cursorX); */
     screen_move(menu->y + mselect - menu->offset, menu->x);
     screen_toggle_stand();
+    tty_write_screen();
 
     return (menu->select);
 }
@@ -2150,7 +2151,6 @@ void initMenu(void)
     w3mMenuList[2].menu = &SelTabMenu;
     w3mMenuList[2].item = NULL;
     w3mMenuList[3].id = NULL;
-
 
     if (!MainMenuEncode) {
         MenuItem* item;

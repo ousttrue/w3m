@@ -6,6 +6,7 @@
 /// signal
 #include "Str.h"
 #include "termcap_util.h"
+#include "geometry.h"
 #include <libwc/wtf.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -215,3 +216,5 @@ wc_uint32 getChar(char* p);
 void show_params(FILE* fp);
 int exec_cmd(const char* cmd);
 uint8_t blockChild(const char* cmd);
+
+struct Vec2 screen_position();

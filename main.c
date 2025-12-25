@@ -1023,12 +1023,6 @@ void w3m_idle()
     //     chkURLBuffer(buf);
     // }
 
-    if (getRuntime()->activeImage && getRuntime()->displayImage && Currentbuf->img) {
-        if (!Currentbuf->image_loaded) {
-            loadImage(Currentbuf, IMG_FLAG_NEXT);
-        }
-    }
-
     struct Buffer* buf = getRuntime()->CurrentTab->currentBuffer;
     bufferPosition(buf);
 
@@ -1041,19 +1035,26 @@ void w3m_idle()
 
         cline = buf->doc.topLine;
         ccolumn = buf->currentColumn;
-    }
 
-    drawAnchorCursor(buf);
+        tty_write_screen();
+
+        // getAllImage(buf);
+
+        loadImage(Currentbuf, IMG_FLAG_NEXT);
+    }
 
     displayMsg(buf);
 
-    if (getRuntime()->activeImage && getRuntime()->displayImage && buf->img) {
-        if (buf->image_loaded) {
-            drawImage(buf);
-        }
+    struct Vec2 pos = screen_position();
+    drawAnchorCursor(buf);
+
+    if (buf->img) {
+        // && buf->image_loaded
+        drawImage(buf);
     }
 
-    tty_write_screen();
+    tty_MOVE(pos.y, pos.x);
+    flush_tty();
 
     // idle timer event
     //     if (Currentbuf->event) {

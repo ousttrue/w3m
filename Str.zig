@@ -135,7 +135,7 @@ test Strnew {
 }
 
 export fn Strnew_size(len: c_int) c.Str {
-    return createStr(allocStrBuf(if (len <= 0) 0 else @intCast(len)));
+    return createStr(allocStrBuf(if (len <= 0) 0 else @intCast(len + 1)));
 }
 test Strnew_size {
     {
