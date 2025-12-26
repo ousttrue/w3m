@@ -272,7 +272,7 @@ global int NOproxy_netaddr init(TRUE);
 global int DNS_order init(DNS_ORDER_UNSPEC);
 extern int ai_family_order_table[7][3]; /* XXX */
 #endif /* INET6 */
-global TextList* NO_proxy_domains;
+global struct TextList* NO_proxy_domains;
 global char NoCache init(FALSE);
 global char use_proxy init(TRUE);
 #define Do_not_use_proxy (!use_proxy)
@@ -414,7 +414,7 @@ global char* mimetypes_files init(USER_MIMETYPES ", " SYS_MIMETYPES);
 global char* urimethodmap_files init(USER_URIMETHODMAP ", " SYS_URIMETHODMAP);
 #endif
 
-global TextList* fileToDelete;
+global struct TextList* fileToDelete;
 
 global int multicolList init(FALSE);
 
@@ -448,9 +448,9 @@ global int accept_bad_cookie init(ACCEPT_BAD_COOKIE_DISCARD);
 global char* cookie_reject_domains init(NULL);
 global char* cookie_accept_domains init(NULL);
 global char* cookie_avoid_wrong_number_of_dots init(NULL);
-global TextList* Cookie_reject_domains;
-global TextList* Cookie_accept_domains;
-global TextList* Cookie_avoid_wrong_number_of_dots_domains;
+global struct TextList* Cookie_reject_domains;
+global struct TextList* Cookie_accept_domains;
+global struct TextList* Cookie_avoid_wrong_number_of_dots_domains;
 #endif /* USE_COOKIE */
 
 #ifdef USE_IMAGE
@@ -492,7 +492,7 @@ global int FollowRedirection init(10);
 
 global int w3m_backend init(FALSE);
 global TextLineList* backend_halfdump_buf;
-global TextList* backend_batch_commands init(NULL);
+global struct TextList* backend_batch_commands init(NULL);
 int backend(void);
 extern void deleteFiles(void);
 

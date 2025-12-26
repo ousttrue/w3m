@@ -24,4 +24,4 @@ struct HttpRequest {
 Str HTTPrequestMethod(struct HttpRequest* hr);
 struct Url;
 Str HTTPrequestURI(struct Url* pu, struct HttpRequest* hr);
-Str HTTPrequest(struct Url* pu, struct Url* current, struct HttpRequest* hr, TextList* extra);
+Str HTTPrequest(struct Url* pu, struct Url* current, struct HttpRequest* hr, struct TextList* extra);

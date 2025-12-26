@@ -18,15 +18,15 @@ static int LINES, COLS;
 #else /* ! HAVE_READLINE */
 static char* readline(char*);
 #endif /* ! HAVE_READLINE */
-static TextList* split(char*);
+static struct TextList* split(char*);
 
 /* Prototype declaration of command functions */
-static void get(TextList*);
-static void post(TextList*);
-static void set(TextList*);
-static void show(TextList*);
-static void quit(TextList*);
-static void help(TextList*);
+static void get(struct TextList*);
+static void post(struct TextList*);
+static void set(struct TextList*);
+static void show(struct TextList*);
+static void quit(struct TextList*);
+static void help(struct TextList*);
 
 /* *INDENT-OFF* */
 /* Table of command functions */
@@ -34,7 +34,7 @@ struct {
     const char* name;
     const char* option_string;
     const char* help;
-    void (*func)(TextList*);
+    void (*func)(struct TextList*);
 } command_table[] = {
     { "get", "[-download_only] URL", "Retrieve URL.", get },
     { "post", "[-download_only] [-target TARGET] [-charset CHARSET]"
@@ -49,15 +49,15 @@ struct {
 /* *INDENT-ON* */
 
 /* Prototype declaration of functions to manipulate configuration variables */
-static void set_column(TextList*);
-static void show_column(TextList*);
+static void set_column(struct TextList*);
+static void show_column(struct TextList*);
 
 /* *INDENT-OFF* */
 /* Table of configuration variables */
 struct {
     const char* name;
-    void (*set_func)(TextList*);
-    void (*show_func)(TextList*);
+    void (*set_func)(struct TextList*);
+    void (*show_func)(struct TextList*);
 } variable_table[] = {
     { "column", set_column, show_column },
     { NULL, NULL, NULL },
@@ -127,7 +127,7 @@ internal_get(char* url, int flag, struct FormList* request)
 
 /* Command: get */
 static void
-get(TextList* argv)
+get(struct TextList* argv)
 {
     char *p, *url = NULL;
     int flag = FALSE;
@@ -145,7 +145,7 @@ get(TextList* argv)
 
 /* Command: post */
 static void
-post(TextList* argv)
+post(struct TextList* argv)
 {
     struct FormList* request;
     char *p, *target = NULL, *charset = NULL,
@@ -181,7 +181,7 @@ post(TextList* argv)
 
 /* Command: set */
 static void
-set(TextList* argv)
+set(struct TextList* argv)
 {
     if (argv->nitem > 1) {
         int i;
@@ -198,7 +198,7 @@ set(TextList* argv)
 
 /* Command: show */
 static void
-show(TextList* argv)
+show(struct TextList* argv)
 {
     if (argv->nitem >= 1) {
         int i;
@@ -215,7 +215,7 @@ show(TextList* argv)
 
 /* Command: quit */
 static void
-quit(TextList* argv)
+quit(struct TextList* argv)
 {
 #ifdef USE_COOKIE
     save_cookies();
@@ -225,7 +225,7 @@ quit(TextList* argv)
 
 /* Command: help */
 static void
-help(TextList* argv)
+help(struct TextList* argv)
 {
     int i;
     for (i = 0; command_table[i].name; i++)
@@ -236,7 +236,7 @@ help(TextList* argv)
 
 /* Sub command: set COLS */
 static void
-set_column(TextList* argv)
+set_column(struct TextList* argv)
 {
     if (argv->nitem == 1) {
         COLS = atol(argv->first->ptr);
@@ -245,7 +245,7 @@ set_column(TextList* argv)
 
 /* Sub command: show COLS */
 static void
-show_column(TextList* argv)
+show_column(struct TextList* argv)
 {
     fprintf(stdout, "column=%d\n", COLS);
 }
@@ -255,7 +255,7 @@ static void
 call_command_function(char* str)
 {
     int i;
-    TextList* argv = split(str);
+    struct TextList* argv = split(str);
     if (argv->nitem > 0) {
         for (i = 0; command_table[i].name; i++) {
             if (!strcasecmp(command_table[i].name, argv->first->ptr)) {
@@ -308,12 +308,12 @@ readline(char* prompt)
 #endif /* ! HAVE_READLINE */
 
 /* Splits a string into a list of tokens and returns that list. */
-static TextList*
+static struct TextList*
 split(char* p)
 {
     int in_double_quote = FALSE, in_single_quote = FALSE;
     Str s = Strnew();
-    TextList* tp = newTextList();
+    struct TextList* tp = newTextList();
 
     for (; *p; p++) {
         switch (*p) {

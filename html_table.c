@@ -721,7 +721,7 @@ get_spec_cell_width(struct table* tbl, int row, int col)
 
 void do_refill(struct table* tbl, int row, int col, int maxlimit)
 {
-    TextList* orgdata;
+    struct TextList* orgdata;
     TextListItem* l;
     struct readbuffer obuf;
     struct html_feed_environ h_env;
@@ -730,7 +730,7 @@ void do_refill(struct table* tbl, int row, int col, int maxlimit)
 
     if (tbl->tabdata[row] == NULL || tbl->tabdata[row][col] == NULL)
         return;
-    orgdata = (TextList*)tbl->tabdata[row][col];
+    orgdata = (struct TextList*)tbl->tabdata[row][col];
     tbl->tabdata[row][col] = newGeneralList();
 
     init_henv(&h_env, &obuf, envs, MAX_ENV_LEVEL,
@@ -2753,7 +2753,7 @@ feed_table_tag(struct table* tbl, char* line, struct table_mode* mode,
             int i = tbl->col, j = tbl->row;
             fprintf(stderr, "(a) row,col: %d, %d\n", j, i);
             if (tbl->tabdata[j] && tbl->tabdata[j][i]) {
-                for (it = ((TextList*)tbl->tabdata[j][i])->first;
+                for (it = ((struct TextList*)tbl->tabdata[j][i])->first;
                     it; it = it->next)
                     fprintf(stderr, "  [%s] \n", it->ptr);
             }

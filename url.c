@@ -98,7 +98,7 @@ static void add_index_file(struct Url* pu, struct URLFile* uf);
 #define HTTP_DEFAULT_FILE "/"
 #endif /* not HTTP_DEFAULT_FILE */
 
-static TextList* mimetypes_list;
+static struct TextList* mimetypes_list;
 static struct table2** UserMimeTypes;
 
 static struct table2*
@@ -1220,7 +1220,7 @@ Str parsedURL2RefererStr(struct Url* pu)
 
 struct URLFile
 openURL(const char* url, struct Url* pu, struct Url* current,
-    struct URLOption* option, struct FormList* request, TextList* extra_header,
+    struct URLOption* option, struct FormList* request, struct TextList* extra_header,
     struct URLFile* ouf, struct HttpRequest* hr, unsigned char* status, bool do_download)
 {
     Str tmp;
@@ -1559,7 +1559,7 @@ static void
 add_index_file(struct Url* pu, struct URLFile* uf)
 {
     char *p, *q;
-    TextList* index_file_list = NULL;
+    struct TextList* index_file_list = NULL;
     TextListItem* ti;
 
     if (non_null(index_file))
@@ -1624,12 +1624,12 @@ no_user_mimetypes:
     return guessContentTypeFromTable(DefaultGuess, filename);
 }
 
-TextList*
+struct TextList*
 make_domain_list(char* domain_list)
 {
     char* p;
     Str tmp;
-    TextList* domains = NULL;
+    struct TextList* domains = NULL;
 
     p = domain_list;
     tmp = Strnew_size(64);
@@ -1851,7 +1851,7 @@ loadURIMethods(char* filename)
 
 void initURIMethods(void)
 {
-    TextList* methodmap_list = NULL;
+    struct TextList* methodmap_list = NULL;
     TextListItem* tl;
     int i;
 

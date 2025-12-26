@@ -121,7 +121,7 @@ otherinfo(struct Url* target, struct Url* current, char* referer)
     return s->ptr;
 }
 
-Str HTTPrequest(struct Url* pu, struct Url* current, struct HttpRequest* hr, TextList* extra)
+Str HTTPrequest(struct Url* pu, struct Url* current, struct HttpRequest* hr, struct TextList* extra)
 {
     Str tmp;
     TextListItem* i;

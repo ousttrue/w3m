@@ -358,7 +358,7 @@ Str convertLine(struct URLFile* uf, Str line, int mode, wc_ces* charset,
 
 void readHeader(struct URLFile* uf, struct Buffer* newBuf, struct Url* pu)
 {
-    TextList* headerlist = newBuf->content.document_header = newTextList();
+    struct TextList* headerlist = newBuf->content.document_header = newTextList();
     if (pu->scheme == SCM_HTTP || pu->scheme == SCM_HTTPS)
         http_response_code = -1;
     else
@@ -1159,7 +1159,7 @@ findAuthentication(struct http_auth* hauth, struct Buffer* buf, char* auth_field
 
 static void
 getAuthCookie(struct http_auth* hauth, char* auth_header,
-    TextList* extra_header, struct Url* pu, struct HttpRequest* hr,
+    struct TextList* extra_header, struct Url* pu, struct HttpRequest* hr,
     struct FormList* request,
     volatile Str* uname, volatile Str* pwd)
 {
@@ -1325,7 +1325,7 @@ loadGeneralFile(const char* path, struct Url* volatile current, const char* refe
     const char *p, *real_type = NULL;
     struct Buffer* volatile t_buf = NULL;
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
-    TextList* extra_header = newTextList();
+    struct TextList* extra_header = newTextList();
     volatile Str uname = NULL;
     volatile Str pwd = NULL;
     volatile Str realm = NULL;

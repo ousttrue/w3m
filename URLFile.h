@@ -45,7 +45,7 @@ void init_stream(struct URLFile* uf, int scheme, union input_stream* stream);
 int doFileSave(struct URLFile uf, const char* defstr);
 struct URLFile openURL(const char* url, struct Url* pu, struct Url* current,
     struct URLOption* option, struct FormList* request,
-    TextList* extra_header, struct URLFile* ouf,
+    struct TextList* extra_header, struct URLFile* ouf,
     struct HttpRequest* hr, unsigned char* status, bool do_download);
 void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int internal);
 struct Buffer* doExternal(struct URLFile uf, const char* type, struct Buffer* defaultbuf);

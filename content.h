@@ -6,7 +6,7 @@
 
 struct Content {
     const char* filename;
-    TextList* document_header;
+    struct TextList* document_header;
     wc_ces content_charset;
 };
 

@@ -302,7 +302,7 @@ extern void copyParsedURL(struct Url* p, const struct Url* q);
 extern Str parsedURL2RefererStr(struct Url* pu);
 struct HttpRequest;
 extern char* acceptableMimeTypes(void);
-extern TextList* make_domain_list(char* domain_list);
+extern struct TextList* make_domain_list(char* domain_list);
 extern int check_no_proxy(char* domain);
 
 extern struct AnchorList* putAnchor(struct AnchorList* al, char* url, char* target,

@@ -289,7 +289,7 @@ const char* acceptableEncoding(void)
     if (encodings != NULL)
         return encodings->ptr;
 
-    TextList* l = newTextList();
+    struct TextList* l = newTextList();
     for (struct CompressionDecoder* d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
         if (check_command(d->cmd, d->auxbin_p)) {
             pushText(l, d->encoding);
