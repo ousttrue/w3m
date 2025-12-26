@@ -182,8 +182,8 @@ loadSomething(struct URLFile* f,
     }
     if (buf->currentURL.scheme == SCM_UNKNOWN)
         buf->currentURL.scheme = f->scheme;
-    if (f->scheme == SCM_LOCAL && buf->sourcefile == NULL)
-        buf->sourcefile = buf->content.filename;
+    // if (f->scheme == SCM_LOCAL && buf->sourcefile == NULL)
+    //     buf->sourcefile = buf->content.filename;
     if (loadproc == loadHTMLBuffer || loadproc == loadImageBuffer)
         buf->type = "text/html";
     else
