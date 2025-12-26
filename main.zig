@@ -109,7 +109,7 @@ export fn onFrame() void {
 
     const buf: *c.Buffer = c.getRuntime().*.CurrentTab.*.currentBuffer;
 
-    if(buf.doc.topLine == null){
+    if (buf.doc.topLine == null) {
         c.reshapeBuffer(buf);
     }
 
@@ -369,8 +369,10 @@ export fn get_pixel_per_cell(ppc: *c_int, ppl: *c_int) bool {
 //
 const SCREEN_SPACE = " ";
 
+const CELL_CHAR_LEN = 10;
+
 const ScreenCell = struct {
-    str: [8]u8,
+    str: [CELL_CHAR_LEN]u8,
     prop: c.ScreenCellProperty,
 
     fn set(
@@ -617,7 +619,7 @@ fn screen_addmchz(pc: [*c]const u8, len: usize, width: usize) void {
 
 export fn screen_addmch(pc: [*c]const u8, len: usize, width: usize) void {
     // copy for zero terminate
-    var buf: [8]u8 = undefined;
+    var buf: [CELL_CHAR_LEN]u8 = undefined;
     std.debug.assert(len < @sizeOf(@TypeOf(buf)));
     std.mem.copyForwards(u8, &buf, pc[0..len]);
     buf[len] = 0;
@@ -728,7 +730,7 @@ export fn screen_clear() void {
     while (i < g_screen.line_count) : (i += 1) {
         for (g_screen.lines[i].cells[0..g_screen.col_capacity]) |*cell| {
             cell.* = .{
-                .str = [1]u8{0} ** 8,
+                .str = [1]u8{0} ** CELL_CHAR_LEN,
                 .prop = c.S_EOL,
             };
         }
