@@ -286,7 +286,7 @@ save_first_animation_frame(const char* path)
     return NULL;
 }
 
-static void put_image_sixel(char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh, int n_terminal_image)
+static void put_image_sixel(const char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh, int n_terminal_image)
 {
     pid_t pid;
     int do_anim;
@@ -366,7 +366,7 @@ static void put_image_sixel(char* url, int x, int y, int w, int h, int sx, int s
     }
 }
 
-static Str get_image_osc5379(char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh)
+static Str get_image_osc5379(const char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh)
 {
     const char* size;
     if (w > 0 && h > 0)
@@ -784,57 +784,57 @@ void loadImage(struct Buffer* buf, int flag)
         bzero(image_cache, sizeof(struct ImageCache*) * MAX_LOAD_IMAGE);
     }
 
-    bool draw = false;
-    for (int i = 0; i < n_load_image; i++) {
-        struct ImageCache* cache = image_cache[i];
-        if (!cache || !cache->touch)
-            continue;
-        struct stat st;
-        if (lstat(cache->touch, &st) != 0)
-            continue;
-        if (cache->pid) {
-            continue;
-            kill(cache->pid, SIGKILL);
-            /*
-             * #ifdef HAVE_WAITPID
-             * waitpid(cache->pid, &wait_st, 0);
-             * #else
-             * wait(&wait_st);
-             * #endif
-             */
-            cache->pid = 0;
-        }
-        if (stat(cache->file, &st) == 0) {
-            cache->loaded = IMG_FLAG_LOADED;
-            getImageSize(cache);
-            draw = true;
-        } else {
-            cache->loaded = IMG_FLAG_ERROR;
-        }
-        unlink(cache->touch);
-        image_cache[i] = NULL;
-    }
-
-    for (int i = 0; i < n_load_image; i++) {
-        struct ImageCache* cache = image_cache[i];
-        if (!cache || !cache->touch)
-            continue;
-        if (cache->pid) {
-            kill(cache->pid, SIGKILL);
-            /*
-             * #ifdef HAVE_WAITPID
-             * waitpid(cache->pid, &wait_st, 0);
-             * #else
-             * wait(&wait_st);
-             * #endif
-             */
-            cache->pid = 0;
-        }
-        /*TODO make sure removing this didn't break anything
-        unlink(cache->touch);
-        */
-        image_cache[i] = NULL;
-    }
+    // bool draw = false;
+    // for (int i = 0; i < n_load_image; i++) {
+    //     struct ImageCache* cache = image_cache[i];
+    //     if (!cache || !cache->touch)
+    //         continue;
+    //     struct stat st;
+    //     if (lstat(cache->touch, &st) != 0)
+    //         continue;
+    //     if (cache->pid) {
+    //         continue;
+    //         kill(cache->pid, SIGKILL);
+    //         /*
+    //          * #ifdef HAVE_WAITPID
+    //          * waitpid(cache->pid, &wait_st, 0);
+    //          * #else
+    //          * wait(&wait_st);
+    //          * #endif
+    //          */
+    //         cache->pid = 0;
+    //     }
+    //     if (stat(cache->file, &st) == 0) {
+    //         cache->loaded = IMG_FLAG_LOADED;
+    //         getImageSize(cache);
+    //         draw = true;
+    //     } else {
+    //         cache->loaded = IMG_FLAG_ERROR;
+    //     }
+    //     unlink(cache->touch);
+    //     image_cache[i] = NULL;
+    // }
+    //
+    // for (int i = 0; i < n_load_image; i++) {
+    //     struct ImageCache* cache = image_cache[i];
+    //     if (!cache || !cache->touch)
+    //         continue;
+    //     if (cache->pid) {
+    //         kill(cache->pid, SIGKILL);
+    //         /*
+    //          * #ifdef HAVE_WAITPID
+    //          * waitpid(cache->pid, &wait_st, 0);
+    //          * #else
+    //          * wait(&wait_st);
+    //          * #endif
+    //          */
+    //         cache->pid = 0;
+    //     }
+    //     /*TODO make sure removing this didn't break anything
+    //     unlink(cache->touch);
+    //     */
+    //     image_cache[i] = NULL;
+    // }
 
     if (flag == IMG_FLAG_STOP) {
         image_list = NULL;
@@ -844,11 +844,11 @@ void loadImage(struct Buffer* buf, int flag)
         return;
     }
 
-    if (draw) {
-        if (!getRuntime()->enable_inline_image)
-            drawImage(buf);
-        showImageProgress(buf);
-    }
+    // if (draw) {
+    //     if (!getRuntime()->enable_inline_image)
+    //         drawImage(buf);
+    //     showImageProgress(buf);
+    // }
 
     // image_buffer = buf;
 
@@ -878,24 +878,29 @@ void loadImage(struct Buffer* buf, int flag)
             continue;
         }
 
-        flush_tty();
-        if ((cache->pid = fork()) == 0) {
-            /*
-             * setup_child(TRUE, 0, -1);
-             */
-            setup_child(FALSE, 0, -1);
-            getRuntime()->image_source = cache->file;
-            loadGeneralFile(cache->url, cache->current, NULL, 0, NULL, false);
-            /* TODO make sure removing this didn't break anything
-            if (!b || !b->real_type || strncasecmp(b->real_type, "image/", 6))
-                unlink(cache->file);
-            */
-            symlink(cache->file, cache->touch);
-            exit(0);
-        } else if (cache->pid < 0) {
-            cache->pid = 0;
-            return;
-        }
+        getRuntime()->image_source = cache->file;
+        loadGeneralFile(cache->url, cache->current, NULL, 0, NULL, false);
+        symlink(cache->file, cache->touch);
+        getRuntime()->image_source = NULL;
+
+        // flush_tty();
+        // if ((cache->pid = fork()) == 0) {
+        //     /*
+        //      * setup_child(TRUE, 0, -1);
+        //      */
+        //     setup_child(FALSE, 0, -1);
+        //     getRuntime()->image_source = cache->file;
+        //     loadGeneralFile(cache->url, cache->current, NULL, 0, NULL, false);
+        //     /* TODO make sure removing this didn't break anything
+        //     if (!b || !b->real_type || strncasecmp(b->real_type, "image/", 6))
+        //         unlink(cache->file);
+        //     */
+        //     symlink(cache->file, cache->touch);
+        //     exit(0);
+        // } else if (cache->pid < 0) {
+        //     cache->pid = 0;
+        //     return;
+        // }
     }
 }
 
