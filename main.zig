@@ -108,6 +108,11 @@ export fn onFrame() void {
     // }
 
     const buf: *c.Buffer = c.getRuntime().*.CurrentTab.*.currentBuffer;
+
+    if(buf.doc.topLine == null){
+        c.reshapeBuffer(buf);
+    }
+
     c.bufferPosition(buf);
 
     // check viewport ?

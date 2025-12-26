@@ -507,7 +507,6 @@ selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectcha
 
 void reshapeBuffer(struct Buffer* buf)
 {
-
     buf->width = INIT_BUFFER_WIDTH;
     if (!buf->sourcefile)
         return;
