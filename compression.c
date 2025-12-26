@@ -111,7 +111,7 @@ void check_compression(const char* path, struct URLFile* uf)
         elen = strlen(d->ext);
         if (len > elen && strcasecmp(&path[len - elen], d->ext) == 0) {
             uf->compression = d->type;
-            uf->guess_type = d->mime_type;
+            // uf->guess_type = d->mime_type;
             break;
         }
     }

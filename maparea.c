@@ -538,7 +538,7 @@ page_info_panel(struct Buffer* buf)
         "<tr valign=top><td nowrap>Current URL<td>",
         html_quote(p),
         "<tr valign=top><td nowrap>Document Type<td>",
-        buf->real_type ? html_quote(buf->real_type) : "unknown",
+        "unknown",
         "<tr valign=top><td nowrap>Last Modified<td>",
         html_quote(last_modified(buf)), NULL);
     if (buf->document_charset != getRuntime()->InnerCharset) {

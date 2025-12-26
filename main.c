@@ -924,14 +924,6 @@ bool w3m_args(int argc, char** argv)
                 continue;
             } else if (newbuf == NO_BUFFER)
                 continue;
-            switch (newbuf->real_scheme) {
-            case SCM_LOCAL:
-            case SCM_LOCAL_CGI:
-                unshiftHist(getRuntime()->LoadHist, url);
-            default:
-                pushHashHist(getRuntime()->URLHist, parsedURL2Str(&newbuf->currentURL)->ptr);
-                break;
-            }
         } else if (newbuf == NO_BUFFER)
             continue;
         if (CurrentTab() == NULL) {
@@ -2320,7 +2312,7 @@ DEFUN(editBf, EDIT, "Edit local source")
 
     Str cmd;
     if (Currentbuf->edit)
-        cmd = unquote_mailcap(Currentbuf->edit, Currentbuf->real_type, fn,
+        cmd = unquote_mailcap(Currentbuf->edit, Currentbuf->type, fn,
             checkHeader(&Currentbuf->content, "Content-Type:"), NULL);
     else
         cmd = myEditor(Editor, shell_quote(fn), cur_real_linenumber(Currentbuf));
@@ -3505,7 +3497,7 @@ DEFUN(svSrc, DOWNLOAD SAVE, "Save document source")
     getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
     PermitSaveToPipe = TRUE;
     const char* file;
-    if (Currentbuf->real_scheme == SCM_LOCAL)
+    if (Currentbuf->currentURL.scheme == SCM_LOCAL)
         file = conv_from_system(guess_save_name(NULL,
             Currentbuf->currentURL.real_file));
     else
@@ -3667,19 +3659,19 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
 
     if (is_html_type(Currentbuf->type)) {
         buf->type = "text/plain";
-        if (Currentbuf->real_type && is_html_type(Currentbuf->real_type))
-            buf->real_type = "text/plain";
+        if (Currentbuf->type && is_html_type(Currentbuf->type))
+            buf->type = "text/plain";
         else
-            buf->real_type = Currentbuf->real_type;
+            buf->type = Currentbuf->type;
         buf->buffername = Sprintf("source of %s", Currentbuf->buffername)->ptr;
         buf->linkBuffer[LB_N_SOURCE] = Currentbuf;
         Currentbuf->linkBuffer[LB_SOURCE] = buf;
     } else if (!strcasecmp(Currentbuf->type, "text/plain")) {
         buf->type = "text/html";
-        if (Currentbuf->real_type && !strcasecmp(Currentbuf->real_type, "text/plain"))
-            buf->real_type = "text/html";
+        if (Currentbuf->type && !strcasecmp(Currentbuf->type, "text/plain"))
+            buf->type = "text/html";
         else
-            buf->real_type = Currentbuf->real_type;
+            buf->type = Currentbuf->type;
         buf->buffername = Sprintf("HTML view of %s",
             Currentbuf->buffername)
                               ->ptr;
@@ -3689,7 +3681,6 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
         return;
     }
     buf->currentURL = Currentbuf->currentURL;
-    buf->real_scheme = Currentbuf->real_scheme;
     buf->content.filename = Currentbuf->content.filename;
     buf->sourcefile = Currentbuf->sourcefile;
     buf->header_source = Currentbuf->header_source;
@@ -3771,7 +3762,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
     if (Currentbuf->document_charset != WC_CES_US_ASCII)
         getRuntime()->DocumentCharset = Currentbuf->document_charset;
     // SearchHeader = Currentbuf->search_header;
-    DefaultType = Currentbuf->real_type;
+    DefaultType = Currentbuf->type;
     buf = loadGeneralFile(url->ptr, NULL, NO_REFERER, RG_NOCACHE, request, false);
     getRuntime()->DocumentCharset = old_charset;
     // SearchHeader = FALSE;

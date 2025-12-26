@@ -1043,7 +1043,7 @@ static void set_buffer_environ(struct Buffer* buf)
         set_environ("W3M_FILENAME", buf->content.filename);
         set_environ("W3M_TITLE", buf->buffername);
         set_environ("W3M_URL", parsedURL2Str(&buf->currentURL)->ptr);
-        set_environ("W3M_TYPE", buf->real_type ? buf->real_type : "unknown");
+        set_environ("W3M_TYPE", "unknown");
         set_environ("W3M_CHARSET", wc_ces_to_charset(buf->document_charset));
     }
     l = buf->doc.currentLine;

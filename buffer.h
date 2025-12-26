@@ -63,7 +63,6 @@ struct Buffer {
     struct Buffer* linkBuffer[MAX_LB];
     short width;
     char* type;
-    const char* real_type;
     short bufferprop;
     int currentColumn;
     short cursorX;
@@ -86,7 +85,6 @@ struct Buffer {
     struct Url currentURL;
     struct Url* baseURL;
     char* baseTarget;
-    int real_scheme;
     const char* sourcefile;
     struct frameset* frameset;
     struct frameset_queue* frameQ;

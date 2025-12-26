@@ -287,7 +287,6 @@ void examineFile(const char* path, struct URLFile* uf, bool do_download)
 {
     struct stat stbuf;
 
-    uf->guess_type = NULL;
     if (path == NULL || *path == '\0' || stat(path, &stbuf) == -1 || NOT_REGULAR(stbuf.st_mode)) {
         uf->stream = NULL;
         return;
@@ -297,8 +296,8 @@ void examineFile(const char* path, struct URLFile* uf, bool do_download)
         check_compression(path, uf);
         if (uf->compression != CMP_NOCOMPRESS) {
             const char* ext = uf->ext;
-            const char* t0 = uncompressed_file_type(path, &ext);
-            uf->guess_type = t0;
+            // const char* t0 = uncompressed_file_type(path, &ext);
+            // uf->guess_type = t0;
             uf->ext = ext;
             uncompress_stream(uf, NULL);
             return;
@@ -1018,7 +1017,8 @@ loadGeneralFile(const char* path, struct Url* volatile current, const char* refe
     struct Buffer* b = NULL;
     struct Buffer* (*volatile proc)(struct URLFile*, struct Buffer*) = loadBuffer;
     const char* t = "text/plain";
-    const char *p, *real_type = NULL;
+    const char *p;
+    // , *real_type = NULL;
     struct Buffer* volatile t_buf = NULL;
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
     struct TextList* extra_header = newTextList();
@@ -1240,70 +1240,20 @@ load_doc: {
     } else if (pu.scheme == SCM_FTP) {
         check_compression(path, &f);
         if (f.compression != CMP_NOCOMPRESS) {
-            const char* t1 = uncompressed_file_type(pu.file, NULL);
-            real_type = f.guess_type;
-            if (t1)
-                t = t1;
-            else
-                t = real_type;
+            t = uncompressed_file_type(pu.file, NULL);
         } else {
-            real_type = guessContentType(pu.file);
-            if (real_type == NULL)
-                real_type = "text/plain";
-            t = real_type;
+            t = guessContentType(pu.file);
         }
-#if 0
-	if (!strncasecmp(t, "application/", 12)) {
-	    char *tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
-	    current_content_length = 0;
-	    if (save2tmp(f, tmpf) < 0)
-		UFclose(&f);
-	    else {
-		UFclose(&f);
-		TRAP_OFF;
-		doFileMove(tmpf, guess_save_name(t_buf, pu.file));
-	    }
-	    return NO_BUFFER;
-	}
-#endif
     }
-    // else if (searchHeader) {
-    //     searchHeader = SearchHeader = FALSE;
-    //     if (t_buf == NULL)
-    //         t_buf = newBuffer(INIT_BUFFER_WIDTH);
-    //     readHeader(&f, t_buf, searchHeader_through, &pu);
-    //     if (f.is_cgi && (p = checkHeader(&t_buf->content, "Location:")) != NULL && checkRedirection(&pu)) {
-    //         /* document moved */
-    //         tpath = url_encode(remove_space(p), NULL, 0);
-    //         request = NULL;
-    //         UFclose(&f);
-    //         add_auth_cookie_flag = 0;
-    //         current = New(struct Url);
-    //         copyParsedURL(current, &pu);
-    //         t_buf = newBuffer(INIT_BUFFER_WIDTH);
-    //         t_buf->bufferprop |= BP_REDIRECTED;
-    //         status = HTST_NORMAL;
-    //         goto load_doc;
-    //     }
-    //     t = checkContentType(&t_buf->content);
-    //     if (t == NULL)
-    //         t = "text/plain";
-    // }
     else if (DefaultType) {
         t = DefaultType;
         DefaultType = NULL;
     } else {
         t = guessContentType(pu.file);
-        if (t == NULL)
-            t = "text/plain";
-        real_type = t;
-        if (f.guess_type)
-            t = f.guess_type;
     }
 
     /* XXX: can we use guess_type to give the type to loadHTMLstream
      *      to support default utf8 encoding for XHTML here? */
-    f.guess_type = t;
 
 page_loaded:
     if (page) {
@@ -1331,8 +1281,6 @@ page_loaded:
         b = loadHTMLString(page);
         if (b) {
             copyParsedURL(&b->currentURL, &pu);
-            b->real_scheme = pu.scheme;
-            b->real_type = t;
             if (src)
                 b->sourcefile = tmp->ptr;
 
@@ -1341,8 +1289,6 @@ page_loaded:
         return b;
     }
 
-    if (real_type == NULL)
-        real_type = t;
     proc = loadBuffer;
 
     current_content_length = 0;
@@ -1368,7 +1314,7 @@ page_loaded:
         return NO_BUFFER;
     }
 
-    if ((f.content_encoding != CMP_NOCOMPRESS) && AutoUncompress
+    if ((f.compression != CMP_NOCOMPRESS) && AutoUncompress
         && !(w3m_dump & DUMP_EXTRA)) {
         uncompress_stream(&f, &pu.real_file);
     } else if (f.compression != CMP_NOCOMPRESS) {
@@ -1388,7 +1334,6 @@ page_loaded:
         if (save2tmp(f, getRuntime()->image_source) == 0) {
             b = newBuffer(INIT_BUFFER_WIDTH);
             b->sourcefile = getRuntime()->image_source;
-            b->real_type = t;
         }
         UFclose(&f);
         TRAP_OFF;
@@ -1449,8 +1394,6 @@ page_loaded:
     UFclose(&f);
     frame_source = 0;
     if (b && b != NO_BUFFER) {
-        b->real_scheme = f.scheme;
-        b->real_type = real_type;
         if (w3m_backend)
             b->type = allocStr(t, -1);
         if (pu.label) {
@@ -6077,8 +6020,6 @@ void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int int
     }
     if (newBuf->content.content_charset && UseContentCharset)
         doc_charset = newBuf->content.content_charset;
-    else if (f->guess_type && !strcasecmp(f->guess_type, "application/xhtml+xml"))
-        doc_charset = WC_CES_UTF_8;
     meta_charset = 0;
 
     while ((lineBuf2 = StrmyUFgets(f)) && lineBuf2->length) {
@@ -6180,7 +6121,6 @@ loadHTMLString(Str page)
     newBuf->doc.lastLine = newBuf->doc.currentLine;
     newBuf->doc.currentLine = newBuf->doc.firstLine;
     newBuf->type = "text/html";
-    newBuf->real_type = newBuf->type;
     if (n_textarea)
         formResetBuffer(newBuf, newBuf->formitem);
     return newBuf;
@@ -6942,7 +6882,7 @@ int doFileSave(struct URLFile uf, const char* defstr)
         pid = fork();
         if (!pid) {
             int err;
-            if ((uf.content_encoding != CMP_NOCOMPRESS) && AutoUncompress) {
+            if ((uf.compression != CMP_NOCOMPRESS) && AutoUncompress) {
                 uncompress_stream(&uf, &tmpf);
                 if (tmpf)
                     unlink(tmpf);
@@ -6982,7 +6922,7 @@ int doFileSave(struct URLFile uf, const char* defstr)
             printf("Can't save. Load file and %s are identical.", p);
             return -1;
         }
-        if (uf.content_encoding != CMP_NOCOMPRESS && AutoUncompress) {
+        if (uf.compression != CMP_NOCOMPRESS && AutoUncompress) {
             uncompress_stream(&uf, &tmpf);
             if (tmpf)
                 unlink(tmpf);

@@ -247,7 +247,6 @@ void getHttpResponseHeader(struct Content* content, struct URLFile* uf, struct U
             while (IS_SPACE(*p))
                 p++;
             uf->compression = get_compression(p);
-            uf->content_encoding = uf->compression;
         } else if (use_cookie && accept_cookie && pu && check_cookie_accept_domain(pu->host) && (!strncasecmp(lineBuf2->ptr, "Set-Cookie:", 11) || !strncasecmp(lineBuf2->ptr, "Set-Cookie2:", 12))) {
             Str name = Strnew(), value = Strnew(), domain = NULL, path = NULL,
                 comment = NULL, commentURL = NULL, port = NULL, tmp2;

@@ -9,8 +9,6 @@ void init_stream(struct URLFile* uf, int scheme, union input_stream* stream)
     uf->scheme = scheme;
     uf->is_cgi = FALSE;
     uf->compression = CMP_NOCOMPRESS;
-    uf->content_encoding = CMP_NOCOMPRESS;
-    uf->guess_type = NULL;
     uf->ext = NULL;
     uf->modtime = -1;
 }
