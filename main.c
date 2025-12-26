@@ -393,7 +393,6 @@ bool w3m_args(int argc, char** argv)
     char* p;
     // int c;
     int i;
-    InputStream redin;
     char* line_str = NULL;
     char** load_argv;
     struct FormList* request;
@@ -735,19 +734,19 @@ bool w3m_args(int argc, char** argv)
                 /* do nothing */
             } else if (!strcmp("-debug", argv[i])) {
                 w3m_debug = TRUE;
-            } 
+            }
             // else if (!strcmp("-reqlog", argv[i])) {
             //     w3m_reqlog = rcFile("request.log");
             // }
-// #if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
-//             else if (!strcmp("-$$getimage", argv[i])) {
-//                 ++i;
-//                 getimage_args = argv + i;
-//                 i += 4;
-//                 if (i > argc)
-//                     usage();
-//             }
-// #endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
+            // #if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
+            //             else if (!strcmp("-$$getimage", argv[i])) {
+            //                 ++i;
+            //                 getimage_args = argv + i;
+            //                 i += 4;
+            //                 if (i > argc)
+            //                     usage();
+            //             }
+            // #endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
             else {
                 usage();
             }
@@ -3178,7 +3177,7 @@ goURL0(char* prompt, int relative)
     if (relative) {
         no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->currentURL);
         current = baseURL(Currentbuf);
-        if ((no_referer_ptr && *no_referer_ptr) || current == NULL || current->scheme == SCM_LOCAL || current->scheme == SCM_LOCAL_CGI || current->scheme == SCM_DATA)
+        if ((no_referer_ptr && *no_referer_ptr) || current == NULL || current->scheme == SCM_LOCAL || current->scheme == SCM_LOCAL_CGI)
             referer = NO_REFERER;
         else
             referer = parsedURL2RefererStr(&Currentbuf->currentURL)->ptr;

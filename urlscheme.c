@@ -38,7 +38,7 @@ struct {
     /*  {"nntp", SCM_NNTP_GROUP}, */
     { "news", SCM_NEWS },
     /*  {"news", SCM_NEWS_GROUP}, */
-    { "data", SCM_DATA },
+    // { "data", SCM_DATA },
     { "mailto", SCM_MAILTO },
     { "https", SCM_HTTPS },
     { 0, SCM_UNKNOWN },

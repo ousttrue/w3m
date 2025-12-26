@@ -244,19 +244,7 @@ void getHttpResponseHeader(struct Content* content, struct URLFile* uf, struct U
             message(lineBuf2->ptr, 0, 0);
             // }
         }
-        if (!strncasecmp(lineBuf2->ptr, "content-transfer-encoding:", 26)) {
-            const char* p = lineBuf2->ptr + 26;
-            while (IS_SPACE(*p))
-                p++;
-            if (!strncasecmp(p, "base64", 6))
-                uf->encoding = ENC_BASE64;
-            else if (!strncasecmp(p, "quoted-printable", 16))
-                uf->encoding = ENC_QUOTE;
-            else if (!strncasecmp(p, "uuencode", 8) || !strncasecmp(p, "x-uuencode", 10))
-                uf->encoding = ENC_UUENCODE;
-            else
-                uf->encoding = ENC_7BIT;
-        } else if (!strncasecmp(lineBuf2->ptr, "content-encoding:", 17)) {
+        else if (!strncasecmp(lineBuf2->ptr, "content-encoding:", 17)) {
             const char* p = lineBuf2->ptr + 17;
             while (IS_SPACE(*p))
                 p++;

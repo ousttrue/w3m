@@ -1356,8 +1356,6 @@ load_doc: {
 	    return NO_BUFFER;
 	}
 #endif
-    } else if (pu.scheme == SCM_DATA) {
-        t = f.guess_type;
     }
     // else if (searchHeader) {
     //     searchHeader = SearchHeader = FALSE;
@@ -1451,8 +1449,6 @@ page_loaded:
         /* download only */
         const char* file;
         TRAP_OFF;
-        if (DecodeCTE && IStype(f.stream) != IST_ENCODED)
-            f.stream = newEncodedStream(f.stream, f.encoding);
         if (pu.scheme == SCM_LOCAL) {
             struct stat st;
             if (PreserveTimestamp && !stat(pu.real_file, &st))
@@ -1485,8 +1481,6 @@ page_loaded:
 
     if (getRuntime()->image_source) {
         struct Buffer* b = NULL;
-        if (IStype(f.stream) != IST_ENCODED)
-            f.stream = newEncodedStream(f.stream, f.encoding);
         if (save2tmp(f, getRuntime()->image_source) == 0) {
             b = newBuffer(INIT_BUFFER_WIDTH);
             b->sourcefile = getRuntime()->image_source;
@@ -1521,8 +1515,6 @@ page_loaded:
                 _doFileCopy(pu.real_file,
                     conv_from_system(guess_save_name(NULL, pu.real_file)), TRUE);
             } else {
-                if (DecodeCTE && IStype(f.stream) != IST_ENCODED)
-                    f.stream = newEncodedStream(f.stream, f.encoding);
                 if (doFileSave(f, guess_save_name(&t_buf->content, pu.file)) == 0)
                     UFhalfclose(&f);
                 else
@@ -6189,8 +6181,6 @@ void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int int
         doc_charset = WC_CES_UTF_8;
     meta_charset = 0;
 
-    if (IStype(f->stream) != IST_ENCODED)
-        f->stream = newEncodedStream(f->stream, f->encoding);
     while ((lineBuf2 = StrmyUFgets(f)) && lineBuf2->length) {
 
         if (f->scheme == SCM_NEWS && lineBuf2->ptr[0] == '.') {
@@ -6500,8 +6490,6 @@ loadBuffer(struct URLFile* uf, struct Buffer* volatile newBuf)
         doc_charset = newBuf->content.content_charset;
 
     nlines = 0;
-    if (IStype(uf->stream) != IST_ENCODED)
-        uf->stream = newEncodedStream(uf->stream, uf->encoding);
     while ((lineBuf2 = StrmyISgets(uf->stream)) && lineBuf2->length) {
 #ifdef USE_NNTP
         if (uf->scheme == SCM_NEWS && lineBuf2->ptr[0] == '.') {
@@ -6576,8 +6564,6 @@ loadImageBuffer(struct URLFile* uf, struct Buffer* newBuf)
     if (!(pu && pu->is_nocache) && cache->loaded & IMG_FLAG_LOADED && !stat(cache->file, &st))
         goto image_buffer;
 
-    if (IStype(uf->stream) != IST_ENCODED)
-        uf->stream = newEncodedStream(uf->stream, uf->encoding);
     TRAP_ON;
     if (save2tmp(*uf, cache->file) < 0) {
         TRAP_OFF;
@@ -6822,18 +6808,14 @@ doExternal(struct URLFile uf, const char* type, struct Buffer* defaultbuf)
     }
 
     Str tmpf = tmpfname(TMPF_DFL, (ext && *ext) ? ext : NULL);
-    if (IStype(uf.stream) != IST_ENCODED)
-        uf.stream = newEncodedStream(uf.stream, uf.encoding);
     const char* header = checkHeader(&defaultbuf->content, "Content-Type:");
     if (header)
         header = conv_to_system(header);
     command = unquote_mailcap(mcap->viewer, type, tmpf->ptr, header, &mc_stat);
-#ifndef __EMX__
     if (!(mc_stat & MCSTAT_REPNAME)) {
         Str tmp = Sprintf("(%s) < %s", command->ptr, shell_quote(tmpf->ptr));
         command = tmp;
     }
-#endif
 
 #ifdef HAVE_SETPGRP
     if (!(mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)) && !(mcap->flags & MAILCAP_NEEDSTERMINAL) && BackgroundExtViewer) {

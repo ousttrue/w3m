@@ -14,7 +14,6 @@ enum UrlScheme {
     SCM_NNTP_GROUP = 8,
     SCM_NEWS = 9,
     SCM_NEWS_GROUP = 10,
-    SCM_DATA = 11,
     SCM_MAILTO = 12,
     SCM_HTTPS = 13,
 };

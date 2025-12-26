@@ -158,25 +158,6 @@ newSSLStream(SSL* ssl, int sock)
 }
 #endif
 
-InputStream
-newEncodedStream(InputStream is, char encoding)
-{
-    InputStream stream;
-    if (is == NULL || (encoding != ENC_QUOTE && encoding != ENC_BASE64 && encoding != ENC_UUENCODE))
-        return is;
-    stream = NewWithoutGC(union input_stream);
-    init_base_stream(&stream->base, STREAM_BUF_SIZE);
-    stream->ens.type = IST_ENCODED;
-    stream->ens.handle = NewWithoutGC(struct ens_handle);
-    stream->ens.handle->is = is;
-    stream->ens.handle->pos = 0;
-    stream->ens.handle->encoding = encoding;
-    growbuf_init_without_GC(&stream->ens.handle->gb);
-    stream->ens.read = (int (*)())ens_read;
-    stream->ens.close = (void (*)())ens_close;
-    return stream;
-}
-
 int ISclose(InputStream stream)
 {
     void (*prevtrap)(int);
@@ -317,12 +298,8 @@ int ISfileno(InputStream stream)
         return *(int*)stream->base.handle;
     case IST_FILE:
         return fileno(stream->file.handle->f);
-#ifdef USE_SSL
     case IST_SSL:
         return stream->ssl.handle->sock;
-#endif
-    case IST_ENCODED:
-        return ISfileno(stream->ens.handle->is);
     default:
         return -1;
     }
@@ -686,52 +663,6 @@ ssl_read(struct ssl_handle* handle, char* buf, int len)
     return status;
 }
 #endif /* USE_SSL */
-
-static void
-ens_close(struct ens_handle* handle)
-{
-    ISclose(handle->is);
-    growbuf_clear(&handle->gb);
-    xfree(handle);
-}
-
-static int
-ens_read(struct ens_handle* handle, char* buf, int len)
-{
-    if (handle->pos == handle->gb.length) {
-        char* p;
-        struct growbuf gbtmp;
-
-        ISgets_to_growbuf(handle->is, &handle->gb, TRUE);
-        if (handle->gb.length == 0)
-            return 0;
-        if (handle->encoding == ENC_BASE64)
-            memchop(handle->gb.ptr, &handle->gb.length);
-        else if (handle->encoding == ENC_UUENCODE) {
-            if (handle->gb.length >= 5 && !strncmp(handle->gb.ptr, "begin", 5))
-                ISgets_to_growbuf(handle->is, &handle->gb, TRUE);
-            memchop(handle->gb.ptr, &handle->gb.length);
-        }
-        growbuf_init_without_GC(&gbtmp);
-        p = handle->gb.ptr;
-        if (handle->encoding == ENC_QUOTE)
-            decodeQP_to_growbuf(&gbtmp, &p);
-        else if (handle->encoding == ENC_BASE64)
-            decodeB_to_growbuf(&gbtmp, &p);
-        else if (handle->encoding == ENC_UUENCODE)
-            decodeU_to_growbuf(&gbtmp, &p);
-        growbuf_clear(&handle->gb);
-        handle->gb = gbtmp;
-        handle->pos = 0;
-    }
-
-    if (len > handle->gb.length - handle->pos)
-        len = handle->gb.length - handle->pos;
-
-    memcpy(buf, &handle->gb.ptr[handle->pos], len);
-    handle->pos += len;
-    return len;
-}
 
 static void
 memchop(char* p, int* len)

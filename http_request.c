@@ -44,8 +44,8 @@ Str HTTPrequestURI(struct Url* pu, struct HttpRequest* hr)
 static Str
 parsedURL2RefererOriginStr(struct Url* pu)
 {
-    char *f = pu->file;
-    char *q = pu->query;
+    char* f = pu->file;
+    char* q = pu->query;
     pu->file = NULL;
     pu->query = NULL;
     Str s = _parsedURL2Str(pu, FALSE, FALSE, FALSE);
@@ -102,7 +102,7 @@ otherinfo(struct Url* target, struct Url* current, char* referer)
             /* Don't send Referer: if https:// -> http:// */
         } else
 #endif
-            if (referer == NULL && current && current->scheme != SCM_LOCAL && current->scheme != SCM_LOCAL_CGI && current->scheme != SCM_DATA && (current->scheme != SCM_FTP || (current->user == NULL && current->pass == NULL))) {
+            if (referer == NULL && current && current->scheme != SCM_LOCAL && current->scheme != SCM_LOCAL_CGI && (current->scheme != SCM_FTP || (current->user == NULL && current->pass == NULL))) {
             Strcat_charp(s, "Referer: ");
             if (cross_origin)
                 Strcat(s, parsedURL2RefererOriginStr(current));

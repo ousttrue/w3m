@@ -2,13 +2,6 @@
 
 #include <stdint.h>
 
-enum EncodingType : uint8_t {
-    ENC_7BIT = 0,
-    ENC_BASE64 = 1,
-    ENC_QUOTE = 2,
-    ENC_UUENCODE = 3,
-};
-
 #include "indep.h"
 #include <stdio.h>
 #ifdef USE_SSL
@@ -40,13 +33,6 @@ struct ssl_handle {
 #endif
 
 union input_stream;
-
-struct ens_handle {
-    union input_stream* is;
-    struct growbuf gb;
-    int pos;
-    char encoding;
-};
 
 struct base_stream {
     struct stream_buffer stream;
@@ -121,7 +107,6 @@ extern InputStream newStrStream(Str s);
 #ifdef USE_SSL
 extern InputStream newSSLStream(SSL* ssl, int sock);
 #endif
-extern InputStream newEncodedStream(InputStream is, char encoding);
 extern int ISclose(InputStream stream);
 extern int ISgetc(InputStream stream);
 extern int ISundogetc(InputStream stream);

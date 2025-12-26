@@ -11,7 +11,6 @@ union input_stream;
 struct URLFile {
     enum UrlScheme scheme;
     char is_cgi;
-    enum EncodingType encoding;
     union input_stream* stream;
     const char* ext;
     enum CompressionType compression;

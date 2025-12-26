@@ -162,13 +162,6 @@ static char* auxbinFile(const char* base)
 
 void uncompress_stream(struct URLFile* uf, const char** src)
 {
-    //  d;
-
-    if (IStype(uf->stream) != IST_ENCODED) {
-        uf->stream = newEncodedStream(uf->stream, uf->encoding);
-        uf->encoding = ENC_7BIT;
-    }
-
     const char* expand_name = GUNZIP_NAME;
     const char* ext = NULL;
     bool use_d_arg = 0;

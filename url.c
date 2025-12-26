@@ -953,8 +953,6 @@ void parseURL2(const char* url, struct Url* pu, struct Url* current)
     if (pu->scheme == SCM_MAILTO)
         return;
 #endif
-    if (pu->scheme == SCM_DATA)
-        return;
     if (pu->scheme == SCM_NEWS || pu->scheme == SCM_NEWS_GROUP) {
         if (pu->file && !strchr(pu->file, '@') && (!(p = strchr(pu->file, '/')) || strchr(p + 1, '-') || *(p + 1) == '\0'))
             pu->scheme = SCM_NEWS_GROUP;
@@ -1159,10 +1157,6 @@ Str _parsedURL2Str(struct Url* pu, bool pass, bool user, bool label)
         return tmp;
     }
 #endif
-    if (pu->scheme == SCM_DATA) {
-        Strcat_charp(tmp, pu->file);
-        return tmp;
-    }
 #ifdef USE_NNTP
     if (pu->scheme != SCM_NEWS && pu->scheme != SCM_NEWS_GROUP)
 #endif /* USE_NNTP */
@@ -1528,24 +1522,6 @@ retry:
         uf.stream = openNewsStream(pu);
         return uf;
 #endif /* USE_NNTP */
-    case SCM_DATA:
-        if (pu->file == NULL)
-            return uf;
-        p = Strnew_charp(pu->file)->ptr;
-        q = strchr(p, ',');
-        if (q == NULL)
-            return uf;
-        *q++ = '\0';
-        tmp = Strnew_charp(q);
-        q = strrchr(p, ';');
-        if (q != NULL && !strcmp(q, ";base64")) {
-            *q = '\0';
-            uf.encoding = ENC_BASE64;
-        } else
-            tmp = Str_url_unquote(tmp, FALSE, FALSE);
-        uf.stream = newStrStream(tmp);
-        uf.guess_type = (*p != '\0') ? p : "text/plain";
-        return uf;
     case SCM_UNKNOWN:
     default:
         return uf;
