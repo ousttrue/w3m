@@ -16,18 +16,6 @@
 #define INFLATE_NAME "inflate"
 #define BROTLI_NAME "brotli"
 
-struct CompressionDecoder {
-    enum CompressionType type;
-    const char* ext;
-    const char* mime_type;
-    bool auxbin_p;
-    const char* cmd;
-    const char* name;
-    char* encoding;
-    char* encodings[4];
-    int use_d_arg;
-};
-
 static struct CompressionDecoder compression_decoders[] = {
     {
         .type = CMP_COMPRESS,

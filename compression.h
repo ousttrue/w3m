@@ -1,4 +1,5 @@
 #pragma once
+#include <stdbool.h>
 
 enum CompressionType {
     CMP_NOCOMPRESS = 0,
@@ -7,6 +8,18 @@ enum CompressionType {
     CMP_BZIP2 = 3,
     CMP_DEFLATE = 4,
     CMP_BROTLI = 5,
+};
+
+struct CompressionDecoder {
+    enum CompressionType type;
+    const char* ext;
+    const char* mime_type;
+    bool auxbin_p;
+    const char* cmd;
+    const char* name;
+    char* encoding;
+    char* encodings[4];
+    int use_d_arg;
 };
 
 struct URLFile;

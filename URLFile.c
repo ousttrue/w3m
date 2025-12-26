@@ -24,3 +24,34 @@ void UFhalfclose(struct URLFile* f)
         break;
     }
 }
+
+#define NOT_REGULAR(m) (((m) & S_IFMT) != S_IFREG)
+
+struct URLFile examineFile(const char* path, bool do_download)
+{
+    struct URLFile uf = { 0 };
+    struct stat stbuf;
+    if (path == NULL || *path == '\0') {
+        return uf;
+    }
+    if (stat(path, &stbuf) != 0) {
+        return uf;
+    }
+    if (NOT_REGULAR(stbuf.st_mode)) {
+        return uf;
+    }
+
+    uf.stream = openIS(path);
+    if (!do_download) {
+        check_compression(path, &uf);
+        if (uf.compression != CMP_NOCOMPRESS) {
+            const char* ext = uf.ext;
+            // const char* t0 =
+            uncompressed_file_type(path, &ext);
+            // uf->guess_type = t0;
+            // uf->ext = ext;
+            uncompress_stream(&uf, NULL);
+        }
+    }
+    return uf;
+}

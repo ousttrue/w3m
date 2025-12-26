@@ -283,28 +283,6 @@ lessopen_stream(const char* path)
     return fp;
 }
 
-void examineFile(const char* path, struct URLFile* uf, bool do_download)
-{
-    struct stat stbuf;
-
-    if (path == NULL || *path == '\0' || stat(path, &stbuf) == -1 || NOT_REGULAR(stbuf.st_mode)) {
-        uf->stream = NULL;
-        return;
-    }
-    uf->stream = openIS(path);
-    if (!do_download) {
-        check_compression(path, uf);
-        if (uf->compression != CMP_NOCOMPRESS) {
-            const char* ext = uf->ext;
-            // const char* t0 = uncompressed_file_type(path, &ext);
-            // uf->guess_type = t0;
-            uf->ext = ext;
-            uncompress_stream(uf, NULL);
-            return;
-        }
-    }
-}
-
 /*
  * convert line
  */

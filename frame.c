@@ -491,7 +491,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
                 init_stream(&f2, SCM_LOCAL, NULL);
                 if (frame.body->source) {
                     fflush(f1);
-                    examineFile(frame.body->source, &f2, false);
+                    f2 = examineFile(frame.body->source, false);
                 }
                 if (f2.stream == NULL) {
                     frame.body->attr = F_UNLOADED;
