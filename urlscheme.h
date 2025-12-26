@@ -24,7 +24,6 @@ inline static int getDefaultPort(enum UrlScheme scheme)
         return 0;
     }
 }
-
 int getDefaultPort(enum UrlScheme scheme);
 enum UrlScheme getURLScheme(const char** url);
 const char* schemeNumToName(enum UrlScheme scheme);

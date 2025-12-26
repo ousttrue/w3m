@@ -1017,7 +1017,7 @@ loadGeneralFile(const char* path, struct Url* volatile current, const char* refe
     struct Buffer* b = NULL;
     struct Buffer* (*volatile proc)(struct URLFile*, struct Buffer*) = loadBuffer;
     const char* t = "text/plain";
-    const char *p;
+    const char* p;
     // , *real_type = NULL;
     struct Buffer* volatile t_buf = NULL;
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
@@ -1244,8 +1244,29 @@ load_doc: {
         } else {
             t = guessContentType(pu.file);
         }
-    }
-    else if (DefaultType) {
+    } else if (f.is_cgi) {
+        // searchHeader = SearchHeader = FALSE;
+        if (t_buf == NULL)
+            t_buf = newBuffer(INIT_BUFFER_WIDTH);
+        getHttpResponseHeader(&t_buf->content, &f, &pu);
+        if ((p = checkHeader(&t_buf->content, "Location:")) != NULL && checkRedirection(&pu)) {
+            /* document moved */
+            tpath = url_encode(remove_space(p), NULL, 0);
+            request = NULL;
+            UFclose(&f);
+            add_auth_cookie_flag = 0;
+            current = New(struct Url);
+            copyParsedURL(current, &pu);
+            t_buf = newBuffer(INIT_BUFFER_WIDTH);
+            t_buf->bufferprop |= BP_REDIRECTED;
+            status = HTST_NORMAL;
+            goto load_doc;
+        }
+        t = checkContentType(&t_buf->content);
+        if (t == NULL)
+            t = "text/plain";
+
+    } else if (DefaultType) {
         t = DefaultType;
         DefaultType = NULL;
     } else {

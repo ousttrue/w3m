@@ -1023,22 +1023,6 @@ void parseURL2(const char* url, struct Url* pu, struct Url* current)
 Str _parsedURL2Str(struct Url* pu, bool pass, bool user, bool label)
 {
     Str tmp;
-    static char* scheme_str[] = {
-        "http",
-        "gopher",
-        "ftp",
-        "ftp",
-        "file",
-        "file",
-        "exec",
-        "nntp",
-        "nntp",
-        "news",
-        "news",
-        "data",
-        "mailto",
-        "https",
-    };
 
     if (pu->scheme == SCM_MISSING) {
         return Strnew_charp("???");
@@ -1057,7 +1041,7 @@ Str _parsedURL2Str(struct Url* pu, bool pass, bool user, bool label)
         }
         return tmp;
     }
-    tmp = Strnew_charp(scheme_str[pu->scheme]);
+    tmp = Strnew_charp(schemeNumToName(pu->scheme));
     Strcat_char(tmp, ':');
     {
         Strcat_charp(tmp, "//");
