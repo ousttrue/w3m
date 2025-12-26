@@ -735,18 +735,19 @@ bool w3m_args(int argc, char** argv)
                 /* do nothing */
             } else if (!strcmp("-debug", argv[i])) {
                 w3m_debug = TRUE;
-            } else if (!strcmp("-reqlog", argv[i])) {
-                w3m_reqlog = rcFile("request.log");
-            }
-#if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
-            else if (!strcmp("-$$getimage", argv[i])) {
-                ++i;
-                getimage_args = argv + i;
-                i += 4;
-                if (i > argc)
-                    usage();
-            }
-#endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
+            } 
+            // else if (!strcmp("-reqlog", argv[i])) {
+            //     w3m_reqlog = rcFile("request.log");
+            // }
+// #if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
+//             else if (!strcmp("-$$getimage", argv[i])) {
+//                 ++i;
+//                 getimage_args = argv + i;
+//                 i += 4;
+//                 if (i > argc)
+//                     usage();
+//             }
+// #endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
             else {
                 usage();
             }

@@ -431,7 +431,7 @@ Str loadNewsgroup(struct Url* pu, wc_ces* charset, bool do_download)
                 &status);
             if (status != 221)
                 continue;
-            buf->content.document_header = readHeader(&f, NULL);
+            getHttpResponseHeader(&buf->content, &f, NULL);
             if (!(p = checkHeader(&buf->content, "Message-ID:")))
                 continue;
             if (*p == '<')

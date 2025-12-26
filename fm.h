@@ -303,7 +303,6 @@ global int TabCols init(10);
 #define NO_TABBUFFER ((struct TabBuffer*)1)
 global struct DownloadList* FirstDL init(NULL);
 global struct DownloadList* LastDL init(NULL);
-global char* w3m_reqlog;
 extern char* w3m_version;
 
 #define DUMP_BUFFER 0x01

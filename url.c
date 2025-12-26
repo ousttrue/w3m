@@ -1422,17 +1422,17 @@ retry:
                 SSL_write(sslh, tmp->ptr, tmp->length);
             else
                 write(sock, tmp->ptr, tmp->length);
-            if (w3m_reqlog) {
-                FILE* ff = fopen(w3m_reqlog, "a");
-                if (ff == NULL)
-                    return uf;
-                if (sslh)
-                    fputs("HTTPS: request via SSL\n", ff);
-                else
-                    fputs("HTTPS: request without SSL\n", ff);
-                fwrite(tmp->ptr, sizeof(char), tmp->length, ff);
-                fclose(ff);
-            }
+            // if (w3m_reqlog) {
+            //     FILE* ff = fopen(w3m_reqlog, "a");
+            //     if (ff == NULL)
+            //         return uf;
+            //     if (sslh)
+            //         fputs("HTTPS: request via SSL\n", ff);
+            //     else
+            //         fputs("HTTPS: request without SSL\n", ff);
+            //     fwrite(tmp->ptr, sizeof(char), tmp->length, ff);
+            //     fclose(ff);
+            // }
             if (hr->command == HR_COMMAND_POST && request->enctype == FORM_ENCTYPE_MULTIPART) {
                 if (sslh)
                     SSL_write_from_file(sslh, request->body);
@@ -1442,13 +1442,13 @@ retry:
             return uf;
         } else {
             write(sock, tmp->ptr, tmp->length);
-            if (w3m_reqlog) {
-                FILE* ff = fopen(w3m_reqlog, "a");
-                if (ff == NULL)
-                    return uf;
-                fwrite(tmp->ptr, sizeof(char), tmp->length, ff);
-                fclose(ff);
-            }
+            // if (w3m_reqlog) {
+            //     FILE* ff = fopen(w3m_reqlog, "a");
+            //     if (ff == NULL)
+            //         return uf;
+            //     fwrite(tmp->ptr, sizeof(char), tmp->length, ff);
+            //     fclose(ff);
+            // }
             if (hr->command == HR_COMMAND_POST && request->enctype == FORM_ENCTYPE_MULTIPART)
                 write_from_file(sock, request->body);
         }

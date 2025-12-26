@@ -17,7 +17,7 @@ enum HttpRequetFlags {
 struct HttpRequest {
     enum HttpRequestMethod command;
     enum HttpRequetFlags flag;
-    char* referer;
+    const char* referer;
     struct FormList* request;
 };
 
