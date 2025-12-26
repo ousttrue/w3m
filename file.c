@@ -294,20 +294,6 @@ void examineFile(const char* path, struct URLFile* uf, bool do_download)
     }
     uf->stream = openIS(path);
     if (!do_download) {
-        if (use_lessopen && getenv("LESSOPEN") != NULL) {
-            FILE* fp;
-            uf->guess_type = guessContentType(path);
-            if (uf->guess_type == NULL)
-                uf->guess_type = "text/plain";
-            if (is_html_type(uf->guess_type))
-                return;
-            if ((fp = lessopen_stream(path))) {
-                UFclose(uf);
-                uf->stream = newFileStream(fp, (void (*)())pclose);
-                uf->guess_type = "text/plain";
-                return;
-            }
-        }
         check_compression(path, uf);
         if (uf->compression != CMP_NOCOMPRESS) {
             const char* ext = uf->ext;

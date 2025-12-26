@@ -482,7 +482,6 @@ global char* ssl_cipher init(NULL);
 global int is_redisplay init(FALSE);
 global int clear_buffer init(TRUE);
 global double image_scale init(100);
-global int use_lessopen init(FALSE);
 
 global char* keymap_file init(KEYMAP_FILE);
 
