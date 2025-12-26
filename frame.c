@@ -40,6 +40,7 @@ parseFrameSetLength(char* s, char*** ret)
 
     for (i = 0, p = s;; ++p) {
         p = skip_blanks(p);
+
         len = strtol(p, &q, 10);
 
         switch (*q) {
@@ -814,7 +815,8 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
                     }
                 token_end:
                     Strclear(tok);
-                } while (*p != '\0' || !iseos(f2.stream));
+                } while (*p != '\0' || !f2.stream->base.iseos);
+
                 if (pre_mode & RB_PLAIN)
                     fputs("</PRE_PLAIN>\n", f1);
                 else if (pre_mode & RB_INTXTA)

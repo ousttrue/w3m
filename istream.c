@@ -293,7 +293,7 @@ int ISfileno(InputStream stream)
 {
     if (stream == NULL)
         return -1;
-    switch (IStype(stream) & ~IST_UNCLOSE) {
+    switch (stream->base.type & ~IST_UNCLOSE) {
     case IST_BASIC:
         return *(int*)stream->base.handle;
     case IST_FILE:

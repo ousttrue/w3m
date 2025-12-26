@@ -41,7 +41,7 @@ struct URLFile examineFile(const char* path, bool do_download)
         return uf;
     }
 
-    uf.stream = openIS(path);
+    uf.stream = newInputStream(open(path, O_RDONLY));
     if (!do_download) {
         check_compression(path, &uf);
         if (uf.compression != CMP_NOCOMPRESS) {

@@ -6675,16 +6675,16 @@ doExternal(struct URLFile uf, const char* type, struct Buffer* defaultbuf)
 static int
 _MoveFile(char* path1, char* path2)
 {
-    InputStream f1;
+    InputStream f1 = newInputStream(open(path1, O_RDONLY));
+    if (!f1)
+        return -1;
+
     FILE* f2;
     int is_pipe;
     clen_t linelen = 0, trbyte = 0;
     char* buf = NULL;
     int count;
 
-    f1 = openIS(path1);
-    if (f1 == NULL)
-        return -1;
     if (*path2 == '|' && PermitSaveToPipe) {
         is_pipe = TRUE;
         f2 = popen(path2 + 1, "w");
