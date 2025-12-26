@@ -527,7 +527,7 @@ void reshapeBuffer(struct Buffer* buf)
             init_stream(&h, SCM_LOCAL, NULL);
             examineFile(buf->header_source, &h, false);
             if (h.stream) {
-                readHeader(&h, buf, NULL);
+                buf->content.document_header = readHeader(&h, NULL);
                 UFclose(&h);
             }
         }

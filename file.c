@@ -356,9 +356,9 @@ Str convertLine(struct URLFile* uf, Str line, int mode, wc_ces* charset,
     return line;
 }
 
-void readHeader(struct URLFile* uf, struct Buffer* newBuf, struct Url* pu)
+struct TextList* readHeader(struct URLFile* uf, struct Url* pu)
 {
-    struct TextList* headerlist = newBuf->content.document_header = newTextList();
+    struct TextList* headerlist = newTextList();
     if (pu->scheme == SCM_HTTP || pu->scheme == SCM_HTTPS)
         http_response_code = -1;
     else
@@ -622,6 +622,7 @@ void readHeader(struct URLFile* uf, struct Buffer* newBuf, struct Url* pu)
     //     addnewline(&newBuf->doc, "", propBuffer, NULL, 0, -1, -1);
     // if (src)
     //     fclose(src);
+    return headerlist;
 }
 
 struct auth_param {
@@ -1467,7 +1468,7 @@ load_doc: {
         }
         if (t_buf == NULL)
             t_buf = newBuffer(INIT_BUFFER_WIDTH);
-        readHeader(&f, t_buf, &pu);
+        t_buf->content.document_header = readHeader(&f, &pu);
         if (((http_response_code >= 301 && http_response_code <= 303)
                 || http_response_code == 307)
             && (p = checkHeader(&t_buf->content, "Location:")) != NULL
@@ -1554,7 +1555,7 @@ load_doc: {
     else if (pu.scheme == SCM_NEWS || pu.scheme == SCM_NNTP) {
         if (t_buf == NULL)
             t_buf = newBuffer(INIT_BUFFER_WIDTH);
-        readHeader(&f, t_buf, &pu);
+        t_buf->content.document_header = readHeader(&f, &pu);
         t = checkContentType(&t_buf->content);
         if (t == NULL)
             t = "text/plain";
