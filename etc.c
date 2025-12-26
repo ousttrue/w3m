@@ -80,16 +80,6 @@ struct Line* currentLineSkip(struct Buffer* buf, struct Line* line, int offset, 
     int i, n;
     struct Line* l = line;
 
-    if (buf->pagerSource && !(buf->bufferprop & BP_CLOSE)) {
-        n = line->linenumber + offset + buf->LINES;
-        if (buf->doc.lastLine->linenumber < n)
-            getNextPage(buf, n - buf->doc.lastLine->linenumber);
-        while ((last || (buf->doc.lastLine->linenumber < n)) && (getNextPage(buf, 1) != NULL))
-            ;
-        if (last)
-            l = buf->doc.lastLine;
-    }
-
     if (offset == 0)
         return l;
     if (offset > 0)

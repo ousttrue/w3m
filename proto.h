@@ -193,7 +193,7 @@ extern Str process_n_textarea(void);
 extern void feed_textarea(char* str);
 extern Str process_form(struct parsed_tag* tag);
 extern Str process_n_form(void);
-extern int getMetaRefreshParam(char* q, Str* refresh_uri);
+extern int getMetaRefreshParam(const char* q, Str* refresh_uri);
 extern void HTMLlineproc2(struct Buffer* buf, TextLineList* tl);
 #define HTMLlineproc1(x, y) HTMLlineproc0(x, y, TRUE)
 
@@ -204,9 +204,6 @@ extern void showProgress(clen_t* linelen, clen_t* trbyte);
 extern void saveBuffer(struct Buffer* buf, FILE* f, int cont);
 extern void saveBufferBody(struct Buffer* buf, FILE* f, int cont);
 extern struct Buffer* getshell(char* cmd);
-extern struct Buffer* getpipe(char* cmd);
-extern struct Buffer* openPagerBuffer(InputStream stream, struct Buffer* buf);
-extern struct Buffer* openGeneralPagerBuffer(InputStream stream);
 
 extern int checkCopyFile(char* path1, char* path2);
 extern int checkSaveFile(InputStream stream, char* path);
@@ -321,7 +318,6 @@ extern struct Anchor* registerImg(struct Buffer* buf, char* url, char* title, in
 extern struct Anchor* registerForm(struct Buffer* buf, struct FormList* flist,
     struct parsed_tag* tag, int line, int pos);
 extern int onAnchor(struct Anchor* a, int line, int pos);
-extern struct Anchor* searchAnchor(struct AnchorList* al, char* str);
 extern void reAnchorWord(struct Buffer* buf, struct Line* l, int spos, int epos);
 extern char* reAnchor(struct Buffer* buf, char* re);
 #ifdef USE_NNTP

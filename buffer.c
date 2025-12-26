@@ -123,8 +123,6 @@ void discardBuffer(struct Buffer* buf)
         unlink(buf->savecache);
     if (--(*buf->clone))
         return;
-    if (buf->pagerSource)
-        ISclose(buf->pagerSource);
     if (buf->sourcefile && (!buf->real_type || strncasecmp(buf->real_type, "image/", 6))) {
         if (buf->real_scheme != SCM_LOCAL || buf->bufferprop & BP_FRAME)
             unlink(buf->sourcefile);
@@ -261,12 +259,7 @@ void gotoLine(struct Buffer* buf, int n)
 
     if (l == NULL)
         return;
-    if (buf->pagerSource && !(buf->bufferprop & BP_CLOSE)) {
-        if (buf->doc.lastLine->linenumber < n)
-            getNextPage(buf, n - buf->doc.lastLine->linenumber);
-        while ((buf->doc.lastLine->linenumber < n) && (getNextPage(buf, 1) != NULL))
-            ;
-    }
+
     if (l->linenumber > n) {
         /* FIXME: gettextize? */
         sprintf(msg, "First line is #%ld", l->linenumber);
@@ -304,12 +297,7 @@ void gotoRealLine(struct Buffer* buf, int n)
 
     if (l == NULL)
         return;
-    if (buf->pagerSource && !(buf->bufferprop & BP_CLOSE)) {
-        if (buf->doc.lastLine->real_linenumber < n)
-            getNextPage(buf, n - buf->doc.lastLine->real_linenumber);
-        while ((buf->doc.lastLine->real_linenumber < n) && (getNextPage(buf, 1) != NULL))
-            ;
-    }
+
     if (l->real_linenumber > n) {
         /* FIXME: gettextize? */
         sprintf(msg, "First line is #%ld", l->real_linenumber);
@@ -539,11 +527,10 @@ void reshapeBuffer(struct Buffer* buf)
             init_stream(&h, SCM_LOCAL, NULL);
             examineFile(buf->header_source, &h, false);
             if (h.stream) {
-                readHeader(&h, buf, TRUE, NULL);
+                readHeader(&h, buf, NULL);
                 UFclose(&h);
             }
-        } else if (buf->search_header) /* -m option */
-            readHeader(&f, buf, TRUE, NULL);
+        }
     }
 
     {
@@ -999,5 +986,3 @@ void arrangeCursor(struct Buffer* buf)
     buf->visualpos = buf->doc.currentLine->bwidth + COLPOS(buf->doc.currentLine, buf->pos) - buf->currentColumn;
     buf->cursorX = buf->visualpos - buf->doc.currentLine->bwidth;
 }
-
-

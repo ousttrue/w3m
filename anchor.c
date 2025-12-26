@@ -171,7 +171,7 @@ retrieveCurrentForm(struct Buffer* buf)
 }
 
 struct Anchor*
-searchAnchor(struct AnchorList* al, char* str)
+searchAnchor(struct AnchorList* al, const char* str)
 {
     int i;
     struct Anchor* a;
@@ -361,7 +361,7 @@ reAnchorAny(struct Buffer* buf, char* re,
     for (l = MarkAllPages ? buf->doc.firstLine : buf->doc.topLine; l != NULL && (MarkAllPages || l->linenumber < buf->doc.topLine->linenumber + LASTLINE());
         l = l->next) {
         if (p && l->bpos)
-            goto next_line;
+            break;
         p = l->lineBuf;
         for (;;) {
             if (regexMatch(p, &l->lineBuf[l->size] - p, p == l->lineBuf) == 1) {
@@ -370,9 +370,6 @@ reAnchorAny(struct Buffer* buf, char* re,
             } else
                 break;
         }
-    next_line:
-        if (MarkAllPages && l->next == NULL && buf->pagerSource && !(buf->bufferprop & BP_CLOSE))
-            getNextPage(buf, PagerMax);
     }
     return NULL;
 }

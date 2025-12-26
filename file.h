@@ -4,13 +4,12 @@
 
 struct Buffer* loadHTMLString(Str page);
 int is_html_type(const char* type);
-struct Line* getNextPage(struct Buffer* buf, int plen);
 
 struct Url;
 struct FormList;
 struct Buffer* loadGeneralFile(const char* path, struct Url* current, const char* referer, int flag, struct FormList* request, bool do_download);
 struct URLFile;
-void readHeader(struct URLFile* uf, struct Buffer* newBuf, bool thru, struct Url* pu);
+void readHeader(struct URLFile* uf, struct Buffer* newBuf, struct Url* pu);
 
 int _doFileCopy(const char* tmpf, const char* defstr, bool download);
 inline static int doFileCopy(const char* tmpf, const char* defstr)

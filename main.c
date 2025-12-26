@@ -391,7 +391,8 @@ bool w3m_args(int argc, char** argv)
 
     struct Buffer* newbuf = NULL;
     char* p;
-    int c, i;
+    // int c;
+    int i;
     InputStream redin;
     char* line_str = NULL;
     char** load_argv;
@@ -400,7 +401,7 @@ bool w3m_args(int argc, char** argv)
     int load_bookmark = FALSE;
     int visual_start = FALSE;
     int open_new_tab = FALSE;
-    char search_header = FALSE;
+    // char search_header = FALSE;
     char* default_type = NULL;
     char* post_file = NULL;
     Str err_msg;
@@ -563,8 +564,9 @@ bool w3m_args(int argc, char** argv)
                 if (++i >= argc)
                     usage();
                 DefaultType = default_type = argv[i];
-            } else if (!strcmp("-m", argv[i]))
-                SearchHeader = search_header = TRUE;
+            }
+            // else if (!strcmp("-m", argv[i]))
+            //     SearchHeader = search_header = TRUE;
             else if (!strcmp("-v", argv[i]))
                 visual_start = TRUE;
             else if (!strcmp("-N", argv[i]))
@@ -823,10 +825,12 @@ bool w3m_args(int argc, char** argv)
     err_msg = Strnew();
     if (load_argc == 0) {
         /* no URL specified */
-        if (!isatty(0)) {
-            redin = newFileStream(fdopen(dup(0), "rb"), (void (*)())pclose);
-            newbuf = openGeneralPagerBuffer(redin);
-            dup2(1, 0);
+        if (isatty(0) == 0) {
+            // not impl
+            assert(false);
+            // redin = newFileStream(fdopen(dup(0), "rb"), (void (*)())pclose);
+            // newbuf = openGeneralPagerBuffer(redin);
+            // dup2(1, 0);
         } else if (load_bookmark) {
             newbuf = loadGeneralFile(BookmarkFile, NULL, NO_REFERER, 0, NULL, false);
             if (newbuf == NULL)
@@ -870,7 +874,7 @@ bool w3m_args(int argc, char** argv)
     }
     for (; i < load_argc; i++) {
         if (i >= 0) {
-            SearchHeader = search_header;
+            // SearchHeader = search_header;
             DefaultType = default_type;
             int retry = 0;
             const char* url = load_argv[i];
@@ -933,9 +937,6 @@ bool w3m_args(int argc, char** argv)
             }
         } else if (newbuf == NO_BUFFER)
             continue;
-        if (newbuf->pagerSource || (newbuf->real_scheme == SCM_LOCAL && newbuf->header_source && newbuf->currentURL.file && strcmp(newbuf->currentURL.file, "-")))
-            newbuf->search_header = search_header;
-
         if (CurrentTab() == NULL) {
             getRuntime()->FirstTab = getRuntime()->LastTab = getRuntime()->CurrentTab = newTab();
             if (!FirstTab()) {
@@ -1003,7 +1004,7 @@ bool w3m_args(int argc, char** argv)
     if (err_msg->length)
         disp_message_nsec(err_msg->ptr, FALSE, 1, TRUE, FALSE);
 
-    SearchHeader = FALSE;
+    // SearchHeader = FALSE;
     DefaultType = NULL;
     UseContentCharset = TRUE;
     WcOption.auto_detect = auto_detect;
@@ -1186,7 +1187,7 @@ DEFUN(multimap, MULTIMAP, "multimap")
 
 void tmpClearBuffer(struct Buffer* buf)
 {
-    if (buf->pagerSource == NULL && writeBufferCache(buf) == 0) {
+    if (writeBufferCache(buf) == 0) {
         buf->doc.firstLine = NULL;
         buf->doc.topLine = NULL;
         buf->doc.currentLine = NULL;
@@ -1687,75 +1688,75 @@ DEFUN(setEnv, SETENV, "Set environment variable")
 
 DEFUN(pipeBuf, PIPE_BUF, "Pipe current buffer through a shell command and display output")
 {
-    getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    char* cmd = searchKeyData();
-    if (cmd == NULL || *cmd == '\0') {
-        /* FIXME: gettextize? */
-        cmd = inputLineHist("Pipe buffer to: ", "", IN_COMMAND, getRuntime()->ShellHist);
-    }
-    if (cmd != NULL)
-        cmd = conv_to_system(cmd);
-    if (cmd == NULL || *cmd == '\0') {
-        return;
-    }
-
-    char* tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
-    FILE* f = fopen(tmpf, "w");
-    if (f == NULL)
-        if (getRuntime()->UseHistory)
-            loadHistory(getRuntime()->URLHist);
-
-    if (getRuntime()->UseHistory)
-        loadHistory(getRuntime()->URLHist);
-
-    {
-        /* FIXME: gettextize? */
-        disp_message(Sprintf("Can't save buffer to %s", cmd)->ptr, TRUE);
-        return;
-    }
-    saveBuffer(Currentbuf, f, TRUE);
-    fclose(f);
-    struct Buffer* buf = getpipe(myExtCommand(cmd, shell_quote(tmpf), TRUE)->ptr);
-    if (buf == NULL) {
-        disp_message("Execution failed", TRUE);
-        return;
-    } else {
-        buf->content.filename = cmd;
-        buf->buffername = Sprintf("%s %s", PIPEBUFFERNAME,
-            conv_from_system(cmd))
-                              ->ptr;
-        buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
-        if (buf->type == NULL)
-            buf->type = "text/plain";
-        buf->currentURL.file = "-";
-        pushBuffer(buf);
-    }
+    // getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
+    // char* cmd = searchKeyData();
+    // if (cmd == NULL || *cmd == '\0') {
+    //     /* FIXME: gettextize? */
+    //     cmd = inputLineHist("Pipe buffer to: ", "", IN_COMMAND, getRuntime()->ShellHist);
+    // }
+    // if (cmd != NULL)
+    //     cmd = conv_to_system(cmd);
+    // if (cmd == NULL || *cmd == '\0') {
+    //     return;
+    // }
+    //
+    // char* tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
+    // FILE* f = fopen(tmpf, "w");
+    // if (f == NULL)
+    //     if (getRuntime()->UseHistory)
+    //         loadHistory(getRuntime()->URLHist);
+    //
+    // if (getRuntime()->UseHistory)
+    //     loadHistory(getRuntime()->URLHist);
+    //
+    // {
+    //     /* FIXME: gettextize? */
+    //     disp_message(Sprintf("Can't save buffer to %s", cmd)->ptr, TRUE);
+    //     return;
+    // }
+    // saveBuffer(Currentbuf, f, TRUE);
+    // fclose(f);
+    // struct Buffer* buf = getpipe(myExtCommand(cmd, shell_quote(tmpf), TRUE)->ptr);
+    // if (buf == NULL) {
+    //     disp_message("Execution failed", TRUE);
+    //     return;
+    // } else {
+    //     buf->content.filename = cmd;
+    //     buf->buffername = Sprintf("%s %s", PIPEBUFFERNAME,
+    //         conv_from_system(cmd))
+    //                           ->ptr;
+    //     buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
+    //     if (buf->type == NULL)
+    //         buf->type = "text/plain";
+    //     buf->currentURL.file = "-";
+    //     pushBuffer(buf);
+    // }
 }
 
 /* Execute shell command and read output ac pipe. */
 DEFUN(pipesh, PIPE_SHELL, "Execute shell command and display output")
 {
-    getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    char* cmd = searchKeyData();
-    if (cmd == NULL || *cmd == '\0') {
-        cmd = inputLineHist("(read shell[pipe])!", "", IN_COMMAND, getRuntime()->ShellHist);
-    }
-    if (cmd != NULL)
-        cmd = conv_to_system(cmd);
-    if (cmd == NULL || *cmd == '\0') {
-        return;
-    }
-
-    struct Buffer* buf = getpipe(cmd);
-    if (buf == NULL) {
-        disp_message("Execution failed", TRUE);
-        return;
-    } else {
-        buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
-        if (buf->type == NULL)
-            buf->type = "text/plain";
-        pushBuffer(buf);
-    }
+    // getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
+    // char* cmd = searchKeyData();
+    // if (cmd == NULL || *cmd == '\0') {
+    //     cmd = inputLineHist("(read shell[pipe])!", "", IN_COMMAND, getRuntime()->ShellHist);
+    // }
+    // if (cmd != NULL)
+    //     cmd = conv_to_system(cmd);
+    // if (cmd == NULL || *cmd == '\0') {
+    //     return;
+    // }
+    //
+    // struct Buffer* buf = getpipe(cmd);
+    // if (buf == NULL) {
+    //     disp_message("Execution failed", TRUE);
+    //     return;
+    // } else {
+    //     buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
+    //     if (buf->type == NULL)
+    //         buf->type = "text/plain";
+    //     pushBuffer(buf);
+    // }
 }
 
 /* Execute shell command and load entire output to buffer */
@@ -2312,13 +2313,13 @@ cur_real_linenumber(struct Buffer* buf)
 DEFUN(editBf, EDIT, "Edit local source")
 {
     const char* fn = Currentbuf->content.filename;
-    if (fn == NULL || Currentbuf->pagerSource != NULL || /* Behaving as a pager */
-        (Currentbuf->type == NULL && Currentbuf->edit == NULL) || /* Reading shell */
-        Currentbuf->real_scheme != SCM_LOCAL || !strcmp(Currentbuf->currentURL.file, "-") || /* file is std input  */
-        Currentbuf->bufferprop & BP_FRAME) { /* Frame */
-        disp_err_message("Can't edit other than local file", TRUE);
-        return;
-    }
+    // if (fn == NULL || Currentbuf->pagerSource != NULL || /* Behaving as a pager */
+    //     (Currentbuf->type == NULL && Currentbuf->edit == NULL) || /* Reading shell */
+    //     Currentbuf->real_scheme != SCM_LOCAL || !strcmp(Currentbuf->currentURL.file, "-") || /* file is std input  */
+    //     Currentbuf->bufferprop & BP_FRAME) { /* Frame */
+    //     disp_err_message("Can't edit other than local file", TRUE);
+    //     return;
+    // }
 
     Str cmd;
     if (Currentbuf->edit)
@@ -3634,31 +3635,33 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
         return;
     }
     if (Currentbuf->sourcefile == NULL) {
-        if (Currentbuf->pagerSource && !strcasecmp(Currentbuf->type, "text/plain")) {
-            wc_ces old_charset;
-            wc_bool old_fix_width_conv;
-
-            FILE* f;
-            Str tmpf = tmpfname(TMPF_SRC, NULL);
-            f = fopen(tmpf->ptr, "w");
-            if (f == NULL)
-                return;
-
-            old_charset = getRuntime()->DisplayCharset;
-            old_fix_width_conv = WcOption.fix_width_conv;
-            getRuntime()->DisplayCharset = (Currentbuf->document_charset != WC_CES_US_ASCII)
-                ? Currentbuf->document_charset
-                : 0;
-            WcOption.fix_width_conv = WC_FALSE;
-
-            saveBufferBody(Currentbuf, f, TRUE);
-
-            getRuntime()->DisplayCharset = old_charset;
-            WcOption.fix_width_conv = old_fix_width_conv;
-
-            fclose(f);
-            Currentbuf->sourcefile = tmpf->ptr;
-        } else {
+        // if (Currentbuf->pagerSource && !strcasecmp(Currentbuf->type, "text/plain")) {
+        //     wc_ces old_charset;
+        //     wc_bool old_fix_width_conv;
+        //
+        //     FILE* f;
+        //     Str tmpf = tmpfname(TMPF_SRC, NULL);
+        //     f = fopen(tmpf->ptr, "w");
+        //     if (f == NULL)
+        //         return;
+        //
+        //     old_charset = getRuntime()->DisplayCharset;
+        //     old_fix_width_conv = WcOption.fix_width_conv;
+        //     getRuntime()->DisplayCharset = (Currentbuf->document_charset != WC_CES_US_ASCII)
+        //         ? Currentbuf->document_charset
+        //         : 0;
+        //     WcOption.fix_width_conv = WC_FALSE;
+        //
+        //     saveBufferBody(Currentbuf, f, TRUE);
+        //
+        //     getRuntime()->DisplayCharset = old_charset;
+        //     WcOption.fix_width_conv = old_fix_width_conv;
+        //
+        //     fclose(f);
+        //     Currentbuf->sourcefile = tmpf->ptr;
+        // }
+        // else
+        {
             return;
         }
     }
@@ -3693,7 +3696,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
     buf->content.filename = Currentbuf->content.filename;
     buf->sourcefile = Currentbuf->sourcefile;
     buf->header_source = Currentbuf->header_source;
-    buf->search_header = Currentbuf->search_header;
+    // buf->search_header = Currentbuf->search_header;
     buf->document_charset = Currentbuf->document_charset;
     buf->clone = Currentbuf->clone;
     (*buf->clone)++;
@@ -3770,11 +3773,11 @@ DEFUN(reload, RELOAD, "Load current document anew")
     old_charset = getRuntime()->DocumentCharset;
     if (Currentbuf->document_charset != WC_CES_US_ASCII)
         getRuntime()->DocumentCharset = Currentbuf->document_charset;
-    SearchHeader = Currentbuf->search_header;
+    // SearchHeader = Currentbuf->search_header;
     DefaultType = Currentbuf->real_type;
     buf = loadGeneralFile(url->ptr, NULL, NO_REFERER, RG_NOCACHE, request, false);
     getRuntime()->DocumentCharset = old_charset;
-    SearchHeader = FALSE;
+    // SearchHeader = FALSE;
     DefaultType = NULL;
 
     if (multipart)
@@ -3794,7 +3797,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
         if (Currentbuf != buf)
             Firstbuf = deleteBuffer(Firstbuf, buf);
     }
-    Currentbuf->search_header = sbuf.search_header;
+    // Currentbuf->search_header = sbuf.search_header;
     Currentbuf->form_submit = sbuf.form_submit;
     if (Currentbuf->doc.firstLine) {
         COPY_BUFROOT(Currentbuf, &sbuf);
@@ -4076,13 +4079,13 @@ DEFUN(curlno, LINE_INFO, "Display current position in document")
     }
     if (Currentbuf->doc.lastLine)
         all = Currentbuf->doc.lastLine->real_linenumber;
-    if (Currentbuf->pagerSource && !(Currentbuf->bufferprop & BP_CLOSE))
-        tmp = Sprintf("line %d col %d/%d", cur, col, len);
-    else
-        tmp = Sprintf("line %d/%d (%d%%) col %d/%d", cur, all,
-            (int)((double)cur * 100.0 / (double)(all ? all : 1)
-                + 0.5),
-            col, len);
+    // if (Currentbuf->pagerSource && !(Currentbuf->bufferprop & BP_CLOSE))
+    //     tmp = Sprintf("line %d col %d/%d", cur, col, len);
+    // else
+    tmp = Sprintf("line %d/%d (%d%%) col %d/%d", cur, all,
+        (int)((double)cur * 100.0 / (double)(all ? all : 1)
+            + 0.5),
+        col, len);
 #ifdef USE_M17N
     Strcat_charp(tmp, "  ");
     Strcat_charp(tmp, wc_ces_to_charset_desc(Currentbuf->document_charset));

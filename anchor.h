@@ -37,3 +37,4 @@ struct HmarkerList {
 
 struct Buffer;
 struct Anchor* searchURLLabel(struct Buffer* buf, const char* url);
+struct Anchor* searchAnchor(struct AnchorList* al, const char* str);

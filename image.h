@@ -27,7 +27,7 @@ struct ImageCache {
 
 struct Image {
     char* url;
-    char* ext;
+    const char* ext;
     short width;
     short height;
     short xoffset;

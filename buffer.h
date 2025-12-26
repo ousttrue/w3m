@@ -74,7 +74,6 @@ struct Buffer {
     short rootY;
     short COLS;
     short LINES;
-    union input_stream* pagerSource;
     struct AnchorList* href;
     struct AnchorList* name;
     struct AnchorList* img;
@@ -102,7 +101,6 @@ struct Buffer {
     struct mailcap* mailcap;
     char* mailcap_source;
     const char* header_source;
-    char search_header;
     char* ssl_certificate;
     char image_flag;
     // char image_loaded;

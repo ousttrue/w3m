@@ -356,22 +356,13 @@ Str convertLine(struct URLFile* uf, Str line, int mode, wc_ces* charset,
     return line;
 }
 
-void readHeader(struct URLFile* uf, struct Buffer* newBuf, bool thru, struct Url* pu)
+void readHeader(struct URLFile* uf, struct Buffer* newBuf, struct Url* pu)
 {
     TextList* headerlist = newBuf->content.document_header = newTextList();
     if (pu->scheme == SCM_HTTP || pu->scheme == SCM_HTTPS)
         http_response_code = -1;
     else
         http_response_code = 0;
-
-    FILE* src = NULL;
-    if (thru && !newBuf->header_source
-        && !getRuntime()->image_source) {
-        const char* tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
-        src = fopen(tmpf, "w");
-        if (src)
-            newBuf->header_source = tmpf;
-    }
 
     wc_ces charset = WC_CES_US_ASCII;
     Str lineBuf2 = NULL;
@@ -388,8 +379,8 @@ void readHeader(struct URLFile* uf, struct Buffer* newBuf, bool thru, struct Url
                 fclose(ff);
             }
         }
-        if (src)
-            Strfputs(tmp, src);
+        // if (src)
+        //     Strfputs(tmp, src);
         cleanup_line(tmp, HEADER_MODE);
         if (tmp->ptr[0] == '\n' || tmp->ptr[0] == '\r' || tmp->ptr[0] == '\0') {
             if (!lineBuf2)
@@ -424,33 +415,33 @@ void readHeader(struct URLFile* uf, struct Buffer* newBuf, bool thru, struct Url
                 lineBuf2 = checkType(Strnew_charp_n(p, q - p), &propBuffer,
                     NULL);
                 Strcat(tmp, lineBuf2);
-                if (thru)
-                    addnewline(&newBuf->doc, lineBuf2->ptr, propBuffer, NULL,
-                        lineBuf2->length, FOLD_BUFFER_WIDTH, -1);
+                // if (thru)
+                //     addnewline(&newBuf->doc, lineBuf2->ptr, propBuffer, NULL,
+                //         lineBuf2->length, FOLD_BUFFER_WIDTH, -1);
                 for (; *q && (*q == '\r' || *q == '\n'); q++)
                     ;
             }
-            if (thru && getRuntime()->activeImage && getRuntime()->displayImage) {
-                Str src = NULL;
-                if (!strncasecmp(tmp->ptr, "X-Image-URL:", 12)) {
-                    const char* tmpf = &tmp->ptr[12];
-                    tmpf = skip_blanks(tmpf);
-                    src = Strnew_m_charp("<img src=\"", html_quote(tmpf),
-                        "\" alt=\"X-Image-URL\">", NULL);
-                }
-                if (src) {
-                    struct URLFile f;
-                    struct Line* l;
-                    wc_ces old_charset = newBuf->document_charset;
-                    init_stream(&f, SCM_LOCAL, newStrStream(src));
-                    loadHTMLstream(&f, newBuf, NULL, TRUE);
-                    UFclose(&f);
-                    for (l = newBuf->doc.lastLine; l && l->real_linenumber;
-                        l = l->prev)
-                        l->real_linenumber = 0;
-                    newBuf->document_charset = old_charset;
-                }
-            }
+            // if (thru && getRuntime()->activeImage && getRuntime()->displayImage) {
+            //     Str src = NULL;
+            //     if (!strncasecmp(tmp->ptr, "X-Image-URL:", 12)) {
+            //         const char* tmpf = &tmp->ptr[12];
+            //         tmpf = skip_blanks(tmpf);
+            //         src = Strnew_m_charp("<img src=\"", html_quote(tmpf),
+            //             "\" alt=\"X-Image-URL\">", NULL);
+            //     }
+            //     if (src) {
+            //         struct URLFile f;
+            //         struct Line* l;
+            //         wc_ces old_charset = newBuf->document_charset;
+            //         init_stream(&f, SCM_LOCAL, newStrStream(src));
+            //         loadHTMLstream(&f, newBuf, NULL, TRUE);
+            //         UFclose(&f);
+            //         for (l = newBuf->doc.lastLine; l && l->real_linenumber;
+            //             l = l->prev)
+            //             l->real_linenumber = 0;
+            //         newBuf->document_charset = old_charset;
+            //     }
+            // }
             lineBuf2 = tmp;
         } else {
             lineBuf2 = tmp;
@@ -627,10 +618,10 @@ void readHeader(struct URLFile* uf, struct Buffer* newBuf, bool thru, struct Url
         Strfree(lineBuf2);
         lineBuf2 = NULL;
     }
-    if (thru)
-        addnewline(&newBuf->doc, "", propBuffer, NULL, 0, -1, -1);
-    if (src)
-        fclose(src);
+    // if (thru)
+    //     addnewline(&newBuf->doc, "", propBuffer, NULL, 0, -1, -1);
+    // if (src)
+    //     fclose(src);
 }
 
 struct auth_param {
@@ -1333,8 +1324,6 @@ loadGeneralFile(const char* path, struct Url* volatile current, const char* refe
     const char* t = "text/plain";
     const char *p, *real_type = NULL;
     struct Buffer* volatile t_buf = NULL;
-    int volatile searchHeader = SearchHeader;
-    int volatile searchHeader_through = TRUE;
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
     TextList* extra_header = newTextList();
     volatile Str uname = NULL;
@@ -1454,8 +1443,8 @@ load_doc: {
     b = NULL;
     if (f.is_cgi) {
         /* local CGI */
-        searchHeader = TRUE;
-        searchHeader_through = FALSE;
+        // searchHeader = TRUE;
+        // searchHeader_through = FALSE;
     }
     if (header_string)
         header_string = NULL;
@@ -1478,7 +1467,7 @@ load_doc: {
         }
         if (t_buf == NULL)
             t_buf = newBuffer(INIT_BUFFER_WIDTH);
-        readHeader(&f, t_buf, FALSE, &pu);
+        readHeader(&f, t_buf, &pu);
         if (((http_response_code >= 301 && http_response_code <= 303)
                 || http_response_code == 307)
             && (p = checkHeader(&t_buf->content, "Location:")) != NULL
@@ -1565,7 +1554,7 @@ load_doc: {
     else if (pu.scheme == SCM_NEWS || pu.scheme == SCM_NNTP) {
         if (t_buf == NULL)
             t_buf = newBuffer(INIT_BUFFER_WIDTH);
-        readHeader(&f, t_buf, TRUE, &pu);
+        readHeader(&f, t_buf, &pu);
         t = checkContentType(&t_buf->content);
         if (t == NULL)
             t = "text/plain";
@@ -1649,28 +1638,30 @@ load_doc: {
 #endif
     } else if (pu.scheme == SCM_DATA) {
         t = f.guess_type;
-    } else if (searchHeader) {
-        searchHeader = SearchHeader = FALSE;
-        if (t_buf == NULL)
-            t_buf = newBuffer(INIT_BUFFER_WIDTH);
-        readHeader(&f, t_buf, searchHeader_through, &pu);
-        if (f.is_cgi && (p = checkHeader(&t_buf->content, "Location:")) != NULL && checkRedirection(&pu)) {
-            /* document moved */
-            tpath = url_encode(remove_space(p), NULL, 0);
-            request = NULL;
-            UFclose(&f);
-            add_auth_cookie_flag = 0;
-            current = New(struct Url);
-            copyParsedURL(current, &pu);
-            t_buf = newBuffer(INIT_BUFFER_WIDTH);
-            t_buf->bufferprop |= BP_REDIRECTED;
-            status = HTST_NORMAL;
-            goto load_doc;
-        }
-        t = checkContentType(&t_buf->content);
-        if (t == NULL)
-            t = "text/plain";
-    } else if (DefaultType) {
+    }
+    // else if (searchHeader) {
+    //     searchHeader = SearchHeader = FALSE;
+    //     if (t_buf == NULL)
+    //         t_buf = newBuffer(INIT_BUFFER_WIDTH);
+    //     readHeader(&f, t_buf, searchHeader_through, &pu);
+    //     if (f.is_cgi && (p = checkHeader(&t_buf->content, "Location:")) != NULL && checkRedirection(&pu)) {
+    //         /* document moved */
+    //         tpath = url_encode(remove_space(p), NULL, 0);
+    //         request = NULL;
+    //         UFclose(&f);
+    //         add_auth_cookie_flag = 0;
+    //         current = New(struct Url);
+    //         copyParsedURL(current, &pu);
+    //         t_buf = newBuffer(INIT_BUFFER_WIDTH);
+    //         t_buf->bufferprop |= BP_REDIRECTED;
+    //         status = HTST_NORMAL;
+    //         goto load_doc;
+    //     }
+    //     t = checkContentType(&t_buf->content);
+    //     if (t == NULL)
+    //         t = "text/plain";
+    // }
+    else if (DefaultType) {
         t = DefaultType;
         DefaultType = NULL;
     } else {
@@ -2115,7 +2106,7 @@ push_tag(struct readbuffer* obuf, char* cmdname, int cmd)
 
 static void
 push_nchars(struct readbuffer* obuf, int width,
-    char* str, int len, Lineprop mode)
+    const char* str, int len, Lineprop mode)
 {
     append_tags(obuf);
     Strcat_charp_n(obuf->line, str, len);
@@ -3849,10 +3840,10 @@ ul_type(struct parsed_tag* tag, int default_type)
     return default_type;
 }
 
-int getMetaRefreshParam(char* q, Str* refresh_uri)
+int getMetaRefreshParam(const char* q, Str* refresh_uri)
 {
     int refresh_interval;
-    char* r;
+    const char* r;
     Str s_tmp = NULL;
 
     if (q == NULL || refresh_uri == NULL)
@@ -3892,7 +3883,9 @@ int getMetaRefreshParam(char* q, Str* refresh_uri)
 
 int HTMLtagproc1(struct parsed_tag* tag, struct html_feed_environ* h_env)
 {
-    char *p, *q, *r;
+    const char* p;
+    const char* q;
+    const char* r;
     int i, w, x, y, z, count, width;
     struct readbuffer* obuf = h_env->obuf;
     struct environment* envs = h_env->envs;
@@ -6946,13 +6939,13 @@ _saveBuffer(struct Buffer* buf, struct Line* l, FILE* f, int cont)
     Str tmp;
     int is_html = FALSE;
 
-    int set_charset = !getRuntime()->DisplayCharset;
+    // int set_charset = !getRuntime()->DisplayCharset;
     wc_ces charset = getRuntime()->DisplayCharset
         ? getRuntime()->DisplayCharset
         : WC_CES_US_ASCII;
     is_html = is_html_type(buf->type);
 
-pager_next:
+    // pager_next:
     for (; l != NULL; l = l->next) {
         if (is_html)
             tmp = conv_symbol(l);
@@ -6963,14 +6956,14 @@ pager_next:
         if (Strlastchar(tmp) != '\n' && !(cont && l->next && l->next->bpos))
             putc('\n', f);
     }
-    if (buf->pagerSource && !(buf->bufferprop & BP_CLOSE)) {
-        l = getNextPage(buf, PagerMax);
-
-        if (set_charset)
-            charset = buf->document_charset;
-
-        goto pager_next;
-    }
+    // if (buf->pagerSource && !(buf->bufferprop & BP_CLOSE)) {
+    //     l = getNextPage(buf, PagerMax);
+    //
+    //     if (set_charset)
+    //         charset = buf->document_charset;
+    //
+    //     goto pager_next;
+    // }
 }
 
 void saveBuffer(struct Buffer* buf, FILE* f, int cont)
@@ -7022,234 +7015,6 @@ getshell(char* cmd)
         conv_from_system(cmd))
                           ->ptr;
     return buf;
-}
-
-/*
- * getpipe: execute shell command and connect pipe to the buffer
- */
-struct Buffer*
-getpipe(char* cmd)
-{
-    FILE *f, *popen(const char*, const char*);
-    struct Buffer* buf;
-
-    if (cmd == NULL || *cmd == '\0')
-        return NULL;
-    f = popen(cmd, "r");
-    if (f == NULL)
-        return NULL;
-    buf = newBuffer(INIT_BUFFER_WIDTH);
-    buf->pagerSource = newFileStream(f, (void (*)())pclose);
-    buf->content.filename = cmd;
-    buf->buffername = Sprintf("%s %s", PIPEBUFFERNAME,
-        conv_from_system(cmd))
-                          ->ptr;
-    buf->bufferprop |= BP_PIPE;
-#ifdef USE_M17N
-    buf->document_charset = WC_CES_US_ASCII;
-#endif
-    return buf;
-}
-
-/*
- * Open pager buffer
- */
-struct Buffer*
-openPagerBuffer(InputStream stream, struct Buffer* buf)
-{
-
-    if (buf == NULL)
-        buf = newBuffer(INIT_BUFFER_WIDTH);
-    buf->pagerSource = stream;
-    buf->buffername = getenv("MAN_PN");
-    if (buf->buffername == NULL)
-        buf->buffername = PIPEBUFFERNAME;
-    else
-        buf->buffername = conv_from_system(buf->buffername);
-    buf->bufferprop |= BP_PIPE;
-    if (buf->content.content_charset && UseContentCharset)
-        buf->document_charset = buf->content.content_charset;
-    else
-        buf->document_charset = WC_CES_US_ASCII;
-    buf->doc.currentLine = buf->doc.firstLine;
-
-    return buf;
-}
-
-struct Buffer*
-openGeneralPagerBuffer(InputStream stream)
-{
-    struct URLFile uf;
-    init_stream(&uf, SCM_UNKNOWN, stream);
-
-    struct Buffer* t_buf = newBuffer(INIT_BUFFER_WIDTH);
-    copyParsedURL(&t_buf->currentURL, NULL);
-    t_buf->currentURL.scheme = SCM_LOCAL;
-    t_buf->currentURL.file = "-";
-    const char* t = "text/plain";
-    if (SearchHeader) {
-        readHeader(&uf, t_buf, TRUE, NULL);
-        t = checkContentType(&t_buf->content);
-        if (t == NULL)
-            t = "text/plain";
-        if (t_buf) {
-            t_buf->doc.topLine = t_buf->doc.firstLine;
-            t_buf->doc.currentLine = t_buf->doc.lastLine;
-        }
-        SearchHeader = FALSE;
-    } else if (DefaultType) {
-        t = DefaultType;
-        DefaultType = NULL;
-    }
-
-    struct Buffer* buf;
-    if (is_html_type(t)) {
-        buf = loadHTMLBuffer(&uf, t_buf);
-        buf->type = "text/html";
-    } else if (is_plain_text_type(t)) {
-        if (IStype(stream) != IST_ENCODED)
-            stream = newEncodedStream(stream, uf.encoding);
-        buf = openPagerBuffer(stream, t_buf);
-        buf->type = "text/plain";
-    }
-
-    else if (getRuntime()->activeImage && getRuntime()->displayImage && !useExtImageViewer && !(w3m_dump & ~DUMP_FRAME) && !strncasecmp(t, "image/", 6)) {
-        buf = loadImageBuffer(&uf, t_buf);
-        buf->type = "text/html";
-    }
-
-    else {
-        if (searchExtViewer(t)) {
-            buf = doExternal(uf, t, t_buf);
-            UFclose(&uf);
-            if (buf == NULL || buf == NO_BUFFER)
-                return buf;
-        } else { /* unknown type is regarded as text/plain */
-            if (IStype(stream) != IST_ENCODED)
-                stream = newEncodedStream(stream, uf.encoding);
-            buf = openPagerBuffer(stream, t_buf);
-            buf->type = "text/plain";
-        }
-    }
-    buf->real_type = t;
-    return buf;
-}
-
-struct Line* getNextPage(struct Buffer* buf, int plen)
-{
-    struct Line* volatile top = buf->doc.topLine, * volatile last = buf->doc.lastLine, * volatile cur = buf->doc.currentLine;
-    int i;
-    int volatile nlines = 0;
-    clen_t linelen = 0, trbyte = buf->trbyte;
-    Str lineBuf2;
-    char volatile pre_lbuf = '\0';
-    struct URLFile uf;
-
-    wc_ces charset;
-    wc_ces volatile doc_charset = getRuntime()->DocumentCharset;
-    wc_uint8 old_auto_detect = WcOption.auto_detect;
-
-    int volatile squeeze_flag = FALSE;
-    Lineprop* propBuffer = NULL;
-
-    Linecolor* colorBuffer = NULL;
-    MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
-
-    if (buf->pagerSource == NULL)
-        return NULL;
-
-    if (last != NULL) {
-        nlines = last->real_linenumber;
-        pre_lbuf = *(last->lineBuf);
-        if (pre_lbuf == '\0')
-            pre_lbuf = '\n';
-        buf->doc.currentLine = last;
-    }
-
-    charset = buf->document_charset;
-    if (buf->document_charset != WC_CES_US_ASCII)
-        doc_charset = buf->document_charset;
-    else if (UseContentCharset) {
-        buf->content.content_charset = 0;
-        checkContentType(&buf->content);
-        if (buf->content.content_charset)
-            doc_charset = buf->content.content_charset;
-    }
-    WcOption.auto_detect = buf->auto_detect;
-
-    if (SETJMP(AbortLoading) != 0) {
-        goto pager_end;
-    }
-    TRAP_ON;
-
-    init_stream(&uf, SCM_UNKNOWN, NULL);
-    for (i = 0; i < plen; i++) {
-        if (!(lineBuf2 = StrmyISgets(buf->pagerSource)))
-            return NULL;
-        if (lineBuf2->length == 0) {
-            /* Assume that `cmd == buf->content.filename' */
-            if (buf->content.filename)
-                buf->buffername = Sprintf("%s %s",
-                    CPIPEBUFFERNAME,
-                    conv_from_system(buf->content.filename))
-                                      ->ptr;
-            else if (getenv("MAN_PN") == NULL)
-                buf->buffername = CPIPEBUFFERNAME;
-            buf->bufferprop |= BP_CLOSE;
-            break;
-        }
-        linelen += lineBuf2->length;
-        showProgress(&linelen, &trbyte);
-        lineBuf2 = convertLine(&uf, lineBuf2, PAGER_MODE, &charset, doc_charset);
-        if (squeezeBlankLine) {
-            squeeze_flag = FALSE;
-            if (lineBuf2->ptr[0] == '\n' && pre_lbuf == '\n') {
-                ++nlines;
-                --i;
-                squeeze_flag = TRUE;
-                continue;
-            }
-            pre_lbuf = lineBuf2->ptr[0];
-        }
-        ++nlines;
-        Strchop(lineBuf2);
-        lineBuf2 = checkType(lineBuf2, &propBuffer, &colorBuffer);
-        addnewline(&buf->doc, lineBuf2->ptr, propBuffer, colorBuffer,
-            lineBuf2->length, FOLD_BUFFER_WIDTH, nlines);
-        if (!top) {
-            top = buf->doc.firstLine;
-            cur = top;
-        }
-        if (buf->doc.lastLine->real_linenumber - buf->doc.firstLine->real_linenumber
-            >= PagerMax) {
-            struct Line* l = buf->doc.firstLine;
-            do {
-                if (top == l)
-                    top = l->next;
-                if (cur == l)
-                    cur = l->next;
-                if (last == l)
-                    last = NULL;
-                l = l->next;
-            } while (l && l->bpos);
-            buf->doc.firstLine = l;
-            if (l)
-                buf->doc.firstLine->prev = NULL;
-        }
-    }
-pager_end:
-    TRAP_OFF;
-
-    buf->trbyte = trbyte + linelen;
-    buf->document_charset = charset;
-    WcOption.auto_detect = old_auto_detect;
-    buf->doc.topLine = top;
-    buf->doc.currentLine = cur;
-    if (!last)
-        last = buf->doc.firstLine;
-    else if (last && (last->next || !squeeze_flag))
-        last = last->next;
-    return last;
 }
 
 int save2tmp(struct URLFile uf, const char* tmpf)

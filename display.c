@@ -361,12 +361,7 @@ redrawLine(struct Buffer* buf, struct Line* l, int i)
     int k, vpos = -1;
 
     if (l == NULL) {
-        if (buf->pagerSource) {
-            l = getNextPage(buf, buf->LINES + buf->rootY - i);
-            if (l == NULL)
-                return NULL;
-        } else
-            return NULL;
+        return NULL;
     }
     screen_move(i, 0);
     if (getRuntime()->showLineNum) {
