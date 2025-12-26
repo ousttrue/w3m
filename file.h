@@ -8,7 +8,7 @@ struct Line* getNextPage(struct Buffer* buf, int plen);
 
 struct Url;
 struct FormList;
-struct Buffer* loadGeneralFile(const char* path, struct Url* current, char* referer, int flag, struct FormList* request, bool do_download);
+struct Buffer* loadGeneralFile(const char* path, struct Url* current, const char* referer, int flag, struct FormList* request, bool do_download);
 struct URLFile;
 void readHeader(struct URLFile* uf, struct Buffer* newBuf, bool thru, struct Url* pu);
 

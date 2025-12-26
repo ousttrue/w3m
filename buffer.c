@@ -60,7 +60,7 @@ struct Buffer* newBuffer(int width)
 {
     struct Buffer* n = New(struct Buffer);
     assert(n);
-    bzero((void*)n, sizeof(struct Buffer));
+    memset(n, 0, sizeof(struct Buffer));
     n->width = width;
     n->COLS = TTY_COLS();
     n->LINES = LASTLINE();

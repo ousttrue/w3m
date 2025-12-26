@@ -2323,7 +2323,7 @@ DEFUN(editBf, EDIT, "Edit local source")
     Str cmd;
     if (Currentbuf->edit)
         cmd = unquote_mailcap(Currentbuf->edit, Currentbuf->real_type, fn,
-            checkHeader(Currentbuf->content, "Content-Type:"), NULL);
+            checkHeader(&Currentbuf->content, "Content-Type:"), NULL);
     else
         cmd = myEditor(Editor, shell_quote(fn), cur_real_linenumber(Currentbuf));
     blockChild(cmd->ptr);
@@ -3207,7 +3207,7 @@ DEFUN(goURL, GOTO, "Open specified document in a new buffer")
 
 DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer")
 {
-    char* url;
+    const char* url;
     if ((url = getenv("HTTP_HOME")) != NULL || (url = getenv("WWW_HOME")) != NULL) {
         struct Url p_url;
         struct Buffer* cur_buf = Currentbuf;
@@ -3508,10 +3508,10 @@ DEFUN(svSrc, DOWNLOAD SAVE, "Save document source")
     PermitSaveToPipe = TRUE;
     const char* file;
     if (Currentbuf->real_scheme == SCM_LOCAL)
-        file = conv_from_system(guess_save_name((struct Content) { 0 },
+        file = conv_from_system(guess_save_name(NULL,
             Currentbuf->currentURL.real_file));
     else
-        file = guess_save_name(Currentbuf->content, Currentbuf->currentURL.file);
+        file = guess_save_name(&Currentbuf->content, Currentbuf->currentURL.file);
     doFileCopy(Currentbuf->sourcefile, file);
     PermitSaveToPipe = FALSE;
 }

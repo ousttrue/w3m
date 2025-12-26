@@ -3,6 +3,7 @@
 #include "indep.h"
 #include "myctype.h"
 #include <string.h>
+#include <libwc/charset.h>
 
 bool matchattr(const char* p, const char* attr, int len, Str* value)
 {
@@ -39,13 +40,13 @@ bool matchattr(const char* p, const char* attr, int len, Str* value)
     return 0;
 }
 
-const char* checkHeader(struct Content content, const char* field)
+const char* checkHeader(struct Content *content, const char* field)
 {
-    if (field == NULL || content.document_header == NULL)
+    if (field == NULL || !content || content->document_header == NULL)
         return NULL;
 
     int len = strlen(field);
-    for (TextListItem* i = content.document_header->first; i != NULL; i = i->next) {
+    for (TextListItem* i = content->document_header->first; i != NULL; i = i->next) {
         if (!strncasecmp(i->ptr, field, len)) {
             char* p = i->ptr + len;
             return remove_space(p);
@@ -75,9 +76,9 @@ const char* guess_filename(const char* file)
     return s;
 }
 
-const char* guess_save_name(struct Content content, const char* path)
+const char* guess_save_name(struct Content *content, const char* path)
 {
-    if (content.document_header) {
+    if (content && content->document_header) {
         Str name = NULL;
         const char *p, *q;
         if ((p = checkHeader(content, "Content-Disposition:")) != NULL && (q = strcasestr(p, "filename")) != NULL && (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') && matchattr(q, "filename", 8, &name))
@@ -86,4 +87,30 @@ const char* guess_save_name(struct Content content, const char* path)
             path = name->ptr;
     }
     return guess_filename(path);
+}
+
+const char* checkContentType(struct Content *content)
+{
+    const char* p = checkHeader(content, "Content-Type:");
+    if (!p) {
+        return NULL;
+    }
+
+    Str r = Strnew();
+    while (*p && *p != ';' && !IS_SPACE(*p))
+        Strcat_char(r, *p++);
+
+    if ((p = strcasestr(p, "charset")) != NULL) {
+        p += 7;
+        p = skip_blanks(p);
+        if (*p == '=') {
+            p++;
+            p = skip_blanks(p);
+            if (*p == '"')
+                p++;
+            content->content_charset = wc_guess_charset(p, 0);
+        }
+    }
+
+    return r->ptr;
 }

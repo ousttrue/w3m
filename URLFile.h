@@ -23,7 +23,7 @@ struct URLFile {
 };
 
 struct URLOption {
-    char* referer;
+    const char* referer;
     int flag;
 };
 
@@ -55,5 +55,5 @@ struct Buffer* loadImageBuffer(struct URLFile* uf, struct Buffer* newBuf);
 Str convertLine(struct URLFile* uf, Str line, int mode, wc_ces* charset, wc_ces doc_charset);
 Str loadGopherDir(struct URLFile* uf, struct Url* pu, wc_ces* charset);
 Str loadGopherSearch(struct URLFile* uf, struct Url* pu, wc_ces* charset);
-int save2tmp(struct URLFile uf, char* tmpf);
+int save2tmp(struct URLFile uf, const char* tmpf);
 void UFhalfclose(struct URLFile* f);
