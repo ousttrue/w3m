@@ -29,17 +29,9 @@ struct {
     int cmd;
 } schemetable[] = {
     { "http", SCM_HTTP },
-    { "gopher", SCM_GOPHER },
     { "ftp", SCM_FTP },
     { "local", SCM_LOCAL },
     { "file", SCM_LOCAL },
-    /*  {"exec", SCM_EXEC}, */
-    { "nntp", SCM_NNTP },
-    /*  {"nntp", SCM_NNTP_GROUP}, */
-    { "news", SCM_NEWS },
-    /*  {"news", SCM_NEWS_GROUP}, */
-    // { "data", SCM_DATA },
-    { "mailto", SCM_MAILTO },
     { "https", SCM_HTTPS },
     { 0, SCM_UNKNOWN },
 };

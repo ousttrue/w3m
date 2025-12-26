@@ -1,7 +1,6 @@
 #include "file.h"
 #include "mimehead.h"
 #include "ftp.h"
-#include "news.h"
 #include "compression.h"
 #include "URLFile.h"
 #include "mailcap.h"
@@ -331,9 +330,6 @@ Str convertLine(struct URLFile* uf, Str line, int mode, wc_ces* charset,
 
     if (mode != RAW_MODE)
         cleanup_line(line, mode);
-
-    if (uf && uf->scheme == SCM_NEWS)
-        Strchop(line);
 
     return line;
 }
@@ -1109,11 +1105,6 @@ load_doc: {
             t = "ftp:directory";
             break;
 
-        case SCM_NEWS_GROUP:
-            page = loadNewsgroup(&pu, &charset, do_download);
-            t = "news:group";
-            break;
-
         case SCM_UNKNOWN:
 
             tmp = searchURIMethods(&pu);
@@ -1163,16 +1154,7 @@ load_doc: {
     if (header_string)
         header_string = NULL;
     TRAP_ON;
-    if (pu.scheme == SCM_HTTP ||
-#ifdef USE_SSL
-        pu.scheme == SCM_HTTPS ||
-#endif /* USE_SSL */
-        ((
-#ifdef USE_GOPHER
-             (pu.scheme == SCM_GOPHER && non_null(GOPHER_proxy)) ||
-#endif /* USE_GOPHER */
-             (pu.scheme == SCM_FTP && non_null(FTP_proxy)))
-            && !Do_not_use_proxy && !check_no_proxy(pu.host))) {
+    if (pu.scheme == SCM_HTTP || pu.scheme == SCM_HTTPS || (((pu.scheme == SCM_FTP && non_null(FTP_proxy))) && !Do_not_use_proxy && !check_no_proxy(pu.host))) {
 
         if (fmInitialized()) {
             exitRawMode();
@@ -1269,65 +1251,7 @@ load_doc: {
         }
 
         f.modtime = mymktime(checkHeader(&t_buf->content, "Last-Modified:"));
-    }
-#ifdef USE_NNTP
-    else if (pu.scheme == SCM_NEWS || pu.scheme == SCM_NNTP) {
-        if (t_buf == NULL)
-            t_buf = newBuffer(INIT_BUFFER_WIDTH);
-        getHttpResponseHeader(&t_buf->content, &f, &pu);
-        t = checkContentType(&t_buf->content);
-        if (t == NULL)
-            t = "text/plain";
-    }
-#endif /* USE_NNTP */
-#ifdef USE_GOPHER
-    else if (pu.scheme == SCM_GOPHER) {
-        p = pu.file;
-        while (*p == '/')
-            ++p;
-        switch (*p) {
-        case '0':
-            t = "text/plain";
-            break;
-        case '1':
-        case 'm':
-            page = loadGopherDir(&f, &pu, &charset);
-            t = "gopher:directory";
-            TRAP_OFF;
-            goto page_loaded;
-        case '7':
-            if (pu.query != NULL) {
-                page = loadGopherDir(&f, &pu, &charset);
-                t = "gopher:directory";
-            } else {
-                page = loadGopherSearch(&f, &pu, &charset);
-                t = "gopher:search";
-            }
-            TRAP_OFF;
-            goto page_loaded;
-        case 's':
-            t = "audio/basic";
-            break;
-        case 'g':
-            t = "image/gif";
-            break;
-        case 'h':
-            t = "text/html";
-            break;
-        case 'I':
-            t = guessContentType(pu.file);
-            if (strncasecmp(t, "image/", 6) != 0) {
-                t = "image/png";
-            }
-            break;
-        case '5':
-        case '9':
-            gopher_download = TRUE;
-            break;
-        }
-    }
-#endif /* USE_GOPHER */
-    else if (pu.scheme == SCM_FTP) {
+    } else if (pu.scheme == SCM_FTP) {
         check_compression(path, &f);
         if (f.compression != CMP_NOCOMPRESS) {
             const char* t1 = uncompressed_file_type(pu.file, NULL);
@@ -1415,12 +1339,6 @@ page_loaded:
             if (!src)
                 return NULL;
             const char* file = guess_filename(pu.file);
-            if (f.scheme == SCM_GOPHER)
-                file = Sprintf("%s.html", file)->ptr;
-
-            if (f.scheme == SCM_NEWS_GROUP)
-                file = Sprintf("%s.html", file)->ptr;
-
             doFileMove(tmp->ptr, file);
             return NO_BUFFER;
         }
@@ -1573,10 +1491,6 @@ page_loaded:
     }
     if (header_string)
         header_string = NULL;
-#ifdef USE_NNTP
-    if (b && b != NO_BUFFER && (f.scheme == SCM_NNTP || f.scheme == SCM_NEWS))
-        reAnchorNewsheader(b);
-#endif
     if (b && b != NO_BUFFER)
         preFormUpdateBuffer(b);
     TRAP_OFF;
@@ -6183,16 +6097,6 @@ void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int int
 
     while ((lineBuf2 = StrmyUFgets(f)) && lineBuf2->length) {
 
-        if (f->scheme == SCM_NEWS && lineBuf2->ptr[0] == '.') {
-            Strshrinkfirst(lineBuf2, 1);
-            if (lineBuf2->ptr[0] == '\n' || lineBuf2->ptr[0] == '\r' || lineBuf2->ptr[0] == '\0') {
-                /*
-                 * iseos(f->stream) = TRUE;
-                 */
-                break;
-            }
-        }
-
         if (src)
             Strfputs(lineBuf2, src);
         linelen += lineBuf2->length;
@@ -6491,17 +6395,6 @@ loadBuffer(struct URLFile* uf, struct Buffer* volatile newBuf)
 
     nlines = 0;
     while ((lineBuf2 = StrmyISgets(uf->stream)) && lineBuf2->length) {
-#ifdef USE_NNTP
-        if (uf->scheme == SCM_NEWS && lineBuf2->ptr[0] == '.') {
-            Strshrinkfirst(lineBuf2, 1);
-            if (lineBuf2->ptr[0] == '\n' || lineBuf2->ptr[0] == '\r' || lineBuf2->ptr[0] == '\0') {
-                /*
-                 * iseos(uf->stream) = TRUE;
-                 */
-                break;
-            }
-        }
-#endif /* USE_NNTP */
         if (src)
             Strfputs(lineBuf2, src);
         linelen += lineBuf2->length;
@@ -6742,30 +6635,6 @@ int save2tmp(struct URLFile uf, const char* tmpf)
         goto _end;
     }
     TRAP_ON;
-#ifdef USE_NNTP
-    int check = 0;
-    if (uf.scheme == SCM_NEWS) {
-        char c;
-        if (!uf.stream)
-            return -1;
-        while (c = UFgetc(&uf), !iseos(uf.stream)) {
-            if (c == '\n') {
-                if (check == 0)
-                    check++;
-                else if (check == 3)
-                    break;
-            } else if (c == '.' && check == 1)
-                check++;
-            else if (c == '\r' && check == 2)
-                check++;
-            else
-                check = 0;
-            putc(c, ff);
-            linelen += sizeof(c);
-            showProgress(&linelen, &trbyte);
-        }
-    } else
-#endif /* USE_NNTP */
     {
         int count;
 

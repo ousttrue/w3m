@@ -152,8 +152,6 @@ void getHttpResponseHeader(struct Content* content, struct URLFile* uf, struct U
     Lineprop* propBuffer = 0;
     Str tmp;
     while ((tmp = StrmyUFgets(uf)) && tmp->length) {
-        if (uf->scheme == SCM_NEWS && tmp->ptr[0] == '.')
-            Strshrinkfirst(tmp, 1);
         // if (w3m_reqlog) {
         //     FILE* ff;
         //     ff = fopen(w3m_reqlog, "a");

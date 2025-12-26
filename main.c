@@ -1,5 +1,4 @@
 #include "maparea.h"
-#include "news.h"
 #include "ftp.h"
 #include "etc.h"
 #include "content.h"
@@ -926,8 +925,6 @@ bool w3m_args(int argc, char** argv)
             } else if (newbuf == NO_BUFFER)
                 continue;
             switch (newbuf->real_scheme) {
-            case SCM_MAILTO:
-                break;
             case SCM_LOCAL:
             case SCM_LOCAL_CGI:
                 unshiftHist(getRuntime()->LoadHist, url);
@@ -4640,28 +4637,15 @@ void deleteFiles()
 
 void w3m_exit(int i)
 {
-#ifdef USE_MIGEMO
-    init_migemo(); /* close pipe to migemo */
-#endif
     stopDownload();
     deleteFiles();
-#ifdef USE_SSL
     free_ssl_ctx();
-#endif
     disconnectFTP();
-#ifdef USE_NNTP
-    disconnectNews();
-#endif
-#ifdef __MINGW32_VERSION
-    WSACleanup();
-#endif
-#ifdef HAVE_MKDTEMP
     if (mkd_tmp_dir)
         if (rmdir(mkd_tmp_dir) != 0) {
             fprintf(stderr, "Can't remove temporary directory (%s)!\n", mkd_tmp_dir);
             exit(1);
         }
-#endif
     exit(i);
 }
 

@@ -1,6 +1,5 @@
 #include "URLFile.h"
 #include "ftp.h"
-#include "news.h"
 #include <string.h>
 
 void init_stream(struct URLFile* uf, int scheme, union input_stream* stream)
@@ -21,10 +20,6 @@ void UFhalfclose(struct URLFile* f)
     switch (f->scheme) {
     case SCM_FTP:
         closeFTP();
-        break;
-    case SCM_NEWS:
-    case SCM_NNTP:
-        closeNews();
         break;
     default:
         UFclose(f);

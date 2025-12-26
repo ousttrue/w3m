@@ -1,5 +1,4 @@
 #include "w3m_rc.h"
-#include "news.h"
 #include "ftp.h"
 #include "URLFile.h"
 #include "file.h"
@@ -174,8 +173,6 @@ DefaultFile(int scheme)
     case SCM_HTTP:
     case SCM_HTTPS:
         return allocStr(HTTP_DEFAULT_FILE, -1);
-    case SCM_GOPHER:
-        return allocStr("1", -1);
     case SCM_LOCAL:
     case SCM_LOCAL_CGI:
     case SCM_FTP:
@@ -687,16 +684,6 @@ void parseURL(const char* url, struct Url* p_url, struct Url* current)
             case SCM_FTPDIR:
                 p_url->scheme = SCM_FTP;
                 break;
-#ifdef USE_NNTP
-            case SCM_NNTP:
-            case SCM_NNTP_GROUP:
-                p_url->scheme = SCM_NNTP;
-                break;
-            case SCM_NEWS:
-            case SCM_NEWS_GROUP:
-                p_url->scheme = SCM_NEWS;
-                break;
-#endif
             default:
                 p_url->scheme = current->scheme;
                 break;
@@ -838,36 +825,12 @@ analyze_file:
 #endif
 
     q = p;
-#ifdef USE_GOPHER
-    if (p_url->scheme == SCM_GOPHER) {
-        if (*q == '/')
-            q++;
-        if (*q && q[0] != '/' && q[1] != '/' && q[2] == '/')
-            q++;
-    }
-#endif /* USE_GOPHER */
     if (*p == '/')
         p++;
     if (*p == '\0' || *p == '#' || *p == '?') { /* scheme://host[:port]/ */
         p_url->file = DefaultFile(p_url->scheme);
         goto do_query;
     }
-#ifdef USE_GOPHER
-    if (p_url->scheme == SCM_GOPHER && *p == 'R') {
-        if (!*++p) {
-            p_url->file = "";
-            goto do_query;
-        }
-        tmp = Strnew();
-        Strcat_char(tmp, *(p++));
-        while (*p && *p != '/')
-            p++;
-        Strcat_charp(tmp, p);
-        while (*p)
-            p++;
-        p_url->file = copyPath(tmp->ptr, -1, COPYPATH_SPC_IGNORE);
-    } else
-#endif /* USE_GOPHER */
     {
         char* cgi = strchr(p, '?');
     again:
@@ -949,43 +912,10 @@ void parseURL2(const char* url, struct Url* pu, struct Url* current)
     int relative_uri = FALSE;
 
     parseURL(url, pu, current);
-#ifndef USE_W3MMAILER
-    if (pu->scheme == SCM_MAILTO)
-        return;
-#endif
-    if (pu->scheme == SCM_NEWS || pu->scheme == SCM_NEWS_GROUP) {
-        if (pu->file && !strchr(pu->file, '@') && (!(p = strchr(pu->file, '/')) || strchr(p + 1, '-') || *(p + 1) == '\0'))
-            pu->scheme = SCM_NEWS_GROUP;
-        else
-            pu->scheme = SCM_NEWS;
-        return;
-    }
-    if (pu->scheme == SCM_NNTP || pu->scheme == SCM_NNTP_GROUP) {
-        if (pu->file && *pu->file == '/')
-            pu->file = allocStr(pu->file + 1, -1);
-        if (pu->file && !strchr(pu->file, '@') && (!(p = strchr(pu->file, '/')) || strchr(p + 1, '-') || *(p + 1) == '\0'))
-            pu->scheme = SCM_NNTP_GROUP;
-        else
-            pu->scheme = SCM_NNTP;
-        if (current && (current->scheme == SCM_NNTP || current->scheme == SCM_NNTP_GROUP)) {
-            if (pu->host == NULL) {
-                pu->host = current->host;
-                pu->port = current->port;
-            }
-        }
-        return;
-    }
+
     if (pu->scheme == SCM_LOCAL) {
         char* q = expandName(file_unquote(pu->file));
-#ifdef SUPPORT_DOS_DRIVE_PREFIX
-        Str drive;
-        if (IS_ALPHA(q[0]) && q[1] == ':') {
-            drive = Strnew_charp_n(q, 2);
-            Strcat_charp(drive, file_quote(q + 2));
-            pu->file = drive->ptr;
-        } else
-#endif
-            pu->file = file_quote(q);
+        pu->file = file_quote(q);
     }
 
     if (current && (pu->scheme == current->scheme || (pu->scheme == SCM_FTP && current->scheme == SCM_FTPDIR) || (pu->scheme == SCM_LOCAL && current->scheme == SCM_LOCAL_CGI))
@@ -1007,16 +937,7 @@ void parseURL2(const char* url, struct Url* pu, struct Url* current)
                                ->ptr;
             } else
 #endif
-                if (
-#ifdef USE_GOPHER
-                    pu->scheme != SCM_GOPHER &&
-#endif /* USE_GOPHER */
-                    pu->file[0] != '/'
-#ifdef SUPPORT_DOS_DRIVE_PREFIX
-                    && !(pu->scheme == SCM_LOCAL && IS_ALPHA(pu->file[0])
-                        && pu->file[1] == ':')
-#endif
-                ) {
+                if (pu->file[0] != '/') {
                 /* file is relative [process 1] */
                 p = pu->file;
                 if (current->file) {
@@ -1031,12 +952,6 @@ void parseURL2(const char* url, struct Url* pu, struct Url* current)
                     relative_uri = TRUE;
                 }
             }
-#ifdef USE_GOPHER
-            else if (pu->scheme == SCM_GOPHER && pu->file[0] == '/') {
-                p = pu->file;
-                pu->file = allocStr(p + 1, -1);
-            }
-#endif /* USE_GOPHER */
         } else { /* scheme:[?query][#label] */
             pu->file = current->file;
             if (!pu->query)
@@ -1082,9 +997,6 @@ void parseURL2(const char* url, struct Url* pu, struct Url* current)
                 pu->file = cleanupName(pu->file);
             }
         } else if (
-#ifdef USE_GOPHER
-            pu->scheme != SCM_GOPHER &&
-#endif /* USE_GOPHER */
             pu->file[0] == '/') {
             /*
              * this happens on the following conditions:
@@ -1147,19 +1059,6 @@ Str _parsedURL2Str(struct Url* pu, bool pass, bool user, bool label)
     }
     tmp = Strnew_charp(scheme_str[pu->scheme]);
     Strcat_char(tmp, ':');
-#ifndef USE_W3MMAILER
-    if (pu->scheme == SCM_MAILTO) {
-        Strcat_charp(tmp, pu->file);
-        if (pu->query) {
-            Strcat_char(tmp, '?');
-            Strcat_charp(tmp, pu->query);
-        }
-        return tmp;
-    }
-#endif
-#ifdef USE_NNTP
-    if (pu->scheme != SCM_NEWS && pu->scheme != SCM_NEWS_GROUP)
-#endif /* USE_NNTP */
     {
         Strcat_charp(tmp, "//");
     }
@@ -1179,14 +1078,7 @@ Str _parsedURL2Str(struct Url* pu, bool pass, bool user, bool label)
         }
     }
     if (
-#ifdef USE_NNTP
-        pu->scheme != SCM_NEWS && pu->scheme != SCM_NEWS_GROUP &&
-#endif /* USE_NNTP */
-        (pu->file == NULL || (pu->file[0] != '/'
-#ifdef SUPPORT_DOS_DRIVE_PREFIX
-             && !(IS_ALPHA(pu->file[0]) && pu->file[1] == ':' && pu->host == NULL)
-#endif
-                 )))
+        (pu->file == NULL || (pu->file[0] != '/')))
         Strcat_char(tmp, '/');
     Strcat_charp(tmp, pu->file);
     if (pu->scheme == SCM_FTPDIR && Strlastchar(tmp) != '/')
@@ -1220,9 +1112,6 @@ openURL(const char* url, struct Url* pu, struct Url* current,
     Str tmp;
     int sock, scheme;
     char *p, *q;
-    Str gophertmp;
-    char type;
-    int n;
     struct URLFile uf;
     struct HttpRequest hr0;
     SSL* sslh = NULL;
@@ -1447,81 +1336,6 @@ retry:
                 write_from_file(sock, request->body);
         }
         break;
-#ifdef USE_GOPHER
-    case SCM_GOPHER:
-        p = pu->file;
-        n = 0;
-        while (*p == '/') {
-            ++p;
-            ++n;
-        }
-        if (*p != '\0') {
-            type = pu->file[n];
-            switch (type) {
-            case '0':
-            case '1':
-            case 'm':
-            case 's':
-            case 'g':
-            case 'h':
-            case 'I':
-            case '5':
-            case '7':
-            case '9':
-                tmp = Strnew_charp(pu->file);
-                gophertmp = Strdup(tmp);
-                Strdelete(tmp, n, 1);
-                pu->file = tmp->ptr;
-                break;
-            default:
-                type = '\0';
-                break;
-            }
-        } else {
-            type = '\0';
-        }
-        if (pu->query != NULL) {
-            tmp = Strnew_charp(pu->file);
-            Strcat_char(tmp, '\t');
-            Strcat_charp(tmp, pu->query);
-            pu->file = tmp->ptr;
-        }
-        if (non_null(GOPHER_proxy) && !Do_not_use_proxy && pu->host != NULL && !check_no_proxy(pu->host)) {
-            hr->flag |= HR_FLAG_PROXY;
-            sock = openSocket(GOPHER_proxy_parsed.host,
-                schemeNumToName(GOPHER_proxy_parsed.scheme),
-                GOPHER_proxy_parsed.port);
-            if (sock < 0)
-                return uf;
-            uf.scheme = SCM_HTTP;
-            tmp = HTTPrequest(pu, current, hr, extra_header);
-        } else {
-            sock = openSocket(pu->host, schemeNumToName(pu->scheme), pu->port);
-            if (sock < 0)
-                return uf;
-            if (pu->file == NULL)
-                pu->file = "1";
-            tmp = Strnew_charp(file_unquote(pu->file));
-            Strcat_char(tmp, '\n');
-        }
-        write(sock, tmp->ptr, tmp->length);
-        if (type != '\0') {
-            pu->file = gophertmp->ptr;
-        }
-        break;
-#endif /* USE_GOPHER */
-#ifdef USE_NNTP
-    case SCM_NNTP:
-    case SCM_NNTP_GROUP:
-    case SCM_NEWS:
-    case SCM_NEWS_GROUP:
-        if (pu->scheme == SCM_NNTP || pu->scheme == SCM_NEWS)
-            uf.scheme = SCM_NEWS;
-        else
-            uf.scheme = SCM_NEWS_GROUP;
-        uf.stream = openNewsStream(pu);
-        return uf;
-#endif /* USE_NNTP */
     case SCM_UNKNOWN:
     default:
         return uf;
@@ -1558,23 +1372,23 @@ add_index_file(struct Url* pu, struct URLFile* uf)
 }
 
 static char*
-guessContentTypeFromTable(struct table2* table, char* filename)
+guessContentTypeFromTable(struct table2* table, const char* filename)
 {
-    struct table2* t;
-    char* p;
     if (table == NULL)
         return NULL;
-    p = &filename[strlen(filename) - 1];
+
+    const char* p = &filename[strlen(filename) - 1];
     while (filename < p && *p != '.')
         p--;
     if (p == filename)
         return NULL;
     p++;
-    for (t = table; t->item1; t++) {
+
+    for (struct table2* t = table; t->item1; t++) {
         if (!strcmp(p, t->item1))
             return t->item2;
     }
-    for (t = table; t->item1; t++) {
+    for (struct table2* t = table; t->item1; t++) {
         if (!strcasecmp(p, t->item1))
             return t->item2;
     }
@@ -1747,9 +1561,10 @@ end:
     return ret;
 }
 
-char* filename_extension(const char* path, int is_url)
+const char* filename_extension(const char* path, int is_url)
 {
-    char *last_dot = "", *p = path;
+    const char* last_dot = "";
+    const char* p = path;
     int i;
 
     if (path == NULL)
@@ -1929,9 +1744,6 @@ schemeToProxy(int scheme)
         break;
     case SCM_FTP:
         pu = &FTP_proxy_parsed;
-        break;
-    case SCM_GOPHER:
-        pu = &GOPHER_proxy_parsed;
         break;
     }
     return pu;

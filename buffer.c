@@ -577,8 +577,6 @@ void reshapeBuffer(struct Buffer* buf)
         chkURLBuffer(buf);
     if (buf->check_url & CHK_NMID)
         chkNMIDBuffer(buf);
-    if (buf->real_scheme == SCM_NNTP || buf->real_scheme == SCM_NEWS)
-        reAnchorNewsheader(buf);
     formResetBuffer(buf, sbuf.formitem);
 }
 

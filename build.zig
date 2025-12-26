@@ -47,7 +47,6 @@ const w3m_srcs = [_][]const u8{
     "ftp.c",
     "mimehead.c",
     "regex.c",
-    "news.c",
     "func.c",
     "cookie.c",
     "history.c",
