@@ -1,4 +1,5 @@
 #include "news.h"
+#include "mimehead.h"
 #include "w3m_rc.h"
 #include "URLFile.h"
 #include "etc.h"

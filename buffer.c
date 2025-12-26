@@ -1003,3 +1003,96 @@ void arrangeCursor(struct Buffer* buf)
     buf->visualpos = buf->doc.currentLine->bwidth + COLPOS(buf->doc.currentLine, buf->pos) - buf->currentColumn;
     buf->cursorX = buf->visualpos - buf->doc.currentLine->bwidth;
 }
+
+static void
+addnewline2(struct Buffer* buf, char* line, Lineprop* prop, Linecolor* color, int pos, int nlines)
+{
+    struct Line* l;
+    l = New(struct Line);
+    l->next = NULL;
+    l->lineBuf = line;
+    l->propBuf = prop;
+#ifdef USE_ANSI_COLOR
+    l->colorBuf = color;
+#endif
+    l->len = pos;
+    l->width = -1;
+    l->size = pos;
+    l->bpos = 0;
+    l->bwidth = 0;
+    l->prev = buf->doc.currentLine;
+    if (buf->doc.currentLine) {
+        l->next = buf->doc.currentLine->next;
+        buf->doc.currentLine->next = l;
+    } else
+        l->next = NULL;
+    if (buf->doc.lastLine == NULL || buf->doc.lastLine == buf->doc.currentLine)
+        buf->doc.lastLine = l;
+    buf->doc.currentLine = l;
+    if (buf->doc.firstLine == NULL)
+        buf->doc.firstLine = l;
+    l->linenumber = ++buf->allLine;
+    if (nlines < 0) {
+        /*     l->real_linenumber = l->linenumber;     */
+        l->real_linenumber = 0;
+    } else {
+        l->real_linenumber = nlines;
+    }
+    l = NULL;
+}
+
+void addnewline(struct Buffer* buf, const char* line, Lineprop* prop, Linecolor* color, int pos, int width, int nlines)
+{
+    char* s;
+    Lineprop* p;
+    Linecolor* c;
+    struct Line* l;
+    int i, bpos, bwidth;
+
+    if (pos > 0) {
+        s = allocStr(line, pos);
+        p = NewAtom_N(Lineprop, pos);
+        bcopy((void*)prop, (void*)p, pos * sizeof(Lineprop));
+    } else {
+        s = NullLine;
+        p = NullProp;
+    }
+    if (pos > 0 && color) {
+        c = NewAtom_N(Linecolor, pos);
+        bcopy((void*)color, (void*)c, pos * sizeof(Linecolor));
+    } else {
+        c = NULL;
+    }
+    addnewline2(buf, s, p, c, pos, nlines);
+    if (pos <= 0 || width <= 0)
+        return;
+    bpos = 0;
+    bwidth = 0;
+    while (1) {
+        l = buf->doc.currentLine;
+        l->bpos = bpos;
+        l->bwidth = bwidth;
+        i = columnLen(l, width);
+        if (i == 0) {
+            i++;
+#ifdef USE_M17N
+            while (i < l->len && p[i] & PC_WCHAR2)
+                i++;
+#endif
+        }
+        l->len = i;
+        l->width = COLPOS(l, l->len);
+        if (pos <= i)
+            return;
+        bpos += l->len;
+        bwidth += l->width;
+        s += i;
+        p += i;
+#ifdef USE_ANSI_COLOR
+        if (c)
+            c += i;
+#endif
+        pos -= i;
+        addnewline2(buf, s, p, c, pos, nlines);
+    }
+}

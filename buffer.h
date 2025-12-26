@@ -140,3 +140,5 @@ extern struct Anchor* retrieveCurrentImg(struct Buffer* buf);
 extern struct Anchor* retrieveCurrentForm(struct Buffer* buf);
 extern struct Anchor* retrieveCurrentMap(struct Buffer* buf);
 extern void reshapeBuffer(struct Buffer* buf);
+
+void addnewline(struct Buffer* buf, const char* line, Lineprop* prop, Linecolor* color, int pos, int width, int nlines);

@@ -345,15 +345,7 @@ extern Str decodeQP(char** ww);
 extern void decodeQP_to_growbuf(struct growbuf* gb, char** ww);
 extern Str decodeU(char** ww);
 extern void decodeU_to_growbuf(struct growbuf* gb, char** ww);
-#ifdef USE_M17N
-extern Str decodeWord(char** ow, wc_ces* charset);
-extern Str decodeMIME(Str orgstr, wc_ces* charset);
-#else
-extern Str decodeWord0(char** ow);
-extern Str decodeMIME0(Str orgstr);
-#define decodeWord(ow, charset) decodeWord0(ow)
-#define decodeMIME(orgstr, charset) decodeMIME0(orgstr)
-#endif
+
 extern int set_param_option(char* option);
 extern char* get_param_option(char* name);
 extern void init_rc(void);

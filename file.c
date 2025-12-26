@@ -1,4 +1,5 @@
 #include "file.h"
+#include "mimehead.h"
 #include "ftp.h"
 #include "news.h"
 #include "compression.h"
@@ -61,11 +62,6 @@ static int _MoveFile(char* path1, char* path2);
 static struct Buffer* loadcmdout(char* cmd,
     struct Buffer* (*loadproc)(struct URLFile*, struct Buffer*),
     struct Buffer* defaultbuf);
-#ifndef USE_ANSI_COLOR
-#define addnewline(a, b, c, d, e, f, g) _addnewline(a, b, c, e, f, g)
-#endif
-static void addnewline(struct Buffer* buf, char* line, Lineprop* prop,
-    Linecolor* color, int pos, int width, int nlines);
 static void addLink(struct Buffer* buf, struct parsed_tag* tag);
 
 static JMP_BUF AbortLoading;
@@ -362,37 +358,25 @@ Str convertLine(struct URLFile* uf, Str line, int mode, wc_ces* charset,
 
 void readHeader(struct URLFile* uf, struct Buffer* newBuf, bool thru, struct Url* pu)
 {
-    const char *p, *q;
-
-    char* emsg;
-
-    char c;
-    Str lineBuf2 = NULL;
-    Str tmp;
-
-    wc_ces charset = WC_CES_US_ASCII, mime_charset;
-
-    const char* tmpf;
-    FILE* src = NULL;
-    Lineprop* propBuffer;
-
     TextList* headerlist = newBuf->content.document_header = newTextList();
-    if (uf->scheme == SCM_HTTP
-
-        || uf->scheme == SCM_HTTPS
-
-    )
+    if (pu->scheme == SCM_HTTP || pu->scheme == SCM_HTTPS)
         http_response_code = -1;
     else
         http_response_code = 0;
 
+    FILE* src = NULL;
     if (thru && !newBuf->header_source
         && !getRuntime()->image_source) {
-        tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
+        const char* tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
         src = fopen(tmpf, "w");
         if (src)
             newBuf->header_source = tmpf;
     }
+
+    wc_ces charset = WC_CES_US_ASCII;
+    Str lineBuf2 = NULL;
+    Lineprop* propBuffer = 0;
+    Str tmp;
     while ((tmp = StrmyUFgets(uf)) && tmp->length) {
         if (uf->scheme == SCM_NEWS && tmp->ptr[0] == '.')
             Strshrinkfirst(tmp, 1);
@@ -418,11 +402,13 @@ void readHeader(struct URLFile* uf, struct Buffer* newBuf, bool thru, struct Url
             } else {
                 lineBuf2 = tmp;
             }
-            c = UFgetc(uf);
+            char c = UFgetc(uf);
             UFundogetc(uf);
             if (c == ' ' || c == '\t')
                 /* header line is continued */
                 continue;
+
+            wc_ces mime_charset;
             lineBuf2 = decodeMIME(lineBuf2, &mime_charset);
             lineBuf2 = convertLine(NULL, lineBuf2, RAW_MODE,
                 mime_charset ? &mime_charset : &charset,
@@ -430,7 +416,9 @@ void readHeader(struct URLFile* uf, struct Buffer* newBuf, bool thru, struct Url
                              : getRuntime()->DocumentCharset);
             /* separated with line and stored */
             tmp = Strnew_size(lineBuf2->length);
-            for (p = lineBuf2->ptr; *p; p = q) {
+
+            const char* q;
+            for (const char* p = lineBuf2->ptr; *p; p = q) {
                 for (q = p; *q && *q != '\r' && *q != '\n'; q++)
                     ;
                 lineBuf2 = checkType(Strnew_charp_n(p, q - p), &propBuffer,
@@ -445,7 +433,7 @@ void readHeader(struct URLFile* uf, struct Buffer* newBuf, bool thru, struct Url
             if (thru && getRuntime()->activeImage && getRuntime()->displayImage) {
                 Str src = NULL;
                 if (!strncasecmp(tmp->ptr, "X-Image-URL:", 12)) {
-                    tmpf = &tmp->ptr[12];
+                    const char* tmpf = &tmp->ptr[12];
                     tmpf = skip_blanks(tmpf);
                     src = Strnew_m_charp("<img src=\"", html_quote(tmpf),
                         "\" alt=\"X-Image-URL\">", NULL);
@@ -470,7 +458,7 @@ void readHeader(struct URLFile* uf, struct Buffer* newBuf, bool thru, struct Url
         if ((uf->scheme == SCM_HTTP
                 || uf->scheme == SCM_HTTPS)
             && http_response_code == -1) {
-            p = lineBuf2->ptr;
+            const char* p = lineBuf2->ptr;
             while (*p && !IS_SPACE(*p))
                 p++;
             while (*p && IS_SPACE(*p))
@@ -481,7 +469,7 @@ void readHeader(struct URLFile* uf, struct Buffer* newBuf, bool thru, struct Url
             }
         }
         if (!strncasecmp(lineBuf2->ptr, "content-transfer-encoding:", 26)) {
-            p = lineBuf2->ptr + 26;
+            const char* p = lineBuf2->ptr + 26;
             while (IS_SPACE(*p))
                 p++;
             if (!strncasecmp(p, "base64", 6))
@@ -493,7 +481,7 @@ void readHeader(struct URLFile* uf, struct Buffer* newBuf, bool thru, struct Url
             else
                 uf->encoding = ENC_7BIT;
         } else if (!strncasecmp(lineBuf2->ptr, "content-encoding:", 17)) {
-            p = lineBuf2->ptr + 17;
+            const char* p = lineBuf2->ptr + 17;
             while (IS_SPACE(*p))
                 p++;
             uf->compression = get_compression(p);
@@ -504,7 +492,7 @@ void readHeader(struct URLFile* uf, struct Buffer* newBuf, bool thru, struct Url
             int version, quoted, flag = 0;
             time_t expires = (time_t)-1;
 
-            q = NULL;
+            const char* p;
             if (lineBuf2->ptr[10] == '2') {
                 p = lineBuf2->ptr + 12;
                 version = 1;
@@ -520,6 +508,7 @@ void readHeader(struct URLFile* uf, struct Buffer* newBuf, bool thru, struct Url
                 p++;
                 p = skip_blanks(p);
                 quoted = 0;
+                const char* q = NULL;
                 while (!IS_ENDL(*p) && (quoted || *p != ';')) {
                     if (!IS_SPACE(*p))
                         q = p;
@@ -597,6 +586,8 @@ void readHeader(struct URLFile* uf, struct Buffer* newBuf, bool thru, struct Url
                     }
                     if (ans == NULL || TOLOWER(*ans) != 'y' || (err = add_cookie(pu, name, value, expires, domain, path, flag | COO_OVERRIDE, comment, version, port, commentURL))) {
                         err = (err & ~COO_OVERRIDE_OK) - 1;
+
+                        const char* emsg;
                         if (err >= 0 && err < COO_EMAX)
                             emsg = Sprintf("This cookie was rejected "
                                            "to prevent security violation. [%s]",
@@ -619,7 +610,7 @@ void readHeader(struct URLFile* uf, struct Buffer* newBuf, bool thru, struct Url
             Str funcname = Strnew();
             int f;
 
-            p = lineBuf2->ptr + 12;
+            const char* p = lineBuf2->ptr + 12;
             p = skip_blanks(p);
             while (*p && !IS_SPACE(*p))
                 Strcat_char(funcname, *(p++));
@@ -6064,109 +6055,6 @@ table_start:
 
 extern char* NullLine;
 extern Lineprop NullProp[];
-
-#ifndef USE_ANSI_COLOR
-#define addnewline2(a, b, c, d, e, f) _addnewline2(a, b, c, e, f)
-#endif
-static void
-addnewline2(struct Buffer* buf, char* line, Lineprop* prop, Linecolor* color, int pos,
-    int nlines)
-{
-    struct Line* l;
-    l = New(struct Line);
-    l->next = NULL;
-    l->lineBuf = line;
-    l->propBuf = prop;
-#ifdef USE_ANSI_COLOR
-    l->colorBuf = color;
-#endif
-    l->len = pos;
-    l->width = -1;
-    l->size = pos;
-    l->bpos = 0;
-    l->bwidth = 0;
-    l->prev = buf->doc.currentLine;
-    if (buf->doc.currentLine) {
-        l->next = buf->doc.currentLine->next;
-        buf->doc.currentLine->next = l;
-    } else
-        l->next = NULL;
-    if (buf->doc.lastLine == NULL || buf->doc.lastLine == buf->doc.currentLine)
-        buf->doc.lastLine = l;
-    buf->doc.currentLine = l;
-    if (buf->doc.firstLine == NULL)
-        buf->doc.firstLine = l;
-    l->linenumber = ++buf->allLine;
-    if (nlines < 0) {
-        /*     l->real_linenumber = l->linenumber;     */
-        l->real_linenumber = 0;
-    } else {
-        l->real_linenumber = nlines;
-    }
-    l = NULL;
-}
-
-static void
-addnewline(struct Buffer* buf, char* line, Lineprop* prop, Linecolor* color, int pos,
-    int width, int nlines)
-{
-    char* s;
-    Lineprop* p;
-#ifdef USE_ANSI_COLOR
-    Linecolor* c;
-#endif
-    struct Line* l;
-    int i, bpos, bwidth;
-
-    if (pos > 0) {
-        s = allocStr(line, pos);
-        p = NewAtom_N(Lineprop, pos);
-        bcopy((void*)prop, (void*)p, pos * sizeof(Lineprop));
-    } else {
-        s = NullLine;
-        p = NullProp;
-    }
-#ifdef USE_ANSI_COLOR
-    if (pos > 0 && color) {
-        c = NewAtom_N(Linecolor, pos);
-        bcopy((void*)color, (void*)c, pos * sizeof(Linecolor));
-    } else {
-        c = NULL;
-    }
-#endif
-    addnewline2(buf, s, p, c, pos, nlines);
-    if (pos <= 0 || width <= 0)
-        return;
-    bpos = 0;
-    bwidth = 0;
-    while (1) {
-        l = buf->doc.currentLine;
-        l->bpos = bpos;
-        l->bwidth = bwidth;
-        i = columnLen(l, width);
-        if (i == 0) {
-            i++;
-#ifdef USE_M17N
-            while (i < l->len && p[i] & PC_WCHAR2)
-                i++;
-#endif
-        }
-        l->len = i;
-        l->width = COLPOS(l, l->len);
-        if (pos <= i)
-            return;
-        bpos += l->len;
-        bwidth += l->width;
-        s += i;
-        p += i;
-#ifdef USE_ANSI_COLOR
-        if (c)
-            c += i;
-#endif
-        pos -= i;
-        addnewline2(buf, s, p, c, pos, nlines);
-    }
-}
 
 /*
  * loadHTMLBuffer: read file and make new buffer

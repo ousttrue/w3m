@@ -18,7 +18,7 @@ void displayDelayedMessage()
     }
 }
 
-void record_err_message(char* s)
+void record_err_message(const char* s)
 {
     if (fmInitialized()) {
         if (!message_list)
@@ -68,7 +68,7 @@ void disp_err_message(char* s, int redraw_current)
     disp_message(s, redraw_current);
 }
 
-void disp_message_nsec(char* s, int redraw_current, int sec, int purge, int mouse)
+void disp_message_nsec(const char* s, int redraw_current, int sec, int purge, int mouse)
 {
     if (getRuntime()->QuietMessage)
         return;
