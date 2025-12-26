@@ -11,6 +11,7 @@ const system_libs = [_][]const u8{
 const w3m_srcs = [_][]const u8{
     "w3m_rc.c",
 
+    "document.c",
     "compression.c",
     "URLFile.c",
     "content.c",
@@ -160,6 +161,7 @@ pub fn build(b: *std.Build) void {
     exe.linkLibrary(Str_lib);
 
     const flags = [_][]const u8{
+        "-Wall",
         "-Wno-implicit-int",
         "-Wno-int-conversion",
         "-DHAVE_CONFIG_H",

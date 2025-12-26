@@ -425,7 +425,7 @@ void readHeader(struct URLFile* uf, struct Buffer* newBuf, bool thru, struct Url
                     NULL);
                 Strcat(tmp, lineBuf2);
                 if (thru)
-                    addnewline(newBuf, lineBuf2->ptr, propBuffer, NULL,
+                    addnewline(&newBuf->doc, lineBuf2->ptr, propBuffer, NULL,
                         lineBuf2->length, FOLD_BUFFER_WIDTH, -1);
                 for (; *q && (*q == '\r' || *q == '\n'); q++)
                     ;
@@ -628,7 +628,7 @@ void readHeader(struct URLFile* uf, struct Buffer* newBuf, bool thru, struct Url
         lineBuf2 = NULL;
     }
     if (thru)
-        addnewline(newBuf, "", propBuffer, NULL, 0, -1, -1);
+        addnewline(&newBuf->doc, "", propBuffer, NULL, 0, -1, -1);
     if (src)
         fclose(src);
 }
@@ -5574,7 +5574,7 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
         }
         /* end of processing for one line */
         if (!internal)
-            addnewline(buf, outc, outp, NULL, pos, -1, nlines);
+            addnewline(&buf->doc, outc, outp, NULL, pos, -1, nlines);
         if (internal == HTML_N_INTERNAL)
             internal = 0;
         if (str != endp) {
@@ -6052,9 +6052,6 @@ table_start:
         }
     }
 }
-
-extern char* NullLine;
-extern Lineprop NullProp[];
 
 /*
  * loadHTMLBuffer: read file and make new buffer
@@ -6825,7 +6822,7 @@ loadBuffer(struct URLFile* uf, struct Buffer* volatile newBuf)
         ++nlines;
         Strchop(lineBuf2);
         lineBuf2 = checkType(lineBuf2, &propBuffer, NULL);
-        addnewline(newBuf, lineBuf2->ptr, propBuffer, colorBuffer,
+        addnewline(&newBuf->doc, lineBuf2->ptr, propBuffer, colorBuffer,
             lineBuf2->length, FOLD_BUFFER_WIDTH, nlines);
     }
 _end:
@@ -7217,7 +7214,7 @@ struct Line* getNextPage(struct Buffer* buf, int plen)
         ++nlines;
         Strchop(lineBuf2);
         lineBuf2 = checkType(lineBuf2, &propBuffer, &colorBuffer);
-        addnewline(buf, lineBuf2->ptr, propBuffer, colorBuffer,
+        addnewline(&buf->doc, lineBuf2->ptr, propBuffer, colorBuffer,
             lineBuf2->length, FOLD_BUFFER_WIDTH, nlines);
         if (!top) {
             top = buf->doc.firstLine;

@@ -525,7 +525,7 @@ page_info_panel(struct Buffer* buf)
 <h1>Information about current page</h1>\n");
     if (buf == NULL)
         goto end;
-    all = buf->allLine;
+    all = buf->doc.allLine;
     if (all == 0 && buf->doc.lastLine)
         all = buf->doc.lastLine->linenumber;
 #ifdef USE_M17N
