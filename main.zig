@@ -116,19 +116,18 @@ export fn onFrame() void {
     c.bufferPosition(buf);
 
     // check viewport ?
-    if (cline != buf.*.doc.topLine or ccolumn != buf.currentColumn) {
-        // render
-        c.screen_from_lines(buf);
-
+    if (buf.*.doc.lineUpdated //
+    or cline != buf.*.doc.topLine or ccolumn != buf.currentColumn) {
         cline = buf.doc.topLine;
         ccolumn = buf.currentColumn;
 
+        // render
+        c.screen_from_lines(buf);
         tty_write_screen();
-
-        // getAllImage(buf);
 
         c.loadImage(buf, c.IMG_FLAG_NEXT);
     }
+    buf.*.doc.lineUpdated = false;
 
     c.displayMsg(buf);
 

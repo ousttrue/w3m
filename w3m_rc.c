@@ -744,6 +744,8 @@ void _followForm(bool submit, bool on_target, bool do_download)
         formUpdateBuffer(a, Currentbuf, fi);
         if (fi->accept || fi->parent->nitems == 1)
             goto do_submit;
+
+        Currentbuf->doc.lineUpdated = true;
         break;
     case FORM_INPUT_FILE:
         if (submit)
