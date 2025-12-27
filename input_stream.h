@@ -7,9 +7,10 @@
 
 #define IST_UNCLOSE 0x10
 
+typedef int (*FileCloseFunc)(FILE* stream);
 struct io_file_handle {
     FILE* f;
-    void (*close)(void*);
+    FileCloseFunc close;
 };
 
 struct base_stream {
@@ -17,8 +18,6 @@ struct base_stream {
     void* handle;
     char type;
     char iseos;
-    int (*read)(void*, void*, int);
-    void (*close)(void*);
 };
 
 struct file_stream {
@@ -26,8 +25,6 @@ struct file_stream {
     struct io_file_handle* handle;
     char type;
     char iseos;
-    int (*read)();
-    void (*close)();
 };
 
 struct str_stream {
@@ -35,17 +32,6 @@ struct str_stream {
     Str handle;
     char type;
     char iseos;
-    int (*read)();
-    void (*close)();
-};
-
-struct encoded_stream {
-    struct stream_buffer stream;
-    struct ens_handle* handle;
-    char type;
-    char iseos;
-    int (*read)();
-    void (*close)();
 };
 
 union input_stream {
@@ -53,13 +39,13 @@ union input_stream {
     struct file_stream file;
     struct str_stream str;
     struct ssl_stream ssl;
-    struct encoded_stream ens;
 };
-union input_stream* newSSLStream(SSL* ssl, int sock);
 
 union input_stream* newInputStream(int des);
-union input_stream* newFileStream(FILE* f, void (*closep)());
+union input_stream* newFileStream(FILE* f, FileCloseFunc closep);
 union input_stream* newStrStream(Str s);
+union input_stream* newSSLStream(SSL* ssl, int sock);
+
 int ISclose(union input_stream* stream);
 int ISgetc(union input_stream* stream);
 int ISundogetc(union input_stream* stream);

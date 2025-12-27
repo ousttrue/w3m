@@ -1,5 +1,5 @@
 #include "ssl_stream.h"
-#include "indep.h"
+#include "alloc.h"
 #include "message.h"
 #include "myctype.h"
 #include "linein.h"
@@ -568,6 +568,4 @@ void ssl_stream_init(struct ssl_stream* s, int sock, SSL* ssl)
     s->handle = NewWithoutGC(struct ssl_handle);
     s->handle->ssl = ssl;
     s->handle->sock = sock;
-    s->read = (int (*)())ssl_read;
-    s->close = (void (*)())ssl_close;
 }

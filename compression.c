@@ -230,7 +230,7 @@ void uncompress_stream(struct URLFile* uf, const char** src)
             uf->scheme = SCM_LOCAL;
     }
     UFhalfclose(uf);
-    uf->stream = newFileStream(f1, (void (*)())fclose);
+    uf->stream = newFileStream(f1, fclose);
 }
 
 #define S_IXANY (S_IXUSR | S_IXGRP | S_IXOTH)

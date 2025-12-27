@@ -21,8 +21,6 @@ struct ssl_stream {
     struct ssl_handle* handle;
     char type;
     char iseos;
-    int (*read)();
-    void (*close)();
 };
 typedef struct ssl_stream* SSLStream;
 void ssl_stream_init(struct ssl_stream* s, int sock, SSL* ssl);

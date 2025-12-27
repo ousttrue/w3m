@@ -6516,7 +6516,7 @@ loadcmdout(char* cmd,
     f = popen(cmd, "r");
     if (f == NULL)
         return NULL;
-    init_stream(&uf, SCM_UNKNOWN, newFileStream(f, (void (*)())pclose));
+    init_stream(&uf, SCM_UNKNOWN, newFileStream(f, pclose));
     buf = loadproc(&uf, defaultbuf);
     UFclose(&uf);
     return buf;

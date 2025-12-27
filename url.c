@@ -188,8 +188,6 @@ KeyAbort(SIGNAL_ARG)
 
 #endif /* SSL_CTX_set_min_proto_version */
 
-
-
 static void
 write_from_file(int sock, char* file)
 {
@@ -899,14 +897,16 @@ retry:
     case SCM_LOCAL_CGI:
         if (request && request->body)
             /* local CGI: POST */
-            uf.stream = newFileStream(localcgi_post(pu->real_file, pu->query,
-                                          request, option->referer),
-                (void (*)())fclose);
+            uf.stream = newFileStream(
+                localcgi_post(pu->real_file, pu->query,
+                    request, option->referer),
+                fclose);
         else
             /* lodal CGI: GET */
-            uf.stream = newFileStream(localcgi_get(pu->real_file, pu->query,
-                                          option->referer),
-                (void (*)())fclose);
+            uf.stream = newFileStream(
+                localcgi_get(pu->real_file, pu->query,
+                    option->referer),
+                fclose);
         if (uf.stream) {
             uf.is_cgi = TRUE;
             uf.scheme = pu->scheme = SCM_LOCAL_CGI;
