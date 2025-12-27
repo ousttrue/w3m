@@ -24,15 +24,13 @@ struct URLOption {
     int flag;
 };
 
-#define StrUFgets(f) StrISgets((f)->stream)
-#define StrmyUFgets(f) StrmyISgets((f)->stream)
-#define UFgetc(f) ISgetc((f)->stream)
-#define UFundogetc(f) ISundogetc((f)->stream)
-#define UFclose(f)                   \
-    if (ISclose((f)->stream) == 0) { \
-        (f)->stream = NULL;          \
+inline static void UFclose(struct URLFile* f)
+{
+    if (!f->stream->unclose) {
+        is_close(f->stream);
+        f->stream = NULL;
     }
-#define UFfileno(f) ISfileno((f)->stream)
+}
 
 struct Url;
 struct FormList;

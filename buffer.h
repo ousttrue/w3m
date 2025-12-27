@@ -97,7 +97,7 @@ struct Buffer {
     char* savecache;
     char* edit;
     struct mailcap* mailcap;
-    char* mailcap_source;
+    const char* mailcap_source;
     const char* header_source;
     const char* ssl_certificate;
     char image_flag;

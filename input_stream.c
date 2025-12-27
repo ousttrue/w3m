@@ -65,29 +65,27 @@ buffer_read(struct stream_buffer* sb, char* obuf, int count)
     return len;
 }
 
-struct input_stream*
-newInputStream(int des)
+struct input_stream* is_from_fd(int fd)
 {
-    if (des < 0)
+    if (fd < 0)
         return NULL;
-    struct input_stream* stream = NewWithoutGC(struct input_stream);
-    *stream = (struct input_stream) {
+    struct input_stream* is = NewWithoutGC(struct input_stream);
+    *is = (struct input_stream) {
         .type = IST_BASIC,
         .iseos = false,
         .unclose = false,
-        .base = des,
+        .base = fd,
     };
-    sb_init(&stream->sb, NULL, STREAM_BUF_SIZE);
-    return stream;
+    sb_init(&is->sb, NULL, STREAM_BUF_SIZE);
+    return is;
 }
 
-struct input_stream*
-newFileStream(FILE* f, FileCloseFunc closep)
+struct input_stream* is_from_file(FILE* f, FileCloseFunc closep)
 {
     if (f == NULL)
         return NULL;
-    struct input_stream* stream = NewWithoutGC(struct input_stream);
-    *stream = (struct input_stream) {
+    struct input_stream* is = NewWithoutGC(struct input_stream);
+    *is = (struct input_stream) {
         .type = IST_FILE,
         .iseos = false,
         .unclose = false,
@@ -96,35 +94,33 @@ newFileStream(FILE* f, FileCloseFunc closep)
             .close = closep ? closep : fclose,
         },
     };
-    sb_init(&stream->sb, NULL, STREAM_BUF_SIZE);
-    return stream;
+    sb_init(&is->sb, NULL, STREAM_BUF_SIZE);
+    return is;
 }
 
-struct input_stream*
-newStrStream(Str s)
+struct input_stream* is_from_str(Str s)
 {
     if (s == NULL)
         return NULL;
-    struct input_stream* stream = NewWithoutGC(struct input_stream);
-    *stream = (struct input_stream) {
+    struct input_stream* is = NewWithoutGC(struct input_stream);
+    *is = (struct input_stream) {
         .type = IST_STR,
         .iseos = false,
         .unclose = false,
     };
-    sb_init(&stream->sb, (const uint8_t*)s->ptr, s->length);
-    return stream;
+    sb_init(&is->sb, (const uint8_t*)s->ptr, s->length);
+    return is;
 }
 
 #define SSL_BUF_SIZE 1536
 
-struct input_stream*
-newSSLStream(SSL* ssl, int sock)
+struct input_stream* is_from_ssl(SSL* ssl, int sock)
 {
     if (sock < 0)
         return NULL;
 
-    struct input_stream* stream = NewWithoutGC(struct input_stream);
-    *stream = (struct input_stream) {
+    struct input_stream* is = NewWithoutGC(struct input_stream);
+    *is = (struct input_stream) {
         .type = IST_SSL,
         .iseos = false,
         .unclose = false,
@@ -133,32 +129,32 @@ newSSLStream(SSL* ssl, int sock)
             .ssl = ssl,
         },
     };
-    sb_init(&stream->sb, NULL, SSL_BUF_SIZE);
-    return stream;
+    sb_init(&is->sb, NULL, SSL_BUF_SIZE);
+    return is;
 }
 
-int ISclose(struct input_stream* stream)
+int is_close(struct input_stream* is)
 {
-    if (stream == NULL)
+    if (is == NULL)
         return -1;
 
-    if (stream->unclose) {
+    if (is->unclose) {
         return -1;
     }
 
     void (*prevtrap)(int);
     prevtrap = mySignal(SIGINT, SIG_IGN);
-    switch (stream->type) {
+    switch (is->type) {
     case IST_BASIC:
-        close(stream->base);
+        close(is->base);
         break;
     case IST_FILE:
-        stream->file.close(stream->file.f);
+        is->file.close(is->file.f);
         break;
     case IST_STR:
         break;
     case IST_SSL:
-        ssl_close(&stream->ssl);
+        ssl_close(&is->ssl);
         break;
     default:
         assert(false);
@@ -166,46 +162,46 @@ int ISclose(struct input_stream* stream)
     }
     mySignal(SIGINT, prevtrap);
 
-    xfree(stream->sb.buf);
-    xfree(stream);
+    xfree(is->sb.buf);
+    xfree(is);
     return 0;
 }
 
-int ISgetc(struct input_stream* stream)
+int is_getc(struct input_stream* is)
 {
-    if (stream == NULL)
+    if (is == NULL)
         return 0;
 
-    if (!stream->iseos && MUST_BE_UPDATED(&stream->sb))
-        do_update(stream);
+    if (!is->iseos && MUST_BE_UPDATED(&is->sb))
+        do_update(is);
 
-    // #define POP_CHAR(bs) ((bs)->iseos ? '\0' : (bs)->stream.buf[(bs)->stream.cur++])
-    if (stream->iseos) {
+    // #define POP_CHAR(bs) ((bs)->iseos ? '\0' : (bs)->is.buf[(bs)->is.cur++])
+    if (is->iseos) {
         return 0;
     }
-    return stream->sb.buf[stream->sb.cur++];
+    return is->sb.buf[is->sb.cur++];
 }
 
-int ISundogetc(struct input_stream* stream)
+int is_undo_getc(struct input_stream* is)
 {
-    if (stream == NULL)
+    if (is == NULL)
         return -1;
-    if (stream->sb.cur > 0) {
-        stream->sb.cur--;
+    if (is->sb.cur > 0) {
+        is->sb.cur--;
         return 0;
     }
     return -1;
 }
 
 struct growbuf;
-static void ISgets_to_growbuf(struct input_stream* stream, struct growbuf* gb, char crnl)
+static void is_to_growbuf(struct input_stream* is, struct growbuf* gb, char crnl)
 {
-    // struct base_stream* base = &stream->base;
-    struct stream_buffer* sb = &stream->sb;
+    // struct base_stream* base = &is->base;
+    struct stream_buffer* sb = &is->sb;
     gb->length = 0;
-    while (!stream->iseos) {
+    while (!is->iseos) {
         if (MUST_BE_UPDATED(sb)) {
-            do_update(stream);
+            do_update(is);
             continue;
         }
         if (crnl && gb->length > 0 && gb->ptr[gb->length - 1] == '\r') {
@@ -232,30 +228,30 @@ static void ISgets_to_growbuf(struct input_stream* stream, struct growbuf* gb, c
     gb->ptr[gb->length] = '\0';
 }
 
-Str StrISgets2(struct input_stream* stream, bool crnl)
+Str is_get_str(struct input_stream* is, bool crnl)
 {
-    if (stream == NULL)
+    if (is == NULL)
         return NULL;
 
     struct growbuf gb;
     growbuf_init(&gb);
-    ISgets_to_growbuf(stream, &gb, crnl);
+    is_to_growbuf(is, &gb, crnl);
     return growbuf_to_Str(&gb);
 }
 
-int ISread_n(struct input_stream* stream, char* dst, int count)
+int is_read(struct input_stream* is, char* dst, int count)
 {
-    if (stream == NULL || count <= 0)
+    if (is == NULL || count <= 0)
         return -1;
 
-    if (stream->iseos)
+    if (is->iseos)
         return 0;
 
-    int len = buffer_read(&stream->sb, dst, count);
-    if (MUST_BE_UPDATED(&stream->sb)) {
-        int l = raw_read(stream, (uint8_t*)&dst[len], count - len);
+    int len = buffer_read(&is->sb, dst, count);
+    if (MUST_BE_UPDATED(&is->sb)) {
+        int l = raw_read(is, (uint8_t*)&dst[len], count - len);
         if (l <= 0) {
-            stream->iseos = true;
+            is->iseos = true;
         } else {
             len += l;
         }
@@ -263,25 +259,18 @@ int ISread_n(struct input_stream* stream, char* dst, int count)
     return len;
 }
 
-int ISfileno(struct input_stream* stream)
+int is_file_no(struct input_stream* is)
 {
-    if (stream == NULL)
+    if (is == NULL)
         return -1;
-    switch (stream->type) {
+    switch (is->type) {
     case IST_BASIC:
-        return stream->base;
+        return is->base;
     case IST_FILE:
-        return fileno(stream->file.f);
+        return fileno(is->file.f);
     case IST_SSL:
-        return stream->ssl.sock;
+        return is->ssl.sock;
     default:
         return -1;
     }
-}
-
-int ISeos(struct input_stream* stream)
-{
-    if (!stream->iseos && MUST_BE_UPDATED(&stream->sb))
-        do_update(stream);
-    return stream->iseos;
 }

@@ -59,7 +59,6 @@
 static int frame_source = 0;
 static int need_number = 0;
 
-static int _MoveFile(char* path1, char* path2);
 static struct Buffer* loadcmdout(char* cmd,
     struct Buffer* (*loadproc)(struct URLFile*, struct Buffer*),
     struct Buffer* defaultbuf);
@@ -5194,9 +5193,9 @@ static struct input_stream* _file_lp2;
 static Str
 file_feed(void)
 {
-    Str s = StrISgets2(_file_lp2, false);
+    Str s = is_get_str(_file_lp2, false);
     if (s && s->length == 0) {
-        ISclose(_file_lp2);
+        is_close(_file_lp2);
         return NULL;
     }
     return s;
@@ -6020,7 +6019,7 @@ void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int int
         doc_charset = newBuf->content.content_charset;
     meta_charset = 0;
 
-    while ((lineBuf2 = StrISgets2(f->stream, true)) && lineBuf2->length) {
+    while ((lineBuf2 = is_get_str(f->stream, true)) && lineBuf2->length) {
 
         if (src)
             Strfputs(lineBuf2, src);
@@ -6096,7 +6095,7 @@ loadHTMLString(Str page)
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
     struct Buffer* newBuf;
 
-    init_stream(&f, SCM_LOCAL, newStrStream(page));
+    init_stream(&f, SCM_LOCAL, is_from_str(page));
 
     newBuf = newBuffer(INIT_BUFFER_WIDTH);
     if (SETJMP(AbortLoading) != 0) {
@@ -6158,7 +6157,7 @@ Str loadGopherDir0(struct URLFile* uf, struct Url* pu)
 
     pre = 0;
     while (1) {
-        if (!(lbuf = StrISgets2(uf->stream, false)) || lbuf->length == 0)
+        if (!(lbuf = is_get_str(uf->stream, false)) || lbuf->length == 0)
             break;
         if (lbuf->ptr[0] == '.' && (lbuf->ptr[1] == '\n' || lbuf->ptr[1] == '\r'))
             break;
@@ -6318,7 +6317,7 @@ loadBuffer(struct URLFile* uf, struct Buffer* volatile newBuf)
         doc_charset = newBuf->content.content_charset;
 
     nlines = 0;
-    while ((lineBuf2 = StrISgets2(uf->stream, true)) && lineBuf2->length) {
+    while ((lineBuf2 = is_get_str(uf->stream, true)) && lineBuf2->length) {
         if (src)
             Strfputs(lineBuf2, src);
         linelen += lineBuf2->length;
@@ -6405,7 +6404,7 @@ image_buffer:
         return NULL;
     newBuf->mailcap_source = tmpf->ptr;
 
-    init_stream(&f, SCM_LOCAL, newStrStream(tmp));
+    init_stream(&f, SCM_LOCAL, is_from_str(tmp));
     loadHTMLstream(&f, newBuf, src, TRUE);
     UFclose(&f);
     if (src)
@@ -6516,7 +6515,7 @@ loadcmdout(char* cmd,
     f = popen(cmd, "r");
     if (f == NULL)
         return NULL;
-    init_stream(&uf, SCM_UNKNOWN, newFileStream(f, pclose));
+    init_stream(&uf, SCM_UNKNOWN, is_from_file(f, pclose));
     buf = loadproc(&uf, defaultbuf);
     UFclose(&uf);
     return buf;
@@ -6563,7 +6562,7 @@ int save2tmp(struct URLFile uf, const char* tmpf)
         int count;
 
         buf = NewWithoutGC_N(char, SAVE_BUF_SIZE);
-        while ((count = ISread_n(uf.stream, buf, SAVE_BUF_SIZE)) > 0) {
+        while ((count = is_read(uf.stream, buf, SAVE_BUF_SIZE)) > 0) {
             if (fwrite(buf, 1, count, ff) != count) {
                 retval = -2;
                 goto _end;
@@ -6610,20 +6609,17 @@ doExternal(struct URLFile uf, const char* type, struct Buffer* defaultbuf)
         command = tmp;
     }
 
-#ifdef HAVE_SETPGRP
     if (!(mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)) && !(mcap->flags & MAILCAP_NEEDSTERMINAL) && BackgroundExtViewer) {
         flush_tty();
         if (!fork()) {
-            setup_child(FALSE, 0, UFfileno(&uf));
+            setup_child(FALSE, 0, is_file_no(uf.stream));
             if (save2tmp(uf, tmpf->ptr) < 0)
                 exit(1);
             UFclose(&uf);
             myExec(command->ptr);
         }
         return NO_BUFFER;
-    } else
-#endif
-    {
+    } else {
         if (save2tmp(uf, tmpf->ptr) < 0) {
             return NULL;
         }
@@ -6672,9 +6668,9 @@ doExternal(struct URLFile uf, const char* type, struct Buffer* defaultbuf)
 }
 
 static int
-_MoveFile(char* path1, char* path2)
+_MoveFile(const char* path1, const char* path2)
 {
-    struct input_stream* f1 = newInputStream(open(path1, O_RDONLY));
+    struct input_stream* f1 = is_from_fd(open(path1, O_RDONLY));
     if (!f1)
         return -1;
 
@@ -6692,18 +6688,18 @@ _MoveFile(char* path1, char* path2)
         f2 = fopen(path2, "wb");
     }
     if (f2 == NULL) {
-        ISclose(f1);
+        is_close(f1);
         return -1;
     }
     current_content_length = 0;
     buf = NewWithoutGC_N(char, SAVE_BUF_SIZE);
-    while ((count = ISread_n(f1, buf, SAVE_BUF_SIZE)) > 0) {
+    while ((count = is_read(f1, buf, SAVE_BUF_SIZE)) > 0) {
         fwrite(buf, 1, count, f2);
         linelen += count;
         showProgress(&linelen, &trbyte);
     }
     xfree(buf);
-    ISclose(f1);
+    is_close(f1);
     if (is_pipe)
         pclose(f2);
     else
@@ -6838,7 +6834,7 @@ int doFileSave(struct URLFile uf, const char* defstr)
     char *p, *q;
     pid_t pid;
     char* lock;
-    char* tmpf = NULL;
+    const char* tmpf = NULL;
 #if !(defined(HAVE_SYMLINK) && defined(HAVE_LSTAT))
     FILE* f;
 #endif
@@ -6885,7 +6881,7 @@ int doFileSave(struct URLFile uf, const char* defstr)
                 if (tmpf)
                     unlink(tmpf);
             }
-            setup_child(FALSE, 0, UFfileno(&uf));
+            setup_child(FALSE, 0, is_file_no(uf.stream));
             err = save2tmp(uf, p);
             if (err == 0 && PreserveTimestamp && uf.modtime != -1)
                 setModtime(p, uf.modtime);
@@ -6937,7 +6933,7 @@ int doFileSave(struct URLFile uf, const char* defstr)
     return 0;
 }
 
-int checkCopyFile(char* path1, char* path2)
+int checkCopyFile(const char* path1, const char* path2)
 {
     struct stat st1, st2;
 
@@ -6952,7 +6948,7 @@ int checkCopyFile(char* path1, char* path2)
 int checkSaveFile(struct input_stream* stream, char* path2)
 {
     struct stat st1, st2;
-    int des = ISfileno(stream);
+    int des = is_file_no(stream);
 
     if (des < 0)
         return 0;

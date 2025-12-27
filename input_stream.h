@@ -40,14 +40,14 @@ struct input_stream {
     };
 };
 
-struct input_stream* newInputStream(int des);
-struct input_stream* newFileStream(FILE* f, FileCloseFunc closep);
-struct input_stream* newStrStream(Str s);
-struct input_stream* newSSLStream(SSL* ssl, int sock);
+struct input_stream* is_from_fd(int fd);
+struct input_stream* is_from_file(FILE* f, FileCloseFunc closep);
+struct input_stream* is_from_str(Str s);
+struct input_stream* is_from_ssl(SSL* ssl, int sock);
 
-int ISclose(struct input_stream* stream);
-int ISgetc(struct input_stream* stream);
-int ISundogetc(struct input_stream* stream);
-Str StrISgets2(struct input_stream* stream, bool crnl);
-int ISread_n(struct input_stream* stream, char* dst, int bufsize);
-int ISfileno(struct input_stream* stream);
+int is_close(struct input_stream* is);
+int is_getc(struct input_stream* is);
+int is_undo_getc(struct input_stream* is);
+Str is_get_str(struct input_stream* is, bool crnl);
+int is_read(struct input_stream* is, char* dst, int bufsize);
+int is_file_no(struct input_stream* is);

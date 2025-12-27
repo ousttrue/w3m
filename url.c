@@ -897,13 +897,13 @@ retry:
     case SCM_LOCAL_CGI:
         if (request && request->body)
             /* local CGI: POST */
-            uf.stream = newFileStream(
+            uf.stream = is_from_file(
                 localcgi_post(pu->real_file, pu->query,
                     request, option->referer),
                 fclose);
         else
             /* lodal CGI: GET */
-            uf.stream = newFileStream(
+            uf.stream = is_from_file(
                 localcgi_get(pu->real_file, pu->query,
                     option->referer),
                 fclose);
@@ -1035,7 +1035,7 @@ retry:
             *status = HTST_NORMAL;
         }
         if (pu->scheme == SCM_HTTPS) {
-            uf.stream = newSSLStream(sslh, sock);
+            uf.stream = is_from_ssl(sslh, sock);
             if (sslh)
                 SSL_write(sslh, tmp->ptr, tmp->length);
             else
@@ -1075,7 +1075,7 @@ retry:
     default:
         return uf;
     }
-    uf.stream = newInputStream(sock);
+    uf.stream = is_from_fd(sock);
     return uf;
 }
 

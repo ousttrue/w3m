@@ -199,10 +199,10 @@ void uncompress_stream(struct URLFile* uf, const char** src)
             int count;
             FILE* f = NULL;
 
-            setup_child(TRUE, 2, UFfileno(uf));
+            setup_child(TRUE, 2, is_file_no(uf->stream));
             if (tmpf)
                 f = fopen(tmpf, "wb");
-            while ((count = ISread_n(uf->stream, buf, SAVE_BUF_SIZE)) > 0) {
+            while ((count = is_read(uf->stream, buf, SAVE_BUF_SIZE)) > 0) {
                 if (fwrite(buf, 1, count, stdout) != count)
                     break;
                 if (f && fwrite(buf, 1, count, f) != count)
@@ -230,7 +230,7 @@ void uncompress_stream(struct URLFile* uf, const char** src)
             uf->scheme = SCM_LOCAL;
     }
     UFhalfclose(uf);
-    uf->stream = newFileStream(f1, fclose);
+    uf->stream = is_from_file(f1, fclose);
 }
 
 #define S_IXANY (S_IXUSR | S_IXGRP | S_IXOTH)

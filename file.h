@@ -16,3 +16,4 @@ inline static int doFileCopy(const char* tmpf, const char* defstr)
 }
 int doFileMove(const char* tmpf, const char* defstr);
 int dir_exist(const char* path);
+int checkCopyFile(const char* path1, const char* path2);

@@ -151,7 +151,7 @@ void getHttpResponseHeader(struct Content* content, struct URLFile* uf, struct U
     Str lineBuf2 = NULL;
     // Lineprop* propBuffer = 0;
     Str tmp;
-    while ((tmp = StrISgets2(uf->stream, true)) && tmp->length) {
+    while ((tmp = is_get_str(uf->stream, true)) && tmp->length) {
         // if (w3m_reqlog) {
         //     FILE* ff;
         //     ff = fopen(w3m_reqlog, "a");
@@ -241,8 +241,7 @@ void getHttpResponseHeader(struct Content* content, struct URLFile* uf, struct U
             // if (fmInitialized()) {
             message(lineBuf2->ptr, 0, 0);
             // }
-        }
-        else if (!strncasecmp(lineBuf2->ptr, "content-encoding:", 17)) {
+        } else if (!strncasecmp(lineBuf2->ptr, "content-encoding:", 17)) {
             const char* p = lineBuf2->ptr + 17;
             while (IS_SPACE(*p))
                 p++;
