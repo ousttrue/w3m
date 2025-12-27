@@ -5,8 +5,6 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-#define IST_UNCLOSE 0x10
-
 typedef int (*FileCloseFunc)(FILE* stream);
 struct io_file_handle {
     FILE* f;
@@ -14,24 +12,27 @@ struct io_file_handle {
 };
 
 struct base_stream {
+    enum InputStreamType type;
+    bool iseos;
+    bool unclose;
     struct stream_buffer stream;
     void* handle;
-    char type;
-    char iseos;
 };
 
 struct file_stream {
+    enum InputStreamType type;
+    bool iseos;
+    bool unclose;
     struct stream_buffer stream;
     struct io_file_handle* handle;
-    char type;
-    char iseos;
 };
 
 struct str_stream {
+    enum InputStreamType type;
+    bool iseos;
+    bool unclose;
     struct stream_buffer stream;
     Str handle;
-    char type;
-    char iseos;
 };
 
 union input_stream {

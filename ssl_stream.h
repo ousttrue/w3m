@@ -17,10 +17,11 @@ void ssl_close(struct ssl_handle* handle);
 int ssl_read(struct ssl_handle* handle, char* buf, int len);
 
 struct ssl_stream {
+    enum InputStreamType type;
+    bool iseos;
+    bool unclose;
     struct stream_buffer stream;
     struct ssl_handle* handle;
-    char type;
-    char iseos;
 };
 typedef struct ssl_stream* SSLStream;
 void ssl_stream_init(struct ssl_stream* s, int sock, SSL* ssl);

@@ -89,6 +89,7 @@ newInputStream(int des)
     union input_stream* stream = NewWithoutGC(union input_stream);
     init_base_stream(&stream->base, STREAM_BUF_SIZE);
     stream->base.type = IST_BASIC;
+    stream->base.unclose = false;
     stream->base.handle = NewWithoutGC(int);
     *(int*)stream->base.handle = des;
     return stream;
@@ -102,6 +103,7 @@ newFileStream(FILE* f, FileCloseFunc closep)
     union input_stream* stream = NewWithoutGC(union input_stream);
     init_base_stream(&stream->base, STREAM_BUF_SIZE);
     stream->file.type = IST_FILE;
+    stream->base.unclose = false;
     stream->file.handle = NewWithoutGC(struct io_file_handle);
     stream->file.handle->f = f;
     if (closep)
@@ -119,6 +121,7 @@ newStrStream(Str s)
     union input_stream* stream = NewWithoutGC(union input_stream);
     init_str_stream(&stream->base, s);
     stream->str.type = IST_STR;
+    stream->base.unclose = false;
     stream->str.handle = NULL;
     return stream;
 }
@@ -134,6 +137,7 @@ newSSLStream(SSL* ssl, int sock)
     union input_stream* stream = NewWithoutGC(union input_stream);
     init_base_stream(&stream->base, SSL_BUF_SIZE);
     ssl_stream_init(&stream->ssl, sock, ssl);
+    stream->base.unclose = false;
     return stream;
 }
 
@@ -142,7 +146,7 @@ int ISclose(union input_stream* stream)
     if (stream == NULL)
         return -1;
 
-    if (stream->base.type & IST_UNCLOSE) {
+    if (stream->base.unclose) {
         return -1;
     }
 
@@ -267,7 +271,7 @@ int ISfileno(union input_stream* stream)
 {
     if (stream == NULL)
         return -1;
-    switch (stream->base.type & ~IST_UNCLOSE) {
+    switch (stream->base.type) {
     case IST_BASIC:
         return *(int*)stream->base.handle;
     case IST_FILE:
