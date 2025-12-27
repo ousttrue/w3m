@@ -6,7 +6,10 @@
 
 struct HtmlBuilder {
     struct Url* cur_baseURL;
+
     wc_ces cur_document_charset;
+    wc_ces meta_charset;
+
     Str cur_title;
     Str pre_title;
 
@@ -20,6 +23,16 @@ struct HtmlBuilder {
     Str cur_option_label;
     int cur_option_selected;
     int cur_status;
+
+    // <textarea>
+    Str cur_textarea;
+    Str* textarea_str;
+    int cur_textarea_size;
+    int cur_textarea_rows;
+    int cur_textarea_readonly;
+    int n_textarea;
+    int ignore_nl_textarea;
+    int max_textarea; // = MAX_TEXTAREA;
 };
 
 struct html_feed_environ;
@@ -30,7 +43,7 @@ struct Buffer;
 
 int HTMLtagproc1(struct HtmlBuilder* hb,
     struct parsed_tag* tag, struct html_feed_environ* h_env);
-void HTMLlineproc2(struct HtmlBuilder *hb, struct Buffer* buf, struct _textlinelist* tl);
+void HTMLlineproc2(struct HtmlBuilder* hb, struct Buffer* buf, struct _textlinelist* tl);
 void HTMLlineproc0(struct HtmlBuilder* hb,
     const char* istr, struct html_feed_environ* h_env, bool internal);
 void completeHTMLstream(struct HtmlBuilder* hb,

@@ -909,7 +909,7 @@ renderFrame(struct Buffer* Cbuf, int force_reload)
 }
 
 union frameset_element*
-search_frame(struct frameset* fset, char* name)
+search_frame(struct frameset* fset, const char* name)
 {
     int i;
     union frameset_element* e = NULL;

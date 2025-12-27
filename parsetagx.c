@@ -109,7 +109,7 @@ extern Hash_si tagtable;
 #define MAX_TAG_LEN 64
 
 struct parsed_tag*
-parse_tag(char** s, int internal)
+parse_tag(const char** s, int internal)
 {
     struct parsed_tag* tag = NULL;
     int tag_id;

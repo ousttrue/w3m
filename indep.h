@@ -32,8 +32,8 @@ extern char* HTML_QUOTE_MAP[];
 
 extern int64_t strtoclen(const char* s);
 extern char* conv_entity(unsigned int ch);
-extern int getescapechar(char** s);
-extern char* getescapecmd(char** s);
+extern int getescapechar(const char** s);
+extern char* getescapecmd(const char** s);
 extern char* allocStr(const char* s, int len);
 extern int strCmp(const void* s1, const void* s2);
 extern char* currentdir(void);

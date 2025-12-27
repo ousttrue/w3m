@@ -616,7 +616,7 @@ void cleanup_line(Str s, int mode)
     }
 }
 
-int getescapechar(char** str)
+int getescapechar(const char** str)
 {
     int dummy = -1;
     char *p = *str, *q;
@@ -680,7 +680,7 @@ int getescapechar(char** str)
     return getHash_si(&entity, q, -1);
 }
 
-char* getescapecmd(char** s)
+char* getescapecmd(const char** s)
 {
     char* save = *s;
     Str tmp;
@@ -721,13 +721,11 @@ char* html_quote(const char* str)
 char* html_unquote(const char* str)
 {
     Str tmp = NULL;
-    char *p, *q;
-
-    for (p = str; *p;) {
+    for (const char* p = str; *p;) {
         if (*p == '&') {
             if (tmp == NULL)
                 tmp = Strnew_charp_n(str, (int)(p - str));
-            q = getescapecmd(&p);
+            const char* q = getescapecmd(&p);
             Strcat_charp(tmp, q);
         } else {
             if (tmp)
@@ -738,7 +736,7 @@ char* html_unquote(const char* str)
 
     if (tmp)
         return tmp->ptr;
-    return str;
+    return Strnew_charp(str)->ptr;
 }
 
 static char xdigit[0x10] = "0123456789ABCDEF";

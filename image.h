@@ -34,7 +34,7 @@ struct Image {
     short yoffset;
     short y;
     short rows;
-    char* map;
+    const char* map;
     char ismap;
     int touch;
     struct ImageCache* cache;

@@ -294,7 +294,7 @@ follow_map_panel(struct Buffer* buf, char* name)
 #endif
 
 struct MapArea*
-newMapArea(char* url, char* target, char* alt, char* shape, char* coords)
+newMapArea(const char* url, const char* target, const char* alt, const char* shape, const char* coords)
 {
     struct MapArea* a = New(struct MapArea);
 #ifdef USE_IMAGE

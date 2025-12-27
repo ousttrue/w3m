@@ -28,3 +28,7 @@ Str process_textarea(struct HtmlBuilder* hb, struct parsed_tag* tag, int width);
 Str process_n_select(struct HtmlBuilder* hb);
 void feed_select(struct HtmlBuilder* hb, const char* str);
 void process_option(struct HtmlBuilder* hb);
+Str process_n_textarea(struct HtmlBuilder* hb);
+void feed_textarea(struct HtmlBuilder *hb, const char* str);
+Str process_anchor(struct parsed_tag* tag, const char* tagbuf);
+

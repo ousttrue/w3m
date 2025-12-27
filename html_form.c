@@ -1,4 +1,5 @@
 #include "html_form.h"
+#include "html_builder.h"
 #include "indep.h"
 #include "URLFile.h"
 #include "alloc.h"
@@ -23,8 +24,6 @@
 #include <strings.h>
 #include <unistd.h>
 
-extern Str* textarea_str;
-extern int max_textarea;
 extern struct FormSelectOption* select_option;
 extern int max_select;
 
@@ -93,7 +92,7 @@ newFormList(char* action, char* method, char* charset, char* enctype,
  * add <input> element to FormList
  */
 struct FormItemList*
-formList_addInput(struct FormList* fl, struct parsed_tag* tag)
+formList_addInput(struct HtmlBuilder *hb, struct FormList* fl, struct parsed_tag* tag)
 {
     struct FormItemList* item;
     char* p;
@@ -127,27 +126,23 @@ formList_addInput(struct FormList* fl, struct parsed_tag* tag)
     parsedtag_get_value(tag, ATTR_MAXLENGTH, &item->maxlength);
     item->readonly = parsedtag_exists(tag, ATTR_READONLY);
     if (parsedtag_get_value(tag, ATTR_TEXTAREANUMBER, &i)
-        && i >= 0 && i < max_textarea)
-        item->value = item->init_value = textarea_str[i];
-#ifdef MENU_SELECT
+        && i >= 0 && i < hb->max_textarea)
+        item->value = item->init_value = hb->textarea_str[i];
     if (parsedtag_get_value(tag, ATTR_SELECTNUMBER, &i)
         && i >= 0 && i < max_select)
         item->select_option = select_option[i].first;
-#endif /* MENU_SELECT */
     if (parsedtag_get_value(tag, ATTR_ROWS, &p))
         item->rows = atoi(p);
     if (item->type == FORM_UNKNOWN) {
         /* type attribute is missing. Ignore the tag. */
         return NULL;
     }
-#ifdef MENU_SELECT
     if (item->type == FORM_SELECT) {
         chooseSelectOption(item, item->select_option);
         item->init_selected = item->selected;
         item->init_value = item->value;
         item->init_label = item->label;
     }
-#endif /* MENU_SELECT */
     if (item->type == FORM_INPUT_FILE && item->value && item->value->length) {
         /* security hole ! */
         return NULL;
@@ -191,7 +186,7 @@ char* form2str(struct FormItemList* fi)
     return tmp->ptr;
 }
 
-int formtype(char* typestr)
+int formtype(const char* typestr)
 {
     int i;
     for (i = 0; _formtypetbl[i]; i++) {

@@ -20,3 +20,6 @@ struct MapList {
     struct MapList* next;
 };
 
+struct MapArea* newMapArea(const char* url,
+    const char* target, const char* alt,
+    const char* shape, const char* coords);

@@ -15,8 +15,8 @@
 #define FIRST_ANCHOR_SIZE 30
 
 struct AnchorList*
-putAnchor(struct AnchorList* al, char* url, char* target, struct Anchor** anchor_return,
-    char* referer, char* title, unsigned char key, int line, int pos)
+putAnchor(struct AnchorList* al, const char* url, const char* target, struct Anchor** anchor_return,
+    const char* referer, const char* title, unsigned char key, int line, int pos)
 {
     int n, i, j;
     struct Anchor* a;
@@ -65,7 +65,7 @@ putAnchor(struct AnchorList* al, char* url, char* target, struct Anchor** anchor
 }
 
 struct Anchor*
-registerHref(struct Buffer* buf, char* url, char* target, char* referer, char* title,
+registerHref(struct Buffer* buf, const char* url, const char* target, const char* referer, const char* title,
     unsigned char key, int line, int pos)
 {
     struct Anchor* a;
@@ -84,7 +84,8 @@ registerName(struct Buffer* buf, char* url, int line, int pos)
 }
 
 struct Anchor*
-registerImg(struct Buffer* buf, char* url, char* title, int line, int pos)
+registerImg(struct Buffer* buf,
+    const char* url, const char* title, int line, int pos)
 {
     struct Anchor* a;
     buf->img = putAnchor(buf->img, url, NULL, &a, NULL, title, '\0', line,
@@ -93,15 +94,15 @@ registerImg(struct Buffer* buf, char* url, char* title, int line, int pos)
 }
 
 struct Anchor*
-registerForm(struct Buffer* buf, struct FormList* flist, struct parsed_tag* tag, int line,
+registerForm(struct HtmlBuilder* hb, struct Buffer* buf,
+    struct FormList* flist, struct parsed_tag* tag, int line,
     int pos)
 {
-    struct Anchor* a;
-    struct FormItemList* fi;
-
-    fi = formList_addInput(flist, tag);
+    struct FormItemList* fi = formList_addInput(hb, flist, tag);
     if (fi == NULL)
         return NULL;
+
+    struct Anchor* a;
     buf->formitem = putAnchor(buf->formitem, (char*)fi, flist->target, &a,
         NULL, NULL, '\0', line, pos);
     return a;

@@ -58,3 +58,4 @@ struct frameset_queue {
 };
 
 extern struct frameset* renderFrameSet;
+extern union frameset_element* search_frame(struct frameset* fset, const char* name);

@@ -150,9 +150,10 @@ extern struct table* begin_table(int border, int spacing, int padding,
 extern void end_table(struct table* tbl);
 extern void check_rowcol(struct table* tbl, struct table_mode* mode);
 extern int minimum_length(char* line);
-extern int feed_table(struct HtmlBuilder *hb, struct table* tbl, char* line, struct table_mode* mode,
+extern int feed_table(struct HtmlBuilder *hb, struct table* tbl, const char* line, struct table_mode* mode,
     int width, int internal);
 extern void feed_table1(struct HtmlBuilder *hb, struct table* tbl, Str tok, struct table_mode* mode,
     int width);
 extern void pushTable(struct table*, struct table*);
 extern void do_refill(struct HtmlBuilder *hb, struct table* tbl, int row, int col, int maxlimit);
+extern void pushdata(struct table* t, int row, int col, const char* data);

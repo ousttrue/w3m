@@ -76,21 +76,6 @@ int max_select = MAX_SELECT;
 static int n_select;
 static int cur_option_maxwidth;
 
-static Str cur_textarea;
-Str* textarea_str;
-static int cur_textarea_size;
-static int cur_textarea_rows;
-static int cur_textarea_readonly;
-static int n_textarea;
-static int ignore_nl_textarea;
-int max_textarea = MAX_TEXTAREA;
-
-#ifdef USE_M17N
-static wc_ces meta_charset = 0;
-static char* check_charset(char* p);
-static char* check_accept_charset(char* p);
-#endif
-
 #define set_prevchar(x, y, n) Strcopy_charp_n((x), (y), (n))
 #define set_space_to_prevchar(x) Strcopy_charp_n((x), " ", 1)
 
@@ -1660,7 +1645,7 @@ push_nchars(struct readbuffer* obuf, int width,
     push_nchars(obuf, width, str->ptr, str->length, mode)
 
 static void
-check_breakpoint(struct readbuffer* obuf, int pre_mode, char* ch)
+check_breakpoint(struct readbuffer* obuf, int pre_mode, const char* ch)
 {
     int tlen, len = obuf->line->length;
 
@@ -1705,7 +1690,7 @@ push_spaces(struct readbuffer* obuf, int pre_mode, int width)
 
 static void
 proc_mchar(struct readbuffer* obuf, int pre_mode,
-    int width, char** str, Lineprop mode)
+    int width, const char** str, Lineprop mode)
 {
     check_breakpoint(obuf, pre_mode, *str);
     obuf->pos += width;
@@ -2214,7 +2199,7 @@ void restore_fonteffect(struct html_feed_environ* h_env, struct readbuffer* obuf
 
 Str process_img(struct HtmlBuilder* hb, struct parsed_tag* tag, int width)
 {
-    char *r, *r2 = NULL, *s;
+    const char *r, *r2 = NULL, *s;
 
     int w, i, nw, ni = 1, n, w0 = -1, i0 = -1;
     int align, xoffset, yoffset, top, bottom, ismap = 0;
@@ -2521,7 +2506,7 @@ img_end:
     return tmp;
 }
 
-Str process_anchor(struct parsed_tag* tag, char* tagbuf)
+Str process_anchor(struct parsed_tag* tag, const char* tagbuf)
 {
     if (parsedtag_need_reconstruct(tag)) {
         parsedtag_set_value(tag, ATTR_HSEQ, Sprintf("%d", cur_hseq++)->ptr);
@@ -2536,13 +2521,13 @@ Str process_anchor(struct parsed_tag* tag, char* tagbuf)
 Str process_input(struct HtmlBuilder* hb, struct parsed_tag* tag)
 {
     int i = 20, v, x, y, z, iw, ih, size = 20;
-    char *q, *p, *r, *p2, *s;
+    const char *q, *p, *r, *p2, *s;
     Str tmp = NULL;
     char* qq = "";
     int qlen = 0;
 
     if (cur_form_id < 0) {
-        char* s = "<form_int method=internal action=none>";
+        const char* s = "<form_int method=internal action=none>";
         tmp = process_form(hb, parse_tag(&s, TRUE));
     }
     if (tmp == NULL)
@@ -2725,7 +2710,7 @@ Str process_button(struct HtmlBuilder* hb, struct parsed_tag* tag)
     int v;
 
     if (cur_form_id < 0) {
-        char* s = "<form_int method=internal action=none>";
+        const char* s = "<form_int method=internal action=none>";
         tmp = process_form(hb, parse_tag(&s, TRUE));
     }
     if (tmp == NULL)
@@ -2789,7 +2774,7 @@ Str process_select(struct HtmlBuilder* hb, struct parsed_tag* tag)
     char* p;
 
     if (cur_form_id < 0) {
-        char* s = "<form_int method=internal action=none>";
+        const char* s = "<form_int method=internal action=none>";
         tmp = process_form(hb, parse_tag(&s, TRUE));
     }
 
@@ -2847,7 +2832,7 @@ void feed_select(struct HtmlBuilder* hb, const char* str)
     Str tmp = Strnew();
     int prev_status = hb->cur_status;
     static int prev_spaces = -1;
-    char* p;
+    const char* p;
 
     if (hb->cur_select == NULL)
         return;
@@ -2857,7 +2842,7 @@ void feed_select(struct HtmlBuilder* hb, const char* str)
         p = tmp->ptr;
         if (tmp->ptr[0] == '<' && Strlastchar(tmp) == '>') {
             struct parsed_tag* tag;
-            char* q;
+            const char* q;
             if (!(tag = parse_tag(&p, FALSE)))
                 continue;
             switch (tag->tagid) {
@@ -2951,91 +2936,91 @@ Str process_textarea(struct HtmlBuilder* hb, struct parsed_tag* tag, int width)
 #define TEXTAREA_ATTR_ROWS_MAX 4096
 
     if (cur_form_id < 0) {
-        char* s = "<form_int method=internal action=none>";
+        const char* s = "<form_int method=internal action=none>";
         tmp = process_form(hb, parse_tag(&s, TRUE));
     }
 
     p = "";
     parsedtag_get_value(tag, ATTR_NAME, &p);
-    cur_textarea = Strnew_charp(p);
-    cur_textarea_size = 20;
+    hb->cur_textarea = Strnew_charp(p);
+    hb->cur_textarea_size = 20;
     if (parsedtag_get_value(tag, ATTR_COLS, &p)) {
-        cur_textarea_size = atoi(p);
+        hb->cur_textarea_size = atoi(p);
         if (strlen(p) > 0 && p[strlen(p) - 1] == '%')
-            cur_textarea_size = width * cur_textarea_size / 100 - 2;
-        if (cur_textarea_size <= 0) {
-            cur_textarea_size = 20;
-        } else if (cur_textarea_size > TEXTAREA_ATTR_COL_MAX) {
-            cur_textarea_size = TEXTAREA_ATTR_COL_MAX;
+            hb->cur_textarea_size = width * hb->cur_textarea_size / 100 - 2;
+        if (hb->cur_textarea_size <= 0) {
+            hb->cur_textarea_size = 20;
+        } else if (hb->cur_textarea_size > TEXTAREA_ATTR_COL_MAX) {
+            hb->cur_textarea_size = TEXTAREA_ATTR_COL_MAX;
         }
     }
-    cur_textarea_rows = 1;
+    hb->cur_textarea_rows = 1;
     if (parsedtag_get_value(tag, ATTR_ROWS, &p)) {
-        cur_textarea_rows = atoi(p);
-        if (cur_textarea_rows <= 0) {
-            cur_textarea_rows = 1;
-        } else if (cur_textarea_rows > TEXTAREA_ATTR_ROWS_MAX) {
-            cur_textarea_rows = TEXTAREA_ATTR_ROWS_MAX;
+        hb->cur_textarea_rows = atoi(p);
+        if (hb->cur_textarea_rows <= 0) {
+            hb->cur_textarea_rows = 1;
+        } else if (hb->cur_textarea_rows > TEXTAREA_ATTR_ROWS_MAX) {
+            hb->cur_textarea_rows = TEXTAREA_ATTR_ROWS_MAX;
         }
     }
-    cur_textarea_readonly = parsedtag_exists(tag, ATTR_READONLY);
-    if (n_textarea >= max_textarea) {
-        max_textarea *= 2;
-        textarea_str = New_Reuse(Str, textarea_str, max_textarea);
+    hb->cur_textarea_readonly = parsedtag_exists(tag, ATTR_READONLY);
+    if (hb->n_textarea >= hb->max_textarea) {
+        hb->max_textarea *= 2;
+        hb->textarea_str = New_Reuse(Str, hb->textarea_str, hb->max_textarea);
     }
-    textarea_str[n_textarea] = Strnew();
-    ignore_nl_textarea = TRUE;
+    hb->textarea_str[hb->n_textarea] = Strnew();
+    hb->ignore_nl_textarea = TRUE;
 
     return tmp;
 }
 
-Str process_n_textarea(void)
+Str process_n_textarea(struct HtmlBuilder* hb)
 {
     Str tmp;
     int i;
 
-    if (cur_textarea == NULL)
+    if (hb->cur_textarea == NULL)
         return NULL;
 
     tmp = Strnew();
     Strcat(tmp, Sprintf("<pre_int>[<input_alt hseq=\"%d\" fid=\"%d\" "
                         "type=textarea name=\"%s\" size=%d rows=%d "
                         "top_margin=%d textareanumber=%d",
-                    cur_hseq, cur_form_id, html_quote(cur_textarea->ptr), cur_textarea_size, cur_textarea_rows, cur_textarea_rows - 1, n_textarea));
-    if (cur_textarea_readonly)
+                    cur_hseq, cur_form_id, html_quote(hb->cur_textarea->ptr), hb->cur_textarea_size, hb->cur_textarea_rows, hb->cur_textarea_rows - 1, hb->n_textarea));
+    if (hb->cur_textarea_readonly)
         Strcat_charp(tmp, " readonly");
     Strcat_charp(tmp, "><u>");
-    for (i = 0; i < cur_textarea_size; i++)
+    for (i = 0; i < hb->cur_textarea_size; i++)
         Strcat_char(tmp, ' ');
     Strcat_charp(tmp, "</u></input_alt>]</pre_int>\n");
     cur_hseq++;
-    n_textarea++;
-    cur_textarea = NULL;
+    hb->n_textarea++;
+    hb->cur_textarea = NULL;
 
     return tmp;
 }
 
-void feed_textarea(char* str)
+void feed_textarea(struct HtmlBuilder* hb, const char* str)
 {
-    if (cur_textarea == NULL)
+    if (hb->cur_textarea == NULL)
         return;
-    if (ignore_nl_textarea) {
+    if (hb->ignore_nl_textarea) {
         if (*str == '\r')
             str++;
         if (*str == '\n')
             str++;
     }
-    ignore_nl_textarea = FALSE;
+    hb->ignore_nl_textarea = FALSE;
     while (*str) {
         if (*str == '&')
-            Strcat_charp(textarea_str[n_textarea], getescapecmd(&str));
+            Strcat_charp(hb->textarea_str[hb->n_textarea], getescapecmd(&str));
         else if (*str == '\n') {
-            Strcat_charp(textarea_str[n_textarea], "\r\n");
+            Strcat_charp(hb->textarea_str[hb->n_textarea], "\r\n");
             str++;
         } else if (*str == '\r')
             str++;
         else
-            Strcat_char(textarea_str[n_textarea], *(str++));
+            Strcat_char(hb->textarea_str[hb->n_textarea], *(str++));
     }
 }
 
@@ -4137,7 +4122,7 @@ int HTMLtagproc1(struct HtmlBuilder* hb, struct parsed_tag* tag, struct html_fee
     case HTML_N_TEXTAREA:
         obuf->flag &= ~RB_INTXTA;
         obuf->end_tag = 0;
-        tmp = process_n_textarea();
+        tmp = process_n_textarea(hb);
         if (tmp)
             HTMLlineproc0(hb, tmp->ptr, h_env, true);
         return 1;
@@ -4163,22 +4148,22 @@ int HTMLtagproc1(struct HtmlBuilder* hb, struct parsed_tag* tag, struct html_fee
         p = q = r = NULL;
         parsedtag_get_value(tag, ATTR_HTTP_EQUIV, &p);
         parsedtag_get_value(tag, ATTR_CONTENT, &q);
-#ifdef USE_M17N
+
         parsedtag_get_value(tag, ATTR_CHARSET, &r);
         if (r) {
             /* <meta charset=""> */
             r = skip_blanks(r);
-            meta_charset = wc_guess_charset(r, 0);
+            hb->meta_charset = wc_guess_charset(r, 0);
         } else if (p && q && !strcasecmp(p, "Content-Type") && (q = strcasestr(q, "charset")) != NULL) {
             q += 7;
             q = skip_blanks(q);
             if (*q == '=') {
                 q++;
                 q = skip_blanks(q);
-                meta_charset = wc_guess_charset(q, 0);
+                hb->meta_charset = wc_guess_charset(q, 0);
             }
         } else
-#endif
+
             if (p && q && !strcasecmp(p, "refresh")) {
             int refresh_interval;
             tmp = NULL;
@@ -4449,20 +4434,17 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
     static Lineprop* outp = NULL;
     static int out_size = 0;
     struct Anchor *a_href = NULL, *a_img = NULL, *a_form = NULL;
-    char *p, *q, *r, *s, *t, *str;
+    const char *p, *q, *r, *s, *t, *str;
     Lineprop mode, effect, ex_effect;
     int pos;
     int nlines;
-#ifdef DEBUG
-    FILE* debug = NULL;
-#endif
     struct frameset* frameset_s[FRAMESTACK_SIZE];
     int frameset_sp = -1;
     union frameset_element* idFrame = NULL;
     char* id = NULL;
     int hseq, form_id;
     Str line;
-    char* endp;
+    const char* endp;
     char symbol = '\0';
     int internal = 0;
     struct Anchor** a_textarea = NULL;
@@ -4483,11 +4465,11 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
         outp = NewAtom_N(Lineprop, out_size);
     }
 
-    n_textarea = -1;
-    if (!max_textarea) { /* halfload */
-        max_textarea = MAX_TEXTAREA;
-        textarea_str = New_N(Str, max_textarea);
-        a_textarea = New_N(struct Anchor*, max_textarea);
+    hb->n_textarea = -1;
+    if (!hb->max_textarea) { /* halfload */
+        hb->max_textarea = MAX_TEXTAREA;
+        hb->textarea_str = New_N(Str, hb->max_textarea);
+        a_textarea = New_N(struct Anchor*, hb->max_textarea);
     }
 
     n_select = -1;
@@ -4501,8 +4483,8 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
     ex_effect = 0;
     nlines = 0;
     while ((line = feed()) != NULL) {
-        if (n_textarea >= 0 && *(line->ptr) != '<') { /* halfload */
-            Strcat(textarea_str[n_textarea], line);
+        if (hb->n_textarea >= 0 && *(line->ptr) != '<') { /* halfload */
+            Strcat(hb->textarea_str[hb->n_textarea], line);
             continue;
         }
     proc_again:
@@ -4797,12 +4779,12 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                     if (!form->target)
                         form->target = buf->baseTarget;
                     if (a_textarea && parsedtag_get_value(tag, ATTR_TEXTAREANUMBER, &textareanumber)) {
-                        if (textareanumber >= max_textarea) {
-                            max_textarea = 2 * textareanumber;
-                            textarea_str = New_Reuse(Str, textarea_str,
-                                max_textarea);
+                        if (textareanumber >= hb->max_textarea) {
+                            hb->max_textarea = 2 * textareanumber;
+                            hb->textarea_str = New_Reuse(Str, hb->textarea_str,
+                                hb->max_textarea);
                             a_textarea = New_Reuse(struct Anchor*, a_textarea,
-                                max_textarea);
+                                hb->max_textarea);
                         }
                     }
 
@@ -4817,13 +4799,11 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                         }
                     }
 
-                    a_form = registerForm(buf, form, tag, currentLn(buf), pos);
+                    a_form = registerForm(hb, buf, form, tag, currentLn(buf), pos);
                     if (a_textarea && textareanumber >= 0)
                         a_textarea[textareanumber] = a_form;
-#ifdef MENU_SELECT
                     if (a_select && selectnumber >= 0)
                         a_select[selectnumber] = a_form;
-#endif
                     if (a_form) {
                         a_form->hseq = hseq - 1;
                         a_form->y = currentLn(buf) - top;
@@ -4933,7 +4913,7 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                             buf->event = setAlarmEvent(buf->event,
                                 refresh_interval,
                                 AL_IMPLICIT_ONCE,
-                                FUNCNAME_gorURL, p);
+                                FUNCNAME_gorURL, (void*)p);
                         } else if (refresh_interval > 0)
                             buf->event = setAlarmEvent(buf->event,
                                 refresh_interval,
@@ -4960,16 +4940,16 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                     break;
                 case HTML_TEXTAREA_INT:
                     if (parsedtag_get_value(tag, ATTR_TEXTAREANUMBER,
-                            &n_textarea)
-                        && n_textarea >= 0 && n_textarea < max_textarea) {
-                        textarea_str[n_textarea] = Strnew();
+                            &hb->n_textarea)
+                        && hb->n_textarea >= 0 && hb->n_textarea < hb->max_textarea) {
+                        hb->textarea_str[hb->n_textarea] = Strnew();
                     } else
-                        n_textarea = -1;
+                        hb->n_textarea = -1;
                     break;
                 case HTML_N_TEXTAREA_INT:
-                    if (a_textarea && n_textarea >= 0) {
-                        struct FormItemList* item = (struct FormItemList*)a_textarea[n_textarea]->url;
-                        item->init_value = item->value = textarea_str[n_textarea];
+                    if (a_textarea && hb->n_textarea >= 0) {
+                        struct FormItemList* item = (struct FormItemList*)a_textarea[hb->n_textarea]->url;
+                        item->init_value = item->value = hb->textarea_str[hb->n_textarea];
                     }
                     break;
 #ifdef MENU_SELECT
@@ -5053,7 +5033,7 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
         if (forms[form_id])
             forms[form_id]->next = forms[form_id - 1];
     buf->formlist = (form_max >= 0) ? forms[form_max] : NULL;
-    if (n_textarea)
+    if (hb->n_textarea)
         addMultirowsForm(buf, buf->formitem);
 #ifdef USE_IMAGE
     addMultirowsImg(buf, buf->img);
@@ -5132,9 +5112,9 @@ HTMLlineproc3(struct HtmlBuilder* hb,
 }
 
 static void
-proc_escape(struct readbuffer* obuf, char** str_return)
+proc_escape(struct readbuffer* obuf, const char** str_return)
 {
-    char *str = *str_return, *estr;
+    const char *str = *str_return, *estr;
     int ech = getescapechar(str_return);
     int width, n_add = *str_return - str;
     Lineprop mode = PC_ASCII;
@@ -5223,7 +5203,7 @@ table_start:
     }
 
     while (*line != '\0') {
-        char *str, *p;
+        const char *str, *p;
         int is_tag = FALSE;
         int pre_mode = (obuf->table_level >= 0 && tbl_mode) ? tbl_mode->pre_mode : obuf->flag;
         int end_tag = (obuf->table_level >= 0 && tbl_mode) ? tbl_mode->end_tag : obuf->end_tag;
@@ -5297,7 +5277,7 @@ table_start:
                 goto proc_normal;
             /* textarea */
             if (pre_mode & RB_INTXTA) {
-                feed_textarea(str);
+                feed_textarea(hb, str);
                 continue;
             }
             /* script */
@@ -5401,7 +5381,7 @@ table_start:
             if (obuf->flag & (RB_SPECIAL & ~RB_NOBR)) {
                 char ch = *str;
                 if (!(obuf->flag & RB_PLAIN) && (*str == '&')) {
-                    char* p = str;
+                    const char* p = str;
                     int ech = getescapechar(&p);
                     if (ech == '\n' || ech == '\r') {
                         ch = '\n';
@@ -5528,11 +5508,11 @@ table_start:
 struct Buffer*
 loadHTMLBuffer(struct URLFile* f, struct Buffer* newBuf)
 {
-    FILE* src = NULL;
-    Str tmp;
-
     if (newBuf == NULL)
         newBuf = newBuffer(INIT_BUFFER_WIDTH);
+
+    FILE* src = NULL;
+    Str tmp = NULL;
     if (newBuf->sourcefile == NULL && (f->scheme != SCM_LOCAL || newBuf->mailcap)) {
         tmp = tmpfname(TMPF_SRC, ".html");
         src = fopen(tmp->ptr, "w");
@@ -5542,11 +5522,6 @@ loadHTMLBuffer(struct URLFile* f, struct Buffer* newBuf)
 
     loadHTMLstream(f, newBuf, src, newBuf->bufferprop & BP_FRAME);
 
-    newBuf->doc.topLine = newBuf->doc.firstLine;
-    newBuf->doc.lastLine = newBuf->doc.currentLine;
-    newBuf->doc.currentLine = newBuf->doc.firstLine;
-    if (n_textarea)
-        formResetBuffer(newBuf, newBuf->formitem);
     if (src)
         fclose(src);
 
@@ -5780,7 +5755,7 @@ void completeHTMLstream(struct HtmlBuilder* hb, struct html_feed_environ* h_env,
 }
 
 static void
-print_internal_information(struct html_feed_environ* henv)
+print_internal_information(struct HtmlBuilder* hb, struct html_feed_environ* henv)
 {
     int i;
     Str s;
@@ -5793,32 +5768,6 @@ print_internal_information(struct html_feed_environ* henv)
             html_quote(henv->title), "\">", NULL);
         pushTextLine(tl, newTextLine(s, 0));
     }
-#if 0
-    if (form_max >= 0) {
-	FormList *fp;
-	for (i = 0; i <= form_max; i++) {
-	    if (forms[i] == NULL)
-		continue;
-	    fp = forms[i];
-	    s = Sprintf("<form_int fid=\"%d\" action=\"%s\" method=\"%s\"",
-			i, html_quote(fp->action->ptr),
-			(fp->method == FORM_METHOD_POST) ? "post"
-			: ((fp->method ==
-			    FORM_METHOD_INTERNAL) ? "internal" : "get"));
-	    if (fp->target)
-		Strcat(s, Sprintf(" target=\"%s\"", html_quote(fp->target)));
-	    if (fp->enctype == FORM_ENCTYPE_MULTIPART)
-		Strcat_charp(s, " enctype=\"multipart/form-data\"");
-#ifdef USE_M17N
-	    if (fp->charset)
-		Strcat(s, Sprintf(" accept-charset=\"%s\"",
-				  html_quote(fp->charset)));
-#endif
-	    Strcat_charp(s, ">");
-	    pushTextLine(tl, newTextLine(s, 0));
-	}
-    }
-#endif
 
     if (n_select > 0) {
         struct FormSelectOptionItem* ip;
@@ -5837,11 +5786,11 @@ print_internal_information(struct html_feed_environ* henv)
         }
     }
 
-    if (n_textarea > 0) {
-        for (i = 0; i < n_textarea; i++) {
+    if (hb->n_textarea > 0) {
+        for (i = 0; i < hb->n_textarea; i++) {
             s = Sprintf("<textarea_int textareanumber=%d>", i);
             pushTextLine(tl, newTextLine(s, 0));
-            s = Strnew_charp(html_quote(textarea_str[i]->ptr));
+            s = Strnew_charp(html_quote(hb->textarea_str[i]->ptr));
             Strcat_charp(s, "</textarea_int>");
             pushTextLine(tl, newTextLine(s, 0));
         }
@@ -5860,7 +5809,11 @@ print_internal_information(struct html_feed_environ* henv)
 
 void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int internal)
 {
-    struct HtmlBuilder _hb = { 0 };
+    struct HtmlBuilder _hb = {
+        0,
+        .max_textarea = MAX_TEXTAREA,
+        .textarea_str = New_N(Str, MAX_TEXTAREA),
+    };
     struct HtmlBuilder* hb = &_hb;
 
     struct environment envs[MAX_ENV_LEVEL];
@@ -5880,11 +5833,6 @@ void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int int
         get_symbol(getRuntime()->DisplayCharset, &symbol_width0);
         symbol_width = WcOption.use_wide ? symbol_width0 : 1;
     }
-
-    n_textarea = 0;
-    cur_textarea = NULL;
-    max_textarea = MAX_TEXTAREA;
-    textarea_str = New_N(Str, max_textarea);
 
     n_select = 0;
     max_select = MAX_SELECT;
@@ -5908,10 +5856,6 @@ void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int int
         newBuf->buffername = "---";
 
         newBuf->document_charset = getRuntime()->InnerCharset;
-
-        max_textarea = 0;
-
-        max_select = 0;
 
         HTMLlineproc3(hb, newBuf, f->stream);
         w3m_halfload = FALSE;
@@ -5941,7 +5885,7 @@ void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int int
     }
     if (newBuf->content.content_charset && UseContentCharset)
         doc_charset = newBuf->content.content_charset;
-    meta_charset = 0;
+    hb->meta_charset = 0;
 
     while ((lineBuf2 = is_get_str(f->stream, true)) && lineBuf2->length) {
 
@@ -5958,12 +5902,12 @@ void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int int
          * continue;
          */
 
-        if (meta_charset) { /* <META> */
+        if (hb->meta_charset) { /* <META> */
             if (newBuf->content.content_charset == 0 && UseContentCharset) {
-                doc_charset = meta_charset;
+                doc_charset = hb->meta_charset;
                 charset = WC_CES_US_ASCII;
             }
-            meta_charset = 0;
+            hb->meta_charset = 0;
         }
 
         lineBuf2 = convertLine(f, lineBuf2, HTML_MODE, &charset, doc_charset);
@@ -5983,15 +5927,16 @@ void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int int
         newBuf->buffername = htmlenv1.title;
     if (w3m_halfdump) {
         TRAP_OFF;
-        print_internal_information(&htmlenv1);
+        print_internal_information(hb, &htmlenv1);
         return;
     }
     if (w3m_backend) {
         TRAP_OFF;
-        print_internal_information(&htmlenv1);
+        print_internal_information(hb, &htmlenv1);
         backend_halfdump_buf = htmlenv1.buf;
         return;
     }
+
 phase2:
     newBuf->trbyte = trbyte + linelen;
     TRAP_OFF;
@@ -5999,6 +5944,13 @@ phase2:
         newBuf->document_charset = charset;
     newBuf->image_flag = image_flag;
     HTMLlineproc2(hb, newBuf, htmlenv1.buf);
+
+    newBuf->doc.topLine = newBuf->doc.firstLine;
+    newBuf->doc.lastLine = newBuf->doc.currentLine;
+    newBuf->doc.currentLine = newBuf->doc.firstLine;
+    newBuf->type = "text/html";
+    if (hb->n_textarea)
+        formResetBuffer(newBuf, newBuf->formitem);
 }
 
 /*
@@ -6030,12 +5982,6 @@ loadHTMLString(Str page)
 
     TRAP_OFF;
     UFclose(&f);
-    newBuf->doc.topLine = newBuf->doc.firstLine;
-    newBuf->doc.lastLine = newBuf->doc.currentLine;
-    newBuf->doc.currentLine = newBuf->doc.firstLine;
-    newBuf->type = "text/html";
-    if (n_textarea)
-        formResetBuffer(newBuf, newBuf->formitem);
     return newBuf;
 }
 

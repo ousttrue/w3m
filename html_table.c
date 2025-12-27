@@ -395,7 +395,7 @@ check_row(struct table* t, int row)
     }
 }
 
-void pushdata(struct table* t, int row, int col, char* data)
+void pushdata(struct table* t, int row, int col, const char* data)
 {
     check_row(t, row);
     if (t->tabdata[row][col] == NULL)
@@ -405,7 +405,7 @@ void pushdata(struct table* t, int row, int col, char* data)
 }
 
 static void
-suspend_or_pushdata(struct table* tbl, char* line)
+suspend_or_pushdata(struct table* tbl, const char* line)
 {
     if (tbl->flag & TBL_IN_COL)
         pushdata(tbl, tbl->row, tbl->col, line);
@@ -429,7 +429,7 @@ int visible_length(char* str)
     int status = R_ST_NORMAL;
     int prev_status = status;
     Str tagbuf = Strnew();
-    char *t, *r2;
+    const char *t, *r2;
 
     while (*str) {
         prev_status = status;
@@ -735,7 +735,7 @@ void do_refill(struct HtmlBuilder *hb, struct table* tbl, int row, int col, int 
     for (l = orgdata->first; l != NULL; l = l->next) {
         if (TAG_IS(l->ptr, "<table_alt", 10)) {
             int id = -1;
-            char* p = l->ptr;
+            const char* p = l->ptr;
             struct parsed_tag* tag;
             if ((tag = parse_tag(&p, TRUE)) != NULL)
                 parsedtag_get_value(tag, ATTR_TID, &id);
@@ -2293,7 +2293,7 @@ skip_space(struct table* t, char* line, struct table_linfo* linfo,
 
 static void
 feed_table_inline_tag(struct table* tbl,
-    char* line, struct table_mode* mode, int width)
+    const char* line, struct table_mode* mode, int width)
 {
     check_rowcol(tbl, mode);
     pushdata(tbl, tbl->row, tbl->col, line);
@@ -2306,7 +2306,7 @@ feed_table_inline_tag(struct table* tbl,
 
 static void
 feed_table_block_tag(struct table* tbl,
-    char* line, struct table_mode* mode, int indent, int cmd)
+    const char* line, struct table_mode* mode, int indent, int cmd)
 {
     int offset;
     if (mode->indent_level <= 0 && indent == -1)
@@ -2354,7 +2354,7 @@ static void
 table_close_textarea(struct HtmlBuilder *hb,
         struct table* tbl, struct table_mode* mode, int width)
 {
-    Str tmp = process_n_textarea();
+    Str tmp = process_n_textarea(hb);
     mode->pre_mode &= ~TBLM_INTXTA;
     mode->end_tag = 0;
     feed_table1(hb, tbl, tmp, mode, width);
@@ -2404,7 +2404,7 @@ table_close_anchor0(struct table* tbl, struct table_mode* mode)
 #define ATTR_ROWSPAN_MAX 32766
 
 static int
-feed_table_tag(struct HtmlBuilder *hb, struct table* tbl, char* line, struct table_mode* mode,
+feed_table_tag(struct HtmlBuilder *hb, struct table* tbl, const char* line, struct table_mode* mode,
     int width, struct parsed_tag* tag)
 {
     int cmd;
@@ -3078,11 +3078,11 @@ feed_table_tag(struct HtmlBuilder *hb, struct table* tbl, char* line, struct tab
     return TAG_ACTION_NONE;
 }
 
-int feed_table(struct HtmlBuilder *hb, struct table* tbl, char* line, struct table_mode* mode,
+int feed_table(struct HtmlBuilder *hb, struct table* tbl, const char* line, struct table_mode* mode,
     int width, int internal)
 {
     int i;
-    char* p;
+    const char* p;
     Str tmp;
     struct table_linfo* linfo = &tbl->linfo;
 
@@ -3122,7 +3122,7 @@ int feed_table(struct HtmlBuilder *hb, struct table* tbl, char* line, struct tab
     if (mode->pre_mode & TBLM_STYLE)
         return -1;
     if (mode->pre_mode & TBLM_INTXTA) {
-        feed_textarea(line);
+        feed_textarea(hb, line);
         return -1;
     }
     if (mode->pre_mode & TBLM_INSELECT) {

@@ -179,10 +179,7 @@ struct FormList;
 extern int is_boundary(unsigned char*, unsigned char*);
 extern int is_blank_line(char* line, int indent);
 
-extern Str process_anchor(struct parsed_tag* tag, char* tagbuf);
 extern Str process_n_button(void);
-extern Str process_n_textarea(void);
-extern void feed_textarea(char* str);
 extern Str process_n_form(void);
 extern int getMetaRefreshParam(const char* q, Str* refresh_uri);
 
@@ -228,7 +225,6 @@ extern Str unescape_spaces(Str s);
 extern struct Buffer* historyBuffer(struct Hist* hist);
 extern double log_like(int x);
 extern struct table* newTable(void);
-extern void pushdata(struct table* t, int row, int col, char* data);
 extern int visible_length(char* str);
 extern void align(TextLine* lbuf, int width, int mode);
 extern void print_item(struct table* t, int row, int col, int width, Str buf);
@@ -237,10 +233,7 @@ extern void print_sep(struct table* t, int row, int type, int maxcol, Str buf);
 extern struct FormList* newFormList(char* action, char* method, char* charset,
     char* enctype, char* target, char* name,
     struct FormList* _next);
-extern struct FormItemList* formList_addInput(struct FormList* fl,
-    struct parsed_tag* tag);
 extern char* form2str(struct FormItemList* fi);
-extern int formtype(char* typestr);
 extern void formRecheckRadio(struct Anchor* a, struct Buffer* buf, struct FormItemList* form);
 struct AnchorList;
 extern void formResetBuffer(struct Buffer* buf, struct AnchorList* formitem);
@@ -261,8 +254,6 @@ extern struct MapArea* follow_map_menu(struct Buffer* buf, char* name, struct An
 extern struct Buffer* follow_map_panel(struct Buffer* buf, char* name);
 #endif
 
-extern struct MapArea* newMapArea(char* url, char* target, char* alt, char* shape,
-    char* coords);
 extern struct Buffer* page_info_panel(struct Buffer* buf);
 extern struct frame_body* newFrame(struct parsed_tag* tag, struct Buffer* buf);
 extern struct frameset* newFrameSet(struct parsed_tag* tag);
@@ -278,7 +269,6 @@ extern struct frameset* popFrameTree(struct frameset_queue** fqpp);
 extern void resetFrameElement(union frameset_element* f_element, struct Buffer* buf,
     char* referer, struct FormList* request);
 extern struct Buffer* renderFrame(struct Buffer* Cbuf, int force_reload);
-extern union frameset_element* search_frame(struct frameset* fset, char* name);
 extern MySignalHandler reset_exit(SIGNAL_ARG);
 extern MySignalHandler error_dump(SIGNAL_ARG);
 extern void set_int(void);
@@ -291,18 +281,7 @@ extern char* acceptableMimeTypes(void);
 extern struct TextList* make_domain_list(char* domain_list);
 extern int check_no_proxy(char* domain);
 
-extern struct AnchorList* putAnchor(struct AnchorList* al, char* url, char* target,
-    struct Anchor** anchor_return, char* referer,
-    char* title, unsigned char key, int line,
-    int pos);
-extern struct Anchor* registerHref(struct Buffer* buf, char* url, char* target,
-    char* referer, char* title, unsigned char key,
-    int line, int pos);
 extern struct Anchor* registerName(struct Buffer* buf, char* url, int line, int pos);
-extern struct Anchor* registerImg(struct Buffer* buf, char* url, char* title, int line,
-    int pos);
-extern struct Anchor* registerForm(struct Buffer* buf, struct FormList* flist,
-    struct parsed_tag* tag, int line, int pos);
 extern int onAnchor(struct Anchor* a, int line, int pos);
 extern void reAnchorWord(struct Buffer* buf, struct Line* l, int spos, int epos);
 extern char* reAnchor(struct Buffer* buf, char* re);
