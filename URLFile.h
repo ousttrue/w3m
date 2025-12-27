@@ -1,6 +1,6 @@
 #pragma once
 #include "textlist.h"
-#include "istream.h"
+#include "input_stream.h"
 #include "compression.h"
 #include "urlscheme.h"
 #include <time.h>

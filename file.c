@@ -1381,9 +1381,7 @@ page_loaded:
     if (flag & RG_FRAME) {
         t_buf->bufferprop |= BP_FRAME;
     }
-#ifdef USE_SSL
     t_buf->ssl_certificate = f.ssl_certificate;
-#endif
     frame_source = flag & RG_FRAME_SRC;
     if (proc == DO_EXTERNAL) {
         b = doExternal(f, t, t_buf);
@@ -5189,13 +5187,12 @@ void HTMLlineproc2(struct Buffer* buf, TextLineList* tl)
     HTMLlineproc2body(buf, textlist_feed, -1);
 }
 
-static InputStream _file_lp2;
+static union input_stream* _file_lp2;
 
 static Str
 file_feed(void)
 {
-    Str s;
-    s = StrISgets(_file_lp2);
+    Str s = StrISgets2(_file_lp2, false);
     if (s && s->length == 0) {
         ISclose(_file_lp2);
         return NULL;
@@ -5204,7 +5201,7 @@ file_feed(void)
 }
 
 static void
-HTMLlineproc3(struct Buffer* buf, InputStream stream)
+HTMLlineproc3(struct Buffer* buf, union input_stream* stream)
 {
     _file_lp2 = stream;
     HTMLlineproc2body(buf, file_feed, -1);
@@ -6021,7 +6018,7 @@ void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int int
         doc_charset = newBuf->content.content_charset;
     meta_charset = 0;
 
-    while ((lineBuf2 = StrmyUFgets(f)) && lineBuf2->length) {
+    while ((lineBuf2 = StrISgets2(f->stream, true)) && lineBuf2->length) {
 
         if (src)
             Strfputs(lineBuf2, src);
@@ -6159,7 +6156,7 @@ Str loadGopherDir0(struct URLFile* uf, struct Url* pu)
 
     pre = 0;
     while (1) {
-        if (!(lbuf = StrUFgets(uf)) || lbuf->length == 0)
+        if (!(lbuf = StrISgets2(uf->stream, false)) || lbuf->length == 0)
             break;
         if (lbuf->ptr[0] == '.' && (lbuf->ptr[1] == '\n' || lbuf->ptr[1] == '\r'))
             break;
@@ -6319,7 +6316,7 @@ loadBuffer(struct URLFile* uf, struct Buffer* volatile newBuf)
         doc_charset = newBuf->content.content_charset;
 
     nlines = 0;
-    while ((lineBuf2 = StrmyISgets(uf->stream)) && lineBuf2->length) {
+    while ((lineBuf2 = StrISgets2(uf->stream, true)) && lineBuf2->length) {
         if (src)
             Strfputs(lineBuf2, src);
         linelen += lineBuf2->length;
@@ -6675,7 +6672,7 @@ doExternal(struct URLFile uf, const char* type, struct Buffer* defaultbuf)
 static int
 _MoveFile(char* path1, char* path2)
 {
-    InputStream f1 = newInputStream(open(path1, O_RDONLY));
+    union input_stream* f1 = newInputStream(open(path1, O_RDONLY));
     if (!f1)
         return -1;
 
@@ -6950,7 +6947,7 @@ int checkCopyFile(char* path1, char* path2)
     return 0;
 }
 
-int checkSaveFile(InputStream stream, char* path2)
+int checkSaveFile(union input_stream* stream, char* path2)
 {
     struct stat st1, st2;
     int des = ISfileno(stream);

@@ -1,6 +1,8 @@
 #include "URLFile.h"
 #include "ftp.h"
+#include <fcntl.h>
 #include <string.h>
+#include <sys/stat.h>
 
 void init_stream(struct URLFile* uf, int scheme, union input_stream* stream)
 {
@@ -30,10 +32,11 @@ void UFhalfclose(struct URLFile* f)
 struct URLFile examineFile(const char* path, bool do_download)
 {
     struct URLFile uf = { 0 };
-    struct stat stbuf;
     if (path == NULL || *path == '\0') {
         return uf;
     }
+
+    struct stat stbuf;
     if (stat(path, &stbuf) != 0) {
         return uf;
     }

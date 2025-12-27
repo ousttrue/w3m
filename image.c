@@ -9,6 +9,7 @@
 #include "etc.h"
 #include "w3m_rc.h"
 #include "fm.h"
+#include <fcntl.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -216,7 +217,6 @@ static void
 save_gif(const char* path, u_char* header, size_t header_size, u_char* body, size_t body_size)
 {
     int fd;
-
     if ((fd = open(path, O_WRONLY | O_CREAT, 0600)) >= 0) {
         write(fd, header, header_size);
         write(fd, body, body_size);

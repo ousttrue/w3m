@@ -46,7 +46,7 @@
 #include "textlist.h"
 #include "funcname1.h"
 #include "terms.h"
-#include "istream.h"
+#include "input_stream.h"
 
 #ifndef HAVE_BCOPY
 void bcopy(const void*, void*, int);

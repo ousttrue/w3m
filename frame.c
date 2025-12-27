@@ -27,7 +27,8 @@ static int
 parseFrameSetLength(char* s, char*** ret)
 {
     int i, len;
-    char *p, *q, **lv;
+    const char *p;
+    char *q, **lv;
 
     i = 1;
 
@@ -529,7 +530,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
                 if (frame.body->type && !strcasecmp(frame.body->type, "text/plain")) {
                     Str tmp;
                     fprintf(f1, "<pre>\n");
-                    while ((tmp = StrmyUFgets(&f2)) && tmp->length) {
+                    while ((tmp = StrISgets2(f2.stream, true)) && tmp->length) {
                         tmp = convertLine(NULL, tmp, HTML_MODE, &charset,
                             doc_charset);
                         fprintf(f1, "%s", html_quote(tmp->ptr));
@@ -545,7 +546,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
 
                     do {
                         if (*p == '\0') {
-                            Str tmp = StrmyUFgets(&f2);
+                            Str tmp = StrISgets2(f2.stream, true);
                             if (!tmp || tmp->length == 0)
                                 break;
                             tmp = convertLine(NULL, tmp, HTML_MODE, &charset,

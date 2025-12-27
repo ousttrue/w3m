@@ -147,11 +147,11 @@ void getHttpResponseHeader(struct Content* content, struct URLFile* uf, struct U
     else
         content->http_response_code = 0;
 
-    wc_ces charset = WC_CES_US_ASCII;
+    // wc_ces charset = WC_CES_US_ASCII;
     Str lineBuf2 = NULL;
-    Lineprop* propBuffer = 0;
+    // Lineprop* propBuffer = 0;
     Str tmp;
-    while ((tmp = StrmyUFgets(uf)) && tmp->length) {
+    while ((tmp = StrISgets2(uf->stream, true)) && tmp->length) {
         // if (w3m_reqlog) {
         //     FILE* ff;
         //     ff = fopen(w3m_reqlog, "a");

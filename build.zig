@@ -11,6 +11,7 @@ const system_libs = [_][]const u8{
 const w3m_srcs = [_][]const u8{
     "w3m_rc.c",
 
+    "input_stream.c",
     "ssl_stream.c",
     "document.c",
     "compression.c",
@@ -56,7 +57,6 @@ const w3m_srcs = [_][]const u8{
     "anchor.c",
     "parsetagx.c",
     "tagtable.c",
-    "istream.c",
 
     "indep.c",
     "textlist.c",

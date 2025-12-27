@@ -9,6 +9,7 @@
 #include <libwc/conv.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/stat.h>
 
 #include "funcname.c"
 #include "functable.c"

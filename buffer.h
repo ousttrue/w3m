@@ -99,7 +99,7 @@ struct Buffer {
     struct mailcap* mailcap;
     char* mailcap_source;
     const char* header_source;
-    char* ssl_certificate;
+    const char* ssl_certificate;
     char image_flag;
     // char image_loaded;
     struct Anchor* submit;

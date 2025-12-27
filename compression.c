@@ -4,6 +4,7 @@
 #include "url.h"
 #include "w3m_rc.h"
 #include <string.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #define GUNZIP_CMDNAME "gunzip"
@@ -240,7 +241,6 @@ check_command(const char* cmd, bool auxbin_p)
     Str dirs;
     char *p, *np;
     Str pathname;
-    struct stat st;
 
     if (path == NULL)
         path = getenv("PATH");
@@ -256,6 +256,7 @@ check_command(const char* cmd, bool auxbin_p)
         Strcat_charp(pathname, p);
         Strcat_char(pathname, '/');
         Strcat_charp(pathname, cmd);
+        struct stat st;
         if (stat(pathname->ptr, &st) == 0 && S_ISREG(st.st_mode)
             && (st.st_mode & S_IXANY) != 0)
             return 1;

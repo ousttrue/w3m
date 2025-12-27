@@ -37,7 +37,7 @@ typedef struct _FTP {
     int port;
     char* user;
     char* pass;
-    InputStream rf;
+    union input_stream* rf;
     FILE* wf;
     FILE* data;
 }* FTP;
@@ -73,7 +73,7 @@ ftp_command(FTP ftp, char* cmd, char* arg, int* status)
     if (!status)
         return NULL;
     *status = -1; /* error */
-    if (!(tmp = StrISgets(ftp->rf)))
+    if (!(tmp = StrISgets2(ftp->rf, false)))
         return NULL;
     if (IS_DIGIT(tmp->ptr[0]) && IS_DIGIT(tmp->ptr[1]) && IS_DIGIT(tmp->ptr[2]) && tmp->ptr[3] == ' ')
         sscanf(tmp->ptr, "%d", status);
@@ -90,7 +90,7 @@ ftp_command(FTP ftp, char* cmd, char* arg, int* status)
      * with the same code, followed immediately by Space <SP>,
      * optionally some text, and the Telnet end-of-line code. */
     while (1) {
-        if (!(tmp = StrISgets(ftp->rf)))
+        if (!(tmp = StrISgets2(ftp->rf, false)))
             break;
         if (IS_DIGIT(tmp->ptr[0]) && IS_DIGIT(tmp->ptr[1]) && IS_DIGIT(tmp->ptr[2]) && tmp->ptr[3] == ' ') {
             sscanf(tmp->ptr, "%d", status);
@@ -354,7 +354,7 @@ void closeFTP(void)
     ftp_close(&current_ftp);
 }
 
-InputStream
+union input_stream*
 openFTPStream(struct Url* pu, struct URLFile* uf)
 {
     Str tmp;

@@ -9,6 +9,7 @@
 #include "fm.h"
 #include <signal.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 static bool add_download_list = false;

@@ -5,6 +5,7 @@
 #include "file.h"
 #include "message.h"
 #include "fm.h"
+#include <sys/stat.h>
 
 /* Merge entries from their history into ours */
 static int
@@ -50,15 +51,14 @@ historyBuffer(struct Hist* hist)
 
 int loadHistory(struct Hist* hist)
 {
-    FILE* f;
-    Str line;
-    struct stat st;
-
     if (hist == NULL)
         return 1;
+
+    FILE* f;
     if ((f = fopen(rcFile(HISTORY_FILE), "rt")) == NULL)
         return 1;
 
+    struct stat st;
     if (fstat(fileno(f), &st) == -1) {
         fclose(f);
         return 1;
@@ -66,7 +66,7 @@ int loadHistory(struct Hist* hist)
     hist->mtime = (long long)st.st_mtime;
 
     while (!feof(f)) {
-        line = Strfgets(f);
+        Str line = Strfgets(f);
         Strchop(line);
         Strremovefirstspaces(line);
         Strremovetrailingspaces(line);
