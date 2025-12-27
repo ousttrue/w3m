@@ -1,6 +1,8 @@
 #pragma once
 #include "Str.h"
 #include <stdbool.h>
+#include <stdint.h>
+#include <stddef.h>
 
 struct Buffer* loadHTMLString(Str page);
 int is_html_type(const char* type);
@@ -29,6 +31,6 @@ Str process_n_select(struct HtmlBuilder* hb);
 void feed_select(struct HtmlBuilder* hb, const char* str);
 void process_option(struct HtmlBuilder* hb);
 Str process_n_textarea(struct HtmlBuilder* hb);
-void feed_textarea(struct HtmlBuilder *hb, const char* str);
+void feed_textarea(struct HtmlBuilder* hb, const char* str);
 Str process_anchor(struct parsed_tag* tag, const char* tagbuf);
-
+void showProgress(int64_t* linelen, int64_t* trbyte, size_t current_content_length);

@@ -60,21 +60,7 @@
 static int frame_source = 0;
 static int need_number = 0;
 
-static struct Buffer* loadcmdout(char* cmd,
-    struct Buffer* (*loadproc)(struct URLFile*, struct Buffer*),
-    struct Buffer* defaultbuf);
-static void addLink(struct Buffer* buf, struct parsed_tag* tag);
-
 static JMP_BUF AbortLoading;
-
-static struct table* tables[MAX_TABLE];
-static struct table_mode table_mode[MAX_TABLE];
-
-/* menu based <select>  */
-struct FormSelectOption* select_option;
-int max_select = MAX_SELECT;
-static int n_select;
-static int cur_option_maxwidth;
 
 #define set_prevchar(x, y, n) Strcopy_charp_n((x), (y), (n))
 #define set_space_to_prevchar(x) Strcopy_charp_n((x), " ", 1)
@@ -102,8 +88,6 @@ static int form_max = -1;
 static int forms_size = 0;
 #define cur_form_id ((form_sp >= 0) ? form_stack[form_sp] : -1)
 static int form_sp = 0;
-
-static int64_t current_content_length;
 
 static int cur_hseq;
 #ifdef USE_IMAGE
@@ -1258,9 +1242,8 @@ page_loaded:
 
     proc = loadBuffer;
 
-    current_content_length = 0;
     if ((p = checkHeader(t_buf ? &t_buf->content : NULL, "Content-Length:")) != NULL)
-        current_content_length = strtoclen(p);
+        t_buf->content.current_content_length = strtoclen(p);
 
     if (do_download || gopher_download) {
         /* download only */
@@ -2789,15 +2772,15 @@ Str process_select(struct HtmlBuilder* hb, struct parsed_tag* tag)
             Strcat(hb->select_str, getLinkNumberStr(0));
         Strcat(hb->select_str, Sprintf("[<input_alt hseq=\"%d\" "
                                        "fid=\"%d\" type=select name=\"%s\" selectnumber=%d",
-                                   cur_hseq++, cur_form_id, html_quote(p), n_select));
+                                   cur_hseq++, cur_form_id, html_quote(p), hb->n_select));
         Strcat_charp(hb->select_str, ">");
-        if (n_select == max_select) {
-            max_select *= 2;
-            select_option = New_Reuse(struct FormSelectOption, select_option, max_select);
+        if (hb->n_select == hb->max_select) {
+            hb->max_select *= 2;
+            hb->select_option = New_Reuse(struct FormSelectOption, hb->select_option, hb->max_select);
         }
-        select_option[n_select].first = NULL;
-        select_option[n_select].last = NULL;
-        cur_option_maxwidth = 0;
+        hb->select_option[hb->n_select].first = NULL;
+        hb->select_option[hb->n_select].last = NULL;
+        hb->cur_option_maxwidth = 0;
     } else
         hb->select_str = Strnew();
     hb->cur_option = NULL;
@@ -2812,13 +2795,13 @@ Str process_n_select(struct HtmlBuilder* hb)
         return NULL;
     process_option(hb);
     if (!hb->select_is_multiple) {
-        if (select_option[n_select].first) {
+        if (hb->select_option[hb->n_select].first) {
             struct FormItemList sitem;
-            chooseSelectOption(&sitem, select_option[n_select].first);
-            Strcat(hb->select_str, textfieldrep(sitem.label, cur_option_maxwidth));
+            chooseSelectOption(&sitem, hb->select_option[hb->n_select].first);
+            Strcat(hb->select_str, textfieldrep(sitem.label, hb->cur_option_maxwidth));
         }
         Strcat_charp(hb->select_str, "</input_alt>]</pre_int>");
-        n_select++;
+        hb->n_select++;
     } else
 
         Strcat_charp(hb->select_str, "<br>");
@@ -2903,9 +2886,9 @@ void process_option(struct HtmlBuilder* hb)
     int len;
     if (!hb->select_is_multiple) {
         len = get_Str_strwidth(hb->cur_option_label);
-        if (len > cur_option_maxwidth)
-            cur_option_maxwidth = len;
-        addSelectOption(&select_option[n_select],
+        if (len > hb->cur_option_maxwidth)
+            hb->cur_option_maxwidth = len;
+        addSelectOption(&hb->select_option[hb->n_select],
             hb->cur_option_value,
             hb->cur_option_label, hb->cur_option_selected);
         return;
@@ -4004,18 +3987,18 @@ int HTMLtagproc1(struct HtmlBuilder* hb, struct parsed_tag* tag, struct html_fee
 #ifdef ID_EXT
         parsedtag_get_value(tag, ATTR_ID, &id);
 #endif /* ID_EXT */
-        tables[obuf->table_level] = begin_table(w, x, y, z);
+        hb->tables[obuf->table_level] = begin_table(w, x, y, z);
 #ifdef ID_EXT
         if (id != NULL)
-            tables[obuf->table_level]->id = Strnew_charp(id);
+            hb->tables[obuf->table_level]->id = Strnew_charp(id);
 #endif /* ID_EXT */
-        table_mode[obuf->table_level].pre_mode = 0;
-        table_mode[obuf->table_level].indent_level = 0;
-        table_mode[obuf->table_level].nobr_level = 0;
-        table_mode[obuf->table_level].caption = 0;
-        table_mode[obuf->table_level].end_tag = 0; /* HTML_UNKNOWN */
+        hb->table_mode[obuf->table_level].pre_mode = 0;
+        hb->table_mode[obuf->table_level].indent_level = 0;
+        hb->table_mode[obuf->table_level].nobr_level = 0;
+        hb->table_mode[obuf->table_level].caption = 0;
+        hb->table_mode[obuf->table_level].end_tag = 0; /* HTML_UNKNOWN */
 #ifndef TABLE_EXPAND
-        tables[obuf->table_level]->total_width = width;
+        hb->tables[obuf->table_level]->total_width = width;
 #else
         tables[obuf->table_level]->real_width = width;
         tables[obuf->table_level]->total_width = 0;
@@ -4428,6 +4411,49 @@ ex_efct(int ex)
 }
 
 static void
+addLink(struct Buffer* buf, struct parsed_tag* tag)
+{
+    char *href = NULL, *title = NULL, *ctype = NULL, *rel = NULL, *rev = NULL;
+    char type = LINK_TYPE_NONE;
+    struct LinkList* l;
+
+    parsedtag_get_value(tag, ATTR_HREF, &href);
+    if (href)
+        href = url_encode(remove_space(href), baseURL(buf),
+            buf->document_charset);
+    parsedtag_get_value(tag, ATTR_TITLE, &title);
+    parsedtag_get_value(tag, ATTR_TYPE, &ctype);
+    parsedtag_get_value(tag, ATTR_REL, &rel);
+    if (rel != NULL) {
+        /* forward link type */
+        type = LINK_TYPE_REL;
+        if (title == NULL)
+            title = rel;
+    }
+    parsedtag_get_value(tag, ATTR_REV, &rev);
+    if (rev != NULL) {
+        /* reverse link type */
+        type = LINK_TYPE_REV;
+        if (title == NULL)
+            title = rev;
+    }
+
+    l = New(struct LinkList);
+    l->url = href;
+    l->title = title;
+    l->ctype = ctype;
+    l->type = type;
+    l->next = NULL;
+    if (buf->linklist) {
+        struct LinkList* i;
+        for (i = buf->linklist; i->next; i = i->next)
+            ;
+        i->next = l;
+    } else
+        buf->linklist = l;
+}
+
+static void
 HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int llimit)
 {
     static char* outc = NULL;
@@ -4472,11 +4498,11 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
         a_textarea = New_N(struct Anchor*, hb->max_textarea);
     }
 
-    n_select = -1;
-    if (!max_select) { /* halfload */
-        max_select = MAX_SELECT;
-        select_option = New_N(struct FormSelectOption, max_select);
-        a_select = New_N(struct Anchor*, max_select);
+    hb->n_select = -1;
+    if (!hb->max_select) { /* halfload */
+        hb->max_select = MAX_SELECT;
+        hb->select_option = New_N(struct FormSelectOption, hb->max_select);
+        a_select = New_N(struct Anchor*, hb->max_select);
     }
 
     effect = 0;
@@ -4789,13 +4815,13 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                     }
 
                     if (a_select && parsedtag_get_value(tag, ATTR_SELECTNUMBER, &selectnumber)) {
-                        if (selectnumber >= max_select) {
-                            max_select = 2 * selectnumber;
-                            select_option = New_Reuse(struct FormSelectOption,
-                                select_option,
-                                max_select);
+                        if (selectnumber >= hb->max_select) {
+                            hb->max_select = 2 * selectnumber;
+                            hb->select_option = New_Reuse(struct FormSelectOption,
+                                hb->select_option,
+                                hb->max_select);
                             a_select = New_Reuse(struct Anchor*, a_select,
-                                max_select);
+                                hb->max_select);
                         }
                     }
 
@@ -4954,17 +4980,17 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                     break;
 #ifdef MENU_SELECT
                 case HTML_SELECT_INT:
-                    if (parsedtag_get_value(tag, ATTR_SELECTNUMBER, &n_select)
-                        && n_select >= 0 && n_select < max_select) {
-                        select_option[n_select].first = NULL;
-                        select_option[n_select].last = NULL;
+                    if (parsedtag_get_value(tag, ATTR_SELECTNUMBER, &hb->n_select)
+                        && hb->n_select >= 0 && hb->n_select < hb->max_select) {
+                        hb->select_option[hb->n_select].first = NULL;
+                        hb->select_option[hb->n_select].last = NULL;
                     } else
-                        n_select = -1;
+                        hb->n_select = -1;
                     break;
                 case HTML_N_SELECT_INT:
-                    if (a_select && n_select >= 0) {
-                        struct FormItemList* item = (struct FormItemList*)a_select[n_select]->url;
-                        item->select_option = select_option[n_select].first;
+                    if (a_select && hb->n_select >= 0) {
+                        struct FormItemList* item = (struct FormItemList*)a_select[hb->n_select]->url;
+                        item->select_option = hb->select_option[hb->n_select].first;
                         chooseSelectOption(item, item->select_option);
                         item->init_selected = item->selected;
                         item->init_value = item->value;
@@ -4972,14 +4998,14 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                     }
                     break;
                 case HTML_OPTION_INT:
-                    if (n_select >= 0) {
+                    if (hb->n_select >= 0) {
                         int selected;
                         q = "";
                         parsedtag_get_value(tag, ATTR_LABEL, &q);
                         p = q;
                         parsedtag_get_value(tag, ATTR_VALUE, &p);
                         selected = parsedtag_exists(tag, ATTR_SELECTED);
-                        addSelectOption(&select_option[n_select],
+                        addSelectOption(&hb->select_option[hb->n_select],
                             Strnew_charp(p), Strnew_charp(q),
                             selected);
                     }
@@ -5038,49 +5064,6 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
 #ifdef USE_IMAGE
     addMultirowsImg(buf, buf->img);
 #endif
-}
-
-static void
-addLink(struct Buffer* buf, struct parsed_tag* tag)
-{
-    char *href = NULL, *title = NULL, *ctype = NULL, *rel = NULL, *rev = NULL;
-    char type = LINK_TYPE_NONE;
-    struct LinkList* l;
-
-    parsedtag_get_value(tag, ATTR_HREF, &href);
-    if (href)
-        href = url_encode(remove_space(href), baseURL(buf),
-            buf->document_charset);
-    parsedtag_get_value(tag, ATTR_TITLE, &title);
-    parsedtag_get_value(tag, ATTR_TYPE, &ctype);
-    parsedtag_get_value(tag, ATTR_REL, &rel);
-    if (rel != NULL) {
-        /* forward link type */
-        type = LINK_TYPE_REL;
-        if (title == NULL)
-            title = rel;
-    }
-    parsedtag_get_value(tag, ATTR_REV, &rev);
-    if (rev != NULL) {
-        /* reverse link type */
-        type = LINK_TYPE_REV;
-        if (title == NULL)
-            title = rev;
-    }
-
-    l = New(struct LinkList);
-    l->url = href;
-    l->title = title;
-    l->ctype = ctype;
-    l->type = type;
-    l->next = NULL;
-    if (buf->linklist) {
-        struct LinkList* i;
-        for (i = buf->linklist; i->next; i = i->next)
-            ;
-        i->next = l;
-    } else
-        buf->linklist = l;
 }
 
 void HTMLlineproc2(struct HtmlBuilder* hb,
@@ -5164,12 +5147,12 @@ need_flushline(struct html_feed_environ* h_env, struct readbuffer* obuf,
 }
 
 static int
-table_width(struct html_feed_environ* h_env, int table_level)
+table_width(struct HtmlBuilder* hb,
+    struct html_feed_environ* h_env, int table_level)
 {
-    int width;
     if (table_level < 0)
         return 0;
-    width = tables[table_level]->total_width;
+    int width = hb->tables[table_level]->total_width;
     if (table_level > 0 || width > 0)
         return width;
     return h_env->limit - h_env->envs[h_env->envc].indent;
@@ -5188,18 +5171,16 @@ void HTMLlineproc0(struct HtmlBuilder* hb,
     struct table* tbl = NULL;
     struct table_mode* tbl_mode = NULL;
     int tbl_width = 0;
-#ifdef USE_M17N
     int is_hangul, prev_is_hangul = 0;
-#endif
 
     tokbuf = Strnew();
 
 table_start:
     if (obuf->table_level >= 0) {
         int level = min(obuf->table_level, MAX_TABLE - 1);
-        tbl = tables[level];
-        tbl_mode = &table_mode[level];
-        tbl_width = table_width(h_env, level);
+        tbl = hb->tables[level];
+        tbl_mode = &hb->table_mode[level];
+        tbl_width = table_width(hb, h_env, level);
     }
 
     while (*line != '\0') {
@@ -5303,14 +5284,14 @@ table_start:
                     continue;
                 end_table(tbl);
                 if (obuf->table_level >= 0) {
-                    struct table* tbl0 = tables[obuf->table_level];
+                    struct table* tbl0 = hb->tables[obuf->table_level];
                     str = Sprintf("<table_alt tid=%d>", tbl0->ntable)->ptr;
                     if (tbl0->row < 0)
                         continue;
                     pushTable(tbl0, tbl);
                     tbl = tbl0;
-                    tbl_mode = &table_mode[obuf->table_level];
-                    tbl_width = table_width(h_env, obuf->table_level);
+                    tbl_mode = &hb->table_mode[obuf->table_level];
+                    tbl_width = table_width(hb, h_env, obuf->table_level);
                     feed_table(hb, tbl, str, tbl_mode, tbl_width, TRUE);
                     continue;
                     /* continue to the next */
@@ -5565,7 +5546,7 @@ char* convert_size2(int64_t size1, int64_t size2, int usefloat)
         ->ptr;
 }
 
-void showProgress(int64_t* linelen, int64_t* trbyte)
+void showProgress(int64_t* linelen, int64_t* trbyte, size_t current_content_length)
 {
     int i, j, rate, duration, eta, pos;
     static time_t last_time, start_time;
@@ -5746,7 +5727,7 @@ void completeHTMLstream(struct HtmlBuilder* hb, struct html_feed_environ* h_env,
 
     while (obuf->table_level >= 0) {
         int tmp = obuf->table_level;
-        table_mode[obuf->table_level].pre_mode
+        hb->table_mode[obuf->table_level].pre_mode
             &= ~(TBLM_SCRIPT | TBLM_STYLE | TBLM_PLAIN);
         HTMLlineproc0(hb, "</table>", h_env, true);
         if (obuf->table_level >= tmp)
@@ -5769,12 +5750,12 @@ print_internal_information(struct HtmlBuilder* hb, struct html_feed_environ* hen
         pushTextLine(tl, newTextLine(s, 0));
     }
 
-    if (n_select > 0) {
+    if (hb->n_select > 0) {
         struct FormSelectOptionItem* ip;
-        for (i = 0; i < n_select; i++) {
+        for (i = 0; i < hb->n_select; i++) {
             s = Sprintf("<select_int selectnumber=%d>", i);
             pushTextLine(tl, newTextLine(s, 0));
-            for (ip = select_option[i].first; ip; ip = ip->next) {
+            for (ip = hb->select_option[i].first; ip; ip = ip->next) {
                 s = Sprintf("<option_int value=\"%s\" label=\"%s\"%s>",
                     html_quote(ip->value ? ip->value->ptr : ip->label->ptr),
                     html_quote(ip->label->ptr),
@@ -5834,9 +5815,9 @@ void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int int
         symbol_width = WcOption.use_wide ? symbol_width0 : 1;
     }
 
-    n_select = 0;
-    max_select = MAX_SELECT;
-    select_option = New_N(struct FormSelectOption, max_select);
+    hb->n_select = 0;
+    hb->max_select = MAX_SELECT;
+    hb->select_option = New_N(struct FormSelectOption, hb->max_select);
 
     form_sp = -1;
     form_max = -1;
@@ -5893,10 +5874,10 @@ void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int int
             Strfputs(lineBuf2, src);
         linelen += lineBuf2->length;
         if (w3m_dump & DUMP_EXTRA)
-            printf("W3m-in-progress: %s\n", convert_size2(linelen, current_content_length, TRUE));
+            printf("W3m-in-progress: %s\n", convert_size2(linelen, newBuf->content.current_content_length, TRUE));
         if (w3m_dump & DUMP_SOURCE)
             continue;
-        showProgress(&linelen, &trbyte);
+        showProgress(&linelen, &trbyte, newBuf->content.current_content_length);
         /*
          * if (frame_source)
          * continue;
@@ -6182,10 +6163,10 @@ loadBuffer(struct URLFile* uf, struct Buffer* volatile newBuf)
             Strfputs(lineBuf2, src);
         linelen += lineBuf2->length;
         if (w3m_dump & DUMP_EXTRA)
-            printf("W3m-in-progress: %s\n", convert_size2(linelen, current_content_length, TRUE));
+            printf("W3m-in-progress: %s\n", convert_size2(linelen, newBuf->content.current_content_length, TRUE));
         if (w3m_dump & DUMP_SOURCE)
             continue;
-        showProgress(&linelen, &trbyte);
+        showProgress(&linelen, &trbyte, newBuf->content.current_content_length);
         if (frame_source)
             continue;
         lineBuf2 = convertLine(uf, lineBuf2, PAGER_MODE, &charset, doc_charset);
@@ -6428,7 +6409,7 @@ int save2tmp(struct URLFile uf, const char* tmpf)
                 goto _end;
             }
             linelen += count;
-            showProgress(&linelen, &trbyte);
+            showProgress(&linelen, &trbyte, 0);
         }
     }
 _end:
@@ -6436,7 +6417,6 @@ _end:
     TRAP_OFF;
     xfree(buf);
     fclose(ff);
-    current_content_length = 0;
     return retval;
 }
 
@@ -6551,12 +6531,11 @@ _MoveFile(const char* path1, const char* path2)
         is_close(f1);
         return -1;
     }
-    current_content_length = 0;
     buf = NewWithoutGC_N(char, SAVE_BUF_SIZE);
     while ((count = is_read(f1, buf, SAVE_BUF_SIZE)) > 0) {
         fwrite(buf, 1, count, f2);
         linelen += count;
-        showProgress(&linelen, &trbyte);
+        showProgress(&linelen, &trbyte, 0);
     }
     xfree(buf);
     is_close(f1);
@@ -6751,7 +6730,7 @@ int doFileSave(struct URLFile uf, const char* defstr)
                 exit(-err);
             exit(0);
         }
-        addDownloadList(pid, uf.url, p, lock, current_content_length);
+        addDownloadList(pid, uf.url, p, lock, 0);
     } else {
         q = searchKeyData();
         if (q == NULL || *q == '\0') {

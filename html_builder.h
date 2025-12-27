@@ -1,9 +1,11 @@
 #pragma once
 #include "Str.h"
 #include "url.h"
+#include "html_table.h"
 #include <libwc/ces.h>
 #include <stdbool.h>
 
+struct FormSelectOption;
 struct HtmlBuilder {
     struct Url* cur_baseURL;
 
@@ -12,6 +14,10 @@ struct HtmlBuilder {
 
     Str cur_title;
     Str pre_title;
+
+    // <table>
+    struct table* tables[MAX_TABLE];
+    struct table_mode table_mode[MAX_TABLE];
 
     // <select>
     Str cur_select;
@@ -23,6 +29,11 @@ struct HtmlBuilder {
     Str cur_option_label;
     int cur_option_selected;
     int cur_status;
+    /* menu based <select>  */
+    struct FormSelectOption* select_option;
+    int max_select; //= MAX_SELECT;
+    int n_select;
+    int cur_option_maxwidth;
 
     // <textarea>
     Str cur_textarea;

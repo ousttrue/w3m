@@ -185,7 +185,6 @@ extern int getMetaRefreshParam(const char* q, Str* refresh_uri);
 
 extern char* convert_size(int64_t size, int usefloat);
 extern char* convert_size2(int64_t size1, int64_t size2, int usefloat);
-extern void showProgress(int64_t* linelen, int64_t* trbyte);
 
 extern void saveBuffer(struct Buffer* buf, FILE* f, int cont);
 extern void saveBufferBody(struct Buffer* buf, FILE* f, int cont);

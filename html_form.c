@@ -24,9 +24,6 @@
 #include <strings.h>
 #include <unistd.h>
 
-extern struct FormSelectOption* select_option;
-extern int max_select;
-
 /* *INDENT-OFF* */
 struct {
     char* action;
@@ -129,8 +126,8 @@ formList_addInput(struct HtmlBuilder *hb, struct FormList* fl, struct parsed_tag
         && i >= 0 && i < hb->max_textarea)
         item->value = item->init_value = hb->textarea_str[i];
     if (parsedtag_get_value(tag, ATTR_SELECTNUMBER, &i)
-        && i >= 0 && i < max_select)
-        item->select_option = select_option[i].first;
+        && i >= 0 && i < hb->max_select)
+        item->select_option = hb->select_option[i].first;
     if (parsedtag_get_value(tag, ATTR_ROWS, &p))
         item->rows = atoi(p);
     if (item->type == FORM_UNKNOWN) {

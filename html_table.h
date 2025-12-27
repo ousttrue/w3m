@@ -1,5 +1,6 @@
 #pragma once
-#include "fm.h"
+#include "textlist.h"
+#include "line.h"
 
 #if (defined(MESCHACH) && !defined(MATRIX))
 #define MATRIX

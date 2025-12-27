@@ -9,6 +9,7 @@ struct Content {
     int http_response_code;
     struct TextList* document_header;
     wc_ces content_charset;
+    size_t current_content_length;
 };
 
 struct URLFile;
