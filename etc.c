@@ -16,6 +16,7 @@
 
 #include <pwd.h>
 #include <fcntl.h>
+#include <string.h>
 #include <sys/types.h>
 #include <time.h>
 #include <sys/wait.h>
@@ -77,7 +78,7 @@ struct Line* lineSkip(struct Buffer* buf, struct Line* line, int offset, int las
 
 struct Line* currentLineSkip(struct Buffer* buf, struct Line* line, int offset, int last)
 {
-    int i, n;
+    int i;
     struct Line* l = line;
 
     if (offset == 0)

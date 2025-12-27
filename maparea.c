@@ -10,6 +10,7 @@
 #include <libwc/charset.h>
 #include "fm.h"
 #include <math.h>
+#include <strings.h>
 
 struct MapList*
 searchMapList(struct Buffer* buf, char* name)

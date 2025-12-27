@@ -4,6 +4,7 @@
 #include "Str.h"
 #include <libwc/wtf.h>
 #include <libwc/charset.h>
+#include <string.h>
 #include <sys/types.h>
 
 #define MIME_ENCODED_LINE_LIMIT 80

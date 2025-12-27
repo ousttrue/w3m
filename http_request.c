@@ -4,6 +4,7 @@
 #include "url.h"
 #include "fm.h"
 #include <stdbool.h>
+#include <strings.h>
 
 Str HTTPrequestMethod(struct HttpRequest* hr)
 {

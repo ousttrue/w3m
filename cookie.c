@@ -14,6 +14,7 @@
 #include "local_cgi.h"
 #include "regex.h"
 #include "myctype.h"
+#include <string.h>
 #include <time.h>
 
 static int is_saved = 1;

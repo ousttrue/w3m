@@ -17,6 +17,7 @@
 #include <libwc/ces.h>
 #include <libwc/charset.h>
 #include <stdio.h>
+#include <string.h>
 
 #ifdef USE_MENU
 

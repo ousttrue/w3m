@@ -3,6 +3,8 @@
 #include "fm.h"
 #include "myctype.h"
 #include <stdio.h>
+#include <string.h>
+#include <strings.h>
 
 static struct mailcap DefaultMailcap[] = {
     { "image/*", DEF_IMAGE_VIEWER " %s", 0, NULL, NULL, NULL }, /* */
@@ -68,10 +70,10 @@ searchMailcap(struct mailcap* table, const char* type)
 }
 
 static int
-matchMailcapAttr(char* p, char* attr, size_t len, Str* value)
+matchMailcapAttr(const char* p, char* attr, size_t len, Str* value)
 {
     int quoted;
-    char* q = NULL;
+    const char* q = NULL;
 
     if (strncasecmp(p, attr, len) == 0) {
         p += len;
@@ -109,7 +111,7 @@ static int
 extractMailcapEntry(char* mcap_entry, struct mailcap* mcap)
 {
     int j, k;
-    char* p;
+    const char* p;
     int quoted;
     Str tmp;
 

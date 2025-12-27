@@ -12,6 +12,7 @@
 #include <charset.h>
 #include <signal.h>
 #include <setjmp.h>
+#include <string.h>
 
 static JMP_BUF AbortLoading;
 struct frameset* renderFrameSet = NULL;

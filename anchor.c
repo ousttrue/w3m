@@ -8,6 +8,7 @@
 #include "fm.h"
 #include "myctype.h"
 #include "regex.h"
+#include <string.h>
 
 #define FIRST_ANCHOR_SIZE 30
 

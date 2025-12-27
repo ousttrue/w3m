@@ -41,6 +41,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <signal.h>
+#include <string.h>
 #include <sys/ioctl.h>
 #include <sys/select.h>
 #include <sys/stat.h>
@@ -54,6 +55,17 @@ static struct termios d_ioval;
 char UseGraphicChar = GRAPHIC_CHAR_CHARSET;
 
 struct Runtime g_runtime = {
+    .ssl_verify_server = TRUE,
+    .ssl_cert_file = NULL,
+    .ssl_key_file = NULL,
+    .ssl_ca_path = NULL,
+    .ssl_ca_file = DEF_CAFILE,
+    .ssl_ca_default = TRUE,
+    .ssl_path_modified = FALSE,
+    .ssl_forbid_method = "2, 3, t, 5",
+    .ssl_min_version = NULL,
+    .ssl_cipher = NULL,
+
     .image_source = (NULL),
     .DecodeURL = (FALSE),
     .QuietMessage = (FALSE),
@@ -1319,9 +1331,7 @@ static int OptionEncode = FALSE;
 #define CMT_SSL_CA_DEFAULT N_("Use default locations for PEM encoded certificates of CAs")
 #endif /* USE_SSL_VERIFY */
 #define CMT_SSL_FORBID_METHOD N_("List of forbidden SSL methods (2: SSLv2, 3: SSLv3, t: TLSv1.0, 5: TLSv1.1, 6: TLSv1.2, 7: TLSv1.3)")
-#ifdef SSL_CTX_set_min_proto_version
 #define CMT_SSL_MIN_VERSION N_("Minimum SSL version (all, TLSv1.0, TLSv1.1, TLSv1.2, or TLSv1.3)")
-#endif
 #define CMT_SSL_CIPHER N_("SSL ciphers for TLSv1.2 and below (e.g. DEFAULT:@SECLEVEL=2)")
 #endif /* USE_SSL */
 #ifdef USE_COOKIE
@@ -1722,33 +1732,27 @@ struct param_ptr params6[] = {
     { NULL, 0, 0, NULL, NULL, NULL },
 };
 
-#ifdef USE_SSL
 struct param_ptr params7[] = {
-    { "ssl_forbid_method", P_STRING, PI_TEXT, (void*)&ssl_forbid_method,
+    { "ssl_forbid_method", P_STRING, PI_TEXT, (void*)&g_runtime.ssl_forbid_method,
         CMT_SSL_FORBID_METHOD, NULL },
-#ifdef SSL_CTX_set_min_proto_version
-    { "ssl_min_version", P_STRING, PI_TEXT, (void*)&ssl_min_version,
+    { "ssl_min_version", P_STRING, PI_TEXT, (void*)&g_runtime.ssl_min_version,
         CMT_SSL_MIN_VERSION, NULL },
-#endif
-    { "ssl_cipher", P_STRING, PI_TEXT, (void*)&ssl_cipher, CMT_SSL_CIPHER,
+    { "ssl_cipher", P_STRING, PI_TEXT, (void*)&g_runtime.ssl_cipher, CMT_SSL_CIPHER,
         NULL },
-#ifdef USE_SSL_VERIFY
-    { "ssl_verify_server", P_INT, PI_ONOFF, (void*)&ssl_verify_server,
+    { "ssl_verify_server", P_INT, PI_ONOFF, (void*)&g_runtime.ssl_verify_server,
         CMT_SSL_VERIFY_SERVER, NULL },
-    { "ssl_cert_file", P_SSLPATH, PI_TEXT, (void*)&ssl_cert_file,
+    { "ssl_cert_file", P_SSLPATH, PI_TEXT, (void*)&g_runtime.ssl_cert_file,
         CMT_SSL_CERT_FILE, NULL },
-    { "ssl_key_file", P_SSLPATH, PI_TEXT, (void*)&ssl_key_file,
+    { "ssl_key_file", P_SSLPATH, PI_TEXT, (void*)&g_runtime.ssl_key_file,
         CMT_SSL_KEY_FILE, NULL },
-    { "ssl_ca_path", P_SSLPATH, PI_TEXT, (void*)&ssl_ca_path, CMT_SSL_CA_PATH,
+    { "ssl_ca_path", P_SSLPATH, PI_TEXT, (void*)&g_runtime.ssl_ca_path, CMT_SSL_CA_PATH,
         NULL },
-    { "ssl_ca_file", P_SSLPATH, PI_TEXT, (void*)&ssl_ca_file, CMT_SSL_CA_FILE,
+    { "ssl_ca_file", P_SSLPATH, PI_TEXT, (void*)&g_runtime.ssl_ca_file, CMT_SSL_CA_FILE,
         NULL },
-    { "ssl_ca_default", P_INT, PI_ONOFF, (void*)&ssl_ca_default,
+    { "ssl_ca_default", P_INT, PI_ONOFF, (void*)&g_runtime.ssl_ca_default,
         CMT_SSL_CA_DEFAULT, NULL },
-#endif /* USE_SSL_VERIFY */
     { NULL, 0, 0, NULL, NULL, NULL },
 };
-#endif /* USE_SSL */
 
 #ifdef USE_COOKIE
 struct param_ptr params8[] = {
@@ -2147,7 +2151,7 @@ set_param(char* name, char* value)
             *(char**)p->varptr = rcFile(value);
         else
             *(char**)p->varptr = NULL;
-        ssl_path_modified = 1;
+        getRuntime()->ssl_path_modified = 1;
         break;
 #endif
 #ifdef USE_COLOR

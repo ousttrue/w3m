@@ -457,28 +457,6 @@ global int view_unseenobject init(FALSE);
 global int view_unseenobject init(TRUE);
 #endif
 
-#if defined(USE_SSL) && defined(USE_SSL_VERIFY)
-global int ssl_verify_server init(TRUE);
-global char* ssl_cert_file init(NULL);
-global char* ssl_key_file init(NULL);
-global char* ssl_ca_path init(NULL);
-global char* ssl_ca_file init(DEF_CAFILE);
-global int ssl_ca_default init(TRUE);
-global int ssl_path_modified init(FALSE);
-#endif /* defined(USE_SSL) && \
-        * defined(USE_SSL_VERIFY) */
-#ifdef USE_SSL
-global char* ssl_forbid_method init("2, 3, t, 5");
-#ifdef SSL_CTX_set_min_proto_version
-global char* ssl_min_version init(NULL);
-#endif
-#if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
-global char* ssl_cipher init("DEFAULT:!LOW:!RC4:!EXP");
-#else
-global char* ssl_cipher init(NULL);
-#endif
-#endif /* USE_SSL */
-
 global int is_redisplay init(FALSE);
 global int clear_buffer init(TRUE);
 global double image_scale init(100);

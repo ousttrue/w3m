@@ -1,4 +1,5 @@
 #include "maparea.h"
+#include "ssl_stream.h"
 #include "ftp.h"
 #include "etc.h"
 #include "content.h"
@@ -11,6 +12,7 @@
 #include <libwc/conv.h>
 #include <libwc/ces.h>
 #include <math.h>
+#include <string.h>
 #include "history.h"
 #include "search.h"
 #include "html_form.h"

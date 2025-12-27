@@ -8,6 +8,7 @@
 #include "image.h"
 #include "fm.h"
 #include <signal.h>
+#include <string.h>
 #include <unistd.h>
 
 static bool add_download_list = false;

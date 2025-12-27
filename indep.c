@@ -1,6 +1,7 @@
 /* $Id: indep.c,v 1.38 2007/05/23 15:06:05 inu Exp $ */
 #include "fm.h"
 #include <stdio.h>
+#include <string.h>
 #ifndef __MINGW32_VERSION
 #include <pwd.h>
 #endif /* __MINGW32_VERSION */

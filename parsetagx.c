@@ -5,6 +5,7 @@
 #include "parsetagx.h"
 #include "hash.h"
 #include "html.c"
+#include <string.h>
 
 /* parse HTML tag */
 

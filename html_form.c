@@ -17,6 +17,8 @@
 #include "menu.h"
 #include <libwc/charset.h>
 #include <libwc/conv.h>
+#include <string.h>
+#include <strings.h>
 #include <unistd.h>
 
 extern Str* textarea_str;

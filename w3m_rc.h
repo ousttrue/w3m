@@ -49,6 +49,17 @@ struct Event {
 };
 
 struct Runtime {
+    int ssl_verify_server;
+    char* ssl_cert_file;
+    char* ssl_key_file;
+    char* ssl_ca_path;
+    char* ssl_ca_file;
+    int ssl_ca_default;
+    int ssl_path_modified;
+    char* ssl_forbid_method;
+    char* ssl_min_version;
+    char* ssl_cipher;
+
     const char* image_source;
     int DecodeURL;
     char QuietMessage;

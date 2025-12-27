@@ -6,6 +6,7 @@
 #include "message.h"
 #include "linein.h"
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 #include <pwd.h>
 #include <Str.h>

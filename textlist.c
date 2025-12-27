@@ -143,3 +143,4 @@ void appendTextLine(TextLineList* tl, Str line, int pos)
         lbuf->pos += pos;
     }
 }
+

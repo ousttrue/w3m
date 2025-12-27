@@ -9,6 +9,7 @@
 #include "etc.h"
 #include "w3m_rc.h"
 #include "fm.h"
+#include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <signal.h>

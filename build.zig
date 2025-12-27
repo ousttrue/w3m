@@ -11,6 +11,7 @@ const system_libs = [_][]const u8{
 const w3m_srcs = [_][]const u8{
     "w3m_rc.c",
 
+    "ssl_stream.c",
     "document.c",
     "compression.c",
     "URLFile.c",

@@ -10,6 +10,7 @@
 #include "w3m_rc.h"
 #include "image.h"
 #include "fm.h"
+#include <string.h>
 #include <unistd.h>
 #include <assert.h>
 
