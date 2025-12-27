@@ -4,7 +4,7 @@
 #include <string.h>
 #include <sys/stat.h>
 
-void init_stream(struct URLFile* uf, int scheme, union input_stream* stream)
+void init_stream(struct URLFile* uf, int scheme, struct input_stream* stream)
 {
     memset(uf, 0, sizeof(struct URLFile));
     uf->stream = stream;

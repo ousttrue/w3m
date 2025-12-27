@@ -7,11 +7,11 @@
 #include <stdbool.h>
 #include <libwc/wc_types.h>
 
-union input_stream;
+struct input_stream;
 struct URLFile {
     enum UrlScheme scheme;
     char is_cgi;
-    union input_stream* stream;
+    struct input_stream* stream;
     const char* ext;
     enum CompressionType compression;
     const char* ssl_certificate;
@@ -38,7 +38,7 @@ struct Url;
 struct FormList;
 struct HttpRequest;
 struct Buffer;
-void init_stream(struct URLFile* uf, int scheme, union input_stream* stream);
+void init_stream(struct URLFile* uf, int scheme, struct input_stream* stream);
 struct URLFile examineFile(const char* path, bool do_download);
 int doFileSave(struct URLFile uf, const char* defstr);
 struct URLFile openURL(const char* url, struct Url* pu, struct Url* current,

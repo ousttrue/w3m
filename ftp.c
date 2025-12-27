@@ -38,7 +38,7 @@ typedef struct _FTP {
     int port;
     char* user;
     char* pass;
-    union input_stream* rf;
+    struct input_stream* rf;
     FILE* wf;
     FILE* data;
 }* FTP;
@@ -107,7 +107,7 @@ ftp_close(FTP ftp)
     if (!ftp->host)
         return;
     if (ftp->rf) {
-        ftp->rf->base.unclose = false;
+        ftp->rf->unclose = false;
         ISclose(ftp->rf);
         ftp->rf = NULL;
     }
@@ -180,7 +180,7 @@ ftp_login(FTP ftp)
         goto open_err;
     if (!ftp->rf || !ftp->wf)
         goto open_err;
-    ftp->rf->base.unclose = true;
+    ftp->rf->unclose = true;
     ftp_command(ftp, NULL, NULL, &status);
     if (status != 220)
         goto open_err;
@@ -356,7 +356,7 @@ void closeFTP(void)
     ftp_close(&current_ftp);
 }
 
-union input_stream*
+struct input_stream*
 openFTPStream(struct Url* pu, struct URLFile* uf)
 {
     Str tmp;

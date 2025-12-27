@@ -206,7 +206,7 @@ extern void saveBufferBody(struct Buffer* buf, FILE* f, int cont);
 extern struct Buffer* getshell(char* cmd);
 
 extern int checkCopyFile(char* path1, char* path2);
-extern int checkSaveFile(union input_stream* stream, char* path);
+extern int checkSaveFile(struct input_stream* stream, char* path);
 extern int checkOverWrite(char* path);
 
 extern struct Buffer* newBuffer(int width);

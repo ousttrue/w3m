@@ -5189,7 +5189,7 @@ void HTMLlineproc2(struct Buffer* buf, TextLineList* tl)
     HTMLlineproc2body(buf, textlist_feed, -1);
 }
 
-static union input_stream* _file_lp2;
+static struct input_stream* _file_lp2;
 
 static Str
 file_feed(void)
@@ -5203,7 +5203,7 @@ file_feed(void)
 }
 
 static void
-HTMLlineproc3(struct Buffer* buf, union input_stream* stream)
+HTMLlineproc3(struct Buffer* buf, struct input_stream* stream)
 {
     _file_lp2 = stream;
     HTMLlineproc2body(buf, file_feed, -1);
@@ -6674,7 +6674,7 @@ doExternal(struct URLFile uf, const char* type, struct Buffer* defaultbuf)
 static int
 _MoveFile(char* path1, char* path2)
 {
-    union input_stream* f1 = newInputStream(open(path1, O_RDONLY));
+    struct input_stream* f1 = newInputStream(open(path1, O_RDONLY));
     if (!f1)
         return -1;
 
@@ -6949,7 +6949,7 @@ int checkCopyFile(char* path1, char* path2)
     return 0;
 }
 
-int checkSaveFile(union input_stream* stream, char* path2)
+int checkSaveFile(struct input_stream* stream, char* path2)
 {
     struct stat st1, st2;
     int des = ISfileno(stream);

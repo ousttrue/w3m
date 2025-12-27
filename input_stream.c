@@ -1,10 +1,7 @@
 #include "input_stream.h"
+#include "growbuf.h"
 #include "alloc.h"
-#include "ssl_stream.h"
-#include "stream_buffer.h"
 #include "w3m_rc.h"
-#include "fm.h"
-#include "input_stream.h"
 #include <stdint.h>
 #include <signal.h>
 #include <string.h>
@@ -14,31 +11,45 @@
 
 #define STREAM_BUF_SIZE 8192
 
-static int raw_read(struct base_stream* base, uint8_t* p, size_t len)
+static void sb_init(struct stream_buffer* sb, const uint8_t* init, int init_size)
 {
-    switch (base->type) {
+    *sb = (struct stream_buffer) {
+        .buf = NewWithoutGC_N(uint8_t, init_size),
+        .size = init_size,
+        .cur = 0,
+        .next = 0,
+    };
+    if (init) {
+        memcpy(sb->buf, init, init_size);
+        sb->next = init_size;
+    }
+}
+
+static int raw_read(struct input_stream* is, uint8_t* p, size_t len)
+{
+    switch (is->type) {
     case IST_BASIC:
-        return read(*(int*)base->handle, p, len);
+        return read(is->base, p, len);
     case IST_FILE:
-        return fread(p, 1, len, ((struct file_stream*)base)->handle->f);
+        return fread(p, 1, len, is->file.f);
     case IST_STR:
         return 0;
     case IST_SSL:
-        return ssl_read(((struct ssl_stream*)base)->handle, (char*)p, len);
+        return ssl_read(&is->ssl, (char*)p, len);
     default:
         return -1;
     }
 }
 
 static void
-do_update(struct base_stream* base)
+do_update(struct input_stream* is)
 {
-    base->stream.cur = base->stream.next = 0;
-    int len = raw_read(base, base->stream.buf, base->stream.size);
+    is->sb.cur = is->sb.next = 0;
+    int len = raw_read(is, is->sb.buf, is->sb.size);
     if (len <= 0)
-        base->iseos = TRUE;
+        is->iseos = true;
     else
-        base->stream.next += len;
+        is->sb.next += len;
 }
 
 static int
@@ -54,115 +65,100 @@ buffer_read(struct stream_buffer* sb, char* obuf, int count)
     return len;
 }
 
-static void
-init_buffer(struct base_stream* base, char* buf, int bufsize)
-{
-    struct stream_buffer* sb = &base->stream;
-    sb->size = bufsize;
-    sb->cur = 0;
-    sb->buf = NewWithoutGC_N(uint8_t, bufsize);
-    if (buf) {
-        memcpy(sb->buf, buf, bufsize);
-        sb->next = bufsize;
-    } else {
-        sb->next = 0;
-    }
-    base->iseos = FALSE;
-}
-
-void init_base_stream(struct base_stream* base, int bufsize)
-{
-    init_buffer(base, NULL, bufsize);
-}
-
-static void
-init_str_stream(struct base_stream* base, Str s)
-{
-    init_buffer(base, s->ptr, s->length);
-}
-
-union input_stream*
+struct input_stream*
 newInputStream(int des)
 {
     if (des < 0)
         return NULL;
-    union input_stream* stream = NewWithoutGC(union input_stream);
-    init_base_stream(&stream->base, STREAM_BUF_SIZE);
-    stream->base.type = IST_BASIC;
-    stream->base.unclose = false;
-    stream->base.handle = NewWithoutGC(int);
-    *(int*)stream->base.handle = des;
+    struct input_stream* stream = NewWithoutGC(struct input_stream);
+    *stream = (struct input_stream) {
+        .type = IST_BASIC,
+        .iseos = false,
+        .unclose = false,
+        .base = des,
+    };
+    sb_init(&stream->sb, NULL, STREAM_BUF_SIZE);
     return stream;
 }
 
-union input_stream*
+struct input_stream*
 newFileStream(FILE* f, FileCloseFunc closep)
 {
     if (f == NULL)
         return NULL;
-    union input_stream* stream = NewWithoutGC(union input_stream);
-    init_base_stream(&stream->base, STREAM_BUF_SIZE);
-    stream->file.type = IST_FILE;
-    stream->base.unclose = false;
-    stream->file.handle = NewWithoutGC(struct io_file_handle);
-    stream->file.handle->f = f;
-    if (closep)
-        stream->file.handle->close = closep;
-    else
-        stream->file.handle->close = fclose;
+    struct input_stream* stream = NewWithoutGC(struct input_stream);
+    *stream = (struct input_stream) {
+        .type = IST_FILE,
+        .iseos = false,
+        .unclose = false,
+        .file = (struct io_file_handle) {
+            .f = f,
+            .close = closep ? closep : fclose,
+        },
+    };
+    sb_init(&stream->sb, NULL, STREAM_BUF_SIZE);
     return stream;
 }
 
-union input_stream*
+struct input_stream*
 newStrStream(Str s)
 {
     if (s == NULL)
         return NULL;
-    union input_stream* stream = NewWithoutGC(union input_stream);
-    init_str_stream(&stream->base, s);
-    stream->str.type = IST_STR;
-    stream->base.unclose = false;
-    stream->str.handle = NULL;
+    struct input_stream* stream = NewWithoutGC(struct input_stream);
+    *stream = (struct input_stream) {
+        .type = IST_STR,
+        .iseos = false,
+        .unclose = false,
+    };
+    sb_init(&stream->sb, (const uint8_t*)s->ptr, s->length);
     return stream;
 }
 
 #define SSL_BUF_SIZE 1536
 
-union input_stream*
+struct input_stream*
 newSSLStream(SSL* ssl, int sock)
 {
     if (sock < 0)
         return NULL;
 
-    union input_stream* stream = NewWithoutGC(union input_stream);
-    init_base_stream(&stream->base, SSL_BUF_SIZE);
-    ssl_stream_init(&stream->ssl, sock, ssl);
-    stream->base.unclose = false;
+    struct input_stream* stream = NewWithoutGC(struct input_stream);
+    *stream = (struct input_stream) {
+        .type = IST_SSL,
+        .iseos = false,
+        .unclose = false,
+        .ssl = (struct ssl_handle) {
+            .sock = sock,
+            .ssl = ssl,
+        },
+    };
+    sb_init(&stream->sb, NULL, SSL_BUF_SIZE);
     return stream;
 }
 
-int ISclose(union input_stream* stream)
+int ISclose(struct input_stream* stream)
 {
     if (stream == NULL)
         return -1;
 
-    if (stream->base.unclose) {
+    if (stream->unclose) {
         return -1;
     }
 
     void (*prevtrap)(int);
     prevtrap = mySignal(SIGINT, SIG_IGN);
-    switch (stream->base.type) {
+    switch (stream->type) {
     case IST_BASIC:
-        close(*(int*)stream->base.handle);
+        close(stream->base);
         break;
     case IST_FILE:
-        stream->file.handle->close(stream->file.handle->f);
+        stream->file.close(stream->file.f);
         break;
     case IST_STR:
         break;
     case IST_SSL:
-        ssl_close(stream->ssl.handle);
+        ssl_close(&stream->ssl);
         break;
     default:
         assert(false);
@@ -170,55 +166,46 @@ int ISclose(union input_stream* stream)
     }
     mySignal(SIGINT, prevtrap);
 
-    xfree(stream->base.stream.buf);
+    xfree(stream->sb.buf);
     xfree(stream);
     return 0;
 }
 
-#define POP_CHAR(bs) ((bs)->iseos ? '\0' : (bs)->stream.buf[(bs)->stream.cur++])
-int ISgetc(union input_stream* stream)
+int ISgetc(struct input_stream* stream)
 {
     if (stream == NULL)
-        return '\0';
-    struct base_stream* base = &stream->base;
-    if (!base->iseos && MUST_BE_UPDATED(&base->stream))
-        do_update(base);
-    return POP_CHAR(base);
+        return 0;
+
+    if (!stream->iseos && MUST_BE_UPDATED(&stream->sb))
+        do_update(stream);
+
+    // #define POP_CHAR(bs) ((bs)->iseos ? '\0' : (bs)->stream.buf[(bs)->stream.cur++])
+    if (stream->iseos) {
+        return 0;
+    }
+    return stream->sb.buf[stream->sb.cur++];
 }
 
-int ISundogetc(union input_stream* stream)
+int ISundogetc(struct input_stream* stream)
 {
-    struct stream_buffer* sb;
     if (stream == NULL)
         return -1;
-    sb = &stream->base.stream;
-    if (sb->cur > 0) {
-        sb->cur--;
+    if (stream->sb.cur > 0) {
+        stream->sb.cur--;
         return 0;
     }
     return -1;
 }
 
-Str StrISgets2(union input_stream* stream, bool crnl)
+struct growbuf;
+static void ISgets_to_growbuf(struct input_stream* stream, struct growbuf* gb, char crnl)
 {
-    if (stream == NULL)
-        return NULL;
-
-    struct growbuf gb;
-    growbuf_init(&gb);
-    ISgets_to_growbuf(stream, &gb, crnl);
-    return growbuf_to_Str(&gb);
-}
-
-void ISgets_to_growbuf(union input_stream* stream, struct growbuf* gb, char crnl)
-{
-    struct base_stream* base = &stream->base;
-    struct stream_buffer* sb = &base->stream;
-
+    // struct base_stream* base = &stream->base;
+    struct stream_buffer* sb = &stream->sb;
     gb->length = 0;
-    while (!base->iseos) {
-        if (MUST_BE_UPDATED(&base->stream)) {
-            do_update(base);
+    while (!stream->iseos) {
+        if (MUST_BE_UPDATED(sb)) {
+            do_update(stream);
             continue;
         }
         if (crnl && gb->length > 0 && gb->ptr[gb->length - 1] == '\r') {
@@ -243,23 +230,32 @@ void ISgets_to_growbuf(union input_stream* stream, struct growbuf* gb, char crnl
 
     growbuf_reserve(gb, gb->length + 1);
     gb->ptr[gb->length] = '\0';
-    return;
 }
 
-int ISread_n(union input_stream* stream, char* dst, int count)
+Str StrISgets2(struct input_stream* stream, bool crnl)
+{
+    if (stream == NULL)
+        return NULL;
+
+    struct growbuf gb;
+    growbuf_init(&gb);
+    ISgets_to_growbuf(stream, &gb, crnl);
+    return growbuf_to_Str(&gb);
+}
+
+int ISread_n(struct input_stream* stream, char* dst, int count)
 {
     if (stream == NULL || count <= 0)
         return -1;
 
-    struct base_stream* base;
-    if ((base = &stream->base)->iseos)
+    if (stream->iseos)
         return 0;
 
-    int len = buffer_read(&base->stream, dst, count);
-    if (MUST_BE_UPDATED(&base->stream)) {
-        int l = raw_read(base, (uint8_t*)&dst[len], count - len);
+    int len = buffer_read(&stream->sb, dst, count);
+    if (MUST_BE_UPDATED(&stream->sb)) {
+        int l = raw_read(stream, (uint8_t*)&dst[len], count - len);
         if (l <= 0) {
-            base->iseos = TRUE;
+            stream->iseos = true;
         } else {
             len += l;
         }
@@ -267,26 +263,25 @@ int ISread_n(union input_stream* stream, char* dst, int count)
     return len;
 }
 
-int ISfileno(union input_stream* stream)
+int ISfileno(struct input_stream* stream)
 {
     if (stream == NULL)
         return -1;
-    switch (stream->base.type) {
+    switch (stream->type) {
     case IST_BASIC:
-        return *(int*)stream->base.handle;
+        return stream->base;
     case IST_FILE:
-        return fileno(stream->file.handle->f);
+        return fileno(stream->file.f);
     case IST_SSL:
-        return stream->ssl.handle->sock;
+        return stream->ssl.sock;
     default:
         return -1;
     }
 }
 
-int ISeos(union input_stream* stream)
+int ISeos(struct input_stream* stream)
 {
-    struct base_stream* base = &stream->base;
-    if (!base->iseos && MUST_BE_UPDATED(&base->stream))
-        do_update(base);
-    return base->iseos;
+    if (!stream->iseos && MUST_BE_UPDATED(&stream->sb))
+        do_update(stream);
+    return stream->iseos;
 }

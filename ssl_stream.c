@@ -533,7 +533,6 @@ void ssl_close(struct ssl_handle* handle)
     close(handle->sock);
     if (handle->ssl)
         SSL_free(handle->ssl);
-    xfree(handle);
 }
 
 int ssl_read(struct ssl_handle* handle, char* buf, int len)
@@ -562,10 +561,3 @@ int ssl_read(struct ssl_handle* handle, char* buf, int len)
     return status;
 }
 
-void ssl_stream_init(struct ssl_stream* s, int sock, SSL* ssl)
-{
-    s->type = IST_SSL;
-    s->handle = NewWithoutGC(struct ssl_handle);
-    s->handle->ssl = ssl;
-    s->handle->sock = sock;
-}

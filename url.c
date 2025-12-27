@@ -982,7 +982,7 @@ retry:
             && !Do_not_use_proxy && pu->host != NULL && !check_no_proxy(pu->host)) {
             hr->flag |= HR_FLAG_PROXY;
             if (pu->scheme == SCM_HTTPS && *status == HTST_CONNECT) {
-                sock = ouf->stream->ssl.handle->sock;
+                sock = ouf->stream->ssl.sock;
 
                 if (!(sslh = openSSLHandle(sock, pu->host,
                           &uf.ssl_certificate))) {

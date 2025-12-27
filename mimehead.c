@@ -1,5 +1,5 @@
 #include "mimehead.h"
-#include "fm.h"
+#include "growbuf.h"
 #include "myctype.h"
 #include "Str.h"
 #include <libwc/wtf.h>

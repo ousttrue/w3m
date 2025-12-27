@@ -24,7 +24,7 @@ struct frame_body {
     char* referer;
     struct AnchorList* nameList;
     struct FormList* request;
-    char* ssl_certificate;
+    const char* ssl_certificate;
 };
 
 union frameset_element {
