@@ -118,7 +118,7 @@ static int forms_size = 0;
 #define cur_form_id ((form_sp >= 0) ? form_stack[form_sp] : -1)
 static int form_sp = 0;
 
-static clen_t current_content_length;
+static int64_t current_content_length;
 
 static int cur_hseq;
 #ifdef USE_IMAGE
@@ -5556,7 +5556,7 @@ loadHTMLBuffer(struct URLFile* f, struct Buffer* newBuf)
 static char* _size_unit[] = { "b", "kb", "Mb", "Gb", "Tb",
     "Pb", "Eb", "Zb", "Bb", "Yb", NULL };
 
-char* convert_size(clen_t size, int usefloat)
+char* convert_size(int64_t size, int usefloat)
 {
     float csize;
     int sizepos = 0;
@@ -5572,7 +5572,7 @@ char* convert_size(clen_t size, int usefloat)
         ->ptr;
 }
 
-char* convert_size2(clen_t size1, clen_t size2, int usefloat)
+char* convert_size2(int64_t size1, int64_t size2, int usefloat)
 {
     char** sizes = _size_unit;
     float csize, factor = 1;
@@ -5590,7 +5590,7 @@ char* convert_size2(clen_t size1, clen_t size2, int usefloat)
         ->ptr;
 }
 
-void showProgress(clen_t* linelen, clen_t* trbyte)
+void showProgress(int64_t* linelen, int64_t* trbyte)
 {
     int i, j, rate, duration, eta, pos;
     static time_t last_time, start_time;
@@ -5864,8 +5864,8 @@ void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int int
     struct HtmlBuilder* hb = &_hb;
 
     struct environment envs[MAX_ENV_LEVEL];
-    clen_t linelen = 0;
-    clen_t trbyte = 0;
+    int64_t linelen = 0;
+    int64_t trbyte = 0;
     Str lineBuf2 = Strnew();
     wc_ces charset = WC_CES_US_ASCII;
     struct html_feed_environ htmlenv1;
@@ -6206,11 +6206,9 @@ loadBuffer(struct URLFile* uf, struct Buffer* volatile newBuf)
     volatile char pre_lbuf = '\0';
     int nlines;
     Str tmpf;
-    clen_t linelen = 0, trbyte = 0;
+    int64_t linelen = 0, trbyte = 0;
     Lineprop* propBuffer = NULL;
-#ifdef USE_ANSI_COLOR
     Linecolor* colorBuffer = NULL;
-#endif
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
 
     if (newBuf == NULL)
@@ -6458,7 +6456,7 @@ getshell(char* cmd)
 int save2tmp(struct URLFile uf, const char* tmpf)
 {
     FILE* ff;
-    clen_t linelen = 0, trbyte = 0;
+    int64_t linelen = 0, trbyte = 0;
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
     static JMP_BUF env_bak;
     volatile int retval = 0;
@@ -6592,7 +6590,7 @@ _MoveFile(const char* path1, const char* path2)
 
     FILE* f2;
     int is_pipe;
-    clen_t linelen = 0, trbyte = 0;
+    int64_t linelen = 0, trbyte = 0;
     char* buf = NULL;
     int count;
 
@@ -6635,7 +6633,7 @@ int _doFileCopy(const char* tmpf, const char* defstr, bool download)
     FILE* f;
 #endif
     struct stat st;
-    clen_t size = 0;
+    int64_t size = 0;
     int is_pipe = FALSE;
 
     if (fmInitialized()) {

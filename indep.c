@@ -293,7 +293,7 @@ char* HTML_QUOTE_MAP[] = {
     NULL,
 };
 
-clen_t
+int64_t
 strtoclen(const char* s)
 {
 #ifdef HAVE_STRTOLL
