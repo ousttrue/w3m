@@ -1,4 +1,6 @@
 #include "html_table.h"
+#include "file.h"
+#include "html_builder.h"
 #include "indep.h"
 #include "readbuffer.h"
 #include "symbol.h"
@@ -708,7 +710,7 @@ get_spec_cell_width(struct table* tbl, int row, int col)
     return w;
 }
 
-void do_refill(struct table* tbl, int row, int col, int maxlimit)
+void do_refill(struct HtmlBuilder *hb, struct table* tbl, int row, int col, int maxlimit)
 {
     struct TextList* orgdata;
     TextListItem* l;
@@ -771,13 +773,13 @@ void do_refill(struct table* tbl, int row, int col, int maxlimit)
                 }
             }
         } else
-            HTMLlineproc0(l->ptr, &h_env, true);
+            HTMLlineproc0(hb, l->ptr, &h_env, true);
     }
     if (obuf.status != R_ST_NORMAL) {
         obuf.status = R_ST_EOL;
-        HTMLlineproc0("\n", &h_env, true);
+        HTMLlineproc0(hb, "\n", &h_env, true);
     }
-    completeHTMLstream(&h_env, &obuf);
+    completeHTMLstream(hb, &h_env, &obuf);
     flushline(&h_env, &obuf, 0, 2, h_env.limit);
     if (tbl->border_mode == BORDER_NONE) {
         int rowspan = table_rowspan(tbl, row, col);
@@ -1618,7 +1620,7 @@ void initRenderTable(void)
 }
 
 static void
-renderCoTable(struct table* tbl, int maxlimit)
+renderCoTable(struct HtmlBuilder *hb, struct table* tbl, int maxlimit)
 {
     struct readbuffer obuf;
     struct html_feed_environ h_env;
@@ -1650,12 +1652,12 @@ renderCoTable(struct table* tbl, int maxlimit)
             maxwidth = t->total_width;
         else
             maxwidth = t->total_width = -t->total_width * h_env.limit / 100;
-        renderTable(t, maxwidth, &h_env);
+        renderTable(hb, t, maxwidth, &h_env);
     }
 }
 
 static void
-make_caption(struct table* t, struct html_feed_environ* h_env)
+make_caption(struct HtmlBuilder *hb, struct table* t, struct html_feed_environ* h_env)
 {
     struct html_feed_environ henv;
     struct readbuffer obuf;
@@ -1671,41 +1673,37 @@ make_caption(struct table* t, struct html_feed_environ* h_env)
         limit = h_env->limit;
     init_henv(&henv, &obuf, envs, MAX_ENV_LEVEL, newTextLineList(),
         limit, h_env->envs[h_env->envc].indent);
-    HTMLlineproc0("<center>", &henv, true);
-    HTMLlineproc0(t->caption->ptr, &henv, false);
-    HTMLlineproc0("</center>", &henv, true);
+    HTMLlineproc0(hb, "<center>", &henv, true);
+    HTMLlineproc0(hb, t->caption->ptr, &henv, false);
+    HTMLlineproc0(hb, "</center>", &henv, true);
 
     if (t->total_width < henv.maxlimit)
         t->total_width = henv.maxlimit;
     limit = h_env->limit;
     h_env->limit = t->total_width;
-    HTMLlineproc0("<center>", h_env, false);
-    HTMLlineproc0(t->caption->ptr, h_env, false);
-    HTMLlineproc0("</center>", h_env, false);
+    HTMLlineproc0(hb, "<center>", h_env, false);
+    HTMLlineproc0(hb, t->caption->ptr, h_env, false);
+    HTMLlineproc0(hb, "</center>", h_env, false);
     h_env->limit = limit;
 }
 
-void renderTable(struct table* t, int max_width, struct html_feed_environ* h_env)
+void renderTable(struct HtmlBuilder *hb, struct table* t, int max_width, struct html_feed_environ* h_env)
 {
     int i, j, w, r, h;
     Str renderbuf;
     short new_tabwidth[MAXCOL] = { 0 };
-#ifdef MATRIX
     int itr;
     VEC* newwidth;
     MAT *mat, *minv;
     PERM* pivot;
-#endif /* MATRIX */
     int width;
     int rulewidth;
     Str vrulea = NULL, vruleb = NULL, vrulec = NULL;
-#ifdef ID_EXT
     Str idtag;
-#endif /* ID_EXT */
 
     t->total_height = 0;
     if (t->maxcol < 0) {
-        make_caption(t, h_env);
+        make_caption(hb, t, h_env);
         return;
     }
 
@@ -1792,14 +1790,14 @@ void renderTable(struct table* t, int max_width, struct html_feed_environ* h_env
     for (i = 0; i <= t->maxcol; i++)
         t->tabwidth[i] = ceil_at_intervals(t->tabwidth[i], rulewidth);
 
-    renderCoTable(t, h_env->limit);
+    renderCoTable(hb, t, h_env->limit);
 
     for (i = 0; i <= t->maxcol; i++) {
         for (j = 0; j <= t->maxrow; j++) {
             check_row(t, j);
             if (t->tabattr[j][i] & HTT_Y)
                 continue;
-            do_refill(t, j, i, h_env->limit);
+            do_refill(hb, t, j, i, h_env->limit);
         }
     }
 
@@ -1849,13 +1847,13 @@ void renderTable(struct table* t, int max_width, struct html_feed_environ* h_env
     /* table output */
     width = t->total_width;
 
-    make_caption(t, h_env);
+    make_caption(hb ,t, h_env);
 
-    HTMLlineproc0("<pre for_table>", h_env, true);
+    HTMLlineproc0(hb, "<pre for_table>", h_env, true);
 
     if (t->id != NULL) {
         idtag = Sprintf("<_id id=\"%s\">", html_quote((t->id)->ptr));
-        HTMLlineproc0(idtag->ptr, h_env, true);
+        HTMLlineproc0(hb, idtag->ptr, h_env, true);
     }
 
     switch (t->border_mode) {
@@ -1960,7 +1958,7 @@ void renderTable(struct table* t, int max_width, struct html_feed_environ* h_env
         t->total_width = 1;
         push_render_image(renderbuf, 1, t->total_width, h_env);
     }
-    HTMLlineproc0("</pre>", h_env, true);
+    HTMLlineproc0(hb, "</pre>", h_env, true);
 }
 
 #ifdef TABLE_NO_COMPACT
@@ -2343,21 +2341,23 @@ feed_table_block_tag(struct table* tbl,
 }
 
 static void
-table_close_select(struct table* tbl, struct table_mode* mode, int width)
+table_close_select(struct HtmlBuilder *hb,
+        struct table* tbl, struct table_mode* mode, int width)
 {
     Str tmp = process_n_select();
     mode->pre_mode &= ~TBLM_INSELECT;
     mode->end_tag = 0;
-    feed_table1(tbl, tmp, mode, width);
+    feed_table1(hb, tbl, tmp, mode, width);
 }
 
 static void
-table_close_textarea(struct table* tbl, struct table_mode* mode, int width)
+table_close_textarea(struct HtmlBuilder *hb,
+        struct table* tbl, struct table_mode* mode, int width)
 {
     Str tmp = process_n_textarea();
     mode->pre_mode &= ~TBLM_INTXTA;
     mode->end_tag = 0;
-    feed_table1(tbl, tmp, mode, width);
+    feed_table1(hb, tbl, tmp, mode, width);
 }
 
 static void
@@ -2404,7 +2404,7 @@ table_close_anchor0(struct table* tbl, struct table_mode* mode)
 #define ATTR_ROWSPAN_MAX 32766
 
 static int
-feed_table_tag(struct table* tbl, char* line, struct table_mode* mode,
+feed_table_tag(struct HtmlBuilder *hb, struct table* tbl, char* line, struct table_mode* mode,
     int width, struct parsed_tag* tag)
 {
     int cmd;
@@ -2433,7 +2433,7 @@ feed_table_tag(struct table* tbl, char* line, struct table_mode* mode,
         switch (cmd) {
         CASE_TABLE_TAG:
         case HTML_N_TEXTAREA:
-            table_close_textarea(tbl, mode, width);
+            table_close_textarea(hb, tbl, mode, width);
             if (cmd == HTML_N_TEXTAREA)
                 return TAG_ACTION_NONE;
             break;
@@ -2464,7 +2464,7 @@ feed_table_tag(struct table* tbl, char* line, struct table_mode* mode,
         CASE_TABLE_TAG:
         case HTML_N_FORM:
         case HTML_N_SELECT: /* mode->end_tag */
-            table_close_select(tbl, mode, width);
+            table_close_select(hb, tbl, mode, width);
             if (cmd == HTML_N_SELECT)
                 return TAG_ACTION_NONE;
             break;
@@ -2697,9 +2697,6 @@ feed_table_tag(struct table* tbl, char* line, struct table_mode* mode,
             if (colspan == 1) {
                 v0 = tbl->fixed_width[tbl->col];
                 if (v0 == 0 || (v0 > 0 && v > v0) || (v0 < 0 && v < v0)) {
-#ifdef FEED_TABLE_DEBUG
-                    fprintf(stderr, "width(%d) = %d\n", tbl->col, v);
-#endif /* TABLE_DEBUG */
                     tbl->fixed_width[tbl->col] = v;
                 }
             } else if (cell->icell >= 0) {
@@ -2711,9 +2708,6 @@ feed_table_tag(struct table* tbl, char* line, struct table_mode* mode,
         for (i = 0; i < rowspan; i++) {
             check_row(tbl, tbl->row + i);
             for (j = 0; j < colspan; j++) {
-#if 0
-		tbl->tabattr[tbl->row + i][tbl->col + j] &= ~(HTT_X | HTT_Y);
-#endif
                 if (!(tbl->tabattr[tbl->row + i][tbl->col + j] & (HTT_X | HTT_Y))) {
                     tbl->tabattr[tbl->row + i][tbl->col + j] |= ((i > 0) ? HTT_Y : 0) | ((j > 0) ? HTT_X : 0);
                 }
@@ -2736,18 +2730,6 @@ feed_table_tag(struct table* tbl, char* line, struct table_mode* mode,
     case HTML_N_TD:
         setwidth(tbl, mode);
         tbl->flag &= ~TBL_IN_COL;
-#ifdef FEED_TABLE_DEBUG
-        {
-            TextListItem* it;
-            int i = tbl->col, j = tbl->row;
-            fprintf(stderr, "(a) row,col: %d, %d\n", j, i);
-            if (tbl->tabdata[j] && tbl->tabdata[j][i]) {
-                for (it = ((struct TextList*)tbl->tabdata[j][i])->first;
-                    it; it = it->next)
-                    fprintf(stderr, "  [%s] \n", it->ptr);
-            }
-        }
-#endif
         return TAG_ACTION_NONE;
     case HTML_P:
     case HTML_BR:
@@ -2861,35 +2843,35 @@ feed_table_tag(struct table* tbl, char* line, struct table_mode* mode,
             else if (width > 0)
                 w = width;
         }
-        tok = process_img(tag, w);
-        feed_table1(tbl, tok, mode, width);
+        tok = process_img(hb, tag, w);
+        feed_table1(hb, tbl, tok, mode, width);
         break;
     case HTML_FORM:
         feed_table_block_tag(tbl, "", mode, 0, cmd);
-        tmp = process_form(tag);
+        tmp = process_form(hb, tag);
         if (tmp)
-            feed_table1(tbl, tmp, mode, width);
+            feed_table1(hb, tbl, tmp, mode, width);
         break;
     case HTML_N_FORM:
         feed_table_block_tag(tbl, "", mode, 0, cmd);
         process_n_form();
         break;
     case HTML_INPUT:
-        tmp = process_input(tag);
-        feed_table1(tbl, tmp, mode, width);
+        tmp = process_input(hb, tag);
+        feed_table1(hb, tbl, tmp, mode, width);
         break;
     case HTML_BUTTON:
-        tmp = process_button(tag);
-        feed_table1(tbl, tmp, mode, width);
+        tmp = process_button(hb, tag);
+        feed_table1(hb, tbl, tmp, mode, width);
         break;
     case HTML_N_BUTTON:
         tmp = process_n_button();
-        feed_table1(tbl, tmp, mode, width);
+        feed_table1(hb, tbl, tmp, mode, width);
         break;
     case HTML_SELECT:
-        tmp = process_select(tag);
+        tmp = process_select(hb, tag);
         if (tmp)
-            feed_table1(tbl, tmp, mode, width);
+            feed_table1(hb, tbl, tmp, mode, width);
         mode->pre_mode |= TBLM_INSELECT;
         mode->end_tag = HTML_N_SELECT;
         break;
@@ -2907,9 +2889,9 @@ feed_table_tag(struct table* tbl, char* line, struct table_mode* mode,
             if (tbl->fixed_width[tbl->col] > 0)
                 w = tbl->fixed_width[tbl->col];
         }
-        tmp = process_textarea(tag, w);
+        tmp = process_textarea(hb, tag, w);
         if (tmp)
-            feed_table1(tbl, tmp, mode, width);
+            feed_table1(hb, tbl, tmp, mode, width);
         mode->pre_mode |= TBLM_INTXTA;
         mode->end_tag = HTML_N_TEXTAREA;
         break;
@@ -3096,7 +3078,7 @@ feed_table_tag(struct table* tbl, char* line, struct table_mode* mode,
     return TAG_ACTION_NONE;
 }
 
-int feed_table(struct table* tbl, char* line, struct table_mode* mode,
+int feed_table(struct HtmlBuilder *hb, struct table* tbl, char* line, struct table_mode* mode,
     int width, int internal)
 {
     int i;
@@ -3109,7 +3091,7 @@ int feed_table(struct table* tbl, char* line, struct table_mode* mode,
         p = line;
         tag = parse_tag(&p, internal);
         if (tag) {
-            switch (feed_table_tag(tbl, line, mode, width, tag)) {
+            switch (feed_table_tag(hb, tbl, line, mode, width, tag)) {
             case TAG_ACTION_NONE:
                 return -1;
             case TAG_ACTION_N_TABLE:
@@ -3251,18 +3233,15 @@ int feed_table(struct table* tbl, char* line, struct table_mode* mode,
     return -1;
 }
 
-void feed_table1(struct table* tbl, Str tok, struct table_mode* mode, int width)
+void feed_table1(struct HtmlBuilder *hb, struct table* tbl, Str tok, struct table_mode* mode, int width)
 {
-    Str tokbuf;
-    int status;
-    char* line;
     if (!tok)
         return;
-    tokbuf = Strnew();
-    status = R_ST_NORMAL;
-    line = tok->ptr;
+    Str tokbuf = Strnew();
+    int status = R_ST_NORMAL;
+    const char* line = tok->ptr;
     while (read_token(tokbuf, &line, &status, mode->pre_mode & TBLM_PREMODE, 0))
-        feed_table(tbl, tokbuf->ptr, mode, width, TRUE);
+        feed_table(hb, tbl, tokbuf->ptr, mode, width, TRUE);
 }
 
 void pushTable(struct table* tbl, struct table* tbl1)

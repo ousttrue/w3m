@@ -143,7 +143,7 @@ int next_status(char c, int* status)
     return 0;
 }
 
-int read_token(Str buf, char** instr, int* status, int pre, int append)
+int read_token(Str buf, const char** instr, int* status, int pre, int append)
 {
     char* p;
     int prev_status;

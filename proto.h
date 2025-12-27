@@ -179,22 +179,14 @@ struct FormList;
 extern int is_boundary(unsigned char*, unsigned char*);
 extern int is_blank_line(char* line, int indent);
 
-extern Str process_img(struct parsed_tag* tag, int width);
 extern Str process_anchor(struct parsed_tag* tag, char* tagbuf);
-extern Str process_input(struct parsed_tag* tag);
-extern Str process_button(struct parsed_tag* tag);
 extern Str process_n_button(void);
-extern Str process_select(struct parsed_tag* tag);
 extern Str process_n_select(void);
-extern void feed_select(char* str);
 extern void process_option(void);
-extern Str process_textarea(struct parsed_tag* tag, int width);
 extern Str process_n_textarea(void);
 extern void feed_textarea(char* str);
-extern Str process_form(struct parsed_tag* tag);
 extern Str process_n_form(void);
 extern int getMetaRefreshParam(const char* q, Str* refresh_uri);
-extern void HTMLlineproc2(struct Buffer* buf, TextLineList* tl);
 
 extern char* convert_size(clen_t size, int usefloat);
 extern char* convert_size2(clen_t size1, clen_t size2, int usefloat);
@@ -243,7 +235,6 @@ extern int visible_length(char* str);
 extern void align(TextLine* lbuf, int width, int mode);
 extern void print_item(struct table* t, int row, int col, int width, Str buf);
 extern void print_sep(struct table* t, int row, int type, int maxcol, Str buf);
-extern void do_refill(struct table* tbl, int row, int col, int maxlimit);
 
 extern struct FormList* newFormList(char* action, char* method, char* charset,
     char* enctype, char* target, char* name,

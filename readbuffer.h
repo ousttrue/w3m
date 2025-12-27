@@ -162,7 +162,7 @@ struct readbuffer {
 };
 
 int next_status(char c, int* status);
-int read_token(Str buf, char** instr, int* status, int pre, int append);
+int read_token(Str buf, const char** instr, int* status, int pre, int append);
 Str correct_irrtag(int status);
 
 void push_render_image(Str str, int width, int limit, struct html_feed_environ* h_env);
@@ -172,7 +172,4 @@ void purgeline(struct html_feed_environ* h_env);
 void save_fonteffect(struct html_feed_environ* h_env, struct readbuffer* obuf);
 void restore_fonteffect(struct html_feed_environ* h_env, struct readbuffer* obuf);
 struct parsed_tag;
-int HTMLtagproc1(struct parsed_tag* tag, struct html_feed_environ* h_env);
-void HTMLlineproc0(char* istr, struct html_feed_environ* h_env, int internal);
 void init_henv(struct html_feed_environ*, struct readbuffer*, struct environment*, int, TextLineList*, int, int);
-void completeHTMLstream(struct html_feed_environ*, struct readbuffer*);
