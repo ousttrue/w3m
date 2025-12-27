@@ -456,7 +456,6 @@ extern void wrapToggle(void);
 extern void saveBufferInfo(void);
 #endif
 
-extern Str getLinkNumberStr(int correction);
 
 extern void dispVer(void);
 

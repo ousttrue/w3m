@@ -15,6 +15,9 @@ struct HtmlBuilder {
     Str cur_title;
     Str pre_title;
 
+    int cur_hseq;
+    int cur_iseq;
+
     // <table>
     struct table* tables[MAX_TABLE];
     struct table_mode table_mode[MAX_TABLE];

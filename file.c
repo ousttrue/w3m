@@ -74,17 +74,8 @@ static struct link_stack* link_stack = NULL;
 #define FORMSTACK_SIZE 10
 #define FRAMESTACK_SIZE 10
 
-#ifdef USE_NNTP
-#define Str_news_endline(s) ((s)->ptr[0] == '.' && ((s)->ptr[1] == '\n' || (s)->ptr[1] == '\r' || (s)->ptr[1] == '\0'))
-#endif /* USE_NNTP */
-
 #define INITIAL_FORM_SIZE 10
 static int cur_form_id(struct HtmlBuilder* hb) { return ((hb->form_sp >= 0) ? hb->form_stack[hb->form_sp] : -1); }
-
-static int cur_hseq;
-#ifdef USE_IMAGE
-static int cur_iseq;
-#endif
 
 #define MAX_UL_LEVEL 9
 #define UL_SYMBOL(x) (N_GRAPH_SYMBOL + (x))
@@ -921,9 +912,9 @@ checkRedirection(struct Url* pu)
     return TRUE;
 }
 
-Str getLinkNumberStr(int correction)
+Str getLinkNumberStr(struct HtmlBuilder* hb, int correction)
 {
-    return Sprintf("[%d]", cur_hseq + correction);
+    return Sprintf("[%d]", hb->cur_hseq + correction);
 }
 
 /*
@@ -1286,18 +1277,12 @@ page_loaded:
         proc = loadHTMLBuffer;
     else if (is_plain_text_type(t))
         proc = loadBuffer;
-#ifdef USE_IMAGE
     else if (getRuntime()->activeImage && getRuntime()->displayImage && !useExtImageViewer && !(w3m_dump & ~DUMP_FRAME) && !strncasecmp(t, "image/", 6))
         proc = loadImageBuffer;
-#endif
     else if (w3m_backend)
         ;
     else if (!(w3m_dump & ~DUMP_FRAME) || is_dump_text_type(t)) {
-        if (!do_download &&
-#ifdef USE_GOPHER
-            !gopher_download &&
-#endif
-            searchExtViewer(t) != NULL) {
+        if (!do_download && searchExtViewer(t) != NULL) {
             proc = DO_EXTERNAL;
         } else {
             TRAP_OFF;
@@ -2262,7 +2247,7 @@ Str process_img(struct HtmlBuilder* hb, struct parsed_tag* tag, int width)
         Strcat_charp(tmp, html_quote((r2) ? r2 + 1 : r));
         Strcat(tmp, Sprintf("\"><input_alt hseq=\"%d\" fid=\"%d\" "
                             "type=submit no_effect=true>",
-                        cur_hseq++, cur_form_id(hb)));
+                        hb->cur_hseq++, cur_form_id(hb)));
     }
     if (use_image) {
         w0 = w;
@@ -2297,7 +2282,7 @@ Str process_img(struct HtmlBuilder* hb, struct parsed_tag* tag, int width)
             ni = (i > 3) ? (int)((i - 3) / getRuntime()->pixel_per_line + 1) : 1;
         }
         Strcat(tmp,
-            Sprintf("<pre_int><img_alt hseq=\"%d\" src=\"", cur_iseq++));
+            Sprintf("<pre_int><img_alt hseq=\"%d\" src=\"", hb->cur_iseq++));
         pre_int = TRUE;
     } else {
         if (w < 0)
@@ -2481,13 +2466,14 @@ img_end:
     return tmp;
 }
 
-Str process_anchor(struct parsed_tag* tag, const char* tagbuf)
+Str process_anchor(struct HtmlBuilder* hb,
+    struct parsed_tag* tag, const char* tagbuf)
 {
     if (parsedtag_need_reconstruct(tag)) {
-        parsedtag_set_value(tag, ATTR_HSEQ, Sprintf("%d", cur_hseq++)->ptr);
+        parsedtag_set_value(tag, ATTR_HSEQ, Sprintf("%d", hb->cur_hseq++)->ptr);
         return parsedtag2str(tag);
     } else {
-        Str tmp = Sprintf("<a hseq=\"%d\"", cur_hseq++);
+        Str tmp = Sprintf("<a hseq=\"%d\"", hb->cur_hseq++);
         Strcat_charp(tmp, tagbuf + 2);
         return tmp;
     }
@@ -2562,17 +2548,17 @@ Str process_input(struct HtmlBuilder* hb, struct parsed_tag* tag)
     case FORM_INPUT_FILE:
     case FORM_INPUT_CHECKBOX:
         if (displayLinkNumber)
-            Strcat(tmp, getLinkNumberStr(0));
+            Strcat(tmp, getLinkNumberStr(hb, 0));
         Strcat_char(tmp, '[');
         break;
     case FORM_INPUT_RADIO:
         if (displayLinkNumber)
-            Strcat(tmp, getLinkNumberStr(0));
+            Strcat(tmp, getLinkNumberStr(hb, 0));
         Strcat_char(tmp, '(');
     }
     Strcat(tmp, Sprintf("<input_alt hseq=\"%d\" fid=\"%d\" type=\"%s\" "
                         "name=\"%s\" width=%d maxlength=%d value=\"%s\"",
-                    cur_hseq++, cur_form_id(hb), html_quote(p), html_quote(r), size, i, qq));
+                    hb->cur_hseq++, cur_form_id(hb), html_quote(p), html_quote(r), size, i, qq));
     if (x)
         Strcat_charp(tmp, " checked");
     if (y)
@@ -2609,7 +2595,7 @@ Str process_input(struct HtmlBuilder* hb, struct parsed_tag* tag)
         case FORM_INPUT_BUTTON:
         case FORM_INPUT_RESET:
             if (displayLinkNumber)
-                Strcat(tmp, getLinkNumberStr(-1));
+                Strcat(tmp, getLinkNumberStr(hb, -1));
             Strcat_charp(tmp, "[");
             break;
         }
@@ -2731,7 +2717,7 @@ Str process_button(struct HtmlBuilder* hb, struct parsed_tag* tag)
     /*    Strcat_charp(tmp, "<pre_int>"); */
     Strcat(tmp, Sprintf("<input_alt hseq=\"%d\" fid=\"%d\" type=\"%s\" "
                         "name=\"%s\" value=\"%s\">",
-                    cur_hseq++, cur_form_id(hb), html_quote(p), html_quote(r), qq));
+                    hb->cur_hseq++, cur_form_id(hb), html_quote(p), html_quote(r), qq));
     return tmp;
 }
 
@@ -2761,10 +2747,10 @@ Str process_select(struct HtmlBuilder* hb, struct parsed_tag* tag)
     if (!hb->select_is_multiple) {
         hb->select_str = Strnew_charp("<pre_int>");
         if (displayLinkNumber)
-            Strcat(hb->select_str, getLinkNumberStr(0));
+            Strcat(hb->select_str, getLinkNumberStr(hb, 0));
         Strcat(hb->select_str, Sprintf("[<input_alt hseq=\"%d\" "
                                        "fid=\"%d\" type=select name=\"%s\" selectnumber=%d",
-                                   cur_hseq++, cur_form_id(hb), html_quote(p), hb->n_select));
+                                   hb->cur_hseq++, cur_form_id(hb), html_quote(p), hb->n_select));
         Strcat_charp(hb->select_str, ">");
         if (hb->n_select == hb->max_select) {
             hb->max_select *= 2;
@@ -2892,7 +2878,7 @@ void process_option(struct HtmlBuilder* hb)
     }
     Strcat(hb->select_str, Sprintf("<br><pre_int>%c<input_alt hseq=\"%d\" "
                                    "fid=\"%d\" type=%s name=\"%s\" value=\"%s\"",
-                               begin_char, cur_hseq++, cur_form_id(hb), hb->select_is_multiple ? "checkbox" : "radio", html_quote(hb->cur_select->ptr), html_quote(hb->cur_option_value->ptr)));
+                               begin_char, hb->cur_hseq++, cur_form_id(hb), hb->select_is_multiple ? "checkbox" : "radio", html_quote(hb->cur_select->ptr), html_quote(hb->cur_option_value->ptr)));
     if (hb->cur_option_selected)
         Strcat_charp(hb->select_str, " checked>*</input_alt>");
     else
@@ -2961,14 +2947,14 @@ Str process_n_textarea(struct HtmlBuilder* hb)
     Strcat(tmp, Sprintf("<pre_int>[<input_alt hseq=\"%d\" fid=\"%d\" "
                         "type=textarea name=\"%s\" size=%d rows=%d "
                         "top_margin=%d textareanumber=%d",
-                    cur_hseq, cur_form_id(hb), html_quote(hb->cur_textarea->ptr), hb->cur_textarea_size, hb->cur_textarea_rows, hb->cur_textarea_rows - 1, hb->n_textarea));
+                    hb->cur_hseq, cur_form_id(hb), html_quote(hb->cur_textarea->ptr), hb->cur_textarea_size, hb->cur_textarea_rows, hb->cur_textarea_rows - 1, hb->n_textarea));
     if (hb->cur_textarea_readonly)
         Strcat_charp(tmp, " readonly");
     Strcat_charp(tmp, "><u>");
     for (i = 0; i < hb->cur_textarea_size; i++)
         Strcat_char(tmp, ' ');
     Strcat_charp(tmp, "</u></input_alt>]</pre_int>\n");
-    cur_hseq++;
+    hb->cur_hseq++;
     hb->n_textarea++;
     hb->cur_textarea = NULL;
 
@@ -3692,7 +3678,7 @@ int HTMLtagproc1(struct HtmlBuilder* hb, struct parsed_tag* tag, struct html_fee
         parsedtag_get_value(tag, ATTR_NAME, &r);
         if (q) {
             q = html_quote(q);
-            push_tag(obuf, Sprintf("<a hseq=\"%d\" href=\"%s\">", cur_hseq++, q)->ptr, HTML_A);
+            push_tag(obuf, Sprintf("<a hseq=\"%d\" href=\"%s\">", hb->cur_hseq++, q)->ptr, HTML_A);
             if (r)
                 q = html_quote(r);
             push_charp(obuf, get_strwidth(q), q, PC_ASCII);
@@ -3845,8 +3831,8 @@ int HTMLtagproc1(struct HtmlBuilder* hb, struct parsed_tag* tag, struct html_fee
             obuf->anchor.hseq = hseq;
 
         if (hseq == 0 && obuf->anchor.url) {
-            obuf->anchor.hseq = cur_hseq;
-            tmp = process_anchor(tag, h_env->tagbuf->ptr);
+            obuf->anchor.hseq = hb->cur_hseq;
+            tmp = process_anchor(hb, tag, h_env->tagbuf->ptr);
             push_tag(obuf, tmp->ptr, HTML_A);
             return 1;
         }
@@ -3859,7 +3845,7 @@ int HTMLtagproc1(struct HtmlBuilder* hb, struct parsed_tag* tag, struct html_fee
             HTML5_CLOSE_A;
         tmp = process_img(hb, tag, h_env->limit);
         if (need_number) {
-            tmp = Strnew_m_charp(getLinkNumberStr(-1)->ptr, tmp->ptr, NULL);
+            tmp = Strnew_m_charp(getLinkNumberStr(hb, -1)->ptr, tmp->ptr, NULL);
             need_number = 0;
         }
         HTMLlineproc0(hb, tmp->ptr, h_env, true);
@@ -5210,7 +5196,7 @@ table_start:
                 obuf->status = R_ST_NORMAL;
             str = tokbuf->ptr;
             if (need_number) {
-                str = Strnew_m_charp(getLinkNumberStr(-1)->ptr, str, NULL)->ptr;
+                str = Strnew_m_charp(getLinkNumberStr(hb, -1)->ptr, str, NULL)->ptr;
                 need_number = 0;
             }
         }
@@ -5815,9 +5801,8 @@ void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int int
     hb->form_max = -1;
     hb->forms_size = 0;
     hb->forms = NULL;
-    cur_hseq = 1;
-
-    cur_iseq = 1;
+    hb->cur_hseq = 1;
+    hb->cur_iseq = 1;
     if (newBuf->image_flag)
         image_flag = newBuf->image_flag;
     else if (getRuntime()->activeImage && getRuntime()->displayImage && autoImage)

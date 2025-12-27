@@ -32,6 +32,7 @@ void feed_select(struct HtmlBuilder* hb, const char* str);
 void process_option(struct HtmlBuilder* hb);
 Str process_n_textarea(struct HtmlBuilder* hb);
 void feed_textarea(struct HtmlBuilder* hb, const char* str);
-Str process_anchor(struct parsed_tag* tag, const char* tagbuf);
+Str process_anchor(struct HtmlBuilder* hb, struct parsed_tag* tag, const char* tagbuf);
 void showProgress(int64_t* linelen, int64_t* trbyte, size_t current_content_length);
 Str process_n_form(struct HtmlBuilder* hb);
+Str getLinkNumberStr(struct HtmlBuilder* hb, int correction);

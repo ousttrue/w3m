@@ -2904,9 +2904,9 @@ feed_table_tag(struct HtmlBuilder *hb, struct table* tbl, const char* line, stru
         if (anchor) {
             check_rowcol(tbl, mode);
             if (i == 0) {
-                Str tmp = process_anchor(tag, line);
+                Str tmp = process_anchor(hb, tag, line);
                 if (displayLinkNumber) {
-                    Str t = getLinkNumberStr(-1);
+                    Str t = getLinkNumberStr(hb, -1);
                     feed_table_inline_tag(tbl, NULL, mode, t->length);
                     Strcat(tmp, t);
                 }
