@@ -19,6 +19,13 @@ struct HtmlBuilder {
     struct table* tables[MAX_TABLE];
     struct table_mode table_mode[MAX_TABLE];
 
+    // <form>
+    struct FormList** forms;
+    int* form_stack;
+    int form_max; // = -1;
+    int forms_size; // = 0;
+    int form_sp; // = 0;
+
     // <select>
     Str cur_select;
     Str select_str;

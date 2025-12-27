@@ -62,9 +62,6 @@ static int need_number = 0;
 
 static JMP_BUF AbortLoading;
 
-#define set_prevchar(x, y, n) Strcopy_charp_n((x), (y), (n))
-#define set_space_to_prevchar(x) Strcopy_charp_n((x), " ", 1)
-
 struct link_stack {
     int cmd;
     short offset;
@@ -82,12 +79,7 @@ static struct link_stack* link_stack = NULL;
 #endif /* USE_NNTP */
 
 #define INITIAL_FORM_SIZE 10
-static struct FormList** forms;
-static int* form_stack;
-static int form_max = -1;
-static int forms_size = 0;
-#define cur_form_id ((form_sp >= 0) ? form_stack[form_sp] : -1)
-static int form_sp = 0;
+static int cur_form_id(struct HtmlBuilder* hb) { return ((hb->form_sp >= 0) ? hb->form_stack[hb->form_sp] : -1); }
 
 static int cur_hseq;
 #ifdef USE_IMAGE
@@ -1615,7 +1607,7 @@ push_nchars(struct readbuffer* obuf, int width,
     Strcat_charp_n(obuf->line, str, len);
     obuf->pos += width;
     if (width > 0) {
-        set_prevchar(obuf->prevchar, str, len);
+        Strcopy_charp_n(obuf->prevchar, str, len);
         obuf->prev_ctype = mode;
     }
     obuf->flag |= RB_NFLUSHED;
@@ -1648,7 +1640,7 @@ push_char(struct readbuffer* obuf, int pre_mode, char ch)
     check_breakpoint(obuf, pre_mode, &ch);
     Strcat_char(obuf->line, ch);
     obuf->pos++;
-    set_prevchar(obuf->prevchar, &ch, 1);
+    Strcopy_charp_n(obuf->prevchar, &ch, 1);
     if (ch != ' ')
         obuf->prev_ctype = PC_ASCII;
     obuf->flag |= RB_NFLUSHED;
@@ -1667,7 +1659,7 @@ push_spaces(struct readbuffer* obuf, int pre_mode, int width)
     for (i = 0; i < width; i++)
         Strcat_char(obuf->line, ' ');
     obuf->pos += width;
-    set_space_to_prevchar(obuf->prevchar);
+    Strcopy_charp_n(obuf->prevchar, " ", 1);
     obuf->flag |= RB_NFLUSHED;
 }
 
@@ -1679,7 +1671,7 @@ proc_mchar(struct readbuffer* obuf, int pre_mode,
     obuf->pos += width;
     Strcat_charp_n(obuf->line, *str, get_mclen(*str));
     if (width > 0) {
-        set_prevchar(obuf->prevchar, *str, 1);
+        Strcopy_charp_n(obuf->prevchar, *str, 1);
         if (**str != ' ')
             obuf->prev_ctype = mode;
     }
@@ -1975,7 +1967,7 @@ void flushline(struct html_feed_environ* h_env, struct readbuffer* obuf, int ind
     obuf->pos = 0;
     obuf->top_margin = 0;
     obuf->bottom_margin = 0;
-    set_space_to_prevchar(obuf->prevchar);
+    Strcopy_charp_n(obuf->prevchar, " ", 1);
     obuf->bp.init_flag = 1;
     obuf->flag &= ~RB_NFLUSHED;
     set_breakpoint(obuf, 0);
@@ -2117,7 +2109,7 @@ close_anchor(struct HtmlBuilder* hb,
         if (i >= 0 || (p = has_hidden_link(obuf, HTML_A))) {
             if (obuf->anchor.hseq > 0) {
                 HTMLlineproc0(hb, ANSP, h_env, true);
-                set_space_to_prevchar(obuf->prevchar);
+                Strcopy_charp_n(obuf->prevchar, " ", 1);
             } else {
                 if (i >= 0) {
                     obuf->tag_sp--;
@@ -2266,11 +2258,11 @@ Str process_img(struct HtmlBuilder* hb, struct parsed_tag* tag, int width)
             Strcat(tmp, tmp2);
         Strcat(tmp, Sprintf("<input_alt fid=\"%d\" "
                             "type=hidden name=link value=\"",
-                        cur_form_id));
+                        cur_form_id(hb)));
         Strcat_charp(tmp, html_quote((r2) ? r2 + 1 : r));
         Strcat(tmp, Sprintf("\"><input_alt hseq=\"%d\" fid=\"%d\" "
                             "type=submit no_effect=true>",
-                        cur_hseq++, cur_form_id));
+                        cur_hseq++, cur_form_id(hb)));
     }
     if (use_image) {
         w0 = w;
@@ -2473,7 +2465,7 @@ img_end:
         Strcat_charp(tmp, "</pre_int>");
     if (r) {
         Strcat_charp(tmp, "</input_alt>");
-        process_n_form();
+        process_n_form(hb);
     }
 #ifdef USE_IMAGE
     if (use_image) {
@@ -2509,7 +2501,7 @@ Str process_input(struct HtmlBuilder* hb, struct parsed_tag* tag)
     char* qq = "";
     int qlen = 0;
 
-    if (cur_form_id < 0) {
+    if (cur_form_id(hb) < 0) {
         const char* s = "<form_int method=internal action=none>";
         tmp = process_form(hb, parse_tag(&s, TRUE));
     }
@@ -2580,7 +2572,7 @@ Str process_input(struct HtmlBuilder* hb, struct parsed_tag* tag)
     }
     Strcat(tmp, Sprintf("<input_alt hseq=\"%d\" fid=\"%d\" type=\"%s\" "
                         "name=\"%s\" width=%d maxlength=%d value=\"%s\"",
-                    cur_hseq++, cur_form_id, html_quote(p), html_quote(r), size, i, qq));
+                    cur_hseq++, cur_form_id(hb), html_quote(p), html_quote(r), size, i, qq));
     if (x)
         Strcat_charp(tmp, " checked");
     if (y)
@@ -2692,7 +2684,7 @@ Str process_button(struct HtmlBuilder* hb, struct parsed_tag* tag)
     char *p, *q, *r, *qq = "";
     int v;
 
-    if (cur_form_id < 0) {
+    if (cur_form_id(hb) < 0) {
         const char* s = "<form_int method=internal action=none>";
         tmp = process_form(hb, parse_tag(&s, TRUE));
     }
@@ -2739,7 +2731,7 @@ Str process_button(struct HtmlBuilder* hb, struct parsed_tag* tag)
     /*    Strcat_charp(tmp, "<pre_int>"); */
     Strcat(tmp, Sprintf("<input_alt hseq=\"%d\" fid=\"%d\" type=\"%s\" "
                         "name=\"%s\" value=\"%s\">",
-                    cur_hseq++, cur_form_id, html_quote(p), html_quote(r), qq));
+                    cur_hseq++, cur_form_id(hb), html_quote(p), html_quote(r), qq));
     return tmp;
 }
 
@@ -2756,7 +2748,7 @@ Str process_select(struct HtmlBuilder* hb, struct parsed_tag* tag)
     Str tmp = NULL;
     char* p;
 
-    if (cur_form_id < 0) {
+    if (cur_form_id(hb) < 0) {
         const char* s = "<form_int method=internal action=none>";
         tmp = process_form(hb, parse_tag(&s, TRUE));
     }
@@ -2772,7 +2764,7 @@ Str process_select(struct HtmlBuilder* hb, struct parsed_tag* tag)
             Strcat(hb->select_str, getLinkNumberStr(0));
         Strcat(hb->select_str, Sprintf("[<input_alt hseq=\"%d\" "
                                        "fid=\"%d\" type=select name=\"%s\" selectnumber=%d",
-                                   cur_hseq++, cur_form_id, html_quote(p), hb->n_select));
+                                   cur_hseq++, cur_form_id(hb), html_quote(p), hb->n_select));
         Strcat_charp(hb->select_str, ">");
         if (hb->n_select == hb->max_select) {
             hb->max_select *= 2;
@@ -2900,7 +2892,7 @@ void process_option(struct HtmlBuilder* hb)
     }
     Strcat(hb->select_str, Sprintf("<br><pre_int>%c<input_alt hseq=\"%d\" "
                                    "fid=\"%d\" type=%s name=\"%s\" value=\"%s\"",
-                               begin_char, cur_hseq++, cur_form_id, hb->select_is_multiple ? "checkbox" : "radio", html_quote(hb->cur_select->ptr), html_quote(hb->cur_option_value->ptr)));
+                               begin_char, cur_hseq++, cur_form_id(hb), hb->select_is_multiple ? "checkbox" : "radio", html_quote(hb->cur_select->ptr), html_quote(hb->cur_option_value->ptr)));
     if (hb->cur_option_selected)
         Strcat_charp(hb->select_str, " checked>*</input_alt>");
     else
@@ -2918,7 +2910,7 @@ Str process_textarea(struct HtmlBuilder* hb, struct parsed_tag* tag, int width)
 #define TEXTAREA_ATTR_COL_MAX 4096
 #define TEXTAREA_ATTR_ROWS_MAX 4096
 
-    if (cur_form_id < 0) {
+    if (cur_form_id(hb) < 0) {
         const char* s = "<form_int method=internal action=none>";
         tmp = process_form(hb, parse_tag(&s, TRUE));
     }
@@ -2969,7 +2961,7 @@ Str process_n_textarea(struct HtmlBuilder* hb)
     Strcat(tmp, Sprintf("<pre_int>[<input_alt hseq=\"%d\" fid=\"%d\" "
                         "type=textarea name=\"%s\" size=%d rows=%d "
                         "top_margin=%d textareanumber=%d",
-                    cur_hseq, cur_form_id, html_quote(hb->cur_textarea->ptr), hb->cur_textarea_size, hb->cur_textarea_rows, hb->cur_textarea_rows - 1, hb->n_textarea));
+                    cur_hseq, cur_form_id(hb), html_quote(hb->cur_textarea->ptr), hb->cur_textarea_size, hb->cur_textarea_rows, hb->cur_textarea_rows - 1, hb->n_textarea));
     if (hb->cur_textarea_readonly)
         Strcat_charp(tmp, " readonly");
     Strcat_charp(tmp, "><u>");
@@ -3098,25 +3090,25 @@ process_form_int(struct HtmlBuilder* hb,
     parsedtag_get_value(tag, ATTR_NAME, &n);
 
     if (fid < 0) {
-        form_max++;
-        form_sp++;
-        fid = form_max;
+        hb->form_max++;
+        hb->form_sp++;
+        fid = hb->form_max;
     } else { /* <form_int> */
-        if (form_max < fid)
-            form_max = fid;
-        form_sp = fid;
+        if (hb->form_max < fid)
+            hb->form_max = fid;
+        hb->form_sp = fid;
     }
-    if (forms_size == 0) {
-        forms_size = INITIAL_FORM_SIZE;
-        forms = New_N(struct FormList*, forms_size);
-        form_stack = NewAtom_N(int, forms_size);
+    if (hb->forms_size == 0) {
+        hb->forms_size = INITIAL_FORM_SIZE;
+        hb->forms = New_N(struct FormList*, hb->forms_size);
+        hb->form_stack = NewAtom_N(int, hb->forms_size);
     }
-    if (forms_size <= form_max) {
-        forms_size += form_max;
-        forms = New_Reuse(struct FormList*, forms, forms_size);
-        form_stack = New_Reuse(int, form_stack, forms_size);
+    if (hb->forms_size <= hb->form_max) {
+        hb->forms_size += hb->form_max;
+        hb->forms = New_Reuse(struct FormList*, hb->forms, hb->forms_size);
+        hb->form_stack = New_Reuse(int, hb->form_stack, hb->forms_size);
     }
-    form_stack[form_sp] = fid;
+    hb->form_stack[hb->form_sp] = fid;
 
     if (w3m_halfdump) {
         Str tmp = Sprintf("<form_int fid=\"%d\" action=\"%s\" method=\"%s\"",
@@ -3135,7 +3127,7 @@ process_form_int(struct HtmlBuilder* hb,
         return tmp;
     }
 
-    forms[fid] = newFormList(q, p, r, s, tg, n, NULL);
+    hb->forms[fid] = newFormList(q, p, r, s, tg, n, NULL);
     return NULL;
 }
 
@@ -3144,10 +3136,10 @@ Str process_form(struct HtmlBuilder* hb, struct parsed_tag* tag)
     return process_form_int(hb, tag, -1);
 }
 
-Str process_n_form(void)
+Str process_n_form(struct HtmlBuilder* hb)
 {
-    if (form_sp >= 0)
-        form_sp--;
+    if (hb->form_sp >= 0)
+        hb->form_sp--;
     return NULL;
 }
 
@@ -3569,7 +3561,7 @@ int HTMLtagproc1(struct HtmlBuilder* hb, struct parsed_tag* tag, struct html_fee
                     push_charp(obuf, 1, NBSP, PC_ASCII);
                 push_str(obuf, symbol_width, tmp, PC_ASCII);
                 push_charp(obuf, 1, NBSP, PC_ASCII);
-                set_space_to_prevchar(obuf->prevchar);
+                Strcopy_charp_n(obuf->prevchar, " ", 1);
                 break;
             case HTML_OL:
                 if (parsedtag_get_value(tag, ATTR_TYPE, &p))
@@ -3600,7 +3592,7 @@ int HTMLtagproc1(struct HtmlBuilder* hb, struct parsed_tag* tag, struct html_fee
                 push_spaces(obuf, 1, INDENT_INCR - num->length);
                 push_str(obuf, num->length, num, PC_ASCII);
                 if (INDENT_INCR >= 4)
-                    set_space_to_prevchar(obuf->prevchar);
+                    Strcopy_charp_n(obuf->prevchar, " ", 1);
                 break;
             default:
                 push_spaces(obuf, 1, INDENT_INCR);
@@ -3712,7 +3704,7 @@ int HTMLtagproc1(struct HtmlBuilder* hb, struct parsed_tag* tag, struct html_fee
         close_anchor(hb, h_env, obuf);
         tmp = process_hr(tag, h_env->limit, envs[h_env->envc].indent);
         HTMLlineproc0(hb, tmp->ptr, h_env, true);
-        set_space_to_prevchar(obuf->prevchar);
+        Strcopy_charp_n(obuf->prevchar, " ", 1);
         return 1;
     case HTML_PRE:
         x = parsedtag_exists(tag, ATTR_FOR_TABLE);
@@ -3750,7 +3742,7 @@ int HTMLtagproc1(struct HtmlBuilder* hb, struct parsed_tag* tag, struct html_fee
         push_tag(obuf, "</pre_int>", HTML_N_PRE_INT);
         obuf->flag &= ~RB_PRE_INT;
         if (!(obuf->flag & RB_SPECIAL) && obuf->pos > obuf->bp.pos) {
-            set_prevchar(obuf->prevchar, "", 0);
+            Strcopy_charp_n(obuf->prevchar, "", 0);
             obuf->prev_ctype = PC_CTRL;
         }
         return 1;
@@ -4057,7 +4049,7 @@ int HTMLtagproc1(struct HtmlBuilder* hb, struct parsed_tag* tag, struct html_fee
         CLOSE_A;
         flushline(h_env, obuf, envs[h_env->envc].indent, 0, h_env->limit);
         obuf->flag |= RB_IGNORE_P;
-        process_n_form();
+        process_n_form(hb);
         return 1;
     case HTML_INPUT:
         close_anchor(hb, h_env, obuf);
@@ -4780,9 +4772,9 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                     parsedtag_get_value(tag, ATTR_FID, &form_id);
                     parsedtag_get_value(tag, ATTR_TOP_MARGIN, &top);
                     parsedtag_get_value(tag, ATTR_BOTTOM_MARGIN, &bottom);
-                    if (form_id < 0 || form_id > form_max || forms == NULL || forms[form_id] == NULL)
+                    if (form_id < 0 || form_id > hb->form_max || hb->forms == NULL || hb->forms[form_id] == NULL)
                         break; /* outside of <form>..</form> */
-                    form = forms[form_id];
+                    form = hb->forms[form_id];
                     if (hseq > 0) {
                         int hpos = pos;
                         if (*str == '[')
@@ -5055,10 +5047,10 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
             goto proc_again;
         }
     }
-    for (form_id = 1; form_id <= form_max; form_id++)
-        if (forms[form_id])
-            forms[form_id]->next = forms[form_id - 1];
-    buf->formlist = (form_max >= 0) ? forms[form_max] : NULL;
+    for (form_id = 1; form_id <= hb->form_max; form_id++)
+        if (hb->forms[form_id])
+            hb->forms[form_id]->next = hb->forms[form_id - 1];
+    buf->formlist = (hb->form_max >= 0) ? hb->forms[hb->form_max] : NULL;
     if (hb->n_textarea)
         addMultirowsForm(buf, buf->formitem);
 #ifdef USE_IMAGE
@@ -5118,7 +5110,7 @@ proc_escape(struct readbuffer* obuf, const char** str_return)
         push_charp(obuf, width, estr, mode);
     } else
         push_nchars(obuf, width, str, n_add, mode);
-    set_prevchar(obuf->prevchar, estr, strlen(estr));
+    Strcopy_charp_n(obuf->prevchar, estr, strlen(estr));
     obuf->prev_ctype = mode;
 }
 
@@ -5314,7 +5306,7 @@ table_start:
                     do_blankline(h_env, obuf, indent, 0, h_env->limit);
                     obuf->flag |= RB_IGNORE_P;
                 }
-                set_space_to_prevchar(obuf->prevchar);
+                Strcopy_charp_n(obuf->prevchar, " ", 1);
                 continue;
             case 1:
                 /* <table> tag */
@@ -5635,7 +5627,7 @@ void init_henv(struct html_feed_environ* h_env, struct readbuffer* obuf,
     obuf->cprop = 0;
     obuf->pos = 0;
     obuf->prevchar = Strnew_size(8);
-    set_space_to_prevchar(obuf->prevchar);
+    Strcopy_charp_n(obuf->prevchar, " ", 1);
     obuf->flag = RB_IGNORE_P;
     obuf->flag_sp = 0;
     obuf->status = R_ST_NORMAL;
@@ -5819,10 +5811,10 @@ void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int int
     hb->max_select = MAX_SELECT;
     hb->select_option = New_N(struct FormSelectOption, hb->max_select);
 
-    form_sp = -1;
-    form_max = -1;
-    forms_size = 0;
-    forms = NULL;
+    hb->form_sp = -1;
+    hb->form_max = -1;
+    hb->forms_size = 0;
+    hb->forms = NULL;
     cur_hseq = 1;
 
     cur_iseq = 1;

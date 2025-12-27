@@ -423,7 +423,7 @@ suspend_or_pushdata(struct table* tbl, const char* line)
 #endif
 
 int visible_length_offset = 0;
-int visible_length(char* str)
+int visible_length(const char* str)
 {
     int len = 0, n, max_len = 0;
     int status = R_ST_NORMAL;
@@ -2216,7 +2216,7 @@ void check_rowcol(struct table* tbl, struct table_mode* mode)
 }
 
 static int
-skip_space(struct table* t, char* line, struct table_linfo* linfo,
+skip_space(struct table* t, const char* line, struct table_linfo* linfo,
     int checkminimum)
 {
     int skip = 0, s = linfo->prev_spaces;
@@ -2232,7 +2232,7 @@ skip_space(struct table* t, char* line, struct table_linfo* linfo,
     }
 
     while (*line) {
-        char *save = line, *c = line;
+        const char *save = line, *c = line;
         int ec, len, wlen, plen;
         ctype = get_mctype(line);
         len = get_mcwidth(line);
@@ -2854,7 +2854,7 @@ feed_table_tag(struct HtmlBuilder *hb, struct table* tbl, const char* line, stru
         break;
     case HTML_N_FORM:
         feed_table_block_tag(tbl, "", mode, 0, cmd);
-        process_n_form();
+        process_n_form(hb);
         break;
     case HTML_INPUT:
         tmp = process_input(hb, tag);

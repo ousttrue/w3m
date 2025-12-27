@@ -158,3 +158,4 @@ extern void feed_table1(struct HtmlBuilder *hb, struct table* tbl, Str tok, stru
 extern void pushTable(struct table*, struct table*);
 extern void do_refill(struct HtmlBuilder *hb, struct table* tbl, int row, int col, int maxlimit);
 extern void pushdata(struct table* t, int row, int col, const char* data);
+extern int visible_length(const char* str);
