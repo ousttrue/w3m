@@ -1,6 +1,6 @@
 #include "symbol.h"
 #include "w3m_rc.h"
-#include "fm.h"
+#include "indep.h"
 #include "ctrlcode.h"
 #include <libwc/conv.h>
 #include <libwc/ccs.h>

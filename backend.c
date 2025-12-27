@@ -1,4 +1,5 @@
 #include "w3m_rc.h"
+#include "indep.h"
 #include "file.h"
 #include "html_form.h"
 #include "buffer.h"

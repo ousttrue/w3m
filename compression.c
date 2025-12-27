@@ -1,4 +1,5 @@
 #include "compression.h"
+#include "indep.h"
 #include "etc.h"
 #include "URLFile.h"
 #include "url.h"

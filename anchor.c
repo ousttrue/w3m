@@ -1,4 +1,6 @@
 #include "anchor.h"
+#include "indep.h"
+#include "alloc.h"
 #include "file.h"
 #include "html_form.h"
 #include "buffer.h"

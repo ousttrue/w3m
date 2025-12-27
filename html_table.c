@@ -1,4 +1,5 @@
 #include "html_table.h"
+#include "indep.h"
 #include "readbuffer.h"
 #include "symbol.h"
 #include "anchor.h"

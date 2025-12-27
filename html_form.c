@@ -1,5 +1,7 @@
 #include "html_form.h"
+#include "indep.h"
 #include "URLFile.h"
+#include "alloc.h"
 #include "etc.h"
 #include "symbol.h"
 #include "message.h"

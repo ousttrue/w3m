@@ -333,14 +333,6 @@ extern void shiftAnchorPosition(struct AnchorList* a, struct HmarkerList* hl, in
 extern char* getAnchorText(struct Buffer* buf, struct AnchorList* al, struct Anchor* a);
 extern struct Buffer* link_list_panel(struct Buffer* buf);
 
-extern Str decodeB(char** ww);
-extern void decodeB_to_growbuf(struct growbuf* gb, char** ww);
-extern Str decodeQ(char** ww);
-extern Str decodeQP(char** ww);
-extern void decodeQP_to_growbuf(struct growbuf* gb, char** ww);
-extern Str decodeU(char** ww);
-extern void decodeU_to_growbuf(struct growbuf* gb, char** ww);
-
 extern int set_param_option(char* option);
 extern char* get_param_option(char* name);
 extern void init_rc(void);

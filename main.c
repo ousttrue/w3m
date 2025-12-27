@@ -1,4 +1,6 @@
 #include "maparea.h"
+#include "indep.h"
+#include "alloc.h"
 #include "ssl_stream.h"
 #include "ftp.h"
 #include "etc.h"

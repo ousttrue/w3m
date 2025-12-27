@@ -3,8 +3,7 @@
  * replacements for w3m's allocation macros which add overflow
  * detection and concentrate the macros in one file
  */
-#ifndef W3_ALLOC_H
-#define W3_ALLOC_H
+#pragma once
 #include <gc.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -36,4 +35,26 @@ z_mult_no_oflow_(size_t n, size_t size)
 #define New_Reuse(type, ptr, n) \
     (GC_REALLOC((ptr), z_mult_no_oflow_((n), sizeof(type))))
 
-#endif /* W3_ALLOC_H */
+inline static void* xrealloc(void* ptr, size_t size)
+{
+    void* newptr = realloc(ptr, size);
+    if (newptr == NULL) {
+        fprintf(stderr, "Out of memory\n");
+        exit(-1);
+    }
+    return newptr;
+}
+
+inline static void* xmalloc(size_t size)
+{
+    return xrealloc(NULL, size);
+}
+
+inline static void xfree(void* ptr)
+{
+    free(ptr);
+}
+
+#define NewWithoutGC(type) ((type*)xmalloc(sizeof(type)))
+#define NewWithoutGC_N(type, n) ((type*)xmalloc((n) * sizeof(type)))
+#define NewWithoutGC_Reuse(type, ptr, n) ((type*)xrealloc(ptr, (n) * sizeof(type)))

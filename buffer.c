@@ -1,4 +1,6 @@
 #include "buffer.h"
+#include "alloc.h"
+#include "line.h"
 #include "URLFile.h"
 #include "etc.h"
 #include "file.h"

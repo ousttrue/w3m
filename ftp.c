@@ -1,4 +1,5 @@
 #include "ftp.h"
+#include "indep.h"
 #include "URLFile.h"
 #include "w3m_rc.h"
 #include "etc.h"

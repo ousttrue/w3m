@@ -11,6 +11,7 @@ const system_libs = [_][]const u8{
 const w3m_srcs = [_][]const u8{
     "w3m_rc.c",
 
+    "growbuf.c",
     "input_stream.c",
     "ssl_stream.c",
     "document.c",

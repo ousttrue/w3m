@@ -1,5 +1,6 @@
 #pragma once
-#include "indep.h" // growbuf
+#include "growbuf.h"
+#include "stream_buffer.h"
 #include "ssl_stream.h"
 #include <stdbool.h>
 #include <stdio.h>

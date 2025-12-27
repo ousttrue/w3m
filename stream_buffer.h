@@ -1,4 +1,5 @@
 #pragma once
+#include <stdint.h>
 
 #define IST_BASIC 0
 #define IST_FILE 1
@@ -7,6 +8,8 @@
 #define IST_ENCODED 4
 
 struct stream_buffer {
-    unsigned char* buf;
-    int size, cur, next;
+    uint8_t* buf;
+    int size;
+    int cur;
+    int next;
 };

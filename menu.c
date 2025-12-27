@@ -1,4 +1,5 @@
 #include "menu.h"
+#include "alloc.h"
 #include "symbol.h"
 #include "message.h"
 #include "conv.h"

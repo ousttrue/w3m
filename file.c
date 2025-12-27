@@ -1,4 +1,6 @@
 #include "file.h"
+#include "indep.h"
+#include "alloc.h"
 #include "mimehead.h"
 #include "ftp.h"
 #include "compression.h"

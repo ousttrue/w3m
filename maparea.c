@@ -1,6 +1,8 @@
 #include "maparea.h"
+#include "alloc.h"
 #include "etc.h"
 #include "file.h"
+#include "indep.h"
 #include "w3m_rc.h"
 #include "ctrlcode.h"
 #include "html_form.h"

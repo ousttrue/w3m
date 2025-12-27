@@ -1,8 +1,10 @@
 #include "mailcap.h"
+#include "indep.h"
 #include "content.h"
 #include "fm.h"
 #include "myctype.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <strings.h>
 

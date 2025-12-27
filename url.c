@@ -1,4 +1,5 @@
 #include "w3m_rc.h"
+#include "indep.h"
 #include "ssl_stream.h"
 #include "ftp.h"
 #include "URLFile.h"

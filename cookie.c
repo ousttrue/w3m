@@ -8,9 +8,11 @@
  */
 
 #include "cookie.h"
+#include "alloc.h"
 #include "fm.h"
 #include "file.h"
 #include "html.h"
+#include "indep.h"
 #include "local_cgi.h"
 #include "regex.h"
 #include "myctype.h"

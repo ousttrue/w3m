@@ -1,16 +1,16 @@
 #include "input_stream.h"
+#include "alloc.h"
 #include "w3m_rc.h"
 #include "linein.h"
 #include "message.h"
 #include "fm.h"
 #include "myctype.h"
 #include "input_stream.h"
+#include <stdint.h>
 #include <signal.h>
 #include <string.h>
 #include <strings.h>
 #include <unistd.h>
-
-#define uchar unsigned char
 
 #define STREAM_BUF_SIZE 8192
 
@@ -62,7 +62,7 @@ init_buffer(struct base_stream* base, char* buf, int bufsize)
     struct stream_buffer* sb = &base->stream;
     sb->size = bufsize;
     sb->cur = 0;
-    sb->buf = NewWithoutGC_N(uchar, bufsize);
+    sb->buf = NewWithoutGC_N(uint8_t, bufsize);
     if (buf) {
         memcpy(sb->buf, buf, bufsize);
         sb->next = bufsize;
@@ -133,10 +133,6 @@ newStrStream(Str s)
     stream->str.close = NULL;
     return stream;
 }
-
-#ifdef USE_SSL
-
-#endif
 
 int ISclose(union input_stream* stream)
 {

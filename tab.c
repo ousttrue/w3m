@@ -1,4 +1,5 @@
 #include "tab.h"
+#include "alloc.h"
 #include "buffer.h"
 #include "w3m_rc.h"
 #include "image.h"

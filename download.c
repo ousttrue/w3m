@@ -1,4 +1,5 @@
 #include "download.h"
+#include "indep.h"
 #include "file.h"
 #include "buffer.h"
 #include "display.h"

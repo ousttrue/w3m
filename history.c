@@ -1,4 +1,5 @@
 #include "history.h"
+#include "indep.h"
 #include "etc.h"
 #include "buffer.h"
 #include "w3m_rc.h"

@@ -9,7 +9,7 @@ void init_stream(struct URLFile* uf, int scheme, union input_stream* stream)
     memset(uf, 0, sizeof(struct URLFile));
     uf->stream = stream;
     uf->scheme = scheme;
-    uf->is_cgi = FALSE;
+    uf->is_cgi = false;
     uf->compression = CMP_NOCOMPRESS;
     uf->ext = NULL;
     uf->modtime = -1;

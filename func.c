@@ -1,4 +1,5 @@
 #include "func.h"
+#include "alloc.h"
 #include "message.h"
 #include "fm.h"
 #include "myctype.h"

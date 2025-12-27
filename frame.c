@@ -1,3 +1,5 @@
+#include "alloc.h"
+#include "indep.h"
 #include "w3m_rc.h"
 #include "URLFile.h"
 #include "etc.h"

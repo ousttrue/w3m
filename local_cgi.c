@@ -1,4 +1,6 @@
 #include "local_cgi.h"
+#include "indep.h"
+#include "alloc.h"
 #include "etc.h"
 #include "w3m_rc.h"
 #include "html_form.h"
