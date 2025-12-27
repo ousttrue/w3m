@@ -70,16 +70,6 @@ static JMP_BUF AbortLoading;
 static struct table* tables[MAX_TABLE];
 static struct table_mode table_mode[MAX_TABLE];
 
-static Str cur_select;
-static Str select_str;
-static int select_is_multiple;
-static int n_selectitem;
-static Str cur_option;
-static Str cur_option_value;
-static Str cur_option_label;
-static int cur_option_selected;
-static int cur_status;
-
 /* menu based <select>  */
 struct FormSelectOption* select_option;
 int max_select = MAX_SELECT;
@@ -2138,7 +2128,7 @@ close_effect0(struct readbuffer* obuf, int cmd)
 }
 
 static void
-close_anchor(struct HtmlBuilder *hb,
+close_anchor(struct HtmlBuilder* hb,
     struct html_feed_environ* h_env, struct readbuffer* obuf)
 {
     if (obuf->anchor.url) {
@@ -2222,7 +2212,7 @@ void restore_fonteffect(struct html_feed_environ* h_env, struct readbuffer* obuf
         push_tag(obuf, "<ins>", HTML_INS);
 }
 
-Str process_img(struct HtmlBuilder *hb, struct parsed_tag* tag, int width)
+Str process_img(struct HtmlBuilder* hb, struct parsed_tag* tag, int width)
 {
     char *r, *r2 = NULL, *s;
 
@@ -2543,7 +2533,7 @@ Str process_anchor(struct parsed_tag* tag, char* tagbuf)
     }
 }
 
-Str process_input(struct HtmlBuilder *hb, struct parsed_tag* tag)
+Str process_input(struct HtmlBuilder* hb, struct parsed_tag* tag)
 {
     int i = 20, v, x, y, z, iw, ih, size = 20;
     char *q, *p, *r, *p2, *s;
@@ -2728,7 +2718,7 @@ Str process_input(struct HtmlBuilder *hb, struct parsed_tag* tag)
     return tmp;
 }
 
-Str process_button(struct HtmlBuilder *hb, struct parsed_tag* tag)
+Str process_button(struct HtmlBuilder* hb, struct parsed_tag* tag)
 {
     Str tmp = NULL;
     char *p, *q, *r, *qq = "";
@@ -2793,7 +2783,7 @@ Str process_n_button(void)
     return tmp;
 }
 
-Str process_select(struct HtmlBuilder *hb, struct parsed_tag* tag)
+Str process_select(struct HtmlBuilder* hb, struct parsed_tag* tag)
 {
     Str tmp = NULL;
     char* p;
@@ -2805,18 +2795,17 @@ Str process_select(struct HtmlBuilder *hb, struct parsed_tag* tag)
 
     p = "";
     parsedtag_get_value(tag, ATTR_NAME, &p);
-    cur_select = Strnew_charp(p);
-    select_is_multiple = parsedtag_exists(tag, ATTR_MULTIPLE);
+    hb->cur_select = Strnew_charp(p);
+    hb->select_is_multiple = parsedtag_exists(tag, ATTR_MULTIPLE);
 
-#ifdef MENU_SELECT
-    if (!select_is_multiple) {
-        select_str = Strnew_charp("<pre_int>");
+    if (!hb->select_is_multiple) {
+        hb->select_str = Strnew_charp("<pre_int>");
         if (displayLinkNumber)
-            Strcat(select_str, getLinkNumberStr(0));
-        Strcat(select_str, Sprintf("[<input_alt hseq=\"%d\" "
-                                   "fid=\"%d\" type=select name=\"%s\" selectnumber=%d",
-                               cur_hseq++, cur_form_id, html_quote(p), n_select));
-        Strcat_charp(select_str, ">");
+            Strcat(hb->select_str, getLinkNumberStr(0));
+        Strcat(hb->select_str, Sprintf("[<input_alt hseq=\"%d\" "
+                                       "fid=\"%d\" type=select name=\"%s\" selectnumber=%d",
+                                   cur_hseq++, cur_form_id, html_quote(p), n_select));
+        Strcat_charp(hb->select_str, ">");
         if (n_select == max_select) {
             max_select *= 2;
             select_option = New_Reuse(struct FormSelectOption, select_option, max_select);
@@ -2825,47 +2814,45 @@ Str process_select(struct HtmlBuilder *hb, struct parsed_tag* tag)
         select_option[n_select].last = NULL;
         cur_option_maxwidth = 0;
     } else
-#endif /* MENU_SELECT */
-        select_str = Strnew();
-    cur_option = NULL;
-    cur_status = R_ST_NORMAL;
-    n_selectitem = 0;
+        hb->select_str = Strnew();
+    hb->cur_option = NULL;
+    hb->cur_status = R_ST_NORMAL;
+    hb->n_selectitem = 0;
     return tmp;
 }
 
-Str process_n_select(void)
+Str process_n_select(struct HtmlBuilder* hb)
 {
-    if (cur_select == NULL)
+    if (hb->cur_select == NULL)
         return NULL;
-    process_option();
-#ifdef MENU_SELECT
-    if (!select_is_multiple) {
+    process_option(hb);
+    if (!hb->select_is_multiple) {
         if (select_option[n_select].first) {
             struct FormItemList sitem;
             chooseSelectOption(&sitem, select_option[n_select].first);
-            Strcat(select_str, textfieldrep(sitem.label, cur_option_maxwidth));
+            Strcat(hb->select_str, textfieldrep(sitem.label, cur_option_maxwidth));
         }
-        Strcat_charp(select_str, "</input_alt>]</pre_int>");
+        Strcat_charp(hb->select_str, "</input_alt>]</pre_int>");
         n_select++;
     } else
-#endif /* MENU_SELECT */
-        Strcat_charp(select_str, "<br>");
-    cur_select = NULL;
-    n_selectitem = 0;
-    return select_str;
+
+        Strcat_charp(hb->select_str, "<br>");
+    hb->cur_select = NULL;
+    hb->n_selectitem = 0;
+    return hb->select_str;
 }
 
-void feed_select(const char* str)
+void feed_select(struct HtmlBuilder* hb, const char* str)
 {
     Str tmp = Strnew();
-    int prev_status = cur_status;
+    int prev_status = hb->cur_status;
     static int prev_spaces = -1;
     char* p;
 
-    if (cur_select == NULL)
+    if (hb->cur_select == NULL)
         return;
-    while (read_token(tmp, &str, &cur_status, 0, 0)) {
-        if (cur_status != R_ST_NORMAL || prev_status != R_ST_NORMAL)
+    while (read_token(tmp, &str, &hb->cur_status, 0, 0)) {
+        if (hb->cur_status != R_ST_NORMAL || prev_status != R_ST_NORMAL)
             continue;
         p = tmp->ptr;
         if (tmp->ptr[0] == '<' && Strlastchar(tmp) == '>') {
@@ -2875,17 +2862,17 @@ void feed_select(const char* str)
                 continue;
             switch (tag->tagid) {
             case HTML_OPTION:
-                process_option();
-                cur_option = Strnew();
+                process_option(hb);
+                hb->cur_option = Strnew();
                 if (parsedtag_get_value(tag, ATTR_VALUE, &q))
-                    cur_option_value = Strnew_charp(q);
+                    hb->cur_option_value = Strnew_charp(q);
                 else
-                    cur_option_value = NULL;
+                    hb->cur_option_value = NULL;
                 if (parsedtag_get_value(tag, ATTR_LABEL, &q))
-                    cur_option_label = Strnew_charp(q);
+                    hb->cur_option_label = Strnew_charp(q);
                 else
-                    cur_option_label = NULL;
-                cur_option_selected = parsedtag_exists(tag, ATTR_SELECTED);
+                    hb->cur_option_label = NULL;
+                hb->cur_option_selected = parsedtag_exists(tag, ATTR_SELECTED);
                 prev_spaces = -1;
                 break;
             case HTML_N_OPTION:
@@ -2895,7 +2882,7 @@ void feed_select(const char* str)
                 /* never happen */
                 break;
             }
-        } else if (cur_option) {
+        } else if (hb->cur_option) {
             while (*p) {
                 if (IS_SPACE(*p) && prev_spaces != 0) {
                     p++;
@@ -2907,57 +2894,56 @@ void feed_select(const char* str)
                     else
                         prev_spaces = 0;
                     if (*p == '&')
-                        Strcat_charp(cur_option, getescapecmd(&p));
+                        Strcat_charp(hb->cur_option, getescapecmd(&p));
                     else
-                        Strcat_char(cur_option, *(p++));
+                        Strcat_char(hb->cur_option, *(p++));
                 }
             }
         }
     }
 }
 
-void process_option(void)
+void process_option(struct HtmlBuilder* hb)
 {
     char begin_char = '[', end_char = ']';
 
-    if (cur_select == NULL || cur_option == NULL)
+    if (hb->cur_select == NULL || hb->cur_option == NULL)
         return;
-    while (cur_option->length > 0 && IS_SPACE(Strlastchar(cur_option)))
-        Strshrink(cur_option, 1);
-    if (cur_option_value == NULL)
-        cur_option_value = cur_option;
-    if (cur_option_label == NULL)
-        cur_option_label = cur_option;
-#ifdef MENU_SELECT
+    while (hb->cur_option->length > 0 && IS_SPACE(Strlastchar(hb->cur_option)))
+        Strshrink(hb->cur_option, 1);
+    if (hb->cur_option_value == NULL)
+        hb->cur_option_value = hb->cur_option;
+    if (hb->cur_option_label == NULL)
+        hb->cur_option_label = hb->cur_option;
     int len;
-    if (!select_is_multiple) {
-        len = get_Str_strwidth(cur_option_label);
+    if (!hb->select_is_multiple) {
+        len = get_Str_strwidth(hb->cur_option_label);
         if (len > cur_option_maxwidth)
             cur_option_maxwidth = len;
         addSelectOption(&select_option[n_select],
-            cur_option_value,
-            cur_option_label, cur_option_selected);
+            hb->cur_option_value,
+            hb->cur_option_label, hb->cur_option_selected);
         return;
     }
-#endif /* MENU_SELECT */
-    if (!select_is_multiple) {
+
+    if (!hb->select_is_multiple) {
         begin_char = '(';
         end_char = ')';
     }
-    Strcat(select_str, Sprintf("<br><pre_int>%c<input_alt hseq=\"%d\" "
-                               "fid=\"%d\" type=%s name=\"%s\" value=\"%s\"",
-                           begin_char, cur_hseq++, cur_form_id, select_is_multiple ? "checkbox" : "radio", html_quote(cur_select->ptr), html_quote(cur_option_value->ptr)));
-    if (cur_option_selected)
-        Strcat_charp(select_str, " checked>*</input_alt>");
+    Strcat(hb->select_str, Sprintf("<br><pre_int>%c<input_alt hseq=\"%d\" "
+                                   "fid=\"%d\" type=%s name=\"%s\" value=\"%s\"",
+                               begin_char, cur_hseq++, cur_form_id, hb->select_is_multiple ? "checkbox" : "radio", html_quote(hb->cur_select->ptr), html_quote(hb->cur_option_value->ptr)));
+    if (hb->cur_option_selected)
+        Strcat_charp(hb->select_str, " checked>*</input_alt>");
     else
-        Strcat_charp(select_str, "> </input_alt>");
-    Strcat_char(select_str, end_char);
-    Strcat_charp(select_str, html_quote(cur_option_label->ptr));
-    Strcat_charp(select_str, "</pre_int>");
-    n_selectitem++;
+        Strcat_charp(hb->select_str, "> </input_alt>");
+    Strcat_char(hb->select_str, end_char);
+    Strcat_charp(hb->select_str, html_quote(hb->cur_option_label->ptr));
+    Strcat_charp(hb->select_str, "</pre_int>");
+    hb->n_selectitem++;
 }
 
-Str process_textarea(struct HtmlBuilder *hb, struct parsed_tag* tag, int width)
+Str process_textarea(struct HtmlBuilder* hb, struct parsed_tag* tag, int width)
 {
     Str tmp = NULL;
     char* p;
@@ -3121,7 +3107,7 @@ check_accept_charset(char* ac)
 #endif
 
 static Str
-process_form_int(struct HtmlBuilder *hb,
+process_form_int(struct HtmlBuilder* hb,
     struct parsed_tag* tag, int fid)
 {
     char *p, *q, *r, *s, *tg, *n;
@@ -3185,7 +3171,7 @@ process_form_int(struct HtmlBuilder *hb,
     return NULL;
 }
 
-Str process_form(struct HtmlBuilder *hb, struct parsed_tag* tag)
+Str process_form(struct HtmlBuilder* hb, struct parsed_tag* tag)
 {
     return process_form_int(hb, tag, -1);
 }
@@ -3373,7 +3359,7 @@ int getMetaRefreshParam(const char* q, Str* refresh_uri)
     return refresh_interval;
 }
 
-int HTMLtagproc1(struct HtmlBuilder *hb, struct parsed_tag* tag, struct html_feed_environ* h_env)
+int HTMLtagproc1(struct HtmlBuilder* hb, struct parsed_tag* tag, struct html_feed_environ* h_env)
 {
     const char* p;
     const char* q;
@@ -4133,7 +4119,7 @@ int HTMLtagproc1(struct HtmlBuilder *hb, struct parsed_tag* tag, struct html_fee
     case HTML_N_SELECT:
         obuf->flag &= ~RB_INSELECT;
         obuf->end_tag = 0;
-        tmp = process_n_select();
+        tmp = process_n_select(hb);
         if (tmp)
             HTMLlineproc0(hb, tmp->ptr, h_env, true);
         return 1;
@@ -4457,7 +4443,7 @@ ex_efct(int ex)
 }
 
 static void
-HTMLlineproc2body(struct HtmlBuilder *hb, struct Buffer* buf, Str (*feed)(), int llimit)
+HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int llimit)
 {
     static char* outc = NULL;
     static Lineprop* outp = NULL;
@@ -5117,7 +5103,7 @@ addLink(struct Buffer* buf, struct parsed_tag* tag)
         buf->linklist = l;
 }
 
-void HTMLlineproc2(struct HtmlBuilder *hb,
+void HTMLlineproc2(struct HtmlBuilder* hb,
     struct Buffer* buf, TextLineList* tl)
 {
     _tl_lp2 = tl->first;
@@ -5138,8 +5124,8 @@ file_feed(void)
 }
 
 static void
-HTMLlineproc3(struct HtmlBuilder *hb,
-        struct Buffer* buf, struct input_stream* stream)
+HTMLlineproc3(struct HtmlBuilder* hb,
+    struct Buffer* buf, struct input_stream* stream)
 {
     _file_lp2 = stream;
     HTMLlineproc2body(hb, buf, file_feed, -1);
@@ -5210,7 +5196,7 @@ table_width(struct html_feed_environ* h_env, int table_level)
 }
 
 /* HTML processing first pass */
-void HTMLlineproc0(struct HtmlBuilder *hb,
+void HTMLlineproc0(struct HtmlBuilder* hb,
     const char* line, struct html_feed_environ* h_env, bool internal)
 {
     Lineprop mode;
@@ -5296,7 +5282,7 @@ table_start:
             if (pre_mode & RB_INSELECT) {
                 if (obuf->table_level >= 0)
                     goto proc_normal;
-                feed_select(str);
+                feed_select(hb, str);
                 continue;
             }
             if (is_tag) {
@@ -5735,7 +5721,7 @@ void init_henv(struct html_feed_environ* h_env, struct readbuffer* obuf,
     h_env->blank_lines = 0;
 }
 
-void completeHTMLstream(struct HtmlBuilder *hb, struct html_feed_environ* h_env, struct readbuffer* obuf)
+void completeHTMLstream(struct HtmlBuilder* hb, struct html_feed_environ* h_env, struct readbuffer* obuf)
 {
     close_anchor(hb, h_env, obuf);
     if (obuf->img_alt) {
@@ -5875,7 +5861,7 @@ print_internal_information(struct html_feed_environ* henv)
 void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int internal)
 {
     struct HtmlBuilder _hb = { 0 };
-    struct HtmlBuilder *hb = &_hb;
+    struct HtmlBuilder* hb = &_hb;
 
     struct environment envs[MAX_ENV_LEVEL];
     clen_t linelen = 0;
@@ -5904,7 +5890,6 @@ void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int int
     max_select = MAX_SELECT;
     select_option = New_N(struct FormSelectOption, max_select);
 
-    cur_select = NULL;
     form_sp = -1;
     form_max = -1;
     forms_size = 0;

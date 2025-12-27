@@ -181,8 +181,6 @@ extern int is_blank_line(char* line, int indent);
 
 extern Str process_anchor(struct parsed_tag* tag, char* tagbuf);
 extern Str process_n_button(void);
-extern Str process_n_select(void);
-extern void process_option(void);
 extern Str process_n_textarea(void);
 extern void feed_textarea(char* str);
 extern Str process_n_form(void);

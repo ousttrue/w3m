@@ -2344,7 +2344,7 @@ static void
 table_close_select(struct HtmlBuilder *hb,
         struct table* tbl, struct table_mode* mode, int width)
 {
-    Str tmp = process_n_select();
+    Str tmp = process_n_select(hb);
     mode->pre_mode &= ~TBLM_INSELECT;
     mode->end_tag = 0;
     feed_table1(hb, tbl, tmp, mode, width);
@@ -3126,7 +3126,7 @@ int feed_table(struct HtmlBuilder *hb, struct table* tbl, char* line, struct tab
         return -1;
     }
     if (mode->pre_mode & TBLM_INSELECT) {
-        feed_select(line);
+        feed_select(hb, line);
         return -1;
     }
     if (!(mode->pre_mode & TBLM_PLAIN) && !(*line == '<' && line[strlen(line) - 1] == '>') && strchr(line, '&') != NULL) {
