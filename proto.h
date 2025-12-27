@@ -195,7 +195,6 @@ extern Str process_form(struct parsed_tag* tag);
 extern Str process_n_form(void);
 extern int getMetaRefreshParam(const char* q, Str* refresh_uri);
 extern void HTMLlineproc2(struct Buffer* buf, TextLineList* tl);
-#define HTMLlineproc1(x, y) HTMLlineproc0(x, y, TRUE)
 
 extern char* convert_size(clen_t size, int usefloat);
 extern char* convert_size2(clen_t size1, clen_t size2, int usefloat);

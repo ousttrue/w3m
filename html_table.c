@@ -428,21 +428,15 @@ int visible_length(char* str)
     int prev_status = status;
     Str tagbuf = Strnew();
     char *t, *r2;
-    int amp_len = 0;
 
     while (*str) {
         prev_status = status;
         if (next_status(*str, &status)) {
-#ifdef USE_M17N
             len += get_mcwidth(str);
             n = get_mclen(str);
         } else {
             n = 1;
         }
-#else
-            len++;
-        }
-#endif
         if (status == R_ST_TAG0) {
             Strclear(tagbuf);
             PUSH_TAG(str, n);
@@ -454,10 +448,8 @@ int visible_length(char* str)
             if (prev_status == R_ST_NORMAL) {
                 Strclear(tagbuf);
                 len--;
-                amp_len = 0;
             } else {
                 PUSH_TAG(str, n);
-                amp_len++;
             }
         } else if (status == R_ST_NORMAL && prev_status == R_ST_AMP) {
             PUSH_TAG(str, n);
@@ -482,11 +474,7 @@ int visible_length(char* str)
                 max_len = len;
             len = 0;
         }
-#ifdef USE_M17N
         str += n;
-#else
-        str++;
-#endif
     }
     if (status == R_ST_AMP) {
         r2 = tagbuf->ptr;
@@ -783,11 +771,11 @@ void do_refill(struct table* tbl, int row, int col, int maxlimit)
                 }
             }
         } else
-            HTMLlineproc1(l->ptr, &h_env);
+            HTMLlineproc0(l->ptr, &h_env, true);
     }
     if (obuf.status != R_ST_NORMAL) {
         obuf.status = R_ST_EOL;
-        HTMLlineproc1("\n", &h_env);
+        HTMLlineproc0("\n", &h_env, true);
     }
     completeHTMLstream(&h_env, &obuf);
     flushline(&h_env, &obuf, 0, 2, h_env.limit);
@@ -1683,17 +1671,17 @@ make_caption(struct table* t, struct html_feed_environ* h_env)
         limit = h_env->limit;
     init_henv(&henv, &obuf, envs, MAX_ENV_LEVEL, newTextLineList(),
         limit, h_env->envs[h_env->envc].indent);
-    HTMLlineproc1("<center>", &henv);
-    HTMLlineproc0(t->caption->ptr, &henv, FALSE);
-    HTMLlineproc1("</center>", &henv);
+    HTMLlineproc0("<center>", &henv, true);
+    HTMLlineproc0(t->caption->ptr, &henv, false);
+    HTMLlineproc0("</center>", &henv, true);
 
     if (t->total_width < henv.maxlimit)
         t->total_width = henv.maxlimit;
     limit = h_env->limit;
     h_env->limit = t->total_width;
-    HTMLlineproc1("<center>", h_env);
-    HTMLlineproc0(t->caption->ptr, h_env, FALSE);
-    HTMLlineproc1("</center>", h_env);
+    HTMLlineproc0("<center>", h_env, false);
+    HTMLlineproc0(t->caption->ptr, h_env, false);
+    HTMLlineproc0("</center>", h_env, false);
     h_env->limit = limit;
 }
 
@@ -1863,13 +1851,13 @@ void renderTable(struct table* t, int max_width, struct html_feed_environ* h_env
 
     make_caption(t, h_env);
 
-    HTMLlineproc1("<pre for_table>", h_env);
-#ifdef ID_EXT
+    HTMLlineproc0("<pre for_table>", h_env, true);
+
     if (t->id != NULL) {
         idtag = Sprintf("<_id id=\"%s\">", html_quote((t->id)->ptr));
-        HTMLlineproc1(idtag->ptr, h_env);
+        HTMLlineproc0(idtag->ptr, h_env, true);
     }
-#endif /* ID_EXT */
+
     switch (t->border_mode) {
     case BORDER_THIN:
     case BORDER_THICK:
@@ -1972,7 +1960,7 @@ void renderTable(struct table* t, int max_width, struct html_feed_environ* h_env
         t->total_width = 1;
         push_render_image(renderbuf, 1, t->total_width, h_env);
     }
-    HTMLlineproc1("</pre>", h_env);
+    HTMLlineproc0("</pre>", h_env, true);
 }
 
 #ifdef TABLE_NO_COMPACT
