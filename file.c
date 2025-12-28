@@ -917,10 +917,183 @@ Str getLinkNumberStr(struct HtmlBuilder* hb, int correction)
     return Sprintf("[%d]", hb->cur_hseq + correction);
 }
 
+#define DO_EXTERNAL ((struct Buffer * (*)(struct URLFile*, struct Buffer*)) doExternal)
+
 /*
  * loadGeneralFile: load file to buffer
  */
-#define DO_EXTERNAL ((struct Buffer * (*)(struct URLFile*, struct Buffer*)) doExternal)
+
+typedef struct Buffer* (*LoadBufferFunc)(struct URLFile*, struct Buffer*);
+
+struct Buffer* page_loaded(struct Url url, bool do_download, int flag,
+    struct URLFile f, struct Buffer* t_buf, wc_ces charset, const char* t,
+    Str page)
+{
+    if (page) {
+
+        if (getRuntime()->image_source)
+            return NULL;
+
+        Str tmp = tmpfname(TMPF_SRC, ".html");
+        FILE* src = fopen(tmp->ptr, "w");
+        if (src) {
+            Str s = wc_Str_conv_strict(page, getRuntime()->InnerCharset, charset);
+            Strfputs(s, src);
+            fclose(src);
+        }
+
+        if (do_download) {
+            if (!src)
+                return NULL;
+            const char* file = guess_filename(url.file);
+            doFileMove(tmp->ptr, file);
+            return NO_BUFFER;
+        }
+
+        struct Buffer* b = loadHTMLString(page);
+        if (b) {
+            copyParsedURL(&b->currentURL, &url);
+            if (src)
+                b->sourcefile = tmp->ptr;
+
+            b->document_charset = charset;
+        }
+        return b;
+    }
+
+    LoadBufferFunc proc = loadBuffer;
+
+    const char* p = checkHeader(t_buf ? &t_buf->content : NULL, "Content-Length:");
+    if (p)
+        t_buf->content.current_content_length = strtoclen(p);
+
+    MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
+    if (do_download) {
+        /* download only */
+        const char* file;
+        TRAP_OFF;
+        if (url.scheme == SCM_LOCAL) {
+            struct stat st;
+            if (PreserveTimestamp && !stat(url.real_file, &st)) {
+                f.modtime = st.st_mtime;
+            }
+            file = conv_from_system(guess_save_name(NULL, url.real_file));
+        } else {
+            file = guess_save_name(&t_buf->content, url.file);
+        }
+        if (doFileSave(f, file) == 0)
+            UFhalfclose(&f);
+        else
+            UFclose(&f);
+        return NO_BUFFER;
+    }
+
+    if ((f.compression != CMP_NOCOMPRESS) && AutoUncompress
+        && !(w3m_dump & DUMP_EXTRA)) {
+        uncompress_stream(&f, &url.real_file);
+    } else if (f.compression != CMP_NOCOMPRESS) {
+        if (!(w3m_dump & DUMP_SOURCE) && (w3m_dump & ~DUMP_FRAME || is_text_type(t) || searchExtViewer(t))) {
+            if (t_buf == NULL)
+                t_buf = newBuffer(INIT_BUFFER_WIDTH);
+            uncompress_stream(&f, &t_buf->sourcefile);
+            uncompressed_file_type(url.file, &f.ext);
+        } else {
+            t = compress_application_type(f.compression);
+            f.compression = CMP_NOCOMPRESS;
+        }
+    }
+
+    if (getRuntime()->image_source) {
+        struct Buffer* b = NULL;
+        if (save2tmp(f, getRuntime()->image_source) == 0) {
+            b = newBuffer(INIT_BUFFER_WIDTH);
+            b->sourcefile = getRuntime()->image_source;
+        }
+        UFclose(&f);
+        TRAP_OFF;
+        return b;
+    }
+
+    if (is_html_type(t))
+        proc = loadHTMLBuffer;
+    else if (is_plain_text_type(t))
+        proc = loadBuffer;
+    else if (getRuntime()->activeImage && getRuntime()->displayImage && !useExtImageViewer && !(w3m_dump & ~DUMP_FRAME) && !strncasecmp(t, "image/", 6))
+        proc = loadImageBuffer;
+    else if (w3m_backend)
+        ;
+    else if (!(w3m_dump & ~DUMP_FRAME) || is_dump_text_type(t)) {
+        if (!do_download && searchExtViewer(t) != NULL) {
+            proc = DO_EXTERNAL;
+        } else {
+            TRAP_OFF;
+            if (url.scheme == SCM_LOCAL) {
+                UFclose(&f);
+                _doFileCopy(url.real_file,
+                    conv_from_system(guess_save_name(NULL, url.real_file)), TRUE);
+            } else {
+                if (doFileSave(f, guess_save_name(&t_buf->content, url.file)) == 0)
+                    UFhalfclose(&f);
+                else
+                    UFclose(&f);
+            }
+            return NO_BUFFER;
+        }
+    } else if (w3m_dump & DUMP_FRAME)
+        return NULL;
+
+    if (t_buf == NULL)
+        t_buf = newBuffer(INIT_BUFFER_WIDTH);
+    copyParsedURL(&t_buf->currentURL, &url);
+    t_buf->content.filename = url.real_file ? url.real_file : url.file ? conv_to_system(url.file)
+                                                                       : NULL;
+    if (flag & RG_FRAME) {
+        t_buf->bufferprop |= BP_FRAME;
+    }
+    t_buf->ssl_certificate = f.ssl_certificate;
+    frame_source = flag & RG_FRAME_SRC;
+
+    struct Buffer* b;
+    if (proc == DO_EXTERNAL) {
+        b = doExternal(f, t, t_buf);
+    } else {
+        b = loadSomething(&f, proc, t_buf);
+    }
+    UFclose(&f);
+    frame_source = 0;
+    if (b && b != NO_BUFFER) {
+        if (w3m_backend)
+            b->type = allocStr(t, -1);
+        if (url.label) {
+            if (proc == loadHTMLBuffer) {
+                struct Anchor* a;
+                a = searchURLLabel(b, url.label);
+                if (a != NULL) {
+                    gotoLine(b, a->start.line);
+                    if (label_topline)
+                        b->doc.topLine = lineSkip(b, b->doc.topLine,
+                            b->doc.currentLine->linenumber
+                                - b->doc.topLine->linenumber,
+                            FALSE);
+                    b->pos = a->start.pos;
+                    arrangeCursor(b);
+                }
+            } else { /* plain text */
+                int l = atoi(url.label);
+                gotoRealLine(b, l);
+                b->pos = 0;
+                arrangeCursor(b);
+            }
+        }
+    }
+    if (header_string)
+        header_string = NULL;
+    if (b && b != NO_BUFFER)
+        preFormUpdateBuffer(b);
+    TRAP_OFF;
+    return b;
+}
+
 struct Buffer*
 loadGeneralFile(const char* path, struct Url* volatile current, const char* referer,
     int flag, struct FormList* volatile request, bool do_download)
@@ -928,7 +1101,6 @@ loadGeneralFile(const char* path, struct Url* volatile current, const char* refe
     struct URLFile f, *volatile of = NULL;
     struct Url pu;
     struct Buffer* b = NULL;
-    struct Buffer* (*volatile proc)(struct URLFile*, struct Buffer*) = loadBuffer;
     const char* t = "text/plain";
     const char* p;
     // , *real_type = NULL;
@@ -943,7 +1115,6 @@ loadGeneralFile(const char* path, struct Url* volatile current, const char* refe
     struct URLOption url_option;
     Str tmp;
     Str volatile page = NULL;
-    int gopher_download = FALSE;
     wc_ces charset = WC_CES_US_ASCII;
     struct HttpRequest hr;
     struct Url* volatile auth_pu;
@@ -1024,7 +1195,7 @@ load_doc: {
             break;
         }
         if (page && page->length > 0)
-            goto page_loaded;
+            return page_loaded(pu, do_download, flag, f, t_buf, charset, t, page);
         return NULL;
     }
 
@@ -1111,7 +1282,7 @@ load_doc: {
                 if (uname == NULL) {
                     /* abort */
                     TRAP_OFF;
-                    goto page_loaded;
+                    return page_loaded(pu, do_download, flag, f, t_buf, charset, t, page);
                 }
                 UFclose(&f);
                 add_auth_cookie_flag = 1;
@@ -1133,7 +1304,8 @@ load_doc: {
                 if (uname == NULL) {
                     /* abort */
                     TRAP_OFF;
-                    goto page_loaded;
+
+                    return page_loaded(pu, do_download, flag, f, t_buf, charset, t, page);
                 }
                 UFclose(&f);
                 add_auth_cookie_flag = 1;
@@ -1186,169 +1358,7 @@ load_doc: {
         t = guessContentType(pu.file);
     }
 
-    /* XXX: can we use guess_type to give the type to loadHTMLstream
-     *      to support default utf8 encoding for XHTML here? */
-
-page_loaded:
-    if (page) {
-        FILE* src;
-
-        if (getRuntime()->image_source)
-            return NULL;
-
-        tmp = tmpfname(TMPF_SRC, ".html");
-        src = fopen(tmp->ptr, "w");
-        if (src) {
-            Str s;
-            s = wc_Str_conv_strict(page, getRuntime()->InnerCharset, charset);
-            Strfputs(s, src);
-            fclose(src);
-        }
-
-        if (do_download || gopher_download) {
-            if (!src)
-                return NULL;
-            const char* file = guess_filename(pu.file);
-            doFileMove(tmp->ptr, file);
-            return NO_BUFFER;
-        }
-        b = loadHTMLString(page);
-        if (b) {
-            copyParsedURL(&b->currentURL, &pu);
-            if (src)
-                b->sourcefile = tmp->ptr;
-
-            b->document_charset = charset;
-        }
-        return b;
-    }
-
-    proc = loadBuffer;
-
-    if ((p = checkHeader(t_buf ? &t_buf->content : NULL, "Content-Length:")) != NULL)
-        t_buf->content.current_content_length = strtoclen(p);
-
-    if (do_download || gopher_download) {
-        /* download only */
-        const char* file;
-        TRAP_OFF;
-        if (pu.scheme == SCM_LOCAL) {
-            struct stat st;
-            if (PreserveTimestamp && !stat(pu.real_file, &st))
-                f.modtime = st.st_mtime;
-            file = conv_from_system(guess_save_name(NULL, pu.real_file));
-        } else {
-            file = guess_save_name(&t_buf->content, pu.file);
-        }
-        if (doFileSave(f, file) == 0)
-            UFhalfclose(&f);
-        else
-            UFclose(&f);
-        return NO_BUFFER;
-    }
-
-    if ((f.compression != CMP_NOCOMPRESS) && AutoUncompress
-        && !(w3m_dump & DUMP_EXTRA)) {
-        uncompress_stream(&f, &pu.real_file);
-    } else if (f.compression != CMP_NOCOMPRESS) {
-        if (!(w3m_dump & DUMP_SOURCE) && (w3m_dump & ~DUMP_FRAME || is_text_type(t) || searchExtViewer(t))) {
-            if (t_buf == NULL)
-                t_buf = newBuffer(INIT_BUFFER_WIDTH);
-            uncompress_stream(&f, &t_buf->sourcefile);
-            uncompressed_file_type(pu.file, &f.ext);
-        } else {
-            t = compress_application_type(f.compression);
-            f.compression = CMP_NOCOMPRESS;
-        }
-    }
-
-    if (getRuntime()->image_source) {
-        struct Buffer* b = NULL;
-        if (save2tmp(f, getRuntime()->image_source) == 0) {
-            b = newBuffer(INIT_BUFFER_WIDTH);
-            b->sourcefile = getRuntime()->image_source;
-        }
-        UFclose(&f);
-        TRAP_OFF;
-        return b;
-    }
-
-    if (is_html_type(t))
-        proc = loadHTMLBuffer;
-    else if (is_plain_text_type(t))
-        proc = loadBuffer;
-    else if (getRuntime()->activeImage && getRuntime()->displayImage && !useExtImageViewer && !(w3m_dump & ~DUMP_FRAME) && !strncasecmp(t, "image/", 6))
-        proc = loadImageBuffer;
-    else if (w3m_backend)
-        ;
-    else if (!(w3m_dump & ~DUMP_FRAME) || is_dump_text_type(t)) {
-        if (!do_download && searchExtViewer(t) != NULL) {
-            proc = DO_EXTERNAL;
-        } else {
-            TRAP_OFF;
-            if (pu.scheme == SCM_LOCAL) {
-                UFclose(&f);
-                _doFileCopy(pu.real_file,
-                    conv_from_system(guess_save_name(NULL, pu.real_file)), TRUE);
-            } else {
-                if (doFileSave(f, guess_save_name(&t_buf->content, pu.file)) == 0)
-                    UFhalfclose(&f);
-                else
-                    UFclose(&f);
-            }
-            return NO_BUFFER;
-        }
-    } else if (w3m_dump & DUMP_FRAME)
-        return NULL;
-
-    if (t_buf == NULL)
-        t_buf = newBuffer(INIT_BUFFER_WIDTH);
-    copyParsedURL(&t_buf->currentURL, &pu);
-    t_buf->content.filename = pu.real_file ? pu.real_file : pu.file ? conv_to_system(pu.file)
-                                                                    : NULL;
-    if (flag & RG_FRAME) {
-        t_buf->bufferprop |= BP_FRAME;
-    }
-    t_buf->ssl_certificate = f.ssl_certificate;
-    frame_source = flag & RG_FRAME_SRC;
-    if (proc == DO_EXTERNAL) {
-        b = doExternal(f, t, t_buf);
-    } else {
-        b = loadSomething(&f, proc, t_buf);
-    }
-    UFclose(&f);
-    frame_source = 0;
-    if (b && b != NO_BUFFER) {
-        if (w3m_backend)
-            b->type = allocStr(t, -1);
-        if (pu.label) {
-            if (proc == loadHTMLBuffer) {
-                struct Anchor* a;
-                a = searchURLLabel(b, pu.label);
-                if (a != NULL) {
-                    gotoLine(b, a->start.line);
-                    if (label_topline)
-                        b->doc.topLine = lineSkip(b, b->doc.topLine,
-                            b->doc.currentLine->linenumber
-                                - b->doc.topLine->linenumber,
-                            FALSE);
-                    b->pos = a->start.pos;
-                    arrangeCursor(b);
-                }
-            } else { /* plain text */
-                int l = atoi(pu.label);
-                gotoRealLine(b, l);
-                b->pos = 0;
-                arrangeCursor(b);
-            }
-        }
-    }
-    if (header_string)
-        header_string = NULL;
-    if (b && b != NO_BUFFER)
-        preFormUpdateBuffer(b);
-    TRAP_OFF;
-    return b;
+    return page_loaded(pu, do_download, flag, f, t_buf, charset, t, page);
 }
 
 #define TAG_IS(s, tag, len) \
