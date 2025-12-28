@@ -52,3 +52,4 @@ int is_undo_getc(struct input_stream* is);
 Str is_get_str(struct input_stream* is, bool crnl);
 int is_read(struct input_stream* is, char* dst, int bufsize);
 int is_file_no(struct input_stream* is);
+bool is_save2tmp(struct input_stream* is, const char* tmpf);

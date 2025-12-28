@@ -43,12 +43,10 @@ struct URLFile openURL(const char* url, struct Url* pu, struct Url* current,
     struct URLOption option, struct FormList* request,
     struct URLFile* ouf,
     struct HttpRequest* hr, unsigned char* status, bool do_download);
-void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int internal);
 struct Buffer* doExternal(struct URLFile uf, const char* type, struct Buffer* defaultbuf);
 struct Buffer* loadHTMLBuffer(struct URLFile* f, struct Buffer* newBuf);
 struct Buffer* loadBuffer(struct URLFile* uf, struct Buffer* newBuf);
 struct Buffer* loadImageBuffer(struct URLFile* uf, struct Buffer* newBuf);
 Str loadGopherDir(struct URLFile* uf, struct Url* pu, wc_ces* charset);
 Str loadGopherSearch(struct URLFile* uf, struct Url* pu, wc_ces* charset);
-bool uf_save2tmp(struct URLFile uf, const char* tmpf);
 void UFhalfclose(struct URLFile* f);

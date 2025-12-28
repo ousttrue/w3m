@@ -62,6 +62,11 @@ static int frame_source = 0;
 static int need_number = 0;
 
 static JMP_BUF AbortLoading;
+static MySignalHandler KeyAbort(SIGNAL_ARG)
+{
+    LONGJMP(AbortLoading, 1);
+    SIGNAL_RETURN;
+}
 
 struct link_stack {
     int cmd;
@@ -85,13 +90,6 @@ static int cur_form_id(struct HtmlBuilder* hb) { return ((hb->form_sp >= 0) ? hb
 #define UL_SYMBOL_SQUARE UL_SYMBOL(11)
 #define IMG_SYMBOL UL_SYMBOL(12)
 #define HR_SYMBOL 26
-
-static MySignalHandler
-KeyAbort(SIGNAL_ARG)
-{
-    LONGJMP(AbortLoading, 1);
-    SIGNAL_RETURN;
-}
 
 int currentLn(struct Buffer* buf)
 {
@@ -1004,7 +1002,7 @@ struct Buffer* make_buffer(struct Url url, int flag,
 
     if (getRuntime()->image_source) {
         struct Buffer* b = NULL;
-        if (uf_save2tmp(f, getRuntime()->image_source)) {
+        if (is_save2tmp(f.stream, getRuntime()->image_source)) {
             b = newBuffer(INIT_BUFFER_WIDTH);
             b->sourcefile = getRuntime()->image_source;
         }
@@ -5514,7 +5512,7 @@ loadHTMLBuffer(struct URLFile* f, struct Buffer* newBuf)
             newBuf->sourcefile = tmp->ptr;
     }
 
-    loadHTMLstream(f, newBuf, src, newBuf->bufferprop & BP_FRAME);
+    loadHTMLstream(f->stream, newBuf, src, newBuf->bufferprop & BP_FRAME);
 
     if (src)
         fclose(src);
@@ -5559,84 +5557,7 @@ char* convert_size2(int64_t size1, int64_t size2, int usefloat)
         ->ptr;
 }
 
-void showProgress(int64_t* linelen, int64_t* trbyte, size_t current_content_length)
-{
-    int i, j, rate, duration, eta, pos;
-    static time_t last_time, start_time;
-    time_t cur_time;
-    Str messages;
-    char *fmtrbyte, *fmrate;
 
-    if (!fmInitialized())
-        return;
-
-    if (*linelen < 1024)
-        return;
-    if (current_content_length > 0) {
-        double ratio;
-        cur_time = time(0);
-        if (*trbyte == 0) {
-            screen_move(LASTLINE(), 0);
-            screen_clrtoeolx();
-            start_time = cur_time;
-        }
-        *trbyte += *linelen;
-        *linelen = 0;
-        if (cur_time == last_time)
-            return;
-        last_time = cur_time;
-        screen_move(LASTLINE(), 0);
-        ratio = 100.0 * (*trbyte) / current_content_length;
-        fmtrbyte = convert_size2(*trbyte, current_content_length, 1);
-        duration = cur_time - start_time;
-        if (duration) {
-            rate = *trbyte / duration;
-            fmrate = convert_size(rate, 1);
-            eta = rate ? (current_content_length - *trbyte) / rate : -1;
-            messages = Sprintf("%11s %3.0f%% "
-                               "%7s/s "
-                               "eta %02d:%02d:%02d     ",
-                fmtrbyte, ratio,
-                fmrate,
-                eta / (60 * 60), (eta / 60) % 60, eta % 60);
-        } else {
-            messages = Sprintf("%11s %3.0f%%                          ",
-                fmtrbyte, ratio);
-        }
-        screen_wc_addstr(messages->ptr);
-        pos = 42;
-        i = pos + (TTY_COLS() - pos - 1) * (*trbyte) / current_content_length;
-        screen_move(LASTLINE(), pos);
-        screen_standout();
-        screen_addch(' ', 1);
-        for (j = pos + 1; j <= i; j++)
-            screen_addch('|', 1);
-        screen_standend();
-        /* no_clrtoeol(); */
-    } else {
-        cur_time = time(0);
-        if (*trbyte == 0) {
-            screen_move(LASTLINE(), 0);
-            screen_clrtoeolx();
-            start_time = cur_time;
-        }
-        *trbyte += *linelen;
-        *linelen = 0;
-        if (cur_time == last_time)
-            return;
-        last_time = cur_time;
-        screen_move(LASTLINE(), 0);
-        fmtrbyte = convert_size(*trbyte, 1);
-        duration = cur_time - start_time;
-        if (duration) {
-            fmrate = convert_size(*trbyte / duration, 1);
-            messages = Sprintf("%7s loaded %7s/s", fmtrbyte, fmrate);
-        } else {
-            messages = Sprintf("%7s loaded", fmtrbyte);
-        }
-        message(messages->ptr, 0, 0);
-    }
-}
 
 void init_henv(struct html_feed_environ* h_env, struct readbuffer* obuf,
     struct environment* envs, int nenv, TextLineList* buf,
@@ -5801,7 +5722,8 @@ print_internal_information(struct HtmlBuilder* hb, struct html_feed_environ* hen
     }
 }
 
-void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int internal)
+void loadHTMLstream(struct input_stream* stream,
+    struct Buffer* newBuf, FILE* src, bool internal)
 {
     struct HtmlBuilder _hb = {
         0,
@@ -5850,7 +5772,7 @@ void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int int
 
         newBuf->document_charset = getRuntime()->InnerCharset;
 
-        HTMLlineproc3(hb, newBuf, f->stream);
+        HTMLlineproc3(hb, newBuf, stream);
         w3m_halfload = FALSE;
         return;
     }
@@ -5880,7 +5802,7 @@ void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int int
         doc_charset = newBuf->content.content_charset;
     hb->meta_charset = 0;
 
-    while ((lineBuf2 = is_get_str(f->stream, true)) && lineBuf2->length) {
+    while ((lineBuf2 = is_get_str(stream, true)) && lineBuf2->length) {
 
         if (src)
             Strfputs(lineBuf2, src);
@@ -5969,7 +5891,7 @@ loadHTMLString(Str page)
 
     newBuf->document_charset = getRuntime()->InnerCharset;
 
-    loadHTMLstream(&f, newBuf, NULL, TRUE);
+    loadHTMLstream(f.stream, newBuf, NULL, TRUE);
 
     newBuf->document_charset = WC_CES_US_ASCII;
 
@@ -6234,7 +6156,7 @@ loadImageBuffer(struct URLFile* uf, struct Buffer* newBuf)
         goto image_buffer;
 
     TRAP_ON;
-    if (!uf_save2tmp(*uf, cache->file)) {
+    if (!is_save2tmp(uf->stream, cache->file)) {
         TRAP_OFF;
         return NULL;
     }
@@ -6258,7 +6180,7 @@ image_buffer:
     newBuf->mailcap_source = tmpf->ptr;
 
     init_stream(&f, SCM_LOCAL, is_from_str(tmp));
-    loadHTMLstream(&f, newBuf, src, TRUE);
+    loadHTMLstream(f.stream, newBuf, src, true);
     UFclose(&f);
     if (src)
         fclose(src);
@@ -6425,14 +6347,14 @@ doExternal(struct URLFile uf, const char* type, struct Buffer* defaultbuf)
         flush_tty();
         if (!fork()) {
             setup_child(FALSE, 0, is_file_no(uf.stream));
-            if (!uf_save2tmp(uf, tmpf->ptr))
+            if (!is_save2tmp(uf.stream, tmpf->ptr))
                 exit(1);
             UFclose(&uf);
             myExec(command->ptr);
         }
         return NO_BUFFER;
     } else {
-        if (!uf_save2tmp(uf, tmpf->ptr)) {
+        if (!is_save2tmp(uf.stream, tmpf->ptr)) {
             return NULL;
         }
     }
@@ -6662,7 +6584,7 @@ int doFileSave(struct URLFile uf, const char* defstr,
             }
 
             setup_child(FALSE, 0, is_file_no(uf.stream));
-            bool succeeded = uf_save2tmp(uf, p);
+            bool succeeded = is_save2tmp(uf.stream, p);
             if (succeeded && PreserveTimestamp && uf.modtime != -1)
                 setModtime(p, uf.modtime);
             UFclose(&uf);
@@ -6698,7 +6620,7 @@ int doFileSave(struct URLFile uf, const char* defstr,
         if (compression != CMP_NOCOMPRESS && AutoUncompress) {
             uf.stream = uncompress_stream(uf.stream, compression, NULL);
         }
-        if (!uf_save2tmp(uf, p)) {
+        if (!is_save2tmp(uf.stream, p)) {
             printf("Can't save to %s\n", p);
             return -1;
         }

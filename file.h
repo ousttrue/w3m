@@ -33,10 +33,10 @@ void process_option(struct HtmlBuilder* hb);
 Str process_n_textarea(struct HtmlBuilder* hb);
 void feed_textarea(struct HtmlBuilder* hb, const char* str);
 Str process_anchor(struct HtmlBuilder* hb, struct parsed_tag* tag, const char* tagbuf);
-void showProgress(int64_t* linelen, int64_t* trbyte, size_t current_content_length);
 Str process_n_form(struct HtmlBuilder* hb);
 Str getLinkNumberStr(struct HtmlBuilder* hb, int correction);
 int checkOverWrite(const char* path);
 struct input_stream;
 int checkSaveFile(struct input_stream* stream, const char* path);
-
+void loadHTMLstream(struct input_stream* stream,
+    struct Buffer* newBuf, FILE* src, bool internal);

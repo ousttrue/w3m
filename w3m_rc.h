@@ -229,3 +229,5 @@ int exec_cmd(const char* cmd);
 uint8_t blockChild(const char* cmd);
 
 struct Vec2 screen_position();
+
+void showProgress(int64_t* linelen, int64_t* trbyte, size_t current_content_length);

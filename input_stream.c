@@ -1,9 +1,11 @@
 #include "input_stream.h"
 #include "compression.h"
+#include "fm.h"
 #include "growbuf.h"
 #include "alloc.h"
 #include "w3m_rc.h"
 #include <fcntl.h>
+#include <setjmp.h>
 #include <stdint.h>
 #include <signal.h>
 #include <string.h>
@@ -302,4 +304,49 @@ struct input_stream* examineFile(const char* path, bool do_download)
         }
     }
     return stream;
+}
+
+static JMP_BUF AbortLoading;
+static MySignalHandler KeyAbort(SIGNAL_ARG)
+{
+    LONGJMP(AbortLoading, 1);
+    SIGNAL_RETURN;
+}
+
+bool is_save2tmp(struct input_stream* stream, const char* tmpf)
+{
+    FILE* ff = fopen(tmpf, "wb");
+    if (ff == NULL) {
+        return false;
+    }
+    static JMP_BUF env_bak;
+    memcpy(env_bak, AbortLoading, sizeof(JMP_BUF));
+    if (SETJMP(AbortLoading) != 0) {
+        goto _end;
+    }
+
+    int retval = 0;
+    int64_t linelen = 0;
+    int64_t trbyte = 0;
+    MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
+    char* buf = NULL;
+    TRAP_ON;
+    {
+        buf = NewWithoutGC_N(char, SAVE_BUF_SIZE);
+        int count;
+        while ((count = is_read(stream, buf, SAVE_BUF_SIZE)) > 0) {
+            if (fwrite(buf, 1, count, ff) != count) {
+                retval = -2;
+                goto _end;
+            }
+            linelen += count;
+            showProgress(&linelen, &trbyte, 0);
+        }
+    }
+_end:
+    bcopy(env_bak, AbortLoading, sizeof(JMP_BUF));
+    TRAP_OFF;
+    xfree(buf);
+    fclose(ff);
+    return retval;
 }

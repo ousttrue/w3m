@@ -2735,3 +2735,82 @@ void tty_clear()
 {
     writestr(g_runtime.termcap._cl);
 }
+
+void showProgress(int64_t* linelen, int64_t* trbyte, size_t current_content_length)
+{
+    int i, j, rate, duration, eta, pos;
+    static time_t last_time, start_time;
+    time_t cur_time;
+    Str messages;
+    char *fmtrbyte, *fmrate;
+
+    if (!fmInitialized())
+        return;
+
+    if (*linelen < 1024)
+        return;
+    if (current_content_length > 0) {
+        double ratio;
+        cur_time = time(0);
+        if (*trbyte == 0) {
+            screen_move(LASTLINE(), 0);
+            screen_clrtoeolx();
+            start_time = cur_time;
+        }
+        *trbyte += *linelen;
+        *linelen = 0;
+        if (cur_time == last_time)
+            return;
+        last_time = cur_time;
+        screen_move(LASTLINE(), 0);
+        ratio = 100.0 * (*trbyte) / current_content_length;
+        fmtrbyte = convert_size2(*trbyte, current_content_length, 1);
+        duration = cur_time - start_time;
+        if (duration) {
+            rate = *trbyte / duration;
+            fmrate = convert_size(rate, 1);
+            eta = rate ? (current_content_length - *trbyte) / rate : -1;
+            messages = Sprintf("%11s %3.0f%% "
+                               "%7s/s "
+                               "eta %02d:%02d:%02d     ",
+                fmtrbyte, ratio,
+                fmrate,
+                eta / (60 * 60), (eta / 60) % 60, eta % 60);
+        } else {
+            messages = Sprintf("%11s %3.0f%%                          ",
+                fmtrbyte, ratio);
+        }
+        screen_wc_addstr(messages->ptr);
+        pos = 42;
+        i = pos + (TTY_COLS() - pos - 1) * (*trbyte) / current_content_length;
+        screen_move(LASTLINE(), pos);
+        screen_standout();
+        screen_addch(' ', 1);
+        for (j = pos + 1; j <= i; j++)
+            screen_addch('|', 1);
+        screen_standend();
+        /* no_clrtoeol(); */
+    } else {
+        cur_time = time(0);
+        if (*trbyte == 0) {
+            screen_move(LASTLINE(), 0);
+            screen_clrtoeolx();
+            start_time = cur_time;
+        }
+        *trbyte += *linelen;
+        *linelen = 0;
+        if (cur_time == last_time)
+            return;
+        last_time = cur_time;
+        screen_move(LASTLINE(), 0);
+        fmtrbyte = convert_size(*trbyte, 1);
+        duration = cur_time - start_time;
+        if (duration) {
+            fmrate = convert_size(*trbyte / duration, 1);
+            messages = Sprintf("%7s loaded %7s/s", fmtrbyte, fmrate);
+        } else {
+            messages = Sprintf("%7s loaded", fmtrbyte);
+        }
+        message(messages->ptr, 0, 0);
+    }
+}
