@@ -2,7 +2,6 @@
 #include "indep.h"
 #include "ssl_stream.h"
 #include "ftp.h"
-#include "URLFile.h"
 #include "file.h"
 #include "etc.h"
 #include "local_cgi.h"
@@ -79,8 +78,6 @@ static struct table2 DefaultGuess[] = {
     { "pdf", "application/pdf" },
     { NULL, NULL }
 };
-
-static void add_index_file(struct Url* pu, struct URLFile* uf);
 
 /* #define HTTP_DEFAULT_FILE    "/index.html" */
 
@@ -836,10 +833,38 @@ Str parsedURL2RefererStr(struct Url* pu)
     return _parsedURL2Str(pu, FALSE, FALSE, FALSE);
 }
 
+/* add index_file if exists */
+static struct input_stream*
+add_index_file(struct Url* pu, struct input_stream* stream)
+{
+    char *p, *q;
+    struct TextList* index_file_list = NULL;
+    TextListItem* ti;
+
+    if (non_null(index_file))
+        index_file_list = make_domain_list(index_file);
+    if (index_file_list == NULL) {
+        stream = NULL;
+    } else {
+        for (ti = index_file_list->first; ti; ti = ti->next) {
+            p = Strnew_m_charp(pu->file, "/", file_quote(ti->ptr), NULL)->ptr;
+            p = cleanupName(p);
+            q = cleanupName(file_unquote(p));
+            stream = examineFile(q, false);
+            if (stream != NULL) {
+                pu->file = p;
+                pu->real_file = q;
+                break;
+            }
+        }
+    }
+    return stream;
+}
+
 struct UrlStream openURL(const char* url, struct Url* current,
     struct FormList* request,
     struct URLOption option,
-    struct URLFile* ouf,
+    struct input_stream* ouf,
     bool do_download)
 {
     Str tmp;
@@ -854,14 +879,9 @@ struct UrlStream openURL(const char* url, struct Url* current,
             .referer = option.referer,
             .request = request,
         },
+        .stream = ouf,
         0,
     };
-
-    if (ouf) {
-        us.uf = *ouf;
-    } else {
-        us.uf = (struct URLFile) { 0 };
-    }
 
     const char* u = url;
     enum UrlScheme scheme = getURLScheme(&u);
@@ -898,26 +918,26 @@ struct UrlStream openURL(const char* url, struct Url* current,
     case SCM_LOCAL_CGI:
         if (request && request->body)
             /* local CGI: POST */
-            us.uf.stream = is_from_file(
+            us.stream = is_from_file(
                 localcgi_post(us.url.real_file, us.url.query,
                     request, option.referer),
                 fclose);
         else
             /* lodal CGI: GET */
-            us.uf.stream = is_from_file(
+            us.stream = is_from_file(
                 localcgi_get(us.url.real_file, us.url.query,
                     option.referer),
                 fclose);
-        if (us.uf.stream) {
+        if (us.stream) {
             us.url.scheme = SCM_LOCAL_CGI;
             us.is_cgi = true;
             return us;
         }
-        us.uf.stream = examineFile(us.url.real_file, false);
-        if (us.uf.stream == NULL) {
+        us.stream = examineFile(us.url.real_file, false);
+        if (us.stream == NULL) {
             if (dir_exist(us.url.real_file)) {
-                add_index_file(&us.url, &us.uf);
-                if (us.uf.stream == NULL) {
+                us.stream = add_index_file(&us.url, us.stream);
+                if (us.stream == NULL) {
                     return us;
                 }
             } else if (document_root != NULL) {
@@ -930,13 +950,13 @@ struct UrlStream openURL(const char* url, struct Url* current,
                 if (dir_exist(q)) {
                     us.url.file = p;
                     us.url.real_file = q;
-                    add_index_file(&us.url, &us.uf);
-                    if (us.uf.stream == NULL) {
+                    us.stream = add_index_file(&us.url, us.stream);
+                    if (us.stream == NULL) {
                         return us;
                     }
                 } else {
-                    us.uf.stream = examineFile(q, do_download);
-                    if (us.uf.stream) {
+                    us.stream = examineFile(q, do_download);
+                    if (us.stream) {
                         us.url.file = p;
                         us.url.real_file = q;
                     }
@@ -961,7 +981,7 @@ struct UrlStream openURL(const char* url, struct Url* current,
             write(sock, tmp->ptr, tmp->length);
         } else {
             struct FtpFile file = openFTPStream(&us.url);
-            us.uf.stream = file.is;
+            us.stream = file.is;
             us.modtime = file.modtime;
             return us;
         }
@@ -979,7 +999,7 @@ struct UrlStream openURL(const char* url, struct Url* current,
             && !Do_not_use_proxy && us.url.host != NULL && !check_no_proxy(us.url.host)) {
             us.hr.flag |= HR_FLAG_PROXY;
             if (us.url.scheme == SCM_HTTPS && us.status == HTST_CONNECT) {
-                sock = ouf->stream->ssl.sock;
+                sock = ouf->ssl.sock;
 
                 if (!(sslh = openSSLHandle(sock, us.url.host,
                           &us.ssl_certificate))) {
@@ -1032,7 +1052,7 @@ struct UrlStream openURL(const char* url, struct Url* current,
             us.status = HTST_NORMAL;
         }
         if (us.url.scheme == SCM_HTTPS) {
-            us.uf.stream = is_from_ssl(sslh, sock);
+            us.stream = is_from_ssl(sslh, sock);
             if (sslh)
                 SSL_write(sslh, tmp->ptr, tmp->length);
             else
@@ -1073,35 +1093,8 @@ struct UrlStream openURL(const char* url, struct Url* current,
         return us;
     }
 
-    us.uf.stream = is_from_fd(sock);
+    us.stream = is_from_fd(sock);
     return us;
-}
-
-/* add index_file if exists */
-static void
-add_index_file(struct Url* pu, struct URLFile* uf)
-{
-    char *p, *q;
-    struct TextList* index_file_list = NULL;
-    TextListItem* ti;
-
-    if (non_null(index_file))
-        index_file_list = make_domain_list(index_file);
-    if (index_file_list == NULL) {
-        uf->stream = NULL;
-        return;
-    }
-    for (ti = index_file_list->first; ti; ti = ti->next) {
-        p = Strnew_m_charp(pu->file, "/", file_quote(ti->ptr), NULL)->ptr;
-        p = cleanupName(p);
-        q = cleanupName(file_unquote(p));
-        uf->stream = examineFile(q, false);
-        if (uf->stream != NULL) {
-            pu->file = p;
-            pu->real_file = q;
-            return;
-        }
-    }
 }
 
 static char*

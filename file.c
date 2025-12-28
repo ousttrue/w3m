@@ -5,7 +5,6 @@
 #include "mimehead.h"
 #include "ftp.h"
 #include "compression.h"
-#include "URLFile.h"
 #include "mailcap.h"
 #include "readbuffer.h"
 #include "symbol.h"
@@ -941,7 +940,7 @@ struct Buffer* page_loaded(struct Url url,
 }
 
 static struct Buffer* make_buffer(struct Url url, int flag,
-    struct URLFile f, struct Buffer* t_buf, const char* t,
+    struct input_stream* stream, struct Buffer* t_buf, const char* t,
     const char* ssl_certificate,
     bool do_download)
 {
@@ -961,10 +960,10 @@ static struct Buffer* make_buffer(struct Url url, int flag,
         } else {
             file = guess_save_name(&t_buf->content, url.file);
         }
-        if (doFileSave(url, f, file, t_buf->content.compression) == 0)
-            UFhalfclose(&f, url.scheme);
+        if (doFileSave(url, stream, file, t_buf->content.compression) == 0)
+            UFhalfclose(stream, url.scheme);
         else
-            is_close(f.stream);
+            is_close(stream);
         return NO_BUFFER;
     }
 
@@ -972,16 +971,14 @@ static struct Buffer* make_buffer(struct Url url, int flag,
         bool use_tmpf = url.scheme != SCM_LOCAL && !getRuntime()->image_source;
         if ((t_buf->content.compression != CMP_NOCOMPRESS) && AutoUncompress
             && !(w3m_dump & DUMP_EXTRA)) {
-            struct input_stream* stream = uncompress_stream(f.stream,
+            stream = uncompress_stream(stream,
                 t_buf->content.compression, use_tmpf ? &url.real_file : NULL);
             // UFhalfclose(&f);
-            f.stream = stream;
         } else if (t_buf->content.compression != CMP_NOCOMPRESS) {
             if (!(w3m_dump & DUMP_SOURCE) && (w3m_dump & ~DUMP_FRAME || is_text_type(t) || searchExtViewer(t))) {
-                struct input_stream* stream = uncompress_stream(f.stream,
+                stream = uncompress_stream(stream,
                     t_buf->content.compression, use_tmpf ? &t_buf->sourcefile : NULL);
                 // UFhalfclose(&f);
-                f.stream = stream;
                 // const char* ext;
                 // uncompressed_file_type(url.file, &ext);
             } else {
@@ -993,11 +990,11 @@ static struct Buffer* make_buffer(struct Url url, int flag,
 
     if (getRuntime()->image_source) {
         struct Buffer* b = NULL;
-        if (is_save2tmp(f.stream, getRuntime()->image_source)) {
+        if (is_save2tmp(stream, getRuntime()->image_source)) {
             b = newBuffer(INIT_BUFFER_WIDTH);
             b->sourcefile = getRuntime()->image_source;
         }
-        is_close(f.stream);
+        is_close(stream);
         TRAP_OFF;
         return b;
     }
@@ -1016,16 +1013,17 @@ static struct Buffer* make_buffer(struct Url url, int flag,
         } else {
             TRAP_OFF;
             if (url.scheme == SCM_LOCAL) {
-                is_close(f.stream);
+                is_close(stream);
                 _doFileCopy(url.real_file,
                     conv_from_system(guess_save_name(NULL, url.real_file)), TRUE);
             } else {
-                if (doFileSave(url, f, guess_save_name(&t_buf->content, url.file),
+                if (doFileSave(url, stream,
+                        guess_save_name(&t_buf->content, url.file),
                         t_buf->content.compression)
                     == 0)
-                    UFhalfclose(&f, url.scheme);
+                    UFhalfclose(stream, url.scheme);
                 else
-                    is_close(f.stream);
+                    is_close(stream);
             }
             return NO_BUFFER;
         }
@@ -1043,9 +1041,9 @@ static struct Buffer* make_buffer(struct Url url, int flag,
     t_buf->ssl_certificate = ssl_certificate;
     frame_source = flag & RG_FRAME_SRC;
 
-    struct Buffer* b = loadSomething(url, f.stream, t,
+    struct Buffer* b = loadSomething(url, stream, t,
         proc, t_buf, t_buf->bufferprop & BP_FRAME);
-    is_close(f.stream);
+    is_close(stream);
     frame_source = 0;
     if (b && b != NO_BUFFER) {
         if (w3m_backend)
@@ -1095,7 +1093,7 @@ struct Buffer* load_doc(const char* path, struct Url* current,
     struct AuthInfo auth,
     bool do_download,
     struct Buffer* t_buf,
-    struct URLFile* connection)
+    struct input_stream* connection)
 {
     //
     // siteconf redirection
@@ -1118,7 +1116,7 @@ struct Buffer* load_doc(const char* path, struct Url* current,
     struct HttpRequest hr;
     struct UrlStream us = openURL(path, current, request,
         (struct URLOption) {}, connection, do_download);
-    if (!us.uf.stream && retryAsHttp && us.url_str[0] != '/') {
+    if (!us.stream && retryAsHttp && us.url_str[0] != '/') {
         if (us.url.scheme == SCM_MISSING || us.url.scheme == SCM_UNKNOWN) {
             // retry it as "http://"
             const char* u = Strnew_m_charp("http://", path, NULL)->ptr;
@@ -1127,7 +1125,7 @@ struct Buffer* load_doc(const char* path, struct Url* current,
         }
     }
 
-    if (!us.uf.stream) {
+    if (!us.stream) {
         // non stream(file or socket) content.
         wc_ces charset = WC_CES_US_ASCII;
         Str page = NULL;
@@ -1186,7 +1184,7 @@ struct Buffer* load_doc(const char* path, struct Url* current,
 
     if (status == HTST_MISSING) {
         TRAP_OFF;
-        is_close(us.uf.stream);
+        is_close(us.stream);
         return NULL;
     }
 
@@ -1196,7 +1194,7 @@ struct Buffer* load_doc(const char* path, struct Url* current,
         TRAP_OFF;
         // if (b)
         //     discardBuffer(b);
-        is_close(us.uf.stream);
+        is_close(us.stream);
         return NULL;
     }
 
@@ -1220,7 +1218,7 @@ struct Buffer* load_doc(const char* path, struct Url* current,
         }
         if (t_buf == NULL)
             t_buf = newBuffer(INIT_BUFFER_WIDTH);
-        getHttpResponseHeader(&t_buf->content, us.url, us.uf.stream);
+        getHttpResponseHeader(&t_buf->content, us.url, us.stream);
         const char* p;
         if (((t_buf->content.http_response_code >= 301 //
                  && t_buf->content.http_response_code <= 303)
@@ -1233,7 +1231,7 @@ struct Buffer* load_doc(const char* path, struct Url* current,
             // 303: See Other
             // 307: Temporary Redirect (HTTP/1.1)
             const char* tpath = url_encode(p, NULL, 0);
-            is_close(us.uf.stream);
+            is_close(us.stream);
             struct Url* new_current = New(struct Url);
             copyParsedURL(new_current, &us.url);
             struct Buffer* t_buf = newBuffer(INIT_BUFFER_WIDTH);
@@ -1274,9 +1272,9 @@ struct Buffer* load_doc(const char* path, struct Url* current,
                     /* abort */
                     TRAP_OFF;
                     return make_buffer(us.url, option.flag,
-                        us.uf, t_buf, t, us.ssl_certificate, do_download);
+                        us.stream, t_buf, t, us.ssl_certificate, do_download);
                 }
-                is_close(us.uf.stream);
+                is_close(us.stream);
                 auth.add_auth_cookie_flag = 1;
                 return load_doc(path, current,
                     request, option, auth, do_download, t_buf, connection);
@@ -1297,9 +1295,9 @@ struct Buffer* load_doc(const char* path, struct Url* current,
                     /* abort */
                     TRAP_OFF;
                     return make_buffer(us.url, option.flag,
-                        us.uf, t_buf, t, us.ssl_certificate, do_download);
+                        us.stream, t_buf, t, us.ssl_certificate, do_download);
                 }
-                is_close(us.uf.stream);
+                is_close(us.stream);
                 auth.add_auth_cookie_flag = 1;
                 add_auth_user_passwd(auth_pu,
                     qstr_unquote(auth.realm)->ptr, auth.uname, auth.pwd, 1);
@@ -1311,7 +1309,7 @@ struct Buffer* load_doc(const char* path, struct Url* current,
         if (status == HTST_CONNECT) {
             // XXX: RFC2617 3.2.3 Authentication-Info: ?
             return load_doc(path, current,
-                request, option, auth, do_download, t_buf, &us.uf);
+                request, option, auth, do_download, t_buf, us.stream);
         }
 
         us.modtime = mymktime(checkHeader(&t_buf->content, "Last-Modified:"));
@@ -1326,14 +1324,14 @@ struct Buffer* load_doc(const char* path, struct Url* current,
         // searchHeader = SearchHeader = FALSE;
         if (t_buf == NULL)
             t_buf = newBuffer(INIT_BUFFER_WIDTH);
-        getHttpResponseHeader(&t_buf->content, us.url, us.uf.stream);
+        getHttpResponseHeader(&t_buf->content, us.url, us.stream);
         const char* p;
         if ((p = checkHeader(&t_buf->content, "Location:")) != NULL && checkRedirection(&us.url)) {
             //
             // document moved
             //
             const char* tpath = url_encode(remove_space(p), NULL, 0);
-            is_close(us.uf.stream);
+            is_close(us.stream);
             auth.add_auth_cookie_flag = 0;
             struct Url* new_current = New(struct Url);
             copyParsedURL(new_current, &us.url);
@@ -1356,7 +1354,7 @@ struct Buffer* load_doc(const char* path, struct Url* current,
     if (p)
         t_buf->content.current_content_length = strtoclen(p);
 
-    return make_buffer(us.url, option.flag, us.uf,
+    return make_buffer(us.url, option.flag, us.stream,
         t_buf, t, us.ssl_certificate, do_download);
 }
 
@@ -6392,8 +6390,8 @@ int doFileMove(const char* tmpf, const char* defstr)
     return ret;
 }
 
-int doFileSave(struct Url url, struct URLFile uf, const char* defstr,
-    enum CompressionType compression)
+int doFileSave(struct Url url, struct input_stream* stream,
+    const char* defstr, enum CompressionType compression)
 {
     if (fmInitialized()) {
         const char* p = searchKeyData();
@@ -6406,7 +6404,7 @@ int doFileSave(struct Url url, struct URLFile uf, const char* defstr,
         }
         if (checkOverWrite(p) < 0)
             return -1;
-        if (checkSaveFile(uf.stream, p) < 0) {
+        if (checkSaveFile(stream, p) < 0) {
             Str msg = Sprintf("Can't save. Load file and %s are identical.",
                 conv_from_system(p));
             disp_err_message(msg->ptr, FALSE);
@@ -6419,14 +6417,14 @@ int doFileSave(struct Url url, struct URLFile uf, const char* defstr,
         pid_t pid = fork();
         if (!pid) {
             if ((compression != CMP_NOCOMPRESS) && AutoUncompress) {
-                uf.stream = uncompress_stream(uf.stream, compression, NULL);
+                stream = uncompress_stream(stream, compression, NULL);
             }
 
-            setup_child(FALSE, 0, is_file_no(uf.stream));
-            bool succeeded = is_save2tmp(uf.stream, p);
+            setup_child(FALSE, 0, is_file_no(stream));
+            bool succeeded = is_save2tmp(stream, p);
             // if (succeeded && PreserveTimestamp && uf.modtime != -1)
             //     setModtime(p, uf.modtime);
-            is_close(uf.stream);
+            is_close(stream);
             unlink(lock);
             if (!succeeded)
                 exit(1);
@@ -6453,14 +6451,14 @@ int doFileSave(struct Url url, struct URLFile uf, const char* defstr,
         p = expandPath(q);
         if (checkOverWrite(p) < 0)
             return -1;
-        if (checkSaveFile(uf.stream, p) < 0) {
+        if (checkSaveFile(stream, p) < 0) {
             printf("Can't save. Load file and %s are identical.", p);
             return -1;
         }
         if (compression != CMP_NOCOMPRESS && AutoUncompress) {
-            uf.stream = uncompress_stream(uf.stream, compression, NULL);
+            stream = uncompress_stream(stream, compression, NULL);
         }
-        if (!is_save2tmp(uf.stream, p)) {
+        if (!is_save2tmp(stream, p)) {
             printf("Can't save to %s\n", p);
             return -1;
         }

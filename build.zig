@@ -17,7 +17,6 @@ const w3m_srcs = [_][]const u8{
     "ssl_stream.c",
     "document.c",
     "compression.c",
-    "URLFile.c",
     "content.c",
     "readbuffer.c",
     "LineWriter.c",

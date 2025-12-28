@@ -1,4 +1,5 @@
 #include "input_stream.h"
+#include "ftp.h"
 #include "compression.h"
 #include "fm.h"
 #include "growbuf.h"
@@ -349,4 +350,16 @@ _end:
     xfree(buf);
     fclose(ff);
     return retval;
+}
+
+void UFhalfclose(struct input_stream* stream, enum UrlScheme scheme)
+{
+    switch (scheme) {
+    case SCM_FTP:
+        closeFTP();
+        break;
+    default:
+        is_close(stream);
+        break;
+    }
 }

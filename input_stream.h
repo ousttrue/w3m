@@ -1,5 +1,8 @@
 #pragma once
+#include "url.h"
+#include "http_request.h"
 #include "ssl_stream.h"
+#include "compression.h"
 #include <stdbool.h>
 #include <stdio.h>
 
@@ -53,3 +56,33 @@ Str is_get_str(struct input_stream* is, bool crnl);
 int is_read(struct input_stream* is, char* dst, int bufsize);
 int is_file_no(struct input_stream* is);
 bool is_save2tmp(struct input_stream* is, const char* tmpf);
+
+struct URLOption {
+    const char* referer;
+    int flag;
+    struct TextList* extra_header;
+};
+
+struct FormList;
+struct HttpRequest;
+struct Buffer;
+int doFileSave(struct Url url, struct input_stream* stream,
+    const char* defstr, enum CompressionType compression);
+
+struct UrlStream {
+    struct input_stream* stream;
+    bool is_cgi;
+    const char* url_str;
+    struct Url url;
+    struct HttpRequest hr;
+    unsigned char status;
+    const char* ssl_certificate;
+    time_t modtime;
+};
+struct UrlStream openURL(const char* url, struct Url* current,
+    struct FormList* request,
+    struct URLOption option,
+    struct input_stream* ouf,
+    bool do_download);
+
+void UFhalfclose(struct input_stream* stream, enum UrlScheme scheme);

@@ -228,6 +228,7 @@ extern void print_sep(struct table* t, int row, int type, int maxcol, Str buf);
 extern struct FormList* newFormList(char* action, char* method, char* charset,
     char* enctype, char* target, char* name,
     struct FormList* _next);
+struct FormItemList;
 extern char* form2str(struct FormItemList* fi);
 extern void formRecheckRadio(struct Anchor* a, struct Buffer* buf, struct FormItemList* form);
 struct AnchorList;
