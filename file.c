@@ -1106,13 +1106,16 @@ loadGeneralFile(const char* path, struct Url* volatile current, const char* refe
     // , *real_type = NULL;
     struct Buffer* volatile t_buf = NULL;
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
-    struct TextList* extra_header = newTextList();
     volatile Str uname = NULL;
     volatile Str pwd = NULL;
     volatile Str realm = NULL;
     int volatile add_auth_cookie_flag;
     unsigned char status = HTST_NORMAL;
-    struct URLOption url_option;
+    struct URLOption url_option = {
+        .flag = flag,
+        .referer = referer,
+        .extra_header = newTextList(),
+    };
     Str tmp;
     Str volatile page = NULL;
     wc_ces charset = WC_CES_US_ASCII;
@@ -1140,9 +1143,7 @@ load_doc: {
     }
 }
     TRAP_OFF;
-    url_option.referer = referer;
-    url_option.flag = flag;
-    f = openURL(tpath, &pu, current, &url_option, request, extra_header, of,
+    f = openURL(tpath, &pu, current, url_option, request, of,
         &hr, &status, do_download);
     of = NULL;
     if (f.stream == NULL) {
@@ -1277,7 +1278,7 @@ load_doc: {
             if (findAuthentication(&hauth, t_buf, "WWW-Authenticate:") != NULL
                 && (realm = get_auth_param(hauth.param, "realm")) != NULL) {
                 auth_pu = &pu;
-                getAuthCookie(&hauth, "Authorization:", extra_header,
+                getAuthCookie(&hauth, "Authorization:", url_option.extra_header,
                     auth_pu, &hr, request, &uname, &pwd);
                 if (uname == NULL) {
                     /* abort */
@@ -1299,7 +1300,7 @@ load_doc: {
                 && (realm = get_auth_param(hauth.param, "realm")) != NULL) {
                 auth_pu = schemeToProxy(pu.scheme);
                 getAuthCookie(&hauth, "Proxy-Authorization:",
-                    extra_header, auth_pu, &hr, request,
+                    url_option.extra_header, auth_pu, &hr, request,
                     &uname, &pwd);
                 if (uname == NULL) {
                     /* abort */

@@ -22,6 +22,7 @@ struct URLFile {
 struct URLOption {
     const char* referer;
     int flag;
+    struct TextList* extra_header;
 };
 
 inline static void UFclose(struct URLFile* f)
@@ -40,8 +41,8 @@ void init_stream(struct URLFile* uf, int scheme, struct input_stream* stream);
 struct URLFile examineFile(const char* path, bool do_download);
 int doFileSave(struct URLFile uf, const char* defstr);
 struct URLFile openURL(const char* url, struct Url* pu, struct Url* current,
-    struct URLOption* option, struct FormList* request,
-    struct TextList* extra_header, struct URLFile* ouf,
+    struct URLOption option, struct FormList* request,
+    struct URLFile* ouf,
     struct HttpRequest* hr, unsigned char* status, bool do_download);
 void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int internal);
 struct Buffer* doExternal(struct URLFile uf, const char* type, struct Buffer* defaultbuf);

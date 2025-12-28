@@ -838,7 +838,7 @@ Str parsedURL2RefererStr(struct Url* pu)
 
 struct URLFile
 openURL(const char* url, struct Url* pu, struct Url* current,
-    struct URLOption* option, struct FormList* request, struct TextList* extra_header,
+    struct URLOption option, struct FormList* request,
     struct URLFile* ouf, struct HttpRequest* hr, unsigned char* status, bool do_download)
 {
     Str tmp;
@@ -884,12 +884,12 @@ retry:
 
     uf.scheme = pu->scheme;
     uf.url = parsedURL2Str(pu)->ptr;
-    pu->is_nocache = (option->flag & RG_NOCACHE);
+    pu->is_nocache = (option.flag & RG_NOCACHE);
     uf.ext = filename_extension(pu->file, 1);
 
     hr->command = HR_COMMAND_GET;
     hr->flag = 0;
-    hr->referer = option->referer;
+    hr->referer = option.referer;
     hr->request = request;
 
     switch (pu->scheme) {
@@ -899,13 +899,13 @@ retry:
             /* local CGI: POST */
             uf.stream = is_from_file(
                 localcgi_post(pu->real_file, pu->query,
-                    request, option->referer),
+                    request, option.referer),
                 fclose);
         else
             /* lodal CGI: GET */
             uf.stream = is_from_file(
                 localcgi_get(pu->real_file, pu->query,
-                    option->referer),
+                    option.referer),
                 fclose);
         if (uf.stream) {
             uf.is_cgi = TRUE;
@@ -961,7 +961,7 @@ retry:
             if (sock < 0)
                 return uf;
             uf.scheme = SCM_HTTP;
-            tmp = HTTPrequest(pu, current, hr, extra_header);
+            tmp = HTTPrequest(pu, current, hr, option.extra_header);
             write(sock, tmp->ptr, tmp->length);
         } else {
             uf.stream = openFTPStream(pu, &uf);
@@ -1006,15 +1006,15 @@ retry:
             if (pu->scheme == SCM_HTTPS) {
                 if (*status == HTST_NORMAL) {
                     hr->command = HR_COMMAND_CONNECT;
-                    tmp = HTTPrequest(pu, current, hr, extra_header);
+                    tmp = HTTPrequest(pu, current, hr, option.extra_header);
                     *status = HTST_CONNECT;
                 } else {
                     hr->flag |= HR_FLAG_LOCAL;
-                    tmp = HTTPrequest(pu, current, hr, extra_header);
+                    tmp = HTTPrequest(pu, current, hr, option.extra_header);
                     *status = HTST_NORMAL;
                 }
             } else {
-                tmp = HTTPrequest(pu, current, hr, extra_header);
+                tmp = HTTPrequest(pu, current, hr, option.extra_header);
                 *status = HTST_NORMAL;
             }
         } else {
@@ -1031,7 +1031,7 @@ retry:
                 }
             }
             hr->flag |= HR_FLAG_LOCAL;
-            tmp = HTTPrequest(pu, current, hr, extra_header);
+            tmp = HTTPrequest(pu, current, hr, option.extra_header);
             *status = HTST_NORMAL;
         }
         if (pu->scheme == SCM_HTTPS) {
