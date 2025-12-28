@@ -189,7 +189,6 @@ extern void saveBuffer(struct Buffer* buf, FILE* f, int cont);
 extern void saveBufferBody(struct Buffer* buf, FILE* f, int cont);
 extern struct Buffer* getshell(char* cmd);
 
-
 extern struct Buffer* newBuffer(int width);
 extern struct Buffer* nullBuffer(void);
 extern void clearBuffer(struct Buffer* buf);
@@ -205,7 +204,6 @@ extern struct Buffer* selectBuffer(struct Buffer* firstbuf, struct Buffer* curre
 extern void copyBuffer(struct Buffer* a, struct Buffer* b);
 extern struct Buffer* prevBuffer(struct Buffer* first, struct Buffer* buf);
 extern int writeBufferCache(struct Buffer* buf);
-
 
 #ifdef USE_MIGEMO
 extern void init_migemo(void);
@@ -405,40 +403,6 @@ extern char* getKeyData(int key);
 extern void initMouseAction(void);
 #endif
 
-#ifdef USE_MENU
-extern void new_menu(Menu* menu, MenuItem* item);
-extern void geom_menu(Menu* menu, int x, int y, int mselect);
-extern void draw_all_menu(Menu* menu);
-extern void draw_menu(Menu* menu);
-extern void draw_menu_item(Menu* menu, int mselect);
-extern int select_menu(Menu* menu, int mselect);
-extern void goto_menu(Menu* menu, int mselect, int down);
-extern void up_menu(Menu* menu, int n);
-extern void down_menu(Menu* menu, int n);
-extern int action_menu(Menu* menu);
-extern void popup_menu(Menu* parent, Menu* menu);
-extern void guess_menu_xy(Menu* menu, int width, int* x, int* y);
-extern void new_option_menu(Menu* menu, char** label, int* variable,
-    void (*func)());
-
-extern int setMenuItem(MenuItem* item, char* type, char* line);
-extern int addMenuList(MenuList** list, char* id);
-extern int getMenuN(MenuList* list, char* id);
-
-extern void popupMenu(int x, int y, Menu* menu);
-extern void mainMenu(int x, int y);
-extern void mainMn(void);
-extern void selMn(void);
-extern void tabMn(void);
-extern void optionMenu(int x, int y, char** label, int* variable, int initial,
-    void (*func)());
-extern void initMenu(void);
-#else /* not USE_MENU */
-#define mainMn nulcmd
-#define selMn selBuf
-#define tabMn nulcmd
-#endif /* not USE_MENU */
-
 #ifdef USE_DICT
 extern void dictword(void);
 extern void dictwordat(void);
@@ -452,11 +416,9 @@ extern void wrapToggle(void);
 extern void saveBufferInfo(void);
 #endif
 
-
 extern void dispVer(void);
 
 #ifdef USE_INCLUDED_SRAND48
 void srand48(long);
 long lrand48(void);
 #endif
-

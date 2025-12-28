@@ -3343,7 +3343,6 @@ void follow_map(struct parsed_tagarg* arg)
 #endif
 }
 
-#ifdef USE_MENU
 /* link menu */
 DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
 {
@@ -3363,17 +3362,16 @@ DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
 }
 
 static void
-anchorMn(struct Anchor* (*menu_func)(struct Buffer*), int go)
+anchorMn(BufferMenuFunc menu_func, bool go)
 {
-    struct Anchor* a;
-    struct BufferPoint* po;
-
     if (!Currentbuf->href || !Currentbuf->hmarklist)
         return;
-    a = menu_func(Currentbuf);
+
+    struct Anchor* a = menu_func(Currentbuf);
     if (!a || a->hseq < 0)
         return;
-    po = &Currentbuf->hmarklist->marks[a->hseq];
+
+    struct BufferPoint* po = &Currentbuf->hmarklist->marks[a->hseq];
     gotoLine(Currentbuf, po->line);
     Currentbuf->pos = po->pos;
     arrangeCursor(Currentbuf);
@@ -3397,7 +3395,6 @@ DEFUN(movlistMn, MOVE_LIST_MENU, "Pop up menu to navigate between hyperlinks")
 {
     anchorMn(list_menu, FALSE);
 }
-#endif
 
 /* link,anchor,image list */
 DEFUN(linkLst, LIST, "Show all URLs referenced")

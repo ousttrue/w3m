@@ -1,10 +1,5 @@
-/* $Id: menu.h,v 1.2 2001/11/20 17:49:23 ukai Exp $ */
-/*
- * w3m menu.h
- */
-
-#ifndef MENU_H
-#define MENU_H
+#pragma once
+#include <stdbool.h>
 
 #define MENU_END 0
 #define MENU_NOP 1
@@ -12,23 +7,27 @@
 #define MENU_FUNC 4
 #define MENU_POPUP 8
 
-#define MENU_NOTHING -1
-#define MENU_CANCEL -2
-#define MENU_CLOSE -3
+enum MenuResult {
+    MENU_NOTHING = -1,
+    MENU_CANCEL = -2,
+    MENU_CLOSE = -3,
+};
 
-typedef struct _MenuItem {
+struct MenuItem {
     int type;
-    char* label;
+    const char* label;
     int* variable;
     int value;
     void (*func)();
-    struct _Menu* popup;
-    char* keys;
-    char* data;
-} MenuItem;
+    struct Menu* popup;
+    const char* keys;
+    const char* data;
+};
 
-typedef struct _Menu {
-    struct _Menu* parent;
+typedef enum MenuResult (*MenuKeyFunc)(char ch);
+
+struct Menu {
+    struct Menu* parent;
     int cursorX;
     int cursorY;
     int x;
@@ -36,19 +35,47 @@ typedef struct _Menu {
     int width;
     int height;
     int nitem;
-    MenuItem* item;
+    struct MenuItem* item;
     int initial;
     int select;
     int offset;
-    int active;
-    int (*keymap[128])(char c);
+    bool active;
+    MenuKeyFunc keymap[128];
     int keyselect[128];
-} Menu;
+};
 
 typedef struct _MenuList {
     char* id;
-    Menu* menu;
-    MenuItem* item;
+    struct Menu* menu;
+    struct MenuItem* item;
 } MenuList;
 
-#endif /* not MENU_H */
+void new_menu(struct Menu* menu, struct MenuItem* item);
+void geom_menu(struct Menu* menu, int x, int y, int mselect);
+void draw_all_menu(struct Menu* menu);
+void draw_menu(struct Menu* menu);
+void draw_menu_item(struct Menu* menu, int mselect);
+int select_menu(struct Menu* menu, int mselect);
+void goto_menu(struct Menu* menu, int mselect, int down);
+void up_menu(struct Menu* menu, int n);
+
+struct Buffer;
+typedef struct Anchor* (*BufferMenuFunc)(struct Buffer*);
+void down_menu(struct Menu* menu, int n);
+
+bool action_menu(struct Menu* menu);
+void popup_menu(struct Menu* parent, struct Menu* menu);
+void guess_menu_xy(struct Menu* menu, int width, int* x, int* y);
+void new_option_menu(struct Menu* menu, char** label, int* variable,
+    void (*func)());
+int setMenuItem(struct MenuItem* item, char* type, char* line);
+int addMenuList(MenuList** list, char* id);
+int getMenuN(MenuList* list, char* id);
+void popupMenu(int x, int y, struct Menu* menu);
+void mainMenu(int x, int y);
+void mainMn(void);
+void selMn(void);
+void tabMn(void);
+void optionMenu(int x, int y, char** label, int* variable, int initial,
+    void (*func)());
+void initMenu(void);

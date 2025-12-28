@@ -2,29 +2,23 @@
 #include "alloc.h"
 #include "symbol.h"
 #include "message.h"
-#include "conv.h"
 #include "linein.h"
 #include "search.h"
 #include "buffer.h"
 #include "anchor.h"
 #include "w3m_rc.h"
-#include "display.h"
 #include "tab.h"
 #include "image.h"
 #include "fm.h"
-#include "func.h"
 #include "myctype.h"
 #include "regex.h"
 #include <libwc/ces.h>
 #include <libwc/charset.h>
-#include <stdio.h>
 #include <string.h>
-
-#ifdef USE_MENU
 
 static char** FRAME;
 static int FRAME_WIDTH;
-static int graph_mode = FALSE;
+static bool graph_mode = false;
 #define G_start                  \
     {                            \
         if (graph_mode)          \
@@ -36,48 +30,35 @@ static int graph_mode = FALSE;
             screen_graphend(); \
     }
 
-static int mEsc(char c);
-static int mEscB(char c);
-static int mEscD(char c);
-static int mNull(char c);
-static int mSelect(char c);
-static int mDown(char c);
-static int mUp(char c);
-static int mLast(char c);
-static int mTop(char c);
-static int mNext(char c);
-static int mPrev(char c);
-static int mFore(char c);
-static int mBack(char c);
-static int mLineU(char c);
-static int mLineD(char c);
-static int mOk(char c);
-static int mCancel(char c);
-static int mClose(char c);
-static int mSusp(char c);
-static int mMouse(char c);
-static int mSgrMouse(char c);
-static int mSrchF(char c);
-static int mSrchB(char c);
-static int mSrchN(char c);
-static int mSrchP(char c);
-#ifdef __EMX__
-static int mPc(char c);
-#endif
+static enum MenuResult mEsc(char c);
+static enum MenuResult mEscB(char c);
+static enum MenuResult mEscD(char c);
+static enum MenuResult mNull(char c);
+static enum MenuResult mSelect(char c);
+static enum MenuResult mDown(char c);
+static enum MenuResult mUp(char c);
+static enum MenuResult mLast(char c);
+static enum MenuResult mTop(char c);
+static enum MenuResult mNext(char c);
+static enum MenuResult mPrev(char c);
+static enum MenuResult mFore(char c);
+static enum MenuResult mBack(char c);
+static enum MenuResult mLineU(char c);
+static enum MenuResult mLineD(char c);
+static enum MenuResult mOk(char c);
+static enum MenuResult mCancel(char c);
+static enum MenuResult mClose(char c);
+static enum MenuResult mSusp(char c);
+static enum MenuResult mMouse(char c);
+static enum MenuResult mSgrMouse(char c);
+static enum MenuResult mSrchF(char c);
+static enum MenuResult mSrchB(char c);
+static enum MenuResult mSrchN(char c);
+static enum MenuResult mSrchP(char c);
 
 /* *INDENT-OFF* */
-static int (*MenuKeymap[128])(char c) = {
-/*  C-@     C-a     C-b     C-c     C-d     C-e     C-f     C-g      */
-#ifdef __EMX__
-    mPc,
-    mTop,
-    mPrev,
-    mClose,
-    mNull,
-    mLast,
-    mNext,
-    mNull,
-#else
+static MenuKeyFunc MenuKeymap[128] = {
+    /*  C-@     C-a     C-b     C-c     C-d     C-e     C-f     C-g      */
     mNull,
     mTop,
     mPrev,
@@ -86,7 +67,6 @@ static int (*MenuKeymap[128])(char c) = {
     mLast,
     mNext,
     mNull,
-#endif
     /*  C-h     C-i     C-j     C-k     C-l     C-m     C-n     C-o      */
     mCancel,
     mNull,
@@ -632,66 +612,10 @@ static int (*MenuEscDKeymap[128])(char c) = {
     mNull,
 };
 
-#ifdef __EMX__
-static int (*MenuPcKeymap[256])(char c) = {
-    //			  Null
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull,
-    //							  S-Tab
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull,
-    // A-q	  A-w	  A-E	  A-r	  A-t	  A-y	  A-u	  A-i
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull,
-    // A-o	  A-p	  A-[	  A-]			  A-a	  A-s
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull,
-    // A-d	  A-f	  A-g	  A-h	  A-j	  A-k	  A-l	  A-;
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull,
-    // A-'    A-'		  A-\		  A-x	  A-c	  A-v
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mPrev,
-    // A-b	  A-n	  A-m	  A-,	  A-.	  A-/		  A-+
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull,
-    //			  F1	  F2	  F3	  F4	  F5
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull,
-    // F6	  F7	  F8	  F9	  F10			  Home
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mTop,
-    // Up	  PgUp	  A-/	  Left	  5	  Right	  C-*	  End
-    mUp, mUp, mNull, mCancel, mNull, mOk, mNull, mLast,
-    // Down	  PgDn	  Ins	  Del	  S-F1	  S-F2	  S-F3	  S-F4
-    mDown, mDown, mClose, mCancel, mNull, mNull, mNull, mNull,
-    // S-F5	  S-F6	  S-F7	  S-F8	  S-F9	  S-F10	  C-F1	  C-F2
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull,
-    // C-F3	  C-F4	  C-F5	  C-F6	  C-F7	  C-F8	  C-F9	  C-F10
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull,
-    // A-F1	  A-F2	  A-F3	  A-F4	  A-F5	  A-F6	  A-F7	  A-F8
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull,
-    // A-F9	  A-F10	  PrtSc	  C-Left  C-Right C-End	  C-PgDn  C-Home
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull,
-    // A-1	  A-2	  A-3	  A-4	  A-5	  A-6	  A-7/8	  A-9
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull,
-    // A-0	  A -	  A-=		  C-PgUp  F11	  F12	  S-F11
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull,
-    // S-F12  C-F11	  C-F12	  A-F11	  A-F12	  C-Up	  C-/	  C-5
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull,
-    // S-*	  C-Down  C-Ins	  C-Del	  C-Tab	  C -	  C-+
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull,
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull,
-    //				  A -	  A-Tab	  A-Enter
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull, // 160
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull, // 168
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull, // 176
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull, // 184
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull, // 192
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull, // 200
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull, // 208
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull, // 216
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull, // 224
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull, // 232
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull, // 240
-    mNull, mNull, mNull, mNull, mNull, mNull, mNull, mNull // 248
-};
-#endif
 /* *INDENT-ON* */
 /* --- SelectMenu --- */
 
-static Menu SelectMenu;
+static struct Menu SelectMenu;
 static int SelectV = 0;
 static void initSelectMenu(void);
 static void smChBuf(void);
@@ -701,7 +625,7 @@ static int smDelBuf(char c);
 
 /* --- SelTabMenu --- */
 
-static Menu SelTabMenu;
+static struct Menu SelTabMenu;
 static int SelTabV = 0;
 static void initSelTabMenu(void);
 static void smChTab(void);
@@ -711,14 +635,11 @@ static int smDelTab(char c);
 
 /* --- MainMenu --- */
 
-static Menu MainMenu;
-#ifdef USE_M17N
-/* FIXME: gettextize here */
+static struct Menu MainMenu;
 static wc_ces MainMenuCharset = WC_CES_US_ASCII; /* FIXME: charset of source code */
-static int MainMenuEncode = FALSE;
-#endif
+static int MainMenuEncode = false;
 
-static MenuItem MainMenuItem[] = {
+static struct MenuItem MainMenuItem[] = {
     /* type        label           variable value func     popup keys data  */
     { MENU_FUNC, N_(" Back         (b) "), NULL, 0, backBf, NULL, "b", NULL },
     { MENU_POPUP, N_(" Select Buffer(s) "), NULL, 0, NULL, &SelectMenu, "s",
@@ -749,16 +670,15 @@ static MenuItem MainMenuItem[] = {
 
 static MenuList* w3mMenuList;
 
-static Menu* CurrentMenu = NULL;
+static struct Menu* CurrentMenu = NULL;
 
 #define mvaddch(y, x, c) (screen_move(y, x), screen_addch(c, 1))
 #define mvaddstr(y, x, str) (screen_move(y, x), screen_wc_addstr(str))
 #define mvaddnstr(y, x, str, n) (screen_move(y, x), screen_wc_addnstr_sup(str, n))
 
-void new_menu(Menu* menu, MenuItem* item)
+void new_menu(struct Menu* menu, struct MenuItem* item)
 {
     int i, l;
-    char* p;
 
     menu->cursorX = 0;
     menu->cursorY = 0;
@@ -782,7 +702,8 @@ void new_menu(Menu* menu, MenuItem* item)
         menu->keymap[i] = MenuKeymap[i];
     menu->width = 0;
     for (i = 0; i < menu->nitem; i++) {
-        if ((p = item[i].keys) != NULL) {
+        const char* p = item[i].keys;
+        if (p != NULL) {
             while (*p) {
                 if (IS_ASCII(*p)) {
                     menu->keymap[(int)*p] = mSelect;
@@ -797,7 +718,7 @@ void new_menu(Menu* menu, MenuItem* item)
     }
 }
 
-void geom_menu(Menu* menu, int x, int y, int mselect)
+void geom_menu(struct Menu* menu, int x, int y, int mselect)
 {
     int win_x, win_y, win_w, win_h;
 
@@ -834,26 +755,24 @@ void geom_menu(Menu* menu, int x, int y, int mselect)
     menu->y = win_y + 1;
 }
 
-void draw_all_menu(Menu* menu)
+void draw_all_menu(struct Menu* menu)
 {
     if (menu->parent != NULL)
         draw_all_menu(menu->parent);
     draw_menu(menu);
 }
 
-void draw_menu(Menu* menu)
+void draw_menu(struct Menu* menu)
 {
-    int x, y, w;
-    int i, j;
-
-    x = menu->x - FRAME_WIDTH;
-    w = menu->width + 2 * FRAME_WIDTH;
-    y = menu->y - 1;
+    int x = menu->x - FRAME_WIDTH;
+    int w = menu->width + 2 * FRAME_WIDTH;
+    int y = menu->y - 1;
 
     if (menu->offset == 0) {
         G_start;
         mvaddstr(y, x, FRAME[3]);
-        for (i = FRAME_WIDTH; i < w - FRAME_WIDTH; i += FRAME_WIDTH)
+        int i = FRAME_WIDTH;
+        for (; i < w - FRAME_WIDTH; i += FRAME_WIDTH)
             mvaddstr(y, x + i, FRAME[10]);
         mvaddstr(y, x + i, FRAME[6]);
         G_end;
@@ -861,7 +780,8 @@ void draw_menu(Menu* menu)
         G_start;
         mvaddstr(y, x, FRAME[5]);
         G_end;
-        for (i = FRAME_WIDTH; i < w - FRAME_WIDTH; i++)
+        int i = FRAME_WIDTH;
+        for (; i < w - FRAME_WIDTH; i++)
             mvaddstr(y, x + i, " ");
         G_start;
         mvaddstr(y, x + i, FRAME[5]);
@@ -870,7 +790,7 @@ void draw_menu(Menu* menu)
         mvaddstr(y, x + i, ":");
     }
 
-    for (j = 0; j < menu->height; j++) {
+    for (int j = 0; j < menu->height; j++) {
         y++;
         G_start;
         mvaddstr(y, x, FRAME[5]);
@@ -884,7 +804,8 @@ void draw_menu(Menu* menu)
     if (menu->offset + menu->height == menu->nitem) {
         G_start;
         mvaddstr(y, x, FRAME[9]);
-        for (i = FRAME_WIDTH; i < w - FRAME_WIDTH; i += FRAME_WIDTH)
+        int i = FRAME_WIDTH;
+        for (; i < w - FRAME_WIDTH; i += FRAME_WIDTH)
             mvaddstr(y, x + i, FRAME[10]);
         mvaddstr(y, x + i, FRAME[12]);
         G_end;
@@ -892,7 +813,8 @@ void draw_menu(Menu* menu)
         G_start;
         mvaddstr(y, x, FRAME[5]);
         G_end;
-        for (i = FRAME_WIDTH; i < w - FRAME_WIDTH; i++)
+        int i = FRAME_WIDTH;
+        for (; i < w - FRAME_WIDTH; i++)
             mvaddstr(y, x + i, " ");
         G_start;
         mvaddstr(y, x + i, FRAME[5]);
@@ -902,13 +824,13 @@ void draw_menu(Menu* menu)
     }
 }
 
-void draw_menu_item(Menu* menu, int mselect)
+void draw_menu_item(struct Menu* menu, int mselect)
 {
     mvaddnstr(menu->y + mselect - menu->offset, menu->x,
         menu->item[mselect].label, menu->width);
 }
 
-int select_menu(Menu* menu, int mselect)
+int select_menu(struct Menu* menu, int mselect)
 {
     if (mselect < 0 || mselect >= menu->nitem)
         return (MENU_NOTHING);
@@ -932,7 +854,7 @@ int select_menu(Menu* menu, int mselect)
     return (menu->select);
 }
 
-void goto_menu(Menu* menu, int mselect, int down)
+void goto_menu(struct Menu* menu, int mselect, int down)
 {
     int select_in;
     if (mselect >= menu->nitem)
@@ -960,7 +882,7 @@ void goto_menu(Menu* menu, int mselect, int down)
     select_menu(menu, mselect);
 }
 
-void up_menu(Menu* menu, int n)
+void up_menu(struct Menu* menu, int n)
 {
     if (n < 0 || menu->offset == 0)
         return;
@@ -971,7 +893,7 @@ void up_menu(Menu* menu, int n)
     draw_menu(menu);
 }
 
-void down_menu(Menu* menu, int n)
+void down_menu(struct Menu* menu, int n)
 {
     if (n < 0 || menu->offset + menu->height == menu->nitem)
         return;
@@ -982,45 +904,34 @@ void down_menu(Menu* menu, int n)
     draw_menu(menu);
 }
 
-int action_menu(Menu* menu)
+bool action_menu(struct Menu* menu)
 {
-    char c;
-    int mselect;
-    MenuItem item;
-
-    if (menu->active == 0) {
-        if (menu->parent != NULL)
-            menu->parent->active = 0;
-        return (0);
+    if (!menu->active) {
+        if (menu->parent) {
+            menu->parent->active = false;
+        }
+        return false;
     }
+
     draw_all_menu(menu);
     select_menu(menu, menu->select);
 
+    enum MenuResult mselect = MENU_NOTHING;
     while (1) {
-#ifdef USE_MOUSE
-        if (use_mouse)
-            mouse_active();
-#endif /* USE_MOUSE */
-        c = getch();
-#ifdef USE_MOUSE
-        if (use_mouse)
-            mouse_inactive();
-#if defined(USE_GPM) || defined(USE_SYSMOUSE)
-        if (c == X_MOUSE_SELECTED) {
-            mselect = X_Mouse_Selection;
-            if (mselect != MENU_NOTHING)
+        int ch = getch();
+        if (IS_ASCII(ch)) { /* Ascii */
+            enum MenuResult mselect = (*menu->keymap[ch])(ch);
+            if (mselect != MENU_NOTHING) {
                 break;
-        }
-#endif /* defined(USE_GPM) || defined(USE_SYSMOUSE) */
-#endif /* USE_MOUSE */
-        if (IS_ASCII(c)) { /* Ascii */
-            mselect = (*menu->keymap[(int)c])(c);
-            if (mselect != MENU_NOTHING)
-                break;
+            }
         }
     }
+
+    // char c;
+    // int mselect;
+
     if (mselect >= 0 && mselect < menu->nitem) {
-        item = menu->item[mselect];
+        struct MenuItem item = menu->item[mselect];
         if (item.type & MENU_POPUP) {
             popup_menu(menu, item.popup);
             return (1);
@@ -1043,23 +954,13 @@ int action_menu(Menu* menu)
     return (0);
 }
 
-void popup_menu(Menu* parent, Menu* menu)
+void popup_menu(struct Menu* parent, struct Menu* menu)
 {
-    int active = 1;
-
     if (menu->item == NULL || menu->nitem == 0)
         return;
     if (menu->active)
         return;
 
-#ifdef USE_MOUSE
-#ifdef USE_GPM
-    gpm_handler = gpm_process_menu_mouse;
-#endif /* USE_GPM */
-#ifdef USE_SYSMOUSE
-    sysm_handler = sysm_process_menu_mouse;
-#endif /* USE_SYSMOUSE */
-#endif /* USE_MOUSE */
     menu->parent = parent;
     menu->select = menu->initial;
     menu->offset = 0;
@@ -1072,24 +973,16 @@ void popup_menu(Menu* parent, Menu* menu)
     geom_menu(menu, menu->x, menu->y, menu->select);
 
     CurrentMenu = menu;
-    while (active) {
-        active = action_menu(CurrentMenu);
+
+    for (bool active = 1; active; active = action_menu(CurrentMenu)) {
+        ;
     }
+
     menu->active = 0;
     CurrentMenu = parent;
-#ifdef USE_MOUSE
-#ifdef USE_GPM
-    if (CurrentMenu == NULL)
-        gpm_handler = gpm_process_mouse;
-#endif /* USE_GPM */
-#ifdef USE_SYSMOUSE
-    if (CurrentMenu == NULL)
-        sysm_handler = sysm_process_mouse;
-#endif /* USE_SYSMOUSE */
-#endif /* USE_MOUSE */
 }
 
-void guess_menu_xy(Menu* parent, int width, int* x, int* y)
+void guess_menu_xy(struct Menu* parent, int width, int* x, int* y)
 {
     *x = parent->x + parent->width + FRAME_WIDTH - 1;
     if (*x + width + FRAME_WIDTH > TTY_COLS()) {
@@ -1100,11 +993,11 @@ void guess_menu_xy(Menu* parent, int width, int* x, int* y)
     *y = parent->y + parent->select - parent->offset;
 }
 
-void new_option_menu(Menu* menu, char** label, int* variable, void (*func)())
+void new_option_menu(struct Menu* menu, char** label, int* variable, void (*func)())
 {
     int i, nitem;
     char** p;
-    MenuItem* item;
+    struct MenuItem* item;
 
     if (label == NULL || *label == NULL)
         return;
@@ -1113,7 +1006,7 @@ void new_option_menu(Menu* menu, char** label, int* variable, void (*func)())
         ;
     nitem = i;
 
-    item = New_N(MenuItem, nitem + 1);
+    item = New_N(struct MenuItem, nitem + 1);
 
     for (i = 0, p = label; i < nitem; i++, p++) {
         if (func != NULL)
@@ -1151,15 +1044,6 @@ set_menu_frame(void)
 
 /* --- MenuFunctions --- */
 
-#ifdef __EMX__
-static int
-mPc(char c)
-{
-    c = getch();
-    return (MenuPcKeymap[(int)c](c));
-}
-#endif
-
 static int
 mEsc(char c)
 {
@@ -1194,14 +1078,12 @@ mEscD(char c)
         return (MENU_NOTHING);
 }
 
-static int
-mNull(char c)
+static enum MenuResult mNull(char c)
 {
     return (MENU_NOTHING);
 }
 
-static int
-mSelect(char c)
+static enum MenuResult mSelect(char c)
 {
     if (IS_ASCII(c))
         return (select_menu(CurrentMenu, CurrentMenu->keyselect[(int)c]));
@@ -1209,8 +1091,7 @@ mSelect(char c)
         return (MENU_NOTHING);
 }
 
-static int
-mDown(char c)
+static enum MenuResult mDown(char c)
 {
     if (CurrentMenu->select >= CurrentMenu->nitem - 1)
         return (MENU_NOTHING);
@@ -1354,10 +1235,10 @@ mSusp(char c)
 
 static char* SearchString = NULL;
 
-int (*menuSearchRoutine)(Menu*, char*, int);
+int (*menuSearchRoutine)(struct Menu*, char*, int);
 
 static int
-menuForwardSearch(Menu* menu, char* str, int from)
+menuForwardSearch(struct Menu* menu, char* str, int from)
 {
     int i;
     char* p;
@@ -1374,7 +1255,7 @@ menuForwardSearch(Menu* menu, char* str, int from)
 }
 
 static int
-menu_search_forward(Menu* menu, int from)
+menu_search_forward(struct Menu* menu, int from)
 {
     char* str;
     int found;
@@ -1406,7 +1287,7 @@ mSrchF(char c)
 }
 
 static int
-menuBackwardSearch(Menu* menu, char* str, int from)
+menuBackwardSearch(struct Menu* menu, char* str, int from)
 {
     int i;
     char* p;
@@ -1423,7 +1304,7 @@ menuBackwardSearch(Menu* menu, char* str, int from)
 }
 
 static int
-menu_search_backward(Menu* menu, int from)
+menu_search_backward(struct Menu* menu, int from)
 {
     char* str = inputStrHist("Backward: ", NULL, getRuntime()->TextHist);
     if (str != NULL && *str == '\0')
@@ -1453,10 +1334,10 @@ mSrchB(char c)
 }
 
 static int
-menu_search_next_previous(Menu* menu, int from, int reverse)
+menu_search_next_previous(struct Menu* menu, int from, int reverse)
 {
     int found;
-    static int (*routine[2])(Menu*, char*, int) = {
+    static int (*routine[2])(struct Menu*, char*, int) = {
         menuForwardSearch, menuBackwardSearch
     };
     char* str;
@@ -1500,213 +1381,6 @@ mSrchP(char c)
     return (MENU_NOTHING);
 }
 
-#ifdef USE_MOUSE
-#define MOUSE_BTN1_DOWN 0
-#define MOUSE_BTN2_DOWN 1
-#define MOUSE_BTN3_DOWN 2
-#define MOUSE_BTN4_DOWN_RXVT 3
-#define MOUSE_BTN5_DOWN_RXVT 4
-#define MOUSE_BTN4_DOWN_XTERM 64
-#define MOUSE_BTN5_DOWN_XTERM 65
-#define MOUSE_BTN_UP 3
-#define MOUSE_BTN_RESET -1
-
-static int
-mMouse_scroll_line(void)
-{
-    int i = 0;
-    if (relative_wheel_scroll)
-        i = (relative_wheel_scroll_ratio * CurrentMenu->height + 99) / 100;
-    else
-        i = fixed_wheel_scroll_count;
-    return i ? i : 1;
-}
-
-static int
-process_mMouse(int btn, int x, int y)
-{
-    Menu* menu;
-    int mselect, i;
-    static int press_btn = MOUSE_BTN_RESET, press_y;
-    char c = ' ';
-
-    menu = CurrentMenu;
-
-    if (x < 0 || x >= TTY_COLS() || y < 0 || y > LASTLINE())
-        return (MENU_NOTHING);
-
-    if (btn == MOUSE_BTN_UP) {
-        switch (press_btn) {
-        case MOUSE_BTN1_DOWN:
-        case MOUSE_BTN3_DOWN:
-            if (x < menu->x - FRAME_WIDTH || x >= menu->x + menu->width + FRAME_WIDTH || y < menu->y - 1 || y >= menu->y + menu->height + 1) {
-                return (MENU_CANCEL);
-            } else if ((x >= menu->x - FRAME_WIDTH && x < menu->x) || (x >= menu->x + menu->width && x < menu->x + menu->width + FRAME_WIDTH)) {
-                return (MENU_NOTHING);
-            } else if (press_y > y) {
-                for (i = 0; i < press_y - y; i++)
-                    mLineU(c);
-                return (MENU_NOTHING);
-            } else if (press_y < y) {
-                for (i = 0; i < y - press_y; i++)
-                    mLineD(c);
-                return (MENU_NOTHING);
-            } else if (y == menu->y - 1) {
-                mPrev(c);
-                return (MENU_NOTHING);
-            } else if (y == menu->y + menu->height) {
-                mNext(c);
-                return (MENU_NOTHING);
-            } else {
-                mselect = y - menu->y + menu->offset;
-                if (menu->item[mselect].type == MENU_NOP)
-                    return (MENU_NOTHING);
-                return (select_menu(menu, mselect));
-            }
-            break;
-        case MOUSE_BTN4_DOWN_RXVT:
-            for (i = 0; i < mMouse_scroll_line(); i++)
-                mLineD(c);
-            break;
-        case MOUSE_BTN5_DOWN_RXVT:
-            for (i = 0; i < mMouse_scroll_line(); i++)
-                mLineU(c);
-            break;
-        }
-    } else if (btn == MOUSE_BTN4_DOWN_XTERM) {
-        for (i = 0; i < mMouse_scroll_line(); i++)
-            mLineD(c);
-    } else if (btn == MOUSE_BTN5_DOWN_XTERM) {
-        for (i = 0; i < mMouse_scroll_line(); i++)
-            mLineU(c);
-    }
-
-    if (btn != MOUSE_BTN4_DOWN_RXVT || press_btn == MOUSE_BTN_RESET) {
-        press_btn = btn;
-        press_y = y;
-    } else {
-        press_btn = MOUSE_BTN_RESET;
-    }
-    return (MENU_NOTHING);
-}
-
-static int
-mMouse(char c)
-{
-    int btn, x, y;
-
-    btn = (unsigned char)getch() - 32;
-#if defined(__CYGWIN__) && CYGWIN_VERSION_DLL_MAJOR < 1005
-    if (cygwin_mouse_btn_swapped) {
-        if (btn == MOUSE_BTN2_DOWN)
-            btn = MOUSE_BTN3_DOWN;
-        else if (btn == MOUSE_BTN3_DOWN)
-            btn = MOUSE_BTN2_DOWN;
-    }
-#endif
-    x = (unsigned char)getch() - 33;
-    if (x < 0)
-        x += 0x100;
-    y = (unsigned char)getch() - 33;
-    if (y < 0)
-        y += 0x100;
-
-    /*
-     * if (x < 0 || x >= COLS || y < 0 || y > LASTLINE) return; */
-    return process_mMouse(btn, x, y);
-}
-
-static int
-mSgrMouse(char c)
-{
-    int btn = 0, x = 0, y = 0;
-    unsigned char ch;
-
-    for (ch = getch(); IS_DIGIT(ch); ch = getch())
-        btn = btn * 10 + ch - '0';
-    if (ch != ';')
-        return MENU_NOTHING;
-
-#if defined(__CYGWIN__) && CYGWIN_VERSION_DLL_MAJOR < 1005
-    if (cygwin_mouse_btn_swapped) {
-        if (btn == MOUSE_BTN2_DOWN)
-            btn = MOUSE_BTN3_DOWN;
-        else if (btn == MOUSE_BTN3_DOWN)
-            btn = MOUSE_BTN2_DOWN;
-    }
-#endif
-
-    for (ch = getch(); IS_DIGIT(ch); ch = getch())
-        x = x * 10 + ch - '0';
-    if (ch != ';')
-        return MENU_NOTHING;
-    if (x > 0)
-        x--;
-
-    for (ch = getch(); IS_DIGIT(ch); ch = getch())
-        y = y * 10 + ch - '0';
-    if (ch == 'm')
-        btn |= 3;
-    else if (ch != 'M' && ch != ';')
-        return MENU_NOTHING;
-    if (y > 0)
-        y--;
-
-    if (x < 0 || x >= TTY_COLS() || y < 0 || y > LASTLINE())
-        return MENU_NOTHING;
-
-    return process_mMouse(btn, x, y);
-}
-
-#ifdef USE_GPM
-static int
-gpm_process_menu_mouse(Gpm_Event* event, void* data)
-{
-    int btn = MOUSE_BTN_RESET, x, y;
-    if (event->type & GPM_UP)
-        btn = MOUSE_BTN_UP;
-    else if (event->type & GPM_DOWN) {
-        switch (event->buttons) {
-        case GPM_B_LEFT:
-            btn = MOUSE_BTN1_DOWN;
-            break;
-        case GPM_B_MIDDLE:
-            btn = MOUSE_BTN2_DOWN;
-            break;
-        case GPM_B_RIGHT:
-            btn = MOUSE_BTN3_DOWN;
-            break;
-        }
-    } else {
-        GPM_DRAWPOINTER(event);
-        return 0;
-    }
-    x = event->x;
-    y = event->y;
-    X_Mouse_Selection = process_mMouse(btn, x - 1, y - 1);
-    return X_MOUSE_SELECTED;
-}
-#endif /* USE_GPM */
-
-#ifdef USE_SYSMOUSE
-static int
-sysm_process_menu_mouse(int x, int y, int nbs, int obs)
-{
-    int btn;
-    int bits;
-
-    if (obs & ~nbs)
-        btn = MOUSE_BTN_UP;
-    else if (nbs & ~obs) {
-        bits = nbs & ~obs;
-        btn = bits & 0x1 ? MOUSE_BTN1_DOWN : (bits & 0x2 ? MOUSE_BTN2_DOWN : (bits & 0x4 ? MOUSE_BTN3_DOWN : 0));
-    } else /* nbs == obs */
-        return 0;
-    X_Mouse_Selection = process_mMouse(btn, x, y);
-    return X_MOUSE_SELECTED;
-}
-#endif /* USE_SYSMOUSE */
-#else /* not USE_MOUSE */
 static int
 mMouse(char c)
 {
@@ -1718,13 +1392,12 @@ mSgrMouse(char c)
 {
     return (MENU_NOTHING);
 }
-#endif /* not USE_MOUSE */
 
 /* --- MenuFunctions (END) --- */
 
 /* --- MainMenu --- */
 
-void popupMenu(int x, int y, Menu* menu)
+void popupMenu(int x, int y, struct Menu* menu)
 {
     set_menu_frame();
 
@@ -1746,7 +1419,7 @@ void mainMenu(int x, int y)
 
 DEFUN(mainMn, MAIN_MENU MENU, "Pop up menu")
 {
-    Menu* menu = &MainMenu;
+    struct Menu* menu = &MainMenu;
     char* data;
     int n;
     int x = Currentbuf->cursorX + Currentbuf->rootX,
@@ -1759,12 +1432,6 @@ DEFUN(mainMn, MAIN_MENU MENU, "Pop up menu")
             return;
         menu = w3mMenuList[n].menu;
     }
-#ifdef USE_MOUSE
-    if (mouse_action.in_action) {
-        x = mouse_action.cursorX;
-        y = mouse_action.cursorY;
-    }
-#endif
     popupMenu(x, y, menu);
 }
 
@@ -1777,12 +1444,6 @@ DEFUN(selMn, SELECT_MENU, "Pop up buffer-stack menu")
     int x = Currentbuf->cursorX + Currentbuf->rootX,
         y = Currentbuf->cursorY + Currentbuf->rootY;
 
-#ifdef USE_MOUSE
-    if (mouse_action.in_action) {
-        x = mouse_action.cursorX;
-        y = mouse_action.cursorY;
-    }
-#endif
     popupMenu(x, y, &SelectMenu);
 }
 
@@ -1866,9 +1527,7 @@ smChBuf(void)
     for (buf = Firstbuf; buf != NULL; buf = buf->nextBuffer) {
         if (buf == Currentbuf)
             continue;
-#ifdef USE_IMAGE
         deleteImage(buf);
-#endif
         if (clear_buffer)
             tmpClearBuffer(buf);
     }
@@ -1923,12 +1582,6 @@ DEFUN(tabMn, TAB_MENU, "Pop up tab selection menu")
     int x = Currentbuf->cursorX + Currentbuf->rootX,
         y = Currentbuf->cursorY + Currentbuf->rootY;
 
-#ifdef USE_MOUSE
-    if (mouse_action.in_action) {
-        x = mouse_action.cursorX;
-        y = mouse_action.cursorY;
-    }
-#endif
     popupMenu(x, y, &SelTabMenu);
 }
 
@@ -2013,9 +1666,7 @@ smChTab(void)
         if (tab == CurrentTab())
             continue;
         buf = tab->currentBuffer;
-#ifdef USE_IMAGE
         deleteImage(buf);
-#endif
         if (clear_buffer)
             tmpClearBuffer(buf);
     }
@@ -2060,7 +1711,7 @@ smDelTab(char c)
 void optionMenu(int x, int y, char** label, int* variable, int initial,
     void (*func)())
 {
-    Menu menu;
+    struct Menu menu;
 
     set_menu_frame();
 
@@ -2084,7 +1735,7 @@ interpret_menu(FILE* mf)
     Str line;
     char *p, *s;
     int in_menu = 0, nmenu = 0, nitem = 0, type;
-    MenuItem* item = NULL;
+    struct MenuItem* item = NULL;
 
     wc_ces charset = getRuntime()->SystemCharset;
 
@@ -2109,7 +1760,7 @@ interpret_menu(FILE* mf)
                 in_menu = 0;
             else {
                 nitem++;
-                item = New_Reuse(MenuItem, item, (nitem + 1));
+                item = New_Reuse(struct MenuItem, item, (nitem + 1));
                 w3mMenuList[nmenu].item = item;
                 item[nitem].type = MENU_END;
             }
@@ -2119,21 +1770,18 @@ interpret_menu(FILE* mf)
                 continue;
             in_menu = 1;
             if ((nmenu = getMenuN(w3mMenuList, s)) != -1)
-                w3mMenuList[nmenu].item = New(MenuItem);
+                w3mMenuList[nmenu].item = New(struct MenuItem);
             else
                 nmenu = addMenuList(&w3mMenuList, s);
             item = w3mMenuList[nmenu].item;
             nitem = 0;
             item[nitem].type = MENU_END;
-        }
-#ifdef USE_M17N
-        else if (!strcmp(s, "charset") || !strcmp(s, "encoding")) {
+        } else if (!strcmp(s, "charset") || !strcmp(s, "encoding")) {
             s = getQWord(&p);
             if (*s == '\0') /* error */
                 continue;
             charset = wc_guess_charset(s, charset);
         }
-#endif
     }
 }
 
@@ -2155,7 +1803,7 @@ void initMenu(void)
     w3mMenuList[3].id = NULL;
 
     if (!MainMenuEncode) {
-        MenuItem* item;
+        struct MenuItem* item;
 
         /* FIXME: charset that gettext(3) returns */
         MainMenuCharset = getRuntime()->SystemCharset;
@@ -2183,7 +1831,7 @@ void initMenu(void)
     }
 }
 
-int setMenuItem(MenuItem* item, char* type, char* line)
+int setMenuItem(struct MenuItem* item, char* type, char* line)
 {
     char *label, *func, *popup, *keys, *data;
     int f;
@@ -2239,8 +1887,8 @@ int addMenuList(MenuList** mlist, char* id)
     *mlist = New_Reuse(MenuList, *mlist, (n + 2));
     list = *mlist + n;
     list->id = id;
-    list->menu = New(Menu);
-    list->item = New(MenuItem);
+    list->menu = New(struct Menu);
+    list->item = New(struct MenuItem);
     (list + 1)->id = NULL;
     return n;
 }
@@ -2261,7 +1909,7 @@ int getMenuN(MenuList* list, char* id)
 struct LinkList*
 link_menu(struct Buffer* buf)
 {
-    Menu menu;
+    struct Menu menu;
     struct LinkList* l;
     int i, nitem, len = 0, linkV = -1;
     char** label;
@@ -2320,7 +1968,7 @@ link_menu(struct Buffer* buf)
 struct Anchor*
 accesskey_menu(struct Buffer* buf)
 {
-    Menu menu;
+    struct Menu menu;
     struct AnchorList* al = buf->href;
     struct Anchor* a;
     struct Anchor** ap;
@@ -2421,33 +2069,29 @@ lmSelect(char c)
 struct Anchor*
 list_menu(struct Buffer* buf)
 {
-    Menu menu;
     struct AnchorList* al = buf->href;
-    struct Anchor* a;
-    struct Anchor** ap;
-    int i, n, nitem = 0, key = -1, two = FALSE;
-    char** label;
-    char* t;
-    unsigned char c;
-
     if (!al)
         return NULL;
-    for (i = 0; i < al->nanchor; i++) {
-        a = &al->anchors[i];
+
+    int nitem = 0;
+    for (int i = 0; i < al->nanchor; i++) {
+        struct Anchor* a = &al->anchors[i];
         if (!a->slave)
             nitem++;
     }
     if (!nitem)
         return NULL;
 
+    bool two = FALSE;
     if (nitem >= nlmKeys)
         two = TRUE;
-    label = New_N(char*, nitem + 1);
-    ap = New_N(struct Anchor*, nitem);
-    for (i = 0, n = 0; i < al->nanchor; i++) {
-        a = &al->anchors[i];
+
+    char** label = New_N(char*, nitem + 1);
+    struct Anchor** ap = New_N(struct Anchor*, nitem);
+    for (int i = 0, n = 0; i < al->nanchor; i++) {
+        struct Anchor* a = &al->anchors[i];
         if (!a->slave) {
-            t = getAnchorText(buf, al, a);
+            const char* t = getAnchorText(buf, al, a);
             if (!t)
                 t = "";
             if (two && n >= nlmKeys2 * nlmKeys)
@@ -2465,6 +2109,8 @@ list_menu(struct Buffer* buf)
     label[nitem] = NULL;
 
     set_menu_frame();
+    struct Menu menu;
+    int key = -1;
     new_option_menu(&menu, label, &key, NULL);
 
     menu.initial = 0;
@@ -2472,30 +2118,30 @@ list_menu(struct Buffer* buf)
     menu.cursorY = buf->cursorY + buf->rootY;
     menu.x = menu.cursorX + FRAME_WIDTH + 1;
     menu.y = menu.cursorY + 2;
-    for (i = 0; i < 128; i++)
+    for (int i = 0; i < 128; i++)
         menu.keyselect[i] = -1;
     if (two) {
-        for (i = 0; i < nlmKeys2; i++) {
-            c = lmKeys2[i];
+        for (int i = 0; i < nlmKeys2; i++) {
+            char c = lmKeys2[i];
             menu.keymap[(int)c] = lmGoto;
             menu.keyselect[(int)c] = i;
         }
-        for (i = 0; i < nlmKeys; i++) {
-            c = lmKeys[i];
+        for (int i = 0; i < nlmKeys; i++) {
+            char c = lmKeys[i];
             menu.keymap[(int)c] = lmSelect;
             menu.keyselect[(int)c] = i;
         }
     } else {
-        for (i = 0; i < nitem; i++) {
-            c = lmKeys[i];
+        for (int i = 0; i < nitem; i++) {
+            char c = lmKeys[i];
             menu.keymap[(int)c] = mSelect;
             menu.keyselect[(int)c] = i;
         }
     }
 
-    a = retrieveCurrentAnchor(buf);
+    struct Anchor* a = retrieveCurrentAnchor(buf);
     if (a) {
-        for (i = 0; i < nitem; i++) {
+        for (int i = 0; i < nitem; i++) {
             if (a->hseq == ap[i]->hseq) {
                 menu.initial = i;
                 break;
@@ -2507,5 +2153,3 @@ list_menu(struct Buffer* buf)
 
     return (key >= 0) ? ap[key] : NULL;
 }
-
-#endif /* USE_MENU */
