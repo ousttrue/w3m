@@ -445,9 +445,6 @@ extern void dictwordat(void);
 #define dictword nulcmd
 #define dictwordat nulcmd
 #endif /* not USE_DICT */
-#if 0
-extern void reloadBuffer(Buffer *buf);
-#endif
 
 extern void wrapToggle(void);
 #ifdef USE_BUFINFO

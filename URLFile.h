@@ -35,10 +35,18 @@ struct URLFile openURL(const char* url, struct Url* pu, struct Url* current,
     struct URLOption option, struct FormList* request,
     struct URLFile* ouf,
     struct HttpRequest* hr, unsigned char* status, bool do_download);
-struct Buffer* doExternal(struct URLFile uf, const char* type, struct Buffer* defaultbuf);
-struct Buffer* loadHTMLBuffer(struct URLFile* f, struct Buffer* newBuf);
-struct Buffer* loadBuffer(struct URLFile* uf, struct Buffer* newBuf);
-struct Buffer* loadImageBuffer(struct URLFile* uf, struct Buffer* newBuf);
+
+typedef struct Buffer* (*LoadBufferFunc)(struct URLFile*, const char* type,
+    struct Buffer*, bool internal);
+struct Buffer* doExternal(struct URLFile* uf, const char* type,
+    struct Buffer* defaultbuf, bool internal);
+struct Buffer* loadHTMLBuffer(struct URLFile* f, const char* type,
+    struct Buffer* newBuf, bool internal);
+struct Buffer* loadBuffer(struct URLFile* uf, const char* type,
+    struct Buffer* newBuf, bool internal);
+struct Buffer* loadImageBuffer(struct URLFile* uf, const char* type,
+    struct Buffer* newBuf, bool internal);
+
 Str loadGopherDir(struct URLFile* uf, struct Url* pu, wc_ces* charset);
 Str loadGopherSearch(struct URLFile* uf, struct Url* pu, wc_ces* charset);
 void UFhalfclose(struct URLFile* f);

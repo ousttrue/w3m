@@ -143,14 +143,6 @@ int is_close(struct input_stream* is)
     if (is == NULL)
         return -1;
 
-    // inline static void UFclose(struct URLFile* f)
-    // {
-    //     if (!f->stream->unclose) {
-    //         is_close(f->stream);
-    //         f->stream = NULL;
-    //     }
-    // }
-
     if (is->unclose) {
         return -1;
     }

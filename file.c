@@ -101,12 +101,11 @@ int currentLn(struct Buffer* buf)
 }
 
 static struct Buffer*
-loadSomething(struct URLFile* f,
-    struct Buffer* (*loadproc)(struct URLFile*, struct Buffer*), struct Buffer* defaultbuf)
+loadSomething(struct URLFile* f, const char* t,
+    LoadBufferFunc loadproc, struct Buffer* defaultbuf, bool internal)
 {
-    struct Buffer* buf;
-
-    if ((buf = loadproc(f, defaultbuf)) == NULL)
+    struct Buffer* buf = loadproc(f, t, defaultbuf, internal);
+    if (!buf)
         return NULL;
 
     if (buf->buffername == NULL || buf->buffername[0] == '\0') {
@@ -902,13 +901,9 @@ Str getLinkNumberStr(struct HtmlBuilder* hb, int correction)
     return Sprintf("[%d]", hb->cur_hseq + correction);
 }
 
-#define DO_EXTERNAL ((struct Buffer * (*)(struct URLFile*, struct Buffer*)) doExternal)
-
 /*
  * loadGeneralFile: load file to buffer
  */
-
-typedef struct Buffer* (*LoadBufferFunc)(struct URLFile*, struct Buffer*);
 
 struct Buffer* page_loaded(struct Url url,
     wc_ces charset, Str page, bool do_download)
@@ -1021,7 +1016,7 @@ struct Buffer* make_buffer(struct Url url, int flag,
         ;
     else if (!(w3m_dump & ~DUMP_FRAME) || is_dump_text_type(t)) {
         if (!do_download && searchExtViewer(t) != NULL) {
-            proc = DO_EXTERNAL;
+            proc = doExternal;
         } else {
             TRAP_OFF;
             if (url.scheme == SCM_LOCAL) {
@@ -1052,12 +1047,8 @@ struct Buffer* make_buffer(struct Url url, int flag,
     t_buf->ssl_certificate = f.ssl_certificate;
     frame_source = flag & RG_FRAME_SRC;
 
-    struct Buffer* b;
-    if (proc == DO_EXTERNAL) {
-        b = doExternal(f, t, t_buf);
-    } else {
-        b = loadSomething(&f, proc, t_buf);
-    }
+    struct Buffer* b = loadSomething(&f, t,
+        proc, t_buf, t_buf->bufferprop & BP_FRAME);
     is_close(f.stream);
     frame_source = 0;
     if (b && b != NO_BUFFER) {
@@ -5498,7 +5489,8 @@ table_start:
  * loadHTMLBuffer: read file and make new buffer
  */
 struct Buffer*
-loadHTMLBuffer(struct URLFile* f, struct Buffer* newBuf)
+loadHTMLBuffer(struct URLFile* f, const char* t,
+    struct Buffer* newBuf, bool internal)
 {
     if (newBuf == NULL)
         newBuf = newBuffer(INIT_BUFFER_WIDTH);
@@ -5512,7 +5504,7 @@ loadHTMLBuffer(struct URLFile* f, struct Buffer* newBuf)
             newBuf->sourcefile = tmp->ptr;
     }
 
-    loadHTMLstream(f->stream, newBuf, src, newBuf->bufferprop & BP_FRAME);
+    loadHTMLstream(f->stream, newBuf, src, internal);
 
     if (src)
         fclose(src);
@@ -5556,8 +5548,6 @@ char* convert_size2(int64_t size1, int64_t size2, int usefloat)
         sizes[sizepos])
         ->ptr;
 }
-
-
 
 void init_henv(struct html_feed_environ* h_env, struct readbuffer* obuf,
     struct environment* envs, int nenv, TextLineList* buf,
@@ -6056,7 +6046,8 @@ Str loadGopherSearch(struct URLFile* uf, struct Url* pu, wc_ces* charset)
  * loadBuffer: read file and make new buffer
  */
 struct Buffer*
-loadBuffer(struct URLFile* uf, struct Buffer* volatile newBuf)
+loadBuffer(struct URLFile* uf, const char* t,
+    struct Buffer* volatile newBuf, bool internal)
 {
     FILE* volatile src = NULL;
 
@@ -6132,9 +6123,9 @@ _end:
     return newBuf;
 }
 
-#ifdef USE_IMAGE
 struct Buffer*
-loadImageBuffer(struct URLFile* uf, struct Buffer* newBuf)
+loadImageBuffer(struct URLFile* uf, const char* t,
+    struct Buffer* newBuf, bool internal)
 {
     struct Image image;
     struct ImageCache* cache;
@@ -6191,7 +6182,6 @@ image_buffer:
     newBuf->image_flag = IMG_FLAG_AUTO;
     return newBuf;
 }
-#endif
 
 static Str
 conv_symbol(struct Line* l)
@@ -6279,19 +6269,18 @@ void saveBufferBody(struct Buffer* buf, FILE* f, int cont)
 
 static struct Buffer*
 loadcmdout(char* cmd,
-    struct Buffer* (*loadproc)(struct URLFile*, struct Buffer*), struct Buffer* defaultbuf)
+    LoadBufferFunc loadproc, struct Buffer* defaultbuf)
 {
-    // FILE *popen(const char*, const char*);
-    struct Buffer* buf;
-    struct URLFile uf;
-
     if (cmd == NULL || *cmd == '\0')
         return NULL;
-    FILE *f = popen(cmd, "r");
+
+    FILE* f = popen(cmd, "r");
     if (f == NULL)
         return NULL;
+    struct URLFile uf;
     init_stream(&uf, SCM_UNKNOWN, is_from_file(f, pclose));
-    buf = loadproc(&uf, defaultbuf);
+    struct Buffer* buf = loadproc(&uf, NULL,
+        defaultbuf, defaultbuf->bufferprop & BP_FRAME);
     is_close(uf.stream);
     return buf;
 }
@@ -6315,14 +6304,15 @@ getshell(char* cmd)
 }
 
 struct Buffer*
-doExternal(struct URLFile uf, const char* type, struct Buffer* defaultbuf)
+doExternal(struct URLFile* uf, const char* type,
+    struct Buffer* defaultbuf, bool internal)
 {
     Str command;
     struct mailcap* mcap;
     int mc_stat;
     struct Buffer* buf = NULL;
     const char* src = NULL;
-    const char* ext = uf.ext;
+    const char* ext = uf->ext;
 
     if (!(mcap = searchExtViewer(type)))
         return NULL;
@@ -6346,15 +6336,15 @@ doExternal(struct URLFile uf, const char* type, struct Buffer* defaultbuf)
     if (!(mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)) && !(mcap->flags & MAILCAP_NEEDSTERMINAL) && BackgroundExtViewer) {
         flush_tty();
         if (!fork()) {
-            setup_child(FALSE, 0, is_file_no(uf.stream));
-            if (!is_save2tmp(uf.stream, tmpf->ptr))
+            setup_child(FALSE, 0, is_file_no(uf->stream));
+            if (!is_save2tmp(uf->stream, tmpf->ptr))
                 exit(1);
-            is_close(uf.stream);
+            is_close(uf->stream);
             myExec(command->ptr);
         }
         return NO_BUFFER;
     } else {
-        if (!is_save2tmp(uf.stream, tmpf->ptr)) {
+        if (!is_save2tmp(uf->stream, tmpf->ptr)) {
             return NULL;
         }
     }

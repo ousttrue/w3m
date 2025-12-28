@@ -3,7 +3,6 @@
 #include "w3m_rc.h"
 #include "cookie.h"
 #include "message.h"
-#include "URLFile.h"
 #include "line.h"
 #include "url.h"
 #include "etc.h"
