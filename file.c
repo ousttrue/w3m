@@ -968,25 +968,19 @@ struct Buffer* make_buffer(struct Url url, int flag,
     }
 
     if (t_buf) {
-        const char* tmpf = NULL;
-        if (f.scheme != SCM_LOCAL && !getRuntime()->image_source) {
-            const char* ext = filename_extension(url.file, true);
-            tmpf = tmpfname(TMPF_DFL, ext)->ptr;
-        }
+        bool use_tmpf = f.scheme != SCM_LOCAL && !getRuntime()->image_source;
         if ((t_buf->content.compression != CMP_NOCOMPRESS) && AutoUncompress
             && !(w3m_dump & DUMP_EXTRA)) {
             struct input_stream* stream = uncompress_stream(f.stream,
-                t_buf->content.compression, tmpf);
+                t_buf->content.compression, use_tmpf ? &url.real_file : NULL);
             // UFhalfclose(&f);
             f.stream = stream;
-            url.real_file = tmpf;
         } else if (t_buf->content.compression != CMP_NOCOMPRESS) {
             if (!(w3m_dump & DUMP_SOURCE) && (w3m_dump & ~DUMP_FRAME || is_text_type(t) || searchExtViewer(t))) {
                 struct input_stream* stream = uncompress_stream(f.stream,
-                    t_buf->content.compression, tmpf);
+                    t_buf->content.compression, use_tmpf ? &t_buf->sourcefile : NULL);
                 // UFhalfclose(&f);
                 f.stream = stream;
-                t_buf->sourcefile = tmpf;
                 uncompressed_file_type(url.file, &f.ext);
             } else {
                 t = compress_application_type(t_buf->content.compression);

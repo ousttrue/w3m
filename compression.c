@@ -153,13 +153,18 @@ static char* auxbinFile(const char* base)
 }
 
 struct input_stream* uncompress_stream(struct input_stream* stream,
-    enum CompressionType compression, const char* tmpf)
+    enum CompressionType compression, const char** out_tmpf)
 {
     struct CompressionDecoder* d = compression_decoders;
     for (; d->type != CMP_NOCOMPRESS; d++) {
         if (compression == d->type) {
             break;
         }
+    }
+
+    const char* tmpf = NULL;
+    if (out_tmpf) {
+        tmpf = tmpfname(TMPF_DFL, d->ext)->ptr;
     }
 
     /* child1 -- stdout|f1=uf -> parent */
@@ -208,13 +213,20 @@ struct input_stream* uncompress_stream(struct input_stream* stream,
         dup2(1, 2); /* stderr>&stdout */
         setup_child(TRUE, -1, -1);
 
+        const char* cmd = d->auxbin_p ? auxbinFile(d->cmd) : d->cmd;
         if (d->use_d_arg)
-            execlp(auxbinFile(d->cmd), d->name, "-d", NULL);
+            execlp(cmd, d->name, "-d", NULL);
         else
-            execlp(d->cmd, d->name, NULL);
+            execlp(cmd, d->name, NULL);
         exit(1);
     }
 
+    if (tmpf) {
+        if (out_tmpf)
+            *out_tmpf = tmpf;
+        // else
+        //     uf->scheme = SCM_LOCAL;
+    }
     return is_from_file(f1, fclose);
 }
 
