@@ -1,7 +1,6 @@
 #include "alloc.h"
 #include "indep.h"
 #include "w3m_rc.h"
-#include "URLFile.h"
 #include "etc.h"
 #include "file.h"
 #include "readbuffer.h"
@@ -406,10 +405,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
     int force_reload)
 {
     int r, c, t_stack;
-    struct URLFile f2;
-#ifdef USE_M17N
     wc_ces charset, doc_charset;
-#endif
     char *d_target, *p_target, *s_target, *t_target;
     struct Url *currentURL, base;
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
@@ -492,13 +488,13 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
                     goto render_frameset;
                 }
                 /* fall through */
-            case F_BODY:
-                init_stream(&f2, SCM_LOCAL, NULL);
+            case F_BODY: {
+                struct input_stream *stream = NULL; 
                 if (frame.body->source) {
                     fflush(f1);
-                    f2 = examineFile(frame.body->source, false);
+                    stream = examineFile(frame.body->source, false);
                 }
-                if (f2.stream == NULL) {
+                if (stream == NULL) {
                     frame.body->attr = F_UNLOADED;
                     if (frame.body->flags & FB_NO_BUFFER)
                         /* FIXME: gettextize? */
@@ -532,13 +528,13 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
                 if (frame.body->type && !strcasecmp(frame.body->type, "text/plain")) {
                     Str tmp;
                     fprintf(f1, "<pre>\n");
-                    while ((tmp = is_get_str(f2.stream, true)) && tmp->length) {
+                    while ((tmp = is_get_str(stream, true)) && tmp->length) {
                         tmp = convertLine(tmp, HTML_MODE, &charset,
                             doc_charset);
                         fprintf(f1, "%s", html_quote(tmp->ptr));
                     }
                     fprintf(f1, "</pre>\n");
-                    UFclose(&f2);
+                    is_close(stream);
                     break;
                 }
                 do {
@@ -548,7 +544,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
 
                     do {
                         if (*p == '\0') {
-                            Str tmp = is_get_str(f2.stream, true);
+                            Str tmp = is_get_str(stream, true);
                             if (!tmp || tmp->length == 0)
                                 break;
                             tmp = convertLine(tmp, HTML_MODE, &charset,
@@ -662,7 +658,6 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
                                     }
                                 }
                             }
-#ifdef USE_M17N
                             if (UseContentCharset && parsedtag_get_value(tag, ATTR_HTTP_EQUIV, &q)
                                 && !strcasecmp(q, "Content-Type")
                                 && parsedtag_get_value(tag, ATTR_CONTENT, &q)
@@ -679,7 +674,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
                                     }
                                 }
                             }
-#endif
+
                             /* fall thru, "META" is prohibit tag */
                         case HTML_HEAD:
                         case HTML_N_HEAD:
@@ -761,23 +756,18 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
                                     &base, charset);
                                 tag->need_reconstruct = TRUE;
                                 parseURL2(tag->value[j], &url, &base);
-                                if (url.scheme == SCM_UNKNOWN ||
-#ifndef USE_W3MMAILER
-                                    url.scheme == SCM_MAILTO ||
-#endif
-                                    url.scheme == SCM_MISSING)
+                                if (url.scheme == SCM_UNKNOWN || url.scheme == SCM_MISSING)
                                     break;
                                 a_target |= 1;
                                 tag->value[j] = parsedURL2Str(&url)->ptr;
                                 parsedtag_set_value(tag,
                                     ATTR_REFERER,
                                     parsedURL2Str(&base)->ptr);
-#ifdef USE_M17N
                                 if (tag->attrid[j] == ATTR_ACTION && charset != WC_CES_US_ASCII)
                                     parsedtag_set_value(tag,
                                         ATTR_CHARSET,
                                         wc_ces_to_charset(charset));
-#endif
+
                                 break;
                             case ATTR_TARGET:
                                 if (!tag->value[j])
@@ -819,7 +809,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
                     }
                 token_end:
                     Strclear(tok);
-                } while (*p != '\0' || !f2.stream->iseos);
+                } while (*p != '\0' || !stream->iseos);
 
                 if (pre_mode & RB_PLAIN)
                     fputs("</PRE_PLAIN>\n", f1);
@@ -837,8 +827,9 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
                 }
                 while (t_stack--)
                     fputs("</TABLE>\n", f1);
-                UFclose(&f2);
+                is_close(stream);
                 break;
+            }
             case F_FRAMESET:
             render_frameset:
                 if (!frame.set->name && f->name) {

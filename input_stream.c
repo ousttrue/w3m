@@ -1,11 +1,14 @@
 #include "input_stream.h"
+#include "compression.h"
 #include "growbuf.h"
 #include "alloc.h"
 #include "w3m_rc.h"
+#include <fcntl.h>
 #include <stdint.h>
 #include <signal.h>
 #include <string.h>
 #include <strings.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <assert.h>
 
@@ -273,4 +276,30 @@ int is_file_no(struct input_stream* is)
     default:
         return -1;
     }
+}
+
+#define NOT_REGULAR(m) (((m) & S_IFMT) != S_IFREG)
+
+struct input_stream* examineFile(const char* path, bool do_download)
+{
+    if (path == NULL || *path == '\0') {
+        return NULL;
+    }
+
+    struct stat stbuf;
+    if (stat(path, &stbuf) != 0) {
+        return NULL;
+    }
+    if (NOT_REGULAR(stbuf.st_mode)) {
+        return NULL;
+    }
+
+    struct input_stream* stream = is_from_fd(open(path, O_RDONLY));
+    if (!do_download) {
+        enum CompressionType compression = check_compression(path);
+        if (compression != CMP_NOCOMPRESS) {
+            stream = uncompress_stream(stream, compression, NULL);
+        }
+    }
+    return stream;
 }

@@ -912,7 +912,7 @@ retry:
             uf.scheme = pu->scheme = SCM_LOCAL_CGI;
             return uf;
         }
-        uf = examineFile(pu->real_file, false);
+        uf.stream = examineFile(pu->real_file, false);
         if (uf.stream == NULL) {
             if (dir_exist(pu->real_file)) {
                 add_index_file(pu, &uf);
@@ -933,7 +933,7 @@ retry:
                         return uf;
                     }
                 } else {
-                    uf = examineFile(q, do_download);
+                    uf.stream = examineFile(q, do_download);
                     if (uf.stream) {
                         pu->file = p;
                         pu->real_file = q;
@@ -1099,7 +1099,7 @@ add_index_file(struct Url* pu, struct URLFile* uf)
         p = Strnew_m_charp(pu->file, "/", file_quote(ti->ptr), NULL)->ptr;
         p = cleanupName(p);
         q = cleanupName(file_unquote(p));
-        *uf = examineFile(q, false);
+        uf->stream = examineFile(q, false);
         if (uf->stream != NULL) {
             pu->file = p;
             pu->real_file = q;

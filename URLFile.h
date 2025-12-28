@@ -37,7 +37,6 @@ struct FormList;
 struct HttpRequest;
 struct Buffer;
 void init_stream(struct URLFile* uf, int scheme, struct input_stream* stream);
-struct URLFile examineFile(const char* path, bool do_download);
 int doFileSave(struct URLFile uf, const char* defstr,
     enum CompressionType compression);
 struct URLFile openURL(const char* url, struct Url* pu, struct Url* current,

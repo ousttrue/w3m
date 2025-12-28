@@ -33,33 +33,6 @@ void UFhalfclose(struct URLFile* f)
     }
 }
 
-#define NOT_REGULAR(m) (((m) & S_IFMT) != S_IFREG)
-
-struct URLFile examineFile(const char* path, bool do_download)
-{
-    struct URLFile uf = { 0 };
-    if (path == NULL || *path == '\0') {
-        return uf;
-    }
-
-    struct stat stbuf;
-    if (stat(path, &stbuf) != 0) {
-        return uf;
-    }
-    if (NOT_REGULAR(stbuf.st_mode)) {
-        return uf;
-    }
-
-    uf.stream = is_from_fd(open(path, O_RDONLY));
-    if (!do_download) {
-        enum CompressionType compression = check_compression(path);
-        if (compression != CMP_NOCOMPRESS) {
-            uf.stream = uncompress_stream(uf.stream, compression, NULL);
-        }
-    }
-    return uf;
-}
-
 static JMP_BUF AbortLoading;
 static MySignalHandler
 KeyAbort(SIGNAL_ARG)

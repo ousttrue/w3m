@@ -40,6 +40,7 @@ struct input_stream {
     };
 };
 
+struct input_stream* examineFile(const char* path, bool do_download);
 struct input_stream* is_from_fd(int fd);
 struct input_stream* is_from_file(FILE* f, FileCloseFunc closep);
 struct input_stream* is_from_str(Str s);

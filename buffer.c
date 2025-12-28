@@ -497,15 +497,13 @@ void reshapeBuffer(struct Buffer* buf)
     if (!buf->sourcefile)
         return;
 
-    struct URLFile f;
-    init_stream(&f, SCM_LOCAL, NULL);
+    struct input_stream* stream;
     if (buf->mailcap_source) {
-        f = examineFile(buf->mailcap_source, false);
+        stream = examineFile(buf->mailcap_source, false);
     } else {
-        f = examineFile(buf->sourcefile, false);
+        stream = examineFile(buf->sourcefile, false);
     }
-
-    if (!f.stream)
+    if (!stream)
         return;
 
     struct Buffer sbuf;
@@ -530,17 +528,19 @@ void reshapeBuffer(struct Buffer* buf)
 
     if (buf->header_source) {
         if (buf->currentURL.scheme != SCM_LOCAL || buf->mailcap_source || !strcmp(buf->currentURL.file, "-")) {
-            struct URLFile h;
-            init_stream(&h, SCM_LOCAL, NULL);
-            h = examineFile(buf->header_source, false);
-            if (h.stream) {
-                getHttpResponseHeader(&buf->content, buf->currentURL, h.stream);
-                UFclose(&h);
+            struct input_stream *stream = examineFile(buf->header_source, false);
+            if (stream) {
+                getHttpResponseHeader(&buf->content, buf->currentURL, stream);
+                is_close(stream);
             }
         }
     }
 
     {
+        struct URLFile f;
+        init_stream(&f, SCM_LOCAL, NULL);
+        f.stream = stream;
+
         wc_uint8 old_auto_detect = WcOption.auto_detect;
         WcOption.auto_detect = WC_OPT_DETECT_OFF;
         UseContentCharset = FALSE;
