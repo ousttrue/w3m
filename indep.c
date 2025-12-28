@@ -369,7 +369,7 @@ char* currentdir()
     return path;
 }
 
-char* cleanupName(char* name)
+char* cleanupName(const char* name)
 {
     char *buf, *p, *q;
 
@@ -596,24 +596,6 @@ int non_null(char* s)
         s++;
     }
     return FALSE;
-}
-
-void cleanup_line(Str s, int mode)
-{
-    if (s->length >= 2 && s->ptr[s->length - 2] == '\r' && s->ptr[s->length - 1] == '\n') {
-        Strshrink(s, 2);
-        Strcat_char(s, '\n');
-    } else if (Strlastchar(s) == '\r')
-        s->ptr[s->length - 1] = '\n';
-    else if (Strlastchar(s) != '\n')
-        Strcat_char(s, '\n');
-    if (mode != PAGER_MODE) {
-        int i;
-        for (i = 0; i < s->length; i++) {
-            if (s->ptr[i] == '\0')
-                s->ptr[i] = ' ';
-        }
-    }
 }
 
 int getescapechar(const char** str)

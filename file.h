@@ -39,3 +39,4 @@ Str getLinkNumberStr(struct HtmlBuilder* hb, int correction);
 int checkOverWrite(const char* path);
 struct input_stream;
 int checkSaveFile(struct input_stream* stream, const char* path);
+

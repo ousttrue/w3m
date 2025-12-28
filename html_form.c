@@ -89,7 +89,7 @@ newFormList(char* action, char* method, char* charset, char* enctype,
  * add <input> element to FormList
  */
 struct FormItemList*
-formList_addInput(struct HtmlBuilder *hb, struct FormList* fl, struct parsed_tag* tag)
+formList_addInput(struct HtmlBuilder* hb, struct FormList* fl, struct parsed_tag* tag)
 {
     struct FormItemList* item;
     char* p;
@@ -579,7 +579,7 @@ void input_textarea(struct FormItemList* fi)
             Strshrink(tmp, 1);
             Strcat_charp(tmp, "\r\n");
         }
-        tmp = convertLine(NULL, tmp, RAW_MODE, &charset, getRuntime()->DisplayCharset);
+        tmp = convertLine(tmp, RAW_MODE, &charset, getRuntime()->DisplayCharset);
         Strcat(fi->value, tmp);
     }
     WcOption.auto_detect = auto_detect;

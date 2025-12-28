@@ -503,7 +503,7 @@ Str loadFTPDir(struct Url* pu, wc_ces* charset, bool do_download)
     if (Strlastchar(tmp) != '/')
         Strcat_char(tmp, '/');
     fn = html_quote(tmp->ptr);
-    tmp = convertLine(NULL, Strnew_charp(file_unquote(tmp->ptr)), RAW_MODE,
+    tmp = convertLine(Strnew_charp(file_unquote(tmp->ptr)), RAW_MODE,
         charset, doc_charset);
     q = html_quote(tmp->ptr);
     FTPDIRtmp = Strnew_m_charp("<html>\n<head>\n<base href=\"", fn,
@@ -580,7 +580,7 @@ Str loadFTPDir(struct Url* pu, wc_ces* charset, bool do_download)
                 *(date - 1) = '\0';
             }
             date++;
-            tmp = convertLine(NULL, Strnew_charp(fn), RAW_MODE, charset,
+            tmp = convertLine(Strnew_charp(fn), RAW_MODE, charset,
                 doc_charset);
             if (ftype == FTPDIR_LINK)
                 Strcat_char(tmp, '@');
@@ -592,7 +592,7 @@ Str loadFTPDir(struct Url* pu, wc_ces* charset, bool do_download)
                 else
                     Strcat_char(FTPDIRtmp, ' ');
             }
-            tmp = convertLine(NULL, Strnew_charp(date), RAW_MODE, charset,
+            tmp = convertLine(Strnew_charp(date), RAW_MODE, charset,
                 doc_charset);
             Strcat_m_charp(FTPDIRtmp, html_quote(tmp->ptr), "\n", NULL);
         }
@@ -609,7 +609,7 @@ Str loadFTPDir(struct Url* pu, wc_ces* charset, bool do_download)
         qsort(flist, nfile, sizeof(char*), strCmp);
         for (i = 0; i < nfile; i++) {
             fn = flist[i];
-            tmp = convertLine(NULL, Strnew_charp(fn), RAW_MODE, charset,
+            tmp = convertLine(Strnew_charp(fn), RAW_MODE, charset,
                 doc_charset);
             Strcat_m_charp(FTPDIRtmp, "<li><a href=\"",
                 html_quote(file_quote(fn)), "\">",

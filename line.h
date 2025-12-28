@@ -1,5 +1,6 @@
 #pragma once
 #include <libwc/wtf.h>
+#include <libwc/conv.h>
 
 typedef unsigned short Lineprop;
 typedef unsigned char Linecolor;
@@ -80,7 +81,12 @@ size_t calcPosition(char* l, Lineprop* pr, int len, int pos, int bpos, enum Calc
 int columnPos(struct Line* line, int column);
 int columnLen(struct Line* line, int column);
 
-/*
- * Check character type
- */
+enum LineMode {
+    RAW_MODE = 0,
+    PAGER_MODE = 1,
+    HTML_MODE = 2,
+    HEADER_MODE = 3,
+};
 Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor);
+void cleanup_line(Str s, enum LineMode mode);
+Str convertLine(Str line, enum LineMode mode, wc_ces* detected, wc_ces f_ces);

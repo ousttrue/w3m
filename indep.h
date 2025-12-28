@@ -10,11 +10,6 @@
 #define FALSE 0
 #endif /* FALSE */
 
-#define RAW_MODE 0
-#define PAGER_MODE 1
-#define HTML_MODE 2
-#define HEADER_MODE 3
-
 extern unsigned char QUOTE_MAP[];
 extern char* HTML_QUOTE_MAP[];
 #define HTML_QUOTE_MASK 0x07 /* &, <, >, ", ' */
@@ -37,7 +32,7 @@ extern char* getescapecmd(const char** s);
 extern char* allocStr(const char* s, int len);
 extern int strCmp(const void* s1, const void* s2);
 extern char* currentdir(void);
-extern char* cleanupName(char* name);
+extern char* cleanupName(const char* name);
 extern char* expandPath(const char* name);
 #ifndef HAVE_STRCHR
 extern char* strchr(const char* s, int c);
@@ -53,7 +48,6 @@ extern int strcasemstr(char* str, char* srch[], char** ret_ptr);
 int strmatchlen(const char* s1, const char* s2, int maxlen);
 extern char* remove_space(const char* str);
 extern int non_null(char* s);
-extern void cleanup_line(Str s, int mode);
 extern char* html_unquote(const char* str);
 extern char* file_quote(char* str);
 extern char* file_unquote(char* str);

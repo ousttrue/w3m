@@ -533,7 +533,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
                     Str tmp;
                     fprintf(f1, "<pre>\n");
                     while ((tmp = is_get_str(f2.stream, true)) && tmp->length) {
-                        tmp = convertLine(NULL, tmp, HTML_MODE, &charset,
+                        tmp = convertLine(tmp, HTML_MODE, &charset,
                             doc_charset);
                         fprintf(f1, "%s", html_quote(tmp->ptr));
                     }
@@ -551,7 +551,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
                             Str tmp = is_get_str(f2.stream, true);
                             if (!tmp || tmp->length == 0)
                                 break;
-                            tmp = convertLine(NULL, tmp, HTML_MODE, &charset,
+                            tmp = convertLine(tmp, HTML_MODE, &charset,
                                 doc_charset);
                             p = tmp->ptr;
                         }

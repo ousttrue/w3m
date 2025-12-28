@@ -219,21 +219,6 @@ lessopen_stream(const char* path)
     return fp;
 }
 
-/*
- * convert line
- */
-Str convertLine(struct URLFile* uf, Str line, int mode, wc_ces* detected,
-    wc_ces f_ces)
-{
-    struct Converted converted = wc_Str_conv_with_detect(line, detected, f_ces, getRuntime()->InnerCharset);
-
-    if (mode != RAW_MODE)
-        cleanup_line(converted.os, mode);
-
-    *detected = converted.detected;
-    return converted.os;
-}
-
 struct auth_param {
     char* name;
     Str val;
@@ -5903,7 +5888,7 @@ void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int int
             hb->meta_charset = 0;
         }
 
-        lineBuf2 = convertLine(f, lineBuf2, HTML_MODE, &charset, doc_charset);
+        lineBuf2 = convertLine(lineBuf2, HTML_MODE, &charset, doc_charset);
 
         hb->cur_document_charset = charset;
 
@@ -5999,7 +5984,7 @@ Str loadGopherDir0(struct URLFile* uf, struct Url* pu)
 
     tmp = parsedURL2Str(pu);
     p = html_quote(tmp->ptr);
-    tmp = convertLine(NULL, Strnew_charp(file_unquote(tmp->ptr)), RAW_MODE,
+    tmp = convertLine(Strnew_charp(file_unquote(tmp->ptr)), RAW_MODE,
         charset, doc_charset);
     q = html_quote(tmp->ptr);
     tmp = Strnew_m_charp("<html>\n<head>\n<base href=\"", p, "\">\n<title>", q,
@@ -6016,7 +6001,7 @@ Str loadGopherDir0(struct URLFile* uf, struct Url* pu)
             break;
         if (lbuf->ptr[0] == '.' && (lbuf->ptr[1] == '\n' || lbuf->ptr[1] == '\r'))
             break;
-        lbuf = convertLine(uf, lbuf, HTML_MODE, charset, doc_charset);
+        lbuf = convertLine(lbuf, HTML_MODE, charset, doc_charset);
         p = lbuf->ptr;
         for (q = p; *q && *q != '\t'; q++)
             ;
@@ -6116,7 +6101,7 @@ Str loadGopherSearch(struct URLFile* uf, struct Url* pu, wc_ces* charset)
 
     tmp = parsedURL2Str(pu);
     p = html_quote(tmp->ptr);
-    tmp = convertLine(NULL, Strnew_charp(file_unquote(tmp->ptr)), RAW_MODE,
+    tmp = convertLine(Strnew_charp(file_unquote(tmp->ptr)), RAW_MODE,
         charset, doc_charset);
     q = html_quote(tmp->ptr);
     tmp = Strnew_m_charp("<html>\n<head>\n<base href=\"", p, "\">\n<title>", q,
@@ -6181,7 +6166,7 @@ loadBuffer(struct URLFile* uf, struct Buffer* volatile newBuf)
         showProgress(&linelen, &trbyte, newBuf->content.current_content_length);
         if (frame_source)
             continue;
-        lineBuf2 = convertLine(uf, lineBuf2, PAGER_MODE, &charset, doc_charset);
+        lineBuf2 = convertLine(lineBuf2, PAGER_MODE, &charset, doc_charset);
         if (squeezeBlankLine) {
             if (lineBuf2->ptr[0] == '\n' && pre_lbuf == '\n') {
                 ++nlines;
