@@ -1,4 +1,6 @@
 #pragma once
+#include "http_request.h"
+#include "url.h"
 #include "textlist.h"
 #include "compression.h"
 #include "input_stream.h"
@@ -10,10 +12,7 @@
 struct input_stream;
 struct URLFile {
     enum UrlScheme scheme;
-    char is_cgi;
     struct input_stream* stream;
-    const char* ext;
-    const char* ssl_certificate;
     char* url;
     time_t modtime;
 };
@@ -24,19 +23,28 @@ struct URLOption {
     struct TextList* extra_header;
 };
 
-struct Url;
 struct FormList;
 struct HttpRequest;
 struct Buffer;
 void init_stream(struct URLFile* uf, int scheme, struct input_stream* stream);
 int doFileSave(struct URLFile uf, const char* defstr,
     enum CompressionType compression);
-struct URLFile openURL(const char* url, struct Url* pu, struct Url* current,
-    struct URLOption option, struct FormList* request,
+
+struct UrlStream {
+    struct URLFile uf;
+    bool is_cgi;
+    const char* url_str;
+    struct Url url;
+    struct HttpRequest hr;
+    unsigned char status;
+    const char* ssl_certificate;
+};
+struct UrlStream openURL(const char* url, struct Url* current,
+    struct FormList* request,
+    struct URLOption option,
     struct URLFile* ouf,
-    struct HttpRequest* hr, unsigned char* status, bool do_download);
+    bool do_download);
 
 Str loadGopherDir(struct URLFile* uf, struct Url* pu, wc_ces* charset);
 Str loadGopherSearch(struct URLFile* uf, struct Url* pu, wc_ces* charset);
 void UFhalfclose(struct URLFile* f);
-

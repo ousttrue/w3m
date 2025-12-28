@@ -7,8 +7,6 @@ void init_stream(struct URLFile* uf, int scheme, struct input_stream* stream)
     memset(uf, 0, sizeof(struct URLFile));
     uf->stream = stream;
     uf->scheme = scheme;
-    uf->is_cgi = false;
-    uf->ext = NULL;
     uf->modtime = -1;
 }
 
