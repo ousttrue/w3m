@@ -1,15 +1,6 @@
 #include "URLFile.h"
-#include "compression.h"
-#include "alloc.h"
-#include "file.h"
-#include "fm.h"
 #include "ftp.h"
-#include "w3m_rc.h"
-#include <fcntl.h>
 #include <string.h>
-#include <sys/stat.h>
-#include <setjmp.h>
-#include <signal.h>
 
 void init_stream(struct URLFile* uf, int scheme, struct input_stream* stream)
 {
@@ -28,16 +19,8 @@ void UFhalfclose(struct URLFile* f)
         closeFTP();
         break;
     default:
-        UFclose(f);
+        is_close(f->stream);
         break;
     }
-}
-
-static JMP_BUF AbortLoading;
-static MySignalHandler
-KeyAbort(SIGNAL_ARG)
-{
-    LONGJMP(AbortLoading, 1);
-    SIGNAL_RETURN;
 }
 

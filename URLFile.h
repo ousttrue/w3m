@@ -24,14 +24,6 @@ struct URLOption {
     struct TextList* extra_header;
 };
 
-inline static void UFclose(struct URLFile* f)
-{
-    if (!f->stream->unclose) {
-        is_close(f->stream);
-        f->stream = NULL;
-    }
-}
-
 struct Url;
 struct FormList;
 struct HttpRequest;

@@ -968,7 +968,7 @@ struct Buffer* make_buffer(struct Url url, int flag,
         if (doFileSave(f, file, t_buf->content.compression) == 0)
             UFhalfclose(&f);
         else
-            UFclose(&f);
+            is_close(f.stream);
         return NO_BUFFER;
     }
 
@@ -1006,7 +1006,7 @@ struct Buffer* make_buffer(struct Url url, int flag,
             b = newBuffer(INIT_BUFFER_WIDTH);
             b->sourcefile = getRuntime()->image_source;
         }
-        UFclose(&f);
+        is_close(f.stream);
         TRAP_OFF;
         return b;
     }
@@ -1025,7 +1025,7 @@ struct Buffer* make_buffer(struct Url url, int flag,
         } else {
             TRAP_OFF;
             if (url.scheme == SCM_LOCAL) {
-                UFclose(&f);
+                is_close(f.stream);
                 _doFileCopy(url.real_file,
                     conv_from_system(guess_save_name(NULL, url.real_file)), TRUE);
             } else {
@@ -1034,7 +1034,7 @@ struct Buffer* make_buffer(struct Url url, int flag,
                     == 0)
                     UFhalfclose(&f);
                 else
-                    UFclose(&f);
+                    is_close(f.stream);
             }
             return NO_BUFFER;
         }
@@ -1058,7 +1058,7 @@ struct Buffer* make_buffer(struct Url url, int flag,
     } else {
         b = loadSomething(&f, proc, t_buf);
     }
-    UFclose(&f);
+    is_close(f.stream);
     frame_source = 0;
     if (b && b != NO_BUFFER) {
         if (w3m_backend)
@@ -1190,7 +1190,7 @@ struct Buffer* load_doc(const char* path, struct Url* current,
 
     if (status == HTST_MISSING) {
         TRAP_OFF;
-        UFclose(&f);
+        is_close(f.stream);
         return NULL;
     }
 
@@ -1200,7 +1200,7 @@ struct Buffer* load_doc(const char* path, struct Url* current,
         TRAP_OFF;
         // if (b)
         //     discardBuffer(b);
-        UFclose(&f);
+        is_close(f.stream);
         return NULL;
     }
 
@@ -1237,7 +1237,7 @@ struct Buffer* load_doc(const char* path, struct Url* current,
             // 303: See Other
             // 307: Temporary Redirect (HTTP/1.1)
             const char* tpath = url_encode(p, NULL, 0);
-            UFclose(&f);
+            is_close(f.stream);
             struct Url* new_current = New(struct Url);
             copyParsedURL(new_current, &pu);
             struct Buffer* t_buf = newBuffer(INIT_BUFFER_WIDTH);
@@ -1280,7 +1280,7 @@ struct Buffer* load_doc(const char* path, struct Url* current,
                     return make_buffer(pu, option.flag,
                         f, t_buf, t, do_download);
                 }
-                UFclose(&f);
+                is_close(f.stream);
                 auth.add_auth_cookie_flag = 1;
                 return load_doc(path, current,
                     request, option, auth, do_download, t_buf, connection);
@@ -1303,7 +1303,7 @@ struct Buffer* load_doc(const char* path, struct Url* current,
                     return make_buffer(pu, option.flag,
                         f, t_buf, t, do_download);
                 }
-                UFclose(&f);
+                is_close(f.stream);
                 auth.add_auth_cookie_flag = 1;
                 add_auth_user_passwd(auth_pu,
                     qstr_unquote(auth.realm)->ptr, auth.uname, auth.pwd, 1);
@@ -1337,7 +1337,7 @@ struct Buffer* load_doc(const char* path, struct Url* current,
             // document moved
             //
             const char* tpath = url_encode(remove_space(p), NULL, 0);
-            UFclose(&f);
+            is_close(f.stream);
             auth.add_auth_cookie_flag = 0;
             struct Url* new_current = New(struct Url);
             copyParsedURL(new_current, &pu);
@@ -5884,7 +5884,7 @@ loadHTMLString(Str page)
     if (SETJMP(AbortLoading) != 0) {
         TRAP_OFF;
         discardBuffer(newBuf);
-        UFclose(&f);
+        is_close(f.stream);
         return NULL;
     }
     TRAP_ON;
@@ -5896,7 +5896,7 @@ loadHTMLString(Str page)
     newBuf->document_charset = WC_CES_US_ASCII;
 
     TRAP_OFF;
-    UFclose(&f);
+    is_close(f.stream);
     return newBuf;
 }
 
@@ -6181,7 +6181,7 @@ image_buffer:
 
     init_stream(&f, SCM_LOCAL, is_from_str(tmp));
     loadHTMLstream(f.stream, newBuf, src, true);
-    UFclose(&f);
+    is_close(f.stream);
     if (src)
         fclose(src);
 
@@ -6281,18 +6281,18 @@ static struct Buffer*
 loadcmdout(char* cmd,
     struct Buffer* (*loadproc)(struct URLFile*, struct Buffer*), struct Buffer* defaultbuf)
 {
-    FILE *f, *popen(const char*, const char*);
+    // FILE *popen(const char*, const char*);
     struct Buffer* buf;
     struct URLFile uf;
 
     if (cmd == NULL || *cmd == '\0')
         return NULL;
-    f = popen(cmd, "r");
+    FILE *f = popen(cmd, "r");
     if (f == NULL)
         return NULL;
     init_stream(&uf, SCM_UNKNOWN, is_from_file(f, pclose));
     buf = loadproc(&uf, defaultbuf);
-    UFclose(&uf);
+    is_close(uf.stream);
     return buf;
 }
 
@@ -6349,7 +6349,7 @@ doExternal(struct URLFile uf, const char* type, struct Buffer* defaultbuf)
             setup_child(FALSE, 0, is_file_no(uf.stream));
             if (!is_save2tmp(uf.stream, tmpf->ptr))
                 exit(1);
-            UFclose(&uf);
+            is_close(uf.stream);
             myExec(command->ptr);
         }
         return NO_BUFFER;
@@ -6587,7 +6587,7 @@ int doFileSave(struct URLFile uf, const char* defstr,
             bool succeeded = is_save2tmp(uf.stream, p);
             if (succeeded && PreserveTimestamp && uf.modtime != -1)
                 setModtime(p, uf.modtime);
-            UFclose(&uf);
+            is_close(uf.stream);
             unlink(lock);
             if (!succeeded)
                 exit(1);

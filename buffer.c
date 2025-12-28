@@ -548,7 +548,7 @@ void reshapeBuffer(struct Buffer* buf)
             loadHTMLBuffer(&f, buf);
         else
             loadBuffer(&f, buf);
-        UFclose(&f);
+        is_close(f.stream);
         WcOption.auto_detect = old_auto_detect;
         UseContentCharset = TRUE;
     }
