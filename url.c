@@ -863,8 +863,16 @@ openURL(const char* url, struct Url* pu, struct Url* current,
         u = file_to_url(url); /* force to local file */
     else
         u = url;
-retry:
+
     parseURL2(u, pu, current);
+    if (retryAsHttp && url[0] != '/') {
+        if (scheme == SCM_MISSING || scheme == SCM_UNKNOWN) {
+            // retry it as "http://"
+            u = Strnew_m_charp("http://", url, NULL)->ptr;
+            parseURL2(u, pu, current);
+        }
+    }
+
     if (pu->scheme == SCM_LOCAL && pu->file == NULL) {
         if (pu->label != NULL) {
             /* #hogege is not a label but a filename */
@@ -939,13 +947,6 @@ retry:
                         pu->real_file = q;
                     }
                 }
-            }
-        }
-        if (uf.stream == NULL && retryAsHttp && url[0] != '/') {
-            if (scheme == SCM_MISSING || scheme == SCM_UNKNOWN) {
-                /* retry it as "http://" */
-                u = Strnew_m_charp("http://", url, NULL)->ptr;
-                goto retry;
             }
         }
         return uf;
