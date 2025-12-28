@@ -1,4 +1,5 @@
 #include "URLFile.h"
+#include "compression.h"
 #include "alloc.h"
 #include "file.h"
 #include "fm.h"
@@ -16,7 +17,6 @@ void init_stream(struct URLFile* uf, int scheme, struct input_stream* stream)
     uf->stream = stream;
     uf->scheme = scheme;
     uf->is_cgi = false;
-    uf->compression = CMP_NOCOMPRESS;
     uf->ext = NULL;
     uf->modtime = -1;
 }
@@ -52,14 +52,14 @@ struct URLFile examineFile(const char* path, bool do_download)
 
     uf.stream = is_from_fd(open(path, O_RDONLY));
     if (!do_download) {
-        check_compression(path, &uf);
-        if (uf.compression != CMP_NOCOMPRESS) {
+        enum CompressionType compression = check_compression(path);
+        if (compression != CMP_NOCOMPRESS) {
             const char* ext = uf.ext;
             // const char* t0 =
             uncompressed_file_type(path, &ext);
             // uf->guess_type = t0;
             // uf->ext = ext;
-            uncompress_stream(&uf, NULL);
+            uncompress_stream(&uf, compression, NULL);
         }
     }
     return uf;

@@ -139,10 +139,11 @@ char* violations[COO_EMAX] = {
 };
 #endif
 
-void getHttpResponseHeader(struct Content* content, struct URLFile* uf, struct Url* pu)
+void getHttpResponseHeader(struct Content* content, struct Url url,
+    struct input_stream* is)
 {
     content->document_header = newTextList();
-    if (pu->scheme == SCM_HTTP || pu->scheme == SCM_HTTPS)
+    if (url.scheme == SCM_HTTP || url.scheme == SCM_HTTPS)
         content->http_response_code = -1;
     else
         content->http_response_code = 0;
@@ -151,7 +152,7 @@ void getHttpResponseHeader(struct Content* content, struct URLFile* uf, struct U
     Str lineBuf2 = NULL;
     // Lineprop* propBuffer = 0;
     Str tmp;
-    while ((tmp = is_get_str(uf->stream, true)) && tmp->length) {
+    while ((tmp = is_get_str(is, true)) && tmp->length) {
         // if (w3m_reqlog) {
         //     FILE* ff;
         //     ff = fopen(w3m_reqlog, "a");
@@ -229,8 +230,8 @@ void getHttpResponseHeader(struct Content* content, struct URLFile* uf, struct U
         else {
             lineBuf2 = tmp;
         }
-        if ((uf->scheme == SCM_HTTP
-                || uf->scheme == SCM_HTTPS)
+        if ((url.scheme == SCM_HTTP
+                || url.scheme == SCM_HTTPS)
             && content->http_response_code == -1) {
             const char* p = lineBuf2->ptr;
             while (*p && !IS_SPACE(*p))
@@ -245,8 +246,8 @@ void getHttpResponseHeader(struct Content* content, struct URLFile* uf, struct U
             const char* p = lineBuf2->ptr + 17;
             while (IS_SPACE(*p))
                 p++;
-            uf->compression = get_compression(p);
-        } else if (use_cookie && accept_cookie && pu && check_cookie_accept_domain(pu->host) && (!strncasecmp(lineBuf2->ptr, "Set-Cookie:", 11) || !strncasecmp(lineBuf2->ptr, "Set-Cookie2:", 12))) {
+            content->compression = get_compression(p);
+        } else if (use_cookie && accept_cookie && check_cookie_accept_domain(url.host) && (!strncasecmp(lineBuf2->ptr, "Set-Cookie:", 11) || !strncasecmp(lineBuf2->ptr, "Set-Cookie2:", 12))) {
             Str name = Strnew(), value = Strnew(), domain = NULL, path = NULL,
                 comment = NULL, commentURL = NULL, port = NULL, tmp2;
             int version, quoted, flag = 0;
@@ -315,7 +316,7 @@ void getHttpResponseHeader(struct Content* content, struct URLFile* uf, struct U
                     p++;
                 }
             }
-            if (pu && name->length > 0) {
+            if (name->length > 0) {
                 int err;
                 if (show_cookie) {
                     if (flag & COO_SECURE)
@@ -327,7 +328,7 @@ void getHttpResponseHeader(struct Content* content, struct URLFile* uf, struct U
                                               ->ptr,
                             FALSE, 1, TRUE, FALSE);
                 }
-                err = add_cookie(pu, name, value, expires, domain, path, flag,
+                err = add_cookie(&url, name, value, expires, domain, path, flag,
                     comment, version, port, commentURL);
                 if (err) {
                     char* ans = (accept_bad_cookie == ACCEPT_BAD_COOKIE_ACCEPT)
@@ -335,7 +336,7 @@ void getHttpResponseHeader(struct Content* content, struct URLFile* uf, struct U
                         : NULL;
                     if ((err & COO_OVERRIDE_OK) && accept_bad_cookie == ACCEPT_BAD_COOKIE_ASK) {
                         Str msg = Sprintf("Accept bad cookie from %s for %s?",
-                            pu->host,
+                            url.host,
                             ((domain && domain->ptr)
                                     ? domain->ptr
                                     : "<localdomain>"));
@@ -344,7 +345,7 @@ void getHttpResponseHeader(struct Content* content, struct URLFile* uf, struct U
                         Strcat_charp(msg, " (y/n)");
                         ans = inputAnswer(msg->ptr);
                     }
-                    if (ans == NULL || TOLOWER(*ans) != 'y' || (err = add_cookie(pu, name, value, expires, domain, path, flag | COO_OVERRIDE, comment, version, port, commentURL))) {
+                    if (ans == NULL || TOLOWER(*ans) != 'y' || (err = add_cookie(&url, name, value, expires, domain, path, flag | COO_OVERRIDE, comment, version, port, commentURL))) {
                         err = (err & ~COO_OVERRIDE_OK) - 1;
 
                         const char* emsg;
@@ -366,7 +367,7 @@ void getHttpResponseHeader(struct Content* content, struct URLFile* uf, struct U
                             1, TRUE, FALSE);
                 }
             }
-        } else if (!strncasecmp(lineBuf2->ptr, "w3m-control:", 12) && uf->scheme == SCM_LOCAL_CGI) {
+        } else if (!strncasecmp(lineBuf2->ptr, "w3m-control:", 12) && url.scheme == SCM_LOCAL_CGI) {
             Str funcname = Strnew();
             int f;
 

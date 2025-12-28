@@ -534,7 +534,7 @@ void reshapeBuffer(struct Buffer* buf)
             init_stream(&h, SCM_LOCAL, NULL);
             h = examineFile(buf->header_source, false);
             if (h.stream) {
-                getHttpResponseHeader(&buf->content, &h, NULL);
+                getHttpResponseHeader(&buf->content, buf->currentURL, h.stream);
                 UFclose(&h);
             }
         }

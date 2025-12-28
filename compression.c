@@ -87,24 +87,25 @@ static struct CompressionDecoder compression_decoders[] = {
     },
 };
 
-void check_compression(const char* path, struct URLFile* uf)
+enum CompressionType check_compression(const char* path)
 {
-    if (!path)
-        return;
-
-    int len = strlen(path);
-    uf->compression = CMP_NOCOMPRESS;
-    for (struct CompressionDecoder* d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
-        int elen;
-        if (d->ext == NULL)
-            continue;
-        elen = strlen(d->ext);
-        if (len > elen && strcasecmp(&path[len - elen], d->ext) == 0) {
-            uf->compression = d->type;
-            // uf->guess_type = d->mime_type;
-            break;
+    enum CompressionType compression = CMP_NOCOMPRESS;
+    if (path) {
+        int len = strlen(path);
+        for (struct CompressionDecoder* d = compression_decoders;
+            d->type != CMP_NOCOMPRESS; d++) {
+            int elen;
+            if (d->ext == NULL)
+                continue;
+            elen = strlen(d->ext);
+            if (len > elen && strcasecmp(&path[len - elen], d->ext) == 0) {
+                compression = d->type;
+                // uf->guess_type = d->mime_type;
+                break;
+            }
         }
     }
+    return compression;
 }
 
 const char* uncompressed_file_type(const char* path, const char** ext)
@@ -150,14 +151,15 @@ static char* auxbinFile(const char* base)
     return expandPath(Strnew_m_charp(w3m_auxbin_dir(), "/", base, NULL)->ptr);
 }
 
-void uncompress_stream(struct URLFile* uf, const char** src)
+void uncompress_stream(struct URLFile* uf,
+    enum CompressionType compression, const char** src)
 {
     const char* expand_name = GUNZIP_NAME;
     const char* ext = NULL;
     bool use_d_arg = 0;
     const char* expand_cmd = GUNZIP_CMDNAME;
     for (struct CompressionDecoder* d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
-        if (uf->compression == d->type) {
+        if (compression == d->type) {
             if (d->auxbin_p)
                 expand_cmd = auxbinFile(d->cmd);
             else
@@ -168,7 +170,6 @@ void uncompress_stream(struct URLFile* uf, const char** src)
             break;
         }
     }
-    uf->compression = CMP_NOCOMPRESS;
 
     const char* tmpf = NULL;
     if (uf->scheme != SCM_LOCAL && !getRuntime()->image_source) {

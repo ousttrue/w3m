@@ -967,25 +967,25 @@ struct Buffer* make_buffer(struct Url url, int flag,
         } else {
             file = guess_save_name(&t_buf->content, url.file);
         }
-        if (doFileSave(f, file) == 0)
+        if (doFileSave(f, file, t_buf->content.compression) == 0)
             UFhalfclose(&f);
         else
             UFclose(&f);
         return NO_BUFFER;
     }
 
-    if ((f.compression != CMP_NOCOMPRESS) && AutoUncompress
+    if ((t_buf && t_buf->content.compression != CMP_NOCOMPRESS) && AutoUncompress
         && !(w3m_dump & DUMP_EXTRA)) {
-        uncompress_stream(&f, &url.real_file);
-    } else if (f.compression != CMP_NOCOMPRESS) {
+        uncompress_stream(&f, t_buf->content.compression, &url.real_file);
+    } else if (t_buf && t_buf->content.compression != CMP_NOCOMPRESS) {
         if (!(w3m_dump & DUMP_SOURCE) && (w3m_dump & ~DUMP_FRAME || is_text_type(t) || searchExtViewer(t))) {
             if (t_buf == NULL)
                 t_buf = newBuffer(INIT_BUFFER_WIDTH);
-            uncompress_stream(&f, &t_buf->sourcefile);
+            uncompress_stream(&f, t_buf->content.compression, &t_buf->sourcefile);
             uncompressed_file_type(url.file, &f.ext);
         } else {
-            t = compress_application_type(f.compression);
-            f.compression = CMP_NOCOMPRESS;
+            t = compress_application_type(t_buf->content.compression);
+            // f.compression = CMP_NOCOMPRESS;
         }
     }
 
@@ -1018,7 +1018,9 @@ struct Buffer* make_buffer(struct Url url, int flag,
                 _doFileCopy(url.real_file,
                     conv_from_system(guess_save_name(NULL, url.real_file)), TRUE);
             } else {
-                if (doFileSave(f, guess_save_name(&t_buf->content, url.file)) == 0)
+                if (doFileSave(f, guess_save_name(&t_buf->content, url.file),
+                        t_buf->content.compression)
+                    == 0)
                     UFhalfclose(&f);
                 else
                     UFclose(&f);
@@ -1211,7 +1213,7 @@ struct Buffer* load_doc(const char* path, struct Url* current,
         }
         if (t_buf == NULL)
             t_buf = newBuffer(INIT_BUFFER_WIDTH);
-        getHttpResponseHeader(&t_buf->content, &f, &pu);
+        getHttpResponseHeader(&t_buf->content, pu, f.stream);
         const char* p;
         if (((t_buf->content.http_response_code >= 301 //
                  && t_buf->content.http_response_code <= 303)
@@ -1307,8 +1309,8 @@ struct Buffer* load_doc(const char* path, struct Url* current,
 
         f.modtime = mymktime(checkHeader(&t_buf->content, "Last-Modified:"));
     } else if (pu.scheme == SCM_FTP) {
-        check_compression(path, &f);
-        if (f.compression != CMP_NOCOMPRESS) {
+        enum CompressionType compression = check_compression(path);
+        if (compression != CMP_NOCOMPRESS) {
             t = uncompressed_file_type(pu.file, NULL);
         } else {
             t = guessContentType(pu.file);
@@ -1317,7 +1319,7 @@ struct Buffer* load_doc(const char* path, struct Url* current,
         // searchHeader = SearchHeader = FALSE;
         if (t_buf == NULL)
             t_buf = newBuffer(INIT_BUFFER_WIDTH);
-        getHttpResponseHeader(&t_buf->content, &f, &pu);
+        getHttpResponseHeader(&t_buf->content, pu, f.stream);
         const char* p;
         if ((p = checkHeader(&t_buf->content, "Location:")) != NULL && checkRedirection(&pu)) {
             //
@@ -6616,7 +6618,8 @@ int doFileMove(const char* tmpf, const char* defstr)
     return ret;
 }
 
-int doFileSave(struct URLFile uf, const char* defstr)
+int doFileSave(struct URLFile uf, const char* defstr,
+    enum CompressionType compression)
 {
     if (fmInitialized()) {
         const char* p = searchKeyData();
@@ -6641,9 +6644,9 @@ int doFileSave(struct URLFile uf, const char* defstr)
         flush_tty();
         pid_t pid = fork();
         if (!pid) {
-            const char* tmpf;
-            if ((uf.compression != CMP_NOCOMPRESS) && AutoUncompress) {
-                uncompress_stream(&uf, &tmpf);
+            if ((compression != CMP_NOCOMPRESS) && AutoUncompress) {
+                const char* tmpf;
+                uncompress_stream(&uf, compression, &tmpf);
                 if (tmpf)
                     unlink(tmpf);
             }
@@ -6683,8 +6686,8 @@ int doFileSave(struct URLFile uf, const char* defstr)
             return -1;
         }
         const char* tmpf;
-        if (uf.compression != CMP_NOCOMPRESS && AutoUncompress) {
-            uncompress_stream(&uf, &tmpf);
+        if (compression != CMP_NOCOMPRESS && AutoUncompress) {
+            uncompress_stream(&uf, compression, &tmpf);
             if (tmpf)
                 unlink(tmpf);
         }

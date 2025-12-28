@@ -1,7 +1,7 @@
 #pragma once
 #include "textlist.h"
-#include "input_stream.h"
 #include "compression.h"
+#include "input_stream.h"
 #include "urlscheme.h"
 #include <time.h>
 #include <stdbool.h>
@@ -13,7 +13,6 @@ struct URLFile {
     char is_cgi;
     struct input_stream* stream;
     const char* ext;
-    enum CompressionType compression;
     const char* ssl_certificate;
     char* url;
     time_t modtime;
@@ -39,7 +38,8 @@ struct HttpRequest;
 struct Buffer;
 void init_stream(struct URLFile* uf, int scheme, struct input_stream* stream);
 struct URLFile examineFile(const char* path, bool do_download);
-int doFileSave(struct URLFile uf, const char* defstr);
+int doFileSave(struct URLFile uf, const char* defstr,
+    enum CompressionType compression);
 struct URLFile openURL(const char* url, struct Url* pu, struct Url* current,
     struct URLOption option, struct FormList* request,
     struct URLFile* ouf,
