@@ -45,6 +45,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <utime.h>
+#include <assert.h>
 
 #include <libwc/charset.h>
 
@@ -925,42 +926,45 @@ Str getLinkNumberStr(struct HtmlBuilder* hb, int correction)
 
 typedef struct Buffer* (*LoadBufferFunc)(struct URLFile*, struct Buffer*);
 
-struct Buffer* page_loaded(struct Url url, int flag,
-    struct URLFile f, struct Buffer* t_buf, wc_ces charset, const char* t,
-    Str page, bool do_download)
+struct Buffer* page_loaded(struct Url url,
+    wc_ces charset, Str page, bool do_download)
 {
-    if (page) {
+    assert(page);
 
-        if (getRuntime()->image_source)
-            return NULL;
+    if (getRuntime()->image_source)
+        return NULL;
 
-        Str tmp = tmpfname(TMPF_SRC, ".html");
-        FILE* src = fopen(tmp->ptr, "w");
-        if (src) {
-            Str s = wc_Str_conv_strict(page, getRuntime()->InnerCharset, charset);
-            Strfputs(s, src);
-            fclose(src);
-        }
-
-        if (do_download) {
-            if (!src)
-                return NULL;
-            const char* file = guess_filename(url.file);
-            doFileMove(tmp->ptr, file);
-            return NO_BUFFER;
-        }
-
-        struct Buffer* b = loadHTMLString(page);
-        if (b) {
-            copyParsedURL(&b->currentURL, &url);
-            if (src)
-                b->sourcefile = tmp->ptr;
-
-            b->document_charset = charset;
-        }
-        return b;
+    Str tmp = tmpfname(TMPF_SRC, ".html");
+    FILE* src = fopen(tmp->ptr, "w");
+    if (src) {
+        Str s = wc_Str_conv_strict(page, getRuntime()->InnerCharset, charset);
+        Strfputs(s, src);
+        fclose(src);
     }
 
+    if (do_download) {
+        if (!src)
+            return NULL;
+        const char* file = guess_filename(url.file);
+        doFileMove(tmp->ptr, file);
+        return NO_BUFFER;
+    }
+
+    struct Buffer* b = loadHTMLString(page);
+    if (b) {
+        copyParsedURL(&b->currentURL, &url);
+        if (src)
+            b->sourcefile = tmp->ptr;
+
+        b->document_charset = charset;
+    }
+    return b;
+}
+
+struct Buffer* make_buffer(struct Url url, int flag,
+    struct URLFile f, struct Buffer* t_buf, const char* t,
+    bool do_download)
+{
     LoadBufferFunc proc = loadBuffer;
 
     const char* p = checkHeader(t_buf ? &t_buf->content : NULL, "Content-Length:");
@@ -1136,7 +1140,6 @@ struct Buffer* load_doc(const char* path, struct Url* current,
         // non stream(file or socket) content.
         wc_ces charset = WC_CES_US_ASCII;
         Str page = NULL;
-        const char* t = "text/plain";
         switch (f.scheme) {
         case SCM_LOCAL: {
             struct stat st;
@@ -1155,15 +1158,12 @@ struct Buffer* load_doc(const char* path, struct Url* current,
                     return b;
                 } else {
                     page = loadLocalDir(pu.real_file);
-                    t = "local:directory";
-
                     charset = getRuntime()->SystemCharset;
                 }
             }
         } break;
         case SCM_FTPDIR:
             page = loadFTPDir(&pu, &charset, do_download);
-            t = "ftp:directory";
             break;
 
         case SCM_UNKNOWN: {
@@ -1188,8 +1188,7 @@ struct Buffer* load_doc(const char* path, struct Url* current,
         }
 
         if (page && page->length > 0)
-            return page_loaded(pu, option.flag,
-                f, NULL, charset, t, page, do_download);
+            return page_loaded(pu, charset, page, do_download);
 
         return NULL;
     }
@@ -1283,8 +1282,8 @@ struct Buffer* load_doc(const char* path, struct Url* current,
                 if (auth.uname == NULL) {
                     /* abort */
                     TRAP_OFF;
-                    return page_loaded(pu, option.flag,
-                        f, t_buf, WC_CES_US_ASCII, t, NULL, do_download);
+                    return make_buffer(pu, option.flag,
+                        f, t_buf, t, do_download);
                 }
                 UFclose(&f);
                 auth.add_auth_cookie_flag = 1;
@@ -1306,8 +1305,8 @@ struct Buffer* load_doc(const char* path, struct Url* current,
                 if (auth.uname == NULL) {
                     /* abort */
                     TRAP_OFF;
-                    return page_loaded(pu, option.flag,
-                        f, t_buf, WC_CES_US_ASCII, t, NULL, do_download);
+                    return make_buffer(pu, option.flag,
+                        f, t_buf, t, do_download);
                 }
                 UFclose(&f);
                 auth.add_auth_cookie_flag = 1;
@@ -1362,8 +1361,8 @@ struct Buffer* load_doc(const char* path, struct Url* current,
         t = guessContentType(pu.file);
     }
 
-    return page_loaded(pu, option.flag, f,
-        t_buf, WC_CES_US_ASCII, t, NULL, do_download);
+    return make_buffer(pu, option.flag, f,
+        t_buf, t, do_download);
 }
 
 struct Buffer*
