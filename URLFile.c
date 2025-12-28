@@ -54,12 +54,7 @@ struct URLFile examineFile(const char* path, bool do_download)
     if (!do_download) {
         enum CompressionType compression = check_compression(path);
         if (compression != CMP_NOCOMPRESS) {
-            const char* ext = uf.ext;
-            // const char* t0 =
-            uncompressed_file_type(path, &ext);
-            // uf->guess_type = t0;
-            // uf->ext = ext;
-            uncompress_stream(&uf, compression, NULL);
+            uf.stream = uncompress_stream(uf.stream, compression, NULL);
         }
     }
     return uf;

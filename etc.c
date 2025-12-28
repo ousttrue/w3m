@@ -1,6 +1,5 @@
 #include "etc.h"
 #include "indep.h"
-#include "URLFile.h"
 #include "alloc.h"
 #include "w3m_rc.h"
 #include "file.h"

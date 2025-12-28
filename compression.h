@@ -24,8 +24,7 @@ struct CompressionDecoder {
 
 enum CompressionType check_compression(const char* path);
 const char* uncompressed_file_type(const char* path, const char** ext);
-struct URLFile;
-void uncompress_stream(struct URLFile* uf,
+struct input_stream* uncompress_stream(struct input_stream* stream,
     enum CompressionType compression, const char* tmpf);
 const char* acceptableEncoding(void);
 enum CompressionType get_compression(const char* p);

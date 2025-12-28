@@ -1,7 +1,8 @@
 #include "compression.h"
+#include "textlist.h"
 #include "indep.h"
 #include "etc.h"
-#include "URLFile.h"
+#include "input_stream.h"
 #include "url.h"
 #include "w3m_rc.h"
 #include <string.h>
@@ -151,8 +152,8 @@ static char* auxbinFile(const char* base)
     return expandPath(Strnew_m_charp(w3m_auxbin_dir(), "/", base, NULL)->ptr);
 }
 
-void uncompress_stream(struct URLFile* uf,
-    enum CompressionType compression, const char*tmpf)
+struct input_stream* uncompress_stream(struct input_stream* stream,
+    enum CompressionType compression, const char* tmpf)
 {
     struct CompressionDecoder* d = compression_decoders;
     for (; d->type != CMP_NOCOMPRESS; d++) {
@@ -165,8 +166,9 @@ void uncompress_stream(struct URLFile* uf,
     FILE* f1;
     pid_t pid1 = open_pipe_rw(&f1, NULL);
     if (pid1 < 0) {
-        UFclose(uf);
-        return;
+        // fail to fork
+        is_close(stream);
+        return NULL;
     }
     if (pid1 == 0) {
         /* child */
@@ -176,25 +178,27 @@ void uncompress_stream(struct URLFile* uf,
         /* uf -> child2 -- stdout|stdin -> child1 */
         pid2 = open_pipe_rw(&f2, NULL);
         if (pid2 < 0) {
-            UFclose(uf);
+            is_close(stream);
             exit(1);
         }
         if (pid2 == 0) {
             /* child2 */
             char* buf = NewWithoutGC_N(char, SAVE_BUF_SIZE);
-            int count;
-            FILE* f = NULL;
 
-            setup_child(TRUE, 2, is_file_no(uf->stream));
+            setup_child(TRUE, 2, is_file_no(stream));
+
+            FILE* f = NULL;
             if (tmpf)
                 f = fopen(tmpf, "wb");
-            while ((count = is_read(uf->stream, buf, SAVE_BUF_SIZE)) > 0) {
+
+            int count;
+            while ((count = is_read(stream, buf, SAVE_BUF_SIZE)) > 0) {
                 if (fwrite(buf, 1, count, stdout) != count)
                     break;
                 if (f && fwrite(buf, 1, count, f) != count)
                     break;
             }
-            UFclose(uf);
+            is_close(stream);
             if (f)
                 fclose(f);
             xfree(buf);
@@ -211,8 +215,7 @@ void uncompress_stream(struct URLFile* uf,
         exit(1);
     }
 
-    UFhalfclose(uf);
-    uf->stream = is_from_file(f1, fclose);
+    return is_from_file(f1, fclose);
 }
 
 #define S_IXANY (S_IXUSR | S_IXGRP | S_IXOTH)

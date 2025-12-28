@@ -982,13 +982,17 @@ struct Buffer* make_buffer(struct Url url, int flag,
         }
         if ((t_buf->content.compression != CMP_NOCOMPRESS) && AutoUncompress
             && !(w3m_dump & DUMP_EXTRA)) {
-            uncompress_stream(&f, t_buf->content.compression, tmpf);
+            struct input_stream* stream = uncompress_stream(f.stream,
+                t_buf->content.compression, tmpf);
+            // UFhalfclose(&f);
+            f.stream = stream;
             url.real_file = tmpf;
         } else if (t_buf->content.compression != CMP_NOCOMPRESS) {
             if (!(w3m_dump & DUMP_SOURCE) && (w3m_dump & ~DUMP_FRAME || is_text_type(t) || searchExtViewer(t))) {
-                // if (t_buf == NULL)
-                //     t_buf = newBuffer(INIT_BUFFER_WIDTH);
-                uncompress_stream(&f, t_buf->content.compression, tmpf);
+                struct input_stream* stream = uncompress_stream(f.stream,
+                    t_buf->content.compression, tmpf);
+                // UFhalfclose(&f);
+                f.stream = stream;
                 t_buf->sourcefile = tmpf;
                 uncompressed_file_type(url.file, &f.ext);
             } else {
@@ -6654,10 +6658,7 @@ int doFileSave(struct URLFile uf, const char* defstr,
         pid_t pid = fork();
         if (!pid) {
             if ((compression != CMP_NOCOMPRESS) && AutoUncompress) {
-                const char* tmpf;
-                uncompress_stream(&uf, compression, &tmpf);
-                if (tmpf)
-                    unlink(tmpf);
+                uf.stream = uncompress_stream(uf.stream, compression, NULL);
             }
 
             setup_child(FALSE, 0, is_file_no(uf.stream));
@@ -6694,11 +6695,8 @@ int doFileSave(struct URLFile uf, const char* defstr,
             printf("Can't save. Load file and %s are identical.", p);
             return -1;
         }
-        const char* tmpf;
         if (compression != CMP_NOCOMPRESS && AutoUncompress) {
-            uncompress_stream(&uf, compression, &tmpf);
-            if (tmpf)
-                unlink(tmpf);
+            uf.stream = uncompress_stream(uf.stream, compression, NULL);
         }
         if (!uf_save2tmp(uf, p)) {
             printf("Can't save to %s\n", p);
