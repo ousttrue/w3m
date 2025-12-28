@@ -974,18 +974,27 @@ struct Buffer* make_buffer(struct Url url, int flag,
         return NO_BUFFER;
     }
 
-    if ((t_buf && t_buf->content.compression != CMP_NOCOMPRESS) && AutoUncompress
-        && !(w3m_dump & DUMP_EXTRA)) {
-        uncompress_stream(&f, t_buf->content.compression, &url.real_file);
-    } else if (t_buf && t_buf->content.compression != CMP_NOCOMPRESS) {
-        if (!(w3m_dump & DUMP_SOURCE) && (w3m_dump & ~DUMP_FRAME || is_text_type(t) || searchExtViewer(t))) {
-            if (t_buf == NULL)
-                t_buf = newBuffer(INIT_BUFFER_WIDTH);
-            uncompress_stream(&f, t_buf->content.compression, &t_buf->sourcefile);
-            uncompressed_file_type(url.file, &f.ext);
-        } else {
-            t = compress_application_type(t_buf->content.compression);
-            // f.compression = CMP_NOCOMPRESS;
+    if (t_buf) {
+        const char* tmpf = NULL;
+        if (f.scheme != SCM_LOCAL && !getRuntime()->image_source) {
+            const char* ext = filename_extension(url.file, true);
+            tmpf = tmpfname(TMPF_DFL, ext)->ptr;
+        }
+        if ((t_buf->content.compression != CMP_NOCOMPRESS) && AutoUncompress
+            && !(w3m_dump & DUMP_EXTRA)) {
+            uncompress_stream(&f, t_buf->content.compression, tmpf);
+            url.real_file = tmpf;
+        } else if (t_buf->content.compression != CMP_NOCOMPRESS) {
+            if (!(w3m_dump & DUMP_SOURCE) && (w3m_dump & ~DUMP_FRAME || is_text_type(t) || searchExtViewer(t))) {
+                // if (t_buf == NULL)
+                //     t_buf = newBuffer(INIT_BUFFER_WIDTH);
+                uncompress_stream(&f, t_buf->content.compression, tmpf);
+                t_buf->sourcefile = tmpf;
+                uncompressed_file_type(url.file, &f.ext);
+            } else {
+                t = compress_application_type(t_buf->content.compression);
+                // f.compression = CMP_NOCOMPRESS;
+            }
         }
     }
 

@@ -152,28 +152,13 @@ static char* auxbinFile(const char* base)
 }
 
 void uncompress_stream(struct URLFile* uf,
-    enum CompressionType compression, const char** src)
+    enum CompressionType compression, const char*tmpf)
 {
-    const char* expand_name = GUNZIP_NAME;
-    const char* ext = NULL;
-    bool use_d_arg = 0;
-    const char* expand_cmd = GUNZIP_CMDNAME;
-    for (struct CompressionDecoder* d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
+    struct CompressionDecoder* d = compression_decoders;
+    for (; d->type != CMP_NOCOMPRESS; d++) {
         if (compression == d->type) {
-            if (d->auxbin_p)
-                expand_cmd = auxbinFile(d->cmd);
-            else
-                expand_cmd = d->cmd;
-            expand_name = d->name;
-            ext = d->ext;
-            use_d_arg = d->use_d_arg;
             break;
         }
-    }
-
-    const char* tmpf = NULL;
-    if (uf->scheme != SCM_LOCAL && !getRuntime()->image_source) {
-        tmpf = tmpfname(TMPF_DFL, ext)->ptr;
     }
 
     /* child1 -- stdout|f1=uf -> parent */
@@ -218,18 +203,14 @@ void uncompress_stream(struct URLFile* uf,
         /* child1 */
         dup2(1, 2); /* stderr>&stdout */
         setup_child(TRUE, -1, -1);
-        if (use_d_arg)
-            execlp(expand_cmd, expand_name, "-d", NULL);
+
+        if (d->use_d_arg)
+            execlp(auxbinFile(d->cmd), d->name, "-d", NULL);
         else
-            execlp(expand_cmd, expand_name, NULL);
+            execlp(d->cmd, d->name, NULL);
         exit(1);
     }
-    if (tmpf) {
-        if (src)
-            *src = tmpf;
-        else
-            uf->scheme = SCM_LOCAL;
-    }
+
     UFhalfclose(uf);
     uf->stream = is_from_file(f1, fclose);
 }

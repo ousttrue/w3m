@@ -26,7 +26,7 @@ enum CompressionType check_compression(const char* path);
 const char* uncompressed_file_type(const char* path, const char** ext);
 struct URLFile;
 void uncompress_stream(struct URLFile* uf,
-    enum CompressionType compression, const char** src);
+    enum CompressionType compression, const char* tmpf);
 const char* acceptableEncoding(void);
 enum CompressionType get_compression(const char* p);
 const char* compress_application_type(enum CompressionType compression);
