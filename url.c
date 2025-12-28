@@ -860,7 +860,7 @@ struct UrlStream openURL(const char* url, struct Url* current,
     if (ouf) {
         us.uf = *ouf;
     } else {
-        init_stream(&us.uf, SCM_MISSING, NULL);
+        us.uf = (struct URLFile) { 0 };
     }
 
     const char* u = url;
@@ -889,7 +889,6 @@ struct UrlStream openURL(const char* url, struct Url* current,
     if (LocalhostOnly && us.url.host && !is_localhost(us.url.host))
         us.url.host = NULL;
 
-    us.uf.scheme = us.url.scheme;
     us.url_str = parsedURL2Str(&us.url)->ptr;
     us.url.is_nocache = (option.flag & RG_NOCACHE);
     // uf.ext = filename_extension(pu->file, 1);
@@ -910,7 +909,7 @@ struct UrlStream openURL(const char* url, struct Url* current,
                     option.referer),
                 fclose);
         if (us.uf.stream) {
-            us.uf.scheme = us.url.scheme = SCM_LOCAL_CGI;
+            us.url.scheme = SCM_LOCAL_CGI;
             us.is_cgi = true;
             return us;
         }
@@ -957,14 +956,13 @@ struct UrlStream openURL(const char* url, struct Url* current,
             if (sock < 0) {
                 return us;
             }
-            us.uf.scheme = SCM_HTTP;
+            us.url.scheme = SCM_HTTP;
             tmp = HTTPrequest(&us.url, current, &us.hr, option.extra_header);
             write(sock, tmp->ptr, tmp->length);
         } else {
             struct FtpFile file = openFTPStream(&us.url);
             us.uf.stream = file.is;
-            us.uf.modtime = file.modtime;
-            us.uf.scheme = us.url.scheme;
+            us.modtime = file.modtime;
             return us;
         }
         break;

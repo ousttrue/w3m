@@ -953,23 +953,23 @@ static struct Buffer* make_buffer(struct Url url, int flag,
         const char* file;
         TRAP_OFF;
         if (url.scheme == SCM_LOCAL) {
-            struct stat st;
-            if (PreserveTimestamp && !stat(url.real_file, &st)) {
-                f.modtime = st.st_mtime;
-            }
+            // struct stat st;
+            // if (PreserveTimestamp && !stat(url.real_file, &st)) {
+            //     f.modtime = st.st_mtime;
+            // }
             file = conv_from_system(guess_save_name(NULL, url.real_file));
         } else {
             file = guess_save_name(&t_buf->content, url.file);
         }
-        if (doFileSave(f, file, t_buf->content.compression) == 0)
-            UFhalfclose(&f);
+        if (doFileSave(url, f, file, t_buf->content.compression) == 0)
+            UFhalfclose(&f, url.scheme);
         else
             is_close(f.stream);
         return NO_BUFFER;
     }
 
     if (t_buf) {
-        bool use_tmpf = f.scheme != SCM_LOCAL && !getRuntime()->image_source;
+        bool use_tmpf = url.scheme != SCM_LOCAL && !getRuntime()->image_source;
         if ((t_buf->content.compression != CMP_NOCOMPRESS) && AutoUncompress
             && !(w3m_dump & DUMP_EXTRA)) {
             struct input_stream* stream = uncompress_stream(f.stream,
@@ -1020,10 +1020,10 @@ static struct Buffer* make_buffer(struct Url url, int flag,
                 _doFileCopy(url.real_file,
                     conv_from_system(guess_save_name(NULL, url.real_file)), TRUE);
             } else {
-                if (doFileSave(f, guess_save_name(&t_buf->content, url.file),
+                if (doFileSave(url, f, guess_save_name(&t_buf->content, url.file),
                         t_buf->content.compression)
                     == 0)
-                    UFhalfclose(&f);
+                    UFhalfclose(&f, url.scheme);
                 else
                     is_close(f.stream);
             }
@@ -1131,7 +1131,7 @@ struct Buffer* load_doc(const char* path, struct Url* current,
         // non stream(file or socket) content.
         wc_ces charset = WC_CES_US_ASCII;
         Str page = NULL;
-        switch (us.uf.scheme) {
+        switch (us.url.scheme) {
         case SCM_LOCAL: {
             struct stat st;
             if (stat(us.url.real_file, &st) < 0)
@@ -1314,7 +1314,7 @@ struct Buffer* load_doc(const char* path, struct Url* current,
                 request, option, auth, do_download, t_buf, &us.uf);
         }
 
-        us.uf.modtime = mymktime(checkHeader(&t_buf->content, "Last-Modified:"));
+        us.modtime = mymktime(checkHeader(&t_buf->content, "Last-Modified:"));
     } else if (us.url.scheme == SCM_FTP) {
         enum CompressionType compression = check_compression(path);
         if (compression != CMP_NOCOMPRESS) {
@@ -5869,29 +5869,24 @@ phase2:
 struct Buffer*
 loadHTMLString(Str page)
 {
-    struct URLFile f;
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
-    struct Buffer* newBuf;
 
-    init_stream(&f, SCM_LOCAL, is_from_str(page));
-
-    newBuf = newBuffer(INIT_BUFFER_WIDTH);
+    struct input_stream* stream = is_from_str(page);
+    struct Buffer* newBuf = newBuffer(INIT_BUFFER_WIDTH);
     if (SETJMP(AbortLoading) != 0) {
         TRAP_OFF;
         discardBuffer(newBuf);
-        is_close(f.stream);
+        is_close(stream);
         return NULL;
     }
     TRAP_ON;
 
     newBuf->document_charset = getRuntime()->InnerCharset;
-
-    loadHTMLstream(f.stream, newBuf, NULL, TRUE);
-
+    loadHTMLstream(stream, newBuf, NULL, TRUE);
     newBuf->document_charset = WC_CES_US_ASCII;
 
     TRAP_OFF;
-    is_close(f.stream);
+    is_close(stream);
     return newBuf;
 }
 
@@ -5984,7 +5979,6 @@ loadImageBuffer(struct Url url, struct input_stream* stream,
     struct ImageCache* cache;
     Str tmp, tmpf;
     FILE* src = NULL;
-    struct URLFile f;
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
     struct stat st;
     const struct Url* pu = newBuf ? &newBuf->currentURL : NULL;
@@ -6023,9 +6017,9 @@ image_buffer:
         return NULL;
     newBuf->mailcap_source = tmpf->ptr;
 
-    init_stream(&f, SCM_LOCAL, is_from_str(tmp));
-    loadHTMLstream(f.stream, newBuf, src, true);
-    is_close(f.stream);
+    struct input_stream* tmp_stream = is_from_str(tmp);
+    loadHTMLstream(tmp_stream, newBuf, src, true);
+    is_close(tmp_stream);
     if (src)
         fclose(src);
 
@@ -6130,14 +6124,13 @@ loadcmdout(char* cmd,
     FILE* f = popen(cmd, "r");
     if (f == NULL)
         return NULL;
-    struct URLFile uf;
-    init_stream(&uf, SCM_UNKNOWN, is_from_file(f, pclose));
 
+    struct input_stream* stream = is_from_file(f, pclose);
     struct Url url;
     parseURL(cmd, &url, NULL);
-    struct Buffer* buf = loadproc(url, uf.stream, NULL,
+    struct Buffer* buf = loadproc(url, stream, NULL,
         defaultbuf, defaultbuf->bufferprop & BP_FRAME);
-    is_close(uf.stream);
+    is_close(stream);
     return buf;
 }
 
@@ -6399,7 +6392,7 @@ int doFileMove(const char* tmpf, const char* defstr)
     return ret;
 }
 
-int doFileSave(struct URLFile uf, const char* defstr,
+int doFileSave(struct Url url, struct URLFile uf, const char* defstr,
     enum CompressionType compression)
 {
     if (fmInitialized()) {
@@ -6431,15 +6424,16 @@ int doFileSave(struct URLFile uf, const char* defstr,
 
             setup_child(FALSE, 0, is_file_no(uf.stream));
             bool succeeded = is_save2tmp(uf.stream, p);
-            if (succeeded && PreserveTimestamp && uf.modtime != -1)
-                setModtime(p, uf.modtime);
+            // if (succeeded && PreserveTimestamp && uf.modtime != -1)
+            //     setModtime(p, uf.modtime);
             is_close(uf.stream);
             unlink(lock);
             if (!succeeded)
                 exit(1);
             exit(0);
         }
-        addDownloadList(pid, uf.url, p, lock, 0);
+        addDownloadList(
+            pid, parsedURL2RefererStr(&url)->ptr, p, lock, 0);
     } else {
         char* q = searchKeyData();
         if (q == NULL || *q == '\0') {
@@ -6470,8 +6464,8 @@ int doFileSave(struct URLFile uf, const char* defstr,
             printf("Can't save to %s\n", p);
             return -1;
         }
-        if (PreserveTimestamp && uf.modtime != -1)
-            setModtime(p, uf.modtime);
+        // if (PreserveTimestamp && uf.modtime != -1)
+        //     setModtime(p, uf.modtime);
     }
     return 0;
 }
