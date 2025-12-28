@@ -189,8 +189,6 @@ extern void saveBuffer(struct Buffer* buf, FILE* f, int cont);
 extern void saveBufferBody(struct Buffer* buf, FILE* f, int cont);
 extern struct Buffer* getshell(char* cmd);
 
-extern int checkSaveFile(struct input_stream* stream, char* path);
-extern int checkOverWrite(char* path);
 
 extern struct Buffer* newBuffer(int width);
 extern struct Buffer* nullBuffer(void);

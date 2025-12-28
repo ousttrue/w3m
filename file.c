@@ -163,7 +163,7 @@ int is_html_type(const char* type)
 }
 
 static int
-setModtime(char* path, time_t modtime)
+setModtime(const char* path, time_t modtime)
 {
     struct utimbuf t;
     struct stat st;
@@ -967,11 +967,7 @@ struct Buffer* make_buffer(struct Url url, int flag,
 {
     LoadBufferFunc proc = loadBuffer;
 
-    const char* p = checkHeader(t_buf ? &t_buf->content : NULL, "Content-Length:");
-    if (p)
-        t_buf->content.current_content_length = strtoclen(p);
-
-    MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
+    MySignalHandler (*prevtrap)(SIGNAL_ARG) = NULL;
     if (do_download) {
         /* download only */
         const char* file;
@@ -1009,7 +1005,7 @@ struct Buffer* make_buffer(struct Url url, int flag,
 
     if (getRuntime()->image_source) {
         struct Buffer* b = NULL;
-        if (save2tmp(f, getRuntime()->image_source) == 0) {
+        if (uf_save2tmp(f, getRuntime()->image_source)) {
             b = newBuffer(INIT_BUFFER_WIDTH);
             b->sourcefile = getRuntime()->image_source;
         }
@@ -1360,6 +1356,10 @@ struct Buffer* load_doc(const char* path, struct Url* current,
     } else {
         t = guessContentType(pu.file);
     }
+
+    const char* p = checkHeader(t_buf ? &t_buf->content : NULL, "Content-Length:");
+    if (p)
+        t_buf->content.current_content_length = strtoclen(p);
 
     return make_buffer(pu, option.flag, f,
         t_buf, t, do_download);
@@ -6233,7 +6233,7 @@ loadImageBuffer(struct URLFile* uf, struct Buffer* newBuf)
         goto image_buffer;
 
     TRAP_ON;
-    if (save2tmp(*uf, cache->file) < 0) {
+    if (!uf_save2tmp(*uf, cache->file)) {
         TRAP_OFF;
         return NULL;
     }
@@ -6391,46 +6391,6 @@ getshell(char* cmd)
     return buf;
 }
 
-int save2tmp(struct URLFile uf, const char* tmpf)
-{
-    FILE* ff;
-    int64_t linelen = 0, trbyte = 0;
-    MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
-    static JMP_BUF env_bak;
-    volatile int retval = 0;
-    char* volatile buf = NULL;
-
-    ff = fopen(tmpf, "wb");
-    if (ff == NULL) {
-        /* fclose(f); */
-        return -1;
-    }
-    bcopy(AbortLoading, env_bak, sizeof(JMP_BUF));
-    if (SETJMP(AbortLoading) != 0) {
-        goto _end;
-    }
-    TRAP_ON;
-    {
-        int count;
-
-        buf = NewWithoutGC_N(char, SAVE_BUF_SIZE);
-        while ((count = is_read(uf.stream, buf, SAVE_BUF_SIZE)) > 0) {
-            if (fwrite(buf, 1, count, ff) != count) {
-                retval = -2;
-                goto _end;
-            }
-            linelen += count;
-            showProgress(&linelen, &trbyte, 0);
-        }
-    }
-_end:
-    bcopy(env_bak, AbortLoading, sizeof(JMP_BUF));
-    TRAP_OFF;
-    xfree(buf);
-    fclose(ff);
-    return retval;
-}
-
 struct Buffer*
 doExternal(struct URLFile uf, const char* type, struct Buffer* defaultbuf)
 {
@@ -6464,14 +6424,14 @@ doExternal(struct URLFile uf, const char* type, struct Buffer* defaultbuf)
         flush_tty();
         if (!fork()) {
             setup_child(FALSE, 0, is_file_no(uf.stream));
-            if (save2tmp(uf, tmpf->ptr) < 0)
+            if (!uf_save2tmp(uf, tmpf->ptr))
                 exit(1);
             UFclose(&uf);
             myExec(command->ptr);
         }
         return NO_BUFFER;
     } else {
-        if (save2tmp(uf, tmpf->ptr) < 0) {
+        if (!uf_save2tmp(uf, tmpf->ptr)) {
             return NULL;
         }
     }
@@ -6609,13 +6569,7 @@ int _doFileCopy(const char* tmpf, const char* defstr, bool download)
             return -1;
         }
         lock = tmpfname(TMPF_DFL, ".lock")->ptr;
-#if defined(HAVE_SYMLINK) && defined(HAVE_LSTAT)
         symlink(p, lock);
-#else
-        f = fopen(lock, "w");
-        if (f)
-            fclose(f);
-#endif
         flush_tty();
         pid = fork();
         if (!pid) {
@@ -6678,21 +6632,9 @@ int doFileMove(const char* tmpf, const char* defstr)
 
 int doFileSave(struct URLFile uf, const char* defstr)
 {
-#ifndef __MINGW32_VERSION
-    Str msg;
-    Str filen;
-    char *p, *q;
-    pid_t pid;
-    char* lock;
-    const char* tmpf = NULL;
-#if !(defined(HAVE_SYMLINK) && defined(HAVE_LSTAT))
-    FILE* f;
-#endif
-
     if (fmInitialized()) {
-        p = searchKeyData();
+        const char* p = searchKeyData();
         if (p == NULL || *p == '\0') {
-            /* FIXME: gettextize? */
             p = inputLineHist("(Download)Save file to: ",
                 defstr, IN_FILENAME, getRuntime()->SaveHist);
             if (p == NULL || *p == '\0')
@@ -6702,57 +6644,46 @@ int doFileSave(struct URLFile uf, const char* defstr)
         if (checkOverWrite(p) < 0)
             return -1;
         if (checkSaveFile(uf.stream, p) < 0) {
-            /* FIXME: gettextize? */
-            msg = Sprintf("Can't save. Load file and %s are identical.",
+            Str msg = Sprintf("Can't save. Load file and %s are identical.",
                 conv_from_system(p));
             disp_err_message(msg->ptr, FALSE);
             return -1;
         }
-        /*
-         * if (save2tmp(uf, p) < 0) {
-         * msg = Sprintf("Can't save to %s", conv_from_system(p));
-         * disp_err_message(msg->ptr, FALSE);
-         * }
-         */
-        lock = tmpfname(TMPF_DFL, ".lock")->ptr;
-#if defined(HAVE_SYMLINK) && defined(HAVE_LSTAT)
+
+        const char* lock = tmpfname(TMPF_DFL, ".lock")->ptr;
         symlink(p, lock);
-#else
-        f = fopen(lock, "w");
-        if (f)
-            fclose(f);
-#endif
         flush_tty();
-        pid = fork();
+        pid_t pid = fork();
         if (!pid) {
-            int err;
+            const char* tmpf;
             if ((uf.compression != CMP_NOCOMPRESS) && AutoUncompress) {
                 uncompress_stream(&uf, &tmpf);
                 if (tmpf)
                     unlink(tmpf);
             }
+
             setup_child(FALSE, 0, is_file_no(uf.stream));
-            err = save2tmp(uf, p);
-            if (err == 0 && PreserveTimestamp && uf.modtime != -1)
+            bool succeeded = uf_save2tmp(uf, p);
+            if (succeeded && PreserveTimestamp && uf.modtime != -1)
                 setModtime(p, uf.modtime);
             UFclose(&uf);
             unlink(lock);
-            if (err != 0)
-                exit(-err);
+            if (!succeeded)
+                exit(1);
             exit(0);
         }
         addDownloadList(pid, uf.url, p, lock, 0);
     } else {
-        q = searchKeyData();
+        char* q = searchKeyData();
         if (q == NULL || *q == '\0') {
-            /* FIXME: gettextize? */
             printf("(Download)Save file to: ");
             fflush(stdout);
-            filen = Strfgets(stdin);
+            Str filen = Strfgets(stdin);
             if (filen->length == 0)
                 return -1;
             q = filen->ptr;
         }
+        char* p;
         for (p = q + strlen(q) - 1; IS_SPACE(*p); p--)
             ;
         *(p + 1) = '\0';
@@ -6762,24 +6693,22 @@ int doFileSave(struct URLFile uf, const char* defstr)
         if (checkOverWrite(p) < 0)
             return -1;
         if (checkSaveFile(uf.stream, p) < 0) {
-            /* FIXME: gettextize? */
             printf("Can't save. Load file and %s are identical.", p);
             return -1;
         }
+        const char* tmpf;
         if (uf.compression != CMP_NOCOMPRESS && AutoUncompress) {
             uncompress_stream(&uf, &tmpf);
             if (tmpf)
                 unlink(tmpf);
         }
-        if (save2tmp(uf, p) < 0) {
-            /* FIXME: gettextize? */
+        if (!uf_save2tmp(uf, p)) {
             printf("Can't save to %s\n", p);
             return -1;
         }
         if (PreserveTimestamp && uf.modtime != -1)
             setModtime(p, uf.modtime);
     }
-#endif /* __MINGW32_VERSION */
     return 0;
 }
 
@@ -6795,7 +6724,7 @@ int checkCopyFile(const char* path1, const char* path2)
     return 0;
 }
 
-int checkSaveFile(struct input_stream* stream, char* path2)
+int checkSaveFile(struct input_stream* stream, const char* path2)
 {
     struct stat st1, st2;
     int des = is_file_no(stream);
@@ -6810,7 +6739,7 @@ int checkSaveFile(struct input_stream* stream, char* path2)
     return 0;
 }
 
-int checkOverWrite(char* path)
+int checkOverWrite(const char* path)
 {
     struct stat st;
     char* ans;

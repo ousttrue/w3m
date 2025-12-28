@@ -167,7 +167,8 @@ void download_panel()
             FUNCNAME_reload, NULL);
 }
 
-void addDownloadList(pid_t pid, char* url, char* save, char* lock, size_t size)
+void addDownloadList(pid_t pid,
+    const char* url, const char* save, const char* lock, size_t size)
 {
     struct DownloadList* d;
 

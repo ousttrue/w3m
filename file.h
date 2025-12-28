@@ -36,3 +36,6 @@ Str process_anchor(struct HtmlBuilder* hb, struct parsed_tag* tag, const char* t
 void showProgress(int64_t* linelen, int64_t* trbyte, size_t current_content_length);
 Str process_n_form(struct HtmlBuilder* hb);
 Str getLinkNumberStr(struct HtmlBuilder* hb, int correction);
+int checkOverWrite(const char* path);
+struct input_stream;
+int checkSaveFile(struct input_stream* stream, const char* path);

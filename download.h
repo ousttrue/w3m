@@ -4,9 +4,9 @@
 
 struct DownloadList {
     pid_t pid;
-    char* url;
-    char* save;
-    char* lock;
+    const char* url;
+    const char* save;
+    const char* lock;
     size_t size;
     time_t time;
     int running;
@@ -20,7 +20,8 @@ bool hasDownloadList();
 void download_update();
 bool download_checkList(void);
 void download_panel(void);
-void addDownloadList(pid_t pid, char* url, char* save, char* lock, size_t size);
+void addDownloadList(pid_t pid,
+    const char* url, const char* save, const char* lock, size_t size);
 void stopDownload(void);
 struct parsed_tagarg;
 void download_action(struct parsed_tagarg* arg);
