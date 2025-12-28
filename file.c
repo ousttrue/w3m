@@ -101,10 +101,10 @@ int currentLn(struct Buffer* buf)
 }
 
 static struct Buffer*
-loadSomething(struct URLFile* f, const char* t,
+loadSomething(struct Url url, struct input_stream* stream, const char* t,
     LoadBufferFunc loadproc, struct Buffer* defaultbuf, bool internal)
 {
-    struct Buffer* buf = loadproc(f, t, defaultbuf, internal);
+    struct Buffer* buf = loadproc(url, stream, t, defaultbuf, internal);
     if (!buf)
         return NULL;
 
@@ -114,7 +114,7 @@ loadSomething(struct URLFile* f, const char* t,
             buf->buffername = conv_from_system(lastFileName(buf->content.filename));
     }
     if (buf->currentURL.scheme == SCM_UNKNOWN)
-        buf->currentURL.scheme = f->scheme;
+        buf->currentURL.scheme = url.scheme;
     // if (f->scheme == SCM_LOCAL && buf->sourcefile == NULL)
     //     buf->sourcefile = buf->content.filename;
     if (loadproc == loadHTMLBuffer || loadproc == loadImageBuffer)
@@ -1041,7 +1041,7 @@ struct Buffer* make_buffer(struct Url url, int flag,
     t_buf->ssl_certificate = f.ssl_certificate;
     frame_source = flag & RG_FRAME_SRC;
 
-    struct Buffer* b = loadSomething(&f, t,
+    struct Buffer* b = loadSomething(url, f.stream, t,
         proc, t_buf, t_buf->bufferprop & BP_FRAME);
     is_close(f.stream);
     frame_source = 0;
@@ -5483,7 +5483,7 @@ table_start:
  * loadHTMLBuffer: read file and make new buffer
  */
 struct Buffer*
-loadHTMLBuffer(struct URLFile* f, const char* t,
+loadHTMLBuffer(struct Url url, struct input_stream* stream, const char* t,
     struct Buffer* newBuf, bool internal)
 {
     if (newBuf == NULL)
@@ -5491,14 +5491,14 @@ loadHTMLBuffer(struct URLFile* f, const char* t,
 
     FILE* src = NULL;
     Str tmp = NULL;
-    if (newBuf->sourcefile == NULL && (f->scheme != SCM_LOCAL || newBuf->mailcap)) {
+    if (newBuf->sourcefile == NULL && (url.scheme != SCM_LOCAL || newBuf->mailcap)) {
         tmp = tmpfname(TMPF_SRC, ".html");
         src = fopen(tmp->ptr, "w");
         if (src)
             newBuf->sourcefile = tmp->ptr;
     }
 
-    loadHTMLstream(f->stream, newBuf, src, internal);
+    loadHTMLstream(stream, newBuf, src, internal);
 
     if (src)
         fclose(src);
@@ -5884,164 +5884,12 @@ loadHTMLString(Str page)
     return newBuf;
 }
 
-#ifdef USE_GOPHER
-
-/*
- * loadGopherDir: get gopher directory
- */
-#ifdef USE_M17N
-Str loadGopherDir(struct URLFile* uf, struct Url* pu, wc_ces* charset)
-#else
-Str loadGopherDir0(struct URLFile* uf, struct Url* pu)
-#endif
-{
-    Str volatile tmp;
-    Str lbuf, name, file, host, port, type;
-    char* volatile p, * volatile q;
-    int link, pre;
-    MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
-
-    wc_ces doc_charset = getRuntime()->DocumentCharset;
-
-    tmp = parsedURL2Str(pu);
-    p = html_quote(tmp->ptr);
-    tmp = convertLine(Strnew_charp(file_unquote(tmp->ptr)), RAW_MODE,
-        charset, doc_charset);
-    q = html_quote(tmp->ptr);
-    tmp = Strnew_m_charp("<html>\n<head>\n<base href=\"", p, "\">\n<title>", q,
-        "</title>\n</head>\n<body>\n<h1>Index of ", q,
-        "</h1>\n<table>\n", NULL);
-
-    if (SETJMP(AbortLoading) != 0)
-        goto gopher_end;
-    TRAP_ON;
-
-    pre = 0;
-    while (1) {
-        if (!(lbuf = is_get_str(uf->stream, false)) || lbuf->length == 0)
-            break;
-        if (lbuf->ptr[0] == '.' && (lbuf->ptr[1] == '\n' || lbuf->ptr[1] == '\r'))
-            break;
-        lbuf = convertLine(lbuf, HTML_MODE, charset, doc_charset);
-        p = lbuf->ptr;
-        for (q = p; *q && *q != '\t'; q++)
-            ;
-        name = Strnew_charp_n(p, q - p);
-        if (!*q)
-            continue;
-        p = q + 1;
-        for (q = p; *q && *q != '\t'; q++)
-            ;
-        file = Strnew_charp_n(p, q - p);
-        if (!*q)
-            continue;
-        p = q + 1;
-        for (q = p; *q && *q != '\t'; q++)
-            ;
-        host = Strnew_charp_n(p, q - p);
-        if (!*q)
-            continue;
-        p = q + 1;
-        for (q = p; *q && *q != '\t' && *q != '\r' && *q != '\n'; q++)
-            ;
-        port = Strnew_charp_n(p, q - p);
-
-        link = 1;
-        switch (name->ptr[0]) {
-        case '0':
-            p = "[text file]";
-            break;
-        case '1':
-            p = "[directory]";
-            break;
-        case '5':
-            p = "[DOS binary]";
-            break;
-        case '7':
-            p = "[search]";
-            break;
-        case 'm':
-            p = "[message]";
-            break;
-        case 's':
-            p = "[sound]";
-            break;
-        case 'g':
-            p = "[gif]";
-            break;
-        case 'h':
-            p = "[HTML]";
-            break;
-        case 'i':
-            link = 0;
-            break;
-        case 'I':
-            p = "[image]";
-            break;
-        case '9':
-            p = "[binary]";
-            break;
-        default:
-            p = "[unsupported]";
-            break;
-        }
-        type = Strsubstr(name, 0, 1);
-        q = Strnew_m_charp("gopher://", host->ptr, ":", port->ptr, "/", type->ptr, file->ptr, NULL)->ptr;
-        if (link) {
-            if (pre) {
-                Strcat_charp(tmp, "</pre>");
-                pre = 0;
-            }
-            Strcat_m_charp(tmp, "<a href=\"",
-                html_quote(url_encode(q, NULL, *charset)),
-                "\">", p, " ", html_quote(name->ptr + 1), "</a><br>\n", NULL);
-        } else {
-            if (!pre) {
-                Strcat_charp(tmp, "<pre>");
-                pre = 1;
-            }
-
-            Strcat_m_charp(tmp, html_quote(name->ptr + 1), "\n", NULL);
-        }
-    }
-
-gopher_end:
-    TRAP_OFF;
-
-    if (pre)
-        Strcat_charp(tmp, "</pre>");
-    Strcat_charp(tmp, "</table>\n</body>\n</html>\n");
-    return tmp;
-}
-
-Str loadGopherSearch(struct URLFile* uf, struct Url* pu, wc_ces* charset)
-{
-    Str tmp;
-    char* volatile p, * volatile q;
-    wc_ces doc_charset = getRuntime()->DocumentCharset;
-
-    tmp = parsedURL2Str(pu);
-    p = html_quote(tmp->ptr);
-    tmp = convertLine(Strnew_charp(file_unquote(tmp->ptr)), RAW_MODE,
-        charset, doc_charset);
-    q = html_quote(tmp->ptr);
-    tmp = Strnew_m_charp("<html>\n<head>\n<base href=\"", p, "\">\n<title>", q,
-        "</title>\n</head>\n<body>\n<h1>Search ", q,
-        "</h1>\n<form role=\"search\">\n<div>\n"
-        "<input type=\"search\" name=\"\">"
-        "</div>\n</form>\n</body>",
-        NULL);
-
-    return tmp;
-}
-#endif /* USE_GOPHER */
-
 /*
  * loadBuffer: read file and make new buffer
  */
 struct Buffer*
-loadBuffer(struct URLFile* uf, const char* t,
-    struct Buffer* volatile newBuf, bool internal)
+loadBuffer(struct Url url, struct input_stream* stream,
+    const char* t, struct Buffer* volatile newBuf, bool internal)
 {
     FILE* volatile src = NULL;
 
@@ -6065,7 +5913,7 @@ loadBuffer(struct URLFile* uf, const char* t,
     }
     TRAP_ON;
 
-    if (newBuf->sourcefile == NULL && (uf->scheme != SCM_LOCAL || newBuf->mailcap)) {
+    if (newBuf->sourcefile == NULL && (url.scheme != SCM_LOCAL || newBuf->mailcap)) {
         tmpf = tmpfname(TMPF_SRC, NULL);
         src = fopen(tmpf->ptr, "w");
         if (src)
@@ -6077,7 +5925,7 @@ loadBuffer(struct URLFile* uf, const char* t,
         doc_charset = newBuf->content.content_charset;
 
     nlines = 0;
-    while ((lineBuf2 = is_get_str(uf->stream, true)) && lineBuf2->length) {
+    while ((lineBuf2 = is_get_str(stream, true)) && lineBuf2->length) {
         if (src)
             Strfputs(lineBuf2, src);
         linelen += lineBuf2->length;
@@ -6118,8 +5966,8 @@ _end:
 }
 
 struct Buffer*
-loadImageBuffer(struct URLFile* uf, const char* t,
-    struct Buffer* newBuf, bool internal)
+loadImageBuffer(struct Url url, struct input_stream* stream,
+    const char* t, struct Buffer* newBuf, bool internal)
 {
     struct Image image;
     struct ImageCache* cache;
@@ -6131,8 +5979,8 @@ loadImageBuffer(struct URLFile* uf, const char* t,
     const struct Url* pu = newBuf ? &newBuf->currentURL : NULL;
 
     loadImage(newBuf, IMG_FLAG_STOP);
-    image.url = uf->url;
-    image.ext = uf->ext;
+    image.url = parsedURL2Str(&url)->ptr;
+    image.ext = filename_extension(url.file, true);
     image.width = -1;
     image.height = -1;
     image.cache = NULL;
@@ -6141,7 +5989,7 @@ loadImageBuffer(struct URLFile* uf, const char* t,
         goto image_buffer;
 
     TRAP_ON;
-    if (!is_save2tmp(uf->stream, cache->file)) {
+    if (!is_save2tmp(stream, cache->file)) {
         TRAP_OFF;
         return NULL;
     }
@@ -6154,7 +6002,7 @@ image_buffer:
     if (newBuf == NULL)
         newBuf = newBuffer(INIT_BUFFER_WIDTH);
     cache->loaded |= IMG_FLAG_DONT_REMOVE;
-    if (newBuf->sourcefile == NULL && uf->scheme != SCM_LOCAL)
+    if (newBuf->sourcefile == NULL && url.scheme != SCM_LOCAL)
         newBuf->sourcefile = cache->file;
 
     tmp = Sprintf("<img src=\"%s\"><br><br>", html_quote(image.url));
@@ -6273,7 +6121,10 @@ loadcmdout(char* cmd,
         return NULL;
     struct URLFile uf;
     init_stream(&uf, SCM_UNKNOWN, is_from_file(f, pclose));
-    struct Buffer* buf = loadproc(&uf, NULL,
+
+    struct Url url;
+    parseURL(cmd, &url, NULL);
+    struct Buffer* buf = loadproc(url, uf.stream, NULL,
         defaultbuf, defaultbuf->bufferprop & BP_FRAME);
     is_close(uf.stream);
     return buf;
@@ -6298,15 +6149,15 @@ getshell(char* cmd)
 }
 
 struct Buffer*
-doExternal(struct URLFile* uf, const char* type,
-    struct Buffer* defaultbuf, bool internal)
+doExternal(struct Url url, struct input_stream* stream,
+    const char* type, struct Buffer* defaultbuf, bool internal)
 {
     Str command;
     struct mailcap* mcap;
     int mc_stat;
     struct Buffer* buf = NULL;
     const char* src = NULL;
-    const char* ext = uf->ext;
+    const char* ext = filename_extension(url.file, true);
 
     if (!(mcap = searchExtViewer(type)))
         return NULL;
@@ -6330,15 +6181,15 @@ doExternal(struct URLFile* uf, const char* type,
     if (!(mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)) && !(mcap->flags & MAILCAP_NEEDSTERMINAL) && BackgroundExtViewer) {
         flush_tty();
         if (!fork()) {
-            setup_child(FALSE, 0, is_file_no(uf->stream));
-            if (!is_save2tmp(uf->stream, tmpf->ptr))
+            setup_child(FALSE, 0, is_file_no(stream));
+            if (!is_save2tmp(stream, tmpf->ptr))
                 exit(1);
-            is_close(uf->stream);
+            is_close(stream);
             myExec(command->ptr);
         }
         return NO_BUFFER;
     } else {
-        if (!is_save2tmp(uf->stream, tmpf->ptr)) {
+        if (!is_save2tmp(stream, tmpf->ptr)) {
             return NULL;
         }
     }

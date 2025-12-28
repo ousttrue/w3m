@@ -1,7 +1,6 @@
 #include "buffer.h"
 #include "alloc.h"
 #include "line.h"
-#include "URLFile.h"
 #include "etc.h"
 #include "file.h"
 #include "message.h"
@@ -528,7 +527,7 @@ void reshapeBuffer(struct Buffer* buf)
 
     if (buf->header_source) {
         if (buf->currentURL.scheme != SCM_LOCAL || buf->mailcap_source || !strcmp(buf->currentURL.file, "-")) {
-            struct input_stream *stream = examineFile(buf->header_source, false);
+            struct input_stream* stream = examineFile(buf->header_source, false);
             if (stream) {
                 getHttpResponseHeader(&buf->content, buf->currentURL, stream);
                 is_close(stream);
@@ -537,18 +536,16 @@ void reshapeBuffer(struct Buffer* buf)
     }
 
     {
-        struct URLFile f;
-        init_stream(&f, SCM_LOCAL, NULL);
-        f.stream = stream;
-
         wc_uint8 old_auto_detect = WcOption.auto_detect;
         WcOption.auto_detect = WC_OPT_DETECT_OFF;
         UseContentCharset = FALSE;
         if (is_html_type(buf->type))
-            loadHTMLBuffer(&f, NULL, buf, buf->bufferprop & BP_FRAME);
+            loadHTMLBuffer(buf->currentURL, stream,
+                NULL, buf, buf->bufferprop & BP_FRAME);
         else
-            loadBuffer(&f, NULL, buf, buf->bufferprop & BP_FRAME);
-        is_close(f.stream);
+            loadBuffer(buf->currentURL, stream,
+                NULL, buf, buf->bufferprop & BP_FRAME);
+        is_close(stream);
         WcOption.auto_detect = old_auto_detect;
         UseContentCharset = TRUE;
     }
