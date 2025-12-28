@@ -964,7 +964,9 @@ retry:
             tmp = HTTPrequest(pu, current, hr, option.extra_header);
             write(sock, tmp->ptr, tmp->length);
         } else {
-            uf.stream = openFTPStream(pu, &uf);
+            struct FtpFile file = openFTPStream(pu);
+            uf.stream = file.is;
+            uf.modtime = file.modtime;
             uf.scheme = pu->scheme;
             return uf;
         }

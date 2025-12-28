@@ -1,37 +1,27 @@
 #include "ftp.h"
-#include "indep.h"
 #include "URLFile.h"
+#include "indep.h"
 #include "w3m_rc.h"
 #include "etc.h"
-#include "symbol.h"
 #include "message.h"
 #include "linein.h"
+#include "fm.h"
+#include "myctype.h"
+
+#include <Str.h>
+#include <libwc/ces.h>
+
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 #include <pwd.h>
-#include <Str.h>
-#include <signal.h>
-#include <setjmp.h>
 #include <time.h>
-
-#include "fm.h"
-#include "html.h"
-#include "myctype.h"
-#include <libwc/ces.h>
-
-#ifdef DEBUG
-#include <malloc.h>
-#endif /* DEBUG */
-
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
 #include <arpa/inet.h>
-
-#ifndef HAVE_SOCKLEN_T
-typedef int socklen_t;
-#endif
+#include <signal.h>
+#include <setjmp.h>
 
 typedef struct _FTP {
     char* host;
@@ -57,7 +47,7 @@ KeyAbort(SIGNAL_ARG)
 }
 
 static Str
-ftp_command(FTP ftp, char* cmd, char* arg, int* status)
+ftp_command(FTP ftp, const char* cmd, const char* arg, int* status)
 {
     Str tmp;
 
@@ -284,17 +274,17 @@ ftp_pasv(FTP ftp)
 }
 
 static time_t
-ftp_modtime(FTP ftp, char* path)
+ftp_modtime(FTP ftp, const char* path)
 {
     int status;
-    Str tmp;
+    Str tmp = ftp_command(ftp, "MDTM", path, &status);
+    if (status != 213)
+        return -1;
+
     char* p;
     struct tm tm;
     time_t t, lt, gt;
 
-    tmp = ftp_command(ftp, "MDTM", path, &status);
-    if (status != 213)
-        return -1;
     for (p = tmp->ptr + 4; *p && *p == ' '; p++)
         ;
     memset(&tm, 0, sizeof(struct tm));
@@ -356,21 +346,17 @@ void closeFTP(void)
     ftp_close(&current_ftp);
 }
 
-struct input_stream*
-openFTPStream(struct Url* pu, struct URLFile* uf)
+struct FtpFile
+openFTPStream(struct Url* pu)
 {
-    Str tmp;
-    int status;
-    char* user = NULL;
-    char* pass = NULL;
+    if (!pu->host) {
+        return (struct FtpFile) { 0 };
+    }
+
     Str uname = NULL;
     Str pwd = NULL;
-    int add_auth_cookie_flag = FALSE;
-    char* realpathname = NULL;
-
-    if (!pu->host)
-        return NULL;
-
+    char* user = NULL;
+    char* pass = NULL;
     if (pu->user == NULL && pu->pass == NULL) {
         if (find_auth_user_passwd(pu, NULL, &uname, &pwd, 0)) {
             if (uname)
@@ -388,6 +374,7 @@ openFTPStream(struct Url* pu, struct URLFile* uf)
 
     if (current_ftp.host) {
         if (!strcmp(current_ftp.host, pu->host) && current_ftp.port == pu->port && !strcmp(current_ftp.user, user)) {
+            int status;
             ftp_command(&current_ftp, "NOOP", NULL, &status);
             if (status != 200)
                 ftp_close(&current_ftp);
@@ -397,6 +384,7 @@ openFTPStream(struct Url* pu, struct URLFile* uf)
             ftp_quit(&current_ftp);
     }
 
+    bool add_auth_cookie_flag = false;
     if (pass)
         /* do nothing */;
     else if (pu->pass)
@@ -411,27 +399,16 @@ openFTPStream(struct Url* pu, struct URLFile* uf)
                 pwd = Str_conv_to_system(pwd);
                 exitRawMode();
             } else {
-#ifndef __MINGW32_VERSION
                 pwd = Strnew_charp((char*)getpass("Password: "));
-#else
-                enterRawMode();
-                pwd = Strnew_charp(inputLine("Password: ", NULL, IN_PASSWORD));
-                pwd = Str_conv_to_system(pwd);
-                term_cbreak();
-#endif /* __MINGW32_VERSION */
             }
-            add_auth_cookie_flag = TRUE;
+            add_auth_cookie_flag = true;
         }
         pass = pwd->ptr;
-    } else if (ftppasswd != NULL && *ftppasswd != '\0')
+    } else if (ftppasswd != NULL && *ftppasswd != '\0') {
         pass = ftppasswd;
-    else {
-#ifndef __MINGW32_VERSION
+    } else {
         struct passwd* mypw = getpwuid(getuid());
-        tmp = Strnew_charp(mypw ? mypw->pw_name : "anonymous");
-#else
-        tmp = Strnew_charp("anonymous");
-#endif /* __MINGW32_VERSION */
+        Str tmp = Strnew_charp(mypw ? mypw->pw_name : "anonymous");
         Strcat_char(tmp, '@');
         pass = tmp->ptr;
     }
@@ -441,33 +418,41 @@ openFTPStream(struct Url* pu, struct URLFile* uf)
         current_ftp.port = pu->port;
         current_ftp.user = allocStr(user, -1);
         current_ftp.pass = allocStr(pass, -1);
-        if (!ftp_login(&current_ftp))
-            return NULL;
+        if (!ftp_login(&current_ftp)) {
+            return (struct FtpFile) { 0 };
+        }
     }
+
+    // char* realpathname = NULL;
     if (add_auth_cookie_flag)
         add_auth_user_passwd(pu, NULL, uname, pwd, 0);
 
+    int status;
 ftp_read:
     ftp_command(&current_ftp, "TYPE", "I", &status);
     if (ftp_pasv(&current_ftp) < 0) {
         ftp_quit(&current_ftp);
-        return NULL;
+        return (struct FtpFile) { 0 };
     }
     if (pu->file == NULL || *pu->file == '\0' || pu->file[strlen(pu->file) - 1] == '/')
         goto ftp_dir;
 
-    realpathname = file_unquote(pu->file);
+    const char* realpathname = file_unquote(pu->file);
     if (*realpathname == '/' && *(realpathname + 1) == '~')
         realpathname++;
-    /* Get file */
-    uf->modtime = ftp_modtime(&current_ftp, realpathname);
+
+    // Get file
     ftp_command(&current_ftp, "RETR", realpathname, &status);
-    if (status == 125 || status == 150)
-        return is_from_file(current_ftp.data, closeFTPdata);
+    if (status == 125 || status == 150) {
+        return (struct FtpFile) {
+            .is = is_from_file(current_ftp.data, closeFTPdata),
+            .modtime = ftp_modtime(&current_ftp, realpathname),
+        };
+    }
 
 ftp_dir:
     pu->scheme = SCM_FTPDIR;
-    return NULL;
+    return (struct FtpFile) { 0 };
 }
 
 Str loadFTPDir(struct Url* pu, wc_ces* charset, bool do_download)
