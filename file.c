@@ -222,15 +222,16 @@ lessopen_stream(const char* path)
 /*
  * convert line
  */
-Str convertLine(struct URLFile* uf, Str line, int mode, wc_ces* charset,
-    wc_ces doc_charset)
+Str convertLine(struct URLFile* uf, Str line, int mode, wc_ces* detected,
+    wc_ces f_ces)
 {
-    line = wc_Str_conv_with_detect(line, charset, doc_charset, getRuntime()->InnerCharset);
+    struct Converted converted = wc_Str_conv_with_detect(line, detected, f_ces, getRuntime()->InnerCharset);
 
     if (mode != RAW_MODE)
-        cleanup_line(line, mode);
+        cleanup_line(converted.os, mode);
 
-    return line;
+    *detected = converted.detected;
+    return converted.os;
 }
 
 struct auth_param {

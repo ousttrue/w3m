@@ -49,7 +49,7 @@ struct Buffer* doExternal(struct URLFile uf, const char* type, struct Buffer* de
 struct Buffer* loadHTMLBuffer(struct URLFile* f, struct Buffer* newBuf);
 struct Buffer* loadBuffer(struct URLFile* uf, struct Buffer* newBuf);
 struct Buffer* loadImageBuffer(struct URLFile* uf, struct Buffer* newBuf);
-Str convertLine(struct URLFile* uf, Str line, int mode, wc_ces* charset, wc_ces doc_charset);
+Str convertLine(struct URLFile* uf, Str line, int mode, wc_ces* detected, wc_ces f_ces);
 Str loadGopherDir(struct URLFile* uf, struct Url* pu, wc_ces* charset);
 Str loadGopherSearch(struct URLFile* uf, struct Url* pu, wc_ces* charset);
 bool uf_save2tmp(struct URLFile uf, const char* tmpf);

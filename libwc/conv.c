@@ -90,7 +90,7 @@ wc_conv_to_ces(Str is, wc_ces ces)
         break;
     default:
         while (p < ep) {
-            if (*p < 0x80 && wtf_width(p + 1)) {
+            if (*p < 0x80 && wtf_width((const char*)p + 1)) {
                 Strcat_char(os, (char)*p);
                 p++;
             } else
@@ -104,29 +104,30 @@ wc_conv_to_ces(Str is, wc_ces ces)
     return os;
 }
 
-Str wc_Str_conv_with_detect(Str is, wc_ces* f_ces, wc_ces hint, wc_ces t_ces)
+struct Converted wc_Str_conv_with_detect(Str is, wc_ces f_ces, wc_ces hint, wc_ces t_ces)
 {
-    wc_ces detect;
-
-    if (*f_ces == WC_CES_WTF || hint == WC_CES_WTF) {
-        *f_ces = WC_CES_WTF;
-        detect = WC_CES_WTF;
+    struct Converted converted = { 0 };
+    if (f_ces == WC_CES_WTF || hint == WC_CES_WTF) {
+        f_ces = WC_CES_WTF;
+        converted.detected = WC_CES_WTF;
     } else if (WcOption.auto_detect == WC_OPT_DETECT_OFF) {
-        *f_ces = hint;
-        detect = hint;
+        f_ces = hint;
+        converted.detected = hint;
     } else {
-        if (*f_ces & WC_CES_T_8BIT)
-            hint = *f_ces;
-        detect = wc_auto_detect(is->ptr, is->length, hint);
+        if (f_ces & WC_CES_T_8BIT)
+            hint = f_ces;
+        converted.detected = wc_auto_detect(is->ptr, is->length, hint);
         if (WcOption.auto_detect == WC_OPT_DETECT_ON) {
-            if ((detect & WC_CES_T_8BIT) || ((detect & WC_CES_T_NASCII) && !(*f_ces & WC_CES_T_8BIT)))
-                *f_ces = detect;
+            if ((converted.detected & WC_CES_T_8BIT) //
+                || ((converted.detected & WC_CES_T_NASCII) && !(f_ces & WC_CES_T_8BIT)))
+                f_ces = converted.detected;
         } else {
-            if ((detect & WC_CES_T_ISO_2022) && !(*f_ces & WC_CES_T_8BIT))
-                *f_ces = detect;
+            if ((converted.detected & WC_CES_T_ISO_2022) && !(f_ces & WC_CES_T_8BIT))
+                f_ces = converted.detected;
         }
     }
-    return wc_Str_conv(is, detect, t_ces);
+    converted.os = wc_Str_conv(is, converted.detected, t_ces);
+    return converted;
 }
 
 void wc_push_end(struct wc_status* st, Str os)
