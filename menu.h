@@ -76,6 +76,6 @@ void mainMenu(int x, int y);
 void mainMn(void);
 void selMn(void);
 void tabMn(void);
-void optionMenu(int x, int y, char** label, int* variable, int initial,
+void optionMenu(int x, int y, const char** label, int* variable, int initial,
     void (*func)());
 void initMenu(void);

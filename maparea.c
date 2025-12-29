@@ -1,4 +1,5 @@
 #include "maparea.h"
+#include "frame.h"
 #include "alloc.h"
 #include "etc.h"
 #include "file.h"
@@ -204,7 +205,7 @@ follow_map_menu(struct Buffer* buf, char* name, struct Anchor* a_img, int x, int
     int i, selected = -1;
     int initial = 0;
     struct MapArea* a;
-    char** label;
+    const char** label;
 
     ml = searchMapList(buf, name);
     if (ml == NULL || ml->area == NULL || ml->area->nitem == 0)
@@ -218,7 +219,6 @@ follow_map_menu(struct Buffer* buf, char* name, struct Anchor* a_img, int x, int
         goto map_end;
     }
 
-#ifdef MENU_MAP
     label = New_N(char*, ml->area->nitem + 1);
     for (i = 0, al = ml->area->first; al != NULL; i++, al = al->next) {
         a = (struct MapArea*)al->ptr;
@@ -230,7 +230,6 @@ follow_map_menu(struct Buffer* buf, char* name, struct Anchor* a_img, int x, int
     label[ml->area->nitem] = NULL;
 
     optionMenu(x, y, label, &selected, initial, NULL);
-#endif
 
 #ifdef USE_IMAGE
 map_end:
@@ -295,15 +294,9 @@ struct MapArea*
 newMapArea(const char* url, const char* target, const char* alt, const char* shape, const char* coords)
 {
     struct MapArea* a = New(struct MapArea);
-#ifdef USE_IMAGE
-    char* p;
-    int i, max;
-#endif
-
     a->url = url;
     a->target = target;
     a->alt = alt ? alt : "";
-#ifdef USE_IMAGE
     a->shape = SHAPE_RECT;
     if (shape) {
         if (!strcasecmp(shape, "default"))
@@ -334,7 +327,10 @@ newMapArea(const char* url, const char* target, const char* alt, const char* sha
         a->coords = New_N(short, 3);
         a->ncoords = 3;
     }
-    max = a->ncoords;
+
+    const char* p;
+    int i;
+    int max = a->ncoords;
     for (i = 0, p = coords; (a->shape == SHAPE_POLY || i < a->ncoords) && *p;) {
         while (IS_SPACE(*p))
             p++;
@@ -382,7 +378,6 @@ newMapArea(const char* url, const char* target, const char* alt, const char* sha
         a->center_x /= a->ncoords / 2;
         a->center_y /= a->ncoords / 2;
     }
-#endif
     return a;
 }
 

@@ -1,4 +1,5 @@
 #include "file.h"
+#include "frame.h"
 #include "html_builder.h"
 #include "indep.h"
 #include "alloc.h"

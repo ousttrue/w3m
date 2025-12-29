@@ -4,9 +4,9 @@
 #include "textlist.h"
 
 struct MapArea {
-    char* url;
-    char* target;
-    char* alt;
+    const char* url;
+    const char* target;
+    const char* alt;
     char shape;
     short* coords;
     int ncoords;

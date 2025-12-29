@@ -27,7 +27,7 @@
 #define N_(Text) Text
 #define gettext(Text) Text
 
-#include "frame.h"
+// #include "frame.h"
 #include "parsetag.h"
 #include "parsetagx.h"
 #include "func.h"

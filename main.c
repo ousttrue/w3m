@@ -1,4 +1,5 @@
 #include "maparea.h"
+#include "frame.h"
 #include "cookie.h"
 #include "indep.h"
 #include "alloc.h"

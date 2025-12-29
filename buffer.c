@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "frame.h"
 #include "alloc.h"
 #include "line.h"
 #include "etc.h"
