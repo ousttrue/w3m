@@ -164,3 +164,18 @@ AlarmEvent* setAlarmEvent(AlarmEvent* event, int sec, short status,
 struct parsed_tagarg;
 extern void panel_set_option(struct parsed_tagarg*);
 extern int check_no_proxy(char* domain);
+char* rcFile(const char* base);
+char* etcFile(const char* base);
+char* confFile(const char* base);
+char* libFile(const char* base);
+char* helpFile(const char* base);
+void init_rc(void);
+extern void change_charset(struct parsed_tagarg* arg);
+extern void tmpClearBuffer(struct Buffer* buf);
+extern void chkURLBuffer(struct Buffer* buf);
+extern int set_param_option(const char* option);
+extern char* get_param_option(const char* name);
+extern void init_tmp(void);
+extern struct Buffer* load_option_panel(void);
+extern void sync_with_option(void);
+extern char* searchKeyData(void);

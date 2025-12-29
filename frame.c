@@ -1,4 +1,5 @@
 #include "frame.h"
+#include "html_form.h"
 #include "alloc.h"
 #include "indep.h"
 #include "w3m_rc.h"
@@ -605,6 +606,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
                                         pre_mode = 0;
                                         end_tag = 0;
                                         goto proc_normal;
+                                    default: break;
                                     }
                                 }
                             }

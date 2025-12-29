@@ -1,12 +1,10 @@
-/* $Id: regex.h,v 1.6 2003/09/22 21:02:21 ukai Exp $ */
+#include <libwc/wc_types.h>
 #define REGEX_MAX 64
 #define STORAGE_MAX 256
 
 typedef struct {
     char type;
-#ifdef USE_M17N
     wc_wchar_t wch;
-#endif
     unsigned char ch;
 } longchar;
 

@@ -13,10 +13,7 @@
 #include "file.h"
 #include "message.h"
 #include "linein.h"
-#include <libwc/conv.h>
-#include <libwc/ces.h>
-#include <math.h>
-#include <string.h>
+#include "proto.h"
 #include "history.h"
 #include "search.h"
 #include "html_form.h"
@@ -27,6 +24,12 @@
 #include "tab.h"
 #include "buffer.h"
 #include "image.h"
+
+#include <libwc/conv.h>
+#include <libwc/ces.h>
+#include <math.h>
+#include <string.h>
+
 #define MAINPROGRAM
 #include "fm.h"
 #include <locale.h>

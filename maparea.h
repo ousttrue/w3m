@@ -32,3 +32,9 @@ struct MapArea* newMapArea(const char* url,
 
 struct parsed_tagarg;
 void follow_map(struct parsed_tagarg* arg);
+struct Buffer;
+extern struct MapList* searchMapList(struct Buffer* buf, char* name);
+struct Anchor;
+extern struct MapArea* follow_map_menu(struct Buffer* buf, char* name, struct Anchor* a_img, int x,
+    int y);
+extern struct Buffer* follow_map_panel(struct Buffer* buf, char* name);

@@ -17,11 +17,27 @@
 #include "regex.h"
 #include "myctype.h"
 #include "w3m_rc.h"
+#include "proto.h" // backBf
 #include <string.h>
 #include <time.h>
 
-struct auth_cookie* Auth_cookie =(NULL);
-struct cookie* First_cookie =(NULL);
+struct auth_cookie* Auth_cookie = (NULL);
+struct cookie* First_cookie = (NULL);
+
+struct TextList* Cookie_reject_domains;
+struct TextList* Cookie_accept_domains;
+struct TextList* Cookie_avoid_wrong_number_of_dots_domains;
+
+void parse_cookie(void)
+{
+    if (non_null(g_runtime.cookie_reject_domains))
+        Cookie_reject_domains = make_domain_list(g_runtime.cookie_reject_domains);
+    if (non_null(g_runtime.cookie_accept_domains))
+        Cookie_accept_domains = make_domain_list(g_runtime.cookie_accept_domains);
+    if (non_null(g_runtime.cookie_avoid_wrong_number_of_dots))
+        Cookie_avoid_wrong_number_of_dots_domains
+            = make_domain_list(g_runtime.cookie_avoid_wrong_number_of_dots);
+}
 
 static int is_saved = 1;
 

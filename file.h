@@ -51,5 +51,6 @@ struct Buffer* loadBuffer(struct Url url, struct input_stream* stream,
     const char* type, struct Buffer* newBuf, bool internal);
 struct Buffer* loadImageBuffer(struct Url url, struct input_stream* stream,
     const char* type, struct Buffer* newBuf, bool internal);
-
-
+extern int getMetaRefreshParam(const char* q, Str* refresh_uri);
+extern int is_boundary(unsigned char*, unsigned char*);
+extern Str process_n_button(void);

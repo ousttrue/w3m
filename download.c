@@ -8,6 +8,7 @@
 #include "buffer.h"
 #include "image.h"
 #include "fm.h"
+#include "proto.h" // ldDL
 #include <signal.h>
 #include <string.h>
 #include <sys/stat.h>

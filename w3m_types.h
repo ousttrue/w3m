@@ -3,6 +3,23 @@
 #include "termcap_util.h"
 #include <libwc/ces.h>
 
+#define MAILTO_OPTIONS_IGNORE 1
+#define MAILTO_OPTIONS_USE_MAILTO_URL 2
+
+#define DISPLAY_INS_DEL_SIMPLE 0
+#define DISPLAY_INS_DEL_NORMAL 1
+#define DISPLAY_INS_DEL_FONTIFY 2
+
+#define DEFAULT_URL_EMPTY 0
+#define DEFAULT_URL_CURRENT 1
+#define DEFAULT_URL_LINK 2
+
+#define DNS_ORDER_UNSPEC 0
+#define DNS_ORDER_INET_INET6 1
+#define DNS_ORDER_INET6_INET 2
+#define DNS_ORDER_INET_ONLY 4
+#define DNS_ORDER_INET6_ONLY 6
+
 struct Runtime {
     int view_unseenobject;
     int is_redisplay;
@@ -169,6 +186,9 @@ struct Runtime {
     wc_ces DocumentCharset;
     wc_ces SystemCharset;
     wc_ces BookmarkCharset;
+    // FIXME: charset of source code
+    wc_ces OptionCharset;
+    int OptionEncode;
 
     char ExtHalfdump;
     int Tabstop;
@@ -205,6 +225,7 @@ struct Runtime {
     struct Event* CurrentEvent;
     struct Event* LastEvent;
 };
+extern struct Runtime g_runtime;
 
 //
 // params

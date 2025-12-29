@@ -1,6 +1,7 @@
 #pragma once
 #include "Str.h"
 #include <sys/types.h>
+#include <libwc/ces.h>
 
 Str base64_encode(const char* src, size_t len);
 char* lastFileName(const char* path);
@@ -23,3 +24,23 @@ Str tmpfname(enum TmpFileTypes type, const char* ext);
 char* file_to_url(const char* file);
 void setup_child(int child, int i, int f);
 int gethtmlcmd(const char** s);
+struct Url;
+int find_auth_user_passwd(struct Url* pu, char* realm,
+    Str* uname, Str* pwd, int is_proxy);
+void add_auth_user_passwd(struct Url* pu, char* realm,
+    Str uname, Str pwd, int is_proxy);
+void invalidate_auth_user_passwd(struct Url* pu, char* realm,
+    Str uname, Str pwd, int is_proxy);
+void myExec(const char* command);
+char* url_unquote_conv(const char* url, wc_ces charset);
+struct Buffer;
+char* last_modified(struct Buffer* buf);
+Str myEditor(const char* cmd, const char* file, int line);
+int is_localhost(const char* host);
+char* expandName(const char* name);
+FILE* openSecretFile(const char* fname);
+Str romanNumeral(int n);
+Str romanAlphabet(int n);
+void mySystem(const char* command, int background);
+Str myExtCommand(const char* cmd, const char* arg, int redirect);
+Str unescape_spaces(Str s);

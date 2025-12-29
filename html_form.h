@@ -91,3 +91,20 @@ struct HtmlBuilder;
 struct HtmlTag;
 struct FormItemList* formList_addInput(struct HtmlBuilder* hb, struct FormList* fl,
     struct HtmlTag* tag);
+extern struct FormList* newFormList(char* action, char* method, char* charset,
+    char* enctype, char* target, char* name,
+    struct FormList* _next);
+struct FormItemList;
+extern char* form2str(struct FormItemList* fi);
+struct Anchor;
+struct Buffer;
+extern void formRecheckRadio(struct Anchor* a, struct Buffer* buf, struct FormItemList* form);
+struct AnchorList;
+extern void formResetBuffer(struct Buffer* buf, struct AnchorList* formitem);
+extern void formUpdateBuffer(struct Anchor* a, struct Buffer* buf, struct FormItemList* form);
+extern void preFormUpdateBuffer(struct Buffer* buf);
+extern Str textfieldrep(Str s, int width);
+extern void do_internal(char* action, char* data);
+extern void form_write_data(FILE* f, char* boundary, char* name, char* value);
+extern void form_write_from_file(FILE* f, char* boundary, char* name,
+    char* filename, char* file);

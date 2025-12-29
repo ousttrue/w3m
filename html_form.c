@@ -661,7 +661,7 @@ int formChooseOptionByMenu(struct FormItemList* fi, int x, int y)
 {
     int i, n, selected = -1, init_select = fi->selected;
     struct FormSelectOptionItem* opt;
-    char** label;
+    const char** label;
 
     for (n = 0, opt = fi->select_option; opt != NULL; n++, opt = opt->next)
         ;
@@ -986,3 +986,4 @@ void preFormUpdateBuffer(struct Buffer* buf)
         }
     }
 }
+

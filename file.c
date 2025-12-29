@@ -3254,15 +3254,15 @@ process_idattr(struct readbuffer* obuf, int cmd, struct HtmlTag* tag)
         HTMLlineproc0(hb, "</b>", h_env, true); \
     }
 
-#define PUSH_ENV(cmd)                                                              \
-    if (++h_env->envc_real < h_env->nenv) {                                        \
-        ++h_env->envc;                                                             \
-        envs[h_env->envc].env = cmd;                                               \
-        envs[h_env->envc].count = 0;                                               \
-        if (h_env->envc <= MAX_INDENT_LEVEL)                                       \
+#define PUSH_ENV(cmd)                                                                           \
+    if (++h_env->envc_real < h_env->nenv) {                                                     \
+        ++h_env->envc;                                                                          \
+        envs[h_env->envc].env = cmd;                                                            \
+        envs[h_env->envc].count = 0;                                                            \
+        if (h_env->envc <= MAX_INDENT_LEVEL)                                                    \
             envs[h_env->envc].indent = envs[h_env->envc - 1].indent + getRuntime()->IndentIncr; \
-        else                                                                       \
-            envs[h_env->envc].indent = envs[h_env->envc - 1].indent;               \
+        else                                                                                    \
+            envs[h_env->envc].indent = envs[h_env->envc - 1].indent;                            \
     }
 
 #define PUSH_ENV_NOINDENT(cmd)                                   \
@@ -5029,8 +5029,9 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                 case HTML_N_SYMBOL:
                     effect &= ~PC_SYMBOL;
                     break;
+                default:
+                    break;
                 }
-#ifdef ID_EXT
                 id = NULL;
                 if (parsedtag_get_value(tag, ATTR_ID, &id)) {
                     id = url_quote_conv(id, name_charset);
@@ -5048,7 +5049,6 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                     idFrame->body->nameList = putAnchor(idFrame->body->nameList, id, NULL,
                         (struct Anchor**)NULL, NULL, NULL, '\0',
                         currentLn(buf), pos);
-#endif /* ID_EXT */
             }
         }
         /* end of processing for one line */

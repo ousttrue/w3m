@@ -95,7 +95,7 @@ registerImg(struct Buffer* buf,
 
 struct Anchor*
 registerForm(struct HtmlBuilder* hb, struct Buffer* buf,
-    struct FormList* flist, struct parsed_tag* tag, int line,
+    struct FormList* flist, struct HtmlTag* tag, int line,
     int pos)
 {
     struct FormItemList* fi = formList_addInput(hb, flist, tag);

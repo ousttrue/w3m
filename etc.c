@@ -411,7 +411,7 @@ parsePasswd(FILE* fp, int netrc)
 /* FIXME: gettextize? */
 #define FILE_IS_READABLE_MSG "SECURITY NOTE: file %s must not be accessible by others"
 
-FILE* openSecretFile(char* fname)
+FILE* openSecretFile(const char* fname)
 {
     char* efname;
     struct stat st;
@@ -689,14 +689,14 @@ err0:
     return (pid_t)-1;
 }
 
-void myExec(char* command)
+void myExec(const char* command)
 {
     mySignal(SIGINT, SIG_DFL);
     execl("/bin/sh", "sh", "-c", command, NULL);
     exit(127);
 }
 
-void mySystem(char* command, int background)
+void mySystem(const char* command, int background)
 {
 #ifndef __MINGW32_VERSION
     if (background) {
@@ -716,7 +716,7 @@ void mySystem(char* command, int background)
         system(command);
 }
 
-Str myExtCommand(char* cmd, char* arg, int redirect)
+Str myExtCommand(const char* cmd, const char* arg, int redirect)
 {
     Str tmp = NULL;
     char* p;
@@ -743,7 +743,7 @@ Str myExtCommand(char* cmd, char* arg, int redirect)
     return tmp;
 }
 
-Str myEditor(char* cmd, char* file, int line)
+Str myEditor(const char* cmd, const char* file, int line)
 {
     Str tmp = NULL;
     char* p;
@@ -783,7 +783,7 @@ char* expandName(char* name)
     return getenv("HOME");
 }
 #else
-char* expandName(char* name)
+char* expandName(const char* name)
 {
     char* p;
     struct passwd *passent, *getpwnam(const char*);
@@ -882,7 +882,7 @@ char* file_to_url(const char* file)
     return tmp->ptr;
 }
 
-char* url_unquote_conv(char* url, wc_ces charset)
+char* url_unquote_conv(const char* url, wc_ces charset)
 {
     wc_uint8 old_auto_detect = WcOption.auto_detect;
 

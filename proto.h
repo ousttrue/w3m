@@ -103,7 +103,6 @@ extern void vwSrc(void);
 extern void reload(void);
 extern void reshape(void);
 extern void chkURL(void);
-extern void chkURLBuffer(struct Buffer* buf);
 extern void chkWORD(void);
 #define chkNMID nulcmd
 extern void rFrame(void);
@@ -141,44 +140,16 @@ extern void cursorMiddle(void);
 extern void cursorBottom(void);
 
 extern int currentLn(struct Buffer* buf);
-extern void tmpClearBuffer(struct Buffer* buf);
 extern void initURIMethods(void);
 extern void chkExternalURIBuffer(struct Buffer* buf);
-extern struct Url* schemeToProxy(int scheme);
-extern wc_ces url_to_charset(const char* url, const struct Url* base,
-    wc_ces doc_charset);
-extern char* url_encode(const char* url, const struct Url* base,
-    wc_ces doc_charset);
 
 struct FormList;
-extern int is_boundary(unsigned char*, unsigned char*);
 extern int is_blank_line(char* line, int indent);
 
-extern Str process_n_button(void);
-extern int getMetaRefreshParam(const char* q, Str* refresh_uri);
 
 extern char* convert_size(int64_t size, int usefloat);
 extern char* convert_size2(int64_t size1, int64_t size2, int usefloat);
 
-extern void saveBuffer(struct Buffer* buf, FILE* f, int cont);
-extern void saveBufferBody(struct Buffer* buf, FILE* f, int cont);
-extern struct Buffer* getshell(char* cmd);
-
-extern struct Buffer* newBuffer(int width);
-extern struct Buffer* nullBuffer(void);
-extern void clearBuffer(struct Buffer* buf);
-extern void discardBuffer(struct Buffer* buf);
-extern struct Buffer* namedBuffer(struct Buffer* first, char* name);
-extern struct Buffer* deleteBuffer(struct Buffer* first, struct Buffer* delbuf);
-extern struct Buffer* replaceBuffer(struct Buffer* first, struct Buffer* delbuf, struct Buffer* newbuf);
-extern struct Buffer* nthBuffer(struct Buffer* firstbuf, int n);
-extern void gotoRealLine(struct Buffer* buf, int n);
-extern void gotoLine(struct Buffer* buf, int n);
-extern struct Buffer* selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf,
-    char* selectchar);
-extern void copyBuffer(struct Buffer* a, struct Buffer* b);
-extern struct Buffer* prevBuffer(struct Buffer* first, struct Buffer* buf);
-extern int writeBufferCache(struct Buffer* buf);
 
 extern void pcmap(void);
 extern void escmap(void);
@@ -186,30 +157,10 @@ extern void escbmap(void);
 extern void escdmap(char c);
 extern void multimap(void);
 
-extern Str unescape_spaces(Str s);
 struct Hist;
 extern struct Buffer* historyBuffer(struct Hist* hist);
 extern double log_like(int x);
 
-extern struct FormList* newFormList(char* action, char* method, char* charset,
-    char* enctype, char* target, char* name,
-    struct FormList* _next);
-struct FormItemList;
-extern char* form2str(struct FormItemList* fi);
-extern void formRecheckRadio(struct Anchor* a, struct Buffer* buf, struct FormItemList* form);
-struct AnchorList;
-extern void formResetBuffer(struct Buffer* buf, struct AnchorList* formitem);
-extern void formUpdateBuffer(struct Anchor* a, struct Buffer* buf, struct FormItemList* form);
-extern void preFormUpdateBuffer(struct Buffer* buf);
-extern Str textfieldrep(Str s, int width);
-extern void do_internal(char* action, char* data);
-extern void form_write_data(FILE* f, char* boundary, char* name, char* value);
-extern void form_write_from_file(FILE* f, char* boundary, char* name,
-    char* filename, char* file);
-extern struct MapList* searchMapList(struct Buffer* buf, char* name);
-extern struct MapArea* follow_map_menu(struct Buffer* buf, char* name, struct Anchor* a_img, int x,
-    int y);
-extern struct Buffer* follow_map_panel(struct Buffer* buf, char* name);
 
 extern struct Buffer* page_info_panel(struct Buffer* buf);
 extern MySignalHandler reset_exit(SIGNAL_ARG);
@@ -222,53 +173,13 @@ extern Str parsedURL2RefererStr(struct Url* pu);
 struct HttpRequest;
 extern char* acceptableMimeTypes(void);
 
-extern struct Anchor* registerName(struct Buffer* buf, char* url, int line, int pos);
-extern int onAnchor(struct Anchor* a, int line, int pos);
-extern char* reAnchor(struct Buffer* buf, char* re);
-extern void addMultirowsForm(struct Buffer* buf, struct AnchorList* al);
-extern struct Anchor* closest_next_anchor(struct AnchorList* a, struct Anchor* an, int x, int y);
-extern struct Anchor* closest_prev_anchor(struct AnchorList* a, struct Anchor* an, int x, int y);
-void addMultirowsImg(struct Buffer* buf, struct AnchorList* al);
-extern struct HmarkerList* putHmarker(struct HmarkerList* ml, int line, int pos, int seq);
-extern void shiftAnchorPosition(struct AnchorList* a, struct HmarkerList* hl, int line,
-    int pos, int shift);
-extern char* getAnchorText(struct Buffer* buf, struct AnchorList* al, struct Anchor* a);
-extern struct Buffer* link_list_panel(struct Buffer* buf);
 
-extern int set_param_option(char* option);
-extern char* get_param_option(char* name);
-extern void init_rc(void);
-extern void init_tmp(void);
-extern struct Buffer* load_option_panel(void);
-extern void sync_with_option(void);
-extern char* rcFile(char* base);
-extern char* etcFile(char* base);
-extern char* confFile(char* base);
-extern char* libFile(char* base);
-extern char* helpFile(char* base);
-extern FILE* openSecretFile(char* fname);
+
 extern void loadPasswd(void);
 extern void loadPreForm(void);
-extern int find_auth_user_passwd(struct Url* pu, char* realm,
-    Str* uname, Str* pwd, int is_proxy);
-extern void add_auth_user_passwd(struct Url* pu, char* realm,
-    Str uname, Str pwd, int is_proxy);
-extern void invalidate_auth_user_passwd(struct Url* pu, char* realm,
-    Str uname, Str pwd, int is_proxy);
-extern char* last_modified(struct Buffer* buf);
-extern Str romanNumeral(int n);
-extern Str romanAlphabet(int n);
-extern void myExec(char* command);
-extern void mySystem(char* command, int background);
-extern Str myExtCommand(char* cmd, char* arg, int redirect);
-extern Str myEditor(char* cmd, char* file, int line);
-extern int is_localhost(const char* host);
-extern char* url_unquote_conv(char* url, wc_ces charset);
-extern char* expandName(char* name);
 
 extern void docCSet(void);
 extern void defCSet(void);
-extern void change_charset(struct parsed_tagarg* arg);
 
 extern void _mark(void);
 extern void nextMk(void);
@@ -283,11 +194,9 @@ extern void reMark(void);
 #define tabMs nulcmd
 #define closeTMs nulcmd
 
-extern char* searchKeyData(void);
 
 extern void setKeymap(char* p, int lineno, int verbose);
 extern void initKeymap(int force);
-extern int getFuncList(char* id);
 extern int getKey(char* s);
 extern char* getKeyData(int key);
 

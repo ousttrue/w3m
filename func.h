@@ -19,3 +19,4 @@ struct regex;
 char* getWord(char** str);
 char* getRegexWord(const char** str, struct regex** regex_ret);
 char* getQWord(char** str);
+int getFuncList(const char* id);

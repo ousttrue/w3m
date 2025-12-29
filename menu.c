@@ -12,6 +12,7 @@
 #include "fm.h"
 #include "myctype.h"
 #include "regex.h"
+#include "proto.h"
 #include <libwc/ces.h>
 #include <libwc/charset.h>
 #include <string.h>

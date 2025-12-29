@@ -2,6 +2,10 @@
 #include "url.h"
 #include <time.h>
 
+#define ACCEPT_BAD_COOKIE_DISCARD 0
+#define ACCEPT_BAD_COOKIE_ACCEPT 1
+#define ACCEPT_BAD_COOKIE_ASK 2
+
 struct portlist {
     unsigned short port;
     struct portlist* next;
@@ -56,5 +60,4 @@ extern struct Buffer* cookie_list_panel(void);
 struct parsed_tagarg;
 extern void set_cookie_flag(struct parsed_tagarg* arg);
 extern int check_cookie_accept_domain(char* domain);
-
-
+void parse_cookie(void);

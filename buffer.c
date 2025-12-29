@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "html_form.h"
 #include "frame.h"
 #include "alloc.h"
 #include "line.h"

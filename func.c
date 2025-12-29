@@ -12,6 +12,7 @@
 #include <string.h>
 #include <sys/stat.h>
 
+#include "proto.h"
 #include "funcheader.h"
 
 #include "funcname.c"
@@ -191,7 +192,7 @@ void initKeymap(int force)
     keymap_initialized = TRUE;
 }
 
-int getFuncList(char* id)
+int getFuncList(const char* id)
 {
     return getHash_si(&functable, id, -1);
 }

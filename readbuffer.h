@@ -171,5 +171,5 @@ void do_blankline(struct html_feed_environ* h_env, struct readbuffer* obuf, int 
 void purgeline(struct html_feed_environ* h_env);
 void save_fonteffect(struct html_feed_environ* h_env, struct readbuffer* obuf);
 void restore_fonteffect(struct html_feed_environ* h_env, struct readbuffer* obuf);
-struct parsed_tag;
+struct HtmlTag;
 void init_henv(struct html_feed_environ*, struct readbuffer*, struct environment*, int, TextLineList*, int, int);

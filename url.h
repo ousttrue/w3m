@@ -2,6 +2,7 @@
 #include "Str.h"
 #include "urlscheme.h"
 #include <stdbool.h>
+#include <libwc/ces.h>
 
 #define NO_REFERER ((char*)-1)
 
@@ -33,3 +34,12 @@ char* guessContentType(const char* filename);
 const char* filename_extension(const char* patch, int is_url);
 void parse_proxy(void);
 extern Str searchURIMethods(struct Url* pu);
+extern void copyParsedURL(struct Url* p, const struct Url* q);
+extern Str parsedURL2RefererStr(struct Url* pu);
+extern struct Url* schemeToProxy(int scheme);
+extern wc_ces url_to_charset(const char* url, const struct Url* base,
+    wc_ces doc_charset);
+extern char* url_encode(const char* url, const struct Url* base,
+    wc_ces doc_charset);
+
+

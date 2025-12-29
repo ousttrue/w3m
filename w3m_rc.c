@@ -1,4 +1,5 @@
 #include "w3m_rc.h"
+#include "cookie.h"
 #include "history.h"
 #include "compression.h"
 #include "etc.h"
@@ -61,208 +62,7 @@ static struct termios d_ioval;
 // rc
 char UseGraphicChar = GRAPHIC_CHAR_CHARSET;
 
-struct Runtime g_runtime = {
-    .view_unseenobject = (FALSE),
-    .is_redisplay = (FALSE),
-    .clear_buffer = (TRUE),
-    .image_scale = (100),
-    .keymap_file = (KEYMAP_FILE),
-    .FollowRedirection = (10),
-    .w3m_backend = (FALSE),
-    .multicolList = (FALSE),
-    .FollowLocale = (TRUE),
-    .UseContentCharset = (TRUE),
-    .SearchConv = (TRUE),
-    .SimplePreserveSpace = (FALSE),
-    .UseAltEntity = (FALSE),
-    .DisplayBorders = (FALSE),
-    .DisableCenter = (FALSE),
-    .no_rc_dir = (FALSE),
-    .rc_dir = (NULL),
-    .param_tmp_dir = (NULL),
-    .mkd_tmp_dir = (NULL),
-    .config_file = (NULL),
-    .default_use_cookie = (TRUE),
-    .use_cookie = (TRUE),
-    .show_cookie = (FALSE),
-    .accept_cookie = (TRUE),
-    .accept_bad_cookie = (ACCEPT_BAD_COOKIE_DISCARD),
-    .cookie_reject_domains = (NULL),
-    .cookie_accept_domains = (NULL),
-    .cookie_avoid_wrong_number_of_dots = (NULL),
-    .w3m_dump = (0),
-    .w3m_halfload = (FALSE),
-    .header_string = (NULL),
-    .override_content_type = (FALSE),
-    .override_user_agent = (FALSE),
-    .confirm_on_quit = (TRUE),
-    .use_mark = (FALSE),
-    .vi_prec_num = (FALSE),
-    .label_topline = (FALSE),
-    .nextpage_topline = (FALSE),
-    .displayTitleTerm = (NULL),
-    .displayLinkNumber = (FALSE),
-    .retryAsHttp = (TRUE),
-    .show_srch_str = (TRUE),
-    .Imgdisplay = (IMGDISPLAY),
-    .autoImage = (TRUE),
-    .useExtImageViewer = (TRUE),
-    .maxLoadImage = (4),
-    .image_map_list = (TRUE),
-    .pseudoInlines = (TRUE),
-    .Editor = (DEF_EDITOR),
-    .Mailer = (DEF_MAILER),
-    .MailtoOptions = (MAILTO_OPTIONS_IGNORE),
-    .ExtBrowser = (DEF_EXT_BROWSER),
-    .ExtBrowser2 = (NULL),
-    .ExtBrowser3 = (NULL),
-    .ExtBrowser4 = (NULL),
-    .ExtBrowser5 = (NULL),
-    .ExtBrowser6 = (NULL),
-    .ExtBrowser7 = (NULL),
-    .ExtBrowser8 = (NULL),
-    .ExtBrowser9 = (NULL),
-    .BackgroundExtViewer = (TRUE),
-    .disable_secret_security_check = (FALSE),
-    .passwd_file = (PASSWD_FILE),
-    .pre_form_file = (PRE_FORM_FILE),
-    .ftppasswd = (NULL),
-    .ftppass_hostnamegen = (TRUE),
-    .UserAgent = (NULL),
-    .NoSendReferer = (FALSE),
-    .CrossOriginReferer = (TRUE),
-    .AcceptLang = (NULL),
-    .AcceptEncoding = (NULL),
-    .AcceptMedia = (NULL),
-    .WrapDefault = (FALSE),
-    .IgnoreCase = (TRUE),
-    .WrapSearch = (FALSE),
-    .squeezeBlankLine = (FALSE),
-    .BookmarkFile = (NULL),
-    .UseExternalDirBuffer = (TRUE),
-    .DirBufferCommand = ("file:///$LIB/dirlist" CGI_EXTENSION),
-    .UseDictCommand = (TRUE),
-    .DictCommand = ("file:///$LIB/w3mdict" CGI_EXTENSION),
-    .ignore_null_img_alt = (TRUE),
-    .displayInsDel = (DISPLAY_INS_DEL_NORMAL),
-    .FoldTextarea = (FALSE),
-    .DefaultURLString = (DEFAULT_URL_CURRENT),
-    .MarkAllPages = (FALSE),
-    .mailcap_files = (USER_MAILCAP ", " SYS_MAILCAP),
-    .mimetypes_files = (USER_MIMETYPES ", " SYS_MIMETYPES),
-    .urimethodmap_files = (USER_URIMETHODMAP ", " SYS_URIMETHODMAP),
-    .open_tab_blank = (FALSE),
-    .open_tab_dl_list = (FALSE),
-    .close_tab_back = (FALSE),
-    .TabCols = (10),
-    .DNS_order = (DNS_ORDER_UNSPEC),
-    .NoCache = (FALSE),
-    .use_proxy = (TRUE),
-    .document_root = (NULL),
-    .personal_document_root = (NULL),
-    .cgi_bin = (NULL),
-    .index_file = (NULL),
-    .HTTP_proxy = (NULL),
-    .HTTPS_proxy = (NULL),
-    .FTP_proxy = (NULL),
-    .NO_proxy = (NULL),
-    .NOproxy_netaddr = (TRUE),
-    .IndentIncr = (4),
-    .PagerMax = (PAGER_MAX_LINE),
-    .DefaultType = (NULL),
-    .RenderFrame = (FALSE),
-    .TargetSelf = (FALSE),
-    .PermitSaveToPipe = (FALSE),
-    .AutoUncompress = (FALSE),
-    .PreserveTimestamp = (TRUE),
-    .ArgvIsURL = (TRUE),
-    .MetaRefresh = (FALSE),
-    .LocalhostOnly = (FALSE),
-    .HostName = (NULL),
-    .TrapSignal = (TRUE),
 
-    .ssl_verify_server = TRUE,
-    .ssl_cert_file = NULL,
-    .ssl_key_file = NULL,
-    .ssl_ca_path = NULL,
-    .ssl_ca_file = DEF_CAFILE,
-    .ssl_ca_default = TRUE,
-    .ssl_path_modified = FALSE,
-    .ssl_forbid_method = "2, 3, t, 5",
-    .ssl_min_version = NULL,
-    .ssl_cipher = NULL,
-
-    .image_source = (NULL),
-    .DecodeURL = (FALSE),
-    .QuietMessage = (FALSE),
-    .ShowEffect = (TRUE),
-    .displayLink = (FALSE),
-    .useColor = (TRUE),
-    .displayImage = (TRUE),
-    .displayLineInfo = (FALSE),
-    .activeImage = (FALSE),
-    .pixel_per_char = (DEFAULT_PIXEL_PER_CHAR),
-    .pixel_per_char_i = (DEFAULT_PIXEL_PER_CHAR),
-    .set_pixel_per_char = (FALSE),
-    .pixel_per_line = (DEFAULT_PIXEL_PER_LINE),
-    .pixel_per_line_i = (DEFAULT_PIXEL_PER_LINE),
-    .set_pixel_per_line = (FALSE),
-    .basic_color = (8), /* don't change */
-    .anchor_color = (4), /* blue  */
-    .image_color = (2), /* green */
-    .form_color = (1), /* red   */
-    .bg_color = (8), /* don't change */
-    .mark_color = (6), /* cyan */
-    .useActiveColor = (FALSE),
-    .active_color = (6), /* cyan */
-    .useVisitedColor = (FALSE),
-    .visited_color = (5), /* magenta  */
-
-    .space_autocomplete = (FALSE),
-    .emacs_like_lineedit = (FALSE),
-
-    // Don't change
-    .InnerCharset = (WC_CES_WTF),
-
-    .DisplayCharset = (DISPLAY_CHARSET),
-    .DocumentCharset = (DOCUMENT_CHARSET),
-    .SystemCharset = (SYSTEM_CHARSET),
-    .BookmarkCharset = (SYSTEM_CHARSET),
-
-    .ExtHalfdump = (FALSE),
-    .Tabstop = 8,
-    .highIntensityColors = (FALSE),
-
-    .UseHistory = (TRUE),
-    .URLHistSize = (100),
-    .SaveURLHist = (TRUE),
-    .LoadHist = 0,
-    .SaveHist = 0,
-    .URLHist = 0,
-    .ShellHist = 0,
-    .TextHist = 0,
-
-    .lines = 0,
-    .cols = 0,
-    .Do_not_use_ti_te = false,
-
-    .showLineNum = (FALSE),
-    .FoldLine = (FALSE),
-
-    .CurrentTab = 0,
-    .FirstTab = 0,
-    .LastTab = 0,
-    .nTab = 0,
-
-    .CurrentKey = -1,
-    .CurrentKeyData = 0,
-    .CurrentCmdData = 0,
-    .prec_num = 0,
-    .prev_key = -1,
-
-    .CurrentEvent = 0,
-    .LastEvent = 0,
-};
 struct Runtime* getRuntime()
 {
     return &g_runtime;
@@ -1413,12 +1213,6 @@ struct rc_search_table {
 static struct rc_search_table* RC_search_table;
 static int RC_table_size;
 
-/* FIXME: gettextize here */
-#ifdef USE_M17N
-static wc_ces OptionCharset = WC_CES_US_ASCII; /* FIXME: charset of source code */
-static int OptionEncode = FALSE;
-#endif
-
 #define CMT_HELPER N_("External Viewer Setup")
 #define CMT_TABSTOP N_("Tab width in characters")
 #define CMT_INDENT_INCR N_("Indent for HTML rendering")
@@ -2061,7 +1855,7 @@ create_option_search_table()
 {
     int i, j, k;
     int diff1, diff2;
-    char *p, *q;
+    const char *p, *q;
 
     /* count table size */
     RC_table_size = 0;
@@ -2142,14 +1936,14 @@ void show_params(FILE* fp)
 {
     int i, j, l;
     const char* t = "";
-    char* cmt;
+    const char* cmt;
 
-    OptionCharset = g_runtime.SystemCharset; /* FIXME */
+    g_runtime.OptionCharset = g_runtime.SystemCharset; /* FIXME */
 
     fputs("\nconfiguration parameters\n", fp);
     for (j = 0; sections[j].name != NULL; j++) {
-        if (!OptionEncode)
-            cmt = wc_conv(_(sections[j].name), OptionCharset,
+        if (!g_runtime.OptionEncode)
+            cmt = wc_conv(_(sections[j].name), g_runtime.OptionCharset,
                 g_runtime.InnerCharset)
                       ->ptr;
         else
@@ -2191,9 +1985,9 @@ void show_params(FILE* fp)
                 break;
             }
 
-            if (!OptionEncode)
+            if (!g_runtime.OptionEncode)
                 cmt = wc_conv(_(sections[j].params[i].comment),
-                    OptionCharset, g_runtime.InnerCharset)
+                    g_runtime.OptionCharset, g_runtime.InnerCharset)
                           ->ptr;
             else
 
@@ -2322,7 +2116,7 @@ set_param(char* name, char* value)
     return 1;
 }
 
-int set_param_option(char* option)
+int set_param_option(const char* option)
 {
     Str tmp = Strnew();
     char *p = option, *q;
@@ -2355,7 +2149,7 @@ option_assigned:
     return 1;
 }
 
-char* get_param_option(char* name)
+char* get_param_option(const char* name)
 {
     struct param_ptr* p;
 
@@ -2389,18 +2183,6 @@ interpret_rc(FILE* f)
         Strlower(tmp);
         set_param(tmp->ptr, p);
     }
-}
-
-static void
-parse_cookie(void)
-{
-    if (non_null(g_runtime.cookie_reject_domains))
-        Cookie_reject_domains = make_domain_list(g_runtime.cookie_reject_domains);
-    if (non_null(g_runtime.cookie_accept_domains))
-        Cookie_accept_domains = make_domain_list(g_runtime.cookie_accept_domains);
-    if (non_null(g_runtime.cookie_avoid_wrong_number_of_dots))
-        Cookie_avoid_wrong_number_of_dots_domains
-            = make_domain_list(g_runtime.cookie_avoid_wrong_number_of_dots);
 }
 
 #ifdef __MINGW32_VERSION
@@ -2662,21 +2444,21 @@ load_option_panel(void)
         optionpanel_str = Sprintf(optionpanel_src1, w3m_version,
             html_quote(localCookie()->ptr), _(CMT_HELPER));
 
-    OptionCharset = g_runtime.SystemCharset; /* FIXME */
-    if (!OptionEncode) {
-        optionpanel_str = wc_Str_conv(optionpanel_str, OptionCharset, g_runtime.InnerCharset);
+    g_runtime.OptionCharset = g_runtime.SystemCharset; /* FIXME */
+    if (!g_runtime.OptionEncode) {
+        optionpanel_str = wc_Str_conv(optionpanel_str, g_runtime.OptionCharset, g_runtime.InnerCharset);
         for (i = 0; sections[i].name != NULL; i++) {
-            sections[i].name = wc_conv(_(sections[i].name), OptionCharset,
+            sections[i].name = wc_conv(_(sections[i].name), g_runtime.OptionCharset,
                 g_runtime.InnerCharset)
                                    ->ptr;
             for (p = sections[i].params; p->name; p++) {
-                p->comment = wc_conv(_(p->comment), OptionCharset,
+                p->comment = wc_conv(_(p->comment), g_runtime.OptionCharset,
                     g_runtime.InnerCharset)
                                  ->ptr;
                 if (p->inputtype == PI_SEL_C
                     && p->select != colorstr) {
                     for (s = (struct sel_c*)p->select; s->text != NULL; s++) {
-                        s->text = wc_conv(_(s->text), OptionCharset,
+                        s->text = wc_conv(_(s->text), g_runtime.OptionCharset,
                             g_runtime.InnerCharset)
                                       ->ptr;
                     }
@@ -2685,11 +2467,11 @@ load_option_panel(void)
         }
 
         for (s = colorstr; s->text; s++)
-            s->text = wc_conv(_(s->text), OptionCharset,
+            s->text = wc_conv(_(s->text), g_runtime.OptionCharset,
                 g_runtime.InnerCharset)
                           ->ptr;
 
-        OptionEncode = TRUE;
+        g_runtime.OptionEncode = TRUE;
     }
 
     src = Strdup(optionpanel_str);
@@ -2756,7 +2538,7 @@ load_option_panel(void)
     Strcat_charp(src, "</table></form></body></html>");
     buf = loadHTMLString(src);
     if (buf)
-        buf->document_charset = OptionCharset;
+        buf->document_charset = g_runtime.OptionCharset;
     return buf;
 }
 
@@ -2794,7 +2576,7 @@ void panel_set_option(struct parsed_tagarg* arg)
     backBf();
 }
 
-char* rcFile(char* base)
+char* rcFile(const char* base)
 {
     if (base && (base[0] == '/' || (base[0] == '.' && (base[1] == '/' || (base[1] == '.' && base[2] == '/'))) || (base[0] == '~' && base[1] == '/')))
         /* /file, ./file, ../file, ~/file */
@@ -2810,12 +2592,12 @@ libFile(char *base)
 }
 #endif
 
-char* etcFile(char* base)
+char* etcFile(const char* base)
 {
     return expandPath(Strnew_m_charp(w3m_etc_dir(), "/", base, NULL)->ptr);
 }
 
-char* confFile(char* base)
+char* confFile(const char* base)
 {
     return expandPath(Strnew_m_charp(w3m_conf_dir(), "/", base, NULL)->ptr);
 }
