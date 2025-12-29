@@ -579,8 +579,8 @@ void reshapeBuffer(struct Buffer* buf)
     }
     if (buf->check_url & CHK_URL)
         chkURLBuffer(buf);
-    if (buf->check_url & CHK_NMID)
-        chkNMIDBuffer(buf);
+    // if (buf->check_url & CHK_NMID)
+    //     chkNMIDBuffer(buf);
     formResetBuffer(buf, sbuf.formitem);
 }
 

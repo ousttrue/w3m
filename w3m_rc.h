@@ -349,3 +349,21 @@ uint8_t blockChild(const char* cmd);
 struct Vec2 screen_position();
 
 void showProgress(int64_t* linelen, int64_t* trbyte, size_t current_content_length);
+#define AL_UNSET 0
+#define AL_EXPLICIT 1
+#define AL_IMPLICIT 2
+#define AL_IMPLICIT_ONCE 3
+
+typedef struct _AlarmEvent {
+    int sec;
+    short status;
+    int cmd;
+    void* data;
+} AlarmEvent;
+
+
+AlarmEvent* setAlarmEvent(AlarmEvent* event, int sec, short status,
+    int cmd, void* data);
+
+struct parsed_tagarg;
+extern void panel_set_option(struct parsed_tagarg*);

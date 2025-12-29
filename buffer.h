@@ -158,4 +158,4 @@ extern struct Anchor* retrieveCurrentImg(struct Buffer* buf);
 extern struct Anchor* retrieveCurrentForm(struct Buffer* buf);
 extern struct Anchor* retrieveCurrentMap(struct Buffer* buf);
 extern void reshapeBuffer(struct Buffer* buf);
-
+void reAnchorWord(struct Buffer* buf, struct Line* l, int spos, int epos);

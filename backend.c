@@ -1,4 +1,5 @@
 #include "w3m_rc.h"
+#include "cookie.h"
 #include "indep.h"
 #include "file.h"
 #include "html_form.h"
@@ -218,9 +219,7 @@ show(struct TextList* argv)
 static void
 quit(struct TextList* argv)
 {
-#ifdef USE_COOKIE
     save_cookies();
-#endif /* USE_COOKIE */
     w3m_exit(0);
 }
 

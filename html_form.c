@@ -1,6 +1,7 @@
 #include "html_form.h"
 #include "html_builder.h"
 #include "indep.h"
+#include "cookie.h"
 #include "alloc.h"
 #include "etc.h"
 #include "symbol.h"
@@ -17,6 +18,7 @@
 #include "local_cgi.h"
 #include "regex.h"
 #include "menu.h"
+#include "maparea.h"
 #include <libwc/charset.h>
 #include <libwc/conv.h>
 #include <string.h>
@@ -30,13 +32,9 @@ struct {
 } internal_action[] = {
     { "map", follow_map },
     { "option", panel_set_option },
-#ifdef USE_COOKIE
     { "cookie", set_cookie_flag },
-#endif /* USE_COOKIE */
     { "download", download_action },
-#ifdef USE_M17N
     { "charset", change_charset },
-#endif
     { "none", NULL },
     { NULL, NULL },
 };

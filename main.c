@@ -1,4 +1,5 @@
 #include "maparea.h"
+#include "cookie.h"
 #include "indep.h"
 #include "alloc.h"
 #include "ssl_stream.h"
@@ -3806,30 +3807,16 @@ void chkURLBuffer(struct Buffer* buf)
     static char* url_like_pat[] = {
         "https?://[a-zA-Z0-9][a-zA-Z0-9:%\\-\\./?=~_\\&+@#,\\$;]*[a-zA-Z0-9_/=\\-]",
         "file:/[a-zA-Z0-9:%\\-\\./=_\\+@#,\\$;]*",
-#ifdef USE_GOPHER
-        "gopher://[a-zA-Z0-9][a-zA-Z0-9:%\\-\\./_]*",
-#endif /* USE_GOPHER */
         "ftp://[a-zA-Z0-9][a-zA-Z0-9:%\\-\\./=_+@#,\\$]*[a-zA-Z0-9_/]",
-#ifdef USE_NNTP
-        "news:[^<> 	][^<> 	]*",
-        "nntp://[a-zA-Z0-9][a-zA-Z0-9:%\\-\\./_]*",
-#endif /* USE_NNTP */
-#ifndef USE_W3MMAILER /* see also chkExternalURIBuffer() */
-        "mailto:[^<> 	][^<> 	]*@[a-zA-Z0-9][a-zA-Z0-9\\-\\._]*[a-zA-Z0-9]",
-#endif
-#ifdef INET6
         "https?://[a-zA-Z0-9:%\\-\\./_@]*\\[[a-fA-F0-9:][a-fA-F0-9:\\.]*\\][a-zA-Z0-9:%\\-\\./?=~_\\&+@#,\\$;]*",
         "ftp://[a-zA-Z0-9:%\\-\\./_@]*\\[[a-fA-F0-9:][a-fA-F0-9:\\.]*\\][a-zA-Z0-9:%\\-\\./=_+@#,\\$]*",
-#endif /* INET6 */
         NULL
     };
     int i;
     for (i = 0; url_like_pat[i]; i++) {
         reAnchor(buf, url_like_pat[i]);
     }
-#ifdef USE_EXTERNAL_URI_LOADER
     chkExternalURIBuffer(buf);
-#endif
     buf->check_url |= CHK_URL;
 }
 
@@ -3847,27 +3834,6 @@ DEFUN(chkWORD, MARK_WORD, "Turn current word into hyperlink")
         return;
     reAnchorWord(Currentbuf, Currentbuf->doc.currentLine, spos, epos);
 }
-
-#ifdef USE_NNTP
-/* mark Message-ID-like patterns as NEWS anchors */
-void chkNMIDBuffer(struct Buffer* buf)
-{
-    static char* url_like_pat[] = {
-        "<[!-;=?-~]+@[a-zA-Z0-9\\.\\-_]+>",
-        NULL,
-    };
-    int i;
-    for (i = 0; url_like_pat[i]; i++) {
-        reAnchorNews(buf, url_like_pat[i]);
-    }
-    buf->check_url |= CHK_NMID;
-}
-
-DEFUN(chkNMID, MARK_MID, "Turn Message-ID-like strings into hyperlinks")
-{
-    chkNMIDBuffer(Currentbuf);
-}
-#endif /* USE_NNTP */
 
 /* render frames */
 DEFUN(rFrame, FRAME, "Toggle rendering HTML frames")

@@ -1,4 +1,5 @@
 #include "w3m_rc.h"
+#include "history.h"
 #include "compression.h"
 #include "etc.h"
 #include "mailcap.h"

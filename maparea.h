@@ -23,3 +23,6 @@ struct MapList {
 struct MapArea* newMapArea(const char* url,
     const char* target, const char* alt,
     const char* shape, const char* coords);
+
+struct parsed_tagarg;
+void follow_map(struct parsed_tagarg* arg);

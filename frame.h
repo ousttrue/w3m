@@ -63,3 +63,16 @@ struct Buffer;
 extern void resetFrameElement(union frameset_element* f_element, struct Buffer* buf,
     const char* referer, struct FormList* request);
 
+struct parsed_tag;
+extern struct frame_body* newFrame(struct parsed_tag* tag, struct Buffer* buf);
+extern struct frameset* newFrameSet(struct parsed_tag* tag);
+extern void addFrameSetElement(struct frameset* f,
+    union frameset_element element);
+extern void deleteFrame(struct frame_body* b);
+extern void deleteFrameSet(struct frameset* f);
+extern void deleteFrameSetElement(union frameset_element e);
+extern struct frameset* copyFrameSet(struct frameset* of);
+extern void pushFrameTree(struct frameset_queue** fqpp, struct frameset* fs,
+    struct Buffer* buf);
+extern struct frameset* popFrameTree(struct frameset_queue** fqpp);
+extern struct Buffer* renderFrame(struct Buffer* Cbuf, int force_reload);

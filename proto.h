@@ -6,6 +6,7 @@
  *   Created: Wed Feb 10 12:47:03 1999
  */
 #include <stdbool.h>
+#include <libwc/ces.h>
 
 struct Buffer;
 extern int main(int argc, char** argv);
@@ -104,31 +105,15 @@ extern void reshape(void);
 extern void chkURL(void);
 extern void chkURLBuffer(struct Buffer* buf);
 extern void chkWORD(void);
-#ifdef USE_NNTP
-extern void chkNMID(void);
-extern void chkNMIDBuffer(struct Buffer* buf);
-#else
 #define chkNMID nulcmd
-#endif
 extern void rFrame(void);
 extern void extbrz(void);
 extern void linkbrz(void);
 extern void curlno(void);
 extern void execCmd(void);
-#ifdef USE_IMAGE
 extern void dispI(void);
 extern void stopI(void);
-#else
-#define dispI nulcmd
-#define stopI nulcmd
-#endif
-#ifdef USE_ALARM
 extern void setAlarm(void);
-extern AlarmEvent* setAlarmEvent(AlarmEvent* event, int sec, short status,
-    int cmd, void* data);
-#else
-#define setAlarm nulcmd
-#endif
 extern void reinit(void);
 extern void defKey(void);
 extern void newT(void);
@@ -142,7 +127,6 @@ extern void tabR(void);
 extern void tabL(void);
 extern void ldDL(void);
 extern void linkLst(void);
-#ifdef USE_MENU
 extern void linkMn(void);
 extern struct LinkList* link_menu(struct Buffer* buf);
 extern void accessKey(void);
@@ -150,12 +134,6 @@ extern struct Anchor* accesskey_menu(struct Buffer* buf);
 extern void listMn(void);
 extern void movlistMn(void);
 extern struct Anchor* list_menu(struct Buffer* buf);
-#else
-#define linkMn nulcmd
-#define accessKey nulcmd
-#define listMn nulcmd
-#define movlistMn nulcmd
-#endif
 extern void undoPos(void);
 extern void redoPos(void);
 extern void cursorTop(void);
@@ -164,11 +142,8 @@ extern void cursorBottom(void);
 
 extern int currentLn(struct Buffer* buf);
 extern void tmpClearBuffer(struct Buffer* buf);
-#ifdef USE_EXTERNAL_URI_LOADER
 extern void initURIMethods(void);
-extern Str searchURIMethods(struct Url* pu);
 extern void chkExternalURIBuffer(struct Buffer* buf);
-#endif
 extern struct Url* schemeToProxy(int scheme);
 extern wc_ces url_to_charset(const char* url, const struct Url* base,
     wc_ces doc_charset);
@@ -205,10 +180,6 @@ extern void copyBuffer(struct Buffer* a, struct Buffer* b);
 extern struct Buffer* prevBuffer(struct Buffer* first, struct Buffer* buf);
 extern int writeBufferCache(struct Buffer* buf);
 
-#ifdef USE_MIGEMO
-extern void init_migemo(void);
-#endif
-
 extern void pcmap(void);
 extern void escmap(void);
 extern void escbmap(void);
@@ -216,12 +187,9 @@ extern void escdmap(char c);
 extern void multimap(void);
 
 extern Str unescape_spaces(Str s);
+struct Hist;
 extern struct Buffer* historyBuffer(struct Hist* hist);
 extern double log_like(int x);
-extern struct table* newTable(void);
-extern void align(TextLine* lbuf, int width, int mode);
-extern void print_item(struct table* t, int row, int col, int width, Str buf);
-extern void print_sep(struct table* t, int row, int type, int maxcol, Str buf);
 
 extern struct FormList* newFormList(char* action, char* method, char* charset,
     char* enctype, char* target, char* name,
@@ -239,28 +207,11 @@ extern void form_write_data(FILE* f, char* boundary, char* name, char* value);
 extern void form_write_from_file(FILE* f, char* boundary, char* name,
     char* filename, char* file);
 extern struct MapList* searchMapList(struct Buffer* buf, char* name);
-extern void follow_map(struct parsed_tagarg* arg);
-#if defined(MENU_MAP) || defined(USE_IMAGE)
 extern struct MapArea* follow_map_menu(struct Buffer* buf, char* name, struct Anchor* a_img, int x,
     int y);
-#endif
-#ifndef MENU_MAP
 extern struct Buffer* follow_map_panel(struct Buffer* buf, char* name);
-#endif
 
 extern struct Buffer* page_info_panel(struct Buffer* buf);
-extern struct frame_body* newFrame(struct parsed_tag* tag, struct Buffer* buf);
-extern struct frameset* newFrameSet(struct parsed_tag* tag);
-extern void addFrameSetElement(struct frameset* f,
-    union frameset_element element);
-extern void deleteFrame(struct frame_body* b);
-extern void deleteFrameSet(struct frameset* f);
-extern void deleteFrameSetElement(union frameset_element e);
-extern struct frameset* copyFrameSet(struct frameset* of);
-extern void pushFrameTree(struct frameset_queue** fqpp, struct frameset* fs,
-    struct Buffer* buf);
-extern struct frameset* popFrameTree(struct frameset_queue** fqpp);
-extern struct Buffer* renderFrame(struct Buffer* Cbuf, int force_reload);
 extern MySignalHandler reset_exit(SIGNAL_ARG);
 extern MySignalHandler error_dump(SIGNAL_ARG);
 extern void set_int(void);
@@ -275,12 +226,7 @@ extern int check_no_proxy(char* domain);
 
 extern struct Anchor* registerName(struct Buffer* buf, char* url, int line, int pos);
 extern int onAnchor(struct Anchor* a, int line, int pos);
-extern void reAnchorWord(struct Buffer* buf, struct Line* l, int spos, int epos);
 extern char* reAnchor(struct Buffer* buf, char* re);
-#ifdef USE_NNTP
-extern char* reAnchorNews(struct Buffer* buf, char* re);
-extern char* reAnchorNewsheader(struct Buffer* buf);
-#endif /* USE_NNTP */
 extern void addMultirowsForm(struct Buffer* buf, struct AnchorList* al);
 extern struct Anchor* closest_next_anchor(struct AnchorList* a, struct Anchor* an, int x, int y);
 extern struct Anchor* closest_prev_anchor(struct AnchorList* a, struct Anchor* an, int x, int y);
@@ -296,7 +242,6 @@ extern char* get_param_option(char* name);
 extern void init_rc(void);
 extern void init_tmp(void);
 extern struct Buffer* load_option_panel(void);
-extern void panel_set_option(struct parsed_tagarg*);
 extern void sync_with_option(void);
 extern char* rcFile(char* base);
 extern char* etcFile(char* base);
@@ -320,67 +265,18 @@ extern void mySystem(char* command, int background);
 extern Str myExtCommand(char* cmd, char* arg, int redirect);
 extern Str myEditor(char* cmd, char* file, int line);
 extern int is_localhost(const char* host);
-#ifdef USE_M17N
 extern char* url_unquote_conv(char* url, wc_ces charset);
-#else
-extern char* url_unquote_conv0(char* url);
-#define url_unquote_conv(url, charset) url_unquote_conv0(url)
-#endif
 extern char* expandName(char* name);
-#ifdef USE_COOKIE
-extern char* FQDN(char* host);
-extern Str find_cookie(struct Url* pu);
-extern int add_cookie(struct Url* pu, Str name, Str value, time_t expires,
-    Str domain, Str path, int flag, Str comment, int version,
-    Str port, Str commentURL);
-extern void save_cookies(void);
-extern void load_cookies(void);
-extern void initCookie(void);
-extern void cooLst(void);
-extern struct Buffer* cookie_list_panel(void);
-extern void set_cookie_flag(struct parsed_tagarg* arg);
-extern int check_cookie_accept_domain(char* domain);
-#else /* not USE_COOKIE */
-#define cooLst nulcmd
-#endif /* not USE_COOKIE */
-#ifdef USE_M17N
+
 extern void docCSet(void);
 extern void defCSet(void);
 extern void change_charset(struct parsed_tagarg* arg);
-#else
-#define docCSet nulcmd
-#define defCSet nulcmd
-#endif
 
-#ifdef USE_MARK
 extern void _mark(void);
 extern void nextMk(void);
 extern void prevMk(void);
 extern void reMark(void);
-#else /* not USE_MARK */
-#define _mark nulcmd
-#define nextMk nulcmd
-#define prevMk nulcmd
-#define reMark nulcmd
-#endif /* not USE_MARK */
 
-#ifdef USE_MOUSE
-extern void mouse(void);
-extern void sgrmouse(void);
-extern void mouse_init(void);
-extern void mouse_end(void);
-extern void mouse_active(void);
-extern void mouse_inactive(void);
-extern void msToggle(void);
-extern void movMs(void);
-#ifdef USE_MENU
-extern void menuMs(void);
-#else
-#define menuMs nulcmd
-#endif
-extern void tabMs(void);
-extern void closeTMs(void);
-#else /* not USE_MOUSE */
 #define mouse nulcmd
 #define sgrmouse nulcmd
 #define msToggle nulcmd
@@ -388,7 +284,6 @@ extern void closeTMs(void);
 #define menuMs nulcmd
 #define tabMs nulcmd
 #define closeTMs nulcmd
-#endif /* not USE_MOUSE */
 
 extern char* searchKeyData(void);
 
@@ -397,26 +292,10 @@ extern void initKeymap(int force);
 extern int getFuncList(char* id);
 extern int getKey(char* s);
 extern char* getKeyData(int key);
-#ifdef USE_MOUSE
-extern void initMouseAction(void);
-#endif
 
-#ifdef USE_DICT
 extern void dictword(void);
 extern void dictwordat(void);
-#else /* not USE_DICT */
-#define dictword nulcmd
-#define dictwordat nulcmd
-#endif /* not USE_DICT */
 
 extern void wrapToggle(void);
-#ifdef USE_BUFINFO
-extern void saveBufferInfo(void);
-#endif
 
 extern void dispVer(void);
-
-#ifdef USE_INCLUDED_SRAND48
-void srand48(long);
-long lrand48(void);
-#endif

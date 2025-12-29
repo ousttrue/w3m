@@ -159,3 +159,9 @@ extern void pushTable(struct table*, struct table*);
 extern void do_refill(struct HtmlBuilder *hb, struct table* tbl, int row, int col, int maxlimit);
 extern void pushdata(struct table* t, int row, int col, const char* data);
 extern int visible_length(const char* str);
+extern struct table* newTable(void);
+extern void align(TextLine* lbuf, int width, int mode);
+extern void print_item(struct table* t, int row, int col, int width, Str buf);
+extern void print_sep(struct table* t, int row, int type, int maxcol, Str buf);
+
+

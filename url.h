@@ -30,3 +30,4 @@ int openSocket(char* hostname, const char* remoteport_name, unsigned short remot
 char* guessContentType(const char* filename);
 const char* filename_extension(const char* patch, int is_url);
 void parse_proxy(void);
+extern Str searchURIMethods(struct Url* pu);
