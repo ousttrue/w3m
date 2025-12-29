@@ -86,7 +86,7 @@ newFormList(char* action, char* method, char* charset, char* enctype,
  * add <input> element to FormList
  */
 struct FormItemList*
-formList_addInput(struct HtmlBuilder* hb, struct FormList* fl, struct parsed_tag* tag)
+formList_addInput(struct HtmlBuilder* hb, struct FormList* fl, struct HtmlTag* tag)
 {
     struct FormItemList* item;
     char* p;

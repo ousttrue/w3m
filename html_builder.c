@@ -2,7 +2,7 @@
 #include "indep.h"
 #include "line.h"
 
-Str process_title(struct HtmlBuilder *hb, struct parsed_tag* tag)
+Str process_title(struct HtmlBuilder *hb, struct HtmlTag* tag)
 {
     if (hb->pre_title)
         return NULL;
@@ -27,7 +27,7 @@ void feed_title(struct HtmlBuilder *hb, const char* str)
     }
 }
 
-Str process_n_title(struct HtmlBuilder *hb, struct parsed_tag* tag)
+Str process_n_title(struct HtmlBuilder *hb, struct HtmlTag* tag)
 {
     if (hb->pre_title)
         return NULL;

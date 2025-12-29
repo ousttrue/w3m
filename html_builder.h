@@ -57,19 +57,19 @@ struct HtmlBuilder {
 };
 
 struct html_feed_environ;
-struct parsed_tag;
+struct HtmlTag;
 struct readbuffer;
 struct _textlinelist;
 struct Buffer;
 
 int HTMLtagproc1(struct HtmlBuilder* hb,
-    struct parsed_tag* tag, struct html_feed_environ* h_env);
+    struct HtmlTag* tag, struct html_feed_environ* h_env);
 void HTMLlineproc2(struct HtmlBuilder* hb, struct Buffer* buf, struct _textlinelist* tl);
 void HTMLlineproc0(struct HtmlBuilder* hb,
     const char* istr, struct html_feed_environ* h_env, bool internal);
 void completeHTMLstream(struct HtmlBuilder* hb,
     struct html_feed_environ*, struct readbuffer*);
 
-Str process_title(struct HtmlBuilder* hb, struct parsed_tag* tag);
-Str process_n_title(struct HtmlBuilder* hb, struct parsed_tag* tag);
+Str process_title(struct HtmlBuilder* hb, struct HtmlTag* tag);
+Str process_n_title(struct HtmlBuilder* hb, struct HtmlTag* tag);
 void feed_title(struct HtmlBuilder* hb, const char* str);

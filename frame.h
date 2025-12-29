@@ -63,9 +63,9 @@ struct Buffer;
 extern void resetFrameElement(union frameset_element* f_element, struct Buffer* buf,
     const char* referer, struct FormList* request);
 
-struct parsed_tag;
-extern struct frame_body* newFrame(struct parsed_tag* tag, struct Buffer* buf);
-extern struct frameset* newFrameSet(struct parsed_tag* tag);
+struct HtmlTag;
+extern struct frame_body* newFrame(struct HtmlTag* tag, struct Buffer* buf);
+extern struct frameset* newFrameSet(struct HtmlTag* tag);
 extern void addFrameSetElement(struct frameset* f,
     union frameset_element element);
 extern void deleteFrame(struct frame_body* b);

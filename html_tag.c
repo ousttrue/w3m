@@ -108,10 +108,10 @@ toVAlign(char* oval, void* valign)
 extern Hash_si tagtable;
 #define MAX_TAG_LEN 64
 
-struct parsed_tag*
+struct HtmlTag*
 parse_tag(const char** s, int internal)
 {
-    struct parsed_tag* tag = NULL;
+    struct HtmlTag* tag = NULL;
     int tag_id;
     char tagname[MAX_TAG_LEN], attrname[MAX_TAG_LEN];
     char *p, *q;
@@ -138,8 +138,8 @@ parse_tag(const char** s, int internal)
     if (tag_id == HTML_UNKNOWN || (!internal && TagMAP[tag_id].flag & TFLG_INT))
         goto skip_parse_tagarg;
 
-    tag = New(struct parsed_tag);
-    bzero(tag, sizeof(struct parsed_tag));
+    tag = New(struct HtmlTag);
+    bzero(tag, sizeof(struct HtmlTag));
     tag->tagid = tag_id;
 
     if ((nattr = TagMAP[tag_id].max_attribute) > 0) {
@@ -253,7 +253,7 @@ done_parse_tag:
     return tag;
 }
 
-int parsedtag_set_value(struct parsed_tag* tag, int id, char* value)
+int parsedtag_set_value(struct HtmlTag* tag, int id, char* value)
 {
     int i;
 
@@ -270,7 +270,7 @@ int parsedtag_set_value(struct parsed_tag* tag, int id, char* value)
     return 1;
 }
 
-int parsedtag_get_value(struct parsed_tag* tag, int id, void* value)
+int parsedtag_get_value(struct HtmlTag* tag, int id, void* value)
 {
     int i;
     if (!parsedtag_exists(tag, id) || !tag->value[i = tag->map[id]])
@@ -278,7 +278,7 @@ int parsedtag_get_value(struct parsed_tag* tag, int id, void* value)
     return toValFunc[AttrMAP[id].vtype](tag->value[i], value);
 }
 
-Str parsedtag2str(struct parsed_tag* tag)
+Str parsedtag2str(struct HtmlTag* tag)
 {
     int i;
     int tag_id = tag->tagid;

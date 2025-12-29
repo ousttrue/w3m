@@ -2185,7 +2185,7 @@ void restore_fonteffect(struct html_feed_environ* h_env, struct readbuffer* obuf
         push_tag(obuf, "<ins>", HTML_INS);
 }
 
-Str process_img(struct HtmlBuilder* hb, struct parsed_tag* tag, int width)
+Str process_img(struct HtmlBuilder* hb, struct HtmlTag* tag, int width)
 {
     const char *r, *r2 = NULL, *s;
 
@@ -2495,7 +2495,7 @@ img_end:
 }
 
 Str process_anchor(struct HtmlBuilder* hb,
-    struct parsed_tag* tag, const char* tagbuf)
+    struct HtmlTag* tag, const char* tagbuf)
 {
     if (parsedtag_need_reconstruct(tag)) {
         parsedtag_set_value(tag, ATTR_HSEQ, Sprintf("%d", hb->cur_hseq++)->ptr);
@@ -2507,7 +2507,7 @@ Str process_anchor(struct HtmlBuilder* hb,
     }
 }
 
-Str process_input(struct HtmlBuilder* hb, struct parsed_tag* tag)
+Str process_input(struct HtmlBuilder* hb, struct HtmlTag* tag)
 {
     int i = 20, v, x, y, z, iw, ih, size = 20;
     const char *q, *p, *r, *p2, *s;
@@ -2692,7 +2692,7 @@ Str process_input(struct HtmlBuilder* hb, struct parsed_tag* tag)
     return tmp;
 }
 
-Str process_button(struct HtmlBuilder* hb, struct parsed_tag* tag)
+Str process_button(struct HtmlBuilder* hb, struct HtmlTag* tag)
 {
     Str tmp = NULL;
     char *p, *q, *r, *qq = "";
@@ -2757,7 +2757,7 @@ Str process_n_button(void)
     return tmp;
 }
 
-Str process_select(struct HtmlBuilder* hb, struct parsed_tag* tag)
+Str process_select(struct HtmlBuilder* hb, struct HtmlTag* tag)
 {
     Str tmp = NULL;
     char* p;
@@ -2830,7 +2830,7 @@ void feed_select(struct HtmlBuilder* hb, const char* str)
             continue;
         p = tmp->ptr;
         if (tmp->ptr[0] == '<' && Strlastchar(tmp) == '>') {
-            struct parsed_tag* tag;
+            struct HtmlTag* tag;
             const char* q;
             if (!(tag = parse_tag(&p, FALSE)))
                 continue;
@@ -2917,7 +2917,7 @@ void process_option(struct HtmlBuilder* hb)
     hb->n_selectitem++;
 }
 
-Str process_textarea(struct HtmlBuilder* hb, struct parsed_tag* tag, int width)
+Str process_textarea(struct HtmlBuilder* hb, struct HtmlTag* tag, int width)
 {
     Str tmp = NULL;
     char* p;
@@ -3014,7 +3014,7 @@ void feed_textarea(struct HtmlBuilder* hb, const char* str)
 }
 
 static Str
-process_hr(struct parsed_tag* tag, int width, int indent_width)
+process_hr(struct HtmlTag* tag, int width, int indent_width)
 {
     Str tmp = Strnew_charp("<nobr>");
     int w = 0;
@@ -3082,7 +3082,7 @@ check_accept_charset(char* ac)
 
 static Str
 process_form_int(struct HtmlBuilder* hb,
-    struct parsed_tag* tag, int fid)
+    struct HtmlTag* tag, int fid)
 {
     char *p, *q, *r, *s, *tg, *n;
 
@@ -3145,7 +3145,7 @@ process_form_int(struct HtmlBuilder* hb,
     return NULL;
 }
 
-Str process_form(struct HtmlBuilder* hb, struct parsed_tag* tag)
+Str process_form(struct HtmlBuilder* hb, struct HtmlTag* tag)
 {
     return process_form_int(hb, tag, -1);
 }
@@ -3174,7 +3174,7 @@ clear_ignore_p_flag(int cmd, struct readbuffer* obuf)
 }
 
 static void
-set_alignment(struct readbuffer* obuf, struct parsed_tag* tag)
+set_alignment(struct readbuffer* obuf, struct HtmlTag* tag)
 {
     long flag = -1;
     int align;
@@ -3202,7 +3202,7 @@ set_alignment(struct readbuffer* obuf, struct parsed_tag* tag)
 
 #ifdef ID_EXT
 static void
-process_idattr(struct readbuffer* obuf, int cmd, struct parsed_tag* tag)
+process_idattr(struct readbuffer* obuf, int cmd, struct HtmlTag* tag)
 {
     char *id = NULL, *framename = NULL;
     Str idtag = NULL;
@@ -3278,7 +3278,7 @@ process_idattr(struct readbuffer* obuf, int cmd, struct parsed_tag* tag)
         h_env->envc--;
 
 static int
-ul_type(struct parsed_tag* tag, int default_type)
+ul_type(struct HtmlTag* tag, int default_type)
 {
     char* p;
     if (parsedtag_get_value(tag, ATTR_TYPE, &p)) {
@@ -3333,7 +3333,7 @@ int getMetaRefreshParam(const char* q, Str* refresh_uri)
     return refresh_interval;
 }
 
-int HTMLtagproc1(struct HtmlBuilder* hb, struct parsed_tag* tag, struct html_feed_environ* h_env)
+int HTMLtagproc1(struct HtmlBuilder* hb, struct HtmlTag* tag, struct html_feed_environ* h_env)
 {
     const char* p;
     const char* q;
@@ -4417,7 +4417,7 @@ ex_efct(int ex)
 }
 
 static void
-addLink(struct Buffer* buf, struct parsed_tag* tag)
+addLink(struct Buffer* buf, struct HtmlTag* tag)
 {
     char *href = NULL, *title = NULL, *ctype = NULL, *rel = NULL, *rev = NULL;
     char type = LINK_TYPE_NONE;
@@ -4591,7 +4591,7 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                 }
             } else {
                 /* tag processing */
-                struct parsed_tag* tag;
+                struct HtmlTag* tag;
                 if (!(tag = parse_tag(&str, TRUE)))
                     continue;
                 switch (tag->tagid) {
@@ -5172,7 +5172,7 @@ void HTMLlineproc0(struct HtmlBuilder* hb,
     int cmd;
     struct readbuffer* obuf = h_env->obuf;
     int indent, delta;
-    struct parsed_tag* tag;
+    struct HtmlTag* tag;
     Str tokbuf;
     struct table* tbl = NULL;
     struct table_mode* tbl_mode = NULL;

@@ -68,7 +68,7 @@ parseFrameSetLength(char* s, char*** ret)
 }
 
 struct frameset*
-newFrameSet(struct parsed_tag* tag)
+newFrameSet(struct HtmlTag* tag)
 {
     struct frameset* f;
     int i;
@@ -92,7 +92,7 @@ newFrameSet(struct parsed_tag* tag)
 }
 
 struct frame_body*
-newFrame(struct parsed_tag* tag, struct Buffer* buf)
+newFrame(struct HtmlTag* tag, struct Buffer* buf)
 {
     struct frame_body* body;
     char* p;
@@ -541,7 +541,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
                 do {
                     int is_tag = FALSE;
                     const char* q;
-                    struct parsed_tag* tag;
+                    struct HtmlTag* tag;
 
                     do {
                         if (*p == '\0') {

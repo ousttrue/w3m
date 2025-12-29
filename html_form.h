@@ -88,6 +88,6 @@ int formChooseOptionByMenu(struct FormItemList* fi, int x, int y);
 void input_textarea(struct FormItemList* fi);
 int formtype(const char* typestr);
 struct HtmlBuilder;
-struct parsed_tag;
+struct HtmlTag;
 struct FormItemList* formList_addInput(struct HtmlBuilder* hb, struct FormList* fl,
-    struct parsed_tag* tag);
+    struct HtmlTag* tag);
