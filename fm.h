@@ -229,21 +229,8 @@ extern unsigned char PcKeymap[];
 extern struct FuncList w3mFuncList[];
 
 global char* HTTP_proxy init(NULL);
-#ifdef USE_SSL
 global char* HTTPS_proxy init(NULL);
-#endif /* USE_SSL */
-#ifdef USE_GOPHER
-global char* GOPHER_proxy init(NULL);
-#endif /* USE_GOPHER */
 global char* FTP_proxy init(NULL);
-global struct Url HTTP_proxy_parsed;
-#ifdef USE_SSL
-global struct Url HTTPS_proxy_parsed;
-#endif /* USE_SSL */
-#ifdef USE_GOPHER
-global struct Url GOPHER_proxy_parsed;
-#endif /* USE_GOPHER */
-global struct Url FTP_proxy_parsed;
 global char* NO_proxy init(NULL);
 global int NOproxy_netaddr init(TRUE);
 #ifdef INET6

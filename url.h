@@ -25,3 +25,4 @@ Str parsedURL2Str(struct Url* pu);
 int openSocket(char* hostname, const char* remoteport_name, unsigned short remoteport_num);
 char* guessContentType(const char* filename);
 const char* filename_extension(const char* patch, int is_url);
+void parse_proxy(void);
