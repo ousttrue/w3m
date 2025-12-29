@@ -590,13 +590,13 @@ void print_item(struct table* t, int row, int col, int width, Str buf)
             alignment = ALIGN_RIGHT;
         else if ((t->tabattr[row][col] & HTT_ALIGN) == HTT_CENTER)
             alignment = ALIGN_CENTER;
-        if (DisableCenter && alignment == ALIGN_CENTER)
+        if (getRuntime()->DisableCenter && alignment == ALIGN_CENTER)
             alignment = ALIGN_LEFT;
         align(lbuf, width, alignment);
         Strcat(buf, lbuf->line);
     } else {
         lbuf = newTextLine(NULL, 0);
-        if (DisableCenter)
+        if (getRuntime()->DisableCenter)
             align(lbuf, width, ALIGN_LEFT);
         else
             align(lbuf, width, ALIGN_CENTER);
@@ -710,7 +710,7 @@ get_spec_cell_width(struct table* tbl, int row, int col)
     return w;
 }
 
-void do_refill(struct HtmlBuilder *hb, struct table* tbl, int row, int col, int maxlimit)
+void do_refill(struct HtmlBuilder* hb, struct table* tbl, int row, int col, int maxlimit)
 {
     struct TextList* orgdata;
     TextListItem* l;
@@ -1620,7 +1620,7 @@ void initRenderTable(void)
 }
 
 static void
-renderCoTable(struct HtmlBuilder *hb, struct table* tbl, int maxlimit)
+renderCoTable(struct HtmlBuilder* hb, struct table* tbl, int maxlimit)
 {
     struct readbuffer obuf;
     struct html_feed_environ h_env;
@@ -1657,7 +1657,7 @@ renderCoTable(struct HtmlBuilder *hb, struct table* tbl, int maxlimit)
 }
 
 static void
-make_caption(struct HtmlBuilder *hb, struct table* t, struct html_feed_environ* h_env)
+make_caption(struct HtmlBuilder* hb, struct table* t, struct html_feed_environ* h_env)
 {
     struct html_feed_environ henv;
     struct readbuffer obuf;
@@ -1687,7 +1687,7 @@ make_caption(struct HtmlBuilder *hb, struct table* t, struct html_feed_environ* 
     h_env->limit = limit;
 }
 
-void renderTable(struct HtmlBuilder *hb, struct table* t, int max_width, struct html_feed_environ* h_env)
+void renderTable(struct HtmlBuilder* hb, struct table* t, int max_width, struct html_feed_environ* h_env)
 {
     int i, j, w, r, h;
     Str renderbuf;
@@ -1847,7 +1847,7 @@ void renderTable(struct HtmlBuilder *hb, struct table* t, int max_width, struct 
     /* table output */
     width = t->total_width;
 
-    make_caption(hb ,t, h_env);
+    make_caption(hb, t, h_env);
 
     HTMLlineproc0(hb, "<pre for_table>", h_env, true);
 
@@ -2260,11 +2260,9 @@ skip_space(struct table* t, const char* line, struct table_linfo* linfo,
                 w += len;
             }
             if (s > 0) {
-#ifdef USE_M17N
-                if (!SimplePreserveSpace && ctype == PC_KANJI1 && prev_ctype == PC_KANJI1)
+                if (!getRuntime()->SimplePreserveSpace && ctype == PC_KANJI1 && prev_ctype == PC_KANJI1)
                     skip += s;
                 else
-#endif
                     skip += s - 1;
             }
             s = 0;
@@ -2341,8 +2339,8 @@ feed_table_block_tag(struct table* tbl,
 }
 
 static void
-table_close_select(struct HtmlBuilder *hb,
-        struct table* tbl, struct table_mode* mode, int width)
+table_close_select(struct HtmlBuilder* hb,
+    struct table* tbl, struct table_mode* mode, int width)
 {
     Str tmp = process_n_select(hb);
     mode->pre_mode &= ~TBLM_INSELECT;
@@ -2351,8 +2349,8 @@ table_close_select(struct HtmlBuilder *hb,
 }
 
 static void
-table_close_textarea(struct HtmlBuilder *hb,
-        struct table* tbl, struct table_mode* mode, int width)
+table_close_textarea(struct HtmlBuilder* hb,
+    struct table* tbl, struct table_mode* mode, int width)
 {
     Str tmp = process_n_textarea(hb);
     mode->pre_mode &= ~TBLM_INTXTA;
@@ -2404,7 +2402,7 @@ table_close_anchor0(struct table* tbl, struct table_mode* mode)
 #define ATTR_ROWSPAN_MAX 32766
 
 static int
-feed_table_tag(struct HtmlBuilder *hb, struct table* tbl, const char* line, struct table_mode* mode,
+feed_table_tag(struct HtmlBuilder* hb, struct table* tbl, const char* line, struct table_mode* mode,
     int width, struct parsed_tag* tag)
 {
     int cmd;
@@ -3078,7 +3076,7 @@ feed_table_tag(struct HtmlBuilder *hb, struct table* tbl, const char* line, stru
     return TAG_ACTION_NONE;
 }
 
-int feed_table(struct HtmlBuilder *hb, struct table* tbl, const char* line, struct table_mode* mode,
+int feed_table(struct HtmlBuilder* hb, struct table* tbl, const char* line, struct table_mode* mode,
     int width, int internal)
 {
     int i;
@@ -3233,7 +3231,7 @@ int feed_table(struct HtmlBuilder *hb, struct table* tbl, const char* line, stru
     return -1;
 }
 
-void feed_table1(struct HtmlBuilder *hb, struct table* tbl, Str tok, struct table_mode* mode, int width)
+void feed_table1(struct HtmlBuilder* hb, struct table* tbl, Str tok, struct table_mode* mode, int width)
 {
     if (!tok)
         return;

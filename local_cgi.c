@@ -88,7 +88,7 @@ Str loadLocalDir(const char* dname)
             nfile_max *= 2;
             flist = New_Reuse(char*, flist, nfile_max);
         }
-        if (multicolList) {
+        if (getRuntime()->multicolList) {
             l = strlen(dir->d_name);
             if (l > maxlen)
                 maxlen = l;
@@ -97,7 +97,7 @@ Str loadLocalDir(const char* dname)
     }
     closedir(d);
 
-    if (multicolList) {
+    if (getRuntime()->multicolList) {
         l = TTY_COLS() / (maxlen + 2);
         if (!l)
             l = 1;
@@ -120,7 +120,7 @@ Str loadLocalDir(const char* dname)
 #endif /* HAVE_LSTAT */
         if (stat(fbuf->ptr, &st) < 0)
             continue;
-        if (multicolList) {
+        if (getRuntime()->multicolList) {
             if (n == 1)
                 Strcat_charp(tmp, "<TD><NOBR>");
         } else {
@@ -141,7 +141,7 @@ Str loadLocalDir(const char* dname)
         if (S_ISDIR(st.st_mode))
             Strcat_char(tmp, '/');
         Strcat_charp(tmp, "</A>");
-        if (multicolList) {
+        if (getRuntime()->multicolList) {
             if (n++ == nrow) {
                 Strcat_charp(tmp, "</NOBR></TD>\n");
                 n = 1;
@@ -163,7 +163,7 @@ Str loadLocalDir(const char* dname)
             Strcat_charp(tmp, "<br>\n");
         }
     }
-    if (multicolList) {
+    if (getRuntime()->multicolList) {
         Strcat_charp(tmp, "</TR>\n</TABLE>\n");
     }
     Strcat_charp(tmp, "</BODY>\n</HTML>\n");

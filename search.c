@@ -85,15 +85,13 @@ err:
 }
 #endif /* USE_MIGEMO */
 
-#ifdef USE_M17N
 /* normalize search string */
 char* conv_search_string(char* str, wc_ces f_ces)
 {
-    if (SearchConv && !WcOption.pre_conv && Currentbuf->document_charset != f_ces)
+    if (getRuntime()->SearchConv && !WcOption.pre_conv && Currentbuf->document_charset != f_ces)
         str = wtf_conv_fit(str, Currentbuf->document_charset);
     return str;
 }
-#endif
 
 enum SearchResult forwardSearch(struct Buffer* buf, char* str)
 {

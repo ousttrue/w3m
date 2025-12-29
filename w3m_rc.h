@@ -49,6 +49,27 @@ struct Event {
 };
 
 struct Runtime {
+    int multicolList;
+    char FollowLocale;
+    char UseContentCharset;
+    char SearchConv;
+    char SimplePreserveSpace;
+    char UseAltEntity;
+    char DisplayBorders;
+    char DisableCenter;
+    int no_rc_dir;
+    char* rc_dir;
+    char* param_tmp_dir;
+    char* mkd_tmp_dir;
+    char* config_file;
+    int default_use_cookie;
+    int use_cookie;
+    int show_cookie;
+    int accept_cookie;
+    int accept_bad_cookie;
+    char* cookie_reject_domains;
+    char* cookie_accept_domains;
+    char* cookie_avoid_wrong_number_of_dots;
     int w3m_dump;
     int w3m_halfload;
     Str header_string;

@@ -3181,7 +3181,7 @@ set_alignment(struct readbuffer* obuf, struct parsed_tag* tag)
     if (parsedtag_get_value(tag, ATTR_ALIGN, &align)) {
         switch (align) {
         case ALIGN_CENTER:
-            if (DisableCenter)
+            if (getRuntime()->DisableCenter)
                 flag = RB_LEFT;
             else
                 flag = RB_CENTER;
@@ -3961,7 +3961,7 @@ int HTMLtagproc1(struct HtmlBuilder* hb, struct parsed_tag* tag, struct html_fee
             } else
                 w = BORDER_THIN;
         }
-        if (DisplayBorders && w == BORDER_NONE)
+        if (getRuntime()->DisplayBorders && w == BORDER_NONE)
             w = BORDER_THIN;
         if (parsedtag_get_value(tag, ATTR_WIDTH, &i)) {
             if (obuf->table_level == 0)
@@ -4017,7 +4017,7 @@ int HTMLtagproc1(struct HtmlBuilder* hb, struct parsed_tag* tag, struct html_fee
         if (!(obuf->flag & (RB_PREMODE | RB_IGNORE_P)))
             flushline(h_env, obuf, envs[h_env->envc].indent, 0, h_env->limit);
         RB_SAVE_FLAG(obuf);
-        if (DisableCenter)
+        if (getRuntime()->DisableCenter)
             RB_SET_ALIGN(obuf, RB_LEFT);
         else
             RB_SET_ALIGN(obuf, RB_CENTER);
@@ -5427,7 +5427,7 @@ table_start:
                         is_hangul = wtf_is_hangul((wc_uchar*)str);
                     else
                         is_hangul = 0;
-                    if (!SimplePreserveSpace && mode == PC_KANJI1 && !is_hangul && !prev_is_hangul && obuf->pos > h_env->envs[h_env->envc].indent && Strlastchar(obuf->line) == ' ') {
+                    if (!getRuntime()->SimplePreserveSpace && mode == PC_KANJI1 && !is_hangul && !prev_is_hangul && obuf->pos > h_env->envs[h_env->envc].indent && Strlastchar(obuf->line) == ' ') {
                         while (obuf->line->length >= 2 && !strncmp(obuf->line->ptr + obuf->line->length - 2, "  ", 2)
                             && obuf->pos >= h_env->envs[h_env->envc].indent) {
                             Strshrink(obuf->line, 1);
@@ -5791,7 +5791,7 @@ void loadHTMLstream(struct input_stream* stream,
         else if (newBuf->document_charset)
             charset = doc_charset = newBuf->document_charset;
     }
-    if (newBuf->content.content_charset && UseContentCharset)
+    if (newBuf->content.content_charset && getRuntime()->UseContentCharset)
         doc_charset = newBuf->content.content_charset;
     hb->meta_charset = 0;
 
@@ -5811,7 +5811,7 @@ void loadHTMLstream(struct input_stream* stream,
          */
 
         if (hb->meta_charset) { /* <META> */
-            if (newBuf->content.content_charset == 0 && UseContentCharset) {
+            if (newBuf->content.content_charset == 0 && getRuntime()->UseContentCharset) {
                 doc_charset = hb->meta_charset;
                 charset = WC_CES_US_ASCII;
             }
@@ -5925,7 +5925,7 @@ loadBuffer(struct Url url, struct input_stream* stream,
     }
     if (newBuf->document_charset)
         charset = doc_charset = newBuf->document_charset;
-    if (newBuf->content.content_charset && UseContentCharset)
+    if (newBuf->content.content_charset && getRuntime()->UseContentCharset)
         doc_charset = newBuf->content.content_charset;
 
     nlines = 0;

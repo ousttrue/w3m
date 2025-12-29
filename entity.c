@@ -1,7 +1,7 @@
 #ifdef DUMMY
 // DUMMY
 // #define NBSP " "
-#define UseAltEntity 1
+// #define UseAltEntity 1
 #else
 // NOT DUMMY
 #include "fm.h"
@@ -51,7 +51,7 @@ char* conv_entity(unsigned int c)
     if (c == 0xad) /* SOFT HYPHEN */
         return "";
     if (c < 0x100) { /* Latin1 (ISO 8859-1) */
-        if (UseAltEntity)
+        if (getRuntime()->UseAltEntity)
             return alt_latin1[c - 0xa0];
         return wc_conv_n(&b, 1, WC_CES_ISO_8859_1, getRuntime()->InnerCharset)->ptr;
     }

@@ -16,8 +16,12 @@
 #include "local_cgi.h"
 #include "regex.h"
 #include "myctype.h"
+#include "w3m_rc.h"
 #include <string.h>
 #include <time.h>
+
+struct auth_cookie* Auth_cookie =(NULL);
+struct cookie* First_cookie =(NULL);
 
 static int is_saved = 1;
 
@@ -365,7 +369,7 @@ int add_cookie(struct Url* pu, Str name, Str value,
     if (!p) {
         p = New(struct cookie);
         p->flag = 0;
-        if (default_use_cookie)
+        if (getRuntime()->default_use_cookie)
             p->flag |= COO_USE;
         p->next = First_cookie;
         First_cookie = p;
@@ -427,7 +431,7 @@ void save_cookies(void)
 
     check_expired_cookies();
 
-    if (!First_cookie || is_saved || no_rc_dir)
+    if (!First_cookie || is_saved || getRuntime()->no_rc_dir)
         return;
 
     cookie_file = rcFile(COOKIE_FILE);
@@ -553,7 +557,7 @@ cookie_list_panel(void)
     int i;
     char *tmp, tmp2[80];
 
-    if (!use_cookie || !First_cookie)
+    if (!getRuntime()->use_cookie || !First_cookie)
         return NULL;
 
     Strcat_charp(src, "<ol>");

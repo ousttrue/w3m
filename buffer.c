@@ -538,7 +538,7 @@ void reshapeBuffer(struct Buffer* buf)
     {
         wc_uint8 old_auto_detect = WcOption.auto_detect;
         WcOption.auto_detect = WC_OPT_DETECT_OFF;
-        UseContentCharset = FALSE;
+        getRuntime()->UseContentCharset = FALSE;
         if (is_html_type(buf->type))
             loadHTMLBuffer(buf->currentURL, stream,
                 NULL, buf, buf->bufferprop & BP_FRAME);
@@ -547,7 +547,7 @@ void reshapeBuffer(struct Buffer* buf)
                 NULL, buf, buf->bufferprop & BP_FRAME);
         is_close(stream);
         WcOption.auto_detect = old_auto_detect;
-        UseContentCharset = TRUE;
+        getRuntime()->UseContentCharset = TRUE;
     }
 
     if (buf->doc.firstLine && sbuf.doc.firstLine) {

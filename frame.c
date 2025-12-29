@@ -442,7 +442,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
             union frameset_element frame;
             struct frameset* f_frameset;
             int i = c + r * f->col;
-            char* p = "";
+            const char* p = "";
             int status = R_ST_NORMAL;
             Str tok = Strnew();
             int pre_mode = 0;
@@ -539,7 +539,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
                 }
                 do {
                     int is_tag = FALSE;
-                    char* q;
+                    const char* q;
                     struct parsed_tag* tag;
 
                     do {
@@ -612,7 +612,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
 
                 proc_normal:
                     if (is_tag) {
-                        char* q = tok->ptr;
+                        const char* q = tok->ptr;
                         int j, a_target = 0;
                         struct Url url;
 
@@ -658,7 +658,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
                                     }
                                 }
                             }
-                            if (UseContentCharset && parsedtag_get_value(tag, ATTR_HTTP_EQUIV, &q)
+                            if (getRuntime()->UseContentCharset && parsedtag_get_value(tag, ATTR_HTTP_EQUIV, &q)
                                 && !strcasecmp(q, "Content-Type")
                                 && parsedtag_get_value(tag, ATTR_CONTENT, &q)
                                 && (q = strcasestr(q, "charset")) != NULL) {

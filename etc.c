@@ -911,11 +911,11 @@ static unsigned int tmpf_seq[MAX_TMPF_TYPE];
 Str tmpfname(enum TmpFileTypes type, const char* ext)
 {
     Str tmpf;
-    char* dir;
+    const char* dir;
 
     switch (type) {
     case TMPF_HIST:
-        dir = rc_dir;
+        dir = getRuntime()->rc_dir;
         break;
     case TMPF_DFL:
     case TMPF_COOKIE:

@@ -429,7 +429,7 @@ bool w3m_args(int argc, char** argv)
         MyProgramName = argv[0];
 #endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
     getRuntime()->BookmarkFile = NULL;
-    config_file = NULL;
+    getRuntime()->config_file = NULL;
 
     {
         char hostname[HOST_NAME_MAX + 2];
@@ -450,7 +450,7 @@ bool w3m_args(int argc, char** argv)
                 argv[i] = "-dummy";
                 if (++i >= argc)
                     usage();
-                config_file = argv[i];
+                getRuntime()->config_file = argv[i];
                 argv[i] = "-dummy";
             } else if (!strcmp("-h", argv[i]) || !strcmp("-help", argv[i]))
                 help();
@@ -470,7 +470,7 @@ bool w3m_args(int argc, char** argv)
     /* initializations */
     init_rc();
 
-    if (FollowLocale && Locale) {
+    if (getRuntime()->FollowLocale && Locale) {
         getRuntime()->DisplayCharset = wc_guess_locale_charset(Locale, getRuntime()->DisplayCharset);
         getRuntime()->SystemCharset = wc_guess_locale_charset(Locale, getRuntime()->SystemCharset);
     }
@@ -521,7 +521,7 @@ bool w3m_args(int argc, char** argv)
                 }
                 getRuntime()->DocumentCharset = wc_guess_charset_short(p, getRuntime()->DocumentCharset);
                 WcOption.auto_detect = WC_OPT_DETECT_OFF;
-                UseContentCharset = FALSE;
+                getRuntime()->UseContentCharset = FALSE;
             } else if (!strncmp("-O", argv[i], 2)) {
                 if (argv[i][2] != '\0')
                     p = argv[i] + 2;
@@ -651,26 +651,13 @@ bool w3m_args(int argc, char** argv)
                     argv[i][0] = '\0';
                     argv[i]++;
                 }
-            }
-#ifdef USE_MOUSE
-            else if (!strcmp("-no-mouse", argv[i])) {
-                use_mouse = FALSE;
-            }
-#endif /* USE_MOUSE */
-#ifdef USE_COOKIE
-            else if (!strcmp("-no-cookie", argv[i])) {
-                use_cookie = FALSE;
-                accept_cookie = FALSE;
+            } else if (!strcmp("-no-cookie", argv[i])) {
+                getRuntime()->use_cookie = FALSE;
+                getRuntime()->accept_cookie = FALSE;
             } else if (!strcmp("-cookie", argv[i])) {
-                use_cookie = TRUE;
-                accept_cookie = TRUE;
-            }
-#endif /* USE_COOKIE */
-#if 1 /* pager requires -s */
-            else if (!strcmp("-s", argv[i]))
-#else
-            else if (!strcmp("-S", argv[i]))
-#endif
+                getRuntime()->use_cookie = TRUE;
+                getRuntime()->accept_cookie = TRUE;
+            } else if (!strcmp("-s", argv[i]))
                 getRuntime()->squeezeBlankLine = TRUE;
             else if (!strcmp("-X", argv[i]))
                 getRuntime()->Do_not_use_ti_te = TRUE;
@@ -678,7 +665,6 @@ bool w3m_args(int argc, char** argv)
                 getRuntime()->displayTitleTerm = getenv("TERM");
             else if (!strncmp("-title=", argv[i], 7))
                 getRuntime()->displayTitleTerm = argv[i] + 7;
-#ifdef USE_SSL
             else if (!strcmp("-insecure", argv[i])) {
 #ifdef OPENSSL_TLS_SECURITY_LEVEL
                 set_param_option("ssl_cipher=ALL:eNULL:@SECLEVEL=0");
@@ -692,9 +678,7 @@ bool w3m_args(int argc, char** argv)
 #ifdef USE_SSL_VERIFY
                 set_param_option("ssl_verify_server=0");
 #endif
-            }
-#endif /* USE_SSL */
-            else if (!strcmp("-o", argv[i]) || !strcmp("-show-option", argv[i])) {
+            } else if (!strcmp("-o", argv[i]) || !strcmp("-show-option", argv[i])) {
                 if (!strcmp("-show-option", argv[i]) || ++i >= argc || !strcmp(argv[i], "?")) {
                     show_params(stdout);
                     exit(0);
@@ -967,7 +951,7 @@ bool w3m_args(int argc, char** argv)
 
     // SearchHeader = FALSE;
     getRuntime()->DefaultType = NULL;
-    UseContentCharset = TRUE;
+    getRuntime()->UseContentCharset = TRUE;
     WcOption.auto_detect = auto_detect;
 
     Currentbuf = Firstbuf;
@@ -4588,9 +4572,9 @@ void w3m_exit(int i)
     deleteFiles();
     free_ssl_ctx();
     disconnectFTP();
-    if (mkd_tmp_dir)
-        if (rmdir(mkd_tmp_dir) != 0) {
-            fprintf(stderr, "Can't remove temporary directory (%s)!\n", mkd_tmp_dir);
+    if (getRuntime()->mkd_tmp_dir)
+        if (rmdir(getRuntime()->mkd_tmp_dir) != 0) {
+            fprintf(stderr, "Can't remove temporary directory (%s)!\n", getRuntime()->mkd_tmp_dir);
             exit(1);
         }
     exit(i);

@@ -246,7 +246,7 @@ void getHttpResponseHeader(struct Content* content, struct Url url,
             while (IS_SPACE(*p))
                 p++;
             content->compression = get_compression(p);
-        } else if (use_cookie && accept_cookie && check_cookie_accept_domain(url.host) && (!strncasecmp(lineBuf2->ptr, "Set-Cookie:", 11) || !strncasecmp(lineBuf2->ptr, "Set-Cookie2:", 12))) {
+        } else if (getRuntime()->use_cookie && getRuntime()->accept_cookie && check_cookie_accept_domain(url.host) && (!strncasecmp(lineBuf2->ptr, "Set-Cookie:", 11) || !strncasecmp(lineBuf2->ptr, "Set-Cookie2:", 12))) {
             Str name = Strnew(), value = Strnew(), domain = NULL, path = NULL,
                 comment = NULL, commentURL = NULL, port = NULL, tmp2;
             int version, quoted, flag = 0;
@@ -317,7 +317,7 @@ void getHttpResponseHeader(struct Content* content, struct Url url,
             }
             if (name->length > 0) {
                 int err;
-                if (show_cookie) {
+                if (getRuntime()->show_cookie) {
                     if (flag & COO_SECURE)
                         disp_message_nsec("Received a secured cookie", FALSE, 1,
                             TRUE, FALSE);
@@ -330,10 +330,10 @@ void getHttpResponseHeader(struct Content* content, struct Url url,
                 err = add_cookie(&url, name, value, expires, domain, path, flag,
                     comment, version, port, commentURL);
                 if (err) {
-                    char* ans = (accept_bad_cookie == ACCEPT_BAD_COOKIE_ACCEPT)
+                    char* ans = (getRuntime()->accept_bad_cookie == ACCEPT_BAD_COOKIE_ACCEPT)
                         ? "y"
                         : NULL;
-                    if ((err & COO_OVERRIDE_OK) && accept_bad_cookie == ACCEPT_BAD_COOKIE_ASK) {
+                    if ((err & COO_OVERRIDE_OK) && getRuntime()->accept_bad_cookie == ACCEPT_BAD_COOKIE_ASK) {
                         Str msg = Sprintf("Accept bad cookie from %s for %s?",
                             url.host,
                             ((domain && domain->ptr)
@@ -356,9 +356,9 @@ void getHttpResponseHeader(struct Content* content, struct Url url,
                         else
                             emsg = "This cookie was rejected to prevent security violation.";
                         record_err_message(emsg);
-                        if (show_cookie)
+                        if (getRuntime()->show_cookie)
                             disp_message_nsec(emsg, FALSE, 1, TRUE, FALSE);
-                    } else if (show_cookie)
+                    } else if (getRuntime()->show_cookie)
                         disp_message_nsec(Sprintf("Accepting invalid cookie: %s=%s",
                                               name->ptr, value->ptr)
                                               ->ptr,

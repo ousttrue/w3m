@@ -56,6 +56,27 @@ static struct termios d_ioval;
 char UseGraphicChar = GRAPHIC_CHAR_CHARSET;
 
 struct Runtime g_runtime = {
+    .multicolList = (FALSE),
+    .FollowLocale = (TRUE),
+    .UseContentCharset = (TRUE),
+    .SearchConv = (TRUE),
+    .SimplePreserveSpace = (FALSE),
+    .UseAltEntity = (FALSE),
+    .DisplayBorders = (FALSE),
+    .DisableCenter = (FALSE),
+    .no_rc_dir = (FALSE),
+    .rc_dir = (NULL),
+    .param_tmp_dir = (NULL),
+    .mkd_tmp_dir = (NULL),
+    .config_file = (NULL),
+    .default_use_cookie = (TRUE),
+    .use_cookie = (TRUE),
+    .show_cookie = (FALSE),
+    .accept_cookie = (TRUE),
+    .accept_bad_cookie = (ACCEPT_BAD_COOKIE_DISCARD),
+    .cookie_reject_domains = (NULL),
+    .cookie_accept_domains = (NULL),
+    .cookie_avoid_wrong_number_of_dots = (NULL),
     .w3m_dump = (0),
     .w3m_halfload = (FALSE),
     .header_string = (NULL),
@@ -499,14 +520,14 @@ void calcTabPos(void)
 
     if (nTab <= 0)
         return;
-    n1 = (TTY_COLS() - rcol - lcol) / getRuntime()->TabCols;
+    n1 = (TTY_COLS() - rcol - lcol) / g_runtime.TabCols;
     if (n1 >= g_runtime.nTab) {
         n2 = 1;
         ny = 1;
     } else {
         if (n1 < 0)
             n1 = 0;
-        n2 = TTY_COLS() / getRuntime()->TabCols;
+        n2 = TTY_COLS() / g_runtime.TabCols;
         if (n2 == 0)
             n2 = 1;
         ny = (g_runtime.nTab - n1 - 1) / n2 + 2;
@@ -1626,14 +1647,14 @@ struct param_ptr params1[] = {
         CMT_USE_DICTCOMMAND, NULL },
     { "dictcommand", P_STRING, PI_TEXT, (void*)&g_runtime.DictCommand,
         CMT_DICTCOMMAND, NULL },
-    { "multicol", P_INT, PI_ONOFF, (void*)&multicolList, CMT_MULTICOL, NULL },
-    { "alt_entity", P_CHARINT, PI_ONOFF, (void*)&UseAltEntity, CMT_ALT_ENTITY,
+    { "multicol", P_INT, PI_ONOFF, (void*)&g_runtime.multicolList, CMT_MULTICOL, NULL },
+    { "alt_entity", P_CHARINT, PI_ONOFF, (void*)&g_runtime.UseAltEntity, CMT_ALT_ENTITY,
         NULL },
     { "graphic_char", P_CHARINT, PI_SEL_C, &UseGraphicChar,
         CMT_GRAPHIC_CHAR, (void*)graphic_char_str },
-    { "display_borders", P_CHARINT, PI_ONOFF, (void*)&DisplayBorders,
+    { "display_borders", P_CHARINT, PI_ONOFF, (void*)&g_runtime.DisplayBorders,
         CMT_DISP_BORDERS, NULL },
-    { "disable_center", P_CHARINT, PI_ONOFF, (void*)&DisableCenter,
+    { "disable_center", P_CHARINT, PI_ONOFF, (void*)&g_runtime.DisableCenter,
         CMT_DISABLE_CENTER, NULL },
     { "fold_textarea", P_CHARINT, PI_ONOFF, (void*)&g_runtime.FoldTextarea,
         CMT_FOLD_TEXTAREA, NULL },
@@ -1772,7 +1793,7 @@ struct param_ptr params5[] = {
         (void*)&g_runtime.personal_document_root, CMT_PDROOT, NULL },
     { "cgi_bin", P_STRING, PI_TEXT, (void*)&g_runtime.cgi_bin, CMT_CGIBIN, NULL },
     { "index_file", P_STRING, PI_TEXT, (void*)&g_runtime.index_file, CMT_IFILE, NULL },
-    { "tmp_dir", P_STRING, PI_TEXT, (void*)&param_tmp_dir, CMT_TMP, NULL },
+    { "tmp_dir", P_STRING, PI_TEXT, (void*)&g_runtime.param_tmp_dir, CMT_TMP, NULL },
     { NULL, 0, 0, NULL, NULL, NULL },
 };
 
@@ -1830,25 +1851,23 @@ struct param_ptr params7[] = {
     { NULL, 0, 0, NULL, NULL, NULL },
 };
 
-#ifdef USE_COOKIE
 struct param_ptr params8[] = {
-    { "use_cookie", P_INT, PI_ONOFF, (void*)&use_cookie, CMT_USECOOKIE, NULL },
-    { "show_cookie", P_INT, PI_ONOFF, (void*)&show_cookie,
+    { "use_cookie", P_INT, PI_ONOFF, (void*)&g_runtime.use_cookie, CMT_USECOOKIE, NULL },
+    { "show_cookie", P_INT, PI_ONOFF, (void*)&g_runtime.show_cookie,
         CMT_SHOWCOOKIE, NULL },
-    { "accept_cookie", P_INT, PI_ONOFF, (void*)&accept_cookie,
+    { "accept_cookie", P_INT, PI_ONOFF, (void*)&g_runtime.accept_cookie,
         CMT_ACCEPTCOOKIE, NULL },
-    { "accept_bad_cookie", P_INT, PI_SEL_C, (void*)&accept_bad_cookie,
+    { "accept_bad_cookie", P_INT, PI_SEL_C, (void*)&g_runtime.accept_bad_cookie,
         CMT_ACCEPTBADCOOKIE, (void*)badcookiestr },
     { "cookie_reject_domains", P_STRING, PI_TEXT,
-        (void*)&cookie_reject_domains, CMT_COOKIE_REJECT_DOMAINS, NULL },
+        (void*)&g_runtime.cookie_reject_domains, CMT_COOKIE_REJECT_DOMAINS, NULL },
     { "cookie_accept_domains", P_STRING, PI_TEXT,
-        (void*)&cookie_accept_domains, CMT_COOKIE_ACCEPT_DOMAINS, NULL },
+        (void*)&g_runtime.cookie_accept_domains, CMT_COOKIE_ACCEPT_DOMAINS, NULL },
     { "cookie_avoid_wrong_number_of_dots", P_STRING, PI_TEXT,
-        (void*)&cookie_avoid_wrong_number_of_dots,
+        (void*)&g_runtime.cookie_avoid_wrong_number_of_dots,
         CMT_COOKIE_AVOID_WONG_NUMBER_OF_DOTS, NULL },
     { NULL, 0, 0, NULL, NULL, NULL },
 };
-#endif
 
 struct param_ptr params9[] = {
     { "passwd_file", P_STRING, PI_TEXT, (void*)&g_runtime.passwd_file, CMT_PASSWDFILE,
@@ -1892,7 +1911,6 @@ struct param_ptr params9[] = {
     { NULL, 0, 0, NULL, NULL, NULL },
 };
 
-#ifdef USE_M17N
 struct param_ptr params10[] = {
     { "display_charset", P_CODE, PI_CODE, (void*)&g_runtime.DisplayCharset,
         CMT_DISPLAY_CHARSET, (void*)&display_charset_str },
@@ -1902,7 +1920,7 @@ struct param_ptr params10[] = {
         CMT_AUTO_DETECT, (void*)auto_detect_str },
     { "system_charset", P_CODE, PI_CODE, (void*)&g_runtime.SystemCharset,
         CMT_SYSTEM_CHARSET, (void*)&system_charset_str },
-    { "follow_locale", P_CHARINT, PI_ONOFF, (void*)&FollowLocale,
+    { "follow_locale", P_CHARINT, PI_ONOFF, (void*)&g_runtime.FollowLocale,
         CMT_FOLLOW_LOCALE, NULL },
     { "ext_halfdump", P_CHARINT, PI_ONOFF, (void*)&g_runtime.ExtHalfdump,
         CMT_EXT_HALFDUMP, NULL },
@@ -1910,24 +1928,20 @@ struct param_ptr params10[] = {
         NULL },
     { "use_combining", P_CHARINT, PI_ONOFF, (void*)&WcOption.use_combining,
         CMT_USE_COMBINING, NULL },
-#ifdef USE_UNICODE
     { "east_asian_width", P_CHARINT, PI_ONOFF,
         (void*)&WcOption.east_asian_width, CMT_EAST_ASIAN_WIDTH, NULL },
     { "use_language_tag", P_CHARINT, PI_ONOFF,
         (void*)&WcOption.use_language_tag, CMT_USE_LANGUAGE_TAG, NULL },
     { "ucs_conv", P_CHARINT, PI_ONOFF, (void*)&WcOption.ucs_conv, CMT_UCS_CONV,
         NULL },
-#endif
     { "pre_conv", P_CHARINT, PI_ONOFF, (void*)&WcOption.pre_conv, CMT_PRE_CONV,
         NULL },
-    { "search_conv", P_CHARINT, PI_ONOFF, (void*)&SearchConv, CMT_SEARCH_CONV,
+    { "search_conv", P_CHARINT, PI_ONOFF, (void*)&g_runtime.SearchConv, CMT_SEARCH_CONV,
         NULL },
     { "fix_width_conv", P_CHARINT, PI_ONOFF, (void*)&WcOption.fix_width_conv,
         CMT_FIX_WIDTH_CONV, NULL },
-#ifdef USE_UNICODE
     { "use_gb12345_map", P_CHARINT, PI_ONOFF, (void*)&WcOption.use_gb12345_map,
         CMT_USE_GB12345_MAP, NULL },
-#endif
     { "use_jisx0201", P_CHARINT, PI_ONOFF, (void*)&WcOption.use_jisx0201,
         CMT_USE_JISX0201, NULL },
     { "use_jisc6226", P_CHARINT, PI_ONOFF, (void*)&WcOption.use_jisc6226,
@@ -1940,15 +1954,12 @@ struct param_ptr params10[] = {
         CMT_USE_JISX0213, NULL },
     { "strict_iso2022", P_CHARINT, PI_ONOFF, (void*)&WcOption.strict_iso2022,
         CMT_STRICT_ISO2022, NULL },
-#ifdef USE_UNICODE
     { "gb18030_as_ucs", P_CHARINT, PI_ONOFF, (void*)&WcOption.gb18030_as_ucs,
         CMT_GB18030_AS_UCS, NULL },
-#endif
-    { "simple_preserve_space", P_CHARINT, PI_ONOFF, (void*)&SimplePreserveSpace,
+    { "simple_preserve_space", P_CHARINT, PI_ONOFF, (void*)&g_runtime.SimplePreserveSpace,
         CMT_SIMPLE_PRESERVE_SPACE, NULL },
     { NULL, 0, 0, NULL, NULL, NULL },
 };
-#endif
 
 struct param_section sections[] = {
     { N_("Display Settings"), params1 },
@@ -2219,7 +2230,7 @@ set_param(char* name, char* value)
             *(char**)p->varptr = rcFile(value);
         else
             *(char**)p->varptr = NULL;
-        getRuntime()->ssl_path_modified = 1;
+        g_runtime.ssl_path_modified = 1;
         break;
 #endif
 #ifdef USE_COLOR
@@ -2315,44 +2326,23 @@ interpret_rc(FILE* f)
     }
 }
 
-#ifdef USE_COOKIE
 static void
 parse_cookie(void)
 {
-    if (non_null(cookie_reject_domains))
-        Cookie_reject_domains = make_domain_list(cookie_reject_domains);
-    if (non_null(cookie_accept_domains))
-        Cookie_accept_domains = make_domain_list(cookie_accept_domains);
-    if (non_null(cookie_avoid_wrong_number_of_dots))
+    if (non_null(g_runtime.cookie_reject_domains))
+        Cookie_reject_domains = make_domain_list(g_runtime.cookie_reject_domains);
+    if (non_null(g_runtime.cookie_accept_domains))
+        Cookie_accept_domains = make_domain_list(g_runtime.cookie_accept_domains);
+    if (non_null(g_runtime.cookie_avoid_wrong_number_of_dots))
         Cookie_avoid_wrong_number_of_dots_domains
-            = make_domain_list(cookie_avoid_wrong_number_of_dots);
+            = make_domain_list(g_runtime.cookie_avoid_wrong_number_of_dots);
 }
-#endif
 
-#ifdef __EMX__
-static int
-do_mkdir(const char* dir, long mode)
-{
-    char *r, abs[_MAX_PATH];
-    size_t n;
-
-    _abspath(abs, rc_dir, _MAX_PATH); /* Translate '\\' to '/' */
-
-    if (!(n = strlen(abs)))
-        return -1;
-
-    if (*(r = abs + n - 1) == '/') /* Ignore tailing slash if it is */
-        *r = 0;
-
-    return mkdir(abs, mode);
-}
-#else /* not __EMX__ */
 #ifdef __MINGW32_VERSION
 #define do_mkdir(dir, mode) mkdir(dir)
 #else
 #define do_mkdir(dir, mode) mkdir(dir, mode)
 #endif /* not __MINW32_VERSION */
-#endif /* not __EMX__ */
 
 static int
 do_recursive_mkdir(const char* dir)
@@ -2413,7 +2403,7 @@ void sync_with_option(void)
     initMimeTypes();
     initURIMethods();
 
-    if (fmInitialized() && (getRuntime()->displayImage || getRuntime()->enable_inline_image))
+    if (fmInitialized() && (g_runtime.displayImage || g_runtime.enable_inline_image))
         initImage();
     loadPasswd();
     loadPreForm();
@@ -2455,35 +2445,33 @@ void init_rc(void)
     int i;
     FILE* f;
 
-    if (rc_dir != NULL)
+    if (g_runtime.rc_dir != NULL)
         goto open_rc;
 
-    rc_dir = allocStr(getenv("W3M_DIR"), -1);
-    if (rc_dir == NULL || *rc_dir == '\0')
-        rc_dir = allocStr(RC_DIR, -1);
-    if (rc_dir == NULL || *rc_dir == '\0')
+    g_runtime.rc_dir = allocStr(getenv("W3M_DIR"), -1);
+    if (g_runtime.rc_dir == NULL || *g_runtime.rc_dir == '\0')
+        g_runtime.rc_dir = allocStr(RC_DIR, -1);
+    if (g_runtime.rc_dir == NULL || *g_runtime.rc_dir == '\0')
         goto rc_dir_err;
-    rc_dir = expandPath(rc_dir);
+    g_runtime.rc_dir = expandPath(g_runtime.rc_dir);
 
-    i = strlen(rc_dir);
-    if (i > 1 && rc_dir[i - 1] == '/')
-        rc_dir[i - 1] = '\0';
+    i = strlen(g_runtime.rc_dir);
+    if (i > 1 && g_runtime.rc_dir[i - 1] == '/')
+        g_runtime.rc_dir[i - 1] = '\0';
 
-#ifdef USE_M17N
     display_charset_str = wc_get_ces_list();
     document_charset_str = display_charset_str;
     system_charset_str = display_charset_str;
-#endif
 
-    tmp_dir = rc_dir;
+    tmp_dir = g_runtime.rc_dir;
 
-    if (do_recursive_mkdir(rc_dir) == -1)
+    if (do_recursive_mkdir(g_runtime.rc_dir) == -1)
         goto rc_dir_err;
 
-    no_rc_dir = FALSE;
+    g_runtime.no_rc_dir = FALSE;
 
-    if (config_file == NULL)
-        config_file = rcFile(CONFIG_FILE);
+    if (g_runtime.config_file == NULL)
+        g_runtime.config_file = rcFile(CONFIG_FILE);
 
     create_option_search_table();
 
@@ -2497,14 +2485,14 @@ open_rc:
         interpret_rc(f);
         fclose(f);
     }
-    if (config_file && (f = fopen(config_file, "rt")) != NULL) {
+    if (g_runtime.config_file && (f = fopen(g_runtime.config_file, "rt")) != NULL) {
         interpret_rc(f);
         fclose(f);
     }
     return;
 
 rc_dir_err:
-    no_rc_dir = TRUE;
+    g_runtime.no_rc_dir = TRUE;
     create_option_search_table();
     goto open_rc;
 }
@@ -2513,13 +2501,13 @@ void init_tmp(void)
 {
     int i;
 
-    if (param_tmp_dir)
-        tmp_dir = param_tmp_dir;
+    if (g_runtime.param_tmp_dir)
+        tmp_dir = g_runtime.param_tmp_dir;
     if (*tmp_dir == '\0')
-        tmp_dir = rc_dir;
+        tmp_dir = g_runtime.rc_dir;
 
-    if (strcmp(tmp_dir, rc_dir) == 0) {
-        if (no_rc_dir)
+    if (strcmp(tmp_dir, g_runtime.rc_dir) == 0) {
+        if (g_runtime.no_rc_dir)
             goto tmp_dir_err;
         return;
     }
@@ -2534,8 +2522,8 @@ void init_tmp(void)
 
 tmp_dir_err:
 #ifdef HAVE_MKDTEMP
-    if (mkd_tmp_dir) {
-        tmp_dir = mkd_tmp_dir;
+    if (g_runtime.mkd_tmp_dir) {
+        tmp_dir = g_runtime.mkd_tmp_dir;
         return;
     }
 #endif
@@ -2544,9 +2532,9 @@ tmp_dir_err:
 #ifdef HAVE_MKDTEMP
     tmp_dir = mkdtemp(Strnew_m_charp(tmp_dir, "/w3m-XXXXXX", NULL)->ptr);
     if (tmp_dir)
-        mkd_tmp_dir = tmp_dir;
+        g_runtime.mkd_tmp_dir = tmp_dir;
     else
-        tmp_dir = rc_dir;
+        tmp_dir = g_runtime.rc_dir;
 #endif
     return;
 }
@@ -2648,7 +2636,7 @@ load_option_panel(void)
         Strcat_charp(src, "<table width=100% cellpadding=0>");
         while (p->name) {
             Strcat_m_charp(src, "<tr><td>", p->comment, NULL);
-            Strcat(src, Sprintf("</td><td width=%d>", (int)(28 * getRuntime()->pixel_per_char)));
+            Strcat(src, Sprintf("</td><td width=%d>", (int)(28 * g_runtime.pixel_per_char)));
             switch (p->inputtype) {
             case PI_TEXT:
                 Strcat_m_charp(src, "<input type=text name=",
@@ -2713,10 +2701,10 @@ void panel_set_option(struct parsed_tagarg* arg)
     char* p;
     Str s = Strnew(), tmp;
 
-    if (config_file == NULL) {
+    if (g_runtime.config_file == NULL) {
         disp_message("There's no config file... config not saved", FALSE);
     } else {
-        f = fopen(config_file, "wt");
+        f = fopen(g_runtime.config_file, "wt");
         if (f == NULL) {
             disp_message("Can't write option!", FALSE);
         }
@@ -2746,7 +2734,7 @@ char* rcFile(char* base)
     if (base && (base[0] == '/' || (base[0] == '.' && (base[1] == '/' || (base[1] == '.' && base[2] == '/'))) || (base[0] == '~' && base[1] == '/')))
         /* /file, ./file, ../file, ~/file */
         return expandPath(base);
-    return expandPath(Strnew_m_charp(rc_dir, "/", base, NULL)->ptr);
+    return expandPath(Strnew_m_charp(g_runtime.rc_dir, "/", base, NULL)->ptr);
 }
 
 #if 0 /* not used */

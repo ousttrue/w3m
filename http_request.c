@@ -151,7 +151,7 @@ Str HTTPrequest(struct Url* pu, struct Url* current, struct HttpRequest* hr, str
             Strcat_charp(tmp, i->ptr);
         }
 
-    if (hr->command != HR_COMMAND_CONNECT && use_cookie && (cookie = find_cookie(pu))) {
+    if (hr->command != HR_COMMAND_CONNECT && getRuntime()->use_cookie && (cookie = find_cookie(pu))) {
         Strcat_charp(tmp, "Cookie: ");
         Strcat(tmp, cookie);
         Strcat_charp(tmp, "\r\n");
