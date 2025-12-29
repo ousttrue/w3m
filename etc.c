@@ -9,7 +9,7 @@
 #include "buffer.h"
 #include "fm.h"
 #include "myctype.h"
-#include "html.h"
+#include "html_tag.h"
 #include "local_cgi.h"
 #include "hash.h"
 

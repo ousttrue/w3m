@@ -1,6 +1,6 @@
 #include "hash.h"
 #include <stdio.h>
-#include "html.h"
+#include "html_tag.h"
 static HashItem_si MyHashItem[] = {
     /* 0 */ {"option_int", HTML_OPTION_INT, &MyHashItem[1]},
     /* 1 */ {"figcaption", HTML_FIGCAPTION, &MyHashItem[2]},
