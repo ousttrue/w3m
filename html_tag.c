@@ -110,10 +110,9 @@ extern Hash_si tagtable;
 struct HtmlTag*
 parse_tag(const char** s, bool internal)
 {
-    // Parse tag name
-    char tagname[MAX_TAG_LEN], attrname[MAX_TAG_LEN];
+    /* Parse tag name */
+    char tagname[MAX_TAG_LEN];
     tagname[0] = '\0';
-
     const char* q = (*s) + 1;
     char* p = tagname;
     if (*q == '/') {
@@ -129,122 +128,125 @@ parse_tag(const char** s, bool internal)
         q++;
 
     enum HtmlTagID tag_id = getHash_si(&tagtable, tagname, HTML_UNKNOWN);
-    if (tag_id == HTML_UNKNOWN || (!internal && TagMAP[tag_id].flag & TFLG_INT))
-        goto skip_parse_tagarg;
 
-    struct HtmlTag* tag = New(struct HtmlTag);
-    memset(tag, 0, sizeof(struct HtmlTag));
-    tag->tagid = tag_id;
+    struct HtmlTag* tag = NULL;
+    char attrname[MAX_TAG_LEN];
+    if (tag_id == HTML_UNKNOWN || (!internal && TagMAP[tag_id].flag & TFLG_INT)) {
+    } else {
+        // goto skip_parse_tagarg;
+        tag = New(struct HtmlTag);
+        bzero(tag, sizeof(struct HtmlTag));
+        tag->tagid = tag_id;
 
-    int nattr = TagMAP[tag_id].max_attribute;
-    if (nattr > 0) {
-        tag->attrid = NewAtom_N(unsigned char, nattr);
-        tag->value = New_N(char*, nattr);
-        tag->map = NewAtom_N(unsigned char, MAX_TAGATTR);
-        memset(tag->map, MAX_TAGATTR, MAX_TAGATTR);
-        memset(tag->attrid, ATTR_UNKNOWN, nattr);
-        for (int i = 0; i < nattr; i++)
-            tag->map[TagMAP[tag_id].accept_attribute[i]] = i;
-    }
-
-    // Parse tag arguments
-    q = skip_blanks(q);
-    while (1) {
-        Str value = NULL, value_tmp = NULL;
-        if (*q == '>' || *q == '\0')
-            goto done_parse_tag;
-        p = attrname;
-        while (*q && *q != '=' && !IS_SPACE(*q) && *q != '>' && p - attrname < MAX_TAG_LEN - 1) {
-            *(p++) = TOLOWER(*q);
-            q++;
+        int nattr = TagMAP[tag_id].max_attribute;
+        if (nattr > 0) {
+            tag->attrid = NewAtom_N(unsigned char, nattr);
+            tag->value = New_N(char*, nattr);
+            tag->map = NewAtom_N(unsigned char, MAX_TAGATTR);
+            memset(tag->map, MAX_TAGATTR, MAX_TAGATTR);
+            memset(tag->attrid, ATTR_UNKNOWN, nattr);
+            for (int i = 0; i < nattr; i++)
+                tag->map[TagMAP[tag_id].accept_attribute[i]] = i;
         }
-        *p = '\0';
-        while (*q && *q != '=' && !IS_SPACE(*q) && *q != '>')
-            q++;
+
+        /* Parse tag arguments */
         q = skip_blanks(q);
-        if (*q == '=') {
-            /* get value */
-            value_tmp = Strnew();
-            q++;
-            q = skip_blanks(q);
-            if (*q == '"') {
-                q++;
-                while (*q && *q != '"') {
-                    Strcat_char(value_tmp, *q);
-                    if (!tag->need_reconstruct && is_html_quote(*q))
-                        tag->need_reconstruct = TRUE;
-                    q++;
-                }
-                if (*q == '"')
-                    q++;
-            } else if (*q == '\'') {
-                q++;
-                while (*q && *q != '\'') {
-                    Strcat_char(value_tmp, *q);
-                    if (!tag->need_reconstruct && is_html_quote(*q))
-                        tag->need_reconstruct = TRUE;
-                    q++;
-                }
-                if (*q == '\'')
-                    q++;
-            } else if (*q) {
-                while (*q && !IS_SPACE(*q) && *q != '>') {
-                    Strcat_char(value_tmp, *q);
-                    if (!tag->need_reconstruct && is_html_quote(*q))
-                        tag->need_reconstruct = TRUE;
-                    q++;
-                }
-            }
-        }
-
-        int attr_id = 0;
-        int i = 0;
-        for (; i < nattr; i++) {
-            if ((tag)->attrid[i] == ATTR_UNKNOWN && strcmp(AttrMAP[TagMAP[tag_id].accept_attribute[i]].name, attrname) == 0) {
-                attr_id = TagMAP[tag_id].accept_attribute[i];
+        while (1) {
+            Str value = NULL, value_tmp = NULL;
+            if (*q == '>' || *q == '\0') {
+                // goto done_parse_tag;
                 break;
             }
-        }
-
-        if (value_tmp) {
-            int j, hidden = FALSE;
-            for (j = 0; j < i; j++) {
-                if (tag->attrid[j] == ATTR_TYPE && tag->value[j] && strcmp("hidden", tag->value[j]) == 0) {
-                    hidden = TRUE;
+            p = attrname;
+            while (*q && *q != '=' && !IS_SPACE(*q) && *q != '>' && p - attrname < MAX_TAG_LEN - 1) {
+                *(p++) = TOLOWER(*q);
+                q++;
+            }
+            *p = '\0';
+            while (*q && *q != '=' && !IS_SPACE(*q) && *q != '>')
+                q++;
+            q = skip_blanks(q);
+            if (*q == '=') {
+                /* get value */
+                value_tmp = Strnew();
+                q++;
+                q = skip_blanks(q);
+                if (*q == '"') {
+                    q++;
+                    while (*q && *q != '"') {
+                        Strcat_char(value_tmp, *q);
+                        if (!tag->need_reconstruct && is_html_quote(*q))
+                            tag->need_reconstruct = TRUE;
+                        q++;
+                    }
+                    if (*q == '"')
+                        q++;
+                } else if (*q == '\'') {
+                    q++;
+                    while (*q && *q != '\'') {
+                        Strcat_char(value_tmp, *q);
+                        if (!tag->need_reconstruct && is_html_quote(*q))
+                            tag->need_reconstruct = TRUE;
+                        q++;
+                    }
+                    if (*q == '\'')
+                        q++;
+                } else if (*q) {
+                    while (*q && !IS_SPACE(*q) && *q != '>') {
+                        Strcat_char(value_tmp, *q);
+                        if (!tag->need_reconstruct && is_html_quote(*q))
+                            tag->need_reconstruct = TRUE;
+                        q++;
+                    }
+                }
+            }
+            int attr_id = 0;
+            int i = 0;
+            for (; i < nattr; i++) {
+                if ((tag)->attrid[i] == ATTR_UNKNOWN && strcmp(AttrMAP[TagMAP[tag_id].accept_attribute[i]].name, attrname) == 0) {
+                    attr_id = TagMAP[tag_id].accept_attribute[i];
                     break;
                 }
             }
-            if ((tag_id == HTML_INPUT || tag_id == HTML_INPUT_ALT) && attr_id == ATTR_VALUE && hidden) {
-                value = value_tmp;
-            } else {
-                char* x;
-                value = Strnew();
-                for (x = value_tmp->ptr; *x; x++) {
-                    if (*x != '\n')
-                        Strcat_char(value, *x);
+
+            if (value_tmp) {
+                int j, hidden = FALSE;
+                for (j = 0; j < i; j++) {
+                    if (tag->attrid[j] == ATTR_TYPE && tag->value[j] && strcmp("hidden", tag->value[j]) == 0) {
+                        hidden = TRUE;
+                        break;
+                    }
+                }
+                if ((tag_id == HTML_INPUT || tag_id == HTML_INPUT_ALT) && attr_id == ATTR_VALUE && hidden) {
+                    value = value_tmp;
+                } else {
+                    char* x;
+                    value = Strnew();
+                    for (x = value_tmp->ptr; *x; x++) {
+                        if (*x != '\n')
+                            Strcat_char(value, *x);
+                    }
                 }
             }
-        }
 
-        if (i != nattr) {
-            if (!internal && ((AttrMAP[attr_id].flag & AFLG_INT) || (value && AttrMAP[attr_id].vtype == VTYPE_METHOD && !strcasecmp(value->ptr, "internal")))) {
+            if (i != nattr) {
+                if (!internal && ((AttrMAP[attr_id].flag & AFLG_INT) || (value && AttrMAP[attr_id].vtype == VTYPE_METHOD && !strcasecmp(value->ptr, "internal")))) {
+                    tag->need_reconstruct = TRUE;
+                    continue;
+                }
+                tag->attrid[i] = attr_id;
+                if (value)
+                    tag->value[i] = html_unquote(value->ptr);
+                else
+                    tag->value[i] = NULL;
+            } else {
                 tag->need_reconstruct = TRUE;
-                continue;
             }
-            tag->attrid[i] = attr_id;
-            if (value)
-                tag->value[i] = html_unquote(value->ptr);
-            else
-                tag->value[i] = NULL;
-        } else {
-            tag->need_reconstruct = TRUE;
         }
     }
-
-skip_parse_tagarg:
     while (*q != '>' && *q)
         q++;
-done_parse_tag:
+    // done_parse_tag:
     if (*q == '>')
         q++;
     *s = q;
