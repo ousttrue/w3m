@@ -68,9 +68,9 @@ void popup_menu(struct Menu* parent, struct Menu* menu);
 void guess_menu_xy(struct Menu* menu, int width, int* x, int* y);
 void new_option_menu(struct Menu* menu, const char** label, int* variable,
     void (*func)());
-int setMenuItem(struct MenuItem* item, char* type, char* line);
+int setMenuItem(struct MenuItem* item, const char* type, const char* line);
 int addMenuList(MenuList** list, char* id);
-int getMenuN(MenuList* list, char* id);
+int getMenuN(MenuList* list, const char* id);
 void popupMenu(int x, int y, struct Menu* menu);
 void mainMenu(int x, int y);
 void mainMn(void);

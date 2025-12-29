@@ -1,4 +1,5 @@
 #include "menu.h"
+#include "etc.h"
 #include "func.h"
 #include "terms.h"
 #include "alloc.h"
@@ -11,7 +12,6 @@
 #include "w3m_rc.h"
 #include "tab.h"
 #include "image.h"
-#include "defun.h"
 #include "myctype.h"
 #include "regex.h"
 #include "proto.h"
@@ -1743,7 +1743,6 @@ static void
 interpret_menu(FILE* mf)
 {
     Str line;
-    char *p, *s;
     int in_menu = 0, nmenu = 0, nitem = 0, type;
     struct MenuItem* item = NULL;
 
@@ -1758,8 +1757,8 @@ interpret_menu(FILE* mf)
 
         line = wc_Str_conv(line, charset, getRuntime()->InnerCharset);
 
-        p = line->ptr;
-        s = getWord(&p);
+        const char* p = line->ptr;
+        const char* s = getWord(&p);
         if (*s == '#') /* comment */
             continue;
         if (in_menu) {
@@ -1775,7 +1774,7 @@ interpret_menu(FILE* mf)
                 item[nitem].type = MENU_END;
             }
         } else if (!strcmp(s, "menu")) {
-            s = getQWord(&p);
+            const char* s = getQWord(&p);
             if (*s == '\0') /* error */
                 continue;
             in_menu = 1;
@@ -1841,7 +1840,7 @@ void initMenu(void)
     }
 }
 
-int setMenuItem(struct MenuItem* item, char* type, char* line)
+int setMenuItem(struct MenuItem* item, const char* type, const char* line)
 {
     char *label, *func, *popup, *keys, *data;
     int f;
@@ -1903,7 +1902,7 @@ int addMenuList(MenuList** mlist, char* id)
     return n;
 }
 
-int getMenuN(MenuList* list, char* id)
+int getMenuN(MenuList* list, const char* id)
 {
     int n;
 

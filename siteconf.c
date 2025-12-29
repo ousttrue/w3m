@@ -1,4 +1,5 @@
 #include "siteconf.h"
+#include "etc.h"
 #include "func.h"
 #include "Str.h"
 #include "url.h"
@@ -8,7 +9,7 @@
 #include <libwc/charset.h>
 #include <string.h>
 
-#define SITECONF_FILE	RC_DIR "/siteconf"
+#define SITECONF_FILE RC_DIR "/siteconf"
 
 const char* siteconf_file = (SITECONF_FILE);
 
@@ -80,15 +81,13 @@ void loadSiteconf(void)
     if (fp == NULL)
         return;
     while (line = Strfgets(fp), line->length > 0) {
-        char *p, *s;
-
         Strchop(line);
-        p = line->ptr;
+        const char* p = line->ptr;
         p = skip_blanks(p);
         if (*p == '#' || *p == '\0')
             continue;
-        s = getWord(&p);
 
+        const char* s = getWord(&p);
         /* The "url" begins a new record. */
         if (strcmp(s, "url") == 0) {
             char *url, *opt;

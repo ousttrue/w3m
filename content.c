@@ -367,20 +367,19 @@ void getHttpResponseHeader(struct Content* content, struct Url url,
                             1, TRUE, FALSE);
                 }
             }
-        } else if (!strncasecmp(lineBuf2->ptr, "w3m-control:", 12) && url.scheme == SCM_LOCAL_CGI) {
-            Str funcname = Strnew();
-            int f;
-
+        } else if (!strncasecmp(lineBuf2->ptr, "w3m-control:", 12) //
+            && url.scheme == SCM_LOCAL_CGI) {
             const char* p = lineBuf2->ptr + 12;
             p = skip_blanks(p);
+            Str funcname = Strnew();
             while (*p && !IS_SPACE(*p))
                 Strcat_char(funcname, *(p++));
             p = skip_blanks(p);
-            f = getFuncList(funcname->ptr);
+            int f = getFuncList(funcname->ptr);
             if (f >= 0) {
-                tmp = Strnew_charp(p);
-                Strchop(tmp);
-                pushEvent(f, tmp->ptr);
+                Str data = Strnew_charp(p);
+                Strchop(data);
+                pushEvent(f, data->ptr);
             }
         }
         pushText(content->document_header, lineBuf2->ptr);

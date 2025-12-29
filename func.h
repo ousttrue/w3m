@@ -1,5 +1,5 @@
 #pragma once
-#define KEY_HASH_SIZE 127
+#include <stdbool.h>
 
 #define K_ESC 0x100
 #define K_ESCB 0x200
@@ -12,14 +12,16 @@ extern unsigned char EscKeymap[];
 extern unsigned char EscBKeymap[];
 extern unsigned char EscDKeymap[];
 
+#define DEFUN(funcname, macroname, docstring) void funcname(void)
+
+typedef void (*DefunFunc)();
+
 struct FuncList {
-    char* id;
-    void (*func)();
+    const char* id;
+    DefunFunc func;
 };
 extern struct FuncList w3mFuncList[];
+extern void setKeymap(const char* p, int lineno, bool verbose);
 
-char* getWord(const char** str);
-struct regex;
-char* getRegexWord(const char** str, struct regex** regex_ret);
-char* getQWord(const char** str);
+/// event
 int getFuncList(const char* id);

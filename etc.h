@@ -44,3 +44,8 @@ Str romanAlphabet(int n);
 void mySystem(const char* command, int background);
 Str myExtCommand(const char* cmd, const char* arg, int redirect);
 Str unescape_spaces(Str s);
+
+char* getQWord(const char** str);
+char* getWord(const char** str);
+struct regex;
+char* getRegexWord(const char** str, struct regex** regex_ret);

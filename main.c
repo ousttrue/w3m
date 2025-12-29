@@ -28,13 +28,9 @@
 #include "tab.h"
 #include "buffer.h"
 #include "image.h"
-
 #include <libwc/conv.h>
 #include <libwc/ces.h>
-// #include <math.h>
 #include <string.h>
-
-#include "defun.h"
 #include <locale.h>
 #include <assert.h>
 #include <stdbool.h>

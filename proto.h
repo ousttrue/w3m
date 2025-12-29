@@ -196,7 +196,6 @@ extern void reMark(void);
 #define closeTMs nulcmd
 
 
-extern void setKeymap(char* p, int lineno, int verbose);
 extern void initKeymap(int force);
 extern int getKey(char* s);
 extern char* getKeyData(int key);
