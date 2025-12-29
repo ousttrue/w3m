@@ -107,6 +107,29 @@ struct Buffer {
     struct _AlarmEvent* event;
 };
 
+#define COPY_BUFROOT(dstbuf, srcbuf)       \
+    {                                      \
+        (dstbuf)->rootX = (srcbuf)->rootX; \
+        (dstbuf)->rootY = (srcbuf)->rootY; \
+        (dstbuf)->COLS = (srcbuf)->COLS;   \
+        (dstbuf)->LINES = (srcbuf)->LINES; \
+    }
+
+#define COPY_BUFPOSITION(dstbuf, srcbuf)                   \
+    {                                                      \
+        (dstbuf)->doc.topLine = (srcbuf)->doc.topLine;             \
+        (dstbuf)->doc.currentLine = (srcbuf)->doc.currentLine;     \
+        (dstbuf)->pos = (srcbuf)->pos;                     \
+        (dstbuf)->cursorX = (srcbuf)->cursorX;             \
+        (dstbuf)->cursorY = (srcbuf)->cursorY;             \
+        (dstbuf)->visualpos = (srcbuf)->visualpos;         \
+        (dstbuf)->currentColumn = (srcbuf)->currentColumn; \
+    }
+#define SAVE_BUFPOSITION(sbufp) COPY_BUFPOSITION(sbufp, Currentbuf)
+#define RESTORE_BUFPOSITION(sbufp) COPY_BUFPOSITION(Currentbuf, sbufp)
+#define TOP_LINENUMBER(buf) ((buf)->doc.topLine ? (buf)->doc.topLine->linenumber : 1)
+#define CUR_LINENUMBER(buf) ((buf)->doc.currentLine ? (buf)->doc.currentLine->linenumber : 1)
+
 struct Url* baseURL(struct Buffer* buf);
 char* url_decode2(const char* url, const struct Buffer* buf);
 void delBuffer(struct Buffer* buf);
