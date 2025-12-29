@@ -367,3 +367,4 @@ AlarmEvent* setAlarmEvent(AlarmEvent* event, int sec, short status,
 
 struct parsed_tagarg;
 extern void panel_set_option(struct parsed_tagarg*);
+extern int check_no_proxy(char* domain);

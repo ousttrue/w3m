@@ -32,12 +32,14 @@
 #include "indep.h"
 #include "myctype.h"
 
+#include <arpa/inet.h>
 #include <fcntl.h>
 #include <libwc/conv.h>
 #include <libwc/ucs.h>
 #include <libwc/charset.h>
 #include <libwc/ces.h>
 
+#include <netdb.h>
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -50,6 +52,9 @@
 #include <sys/wait.h>
 #include <termios.h>
 #include <unistd.h>
+
+#include <signal.h>
+#include <setjmp.h>
 
 static struct termios d_ioval;
 
@@ -263,6 +268,139 @@ struct Runtime* getRuntime()
     return &g_runtime;
 }
 
+struct TextList* NO_proxy_domains = NULL;
+
+static int
+domain_match(char* pat, char* domain)
+{
+    if (domain == NULL)
+        return 0;
+    if (*pat == '.')
+        pat++;
+    for (;;) {
+        if (!strcasecmp(pat, domain))
+            return 1;
+        domain = strchr(domain, '.');
+        if (domain == NULL)
+            return 0;
+        domain++;
+    }
+}
+
+static JMP_BUF AbortLoading;
+static MySignalHandler
+KeyAbort(SIGNAL_ARG)
+{
+    LONGJMP(AbortLoading, 1);
+    SIGNAL_RETURN;
+}
+
+int check_no_proxy(char* domain)
+{
+    if (!NO_proxy_domains) {
+        NO_proxy_domains = newTextList();
+    }
+
+    TextListItem* tl;
+    volatile int ret = 0;
+    MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
+
+    if (NO_proxy_domains == NULL || NO_proxy_domains->nitem == 0 || domain == NULL)
+        return 0;
+    for (tl = NO_proxy_domains->first; tl != NULL; tl = tl->next) {
+        if (domain_match(tl->ptr, domain))
+            return 1;
+    }
+    if (!getRuntime()->NOproxy_netaddr) {
+        return 0;
+    }
+    /*
+     * to check noproxy by network addr
+     */
+    if (SETJMP(AbortLoading) != 0) {
+        ret = 0;
+        goto end;
+    }
+    TRAP_ON;
+    {
+#ifndef INET6
+        struct hostent* he;
+        int n;
+        unsigned char** h_addr_list;
+        char addr[4 * 16], buf[5];
+
+        he = gethostbyname(domain);
+        if (!he) {
+            ret = 0;
+            goto end;
+        }
+        for (h_addr_list = (unsigned char**)he->h_addr_list; *h_addr_list;
+            h_addr_list++) {
+            sprintf(addr, "%d", h_addr_list[0][0]);
+            for (n = 1; n < he->h_length; n++) {
+                sprintf(buf, ".%d", h_addr_list[0][n]);
+                strcat(addr, buf);
+            }
+            for (tl = NO_proxy_domains->first; tl != NULL; tl = tl->next) {
+                if (strncmp(tl->ptr, addr, strlen(tl->ptr)) == 0) {
+                    ret = 1;
+                    goto end;
+                }
+            }
+        }
+#else /* INET6 */
+        int error;
+        struct addrinfo hints;
+        struct addrinfo *res, *res0;
+        char addr[4 * 16];
+        int* af;
+
+        for (af = ai_family_order_table[getRuntime()->DNS_order];; af++) {
+            memset(&hints, 0, sizeof(hints));
+            hints.ai_family = *af;
+            error = getaddrinfo(domain, NULL, &hints, &res0);
+            if (error) {
+                if (*af == PF_UNSPEC) {
+                    break;
+                }
+                /* try next */
+                continue;
+            }
+            for (res = res0; res != NULL; res = res->ai_next) {
+                switch (res->ai_family) {
+                case AF_INET:
+                    inet_ntop(AF_INET,
+                        &((struct sockaddr_in*)res->ai_addr)->sin_addr,
+                        addr, sizeof(addr));
+                    break;
+                case AF_INET6:
+                    inet_ntop(AF_INET6,
+                        &((struct sockaddr_in6*)res->ai_addr)->sin6_addr, addr, sizeof(addr));
+                    break;
+                default:
+                    /* unknown */
+                    continue;
+                }
+                for (tl = NO_proxy_domains->first; tl != NULL; tl = tl->next) {
+                    if (strncmp(tl->ptr, addr, strlen(tl->ptr)) == 0) {
+                        freeaddrinfo(res0);
+                        ret = 1;
+                        goto end;
+                    }
+                }
+            }
+            freeaddrinfo(res0);
+            if (*af == PF_UNSPEC) {
+                break;
+            }
+        }
+#endif /* INET6 */
+    }
+end:
+    TRAP_OFF;
+    return ret;
+}
+
 void parse_proxy(void)
 {
     if (non_null(g_runtime.HTTP_proxy))
@@ -272,7 +410,7 @@ void parse_proxy(void)
     if (non_null(g_runtime.FTP_proxy))
         parseURL(g_runtime.FTP_proxy, &FTP_proxy_parsed, NULL);
     if (non_null(g_runtime.NO_proxy))
-        set_no_proxy(g_runtime.NO_proxy);
+        NO_proxy_domains = make_domain_list(g_runtime.NO_proxy);
 }
 
 char* url_quote_conv(const char* x, wc_ces c)

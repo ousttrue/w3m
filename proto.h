@@ -221,8 +221,6 @@ extern void copyParsedURL(struct Url* p, const struct Url* q);
 extern Str parsedURL2RefererStr(struct Url* pu);
 struct HttpRequest;
 extern char* acceptableMimeTypes(void);
-extern struct TextList* make_domain_list(char* domain_list);
-extern int check_no_proxy(char* domain);
 
 extern struct Anchor* registerName(struct Buffer* buf, char* url, int line, int pos);
 extern int onAnchor(struct Anchor* a, int line, int pos);

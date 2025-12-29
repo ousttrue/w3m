@@ -417,7 +417,6 @@ bool w3m_args(int argc, char** argv)
     textdomain(PACKAGE);
 #endif
 
-    NO_proxy_domains = newTextList();
     fileToDelete = newTextList();
 
     load_argv = New_N(char*, argc - 1);

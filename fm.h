@@ -19,15 +19,6 @@
 #define MENU_SELECT
 #define MENU_MAP
 
-#if !HAVE_SETLOCALE
-#define setlocale(category, locale) /* empty */
-#endif
-
-#ifdef ENABLE_NLS
-#include <libintl.h>
-#define _(String) gettext(String)
-#define N_(String) (String)
-#else
 #undef bindtextdomain
 #define bindtextdomain(Domain, Directory) /* empty */
 #undef textdomain
@@ -35,7 +26,6 @@
 #define _(Text) Text
 #define N_(Text) Text
 #define gettext(Text) Text
-#endif
 
 #include "frame.h"
 #include "parsetag.h"
@@ -46,11 +36,6 @@
 #include "funcname1.h"
 #include "terms.h"
 #include "input_stream.h"
-
-#ifndef HAVE_BCOPY
-void bcopy(const void*, void*, int);
-void bzero(void*, int);
-#endif /* HAVE_BCOPY */
 
 #ifdef MAINPROGRAM
 #define global
@@ -142,8 +127,6 @@ void bzero(void*, int);
 #define HTST_NORMAL 0
 #define HTST_CONNECT 1
 
-#define set_no_proxy(domains) (NO_proxy_domains = make_domain_list(domains))
-
 /*
  * Globals.
  */
@@ -161,7 +144,6 @@ extern struct FuncList w3mFuncList[];
 #define DNS_ORDER_INET6_ONLY 6
 extern int ai_family_order_table[7][3]; /* XXX */
 
-global struct TextList* NO_proxy_domains;
 
 global char* CurrentDir;
 global int CurrentPid;
