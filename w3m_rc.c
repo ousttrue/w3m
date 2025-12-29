@@ -56,6 +56,11 @@ static struct termios d_ioval;
 char UseGraphicChar = GRAPHIC_CHAR_CHARSET;
 
 struct Runtime g_runtime = {
+    .HTTP_proxy = (NULL),
+    .HTTPS_proxy = (NULL),
+    .FTP_proxy = (NULL),
+    .NO_proxy = (NULL),
+    .NOproxy_netaddr = (TRUE),
     .IndentIncr = (4),
     .PagerMax = (PAGER_MAX_LINE),
     .DefaultType = (NULL),
@@ -155,6 +160,18 @@ struct Runtime g_runtime = {
 struct Runtime* getRuntime()
 {
     return &g_runtime;
+}
+
+void parse_proxy(void)
+{
+    if (non_null(g_runtime.HTTP_proxy))
+        parseURL(g_runtime.HTTP_proxy, &HTTP_proxy_parsed, NULL);
+    if (non_null(g_runtime.HTTPS_proxy))
+        parseURL(g_runtime.HTTPS_proxy, &HTTPS_proxy_parsed, NULL);
+    if (non_null(g_runtime.FTP_proxy))
+        parseURL(g_runtime.FTP_proxy, &FTP_proxy_parsed, NULL);
+    if (non_null(g_runtime.NO_proxy))
+        set_no_proxy(g_runtime.NO_proxy);
 }
 
 char* url_quote_conv(const char* x, wc_ces c)
@@ -1683,13 +1700,13 @@ struct param_ptr params3[] = {
 struct param_ptr params4[] = {
     { "use_proxy", P_CHARINT, PI_ONOFF, (void*)&use_proxy, CMT_USE_PROXY,
         NULL },
-    { "http_proxy", P_STRING, PI_TEXT, (void*)&HTTP_proxy, CMT_HTTP_PROXY,
+    { "http_proxy", P_STRING, PI_TEXT, (void*)&g_runtime.HTTP_proxy, CMT_HTTP_PROXY,
         NULL },
-    { "https_proxy", P_STRING, PI_TEXT, (void*)&HTTPS_proxy, CMT_HTTPS_PROXY,
+    { "https_proxy", P_STRING, PI_TEXT, (void*)&g_runtime.HTTPS_proxy, CMT_HTTPS_PROXY,
         NULL },
-    { "ftp_proxy", P_STRING, PI_TEXT, (void*)&FTP_proxy, CMT_FTP_PROXY, NULL },
-    { "no_proxy", P_STRING, PI_TEXT, (void*)&NO_proxy, CMT_NO_PROXY, NULL },
-    { "noproxy_netaddr", P_INT, PI_ONOFF, (void*)&NOproxy_netaddr,
+    { "ftp_proxy", P_STRING, PI_TEXT, (void*)&g_runtime.FTP_proxy, CMT_FTP_PROXY, NULL },
+    { "no_proxy", P_STRING, PI_TEXT, (void*)&g_runtime.NO_proxy, CMT_NO_PROXY, NULL },
+    { "noproxy_netaddr", P_INT, PI_ONOFF, (void*)&g_runtime.NOproxy_netaddr,
         CMT_NOPROXY_NETADDR, NULL },
     { "no_cache", P_CHARINT, PI_ONOFF, (void*)&NoCache, CMT_NO_CACHE, NULL },
 

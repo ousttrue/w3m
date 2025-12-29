@@ -494,18 +494,18 @@ bool w3m_args(int argc, char** argv)
     auto_detect = WcOption.auto_detect;
     getRuntime()->BookmarkCharset = getRuntime()->DocumentCharset;
 
-    if (!non_null(HTTP_proxy) && ((p = getenv("HTTP_PROXY")) || (p = getenv("http_proxy")) || (p = getenv("HTTP_proxy"))))
-        HTTP_proxy = p;
+    if (!non_null(getRuntime()->HTTP_proxy) && ((p = getenv("HTTP_PROXY")) || (p = getenv("http_proxy")) || (p = getenv("HTTP_proxy"))))
+        getRuntime()->HTTP_proxy = p;
 #ifdef USE_SSL
-    if (!non_null(HTTPS_proxy) && ((p = getenv("HTTPS_PROXY")) || (p = getenv("https_proxy")) || (p = getenv("HTTPS_proxy"))))
-        HTTPS_proxy = p;
-    if (HTTPS_proxy == NULL && non_null(HTTP_proxy))
-        HTTPS_proxy = HTTP_proxy;
+    if (!non_null(getRuntime()->HTTPS_proxy) && ((p = getenv("HTTPS_PROXY")) || (p = getenv("https_proxy")) || (p = getenv("HTTPS_proxy"))))
+        getRuntime()->HTTPS_proxy = p;
+    if (getRuntime()->HTTPS_proxy == NULL && non_null(getRuntime()->HTTP_proxy))
+        getRuntime()->HTTPS_proxy = getRuntime()->HTTP_proxy;
 #endif /* USE_SSL */
-    if (!non_null(FTP_proxy) && ((p = getenv("FTP_PROXY")) || (p = getenv("ftp_proxy")) || (p = getenv("FTP_proxy"))))
-        FTP_proxy = p;
-    if (!non_null(NO_proxy) && ((p = getenv("NO_PROXY")) || (p = getenv("no_proxy")) || (p = getenv("NO_proxy"))))
-        NO_proxy = p;
+    if (!non_null(getRuntime()->FTP_proxy) && ((p = getenv("FTP_PROXY")) || (p = getenv("ftp_proxy")) || (p = getenv("FTP_proxy"))))
+        getRuntime()->FTP_proxy = p;
+    if (!non_null(getRuntime()->NO_proxy) && ((p = getenv("NO_PROXY")) || (p = getenv("no_proxy")) || (p = getenv("NO_proxy"))))
+        getRuntime()->NO_proxy = p;
 
     if (!non_null(Editor) && (p = getenv("EDITOR")) != NULL)
         Editor = p;

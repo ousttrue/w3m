@@ -35,17 +35,6 @@
 struct Url HTTP_proxy_parsed;
 struct Url HTTPS_proxy_parsed;
 struct Url FTP_proxy_parsed;
-void parse_proxy(void)
-{
-    if (non_null(HTTP_proxy))
-        parseURL(HTTP_proxy, &HTTP_proxy_parsed, NULL);
-    if (non_null(HTTPS_proxy))
-        parseURL(HTTPS_proxy, &HTTPS_proxy_parsed, NULL);
-    if (non_null(FTP_proxy))
-        parseURL(FTP_proxy, &FTP_proxy_parsed, NULL);
-    if (non_null(NO_proxy))
-        set_no_proxy(NO_proxy);
-}
 
 #ifdef __WATT32__
 #define write(a, b, c) write_s(a, b, c)
@@ -983,7 +972,7 @@ struct UrlStream openURL(const char* url, struct Url* current,
     case SCM_FTPDIR:
         if (us.url.file == NULL)
             us.url.file = allocStr("/", -1);
-        if (non_null(FTP_proxy) && !Do_not_use_proxy && us.url.host != NULL && !check_no_proxy(us.url.host)) {
+        if (non_null(getRuntime()->FTP_proxy) && !Do_not_use_proxy && us.url.host != NULL && !check_no_proxy(us.url.host)) {
             us.hr.flag |= HR_FLAG_PROXY;
             sock = openSocket(FTP_proxy_parsed.host,
                 schemeNumToName(FTP_proxy_parsed.scheme),
@@ -1010,7 +999,7 @@ struct UrlStream openURL(const char* url, struct Url* current,
         if (request && request->method == FORM_METHOD_HEAD)
             us.hr.command = HR_COMMAND_HEAD;
         if ((
-                (us.url.scheme == SCM_HTTPS) ? non_null(HTTPS_proxy) : non_null(HTTP_proxy))
+                (us.url.scheme == SCM_HTTPS) ? non_null(getRuntime()->HTTPS_proxy) : non_null(getRuntime()->HTTP_proxy))
             && !Do_not_use_proxy && us.url.host != NULL && !check_no_proxy(us.url.host)) {
             us.hr.flag |= HR_FLAG_PROXY;
             if (us.url.scheme == SCM_HTTPS && us.status == HTST_CONNECT) {
@@ -1212,7 +1201,7 @@ int check_no_proxy(char* domain)
         if (domain_match(tl->ptr, domain))
             return 1;
     }
-    if (!NOproxy_netaddr) {
+    if (!getRuntime()->NOproxy_netaddr) {
         return 0;
     }
     /*

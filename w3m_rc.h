@@ -25,12 +25,12 @@
     } while ((s) > 0 && (l)->propBuf[s] & PC_WCHAR2)
 
 #define TRAP_ON                                \
-    if (getRuntime()->TrapSignal) {                          \
+    if (getRuntime()->TrapSignal) {            \
         prevtrap = mySignal(SIGINT, KeyAbort); \
         tty_cbreak(true);                      \
     }
 #define TRAP_OFF                        \
-    if (getRuntime()->TrapSignal) {                   \
+    if (getRuntime()->TrapSignal) {     \
         tty_cbreak(false);              \
         if (prevtrap)                   \
             mySignal(SIGINT, prevtrap); \
@@ -49,6 +49,11 @@ struct Event {
 };
 
 struct Runtime {
+    char* HTTP_proxy;
+    char* HTTPS_proxy;
+    char* FTP_proxy;
+    char* NO_proxy;
+    int NOproxy_netaddr;
     int IndentIncr;
     int PagerMax;
     const char* DefaultType;

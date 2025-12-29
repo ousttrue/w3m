@@ -17,6 +17,10 @@ struct Url {
     char* label;
     int is_nocache;
 };
+extern struct Url HTTP_proxy_parsed;
+extern struct Url HTTPS_proxy_parsed;
+extern struct Url FTP_proxy_parsed;
+
 #define IS_EMPTY_PARSED_URL(pu) ((pu)->scheme == SCM_UNKNOWN && !(pu)->file)
 void parseURL2(const char* url, struct Url* pu, struct Url* current);
 void parseURL(const char* url, struct Url* p_url, struct Url* current);
