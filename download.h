@@ -16,6 +16,7 @@ struct DownloadList {
 };
 #define DOWNLOAD_LIST_TITLE "Download List Panel"
 
+void sig_child_downloadlist(pid_t pid, int p_stat);
 bool hasDownloadList();
 void download_update();
 bool download_checkList(void);

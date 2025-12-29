@@ -317,36 +317,19 @@ wrap_GC_warn_proc(char* msg, GC_word arg)
         fprintf(stderr, msg, (unsigned long)arg);
 }
 
-#ifdef SIGCHLD
 static void
 sig_chld(int signo)
 {
     int p_stat;
     pid_t pid;
-
-#ifdef HAVE_WAITPID
-    while ((pid = waitpid(-1, &p_stat, WNOHANG)) > 0)
-#elif HAVE_WAIT3
-    while ((pid = wait3(&p_stat, WNOHANG, NULL)) > 0)
-#else
-    if ((pid = wait(&p_stat)) > 0)
-#endif
-    {
-        struct DownloadList* d;
-
+    while ((pid = waitpid(-1, &p_stat, WNOHANG)) > 0) {
         if (WIFEXITED(p_stat)) {
-            for (d = FirstDL; d != NULL; d = d->next) {
-                if (d->pid == pid) {
-                    d->err = WEXITSTATUS(p_stat);
-                    break;
-                }
-            }
+            sig_child_downloadlist(pid, p_stat);
         }
     }
     mySignal(SIGCHLD, sig_chld);
     return;
 }
-#endif
 
 static Str
 make_optional_header_string(char* s)
@@ -2521,7 +2504,7 @@ void _followA(bool on_target, bool do_download)
     if (map)
         url = Sprintf("%s?%d,%d", a->url, x, y)->ptr;
 
-    if (check_target && open_tab_blank && a->target && (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
+    if (check_target && getRuntime()->open_tab_blank && a->target && (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
         struct Buffer* buf;
 
         _newT();
@@ -3070,7 +3053,7 @@ DEFUN(backBf, BACK, "Close current buffer and return to the one below in stack")
     struct Buffer* buf = Currentbuf->linkBuffer[LB_N_FRAME];
 
     if (!checkBackBuffer(Currentbuf)) {
-        if (close_tab_back && nTab() >= 1) {
+        if (getRuntime()->close_tab_back && nTab() >= 1) {
             deleteTab(CurrentTab());
         } else
             /* FIXME: gettextize? */
@@ -3311,7 +3294,7 @@ void follow_map(struct parsed_tagarg* arg)
     }
     parseURL2(a->url, &p_url, baseURL(Currentbuf));
     pushHashHist(getRuntime()->URLHist, parsedURL2Str(&p_url)->ptr);
-    if (check_target && open_tab_blank && a->target && (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
+    if (check_target && getRuntime()->open_tab_blank && a->target && (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
         struct Buffer* buf;
 
         _newT();

@@ -236,20 +236,8 @@ global struct TextList* NO_proxy_domains;
 
 global char* CurrentDir;
 global int CurrentPid;
-#if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
-global char* MyProgramName init("w3m");
-#endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
-/*
- * global Buffer *Currentbuf;
- * global Buffer *Firstbuf;
- */
-global int open_tab_blank init(FALSE);
-global int open_tab_dl_list init(FALSE);
-global int close_tab_back init(FALSE);
-global int TabCols init(10);
+
 #define NO_TABBUFFER ((struct TabBuffer*)1)
-global struct DownloadList* FirstDL init(NULL);
-global struct DownloadList* LastDL init(NULL);
 extern char* w3m_version;
 
 #define DUMP_BUFFER 0x01

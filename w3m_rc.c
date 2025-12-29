@@ -56,6 +56,10 @@ static struct termios d_ioval;
 char UseGraphicChar = GRAPHIC_CHAR_CHARSET;
 
 struct Runtime g_runtime = {
+    .open_tab_blank = (FALSE),
+    .open_tab_dl_list = (FALSE),
+    .close_tab_back = (FALSE),
+    .TabCols = (10),
     .DNS_order = (DNS_ORDER_UNSPEC),
     .NoCache = (FALSE),
     .use_proxy = (TRUE),
@@ -434,14 +438,14 @@ void calcTabPos(void)
 
     if (nTab <= 0)
         return;
-    n1 = (TTY_COLS() - rcol - lcol) / TabCols;
+    n1 = (TTY_COLS() - rcol - lcol) / getRuntime()->TabCols;
     if (n1 >= g_runtime.nTab) {
         n2 = 1;
         ny = 1;
     } else {
         if (n1 < 0)
             n1 = 0;
-        n2 = TTY_COLS() / TabCols;
+        n2 = TTY_COLS() / getRuntime()->TabCols;
         if (n2 == 0)
             n2 = 1;
         ny = (g_runtime.nTab - n1 - 1) / n2 + 2;
@@ -1552,9 +1556,9 @@ struct param_ptr params1[] = {
         CMT_PIXEL_PER_LINE, NULL },
     { "frame", P_CHARINT, PI_ONOFF, (void*)&g_runtime.RenderFrame, CMT_FRAME, NULL },
     { "target_self", P_CHARINT, PI_ONOFF, (void*)&g_runtime.TargetSelf, CMT_TSELF, NULL },
-    { "open_tab_blank", P_INT, PI_ONOFF, (void*)&open_tab_blank,
+    { "open_tab_blank", P_INT, PI_ONOFF, (void*)&g_runtime.open_tab_blank,
         CMT_OPEN_TAB_BLANK, NULL },
-    { "open_tab_dl_list", P_INT, PI_ONOFF, (void*)&open_tab_dl_list,
+    { "open_tab_dl_list", P_INT, PI_ONOFF, (void*)&g_runtime.open_tab_dl_list,
         CMT_OPEN_TAB_DL_LIST, NULL },
     { "display_link", P_INT, PI_ONOFF, (void*)&g_runtime.displayLink, CMT_DISPLINK,
         NULL },
@@ -1658,11 +1662,9 @@ struct param_ptr params3[] = {
     { "save_hist", P_INT, PI_ONOFF, (void*)&g_runtime.SaveURLHist, CMT_SAVEHIST, NULL },
     { "confirm_qq", P_INT, PI_ONOFF, (void*)&confirm_on_quit, CMT_CONFIRM_QQ,
         NULL },
-    { "close_tab_back", P_INT, PI_ONOFF, (void*)&close_tab_back,
+    { "close_tab_back", P_INT, PI_ONOFF, (void*)&g_runtime.close_tab_back,
         CMT_CLOSE_TAB_BACK, NULL },
-#ifdef USE_MARK
     { "mark", P_INT, PI_ONOFF, (void*)&use_mark, CMT_USE_MARK, NULL },
-#endif
     { "emacs_like_lineedit", P_INT, PI_ONOFF, (void*)&g_runtime.emacs_like_lineedit,
         CMT_EMACS_LIKE_LINEEDIT, NULL },
     { "space_autocomplete", P_INT, PI_ONOFF, (void*)&g_runtime.space_autocomplete,

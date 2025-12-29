@@ -12,6 +12,20 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <stdlib.h>
+
+struct DownloadList* FirstDL = (NULL);
+struct DownloadList* LastDL = (NULL);
+
+void sig_child_downloadlist(pid_t pid, int p_stat)
+{
+    for (struct DownloadList* d = FirstDL; d != NULL; d = d->next) {
+        if (d->pid == pid) {
+            d->err = WEXITSTATUS(p_stat);
+            break;
+        }
+    }
+}
 
 static bool add_download_list = false;
 
@@ -155,7 +169,7 @@ void download_panel()
         restorePosition(buf, Currentbuf);
     }
     bool new_tab = false;
-    if (!replace && open_tab_dl_list) {
+    if (!replace && getRuntime()->open_tab_dl_list) {
         _newT();
         new_tab = true;
     }
