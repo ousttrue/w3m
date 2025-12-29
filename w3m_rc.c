@@ -1,4 +1,5 @@
 #include "w3m_rc.h"
+#include "menu.h"
 #include "cookie.h"
 #include "history.h"
 #include "compression.h"
@@ -18,6 +19,7 @@
 #include "proto.h"
 #include "parsetag.h"
 #include "regex.h"
+#include "funcname1.h"
 
 #include "html_form.h"
 #include "siteconf.h"
@@ -61,7 +63,6 @@ static struct termios d_ioval;
 
 // rc
 char UseGraphicChar = GRAPHIC_CHAR_CHARSET;
-
 
 struct Runtime* getRuntime()
 {
@@ -528,7 +529,7 @@ void query_from_followform(Str* query, struct FormItemList* fi, int multipart)
             return;
         }
         fi->parent->body = (*query)->ptr;
-        fi->parent->boundary = Sprintf("------------------------------%d%ld%ld%ld", CurrentPid,
+        fi->parent->boundary = Sprintf("------------------------------%d%ld%ld%ld", getRuntime()->CurrentPid,
             fi->parent, fi->parent->body, fi->parent->boundary)
                                    ->ptr;
     }
@@ -1413,6 +1414,10 @@ static int RC_table_size;
 
 #define CMT_KEYMAP_FILE N_("keymap file")
 
+#define _(Text) Text
+#define N_(Text) Text
+#define gettext(Text) Text
+
 static struct sel_c colorstr[] = {
     { 0, "black", N_("black") },
     { 1, "red", N_("red") },
@@ -1897,7 +1902,7 @@ create_option_search_table()
 }
 
 static struct param_ptr*
-search_param(char* name)
+search_param(const char* name)
 {
     size_t b, e, i;
     int cmp;
@@ -2003,9 +2008,8 @@ void show_params(FILE* fp)
     }
 }
 
-#ifdef USE_COLOR
 static int
-str_to_color(char* value)
+str_to_color(const char* value)
 {
     if (value == NULL)
         return 8; /* terminal */
@@ -2043,10 +2047,9 @@ str_to_color(char* value)
     }
     return 8; /* terminal */
 }
-#endif
 
 static int
-set_param(char* name, char* value)
+set_param(const char* name, const char* value)
 {
     struct param_ptr* p;
     double ppc;
@@ -2081,7 +2084,7 @@ set_param(char* name, char* value)
         *(char*)p->varptr = value[0];
         break;
     case P_STRING:
-        *(char**)p->varptr = value;
+        *(const char**)p->varptr = value;
         break;
 #if defined(USE_SSL) && defined(USE_SSL_VERIFY)
     case P_SSLPATH:
@@ -2119,7 +2122,7 @@ set_param(char* name, char* value)
 int set_param_option(const char* option)
 {
     Str tmp = Strnew();
-    char *p = option, *q;
+    const char *p = option, *q;
 
     while (*p && !IS_SPACE(*p) && *p != '=')
         Strcat_char(tmp, *p++);
@@ -2310,7 +2313,7 @@ void init_rc(void)
     document_charset_str = display_charset_str;
     system_charset_str = display_charset_str;
 
-    tmp_dir = g_runtime.rc_dir;
+    getRuntime()->tmp_dir = g_runtime.rc_dir;
 
     if (do_recursive_mkdir(g_runtime.rc_dir) == -1)
         goto rc_dir_err;
@@ -2349,39 +2352,39 @@ void init_tmp(void)
     int i;
 
     if (g_runtime.param_tmp_dir)
-        tmp_dir = g_runtime.param_tmp_dir;
-    if (*tmp_dir == '\0')
-        tmp_dir = g_runtime.rc_dir;
+        getRuntime()->tmp_dir = g_runtime.param_tmp_dir;
+    if (*getRuntime()->tmp_dir == '\0')
+        getRuntime()->tmp_dir = g_runtime.rc_dir;
 
-    if (strcmp(tmp_dir, g_runtime.rc_dir) == 0) {
+    if (strcmp(getRuntime()->tmp_dir, g_runtime.rc_dir) == 0) {
         if (g_runtime.no_rc_dir)
             goto tmp_dir_err;
         return;
     }
 
-    tmp_dir = expandPath(tmp_dir);
-    i = strlen(tmp_dir);
-    if (i > 1 && tmp_dir[i - 1] == '/')
-        tmp_dir[i - 1] = '\0';
-    if (do_recursive_mkdir(tmp_dir) == -1)
+    getRuntime()->tmp_dir = expandPath(getRuntime()->tmp_dir);
+    i = strlen(getRuntime()->tmp_dir);
+    if (i > 1 && getRuntime()->tmp_dir[i - 1] == '/')
+        getRuntime()->tmp_dir[i - 1] = '\0';
+    if (do_recursive_mkdir(getRuntime()->tmp_dir) == -1)
         goto tmp_dir_err;
     return;
 
 tmp_dir_err:
 #ifdef HAVE_MKDTEMP
     if (g_runtime.mkd_tmp_dir) {
-        tmp_dir = g_runtime.mkd_tmp_dir;
+        getRuntime()->tmp_dir = g_runtime.mkd_tmp_dir;
         return;
     }
 #endif
-    if (((tmp_dir = getenv("TMPDIR")) == NULL || *tmp_dir == '\0') && ((tmp_dir = getenv("TMP")) == NULL || *tmp_dir == '\0') && ((tmp_dir = getenv("TEMP")) == NULL || *tmp_dir == '\0'))
-        tmp_dir = "/tmp";
+    if (((getRuntime()->tmp_dir = getenv("TMPDIR")) == NULL || *getRuntime()->tmp_dir == '\0') && ((getRuntime()->tmp_dir = getenv("TMP")) == NULL || *getRuntime()->tmp_dir == '\0') && ((getRuntime()->tmp_dir = getenv("TEMP")) == NULL || *getRuntime()->tmp_dir == '\0'))
+        getRuntime()->tmp_dir = "/tmp";
 #ifdef HAVE_MKDTEMP
-    tmp_dir = mkdtemp(Strnew_m_charp(tmp_dir, "/w3m-XXXXXX", NULL)->ptr);
-    if (tmp_dir)
-        g_runtime.mkd_tmp_dir = tmp_dir;
+    getRuntime()->tmp_dir = mkdtemp(Strnew_m_charp(getRuntime()->tmp_dir, "/w3m-XXXXXX", NULL)->ptr);
+    if (getRuntime()->tmp_dir)
+        g_runtime.mkd_tmp_dir = getRuntime()->tmp_dir;
     else
-        tmp_dir = g_runtime.rc_dir;
+        getRuntime()->tmp_dir = g_runtime.rc_dir;
 #endif
     return;
 }

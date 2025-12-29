@@ -1,4 +1,5 @@
 #include "download.h"
+#include "parsetag.h"
 #include "indep.h"
 #include "file.h"
 #include "buffer.h"
@@ -9,6 +10,8 @@
 #include "image.h"
 #include "fm.h"
 #include "proto.h" // ldDL
+#include "funcname1.h"
+
 #include <signal.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -192,7 +195,7 @@ void addDownloadList(pid_t pid,
     d->pid = pid;
     d->url = url;
     if (save[0] != '/' && save[0] != '~')
-        save = Strnew_m_charp(CurrentDir, "/", save, NULL)->ptr;
+        save = Strnew_m_charp(getRuntime()->CurrentDir, "/", save, NULL)->ptr;
     d->save = expandPath(save);
     d->lock = lock;
     d->size = size;

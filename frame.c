@@ -1,4 +1,5 @@
 #include "frame.h"
+#include "input_stream.h"
 #include "html_form.h"
 #include "alloc.h"
 #include "indep.h"

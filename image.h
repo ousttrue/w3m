@@ -1,6 +1,19 @@
 #pragma once
-#include "Str.h"
 #include <sys/types.h>
+
+#define INLINE_IMG_NONE 0
+#define INLINE_IMG_OSC5379 1
+#define INLINE_IMG_SIXEL 2
+#define INLINE_IMG_ITERM2 3
+#define INLINE_IMG_KITTY 4
+
+#define IMG_FLAG_SKIP 1
+#define IMG_FLAG_AUTO 2
+
+#define IMG_FLAG_UNLOADED 0
+#define IMG_FLAG_LOADED 1
+#define IMG_FLAG_ERROR 2
+#define IMG_FLAG_DONT_REMOVE 4
 
 #define MAX_IMAGE 1000
 #define MAX_IMAGE_SIZE 2048

@@ -6,6 +6,11 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+#define HTST_UNKNOWN 255
+#define HTST_MISSING 254
+#define HTST_NORMAL 0
+#define HTST_CONNECT 1
+
 enum InputStreamType {
     IST_BASIC = 0,
     IST_FILE = 1,

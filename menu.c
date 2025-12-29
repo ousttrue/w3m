@@ -1,4 +1,5 @@
 #include "menu.h"
+#include "terms.h"
 #include "alloc.h"
 #include "symbol.h"
 #include "message.h"
@@ -13,6 +14,8 @@
 #include "myctype.h"
 #include "regex.h"
 #include "proto.h"
+#include "funcname1.h"
+
 #include <libwc/ces.h>
 #include <libwc/charset.h>
 #include <string.h>
@@ -639,6 +642,10 @@ static int smDelTab(char c);
 static struct Menu MainMenu;
 static wc_ces MainMenuCharset = WC_CES_US_ASCII; /* FIXME: charset of source code */
 static int MainMenuEncode = false;
+
+#define _(Text) Text
+#define N_(Text) Text
+#define gettext(Text) Text
 
 static struct MenuItem MainMenuItem[] = {
     /* type        label           variable value func     popup keys data  */

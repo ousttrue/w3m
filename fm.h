@@ -1,157 +1,15 @@
-/*
- * w3m: WWW wo Miru utility
- *
- * by A.ITO  Feb. 1995
- *
- * You can use,copy,modify and distribute this program without any permission.
- */
 #pragma once
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE /* strcasestr() */
 #endif
 
-#include "config.h"
-
-#define MENU_SELECT
-#define MENU_MAP
-
-#undef bindtextdomain
-#define bindtextdomain(Domain, Directory) /* empty */
-#undef textdomain
-#define textdomain(Domain) /* empty */
-#define _(Text) Text
-#define N_(Text) Text
-#define gettext(Text) Text
-
-#include "parsetag.h"
-#include "func.h"
-#include "menu.h"
-#include "textlist.h"
-#include "funcname1.h"
-#include "terms.h"
-#include "input_stream.h"
-
-#ifdef MAINPROGRAM
-#define global
-#define init(x) = (x)
-#else /* not MAINPROGRAM */
-#define global extern
-#define init(x)
-#endif /* not MAINPROGRAM */
-
 #define DEFUN(funcname, macroname, docstring) void funcname(void)
 
-/*
- * Constants.
- */
-
-#define DEFAULT_COLS 80
-
-#ifdef FALSE
-#undef FALSE
-#endif
-
-#ifdef TRUE
-#undef TRUE
-#endif
-
-#define FALSE 0
-#define TRUE 1
-
-#define SHELLBUFFERNAME "*Shellout*"
-#define PIPEBUFFERNAME "*stream*"
-#define CPIPEBUFFERNAME "*stream(closed)*"
-#define DICTBUFFERNAME "*dictionary*"
-
-#ifndef HOST_NAME_MAX
-#define HOST_NAME_MAX 255
-#endif
-
-/*
- * Line Property
- */
-
-#define IMG_FLAG_SKIP 1
-#define IMG_FLAG_AUTO 2
-
-#define IMG_FLAG_UNLOADED 0
-#define IMG_FLAG_LOADED 1
-#define IMG_FLAG_ERROR 2
-#define IMG_FLAG_DONT_REMOVE 4
-
-/*
- * Macros.
- */
-
-#define bpcmp(a, b) \
-    (((a).line - (b).line) ? ((a).line - (b).line) : ((a).pos - (b).pos))
-
-#define RELATIVE_WIDTH(w) (((w) >= 0) ? (int)((w) / getRuntime()->pixel_per_char) : (w))
-#define REAL_WIDTH(w, limit) (((w) >= 0) ? (int)((w) / getRuntime()->pixel_per_char) : -(w) * (limit) / 100)
-
-#define EOL(l) (&(l)->ptr[(l)->length])
-#define IS_EOL(p, l) ((p) == &(l)->ptr[(l)->length])
-
-#define INLINE_IMG_NONE 0
-#define INLINE_IMG_OSC5379 1
-#define INLINE_IMG_SIXEL 2
-#define INLINE_IMG_ITERM2 3
-#define INLINE_IMG_KITTY 4
-
-/*
- * Types.
- */
-
-/* modes for align() */
-
-#define ALIGN_CENTER 0
-#define ALIGN_LEFT 1
-#define ALIGN_RIGHT 2
-#define ALIGN_MIDDLE 4
-#define ALIGN_TOP 5
-#define ALIGN_BOTTOM 6
-
-#define VALIGN_MIDDLE 0
-#define VALIGN_TOP 1
-#define VALIGN_BOTTOM 2
-
-#define HTST_UNKNOWN 255
-#define HTST_MISSING 254
-#define HTST_NORMAL 0
-#define HTST_CONNECT 1
-
-/*
- * Globals.
- */
-
+#include "func.h"
 extern unsigned char GlobalKeymap[];
 extern unsigned char EscKeymap[];
 extern unsigned char EscBKeymap[];
 extern unsigned char EscDKeymap[];
 extern struct FuncList w3mFuncList[];
 
-extern int ai_family_order_table[7][3]; /* XXX */
-
-global char* CurrentDir;
-global int CurrentPid;
-
-#define NO_TABBUFFER ((struct TabBuffer*)1)
-extern char* w3m_version;
-
-#define DUMP_BUFFER 0x01
-#define DUMP_HEAD 0x02
-#define DUMP_SOURCE 0x04
-#define DUMP_EXTRA 0x08
-#define DUMP_HALFDUMP 0x10
-#define DUMP_FRAME 0x20
-global int w3m_debug;
-#define w3m_halfdump (getRuntime()->w3m_dump & DUMP_HALFDUMP)
-
-global struct TextList* fileToDelete;
-global char* tmp_dir;
-
-global struct TextList* backend_batch_commands init(NULL);
-global TextLineList* backend_halfdump_buf;
-int backend(void);
-extern void deleteFiles(void);

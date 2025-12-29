@@ -1,4 +1,5 @@
 #include "maparea.h"
+#include "menu.h"
 #include "frame.h"
 #include "alloc.h"
 #include "etc.h"
@@ -231,9 +232,7 @@ follow_map_menu(struct Buffer* buf, char* name, struct Anchor* a_img, int x, int
 
     optionMenu(x, y, label, &selected, initial, NULL);
 
-#ifdef USE_IMAGE
 map_end:
-#endif
     if (selected >= 0) {
         for (i = 0, al = ml->area->first; al != NULL; i++, al = al->next) {
             if (al->ptr && i == selected)
@@ -242,53 +241,6 @@ map_end:
     }
     return NULL;
 }
-
-#ifndef MENU_MAP
-char* map1 = "<HTML><HEAD><TITLE>Image map links</TITLE></HEAD>\
-<BODY><H1>Image map links</H1>\
-<table>";
-
-struct Buffer*
-follow_map_panel(struct Buffer* buf, char* name)
-{
-    Str mappage;
-    MapList* ml;
-    ListItem* al;
-    MapArea* a;
-    struct Url pu;
-    char *p, *q;
-    struct Buffer* newbuf;
-
-    ml = searchMapList(buf, name);
-    if (ml == NULL)
-        return NULL;
-
-    mappage = Strnew_charp(map1);
-    for (al = ml->area->first; al != NULL; al = al->next) {
-        a = (MapArea*)al->ptr;
-        if (!a)
-            continue;
-        parseURL2(a->url, &pu, baseURL(buf));
-        p = parsedURL2Str(&pu)->ptr;
-        q = html_quote(p);
-        if (DecodeURL)
-            p = html_quote(url_decode2(p, buf));
-        else
-            p = q;
-        Strcat_m_charp(mappage, "<tr valign=top><td><a href=\"", q, "\">",
-            html_quote(*a->alt ? a->alt : mybasename(a->url)),
-            "</a><td>", p, NULL);
-    }
-    Strcat_charp(mappage, "</table></body></html>");
-
-    newbuf = loadHTMLString(mappage);
-#ifdef USE_M17N
-    if (newbuf)
-        newbuf->document_charset = buf->document_charset;
-#endif
-    return newbuf;
-}
-#endif
 
 struct MapArea*
 newMapArea(const char* url, const char* target, const char* alt, const char* shape, const char* coords)

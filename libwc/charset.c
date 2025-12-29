@@ -112,7 +112,7 @@ wc_guess_charset(const char* charset, wc_ces orig)
 }
 
 wc_ces
-wc_guess_charset_short(char* charset, wc_ces orig)
+wc_guess_charset_short(const char* charset, wc_ces orig)
 {
     wc_ces guess;
 

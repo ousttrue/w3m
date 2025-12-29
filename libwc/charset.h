@@ -10,7 +10,7 @@
 extern wc_locale WcLocale;
 
 extern wc_ces wc_guess_charset(const char* charset, wc_ces orig);
-extern wc_ces wc_guess_charset_short(char* charset, wc_ces orig);
+extern wc_ces wc_guess_charset_short(const char* charset, wc_ces orig);
 extern wc_ces wc_guess_locale_charset(char* locale, wc_ces orig);
 extern wc_ces wc_charset_to_ces(char* charset);
 extern wc_ces wc_charset_short_to_ces(char* charset);

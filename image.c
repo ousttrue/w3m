@@ -1,4 +1,5 @@
 #include "image.h"
+#include "terms.h"
 #include "file.h"
 #include "indep.h"
 #include "local_cgi.h"
@@ -454,7 +455,7 @@ static void put_image_kitty(const char* url, int x, int y, int w, int h, int sx,
     t = 100; /* always convert to png for now. */
 
     if (!(type && !strcasecmp(type, "image/png"))) {
-        tmpf = Sprintf("%s/%s.png", tmp_dir, mybasename(url))->ptr;
+        tmpf = Sprintf("%s/%s.png", getRuntime()->tmp_dir, mybasename(url))->ptr;
 
         if (type && !strcasecmp(type, "image/gif")) {
             is_anim = 1;
@@ -504,7 +505,7 @@ static void put_image_kitty(const char* url, int x, int y, int w, int h, int sx,
                 mySignal(SIGTSTP, prevstop);
             }
 
-            pushText(fileToDelete, tmpf);
+            pushText(getRuntime()->fileToDelete, tmpf);
         }
         url = tmpf;
     }

@@ -540,7 +540,7 @@ unsigned char MYCTYPE_DIGITMAP[0x100] = {
 };
 uint8_t GET_MYCDIGIT(uint8_t x) { return (MYCTYPE_DIGITMAP[(int)(unsigned char)(x)]); }
 
-int str_to_bool(char* value, int old)
+int str_to_bool(const char* value, int old)
 {
     if (value == 0)
         return 1;

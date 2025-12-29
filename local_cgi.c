@@ -1,4 +1,5 @@
 #include "local_cgi.h"
+#include "input_stream.h"
 #include "indep.h"
 #include "alloc.h"
 #include "etc.h"

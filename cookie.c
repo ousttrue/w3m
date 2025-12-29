@@ -8,17 +8,20 @@
  */
 
 #include "cookie.h"
+#include "parsetag.h"
 #include "alloc.h"
 #include "fm.h"
 #include "file.h"
-#include "html.h"
+// #include "html.h"
 #include "indep.h"
-#include "local_cgi.h"
+// #include "local_cgi.h"
 #include "regex.h"
 #include "myctype.h"
 #include "w3m_rc.h"
 #include "proto.h" // backBf
+#include <fcntl.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <time.h>
 
 struct auth_cookie* Auth_cookie = (NULL);

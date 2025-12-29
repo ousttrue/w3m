@@ -11,6 +11,21 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#define DUMP_BUFFER 0x01
+#define DUMP_HEAD 0x02
+#define DUMP_SOURCE 0x04
+#define DUMP_EXTRA 0x08
+#define DUMP_HALFDUMP 0x10
+#define DUMP_FRAME 0x20
+#define w3m_halfdump (getRuntime()->w3m_dump & DUMP_HALFDUMP)
+
+#define RELATIVE_WIDTH(w) (((w) >= 0) ? (int)((w) / getRuntime()->pixel_per_char) : (w))
+#define REAL_WIDTH(w, limit) (((w) >= 0) ? (int)((w) / getRuntime()->pixel_per_char) : -(w) * (limit) / 100)
+
+extern char* w3m_version;
+
+#define DEFAULT_COLS 80
+
 #define SAVE_BUF_SIZE 1536
 
 #define nextChar(s, l) \

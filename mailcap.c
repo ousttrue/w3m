@@ -1,4 +1,5 @@
 #include "mailcap.h"
+#include "input_stream.h"
 #include "indep.h"
 #include "content.h"
 #include "fm.h"

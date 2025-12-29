@@ -6,6 +6,8 @@
 
 #define NO_REFERER ((char*)-1)
 
+extern int ai_family_order_table[7][3]; /* XXX */
+
 struct Url {
     enum UrlScheme scheme;
     char* user;
@@ -41,5 +43,3 @@ extern wc_ces url_to_charset(const char* url, const struct Url* base,
     wc_ces doc_charset);
 extern char* url_encode(const char* url, const struct Url* base,
     wc_ces doc_charset);
-
-

@@ -5,6 +5,11 @@
 #define PAGER_MAX_LINE 10000 /* Maximum line kept as pager */
 
 struct Runtime g_runtime = {
+    .CurrentDir = 0,
+    .CurrentPid = 0,
+    .fileToDelete = 0,
+    .tmp_dir = 0,
+
     .OptionCharset = WC_CES_US_ASCII,
     .OptionEncode = false,
 

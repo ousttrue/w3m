@@ -1,4 +1,5 @@
 #include "ftp.h"
+#include "input_stream.h"
 #include "indep.h"
 #include "w3m_rc.h"
 #include "etc.h"

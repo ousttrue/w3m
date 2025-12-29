@@ -3,6 +3,15 @@
 #include "termcap_util.h"
 #include <libwc/ces.h>
 
+#ifdef FALSE
+#undef FALSE
+#endif
+#ifdef TRUE
+#undef TRUE
+#endif
+#define FALSE 0
+#define TRUE 1
+
 #define MAILTO_OPTIONS_IGNORE 1
 #define MAILTO_OPTIONS_USE_MAILTO_URL 2
 
@@ -21,6 +30,11 @@
 #define DNS_ORDER_INET6_ONLY 6
 
 struct Runtime {
+    char* CurrentDir;
+    int CurrentPid;
+    struct TextList* fileToDelete;
+    char* tmp_dir;
+
     int view_unseenobject;
     int is_redisplay;
     int clear_buffer;

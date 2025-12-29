@@ -128,7 +128,7 @@ interpret_keymap(FILE* kf, struct stat* current, int force)
     wc_ces charset = getRuntime()->SystemCharset;
 
     int verbose = 1;
-    extern int str_to_bool(char* value, int old);
+    extern int str_to_bool(const char* value, int old);
 
     if ((fd = fileno(kf)) < 0 || fstat(fd, &kstat) || (!force && kstat.st_mtime == current->st_mtime && kstat.st_dev == current->st_dev && kstat.st_ino == current->st_ino && kstat.st_size == current->st_size))
         return;

@@ -1,4 +1,6 @@
 #include "buffer.h"
+#include "input_stream.h"
+#include "terms.h"
 #include "html_form.h"
 #include "frame.h"
 #include "alloc.h"

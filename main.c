@@ -1,4 +1,7 @@
 #include "maparea.h"
+#include "backend.h"
+#include "menu.h"
+#include "parsetag.h"
 #include "frame.h"
 #include "cookie.h"
 #include "indep.h"
@@ -48,25 +51,19 @@
 #include "terms.h"
 #include "myctype.h"
 #include "regex.h"
+#include "funcname1.h"
 
 #include <libwc/wtf.h>
 #include <libwc/ucs.h>
 #include <libwc/charset.h>
 
-#ifdef USE_MOUSE
-#ifdef USE_GPM
-#include <gpm.h>
-#endif /* USE_GPM */
-#if defined(USE_GPM) || defined(USE_SYSMOUSE)
-extern int do_getch();
-#define getch() do_getch()
-#endif /* defined(USE_GPM) || defined(USE_SYSMOUSE) */
-#endif
+#define PIPEBUFFERNAME "*stream*"
+#define CPIPEBUFFERNAME "*stream(closed)*"
+#define DICTBUFFERNAME "*dictionary*"
+#define NO_TABBUFFER ((struct TabBuffer*)1)
 
-#ifdef __MINGW32_VERSION
-#include <winsock.h>
-
-WSADATA WSAData;
+#ifndef HOST_NAME_MAX
+#define HOST_NAME_MAX 255
 #endif
 
 #define DSTR_LEN 256
@@ -416,22 +413,13 @@ bool w3m_args(int argc, char** argv)
 
     setlocale(LC_ALL, "");
 
-#ifdef ENABLE_NLS
-    bindtextdomain(PACKAGE, LOCALEDIR);
-    textdomain(PACKAGE);
-#endif
-
-    fileToDelete = newTextList();
+    getRuntime()->fileToDelete = newTextList();
 
     load_argv = New_N(char*, argc - 1);
     load_argc = 0;
 
-    CurrentDir = currentdir();
-    CurrentPid = (int)getpid();
-#if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
-    if (argv[0] && *argv[0])
-        MyProgramName = argv[0];
-#endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
+    getRuntime()->CurrentDir = currentdir();
+    getRuntime()->CurrentPid = (int)getpid();
     getRuntime()->BookmarkFile = NULL;
     getRuntime()->config_file = NULL;
 
@@ -563,7 +551,7 @@ bool w3m_args(int argc, char** argv)
                     usage();
                 getRuntime()->BookmarkFile = argv[i];
                 if (getRuntime()->BookmarkFile[0] != '~' && getRuntime()->BookmarkFile[0] != '/') {
-                    Str tmp = Strnew_charp(CurrentDir);
+                    Str tmp = Strnew_charp(getRuntime()->CurrentDir);
                     if (Strlastchar(tmp) != '/')
                         Strcat_char(tmp, '/');
                     Strcat_charp(tmp, getRuntime()->BookmarkFile);
@@ -696,8 +684,6 @@ bool w3m_args(int argc, char** argv)
                 }
             } else if (!strcmp("-", argv[i]) || !strcmp("-dummy", argv[i])) {
                 /* do nothing */
-            } else if (!strcmp("-debug", argv[i])) {
-                w3m_debug = TRUE;
             }
             // else if (!strcmp("-reqlog", argv[i])) {
             //     w3m_reqlog = rcFile("request.log");
@@ -3250,14 +3236,6 @@ void follow_map(struct parsed_tagarg* arg)
     y = Currentbuf->cursorY + Currentbuf->rootY;
     struct MapArea* a = follow_map_menu(Currentbuf, name, an, x, y);
     if (a == NULL || a->url == NULL || *(a->url) == '\0') {
-
-#ifndef MENU_MAP
-        struct Buffer* buf = follow_map_panel(Currentbuf, name);
-
-        if (buf != NULL)
-            cmd_loadBuffer(buf, BP_NORMAL, LB_NOLINK);
-#endif
-#if defined(MENU_MAP) || defined(USE_IMAGE)
         return;
     }
     if (*(a->url) == '#') {
@@ -3281,7 +3259,6 @@ void follow_map(struct parsed_tagarg* arg)
     }
     cmd_loadURL(a->url, baseURL(Currentbuf),
         parsedURL2Str(&Currentbuf->currentURL)->ptr, NULL);
-#endif
 }
 
 /* link menu */
@@ -4523,7 +4500,7 @@ void deleteFiles()
             Firstbuf = buf;
         }
     }
-    while ((f = popText(fileToDelete)) != NULL) {
+    while ((f = popText(getRuntime()->fileToDelete)) != NULL) {
         unlink(f);
         if (getRuntime()->enable_inline_image == INLINE_IMG_SIXEL && strcmp(f + strlen(f) - 4, ".gif") == 0) {
             Str firstframe = Strnew_charp(f);

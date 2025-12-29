@@ -1,4 +1,5 @@
 #include "w3m_rc.h"
+#include "input_stream.h"
 #include "indep.h"
 #include "ssl_stream.h"
 #include "ftp.h"
@@ -723,7 +724,7 @@ void parseURL2(const char* url, struct Url* pu, struct Url* current)
 #endif
             strcmp(pu->file, "-")) {
             /* local file, relative path */
-            tmp = Strnew_charp(CurrentDir);
+            tmp = Strnew_charp(getRuntime()->CurrentDir);
             if (Strlastchar(tmp) != '/')
                 Strcat_char(tmp, '/');
             Strcat_charp(tmp, file_unquote(pu->file));

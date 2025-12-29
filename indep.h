@@ -64,4 +64,3 @@ extern char* w3m_conf_dir(void);
 extern char* w3m_help_dir(void);
 
 char* html_quote(const char* str);
-

@@ -238,7 +238,6 @@ void formResetBuffer(struct Buffer* buf, struct AnchorList* formitem)
             f1->init_checked = f2->init_checked;
             break;
         case FORM_SELECT:
-#ifdef MENU_SELECT
             f1->select_option = f2->select_option;
             f1->value = f2->value;
             f1->label = f2->label;
@@ -246,7 +245,6 @@ void formResetBuffer(struct Buffer* buf, struct AnchorList* formitem)
             f1->init_value = f2->init_value;
             f1->init_label = f2->init_label;
             f1->init_selected = f2->init_selected;
-#endif /* MENU_SELECT */
             break;
         default:
             continue;
@@ -388,9 +386,7 @@ void formUpdateBuffer(struct Anchor* a, struct Buffer* buf, struct FormItemList*
     case FORM_INPUT_PASSWORD:
     case FORM_INPUT_CHECKBOX:
     case FORM_INPUT_RADIO:
-#ifdef MENU_SELECT
     case FORM_SELECT:
-#endif /* MENU_SELECT */
         spos = a->start.pos;
         epos = a->end.pos;
         break;
@@ -412,13 +408,11 @@ void formUpdateBuffer(struct Anchor* a, struct Buffer* buf, struct FormItemList*
     case FORM_INPUT_FILE:
     case FORM_INPUT_PASSWORD:
     case FORM_TEXTAREA:
-#ifdef MENU_SELECT
     case FORM_SELECT:
         if (form->type == FORM_SELECT) {
             p = form->label->ptr;
             updateSelectOption(form, form->select_option);
         } else
-#endif /* MENU_SELECT */
         {
             if (!form->value)
                 break;
@@ -598,7 +592,6 @@ void do_internal(char* action, char* data)
     }
 }
 
-#ifdef MENU_SELECT
 void addSelectOption(struct FormSelectOption* fso, Str value, Str label, int chk)
 {
     struct FormSelectOptionItem* o;
@@ -685,7 +678,6 @@ int formChooseOptionByMenu(struct FormItemList* fi, int x, int y)
     updateSelectOption(fi, fi->select_option);
     return 1;
 }
-#endif /* MENU_SELECT */
 
 void form_write_data(FILE* f, char* boundary, char* name, char* value)
 {
@@ -966,7 +958,6 @@ void preFormUpdateBuffer(struct Buffer* buf)
                     if (pi->value && fi->value && !Strcmp_charp(fi->value, pi->value))
                         formRecheckRadio(a, buf, fi);
                     break;
-#ifdef MENU_SELECT
                 case FORM_SELECT:
                     for (j = 0, opt = fi->select_option; opt != NULL;
                         j++, opt = opt->next) {
@@ -980,7 +971,6 @@ void preFormUpdateBuffer(struct Buffer* buf)
                         }
                     }
                     break;
-#endif
                 }
             }
         }

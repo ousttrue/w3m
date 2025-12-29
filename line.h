@@ -11,6 +11,9 @@ inline static Lineprop get_mctype(const char* c)
 
 #define LINELEN 256 /* Initial line length */
 
+// #define EOL(l) (&(l)->ptr[(l)->length])
+// #define IS_EOL(p, l) ((p) == &(l)->ptr[(l)->length])
+
 enum LinepropFlags : uint16_t {
     P_CHARTYPE = 0x3f00,
     PC_ASCII = (WTF_TYPE_ASCII << 8),
@@ -90,4 +93,3 @@ enum LineMode {
 Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor);
 void cleanup_line(Str s, enum LineMode mode);
 Str convertLine(Str line, enum LineMode mode, wc_ces* detected, wc_ces f_ces);
-

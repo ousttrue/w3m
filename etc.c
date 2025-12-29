@@ -719,7 +719,7 @@ void mySystem(const char* command, int background)
 Str myExtCommand(const char* cmd, const char* arg, int redirect)
 {
     Str tmp = NULL;
-    char* p;
+    const char* p;
     int set_arg = FALSE;
 
     for (p = cmd; *p; p++) {
@@ -746,7 +746,7 @@ Str myExtCommand(const char* cmd, const char* arg, int redirect)
 Str myEditor(const char* cmd, const char* file, int line)
 {
     Str tmp = NULL;
-    char* p;
+    const char* p;
     int set_file = FALSE, set_line = FALSE;
 
     for (p = cmd; *p; p++) {
@@ -777,15 +777,9 @@ Str myEditor(const char* cmd, const char* file, int line)
     return tmp;
 }
 
-#ifdef __MINGW32_VERSION
-char* expandName(char* name)
-{
-    return getenv("HOME");
-}
-#else
 char* expandName(const char* name)
 {
-    char* p;
+    const char* p;
     struct passwd *passent, *getpwnam(const char*);
     Str extpath = NULL;
 
@@ -820,9 +814,8 @@ char* expandName(const char* name)
     } else
         return expandPath(p);
 rest:
-    return name;
+    return Strnew_charp(name)->ptr;
 }
-#endif
 
 int is_localhost(const char* host)
 {
@@ -863,7 +856,7 @@ char* file_to_url(const char* file)
     } else
 #endif
         if (file[0] != '/') {
-        tmp = Strnew_charp(CurrentDir);
+        tmp = Strnew_charp(getRuntime()->CurrentDir);
         if (Strlastchar(tmp) != '/')
             Strcat_char(tmp, '/');
         Strcat_charp(tmp, file);
@@ -923,14 +916,14 @@ Str tmpfname(enum TmpFileTypes type, const char* ext)
     case TMPF_FRAME:
     case TMPF_CACHE:
     default:
-        dir = tmp_dir;
+        dir = getRuntime()->tmp_dir;
     }
 
     tmpf = Sprintf("%s/w3m%s%d-%d%s",
         dir,
         tmpf_base[type],
-        CurrentPid, tmpf_seq[type]++, (ext) ? ext : "");
-    pushText(fileToDelete, tmpf->ptr);
+        getRuntime()->CurrentPid, tmpf_seq[type]++, (ext) ? ext : "");
+    pushText(getRuntime()->fileToDelete, tmpf->ptr);
     return tmpf;
 }
 

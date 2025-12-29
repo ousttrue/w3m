@@ -1,3 +1,4 @@
+#include "backend.h"
 #include "w3m_rc.h"
 #include "cookie.h"
 #include "indep.h"
@@ -11,6 +12,9 @@
 #include <gc.h>
 #include <charset.h>
 #include "terms.h"
+
+struct TextList* backend_batch_commands = (NULL);
+TextLineList* backend_halfdump_buf = NULL;
 
 static int LINES, COLS;
 

@@ -1,4 +1,5 @@
 #include "content.h"
+#include "input_stream.h"
 #include "linein.h"
 #include "w3m_rc.h"
 #include "cookie.h"

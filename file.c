@@ -1,4 +1,6 @@
 #include "file.h"
+#include "backend.h"
+#include "input_stream.h"
 #include "frame.h"
 #include "html_builder.h"
 #include "indep.h"
@@ -32,6 +34,7 @@
 #include "local_cgi.h"
 #include "regex.h"
 #include "myctype.h"
+#include "funcname1.h"
 
 #include <libwc/ces.h>
 
@@ -49,14 +52,16 @@
 
 #include <libwc/charset.h>
 
+#define SHELLBUFFERNAME "*Shellout*"
+
+#define MAX_INPUT_SIZE 80 /* TODO - max should be screen line length */
+
 #ifndef max
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #endif /* not max */
 #ifndef min
 #define min(a, b) ((a) > (b) ? (b) : (a))
 #endif /* not min */
-
-#define MAX_INPUT_SIZE 80 /* TODO - max should be screen line length */
 
 static int frame_source = 0;
 static int need_number = 0;
@@ -4480,16 +4485,13 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
     char symbol = '\0';
     int internal = 0;
     struct Anchor** a_textarea = NULL;
-#ifdef MENU_SELECT
+
     struct Anchor** a_select = NULL;
-#endif
-#if defined(USE_M17N) || defined(USE_IMAGE)
+
     struct Url* base = baseURL(buf);
-#endif
-#ifdef USE_M17N
+
     wc_ces name_charset = url_to_charset(NULL, &buf->currentURL,
         buf->document_charset);
-#endif
 
     if (out_size == 0) {
         out_size = LINELEN;
@@ -4776,9 +4778,7 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                     struct FormList* form;
                     int top = 0, bottom = 0;
                     int textareanumber = -1;
-#ifdef MENU_SELECT
                     int selectnumber = -1;
-#endif
                     hseq = 0;
                     form_id = -1;
 
@@ -4984,7 +4984,6 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                         item->init_value = item->value = hb->textarea_str[hb->n_textarea];
                     }
                     break;
-#ifdef MENU_SELECT
                 case HTML_SELECT_INT:
                     if (parsedtag_get_value(tag, ATTR_SELECTNUMBER, &hb->n_select)
                         && hb->n_select >= 0 && hb->n_select < hb->max_select) {
@@ -5016,7 +5015,6 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                             selected);
                     }
                     break;
-#endif
                 case HTML_TITLE_ALT:
                     if (parsedtag_get_value(tag, ATTR_TITLE, &p))
                         buf->buffername = html_unquote(p);
