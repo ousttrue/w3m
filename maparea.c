@@ -210,15 +210,13 @@ follow_map_menu(struct Buffer* buf, char* name, struct Anchor* a_img, int x, int
     if (ml == NULL || ml->area == NULL || ml->area->nitem == 0)
         return NULL;
 
-#ifdef USE_IMAGE
     initial = searchMapArea(buf, ml, a_img);
     if (initial < 0)
         initial = 0;
-    else if (!image_map_list) {
+    else if (!getRuntime()->image_map_list) {
         selected = initial;
         goto map_end;
     }
-#endif
 
 #ifdef MENU_MAP
     label = New_N(char*, ml->area->nitem + 1);

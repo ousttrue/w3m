@@ -70,7 +70,7 @@ struct Line* lineSkip(struct Buffer* buf, struct Line* line, int offset, int las
     struct Line* l;
 
     l = currentLineSkip(buf, line, offset, last);
-    if (!nextpage_topline)
+    if (!getRuntime()->nextpage_topline)
         for (i = buf->LINES - 1 - (buf->doc.lastLine->linenumber - l->linenumber);
             i > 0 && l->prev != NULL; i--, l = l->prev)
             ;
@@ -431,7 +431,7 @@ FILE* openSecretFile(char* fname)
      *    readable and writable.
      *   [w3m-dev 03368][w3m-dev 03369][w3m-dev 03370]
      */
-    if (disable_secret_security_check)
+    if (getRuntime()->disable_secret_security_check)
         /* do nothing */;
     else if ((st.st_mode & (S_IRWXG | S_IRWXO)) != 0) {
         if (fmInitialized()) {
@@ -449,10 +449,8 @@ FILE* openSecretFile(char* fname)
 
 void loadPasswd(void)
 {
-    FILE* fp;
-
     passwords = NULL;
-    fp = openSecretFile(passwd_file);
+    FILE* fp = openSecretFile(getRuntime()->passwd_file);
     if (fp != NULL) {
         parsePasswd(fp, 0);
         fclose(fp);

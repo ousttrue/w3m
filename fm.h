@@ -247,107 +247,19 @@ extern char* w3m_version;
 #define DUMP_HALFDUMP 0x10
 #define DUMP_FRAME 0x20
 global int w3m_debug;
-global int w3m_dump init(0);
-#define w3m_halfdump (w3m_dump & DUMP_HALFDUMP)
-global int w3m_halfload init(FALSE);
-global Str header_string init(NULL);
-global int override_content_type init(FALSE);
-global int override_user_agent init(FALSE);
+#define w3m_halfdump (getRuntime()->w3m_dump & DUMP_HALFDUMP)
 
-global int confirm_on_quit init(TRUE);
-#ifdef USE_MARK
-global int use_mark init(FALSE);
-#endif
-global int vi_prec_num init(FALSE);
-global int label_topline init(FALSE);
-global int nextpage_topline init(FALSE);
-global char* displayTitleTerm init(NULL);
-global int displayLinkNumber init(FALSE);
-global int retryAsHttp init(TRUE);
-global int show_srch_str init(TRUE);
-#ifdef USE_IMAGE
-global char* Imgdisplay init(IMGDISPLAY);
-global int autoImage init(TRUE);
-global int useExtImageViewer init(TRUE);
-global int maxLoadImage init(4);
-global int image_map_list init(TRUE);
-#else
-global int displayImage init(FALSE); /* XXX: emacs-w3m use display_image=off */
-#endif
-global int pseudoInlines init(TRUE);
-global char* Editor init(DEF_EDITOR);
-#ifdef USE_W3MMAILER
-global char* Mailer init(NULL);
-#else
-global char* Mailer init(DEF_MAILER);
-#endif
-#ifdef USE_W3MMAILER
-#define MAILTO_OPTIONS_USE_W3MMAILER 0
-#endif
 #define MAILTO_OPTIONS_IGNORE 1
 #define MAILTO_OPTIONS_USE_MAILTO_URL 2
-global int MailtoOptions init(MAILTO_OPTIONS_IGNORE);
-global char* ExtBrowser init(DEF_EXT_BROWSER);
-global char* ExtBrowser2 init(NULL);
-global char* ExtBrowser3 init(NULL);
-global char* ExtBrowser4 init(NULL);
-global char* ExtBrowser5 init(NULL);
-global char* ExtBrowser6 init(NULL);
-global char* ExtBrowser7 init(NULL);
-global char* ExtBrowser8 init(NULL);
-global char* ExtBrowser9 init(NULL);
-global int BackgroundExtViewer init(TRUE);
-global int disable_secret_security_check init(FALSE);
-global char* passwd_file init(PASSWD_FILE);
-global char* pre_form_file init(PRE_FORM_FILE);
-global char* ftppasswd init(NULL);
-global int ftppass_hostnamegen init(TRUE);
-global char* UserAgent init(NULL);
-global int NoSendReferer init(FALSE);
-global int CrossOriginReferer init(TRUE);
-global char* AcceptLang init(NULL);
-global char* AcceptEncoding init(NULL);
-global char* AcceptMedia init(NULL);
-global int WrapDefault init(FALSE);
-global int IgnoreCase init(TRUE);
-global int WrapSearch init(FALSE);
-global int squeezeBlankLine init(FALSE);
-global char* BookmarkFile init(NULL);
-global int UseExternalDirBuffer init(TRUE);
-global char* DirBufferCommand init("file:///$LIB/dirlist" CGI_EXTENSION);
-#ifdef USE_DICT
-global int UseDictCommand init(TRUE);
-global char* DictCommand init("file:///$LIB/w3mdict" CGI_EXTENSION);
-#endif /* USE_DICT */
-global int ignore_null_img_alt init(TRUE);
 #define DISPLAY_INS_DEL_SIMPLE 0
 #define DISPLAY_INS_DEL_NORMAL 1
 #define DISPLAY_INS_DEL_FONTIFY 2
-global int displayInsDel init(DISPLAY_INS_DEL_NORMAL);
-global int FoldTextarea init(FALSE);
 #define DEFAULT_URL_EMPTY 0
 #define DEFAULT_URL_CURRENT 1
 #define DEFAULT_URL_LINK 2
-global int DefaultURLString init(DEFAULT_URL_CURRENT);
-global int MarkAllPages init(FALSE);
-
-#ifdef USE_MIGEMO
-global int use_migemo init(FALSE);
-global int migemo_active init(0);
-global char* migemo_command init(DEF_MIGEMO_COMMAND);
-#endif /* USE_MIGEMO */
 
 global struct auth_cookie* Auth_cookie init(NULL);
-#ifdef USE_COOKIE
 global struct cookie* First_cookie init(NULL);
-#endif /* USE_COOKIE */
-
-global char* mailcap_files init(USER_MAILCAP ", " SYS_MAILCAP);
-global char* mimetypes_files init(USER_MIMETYPES ", " SYS_MIMETYPES);
-#ifdef USE_EXTERNAL_URI_LOADER
-global char* urimethodmap_files init(USER_URIMETHODMAP ", " SYS_URIMETHODMAP);
-#endif
-
 global struct TextList* fileToDelete;
 
 global int multicolList init(FALSE);

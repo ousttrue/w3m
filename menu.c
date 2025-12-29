@@ -1242,7 +1242,7 @@ menuForwardSearch(struct Menu* menu, char* str, int from)
 {
     int i;
     char* p;
-    if ((p = regexCompile(str, IgnoreCase)) != NULL) {
+    if ((p = regexCompile(str, getRuntime()->IgnoreCase)) != NULL) {
         message(p, 0, 0);
         return -1;
     }
@@ -1268,7 +1268,7 @@ menu_search_forward(struct Menu* menu, int from)
     str = conv_search_string(str, getRuntime()->DisplayCharset);
     menuSearchRoutine = menuForwardSearch;
     found = menuForwardSearch(menu, str, from + 1);
-    if (WrapSearch && found == -1)
+    if (getRuntime()->WrapSearch && found == -1)
         found = menuForwardSearch(menu, str, 0);
     if (found >= 0)
         return found;
@@ -1291,7 +1291,7 @@ menuBackwardSearch(struct Menu* menu, char* str, int from)
 {
     int i;
     char* p;
-    if ((p = regexCompile(str, IgnoreCase)) != NULL) {
+    if ((p = regexCompile(str, getRuntime()->IgnoreCase)) != NULL) {
         message(p, 0, 0);
         return -1;
     }
@@ -1315,7 +1315,7 @@ menu_search_backward(struct Menu* menu, int from)
     str = conv_search_string(str, getRuntime()->DisplayCharset);
     menuSearchRoutine = menuBackwardSearch;
     int found = menuBackwardSearch(menu, str, from - 1);
-    if (WrapSearch && found == -1)
+    if (getRuntime()->WrapSearch && found == -1)
         found = menuBackwardSearch(menu, str, menu->nitem);
     if (found >= 0)
         return found;
@@ -1353,7 +1353,7 @@ menu_search_next_previous(struct Menu* menu, int from, int reverse)
         reverse ^= 1;
     from += reverse ? -1 : 1;
     found = (*routine[reverse])(menu, str, from);
-    if (WrapSearch && found == -1)
+    if (getRuntime()->WrapSearch && found == -1)
         found = (*routine[reverse])(menu, str, reverse * menu->nitem);
     if (found >= 0)
         return found;

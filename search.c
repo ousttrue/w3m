@@ -102,16 +102,7 @@ enum SearchResult forwardSearch(struct Buffer* buf, char* str)
     int wrapped = FALSE;
     int pos;
 
-#ifdef USE_MIGEMO
-    if (migemo_active > 0) {
-        if (((p = regexCompile(migemostr(str), IgnoreCase)) != NULL)
-            && ((p = regexCompile(str, IgnoreCase)) != NULL)) {
-            message(p, 0, 0);
-            return SR_NOTFOUND;
-        }
-    } else
-#endif
-        if ((p = regexCompile(str, IgnoreCase)) != NULL) {
+    if ((p = regexCompile(str, getRuntime()->IgnoreCase)) != NULL) {
         message(p, 0, 0);
         return SR_NOTFOUND;
     }
@@ -146,7 +137,7 @@ enum SearchResult forwardSearch(struct Buffer* buf, char* str)
     }
     for (l = l->next;; l = l->next) {
         if (l == NULL) {
-            if (WrapSearch) {
+            if (getRuntime()->WrapSearch) {
                 l = buf->doc.firstLine;
                 wrapped = TRUE;
             } else {
@@ -182,16 +173,7 @@ enum SearchResult backwardSearch(struct Buffer* buf, char* str)
     int wrapped = FALSE;
     int pos;
 
-#ifdef USE_MIGEMO
-    if (migemo_active > 0) {
-        if (((p = regexCompile(migemostr(str), IgnoreCase)) != NULL)
-            && ((p = regexCompile(str, IgnoreCase)) != NULL)) {
-            message(p, 0, 0);
-            return SR_NOTFOUND;
-        }
-    } else
-#endif
-        if ((p = regexCompile(str, IgnoreCase)) != NULL) {
+    if ((p = regexCompile(str, getRuntime()->IgnoreCase)) != NULL) {
         message(p, 0, 0);
         return SR_NOTFOUND;
     }
@@ -249,7 +231,7 @@ enum SearchResult backwardSearch(struct Buffer* buf, char* str)
     }
     for (l = l->prev;; l = l->prev) {
         if (l == NULL) {
-            if (WrapSearch) {
+            if (getRuntime()->WrapSearch) {
                 l = buf->doc.lastLine;
                 wrapped = TRUE;
             } else {

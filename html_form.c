@@ -351,7 +351,7 @@ form_update_line(struct Line* line, char** str, int spos, int epos, int width,
         pos++;
     }
     if (newline) {
-        if (!FoldTextarea) {
+        if (!getRuntime()->FoldTextarea) {
             while (*p && *p != '\r' && *p != '\n')
                 p++;
         }
@@ -554,7 +554,7 @@ void input_textarea(struct FormItemList* fi)
         form_fputs_decode(fi->value, f);
     fclose(f);
 
-    if (exec_cmd(myEditor(Editor, tmpf, 1)->ptr))
+    if (exec_cmd(myEditor(getRuntime()->Editor, tmpf, 1)->ptr))
         goto input_end;
 
     if (fi->readonly)
@@ -817,7 +817,7 @@ void loadPreForm(void)
     char* name = NULL;
 
     PreForm = NULL;
-    fp = openSecretFile(pre_form_file);
+    fp = openSecretFile(getRuntime()->pre_form_file);
     if (fp == NULL)
         return;
     while (1) {

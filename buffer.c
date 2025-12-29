@@ -76,7 +76,7 @@ struct Buffer* newBuffer(int width)
     n->trbyte = 0;
     n->ssl_certificate = NULL;
     n->auto_detect = WcOption.auto_detect;
-    n->check_url = MarkAllPages; /* use default from -o mark_all_pages */
+    n->check_url = getRuntime()->MarkAllPages; /* use default from -o mark_all_pages */
     return n;
 }
 

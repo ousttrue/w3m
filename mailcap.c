@@ -3,6 +3,7 @@
 #include "content.h"
 #include "fm.h"
 #include "myctype.h"
+#include "w3m_rc.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -217,8 +218,8 @@ void initMailcap(void)
     TextListItem* tl;
     int i;
 
-    if (non_null(mailcap_files))
-        mailcap_list = make_domain_list(mailcap_files);
+    if (non_null(getRuntime()->mailcap_files))
+        mailcap_list = make_domain_list(getRuntime()->mailcap_files);
     else
         mailcap_list = NULL;
     if (mailcap_list == NULL)

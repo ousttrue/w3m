@@ -970,12 +970,12 @@ static struct Buffer* make_buffer(struct Url url, int flag,
     if (t_buf) {
         bool use_tmpf = url.scheme != SCM_LOCAL && !getRuntime()->image_source;
         if ((t_buf->content.compression != CMP_NOCOMPRESS) && getRuntime()->AutoUncompress
-            && !(w3m_dump & DUMP_EXTRA)) {
+            && !(getRuntime()->w3m_dump & DUMP_EXTRA)) {
             stream = uncompress_stream(stream,
                 t_buf->content.compression, use_tmpf ? &url.real_file : NULL);
             // UFhalfclose(&f);
         } else if (t_buf->content.compression != CMP_NOCOMPRESS) {
-            if (!(w3m_dump & DUMP_SOURCE) && (w3m_dump & ~DUMP_FRAME || is_text_type(t) || searchExtViewer(t))) {
+            if (!(getRuntime()->w3m_dump & DUMP_SOURCE) && (getRuntime()->w3m_dump & ~DUMP_FRAME || is_text_type(t) || searchExtViewer(t))) {
                 stream = uncompress_stream(stream,
                     t_buf->content.compression, use_tmpf ? &t_buf->sourcefile : NULL);
                 // UFhalfclose(&f);
@@ -1003,11 +1003,11 @@ static struct Buffer* make_buffer(struct Url url, int flag,
         proc = loadHTMLBuffer;
     else if (is_plain_text_type(t))
         proc = loadBuffer;
-    else if (getRuntime()->activeImage && getRuntime()->displayImage && !useExtImageViewer && !(w3m_dump & ~DUMP_FRAME) && !strncasecmp(t, "image/", 6))
+    else if (getRuntime()->activeImage && getRuntime()->displayImage && !getRuntime()->useExtImageViewer && !(getRuntime()->w3m_dump & ~DUMP_FRAME) && !strncasecmp(t, "image/", 6))
         proc = loadImageBuffer;
     else if (w3m_backend)
         ;
-    else if (!(w3m_dump & ~DUMP_FRAME) || is_dump_text_type(t)) {
+    else if (!(getRuntime()->w3m_dump & ~DUMP_FRAME) || is_dump_text_type(t)) {
         if (!do_download && searchExtViewer(t) != NULL) {
             proc = doExternal;
         } else {
@@ -1027,7 +1027,7 @@ static struct Buffer* make_buffer(struct Url url, int flag,
             }
             return NO_BUFFER;
         }
-    } else if (w3m_dump & DUMP_FRAME)
+    } else if (getRuntime()->w3m_dump & DUMP_FRAME)
         return NULL;
 
     if (t_buf == NULL)
@@ -1054,7 +1054,7 @@ static struct Buffer* make_buffer(struct Url url, int flag,
                 a = searchURLLabel(b, url.label);
                 if (a != NULL) {
                     gotoLine(b, a->start.line);
-                    if (label_topline)
+                    if (getRuntime()->label_topline)
                         b->doc.topLine = lineSkip(b, b->doc.topLine,
                             b->doc.currentLine->linenumber
                                 - b->doc.topLine->linenumber,
@@ -1070,8 +1070,8 @@ static struct Buffer* make_buffer(struct Url url, int flag,
             }
         }
     }
-    if (header_string)
-        header_string = NULL;
+    if (getRuntime()->header_string)
+        getRuntime()->header_string = NULL;
     if (b && b != NO_BUFFER)
         preFormUpdateBuffer(b);
     TRAP_OFF;
@@ -1116,7 +1116,7 @@ struct Buffer* load_doc(const char* path, struct Url* current,
     struct HttpRequest hr;
     struct UrlStream us = openURL(path, current, request,
         (struct URLOption) {}, connection, do_download);
-    if (!us.stream && retryAsHttp && us.url_str[0] != '/') {
+    if (!us.stream && getRuntime()->retryAsHttp && us.url_str[0] != '/') {
         if (us.url.scheme == SCM_MISSING || us.url.scheme == SCM_UNKNOWN) {
             // retry it as "http://"
             const char* u = Strnew_m_charp("http://", path, NULL)->ptr;
@@ -1135,9 +1135,9 @@ struct Buffer* load_doc(const char* path, struct Url* current,
             if (stat(us.url.real_file, &st) < 0)
                 return NULL;
             if (S_ISDIR(st.st_mode)) {
-                if (UseExternalDirBuffer) {
+                if (getRuntime()->UseExternalDirBuffer) {
                     Str cmd = Sprintf("%s?dir=%s#current",
-                        DirBufferCommand, us.url.file);
+                        getRuntime()->DirBufferCommand, us.url.file);
                     struct Buffer* b = loadGeneralFile(cmd->ptr, NULL, NO_REFERER, 0,
                         NULL, do_download);
                     if (b != NULL && b != NO_BUFFER) {
@@ -1203,8 +1203,8 @@ struct Buffer* load_doc(const char* path, struct Url* current,
         // searchHeader = TRUE;
         // searchHeader_through = FALSE;
     }
-    if (header_string)
-        header_string = NULL;
+    if (getRuntime()->header_string)
+        getRuntime()->header_string = NULL;
 
     const char* t = "text/plain";
 
@@ -2200,7 +2200,7 @@ Str process_img(struct HtmlBuilder* hb, struct parsed_tag* tag, int width)
     p = url_encode(remove_space(p), hb->cur_baseURL, hb->cur_document_charset);
     const char* q = NULL;
     parsedtag_get_value(tag, ATTR_ALT, &q);
-    if (!pseudoInlines && (q == NULL || (*q == '\0' && ignore_null_img_alt)))
+    if (!getRuntime()->pseudoInlines && (q == NULL || (*q == '\0' && getRuntime()->ignore_null_img_alt)))
         return tmp;
     const char* t = q;
     parsedtag_get_value(tag, ATTR_TITLE, &t);
@@ -2390,7 +2390,7 @@ Str process_img(struct HtmlBuilder* hb, struct parsed_tag* tag, int width)
     }
 
     Strcat_charp(tmp, ">");
-    if (q != NULL && *q == '\0' && ignore_null_img_alt)
+    if (q != NULL && *q == '\0' && getRuntime()->ignore_null_img_alt)
         q = NULL;
     if (q != NULL) {
         n = get_strwidth(q);
@@ -2574,12 +2574,12 @@ Str process_input(struct HtmlBuilder* hb, struct parsed_tag* tag)
     case FORM_INPUT_TEXT:
     case FORM_INPUT_FILE:
     case FORM_INPUT_CHECKBOX:
-        if (displayLinkNumber)
+        if (getRuntime()->displayLinkNumber)
             Strcat(tmp, getLinkNumberStr(hb, 0));
         Strcat_char(tmp, '[');
         break;
     case FORM_INPUT_RADIO:
-        if (displayLinkNumber)
+        if (getRuntime()->displayLinkNumber)
             Strcat(tmp, getLinkNumberStr(hb, 0));
         Strcat_char(tmp, '(');
     }
@@ -2621,7 +2621,7 @@ Str process_input(struct HtmlBuilder* hb, struct parsed_tag* tag)
         case FORM_INPUT_SUBMIT:
         case FORM_INPUT_BUTTON:
         case FORM_INPUT_RESET:
-            if (displayLinkNumber)
+            if (getRuntime()->displayLinkNumber)
                 Strcat(tmp, getLinkNumberStr(hb, -1));
             Strcat_charp(tmp, "[");
             break;
@@ -2773,7 +2773,7 @@ Str process_select(struct HtmlBuilder* hb, struct parsed_tag* tag)
 
     if (!hb->select_is_multiple) {
         hb->select_str = Strnew_charp("<pre_int>");
-        if (displayLinkNumber)
+        if (getRuntime()->displayLinkNumber)
             Strcat(hb->select_str, getLinkNumberStr(hb, 0));
         Strcat(hb->select_str, Sprintf("[<input_alt hseq=\"%d\" "
                                        "fid=\"%d\" type=select name=\"%s\" selectnumber=%d",
@@ -4184,7 +4184,7 @@ int HTMLtagproc1(struct HtmlBuilder* hb, struct parsed_tag* tag, struct html_fee
     case HTML_AREA:
         return 0;
     case HTML_DEL:
-        switch (displayInsDel) {
+        switch (getRuntime()->displayInsDel) {
         case DISPLAY_INS_DEL_SIMPLE:
             obuf->flag |= RB_DEL;
             break;
@@ -4201,7 +4201,7 @@ int HTMLtagproc1(struct HtmlBuilder* hb, struct parsed_tag* tag, struct html_fee
         }
         return 1;
     case HTML_N_DEL:
-        switch (displayInsDel) {
+        switch (getRuntime()->displayInsDel) {
         case DISPLAY_INS_DEL_SIMPLE:
             obuf->flag &= ~RB_DEL;
             break;
@@ -4222,7 +4222,7 @@ int HTMLtagproc1(struct HtmlBuilder* hb, struct parsed_tag* tag, struct html_fee
         }
         return 1;
     case HTML_S:
-        switch (displayInsDel) {
+        switch (getRuntime()->displayInsDel) {
         case DISPLAY_INS_DEL_SIMPLE:
             obuf->flag |= RB_S;
             break;
@@ -4239,7 +4239,7 @@ int HTMLtagproc1(struct HtmlBuilder* hb, struct parsed_tag* tag, struct html_fee
         }
         return 1;
     case HTML_N_S:
-        switch (displayInsDel) {
+        switch (getRuntime()->displayInsDel) {
         case DISPLAY_INS_DEL_SIMPLE:
             obuf->flag &= ~RB_S;
             break;
@@ -4260,7 +4260,7 @@ int HTMLtagproc1(struct HtmlBuilder* hb, struct parsed_tag* tag, struct html_fee
         }
         return 1;
     case HTML_INS:
-        switch (displayInsDel) {
+        switch (getRuntime()->displayInsDel) {
         case DISPLAY_INS_DEL_SIMPLE:
             break;
         case DISPLAY_INS_DEL_NORMAL:
@@ -4276,7 +4276,7 @@ int HTMLtagproc1(struct HtmlBuilder* hb, struct parsed_tag* tag, struct html_fee
         }
         return 1;
     case HTML_N_INS:
-        switch (displayInsDel) {
+        switch (getRuntime()->displayInsDel) {
         case DISPLAY_INS_DEL_SIMPLE:
             break;
         case DISPLAY_INS_DEL_NORMAL:
@@ -5352,7 +5352,7 @@ table_start:
             if (cmd == HTML_TABLE)
                 goto table_start;
             else {
-                if (displayLinkNumber && cmd == HTML_A && !internal)
+                if (getRuntime()->displayLinkNumber && cmd == HTML_A && !internal)
                     if (h_env->obuf->anchor.url)
                         need_number = 1;
                 continue;
@@ -5755,18 +5755,18 @@ void loadHTMLstream(struct input_stream* stream,
     hb->cur_iseq = 1;
     if (newBuf->image_flag)
         image_flag = newBuf->image_flag;
-    else if (getRuntime()->activeImage && getRuntime()->displayImage && autoImage)
+    else if (getRuntime()->activeImage && getRuntime()->displayImage && getRuntime()->autoImage)
         image_flag = IMG_FLAG_AUTO;
     else
         image_flag = IMG_FLAG_SKIP;
 
-    if (w3m_halfload) {
+    if (getRuntime()->w3m_halfload) {
         newBuf->buffername = "---";
 
         newBuf->document_charset = getRuntime()->InnerCharset;
 
         HTMLlineproc3(hb, newBuf, stream);
-        w3m_halfload = FALSE;
+        getRuntime()->w3m_halfload = FALSE;
         return;
     }
 
@@ -5800,9 +5800,9 @@ void loadHTMLstream(struct input_stream* stream,
         if (src)
             Strfputs(lineBuf2, src);
         linelen += lineBuf2->length;
-        if (w3m_dump & DUMP_EXTRA)
+        if (getRuntime()->w3m_dump & DUMP_EXTRA)
             printf("W3m-in-progress: %s\n", convert_size2(linelen, newBuf->content.current_content_length, TRUE));
-        if (w3m_dump & DUMP_SOURCE)
+        if (getRuntime()->w3m_dump & DUMP_SOURCE)
             continue;
         showProgress(&linelen, &trbyte, newBuf->content.current_content_length);
         /*
@@ -5933,15 +5933,15 @@ loadBuffer(struct Url url, struct input_stream* stream,
         if (src)
             Strfputs(lineBuf2, src);
         linelen += lineBuf2->length;
-        if (w3m_dump & DUMP_EXTRA)
+        if (getRuntime()->w3m_dump & DUMP_EXTRA)
             printf("W3m-in-progress: %s\n", convert_size2(linelen, newBuf->content.current_content_length, TRUE));
-        if (w3m_dump & DUMP_SOURCE)
+        if (getRuntime()->w3m_dump & DUMP_SOURCE)
             continue;
         showProgress(&linelen, &trbyte, newBuf->content.current_content_length);
         if (frame_source)
             continue;
         lineBuf2 = convertLine(lineBuf2, PAGER_MODE, &charset, doc_charset);
-        if (squeezeBlankLine) {
+        if (getRuntime()->squeezeBlankLine) {
             if (lineBuf2->ptr[0] == '\n' && pre_lbuf == '\n') {
                 ++nlines;
                 continue;
@@ -6180,7 +6180,7 @@ doExternal(struct Url url, struct input_stream* stream,
         command = tmp;
     }
 
-    if (!(mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)) && !(mcap->flags & MAILCAP_NEEDSTERMINAL) && BackgroundExtViewer) {
+    if (!(mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)) && !(mcap->flags & MAILCAP_NEEDSTERMINAL) && getRuntime()->BackgroundExtViewer) {
         flush_tty();
         if (!fork()) {
             setup_child(FALSE, 0, is_file_no(stream));
@@ -6220,7 +6220,7 @@ doExternal(struct Url url, struct input_stream* stream,
             buf->sourcefile = src;
         }
     } else {
-        if (mcap->flags & MAILCAP_NEEDSTERMINAL || !BackgroundExtViewer) {
+        if (mcap->flags & MAILCAP_NEEDSTERMINAL || !getRuntime()->BackgroundExtViewer) {
             exitRawMode();
             mySystem(command->ptr, 0);
             enterRawMode();

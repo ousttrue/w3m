@@ -2905,7 +2905,7 @@ feed_table_tag(struct HtmlBuilder *hb, struct table* tbl, const char* line, stru
             check_rowcol(tbl, mode);
             if (i == 0) {
                 Str tmp = process_anchor(hb, tag, line);
-                if (displayLinkNumber) {
+                if (getRuntime()->displayLinkNumber) {
                     Str t = getLinkNumberStr(hb, -1);
                     feed_table_inline_tag(tbl, NULL, mode, t->length);
                     Strcat(tmp, t);
@@ -2921,7 +2921,7 @@ feed_table_tag(struct HtmlBuilder *hb, struct table* tbl, const char* line, stru
             suspend_or_pushdata(tbl, line);
         break;
     case HTML_DEL:
-        switch (displayInsDel) {
+        switch (getRuntime()->displayInsDel) {
         case DISPLAY_INS_DEL_SIMPLE:
             mode->pre_mode |= TBLM_DEL;
             break;
@@ -2934,7 +2934,7 @@ feed_table_tag(struct HtmlBuilder *hb, struct table* tbl, const char* line, stru
         }
         break;
     case HTML_N_DEL:
-        switch (displayInsDel) {
+        switch (getRuntime()->displayInsDel) {
         case DISPLAY_INS_DEL_SIMPLE:
             mode->pre_mode &= ~TBLM_DEL;
             break;
@@ -2947,7 +2947,7 @@ feed_table_tag(struct HtmlBuilder *hb, struct table* tbl, const char* line, stru
         }
         break;
     case HTML_S:
-        switch (displayInsDel) {
+        switch (getRuntime()->displayInsDel) {
         case DISPLAY_INS_DEL_SIMPLE:
             mode->pre_mode |= TBLM_S;
             break;
@@ -2960,7 +2960,7 @@ feed_table_tag(struct HtmlBuilder *hb, struct table* tbl, const char* line, stru
         }
         break;
     case HTML_N_S:
-        switch (displayInsDel) {
+        switch (getRuntime()->displayInsDel) {
         case DISPLAY_INS_DEL_SIMPLE:
             mode->pre_mode &= ~TBLM_S;
             break;
@@ -2974,7 +2974,7 @@ feed_table_tag(struct HtmlBuilder *hb, struct table* tbl, const char* line, stru
         break;
     case HTML_INS:
     case HTML_N_INS:
-        switch (displayInsDel) {
+        switch (getRuntime()->displayInsDel) {
         case DISPLAY_INS_DEL_SIMPLE:
             break;
         case DISPLAY_INS_DEL_NORMAL:
@@ -3132,7 +3132,7 @@ int feed_table(struct HtmlBuilder *hb, struct table* tbl, const char* line, stru
     if (!(mode->pre_mode & TBLM_PLAIN) && !(*line == '<' && line[strlen(line) - 1] == '>') && strchr(line, '&') != NULL) {
         tmp = Strnew();
         for (p = line; *p;) {
-            char *q, *r;
+            const char *q, *r;
             if (*p == '&') {
                 if (!strncasecmp(p, "&amp;", 5) || !strncasecmp(p, "&gt;", 4) || !strncasecmp(p, "&lt;", 4)) {
                     /* do not convert */

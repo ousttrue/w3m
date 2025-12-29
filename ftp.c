@@ -121,7 +121,7 @@ ftp_login(FTP ftp)
     sock = openSocket(ftp->host, "ftp", 21);
     if (sock < 0)
         goto open_err;
-    if (ftppass_hostnamegen && !strcmp(ftp->user, "anonymous")) {
+    if (getRuntime()->ftppass_hostnamegen && !strcmp(ftp->user, "anonymous")) {
         size_t n = strlen(ftp->pass);
 
         if (n > 0 && ftp->pass[n - 1] == '@') {
@@ -403,8 +403,8 @@ openFTPStream(struct Url* pu)
             add_auth_cookie_flag = true;
         }
         pass = pwd->ptr;
-    } else if (ftppasswd != NULL && *ftppasswd != '\0') {
-        pass = ftppasswd;
+    } else if (getRuntime()->ftppasswd != NULL && *getRuntime()->ftppasswd != '\0') {
+        pass = getRuntime()->ftppasswd;
     } else {
         struct passwd* mypw = getpwuid(getuid());
         Str tmp = Strnew_charp(mypw ? mypw->pw_name : "anonymous");

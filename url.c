@@ -144,17 +144,15 @@ loadMimeTypes(char* filename)
 
 void initMimeTypes(void)
 {
-    int i;
-    TextListItem* tl;
-
-    if (non_null(mimetypes_files))
-        mimetypes_list = make_domain_list(mimetypes_files);
+    if (non_null(getRuntime()->mimetypes_files))
+        mimetypes_list = make_domain_list(getRuntime()->mimetypes_files);
     else
         mimetypes_list = NULL;
     if (mimetypes_list == NULL)
         return;
     UserMimeTypes = New_N(struct table2*, mimetypes_list->nitem);
-    for (i = 0, tl = mimetypes_list->first; tl; i++, tl = tl->next)
+    int i = 0;
+    for (TextListItem* tl = mimetypes_list->first; tl; i++, tl = tl->next)
         UserMimeTypes[i] = loadMimeTypes(tl->ptr);
 }
 
@@ -1376,8 +1374,8 @@ void initURIMethods(void)
     TextListItem* tl;
     int i;
 
-    if (non_null(urimethodmap_files))
-        methodmap_list = make_domain_list(urimethodmap_files);
+    if (non_null(getRuntime()->urimethodmap_files))
+        methodmap_list = make_domain_list(getRuntime()->urimethodmap_files);
     if (methodmap_list == NULL)
         return;
     urimethods = New_N(struct table2*, (methodmap_list->nitem + 1));

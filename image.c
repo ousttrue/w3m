@@ -80,9 +80,9 @@ getCharSize(void)
     }
 
     tmp = Strnew();
-    if (!strchr(Imgdisplay, '/'))
+    if (!strchr(getRuntime()->Imgdisplay, '/'))
         Strcat_m_charp(tmp, w3m_auxbin_dir(), "/", NULL);
-    Strcat_m_charp(tmp, Imgdisplay, " -test 2>/dev/null", NULL);
+    Strcat_m_charp(tmp, getRuntime()->Imgdisplay, " -test 2>/dev/null", NULL);
     f = popen(tmp->ptr, "r");
     if (!f)
         return FALSE;
@@ -118,10 +118,10 @@ openImgdisplay()
 {
     char* cmd;
 
-    if (!strchr(Imgdisplay, '/'))
-        cmd = Strnew_m_charp(w3m_auxbin_dir(), "/", Imgdisplay, NULL)->ptr;
+    if (!strchr(getRuntime()->Imgdisplay, '/'))
+        cmd = Strnew_m_charp(w3m_auxbin_dir(), "/", getRuntime()->Imgdisplay, NULL)->ptr;
     else
-        cmd = Imgdisplay;
+        cmd = getRuntime()->Imgdisplay;
     Imgdisplay_pid = open_pipe_rw(&Imgdisplay_rf, &Imgdisplay_wf);
     if (Imgdisplay_pid < 0)
         goto err0;
@@ -348,7 +348,7 @@ static void put_image_sixel(const char* url, int x, int y, int w, int h, int sx,
         argv[n++] = "-c";
         sprintf(clip, "%dx%d+%d+%d", sw, sh, sx, sy);
         argv[n++] = clip;
-        argv[n++] = url;
+        argv[n++] = (char*)url;
         if (getenv("TERM") && strcmp(getenv("TERM"), "screen") == 0 && (!getenv("SCREEN_VARIANT") || strcmp(getenv("SCREEN_VARIANT"), "sixel") != 0)) {
             argv[n++] = "-P";
         }
@@ -379,7 +379,7 @@ static Str get_image_osc5379(const char* url, int x, int y, int w, int h, int sx
     return Sprintf("\x1b]5379;show_picture %s %s %dx%d+%d+%d\x07", url, size, sw, sh, sx, sy);
 }
 
-void put_image_iterm2(char* url, int x, int y, int w, int h)
+static void put_image_iterm2(const char* url, int x, int y, int w, int h)
 {
     Str buf;
     char* cbuf;
@@ -433,7 +433,7 @@ cleanup:
     tty_MOVE(Currentbuf->cursorY, Currentbuf->cursorX);
 }
 
-static void put_image_kitty(char* url, int x, int y, int w, int h, int sx, int sy, int sw,
+static void put_image_kitty(const char* url, int x, int y, int w, int h, int sx, int sy, int sw,
     int sh, int cols, int rows)
 {
     Str buf, base64;
@@ -490,7 +490,7 @@ static void put_image_kitty(char* url, int x, int y, int w, int h, int sx, int s
                     Strcat_charp(buf, "[0]");
                     argv[i++] = buf->ptr;
                 } else {
-                    argv[i++] = url;
+                    argv[i++] = (char*)url;
                 }
                 argv[i++] = tmpf;
                 argv[i++] = NULL;
@@ -775,12 +775,12 @@ void loadImage(struct Buffer* buf, int flag)
     //     return;
     // }
 
-    if (maxLoadImage > MAX_LOAD_IMAGE)
-        maxLoadImage = MAX_LOAD_IMAGE;
-    else if (maxLoadImage < 1)
-        maxLoadImage = 1;
+    if (getRuntime()->maxLoadImage > MAX_LOAD_IMAGE)
+        getRuntime()->maxLoadImage = MAX_LOAD_IMAGE;
+    else if (getRuntime()->maxLoadImage < 1)
+        getRuntime()->maxLoadImage = 1;
     if (n_load_image == 0)
-        n_load_image = maxLoadImage;
+        n_load_image = getRuntime()->maxLoadImage;
     if (!image_cache) {
         image_cache = New_N(struct ImageCache*, MAX_LOAD_IMAGE);
         bzero(image_cache, sizeof(struct ImageCache*) * MAX_LOAD_IMAGE);
@@ -841,7 +841,7 @@ void loadImage(struct Buffer* buf, int flag)
     if (flag == IMG_FLAG_STOP) {
         image_list = NULL;
         image_file = NULL;
-        n_load_image = maxLoadImage;
+        n_load_image = getRuntime()->maxLoadImage;
         // image_buffer = NULL;
         return;
     }
@@ -1069,9 +1069,9 @@ int getImageSize(struct ImageCache* cache)
         goto got_image_size;
 
     tmp = Strnew();
-    if (!strchr(Imgdisplay, '/'))
+    if (!strchr(getRuntime()->Imgdisplay, '/'))
         Strcat_m_charp(tmp, w3m_auxbin_dir(), "/", NULL);
-    Strcat_m_charp(tmp, Imgdisplay, " -size ", shell_quote(cache->file), NULL);
+    Strcat_m_charp(tmp, getRuntime()->Imgdisplay, " -size ", shell_quote(cache->file), NULL);
     f = popen(tmp->ptr, "r");
     if (!f)
         return FALSE;

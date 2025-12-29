@@ -346,9 +346,9 @@ make_optional_header_string(char* s)
     Str hs = Strnew_size(strlen(s) + 3);
     Strcopy_charp_n(hs, s, p - s);
     if (!Strcasecmp_charp(hs, "content-type"))
-        override_content_type = TRUE;
+        getRuntime()->override_content_type = TRUE;
     if (!Strcasecmp_charp(hs, "user-agent"))
-        override_user_agent = TRUE;
+        getRuntime()->override_user_agent = TRUE;
     Strcat_charp(hs, ": ");
     if (*(++p)) { /* not null header */
         p = skip_blanks(p); /* skip white spaces */
@@ -428,7 +428,7 @@ bool w3m_args(int argc, char** argv)
     if (argv[0] && *argv[0])
         MyProgramName = argv[0];
 #endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
-    BookmarkFile = NULL;
+    getRuntime()->BookmarkFile = NULL;
     config_file = NULL;
 
     {
@@ -490,10 +490,10 @@ bool w3m_args(int argc, char** argv)
     if (!non_null(getRuntime()->NO_proxy) && ((p = getenv("NO_PROXY")) || (p = getenv("no_proxy")) || (p = getenv("NO_proxy"))))
         getRuntime()->NO_proxy = p;
 
-    if (!non_null(Editor) && (p = getenv("EDITOR")) != NULL)
-        Editor = p;
-    if (!non_null(Mailer) && (p = getenv("MAILER")) != NULL)
-        Mailer = p;
+    if (!non_null(getRuntime()->Editor) && (p = getenv("EDITOR")) != NULL)
+        getRuntime()->Editor = p;
+    if (!non_null(getRuntime()->Mailer) && (p = getenv("MAILER")) != NULL)
+        getRuntime()->Mailer = p;
 
     /* argument search 2 */
     i = 1;
@@ -557,36 +557,36 @@ bool w3m_args(int argc, char** argv)
             else if (!strcmp("-bookmark", argv[i])) {
                 if (++i >= argc)
                     usage();
-                BookmarkFile = argv[i];
-                if (BookmarkFile[0] != '~' && BookmarkFile[0] != '/') {
+                getRuntime()->BookmarkFile = argv[i];
+                if (getRuntime()->BookmarkFile[0] != '~' && getRuntime()->BookmarkFile[0] != '/') {
                     Str tmp = Strnew_charp(CurrentDir);
                     if (Strlastchar(tmp) != '/')
                         Strcat_char(tmp, '/');
-                    Strcat_charp(tmp, BookmarkFile);
-                    BookmarkFile = cleanupName(tmp->ptr);
+                    Strcat_charp(tmp, getRuntime()->BookmarkFile);
+                    getRuntime()->BookmarkFile = cleanupName(tmp->ptr);
                 }
             } else if (!strcmp("-F", argv[i]))
                 getRuntime()->RenderFrame = TRUE;
             else if (!strcmp("-W", argv[i])) {
-                if (WrapDefault)
-                    WrapDefault = FALSE;
+                if (getRuntime()->WrapDefault)
+                    getRuntime()->WrapDefault = FALSE;
                 else
-                    WrapDefault = TRUE;
+                    getRuntime()->WrapDefault = TRUE;
             } else if (!strcmp("-dump", argv[i]))
-                w3m_dump = DUMP_BUFFER;
+                getRuntime()->w3m_dump = DUMP_BUFFER;
             else if (!strcmp("-dump_source", argv[i]))
-                w3m_dump = DUMP_SOURCE;
+                getRuntime()->w3m_dump = DUMP_SOURCE;
             else if (!strcmp("-dump_head", argv[i]))
-                w3m_dump = DUMP_HEAD;
+                getRuntime()->w3m_dump = DUMP_HEAD;
             else if (!strcmp("-dump_both", argv[i]))
-                w3m_dump = (DUMP_HEAD | DUMP_SOURCE);
+                getRuntime()->w3m_dump = (DUMP_HEAD | DUMP_SOURCE);
             else if (!strcmp("-dump_extra", argv[i]))
-                w3m_dump = (DUMP_HEAD | DUMP_SOURCE | DUMP_EXTRA);
+                getRuntime()->w3m_dump = (DUMP_HEAD | DUMP_SOURCE | DUMP_EXTRA);
             else if (!strcmp("-halfdump", argv[i]))
-                w3m_dump = DUMP_HALFDUMP;
+                getRuntime()->w3m_dump = DUMP_HALFDUMP;
             else if (!strcmp("-halfload", argv[i])) {
-                w3m_dump = 0;
-                w3m_halfload = TRUE;
+                getRuntime()->w3m_dump = 0;
+                getRuntime()->w3m_halfload = TRUE;
                 getRuntime()->DefaultType = default_type = "text/html";
             } else if (!strcmp("-backend", argv[i])) {
                 w3m_backend = TRUE;
@@ -642,10 +642,10 @@ bool w3m_args(int argc, char** argv)
                 if (++i >= argc)
                     usage();
                 if ((hs = make_optional_header_string(argv[i])) != NULL) {
-                    if (header_string == NULL)
-                        header_string = hs;
+                    if (getRuntime()->header_string == NULL)
+                        getRuntime()->header_string = hs;
                     else
-                        Strcat(header_string, hs);
+                        Strcat(getRuntime()->header_string, hs);
                 }
                 while (argv[i][0]) {
                     argv[i][0] = '\0';
@@ -671,13 +671,13 @@ bool w3m_args(int argc, char** argv)
 #else
             else if (!strcmp("-S", argv[i]))
 #endif
-                squeezeBlankLine = TRUE;
+                getRuntime()->squeezeBlankLine = TRUE;
             else if (!strcmp("-X", argv[i]))
                 getRuntime()->Do_not_use_ti_te = TRUE;
             else if (!strcmp("-title", argv[i]))
-                displayTitleTerm = getenv("TERM");
+                getRuntime()->displayTitleTerm = getenv("TERM");
             else if (!strncmp("-title=", argv[i], 7))
-                displayTitleTerm = argv[i] + 7;
+                getRuntime()->displayTitleTerm = argv[i] + 7;
 #ifdef USE_SSL
             else if (!strcmp("-insecure", argv[i])) {
 #ifdef OPENSSL_TLS_SECURITY_LEVEL
@@ -734,19 +734,19 @@ bool w3m_args(int argc, char** argv)
         i++;
     }
 
-    if (BookmarkFile == NULL)
-        BookmarkFile = rcFile(BOOKMARK);
+    if (getRuntime()->BookmarkFile == NULL)
+        getRuntime()->BookmarkFile = rcFile(BOOKMARK);
 
-    if (!isatty(1) && !w3m_dump) {
+    if (!isatty(1) && !getRuntime()->w3m_dump) {
         /* redirected output */
-        w3m_dump = DUMP_BUFFER;
+        getRuntime()->w3m_dump = DUMP_BUFFER;
     }
-    if (w3m_dump) {
+    if (getRuntime()->w3m_dump) {
         if (TTY_COLS() == 0)
             tty_set_cols(DEFAULT_COLS);
     }
 
-    if (!w3m_dump && !w3m_backend) {
+    if (!getRuntime()->w3m_dump && !w3m_backend) {
         enterRawMode();
         // mySignal(SIGWINCH, resize_hook);
     } else if (w3m_halfdump && getRuntime()->displayImage) {
@@ -783,7 +783,7 @@ bool w3m_args(int argc, char** argv)
     }
 #endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
 
-    if (w3m_dump)
+    if (getRuntime()->w3m_dump)
         mySignal(SIGINT, SIG_IGN);
 #ifdef SIGCHLD
     mySignal(SIGCHLD, sig_chld);
@@ -808,11 +808,10 @@ bool w3m_args(int argc, char** argv)
             // newbuf = openGeneralPagerBuffer(redin);
             // dup2(1, 0);
         } else if (load_bookmark) {
-            newbuf = loadGeneralFile(BookmarkFile, NULL, NO_REFERER, 0, NULL, false);
+            newbuf = loadGeneralFile(getRuntime()->BookmarkFile, NULL, NO_REFERER, 0, NULL, false);
             if (newbuf == NULL)
                 Strcat_charp(err_msg, "w3m: Can't load bookmark.\n");
         } else if (visual_start) {
-            /* FIXME: gettextize? */
             Str s_page;
             s_page = Strnew_charp("<title>W3M startup page</title><center><b>Welcome to ");
             Strcat_charp(s_page, "<a href='http://w3m.sourceforge.net/'>");
@@ -859,7 +858,7 @@ bool w3m_args(int argc, char** argv)
                 url = file_to_url(load_argv[i]);
             else
                 url = url_encode(conv_from_system(load_argv[i]), NULL, 0);
-            if (w3m_dump == DUMP_HEAD) {
+            if (getRuntime()->w3m_dump == DUMP_HEAD) {
                 request = New(struct FormList);
                 request->method = FORM_METHOD_HEAD;
                 newbuf = loadGeneralFile(url, NULL, NO_REFERER, 0, request, false);
@@ -872,7 +871,6 @@ bool w3m_args(int argc, char** argv)
                     else
                         fp = fopen(post_file, "r");
                     if (fp == NULL) {
-                        /* FIXME: gettextize? */
                         Strcat(err_msg,
                             Sprintf("w3m: Can't open %s.\n", post_file));
                         continue;
@@ -922,20 +920,17 @@ bool w3m_args(int argc, char** argv)
         assert(Currentbuf);
         assert(Firstbuf);
 
-        if (!w3m_dump || w3m_dump == DUMP_BUFFER) {
+        if (!getRuntime()->w3m_dump || getRuntime()->w3m_dump == DUMP_BUFFER) {
             if (Currentbuf->frameset != NULL && getRuntime()->RenderFrame)
                 rFrame();
         }
-        if (w3m_dump)
+        if (getRuntime()->w3m_dump)
             do_dump(Currentbuf);
         else {
             Currentbuf = newbuf;
-#ifdef USE_BUFINFO
-            saveBufferInfo();
-#endif
         }
     }
-    if (w3m_dump) {
+    if (getRuntime()->w3m_dump) {
         if (err_msg->length)
             fprintf(stderr, "%s", err_msg->ptr);
         save_cookies();
@@ -1004,7 +999,7 @@ static void
 dump_head(struct Buffer* buf)
 {
     if (buf->content.document_header == NULL) {
-        if (w3m_dump & DUMP_EXTRA)
+        if (getRuntime()->w3m_dump & DUMP_EXTRA)
             printf("\n");
         return;
     }
@@ -1060,16 +1055,16 @@ do_dump(struct Buffer* buf)
         mySignal(SIGINT, prevtrap);
         return;
     }
-    if (w3m_dump & DUMP_EXTRA)
+    if (getRuntime()->w3m_dump & DUMP_EXTRA)
         dump_extra(buf);
-    if (w3m_dump & DUMP_HEAD)
+    if (getRuntime()->w3m_dump & DUMP_HEAD)
         dump_head(buf);
-    if (w3m_dump & DUMP_SOURCE)
+    if (getRuntime()->w3m_dump & DUMP_SOURCE)
         dump_source(buf);
-    if (w3m_dump == DUMP_BUFFER) {
+    if (getRuntime()->w3m_dump == DUMP_BUFFER) {
         int i;
         saveBuffer(buf, stdout, FALSE);
-        if (displayLinkNumber && buf->href) {
+        if (getRuntime()->displayLinkNumber && buf->href) {
             int nanchor = buf->href->nanchor;
             printf("\nReferences:\n\n");
             struct Anchor** in_order = New_N(struct Anchor*, buf->href->nanchor);
@@ -1223,7 +1218,7 @@ static void nscroll(int n)
     } else {
         tlnum = buf->doc.topLine->linenumber;
         llnum = buf->doc.topLine->linenumber + buf->LINES - 1;
-        if (nextpage_topline)
+        if (getRuntime()->nextpage_topline)
             diff_n = 0;
         else
             diff_n = n - (tlnum - top->linenumber);
@@ -1254,7 +1249,7 @@ static void nscroll(int n)
 /* Move page forward */
 DEFUN(pgFore, NEXT_PAGE, "Scroll down one page")
 {
-    if (vi_prec_num)
+    if (getRuntime()->vi_prec_num)
         nscroll(searchKeyNum() * (Currentbuf->LINES - 1));
     else
         nscroll(getRuntime()->prec_num ? searchKeyNum() : searchKeyNum() * (Currentbuf->LINES - 1));
@@ -1263,7 +1258,7 @@ DEFUN(pgFore, NEXT_PAGE, "Scroll down one page")
 /* Move page backward */
 DEFUN(pgBack, PREV_PAGE, "Scroll up one page")
 {
-    if (vi_prec_num)
+    if (getRuntime()->vi_prec_num)
         nscroll(-searchKeyNum() * (Currentbuf->LINES - 1));
     else
         nscroll(-(getRuntime()->prec_num ? searchKeyNum() : searchKeyNum() * (Currentbuf->LINES - 1)));
@@ -1370,7 +1365,7 @@ disp_srchresult(int result, char* prompt, char* str)
         disp_message(Sprintf("Not found: %s", str)->ptr, TRUE);
     else if (result & SR_WRAPPED)
         disp_message(Sprintf("Search wrapped: %s", str)->ptr, TRUE);
-    else if (show_srch_str)
+    else if (getRuntime()->show_srch_str)
         disp_message(Sprintf("%s%s", prompt, str)->ptr, TRUE);
 }
 
@@ -1799,26 +1794,21 @@ handleMailto(const char* url)
 
     if (strncasecmp(url, "mailto:", 7))
         return 0;
-#ifdef USE_W3MMAILER
-    if (!non_null(Mailer) || MailtoOptions == MAILTO_OPTIONS_USE_W3MMAILER)
-        return 0;
-#else
-    if (!non_null(Mailer)) {
+    if (!non_null(getRuntime()->Mailer)) {
         /* FIXME: gettextize? */
         disp_err_message("no mailer is specified", TRUE);
         return 1;
     }
-#endif
 
     /* invoke external mailer */
-    if (MailtoOptions == MAILTO_OPTIONS_USE_MAILTO_URL) {
+    if (getRuntime()->MailtoOptions == MAILTO_OPTIONS_USE_MAILTO_URL) {
         to = Strnew_charp(html_unquote(url));
     } else {
         to = Strnew_charp(url + 7);
         if ((pos = strchr(to->ptr, '?')) != NULL)
             Strtruncate(to, pos - to->ptr);
     }
-    exec_cmd(myExtCommand(Mailer, shell_quote(file_unquote(to->ptr)), FALSE)->ptr);
+    exec_cmd(myExtCommand(getRuntime()->Mailer, shell_quote(file_unquote(to->ptr)), FALSE)->ptr);
     pushHashHist(getRuntime()->URLHist, url);
     return 1;
 }
@@ -1843,20 +1833,16 @@ cmd_loadURL(const char* url, struct Url* current, const char* referer, struct Fo
 /* Load help file */
 DEFUN(ldhelp, HELP, "Show help panel")
 {
-#ifdef USE_HELP_CGI
     char* lang;
     int n;
     Str tmp;
 
-    lang = AcceptLang;
+    lang = getRuntime()->AcceptLang;
     n = strcspn(lang, ";, \t");
     tmp = Sprintf("file:///$LIB/" HELP_CGI CGI_EXTENSION "?version=%s&lang=%s",
         Str_form_quote(Strnew_charp(w3m_version))->ptr,
         Str_form_quote(Strnew_charp_n(lang, n))->ptr);
     cmd_loadURL(tmp->ptr, NULL, NO_REFERER, NULL);
-#else
-    cmd_loadURL(helpFile(HELP_FILE), NULL, NO_REFERER, NULL);
-#endif
 }
 
 static void
@@ -2125,7 +2111,7 @@ DEFUN(quitfm, ABORT EXIT, "Quit without confirmation")
 /* Question and Quit */
 DEFUN(qquitfm, QUIT, "Quit with confirmation request")
 {
-    _quitfm(confirm_on_quit);
+    _quitfm(getRuntime()->confirm_on_quit);
 }
 
 /* Select buffer */
@@ -2288,7 +2274,7 @@ DEFUN(editBf, EDIT, "Edit local source")
         cmd = unquote_mailcap(Currentbuf->edit, Currentbuf->type, fn,
             checkHeader(&Currentbuf->content, "Content-Type:"), NULL);
     else
-        cmd = myEditor(Editor, shell_quote(fn), cur_real_linenumber(Currentbuf));
+        cmd = myEditor(getRuntime()->Editor, shell_quote(fn), cur_real_linenumber(Currentbuf));
     blockChild(cmd->ptr);
 
     // buffer is modified. so reload
@@ -2310,7 +2296,7 @@ DEFUN(editScr, EDIT_SCREEN, "Edit rendered copy of document")
     }
     saveBuffer(Currentbuf, f, TRUE);
     fclose(f);
-    exec_cmd(myEditor(Editor, shell_quote(tmpf),
+    exec_cmd(myEditor(getRuntime()->Editor, shell_quote(tmpf),
         cur_real_linenumber(Currentbuf))
             ->ptr);
     unlink(tmpf);
@@ -2322,7 +2308,7 @@ DEFUN(editScr, EDIT_SCREEN, "Edit rendered copy of document")
 DEFUN(_mark, MARK, "Set/unset mark")
 {
     struct Line* l;
-    if (!use_mark)
+    if (!getRuntime()->use_mark)
         return;
     if (Currentbuf->doc.firstLine == NULL)
         return;
@@ -2336,7 +2322,7 @@ DEFUN(nextMk, NEXT_MARK, "Go to the next mark")
     struct Line* l;
     int i;
 
-    if (!use_mark)
+    if (!getRuntime()->use_mark)
         return;
     if (Currentbuf->doc.firstLine == NULL)
         return;
@@ -2368,7 +2354,7 @@ DEFUN(prevMk, PREV_MARK, "Go to the previous mark")
     struct Line* l;
     int i;
 
-    if (!use_mark)
+    if (!getRuntime()->use_mark)
         return;
     if (Currentbuf->doc.firstLine == NULL)
         return;
@@ -2403,7 +2389,7 @@ DEFUN(reMark, REG_MARK, "Mark all occurences of a pattern")
     char* str;
     char *p, *p1, *p2;
 
-    if (!use_mark)
+    if (!getRuntime()->use_mark)
         return;
     str = searchKeyData();
     if (str == NULL || *str == '\0') {
@@ -2454,7 +2440,7 @@ gotoLabel(const char* label)
     (*buf->clone)++;
     pushBuffer(buf);
     gotoLine(Currentbuf, al->start.line);
-    if (label_topline)
+    if (getRuntime()->label_topline)
         Currentbuf->doc.topLine = lineSkip(Currentbuf, Currentbuf->doc.topLine,
             Currentbuf->doc.currentLine->linenumber
                 - Currentbuf->doc.topLine->linenumber,
@@ -3117,7 +3103,7 @@ goURL0(char* prompt, int relative)
         current = baseURL(Currentbuf);
         if (current) {
             char* c_url = parsedURL2Str(current)->ptr;
-            if (DefaultURLString == DEFAULT_URL_CURRENT)
+            if (getRuntime()->DefaultURLString == DEFAULT_URL_CURRENT)
                 url = url_decode2(c_url, NULL);
             else
                 pushHist(hist, c_url);
@@ -3127,7 +3113,7 @@ goURL0(char* prompt, int relative)
             char* a_url;
             parseURL2(a->url, &p_url, current);
             a_url = parsedURL2Str(&p_url)->ptr;
-            if (DefaultURLString == DEFAULT_URL_LINK)
+            if (getRuntime()->DefaultURLString == DEFAULT_URL_LINK)
                 url = url_decode2(a_url, Currentbuf);
             else
                 pushHist(hist, a_url);
@@ -3192,7 +3178,7 @@ DEFUN(gorURL, GOTO_RELATIVE, "Go to relative address")
 /* load bookmark */
 DEFUN(ldBmark, BOOKMARK VIEW_BOOKMARK, "View bookmarks")
 {
-    cmd_loadURL(BookmarkFile, NULL, NO_REFERER, NULL);
+    cmd_loadURL(getRuntime()->BookmarkFile, NULL, NO_REFERER, NULL);
 }
 
 /* Add current to bookmark */
@@ -3204,7 +3190,7 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
     tmp = Sprintf("mode=panel&cookie=%s&bmark=%s&url=%s&title=%s"
                   "&charset=%s",
         (Str_form_quote(localCookie()))->ptr,
-        (Str_form_quote(Strnew_charp(BookmarkFile)))->ptr,
+        (Str_form_quote(Strnew_charp(getRuntime()->BookmarkFile)))->ptr,
         (Str_form_quote(parsedURL2Str(&Currentbuf->currentURL)))->ptr,
 
         (Str_form_quote(wc_conv_strict(Currentbuf->buffername,
@@ -3938,31 +3924,31 @@ invoke_browser(char* url)
         switch (getRuntime()->prec_num) {
         case 0:
         case 1:
-            browser = ExtBrowser;
+            browser = getRuntime()->ExtBrowser;
             break;
         case 2:
-            browser = ExtBrowser2;
+            browser = getRuntime()->ExtBrowser2;
             break;
         case 3:
-            browser = ExtBrowser3;
+            browser = getRuntime()->ExtBrowser3;
             break;
         case 4:
-            browser = ExtBrowser4;
+            browser = getRuntime()->ExtBrowser4;
             break;
         case 5:
-            browser = ExtBrowser5;
+            browser = getRuntime()->ExtBrowser5;
             break;
         case 6:
-            browser = ExtBrowser6;
+            browser = getRuntime()->ExtBrowser6;
             break;
         case 7:
-            browser = ExtBrowser7;
+            browser = getRuntime()->ExtBrowser7;
             break;
         case 8:
-            browser = ExtBrowser8;
+            browser = getRuntime()->ExtBrowser8;
             break;
         case 9:
-            browser = ExtBrowser9;
+            browser = getRuntime()->ExtBrowser9;
             break;
         }
         if (browser == NULL || *browser == '\0') {
@@ -4480,12 +4466,12 @@ DEFUN(dispVer, VERSION, "Display the version of w3m")
 
 DEFUN(wrapToggle, WRAP_TOGGLE, "Toggle wrapping mode in searches")
 {
-    if (WrapSearch) {
-        WrapSearch = FALSE;
+    if (getRuntime()->WrapSearch) {
+        getRuntime()->WrapSearch = FALSE;
         /* FIXME: gettextize? */
         disp_message("Wrap search off", TRUE);
     } else {
-        WrapSearch = TRUE;
+        getRuntime()->WrapSearch = TRUE;
         /* FIXME: gettextize? */
         disp_message("Wrap search on", TRUE);
     }
@@ -4495,7 +4481,7 @@ DEFUN(wrapToggle, WRAP_TOGGLE, "Toggle wrapping mode in searches")
 static void
 execdict(char* word)
 {
-    if (!UseDictCommand || word == NULL || *word == '\0') {
+    if (!getRuntime()->UseDictCommand || word == NULL || *word == '\0') {
         return;
     }
     char* w = conv_to_system(word);
@@ -4503,7 +4489,7 @@ execdict(char* word)
         return;
     }
 
-    char* dictcmd = Sprintf("%s?%s", DictCommand,
+    char* dictcmd = Sprintf("%s?%s", getRuntime()->DictCommand,
         Str_form_quote(Strnew_charp(w))->ptr)
                         ->ptr;
 

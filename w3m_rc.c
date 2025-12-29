@@ -56,6 +56,67 @@ static struct termios d_ioval;
 char UseGraphicChar = GRAPHIC_CHAR_CHARSET;
 
 struct Runtime g_runtime = {
+    .w3m_dump = (0),
+    .w3m_halfload = (FALSE),
+    .header_string = (NULL),
+    .override_content_type = (FALSE),
+    .override_user_agent = (FALSE),
+    .confirm_on_quit = (TRUE),
+    .use_mark = (FALSE),
+    .vi_prec_num = (FALSE),
+    .label_topline = (FALSE),
+    .nextpage_topline = (FALSE),
+    .displayTitleTerm = (NULL),
+    .displayLinkNumber = (FALSE),
+    .retryAsHttp = (TRUE),
+    .show_srch_str = (TRUE),
+    .Imgdisplay = (IMGDISPLAY),
+    .autoImage = (TRUE),
+    .useExtImageViewer = (TRUE),
+    .maxLoadImage = (4),
+    .image_map_list = (TRUE),
+    .pseudoInlines = (TRUE),
+    .Editor = (DEF_EDITOR),
+    .Mailer = (DEF_MAILER),
+    .MailtoOptions = (MAILTO_OPTIONS_IGNORE),
+    .ExtBrowser = (DEF_EXT_BROWSER),
+    .ExtBrowser2 = (NULL),
+    .ExtBrowser3 = (NULL),
+    .ExtBrowser4 = (NULL),
+    .ExtBrowser5 = (NULL),
+    .ExtBrowser6 = (NULL),
+    .ExtBrowser7 = (NULL),
+    .ExtBrowser8 = (NULL),
+    .ExtBrowser9 = (NULL),
+    .BackgroundExtViewer = (TRUE),
+    .disable_secret_security_check = (FALSE),
+    .passwd_file = (PASSWD_FILE),
+    .pre_form_file = (PRE_FORM_FILE),
+    .ftppasswd = (NULL),
+    .ftppass_hostnamegen = (TRUE),
+    .UserAgent = (NULL),
+    .NoSendReferer = (FALSE),
+    .CrossOriginReferer = (TRUE),
+    .AcceptLang = (NULL),
+    .AcceptEncoding = (NULL),
+    .AcceptMedia = (NULL),
+    .WrapDefault = (FALSE),
+    .IgnoreCase = (TRUE),
+    .WrapSearch = (FALSE),
+    .squeezeBlankLine = (FALSE),
+    .BookmarkFile = (NULL),
+    .UseExternalDirBuffer = (TRUE),
+    .DirBufferCommand = ("file:///$LIB/dirlist" CGI_EXTENSION),
+    .UseDictCommand = (TRUE),
+    .DictCommand = ("file:///$LIB/w3mdict" CGI_EXTENSION),
+    .ignore_null_img_alt = (TRUE),
+    .displayInsDel = (DISPLAY_INS_DEL_NORMAL),
+    .FoldTextarea = (FALSE),
+    .DefaultURLString = (DEFAULT_URL_CURRENT),
+    .MarkAllPages = (FALSE),
+    .mailcap_files = (USER_MAILCAP ", " SYS_MAILCAP),
+    .mimetypes_files = (USER_MIMETYPES ", " SYS_MIMETYPES),
+    .urimethodmap_files = (USER_URIMETHODMAP ", " SYS_URIMETHODMAP),
     .open_tab_blank = (FALSE),
     .open_tab_dl_list = (FALSE),
     .close_tab_back = (FALSE),
@@ -685,7 +746,7 @@ struct Buffer* loadLink(const char* url, const char* target, const char* referer
         }
         if (al) {
             gotoLine(Currentbuf, al->start.line);
-            if (label_topline)
+            if (g_runtime.label_topline)
                 Currentbuf->doc.topLine = lineSkip(Currentbuf, Currentbuf->doc.topLine,
                     Currentbuf->doc.currentLine->linenumber - Currentbuf->doc.topLine->linenumber,
                     FALSE);
@@ -1496,27 +1557,18 @@ static struct sel_c dnsorders[] = {
 };
 #endif /* INET6 */
 
-#ifdef USE_COOKIE
 static struct sel_c badcookiestr[] = {
     { N_S(ACCEPT_BAD_COOKIE_DISCARD), N_("discard") },
-#if 0
-    {N_S(ACCEPT_BAD_COOKIE_ACCEPT), N_("accept")},
-#endif
     { N_S(ACCEPT_BAD_COOKIE_ASK), N_("ask") },
     { 0, NULL, NULL }
 };
-#endif /* USE_COOKIE */
 
 static struct sel_c mailtooptionsstr[] = {
-#ifdef USE_W3MMAILER
-    { N_S(MAILTO_OPTIONS_USE_W3MMAILER), N_("use internal mailer instead") },
-#endif
     { N_S(MAILTO_OPTIONS_IGNORE), N_("ignore options and use only the address") },
     { N_S(MAILTO_OPTIONS_USE_MAILTO_URL), N_("use full mailto URL") },
     { 0, NULL, NULL }
 };
 
-#ifdef USE_M17N
 static wc_ces_list* display_charset_str = NULL;
 static wc_ces_list* document_charset_str = NULL;
 static wc_ces_list* system_charset_str = NULL;
@@ -1526,7 +1578,6 @@ static struct sel_c auto_detect_str[] = {
     { N_S(WC_OPT_DETECT_ON), N_("ON") },
     { 0, NULL, NULL }
 };
-#endif
 
 static struct sel_c graphic_char_str[] = {
     { N_S(GRAPHIC_CHAR_ASCII), N_("ASCII") },
@@ -1562,21 +1613,19 @@ struct param_ptr params1[] = {
         CMT_OPEN_TAB_DL_LIST, NULL },
     { "display_link", P_INT, PI_ONOFF, (void*)&g_runtime.displayLink, CMT_DISPLINK,
         NULL },
-    { "display_link_number", P_INT, PI_ONOFF, (void*)&displayLinkNumber,
+    { "display_link_number", P_INT, PI_ONOFF, (void*)&g_runtime.displayLinkNumber,
         CMT_DISPLINKNUMBER, NULL },
     { "decode_url", P_INT, PI_ONOFF, (void*)&g_runtime.DecodeURL, CMT_DECODE_URL, NULL },
     { "display_lineinfo", P_INT, PI_ONOFF, (void*)&g_runtime.displayLineInfo,
         CMT_DISPLINEINFO, NULL },
-    { "ext_dirlist", P_INT, PI_ONOFF, (void*)&UseExternalDirBuffer,
+    { "ext_dirlist", P_INT, PI_ONOFF, (void*)&g_runtime.UseExternalDirBuffer,
         CMT_EXT_DIRLIST, NULL },
-    { "dirlist_cmd", P_STRING, PI_TEXT, (void*)&DirBufferCommand,
+    { "dirlist_cmd", P_STRING, PI_TEXT, (void*)&g_runtime.DirBufferCommand,
         CMT_DIRLIST_CMD, NULL },
-#ifdef USE_DICT
-    { "use_dictcommand", P_INT, PI_ONOFF, (void*)&UseDictCommand,
+    { "use_dictcommand", P_INT, PI_ONOFF, (void*)&g_runtime.UseDictCommand,
         CMT_USE_DICTCOMMAND, NULL },
-    { "dictcommand", P_STRING, PI_TEXT, (void*)&DictCommand,
+    { "dictcommand", P_STRING, PI_TEXT, (void*)&g_runtime.DictCommand,
         CMT_DICTCOMMAND, NULL },
-#endif /* USE_DICT */
     { "multicol", P_INT, PI_ONOFF, (void*)&multicolList, CMT_MULTICOL, NULL },
     { "alt_entity", P_CHARINT, PI_ONOFF, (void*)&UseAltEntity, CMT_ALT_ENTITY,
         NULL },
@@ -1586,46 +1635,43 @@ struct param_ptr params1[] = {
         CMT_DISP_BORDERS, NULL },
     { "disable_center", P_CHARINT, PI_ONOFF, (void*)&DisableCenter,
         CMT_DISABLE_CENTER, NULL },
-    { "fold_textarea", P_CHARINT, PI_ONOFF, (void*)&FoldTextarea,
+    { "fold_textarea", P_CHARINT, PI_ONOFF, (void*)&g_runtime.FoldTextarea,
         CMT_FOLD_TEXTAREA, NULL },
-    { "display_ins_del", P_INT, PI_SEL_C, (void*)&displayInsDel,
+    { "display_ins_del", P_INT, PI_SEL_C, (void*)&g_runtime.displayInsDel,
         CMT_DISP_INS_DEL, displayinsdel },
-    { "ignore_null_img_alt", P_INT, PI_ONOFF, (void*)&ignore_null_img_alt,
+    { "ignore_null_img_alt", P_INT, PI_ONOFF, (void*)&g_runtime.ignore_null_img_alt,
         CMT_IGNORE_NULL_IMG_ALT, NULL },
     { "view_unseenobject", P_INT, PI_ONOFF, (void*)&view_unseenobject,
         CMT_VIEW_UNSEENOBJECTS, NULL },
     /* XXX: emacs-w3m force to off display_image even if image options off */
     { "display_image", P_INT, PI_ONOFF, (void*)&g_runtime.displayImage, CMT_DISP_IMAGE,
         NULL },
-    { "pseudo_inlines", P_INT, PI_ONOFF, (void*)&pseudoInlines,
+    { "pseudo_inlines", P_INT, PI_ONOFF, (void*)&g_runtime.pseudoInlines,
         CMT_PSEUDO_INLINES, NULL },
-#ifdef USE_IMAGE
-    { "auto_image", P_INT, PI_ONOFF, (void*)&autoImage, CMT_AUTO_IMAGE, NULL },
-    { "max_load_image", P_INT, PI_TEXT, (void*)&maxLoadImage,
+    { "auto_image", P_INT, PI_ONOFF, (void*)&g_runtime.autoImage, CMT_AUTO_IMAGE, NULL },
+    { "max_load_image", P_INT, PI_TEXT, (void*)&g_runtime.maxLoadImage,
         CMT_MAX_LOAD_IMAGE, NULL },
-    { "ext_image_viewer", P_INT, PI_ONOFF, (void*)&useExtImageViewer,
+    { "ext_image_viewer", P_INT, PI_ONOFF, (void*)&g_runtime.useExtImageViewer,
         CMT_EXT_IMAGE_VIEWER, NULL },
     { "image_scale", P_SCALE, PI_TEXT, (void*)&image_scale, CMT_IMAGE_SCALE,
         NULL },
     { "inline_img_protocol", P_INT, PI_SEL_C, (void*)&g_runtime.enable_inline_image,
         CMT_INLINE_IMG_PROTOCOL, (void*)inlineimgstr },
-    { "imgdisplay", P_STRING, PI_TEXT, (void*)&Imgdisplay, CMT_IMGDISPLAY,
+    { "imgdisplay", P_STRING, PI_TEXT, (void*)&g_runtime.Imgdisplay, CMT_IMGDISPLAY,
         NULL },
-    { "image_map_list", P_INT, PI_ONOFF, (void*)&image_map_list,
+    { "image_map_list", P_INT, PI_ONOFF, (void*)&g_runtime.image_map_list,
         CMT_IMAGE_MAP_LIST, NULL },
-#endif
     { "fold_line", P_INT, PI_ONOFF, (void*)&g_runtime.FoldLine, CMT_FOLD_LINE, NULL },
     { "show_lnum", P_INT, PI_ONOFF, (void*)&g_runtime.showLineNum, CMT_SHOW_NUM, NULL },
-    { "show_srch_str", P_INT, PI_ONOFF, (void*)&show_srch_str,
+    { "show_srch_str", P_INT, PI_ONOFF, (void*)&g_runtime.show_srch_str,
         CMT_SHOW_SRCH_STR, NULL },
-    { "label_topline", P_INT, PI_ONOFF, (void*)&label_topline,
+    { "label_topline", P_INT, PI_ONOFF, (void*)&g_runtime.label_topline,
         CMT_LABEL_TOPLINE, NULL },
-    { "nextpage_topline", P_INT, PI_ONOFF, (void*)&nextpage_topline,
+    { "nextpage_topline", P_INT, PI_ONOFF, (void*)&g_runtime.nextpage_topline,
         CMT_NEXTPAGE_TOPLINE, NULL },
     { NULL, 0, 0, NULL, NULL, NULL },
 };
 
-#ifdef USE_COLOR
 struct param_ptr params2[] = {
     { "color", P_INT, PI_ONOFF, (void*)&g_runtime.useColor, CMT_COLOR, NULL },
     { "high-intensity", P_INT, PI_ONOFF, (void*)&g_runtime.highIntensityColors, CMT_HINTENSITY_COLOR, NULL },
@@ -1637,12 +1683,10 @@ struct param_ptr params2[] = {
         (void*)colorstr },
     { "form_color", P_COLOR, PI_SEL_C, (void*)&g_runtime.form_color, CMT_F_COLOR,
         (void*)colorstr },
-#ifdef USE_BG_COLOR
     { "mark_color", P_COLOR, PI_SEL_C, (void*)&g_runtime.mark_color, CMT_MARK_COLOR,
         (void*)colorstr },
     { "bg_color", P_COLOR, PI_SEL_C, (void*)&g_runtime.bg_color, CMT_BG_COLOR,
         (void*)colorstr },
-#endif /* USE_BG_COLOR */
     { "active_style", P_INT, PI_ONOFF, (void*)&g_runtime.useActiveColor,
         CMT_ACTIVE_STYLE, NULL },
     { "active_color", P_COLOR, PI_SEL_C, (void*)&g_runtime.active_color, CMT_C_COLOR,
@@ -1653,28 +1697,27 @@ struct param_ptr params2[] = {
         (void*)colorstr },
     { NULL, 0, 0, NULL, NULL, NULL },
 };
-#endif /* USE_COLOR */
 
 struct param_ptr params3[] = {
     { "pagerline", P_NZINT, PI_TEXT, (void*)&g_runtime.PagerMax, CMT_PAGERLINE, NULL },
     { "use_history", P_INT, PI_ONOFF, (void*)&g_runtime.UseHistory, CMT_HISTORY, NULL },
     { "history", P_INT, PI_TEXT, (void*)&g_runtime.URLHistSize, CMT_HISTSIZE, NULL },
     { "save_hist", P_INT, PI_ONOFF, (void*)&g_runtime.SaveURLHist, CMT_SAVEHIST, NULL },
-    { "confirm_qq", P_INT, PI_ONOFF, (void*)&confirm_on_quit, CMT_CONFIRM_QQ,
+    { "confirm_qq", P_INT, PI_ONOFF, (void*)&g_runtime.confirm_on_quit, CMT_CONFIRM_QQ,
         NULL },
     { "close_tab_back", P_INT, PI_ONOFF, (void*)&g_runtime.close_tab_back,
         CMT_CLOSE_TAB_BACK, NULL },
-    { "mark", P_INT, PI_ONOFF, (void*)&use_mark, CMT_USE_MARK, NULL },
+    { "mark", P_INT, PI_ONOFF, (void*)&g_runtime.use_mark, CMT_USE_MARK, NULL },
     { "emacs_like_lineedit", P_INT, PI_ONOFF, (void*)&g_runtime.emacs_like_lineedit,
         CMT_EMACS_LIKE_LINEEDIT, NULL },
     { "space_autocomplete", P_INT, PI_ONOFF, (void*)&g_runtime.space_autocomplete,
         CMT_SPACE_AUTOCOMPLETE, NULL },
-    { "vi_prec_num", P_INT, PI_ONOFF, (void*)&vi_prec_num, CMT_VI_PREC_NUM,
+    { "vi_prec_num", P_INT, PI_ONOFF, (void*)&g_runtime.vi_prec_num, CMT_VI_PREC_NUM,
         NULL },
-    { "mark_all_pages", P_INT, PI_ONOFF, (void*)&MarkAllPages,
+    { "mark_all_pages", P_INT, PI_ONOFF, (void*)&g_runtime.MarkAllPages,
         CMT_MARK_ALL_PAGES, NULL },
-    { "wrap_search", P_INT, PI_ONOFF, (void*)&WrapDefault, CMT_WRAP, NULL },
-    { "ignorecase_search", P_INT, PI_ONOFF, (void*)&IgnoreCase,
+    { "wrap_search", P_INT, PI_ONOFF, (void*)&g_runtime.WrapDefault, CMT_WRAP, NULL },
+    { "ignorecase_search", P_INT, PI_ONOFF, (void*)&g_runtime.IgnoreCase,
         CMT_IGNORE_CASE, NULL },
 #ifdef USE_MIGEMO
     { "use_migemo", P_INT, PI_ONOFF, (void*)&use_migemo, CMT_USE_MIGEMO,
@@ -1734,35 +1777,33 @@ struct param_ptr params5[] = {
 };
 
 struct param_ptr params6[] = {
-    { "mime_types", P_STRING, PI_TEXT, (void*)&mimetypes_files, CMT_MIMETYPES,
+    { "mime_types", P_STRING, PI_TEXT, (void*)&g_runtime.mimetypes_files, CMT_MIMETYPES,
         NULL },
-    { "mailcap", P_STRING, PI_TEXT, (void*)&mailcap_files, CMT_MAILCAP, NULL },
-#ifdef USE_EXTERNAL_URI_LOADER
-    { "urimethodmap", P_STRING, PI_TEXT, (void*)&urimethodmap_files,
+    { "mailcap", P_STRING, PI_TEXT, (void*)&g_runtime.mailcap_files, CMT_MAILCAP, NULL },
+    { "urimethodmap", P_STRING, PI_TEXT, (void*)&g_runtime.urimethodmap_files,
         CMT_URIMETHODMAP, NULL },
-#endif
-    { "editor", P_STRING, PI_TEXT, (void*)&Editor, CMT_EDITOR, NULL },
-    { "mailto_options", P_INT, PI_SEL_C, (void*)&MailtoOptions,
+    { "editor", P_STRING, PI_TEXT, (void*)&g_runtime.Editor, CMT_EDITOR, NULL },
+    { "mailto_options", P_INT, PI_SEL_C, (void*)&g_runtime.MailtoOptions,
         CMT_MAILTO_OPTIONS, (void*)mailtooptionsstr },
-    { "mailer", P_STRING, PI_TEXT, (void*)&Mailer, CMT_MAILER, NULL },
-    { "extbrowser", P_STRING, PI_TEXT, (void*)&ExtBrowser, CMT_EXTBRZ, NULL },
-    { "extbrowser2", P_STRING, PI_TEXT, (void*)&ExtBrowser2, CMT_EXTBRZ2,
+    { "mailer", P_STRING, PI_TEXT, (void*)&g_runtime.Mailer, CMT_MAILER, NULL },
+    { "extbrowser", P_STRING, PI_TEXT, (void*)&g_runtime.ExtBrowser, CMT_EXTBRZ, NULL },
+    { "extbrowser2", P_STRING, PI_TEXT, (void*)&g_runtime.ExtBrowser2, CMT_EXTBRZ2,
         NULL },
-    { "extbrowser3", P_STRING, PI_TEXT, (void*)&ExtBrowser3, CMT_EXTBRZ3,
+    { "extbrowser3", P_STRING, PI_TEXT, (void*)&g_runtime.ExtBrowser3, CMT_EXTBRZ3,
         NULL },
-    { "extbrowser4", P_STRING, PI_TEXT, (void*)&ExtBrowser4, CMT_EXTBRZ4,
+    { "extbrowser4", P_STRING, PI_TEXT, (void*)&g_runtime.ExtBrowser4, CMT_EXTBRZ4,
         NULL },
-    { "extbrowser5", P_STRING, PI_TEXT, (void*)&ExtBrowser5, CMT_EXTBRZ5,
+    { "extbrowser5", P_STRING, PI_TEXT, (void*)&g_runtime.ExtBrowser5, CMT_EXTBRZ5,
         NULL },
-    { "extbrowser6", P_STRING, PI_TEXT, (void*)&ExtBrowser6, CMT_EXTBRZ6,
+    { "extbrowser6", P_STRING, PI_TEXT, (void*)&g_runtime.ExtBrowser6, CMT_EXTBRZ6,
         NULL },
-    { "extbrowser7", P_STRING, PI_TEXT, (void*)&ExtBrowser7, CMT_EXTBRZ7,
+    { "extbrowser7", P_STRING, PI_TEXT, (void*)&g_runtime.ExtBrowser7, CMT_EXTBRZ7,
         NULL },
-    { "extbrowser8", P_STRING, PI_TEXT, (void*)&ExtBrowser8, CMT_EXTBRZ8,
+    { "extbrowser8", P_STRING, PI_TEXT, (void*)&g_runtime.ExtBrowser8, CMT_EXTBRZ8,
         NULL },
-    { "extbrowser9", P_STRING, PI_TEXT, (void*)&ExtBrowser9, CMT_EXTBRZ9,
+    { "extbrowser9", P_STRING, PI_TEXT, (void*)&g_runtime.ExtBrowser9, CMT_EXTBRZ9,
         NULL },
-    { "bgextviewer", P_INT, PI_ONOFF, (void*)&BackgroundExtViewer,
+    { "bgextviewer", P_INT, PI_ONOFF, (void*)&g_runtime.BackgroundExtViewer,
         CMT_BGEXTVIEW, NULL },
     { NULL, 0, 0, NULL, NULL, NULL },
 };
@@ -1810,35 +1851,35 @@ struct param_ptr params8[] = {
 #endif
 
 struct param_ptr params9[] = {
-    { "passwd_file", P_STRING, PI_TEXT, (void*)&passwd_file, CMT_PASSWDFILE,
+    { "passwd_file", P_STRING, PI_TEXT, (void*)&g_runtime.passwd_file, CMT_PASSWDFILE,
         NULL },
     { "disable_secret_security_check", P_INT, PI_ONOFF,
-        (void*)&disable_secret_security_check, CMT_DISABLE_SECRET_SECURITY_CHECK,
+        (void*)&g_runtime.disable_secret_security_check, CMT_DISABLE_SECRET_SECURITY_CHECK,
         NULL },
-    { "ftppasswd", P_STRING, PI_TEXT, (void*)&ftppasswd, CMT_FTPPASS, NULL },
-    { "ftppass_hostnamegen", P_INT, PI_ONOFF, (void*)&ftppass_hostnamegen,
+    { "ftppasswd", P_STRING, PI_TEXT, (void*)&g_runtime.ftppasswd, CMT_FTPPASS, NULL },
+    { "ftppass_hostnamegen", P_INT, PI_ONOFF, (void*)&g_runtime.ftppass_hostnamegen,
         CMT_FTPPASS_HOSTNAMEGEN, NULL },
-    { "pre_form_file", P_STRING, PI_TEXT, (void*)&pre_form_file,
+    { "pre_form_file", P_STRING, PI_TEXT, (void*)&g_runtime.pre_form_file,
         CMT_PRE_FORM_FILE, NULL },
     { "siteconf_file", P_STRING, PI_TEXT, (void*)&siteconf_file,
         CMT_SITECONF_FILE, NULL },
-    { "user_agent", P_STRING, PI_TEXT, (void*)&UserAgent, CMT_USERAGENT, NULL },
-    { "no_referer", P_INT, PI_ONOFF, (void*)&NoSendReferer, CMT_NOSENDREFERER,
+    { "user_agent", P_STRING, PI_TEXT, (void*)&g_runtime.UserAgent, CMT_USERAGENT, NULL },
+    { "no_referer", P_INT, PI_ONOFF, (void*)&g_runtime.NoSendReferer, CMT_NOSENDREFERER,
         NULL },
-    { "cross_origin_referer", P_INT, PI_ONOFF, (void*)&CrossOriginReferer,
+    { "cross_origin_referer", P_INT, PI_ONOFF, (void*)&g_runtime.CrossOriginReferer,
         CMT_CROSSORIGINREFERER, NULL },
-    { "accept_language", P_STRING, PI_TEXT, (void*)&AcceptLang, CMT_ACCEPTLANG,
+    { "accept_language", P_STRING, PI_TEXT, (void*)&g_runtime.AcceptLang, CMT_ACCEPTLANG,
         NULL },
-    { "accept_encoding", P_STRING, PI_TEXT, (void*)&AcceptEncoding,
+    { "accept_encoding", P_STRING, PI_TEXT, (void*)&g_runtime.AcceptEncoding,
         CMT_ACCEPTENCODING,
         NULL },
-    { "accept_media", P_STRING, PI_TEXT, (void*)&AcceptMedia, CMT_ACCEPTMEDIA,
+    { "accept_media", P_STRING, PI_TEXT, (void*)&g_runtime.AcceptMedia, CMT_ACCEPTMEDIA,
         NULL },
     { "argv_is_url", P_CHARINT, PI_ONOFF, (void*)&g_runtime.ArgvIsURL, CMT_ARGV_IS_URL,
         NULL },
-    { "retry_http", P_INT, PI_ONOFF, (void*)&retryAsHttp, CMT_RETRY_HTTP,
+    { "retry_http", P_INT, PI_ONOFF, (void*)&g_runtime.retryAsHttp, CMT_RETRY_HTTP,
         NULL },
-    { "default_url", P_INT, PI_SEL_C, (void*)&DefaultURLString,
+    { "default_url", P_INT, PI_SEL_C, (void*)&g_runtime.DefaultURLString,
         CMT_DEFAULT_URL, (void*)defaulturls },
     { "follow_redirection", P_INT, PI_TEXT, &FollowRedirection,
         CMT_FOLLOW_REDIRECTION, NULL },
@@ -2365,17 +2406,12 @@ void sync_with_option(void)
     init_tmp();
     if (g_runtime.PagerMax < TTY_LINES())
         g_runtime.PagerMax = TTY_LINES();
-    WrapSearch = WrapDefault;
+    g_runtime.WrapSearch = g_runtime.WrapDefault;
     parse_proxy();
     parse_cookie();
     initMailcap();
     initMimeTypes();
-#ifdef USE_EXTERNAL_URI_LOADER
     initURIMethods();
-#endif
-#ifdef USE_MIGEMO
-    init_migemo();
-#endif
 
     if (fmInitialized() && (getRuntime()->displayImage || getRuntime()->enable_inline_image))
         initImage();
@@ -2383,18 +2419,18 @@ void sync_with_option(void)
     loadPreForm();
     loadSiteconf();
 
-    if (AcceptLang == NULL || *AcceptLang == '\0') {
+    if (g_runtime.AcceptLang == NULL || *g_runtime.AcceptLang == '\0') {
         /* TRANSLATORS:
          * AcceptLang default: this is used in Accept-Language: HTTP request
          * header. For example, ja.po should translate it as
          * "ja;q=1.0, en;q=0.5" like that.
          */
-        AcceptLang = _("en;q=1.0");
+        g_runtime.AcceptLang = _("en;q=1.0");
     }
-    if (AcceptEncoding == NULL || *AcceptEncoding == '\0')
-        AcceptEncoding = acceptableEncoding();
-    if (AcceptMedia == NULL || *AcceptMedia == '\0')
-        AcceptMedia = acceptableMimeTypes();
+    if (g_runtime.AcceptEncoding == NULL || *g_runtime.AcceptEncoding == '\0')
+        g_runtime.AcceptEncoding = acceptableEncoding();
+    if (g_runtime.AcceptMedia == NULL || *g_runtime.AcceptMedia == '\0')
+        g_runtime.AcceptMedia = acceptableMimeTypes();
 
     update_utf8_symbol();
 
