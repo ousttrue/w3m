@@ -1,4 +1,5 @@
 #include "image.h"
+#include "hash.h"
 #include "terms.h"
 #include "file.h"
 #include "indep.h"
@@ -10,7 +11,6 @@
 #include "tab.h"
 #include "etc.h"
 #include "w3m_rc.h"
-#include "fm.h"
 #include <fcntl.h>
 #include <string.h>
 #include <sys/types.h>

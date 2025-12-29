@@ -1,7 +1,7 @@
 #include "func.h"
+#include "fm.h"
 #include "alloc.h"
 #include "message.h"
-#include "fm.h"
 #include "myctype.h"
 #include "regex.h"
 #include "w3m_rc.h"

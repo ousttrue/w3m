@@ -1,12 +1,3 @@
-#ifdef DUMMY
-// DUMMY
-// #define NBSP " "
-// #define UseAltEntity 1
-#else
-// NOT DUMMY
-#include "fm.h"
-#endif
-
 #include "Str.h"
 #include <libwc/wtf.h>
 #include <libwc/conv.h>

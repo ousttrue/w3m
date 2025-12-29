@@ -1,18 +1,15 @@
-/* $Id: indep.c,v 1.38 2007/05/23 15:06:05 inu Exp $ */
-#include "fm.h"
+#include "indep.h"
+#include "myctype.h"
+#include "entity.h"
+#include "Str.h"
+#include <gc.h>
 #include <stdio.h>
 #include <string.h>
-#ifndef __MINGW32_VERSION
 #include <pwd.h>
-#endif /* __MINGW32_VERSION */
 #include <sys/param.h>
 #include <sys/types.h>
 #include <stdlib.h>
-#include "indep.h"
-#include "Str.h"
-#include <gc.h>
-#include "myctype.h"
-#include "entity.h"
+#include <unistd.h>
 
 unsigned char QUOTE_MAP[0x100] = {
     /* NUL SOH STX ETX EOT ENQ ACK BEL  BS  HT  LF  VT  FF  CR  SO  SI */

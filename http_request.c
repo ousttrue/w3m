@@ -3,7 +3,6 @@
 #include "html_form.h"
 #include "siteconf.h"
 #include "url.h"
-#include "fm.h"
 #include "w3m_rc.h"
 #include <stdbool.h>
 #include <strings.h>

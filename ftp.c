@@ -5,7 +5,6 @@
 #include "etc.h"
 #include "message.h"
 #include "linein.h"
-#include "fm.h"
 #include "myctype.h"
 
 #include <Str.h>

@@ -5,7 +5,6 @@
 #include "w3m_rc.h"
 #include "file.h"
 #include "message.h"
-#include "fm.h"
 #include <sys/stat.h>
 
 /* Merge entries from their history into ours */

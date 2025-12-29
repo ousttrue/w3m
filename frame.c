@@ -1,4 +1,5 @@
 #include "frame.h"
+#include "html.h"
 #include "input_stream.h"
 #include "html_form.h"
 #include "alloc.h"
@@ -7,9 +8,7 @@
 #include "etc.h"
 #include "file.h"
 #include "readbuffer.h"
-#include "symbol.h"
 #include "buffer.h"
-#include "fm.h"
 #include "html_tag.h"
 #include "myctype.h"
 #include <libwc/ces.h>

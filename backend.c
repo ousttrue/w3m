@@ -8,10 +8,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
-#include "fm.h"
 #include <gc.h>
 #include <charset.h>
-#include "terms.h"
 
 struct TextList* backend_batch_commands = (NULL);
 TextLineList* backend_halfdump_buf = NULL;

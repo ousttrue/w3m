@@ -1,10 +1,8 @@
 #include "search.h"
-#include "file.h"
 #include "message.h"
-#include "fm.h"
+#include "tab.h"
 #include "buffer.h"
 #include "w3m_rc.h"
-#include "tab.h"
 #include "regex.h"
 #include <signal.h>
 #include <errno.h>

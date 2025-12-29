@@ -7,7 +7,6 @@
 #include "w3m_rc.h"
 #include "image.h"
 #include "maparea.h"
-#include "fm.h"
 #include "myctype.h"
 #include "regex.h"
 #include <string.h>

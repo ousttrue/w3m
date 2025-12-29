@@ -8,7 +8,6 @@
 #include "tab.h"
 #include "buffer.h"
 #include "image.h"
-#include "fm.h"
 #include "proto.h" // ldDL
 #include "funcname1.h"
 

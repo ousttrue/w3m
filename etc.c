@@ -3,14 +3,11 @@
 #include "alloc.h"
 #include "w3m_rc.h"
 #include "file.h"
-#include "symbol.h"
 #include "message.h"
 #include "ctrlcode.h"
 #include "buffer.h"
-#include "fm.h"
 #include "myctype.h"
 #include "html_tag.h"
-#include "local_cgi.h"
 #include "hash.h"
 
 #include <libwc/ces.h>
@@ -18,6 +15,7 @@
 #include <pwd.h>
 #include <fcntl.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <time.h>
 #include <sys/wait.h>

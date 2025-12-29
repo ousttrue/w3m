@@ -6,15 +6,12 @@
  *   [RFC 2109] http://www.ics.uci.edu/pub/ietf/http/rfc2109.txt
  *   [DRAFT 12] http://www.ics.uci.edu/pub/ietf/http/draft-ietf-http-state-man-mec-12.txt
  */
-
 #include "cookie.h"
+#include "textlist.h"
 #include "parsetag.h"
 #include "alloc.h"
-#include "fm.h"
 #include "file.h"
-// #include "html.h"
 #include "indep.h"
-// #include "local_cgi.h"
 #include "regex.h"
 #include "myctype.h"
 #include "w3m_rc.h"

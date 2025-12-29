@@ -1,8 +1,8 @@
 #include "mailcap.h"
-#include "input_stream.h"
+#include "hash.h"
+#include "url.h"
 #include "indep.h"
 #include "content.h"
-#include "fm.h"
 #include "myctype.h"
 #include "w3m_rc.h"
 #include <stdio.h>

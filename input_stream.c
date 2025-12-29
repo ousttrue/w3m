@@ -1,7 +1,6 @@
 #include "input_stream.h"
 #include "ftp.h"
 #include "compression.h"
-#include "fm.h"
 #include "growbuf.h"
 #include "alloc.h"
 #include "w3m_rc.h"

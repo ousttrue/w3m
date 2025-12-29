@@ -10,7 +10,7 @@
 #include "w3m_rc.h"
 #include "tab.h"
 #include "image.h"
-#include "fm.h"
+#include "fm.h" // DEFUN
 #include "myctype.h"
 #include "regex.h"
 #include "proto.h"

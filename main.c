@@ -34,7 +34,7 @@
 #include <string.h>
 
 #define MAINPROGRAM
-#include "fm.h"
+#include "fm.h" // DEFUN
 #include <locale.h>
 #include <assert.h>
 #include <stdbool.h>

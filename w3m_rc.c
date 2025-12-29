@@ -14,7 +14,6 @@
 #include "siteconf.h"
 #include "buffer.h"
 #include "image.h"
-#include "fm.h"
 #include "myctype.h"
 #include "proto.h"
 #include "parsetag.h"
@@ -25,7 +24,7 @@
 #include "siteconf.h"
 #include "anchor.h"
 #include "frame.h"
-#include "fm.h"
+#include "fm.h" // w3mFuncList
 #include "tab.h"
 #include "buffer.h"
 #include "image.h"

@@ -12,7 +12,6 @@
 #include "anchor.h"
 #include "image.h"
 #include <libwc/charset.h>
-#include "fm.h"
 #include <math.h>
 #include <strings.h>
 

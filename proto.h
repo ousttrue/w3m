@@ -168,6 +168,7 @@ extern MySignalHandler error_dump(SIGNAL_ARG);
 extern void set_int(void);
 
 extern void initMimeTypes(void);
+struct Url;
 extern void copyParsedURL(struct Url* p, const struct Url* q);
 extern Str parsedURL2RefererStr(struct Url* pu);
 struct HttpRequest;

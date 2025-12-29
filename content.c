@@ -1,4 +1,5 @@
 #include "content.h"
+#include "func.h"
 #include "input_stream.h"
 #include "linein.h"
 #include "w3m_rc.h"
@@ -9,7 +10,6 @@
 #include "etc.h"
 #include "indep.h"
 #include "myctype.h"
-#include "fm.h"
 #include <string.h>
 #include <libwc/charset.h>
 

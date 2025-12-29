@@ -3,7 +3,6 @@
 #include "buffer.h"
 #include "w3m_rc.h"
 #include "image.h"
-#include "fm.h"
 
 struct TabBuffer* newTab(void)
 {
