@@ -2319,18 +2319,18 @@ feed_table_block_tag(struct table* tbl,
     if (indent == 1) {
         mode->indent_level++;
         if (mode->indent_level <= MAX_INDENT_LEVEL)
-            tbl->indent += INDENT_INCR;
+            tbl->indent += getRuntime()->IndentIncr;
     } else if (indent == -1) {
         mode->indent_level--;
         if (mode->indent_level < MAX_INDENT_LEVEL)
-            tbl->indent -= INDENT_INCR;
+            tbl->indent -= getRuntime()->IndentIncr;
     }
     if (tbl->indent < 0)
         tbl->indent = 0;
     offset = tbl->indent;
     if (cmd == HTML_DT) {
         if (mode->indent_level > 0 && mode->indent_level <= MAX_INDENT_LEVEL)
-            offset -= INDENT_INCR;
+            offset -= getRuntime()->IndentIncr;
         if (offset < 0)
             offset = 0;
     }

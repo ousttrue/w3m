@@ -953,7 +953,7 @@ static struct Buffer* make_buffer(struct Url url, int flag,
         TRAP_OFF;
         if (url.scheme == SCM_LOCAL) {
             // struct stat st;
-            // if (PreserveTimestamp && !stat(url.real_file, &st)) {
+            // if (getRuntime()->PreserveTimestamp && !stat(url.real_file, &st)) {
             //     f.modtime = st.st_mtime;
             // }
             file = conv_from_system(guess_save_name(NULL, url.real_file));
@@ -969,7 +969,7 @@ static struct Buffer* make_buffer(struct Url url, int flag,
 
     if (t_buf) {
         bool use_tmpf = url.scheme != SCM_LOCAL && !getRuntime()->image_source;
-        if ((t_buf->content.compression != CMP_NOCOMPRESS) && AutoUncompress
+        if ((t_buf->content.compression != CMP_NOCOMPRESS) && getRuntime()->AutoUncompress
             && !(w3m_dump & DUMP_EXTRA)) {
             stream = uncompress_stream(stream,
                 t_buf->content.compression, use_tmpf ? &url.real_file : NULL);
@@ -1343,9 +1343,9 @@ struct Buffer* load_doc(const char* path, struct Url* current,
         t = checkContentType(&t_buf->content);
         if (t == NULL)
             t = "text/plain";
-    } else if (DefaultType) {
-        t = DefaultType;
-        DefaultType = NULL;
+    } else if (getRuntime()->DefaultType) {
+        t = getRuntime()->DefaultType;
+        getRuntime()->DefaultType = NULL;
     } else {
         t = guessContentType(us.url.file);
     }
@@ -3259,7 +3259,7 @@ process_idattr(struct readbuffer* obuf, int cmd, struct parsed_tag* tag)
         envs[h_env->envc].env = cmd;                                               \
         envs[h_env->envc].count = 0;                                               \
         if (h_env->envc <= MAX_INDENT_LEVEL)                                       \
-            envs[h_env->envc].indent = envs[h_env->envc - 1].indent + INDENT_INCR; \
+            envs[h_env->envc].indent = envs[h_env->envc - 1].indent + getRuntime()->IndentIncr; \
         else                                                                       \
             envs[h_env->envc].indent = envs[h_env->envc - 1].indent;               \
     }
@@ -3512,7 +3512,7 @@ int HTMLtagproc1(struct HtmlBuilder* hb, struct parsed_tag* tag, struct html_fee
             if (!(obuf->flag & RB_PREMODE) && (h_env->envc == 0 || cmd == HTML_N_BLQ)) {
                 do_blankline(h_env, obuf,
                     envs[h_env->envc].indent,
-                    INDENT_INCR, h_env->limit);
+                    getRuntime()->IndentIncr, h_env->limit);
                 obuf->flag |= RB_IGNORE_P;
             }
         }
@@ -3551,7 +3551,7 @@ int HTMLtagproc1(struct HtmlBuilder* hb, struct parsed_tag* tag, struct html_fee
             switch (envs[h_env->envc].env) {
             case HTML_UL:
                 envs[h_env->envc].type = ul_type(tag, envs[h_env->envc].type);
-                for (i = 0; i < INDENT_INCR - 3; i++)
+                for (i = 0; i < getRuntime()->IndentIncr - 3; i++)
                     push_charp(obuf, 1, NBSP, PC_ASCII);
                 tmp = Strnew();
                 switch (envs[h_env->envc].type) {
@@ -3598,17 +3598,17 @@ int HTMLtagproc1(struct HtmlBuilder* hb, struct parsed_tag* tag, struct html_fee
                     num = Sprintf("%d", envs[h_env->envc].count);
                     break;
                 }
-                if (INDENT_INCR >= 4)
+                if (getRuntime()->IndentIncr >= 4)
                     Strcat_charp(num, ". ");
                 else
                     Strcat_char(num, '.');
-                push_spaces(obuf, 1, INDENT_INCR - num->length);
+                push_spaces(obuf, 1, getRuntime()->IndentIncr - num->length);
                 push_str(obuf, num->length, num, PC_ASCII);
-                if (INDENT_INCR >= 4)
+                if (getRuntime()->IndentIncr >= 4)
                     Strcopy_charp_n(obuf->prevchar, " ", 1);
                 break;
             default:
-                push_spaces(obuf, 1, INDENT_INCR);
+                push_spaces(obuf, 1, getRuntime()->IndentIncr);
                 break;
             }
         } else {
@@ -4166,7 +4166,7 @@ int HTMLtagproc1(struct HtmlBuilder* hb, struct parsed_tag* tag, struct html_fee
                 HTMLlineproc0(hb, tmp->ptr, h_env, true);
                 do_blankline(h_env, obuf, envs[h_env->envc].indent, 0,
                     h_env->limit);
-                if (!is_redisplay && !((obuf->flag & RB_NOFRAMES) && RenderFrame)) {
+                if (!is_redisplay && !((obuf->flag & RB_NOFRAMES) && getRuntime()->RenderFrame)) {
                     tag->need_reconstruct = TRUE;
                     return 0;
                 }
@@ -4934,7 +4934,7 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                     p = q = NULL;
                     parsedtag_get_value(tag, ATTR_HTTP_EQUIV, &p);
                     parsedtag_get_value(tag, ATTR_CONTENT, &q);
-                    if (p && q && !strcasecmp(p, "refresh") && MetaRefresh) {
+                    if (p && q && !strcasecmp(p, "refresh") && getRuntime()->MetaRefresh) {
                         Str tmp = NULL;
                         int refresh_interval = getMetaRefreshParam(q, &tmp);
 #ifdef USE_ALARM
@@ -6251,7 +6251,7 @@ _MoveFile(const char* path1, const char* path2)
     char* buf = NULL;
     int count;
 
-    if (*path2 == '|' && PermitSaveToPipe) {
+    if (*path2 == '|' && getRuntime()->PermitSaveToPipe) {
         is_pipe = TRUE;
         f2 = popen(path2 + 1, "w");
     } else {
@@ -6302,7 +6302,7 @@ int _doFileCopy(const char* tmpf, const char* defstr, bool download)
                 return FALSE;
             p = conv_to_system(q);
         }
-        if (*p == '|' && PermitSaveToPipe)
+        if (*p == '|' && getRuntime()->PermitSaveToPipe)
             is_pipe = TRUE;
         else {
             if (q) {
@@ -6334,7 +6334,7 @@ int _doFileCopy(const char* tmpf, const char* defstr, bool download)
         pid = fork();
         if (!pid) {
             setup_child(FALSE, 0, -1);
-            if (!_MoveFile(tmpf, p) && PreserveTimestamp && !is_pipe && !stat(tmpf, &st))
+            if (!_MoveFile(tmpf, p) && getRuntime()->PreserveTimestamp && !is_pipe && !stat(tmpf, &st))
                 setModtime(p, st.st_mtime);
             unlink(lock);
             exit(0);
@@ -6359,7 +6359,7 @@ int _doFileCopy(const char* tmpf, const char* defstr, bool download)
         if (*q == '\0')
             return -1;
         p = q;
-        if (*p == '|' && PermitSaveToPipe)
+        if (*p == '|' && getRuntime()->PermitSaveToPipe)
             is_pipe = TRUE;
         else {
             p = expandPath(p);
@@ -6376,7 +6376,7 @@ int _doFileCopy(const char* tmpf, const char* defstr, bool download)
             printf("Can't save to %s\n", p);
             return -1;
         }
-        if (PreserveTimestamp && !is_pipe && !stat(tmpf, &st))
+        if (getRuntime()->PreserveTimestamp && !is_pipe && !stat(tmpf, &st))
             setModtime(p, st.st_mtime);
     }
 #endif /* __MINGW32_VERSION */
@@ -6416,13 +6416,13 @@ int doFileSave(struct Url url, struct input_stream* stream,
         flush_tty();
         pid_t pid = fork();
         if (!pid) {
-            if ((compression != CMP_NOCOMPRESS) && AutoUncompress) {
+            if ((compression != CMP_NOCOMPRESS) && getRuntime()->AutoUncompress) {
                 stream = uncompress_stream(stream, compression, NULL);
             }
 
             setup_child(FALSE, 0, is_file_no(stream));
             bool succeeded = is_save2tmp(stream, p);
-            // if (succeeded && PreserveTimestamp && uf.modtime != -1)
+            // if (succeeded && getRuntime()->PreserveTimestamp && uf.modtime != -1)
             //     setModtime(p, uf.modtime);
             is_close(stream);
             unlink(lock);
@@ -6455,14 +6455,14 @@ int doFileSave(struct Url url, struct input_stream* stream,
             printf("Can't save. Load file and %s are identical.", p);
             return -1;
         }
-        if (compression != CMP_NOCOMPRESS && AutoUncompress) {
+        if (compression != CMP_NOCOMPRESS && getRuntime()->AutoUncompress) {
             stream = uncompress_stream(stream, compression, NULL);
         }
         if (!is_save2tmp(stream, p)) {
             printf("Can't save to %s\n", p);
             return -1;
         }
-        // if (PreserveTimestamp && uf.modtime != -1)
+        // if (getRuntime()->PreserveTimestamp && uf.modtime != -1)
         //     setModtime(p, uf.modtime);
     }
     return 0;
@@ -6472,7 +6472,7 @@ int checkCopyFile(const char* path1, const char* path2)
 {
     struct stat st1, st2;
 
-    if (*path2 == '|' && PermitSaveToPipe)
+    if (*path2 == '|' && getRuntime()->PermitSaveToPipe)
         return 0;
     if ((stat(path1, &st1) == 0) && (stat(path2, &st2) == 0))
         if (st1.st_ino == st2.st_ino)
@@ -6487,7 +6487,7 @@ int checkSaveFile(struct input_stream* stream, const char* path2)
 
     if (des < 0)
         return 0;
-    if (*path2 == '|' && PermitSaveToPipe)
+    if (*path2 == '|' && getRuntime()->PermitSaveToPipe)
         return 0;
     if ((fstat(des, &st1) == 0) && (stat(path2, &st2) == 0))
         if (st1.st_ino == st2.st_ino)

@@ -56,6 +56,20 @@ static struct termios d_ioval;
 char UseGraphicChar = GRAPHIC_CHAR_CHARSET;
 
 struct Runtime g_runtime = {
+    .IndentIncr = (4),
+    .PagerMax = (PAGER_MAX_LINE),
+    .DefaultType = (NULL),
+    .RenderFrame = (FALSE),
+    .TargetSelf = (FALSE),
+    .PermitSaveToPipe = (FALSE),
+    .AutoUncompress = (FALSE),
+    .PreserveTimestamp = (TRUE),
+    .ArgvIsURL = (TRUE),
+    .MetaRefresh = (FALSE),
+    .LocalhostOnly = (FALSE),
+    .HostName = (NULL),
+    .TrapSignal = (TRUE),
+
     .ssl_verify_server = TRUE,
     .ssl_cert_file = NULL,
     .ssl_key_file = NULL,
@@ -561,12 +575,12 @@ static struct Buffer*
 loadNormalBuf(struct Buffer* buf, int renderframe)
 {
     pushBuffer(buf);
-    if (renderframe && RenderFrame && Currentbuf->frameset != NULL)
+    if (renderframe && g_runtime.RenderFrame && Currentbuf->frameset != NULL)
         rFrame();
     return buf;
 }
 
-struct Buffer* loadLink(char* url, char* target, char* referer, struct FormList* request, bool on_target, bool do_download)
+struct Buffer* loadLink(const char* url, const char* target, const char* referer, struct FormList* request, bool on_target, bool do_download)
 {
     struct Buffer *buf, *nfbuf;
     union frameset_element* f_element = NULL;
@@ -1506,14 +1520,14 @@ static struct sel_c inlineimgstr[] = {
 
 struct param_ptr params1[] = {
     { "tabstop", P_NZINT, PI_TEXT, (void*)&g_runtime.Tabstop, CMT_TABSTOP, NULL },
-    { "indent_incr", P_NZINT, PI_TEXT, (void*)&IndentIncr, CMT_INDENT_INCR,
+    { "indent_incr", P_NZINT, PI_TEXT, (void*)&g_runtime.IndentIncr, CMT_INDENT_INCR,
         NULL },
     { "pixel_per_char", P_PIXELS, PI_TEXT, (void*)&g_runtime.pixel_per_char,
         CMT_PIXEL_PER_CHAR, NULL },
     { "pixel_per_line", P_PIXELS, PI_TEXT, (void*)&g_runtime.pixel_per_line,
         CMT_PIXEL_PER_LINE, NULL },
-    { "frame", P_CHARINT, PI_ONOFF, (void*)&RenderFrame, CMT_FRAME, NULL },
-    { "target_self", P_CHARINT, PI_ONOFF, (void*)&TargetSelf, CMT_TSELF, NULL },
+    { "frame", P_CHARINT, PI_ONOFF, (void*)&g_runtime.RenderFrame, CMT_FRAME, NULL },
+    { "target_self", P_CHARINT, PI_ONOFF, (void*)&g_runtime.TargetSelf, CMT_TSELF, NULL },
     { "open_tab_blank", P_INT, PI_ONOFF, (void*)&open_tab_blank,
         CMT_OPEN_TAB_BLANK, NULL },
     { "open_tab_dl_list", P_INT, PI_ONOFF, (void*)&open_tab_dl_list,
@@ -1614,7 +1628,7 @@ struct param_ptr params2[] = {
 #endif /* USE_COLOR */
 
 struct param_ptr params3[] = {
-    { "pagerline", P_NZINT, PI_TEXT, (void*)&PagerMax, CMT_PAGERLINE, NULL },
+    { "pagerline", P_NZINT, PI_TEXT, (void*)&g_runtime.PagerMax, CMT_PAGERLINE, NULL },
     { "use_history", P_INT, PI_ONOFF, (void*)&g_runtime.UseHistory, CMT_HISTORY, NULL },
     { "history", P_INT, PI_TEXT, (void*)&g_runtime.URLHistSize, CMT_HISTSIZE, NULL },
     { "save_hist", P_INT, PI_ONOFF, (void*)&g_runtime.SaveURLHist, CMT_SAVEHIST, NULL },
@@ -1657,9 +1671,9 @@ struct param_ptr params3[] = {
 #endif /* USE_MOUSE */
     { "clear_buffer", P_INT, PI_ONOFF, (void*)&clear_buffer, CMT_CLEAR_BUF,
         NULL },
-    { "auto_uncompress", P_CHARINT, PI_ONOFF, (void*)&AutoUncompress,
+    { "auto_uncompress", P_CHARINT, PI_ONOFF, (void*)&g_runtime.AutoUncompress,
         CMT_AUTO_UNCOMPRESS, NULL },
-    { "preserve_timestamp", P_CHARINT, PI_ONOFF, (void*)&PreserveTimestamp,
+    { "preserve_timestamp", P_CHARINT, PI_ONOFF, (void*)&g_runtime.PreserveTimestamp,
         CMT_PRESERVE_TIMESTAMP, NULL },
     { "keymap_file", P_STRING, PI_TEXT, (void*)&keymap_file, CMT_KEYMAP_FILE,
         NULL },
@@ -1800,7 +1814,7 @@ struct param_ptr params9[] = {
         NULL },
     { "accept_media", P_STRING, PI_TEXT, (void*)&AcceptMedia, CMT_ACCEPTMEDIA,
         NULL },
-    { "argv_is_url", P_CHARINT, PI_ONOFF, (void*)&ArgvIsURL, CMT_ARGV_IS_URL,
+    { "argv_is_url", P_CHARINT, PI_ONOFF, (void*)&g_runtime.ArgvIsURL, CMT_ARGV_IS_URL,
         NULL },
     { "retry_http", P_INT, PI_ONOFF, (void*)&retryAsHttp, CMT_RETRY_HTTP,
         NULL },
@@ -1808,9 +1822,9 @@ struct param_ptr params9[] = {
         CMT_DEFAULT_URL, (void*)defaulturls },
     { "follow_redirection", P_INT, PI_TEXT, &FollowRedirection,
         CMT_FOLLOW_REDIRECTION, NULL },
-    { "meta_refresh", P_CHARINT, PI_ONOFF, (void*)&MetaRefresh,
+    { "meta_refresh", P_CHARINT, PI_ONOFF, (void*)&g_runtime.MetaRefresh,
         CMT_META_REFRESH, NULL },
-    { "localhost_only", P_CHARINT, PI_ONOFF, (void*)&LocalhostOnly,
+    { "localhost_only", P_CHARINT, PI_ONOFF, (void*)&g_runtime.LocalhostOnly,
         CMT_LOCALHOST_ONLY, NULL },
 #ifdef INET6
     { "dns_order", P_INT, PI_SEL_C, (void*)&DNS_order, CMT_DNS_ORDER,
@@ -2356,8 +2370,8 @@ do_recursive_mkdir(const char* dir)
 void sync_with_option(void)
 {
     init_tmp();
-    if (PagerMax < TTY_LINES())
-        PagerMax = TTY_LINES();
+    if (g_runtime.PagerMax < TTY_LINES())
+        g_runtime.PagerMax = TTY_LINES();
     WrapSearch = WrapDefault;
     parse_proxy();
     parse_cookie();

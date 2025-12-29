@@ -25,12 +25,12 @@
     } while ((s) > 0 && (l)->propBuf[s] & PC_WCHAR2)
 
 #define TRAP_ON                                \
-    if (TrapSignal) {                          \
+    if (getRuntime()->TrapSignal) {                          \
         prevtrap = mySignal(SIGINT, KeyAbort); \
         tty_cbreak(true);                      \
     }
 #define TRAP_OFF                        \
-    if (TrapSignal) {                   \
+    if (getRuntime()->TrapSignal) {                   \
         tty_cbreak(false);              \
         if (prevtrap)                   \
             mySignal(SIGINT, prevtrap); \
@@ -49,6 +49,19 @@ struct Event {
 };
 
 struct Runtime {
+    int IndentIncr;
+    int PagerMax;
+    const char* DefaultType;
+    char RenderFrame;
+    char TargetSelf;
+    char PermitSaveToPipe;
+    char AutoUncompress;
+    char PreserveTimestamp;
+    char ArgvIsURL;
+    char MetaRefresh;
+    char LocalhostOnly;
+    char* HostName;
+    char TrapSignal;
     int ssl_verify_server;
     char* ssl_cert_file;
     char* ssl_key_file;
@@ -210,7 +223,7 @@ void tabs_prepare();
 bool currentBufferSubmit();
 void _followForm(bool submit, bool on_target, bool do_download);
 struct FormList;
-struct Buffer* loadLink(char* url, char* target, char* referer, struct FormList* request, bool on_target, bool do_download);
+struct Buffer* loadLink(const char* url, const char* target, const char* referer, struct FormList* request, bool on_target, bool do_download);
 struct FormItemList;
 void query_from_followform(Str* query, struct FormItemList* fi, int multipart);
 void pushEvent(int cmd, void* data);

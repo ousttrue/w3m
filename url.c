@@ -885,7 +885,7 @@ struct UrlStream openURL(const char* url, struct Url* current,
 
     const char* u = url;
     enum UrlScheme scheme = getURLScheme(&u);
-    if (current == NULL && scheme == SCM_MISSING && !ArgvIsURL)
+    if (current == NULL && scheme == SCM_MISSING && !getRuntime()->ArgvIsURL)
         u = file_to_url(url); /* force to local file */
     else
         u = url;
@@ -906,7 +906,7 @@ struct UrlStream openURL(const char* url, struct Url* current,
         }
     }
 
-    if (LocalhostOnly && us.url.host && !is_localhost(us.url.host))
+    if (getRuntime()->LocalhostOnly && us.url.host && !is_localhost(us.url.host))
         us.url.host = NULL;
 
     us.url_str = parsedURL2Str(&us.url)->ptr;

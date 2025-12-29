@@ -295,7 +295,7 @@ popFrameTree(struct frameset_queue** fqpp)
 }
 
 void resetFrameElement(union frameset_element* f_element,
-    struct Buffer* buf, char* referer, struct FormList* request)
+    struct Buffer* buf, const char* referer, struct FormList* request)
 {
     char* f_name;
     struct frame_body* f_body;
@@ -516,7 +516,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
                 p_target = f->name;
                 s_target = frame.body->name;
                 t_target = "_blank";
-                d_target = TargetSelf ? s_target : t_target;
+                d_target = getRuntime()->TargetSelf ? s_target : t_target;
 
                 charset = WC_CES_US_ASCII;
                 if (current->document_charset != WC_CES_US_ASCII)

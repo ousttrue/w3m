@@ -44,7 +44,7 @@ Str localCookie()
     if (Local_cookie)
         return Local_cookie;
     srand48((long)New(char) + (long)time(NULL));
-    Local_cookie = Sprintf("%ld@%s", lrand48(), HostName ? HostName : "localhost");
+    Local_cookie = Sprintf("%ld@%s", lrand48(), getRuntime()->HostName ? getRuntime()->HostName : "localhost");
     return Local_cookie;
 }
 

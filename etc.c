@@ -632,7 +632,7 @@ void setup_child(int child, int i, int f)
     close_all_fds_except(i, f);
     getRuntime()->QuietMessage = TRUE;
     // getRuntime()->fmInitialized = FALSE;
-    TrapSignal = FALSE;
+    getRuntime()->TrapSignal = FALSE;
 }
 
 pid_t open_pipe_rw(FILE** fr, FILE** fw)
@@ -828,7 +828,7 @@ rest:
 
 int is_localhost(const char* host)
 {
-    if (!host || !strcasecmp(host, "localhost") || !strcmp(host, "127.0.0.1") || (HostName && !strcasecmp(host, HostName)) || !strcmp(host, "[::1]"))
+    if (!host || !strcasecmp(host, "localhost") || !strcmp(host, "127.0.0.1") || (getRuntime()->HostName && !strcasecmp(host, getRuntime()->HostName)) || !strcmp(host, "[::1]"))
         return TRUE;
     return FALSE;
 }

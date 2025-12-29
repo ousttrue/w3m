@@ -21,7 +21,7 @@ struct frame_body {
     struct Url* baseURL;
     const char* source;
     char* type;
-    char* referer;
+    const char* referer;
     struct AnchorList* nameList;
     struct FormList* request;
     const char* ssl_certificate;
@@ -59,3 +59,7 @@ struct frameset_queue {
 
 extern struct frameset* renderFrameSet;
 extern union frameset_element* search_frame(struct frameset* fset, const char* name);
+struct Buffer;
+extern void resetFrameElement(union frameset_element* f_element, struct Buffer* buf,
+    const char* referer, struct FormList* request);
+

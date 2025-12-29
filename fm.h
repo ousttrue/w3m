@@ -219,22 +219,6 @@ struct cookie {
  * Globals.
  */
 
-global int IndentIncr init(4);
-global int PagerMax init(PAGER_MAX_LINE);
-
-global const char* DefaultType init(NULL);
-global char RenderFrame init(FALSE);
-global char TargetSelf init(FALSE);
-global char PermitSaveToPipe init(FALSE);
-global char AutoUncompress init(FALSE);
-global char PreserveTimestamp init(TRUE);
-global char ArgvIsURL init(TRUE);
-global char MetaRefresh init(FALSE);
-global char LocalhostOnly init(FALSE);
-global char* HostName init(NULL);
-
-global char TrapSignal init(TRUE);
-
 extern unsigned char GlobalKeymap[];
 extern unsigned char EscKeymap[];
 extern unsigned char EscBKeymap[];

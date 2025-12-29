@@ -260,8 +260,6 @@ extern struct frameset* copyFrameSet(struct frameset* of);
 extern void pushFrameTree(struct frameset_queue** fqpp, struct frameset* fs,
     struct Buffer* buf);
 extern struct frameset* popFrameTree(struct frameset_queue** fqpp);
-extern void resetFrameElement(union frameset_element* f_element, struct Buffer* buf,
-    char* referer, struct FormList* request);
 extern struct Buffer* renderFrame(struct Buffer* Cbuf, int force_reload);
 extern MySignalHandler reset_exit(SIGNAL_ARG);
 extern MySignalHandler error_dump(SIGNAL_ARG);

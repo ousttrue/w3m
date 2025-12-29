@@ -456,7 +456,7 @@ bool w3m_args(int argc, char** argv)
             hostname[HOST_NAME_MAX + 1] = '\0';
             hostname_len = strlen(hostname);
             if (hostname_len <= HOST_NAME_MAX && hostname_len < STR_SIZE_MAX)
-                HostName = allocStr(hostname, (int)hostname_len);
+                getRuntime()->HostName = allocStr(hostname, (int)hostname_len);
         }
     }
 
@@ -537,7 +537,7 @@ bool w3m_args(int argc, char** argv)
                 if (++i >= argc)
                     usage();
                 if (atoi(argv[i]) > 0)
-                    PagerMax = atoi(argv[i]);
+                    getRuntime()->PagerMax = atoi(argv[i]);
             } else if (!strncmp("-I", argv[i], 2)) {
                 if (argv[i][2] != '\0')
                     p = argv[i] + 2;
@@ -565,7 +565,7 @@ bool w3m_args(int argc, char** argv)
             else if (!strcmp("-T", argv[i])) {
                 if (++i >= argc)
                     usage();
-                DefaultType = default_type = argv[i];
+                getRuntime()->DefaultType = default_type = argv[i];
             }
             // else if (!strcmp("-m", argv[i]))
             //     SearchHeader = search_header = TRUE;
@@ -593,7 +593,7 @@ bool w3m_args(int argc, char** argv)
                     BookmarkFile = cleanupName(tmp->ptr);
                 }
             } else if (!strcmp("-F", argv[i]))
-                RenderFrame = TRUE;
+                getRuntime()->RenderFrame = TRUE;
             else if (!strcmp("-W", argv[i])) {
                 if (WrapDefault)
                     WrapDefault = FALSE;
@@ -614,7 +614,7 @@ bool w3m_args(int argc, char** argv)
             else if (!strcmp("-halfload", argv[i])) {
                 w3m_dump = 0;
                 w3m_halfload = TRUE;
-                DefaultType = default_type = "text/html";
+                getRuntime()->DefaultType = default_type = "text/html";
             } else if (!strcmp("-backend", argv[i])) {
                 w3m_backend = TRUE;
             } else if (!strcmp("-backend_batch", argv[i])) {
@@ -878,10 +878,10 @@ bool w3m_args(int argc, char** argv)
     for (; i < load_argc; i++) {
         if (i >= 0) {
             // SearchHeader = search_header;
-            DefaultType = default_type;
+            getRuntime()->DefaultType = default_type;
             int retry = 0;
             const char* url = load_argv[i];
-            if (getURLScheme(&url) == SCM_MISSING && !ArgvIsURL)
+            if (getURLScheme(&url) == SCM_MISSING && !getRuntime()->ArgvIsURL)
             retry_as_local_file:
                 url = file_to_url(load_argv[i]);
             else
@@ -918,7 +918,7 @@ bool w3m_args(int argc, char** argv)
                 newbuf = loadGeneralFile(url, NULL, NO_REFERER, 0, request, false);
             }
             if (newbuf == NULL) {
-                if (ArgvIsURL && !retry) {
+                if (getRuntime()->ArgvIsURL && !retry) {
                     retry = 1;
                     goto retry_as_local_file;
                 }
@@ -950,7 +950,7 @@ bool w3m_args(int argc, char** argv)
         assert(Firstbuf);
 
         if (!w3m_dump || w3m_dump == DUMP_BUFFER) {
-            if (Currentbuf->frameset != NULL && RenderFrame)
+            if (Currentbuf->frameset != NULL && getRuntime()->RenderFrame)
                 rFrame();
         }
         if (w3m_dump)
@@ -998,7 +998,7 @@ bool w3m_args(int argc, char** argv)
         disp_message_nsec(err_msg->ptr, FALSE, 1, TRUE, FALSE);
 
     // SearchHeader = FALSE;
-    DefaultType = NULL;
+    getRuntime()->DefaultType = NULL;
     UseContentCharset = TRUE;
     WcOption.auto_detect = auto_detect;
 
@@ -1051,15 +1051,12 @@ dump_extra(struct Buffer* buf)
     printf("W3m-current-url: %s\n", parsedURL2Str(&buf->currentURL)->ptr);
     if (buf->baseURL)
         printf("W3m-base-url: %s\n", parsedURL2Str(buf->baseURL)->ptr);
-#ifdef USE_M17N
     printf("W3m-document-charset: %s\n",
         wc_ces_to_charset(buf->document_charset));
-#endif
-#ifdef USE_SSL
+
     if (buf->ssl_certificate) {
         Str tmp = Strnew();
-        char* p;
-        for (p = buf->ssl_certificate; *p; p++) {
+        for (const char* p = buf->ssl_certificate; *p; p++) {
             Strcat_char(tmp, *p);
             if (*p == '\n') {
                 for (; *(p + 1) == '\n'; p++)
@@ -1072,7 +1069,6 @@ dump_extra(struct Buffer* buf)
             Strcat_char(tmp, '\n');
         printf("W3m-ssl-certificate: %s", tmp->ptr);
     }
-#endif
 }
 
 static int
@@ -1866,7 +1862,7 @@ cmd_loadURL(const char* url, struct Url* current, const char* referer, struct Fo
         disp_err_message(emsg, FALSE);
     } else if (buf != NO_BUFFER) {
         pushBuffer(buf);
-        if (RenderFrame && Currentbuf->frameset != NULL)
+        if (getRuntime()->RenderFrame && Currentbuf->frameset != NULL)
             rFrame();
     }
 }
@@ -1900,7 +1896,7 @@ cmd_loadfile(char* fn)
         disp_err_message(emsg, FALSE);
     } else if (buf != NO_BUFFER) {
         pushBuffer(buf);
-        if (RenderFrame && Currentbuf->frameset != NULL)
+        if (getRuntime()->RenderFrame && Currentbuf->frameset != NULL)
             rFrame();
     }
 }
@@ -2531,7 +2527,7 @@ void _followA(bool on_target, bool do_download)
     if (handleMailto(a->url))
         return;
 
-    char* url = a->url;
+    const char* url = a->url;
     if (map)
         url = Sprintf("%s?%d,%d", a->url, x, y)->ptr;
 
@@ -3064,7 +3060,7 @@ checkBackBuffer(struct Buffer* buf)
             return TRUE; /* Currentbuf has stacked frames */
         /* when no frames stacked and next is frame source, try next's
          * nextBuffer */
-        if (RenderFrame && fbuf == buf->nextBuffer) {
+        if (getRuntime()->RenderFrame && fbuf == buf->nextBuffer) {
             if (fbuf->nextBuffer != NULL)
                 return TRUE;
             else
@@ -3118,7 +3114,7 @@ DEFUN(backBf, BACK, "Close current buffer and return to the one below in stack")
                 arrangeCursor(Currentbuf);
                 formResetBuffer(Currentbuf, formitem);
             }
-        } else if (RenderFrame && buf == Currentbuf) {
+        } else if (getRuntime()->RenderFrame && buf == Currentbuf) {
             delBuffer(Currentbuf);
         }
     }
@@ -3496,7 +3492,7 @@ DEFUN(svSrc, DOWNLOAD SAVE, "Save document source")
     if (Currentbuf->sourcefile == NULL)
         return;
     getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    PermitSaveToPipe = TRUE;
+    getRuntime()->PermitSaveToPipe = TRUE;
     const char* file;
     if (Currentbuf->currentURL.scheme == SCM_LOCAL)
         file = conv_from_system(guess_save_name(NULL,
@@ -3504,7 +3500,7 @@ DEFUN(svSrc, DOWNLOAD SAVE, "Save document source")
     else
         file = guess_save_name(&Currentbuf->content, Currentbuf->currentURL.file);
     doFileCopy(Currentbuf->sourcefile, file);
-    PermitSaveToPipe = FALSE;
+    getRuntime()->PermitSaveToPipe = FALSE;
 }
 
 static void
@@ -3763,11 +3759,11 @@ DEFUN(reload, RELOAD, "Load current document anew")
     if (Currentbuf->document_charset != WC_CES_US_ASCII)
         getRuntime()->DocumentCharset = Currentbuf->document_charset;
     // SearchHeader = Currentbuf->search_header;
-    DefaultType = Currentbuf->type;
+    getRuntime()->DefaultType = Currentbuf->type;
     buf = loadGeneralFile(url->ptr, NULL, NO_REFERER, RG_NOCACHE, request, false);
     getRuntime()->DocumentCharset = old_charset;
     // SearchHeader = FALSE;
-    DefaultType = NULL;
+    getRuntime()->DefaultType = NULL;
 
     if (multipart)
         unlink(request->body);
