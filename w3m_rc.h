@@ -49,6 +49,13 @@ struct Event {
 };
 
 struct Runtime {
+    int DNS_order;
+    char NoCache;
+    char use_proxy;
+    char* document_root;
+    char* personal_document_root;
+    char* cgi_bin;
+    char* index_file;
     char* HTTP_proxy;
     char* HTTPS_proxy;
     char* FTP_proxy;

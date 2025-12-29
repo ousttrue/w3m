@@ -238,7 +238,7 @@ int openSocket(char* const hostname,
         if (strspn(hname, "0123456789abcdefABCDEF:.") != strlen(hname))
             goto error;
     }
-    for (af = ai_family_order_table[DNS_order];; af++) {
+    for (af = ai_family_order_table[getRuntime()->DNS_order];; af++) {
         memset(&hints, 0, sizeof(hints));
         hints.ai_family = *af;
         hints.ai_socktype = SOCK_STREAM;
@@ -845,8 +845,8 @@ add_index_file(struct Url* pu, struct input_stream* stream)
     struct TextList* index_file_list = NULL;
     TextListItem* ti;
 
-    if (non_null(index_file))
-        index_file_list = make_domain_list(index_file);
+    if (non_null(getRuntime()->index_file))
+        index_file_list = make_domain_list(getRuntime()->index_file);
     if (index_file_list == NULL) {
         stream = NULL;
     } else {
@@ -944,8 +944,8 @@ struct UrlStream openURL(const char* url, struct Url* current,
                 if (us.stream == NULL) {
                     return us;
                 }
-            } else if (document_root != NULL) {
-                tmp = Strnew_charp(document_root);
+            } else if (getRuntime()->document_root != NULL) {
+                tmp = Strnew_charp(getRuntime()->document_root);
                 if (Strlastchar(tmp) != '/' && us.url.file[0] != '/')
                     Strcat_char(tmp, '/');
                 Strcat_charp(tmp, us.url.file);
@@ -972,7 +972,7 @@ struct UrlStream openURL(const char* url, struct Url* current,
     case SCM_FTPDIR:
         if (us.url.file == NULL)
             us.url.file = allocStr("/", -1);
-        if (non_null(getRuntime()->FTP_proxy) && !Do_not_use_proxy && us.url.host != NULL && !check_no_proxy(us.url.host)) {
+        if (non_null(getRuntime()->FTP_proxy) && getRuntime()->use_proxy && us.url.host != NULL && !check_no_proxy(us.url.host)) {
             us.hr.flag |= HR_FLAG_PROXY;
             sock = openSocket(FTP_proxy_parsed.host,
                 schemeNumToName(FTP_proxy_parsed.scheme),
@@ -1000,7 +1000,7 @@ struct UrlStream openURL(const char* url, struct Url* current,
             us.hr.command = HR_COMMAND_HEAD;
         if ((
                 (us.url.scheme == SCM_HTTPS) ? non_null(getRuntime()->HTTPS_proxy) : non_null(getRuntime()->HTTP_proxy))
-            && !Do_not_use_proxy && us.url.host != NULL && !check_no_proxy(us.url.host)) {
+            && getRuntime()->use_proxy && us.url.host != NULL && !check_no_proxy(us.url.host)) {
             us.hr.flag |= HR_FLAG_PROXY;
             if (us.url.scheme == SCM_HTTPS && us.status == HTST_CONNECT) {
                 sock = ouf->ssl.sock;
@@ -1245,7 +1245,7 @@ int check_no_proxy(char* domain)
         char addr[4 * 16];
         int* af;
 
-        for (af = ai_family_order_table[DNS_order];; af++) {
+        for (af = ai_family_order_table[getRuntime()->DNS_order];; af++) {
             memset(&hints, 0, sizeof(hints));
             hints.ai_family = *af;
             error = getaddrinfo(domain, NULL, &hints, &res0);

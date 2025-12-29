@@ -3,6 +3,7 @@
 #include "siteconf.h"
 #include "url.h"
 #include "fm.h"
+#include "w3m_rc.h"
 #include <stdbool.h>
 #include <strings.h>
 
@@ -85,7 +86,7 @@ otherinfo(struct Url* target, struct Url* current, char* referer)
             Strcat(s, Sprintf(":%d", target->port));
         Strcat_charp(s, "\r\n");
     }
-    if (target->is_nocache || NoCache) {
+    if (target->is_nocache || getRuntime()->NoCache) {
         Strcat_charp(s, "Pragma: no-cache\r\n");
         Strcat_charp(s, "Cache-control: no-cache\r\n");
     }

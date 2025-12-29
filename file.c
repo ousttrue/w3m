@@ -1209,7 +1209,7 @@ struct Buffer* load_doc(const char* path, struct Url* current,
     const char* t = "text/plain";
 
     TRAP_ON;
-    if (us.url.scheme == SCM_HTTP || us.url.scheme == SCM_HTTPS || (((us.url.scheme == SCM_FTP && non_null(getRuntime()->FTP_proxy))) && !Do_not_use_proxy && !check_no_proxy(us.url.host))) {
+    if (us.url.scheme == SCM_HTTP || us.url.scheme == SCM_HTTPS || (((us.url.scheme == SCM_FTP && non_null(getRuntime()->FTP_proxy))) && getRuntime()->use_proxy && !check_no_proxy(us.url.host))) {
 
         if (fmInitialized()) {
             exitRawMode();

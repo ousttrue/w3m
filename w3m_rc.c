@@ -56,6 +56,13 @@ static struct termios d_ioval;
 char UseGraphicChar = GRAPHIC_CHAR_CHARSET;
 
 struct Runtime g_runtime = {
+    .DNS_order = (DNS_ORDER_UNSPEC),
+    .NoCache = (FALSE),
+    .use_proxy = (TRUE),
+    .document_root = (NULL),
+    .personal_document_root = (NULL),
+    .cgi_bin = (NULL),
+    .index_file = (NULL),
     .HTTP_proxy = (NULL),
     .HTTPS_proxy = (NULL),
     .FTP_proxy = (NULL),
@@ -1698,7 +1705,7 @@ struct param_ptr params3[] = {
 };
 
 struct param_ptr params4[] = {
-    { "use_proxy", P_CHARINT, PI_ONOFF, (void*)&use_proxy, CMT_USE_PROXY,
+    { "use_proxy", P_CHARINT, PI_ONOFF, (void*)&g_runtime.use_proxy, CMT_USE_PROXY,
         NULL },
     { "http_proxy", P_STRING, PI_TEXT, (void*)&g_runtime.HTTP_proxy, CMT_HTTP_PROXY,
         NULL },
@@ -1708,18 +1715,18 @@ struct param_ptr params4[] = {
     { "no_proxy", P_STRING, PI_TEXT, (void*)&g_runtime.NO_proxy, CMT_NO_PROXY, NULL },
     { "noproxy_netaddr", P_INT, PI_ONOFF, (void*)&g_runtime.NOproxy_netaddr,
         CMT_NOPROXY_NETADDR, NULL },
-    { "no_cache", P_CHARINT, PI_ONOFF, (void*)&NoCache, CMT_NO_CACHE, NULL },
+    { "no_cache", P_CHARINT, PI_ONOFF, (void*)&g_runtime.NoCache, CMT_NO_CACHE, NULL },
 
     { NULL, 0, 0, NULL, NULL, NULL },
 };
 
 struct param_ptr params5[] = {
-    { "document_root", P_STRING, PI_TEXT, (void*)&document_root, CMT_DROOT,
+    { "document_root", P_STRING, PI_TEXT, (void*)&g_runtime.document_root, CMT_DROOT,
         NULL },
     { "personal_document_root", P_STRING, PI_TEXT,
-        (void*)&personal_document_root, CMT_PDROOT, NULL },
-    { "cgi_bin", P_STRING, PI_TEXT, (void*)&cgi_bin, CMT_CGIBIN, NULL },
-    { "index_file", P_STRING, PI_TEXT, (void*)&index_file, CMT_IFILE, NULL },
+        (void*)&g_runtime.personal_document_root, CMT_PDROOT, NULL },
+    { "cgi_bin", P_STRING, PI_TEXT, (void*)&g_runtime.cgi_bin, CMT_CGIBIN, NULL },
+    { "index_file", P_STRING, PI_TEXT, (void*)&g_runtime.index_file, CMT_IFILE, NULL },
     { "tmp_dir", P_STRING, PI_TEXT, (void*)&param_tmp_dir, CMT_TMP, NULL },
     { NULL, 0, 0, NULL, NULL, NULL },
 };
@@ -1837,16 +1844,8 @@ struct param_ptr params9[] = {
         CMT_META_REFRESH, NULL },
     { "localhost_only", P_CHARINT, PI_ONOFF, (void*)&g_runtime.LocalhostOnly,
         CMT_LOCALHOST_ONLY, NULL },
-#ifdef INET6
-    { "dns_order", P_INT, PI_SEL_C, (void*)&DNS_order, CMT_DNS_ORDER,
+    { "dns_order", P_INT, PI_SEL_C, (void*)&g_runtime.DNS_order, CMT_DNS_ORDER,
         (void*)dnsorders },
-#endif /* INET6 */
-#ifdef USE_NNTP
-    { "nntpserver", P_STRING, PI_TEXT, (void*)&NNTP_server, CMT_NNTP_SERVER,
-        NULL },
-    { "nntpmode", P_STRING, PI_TEXT, (void*)&NNTP_mode, CMT_NNTP_MODE, NULL },
-    { "max_news", P_INT, PI_TEXT, (void*)&MaxNewsMessage, CMT_MAX_NEWS, NULL },
-#endif
     { NULL, 0, 0, NULL, NULL, NULL },
 };
 

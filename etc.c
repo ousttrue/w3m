@@ -796,7 +796,7 @@ char* expandName(char* name)
     p = name;
     if (*p == '/') {
         if ((*(p + 1) == '~' && IS_ALPHA(*(p + 2)))
-            && personal_document_root) {
+            && getRuntime()->personal_document_root) {
             char* q;
             p += 2;
             q = strchr(p, '/');
@@ -810,8 +810,8 @@ char* expandName(char* name)
             if (!passent)
                 goto rest;
             extpath = Strnew_m_charp(passent->pw_dir, "/",
-                personal_document_root, NULL);
-            if (*personal_document_root == '\0' && *p == '/')
+                getRuntime()->personal_document_root, NULL);
+            if (*getRuntime()->personal_document_root == '\0' && *p == '/')
                 p++;
         } else
             goto rest;
@@ -1202,13 +1202,7 @@ char* FQDN(char* host)
     if (*p == '.')
         return host;
 
-#ifndef INET6
-    if (!(entry = gethostbyname(host)))
-        return NULL;
-
-    return allocStr(entry->h_name, -1);
-#else /* INET6 */
-    for (af = ai_family_order_table[DNS_order];; af++) {
+    for (af = ai_family_order_table[getRuntime()->DNS_order];; af++) {
         int error;
         struct addrinfo hints;
         struct addrinfo *res, *res0;
@@ -1242,7 +1236,6 @@ char* FQDN(char* host)
     }
     /* all failed */
     return NULL;
-#endif /* INET6 */
 }
 
 #endif /* USE_COOKIE */

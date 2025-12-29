@@ -286,34 +286,26 @@ cgi_filename(const char* uri, const char** fn, const char** name, const char** p
     *name = uri;
     *path_info = NULL;
 
-    if (cgi_bin != NULL && strncmp(uri, "/cgi-bin/", 9) == 0) {
+    if (getRuntime()->cgi_bin != NULL && strncmp(uri, "/cgi-bin/", 9) == 0) {
         offset = 9;
         if ((*path_info = strchr(uri + offset, '/')))
             *name = allocStr(uri, *path_info - uri);
-        tmp = checkPath(*name + offset, cgi_bin);
+        tmp = checkPath(*name + offset, getRuntime()->cgi_bin);
         if (tmp == NULL)
             return CGIFN_NORMAL;
         *fn = tmp->ptr;
         return CGIFN_CGIBIN;
     }
 
-#ifdef __EMX__
-    {
-        char lib[_MAX_PATH];
-        _abspath(lib, w3m_lib_dir(), _MAX_PATH); /* Translate '\\' to '/' */
-        tmp = Strnew_charp(lib);
-    }
-#else
     tmp = Strnew_charp(w3m_lib_dir());
-#endif
     if (Strlastchar(tmp) != '/')
         Strcat_char(tmp, '/');
     if (strncmp(uri, "/$LIB/", 6) == 0)
         offset = 6;
     else if (strncmp(uri, tmp->ptr, tmp->length) == 0)
         offset = tmp->length;
-    else if (*uri == '/' && document_root != NULL) {
-        Str tmp2 = Strnew_charp(document_root);
+    else if (*uri == '/' && getRuntime()->document_root != NULL) {
+        Str tmp2 = Strnew_charp(getRuntime()->document_root);
         if (Strlastchar(tmp2) != '/')
             Strcat_char(tmp2, '/');
         Strcat_charp(tmp2, uri + 1);
