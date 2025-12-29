@@ -49,6 +49,13 @@ struct Event {
 };
 
 struct Runtime {
+    int view_unseenobject;
+    int is_redisplay;
+    int clear_buffer;
+    double image_scale;
+    char* keymap_file;
+    int FollowRedirection;
+    int w3m_backend;
     int multicolList;
     char FollowLocale;
     char UseContentCharset;

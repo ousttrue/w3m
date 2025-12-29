@@ -345,7 +345,7 @@ frame_download_source(struct frame_body* b, struct Url* currentURL,
     case SCM_LOCAL:
         b->flags = 0;
     default:
-        is_redisplay = TRUE;
+        getRuntime()->is_redisplay = TRUE;
         getRuntime()->w3m_dump |= DUMP_FRAME;
         buf = loadGeneralFile(b->url,
             baseURL ? baseURL : currentURL,
@@ -354,7 +354,7 @@ frame_download_source(struct frame_body* b, struct Url* currentURL,
         if (buf && buf != NO_BUFFER)
             b->ssl_certificate = buf->ssl_certificate;
         getRuntime()->w3m_dump &= ~DUMP_FRAME;
-        is_redisplay = FALSE;
+        getRuntime()->is_redisplay = FALSE;
         break;
     }
 

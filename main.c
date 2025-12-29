@@ -589,9 +589,9 @@ bool w3m_args(int argc, char** argv)
                 getRuntime()->w3m_halfload = TRUE;
                 getRuntime()->DefaultType = default_type = "text/html";
             } else if (!strcmp("-backend", argv[i])) {
-                w3m_backend = TRUE;
+                getRuntime()->w3m_backend = TRUE;
             } else if (!strcmp("-backend_batch", argv[i])) {
-                w3m_backend = TRUE;
+                getRuntime()->w3m_backend = TRUE;
                 if (++i >= argc)
                     usage();
                 if (!backend_batch_commands)
@@ -730,7 +730,7 @@ bool w3m_args(int argc, char** argv)
             tty_set_cols(DEFAULT_COLS);
     }
 
-    if (!getRuntime()->w3m_dump && !w3m_backend) {
+    if (!getRuntime()->w3m_dump && !getRuntime()->w3m_backend) {
         enterRawMode();
         // mySignal(SIGWINCH, resize_hook);
     } else if (w3m_halfdump && getRuntime()->displayImage) {
@@ -741,7 +741,7 @@ bool w3m_args(int argc, char** argv)
 
     initCookie();
 
-    if (w3m_backend)
+    if (getRuntime()->w3m_backend)
         backend();
 #if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
     if (getimage_args) {
@@ -2137,10 +2137,8 @@ DEFUN(selBuf, SELECT, "Display buffer-stack panel")
     for (buf = Firstbuf; buf != NULL; buf = buf->nextBuffer) {
         if (buf == Currentbuf)
             continue;
-#ifdef USE_IMAGE
         deleteImage(buf);
-#endif
-        if (clear_buffer)
+        if (getRuntime()->clear_buffer)
             tmpClearBuffer(buf);
     }
 }

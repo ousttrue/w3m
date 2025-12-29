@@ -19,7 +19,7 @@ struct TabBuffer* newTab(void)
 void pushBuffer(struct Buffer* buf)
 {
     deleteImage(Currentbuf);
-    if (clear_buffer)
+    if (getRuntime()->clear_buffer)
         tmpClearBuffer(Currentbuf);
 
     struct Buffer* b;

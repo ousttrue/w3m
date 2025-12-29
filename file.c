@@ -872,10 +872,10 @@ checkRedirection(struct Url* pu)
         puv = NULL;
         return TRUE;
     }
-    if (nredir >= FollowRedirection) {
+    if (nredir >= getRuntime()->FollowRedirection) {
         /* FIXME: gettextize? */
         tmp = Sprintf("Number of redirections exceeded %d at %s",
-            FollowRedirection, parsedURL2Str(pu)->ptr);
+            getRuntime()->FollowRedirection, parsedURL2Str(pu)->ptr);
         disp_err_message(tmp->ptr, FALSE);
         return FALSE;
     } else if (nredir_size > 0 && (same_url_p(pu, &puv[(nredir - 1) % nredir_size]) || (!(nredir % 2) && same_url_p(pu, &puv[(nredir / 2) % nredir_size])))) {
@@ -886,7 +886,7 @@ checkRedirection(struct Url* pu)
         return FALSE;
     }
     if (!puv) {
-        nredir_size = FollowRedirection / 2 + 1;
+        nredir_size = getRuntime()->FollowRedirection / 2 + 1;
         puv = New_N(struct Url, nredir_size);
         memset(puv, 0, sizeof(struct Url) * nredir_size);
     }
@@ -1005,7 +1005,7 @@ static struct Buffer* make_buffer(struct Url url, int flag,
         proc = loadBuffer;
     else if (getRuntime()->activeImage && getRuntime()->displayImage && !getRuntime()->useExtImageViewer && !(getRuntime()->w3m_dump & ~DUMP_FRAME) && !strncasecmp(t, "image/", 6))
         proc = loadImageBuffer;
-    else if (w3m_backend)
+    else if (getRuntime()->w3m_backend)
         ;
     else if (!(getRuntime()->w3m_dump & ~DUMP_FRAME) || is_dump_text_type(t)) {
         if (!do_download && searchExtViewer(t) != NULL) {
@@ -1046,7 +1046,7 @@ static struct Buffer* make_buffer(struct Url url, int flag,
     is_close(stream);
     frame_source = 0;
     if (b && b != NO_BUFFER) {
-        if (w3m_backend)
+        if (getRuntime()->w3m_backend)
             b->type = allocStr(t, -1);
         if (url.label) {
             if (proc == loadHTMLBuffer) {
@@ -2214,7 +2214,7 @@ Str process_img(struct HtmlBuilder* hb, struct parsed_tag* tag, int width)
         }
         if (use_image) {
             if (w > 0) {
-                w = (int)(w * image_scale / 100 + 0.5);
+                w = (int)(w * getRuntime()->image_scale / 100 + 0.5);
                 if (w == 0)
                     w = 1;
                 else if (w > MAX_IMAGE_SIZE)
@@ -2226,7 +2226,7 @@ Str process_img(struct HtmlBuilder* hb, struct parsed_tag* tag, int width)
     if (use_image) {
         if (parsedtag_get_value(tag, ATTR_HEIGHT, &i)) {
             if (i > 0) {
-                i = (int)(i * image_scale / 100 + 0.5);
+                i = (int)(i * getRuntime()->image_scale / 100 + 0.5);
                 if (i == 0)
                     i = 1;
                 else if (i > MAX_IMAGE_SIZE)
@@ -4166,7 +4166,7 @@ int HTMLtagproc1(struct HtmlBuilder* hb, struct parsed_tag* tag, struct html_fee
                 HTMLlineproc0(hb, tmp->ptr, h_env, true);
                 do_blankline(h_env, obuf, envs[h_env->envc].indent, 0,
                     h_env->limit);
-                if (!is_redisplay && !((obuf->flag & RB_NOFRAMES) && getRuntime()->RenderFrame)) {
+                if (!getRuntime()->is_redisplay && !((obuf->flag & RB_NOFRAMES) && getRuntime()->RenderFrame)) {
                     tag->need_reconstruct = TRUE;
                     return 0;
                 }
@@ -4315,7 +4315,7 @@ int HTMLtagproc1(struct HtmlBuilder* hb, struct parsed_tag* tag, struct html_fee
     case HTML_NOP:
         return 1;
     case HTML_BGSOUND:
-        if (view_unseenobject) {
+        if (getRuntime()->view_unseenobject) {
             if (parsedtag_get_value(tag, ATTR_SRC, &p)) {
                 Str s;
                 q = html_quote(p);
@@ -4326,7 +4326,7 @@ int HTMLtagproc1(struct HtmlBuilder* hb, struct parsed_tag* tag, struct html_fee
         return 1;
     case HTML_EMBED:
         HTML5_CLOSE_A;
-        if (view_unseenobject) {
+        if (getRuntime()->view_unseenobject) {
             if (parsedtag_get_value(tag, ATTR_SRC, &p)) {
                 Str s;
                 q = html_quote(p);
@@ -4336,7 +4336,7 @@ int HTMLtagproc1(struct HtmlBuilder* hb, struct parsed_tag* tag, struct html_fee
         }
         return 1;
     case HTML_APPLET:
-        if (view_unseenobject) {
+        if (getRuntime()->view_unseenobject) {
             if (parsedtag_get_value(tag, ATTR_ARCHIVE, &p)) {
                 Str s;
                 q = html_quote(p);
@@ -4346,7 +4346,7 @@ int HTMLtagproc1(struct HtmlBuilder* hb, struct parsed_tag* tag, struct html_fee
         }
         return 1;
     case HTML_BODY:
-        if (view_unseenobject) {
+        if (getRuntime()->view_unseenobject) {
             if (parsedtag_get_value(tag, ATTR_BACKGROUND, &p)) {
                 Str s;
                 q = html_quote(p);
@@ -5838,7 +5838,7 @@ void loadHTMLstream(struct input_stream* stream,
         print_internal_information(hb, &htmlenv1);
         return;
     }
-    if (w3m_backend) {
+    if (getRuntime()->w3m_backend) {
         TRAP_OFF;
         print_internal_information(hb, &htmlenv1);
         backend_halfdump_buf = htmlenv1.buf;

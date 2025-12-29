@@ -1528,7 +1528,7 @@ smChBuf(void)
         if (buf == Currentbuf)
             continue;
         deleteImage(buf);
-        if (clear_buffer)
+        if (getRuntime()->clear_buffer)
             tmpClearBuffer(buf);
     }
 }
@@ -1667,7 +1667,7 @@ smChTab(void)
             continue;
         buf = tab->currentBuffer;
         deleteImage(buf);
-        if (clear_buffer)
+        if (getRuntime()->clear_buffer)
             tmpClearBuffer(buf);
     }
 }

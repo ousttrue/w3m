@@ -269,23 +269,8 @@ global struct TextList* Cookie_reject_domains;
 global struct TextList* Cookie_accept_domains;
 global struct TextList* Cookie_avoid_wrong_number_of_dots_domains;
 
-#ifdef USE_IMAGE
-global int view_unseenobject init(FALSE);
-#else
-global int view_unseenobject init(TRUE);
-#endif
-
-global int is_redisplay init(FALSE);
-global int clear_buffer init(TRUE);
-global double image_scale init(100);
-
-global char* keymap_file init(KEYMAP_FILE);
-
-global int FollowRedirection init(10);
-
-global int w3m_backend init(FALSE);
-global TextLineList* backend_halfdump_buf;
 global struct TextList* backend_batch_commands init(NULL);
+global TextLineList* backend_halfdump_buf;
 int backend(void);
 extern void deleteFiles(void);
 

@@ -1085,10 +1085,10 @@ int getImageSize(struct ImageCache* cache)
         return FALSE;
 
 got_image_size:
-    w = (int)(w * image_scale / 100 + 0.5);
+    w = (int)(w * getRuntime()->image_scale / 100 + 0.5);
     if (w == 0)
         w = 1;
-    h = (int)(h * image_scale / 100 + 0.5);
+    h = (int)(h * getRuntime()->image_scale / 100 + 0.5);
     if (h == 0)
         h = 1;
     if (cache->width < 0 && cache->height < 0) {
