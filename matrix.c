@@ -36,10 +36,6 @@
 #include "matrix.h"
 #include "alloc.h"
 
-/*
- * Macros from "fm.h".
- */
-
 #define SWAPD(a, b)     \
     {                   \
         double tmp = a; \

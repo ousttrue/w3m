@@ -1,6 +1,7 @@
 #pragma once
 #include "Str.h"
 #include <stdbool.h>
+#include <stdint.h>
 
 #define ALIGN_CENTER 0
 #define ALIGN_LEFT 1
@@ -13,7 +14,7 @@
 #define VALIGN_TOP 1
 #define VALIGN_BOTTOM 2
 
-enum HtmlTagID {
+enum HtmlTagID : uint8_t {
     HTML_UNKNOWN = 0,
     HTML_A = 1,
     HTML_N_A = 2,

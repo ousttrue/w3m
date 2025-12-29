@@ -1,4 +1,5 @@
 #include "maparea.h"
+#include "func.h"
 #include "backend.h"
 #include "menu.h"
 #include "parsetag.h"
@@ -30,11 +31,10 @@
 
 #include <libwc/conv.h>
 #include <libwc/ces.h>
-#include <math.h>
+// #include <math.h>
 #include <string.h>
 
-#define MAINPROGRAM
-#include "fm.h" // DEFUN
+#include "defun.h"
 #include <locale.h>
 #include <assert.h>
 #include <stdbool.h>

@@ -24,7 +24,6 @@
 #include "siteconf.h"
 #include "anchor.h"
 #include "frame.h"
-#include "fm.h" // w3mFuncList
 #include "tab.h"
 #include "buffer.h"
 #include "image.h"
@@ -989,20 +988,6 @@ bool currentBufferSubmit()
     return true;
 }
 
-bool eventUpdate()
-{
-    if (!g_runtime.CurrentEvent) {
-        return false;
-    }
-    g_runtime.CurrentKey = -1;
-    g_runtime.CurrentKeyData = NULL;
-    g_runtime.CurrentCmdData = (char*)g_runtime.CurrentEvent->data;
-    w3mFuncList[g_runtime.CurrentEvent->cmd].func();
-    g_runtime.CurrentCmdData = NULL;
-    g_runtime.CurrentEvent = g_runtime.CurrentEvent->next;
-    return true;
-}
-
 void pushEvent(int cmd, void* data)
 {
     struct Event* event = New(struct Event);
@@ -1018,39 +1003,7 @@ void pushEvent(int cmd, void* data)
     g_runtime.LastEvent = event;
 }
 
-void keyPressEventProc(int c)
-{
-    g_runtime.CurrentKey = c;
-    w3mFuncList[(int)GlobalKeymap[c]].func();
-}
 
-void escKeyProc(int c, int esc, unsigned char* map)
-{
-    if (g_runtime.CurrentKey >= 0 && g_runtime.CurrentKey & K_MULTI) {
-        unsigned char** mmap;
-        mmap = (unsigned char**)getKeyData(MULTI_KEY(g_runtime.CurrentKey));
-        if (!mmap)
-            return;
-        switch (esc) {
-        case K_ESCD:
-            map = mmap[3];
-            break;
-        case K_ESCB:
-            map = mmap[2];
-            break;
-        case K_ESC:
-            map = mmap[1];
-            break;
-        default:
-            map = mmap[0];
-            break;
-        }
-        esc |= (g_runtime.CurrentKey & ~0xFFFF);
-    }
-    g_runtime.CurrentKey = esc | c;
-    if (map)
-        w3mFuncList[(int)map[c]].func();
-}
 
 void w3m_end_frame()
 {
@@ -1058,8 +1011,6 @@ void w3m_end_frame()
     g_runtime.CurrentKey = -1;
     g_runtime.CurrentKeyData = NULL;
 }
-
-#define PREC_LIMIT 10000
 
 int is_wordchar(wc_uint32 c)
 {
@@ -1110,99 +1061,6 @@ char* GetWord(struct Buffer* buf)
         return Strnew_charp_n(p, e - b)->ptr;
     }
     return NULL;
-}
-
-static void set_buffer_environ(struct Buffer* buf)
-{
-    static struct Buffer* prev_buf = NULL;
-    static struct Line* prev_line = NULL;
-    static int prev_pos = -1;
-    struct Line* l;
-
-    if (buf == NULL)
-        return;
-    if (buf != prev_buf) {
-        set_environ("W3M_SOURCEFILE", buf->sourcefile);
-        set_environ("W3M_FILENAME", buf->content.filename);
-        set_environ("W3M_TITLE", buf->buffername);
-        set_environ("W3M_URL", parsedURL2Str(&buf->currentURL)->ptr);
-        set_environ("W3M_TYPE", "unknown");
-        set_environ("W3M_CHARSET", wc_ces_to_charset(buf->document_charset));
-    }
-    l = buf->doc.currentLine;
-    if (l && (buf != prev_buf || l != prev_line || buf->pos != prev_pos)) {
-        struct Anchor* a;
-        struct Url pu;
-        char* s = GetWord(buf);
-        set_environ("W3M_CURRENT_WORD", s ? s : "");
-        a = retrieveCurrentAnchor(buf);
-        if (a) {
-            parseURL2(a->url, &pu, baseURL(buf));
-            set_environ("W3M_CURRENT_LINK", parsedURL2Str(&pu)->ptr);
-        } else
-            set_environ("W3M_CURRENT_LINK", "");
-        a = retrieveCurrentImg(buf);
-        if (a) {
-            parseURL2(a->url, &pu, baseURL(buf));
-            set_environ("W3M_CURRENT_IMG", parsedURL2Str(&pu)->ptr);
-        } else
-            set_environ("W3M_CURRENT_IMG", "");
-        a = retrieveCurrentForm(buf);
-        if (a)
-            set_environ("W3M_CURRENT_FORM", form2str((struct FormItemList*)a->url));
-        else
-            set_environ("W3M_CURRENT_FORM", "");
-        set_environ("W3M_CURRENT_LINE", Sprintf("%ld", l->real_linenumber)->ptr);
-        set_environ("W3M_CURRENT_COLUMN", Sprintf("%d", buf->currentColumn + buf->cursorX + 1)->ptr);
-    } else if (!l) {
-        set_environ("W3M_CURRENT_WORD", "");
-        set_environ("W3M_CURRENT_LINK", "");
-        set_environ("W3M_CURRENT_IMG", "");
-        set_environ("W3M_CURRENT_FORM", "");
-        set_environ("W3M_CURRENT_LINE", "0");
-        set_environ("W3M_CURRENT_COLUMN", "0");
-    }
-    prev_buf = buf;
-    prev_line = l;
-    prev_pos = buf->pos;
-}
-
-static void
-save_buffer_position(struct Buffer* buf)
-{
-    struct BufferPos* b = buf->undo;
-
-    if (!buf->doc.firstLine)
-        return;
-    if (b && b->top_linenumber == TOP_LINENUMBER(buf) && b->cur_linenumber == CUR_LINENUMBER(buf) && b->currentColumn == buf->currentColumn && b->pos == buf->pos)
-        return;
-    b = New(struct BufferPos);
-    b->top_linenumber = TOP_LINENUMBER(buf);
-    b->cur_linenumber = CUR_LINENUMBER(buf);
-    b->currentColumn = buf->currentColumn;
-    b->pos = buf->pos;
-    b->bpos = buf->doc.currentLine ? buf->doc.currentLine->bpos : 0;
-    b->next = NULL;
-    b->prev = buf->undo;
-    if (buf->undo)
-        buf->undo->next = b;
-    buf->undo = b;
-}
-
-void w3m_on_key(uint8_t ch)
-{
-    if (IS_ASCII(ch)) {
-        if (('0' <= ch) && (ch <= '9') && (g_runtime.prec_num || (GlobalKeymap[ch] == FUNCNAME_nulcmd))) {
-            g_runtime.prec_num = g_runtime.prec_num * 10 + (int)(ch - '0');
-            if (g_runtime.prec_num > PREC_LIMIT)
-                g_runtime.prec_num = PREC_LIMIT;
-        } else {
-            set_buffer_environ(Currentbuf);
-            save_buffer_position(Currentbuf);
-            keyPressEventProc(ch);
-            g_runtime.prec_num = 0;
-        }
-    }
 }
 
 struct rc_search_table {

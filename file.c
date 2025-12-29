@@ -432,7 +432,6 @@ AuthBasicCred(struct http_auth* ha, Str uname, Str pw, struct Url* pu,
     return Strnew_m_charp("Basic ", base64_encode(s->ptr, s->length)->ptr, NULL);
 }
 
-#ifdef USE_DIGEST_AUTH
 #include <openssl/md5.h>
 
 /* RFC2617: 3.2.2 The Authorization Request Header
@@ -651,7 +650,6 @@ AuthDigestCred(struct http_auth* ha, Str uname, Str pw, struct Url* pu,
 
     return tmp;
 }
-#endif
 
 /* *INDENT-OFF* */
 struct auth_param none_auth_param[] = {
@@ -663,7 +661,6 @@ struct auth_param basic_auth_param[] = {
     { NULL, NULL }
 };
 
-#ifdef USE_DIGEST_AUTH
 /* RFC2617: 3.2.1 The WWW-Authenticate Response Header
  * challenge        =  "Digest" digest-challenge
  *
@@ -692,21 +689,13 @@ struct auth_param digest_auth_param[] = {
     { "qop", NULL },
     { NULL, NULL }
 };
-#endif
+
 /* for RFC2617: HTTP Authentication */
 struct http_auth www_auth[] = {
     { 1, "Basic ", basic_auth_param, AuthBasicCred },
-#ifdef USE_DIGEST_AUTH
     { 10, "Digest ", digest_auth_param, AuthDigestCred },
-#endif
-    {
-        0,
-        NULL,
-        NULL,
-        NULL,
-    }
+    { 0, NULL, NULL, NULL }
 };
-/* *INDENT-ON* */
 
 static struct http_auth*
 findAuthentication(struct http_auth* hauth, struct Buffer* buf, char* auth_field)
@@ -1761,26 +1750,6 @@ passthrough(struct readbuffer* obuf, char* str, int back)
     }
 }
 
-#if 0
-int
-is_blank_line(char *line, int indent)
-{
-    int i, is_blank = 0;
-
-    for (i = 0; i < indent; i++) {
-	if (line[i] == '\0') {
-	    is_blank = 1;
-	}
-	else if (line[i] != ' ') {
-	    break;
-	}
-    }
-    if (i == indent && line[i] == '\0')
-	is_blank = 1;
-    return is_blank;
-}
-#endif
-
 static void
 fillline(struct readbuffer* obuf, int indent)
 {
@@ -2470,12 +2439,10 @@ Str process_img(struct HtmlBuilder* hb, struct HtmlTag* tag, int width)
     Strcat_char(tmp, ']');
     n++;
 img_end:
-#ifdef USE_IMAGE
     if (use_image) {
         for (; n < nw; n++)
             Strcat_char(tmp, ' ');
     }
-#endif
     Strcat_charp(tmp, "</img_alt>");
     if (pre_int && !ext_pre_int)
         Strcat_charp(tmp, "</pre_int>");
@@ -2483,7 +2450,6 @@ img_end:
         Strcat_charp(tmp, "</input_alt>");
         process_n_form(hb);
     }
-#ifdef USE_IMAGE
     if (use_image) {
         switch (align) {
         case ALIGN_RIGHT:
@@ -2493,7 +2459,6 @@ img_end:
             break;
         }
     }
-#endif
     return tmp;
 }
 
@@ -3055,7 +3020,6 @@ process_hr(struct HtmlTag* tag, int width, int indent_width)
     return tmp;
 }
 
-#ifdef USE_M17N
 static char*
 check_charset(char* p)
 {
@@ -3081,7 +3045,7 @@ check_accept_charset(char* ac)
     }
     return NULL;
 }
-#endif
+
 
 static Str
 process_form_int(struct HtmlBuilder* hb,
@@ -3136,10 +3100,8 @@ process_form_int(struct HtmlBuilder* hb,
             Strcat(tmp, Sprintf(" target=\"%s\"", html_quote(tg)));
         if (n)
             Strcat(tmp, Sprintf(" name=\"%s\"", html_quote(n)));
-#ifdef USE_M17N
         if (r)
             Strcat(tmp, Sprintf(" accept-charset=\"%s\"", html_quote(r)));
-#endif
         Strcat_charp(tmp, ">");
         return tmp;
     }
@@ -3203,7 +3165,6 @@ set_alignment(struct readbuffer* obuf, struct HtmlTag* tag)
     }
 }
 
-#ifdef ID_EXT
 static void
 process_idattr(struct readbuffer* obuf, int cmd, struct HtmlTag* tag)
 {
@@ -3227,7 +3188,7 @@ process_idattr(struct readbuffer* obuf, int cmd, struct HtmlTag* tag)
         idtag = Sprintf("<_id id=\"%s\">", html_quote(id));
     push_tag(obuf, idtag->ptr, HTML_NOP);
 }
-#endif /* ID_EXT */
+
 
 #define CLOSE_P                                                            \
     if (obuf->flag & RB_P) {                                               \
@@ -3884,7 +3845,6 @@ int HTMLtagproc1(struct HtmlBuilder* hb, struct HtmlTag* tag, struct html_feed_e
     case HTML_IMG_ALT:
         if (parsedtag_get_value(tag, ATTR_SRC, &p))
             obuf->img_alt = Strnew_charp(p);
-#ifdef USE_IMAGE
         i = 0;
         if (parsedtag_get_value(tag, ATTR_TOP_MARGIN, &i)) {
             if ((short)i > obuf->top_margin)
@@ -3895,7 +3855,7 @@ int HTMLtagproc1(struct HtmlBuilder* hb, struct HtmlTag* tag, struct html_feed_e
             if ((short)i > obuf->bottom_margin)
                 obuf->bottom_margin = (short)i;
         }
-#endif
+
         return 0;
     case HTML_N_IMG_ALT:
         if (obuf->img_alt) {
@@ -3993,25 +3953,20 @@ int HTMLtagproc1(struct HtmlBuilder* hb, struct HtmlTag* tag, struct html_feed_e
             y = MAX_CELLPADDING;
         if (z > MAX_VSPACE)
             z = MAX_VSPACE;
-#ifdef ID_EXT
+
         parsedtag_get_value(tag, ATTR_ID, &id);
-#endif /* ID_EXT */
+
         hb->tables[obuf->table_level] = begin_table(w, x, y, z);
-#ifdef ID_EXT
+
         if (id != NULL)
             hb->tables[obuf->table_level]->id = Strnew_charp(id);
-#endif /* ID_EXT */
+
         hb->table_mode[obuf->table_level].pre_mode = 0;
         hb->table_mode[obuf->table_level].indent_level = 0;
         hb->table_mode[obuf->table_level].nobr_level = 0;
         hb->table_mode[obuf->table_level].caption = 0;
         hb->table_mode[obuf->table_level].end_tag = 0; /* HTML_UNKNOWN */
-#ifndef TABLE_EXPAND
         hb->tables[obuf->table_level]->total_width = width;
-#else
-        tables[obuf->table_level]->real_width = width;
-        tables[obuf->table_level]->total_width = 0;
-#endif
         return 1;
     case HTML_N_TABLE:
         /* should be processed in HTMLlineproc() */
@@ -4698,7 +4653,6 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
 
                 case HTML_IMG_ALT:
                     if (parsedtag_get_value(tag, ATTR_SRC, &p)) {
-#ifdef USE_IMAGE
                         int w = -1, h = -1, iseq = 0, ismap = 0;
                         int xoffset = 0, yoffset = 0, top = 0, bottom = 0;
                         parsedtag_get_value(tag, ATTR_HSEQ, &iseq);
@@ -4717,13 +4671,12 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                                 currentLn(buf), pos,
                                 iseq - 1);
                         }
-#endif
+
                         s = NULL;
                         parsedtag_get_value(tag, ATTR_TITLE, &s);
                         p = url_quote_conv(remove_space(p),
                             buf->document_charset);
                         a_img = registerImg(buf, p, s, currentLn(buf), pos);
-#ifdef USE_IMAGE
                         a_img->hseq = iseq;
                         a_img->image = NULL;
                         if (iseq > 0) {
@@ -4760,7 +4713,7 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                                 a_img->image = a->image;
                             }
                         }
-#endif
+
                     }
                     effect |= PE_IMAGE;
                     break;
@@ -4878,10 +4831,8 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                         parsedtag_get_value(tag, ATTR_ALT, &q);
                         r = NULL;
                         s = NULL;
-#ifdef USE_IMAGE
                         parsedtag_get_value(tag, ATTR_SHAPE, &r);
                         parsedtag_get_value(tag, ATTR_COORDS, &s);
-#endif
                         a = newMapArea(p, t, q, r, s);
                         pushValue(buf->maplist->area, (void*)a);
                     }
@@ -4922,9 +4873,7 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                         if (!buf->baseURL)
                             buf->baseURL = New(struct Url);
                         parseURL2(p, buf->baseURL, &buf->currentURL);
-#if defined(USE_M17N) || defined(USE_IMAGE)
                         base = buf->baseURL;
-#endif
                     }
                     if (parsedtag_get_value(tag, ATTR_TARGET, &p))
                         buf->baseTarget = url_quote_conv(p, buf->document_charset);
@@ -4936,7 +4885,6 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                     if (p && q && !strcasecmp(p, "refresh") && getRuntime()->MetaRefresh) {
                         Str tmp = NULL;
                         int refresh_interval = getMetaRefreshParam(q, &tmp);
-#ifdef USE_ALARM
                         if (tmp) {
                             p = url_encode(remove_space(tmp->ptr), base,
                                 buf->document_charset);
@@ -4949,13 +4897,6 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                                 refresh_interval,
                                 AL_IMPLICIT,
                                 FUNCNAME_reload, NULL);
-#else
-                        if (tmp && refresh_interval == 0) {
-                            p = url_encode(remove_space(tmp->ptr), base,
-                                buf->document_charset);
-                            pushEvent(FUNCNAME_gorURL, p);
-                        }
-#endif
                     }
                     break;
                 case HTML_INTERNAL:
@@ -5063,9 +5004,7 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
     buf->formlist = (hb->form_max >= 0) ? hb->forms[hb->form_max] : NULL;
     if (hb->n_textarea)
         addMultirowsForm(buf, buf->formitem);
-#ifdef USE_IMAGE
     addMultirowsImg(buf, buf->img);
-#endif
 }
 
 void HTMLlineproc2(struct HtmlBuilder* hb,
@@ -5328,6 +5267,7 @@ table_start:
 
         if (is_tag) {
             /*** Beginning of a new tag ***/
+            const char* _debug = str;
             if ((tag = parse_tag(&str, internal)))
                 cmd = tag->tagid;
             else
@@ -5339,11 +5279,9 @@ table_start:
                     h_env->tagbuf = parsedtag2str(tag);
                 push_tag(obuf, h_env->tagbuf->ptr, cmd);
             }
-#ifdef ID_EXT
             else {
                 process_idattr(obuf, cmd, tag);
             }
-#endif /* ID_EXT */
             obuf->bp.init_flag = 1;
             clear_ignore_p_flag(cmd, obuf);
             if (cmd == HTML_TABLE)
@@ -5419,7 +5357,6 @@ table_start:
                     }
                     str++;
                 } else {
-#ifdef USE_M17N
                     if (mode == PC_KANJI1)
                         is_hangul = wtf_is_hangul((wc_uchar*)str);
                     else
@@ -5436,7 +5373,7 @@ table_start:
                         }
                     }
                     prev_is_hangul = is_hangul;
-#endif
+
                     if (*str == '&')
                         proc_escape(obuf, &str);
                     else
@@ -5957,9 +5894,7 @@ _end:
     newBuf->doc.lastLine = newBuf->doc.currentLine;
     newBuf->doc.currentLine = newBuf->doc.firstLine;
     newBuf->trbyte = trbyte + linelen;
-#ifdef USE_M17N
     newBuf->document_charset = charset;
-#endif
     if (src)
         fclose(src);
 
@@ -6276,15 +6211,11 @@ _MoveFile(const char* path1, const char* path2)
 
 int _doFileCopy(const char* tmpf, const char* defstr, bool download)
 {
-#ifndef __MINGW32_VERSION
     Str msg;
     Str filen;
     char *p, *q = NULL;
     pid_t pid;
     char* lock;
-#if !(defined(HAVE_SYMLINK) && defined(HAVE_LSTAT))
-    FILE* f;
-#endif
     struct stat st;
     int64_t size = 0;
     int is_pipe = FALSE;
@@ -6376,7 +6307,6 @@ int _doFileCopy(const char* tmpf, const char* defstr, bool download)
         if (getRuntime()->PreserveTimestamp && !is_pipe && !stat(tmpf, &st))
             setModtime(p, st.st_mtime);
     }
-#endif /* __MINGW32_VERSION */
     return 0;
 }
 

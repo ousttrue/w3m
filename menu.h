@@ -66,7 +66,7 @@ void down_menu(struct Menu* menu, int n);
 bool action_menu(struct Menu* menu);
 void popup_menu(struct Menu* parent, struct Menu* menu);
 void guess_menu_xy(struct Menu* menu, int width, int* x, int* y);
-void new_option_menu(struct Menu* menu, char** label, int* variable,
+void new_option_menu(struct Menu* menu, const char** label, int* variable,
     void (*func)());
 int setMenuItem(struct MenuItem* item, char* type, char* line);
 int addMenuList(MenuList** list, char* id);

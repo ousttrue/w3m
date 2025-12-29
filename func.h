@@ -1,7 +1,4 @@
 #pragma once
-#include "textlist.h"
-#include "hash.h"
-
 #define KEY_HASH_SIZE 127
 
 #define K_ESC 0x100
@@ -10,13 +7,19 @@
 #define K_MULTI 0x10000000
 #define MULTI_KEY(c) (((c) >> 16) & 0x77F)
 
+extern unsigned char GlobalKeymap[];
+extern unsigned char EscKeymap[];
+extern unsigned char EscBKeymap[];
+extern unsigned char EscDKeymap[];
+
 struct FuncList {
     char* id;
     void (*func)();
 };
-struct regex;
+extern struct FuncList w3mFuncList[];
 
-char* getWord(char** str);
+char* getWord(const char** str);
+struct regex;
 char* getRegexWord(const char** str, struct regex** regex_ret);
-char* getQWord(char** str);
+char* getQWord(const char** str);
 int getFuncList(const char* id);

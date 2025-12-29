@@ -1,4 +1,5 @@
 #include "menu.h"
+#include "func.h"
 #include "terms.h"
 #include "alloc.h"
 #include "symbol.h"
@@ -10,7 +11,7 @@
 #include "w3m_rc.h"
 #include "tab.h"
 #include "image.h"
-#include "fm.h" // DEFUN
+#include "defun.h"
 #include "myctype.h"
 #include "regex.h"
 #include "proto.h"
@@ -1001,10 +1002,11 @@ void guess_menu_xy(struct Menu* parent, int width, int* x, int* y)
     *y = parent->y + parent->select - parent->offset;
 }
 
-void new_option_menu(struct Menu* menu, char** label, int* variable, void (*func)())
+void new_option_menu(struct Menu* menu,
+    const char** label, int* variable, void (*func)())
 {
     int i, nitem;
-    char** p;
+    const char** p;
     struct MenuItem* item;
 
     if (label == NULL || *label == NULL)
@@ -1461,7 +1463,7 @@ initSelectMenu(void)
     int i, nitem, len = 0, l;
     struct Buffer* buf;
     Str str;
-    char** label;
+    const char** label;
     char* p;
     static char* comment = " SPC for select / D for delete buffer ";
 
@@ -1605,7 +1607,7 @@ initSelTabMenu(void)
     }
     int nitem = i;
 
-    char** label = New_N(char*, nitem + 2);
+    const char** label = New_N(char*, nitem + 2);
     int len = 0;
     i = 0;
     for (struct TabBuffer* tab = LastTab(); i < nitem; i++, tab = tab->prevTab) {
