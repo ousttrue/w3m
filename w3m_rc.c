@@ -1405,20 +1405,6 @@ void w3m_on_key(uint8_t ch)
     }
 }
 
-struct param_ptr {
-    char* name;
-    int type;
-    int inputtype;
-    void* varptr;
-    char* comment;
-    void* select;
-};
-
-struct param_section {
-    char* name;
-    struct param_ptr* params;
-};
-
 struct rc_search_table {
     struct param_ptr* param;
     short uniq_pos;
@@ -1426,24 +1412,6 @@ struct rc_search_table {
 
 static struct rc_search_table* RC_search_table;
 static int RC_table_size;
-
-#define P_INT 0
-#define P_SHORT 1
-#define P_CHARINT 2
-#define P_CHAR 3
-#define P_STRING 4
-#if defined(USE_SSL) && defined(USE_SSL_VERIFY)
-#define P_SSLPATH 5
-#endif
-#ifdef USE_COLOR
-#define P_COLOR 6
-#endif
-#ifdef USE_M17N
-#define P_CODE 7
-#endif
-#define P_PIXELS 8
-#define P_NZINT 9
-#define P_SCALE 10
 
 /* FIXME: gettextize here */
 #ifdef USE_M17N
@@ -1651,20 +1619,6 @@ static int OptionEncode = FALSE;
 
 #define CMT_KEYMAP_FILE N_("keymap file")
 
-#define PI_TEXT 0
-#define PI_ONOFF 1
-#define PI_SEL_C 2
-#ifdef USE_M17N
-#define PI_CODE 3
-#endif
-
-struct sel_c {
-    int value;
-    char* cvalue;
-    char* text;
-};
-
-#ifdef USE_COLOR
 static struct sel_c colorstr[] = {
     { 0, "black", N_("black") },
     { 1, "red", N_("red") },
@@ -1677,19 +1631,9 @@ static struct sel_c colorstr[] = {
     { 8, "terminal", N_("terminal") },
     { 0, NULL, NULL }
 };
-#endif /* USE_COLOR */
 
-#if 1 /* ANSI-C ? */
 #define N_STR(x) #x
 #define N_S(x) (x), N_STR(x)
-#else /* for traditional cpp? */
-static char n_s[][2] = {
-    { '0', 0 },
-    { '1', 0 },
-    { '2', 0 },
-};
-#define N_S(x) (x), n_s[(x)]
-#endif
 
 static struct sel_c defaulturls[] = {
     { N_S(DEFAULT_URL_EMPTY), N_("none") },
@@ -1705,15 +1649,6 @@ static struct sel_c displayinsdel[] = {
     { 0, NULL, NULL }
 };
 
-#ifdef USE_MOUSE
-static struct sel_c wheelmode[] = {
-    { TRUE, "1", N_("A:relative to screen height") },
-    { FALSE, "0", N_("B:fixed speed") },
-    { 0, NULL, NULL }
-};
-#endif /* MOUSE */
-
-#ifdef INET6
 static struct sel_c dnsorders[] = {
     { N_S(DNS_ORDER_UNSPEC), N_("unspecified") },
     { N_S(DNS_ORDER_INET_INET6), N_("inet inet6") },
@@ -1722,7 +1657,6 @@ static struct sel_c dnsorders[] = {
     { N_S(DNS_ORDER_INET6_ONLY), N_("inet6 only") },
     { 0, NULL, NULL }
 };
-#endif /* INET6 */
 
 static struct sel_c badcookiestr[] = {
     { N_S(ACCEPT_BAD_COOKIE_DISCARD), N_("discard") },
@@ -1753,7 +1687,6 @@ static struct sel_c graphic_char_str[] = {
     { 0, NULL, NULL }
 };
 
-#ifdef USE_IMAGE
 static struct sel_c inlineimgstr[] = {
     { N_S(INLINE_IMG_NONE), N_("external command") },
     { N_S(INLINE_IMG_OSC5379), N_("OSC 5379 (mlterm)") },
@@ -1762,7 +1695,6 @@ static struct sel_c inlineimgstr[] = {
     { N_S(INLINE_IMG_KITTY), N_("kitty (ImageMagick)") },
     { 0, NULL, NULL }
 };
-#endif /* USE_IMAGE */
 
 struct param_ptr params1[] = {
     { "tabstop", P_NZINT, PI_TEXT, (void*)&g_runtime.Tabstop, CMT_TABSTOP, NULL },
