@@ -1,8 +1,8 @@
+#include "html_tag.h"
 #include "fm.h"
 #include "myctype.h"
 #include "indep.h"
 #include "Str.h"
-#include "parsetagx.h"
 #include "hash.h"
 #include "html.c"
 #include <string.h>

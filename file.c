@@ -28,7 +28,7 @@
 #include "html_table.h"
 #include "display.h"
 #include "html.h"
-#include "parsetagx.h"
+#include "html_tag.h"
 #include "local_cgi.h"
 #include "regex.h"
 #include "myctype.h"

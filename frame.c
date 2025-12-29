@@ -8,7 +8,7 @@
 #include "symbol.h"
 #include "buffer.h"
 #include "fm.h"
-#include "parsetagx.h"
+#include "html_tag.h"
 #include "myctype.h"
 #include <libwc/ces.h>
 #include <charset.h>

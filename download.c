@@ -11,6 +11,7 @@
 #include <signal.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <time.h>
 #include <unistd.h>
 #include <stdlib.h>
 
@@ -65,13 +66,13 @@ static struct Buffer* DownloadListBuffer(void)
     struct DownloadList* d;
     Str src = NULL;
     struct stat st;
-    time_t cur_time;
     int duration, rate, eta;
     size_t size;
 
     if (!FirstDL)
         return NULL;
-    cur_time = time(0);
+
+    time_t cur_time = time(0);
     /* FIXME: gettextize? */
     src = Strnew_charp("<html><head><title>" DOWNLOAD_LIST_TITLE
                        "</title></head>\n<body><h1 align=center>" DOWNLOAD_LIST_TITLE "</h1>\n"

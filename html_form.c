@@ -13,7 +13,7 @@
 #include "anchor.h"
 #include "fm.h"
 #include "parsetag.h"
-#include "parsetagx.h"
+#include "html_tag.h"
 #include "myctype.h"
 #include "local_cgi.h"
 #include "regex.h"

@@ -12,6 +12,7 @@ const w3m_srcs = [_][]const u8{
     "w3m_rc.c",
 
     "html_builder.c",
+    "html_tag.c",
     "growbuf.c",
     "input_stream.c",
     "ssl_stream.c",
@@ -56,7 +57,6 @@ const w3m_srcs = [_][]const u8{
     "backend.c",
 
     "anchor.c",
-    "parsetagx.c",
     "tagtable.c",
 
     "indep.c",

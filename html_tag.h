@@ -1,7 +1,4 @@
-/* $Id: parsetagx.h,v 1.4 2001/11/24 02:01:26 ukai Exp $ */
-#ifndef PARSETAGX_H
-#define PARSETAGX_H
-
+#pragma once
 #include "html.h"
 #include "Str.h"
 
@@ -25,4 +22,3 @@ extern struct parsed_tag* parse_tag(const char** s, int internal);
 extern int parsedtag_get_value(struct parsed_tag* tag, int id, void* value);
 extern int parsedtag_set_value(struct parsed_tag* tag, int id, char* value);
 extern Str parsedtag2str(struct parsed_tag* tag);
-#endif
