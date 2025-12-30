@@ -702,15 +702,4 @@ void delBuffer(struct Buffer* buf)
         Currentbuf = Firstbuf;
 }
 
-void restorePosition(struct Buffer* buf, struct Buffer* orig)
-{
-    buf->doc.topLine = doc_lineSkip(&buf->doc, buf->doc.firstLine, TOP_LINENUMBER(orig) - 1);
-    doc_gotoLine(&buf->doc, CUR_LINENUMBER(orig));
-    buf->doc.pos = orig->doc.pos;
-    if (buf->doc.currentLine && orig->doc.currentLine)
-        buf->doc.pos += orig->doc.currentLine->bpos - buf->doc.currentLine->bpos;
-    buf->doc.currentColumn = orig->doc.currentColumn;
-    doc_arrangeCursor(&buf->doc);
-}
-
 

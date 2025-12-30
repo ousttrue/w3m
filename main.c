@@ -3446,7 +3446,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
         Currentbuf = buf;
         if (Currentbuf->doc.firstLine) {
             COPY_BUFROOT(Currentbuf, &sbuf);
-            restorePosition(Currentbuf, &sbuf);
+            doc_restorePosition(&Currentbuf->doc, &sbuf.doc);
         }
         return;
     } else if (Currentbuf->frameset != NULL)
@@ -3500,7 +3500,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
     Currentbuf->form_submit = sbuf.form_submit;
     if (Currentbuf->doc.firstLine) {
         COPY_BUFROOT(Currentbuf, &sbuf);
-        restorePosition(Currentbuf, &sbuf);
+        doc_restorePosition(&Currentbuf->doc, &sbuf.doc);
     }
 }
 
@@ -4326,7 +4326,7 @@ resetPos(struct BufferPos* b)
     buf.doc.currentLine = &cur;
     buf.doc.pos = b->pos;
     buf.doc.currentColumn = b->currentColumn;
-    restorePosition(Currentbuf, &buf);
+    doc_restorePosition(&Currentbuf->doc, &buf.doc);
     Currentbuf->undo = b;
 }
 

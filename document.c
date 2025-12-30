@@ -495,3 +495,14 @@ void doc_cursorXY(struct Document* doc, int x, int y)
             doc_cursorLeft(doc, doc->COLS / 2);
     }
 }
+
+void doc_restorePosition(struct Document* doc, struct Document* orig)
+{
+    doc->topLine = doc_lineSkip(doc, doc->firstLine, TOP_LINENUMBER(orig) - 1);
+    doc_gotoLine(doc, CUR_LINENUMBER(orig));
+    doc->pos = orig->pos;
+    if (doc->currentLine && orig->currentLine)
+        doc->pos += orig->currentLine->bpos - doc->currentLine->bpos;
+    doc->currentColumn = orig->currentColumn;
+    doc_arrangeCursor(doc);
+}

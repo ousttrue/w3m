@@ -107,7 +107,7 @@ struct Buffer {
     {                                                              \
         (dstbuf)->doc.topLine = (srcbuf)->doc.topLine;             \
         (dstbuf)->doc.currentLine = (srcbuf)->doc.currentLine;     \
-        (dstbuf)->doc.pos = (srcbuf)->doc.pos;                             \
+        (dstbuf)->doc.pos = (srcbuf)->doc.pos;                     \
         (dstbuf)->doc.cursorX = (srcbuf)->doc.cursorX;             \
         (dstbuf)->doc.cursorY = (srcbuf)->doc.cursorY;             \
         (dstbuf)->doc.visualpos = (srcbuf)->doc.visualpos;         \
@@ -115,15 +115,12 @@ struct Buffer {
     }
 #define SAVE_BUFPOSITION(sbufp) COPY_BUFPOSITION(sbufp, Currentbuf)
 #define RESTORE_BUFPOSITION(sbufp) COPY_BUFPOSITION(Currentbuf, sbufp)
-#define TOP_LINENUMBER(buf) ((buf)->doc.topLine ? (buf)->doc.topLine->linenumber : 1)
-#define CUR_LINENUMBER(buf) ((buf)->doc.currentLine ? (buf)->doc.currentLine->linenumber : 1)
 
 struct Url* baseURL(struct Buffer* buf);
 char* url_decode2(const char* url, const struct Buffer* buf);
 void delBuffer(struct Buffer* buf);
 void cmd_loadBuffer(struct Buffer* buf, int prop, enum LinkBufferID linkid);
 bool readBufferCache(struct Buffer* buf);
-void restorePosition(struct Buffer* buf, struct Buffer* orig);
 int getMapXY(struct Buffer* buf, struct Anchor* a, int* x, int* y);
 struct MapArea* retrieveCurrentMapArea(struct Buffer* buf);
 extern struct Anchor* retrieveCurrentAnchor(struct Buffer* buf);

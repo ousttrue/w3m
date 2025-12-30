@@ -39,6 +39,10 @@ struct Document {
     int pos;
     int visualpos;
 };
+
+#define TOP_LINENUMBER(doc) ((doc)->topLine ? (doc)->topLine->linenumber : 1)
+#define CUR_LINENUMBER(doc) ((doc)->currentLine ? (doc)->currentLine->linenumber : 1)
+
 struct Url;
 
 void doc_addnewline(struct Document* doc, const char* line, Lineprop* prop, Linecolor* color, int pos, int width, int nlines);
@@ -64,3 +68,4 @@ void doc_cursorRight(struct Document* doc, int n);
 void doc_cursorDown(struct Document* doc, int n);
 void doc_cursorUp(struct Document* doc, int n);
 void doc_cursorXY(struct Document* doc, int x, int y);
+void doc_restorePosition(struct Document* doc, struct Document* orig);

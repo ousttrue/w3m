@@ -170,7 +170,7 @@ void download_panel()
     buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
     if (replace) {
         COPY_BUFROOT(buf, Currentbuf);
-        restorePosition(buf, Currentbuf);
+        doc_restorePosition(&buf->doc, Currentbuf);
     }
     bool new_tab = false;
     if (!replace && getRuntime()->open_tab_dl_list) {

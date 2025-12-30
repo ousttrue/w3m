@@ -140,11 +140,11 @@ save_buffer_position(struct Buffer* buf)
 
     if (!buf->doc.firstLine)
         return;
-    if (b && b->top_linenumber == TOP_LINENUMBER(buf) && b->cur_linenumber == CUR_LINENUMBER(buf) && b->currentColumn == buf->doc.currentColumn && b->pos == buf->doc.pos)
+    if (b && b->top_linenumber == TOP_LINENUMBER(&buf->doc) && b->cur_linenumber == CUR_LINENUMBER(&buf->doc) && b->currentColumn == buf->doc.currentColumn && b->pos == buf->doc.pos)
         return;
     b = New(struct BufferPos);
-    b->top_linenumber = TOP_LINENUMBER(buf);
-    b->cur_linenumber = CUR_LINENUMBER(buf);
+    b->top_linenumber = TOP_LINENUMBER(&buf->doc);
+    b->cur_linenumber = CUR_LINENUMBER(&buf->doc);
     b->currentColumn = buf->doc.currentColumn;
     b->pos = buf->doc.pos;
     b->bpos = buf->doc.currentLine ? buf->doc.currentLine->bpos : 0;
