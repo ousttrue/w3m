@@ -4377,8 +4377,7 @@ DEFUN(cursorMiddle, CURSOR_MIDDLE, "Move cursor to the middle of the screen")
     if (Currentbuf->doc.firstLine == NULL)
         return;
     offsety = (Currentbuf->doc.LINES - 1) / 2;
-    Currentbuf->doc.currentLine = currentLineSkip(Currentbuf, Currentbuf->doc.topLine,
-        offsety, FALSE);
+    Currentbuf->doc.currentLine = currentLineSkip(Currentbuf->doc.topLine, offsety);
     arrangeLine(Currentbuf);
 }
 
@@ -4388,7 +4387,6 @@ DEFUN(cursorBottom, CURSOR_BOTTOM, "Move cursor to the bottom of the screen")
     if (Currentbuf->doc.firstLine == NULL)
         return;
     offsety = Currentbuf->doc.LINES - 1;
-    Currentbuf->doc.currentLine = currentLineSkip(Currentbuf, Currentbuf->doc.topLine,
-        offsety, FALSE);
+    Currentbuf->doc.currentLine = currentLineSkip(Currentbuf->doc.topLine, offsety);
     arrangeLine(Currentbuf);
 }

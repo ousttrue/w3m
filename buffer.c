@@ -861,7 +861,7 @@ void cursorUpDown(struct Buffer* buf, int n)
 
     if (buf->doc.firstLine == NULL)
         return;
-    if ((buf->doc.currentLine = currentLineSkip(buf, cl, n, FALSE)) == cl)
+    if ((buf->doc.currentLine = currentLineSkip(cl, n)) == cl)
         return;
     arrangeLine(buf);
 }

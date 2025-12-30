@@ -4,6 +4,18 @@
 #include "w3m_rc.h"
 #include <string.h>
 
+struct Line* currentLineSkip(struct Line* l, int offset)
+{
+    if (offset > 0) {
+        for (int i = 0; i < offset && l->next != NULL; i++, l = l->next)
+            ;
+    } else if (offset < 0) {
+        for (int i = 0; i < -offset && l->prev != NULL; i++, l = l->prev)
+            ;
+    }
+    return l;
+}
+
 static int
 nextColumn(int n, const char* p, Lineprop* pr, int Tabstop)
 {

@@ -65,29 +65,10 @@ int columnSkip(struct Buffer* buf, int offset)
 
 struct Line* lineSkip(struct Buffer* buf, struct Line* line, int offset, int last)
 {
-    int i;
-    struct Line* l;
-
-    l = currentLineSkip(buf, line, offset, last);
+    struct Line* l = currentLineSkip(line, offset);
     if (!getRuntime()->nextpage_topline)
-        for (i = buf->doc.LINES - 1 - (buf->doc.lastLine->linenumber - l->linenumber);
+        for (int i = buf->doc.LINES - 1 - (buf->doc.lastLine->linenumber - l->linenumber);
             i > 0 && l->prev != NULL; i--, l = l->prev)
-            ;
-    return l;
-}
-
-struct Line* currentLineSkip(struct Buffer* buf, struct Line* line, int offset, int last)
-{
-    int i;
-    struct Line* l = line;
-
-    if (offset == 0)
-        return l;
-    if (offset > 0)
-        for (i = 0; i < offset && l->next != NULL; i++, l = l->next)
-            ;
-    else
-        for (i = 0; i < -offset && l->prev != NULL; i++, l = l->prev)
             ;
     return l;
 }
