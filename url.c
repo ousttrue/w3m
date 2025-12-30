@@ -923,7 +923,7 @@ char* url_decode2(const char* url, const struct Buffer* buf)
     if (!getRuntime()->DecodeURL)
         return (char*)url;
     enum wc_ces url_charset = buf
-        ? url_to_charset(url, baseURL((struct Buffer*)buf), buf->document_charset)
+        ? url_to_charset(url, baseURL((struct Buffer*)buf), buf->doc.charset)
         : url_to_charset(url, NULL, 0);
     return url_unquote_conv((char*)url, url_charset);
 }

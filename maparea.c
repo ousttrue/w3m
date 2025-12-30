@@ -426,7 +426,7 @@ append_frame_info(struct Buffer* buf, Str html, struct frameset* set, int level)
                 Strcat_m_charp(html, "<a href=\"", q, "\">", NULL);
                 if (frame.body->name) {
                     p = html_quote(url_unquote_conv(frame.body->name,
-                        buf->document_charset));
+                        buf->doc.charset));
                     Strcat_charp(html, p);
                 }
                 if (getRuntime()->DecodeURL)
@@ -488,15 +488,15 @@ page_info_panel(struct Buffer* buf)
         "unknown",
         "<tr valign=top><td nowrap>Last Modified<td>",
         html_quote(last_modified(buf)), NULL);
-    if (buf->document_charset != getRuntime()->InnerCharset) {
+    if (buf->doc.charset != getRuntime()->InnerCharset) {
         list = wc_get_ces_list();
         Strcat_charp(tmp,
             "<tr><td nowrap>Document Charset<td><select name=charset>");
         for (; list->name != NULL; list++) {
             sprintf(charset, "%d", (unsigned int)list->id);
             Strcat_m_charp(tmp, "<option value=", charset,
-                (buf->document_charset == list->id) ? " selected>"
-                                                    : ">",
+                (buf->doc.charset == list->id) ? " selected>"
+                                               : ">",
                 list->desc, NULL);
         }
         Strcat_charp(tmp, "</select>");
@@ -570,17 +570,13 @@ page_info_panel(struct Buffer* buf)
         Strcat_charp(tmp, "<hr width=50%><h1>Frame information</h1>\n");
         append_frame_info(buf, tmp, f_set, 0);
     }
-#ifdef USE_SSL
     if (buf->ssl_certificate)
         Strcat_m_charp(tmp, "<h1>SSL certificate</h1><pre>\n",
             html_quote(buf->ssl_certificate), "</pre>\n", NULL);
-#endif
 end:
     Strcat_charp(tmp, "</body></html>");
     newbuf = loadHTMLString(tmp);
-#ifdef USE_M17N
     if (newbuf)
-        newbuf->document_charset = buf->document_charset;
-#endif
+        newbuf->doc.charset = buf->doc.charset;
     return newbuf;
 }

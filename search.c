@@ -87,8 +87,8 @@ err:
 /* normalize search string */
 const char* conv_search_string(const char* str, enum wc_ces f_ces)
 {
-    if (getRuntime()->SearchConv && !WcOption.pre_conv && Currentbuf->document_charset != f_ces)
-        str = wtf_conv_fit(str, Currentbuf->document_charset);
+    if (getRuntime()->SearchConv && !WcOption.pre_conv && Currentbuf->doc.charset != f_ces)
+        str = wtf_conv_fit(str, Currentbuf->doc.charset);
     return str;
 }
 

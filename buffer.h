@@ -79,7 +79,6 @@ struct Buffer {
     int* clone;
     size_t trbyte;
     char check_url;
-    enum wc_ces document_charset;
     wc_uint8 auto_detect;
     struct FormItemList* form_submit;
     char* savecache;

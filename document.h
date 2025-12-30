@@ -6,6 +6,7 @@
 struct AnchorList;
 struct Document {
     const char* title;
+    enum wc_ces charset;
 
     //
     // lines

@@ -93,7 +93,7 @@ static void set_buffer_environ(struct Buffer* buf)
         set_environ("W3M_TITLE", buf->doc.title);
         set_environ("W3M_URL", parsedURL2Str(&buf->currentURL)->ptr);
         set_environ("W3M_TYPE", "unknown");
-        set_environ("W3M_CHARSET", wc_ces_to_charset(buf->document_charset));
+        set_environ("W3M_CHARSET", wc_ces_to_charset(buf->doc.charset));
     }
     l = buf->doc.currentLine;
     if (l && (buf != prev_buf || l != prev_line || buf->doc.pos != prev_pos)) {

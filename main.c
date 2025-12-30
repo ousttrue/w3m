@@ -824,7 +824,7 @@ dump_head(struct Buffer* buf)
     for (ti = buf->content.document_header->first; ti; ti = ti->next) {
         printf("%s",
             wc_conv_strict(ti->ptr, getRuntime()->InnerCharset,
-                buf->document_charset)
+                buf->doc.charset)
                 ->ptr);
     }
     puts("");
@@ -837,7 +837,7 @@ dump_extra(struct Buffer* buf)
     if (buf->baseURL)
         printf("W3m-base-url: %s\n", parsedURL2Str(buf->baseURL)->ptr);
     printf("W3m-document-charset: %s\n",
-        wc_ces_to_charset(buf->document_charset));
+        wc_ces_to_charset(buf->doc.charset));
 
     if (buf->ssl_certificate) {
         Str tmp = Strnew();
@@ -2895,7 +2895,7 @@ goURL0(char* prompt, int relative)
             referer = NO_REFERER;
         else
             referer = parsedURL2RefererStr(&Currentbuf->currentURL)->ptr;
-        url = url_encode(url, current, Currentbuf->document_charset);
+        url = url_encode(url, current, Currentbuf->doc.charset);
     } else {
         current = NULL;
         referer = NULL;
@@ -3115,7 +3115,7 @@ DEFUN(linkLst, LIST, "Show all URLs referenced")
 
     buf = link_list_panel(Currentbuf);
     if (buf != NULL) {
-        buf->document_charset = Currentbuf->document_charset;
+        buf->doc.charset = Currentbuf->doc.charset;
         cmd_loadBuffer(buf, BP_NORMAL, LB_NOLINK);
     }
 }
@@ -3392,7 +3392,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
     buf->sourcefile = Currentbuf->sourcefile;
     buf->header_source = Currentbuf->header_source;
     // buf->search_header = Currentbuf->search_header;
-    buf->document_charset = Currentbuf->document_charset;
+    buf->doc.charset = Currentbuf->doc.charset;
     buf->clone = Currentbuf->clone;
     (*buf->clone)++;
     reshapeBuffer(buf);
@@ -3466,8 +3466,8 @@ DEFUN(reload, RELOAD, "Load current document anew")
     /* FIXME: gettextize? */
     message("Reloading...", 0, 0);
     old_charset = getRuntime()->DocumentCharset;
-    if (Currentbuf->document_charset != WC_CES_US_ASCII)
-        getRuntime()->DocumentCharset = Currentbuf->document_charset;
+    if (Currentbuf->doc.charset != WC_CES_US_ASCII)
+        getRuntime()->DocumentCharset = Currentbuf->doc.charset;
     // SearchHeader = Currentbuf->search_header;
     getRuntime()->DefaultType = Currentbuf->type;
     buf = loadGeneralFile(url->ptr, NULL, NO_REFERER, RG_NOCACHE, request, false);
@@ -3515,7 +3515,7 @@ _docCSet(enum wc_ces charset)
         disp_message("Can't reload...", FALSE);
         return;
     }
-    Currentbuf->document_charset = charset;
+    Currentbuf->doc.charset = charset;
 }
 
 void change_charset(struct parsed_tagarg* arg)
@@ -3529,7 +3529,7 @@ void change_charset(struct parsed_tagarg* arg)
     Currentbuf = buf;
     if (Currentbuf->bufferprop & BP_INTERNAL)
         return;
-    charset = Currentbuf->document_charset;
+    charset = Currentbuf->doc.charset;
     for (; arg; arg = arg->next) {
         if (!strcmp(arg->arg, "charset"))
             charset = atoi(arg->value);
@@ -3543,7 +3543,7 @@ DEFUN(docCSet, CHARSET, "Change the character encoding for the current document"
     if (cs == NULL || *cs == '\0')
         /* FIXME: gettextize? */
         cs = inputStr("Document charset: ",
-            wc_ces_to_charset(Currentbuf->document_charset));
+            wc_ces_to_charset(Currentbuf->doc.charset));
 
     enum wc_ces charset = wc_guess_charset_short(cs, 0);
     if (charset == 0) {
@@ -3742,7 +3742,7 @@ DEFUN(curlno, LINE_INFO, "Display current position in document")
             + 0.5),
         col, len);
     Strcat_charp(tmp, "  ");
-    Strcat_charp(tmp, wc_ces_to_charset_desc(Currentbuf->document_charset));
+    Strcat_charp(tmp, wc_ces_to_charset_desc(Currentbuf->doc.charset));
 
     disp_message(tmp->ptr, FALSE);
 }

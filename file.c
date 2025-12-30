@@ -7,7 +7,6 @@
 #include "html_builder.h"
 #include "indep.h"
 #include "alloc.h"
-#include "mimehead.h"
 #include "ftp.h"
 #include "compression.h"
 #include "mailcap.h"
@@ -929,7 +928,7 @@ struct Buffer* page_loaded(struct Url url,
         if (src)
             b->sourcefile = tmp->ptr;
 
-        b->document_charset = charset;
+        b->doc.charset = charset;
     }
     return b;
 }
@@ -4389,7 +4388,7 @@ addLink(struct Buffer* buf, struct HtmlTag* tag)
     parsedtag_get_value(tag, ATTR_HREF, &href);
     if (href)
         href = url_encode(remove_space(href), baseURL(buf),
-            buf->document_charset);
+            buf->doc.charset);
     parsedtag_get_value(tag, ATTR_TITLE, &title);
     parsedtag_get_value(tag, ATTR_TYPE, &ctype);
     parsedtag_get_value(tag, ATTR_REL, &rel);
@@ -4449,7 +4448,7 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
     struct Url* base = baseURL(buf);
 
     enum wc_ces name_charset = url_to_charset(NULL, &buf->currentURL,
-        buf->document_charset);
+        buf->doc.charset);
 
     if (out_size == 0) {
         out_size = LINELEN;
@@ -4587,7 +4586,7 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                     break;
                 case HTML_A:
                     if (renderFrameSet && parsedtag_get_value(tag, ATTR_FRAMENAME, &p)) {
-                        p = url_quote_conv(p, buf->document_charset);
+                        p = url_quote_conv(p, buf->doc.charset);
                         if (!idFrame || strcmp(idFrame->body->name, p)) {
                             idFrame = search_frame(renderFrameSet, p);
                             if (idFrame && idFrame->body->attr != F_BODY)
@@ -4605,12 +4604,12 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                     }
                     if (parsedtag_get_value(tag, ATTR_HREF, &p))
                         p = url_encode(remove_space(p), base,
-                            buf->document_charset);
+                            buf->doc.charset);
                     if (parsedtag_get_value(tag, ATTR_TARGET, &q))
-                        q = url_quote_conv(q, buf->document_charset);
+                        q = url_quote_conv(q, buf->doc.charset);
                     if (parsedtag_get_value(tag, ATTR_REFERER, &r))
                         r = url_encode(r, base,
-                            buf->document_charset);
+                            buf->doc.charset);
                     parsedtag_get_value(tag, ATTR_TITLE, &s);
                     parsedtag_get_value(tag, ATTR_ACCESSKEY, &t);
                     parsedtag_get_value(tag, ATTR_HSEQ, &hseq);
@@ -4680,7 +4679,7 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                         s = NULL;
                         parsedtag_get_value(tag, ATTR_TITLE, &s);
                         p = url_quote_conv(remove_space(p),
-                            buf->document_charset);
+                            buf->doc.charset);
                         a_img = registerImg(buf, p, s, currentLn(buf), pos);
                         a_img->hseq = iseq;
                         a_img->image = NULL;
@@ -4828,7 +4827,7 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                     if (parsedtag_get_value(tag, ATTR_HREF, &p)) {
                         struct MapArea* a;
                         p = url_encode(remove_space(p), base,
-                            buf->document_charset);
+                            buf->doc.charset);
                         t = NULL;
                         parsedtag_get_value(tag, ATTR_TARGET, &t);
                         q = "";
@@ -4873,14 +4872,14 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                 case HTML_BASE:
                     if (parsedtag_get_value(tag, ATTR_HREF, &p)) {
                         p = url_encode(remove_space(p), NULL,
-                            buf->document_charset);
+                            buf->doc.charset);
                         if (!buf->baseURL)
                             buf->baseURL = New(struct Url);
                         parseURL2(p, buf->baseURL, &buf->currentURL);
                         base = buf->baseURL;
                     }
                     if (parsedtag_get_value(tag, ATTR_TARGET, &p))
-                        buf->baseTarget = url_quote_conv(p, buf->document_charset);
+                        buf->baseTarget = url_quote_conv(p, buf->doc.charset);
                     break;
                 case HTML_META:
                     p = q = NULL;
@@ -4891,7 +4890,7 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                         int refresh_interval = getMetaRefreshParam(q, &tmp);
                         if (tmp) {
                             p = url_encode(remove_space(tmp->ptr), base,
-                                buf->document_charset);
+                                buf->doc.charset);
                             buf->event = setAlarmEvent(buf->event,
                                 refresh_interval,
                                 AL_IMPLICIT_ONCE,
@@ -4979,7 +4978,7 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                     registerName(buf, id, currentLn(buf), pos);
                 }
                 if (renderFrameSet && parsedtag_get_value(tag, ATTR_FRAMENAME, &p)) {
-                    p = url_quote_conv(p, buf->document_charset);
+                    p = url_quote_conv(p, buf->doc.charset);
                     if (!idFrame || strcmp(idFrame->body->name, p)) {
                         idFrame = search_frame(renderFrameSet, p);
                         if (idFrame && idFrame->body->attr != F_BODY)
@@ -5713,8 +5712,8 @@ void loadHTMLstream(struct input_stream* stream,
     if (newBuf) {
         if (newBuf->bufferprop & BP_FRAME)
             detected_charset = getRuntime()->InnerCharset;
-        else if (newBuf->document_charset)
-            detected_charset = doc_charset = newBuf->document_charset;
+        else if (newBuf->doc.charset)
+            detected_charset = doc_charset = newBuf->doc.charset;
     }
     if (newBuf->content.content_charset && getRuntime()->UseContentCharset)
         doc_charset = newBuf->content.content_charset;
@@ -5774,7 +5773,7 @@ phase2:
     newBuf->trbyte = trbyte + linelen;
     TRAP_OFF;
     if (!(newBuf->bufferprop & BP_FRAME))
-        newBuf->document_charset = detected_charset;
+        newBuf->doc.charset = detected_charset;
     newBuf->doc.image_flag = image_flag;
     HTMLlineproc2(hb, newBuf, htmlenv1.buf);
 
@@ -5804,9 +5803,9 @@ loadHTMLString(Str page)
     }
     TRAP_ON;
 
-    newBuf->document_charset = getRuntime()->InnerCharset;
+    newBuf->doc.charset = getRuntime()->InnerCharset;
     loadHTMLstream(stream, newBuf, NULL, TRUE);
-    newBuf->document_charset = WC_CES_US_ASCII;
+    newBuf->doc.charset = WC_CES_US_ASCII;
 
     TRAP_OFF;
     is_close(stream);
@@ -5848,8 +5847,8 @@ loadBuffer(struct Url url, struct input_stream* stream,
         if (src)
             newBuf->sourcefile = tmpf->ptr;
     }
-    if (newBuf->document_charset)
-        charset = doc_charset = newBuf->document_charset;
+    if (newBuf->doc.charset)
+        charset = doc_charset = newBuf->doc.charset;
     if (newBuf->content.content_charset && getRuntime()->UseContentCharset)
         doc_charset = newBuf->content.content_charset;
 
@@ -5885,7 +5884,7 @@ _end:
     newBuf->doc.lastLine = newBuf->doc.currentLine;
     newBuf->doc.currentLine = newBuf->doc.firstLine;
     newBuf->trbyte = trbyte + linelen;
-    newBuf->document_charset = charset;
+    newBuf->doc.charset = charset;
     if (src)
         fclose(src);
 
@@ -6015,7 +6014,7 @@ _saveBuffer(struct Buffer* buf, struct Line* l, FILE* f, int cont)
     //     l = getNextPage(buf, PagerMax);
     //
     //     if (set_charset)
-    //         charset = buf->document_charset;
+    //         charset = buf->doc.charset;
     //
     //     goto pager_next;
     // }

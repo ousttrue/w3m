@@ -106,9 +106,9 @@ newFrame(struct HtmlTag* tag, struct Buffer* buf)
     if (tag) {
         if (parsedtag_get_value(tag, ATTR_SRC, &p))
             body->url = url_encode(remove_space(p), body->baseURL,
-                buf->document_charset);
+                buf->doc.charset);
         if (parsedtag_get_value(tag, ATTR_NAME, &p) && *p != '_')
-            body->name = url_quote_conv(p, buf->document_charset);
+            body->name = url_quote_conv(p, buf->doc.charset);
     }
     return body;
 }
@@ -521,8 +521,8 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
                 d_target = getRuntime()->TargetSelf ? s_target : t_target;
 
                 charset = WC_CES_US_ASCII;
-                if (current->document_charset != WC_CES_US_ASCII)
-                    doc_charset = current->document_charset;
+                if (current->doc.charset != WC_CES_US_ASCII)
+                    doc_charset = current->doc.charset;
                 else
                     doc_charset = getRuntime()->DocumentCharset;
 
@@ -891,9 +891,7 @@ renderFrame(struct Buffer* Cbuf, int force_reload)
     if (buf == NULL || buf == NO_BUFFER)
         return NULL;
     buf->sourcefile = tmp->ptr;
-#ifdef USE_M17N
-    buf->document_charset = Cbuf->document_charset;
-#endif
+    buf->doc.charset = Cbuf->doc.charset;
     copyParsedURL(&buf->currentURL, &Cbuf->currentURL);
     preFormUpdateBuffer(buf);
     return buf;

@@ -389,8 +389,8 @@ conv_form_encoding(Str val, struct FormItemList* fi, struct Buffer* buf)
     enum wc_ces charset = g_runtime.SystemCharset;
     if (fi->parent->charset)
         charset = fi->parent->charset;
-    else if (buf->document_charset && buf->document_charset != WC_CES_US_ASCII)
-        charset = buf->document_charset;
+    else if (buf->doc.charset && buf->doc.charset != WC_CES_US_ASCII)
+        charset = buf->doc.charset;
     return wc_Str_conv_strict(val, g_runtime.InnerCharset, charset);
 }
 
@@ -2268,7 +2268,7 @@ load_option_panel(void)
     Strcat_charp(src, "</table></form></body></html>");
     buf = loadHTMLString(src);
     if (buf)
-        buf->document_charset = g_runtime.OptionCharset;
+        buf->doc.charset = g_runtime.OptionCharset;
     return buf;
 }
 
