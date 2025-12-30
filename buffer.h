@@ -67,7 +67,6 @@ struct Buffer {
     int pos;
     int visualpos;
     struct AnchorList* name;
-    struct AnchorList* img;
     struct AnchorList* formitem;
     struct LinkList* linklist;
     struct FormList* formlist;

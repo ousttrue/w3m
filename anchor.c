@@ -90,7 +90,7 @@ registerImg(struct Buffer* buf,
     const char* url, const char* title, int line, int pos)
 {
     struct Anchor* a;
-    buf->img = putAnchor(buf->img, url, NULL, &a, NULL, title, '\0', line,
+    buf->doc.img = putAnchor(buf->doc.img, url, NULL, &a, NULL, title, '\0', line,
         pos);
     return a;
 }
@@ -164,7 +164,7 @@ retrieveCurrentImg(struct Buffer* buf)
 {
     if (buf->doc.currentLine == NULL)
         return NULL;
-    return retrieveAnchor(buf->img, buf->doc.currentLine->linenumber, buf->pos);
+    return retrieveAnchor(buf->doc.img, buf->doc.currentLine->linenumber, buf->pos);
 }
 
 struct Anchor*
@@ -731,7 +731,7 @@ link_list_panel(struct Buffer* buf)
     Str tmp = Strnew_charp("<title>Link List</title>\
 <h1 align=center>Link List</h1>\n");
 
-    if (buf->bufferprop & BP_INTERNAL || (buf->linklist == NULL && buf->doc.href == NULL && buf->img == NULL)) {
+    if (buf->bufferprop & BP_INTERNAL || (buf->linklist == NULL && buf->doc.href == NULL && buf->doc.img == NULL)) {
         return NULL;
     }
 
@@ -784,9 +784,9 @@ link_list_panel(struct Buffer* buf)
         Strcat_charp(tmp, "</ol>\n");
     }
 
-    if (buf->img) {
+    if (buf->doc.img) {
         Strcat_charp(tmp, "<hr><h2>Images</h2>\n<ol>\n");
-        al = buf->img;
+        al = buf->doc.img;
         for (i = 0; i < al->nanchor; i++) {
             a = &al->anchors[i];
             if (a->slave)

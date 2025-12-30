@@ -700,7 +700,7 @@ void deleteImage(struct Buffer* buf)
 
     if (!buf)
         return;
-    al = buf->img;
+    al = buf->doc.img;
     if (!al)
         return;
     for (i = 0, a = al->anchors; i < al->nanchor; i++, a++) {
@@ -721,7 +721,7 @@ void deleteImage(struct Buffer* buf)
 //     if (!buf)
 //         return;
 //     buf->image_loaded = TRUE;
-//     al = buf->img;
+//     al = buf->doc.img;
 //     if (!al)
 //         return;
 //     current = baseURL(buf);
@@ -743,7 +743,7 @@ showImageProgress(struct Buffer* buf)
 
     if (!buf)
         return;
-    al = buf->img;
+    al = buf->doc.img;
     if (!al)
         return;
     for (i = 0, l = 0, n = 0, a = al->anchors; i < al->nanchor; i++, a++) {
@@ -769,7 +769,7 @@ void loadImage(struct Buffer* buf, int flag)
     if (!buf) {
         return;
     }
-    if (!buf->img) {
+    if (!buf->doc.img) {
         return;
     }
     // if (buf->image_loaded) {

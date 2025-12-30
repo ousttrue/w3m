@@ -279,10 +279,10 @@ void drawAnchorCursor(struct Buffer* buf)
 }
 
 static struct Line*
-redrawLineImage(struct Buffer* buf, struct Line* l, int i)
+redrawLineImage(struct Buffer* buf, struct Document *doc, struct Line* l, int i)
 {
     int j, pos, rcol;
-    int column = buf->doc.currentColumn;
+    int column = doc->currentColumn;
     struct Anchor* a;
     int x, y, sx, sy, w, h;
 
@@ -294,12 +294,12 @@ redrawLineImage(struct Buffer* buf, struct Line* l, int i)
         return l;
     pos = columnPos(l, column);
     rcol = COLPOS(l, pos);
-    for (j = 0; rcol - column < buf->doc.COLS && pos + j < l->len; j++) {
+    for (j = 0; rcol - column < doc->COLS && pos + j < l->len; j++) {
         if (rcol - column < 0) {
             rcol = COLPOS(l, pos + j + 1);
             continue;
         }
-        a = retrieveAnchor(buf->img, l->linenumber, pos + j);
+        a = retrieveAnchor(buf->doc.img, l->linenumber, pos + j);
         if (a && a->image && a->image->touch < image_touch) {
             struct Image* image = a->image;
             struct ImageCache* cache;
@@ -311,7 +311,7 @@ redrawLineImage(struct Buffer* buf, struct Line* l, int i)
                     image->width = cache->width;
                     image->height = cache->height;
                 }
-                x = (int)((rcol - column + buf->doc.rootX) * getRuntime()->pixel_per_char);
+                x = (int)((rcol - column + doc->rootX) * getRuntime()->pixel_per_char);
                 y = (int)(i * getRuntime()->pixel_per_line);
                 sx = (int)((rcol - COLPOS(l, a->start.pos)) * getRuntime()->pixel_per_char);
                 sy = (int)((l->linenumber - image->y) * getRuntime()->pixel_per_line);
@@ -333,8 +333,8 @@ redrawLineImage(struct Buffer* buf, struct Line* l, int i)
                     h = image->height - sy;
                 else
                     h = (int)(getRuntime()->pixel_per_line - sy);
-                if (w > (int)((buf->doc.rootX + buf->doc.COLS) * getRuntime()->pixel_per_char - x))
-                    w = (int)((buf->doc.rootX + buf->doc.COLS) * getRuntime()->pixel_per_char - x);
+                if (w > (int)((doc->rootX + doc->COLS) * getRuntime()->pixel_per_char - x))
+                    w = (int)((doc->rootX + doc->COLS) * getRuntime()->pixel_per_char - x);
                 if (h > (int)(LASTLINE() * getRuntime()->pixel_per_line - y))
                     h = (int)(LASTLINE() * getRuntime()->pixel_per_line - y);
                 addImage(cache, x, y, sx, sy, w, h);
@@ -395,12 +395,12 @@ redrawNLine(struct Buffer* buf, int n)
         screen_clrtobotx();
     }
 
-    if (!(getRuntime()->activeImage && getRuntime()->displayImage && buf->img))
+    if (!(getRuntime()->activeImage && getRuntime()->displayImage && buf->doc.img))
         return;
     screen_move(buf->doc.cursorY + buf->doc.rootY, buf->doc.cursorX + buf->doc.rootX);
     for (i = 0, l = buf->doc.topLine; i < buf->doc.LINES && l; i++, l = l->next) {
         if (i >= buf->doc.LINES - n || i < -n)
-            redrawLineImage(buf, l, i + buf->doc.rootY);
+            redrawLineImage(buf, &buf->doc, l, i + buf->doc.rootY);
     }
 }
 

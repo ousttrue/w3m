@@ -22,6 +22,7 @@ struct Document {
     // anchors
     //
     struct AnchorList* href;
+    struct AnchorList* img;
 
     //
     // screen

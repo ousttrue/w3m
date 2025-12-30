@@ -4712,7 +4712,7 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                                 IMG_FLAG_SKIP);
                         } else if (iseq < 0) {
                             struct BufferPoint* po = buf->imarklist->marks - iseq - 1;
-                            struct Anchor* a = retrieveAnchor(buf->img,
+                            struct Anchor* a = retrieveAnchor(buf->doc.img,
                                 po->line, po->pos);
                             if (a) {
                                 a_img->url = a->url;
@@ -5009,7 +5009,7 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
     buf->formlist = (hb->form_max >= 0) ? hb->forms[hb->form_max] : NULL;
     if (hb->n_textarea)
         addMultirowsForm(buf, buf->formitem);
-    addMultirowsImg(buf, buf->img);
+    addMultirowsImg(buf, buf->doc.img);
 }
 
 void HTMLlineproc2(struct HtmlBuilder* hb,

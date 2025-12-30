@@ -452,7 +452,7 @@ void formUpdateBuffer(struct Anchor* a, struct Buffer* buf, struct FormItemList*
                     a->start.line, spos, pos - epos);
                 shiftAnchorPosition(buf->name, buf->hmarklist,
                     a->start.line, spos, pos - epos);
-                shiftAnchorPosition(buf->img, buf->hmarklist,
+                shiftAnchorPosition(buf->doc.img, buf->hmarklist,
                     a->start.line, spos, pos - epos);
                 shiftAnchorPosition(buf->formitem, buf->hmarklist,
                     a->start.line, spos, pos - epos);
