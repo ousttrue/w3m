@@ -84,14 +84,14 @@ err:
 #endif /* USE_MIGEMO */
 
 /* normalize search string */
-char* conv_search_string(const char* str, enum wc_ces f_ces)
+const char* conv_search_string(const char* str, enum wc_ces f_ces)
 {
     if (getRuntime()->SearchConv && !WcOption.pre_conv && Currentbuf->document_charset != f_ces)
         str = wtf_conv_fit(str, Currentbuf->document_charset);
     return str;
 }
 
-enum SearchResult forwardSearch(struct Buffer* buf, char* str)
+enum SearchResult forwardSearch(struct Buffer* buf, const char* str)
 {
     char *p, *first, *last;
     struct Line *l, *begin;
@@ -106,7 +106,7 @@ enum SearchResult forwardSearch(struct Buffer* buf, char* str)
     if (l == NULL) {
         return SR_NOTFOUND;
     }
-    pos = buf->pos;
+    pos = buf->doc.pos;
     if (l->bpos) {
         pos += l->bpos;
         while (l->bpos && l->prev)
@@ -124,7 +124,7 @@ enum SearchResult forwardSearch(struct Buffer* buf, char* str)
             pos -= l->len;
             l = l->next;
         }
-        buf->pos = pos;
+        buf->doc.pos = pos;
         if (l != buf->doc.currentLine)
             gotoLine(buf, l->linenumber);
         arrangeCursor(buf);
@@ -149,7 +149,7 @@ enum SearchResult forwardSearch(struct Buffer* buf, char* str)
                 pos -= l->len;
                 l = l->next;
             }
-            buf->pos = pos;
+            buf->doc.pos = pos;
             buf->doc.currentLine = l;
             gotoLine(buf, l->linenumber);
             arrangeCursor(buf);
@@ -162,7 +162,7 @@ enum SearchResult forwardSearch(struct Buffer* buf, char* str)
     return SR_NOTFOUND;
 }
 
-enum SearchResult backwardSearch(struct Buffer* buf, char* str)
+enum SearchResult backwardSearch(struct Buffer* buf, const char* str)
 {
     char *p, *q, *found, *found_last, *first, *last;
     struct Line *l, *begin;
@@ -177,7 +177,7 @@ enum SearchResult backwardSearch(struct Buffer* buf, char* str)
     if (l == NULL) {
         return SR_NOTFOUND;
     }
-    pos = buf->pos;
+    pos = buf->doc.pos;
     if (l->bpos) {
         pos += l->bpos;
         while (l->bpos && l->prev)
@@ -217,7 +217,7 @@ enum SearchResult backwardSearch(struct Buffer* buf, char* str)
                 pos -= l->len;
                 l = l->next;
             }
-            buf->pos = pos;
+            buf->doc.pos = pos;
             if (l != buf->doc.currentLine)
                 gotoLine(buf, l->linenumber);
             arrangeCursor(buf);
@@ -256,7 +256,7 @@ enum SearchResult backwardSearch(struct Buffer* buf, char* str)
                 pos -= l->len;
                 l = l->next;
             }
-            buf->pos = pos;
+            buf->doc.pos = pos;
             gotoLine(buf, l->linenumber);
             arrangeCursor(buf);
             set_mark(l, pos, pos + found_last - found);

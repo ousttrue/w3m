@@ -1,8 +1,7 @@
 #pragma once
 #include <libwc/ces.h>
 
-struct Buffer;
-char* conv_search_string(const char* str, enum wc_ces f_ces);
+const char* conv_search_string(const char* str, enum wc_ces f_ces);
 
 enum SearchResult {
     SR_FOUND = 0x1,
@@ -10,7 +9,8 @@ enum SearchResult {
     SR_WRAPPED = 0x4,
 };
 
-typedef enum SearchResult (*SearchFunc)(struct Buffer*, char*);
+struct Buffer;
+typedef enum SearchResult (*SearchFunc)(struct Buffer*, const char*);
 
-enum SearchResult forwardSearch(struct Buffer* buf, char* str);
-enum SearchResult backwardSearch(struct Buffer* buf, char* str);
+enum SearchResult forwardSearch(struct Buffer* buf, const char* str);
+enum SearchResult backwardSearch(struct Buffer* buf, const char* str);

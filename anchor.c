@@ -156,7 +156,7 @@ retrieveCurrentAnchor(struct Buffer* buf)
 {
     if (buf->doc.currentLine == NULL)
         return NULL;
-    return retrieveAnchor(buf->doc.href, buf->doc.currentLine->linenumber, buf->pos);
+    return retrieveAnchor(buf->doc.href, buf->doc.currentLine->linenumber, buf->doc.pos);
 }
 
 struct Anchor*
@@ -164,7 +164,7 @@ retrieveCurrentImg(struct Buffer* buf)
 {
     if (buf->doc.currentLine == NULL)
         return NULL;
-    return retrieveAnchor(buf->doc.img, buf->doc.currentLine->linenumber, buf->pos);
+    return retrieveAnchor(buf->doc.img, buf->doc.currentLine->linenumber, buf->doc.pos);
 }
 
 struct Anchor*
@@ -173,7 +173,7 @@ retrieveCurrentForm(struct Buffer* buf)
     if (buf->doc.currentLine == NULL)
         return NULL;
     return retrieveAnchor(buf->formitem,
-        buf->doc.currentLine->linenumber, buf->pos);
+        buf->doc.currentLine->linenumber, buf->doc.pos);
 }
 
 struct Anchor*

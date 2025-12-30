@@ -31,7 +31,7 @@ int RegexMatch(Regex* re, char* str, int len, int firstp);
 void MatchedPosition(Regex* re, char** first, char** last);
 
 /* backward compatibility */
-char* regexCompile(char* ex, int igncase);
+char* regexCompile(const char* ex, int igncase);
 
 int regexMatch(const char* str, int len, int firstp);
 

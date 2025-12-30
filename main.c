@@ -71,8 +71,8 @@ static MySignalHandler SigAlarm(SIGNAL_ARG);
 
 static MySignalHandler SigPipe(SIGNAL_ARG);
 
-static char* MarkString = NULL;
-static char* SearchString = NULL;
+static const char* MarkString = NULL;
+static const char* SearchString = NULL;
 SearchFunc searchRoutine = NULL;
 
 JMP_BUF IntReturn;
@@ -1126,7 +1126,7 @@ clear_mark(struct Line* l)
 
 /* search by regular expression */
 static int
-srchcore(char* volatile str, SearchFunc func)
+srchcore(const char* str, SearchFunc func)
 {
     volatile int i, result = SR_NOTFOUND;
 
@@ -1151,7 +1151,7 @@ srchcore(char* volatile str, SearchFunc func)
 }
 
 static void
-disp_srchresult(int result, char* prompt, char* str)
+disp_srchresult(int result, char* prompt, const char* str)
 {
     if (str == NULL)
         str = "";
@@ -1194,11 +1194,11 @@ dispincsrch(int ch, Str buf, Lineprop* prop)
     if (do_next_search) {
         if (*str) {
             if (searchRoutine == forwardSearch)
-                Currentbuf->pos += 1;
+                Currentbuf->doc.pos += 1;
             SAVE_BUFPOSITION(&sbuf);
             if (srchcore(str, searchRoutine) == SR_NOTFOUND
                 && searchRoutine == forwardSearch) {
-                Currentbuf->pos -= 1;
+                Currentbuf->doc.pos -= 1;
                 SAVE_BUFPOSITION(&sbuf);
             }
             arrangeCursor(Currentbuf);
@@ -1234,7 +1234,7 @@ isrch(SearchFunc func, char* prompt)
 static void
 srch(SearchFunc func, char* prompt)
 {
-    char* str;
+    const char* str;
     int result;
     int disp = FALSE;
     int pos;
@@ -1249,14 +1249,14 @@ srch(SearchFunc func, char* prompt)
         }
         disp = TRUE;
     }
-    pos = Currentbuf->pos;
+    pos = Currentbuf->doc.pos;
     if (func == forwardSearch)
-        Currentbuf->pos += 1;
+        Currentbuf->doc.pos += 1;
     result = srchcore(str, func);
     if (result & SR_FOUND)
         clear_mark(Currentbuf->doc.currentLine);
     else
-        Currentbuf->pos = pos;
+        Currentbuf->doc.pos = pos;
     if (disp)
         disp_srchresult(result, prompt, str);
     searchRoutine = func;
@@ -1306,13 +1306,13 @@ srch_nxtprv(int reverse)
     if (searchRoutine == backwardSearch)
         reverse ^= 1;
     if (reverse == 0)
-        Currentbuf->pos += 1;
+        Currentbuf->doc.pos += 1;
     result = srchcore(SearchString, routine[reverse]);
     if (result & SR_FOUND)
         clear_mark(Currentbuf->doc.currentLine);
     else {
         if (reverse == 0)
-            Currentbuf->pos -= 1;
+            Currentbuf->doc.pos -= 1;
     }
     disp_srchresult(result, (reverse ? "Backward: " : "Forward: "),
         SearchString);
@@ -1741,7 +1741,7 @@ prev_nonnull_line(struct Line* line)
 
     Currentbuf->doc.currentLine = l;
     if (l != line)
-        Currentbuf->pos = Currentbuf->doc.currentLine->len;
+        Currentbuf->doc.pos = Currentbuf->doc.currentLine->len;
     return 0;
 }
 
@@ -1757,7 +1757,7 @@ DEFUN(movLW, PREV_WORD, "Move to the previous word")
 
     for (i = 0; i < n; i++) {
         pline = Currentbuf->doc.currentLine;
-        ppos = Currentbuf->pos;
+        ppos = Currentbuf->doc.pos;
 
         if (prev_nonnull_line(Currentbuf->doc.currentLine) < 0)
             goto end;
@@ -1765,31 +1765,31 @@ DEFUN(movLW, PREV_WORD, "Move to the previous word")
         while (1) {
             l = Currentbuf->doc.currentLine;
             lb = l->lineBuf;
-            while (Currentbuf->pos > 0) {
-                int tmp = Currentbuf->pos;
+            while (Currentbuf->doc.pos > 0) {
+                int tmp = Currentbuf->doc.pos;
                 prevChar(tmp, l);
                 if (is_wordchar(getChar(&lb[tmp])))
                     break;
-                Currentbuf->pos = tmp;
+                Currentbuf->doc.pos = tmp;
             }
-            if (Currentbuf->pos > 0)
+            if (Currentbuf->doc.pos > 0)
                 break;
             if (prev_nonnull_line(Currentbuf->doc.currentLine->prev) < 0) {
                 Currentbuf->doc.currentLine = pline;
-                Currentbuf->pos = ppos;
+                Currentbuf->doc.pos = ppos;
                 goto end;
             }
-            Currentbuf->pos = Currentbuf->doc.currentLine->len;
+            Currentbuf->doc.pos = Currentbuf->doc.currentLine->len;
         }
 
         l = Currentbuf->doc.currentLine;
         lb = l->lineBuf;
-        while (Currentbuf->pos > 0) {
-            int tmp = Currentbuf->pos;
+        while (Currentbuf->doc.pos > 0) {
+            int tmp = Currentbuf->doc.pos;
             prevChar(tmp, l);
             if (!is_wordchar(getChar(&lb[tmp])))
                 break;
-            Currentbuf->pos = tmp;
+            Currentbuf->doc.pos = tmp;
         }
     }
 end:
@@ -1809,7 +1809,7 @@ next_nonnull_line(struct Line* line)
 
     Currentbuf->doc.currentLine = l;
     if (l != line)
-        Currentbuf->pos = 0;
+        Currentbuf->doc.pos = 0;
     return 0;
 }
 
@@ -1825,27 +1825,27 @@ DEFUN(movRW, NEXT_WORD, "Move to the next word")
 
     for (i = 0; i < n; i++) {
         pline = Currentbuf->doc.currentLine;
-        ppos = Currentbuf->pos;
+        ppos = Currentbuf->doc.pos;
 
         if (next_nonnull_line(Currentbuf->doc.currentLine) < 0)
             goto end;
 
         l = Currentbuf->doc.currentLine;
         lb = l->lineBuf;
-        while (Currentbuf->pos < l->len && is_wordchar(getChar(&lb[Currentbuf->pos])))
-            nextChar(Currentbuf->pos, l);
+        while (Currentbuf->doc.pos < l->len && is_wordchar(getChar(&lb[Currentbuf->doc.pos])))
+            nextChar(Currentbuf->doc.pos, l);
 
         while (1) {
-            while (Currentbuf->pos < l->len && !is_wordchar(getChar(&lb[Currentbuf->pos])))
-                nextChar(Currentbuf->pos, l);
-            if (Currentbuf->pos < l->len)
+            while (Currentbuf->doc.pos < l->len && !is_wordchar(getChar(&lb[Currentbuf->doc.pos])))
+                nextChar(Currentbuf->doc.pos, l);
+            if (Currentbuf->doc.pos < l->len)
                 break;
             if (next_nonnull_line(Currentbuf->doc.currentLine->next) < 0) {
                 Currentbuf->doc.currentLine = pline;
-                Currentbuf->pos = ppos;
+                Currentbuf->doc.pos = ppos;
                 goto end;
             }
-            Currentbuf->pos = 0;
+            Currentbuf->doc.pos = 0;
             l = Currentbuf->doc.currentLine;
             lb = l->lineBuf;
         }
@@ -1959,7 +1959,7 @@ _goLine(char* l)
     if (l == NULL || *l == '\0' || Currentbuf->doc.currentLine == NULL) {
         return;
     }
-    Currentbuf->pos = 0;
+    Currentbuf->doc.pos = 0;
     if (((*l == '^') || (*l == '$')) && getRuntime()->prec_num) {
         gotoRealLine(Currentbuf, getRuntime()->prec_num);
     } else if (*l == '^') {
@@ -2002,7 +2002,7 @@ DEFUN(linbeg, LINE_BEGIN, "Go to the beginning of the line")
         return;
     while (Currentbuf->doc.currentLine->prev && Currentbuf->doc.currentLine->bpos)
         cursorUp0(Currentbuf, 1);
-    Currentbuf->pos = 0;
+    Currentbuf->doc.pos = 0;
     arrangeCursor(Currentbuf);
 }
 
@@ -2014,7 +2014,7 @@ DEFUN(linend, LINE_END, "Go to the end of the line")
     while (Currentbuf->doc.currentLine->next
         && Currentbuf->doc.currentLine->next->bpos)
         cursorDown0(Currentbuf, 1);
-    Currentbuf->pos = Currentbuf->doc.currentLine->len - 1;
+    Currentbuf->doc.pos = Currentbuf->doc.currentLine->len - 1;
     arrangeCursor(Currentbuf);
 }
 
@@ -2088,7 +2088,7 @@ DEFUN(_mark, MARK, "Set/unset mark")
     if (Currentbuf->doc.firstLine == NULL)
         return;
     l = Currentbuf->doc.currentLine;
-    l->propBuf[Currentbuf->pos] ^= PE_MARK;
+    l->propBuf[Currentbuf->doc.pos] ^= PE_MARK;
 }
 
 /* Go to next mark */
@@ -2101,7 +2101,7 @@ DEFUN(nextMk, NEXT_MARK, "Go to the next mark")
         return;
     if (Currentbuf->doc.firstLine == NULL)
         return;
-    i = Currentbuf->pos + 1;
+    i = Currentbuf->doc.pos + 1;
     l = Currentbuf->doc.currentLine;
     if (i >= l->len) {
         i = 0;
@@ -2111,7 +2111,7 @@ DEFUN(nextMk, NEXT_MARK, "Go to the next mark")
         for (; i < l->len; i++) {
             if (l->propBuf[i] & PE_MARK) {
                 Currentbuf->doc.currentLine = l;
-                Currentbuf->pos = i;
+                Currentbuf->doc.pos = i;
                 arrangeCursor(Currentbuf);
                 return;
             }
@@ -2133,7 +2133,7 @@ DEFUN(prevMk, PREV_MARK, "Go to the previous mark")
         return;
     if (Currentbuf->doc.firstLine == NULL)
         return;
-    i = Currentbuf->pos - 1;
+    i = Currentbuf->doc.pos - 1;
     l = Currentbuf->doc.currentLine;
     if (i < 0) {
         l = l->prev;
@@ -2144,7 +2144,7 @@ DEFUN(prevMk, PREV_MARK, "Go to the previous mark")
         for (; i >= 0; i--) {
             if (l->propBuf[i] & PE_MARK) {
                 Currentbuf->doc.currentLine = l;
-                Currentbuf->pos = i;
+                Currentbuf->doc.pos = i;
                 arrangeCursor(Currentbuf);
                 return;
             }
@@ -2161,7 +2161,7 @@ DEFUN(prevMk, PREV_MARK, "Go to the previous mark")
 DEFUN(reMark, REG_MARK, "Mark all occurences of a pattern")
 {
     struct Line* l;
-    char* str;
+    const char* str;
     char *p, *p1, *p2;
 
     if (!getRuntime()->use_mark)
@@ -2218,7 +2218,7 @@ gotoLabel(const char* label)
         Currentbuf->doc.topLine = doc_lineSkip(&Currentbuf->doc, Currentbuf->doc.topLine,
             Currentbuf->doc.currentLine->linenumber
                 - Currentbuf->doc.topLine->linenumber);
-    Currentbuf->pos = al->start.pos;
+    Currentbuf->doc.pos = al->start.pos;
     arrangeCursor(Currentbuf);
     return;
 }
@@ -2357,7 +2357,7 @@ DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink")
     } while (an == NULL);
 
     gotoLine(Currentbuf, po->line);
-    Currentbuf->pos = po->pos;
+    Currentbuf->doc.pos = po->pos;
     arrangeCursor(Currentbuf);
 }
 
@@ -2392,7 +2392,7 @@ DEFUN(lastA, LINK_END, "Move to the last hyperlink")
     } while (an == NULL);
 
     gotoLine(Currentbuf, po->line);
-    Currentbuf->pos = po->pos;
+    Currentbuf->doc.pos = po->pos;
     arrangeCursor(Currentbuf);
 }
 
@@ -2420,7 +2420,7 @@ DEFUN(nthA, LINK_N, "Go to the nth link")
         return;
 
     gotoLine(Currentbuf, po->line);
-    Currentbuf->pos = po->pos;
+    Currentbuf->doc.pos = po->pos;
     arrangeCursor(Currentbuf);
 }
 
@@ -2468,7 +2468,7 @@ _nextA(int visited)
         an = retrieveCurrentForm(Currentbuf);
 
     y = Currentbuf->doc.currentLine->linenumber;
-    x = Currentbuf->pos;
+    x = Currentbuf->doc.pos;
 
     if (visited == TRUE) {
         n = hl->nmark;
@@ -2526,7 +2526,7 @@ _end:
         return;
     po = &hl->marks[an->hseq];
     gotoLine(Currentbuf, po->line);
-    Currentbuf->pos = po->pos;
+    Currentbuf->doc.pos = po->pos;
     arrangeCursor(Currentbuf);
 }
 
@@ -2550,7 +2550,7 @@ _prevA(int visited)
         an = retrieveCurrentForm(Currentbuf);
 
     y = Currentbuf->doc.currentLine->linenumber;
-    x = Currentbuf->pos;
+    x = Currentbuf->doc.pos;
 
     if (visited == TRUE) {
         n = hl->nmark;
@@ -2608,7 +2608,7 @@ _end:
         return;
     po = hl->marks + an->hseq;
     gotoLine(Currentbuf, po->line);
-    Currentbuf->pos = po->pos;
+    Currentbuf->doc.pos = po->pos;
     arrangeCursor(Currentbuf);
 }
 
@@ -2631,7 +2631,7 @@ nextX(int d, int dy)
         an = retrieveCurrentForm(Currentbuf);
 
     l = Currentbuf->doc.currentLine;
-    x = Currentbuf->pos;
+    x = Currentbuf->doc.pos;
     y = l->linenumber;
     pan = NULL;
     for (i = 0; i < n; i++) {
@@ -2663,7 +2663,7 @@ nextX(int d, int dy)
     if (pan == NULL)
         return;
     gotoLine(Currentbuf, y);
-    Currentbuf->pos = pan->start.pos;
+    Currentbuf->doc.pos = pan->start.pos;
     arrangeCursor(Currentbuf);
 }
 
@@ -2685,7 +2685,7 @@ nextY(int d)
     if (an == NULL)
         an = retrieveCurrentForm(Currentbuf);
 
-    x = Currentbuf->pos;
+    x = Currentbuf->doc.pos;
     y = Currentbuf->doc.currentLine->linenumber + d;
     pan = NULL;
     hseq = -1;
@@ -2840,7 +2840,7 @@ DEFUN(backBf, BACK, "Close current buffer and return to the one below in stack")
                 Currentbuf->doc.topLine = doc_lineSkip(&Currentbuf->doc,
                     Currentbuf->doc.firstLine, top - 1);
                 gotoLine(Currentbuf, linenumber);
-                Currentbuf->pos = pos;
+                Currentbuf->doc.pos = pos;
                 Currentbuf->doc.currentColumn = currentColumn;
                 arrangeCursor(Currentbuf);
                 formResetBuffer(Currentbuf, formitem);
@@ -3091,7 +3091,7 @@ anchorMn(BufferMenuFunc menu_func, bool go)
 
     struct BufferPoint* po = &Currentbuf->hmarklist->marks[a->hseq];
     gotoLine(Currentbuf, po->line);
-    Currentbuf->pos = po->pos;
+    Currentbuf->doc.pos = po->pos;
     arrangeCursor(Currentbuf);
     if (go)
         followA();
@@ -4326,7 +4326,7 @@ resetPos(struct BufferPos* b)
     cur.bpos = b->bpos;
     buf.doc.topLine = &top;
     buf.doc.currentLine = &cur;
-    buf.pos = b->pos;
+    buf.doc.pos = b->pos;
     buf.doc.currentColumn = b->currentColumn;
     restorePosition(Currentbuf, &buf);
     Currentbuf->undo = b;

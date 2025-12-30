@@ -36,6 +36,7 @@ struct Document {
     short LINES;
     short cursorX;
     short cursorY;
+    int pos;
     int visualpos;
 };
 struct Url;

@@ -88,4 +88,4 @@ extern wc_uint32 wtf_get_code(wc_uchar* p);
 
 extern wc_bool wtf_is_hangul(wc_uchar* p);
 
-extern char* wtf_conv_fit(char* s, enum wc_ces ces);
+extern char* wtf_conv_fit(const char* s, enum wc_ces ces);

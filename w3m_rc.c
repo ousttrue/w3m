@@ -593,7 +593,7 @@ struct Buffer* loadLink(const char* url, const char* target, const char* referer
             if (g_runtime.label_topline)
                 Currentbuf->doc.topLine = doc_lineSkip(&Currentbuf->doc, Currentbuf->doc.topLine,
                     Currentbuf->doc.currentLine->linenumber - Currentbuf->doc.topLine->linenumber);
-            Currentbuf->pos = al->start.pos;
+            Currentbuf->doc.pos = al->start.pos;
             arrangeCursor(Currentbuf);
         }
     }
@@ -775,7 +775,7 @@ void _followForm(bool submit, bool on_target, bool do_download)
         if (submit)
             goto do_submit;
         if (!formChooseOptionByMenu(fi,
-                Currentbuf->doc.cursorX - Currentbuf->pos + a->start.pos + Currentbuf->doc.rootX,
+                Currentbuf->doc.cursorX - Currentbuf->doc.pos + a->start.pos + Currentbuf->doc.rootX,
                 Currentbuf->doc.cursorY + Currentbuf->doc.rootY))
             break;
         formUpdateBuffer(a, Currentbuf, fi);
@@ -860,7 +860,7 @@ bool currentBufferSubmit()
     }
     Currentbuf->submit = NULL;
     gotoLine(Currentbuf, a->start.line);
-    Currentbuf->pos = a->start.pos;
+    Currentbuf->doc.pos = a->start.pos;
     _followForm(TRUE, true, false);
     return true;
 }
@@ -908,7 +908,7 @@ char* getCurWord(struct Buffer* buf, int* spos, int* epos)
     if (l == NULL)
         return NULL;
     p = l->lineBuf;
-    e = buf->pos;
+    e = buf->doc.pos;
     while (e > 0 && !is_wordchar(getChar(&p[e])))
         prevChar(e, l);
     if (!is_wordchar(getChar(&p[e])))

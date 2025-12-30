@@ -96,7 +96,7 @@ static void set_buffer_environ(struct Buffer* buf)
         set_environ("W3M_CHARSET", wc_ces_to_charset(buf->document_charset));
     }
     l = buf->doc.currentLine;
-    if (l && (buf != prev_buf || l != prev_line || buf->pos != prev_pos)) {
+    if (l && (buf != prev_buf || l != prev_line || buf->doc.pos != prev_pos)) {
         struct Anchor* a;
         struct Url pu;
         char* s = GetWord(buf);
@@ -130,7 +130,7 @@ static void set_buffer_environ(struct Buffer* buf)
     }
     prev_buf = buf;
     prev_line = l;
-    prev_pos = buf->pos;
+    prev_pos = buf->doc.pos;
 }
 
 static void
@@ -140,13 +140,13 @@ save_buffer_position(struct Buffer* buf)
 
     if (!buf->doc.firstLine)
         return;
-    if (b && b->top_linenumber == TOP_LINENUMBER(buf) && b->cur_linenumber == CUR_LINENUMBER(buf) && b->currentColumn == buf->doc.currentColumn && b->pos == buf->pos)
+    if (b && b->top_linenumber == TOP_LINENUMBER(buf) && b->cur_linenumber == CUR_LINENUMBER(buf) && b->currentColumn == buf->doc.currentColumn && b->pos == buf->doc.pos)
         return;
     b = New(struct BufferPos);
     b->top_linenumber = TOP_LINENUMBER(buf);
     b->cur_linenumber = CUR_LINENUMBER(buf);
     b->currentColumn = buf->doc.currentColumn;
-    b->pos = buf->pos;
+    b->pos = buf->doc.pos;
     b->bpos = buf->doc.currentLine ? buf->doc.currentLine->bpos : 0;
     b->next = NULL;
     b->prev = buf->undo;

@@ -1327,7 +1327,7 @@ wtf_is_hangul(wc_uchar* p)
     return WC_FALSE;
 }
 
-char* wtf_conv_fit(char* s, enum wc_ces ces)
+char* wtf_conv_fit(const char* s, enum wc_ces ces)
 {
     wc_uchar* p;
     Str os;
