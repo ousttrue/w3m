@@ -11,6 +11,22 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#ifdef HAVE_SIGSETJMP
+#ifdef __MINGW32_VERSION
+#define SETJMP(env) setjmp(env)
+#define LONGJMP(env, val) longjmp(env, val)
+#define JMP_BUF jmp_buf
+#else
+#define SETJMP(env) sigsetjmp(env, 1)
+#define LONGJMP(env, val) siglongjmp(env, val)
+#define JMP_BUF sigjmp_buf
+#endif /* __MINGW32_VERSION */
+#else
+#define SETJMP(env) setjmp(env)
+#define LONGJMP(env, val) longjmp(env, val)
+#define JMP_BUF jmp_buf
+#endif
+
 #define DUMP_BUFFER 0x01
 #define DUMP_HEAD 0x02
 #define DUMP_SOURCE 0x04
@@ -178,7 +194,6 @@ AlarmEvent* setAlarmEvent(AlarmEvent* event, int sec, short status,
 
 struct parsed_tagarg;
 extern void panel_set_option(struct parsed_tagarg*);
-extern int check_no_proxy(char* domain);
 char* rcFile(const char* base);
 char* etcFile(const char* base);
 char* confFile(const char* base);
@@ -194,4 +209,3 @@ extern void init_tmp(void);
 extern struct Buffer* load_option_panel(void);
 extern void sync_with_option(void);
 extern char* searchKeyData(void);
-

@@ -813,7 +813,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
                     }
                 token_end:
                     Strclear(tok);
-                } while (*p != '\0' || !stream->iseos);
+                } while (*p != '\0' || !is_isend(stream));
 
                 if (pre_mode & RB_PLAIN)
                     fputs("</PRE_PLAIN>\n", f1);

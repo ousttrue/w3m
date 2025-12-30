@@ -30,6 +30,8 @@
 #define DNS_ORDER_INET6_ONLY 6
 
 struct Runtime {
+    struct TextList* NO_proxy_domains;
+
     char* CurrentDir;
     int CurrentPid;
     struct TextList* fileToDelete;

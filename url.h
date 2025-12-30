@@ -6,8 +6,6 @@
 
 #define NO_REFERER ((char*)-1)
 
-extern int ai_family_order_table[7][3]; /* XXX */
-
 /* flags for loadGeneralFile */
 #define RG_NOCACHE 1
 #define RG_FRAME 2
@@ -36,8 +34,7 @@ void parseURL2(const char* url, struct Url* pu, struct Url* current);
 void parseURL(const char* url, struct Url* p_url, struct Url* current);
 Str _parsedURL2Str(struct Url* pu, bool pass, bool user, bool label);
 Str parsedURL2Str(struct Url* pu);
-int openSocket(char* hostname, const char* remoteport_name, unsigned short remoteport_num);
-char* guessContentType(const char* filename);
+const char* guessContentType(const char* filename);
 const char* filename_extension(const char* patch, int is_url);
 void parse_proxy(void);
 extern Str searchURIMethods(struct Url* pu);

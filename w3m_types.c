@@ -5,6 +5,8 @@
 #define PAGER_MAX_LINE 10000 /* Maximum line kept as pager */
 
 struct Runtime g_runtime = {
+    .NO_proxy_domains = NULL,
+
     .CurrentDir = 0,
     .CurrentPid = 0,
     .fileToDelete = 0,

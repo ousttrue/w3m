@@ -1,4 +1,5 @@
 #include "ftp.h"
+#include "tcp_socket.h"
 #include "input_stream.h"
 #include "indep.h"
 #include "w3m_rc.h"
@@ -15,10 +16,7 @@
 #include <unistd.h>
 #include <pwd.h>
 #include <time.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <netdb.h>
-#include <arpa/inet.h>
 #include <signal.h>
 #include <setjmp.h>
 
@@ -96,7 +94,7 @@ ftp_close(FTP ftp)
     if (!ftp->host)
         return;
     if (ftp->rf) {
-        ftp->rf->unclose = false;
+        is_set_unclose(ftp->rf, false);
         is_close(ftp->rf);
         ftp->rf = NULL;
     }
@@ -112,15 +110,14 @@ ftp_close(FTP ftp)
     return;
 }
 
-static int
-ftp_login(FTP ftp)
+static bool
+_ftp_login(FTP ftp)
 {
-    int sock, status;
-    int sock_wf;
+    int sock = tcp_open(ftp->host, "ftp", 21);
+    if (sock < 0) {
+        return false;
+    }
 
-    sock = openSocket(ftp->host, "ftp", 21);
-    if (sock < 0)
-        goto open_err;
     if (getRuntime()->ftppass_hostnamegen && !strcmp(ftp->user, "anonymous")) {
         size_t n = strlen(ftp->pass);
 
@@ -163,16 +160,20 @@ ftp_login(FTP ftp)
         }
     }
     ftp->rf = is_from_fd(sock);
+
+    int sock_wf;
     if ((sock_wf = dup(sock)) >= 0)
         ftp->wf = fdopen(sock_wf, "wb");
     else
-        goto open_err;
+        return false;
     if (!ftp->rf || !ftp->wf)
-        goto open_err;
-    ftp->rf->unclose = true;
+        return false;
+    is_set_unclose(ftp->rf, true);
+
+    int status;
     ftp_command(ftp, NULL, NULL, &status);
     if (status != 220)
-        goto open_err;
+        return false;
     if (fmInitialized()) {
         message(Sprintf("Sending FTP username (%s) to remote server.",
                     ftp->user)
@@ -184,20 +185,28 @@ ftp_login(FTP ftp)
      * Some ftp daemons(e.g. publicfile) return code 230 for user command.
      */
     if (status == 230)
-        goto succeed;
+        return true;
     if (status != 331)
-        goto open_err;
+        return false;
     if (fmInitialized()) {
         message("Sending FTP password to remote server.", 0, 0);
     }
     ftp_command(ftp, "PASS", ftp->pass, &status);
     if (status != 230)
-        goto open_err;
-succeed:
-    return TRUE;
-open_err:
-    ftp_close(ftp);
-    return FALSE;
+        return false;
+
+    return true;
+}
+
+static bool
+ftp_login(FTP ftp)
+{
+    if (_ftp_login(ftp)) {
+        return true;
+    } else {
+        ftp_close(ftp);
+        return false;
+    }
 }
 
 static int
@@ -248,7 +257,7 @@ ftp_pasv(FTP ftp)
                 abuf, sizeof(abuf), NULL, 0, NI_NUMERICHOST)
             != 0)
             return -1;
-        data = openSocket(abuf, "", port);
+        data = tcp_open(abuf, "", port);
         break;
 #endif
     case AF_INET:
@@ -261,7 +270,7 @@ ftp_pasv(FTP ftp)
             return -1;
         sscanf(p, "%d,%d,%d,%d,%d,%d", &n1, &n2, &n3, &n4, &p1, &p2);
         tmp = Sprintf("%d.%d.%d.%d", n1, n2, n3, n4);
-        data = openSocket(tmp->ptr, "", p1 * 256 + p2);
+        data = tcp_open(tmp->ptr, "", p1 * 256 + p2);
         break;
     default:
         return -1;

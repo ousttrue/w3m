@@ -1,36 +1,14 @@
+#include "url.h"
 #include "w3m_rc.h"
-#include "input_stream.h"
+#include "textlist.h"
+#include "anchor.h"
+#include "alloc.h"
 #include "indep.h"
-#include "ssl_stream.h"
-#include "ftp.h"
-#include "file.h"
 #include "etc.h"
-#include "local_cgi.h"
-#include "readbuffer.h"
-#include "message.h"
-#include "html_form.h"
-#include "urlscheme.h"
 #include "siteconf.h"
-#include "http_request.h"
 #include "buffer.h"
-#include "html.h"
-#include "Str.h"
 #include "myctype.h"
-#include "regex.h"
-
-#include <openssl/ssl.h>
-
 #include <string.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <signal.h>
-#include <setjmp.h>
-#include <errno.h>
-#include <sys/stat.h>
 
 struct Url HTTP_proxy_parsed;
 struct Url HTTPS_proxy_parsed;
@@ -45,28 +23,12 @@ struct Url FTP_proxy_parsed;
 #define close(fd) closesocket(fd)
 #endif
 
-#ifdef INET6
-/* see rc.c, "dns_order" and dnsorders[] */
-int ai_family_order_table[7][3] = {
-    { PF_UNSPEC, PF_UNSPEC, PF_UNSPEC }, /* 0:unspec */
-    { PF_INET, PF_INET6, PF_UNSPEC }, /* 1:inet inet6 */
-    { PF_INET6, PF_INET, PF_UNSPEC }, /* 2:inet6 inet */
-    { PF_UNSPEC, PF_UNSPEC, PF_UNSPEC }, /* 3: --- */
-    { PF_INET, PF_UNSPEC, PF_UNSPEC }, /* 4:inet */
-    { PF_UNSPEC, PF_UNSPEC, PF_UNSPEC }, /* 5: --- */
-    { PF_INET6, PF_UNSPEC, PF_UNSPEC }, /* 6:inet6 */
+struct KeyValue {
+    const char* item1;
+    const char* item2;
 };
-#endif /* INET6 */
 
-static JMP_BUF AbortLoading;
-static MySignalHandler
-KeyAbort(SIGNAL_ARG)
-{
-    LONGJMP(AbortLoading, 1);
-    SIGNAL_RETURN;
-}
-
-static struct table2 DefaultGuess[] = {
+static struct KeyValue DefaultGuess[] = {
     { "html", "text/html" },
     { "htm", "text/html" },
     { "shtml", "text/html" },
@@ -96,16 +58,16 @@ static struct table2 DefaultGuess[] = {
 #endif /* not HTTP_DEFAULT_FILE */
 
 static struct TextList* mimetypes_list;
-static struct table2** UserMimeTypes;
+static struct KeyValue** UserMimeTypes;
 
-static struct table2*
+static struct KeyValue*
 loadMimeTypes(char* filename)
 {
     FILE* f;
     char *d, *type;
     int i, n;
     Str tmp;
-    struct table2* mtypes;
+    struct KeyValue* mtypes;
 
     f = fopen(expandPath(filename), "r");
     if (f == NULL)
@@ -124,7 +86,7 @@ loadMimeTypes(char* filename)
         }
     }
     fseek(f, 0, 0);
-    mtypes = New_N(struct table2, n + 1);
+    mtypes = New_N(struct KeyValue, n + 1);
     i = 0;
     while (tmp = Strfgets(f), tmp->length > 0) {
         d = tmp->ptr;
@@ -156,7 +118,7 @@ void initMimeTypes(void)
         mimetypes_list = NULL;
     if (mimetypes_list == NULL)
         return;
-    UserMimeTypes = New_N(struct table2*, mimetypes_list->nitem);
+    UserMimeTypes = New_N(struct KeyValue*, mimetypes_list->nitem);
     int i = 0;
     for (TextListItem* tl = mimetypes_list->first; tl; i++, tl = tl->next)
         UserMimeTypes[i] = loadMimeTypes(tl->ptr);
@@ -185,150 +147,6 @@ DefaultFile(int scheme)
 #ifdef SSL_CTX_set_min_proto_version
 
 #endif /* SSL_CTX_set_min_proto_version */
-
-int openSocket(char* const hostname,
-    const char* remoteport_name, unsigned short remoteport_num)
-{
-    volatile int sock = -1;
-    int* af;
-    struct addrinfo hints, *res0, *res;
-    int error;
-    char* hname;
-    MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
-
-    if (fmInitialized()) {
-        /* FIXME: gettextize? */
-        message(Sprintf("Opening socket...")->ptr, 0, 0);
-    }
-    if (SETJMP(AbortLoading) != 0) {
-        if (sock >= 0)
-            close(sock);
-        goto error;
-    }
-    TRAP_ON;
-    if (hostname == NULL) {
-        goto error;
-    }
-
-#ifdef INET6
-    /* rfc2732 compliance */
-    hname = hostname;
-    if (hname != NULL && hname[0] == '[' && hname[strlen(hname) - 1] == ']') {
-        hname = allocStr(hostname + 1, -1);
-        hname[strlen(hname) - 1] = '\0';
-        if (strspn(hname, "0123456789abcdefABCDEF:.") != strlen(hname))
-            goto error;
-    }
-    for (af = ai_family_order_table[getRuntime()->DNS_order];; af++) {
-        memset(&hints, 0, sizeof(hints));
-        hints.ai_family = *af;
-        hints.ai_socktype = SOCK_STREAM;
-        if (remoteport_num != 0) {
-            Str portbuf = Sprintf("%d", remoteport_num);
-            error = getaddrinfo(hname, portbuf->ptr, &hints, &res0);
-        } else {
-            error = -1;
-        }
-        if (error && remoteport_name && remoteport_name[0] != '\0') {
-            /* try default port */
-            error = getaddrinfo(hname, remoteport_name, &hints, &res0);
-        }
-        if (error) {
-            if (*af == PF_UNSPEC) {
-                goto error;
-            }
-            /* try next ai family */
-            continue;
-        }
-        sock = -1;
-        for (res = res0; res; res = res->ai_next) {
-            sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-            if (sock < 0) {
-                continue;
-            }
-            if (connect(sock, res->ai_addr, res->ai_addrlen) < 0) {
-                close(sock);
-                sock = -1;
-                continue;
-            }
-            break;
-        }
-        if (sock < 0) {
-            freeaddrinfo(res0);
-            if (*af == PF_UNSPEC) {
-                goto error;
-            }
-            /* try next ai family */
-            continue;
-        }
-        freeaddrinfo(res0);
-        break;
-    }
-#else /* not INET6 */
-    s_port = htons(remoteport_num);
-    bzero((char*)&hostaddr, sizeof(struct sockaddr_in));
-    if ((proto = getprotobyname("tcp")) == NULL) {
-        /* protocol number of TCP is 6 */
-        proto = New(struct protoent);
-        proto->p_proto = 6;
-    }
-    if ((sock = socket(AF_INET, SOCK_STREAM, proto->p_proto)) < 0) {
-        goto error;
-    }
-    regexCompile("^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$", 0);
-    if (regexMatch(hostname, -1, 1)) {
-        sscanf(hostname, "%d.%d.%d.%d", &a1, &a2, &a3, &a4);
-        adr = htonl((a1 << 24) | (a2 << 16) | (a3 << 8) | a4);
-        bcopy((void*)&adr, (void*)&hostaddr.sin_addr, sizeof(long));
-        hostaddr.sin_family = AF_INET;
-        hostaddr.sin_port = s_port;
-        if (fmInitialized()) {
-            message(Sprintf("Connecting to %s", hostname)->ptr, 0, 0);
-            tty_refresh();
-        }
-        if (connect(sock, (struct sockaddr*)&hostaddr,
-                sizeof(struct sockaddr_in))
-            < 0) {
-            goto error;
-        }
-    } else {
-        char** h_addr_list;
-        int result = -1;
-        if (fmInitialized()) {
-            message(Sprintf("Performing hostname lookup on %s", hostname)->ptr,
-                0, 0);
-            tty_refresh();
-        }
-        if ((entry = gethostbyname(hostname)) == NULL) {
-            goto error;
-        }
-        hostaddr.sin_family = AF_INET;
-        hostaddr.sin_port = s_port;
-        for (h_addr_list = entry->h_addr_list; *h_addr_list; h_addr_list++) {
-            bcopy((void*)h_addr_list[0], (void*)&hostaddr.sin_addr,
-                entry->h_length);
-            if (fmInitialized()) {
-                message(Sprintf("Connecting to %s", hostname)->ptr, 0, 0);
-                tty_refresh();
-            }
-            if ((result = connect(sock, (struct sockaddr*)&hostaddr,
-                     sizeof(struct sockaddr_in)))
-                == 0) {
-                break;
-            }
-        }
-        if (result < 0) {
-            goto error;
-        }
-    }
-#endif /* not INET6 */
-
-    TRAP_OFF;
-    return sock;
-error:
-    TRAP_OFF;
-    return -1;
-}
 
 #define COPYPATH_SPC_ALLOW 0
 #define COPYPATH_SPC_IGNORE 1
@@ -818,8 +636,8 @@ Str parsedURL2RefererStr(struct Url* pu)
     return _parsedURL2Str(pu, FALSE, FALSE, FALSE);
 }
 
-static char*
-guessContentTypeFromTable(struct table2* table, const char* filename)
+static const char*
+guessContentTypeFromTable(struct KeyValue* table, const char* filename)
 {
     if (table == NULL)
         return NULL;
@@ -831,28 +649,26 @@ guessContentTypeFromTable(struct table2* table, const char* filename)
         return NULL;
     p++;
 
-    for (struct table2* t = table; t->item1; t++) {
+    for (struct KeyValue* t = table; t->item1; t++) {
         if (!strcmp(p, t->item1))
             return t->item2;
     }
-    for (struct table2* t = table; t->item1; t++) {
+    for (struct KeyValue* t = table; t->item1; t++) {
         if (!strcasecmp(p, t->item1))
             return t->item2;
     }
     return NULL;
 }
 
-char* guessContentType(const char* filename)
+const char* guessContentType(const char* filename)
 {
-    char* ret;
-    int i;
-
     if (filename == NULL)
         return NULL;
     if (mimetypes_list == NULL)
         goto no_user_mimetypes;
 
-    for (i = 0; i < mimetypes_list->nitem; i++) {
+    for (int i = 0; i < mimetypes_list->nitem; i++) {
+        const char* ret;
         if ((ret = guessContentTypeFromTable(UserMimeTypes[i], filename)) != NULL)
             return ret;
     }
@@ -915,19 +731,19 @@ const char* filename_extension(const char* path, int is_url)
 }
 
 #ifdef USE_EXTERNAL_URI_LOADER
-static struct table2** urimethods;
-static struct table2 default_urimethods[] = {
+static struct KeyValue** urimethods;
+static struct KeyValue default_urimethods[] = {
     { "mailto", "file:///$LIB/w3mmail.cgi?%s" },
     { NULL, NULL }
 };
 
-static struct table2*
+static struct KeyValue*
 loadURIMethods(char* filename)
 {
     FILE* f;
     int i, n;
     Str tmp;
-    struct table2* um;
+    struct KeyValue* um;
     char *up, *p;
 
     f = fopen(expandPath(filename), "r");
@@ -940,7 +756,7 @@ loadURIMethods(char* filename)
     }
     fseek(f, 0, 0);
     n = i;
-    um = New_N(struct table2, n + 1);
+    um = New_N(struct KeyValue, n + 1);
     i = 0;
     while (tmp = Strfgets(f), tmp->length > 0) {
         if (tmp->ptr[0] == '#')
@@ -977,7 +793,7 @@ void initURIMethods(void)
         methodmap_list = make_domain_list(getRuntime()->urimethodmap_files);
     if (methodmap_list == NULL)
         return;
-    urimethods = New_N(struct table2*, (methodmap_list->nitem + 1));
+    urimethods = New_N(struct KeyValue*, (methodmap_list->nitem + 1));
     for (i = 0, tl = methodmap_list->first; tl; tl = tl->next) {
         urimethods[i] = loadURIMethods(tl->ptr);
         if (urimethods[i])
@@ -988,7 +804,7 @@ void initURIMethods(void)
 
 Str searchURIMethods(struct Url* pu)
 {
-    struct table2* ump;
+    struct KeyValue* ump;
     int i;
     Str scheme = NULL;
     Str url;
@@ -1045,7 +861,7 @@ Str searchURIMethods(struct Url* pu)
 void chkExternalURIBuffer(struct Buffer* buf)
 {
     int i;
-    struct table2* ump;
+    struct KeyValue* ump;
 
     for (i = 0; (ump = urimethods[i]) != NULL; i++) {
         for (; ump->item1 != NULL; ump++) {

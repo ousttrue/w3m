@@ -1,4 +1,5 @@
 #include "input_stream.h"
+#include "tcp_socket.h"
 #include "file.h"
 #include "local_cgi.h"
 #include "html_form.h"
@@ -19,6 +20,52 @@
 #include <unistd.h>
 #include <assert.h>
 #include <openssl/ssl.h>
+
+enum InputStreamType {
+    IST_BASIC = 0,
+    IST_FILE = 1,
+    IST_STR = 2,
+    IST_SSL = 3,
+};
+
+struct stream_buffer {
+    uint8_t* buf;
+    int size;
+    int cur;
+    int next;
+};
+
+inline static bool MUST_BE_UPDATED(struct stream_buffer* sb)
+{
+    return (sb->cur == sb->next);
+}
+
+struct io_file_handle {
+    FILE* f;
+    FileCloseFunc close;
+};
+
+struct input_stream {
+    enum InputStreamType type;
+    bool iseos;
+    bool unclose;
+    struct stream_buffer sb;
+    union {
+        int base;
+        struct io_file_handle file;
+        struct ssl_handle ssl;
+    };
+};
+
+bool is_isend(struct input_stream* is)
+{
+    return is->iseos;
+}
+
+void is_set_unclose(struct input_stream* is, bool unclose)
+{
+    is->unclose = unclose;
+}
 
 #define STREAM_BUF_SIZE 8192
 
@@ -525,7 +572,7 @@ struct UrlStream openURL(const char* url, struct Url* current,
             us.url.file = allocStr("/", -1);
         if (non_null(getRuntime()->FTP_proxy) && getRuntime()->use_proxy && us.url.host != NULL && !check_no_proxy(us.url.host)) {
             us.hr.flag |= HR_FLAG_PROXY;
-            sock = openSocket(FTP_proxy_parsed.host,
+            sock = tcp_open(FTP_proxy_parsed.host,
                 schemeNumToName(FTP_proxy_parsed.scheme),
                 FTP_proxy_parsed.port);
             if (sock < 0) {
@@ -562,12 +609,12 @@ struct UrlStream openURL(const char* url, struct Url* current,
                     return us;
                 }
             } else if (us.url.scheme == SCM_HTTPS) {
-                sock = openSocket(HTTPS_proxy_parsed.host,
+                sock = tcp_open(HTTPS_proxy_parsed.host,
                     schemeNumToName(HTTPS_proxy_parsed.scheme),
                     HTTPS_proxy_parsed.port);
                 sslh = NULL;
             } else {
-                sock = openSocket(HTTP_proxy_parsed.host,
+                sock = tcp_open(HTTP_proxy_parsed.host,
                     schemeNumToName(HTTP_proxy_parsed.scheme),
                     HTTP_proxy_parsed.port);
                 sslh = NULL;
@@ -590,7 +637,7 @@ struct UrlStream openURL(const char* url, struct Url* current,
                 us.status = HTST_NORMAL;
             }
         } else {
-            sock = openSocket(us.url.host, schemeNumToName(us.url.scheme), us.url.port);
+            sock = tcp_open(us.url.host, schemeNumToName(us.url.scheme), us.url.port);
             if (sock < 0) {
                 us.status = HTST_MISSING;
                 return us;

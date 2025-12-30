@@ -47,7 +47,6 @@ struct cookie {
 #define COO_EPORT (9) /* Port match failed (version 1' case 5) */
 #define COO_EMAX COO_EPORT
 
-extern char* FQDN(char* host);
 extern Str find_cookie(struct Url* pu);
 extern int add_cookie(struct Url* pu, Str name, Str value, time_t expires,
     Str domain, Str path, int flag, Str comment, int version,

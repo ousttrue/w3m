@@ -1,5 +1,6 @@
 #include "file.h"
 #include "backend.h"
+#include "tcp_socket.h"
 #include "input_stream.h"
 #include "frame.h"
 #include "html_builder.h"
