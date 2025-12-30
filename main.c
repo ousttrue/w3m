@@ -1024,17 +1024,17 @@ static void nscroll(int n)
     gotoLine(buf, lnum);
     arrangeLine(buf);
     if (n > 0) {
-        if (buf->doc.currentLine->bpos && buf->doc.currentLine->bwidth >= buf->doc.currentColumn + buf->visualpos)
+        if (buf->doc.currentLine->bpos && buf->doc.currentLine->bwidth >= buf->doc.currentColumn + buf->doc.visualpos)
             cursorDown(buf, 1);
         else {
-            while (buf->doc.currentLine->next && buf->doc.currentLine->next->bpos && buf->doc.currentLine->bwidth + buf->doc.currentLine->width < buf->doc.currentColumn + buf->visualpos)
+            while (buf->doc.currentLine->next && buf->doc.currentLine->next->bpos && buf->doc.currentLine->bwidth + buf->doc.currentLine->width < buf->doc.currentColumn + buf->doc.visualpos)
                 cursorDown0(buf, 1);
         }
     } else {
-        if (buf->doc.currentLine->bwidth + buf->doc.currentLine->width < buf->doc.currentColumn + buf->visualpos)
+        if (buf->doc.currentLine->bwidth + buf->doc.currentLine->width < buf->doc.currentColumn + buf->doc.visualpos)
             cursorUp(buf, 1);
         else {
-            while (buf->doc.currentLine->prev && buf->doc.currentLine->bpos && buf->doc.currentLine->bwidth >= buf->doc.currentColumn + buf->visualpos)
+            while (buf->doc.currentLine->prev && buf->doc.currentLine->bpos && buf->doc.currentLine->bwidth >= buf->doc.currentColumn + buf->doc.visualpos)
                 cursorUp0(buf, 1);
         }
     }
@@ -1334,14 +1334,14 @@ static void
 shiftvisualpos(struct Buffer* buf, int shift)
 {
     struct Line* l = buf->doc.currentLine;
-    buf->visualpos -= shift;
-    if (buf->visualpos - l->bwidth >= buf->doc.COLS)
-        buf->visualpos = l->bwidth + buf->doc.COLS - 1;
-    else if (buf->visualpos - l->bwidth < 0)
-        buf->visualpos = l->bwidth;
+    buf->doc.visualpos -= shift;
+    if (buf->doc.visualpos - l->bwidth >= buf->doc.COLS)
+        buf->doc.visualpos = l->bwidth + buf->doc.COLS - 1;
+    else if (buf->doc.visualpos - l->bwidth < 0)
+        buf->doc.visualpos = l->bwidth;
     arrangeLine(buf);
-    if (buf->visualpos - l->bwidth == -shift && buf->doc.cursorX == 0)
-        buf->visualpos = l->bwidth;
+    if (buf->doc.visualpos - l->bwidth == -shift && buf->doc.cursorX == 0)
+        buf->doc.visualpos = l->bwidth;
 }
 
 /* Shift screen left */

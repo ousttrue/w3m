@@ -65,7 +65,6 @@ struct Buffer {
     char* type;
     short bufferprop;
     int pos;
-    int visualpos;
     struct AnchorList* name;
     struct AnchorList* formitem;
     struct LinkList* linklist;
@@ -111,8 +110,8 @@ struct Buffer {
         (dstbuf)->doc.currentLine = (srcbuf)->doc.currentLine;     \
         (dstbuf)->pos = (srcbuf)->pos;                             \
         (dstbuf)->doc.cursorX = (srcbuf)->doc.cursorX;             \
-        (dstbuf)->doc.cursorY = (srcbuf)->doc.cursorY;                     \
-        (dstbuf)->visualpos = (srcbuf)->visualpos;                 \
+        (dstbuf)->doc.cursorY = (srcbuf)->doc.cursorY;             \
+        (dstbuf)->doc.visualpos = (srcbuf)->doc.visualpos;         \
         (dstbuf)->doc.currentColumn = (srcbuf)->doc.currentColumn; \
     }
 #define SAVE_BUFPOSITION(sbufp) COPY_BUFPOSITION(sbufp, Currentbuf)
