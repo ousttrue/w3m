@@ -438,7 +438,7 @@ static void put_image_kitty(const char* url, int x, int y, int w, int h, int sx,
     int sh, int cols, int rows)
 {
     Str buf, base64;
-    char *cbuf, *type, *tmpf;
+    char *cbuf, *tmpf;
     char* argv[4];
     FILE* fp;
     int c, i, j, m, t, is_anim;
@@ -451,7 +451,7 @@ static void put_image_kitty(const char* url, int x, int y, int w, int h, int sx,
     if (!url)
         return;
 
-    type = guessContentType(url);
+    const char* type = guessContentType(url);
     t = 100; /* always convert to png for now. */
 
     if (!(type && !strcasecmp(type, "image/png"))) {
@@ -757,7 +757,7 @@ showImageProgress(struct Buffer* buf)
         if (getRuntime()->enable_inline_image && n == l)
             drawImage(buf);
         message(Sprintf("%d/%d images loaded", l, n)->ptr,
-            buf->cursorX + buf->rootX, buf->cursorY + buf->rootY);
+            buf->cursorX + buf->doc.rootX, buf->cursorY + buf->rootY);
     }
 }
 

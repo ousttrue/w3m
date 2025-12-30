@@ -77,7 +77,7 @@ void disp_message_nsec(const char* s, int redraw_current, int sec, int purge, in
         return;
     }
     if (CurrentTab() != NULL && Currentbuf != NULL)
-        message(s, Currentbuf->cursorX + Currentbuf->rootX,
+        message(s, Currentbuf->cursorX + Currentbuf->doc.rootX,
             Currentbuf->cursorY + Currentbuf->rootY);
     else
         message(s, LASTLINE(), 0);

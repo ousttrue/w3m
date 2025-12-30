@@ -17,7 +17,7 @@ static int image_touch = 0;
 static bool draw_image_flag = false;
 
 static Str
-make_lastline_link(struct Buffer* buf, char* title, char* url)
+make_lastline_link(struct Buffer* buf, const char* title, const char* url)
 {
     Str s = NULL, u;
     Lineprop* pr;
@@ -76,7 +76,7 @@ make_lastline_message(struct Buffer* buf)
             s = make_lastline_link(buf, a->alt, a->url);
         else {
             struct Anchor* a = retrieveCurrentAnchor(buf);
-            char* p = NULL;
+            const char* p = NULL;
             if (a && a->title && *a->title)
                 p = a->title;
             else {
@@ -179,12 +179,12 @@ redrawLineRegion(struct Buffer* buf, struct Line* l, int i, int bpos, int epos)
             do_color(&g, pc[j]);
         if (j >= bcol && j < ecol) {
             if (rcol < column) {
-                screen_move(i, buf->rootX);
+                screen_move(i, buf->doc.rootX);
                 for (rcol = column; rcol < ncol; rcol++)
                     addChar(&g, ' ', 0);
                 continue;
             }
-            screen_move(i, rcol - column + buf->rootX);
+            screen_move(i, rcol - column + buf->doc.rootX);
             if (p[j] == '\t') {
                 for (; rcol < ncol; rcol++)
                     addChar(&g, ' ', 0);
@@ -310,7 +310,7 @@ redrawLineImage(struct Buffer* buf, struct Line* l, int i)
                     image->width = cache->width;
                     image->height = cache->height;
                 }
-                x = (int)((rcol - column + buf->rootX) * getRuntime()->pixel_per_char);
+                x = (int)((rcol - column + buf->doc.rootX) * getRuntime()->pixel_per_char);
                 y = (int)(i * getRuntime()->pixel_per_line);
                 sx = (int)((rcol - COLPOS(l, a->start.pos)) * getRuntime()->pixel_per_char);
                 sy = (int)((l->linenumber - image->y) * getRuntime()->pixel_per_line);
@@ -332,8 +332,8 @@ redrawLineImage(struct Buffer* buf, struct Line* l, int i)
                     h = image->height - sy;
                 else
                     h = (int)(getRuntime()->pixel_per_line - sy);
-                if (w > (int)((buf->rootX + buf->COLS) * getRuntime()->pixel_per_char - x))
-                    w = (int)((buf->rootX + buf->COLS) * getRuntime()->pixel_per_char - x);
+                if (w > (int)((buf->doc.rootX + buf->COLS) * getRuntime()->pixel_per_char - x))
+                    w = (int)((buf->doc.rootX + buf->COLS) * getRuntime()->pixel_per_char - x);
                 if (h > (int)(LASTLINE() * getRuntime()->pixel_per_line - y))
                     h = (int)(LASTLINE() * getRuntime()->pixel_per_line - y);
                 addImage(cache, x, y, sx, sy, w, h);
@@ -366,24 +366,24 @@ redrawLine(struct Buffer* buf, struct Line* l, int i)
     screen_move(i, 0);
     if (getRuntime()->showLineNum) {
         char tmp[16];
-        if (!buf->rootX) {
+        if (!buf->doc.rootX) {
             if (buf->doc.lastLine->real_linenumber > 0)
-                buf->rootX = (int)(log(buf->doc.lastLine->real_linenumber + 0.1)
+                buf->doc.rootX = (int)(log(buf->doc.lastLine->real_linenumber + 0.1)
                                  / log(10))
                     + 2;
-            if (buf->rootX < 5)
-                buf->rootX = 5;
-            if (buf->rootX > TTY_COLS())
-                buf->rootX = TTY_COLS();
-            buf->COLS = TTY_COLS() - buf->rootX;
+            if (buf->doc.rootX < 5)
+                buf->doc.rootX = 5;
+            if (buf->doc.rootX > TTY_COLS())
+                buf->doc.rootX = TTY_COLS();
+            buf->COLS = TTY_COLS() - buf->doc.rootX;
         }
         if (l->real_linenumber && !l->bpos)
-            sprintf(tmp, "%*ld:", buf->rootX - 1, l->real_linenumber);
+            sprintf(tmp, "%*ld:", buf->doc.rootX - 1, l->real_linenumber);
         else
-            sprintf(tmp, "%*s ", buf->rootX - 1, "");
+            sprintf(tmp, "%*s ", buf->doc.rootX - 1, "");
         screen_wc_addstr(tmp);
     }
-    screen_move(i, buf->rootX);
+    screen_move(i, buf->doc.rootX);
     if (l->width < 0)
         l->width = COLPOS(l, l->len);
     if (l->len == 0 || l->width - 1 < column) {
@@ -487,7 +487,7 @@ redrawNLine(struct Buffer* buf, int n)
 
     if (!(getRuntime()->activeImage && getRuntime()->displayImage && buf->img))
         return;
-    screen_move(buf->cursorY + buf->rootY, buf->cursorX + buf->rootX);
+    screen_move(buf->cursorY + buf->rootY, buf->cursorX + buf->doc.rootX);
     for (i = 0, l = buf->doc.topLine; i < buf->LINES && l; i++, l = l->next) {
         if (i >= buf->LINES - n || i < -n)
             redrawLineImage(buf, l, i + buf->rootY);
@@ -517,27 +517,27 @@ void displayMsg(struct Buffer* buf)
     }
     displayDelayedMessage();
     screen_standout();
-    message(msg->ptr, buf->cursorX + buf->rootX, buf->cursorY + buf->rootY);
+    message(msg->ptr, buf->cursorX + buf->doc.rootX, buf->cursorY + buf->rootY);
     screen_standend();
     term_title(conv_to_system(buf->buffername));
 }
 
 void bufferPosition(struct Buffer* buf)
 {
-    // rootX
+    // doc.rootX
     if (getRuntime()->showLineNum) {
         if (buf->doc.lastLine && buf->doc.lastLine->real_linenumber > 0)
-            buf->rootX = (int)(log(buf->doc.lastLine->real_linenumber + 0.1)
+            buf->doc.rootX = (int)(log(buf->doc.lastLine->real_linenumber + 0.1)
                              / log(10))
                 + 2;
-        if (buf->rootX < 5)
-            buf->rootX = 5;
-        if (buf->rootX > TTY_COLS())
-            buf->rootX = TTY_COLS();
+        if (buf->doc.rootX < 5)
+            buf->doc.rootX = 5;
+        if (buf->doc.rootX > TTY_COLS())
+            buf->doc.rootX = TTY_COLS();
     } else {
-        buf->rootX = 0;
+        buf->doc.rootX = 0;
     }
-    buf->COLS = TTY_COLS() - buf->rootX;
+    buf->COLS = TTY_COLS() - buf->doc.rootX;
 
     // rootY
     int ny = 0;

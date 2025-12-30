@@ -1414,7 +1414,7 @@ void popupMenu(int x, int y, struct Menu* menu)
     initSelectMenu();
     initSelTabMenu();
 
-    menu->cursorX = Currentbuf->cursorX + Currentbuf->rootX;
+    menu->cursorX = Currentbuf->cursorX + Currentbuf->doc.rootX;
     menu->cursorY = Currentbuf->cursorY + Currentbuf->rootY;
     menu->x = x + FRAME_WIDTH + 1;
     menu->y = y + 2;
@@ -1432,7 +1432,7 @@ DEFUN(mainMn, MAIN_MENU MENU, "Pop up menu")
     struct Menu* menu = &MainMenu;
     char* data;
     int n;
-    int x = Currentbuf->cursorX + Currentbuf->rootX,
+    int x = Currentbuf->cursorX + Currentbuf->doc.rootX,
         y = Currentbuf->cursorY + Currentbuf->rootY;
 
     data = searchKeyData();
@@ -1451,7 +1451,7 @@ DEFUN(mainMn, MAIN_MENU MENU, "Pop up menu")
 
 DEFUN(selMn, SELECT_MENU, "Pop up buffer-stack menu")
 {
-    int x = Currentbuf->cursorX + Currentbuf->rootX,
+    int x = Currentbuf->cursorX + Currentbuf->doc.rootX,
         y = Currentbuf->cursorY + Currentbuf->rootY;
 
     popupMenu(x, y, &SelectMenu);
@@ -1517,7 +1517,7 @@ initSelectMenu(void)
 
     new_option_menu(&SelectMenu, label, &SelectV, smChBuf);
     SelectMenu.initial = SelectV;
-    SelectMenu.cursorX = Currentbuf->cursorX + Currentbuf->rootX;
+    SelectMenu.cursorX = Currentbuf->cursorX + Currentbuf->doc.rootX;
     SelectMenu.cursorY = Currentbuf->cursorY + Currentbuf->rootY;
     SelectMenu.keymap['D'] = smDelBuf;
     SelectMenu.item[nitem].type = MENU_NOP;
@@ -1589,7 +1589,7 @@ smDelBuf(char c)
 
 DEFUN(tabMn, TAB_MENU, "Pop up tab selection menu")
 {
-    int x = Currentbuf->cursorX + Currentbuf->rootX,
+    int x = Currentbuf->cursorX + Currentbuf->doc.rootX,
         y = Currentbuf->cursorY + Currentbuf->rootY;
 
     popupMenu(x, y, &SelTabMenu);
@@ -1653,7 +1653,7 @@ initSelTabMenu(void)
 
     new_option_menu(&SelTabMenu, label, &SelTabV, smChTab);
     SelTabMenu.initial = SelTabV;
-    SelTabMenu.cursorX = Currentbuf->cursorX + Currentbuf->rootX;
+    SelTabMenu.cursorX = Currentbuf->cursorX + Currentbuf->doc.rootX;
     SelTabMenu.cursorY = Currentbuf->cursorY + Currentbuf->rootY;
     SelTabMenu.keymap['D'] = smDelTab;
     SelTabMenu.item[nitem].type = MENU_NOP;
@@ -1956,7 +1956,7 @@ link_menu(struct Buffer* buf)
     new_option_menu(&menu, label, &linkV, NULL);
 
     menu.initial = 0;
-    menu.cursorX = buf->cursorX + buf->rootX;
+    menu.cursorX = buf->cursorX + buf->doc.rootX;
     menu.cursorY = buf->cursorY + buf->rootY;
     menu.x = menu.cursorX + FRAME_WIDTH + 1;
     menu.y = menu.cursorY + 2;
@@ -2013,7 +2013,7 @@ accesskey_menu(struct Buffer* buf)
     new_option_menu(&menu, label, &key, NULL);
 
     menu.initial = 0;
-    menu.cursorX = buf->cursorX + buf->rootX;
+    menu.cursorX = buf->cursorX + buf->doc.rootX;
     menu.cursorY = buf->cursorY + buf->rootY;
     menu.x = menu.cursorX + FRAME_WIDTH + 1;
     menu.y = menu.cursorY + 2;
@@ -2123,7 +2123,7 @@ list_menu(struct Buffer* buf)
     new_option_menu(&menu, label, &key, NULL);
 
     menu.initial = 0;
-    menu.cursorX = buf->cursorX + buf->rootX;
+    menu.cursorX = buf->cursorX + buf->doc.rootX;
     menu.cursorY = buf->cursorY + buf->rootY;
     menu.x = menu.cursorX + FRAME_WIDTH + 1;
     menu.y = menu.cursorY + 2;

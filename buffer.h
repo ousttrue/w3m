@@ -69,7 +69,6 @@ struct Buffer {
     short cursorY;
     int pos;
     int visualpos;
-    short rootX;
     short rootY;
     short COLS;
     short LINES;
@@ -107,23 +106,23 @@ struct Buffer {
     struct _AlarmEvent* event;
 };
 
-#define COPY_BUFROOT(dstbuf, srcbuf)       \
-    {                                      \
-        (dstbuf)->rootX = (srcbuf)->rootX; \
-        (dstbuf)->rootY = (srcbuf)->rootY; \
-        (dstbuf)->COLS = (srcbuf)->COLS;   \
-        (dstbuf)->LINES = (srcbuf)->LINES; \
+#define COPY_BUFROOT(dstbuf, srcbuf)               \
+    {                                              \
+        (dstbuf)->doc.rootX = (srcbuf)->doc.rootX; \
+        (dstbuf)->rootY = (srcbuf)->rootY;         \
+        (dstbuf)->COLS = (srcbuf)->COLS;           \
+        (dstbuf)->LINES = (srcbuf)->LINES;         \
     }
 
-#define COPY_BUFPOSITION(dstbuf, srcbuf)                   \
-    {                                                      \
-        (dstbuf)->doc.topLine = (srcbuf)->doc.topLine;             \
-        (dstbuf)->doc.currentLine = (srcbuf)->doc.currentLine;     \
-        (dstbuf)->pos = (srcbuf)->pos;                     \
-        (dstbuf)->cursorX = (srcbuf)->cursorX;             \
-        (dstbuf)->cursorY = (srcbuf)->cursorY;             \
-        (dstbuf)->visualpos = (srcbuf)->visualpos;         \
-        (dstbuf)->currentColumn = (srcbuf)->currentColumn; \
+#define COPY_BUFPOSITION(dstbuf, srcbuf)                       \
+    {                                                          \
+        (dstbuf)->doc.topLine = (srcbuf)->doc.topLine;         \
+        (dstbuf)->doc.currentLine = (srcbuf)->doc.currentLine; \
+        (dstbuf)->pos = (srcbuf)->pos;                         \
+        (dstbuf)->cursorX = (srcbuf)->cursorX;                 \
+        (dstbuf)->cursorY = (srcbuf)->cursorY;                 \
+        (dstbuf)->visualpos = (srcbuf)->visualpos;             \
+        (dstbuf)->currentColumn = (srcbuf)->currentColumn;     \
     }
 #define SAVE_BUFPOSITION(sbufp) COPY_BUFPOSITION(sbufp, Currentbuf)
 #define RESTORE_BUFPOSITION(sbufp) COPY_BUFPOSITION(Currentbuf, sbufp)
@@ -178,4 +177,3 @@ extern struct Buffer* selectBuffer(struct Buffer* firstbuf, struct Buffer* curre
 extern void copyBuffer(struct Buffer* a, struct Buffer* b);
 extern struct Buffer* prevBuffer(struct Buffer* first, struct Buffer* buf);
 extern int writeBufferCache(struct Buffer* buf);
-

@@ -3034,7 +3034,7 @@ void follow_map(struct parsed_tagarg* arg)
     struct Url p_url;
 
     an = retrieveCurrentImg(Currentbuf);
-    x = Currentbuf->cursorX + Currentbuf->rootX;
+    x = Currentbuf->cursorX + Currentbuf->doc.rootX;
     y = Currentbuf->cursorY + Currentbuf->rootY;
     struct MapArea* a = follow_map_menu(Currentbuf, name, an, x, y);
     if (a == NULL || a->url == NULL || *(a->url) == '\0') {
