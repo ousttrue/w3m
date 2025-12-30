@@ -1886,7 +1886,7 @@ int setMenuItem(struct MenuItem* item, const char* type, const char* line)
     return -1; /* error */
 }
 
-int addMenuList(MenuList** mlist, char* id)
+int addMenuList(MenuList** mlist, const char* id)
 {
     int n;
     MenuList* list = *mlist;
@@ -1921,7 +1921,7 @@ link_menu(struct Buffer* buf)
     struct Menu menu;
     struct LinkList* l;
     int i, nitem, len = 0, linkV = -1;
-    char** label;
+    const char** label;
     Str str;
     char* p;
 
@@ -1978,7 +1978,7 @@ struct Anchor*
 accesskey_menu(struct Buffer* buf)
 {
     struct Menu menu;
-    struct AnchorList* al = buf->href;
+    struct AnchorList* al = buf->doc.href;
     struct Anchor* a;
     struct Anchor** ap;
     int i, n, nitem = 0, key = -1;
@@ -2078,7 +2078,7 @@ lmSelect(char c)
 struct Anchor*
 list_menu(struct Buffer* buf)
 {
-    struct AnchorList* al = buf->href;
+    struct AnchorList* al = buf->doc.href;
     if (!al)
         return NULL;
 

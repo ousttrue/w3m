@@ -885,12 +885,12 @@ do_dump(struct Buffer* buf)
     if (getRuntime()->w3m_dump == DUMP_BUFFER) {
         int i;
         saveBuffer(buf, stdout, FALSE);
-        if (getRuntime()->displayLinkNumber && buf->href) {
-            int nanchor = buf->href->nanchor;
+        if (getRuntime()->displayLinkNumber && buf->doc.href) {
+            int nanchor = buf->doc.href->nanchor;
             printf("\nReferences:\n\n");
-            struct Anchor** in_order = New_N(struct Anchor*, buf->href->nanchor);
+            struct Anchor** in_order = New_N(struct Anchor*, buf->doc.href->nanchor);
             for (i = 0; i < nanchor; i++)
-                in_order[i] = buf->href->anchors + i;
+                in_order[i] = buf->doc.href->anchors + i;
             qsort(in_order, nanchor, sizeof(struct Anchor*), cmp_anchor_hseq);
             for (i = 0; i < nanchor; i++) {
                 struct Url pu;
@@ -2351,7 +2351,7 @@ DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink")
         if (hseq >= hl->nmark)
             return;
         po = hl->marks + hseq;
-        an = retrieveAnchor(Currentbuf->href, po->line, po->pos);
+        an = retrieveAnchor(Currentbuf->doc.href, po->line, po->pos);
         if (an == NULL)
             an = retrieveAnchor(Currentbuf->formitem, po->line, po->pos);
         hseq++;
@@ -2386,7 +2386,7 @@ DEFUN(lastA, LINK_END, "Move to the last hyperlink")
         if (hseq < 0)
             return;
         po = hl->marks + hseq;
-        an = retrieveAnchor(Currentbuf->href, po->line, po->pos);
+        an = retrieveAnchor(Currentbuf->doc.href, po->line, po->pos);
         if (an == NULL)
             an = retrieveAnchor(Currentbuf->formitem, po->line, po->pos);
         hseq--;
@@ -2414,7 +2414,7 @@ DEFUN(nthA, LINK_N, "Go to the nth link")
         return;
 
     po = hl->marks + n - 1;
-    an = retrieveAnchor(Currentbuf->href, po->line, po->pos);
+    an = retrieveAnchor(Currentbuf->doc.href, po->line, po->pos);
     if (an == NULL)
         an = retrieveAnchor(Currentbuf->formitem, po->line, po->pos);
     if (an == NULL)
@@ -2487,7 +2487,7 @@ _nextA(int visited)
                     goto _end;
                 }
                 po = &hl->marks[hseq];
-                an = retrieveAnchor(Currentbuf->href, po->line, po->pos);
+                an = retrieveAnchor(Currentbuf->doc.href, po->line, po->pos);
                 if (visited != TRUE && an == NULL)
                     an = retrieveAnchor(Currentbuf->formitem, po->line,
                         po->pos);
@@ -2500,7 +2500,7 @@ _nextA(int visited)
                 }
             } while (an == NULL || an == pan);
         } else {
-            an = closest_next_anchor(Currentbuf->href, NULL, x, y);
+            an = closest_next_anchor(Currentbuf->doc.href, NULL, x, y);
             if (visited != TRUE)
                 an = closest_next_anchor(Currentbuf->formitem, an, x, y);
             if (an == NULL) {
@@ -2569,7 +2569,7 @@ _prevA(int visited)
                     goto _end;
                 }
                 po = hl->marks + hseq;
-                an = retrieveAnchor(Currentbuf->href, po->line, po->pos);
+                an = retrieveAnchor(Currentbuf->doc.href, po->line, po->pos);
                 if (visited != TRUE && an == NULL)
                     an = retrieveAnchor(Currentbuf->formitem, po->line,
                         po->pos);
@@ -2582,7 +2582,7 @@ _prevA(int visited)
                 }
             } while (an == NULL || an == pan);
         } else {
-            an = closest_prev_anchor(Currentbuf->href, NULL, x, y);
+            an = closest_prev_anchor(Currentbuf->doc.href, NULL, x, y);
             if (visited != TRUE)
                 an = closest_prev_anchor(Currentbuf->formitem, an, x, y);
             if (an == NULL) {
@@ -2641,7 +2641,7 @@ nextX(int d, int dy)
         an = NULL;
         while (1) {
             for (; x >= 0 && x < l->len; x += d) {
-                an = retrieveAnchor(Currentbuf->href, y, x);
+                an = retrieveAnchor(Currentbuf->doc.href, y, x);
                 if (!an)
                     an = retrieveAnchor(Currentbuf->formitem, y, x);
                 if (an) {
@@ -2695,7 +2695,7 @@ nextY(int d)
             hseq = abs(an->hseq);
         an = NULL;
         for (; y >= 0 && y <= Currentbuf->doc.lastLine->linenumber; y += d) {
-            an = retrieveAnchor(Currentbuf->href, y, x);
+            an = retrieveAnchor(Currentbuf->doc.href, y, x);
             if (!an)
                 an = retrieveAnchor(Currentbuf->formitem, y, x);
             if (an && hseq != abs(an->hseq)) {
@@ -3084,7 +3084,7 @@ DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
 static void
 anchorMn(BufferMenuFunc menu_func, bool go)
 {
-    if (!Currentbuf->href || !Currentbuf->hmarklist)
+    if (!Currentbuf->doc.href || !Currentbuf->hmarklist)
         return;
 
     struct Anchor* a = menu_func(Currentbuf);

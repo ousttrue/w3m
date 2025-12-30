@@ -161,7 +161,7 @@ redrawLineRegion(struct Buffer* buf, struct Line* l, int i, int bpos, int epos)
 
     for (j = 0; rcol - column < buf->doc.COLS && pos + j < l->len; j += delta) {
         if (getRuntime()->useVisitedColor && vpos <= pos + j && !(pr[j] & PE_VISITED)) {
-            a = retrieveAnchor(buf->href, l->linenumber, pos + j);
+            a = retrieveAnchor(buf->doc.href, l->linenumber, pos + j);
             if (a) {
                 parseURL2(a->url, &url, baseURL(buf));
                 if (getHashHist(getRuntime()->URLHist, parsedURL2Str(&url)->ptr)) {
@@ -252,7 +252,7 @@ void drawAnchorCursor(struct Buffer* buf)
 
     if (!buf->doc.firstLine || !buf->hmarklist)
         return;
-    if (!buf->href && !buf->formitem)
+    if (!buf->doc.href && !buf->formitem)
         return;
 
     an = retrieveCurrentAnchor(buf);
@@ -266,9 +266,9 @@ void drawAnchorCursor(struct Buffer* buf)
     eline = tline + buf->doc.LINES;
     prevhseq = buf->hmarklist->prevhseq;
 
-    if (buf->href) {
-        drawAnchorCursor0(buf, buf->href, hseq, prevhseq, tline, eline, 1);
-        drawAnchorCursor0(buf, buf->href, hseq, -1, tline, eline, 0);
+    if (buf->doc.href) {
+        drawAnchorCursor0(buf, buf->doc.href, hseq, prevhseq, tline, eline, 1);
+        drawAnchorCursor0(buf, buf->doc.href, hseq, -1, tline, eline, 0);
     }
     if (buf->formitem) {
         drawAnchorCursor0(buf, buf->formitem, hseq, prevhseq, tline, eline, 1);
@@ -402,7 +402,7 @@ redrawLine(struct Buffer* buf, struct Document* doc, struct Line* l, int i)
 
     for (j = 0; rcol - column < doc->COLS && pos + j < l->len; j += delta) {
         if (getRuntime()->useVisitedColor && vpos <= pos + j && !(pr[j] & PE_VISITED)) {
-            a = retrieveAnchor(buf->href, l->linenumber, pos + j);
+            a = retrieveAnchor(buf->doc.href, l->linenumber, pos + j);
             if (a) {
                 parseURL2(a->url, &url, baseURL(buf));
                 if (getHashHist(getRuntime()->URLHist, parsedURL2Str(&url)->ptr)) {

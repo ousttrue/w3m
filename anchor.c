@@ -71,7 +71,7 @@ registerHref(struct Buffer* buf, const char* url, const char* target, const char
     unsigned char key, int line, int pos)
 {
     struct Anchor* a;
-    buf->href = putAnchor(buf->href, url, target, &a, referer, title, key,
+    buf->doc.href = putAnchor(buf->doc.href, url, target, &a, referer, title, key,
         line, pos);
     return a;
 }
@@ -156,7 +156,7 @@ retrieveCurrentAnchor(struct Buffer* buf)
 {
     if (buf->doc.currentLine == NULL)
         return NULL;
-    return retrieveAnchor(buf->href, buf->doc.currentLine->linenumber, buf->pos);
+    return retrieveAnchor(buf->doc.href, buf->doc.currentLine->linenumber, buf->pos);
 }
 
 struct Anchor*
@@ -255,12 +255,12 @@ reseq_anchor(struct Buffer* buf)
     struct Anchor *a, *a1;
     struct HmarkerList* ml = NULL;
 
-    if (!buf->href)
+    if (!buf->doc.href)
         return;
 
     n = nmark;
-    for (i = 0; i < buf->href->nanchor; i++) {
-        a = &buf->href->anchors[i];
+    for (i = 0; i < buf->doc.href->nanchor; i++) {
+        a = &buf->doc.href->anchors[i];
         if (a->hseq == -2)
             n++;
     }
@@ -274,11 +274,11 @@ reseq_anchor(struct Buffer* buf)
         seqmap[i] = i;
 
     n = nmark;
-    for (i = 0; i < buf->href->nanchor; i++) {
-        a = &buf->href->anchors[i];
+    for (i = 0; i < buf->doc.href->nanchor; i++) {
+        a = &buf->doc.href->anchors[i];
         if (a->hseq == -2) {
             a->hseq = n;
-            a1 = closest_next_anchor(buf->href, NULL, a->start.pos,
+            a1 = closest_next_anchor(buf->doc.href, NULL, a->start.pos,
                 a->start.line);
             a1 = closest_next_anchor(buf->formitem, a1, a->start.pos,
                 a->start.line);
@@ -298,7 +298,7 @@ reseq_anchor(struct Buffer* buf)
     }
     buf->hmarklist = ml;
 
-    reseq_anchor0(buf->href, seqmap);
+    reseq_anchor0(buf->doc.href, seqmap);
     reseq_anchor0(buf->formitem, seqmap);
 }
 
@@ -579,7 +579,7 @@ void addMultirowsImg(struct Buffer* buf, struct AnchorList* al)
             if (!ls)
                 continue;
         }
-        a = retrieveAnchor(buf->href, a_img.start.line, a_img.start.pos);
+        a = retrieveAnchor(buf->doc.href, a_img.start.line, a_img.start.pos);
         if (a)
             a_href = *a;
         else
@@ -731,7 +731,7 @@ link_list_panel(struct Buffer* buf)
     Str tmp = Strnew_charp("<title>Link List</title>\
 <h1 align=center>Link List</h1>\n");
 
-    if (buf->bufferprop & BP_INTERNAL || (buf->linklist == NULL && buf->href == NULL && buf->img == NULL)) {
+    if (buf->bufferprop & BP_INTERNAL || (buf->linklist == NULL && buf->doc.href == NULL && buf->img == NULL)) {
         return NULL;
     }
 
@@ -762,9 +762,9 @@ link_list_panel(struct Buffer* buf)
         Strcat_charp(tmp, "</ol>\n");
     }
 
-    if (buf->href) {
+    if (buf->doc.href) {
         Strcat_charp(tmp, "<hr><h2>Anchors</h2>\n<ol>\n");
-        al = buf->href;
+        al = buf->doc.href;
         for (i = 0; i < al->nanchor; i++) {
             a = &al->anchors[i];
             if (a->hseq < 0 || a->slave)

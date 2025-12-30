@@ -68,7 +68,6 @@ struct Buffer {
     short cursorY;
     int pos;
     int visualpos;
-    struct AnchorList* href;
     struct AnchorList* name;
     struct AnchorList* img;
     struct AnchorList* formitem;

@@ -516,7 +516,7 @@ void reshapeBuffer(struct Buffer* buf)
         buf->frameset = popFrameTree(&(buf->frameQ));
     }
 
-    buf->href = NULL;
+    buf->doc.href = NULL;
     buf->name = NULL;
     buf->img = NULL;
     buf->formitem = NULL;

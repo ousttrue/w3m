@@ -448,7 +448,7 @@ void formUpdateBuffer(struct Anchor* a, struct Buffer* buf, struct FormItemList*
                 rows > 1,
                 form->type == FORM_INPUT_PASSWORD);
             if (pos != epos) {
-                shiftAnchorPosition(buf->href, buf->hmarklist,
+                shiftAnchorPosition(buf->doc.href, buf->hmarklist,
                     a->start.line, spos, pos - epos);
                 shiftAnchorPosition(buf->name, buf->hmarklist,
                     a->start.line, spos, pos - epos);

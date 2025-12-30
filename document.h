@@ -2,6 +2,7 @@
 #include "line.h"
 #include <stdbool.h>
 
+struct AnchorList;
 struct Document {
     //
     // lines
@@ -16,6 +17,11 @@ struct Document {
     int allLine;
     // cursor position
     int currentColumn;
+
+    //
+    // anchors
+    //
+    struct AnchorList* href;
 
     //
     // screen
