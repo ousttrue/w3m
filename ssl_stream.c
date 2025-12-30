@@ -355,20 +355,13 @@ SSL* openSSLHandle(int sock, const char* hostname, const char** p_cert)
 {
     SSL* handle = NULL;
     static const char* old_ssl_forbid_method = NULL;
-#ifdef USE_SSL_VERIFY
     static int old_ssl_verify_server = -1;
-#endif
 
     if (old_ssl_forbid_method != getRuntime()->ssl_forbid_method
         && (!old_ssl_forbid_method || !getRuntime()->ssl_forbid_method || strcmp(old_ssl_forbid_method, getRuntime()->ssl_forbid_method))) {
         old_ssl_forbid_method = getRuntime()->ssl_forbid_method;
-#ifdef USE_SSL_VERIFY
         getRuntime()->ssl_path_modified = 1;
-#else
-        free_ssl_ctx();
-#endif
     }
-#ifdef USE_SSL_VERIFY
     if (old_ssl_verify_server != getRuntime()->ssl_verify_server) {
         old_ssl_verify_server = getRuntime()->ssl_verify_server;
         getRuntime()->ssl_path_modified = 1;
@@ -377,7 +370,6 @@ SSL* openSSLHandle(int sock, const char* hostname, const char** p_cert)
         free_ssl_ctx();
         getRuntime()->ssl_path_modified = 0;
     }
-#endif /* defined(USE_SSL_VERIFY) */
     if (ssl_ctx == NULL) {
         int option;
 #if OPENSSL_VERSION_NUMBER < 0x0800
@@ -442,14 +434,8 @@ SSL* openSSLHandle(int sock, const char* hostname, const char** p_cert)
         SSL_CTX_set_mode(ssl_ctx, SSL_MODE_RELEASE_BUFFERS);
 #endif
 
-#ifdef USE_SSL_VERIFY
         /* derived from openssl-0.9.5/apps/s_{client,cb}.c */
-#if 1 /* use SSL_get_verify_result() to verify cert */
         SSL_CTX_set_verify(ssl_ctx, SSL_VERIFY_NONE, NULL);
-#else
-        SSL_CTX_set_verify(ssl_ctx,
-            ssl_verify_server ? SSL_VERIFY_PEER : SSL_VERIFY_NONE, NULL);
-#endif
         if (getRuntime()->ssl_cert_file != NULL && *getRuntime()->ssl_cert_file != '\0') {
             int ng = 1;
             if (SSL_CTX_use_certificate_file(ssl_ctx, getRuntime()->ssl_cert_file, SSL_FILETYPE_PEM) > 0) {
@@ -480,7 +466,7 @@ SSL* openSSLHandle(int sock, const char* hostname, const char** p_cert)
             if (getRuntime()->ssl_ca_default)
                 SSL_CTX_set_default_verify_paths(ssl_ctx);
         }
-#endif /* defined(USE_SSL_VERIFY) */
+
 #endif /* SSLEAY_VERSION_NUMBER >= 0x0800 */
     }
     handle = SSL_new(ssl_ctx);
