@@ -1,5 +1,6 @@
 #pragma once
 #include "line.h"
+#include "image.h"
 #include <stdbool.h>
 
 struct AnchorList;
@@ -23,6 +24,7 @@ struct Document {
     //
     struct AnchorList* href;
     struct AnchorList* img;
+    enum ImageGetFlags image_flag;
 
     //
     // screen

@@ -908,7 +908,7 @@ void loadImage(struct Buffer* buf, int flag)
 }
 
 struct ImageCache*
-getImage(struct Image* image, struct Url* current, int flag)
+getImage(struct Image* image, struct Url* current, enum ImageGetFlags flag)
 {
     Str key = NULL;
     struct ImageCache* cache;

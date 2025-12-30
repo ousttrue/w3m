@@ -7,9 +7,6 @@
 #define INLINE_IMG_ITERM2 3
 #define INLINE_IMG_KITTY 4
 
-#define IMG_FLAG_SKIP 1
-#define IMG_FLAG_AUTO 2
-
 #define IMG_FLAG_UNLOADED 0
 #define IMG_FLAG_LOADED 1
 #define IMG_FLAG_ERROR 2
@@ -69,5 +66,10 @@ extern void deleteImage(struct Buffer* buf);
 #define IMG_FLAG_NEXT 2
 extern void loadImage(struct Buffer* buf, int flag);
 
-struct ImageCache* getImage(struct Image* image, struct Url* current, int flag);
+enum ImageGetFlags {
+    IMG_FLAG_SKIP = 1,
+    IMG_FLAG_AUTO = 2,
+};
+struct ImageCache* getImage(struct Image* image, struct Url* current, enum ImageGetFlags flag);
+
 int getImageSize(struct ImageCache* cache);

@@ -5669,7 +5669,6 @@ void loadHTMLstream(struct input_stream* stream,
     enum wc_ces charset = WC_CES_US_ASCII;
     struct html_feed_environ htmlenv1;
     struct readbuffer obuf;
-    int volatile image_flag;
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
 
     if (fmInitialized() && graph_ok()) {
@@ -5690,12 +5689,12 @@ void loadHTMLstream(struct input_stream* stream,
     hb->forms = NULL;
     hb->cur_hseq = 1;
     hb->cur_iseq = 1;
-    if (newBuf->image_flag)
-        image_flag = newBuf->image_flag;
+
+    enum ImageGetFlags image_flag= IMG_FLAG_SKIP;
+    if (newBuf->doc.image_flag)
+        image_flag = newBuf->doc.image_flag;
     else if (getRuntime()->activeImage && getRuntime()->displayImage && getRuntime()->autoImage)
         image_flag = IMG_FLAG_AUTO;
-    else
-        image_flag = IMG_FLAG_SKIP;
 
     if (getRuntime()->w3m_halfload) {
         newBuf->buffername = "---";
@@ -5787,7 +5786,7 @@ phase2:
     TRAP_OFF;
     if (!(newBuf->bufferprop & BP_FRAME))
         newBuf->document_charset = charset;
-    newBuf->image_flag = image_flag;
+    newBuf->doc.image_flag = image_flag;
     HTMLlineproc2(hb, newBuf, htmlenv1.buf);
 
     newBuf->doc.topLine = newBuf->doc.firstLine;
@@ -5959,7 +5958,7 @@ image_buffer:
     newBuf->doc.topLine = newBuf->doc.firstLine;
     newBuf->doc.lastLine = newBuf->doc.currentLine;
     newBuf->doc.currentLine = newBuf->doc.firstLine;
-    newBuf->image_flag = IMG_FLAG_AUTO;
+    newBuf->doc.image_flag = IMG_FLAG_AUTO;
     return newBuf;
 }
 

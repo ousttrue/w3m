@@ -3766,7 +3766,7 @@ DEFUN(dispI, DISPLAY_IMAGE, "Restart loading and drawing of images")
      * if (!(Currentbuf->type && is_html_type(Currentbuf->type)))
      * return;
      */
-    Currentbuf->image_flag = IMG_FLAG_AUTO;
+    Currentbuf->doc.image_flag = IMG_FLAG_AUTO;
 }
 
 DEFUN(stopI, STOP_IMAGE, "Stop loading and drawing of images")
@@ -3777,7 +3777,7 @@ DEFUN(stopI, STOP_IMAGE, "Stop loading and drawing of images")
      * if (!(Currentbuf->type && is_html_type(Currentbuf->type)))
      * return;
      */
-    Currentbuf->image_flag = IMG_FLAG_SKIP;
+    Currentbuf->doc.image_flag = IMG_FLAG_SKIP;
 }
 
 DEFUN(dispVer, VERSION, "Display the version of w3m")

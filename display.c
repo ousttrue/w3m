@@ -279,7 +279,7 @@ void drawAnchorCursor(struct Buffer* buf)
 }
 
 static struct Line*
-redrawLineImage(struct Buffer* buf, struct Document *doc, struct Line* l, int i)
+redrawLineImage(struct Document* doc, struct Line* l, int i, struct Url* base_url)
 {
     int j, pos, rcol;
     int column = doc->currentColumn;
@@ -299,13 +299,11 @@ redrawLineImage(struct Buffer* buf, struct Document *doc, struct Line* l, int i)
             rcol = COLPOS(l, pos + j + 1);
             continue;
         }
-        a = retrieveAnchor(buf->doc.img, l->linenumber, pos + j);
+        a = retrieveAnchor(doc->img, l->linenumber, pos + j);
         if (a && a->image && a->image->touch < image_touch) {
             struct Image* image = a->image;
-            struct ImageCache* cache;
-
-            cache = image->cache = getImage(image, baseURL(buf),
-                buf->image_flag);
+            image->cache = getImage(image, base_url, doc->image_flag);
+            struct ImageCache* cache = image->cache;
             if (cache) {
                 if ((image->width < 0 && cache->width > 0) || (image->height < 0 && cache->height > 0)) {
                     image->width = cache->width;
@@ -400,7 +398,7 @@ redrawNLine(struct Buffer* buf, int n)
     screen_move(buf->doc.cursorY + buf->doc.rootY, buf->doc.cursorX + buf->doc.rootX);
     for (i = 0, l = buf->doc.topLine; i < buf->doc.LINES && l; i++, l = l->next) {
         if (i >= buf->doc.LINES - n || i < -n)
-            redrawLineImage(buf, &buf->doc, l, i + buf->doc.rootY);
+            redrawLineImage(&buf->doc, l, i + buf->doc.rootY, baseURL(buf));
     }
 }
 
