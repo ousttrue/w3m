@@ -41,7 +41,7 @@ int columnSkip(struct Buffer* buf, int offset)
 {
     int i, maxColumn;
     int column = buf->currentColumn + offset;
-    int nlines = buf->LINES + 1;
+    int nlines = buf->doc.LINES + 1;
     struct Line* l;
 
     maxColumn = 0;
@@ -70,7 +70,7 @@ struct Line* lineSkip(struct Buffer* buf, struct Line* line, int offset, int las
 
     l = currentLineSkip(buf, line, offset, last);
     if (!getRuntime()->nextpage_topline)
-        for (i = buf->LINES - 1 - (buf->doc.lastLine->linenumber - l->linenumber);
+        for (i = buf->doc.LINES - 1 - (buf->doc.lastLine->linenumber - l->linenumber);
             i > 0 && l->prev != NULL; i--, l = l->prev)
             ;
     return l;

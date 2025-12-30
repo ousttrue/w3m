@@ -69,7 +69,6 @@ struct Buffer {
     short cursorY;
     int pos;
     int visualpos;
-    short LINES;
     struct AnchorList* href;
     struct AnchorList* name;
     struct AnchorList* img;
@@ -109,7 +108,7 @@ struct Buffer {
         (dstbuf)->doc.rootX = (srcbuf)->doc.rootX; \
         (dstbuf)->doc.rootY = (srcbuf)->doc.rootY; \
         (dstbuf)->doc.COLS = (srcbuf)->doc.COLS;   \
-        (dstbuf)->LINES = (srcbuf)->LINES;         \
+        (dstbuf)->doc.LINES = (srcbuf)->doc.LINES; \
     }
 
 #define COPY_BUFPOSITION(dstbuf, srcbuf)                       \

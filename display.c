@@ -263,7 +263,7 @@ void drawAnchorCursor(struct Buffer* buf)
     else
         hseq = -1;
     tline = buf->doc.topLine->linenumber;
-    eline = tline + buf->LINES;
+    eline = tline + buf->doc.LINES;
     prevhseq = buf->hmarklist->prevhseq;
 
     if (buf->href) {
@@ -369,7 +369,7 @@ redrawLine(struct Buffer* buf, struct Line* l, int i)
         if (!buf->doc.rootX) {
             if (buf->doc.lastLine->real_linenumber > 0)
                 buf->doc.rootX = (int)(log(buf->doc.lastLine->real_linenumber + 0.1)
-                                 / log(10))
+                                     / log(10))
                     + 2;
             if (buf->doc.rootX < 5)
                 buf->doc.rootX = 5;
@@ -474,8 +474,8 @@ redrawNLine(struct Buffer* buf, int n)
         for (i = 0; i < TTY_COLS(); i++)
             screen_addch('~', 1);
     }
-    for (i = 0, l = buf->doc.topLine; i < buf->LINES; i++, l = l->next) {
-        if (i >= buf->LINES - n || i < -n)
+    for (i = 0, l = buf->doc.topLine; i < buf->doc.LINES; i++, l = l->next) {
+        if (i >= buf->doc.LINES - n || i < -n)
             l = redrawLine(buf, l, i + buf->doc.rootY);
         if (l == NULL)
             break;
@@ -488,8 +488,8 @@ redrawNLine(struct Buffer* buf, int n)
     if (!(getRuntime()->activeImage && getRuntime()->displayImage && buf->img))
         return;
     screen_move(buf->cursorY + buf->doc.rootY, buf->cursorX + buf->doc.rootX);
-    for (i = 0, l = buf->doc.topLine; i < buf->LINES && l; i++, l = l->next) {
-        if (i >= buf->LINES - n || i < -n)
+    for (i = 0, l = buf->doc.topLine; i < buf->doc.LINES && l; i++, l = l->next) {
+        if (i >= buf->doc.LINES - n || i < -n)
             redrawLineImage(buf, l, i + buf->doc.rootY);
     }
 }
@@ -528,7 +528,7 @@ void bufferPosition(struct Buffer* buf)
     if (getRuntime()->showLineNum) {
         if (buf->doc.lastLine && buf->doc.lastLine->real_linenumber > 0)
             buf->doc.rootX = (int)(log(buf->doc.lastLine->real_linenumber + 0.1)
-                             / log(10))
+                                 / log(10))
                 + 2;
         if (buf->doc.rootX < 5)
             buf->doc.rootX = 5;
@@ -547,9 +547,9 @@ void bufferPosition(struct Buffer* buf)
         if (ny > LASTLINE())
             ny = LASTLINE();
     }
-    if (buf->doc.rootY != ny || buf->LINES != LASTLINE() - ny) {
+    if (buf->doc.rootY != ny || buf->doc.LINES != LASTLINE() - ny) {
         buf->doc.rootY = ny;
-        buf->LINES = LASTLINE() - ny;
+        buf->doc.LINES = LASTLINE() - ny;
         arrangeCursor(buf);
     }
 }

@@ -1011,7 +1011,7 @@ static void nscroll(int n)
             lnum = buf->doc.lastLine->linenumber;
     } else {
         tlnum = buf->doc.topLine->linenumber;
-        llnum = buf->doc.topLine->linenumber + buf->LINES - 1;
+        llnum = buf->doc.topLine->linenumber + buf->doc.LINES - 1;
         if (getRuntime()->nextpage_topline)
             diff_n = 0;
         else
@@ -1044,30 +1044,30 @@ static void nscroll(int n)
 DEFUN(pgFore, NEXT_PAGE, "Scroll down one page")
 {
     if (getRuntime()->vi_prec_num)
-        nscroll(searchKeyNum() * (Currentbuf->LINES - 1));
+        nscroll(searchKeyNum() * (Currentbuf->doc.LINES - 1));
     else
-        nscroll(getRuntime()->prec_num ? searchKeyNum() : searchKeyNum() * (Currentbuf->LINES - 1));
+        nscroll(getRuntime()->prec_num ? searchKeyNum() : searchKeyNum() * (Currentbuf->doc.LINES - 1));
 }
 
 /* Move page backward */
 DEFUN(pgBack, PREV_PAGE, "Scroll up one page")
 {
     if (getRuntime()->vi_prec_num)
-        nscroll(-searchKeyNum() * (Currentbuf->LINES - 1));
+        nscroll(-searchKeyNum() * (Currentbuf->doc.LINES - 1));
     else
-        nscroll(-(getRuntime()->prec_num ? searchKeyNum() : searchKeyNum() * (Currentbuf->LINES - 1)));
+        nscroll(-(getRuntime()->prec_num ? searchKeyNum() : searchKeyNum() * (Currentbuf->doc.LINES - 1)));
 }
 
 /* Move half page forward */
 DEFUN(hpgFore, NEXT_HALF_PAGE, "Scroll down half a page")
 {
-    nscroll(searchKeyNum() * (Currentbuf->LINES / 2 - 1));
+    nscroll(searchKeyNum() * (Currentbuf->doc.LINES / 2 - 1));
 }
 
 /* Move half page backward */
 DEFUN(hpgBack, PREV_HALF_PAGE, "Scroll up half a page")
 {
-    nscroll(-searchKeyNum() * (Currentbuf->LINES / 2 - 1));
+    nscroll(-searchKeyNum() * (Currentbuf->doc.LINES / 2 - 1));
 }
 
 /* 1 line up */
@@ -1087,7 +1087,7 @@ DEFUN(ctrCsrV, CENTER_V, "Center on cursor line")
 {
     if (Currentbuf->doc.firstLine == NULL)
         return;
-    int offsety = /*Currentbuf->LINES / 2*/ -Currentbuf->cursorY;
+    int offsety = /*Currentbuf->doc.LINES / 2*/ -Currentbuf->cursorY;
     if (offsety != 0) {
         Currentbuf->doc.topLine = lineSkip(Currentbuf, Currentbuf->doc.topLine, -offsety, FALSE);
         arrangeLine(Currentbuf);
@@ -1673,7 +1673,7 @@ _movD(int n)
 
 DEFUN(movD, MOVE_DOWN, "Cursor down")
 {
-    _movD((Currentbuf->LINES + 1) / 2);
+    _movD((Currentbuf->doc.LINES + 1) / 2);
 }
 
 DEFUN(movD1, MOVE_DOWN1, "Cursor down. With edge touched, slide")
@@ -1694,7 +1694,7 @@ _movU(int n)
 
 DEFUN(movU, MOVE_UP, "Cursor up")
 {
-    _movU((Currentbuf->LINES + 1) / 2);
+    _movU((Currentbuf->doc.LINES + 1) / 2);
 }
 
 DEFUN(movU1, MOVE_UP1, "Cursor up. With edge touched, slide")
@@ -1966,7 +1966,7 @@ _goLine(char* l)
         Currentbuf->doc.topLine = Currentbuf->doc.currentLine = Currentbuf->doc.firstLine;
     } else if (*l == '$') {
         Currentbuf->doc.topLine = lineSkip(Currentbuf, Currentbuf->doc.lastLine,
-            -(Currentbuf->LINES + 1) / 2, TRUE);
+            -(Currentbuf->doc.LINES + 1) / 2, TRUE);
         Currentbuf->doc.currentLine = Currentbuf->doc.lastLine;
     } else
         gotoRealLine(Currentbuf, atoi(l));
@@ -4376,7 +4376,7 @@ DEFUN(cursorMiddle, CURSOR_MIDDLE, "Move cursor to the middle of the screen")
     int offsety;
     if (Currentbuf->doc.firstLine == NULL)
         return;
-    offsety = (Currentbuf->LINES - 1) / 2;
+    offsety = (Currentbuf->doc.LINES - 1) / 2;
     Currentbuf->doc.currentLine = currentLineSkip(Currentbuf, Currentbuf->doc.topLine,
         offsety, FALSE);
     arrangeLine(Currentbuf);
@@ -4387,7 +4387,7 @@ DEFUN(cursorBottom, CURSOR_BOTTOM, "Move cursor to the bottom of the screen")
     int offsety;
     if (Currentbuf->doc.firstLine == NULL)
         return;
-    offsety = Currentbuf->LINES - 1;
+    offsety = Currentbuf->doc.LINES - 1;
     Currentbuf->doc.currentLine = currentLineSkip(Currentbuf, Currentbuf->doc.topLine,
         offsety, FALSE);
     arrangeLine(Currentbuf);
