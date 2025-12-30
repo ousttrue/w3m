@@ -15,6 +15,7 @@ pub const c = @cImport({
     @cInclude("html_form.h");
     @cInclude("tab.h");
     @cInclude("display.h");
+    @cInclude("message.h");
     // wc
     @cInclude("char_conv.h");
     @cInclude("charset.h");

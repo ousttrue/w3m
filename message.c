@@ -1,4 +1,7 @@
 #include "message.h"
+#include "anchor.h"
+#include "maparea.h"
+#include "myctype.h"
 #include "tab.h"
 #include "buffer.h"
 #include "terms.h"
@@ -52,7 +55,7 @@ message_list_panel(void)
     return loadHTMLString(tmp);
 }
 
-void message(char* s, int return_x, int return_y)
+void message(const char* s, int return_x, int return_y)
 {
     if (!fmInitialized())
         return;
@@ -62,7 +65,7 @@ void message(char* s, int return_x, int return_y)
     screen_move(return_y, return_x);
 }
 
-void disp_err_message(char* s, int redraw_current)
+void disp_err_message(const char* s, int redraw_current)
 {
     record_err_message(s);
     disp_message(s, redraw_current);
@@ -83,13 +86,140 @@ void disp_message_nsec(const char* s, int redraw_current, int sec, int purge, in
         message(s, LASTLINE(), 0);
 }
 
-void disp_message(char* s, int redraw_current)
+void disp_message(const char* s, int redraw_current)
 {
     disp_message_nsec(s, redraw_current, 10, FALSE, TRUE);
 }
 
-void set_delayed_message(char* s)
+void set_delayed_message(const char* s)
 {
     delayed_msg = allocStr(s, -1);
 }
 
+static Str
+make_lastline_link(struct Buffer* buf, const char* title, const char* url)
+{
+    Str s = NULL, u;
+    Lineprop* pr;
+    struct Url pu;
+    char* p;
+    int l = TTY_COLS() - 1, i;
+
+    if (title && *title) {
+        s = Strnew_m_charp("[", title, "]", NULL);
+        for (p = s->ptr; *p; p++) {
+            if (IS_CNTRL(*p) || IS_SPACE(*p))
+                *p = ' ';
+        }
+        if (url)
+            Strcat_charp(s, " ");
+        l -= get_Str_strwidth(s);
+        if (l <= 0)
+            return s;
+    }
+    if (!url)
+        return s;
+    parseURL2(url, &pu, baseURL(buf));
+    u = parsedURL2Str(&pu);
+    if (getRuntime()->DecodeURL)
+        u = Strnew_charp(url_decode2(u->ptr, buf));
+    u = checkType(u, &pr, NULL);
+    if (l <= 4 || l >= get_Str_strwidth(u)) {
+        if (!s)
+            return u;
+        Strcat(s, u);
+        return s;
+    }
+    if (!s)
+        s = Strnew_size(TTY_COLS());
+    i = (l - 2) / 2;
+    while (i && pr[i] & PC_WCHAR2)
+        i--;
+    Strcat_charp_n(s, u->ptr, i);
+    Strcat_charp(s, "..");
+    i = get_Str_strwidth(u) - (TTY_COLS() - 1 - get_Str_strwidth(s));
+    while (i < u->length && pr[i] & PC_WCHAR2)
+        i++;
+    Strcat_charp(s, &u->ptr[i]);
+    return s;
+}
+
+static Str
+make_lastline_message(struct Buffer* buf)
+{
+    Str msg, s = NULL;
+    int sl = 0;
+
+    if (getRuntime()->displayLink) {
+        struct MapArea* a = retrieveCurrentMapArea(buf);
+        if (a)
+            s = make_lastline_link(buf, a->alt, a->url);
+        else {
+            struct Anchor* a = retrieveCurrentAnchor(buf);
+            const char* p = NULL;
+            if (a && a->title && *a->title)
+                p = a->title;
+            else {
+                struct Anchor* a_img = retrieveCurrentImg(buf);
+                if (a_img && a_img->title && *a_img->title)
+                    p = a_img->title;
+            }
+            if (p || a)
+                s = make_lastline_link(buf, p, a ? a->url : NULL);
+        }
+        if (s) {
+            sl = get_Str_strwidth(s);
+            if (sl >= TTY_COLS() - 3)
+                return s;
+        }
+    }
+
+    msg = Strnew();
+    if (getRuntime()->displayLineInfo && buf->doc.currentLine != NULL && buf->doc.lastLine != NULL) {
+        int cl = buf->doc.currentLine->real_linenumber;
+        int ll = buf->doc.lastLine->real_linenumber;
+        int r = (int)((double)cl * 100.0 / (double)(ll ? ll : 1) + 0.5);
+        Strcat(msg, Sprintf("%d/%d (%d%%)", cl, ll, r));
+    } else {
+        msg = Sprintf("%s", msg->ptr);
+    }
+    Strcat_charp(msg, "Viewing");
+    if (buf->ssl_certificate)
+        Strcat_charp(msg, "[SSL]");
+    Strcat_charp(msg, " <");
+    Strcat_charp(msg, buf->buffername);
+
+    if (s) {
+        int l = TTY_COLS() - 3 - sl;
+        if (get_Str_strwidth(msg) > l) {
+
+            const char* p;
+            for (p = msg->ptr; *p; p += get_mclen(p)) {
+                l -= get_mcwidth(p);
+                if (l < 0)
+                    break;
+            }
+            l = p - msg->ptr;
+
+            Strtruncate(msg, l);
+        }
+        Strcat_charp(msg, "> ");
+        Strcat(msg, s);
+    } else {
+        Strcat_charp(msg, ">");
+    }
+    return msg;
+}
+
+void displayMsg(struct Buffer* buf)
+{
+    Str msg = make_lastline_message(buf);
+    if (buf->doc.firstLine == NULL) {
+        Strcat_charp(msg, "\tNo Line");
+    }
+    displayDelayedMessage();
+    screen_standout();
+    message(msg->ptr, buf->doc.cursorX + buf->doc.rootX, buf->doc.cursorY + buf->doc.rootY);
+    screen_standend();
+    term_title(conv_to_system(buf->buffername));
+}
