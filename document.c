@@ -506,3 +506,35 @@ void doc_restorePosition(struct Document* doc, struct Document* orig)
     doc->currentColumn = orig->currentColumn;
     doc_arrangeCursor(doc);
 }
+
+void doc_gotoRealLine(struct Document* doc, int n)
+{
+    char msg[36];
+    struct Line* l = doc->firstLine;
+
+    if (l == NULL)
+        return;
+
+    if (l->real_linenumber > n) {
+        sprintf(msg, "First line is #%ld", l->real_linenumber);
+        set_delayed_message(msg);
+        doc->topLine = doc->currentLine = l;
+        return;
+    }
+    if (doc->lastLine->real_linenumber < n) {
+        l = doc->lastLine;
+        sprintf(msg, "Last line is #%ld", doc->lastLine->real_linenumber);
+        set_delayed_message(msg);
+        doc->currentLine = l;
+        doc->topLine = doc_lineSkip(doc, doc->currentLine, -(doc->LINES - 1));
+        return;
+    }
+    for (; l != NULL; l = l->next) {
+        if (l->real_linenumber >= n) {
+            doc->currentLine = l;
+            if (n < doc->topLine->real_linenumber || doc->topLine->real_linenumber + doc->LINES <= n)
+                doc->topLine = doc_lineSkip(doc, l, -(doc->LINES + 1) / 2);
+            break;
+        }
+    }
+}

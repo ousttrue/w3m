@@ -1058,7 +1058,7 @@ static struct Buffer* make_buffer(struct Url url, int flag,
                 }
             } else { /* plain text */
                 int l = atoi(url.label);
-                gotoRealLine(b, l);
+                doc_gotoRealLine(&b->doc, l);
                 b->doc.pos = 0;
                 doc_arrangeCursor(&b->doc);
             }

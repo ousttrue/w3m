@@ -1961,7 +1961,7 @@ _goLine(char* l)
     }
     Currentbuf->doc.pos = 0;
     if (((*l == '^') || (*l == '$')) && getRuntime()->prec_num) {
-        gotoRealLine(Currentbuf, getRuntime()->prec_num);
+        doc_gotoRealLine(&Currentbuf->doc, getRuntime()->prec_num);
     } else if (*l == '^') {
         Currentbuf->doc.topLine = Currentbuf->doc.currentLine = Currentbuf->doc.firstLine;
     } else if (*l == '$') {
@@ -1969,7 +1969,7 @@ _goLine(char* l)
             -(Currentbuf->doc.LINES + 1) / 2);
         Currentbuf->doc.currentLine = Currentbuf->doc.lastLine;
     } else
-        gotoRealLine(Currentbuf, atoi(l));
+        doc_gotoRealLine(&Currentbuf->doc, atoi(l));
     doc_arrangeCursor(&Currentbuf->doc);
 }
 

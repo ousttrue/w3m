@@ -253,43 +253,6 @@ writeBufferName(struct Buffer* buf, int n)
     screen_wc_addnstr_sup(msg->ptr, TTY_COLS() - 1);
 }
 
-/*
- * gotoRealLine: go to real line number
- */
-void gotoRealLine(struct Buffer* buf, int n)
-{
-    char msg[36];
-    struct Line* l = buf->doc.firstLine;
-
-    if (l == NULL)
-        return;
-
-    if (l->real_linenumber > n) {
-        /* FIXME: gettextize? */
-        sprintf(msg, "First line is #%ld", l->real_linenumber);
-        set_delayed_message(msg);
-        buf->doc.topLine = buf->doc.currentLine = l;
-        return;
-    }
-    if (buf->doc.lastLine->real_linenumber < n) {
-        l = buf->doc.lastLine;
-        /* FIXME: gettextize? */
-        sprintf(msg, "Last line is #%ld", buf->doc.lastLine->real_linenumber);
-        set_delayed_message(msg);
-        buf->doc.currentLine = l;
-        buf->doc.topLine = doc_lineSkip(&buf->doc, buf->doc.currentLine, -(buf->doc.LINES - 1));
-        return;
-    }
-    for (; l != NULL; l = l->next) {
-        if (l->real_linenumber >= n) {
-            buf->doc.currentLine = l;
-            if (n < buf->doc.topLine->real_linenumber || buf->doc.topLine->real_linenumber + buf->doc.LINES <= n)
-                buf->doc.topLine = doc_lineSkip(&buf->doc, l, -(buf->doc.LINES + 1) / 2);
-            break;
-        }
-    }
-}
-
 static struct Buffer*
 listBuffer(struct Buffer* top, struct Buffer* current)
 {
@@ -457,13 +420,11 @@ selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectcha
 void reshapeBuffer(struct Buffer* buf)
 {
     buf->width = INIT_BUFFER_WIDTH;
-    if (!buf->sourcefile)
-        return;
 
-    struct input_stream* stream;
+    struct input_stream* stream = NULL;
     if (buf->mailcap_source) {
         stream = decompress_stream(examineFile(buf->mailcap_source), buf->mailcap_source);
-    } else {
+    } else if (buf->sourcefile) {
         stream = decompress_stream(examineFile(buf->sourcefile), buf->sourcefile);
     }
     if (!stream)
@@ -522,7 +483,7 @@ void reshapeBuffer(struct Buffer* buf)
         while (cur->bpos && cur->prev)
             cur = cur->prev;
         if (cur->real_linenumber > 0)
-            gotoRealLine(buf, cur->real_linenumber);
+            doc_gotoRealLine(&buf->doc, cur->real_linenumber);
         else
             doc_gotoLine(&buf->doc, cur->linenumber);
         n = (buf->doc.currentLine->linenumber - buf->doc.topLine->linenumber)
@@ -530,7 +491,7 @@ void reshapeBuffer(struct Buffer* buf)
         if (n) {
             buf->doc.topLine = doc_lineSkip(&buf->doc, buf->doc.topLine, n);
             if (cur->real_linenumber > 0)
-                gotoRealLine(buf, cur->real_linenumber);
+                doc_gotoRealLine(&buf->doc, cur->real_linenumber);
             else
                 doc_gotoLine(&buf->doc, cur->linenumber);
         }
@@ -701,5 +662,3 @@ void delBuffer(struct Buffer* buf)
     if (!Currentbuf)
         Currentbuf = Firstbuf;
 }
-
-
