@@ -1022,7 +1022,7 @@ static void nscroll(int n)
             lnum = llnum + diff_n;
     }
     gotoLine(buf, lnum);
-    arrangeLine(buf);
+    doc_arrangeLine(&buf->doc);
     if (n > 0) {
         if (buf->doc.currentLine->bpos && buf->doc.currentLine->bwidth >= buf->doc.currentColumn + buf->doc.visualpos)
             cursorDown(buf, 1);
@@ -1090,7 +1090,7 @@ DEFUN(ctrCsrV, CENTER_V, "Center on cursor line")
     int offsety = /*Currentbuf->doc.LINES / 2*/ -Currentbuf->doc.cursorY;
     if (offsety != 0) {
         Currentbuf->doc.topLine = doc_lineSkip(&Currentbuf->doc, Currentbuf->doc.topLine, -offsety);
-        arrangeLine(Currentbuf);
+        doc_arrangeLine(&Currentbuf->doc);
     }
 }
 
@@ -1339,7 +1339,7 @@ shiftvisualpos(struct Buffer* buf, int shift)
         buf->doc.visualpos = l->bwidth + buf->doc.COLS - 1;
     else if (buf->doc.visualpos - l->bwidth < 0)
         buf->doc.visualpos = l->bwidth;
-    arrangeLine(buf);
+    doc_arrangeLine(&buf->doc);
     if (buf->doc.visualpos - l->bwidth == -shift && buf->doc.cursorX == 0)
         buf->doc.visualpos = l->bwidth;
 }
@@ -2709,7 +2709,7 @@ nextY(int d)
     if (pan == NULL)
         return;
     gotoLine(Currentbuf, pan->start.line);
-    arrangeLine(Currentbuf);
+    doc_arrangeLine(&Currentbuf->doc);
 }
 
 /* go to the next left anchor */
@@ -4365,25 +4365,23 @@ DEFUN(cursorTop, CURSOR_TOP, "Move cursor to the top of the screen")
     if (Currentbuf->doc.firstLine == NULL)
         return;
     Currentbuf->doc.currentLine = doc_lineSkip(&Currentbuf->doc, Currentbuf->doc.topLine, 0);
-    arrangeLine(Currentbuf);
+    doc_arrangeLine(&Currentbuf->doc);
 }
 
 DEFUN(cursorMiddle, CURSOR_MIDDLE, "Move cursor to the middle of the screen")
 {
-    int offsety;
     if (Currentbuf->doc.firstLine == NULL)
         return;
-    offsety = (Currentbuf->doc.LINES - 1) / 2;
+    int offsety = (Currentbuf->doc.LINES - 1) / 2;
     Currentbuf->doc.currentLine = currentLineSkip(Currentbuf->doc.topLine, offsety);
-    arrangeLine(Currentbuf);
+    doc_arrangeLine(&Currentbuf->doc);
 }
 
 DEFUN(cursorBottom, CURSOR_BOTTOM, "Move cursor to the bottom of the screen")
 {
-    int offsety;
     if (Currentbuf->doc.firstLine == NULL)
         return;
-    offsety = Currentbuf->doc.LINES - 1;
+    int offsety = Currentbuf->doc.LINES - 1;
     Currentbuf->doc.currentLine = currentLineSkip(Currentbuf->doc.topLine, offsety);
-    arrangeLine(Currentbuf);
+    doc_arrangeLine(&Currentbuf->doc);
 }

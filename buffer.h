@@ -134,7 +134,6 @@ void cursorRight(struct Buffer* buf, int n);
 void cursorLeft(struct Buffer* buf, int n);
 void cursorHome(struct Buffer* buf);
 void arrangeCursor(struct Buffer* buf);
-void arrangeLine(struct Buffer* buf);
 int columnSkip(struct Buffer* buf, int offset);
 int getMapXY(struct Buffer* buf, struct Anchor* a, int* x, int* y);
 struct MapArea* retrieveCurrentMapArea(struct Buffer* buf);

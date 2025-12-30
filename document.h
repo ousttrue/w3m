@@ -44,3 +44,5 @@ struct Url;
 void doc_addnewline(struct Document* doc, const char* line, Lineprop* prop, Linecolor* color, int pos, int width, int nlines);
 struct Line* doc_redrawLine(struct Document* doc, struct Line* l, int i, struct Url* base_url);
 struct Line* doc_lineSkip(struct Document* doc, struct Line* line, int offset);
+/// update cursorY, cursorX and pos from currentLine and currentColumn
+void doc_arrangeLine(struct Document* doc);

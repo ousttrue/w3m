@@ -461,7 +461,7 @@ void formUpdateBuffer(struct Anchor* a, struct Buffer* buf, struct FormItemList*
         break;
     }
     copyBuffer(buf, &save);
-    arrangeLine(buf);
+    doc_arrangeLine(&buf->doc);
 }
 
 Str textfieldrep(Str s, int width)

@@ -199,3 +199,24 @@ struct Line* doc_lineSkip(struct Document* doc, struct Line* line, int offset)
             ;
     return l;
 }
+
+void doc_arrangeLine(struct Document* doc)
+{
+    if (doc->firstLine == NULL)
+        return;
+    doc->cursorY = doc->currentLine->linenumber - doc->topLine->linenumber;
+    int i = columnPos(doc->currentLine, doc->currentColumn + doc->visualpos - doc->currentLine->bwidth);
+    int cpos = COLPOS(doc->currentLine, i) - doc->currentColumn;
+    if (cpos >= 0) {
+        doc->cursorX = cpos;
+        doc->pos = i;
+    } else if (doc->currentLine->len > i) {
+        doc->cursorX = 0;
+        doc->pos = i + 1;
+    } else {
+        doc->cursorX = 0;
+        doc->pos = 0;
+    }
+}
+
+
