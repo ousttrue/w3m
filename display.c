@@ -346,11 +346,8 @@ redrawLineImage(struct Document* doc, struct Line* l, int i, struct Url* base_ur
 }
 
 static void
-redrawNLine(struct Buffer* buf, int n)
+redrawNLine(struct Document* doc, int n, struct Url* base_url)
 {
-    struct Line* l;
-    int i;
-
     beginLine();
 
     if (nTab() > 1) {
@@ -379,26 +376,29 @@ redrawNLine(struct Buffer* buf, int n)
                 screen_boldend();
         }
         screen_move(LastTab()->y + 1, 0);
-        for (i = 0; i < TTY_COLS(); i++)
+        for (int i = 0; i < TTY_COLS(); i++)
             screen_addch('~', 1);
     }
-    for (i = 0, l = buf->doc.topLine; i < buf->doc.LINES; i++, l = l->next) {
-        if (i >= buf->doc.LINES - n || i < -n)
-            l = redrawLine(&buf->doc, l, i + buf->doc.rootY, baseURL(buf));
+    int i = 0;
+    for (struct Line* l = doc->topLine; i < doc->LINES; i++, l = l->next) {
+        if (i >= doc->LINES - n || i < -n)
+            l = redrawLine(doc, l, i + doc->rootY, base_url);
         if (l == NULL)
             break;
     }
     if (n > 0) {
-        screen_move(i + buf->doc.rootY, 0);
+        screen_move(i + doc->rootY, 0);
         screen_clrtobotx();
     }
 
-    if (!(getRuntime()->activeImage && getRuntime()->displayImage && buf->doc.img))
+    if (!(getRuntime()->activeImage && getRuntime()->displayImage && doc->img))
         return;
-    screen_move(buf->doc.cursorY + buf->doc.rootY, buf->doc.cursorX + buf->doc.rootX);
-    for (i = 0, l = buf->doc.topLine; i < buf->doc.LINES && l; i++, l = l->next) {
-        if (i >= buf->doc.LINES - n || i < -n)
-            redrawLineImage(&buf->doc, l, i + buf->doc.rootY, baseURL(buf));
+    screen_move(doc->cursorY + doc->rootY, doc->cursorX + doc->rootX);
+
+    i = 0;
+    for (struct Line* l = doc->topLine; i < doc->LINES && l; i++, l = l->next) {
+        if (i >= doc->LINES - n || i < -n)
+            redrawLineImage(doc, l, i + doc->rootY, base_url);
     }
 }
 
@@ -414,7 +414,7 @@ void screen_from_lines(struct Buffer* buf)
         image_touch++;
         draw_image_flag = false;
     }
-    redrawNLine(buf, LASTLINE());
+    redrawNLine(&buf->doc, LASTLINE(), baseURL(buf));
 }
 
 void displayMsg(struct Buffer* buf)
