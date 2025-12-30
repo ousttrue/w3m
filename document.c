@@ -361,3 +361,137 @@ void doc_arrangeCursor(struct Document* doc)
     doc->visualpos = doc->currentLine->bwidth + COLPOS(doc->currentLine, doc->pos) - doc->currentColumn;
     doc->cursorX = doc->visualpos - doc->currentLine->bwidth;
 }
+
+void doc_cursorHome(struct Document* doc)
+{
+    doc->visualpos = 0;
+    doc->cursorX = doc->cursorY = 0;
+}
+
+void doc_cursorLeft(struct Document* doc, int n)
+{
+    int i, delta = 1, cpos;
+    struct Line* l = doc->currentLine;
+
+    if (doc->firstLine == NULL)
+        return;
+    i = doc->pos;
+    Lineprop* p = l->propBuf;
+    while (i - delta > 0 && p[i - delta] & PC_WCHAR2)
+        delta++;
+    if (i >= delta)
+        doc->pos = i - delta;
+    else if (l->prev && l->bpos) {
+        doc_cursorUp0(doc, -1);
+        doc->pos = doc->currentLine->len - 1;
+        doc_arrangeCursor(doc);
+        return;
+    } else
+        doc->pos = 0;
+    cpos = COLPOS(l, doc->pos);
+    doc->visualpos = l->bwidth + cpos - doc->currentColumn;
+    if (doc->visualpos - l->bwidth < 0 && n) {
+        doc_columnSkip(doc,
+            -n + doc->visualpos - l->bwidth - (doc->visualpos - l->bwidth) % n);
+        doc->visualpos = l->bwidth + cpos - doc->currentColumn;
+    }
+    doc->cursorX = doc->visualpos - l->bwidth;
+}
+
+void doc_cursorRight(struct Document* doc, int n)
+{
+    int i, delta = 1, cpos, vpos2;
+    struct Line* l = doc->currentLine;
+
+    if (doc->firstLine == NULL)
+        return;
+    if (doc->pos == l->len && !(l->next && l->next->bpos))
+        return;
+    i = doc->pos;
+    Lineprop* p = l->propBuf;
+    while (i + delta < l->len && p[i + delta] & PC_WCHAR2)
+        delta++;
+    if (i + delta < l->len) {
+        doc->pos = i + delta;
+    } else if (l->len == 0) {
+        doc->pos = 0;
+    } else if (l->next && l->next->bpos) {
+        doc_cursorDown0(doc, 1);
+        doc->pos = 0;
+        doc_arrangeCursor(doc);
+        return;
+    } else {
+        doc->pos = l->len - 1;
+        while (doc->pos && p[doc->pos] & PC_WCHAR2)
+            doc->pos--;
+    }
+    cpos = COLPOS(l, doc->pos);
+
+    doc->visualpos = l->bwidth + cpos - doc->currentColumn;
+    delta = 1;
+    while (doc->pos + delta < l->len && p[doc->pos + delta] & PC_WCHAR2)
+        delta++;
+    vpos2 = COLPOS(l, doc->pos + delta) - doc->currentColumn - 1;
+    if (vpos2 >= doc->COLS && n) {
+        doc_columnSkip(doc, n + (vpos2 - doc->COLS) - (vpos2 - doc->COLS) % n);
+        doc->visualpos = l->bwidth + cpos - doc->currentColumn;
+    }
+    doc->cursorX = doc->visualpos - l->bwidth;
+}
+
+void doc_cursorDown(struct Document* doc, int n)
+{
+    struct Line* l = doc->currentLine;
+    if (doc->firstLine == NULL)
+        return;
+    while (doc->currentLine->next && doc->currentLine->next->bpos)
+        doc_cursorDown0(doc, n);
+    if (doc->currentLine == doc->lastLine) {
+        doc_gotoLine(doc, l->linenumber);
+        doc_arrangeLine(doc);
+        return;
+    }
+    doc_cursorDown0(doc, n);
+    while (doc->currentLine->next
+        && doc->currentLine->next->bpos
+        && doc->currentLine->bwidth + doc->currentLine->width < doc->currentColumn + doc->visualpos)
+        doc_cursorDown0(doc, n);
+}
+
+void doc_cursorUp(struct Document* doc, int n)
+{
+    struct Line* l = doc->currentLine;
+    if (doc->firstLine == NULL)
+        return;
+    while (doc->currentLine->prev && doc->currentLine->bpos)
+        doc_cursorUp0(doc, n);
+    if (doc->currentLine == doc->firstLine) {
+        doc_gotoLine(doc, l->linenumber);
+        doc_arrangeLine(doc);
+        return;
+    }
+    doc_cursorUp0(doc, n);
+    while (doc->currentLine->prev && doc->currentLine->bpos && doc->currentLine->bwidth >= doc->currentColumn + doc->visualpos)
+        doc_cursorUp0(doc, n);
+}
+
+void doc_cursorXY(struct Document* doc, int x, int y)
+{
+    doc_cursorUpDown(doc, y - doc->cursorY);
+
+    if (doc->cursorX > x) {
+        while (doc->cursorX > x)
+            doc_cursorLeft(doc, doc->COLS / 2);
+    } else if (doc->cursorX < x) {
+        while (doc->cursorX < x) {
+            int oldX = doc->cursorX;
+
+            doc_cursorRight(doc, doc->COLS / 2);
+
+            if (oldX == doc->cursorX)
+                break;
+        }
+        if (doc->cursorX > x)
+            doc_cursorLeft(doc, doc->COLS / 2);
+    }
+}

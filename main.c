@@ -1025,14 +1025,14 @@ static void nscroll(int n)
     doc_arrangeLine(&buf->doc);
     if (n > 0) {
         if (buf->doc.currentLine->bpos && buf->doc.currentLine->bwidth >= buf->doc.currentColumn + buf->doc.visualpos)
-            cursorDown(buf, 1);
+            doc_cursorDown(&buf->doc, 1);
         else {
             while (buf->doc.currentLine->next && buf->doc.currentLine->next->bpos && buf->doc.currentLine->bwidth + buf->doc.currentLine->width < buf->doc.currentColumn + buf->doc.visualpos)
                 doc_cursorDown0(&buf->doc, 1);
         }
     } else {
         if (buf->doc.currentLine->bwidth + buf->doc.currentLine->width < buf->doc.currentColumn + buf->doc.visualpos)
-            cursorUp(buf, 1);
+            doc_cursorUp(&buf->doc, 1);
         else {
             while (buf->doc.currentLine->prev && buf->doc.currentLine->bpos && buf->doc.currentLine->bwidth >= buf->doc.currentColumn + buf->doc.visualpos)
                 doc_cursorUp0(&buf->doc, 1);
@@ -1647,7 +1647,7 @@ _movL(int n)
     if (Currentbuf->doc.firstLine == NULL)
         return;
     for (i = 0; i < m; i++)
-        cursorLeft(Currentbuf, n);
+        doc_cursorLeft(&Currentbuf->doc, n);
 }
 
 DEFUN(movL, MOVE_LEFT, "Cursor left")
@@ -1668,7 +1668,7 @@ _movD(int n)
     if (Currentbuf->doc.firstLine == NULL)
         return;
     for (i = 0; i < m; i++)
-        cursorDown(Currentbuf, n);
+        doc_cursorDown(&Currentbuf->doc, n);
 }
 
 DEFUN(movD, MOVE_DOWN, "Cursor down")
@@ -1689,7 +1689,7 @@ _movU(int n)
     if (Currentbuf->doc.firstLine == NULL)
         return;
     for (i = 0; i < m; i++)
-        cursorUp(Currentbuf, n);
+        doc_cursorUp(&Currentbuf->doc, n);
 }
 
 DEFUN(movU, MOVE_UP, "Cursor up")
@@ -1710,7 +1710,7 @@ _movR(int n)
     if (Currentbuf->doc.firstLine == NULL)
         return;
     for (i = 0; i < m; i++)
-        cursorRight(Currentbuf, n);
+        doc_cursorRight(&Currentbuf->doc, n);
 }
 
 DEFUN(movR, MOVE_RIGHT, "Cursor right")

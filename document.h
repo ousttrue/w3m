@@ -57,3 +57,10 @@ void doc_cursorDown0(struct Document* doc, int n);
 void doc_gotoLine(struct Document* doc, int linenumer);
 /// update currentColumn
 int doc_columnSkip(struct Document* doc, int offset);
+
+void doc_cursorHome(struct Document* doc);
+void doc_cursorLeft(struct Document* doc, int n);
+void doc_cursorRight(struct Document* doc, int n);
+void doc_cursorDown(struct Document* doc, int n);
+void doc_cursorUp(struct Document* doc, int n);
+void doc_cursorXY(struct Document* doc, int x, int y);
