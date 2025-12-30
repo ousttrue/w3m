@@ -1099,7 +1099,7 @@ DEFUN(ctrCsrH, CENTER_H, "Center on cursor column")
     int offsetx;
     if (Currentbuf->doc.firstLine == NULL)
         return;
-    offsetx = Currentbuf->cursorX - Currentbuf->COLS / 2;
+    offsetx = Currentbuf->cursorX - Currentbuf->doc.COLS / 2;
     if (offsetx != 0) {
         columnSkip(Currentbuf, offsetx);
         arrangeCursor(Currentbuf);
@@ -1335,8 +1335,8 @@ shiftvisualpos(struct Buffer* buf, int shift)
 {
     struct Line* l = buf->doc.currentLine;
     buf->visualpos -= shift;
-    if (buf->visualpos - l->bwidth >= buf->COLS)
-        buf->visualpos = l->bwidth + buf->COLS - 1;
+    if (buf->visualpos - l->bwidth >= buf->doc.COLS)
+        buf->visualpos = l->bwidth + buf->doc.COLS - 1;
     else if (buf->visualpos - l->bwidth < 0)
         buf->visualpos = l->bwidth;
     arrangeLine(buf);
@@ -1352,7 +1352,7 @@ DEFUN(shiftl, SHIFT_LEFT, "Shift screen left")
     if (Currentbuf->doc.firstLine == NULL)
         return;
     column = Currentbuf->currentColumn;
-    columnSkip(Currentbuf, searchKeyNum() * (-Currentbuf->COLS + 1) + 1);
+    columnSkip(Currentbuf, searchKeyNum() * (-Currentbuf->doc.COLS + 1) + 1);
     shiftvisualpos(Currentbuf, Currentbuf->currentColumn - column);
 }
 
@@ -1364,7 +1364,7 @@ DEFUN(shiftr, SHIFT_RIGHT, "Shift screen right")
     if (Currentbuf->doc.firstLine == NULL)
         return;
     column = Currentbuf->currentColumn;
-    columnSkip(Currentbuf, searchKeyNum() * (Currentbuf->COLS - 1) - 1);
+    columnSkip(Currentbuf, searchKeyNum() * (Currentbuf->doc.COLS - 1) - 1);
     shiftvisualpos(Currentbuf, Currentbuf->currentColumn - column);
 }
 
@@ -1652,7 +1652,7 @@ _movL(int n)
 
 DEFUN(movL, MOVE_LEFT, "Cursor left")
 {
-    _movL(Currentbuf->COLS / 2);
+    _movL(Currentbuf->doc.COLS / 2);
 }
 
 DEFUN(movL1, MOVE_LEFT1, "Cursor left. With edge touched, slide")
@@ -1715,7 +1715,7 @@ _movR(int n)
 
 DEFUN(movR, MOVE_RIGHT, "Cursor right")
 {
-    _movR(Currentbuf->COLS / 2);
+    _movR(Currentbuf->doc.COLS / 2);
 }
 
 DEFUN(movR1, MOVE_RIGHT1, "Cursor right. With edge touched, slide")

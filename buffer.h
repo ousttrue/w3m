@@ -69,7 +69,6 @@ struct Buffer {
     short cursorY;
     int pos;
     int visualpos;
-    short COLS;
     short LINES;
     struct AnchorList* href;
     struct AnchorList* name;
@@ -109,7 +108,7 @@ struct Buffer {
     {                                              \
         (dstbuf)->doc.rootX = (srcbuf)->doc.rootX; \
         (dstbuf)->doc.rootY = (srcbuf)->doc.rootY; \
-        (dstbuf)->COLS = (srcbuf)->COLS;           \
+        (dstbuf)->doc.COLS = (srcbuf)->doc.COLS;   \
         (dstbuf)->LINES = (srcbuf)->LINES;         \
     }
 

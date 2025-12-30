@@ -67,7 +67,7 @@ struct Buffer* newBuffer(int width)
     assert(n);
     memset(n, 0, sizeof(struct Buffer));
     n->width = width;
-    n->COLS = TTY_COLS();
+    n->doc.COLS = TTY_COLS();
     n->LINES = LASTLINE();
     n->currentURL.scheme = SCM_UNKNOWN;
     n->baseURL = NULL;
@@ -761,18 +761,18 @@ void cursorXY(struct Buffer* buf, int x, int y)
 
     if (buf->cursorX > x) {
         while (buf->cursorX > x)
-            cursorLeft(buf, buf->COLS / 2);
+            cursorLeft(buf, buf->doc.COLS / 2);
     } else if (buf->cursorX < x) {
         while (buf->cursorX < x) {
             oldX = buf->cursorX;
 
-            cursorRight(buf, buf->COLS / 2);
+            cursorRight(buf, buf->doc.COLS / 2);
 
             if (oldX == buf->cursorX)
                 break;
         }
         if (buf->cursorX > x)
-            cursorLeft(buf, buf->COLS / 2);
+            cursorLeft(buf, buf->doc.COLS / 2);
     }
 }
 
@@ -899,8 +899,8 @@ void cursorRight(struct Buffer* buf, int n)
     while (buf->pos + delta < l->len && p[buf->pos + delta] & PC_WCHAR2)
         delta++;
     vpos2 = COLPOS(l, buf->pos + delta) - buf->currentColumn - 1;
-    if (vpos2 >= buf->COLS && n) {
-        columnSkip(buf, n + (vpos2 - buf->COLS) - (vpos2 - buf->COLS) % n);
+    if (vpos2 >= buf->doc.COLS && n) {
+        columnSkip(buf, n + (vpos2 - buf->doc.COLS) - (vpos2 - buf->doc.COLS) % n);
         buf->visualpos = l->bwidth + cpos - buf->currentColumn;
     }
     buf->cursorX = buf->visualpos - l->bwidth;
@@ -981,9 +981,9 @@ void arrangeCursor(struct Buffer* buf)
     while (buf->pos + delta < buf->doc.currentLine->len && buf->doc.currentLine->propBuf[buf->pos + delta] & PC_WCHAR2)
         delta++;
     col2 = COLPOS(buf->doc.currentLine, buf->pos + delta);
-    if (col < buf->currentColumn || col2 > buf->COLS + buf->currentColumn) {
+    if (col < buf->currentColumn || col2 > buf->doc.COLS + buf->currentColumn) {
         buf->currentColumn = 0;
-        if (col2 > buf->COLS)
+        if (col2 > buf->doc.COLS)
             columnSkip(buf, col);
     }
     /* Arrange cursor */

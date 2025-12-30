@@ -159,7 +159,7 @@ redrawLineRegion(struct Buffer* buf, struct Line* l, int i, int bpos, int epos)
     bcol = bpos - pos;
     ecol = epos - pos;
 
-    for (j = 0; rcol - column < buf->COLS && pos + j < l->len; j += delta) {
+    for (j = 0; rcol - column < buf->doc.COLS && pos + j < l->len; j += delta) {
         if (getRuntime()->useVisitedColor && vpos <= pos + j && !(pr[j] & PE_VISITED)) {
             a = retrieveAnchor(buf->href, l->linenumber, pos + j);
             if (a) {
@@ -173,7 +173,7 @@ redrawLineRegion(struct Buffer* buf, struct Line* l, int i, int bpos, int epos)
         }
         delta = wtf_len((wc_uchar*)&p[j]);
         ncol = COLPOS(l, pos + j + delta);
-        if (ncol - column > buf->COLS)
+        if (ncol - column > buf->doc.COLS)
             break;
         if (pc)
             do_color(&g, pc[j]);
@@ -293,7 +293,7 @@ redrawLineImage(struct Buffer* buf, struct Line* l, int i)
         return l;
     pos = columnPos(l, column);
     rcol = COLPOS(l, pos);
-    for (j = 0; rcol - column < buf->COLS && pos + j < l->len; j++) {
+    for (j = 0; rcol - column < buf->doc.COLS && pos + j < l->len; j++) {
         if (rcol - column < 0) {
             rcol = COLPOS(l, pos + j + 1);
             continue;
@@ -332,8 +332,8 @@ redrawLineImage(struct Buffer* buf, struct Line* l, int i)
                     h = image->height - sy;
                 else
                     h = (int)(getRuntime()->pixel_per_line - sy);
-                if (w > (int)((buf->doc.rootX + buf->COLS) * getRuntime()->pixel_per_char - x))
-                    w = (int)((buf->doc.rootX + buf->COLS) * getRuntime()->pixel_per_char - x);
+                if (w > (int)((buf->doc.rootX + buf->doc.COLS) * getRuntime()->pixel_per_char - x))
+                    w = (int)((buf->doc.rootX + buf->doc.COLS) * getRuntime()->pixel_per_char - x);
                 if (h > (int)(LASTLINE() * getRuntime()->pixel_per_line - y))
                     h = (int)(LASTLINE() * getRuntime()->pixel_per_line - y);
                 addImage(cache, x, y, sx, sy, w, h);
@@ -375,7 +375,7 @@ redrawLine(struct Buffer* buf, struct Line* l, int i)
                 buf->doc.rootX = 5;
             if (buf->doc.rootX > TTY_COLS())
                 buf->doc.rootX = TTY_COLS();
-            buf->COLS = TTY_COLS() - buf->doc.rootX;
+            buf->doc.COLS = TTY_COLS() - buf->doc.rootX;
         }
         if (l->real_linenumber && !l->bpos)
             sprintf(tmp, "%*ld:", buf->doc.rootX - 1, l->real_linenumber);
@@ -400,7 +400,7 @@ redrawLine(struct Buffer* buf, struct Line* l, int i)
         pc = NULL;
     rcol = COLPOS(l, pos);
 
-    for (j = 0; rcol - column < buf->COLS && pos + j < l->len; j += delta) {
+    for (j = 0; rcol - column < buf->doc.COLS && pos + j < l->len; j += delta) {
         if (getRuntime()->useVisitedColor && vpos <= pos + j && !(pr[j] & PE_VISITED)) {
             a = retrieveAnchor(buf->href, l->linenumber, pos + j);
             if (a) {
@@ -414,7 +414,7 @@ redrawLine(struct Buffer* buf, struct Line* l, int i)
         }
         delta = wtf_len((wc_uchar*)&p[j]);
         ncol = COLPOS(l, pos + j + delta);
-        if (ncol - column > buf->COLS)
+        if (ncol - column > buf->doc.COLS)
             break;
         if (pc)
             do_color(&g, pc[j]);
@@ -432,7 +432,7 @@ redrawLine(struct Buffer* buf, struct Line* l, int i)
         rcol = ncol;
     }
     endLine(&g);
-    if (rcol - column < buf->COLS)
+    if (rcol - column < buf->doc.COLS)
         screen_clrtoeolx();
     return l;
 }
@@ -537,7 +537,7 @@ void bufferPosition(struct Buffer* buf)
     } else {
         buf->doc.rootX = 0;
     }
-    buf->COLS = TTY_COLS() - buf->doc.rootX;
+    buf->doc.COLS = TTY_COLS() - buf->doc.rootX;
 
     // doc.rootY
     int ny = 0;
