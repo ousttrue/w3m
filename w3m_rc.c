@@ -18,7 +18,7 @@
 #include "buffer.h"
 #include "image.h"
 #include "myctype.h"
-#include "proto.h"
+#include "funcheader.h"
 #include "parsetag.h"
 #include "regex.h"
 #include "funcname1.h"

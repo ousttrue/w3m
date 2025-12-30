@@ -15,7 +15,7 @@
 #include "regex.h"
 #include "myctype.h"
 #include "w3m_rc.h"
-#include "proto.h" // backBf
+#include "funcheader.h" // backBf
 #include <fcntl.h>
 #include <string.h>
 #include <sys/stat.h>

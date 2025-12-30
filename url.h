@@ -45,3 +45,5 @@ extern char* url_encode(const char* url, const struct Url* base,
     wc_ces doc_charset);
 struct Buffer;
 extern void chkExternalURIBuffer(struct Buffer* buf);
+extern void initMimeTypes(void);
+extern void initURIMethods(void);

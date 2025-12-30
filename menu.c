@@ -14,7 +14,7 @@
 #include "image.h"
 #include "myctype.h"
 #include "regex.h"
-#include "proto.h"
+#include "funcheader.h"
 #include "funcname1.h"
 
 #include <libwc/ces.h>

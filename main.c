@@ -17,7 +17,7 @@
 #include "file.h"
 #include "message.h"
 #include "linein.h"
-#include "proto.h"
+#include "funcheader.h"
 #include "history.h"
 #include "search.h"
 #include "html_form.h"
