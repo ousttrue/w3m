@@ -81,11 +81,6 @@
 #define REALLY_THE_BEGINNING_OF_A_TAG(p) \
     (IS_ALPHA(p[1]) || p[1] == '/' || p[1] == '!' || p[1] == '?' || p[1] == '\0' || p[1] == '_')
 
-/* flags for loadGeneralFile */
-#define RG_NOCACHE 1
-#define RG_FRAME 2
-#define RG_FRAME_SRC 4
-
 struct html_feed_environ {
     struct readbuffer* obuf;
     TextLineList* buf;

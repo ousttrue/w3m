@@ -491,10 +491,10 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
                 }
                 /* fall through */
             case F_BODY: {
-                struct input_stream *stream = NULL; 
+                struct input_stream* stream = NULL;
                 if (frame.body->source) {
                     fflush(f1);
-                    stream = examineFile(frame.body->source, false);
+                    stream = decompress_stream(examineFile(frame.body->source), frame.body->source);
                 }
                 if (stream == NULL) {
                     frame.body->attr = F_UNLOADED;
@@ -606,7 +606,8 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
                                         pre_mode = 0;
                                         end_tag = 0;
                                         goto proc_normal;
-                                    default: break;
+                                    default:
+                                        break;
                                     }
                                 }
                             }

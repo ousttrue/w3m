@@ -1108,13 +1108,13 @@ struct Buffer* load_doc(const char* path, struct Url* current,
     unsigned char status = HTST_NORMAL;
     struct HttpRequest hr;
     struct UrlStream us = openURL(path, current, request,
-        (struct URLOption) {}, connection, do_download);
+        (struct URLOption) {}, connection);
     if (!us.stream && getRuntime()->retryAsHttp && us.url_str[0] != '/') {
         if (us.url.scheme == SCM_MISSING || us.url.scheme == SCM_UNKNOWN) {
             // retry it as "http://"
             const char* u = Strnew_m_charp("http://", path, NULL)->ptr;
             us = openURL(u, current, request,
-                (struct URLOption) {}, connection, do_download);
+                (struct URLOption) {}, connection);
         }
     }
 

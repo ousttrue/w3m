@@ -6,11 +6,6 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-#define HTST_UNKNOWN 255
-#define HTST_MISSING 254
-#define HTST_NORMAL 0
-#define HTST_CONNECT 1
-
 enum InputStreamType {
     IST_BASIC = 0,
     IST_FILE = 1,
@@ -48,11 +43,13 @@ struct input_stream {
     };
 };
 
-struct input_stream* examineFile(const char* path, bool do_download);
 struct input_stream* is_from_fd(int fd);
 struct input_stream* is_from_file(FILE* f, FileCloseFunc closep);
 struct input_stream* is_from_str(Str s);
 struct input_stream* is_from_ssl(SSL* ssl, int sock);
+
+struct input_stream* examineFile(const char* path);
+struct input_stream* decompress_stream(struct input_stream* s, const char* path);
 
 int is_close(struct input_stream* is);
 int is_getc(struct input_stream* is);
@@ -74,20 +71,26 @@ struct Buffer;
 int doFileSave(struct Url url, struct input_stream* stream,
     const char* defstr, enum CompressionType compression);
 
+enum StreamStatus {
+    HTST_UNKNOWN = 255,
+    HTST_MISSING = 254,
+    HTST_NORMAL = 0,
+    HTST_CONNECT = 1,
+};
+
 struct UrlStream {
     struct input_stream* stream;
     bool is_cgi;
     const char* url_str;
     struct Url url;
     struct HttpRequest hr;
-    unsigned char status;
+    enum StreamStatus status;
     const char* ssl_certificate;
     time_t modtime;
 };
 struct UrlStream openURL(const char* url, struct Url* current,
     struct FormList* request,
     struct URLOption option,
-    struct input_stream* ouf,
-    bool do_download);
+    struct input_stream* ouf);
 
 void UFhalfclose(struct input_stream* stream, enum UrlScheme scheme);
