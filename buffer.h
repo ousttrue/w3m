@@ -64,7 +64,6 @@ struct Buffer {
     short width;
     char* type;
     short bufferprop;
-    short cursorX;
     short cursorY;
     int pos;
     int visualpos;
@@ -114,7 +113,7 @@ struct Buffer {
         (dstbuf)->doc.topLine = (srcbuf)->doc.topLine;             \
         (dstbuf)->doc.currentLine = (srcbuf)->doc.currentLine;     \
         (dstbuf)->pos = (srcbuf)->pos;                             \
-        (dstbuf)->cursorX = (srcbuf)->cursorX;                     \
+        (dstbuf)->doc.cursorX = (srcbuf)->doc.cursorX;             \
         (dstbuf)->cursorY = (srcbuf)->cursorY;                     \
         (dstbuf)->visualpos = (srcbuf)->visualpos;                 \
         (dstbuf)->doc.currentColumn = (srcbuf)->doc.currentColumn; \

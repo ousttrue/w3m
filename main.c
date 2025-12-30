@@ -1099,7 +1099,7 @@ DEFUN(ctrCsrH, CENTER_H, "Center on cursor column")
     int offsetx;
     if (Currentbuf->doc.firstLine == NULL)
         return;
-    offsetx = Currentbuf->cursorX - Currentbuf->doc.COLS / 2;
+    offsetx = Currentbuf->doc.cursorX - Currentbuf->doc.COLS / 2;
     if (offsetx != 0) {
         columnSkip(Currentbuf, offsetx);
         arrangeCursor(Currentbuf);
@@ -1340,7 +1340,7 @@ shiftvisualpos(struct Buffer* buf, int shift)
     else if (buf->visualpos - l->bwidth < 0)
         buf->visualpos = l->bwidth;
     arrangeLine(buf);
-    if (buf->visualpos - l->bwidth == -shift && buf->cursorX == 0)
+    if (buf->visualpos - l->bwidth == -shift && buf->doc.cursorX == 0)
         buf->visualpos = l->bwidth;
 }
 
@@ -3034,7 +3034,7 @@ void follow_map(struct parsed_tagarg* arg)
     struct Url p_url;
 
     an = retrieveCurrentImg(Currentbuf);
-    x = Currentbuf->cursorX + Currentbuf->doc.rootX;
+    x = Currentbuf->doc.cursorX + Currentbuf->doc.rootX;
     y = Currentbuf->cursorY + Currentbuf->doc.rootY;
     struct MapArea* a = follow_map_menu(Currentbuf, name, an, x, y);
     if (a == NULL || a->url == NULL || *(a->url) == '\0') {
@@ -3733,7 +3733,7 @@ DEFUN(curlno, LINE_INFO, "Display current position in document")
 
     if (l != NULL) {
         cur = l->real_linenumber;
-        col = l->bwidth + Currentbuf->doc.currentColumn + Currentbuf->cursorX + 1;
+        col = l->bwidth + Currentbuf->doc.currentColumn + Currentbuf->doc.cursorX + 1;
         while (l->next && l->next->bpos)
             l = l->next;
         if (l->width < 0)

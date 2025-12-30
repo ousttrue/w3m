@@ -431,7 +431,7 @@ static void put_image_iterm2(const char* url, int x, int y, int w, int h)
 cleanup:
     fclose(fp);
     writestr("\a");
-    tty_MOVE(Currentbuf->cursorY, Currentbuf->cursorX);
+    tty_MOVE(Currentbuf->cursorY, Currentbuf->doc.cursorX);
 }
 
 static void put_image_kitty(const char* url, int x, int y, int w, int h, int sx, int sy, int sw,
@@ -562,7 +562,7 @@ static void put_image_kitty(const char* url, int x, int y, int w, int h, int sx,
     }
 cleanup:
     fclose(fp);
-    tty_MOVE(Currentbuf->cursorY, Currentbuf->cursorX);
+    tty_MOVE(Currentbuf->cursorY, Currentbuf->doc.cursorX);
 }
 
 void drawImage(struct Buffer* currentbuf)
@@ -606,12 +606,12 @@ void drawImage(struct Buffer* currentbuf)
                 w = i->cache->a_width > 0 ? i->width : 0;
                 h = i->cache->a_height > 0 ? i->height : 0;
                 put_image_sixel(url, x, y, w, h, i->sx, i->sy, sw * rt->pixel_per_char, sh * rt->pixel_per_line_i, n_terminal_image);
-                tty_MOVE(Currentbuf->cursorY, Currentbuf->cursorX);
+                tty_MOVE(Currentbuf->cursorY, Currentbuf->doc.cursorX);
             } else if (rt->enable_inline_image == INLINE_IMG_OSC5379) {
                 Str buf = get_image_osc5379(url, x, y, w, h, sx, sy, sw, sh);
                 tty_MOVE(y, x);
                 writestr(buf->ptr);
-                tty_MOVE(Currentbuf->cursorY, Currentbuf->cursorX);
+                tty_MOVE(Currentbuf->cursorY, Currentbuf->doc.cursorX);
             } else if (rt->enable_inline_image == INLINE_IMG_ITERM2) {
                 put_image_iterm2(url, x, y, sw, sh);
             } else if (rt->enable_inline_image == INLINE_IMG_KITTY) {
@@ -757,7 +757,7 @@ showImageProgress(struct Buffer* buf)
         if (getRuntime()->enable_inline_image && n == l)
             drawImage(buf);
         message(Sprintf("%d/%d images loaded", l, n)->ptr,
-            buf->cursorX + buf->doc.rootX, buf->cursorY + buf->doc.rootY);
+            buf->doc.cursorX + buf->doc.rootX, buf->cursorY + buf->doc.rootY);
     }
 }
 

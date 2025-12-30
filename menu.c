@@ -855,7 +855,7 @@ int select_menu(struct Menu* menu, int mselect)
     draw_menu_item(menu, menu->select);
     screen_standend();
     /*
-     * move(menu->cursorY, menu->cursorX); */
+     * move(menu->cursorY, menu->doc.cursorX); */
     screen_move(menu->y + mselect - menu->offset, menu->x);
     screen_toggle_stand();
     tty_write_screen();
@@ -1414,7 +1414,7 @@ void popupMenu(int x, int y, struct Menu* menu)
     initSelectMenu();
     initSelTabMenu();
 
-    menu->cursorX = Currentbuf->cursorX + Currentbuf->doc.rootX;
+    menu->cursorX = Currentbuf->doc.cursorX + Currentbuf->doc.rootX;
     menu->cursorY = Currentbuf->cursorY + Currentbuf->doc.rootY;
     menu->x = x + FRAME_WIDTH + 1;
     menu->y = y + 2;
@@ -1432,7 +1432,7 @@ DEFUN(mainMn, MAIN_MENU MENU, "Pop up menu")
     struct Menu* menu = &MainMenu;
     char* data;
     int n;
-    int x = Currentbuf->cursorX + Currentbuf->doc.rootX,
+    int x = Currentbuf->doc.cursorX + Currentbuf->doc.rootX,
         y = Currentbuf->cursorY + Currentbuf->doc.rootY;
 
     data = searchKeyData();
@@ -1451,7 +1451,7 @@ DEFUN(mainMn, MAIN_MENU MENU, "Pop up menu")
 
 DEFUN(selMn, SELECT_MENU, "Pop up buffer-stack menu")
 {
-    int x = Currentbuf->cursorX + Currentbuf->doc.rootX,
+    int x = Currentbuf->doc.cursorX + Currentbuf->doc.rootX,
         y = Currentbuf->cursorY + Currentbuf->doc.rootY;
 
     popupMenu(x, y, &SelectMenu);
@@ -1517,7 +1517,7 @@ initSelectMenu(void)
 
     new_option_menu(&SelectMenu, label, &SelectV, smChBuf);
     SelectMenu.initial = SelectV;
-    SelectMenu.cursorX = Currentbuf->cursorX + Currentbuf->doc.rootX;
+    SelectMenu.cursorX = Currentbuf->doc.cursorX + Currentbuf->doc.rootX;
     SelectMenu.cursorY = Currentbuf->cursorY + Currentbuf->doc.rootY;
     SelectMenu.keymap['D'] = smDelBuf;
     SelectMenu.item[nitem].type = MENU_NOP;
@@ -1589,7 +1589,7 @@ smDelBuf(char c)
 
 DEFUN(tabMn, TAB_MENU, "Pop up tab selection menu")
 {
-    int x = Currentbuf->cursorX + Currentbuf->doc.rootX,
+    int x = Currentbuf->doc.cursorX + Currentbuf->doc.rootX,
         y = Currentbuf->cursorY + Currentbuf->doc.rootY;
 
     popupMenu(x, y, &SelTabMenu);
@@ -1653,7 +1653,7 @@ initSelTabMenu(void)
 
     new_option_menu(&SelTabMenu, label, &SelTabV, smChTab);
     SelTabMenu.initial = SelTabV;
-    SelTabMenu.cursorX = Currentbuf->cursorX + Currentbuf->doc.rootX;
+    SelTabMenu.cursorX = Currentbuf->doc.cursorX + Currentbuf->doc.rootX;
     SelTabMenu.cursorY = Currentbuf->cursorY + Currentbuf->doc.rootY;
     SelTabMenu.keymap['D'] = smDelTab;
     SelTabMenu.item[nitem].type = MENU_NOP;
@@ -1956,7 +1956,7 @@ link_menu(struct Buffer* buf)
     new_option_menu(&menu, label, &linkV, NULL);
 
     menu.initial = 0;
-    menu.cursorX = buf->cursorX + buf->doc.rootX;
+    menu.cursorX = buf->doc.cursorX + buf->doc.rootX;
     menu.cursorY = buf->cursorY + buf->doc.rootY;
     menu.x = menu.cursorX + FRAME_WIDTH + 1;
     menu.y = menu.cursorY + 2;
@@ -1982,7 +1982,7 @@ accesskey_menu(struct Buffer* buf)
     struct Anchor* a;
     struct Anchor** ap;
     int i, n, nitem = 0, key = -1;
-    char** label;
+    const char** label;
     char* t;
     unsigned char c;
 
@@ -2013,7 +2013,7 @@ accesskey_menu(struct Buffer* buf)
     new_option_menu(&menu, label, &key, NULL);
 
     menu.initial = 0;
-    menu.cursorX = buf->cursorX + buf->doc.rootX;
+    menu.cursorX = buf->doc.cursorX + buf->doc.rootX;
     menu.cursorY = buf->cursorY + buf->doc.rootY;
     menu.x = menu.cursorX + FRAME_WIDTH + 1;
     menu.y = menu.cursorY + 2;
@@ -2095,7 +2095,7 @@ list_menu(struct Buffer* buf)
     if (nitem >= nlmKeys)
         two = TRUE;
 
-    char** label = New_N(char*, nitem + 1);
+    const char** label = New_N(char*, nitem + 1);
     struct Anchor** ap = New_N(struct Anchor*, nitem);
     for (int i = 0, n = 0; i < al->nanchor; i++) {
         struct Anchor* a = &al->anchors[i];
@@ -2123,7 +2123,7 @@ list_menu(struct Buffer* buf)
     new_option_menu(&menu, label, &key, NULL);
 
     menu.initial = 0;
-    menu.cursorX = buf->cursorX + buf->doc.rootX;
+    menu.cursorX = buf->doc.cursorX + buf->doc.rootX;
     menu.cursorY = buf->cursorY + buf->doc.rootY;
     menu.x = menu.cursorX + FRAME_WIDTH + 1;
     menu.y = menu.cursorY + 2;

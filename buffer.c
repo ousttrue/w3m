@@ -759,19 +759,19 @@ void cursorXY(struct Buffer* buf, int x, int y)
 
     cursorUpDown(buf, y - buf->cursorY);
 
-    if (buf->cursorX > x) {
-        while (buf->cursorX > x)
+    if (buf->doc.cursorX > x) {
+        while (buf->doc.cursorX > x)
             cursorLeft(buf, buf->doc.COLS / 2);
-    } else if (buf->cursorX < x) {
-        while (buf->cursorX < x) {
-            oldX = buf->cursorX;
+    } else if (buf->doc.cursorX < x) {
+        while (buf->doc.cursorX < x) {
+            oldX = buf->doc.cursorX;
 
             cursorRight(buf, buf->doc.COLS / 2);
 
-            if (oldX == buf->cursorX)
+            if (oldX == buf->doc.cursorX)
                 break;
         }
-        if (buf->cursorX > x)
+        if (buf->doc.cursorX > x)
             cursorLeft(buf, buf->doc.COLS / 2);
     }
 }
@@ -786,13 +786,13 @@ void arrangeLine(struct Buffer* buf)
     i = columnPos(buf->doc.currentLine, buf->doc.currentColumn + buf->visualpos - buf->doc.currentLine->bwidth);
     cpos = COLPOS(buf->doc.currentLine, i) - buf->doc.currentColumn;
     if (cpos >= 0) {
-        buf->cursorX = cpos;
+        buf->doc.cursorX = cpos;
         buf->pos = i;
     } else if (buf->doc.currentLine->len > i) {
-        buf->cursorX = 0;
+        buf->doc.cursorX = 0;
         buf->pos = i + 1;
     } else {
-        buf->cursorX = 0;
+        buf->doc.cursorX = 0;
         buf->pos = 0;
     }
 }
@@ -903,7 +903,7 @@ void cursorRight(struct Buffer* buf, int n)
         columnSkip(buf, n + (vpos2 - buf->doc.COLS) - (vpos2 - buf->doc.COLS) % n);
         buf->visualpos = l->bwidth + cpos - buf->doc.currentColumn;
     }
-    buf->cursorX = buf->visualpos - l->bwidth;
+    buf->doc.cursorX = buf->visualpos - l->bwidth;
 }
 
 void cursorLeft(struct Buffer* buf, int n)
@@ -933,13 +933,13 @@ void cursorLeft(struct Buffer* buf, int n)
             -n + buf->visualpos - l->bwidth - (buf->visualpos - l->bwidth) % n);
         buf->visualpos = l->bwidth + cpos - buf->doc.currentColumn;
     }
-    buf->cursorX = buf->visualpos - l->bwidth;
+    buf->doc.cursorX = buf->visualpos - l->bwidth;
 }
 
 void cursorHome(struct Buffer* buf)
 {
     buf->visualpos = 0;
-    buf->cursorX = buf->cursorY = 0;
+    buf->doc.cursorX = buf->cursorY = 0;
 }
 
 /*
@@ -989,5 +989,5 @@ void arrangeCursor(struct Buffer* buf)
     /* Arrange cursor */
     buf->cursorY = buf->doc.currentLine->linenumber - buf->doc.topLine->linenumber;
     buf->visualpos = buf->doc.currentLine->bwidth + COLPOS(buf->doc.currentLine, buf->pos) - buf->doc.currentColumn;
-    buf->cursorX = buf->visualpos - buf->doc.currentLine->bwidth;
+    buf->doc.cursorX = buf->visualpos - buf->doc.currentLine->bwidth;
 }

@@ -119,7 +119,7 @@ static void set_buffer_environ(struct Buffer* buf)
         else
             set_environ("W3M_CURRENT_FORM", "");
         set_environ("W3M_CURRENT_LINE", Sprintf("%ld", l->real_linenumber)->ptr);
-        set_environ("W3M_CURRENT_COLUMN", Sprintf("%d", buf->doc.currentColumn + buf->cursorX + 1)->ptr);
+        set_environ("W3M_CURRENT_COLUMN", Sprintf("%d", buf->doc.currentColumn + buf->doc.cursorX + 1)->ptr);
     } else if (!l) {
         set_environ("W3M_CURRENT_WORD", "");
         set_environ("W3M_CURRENT_LINK", "");
