@@ -1048,7 +1048,7 @@ static struct Buffer* make_buffer(struct Url url, int flag,
                 struct Anchor* a;
                 a = searchURLLabel(b, url.label);
                 if (a != NULL) {
-                    gotoLine(b, a->start.line);
+                    doc_gotoLine(&b->doc, a->start.line);
                     if (getRuntime()->label_topline)
                         b->doc.topLine = doc_lineSkip(&b->doc, b->doc.topLine,
                             b->doc.currentLine->linenumber

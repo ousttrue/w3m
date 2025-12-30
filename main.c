@@ -1021,7 +1021,7 @@ static void nscroll(int n)
         if (lnum > llnum)
             lnum = llnum + diff_n;
     }
-    gotoLine(buf, lnum);
+    doc_gotoLine(&buf->doc, lnum);
     doc_arrangeLine(&buf->doc);
     if (n > 0) {
         if (buf->doc.currentLine->bpos && buf->doc.currentLine->bwidth >= buf->doc.currentColumn + buf->doc.visualpos)
@@ -2213,7 +2213,7 @@ gotoLabel(const char* label)
     pushHashHist(getRuntime()->URLHist, parsedURL2Str(&buf->currentURL)->ptr);
     (*buf->clone)++;
     pushBuffer(buf);
-    gotoLine(Currentbuf, al->start.line);
+    doc_gotoLine(&Currentbuf->doc, al->start.line);
     if (getRuntime()->label_topline)
         Currentbuf->doc.topLine = doc_lineSkip(&Currentbuf->doc, Currentbuf->doc.topLine,
             Currentbuf->doc.currentLine->linenumber
@@ -2356,7 +2356,7 @@ DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink")
         hseq++;
     } while (an == NULL);
 
-    gotoLine(Currentbuf, po->line);
+    doc_gotoLine(&Currentbuf->doc, po->line);
     Currentbuf->doc.pos = po->pos;
     arrangeCursor(Currentbuf);
 }
@@ -2391,7 +2391,7 @@ DEFUN(lastA, LINK_END, "Move to the last hyperlink")
         hseq--;
     } while (an == NULL);
 
-    gotoLine(Currentbuf, po->line);
+    doc_gotoLine(&Currentbuf->doc, po->line);
     Currentbuf->doc.pos = po->pos;
     arrangeCursor(Currentbuf);
 }
@@ -2419,7 +2419,7 @@ DEFUN(nthA, LINK_N, "Go to the nth link")
     if (an == NULL)
         return;
 
-    gotoLine(Currentbuf, po->line);
+    doc_gotoLine(&Currentbuf->doc, po->line);
     Currentbuf->doc.pos = po->pos;
     arrangeCursor(Currentbuf);
 }
@@ -2525,7 +2525,7 @@ _end:
     if (an == NULL || an->hseq < 0)
         return;
     po = &hl->marks[an->hseq];
-    gotoLine(Currentbuf, po->line);
+    doc_gotoLine(&Currentbuf->doc, po->line);
     Currentbuf->doc.pos = po->pos;
     arrangeCursor(Currentbuf);
 }
@@ -2607,7 +2607,7 @@ _end:
     if (an == NULL || an->hseq < 0)
         return;
     po = hl->marks + an->hseq;
-    gotoLine(Currentbuf, po->line);
+    doc_gotoLine(&Currentbuf->doc, po->line);
     Currentbuf->doc.pos = po->pos;
     arrangeCursor(Currentbuf);
 }
@@ -2662,7 +2662,7 @@ nextX(int d, int dy)
 
     if (pan == NULL)
         return;
-    gotoLine(Currentbuf, y);
+    doc_gotoLine(&Currentbuf->doc, y);
     Currentbuf->doc.pos = pan->start.pos;
     arrangeCursor(Currentbuf);
 }
@@ -2708,7 +2708,7 @@ nextY(int d)
 
     if (pan == NULL)
         return;
-    gotoLine(Currentbuf, pan->start.line);
+    doc_gotoLine(&Currentbuf->doc, pan->start.line);
     doc_arrangeLine(&Currentbuf->doc);
 }
 
@@ -2839,7 +2839,7 @@ DEFUN(backBf, BACK, "Close current buffer and return to the one below in stack")
                 rFrame();
                 Currentbuf->doc.topLine = doc_lineSkip(&Currentbuf->doc,
                     Currentbuf->doc.firstLine, top - 1);
-                gotoLine(Currentbuf, linenumber);
+                doc_gotoLine(&Currentbuf->doc, linenumber);
                 Currentbuf->doc.pos = pos;
                 Currentbuf->doc.currentColumn = currentColumn;
                 arrangeCursor(Currentbuf);
@@ -3090,7 +3090,7 @@ anchorMn(BufferMenuFunc menu_func, bool go)
         return;
 
     struct BufferPoint* po = &Currentbuf->hmarklist->marks[a->hseq];
-    gotoLine(Currentbuf, po->line);
+    doc_gotoLine(&Currentbuf->doc, po->line);
     Currentbuf->doc.pos = po->pos;
     arrangeCursor(Currentbuf);
     if (go)

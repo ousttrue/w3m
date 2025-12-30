@@ -140,7 +140,6 @@ extern struct Anchor* retrieveCurrentForm(struct Buffer* buf);
 extern struct Anchor* retrieveCurrentMap(struct Buffer* buf);
 extern void reshapeBuffer(struct Buffer* buf);
 void reAnchorWord(struct Buffer* buf, struct Line* l, int spos, int epos);
-extern void gotoLine(struct Buffer* buf, int n);
 extern void saveBuffer(struct Buffer* buf, FILE* f, int cont);
 extern void saveBufferBody(struct Buffer* buf, FILE* f, int cont);
 extern struct Buffer* getshell(char* cmd);
@@ -153,7 +152,6 @@ extern struct Buffer* deleteBuffer(struct Buffer* first, struct Buffer* delbuf);
 extern struct Buffer* replaceBuffer(struct Buffer* first, struct Buffer* delbuf, struct Buffer* newbuf);
 extern struct Buffer* nthBuffer(struct Buffer* firstbuf, int n);
 extern void gotoRealLine(struct Buffer* buf, int n);
-extern void gotoLine(struct Buffer* buf, int n);
 extern struct Buffer* selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf,
     char* selectchar);
 extern void copyBuffer(struct Buffer* a, struct Buffer* b);

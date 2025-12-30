@@ -1,4 +1,5 @@
 #include "search.h"
+#include "document.h"
 #include "message.h"
 #include "tab.h"
 #include "buffer.h"
@@ -126,7 +127,7 @@ enum SearchResult forwardSearch(struct Buffer* buf, const char* str)
         }
         buf->doc.pos = pos;
         if (l != buf->doc.currentLine)
-            gotoLine(buf, l->linenumber);
+            doc_gotoLine(&buf->doc, l->linenumber);
         arrangeCursor(buf);
         set_mark(l, pos, pos + last - first);
         return SR_FOUND;
@@ -151,7 +152,7 @@ enum SearchResult forwardSearch(struct Buffer* buf, const char* str)
             }
             buf->doc.pos = pos;
             buf->doc.currentLine = l;
-            gotoLine(buf, l->linenumber);
+            doc_gotoLine(&buf->doc, l->linenumber);
             arrangeCursor(buf);
             set_mark(l, pos, pos + last - first);
             return SR_FOUND | (wrapped ? SR_WRAPPED : 0);
@@ -219,7 +220,7 @@ enum SearchResult backwardSearch(struct Buffer* buf, const char* str)
             }
             buf->doc.pos = pos;
             if (l != buf->doc.currentLine)
-                gotoLine(buf, l->linenumber);
+                doc_gotoLine(&buf->doc, l->linenumber);
             arrangeCursor(buf);
             set_mark(l, pos, pos + found_last - found);
             return SR_FOUND;
@@ -257,7 +258,7 @@ enum SearchResult backwardSearch(struct Buffer* buf, const char* str)
                 l = l->next;
             }
             buf->doc.pos = pos;
-            gotoLine(buf, l->linenumber);
+            doc_gotoLine(&buf->doc, l->linenumber);
             arrangeCursor(buf);
             set_mark(l, pos, pos + found_last - found);
             return SR_FOUND | (wrapped ? SR_WRAPPED : 0);

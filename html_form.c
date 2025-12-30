@@ -375,7 +375,7 @@ void formUpdateBuffer(struct Anchor* a, struct Buffer* buf, struct FormItemList*
     struct Line* l;
 
     copyBuffer(&save, buf);
-    gotoLine(buf, a->start.line);
+    doc_gotoLine(&buf->doc, a->start.line);
     switch (form->type) {
     case FORM_TEXTAREA:
     case FORM_INPUT_TEXT:

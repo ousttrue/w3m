@@ -49,3 +49,5 @@ void doc_arrangeLine(struct Document* doc);
 void doc_cursorUpDown(struct Document* doc, int n);
 void doc_cursorUp0(struct Document* doc, int n);
 void doc_cursorDown0(struct Document* doc, int n);
+// set currentLine to line that has the number
+void doc_gotoLine(struct Document* doc, int linenumer);

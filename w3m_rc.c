@@ -1,4 +1,5 @@
 #include "w3m_rc.h"
+#include "document.h"
 #include "func.h"
 #include "maparea.h"
 #include "mimehead.h"
@@ -589,7 +590,7 @@ struct Buffer* loadLink(const char* url, const char* target, const char* referer
             al = searchURLLabel(Currentbuf, label);
         }
         if (al) {
-            gotoLine(Currentbuf, al->start.line);
+            doc_gotoLine(&Currentbuf->doc, al->start.line);
             if (g_runtime.label_topline)
                 Currentbuf->doc.topLine = doc_lineSkip(&Currentbuf->doc, Currentbuf->doc.topLine,
                     Currentbuf->doc.currentLine->linenumber - Currentbuf->doc.topLine->linenumber);
@@ -859,7 +860,7 @@ bool currentBufferSubmit()
         return false;
     }
     Currentbuf->submit = NULL;
-    gotoLine(Currentbuf, a->start.line);
+    doc_gotoLine(&Currentbuf->doc, a->start.line);
     Currentbuf->doc.pos = a->start.pos;
     _followForm(TRUE, true, false);
     return true;

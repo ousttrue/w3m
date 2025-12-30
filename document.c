@@ -1,4 +1,5 @@
 #include "document.h"
+#include "message.h"
 #include "w3m_rc.h"
 #include "history.h"
 #include "anchor.h"
@@ -250,5 +251,39 @@ void doc_cursorDown0(struct Document* doc, int n)
         if (doc->currentLine->next != NULL)
             doc->currentLine = doc->currentLine->next;
         doc_arrangeLine(doc);
+    }
+}
+
+void doc_gotoLine(struct Document* doc, int linenumber)
+{
+    if (doc->firstLine == NULL)
+        return;
+
+    if (doc->firstLine->linenumber > linenumber) {
+        struct Line* l = doc->firstLine;
+        char msg[36];
+        sprintf(msg, "First line is #%ld", l->linenumber);
+        set_delayed_message(msg);
+        doc->topLine = doc->currentLine = l;
+        return;
+    }
+
+    if (doc->lastLine->linenumber < linenumber) {
+        struct Line* l = doc->lastLine;
+        char msg[36];
+        sprintf(msg, "Last line is #%ld", doc->lastLine->linenumber);
+        set_delayed_message(msg);
+        doc->currentLine = l;
+        doc->topLine = doc_lineSkip(doc, doc->currentLine, -(doc->LINES - 1));
+        return;
+    }
+
+    for (struct Line* l = doc->firstLine; l != NULL; l = l->next) {
+        if (l->linenumber >= linenumber) {
+            doc->currentLine = l;
+            if (linenumber < doc->topLine->linenumber || doc->topLine->linenumber + doc->LINES <= linenumber)
+                doc->topLine = doc_lineSkip(doc, l, -(doc->LINES + 1) / 2);
+            break;
+        }
     }
 }
