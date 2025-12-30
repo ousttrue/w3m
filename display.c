@@ -234,11 +234,11 @@ void drawAnchorCursor0(struct Buffer* buf, struct AnchorList* al, int hseq, int 
                 }
             }
             if (active && start_pos < end_pos)
-                redrawLineRegion(buf, l, l->linenumber - tline + buf->rootY,
+                redrawLineRegion(buf, l, l->linenumber - tline + buf->doc.rootY,
                     start_pos, end_pos);
         } else if (prevhseq >= 0 && an->hseq == prevhseq) {
             if (active)
-                redrawLineRegion(buf, l, l->linenumber - tline + buf->rootY,
+                redrawLineRegion(buf, l, l->linenumber - tline + buf->doc.rootY,
                     an->start.pos, an->end.pos);
         }
     }
@@ -476,21 +476,21 @@ redrawNLine(struct Buffer* buf, int n)
     }
     for (i = 0, l = buf->doc.topLine; i < buf->LINES; i++, l = l->next) {
         if (i >= buf->LINES - n || i < -n)
-            l = redrawLine(buf, l, i + buf->rootY);
+            l = redrawLine(buf, l, i + buf->doc.rootY);
         if (l == NULL)
             break;
     }
     if (n > 0) {
-        screen_move(i + buf->rootY, 0);
+        screen_move(i + buf->doc.rootY, 0);
         screen_clrtobotx();
     }
 
     if (!(getRuntime()->activeImage && getRuntime()->displayImage && buf->img))
         return;
-    screen_move(buf->cursorY + buf->rootY, buf->cursorX + buf->doc.rootX);
+    screen_move(buf->cursorY + buf->doc.rootY, buf->cursorX + buf->doc.rootX);
     for (i = 0, l = buf->doc.topLine; i < buf->LINES && l; i++, l = l->next) {
         if (i >= buf->LINES - n || i < -n)
-            redrawLineImage(buf, l, i + buf->rootY);
+            redrawLineImage(buf, l, i + buf->doc.rootY);
     }
 }
 
@@ -517,7 +517,7 @@ void displayMsg(struct Buffer* buf)
     }
     displayDelayedMessage();
     screen_standout();
-    message(msg->ptr, buf->cursorX + buf->doc.rootX, buf->cursorY + buf->rootY);
+    message(msg->ptr, buf->cursorX + buf->doc.rootX, buf->cursorY + buf->doc.rootY);
     screen_standend();
     term_title(conv_to_system(buf->buffername));
 }
@@ -539,7 +539,7 @@ void bufferPosition(struct Buffer* buf)
     }
     buf->COLS = TTY_COLS() - buf->doc.rootX;
 
-    // rootY
+    // doc.rootY
     int ny = 0;
     if (nTab() > 1) {
         calcTabPos();
@@ -547,8 +547,8 @@ void bufferPosition(struct Buffer* buf)
         if (ny > LASTLINE())
             ny = LASTLINE();
     }
-    if (buf->rootY != ny || buf->LINES != LASTLINE() - ny) {
-        buf->rootY = ny;
+    if (buf->doc.rootY != ny || buf->LINES != LASTLINE() - ny) {
+        buf->doc.rootY = ny;
         buf->LINES = LASTLINE() - ny;
         arrangeCursor(buf);
     }

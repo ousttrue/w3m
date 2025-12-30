@@ -14,6 +14,7 @@ struct Document {
     int allLine;
 
     short rootX;
+    short rootY;
 };
 
 void addnewline(struct Document* doc, const char* line, Lineprop* prop, Linecolor* color, int pos, int width, int nlines);
