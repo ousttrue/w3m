@@ -219,4 +219,36 @@ void doc_arrangeLine(struct Document* doc)
     }
 }
 
+void doc_cursorUpDown(struct Document* doc, int n)
+{
+    if (doc->firstLine == NULL)
+        return;
+    struct Line* cl = doc->currentLine;
+    if ((doc->currentLine = currentLineSkip(cl, n)) == cl)
+        return;
+    doc_arrangeLine(doc);
+}
 
+void doc_cursorUp0(struct Document* doc, int n)
+{
+    if (doc->cursorY > 0)
+        doc_cursorUpDown(doc, -1);
+    else {
+        doc->topLine = doc_lineSkip(doc, doc->topLine, -n);
+        if (doc->currentLine->prev != NULL)
+            doc->currentLine = doc->currentLine->prev;
+        doc_arrangeLine(doc);
+    }
+}
+
+void doc_cursorDown0(struct Document* doc, int n)
+{
+    if (doc->cursorY < doc->LINES - 1)
+        doc_cursorUpDown(doc, 1);
+    else {
+        doc->topLine = doc_lineSkip(doc, doc->topLine, n);
+        if (doc->currentLine->next != NULL)
+            doc->currentLine = doc->currentLine->next;
+        doc_arrangeLine(doc);
+    }
+}

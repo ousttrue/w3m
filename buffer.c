@@ -752,16 +752,14 @@ void restorePosition(struct Buffer* buf, struct Buffer* orig)
 
 void cursorXY(struct Buffer* buf, int x, int y)
 {
-    int oldX;
-
-    cursorUpDown(buf, y - buf->doc.cursorY);
+    doc_cursorUpDown(&buf->doc, y - buf->doc.cursorY);
 
     if (buf->doc.cursorX > x) {
         while (buf->doc.cursorX > x)
             cursorLeft(buf, buf->doc.COLS / 2);
     } else if (buf->doc.cursorX < x) {
         while (buf->doc.cursorX < x) {
-            oldX = buf->doc.cursorX;
+            int oldX = buf->doc.cursorX;
 
             cursorRight(buf, buf->doc.COLS / 2);
 
@@ -773,45 +771,21 @@ void cursorXY(struct Buffer* buf, int x, int y)
     }
 }
 
-void cursorUp0(struct Buffer* buf, int n)
-{
-    if (buf->doc.cursorY > 0)
-        cursorUpDown(buf, -1);
-    else {
-        buf->doc.topLine = doc_lineSkip(&buf->doc, buf->doc.topLine, -n);
-        if (buf->doc.currentLine->prev != NULL)
-            buf->doc.currentLine = buf->doc.currentLine->prev;
-        doc_arrangeLine(&buf->doc);
-    }
-}
-
 void cursorUp(struct Buffer* buf, int n)
 {
     struct Line* l = buf->doc.currentLine;
     if (buf->doc.firstLine == NULL)
         return;
     while (buf->doc.currentLine->prev && buf->doc.currentLine->bpos)
-        cursorUp0(buf, n);
+        doc_cursorUp0(&buf->doc, n);
     if (buf->doc.currentLine == buf->doc.firstLine) {
         gotoLine(buf, l->linenumber);
         doc_arrangeLine(&buf->doc);
         return;
     }
-    cursorUp0(buf, n);
+    doc_cursorUp0(&buf->doc, n);
     while (buf->doc.currentLine->prev && buf->doc.currentLine->bpos && buf->doc.currentLine->bwidth >= buf->doc.currentColumn + buf->doc.visualpos)
-        cursorUp0(buf, n);
-}
-
-void cursorDown0(struct Buffer* buf, int n)
-{
-    if (buf->doc.cursorY < buf->doc.LINES - 1)
-        cursorUpDown(buf, 1);
-    else {
-        buf->doc.topLine = doc_lineSkip(&buf->doc, buf->doc.topLine, n);
-        if (buf->doc.currentLine->next != NULL)
-            buf->doc.currentLine = buf->doc.currentLine->next;
-        doc_arrangeLine(&buf->doc);
-    }
+        doc_cursorUp0(&buf->doc, n);
 }
 
 void cursorDown(struct Buffer* buf, int n)
@@ -820,26 +794,15 @@ void cursorDown(struct Buffer* buf, int n)
     if (buf->doc.firstLine == NULL)
         return;
     while (buf->doc.currentLine->next && buf->doc.currentLine->next->bpos)
-        cursorDown0(buf, n);
+        doc_cursorDown0(&buf->doc, n);
     if (buf->doc.currentLine == buf->doc.lastLine) {
         gotoLine(buf, l->linenumber);
         doc_arrangeLine(&buf->doc);
         return;
     }
-    cursorDown0(buf, n);
+    doc_cursorDown0(&buf->doc, n);
     while (buf->doc.currentLine->next && buf->doc.currentLine->next->bpos && buf->doc.currentLine->bwidth + buf->doc.currentLine->width < buf->doc.currentColumn + buf->doc.visualpos)
-        cursorDown0(buf, n);
-}
-
-void cursorUpDown(struct Buffer* buf, int n)
-{
-    struct Line* cl = buf->doc.currentLine;
-
-    if (buf->doc.firstLine == NULL)
-        return;
-    if ((buf->doc.currentLine = currentLineSkip(cl, n)) == cl)
-        return;
-    doc_arrangeLine(&buf->doc);
+        doc_cursorDown0(&buf->doc, n);
 }
 
 void cursorRight(struct Buffer* buf, int n)
@@ -860,7 +823,7 @@ void cursorRight(struct Buffer* buf, int n)
     } else if (l->len == 0) {
         buf->doc.pos = 0;
     } else if (l->next && l->next->bpos) {
-        cursorDown0(buf, 1);
+        doc_cursorDown0(&buf->doc, 1);
         buf->doc.pos = 0;
         arrangeCursor(buf);
         return;
@@ -897,7 +860,7 @@ void cursorLeft(struct Buffer* buf, int n)
     if (i >= delta)
         buf->doc.pos = i - delta;
     else if (l->prev && l->bpos) {
-        cursorUp0(buf, -1);
+        doc_cursorUp0(&buf->doc, -1);
         buf->doc.pos = buf->doc.currentLine->len - 1;
         arrangeCursor(buf);
         return;
@@ -940,12 +903,12 @@ void arrangeCursor(struct Buffer* buf)
     /* Arrange column */
     while (buf->doc.pos < 0 && buf->doc.currentLine->prev && buf->doc.currentLine->bpos) {
         pos = buf->doc.pos + buf->doc.currentLine->prev->len;
-        cursorUp0(buf, 1);
+        doc_cursorUp0(&buf->doc, 1);
         buf->doc.pos = pos;
     }
     while (buf->doc.pos >= buf->doc.currentLine->len && buf->doc.currentLine->next && buf->doc.currentLine->next->bpos) {
         pos = buf->doc.pos - buf->doc.currentLine->len;
-        cursorDown0(buf, 1);
+        doc_cursorDown0(&buf->doc, 1);
         buf->doc.pos = pos;
     }
     if (buf->doc.currentLine->len == 0 || buf->doc.pos < 0)

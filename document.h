@@ -46,3 +46,6 @@ struct Line* doc_redrawLine(struct Document* doc, struct Line* l, int i, struct 
 struct Line* doc_lineSkip(struct Document* doc, struct Line* line, int offset);
 /// update cursorY, cursorX and pos from currentLine and currentColumn
 void doc_arrangeLine(struct Document* doc);
+void doc_cursorUpDown(struct Document* doc, int n);
+void doc_cursorUp0(struct Document* doc, int n);
+void doc_cursorDown0(struct Document* doc, int n);

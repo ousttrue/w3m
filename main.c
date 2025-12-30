@@ -1028,14 +1028,14 @@ static void nscroll(int n)
             cursorDown(buf, 1);
         else {
             while (buf->doc.currentLine->next && buf->doc.currentLine->next->bpos && buf->doc.currentLine->bwidth + buf->doc.currentLine->width < buf->doc.currentColumn + buf->doc.visualpos)
-                cursorDown0(buf, 1);
+                doc_cursorDown0(&buf->doc, 1);
         }
     } else {
         if (buf->doc.currentLine->bwidth + buf->doc.currentLine->width < buf->doc.currentColumn + buf->doc.visualpos)
             cursorUp(buf, 1);
         else {
             while (buf->doc.currentLine->prev && buf->doc.currentLine->bpos && buf->doc.currentLine->bwidth >= buf->doc.currentColumn + buf->doc.visualpos)
-                cursorUp0(buf, 1);
+                doc_cursorUp0(&buf->doc, 1);
         }
     }
 }
@@ -2001,7 +2001,7 @@ DEFUN(linbeg, LINE_BEGIN, "Go to the beginning of the line")
     if (Currentbuf->doc.firstLine == NULL)
         return;
     while (Currentbuf->doc.currentLine->prev && Currentbuf->doc.currentLine->bpos)
-        cursorUp0(Currentbuf, 1);
+        doc_cursorUp0(&Currentbuf->doc, 1);
     Currentbuf->doc.pos = 0;
     arrangeCursor(Currentbuf);
 }
@@ -2013,7 +2013,7 @@ DEFUN(linend, LINE_END, "Go to the end of the line")
         return;
     while (Currentbuf->doc.currentLine->next
         && Currentbuf->doc.currentLine->next->bpos)
-        cursorDown0(Currentbuf, 1);
+        doc_cursorDown0(&Currentbuf->doc, 1);
     Currentbuf->doc.pos = Currentbuf->doc.currentLine->len - 1;
     arrangeCursor(Currentbuf);
 }
