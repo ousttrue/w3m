@@ -1,4 +1,5 @@
 #include "display.h"
+#include "document.h"
 #include "file.h"
 #include "terms.h"
 #include "history.h"
@@ -346,97 +347,6 @@ redrawLineImage(struct Buffer* buf, struct Line* l, int i)
     return l;
 }
 
-static struct Line*
-redrawLine(struct Buffer* buf, struct Document* doc, struct Line* l, int i)
-{
-    struct LineWriter g = { 0 };
-
-    int j, pos, rcol, ncol, delta = 1;
-    int column = buf->doc.currentColumn;
-    char* p;
-    Lineprop* pr;
-    Linecolor* pc;
-    struct Anchor* a;
-    struct Url url;
-    int k, vpos = -1;
-
-    if (l == NULL) {
-        return NULL;
-    }
-    screen_move(i, 0);
-    if (getRuntime()->showLineNum) {
-        char tmp[16];
-        if (!doc->rootX) {
-            if (doc->lastLine->real_linenumber > 0)
-                doc->rootX = (int)(log(doc->lastLine->real_linenumber + 0.1)
-                                     / log(10))
-                    + 2;
-            if (doc->rootX < 5)
-                doc->rootX = 5;
-            if (doc->rootX > TTY_COLS())
-                doc->rootX = TTY_COLS();
-            doc->COLS = TTY_COLS() - doc->rootX;
-        }
-        if (l->real_linenumber && !l->bpos)
-            sprintf(tmp, "%*ld:", doc->rootX - 1, l->real_linenumber);
-        else
-            sprintf(tmp, "%*s ", doc->rootX - 1, "");
-        screen_wc_addstr(tmp);
-    }
-    screen_move(i, doc->rootX);
-    if (l->width < 0)
-        l->width = COLPOS(l, l->len);
-    if (l->len == 0 || l->width - 1 < column) {
-        screen_clrtoeolx();
-        return l;
-    }
-    /* need_clrtoeol(); */
-    pos = columnPos(l, column);
-    p = &(l->lineBuf[pos]);
-    pr = &(l->propBuf[pos]);
-    if (getRuntime()->useColor && l->colorBuf)
-        pc = &(l->colorBuf[pos]);
-    else
-        pc = NULL;
-    rcol = COLPOS(l, pos);
-
-    for (j = 0; rcol - column < doc->COLS && pos + j < l->len; j += delta) {
-        if (getRuntime()->useVisitedColor && vpos <= pos + j && !(pr[j] & PE_VISITED)) {
-            a = retrieveAnchor(buf->doc.href, l->linenumber, pos + j);
-            if (a) {
-                parseURL2(a->url, &url, baseURL(buf));
-                if (getHashHist(getRuntime()->URLHist, parsedURL2Str(&url)->ptr)) {
-                    for (k = a->start.pos; k < a->end.pos; k++)
-                        pr[k - pos] |= PE_VISITED;
-                }
-                vpos = a->end.pos;
-            }
-        }
-        delta = wtf_len((wc_uchar*)&p[j]);
-        ncol = COLPOS(l, pos + j + delta);
-        if (ncol - column > doc->COLS)
-            break;
-        if (pc)
-            do_color(&g, pc[j]);
-        if (rcol < column) {
-            for (rcol = column; rcol < ncol; rcol++)
-                addChar(&g, ' ', 0);
-            continue;
-        }
-        if (p[j] == '\t') {
-            for (; rcol < ncol; rcol++)
-                addChar(&g, ' ', 0);
-        } else {
-            addMChar(&g, &p[j], pr[j], delta);
-        }
-        rcol = ncol;
-    }
-    endLine(&g);
-    if (rcol - column < doc->COLS)
-        screen_clrtoeolx();
-    return l;
-}
-
 static void
 redrawNLine(struct Buffer* buf, int n)
 {
@@ -476,7 +386,7 @@ redrawNLine(struct Buffer* buf, int n)
     }
     for (i = 0, l = buf->doc.topLine; i < buf->doc.LINES; i++, l = l->next) {
         if (i >= buf->doc.LINES - n || i < -n)
-            l = redrawLine(buf, &buf->doc, l, i + buf->doc.rootY);
+            l = redrawLine(&buf->doc, l, i + buf->doc.rootY, baseURL(buf));
         if (l == NULL)
             break;
     }

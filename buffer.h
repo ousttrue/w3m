@@ -146,7 +146,6 @@ struct Line* lineSkip(struct Buffer* buf, struct Line* line, int offset, int las
 struct Line* currentLineSkip(struct Buffer* buf, struct Line* line, int offset, int last);
 int getMapXY(struct Buffer* buf, struct Anchor* a, int* x, int* y);
 struct MapArea* retrieveCurrentMapArea(struct Buffer* buf);
-extern struct Anchor* retrieveAnchor(struct AnchorList* al, int line, int pos);
 extern struct Anchor* retrieveCurrentAnchor(struct Buffer* buf);
 extern struct Anchor* retrieveCurrentImg(struct Buffer* buf);
 extern struct Anchor* retrieveCurrentForm(struct Buffer* buf);

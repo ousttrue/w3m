@@ -34,3 +34,5 @@ struct Document {
 };
 
 void addnewline(struct Document* doc, const char* line, Lineprop* prop, Linecolor* color, int pos, int width, int nlines);
+struct Url;
+struct Line* redrawLine(struct Document* doc, struct Line* l, int i, struct Url* base_url);

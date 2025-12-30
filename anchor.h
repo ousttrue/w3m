@@ -68,4 +68,4 @@ extern void shiftAnchorPosition(struct AnchorList* a, struct HmarkerList* hl, in
     int pos, int shift);
 extern char* getAnchorText(struct Buffer* buf, struct AnchorList* al, struct Anchor* a);
 extern struct Buffer* link_list_panel(struct Buffer* buf);
-
+extern struct Anchor* retrieveAnchor(struct AnchorList* al, int line, int pos);
