@@ -39,10 +39,10 @@ extern Str searchURIMethods(struct Url* pu);
 extern void copyParsedURL(struct Url* p, const struct Url* q);
 extern Str parsedURL2RefererStr(struct Url* pu);
 extern struct Url* schemeToProxy(int scheme);
-extern wc_ces url_to_charset(const char* url, const struct Url* base,
-    wc_ces doc_charset);
+extern enum wc_ces url_to_charset(const char* url, const struct Url* base,
+    enum wc_ces doc_charset);
 extern char* url_encode(const char* url, const struct Url* base,
-    wc_ces doc_charset);
+    enum wc_ces doc_charset);
 struct Buffer;
 extern void chkExternalURIBuffer(struct Buffer* buf);
 extern void initMimeTypes(void);

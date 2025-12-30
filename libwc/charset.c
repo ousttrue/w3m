@@ -1,5 +1,4 @@
 #include "charset.h"
-#include "status.h"
 #include "ces.h"
 #include "../alloc.h"
 #include <stdlib.h>
@@ -10,7 +9,7 @@ wc_locale WcLocale = 0;
 
 static struct {
     char* lang;
-    wc_ces ces;
+    enum wc_ces ces;
 } lang_ces_table[] = {
     { "cs", WC_CES_ISO_8859_2 }, /* cs_CZ */
     { "el", WC_CES_ISO_8859_7 }, /* el_GR */
@@ -28,7 +27,7 @@ static struct {
     { NULL, 0 }
 };
 
-static wc_ces
+static enum wc_ces
 wc_codepage(int n)
 {
     switch (n) {
@@ -100,43 +99,39 @@ wc_codepage(int n)
     return 0;
 }
 
-wc_ces
-wc_guess_charset(const char* charset, wc_ces orig)
+enum wc_ces
+wc_guess_charset(const char* charset, enum wc_ces orig)
 {
-    wc_ces guess;
-
     if (charset == NULL || *charset == '\0')
         return orig;
-    guess = wc_charset_to_ces(charset);
+
+    enum wc_ces guess = wc_charset_to_ces(charset);
     return guess ? guess : orig;
 }
 
-wc_ces
-wc_guess_charset_short(const char* charset, wc_ces orig)
+enum wc_ces
+wc_guess_charset_short(const char* charset, enum wc_ces orig)
 {
-    wc_ces guess;
-
     if (charset == NULL || *charset == '\0')
         return orig;
-    guess = wc_charset_short_to_ces(charset);
+
+    enum wc_ces guess = wc_charset_short_to_ces(charset);
     return guess ? guess : orig;
 }
 
-wc_ces
-wc_guess_locale_charset(char* locale, wc_ces orig)
+enum wc_ces
+wc_guess_locale_charset(const char* locale, enum wc_ces orig)
 {
-    wc_ces guess;
-
     if (locale == NULL || *locale == '\0')
         return orig;
-    guess = wc_locale_to_ces(locale);
+    enum wc_ces guess = wc_locale_to_ces(locale);
     return guess ? guess : orig;
 }
 
-wc_ces
-wc_charset_to_ces(char* charset)
+enum wc_ces
+wc_charset_to_ces(const char* charset)
 {
-    char* p = charset;
+    const char* p = charset;
     char buf[16];
     int n;
 
@@ -312,12 +307,12 @@ wc_charset_to_ces(char* charset)
     return 0;
 }
 
-wc_ces
-wc_charset_short_to_ces(char* charset)
+enum wc_ces
+wc_charset_short_to_ces(const char* charset)
 {
-    char* p = charset;
+    const char* p = charset;
     char buf[16];
-    wc_ces ces;
+    enum wc_ces ces;
     int n;
 
     ces = wc_charset_to_ces(charset);
@@ -404,10 +399,10 @@ wc_charset_short_to_ces(char* charset)
     return 0;
 }
 
-wc_ces
-wc_locale_to_ces(char* locale)
+enum wc_ces
+wc_locale_to_ces(const char* locale)
 {
-    char* p = locale;
+    const char* p = locale;
     char buf[8];
     int n;
 
@@ -462,22 +457,22 @@ wc_locale_to_ces(char* locale)
     return WC_CES_ISO_8859_1;
 }
 
-char* wc_ces_to_charset(wc_ces ces)
+char* wc_ces_to_charset(enum wc_ces ces)
 {
     if (ces == WC_CES_WTF)
         return "WTF";
     return WcCesInfo[WC_CES_INDEX(ces)].name;
 }
 
-char* wc_ces_to_charset_desc(wc_ces ces)
+char* wc_ces_to_charset_desc(enum wc_ces ces)
 {
     if (ces == WC_CES_WTF)
         return "W3M Transfer Format";
     return WcCesInfo[WC_CES_INDEX(ces)].desc;
 }
 
-wc_ces
-wc_guess_8bit_charset(wc_ces orig)
+enum wc_ces
+wc_guess_8bit_charset(enum wc_ces orig)
 {
     switch (orig) {
     case WC_CES_ISO_2022_JP:
@@ -491,12 +486,14 @@ wc_guess_8bit_charset(wc_ces orig)
         return WC_CES_EUC_CN;
     case WC_CES_US_ASCII:
         return WC_CES_ISO_8859_1;
+    default:
+        break;
     }
     return orig;
 }
 
 wc_bool
-wc_check_ces(wc_ces ces)
+wc_check_ces(enum wc_ces ces)
 {
     size_t i = WC_CES_INDEX(ces);
 

@@ -56,7 +56,7 @@ wc_cs94w_to_big5(wc_wchar_t cc)
 }
 
 Str
-wc_conv_from_big5(Str is, wc_ces ces)
+wc_conv_from_big5(Str is, enum wc_ces ces)
 {
     Str os;
     wc_uchar *sp = (wc_uchar *)is->ptr;

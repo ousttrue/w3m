@@ -1,8 +1,8 @@
 #pragma once
-#include <libwc/wc_types.h>
+#include <libwc/ces.h>
 
 struct Buffer;
-char* conv_search_string(char* str, wc_ces f_ces);
+char* conv_search_string(const char* str, enum wc_ces f_ces);
 
 enum SearchResult {
     SR_FOUND = 0x1,

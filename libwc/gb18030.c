@@ -155,7 +155,7 @@ wc_ucs_to_gb18030(wc_uint32 ucs)
 #endif
 
 Str
-wc_conv_from_gb18030(Str is, wc_ces ces)
+wc_conv_from_gb18030(Str is, enum wc_ces ces)
 {
     Str os;
     wc_uchar *sp = (wc_uchar *)is->ptr;

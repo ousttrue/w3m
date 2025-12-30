@@ -17,7 +17,7 @@ const void* querySiteconf(const struct Url* query_pu, enum SiteConfTypes field);
 
 #define query_SCONF_SUBSTITUTE_URL(pu) ((const char*)querySiteconf(pu, SCONF_SUBSTITUTE_URL))
 #define query_SCONF_USER_AGENT(pu) ((const char*)querySiteconf(pu, SCONF_USER_AGENT))
-#define query_SCONF_URL_CHARSET(pu) ((const wc_ces*)querySiteconf(pu, SCONF_URL_CHARSET))
+#define query_SCONF_URL_CHARSET(pu) ((const enum wc_ces*)querySiteconf(pu, SCONF_URL_CHARSET))
 #define query_SCONF_NO_REFERER_FROM(pu) ((const int*)querySiteconf(pu, SCONF_NO_REFERER_FROM))
 #define query_SCONF_NO_REFERER_TO(pu) ((const int*)querySiteconf(pu, SCONF_NO_REFERER_TO))
 

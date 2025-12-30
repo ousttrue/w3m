@@ -86,7 +86,7 @@ wc_gbk_to_N(wc_uint32 c)
 }
 
 Str
-wc_conv_from_gbk(Str is, wc_ces ces)
+wc_conv_from_gbk(Str is, enum wc_ces ces)
 {
     Str os;
     wc_uchar *sp = (wc_uchar *)is->ptr;

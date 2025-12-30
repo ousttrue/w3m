@@ -1,5 +1,5 @@
 #pragma once
-#include "wc_types.h"
+#include "ces.h"
 #include "Str.h"
 
 #define WC_HKSCS_NOSTATE	0
@@ -31,7 +31,7 @@ extern wc_uchar WC_HKSCS_MAP[];
 extern wc_wchar_t wc_hkscs_to_cs128w(wc_wchar_t cc);
 extern wc_wchar_t wc_cs128w_to_hkscs(wc_wchar_t cc);
 extern wc_uint32  wc_hkscs_to_N(wc_uint32 c);
-extern Str        wc_conv_from_hkscs(Str is, wc_ces ces);
+extern Str        wc_conv_from_hkscs(Str is, enum wc_ces ces);
 struct wc_status;
 extern void       wc_push_to_hkscs(Str os, wc_wchar_t cc, struct wc_status *st);
 extern Str        wc_char_conv_from_hkscs(wc_uchar c, struct wc_status *st);

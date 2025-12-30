@@ -1356,13 +1356,12 @@ schemeToProxy(int scheme)
     return pu;
 }
 
-#ifdef USE_M17N
-wc_ces
-url_to_charset(const char* url, const struct Url* base, wc_ces doc_charset)
+enum wc_ces
+url_to_charset(const char* url, const struct Url* base, enum wc_ces doc_charset)
 {
     const struct Url* pu;
     struct Url pu_buf;
-    const wc_ces* csptr;
+    const enum wc_ces* csptr;
 
     if (url && *url && *url != '#') {
         parseURL2((char*)url, &pu_buf, (struct Url*)base);
@@ -1377,7 +1376,7 @@ url_to_charset(const char* url, const struct Url* base, wc_ces doc_charset)
                                                     : getRuntime()->DocumentCharset;
 }
 
-char* url_encode(const char* url, const struct Url* base, wc_ces doc_charset)
+char* url_encode(const char* url, const struct Url* base, enum wc_ces doc_charset)
 {
     return url_quote_conv((char*)url,
         url_to_charset(url, base, doc_charset));
@@ -1387,18 +1386,9 @@ char* url_decode2(const char* url, const struct Buffer* buf)
 {
     if (!getRuntime()->DecodeURL)
         return (char*)url;
-    wc_ces url_charset = buf
+    enum wc_ces url_charset = buf
         ? url_to_charset(url, baseURL((struct Buffer*)buf), buf->document_charset)
         : url_to_charset(url, NULL, 0);
     return url_unquote_conv((char*)url, url_charset);
 }
 
-#else /* !defined(USE_M17N) */
-
-char* url_decode0(const char* url)
-{
-    if (!DecodeURL)
-        return (char*)url;
-    return url_unquote_conv((char*)url, 0);
-}
-#endif /* !defined(USE_M17N) */

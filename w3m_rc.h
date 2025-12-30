@@ -70,7 +70,7 @@ int nTab();
 
 char* conv_from_system(const char* x);
 char* conv_to_system(const char* x);
-char* url_quote_conv(const char* x, wc_ces c);
+char* url_quote_conv(const char* x, enum wc_ces c);
 Str Str_conv_to_halfdump(Str x);
 Str Str_conv_to_system(Str x);
 Str Str_conv_from_system(Str x);

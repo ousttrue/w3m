@@ -58,7 +58,7 @@ static char base64_c_map[] =
 #define C_BASE64(x) c_base64_map[(x) - 0x20]
 
 Str
-wc_conv_from_utf7(Str is, wc_ces ces)
+wc_conv_from_utf7(Str is, enum wc_ces ces)
 {
     Str os;
     wc_uchar *sp = (wc_uchar *)is->ptr;

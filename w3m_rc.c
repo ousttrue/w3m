@@ -215,7 +215,7 @@ void parse_proxy(void)
         NO_proxy_domains = make_domain_list(g_runtime.NO_proxy);
 }
 
-char* url_quote_conv(const char* x, wc_ces c)
+char* url_quote_conv(const char* x, enum wc_ces c)
 {
     return url_quote(wc_conv_strict(x, g_runtime.InnerCharset, c)->ptr);
 }
@@ -510,7 +510,7 @@ void calcTabPos(void)
 static Str
 conv_form_encoding(Str val, struct FormItemList* fi, struct Buffer* buf)
 {
-    wc_ces charset = g_runtime.SystemCharset;
+    enum wc_ces charset = g_runtime.SystemCharset;
     if (fi->parent->charset)
         charset = fi->parent->charset;
     else if (buf->document_charset && buf->document_charset != WC_CES_US_ASCII)
@@ -1005,8 +1005,6 @@ void pushEvent(int cmd, void* data)
         g_runtime.CurrentEvent = event;
     g_runtime.LastEvent = event;
 }
-
-
 
 void w3m_end_frame()
 {
@@ -1946,7 +1944,7 @@ set_param(const char* name, const char* value)
     case P_STRING:
         *(const char**)p->varptr = value;
         break;
-#if defined(USE_SSL) && defined(USE_SSL_VERIFY)
+
     case P_SSLPATH:
         if (value != NULL && value[0] != '\0')
             *(char**)p->varptr = rcFile(value);
@@ -1954,17 +1952,15 @@ set_param(const char* name, const char* value)
             *(char**)p->varptr = NULL;
         g_runtime.ssl_path_modified = 1;
         break;
-#endif
-#ifdef USE_COLOR
+
     case P_COLOR:
         *(int*)p->varptr = str_to_color(value);
         break;
-#endif
-#ifdef USE_M17N
+
     case P_CODE:
-        *(wc_ces*)p->varptr = wc_guess_charset_short(value, *(wc_ces*)p->varptr);
+        *(enum wc_ces*)p->varptr = wc_guess_charset_short(value, *(enum wc_ces*)p->varptr);
         break;
-#endif
+
     case P_PIXELS:
         ppc = atof(value);
         if (ppc >= MINIMUM_PIXEL_PER_CHAR && ppc <= MAXIMUM_PIXEL_PER_CHAR * 2)
@@ -2265,13 +2261,9 @@ to_str(struct param_ptr* p)
 {
     switch (p->type) {
     case P_INT:
-#ifdef USE_COLOR
     case P_COLOR:
-#endif
-#ifdef USE_M17N
     case P_CODE:
-        return Sprintf("%d", (int)(*(wc_ces*)p->varptr));
-#endif
+        return Sprintf("%d", (int)(*(enum wc_ces*)p->varptr));
     case P_NZINT:
         return Sprintf("%d", *(int*)p->varptr);
     case P_SHORT:

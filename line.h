@@ -92,4 +92,4 @@ enum LineMode {
 };
 Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor);
 void cleanup_line(Str s, enum LineMode mode);
-Str convertLine(Str line, enum LineMode mode, wc_ces* detected, wc_ces f_ces);
+Str convertLine(Str line, enum LineMode mode, enum wc_ces* detected, enum wc_ces f_ces);

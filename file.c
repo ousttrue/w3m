@@ -898,7 +898,7 @@ Str getLinkNumberStr(struct HtmlBuilder* hb, int correction)
  */
 
 struct Buffer* page_loaded(struct Url url,
-    wc_ces charset, Str page, bool do_download)
+    enum wc_ces charset, Str page, bool do_download)
 {
     assert(page);
 
@@ -1120,7 +1120,7 @@ struct Buffer* load_doc(const char* path, struct Url* current,
 
     if (!us.stream) {
         // non stream(file or socket) content.
-        wc_ces charset = WC_CES_US_ASCII;
+        enum wc_ces charset = WC_CES_US_ASCII;
         Str page = NULL;
         switch (us.url.scheme) {
         case SCM_LOCAL: {
@@ -4443,7 +4443,7 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
 
     struct Url* base = baseURL(buf);
 
-    wc_ces name_charset = url_to_charset(NULL, &buf->currentURL,
+    enum wc_ces name_charset = url_to_charset(NULL, &buf->currentURL,
         buf->document_charset);
 
     if (out_size == 0) {
@@ -5267,7 +5267,6 @@ table_start:
 
         if (is_tag) {
             /*** Beginning of a new tag ***/
-            const char* _debug = str;
             if ((tag = parse_tag(&str, internal)))
                 cmd = tag->tagid;
             else
@@ -5663,7 +5662,7 @@ void loadHTMLstream(struct input_stream* stream,
     int64_t linelen = 0;
     int64_t trbyte = 0;
     Str lineBuf2 = Strnew();
-    wc_ces charset = WC_CES_US_ASCII;
+    enum wc_ces charset = WC_CES_US_ASCII;
     struct html_feed_environ htmlenv1;
     struct readbuffer obuf;
     int volatile image_flag;
@@ -5718,7 +5717,7 @@ void loadHTMLstream(struct input_stream* stream,
     }
     TRAP_ON;
 
-    wc_ces doc_charset = getRuntime()->DocumentCharset;
+    enum wc_ces doc_charset = getRuntime()->DocumentCharset;
     if (newBuf) {
         if (newBuf->bufferprop & BP_FRAME)
             charset = getRuntime()->InnerCharset;
@@ -5831,8 +5830,8 @@ loadBuffer(struct Url url, struct input_stream* stream,
 {
     FILE* volatile src = NULL;
 
-    wc_ces charset = WC_CES_US_ASCII;
-    wc_ces volatile doc_charset = getRuntime()->DocumentCharset;
+    enum wc_ces charset = WC_CES_US_ASCII;
+    enum wc_ces volatile doc_charset = getRuntime()->DocumentCharset;
 
     Str lineBuf2;
     volatile char pre_lbuf = '\0';
@@ -6004,7 +6003,7 @@ _saveBuffer(struct Buffer* buf, struct Line* l, FILE* f, int cont)
     int is_html = FALSE;
 
     // int set_charset = !getRuntime()->DisplayCharset;
-    wc_ces charset = getRuntime()->DisplayCharset
+    enum wc_ces charset = getRuntime()->DisplayCharset
         ? getRuntime()->DisplayCharset
         : WC_CES_US_ASCII;
     is_html = is_html_type(buf->type);

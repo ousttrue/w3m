@@ -5,7 +5,7 @@
 #include "wtf.h"
 
 Str
-wc_conv_from_priv1(Str is, wc_ces ces)
+wc_conv_from_priv1(Str is, enum wc_ces ces)
 {
     Str os;
     wc_uchar *sp = (wc_uchar *)is->ptr;
@@ -43,7 +43,7 @@ wc_char_conv_from_priv1(wc_uchar c, struct wc_status *st)
 }
 
 Str
-wc_conv_from_ascii(Str is, wc_ces ces)
+wc_conv_from_ascii(Str is, enum wc_ces ces)
 {
     Str os;
     wc_uchar *sp = (wc_uchar *)is->ptr;

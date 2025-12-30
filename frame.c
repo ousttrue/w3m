@@ -407,7 +407,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
     int force_reload)
 {
     int r, c, t_stack;
-    wc_ces charset, doc_charset;
+    enum wc_ces charset, doc_charset;
     char *d_target, *p_target, *s_target, *t_target;
     struct Url *currentURL, base;
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
@@ -668,7 +668,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
                                 q += 7;
                                 q = skip_blanks(q);
                                 if (*q == '=') {
-                                    wc_ces c;
+                                    enum wc_ces c;
                                     q++;
                                     q = skip_blanks(q);
                                     if ((c = wc_guess_charset(q, 0)) != 0) {
@@ -858,27 +858,23 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
 struct Buffer*
 renderFrame(struct Buffer* Cbuf, int force_reload)
 {
-    Str tmp;
-    FILE* f;
-    struct Buffer* buf;
-    int flag;
-    struct frameset* fset;
+    enum wc_ces doc_charset = getRuntime()->DocumentCharset;
 
-    wc_ces doc_charset = getRuntime()->DocumentCharset;
-
-    tmp = tmpfname(TMPF_FRAME, ".html");
-    f = fopen(tmp->ptr, "w");
+    Str tmp = tmpfname(TMPF_FRAME, ".html");
+    FILE* f = fopen(tmp->ptr, "w");
     if (f == NULL)
         return NULL;
     /*
      * if (Cbuf->frameQ != NULL) fset = Cbuf->frameQ->frameset; else */
+    struct frameset* fset;
     fset = Cbuf->frameset;
     if (fset == NULL || createFrameFile(fset, f, Cbuf, 0, force_reload) < 0) {
         fclose(f);
         return NULL;
     }
     fclose(f);
-    flag = RG_FRAME;
+
+    int flag = RG_FRAME;
     if ((Cbuf->currentURL).is_nocache)
         flag |= RG_NOCACHE;
     renderFrameSet = Cbuf->frameset;
@@ -886,7 +882,7 @@ renderFrame(struct Buffer* Cbuf, int force_reload)
 
     getRuntime()->DocumentCharset = getRuntime()->InnerCharset;
 
-    buf = loadGeneralFile(tmp->ptr, NULL, NULL, flag, NULL, false);
+    struct Buffer* buf = loadGeneralFile(tmp->ptr, NULL, NULL, flag, NULL, false);
 
     getRuntime()->DocumentCharset = doc_charset;
 

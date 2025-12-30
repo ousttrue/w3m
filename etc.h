@@ -32,7 +32,7 @@ void add_auth_user_passwd(struct Url* pu, char* realm,
 void invalidate_auth_user_passwd(struct Url* pu, char* realm,
     Str uname, Str pwd, int is_proxy);
 void myExec(const char* command);
-char* url_unquote_conv(const char* url, wc_ces charset);
+char* url_unquote_conv(const char* url, enum wc_ces charset);
 struct Buffer;
 char* last_modified(struct Buffer* buf);
 Str myEditor(const char* cmd, const char* file, int line);

@@ -208,15 +208,9 @@ void decodeQP_to_growbuf(struct growbuf* gb, char** ww)
     return;
 }
 
-#ifdef USE_M17N
-Str decodeWord(char** ow, wc_ces* charset)
-#else
-Str decodeWord0(char** ow)
-#endif
+Str decodeWord(char** ow, enum wc_ces* charset)
 {
-#ifdef USE_M17N
-    wc_ces c;
-#endif
+    enum wc_ces c;
     char *p, *w = *ow;
     char method;
     Str a = Strnew();
@@ -267,19 +261,13 @@ convert_fail:
 /*
  * convert MIME encoded string to the original one
  */
-#ifdef USE_M17N
-Str decodeMIME(Str orgstr, wc_ces* charset)
-#else
-Str decodeMIME0(Str orgstr)
-#endif
+Str decodeMIME(Str orgstr, enum wc_ces* charset)
 {
     char *org = orgstr->ptr, *endp = org + orgstr->length;
     char *org0, *p;
     Str cnv = NULL;
 
-#ifdef USE_M17N
     *charset = 0;
-#endif
     while (org < endp) {
         if (*org == '=' && *(org + 1) == '?') {
             if (cnv == NULL) {

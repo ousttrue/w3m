@@ -10,42 +10,281 @@
 #include "utf8.h"
 #include "utf7.h"
 
-wc_uint8 WC_DETECT_MAP[ 0x100 ] = {
-    0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 
-    0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 
-    0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 
-    0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 
-    0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 
-    0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 
-    0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 
-    0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 
-    1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 
-    1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 
-    1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 
-    1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 
-    1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 
-    1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 
-    1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 
-    1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 
+wc_uint8 WC_DETECT_MAP[0x100] = {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
 };
 
-#define DETECT_NORMAL        0
-#define DETECT_POSSIBLE        1
-#define DETECT_OK        2
-#define DETECT_BROKEN        4
-#define DETECT_ERROR        8
-#define SET_DETECT(x,y) ((x) |= (y))
+#define DETECT_NORMAL 0
+#define DETECT_POSSIBLE 1
+#define DETECT_OK 2
+#define DETECT_BROKEN 4
+#define DETECT_ERROR 8
+#define SET_DETECT(x, y) ((x) |= (y))
 #define SET_BROKEN_ERROR(x) ((x) = ((x) & DETECT_BROKEN) ? DETECT_ERROR : ((x) | DETECT_BROKEN))
 
-void
-wc_create_detect_map(wc_ces ces, wc_bool esc)
+void wc_create_detect_map(enum wc_ces ces, wc_bool esc)
 {
-    static wc_ces detect_ces = WC_CES_US_ASCII;
+    static enum wc_ces detect_ces = WC_CES_US_ASCII;
     int i;
 
     if (ces != detect_ces) {
         if (ces & WC_CES_T_VIET) {
-            wc_uint8 *map = NULL;
+            wc_uint8* map = NULL;
             switch (ces) {
             case WC_CES_TCVN_5712:
                 map = wc_c0_tcvn57122_map;
@@ -55,6 +294,8 @@ wc_create_detect_map(wc_ces ces, wc_bool esc)
                 break;
             case WC_CES_VPS:
                 map = wc_c0_vps2_map;
+                break;
+            default:
                 break;
             }
             for (i = 0; i < 0x20; i++)
@@ -71,13 +312,13 @@ wc_create_detect_map(wc_ces ces, wc_bool esc)
     return;
 }
 
-wc_ces
-wc_auto_detect(char *is, size_t len, wc_ces hint)
+enum wc_ces
+wc_auto_detect(char* is, size_t len, enum wc_ces hint)
 {
-    wc_uchar *p = (wc_uchar *)is;
-    wc_uchar *ep = p + len;
-    wc_uchar *q;
-    wc_ces euc = 0, priv = 0;
+    wc_uchar* p = (wc_uchar*)is;
+    wc_uchar* ep = p + len;
+    wc_uchar* q;
+    enum wc_ces euc = 0, priv = 0;
     struct wc_status st;
     int euc_state = 0, sjis_state = 0, big5_state = 0, hz_state = 0;
     int iso_detect = DETECT_ERROR, euc_detect = DETECT_ERROR,
@@ -86,13 +327,13 @@ wc_auto_detect(char *is, size_t len, wc_ces hint)
         priv_detect = DETECT_ERROR;
     int possible = 0;
     wc_bool iso2022jp2 = WC_FALSE, iso2022jp3 = WC_FALSE,
-        iso2022cn = WC_FALSE, iso2022kr = WC_FALSE, ok = WC_FALSE;
+            iso2022cn = WC_FALSE, iso2022kr = WC_FALSE, ok = WC_FALSE;
     int utf8_state = 0;
     int utf8_detect = DETECT_ERROR;
     int utf8_next = 0;
 
     wc_create_detect_map(hint, WC_TRUE);
-    for (; p < ep && ! WC_DETECT_MAP[*p]; p++)
+    for (; p < ep && !WC_DETECT_MAP[*p]; p++)
         ;
     if (p == ep)
         return hint;
@@ -154,7 +395,7 @@ wc_auto_detect(char *is, size_t len, wc_ces hint)
             possible = 2;
         } else {
             iso_detect = priv_detect = DETECT_NORMAL;
-            priv = hint;        /* for TVCN, VISCII, VPS */
+            priv = hint; /* for TVCN, VISCII, VPS */
             possible = 2;
         }
         break;
@@ -172,36 +413,31 @@ wc_auto_detect(char *is, size_t len, wc_ces hint)
         if (iso_detect != DETECT_ERROR) {
             switch (*p) {
             case WC_C_ESC:
-                if (*(p+1) == WC_C_MBCS) {
+                if (*(p + 1) == WC_C_MBCS) {
                     q = p;
-                    if (! wc_parse_iso2022_esc(&q, &st))
+                    if (!wc_parse_iso2022_esc(&q, &st))
                         break;
-                    if (st.design[0] == WC_CCS_JIS_C_6226 ||
-                        st.design[0] == WC_CCS_JIS_X_0208)
+                    if (st.design[0] == WC_CCS_JIS_C_6226 || st.design[0] == WC_CCS_JIS_X_0208)
                         ;
-                    else if (st.design[0] == WC_CCS_JIS_X_0213_1 ||
-                             st.design[0] == WC_CCS_JIS_X_0213_2)
+                    else if (st.design[0] == WC_CCS_JIS_X_0213_1 || st.design[0] == WC_CCS_JIS_X_0213_2)
                         iso2022jp3 = WC_TRUE;
                     else if (WC_CCS_TYPE(st.design[0]) == WC_CCS_A_CS94W)
                         iso2022jp2 = WC_TRUE;
                     if (st.design[1] == WC_CCS_KS_X_1001)
                         iso2022kr = WC_TRUE;
-                    else if (st.design[1] == WC_CCS_GB_2312 ||
-                             st.design[1] == WC_CCS_ISO_IR_165 ||
-                             st.design[1] == WC_CCS_CNS_11643_1)
+                    else if (st.design[1] == WC_CCS_GB_2312 || st.design[1] == WC_CCS_ISO_IR_165 || st.design[1] == WC_CCS_CNS_11643_1)
                         iso2022cn = WC_TRUE;
-                    if (WC_CCS_TYPE(st.design[2]) == WC_CCS_A_CS94W ||
-                        WC_CCS_TYPE(st.design[3]) == WC_CCS_A_CS94W)
+                    if (WC_CCS_TYPE(st.design[2]) == WC_CCS_A_CS94W || WC_CCS_TYPE(st.design[3]) == WC_CCS_A_CS94W)
                         iso2022cn = WC_TRUE;
-                } else if (*(p+1) == WC_C_G2_CS96) {
+                } else if (*(p + 1) == WC_C_G2_CS96) {
                     q = p;
-                    if (! wc_parse_iso2022_esc(&q, &st))
+                    if (!wc_parse_iso2022_esc(&q, &st))
                         break;
                     if (WC_CCS_TYPE(st.design[2]) == WC_CCS_A_CS96)
                         iso2022jp2 = WC_TRUE;
-                } else if (*(p+1) == WC_C_CSWSR) {
+                } else if (*(p + 1) == WC_C_CSWSR) {
                     q = p;
-                    if (! wc_parse_iso2022_esc(&q, &st))
+                    if (!wc_parse_iso2022_esc(&q, &st))
                         break;
                     possible = 0;
                     iso_detect = DETECT_BROKEN;
@@ -241,8 +477,7 @@ wc_auto_detect(char *is, size_t len, wc_ces hint)
                         euc_detect = DETECT_ERROR;
                     break;
                 case WC_ISO_MAP_SS3:
-                    if (euc == WC_CES_EUC_JP &&
-                        WC_ISO_MAP[*(p+1)] == WC_ISO_MAP_GR)
+                    if (euc == WC_CES_EUC_JP && WC_ISO_MAP[*(p + 1)] == WC_ISO_MAP_GR)
                         ;
                     else
                         euc_detect = DETECT_ERROR;
@@ -262,8 +497,7 @@ wc_auto_detect(char *is, size_t len, wc_ces hint)
                 euc_state = WC_EUC_NOSTATE;
                 break;
             case WC_EUC_TW_SS2:
-                if (!( 0xa0 <= *p && *p <= 0xb0) ||
-                    WC_ISO_MAP[*(p+1)] != WC_ISO_MAP_GR)
+                if (!(0xa0 <= *p && *p <= 0xb0) || WC_ISO_MAP[*(p + 1)] != WC_ISO_MAP_GR)
                     euc_detect = DETECT_ERROR;
                 euc_state = WC_EUC_NOSTATE;
                 break;
@@ -338,40 +572,40 @@ wc_auto_detect(char *is, size_t len, wc_ces hint)
                 possible--;
         }
         if (hz_detect != DETECT_ERROR) {
-          if (*p & 0x80) {
+            if (*p & 0x80) {
                 hz_detect = DETECT_ERROR;
                 possible--;
-          } else {
-            switch (hz_state) {
-            case WC_HZ_NOSTATE:
-                if (*p == WC_C_HZ_TILDA)
-                    hz_state = WC_HZ_TILDA;
-                break;
-            case WC_HZ_TILDA:
-                if (*p == WC_C_HZ_SI)
-                    hz_state = WC_HZ_MBYTE;
-                else
+            } else {
+                switch (hz_state) {
+                case WC_HZ_NOSTATE:
+                    if (*p == WC_C_HZ_TILDA)
+                        hz_state = WC_HZ_TILDA;
+                    break;
+                case WC_HZ_TILDA:
+                    if (*p == WC_C_HZ_SI)
+                        hz_state = WC_HZ_MBYTE;
+                    else
+                        hz_state = WC_HZ_NOSTATE;
+                    break;
+                case WC_HZ_TILDA_MB:
+                    if (*p == WC_C_HZ_SO)
+                        hz_state = WC_HZ_NOSTATE;
+                    else
+                        hz_state = WC_HZ_MBYTE;
+                    break;
+                case WC_HZ_MBYTE:
+                    if (*p == WC_C_HZ_TILDA)
+                        hz_state = WC_HZ_TILDA_MB;
+                    else
+                        hz_state = WC_HZ_MBYTE1;
+                    break;
+                case WC_HZ_MBYTE1:
+                    hz_detect = DETECT_OK;
+                    ok = WC_TRUE;
                     hz_state = WC_HZ_NOSTATE;
-                break;
-            case WC_HZ_TILDA_MB:
-                if (*p == WC_C_HZ_SO)
-                    hz_state = WC_HZ_NOSTATE;
-                else
-                    hz_state = WC_HZ_MBYTE;
-                break;
-            case WC_HZ_MBYTE:
-                if (*p == WC_C_HZ_TILDA)
-                    hz_state = WC_HZ_TILDA_MB;
-                else
-                    hz_state = WC_HZ_MBYTE1;
-                break;
-            case WC_HZ_MBYTE1:
-                hz_detect = DETECT_OK;
-                ok = WC_TRUE;
-                hz_state = WC_HZ_NOSTATE;
-                break;
+                    break;
+                }
             }
-          }
         }
         if (latin_detect != DETECT_ERROR) {
             switch (WC_ISO_MAP[*p] & WC_ISO_MAP_CG) {
@@ -392,10 +626,10 @@ wc_auto_detect(char *is, size_t len, wc_ces hint)
                 SET_DETECT(priv_detect, DETECT_OK);
                 ok = WC_TRUE;
             }
-/*
-            if (priv_detect == DETECT_ERROR)
-                possible--;
-*/
+            /*
+                        if (priv_detect == DETECT_ERROR)
+                            possible--;
+            */
         }
         if (utf8_detect != DETECT_ERROR) {
             switch (utf8_state) {
@@ -421,7 +655,7 @@ wc_auto_detect(char *is, size_t len, wc_ces hint)
                     break;
                 }
                 utf8_next--;
-                if (! utf8_next) {
+                if (!utf8_next) {
                     SET_DETECT(utf8_detect, DETECT_OK);
                     ok = WC_TRUE;
                     utf8_state = WC_UTF8_NOSTATE;
@@ -435,11 +669,11 @@ wc_auto_detect(char *is, size_t len, wc_ces hint)
 
     if (iso_detect != DETECT_ERROR) {
         if (iso_detect == DETECT_NORMAL) {
-           if (hz_detect == DETECT_OK)
+            if (hz_detect == DETECT_OK)
                 return WC_CES_HZ_GB_2312;
-           if (priv_detect == DETECT_OK)
+            if (priv_detect == DETECT_OK)
                 return priv;
-           return WC_CES_US_ASCII;
+            return WC_CES_US_ASCII;
         }
         switch (euc) {
         case WC_CES_EUC_CN:

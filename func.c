@@ -272,7 +272,7 @@ interpret_keymap(FILE* kf, struct stat* current, int force)
     char *p, *s, *emsg;
     int lineno;
 
-    wc_ces charset = getRuntime()->SystemCharset;
+    enum wc_ces charset = getRuntime()->SystemCharset;
 
     int verbose = 1;
     extern int str_to_bool(const char* value, int old);

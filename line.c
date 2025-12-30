@@ -5,7 +5,7 @@
 #include <string.h>
 
 static int
-nextColumn(int n, char* p, Lineprop* pr, int Tabstop)
+nextColumn(int n, const char* p, Lineprop* pr, int Tabstop)
 {
     if (*pr & PC_CTRL) {
         if (*p == '\t')
@@ -78,7 +78,7 @@ int columnLen(struct Line* line, int column)
 {
     int i, j;
     for (i = 0, j = 0; i < line->len;) {
-        int j = nextColumn(j, &line->lineBuf[i], &line->propBuf[i], getRuntime()->Tabstop);
+        j = nextColumn(j, &line->lineBuf[i], &line->propBuf[i], getRuntime()->Tabstop);
         if (j > column)
             return i;
         i++;
@@ -386,10 +386,10 @@ void cleanup_line(Str s, enum LineMode mode)
 }
 
 Str convertLine(Str line, enum LineMode mode,
-    wc_ces* detected, wc_ces f_ces)
+    enum wc_ces* detected, enum wc_ces f_ces)
 {
-    struct Converted converted = wc_Str_conv_with_detect(line, detected, 
-            f_ces, getRuntime()->InnerCharset);
+    struct Converted converted = wc_Str_conv_with_detect(line, *detected,
+        f_ces, getRuntime()->InnerCharset);
 
     if (mode != RAW_MODE)
         cleanup_line(converted.os, mode);

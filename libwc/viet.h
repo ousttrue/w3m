@@ -1,12 +1,12 @@
 #pragma once
-#include "wc_types.h"
+#include "ces.h"
 #include "Str.h"
 
 extern wc_uint8 wc_c0_tcvn57122_map[];
 extern wc_uint8 wc_c0_viscii112_map[];
 extern wc_uint8 wc_c0_vps2_map[];
 
-extern Str       wc_conv_from_viet(Str is, wc_ces ces);
+extern Str       wc_conv_from_viet(Str is, enum wc_ces ces);
 struct wc_status;
 extern void      wc_push_to_viet(Str os, wc_wchar_t cc, struct wc_status *st);
 extern void      wc_push_to_cp1258(Str os, wc_wchar_t cc, struct wc_status *st);

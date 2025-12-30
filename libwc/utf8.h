@@ -1,5 +1,5 @@
 #pragma once
-#include "wc_types.h"
+#include "ces.h"
 #include "Str.h"
 
 #define WC_C_UTF8_L2	0x80
@@ -15,7 +15,7 @@ extern wc_uint8 WC_UTF8_MAP[];
 
 extern size_t    wc_ucs_to_utf8(wc_uint32 ucs, wc_uchar *utf8);
 extern wc_uint32 wc_utf8_to_ucs(wc_uchar *utf8);
-extern Str       wc_conv_from_utf8(Str is, wc_ces ces);
+extern Str       wc_conv_from_utf8(Str is, enum wc_ces ces);
 struct wc_status;
 extern void      wc_push_to_utf8(Str os, wc_wchar_t cc, struct wc_status *st);
 extern void      wc_push_to_utf8_end(Str os, struct wc_status *st);

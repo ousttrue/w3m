@@ -1,5 +1,5 @@
 #pragma once
-#include "wc_types.h"
+#include "ces.h"
 #include "Str.h"
 
 #define WC_F_SPECIAL	0x00
@@ -86,9 +86,9 @@
 
 #define WC_F_C1			0x01
 
-extern Str  wc_conv_from_priv1(Str is, wc_ces ces);
+extern Str  wc_conv_from_priv1(Str is, enum wc_ces ces);
 struct wc_status;
 extern Str  wc_char_conv_from_priv1(wc_uchar c, struct wc_status *st);
-extern Str  wc_conv_from_ascii(Str is, wc_ces ces);
+extern Str  wc_conv_from_ascii(Str is, enum wc_ces ces);
 extern void wc_push_to_raw(Str os, wc_wchar_t cc, struct wc_status *st);
 

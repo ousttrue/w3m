@@ -3411,7 +3411,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
 DEFUN(reload, RELOAD, "Load current document anew")
 {
     struct Buffer *buf, *fbuf = NULL, sbuf;
-    wc_ces old_charset;
+    enum wc_ces old_charset;
     Str url;
     struct FormList* request;
     int multipart;
@@ -3515,7 +3515,7 @@ DEFUN(reshape, RESHAPE, "Re-render document")
 }
 
 static void
-_docCSet(wc_ces charset)
+_docCSet(enum wc_ces charset)
 {
     if (Currentbuf->bufferprop & BP_INTERNAL)
         return;
@@ -3529,7 +3529,7 @@ _docCSet(wc_ces charset)
 void change_charset(struct parsed_tagarg* arg)
 {
     struct Buffer* buf = Currentbuf->linkBuffer[LB_N_INFO];
-    wc_ces charset;
+    enum wc_ces charset;
 
     if (buf == NULL)
         return;
@@ -3547,15 +3547,13 @@ void change_charset(struct parsed_tagarg* arg)
 
 DEFUN(docCSet, CHARSET, "Change the character encoding for the current document")
 {
-    char* cs;
-    wc_ces charset;
-
-    cs = searchKeyData();
+    char* cs = searchKeyData();
     if (cs == NULL || *cs == '\0')
         /* FIXME: gettextize? */
         cs = inputStr("Document charset: ",
             wc_ces_to_charset(Currentbuf->document_charset));
-    charset = wc_guess_charset_short(cs, 0);
+
+    enum wc_ces charset = wc_guess_charset_short(cs, 0);
     if (charset == 0) {
         return;
     }
@@ -3564,15 +3562,12 @@ DEFUN(docCSet, CHARSET, "Change the character encoding for the current document"
 
 DEFUN(defCSet, DEFAULT_CHARSET, "Change the default character encoding")
 {
-    char* cs;
-    wc_ces charset;
-
-    cs = searchKeyData();
+    char* cs = searchKeyData();
     if (cs == NULL || *cs == '\0')
         /* FIXME: gettextize? */
         cs = inputStr("Default document charset: ",
             wc_ces_to_charset(getRuntime()->DocumentCharset));
-    charset = wc_guess_charset_short(cs, 0);
+    enum wc_ces charset = wc_guess_charset_short(cs, 0);
     if (charset != 0)
         getRuntime()->DocumentCharset = charset;
 }

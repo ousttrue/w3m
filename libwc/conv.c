@@ -5,40 +5,40 @@
 #include "wtf.h"
 #include "iso2022.h"
 #include "hz.h"
-// #include "ucs.h"
 #include "utf8.h"
 #include "utf7.h"
 
 char* WcReplace = "?";
 char* WcReplaceW = "??";
 
-static Str wc_conv_to_ces(Str is, wc_ces ces);
+static Str wc_conv_to_ces(Str is, enum wc_ces ces);
 
-Str wc_Str_conv(Str is, wc_ces f_ces, wc_ces t_ces)
+Str wc_Str_conv(Str is, enum wc_ces f_ces, enum wc_ces t_ces)
 {
-    if (f_ces != WC_CES_WTF)
-        is = (*WcCesInfo[WC_CES_INDEX(f_ces)].conv_from)(is, f_ces);
-    if (t_ces != WC_CES_WTF)
+    if (f_ces != WC_CES_WTF) {
+        int index = WC_CES_INDEX(f_ces);
+        struct wc_ces_info* info = &WcCesInfo[index];
+        is = (info->conv_from)(is, f_ces);
+    }
+    if (t_ces != WC_CES_WTF) {
         return wc_conv_to_ces(is, t_ces);
-    else
-        return is;
+    }
+    return is;
 }
 
-Str wc_Str_conv_strict(Str is, wc_ces f_ces, wc_ces t_ces)
+Str wc_Str_conv_strict(Str is, enum wc_ces f_ces, enum wc_ces t_ces)
 {
-    Str os;
     struct wc_option opt = WcOption;
-
     WcOption.strict_iso2022 = WC_TRUE;
     WcOption.no_replace = WC_TRUE;
     WcOption.fix_width_conv = WC_FALSE;
-    os = wc_Str_conv(is, f_ces, t_ces);
+    Str os = wc_Str_conv(is, f_ces, t_ces);
     WcOption = opt;
     return os;
 }
 
 static Str
-wc_conv_to_ces(Str is, wc_ces ces)
+wc_conv_to_ces(Str is, enum wc_ces ces)
 {
     Str os;
     wc_uchar* sp = (wc_uchar*)is->ptr;
@@ -104,9 +104,12 @@ wc_conv_to_ces(Str is, wc_ces ces)
     return os;
 }
 
-struct Converted wc_Str_conv_with_detect(Str is, wc_ces f_ces, wc_ces hint, wc_ces t_ces)
+struct Converted wc_Str_conv_with_detect(Str is, enum wc_ces f_ces, enum wc_ces hint, enum wc_ces t_ces)
 {
-    struct Converted converted = { 0 };
+    struct Converted converted = { 
+        .os = 0,
+        .detected = WC_CES_US_ASCII,
+    };
     if (f_ces == WC_CES_WTF || hint == WC_CES_WTF) {
         f_ces = WC_CES_WTF;
         converted.detected = WC_CES_WTF;

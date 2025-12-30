@@ -1,5 +1,5 @@
 #pragma once
-#include "wc_types.h"
+#include "ces.h"
 #include "Str.h"
 
 #define WC_C_JOHAB_ERROR	0xFFFFFFFFU
@@ -56,7 +56,7 @@ extern wc_uint32  wc_johab1_to_N(wc_uint32 cc);
 extern wc_uint32  wc_N_to_johab1(wc_uint32 ucs);
 extern wc_wchar_t wc_johab_to_cs128w(wc_wchar_t cc);
 extern wc_wchar_t wc_cs128w_to_johab(wc_wchar_t cc);
-extern Str        wc_conv_from_johab(Str is, wc_ces ces);
+extern Str        wc_conv_from_johab(Str is, enum wc_ces ces);
 struct wc_status;
 extern void       wc_push_to_johab(Str os, wc_wchar_t cc, struct wc_status *st);
 extern Str        wc_char_conv_from_johab(wc_uchar c, struct wc_status *st);

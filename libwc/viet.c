@@ -107,7 +107,7 @@ wc_cp1258_precompose(wc_uchar c1, wc_uchar c2)
 }
 
 Str
-wc_conv_from_viet(Str is, wc_ces ces)
+wc_conv_from_viet(Str is, enum wc_ces ces)
 {
     Str os;
     wc_uchar *sp = (wc_uchar *)is->ptr;

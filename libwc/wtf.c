@@ -834,10 +834,10 @@ static wc_uint16 CCS_MAP[33] = {
 };
 
 wc_ccs wtf_gr_ccs = 0;
-static wc_ces wtf_major_ces = WC_CES_US_ASCII;
+static enum wc_ces wtf_major_ces = WC_CES_US_ASCII;
 static struct wc_status wtf_major_st;
 
-void wtf_init(wc_ces ces1, wc_ces ces2)
+void wtf_init(enum wc_ces ces1, enum wc_ces ces2)
 {
     int i;
     wc_gset* gset;
@@ -1327,12 +1327,12 @@ wtf_is_hangul(wc_uchar* p)
     return WC_FALSE;
 }
 
-char* wtf_conv_fit(char* s, wc_ces ces)
+char* wtf_conv_fit(char* s, enum wc_ces ces)
 {
     wc_uchar* p;
     Str os;
     wc_wchar_t cc;
-    wc_ces major_ces;
+    enum wc_ces major_ces;
     wc_bool pre_conv, ucs_conv;
 
     if (ces == WC_CES_WTF || ces == WC_CES_US_ASCII)

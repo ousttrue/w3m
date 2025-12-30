@@ -1,24 +1,25 @@
-# *.a
-# *.o
-# Makefile
+*.a
+*.o
+Makefile
 # /autom4te.cache/
-# /config.cache
-# /config.log
-# /config.status
-# /config.param
-# /funcname.tab
-# /inflate
-# /mktable
+/config.cache
+/config.log
+/config.status
+/config.param
+/funcname.tab
+/inflate
+/mktable
 # /w3m
-# /w3mbookmark
-# /w3mhelperpanel
+/w3mbookmark
+/w3mhelperpanel
 # /w3mimgdisplay
-# /w3mhelp-lynx_*.html
-# /w3mhelp-w3m_*.html
-# /posubst
+/w3mhelp-lynx_*.html
+/w3mhelp-w3m_*.html
+/posubst
 # /po/stamp-po
 # /po/POTFILES
 # /po/*.gmo
+/po/
 # /po/Makefile.in
 # /po/remove-potcdate.sed
 # /scripts/dirlist.cgi
@@ -29,6 +30,7 @@
 # /scripts/w3mhelp-funcdesc-stamp
 # /scripts/xface2xpm
 # /scripts/multipart/multipart.cgi
+/scripts/
 # /scripts/w3mman/w3mman
 # /scripts/w3mman/w3mman2html.cgi
 # /scripts/w3mman/w3mman*.1

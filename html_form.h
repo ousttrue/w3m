@@ -3,7 +3,7 @@
  */
 #pragma once
 #include "Str.h"
-#include "libwc/wc_types.h"
+#include "libwc/ces.h"
 
 #define FORM_UNKNOWN -1
 #define FORM_INPUT_TEXT 0
@@ -72,7 +72,7 @@ struct FormList {
     Str action;
     char* target;
     char* name;
-    wc_ces charset;
+    enum wc_ces charset;
     int enctype;
     struct FormList* next;
     int nitems;

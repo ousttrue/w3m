@@ -34,7 +34,7 @@ int wc_option_cmp(struct wc_option* opt1, struct wc_option* opt2)
     return memcmp(opt1, opt2, sizeof(struct wc_option));
 }
 
-void wc_input_init(struct wc_status* st, wc_ces ces)
+void wc_input_init(struct wc_status* st, enum wc_ces ces)
 {
     wc_gset* gset;
     int i, g;
@@ -65,7 +65,7 @@ void wc_input_init(struct wc_status* st, wc_ces ces)
     st->ntag = 0;
 }
 
-void wc_output_init(struct wc_status* st, wc_ces ces)
+void wc_output_init(struct wc_status* st, enum wc_ces ces)
 {
     wc_gset* gset;
     size_t i, n, nw;

@@ -11,6 +11,6 @@ struct FtpFile {
 };
 struct FtpFile
 openFTPStream(struct Url* pu);
-Str loadFTPDir(struct Url* pu, wc_ces* charset, bool do_download);
+Str loadFTPDir(struct Url* pu, enum wc_ces* charset, bool do_download);
 void closeFTP(void);
 void disconnectFTP(void);

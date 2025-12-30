@@ -3,10 +3,10 @@
 #include "status.h"
 #include "conv.h"
 
-static wc_ces char_conv_f_ces = 0, char_conv_t_ces = WC_CES_WTF;
+static enum wc_ces char_conv_f_ces = 0, char_conv_t_ces = WC_CES_WTF;
 static struct wc_status char_conv_st;
 
-void wc_char_conv_init(wc_ces f_ces, wc_ces t_ces)
+void wc_char_conv_init(enum wc_ces f_ces, enum wc_ces t_ces)
 {
     wc_input_init(&char_conv_st, f_ces);
     char_conv_st.state = -1;

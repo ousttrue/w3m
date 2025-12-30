@@ -1,5 +1,5 @@
 #pragma once
-#include "wc_types.h"
+#include "ces.h"
 #include "Str.h"
 
 #define WC_C_ESC	0x1B	/* '\033' */
@@ -112,7 +112,7 @@
 
 extern wc_uint8 WC_ISO_MAP[];
 
-extern Str  wc_conv_from_iso2022(Str is, wc_ces ces);
+extern Str  wc_conv_from_iso2022(Str is, enum wc_ces ces);
 struct wc_status;
 extern void wc_push_to_iso2022(Str os, wc_wchar_t cc, struct wc_status *st);
 extern void wc_push_to_euc(Str os, wc_wchar_t cc, struct wc_status *st);

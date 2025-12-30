@@ -195,13 +195,13 @@ struct Runtime {
     int emacs_like_lineedit;
 
     // Don't change
-    wc_ces InnerCharset;
-    wc_ces DisplayCharset;
-    wc_ces DocumentCharset;
-    wc_ces SystemCharset;
-    wc_ces BookmarkCharset;
+    enum wc_ces InnerCharset;
+    enum wc_ces DisplayCharset;
+    enum wc_ces DocumentCharset;
+    enum wc_ces SystemCharset;
+    enum wc_ces BookmarkCharset;
     // FIXME: charset of source code
-    wc_ces OptionCharset;
+    enum wc_ces OptionCharset;
     int OptionEncode;
 
     char ExtHalfdump;

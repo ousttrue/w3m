@@ -1,5 +1,5 @@
 #pragma once
-#include "wc_types.h"
+#include "ces.h"
 #include "Str.h"
 
 enum WC_OPT_DETECT_MODE : wc_uint8 {
@@ -63,7 +63,7 @@ struct wc_status {
     int shift;
 };
 
-extern void wc_input_init(struct wc_status* st, wc_ces ces);
-extern void wc_output_init(struct wc_status* st, wc_ces ces);
+extern void wc_input_init(struct wc_status* st, enum wc_ces ces);
+extern void wc_output_init(struct wc_status* st, enum wc_ces ces);
 extern void wc_push_end(struct wc_status* st, Str os);
 extern wc_bool wc_ces_has_ccs(struct wc_status* st, wc_ccs ccs);

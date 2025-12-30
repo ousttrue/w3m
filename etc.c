@@ -874,7 +874,7 @@ char* file_to_url(const char* file)
     return tmp->ptr;
 }
 
-char* url_unquote_conv(const char* url, wc_ces charset)
+char* url_unquote_conv(const char* url, enum wc_ces charset)
 {
     wc_uint8 old_auto_detect = WcOption.auto_detect;
 

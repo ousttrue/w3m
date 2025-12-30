@@ -9,8 +9,8 @@ struct FormSelectOption;
 struct HtmlBuilder {
     struct Url* cur_baseURL;
 
-    wc_ces cur_document_charset;
-    wc_ces meta_charset;
+    enum wc_ces cur_document_charset;
+    enum wc_ces meta_charset;
 
     Str cur_title;
     Str pre_title;

@@ -47,9 +47,7 @@ newFormList(char* action, char* method, char* charset, char* enctype,
     Str a = Strnew_charp(action);
     int m = FORM_METHOD_GET;
     int e = FORM_ENCTYPE_URLENCODED;
-#ifdef USE_M17N
-    wc_ces c = 0;
-#endif
+    enum wc_ces c = 0;
 
     if (method == NULL || !strcasecmp(method, "get"))
         m = FORM_METHOD_GET;
@@ -531,11 +529,10 @@ void input_textarea(struct FormItemList* fi)
 {
     char* tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
     Str tmp;
-    FILE* f;
-    wc_ces charset = getRuntime()->DisplayCharset;
+    enum wc_ces charset = getRuntime()->DisplayCharset;
     wc_uint8 auto_detect;
 
-    f = fopen(tmpf, "w");
+    FILE* f = fopen(tmpf, "w");
     if (f == NULL) {
         /* FIXME: gettextize? */
         disp_err_message("Can't open temporary file", FALSE);

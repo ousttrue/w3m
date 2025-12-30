@@ -1,5 +1,5 @@
 #pragma once
-#include "wc_types.h"
+#include "ces.h"
 #include "Str.h"
 
 #define WC_C_HZ_TILDA	'~'
@@ -13,7 +13,7 @@
 #define WC_HZ_MBYTE1	4
 #define WC_HZ_MBYTE1_GR	5
 
-extern Str  wc_conv_from_hz(Str is, wc_ces ces);
+extern Str  wc_conv_from_hz(Str is, enum wc_ces ces);
 struct wc_status;
 extern void wc_push_to_hz(Str os, wc_wchar_t cc, struct wc_status *st);
 extern void wc_push_to_hz_end(Str os, struct wc_status *st);

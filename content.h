@@ -9,7 +9,7 @@ struct Content {
     const char* filename;
     int http_response_code;
     struct TextList* document_header;
-    wc_ces content_charset;
+    enum wc_ces content_charset;
     size_t current_content_length;
     enum CompressionType compression;
 };

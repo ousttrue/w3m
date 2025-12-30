@@ -1,5 +1,5 @@
 #pragma once
-#include "wc_types.h"
+#include "ces.h"
 #include "Str.h"
 
 #define WC_C_UTF7_PLUS	'+'
@@ -20,7 +20,7 @@
 
 extern wc_uint8 WC_UTF7_MAP[];
 
-extern Str       wc_conv_from_utf7(Str is, wc_ces ces);
+extern Str       wc_conv_from_utf7(Str is, enum wc_ces ces);
 struct wc_status;
 extern void      wc_push_to_utf7(Str os, wc_wchar_t cc, struct wc_status *st);
 extern void      wc_push_to_utf7_end(Str os, struct wc_status *st);

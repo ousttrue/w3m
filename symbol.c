@@ -1,6 +1,7 @@
 #include "symbol.h"
+#include "alloc.h"
 #include "w3m_rc.h"
-#include "indep.h"
+// #include "indep.h"
 #include "ctrlcode.h"
 #include <libwc/conv.h>
 #include <libwc/ccs.h>
@@ -20,14 +21,14 @@
 #include "Symbols/cp850.sym"
 
 typedef struct {
-    wc_ces ces;
+    enum wc_ces ces;
     char width;
     char** item;
     char** conved_item;
 } symbol_set;
 
 typedef struct {
-    wc_ces charset;
+    enum wc_ces charset;
     symbol_set* symbol;
 } charset_symbol_set;
 
@@ -39,9 +40,7 @@ static symbol_set euckr_symbol_set = { WC_CES_EUC_KR, 2, euckr_symbol, NULL };
 static symbol_set euccn_symbol_set = { WC_CES_EUC_CN, 2, euccn_symbol, NULL };
 static symbol_set euctw_symbol_set = { WC_CES_EUC_TW, 2, euctw_symbol, NULL };
 static symbol_set big5_symbol_set = { WC_CES_BIG5, 2, big5_symbol, NULL };
-#ifdef USE_UNICODE
 static symbol_set utf8_symbol_set = { WC_CES_UTF_8, 1, utf8_symbol, NULL };
-#endif
 static symbol_set cp850_symbol_set = { WC_CES_CP850, 1, cp850_symbol, NULL };
 
 static charset_symbol_set charset_symbol_list[] = {
@@ -62,15 +61,12 @@ static charset_symbol_set charset_symbol_list[] = {
     { WC_CES_EUC_TW, &euctw_symbol_set },
     { WC_CES_BIG5, &big5_symbol_set },
     { WC_CES_HKSCS, &big5_symbol_set },
-#ifdef USE_UNICODE
     { WC_CES_UTF_8, &utf8_symbol_set },
-#endif
     { WC_CES_CP850, &cp850_symbol_set },
     { 0, NULL },
 };
-/* *INDENT-ON* */
 
-static wc_ces save_charset = 0;
+static enum wc_ces save_charset = 0;
 static symbol_set* save_symbol = NULL;
 
 static void
@@ -88,7 +84,7 @@ encode_symbol(symbol_set* s)
 }
 
 char**
-get_symbol(wc_ces charset, int* width)
+get_symbol(enum wc_ces charset, int* width)
 {
     charset_symbol_set* p;
     symbol_set* s = NULL;

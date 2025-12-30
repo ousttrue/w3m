@@ -34,7 +34,7 @@ struct siteconf_rec {
 
     char* substitute_url;
     char* user_agent;
-    wc_ces url_charset;
+    enum wc_ces url_charset;
     int no_referer_from;
     int no_referer_to;
 };

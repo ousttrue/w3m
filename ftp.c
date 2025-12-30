@@ -454,7 +454,7 @@ ftp_dir:
     return (struct FtpFile) { 0 };
 }
 
-Str loadFTPDir(struct Url* pu, wc_ces* charset, bool do_download)
+Str loadFTPDir(struct Url* pu, enum wc_ces* charset, bool do_download)
 {
     Str FTPDIRtmp;
     Str tmp;
@@ -465,7 +465,7 @@ Str loadFTPDir(struct Url* pu, wc_ces* charset, bool do_download)
     int i, nfile, nfile_max;
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
 
-    wc_ces doc_charset = getRuntime()->DocumentCharset;
+    enum wc_ces doc_charset = getRuntime()->DocumentCharset;
 
     *charset = WC_CES_US_ASCII;
 

@@ -1,5 +1,5 @@
 #pragma once
-#include "wc_types.h"
+#include "ces.h"
 #include "Str.h"
 
 #define WC_C_SJIS_ERROR		0xFFFFFFFFU
@@ -29,8 +29,8 @@ extern wc_wchar_t wc_sjis_ext_to_cs94w(wc_wchar_t cc);
 extern wc_wchar_t wc_cs94w_to_sjis_ext(wc_wchar_t cc);
 extern wc_uint32  wc_sjis_ext1_to_N(wc_uint32 cc);
 extern wc_uint32  wc_sjis_ext2_to_N(wc_uint32 cc);
-extern Str        wc_conv_from_sjis(Str is, wc_ces ces);
-extern Str        wc_conv_from_sjisx0213(Str is, wc_ces ces);
+extern Str        wc_conv_from_sjis(Str is, enum wc_ces ces);
+extern Str        wc_conv_from_sjisx0213(Str is, enum wc_ces ces);
 struct wc_status;
 extern void       wc_push_to_sjis(Str os, wc_wchar_t cc, struct wc_status *st);
 extern void       wc_push_to_sjisx0213(Str os, wc_wchar_t cc, struct wc_status *st);

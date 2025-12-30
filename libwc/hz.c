@@ -6,7 +6,7 @@
 #include "ucs.h"
 
 Str
-wc_conv_from_hz(Str is, wc_ces ces)
+wc_conv_from_hz(Str is, enum wc_ces ces)
 {
     Str os;
     wc_uchar *sp = (wc_uchar *)is->ptr;

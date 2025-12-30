@@ -641,7 +641,7 @@ static int smDelTab(char c);
 /* --- MainMenu --- */
 
 static struct Menu MainMenu;
-static wc_ces MainMenuCharset = WC_CES_US_ASCII; /* FIXME: charset of source code */
+static enum wc_ces MainMenuCharset = WC_CES_US_ASCII; /* FIXME: charset of source code */
 static int MainMenuEncode = false;
 
 #define _(Text) Text
@@ -1746,7 +1746,7 @@ interpret_menu(FILE* mf)
     int in_menu = 0, nmenu = 0, nitem = 0, type;
     struct MenuItem* item = NULL;
 
-    wc_ces charset = getRuntime()->SystemCharset;
+    enum wc_ces charset = getRuntime()->SystemCharset;
 
     while (!feof(mf)) {
         line = Strfgets(mf);

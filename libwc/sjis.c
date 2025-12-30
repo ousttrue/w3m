@@ -190,7 +190,7 @@ wc_sjis_ext2_to_N(wc_uint32 c)
 }
 
 Str
-wc_conv_from_sjis(Str is, wc_ces ces)
+wc_conv_from_sjis(Str is, enum wc_ces ces)
 {
     Str os;
     wc_uchar *sp = (wc_uchar *)is->ptr;
@@ -270,7 +270,7 @@ wc_conv_from_sjis(Str is, wc_ces ces)
 }
 
 Str
-wc_conv_from_sjisx0213(Str is, wc_ces ces)
+wc_conv_from_sjisx0213(Str is, enum wc_ces ces)
 {
     Str os;
     wc_uchar *sp = (wc_uchar *)is->ptr;

@@ -1,7 +1,6 @@
 #pragma once
 #include "Str.h"
-#include "html.h"
-#include <libwc/wc_types.h>
+#include <libwc/ces.h>
 
 #define SYMBOL_BASE 0x20
 #define N_GRAPH_SYMBOL 32
@@ -12,7 +11,7 @@ extern char* graph2_symbol[];
 extern int symbol_width;
 extern int symbol_width0;
 
-char** get_symbol(wc_ces charset, int* width);
+char** get_symbol(enum wc_ces charset, int* width);
 char** set_symbol(int width);
 void push_symbol(Str str, char symbol, int width, int n);
 void update_utf8_symbol(void);

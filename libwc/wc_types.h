@@ -45,10 +45,3 @@ typedef struct {
     wc_bool init;
 } wc_gset;
 
-typedef wc_uint32 wc_ces;
-
-typedef struct {
-    wc_ces id;
-    char* name;
-    char* desc;
-} wc_ces_list;

@@ -132,7 +132,7 @@ wc_utf8_to_ucs(wc_uchar *utf8)
 }
 
 Str
-wc_conv_from_utf8(Str is, wc_ces ces)
+wc_conv_from_utf8(Str is, enum wc_ces ces)
 {
     Str os;
     wc_uchar *sp = (wc_uchar *)is->ptr;
