@@ -792,7 +792,7 @@ bool w3m_args(int argc, char** argv)
     WcOption.auto_detect = auto_detect;
 
     Currentbuf = Firstbuf;
-    screen_from_lines(Currentbuf);
+    screen_from_lines(&Currentbuf->doc, baseURL(Currentbuf));
     if (line_str) {
         _goLine(line_str);
     }

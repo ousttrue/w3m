@@ -707,7 +707,7 @@ void deleteImage(struct Buffer* buf)
         if (a->image && a->image->cache && a->image->cache->loaded != IMG_FLAG_UNLOADED && !(a->image->cache->loaded & IMG_FLAG_DONT_REMOVE) && a->image->cache->index < 0)
             unlink(a->image->cache->file);
     }
-    loadImage(NULL, IMG_FLAG_STOP);
+    loadImage(IMG_FLAG_STOP);
 }
 
 // void getAllImage(struct Buffer* buf)
@@ -761,17 +761,17 @@ showImageProgress(struct Buffer* buf)
     }
 }
 
-void loadImage(struct Buffer* buf, int flag)
+void loadImage(enum ImageLoadFlags flag)
 {
     if (!getRuntime()->activeImage) {
         return;
     }
-    if (!buf) {
-        return;
-    }
-    if (!buf->doc.img) {
-        return;
-    }
+    // if (!buf) {
+    //     return;
+    // }
+    // if (!buf->doc.img) {
+    //     return;
+    // }
     // if (buf->image_loaded) {
     //     return;
     // }

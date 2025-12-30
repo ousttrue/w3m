@@ -402,7 +402,7 @@ redrawNLine(struct Document* doc, int n, struct Url* base_url)
     }
 }
 
-void screen_from_lines(struct Buffer* buf)
+void screen_from_lines(struct Document* doc, struct Url* base_url)
 {
     if (getRuntime()->activeImage) {
         if (draw_image_flag) {
@@ -410,11 +410,11 @@ void screen_from_lines(struct Buffer* buf)
             screen_clear();
         }
         clearImage();
-        loadImage(buf, IMG_FLAG_STOP);
+        loadImage(IMG_FLAG_STOP);
         image_touch++;
         draw_image_flag = false;
     }
-    redrawNLine(&buf->doc, LASTLINE(), baseURL(buf));
+    redrawNLine(doc, LASTLINE(), base_url);
 }
 
 void displayMsg(struct Buffer* buf)

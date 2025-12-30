@@ -58,13 +58,14 @@ void drawImage(struct Buffer* currentbuf);
 void clearImage(void);
 
 struct Buffer;
-extern void deleteImage(struct Buffer* buf);
-// extern void getAllImage(struct Buffer* buf);
+void deleteImage(struct Buffer* buf);
 
-#define IMG_FLAG_START 0
-#define IMG_FLAG_STOP 1
-#define IMG_FLAG_NEXT 2
-extern void loadImage(struct Buffer* buf, int flag);
+enum ImageLoadFlags {
+    IMG_FLAG_START = 0,
+    IMG_FLAG_STOP = 1,
+    IMG_FLAG_NEXT = 2,
+};
+void loadImage(enum ImageLoadFlags flag);
 
 enum ImageGetFlags {
     IMG_FLAG_SKIP = 1,

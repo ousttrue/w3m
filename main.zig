@@ -67,7 +67,7 @@ export fn exitRawMode() void {
         c.screen_move(c.LASTLINE(), 0);
         c.screen_clrtoeolx();
         c.tty_write_screen();
-        c.loadImage(null, c.IMG_FLAG_STOP);
+        c.loadImage(c.IMG_FLAG_STOP);
         reset_tty();
     }
 }
@@ -122,10 +122,10 @@ export fn onFrame() void {
         ccolumn = buf.doc.currentColumn;
 
         // render
-        c.screen_from_lines(buf);
+        c.screen_from_lines(&buf.doc, c.baseURL(buf));
         tty_write_screen();
 
-        c.loadImage(buf, c.IMG_FLAG_NEXT);
+        c.loadImage(c.IMG_FLAG_NEXT);
     }
     buf.*.doc.lineUpdated = false;
 

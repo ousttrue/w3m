@@ -5690,7 +5690,7 @@ void loadHTMLstream(struct input_stream* stream,
     hb->cur_hseq = 1;
     hb->cur_iseq = 1;
 
-    enum ImageGetFlags image_flag= IMG_FLAG_SKIP;
+    enum ImageGetFlags image_flag = IMG_FLAG_SKIP;
     if (newBuf->doc.image_flag)
         image_flag = newBuf->doc.image_flag;
     else if (getRuntime()->activeImage && getRuntime()->displayImage && getRuntime()->autoImage)
@@ -5915,7 +5915,7 @@ loadImageBuffer(struct Url url, struct input_stream* stream,
     struct stat st;
     const struct Url* pu = newBuf ? &newBuf->currentURL : NULL;
 
-    loadImage(newBuf, IMG_FLAG_STOP);
+    loadImage(IMG_FLAG_STOP);
     image.url = parsedURL2Str(&url)->ptr;
     image.ext = filename_extension(url.file, true);
     image.width = -1;
