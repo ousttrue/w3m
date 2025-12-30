@@ -463,17 +463,13 @@ write_from_file(int sock, char* file)
     }
 }
 
-struct UrlStream openURL(const char* url, struct Url* current,
+struct UrlStream openURL(struct Url url, struct Url* current,
     struct FormList* request,
     struct URLOption option,
     struct input_stream* ouf)
 {
-    Str tmp;
-    int sock;
-    char *p, *q;
-    SSL* sslh = NULL;
-
     struct UrlStream us = {
+        .url = url,
         .hr = (struct HttpRequest) {
             .command = HR_COMMAND_GET,
             .flag = 0,
@@ -484,17 +480,8 @@ struct UrlStream openURL(const char* url, struct Url* current,
         0,
     };
 
-    const char* u = url;
-    enum UrlScheme scheme = getURLScheme(&u);
-    if (current == NULL && scheme == SCM_MISSING && !getRuntime()->ArgvIsURL)
-        u = file_to_url(url); /* force to local file */
-    else
-        u = url;
-
-    parseURL2(u, &us.url, current);
-
-    if (us.url.scheme == SCM_LOCAL && us.url.file == NULL) {
-        if (us.url.label != NULL) {
+    if (us.url.scheme == SCM_LOCAL && !us.url.file) {
+        if (us.url.label) {
             /* #hogege is not a label but a filename */
             Str tmp2 = Strnew_charp("#");
             Strcat_charp(tmp2, us.url.label);
@@ -513,6 +500,11 @@ struct UrlStream openURL(const char* url, struct Url* current,
     us.url_str = parsedURL2Str(&us.url)->ptr;
     us.url.is_nocache = (option.flag & RG_NOCACHE);
     // uf.ext = filename_extension(pu->file, 1);
+
+    Str tmp;
+    int sock;
+    char *p, *q;
+    SSL* sslh = NULL;
 
     switch (us.url.scheme) {
     case SCM_LOCAL:

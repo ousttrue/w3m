@@ -1,4 +1,5 @@
 #include "file.h"
+#include "url.h"
 #include "backend.h"
 #include "tcp_socket.h"
 #include "input_stream.h"
@@ -1104,18 +1105,24 @@ struct Buffer* load_doc(const char* path, struct Url* current,
         }
     }
 
-    TRAP_OFF;
+    struct Url url;
+    {
+        const char* u = path;
+        enum UrlScheme scheme = getURLScheme(&u);
+        if (current == NULL && scheme == SCM_MISSING && !getRuntime()->ArgvIsURL)
+            u = file_to_url(path); /* force to local file */
+        else
+            u = path;
+        parseURL2(u, &url, current);
+    }
 
-    unsigned char status = HTST_NORMAL;
-    struct HttpRequest hr;
-    struct UrlStream us = openURL(path, current, request,
-        (struct URLOption) {}, connection);
+    struct UrlStream us = openURL(url, current, request, option, connection);
     if (!us.stream && getRuntime()->retryAsHttp && us.url_str[0] != '/') {
         if (us.url.scheme == SCM_MISSING || us.url.scheme == SCM_UNKNOWN) {
             // retry it as "http://"
             const char* u = Strnew_m_charp("http://", path, NULL)->ptr;
-            us = openURL(u, current, request,
-                (struct URLOption) {}, connection);
+            parseURL2(u, &url, current);
+            us = openURL(url, current, request, option, connection);
         }
     }
 
@@ -1176,7 +1183,7 @@ struct Buffer* load_doc(const char* path, struct Url* current,
         return NULL;
     }
 
-    if (status == HTST_MISSING) {
+    if (us.status == HTST_MISSING) {
         TRAP_OFF;
         is_close(us.stream);
         return NULL;
@@ -1261,7 +1268,7 @@ struct Buffer* load_doc(const char* path, struct Url* current,
                 && (auth.realm = get_auth_param(hauth.param, "realm")) != NULL) {
                 struct Url* auth_pu = &us.url;
                 getAuthCookie(&hauth, "Authorization:", option.extra_header,
-                    auth_pu, &hr, request, &auth.uname, &auth.pwd);
+                    auth_pu, &us.hr, request, &auth.uname, &auth.pwd);
                 if (auth.uname == NULL) {
                     /* abort */
                     TRAP_OFF;
@@ -1283,7 +1290,7 @@ struct Buffer* load_doc(const char* path, struct Url* current,
                 && (auth.realm = get_auth_param(hauth.param, "realm")) != NULL) {
                 struct Url* auth_pu = schemeToProxy(us.url.scheme);
                 getAuthCookie(&hauth, "Proxy-Authorization:",
-                    option.extra_header, auth_pu, &hr, request,
+                    option.extra_header, auth_pu, &us.hr, request,
                     &auth.uname, &auth.pwd);
                 if (auth.uname == NULL) {
                     /* abort */
@@ -1300,7 +1307,7 @@ struct Buffer* load_doc(const char* path, struct Url* current,
             }
         }
 
-        if (status == HTST_CONNECT) {
+        if (us.status == HTST_CONNECT) {
             // XXX: RFC2617 3.2.3 Authentication-Info: ?
             return load_doc(path, current,
                 request, option, auth, do_download, t_buf, us.stream);
@@ -3047,7 +3054,6 @@ check_accept_charset(char* ac)
     return NULL;
 }
 
-
 static Str
 process_form_int(struct HtmlBuilder* hb,
     struct HtmlTag* tag, int fid)
@@ -3189,7 +3195,6 @@ process_idattr(struct readbuffer* obuf, int cmd, struct HtmlTag* tag)
         idtag = Sprintf("<_id id=\"%s\">", html_quote(id));
     push_tag(obuf, idtag->ptr, HTML_NOP);
 }
-
 
 #define CLOSE_P                                                            \
     if (obuf->flag & RB_P) {                                               \
@@ -4714,7 +4719,6 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                                 a_img->image = a->image;
                             }
                         }
-
                     }
                     effect |= PE_IMAGE;
                     break;
@@ -5278,8 +5282,7 @@ table_start:
                 if (parsedtag_need_reconstruct(tag))
                     h_env->tagbuf = parsedtag2str(tag);
                 push_tag(obuf, h_env->tagbuf->ptr, cmd);
-            }
-            else {
+            } else {
                 process_idattr(obuf, cmd, tag);
             }
             obuf->bp.init_flag = 1;

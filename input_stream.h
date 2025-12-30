@@ -55,7 +55,7 @@ struct UrlStream {
     const char* ssl_certificate;
     time_t modtime;
 };
-struct UrlStream openURL(const char* url, struct Url* current,
+struct UrlStream openURL(struct Url url, struct Url* current,
     struct FormList* request,
     struct URLOption option,
     struct input_stream* ouf);

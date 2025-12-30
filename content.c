@@ -231,7 +231,7 @@ void getHttpResponseHeader(struct Content* content, struct Url url,
             lineBuf2 = tmp;
         }
 
-        printf("%s", lineBuf2->ptr);
+        // printf("%s", lineBuf2->ptr);
         if ((url.scheme == SCM_HTTP
                 || url.scheme == SCM_HTTPS)
             && content->http_response_code == -1) {

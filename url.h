@@ -49,3 +49,5 @@ struct Buffer;
 extern void chkExternalURIBuffer(struct Buffer* buf);
 extern void initMimeTypes(void);
 extern void initURIMethods(void);
+
+char* file_to_url(const char* file);
