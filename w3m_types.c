@@ -44,7 +44,6 @@ struct Runtime g_runtime = {
     .cookie_accept_domains = (NULL),
     .cookie_avoid_wrong_number_of_dots = (NULL),
     .w3m_dump = (0),
-    .w3m_halfload = (false),
     .header_string = (NULL),
     .override_content_type = (false),
     .override_user_agent = (false),

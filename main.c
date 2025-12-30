@@ -466,11 +466,7 @@ bool w3m_args(int argc, char** argv)
                 getRuntime()->w3m_dump = (DUMP_HEAD | DUMP_SOURCE | DUMP_EXTRA);
             else if (!strcmp("-halfdump", argv[i]))
                 getRuntime()->w3m_dump = DUMP_HALFDUMP;
-            else if (!strcmp("-halfload", argv[i])) {
-                getRuntime()->w3m_dump = 0;
-                getRuntime()->w3m_halfload = TRUE;
-                getRuntime()->DefaultType = default_type = "text/html";
-            } else if (!strcmp("-backend", argv[i])) {
+            else if (!strcmp("-backend", argv[i])) {
                 getRuntime()->w3m_backend = TRUE;
             } else if (!strcmp("-backend_batch", argv[i])) {
                 getRuntime()->w3m_backend = TRUE;

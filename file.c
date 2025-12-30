@@ -5695,16 +5695,6 @@ void loadHTMLstream(struct input_stream* stream,
     else if (getRuntime()->activeImage && getRuntime()->displayImage && getRuntime()->autoImage)
         image_flag = IMG_FLAG_AUTO;
 
-    if (getRuntime()->w3m_halfload) {
-        newBuf->buffername = "---";
-
-        newBuf->document_charset = getRuntime()->InnerCharset;
-
-        HTMLlineproc3(hb, newBuf, stream);
-        getRuntime()->w3m_halfload = FALSE;
-        return;
-    }
-
     init_henv(&htmlenv1, &obuf, envs, MAX_ENV_LEVEL, NULL, newBuf->width, 0);
 
     if (w3m_halfdump)

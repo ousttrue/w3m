@@ -66,7 +66,6 @@ struct Runtime {
     char* cookie_accept_domains;
     char* cookie_avoid_wrong_number_of_dots;
     int w3m_dump;
-    int w3m_halfload;
     Str header_string;
     int override_content_type;
     int override_user_agent;
