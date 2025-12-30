@@ -1002,7 +1002,7 @@ static void nscroll(int n)
     if (buf->doc.firstLine == NULL)
         return;
     lnum = cur->linenumber;
-    buf->doc.topLine = lineSkip(buf, top, n, FALSE);
+    buf->doc.topLine = doc_lineSkip(&buf->doc, top, n);
     if (buf->doc.topLine == top) {
         lnum += n;
         if (lnum < buf->doc.topLine->linenumber)
@@ -1089,7 +1089,7 @@ DEFUN(ctrCsrV, CENTER_V, "Center on cursor line")
         return;
     int offsety = /*Currentbuf->doc.LINES / 2*/ -Currentbuf->doc.cursorY;
     if (offsety != 0) {
-        Currentbuf->doc.topLine = lineSkip(Currentbuf, Currentbuf->doc.topLine, -offsety, FALSE);
+        Currentbuf->doc.topLine = doc_lineSkip(&Currentbuf->doc, Currentbuf->doc.topLine, -offsety);
         arrangeLine(Currentbuf);
     }
 }
@@ -1965,8 +1965,8 @@ _goLine(char* l)
     } else if (*l == '^') {
         Currentbuf->doc.topLine = Currentbuf->doc.currentLine = Currentbuf->doc.firstLine;
     } else if (*l == '$') {
-        Currentbuf->doc.topLine = lineSkip(Currentbuf, Currentbuf->doc.lastLine,
-            -(Currentbuf->doc.LINES + 1) / 2, TRUE);
+        Currentbuf->doc.topLine = doc_lineSkip(&Currentbuf->doc, Currentbuf->doc.lastLine,
+            -(Currentbuf->doc.LINES + 1) / 2);
         Currentbuf->doc.currentLine = Currentbuf->doc.lastLine;
     } else
         gotoRealLine(Currentbuf, atoi(l));
@@ -2215,10 +2215,9 @@ gotoLabel(const char* label)
     pushBuffer(buf);
     gotoLine(Currentbuf, al->start.line);
     if (getRuntime()->label_topline)
-        Currentbuf->doc.topLine = lineSkip(Currentbuf, Currentbuf->doc.topLine,
+        Currentbuf->doc.topLine = doc_lineSkip(&Currentbuf->doc, Currentbuf->doc.topLine,
             Currentbuf->doc.currentLine->linenumber
-                - Currentbuf->doc.topLine->linenumber,
-            FALSE);
+                - Currentbuf->doc.topLine->linenumber);
     Currentbuf->pos = al->start.pos;
     arrangeCursor(Currentbuf);
     return;
@@ -2838,9 +2837,8 @@ DEFUN(backBf, BACK, "Close current buffer and return to the one below in stack")
 
             if (buf == Currentbuf) {
                 rFrame();
-                Currentbuf->doc.topLine = lineSkip(Currentbuf,
-                    Currentbuf->doc.firstLine, top - 1,
-                    FALSE);
+                Currentbuf->doc.topLine = doc_lineSkip(&Currentbuf->doc,
+                    Currentbuf->doc.firstLine, top - 1);
                 gotoLine(Currentbuf, linenumber);
                 Currentbuf->pos = pos;
                 Currentbuf->doc.currentColumn = currentColumn;
@@ -4366,8 +4364,7 @@ DEFUN(cursorTop, CURSOR_TOP, "Move cursor to the top of the screen")
 {
     if (Currentbuf->doc.firstLine == NULL)
         return;
-    Currentbuf->doc.currentLine = lineSkip(Currentbuf, Currentbuf->doc.topLine,
-        0, FALSE);
+    Currentbuf->doc.currentLine = doc_lineSkip(&Currentbuf->doc, Currentbuf->doc.topLine, 0);
     arrangeLine(Currentbuf);
 }
 

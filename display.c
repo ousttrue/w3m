@@ -267,7 +267,7 @@ redrawNLine(struct Document* doc, int n, struct Url* base_url)
     int i = 0;
     for (struct Line* l = doc->topLine; i < doc->LINES; i++, l = l->next) {
         if (i >= doc->LINES - n || i < -n)
-            l = redrawLine(doc, l, i + doc->rootY, base_url);
+            l = doc_redrawLine(doc, l, i + doc->rootY, base_url);
         if (l == NULL)
             break;
     }

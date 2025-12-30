@@ -63,16 +63,6 @@ int columnSkip(struct Buffer* buf, int offset)
     return 1;
 }
 
-struct Line* lineSkip(struct Buffer* buf, struct Line* line, int offset, int last)
-{
-    struct Line* l = currentLineSkip(line, offset);
-    if (!getRuntime()->nextpage_topline)
-        for (int i = buf->doc.LINES - 1 - (buf->doc.lastLine->linenumber - l->linenumber);
-            i > 0 && l->prev != NULL; i--, l = l->prev)
-            ;
-    return l;
-}
-
 #define MAX_CMD_LEN 128
 
 int gethtmlcmd(const char** s)

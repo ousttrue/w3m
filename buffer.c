@@ -277,15 +277,14 @@ void gotoLine(struct Buffer* buf, int n)
         sprintf(msg, "Last line is #%ld", buf->doc.lastLine->linenumber);
         set_delayed_message(msg);
         buf->doc.currentLine = l;
-        buf->doc.topLine = lineSkip(buf, buf->doc.currentLine, -(buf->doc.LINES - 1),
-            FALSE);
+        buf->doc.topLine = doc_lineSkip(&buf->doc, buf->doc.currentLine, -(buf->doc.LINES - 1));
         return;
     }
     for (; l != NULL; l = l->next) {
         if (l->linenumber >= n) {
             buf->doc.currentLine = l;
             if (n < buf->doc.topLine->linenumber || buf->doc.topLine->linenumber + buf->doc.LINES <= n)
-                buf->doc.topLine = lineSkip(buf, l, -(buf->doc.LINES + 1) / 2, FALSE);
+                buf->doc.topLine = doc_lineSkip(&buf->doc, l, -(buf->doc.LINES + 1) / 2);
             break;
         }
     }
@@ -315,15 +314,14 @@ void gotoRealLine(struct Buffer* buf, int n)
         sprintf(msg, "Last line is #%ld", buf->doc.lastLine->real_linenumber);
         set_delayed_message(msg);
         buf->doc.currentLine = l;
-        buf->doc.topLine = lineSkip(buf, buf->doc.currentLine, -(buf->doc.LINES - 1),
-            FALSE);
+        buf->doc.topLine = doc_lineSkip(&buf->doc, buf->doc.currentLine, -(buf->doc.LINES - 1));
         return;
     }
     for (; l != NULL; l = l->next) {
         if (l->real_linenumber >= n) {
             buf->doc.currentLine = l;
             if (n < buf->doc.topLine->real_linenumber || buf->doc.topLine->real_linenumber + buf->doc.LINES <= n)
-                buf->doc.topLine = lineSkip(buf, l, -(buf->doc.LINES + 1) / 2, FALSE);
+                buf->doc.topLine = doc_lineSkip(&buf->doc, l, -(buf->doc.LINES + 1) / 2);
             break;
         }
     }
@@ -567,7 +565,7 @@ void reshapeBuffer(struct Buffer* buf)
         n = (buf->doc.currentLine->linenumber - buf->doc.topLine->linenumber)
             - (cur->linenumber - sbuf.doc.topLine->linenumber);
         if (n) {
-            buf->doc.topLine = lineSkip(buf, buf->doc.topLine, n, FALSE);
+            buf->doc.topLine = doc_lineSkip(&buf->doc, buf->doc.topLine, n);
             if (cur->real_linenumber > 0)
                 gotoRealLine(buf, cur->real_linenumber);
             else
@@ -743,8 +741,7 @@ void delBuffer(struct Buffer* buf)
 
 void restorePosition(struct Buffer* buf, struct Buffer* orig)
 {
-    buf->doc.topLine = lineSkip(buf, buf->doc.firstLine, TOP_LINENUMBER(orig) - 1,
-        FALSE);
+    buf->doc.topLine = doc_lineSkip(&buf->doc, buf->doc.firstLine, TOP_LINENUMBER(orig) - 1);
     gotoLine(buf, CUR_LINENUMBER(orig));
     buf->pos = orig->pos;
     if (buf->doc.currentLine && orig->doc.currentLine)
@@ -802,7 +799,7 @@ void cursorUp0(struct Buffer* buf, int n)
     if (buf->doc.cursorY > 0)
         cursorUpDown(buf, -1);
     else {
-        buf->doc.topLine = lineSkip(buf, buf->doc.topLine, -n, FALSE);
+        buf->doc.topLine = doc_lineSkip(&buf->doc, buf->doc.topLine, -n);
         if (buf->doc.currentLine->prev != NULL)
             buf->doc.currentLine = buf->doc.currentLine->prev;
         arrangeLine(buf);
@@ -831,7 +828,7 @@ void cursorDown0(struct Buffer* buf, int n)
     if (buf->doc.cursorY < buf->doc.LINES - 1)
         cursorUpDown(buf, 1);
     else {
-        buf->doc.topLine = lineSkip(buf, buf->doc.topLine, n, FALSE);
+        buf->doc.topLine = doc_lineSkip(&buf->doc, buf->doc.topLine, n);
         if (buf->doc.currentLine->next != NULL)
             buf->doc.currentLine = buf->doc.currentLine->next;
         arrangeLine(buf);
@@ -958,7 +955,7 @@ void arrangeCursor(struct Buffer* buf)
         /*
          * buf->doc.topLine = buf->doc.currentLine;
          */
-        buf->doc.topLine = lineSkip(buf, buf->doc.currentLine, 0, FALSE);
+        buf->doc.topLine = doc_lineSkip(&buf->doc, buf->doc.currentLine, 0);
     }
     /* Arrange column */
     while (buf->pos < 0 && buf->doc.currentLine->prev && buf->doc.currentLine->bpos) {

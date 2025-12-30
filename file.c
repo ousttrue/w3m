@@ -1050,10 +1050,9 @@ static struct Buffer* make_buffer(struct Url url, int flag,
                 if (a != NULL) {
                     gotoLine(b, a->start.line);
                     if (getRuntime()->label_topline)
-                        b->doc.topLine = lineSkip(b, b->doc.topLine,
+                        b->doc.topLine = doc_lineSkip(&b->doc, b->doc.topLine,
                             b->doc.currentLine->linenumber
-                                - b->doc.topLine->linenumber,
-                            FALSE);
+                                - b->doc.topLine->linenumber);
                     b->pos = a->start.pos;
                     arrangeCursor(b);
                 }
@@ -4995,7 +4994,7 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
         }
         /* end of processing for one line */
         if (!internal)
-            addnewline(&buf->doc, outc, outp, NULL, pos, -1, nlines);
+            doc_addnewline(&buf->doc, outc, outp, NULL, pos, -1, nlines);
         if (internal == HTML_N_INTERNAL)
             internal = 0;
         if (str != endp) {
@@ -5887,7 +5886,7 @@ loadBuffer(struct Url url, struct input_stream* stream,
         ++nlines;
         Strchop(lineBuf2);
         lineBuf2 = checkType(lineBuf2, &propBuffer, NULL);
-        addnewline(&newBuf->doc, lineBuf2->ptr, propBuffer, colorBuffer,
+        doc_addnewline(&newBuf->doc, lineBuf2->ptr, propBuffer, colorBuffer,
             lineBuf2->length, FOLD_BUFFER_WIDTH, nlines);
     }
 _end:

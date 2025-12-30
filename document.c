@@ -48,7 +48,7 @@ addnewline2(struct Document* doc, char* line, Lineprop* prop, Linecolor* color, 
     l = NULL;
 }
 
-void addnewline(struct Document* doc, const char* line, Lineprop* prop, Linecolor* color, int pos, int width, int nlines)
+void doc_addnewline(struct Document* doc, const char* line, Lineprop* prop, Linecolor* color, int pos, int width, int nlines)
 {
     char* s;
     Lineprop* p;
@@ -100,7 +100,7 @@ void addnewline(struct Document* doc, const char* line, Lineprop* prop, Linecolo
     }
 }
 
-struct Line* redrawLine(struct Document* doc, struct Line* l, int i, struct Url* base_url)
+struct Line* doc_redrawLine(struct Document* doc, struct Line* l, int i, struct Url* base_url)
 {
     struct LineWriter g = { 0 };
 
@@ -187,5 +187,15 @@ struct Line* redrawLine(struct Document* doc, struct Line* l, int i, struct Url*
     endLine(&g);
     if (rcol - column < doc->COLS)
         screen_clrtoeolx();
+    return l;
+}
+
+struct Line* doc_lineSkip(struct Document* doc, struct Line* line, int offset)
+{
+    struct Line* l = currentLineSkip(line, offset);
+    if (!getRuntime()->nextpage_topline)
+        for (int i = doc->LINES - 1 - (doc->lastLine->linenumber - l->linenumber);
+            i > 0 && l->prev != NULL; i--, l = l->prev)
+            ;
     return l;
 }

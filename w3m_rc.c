@@ -591,9 +591,8 @@ struct Buffer* loadLink(const char* url, const char* target, const char* referer
         if (al) {
             gotoLine(Currentbuf, al->start.line);
             if (g_runtime.label_topline)
-                Currentbuf->doc.topLine = lineSkip(Currentbuf, Currentbuf->doc.topLine,
-                    Currentbuf->doc.currentLine->linenumber - Currentbuf->doc.topLine->linenumber,
-                    FALSE);
+                Currentbuf->doc.topLine = doc_lineSkip(&Currentbuf->doc, Currentbuf->doc.topLine,
+                    Currentbuf->doc.currentLine->linenumber - Currentbuf->doc.topLine->linenumber);
             Currentbuf->pos = al->start.pos;
             arrangeCursor(Currentbuf);
         }
