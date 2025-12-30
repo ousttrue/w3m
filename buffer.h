@@ -57,7 +57,6 @@ struct BufferPos {
 
 struct Buffer {
     struct Content content;
-    const char* buffername;
     struct Document doc;
     struct Buffer* nextBuffer;
     struct Buffer* linkBuffer[MAX_LB];

@@ -243,14 +243,14 @@ redrawNLine(struct Document* doc, int n, struct Url* base_url)
             if (t == CurrentTab())
                 screen_bold();
             screen_addch('[', 1);
-            int l = t->x2 - t->x1 - 1 - get_strwidth(t->currentBuffer->buffername);
+            int l = t->x2 - t->x1 - 1 - get_strwidth(t->currentBuffer->doc.title);
             if (l < 0)
                 l = 0;
             if (l / 2 > 0)
                 screen_wc_addnstr_sup(" ", l / 2);
             // if (t == CurrentTab())
             //     EFFECT_ACTIVE_START;
-            screen_wc_addstr_width(t->currentBuffer->buffername, t->x2 - t->x1 - l);
+            screen_wc_addstr_width(t->currentBuffer->doc.title, t->x2 - t->x1 - l);
             // if (t == CurrentTab())
             //     EFFECT_ACTIVE_END;
             if ((l + 1) / 2 > 0)

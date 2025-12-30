@@ -432,7 +432,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
 
     if (level == 0) {
         fprintf(f1, "<html><head><title>%s</title></head><body>\n",
-            html_quote(current->buffername));
+            html_quote(current->doc.title));
         fputs("<table hborder width=\"100%\">\n", f1);
     } else
         fputs("<table hborder>\n", f1);

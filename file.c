@@ -113,10 +113,10 @@ loadSomething(struct Url url, struct input_stream* stream, const char* t,
     if (!buf)
         return NULL;
 
-    if (buf->buffername == NULL || buf->buffername[0] == '\0') {
-        buf->buffername = checkHeader(&buf->content, "Subject:");
-        if (buf->buffername == NULL && buf->content.filename != NULL)
-            buf->buffername = conv_from_system(lastFileName(buf->content.filename));
+    if (buf->doc.title == NULL || buf->doc.title[0] == '\0') {
+        buf->doc.title = checkHeader(&buf->content, "Subject:");
+        if (buf->doc.title == NULL && buf->content.filename != NULL)
+            buf->doc.title = conv_from_system(lastFileName(buf->content.filename));
     }
     if (buf->currentURL.scheme == SCM_UNKNOWN)
         buf->currentURL.scheme = url.scheme;
@@ -4960,7 +4960,7 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                     break;
                 case HTML_TITLE_ALT:
                     if (parsedtag_get_value(tag, ATTR_TITLE, &p))
-                        buf->buffername = html_unquote(p);
+                        buf->doc.title = html_unquote(p);
                     break;
                 case HTML_SYMBOL:
                     effect |= PC_SYMBOL;
@@ -5665,7 +5665,6 @@ void loadHTMLstream(struct input_stream* stream,
     int64_t linelen = 0;
     int64_t trbyte = 0;
     Str lineBuf2 = Strnew();
-    enum wc_ces charset = WC_CES_US_ASCII;
     struct html_feed_environ htmlenv1;
     struct readbuffer obuf;
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
@@ -5710,11 +5709,12 @@ void loadHTMLstream(struct input_stream* stream,
     TRAP_ON;
 
     enum wc_ces doc_charset = getRuntime()->DocumentCharset;
+    enum wc_ces detected_charset = WC_CES_US_ASCII;
     if (newBuf) {
         if (newBuf->bufferprop & BP_FRAME)
-            charset = getRuntime()->InnerCharset;
+            detected_charset = getRuntime()->InnerCharset;
         else if (newBuf->document_charset)
-            charset = doc_charset = newBuf->document_charset;
+            detected_charset = doc_charset = newBuf->document_charset;
     }
     if (newBuf->content.content_charset && getRuntime()->UseContentCharset)
         doc_charset = newBuf->content.content_charset;
@@ -5738,14 +5738,14 @@ void loadHTMLstream(struct input_stream* stream,
         if (hb->meta_charset) { /* <META> */
             if (newBuf->content.content_charset == 0 && getRuntime()->UseContentCharset) {
                 doc_charset = hb->meta_charset;
-                charset = WC_CES_US_ASCII;
+                detected_charset = WC_CES_US_ASCII;
             }
             hb->meta_charset = 0;
         }
 
-        lineBuf2 = convertLine(lineBuf2, HTML_MODE, &charset, doc_charset);
+        lineBuf2 = convertLine(lineBuf2, HTML_MODE, &detected_charset, doc_charset);
 
-        hb->cur_document_charset = charset;
+        hb->cur_document_charset = detected_charset;
 
         HTMLlineproc0(hb, lineBuf2->ptr, &htmlenv1, internal);
     }
@@ -5757,7 +5757,7 @@ void loadHTMLstream(struct input_stream* stream,
     flushline(&htmlenv1, &obuf, 0, 2, htmlenv1.limit);
 
     if (htmlenv1.title)
-        newBuf->buffername = htmlenv1.title;
+        newBuf->doc.title = htmlenv1.title;
     if (w3m_halfdump) {
         TRAP_OFF;
         print_internal_information(hb, &htmlenv1);
@@ -5774,7 +5774,7 @@ phase2:
     newBuf->trbyte = trbyte + linelen;
     TRAP_OFF;
     if (!(newBuf->bufferprop & BP_FRAME))
-        newBuf->document_charset = charset;
+        newBuf->document_charset = detected_charset;
     newBuf->doc.image_flag = image_flag;
     HTMLlineproc2(hb, newBuf, htmlenv1.buf);
 
@@ -6067,7 +6067,7 @@ getshell(char* cmd)
     if (buf == NULL)
         return NULL;
     buf->content.filename = cmd;
-    buf->buffername = Sprintf("%s %s", SHELLBUFFERNAME,
+    buf->doc.title = Sprintf("%s %s", SHELLBUFFERNAME,
         conv_from_system(cmd))
                           ->ptr;
     return buf;
@@ -6153,8 +6153,8 @@ doExternal(struct Url url, struct input_stream* stream,
         buf = NO_BUFFER;
     }
     if (buf && buf != NO_BUFFER) {
-        if ((buf->buffername == NULL || buf->buffername[0] == '\0') && buf->content.filename)
-            buf->buffername = conv_from_system(lastFileName(buf->content.filename));
+        if ((buf->doc.title == NULL || buf->doc.title[0] == '\0') && buf->content.filename)
+            buf->doc.title = conv_from_system(lastFileName(buf->content.filename));
         buf->edit = mcap->edit;
         buf->mailcap = mcap;
     }

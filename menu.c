@@ -1243,12 +1243,12 @@ mSusp(char c)
     return (MENU_NOTHING);
 }
 
-static char* SearchString = NULL;
+static const char* SearchString = NULL;
 
-int (*menuSearchRoutine)(struct Menu*, char*, int);
+int (*menuSearchRoutine)(struct Menu*, const char*, int);
 
 static int
-menuForwardSearch(struct Menu* menu, char* str, int from)
+menuForwardSearch(struct Menu* menu, const char* str, int from)
 {
     int i;
     char* p;
@@ -1267,9 +1267,7 @@ menuForwardSearch(struct Menu* menu, char* str, int from)
 static int
 menu_search_forward(struct Menu* menu, int from)
 {
-    char* str;
-    int found;
-    str = inputStrHist("Forward: ", NULL, getRuntime()->TextHist);
+    const char* str = inputStrHist("Forward: ", NULL, getRuntime()->TextHist);
     if (str != NULL && *str == '\0')
         str = SearchString;
     if (str == NULL || *str == '\0')
@@ -1277,7 +1275,7 @@ menu_search_forward(struct Menu* menu, int from)
     SearchString = str;
     str = conv_search_string(str, getRuntime()->DisplayCharset);
     menuSearchRoutine = menuForwardSearch;
-    found = menuForwardSearch(menu, str, from + 1);
+    int found = menuForwardSearch(menu, str, from + 1);
     if (getRuntime()->WrapSearch && found == -1)
         found = menuForwardSearch(menu, str, 0);
     if (found >= 0)
@@ -1297,7 +1295,7 @@ mSrchF(char c)
 }
 
 static int
-menuBackwardSearch(struct Menu* menu, char* str, int from)
+menuBackwardSearch(struct Menu* menu, const char* str, int from)
 {
     int i;
     char* p;
@@ -1316,7 +1314,7 @@ menuBackwardSearch(struct Menu* menu, char* str, int from)
 static int
 menu_search_backward(struct Menu* menu, int from)
 {
-    char* str = inputStrHist("Backward: ", NULL, getRuntime()->TextHist);
+    const char* str = inputStrHist("Backward: ", NULL, getRuntime()->TextHist);
     if (str != NULL && *str == '\0')
         str = SearchString;
     if (str == NULL || *str == '\0')
@@ -1346,23 +1344,21 @@ mSrchB(char c)
 static int
 menu_search_next_previous(struct Menu* menu, int from, int reverse)
 {
-    int found;
-    static int (*routine[2])(struct Menu*, char*, int) = {
+    static int (*routine[2])(struct Menu*, const char*, int) = {
         menuForwardSearch, menuBackwardSearch
     };
-    char* str;
 
     if (menuSearchRoutine == NULL) {
         disp_message("No previous regular expression", TRUE);
         return -1;
     }
-    str = conv_search_string(SearchString, getRuntime()->DisplayCharset);
+    const char* str = conv_search_string(SearchString, getRuntime()->DisplayCharset);
     if (reverse != 0)
         reverse = 1;
     if (menuSearchRoutine == menuBackwardSearch)
         reverse ^= 1;
     from += reverse ? -1 : 1;
-    found = (*routine[reverse])(menu, str, from);
+    int found = (*routine[reverse])(menu, str, from);
     if (getRuntime()->WrapSearch && found == -1)
         found = (*routine[reverse])(menu, str, reverse * menu->nitem);
     if (found >= 0)
@@ -1476,7 +1472,7 @@ initSelectMenu(void)
 
     label = New_N(char*, nitem + 2);
     for (i = 0, buf = Firstbuf; i < nitem; i++, buf = buf->nextBuffer) {
-        str = Sprintf("<%s>", buf->buffername);
+        str = Sprintf("<%s>", buf->doc.title);
         if (buf->content.filename != NULL) {
             switch (buf->currentURL.scheme) {
             case SCM_LOCAL:
@@ -1612,7 +1608,7 @@ initSelTabMenu(void)
     i = 0;
     for (struct TabBuffer* tab = LastTab(); i < nitem; i++, tab = tab->prevTab) {
         struct Buffer* buf = tab->currentBuffer;
-        Str str = Sprintf("<%s>", buf->buffername);
+        Str str = Sprintf("<%s>", buf->doc.title);
         if (buf->content.filename != NULL) {
             switch (buf->currentURL.scheme) {
             case SCM_LOCAL:

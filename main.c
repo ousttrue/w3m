@@ -2959,7 +2959,7 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
         (Str_form_quote(Strnew_charp(getRuntime()->BookmarkFile)))->ptr,
         (Str_form_quote(parsedURL2Str(&Currentbuf->currentURL)))->ptr,
 
-        (Str_form_quote(wc_conv_strict(Currentbuf->buffername,
+        (Str_form_quote(wc_conv_strict(Currentbuf->doc.title,
              getRuntime()->InnerCharset,
              getRuntime()->BookmarkCharset)))
             ->ptr,
@@ -3370,7 +3370,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
             buf->type = "text/plain";
         else
             buf->type = Currentbuf->type;
-        buf->buffername = Sprintf("source of %s", Currentbuf->buffername)->ptr;
+        buf->doc.title = Sprintf("source of %s", Currentbuf->doc.title)->ptr;
         buf->linkBuffer[LB_N_SOURCE] = Currentbuf;
         Currentbuf->linkBuffer[LB_SOURCE] = buf;
     } else if (!strcasecmp(Currentbuf->type, "text/plain")) {
@@ -3379,9 +3379,9 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
             buf->type = "text/html";
         else
             buf->type = Currentbuf->type;
-        buf->buffername = Sprintf("HTML view of %s",
-            Currentbuf->buffername)
-                              ->ptr;
+        buf->doc.title = Sprintf("HTML view of %s",
+            Currentbuf->doc.title)
+                             ->ptr;
         buf->linkBuffer[LB_SOURCE] = Currentbuf;
         Currentbuf->linkBuffer[LB_N_SOURCE] = buf;
     } else {
@@ -3409,7 +3409,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
     int multipart;
 
     if (Currentbuf->bufferprop & BP_INTERNAL) {
-        if (!strcmp(Currentbuf->buffername, DOWNLOAD_LIST_TITLE)) {
+        if (!strcmp(Currentbuf->doc.title, DOWNLOAD_LIST_TITLE)) {
             ldDL();
             return;
         }
@@ -3811,7 +3811,7 @@ execdict(char* word)
         return;
     } else if (buf != NO_BUFFER) {
         buf->content.filename = w;
-        buf->buffername = Sprintf("%s %s", DICTBUFFERNAME, word)->ptr;
+        buf->doc.title = Sprintf("%s %s", DICTBUFFERNAME, word)->ptr;
         if (buf->type == NULL)
             buf->type = "text/plain";
         pushBuffer(buf);

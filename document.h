@@ -5,6 +5,8 @@
 
 struct AnchorList;
 struct Document {
+    const char* title;
+
     //
     // lines
     //

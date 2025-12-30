@@ -72,7 +72,7 @@ struct Buffer* newBuffer(int width)
     n->currentURL.scheme = SCM_UNKNOWN;
     n->baseURL = NULL;
     n->baseTarget = NULL;
-    n->buffername = "";
+    n->doc.title = "";
     n->bufferprop = BP_NORMAL;
     n->clone = New(int);
     *n->clone = 1;
@@ -89,10 +89,8 @@ struct Buffer* newBuffer(int width)
 struct Buffer*
 nullBuffer(void)
 {
-    struct Buffer* b;
-
-    b = newBuffer(TTY_COLS());
-    b->buffername = "*Null*";
+    struct Buffer* b = newBuffer(TTY_COLS());
+    b->doc.title = "*Null*";
     return b;
 }
 
@@ -149,11 +147,11 @@ namedBuffer(struct Buffer* first, char* name)
 {
     struct Buffer* buf;
 
-    if (!strcmp(first->buffername, name)) {
+    if (!strcmp(first->doc.title, name)) {
         return first;
     }
     for (buf = first; buf->nextBuffer != NULL; buf = buf->nextBuffer) {
-        if (!strcmp(buf->nextBuffer->buffername, name)) {
+        if (!strcmp(buf->nextBuffer->doc.title, name)) {
             return buf->nextBuffer;
         }
     }
@@ -231,7 +229,7 @@ writeBufferName(struct Buffer* buf, int n)
     if (all == 0 && buf->doc.lastLine != NULL)
         all = buf->doc.lastLine->linenumber;
     screen_move(n, 0);
-    Str msg = Sprintf("<%s> [%d lines]", buf->buffername, all);
+    Str msg = Sprintf("<%s> [%d lines]", buf->doc.title, all);
     if (buf->content.filename != NULL) {
         switch (buf->currentURL.scheme) {
         case SCM_LOCAL:

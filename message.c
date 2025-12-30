@@ -187,7 +187,7 @@ make_lastline_message(struct Buffer* buf)
     if (buf->ssl_certificate)
         Strcat_charp(msg, "[SSL]");
     Strcat_charp(msg, " <");
-    Strcat_charp(msg, buf->buffername);
+    Strcat_charp(msg, buf->doc.title);
 
     if (s) {
         int l = TTY_COLS() - 3 - sl;
@@ -221,5 +221,5 @@ void displayMsg(struct Buffer* buf)
     screen_standout();
     message(msg->ptr, buf->doc.cursorX + buf->doc.rootX, buf->doc.cursorY + buf->doc.rootY);
     screen_standend();
-    term_title(conv_to_system(buf->buffername));
+    term_title(conv_to_system(buf->doc.title));
 }

@@ -150,7 +150,7 @@ static struct Buffer* DownloadListBuffer(void)
 void download_panel()
 {
     bool replace = false;
-    if (Currentbuf->bufferprop & BP_INTERNAL && !strcmp(Currentbuf->buffername, DOWNLOAD_LIST_TITLE))
+    if (Currentbuf->bufferprop & BP_INTERNAL && !strcmp(Currentbuf->doc.title, DOWNLOAD_LIST_TITLE))
         replace = true;
     if (!FirstDL) {
         if (replace) {
@@ -170,7 +170,7 @@ void download_panel()
     buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
     if (replace) {
         COPY_BUFROOT(buf, Currentbuf);
-        doc_restorePosition(&buf->doc, Currentbuf);
+        doc_restorePosition(&buf->doc, &Currentbuf->doc);
     }
     bool new_tab = false;
     if (!replace && getRuntime()->open_tab_dl_list) {
@@ -221,7 +221,7 @@ bool hasDownloadList()
         if (!Firstbuf || Firstbuf == NO_BUFFER) {
             Firstbuf = Currentbuf = newBuffer(INIT_BUFFER_WIDTH);
             Currentbuf->bufferprop = BP_INTERNAL | BP_NO_URL;
-            Currentbuf->buffername = DOWNLOAD_LIST_TITLE;
+            Currentbuf->doc.title = DOWNLOAD_LIST_TITLE;
         } else
             Currentbuf = Firstbuf;
         ldDL();
