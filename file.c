@@ -1054,13 +1054,13 @@ static struct Buffer* make_buffer(struct Url url, int flag,
                             b->doc.currentLine->linenumber
                                 - b->doc.topLine->linenumber);
                     b->doc.pos = a->start.pos;
-                    arrangeCursor(b);
+                    doc_arrangeCursor(&b->doc);
                 }
             } else { /* plain text */
                 int l = atoi(url.label);
                 gotoRealLine(b, l);
                 b->doc.pos = 0;
-                arrangeCursor(b);
+                doc_arrangeCursor(&b->doc);
             }
         }
     }

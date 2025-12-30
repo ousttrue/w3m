@@ -37,31 +37,7 @@ struct auth_pass {
 
 struct auth_pass* passwords = NULL;
 
-int columnSkip(struct Buffer* buf, int offset)
-{
-    int i, maxColumn;
-    int column = buf->doc.currentColumn + offset;
-    int nlines = buf->doc.LINES + 1;
-    struct Line* l;
 
-    maxColumn = 0;
-    for (i = 0, l = buf->doc.topLine; i < nlines && l != NULL; i++, l = l->next) {
-        if (l->width < 0)
-            l->width = COLPOS(l, l->len);
-        if (l->width - 1 > maxColumn)
-            maxColumn = l->width - 1;
-    }
-    maxColumn -= buf->doc.COLS - 1;
-    if (column < maxColumn)
-        maxColumn = column;
-    if (maxColumn < 0)
-        maxColumn = 0;
-
-    if (buf->doc.currentColumn == maxColumn)
-        return 0;
-    buf->doc.currentColumn = maxColumn;
-    return 1;
-}
 
 #define MAX_CMD_LEN 128
 

@@ -128,7 +128,7 @@ enum SearchResult forwardSearch(struct Buffer* buf, const char* str)
         buf->doc.pos = pos;
         if (l != buf->doc.currentLine)
             doc_gotoLine(&buf->doc, l->linenumber);
-        arrangeCursor(buf);
+        doc_arrangeCursor(&buf->doc);
         set_mark(l, pos, pos + last - first);
         return SR_FOUND;
     }
@@ -153,7 +153,7 @@ enum SearchResult forwardSearch(struct Buffer* buf, const char* str)
             buf->doc.pos = pos;
             buf->doc.currentLine = l;
             doc_gotoLine(&buf->doc, l->linenumber);
-            arrangeCursor(buf);
+            doc_arrangeCursor(&buf->doc);
             set_mark(l, pos, pos + last - first);
             return SR_FOUND | (wrapped ? SR_WRAPPED : 0);
         }
@@ -221,7 +221,7 @@ enum SearchResult backwardSearch(struct Buffer* buf, const char* str)
             buf->doc.pos = pos;
             if (l != buf->doc.currentLine)
                 doc_gotoLine(&buf->doc, l->linenumber);
-            arrangeCursor(buf);
+            doc_arrangeCursor(&buf->doc);
             set_mark(l, pos, pos + found_last - found);
             return SR_FOUND;
         }
@@ -259,7 +259,7 @@ enum SearchResult backwardSearch(struct Buffer* buf, const char* str)
             }
             buf->doc.pos = pos;
             doc_gotoLine(&buf->doc, l->linenumber);
-            arrangeCursor(buf);
+            doc_arrangeCursor(&buf->doc);
             set_mark(l, pos, pos + found_last - found);
             return SR_FOUND | (wrapped ? SR_WRAPPED : 0);
         }

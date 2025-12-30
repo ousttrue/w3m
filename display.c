@@ -330,6 +330,6 @@ void bufferPosition(struct Buffer* buf)
     if (buf->doc.rootY != ny || buf->doc.LINES != LASTLINE() - ny) {
         buf->doc.rootY = ny;
         buf->doc.LINES = LASTLINE() - ny;
-        arrangeCursor(buf);
+        doc_arrangeCursor(&buf->doc);
     }
 }

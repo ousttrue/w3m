@@ -1101,8 +1101,8 @@ DEFUN(ctrCsrH, CENTER_H, "Center on cursor column")
         return;
     offsetx = Currentbuf->doc.cursorX - Currentbuf->doc.COLS / 2;
     if (offsetx != 0) {
-        columnSkip(Currentbuf, offsetx);
-        arrangeCursor(Currentbuf);
+        doc_columnSkip(&Currentbuf->doc, offsetx);
+        doc_arrangeCursor(&Currentbuf->doc);
     }
 }
 
@@ -1111,7 +1111,7 @@ DEFUN(rdrwSc, REDRAW, "Draw the screen anew")
 {
     tty_clear();
     screen_clear();
-    arrangeCursor(Currentbuf);
+    doc_arrangeCursor(&Currentbuf->doc);
 }
 
 static void
@@ -1201,16 +1201,16 @@ dispincsrch(int ch, Str buf, Lineprop* prop)
                 Currentbuf->doc.pos -= 1;
                 SAVE_BUFPOSITION(&sbuf);
             }
-            arrangeCursor(Currentbuf);
+            doc_arrangeCursor(&Currentbuf->doc);
             clear_mark(Currentbuf->doc.currentLine);
             return -1;
         } else
             return 020; /* _prev completion for C-s C-s */
     } else if (*str) {
         RESTORE_BUFPOSITION(&sbuf);
-        arrangeCursor(Currentbuf);
+        doc_arrangeCursor(&Currentbuf->doc);
         srchcore(str, searchRoutine);
-        arrangeCursor(Currentbuf);
+        doc_arrangeCursor(&Currentbuf->doc);
     }
     clear_mark(Currentbuf->doc.currentLine);
     return -1;
@@ -1352,7 +1352,7 @@ DEFUN(shiftl, SHIFT_LEFT, "Shift screen left")
     if (Currentbuf->doc.firstLine == NULL)
         return;
     column = Currentbuf->doc.currentColumn;
-    columnSkip(Currentbuf, searchKeyNum() * (-Currentbuf->doc.COLS + 1) + 1);
+    doc_columnSkip(&Currentbuf->doc, searchKeyNum() * (-Currentbuf->doc.COLS + 1) + 1);
     shiftvisualpos(Currentbuf, Currentbuf->doc.currentColumn - column);
 }
 
@@ -1364,7 +1364,7 @@ DEFUN(shiftr, SHIFT_RIGHT, "Shift screen right")
     if (Currentbuf->doc.firstLine == NULL)
         return;
     column = Currentbuf->doc.currentColumn;
-    columnSkip(Currentbuf, searchKeyNum() * (Currentbuf->doc.COLS - 1) - 1);
+    doc_columnSkip(&Currentbuf->doc, searchKeyNum() * (Currentbuf->doc.COLS - 1) - 1);
     shiftvisualpos(Currentbuf, Currentbuf->doc.currentColumn - column);
 }
 
@@ -1378,7 +1378,7 @@ DEFUN(col1R, RIGHT, "Shift screen one column right")
         return;
     for (j = 0; j < n; j++) {
         column = buf->doc.currentColumn;
-        columnSkip(Currentbuf, 1);
+        doc_columnSkip(&Currentbuf->doc, 1);
         if (column == buf->doc.currentColumn)
             break;
         shiftvisualpos(Currentbuf, 1);
@@ -1396,7 +1396,7 @@ DEFUN(col1L, LEFT, "Shift screen one column left")
     for (j = 0; j < n; j++) {
         if (buf->doc.currentColumn == 0)
             break;
-        columnSkip(Currentbuf, -1);
+        doc_columnSkip(&Currentbuf->doc, -1);
         shiftvisualpos(Currentbuf, -1);
     }
 }
@@ -1793,7 +1793,7 @@ DEFUN(movLW, PREV_WORD, "Move to the previous word")
         }
     }
 end:
-    arrangeCursor(Currentbuf);
+    doc_arrangeCursor(&Currentbuf->doc);
 }
 
 static int
@@ -1851,7 +1851,7 @@ DEFUN(movRW, NEXT_WORD, "Move to the next word")
         }
     }
 end:
-    arrangeCursor(Currentbuf);
+    doc_arrangeCursor(&Currentbuf->doc);
 }
 
 static void
@@ -1970,7 +1970,7 @@ _goLine(char* l)
         Currentbuf->doc.currentLine = Currentbuf->doc.lastLine;
     } else
         gotoRealLine(Currentbuf, atoi(l));
-    arrangeCursor(Currentbuf);
+    doc_arrangeCursor(&Currentbuf->doc);
 }
 
 DEFUN(goLine, GOTO_LINE, "Go to the specified line")
@@ -2003,7 +2003,7 @@ DEFUN(linbeg, LINE_BEGIN, "Go to the beginning of the line")
     while (Currentbuf->doc.currentLine->prev && Currentbuf->doc.currentLine->bpos)
         doc_cursorUp0(&Currentbuf->doc, 1);
     Currentbuf->doc.pos = 0;
-    arrangeCursor(Currentbuf);
+    doc_arrangeCursor(&Currentbuf->doc);
 }
 
 /* Go to the bottom of the line */
@@ -2015,7 +2015,7 @@ DEFUN(linend, LINE_END, "Go to the end of the line")
         && Currentbuf->doc.currentLine->next->bpos)
         doc_cursorDown0(&Currentbuf->doc, 1);
     Currentbuf->doc.pos = Currentbuf->doc.currentLine->len - 1;
-    arrangeCursor(Currentbuf);
+    doc_arrangeCursor(&Currentbuf->doc);
 }
 
 static int
@@ -2112,14 +2112,13 @@ DEFUN(nextMk, NEXT_MARK, "Go to the next mark")
             if (l->propBuf[i] & PE_MARK) {
                 Currentbuf->doc.currentLine = l;
                 Currentbuf->doc.pos = i;
-                arrangeCursor(Currentbuf);
+                doc_arrangeCursor(&Currentbuf->doc);
                 return;
             }
         }
         l = l->next;
         i = 0;
     }
-    /* FIXME: gettextize? */
     disp_message("No mark exist after here", TRUE);
 }
 
@@ -2145,7 +2144,7 @@ DEFUN(prevMk, PREV_MARK, "Go to the previous mark")
             if (l->propBuf[i] & PE_MARK) {
                 Currentbuf->doc.currentLine = l;
                 Currentbuf->doc.pos = i;
-                arrangeCursor(Currentbuf);
+                doc_arrangeCursor(&Currentbuf->doc);
                 return;
             }
         }
@@ -2153,7 +2152,6 @@ DEFUN(prevMk, PREV_MARK, "Go to the previous mark")
         if (l != NULL)
             i = l->len - 1;
     }
-    /* FIXME: gettextize? */
     disp_message("No mark exist before here", TRUE);
 }
 
@@ -2219,7 +2217,7 @@ gotoLabel(const char* label)
             Currentbuf->doc.currentLine->linenumber
                 - Currentbuf->doc.topLine->linenumber);
     Currentbuf->doc.pos = al->start.pos;
-    arrangeCursor(Currentbuf);
+    doc_arrangeCursor(&Currentbuf->doc);
     return;
 }
 
@@ -2358,7 +2356,7 @@ DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink")
 
     doc_gotoLine(&Currentbuf->doc, po->line);
     Currentbuf->doc.pos = po->pos;
-    arrangeCursor(Currentbuf);
+    doc_arrangeCursor(&Currentbuf->doc);
 }
 
 /* go to the last anchor */
@@ -2393,7 +2391,7 @@ DEFUN(lastA, LINK_END, "Move to the last hyperlink")
 
     doc_gotoLine(&Currentbuf->doc, po->line);
     Currentbuf->doc.pos = po->pos;
-    arrangeCursor(Currentbuf);
+    doc_arrangeCursor(&Currentbuf->doc);
 }
 
 /* go to the nth anchor */
@@ -2421,7 +2419,7 @@ DEFUN(nthA, LINK_N, "Go to the nth link")
 
     doc_gotoLine(&Currentbuf->doc, po->line);
     Currentbuf->doc.pos = po->pos;
-    arrangeCursor(Currentbuf);
+    doc_arrangeCursor(&Currentbuf->doc);
 }
 
 /* go to the next anchor */
@@ -2527,7 +2525,7 @@ _end:
     po = &hl->marks[an->hseq];
     doc_gotoLine(&Currentbuf->doc, po->line);
     Currentbuf->doc.pos = po->pos;
-    arrangeCursor(Currentbuf);
+    doc_arrangeCursor(&Currentbuf->doc);
 }
 
 /* go to the previous anchor */
@@ -2609,7 +2607,7 @@ _end:
     po = hl->marks + an->hseq;
     doc_gotoLine(&Currentbuf->doc, po->line);
     Currentbuf->doc.pos = po->pos;
-    arrangeCursor(Currentbuf);
+    doc_arrangeCursor(&Currentbuf->doc);
 }
 
 /* go to the next left/right anchor */
@@ -2664,7 +2662,7 @@ nextX(int d, int dy)
         return;
     doc_gotoLine(&Currentbuf->doc, y);
     Currentbuf->doc.pos = pan->start.pos;
-    arrangeCursor(Currentbuf);
+    doc_arrangeCursor(&Currentbuf->doc);
 }
 
 /* go to the next downward/upward anchor */
@@ -2842,7 +2840,7 @@ DEFUN(backBf, BACK, "Close current buffer and return to the one below in stack")
                 doc_gotoLine(&Currentbuf->doc, linenumber);
                 Currentbuf->doc.pos = pos;
                 Currentbuf->doc.currentColumn = currentColumn;
-                arrangeCursor(Currentbuf);
+                doc_arrangeCursor(&Currentbuf->doc);
                 formResetBuffer(Currentbuf, formitem);
             }
         } else if (getRuntime()->RenderFrame && buf == Currentbuf) {
@@ -3092,7 +3090,7 @@ anchorMn(BufferMenuFunc menu_func, bool go)
     struct BufferPoint* po = &Currentbuf->hmarklist->marks[a->hseq];
     doc_gotoLine(&Currentbuf->doc, po->line);
     Currentbuf->doc.pos = po->pos;
-    arrangeCursor(Currentbuf);
+    doc_arrangeCursor(&Currentbuf->doc);
     if (go)
         followA();
 }

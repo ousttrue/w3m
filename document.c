@@ -287,3 +287,77 @@ void doc_gotoLine(struct Document* doc, int linenumber)
         }
     }
 }
+
+int doc_columnSkip(struct Document* doc, int offset)
+{
+    int i, maxColumn;
+    int column = doc->currentColumn + offset;
+    int nlines = doc->LINES + 1;
+    struct Line* l;
+
+    maxColumn = 0;
+    for (i = 0, l = doc->topLine; i < nlines && l != NULL; i++, l = l->next) {
+        if (l->width < 0)
+            l->width = COLPOS(l, l->len);
+        if (l->width - 1 > maxColumn)
+            maxColumn = l->width - 1;
+    }
+    maxColumn -= doc->COLS - 1;
+    if (column < maxColumn)
+        maxColumn = column;
+    if (maxColumn < 0)
+        maxColumn = 0;
+
+    if (doc->currentColumn == maxColumn)
+        return 0;
+    doc->currentColumn = maxColumn;
+    return 1;
+}
+
+void doc_arrangeCursor(struct Document* doc)
+{
+    if (doc == NULL || doc->currentLine == NULL)
+        return;
+
+    /* Arrange line */
+    if (doc->currentLine->linenumber - doc->topLine->linenumber >= doc->LINES
+        || doc->currentLine->linenumber < doc->topLine->linenumber) {
+        /*
+         * doc->topLine = doc->currentLine;
+         */
+        doc->topLine = doc_lineSkip(doc, doc->currentLine, 0);
+    }
+
+    /* Arrange column */
+    int col, col2, pos;
+    int delta = 1;
+    while (doc->pos < 0 && doc->currentLine->prev && doc->currentLine->bpos) {
+        pos = doc->pos + doc->currentLine->prev->len;
+        doc_cursorUp0(doc, 1);
+        doc->pos = pos;
+    }
+    while (doc->pos >= doc->currentLine->len && doc->currentLine->next && doc->currentLine->next->bpos) {
+        pos = doc->pos - doc->currentLine->len;
+        doc_cursorDown0(doc, 1);
+        doc->pos = pos;
+    }
+    if (doc->currentLine->len == 0 || doc->pos < 0)
+        doc->pos = 0;
+    else if (doc->pos >= doc->currentLine->len)
+        doc->pos = doc->currentLine->len - 1;
+    while (doc->pos > 0 && doc->currentLine->propBuf[doc->pos] & PC_WCHAR2)
+        doc->pos--;
+    col = COLPOS(doc->currentLine, doc->pos);
+    while (doc->pos + delta < doc->currentLine->len && doc->currentLine->propBuf[doc->pos + delta] & PC_WCHAR2)
+        delta++;
+    col2 = COLPOS(doc->currentLine, doc->pos + delta);
+    if (col < doc->currentColumn || col2 > doc->COLS + doc->currentColumn) {
+        doc->currentColumn = 0;
+        if (col2 > doc->COLS)
+            doc_columnSkip(doc, col);
+    }
+    /* Arrange cursor */
+    doc->cursorY = doc->currentLine->linenumber - doc->topLine->linenumber;
+    doc->visualpos = doc->currentLine->bwidth + COLPOS(doc->currentLine, doc->pos) - doc->currentColumn;
+    doc->cursorX = doc->visualpos - doc->currentLine->bwidth;
+}
