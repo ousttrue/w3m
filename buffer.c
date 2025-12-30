@@ -575,9 +575,9 @@ void reshapeBuffer(struct Buffer* buf)
         }
         buf->pos -= buf->doc.currentLine->bpos;
         if (getRuntime()->FoldLine && !is_html_type(buf->type))
-            buf->currentColumn = 0;
+            buf->doc.currentColumn = 0;
         else
-            buf->currentColumn = sbuf.currentColumn;
+            buf->doc.currentColumn = sbuf.doc.currentColumn;
         arrangeCursor(buf);
     }
     if (buf->check_url & CHK_URL)
@@ -749,7 +749,7 @@ void restorePosition(struct Buffer* buf, struct Buffer* orig)
     buf->pos = orig->pos;
     if (buf->doc.currentLine && orig->doc.currentLine)
         buf->pos += orig->doc.currentLine->bpos - buf->doc.currentLine->bpos;
-    buf->currentColumn = orig->currentColumn;
+    buf->doc.currentColumn = orig->doc.currentColumn;
     arrangeCursor(buf);
 }
 
@@ -783,8 +783,8 @@ void arrangeLine(struct Buffer* buf)
     if (buf->doc.firstLine == NULL)
         return;
     buf->cursorY = buf->doc.currentLine->linenumber - buf->doc.topLine->linenumber;
-    i = columnPos(buf->doc.currentLine, buf->currentColumn + buf->visualpos - buf->doc.currentLine->bwidth);
-    cpos = COLPOS(buf->doc.currentLine, i) - buf->currentColumn;
+    i = columnPos(buf->doc.currentLine, buf->doc.currentColumn + buf->visualpos - buf->doc.currentLine->bwidth);
+    cpos = COLPOS(buf->doc.currentLine, i) - buf->doc.currentColumn;
     if (cpos >= 0) {
         buf->cursorX = cpos;
         buf->pos = i;
@@ -822,7 +822,7 @@ void cursorUp(struct Buffer* buf, int n)
         return;
     }
     cursorUp0(buf, n);
-    while (buf->doc.currentLine->prev && buf->doc.currentLine->bpos && buf->doc.currentLine->bwidth >= buf->currentColumn + buf->visualpos)
+    while (buf->doc.currentLine->prev && buf->doc.currentLine->bpos && buf->doc.currentLine->bwidth >= buf->doc.currentColumn + buf->visualpos)
         cursorUp0(buf, n);
 }
 
@@ -851,7 +851,7 @@ void cursorDown(struct Buffer* buf, int n)
         return;
     }
     cursorDown0(buf, n);
-    while (buf->doc.currentLine->next && buf->doc.currentLine->next->bpos && buf->doc.currentLine->bwidth + buf->doc.currentLine->width < buf->currentColumn + buf->visualpos)
+    while (buf->doc.currentLine->next && buf->doc.currentLine->next->bpos && buf->doc.currentLine->bwidth + buf->doc.currentLine->width < buf->doc.currentColumn + buf->visualpos)
         cursorDown0(buf, n);
 }
 
@@ -894,14 +894,14 @@ void cursorRight(struct Buffer* buf, int n)
             buf->pos--;
     }
     cpos = COLPOS(l, buf->pos);
-    buf->visualpos = l->bwidth + cpos - buf->currentColumn;
+    buf->visualpos = l->bwidth + cpos - buf->doc.currentColumn;
     delta = 1;
     while (buf->pos + delta < l->len && p[buf->pos + delta] & PC_WCHAR2)
         delta++;
-    vpos2 = COLPOS(l, buf->pos + delta) - buf->currentColumn - 1;
+    vpos2 = COLPOS(l, buf->pos + delta) - buf->doc.currentColumn - 1;
     if (vpos2 >= buf->doc.COLS && n) {
         columnSkip(buf, n + (vpos2 - buf->doc.COLS) - (vpos2 - buf->doc.COLS) % n);
-        buf->visualpos = l->bwidth + cpos - buf->currentColumn;
+        buf->visualpos = l->bwidth + cpos - buf->doc.currentColumn;
     }
     buf->cursorX = buf->visualpos - l->bwidth;
 }
@@ -927,11 +927,11 @@ void cursorLeft(struct Buffer* buf, int n)
     } else
         buf->pos = 0;
     cpos = COLPOS(l, buf->pos);
-    buf->visualpos = l->bwidth + cpos - buf->currentColumn;
+    buf->visualpos = l->bwidth + cpos - buf->doc.currentColumn;
     if (buf->visualpos - l->bwidth < 0 && n) {
         columnSkip(buf,
             -n + buf->visualpos - l->bwidth - (buf->visualpos - l->bwidth) % n);
-        buf->visualpos = l->bwidth + cpos - buf->currentColumn;
+        buf->visualpos = l->bwidth + cpos - buf->doc.currentColumn;
     }
     buf->cursorX = buf->visualpos - l->bwidth;
 }
@@ -981,13 +981,13 @@ void arrangeCursor(struct Buffer* buf)
     while (buf->pos + delta < buf->doc.currentLine->len && buf->doc.currentLine->propBuf[buf->pos + delta] & PC_WCHAR2)
         delta++;
     col2 = COLPOS(buf->doc.currentLine, buf->pos + delta);
-    if (col < buf->currentColumn || col2 > buf->doc.COLS + buf->currentColumn) {
-        buf->currentColumn = 0;
+    if (col < buf->doc.currentColumn || col2 > buf->doc.COLS + buf->doc.currentColumn) {
+        buf->doc.currentColumn = 0;
         if (col2 > buf->doc.COLS)
             columnSkip(buf, col);
     }
     /* Arrange cursor */
     buf->cursorY = buf->doc.currentLine->linenumber - buf->doc.topLine->linenumber;
-    buf->visualpos = buf->doc.currentLine->bwidth + COLPOS(buf->doc.currentLine, buf->pos) - buf->currentColumn;
+    buf->visualpos = buf->doc.currentLine->bwidth + COLPOS(buf->doc.currentLine, buf->pos) - buf->doc.currentColumn;
     buf->cursorX = buf->visualpos - buf->doc.currentLine->bwidth;
 }

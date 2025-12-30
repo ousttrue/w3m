@@ -1024,17 +1024,17 @@ static void nscroll(int n)
     gotoLine(buf, lnum);
     arrangeLine(buf);
     if (n > 0) {
-        if (buf->doc.currentLine->bpos && buf->doc.currentLine->bwidth >= buf->currentColumn + buf->visualpos)
+        if (buf->doc.currentLine->bpos && buf->doc.currentLine->bwidth >= buf->doc.currentColumn + buf->visualpos)
             cursorDown(buf, 1);
         else {
-            while (buf->doc.currentLine->next && buf->doc.currentLine->next->bpos && buf->doc.currentLine->bwidth + buf->doc.currentLine->width < buf->currentColumn + buf->visualpos)
+            while (buf->doc.currentLine->next && buf->doc.currentLine->next->bpos && buf->doc.currentLine->bwidth + buf->doc.currentLine->width < buf->doc.currentColumn + buf->visualpos)
                 cursorDown0(buf, 1);
         }
     } else {
-        if (buf->doc.currentLine->bwidth + buf->doc.currentLine->width < buf->currentColumn + buf->visualpos)
+        if (buf->doc.currentLine->bwidth + buf->doc.currentLine->width < buf->doc.currentColumn + buf->visualpos)
             cursorUp(buf, 1);
         else {
-            while (buf->doc.currentLine->prev && buf->doc.currentLine->bpos && buf->doc.currentLine->bwidth >= buf->currentColumn + buf->visualpos)
+            while (buf->doc.currentLine->prev && buf->doc.currentLine->bpos && buf->doc.currentLine->bwidth >= buf->doc.currentColumn + buf->visualpos)
                 cursorUp0(buf, 1);
         }
     }
@@ -1351,9 +1351,9 @@ DEFUN(shiftl, SHIFT_LEFT, "Shift screen left")
 
     if (Currentbuf->doc.firstLine == NULL)
         return;
-    column = Currentbuf->currentColumn;
+    column = Currentbuf->doc.currentColumn;
     columnSkip(Currentbuf, searchKeyNum() * (-Currentbuf->doc.COLS + 1) + 1);
-    shiftvisualpos(Currentbuf, Currentbuf->currentColumn - column);
+    shiftvisualpos(Currentbuf, Currentbuf->doc.currentColumn - column);
 }
 
 /* Shift screen right */
@@ -1363,9 +1363,9 @@ DEFUN(shiftr, SHIFT_RIGHT, "Shift screen right")
 
     if (Currentbuf->doc.firstLine == NULL)
         return;
-    column = Currentbuf->currentColumn;
+    column = Currentbuf->doc.currentColumn;
     columnSkip(Currentbuf, searchKeyNum() * (Currentbuf->doc.COLS - 1) - 1);
-    shiftvisualpos(Currentbuf, Currentbuf->currentColumn - column);
+    shiftvisualpos(Currentbuf, Currentbuf->doc.currentColumn - column);
 }
 
 DEFUN(col1R, RIGHT, "Shift screen one column right")
@@ -1377,9 +1377,9 @@ DEFUN(col1R, RIGHT, "Shift screen one column right")
     if (l == NULL)
         return;
     for (j = 0; j < n; j++) {
-        column = buf->currentColumn;
+        column = buf->doc.currentColumn;
         columnSkip(Currentbuf, 1);
-        if (column == buf->currentColumn)
+        if (column == buf->doc.currentColumn)
             break;
         shiftvisualpos(Currentbuf, 1);
     }
@@ -1394,7 +1394,7 @@ DEFUN(col1L, LEFT, "Shift screen one column left")
     if (l == NULL)
         return;
     for (j = 0; j < n; j++) {
-        if (buf->currentColumn == 0)
+        if (buf->doc.currentColumn == 0)
             break;
         columnSkip(Currentbuf, -1);
         shiftvisualpos(Currentbuf, -1);
@@ -2843,7 +2843,7 @@ DEFUN(backBf, BACK, "Close current buffer and return to the one below in stack")
                     FALSE);
                 gotoLine(Currentbuf, linenumber);
                 Currentbuf->pos = pos;
-                Currentbuf->currentColumn = currentColumn;
+                Currentbuf->doc.currentColumn = currentColumn;
                 arrangeCursor(Currentbuf);
                 formResetBuffer(Currentbuf, formitem);
             }
@@ -3733,7 +3733,7 @@ DEFUN(curlno, LINE_INFO, "Display current position in document")
 
     if (l != NULL) {
         cur = l->real_linenumber;
-        col = l->bwidth + Currentbuf->currentColumn + Currentbuf->cursorX + 1;
+        col = l->bwidth + Currentbuf->doc.currentColumn + Currentbuf->cursorX + 1;
         while (l->next && l->next->bpos)
             l = l->next;
         if (l->width < 0)
@@ -3904,7 +3904,7 @@ void w3m_exit(int i)
 DEFUN(execCmd, COMMAND, "Invoke w3m function(s)")
 {
     getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    char* data = searchKeyData();
+    const char* data = searchKeyData();
     if (data == NULL || *data == '\0') {
         data = inputStrHist("command [; ...]: ", "", getRuntime()->TextHist);
         if (data == NULL) {
@@ -3965,7 +3965,7 @@ SigAlarm(SIGNAL_ARG)
 DEFUN(setAlarm, ALARM, "Set alarm")
 {
     getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    char* data = searchKeyData();
+    const char* data = searchKeyData();
     if (data == NULL || *data == '\0') {
         data = inputStrHist("(Alarm)sec command: ", "", getRuntime()->TextHist);
         if (data == NULL) {
@@ -3991,7 +3991,7 @@ DEFUN(setAlarm, ALARM, "Set alarm")
 }
 
 AlarmEvent*
-setAlarmEvent(AlarmEvent* event, int sec, short status, int cmd, void* data)
+setAlarmEvent(AlarmEvent* event, int sec, short status, int cmd, const void* data)
 {
     if (event == NULL)
         event = New(AlarmEvent);
@@ -4329,7 +4329,7 @@ resetPos(struct BufferPos* b)
     buf.doc.topLine = &top;
     buf.doc.currentLine = &cur;
     buf.pos = b->pos;
-    buf.currentColumn = b->currentColumn;
+    buf.doc.currentColumn = b->currentColumn;
     restorePosition(Currentbuf, &buf);
     Currentbuf->undo = b;
 }

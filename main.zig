@@ -117,9 +117,9 @@ export fn onFrame() void {
 
     // check viewport ?
     if (buf.*.doc.lineUpdated //
-    or cline != buf.*.doc.topLine or ccolumn != buf.currentColumn) {
+    or cline != buf.*.doc.topLine or ccolumn != buf.doc.currentColumn) {
         cline = buf.doc.topLine;
-        ccolumn = buf.currentColumn;
+        ccolumn = buf.doc.currentColumn;
 
         // render
         c.screen_from_lines(buf);

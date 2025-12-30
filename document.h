@@ -3,6 +3,9 @@
 #include <stdbool.h>
 
 struct Document {
+    //
+    // lines
+    //
     bool lineUpdated;
     struct Line* firstLine;
     struct Line* lastLine;
@@ -10,9 +13,14 @@ struct Document {
     struct Line* topLine;
     // cursor line
     struct Line* currentLine;
-
     int allLine;
+    // cursor position
+    int currentColumn;
 
+    //
+    // screen
+    //
+    // viewport
     short rootX;
     short rootY;
     short COLS;

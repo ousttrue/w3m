@@ -186,11 +186,11 @@ typedef struct _AlarmEvent {
     int sec;
     short status;
     int cmd;
-    void* data;
+    const void* data;
 } AlarmEvent;
 
 AlarmEvent* setAlarmEvent(AlarmEvent* event, int sec, short status,
-    int cmd, void* data);
+    int cmd, const void* data);
 
 struct parsed_tagarg;
 extern void panel_set_option(struct parsed_tagarg*);

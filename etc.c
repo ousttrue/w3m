@@ -40,7 +40,7 @@ struct auth_pass* passwords = NULL;
 int columnSkip(struct Buffer* buf, int offset)
 {
     int i, maxColumn;
-    int column = buf->currentColumn + offset;
+    int column = buf->doc.currentColumn + offset;
     int nlines = buf->doc.LINES + 1;
     struct Line* l;
 
@@ -57,9 +57,9 @@ int columnSkip(struct Buffer* buf, int offset)
     if (maxColumn < 0)
         maxColumn = 0;
 
-    if (buf->currentColumn == maxColumn)
+    if (buf->doc.currentColumn == maxColumn)
         return 0;
-    buf->currentColumn = maxColumn;
+    buf->doc.currentColumn = maxColumn;
     return 1;
 }
 

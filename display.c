@@ -137,7 +137,7 @@ redrawLineRegion(struct Buffer* buf, struct Line* l, int i, int bpos, int epos)
     struct LineWriter g = { 0 };
 
     int j, pos, rcol, ncol, delta = 1;
-    int column = buf->currentColumn;
+    int column = buf->doc.currentColumn;
     char* p;
     Lineprop* pr;
     Linecolor* pc;
@@ -281,7 +281,7 @@ static struct Line*
 redrawLineImage(struct Buffer* buf, struct Line* l, int i)
 {
     int j, pos, rcol;
-    int column = buf->currentColumn;
+    int column = buf->doc.currentColumn;
     struct Anchor* a;
     int x, y, sx, sy, w, h;
 
@@ -347,12 +347,12 @@ redrawLineImage(struct Buffer* buf, struct Line* l, int i)
 }
 
 static struct Line*
-redrawLine(struct Buffer* buf, struct Line* l, int i)
+redrawLine(struct Buffer* buf, struct Document* doc, struct Line* l, int i)
 {
     struct LineWriter g = { 0 };
 
     int j, pos, rcol, ncol, delta = 1;
-    int column = buf->currentColumn;
+    int column = buf->doc.currentColumn;
     char* p;
     Lineprop* pr;
     Linecolor* pc;
@@ -366,24 +366,24 @@ redrawLine(struct Buffer* buf, struct Line* l, int i)
     screen_move(i, 0);
     if (getRuntime()->showLineNum) {
         char tmp[16];
-        if (!buf->doc.rootX) {
-            if (buf->doc.lastLine->real_linenumber > 0)
-                buf->doc.rootX = (int)(log(buf->doc.lastLine->real_linenumber + 0.1)
+        if (!doc->rootX) {
+            if (doc->lastLine->real_linenumber > 0)
+                doc->rootX = (int)(log(doc->lastLine->real_linenumber + 0.1)
                                      / log(10))
                     + 2;
-            if (buf->doc.rootX < 5)
-                buf->doc.rootX = 5;
-            if (buf->doc.rootX > TTY_COLS())
-                buf->doc.rootX = TTY_COLS();
-            buf->doc.COLS = TTY_COLS() - buf->doc.rootX;
+            if (doc->rootX < 5)
+                doc->rootX = 5;
+            if (doc->rootX > TTY_COLS())
+                doc->rootX = TTY_COLS();
+            doc->COLS = TTY_COLS() - doc->rootX;
         }
         if (l->real_linenumber && !l->bpos)
-            sprintf(tmp, "%*ld:", buf->doc.rootX - 1, l->real_linenumber);
+            sprintf(tmp, "%*ld:", doc->rootX - 1, l->real_linenumber);
         else
-            sprintf(tmp, "%*s ", buf->doc.rootX - 1, "");
+            sprintf(tmp, "%*s ", doc->rootX - 1, "");
         screen_wc_addstr(tmp);
     }
-    screen_move(i, buf->doc.rootX);
+    screen_move(i, doc->rootX);
     if (l->width < 0)
         l->width = COLPOS(l, l->len);
     if (l->len == 0 || l->width - 1 < column) {
@@ -400,7 +400,7 @@ redrawLine(struct Buffer* buf, struct Line* l, int i)
         pc = NULL;
     rcol = COLPOS(l, pos);
 
-    for (j = 0; rcol - column < buf->doc.COLS && pos + j < l->len; j += delta) {
+    for (j = 0; rcol - column < doc->COLS && pos + j < l->len; j += delta) {
         if (getRuntime()->useVisitedColor && vpos <= pos + j && !(pr[j] & PE_VISITED)) {
             a = retrieveAnchor(buf->href, l->linenumber, pos + j);
             if (a) {
@@ -414,7 +414,7 @@ redrawLine(struct Buffer* buf, struct Line* l, int i)
         }
         delta = wtf_len((wc_uchar*)&p[j]);
         ncol = COLPOS(l, pos + j + delta);
-        if (ncol - column > buf->doc.COLS)
+        if (ncol - column > doc->COLS)
             break;
         if (pc)
             do_color(&g, pc[j]);
@@ -432,7 +432,7 @@ redrawLine(struct Buffer* buf, struct Line* l, int i)
         rcol = ncol;
     }
     endLine(&g);
-    if (rcol - column < buf->doc.COLS)
+    if (rcol - column < doc->COLS)
         screen_clrtoeolx();
     return l;
 }
@@ -476,7 +476,7 @@ redrawNLine(struct Buffer* buf, int n)
     }
     for (i = 0, l = buf->doc.topLine; i < buf->doc.LINES; i++, l = l->next) {
         if (i >= buf->doc.LINES - n || i < -n)
-            l = redrawLine(buf, l, i + buf->doc.rootY);
+            l = redrawLine(buf, &buf->doc, l, i + buf->doc.rootY);
         if (l == NULL)
             break;
     }

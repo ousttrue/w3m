@@ -119,7 +119,7 @@ static void set_buffer_environ(struct Buffer* buf)
         else
             set_environ("W3M_CURRENT_FORM", "");
         set_environ("W3M_CURRENT_LINE", Sprintf("%ld", l->real_linenumber)->ptr);
-        set_environ("W3M_CURRENT_COLUMN", Sprintf("%d", buf->currentColumn + buf->cursorX + 1)->ptr);
+        set_environ("W3M_CURRENT_COLUMN", Sprintf("%d", buf->doc.currentColumn + buf->cursorX + 1)->ptr);
     } else if (!l) {
         set_environ("W3M_CURRENT_WORD", "");
         set_environ("W3M_CURRENT_LINK", "");
@@ -140,12 +140,12 @@ save_buffer_position(struct Buffer* buf)
 
     if (!buf->doc.firstLine)
         return;
-    if (b && b->top_linenumber == TOP_LINENUMBER(buf) && b->cur_linenumber == CUR_LINENUMBER(buf) && b->currentColumn == buf->currentColumn && b->pos == buf->pos)
+    if (b && b->top_linenumber == TOP_LINENUMBER(buf) && b->cur_linenumber == CUR_LINENUMBER(buf) && b->currentColumn == buf->doc.currentColumn && b->pos == buf->pos)
         return;
     b = New(struct BufferPos);
     b->top_linenumber = TOP_LINENUMBER(buf);
     b->cur_linenumber = CUR_LINENUMBER(buf);
-    b->currentColumn = buf->currentColumn;
+    b->currentColumn = buf->doc.currentColumn;
     b->pos = buf->pos;
     b->bpos = buf->doc.currentLine ? buf->doc.currentLine->bpos : 0;
     b->next = NULL;
