@@ -777,7 +777,7 @@ void _followForm(bool submit, bool on_target, bool do_download)
             goto do_submit;
         if (!formChooseOptionByMenu(fi,
                 Currentbuf->doc.cursorX - Currentbuf->pos + a->start.pos + Currentbuf->doc.rootX,
-                Currentbuf->cursorY + Currentbuf->doc.rootY))
+                Currentbuf->doc.cursorY + Currentbuf->doc.rootY))
             break;
         formUpdateBuffer(a, Currentbuf, fi);
         if (fi->parent->nitems == 1)

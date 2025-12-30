@@ -64,7 +64,6 @@ struct Buffer {
     short width;
     char* type;
     short bufferprop;
-    short cursorY;
     int pos;
     int visualpos;
     struct AnchorList* name;
@@ -114,7 +113,7 @@ struct Buffer {
         (dstbuf)->doc.currentLine = (srcbuf)->doc.currentLine;     \
         (dstbuf)->pos = (srcbuf)->pos;                             \
         (dstbuf)->doc.cursorX = (srcbuf)->doc.cursorX;             \
-        (dstbuf)->cursorY = (srcbuf)->cursorY;                     \
+        (dstbuf)->doc.cursorY = (srcbuf)->doc.cursorY;                     \
         (dstbuf)->visualpos = (srcbuf)->visualpos;                 \
         (dstbuf)->doc.currentColumn = (srcbuf)->doc.currentColumn; \
     }

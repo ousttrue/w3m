@@ -757,7 +757,7 @@ void cursorXY(struct Buffer* buf, int x, int y)
 {
     int oldX;
 
-    cursorUpDown(buf, y - buf->cursorY);
+    cursorUpDown(buf, y - buf->doc.cursorY);
 
     if (buf->doc.cursorX > x) {
         while (buf->doc.cursorX > x)
@@ -782,7 +782,7 @@ void arrangeLine(struct Buffer* buf)
 
     if (buf->doc.firstLine == NULL)
         return;
-    buf->cursorY = buf->doc.currentLine->linenumber - buf->doc.topLine->linenumber;
+    buf->doc.cursorY = buf->doc.currentLine->linenumber - buf->doc.topLine->linenumber;
     i = columnPos(buf->doc.currentLine, buf->doc.currentColumn + buf->visualpos - buf->doc.currentLine->bwidth);
     cpos = COLPOS(buf->doc.currentLine, i) - buf->doc.currentColumn;
     if (cpos >= 0) {
@@ -799,7 +799,7 @@ void arrangeLine(struct Buffer* buf)
 
 void cursorUp0(struct Buffer* buf, int n)
 {
-    if (buf->cursorY > 0)
+    if (buf->doc.cursorY > 0)
         cursorUpDown(buf, -1);
     else {
         buf->doc.topLine = lineSkip(buf, buf->doc.topLine, -n, FALSE);
@@ -828,7 +828,7 @@ void cursorUp(struct Buffer* buf, int n)
 
 void cursorDown0(struct Buffer* buf, int n)
 {
-    if (buf->cursorY < buf->doc.LINES - 1)
+    if (buf->doc.cursorY < buf->doc.LINES - 1)
         cursorUpDown(buf, 1);
     else {
         buf->doc.topLine = lineSkip(buf, buf->doc.topLine, n, FALSE);
@@ -939,7 +939,7 @@ void cursorLeft(struct Buffer* buf, int n)
 void cursorHome(struct Buffer* buf)
 {
     buf->visualpos = 0;
-    buf->doc.cursorX = buf->cursorY = 0;
+    buf->doc.cursorX = buf->doc.cursorY = 0;
 }
 
 /*
@@ -987,7 +987,7 @@ void arrangeCursor(struct Buffer* buf)
             columnSkip(buf, col);
     }
     /* Arrange cursor */
-    buf->cursorY = buf->doc.currentLine->linenumber - buf->doc.topLine->linenumber;
+    buf->doc.cursorY = buf->doc.currentLine->linenumber - buf->doc.topLine->linenumber;
     buf->visualpos = buf->doc.currentLine->bwidth + COLPOS(buf->doc.currentLine, buf->pos) - buf->doc.currentColumn;
     buf->doc.cursorX = buf->visualpos - buf->doc.currentLine->bwidth;
 }

@@ -1087,7 +1087,7 @@ DEFUN(ctrCsrV, CENTER_V, "Center on cursor line")
 {
     if (Currentbuf->doc.firstLine == NULL)
         return;
-    int offsety = /*Currentbuf->doc.LINES / 2*/ -Currentbuf->cursorY;
+    int offsety = /*Currentbuf->doc.LINES / 2*/ -Currentbuf->doc.cursorY;
     if (offsety != 0) {
         Currentbuf->doc.topLine = lineSkip(Currentbuf, Currentbuf->doc.topLine, -offsety, FALSE);
         arrangeLine(Currentbuf);
@@ -3035,7 +3035,7 @@ void follow_map(struct parsed_tagarg* arg)
 
     an = retrieveCurrentImg(Currentbuf);
     x = Currentbuf->doc.cursorX + Currentbuf->doc.rootX;
-    y = Currentbuf->cursorY + Currentbuf->doc.rootY;
+    y = Currentbuf->doc.cursorY + Currentbuf->doc.rootY;
     struct MapArea* a = follow_map_menu(Currentbuf, name, an, x, y);
     if (a == NULL || a->url == NULL || *(a->url) == '\0') {
         return;

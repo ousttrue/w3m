@@ -397,7 +397,7 @@ redrawNLine(struct Buffer* buf, int n)
 
     if (!(getRuntime()->activeImage && getRuntime()->displayImage && buf->img))
         return;
-    screen_move(buf->cursorY + buf->doc.rootY, buf->doc.cursorX + buf->doc.rootX);
+    screen_move(buf->doc.cursorY + buf->doc.rootY, buf->doc.cursorX + buf->doc.rootX);
     for (i = 0, l = buf->doc.topLine; i < buf->doc.LINES && l; i++, l = l->next) {
         if (i >= buf->doc.LINES - n || i < -n)
             redrawLineImage(buf, l, i + buf->doc.rootY);
@@ -427,7 +427,7 @@ void displayMsg(struct Buffer* buf)
     }
     displayDelayedMessage();
     screen_standout();
-    message(msg->ptr, buf->doc.cursorX + buf->doc.rootX, buf->cursorY + buf->doc.rootY);
+    message(msg->ptr, buf->doc.cursorX + buf->doc.rootX, buf->doc.cursorY + buf->doc.rootY);
     screen_standend();
     term_title(conv_to_system(buf->buffername));
 }
