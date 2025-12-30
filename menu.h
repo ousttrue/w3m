@@ -79,3 +79,6 @@ void tabMn(void);
 void optionMenu(int x, int y, const char** label, int* variable, int initial,
     void (*func)());
 void initMenu(void);
+struct LinkList* link_menu(struct Buffer* buf);
+struct Anchor* accesskey_menu(struct Buffer* buf);
+struct Anchor* list_menu(struct Buffer* buf);

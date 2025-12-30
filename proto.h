@@ -8,10 +8,17 @@
 #include <stdbool.h>
 #include <libwc/ces.h>
 
-struct Buffer;
-extern int main(int argc, char** argv);
+#define mouse nulcmd
+#define sgrmouse nulcmd
+#define msToggle nulcmd
+#define movMs nulcmd
+#define menuMs nulcmd
+#define tabMs nulcmd
+#define closeTMs nulcmd
+#define chkNMID nulcmd
+
+// extern int main(int argc, char** argv);
 extern void nulcmd(void);
-extern MySignalHandler intTrap(SIGNAL_ARG);
 extern void pgFore(void);
 extern void pgBack(void);
 extern void hpgFore(void);
@@ -68,7 +75,6 @@ extern void topA(void);
 extern void lastA(void);
 extern void nthA(void);
 extern void onA(void);
-
 extern void nextA(void);
 extern void prevA(void);
 extern void nextVA(void);
@@ -104,7 +110,6 @@ extern void reload(void);
 extern void reshape(void);
 extern void chkURL(void);
 extern void chkWORD(void);
-#define chkNMID nulcmd
 extern void rFrame(void);
 extern void extbrz(void);
 extern void linkbrz(void);
@@ -127,82 +132,31 @@ extern void tabL(void);
 extern void ldDL(void);
 extern void linkLst(void);
 extern void linkMn(void);
-extern struct LinkList* link_menu(struct Buffer* buf);
 extern void accessKey(void);
-extern struct Anchor* accesskey_menu(struct Buffer* buf);
 extern void listMn(void);
 extern void movlistMn(void);
-extern struct Anchor* list_menu(struct Buffer* buf);
 extern void undoPos(void);
 extern void redoPos(void);
 extern void cursorTop(void);
 extern void cursorMiddle(void);
 extern void cursorBottom(void);
-
-extern int currentLn(struct Buffer* buf);
 extern void initURIMethods(void);
-extern void chkExternalURIBuffer(struct Buffer* buf);
-
-struct FormList;
-extern int is_blank_line(char* line, int indent);
-
-
-extern char* convert_size(int64_t size, int usefloat);
-extern char* convert_size2(int64_t size1, int64_t size2, int usefloat);
-
-
 extern void pcmap(void);
 extern void escmap(void);
 extern void escbmap(void);
-extern void escdmap(char c);
 extern void multimap(void);
-
-struct Hist;
-extern struct Buffer* historyBuffer(struct Hist* hist);
-extern double log_like(int x);
-
-
-extern struct Buffer* page_info_panel(struct Buffer* buf);
-extern MySignalHandler reset_exit(SIGNAL_ARG);
-extern MySignalHandler error_dump(SIGNAL_ARG);
 extern void set_int(void);
-
 extern void initMimeTypes(void);
-struct Url;
-extern void copyParsedURL(struct Url* p, const struct Url* q);
-extern Str parsedURL2RefererStr(struct Url* pu);
-struct HttpRequest;
-extern char* acceptableMimeTypes(void);
-
-
-
 extern void loadPasswd(void);
 extern void loadPreForm(void);
-
 extern void docCSet(void);
 extern void defCSet(void);
-
 extern void _mark(void);
 extern void nextMk(void);
 extern void prevMk(void);
 extern void reMark(void);
-
-#define mouse nulcmd
-#define sgrmouse nulcmd
-#define msToggle nulcmd
-#define movMs nulcmd
-#define menuMs nulcmd
-#define tabMs nulcmd
-#define closeTMs nulcmd
-
-
-extern void initKeymap(int force);
-extern int getKey(char* s);
-extern char* getKeyData(int key);
-
 extern void dictword(void);
 extern void dictwordat(void);
-
 extern void wrapToggle(void);
-
 extern void dispVer(void);
+

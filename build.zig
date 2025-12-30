@@ -244,6 +244,9 @@ fn gen_functable(b: *std.Build) *std.Build.Step.WriteFile {
     const funcname_c = gen_funcname(b, funcname_tab.output, b.path("funcname0.awk"));
     _ = wf.addCopyFile(funcname_c.output, "funcname.c");
 
+    const funcheader_h = gen_funcname(b, funcname_tab.output, b.path("funcheader.awk"));
+    _ = wf.addCopyFile(funcheader_h.output, "funcheader.h");
+
     const funcname1_h = gen_funcname(b, funcname_tab.output, b.path("funcname1.awk"));
     _ = wf.addCopyFile(funcname1_h.output, "funcname1.h");
 

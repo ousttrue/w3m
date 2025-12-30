@@ -13,3 +13,4 @@ Str decodeQP(char** ww);
 void decodeQP_to_growbuf(struct growbuf* gb, char** ww);
 Str decodeU(char** ww);
 void decodeU_to_growbuf(struct growbuf* gb, char** ww);
+char* acceptableMimeTypes(void);

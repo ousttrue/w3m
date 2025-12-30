@@ -54,3 +54,6 @@ struct Buffer* loadImageBuffer(struct Url url, struct input_stream* stream,
 extern int getMetaRefreshParam(const char* q, Str* refresh_uri);
 extern int is_boundary(unsigned char*, unsigned char*);
 extern Str process_n_button(void);
+extern int currentLn(struct Buffer* buf);
+extern char* convert_size(int64_t size, int usefloat);
+extern char* convert_size2(int64_t size1, int64_t size2, int usefloat);

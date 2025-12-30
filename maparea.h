@@ -38,3 +38,4 @@ struct Anchor;
 extern struct MapArea* follow_map_menu(struct Buffer* buf, char* name, struct Anchor* a_img, int x,
     int y);
 extern struct Buffer* follow_map_panel(struct Buffer* buf, char* name);
+extern struct Buffer* page_info_panel(struct Buffer* buf);

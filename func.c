@@ -17,7 +17,6 @@
 #include <string.h>
 #include <sys/stat.h>
 
-#include "proto.h"
 #include "funcheader.h"
 #include "funcname.c"
 #include "functable.c"

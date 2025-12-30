@@ -1,4 +1,7 @@
 #include "w3m_rc.h"
+#include "func.h"
+#include "maparea.h"
+#include "mimehead.h"
 #include "menu.h"
 #include "cookie.h"
 #include "history.h"

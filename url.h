@@ -43,3 +43,5 @@ extern wc_ces url_to_charset(const char* url, const struct Url* base,
     wc_ces doc_charset);
 extern char* url_encode(const char* url, const struct Url* base,
     wc_ces doc_charset);
+struct Buffer;
+extern void chkExternalURIBuffer(struct Buffer* buf);

@@ -194,3 +194,4 @@ extern void init_tmp(void);
 extern struct Buffer* load_option_panel(void);
 extern void sync_with_option(void);
 extern char* searchKeyData(void);
+

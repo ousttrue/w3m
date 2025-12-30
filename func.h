@@ -25,3 +25,6 @@ extern void setKeymap(const char* p, int lineno, bool verbose);
 
 /// event
 int getFuncList(const char* id);
+void initKeymap(int force);
+int getKey(char* s);
+char* getKeyData(int key);
