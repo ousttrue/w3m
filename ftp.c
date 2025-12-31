@@ -463,7 +463,7 @@ ftp_dir:
     return (struct FtpFile) { 0 };
 }
 
-Str loadFTPDir(struct Url* pu, enum wc_ces* charset, bool do_download)
+Str loadFTPDir(struct Url* pu, enum wc_ces* charset)
 {
     Str FTPDIRtmp;
     Str tmp;
