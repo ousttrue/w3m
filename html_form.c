@@ -714,17 +714,17 @@ write_end:
 
 struct pre_form_item {
     int type;
-    char* name;
-    char* value;
+    const char* name;
+    const char* value;
     int checked;
     struct pre_form_item* next;
 };
 
 struct pre_form {
-    char* url;
+    const char* url;
     Regex* re_url;
-    char* name;
-    char* action;
+    const char* name;
+    const char* action;
     struct pre_form_item* item;
     struct pre_form* next;
 };
@@ -732,7 +732,7 @@ struct pre_form {
 static struct pre_form* PreForm = NULL;
 
 static struct pre_form*
-add_pre_form(struct pre_form* prev, char* url, Regex* re_url, char* name, char* action)
+add_pre_form(struct pre_form* prev, const char* url, Regex* re_url, const char* name, const char* action)
 {
     struct Url pu;
     struct pre_form* new;
@@ -756,7 +756,7 @@ add_pre_form(struct pre_form* prev, char* url, Regex* re_url, char* name, char* 
 
 static struct pre_form_item*
 add_pre_form_item(struct pre_form* pf, struct pre_form_item* prev, int type,
-    char* name, char* value, char* checked)
+    const char* name, const char* value, const char* checked)
 {
     struct pre_form_item* new;
 
@@ -807,7 +807,7 @@ void loadPreForm(void)
     if (fp == NULL)
         return;
     while (1) {
-        char *p, *s, *arg;
+        const char *p, *s, *arg;
         Regex* re_arg;
 
         line = Strfgets(fp);
@@ -931,7 +931,7 @@ void preFormUpdateBuffer(struct Buffer* buf)
                     continue;
                 if (pi->type == FORM_INPUT_SUBMIT || pi->type == FORM_INPUT_IMAGE) {
                     if ((!pi->name || !*pi->name || (fi->name && !Strcmp_charp(fi->name, pi->name))) && (!pi->value || !*pi->value || (fi->value && !Strcmp_charp(fi->value, pi->value))))
-                        buf->submit = a;
+                        buf->doc.submit = a;
                     continue;
                 }
                 if (!pi->name || !fi->name || Strcmp_charp(fi->name, pi->name))

@@ -65,8 +65,6 @@ struct Buffer {
     struct frameset* frameset;
     struct frameset_queue* frameQ;
     wc_uint8 auto_detect;
-    struct FormItemList* form_submit;
-    struct Anchor* submit;
     struct BufferPos* undo;
 
     int* clone;

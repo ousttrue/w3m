@@ -822,7 +822,7 @@ void _followForm(bool submit, bool on_target, bool do_download)
                  * Location: header. In this case, buf->form_submit must not be set
                  * because the page is not loaded by POST method but GET method.
                  */
-                buf->form_submit = save_submit_formlist(fi);
+                buf->doc.form_submit = save_submit_formlist(fi);
             }
         } else if ((fi->parent->method == FORM_METHOD_INTERNAL && (!Strcmp_charp(fi->parent->action, "map") || !Strcmp_charp(fi->parent->action, "none"))) || Currentbuf->bufferprop & BP_INTERNAL) { /* internal */
             do_internal(tmp2->ptr, tmp->ptr);
@@ -852,11 +852,11 @@ void _followForm(bool submit, bool on_target, bool do_download)
 
 bool currentBufferSubmit()
 {
-    struct Anchor* a = Currentbuf->submit;
+    struct Anchor* a = Currentbuf->doc.submit;
     if (!a) {
         return false;
     }
-    Currentbuf->submit = NULL;
+    Currentbuf->doc.submit = NULL;
     doc_gotoLine(&Currentbuf->doc, a->start.line);
     Currentbuf->doc.pos = a->start.pos;
     _followForm(TRUE, true, false);

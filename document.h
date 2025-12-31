@@ -36,8 +36,9 @@ struct Document {
     struct MapList* maplist;
     struct HmarkerList* hmarklist;
     struct HmarkerList* imarklist;
-
     enum ImageGetFlags image_flag;
+    struct FormItemList* form_submit;
+    struct Anchor* submit;
 
     //
     // screen

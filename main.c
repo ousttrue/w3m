@@ -3438,14 +3438,14 @@ DEFUN(reload, RELOAD, "Load current document anew")
     } else if (Currentbuf->frameset != NULL)
         fbuf = Currentbuf->linkBuffer[LB_FRAME];
     multipart = 0;
-    if (Currentbuf->form_submit) {
-        request = Currentbuf->form_submit->parent;
+    if (Currentbuf->doc.form_submit) {
+        request = Currentbuf->doc.form_submit->parent;
         if (request->method == FORM_METHOD_POST
             && request->enctype == FORM_ENCTYPE_MULTIPART) {
             Str query;
             struct stat st;
             multipart = 1;
-            query_from_followform(&query, Currentbuf->form_submit, multipart);
+            query_from_followform(&query, Currentbuf->doc.form_submit, multipart);
             stat(request->body, &st);
             request->length = st.st_size;
         }
@@ -3481,7 +3481,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
             Firstbuf = deleteBuffer(Firstbuf, buf);
     }
     // Currentbuf->search_header = sbuf.search_header;
-    Currentbuf->form_submit = sbuf.form_submit;
+    Currentbuf->doc.form_submit = sbuf.doc.form_submit;
     if (Currentbuf->doc.firstLine) {
         COPY_BUFROOT(Currentbuf, &sbuf);
         doc_restorePosition(&Currentbuf->doc, &sbuf.doc);
