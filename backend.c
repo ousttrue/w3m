@@ -77,8 +77,8 @@ print_headers(struct Buffer* buf, int len)
             printf("%s\n", tp->ptr);
     }
     printf("w3m-current-url: %s\n", parsedURL2Str(&buf->content.url)->ptr);
-    if (buf->baseURL)
-        printf("w3m-base-url: %s\n", parsedURL2Str(buf->baseURL)->ptr);
+    if (buf->doc.baseURL)
+        printf("w3m-base-url: %s\n", parsedURL2Str(buf->doc.baseURL)->ptr);
     printf("w3m-content-type: %s\n", buf->type);
     if (buf->doc.charset)
         printf("w3m-content-charset: %s\n",

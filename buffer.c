@@ -33,9 +33,9 @@ baseURL(struct Buffer* buf)
         /* no URL is defined for the buffer */
         return NULL;
     }
-    if (buf->baseURL != NULL) {
+    if (buf->doc.baseURL != NULL) {
         /* <BASE> tag is defined in the document */
-        return buf->baseURL;
+        return buf->doc.baseURL;
     } else if (IS_EMPTY_PARSED_URL(&buf->content.url))
         return NULL;
     else
@@ -70,8 +70,8 @@ struct Buffer* newBuffer(int width)
     n->doc.COLS = TTY_COLS();
     n->doc.LINES = LASTLINE();
     n->content.url.scheme = SCM_UNKNOWN;
-    n->baseURL = NULL;
-    n->baseTarget = NULL;
+    n->doc.baseURL = NULL;
+    n->doc.baseTarget = NULL;
     n->doc.title = "";
     n->bufferprop = BP_NORMAL;
     n->clone = New(int);

@@ -25,6 +25,8 @@ struct Document {
     //
     // anchors
     //
+    struct Url* baseURL;
+    char* baseTarget;
     struct AnchorList* href;
     struct AnchorList* img;
     struct AnchorList* name;

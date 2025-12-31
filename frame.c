@@ -483,7 +483,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
                 fflush(f1);
                 f_frameset = frame_download_source(frame.body,
                     currentURL,
-                    current->baseURL, flag);
+                    current->doc.baseURL, flag);
                 if (f_frameset) {
                     deleteFrame(frame.body);
                     f->frame[i].set = frame.set = f_frameset;

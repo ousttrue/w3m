@@ -4583,7 +4583,7 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                         }
                     }
                     p = r = s = NULL;
-                    q = buf->baseTarget;
+                    q = buf->doc.baseTarget;
                     t = "";
                     hseq = 0;
                     id = NULL;
@@ -4752,7 +4752,7 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                     }
 
                     if (!form->target)
-                        form->target = buf->baseTarget;
+                        form->target = buf->doc.baseTarget;
                     if (a_textarea && parsedtag_get_value(tag, ATTR_TEXTAREANUMBER, &textareanumber)) {
                         if (textareanumber >= hb->max_textarea) {
                             hb->max_textarea = 2 * textareanumber;
@@ -4862,13 +4862,13 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                     if (parsedtag_get_value(tag, ATTR_HREF, &p)) {
                         p = url_encode(remove_space(p), NULL,
                             buf->doc.charset);
-                        if (!buf->baseURL)
-                            buf->baseURL = New(struct Url);
-                        parseURL2(p, buf->baseURL, &buf->content.url);
-                        base = buf->baseURL;
+                        if (!buf->doc.baseURL)
+                            buf->doc.baseURL = New(struct Url);
+                        parseURL2(p, buf->doc.baseURL, &buf->content.url);
+                        base = buf->doc.baseURL;
                     }
                     if (parsedtag_get_value(tag, ATTR_TARGET, &p))
-                        buf->baseTarget = url_quote_conv(p, buf->doc.charset);
+                        buf->doc.baseTarget = url_quote_conv(p, buf->doc.charset);
                     break;
                 case HTML_META:
                     p = q = NULL;

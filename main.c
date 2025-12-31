@@ -822,8 +822,8 @@ static void
 dump_extra(struct Buffer* buf)
 {
     printf("W3m-current-url: %s\n", parsedURL2Str(&buf->content.url)->ptr);
-    if (buf->baseURL)
-        printf("W3m-base-url: %s\n", parsedURL2Str(buf->baseURL)->ptr);
+    if (buf->doc.baseURL)
+        printf("W3m-base-url: %s\n", parsedURL2Str(buf->doc.baseURL)->ptr);
     printf("W3m-document-charset: %s\n",
         wc_ces_to_charset(buf->doc.charset));
 
