@@ -1137,8 +1137,10 @@ struct Buffer* load_doc(const char* path, struct Url* current,
                 if (getRuntime()->UseExternalDirBuffer) {
                     Str cmd = Sprintf("%s?dir=%s#current",
                         getRuntime()->DirBufferCommand, us.url.file);
-                    struct Buffer* b = loadGeneralFile(cmd->ptr, NULL, NO_REFERER, 0,
-                        NULL, do_download);
+                    struct Buffer* b = load_doc(cmd->ptr, NULL, NULL,
+                        (struct URLOption) { .referer = NO_REFERER, .flag = 0, .extra_header = NULL },
+                        (struct AuthInfo) { 0 },
+                        do_download, t_buf, NULL);
                     if (b != NULL && b != NO_BUFFER) {
                         copyParsedURL(&b->content.url, &us.url);
                         b->content.filename = b->content.url.real_file;
@@ -1157,8 +1159,8 @@ struct Buffer* load_doc(const char* path, struct Url* current,
         case SCM_UNKNOWN: {
             Str tmp = searchURIMethods(&us.url);
             if (tmp != NULL) {
-                struct Buffer* b = loadGeneralFile(tmp->ptr, current,
-                    option.referer, option.flag, request, do_download);
+                struct Buffer* b = load_doc(tmp->ptr, current, request,
+                    option, (struct AuthInfo) { 0 }, do_download, t_buf, connection);
                 if (b != NULL && b != NO_BUFFER)
                     copyParsedURL(&b->content.url, &us.url);
                 return b;
