@@ -58,7 +58,6 @@ struct Buffer {
     struct Document doc;
     struct Buffer* nextBuffer;
     struct Buffer* linkBuffer[MAX_LB];
-    short width;
     short bufferprop;
 
     int* clone;

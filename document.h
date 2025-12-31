@@ -5,6 +5,7 @@
 
 struct AnchorList;
 struct Document {
+    short width;
     const char* title;
     enum wc_ces charset;
     wc_uint8 auto_detect;

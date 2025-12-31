@@ -308,7 +308,7 @@ void _newT(void)
     if (!tag)
         return;
 
-    struct Buffer* buf = newBuffer(Currentbuf->width);
+    struct Buffer* buf = newBuffer(Currentbuf->doc.width);
     copyBuffer(buf, Currentbuf);
     buf->nextBuffer = NULL;
     for (int i = 0; i < MAX_LB; i++)

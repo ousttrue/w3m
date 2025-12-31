@@ -66,7 +66,7 @@ struct Buffer* newBuffer(int width)
     struct Buffer* n = New(struct Buffer);
     assert(n);
     memset(n, 0, sizeof(struct Buffer));
-    n->width = width;
+    n->doc.width = width;
     n->doc.COLS = TTY_COLS();
     n->doc.LINES = LASTLINE();
     n->content.url.scheme = SCM_UNKNOWN;
@@ -417,7 +417,7 @@ selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectcha
 
 void reshapeBuffer(struct Buffer* buf)
 {
-    buf->width = INIT_BUFFER_WIDTH;
+    buf->doc.width = INIT_BUFFER_WIDTH;
 
     struct input_stream* stream = NULL;
     if (buf->content.mailcap_source) {

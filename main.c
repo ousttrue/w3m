@@ -2187,7 +2187,7 @@ gotoLabel(const char* label)
         disp_message(Sprintf("%s is not found", label)->ptr, TRUE);
         return;
     }
-    buf = newBuffer(Currentbuf->width);
+    buf = newBuffer(Currentbuf->doc.width);
     copyBuffer(buf, Currentbuf);
     for (i = 0; i < MAX_LB; i++)
         buf->linkBuffer[i] = NULL;

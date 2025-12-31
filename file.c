@@ -5681,7 +5681,7 @@ void loadHTMLstream(struct input_stream* stream,
     else if (getRuntime()->activeImage && getRuntime()->displayImage && getRuntime()->autoImage)
         image_flag = IMG_FLAG_AUTO;
 
-    init_henv(&htmlenv1, &obuf, envs, MAX_ENV_LEVEL, NULL, newBuf->width, 0);
+    init_henv(&htmlenv1, &obuf, envs, MAX_ENV_LEVEL, NULL, newBuf->doc.width, 0);
 
     if (w3m_halfdump)
         htmlenv1.f = stdout;
