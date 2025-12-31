@@ -699,7 +699,7 @@ struct http_auth www_auth[] = {
 };
 
 static struct http_auth*
-findAuthentication(struct http_auth* hauth, struct Buffer* buf, char* auth_field)
+findAuthentication(struct http_auth* hauth, struct TextList* document_header, char* auth_field)
 {
     struct http_auth* ha;
     int len = strlen(auth_field), slen;
@@ -707,7 +707,7 @@ findAuthentication(struct http_auth* hauth, struct Buffer* buf, char* auth_field
     const char *p0, *p;
 
     bzero(hauth, sizeof(struct http_auth));
-    for (i = buf->content.document_header->first; i != NULL; i = i->next) {
+    for (i = document_header->first; i != NULL; i = i->next) {
         if (strncasecmp(i->ptr, auth_field, len) == 0) {
             for (p = i->ptr + len; p != NULL && *p != '\0';) {
                 p = skip_blanks(p);
@@ -933,66 +933,64 @@ struct Buffer* page_loaded(struct Url url,
     return b;
 }
 
-static struct Buffer* make_buffer(struct Url url, int flag,
-    struct input_stream* stream, struct Buffer* t_buf, const char* t,
-    const char* ssl_certificate,
+static struct Buffer* make_buffer(struct Content content,
+    const char* t,
+    int flag,
     bool do_download)
 {
-    LoadBufferFunc proc = loadBuffer;
-
     MySignalHandler (*prevtrap)(SIGNAL_ARG) = NULL;
+
     if (do_download) {
         /* download only */
         const char* file;
         TRAP_OFF;
-        if (url.scheme == SCM_LOCAL) {
+        if (content.url.scheme == SCM_LOCAL) {
             // struct stat st;
             // if (getRuntime()->PreserveTimestamp && !stat(url.real_file, &st)) {
             //     f.modtime = st.st_mtime;
             // }
-            file = conv_from_system(guess_save_name(NULL, url.real_file));
+            file = conv_from_system(guess_save_name(NULL, content.url.real_file));
         } else {
-            file = guess_save_name(&t_buf->content, url.file);
+            file = guess_save_name(&content, content.url.file);
         }
-        if (doFileSave(url, stream, file, t_buf->content.compression) == 0)
-            UFhalfclose(stream, url.scheme);
+        if (doFileSave(content.url, content.stream, file, content.compression) == 0)
+            UFhalfclose(content.stream, content.url.scheme);
         else
-            is_close(stream);
+            is_close(content.stream);
         return NULL;
     }
 
-    if (t_buf) {
-        bool use_tmpf = url.scheme != SCM_LOCAL && !getRuntime()->image_source;
-        if ((t_buf->content.compression != CMP_NOCOMPRESS) && getRuntime()->AutoUncompress
-            && !(getRuntime()->w3m_dump & DUMP_EXTRA)) {
-            stream = uncompress_stream(stream,
-                t_buf->content.compression, use_tmpf ? &url.real_file : NULL);
+    bool use_tmpf = content.url.scheme != SCM_LOCAL && !getRuntime()->image_source;
+    if ((content.compression != CMP_NOCOMPRESS) && getRuntime()->AutoUncompress
+        && !(getRuntime()->w3m_dump & DUMP_EXTRA)) {
+        content.stream = uncompress_stream(content.stream,
+            content.compression, use_tmpf ? &content.url.real_file : NULL);
+        // UFhalfclose(&f);
+    } else if (content.compression != CMP_NOCOMPRESS) {
+        if (!(getRuntime()->w3m_dump & DUMP_SOURCE) && (getRuntime()->w3m_dump & ~DUMP_FRAME || is_text_type(t) || searchExtViewer(t))) {
+            content.stream = uncompress_stream(content.stream,
+                content.compression, use_tmpf ? &content.sourcefile : NULL);
             // UFhalfclose(&f);
-        } else if (t_buf->content.compression != CMP_NOCOMPRESS) {
-            if (!(getRuntime()->w3m_dump & DUMP_SOURCE) && (getRuntime()->w3m_dump & ~DUMP_FRAME || is_text_type(t) || searchExtViewer(t))) {
-                stream = uncompress_stream(stream,
-                    t_buf->content.compression, use_tmpf ? &t_buf->content.sourcefile : NULL);
-                // UFhalfclose(&f);
-                // const char* ext;
-                // uncompressed_file_type(url.file, &ext);
-            } else {
-                t = compress_application_type(t_buf->content.compression);
-                // f.compression = CMP_NOCOMPRESS;
-            }
+            // const char* ext;
+            // uncompressed_file_type(url.file, &ext);
+        } else {
+            t = compress_application_type(content.compression);
+            // f.compression = CMP_NOCOMPRESS;
         }
     }
 
     if (getRuntime()->image_source) {
         struct Buffer* b = NULL;
-        if (is_save2tmp(stream, getRuntime()->image_source)) {
+        if (is_save2tmp(content.stream, getRuntime()->image_source)) {
             b = newBuffer(INIT_BUFFER_WIDTH);
             b->content.sourcefile = getRuntime()->image_source;
         }
-        is_close(stream);
+        is_close(content.stream);
         TRAP_OFF;
         return b;
     }
 
+    LoadBufferFunc proc = loadBuffer;
     if (is_html_type(t))
         proc = loadHTMLBuffer;
     else if (is_plain_text_type(t))
@@ -1006,46 +1004,42 @@ static struct Buffer* make_buffer(struct Url url, int flag,
             proc = doExternal;
         } else {
             TRAP_OFF;
-            if (url.scheme == SCM_LOCAL) {
-                is_close(stream);
-                _doFileCopy(url.real_file,
-                    conv_from_system(guess_save_name(NULL, url.real_file)), TRUE);
+            if (content.url.scheme == SCM_LOCAL) {
+                is_close(content.stream);
+                _doFileCopy(content.url.real_file,
+                    conv_from_system(guess_save_name(NULL, content.url.real_file)), TRUE);
             } else {
-                if (doFileSave(url, stream,
-                        guess_save_name(&t_buf->content, url.file),
-                        t_buf->content.compression)
+                if (doFileSave(content.url, content.stream,
+                        guess_save_name(&content, content.url.file),
+                        content.compression)
                     == 0)
-                    UFhalfclose(stream, url.scheme);
+                    UFhalfclose(content.stream, content.url.scheme);
                 else
-                    is_close(stream);
+                    is_close(content.stream);
             }
             return NULL;
         }
     } else if (getRuntime()->w3m_dump & DUMP_FRAME)
         return NULL;
 
-    if (t_buf == NULL)
-        t_buf = newBuffer(INIT_BUFFER_WIDTH);
-    copyParsedURL(&t_buf->content.url, &url);
-    t_buf->content.filename = url.real_file ? url.real_file : url.file ? conv_to_system(url.file)
-                                                                       : NULL;
-    if (flag & RG_FRAME) {
-        t_buf->bufferprop |= BP_FRAME;
-    }
-    t_buf->content.ssl_certificate = ssl_certificate;
+    content.filename = content.url.real_file ? content.url.real_file : content.url.file ? conv_to_system(content.url.file)
+                                                                                        : NULL;
+    content.ssl_certificate = content.ssl_certificate;
     frame_source = flag & RG_FRAME_SRC;
 
-    struct Buffer* b = loadSomething(url, stream, t,
-        proc, t_buf, t_buf->bufferprop & BP_FRAME);
-    is_close(stream);
+    struct Buffer* t_buf = newBuffer(INIT_BUFFER_WIDTH);
+    t_buf->content = content;
+    struct Buffer* b = loadSomething(content.url, content.stream, t,
+        proc, t_buf, flag & RG_FRAME);
+    is_close(content.stream);
     frame_source = 0;
     if (b) {
         if (getRuntime()->w3m_backend)
             b->type = allocStr(t, -1);
-        if (url.label) {
+        if (content.url.label) {
             if (proc == loadHTMLBuffer) {
                 struct Anchor* a;
-                a = searchURLLabel(b, url.label);
+                a = searchURLLabel(b, content.url.label);
                 if (a != NULL) {
                     doc_gotoLine(&b->doc, a->start.line);
                     if (getRuntime()->label_topline)
@@ -1056,7 +1050,7 @@ static struct Buffer* make_buffer(struct Url url, int flag,
                     doc_arrangeCursor(&b->doc);
                 }
             } else { /* plain text */
-                int l = atoi(url.label);
+                int l = atoi(content.url.label);
                 doc_gotoRealLine(&b->doc, l);
                 b->doc.pos = 0;
                 doc_arrangeCursor(&b->doc);
@@ -1085,7 +1079,6 @@ struct Buffer* load_doc(const char* path, struct Url* current,
     struct URLOption option,
     struct AuthInfo auth,
     bool do_download,
-    struct Buffer* t_buf,
     struct input_stream* connection)
 {
     //
@@ -1099,7 +1092,7 @@ struct Buffer* load_doc(const char* path, struct Url* current,
             struct Url* new_current = New(struct Url);
             *new_current = pu;
             return load_doc(sc_redirect, new_current,
-                NULL, option, auth, do_download, t_buf, NULL);
+                NULL, option, auth, do_download, NULL);
         }
     }
 
@@ -1140,7 +1133,7 @@ struct Buffer* load_doc(const char* path, struct Url* current,
                     struct Buffer* b = load_doc(cmd->ptr, NULL, NULL,
                         (struct URLOption) { .referer = NO_REFERER, .flag = 0, .extra_header = NULL },
                         (struct AuthInfo) { 0 },
-                        do_download, t_buf, NULL);
+                        do_download, NULL);
                     if (b != NULL) {
                         copyParsedURL(&b->content.url, &content.url);
                         b->content.filename = b->content.url.real_file;
@@ -1160,7 +1153,7 @@ struct Buffer* load_doc(const char* path, struct Url* current,
             Str tmp = searchURIMethods(&content.url);
             if (tmp != NULL) {
                 struct Buffer* b = load_doc(tmp->ptr, current, request,
-                    option, (struct AuthInfo) { 0 }, do_download, t_buf, connection);
+                    option, (struct AuthInfo) { 0 }, do_download, connection);
                 if (b != NULL)
                     copyParsedURL(&b->content.url, &content.url);
                 return b;
@@ -1217,14 +1210,12 @@ struct Buffer* load_doc(const char* path, struct Url* current,
             /* FIXME: gettextize? */
             message(Sprintf("%s contacted. Waiting for reply...", content.url.host)->ptr, 0, 0);
         }
-        if (t_buf == NULL)
-            t_buf = newBuffer(INIT_BUFFER_WIDTH);
-        getHttpResponseHeader(&t_buf->content, content.url, content.stream);
+        getHttpResponseHeader(&content, content.url, content.stream);
         const char* p;
-        if (((t_buf->content.http_response_code >= 301 //
-                 && t_buf->content.http_response_code <= 303)
-                || t_buf->content.http_response_code == 307)
-            && (p = checkHeader(&t_buf->content, "Location:")) != NULL
+        if (((content.http_response_code >= 301 //
+                 && content.http_response_code <= 303)
+                || content.http_response_code == 307)
+            && (p = checkHeader(&content, "Location:")) != NULL
             && checkRedirection(&content.url)) {
             // document moved
             // 301: Moved Permanently
@@ -1235,18 +1226,17 @@ struct Buffer* load_doc(const char* path, struct Url* current,
             is_close(content.stream);
             struct Url* new_current = New(struct Url);
             copyParsedURL(new_current, &content.url);
-            struct Buffer* t_buf = newBuffer(INIT_BUFFER_WIDTH);
-            t_buf->bufferprop |= BP_REDIRECTED;
+            // t_buf->bufferprop |= BP_REDIRECTED;
             return load_doc(tpath, new_current,
-                NULL, option, auth, do_download, t_buf, NULL);
+                NULL, option, auth, do_download, NULL);
         }
 
-        t = checkContentType(&t_buf->content);
+        t = checkContentType(&content);
         if (t == NULL && content.url.file != NULL) {
-            if (!((t_buf->content.http_response_code >= 400 //
-                      && t_buf->content.http_response_code <= 407) //
-                    || (t_buf->content.http_response_code >= 500 //
-                        && t_buf->content.http_response_code <= 505)))
+            if (!((content.http_response_code >= 400 //
+                      && content.http_response_code <= 407) //
+                    || (content.http_response_code >= 500 //
+                        && content.http_response_code <= 505)))
                 t = guessContentType(content.url.file);
         }
         if (t == NULL)
@@ -1260,11 +1250,11 @@ struct Buffer* load_doc(const char* path, struct Url* current,
                 0);
             auth.add_auth_cookie_flag = 0;
         }
-        if ((p = checkHeader(&t_buf->content, "WWW-Authenticate:")) != NULL //
-            && t_buf->content.http_response_code == 401) {
+        if ((p = checkHeader(&content, "WWW-Authenticate:")) != NULL //
+            && content.http_response_code == 401) {
             /* Authentication needed */
             struct http_auth hauth;
-            if (findAuthentication(&hauth, t_buf, "WWW-Authenticate:") != NULL
+            if (findAuthentication(&hauth, content.document_header, "WWW-Authenticate:") != NULL
                 && (auth.realm = get_auth_param(hauth.param, "realm")) != NULL) {
                 struct Url* auth_pu = &content.url;
                 getAuthCookie(&hauth, "Authorization:", option.extra_header,
@@ -1272,20 +1262,19 @@ struct Buffer* load_doc(const char* path, struct Url* current,
                 if (auth.uname == NULL) {
                     /* abort */
                     TRAP_OFF;
-                    return make_buffer(content.url, option.flag,
-                        content.stream, t_buf, t, content.ssl_certificate, do_download);
+                    return make_buffer(content, t, option.flag, do_download);
                 }
                 is_close(content.stream);
                 auth.add_auth_cookie_flag = 1;
                 return load_doc(path, current,
-                    request, option, auth, do_download, t_buf, connection);
+                    request, option, auth, do_download, connection);
             }
         }
-        if ((p = checkHeader(&t_buf->content, "Proxy-Authenticate:")) != NULL //
-            && t_buf->content.http_response_code == 407) {
+        if ((p = checkHeader(&content, "Proxy-Authenticate:")) != NULL //
+            && content.http_response_code == 407) {
             // Authentication needed
             struct http_auth hauth;
-            if (findAuthentication(&hauth, t_buf, "Proxy-Authenticate:")
+            if (findAuthentication(&hauth, content.document_header, "Proxy-Authenticate:")
                     != NULL
                 && (auth.realm = get_auth_param(hauth.param, "realm")) != NULL) {
                 struct Url* auth_pu = schemeToProxy(content.url.scheme);
@@ -1295,25 +1284,24 @@ struct Buffer* load_doc(const char* path, struct Url* current,
                 if (auth.uname == NULL) {
                     /* abort */
                     TRAP_OFF;
-                    return make_buffer(content.url, option.flag,
-                        content.stream, t_buf, t, content.ssl_certificate, do_download);
+                    return make_buffer(content, t, option.flag, do_download);
                 }
                 is_close(content.stream);
                 auth.add_auth_cookie_flag = 1;
                 add_auth_user_passwd(auth_pu,
                     qstr_unquote(auth.realm)->ptr, auth.uname, auth.pwd, 1);
                 return load_doc(path, current,
-                    request, option, auth, do_download, t_buf, connection);
+                    request, option, auth, do_download, connection);
             }
         }
 
         if (content.status == HTST_CONNECT) {
             // XXX: RFC2617 3.2.3 Authentication-Info: ?
             return load_doc(path, current,
-                request, option, auth, do_download, t_buf, content.stream);
+                request, option, auth, do_download, content.stream);
         }
 
-        content.modtime = mymktime(checkHeader(&t_buf->content, "Last-Modified:"));
+        content.modtime = mymktime(checkHeader(&content, "Last-Modified:"));
     } else if (content.url.scheme == SCM_FTP) {
         enum CompressionType compression = check_compression(path);
         if (compression != CMP_NOCOMPRESS) {
@@ -1323,11 +1311,9 @@ struct Buffer* load_doc(const char* path, struct Url* current,
         }
     } else if (content.is_cgi) {
         // searchHeader = SearchHeader = FALSE;
-        if (t_buf == NULL)
-            t_buf = newBuffer(INIT_BUFFER_WIDTH);
-        getHttpResponseHeader(&t_buf->content, content.url, content.stream);
+        getHttpResponseHeader(&content, content.url, content.stream);
         const char* p;
-        if ((p = checkHeader(&t_buf->content, "Location:")) != NULL && checkRedirection(&content.url)) {
+        if ((p = checkHeader(&content, "Location:")) != NULL && checkRedirection(&content.url)) {
             //
             // document moved
             //
@@ -1336,12 +1322,11 @@ struct Buffer* load_doc(const char* path, struct Url* current,
             auth.add_auth_cookie_flag = 0;
             struct Url* new_current = New(struct Url);
             copyParsedURL(new_current, &content.url);
-            t_buf = newBuffer(INIT_BUFFER_WIDTH);
-            t_buf->bufferprop |= BP_REDIRECTED;
+            // t_buf->bufferprop |= BP_REDIRECTED;
             return load_doc(tpath, new_current,
-                NULL, option, auth, do_download, t_buf, NULL);
+                NULL, option, auth, do_download, NULL);
         }
-        t = checkContentType(&t_buf->content);
+        t = checkContentType(&content);
         if (t == NULL)
             t = "text/plain";
     } else if (getRuntime()->DefaultType) {
@@ -1351,12 +1336,11 @@ struct Buffer* load_doc(const char* path, struct Url* current,
         t = guessContentType(content.url.file);
     }
 
-    const char* p = checkHeader(t_buf ? &t_buf->content : NULL, "Content-Length:");
+    const char* p = checkHeader(&content, "Content-Length:");
     if (p)
-        t_buf->content.current_content_length = strtoclen(p);
+        content.current_content_length = strtoclen(p);
 
-    return make_buffer(content.url, option.flag, content.stream,
-        t_buf, t, content.ssl_certificate, do_download);
+    return make_buffer(content, t, option.flag, do_download);
 }
 
 struct Buffer*
@@ -1376,7 +1360,7 @@ loadGeneralFile(const char* path, struct Url* current, const char* referer,
             .uname = NULL,
             .pwd = NULL,
         },
-        do_download, NULL, NULL);
+        do_download, NULL);
 }
 
 #define TAG_IS(s, tag, len) \
