@@ -28,9 +28,6 @@ struct Content {
     struct mailcap* mailcap;
     const char* mailcap_source;
 
-    enum StreamStatus status;
-    struct input_stream* stream;
-    Str page;
     struct HttpRequest hr;
     int http_response_code;
     struct TextList* document_header;

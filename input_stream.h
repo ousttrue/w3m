@@ -37,7 +37,13 @@ struct Buffer;
 int doFileSave(struct Url url, struct input_stream* stream,
     const char* defstr, enum CompressionType compression);
 
-struct Content openURL(struct Url url, struct Url* current,
+struct ContentAndStream {
+    struct Content content;
+    enum StreamStatus status;
+    struct input_stream* stream;
+};
+
+struct ContentAndStream openURL(struct Url url, struct Url* current,
     struct FormList* request,
     struct URLOption option,
     struct input_stream* ouf);
