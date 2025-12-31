@@ -1,4 +1,9 @@
 #include "content.h"
+#include "http_auth.h"
+#include "tcp_socket.h"
+#include "ftp.h"
+#include "local_cgi.h"
+#include "siteconf.h"
 #include "func.h"
 #include "input_stream.h"
 #include "linein.h"
@@ -12,6 +17,17 @@
 #include "myctype.h"
 #include <string.h>
 #include <libwc/charset.h>
+#include <sys/stat.h>
+
+#include <signal.h>
+#include <setjmp.h>
+
+static JMP_BUF AbortLoading;
+static MySignalHandler KeyAbort(SIGNAL_ARG)
+{
+    LONGJMP(AbortLoading, 1);
+    SIGNAL_RETURN;
+}
 
 bool matchattr(const char* p, const char* attr, int len, Str* value)
 {
@@ -392,4 +408,340 @@ void getHttpResponseHeader(struct Content* content, struct Url url,
     //     addnewline(&newBuf->doc, "", propBuffer, NULL, 0, -1, -1);
     // if (src)
     //     fclose(src);
+}
+
+static int
+same_url_p(struct Url* pu1, struct Url* pu2)
+{
+    return (pu1->scheme == pu2->scheme && pu1->port == pu2->port && (pu1->host ? pu2->host ? !strcasecmp(pu1->host, pu2->host) : 0 : 1)
+        && (pu1->file ? pu2->file ? !strcmp(pu1->file, pu2->file) : 0 : 1));
+}
+
+int checkRedirection(struct Url* pu)
+{
+    static struct Url* puv = NULL;
+    static int nredir = 0;
+    static int nredir_size = 0;
+    Str tmp;
+
+    if (pu == NULL) {
+        nredir = 0;
+        nredir_size = 0;
+        puv = NULL;
+        return TRUE;
+    }
+    if (nredir >= getRuntime()->FollowRedirection) {
+        /* FIXME: gettextize? */
+        tmp = Sprintf("Number of redirections exceeded %d at %s",
+            getRuntime()->FollowRedirection, parsedURL2Str(pu)->ptr);
+        disp_err_message(tmp->ptr, FALSE);
+        return FALSE;
+    } else if (nredir_size > 0 && (same_url_p(pu, &puv[(nredir - 1) % nredir_size]) || (!(nredir % 2) && same_url_p(pu, &puv[(nredir / 2) % nredir_size])))) {
+        /* FIXME: gettextize? */
+        tmp = Sprintf("Redirection loop detected (%s)",
+            parsedURL2Str(pu)->ptr);
+        disp_err_message(tmp->ptr, FALSE);
+        return FALSE;
+    }
+    if (!puv) {
+        nredir_size = getRuntime()->FollowRedirection / 2 + 1;
+        puv = New_N(struct Url, nredir_size);
+        memset(puv, 0, sizeof(struct Url) * nredir_size);
+    }
+    copyParsedURL(&puv[nredir % nredir_size], pu);
+    nredir++;
+    return TRUE;
+}
+
+struct ContentData get_content(const char* path, struct Url* current,
+    struct FormList* request,
+    struct URLOption option,
+    struct AuthInfo auth,
+    struct input_stream* connection)
+{
+    //
+    // siteconf redirection
+    //
+    {
+        struct Url pu;
+        parseURL2(path, &pu, current);
+        const char* sc_redirect = query_SCONF_SUBSTITUTE_URL(&pu);
+        if (sc_redirect && *sc_redirect && checkRedirection(&pu)) {
+            struct Url* new_current = New(struct Url);
+            *new_current = pu;
+            return get_content(sc_redirect, new_current,
+                NULL, option, auth, NULL);
+        }
+    }
+
+    struct Url url;
+    {
+        const char* u = path;
+        enum UrlScheme scheme = getURLScheme(&u);
+        if (current == NULL && scheme == SCM_MISSING && !getRuntime()->ArgvIsURL)
+            u = file_to_url(path); /* force to local file */
+        else
+            u = path;
+        parseURL2(u, &url, current);
+    }
+
+    struct ContentAndStream s = openURL(url, current, request, option, connection);
+    if (!s.stream && getRuntime()->retryAsHttp && s.content.url_str[0] != '/') {
+        if (s.content.url.scheme == SCM_MISSING || s.content.url.scheme == SCM_UNKNOWN) {
+            // retry it as "http://"
+            const char* u = Strnew_m_charp("http://", path, NULL)->ptr;
+            parseURL2(u, &url, current);
+            s = openURL(url, current, request, option, connection);
+        }
+    }
+
+    if (!s.stream) {
+        // non stream(file or socket) content.
+        s.content.charset = WC_CES_US_ASCII;
+        Str page = NULL;
+        switch (s.content.url.scheme) {
+        case SCM_LOCAL: {
+            struct stat st;
+            if (stat(s.content.url.real_file, &st) < 0)
+                return (struct ContentData) { 0 };
+            if (S_ISDIR(st.st_mode)) {
+                if (getRuntime()->UseExternalDirBuffer) {
+                    Str cmd = Sprintf("%s?dir=%s#current",
+                        getRuntime()->DirBufferCommand, s.content.url.file);
+                    struct ContentData data = get_content(cmd->ptr, NULL, NULL,
+                        (struct URLOption) { .referer = NO_REFERER, .flag = 0, .extra_header = NULL },
+                        (struct AuthInfo) { 0 }, NULL);
+                    // if (b != NULL) {
+                    copyParsedURL(&data.content.url, &s.content.url);
+                    data.content.filename = data.content.url.real_file;
+                    // }
+                    return data;
+                } else {
+                    page = loadLocalDir(s.content.url.real_file);
+                    s.content.charset = getRuntime()->SystemCharset;
+                }
+            }
+        } break;
+
+        case SCM_FTPDIR:
+            page = loadFTPDir(&s.content.url, &s.content.charset);
+            break;
+
+        case SCM_UNKNOWN: {
+            // ?
+            Str tmp = searchURIMethods(&s.content.url);
+            if (tmp != NULL) {
+                struct ContentData data = get_content(tmp->ptr, current, request,
+                    option, (struct AuthInfo) { 0 }, connection);
+                // if (b != NULL)
+                copyParsedURL(&data.content.url, &s.content.url);
+                return data;
+            }
+
+            disp_err_message(Sprintf("Unknown URI: %s",
+                                 parsedURL2Str(&s.content.url)->ptr)
+                                 ->ptr,
+                FALSE);
+            break;
+        }
+
+        default:
+            break;
+        }
+
+        if (page && page->length > 0) {
+            return (struct ContentData) {
+                .content = s.content,
+                .type = CONTENT_DATA_STR,
+                .page = page,
+            };
+        }
+
+        return (struct ContentData) {
+            .content = s.content,
+            .type = CONTENT_DATA_NONE,
+        };
+    }
+
+    MySignalHandler (*prevtrap)(SIGNAL_ARG) = NULL;
+    if (s.status == HTST_MISSING) {
+        TRAP_OFF;
+        is_close(s.stream);
+        return (struct ContentData) { 0 };
+    }
+
+    // openURL() succeeded
+    if (SETJMP(AbortLoading) != 0) {
+        /* transfer interrupted */
+        TRAP_OFF;
+        // if (b)
+        //     discardBuffer(b);
+        is_close(s.stream);
+        return (struct ContentData) { 0 };
+    }
+
+    if (s.content.is_cgi) {
+        /* local CGI */
+        // searchHeader = TRUE;
+        // searchHeader_through = FALSE;
+    }
+    if (getRuntime()->header_string) {
+        getRuntime()->header_string = NULL;
+    }
+
+    TRAP_ON;
+    if (s.content.url.scheme == SCM_HTTP
+        || s.content.url.scheme == SCM_HTTPS
+        || (((s.content.url.scheme == SCM_FTP && non_null(getRuntime()->FTP_proxy)))
+            && getRuntime()->use_proxy
+            && !check_no_proxy(s.content.url.host))) {
+
+        if (fmInitialized()) {
+            exitRawMode();
+            /* FIXME: gettextize? */
+            message(Sprintf("%s contacted. Waiting for reply...", s.content.url.host)->ptr, 0, 0);
+        }
+        getHttpResponseHeader(&s.content, s.content.url, s.stream);
+        const char* p;
+        if (((s.content.http_response_code >= 301 //
+                 && s.content.http_response_code <= 303)
+                || s.content.http_response_code == 307)
+            && (p = checkHeader(&s.content, "Location:")) != NULL
+            && checkRedirection(&s.content.url)) {
+            // document moved
+            // 301: Moved Permanently
+            // 302: Found
+            // 303: See Other
+            // 307: Temporary Redirect (HTTP/1.1)
+            const char* tpath = url_encode(p, NULL, 0);
+            is_close(s.stream);
+            struct Url* new_current = New(struct Url);
+            copyParsedURL(new_current, &s.content.url);
+            // t_buf->bufferprop |= BP_REDIRECTED;
+            return get_content(tpath, new_current,
+                NULL, option, auth, NULL);
+        }
+
+        s.content.content_type = checkContentType(&s.content);
+        if (s.content.content_type == NULL && s.content.url.file != NULL) {
+            if (!((s.content.http_response_code >= 400 //
+                      && s.content.http_response_code <= 407) //
+                    || (s.content.http_response_code >= 500 //
+                        && s.content.http_response_code <= 505)))
+                s.content.content_type = guessContentType(s.content.url.file);
+        }
+        if (s.content.content_type == NULL)
+            s.content.content_type = "text/plain";
+        if (auth.add_auth_cookie_flag
+            && auth.realm && auth.uname && auth.pwd) {
+            /* If authorization is required and passed */
+            add_auth_user_passwd(&s.content.url, qstr_unquote(auth.realm)->ptr,
+                auth.uname,
+                auth.pwd,
+                0);
+            auth.add_auth_cookie_flag = 0;
+        }
+        if ((p = checkHeader(&s.content, "WWW-Authenticate:")) != NULL //
+            && s.content.http_response_code == 401) {
+            /* Authentication needed */
+            struct http_auth hauth;
+            if (findAuthentication(&hauth, s.content.document_header, "WWW-Authenticate:") != NULL
+                && (auth.realm = get_auth_param(hauth.param, "realm")) != NULL) {
+                struct Url* auth_pu = &s.content.url;
+                getAuthCookie(&hauth, "Authorization:", option.extra_header,
+                    auth_pu, &s.content.hr, request, &auth.uname, &auth.pwd);
+                if (auth.uname == NULL) {
+                    /* abort */
+                    TRAP_OFF;
+                    return (struct ContentData) {
+                        .content = s.content,
+                        .type = CONTENT_DATA_STREAM,
+                        .stream = s.stream,
+                    };
+                }
+                is_close(s.stream);
+                auth.add_auth_cookie_flag = 1;
+                return get_content(path, current,
+                    request, option, auth, connection);
+            }
+        }
+        if ((p = checkHeader(&s.content, "Proxy-Authenticate:")) != NULL //
+            && s.content.http_response_code == 407) {
+            // Authentication needed
+            struct http_auth hauth;
+            if (findAuthentication(&hauth, s.content.document_header, "Proxy-Authenticate:")
+                    != NULL
+                && (auth.realm = get_auth_param(hauth.param, "realm")) != NULL) {
+                struct Url* auth_pu = schemeToProxy(s.content.url.scheme);
+                getAuthCookie(&hauth, "Proxy-Authorization:",
+                    option.extra_header, auth_pu, &s.content.hr, request,
+                    &auth.uname, &auth.pwd);
+                if (auth.uname == NULL) {
+                    /* abort */
+                    TRAP_OFF;
+                    return (struct ContentData) {
+                        .content = s.content,
+                        .type = CONTENT_DATA_STREAM,
+                        .stream = s.stream,
+                    };
+                }
+                is_close(s.stream);
+                auth.add_auth_cookie_flag = 1;
+                add_auth_user_passwd(auth_pu,
+                    qstr_unquote(auth.realm)->ptr, auth.uname, auth.pwd, 1);
+                return get_content(path, current,
+                    request, option, auth, connection);
+            }
+        }
+
+        if (s.status == HTST_CONNECT) {
+            // XXX: RFC2617 3.2.3 Authentication-Info: ?
+            return get_content(path, current,
+                request, option, auth, s.stream);
+        }
+
+        s.content.modtime = mymktime(checkHeader(&s.content, "Last-Modified:"));
+    } else if (s.content.url.scheme == SCM_FTP) {
+        enum CompressionType compression = check_compression(path);
+        if (compression != CMP_NOCOMPRESS) {
+            s.content.content_type = uncompressed_file_type(s.content.url.file, NULL);
+        } else {
+            s.content.content_type = guessContentType(s.content.url.file);
+        }
+    } else if (s.content.is_cgi) {
+        // searchHeader = SearchHeader = FALSE;
+        getHttpResponseHeader(&s.content, s.content.url, s.stream);
+        const char* p;
+        if ((p = checkHeader(&s.content, "Location:")) != NULL && checkRedirection(&s.content.url)) {
+            //
+            // document moved
+            //
+            const char* tpath = url_encode(remove_space(p), NULL, 0);
+            is_close(s.stream);
+            auth.add_auth_cookie_flag = 0;
+            struct Url* new_current = New(struct Url);
+            copyParsedURL(new_current, &s.content.url);
+            // t_buf->bufferprop |= BP_REDIRECTED;
+            return get_content(tpath, new_current,
+                NULL, option, auth, NULL);
+        }
+        s.content.content_type = checkContentType(&s.content);
+        if (s.content.content_type == NULL)
+            s.content.content_type = "text/plain";
+    } else if (getRuntime()->DefaultType) {
+        s.content.content_type = getRuntime()->DefaultType;
+        getRuntime()->DefaultType = NULL;
+    } else {
+        s.content.content_type = guessContentType(s.content.url.file);
+    }
+
+    const char* p = checkHeader(&s.content, "Content-Length:");
+    if (p)
+        s.content.current_content_length = strtoclen(p);
+
+    return (struct ContentData) {
+        .content = s.content,
+        .type = CONTENT_DATA_STREAM,
+        .stream = s.stream,
+    };
 }

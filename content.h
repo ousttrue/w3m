@@ -40,6 +40,34 @@ struct Content {
     time_t modtime;
 };
 
+struct URLOption {
+    const char* referer;
+    int flag;
+    struct TextList* extra_header;
+};
+
+struct AuthInfo {
+    bool add_auth_cookie_flag;
+    Str uname;
+    Str pwd;
+    Str realm;
+};
+
+enum ContentDataType {
+    CONTENT_DATA_NONE,
+    CONTENT_DATA_STR,
+    CONTENT_DATA_STREAM,
+};
+
+struct ContentData {
+    struct Content content;
+    enum ContentDataType type;
+    union {
+        Str page;
+        struct input_stream* stream;
+    };
+};
+
 struct Url;
 struct input_stream;
 void getHttpResponseHeader(struct Content* content, struct Url url,
@@ -50,3 +78,11 @@ const char* checkHeader(struct Content* content, const char* field);
 const char* checkContentType(struct Content* content);
 const char* guess_filename(const char* file);
 const char* guess_save_name(struct Content* content, const char* file);
+
+struct ContentData get_content(const char* path, struct Url* current,
+    struct FormList* request,
+    struct URLOption option,
+    struct AuthInfo auth,
+    struct input_stream* connection);
+
+int checkRedirection(struct Url* pu);

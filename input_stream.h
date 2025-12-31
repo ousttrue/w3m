@@ -25,12 +25,6 @@ int is_file_no(struct input_stream* is);
 bool is_save2tmp(struct input_stream* is, const char* tmpf);
 void is_write_all(struct input_stream* stream, FILE* src);
 
-struct URLOption {
-    const char* referer;
-    int flag;
-    struct TextList* extra_header;
-};
-
 struct FormList;
 struct HttpRequest;
 struct Buffer;
