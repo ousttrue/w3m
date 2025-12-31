@@ -22,10 +22,11 @@ struct Content {
     const char* filename;
     /// download file cache
     const char* sourcefile;
-
-    const char* mailcap_source;
     const char* header_source;
     const char* ssl_certificate;
+
+    struct mailcap* mailcap;
+    const char* mailcap_source;
 
     enum StreamStatus status;
     struct input_stream* stream;

@@ -5423,7 +5423,7 @@ loadHTMLBuffer(struct Url url, struct input_stream* stream, const char* t,
         newBuf = newBuffer(INIT_BUFFER_WIDTH);
 
     if (newBuf->content.sourcefile == NULL
-        && (url.scheme != SCM_LOCAL || newBuf->mailcap)) {
+        && (url.scheme != SCM_LOCAL || newBuf->content.mailcap)) {
         Str tmp = tmpfname(TMPF_SRC, ".html");
         FILE* src = fopen(tmp->ptr, "w");
         if (src) {
@@ -5827,7 +5827,7 @@ loadBuffer(struct Url url, struct input_stream* stream,
     }
     TRAP_ON;
 
-    if (newBuf->content.sourcefile == NULL && (url.scheme != SCM_LOCAL || newBuf->mailcap)) {
+    if (newBuf->content.sourcefile == NULL && (url.scheme != SCM_LOCAL || newBuf->content.mailcap)) {
         tmpf = tmpfname(TMPF_SRC, NULL);
         src = fopen(tmpf->ptr, "w");
         if (src)
@@ -6111,7 +6111,7 @@ doExternal(struct Url url, struct input_stream* stream,
         else
             src = tmpf->ptr;
         defaultbuf->content.sourcefile = NULL;
-        defaultbuf->mailcap = mcap;
+        defaultbuf->content.mailcap = mcap;
     }
     if (mcap->flags & MAILCAP_HTMLOUTPUT) {
         buf = loadcmdout(command->ptr, loadHTMLBuffer, defaultbuf);
@@ -6141,7 +6141,7 @@ doExternal(struct Url url, struct input_stream* stream,
         if ((buf->doc.title == NULL || buf->doc.title[0] == '\0') && buf->content.filename)
             buf->doc.title = conv_from_system(lastFileName(buf->content.filename));
         buf->edit = mcap->edit;
-        buf->mailcap = mcap;
+        buf->content.mailcap = mcap;
     }
     return buf;
 }

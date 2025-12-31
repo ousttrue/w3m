@@ -80,7 +80,6 @@ struct Buffer {
     struct FormItemList* form_submit;
     char* savecache;
     char* edit;
-    struct mailcap* mailcap;
     // char image_loaded;
     struct Anchor* submit;
     struct BufferPos* undo;
