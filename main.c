@@ -4311,12 +4311,12 @@ resetPos(struct BufferPos* b)
     buf.doc.pos = b->pos;
     buf.doc.currentColumn = b->currentColumn;
     doc_restorePosition(&Currentbuf->doc, &buf.doc);
-    Currentbuf->undo = b;
+    Currentbuf->doc.undo = b;
 }
 
 DEFUN(undoPos, UNDO, "Cancel the last cursor movement")
 {
-    struct BufferPos* b = Currentbuf->undo;
+    struct BufferPos* b = Currentbuf->doc.undo;
     int i;
 
     if (!Currentbuf->doc.firstLine)
@@ -4330,7 +4330,7 @@ DEFUN(undoPos, UNDO, "Cancel the last cursor movement")
 
 DEFUN(redoPos, REDO, "Cancel the last undo")
 {
-    struct BufferPos* b = Currentbuf->undo;
+    struct BufferPos* b = Currentbuf->doc.undo;
     int i;
 
     if (!Currentbuf->doc.firstLine)

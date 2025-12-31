@@ -62,9 +62,6 @@ struct Buffer {
     char* type;
     short bufferprop;
 
-    wc_uint8 auto_detect;
-    struct BufferPos* undo;
-
     int* clone;
     size_t trbyte;
     char check_url;

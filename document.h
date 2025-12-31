@@ -7,6 +7,8 @@ struct AnchorList;
 struct Document {
     const char* title;
     enum wc_ces charset;
+    wc_uint8 auto_detect;
+    struct BufferPos* undo;
 
     //
     // lines

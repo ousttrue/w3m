@@ -136,7 +136,7 @@ static void set_buffer_environ(struct Buffer* buf)
 static void
 save_buffer_position(struct Buffer* buf)
 {
-    struct BufferPos* b = buf->undo;
+    struct BufferPos* b = buf->doc.undo;
 
     if (!buf->doc.firstLine)
         return;
@@ -149,10 +149,10 @@ save_buffer_position(struct Buffer* buf)
     b->pos = buf->doc.pos;
     b->bpos = buf->doc.currentLine ? buf->doc.currentLine->bpos : 0;
     b->next = NULL;
-    b->prev = buf->undo;
-    if (buf->undo)
-        buf->undo->next = b;
-    buf->undo = b;
+    b->prev = buf->doc.undo;
+    if (buf->doc.undo)
+        buf->doc.undo->next = b;
+    buf->doc.undo = b;
 }
 
 void w3m_on_key(uint8_t ch)
