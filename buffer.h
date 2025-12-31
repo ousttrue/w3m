@@ -4,8 +4,6 @@
 #include <stddef.h>
 #include <libwc/wc_types.h>
 
-#define NO_BUFFER ((struct Buffer*)1)
-
 #define LINK_TYPE_NONE 0
 #define LINK_TYPE_REL 1
 #define LINK_TYPE_REV 2

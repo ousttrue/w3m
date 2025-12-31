@@ -46,7 +46,7 @@ void cmd_loadBuffer(struct Buffer* buf, int prop, enum LinkBufferID linkid)
 {
     if (buf == NULL) {
         disp_err_message("Can't load string", FALSE);
-    } else if (buf != NO_BUFFER) {
+    } else {
         buf->bufferprop |= (BP_INTERNAL | prop);
         if (!(buf->bufferprop & BP_NO_URL))
             copyParsedURL(&buf->content.url, &Currentbuf->content.url);

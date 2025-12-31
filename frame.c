@@ -353,16 +353,16 @@ frame_download_source(struct frame_body* b, struct Url* currentURL,
             baseURL ? baseURL : currentURL,
             b->referer, flag | RG_FRAME_SRC, b->request, false);
         /* XXX certificate? */
-        if (buf && buf != NO_BUFFER)
+        if (buf)
             b->ssl_certificate = buf->content.ssl_certificate;
         getRuntime()->w3m_dump &= ~DUMP_FRAME;
         getRuntime()->is_redisplay = FALSE;
         break;
     }
 
-    if (buf == NULL || buf == NO_BUFFER) {
+    if (buf == NULL) {
         b->source = NULL;
-        b->flags = (buf == NO_BUFFER) ? FB_NO_BUFFER : 0;
+        b->flags = 0;
         return NULL;
     }
     b->url = parsedURL2Str(&buf->content.url)->ptr;
@@ -888,7 +888,7 @@ renderFrame(struct Buffer* Cbuf, int force_reload)
     getRuntime()->DocumentCharset = doc_charset;
 
     renderFrameSet = NULL;
-    if (buf == NULL || buf == NO_BUFFER)
+    if (buf == NULL)
         return NULL;
     buf->content.sourcefile = tmp->ptr;
     buf->doc.charset = Cbuf->doc.charset;

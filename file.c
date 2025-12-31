@@ -919,7 +919,7 @@ struct Buffer* page_loaded(struct Url url,
             return NULL;
         const char* file = guess_filename(url.file);
         doFileMove(tmp->ptr, file);
-        return NO_BUFFER;
+        return NULL;
     }
 
     struct Buffer* b = loadHTMLString(page);
@@ -958,7 +958,7 @@ static struct Buffer* make_buffer(struct Url url, int flag,
             UFhalfclose(stream, url.scheme);
         else
             is_close(stream);
-        return NO_BUFFER;
+        return NULL;
     }
 
     if (t_buf) {
@@ -1019,7 +1019,7 @@ static struct Buffer* make_buffer(struct Url url, int flag,
                 else
                     is_close(stream);
             }
-            return NO_BUFFER;
+            return NULL;
         }
     } else if (getRuntime()->w3m_dump & DUMP_FRAME)
         return NULL;
@@ -1039,7 +1039,7 @@ static struct Buffer* make_buffer(struct Url url, int flag,
         proc, t_buf, t_buf->bufferprop & BP_FRAME);
     is_close(stream);
     frame_source = 0;
-    if (b && b != NO_BUFFER) {
+    if (b) {
         if (getRuntime()->w3m_backend)
             b->type = allocStr(t, -1);
         if (url.label) {
@@ -1065,7 +1065,7 @@ static struct Buffer* make_buffer(struct Url url, int flag,
     }
     if (getRuntime()->header_string)
         getRuntime()->header_string = NULL;
-    if (b && b != NO_BUFFER)
+    if (b)
         preFormUpdateBuffer(b);
     TRAP_OFF;
     return b;
@@ -1141,7 +1141,7 @@ struct Buffer* load_doc(const char* path, struct Url* current,
                         (struct URLOption) { .referer = NO_REFERER, .flag = 0, .extra_header = NULL },
                         (struct AuthInfo) { 0 },
                         do_download, t_buf, NULL);
-                    if (b != NULL && b != NO_BUFFER) {
+                    if (b != NULL) {
                         copyParsedURL(&b->content.url, &us.url);
                         b->content.filename = b->content.url.real_file;
                     }
@@ -1161,7 +1161,7 @@ struct Buffer* load_doc(const char* path, struct Url* current,
             if (tmp != NULL) {
                 struct Buffer* b = load_doc(tmp->ptr, current, request,
                     option, (struct AuthInfo) { 0 }, do_download, t_buf, connection);
-                if (b != NULL && b != NO_BUFFER)
+                if (b != NULL)
                     copyParsedURL(&b->content.url, &us.url);
                 return b;
             }
@@ -6110,7 +6110,7 @@ doExternal(struct Url url, struct input_stream* stream,
             is_close(stream);
             myExec(command->ptr);
         }
-        return NO_BUFFER;
+        return NULL;
     } else {
         if (!is_save2tmp(stream, tmpf->ptr)) {
             return NULL;
@@ -6128,14 +6128,14 @@ doExternal(struct Url url, struct input_stream* stream,
     }
     if (mcap->flags & MAILCAP_HTMLOUTPUT) {
         buf = loadcmdout(command->ptr, loadHTMLBuffer, defaultbuf);
-        if (buf && buf != NO_BUFFER) {
+        if (buf) {
             buf->type = "text/html";
             buf->content.mailcap_source = buf->content.sourcefile;
             buf->content.sourcefile = src;
         }
     } else if (mcap->flags & MAILCAP_COPIOUSOUTPUT) {
         buf = loadcmdout(command->ptr, loadBuffer, defaultbuf);
-        if (buf && buf != NO_BUFFER) {
+        if (buf) {
             buf->type = "text/plain";
             buf->content.mailcap_source = buf->content.sourcefile;
             buf->content.sourcefile = src;
@@ -6148,9 +6148,9 @@ doExternal(struct Url url, struct input_stream* stream,
         } else {
             mySystem(command->ptr, 1);
         }
-        buf = NO_BUFFER;
+        buf = NULL;
     }
-    if (buf && buf != NO_BUFFER) {
+    if (buf) {
         if ((buf->doc.title == NULL || buf->doc.title[0] == '\0') && buf->content.filename)
             buf->doc.title = conv_from_system(lastFileName(buf->content.filename));
         buf->edit = mcap->edit;

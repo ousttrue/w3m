@@ -642,13 +642,13 @@ bool w3m_args(int argc, char** argv)
             newbuf = loadHTMLString(s_page);
             if (newbuf == NULL)
                 Strcat_charp(err_msg, "w3m: Can't load string.\n");
-            else if (newbuf != NO_BUFFER)
+            else
                 newbuf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
         } else if ((p = getenv("HTTP_HOME")) != NULL || (p = getenv("WWW_HOME")) != NULL) {
             newbuf = loadGeneralFile(p, NULL, NO_REFERER, 0, NULL, false);
             if (newbuf == NULL)
                 Strcat(err_msg, Sprintf("w3m: Can't load %s.\n", p));
-            else if (newbuf != NO_BUFFER)
+            else
                 pushHashHist(getRuntime()->URLHist, parsedURL2Str(&newbuf->content.url)->ptr);
         } else {
             if (fmInitialized())
@@ -716,10 +716,8 @@ bool w3m_args(int argc, char** argv)
                 Strcat(err_msg,
                     Sprintf("w3m: Can't load %s.\n", load_argv[i]));
                 continue;
-            } else if (newbuf == NO_BUFFER)
-                continue;
-        } else if (newbuf == NO_BUFFER)
-            continue;
+            }
+        }
         if (CurrentTab() == NULL) {
             getRuntime()->FirstTab = getRuntime()->LastTab = getRuntime()->CurrentTab = newTab();
             if (!FirstTab()) {
@@ -761,21 +759,11 @@ bool w3m_args(int argc, char** argv)
         getRuntime()->CurrentTab = FirstTab();
     }
 
-    if (!FirstTab() || !Firstbuf || Firstbuf == NO_BUFFER) {
-        if (newbuf == NO_BUFFER) {
-            if (fmInitialized())
-                /* FIXME: gettextize? */
-                inputChar("Hit any key to quit w3m:");
-        }
+    if (!FirstTab() || !Firstbuf) {
         if (fmInitialized())
             exitRawMode();
         if (err_msg->length)
             fprintf(stderr, "%s", err_msg->ptr);
-        if (newbuf == NO_BUFFER) {
-            save_cookies();
-            if (!err_msg->length)
-                w3m_exit(0);
-        }
         w3m_exit(2);
     }
 
@@ -1598,7 +1586,7 @@ cmd_loadURL(const char* url, struct Url* current, const char* referer, struct Fo
     if (buf == NULL) {
         char* emsg = Sprintf("Can't load %s", conv_from_system(url))->ptr;
         disp_err_message(emsg, FALSE);
-    } else if (buf != NO_BUFFER) {
+    } else {
         pushBuffer(buf);
         if (getRuntime()->RenderFrame && Currentbuf->frameset != NULL)
             rFrame();
@@ -1628,7 +1616,7 @@ cmd_loadfile(char* fn)
         /* FIXME: gettextize? */
         char* emsg = Sprintf("%s not found", conv_from_system(fn))->ptr;
         disp_err_message(emsg, FALSE);
-    } else if (buf != NO_BUFFER) {
+    } else {
         pushBuffer(buf);
         if (getRuntime()->RenderFrame && Currentbuf->frameset != NULL)
             rFrame();
@@ -2300,7 +2288,7 @@ void _followI(bool do_download)
         /* FIXME: gettextize? */
         char* emsg = Sprintf("Can't load %s", a->url)->ptr;
         disp_err_message(emsg, FALSE);
-    } else if (buf != NO_BUFFER) {
+    } else {
         pushBuffer(buf);
     }
 }
@@ -3483,8 +3471,6 @@ DEFUN(reload, RELOAD, "Load current document anew")
         /* FIXME: gettextize? */
         disp_err_message("Can't reload...", TRUE);
         return;
-    } else if (buf == NO_BUFFER) {
-        return;
     }
     if (fbuf != NULL)
         Firstbuf = deleteBuffer(Firstbuf, fbuf);
@@ -3811,7 +3797,7 @@ execdict(char* word)
     if (buf == NULL) {
         disp_message("Execution failed", TRUE);
         return;
-    } else if (buf != NO_BUFFER) {
+    } else {
         buf->content.filename = w;
         buf->doc.title = Sprintf("%s %s", DICTBUFFERNAME, word)->ptr;
         if (buf->type == NULL)
@@ -3865,7 +3851,7 @@ void deleteFiles()
     char* f;
 
     for (struct TabBuffer* CurrentTab = FirstTab(); CurrentTab; CurrentTab = CurrentTab->nextTab) {
-        while (Firstbuf && Firstbuf != NO_BUFFER) {
+        while (Firstbuf) {
             buf = Firstbuf->nextBuffer;
             discardBuffer(Firstbuf);
             Firstbuf = buf;
@@ -4104,7 +4090,7 @@ deleteTab(struct TabBuffer* tab)
     }
     getRuntime()->nTab--;
     buf = tab->firstBuffer;
-    while (buf && buf != NO_BUFFER) {
+    while (buf) {
         next = buf->nextBuffer;
         discardBuffer(buf);
         buf = next;

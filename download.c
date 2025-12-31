@@ -218,7 +218,7 @@ bool hasDownloadList()
 
         tabs_prepare();
 
-        if (!Firstbuf || Firstbuf == NO_BUFFER) {
+        if (!Firstbuf) {
             Firstbuf = Currentbuf = newBuffer(INIT_BUFFER_WIDTH);
             Currentbuf->bufferprop = BP_INTERNAL | BP_NO_URL;
             Currentbuf->doc.title = DOWNLOAD_LIST_TITLE;

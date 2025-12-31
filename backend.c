@@ -92,7 +92,7 @@ internal_get(char* url, int flag, struct FormList* request)
 {
     backend_halfdump_buf = NULL;
     struct Buffer* buf = loadGeneralFile(url, NULL, NO_REFERER, 0, request, flag);
-    if (buf != NULL && buf != NO_BUFFER) {
+    if (buf != NULL) {
         if (is_html_type(buf->type) && backend_halfdump_buf) {
             TextLineListItem* p;
             Str first, last;

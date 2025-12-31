@@ -540,9 +540,6 @@ struct Buffer* loadLink(const char* url, const char* target, const char* referer
     parseURL2(url, &pu, base);
     pushHashHist(g_runtime.URLHist, parsedURL2Str(&pu)->ptr);
 
-    if (buf == NO_BUFFER) {
-        return NULL;
-    }
     if (!on_target) /* open link as an indivisual page */
         return loadNormalBuf(buf, TRUE);
 
