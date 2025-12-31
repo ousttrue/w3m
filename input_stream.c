@@ -478,6 +478,7 @@ struct Content openURL(struct Url url, struct Url* current,
             .request = request,
         },
         .stream = ouf,
+        .content_type =  "text/plain",
         0,
     };
 

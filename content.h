@@ -30,12 +30,13 @@ struct Content {
     enum StreamStatus status;
     struct input_stream* stream;
     Str page;
-
     struct HttpRequest hr;
     int http_response_code;
     struct TextList* document_header;
-    enum wc_ces charset;
+
+    const char* content_type;
     size_t current_content_length;
+    enum wc_ces charset;
     enum CompressionType compression;
 
     time_t modtime;

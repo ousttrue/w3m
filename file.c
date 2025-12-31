@@ -934,7 +934,6 @@ struct Buffer* page_loaded(struct Url url,
 }
 
 static struct Buffer* make_buffer(struct Content content,
-    const char* t,
     int flag,
     bool do_download)
 {
@@ -967,14 +966,17 @@ static struct Buffer* make_buffer(struct Content content,
             content.compression, use_tmpf ? &content.url.real_file : NULL);
         // UFhalfclose(&f);
     } else if (content.compression != CMP_NOCOMPRESS) {
-        if (!(getRuntime()->w3m_dump & DUMP_SOURCE) && (getRuntime()->w3m_dump & ~DUMP_FRAME || is_text_type(t) || searchExtViewer(t))) {
+        if (!(getRuntime()->w3m_dump & DUMP_SOURCE)
+            && (getRuntime()->w3m_dump & ~DUMP_FRAME
+                || is_text_type(content.content_type)
+                || searchExtViewer(content.content_type))) {
             content.stream = uncompress_stream(content.stream,
                 content.compression, use_tmpf ? &content.sourcefile : NULL);
             // UFhalfclose(&f);
             // const char* ext;
             // uncompressed_file_type(url.file, &ext);
         } else {
-            t = compress_application_type(content.compression);
+            content.content_type = compress_application_type(content.compression);
             // f.compression = CMP_NOCOMPRESS;
         }
     }
@@ -991,16 +993,21 @@ static struct Buffer* make_buffer(struct Content content,
     }
 
     LoadBufferFunc proc = loadBuffer;
-    if (is_html_type(t))
+    if (is_html_type(content.content_type))
         proc = loadHTMLBuffer;
-    else if (is_plain_text_type(t))
+    else if (is_plain_text_type(content.content_type))
         proc = loadBuffer;
-    else if (getRuntime()->activeImage && getRuntime()->displayImage && !getRuntime()->useExtImageViewer && !(getRuntime()->w3m_dump & ~DUMP_FRAME) && !strncasecmp(t, "image/", 6))
+    else if (getRuntime()->activeImage
+        && getRuntime()->displayImage
+        && !getRuntime()->useExtImageViewer
+        && !(getRuntime()->w3m_dump & ~DUMP_FRAME)
+        && !strncasecmp(content.content_type, "image/", 6))
         proc = loadImageBuffer;
     else if (getRuntime()->w3m_backend)
         ;
-    else if (!(getRuntime()->w3m_dump & ~DUMP_FRAME) || is_dump_text_type(t)) {
-        if (!do_download && searchExtViewer(t) != NULL) {
+    else if (!(getRuntime()->w3m_dump & ~DUMP_FRAME)
+        || is_dump_text_type(content.content_type)) {
+        if (!do_download && searchExtViewer(content.content_type) != NULL) {
             proc = doExternal;
         } else {
             TRAP_OFF;
@@ -1029,13 +1036,13 @@ static struct Buffer* make_buffer(struct Content content,
 
     struct Buffer* t_buf = newBuffer(INIT_BUFFER_WIDTH);
     t_buf->content = content;
-    struct Buffer* b = loadSomething(content.url, content.stream, t,
+    struct Buffer* b = loadSomething(content.url, content.stream, content.content_type,
         proc, t_buf, flag & RG_FRAME);
     is_close(content.stream);
     frame_source = 0;
     if (b) {
         if (getRuntime()->w3m_backend)
-            b->type = allocStr(t, -1);
+            b->type = allocStr(content.content_type, -1);
         if (content.url.label) {
             if (proc == loadHTMLBuffer) {
                 struct Anchor* a;
@@ -1200,8 +1207,6 @@ struct Buffer* load_doc(const char* path, struct Url* current,
     if (getRuntime()->header_string)
         getRuntime()->header_string = NULL;
 
-    const char* t = "text/plain";
-
     TRAP_ON;
     if (content.url.scheme == SCM_HTTP || content.url.scheme == SCM_HTTPS || (((content.url.scheme == SCM_FTP && non_null(getRuntime()->FTP_proxy))) && getRuntime()->use_proxy && !check_no_proxy(content.url.host))) {
 
@@ -1231,16 +1236,16 @@ struct Buffer* load_doc(const char* path, struct Url* current,
                 NULL, option, auth, do_download, NULL);
         }
 
-        t = checkContentType(&content);
-        if (t == NULL && content.url.file != NULL) {
+        content.content_type = checkContentType(&content);
+        if (content.content_type == NULL && content.url.file != NULL) {
             if (!((content.http_response_code >= 400 //
                       && content.http_response_code <= 407) //
                     || (content.http_response_code >= 500 //
                         && content.http_response_code <= 505)))
-                t = guessContentType(content.url.file);
+                content.content_type = guessContentType(content.url.file);
         }
-        if (t == NULL)
-            t = "text/plain";
+        if (content.content_type == NULL)
+            content.content_type = "text/plain";
         if (auth.add_auth_cookie_flag
             && auth.realm && auth.uname && auth.pwd) {
             /* If authorization is required and passed */
@@ -1262,7 +1267,7 @@ struct Buffer* load_doc(const char* path, struct Url* current,
                 if (auth.uname == NULL) {
                     /* abort */
                     TRAP_OFF;
-                    return make_buffer(content, t, option.flag, do_download);
+                    return make_buffer(content, option.flag, do_download);
                 }
                 is_close(content.stream);
                 auth.add_auth_cookie_flag = 1;
@@ -1284,7 +1289,7 @@ struct Buffer* load_doc(const char* path, struct Url* current,
                 if (auth.uname == NULL) {
                     /* abort */
                     TRAP_OFF;
-                    return make_buffer(content, t, option.flag, do_download);
+                    return make_buffer(content, option.flag, do_download);
                 }
                 is_close(content.stream);
                 auth.add_auth_cookie_flag = 1;
@@ -1305,9 +1310,9 @@ struct Buffer* load_doc(const char* path, struct Url* current,
     } else if (content.url.scheme == SCM_FTP) {
         enum CompressionType compression = check_compression(path);
         if (compression != CMP_NOCOMPRESS) {
-            t = uncompressed_file_type(content.url.file, NULL);
+            content.content_type = uncompressed_file_type(content.url.file, NULL);
         } else {
-            t = guessContentType(content.url.file);
+            content.content_type = guessContentType(content.url.file);
         }
     } else if (content.is_cgi) {
         // searchHeader = SearchHeader = FALSE;
@@ -1326,21 +1331,21 @@ struct Buffer* load_doc(const char* path, struct Url* current,
             return load_doc(tpath, new_current,
                 NULL, option, auth, do_download, NULL);
         }
-        t = checkContentType(&content);
-        if (t == NULL)
-            t = "text/plain";
+        content.content_type = checkContentType(&content);
+        if (content.content_type == NULL)
+            content.content_type = "text/plain";
     } else if (getRuntime()->DefaultType) {
-        t = getRuntime()->DefaultType;
+        content.content_type = getRuntime()->DefaultType;
         getRuntime()->DefaultType = NULL;
     } else {
-        t = guessContentType(content.url.file);
+        content.content_type = guessContentType(content.url.file);
     }
 
     const char* p = checkHeader(&content, "Content-Length:");
     if (p)
         content.current_content_length = strtoclen(p);
 
-    return make_buffer(content, t, option.flag, do_download);
+    return make_buffer(content, option.flag, do_download);
 }
 
 struct Buffer*
