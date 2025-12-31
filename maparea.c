@@ -507,7 +507,7 @@ page_info_panel(struct Buffer* buf)
         "<tr valign=top><td nowrap>Number of lines<td>",
         Sprintf("%d", all)->ptr,
         "<tr valign=top><td nowrap>Transferred bytes<td>",
-        Sprintf("%lu", (unsigned long)buf->trbyte)->ptr, NULL);
+        Sprintf("%lu", (unsigned long)buf->doc.trbyte)->ptr, NULL);
 
     a = retrieveCurrentAnchor(buf);
     if (a != NULL) {

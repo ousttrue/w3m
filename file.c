@@ -5756,7 +5756,7 @@ void loadHTMLstream(struct input_stream* stream,
     }
 
 phase2:
-    newBuf->trbyte = trbyte + linelen;
+    newBuf->doc.trbyte = trbyte + linelen;
     TRAP_OFF;
     if (!(newBuf->bufferprop & BP_FRAME))
         newBuf->doc.charset = detected_charset;
@@ -5869,7 +5869,7 @@ _end:
     newBuf->doc.topLine = newBuf->doc.firstLine;
     newBuf->doc.lastLine = newBuf->doc.currentLine;
     newBuf->doc.currentLine = newBuf->doc.firstLine;
-    newBuf->trbyte = trbyte + linelen;
+    newBuf->doc.trbyte = trbyte + linelen;
     newBuf->doc.charset = charset;
     if (src)
         fclose(src);

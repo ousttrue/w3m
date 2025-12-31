@@ -61,7 +61,6 @@ struct Buffer {
     short bufferprop;
 
     int* clone;
-    size_t trbyte;
     char check_url;
     char* savecache;
     char* edit;

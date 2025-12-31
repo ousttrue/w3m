@@ -76,7 +76,7 @@ struct Buffer* newBuffer(int width)
     n->bufferprop = BP_NORMAL;
     n->clone = New(int);
     *n->clone = 1;
-    n->trbyte = 0;
+    n->doc.trbyte = 0;
     n->content.ssl_certificate = NULL;
     n->doc.auto_detect = WcOption.auto_detect;
     n->check_url = getRuntime()->MarkAllPages; /* use default from -o mark_all_pages */

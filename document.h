@@ -22,6 +22,8 @@ struct Document {
     // cursor line
     struct Line* currentLine;
     int allLine;
+    /// summary of all lines linelen ?
+    size_t trbyte;
     // cursor position
     int currentColumn;
 
