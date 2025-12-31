@@ -898,10 +898,9 @@ Str getLinkNumberStr(struct HtmlBuilder* hb, int correction)
  * loadGeneralFile: load file to buffer
  */
 
-struct Buffer* page_loaded(struct Url url,
-    enum wc_ces charset, Str page, bool do_download)
+struct Buffer* page_loaded(struct Content content, bool do_download)
 {
-    assert(page);
+    assert(content.page);
 
     if (getRuntime()->image_source)
         return NULL;
@@ -909,7 +908,7 @@ struct Buffer* page_loaded(struct Url url,
     Str tmp = tmpfname(TMPF_SRC, ".html");
     FILE* src = fopen(tmp->ptr, "w");
     if (src) {
-        Str s = wc_Str_conv_strict(page, getRuntime()->InnerCharset, charset);
+        Str s = wc_Str_conv_strict(content.page, getRuntime()->InnerCharset, content.charset);
         Strfputs(s, src);
         fclose(src);
     }
@@ -917,18 +916,18 @@ struct Buffer* page_loaded(struct Url url,
     if (do_download) {
         if (!src)
             return NULL;
-        const char* file = guess_filename(url.file);
+        const char* file = guess_filename(content.url.file);
         doFileMove(tmp->ptr, file);
         return NULL;
     }
 
-    struct Buffer* b = loadHTMLString(page);
+    struct Buffer* b = loadHTMLString(content.page);
     if (b) {
-        copyParsedURL(&b->content.url, &url);
+        copyParsedURL(&b->content.url, &content.url);
         if (src)
             b->content.sourcefile = tmp->ptr;
 
-        b->doc.charset = charset;
+        b->doc.charset = content.charset;
     }
     return b;
 }
@@ -1127,7 +1126,6 @@ struct Buffer* load_doc(const char* path, struct Url* current,
     if (!content.stream) {
         // non stream(file or socket) content.
         enum wc_ces charset = WC_CES_US_ASCII;
-        Str page = NULL;
         switch (content.url.scheme) {
         case SCM_LOCAL: {
             struct stat st;
@@ -1147,13 +1145,13 @@ struct Buffer* load_doc(const char* path, struct Url* current,
                     }
                     return b;
                 } else {
-                    page = loadLocalDir(content.url.real_file);
+                    content.page = loadLocalDir(content.url.real_file);
                     charset = getRuntime()->SystemCharset;
                 }
             }
         } break;
         case SCM_FTPDIR:
-            page = loadFTPDir(&content.url, &charset, do_download);
+            content.page = loadFTPDir(&content.url, &charset, do_download);
             break;
 
         case SCM_UNKNOWN: {
@@ -1177,8 +1175,8 @@ struct Buffer* load_doc(const char* path, struct Url* current,
             break;
         }
 
-        if (page && page->length > 0)
-            return page_loaded(content.url, charset, page, do_download);
+        if (content.page && content.page->length > 0)
+            return page_loaded(content, do_download);
 
         return NULL;
     }
