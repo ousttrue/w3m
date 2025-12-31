@@ -4995,7 +4995,7 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
             hb->forms[form_id]->next = hb->forms[form_id - 1];
     buf->formlist = (hb->form_max >= 0) ? hb->forms[hb->form_max] : NULL;
     if (hb->n_textarea)
-        addMultirowsForm(buf, buf->formitem);
+        addMultirowsForm(buf, buf->doc.formitem);
     addMultirowsImg(buf, buf->doc.img);
 }
 
@@ -5768,7 +5768,7 @@ phase2:
     newBuf->doc.currentLine = newBuf->doc.firstLine;
     newBuf->type = "text/html";
     if (hb->n_textarea)
-        formResetBuffer(newBuf, newBuf->formitem);
+        formResetBuffer(newBuf, newBuf->doc.formitem);
 }
 
 /*

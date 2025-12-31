@@ -2334,7 +2334,7 @@ DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink")
         po = hl->marks + hseq;
         an = retrieveAnchor(Currentbuf->doc.href, po->line, po->pos);
         if (an == NULL)
-            an = retrieveAnchor(Currentbuf->formitem, po->line, po->pos);
+            an = retrieveAnchor(Currentbuf->doc.formitem, po->line, po->pos);
         hseq++;
     } while (an == NULL);
 
@@ -2369,7 +2369,7 @@ DEFUN(lastA, LINK_END, "Move to the last hyperlink")
         po = hl->marks + hseq;
         an = retrieveAnchor(Currentbuf->doc.href, po->line, po->pos);
         if (an == NULL)
-            an = retrieveAnchor(Currentbuf->formitem, po->line, po->pos);
+            an = retrieveAnchor(Currentbuf->doc.formitem, po->line, po->pos);
         hseq--;
     } while (an == NULL);
 
@@ -2397,7 +2397,7 @@ DEFUN(nthA, LINK_N, "Go to the nth link")
     po = hl->marks + n - 1;
     an = retrieveAnchor(Currentbuf->doc.href, po->line, po->pos);
     if (an == NULL)
-        an = retrieveAnchor(Currentbuf->formitem, po->line, po->pos);
+        an = retrieveAnchor(Currentbuf->doc.formitem, po->line, po->pos);
     if (an == NULL)
         return;
 
@@ -2470,7 +2470,7 @@ _nextA(int visited)
                 po = &hl->marks[hseq];
                 an = retrieveAnchor(Currentbuf->doc.href, po->line, po->pos);
                 if (visited != TRUE && an == NULL)
-                    an = retrieveAnchor(Currentbuf->formitem, po->line,
+                    an = retrieveAnchor(Currentbuf->doc.formitem, po->line,
                         po->pos);
                 hseq++;
                 if (visited == TRUE && an) {
@@ -2483,7 +2483,7 @@ _nextA(int visited)
         } else {
             an = closest_next_anchor(Currentbuf->doc.href, NULL, x, y);
             if (visited != TRUE)
-                an = closest_next_anchor(Currentbuf->formitem, an, x, y);
+                an = closest_next_anchor(Currentbuf->doc.formitem, an, x, y);
             if (an == NULL) {
                 if (visited == TRUE)
                     return;
@@ -2552,7 +2552,7 @@ _prevA(int visited)
                 po = hl->marks + hseq;
                 an = retrieveAnchor(Currentbuf->doc.href, po->line, po->pos);
                 if (visited != TRUE && an == NULL)
-                    an = retrieveAnchor(Currentbuf->formitem, po->line,
+                    an = retrieveAnchor(Currentbuf->doc.formitem, po->line,
                         po->pos);
                 hseq--;
                 if (visited == TRUE && an) {
@@ -2565,7 +2565,7 @@ _prevA(int visited)
         } else {
             an = closest_prev_anchor(Currentbuf->doc.href, NULL, x, y);
             if (visited != TRUE)
-                an = closest_prev_anchor(Currentbuf->formitem, an, x, y);
+                an = closest_prev_anchor(Currentbuf->doc.formitem, an, x, y);
             if (an == NULL) {
                 if (visited == TRUE)
                     return;
@@ -2624,7 +2624,7 @@ nextX(int d, int dy)
             for (; x >= 0 && x < l->len; x += d) {
                 an = retrieveAnchor(Currentbuf->doc.href, y, x);
                 if (!an)
-                    an = retrieveAnchor(Currentbuf->formitem, y, x);
+                    an = retrieveAnchor(Currentbuf->doc.formitem, y, x);
                 if (an) {
                     pan = an;
                     break;
@@ -2678,7 +2678,7 @@ nextY(int d)
         for (; y >= 0 && y <= Currentbuf->doc.lastLine->linenumber; y += d) {
             an = retrieveAnchor(Currentbuf->doc.href, y, x);
             if (!an)
-                an = retrieveAnchor(Currentbuf->formitem, y, x);
+                an = retrieveAnchor(Currentbuf->doc.formitem, y, x);
             if (an && hseq != abs(an->hseq)) {
                 pan = an;
                 break;

@@ -832,8 +832,8 @@ void _followForm(bool submit, bool on_target, bool do_download)
         }
         break;
     case FORM_INPUT_RESET:
-        for (i = 0; i < Currentbuf->formitem->nanchor; i++) {
-            a2 = &Currentbuf->formitem->anchors[i];
+        for (i = 0; i < Currentbuf->doc.formitem->nanchor; i++) {
+            a2 = &Currentbuf->doc.formitem->anchors[i];
             f2 = (struct FormItemList*)a2->url;
             if (f2->parent == fi->parent && f2->name && f2->value && f2->type != FORM_INPUT_SUBMIT && f2->type != FORM_INPUT_HIDDEN && f2->type != FORM_INPUT_RESET) {
                 f2->value = f2->init_value;

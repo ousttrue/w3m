@@ -193,8 +193,8 @@ void formRecheckRadio(struct Anchor* a, struct Buffer* buf, struct FormItemList*
     struct Anchor* a2;
     struct FormItemList* f2;
 
-    for (i = 0; i < buf->formitem->nanchor; i++) {
-        a2 = &buf->formitem->anchors[i];
+    for (i = 0; i < buf->doc.formitem->nanchor; i++) {
+        a2 = &buf->doc.formitem->anchors[i];
         f2 = (struct FormItemList*)a2->url;
         if (f2->parent == fi->parent && f2 != fi && f2->type == FORM_INPUT_RADIO && Strcmp(f2->name, fi->name) == 0) {
             f2->checked = 0;
@@ -211,10 +211,10 @@ void formResetBuffer(struct Buffer* buf, struct AnchorList* formitem)
     struct Anchor* a;
     struct FormItemList *f1, *f2;
 
-    if (buf == NULL || buf->formitem == NULL || formitem == NULL)
+    if (buf == NULL || buf->doc.formitem == NULL || formitem == NULL)
         return;
-    for (i = 0; i < buf->formitem->nanchor && i < formitem->nanchor; i++) {
-        a = &buf->formitem->anchors[i];
+    for (i = 0; i < buf->doc.formitem->nanchor && i < formitem->nanchor; i++) {
+        a = &buf->doc.formitem->anchors[i];
         if (a->y != a->start.line)
             continue;
         f1 = (struct FormItemList*)a->url;
@@ -436,7 +436,7 @@ void formUpdateBuffer(struct Anchor* a, struct Buffer* buf, struct FormItemList*
                 break;
             if (rows > 1) {
                 pos = columnPos(l, col);
-                a = retrieveAnchor(buf->formitem, l->linenumber, pos);
+                a = retrieveAnchor(buf->doc.formitem, l->linenumber, pos);
                 if (a == NULL)
                     break;
                 spos = a->start.pos;
@@ -454,7 +454,7 @@ void formUpdateBuffer(struct Anchor* a, struct Buffer* buf, struct FormItemList*
                     a->start.line, spos, pos - epos);
                 shiftAnchorPosition(buf->doc.img, buf->hmarklist,
                     a->start.line, spos, pos - epos);
-                shiftAnchorPosition(buf->formitem, buf->hmarklist,
+                shiftAnchorPosition(buf->doc.formitem, buf->hmarklist,
                     a->start.line, spos, pos - epos);
             }
         }
@@ -904,7 +904,7 @@ void preFormUpdateBuffer(struct Buffer* buf)
     struct FormSelectOptionItem* opt;
     int j;
 
-    if (!buf || !buf->formitem || !PreForm)
+    if (!buf || !buf->doc.formitem || !PreForm)
         return;
 
     for (pf = PreForm; pf; pf = pf->next) {
@@ -917,8 +917,8 @@ void preFormUpdateBuffer(struct Buffer* buf)
                 continue;
         } else
             continue;
-        for (i = 0; i < buf->formitem->nanchor; i++) {
-            a = &buf->formitem->anchors[i];
+        for (i = 0; i < buf->doc.formitem->nanchor; i++) {
+            a = &buf->doc.formitem->anchors[i];
             fi = (struct FormItemList*)a->url;
             fl = fi->parent;
             if (pf->name && (!fl->name || strcmp(fl->name, pf->name)))

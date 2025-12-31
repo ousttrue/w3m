@@ -105,7 +105,7 @@ registerForm(struct HtmlBuilder* hb, struct Buffer* buf,
         return NULL;
 
     struct Anchor* a;
-    buf->formitem = putAnchor(buf->formitem, (char*)fi, flist->target, &a,
+    buf->doc.formitem = putAnchor(buf->doc.formitem, (char*)fi, flist->target, &a,
         NULL, NULL, '\0', line, pos);
     return a;
 }
@@ -172,7 +172,7 @@ retrieveCurrentForm(struct Buffer* buf)
 {
     if (buf->doc.currentLine == NULL)
         return NULL;
-    return retrieveAnchor(buf->formitem,
+    return retrieveAnchor(buf->doc.formitem,
         buf->doc.currentLine->linenumber, buf->doc.pos);
 }
 
@@ -280,7 +280,7 @@ reseq_anchor(struct Buffer* buf)
             a->hseq = n;
             a1 = closest_next_anchor(buf->doc.href, NULL, a->start.pos,
                 a->start.line);
-            a1 = closest_next_anchor(buf->formitem, a1, a->start.pos,
+            a1 = closest_next_anchor(buf->doc.formitem, a1, a->start.pos,
                 a->start.line);
             if (a1 && a1->hseq >= 0) {
                 seqmap[n] = seqmap[a1->hseq];
@@ -299,7 +299,7 @@ reseq_anchor(struct Buffer* buf)
     buf->hmarklist = ml;
 
     reseq_anchor0(buf->doc.href, seqmap);
-    reseq_anchor0(buf->formitem, seqmap);
+    reseq_anchor0(buf->doc.formitem, seqmap);
 }
 
 static char*
@@ -584,7 +584,7 @@ void addMultirowsImg(struct Buffer* buf, struct AnchorList* al)
             a_href = *a;
         else
             a_href.url = NULL;
-        a = retrieveAnchor(buf->formitem, a_img.start.line, a_img.start.pos);
+        a = retrieveAnchor(buf->doc.formitem, a_img.start.line, a_img.start.pos);
         if (a)
             a_form = *a;
         else
@@ -613,7 +613,7 @@ void addMultirowsImg(struct Buffer* buf, struct AnchorList* al)
                     l->propBuf[k] |= PE_ANCHOR;
             }
             if (a_form.url) {
-                buf->formitem = putAnchor(buf->formitem, a_form.url,
+                buf->doc.formitem = putAnchor(buf->doc.formitem, a_form.url,
                     a_form.target, &a, NULL, NULL, '\0',
                     l->linenumber, pos);
                 a->hseq = a_form.hseq;
@@ -665,7 +665,7 @@ void addMultirowsForm(struct Buffer* buf, struct AnchorList* al)
             }
             if (a_form.start.line == l->linenumber)
                 continue;
-            buf->formitem = putAnchor(buf->formitem, a_form.url,
+            buf->doc.formitem = putAnchor(buf->doc.formitem, a_form.url,
                 a_form.target, &a, NULL, NULL, '\0',
                 l->linenumber, pos);
             a->hseq = a_form.hseq;
@@ -804,7 +804,7 @@ link_list_panel(struct Buffer* buf)
                 t = html_quote(url_decode2(a->url, buf));
             Strcat_m_charp(tmp, "<li><a href=\"", u, "\">", t, "</a><br>", p,
                 "\n", NULL);
-            a = retrieveAnchor(buf->formitem, a->start.line, a->start.pos);
+            a = retrieveAnchor(buf->doc.formitem, a->start.line, a->start.pos);
             if (!a)
                 continue;
             fi = (struct FormItemList*)a->url;

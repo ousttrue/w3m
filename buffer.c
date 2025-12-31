@@ -439,7 +439,7 @@ void reshapeBuffer(struct Buffer* buf)
     buf->doc.href = NULL;
     buf->doc.name = NULL;
     buf->doc.img = NULL;
-    buf->formitem = NULL;
+    buf->doc.formitem = NULL;
     buf->formlist = NULL;
     buf->linklist = NULL;
     buf->maplist = NULL;
@@ -504,7 +504,7 @@ void reshapeBuffer(struct Buffer* buf)
         chkURLBuffer(buf);
     // if (buf->check_url & CHK_NMID)
     //     chkNMIDBuffer(buf);
-    formResetBuffer(buf, sbuf.formitem);
+    formResetBuffer(buf, sbuf.doc.formitem);
 }
 
 /* shallow copy */
