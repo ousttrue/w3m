@@ -509,7 +509,7 @@ static struct Buffer*
 loadNormalBuf(struct Buffer* buf, int renderframe)
 {
     pushBuffer(buf);
-    if (renderframe && g_runtime.RenderFrame && Currentbuf->frameset != NULL)
+    if (renderframe && g_runtime.RenderFrame && Currentbuf->doc.frameset != NULL)
         rFrame();
     return buf;
 }
@@ -558,7 +558,7 @@ struct Buffer* loadLink(const char* url, const char* target, const char* referer
         return loadNormalBuf(buf, TRUE);
     }
 
-    f_element = search_frame(nfbuf->frameset, target);
+    f_element = search_frame(nfbuf->doc.frameset, target);
     if (f_element == NULL) {
         /* specified target doesn't exist in this frameset */
         return loadNormalBuf(buf, TRUE);
@@ -567,7 +567,7 @@ struct Buffer* loadLink(const char* url, const char* target, const char* referer
     /* frame page */
 
     /* stack current frameset */
-    pushFrameTree(&(nfbuf->frameQ), copyFrameSet(nfbuf->frameset), Currentbuf);
+    pushFrameTree(&(nfbuf->doc.frameQ), copyFrameSet(nfbuf->doc.frameset), Currentbuf);
     /* delete frame view buffer */
     delBuffer(Currentbuf);
     Currentbuf = nfbuf;

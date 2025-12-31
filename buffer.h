@@ -62,8 +62,6 @@ struct Buffer {
     char* type;
     short bufferprop;
 
-    struct frameset* frameset;
-    struct frameset_queue* frameQ;
     wc_uint8 auto_detect;
     struct BufferPos* undo;
 

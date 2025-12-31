@@ -738,7 +738,7 @@ bool w3m_args(int argc, char** argv)
         assert(Firstbuf);
 
         if (!getRuntime()->w3m_dump || getRuntime()->w3m_dump == DUMP_BUFFER) {
-            if (Currentbuf->frameset != NULL && getRuntime()->RenderFrame)
+            if (Currentbuf->doc.frameset != NULL && getRuntime()->RenderFrame)
                 rFrame();
         }
         if (getRuntime()->w3m_dump)
@@ -1588,7 +1588,7 @@ cmd_loadURL(const char* url, struct Url* current, const char* referer, struct Fo
         disp_err_message(emsg, FALSE);
     } else {
         pushBuffer(buf);
-        if (getRuntime()->RenderFrame && Currentbuf->frameset != NULL)
+        if (getRuntime()->RenderFrame && Currentbuf->doc.frameset != NULL)
             rFrame();
     }
 }
@@ -1618,7 +1618,7 @@ cmd_loadfile(char* fn)
         disp_err_message(emsg, FALSE);
     } else {
         pushBuffer(buf);
-        if (getRuntime()->RenderFrame && Currentbuf->frameset != NULL)
+        if (getRuntime()->RenderFrame && Currentbuf->doc.frameset != NULL)
             rFrame();
     }
 }
@@ -2770,7 +2770,7 @@ checkBackBuffer(struct Buffer* buf)
     struct Buffer* fbuf = buf->linkBuffer[LB_N_FRAME];
 
     if (fbuf) {
-        if (fbuf->frameQ)
+        if (fbuf->doc.frameQ)
             return TRUE; /* Currentbuf has stacked frames */
         /* when no frames stacked and next is frame source, try next's
          * nextBuffer */
@@ -2805,17 +2805,17 @@ DEFUN(backBf, BACK, "Close current buffer and return to the one below in stack")
     delBuffer(Currentbuf);
 
     if (buf) {
-        if (buf->frameQ) {
+        if (buf->doc.frameQ) {
             struct frameset* fs;
-            long linenumber = buf->frameQ->linenumber;
-            long top = buf->frameQ->top_linenumber;
-            int pos = buf->frameQ->pos;
-            int currentColumn = buf->frameQ->currentColumn;
-            struct AnchorList* formitem = buf->frameQ->formitem;
+            long linenumber = buf->doc.frameQ->linenumber;
+            long top = buf->doc.frameQ->top_linenumber;
+            int pos = buf->doc.frameQ->pos;
+            int currentColumn = buf->doc.frameQ->currentColumn;
+            struct AnchorList* formitem = buf->doc.frameQ->formitem;
 
-            fs = popFrameTree(&(buf->frameQ));
-            deleteFrameSet(buf->frameset);
-            buf->frameset = fs;
+            fs = popFrameTree(&(buf->doc.frameQ));
+            deleteFrameSet(buf->doc.frameset);
+            buf->doc.frameset = fs;
 
             if (buf == Currentbuf) {
                 rFrame();
@@ -3435,7 +3435,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
             doc_restorePosition(&Currentbuf->doc, &sbuf.doc);
         }
         return;
-    } else if (Currentbuf->frameset != NULL)
+    } else if (Currentbuf->doc.frameset != NULL)
         fbuf = Currentbuf->linkBuffer[LB_FRAME];
     multipart = 0;
     if (Currentbuf->doc.form_submit) {
@@ -3595,7 +3595,7 @@ DEFUN(rFrame, FRAME, "Toggle rendering HTML frames")
         Currentbuf = buf;
         return;
     }
-    if (Currentbuf->frameset == NULL) {
+    if (Currentbuf->doc.frameset == NULL) {
         if ((buf = Currentbuf->linkBuffer[LB_N_FRAME]) != NULL) {
             Currentbuf = buf;
         }

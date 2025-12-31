@@ -41,6 +41,12 @@ struct Document {
     struct Anchor* submit;
 
     //
+    // frame
+    //
+    struct frameset* frameset;
+    struct frameset_queue* frameQ;
+
+    //
     // screen
     //
     // viewport

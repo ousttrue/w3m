@@ -303,13 +303,13 @@ void resetFrameElement(union frameset_element* f_element,
     struct frame_body* f_body;
 
     f_name = f_element->element->name;
-    if (buf->frameset) {
+    if (buf->doc.frameset) {
         /* frame cascade */
         deleteFrameSetElement(*f_element);
-        f_element->set = buf->frameset;
+        f_element->set = buf->doc.frameset;
         f_element->set->currentURL = New(struct Url);
         copyParsedURL(f_element->set->currentURL, &buf->content.url);
-        buf->frameset = popFrameTree(&(buf->frameQ));
+        buf->doc.frameset = popFrameTree(&(buf->doc.frameQ));
         f_element->set->name = f_name;
     } else {
         f_body = newFrame(NULL, buf);
@@ -374,12 +374,12 @@ frame_download_source(struct frame_body* b, struct Url* currentURL,
         buf->content.mailcap_source = NULL;
     }
     b->attr = F_BODY;
-    if (buf->frameset) {
-        ret_frameset = buf->frameset;
+    if (buf->doc.frameset) {
+        ret_frameset = buf->doc.frameset;
         ret_frameset->name = b->name;
         ret_frameset->currentURL = New(struct Url);
         copyParsedURL(ret_frameset->currentURL, &buf->content.url);
-        buf->frameset = popFrameTree(&(buf->frameQ));
+        buf->doc.frameset = popFrameTree(&(buf->doc.frameQ));
     }
     discardBuffer(buf);
     return ret_frameset;
@@ -868,7 +868,7 @@ renderFrame(struct Buffer* Cbuf, int force_reload)
     /*
      * if (Cbuf->frameQ != NULL) fset = Cbuf->frameQ->frameset; else */
     struct frameset* fset;
-    fset = Cbuf->frameset;
+    fset = Cbuf->doc.frameset;
     if (fset == NULL || createFrameFile(fset, f, Cbuf, 0, force_reload) < 0) {
         fclose(f);
         return NULL;
@@ -878,7 +878,7 @@ renderFrame(struct Buffer* Cbuf, int force_reload)
     int flag = RG_FRAME;
     if ((Cbuf->content.url).is_nocache)
         flag |= RG_NOCACHE;
-    renderFrameSet = Cbuf->frameset;
+    renderFrameSet = Cbuf->doc.frameset;
     flushFrameSet(renderFrameSet);
 
     getRuntime()->DocumentCharset = getRuntime()->InnerCharset;

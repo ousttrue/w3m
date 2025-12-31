@@ -4837,10 +4837,10 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                     if (frameset_s[frameset_sp] == NULL)
                         break;
                     if (frameset_sp == 0) {
-                        if (buf->frameset == NULL) {
-                            buf->frameset = frameset_s[frameset_sp];
+                        if (buf->doc.frameset == NULL) {
+                            buf->doc.frameset = frameset_s[frameset_sp];
                         } else
-                            pushFrameTree(&(buf->frameQ),
+                            pushFrameTree(&(buf->doc.frameQ),
                                 frameset_s[frameset_sp], NULL);
                     } else
                         addFrameSetElement(frameset_s[frameset_sp - 1],

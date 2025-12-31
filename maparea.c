@@ -561,10 +561,10 @@ page_info_panel(struct Buffer* buf)
         Strcat_charp(tmp, "</pre>\n");
     }
 
-    if (buf->frameset != NULL)
-        f_set = buf->frameset;
-    else if (buf->bufferprop & BP_FRAME && buf->nextBuffer != NULL && buf->nextBuffer->frameset != NULL)
-        f_set = buf->nextBuffer->frameset;
+    if (buf->doc.frameset != NULL)
+        f_set = buf->doc.frameset;
+    else if (buf->bufferprop & BP_FRAME && buf->nextBuffer != NULL && buf->nextBuffer->doc.frameset != NULL)
+        f_set = buf->nextBuffer->doc.frameset;
 
     if (f_set) {
         Strcat_charp(tmp, "<hr width=50%><h1>Frame information</h1>\n");

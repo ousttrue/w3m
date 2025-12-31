@@ -133,9 +133,9 @@ void discardBuffer(struct Buffer* buf)
         unlink(buf->content.header_source);
     if (buf->content.mailcap_source)
         unlink(buf->content.mailcap_source);
-    while (buf->frameset) {
-        deleteFrameSet(buf->frameset);
-        buf->frameset = popFrameTree(&(buf->frameQ));
+    while (buf->doc.frameset) {
+        deleteFrameSet(buf->doc.frameset);
+        buf->doc.frameset = popFrameTree(&(buf->doc.frameQ));
     }
 }
 
@@ -431,9 +431,9 @@ void reshapeBuffer(struct Buffer* buf)
     struct Buffer sbuf;
     copyBuffer(&sbuf, buf);
     clearBuffer(buf);
-    while (buf->frameset) {
-        deleteFrameSet(buf->frameset);
-        buf->frameset = popFrameTree(&(buf->frameQ));
+    while (buf->doc.frameset) {
+        deleteFrameSet(buf->doc.frameset);
+        buf->doc.frameset = popFrameTree(&(buf->doc.frameQ));
     }
 
     buf->doc.href = NULL;
