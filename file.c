@@ -253,14 +253,16 @@ struct Buffer* page_loaded(struct Content content, Str page, bool do_download)
         return NULL;
     }
 
-    struct Buffer* b = loadHTMLString(page);
-    if (b) {
-        copyParsedURL(&b->content.url, &content.url);
-        if (src)
-            b->content.sourcefile = tmp->ptr;
-
-        b->doc.charset = content.charset;
-    }
+    struct Buffer* b = newBuffer(INIT_BUFFER_WIDTH);
+    b->content = content;
+    // struct Buffer* b = loadHTMLString(page);
+    // if (b) {
+    //     copyParsedURL(&b->content.url, &content.url);
+    if (src)
+        b->content.sourcefile = tmp->ptr;
+    //
+    //     b->doc.charset = content.charset;
+    // }
     return b;
 }
 
@@ -324,84 +326,34 @@ static struct Buffer* make_buffer(struct Content content,
         return b;
     }
 
-    LoadBufferFunc proc = loadBuffer;
-    if (is_html_type(content.content_type))
-        proc = loadHTMLBuffer;
-    else if (is_plain_text_type(content.content_type))
-        proc = loadBuffer;
-    else if (getRuntime()->activeImage
-        && getRuntime()->displayImage
-        && !getRuntime()->useExtImageViewer
-        && !(getRuntime()->w3m_dump & ~DUMP_FRAME)
-        && !strncasecmp(content.content_type, "image/", 6))
-        proc = loadImageBuffer;
-    else if (getRuntime()->w3m_backend)
-        ;
-    else if (!(getRuntime()->w3m_dump & ~DUMP_FRAME)
-        || is_dump_text_type(content.content_type)) {
-        if (!do_download && searchExtViewer(content.content_type) != NULL) {
-            proc = doExternal;
-        } else {
-            TRAP_OFF;
-            if (content.url.scheme == SCM_LOCAL) {
-                is_close(stream);
-                _doFileCopy(content.url.real_file,
-                    conv_from_system(guess_save_name(NULL, content.url.real_file)), TRUE);
-            } else {
-                if (doFileSave(content.url, stream,
-                        guess_save_name(&content, content.url.file),
-                        content.compression)
-                    == 0)
-                    UFhalfclose(stream, content.url.scheme);
-                else
-                    is_close(stream);
-            }
-            return NULL;
+    if (content.sourcefile == NULL
+        // && (content.url.scheme != SCM_LOCAL || content.mailcap)
+    ) {
+        Str tmp = tmpfname(TMPF_SRC, ".html");
+        FILE* src = fopen(tmp->ptr, "w");
+        if (src) {
+            content.sourcefile = tmp->ptr;
+            is_write_all(stream, src);
+            fclose(src);
         }
-    } else if (getRuntime()->w3m_dump & DUMP_FRAME)
-        return NULL;
+        struct Buffer* b = newBuffer(INIT_BUFFER_WIDTH);
+        b->content = content;
 
-    content.filename = content.url.real_file ? content.url.real_file : content.url.file ? conv_to_system(content.url.file)
-                                                                                        : NULL;
-    content.ssl_certificate = content.ssl_certificate;
-    frame_source = flag & RG_FRAME_SRC;
+        TRAP_OFF;
+        return b;
+    } else {
 
-    struct Buffer* t_buf = newBuffer(INIT_BUFFER_WIDTH);
-    t_buf->content = content;
-    struct Buffer* b = loadSomething(content.url, stream, content.content_type,
-        proc, t_buf, flag & RG_FRAME);
-    is_close(stream);
-    frame_source = 0;
-    if (b) {
-        if (getRuntime()->w3m_backend)
-            b->content.content_type = allocStr(content.content_type, -1);
-        if (content.url.label) {
-            if (proc == loadHTMLBuffer) {
-                struct Anchor* a;
-                a = searchURLLabel(b, content.url.label);
-                if (a != NULL) {
-                    doc_gotoLine(&b->doc, a->start.line);
-                    if (getRuntime()->label_topline)
-                        b->doc.topLine = doc_lineSkip(&b->doc, b->doc.topLine,
-                            b->doc.currentLine->linenumber
-                                - b->doc.topLine->linenumber);
-                    b->doc.pos = a->start.pos;
-                    doc_arrangeCursor(&b->doc);
-                }
-            } else { /* plain text */
-                int l = atoi(content.url.label);
-                doc_gotoRealLine(&b->doc, l);
-                b->doc.pos = 0;
-                doc_arrangeCursor(&b->doc);
-            }
+        // compression extraced
+        struct Buffer* x = newBuffer(INIT_BUFFER_WIDTH);
+        x->content = content;
+
+        // pull decomress pipe
+        Str lineBuf2;
+        while ((lineBuf2 = is_get_str(stream, true)) && lineBuf2->length) {
         }
+
+        return x;
     }
-    if (getRuntime()->header_string)
-        getRuntime()->header_string = NULL;
-    if (b)
-        preFormUpdateBuffer(b);
-    TRAP_OFF;
-    return b;
 }
 
 struct Buffer*
