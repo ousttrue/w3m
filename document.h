@@ -27,6 +27,8 @@ struct Document {
     //
     struct AnchorList* href;
     struct AnchorList* img;
+    struct AnchorList* name;
+
     enum ImageGetFlags image_flag;
 
     //

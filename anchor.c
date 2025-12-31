@@ -77,10 +77,10 @@ registerHref(struct Buffer* buf, const char* url, const char* target, const char
 }
 
 struct Anchor*
-registerName(struct Buffer* buf, char* url, int line, int pos)
+registerName(struct Buffer* buf, const char* url, int line, int pos)
 {
     struct Anchor* a;
-    buf->name = putAnchor(buf->name, url, NULL, &a, NULL, NULL, '\0', line,
+    buf->doc.name = putAnchor(buf->doc.name, url, NULL, &a, NULL, NULL, '\0', line,
         pos);
     return a;
 }
@@ -196,7 +196,7 @@ searchAnchor(struct AnchorList* al, const char* str)
 struct Anchor*
 searchURLLabel(struct Buffer* buf, const char* url)
 {
-    return searchAnchor(buf->name, url);
+    return searchAnchor(buf->doc.name, url);
 }
 
 #ifdef USE_NNTP

@@ -56,7 +56,7 @@ struct HtmlTag;
 struct Anchor* registerForm(struct HtmlBuilder* hb,
     struct Buffer* buf, struct FormList* flist,
     struct HtmlTag* tag, int line, int pos);
-extern struct Anchor* registerName(struct Buffer* buf, char* url, int line, int pos);
+extern struct Anchor* registerName(struct Buffer* buf, const char* url, int line, int pos);
 extern int onAnchor(struct Anchor* a, int line, int pos);
 extern char* reAnchor(struct Buffer* buf, char* re);
 extern void addMultirowsForm(struct Buffer* buf, struct AnchorList* al);

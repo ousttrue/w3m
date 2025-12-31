@@ -61,7 +61,7 @@ struct Buffer {
     short width;
     char* type;
     short bufferprop;
-    struct AnchorList* name;
+
     struct AnchorList* formitem;
     struct LinkList* linklist;
     struct FormList* formlist;
@@ -70,19 +70,18 @@ struct Buffer {
     struct HmarkerList* imarklist;
     struct Url* baseURL;
     char* baseTarget;
-
     struct frameset* frameset;
     struct frameset_queue* frameQ;
+    wc_uint8 auto_detect;
+    struct FormItemList* form_submit;
+    struct Anchor* submit;
+    struct BufferPos* undo;
+
     int* clone;
     size_t trbyte;
     char check_url;
-    wc_uint8 auto_detect;
-    struct FormItemList* form_submit;
     char* savecache;
     char* edit;
-    // char image_loaded;
-    struct Anchor* submit;
-    struct BufferPos* undo;
     struct _AlarmEvent* event;
 };
 

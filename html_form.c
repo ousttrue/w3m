@@ -450,7 +450,7 @@ void formUpdateBuffer(struct Anchor* a, struct Buffer* buf, struct FormItemList*
             if (pos != epos) {
                 shiftAnchorPosition(buf->doc.href, buf->hmarklist,
                     a->start.line, spos, pos - epos);
-                shiftAnchorPosition(buf->name, buf->hmarklist,
+                shiftAnchorPosition(buf->doc.name, buf->hmarklist,
                     a->start.line, spos, pos - epos);
                 shiftAnchorPosition(buf->doc.img, buf->hmarklist,
                     a->start.line, spos, pos - epos);
