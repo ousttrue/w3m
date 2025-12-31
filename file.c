@@ -4603,14 +4603,14 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                     parsedtag_get_value(tag, ATTR_ACCESSKEY, &t);
                     parsedtag_get_value(tag, ATTR_HSEQ, &hseq);
                     if (hseq > 0)
-                        buf->hmarklist = putHmarker(buf->hmarklist, currentLn(buf),
+                        buf->doc.hmarklist = putHmarker(buf->doc.hmarklist, currentLn(buf),
                             pos, hseq - 1);
                     else if (hseq < 0) {
                         int h = -hseq - 1;
-                        if (buf->hmarklist && h < buf->hmarklist->nmark && buf->hmarklist->marks[h].invalid) {
-                            buf->hmarklist->marks[h].pos = pos;
-                            buf->hmarklist->marks[h].line = currentLn(buf);
-                            buf->hmarklist->marks[h].invalid = 0;
+                        if (buf->doc.hmarklist && h < buf->doc.hmarklist->nmark && buf->doc.hmarklist->marks[h].invalid) {
+                            buf->doc.hmarklist->marks[h].pos = pos;
+                            buf->doc.hmarklist->marks[h].line = currentLn(buf);
+                            buf->doc.hmarklist->marks[h].invalid = 0;
                             hseq = -hseq;
                         }
                     }
@@ -4632,8 +4632,8 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                         a_href->end.line = currentLn(buf);
                         a_href->end.pos = pos;
                         if (a_href->start.line == a_href->end.line && a_href->start.pos == a_href->end.pos) {
-                            if (buf->hmarklist && a_href->hseq >= 0 && a_href->hseq < buf->hmarklist->nmark)
-                                buf->hmarklist->marks[a_href->hseq].invalid = 1;
+                            if (buf->doc.hmarklist && a_href->hseq >= 0 && a_href->hseq < buf->doc.hmarklist->nmark)
+                                buf->doc.hmarklist->marks[a_href->hseq].invalid = 1;
                             a_href->hseq = -1;
                         }
                         a_href = NULL;
@@ -4660,7 +4660,7 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                         q = NULL;
                         parsedtag_get_value(tag, ATTR_USEMAP, &q);
                         if (iseq > 0) {
-                            buf->imarklist = putHmarker(buf->imarklist,
+                            buf->doc.imarklist = putHmarker(buf->doc.imarklist,
                                 currentLn(buf), pos,
                                 iseq - 1);
                         }
@@ -4698,7 +4698,7 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                             image->cache = getImage(image, base,
                                 IMG_FLAG_SKIP);
                         } else if (iseq < 0) {
-                            struct BufferPoint* po = buf->imarklist->marks - iseq - 1;
+                            struct BufferPoint* po = buf->doc.imarklist->marks - iseq - 1;
                             struct Anchor* a = retrieveAnchor(buf->doc.img,
                                 po->line, po->pos);
                             if (a) {
@@ -4736,17 +4736,17 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                         int hpos = pos;
                         if (*str == '[')
                             hpos++;
-                        buf->hmarklist = putHmarker(buf->hmarklist, currentLn(buf),
+                        buf->doc.hmarklist = putHmarker(buf->doc.hmarklist, currentLn(buf),
                             hpos, hseq - 1);
                     } else if (hseq < 0) {
                         int h = -hseq - 1;
                         int hpos = pos;
                         if (*str == '[')
                             hpos++;
-                        if (buf->hmarklist && h < buf->hmarklist->nmark && buf->hmarklist->marks[h].invalid) {
-                            buf->hmarklist->marks[h].pos = hpos;
-                            buf->hmarklist->marks[h].line = currentLn(buf);
-                            buf->hmarklist->marks[h].invalid = 0;
+                        if (buf->doc.hmarklist && h < buf->doc.hmarklist->nmark && buf->doc.hmarklist->marks[h].invalid) {
+                            buf->doc.hmarklist->marks[h].pos = hpos;
+                            buf->doc.hmarklist->marks[h].line = currentLn(buf);
+                            buf->doc.hmarklist->marks[h].invalid = 0;
                             hseq = -hseq;
                         }
                     }
@@ -4803,15 +4803,15 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                         struct MapList* m = New(struct MapList);
                         m->name = Strnew_charp(p);
                         m->area = newGeneralList();
-                        m->next = buf->maplist;
-                        buf->maplist = m;
+                        m->next = buf->doc.maplist;
+                        buf->doc.maplist = m;
                     }
                     break;
                 case HTML_N_MAP:
                     /* nothing to do */
                     break;
                 case HTML_AREA:
-                    if (buf->maplist == NULL) /* outside of <map>..</map> */
+                    if (buf->doc.maplist == NULL) /* outside of <map>..</map> */
                         break;
                     if (parsedtag_get_value(tag, ATTR_HREF, &p)) {
                         struct MapArea* a;
@@ -4826,7 +4826,7 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                         parsedtag_get_value(tag, ATTR_SHAPE, &r);
                         parsedtag_get_value(tag, ATTR_COORDS, &s);
                         a = newMapArea(p, t, q, r, s);
-                        pushValue(buf->maplist->area, (void*)a);
+                        pushValue(buf->doc.maplist->area, (void*)a);
                     }
                     break;
                 case HTML_FRAMESET:
@@ -4993,7 +4993,7 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
     for (form_id = 1; form_id <= hb->form_max; form_id++)
         if (hb->forms[form_id])
             hb->forms[form_id]->next = hb->forms[form_id - 1];
-    buf->formlist = (hb->form_max >= 0) ? hb->forms[hb->form_max] : NULL;
+    buf->doc.formlist = (hb->form_max >= 0) ? hb->forms[hb->form_max] : NULL;
     if (hb->n_textarea)
         addMultirowsForm(buf, buf->doc.formitem);
     addMultirowsImg(buf, buf->doc.img);

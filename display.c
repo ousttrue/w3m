@@ -136,7 +136,7 @@ void drawAnchorCursor(struct Buffer* buf)
     int hseq, prevhseq;
     int tline, eline;
 
-    if (!buf->doc.firstLine || !buf->hmarklist)
+    if (!buf->doc.firstLine || !buf->doc.hmarklist)
         return;
     if (!buf->doc.href && !buf->doc.formitem)
         return;
@@ -150,7 +150,7 @@ void drawAnchorCursor(struct Buffer* buf)
         hseq = -1;
     tline = buf->doc.topLine->linenumber;
     eline = tline + buf->doc.LINES;
-    prevhseq = buf->hmarklist->prevhseq;
+    prevhseq = buf->doc.hmarklist->prevhseq;
 
     if (buf->doc.href) {
         drawAnchorCursor0(buf, buf->doc.href, hseq, prevhseq, tline, eline, 1);
@@ -160,7 +160,7 @@ void drawAnchorCursor(struct Buffer* buf)
         drawAnchorCursor0(buf, buf->doc.formitem, hseq, prevhseq, tline, eline, 1);
         drawAnchorCursor0(buf, buf->doc.formitem, hseq, -1, tline, eline, 0);
     }
-    buf->hmarklist->prevhseq = hseq;
+    buf->doc.hmarklist->prevhseq = hseq;
 }
 
 static struct Line*

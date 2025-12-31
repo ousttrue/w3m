@@ -22,7 +22,7 @@ searchMapList(struct Buffer* buf, char* name)
 
     if (name == NULL)
         return NULL;
-    for (ml = buf->maplist; ml != NULL; ml = ml->next) {
+    for (ml = buf->doc.maplist; ml != NULL; ml = ml->next) {
         if (!Strcmp_charp(ml->name, name))
             break;
     }

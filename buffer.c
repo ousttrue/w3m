@@ -440,13 +440,13 @@ void reshapeBuffer(struct Buffer* buf)
     buf->doc.name = NULL;
     buf->doc.img = NULL;
     buf->doc.formitem = NULL;
-    buf->formlist = NULL;
+    buf->doc.formlist = NULL;
     buf->doc.linklist = NULL;
-    buf->maplist = NULL;
-    if (buf->hmarklist)
-        buf->hmarklist->nmark = 0;
-    if (buf->imarklist)
-        buf->imarklist->nmark = 0;
+    buf->doc.maplist = NULL;
+    if (buf->doc.hmarklist)
+        buf->doc.hmarklist->nmark = 0;
+    if (buf->doc.imarklist)
+        buf->doc.imarklist->nmark = 0;
 
     if (buf->content.header_source) {
         if (buf->content.url.scheme != SCM_LOCAL || buf->content.mailcap_source || !strcmp(buf->content.url.file, "-")) {

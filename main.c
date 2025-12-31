@@ -2314,7 +2314,7 @@ void followForm(void)
 /* go to the top anchor */
 DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink")
 {
-    struct HmarkerList* hl = Currentbuf->hmarklist;
+    struct HmarkerList* hl = Currentbuf->doc.hmarklist;
     struct BufferPoint* po;
     struct Anchor* an;
     int hseq = 0;
@@ -2349,7 +2349,7 @@ DEFUN(lastA, LINK_END, "Move to the last hyperlink")
     if (Currentbuf->doc.firstLine == NULL)
         return;
 
-    struct HmarkerList* hl = Currentbuf->hmarklist;
+    struct HmarkerList* hl = Currentbuf->doc.hmarklist;
     if (!hl || hl->nmark == 0)
         return;
 
@@ -2381,7 +2381,7 @@ DEFUN(lastA, LINK_END, "Move to the last hyperlink")
 /* go to the nth anchor */
 DEFUN(nthA, LINK_N, "Go to the nth link")
 {
-    struct HmarkerList* hl = Currentbuf->hmarklist;
+    struct HmarkerList* hl = Currentbuf->doc.hmarklist;
     struct BufferPoint* po;
     struct Anchor* an;
 
@@ -2434,7 +2434,7 @@ DEFUN(prevVA, PREV_VISITED, "Move to the previous visited hyperlink")
 static void
 _nextA(int visited)
 {
-    struct HmarkerList* hl = Currentbuf->hmarklist;
+    struct HmarkerList* hl = Currentbuf->doc.hmarklist;
     struct BufferPoint* po;
     struct Anchor *an, *pan;
     int i, x, y, n = searchKeyNum();
@@ -2516,7 +2516,7 @@ _end:
 static void
 _prevA(int visited)
 {
-    struct HmarkerList* hl = Currentbuf->hmarklist;
+    struct HmarkerList* hl = Currentbuf->doc.hmarklist;
     struct BufferPoint* po;
     struct Anchor *an, *pan;
     int i, x, y, n = searchKeyNum();
@@ -2598,7 +2598,7 @@ _end:
 static void
 nextX(int d, int dy)
 {
-    struct HmarkerList* hl = Currentbuf->hmarklist;
+    struct HmarkerList* hl = Currentbuf->doc.hmarklist;
     struct Anchor *an, *pan;
     struct Line* l;
     int i, x, y, n = searchKeyNum();
@@ -2653,7 +2653,7 @@ nextX(int d, int dy)
 static void
 nextY(int d)
 {
-    struct HmarkerList* hl = Currentbuf->hmarklist;
+    struct HmarkerList* hl = Currentbuf->doc.hmarklist;
     struct Anchor *an, *pan;
     int i, x, y, n = searchKeyNum();
     int hseq;
@@ -3064,14 +3064,14 @@ DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
 static void
 anchorMn(BufferMenuFunc menu_func, bool go)
 {
-    if (!Currentbuf->doc.href || !Currentbuf->hmarklist)
+    if (!Currentbuf->doc.href || !Currentbuf->doc.hmarklist)
         return;
 
     struct Anchor* a = menu_func(Currentbuf);
     if (!a || a->hseq < 0)
         return;
 
-    struct BufferPoint* po = &Currentbuf->hmarklist->marks[a->hseq];
+    struct BufferPoint* po = &Currentbuf->doc.hmarklist->marks[a->hseq];
     doc_gotoLine(&Currentbuf->doc, po->line);
     Currentbuf->doc.pos = po->pos;
     doc_arrangeCursor(&Currentbuf->doc);
@@ -3911,36 +3911,36 @@ DEFUN(execCmd, COMMAND, "Invoke w3m function(s)")
     }
 }
 
-static MySignalHandler
-SigAlarm(SIGNAL_ARG)
-{
-    char* data;
-
-    if (CurrentAlarm->sec > 0) {
-        getRuntime()->CurrentKey = -1;
-        getRuntime()->CurrentKeyData = NULL;
-        getRuntime()->CurrentCmdData = data = (char*)CurrentAlarm->data;
-        w3mFuncList[CurrentAlarm->cmd].func();
-        getRuntime()->CurrentCmdData = NULL;
-        if (CurrentAlarm->status == AL_IMPLICIT_ONCE) {
-            CurrentAlarm->sec = 0;
-            CurrentAlarm->status = AL_UNSET;
-        }
-        if (Currentbuf->event) {
-            if (Currentbuf->event->status != AL_UNSET)
-                CurrentAlarm = Currentbuf->event;
-            else
-                Currentbuf->event = NULL;
-        }
-        if (!Currentbuf->event)
-            CurrentAlarm = &DefaultAlarm;
-        if (CurrentAlarm->sec > 0) {
-            mySignal(SIGALRM, SigAlarm);
-            alarm(CurrentAlarm->sec);
-        }
-    }
-    SIGNAL_RETURN;
-}
+// static MySignalHandler
+// SigAlarm(SIGNAL_ARG)
+// {
+//     char* data;
+//
+//     if (CurrentAlarm->sec > 0) {
+//         getRuntime()->CurrentKey = -1;
+//         getRuntime()->CurrentKeyData = NULL;
+//         getRuntime()->CurrentCmdData = data = (char*)CurrentAlarm->data;
+//         w3mFuncList[CurrentAlarm->cmd].func();
+//         getRuntime()->CurrentCmdData = NULL;
+//         if (CurrentAlarm->status == AL_IMPLICIT_ONCE) {
+//             CurrentAlarm->sec = 0;
+//             CurrentAlarm->status = AL_UNSET;
+//         }
+//         if (Currentbuf->event) {
+//             if (Currentbuf->event->status != AL_UNSET)
+//                 CurrentAlarm = Currentbuf->event;
+//             else
+//                 Currentbuf->event = NULL;
+//         }
+//         if (!Currentbuf->event)
+//             CurrentAlarm = &DefaultAlarm;
+//         if (CurrentAlarm->sec > 0) {
+//             mySignal(SIGALRM, SigAlarm);
+//             alarm(CurrentAlarm->sec);
+//         }
+//     }
+//     SIGNAL_RETURN;
+// }
 
 DEFUN(setAlarm, ALARM, "Set alarm")
 {

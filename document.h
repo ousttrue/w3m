@@ -30,6 +30,10 @@ struct Document {
     struct AnchorList* name;
     struct AnchorList* formitem;
     struct LinkList* linklist;
+    struct FormList* formlist;
+    struct MapList* maplist;
+    struct HmarkerList* hmarklist;
+    struct HmarkerList* imarklist;
 
     enum ImageGetFlags image_flag;
 

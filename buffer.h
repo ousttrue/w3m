@@ -62,10 +62,6 @@ struct Buffer {
     char* type;
     short bufferprop;
 
-    struct FormList* formlist;
-    struct MapList* maplist;
-    struct HmarkerList* hmarklist;
-    struct HmarkerList* imarklist;
     struct Url* baseURL;
     char* baseTarget;
     struct frameset* frameset;

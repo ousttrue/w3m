@@ -250,7 +250,7 @@ reseq_anchor0(struct AnchorList* al, short* seqmap)
 static void
 reseq_anchor(struct Buffer* buf)
 {
-    int i, j, n, nmark = (buf->hmarklist) ? buf->hmarklist->nmark : 0;
+    int i, j, n, nmark = (buf->doc.hmarklist) ? buf->doc.hmarklist->nmark : 0;
     short* seqmap;
     struct Anchor *a, *a1;
     struct HmarkerList* ml = NULL;
@@ -293,10 +293,10 @@ reseq_anchor(struct Buffer* buf)
     }
 
     for (i = 0; i < nmark; i++) {
-        ml = putHmarker(ml, buf->hmarklist->marks[i].line,
-            buf->hmarklist->marks[i].pos, seqmap[i]);
+        ml = putHmarker(ml, buf->doc.hmarklist->marks[i].line,
+            buf->doc.hmarklist->marks[i].pos, seqmap[i]);
     }
-    buf->hmarklist = ml;
+    buf->doc.hmarklist = ml;
 
     reseq_anchor0(buf->doc.href, seqmap);
     reseq_anchor0(buf->doc.formitem, seqmap);
@@ -660,8 +660,8 @@ void addMultirowsForm(struct Buffer* buf, struct AnchorList* al)
         for (j = 0; l && j < a_form.rows; l = l->next, j++) {
             pos = columnPos(l, col);
             if (j == 0) {
-                buf->hmarklist->marks[a_form.hseq].line = l->linenumber;
-                buf->hmarklist->marks[a_form.hseq].pos = pos;
+                buf->doc.hmarklist->marks[a_form.hseq].line = l->linenumber;
+                buf->doc.hmarklist->marks[a_form.hseq].pos = pos;
             }
             if (a_form.start.line == l->linenumber)
                 continue;
