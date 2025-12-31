@@ -1921,15 +1921,15 @@ link_menu(struct Buffer* buf)
     Str str;
     char* p;
 
-    if (!buf->linklist)
+    if (!buf->doc.linklist)
         return NULL;
 
-    for (i = 0, l = buf->linklist; l; i++, l = l->next)
+    for (i = 0, l = buf->doc.linklist; l; i++, l = l->next)
         ;
     nitem = i;
 
     label = New_N(char*, nitem + 1);
-    for (i = 0, l = buf->linklist; l; i++, l = l->next) {
+    for (i = 0, l = buf->doc.linklist; l; i++, l = l->next) {
         str = Strnew_charp(l->title ? l->title : "(empty)");
         if (l->type == LINK_TYPE_REL)
             Strcat_charp(str, " [Rel] ");
@@ -1961,7 +1961,7 @@ link_menu(struct Buffer* buf)
 
     if (linkV < 0)
         return NULL;
-    for (i = 0, l = buf->linklist; l; i++, l = l->next) {
+    for (i = 0, l = buf->doc.linklist; l; i++, l = l->next) {
         if (i == linkV)
             return l;
     }

@@ -550,7 +550,7 @@ page_info_panel(struct Buffer* buf)
     Strcat_charp(tmp, "</table>\n");
     Strcat_charp(tmp, "</form>");
 
-    append_link_info(buf, tmp, buf->linklist);
+    append_link_info(buf, tmp, buf->doc.linklist);
 
     if (buf->content.document_header != NULL) {
         Strcat_charp(tmp, "<hr width=50%><h1>Header information</h1><pre>\n");

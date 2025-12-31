@@ -441,7 +441,7 @@ void reshapeBuffer(struct Buffer* buf)
     buf->doc.img = NULL;
     buf->doc.formitem = NULL;
     buf->formlist = NULL;
-    buf->linklist = NULL;
+    buf->doc.linklist = NULL;
     buf->maplist = NULL;
     if (buf->hmarklist)
         buf->hmarklist->nmark = 0;

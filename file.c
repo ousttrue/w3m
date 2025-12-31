@@ -4401,13 +4401,13 @@ addLink(struct Buffer* buf, struct HtmlTag* tag)
     l->ctype = ctype;
     l->type = type;
     l->next = NULL;
-    if (buf->linklist) {
+    if (buf->doc.linklist) {
         struct LinkList* i;
-        for (i = buf->linklist; i->next; i = i->next)
+        for (i = buf->doc.linklist; i->next; i = i->next)
             ;
         i->next = l;
     } else
-        buf->linklist = l;
+        buf->doc.linklist = l;
 }
 
 static void

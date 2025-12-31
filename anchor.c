@@ -731,13 +731,13 @@ link_list_panel(struct Buffer* buf)
     Str tmp = Strnew_charp("<title>Link List</title>\
 <h1 align=center>Link List</h1>\n");
 
-    if (buf->bufferprop & BP_INTERNAL || (buf->linklist == NULL && buf->doc.href == NULL && buf->doc.img == NULL)) {
+    if (buf->bufferprop & BP_INTERNAL || (buf->doc.linklist == NULL && buf->doc.href == NULL && buf->doc.img == NULL)) {
         return NULL;
     }
 
-    if (buf->linklist) {
+    if (buf->doc.linklist) {
         Strcat_charp(tmp, "<hr><h2>Links</h2>\n<ol>\n");
-        for (l = buf->linklist; l; l = l->next) {
+        for (l = buf->doc.linklist; l; l = l->next) {
             if (l->url) {
                 parseURL2(l->url, &pu, baseURL(buf));
                 p = parsedURL2Str(&pu)->ptr;
