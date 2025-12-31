@@ -12,6 +12,7 @@ const w3m_srcs = [_][]const u8{
     "w3m_rc.c",
     "w3m_types.c",
     "tcp_socket.c",
+    "http_auth.c",
     "html_builder.c",
     "html_tag.c",
     "growbuf.c",

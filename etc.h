@@ -49,3 +49,4 @@ char* getWord(const char** str);
 struct regex;
 char* getRegexWord(const char** str, struct regex** regex_ret);
 extern void loadPasswd(void);
+Str qstr_unquote(Str s);
