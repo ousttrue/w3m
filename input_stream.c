@@ -252,7 +252,7 @@ int is_undo_getc(struct input_stream* is)
 }
 
 struct growbuf;
-static void is_to_growbuf(struct input_stream* is, struct growbuf* gb, char crnl)
+static void is_to_growbuf(struct input_stream* is, struct growbuf* gb, bool crnl)
 {
     // struct base_stream* base = &is->base;
     struct stream_buffer* sb = &is->sb;
@@ -689,4 +689,14 @@ struct UrlStream openURL(struct Url url, struct Url* current,
 
     us.stream = is_from_fd(sock);
     return us;
+}
+
+void is_write_all(struct input_stream* stream, FILE* src)
+{
+    for (Str lineBuf2 = is_get_str(stream, false);
+        lineBuf2 && lineBuf2->length;
+        lineBuf2 = is_get_str(stream, true)) {
+
+        Strfputs(lineBuf2, src);
+    }
 }

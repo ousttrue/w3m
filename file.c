@@ -5433,20 +5433,19 @@ loadHTMLBuffer(struct Url url, struct input_stream* stream, const char* t,
     if (newBuf == NULL)
         newBuf = newBuffer(INIT_BUFFER_WIDTH);
 
-    FILE* src = NULL;
-    Str tmp = NULL;
-    if (newBuf->sourcefile == NULL && (url.scheme != SCM_LOCAL || newBuf->mailcap)) {
-        tmp = tmpfname(TMPF_SRC, ".html");
-        src = fopen(tmp->ptr, "w");
-        if (src)
+    if (newBuf->sourcefile == NULL
+        && (url.scheme != SCM_LOCAL || newBuf->mailcap)) {
+        Str tmp = tmpfname(TMPF_SRC, ".html");
+        FILE* src = fopen(tmp->ptr, "w");
+        if (src) {
             newBuf->sourcefile = tmp->ptr;
+            is_write_all(stream, src);
+            fclose(src);
+        }
+        return newBuf;
     }
 
-    loadHTMLstream(stream, newBuf, src, internal);
-
-    if (src)
-        fclose(src);
-
+    loadHTMLstream(stream, newBuf, internal);
     return newBuf;
 }
 
@@ -5651,7 +5650,7 @@ print_internal_information(struct HtmlBuilder* hb, struct html_feed_environ* hen
 }
 
 void loadHTMLstream(struct input_stream* stream,
-    struct Buffer* newBuf, FILE* src, bool internal)
+    struct Buffer* newBuf, bool internal)
 {
     struct HtmlBuilder _hb = {
         0,
@@ -5721,8 +5720,6 @@ void loadHTMLstream(struct input_stream* stream,
 
     while ((lineBuf2 = is_get_str(stream, true)) && lineBuf2->length) {
 
-        if (src)
-            Strfputs(lineBuf2, src);
         linelen += lineBuf2->length;
         if (getRuntime()->w3m_dump & DUMP_EXTRA)
             printf("W3m-in-progress: %s\n", convert_size2(linelen, newBuf->content.current_content_length, TRUE));
@@ -5804,7 +5801,7 @@ loadHTMLString(Str page)
     TRAP_ON;
 
     newBuf->doc.charset = getRuntime()->InnerCharset;
-    loadHTMLstream(stream, newBuf, NULL, TRUE);
+    loadHTMLstream(stream, newBuf, TRUE);
     newBuf->doc.charset = WC_CES_US_ASCII;
 
     TRAP_OFF;
@@ -5933,15 +5930,15 @@ image_buffer:
     tmp = Sprintf("<img src=\"%s\"><br><br>", html_quote(image.url));
     tmpf = tmpfname(TMPF_SRC, ".html");
     src = fopen(tmpf->ptr, "w");
-    if (src == NULL)
+    if (!src)
         return NULL;
-    newBuf->mailcap_source = tmpf->ptr;
 
+    newBuf->mailcap_source = tmpf->ptr;
     struct input_stream* tmp_stream = is_from_str(tmp);
-    loadHTMLstream(tmp_stream, newBuf, src, true);
+    is_write_all(tmp_stream, src);
+
     is_close(tmp_stream);
-    if (src)
-        fclose(src);
+    fclose(src);
 
     newBuf->doc.topLine = newBuf->doc.firstLine;
     newBuf->doc.lastLine = newBuf->doc.currentLine;
@@ -6068,7 +6065,7 @@ getshell(char* cmd)
     buf->content.filename = cmd;
     buf->doc.title = Sprintf("%s %s", SHELLBUFFERNAME,
         conv_from_system(cmd))
-                          ->ptr;
+                         ->ptr;
     return buf;
 }
 

@@ -39,7 +39,7 @@ int checkOverWrite(const char* path);
 struct input_stream;
 int checkSaveFile(struct input_stream* stream, const char* path);
 void loadHTMLstream(struct input_stream* stream,
-    struct Buffer* newBuf, FILE* src, bool internal);
+    struct Buffer* newBuf, bool internal);
 
 typedef struct Buffer* (*LoadBufferFunc)(struct Url, struct input_stream*,
     const char* type, struct Buffer*, bool internal);

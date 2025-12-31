@@ -73,7 +73,10 @@ struct Buffer {
     struct Url currentURL;
     struct Url* baseURL;
     char* baseTarget;
+
+    /// download file cache
     const char* sourcefile;
+
     struct frameset* frameset;
     struct frameset_queue* frameQ;
     int* clone;
