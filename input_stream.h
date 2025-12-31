@@ -1,8 +1,6 @@
 #pragma once
-#include "url.h"
-#include "http_request.h"
 #include "ssl_stream.h"
-#include "compression.h"
+#include "content.h"
 #include <stdbool.h>
 #include <stdio.h>
 
@@ -39,24 +37,7 @@ struct Buffer;
 int doFileSave(struct Url url, struct input_stream* stream,
     const char* defstr, enum CompressionType compression);
 
-enum StreamStatus {
-    HTST_UNKNOWN = 255,
-    HTST_MISSING = 254,
-    HTST_NORMAL = 0,
-    HTST_CONNECT = 1,
-};
-
-struct UrlStream {
-    struct input_stream* stream;
-    bool is_cgi;
-    const char* url_str;
-    struct Url url;
-    struct HttpRequest hr;
-    enum StreamStatus status;
-    const char* ssl_certificate;
-    time_t modtime;
-};
-struct UrlStream openURL(struct Url url, struct Url* current,
+struct Content openURL(struct Url url, struct Url* current,
     struct FormList* request,
     struct URLOption option,
     struct input_stream* ouf);

@@ -1,4 +1,5 @@
 #include "input_stream.h"
+#include "textlist.h"
 #include "tcp_socket.h"
 #include "file.h"
 #include "local_cgi.h"
@@ -463,12 +464,12 @@ write_from_file(int sock, char* file)
     }
 }
 
-struct UrlStream openURL(struct Url url, struct Url* current,
+struct Content openURL(struct Url url, struct Url* current,
     struct FormList* request,
     struct URLOption option,
     struct input_stream* ouf)
 {
-    struct UrlStream us = {
+    struct Content us = {
         .url = url,
         .hr = (struct HttpRequest) {
             .command = HR_COMMAND_GET,

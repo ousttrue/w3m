@@ -1,12 +1,23 @@
 #pragma once
+#include "http_request.h"
 #include "url.h"
 #include "textlist.h"
 #include "compression.h"
 #include "Str.h"
 #include <stdbool.h>
 #include <libwc/ces.h>
+#include <time.h>
+
+enum StreamStatus {
+    HTST_UNKNOWN = 255,
+    HTST_MISSING = 254,
+    HTST_NORMAL = 0,
+    HTST_CONNECT = 1,
+};
 
 struct Content {
+    bool is_cgi;
+    const char* url_str;
     struct Url url;
     const char* filename;
     /// download file cache
@@ -16,11 +27,18 @@ struct Content {
     const char* header_source;
     const char* ssl_certificate;
 
+    enum StreamStatus status;
+    struct input_stream* stream;
+    Str page;
+
+    struct HttpRequest hr;
     int http_response_code;
     struct TextList* document_header;
     enum wc_ces charset;
     size_t current_content_length;
     enum CompressionType compression;
+
+    time_t modtime;
 };
 
 struct Url;
