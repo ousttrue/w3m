@@ -1503,8 +1503,8 @@ DEFUN(readsh, READ_SHELL, "Execute shell command and display output")
         return;
     } else {
         buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
-        if (buf->type == NULL)
-            buf->type = "text/plain";
+        if (buf->content.content_type == NULL)
+            buf->content.content_type = "text/plain";
         pushBuffer(buf);
     }
 }
@@ -2032,7 +2032,7 @@ DEFUN(editBf, EDIT, "Edit local source")
 
     Str cmd;
     if (Currentbuf->edit)
-        cmd = unquote_mailcap(Currentbuf->edit, Currentbuf->type, fn,
+        cmd = unquote_mailcap(Currentbuf->edit, Currentbuf->content.content_type, fn,
             checkHeader(&Currentbuf->content, "Content-Type:"), NULL);
     else
         cmd = myEditor(getRuntime()->Editor, shell_quote(fn), cur_real_linenumber(Currentbuf));
@@ -3312,7 +3312,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
 {
     struct Buffer* buf;
 
-    if (Currentbuf->type == NULL || Currentbuf->bufferprop & BP_FRAME)
+    if (Currentbuf->content.content_type == NULL || Currentbuf->bufferprop & BP_FRAME)
         return;
     if ((buf = Currentbuf->linkBuffer[LB_SOURCE]) != NULL || (buf = Currentbuf->linkBuffer[LB_N_SOURCE]) != NULL) {
         Currentbuf = buf;
@@ -3352,21 +3352,21 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
 
     buf = newBuffer(INIT_BUFFER_WIDTH);
 
-    if (is_html_type(Currentbuf->type)) {
-        buf->type = "text/plain";
-        if (Currentbuf->type && is_html_type(Currentbuf->type))
-            buf->type = "text/plain";
+    if (is_html_type(Currentbuf->content.content_type)) {
+        buf->content.content_type = "text/plain";
+        if (Currentbuf->content.content_type && is_html_type(Currentbuf->content.content_type))
+            buf->content.content_type = "text/plain";
         else
-            buf->type = Currentbuf->type;
+            buf->content.content_type = Currentbuf->content.content_type;
         buf->doc.title = Sprintf("source of %s", Currentbuf->doc.title)->ptr;
         buf->linkBuffer[LB_N_SOURCE] = Currentbuf;
         Currentbuf->linkBuffer[LB_SOURCE] = buf;
-    } else if (!strcasecmp(Currentbuf->type, "text/plain")) {
-        buf->type = "text/html";
-        if (Currentbuf->type && !strcasecmp(Currentbuf->type, "text/plain"))
-            buf->type = "text/html";
+    } else if (!strcasecmp(Currentbuf->content.content_type, "text/plain")) {
+        buf->content.content_type = "text/html";
+        if (Currentbuf->content.content_type && !strcasecmp(Currentbuf->content.content_type, "text/plain"))
+            buf->content.content_type = "text/html";
         else
-            buf->type = Currentbuf->type;
+            buf->content.content_type = Currentbuf->content.content_type;
         buf->doc.title = Sprintf("HTML view of %s",
             Currentbuf->doc.title)
                              ->ptr;
@@ -3459,7 +3459,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
     if (Currentbuf->doc.charset != WC_CES_US_ASCII)
         getRuntime()->DocumentCharset = Currentbuf->doc.charset;
     // SearchHeader = Currentbuf->search_header;
-    getRuntime()->DefaultType = Currentbuf->type;
+    getRuntime()->DefaultType = Currentbuf->content.content_type;
     buf = loadGeneralFile(url->ptr, NULL, NO_REFERER, RG_NOCACHE, request, false);
     getRuntime()->DocumentCharset = old_charset;
     // SearchHeader = FALSE;
@@ -3475,7 +3475,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
     if (fbuf != NULL)
         Firstbuf = deleteBuffer(Firstbuf, fbuf);
     repBuffer(Currentbuf, buf);
-    if ((buf->type != NULL) && (sbuf.type != NULL) && ((!strcasecmp(buf->type, "text/plain") && is_html_type(sbuf.type)) || (is_html_type(buf->type) && !strcasecmp(sbuf.type, "text/plain")))) {
+    if ((buf->content.content_type != NULL) && (sbuf.content.content_type != NULL) && ((!strcasecmp(buf->content.content_type, "text/plain") && is_html_type(sbuf.content.content_type)) || (is_html_type(buf->content.content_type) && !strcasecmp(sbuf.content.content_type, "text/plain")))) {
         vwSrc();
         if (Currentbuf != buf)
             Firstbuf = deleteBuffer(Firstbuf, buf);
@@ -3800,8 +3800,8 @@ execdict(char* word)
     } else {
         buf->content.filename = w;
         buf->doc.title = Sprintf("%s %s", DICTBUFFERNAME, word)->ptr;
-        if (buf->type == NULL)
-            buf->type = "text/plain";
+        if (buf->content.content_type == NULL)
+            buf->content.content_type = "text/plain";
         pushBuffer(buf);
     }
 }

@@ -462,7 +462,7 @@ void reshapeBuffer(struct Buffer* buf)
         wc_uint8 old_auto_detect = WcOption.auto_detect;
         WcOption.auto_detect = WC_OPT_DETECT_OFF;
         getRuntime()->UseContentCharset = FALSE;
-        if (is_html_type(buf->type))
+        if (is_html_type(buf->content.content_type))
             loadHTMLBuffer(buf->content.url, stream,
                 NULL, buf, buf->bufferprop & BP_FRAME);
         else
@@ -494,7 +494,7 @@ void reshapeBuffer(struct Buffer* buf)
                 doc_gotoLine(&buf->doc, cur->linenumber);
         }
         buf->doc.pos -= buf->doc.currentLine->bpos;
-        if (getRuntime()->FoldLine && !is_html_type(buf->type))
+        if (getRuntime()->FoldLine && !is_html_type(buf->content.content_type))
             buf->doc.currentColumn = 0;
         else
             buf->doc.currentColumn = sbuf.doc.currentColumn;

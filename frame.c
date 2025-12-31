@@ -322,7 +322,7 @@ void resetFrameElement(union frameset_element* f_element,
             f_body->source = buf->content.mailcap_source;
             buf->content.mailcap_source = NULL;
         }
-        f_body->type = buf->type;
+        f_body->type = buf->content.content_type;
         f_body->referer = referer;
         f_body->request = request;
         deleteFrameSetElement(*f_element);
@@ -366,7 +366,7 @@ frame_download_source(struct frame_body* b, struct Url* currentURL,
         return NULL;
     }
     b->url = parsedURL2Str(&buf->content.url)->ptr;
-    b->type = buf->type;
+    b->type = buf->content.content_type;
     b->source = buf->content.sourcefile;
     buf->content.sourcefile = NULL;
     if (buf->content.mailcap_source) {

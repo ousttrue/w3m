@@ -79,7 +79,7 @@ print_headers(struct Buffer* buf, int len)
     printf("w3m-current-url: %s\n", parsedURL2Str(&buf->content.url)->ptr);
     if (buf->doc.baseURL)
         printf("w3m-base-url: %s\n", parsedURL2Str(buf->doc.baseURL)->ptr);
-    printf("w3m-content-type: %s\n", buf->type);
+    printf("w3m-content-type: %s\n", buf->content.content_type);
     if (buf->doc.charset)
         printf("w3m-content-charset: %s\n",
             wc_ces_to_charset(buf->doc.charset));
@@ -93,7 +93,7 @@ internal_get(char* url, int flag, struct FormList* request)
     backend_halfdump_buf = NULL;
     struct Buffer* buf = loadGeneralFile(url, NULL, NO_REFERER, 0, request, flag);
     if (buf != NULL) {
-        if (is_html_type(buf->type) && backend_halfdump_buf) {
+        if (is_html_type(buf->content.content_type) && backend_halfdump_buf) {
             TextLineListItem* p;
             Str first, last;
             int len = 0;
@@ -111,7 +111,7 @@ internal_get(char* url, int flag, struct FormList* request)
                 printf("%s\n", p->ptr->line->ptr);
             printf("%s", last->ptr);
         } else {
-            if (!strcasecmp(buf->type, "text/plain")) {
+            if (!strcasecmp(buf->content.content_type, "text/plain")) {
                 struct Line* lp;
                 int len = 0;
                 for (lp = buf->doc.firstLine; lp; lp = lp->next) {

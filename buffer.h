@@ -59,7 +59,6 @@ struct Buffer {
     struct Buffer* nextBuffer;
     struct Buffer* linkBuffer[MAX_LB];
     short width;
-    char* type;
     short bufferprop;
 
     int* clone;

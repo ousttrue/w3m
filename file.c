@@ -122,9 +122,9 @@ loadSomething(struct Url url, struct input_stream* stream, const char* t,
     // if (f->scheme == SCM_LOCAL && buf->sourcefile == NULL)
     //     buf->sourcefile = buf->content.filename;
     if (loadproc == loadHTMLBuffer || loadproc == loadImageBuffer)
-        buf->type = "text/html";
+        buf->content.content_type = "text/html";
     else
-        buf->type = "text/plain";
+        buf->content.content_type = "text/plain";
     return buf;
 }
 
@@ -1041,7 +1041,7 @@ static struct Buffer* make_buffer(struct Content content,
     frame_source = 0;
     if (b) {
         if (getRuntime()->w3m_backend)
-            b->type = allocStr(content.content_type, -1);
+            b->content.content_type = allocStr(content.content_type, -1);
         if (content.url.label) {
             if (proc == loadHTMLBuffer) {
                 struct Anchor* a;
@@ -5766,7 +5766,7 @@ phase2:
     newBuf->doc.topLine = newBuf->doc.firstLine;
     newBuf->doc.lastLine = newBuf->doc.currentLine;
     newBuf->doc.currentLine = newBuf->doc.firstLine;
-    newBuf->type = "text/html";
+    newBuf->content.content_type = "text/html";
     if (hb->n_textarea)
         formResetBuffer(newBuf, newBuf->doc.formitem);
 }
@@ -5983,7 +5983,7 @@ _saveBuffer(struct Buffer* buf, struct Line* l, FILE* f, int cont)
     enum wc_ces charset = getRuntime()->DisplayCharset
         ? getRuntime()->DisplayCharset
         : WC_CES_US_ASCII;
-    is_html = is_html_type(buf->type);
+    is_html = is_html_type(buf->content.content_type);
 
     // pager_next:
     for (; l != NULL; l = l->next) {
@@ -6116,14 +6116,14 @@ doExternal(struct Url url, struct input_stream* stream,
     if (mcap->flags & MAILCAP_HTMLOUTPUT) {
         buf = loadcmdout(command->ptr, loadHTMLBuffer, defaultbuf);
         if (buf) {
-            buf->type = "text/html";
+            buf->content.content_type = "text/html";
             buf->content.mailcap_source = buf->content.sourcefile;
             buf->content.sourcefile = src;
         }
     } else if (mcap->flags & MAILCAP_COPIOUSOUTPUT) {
         buf = loadcmdout(command->ptr, loadBuffer, defaultbuf);
         if (buf) {
-            buf->type = "text/plain";
+            buf->content.content_type = "text/plain";
             buf->content.mailcap_source = buf->content.sourcefile;
             buf->content.sourcefile = src;
         }
