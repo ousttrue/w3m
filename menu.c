@@ -1474,12 +1474,12 @@ initSelectMenu(void)
     for (i = 0, buf = Firstbuf; i < nitem; i++, buf = buf->nextBuffer) {
         str = Sprintf("<%s>", buf->doc.title);
         if (buf->content.filename != NULL) {
-            switch (buf->currentURL.scheme) {
+            switch (buf->content.url.scheme) {
             case SCM_LOCAL:
-                if (strcmp(buf->currentURL.file, "-")) {
+                if (strcmp(buf->content.url.file, "-")) {
                     Strcat_char(str, ' ');
                     Strcat_charp(str,
-                        conv_from_system(buf->currentURL.real_file));
+                        conv_from_system(buf->content.url.real_file));
                 }
                 break;
                 /* case SCM_UNKNOWN: */
@@ -1487,7 +1487,7 @@ initSelectMenu(void)
                 break;
             default:
                 Strcat_char(str, ' ');
-                p = url_decode2(parsedURL2Str(&buf->currentURL)->ptr, NULL);
+                p = url_decode2(parsedURL2Str(&buf->content.url)->ptr, NULL);
                 Strcat_charp(str, p);
                 break;
             }
@@ -1610,19 +1610,19 @@ initSelTabMenu(void)
         struct Buffer* buf = tab->currentBuffer;
         Str str = Sprintf("<%s>", buf->doc.title);
         if (buf->content.filename != NULL) {
-            switch (buf->currentURL.scheme) {
+            switch (buf->content.url.scheme) {
             case SCM_LOCAL:
-                if (strcmp(buf->currentURL.file, "-")) {
+                if (strcmp(buf->content.url.file, "-")) {
                     Strcat_char(str, ' ');
                     Strcat_charp(str,
-                        conv_from_system(buf->currentURL.real_file));
+                        conv_from_system(buf->content.url.real_file));
                 }
                 break;
                 /* case SCM_UNKNOWN: */
             case SCM_MISSING:
                 break;
             default: {
-                char* p = url_decode2(parsedURL2Str(&buf->currentURL)->ptr, NULL);
+                char* p = url_decode2(parsedURL2Str(&buf->content.url)->ptr, NULL);
                 Strcat_charp(str, p);
                 break;
             }

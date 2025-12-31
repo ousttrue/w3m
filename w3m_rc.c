@@ -524,12 +524,12 @@ struct Buffer* loadLink(const char* url, const char* target, const char* referer
 
     message(Sprintf("loading %s", url)->ptr, 0, 0);
 
-    no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->currentURL);
+    no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->content.url);
     base = baseURL(Currentbuf);
     if ((no_referer_ptr && *no_referer_ptr) || base == NULL || base->scheme == SCM_LOCAL || base->scheme == SCM_LOCAL_CGI)
         referer = NO_REFERER;
     if (referer == NULL)
-        referer = parsedURL2RefererStr(&Currentbuf->currentURL)->ptr;
+        referer = parsedURL2RefererStr(&Currentbuf->content.url)->ptr;
     buf = loadGeneralFile(url, baseURL(Currentbuf), referer, flag, request, do_download);
     if (buf == NULL) {
         char* emsg = Sprintf("Can't load %s", url)->ptr;
@@ -795,7 +795,7 @@ void _followForm(bool submit, bool on_target, bool do_download)
         tmp2 = Strdup(fi->parent->action);
         if (!Strcmp_charp(tmp2, "!CURRENT_URL!")) {
             /* It means "current URL" */
-            tmp2 = parsedURL2Str(&Currentbuf->currentURL);
+            tmp2 = parsedURL2Str(&Currentbuf->content.url);
             if ((p = strchr(tmp2->ptr, '?')) != NULL)
                 Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
         }

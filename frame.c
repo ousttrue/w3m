@@ -308,19 +308,19 @@ void resetFrameElement(union frameset_element* f_element,
         deleteFrameSetElement(*f_element);
         f_element->set = buf->frameset;
         f_element->set->currentURL = New(struct Url);
-        copyParsedURL(f_element->set->currentURL, &buf->currentURL);
+        copyParsedURL(f_element->set->currentURL, &buf->content.url);
         buf->frameset = popFrameTree(&(buf->frameQ));
         f_element->set->name = f_name;
     } else {
         f_body = newFrame(NULL, buf);
         f_body->attr = F_BODY;
         f_body->name = f_name;
-        f_body->url = parsedURL2Str(&buf->currentURL)->ptr;
-        f_body->source = buf->sourcefile;
-        buf->sourcefile = NULL;
-        if (buf->mailcap_source) {
-            f_body->source = buf->mailcap_source;
-            buf->mailcap_source = NULL;
+        f_body->url = parsedURL2Str(&buf->content.url)->ptr;
+        f_body->source = buf->content.sourcefile;
+        buf->content.sourcefile = NULL;
+        if (buf->content.mailcap_source) {
+            f_body->source = buf->content.mailcap_source;
+            buf->content.mailcap_source = NULL;
         }
         f_body->type = buf->type;
         f_body->referer = referer;
@@ -354,7 +354,7 @@ frame_download_source(struct frame_body* b, struct Url* currentURL,
             b->referer, flag | RG_FRAME_SRC, b->request, false);
         /* XXX certificate? */
         if (buf && buf != NO_BUFFER)
-            b->ssl_certificate = buf->ssl_certificate;
+            b->ssl_certificate = buf->content.ssl_certificate;
         getRuntime()->w3m_dump &= ~DUMP_FRAME;
         getRuntime()->is_redisplay = FALSE;
         break;
@@ -365,20 +365,20 @@ frame_download_source(struct frame_body* b, struct Url* currentURL,
         b->flags = (buf == NO_BUFFER) ? FB_NO_BUFFER : 0;
         return NULL;
     }
-    b->url = parsedURL2Str(&buf->currentURL)->ptr;
+    b->url = parsedURL2Str(&buf->content.url)->ptr;
     b->type = buf->type;
-    b->source = buf->sourcefile;
-    buf->sourcefile = NULL;
-    if (buf->mailcap_source) {
-        b->source = buf->mailcap_source;
-        buf->mailcap_source = NULL;
+    b->source = buf->content.sourcefile;
+    buf->content.sourcefile = NULL;
+    if (buf->content.mailcap_source) {
+        b->source = buf->content.mailcap_source;
+        buf->content.mailcap_source = NULL;
     }
     b->attr = F_BODY;
     if (buf->frameset) {
         ret_frameset = buf->frameset;
         ret_frameset->name = b->name;
         ret_frameset->currentURL = New(struct Url);
-        copyParsedURL(ret_frameset->currentURL, &buf->currentURL);
+        copyParsedURL(ret_frameset->currentURL, &buf->content.url);
         buf->frameset = popFrameTree(&(buf->frameQ));
     }
     discardBuffer(buf);
@@ -437,7 +437,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
     } else
         fputs("<table hborder>\n", f1);
 
-    currentURL = f->currentURL ? f->currentURL : &current->currentURL;
+    currentURL = f->currentURL ? f->currentURL : &current->content.url;
     for (r = 0; r < f->row; r++) {
         fputs("<tr valign=top>\n", f1);
         for (c = 0; c < f->col; c++) {
@@ -876,7 +876,7 @@ renderFrame(struct Buffer* Cbuf, int force_reload)
     fclose(f);
 
     int flag = RG_FRAME;
-    if ((Cbuf->currentURL).is_nocache)
+    if ((Cbuf->content.url).is_nocache)
         flag |= RG_NOCACHE;
     renderFrameSet = Cbuf->frameset;
     flushFrameSet(renderFrameSet);
@@ -890,9 +890,9 @@ renderFrame(struct Buffer* Cbuf, int force_reload)
     renderFrameSet = NULL;
     if (buf == NULL || buf == NO_BUFFER)
         return NULL;
-    buf->sourcefile = tmp->ptr;
+    buf->content.sourcefile = tmp->ptr;
     buf->doc.charset = Cbuf->doc.charset;
-    copyParsedURL(&buf->currentURL, &Cbuf->currentURL);
+    copyParsedURL(&buf->content.url, &Cbuf->content.url);
     preFormUpdateBuffer(buf);
     return buf;
 }

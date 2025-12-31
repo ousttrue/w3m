@@ -88,10 +88,10 @@ static void set_buffer_environ(struct Buffer* buf)
     if (buf == NULL)
         return;
     if (buf != prev_buf) {
-        set_environ("W3M_SOURCEFILE", buf->sourcefile);
+        set_environ("W3M_SOURCEFILE", buf->content.sourcefile);
         set_environ("W3M_FILENAME", buf->content.filename);
         set_environ("W3M_TITLE", buf->doc.title);
-        set_environ("W3M_URL", parsedURL2Str(&buf->currentURL)->ptr);
+        set_environ("W3M_URL", parsedURL2Str(&buf->content.url)->ptr);
         set_environ("W3M_TYPE", "unknown");
         set_environ("W3M_CHARSET", wc_ces_to_charset(buf->doc.charset));
     }

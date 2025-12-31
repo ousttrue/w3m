@@ -116,7 +116,7 @@ const char* checkContentType(struct Content* content)
             p = skip_blanks(p);
             if (*p == '"')
                 p++;
-            content->content_charset = wc_guess_charset(p, 0);
+            content->charset = wc_guess_charset(p, 0);
         }
     }
 

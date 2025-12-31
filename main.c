@@ -649,7 +649,7 @@ bool w3m_args(int argc, char** argv)
             if (newbuf == NULL)
                 Strcat(err_msg, Sprintf("w3m: Can't load %s.\n", p));
             else if (newbuf != NO_BUFFER)
-                pushHashHist(getRuntime()->URLHist, parsedURL2Str(&newbuf->currentURL)->ptr);
+                pushHashHist(getRuntime()->URLHist, parsedURL2Str(&newbuf->content.url)->ptr);
         } else {
             if (fmInitialized())
                 exitRawMode();
@@ -801,9 +801,9 @@ dump_source(struct Buffer* buf)
 {
     FILE* f;
     int c;
-    if (buf->sourcefile == NULL)
+    if (buf->content.sourcefile == NULL)
         return;
-    f = fopen(buf->sourcefile, "r");
+    f = fopen(buf->content.sourcefile, "r");
     if (f == NULL)
         return;
     while ((c = fgetc(f)) != EOF) {
@@ -833,15 +833,15 @@ dump_head(struct Buffer* buf)
 static void
 dump_extra(struct Buffer* buf)
 {
-    printf("W3m-current-url: %s\n", parsedURL2Str(&buf->currentURL)->ptr);
+    printf("W3m-current-url: %s\n", parsedURL2Str(&buf->content.url)->ptr);
     if (buf->baseURL)
         printf("W3m-base-url: %s\n", parsedURL2Str(buf->baseURL)->ptr);
     printf("W3m-document-charset: %s\n",
         wc_ces_to_charset(buf->doc.charset));
 
-    if (buf->ssl_certificate) {
+    if (buf->content.ssl_certificate) {
         Str tmp = Strnew();
-        for (const char* p = buf->ssl_certificate; *p; p++) {
+        for (const char* p = buf->content.ssl_certificate; *p; p++) {
             Strcat_char(tmp, *p);
             if (*p == '\n') {
                 for (; *(p + 1) == '\n'; p++)
@@ -2203,8 +2203,8 @@ gotoLabel(const char* label)
     copyBuffer(buf, Currentbuf);
     for (i = 0; i < MAX_LB; i++)
         buf->linkBuffer[i] = NULL;
-    buf->currentURL.label = allocStr(label, -1);
-    pushHashHist(getRuntime()->URLHist, parsedURL2Str(&buf->currentURL)->ptr);
+    buf->content.url.label = allocStr(label, -1);
+    pushHashHist(getRuntime()->URLHist, parsedURL2Str(&buf->content.url)->ptr);
     (*buf->clone)++;
     pushBuffer(buf);
     doc_gotoLine(&Currentbuf->doc, al->start.line);
@@ -2243,7 +2243,7 @@ void _followA(bool on_target, bool do_download)
 
     struct Url u;
     parseURL2(a->url, &u, baseURL(Currentbuf));
-    if (Strcmp(parsedURL2Str(&u), parsedURL2Str(&Currentbuf->currentURL)) == 0) {
+    if (Strcmp(parsedURL2Str(&u), parsedURL2Str(&Currentbuf->content.url)) == 0) {
         /* index within this buffer */
         if (u.label) {
             gotoLabel(u.label);
@@ -2889,12 +2889,12 @@ goURL0(char* prompt, int relative)
             url = skip_blanks(url);
     }
     if (relative) {
-        no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->currentURL);
+        no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->content.url);
         current = baseURL(Currentbuf);
         if ((no_referer_ptr && *no_referer_ptr) || current == NULL || current->scheme == SCM_LOCAL || current->scheme == SCM_LOCAL_CGI)
             referer = NO_REFERER;
         else
-            referer = parsedURL2RefererStr(&Currentbuf->currentURL)->ptr;
+            referer = parsedURL2RefererStr(&Currentbuf->content.url)->ptr;
         url = url_encode(url, current, Currentbuf->doc.charset);
     } else {
         current = NULL;
@@ -2912,7 +2912,7 @@ goURL0(char* prompt, int relative)
     pushHashHist(getRuntime()->URLHist, parsedURL2Str(&p_url)->ptr);
     cmd_loadURL(url, current, referer, NULL);
     if (Currentbuf != cur_buf) /* success */
-        pushHashHist(getRuntime()->URLHist, parsedURL2Str(&Currentbuf->currentURL)->ptr);
+        pushHashHist(getRuntime()->URLHist, parsedURL2Str(&Currentbuf->content.url)->ptr);
 }
 
 DEFUN(goURL, GOTO, "Open specified document in a new buffer")
@@ -2932,7 +2932,7 @@ DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer")
         pushHashHist(getRuntime()->URLHist, parsedURL2Str(&p_url)->ptr);
         cmd_loadURL(url, NULL, NULL, NULL);
         if (Currentbuf != cur_buf) /* success */
-            pushHashHist(getRuntime()->URLHist, parsedURL2Str(&Currentbuf->currentURL)->ptr);
+            pushHashHist(getRuntime()->URLHist, parsedURL2Str(&Currentbuf->content.url)->ptr);
     }
 }
 
@@ -2957,7 +2957,7 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
                   "&charset=%s",
         (Str_form_quote(localCookie()))->ptr,
         (Str_form_quote(Strnew_charp(getRuntime()->BookmarkFile)))->ptr,
-        (Str_form_quote(parsedURL2Str(&Currentbuf->currentURL)))->ptr,
+        (Str_form_quote(parsedURL2Str(&Currentbuf->content.url)))->ptr,
 
         (Str_form_quote(wc_conv_strict(Currentbuf->doc.title,
              getRuntime()->InnerCharset,
@@ -3044,7 +3044,7 @@ void follow_map(struct parsed_tagarg* arg)
         _newT();
         buf = Currentbuf;
         cmd_loadURL(a->url, baseURL(Currentbuf),
-            parsedURL2Str(&Currentbuf->currentURL)->ptr, NULL);
+            parsedURL2Str(&Currentbuf->content.url)->ptr, NULL);
         if (buf != Currentbuf)
             delBuffer(buf);
         else
@@ -3052,7 +3052,7 @@ void follow_map(struct parsed_tagarg* arg)
         return;
     }
     cmd_loadURL(a->url, baseURL(Currentbuf),
-        parsedURL2Str(&Currentbuf->currentURL)->ptr, NULL);
+        parsedURL2Str(&Currentbuf->content.url)->ptr, NULL);
 }
 
 /* link menu */
@@ -3070,7 +3070,7 @@ DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
     parseURL2(l->url, &p_url, baseURL(Currentbuf));
     pushHashHist(getRuntime()->URLHist, parsedURL2Str(&p_url)->ptr);
     cmd_loadURL(l->url, baseURL(Currentbuf),
-        parsedURL2Str(&Currentbuf->currentURL)->ptr, NULL);
+        parsedURL2Str(&Currentbuf->content.url)->ptr, NULL);
 }
 
 static void
@@ -3199,17 +3199,17 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document")
 /* save source */
 DEFUN(svSrc, DOWNLOAD SAVE, "Save document source")
 {
-    if (Currentbuf->sourcefile == NULL)
+    if (Currentbuf->content.sourcefile == NULL)
         return;
     getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
     getRuntime()->PermitSaveToPipe = TRUE;
     const char* file;
-    if (Currentbuf->currentURL.scheme == SCM_LOCAL)
+    if (Currentbuf->content.url.scheme == SCM_LOCAL)
         file = conv_from_system(guess_save_name(NULL,
-            Currentbuf->currentURL.real_file));
+            Currentbuf->content.url.real_file));
     else
-        file = guess_save_name(&Currentbuf->content, Currentbuf->currentURL.file);
-    doFileCopy(Currentbuf->sourcefile, file);
+        file = guess_save_name(&Currentbuf->content, Currentbuf->content.url.file);
+    doFileCopy(Currentbuf->content.sourcefile, file);
     getRuntime()->PermitSaveToPipe = FALSE;
 }
 
@@ -3284,7 +3284,7 @@ currentURL(void)
 {
     if (Currentbuf->bufferprop & BP_INTERNAL)
         return Strnew_size(0);
-    return parsedURL2Str(&Currentbuf->currentURL);
+    return parsedURL2Str(&Currentbuf->content.url);
 }
 
 DEFUN(curURL, PEEK, "Show current address")
@@ -3330,7 +3330,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
         Currentbuf = buf;
         return;
     }
-    if (Currentbuf->sourcefile == NULL) {
+    if (Currentbuf->content.sourcefile == NULL) {
         // if (Currentbuf->pagerSource && !strcasecmp(Currentbuf->type, "text/plain")) {
         //     wc_ces old_charset;
         //     wc_bool old_fix_width_conv;
@@ -3387,10 +3387,10 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
     } else {
         return;
     }
-    buf->currentURL = Currentbuf->currentURL;
+    buf->content.url = Currentbuf->content.url;
     buf->content.filename = Currentbuf->content.filename;
-    buf->sourcefile = Currentbuf->sourcefile;
-    buf->header_source = Currentbuf->header_source;
+    buf->content.sourcefile = Currentbuf->content.sourcefile;
+    buf->content.header_source = Currentbuf->content.header_source;
     // buf->search_header = Currentbuf->search_header;
     buf->doc.charset = Currentbuf->doc.charset;
     buf->clone = Currentbuf->clone;
@@ -3417,7 +3417,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
         disp_err_message("Can't reload...", TRUE);
         return;
     }
-    if (Currentbuf->currentURL.scheme == SCM_LOCAL && !strcmp(Currentbuf->currentURL.file, "-")) {
+    if (Currentbuf->content.url.scheme == SCM_LOCAL && !strcmp(Currentbuf->content.url.file, "-")) {
         /* file is std input */
         /* FIXME: gettextize? */
         disp_err_message("Can't reload stdin", TRUE);
@@ -3432,8 +3432,10 @@ DEFUN(reload, RELOAD, "Load current document anew")
             return;
         }
         if (fbuf->linkBuffer[LB_FRAME]) {
-            if (buf->sourcefile && fbuf->linkBuffer[LB_FRAME]->sourcefile && !strcmp(buf->sourcefile, fbuf->linkBuffer[LB_FRAME]->sourcefile))
-                fbuf->linkBuffer[LB_FRAME]->sourcefile = NULL;
+            if (buf->content.sourcefile
+                && fbuf->linkBuffer[LB_FRAME]->content.sourcefile
+                && !strcmp(buf->content.sourcefile, fbuf->linkBuffer[LB_FRAME]->content.sourcefile))
+                fbuf->linkBuffer[LB_FRAME]->content.sourcefile = NULL;
             delBuffer(fbuf->linkBuffer[LB_FRAME]);
         }
         fbuf->linkBuffer[LB_FRAME] = buf;
@@ -3462,7 +3464,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
     } else {
         request = NULL;
     }
-    url = parsedURL2Str(&Currentbuf->currentURL);
+    url = parsedURL2Str(&Currentbuf->content.url);
     /* FIXME: gettextize? */
     message("Reloading...", 0, 0);
     old_charset = getRuntime()->DocumentCharset;
@@ -3511,7 +3513,7 @@ _docCSet(enum wc_ces charset)
 {
     if (Currentbuf->bufferprop & BP_INTERNAL)
         return;
-    if (Currentbuf->sourcefile == NULL) {
+    if (Currentbuf->content.sourcefile == NULL) {
         disp_message("Can't reload...", FALSE);
         return;
     }
@@ -3693,13 +3695,13 @@ DEFUN(extbrz, EXTERN, "Display using an external browser")
         disp_err_message("Can't browse...", TRUE);
         return;
     }
-    if (Currentbuf->currentURL.scheme == SCM_LOCAL && !strcmp(Currentbuf->currentURL.file, "-")) {
+    if (Currentbuf->content.url.scheme == SCM_LOCAL && !strcmp(Currentbuf->content.url.file, "-")) {
         /* file is std input */
         /* FIXME: gettextize? */
         disp_err_message("Can't browse stdin", TRUE);
         return;
     }
-    invoke_browser(parsedURL2Str(&Currentbuf->currentURL)->ptr);
+    invoke_browser(parsedURL2Str(&Currentbuf->content.url)->ptr);
 }
 
 DEFUN(linkbrz, EXTERN_LINK, "Display target using an external browser")

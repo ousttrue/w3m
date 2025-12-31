@@ -117,8 +117,8 @@ loadSomething(struct Url url, struct input_stream* stream, const char* t,
         if (buf->doc.title == NULL && buf->content.filename != NULL)
             buf->doc.title = conv_from_system(lastFileName(buf->content.filename));
     }
-    if (buf->currentURL.scheme == SCM_UNKNOWN)
-        buf->currentURL.scheme = url.scheme;
+    if (buf->content.url.scheme == SCM_UNKNOWN)
+        buf->content.url.scheme = url.scheme;
     // if (f->scheme == SCM_LOCAL && buf->sourcefile == NULL)
     //     buf->sourcefile = buf->content.filename;
     if (loadproc == loadHTMLBuffer || loadproc == loadImageBuffer)
@@ -924,9 +924,9 @@ struct Buffer* page_loaded(struct Url url,
 
     struct Buffer* b = loadHTMLString(page);
     if (b) {
-        copyParsedURL(&b->currentURL, &url);
+        copyParsedURL(&b->content.url, &url);
         if (src)
-            b->sourcefile = tmp->ptr;
+            b->content.sourcefile = tmp->ptr;
 
         b->doc.charset = charset;
     }
@@ -971,7 +971,7 @@ static struct Buffer* make_buffer(struct Url url, int flag,
         } else if (t_buf->content.compression != CMP_NOCOMPRESS) {
             if (!(getRuntime()->w3m_dump & DUMP_SOURCE) && (getRuntime()->w3m_dump & ~DUMP_FRAME || is_text_type(t) || searchExtViewer(t))) {
                 stream = uncompress_stream(stream,
-                    t_buf->content.compression, use_tmpf ? &t_buf->sourcefile : NULL);
+                    t_buf->content.compression, use_tmpf ? &t_buf->content.sourcefile : NULL);
                 // UFhalfclose(&f);
                 // const char* ext;
                 // uncompressed_file_type(url.file, &ext);
@@ -986,7 +986,7 @@ static struct Buffer* make_buffer(struct Url url, int flag,
         struct Buffer* b = NULL;
         if (is_save2tmp(stream, getRuntime()->image_source)) {
             b = newBuffer(INIT_BUFFER_WIDTH);
-            b->sourcefile = getRuntime()->image_source;
+            b->content.sourcefile = getRuntime()->image_source;
         }
         is_close(stream);
         TRAP_OFF;
@@ -1026,13 +1026,13 @@ static struct Buffer* make_buffer(struct Url url, int flag,
 
     if (t_buf == NULL)
         t_buf = newBuffer(INIT_BUFFER_WIDTH);
-    copyParsedURL(&t_buf->currentURL, &url);
+    copyParsedURL(&t_buf->content.url, &url);
     t_buf->content.filename = url.real_file ? url.real_file : url.file ? conv_to_system(url.file)
                                                                        : NULL;
     if (flag & RG_FRAME) {
         t_buf->bufferprop |= BP_FRAME;
     }
-    t_buf->ssl_certificate = ssl_certificate;
+    t_buf->content.ssl_certificate = ssl_certificate;
     frame_source = flag & RG_FRAME_SRC;
 
     struct Buffer* b = loadSomething(url, stream, t,
@@ -1140,8 +1140,8 @@ struct Buffer* load_doc(const char* path, struct Url* current,
                     struct Buffer* b = loadGeneralFile(cmd->ptr, NULL, NO_REFERER, 0,
                         NULL, do_download);
                     if (b != NULL && b != NO_BUFFER) {
-                        copyParsedURL(&b->currentURL, &us.url);
-                        b->content.filename = b->currentURL.real_file;
+                        copyParsedURL(&b->content.url, &us.url);
+                        b->content.filename = b->content.url.real_file;
                     }
                     return b;
                 } else {
@@ -1160,7 +1160,7 @@ struct Buffer* load_doc(const char* path, struct Url* current,
                 struct Buffer* b = loadGeneralFile(tmp->ptr, current,
                     option.referer, option.flag, request, do_download);
                 if (b != NULL && b != NO_BUFFER)
-                    copyParsedURL(&b->currentURL, &us.url);
+                    copyParsedURL(&b->content.url, &us.url);
                 return b;
             }
 
@@ -4447,7 +4447,7 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
 
     struct Url* base = baseURL(buf);
 
-    enum wc_ces name_charset = url_to_charset(NULL, &buf->currentURL,
+    enum wc_ces name_charset = url_to_charset(NULL, &buf->content.url,
         buf->doc.charset);
 
     if (out_size == 0) {
@@ -4875,7 +4875,7 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                             buf->doc.charset);
                         if (!buf->baseURL)
                             buf->baseURL = New(struct Url);
-                        parseURL2(p, buf->baseURL, &buf->currentURL);
+                        parseURL2(p, buf->baseURL, &buf->content.url);
                         base = buf->baseURL;
                     }
                     if (parsedtag_get_value(tag, ATTR_TARGET, &p))
@@ -5433,12 +5433,12 @@ loadHTMLBuffer(struct Url url, struct input_stream* stream, const char* t,
     if (newBuf == NULL)
         newBuf = newBuffer(INIT_BUFFER_WIDTH);
 
-    if (newBuf->sourcefile == NULL
+    if (newBuf->content.sourcefile == NULL
         && (url.scheme != SCM_LOCAL || newBuf->mailcap)) {
         Str tmp = tmpfname(TMPF_SRC, ".html");
         FILE* src = fopen(tmp->ptr, "w");
         if (src) {
-            newBuf->sourcefile = tmp->ptr;
+            newBuf->content.sourcefile = tmp->ptr;
             is_write_all(stream, src);
             fclose(src);
         }
@@ -5714,8 +5714,8 @@ void loadHTMLstream(struct input_stream* stream,
         else if (newBuf->doc.charset)
             detected_charset = doc_charset = newBuf->doc.charset;
     }
-    if (newBuf->content.content_charset && getRuntime()->UseContentCharset)
-        doc_charset = newBuf->content.content_charset;
+    if (newBuf->content.charset && getRuntime()->UseContentCharset)
+        doc_charset = newBuf->content.charset;
     hb->meta_charset = 0;
 
     while ((lineBuf2 = is_get_str(stream, true)) && lineBuf2->length) {
@@ -5732,7 +5732,7 @@ void loadHTMLstream(struct input_stream* stream,
          */
 
         if (hb->meta_charset) { /* <META> */
-            if (newBuf->content.content_charset == 0 && getRuntime()->UseContentCharset) {
+            if (newBuf->content.charset == 0 && getRuntime()->UseContentCharset) {
                 doc_charset = hb->meta_charset;
                 detected_charset = WC_CES_US_ASCII;
             }
@@ -5838,16 +5838,16 @@ loadBuffer(struct Url url, struct input_stream* stream,
     }
     TRAP_ON;
 
-    if (newBuf->sourcefile == NULL && (url.scheme != SCM_LOCAL || newBuf->mailcap)) {
+    if (newBuf->content.sourcefile == NULL && (url.scheme != SCM_LOCAL || newBuf->mailcap)) {
         tmpf = tmpfname(TMPF_SRC, NULL);
         src = fopen(tmpf->ptr, "w");
         if (src)
-            newBuf->sourcefile = tmpf->ptr;
+            newBuf->content.sourcefile = tmpf->ptr;
     }
     if (newBuf->doc.charset)
         charset = doc_charset = newBuf->doc.charset;
-    if (newBuf->content.content_charset && getRuntime()->UseContentCharset)
-        doc_charset = newBuf->content.content_charset;
+    if (newBuf->content.charset && getRuntime()->UseContentCharset)
+        doc_charset = newBuf->content.charset;
 
     nlines = 0;
     while ((lineBuf2 = is_get_str(stream, true)) && lineBuf2->length) {
@@ -5898,7 +5898,7 @@ loadImageBuffer(struct Url url, struct input_stream* stream,
     FILE* src = NULL;
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
     struct stat st;
-    const struct Url* pu = newBuf ? &newBuf->currentURL : NULL;
+    const struct Url* pu = newBuf ? &newBuf->content.url : NULL;
 
     loadImage(IMG_FLAG_STOP);
     image.url = parsedURL2Str(&url)->ptr;
@@ -5924,8 +5924,8 @@ image_buffer:
     if (newBuf == NULL)
         newBuf = newBuffer(INIT_BUFFER_WIDTH);
     cache->loaded |= IMG_FLAG_DONT_REMOVE;
-    if (newBuf->sourcefile == NULL && url.scheme != SCM_LOCAL)
-        newBuf->sourcefile = cache->file;
+    if (newBuf->content.sourcefile == NULL && url.scheme != SCM_LOCAL)
+        newBuf->content.sourcefile = cache->file;
 
     tmp = Sprintf("<img src=\"%s\"><br><br>", html_quote(image.url));
     tmpf = tmpfname(TMPF_SRC, ".html");
@@ -5933,7 +5933,7 @@ image_buffer:
     if (!src)
         return NULL;
 
-    newBuf->mailcap_source = tmpf->ptr;
+    newBuf->content.mailcap_source = tmpf->ptr;
     struct input_stream* tmp_stream = is_from_str(tmp);
     is_write_all(tmp_stream, src);
 
@@ -6117,26 +6117,26 @@ doExternal(struct Url url, struct input_stream* stream,
     if (mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)) {
         if (defaultbuf == NULL)
             defaultbuf = newBuffer(INIT_BUFFER_WIDTH);
-        if (defaultbuf->sourcefile)
-            src = defaultbuf->sourcefile;
+        if (defaultbuf->content.sourcefile)
+            src = defaultbuf->content.sourcefile;
         else
             src = tmpf->ptr;
-        defaultbuf->sourcefile = NULL;
+        defaultbuf->content.sourcefile = NULL;
         defaultbuf->mailcap = mcap;
     }
     if (mcap->flags & MAILCAP_HTMLOUTPUT) {
         buf = loadcmdout(command->ptr, loadHTMLBuffer, defaultbuf);
         if (buf && buf != NO_BUFFER) {
             buf->type = "text/html";
-            buf->mailcap_source = buf->sourcefile;
-            buf->sourcefile = src;
+            buf->content.mailcap_source = buf->content.sourcefile;
+            buf->content.sourcefile = src;
         }
     } else if (mcap->flags & MAILCAP_COPIOUSOUTPUT) {
         buf = loadcmdout(command->ptr, loadBuffer, defaultbuf);
         if (buf && buf != NO_BUFFER) {
             buf->type = "text/plain";
-            buf->mailcap_source = buf->sourcefile;
-            buf->sourcefile = src;
+            buf->content.mailcap_source = buf->content.sourcefile;
+            buf->content.sourcefile = src;
         }
     } else {
         if (mcap->flags & MAILCAP_NEEDSTERMINAL || !getRuntime()->BackgroundExtViewer) {

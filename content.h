@@ -1,4 +1,5 @@
 #pragma once
+#include "url.h"
 #include "textlist.h"
 #include "compression.h"
 #include "Str.h"
@@ -6,10 +7,18 @@
 #include <libwc/ces.h>
 
 struct Content {
+    struct Url url;
     const char* filename;
+    /// download file cache
+    const char* sourcefile;
+
+    const char* mailcap_source;
+    const char* header_source;
+    const char* ssl_certificate;
+
     int http_response_code;
     struct TextList* document_header;
-    enum wc_ces content_charset;
+    enum wc_ces charset;
     size_t current_content_length;
     enum CompressionType compression;
 };

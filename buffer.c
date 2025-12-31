@@ -36,10 +36,10 @@ baseURL(struct Buffer* buf)
     if (buf->baseURL != NULL) {
         /* <BASE> tag is defined in the document */
         return buf->baseURL;
-    } else if (IS_EMPTY_PARSED_URL(&buf->currentURL))
+    } else if (IS_EMPTY_PARSED_URL(&buf->content.url))
         return NULL;
     else
-        return &buf->currentURL;
+        return &buf->content.url;
 }
 
 void cmd_loadBuffer(struct Buffer* buf, int prop, enum LinkBufferID linkid)
@@ -49,7 +49,7 @@ void cmd_loadBuffer(struct Buffer* buf, int prop, enum LinkBufferID linkid)
     } else if (buf != NO_BUFFER) {
         buf->bufferprop |= (BP_INTERNAL | prop);
         if (!(buf->bufferprop & BP_NO_URL))
-            copyParsedURL(&buf->currentURL, &Currentbuf->currentURL);
+            copyParsedURL(&buf->content.url, &Currentbuf->content.url);
         if (linkid != LB_NOLINK) {
             buf->linkBuffer[REV_LB[linkid]] = Currentbuf;
             Currentbuf->linkBuffer[linkid] = buf;
@@ -69,7 +69,7 @@ struct Buffer* newBuffer(int width)
     n->width = width;
     n->doc.COLS = TTY_COLS();
     n->doc.LINES = LASTLINE();
-    n->currentURL.scheme = SCM_UNKNOWN;
+    n->content.url.scheme = SCM_UNKNOWN;
     n->baseURL = NULL;
     n->baseTarget = NULL;
     n->doc.title = "";
@@ -77,7 +77,7 @@ struct Buffer* newBuffer(int width)
     n->clone = New(int);
     *n->clone = 1;
     n->trbyte = 0;
-    n->ssl_certificate = NULL;
+    n->content.ssl_certificate = NULL;
     n->auto_detect = WcOption.auto_detect;
     n->check_url = getRuntime()->MarkAllPages; /* use default from -o mark_all_pages */
     return n;
@@ -126,13 +126,13 @@ void discardBuffer(struct Buffer* buf)
         unlink(buf->savecache);
     if (--(*buf->clone))
         return;
-    if (buf->sourcefile) {
-        unlink(buf->sourcefile);
+    if (buf->content.sourcefile) {
+        unlink(buf->content.sourcefile);
     }
-    if (buf->header_source)
-        unlink(buf->header_source);
-    if (buf->mailcap_source)
-        unlink(buf->mailcap_source);
+    if (buf->content.header_source)
+        unlink(buf->content.header_source);
+    if (buf->content.mailcap_source)
+        unlink(buf->content.mailcap_source);
     while (buf->frameset) {
         deleteFrameSet(buf->frameset);
         buf->frameset = popFrameTree(&(buf->frameQ));
@@ -231,12 +231,12 @@ writeBufferName(struct Buffer* buf, int n)
     screen_move(n, 0);
     Str msg = Sprintf("<%s> [%d lines]", buf->doc.title, all);
     if (buf->content.filename != NULL) {
-        switch (buf->currentURL.scheme) {
+        switch (buf->content.url.scheme) {
         case SCM_LOCAL:
         case SCM_LOCAL_CGI:
-            if (strcmp(buf->currentURL.file, "-")) {
+            if (strcmp(buf->content.url.file, "-")) {
                 Strcat_char(msg, ' ');
-                Strcat_charp(msg, conv_from_system(buf->currentURL.real_file));
+                Strcat_charp(msg, conv_from_system(buf->content.url.real_file));
             }
             break;
         case SCM_UNKNOWN:
@@ -244,7 +244,7 @@ writeBufferName(struct Buffer* buf, int n)
             break;
         default:
             Strcat_char(msg, ' ');
-            Strcat(msg, parsedURL2Str(&buf->currentURL));
+            Strcat(msg, parsedURL2Str(&buf->content.url));
             break;
         }
     }
@@ -420,10 +420,10 @@ void reshapeBuffer(struct Buffer* buf)
     buf->width = INIT_BUFFER_WIDTH;
 
     struct input_stream* stream = NULL;
-    if (buf->mailcap_source) {
-        stream = decompress_stream(examineFile(buf->mailcap_source), buf->mailcap_source);
-    } else if (buf->sourcefile) {
-        stream = decompress_stream(examineFile(buf->sourcefile), buf->sourcefile);
+    if (buf->content.mailcap_source) {
+        stream = decompress_stream(examineFile(buf->content.mailcap_source), buf->content.mailcap_source);
+    } else if (buf->content.sourcefile) {
+        stream = decompress_stream(examineFile(buf->content.sourcefile), buf->content.sourcefile);
     }
     if (!stream)
         return;
@@ -448,11 +448,11 @@ void reshapeBuffer(struct Buffer* buf)
     if (buf->imarklist)
         buf->imarklist->nmark = 0;
 
-    if (buf->header_source) {
-        if (buf->currentURL.scheme != SCM_LOCAL || buf->mailcap_source || !strcmp(buf->currentURL.file, "-")) {
-            struct input_stream* stream = decompress_stream(examineFile(buf->header_source), buf->header_source);
+    if (buf->content.header_source) {
+        if (buf->content.url.scheme != SCM_LOCAL || buf->content.mailcap_source || !strcmp(buf->content.url.file, "-")) {
+            struct input_stream* stream = decompress_stream(examineFile(buf->content.header_source), buf->content.header_source);
             if (stream) {
-                getHttpResponseHeader(&buf->content, buf->currentURL, stream);
+                getHttpResponseHeader(&buf->content, buf->content.url, stream);
                 is_close(stream);
             }
         }
@@ -463,10 +463,10 @@ void reshapeBuffer(struct Buffer* buf)
         WcOption.auto_detect = WC_OPT_DETECT_OFF;
         getRuntime()->UseContentCharset = FALSE;
         if (is_html_type(buf->type))
-            loadHTMLBuffer(buf->currentURL, stream,
+            loadHTMLBuffer(buf->content.url, stream,
                 NULL, buf, buf->bufferprop & BP_FRAME);
         else
-            loadBuffer(buf->currentURL, stream,
+            loadBuffer(buf->content.url, stream,
                 NULL, buf, buf->bufferprop & BP_FRAME);
         is_close(stream);
         WcOption.auto_detect = old_auto_detect;

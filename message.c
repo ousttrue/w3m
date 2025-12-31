@@ -184,7 +184,7 @@ make_lastline_message(struct Buffer* buf)
         msg = Sprintf("%s", msg->ptr);
     }
     Strcat_charp(msg, "Viewing");
-    if (buf->ssl_certificate)
+    if (buf->content.ssl_certificate)
         Strcat_charp(msg, "[SSL]");
     Strcat_charp(msg, " <");
     Strcat_charp(msg, buf->doc.title);

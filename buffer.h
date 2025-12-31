@@ -70,12 +70,8 @@ struct Buffer {
     struct MapList* maplist;
     struct HmarkerList* hmarklist;
     struct HmarkerList* imarklist;
-    struct Url currentURL;
     struct Url* baseURL;
     char* baseTarget;
-
-    /// download file cache
-    const char* sourcefile;
 
     struct frameset* frameset;
     struct frameset_queue* frameQ;
@@ -87,9 +83,6 @@ struct Buffer {
     char* savecache;
     char* edit;
     struct mailcap* mailcap;
-    const char* mailcap_source;
-    const char* header_source;
-    const char* ssl_certificate;
     // char image_loaded;
     struct Anchor* submit;
     struct BufferPos* undo;
