@@ -881,10 +881,8 @@ void loadImage(enum ImageLoadFlags flag)
             continue;
         }
 
-        getRuntime()->image_source = cache->file;
-        loadGeneralFile(cache->url, cache->current, NULL, 0, NULL, false);
+        loadGeneralFile(cache->url, cache->current, NULL, 0, NULL, false, cache->file);
         symlink(cache->file, cache->touch);
-        getRuntime()->image_source = NULL;
 
         // flush_tty();
         // if ((cache->pid = fork()) == 0) {

@@ -165,7 +165,6 @@ struct Runtime {
     char* ssl_min_version;
     char* ssl_cipher;
 
-    const char* image_source;
     int DecodeURL;
     char QuietMessage;
     int ShowEffect;

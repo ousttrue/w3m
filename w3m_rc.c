@@ -530,7 +530,7 @@ struct Buffer* loadLink(const char* url, const char* target, const char* referer
         referer = NO_REFERER;
     if (referer == NULL)
         referer = parsedURL2RefererStr(&Currentbuf->content.url)->ptr;
-    buf = loadGeneralFile(url, baseURL(Currentbuf), referer, flag, request, do_download);
+    buf = loadGeneralFile(url, baseURL(Currentbuf), referer, flag, request, do_download, NULL);
     if (buf == NULL) {
         char* emsg = Sprintf("Can't load %s", url)->ptr;
         disp_err_message(emsg, FALSE);

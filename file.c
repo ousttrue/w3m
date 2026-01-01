@@ -228,7 +228,7 @@ Str getLinkNumberStr(struct HtmlBuilder* hb, int correction)
 
 struct Buffer*
 loadGeneralFile(const char* path, struct Url* current, const char* referer,
-    int flag, struct FormList* request, bool do_download)
+    int flag, struct FormList* request, bool do_download, const char *image_source)
 {
     checkRedirection(NULL);
     struct ContentData data = get_content(path, current, request,
@@ -249,7 +249,7 @@ loadGeneralFile(const char* path, struct Url* current, const char* referer,
         return NULL;
 
     case CONTENT_DATA_STR: {
-        if (getRuntime()->image_source)
+        if (image_source)
             return NULL;
 
         // write page to tmpfile
@@ -291,11 +291,11 @@ loadGeneralFile(const char* path, struct Url* current, const char* referer,
                 is_close(data.stream);
             return NULL;
         } else {
-            if (getRuntime()->image_source) {
+            if (image_source) {
                 struct Buffer* b = NULL;
-                if (is_save2tmp(data.stream, getRuntime()->image_source)) {
+                if (is_save2tmp(data.stream, image_source)) {
                     b = newBuffer(INIT_BUFFER_WIDTH);
-                    b->content.sourcefile = getRuntime()->image_source;
+                    b->content.sourcefile = image_source;
                 }
                 is_close(data.stream);
                 // TRAP_OFF;

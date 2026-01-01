@@ -144,7 +144,6 @@ struct Runtime g_runtime = {
     .ssl_min_version = NULL,
     .ssl_cipher = NULL,
 
-    .image_source = (NULL),
     .DecodeURL = (false),
     .QuietMessage = (false),
     .ShowEffect = (true),

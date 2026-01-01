@@ -91,7 +91,7 @@ static void
 internal_get(char* url, int flag, struct FormList* request)
 {
     backend_halfdump_buf = NULL;
-    struct Buffer* buf = loadGeneralFile(url, NULL, NO_REFERER, 0, request, flag);
+    struct Buffer* buf = loadGeneralFile(url, NULL, NO_REFERER, 0, request, flag, NULL);
     if (buf != NULL) {
         if (is_html_type(buf->content.content_type) && backend_halfdump_buf) {
             TextLineListItem* p;
