@@ -90,6 +90,9 @@ static struct CompressionDecoder compression_decoders[] = {
 
 struct CompressionDecoder* compression_from_type(enum CompressionType compression)
 {
+    if (compression == CMP_NOCOMPRESS) {
+        return NULL;
+    }
     for (struct CompressionDecoder* d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
         if (d->type == compression)
             return d;
@@ -97,25 +100,21 @@ struct CompressionDecoder* compression_from_type(enum CompressionType compressio
     return NULL;
 }
 
-enum CompressionType check_compression(const char* path)
+struct CompressionDecoder* compression_from_path(const char* path)
 {
-    enum CompressionType compression = CMP_NOCOMPRESS;
     if (path) {
         int len = strlen(path);
         for (struct CompressionDecoder* d = compression_decoders;
             d->type != CMP_NOCOMPRESS; d++) {
-            int elen;
             if (d->ext == NULL)
                 continue;
-            elen = strlen(d->ext);
+            int elen = strlen(d->ext);
             if (len > elen && strcasecmp(&path[len - elen], d->ext) == 0) {
-                compression = d->type;
-                // uf->guess_type = d->mime_type;
-                break;
+                return d;
             }
         }
     }
-    return compression;
+    return NULL;
 }
 
 const char* uncompressed_file_type(const char* path, const char** ext)

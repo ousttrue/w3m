@@ -356,11 +356,11 @@ struct input_stream* examineFile(const char* path)
 
 struct input_stream* decompress_stream(struct input_stream* stream, const char* path)
 {
-    enum CompressionType compression = check_compression(path);
-    if (compression == CMP_NOCOMPRESS) {
+    struct CompressionDecoder* d = compression_from_path(path);
+    if (!d) {
         return stream;
     }
-    return uncompress_stream(stream, compression, NULL);
+    return uncompress_stream(stream, d->type, NULL);
 }
 
 static JMP_BUF AbortLoading;

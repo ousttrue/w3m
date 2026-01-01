@@ -703,8 +703,8 @@ struct ContentData get_content(const char* path, struct Url* current,
 
         s.content.modtime = mymktime(checkHeader(&s.content, "Last-Modified:"));
     } else if (s.content.url.scheme == SCM_FTP) {
-        enum CompressionType compression = check_compression(path);
-        if (compression != CMP_NOCOMPRESS) {
+        struct CompressionDecoder *d = compression_from_path(path);
+        if (d) {
             s.content.content_type = uncompressed_file_type(s.content.url.file, NULL);
         } else {
             s.content.content_type = guessContentType(s.content.url.file);
