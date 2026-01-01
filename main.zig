@@ -368,7 +368,7 @@ export fn get_pixel_per_cell(ppc: *c_int, ppl: *c_int) bool {
 //
 const SCREEN_SPACE = " ";
 
-const CELL_CHAR_LEN = 10;
+const CELL_CHAR_LEN = 14;
 
 const ScreenCell = struct {
     str: [CELL_CHAR_LEN]u8,

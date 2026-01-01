@@ -226,136 +226,6 @@ Str getLinkNumberStr(struct HtmlBuilder* hb, int correction)
     return Sprintf("[%d]", hb->cur_hseq + correction);
 }
 
-/*
- * loadGeneralFile: load file to buffer
- */
-
-struct Buffer* page_loaded(struct Content content, Str page, bool do_download)
-{
-    assert(page);
-
-    if (getRuntime()->image_source)
-        return NULL;
-
-    Str tmp = tmpfname(TMPF_SRC, ".html");
-    FILE* src = fopen(tmp->ptr, "w");
-    if (src) {
-        Str s = wc_Str_conv_strict(page, getRuntime()->InnerCharset, content.charset);
-        Strfputs(s, src);
-        fclose(src);
-    }
-
-    if (do_download) {
-        if (!src)
-            return NULL;
-        const char* file = guess_filename(content.url.file);
-        doFileMove(tmp->ptr, file);
-        return NULL;
-    }
-
-    struct Buffer* b = newBuffer(INIT_BUFFER_WIDTH);
-    b->content = content;
-    // struct Buffer* b = loadHTMLString(page);
-    // if (b) {
-    //     copyParsedURL(&b->content.url, &content.url);
-    if (src)
-        b->content.sourcefile = tmp->ptr;
-    //
-    //     b->doc.charset = content.charset;
-    // }
-    return b;
-}
-
-static struct Buffer* make_buffer(struct Content content,
-    struct input_stream* stream,
-    int flag,
-    bool do_download)
-{
-    MySignalHandler (*prevtrap)(SIGNAL_ARG) = NULL;
-
-    if (do_download) {
-        /* download only */
-        const char* file;
-        TRAP_OFF;
-        if (content.url.scheme == SCM_LOCAL) {
-            // struct stat st;
-            // if (getRuntime()->PreserveTimestamp && !stat(url.real_file, &st)) {
-            //     f.modtime = st.st_mtime;
-            // }
-            file = conv_from_system(guess_save_name(NULL, content.url.real_file));
-        } else {
-            file = guess_save_name(&content, content.url.file);
-        }
-        if (doFileSave(content.url, stream, file, content.compression) == 0)
-            UFhalfclose(stream, content.url.scheme);
-        else
-            is_close(stream);
-        return NULL;
-    }
-
-    bool use_tmpf = content.url.scheme != SCM_LOCAL && !getRuntime()->image_source;
-    if ((content.compression != CMP_NOCOMPRESS) && getRuntime()->AutoUncompress
-        && !(getRuntime()->w3m_dump & DUMP_EXTRA)) {
-        stream = uncompress_stream(stream,
-            content.compression, use_tmpf ? &content.url.real_file : NULL);
-        // UFhalfclose(&f);
-    } else if (content.compression != CMP_NOCOMPRESS) {
-        if (!(getRuntime()->w3m_dump & DUMP_SOURCE)
-            && (getRuntime()->w3m_dump & ~DUMP_FRAME
-                || is_text_type(content.content_type)
-                || searchExtViewer(content.content_type))) {
-            stream = uncompress_stream(stream,
-                content.compression, use_tmpf ? &content.sourcefile : NULL);
-            // UFhalfclose(&f);
-            // const char* ext;
-            // uncompressed_file_type(url.file, &ext);
-        } else {
-            content.content_type = compress_application_type(content.compression);
-            // f.compression = CMP_NOCOMPRESS;
-        }
-    }
-
-    if (getRuntime()->image_source) {
-        struct Buffer* b = NULL;
-        if (is_save2tmp(stream, getRuntime()->image_source)) {
-            b = newBuffer(INIT_BUFFER_WIDTH);
-            b->content.sourcefile = getRuntime()->image_source;
-        }
-        is_close(stream);
-        TRAP_OFF;
-        return b;
-    }
-
-    if (content.sourcefile == NULL
-        // && (content.url.scheme != SCM_LOCAL || content.mailcap)
-    ) {
-        Str tmp = tmpfname(TMPF_SRC, ".html");
-        FILE* src = fopen(tmp->ptr, "w");
-        if (src) {
-            content.sourcefile = tmp->ptr;
-            is_write_all(stream, src);
-            fclose(src);
-        }
-        struct Buffer* b = newBuffer(INIT_BUFFER_WIDTH);
-        b->content = content;
-
-        TRAP_OFF;
-        return b;
-    } else {
-
-        // compression extraced
-        struct Buffer* x = newBuffer(INIT_BUFFER_WIDTH);
-        x->content = content;
-
-        // pull decomress pipe
-        Str lineBuf2;
-        while ((lineBuf2 = is_get_str(stream, true)) && lineBuf2->length) {
-        }
-
-        return x;
-    }
-}
-
 struct Buffer*
 loadGeneralFile(const char* path, struct Url* current, const char* referer,
     int flag, struct FormList* request, bool do_download)
@@ -377,10 +247,78 @@ loadGeneralFile(const char* path, struct Url* current, const char* referer,
     switch (data.type) {
     case CONTENT_DATA_NONE:
         return NULL;
-    case CONTENT_DATA_STR:
-        return page_loaded(data.content, data.page, do_download);
+
+    case CONTENT_DATA_STR: {
+        if (getRuntime()->image_source)
+            return NULL;
+
+        // write page to tmpfile
+        Str tmp = tmpfname(TMPF_SRC, ".html");
+        FILE* src = fopen(tmp->ptr, "w");
+        assert(src);
+        Str s = wc_Str_conv_strict(data.page, getRuntime()->InnerCharset, data.content.charset);
+        Strfputs(s, src);
+        fclose(src);
+
+        if (do_download) {
+            const char* file = guess_filename(data.content.url.file);
+            doFileMove(tmp->ptr, file);
+            return NULL;
+        } else {
+            struct Buffer* b = newBuffer(INIT_BUFFER_WIDTH);
+            b->content = data.content;
+            b->content.sourcefile = tmp->ptr;
+            return b;
+        }
+    }
+
     case CONTENT_DATA_STREAM:
-        return make_buffer(data.content, data.stream, flag, do_download);
+        // return make_buffer(data.content, data.stream, flag, do_download);
+        if (do_download) {
+            const char* file;
+            if (data.content.url.scheme == SCM_LOCAL) {
+                // struct stat st;
+                // if (getRuntime()->PreserveTimestamp && !stat(url.real_file, &st)) {
+                //     f.modtime = st.st_mtime;
+                // }
+                file = conv_from_system(guess_save_name(NULL, data.content.url.real_file));
+            } else {
+                file = guess_save_name(&data.content, data.content.url.file);
+            }
+            if (doFileSave(data.content.url, data.stream, file, data.content.compression) == 0)
+                UFhalfclose(data.stream, data.content.url.scheme);
+            else
+                is_close(data.stream);
+            return NULL;
+        } else {
+            if (getRuntime()->image_source) {
+                struct Buffer* b = NULL;
+                if (is_save2tmp(data.stream, getRuntime()->image_source)) {
+                    b = newBuffer(INIT_BUFFER_WIDTH);
+                    b->content.sourcefile = getRuntime()->image_source;
+                }
+                is_close(data.stream);
+                // TRAP_OFF;
+                return b;
+            }
+
+            Str tmp = tmpfname(TMPF_SRC, ".html");
+            struct CompressionDecoder* d = compression_from_type(data.content.compression);
+            if (d) {
+                Strcat_charp(tmp, d->ext);
+            }
+            FILE* src = fopen(tmp->ptr, "w");
+            assert(src);
+            data.content.sourcefile = tmp->ptr;
+            is_write_all(data.stream, src);
+            fclose(src);
+
+            struct Buffer* b = newBuffer(INIT_BUFFER_WIDTH);
+            b->content = data.content;
+
+            // TRAP_OFF;
+            return b;
+        }
     }
 }
 

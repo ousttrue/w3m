@@ -88,6 +88,15 @@ static struct CompressionDecoder compression_decoders[] = {
     },
 };
 
+struct CompressionDecoder* compression_from_type(enum CompressionType compression)
+{
+    for (struct CompressionDecoder* d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
+        if (d->type == compression)
+            return d;
+    }
+    return NULL;
+}
+
 enum CompressionType check_compression(const char* path)
 {
     enum CompressionType compression = CMP_NOCOMPRESS;

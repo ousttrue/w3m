@@ -22,6 +22,8 @@ struct CompressionDecoder {
     int use_d_arg;
 };
 
+struct CompressionDecoder* compression_from_type(enum CompressionType compression);
+
 enum CompressionType check_compression(const char* path);
 const char* uncompressed_file_type(const char* path, const char** ext);
 struct input_stream* uncompress_stream(struct input_stream* stream,
