@@ -173,6 +173,10 @@ pub fn input(this: *@This(), opts: Options) [*c]const u8 {
 
         // next_char:
         while (true) {
+            const pos = c.screen_position();
+            c.tty_MOVE(@intCast(pos.y), @intCast(pos.x));
+            // c.tty_write_screen();
+
             const ch: u8 = @intCast(c.getch());
             this.cm_clear = true;
             this.cm_disp_clear = true;
@@ -919,5 +923,3 @@ fn _rdcompl(this: *@This(), _: u8) void {
 // //         CompleteBuf = escape_spaces(CompleteBuf);
 // //     return Str_conv_from_system(CompleteBuf);
 // // }
-
-
