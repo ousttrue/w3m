@@ -466,7 +466,7 @@ write_from_file(int sock, char* file)
 
 struct ContentAndStream openURL(struct Url url, struct Url* current,
     struct FormList* request,
-    struct URLOption option,
+    struct LoadOption option,
     struct input_stream* ouf)
 {
     struct ContentAndStream us = {

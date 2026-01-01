@@ -885,7 +885,7 @@ void loadImage(enum ImageLoadFlags flag)
         // loadGeneralFile(cache->url, cache->current, NULL, 0, NULL, false, cache->file);
         checkRedirection(NULL);
         struct ContentData data = get_content(cache->url, cache->current, NULL,
-            (struct URLOption) {
+            (struct LoadOption) {
                 .flag = 0,
                 .referer = NULL,
                 .extra_header = NULL,

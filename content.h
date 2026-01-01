@@ -40,9 +40,15 @@ struct Content {
     time_t modtime;
 };
 
-struct URLOption {
+enum LoadFlags {
+    RG_NONE = 0,
+    RG_NOCACHE = 1,
+    RG_FRAME = 2,
+    RG_FRAME_SRC = 4,
+};
+struct LoadOption {
     const char* referer;
-    int flag;
+    enum LoadFlags flag;
     struct TextList* extra_header;
 };
 
@@ -81,7 +87,7 @@ const char* guess_save_name(struct Content* content, const char* file);
 
 struct ContentData get_content(const char* path, struct Url* current,
     struct FormList* request,
-    struct URLOption option,
+    struct LoadOption option,
     struct AuthInfo auth,
     struct input_stream* connection);
 

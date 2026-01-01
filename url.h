@@ -6,11 +6,6 @@
 
 #define NO_REFERER ((char*)-1)
 
-/* flags for loadGeneralFile */
-#define RG_NOCACHE 1
-#define RG_FRAME 2
-#define RG_FRAME_SRC 4
-
 struct Url {
     enum UrlScheme scheme;
     char* user;

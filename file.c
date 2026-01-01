@@ -227,16 +227,11 @@ Str getLinkNumberStr(struct HtmlBuilder* hb, int correction)
 }
 
 struct Buffer*
-loadGeneralFile(const char* path, struct Url* current, const char* referer,
-    int flag, struct FormList* request, bool do_download)
+loadGeneralFile(const char* path, struct Url* current, struct LoadOption option, struct FormList* request, bool do_download)
 {
     checkRedirection(NULL);
     struct ContentData data = get_content(path, current, request,
-        (struct URLOption) {
-            .flag = flag,
-            .referer = referer,
-            .extra_header = newTextList(),
-        },
+        option,
         (struct AuthInfo) {
             .realm = NULL,
             .uname = NULL,

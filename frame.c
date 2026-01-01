@@ -351,7 +351,7 @@ frame_download_source(struct frame_body* b, struct Url* currentURL,
         getRuntime()->w3m_dump |= DUMP_FRAME;
         buf = loadGeneralFile(b->url,
             baseURL ? baseURL : currentURL,
-            b->referer, flag | RG_FRAME_SRC, b->request, false);
+            (struct LoadOption) { .referer = b->referer, .flag = flag | RG_FRAME_SRC }, b->request, false);
         /* XXX certificate? */
         if (buf)
             b->ssl_certificate = buf->content.ssl_certificate;
@@ -883,7 +883,7 @@ renderFrame(struct Buffer* Cbuf, int force_reload)
 
     getRuntime()->DocumentCharset = getRuntime()->InnerCharset;
 
-    struct Buffer* buf = loadGeneralFile(tmp->ptr, NULL, NULL, flag, NULL, false);
+    struct Buffer* buf = loadGeneralFile(tmp->ptr, NULL, (struct LoadOption) { .referer = NULL, .flag = flag }, NULL, false);
 
     getRuntime()->DocumentCharset = doc_charset;
 

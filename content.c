@@ -456,7 +456,7 @@ int checkRedirection(struct Url* pu)
 // TODO return Str
 struct ContentData get_content(const char* path, struct Url* current,
     struct FormList* request,
-    struct URLOption option,
+    struct LoadOption option,
     struct AuthInfo auth,
     struct input_stream* connection)
 {
@@ -510,7 +510,7 @@ struct ContentData get_content(const char* path, struct Url* current,
                     Str cmd = Sprintf("%s?dir=%s#current",
                         getRuntime()->DirBufferCommand, s.content.url.file);
                     struct ContentData data = get_content(cmd->ptr, NULL, NULL,
-                        (struct URLOption) { .referer = NO_REFERER, .flag = 0, .extra_header = NULL },
+                        (struct LoadOption) { .referer = NO_REFERER, .flag = 0, .extra_header = NULL },
                         (struct AuthInfo) { 0 }, NULL);
                     // if (b != NULL) {
                     copyParsedURL(&data.content.url, &s.content.url);
