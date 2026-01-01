@@ -1,4 +1,5 @@
 #include "image.h"
+#include "input_stream.h"
 #include "hash.h"
 #include "terms.h"
 #include "file.h"
@@ -881,7 +882,29 @@ void loadImage(enum ImageLoadFlags flag)
             continue;
         }
 
-        loadGeneralFile(cache->url, cache->current, NULL, 0, NULL, false, cache->file);
+        // loadGeneralFile(cache->url, cache->current, NULL, 0, NULL, false, cache->file);
+        checkRedirection(NULL);
+        struct ContentData data = get_content(cache->url, cache->current, NULL,
+            (struct URLOption) {
+                .flag = 0,
+                .referer = NULL,
+                .extra_header = NULL,
+            },
+            (struct AuthInfo) {
+                .realm = NULL,
+                .uname = NULL,
+                .pwd = NULL,
+            },
+            NULL);
+        struct Buffer* b = NULL;
+        if (is_save2tmp(data.stream, cache->file)) {
+            b = newBuffer(INIT_BUFFER_WIDTH);
+            b->content.sourcefile = cache->file;
+        }
+        is_close(data.stream);
+        // TRAP_OFF;
+        // return b;
+
         symlink(cache->file, cache->touch);
 
         // flush_tty();
