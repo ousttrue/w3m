@@ -227,10 +227,10 @@ Str getLinkNumberStr(struct HtmlBuilder* hb, int correction)
 }
 
 struct Buffer*
-loadGeneralFile(const char* path, struct Url* current, struct LoadOption option, struct FormList* request, bool do_download)
+loadGeneralFile(const char* path, struct FormList* request, struct LoadOption option, bool do_download)
 {
     checkRedirection(NULL);
-    struct ContentData data = get_content(path, current, request,
+    struct ContentData data = get_content(path, request,
         option,
         (struct AuthInfo) {
             .realm = NULL,

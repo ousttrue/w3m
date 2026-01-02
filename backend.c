@@ -88,10 +88,11 @@ print_headers(struct Buffer* buf, int len)
 }
 
 static void
-internal_get(char* url, int flag, struct FormList* request)
+internal_get(char* url, struct FormList* request, bool do_download)
 {
     backend_halfdump_buf = NULL;
-    struct Buffer* buf = loadGeneralFile(url, NULL, (struct LoadOption) { .referer = NO_REFERER, 0 }, request, flag);
+    struct Buffer* buf = loadGeneralFile(url, request,
+        (struct LoadOption) { .base_url = 0, .referer = NO_REFERER, 0 }, do_download);
     if (buf != NULL) {
         if (is_html_type(buf->content.content_type) && backend_halfdump_buf) {
             TextLineListItem* p;
@@ -134,16 +135,16 @@ static void
 get(struct TextList* argv)
 {
     char *p, *url = NULL;
-    int flag = FALSE;
+    int do_download = FALSE;
 
     while ((p = popText(argv))) {
         if (!strcasecmp(p, "-download_only"))
-            flag = TRUE;
+            do_download = TRUE;
         else
             url = p;
     }
     if (url) {
-        internal_get(url, flag, NULL);
+        internal_get(url, NULL, do_download);
     }
 }
 
@@ -154,11 +155,12 @@ post(struct TextList* argv)
     struct FormList* request;
     char *p, *target = NULL, *charset = NULL,
              *enctype = NULL, *body = NULL, *boundary = NULL, *url = NULL;
-    int flag = FALSE, length = 0;
+    bool do_download = FALSE;
+    int length = 0;
 
     while ((p = popText(argv))) {
         if (!strcasecmp(p, "-download_only"))
-            flag = TRUE;
+            do_download = TRUE;
         else if (!strcasecmp(p, "-target"))
             target = popText(argv);
         else if (!strcasecmp(p, "-charset"))
@@ -179,7 +181,7 @@ post(struct TextList* argv)
         request->body = body;
         request->boundary = boundary;
         request->length = (length > 0) ? length : (body ? strlen(body) : 0);
-        internal_get(url, flag, request);
+        internal_get(url, request, do_download);
     }
 }
 

@@ -46,7 +46,9 @@ enum LoadFlags {
     RG_FRAME = 2,
     RG_FRAME_SRC = 4,
 };
+
 struct LoadOption {
+    struct Url* base_url;
     const char* referer;
     enum LoadFlags flag;
     struct TextList* extra_header;
@@ -85,10 +87,7 @@ const char* checkContentType(struct Content* content);
 const char* guess_filename(const char* file);
 const char* guess_save_name(struct Content* content, const char* file);
 
-struct ContentData get_content(const char* path, struct Url* current,
-    struct FormList* request,
-    struct LoadOption option,
-    struct AuthInfo auth,
-    struct input_stream* connection);
+struct ContentData get_content(const char* path, struct FormList* request,
+    struct LoadOption option, struct AuthInfo auth, struct input_stream* connection);
 
 int checkRedirection(struct Url* pu);

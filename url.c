@@ -453,7 +453,7 @@ void copyParsedURL(struct Url* p, const struct Url* q)
     p->query = ALLOC_STR(q->query);
 }
 
-void parseURL2(const char* url, struct Url* pu, struct Url* current)
+void parseURL2(const char* url, struct Url* pu, const struct Url* current)
 {
     char* p;
     Str tmp;

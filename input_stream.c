@@ -464,10 +464,8 @@ write_from_file(int sock, char* file)
     }
 }
 
-struct ContentAndStream openURL(struct Url url, struct Url* current,
-    struct FormList* request,
-    struct LoadOption option,
-    struct input_stream* ouf)
+struct ContentAndStream openURL(struct Url url, struct FormList* request,
+    struct LoadOption option, struct input_stream* ouf)
 {
     struct ContentAndStream us = {
         .content = {
@@ -575,7 +573,7 @@ struct ContentAndStream openURL(struct Url url, struct Url* current,
                 return us;
             }
             us.content.url.scheme = SCM_HTTP;
-            tmp = HTTPrequest(&us.content.url, current, &us.content.hr, option.extra_header);
+            tmp = HTTPrequest(&us.content.url, option.base_url, &us.content.hr, option.extra_header);
             write(sock, tmp->ptr, tmp->length);
         } else {
             struct FtpFile file = openFTPStream(&us.content.url);
@@ -621,15 +619,15 @@ struct ContentAndStream openURL(struct Url url, struct Url* current,
             if (us.content.url.scheme == SCM_HTTPS) {
                 if (us.status == HTST_NORMAL) {
                     us.content.hr.command = HR_COMMAND_CONNECT;
-                    tmp = HTTPrequest(&us.content.url, current, &us.content.hr, option.extra_header);
+                    tmp = HTTPrequest(&us.content.url, option.base_url, &us.content.hr, option.extra_header);
                     us.status = HTST_CONNECT;
                 } else {
                     us.content.hr.flag |= HR_FLAG_LOCAL;
-                    tmp = HTTPrequest(&us.content.url, current, &us.content.hr, option.extra_header);
+                    tmp = HTTPrequest(&us.content.url, option.base_url, &us.content.hr, option.extra_header);
                     us.status = HTST_NORMAL;
                 }
             } else {
-                tmp = HTTPrequest(&us.content.url, current, &us.content.hr, option.extra_header);
+                tmp = HTTPrequest(&us.content.url, option.base_url, &us.content.hr, option.extra_header);
                 us.status = HTST_NORMAL;
             }
         } else {
@@ -646,7 +644,7 @@ struct ContentAndStream openURL(struct Url url, struct Url* current,
                 }
             }
             us.content.hr.flag |= HR_FLAG_LOCAL;
-            tmp = HTTPrequest(&us.content.url, current, &us.content.hr, option.extra_header);
+            tmp = HTTPrequest(&us.content.url, option.base_url, &us.content.hr, option.extra_header);
             us.status = HTST_NORMAL;
         }
         if (us.content.url.scheme == SCM_HTTPS) {

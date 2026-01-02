@@ -454,7 +454,7 @@ int checkRedirection(struct Url* pu)
 }
 
 // TODO return Str
-struct ContentData get_content(const char* path, struct Url* current,
+struct ContentData get_content(const char* path,
     struct FormList* request,
     struct LoadOption option,
     struct AuthInfo auth,
@@ -465,13 +465,11 @@ struct ContentData get_content(const char* path, struct Url* current,
     //
     {
         struct Url pu;
-        parseURL2(path, &pu, current);
+        parseURL2(path, &pu, option.base_url);
         const char* sc_redirect = query_SCONF_SUBSTITUTE_URL(&pu);
         if (sc_redirect && *sc_redirect && checkRedirection(&pu)) {
-            struct Url* new_current = New(struct Url);
-            *new_current = pu;
-            return get_content(sc_redirect, new_current,
-                NULL, option, auth, NULL);
+            option.base_url = &pu;
+            return get_content(sc_redirect, NULL, option, auth, NULL);
         }
     }
 
@@ -479,20 +477,20 @@ struct ContentData get_content(const char* path, struct Url* current,
     {
         const char* u = path;
         enum UrlScheme scheme = getURLScheme(&u);
-        if (current == NULL && scheme == SCM_MISSING && !getRuntime()->ArgvIsURL)
+        if (option.base_url == NULL && scheme == SCM_MISSING && !getRuntime()->ArgvIsURL)
             u = file_to_url(path); /* force to local file */
         else
             u = path;
-        parseURL2(u, &url, current);
+        parseURL2(u, &url, option.base_url);
     }
 
-    struct ContentAndStream s = openURL(url, current, request, option, connection);
+    struct ContentAndStream s = openURL(url, request, option, connection);
     if (!s.stream && getRuntime()->retryAsHttp && s.content.url_str[0] != '/') {
         if (s.content.url.scheme == SCM_MISSING || s.content.url.scheme == SCM_UNKNOWN) {
             // retry it as "http://"
             const char* u = Strnew_m_charp("http://", path, NULL)->ptr;
-            parseURL2(u, &url, current);
-            s = openURL(url, current, request, option, connection);
+            parseURL2(u, &url, option.base_url);
+            s = openURL(url, request, option, connection);
         }
     }
 
@@ -509,8 +507,8 @@ struct ContentData get_content(const char* path, struct Url* current,
                 if (getRuntime()->UseExternalDirBuffer) {
                     Str cmd = Sprintf("%s?dir=%s#current",
                         getRuntime()->DirBufferCommand, s.content.url.file);
-                    struct ContentData data = get_content(cmd->ptr, NULL, NULL,
-                        (struct LoadOption) { .referer = NO_REFERER, .flag = 0, .extra_header = NULL },
+                    struct ContentData data = get_content(cmd->ptr, NULL,
+                        (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER, .flag = 0, .extra_header = NULL },
                         (struct AuthInfo) { 0 }, NULL);
                     // if (b != NULL) {
                     copyParsedURL(&data.content.url, &s.content.url);
@@ -532,7 +530,7 @@ struct ContentData get_content(const char* path, struct Url* current,
             // ?
             Str tmp = searchURIMethods(&s.content.url);
             if (tmp != NULL) {
-                struct ContentData data = get_content(tmp->ptr, current, request,
+                struct ContentData data = get_content(tmp->ptr, request,
                     option, (struct AuthInfo) { 0 }, connection);
                 // if (b != NULL)
                 copyParsedURL(&data.content.url, &s.content.url);
@@ -616,10 +614,11 @@ struct ContentData get_content(const char* path, struct Url* current,
             // 307: Temporary Redirect (HTTP/1.1)
             const char* tpath = url_encode(p, NULL, 0);
             is_close(s.stream);
-            struct Url* new_current = New(struct Url);
-            copyParsedURL(new_current, &s.content.url);
+            // struct Url* new_current = New(struct Url);
+            // copyParsedURL(new_current, &s.content.url);
+            option.base_url = &s.content.url;
             // t_buf->bufferprop |= BP_REDIRECTED;
-            return get_content(tpath, new_current,
+            return get_content(tpath,
                 NULL, option, auth, NULL);
         }
 
@@ -662,8 +661,7 @@ struct ContentData get_content(const char* path, struct Url* current,
                 }
                 is_close(s.stream);
                 auth.add_auth_cookie_flag = 1;
-                return get_content(path, current,
-                    request, option, auth, connection);
+                return get_content(path, request, option, auth, connection);
             }
         }
         if ((p = checkHeader(&s.content, "Proxy-Authenticate:")) != NULL //
@@ -690,20 +688,18 @@ struct ContentData get_content(const char* path, struct Url* current,
                 auth.add_auth_cookie_flag = 1;
                 add_auth_user_passwd(auth_pu,
                     qstr_unquote(auth.realm)->ptr, auth.uname, auth.pwd, 1);
-                return get_content(path, current,
-                    request, option, auth, connection);
+                return get_content(path, request, option, auth, connection);
             }
         }
 
         if (s.status == HTST_CONNECT) {
             // XXX: RFC2617 3.2.3 Authentication-Info: ?
-            return get_content(path, current,
-                request, option, auth, s.stream);
+            return get_content(path, request, option, auth, s.stream);
         }
 
         s.content.modtime = mymktime(checkHeader(&s.content, "Last-Modified:"));
     } else if (s.content.url.scheme == SCM_FTP) {
-        struct CompressionDecoder *d = compression_from_path(path);
+        struct CompressionDecoder* d = compression_from_path(path);
         if (d) {
             s.content.content_type = uncompressed_file_type(s.content.url.file, NULL);
         } else {
@@ -720,11 +716,11 @@ struct ContentData get_content(const char* path, struct Url* current,
             const char* tpath = url_encode(remove_space(p), NULL, 0);
             is_close(s.stream);
             auth.add_auth_cookie_flag = 0;
-            struct Url* new_current = New(struct Url);
-            copyParsedURL(new_current, &s.content.url);
+            // struct Url* new_current = New(struct Url);
+            // copyParsedURL(new_current, &s.content.url);
             // t_buf->bufferprop |= BP_REDIRECTED;
-            return get_content(tpath, new_current,
-                NULL, option, auth, NULL);
+            option.base_url = &s.content.url;
+            return get_content(tpath, NULL, option, auth, NULL);
         }
         s.content.content_type = checkContentType(&s.content);
         if (s.content.content_type == NULL)

@@ -627,7 +627,8 @@ bool w3m_args(int argc, char** argv)
             // newbuf = openGeneralPagerBuffer(redin);
             // dup2(1, 0);
         } else if (load_bookmark) {
-            newbuf = loadGeneralFile(getRuntime()->BookmarkFile, NULL, (struct LoadOption) { .referer = NO_REFERER, .flag = 0 }, NULL, false);
+            newbuf = loadGeneralFile(getRuntime()->BookmarkFile, NULL,
+                (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER, .flag = 0 }, false);
             if (newbuf == NULL)
                 Strcat_charp(err_msg, "w3m: Can't load bookmark.\n");
         } else if (visual_start) {
@@ -645,7 +646,8 @@ bool w3m_args(int argc, char** argv)
             else
                 newbuf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
         } else if ((p = getenv("HTTP_HOME")) != NULL || (p = getenv("WWW_HOME")) != NULL) {
-            newbuf = loadGeneralFile(p, NULL, (struct LoadOption) { .referer = NO_REFERER, .flag = 0 }, NULL, false);
+            newbuf = loadGeneralFile(p, NULL,
+                (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER, .flag = 0 }, false);
             if (newbuf == NULL)
                 Strcat(err_msg, Sprintf("w3m: Can't load %s.\n", p));
             else
@@ -680,7 +682,8 @@ bool w3m_args(int argc, char** argv)
             if (getRuntime()->w3m_dump == DUMP_HEAD) {
                 request = New(struct FormList);
                 request->method = FORM_METHOD_HEAD;
-                newbuf = loadGeneralFile(url, NULL, (struct LoadOption) { .referer = NO_REFERER, .flag = 0 }, request, false);
+                newbuf = loadGeneralFile(url, request,
+                    (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER, .flag = 0 }, false);
             } else {
                 if (post_file && i == 0) {
                     FILE* fp;
@@ -705,7 +708,8 @@ bool w3m_args(int argc, char** argv)
                 } else {
                     request = NULL;
                 }
-                newbuf = loadGeneralFile(url, NULL, (struct LoadOption) { .referer = NO_REFERER, .flag = 0 }, request, false);
+                newbuf = loadGeneralFile(url, request,
+                    (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER, .flag = 0 }, false);
             }
             if (newbuf == NULL) {
                 if (getRuntime()->ArgvIsURL && !retry) {
@@ -1577,12 +1581,12 @@ handleMailto(const char* url)
 }
 
 static void
-cmd_loadURL(const char* url, struct Url* current, const char* referer, struct FormList* request)
+cmd_loadURL(const char* url, struct FormList* request, struct LoadOption option)
 {
     if (handleMailto(url))
         return;
 
-    struct Buffer* buf = loadGeneralFile(url, current, (struct LoadOption) { .referer = referer, .flag = 0 }, request, false);
+    struct Buffer* buf = loadGeneralFile(url, request, option, false);
     if (buf == NULL) {
         char* emsg = Sprintf("Can't load %s", conv_from_system(url))->ptr;
         disp_err_message(emsg, FALSE);
@@ -1605,13 +1609,14 @@ DEFUN(ldhelp, HELP, "Show help panel")
     tmp = Sprintf("file:///$LIB/" HELP_CGI CGI_EXTENSION "?version=%s&lang=%s",
         Str_form_quote(Strnew_charp(w3m_version))->ptr,
         Str_form_quote(Strnew_charp_n(lang, n))->ptr);
-    cmd_loadURL(tmp->ptr, NULL, NO_REFERER, NULL);
+    cmd_loadURL(tmp->ptr, NULL, (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER, 0 });
 }
 
 static void
 cmd_loadfile(char* fn)
 {
-    struct Buffer* buf = loadGeneralFile(file_to_url(fn), NULL, (struct LoadOption) { .referer = NO_REFERER, .flag = 0 }, NULL, false);
+    struct Buffer* buf = loadGeneralFile(file_to_url(fn), NULL,
+        (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER, .flag = 0 }, false);
     if (buf == NULL) {
         /* FIXME: gettextize? */
         char* emsg = Sprintf("%s not found", conv_from_system(fn))->ptr;
@@ -2283,7 +2288,8 @@ void _followI(bool do_download)
     if (a == NULL)
         return;
     message(Sprintf("loading %s", a->url)->ptr, 0, 0);
-    struct Buffer* buf = loadGeneralFile(a->url, baseURL(Currentbuf), (struct LoadOption) { .referer = NULL, .flag = 0 }, NULL, do_download);
+    struct Buffer* buf = loadGeneralFile(a->url, NULL,
+        (struct LoadOption) { .base_url = baseURL(Currentbuf), .referer = NULL, .flag = 0 }, do_download);
     if (buf == NULL) {
         /* FIXME: gettextize? */
         char* emsg = Sprintf("Can't load %s", a->url)->ptr;
@@ -2842,7 +2848,7 @@ DEFUN(deletePrevBuf, DELETE_PREVBUF, "Delete previous buffer (mainly for local C
 
 /* go to specified URL */
 static void
-goURL0(char* prompt, int relative)
+goURL0(const char* prompt, int relative)
 {
     const char *url, *referer;
     struct Url p_url, *current;
@@ -2898,7 +2904,7 @@ goURL0(char* prompt, int relative)
     }
     parseURL2(url, &p_url, current);
     pushHashHist(getRuntime()->URLHist, parsedURL2Str(&p_url)->ptr);
-    cmd_loadURL(url, current, referer, NULL);
+    cmd_loadURL(url, NULL, (struct LoadOption) { .base_url = current, .referer = referer });
     if (Currentbuf != cur_buf) /* success */
         pushHashHist(getRuntime()->URLHist, parsedURL2Str(&Currentbuf->content.url)->ptr);
 }
@@ -2918,7 +2924,7 @@ DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer")
         url = url_encode(url, NULL, 0);
         parseURL2(url, &p_url, NULL);
         pushHashHist(getRuntime()->URLHist, parsedURL2Str(&p_url)->ptr);
-        cmd_loadURL(url, NULL, NULL, NULL);
+        cmd_loadURL(url, NULL, (struct LoadOption) { .base_url = NULL, .referer = NULL });
         if (Currentbuf != cur_buf) /* success */
             pushHashHist(getRuntime()->URLHist, parsedURL2Str(&Currentbuf->content.url)->ptr);
     }
@@ -2932,7 +2938,8 @@ DEFUN(gorURL, GOTO_RELATIVE, "Go to relative address")
 /* load bookmark */
 DEFUN(ldBmark, BOOKMARK VIEW_BOOKMARK, "View bookmarks")
 {
-    cmd_loadURL(getRuntime()->BookmarkFile, NULL, NO_REFERER, NULL);
+    cmd_loadURL(getRuntime()->BookmarkFile, NULL,
+        (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER });
 }
 
 /* Add current to bookmark */
@@ -2956,8 +2963,8 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
     request = newFormList(NULL, "post", NULL, NULL, NULL, NULL, NULL);
     request->body = tmp->ptr;
     request->length = tmp->length;
-    cmd_loadURL("file:///$LIB/" W3MBOOKMARK_CMDNAME, NULL, NO_REFERER,
-        request);
+    cmd_loadURL("file:///$LIB/" W3MBOOKMARK_CMDNAME, request,
+        (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER });
 }
 
 /* option setting */
@@ -3031,16 +3038,20 @@ void follow_map(struct parsed_tagarg* arg)
 
         _newT();
         buf = Currentbuf;
-        cmd_loadURL(a->url, baseURL(Currentbuf),
-            parsedURL2Str(&Currentbuf->content.url)->ptr, NULL);
+        cmd_loadURL(a->url, NULL,
+            (struct LoadOption) {
+                .base_url = baseURL(Currentbuf),
+                .referer = parsedURL2Str(&Currentbuf->content.url)->ptr });
         if (buf != Currentbuf)
             delBuffer(buf);
         else
             deleteTab(CurrentTab());
         return;
     }
-    cmd_loadURL(a->url, baseURL(Currentbuf),
-        parsedURL2Str(&Currentbuf->content.url)->ptr, NULL);
+    cmd_loadURL(a->url, NULL,
+        (struct LoadOption) {
+            .base_url = baseURL(Currentbuf),
+            .referer = parsedURL2Str(&Currentbuf->content.url)->ptr });
 }
 
 /* link menu */
@@ -3057,8 +3068,10 @@ DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
     }
     parseURL2(l->url, &p_url, baseURL(Currentbuf));
     pushHashHist(getRuntime()->URLHist, parsedURL2Str(&p_url)->ptr);
-    cmd_loadURL(l->url, baseURL(Currentbuf),
-        parsedURL2Str(&Currentbuf->content.url)->ptr, NULL);
+    cmd_loadURL(l->url, NULL,
+        (struct LoadOption) {
+            .base_url = baseURL(Currentbuf),
+            .referer = parsedURL2Str(&Currentbuf->content.url)->ptr });
 }
 
 static void
@@ -3460,7 +3473,8 @@ DEFUN(reload, RELOAD, "Load current document anew")
         getRuntime()->DocumentCharset = Currentbuf->doc.charset;
     // SearchHeader = Currentbuf->search_header;
     getRuntime()->DefaultType = Currentbuf->content.content_type;
-    buf = loadGeneralFile(url->ptr, NULL, (struct LoadOption) { .referer = NO_REFERER, .flag = RG_NOCACHE }, request, false);
+    buf = loadGeneralFile(url->ptr, request,
+        (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER, .flag = RG_NOCACHE }, false);
     getRuntime()->DocumentCharset = old_charset;
     // SearchHeader = FALSE;
     getRuntime()->DefaultType = NULL;
@@ -3793,7 +3807,8 @@ execdict(char* word)
         Str_form_quote(Strnew_charp(w))->ptr)
                         ->ptr;
 
-    struct Buffer* buf = loadGeneralFile(dictcmd, NULL, (struct LoadOption) { .referer = NO_REFERER, .flag = 0 }, NULL, false);
+    struct Buffer* buf = loadGeneralFile(dictcmd, NULL,
+        (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER, .flag = 0 }, false);
     if (buf == NULL) {
         disp_message("Execution failed", TRUE);
         return;

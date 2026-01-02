@@ -37,9 +37,7 @@ struct ContentAndStream {
     struct input_stream* stream;
 };
 
-struct ContentAndStream openURL(struct Url url, struct Url* current,
-    struct FormList* request,
-    struct LoadOption option,
-    struct input_stream* ouf);
+struct ContentAndStream openURL(struct Url url, struct FormList* request,
+    struct LoadOption option, struct input_stream* ouf);
 
 void UFhalfclose(struct input_stream* stream, enum UrlScheme scheme);
