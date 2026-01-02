@@ -2103,14 +2103,14 @@ void _followA(struct FollowOption option)
 
         _newT();
         buf = Currentbuf;
-        loadLink(url, a->target, a->referer, NULL, option);
+        loadLink(url, NULL, a->target, a->referer, option);
         if (buf != Currentbuf)
             delBuffer(buf);
         else
             deleteTab(CurrentTab());
         return;
     }
-    loadLink(url, a->target, a->referer, NULL, option);
+    loadLink(url, NULL, a->target, a->referer, option);
 }
 
 /* follow HREF link */

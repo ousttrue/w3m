@@ -151,7 +151,8 @@ struct FollowOption {
 };
 void _followForm(bool submit, struct FollowOption option);
 struct FormList;
-struct Buffer* loadLink(const char* url, const char* target, const char* referer, struct FormList* request, struct FollowOption option);
+struct Buffer* loadLink(const char* url, struct FormList* request, 
+        const char* target, const char* referer, struct FollowOption option);
 struct FormItemList;
 void query_from_followform(Str* query, struct FormItemList* fi, int multipart);
 void pushEvent(int cmd, void* data);

@@ -507,30 +507,26 @@ loadNormalBuf(struct Buffer* buf, int renderframe)
     return buf;
 }
 
-struct Buffer* loadLink(const char* url, const char* target, const char* referer, struct FormList* request, struct FollowOption option)
+struct Buffer* loadLink(const char* url, struct FormList* request,
+    const char* target, const char* referer, struct FollowOption option)
 {
-    struct Buffer *buf, *nfbuf;
-    union frameset_element* f_element = NULL;
-    int flag = 0;
-    struct Url *base, pu;
-    const int* no_referer_ptr;
-
     message(Sprintf("loading %s", url)->ptr);
 
-    no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->content.url);
-    base = baseURL(Currentbuf);
+    const int* no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->content.url);
+    struct Url* base = baseURL(Currentbuf);
     if ((no_referer_ptr && *no_referer_ptr) || base == NULL || base->scheme == SCM_LOCAL || base->scheme == SCM_LOCAL_CGI)
         referer = NO_REFERER;
     if (referer == NULL)
         referer = parsedURL2RefererStr(&Currentbuf->content.url)->ptr;
-    buf = loadGeneralFile(url, request,
-        (struct LoadOption) { .base_url = baseURL(Currentbuf), .referer = referer, .flag = flag }, option.do_download);
+    struct Buffer* buf = loadGeneralFile(url, request,
+        (struct LoadOption) { .base_url = baseURL(Currentbuf), .referer = referer, .flag = 0 }, option.do_download);
     if (buf == NULL) {
         char* emsg = Sprintf("Can't load %s", url)->ptr;
         disp_err_message(emsg, FALSE);
         return NULL;
     }
 
+    struct Url pu;
     parseURL2(url, &pu, base);
     pushHashHist(g_runtime.URLHist, parsedURL2Str(&pu)->ptr);
 
@@ -546,13 +542,13 @@ struct Buffer* loadLink(const char* url, const char* target, const char* referer
     ) {
         return loadNormalBuf(buf, TRUE);
     }
-    nfbuf = Currentbuf->linkBuffer[LB_N_FRAME];
+    struct Buffer* nfbuf = Currentbuf->linkBuffer[LB_N_FRAME];
     if (nfbuf == NULL) {
         /* original page (that contains <frameset> tag) doesn't exist */
         return loadNormalBuf(buf, TRUE);
     }
 
-    f_element = search_frame(nfbuf->doc.frameset, target);
+    union frameset_element* f_element = search_frame(nfbuf->doc.frameset, target);
     if (f_element == NULL) {
         /* specified target doesn't exist in this frameset */
         return loadNormalBuf(buf, TRUE);
@@ -796,7 +792,7 @@ void _followForm(bool submit, struct FollowOption option)
                 Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
             Strcat_charp(tmp2, "?");
             Strcat(tmp2, tmp);
-            loadLink(tmp2->ptr, a->target, NULL, NULL, option);
+            loadLink(tmp2->ptr, NULL, a->target, NULL, option);
         } else if (fi->parent->method == FORM_METHOD_POST) {
             struct Buffer* buf;
             if (multipart) {
@@ -807,7 +803,7 @@ void _followForm(bool submit, struct FollowOption option)
                 fi->parent->body = tmp->ptr;
                 fi->parent->length = tmp->length;
             }
-            buf = loadLink(tmp2->ptr, a->target, NULL, fi->parent, option);
+            buf = loadLink(tmp2->ptr, fi->parent, a->target, NULL, option);
             if (multipart) {
                 unlink(fi->parent->body);
             }
