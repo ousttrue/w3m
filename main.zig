@@ -1,9 +1,9 @@
 const std = @import("std");
 const c = @import("c_include.zig").c;
 const PutcStatus = @import("PutcStatus.zig");
+const defuns = @import("defun.zig");
 
 const Term = @import("Term.zig");
-var g_term: Term = undefined;
 var g_allocator: std.mem.Allocator = undefined;
 
 /// return ture if enter main loop
@@ -14,11 +14,11 @@ pub fn main() !void {
     defer _ = gpa.detectLeaks();
     g_allocator = gpa.allocator();
 
-    g_term = Term.init(g_allocator, std.fs.File.stdin()) catch
+    Term.g_term = Term.init(g_allocator, std.fs.File.stdin()) catch
         @panic("Term.init");
-    defer g_term.deinit();
+    defer Term.g_term.deinit();
 
-    const ws = try g_term.getWinsize();
+    const ws = try Term.g_term.getWinsize();
     c.screen_setup(ws.row, ws.col);
 
     if (!w3m_args(@intCast(std.os.argv.len), &std.os.argv[0])) {
@@ -36,7 +36,7 @@ pub fn main() !void {
             continue;
         }
 
-        if (g_term.getch()) |ch| {
+        if (Term.g_term.getch()) |ch| {
             c.w3m_on_key(ch);
             c.w3m_end_frame();
         }
@@ -49,21 +49,21 @@ pub fn main() !void {
 //
 
 export fn fmInitialized() bool {
-    return g_term.is_rawmode;
+    return Term.g_term.is_rawmode;
 }
 
 export fn enterRawMode() void {
-    if (!g_term.is_rawmode) {
+    if (!Term.g_term.is_rawmode) {
         // term_raw();
         // term_noecho();
-        g_term.enterRawMode() catch @panic("enterRawMode");
+        Term.g_term.enterRawMode() catch @panic("enterRawMode");
         c.initscr();
         c.initImage();
     }
 }
 
 export fn exitRawMode() void {
-    if (g_term.is_rawmode) {
+    if (Term.g_term.is_rawmode) {
         c.screen_move(.{ .y = c.LASTLINE(), .x = 0 });
         c.screen_clrtoeolx();
         c.tty_write_screen();
@@ -88,7 +88,7 @@ export fn reset_tty() void {
     writestr(g_runtime.termcap._se); // reset terminal
     flush_tty();
     // tcsetattr(g_runtime.tty_input, TCSANOW, &d_ioval);
-    g_term.exitRawMode();
+    Term.g_term.exitRawMode();
 }
 
 export fn tty_add_ISIG() void {
@@ -239,14 +239,14 @@ export fn onFrame() void {
 
 export fn tty_cbreak(enable: bool) void {
     if (enable) {
-        g_term.cbreakMode() catch @panic("tty_cbreak");
+        Term.g_term.cbreakMode() catch @panic("tty_cbreak");
     } else {
-        g_term.enterRawMode() catch @panic("tty_cbreak");
+        Term.g_term.enterRawMode() catch @panic("tty_cbreak");
     }
 }
 
 export fn getch() c_int {
-    if (g_term.getch()) |ch| {
+    if (Term.g_term.getch()) |ch| {
         return ch;
     } else {
         return 0;
@@ -296,7 +296,7 @@ export fn setlinescols() void {
     //     g_runtime.cols = wins.ws_col;
     // }
 
-    if (g_term.getWinsize()) |ws| {
+    if (Term.g_term.getWinsize()) |ws| {
         const rt = c.getRuntime();
         rt.*.lines = ws.row;
         rt.*.cols = ws.col;

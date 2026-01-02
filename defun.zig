@@ -1,0 +1,3511 @@
+const Term = @import("Term.zig");
+const c = @import("c_include.zig").c;
+
+const Defun = struct {
+    name: []const u8,
+    desc: []const u8,
+    func: fn () void,
+};
+
+pub const defuns = []Defun{
+    .{
+        .name = "nulcmd",
+        .key = "NOTHING",
+        .desc = "Do nothing",
+        .func = fn () void{},
+    },
+
+    .{
+        .name = "escmap",
+        .key = "ESCMAP",
+        .desc = "ESC map",
+        .func = fn () void{if (Term.g_term.getch()) |ch| {
+            if (c.IS_ASCII(ch)) {
+                // escKeyProc((int)c, K_ESC, EscKeymap);
+            }
+        }},
+    },
+    //
+    // DEFUN(escbmap, ESCBMAP, "ESC [ map")
+    // {
+    //     char c;
+    //     c = getch();
+    //     if (IS_DIGIT(c)) {
+    //         escdmap(c);
+    //         return;
+    //     }
+    //     if (IS_ASCII(c))
+    //         escKeyProc((int)c, K_ESCB, EscBKeymap);
+    // }
+    //
+    // void escdmap(char c)
+    // {
+    //     int d;
+    //     d = (int)c - (int)'0';
+    //     c = getch();
+    //     if (IS_DIGIT(c)) {
+    //         d = d * 10 + (int)c - (int)'0';
+    //         c = getch();
+    //     }
+    //     if (c == '~')
+    //         escKeyProc((int)d, K_ESCD, EscDKeymap);
+    // }
+    //
+    // DEFUN(multimap, MULTIMAP, "multimap")
+    // {
+    //     char c = getch();
+    //     if (IS_ASCII(c)) {
+    //         getRuntime()->CurrentKey = K_MULTI | (getRuntime()->CurrentKey << 16) | c;
+    //         escKeyProc((int)c, 0, NULL);
+    //     }
+    // }
+    //
+    // void tmpClearBuffer(struct Buffer* buf)
+    // {
+    //     if (writeBufferCache(buf) == 0) {
+    //         buf->doc.firstLine = NULL;
+    //         buf->doc.topLine = NULL;
+    //         buf->doc.currentLine = NULL;
+    //         buf->doc.lastLine = NULL;
+    //     }
+    // }
+    //
+    // static Str currentURL(void);
+    //
+    // static void
+    // repBuffer(struct Buffer* oldbuf, struct Buffer* buf)
+    // {
+    //     Firstbuf = replaceBuffer(Firstbuf, oldbuf, buf);
+    //     Currentbuf = buf;
+    // }
+    //
+    // MySignalHandler
+    // intTrap(SIGNAL_ARG)
+    // { /* Interrupt catcher */
+    //     LONGJMP(IntReturn, 0);
+    //     SIGNAL_RETURN;
+    // }
+    //
+    // static MySignalHandler
+    // SigPipe(SIGNAL_ARG)
+    // {
+    //     mySignal(SIGPIPE, SigPipe);
+    //     SIGNAL_RETURN;
+    // }
+    //
+    // /*
+    //  * Command functions: These functions are called with a keystroke.
+    //  */
+    //
+    // static void nscroll(int n)
+    // {
+    //     struct Buffer* buf = Currentbuf;
+    //     struct Line *top = buf->doc.topLine, *cur = buf->doc.currentLine;
+    //     int lnum, tlnum, llnum, diff_n;
+    //
+    //     if (buf->doc.firstLine == NULL)
+    //         return;
+    //     lnum = cur->linenumber;
+    //     buf->doc.topLine = doc_lineSkip(&buf->doc, top, n);
+    //     if (buf->doc.topLine == top) {
+    //         lnum += n;
+    //         if (lnum < buf->doc.topLine->linenumber)
+    //             lnum = buf->doc.topLine->linenumber;
+    //         else if (lnum > buf->doc.lastLine->linenumber)
+    //             lnum = buf->doc.lastLine->linenumber;
+    //     } else {
+    //         tlnum = buf->doc.topLine->linenumber;
+    //         llnum = buf->doc.topLine->linenumber + buf->doc.LINES - 1;
+    //         if (getRuntime()->nextpage_topline)
+    //             diff_n = 0;
+    //         else
+    //             diff_n = n - (tlnum - top->linenumber);
+    //         if (lnum < tlnum)
+    //             lnum = tlnum + diff_n;
+    //         if (lnum > llnum)
+    //             lnum = llnum + diff_n;
+    //     }
+    //     doc_gotoLine(&buf->doc, lnum);
+    //     doc_arrangeLine(&buf->doc);
+    //     if (n > 0) {
+    //         if (buf->doc.currentLine->bpos && buf->doc.currentLine->bwidth >= buf->doc.currentColumn + buf->doc.visualpos)
+    //             doc_cursorDown(&buf->doc, 1);
+    //         else {
+    //             while (buf->doc.currentLine->next && buf->doc.currentLine->next->bpos && buf->doc.currentLine->bwidth + buf->doc.currentLine->width < buf->doc.currentColumn + buf->doc.visualpos)
+    //                 doc_cursorDown0(&buf->doc, 1);
+    //         }
+    //     } else {
+    //         if (buf->doc.currentLine->bwidth + buf->doc.currentLine->width < buf->doc.currentColumn + buf->doc.visualpos)
+    //             doc_cursorUp(&buf->doc, 1);
+    //         else {
+    //             while (buf->doc.currentLine->prev && buf->doc.currentLine->bpos && buf->doc.currentLine->bwidth >= buf->doc.currentColumn + buf->doc.visualpos)
+    //                 doc_cursorUp0(&buf->doc, 1);
+    //         }
+    //     }
+    // }
+    //
+    // /* Move page forward */
+    // DEFUN(pgFore, NEXT_PAGE, "Scroll down one page")
+    // {
+    //     if (getRuntime()->vi_prec_num)
+    //         nscroll(searchKeyNum() * (Currentbuf->doc.LINES - 1));
+    //     else
+    //         nscroll(getRuntime()->prec_num ? searchKeyNum() : searchKeyNum() * (Currentbuf->doc.LINES - 1));
+    // }
+    //
+    // /* Move page backward */
+    // DEFUN(pgBack, PREV_PAGE, "Scroll up one page")
+    // {
+    //     if (getRuntime()->vi_prec_num)
+    //         nscroll(-searchKeyNum() * (Currentbuf->doc.LINES - 1));
+    //     else
+    //         nscroll(-(getRuntime()->prec_num ? searchKeyNum() : searchKeyNum() * (Currentbuf->doc.LINES - 1)));
+    // }
+    //
+    // /* Move half page forward */
+    // DEFUN(hpgFore, NEXT_HALF_PAGE, "Scroll down half a page")
+    // {
+    //     nscroll(searchKeyNum() * (Currentbuf->doc.LINES / 2 - 1));
+    // }
+    //
+    // /* Move half page backward */
+    // DEFUN(hpgBack, PREV_HALF_PAGE, "Scroll up half a page")
+    // {
+    //     nscroll(-searchKeyNum() * (Currentbuf->doc.LINES / 2 - 1));
+    // }
+    //
+    // /* 1 line up */
+    // DEFUN(lup1, UP, "Scroll the screen up one line")
+    // {
+    //     nscroll(searchKeyNum());
+    // }
+    //
+    // /* 1 line down */
+    // DEFUN(ldown1, DOWN, "Scroll the screen down one line")
+    // {
+    //     nscroll(-searchKeyNum());
+    // }
+    //
+    // /* move cursor position to the center of screen */
+    // DEFUN(ctrCsrV, CENTER_V, "Center on cursor line")
+    // {
+    //     if (Currentbuf->doc.firstLine == NULL)
+    //         return;
+    //     int offsety = /*Currentbuf->doc.LINES / 2*/ -Currentbuf->doc.cursorY;
+    //     if (offsety != 0) {
+    //         Currentbuf->doc.topLine = doc_lineSkip(&Currentbuf->doc, Currentbuf->doc.topLine, -offsety);
+    //         doc_arrangeLine(&Currentbuf->doc);
+    //     }
+    // }
+    //
+    // DEFUN(ctrCsrH, CENTER_H, "Center on cursor column")
+    // {
+    //     int offsetx;
+    //     if (Currentbuf->doc.firstLine == NULL)
+    //         return;
+    //     offsetx = Currentbuf->doc.cursorX - Currentbuf->doc.COLS / 2;
+    //     if (offsetx != 0) {
+    //         doc_columnSkip(&Currentbuf->doc, offsetx);
+    //         doc_arrangeCursor(&Currentbuf->doc);
+    //     }
+    // }
+    //
+    // /* Redraw screen */
+    // DEFUN(rdrwSc, REDRAW, "Draw the screen anew")
+    // {
+    //     tty_clear();
+    //     screen_clear();
+    //     doc_arrangeCursor(&Currentbuf->doc);
+    // }
+    //
+    // static void
+    // clear_mark(struct Line* l)
+    // {
+    //     int pos;
+    //     if (!l)
+    //         return;
+    //     for (pos = 0; pos < l->size; pos++)
+    //         l->propBuf[pos] &= ~PE_MARK;
+    // }
+    //
+    // /* search by regular expression */
+    // static int
+    // srchcore(const char* str, SearchFunc func)
+    // {
+    //     volatile int i, result = SR_NOTFOUND;
+    //
+    //     if (str != NULL && str != SearchString)
+    //         SearchString = str;
+    //     if (SearchString == NULL || *SearchString == '\0')
+    //         return SR_NOTFOUND;
+    //
+    //     str = conv_search_string(SearchString, getRuntime()->DisplayCharset);
+    //     auto prevtrap = mySignal(SIGINT, intTrap);
+    //     tty_cbreak(true);
+    //     if (SETJMP(IntReturn) == 0) {
+    //         for (i = 0; i < PREC_NUM; i++) {
+    //             result = func(Currentbuf, str);
+    //             if (i < PREC_NUM - 1 && result & SR_FOUND)
+    //                 clear_mark(Currentbuf->doc.currentLine);
+    //         }
+    //     }
+    //     mySignal(SIGINT, prevtrap);
+    //     tty_cbreak(false);
+    //     return result;
+    // }
+    //
+    // static void
+    // disp_srchresult(int result, char* prompt, const char* str)
+    // {
+    //     if (str == NULL)
+    //         str = "";
+    //     if (result & SR_NOTFOUND)
+    //         disp_message(Sprintf("Not found: %s", str)->ptr, TRUE);
+    //     else if (result & SR_WRAPPED)
+    //         disp_message(Sprintf("Search wrapped: %s", str)->ptr, TRUE);
+    //     else if (getRuntime()->show_srch_str)
+    //         disp_message(Sprintf("%s%s", prompt, str)->ptr, TRUE);
+    // }
+    //
+    // static int
+    // dispincsrch(int ch, Str buf, Lineprop* prop)
+    // {
+    //     static struct Buffer sbuf;
+    //     char* str;
+    //     int do_next_search = FALSE;
+    //
+    //     if (ch == 0 && buf == NULL) {
+    //         SAVE_BUFPOSITION(&sbuf); /* search starting point */
+    //         return -1;
+    //     }
+    //
+    //     str = buf->ptr;
+    //     switch (ch) {
+    //     case 022: /* C-r */
+    //         searchRoutine = backwardSearch;
+    //         do_next_search = TRUE;
+    //         break;
+    //     case 023: /* C-s */
+    //         searchRoutine = forwardSearch;
+    //         do_next_search = TRUE;
+    //         break;
+    //
+    //     default:
+    //         if (ch >= 0)
+    //             return ch; /* use InputKeymap */
+    //     }
+    //
+    //     if (do_next_search) {
+    //         if (*str) {
+    //             if (searchRoutine == forwardSearch)
+    //                 Currentbuf->doc.pos += 1;
+    //             SAVE_BUFPOSITION(&sbuf);
+    //             if (srchcore(str, searchRoutine) == SR_NOTFOUND
+    //                 && searchRoutine == forwardSearch) {
+    //                 Currentbuf->doc.pos -= 1;
+    //                 SAVE_BUFPOSITION(&sbuf);
+    //             }
+    //             doc_arrangeCursor(&Currentbuf->doc);
+    //             clear_mark(Currentbuf->doc.currentLine);
+    //             return -1;
+    //         } else
+    //             return 020; /* _prev completion for C-s C-s */
+    //     } else if (*str) {
+    //         RESTORE_BUFPOSITION(&sbuf);
+    //         doc_arrangeCursor(&Currentbuf->doc);
+    //         srchcore(str, searchRoutine);
+    //         doc_arrangeCursor(&Currentbuf->doc);
+    //     }
+    //     clear_mark(Currentbuf->doc.currentLine);
+    //     return -1;
+    // }
+    //
+    // static void
+    // isrch(SearchFunc func, char* prompt)
+    // {
+    //     char* str;
+    //     struct Buffer sbuf;
+    //     SAVE_BUFPOSITION(&sbuf);
+    //     dispincsrch(0, NULL, NULL); /* initialize incremental search state */
+    //
+    //     searchRoutine = func;
+    //     str = inputLineHistSearch(prompt, NULL, IN_STRING, getRuntime()->TextHist, dispincsrch);
+    //     if (str == NULL) {
+    //         RESTORE_BUFPOSITION(&sbuf);
+    //     }
+    // }
+    //
+    // static void
+    // srch(SearchFunc func, char* prompt)
+    // {
+    //     const char* str;
+    //     int result;
+    //     int disp = FALSE;
+    //     int pos;
+    //
+    //     str = searchKeyData();
+    //     if (str == NULL || *str == '\0') {
+    //         str = inputStrHist(prompt, NULL, getRuntime()->TextHist);
+    //         if (str != NULL && *str == '\0')
+    //             str = SearchString;
+    //         if (str == NULL) {
+    //             return;
+    //         }
+    //         disp = TRUE;
+    //     }
+    //     pos = Currentbuf->doc.pos;
+    //     if (func == forwardSearch)
+    //         Currentbuf->doc.pos += 1;
+    //     result = srchcore(str, func);
+    //     if (result & SR_FOUND)
+    //         clear_mark(Currentbuf->doc.currentLine);
+    //     else
+    //         Currentbuf->doc.pos = pos;
+    //     if (disp)
+    //         disp_srchresult(result, prompt, str);
+    //     searchRoutine = func;
+    // }
+    //
+    // /* Search regular expression forward */
+    //
+    // DEFUN(srchfor, SEARCH SEARCH_FORE WHEREIS, "Search forward")
+    // {
+    //     srch(forwardSearch, "Forward: ");
+    // }
+    //
+    // DEFUN(isrchfor, ISEARCH, "Incremental search forward")
+    // {
+    //     isrch(forwardSearch, "I-search: ");
+    // }
+    //
+    // /* Search regular expression backward */
+    //
+    // DEFUN(srchbak, SEARCH_BACK, "Search backward")
+    // {
+    //     srch(backwardSearch, "Backward: ");
+    // }
+    //
+    // DEFUN(isrchbak, ISEARCH_BACK, "Incremental search backward")
+    // {
+    //     isrch(backwardSearch, "I-search backward: ");
+    // }
+    //
+    // static void
+    // srch_nxtprv(int reverse)
+    // {
+    //     int result;
+    //     /* *INDENT-OFF* */
+    //     static SearchFunc routine[2] = {
+    //         forwardSearch, backwardSearch
+    //     };
+    //     /* *INDENT-ON* */
+    //
+    //     if (searchRoutine == NULL) {
+    //         /* FIXME: gettextize? */
+    //         disp_message("No previous regular expression", TRUE);
+    //         return;
+    //     }
+    //     if (reverse != 0)
+    //         reverse = 1;
+    //     if (searchRoutine == backwardSearch)
+    //         reverse ^= 1;
+    //     if (reverse == 0)
+    //         Currentbuf->doc.pos += 1;
+    //     result = srchcore(SearchString, routine[reverse]);
+    //     if (result & SR_FOUND)
+    //         clear_mark(Currentbuf->doc.currentLine);
+    //     else {
+    //         if (reverse == 0)
+    //             Currentbuf->doc.pos -= 1;
+    //     }
+    //     disp_srchresult(result, (reverse ? "Backward: " : "Forward: "),
+    //         SearchString);
+    // }
+    //
+    // /* Search next matching */
+    // DEFUN(srchnxt, SEARCH_NEXT, "Continue search forward")
+    // {
+    //     srch_nxtprv(0);
+    // }
+    //
+    // /* Search previous matching */
+    // DEFUN(srchprv, SEARCH_PREV, "Continue search backward")
+    // {
+    //     srch_nxtprv(1);
+    // }
+    //
+    // static void
+    // shiftvisualpos(struct Buffer* buf, int shift)
+    // {
+    //     struct Line* l = buf->doc.currentLine;
+    //     buf->doc.visualpos -= shift;
+    //     if (buf->doc.visualpos - l->bwidth >= buf->doc.COLS)
+    //         buf->doc.visualpos = l->bwidth + buf->doc.COLS - 1;
+    //     else if (buf->doc.visualpos - l->bwidth < 0)
+    //         buf->doc.visualpos = l->bwidth;
+    //     doc_arrangeLine(&buf->doc);
+    //     if (buf->doc.visualpos - l->bwidth == -shift && buf->doc.cursorX == 0)
+    //         buf->doc.visualpos = l->bwidth;
+    // }
+    //
+    // /* Shift screen left */
+    // DEFUN(shiftl, SHIFT_LEFT, "Shift screen left")
+    // {
+    //     int column;
+    //
+    //     if (Currentbuf->doc.firstLine == NULL)
+    //         return;
+    //     column = Currentbuf->doc.currentColumn;
+    //     doc_columnSkip(&Currentbuf->doc, searchKeyNum() * (-Currentbuf->doc.COLS + 1) + 1);
+    //     shiftvisualpos(Currentbuf, Currentbuf->doc.currentColumn - column);
+    // }
+    //
+    // /* Shift screen right */
+    // DEFUN(shiftr, SHIFT_RIGHT, "Shift screen right")
+    // {
+    //     int column;
+    //
+    //     if (Currentbuf->doc.firstLine == NULL)
+    //         return;
+    //     column = Currentbuf->doc.currentColumn;
+    //     doc_columnSkip(&Currentbuf->doc, searchKeyNum() * (Currentbuf->doc.COLS - 1) - 1);
+    //     shiftvisualpos(Currentbuf, Currentbuf->doc.currentColumn - column);
+    // }
+    //
+    // DEFUN(col1R, RIGHT, "Shift screen one column right")
+    // {
+    //     struct Buffer* buf = Currentbuf;
+    //     struct Line* l = buf->doc.currentLine;
+    //     int j, column, n = searchKeyNum();
+    //
+    //     if (l == NULL)
+    //         return;
+    //     for (j = 0; j < n; j++) {
+    //         column = buf->doc.currentColumn;
+    //         doc_columnSkip(&Currentbuf->doc, 1);
+    //         if (column == buf->doc.currentColumn)
+    //             break;
+    //         shiftvisualpos(Currentbuf, 1);
+    //     }
+    // }
+    //
+    // DEFUN(col1L, LEFT, "Shift screen one column left")
+    // {
+    //     struct Buffer* buf = Currentbuf;
+    //     struct Line* l = buf->doc.currentLine;
+    //     int j, n = searchKeyNum();
+    //
+    //     if (l == NULL)
+    //         return;
+    //     for (j = 0; j < n; j++) {
+    //         if (buf->doc.currentColumn == 0)
+    //             break;
+    //         doc_columnSkip(&Currentbuf->doc, -1);
+    //         shiftvisualpos(Currentbuf, -1);
+    //     }
+    // }
+    //
+    // DEFUN(setEnv, SETENV, "Set environment variable")
+    // {
+    //     getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
+    //     char* env = searchKeyData();
+    //     if (env == NULL || *env == '\0' || strchr(env, '=') == NULL) {
+    //         if (env != NULL && *env != '\0')
+    //             env = Sprintf("%s=", env)->ptr;
+    //         env = inputStrHist("Set environ: ", env, getRuntime()->TextHist);
+    //         if (env == NULL || *env == '\0') {
+    //             return;
+    //         }
+    //     }
+    //
+    //     char *var, *value;
+    //     if ((value = strchr(env, '=')) != NULL && value > env) {
+    //         var = allocStr(env, value - env);
+    //         value++;
+    //         set_environ(var, value);
+    //     }
+    // }
+    //
+    // DEFUN(pipeBuf, PIPE_BUF, "Pipe current buffer through a shell command and display output")
+    // {
+    //     // getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
+    //     // char* cmd = searchKeyData();
+    //     // if (cmd == NULL || *cmd == '\0') {
+    //     //     /* FIXME: gettextize? */
+    //     //     cmd = inputLineHist("Pipe buffer to: ", "", IN_COMMAND, getRuntime()->ShellHist);
+    //     // }
+    //     // if (cmd != NULL)
+    //     //     cmd = conv_to_system(cmd);
+    //     // if (cmd == NULL || *cmd == '\0') {
+    //     //     return;
+    //     // }
+    //     //
+    //     // char* tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
+    //     // FILE* f = fopen(tmpf, "w");
+    //     // if (f == NULL)
+    //     //     if (getRuntime()->UseHistory)
+    //     //         loadHistory(getRuntime()->URLHist);
+    //     //
+    //     // if (getRuntime()->UseHistory)
+    //     //     loadHistory(getRuntime()->URLHist);
+    //     //
+    //     // {
+    //     //     /* FIXME: gettextize? */
+    //     //     disp_message(Sprintf("Can't save buffer to %s", cmd)->ptr, TRUE);
+    //     //     return;
+    //     // }
+    //     // saveBuffer(Currentbuf, f, TRUE);
+    //     // fclose(f);
+    //     // struct Buffer* buf = getpipe(myExtCommand(cmd, shell_quote(tmpf), TRUE)->ptr);
+    //     // if (buf == NULL) {
+    //     //     disp_message("Execution failed", TRUE);
+    //     //     return;
+    //     // } else {
+    //     //     buf->content.filename = cmd;
+    //     //     buf->buffername = Sprintf("%s %s", PIPEBUFFERNAME,
+    //     //         conv_from_system(cmd))
+    //     //                           ->ptr;
+    //     //     buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
+    //     //     if (buf->type == NULL)
+    //     //         buf->type = "text/plain";
+    //     //     buf->currentURL.file = "-";
+    //     //     pushBuffer(buf);
+    //     // }
+    // }
+    //
+    // /* Execute shell command and read output ac pipe. */
+    // DEFUN(pipesh, PIPE_SHELL, "Execute shell command and display output")
+    // {
+    //     // getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
+    //     // char* cmd = searchKeyData();
+    //     // if (cmd == NULL || *cmd == '\0') {
+    //     //     cmd = inputLineHist("(read shell[pipe])!", "", IN_COMMAND, getRuntime()->ShellHist);
+    //     // }
+    //     // if (cmd != NULL)
+    //     //     cmd = conv_to_system(cmd);
+    //     // if (cmd == NULL || *cmd == '\0') {
+    //     //     return;
+    //     // }
+    //     //
+    //     // struct Buffer* buf = getpipe(cmd);
+    //     // if (buf == NULL) {
+    //     //     disp_message("Execution failed", TRUE);
+    //     //     return;
+    //     // } else {
+    //     //     buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
+    //     //     if (buf->type == NULL)
+    //     //         buf->type = "text/plain";
+    //     //     pushBuffer(buf);
+    //     // }
+    // }
+    //
+    // /* Execute shell command and load entire output to buffer */
+    // DEFUN(readsh, READ_SHELL, "Execute shell command and display output")
+    // {
+    //     getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
+    //     char* cmd = searchKeyData();
+    //     if (cmd == NULL || *cmd == '\0') {
+    //         cmd = inputLineHist("(read shell)!", "", IN_COMMAND, getRuntime()->ShellHist);
+    //     }
+    //     if (cmd != NULL)
+    //         cmd = conv_to_system(cmd);
+    //     if (cmd == NULL || *cmd == '\0') {
+    //         return;
+    //     }
+    //     auto prevtrap = mySignal(SIGINT, intTrap);
+    //     exitRawMode();
+    //     struct Buffer* buf = getshell(cmd);
+    //     mySignal(SIGINT, prevtrap);
+    //     enterRawMode();
+    //     if (buf == NULL) {
+    //         /* FIXME: gettextize? */
+    //         disp_message("Execution failed", TRUE);
+    //         return;
+    //     } else {
+    //         buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
+    //         if (buf->content.content_type == NULL)
+    //             buf->content.content_type = "text/plain";
+    //         pushBuffer(buf);
+    //     }
+    // }
+    //
+    // /* Execute shell command */
+    // DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output")
+    // {
+    //     getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
+    //     char* cmd = searchKeyData();
+    //     if (cmd == NULL || *cmd == '\0') {
+    //         cmd = inputLineHist("(exec shell)!", "", IN_COMMAND, getRuntime()->ShellHist);
+    //     }
+    //     if (cmd != NULL)
+    //         cmd = conv_to_system(cmd);
+    //     if (cmd != NULL && *cmd != '\0') {
+    //         exitRawMode();
+    //         printf("\n");
+    //         (void)!system(cmd); /* We do not care about the exit code here! */
+    //         /* FIXME: gettextize? */
+    //         printf("\n[Hit any key]");
+    //         fflush(stdout);
+    //         enterRawMode();
+    //         getch();
+    //     }
+    // }
+    //
+    // /* Load file */
+    // DEFUN(ldfile, LOAD, "Open local file in a new buffer")
+    // {
+    //     char* fn;
+    //
+    //     fn = searchKeyData();
+    //     if (fn == NULL || *fn == '\0') {
+    //         /* FIXME: gettextize? */
+    //         fn = inputFilenameHist("(Load)Filename? ", NULL, getRuntime()->LoadHist);
+    //     }
+    //     if (fn != NULL)
+    //         fn = conv_to_system(fn);
+    //     if (fn == NULL || *fn == '\0') {
+    //         return;
+    //     }
+    //     cmd_loadfile(fn);
+    // }
+    //
+    // static int
+    // handleMailto(const char* url)
+    // {
+    //     Str to;
+    //     char* pos;
+    //
+    //     if (strncasecmp(url, "mailto:", 7))
+    //         return 0;
+    //     if (!non_null(getRuntime()->Mailer)) {
+    //         /* FIXME: gettextize? */
+    //         disp_err_message("no mailer is specified", TRUE);
+    //         return 1;
+    //     }
+    //
+    //     /* invoke external mailer */
+    //     if (getRuntime()->MailtoOptions == MAILTO_OPTIONS_USE_MAILTO_URL) {
+    //         to = Strnew_charp(html_unquote(url));
+    //     } else {
+    //         to = Strnew_charp(url + 7);
+    //         if ((pos = strchr(to->ptr, '?')) != NULL)
+    //             Strtruncate(to, pos - to->ptr);
+    //     }
+    //     exec_cmd(myExtCommand(getRuntime()->Mailer, shell_quote(file_unquote(to->ptr)), FALSE)->ptr);
+    //     pushHashHist(getRuntime()->URLHist, url);
+    //     return 1;
+    // }
+    //
+    // static void
+    // cmd_loadURL(const char* url, struct FormList* request, struct LoadOption option)
+    // {
+    //     if (handleMailto(url))
+    //         return;
+    //
+    //     struct Content content = loadGeneralFile(url, request, option, false);
+    //     struct Buffer* buf = newBuffer(INIT_BUFFER_WIDTH);
+    //     buf->content = content;
+    //     if (buf == NULL) {
+    //         char* emsg = Sprintf("Can't load %s", conv_from_system(url))->ptr;
+    //         disp_err_message(emsg, FALSE);
+    //     } else {
+    //         pushBuffer(buf);
+    //         if (getRuntime()->RenderFrame && Currentbuf->doc.frameset != NULL)
+    //             rFrame();
+    //     }
+    // }
+    //
+    // /* Load help file */
+    // DEFUN(ldhelp, HELP, "Show help panel")
+    // {
+    //     char* lang;
+    //     int n;
+    //     Str tmp;
+    //
+    //     lang = getRuntime()->AcceptLang;
+    //     n = strcspn(lang, ";, \t");
+    //     tmp = Sprintf("file:///$LIB/" HELP_CGI CGI_EXTENSION "?version=%s&lang=%s",
+    //         Str_form_quote(Strnew_charp(w3m_version))->ptr,
+    //         Str_form_quote(Strnew_charp_n(lang, n))->ptr);
+    //     cmd_loadURL(tmp->ptr, NULL, (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER, 0 });
+    // }
+    //
+    // static void
+    // cmd_loadfile(char* fn)
+    // {
+    //     struct Content content = loadGeneralFile(file_to_url(fn), NULL,
+    //         (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER, .flag = 0 }, false);
+    //     struct Buffer* buf = newBuffer(INIT_BUFFER_WIDTH);
+    //     buf->content = content;
+    //     if (buf == NULL) {
+    //         /* FIXME: gettextize? */
+    //         char* emsg = Sprintf("%s not found", conv_from_system(fn))->ptr;
+    //         disp_err_message(emsg, FALSE);
+    //     } else {
+    //         pushBuffer(buf);
+    //         if (getRuntime()->RenderFrame && Currentbuf->doc.frameset != NULL)
+    //             rFrame();
+    //     }
+    // }
+    //
+    // /* Move cursor left */
+    // static void
+    // _movL(int n)
+    // {
+    //     int i, m = searchKeyNum();
+    //     if (Currentbuf->doc.firstLine == NULL)
+    //         return;
+    //     for (i = 0; i < m; i++)
+    //         doc_cursorLeft(&Currentbuf->doc, n);
+    // }
+    //
+    // DEFUN(movL, MOVE_LEFT, "Cursor left")
+    // {
+    //     _movL(Currentbuf->doc.COLS / 2);
+    // }
+    //
+    // DEFUN(movL1, MOVE_LEFT1, "Cursor left. With edge touched, slide")
+    // {
+    //     _movL(1);
+    // }
+    //
+    // /* Move cursor downward */
+    // static void
+    // _movD(int n)
+    // {
+    //     int i, m = searchKeyNum();
+    //     if (Currentbuf->doc.firstLine == NULL)
+    //         return;
+    //     for (i = 0; i < m; i++)
+    //         doc_cursorDown(&Currentbuf->doc, n);
+    // }
+    //
+    // DEFUN(movD, MOVE_DOWN, "Cursor down")
+    // {
+    //     _movD((Currentbuf->doc.LINES + 1) / 2);
+    // }
+    //
+    // DEFUN(movD1, MOVE_DOWN1, "Cursor down. With edge touched, slide")
+    // {
+    //     _movD(1);
+    // }
+    //
+    // /* move cursor upward */
+    // static void
+    // _movU(int n)
+    // {
+    //     int i, m = searchKeyNum();
+    //     if (Currentbuf->doc.firstLine == NULL)
+    //         return;
+    //     for (i = 0; i < m; i++)
+    //         doc_cursorUp(&Currentbuf->doc, n);
+    // }
+    //
+    // DEFUN(movU, MOVE_UP, "Cursor up")
+    // {
+    //     _movU((Currentbuf->doc.LINES + 1) / 2);
+    // }
+    //
+    // DEFUN(movU1, MOVE_UP1, "Cursor up. With edge touched, slide")
+    // {
+    //     _movU(1);
+    // }
+    //
+    // /* Move cursor right */
+    // static void
+    // _movR(int n)
+    // {
+    //     int i, m = searchKeyNum();
+    //     if (Currentbuf->doc.firstLine == NULL)
+    //         return;
+    //     for (i = 0; i < m; i++)
+    //         doc_cursorRight(&Currentbuf->doc, n);
+    // }
+    //
+    // DEFUN(movR, MOVE_RIGHT, "Cursor right")
+    // {
+    //     _movR(Currentbuf->doc.COLS / 2);
+    // }
+    //
+    // DEFUN(movR1, MOVE_RIGHT1, "Cursor right. With edge touched, slide")
+    // {
+    //     _movR(1);
+    // }
+    //
+    // /* movLW, movRW */
+    // /*
+    //  * From: Takashi Nishimoto <g96p0935@mse.waseda.ac.jp> Date: Mon, 14 Jun
+    //  * 1999 09:29:56 +0900
+    //  */
+    //
+    // static int
+    // prev_nonnull_line(struct Line* line)
+    // {
+    //     struct Line* l;
+    //
+    //     for (l = line; l != NULL && l->len == 0; l = l->prev)
+    //         ;
+    //     if (l == NULL || l->len == 0)
+    //         return -1;
+    //
+    //     Currentbuf->doc.currentLine = l;
+    //     if (l != line)
+    //         Currentbuf->doc.pos = Currentbuf->doc.currentLine->len;
+    //     return 0;
+    // }
+    //
+    // DEFUN(movLW, PREV_WORD, "Move to the previous word")
+    // {
+    //     char* lb;
+    //     struct Line *pline, *l;
+    //     int ppos;
+    //     int i, n = searchKeyNum();
+    //
+    //     if (Currentbuf->doc.firstLine == NULL)
+    //         return;
+    //
+    //     for (i = 0; i < n; i++) {
+    //         pline = Currentbuf->doc.currentLine;
+    //         ppos = Currentbuf->doc.pos;
+    //
+    //         if (prev_nonnull_line(Currentbuf->doc.currentLine) < 0)
+    //             goto end;
+    //
+    //         while (1) {
+    //             l = Currentbuf->doc.currentLine;
+    //             lb = l->lineBuf;
+    //             while (Currentbuf->doc.pos > 0) {
+    //                 int tmp = Currentbuf->doc.pos;
+    //                 prevChar(tmp, l);
+    //                 if (is_wordchar(getChar(&lb[tmp])))
+    //                     break;
+    //                 Currentbuf->doc.pos = tmp;
+    //             }
+    //             if (Currentbuf->doc.pos > 0)
+    //                 break;
+    //             if (prev_nonnull_line(Currentbuf->doc.currentLine->prev) < 0) {
+    //                 Currentbuf->doc.currentLine = pline;
+    //                 Currentbuf->doc.pos = ppos;
+    //                 goto end;
+    //             }
+    //             Currentbuf->doc.pos = Currentbuf->doc.currentLine->len;
+    //         }
+    //
+    //         l = Currentbuf->doc.currentLine;
+    //         lb = l->lineBuf;
+    //         while (Currentbuf->doc.pos > 0) {
+    //             int tmp = Currentbuf->doc.pos;
+    //             prevChar(tmp, l);
+    //             if (!is_wordchar(getChar(&lb[tmp])))
+    //                 break;
+    //             Currentbuf->doc.pos = tmp;
+    //         }
+    //     }
+    // end:
+    //     doc_arrangeCursor(&Currentbuf->doc);
+    // }
+    //
+    // static int
+    // next_nonnull_line(struct Line* line)
+    // {
+    //     struct Line* l;
+    //
+    //     for (l = line; l != NULL && l->len == 0; l = l->next)
+    //         ;
+    //
+    //     if (l == NULL || l->len == 0)
+    //         return -1;
+    //
+    //     Currentbuf->doc.currentLine = l;
+    //     if (l != line)
+    //         Currentbuf->doc.pos = 0;
+    //     return 0;
+    // }
+    //
+    // DEFUN(movRW, NEXT_WORD, "Move to the next word")
+    // {
+    //     char* lb;
+    //     struct Line *pline, *l;
+    //     int ppos;
+    //     int i, n = searchKeyNum();
+    //
+    //     if (Currentbuf->doc.firstLine == NULL)
+    //         return;
+    //
+    //     for (i = 0; i < n; i++) {
+    //         pline = Currentbuf->doc.currentLine;
+    //         ppos = Currentbuf->doc.pos;
+    //
+    //         if (next_nonnull_line(Currentbuf->doc.currentLine) < 0)
+    //             goto end;
+    //
+    //         l = Currentbuf->doc.currentLine;
+    //         lb = l->lineBuf;
+    //         while (Currentbuf->doc.pos < l->len && is_wordchar(getChar(&lb[Currentbuf->doc.pos])))
+    //             nextChar(Currentbuf->doc.pos, l);
+    //
+    //         while (1) {
+    //             while (Currentbuf->doc.pos < l->len && !is_wordchar(getChar(&lb[Currentbuf->doc.pos])))
+    //                 nextChar(Currentbuf->doc.pos, l);
+    //             if (Currentbuf->doc.pos < l->len)
+    //                 break;
+    //             if (next_nonnull_line(Currentbuf->doc.currentLine->next) < 0) {
+    //                 Currentbuf->doc.currentLine = pline;
+    //                 Currentbuf->doc.pos = ppos;
+    //                 goto end;
+    //             }
+    //             Currentbuf->doc.pos = 0;
+    //             l = Currentbuf->doc.currentLine;
+    //             lb = l->lineBuf;
+    //         }
+    //     }
+    // end:
+    //     doc_arrangeCursor(&Currentbuf->doc);
+    // }
+    //
+    // static void
+    // _quitfm(int confirm)
+    // {
+    //     const char* ans = "y";
+    //     if (download_checkList())
+    //         /* FIXME: gettextize? */
+    //         ans = inputChar("Download process retains. "
+    //                         "Do you want to exit w3m? (y/n)");
+    //     else if (confirm)
+    //         /* FIXME: gettextize? */
+    //         ans = inputChar("Do you want to exit w3m? (y/n)");
+    //     if (!(ans && TOLOWER(*ans) == 'y')) {
+    //         return;
+    //     }
+    //
+    //     term_title(""); /* XXX */
+    //     if (getRuntime()->activeImage)
+    //         termImage();
+    //     exitRawMode();
+    //     save_cookies();
+    //
+    //     if (getRuntime()->UseHistory && getRuntime()->SaveURLHist)
+    //         saveHistory(getRuntime()->URLHist, getRuntime()->URLHistSize);
+    //
+    //     w3m_exit(0);
+    // }
+    //
+    // /* Quit */
+    // DEFUN(quitfm, ABORT EXIT, "Quit without confirmation")
+    // {
+    //     _quitfm(FALSE);
+    // }
+    //
+    // /* Question and Quit */
+    // DEFUN(qquitfm, QUIT, "Quit with confirmation request")
+    // {
+    //     _quitfm(getRuntime()->confirm_on_quit);
+    // }
+    //
+    // /* Select buffer */
+    // DEFUN(selBuf, SELECT, "Display buffer-stack panel")
+    // {
+    //     struct Buffer* buf;
+    //     int ok;
+    //     char cmd;
+    //
+    //     ok = FALSE;
+    //     do {
+    //         buf = selectBuffer(Firstbuf, Currentbuf, &cmd);
+    //         switch (cmd) {
+    //         case 'B':
+    //             ok = TRUE;
+    //             break;
+    //         case '\n':
+    //         case ' ':
+    //             Currentbuf = buf;
+    //             ok = TRUE;
+    //             break;
+    //         case 'D':
+    //             delBuffer(buf);
+    //             if (Firstbuf == NULL) {
+    //                 /* No more buffer */
+    //                 Firstbuf = nullBuffer();
+    //                 Currentbuf = Firstbuf;
+    //             }
+    //             break;
+    //         case 'q':
+    //             qquitfm();
+    //             break;
+    //         case 'Q':
+    //             quitfm();
+    //             break;
+    //         }
+    //     } while (!ok);
+    //
+    //     for (buf = Firstbuf; buf != NULL; buf = buf->nextBuffer) {
+    //         if (buf == Currentbuf)
+    //             continue;
+    //         deleteImage(buf);
+    //         if (getRuntime()->clear_buffer)
+    //             tmpClearBuffer(buf);
+    //     }
+    // }
+    //
+    // /* Suspend (on BSD), or run interactive shell (on SysV) */
+    // DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background")
+    // {
+    //     screen_move((struct Vec2) { .y = LASTLINE(), .x = 0 });
+    //     screen_clrtoeolx();
+    //     tty_write_screen();
+    //     exitRawMode();
+    //     char* shell = getenv("SHELL");
+    //     if (shell == NULL)
+    //         shell = "/bin/sh";
+    //     system(shell);
+    //     enterRawMode();
+    // }
+    //
+    // /* Go to specified line */
+    // static void
+    // _goLine(char* l)
+    // {
+    //     if (l == NULL || *l == '\0' || Currentbuf->doc.currentLine == NULL) {
+    //         return;
+    //     }
+    //     Currentbuf->doc.pos = 0;
+    //     if (((*l == '^') || (*l == '$')) && getRuntime()->prec_num) {
+    //         doc_gotoRealLine(&Currentbuf->doc, getRuntime()->prec_num);
+    //     } else if (*l == '^') {
+    //         Currentbuf->doc.topLine = Currentbuf->doc.currentLine = Currentbuf->doc.firstLine;
+    //     } else if (*l == '$') {
+    //         Currentbuf->doc.topLine = doc_lineSkip(&Currentbuf->doc, Currentbuf->doc.lastLine,
+    //             -(Currentbuf->doc.LINES + 1) / 2);
+    //         Currentbuf->doc.currentLine = Currentbuf->doc.lastLine;
+    //     } else
+    //         doc_gotoRealLine(&Currentbuf->doc, atoi(l));
+    //     doc_arrangeCursor(&Currentbuf->doc);
+    // }
+    //
+    // DEFUN(goLine, GOTO_LINE, "Go to the specified line")
+    // {
+    //     char* str = searchKeyData();
+    //     if (getRuntime()->prec_num)
+    //         _goLine("^");
+    //     else if (str)
+    //         _goLine(str);
+    //     else
+    //         /* FIXME: gettextize? */
+    //         _goLine(inputStr("Goto line: ", ""));
+    // }
+    //
+    // DEFUN(goLineF, BEGIN, "Go to the first line")
+    // {
+    //     _goLine("^");
+    // }
+    //
+    // DEFUN(goLineL, END, "Go to the last line")
+    // {
+    //     _goLine("$");
+    // }
+    //
+    // /* Go to the beginning of the line */
+    // DEFUN(linbeg, LINE_BEGIN, "Go to the beginning of the line")
+    // {
+    //     if (Currentbuf->doc.firstLine == NULL)
+    //         return;
+    //     while (Currentbuf->doc.currentLine->prev && Currentbuf->doc.currentLine->bpos)
+    //         doc_cursorUp0(&Currentbuf->doc, 1);
+    //     Currentbuf->doc.pos = 0;
+    //     doc_arrangeCursor(&Currentbuf->doc);
+    // }
+    //
+    // /* Go to the bottom of the line */
+    // DEFUN(linend, LINE_END, "Go to the end of the line")
+    // {
+    //     if (Currentbuf->doc.firstLine == NULL)
+    //         return;
+    //     while (Currentbuf->doc.currentLine->next
+    //         && Currentbuf->doc.currentLine->next->bpos)
+    //         doc_cursorDown0(&Currentbuf->doc, 1);
+    //     Currentbuf->doc.pos = Currentbuf->doc.currentLine->len - 1;
+    //     doc_arrangeCursor(&Currentbuf->doc);
+    // }
+    //
+    // static int
+    // cur_real_linenumber(struct Buffer* buf)
+    // {
+    //     struct Line *l, *cur = buf->doc.currentLine;
+    //     int n;
+    //
+    //     if (!cur)
+    //         return 1;
+    //     n = cur->real_linenumber ? cur->real_linenumber : 1;
+    //     for (l = buf->doc.firstLine; l && l != cur && l->real_linenumber == 0; l = l->next) { /* header */
+    //         if (l->bpos == 0)
+    //             n++;
+    //     }
+    //     return n;
+    // }
+    //
+    // /* Run editor on the current buffer */
+    // DEFUN(editBf, EDIT, "Edit local source")
+    // {
+    //     const char* fn = Currentbuf->content.filename;
+    //     // if (fn == NULL || Currentbuf->pagerSource != NULL || /* Behaving as a pager */
+    //     //     (Currentbuf->type == NULL && Currentbuf->edit == NULL) || /* Reading shell */
+    //     //     Currentbuf->real_scheme != SCM_LOCAL || !strcmp(Currentbuf->currentURL.file, "-") || /* file is std input  */
+    //     //     Currentbuf->bufferprop & BP_FRAME) { /* Frame */
+    //     //     disp_err_message("Can't edit other than local file", TRUE);
+    //     //     return;
+    //     // }
+    //
+    //     Str cmd;
+    //     if (Currentbuf->edit)
+    //         cmd = unquote_mailcap(Currentbuf->edit, Currentbuf->content.content_type, fn,
+    //             checkHeader(&Currentbuf->content, "Content-Type:"), NULL);
+    //     else
+    //         cmd = myEditor(getRuntime()->Editor, shell_quote(fn), cur_real_linenumber(Currentbuf));
+    //     blockChild(cmd->ptr);
+    //
+    //     // buffer is modified. so reload
+    //     reload();
+    // }
+    //
+    // /* Run editor on the current screen */
+    // DEFUN(editScr, EDIT_SCREEN, "Edit rendered copy of document")
+    // {
+    //     char* tmpf;
+    //     FILE* f;
+    //
+    //     tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
+    //     f = fopen(tmpf, "w");
+    //     if (f == NULL) {
+    //         /* FIXME: gettextize? */
+    //         disp_err_message(Sprintf("Can't open %s", tmpf)->ptr, TRUE);
+    //         return;
+    //     }
+    //     saveBuffer(Currentbuf, f, TRUE);
+    //     fclose(f);
+    //     exec_cmd(myEditor(getRuntime()->Editor, shell_quote(tmpf),
+    //         cur_real_linenumber(Currentbuf))
+    //             ->ptr);
+    //     unlink(tmpf);
+    // }
+    //
+    // /* Set / unset mark */
+    // DEFUN(_mark, MARK, "Set/unset mark")
+    // {
+    //     struct Line* l;
+    //     if (!getRuntime()->use_mark)
+    //         return;
+    //     if (Currentbuf->doc.firstLine == NULL)
+    //         return;
+    //     l = Currentbuf->doc.currentLine;
+    //     l->propBuf[Currentbuf->doc.pos] ^= PE_MARK;
+    // }
+    //
+    // /* Go to next mark */
+    // DEFUN(nextMk, NEXT_MARK, "Go to the next mark")
+    // {
+    //     struct Line* l;
+    //     int i;
+    //
+    //     if (!getRuntime()->use_mark)
+    //         return;
+    //     if (Currentbuf->doc.firstLine == NULL)
+    //         return;
+    //     i = Currentbuf->doc.pos + 1;
+    //     l = Currentbuf->doc.currentLine;
+    //     if (i >= l->len) {
+    //         i = 0;
+    //         l = l->next;
+    //     }
+    //     while (l != NULL) {
+    //         for (; i < l->len; i++) {
+    //             if (l->propBuf[i] & PE_MARK) {
+    //                 Currentbuf->doc.currentLine = l;
+    //                 Currentbuf->doc.pos = i;
+    //                 doc_arrangeCursor(&Currentbuf->doc);
+    //                 return;
+    //             }
+    //         }
+    //         l = l->next;
+    //         i = 0;
+    //     }
+    //     disp_message("No mark exist after here", TRUE);
+    // }
+    //
+    // /* Go to previous mark */
+    // DEFUN(prevMk, PREV_MARK, "Go to the previous mark")
+    // {
+    //     struct Line* l;
+    //     int i;
+    //
+    //     if (!getRuntime()->use_mark)
+    //         return;
+    //     if (Currentbuf->doc.firstLine == NULL)
+    //         return;
+    //     i = Currentbuf->doc.pos - 1;
+    //     l = Currentbuf->doc.currentLine;
+    //     if (i < 0) {
+    //         l = l->prev;
+    //         if (l != NULL)
+    //             i = l->len - 1;
+    //     }
+    //     while (l != NULL) {
+    //         for (; i >= 0; i--) {
+    //             if (l->propBuf[i] & PE_MARK) {
+    //                 Currentbuf->doc.currentLine = l;
+    //                 Currentbuf->doc.pos = i;
+    //                 doc_arrangeCursor(&Currentbuf->doc);
+    //                 return;
+    //             }
+    //         }
+    //         l = l->prev;
+    //         if (l != NULL)
+    //             i = l->len - 1;
+    //     }
+    //     disp_message("No mark exist before here", TRUE);
+    // }
+    //
+    // /* Mark place to which the regular expression matches */
+    // DEFUN(reMark, REG_MARK, "Mark all occurences of a pattern")
+    // {
+    //     struct Line* l;
+    //     const char* str;
+    //     char *p, *p1, *p2;
+    //
+    //     if (!getRuntime()->use_mark)
+    //         return;
+    //     str = searchKeyData();
+    //     if (str == NULL || *str == '\0') {
+    //         str = inputStrHist("(Mark)Regexp: ", MarkString, getRuntime()->TextHist);
+    //         if (str == NULL || *str == '\0') {
+    //             return;
+    //         }
+    //     }
+    //     str = conv_search_string(str, getRuntime()->DisplayCharset);
+    //     if ((str = regexCompile(str, 1)) != NULL) {
+    //         disp_message(str, TRUE);
+    //         return;
+    //     }
+    //     MarkString = str;
+    //     for (l = Currentbuf->doc.firstLine; l != NULL; l = l->next) {
+    //         p = l->lineBuf;
+    //         for (;;) {
+    //             if (regexMatch(p, &l->lineBuf[l->len] - p, p == l->lineBuf) == 1) {
+    //                 matchedPosition(&p1, &p2);
+    //                 l->propBuf[p1 - l->lineBuf] |= PE_MARK;
+    //                 p = p2;
+    //             } else
+    //                 break;
+    //         }
+    //     }
+    // }
+    //
+    // static void
+    // gotoLabel(const char* label)
+    // {
+    //     struct Buffer* buf;
+    //     struct Anchor* al;
+    //     int i;
+    //
+    //     al = searchURLLabel(Currentbuf, label);
+    //     if (al == NULL) {
+    //         /* FIXME: gettextize? */
+    //         disp_message(Sprintf("%s is not found", label)->ptr, TRUE);
+    //         return;
+    //     }
+    //     buf = newBuffer(Currentbuf->doc.width);
+    //     copyBuffer(buf, Currentbuf);
+    //     for (i = 0; i < MAX_LB; i++)
+    //         buf->linkBuffer[i] = NULL;
+    //     buf->content.url.label = allocStr(label, -1);
+    //     pushHashHist(getRuntime()->URLHist, parsedURL2Str(&buf->content.url)->ptr);
+    //     (*buf->clone)++;
+    //     pushBuffer(buf);
+    //     doc_gotoLine(&Currentbuf->doc, al->start.line);
+    //     if (getRuntime()->label_topline)
+    //         Currentbuf->doc.topLine = doc_lineSkip(&Currentbuf->doc, Currentbuf->doc.topLine,
+    //             Currentbuf->doc.currentLine->linenumber
+    //                 - Currentbuf->doc.topLine->linenumber);
+    //     Currentbuf->doc.pos = al->start.pos;
+    //     doc_arrangeCursor(&Currentbuf->doc);
+    //     return;
+    // }
+    //
+    // void _followA(struct FollowOption option)
+    // {
+    //     struct Anchor* a = retrieveCurrentImg(Currentbuf);
+    //     if (a && a->image && a->image->map) {
+    //         _followForm(FALSE, option);
+    //         return;
+    //     }
+    //
+    //     int x = 0, y = 0, map = 0;
+    //     if (a && a->image && a->image->ismap) {
+    //         getMapXY(Currentbuf, a, &x, &y);
+    //         map = 1;
+    //     }
+    //
+    //     a = retrieveCurrentAnchor(Currentbuf);
+    //     if (a == NULL) {
+    //         _followForm(FALSE, option);
+    //         return;
+    //     }
+    //     if (*a->url == '#') { /* index within this buffer */
+    //         gotoLabel(a->url + 1);
+    //         return;
+    //     }
+    //
+    //     struct Url u;
+    //     parseURL2(a->url, &u, baseURL(Currentbuf));
+    //     if (Strcmp(parsedURL2Str(&u), parsedURL2Str(&Currentbuf->content.url)) == 0) {
+    //         /* index within this buffer */
+    //         if (u.label) {
+    //             gotoLabel(u.label);
+    //             return;
+    //         }
+    //     }
+    //     if (handleMailto(a->url))
+    //         return;
+    //
+    //     const char* url = a->url;
+    //     if (map)
+    //         url = Sprintf("%s?%d,%d", a->url, x, y)->ptr;
+    //
+    //     if (check_target && getRuntime()->open_tab_blank && a->target && (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
+    //         struct Buffer* buf;
+    //
+    //         _newT();
+    //         buf = Currentbuf;
+    //         loadLink(url, NULL, a->target, a->referer, option);
+    //         if (buf != Currentbuf)
+    //             delBuffer(buf);
+    //         else
+    //             deleteTab(CurrentTab());
+    //         return;
+    //     }
+    //     loadLink(url, NULL, a->target, a->referer, option);
+    // }
+    //
+    // /* follow HREF link */
+    // DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
+    // {
+    //     if (Currentbuf->doc.firstLine == NULL)
+    //         return;
+    //     _followA((struct FollowOption) { .on_target = true, .do_download = false });
+    // }
+    //
+    // /* follow HREF link in the buffer */
+    // void bufferA(void)
+    // {
+    //     _followA((struct FollowOption) { .on_target = false, .do_download = false });
+    // }
+    //
+    // void _followI(bool do_download)
+    // {
+    //     if (Currentbuf->doc.firstLine == NULL)
+    //         return;
+    //
+    //     struct Anchor* a = retrieveCurrentImg(Currentbuf);
+    //     if (a == NULL)
+    //         return;
+    //     message(Sprintf("loading %s", a->url)->ptr);
+    //     struct Content content = loadGeneralFile(a->url, NULL,
+    //         (struct LoadOption) { .base_url = baseURL(Currentbuf), .referer = NULL, .flag = 0 }, do_download);
+    //     struct Buffer* buf = newBuffer(INIT_BUFFER_WIDTH);
+    //     buf->content = content;
+    //     if (buf == NULL) {
+    //         /* FIXME: gettextize? */
+    //         char* emsg = Sprintf("Can't load %s", a->url)->ptr;
+    //         disp_err_message(emsg, FALSE);
+    //     } else {
+    //         pushBuffer(buf);
+    //     }
+    // }
+    //
+    // /* view inline image */
+    // DEFUN(followI, VIEW_IMAGE, "Display image in viewer")
+    // {
+    //     _followI(false);
+    // }
+    //
+    // /* submit form */
+    // DEFUN(submitForm, SUBMIT, "Submit form")
+    // {
+    //     _followForm(TRUE, (struct FollowOption) { .on_target = true, .do_download = false });
+    // }
+    //
+    // /* process form */
+    // void followForm(void)
+    // {
+    //     _followForm(FALSE, (struct FollowOption) { .on_target = true, .do_download = false });
+    // }
+    //
+    // /* go to the top anchor */
+    // DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink")
+    // {
+    //     struct HmarkerList* hl = Currentbuf->doc.hmarklist;
+    //     struct BufferPoint* po;
+    //     struct Anchor* an;
+    //     int hseq = 0;
+    //
+    //     if (Currentbuf->doc.firstLine == NULL)
+    //         return;
+    //     if (!hl || hl->nmark == 0)
+    //         return;
+    //
+    //     if (getRuntime()->prec_num > hl->nmark)
+    //         hseq = hl->nmark - 1;
+    //     else if (getRuntime()->prec_num > 0)
+    //         hseq = getRuntime()->prec_num - 1;
+    //     do {
+    //         if (hseq >= hl->nmark)
+    //             return;
+    //         po = hl->marks + hseq;
+    //         an = retrieveAnchor(Currentbuf->doc.href, po->line, po->pos);
+    //         if (an == NULL)
+    //             an = retrieveAnchor(Currentbuf->doc.formitem, po->line, po->pos);
+    //         hseq++;
+    //     } while (an == NULL);
+    //
+    //     doc_gotoLine(&Currentbuf->doc, po->line);
+    //     Currentbuf->doc.pos = po->pos;
+    //     doc_arrangeCursor(&Currentbuf->doc);
+    // }
+    //
+    // /* go to the last anchor */
+    // DEFUN(lastA, LINK_END, "Move to the last hyperlink")
+    // {
+    //     if (Currentbuf->doc.firstLine == NULL)
+    //         return;
+    //
+    //     struct HmarkerList* hl = Currentbuf->doc.hmarklist;
+    //     if (!hl || hl->nmark == 0)
+    //         return;
+    //
+    //     int hseq;
+    //     if (getRuntime()->prec_num >= hl->nmark)
+    //         hseq = 0;
+    //     else if (getRuntime()->prec_num > 0)
+    //         hseq = hl->nmark - getRuntime()->prec_num;
+    //     else
+    //         hseq = hl->nmark - 1;
+    //
+    //     struct BufferPoint* po;
+    //     struct Anchor* an;
+    //     do {
+    //         if (hseq < 0)
+    //             return;
+    //         po = hl->marks + hseq;
+    //         an = retrieveAnchor(Currentbuf->doc.href, po->line, po->pos);
+    //         if (an == NULL)
+    //             an = retrieveAnchor(Currentbuf->doc.formitem, po->line, po->pos);
+    //         hseq--;
+    //     } while (an == NULL);
+    //
+    //     doc_gotoLine(&Currentbuf->doc, po->line);
+    //     Currentbuf->doc.pos = po->pos;
+    //     doc_arrangeCursor(&Currentbuf->doc);
+    // }
+    //
+    // /* go to the nth anchor */
+    // DEFUN(nthA, LINK_N, "Go to the nth link")
+    // {
+    //     struct HmarkerList* hl = Currentbuf->doc.hmarklist;
+    //     struct BufferPoint* po;
+    //     struct Anchor* an;
+    //
+    //     int n = searchKeyNum();
+    //     if (n < 0 || n > hl->nmark)
+    //         return;
+    //
+    //     if (Currentbuf->doc.firstLine == NULL)
+    //         return;
+    //     if (!hl || hl->nmark == 0)
+    //         return;
+    //
+    //     po = hl->marks + n - 1;
+    //     an = retrieveAnchor(Currentbuf->doc.href, po->line, po->pos);
+    //     if (an == NULL)
+    //         an = retrieveAnchor(Currentbuf->doc.formitem, po->line, po->pos);
+    //     if (an == NULL)
+    //         return;
+    //
+    //     doc_gotoLine(&Currentbuf->doc, po->line);
+    //     Currentbuf->doc.pos = po->pos;
+    //     doc_arrangeCursor(&Currentbuf->doc);
+    // }
+    //
+    // /* go to the next anchor */
+    // DEFUN(nextA, NEXT_LINK, "Move to the next hyperlink")
+    // {
+    //     _nextA(FALSE);
+    // }
+    //
+    // /* go to the previous anchor */
+    // DEFUN(prevA, PREV_LINK, "Move to the previous hyperlink")
+    // {
+    //     _prevA(FALSE);
+    // }
+    //
+    // /* go to the next visited anchor */
+    // DEFUN(nextVA, NEXT_VISITED, "Move to the next visited hyperlink")
+    // {
+    //     _nextA(TRUE);
+    // }
+    //
+    // /* go to the previous visited anchor */
+    // DEFUN(prevVA, PREV_VISITED, "Move to the previous visited hyperlink")
+    // {
+    //     _prevA(TRUE);
+    // }
+    //
+    // /* go to the next [visited] anchor */
+    // static void
+    // _nextA(int visited)
+    // {
+    //     struct HmarkerList* hl = Currentbuf->doc.hmarklist;
+    //     struct BufferPoint* po;
+    //     struct Anchor *an, *pan;
+    //     int i, x, y, n = searchKeyNum();
+    //     struct Url url;
+    //
+    //     if (Currentbuf->doc.firstLine == NULL)
+    //         return;
+    //     if (!hl || hl->nmark == 0)
+    //         return;
+    //
+    //     an = retrieveCurrentAnchor(Currentbuf);
+    //     if (visited != TRUE && an == NULL)
+    //         an = retrieveCurrentForm(Currentbuf);
+    //
+    //     y = Currentbuf->doc.currentLine->linenumber;
+    //     x = Currentbuf->doc.pos;
+    //
+    //     if (visited == TRUE) {
+    //         n = hl->nmark;
+    //     }
+    //
+    //     for (i = 0; i < n; i++) {
+    //         pan = an;
+    //         if (an && an->hseq >= 0) {
+    //             int hseq = an->hseq + 1;
+    //             do {
+    //                 if (hseq >= hl->nmark) {
+    //                     if (visited == TRUE)
+    //                         return;
+    //                     an = pan;
+    //                     goto _end;
+    //                 }
+    //                 po = &hl->marks[hseq];
+    //                 an = retrieveAnchor(Currentbuf->doc.href, po->line, po->pos);
+    //                 if (visited != TRUE && an == NULL)
+    //                     an = retrieveAnchor(Currentbuf->doc.formitem, po->line,
+    //                         po->pos);
+    //                 hseq++;
+    //                 if (visited == TRUE && an) {
+    //                     parseURL2(an->url, &url, baseURL(Currentbuf));
+    //                     if (getHashHist(getRuntime()->URLHist, parsedURL2Str(&url)->ptr)) {
+    //                         goto _end;
+    //                     }
+    //                 }
+    //             } while (an == NULL || an == pan);
+    //         } else {
+    //             an = closest_next_anchor(Currentbuf->doc.href, NULL, x, y);
+    //             if (visited != TRUE)
+    //                 an = closest_next_anchor(Currentbuf->doc.formitem, an, x, y);
+    //             if (an == NULL) {
+    //                 if (visited == TRUE)
+    //                     return;
+    //                 an = pan;
+    //                 break;
+    //             }
+    //             x = an->start.pos;
+    //             y = an->start.line;
+    //             if (visited == TRUE) {
+    //                 parseURL2(an->url, &url, baseURL(Currentbuf));
+    //                 if (getHashHist(getRuntime()->URLHist, parsedURL2Str(&url)->ptr)) {
+    //                     goto _end;
+    //                 }
+    //             }
+    //         }
+    //     }
+    //     if (visited == TRUE)
+    //         return;
+    //
+    // _end:
+    //     if (an == NULL || an->hseq < 0)
+    //         return;
+    //     po = &hl->marks[an->hseq];
+    //     doc_gotoLine(&Currentbuf->doc, po->line);
+    //     Currentbuf->doc.pos = po->pos;
+    //     doc_arrangeCursor(&Currentbuf->doc);
+    // }
+    //
+    // /* go to the previous anchor */
+    // static void
+    // _prevA(int visited)
+    // {
+    //     struct HmarkerList* hl = Currentbuf->doc.hmarklist;
+    //     struct BufferPoint* po;
+    //     struct Anchor *an, *pan;
+    //     int i, x, y, n = searchKeyNum();
+    //     struct Url url;
+    //
+    //     if (Currentbuf->doc.firstLine == NULL)
+    //         return;
+    //     if (!hl || hl->nmark == 0)
+    //         return;
+    //
+    //     an = retrieveCurrentAnchor(Currentbuf);
+    //     if (visited != TRUE && an == NULL)
+    //         an = retrieveCurrentForm(Currentbuf);
+    //
+    //     y = Currentbuf->doc.currentLine->linenumber;
+    //     x = Currentbuf->doc.pos;
+    //
+    //     if (visited == TRUE) {
+    //         n = hl->nmark;
+    //     }
+    //
+    //     for (i = 0; i < n; i++) {
+    //         pan = an;
+    //         if (an && an->hseq >= 0) {
+    //             int hseq = an->hseq - 1;
+    //             do {
+    //                 if (hseq < 0) {
+    //                     if (visited == TRUE)
+    //                         return;
+    //                     an = pan;
+    //                     goto _end;
+    //                 }
+    //                 po = hl->marks + hseq;
+    //                 an = retrieveAnchor(Currentbuf->doc.href, po->line, po->pos);
+    //                 if (visited != TRUE && an == NULL)
+    //                     an = retrieveAnchor(Currentbuf->doc.formitem, po->line,
+    //                         po->pos);
+    //                 hseq--;
+    //                 if (visited == TRUE && an) {
+    //                     parseURL2(an->url, &url, baseURL(Currentbuf));
+    //                     if (getHashHist(getRuntime()->URLHist, parsedURL2Str(&url)->ptr)) {
+    //                         goto _end;
+    //                     }
+    //                 }
+    //             } while (an == NULL || an == pan);
+    //         } else {
+    //             an = closest_prev_anchor(Currentbuf->doc.href, NULL, x, y);
+    //             if (visited != TRUE)
+    //                 an = closest_prev_anchor(Currentbuf->doc.formitem, an, x, y);
+    //             if (an == NULL) {
+    //                 if (visited == TRUE)
+    //                     return;
+    //                 an = pan;
+    //                 break;
+    //             }
+    //             x = an->start.pos;
+    //             y = an->start.line;
+    //             if (visited == TRUE && an) {
+    //                 parseURL2(an->url, &url, baseURL(Currentbuf));
+    //                 if (getHashHist(getRuntime()->URLHist, parsedURL2Str(&url)->ptr)) {
+    //                     goto _end;
+    //                 }
+    //             }
+    //         }
+    //     }
+    //     if (visited == TRUE)
+    //         return;
+    //
+    // _end:
+    //     if (an == NULL || an->hseq < 0)
+    //         return;
+    //     po = hl->marks + an->hseq;
+    //     doc_gotoLine(&Currentbuf->doc, po->line);
+    //     Currentbuf->doc.pos = po->pos;
+    //     doc_arrangeCursor(&Currentbuf->doc);
+    // }
+    //
+    // /* go to the next left/right anchor */
+    // static void
+    // nextX(int d, int dy)
+    // {
+    //     struct HmarkerList* hl = Currentbuf->doc.hmarklist;
+    //     struct Anchor *an, *pan;
+    //     struct Line* l;
+    //     int i, x, y, n = searchKeyNum();
+    //
+    //     if (Currentbuf->doc.firstLine == NULL)
+    //         return;
+    //     if (!hl || hl->nmark == 0)
+    //         return;
+    //
+    //     an = retrieveCurrentAnchor(Currentbuf);
+    //     if (an == NULL)
+    //         an = retrieveCurrentForm(Currentbuf);
+    //
+    //     l = Currentbuf->doc.currentLine;
+    //     x = Currentbuf->doc.pos;
+    //     y = l->linenumber;
+    //     pan = NULL;
+    //     for (i = 0; i < n; i++) {
+    //         if (an)
+    //             x = (d > 0) ? an->end.pos : an->start.pos - 1;
+    //         an = NULL;
+    //         while (1) {
+    //             for (; x >= 0 && x < l->len; x += d) {
+    //                 an = retrieveAnchor(Currentbuf->doc.href, y, x);
+    //                 if (!an)
+    //                     an = retrieveAnchor(Currentbuf->doc.formitem, y, x);
+    //                 if (an) {
+    //                     pan = an;
+    //                     break;
+    //                 }
+    //             }
+    //             if (!dy || an)
+    //                 break;
+    //             l = (dy > 0) ? l->next : l->prev;
+    //             if (!l)
+    //                 break;
+    //             x = (d > 0) ? 0 : l->len - 1;
+    //             y = l->linenumber;
+    //         }
+    //         if (!an)
+    //             break;
+    //     }
+    //
+    //     if (pan == NULL)
+    //         return;
+    //     doc_gotoLine(&Currentbuf->doc, y);
+    //     Currentbuf->doc.pos = pan->start.pos;
+    //     doc_arrangeCursor(&Currentbuf->doc);
+    // }
+    //
+    // /* go to the next downward/upward anchor */
+    // static void
+    // nextY(int d)
+    // {
+    //     struct HmarkerList* hl = Currentbuf->doc.hmarklist;
+    //     struct Anchor *an, *pan;
+    //     int i, x, y, n = searchKeyNum();
+    //     int hseq;
+    //
+    //     if (Currentbuf->doc.firstLine == NULL)
+    //         return;
+    //     if (!hl || hl->nmark == 0)
+    //         return;
+    //
+    //     an = retrieveCurrentAnchor(Currentbuf);
+    //     if (an == NULL)
+    //         an = retrieveCurrentForm(Currentbuf);
+    //
+    //     x = Currentbuf->doc.pos;
+    //     y = Currentbuf->doc.currentLine->linenumber + d;
+    //     pan = NULL;
+    //     hseq = -1;
+    //     for (i = 0; i < n; i++) {
+    //         if (an)
+    //             hseq = abs(an->hseq);
+    //         an = NULL;
+    //         for (; y >= 0 && y <= Currentbuf->doc.lastLine->linenumber; y += d) {
+    //             an = retrieveAnchor(Currentbuf->doc.href, y, x);
+    //             if (!an)
+    //                 an = retrieveAnchor(Currentbuf->doc.formitem, y, x);
+    //             if (an && hseq != abs(an->hseq)) {
+    //                 pan = an;
+    //                 break;
+    //             }
+    //         }
+    //         if (!an)
+    //             break;
+    //     }
+    //
+    //     if (pan == NULL)
+    //         return;
+    //     doc_gotoLine(&Currentbuf->doc, pan->start.line);
+    //     doc_arrangeLine(&Currentbuf->doc);
+    // }
+    //
+    // /* go to the next left anchor */
+    // DEFUN(nextL, NEXT_LEFT, "Move left to the next hyperlink")
+    // {
+    //     nextX(-1, 0);
+    // }
+    //
+    // /* go to the next left-up anchor */
+    // DEFUN(nextLU, NEXT_LEFT_UP, "Move left or upward to the next hyperlink")
+    // {
+    //     nextX(-1, -1);
+    // }
+    //
+    // /* go to the next right anchor */
+    // DEFUN(nextR, NEXT_RIGHT, "Move right to the next hyperlink")
+    // {
+    //     nextX(1, 0);
+    // }
+    //
+    // /* go to the next right-down anchor */
+    // DEFUN(nextRD, NEXT_RIGHT_DOWN, "Move right or downward to the next hyperlink")
+    // {
+    //     nextX(1, 1);
+    // }
+    //
+    // /* go to the next downward anchor */
+    // DEFUN(nextD, NEXT_DOWN, "Move downward to the next hyperlink")
+    // {
+    //     nextY(1);
+    // }
+    //
+    // /* go to the next upward anchor */
+    // DEFUN(nextU, NEXT_UP, "Move upward to the next hyperlink")
+    // {
+    //     nextY(-1);
+    // }
+    //
+    // /* go to the next bufferr */
+    // DEFUN(nextBf, NEXT, "Switch to the next buffer")
+    // {
+    //     struct Buffer* buf;
+    //     int i;
+    //
+    //     for (i = 0; i < PREC_NUM; i++) {
+    //         buf = prevBuffer(Firstbuf, Currentbuf);
+    //         if (!buf) {
+    //             if (i == 0)
+    //                 return;
+    //             break;
+    //         }
+    //         Currentbuf = buf;
+    //     }
+    // }
+    //
+    // /* go to the previous bufferr */
+    // DEFUN(prevBf, PREV, "Switch to the previous buffer")
+    // {
+    //     struct Buffer* buf;
+    //     int i;
+    //
+    //     for (i = 0; i < PREC_NUM; i++) {
+    //         buf = Currentbuf->nextBuffer;
+    //         if (!buf) {
+    //             if (i == 0)
+    //                 return;
+    //             break;
+    //         }
+    //         Currentbuf = buf;
+    //     }
+    // }
+    //
+    // static int
+    // checkBackBuffer(struct Buffer* buf)
+    // {
+    //     struct Buffer* fbuf = buf->linkBuffer[LB_N_FRAME];
+    //
+    //     if (fbuf) {
+    //         if (fbuf->doc.frameQ)
+    //             return TRUE; /* Currentbuf has stacked frames */
+    //         /* when no frames stacked and next is frame source, try next's
+    //          * nextBuffer */
+    //         if (getRuntime()->RenderFrame && fbuf == buf->nextBuffer) {
+    //             if (fbuf->nextBuffer != NULL)
+    //                 return TRUE;
+    //             else
+    //                 return FALSE;
+    //         }
+    //     }
+    //
+    //     if (buf->nextBuffer)
+    //         return TRUE;
+    //
+    //     return FALSE;
+    // }
+    //
+    // /* delete current buffer and back to the previous buffer */
+    // DEFUN(backBf, BACK, "Close current buffer and return to the one below in stack")
+    // {
+    //     struct Buffer* buf = Currentbuf->linkBuffer[LB_N_FRAME];
+    //
+    //     if (!checkBackBuffer(Currentbuf)) {
+    //         if (getRuntime()->close_tab_back && nTab() >= 1) {
+    //             deleteTab(CurrentTab());
+    //         } else
+    //             /* FIXME: gettextize? */
+    //             disp_message("Can't go back...", TRUE);
+    //         return;
+    //     }
+    //
+    //     delBuffer(Currentbuf);
+    //
+    //     if (buf) {
+    //         if (buf->doc.frameQ) {
+    //             struct frameset* fs;
+    //             long linenumber = buf->doc.frameQ->linenumber;
+    //             long top = buf->doc.frameQ->top_linenumber;
+    //             int pos = buf->doc.frameQ->pos;
+    //             int currentColumn = buf->doc.frameQ->currentColumn;
+    //             struct AnchorList* formitem = buf->doc.frameQ->formitem;
+    //
+    //             fs = popFrameTree(&(buf->doc.frameQ));
+    //             deleteFrameSet(buf->doc.frameset);
+    //             buf->doc.frameset = fs;
+    //
+    //             if (buf == Currentbuf) {
+    //                 rFrame();
+    //                 Currentbuf->doc.topLine = doc_lineSkip(&Currentbuf->doc,
+    //                     Currentbuf->doc.firstLine, top - 1);
+    //                 doc_gotoLine(&Currentbuf->doc, linenumber);
+    //                 Currentbuf->doc.pos = pos;
+    //                 Currentbuf->doc.currentColumn = currentColumn;
+    //                 doc_arrangeCursor(&Currentbuf->doc);
+    //                 formResetBuffer(Currentbuf, formitem);
+    //             }
+    //         } else if (getRuntime()->RenderFrame && buf == Currentbuf) {
+    //             delBuffer(Currentbuf);
+    //         }
+    //     }
+    // }
+    //
+    // DEFUN(deletePrevBuf, DELETE_PREVBUF, "Delete previous buffer (mainly for local CGI-scripts)")
+    // {
+    //     struct Buffer* buf = Currentbuf->nextBuffer;
+    //     if (buf)
+    //         delBuffer(buf);
+    // }
+    //
+    // /* go to specified URL */
+    // static void
+    // goURL0(const char* prompt, int relative)
+    // {
+    //     const char *url, *referer;
+    //     struct Url p_url, *current;
+    //     struct Buffer* cur_buf = Currentbuf;
+    //     const int* no_referer_ptr;
+    //
+    //     url = searchKeyData();
+    //     if (url == NULL) {
+    //         struct Hist* hist = copyHist(getRuntime()->URLHist);
+    //         struct Anchor* a;
+    //
+    //         current = baseURL(Currentbuf);
+    //         if (current) {
+    //             char* c_url = parsedURL2Str(current)->ptr;
+    //             if (getRuntime()->DefaultURLString == DEFAULT_URL_CURRENT)
+    //                 url = url_decode2(c_url, NULL);
+    //             else
+    //                 pushHist(hist, c_url);
+    //         }
+    //         a = retrieveCurrentAnchor(Currentbuf);
+    //         if (a) {
+    //             char* a_url;
+    //             parseURL2(a->url, &p_url, current);
+    //             a_url = parsedURL2Str(&p_url)->ptr;
+    //             if (getRuntime()->DefaultURLString == DEFAULT_URL_LINK)
+    //                 url = url_decode2(a_url, Currentbuf);
+    //             else
+    //                 pushHist(hist, a_url);
+    //         }
+    //         url = inputLineHist(prompt, url, IN_URL, hist);
+    //         if (url != NULL)
+    //             url = skip_blanks(url);
+    //     }
+    //     if (relative) {
+    //         no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->content.url);
+    //         current = baseURL(Currentbuf);
+    //         if ((no_referer_ptr && *no_referer_ptr) || current == NULL || current->scheme == SCM_LOCAL || current->scheme == SCM_LOCAL_CGI)
+    //             referer = NO_REFERER;
+    //         else
+    //             referer = parsedURL2RefererStr(&Currentbuf->content.url)->ptr;
+    //         url = url_encode(url, current, Currentbuf->doc.charset);
+    //     } else {
+    //         current = NULL;
+    //         referer = NULL;
+    //         url = url_encode(url, NULL, 0);
+    //     }
+    //     if (url == NULL || *url == '\0') {
+    //         return;
+    //     }
+    //     if (*url == '#') {
+    //         gotoLabel(url + 1);
+    //         return;
+    //     }
+    //     parseURL2(url, &p_url, current);
+    //     pushHashHist(getRuntime()->URLHist, parsedURL2Str(&p_url)->ptr);
+    //     cmd_loadURL(url, NULL, (struct LoadOption) { .base_url = current, .referer = referer });
+    //     if (Currentbuf != cur_buf) /* success */
+    //         pushHashHist(getRuntime()->URLHist, parsedURL2Str(&Currentbuf->content.url)->ptr);
+    // }
+    //
+    // DEFUN(goURL, GOTO, "Open specified document in a new buffer")
+    // {
+    //     goURL0("Goto URL: ", FALSE);
+    // }
+    //
+    // DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer")
+    // {
+    //     const char* url;
+    //     if ((url = getenv("HTTP_HOME")) != NULL || (url = getenv("WWW_HOME")) != NULL) {
+    //         struct Url p_url;
+    //         struct Buffer* cur_buf = Currentbuf;
+    //         url = skip_blanks(url);
+    //         url = url_encode(url, NULL, 0);
+    //         parseURL2(url, &p_url, NULL);
+    //         pushHashHist(getRuntime()->URLHist, parsedURL2Str(&p_url)->ptr);
+    //         cmd_loadURL(url, NULL, (struct LoadOption) { .base_url = NULL, .referer = NULL });
+    //         if (Currentbuf != cur_buf) /* success */
+    //             pushHashHist(getRuntime()->URLHist, parsedURL2Str(&Currentbuf->content.url)->ptr);
+    //     }
+    // }
+    //
+    // DEFUN(gorURL, GOTO_RELATIVE, "Go to relative address")
+    // {
+    //     goURL0("Goto relative URL: ", TRUE);
+    // }
+    //
+    // /* load bookmark */
+    // DEFUN(ldBmark, BOOKMARK VIEW_BOOKMARK, "View bookmarks")
+    // {
+    //     cmd_loadURL(getRuntime()->BookmarkFile, NULL,
+    //         (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER });
+    // }
+    //
+    // /* Add current to bookmark */
+    // DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
+    // {
+    //     Str tmp;
+    //     struct FormList* request;
+    //
+    //     tmp = Sprintf("mode=panel&cookie=%s&bmark=%s&url=%s&title=%s"
+    //                   "&charset=%s",
+    //         (Str_form_quote(localCookie()))->ptr,
+    //         (Str_form_quote(Strnew_charp(getRuntime()->BookmarkFile)))->ptr,
+    //         (Str_form_quote(parsedURL2Str(&Currentbuf->content.url)))->ptr,
+    //
+    //         (Str_form_quote(wc_conv_strict(Currentbuf->doc.title,
+    //              getRuntime()->InnerCharset,
+    //              getRuntime()->BookmarkCharset)))
+    //             ->ptr,
+    //         wc_ces_to_charset(getRuntime()->BookmarkCharset));
+    //
+    //     request = newFormList(NULL, "post", NULL, NULL, NULL, NULL, NULL);
+    //     request->body = tmp->ptr;
+    //     request->length = tmp->length;
+    //     cmd_loadURL("file:///$LIB/" W3MBOOKMARK_CMDNAME, request,
+    //         (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER });
+    // }
+    //
+    // /* option setting */
+    // DEFUN(ldOpt, OPTIONS, "Display options setting panel")
+    // {
+    //     cmd_loadBuffer(load_option_panel(), BP_NO_URL, LB_NOLINK);
+    // }
+    //
+    // /* set an option */
+    // DEFUN(setOpt, SET_OPTION, "Set option")
+    // {
+    //     getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
+    //     char* opt = searchKeyData();
+    //     if (opt == NULL || *opt == '\0' || strchr(opt, '=') == NULL) {
+    //         if (opt != NULL && *opt != '\0') {
+    //             char* v = get_param_option(opt);
+    //             opt = Sprintf("%s=%s", opt, v ? v : "")->ptr;
+    //         }
+    //         opt = inputStrHist("Set option: ", opt, getRuntime()->TextHist);
+    //         if (opt == NULL || *opt == '\0') {
+    //             return;
+    //         }
+    //     }
+    //     if (set_param_option(opt))
+    //         sync_with_option();
+    // }
+    //
+    // /* error message list */
+    // DEFUN(msgs, MSGS, "Display error messages")
+    // {
+    //     cmd_loadBuffer(message_list_panel(), BP_NO_URL, LB_NOLINK);
+    // }
+    //
+    // /* page info */
+    // DEFUN(pginfo, INFO, "Display information about the current document")
+    // {
+    //     struct Buffer* buf;
+    //
+    //     if ((buf = Currentbuf->linkBuffer[LB_N_INFO]) != NULL) {
+    //         Currentbuf = buf;
+    //         return;
+    //     }
+    //     if ((buf = Currentbuf->linkBuffer[LB_INFO]) != NULL)
+    //         delBuffer(buf);
+    //     buf = page_info_panel(Currentbuf);
+    //     cmd_loadBuffer(buf, BP_NORMAL, LB_INFO);
+    // }
+    //
+    // void follow_map(struct parsed_tagarg* arg)
+    // {
+    //     char* name = tag_get_value(arg, "link");
+    //     struct Anchor* an;
+    //     int x, y;
+    //     struct Url p_url;
+    //
+    //     an = retrieveCurrentImg(Currentbuf);
+    //     x = Currentbuf->doc.cursorX + Currentbuf->doc.rootX;
+    //     y = Currentbuf->doc.cursorY + Currentbuf->doc.rootY;
+    //     struct MapArea* a = follow_map_menu(Currentbuf, name, an, x, y);
+    //     if (a == NULL || a->url == NULL || *(a->url) == '\0') {
+    //         return;
+    //     }
+    //     if (*(a->url) == '#') {
+    //         gotoLabel(a->url + 1);
+    //         return;
+    //     }
+    //     parseURL2(a->url, &p_url, baseURL(Currentbuf));
+    //     pushHashHist(getRuntime()->URLHist, parsedURL2Str(&p_url)->ptr);
+    //     if (check_target && getRuntime()->open_tab_blank && a->target && (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
+    //         struct Buffer* buf;
+    //
+    //         _newT();
+    //         buf = Currentbuf;
+    //         cmd_loadURL(a->url, NULL,
+    //             (struct LoadOption) {
+    //                 .base_url = baseURL(Currentbuf),
+    //                 .referer = parsedURL2Str(&Currentbuf->content.url)->ptr });
+    //         if (buf != Currentbuf)
+    //             delBuffer(buf);
+    //         else
+    //             deleteTab(CurrentTab());
+    //         return;
+    //     }
+    //     cmd_loadURL(a->url, NULL,
+    //         (struct LoadOption) {
+    //             .base_url = baseURL(Currentbuf),
+    //             .referer = parsedURL2Str(&Currentbuf->content.url)->ptr });
+    // }
+    //
+    // /* link menu */
+    // DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
+    // {
+    //     struct LinkList* l = link_menu(Currentbuf);
+    //     struct Url p_url;
+    //
+    //     if (!l || !l->url)
+    //         return;
+    //     if (*(l->url) == '#') {
+    //         gotoLabel(l->url + 1);
+    //         return;
+    //     }
+    //     parseURL2(l->url, &p_url, baseURL(Currentbuf));
+    //     pushHashHist(getRuntime()->URLHist, parsedURL2Str(&p_url)->ptr);
+    //     cmd_loadURL(l->url, NULL,
+    //         (struct LoadOption) {
+    //             .base_url = baseURL(Currentbuf),
+    //             .referer = parsedURL2Str(&Currentbuf->content.url)->ptr });
+    // }
+    //
+    // static void
+    // anchorMn(BufferMenuFunc menu_func, bool go)
+    // {
+    //     if (!Currentbuf->doc.href || !Currentbuf->doc.hmarklist)
+    //         return;
+    //
+    //     struct Anchor* a = menu_func(Currentbuf);
+    //     if (!a || a->hseq < 0)
+    //         return;
+    //
+    //     struct BufferPoint* po = &Currentbuf->doc.hmarklist->marks[a->hseq];
+    //     doc_gotoLine(&Currentbuf->doc, po->line);
+    //     Currentbuf->doc.pos = po->pos;
+    //     doc_arrangeCursor(&Currentbuf->doc);
+    //     if (go)
+    //         followA();
+    // }
+    //
+    // /* accesskey */
+    // DEFUN(accessKey, ACCESSKEY, "Pop up accesskey menu")
+    // {
+    //     anchorMn(accesskey_menu, TRUE);
+    // }
+    //
+    // /* list menu */
+    // DEFUN(listMn, LIST_MENU, "Pop up menu for hyperlinks to browse to")
+    // {
+    //     anchorMn(list_menu, TRUE);
+    // }
+    //
+    // DEFUN(movlistMn, MOVE_LIST_MENU, "Pop up menu to navigate between hyperlinks")
+    // {
+    //     anchorMn(list_menu, FALSE);
+    // }
+    //
+    // /* link,anchor,image list */
+    // DEFUN(linkLst, LIST, "Show all URLs referenced")
+    // {
+    //     struct Buffer* buf;
+    //
+    //     buf = link_list_panel(Currentbuf);
+    //     if (buf != NULL) {
+    //         buf->doc.charset = Currentbuf->doc.charset;
+    //         cmd_loadBuffer(buf, BP_NORMAL, LB_NOLINK);
+    //     }
+    // }
+    //
+    // /* cookie list */
+    // DEFUN(cooLst, COOKIE, "View cookie list")
+    // {
+    //     struct Buffer* buf;
+    //
+    //     buf = cookie_list_panel();
+    //     if (buf != NULL)
+    //         cmd_loadBuffer(buf, BP_NO_URL, LB_NOLINK);
+    // }
+    //
+    // /* History page */
+    // DEFUN(ldHist, HISTORY, "Show browsing history")
+    // {
+    //     cmd_loadBuffer(historyBuffer(getRuntime()->URLHist), BP_NO_URL, LB_NOLINK);
+    // }
+    //
+    // /* download HREF link */
+    // DEFUN(svA, SAVE_LINK, "Save hyperlink target")
+    // {
+    //     getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
+    //     _followA((struct FollowOption) { .on_target = true, .do_download = false });
+    // }
+    //
+    // /* download IMG link */
+    // DEFUN(svI, SAVE_IMAGE, "Save inline image")
+    // {
+    //     getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
+    //     _followI(true);
+    // }
+    //
+    // /* save buffer */
+    // DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document")
+    // {
+    //     getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
+    //
+    //     char* file = searchKeyData();
+    //     char* qfile = NULL;
+    //     if (file == NULL || *file == '\0') {
+    //         /* FIXME: gettextize? */
+    //         qfile = inputLineHist("Save buffer to: ", NULL, IN_COMMAND, getRuntime()->SaveHist);
+    //         if (qfile == NULL || *qfile == '\0') {
+    //             return;
+    //         }
+    //     }
+    //     file = conv_to_system(qfile ? qfile : file);
+    //
+    //     FILE* f;
+    //     bool is_pipe;
+    //     if (*file == '|') {
+    //         is_pipe = TRUE;
+    //         f = popen(file + 1, "w");
+    //     } else {
+    //         if (qfile) {
+    //             file = unescape_spaces(Strnew_charp(qfile))->ptr;
+    //             file = conv_to_system(file);
+    //         }
+    //         file = expandPath(file);
+    //         if (checkOverWrite(file) < 0) {
+    //             return;
+    //         }
+    //         f = fopen(file, "w");
+    //         is_pipe = FALSE;
+    //     }
+    //     if (f == NULL) {
+    //         /* FIXME: gettextize? */
+    //         char* emsg = Sprintf("Can't open %s", conv_from_system(file))->ptr;
+    //         disp_err_message(emsg, TRUE);
+    //         return;
+    //     }
+    //     saveBuffer(Currentbuf, f, TRUE);
+    //     if (is_pipe)
+    //         pclose(f);
+    //     else
+    //         fclose(f);
+    // }
+    //
+    // /* save source */
+    // DEFUN(svSrc, DOWNLOAD SAVE, "Save document source")
+    // {
+    //     if (Currentbuf->content.sourcefile == NULL)
+    //         return;
+    //     getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
+    //     getRuntime()->PermitSaveToPipe = TRUE;
+    //     const char* file;
+    //     if (Currentbuf->content.url.scheme == SCM_LOCAL)
+    //         file = conv_from_system(guess_save_name(NULL,
+    //             Currentbuf->content.url.real_file));
+    //     else
+    //         file = guess_save_name(&Currentbuf->content, Currentbuf->content.url.file);
+    //     doFileCopy(Currentbuf->content.sourcefile, file);
+    //     getRuntime()->PermitSaveToPipe = FALSE;
+    // }
+    //
+    // static void
+    // _peekURL(int only_img)
+    // {
+    //
+    //     struct Anchor* a;
+    //     struct Url pu;
+    //     static Str s = NULL;
+    //     static Lineprop* p = NULL;
+    //     Lineprop* pp;
+    //
+    //     static int offset = 0, n;
+    //
+    //     if (Currentbuf->doc.firstLine == NULL)
+    //         return;
+    //
+    //     if (getRuntime()->CurrentKey == getRuntime()->prev_key && s != NULL) {
+    //         if (s->length - offset >= TTY_COLS())
+    //             offset++;
+    //         else if (s->length <= offset) /* bug ? */
+    //             offset = 0;
+    //         goto disp;
+    //     } else {
+    //         offset = 0;
+    //     }
+    //     s = NULL;
+    //     a = (only_img ? NULL : retrieveCurrentAnchor(Currentbuf));
+    //     if (a == NULL) {
+    //         a = (only_img ? NULL : retrieveCurrentForm(Currentbuf));
+    //         if (a == NULL) {
+    //             a = retrieveCurrentImg(Currentbuf);
+    //             if (a == NULL)
+    //                 return;
+    //         } else
+    //             s = Strnew_charp(form2str((struct FormItemList*)a->url));
+    //     }
+    //     if (s == NULL) {
+    //         parseURL2(a->url, &pu, baseURL(Currentbuf));
+    //         s = parsedURL2Str(&pu);
+    //     }
+    //     if (getRuntime()->DecodeURL)
+    //         s = Strnew_charp(url_decode2(s->ptr, Currentbuf));
+    //     s = checkType(s, &pp, NULL);
+    //     p = NewAtom_N(Lineprop, s->length);
+    //     bcopy((void*)pp, (void*)p, s->length * sizeof(Lineprop));
+    // disp:
+    //     n = searchKeyNum();
+    //     if (n > 1 && s->length > (n - 1) * (TTY_COLS() - 1))
+    //         offset = (n - 1) * (TTY_COLS() - 1);
+    //     while (offset < s->length && p[offset] & PC_WCHAR2)
+    //         offset++;
+    //     disp_message(&s->ptr[offset], TRUE);
+    // }
+    //
+    // /* peek URL */
+    // DEFUN(peekURL, PEEK_LINK, "Show target address")
+    // {
+    //     _peekURL(0);
+    // }
+    //
+    // /* peek URL of image */
+    // DEFUN(peekIMG, PEEK_IMG, "Show image address")
+    // {
+    //     _peekURL(1);
+    // }
+    //
+    // /* show current URL */
+    // static Str
+    // currentURL(void)
+    // {
+    //     if (Currentbuf->bufferprop & BP_INTERNAL)
+    //         return Strnew_size(0);
+    //     return parsedURL2Str(&Currentbuf->content.url);
+    // }
+    //
+    // DEFUN(curURL, PEEK, "Show current address")
+    // {
+    //     static Str s = NULL;
+    //     static Lineprop* p = NULL;
+    //     Lineprop* pp;
+    //
+    //     static int offset = 0, n;
+    //
+    //     if (Currentbuf->bufferprop & BP_INTERNAL)
+    //         return;
+    //     if (getRuntime()->CurrentKey == getRuntime()->prev_key && s != NULL) {
+    //         if (s->length - offset >= TTY_COLS())
+    //             offset++;
+    //         else if (s->length <= offset) /* bug ? */
+    //             offset = 0;
+    //     } else {
+    //         offset = 0;
+    //         s = currentURL();
+    //         if (getRuntime()->DecodeURL)
+    //             s = Strnew_charp(url_decode2(s->ptr, NULL));
+    //         s = checkType(s, &pp, NULL);
+    //         p = NewAtom_N(Lineprop, s->length);
+    //         bcopy((void*)pp, (void*)p, s->length * sizeof(Lineprop));
+    //     }
+    //     n = searchKeyNum();
+    //     if (n > 1 && s->length > (n - 1) * (TTY_COLS() - 1))
+    //         offset = (n - 1) * (TTY_COLS() - 1);
+    //     while (offset < s->length && p[offset] & PC_WCHAR2)
+    //         offset++;
+    //     disp_message(&s->ptr[offset], TRUE);
+    // }
+    // /* view HTML source */
+    //
+    // DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
+    // {
+    //     struct Buffer* buf;
+    //
+    //     if (Currentbuf->content.content_type == NULL || Currentbuf->bufferprop & BP_FRAME)
+    //         return;
+    //     if ((buf = Currentbuf->linkBuffer[LB_SOURCE]) != NULL || (buf = Currentbuf->linkBuffer[LB_N_SOURCE]) != NULL) {
+    //         Currentbuf = buf;
+    //         return;
+    //     }
+    //     if (Currentbuf->content.sourcefile == NULL) {
+    //         // if (Currentbuf->pagerSource && !strcasecmp(Currentbuf->type, "text/plain")) {
+    //         //     wc_ces old_charset;
+    //         //     wc_bool old_fix_width_conv;
+    //         //
+    //         //     FILE* f;
+    //         //     Str tmpf = tmpfname(TMPF_SRC, NULL);
+    //         //     f = fopen(tmpf->ptr, "w");
+    //         //     if (f == NULL)
+    //         //         return;
+    //         //
+    //         //     old_charset = getRuntime()->DisplayCharset;
+    //         //     old_fix_width_conv = WcOption.fix_width_conv;
+    //         //     getRuntime()->DisplayCharset = (Currentbuf->document_charset != WC_CES_US_ASCII)
+    //         //         ? Currentbuf->document_charset
+    //         //         : 0;
+    //         //     WcOption.fix_width_conv = WC_FALSE;
+    //         //
+    //         //     saveBufferBody(Currentbuf, f, TRUE);
+    //         //
+    //         //     getRuntime()->DisplayCharset = old_charset;
+    //         //     WcOption.fix_width_conv = old_fix_width_conv;
+    //         //
+    //         //     fclose(f);
+    //         //     Currentbuf->sourcefile = tmpf->ptr;
+    //         // }
+    //         // else
+    //         {
+    //             return;
+    //         }
+    //     }
+    //
+    //     buf = newBuffer(INIT_BUFFER_WIDTH);
+    //
+    //     if (is_html_type(Currentbuf->content.content_type)) {
+    //         buf->content.content_type = "text/plain";
+    //         if (Currentbuf->content.content_type && is_html_type(Currentbuf->content.content_type))
+    //             buf->content.content_type = "text/plain";
+    //         else
+    //             buf->content.content_type = Currentbuf->content.content_type;
+    //         buf->doc.title = Sprintf("source of %s", Currentbuf->doc.title)->ptr;
+    //         buf->linkBuffer[LB_N_SOURCE] = Currentbuf;
+    //         Currentbuf->linkBuffer[LB_SOURCE] = buf;
+    //     } else if (!strcasecmp(Currentbuf->content.content_type, "text/plain")) {
+    //         buf->content.content_type = "text/html";
+    //         if (Currentbuf->content.content_type && !strcasecmp(Currentbuf->content.content_type, "text/plain"))
+    //             buf->content.content_type = "text/html";
+    //         else
+    //             buf->content.content_type = Currentbuf->content.content_type;
+    //         buf->doc.title = Sprintf("HTML view of %s",
+    //             Currentbuf->doc.title)
+    //                              ->ptr;
+    //         buf->linkBuffer[LB_SOURCE] = Currentbuf;
+    //         Currentbuf->linkBuffer[LB_N_SOURCE] = buf;
+    //     } else {
+    //         return;
+    //     }
+    //     buf->content.url = Currentbuf->content.url;
+    //     buf->content.filename = Currentbuf->content.filename;
+    //     buf->content.sourcefile = Currentbuf->content.sourcefile;
+    //     buf->content.header_source = Currentbuf->content.header_source;
+    //     // buf->search_header = Currentbuf->search_header;
+    //     buf->doc.charset = Currentbuf->doc.charset;
+    //     buf->clone = Currentbuf->clone;
+    //     (*buf->clone)++;
+    //     reshapeBuffer(buf);
+    //     pushBuffer(buf);
+    // }
+    //
+    // /* reload */
+    // DEFUN(reload, RELOAD, "Load current document anew")
+    // {
+    //     struct Buffer *buf, *fbuf = NULL, sbuf;
+    //     enum wc_ces old_charset;
+    //     Str url;
+    //     struct FormList* request;
+    //     int multipart;
+    //
+    //     if (Currentbuf->bufferprop & BP_INTERNAL) {
+    //         if (!strcmp(Currentbuf->doc.title, DOWNLOAD_LIST_TITLE)) {
+    //             ldDL();
+    //             return;
+    //         }
+    //         /* FIXME: gettextize? */
+    //         disp_err_message("Can't reload...", TRUE);
+    //         return;
+    //     }
+    //     if (Currentbuf->content.url.scheme == SCM_LOCAL && !strcmp(Currentbuf->content.url.file, "-")) {
+    //         /* file is std input */
+    //         /* FIXME: gettextize? */
+    //         disp_err_message("Can't reload stdin", TRUE);
+    //         return;
+    //     }
+    //     copyBuffer(&sbuf, Currentbuf);
+    //     if (Currentbuf->bufferprop & BP_FRAME && (fbuf = Currentbuf->linkBuffer[LB_N_FRAME])) {
+    //         if (fmInitialized()) {
+    //             message("Rendering frame");
+    //         }
+    //         if (!(buf = renderFrame(fbuf, 1))) {
+    //             return;
+    //         }
+    //         if (fbuf->linkBuffer[LB_FRAME]) {
+    //             if (buf->content.sourcefile
+    //                 && fbuf->linkBuffer[LB_FRAME]->content.sourcefile
+    //                 && !strcmp(buf->content.sourcefile, fbuf->linkBuffer[LB_FRAME]->content.sourcefile))
+    //                 fbuf->linkBuffer[LB_FRAME]->content.sourcefile = NULL;
+    //             delBuffer(fbuf->linkBuffer[LB_FRAME]);
+    //         }
+    //         fbuf->linkBuffer[LB_FRAME] = buf;
+    //         buf->linkBuffer[LB_N_FRAME] = fbuf;
+    //         pushBuffer(buf);
+    //         Currentbuf = buf;
+    //         if (Currentbuf->doc.firstLine) {
+    //             COPY_BUFROOT(Currentbuf, &sbuf);
+    //             doc_restorePosition(&Currentbuf->doc, &sbuf.doc);
+    //         }
+    //         return;
+    //     } else if (Currentbuf->doc.frameset != NULL)
+    //         fbuf = Currentbuf->linkBuffer[LB_FRAME];
+    //     multipart = 0;
+    //     if (Currentbuf->doc.form_submit) {
+    //         request = Currentbuf->doc.form_submit->parent;
+    //         if (request->method == FORM_METHOD_POST
+    //             && request->enctype == FORM_ENCTYPE_MULTIPART) {
+    //             Str query;
+    //             struct stat st;
+    //             multipart = 1;
+    //             query_from_followform(&query, Currentbuf->doc.form_submit, multipart);
+    //             stat(request->body, &st);
+    //             request->length = st.st_size;
+    //         }
+    //     } else {
+    //         request = NULL;
+    //     }
+    //     url = parsedURL2Str(&Currentbuf->content.url);
+    //     message("Reloading...");
+    //     old_charset = getRuntime()->DocumentCharset;
+    //     if (Currentbuf->doc.charset != WC_CES_US_ASCII)
+    //         getRuntime()->DocumentCharset = Currentbuf->doc.charset;
+    //     // SearchHeader = Currentbuf->search_header;
+    //     getRuntime()->DefaultType = Currentbuf->content.content_type;
+    //     struct Content content
+    //         = loadGeneralFile(url->ptr, request,
+    //             (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER, .flag = RG_NOCACHE }, false);
+    //     buf = newBuffer(INIT_BUFFER_WIDTH);
+    //     buf->content = content;
+    //     getRuntime()->DocumentCharset = old_charset;
+    //     // SearchHeader = FALSE;
+    //     getRuntime()->DefaultType = NULL;
+    //
+    //     if (multipart)
+    //         unlink(request->body);
+    //     if (buf == NULL) {
+    //         /* FIXME: gettextize? */
+    //         disp_err_message("Can't reload...", TRUE);
+    //         return;
+    //     }
+    //     if (fbuf != NULL)
+    //         Firstbuf = deleteBuffer(Firstbuf, fbuf);
+    //     repBuffer(Currentbuf, buf);
+    //     if ((buf->content.content_type != NULL) && (sbuf.content.content_type != NULL) && ((!strcasecmp(buf->content.content_type, "text/plain") && is_html_type(sbuf.content.content_type)) || (is_html_type(buf->content.content_type) && !strcasecmp(sbuf.content.content_type, "text/plain")))) {
+    //         vwSrc();
+    //         if (Currentbuf != buf)
+    //             Firstbuf = deleteBuffer(Firstbuf, buf);
+    //     }
+    //     // Currentbuf->search_header = sbuf.search_header;
+    //     Currentbuf->doc.form_submit = sbuf.doc.form_submit;
+    //     if (Currentbuf->doc.firstLine) {
+    //         COPY_BUFROOT(Currentbuf, &sbuf);
+    //         doc_restorePosition(&Currentbuf->doc, &sbuf.doc);
+    //     }
+    // }
+    //
+    // /* reshape */
+    // DEFUN(reshape, RESHAPE, "Re-render document")
+    // {
+    //     reshapeBuffer(Currentbuf);
+    // }
+    //
+    // static void
+    // _docCSet(enum wc_ces charset)
+    // {
+    //     if (Currentbuf->bufferprop & BP_INTERNAL)
+    //         return;
+    //     if (Currentbuf->content.sourcefile == NULL) {
+    //         disp_message("Can't reload...", FALSE);
+    //         return;
+    //     }
+    //     Currentbuf->doc.charset = charset;
+    // }
+    //
+    // void change_charset(struct parsed_tagarg* arg)
+    // {
+    //     struct Buffer* buf = Currentbuf->linkBuffer[LB_N_INFO];
+    //     enum wc_ces charset;
+    //
+    //     if (buf == NULL)
+    //         return;
+    //     delBuffer(Currentbuf);
+    //     Currentbuf = buf;
+    //     if (Currentbuf->bufferprop & BP_INTERNAL)
+    //         return;
+    //     charset = Currentbuf->doc.charset;
+    //     for (; arg; arg = arg->next) {
+    //         if (!strcmp(arg->arg, "charset"))
+    //             charset = atoi(arg->value);
+    //     }
+    //     _docCSet(charset);
+    // }
+    //
+    // DEFUN(docCSet, CHARSET, "Change the character encoding for the current document")
+    // {
+    //     char* cs = searchKeyData();
+    //     if (cs == NULL || *cs == '\0')
+    //         /* FIXME: gettextize? */
+    //         cs = inputStr("Document charset: ",
+    //             wc_ces_to_charset(Currentbuf->doc.charset));
+    //
+    //     enum wc_ces charset = wc_guess_charset_short(cs, 0);
+    //     if (charset == 0) {
+    //         return;
+    //     }
+    //     _docCSet(charset);
+    // }
+    //
+    // DEFUN(defCSet, DEFAULT_CHARSET, "Change the default character encoding")
+    // {
+    //     char* cs = searchKeyData();
+    //     if (cs == NULL || *cs == '\0')
+    //         /* FIXME: gettextize? */
+    //         cs = inputStr("Default document charset: ",
+    //             wc_ces_to_charset(getRuntime()->DocumentCharset));
+    //     enum wc_ces charset = wc_guess_charset_short(cs, 0);
+    //     if (charset != 0)
+    //         getRuntime()->DocumentCharset = charset;
+    // }
+    //
+    // /* mark URL-like patterns as anchors */
+    // void chkURLBuffer(struct Buffer* buf)
+    // {
+    //     static char* url_like_pat[] = {
+    //         "https?://[a-zA-Z0-9][a-zA-Z0-9:%\\-\\./?=~_\\&+@#,\\$;]*[a-zA-Z0-9_/=\\-]",
+    //         "file:/[a-zA-Z0-9:%\\-\\./=_\\+@#,\\$;]*",
+    //         "ftp://[a-zA-Z0-9][a-zA-Z0-9:%\\-\\./=_+@#,\\$]*[a-zA-Z0-9_/]",
+    //         "https?://[a-zA-Z0-9:%\\-\\./_@]*\\[[a-fA-F0-9:][a-fA-F0-9:\\.]*\\][a-zA-Z0-9:%\\-\\./?=~_\\&+@#,\\$;]*",
+    //         "ftp://[a-zA-Z0-9:%\\-\\./_@]*\\[[a-fA-F0-9:][a-fA-F0-9:\\.]*\\][a-zA-Z0-9:%\\-\\./=_+@#,\\$]*",
+    //         NULL
+    //     };
+    //     int i;
+    //     for (i = 0; url_like_pat[i]; i++) {
+    //         reAnchor(buf, url_like_pat[i]);
+    //     }
+    //     chkExternalURIBuffer(buf);
+    //     buf->check_url |= CHK_URL;
+    // }
+    //
+    // DEFUN(chkURL, MARK_URL, "Turn URL-like strings into hyperlinks")
+    // {
+    //     chkURLBuffer(Currentbuf);
+    // }
+    //
+    // DEFUN(chkWORD, MARK_WORD, "Turn current word into hyperlink")
+    // {
+    //     char* p;
+    //     int spos, epos;
+    //     p = getCurWord(Currentbuf, &spos, &epos);
+    //     if (p == NULL)
+    //         return;
+    //     reAnchorWord(Currentbuf, Currentbuf->doc.currentLine, spos, epos);
+    // }
+    //
+    // /* render frames */
+    // DEFUN(rFrame, FRAME, "Toggle rendering HTML frames")
+    // {
+    //     struct Buffer* buf;
+    //
+    //     if ((buf = Currentbuf->linkBuffer[LB_FRAME]) != NULL) {
+    //         Currentbuf = buf;
+    //         return;
+    //     }
+    //     if (Currentbuf->doc.frameset == NULL) {
+    //         if ((buf = Currentbuf->linkBuffer[LB_N_FRAME]) != NULL) {
+    //             Currentbuf = buf;
+    //         }
+    //         return;
+    //     }
+    //     if (fmInitialized()) {
+    //         message("Rendering frame");
+    //     }
+    //     buf = renderFrame(Currentbuf, 0);
+    //     if (buf == NULL) {
+    //         return;
+    //     }
+    //     buf->linkBuffer[LB_N_FRAME] = Currentbuf;
+    //     Currentbuf->linkBuffer[LB_FRAME] = buf;
+    //     pushBuffer(buf);
+    // }
+    //
+    // /* spawn external browser */
+    // static void
+    // invoke_browser(char* url)
+    // {
+    //     getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
+    //     char* browser = searchKeyData();
+    //     if (browser == NULL || *browser == '\0') {
+    //         switch (getRuntime()->prec_num) {
+    //         case 0:
+    //         case 1:
+    //             browser = getRuntime()->ExtBrowser;
+    //             break;
+    //         case 2:
+    //             browser = getRuntime()->ExtBrowser2;
+    //             break;
+    //         case 3:
+    //             browser = getRuntime()->ExtBrowser3;
+    //             break;
+    //         case 4:
+    //             browser = getRuntime()->ExtBrowser4;
+    //             break;
+    //         case 5:
+    //             browser = getRuntime()->ExtBrowser5;
+    //             break;
+    //         case 6:
+    //             browser = getRuntime()->ExtBrowser6;
+    //             break;
+    //         case 7:
+    //             browser = getRuntime()->ExtBrowser7;
+    //             break;
+    //         case 8:
+    //             browser = getRuntime()->ExtBrowser8;
+    //             break;
+    //         case 9:
+    //             browser = getRuntime()->ExtBrowser9;
+    //             break;
+    //         }
+    //         if (browser == NULL || *browser == '\0') {
+    //             browser = inputStr("Browse command: ", NULL);
+    //             if (browser != NULL)
+    //                 browser = conv_to_system(browser);
+    //         }
+    //     } else {
+    //         browser = conv_to_system(browser);
+    //     }
+    //     if (browser == NULL || *browser == '\0') {
+    //         return;
+    //     }
+    //
+    //     int bg = 0, len;
+    //     if ((len = strlen(browser)) >= 2 && browser[len - 1] == '&' && browser[len - 2] != '\\') {
+    //         browser = allocStr(browser, len - 2);
+    //         bg = 1;
+    //     }
+    //     Str cmd = myExtCommand(browser, shell_quote(url), FALSE);
+    //     Strremovetrailingspaces(cmd);
+    //     exitRawMode();
+    //     mySystem(cmd->ptr, bg);
+    //     enterRawMode();
+    // }
+    //
+    // DEFUN(extbrz, EXTERN, "Display using an external browser")
+    // {
+    //     if (Currentbuf->bufferprop & BP_INTERNAL) {
+    //         /* FIXME: gettextize? */
+    //         disp_err_message("Can't browse...", TRUE);
+    //         return;
+    //     }
+    //     if (Currentbuf->content.url.scheme == SCM_LOCAL && !strcmp(Currentbuf->content.url.file, "-")) {
+    //         /* file is std input */
+    //         /* FIXME: gettextize? */
+    //         disp_err_message("Can't browse stdin", TRUE);
+    //         return;
+    //     }
+    //     invoke_browser(parsedURL2Str(&Currentbuf->content.url)->ptr);
+    // }
+    //
+    // DEFUN(linkbrz, EXTERN_LINK, "Display target using an external browser")
+    // {
+    //     struct Anchor* a;
+    //     struct Url pu;
+    //
+    //     if (Currentbuf->doc.firstLine == NULL)
+    //         return;
+    //     a = retrieveCurrentAnchor(Currentbuf);
+    //     if (a == NULL)
+    //         return;
+    //     parseURL2(a->url, &pu, baseURL(Currentbuf));
+    //     invoke_browser(parsedURL2Str(&pu)->ptr);
+    // }
+    //
+    // /* show current line number and number of lines in the entire document */
+    // DEFUN(curlno, LINE_INFO, "Display current position in document")
+    // {
+    //     struct Line* l = Currentbuf->doc.currentLine;
+    //     Str tmp;
+    //     int cur = 0, all = 0, col = 0, len = 0;
+    //
+    //     if (l != NULL) {
+    //         cur = l->real_linenumber;
+    //         col = l->bwidth + Currentbuf->doc.currentColumn + Currentbuf->doc.cursorX + 1;
+    //         while (l->next && l->next->bpos)
+    //             l = l->next;
+    //         if (l->width < 0)
+    //             l->width = COLPOS(l, l->len);
+    //         len = l->bwidth + l->width;
+    //     }
+    //     if (Currentbuf->doc.lastLine)
+    //         all = Currentbuf->doc.lastLine->real_linenumber;
+    //     // if (Currentbuf->pagerSource && !(Currentbuf->bufferprop & BP_CLOSE))
+    //     //     tmp = Sprintf("line %d col %d/%d", cur, col, len);
+    //     // else
+    //     tmp = Sprintf("line %d/%d (%d%%) col %d/%d", cur, all,
+    //         (int)((double)cur * 100.0 / (double)(all ? all : 1)
+    //             + 0.5),
+    //         col, len);
+    //     Strcat_charp(tmp, "  ");
+    //     Strcat_charp(tmp, wc_ces_to_charset_desc(Currentbuf->doc.charset));
+    //
+    //     disp_message(tmp->ptr, FALSE);
+    // }
+    //
+    // DEFUN(dispI, DISPLAY_IMAGE, "Restart loading and drawing of images")
+    // {
+    //     if (!getRuntime()->displayImage)
+    //         initImage();
+    //     if (!getRuntime()->activeImage)
+    //         return;
+    //     getRuntime()->displayImage = true;
+    //     /*
+    //      * if (!(Currentbuf->type && is_html_type(Currentbuf->type)))
+    //      * return;
+    //      */
+    //     Currentbuf->doc.image_flag = IMG_FLAG_AUTO;
+    // }
+    //
+    // DEFUN(stopI, STOP_IMAGE, "Stop loading and drawing of images")
+    // {
+    //     if (!getRuntime()->activeImage)
+    //         return;
+    //     /*
+    //      * if (!(Currentbuf->type && is_html_type(Currentbuf->type)))
+    //      * return;
+    //      */
+    //     Currentbuf->doc.image_flag = IMG_FLAG_SKIP;
+    // }
+    //
+    // DEFUN(dispVer, VERSION, "Display the version of w3m")
+    // {
+    //     disp_message(Sprintf("w3m version %s", w3m_version)->ptr, TRUE);
+    // }
+    //
+    // DEFUN(wrapToggle, WRAP_TOGGLE, "Toggle wrapping mode in searches")
+    // {
+    //     if (getRuntime()->WrapSearch) {
+    //         getRuntime()->WrapSearch = FALSE;
+    //         /* FIXME: gettextize? */
+    //         disp_message("Wrap search off", TRUE);
+    //     } else {
+    //         getRuntime()->WrapSearch = TRUE;
+    //         /* FIXME: gettextize? */
+    //         disp_message("Wrap search on", TRUE);
+    //     }
+    // }
+    //
+    // static void
+    // execdict(char* word)
+    // {
+    //     if (!getRuntime()->UseDictCommand || word == NULL || *word == '\0') {
+    //         return;
+    //     }
+    //     char* w = conv_to_system(word);
+    //     if (*w == '\0') {
+    //         return;
+    //     }
+    //
+    //     char* dictcmd = Sprintf("%s?%s", getRuntime()->DictCommand,
+    //         Str_form_quote(Strnew_charp(w))->ptr)
+    //                         ->ptr;
+    //
+    //     struct Content content = loadGeneralFile(dictcmd, NULL,
+    //         (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER, .flag = 0 }, false);
+    //     struct Buffer* buf = newBuffer(INIT_BUFFER_WIDTH);
+    //     buf->content = content;
+    //     if (buf == NULL) {
+    //         disp_message("Execution failed", TRUE);
+    //         return;
+    //     } else {
+    //         buf->content.filename = w;
+    //         buf->doc.title = Sprintf("%s %s", DICTBUFFERNAME, word)->ptr;
+    //         if (buf->content.content_type == NULL)
+    //             buf->content.content_type = "text/plain";
+    //         pushBuffer(buf);
+    //     }
+    // }
+    //
+    // DEFUN(dictword, DICT_WORD, "Execute dictionary command (see README.dict)")
+    // {
+    //     execdict(inputStr("(dictionary)!", ""));
+    // }
+    //
+    // DEFUN(dictwordat, DICT_WORD_AT,
+    //     "Execute dictionary command for word at cursor")
+    // {
+    //     execdict(GetWord(Currentbuf));
+    // }
+    //
+    // char* searchKeyData(void)
+    // {
+    //     const char* data = NULL;
+    //     if (getRuntime()->CurrentKeyData != NULL && *getRuntime()->CurrentKeyData != '\0')
+    //         data = getRuntime()->CurrentKeyData;
+    //     else if (getRuntime()->CurrentCmdData != NULL && *getRuntime()->CurrentCmdData != '\0')
+    //         data = getRuntime()->CurrentCmdData;
+    //     else if (getRuntime()->CurrentKey >= 0)
+    //         data = getKeyData(getRuntime()->CurrentKey);
+    //     getRuntime()->CurrentKeyData = NULL;
+    //     getRuntime()->CurrentCmdData = NULL;
+    //     if (data == NULL || *data == '\0')
+    //         return NULL;
+    //     return allocStr(data, -1);
+    // }
+    //
+    // static int
+    // searchKeyNum(void)
+    // {
+    //     char* d;
+    //     int n = 1;
+    //
+    //     d = searchKeyData();
+    //     if (d != NULL)
+    //         n = atoi(d);
+    //     return n * PREC_NUM;
+    // }
+    //
+    // void deleteFiles()
+    // {
+    //     struct Buffer* buf;
+    //     char* f;
+    //
+    //     for (struct TabBuffer* CurrentTab = FirstTab(); CurrentTab; CurrentTab = CurrentTab->nextTab) {
+    //         while (Firstbuf) {
+    //             buf = Firstbuf->nextBuffer;
+    //             discardBuffer(Firstbuf);
+    //             Firstbuf = buf;
+    //         }
+    //     }
+    //     while ((f = popText(getRuntime()->fileToDelete)) != NULL) {
+    //         unlink(f);
+    //         if (getRuntime()->enable_inline_image == INLINE_IMG_SIXEL && strcmp(f + strlen(f) - 4, ".gif") == 0) {
+    //             Str firstframe = Strnew_charp(f);
+    //             Strcat_charp(firstframe, "-1");
+    //             unlink(firstframe->ptr);
+    //         }
+    //     }
+    // }
+    //
+    // void w3m_exit(int i)
+    // {
+    //     stopDownload();
+    //     deleteFiles();
+    //     free_ssl_ctx();
+    //     disconnectFTP();
+    //     if (getRuntime()->mkd_tmp_dir)
+    //         if (rmdir(getRuntime()->mkd_tmp_dir) != 0) {
+    //             fprintf(stderr, "Can't remove temporary directory (%s)!\n", getRuntime()->mkd_tmp_dir);
+    //             exit(1);
+    //         }
+    //     exit(i);
+    // }
+    //
+    // DEFUN(execCmd, COMMAND, "Invoke w3m function(s)")
+    // {
+    //     getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
+    //     const char* data = searchKeyData();
+    //     if (data == NULL || *data == '\0') {
+    //         data = inputStrHist("command [; ...]: ", "", getRuntime()->TextHist);
+    //         if (data == NULL) {
+    //             return;
+    //         }
+    //     }
+    //     /* data: FUNC [DATA] [; FUNC [DATA] ...] */
+    //     while (*data) {
+    //         data = skip_blanks(data);
+    //         if (*data == ';') {
+    //             data++;
+    //             continue;
+    //         }
+    //         char* p = getWord(&data);
+    //         int cmd = getFuncList(p);
+    //         if (cmd < 0)
+    //             break;
+    //         p = getQWord(&data);
+    //         getRuntime()->CurrentKey = -1;
+    //         getRuntime()->CurrentKeyData = NULL;
+    //         getRuntime()->CurrentCmdData = *p ? p : NULL;
+    //         w3mFuncList[cmd].func();
+    //         getRuntime()->CurrentCmdData = NULL;
+    //     }
+    // }
+    //
+    // // static MySignalHandler
+    // // SigAlarm(SIGNAL_ARG)
+    // // {
+    // //     char* data;
+    // //
+    // //     if (CurrentAlarm->sec > 0) {
+    // //         getRuntime()->CurrentKey = -1;
+    // //         getRuntime()->CurrentKeyData = NULL;
+    // //         getRuntime()->CurrentCmdData = data = (char*)CurrentAlarm->data;
+    // //         w3mFuncList[CurrentAlarm->cmd].func();
+    // //         getRuntime()->CurrentCmdData = NULL;
+    // //         if (CurrentAlarm->status == AL_IMPLICIT_ONCE) {
+    // //             CurrentAlarm->sec = 0;
+    // //             CurrentAlarm->status = AL_UNSET;
+    // //         }
+    // //         if (Currentbuf->event) {
+    // //             if (Currentbuf->event->status != AL_UNSET)
+    // //                 CurrentAlarm = Currentbuf->event;
+    // //             else
+    // //                 Currentbuf->event = NULL;
+    // //         }
+    // //         if (!Currentbuf->event)
+    // //             CurrentAlarm = &DefaultAlarm;
+    // //         if (CurrentAlarm->sec > 0) {
+    // //             mySignal(SIGALRM, SigAlarm);
+    // //             alarm(CurrentAlarm->sec);
+    // //         }
+    // //     }
+    // //     SIGNAL_RETURN;
+    // // }
+    //
+    // DEFUN(setAlarm, ALARM, "Set alarm")
+    // {
+    //     getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
+    //     const char* data = searchKeyData();
+    //     if (data == NULL || *data == '\0') {
+    //         data = inputStrHist("(Alarm)sec command: ", "", getRuntime()->TextHist);
+    //         if (data == NULL) {
+    //             return;
+    //         }
+    //     }
+    //     int sec = 0, cmd = -1;
+    //     if (*data != '\0') {
+    //         sec = atoi(getWord(&data));
+    //         if (sec > 0)
+    //             cmd = getFuncList(getWord(&data));
+    //     }
+    //     if (cmd >= 0) {
+    //         data = getQWord(&data);
+    //         setAlarmEvent(&DefaultAlarm, sec, AL_EXPLICIT, cmd, data);
+    //         disp_message_nsec(Sprintf("%dsec %s %s", sec, w3mFuncList[cmd].id,
+    //                               data)
+    //                               ->ptr,
+    //             FALSE, 1, FALSE, TRUE);
+    //     } else {
+    //         setAlarmEvent(&DefaultAlarm, 0, AL_UNSET, FUNCNAME_nulcmd, NULL);
+    //     }
+    // }
+    //
+    // AlarmEvent*
+    // setAlarmEvent(AlarmEvent* event, int sec, short status, int cmd, const void* data)
+    // {
+    //     if (event == NULL)
+    //         event = New(AlarmEvent);
+    //     event->sec = sec;
+    //     event->status = status;
+    //     event->cmd = cmd;
+    //     event->data = data;
+    //     return event;
+    // }
+    //
+    // DEFUN(reinit, REINIT, "Reload configuration file")
+    // {
+    //     char* resource = searchKeyData();
+    //
+    //     if (resource == NULL) {
+    //         init_rc();
+    //         sync_with_option();
+    //         initCookie();
+    //         return;
+    //     }
+    //
+    //     if (!strcasecmp(resource, "CONFIG") || !strcasecmp(resource, "RC")) {
+    //         init_rc();
+    //         sync_with_option();
+    //         return;
+    //     }
+    //
+    //     if (!strcasecmp(resource, "COOKIE")) {
+    //         initCookie();
+    //         return;
+    //     }
+    //
+    //     if (!strcasecmp(resource, "KEYMAP")) {
+    //         initKeymap(TRUE);
+    //         return;
+    //     }
+    //
+    //     if (!strcasecmp(resource, "MAILCAP")) {
+    //         initMailcap();
+    //         return;
+    //     }
+    //
+    //     if (!strcasecmp(resource, "MENU")) {
+    //         initMenu();
+    //         return;
+    //     }
+    //
+    //     if (!strcasecmp(resource, "MIMETYPES")) {
+    //         initMimeTypes();
+    //         return;
+    //     }
+    //
+    //     if (!strcasecmp(resource, "URIMETHODS")) {
+    //         initURIMethods();
+    //         return;
+    //     }
+    //
+    //     disp_err_message(Sprintf("Don't know how to reinitialize '%s'", resource)->ptr, FALSE);
+    // }
+    //
+    // DEFUN(defKey, DEFINE_KEY, "Define a binding between a key stroke combination and a command")
+    // {
+    //     getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
+    //     char* data = searchKeyData();
+    //     if (data == NULL || *data == '\0') {
+    //         data = inputStrHist("Key definition: ", "", getRuntime()->TextHist);
+    //         if (data == NULL || *data == '\0') {
+    //             return;
+    //         }
+    //     }
+    //     setKeymap(allocStr(data, -1), -1, TRUE);
+    // }
+    //
+    // DEFUN(newT, NEW_TAB, "Open a new tab (with current document)")
+    // {
+    //     _newT();
+    // }
+    //
+    // static struct TabBuffer*
+    // numTab(int n)
+    // {
+    //     struct TabBuffer* tab;
+    //     int i;
+    //
+    //     if (n == 0)
+    //         return CurrentTab();
+    //     if (n == 1)
+    //         return FirstTab();
+    //     if (nTab() <= 1)
+    //         return NULL;
+    //     for (tab = FirstTab(), i = 1; tab && i < n; tab = tab->nextTab, i++)
+    //         ;
+    //     return tab;
+    // }
+    //
+    // struct TabBuffer*
+    // deleteTab(struct TabBuffer* tab)
+    // {
+    //     struct Buffer *buf, *next;
+    //
+    //     if (nTab() <= 1)
+    //         return FirstTab();
+    //     if (tab->prevTab) {
+    //         if (tab->nextTab)
+    //             tab->nextTab->prevTab = tab->prevTab;
+    //         else
+    //             getRuntime()->LastTab = tab->prevTab;
+    //         tab->prevTab->nextTab = tab->nextTab;
+    //         if (tab == CurrentTab())
+    //             getRuntime()->CurrentTab = tab->prevTab;
+    //     } else { /* tab == FirstTab */
+    //         tab->nextTab->prevTab = NULL;
+    //         getRuntime()->FirstTab = tab->nextTab;
+    //         if (tab == CurrentTab())
+    //             getRuntime()->CurrentTab = tab->nextTab;
+    //     }
+    //     getRuntime()->nTab--;
+    //     buf = tab->firstBuffer;
+    //     while (buf) {
+    //         next = buf->nextBuffer;
+    //         discardBuffer(buf);
+    //         buf = next;
+    //     }
+    //     return FirstTab();
+    // }
+    //
+    // DEFUN(closeT, CLOSE_TAB, "Close tab")
+    // {
+    //     struct TabBuffer* tab;
+    //
+    //     if (nTab() <= 1)
+    //         return;
+    //     if (getRuntime()->prec_num)
+    //         tab = numTab(PREC_NUM);
+    //     else
+    //         tab = CurrentTab();
+    //     if (tab)
+    //         deleteTab(tab);
+    // }
+    //
+    // DEFUN(nextT, NEXT_TAB, "Switch to the next tab")
+    // {
+    //     int i;
+    //
+    //     if (nTab() <= 1)
+    //         return;
+    //     for (i = 0; i < PREC_NUM; i++) {
+    //         if (CurrentTab()->nextTab)
+    //             getRuntime()->CurrentTab = CurrentTab()->nextTab;
+    //         else
+    //             getRuntime()->CurrentTab = FirstTab();
+    //     }
+    // }
+    //
+    // DEFUN(prevT, PREV_TAB, "Switch to the previous tab")
+    // {
+    //     int i;
+    //
+    //     if (nTab() <= 1)
+    //         return;
+    //     for (i = 0; i < PREC_NUM; i++) {
+    //         if (CurrentTab()->prevTab)
+    //             getRuntime()->CurrentTab = CurrentTab()->prevTab;
+    //         else
+    //             getRuntime()->CurrentTab = LastTab();
+    //     }
+    // }
+    //
+    // static void
+    // followTab(struct TabBuffer* tab)
+    // {
+    //     struct Buffer* buf;
+    //     struct Anchor* a;
+    //
+    //     a = retrieveCurrentImg(Currentbuf);
+    //     if (!(a && a->image && a->image->map))
+    //         a = retrieveCurrentAnchor(Currentbuf);
+    //     if (a == NULL)
+    //         return;
+    //
+    //     if (tab == CurrentTab()) {
+    //         check_target = FALSE;
+    //         followA();
+    //         check_target = TRUE;
+    //         return;
+    //     }
+    //     _newT();
+    //     buf = Currentbuf;
+    //     check_target = FALSE;
+    //     followA();
+    //     check_target = TRUE;
+    //     if (tab == NULL) {
+    //         if (buf != Currentbuf)
+    //             delBuffer(buf);
+    //         else
+    //             deleteTab(CurrentTab());
+    //     } else if (buf != Currentbuf) {
+    //         /* buf <- p <- ... <- Currentbuf = c */
+    //         struct Buffer *c, *p;
+    //
+    //         c = Currentbuf;
+    //         if ((p = prevBuffer(c, buf)))
+    //             p->nextBuffer = NULL;
+    //         Firstbuf = buf;
+    //         deleteTab(CurrentTab());
+    //         getRuntime()->CurrentTab = tab;
+    //         for (buf = p; buf; buf = p) {
+    //             p = prevBuffer(c, buf);
+    //             pushBuffer(buf);
+    //         }
+    //     }
+    // }
+    //
+    // DEFUN(tabA, TAB_LINK, "Follow current hyperlink in a new tab")
+    // {
+    //     followTab(getRuntime()->prec_num ? numTab(PREC_NUM) : NULL);
+    // }
+    //
+    // static void
+    // tabURL0(struct TabBuffer* tab, char* prompt, int relative)
+    // {
+    //     struct Buffer* buf;
+    //
+    //     if (tab == CurrentTab()) {
+    //         goURL0(prompt, relative);
+    //         return;
+    //     }
+    //     _newT();
+    //     buf = Currentbuf;
+    //     goURL0(prompt, relative);
+    //     if (tab == NULL) {
+    //         if (buf != Currentbuf)
+    //             delBuffer(buf);
+    //         else
+    //             deleteTab(CurrentTab());
+    //     } else if (buf != Currentbuf) {
+    //         /* buf <- p <- ... <- Currentbuf = c */
+    //         struct Buffer *c, *p;
+    //
+    //         c = Currentbuf;
+    //         if ((p = prevBuffer(c, buf)))
+    //             p->nextBuffer = NULL;
+    //         Firstbuf = buf;
+    //         deleteTab(CurrentTab());
+    //         getRuntime()->CurrentTab = tab;
+    //         for (buf = p; buf; buf = p) {
+    //             p = prevBuffer(c, buf);
+    //             pushBuffer(buf);
+    //         }
+    //     }
+    // }
+    //
+    // DEFUN(tabURL, TAB_GOTO, "Open specified document in a new tab")
+    // {
+    //     tabURL0(getRuntime()->prec_num ? numTab(PREC_NUM) : NULL,
+    //         "Goto URL on new tab: ", FALSE);
+    // }
+    //
+    // DEFUN(tabrURL, TAB_GOTO_RELATIVE, "Open relative address in a new tab")
+    // {
+    //     tabURL0(getRuntime()->prec_num ? numTab(PREC_NUM) : NULL,
+    //         "Goto relative URL on new tab: ", TRUE);
+    // }
+    //
+    // static void
+    // moveTab(struct TabBuffer* t, struct TabBuffer* t2, int right)
+    // {
+    //     if (t2 == NO_TABBUFFER)
+    //         t2 = FirstTab();
+    //     if (!t || !t2 || t == t2 || t == NO_TABBUFFER)
+    //         return;
+    //     if (t->prevTab) {
+    //         if (t->nextTab)
+    //             t->nextTab->prevTab = t->prevTab;
+    //         else
+    //             getRuntime()->LastTab = t->prevTab;
+    //         t->prevTab->nextTab = t->nextTab;
+    //     } else {
+    //         t->nextTab->prevTab = NULL;
+    //         getRuntime()->FirstTab = t->nextTab;
+    //     }
+    //     if (right) {
+    //         t->nextTab = t2->nextTab;
+    //         t->prevTab = t2;
+    //         if (t2->nextTab)
+    //             t2->nextTab->prevTab = t;
+    //         else
+    //             getRuntime()->LastTab = t;
+    //         t2->nextTab = t;
+    //     } else {
+    //         t->prevTab = t2->prevTab;
+    //         t->nextTab = t2;
+    //         if (t2->prevTab)
+    //             t2->prevTab->nextTab = t;
+    //         else
+    //             getRuntime()->FirstTab = t;
+    //         t2->prevTab = t;
+    //     }
+    // }
+    //
+    // DEFUN(tabR, TAB_RIGHT, "Move right along the tab bar")
+    // {
+    //     int i = 0;
+    //     struct TabBuffer* tab = CurrentTab();
+    //     for (; tab && i < PREC_NUM; tab = tab->nextTab, i++)
+    //         ;
+    //     moveTab(CurrentTab(), tab ? tab : LastTab(), TRUE);
+    // }
+    //
+    // DEFUN(tabL, TAB_LEFT, "Move left along the tab bar")
+    // {
+    //     struct TabBuffer* tab = CurrentTab();
+    //     int i = 0;
+    //     for (; tab && i < PREC_NUM;
+    //         tab = tab->prevTab, i++)
+    //         ;
+    //     moveTab(CurrentTab(), tab ? tab : FirstTab(), FALSE);
+    // }
+    //
+    // /* download panel */
+    // DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
+    // {
+    //     download_panel();
+    // }
+    //
+    // static void
+    // resetPos(struct BufferPos* b)
+    // {
+    //     struct Buffer buf;
+    //     struct Line top, cur;
+    //
+    //     top.linenumber = b->top_linenumber;
+    //     cur.linenumber = b->cur_linenumber;
+    //     cur.bpos = b->bpos;
+    //     buf.doc.topLine = &top;
+    //     buf.doc.currentLine = &cur;
+    //     buf.doc.pos = b->pos;
+    //     buf.doc.currentColumn = b->currentColumn;
+    //     doc_restorePosition(&Currentbuf->doc, &buf.doc);
+    //     Currentbuf->doc.undo = b;
+    // }
+    //
+    // DEFUN(undoPos, UNDO, "Cancel the last cursor movement")
+    // {
+    //     struct BufferPos* b = Currentbuf->doc.undo;
+    //     int i;
+    //
+    //     if (!Currentbuf->doc.firstLine)
+    //         return;
+    //     if (!b || !b->prev)
+    //         return;
+    //     for (i = 0; i < PREC_NUM && b->prev; i++, b = b->prev)
+    //         ;
+    //     resetPos(b);
+    // }
+    //
+    // DEFUN(redoPos, REDO, "Cancel the last undo")
+    // {
+    //     struct BufferPos* b = Currentbuf->doc.undo;
+    //     int i;
+    //
+    //     if (!Currentbuf->doc.firstLine)
+    //         return;
+    //     if (!b || !b->next)
+    //         return;
+    //     for (i = 0; i < PREC_NUM && b->next; i++, b = b->next)
+    //         ;
+    //     resetPos(b);
+    // }
+    //
+    // DEFUN(cursorTop, CURSOR_TOP, "Move cursor to the top of the screen")
+    // {
+    //     if (Currentbuf->doc.firstLine == NULL)
+    //         return;
+    //     Currentbuf->doc.currentLine = doc_lineSkip(&Currentbuf->doc, Currentbuf->doc.topLine, 0);
+    //     doc_arrangeLine(&Currentbuf->doc);
+    // }
+    //
+    // DEFUN(cursorMiddle, CURSOR_MIDDLE, "Move cursor to the middle of the screen")
+    // {
+    //     if (Currentbuf->doc.firstLine == NULL)
+    //         return;
+    //     int offsety = (Currentbuf->doc.LINES - 1) / 2;
+    //     Currentbuf->doc.currentLine = currentLineSkip(Currentbuf->doc.topLine, offsety);
+    //     doc_arrangeLine(&Currentbuf->doc);
+    // }
+    //
+    // DEFUN(cursorBottom, CURSOR_BOTTOM, "Move cursor to the bottom of the screen")
+    // {
+    //     if (Currentbuf->doc.firstLine == NULL)
+    //         return;
+    //     int offsety = Currentbuf->doc.LINES - 1;
+    //     Currentbuf->doc.currentLine = currentLineSkip(Currentbuf->doc.topLine, offsety);
+    //     doc_arrangeLine(&Currentbuf->doc);
+    // }
+};

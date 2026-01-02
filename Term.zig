@@ -9,6 +9,8 @@ termios: ?std.posix.termios = null,
 buffer: [256]u8 = undefined,
 epoll: Epoll,
 
+pub var g_term: @This() = undefined;
+
 pub fn init(allocator: std.mem.Allocator, input: std.fs.File) !@This() {
     var this = @This(){
         .allocator = allocator,
