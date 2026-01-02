@@ -61,19 +61,9 @@ struct AuthInfo {
     Str realm;
 };
 
-enum ContentDataType {
-    CONTENT_DATA_NONE,
-    CONTENT_DATA_STR,
-    CONTENT_DATA_STREAM,
-};
-
 struct ContentData {
     struct Content content;
-    enum ContentDataType type;
-    union {
-        Str page;
-        struct input_stream* stream;
-    };
+    Str page;
 };
 
 struct Url;

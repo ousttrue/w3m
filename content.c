@@ -484,6 +484,8 @@ struct ContentData get_content(const char* path,
         parseURL2(u, &url, option.base_url);
     }
 
+    MySignalHandler (*prevtrap)(SIGNAL_ARG) = NULL;
+    TRAP_ON
     struct ContentAndStream s = openURL(url, request, option, connection);
     if (!s.stream && getRuntime()->retryAsHttp && s.content.url_str[0] != '/') {
         if (s.content.url.scheme == SCM_MISSING || s.content.url.scheme == SCM_UNKNOWN) {
@@ -549,20 +551,20 @@ struct ContentData get_content(const char* path,
         }
 
         if (page && page->length > 0) {
+            TRAP_OFF
             return (struct ContentData) {
                 .content = s.content,
-                .type = CONTENT_DATA_STR,
                 .page = page,
             };
         }
 
+        TRAP_OFF
         return (struct ContentData) {
             .content = s.content,
-            .type = CONTENT_DATA_NONE,
+            .page = NULL,
         };
     }
 
-    MySignalHandler (*prevtrap)(SIGNAL_ARG) = NULL;
     if (s.status == HTST_MISSING) {
         TRAP_OFF;
         is_close(s.stream);
@@ -588,7 +590,6 @@ struct ContentData get_content(const char* path,
         getRuntime()->header_string = NULL;
     }
 
-    TRAP_ON;
     if (s.content.url.scheme == SCM_HTTP
         || s.content.url.scheme == SCM_HTTPS
         || (((s.content.url.scheme == SCM_FTP && non_null(getRuntime()->FTP_proxy)))
@@ -654,8 +655,7 @@ struct ContentData get_content(const char* path,
                     TRAP_OFF;
                     return (struct ContentData) {
                         .content = s.content,
-                        .type = CONTENT_DATA_STREAM,
-                        .stream = s.stream,
+                        .page = is_readall(s.stream),
                     };
                 }
                 is_close(s.stream);
@@ -679,8 +679,7 @@ struct ContentData get_content(const char* path,
                     TRAP_OFF;
                     return (struct ContentData) {
                         .content = s.content,
-                        .type = CONTENT_DATA_STREAM,
-                        .stream = s.stream,
+                        .page = is_readall(s.stream),
                     };
                 }
                 is_close(s.stream);
@@ -735,9 +734,9 @@ struct ContentData get_content(const char* path,
     if (p)
         s.content.current_content_length = strtoclen(p);
 
+    TRAP_OFF
     return (struct ContentData) {
         .content = s.content,
-        .type = CONTENT_DATA_STREAM,
-        .stream = s.stream,
+        .page = is_readall(s.stream),
     };
 }

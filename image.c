@@ -896,35 +896,13 @@ void loadImage(enum ImageLoadFlags flag)
                 .pwd = NULL,
             },
             NULL);
-        struct Buffer* b = NULL;
-        if (is_save2tmp(data.stream, cache->file)) {
-            b = newBuffer(INIT_BUFFER_WIDTH);
-            b->content.sourcefile = cache->file;
+
+        FILE* fp = fopen(cache->file, "w");
+        if (fp) {
+            fwrite(data.page->ptr, data.page->length, 1, fp);
+            fclose(fp);
+            symlink(cache->file, cache->touch);
         }
-        is_close(data.stream);
-        // TRAP_OFF;
-        // return b;
-
-        symlink(cache->file, cache->touch);
-
-        // flush_tty();
-        // if ((cache->pid = fork()) == 0) {
-        //     /*
-        //      * setup_child(TRUE, 0, -1);
-        //      */
-        //     setup_child(FALSE, 0, -1);
-        //     getRuntime()->image_source = cache->file;
-        //     loadGeneralFile(cache->url, cache->current, NULL, 0, NULL, false);
-        //     /* TODO make sure removing this didn't break anything
-        //     if (!b || !b->real_type || strncasecmp(b->real_type, "image/", 6))
-        //         unlink(cache->file);
-        //     */
-        //     symlink(cache->file, cache->touch);
-        //     exit(0);
-        // } else if (cache->pid < 0) {
-        //     cache->pid = 0;
-        //     return;
-        // }
     }
 }
 
