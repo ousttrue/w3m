@@ -43,8 +43,6 @@ int checkSaveFile(struct input_stream* stream, const char* path);
 void loadHTMLstream(struct input_stream* stream,
     struct Buffer* newBuf, bool internal);
 
-typedef struct Buffer* (*LoadBufferFunc)(struct Url, struct input_stream*,
-    const char* type, struct Buffer*, bool internal);
 struct Buffer* doExternal(struct Url url, struct input_stream* stream,
     const char* type, struct Buffer* defaultbuf, bool internal);
 struct Buffer* loadHTMLBuffer(struct Url url, struct input_stream* stream,

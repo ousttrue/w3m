@@ -105,30 +105,6 @@ int currentLn(struct Buffer* buf)
         return 1;
 }
 
-static struct Buffer*
-loadSomething(struct Url url, struct input_stream* stream, const char* t,
-    LoadBufferFunc loadproc, struct Buffer* defaultbuf, bool internal)
-{
-    struct Buffer* buf = loadproc(url, stream, t, defaultbuf, internal);
-    if (!buf)
-        return NULL;
-
-    if (buf->doc.title == NULL || buf->doc.title[0] == '\0') {
-        buf->doc.title = checkHeader(&buf->content, "Subject:");
-        if (buf->doc.title == NULL && buf->content.filename != NULL)
-            buf->doc.title = conv_from_system(lastFileName(buf->content.filename));
-    }
-    if (buf->content.url.scheme == SCM_UNKNOWN)
-        buf->content.url.scheme = url.scheme;
-    // if (f->scheme == SCM_LOCAL && buf->sourcefile == NULL)
-    //     buf->sourcefile = buf->content.filename;
-    if (loadproc == loadHTMLBuffer || loadproc == loadImageBuffer)
-        buf->content.content_type = "text/html";
-    else
-        buf->content.content_type = "text/plain";
-    return buf;
-}
-
 int dir_exist(const char* path)
 {
     struct stat stbuf;
@@ -4957,6 +4933,7 @@ void saveBufferBody(struct Buffer* buf, FILE* f, int cont)
     _saveBuffer(buf, l, f, cont);
 }
 
+typedef struct Buffer* (*LoadBufferFunc)(struct Url, struct input_stream*, const char* type, struct Buffer*, bool internal);
 static struct Buffer*
 loadcmdout(char* cmd,
     LoadBufferFunc loadproc, struct Buffer* defaultbuf)
