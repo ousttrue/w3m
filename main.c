@@ -1,6 +1,5 @@
 #include "maparea.h"
 #include "func.h"
-#include "backend.h"
 #include "menu.h"
 #include "parsetag.h"
 #include "frame.h"
@@ -466,16 +465,7 @@ bool w3m_args(int argc, char** argv)
                 getRuntime()->w3m_dump = (DUMP_HEAD | DUMP_SOURCE | DUMP_EXTRA);
             else if (!strcmp("-halfdump", argv[i]))
                 getRuntime()->w3m_dump = DUMP_HALFDUMP;
-            else if (!strcmp("-backend", argv[i])) {
-                getRuntime()->w3m_backend = TRUE;
-            } else if (!strcmp("-backend_batch", argv[i])) {
-                getRuntime()->w3m_backend = TRUE;
-                if (++i >= argc)
-                    usage();
-                if (!backend_batch_commands)
-                    backend_batch_commands = newTextList();
-                pushText(backend_batch_commands, argv[i]);
-            } else if (!strcmp("-cols", argv[i])) {
+            else if (!strcmp("-cols", argv[i])) {
                 if (++i >= argc)
                     usage();
                 tty_set_cols(atoi(argv[i]));
@@ -597,7 +587,7 @@ bool w3m_args(int argc, char** argv)
             tty_set_cols(DEFAULT_COLS);
     }
 
-    if (!getRuntime()->w3m_dump && !getRuntime()->w3m_backend) {
+    if (!getRuntime()->w3m_dump) {
         enterRawMode();
         // mySignal(SIGWINCH, resize_hook);
     } else if (w3m_halfdump && getRuntime()->displayImage) {
@@ -608,8 +598,6 @@ bool w3m_args(int argc, char** argv)
 
     initCookie();
 
-    if (getRuntime()->w3m_backend)
-        backend();
     if (getRuntime()->w3m_dump)
         mySignal(SIGINT, SIG_IGN);
     mySignal(SIGCHLD, sig_chld);

@@ -21,7 +21,6 @@ struct Runtime g_runtime = {
     .image_scale = (100),
     .keymap_file = (KEYMAP_FILE),
     .FollowRedirection = (10),
-    .w3m_backend = (false),
     .multicolList = (false),
     .FollowLocale = (true),
     .UseContentCharset = (true),

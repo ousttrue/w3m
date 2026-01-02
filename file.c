@@ -1,7 +1,6 @@
 #include "file.h"
 #include "http_auth.h"
 #include "url.h"
-#include "backend.h"
 #include "tcp_socket.h"
 #include "input_stream.h"
 #include "frame.h"
@@ -4670,12 +4669,6 @@ void loadHTMLstream(struct input_stream* stream,
     if (w3m_halfdump) {
         TRAP_OFF;
         print_internal_information(hb, &htmlenv1);
-        return;
-    }
-    if (getRuntime()->w3m_backend) {
-        TRAP_OFF;
-        print_internal_information(hb, &htmlenv1);
-        backend_halfdump_buf = htmlenv1.buf;
         return;
     }
 

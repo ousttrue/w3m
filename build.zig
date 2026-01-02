@@ -56,7 +56,6 @@ const w3m_srcs = [_][]const u8{
     "func.c",
     "cookie.c",
     "history.c",
-    "backend.c",
 
     "anchor.c",
     "tagtable.c",
