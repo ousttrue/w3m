@@ -584,8 +584,10 @@ bool w3m_args(int argc, char** argv)
             // newbuf = openGeneralPagerBuffer(redin);
             // dup2(1, 0);
         } else if (load_bookmark) {
-            newbuf = loadGeneralFile(getRuntime()->BookmarkFile, NULL,
+            struct Content content = loadGeneralFile(getRuntime()->BookmarkFile, NULL,
                 (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER, .flag = 0 }, false);
+            newbuf = newBuffer(INIT_BUFFER_WIDTH);
+            newbuf->content = content;
             if (newbuf == NULL)
                 Strcat_charp(err_msg, "w3m: Can't load bookmark.\n");
         } else if (visual_start) {
@@ -603,8 +605,10 @@ bool w3m_args(int argc, char** argv)
             else
                 newbuf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
         } else if ((p = getenv("HTTP_HOME")) != NULL || (p = getenv("WWW_HOME")) != NULL) {
-            newbuf = loadGeneralFile(p, NULL,
+            struct Content content = loadGeneralFile(p, NULL,
                 (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER, .flag = 0 }, false);
+            newbuf = newBuffer(INIT_BUFFER_WIDTH);
+            newbuf->content = content;
             if (newbuf == NULL)
                 Strcat(err_msg, Sprintf("w3m: Can't load %s.\n", p));
             else
@@ -660,8 +664,10 @@ bool w3m_args(int argc, char** argv)
                 } else {
                     request = NULL;
                 }
-                newbuf = loadGeneralFile(url, request,
+                struct Content content = loadGeneralFile(url, request,
                     (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER, .flag = 0 }, false);
+                newbuf = newBuffer(INIT_BUFFER_WIDTH);
+                newbuf->content = content;
             }
             if (newbuf == NULL) {
                 if (getRuntime()->ArgvIsURL && !retry) {
@@ -1434,7 +1440,9 @@ cmd_loadURL(const char* url, struct FormList* request, struct LoadOption option)
     if (handleMailto(url))
         return;
 
-    struct Buffer* buf = loadGeneralFile(url, request, option, false);
+    struct Content content = loadGeneralFile(url, request, option, false);
+    struct Buffer* buf = newBuffer(INIT_BUFFER_WIDTH);
+    buf->content = content;
     if (buf == NULL) {
         char* emsg = Sprintf("Can't load %s", conv_from_system(url))->ptr;
         disp_err_message(emsg, FALSE);
@@ -1463,8 +1471,10 @@ DEFUN(ldhelp, HELP, "Show help panel")
 static void
 cmd_loadfile(char* fn)
 {
-    struct Buffer* buf = loadGeneralFile(file_to_url(fn), NULL,
+    struct Content content = loadGeneralFile(file_to_url(fn), NULL,
         (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER, .flag = 0 }, false);
+    struct Buffer* buf = newBuffer(INIT_BUFFER_WIDTH);
+    buf->content = content;
     if (buf == NULL) {
         /* FIXME: gettextize? */
         char* emsg = Sprintf("%s not found", conv_from_system(fn))->ptr;
@@ -2136,8 +2146,10 @@ void _followI(bool do_download)
     if (a == NULL)
         return;
     message(Sprintf("loading %s", a->url)->ptr);
-    struct Buffer* buf = loadGeneralFile(a->url, NULL,
+    struct Content content = loadGeneralFile(a->url, NULL,
         (struct LoadOption) { .base_url = baseURL(Currentbuf), .referer = NULL, .flag = 0 }, do_download);
+    struct Buffer* buf = newBuffer(INIT_BUFFER_WIDTH);
+    buf->content = content;
     if (buf == NULL) {
         /* FIXME: gettextize? */
         char* emsg = Sprintf("Can't load %s", a->url)->ptr;
@@ -3320,8 +3332,11 @@ DEFUN(reload, RELOAD, "Load current document anew")
         getRuntime()->DocumentCharset = Currentbuf->doc.charset;
     // SearchHeader = Currentbuf->search_header;
     getRuntime()->DefaultType = Currentbuf->content.content_type;
-    buf = loadGeneralFile(url->ptr, request,
-        (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER, .flag = RG_NOCACHE }, false);
+    struct Content content
+        = loadGeneralFile(url->ptr, request,
+            (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER, .flag = RG_NOCACHE }, false);
+    buf = newBuffer(INIT_BUFFER_WIDTH);
+    buf->content = content;
     getRuntime()->DocumentCharset = old_charset;
     // SearchHeader = FALSE;
     getRuntime()->DefaultType = NULL;
@@ -3654,8 +3669,10 @@ execdict(char* word)
         Str_form_quote(Strnew_charp(w))->ptr)
                         ->ptr;
 
-    struct Buffer* buf = loadGeneralFile(dictcmd, NULL,
+    struct Content content = loadGeneralFile(dictcmd, NULL,
         (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER, .flag = 0 }, false);
+    struct Buffer* buf = newBuffer(INIT_BUFFER_WIDTH);
+    buf->content = content;
     if (buf == NULL) {
         disp_message("Execution failed", TRUE);
         return;

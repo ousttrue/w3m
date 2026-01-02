@@ -346,22 +346,25 @@ frame_download_source(struct frame_body* b, struct Url* currentURL,
     switch (url.scheme) {
     case SCM_LOCAL:
         b->flags = 0;
-    default:
+    default: {
         getRuntime()->is_redisplay = TRUE;
         // getRuntime()->w3m_dump |= DUMP_FRAME;
-        buf = loadGeneralFile(b->url, b->request,
+        struct Content content = loadGeneralFile(b->url, b->request,
             (struct LoadOption) {
                 .base_url = baseURL ? baseURL : currentURL,
                 .referer = b->referer,
                 .flag = flag | RG_FRAME_SRC,
             },
             false);
+        buf = newBuffer(INIT_BUFFER_WIDTH);
+        buf->content = content;
         /* XXX certificate? */
         if (buf)
             b->ssl_certificate = buf->content.ssl_certificate;
         // getRuntime()->w3m_dump &= ~DUMP_FRAME;
         getRuntime()->is_redisplay = FALSE;
         break;
+    }
     }
 
     if (buf == NULL) {
@@ -887,9 +890,11 @@ renderFrame(struct Buffer* Cbuf, int force_reload)
 
     getRuntime()->DocumentCharset = getRuntime()->InnerCharset;
 
-    struct Buffer* buf = loadGeneralFile(tmp->ptr, NULL,
+    struct Content content = loadGeneralFile(tmp->ptr, NULL,
         (struct LoadOption) { .base_url = NULL, .referer = NULL, .flag = flag },
         false);
+    struct Buffer* buf  = newBuffer(INIT_BUFFER_WIDTH);
+    buf->content = content;
 
     getRuntime()->DocumentCharset = doc_charset;
 

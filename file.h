@@ -11,7 +11,7 @@ int is_html_type(const char* type);
 struct Url;
 struct FormList;
 
-struct Buffer* loadGeneralFile(const char* path, struct FormList* request, struct LoadOption option, bool do_download);
+struct Content loadGeneralFile(const char* path, struct FormList* request, struct LoadOption option, bool do_download);
 
 int _doFileCopy(const char* tmpf, const char* defstr, bool download);
 inline static int doFileCopy(const char* tmpf, const char* defstr)

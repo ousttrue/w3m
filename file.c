@@ -201,7 +201,7 @@ Str getLinkNumberStr(struct HtmlBuilder* hb, int correction)
     return Sprintf("[%d]", hb->cur_hseq + correction);
 }
 
-struct Buffer*
+struct Content
 loadGeneralFile(const char* path, struct FormList* request, struct LoadOption option, bool do_download)
 {
     checkRedirection(NULL);
@@ -215,7 +215,7 @@ loadGeneralFile(const char* path, struct FormList* request, struct LoadOption op
         NULL);
 
     if (!data.page) {
-        return NULL;
+        return data.content;
     }
 
     if (do_download) {
@@ -225,7 +225,7 @@ loadGeneralFile(const char* path, struct FormList* request, struct LoadOption op
             fwrite(data.page->ptr, data.page->length, 1, fp);
             fclose(fp);
         }
-        return NULL;
+        return data.content;
     }
 
     // write page to tmpfile
@@ -241,9 +241,11 @@ loadGeneralFile(const char* path, struct FormList* request, struct LoadOption op
         data.content.sourcefile = tmp->ptr;
     }
 
-    struct Buffer* b = newBuffer(INIT_BUFFER_WIDTH);
-    b->content = data.content;
-    return b;
+    return data.content;
+
+    // struct Buffer* b = newBuffer(INIT_BUFFER_WIDTH);
+    // b->content = data.content;
+    // return b;
 
     // case CONTENT_DATA_STREAM:
     //     // return make_buffer(data.content, data.stream, flag, do_download);
@@ -810,9 +812,9 @@ void flushline(struct html_feed_environ* h_env, struct readbuffer* obuf, int ind
         char *p = line->ptr, *q;
         Str tmp = Strnew(), tmp2 = Strnew();
 
-#define APPEND(str)                    \
-    if (buf)                           \
-        appendTextLine(buf, (str), 0); \
+#define APPEND(str) \
+    if (buf)        \
+        appendTextLine(buf, (str), 0);
 
         while (*p) {
             q = p;
