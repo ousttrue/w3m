@@ -1,6 +1,6 @@
 #include "buffer.h"
 #include "input_stream.h"
-#include "terms.h"
+#include "screen.h"
 #include "html_form.h"
 #include "frame.h"
 #include "alloc.h"
@@ -228,7 +228,7 @@ writeBufferName(struct Buffer* buf, int n)
     int all = buf->doc.allLine;
     if (all == 0 && buf->doc.lastLine != NULL)
         all = buf->doc.lastLine->linenumber;
-    screen_move(n, 0);
+    screen_move((struct Vec2) { .y = n, .x = 0 });
     Str msg = Sprintf("<%s> [%d lines]", buf->doc.title, all);
     if (buf->content.filename != NULL) {
         switch (buf->content.url.scheme) {
@@ -257,7 +257,7 @@ listBuffer(struct Buffer* top, struct Buffer* current)
     int i, c = 0;
     struct Buffer* buf = top;
 
-    screen_move(0, 0);
+    screen_move((struct Vec2) { 0 });
     if (getRuntime()->useColor) {
         screen_setfcolor(getRuntime()->basic_color);
         screen_setbcolor(getRuntime()->bg_color);
@@ -272,24 +272,23 @@ listBuffer(struct Buffer* top, struct Buffer* current)
         if (buf == current) {
             screen_standend();
             screen_clrtoeolx();
-            screen_move(i, 0);
+            screen_move((struct Vec2) { .y = i, .x = 0 });
             screen_toggle_stand();
         } else
             screen_clrtoeolx();
         if (buf->nextBuffer == NULL) {
-            screen_move(i + 1, 0);
+            screen_move((struct Vec2) { .y = i + 1, .x = 0 });
             screen_clrtobotx();
             break;
         }
         buf = buf->nextBuffer;
     }
     screen_standout();
-    /* FIXME: gettextize? */
     message("Buffer selection mode: SPC for select / D for delete buffer");
     screen_standend();
     /*
      * move(LASTLINE(), COLS - 1); */
-    screen_move(c, 0);
+    screen_move((struct Vec2) { .y = c, .x = 0 });
     return buf->nextBuffer;
 }
 
@@ -371,7 +370,7 @@ selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectcha
                 screen_standout();
                 writeBufferName(currentbuf, spoint);
                 screen_standend();
-                screen_move(spoint, 0);
+                screen_move((struct Vec2) { .y = spoint, .x = 0 });
                 screen_toggle_stand();
             } else if (cpoint < maxbuf - 1) {
                 topbuf = currentbuf;
@@ -390,7 +389,7 @@ selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectcha
                 screen_standout();
                 writeBufferName(currentbuf, spoint);
                 screen_standend();
-                screen_move(spoint, 0);
+                screen_move((struct Vec2) { .y = spoint, .x = 0 });
                 screen_toggle_stand();
             } else if (cpoint > 0) {
                 i = cpoint - sclimit;
@@ -410,7 +409,7 @@ selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectcha
         /*
          * move(LASTLINE(), COLS - 1);
          */
-        screen_move(spoint, 0);
+        screen_move((struct Vec2) { .y = spoint, .x = 0 });
     }
 }
 

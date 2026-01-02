@@ -1,9 +1,8 @@
 #include "display.h"
 #include "document.h"
 #include "file.h"
-#include "terms.h"
+#include "screen.h"
 #include "history.h"
-#include "message.h"
 #include "buffer.h"
 #include "anchor.h"
 #include "maparea.h"
@@ -65,12 +64,12 @@ redrawLineRegion(struct Buffer* buf, struct Line* l, int i, int bpos, int epos)
             do_color(&g, pc[j]);
         if (j >= bcol && j < ecol) {
             if (rcol < column) {
-                screen_move(i, buf->doc.rootX);
+                screen_move((struct Vec2) { .y = i, .x = buf->doc.rootX });
                 for (rcol = column; rcol < ncol; rcol++)
                     addChar(&g, ' ', 0);
                 continue;
             }
-            screen_move(i, rcol - column + buf->doc.rootX);
+            screen_move((struct Vec2) { .y = i, .x = rcol - column + buf->doc.rootX });
             if (p[j] == '\t') {
                 for (; rcol < ncol; rcol++)
                     addChar(&g, ' ', 0);
@@ -236,10 +235,10 @@ redrawNLine(struct Document* doc, int n, struct Url* base_url)
     beginLine();
 
     if (nTab() > 1) {
-        screen_move(0, 0);
+        screen_move((struct Vec2) { 0 });
         screen_clrtoeolx();
         for (struct TabBuffer* t = FirstTab(); t; t = t->nextTab) {
-            screen_move(t->y, t->x1);
+            screen_move((struct Vec2) { .y = t->y, .x = t->x1 });
             if (t == CurrentTab())
                 screen_bold();
             screen_addch('[', 1);
@@ -255,12 +254,12 @@ redrawNLine(struct Document* doc, int n, struct Url* base_url)
             //     EFFECT_ACTIVE_END;
             if ((l + 1) / 2 > 0)
                 screen_wc_addnstr_sup(" ", (l + 1) / 2);
-            screen_move(t->y, t->x2);
+            screen_move((struct Vec2) { .y = t->y, .x = t->x2 });
             screen_addch(']', 1);
             if (t == CurrentTab())
                 screen_boldend();
         }
-        screen_move(LastTab()->y + 1, 0);
+        screen_move((struct Vec2) { .y = LastTab()->y + 1, .x = 0 });
         for (int i = 0; i < TTY_COLS(); i++)
             screen_addch('~', 1);
     }
@@ -272,13 +271,13 @@ redrawNLine(struct Document* doc, int n, struct Url* base_url)
             break;
     }
     if (n > 0) {
-        screen_move(i + doc->rootY, 0);
+        screen_move((struct Vec2) { .y = i + doc->rootY, .x = 0 });
         screen_clrtobotx();
     }
 
     if (!(getRuntime()->activeImage && getRuntime()->displayImage && doc->img))
         return;
-    screen_move(doc->cursorY + doc->rootY, doc->cursorX + doc->rootX);
+    screen_move((struct Vec2) { .y = doc->cursorY + doc->rootY, .x = doc->cursorX + doc->rootX });
 
     i = 0;
     for (struct Line* l = doc->topLine; i < doc->LINES && l; i++, l = l->next) {

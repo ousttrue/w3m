@@ -4,7 +4,7 @@
 #include "myctype.h"
 #include "tab.h"
 #include "buffer.h"
-#include "terms.h"
+#include "screen.h"
 #include "file.h"
 #include "w3m_rc.h"
 #include "textlist.h"
@@ -60,10 +60,10 @@ void message(const char* s)
     if (!fmInitialized())
         return;
     struct Vec2 pos = screen_position();
-    screen_move(LASTLINE(), 0);
+    screen_move((struct Vec2) { .y = LASTLINE(), .x = 0 });
     screen_wc_addstr_width(s, TTY_COLS() - 1);
     screen_clrtoeolx();
-    screen_move(pos.y, pos.x);
+    screen_move((struct Vec2) { .y = pos.y, .x = pos.x });
 }
 
 void disp_err_message(const char* s, int redraw_current)
@@ -81,7 +81,7 @@ void disp_message_nsec(const char* s, int redraw_current, int sec, int purge, in
         return;
     }
     message(s);
-    screen_move(LASTLINE(), 0);
+    screen_move((struct Vec2) { .y = LASTLINE(), .x = 0 });
 }
 
 void disp_message(const char* s, int redraw_current)
@@ -218,7 +218,7 @@ void displayMsg(struct Buffer* buf)
     displayDelayedMessage();
     screen_standout();
     message(msg->ptr);
-    screen_move(buf->doc.cursorY + buf->doc.rootY, buf->doc.cursorX + buf->doc.rootX);
+    screen_move((struct Vec2) { .y = buf->doc.cursorY + buf->doc.rootY, .x = buf->doc.cursorX + buf->doc.rootX });
     screen_standend();
     term_title(conv_to_system(buf->doc.title));
 }

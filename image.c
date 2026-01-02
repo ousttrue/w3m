@@ -1,7 +1,7 @@
 #include "image.h"
 #include "input_stream.h"
 #include "hash.h"
-#include "terms.h"
+// #include "screen.h"
 #include "file.h"
 #include "indep.h"
 #include "local_cgi.h"
@@ -653,7 +653,7 @@ void drawImage(struct Buffer* currentbuf)
     } else
         n_terminal_image = 0;
 
-    screen_touch_cursor();
+    // screen_touch_cursor();
 }
 
 void clearImage()
@@ -758,8 +758,6 @@ showImageProgress(struct Buffer* buf)
         if (getRuntime()->enable_inline_image && n == l)
             drawImage(buf);
         message(Sprintf("%d/%d images loaded", l, n)->ptr);
-        screen_move(buf->doc.cursorY + buf->doc.rootY,
-            buf->doc.cursorX + buf->doc.rootX);
     }
 }
 

@@ -1,7 +1,7 @@
 #include "menu.h"
 #include "etc.h"
 #include "func.h"
-#include "terms.h"
+#include "screen.h"
 #include "alloc.h"
 #include "symbol.h"
 #include "message.h"
@@ -681,10 +681,6 @@ static MenuList* w3mMenuList;
 
 static struct Menu* CurrentMenu = NULL;
 
-#define mvaddch(y, x, c) (screen_move(y, x), screen_addch(c, 1))
-#define mvaddstr(y, x, str) (screen_move(y, x), screen_wc_addstr(str))
-#define mvaddnstr(y, x, str, n) (screen_move(y, x), screen_wc_addnstr_sup(str, n))
-
 void new_menu(struct Menu* menu, struct MenuItem* item)
 {
     int i, l;
@@ -779,63 +775,63 @@ void draw_menu(struct Menu* menu)
 
     if (menu->offset == 0) {
         G_start;
-        mvaddstr(y, x, FRAME[3]);
+        mvaddstr((struct Vec2) { .y = y, .x = x }, FRAME[3]);
         int i = FRAME_WIDTH;
         for (; i < w - FRAME_WIDTH; i += FRAME_WIDTH)
-            mvaddstr(y, x + i, FRAME[10]);
-        mvaddstr(y, x + i, FRAME[6]);
+            mvaddstr((struct Vec2) { .y = y, .x = x + i }, FRAME[10]);
+        mvaddstr((struct Vec2) { .y = y, .x = x + i }, FRAME[6]);
         G_end;
     } else {
         G_start;
-        mvaddstr(y, x, FRAME[5]);
+        mvaddstr((struct Vec2) { .y = y, .x = x }, FRAME[5]);
         G_end;
         int i = FRAME_WIDTH;
         for (; i < w - FRAME_WIDTH; i++)
-            mvaddstr(y, x + i, " ");
+            mvaddstr((struct Vec2) { .y = y, .x = x + i }, " ");
         G_start;
-        mvaddstr(y, x + i, FRAME[5]);
+        mvaddstr((struct Vec2) { .y = y, .x = x + i }, FRAME[5]);
         G_end;
         i = (w / 2 - 1) / FRAME_WIDTH * FRAME_WIDTH;
-        mvaddstr(y, x + i, ":");
+        mvaddstr((struct Vec2) { .y = y, .x = x + i }, ":");
     }
 
     for (int j = 0; j < menu->height; j++) {
         y++;
         G_start;
-        mvaddstr(y, x, FRAME[5]);
+        mvaddstr((struct Vec2) { .y = y, .x = x }, FRAME[5]);
         G_end;
         draw_menu_item(menu, menu->offset + j);
         G_start;
-        mvaddstr(y, x + w - FRAME_WIDTH, FRAME[5]);
+        mvaddstr((struct Vec2) { .y = y, .x = x + w - FRAME_WIDTH }, FRAME[5]);
         G_end;
     }
     y++;
     if (menu->offset + menu->height == menu->nitem) {
         G_start;
-        mvaddstr(y, x, FRAME[9]);
+        mvaddstr((struct Vec2) { .y = y, .x = x }, FRAME[9]);
         int i = FRAME_WIDTH;
         for (; i < w - FRAME_WIDTH; i += FRAME_WIDTH)
-            mvaddstr(y, x + i, FRAME[10]);
-        mvaddstr(y, x + i, FRAME[12]);
+            mvaddstr((struct Vec2) { .y = y, .x = x + i }, FRAME[10]);
+        mvaddstr((struct Vec2) { .y = y, .x = x + i }, FRAME[12]);
         G_end;
     } else {
         G_start;
-        mvaddstr(y, x, FRAME[5]);
+        mvaddstr((struct Vec2) { .y = y, .x = x }, FRAME[5]);
         G_end;
         int i = FRAME_WIDTH;
         for (; i < w - FRAME_WIDTH; i++)
-            mvaddstr(y, x + i, " ");
+            mvaddstr((struct Vec2) { .y = y, .x = x + i }, " ");
         G_start;
-        mvaddstr(y, x + i, FRAME[5]);
+        mvaddstr((struct Vec2) { .y = y, .x = x + i }, FRAME[5]);
         G_end;
         i = (w / 2 - 1) / FRAME_WIDTH * FRAME_WIDTH;
-        mvaddstr(y, x + i, ":");
+        mvaddstr((struct Vec2) { .y = y, .x = x + i }, ":");
     }
 }
 
 void draw_menu_item(struct Menu* menu, int mselect)
 {
-    mvaddnstr(menu->y + mselect - menu->offset, menu->x,
+    mvaddnstr((struct Vec2) { .y = menu->y + mselect - menu->offset, .x = menu->x },
         menu->item[mselect].label, menu->width);
 }
 
@@ -856,7 +852,7 @@ int select_menu(struct Menu* menu, int mselect)
     screen_standend();
     /*
      * move(menu->cursorY, menu->doc.cursorX); */
-    screen_move(menu->y + mselect - menu->offset, menu->x);
+    screen_move((struct Vec2) { .y = menu->y + mselect - menu->offset, .x = menu->x });
     screen_toggle_stand();
     tty_write_screen();
 

@@ -62,7 +62,7 @@ enum ScreenLineFlags : uint16_t {
 
 void screen_setup(size_t lines, size_t cols);
 struct Vec2 screen_position();
-void screen_move(size_t line, size_t column);
+void screen_move(struct Vec2 pos);
 void screen_addmch(const char* p, size_t len, size_t width);
 
 void screen_add_tab();
@@ -91,3 +91,19 @@ void screen_touch_cursor(void);
 void screen_wc_addstr(const char* s);
 void screen_wc_addstr_width(const char* s, size_t width);
 void screen_wc_addnstr_sup(const char* s, size_t n);
+
+inline static void mvaddch(struct Vec2 pos, char c)
+{
+    screen_move(pos);
+    screen_addch(c, 1);
+}
+inline static void mvaddstr(struct Vec2 pos, const char* str)
+{
+    screen_move(pos);
+    screen_wc_addstr(str);
+}
+inline static void mvaddnstr(struct Vec2 pos, const char* str, size_t n)
+{
+    screen_move(pos);
+    screen_wc_addnstr_sup(str, n);
+}

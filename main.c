@@ -44,7 +44,7 @@
 #include <sys/wait.h>
 #include <time.h>
 #include "display.h"
-#include "terms.h"
+#include "screen.h"
 #include "myctype.h"
 #include "regex.h"
 #include "funcname1.h"
@@ -1930,7 +1930,7 @@ DEFUN(selBuf, SELECT, "Display buffer-stack panel")
 /* Suspend (on BSD), or run interactive shell (on SysV) */
 DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background")
 {
-    screen_move(LASTLINE(), 0);
+    screen_move((struct Vec2) { .y = LASTLINE(), .x = 0 });
     screen_clrtoeolx();
     tty_write_screen();
     exitRawMode();

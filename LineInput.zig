@@ -145,7 +145,7 @@ pub fn input(this: *@This(), opts: Options) [*c]const u8 {
                 this.offset = 0;
             }
         }
-        c.screen_move(c.LASTLINE(), 0);
+        c.screen_move(.{ .y = c.LASTLINE(), .x = 0 });
         c.screen_wc_addstr(opts.prompt);
         var w: c.LineWriter = .{};
         if (this.is_passwd) {
@@ -168,7 +168,7 @@ pub fn input(this: *@This(), opts: Options) [*c]const u8 {
             );
         }
         c.screen_clrtoeolx();
-        c.screen_move(c.LASTLINE(), @as(usize, @intCast(opos)) + x - this.offset);
+        c.screen_move(.{ .y = c.LASTLINE(), .x = @as(usize, @intCast(opos)) + x - this.offset });
         c.tty_write_screen();
 
         // next_char:
@@ -244,7 +244,7 @@ pub fn input(this: *@This(), opts: Options) [*c]const u8 {
     if (this.i_broken)
         return null;
 
-    c.screen_move(c.LASTLINE(), 0);
+    c.screen_move(.{ .y = c.LASTLINE(), .x = 0 });
     c.tty_write_screen();
     var p = this.strBuf.*.ptr;
     if (opts.flag & (c.IN_FILENAME | c.IN_COMMAND) != 0) {

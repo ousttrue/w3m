@@ -2,7 +2,7 @@ pub const c = @cImport({
     @cInclude("w3m_rc.h");
     @cInclude("termcap.h");
     @cInclude("image.h");
-    @cInclude("terms.h");
+    @cInclude("screen.h");
     @cInclude("download.h");
     @cInclude("myctype.h");
     @cInclude("stdlib.h");

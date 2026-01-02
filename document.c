@@ -6,7 +6,7 @@
 #include "url.h"
 #include "alloc.h"
 #include "LineWriter.h"
-#include "terms.h"
+#include "screen.h"
 #include <math.h>
 #include <string.h>
 
@@ -117,7 +117,7 @@ struct Line* doc_redrawLine(struct Document* doc, struct Line* l, int i, struct 
     if (l == NULL) {
         return NULL;
     }
-    screen_move(i, 0);
+    screen_move((struct Vec2) { .y = i, .x = 0 });
     if (getRuntime()->showLineNum) {
         char tmp[16];
         if (!doc->rootX) {
@@ -137,7 +137,7 @@ struct Line* doc_redrawLine(struct Document* doc, struct Line* l, int i, struct 
             sprintf(tmp, "%*s ", doc->rootX - 1, "");
         screen_wc_addstr(tmp);
     }
-    screen_move(i, doc->rootX);
+    screen_move((struct Vec2) { .y = i, .x = doc->rootX });
     if (l->width < 0)
         l->width = COLPOS(l, l->len);
     if (l->len == 0 || l->width - 1 < column) {

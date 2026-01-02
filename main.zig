@@ -64,7 +64,7 @@ export fn enterRawMode() void {
 
 export fn exitRawMode() void {
     if (g_term.is_rawmode) {
-        c.screen_move(c.LASTLINE(), 0);
+        c.screen_move(.{ .y = c.LASTLINE(), .x = 0 });
         c.screen_clrtoeolx();
         c.tty_write_screen();
         c.loadImage(c.IMG_FLAG_STOP);
@@ -625,11 +625,11 @@ export fn screen_addmch(pc: [*c]const u8, len: usize, width: usize) void {
     screen_addmchz((&buf).ptr, len, width);
 }
 
-export fn screen_move(line: usize, column: usize) void {
-    if (line >= 0 and line < g_screen.line_count)
-        g_screen.y = line;
-    if (column >= 0 and column < g_screen.col_count)
-        g_screen.x = column;
+export fn screen_move(pos: c.Vec2) void {
+    if (pos.y < g_screen.line_count)
+        g_screen.y = pos.y;
+    if (pos.x < g_screen.col_count)
+        g_screen.x = pos.x;
 }
 
 fn CHAR_MODE(prop: c.ScreenCellProperty) c.ScreenCellProperty {
@@ -740,7 +740,7 @@ export fn screen_clear() void {
         g_screen.lines[i].isdirty = c.L_UNUSED;
     }
 
-    c.screen_move(0, 0);
+    c.screen_move(.{ .y = 0, .x = 0 });
     g_screen.mode = c.C_ASCII;
 }
 
@@ -778,7 +778,7 @@ fn screen_clrtoeol_with_bcolor() void {
     for (g_screen.x..g_screen.col_count) |_| {
         screen_add_whitespace();
     }
-    c.screen_move(cli, cco);
+    c.screen_move(.{ .y = cli, .x = cco });
     g_screen.mode = pr;
 }
 

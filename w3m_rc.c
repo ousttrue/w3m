@@ -31,7 +31,7 @@
 #include "tab.h"
 #include "buffer.h"
 #include "image.h"
-#include "terms.h"
+#include "screen.h"
 #include "display.h"
 #include "config.h"
 #include "indep.h"
@@ -2359,7 +2359,7 @@ void showProgress(int64_t* linelen, int64_t* trbyte, size_t current_content_leng
         double ratio;
         cur_time = time(0);
         if (*trbyte == 0) {
-            screen_move(LASTLINE(), 0);
+            screen_move((struct Vec2) { .y = LASTLINE(), .x = 0 });
             screen_clrtoeolx();
             start_time = cur_time;
         }
@@ -2368,7 +2368,7 @@ void showProgress(int64_t* linelen, int64_t* trbyte, size_t current_content_leng
         if (cur_time == last_time)
             return;
         last_time = cur_time;
-        screen_move(LASTLINE(), 0);
+        screen_move((struct Vec2) { .y = LASTLINE(), .x = 0 });
         ratio = 100.0 * (*trbyte) / current_content_length;
         fmtrbyte = convert_size2(*trbyte, current_content_length, 1);
         duration = cur_time - start_time;
@@ -2389,7 +2389,7 @@ void showProgress(int64_t* linelen, int64_t* trbyte, size_t current_content_leng
         screen_wc_addstr(messages->ptr);
         pos = 42;
         i = pos + (TTY_COLS() - pos - 1) * (*trbyte) / current_content_length;
-        screen_move(LASTLINE(), pos);
+        screen_move((struct Vec2) { .y = LASTLINE(), .x = pos });
         screen_standout();
         screen_addch(' ', 1);
         for (j = pos + 1; j <= i; j++)
@@ -2399,7 +2399,7 @@ void showProgress(int64_t* linelen, int64_t* trbyte, size_t current_content_leng
     } else {
         cur_time = time(0);
         if (*trbyte == 0) {
-            screen_move(LASTLINE(), 0);
+            screen_move((struct Vec2) { .y = LASTLINE(), .x = 0 });
             screen_clrtoeolx();
             start_time = cur_time;
         }
@@ -2408,7 +2408,7 @@ void showProgress(int64_t* linelen, int64_t* trbyte, size_t current_content_leng
         if (cur_time == last_time)
             return;
         last_time = cur_time;
-        screen_move(LASTLINE(), 0);
+        screen_move((struct Vec2) { .y = LASTLINE(), .x = 0 });
         fmtrbyte = convert_size(*trbyte, 1);
         duration = cur_time - start_time;
         if (duration) {
