@@ -2287,7 +2287,7 @@ void _followI(bool do_download)
     struct Anchor* a = retrieveCurrentImg(Currentbuf);
     if (a == NULL)
         return;
-    message(Sprintf("loading %s", a->url)->ptr, 0, 0);
+    message(Sprintf("loading %s", a->url)->ptr);
     struct Buffer* buf = loadGeneralFile(a->url, NULL,
         (struct LoadOption) { .base_url = baseURL(Currentbuf), .referer = NULL, .flag = 0 }, do_download);
     if (buf == NULL) {
@@ -3427,7 +3427,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
     copyBuffer(&sbuf, Currentbuf);
     if (Currentbuf->bufferprop & BP_FRAME && (fbuf = Currentbuf->linkBuffer[LB_N_FRAME])) {
         if (fmInitialized()) {
-            message("Rendering frame", 0, 0);
+            message("Rendering frame");
         }
         if (!(buf = renderFrame(fbuf, 1))) {
             return;
@@ -3466,8 +3466,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
         request = NULL;
     }
     url = parsedURL2Str(&Currentbuf->content.url);
-    /* FIXME: gettextize? */
-    message("Reloading...", 0, 0);
+    message("Reloading...");
     old_charset = getRuntime()->DocumentCharset;
     if (Currentbuf->doc.charset != WC_CES_US_ASCII)
         getRuntime()->DocumentCharset = Currentbuf->doc.charset;
@@ -3616,7 +3615,7 @@ DEFUN(rFrame, FRAME, "Toggle rendering HTML frames")
         return;
     }
     if (fmInitialized()) {
-        message("Rendering frame", 0, 0);
+        message("Rendering frame");
     }
     buf = renderFrame(Currentbuf, 0);
     if (buf == NULL) {

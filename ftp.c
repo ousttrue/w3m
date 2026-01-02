@@ -175,10 +175,7 @@ _ftp_login(FTP ftp)
     if (status != 220)
         return false;
     if (fmInitialized()) {
-        message(Sprintf("Sending FTP username (%s) to remote server.",
-                    ftp->user)
-                    ->ptr,
-            0, 0);
+        message(Sprintf("Sending FTP username (%s) to remote server.", ftp->user)->ptr);
     }
     ftp_command(ftp, "USER", ftp->user, &status);
     /*
@@ -189,7 +186,7 @@ _ftp_login(FTP ftp)
     if (status != 331)
         return false;
     if (fmInitialized()) {
-        message("Sending FTP password to remote server.", 0, 0);
+        message("Sending FTP password to remote server.");
     }
     ftp_command(ftp, "PASS", ftp->pass, &status);
     if (status != 230)

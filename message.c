@@ -55,14 +55,15 @@ message_list_panel(void)
     return loadHTMLString(tmp);
 }
 
-void message(const char* s, int return_x, int return_y)
+void message(const char* s)
 {
     if (!fmInitialized())
         return;
+    struct Vec2 pos = screen_position();
     screen_move(LASTLINE(), 0);
     screen_wc_addstr_width(s, TTY_COLS() - 1);
     screen_clrtoeolx();
-    screen_move(return_y, return_x);
+    screen_move(pos.y, pos.x);
 }
 
 void disp_err_message(const char* s, int redraw_current)
@@ -79,11 +80,8 @@ void disp_message_nsec(const char* s, int redraw_current, int sec, int purge, in
         fprintf(stderr, "%s\n", conv_to_system(s));
         return;
     }
-    if (CurrentTab() != NULL && Currentbuf != NULL)
-        message(s, Currentbuf->doc.cursorX + Currentbuf->doc.rootX,
-            Currentbuf->doc.cursorY + Currentbuf->doc.rootY);
-    else
-        message(s, LASTLINE(), 0);
+    message(s);
+    screen_move(LASTLINE(), 0);
 }
 
 void disp_message(const char* s, int redraw_current)
@@ -219,7 +217,8 @@ void displayMsg(struct Buffer* buf)
     }
     displayDelayedMessage();
     screen_standout();
-    message(msg->ptr, buf->doc.cursorX + buf->doc.rootX, buf->doc.cursorY + buf->doc.rootY);
+    message(msg->ptr);
+    screen_move(buf->doc.cursorY + buf->doc.rootY, buf->doc.cursorX + buf->doc.rootX);
     screen_standend();
     term_title(conv_to_system(buf->doc.title));
 }

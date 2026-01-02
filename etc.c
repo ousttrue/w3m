@@ -381,7 +381,7 @@ FILE* openSecretFile(const char* fname)
         /* do nothing */;
     else if ((st.st_mode & (S_IRWXG | S_IRWXO)) != 0) {
         if (fmInitialized()) {
-            message(Sprintf(FILE_IS_READABLE_MSG, fname)->ptr, 0, 0);
+            message(Sprintf(FILE_IS_READABLE_MSG, fname)->ptr);
         } else {
             fputs(Sprintf(FILE_IS_READABLE_MSG, fname)->ptr, stderr);
             fputc('\n', stderr);

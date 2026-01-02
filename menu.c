@@ -1253,7 +1253,7 @@ menuForwardSearch(struct Menu* menu, const char* str, int from)
     int i;
     char* p;
     if ((p = regexCompile(str, getRuntime()->IgnoreCase)) != NULL) {
-        message(p, 0, 0);
+        message(p);
         return -1;
     }
     if (from < 0)
@@ -1300,7 +1300,7 @@ menuBackwardSearch(struct Menu* menu, const char* str, int from)
     int i;
     char* p;
     if ((p = regexCompile(str, getRuntime()->IgnoreCase)) != NULL) {
-        message(p, 0, 0);
+        message(p);
         return -1;
     }
     if (from >= menu->nitem)

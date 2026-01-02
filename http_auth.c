@@ -480,7 +480,7 @@ void getAuthCookie(struct http_auth* hauth, const char* auth_header,
          * Authorization: header is sent to the server.
          */
         if (fmInitialized()) {
-            message("Wrong username or password", 0, 0);
+            message("Wrong username or password");
         } else
             fprintf(stderr, "Wrong username or password\n");
         sleep(1);

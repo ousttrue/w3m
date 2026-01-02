@@ -258,7 +258,7 @@ void getHttpResponseHeader(struct Content* content, struct Url url,
                 p++;
             content->http_response_code = atoi(p);
             // if (fmInitialized()) {
-            message(lineBuf2->ptr, 0, 0);
+            message(lineBuf2->ptr);
             // }
         } else if (!strncasecmp(lineBuf2->ptr, "content-encoding:", 17)) {
             const char* p = lineBuf2->ptr + 17;
@@ -597,8 +597,7 @@ struct ContentData get_content(const char* path,
 
         if (fmInitialized()) {
             exitRawMode();
-            /* FIXME: gettextize? */
-            message(Sprintf("%s contacted. Waiting for reply...", s.content.url.host)->ptr, 0, 0);
+            message(Sprintf("%s contacted. Waiting for reply...", s.content.url.host)->ptr);
         }
         getHttpResponseHeader(&s.content, s.content.url, s.stream);
         const char* p;

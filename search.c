@@ -100,7 +100,7 @@ enum SearchResult forwardSearch(struct Buffer* buf, const char* str)
     int pos;
 
     if ((p = regexCompile(str, getRuntime()->IgnoreCase)) != NULL) {
-        message(p, 0, 0);
+        message(p);
         return SR_NOTFOUND;
     }
     l = buf->doc.currentLine;
@@ -171,7 +171,7 @@ enum SearchResult backwardSearch(struct Buffer* buf, const char* str)
     int pos;
 
     if ((p = regexCompile(str, getRuntime()->IgnoreCase)) != NULL) {
-        message(p, 0, 0);
+        message(p);
         return SR_NOTFOUND;
     }
     l = buf->doc.currentLine;

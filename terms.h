@@ -1,4 +1,5 @@
 #pragma once
+#include "geometry.h"
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -60,6 +61,7 @@ enum ScreenLineFlags : uint16_t {
 };
 
 void screen_setup(size_t lines, size_t cols);
+struct Vec2 screen_position();
 void screen_move(size_t line, size_t column);
 void screen_addmch(const char* p, size_t len, size_t width);
 

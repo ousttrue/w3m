@@ -757,8 +757,9 @@ showImageProgress(struct Buffer* buf)
     if (n) {
         if (getRuntime()->enable_inline_image && n == l)
             drawImage(buf);
-        message(Sprintf("%d/%d images loaded", l, n)->ptr,
-            buf->doc.cursorX + buf->doc.rootX, buf->doc.cursorY + buf->doc.rootY);
+        message(Sprintf("%d/%d images loaded", l, n)->ptr);
+        screen_move(buf->doc.cursorY + buf->doc.rootY,
+            buf->doc.cursorX + buf->doc.rootX);
     }
 }
 

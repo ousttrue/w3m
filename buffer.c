@@ -285,8 +285,7 @@ listBuffer(struct Buffer* top, struct Buffer* current)
     }
     screen_standout();
     /* FIXME: gettextize? */
-    message("Buffer selection mode: SPC for select / D for delete buffer", 0,
-        0);
+    message("Buffer selection mode: SPC for select / D for delete buffer");
     screen_standend();
     /*
      * move(LASTLINE(), COLS - 1); */

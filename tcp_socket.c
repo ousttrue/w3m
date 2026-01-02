@@ -227,7 +227,7 @@ int tcp_open_v4(const char* hostname,
 
     if (fmInitialized()) {
         /* FIXME: gettextize? */
-        message(Sprintf("Opening socket...")->ptr, 0, 0);
+        message(Sprintf("Opening socket...")->ptr);
     }
     if (SETJMP(AbortLoading) != 0) {
         if (sock >= 0)
@@ -257,7 +257,7 @@ int tcp_open_v4(const char* hostname,
         hostaddr.sin_family = AF_INET;
         hostaddr.sin_port = s_port;
         if (fmInitialized()) {
-            message(Sprintf("Connecting to %s", hostname)->ptr, 0, 0);
+            message(Sprintf("Connecting to %s", hostname)->ptr);
         }
         if (connect(sock, (struct sockaddr*)&hostaddr,
                 sizeof(struct sockaddr_in))
@@ -268,8 +268,7 @@ int tcp_open_v4(const char* hostname,
         char** h_addr_list;
         int result = -1;
         if (fmInitialized()) {
-            message(Sprintf("Performing hostname lookup on %s", hostname)->ptr,
-                0, 0);
+            message(Sprintf("Performing hostname lookup on %s", hostname)->ptr);
         }
         if ((entry = gethostbyname(hostname)) == NULL) {
             goto error;
@@ -280,7 +279,7 @@ int tcp_open_v4(const char* hostname,
             bcopy((void*)h_addr_list[0], (void*)&hostaddr.sin_addr,
                 entry->h_length);
             if (fmInitialized()) {
-                message(Sprintf("Connecting to %s", hostname)->ptr, 0, 0);
+                message(Sprintf("Connecting to %s", hostname)->ptr);
             }
             if ((result = connect(sock, (struct sockaddr*)&hostaddr,
                      sizeof(struct sockaddr_in)))
@@ -310,8 +309,7 @@ int tcp_open_v6(const char* hostname,
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
 
     if (fmInitialized()) {
-        /* FIXME: gettextize? */
-        message(Sprintf("Opening socket...")->ptr, 0, 0);
+        message(Sprintf("Opening socket...")->ptr);
     }
     if (SETJMP(AbortLoading) != 0) {
         if (sock >= 0)

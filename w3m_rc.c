@@ -522,7 +522,7 @@ struct Buffer* loadLink(const char* url, const char* target, const char* referer
     struct Url *base, pu;
     const int* no_referer_ptr;
 
-    message(Sprintf("loading %s", url)->ptr, 0, 0);
+    message(Sprintf("loading %s", url)->ptr);
 
     no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->content.url);
     base = baseURL(Currentbuf);
@@ -2417,6 +2417,6 @@ void showProgress(int64_t* linelen, int64_t* trbyte, size_t current_content_leng
         } else {
             messages = Sprintf("%7s loaded", fmtrbyte);
         }
-        message(messages->ptr, 0, 0);
+        message(messages->ptr);
     }
 }
