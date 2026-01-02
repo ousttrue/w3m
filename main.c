@@ -453,19 +453,7 @@ bool w3m_args(int argc, char** argv)
                     getRuntime()->WrapDefault = FALSE;
                 else
                     getRuntime()->WrapDefault = TRUE;
-            } else if (!strcmp("-dump", argv[i]))
-                getRuntime()->w3m_dump = DUMP_BUFFER;
-            else if (!strcmp("-dump_source", argv[i]))
-                getRuntime()->w3m_dump = DUMP_SOURCE;
-            else if (!strcmp("-dump_head", argv[i]))
-                getRuntime()->w3m_dump = DUMP_HEAD;
-            else if (!strcmp("-dump_both", argv[i]))
-                getRuntime()->w3m_dump = (DUMP_HEAD | DUMP_SOURCE);
-            else if (!strcmp("-dump_extra", argv[i]))
-                getRuntime()->w3m_dump = (DUMP_HEAD | DUMP_SOURCE | DUMP_EXTRA);
-            else if (!strcmp("-halfdump", argv[i]))
-                getRuntime()->w3m_dump = DUMP_HALFDUMP;
-            else if (!strcmp("-cols", argv[i])) {
+            } else if (!strcmp("-cols", argv[i])) {
                 if (++i >= argc)
                     usage();
                 tty_set_cols(atoi(argv[i]));
@@ -578,28 +566,12 @@ bool w3m_args(int argc, char** argv)
     if (getRuntime()->BookmarkFile == NULL)
         getRuntime()->BookmarkFile = rcFile(BOOKMARK);
 
-    if (!isatty(1) && !getRuntime()->w3m_dump) {
-        /* redirected output */
-        getRuntime()->w3m_dump = DUMP_BUFFER;
-    }
-    if (getRuntime()->w3m_dump) {
-        if (TTY_COLS() == 0)
-            tty_set_cols(DEFAULT_COLS);
-    }
-
-    if (!getRuntime()->w3m_dump) {
-        enterRawMode();
-        // mySignal(SIGWINCH, resize_hook);
-    } else if (w3m_halfdump && getRuntime()->displayImage) {
-        getRuntime()->activeImage = true;
-    }
+    enterRawMode();
 
     sync_with_option();
 
     initCookie();
 
-    if (getRuntime()->w3m_dump)
-        mySignal(SIGINT, SIG_IGN);
     mySignal(SIGCHLD, sig_chld);
     mySignal(SIGPIPE, SigPipe);
 
@@ -667,12 +639,7 @@ bool w3m_args(int argc, char** argv)
                 url = file_to_url(load_argv[i]);
             else
                 url = url_encode(conv_from_system(load_argv[i]), NULL, 0);
-            if (getRuntime()->w3m_dump == DUMP_HEAD) {
-                request = New(struct FormList);
-                request->method = FORM_METHOD_HEAD;
-                newbuf = loadGeneralFile(url, request,
-                    (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER, .flag = 0 }, false);
-            } else {
+            {
                 if (post_file && i == 0) {
                     FILE* fp;
                     Str body;
@@ -729,21 +696,7 @@ bool w3m_args(int argc, char** argv)
         assert(Currentbuf);
         assert(Firstbuf);
 
-        if (!getRuntime()->w3m_dump || getRuntime()->w3m_dump == DUMP_BUFFER) {
-            if (Currentbuf->doc.frameset != NULL && getRuntime()->RenderFrame)
-                rFrame();
-        }
-        if (getRuntime()->w3m_dump)
-            do_dump(Currentbuf);
-        else {
-            Currentbuf = newbuf;
-        }
-    }
-    if (getRuntime()->w3m_dump) {
-        if (err_msg->length)
-            fprintf(stderr, "%s", err_msg->ptr);
-        save_cookies();
-        w3m_exit(0);
+        Currentbuf = newbuf;
     }
 
     if (hasDownloadList()) {
@@ -790,96 +743,6 @@ dump_source(struct Buffer* buf)
         putchar(c);
     }
     fclose(f);
-}
-
-static void
-dump_head(struct Buffer* buf)
-{
-    if (buf->content.document_header == NULL) {
-        if (getRuntime()->w3m_dump & DUMP_EXTRA)
-            printf("\n");
-        return;
-    }
-    TextListItem* ti;
-    for (ti = buf->content.document_header->first; ti; ti = ti->next) {
-        printf("%s",
-            wc_conv_strict(ti->ptr, getRuntime()->InnerCharset,
-                buf->doc.charset)
-                ->ptr);
-    }
-    puts("");
-}
-
-static void
-dump_extra(struct Buffer* buf)
-{
-    printf("W3m-current-url: %s\n", parsedURL2Str(&buf->content.url)->ptr);
-    if (buf->doc.baseURL)
-        printf("W3m-base-url: %s\n", parsedURL2Str(buf->doc.baseURL)->ptr);
-    printf("W3m-document-charset: %s\n",
-        wc_ces_to_charset(buf->doc.charset));
-
-    if (buf->content.ssl_certificate) {
-        Str tmp = Strnew();
-        for (const char* p = buf->content.ssl_certificate; *p; p++) {
-            Strcat_char(tmp, *p);
-            if (*p == '\n') {
-                for (; *(p + 1) == '\n'; p++)
-                    ;
-                if (*(p + 1))
-                    Strcat_char(tmp, '\t');
-            }
-        }
-        if (Strlastchar(tmp) != '\n')
-            Strcat_char(tmp, '\n');
-        printf("W3m-ssl-certificate: %s", tmp->ptr);
-    }
-}
-
-static int
-cmp_anchor_hseq(const void* a, const void* b)
-{
-    return (*((const struct Anchor**)a))->hseq - (*((const struct Anchor**)b))->hseq;
-}
-
-static void
-do_dump(struct Buffer* buf)
-{
-    MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
-
-    prevtrap = mySignal(SIGINT, intTrap);
-    if (SETJMP(IntReturn) != 0) {
-        mySignal(SIGINT, prevtrap);
-        return;
-    }
-    if (getRuntime()->w3m_dump & DUMP_EXTRA)
-        dump_extra(buf);
-    if (getRuntime()->w3m_dump & DUMP_HEAD)
-        dump_head(buf);
-    if (getRuntime()->w3m_dump & DUMP_SOURCE)
-        dump_source(buf);
-    if (getRuntime()->w3m_dump == DUMP_BUFFER) {
-        int i;
-        saveBuffer(buf, stdout, FALSE);
-        if (getRuntime()->displayLinkNumber && buf->doc.href) {
-            int nanchor = buf->doc.href->nanchor;
-            printf("\nReferences:\n\n");
-            struct Anchor** in_order = New_N(struct Anchor*, buf->doc.href->nanchor);
-            for (i = 0; i < nanchor; i++)
-                in_order[i] = buf->doc.href->anchors + i;
-            qsort(in_order, nanchor, sizeof(struct Anchor*), cmp_anchor_hseq);
-            for (i = 0; i < nanchor; i++) {
-                struct Url pu;
-                char* url;
-                if (in_order[i]->slave)
-                    continue;
-                parseURL2(in_order[i]->url, &pu, baseURL(buf));
-                url = url_decode2(parsedURL2Str(&pu)->ptr, Currentbuf);
-                printf("[%d] %s\n", in_order[i]->hseq + 1, url);
-            }
-        }
-    }
-    mySignal(SIGINT, prevtrap);
 }
 
 DEFUN(nulcmd, NOTHING NULL @ @ @, "Do nothing")

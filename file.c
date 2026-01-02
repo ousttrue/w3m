@@ -679,7 +679,6 @@ void flushline(struct html_feed_environ* h_env, struct readbuffer* obuf, int ind
     int force, int width)
 {
     TextLineList* buf = h_env->buf;
-    FILE* f = h_env->f;
     Str line = obuf->line, pass = NULL;
     char *hidden_anchor = NULL, *hidden_img = NULL, *hidden_bold = NULL,
          *hidden_under = NULL, *hidden_italic = NULL, *hidden_strike = NULL,
@@ -803,10 +802,6 @@ void flushline(struct html_feed_environ* h_env, struct readbuffer* obuf, int ind
             h_env->maxlimit = lbuf->pos;
         if (buf)
             pushTextLine(buf, lbuf);
-        else if (f) {
-            Strfputs(Str_conv_to_halfdump(lbuf->line), f);
-            fputc('\n', f);
-        }
         if (obuf->flag & RB_SPECIAL || obuf->flag & RB_NFLUSHED)
             h_env->blank_lines = 0;
         else
@@ -818,8 +813,6 @@ void flushline(struct html_feed_environ* h_env, struct readbuffer* obuf, int ind
 #define APPEND(str)                    \
     if (buf)                           \
         appendTextLine(buf, (str), 0); \
-    else if (f)                        \
-    Strfputs((str), f)
 
         while (*p) {
             q = p;
@@ -2007,21 +2000,6 @@ process_form_int(struct HtmlBuilder* hb,
         hb->form_stack = New_Reuse(int, hb->form_stack, hb->forms_size);
     }
     hb->form_stack[hb->form_sp] = fid;
-
-    if (w3m_halfdump) {
-        Str tmp = Sprintf("<form_int fid=\"%d\" action=\"%s\" method=\"%s\"",
-            fid, html_quote(q), html_quote(p));
-        if (s)
-            Strcat(tmp, Sprintf(" enctype=\"%s\"", html_quote(s)));
-        if (tg)
-            Strcat(tmp, Sprintf(" target=\"%s\"", html_quote(tg)));
-        if (n)
-            Strcat(tmp, Sprintf(" name=\"%s\"", html_quote(n)));
-        if (r)
-            Strcat(tmp, Sprintf(" accept-charset=\"%s\"", html_quote(r)));
-        Strcat_charp(tmp, ">");
-        return tmp;
-    }
 
     hb->forms[fid] = newFormList(q, p, r, s, tg, n, NULL);
     return NULL;
@@ -4554,11 +4532,6 @@ print_internal_information(struct HtmlBuilder* hb, struct html_feed_environ* hen
 
     if (henv->buf)
         appendTextLineList(henv->buf, tl);
-    else if (henv->f) {
-        TextLineListItem* p;
-        for (p = tl->first; p; p = p->next)
-            fprintf(henv->f, "%s\n", Str_conv_to_halfdump(p->ptr->line)->ptr);
-    }
 }
 
 void loadHTMLstream(struct input_stream* stream,
@@ -4606,10 +4579,7 @@ void loadHTMLstream(struct input_stream* stream,
 
     init_henv(&htmlenv1, &obuf, envs, MAX_ENV_LEVEL, NULL, newBuf->doc.width, 0);
 
-    if (w3m_halfdump)
-        htmlenv1.f = stdout;
-    else
-        htmlenv1.buf = newTextLineList();
+    htmlenv1.buf = newTextLineList();
     hb->cur_baseURL = baseURL(newBuf);
 
     if (SETJMP(AbortLoading) != 0) {
@@ -4633,10 +4603,6 @@ void loadHTMLstream(struct input_stream* stream,
     while ((lineBuf2 = is_get_str(stream, true)) && lineBuf2->length) {
 
         linelen += lineBuf2->length;
-        if (getRuntime()->w3m_dump & DUMP_EXTRA)
-            printf("W3m-in-progress: %s\n", convert_size2(linelen, newBuf->content.current_content_length, TRUE));
-        if (getRuntime()->w3m_dump & DUMP_SOURCE)
-            continue;
         showProgress(&linelen, &trbyte, newBuf->content.current_content_length);
         /*
          * if (frame_source)
@@ -4666,11 +4632,6 @@ void loadHTMLstream(struct input_stream* stream,
 
     if (htmlenv1.title)
         newBuf->doc.title = htmlenv1.title;
-    if (w3m_halfdump) {
-        TRAP_OFF;
-        print_internal_information(hb, &htmlenv1);
-        return;
-    }
 
 phase2:
     newBuf->doc.trbyte = trbyte + linelen;
@@ -4760,10 +4721,6 @@ loadBuffer(struct Url url, struct input_stream* stream,
         if (src)
             Strfputs(lineBuf2, src);
         linelen += lineBuf2->length;
-        if (getRuntime()->w3m_dump & DUMP_EXTRA)
-            printf("W3m-in-progress: %s\n", convert_size2(linelen, newBuf->content.current_content_length, TRUE));
-        if (getRuntime()->w3m_dump & DUMP_SOURCE)
-            continue;
         showProgress(&linelen, &trbyte, newBuf->content.current_content_length);
         if (frame_source)
             continue;

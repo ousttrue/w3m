@@ -348,7 +348,7 @@ frame_download_source(struct frame_body* b, struct Url* currentURL,
         b->flags = 0;
     default:
         getRuntime()->is_redisplay = TRUE;
-        getRuntime()->w3m_dump |= DUMP_FRAME;
+        // getRuntime()->w3m_dump |= DUMP_FRAME;
         buf = loadGeneralFile(b->url, b->request,
             (struct LoadOption) {
                 .base_url = baseURL ? baseURL : currentURL,
@@ -359,7 +359,7 @@ frame_download_source(struct frame_body* b, struct Url* currentURL,
         /* XXX certificate? */
         if (buf)
             b->ssl_certificate = buf->content.ssl_certificate;
-        getRuntime()->w3m_dump &= ~DUMP_FRAME;
+        // getRuntime()->w3m_dump &= ~DUMP_FRAME;
         getRuntime()->is_redisplay = FALSE;
         break;
     }

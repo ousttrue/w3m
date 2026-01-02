@@ -42,7 +42,6 @@ struct Runtime g_runtime = {
     .cookie_reject_domains = (NULL),
     .cookie_accept_domains = (NULL),
     .cookie_avoid_wrong_number_of_dots = (NULL),
-    .w3m_dump = (0),
     .header_string = (NULL),
     .override_content_type = (false),
     .override_user_agent = (false),
@@ -179,7 +178,6 @@ struct Runtime g_runtime = {
     .SystemCharset = (SYSTEM_CHARSET),
     .BookmarkCharset = (SYSTEM_CHARSET),
 
-    .ExtHalfdump = (false),
     .Tabstop = 8,
     .highIntensityColors = (false),
 

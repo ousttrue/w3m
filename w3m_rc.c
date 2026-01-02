@@ -111,13 +111,6 @@ Str Str_conv_to_system(Str x)
     return wc_Str_conv_strict(x, g_runtime.InnerCharset, g_runtime.SystemCharset);
 }
 
-Str Str_conv_to_halfdump(Str x)
-{
-    return (g_runtime.ExtHalfdump
-            ? wc_Str_conv((x), g_runtime.InnerCharset, g_runtime.DisplayCharset)
-            : (x));
-}
-
 Str Str_conv_from_system(Str x)
 {
     return wc_Str_conv((x), g_runtime.SystemCharset, g_runtime.InnerCharset);
@@ -1517,8 +1510,6 @@ struct param_ptr params10[] = {
         CMT_SYSTEM_CHARSET, (void*)&system_charset_str },
     { "follow_locale", P_CHARINT, PI_ONOFF, (void*)&g_runtime.FollowLocale,
         CMT_FOLLOW_LOCALE, NULL },
-    { "ext_halfdump", P_CHARINT, PI_ONOFF, (void*)&g_runtime.ExtHalfdump,
-        CMT_EXT_HALFDUMP, NULL },
     { "use_wide", P_CHARINT, PI_ONOFF, (void*)&WcOption.use_wide, CMT_USE_WIDE,
         NULL },
     { "use_combining", P_CHARINT, PI_ONOFF, (void*)&WcOption.use_combining,
