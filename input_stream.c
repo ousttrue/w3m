@@ -693,7 +693,7 @@ struct ContentAndStream openURL(struct Url url, struct FormList* request,
     return us;
 }
 
-void is_write_all(struct input_stream* stream, FILE* src)
+void is_readall_to_file(struct input_stream* stream, FILE* src)
 {
     for (Str lineBuf2 = is_get_str(stream, false);
         lineBuf2 && lineBuf2->length;

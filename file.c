@@ -291,7 +291,7 @@ loadGeneralFile(const char* path, struct FormList* request, struct LoadOption op
             FILE* src = fopen(tmp->ptr, "w");
             assert(src);
             data.content.sourcefile = tmp->ptr;
-            is_write_all(data.stream, src);
+            is_readall_to_file(data.stream, src);
             fclose(src);
 
             struct Buffer* b = newBuffer(INIT_BUFFER_WIDTH);
@@ -4365,7 +4365,7 @@ loadHTMLBuffer(struct Url url, struct input_stream* stream, const char* t,
         FILE* src = fopen(tmp->ptr, "w");
         if (src) {
             newBuf->content.sourcefile = tmp->ptr;
-            is_write_all(stream, src);
+            is_readall_to_file(stream, src);
             fclose(src);
         }
         return newBuf;
@@ -4861,7 +4861,7 @@ image_buffer:
 
     newBuf->content.mailcap_source = tmpf->ptr;
     struct input_stream* tmp_stream = is_from_str(tmp);
-    is_write_all(tmp_stream, src);
+    is_readall_to_file(tmp_stream, src);
 
     is_close(tmp_stream);
     fclose(src);
