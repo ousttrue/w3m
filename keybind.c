@@ -1,6 +1,5 @@
-/* $Id: keybind.c,v 1.10 2006/05/29 12:17:25 inu Exp $ */
-#include "funcheader.h"
 #include "funcname2.h"
+#include "func_define.h"
 
 unsigned char GlobalKeymap[128] = {
 /*  C-@     C-a     C-b     C-c     C-d     C-e     C-f     C-g      */
