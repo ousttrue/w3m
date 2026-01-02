@@ -24,6 +24,7 @@ int is_read(struct input_stream* is, char* dst, int bufsize);
 int is_file_no(struct input_stream* is);
 bool is_save2tmp(struct input_stream* is, const char* tmpf);
 void is_readall_to_file(struct input_stream* stream, FILE* src);
+Str is_readall(struct input_stream* stream);
 
 struct FormList;
 struct HttpRequest;
