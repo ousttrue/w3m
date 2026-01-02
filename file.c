@@ -265,10 +265,15 @@ loadGeneralFile(const char* path, struct FormList* request, struct LoadOption op
                 Strcat_charp(tmp, d->ext);
             }
             FILE* src = fopen(tmp->ptr, "w");
-            assert(src);
-            data.content.sourcefile = tmp->ptr;
-            is_readall_to_file(data.stream, src);
-            fclose(src);
+            if (src) {
+                // assert(src);
+                data.content.sourcefile = tmp->ptr;
+                // is_readall_to_file(data.stream, src);
+                Str s = is_readall(data.stream);
+                // fwrite(s->ptr, s->length, 1, src);
+                fwrite(s->ptr, 1, s->length, src);
+                fclose(src);
+            }
 
             struct Buffer* b = newBuffer(INIT_BUFFER_WIDTH);
             b->content = data.content;

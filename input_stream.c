@@ -697,7 +697,7 @@ void is_readall_to_file(struct input_stream* stream, FILE* src)
 {
     for (Str lineBuf2 = is_get_str(stream, false);
         lineBuf2 && lineBuf2->length;
-        lineBuf2 = is_get_str(stream, true)) {
+        lineBuf2 = is_get_str(stream, false)) {
         Strfputs(lineBuf2, src);
     }
     is_close(stream);
@@ -708,8 +708,8 @@ Str is_readall(struct input_stream* stream)
     Str s = Strnew();
     for (Str lineBuf2 = is_get_str(stream, false);
         lineBuf2 && lineBuf2->length;
-        lineBuf2 = is_get_str(stream, true)) {
-        Strcat_charp(s, lineBuf2->ptr);
+        lineBuf2 = is_get_str(stream, false)) {
+        Strcat_charp_n(s, lineBuf2->ptr, lineBuf2->length);
     }
     is_close(stream);
     return s;
