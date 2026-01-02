@@ -498,14 +498,14 @@ void query_from_followform(Str* query, struct FormItemList* fi, int multipart)
     }
 }
 
-static struct Buffer*
-loadNormalBuf(struct Buffer* buf, int renderframe)
-{
-    pushBuffer(buf);
-    if (renderframe && g_runtime.RenderFrame && Currentbuf->doc.frameset != NULL)
-        rFrame();
-    return buf;
-}
+// static struct Buffer*
+// loadNormalBuf(struct Buffer* buf, int renderframe)
+// {
+//     pushBuffer(buf);
+//     if (renderframe && g_runtime.RenderFrame && Currentbuf->doc.frameset != NULL)
+//         rFrame();
+//     return buf;
+// }
 
 struct Buffer* loadLink(const char* url, struct FormList* request,
     const char* target, const char* referer, struct FollowOption option)
@@ -525,66 +525,67 @@ struct Buffer* loadLink(const char* url, struct FormList* request,
         disp_err_message(emsg, FALSE);
         return NULL;
     }
+    pushBuffer(buf);
 
-    struct Url pu;
-    parseURL2(url, &pu, base);
-    pushHashHist(g_runtime.URLHist, parsedURL2Str(&pu)->ptr);
-
-    if (!option.on_target) /* open link as an indivisual page */
-        return loadNormalBuf(buf, TRUE);
-
-    if (option.do_download) /* download (thus no need to render frames) */
-        return loadNormalBuf(buf, FALSE);
-
-    if (target == NULL || /* no target specified (that means this page is not a frame page) */
-        !strcmp(target, "_top") || /* this link is specified to be opened as an indivisual * page */
-        !(Currentbuf->bufferprop & BP_FRAME) /* This page is not a frame page */
-    ) {
-        return loadNormalBuf(buf, TRUE);
-    }
-    struct Buffer* nfbuf = Currentbuf->linkBuffer[LB_N_FRAME];
-    if (nfbuf == NULL) {
-        /* original page (that contains <frameset> tag) doesn't exist */
-        return loadNormalBuf(buf, TRUE);
-    }
-
-    union frameset_element* f_element = search_frame(nfbuf->doc.frameset, target);
-    if (f_element == NULL) {
-        /* specified target doesn't exist in this frameset */
-        return loadNormalBuf(buf, TRUE);
-    }
-
-    /* frame page */
-
-    /* stack current frameset */
-    pushFrameTree(&(nfbuf->doc.frameQ), copyFrameSet(nfbuf->doc.frameset), Currentbuf);
-    /* delete frame view buffer */
-    delBuffer(Currentbuf);
-    Currentbuf = nfbuf;
-    /* nfbuf->frameset = copyFrameSet(nfbuf->frameset); */
-    resetFrameElement(f_element, buf, referer, request);
-    discardBuffer(buf);
-    rFrame();
-    {
-        struct Anchor* al = NULL;
-        char* label = pu.label;
-
-        if (label && f_element->element->attr == F_BODY) {
-            al = searchAnchor(f_element->body->nameList, label);
-        }
-        if (!al) {
-            label = Strnew_m_charp("_", target, NULL)->ptr;
-            al = searchURLLabel(Currentbuf, label);
-        }
-        if (al) {
-            doc_gotoLine(&Currentbuf->doc, al->start.line);
-            if (g_runtime.label_topline)
-                Currentbuf->doc.topLine = doc_lineSkip(&Currentbuf->doc, Currentbuf->doc.topLine,
-                    Currentbuf->doc.currentLine->linenumber - Currentbuf->doc.topLine->linenumber);
-            Currentbuf->doc.pos = al->start.pos;
-            doc_arrangeCursor(&Currentbuf->doc);
-        }
-    }
+    // struct Url pu;
+    // parseURL2(url, &pu, base);
+    // pushHashHist(g_runtime.URLHist, parsedURL2Str(&pu)->ptr);
+    //
+    // if (!option.on_target) /* open link as an indivisual page */
+    //     return loadNormalBuf(buf, TRUE);
+    //
+    // if (option.do_download) /* download (thus no need to render frames) */
+    //     return loadNormalBuf(buf, FALSE);
+    //
+    // if (target == NULL || /* no target specified (that means this page is not a frame page) */
+    //     !strcmp(target, "_top") || /* this link is specified to be opened as an indivisual * page */
+    //     !(Currentbuf->bufferprop & BP_FRAME) /* This page is not a frame page */
+    // ) {
+    //     return loadNormalBuf(buf, TRUE);
+    // }
+    // struct Buffer* nfbuf = Currentbuf->linkBuffer[LB_N_FRAME];
+    // if (nfbuf == NULL) {
+    //     /* original page (that contains <frameset> tag) doesn't exist */
+    //     return loadNormalBuf(buf, TRUE);
+    // }
+    //
+    // union frameset_element* f_element = search_frame(nfbuf->doc.frameset, target);
+    // if (f_element == NULL) {
+    //     /* specified target doesn't exist in this frameset */
+    //     return loadNormalBuf(buf, TRUE);
+    // }
+    //
+    // /* frame page */
+    //
+    // /* stack current frameset */
+    // pushFrameTree(&(nfbuf->doc.frameQ), copyFrameSet(nfbuf->doc.frameset), Currentbuf);
+    // /* delete frame view buffer */
+    // delBuffer(Currentbuf);
+    // Currentbuf = nfbuf;
+    // /* nfbuf->frameset = copyFrameSet(nfbuf->frameset); */
+    // resetFrameElement(f_element, buf, referer, request);
+    // discardBuffer(buf);
+    // rFrame();
+    // {
+    //     struct Anchor* al = NULL;
+    //     char* label = pu.label;
+    //
+    //     if (label && f_element->element->attr == F_BODY) {
+    //         al = searchAnchor(f_element->body->nameList, label);
+    //     }
+    //     if (!al) {
+    //         label = Strnew_m_charp("_", target, NULL)->ptr;
+    //         al = searchURLLabel(Currentbuf, label);
+    //     }
+    //     if (al) {
+    //         doc_gotoLine(&Currentbuf->doc, al->start.line);
+    //         if (g_runtime.label_topline)
+    //             Currentbuf->doc.topLine = doc_lineSkip(&Currentbuf->doc, Currentbuf->doc.topLine,
+    //                 Currentbuf->doc.currentLine->linenumber - Currentbuf->doc.topLine->linenumber);
+    //         Currentbuf->doc.pos = al->start.pos;
+    //         doc_arrangeCursor(&Currentbuf->doc);
+    //     }
+    // }
     return buf;
 }
 
