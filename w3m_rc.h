@@ -145,9 +145,13 @@ bool get_pixel_per_cell(int* ppc, int* ppl);
 
 void tabs_prepare();
 bool currentBufferSubmit();
-void _followForm(bool submit, bool on_target, bool do_download);
+struct FollowOption {
+    bool on_target;
+    bool do_download;
+};
+void _followForm(bool submit, struct FollowOption option);
 struct FormList;
-struct Buffer* loadLink(const char* url, const char* target, const char* referer, struct FormList* request, bool on_target, bool do_download);
+struct Buffer* loadLink(const char* url, const char* target, const char* referer, struct FormList* request, struct FollowOption option);
 struct FormItemList;
 void query_from_followform(Str* query, struct FormItemList* fi, int multipart);
 void pushEvent(int cmd, void* data);

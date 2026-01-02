@@ -507,7 +507,7 @@ loadNormalBuf(struct Buffer* buf, int renderframe)
     return buf;
 }
 
-struct Buffer* loadLink(const char* url, const char* target, const char* referer, struct FormList* request, bool on_target, bool do_download)
+struct Buffer* loadLink(const char* url, const char* target, const char* referer, struct FormList* request, struct FollowOption option)
 {
     struct Buffer *buf, *nfbuf;
     union frameset_element* f_element = NULL;
@@ -524,7 +524,7 @@ struct Buffer* loadLink(const char* url, const char* target, const char* referer
     if (referer == NULL)
         referer = parsedURL2RefererStr(&Currentbuf->content.url)->ptr;
     buf = loadGeneralFile(url, request,
-        (struct LoadOption) { .base_url = baseURL(Currentbuf), .referer = referer, .flag = flag }, do_download);
+        (struct LoadOption) { .base_url = baseURL(Currentbuf), .referer = referer, .flag = flag }, option.do_download);
     if (buf == NULL) {
         char* emsg = Sprintf("Can't load %s", url)->ptr;
         disp_err_message(emsg, FALSE);
@@ -534,10 +534,10 @@ struct Buffer* loadLink(const char* url, const char* target, const char* referer
     parseURL2(url, &pu, base);
     pushHashHist(g_runtime.URLHist, parsedURL2Str(&pu)->ptr);
 
-    if (!on_target) /* open link as an indivisual page */
+    if (!option.on_target) /* open link as an indivisual page */
         return loadNormalBuf(buf, TRUE);
 
-    if (do_download) /* download (thus no need to render frames) */
+    if (option.do_download) /* download (thus no need to render frames) */
         return loadNormalBuf(buf, FALSE);
 
     if (target == NULL || /* no target specified (that means this page is not a frame page) */
@@ -665,7 +665,7 @@ save_submit_formlist(struct FormItemList* src)
     return ret;
 }
 
-void _followForm(bool submit, bool on_target, bool do_download)
+void _followForm(bool submit, struct FollowOption option)
 {
     struct Anchor *a, *a2;
     char* p;
@@ -796,7 +796,7 @@ void _followForm(bool submit, bool on_target, bool do_download)
                 Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
             Strcat_charp(tmp2, "?");
             Strcat(tmp2, tmp);
-            loadLink(tmp2->ptr, a->target, NULL, NULL, on_target, do_download);
+            loadLink(tmp2->ptr, a->target, NULL, NULL, option);
         } else if (fi->parent->method == FORM_METHOD_POST) {
             struct Buffer* buf;
             if (multipart) {
@@ -807,7 +807,7 @@ void _followForm(bool submit, bool on_target, bool do_download)
                 fi->parent->body = tmp->ptr;
                 fi->parent->length = tmp->length;
             }
-            buf = loadLink(tmp2->ptr, a->target, NULL, fi->parent, on_target, do_download);
+            buf = loadLink(tmp2->ptr, a->target, NULL, fi->parent, option);
             if (multipart) {
                 unlink(fi->parent->body);
             }
@@ -853,7 +853,7 @@ bool currentBufferSubmit()
     Currentbuf->doc.submit = NULL;
     doc_gotoLine(&Currentbuf->doc, a->start.line);
     Currentbuf->doc.pos = a->start.pos;
-    _followForm(TRUE, true, false);
+    _followForm(TRUE, (struct FollowOption) { .on_target = true, .do_download = false });
     return true;
 }
 

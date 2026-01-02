@@ -81,9 +81,6 @@ static void cmd_loadfile(char* path);
 int show_params_p = 0;
 void show_params(FILE* fp);
 
-static int display_ok = FALSE;
-static void do_dump(struct Buffer*);
-
 static void _goLine(char*);
 static void followTab(struct TabBuffer* tab);
 static void moveTab(struct TabBuffer* t, struct TabBuffer* t2, int right);
@@ -2061,11 +2058,11 @@ gotoLabel(const char* label)
     return;
 }
 
-void _followA(bool on_target, bool do_download)
+void _followA(struct FollowOption option)
 {
     struct Anchor* a = retrieveCurrentImg(Currentbuf);
     if (a && a->image && a->image->map) {
-        _followForm(FALSE, on_target, do_download);
+        _followForm(FALSE, option);
         return;
     }
 
@@ -2077,7 +2074,7 @@ void _followA(bool on_target, bool do_download)
 
     a = retrieveCurrentAnchor(Currentbuf);
     if (a == NULL) {
-        _followForm(FALSE, on_target, do_download);
+        _followForm(FALSE, option);
         return;
     }
     if (*a->url == '#') { /* index within this buffer */
@@ -2106,14 +2103,14 @@ void _followA(bool on_target, bool do_download)
 
         _newT();
         buf = Currentbuf;
-        loadLink(url, a->target, a->referer, NULL, on_target, do_download);
+        loadLink(url, a->target, a->referer, NULL, option);
         if (buf != Currentbuf)
             delBuffer(buf);
         else
             deleteTab(CurrentTab());
         return;
     }
-    loadLink(url, a->target, a->referer, NULL, on_target, do_download);
+    loadLink(url, a->target, a->referer, NULL, option);
 }
 
 /* follow HREF link */
@@ -2121,13 +2118,13 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
 {
     if (Currentbuf->doc.firstLine == NULL)
         return;
-    _followA(true, false);
+    _followA((struct FollowOption) { .on_target = true, .do_download = false });
 }
 
 /* follow HREF link in the buffer */
 void bufferA(void)
 {
-    _followA(false, false);
+    _followA((struct FollowOption) { .on_target = false, .do_download = false });
 }
 
 void _followI(bool do_download)
@@ -2159,13 +2156,13 @@ DEFUN(followI, VIEW_IMAGE, "Display image in viewer")
 /* submit form */
 DEFUN(submitForm, SUBMIT, "Submit form")
 {
-    _followForm(TRUE, true, false);
+    _followForm(TRUE, (struct FollowOption) { .on_target = true, .do_download = false });
 }
 
 /* process form */
 void followForm(void)
 {
-    _followForm(FALSE, true, false);
+    _followForm(FALSE, (struct FollowOption) { .on_target = true, .do_download = false });
 }
 
 /* go to the top anchor */
@@ -2992,7 +2989,7 @@ DEFUN(ldHist, HISTORY, "Show browsing history")
 DEFUN(svA, SAVE_LINK, "Save hyperlink target")
 {
     getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    _followA(true, false);
+    _followA((struct FollowOption) { .on_target = true, .do_download = false });
 }
 
 /* download IMG link */
