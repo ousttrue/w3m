@@ -1,4 +1,5 @@
 #pragma once
+#include "defun.h"
 #include <stdbool.h>
 
 #define K_ESC 0x100
@@ -11,10 +12,6 @@ extern unsigned char GlobalKeymap[];
 extern unsigned char EscKeymap[];
 extern unsigned char EscBKeymap[];
 extern unsigned char EscDKeymap[];
-
-#define DEFUN(funcname, macroname, docstring) void funcname(void)
-
-typedef void (*DefunFunc)();
 
 struct FuncList {
     const char* id;

@@ -1,24 +1,26 @@
 #pragma once
 #include "menu_keybind.h"
+#include "defun.h"
 #include <stdbool.h>
 
-#define MENU_END 0
-#define MENU_NOP 1
-#define MENU_VALUE 2
-#define MENU_FUNC 4
-#define MENU_POPUP 8
+enum MenuItemType {
+    MENU_END = 0,
+    MENU_NOP = 1,
+    MENU_VALUE = 2,
+    MENU_FUNC = 4,
+    MENU_POPUP = 8,
+};
 
 struct MenuItem {
-    int type;
+    enum MenuItemType type;
     const char* label;
     int* variable;
     int value;
-    void (*func)();
+    DefunFunc func;
     struct Menu* popup;
     const char* keys;
     const char* data;
 };
-
 
 struct Menu {
     struct Menu* parent;
