@@ -207,8 +207,9 @@ typedef struct {
 } wc_ces_list;
 
 typedef Str (*ConvFromFunc)(Str is, enum wc_ces f_ces);
-typedef void (*PushToFunc)(Str os, wc_wchar_t, void*);
-typedef Str (*CharConvFunc)(wc_uchar, void*);
+struct wc_status;
+typedef void (*PushToFunc)(Str os, wc_wchar_t, struct wc_status*);
+typedef Str (*CharConvFunc)(wc_uchar, struct wc_status*);
 
 struct wc_ces_info {
     enum wc_ces id;
