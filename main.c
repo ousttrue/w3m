@@ -2041,7 +2041,7 @@ static struct FollowResult gotoLabel(const char* label)
     return res;
 }
 
-struct FollowResult _followA(struct FollowOption option)
+static struct FollowResult _followA(struct Buffer* buf, struct FollowOption option)
 {
     if (Currentbuf->doc.firstLine == NULL) {
         return (struct FollowResult) { 0 };
@@ -2049,7 +2049,7 @@ struct FollowResult _followA(struct FollowOption option)
 
     struct Anchor* a = retrieveCurrentImg(Currentbuf);
     if (a && a->image && a->image->map) {
-        return _followForm(FALSE, option);
+        return _followForm(buf, option, false);
     }
 
     int x = 0, y = 0, map = 0;
@@ -2060,7 +2060,7 @@ struct FollowResult _followA(struct FollowOption option)
 
     a = retrieveCurrentAnchor(Currentbuf);
     if (a == NULL) {
-        return _followForm(FALSE, option);
+        return _followForm(buf, option, false);
     }
     if (*a->url == '#') { /* index within this buffer */
         return gotoLabel(a->url + 1);
@@ -2089,7 +2089,8 @@ struct FollowResult _followA(struct FollowOption option)
 
 DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
 {
-    struct FollowResult res = _followA((struct FollowOption) { .on_target = true, .do_download = false });
+    struct FollowResult res = _followA(Currentbuf,
+        (struct FollowOption) { .on_target = true, .do_download = false });
     if (!res.new_buf) {
         return;
     }
@@ -2111,12 +2112,6 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
         // struct Buffer* new_buf = loadLink(url, NULL, a->target, a->referer, option);
         tab_push_buffer(getRuntime()->CurrentTab, res.new_buf);
     }
-}
-
-/* follow HREF link in the buffer */
-void bufferA(void)
-{
-    _followA((struct FollowOption) { .on_target = false, .do_download = false });
 }
 
 void _followI(bool do_download)
@@ -2150,13 +2145,15 @@ DEFUN(followI, VIEW_IMAGE, "Display image in viewer")
 /* submit form */
 DEFUN(submitForm, SUBMIT, "Submit form")
 {
-    _followForm(TRUE, (struct FollowOption) { .on_target = true, .do_download = false });
+    _followForm(Currentbuf,
+        (struct FollowOption) { .on_target = true, .do_download = false }, true);
 }
 
 /* process form */
 void followForm(void)
 {
-    _followForm(FALSE, (struct FollowOption) { .on_target = true, .do_download = false });
+    _followForm(Currentbuf,
+        (struct FollowOption) { .on_target = true, .do_download = false }, false);
 }
 
 /* go to the top anchor */
@@ -2983,7 +2980,7 @@ DEFUN(ldHist, HISTORY, "Show browsing history")
 DEFUN(svA, SAVE_LINK, "Save hyperlink target")
 {
     getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    _followA((struct FollowOption) { .on_target = true, .do_download = false });
+    _followA(Currentbuf, (struct FollowOption) { .on_target = true, .do_download = false });
 }
 
 /* download IMG link */
@@ -3292,10 +3289,9 @@ DEFUN(reload, RELOAD, "Load current document anew")
         request = Currentbuf->doc.form_submit->parent;
         if (request->method == FORM_METHOD_POST
             && request->enctype == FORM_ENCTYPE_MULTIPART) {
-            Str query;
             struct stat st;
             multipart = 1;
-            query_from_followform(&query, Currentbuf->doc.form_submit, multipart);
+            query_from_followform(Currentbuf, Currentbuf->doc.form_submit, multipart);
             stat(request->body, &st);
             request->length = st.st_size;
         }

@@ -387,23 +387,24 @@ conv_form_encoding(Str val, struct FormItemList* fi, struct Buffer* buf)
     return wc_Str_conv_strict(val, g_runtime.InnerCharset, charset);
 }
 
-void query_from_followform(Str* query, struct FormItemList* fi, int multipart)
+Str query_from_followform(struct Buffer* buf, struct FormItemList* fi, bool multipart)
 {
     struct FormItemList* f2;
     FILE* body = NULL;
+    Str query = Strnew();
 
     if (multipart) {
-        *query = tmpfname(TMPF_DFL, NULL);
-        body = fopen((*query)->ptr, "w");
+        query = tmpfname(TMPF_DFL, NULL);
+        body = fopen(query->ptr, "w");
         if (body == NULL) {
-            return;
+            return query;
         }
-        fi->parent->body = (*query)->ptr;
+        fi->parent->body = query->ptr;
         fi->parent->boundary = Sprintf("------------------------------%d%ld%ld%ld", getRuntime()->CurrentPid,
             fi->parent, fi->parent->body, fi->parent->boundary)
                                    ->ptr;
     }
-    *query = Strnew();
+    query = Strnew();
     for (f2 = fi->parent->item; f2; f2 = f2->next) {
         if (f2->name == NULL)
             continue;
@@ -427,65 +428,57 @@ void query_from_followform(Str* query, struct FormItemList* fi, int multipart)
         if (multipart) {
             if (f2->type == FORM_INPUT_IMAGE) {
                 int x = 0, y = 0;
-#ifdef USE_IMAGE
-                getMapXY(Currentbuf, retrieveCurrentImg(Currentbuf), &x, &y);
-#endif
-                *query = Strdup(conv_form_encoding(f2->name, fi, Currentbuf));
-                Strcat_charp(*query, ".x");
-                form_write_data(body, fi->parent->boundary, (*query)->ptr,
+                getMapXY(buf, retrieveCurrentImg(buf), &x, &y);
+                query = Strdup(conv_form_encoding(f2->name, fi, buf));
+                Strcat_charp(query, ".x");
+                form_write_data(body, fi->parent->boundary, query->ptr,
                     Sprintf("%d", x)->ptr);
-                *query = Strdup(conv_form_encoding(f2->name, fi, Currentbuf));
-                Strcat_charp(*query, ".y");
-                form_write_data(body, fi->parent->boundary, (*query)->ptr,
+                query = Strdup(conv_form_encoding(f2->name, fi, buf));
+                Strcat_charp(query, ".y");
+                form_write_data(body, fi->parent->boundary, query->ptr,
                     Sprintf("%d", y)->ptr);
             } else if (f2->name && f2->name->length > 0 && f2->value != NULL) {
                 /* not IMAGE */
-                *query = conv_form_encoding(f2->value, fi, Currentbuf);
+                query = conv_form_encoding(f2->value, fi, buf);
                 if (f2->type == FORM_INPUT_FILE)
                     form_write_from_file(body, fi->parent->boundary,
-                        conv_form_encoding(f2->name, fi,
-                            Currentbuf)
-                            ->ptr,
-                        (*query)->ptr,
+                        conv_form_encoding(f2->name, fi, buf)->ptr,
+                        query->ptr,
                         Str_conv_to_system(f2->value)->ptr);
                 else
                     form_write_data(body, fi->parent->boundary,
-                        conv_form_encoding(f2->name, fi,
-                            Currentbuf)
-                            ->ptr,
-                        (*query)->ptr);
+                        conv_form_encoding(f2->name, fi, buf)->ptr,
+                        query->ptr);
             }
         } else {
             /* not multipart */
             if (f2->type == FORM_INPUT_IMAGE) {
                 int x = 0, y = 0;
-#ifdef USE_IMAGE
-                getMapXY(Currentbuf, retrieveCurrentImg(Currentbuf), &x, &y);
-#endif
-                Strcat(*query,
-                    Str_form_quote(conv_form_encoding(f2->name, fi, Currentbuf)));
-                Strcat(*query, Sprintf(".x=%d&", x));
-                Strcat(*query,
-                    Str_form_quote(conv_form_encoding(f2->name, fi, Currentbuf)));
-                Strcat(*query, Sprintf(".y=%d", y));
+                getMapXY(buf, retrieveCurrentImg(buf), &x, &y);
+                Strcat(query,
+                    Str_form_quote(conv_form_encoding(f2->name, fi, buf)));
+                Strcat(query, Sprintf(".x=%d&", x));
+                Strcat(query,
+                    Str_form_quote(conv_form_encoding(f2->name, fi, buf)));
+                Strcat(query, Sprintf(".y=%d", y));
             } else {
                 /* not IMAGE */
                 if (f2->name && f2->name->length > 0) {
-                    Strcat(*query,
-                        Str_form_quote(conv_form_encoding(f2->name, fi, Currentbuf)));
-                    Strcat_char(*query, '=');
+                    Strcat(query,
+                        Str_form_quote(conv_form_encoding(f2->name, fi, buf)));
+                    Strcat_char(query, '=');
                 }
                 if (f2->value != NULL) {
                     if (fi->parent->method == FORM_METHOD_INTERNAL)
-                        Strcat(*query, Str_form_quote(f2->value));
+                        Strcat(query, Str_form_quote(f2->value));
                     else {
-                        Strcat(*query,
-                            Str_form_quote(conv_form_encoding(f2->value, fi, Currentbuf)));
+                        Strcat(query,
+                            Str_form_quote(conv_form_encoding(f2->value, fi, buf)));
                     }
                 }
             }
             if (f2->next)
-                Strcat_char(*query, '&');
+                Strcat_char(query, '&');
         }
     }
     if (multipart) {
@@ -493,9 +486,10 @@ void query_from_followform(Str* query, struct FormItemList* fi, int multipart)
         fclose(body);
     } else {
         /* remove trailing & */
-        while (Strlastchar(*query) == '&')
-            Strshrink(*query, 1);
+        while (Strlastchar(query) == '&')
+            Strshrink(query, 1);
     }
+    return query;
 }
 
 // static struct Buffer*
@@ -663,16 +657,17 @@ save_submit_formlist(struct FormItemList* src)
     return ret;
 }
 
-static struct Buffer* do_submit(char* p, struct Anchor* a, struct FormItemList* fi, struct FollowOption option)
+static struct Buffer* do_submit(struct Buffer* buf, struct Anchor* a, struct FormItemList* fi,
+    const char* p,
+    struct FollowOption option)
 {
-    Str tmp = Strnew();
     int multipart = (fi->parent->method == FORM_METHOD_POST && fi->parent->enctype == FORM_ENCTYPE_MULTIPART);
-    query_from_followform(&tmp, fi, multipart);
+    Str tmp = query_from_followform(buf, fi, multipart);
 
     Str tmp2 = Strdup(fi->parent->action);
     if (!Strcmp_charp(tmp2, "!CURRENT_URL!")) {
         /* It means "current URL" */
-        tmp2 = parsedURL2Str(&Currentbuf->content.url);
+        tmp2 = parsedURL2Str(&buf->content.url);
         if ((p = strchr(tmp2->ptr, '?')) != NULL)
             Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
     }
@@ -683,7 +678,6 @@ static struct Buffer* do_submit(char* p, struct Anchor* a, struct FormItemList* 
         Strcat_charp(tmp2, "?");
         Strcat(tmp2, tmp);
         return loadLink(tmp2->ptr, NULL, a->target, NULL, option);
-        // tab_push_buffer(getRuntime()->CurrentTab, new_buf);
     } else if (fi->parent->method == FORM_METHOD_POST) {
         if (multipart) {
             struct stat st;
@@ -706,17 +700,18 @@ static struct Buffer* do_submit(char* p, struct Anchor* a, struct FormItemList* 
             new_buf->doc.form_submit = save_submit_formlist(fi);
         }
         return new_buf;
-    } else if ((fi->parent->method == FORM_METHOD_INTERNAL && (!Strcmp_charp(fi->parent->action, "map") || !Strcmp_charp(fi->parent->action, "none"))) || Currentbuf->bufferprop & BP_INTERNAL) { /* internal */
+    } else if ((fi->parent->method == FORM_METHOD_INTERNAL
+                   && (!Strcmp_charp(fi->parent->action, "map")
+                       || !Strcmp_charp(fi->parent->action, "none")))
+        || buf->bufferprop & BP_INTERNAL) { /* internal */
         do_internal(tmp2->ptr, tmp->ptr);
     } else {
-        disp_err_message("Can't send form because of illegal method.",
-            FALSE);
+        disp_err_message("Can't send form because of illegal method.", false);
     }
-    // break;
     return NULL;
 }
 
-struct FollowResult _followForm(bool submit, struct FollowOption option)
+struct FollowResult _followForm(struct Buffer* buf, struct FollowOption option, bool submit)
 {
     if (!Currentbuf->doc.firstLine)
         return (struct FollowResult) { 0 };
@@ -731,7 +726,7 @@ struct FollowResult _followForm(bool submit, struct FollowOption option)
         if (submit) {
             return (struct FollowResult) {
                 .anchor = a,
-                .new_buf = do_submit(NULL, a, fi, option),
+                .new_buf = do_submit(Currentbuf, a, fi, NULL, option),
             };
         }
         if (fi->readonly) {
@@ -745,7 +740,7 @@ struct FollowResult _followForm(bool submit, struct FollowOption option)
         if (fi->accept || fi->parent->nitems == 1) {
             return (struct FollowResult) {
                 .anchor = a,
-                .new_buf = do_submit(p, a, fi, option),
+                .new_buf = do_submit(Currentbuf, a, fi, p, option),
             };
         }
         Currentbuf->doc.lineUpdated = true;
@@ -755,7 +750,7 @@ struct FollowResult _followForm(bool submit, struct FollowOption option)
         if (submit) {
             return (struct FollowResult) {
                 .anchor = a,
-                .new_buf = do_submit(NULL, a, fi, option),
+                .new_buf = do_submit(Currentbuf, a, fi, NULL, option),
             };
         }
         if (fi->readonly)
@@ -768,7 +763,7 @@ struct FollowResult _followForm(bool submit, struct FollowOption option)
         if (fi->accept || fi->parent->nitems == 1) {
             return (struct FollowResult) {
                 .anchor = a,
-                .new_buf = do_submit(p, a, fi, option),
+                .new_buf = do_submit(Currentbuf, a, fi, p, option),
             };
         }
         break;
@@ -777,7 +772,7 @@ struct FollowResult _followForm(bool submit, struct FollowOption option)
         if (submit) {
             return (struct FollowResult) {
                 .anchor = a,
-                .new_buf = do_submit(NULL, a, fi, option),
+                .new_buf = do_submit(Currentbuf, a, fi, NULL, option),
             };
         }
         if (fi->readonly) {
@@ -792,7 +787,7 @@ struct FollowResult _followForm(bool submit, struct FollowOption option)
         if (fi->accept) {
             return (struct FollowResult) {
                 .anchor = a,
-                .new_buf = do_submit(p, a, fi, option),
+                .new_buf = do_submit(Currentbuf, a, fi, p, option),
             };
         }
         break;
@@ -801,7 +796,7 @@ struct FollowResult _followForm(bool submit, struct FollowOption option)
         if (submit) {
             return (struct FollowResult) {
                 .anchor = a,
-                .new_buf = do_submit(NULL, a, fi, option),
+                .new_buf = do_submit(Currentbuf, a, fi, NULL, option),
             };
         }
         if (fi->readonly)
@@ -814,7 +809,7 @@ struct FollowResult _followForm(bool submit, struct FollowOption option)
         if (submit) {
             return (struct FollowResult) {
                 .anchor = a,
-                .new_buf = do_submit(NULL, a, fi, option),
+                .new_buf = do_submit(Currentbuf, a, fi, NULL, option),
             };
         }
         if (fi->readonly) {
@@ -828,7 +823,7 @@ struct FollowResult _followForm(bool submit, struct FollowOption option)
         if (submit) {
             return (struct FollowResult) {
                 .anchor = a,
-                .new_buf = do_submit(NULL, a, fi, option),
+                .new_buf = do_submit(Currentbuf, a, fi, NULL, option),
             };
         }
         if (fi->readonly) {
@@ -843,7 +838,7 @@ struct FollowResult _followForm(bool submit, struct FollowOption option)
         if (submit) {
             return (struct FollowResult) {
                 .anchor = a,
-                .new_buf = do_submit(NULL, a, fi, option),
+                .new_buf = do_submit(Currentbuf, a, fi, NULL, option),
             };
         }
         if (!formChooseOptionByMenu(fi,
@@ -854,7 +849,7 @@ struct FollowResult _followForm(bool submit, struct FollowOption option)
         if (fi->parent->nitems == 1) {
             return (struct FollowResult) {
                 .anchor = a,
-                .new_buf = do_submit(NULL, a, fi, option),
+                .new_buf = do_submit(Currentbuf, a, fi, NULL, option),
             };
         }
         break;
@@ -864,7 +859,7 @@ struct FollowResult _followForm(bool submit, struct FollowOption option)
     case FORM_INPUT_BUTTON:
         return (struct FollowResult) {
             .anchor = a,
-            .new_buf = do_submit(NULL, a, fi, option),
+            .new_buf = do_submit(Currentbuf, a, fi, NULL, option),
         };
 
     case FORM_INPUT_RESET:
@@ -898,7 +893,8 @@ bool currentBufferSubmit()
     Currentbuf->doc.submit = NULL;
     doc_gotoLine(&Currentbuf->doc, a->start.line);
     Currentbuf->doc.pos = a->start.pos;
-    struct FollowResult result = _followForm(TRUE, (struct FollowOption) { .on_target = true, .do_download = false });
+    struct FollowResult result = _followForm(Currentbuf,
+        (struct FollowOption) { .on_target = true, .do_download = false }, true);
     if (result.new_buf) {
         tab_push_buffer(getRuntime()->CurrentTab, result.new_buf);
     }

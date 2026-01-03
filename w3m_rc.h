@@ -153,12 +153,12 @@ struct FollowResult {
     struct Anchor* anchor;
     struct Buffer* new_buf;
 };
-struct FollowResult _followForm(bool submit, struct FollowOption option);
+struct FollowResult _followForm(struct Buffer* buf, struct FollowOption option, bool submit);
 struct FormList;
 struct Buffer* loadLink(const char* url, struct FormList* request,
     const char* target, const char* referer, struct FollowOption option);
 struct FormItemList;
-void query_from_followform(Str* query, struct FormItemList* fi, int multipart);
+Str query_from_followform(struct Buffer* buf, struct FormItemList* fi, bool multipart);
 void pushEvent(int cmd, void* data);
 void keyPressEventProc(int c);
 void escKeyProc(int c, int esc, unsigned char* map);
