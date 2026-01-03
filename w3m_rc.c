@@ -663,97 +663,155 @@ save_submit_formlist(struct FormItemList* src)
     return ret;
 }
 
+static void do_submit(char* p, struct Anchor* a, struct FormItemList* fi, struct FollowOption option)
+{
+    Str tmp = Strnew();
+    int multipart = (fi->parent->method == FORM_METHOD_POST && fi->parent->enctype == FORM_ENCTYPE_MULTIPART);
+    query_from_followform(&tmp, fi, multipart);
+
+    Str tmp2 = Strdup(fi->parent->action);
+    if (!Strcmp_charp(tmp2, "!CURRENT_URL!")) {
+        /* It means "current URL" */
+        tmp2 = parsedURL2Str(&Currentbuf->content.url);
+        if ((p = strchr(tmp2->ptr, '?')) != NULL)
+            Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
+    }
+
+    if (fi->parent->method == FORM_METHOD_GET) {
+        if ((p = strchr(tmp2->ptr, '?')) != NULL)
+            Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
+        Strcat_charp(tmp2, "?");
+        Strcat(tmp2, tmp);
+        struct Buffer* new_buf = loadLink(tmp2->ptr, NULL, a->target, NULL, option);
+        tab_push_buffer(getRuntime()->CurrentTab, new_buf);
+    } else if (fi->parent->method == FORM_METHOD_POST) {
+        if (multipart) {
+            struct stat st;
+            stat(fi->parent->body, &st);
+            fi->parent->length = st.st_size;
+        } else {
+            fi->parent->body = tmp->ptr;
+            fi->parent->length = tmp->length;
+        }
+        struct Buffer* new_buf = loadLink(tmp2->ptr, fi->parent, a->target, NULL, option);
+        tab_push_buffer(getRuntime()->CurrentTab, new_buf);
+        if (multipart) {
+            unlink(fi->parent->body);
+        }
+        if (new_buf && !(new_buf->bufferprop & BP_REDIRECTED)) { /* buf must be Currentbuf */
+            /* BP_REDIRECTED means that the buffer is obtained through
+             * Location: header. In this case, buf->form_submit must not be set
+             * because the page is not loaded by POST method but GET method.
+             */
+            new_buf->doc.form_submit = save_submit_formlist(fi);
+        }
+    } else if ((fi->parent->method == FORM_METHOD_INTERNAL && (!Strcmp_charp(fi->parent->action, "map") || !Strcmp_charp(fi->parent->action, "none"))) || Currentbuf->bufferprop & BP_INTERNAL) { /* internal */
+        do_internal(tmp2->ptr, tmp->ptr);
+    } else {
+        disp_err_message("Can't send form because of illegal method.",
+            FALSE);
+    }
+    // break;
+}
+
 void _followForm(bool submit, struct FollowOption option)
 {
-    struct Anchor *a, *a2;
-    char* p;
-    struct FormItemList *fi, *f2;
-    Str tmp, tmp2;
-    int multipart = 0, i;
+    // struct Anchor* a2;
+    // struct FormItemList* f2;
+    // Str tmp, tmp2;
+    // int multipart = 0, i;
 
     if (Currentbuf->doc.firstLine == NULL)
         return;
 
-    a = retrieveCurrentForm(Currentbuf);
+    struct Anchor* a = retrieveCurrentForm(Currentbuf);
     if (a == NULL)
         return;
-    fi = (struct FormItemList*)a->url;
+
+    struct FormItemList* fi = (struct FormItemList*)a->url;
     switch (fi->type) {
-    case FORM_INPUT_TEXT:
-        if (submit)
-            goto do_submit;
-        if (fi->readonly)
-            /* FIXME: gettextize? */
+    case FORM_INPUT_TEXT: {
+        if (submit) {
+            do_submit(NULL, a, fi, option);
+            return;
+        }
+        if (fi->readonly) {
             disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
-        /* FIXME: gettextize? */
-        p = inputStrHist("TEXT:", fi->value ? fi->value->ptr : NULL, g_runtime.TextHist);
+        }
+        char* p = inputStrHist("TEXT:", fi->value ? fi->value->ptr : NULL, g_runtime.TextHist);
         if (p == NULL || fi->readonly)
             break;
         fi->value = Strnew_charp(p);
         formUpdateBuffer(a, Currentbuf, fi);
-        if (fi->accept || fi->parent->nitems == 1)
-            goto do_submit;
-
+        if (fi->accept || fi->parent->nitems == 1) {
+            do_submit(p, a, fi, option);
+            return;
+        }
         Currentbuf->doc.lineUpdated = true;
         break;
-    case FORM_INPUT_FILE:
-        if (submit)
-            goto do_submit;
+    }
+    case FORM_INPUT_FILE: {
+        if (submit) {
+            do_submit(NULL, a, fi, option);
+            return;
+        }
         if (fi->readonly)
-            /* FIXME: gettextize? */
             disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
-        /* FIXME: gettextize? */
-        p = inputFilenameHist("Filename:", fi->value ? fi->value->ptr : NULL,
-            NULL);
+        char* p = inputFilenameHist("Filename:", fi->value ? fi->value->ptr : NULL, NULL);
         if (p == NULL || fi->readonly)
             break;
         fi->value = Strnew_charp(p);
         formUpdateBuffer(a, Currentbuf, fi);
-        if (fi->accept || fi->parent->nitems == 1)
-            goto do_submit;
+        if (fi->accept || fi->parent->nitems == 1) {
+            do_submit(p, a, fi, option);
+            return;
+        }
         break;
-    case FORM_INPUT_PASSWORD:
-        if (submit)
-            goto do_submit;
+    }
+    case FORM_INPUT_PASSWORD: {
+        if (submit) {
+            do_submit(NULL, a, fi, option);
+        }
         if (fi->readonly) {
-            /* FIXME: gettextize? */
             disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
             break;
         }
-        /* FIXME: gettextize? */
-        p = inputLine("Password:", fi->value ? fi->value->ptr : NULL,
-            IN_PASSWORD);
+        char* p = inputLine("Password:", fi->value ? fi->value->ptr : NULL, IN_PASSWORD);
         if (p == NULL)
             break;
         fi->value = Strnew_charp(p);
         formUpdateBuffer(a, Currentbuf, fi);
-        if (fi->accept)
-            goto do_submit;
+        if (fi->accept) {
+            do_submit(p, a, fi, option);
+        }
         break;
+    }
     case FORM_TEXTAREA:
-        if (submit)
-            goto do_submit;
+        if (submit) {
+            do_submit(NULL, a, fi, option);
+        }
         if (fi->readonly)
-            /* FIXME: gettextize? */
             disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
         input_textarea(fi);
         formUpdateBuffer(a, Currentbuf, fi);
         break;
+
     case FORM_INPUT_RADIO:
-        if (submit)
-            goto do_submit;
+        if (submit) {
+            do_submit(NULL, a, fi, option);
+        }
         if (fi->readonly) {
-            /* FIXME: gettextize? */
             disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
             break;
         }
         formRecheckRadio(a, Currentbuf, fi);
         break;
+
     case FORM_INPUT_CHECKBOX:
-        if (submit)
-            goto do_submit;
+        if (submit) {
+            do_submit(NULL, a, fi, option);
+        }
         if (fi->readonly) {
-            /* FIXME: gettextize? */
             disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
             break;
         }
@@ -762,72 +820,29 @@ void _followForm(bool submit, struct FollowOption option)
         break;
 
     case FORM_SELECT:
-        if (submit)
-            goto do_submit;
+        if (submit) {
+            do_submit(NULL, a, fi, option);
+        }
         if (!formChooseOptionByMenu(fi,
                 Currentbuf->doc.cursorX - Currentbuf->doc.pos + a->start.pos + Currentbuf->doc.rootX,
                 Currentbuf->doc.cursorY + Currentbuf->doc.rootY))
             break;
         formUpdateBuffer(a, Currentbuf, fi);
-        if (fi->parent->nitems == 1)
-            goto do_submit;
+        if (fi->parent->nitems == 1) {
+            do_submit(NULL, a, fi, option);
+        }
         break;
 
     case FORM_INPUT_IMAGE:
     case FORM_INPUT_SUBMIT:
     case FORM_INPUT_BUTTON:
-    do_submit:
-        tmp = Strnew();
-        multipart = (fi->parent->method == FORM_METHOD_POST && fi->parent->enctype == FORM_ENCTYPE_MULTIPART);
-        query_from_followform(&tmp, fi, multipart);
+        do_submit(NULL, a, fi, option);
+        return;
 
-        tmp2 = Strdup(fi->parent->action);
-        if (!Strcmp_charp(tmp2, "!CURRENT_URL!")) {
-            /* It means "current URL" */
-            tmp2 = parsedURL2Str(&Currentbuf->content.url);
-            if ((p = strchr(tmp2->ptr, '?')) != NULL)
-                Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
-        }
-
-        if (fi->parent->method == FORM_METHOD_GET) {
-            if ((p = strchr(tmp2->ptr, '?')) != NULL)
-                Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
-            Strcat_charp(tmp2, "?");
-            Strcat(tmp2, tmp);
-            struct Buffer* new_buf = loadLink(tmp2->ptr, NULL, a->target, NULL, option);
-            tab_push_buffer(getRuntime()->CurrentTab, new_buf);
-        } else if (fi->parent->method == FORM_METHOD_POST) {
-            if (multipart) {
-                struct stat st;
-                stat(fi->parent->body, &st);
-                fi->parent->length = st.st_size;
-            } else {
-                fi->parent->body = tmp->ptr;
-                fi->parent->length = tmp->length;
-            }
-            struct Buffer* new_buf = loadLink(tmp2->ptr, fi->parent, a->target, NULL, option);
-            tab_push_buffer(getRuntime()->CurrentTab, new_buf);
-            if (multipart) {
-                unlink(fi->parent->body);
-            }
-            if (new_buf && !(new_buf->bufferprop & BP_REDIRECTED)) { /* buf must be Currentbuf */
-                /* BP_REDIRECTED means that the buffer is obtained through
-                 * Location: header. In this case, buf->form_submit must not be set
-                 * because the page is not loaded by POST method but GET method.
-                 */
-                new_buf->doc.form_submit = save_submit_formlist(fi);
-            }
-        } else if ((fi->parent->method == FORM_METHOD_INTERNAL && (!Strcmp_charp(fi->parent->action, "map") || !Strcmp_charp(fi->parent->action, "none"))) || Currentbuf->bufferprop & BP_INTERNAL) { /* internal */
-            do_internal(tmp2->ptr, tmp->ptr);
-        } else {
-            disp_err_message("Can't send form because of illegal method.",
-                FALSE);
-        }
-        break;
     case FORM_INPUT_RESET:
-        for (i = 0; i < Currentbuf->doc.formitem->nanchor; i++) {
-            a2 = &Currentbuf->doc.formitem->anchors[i];
-            f2 = (struct FormItemList*)a2->url;
+        for (int i = 0; i < Currentbuf->doc.formitem->nanchor; i++) {
+            struct Anchor* a2 = &Currentbuf->doc.formitem->anchors[i];
+            struct FormItemList* f2 = (struct FormItemList*)a2->url;
             if (f2->parent == fi->parent && f2->name && f2->value && f2->type != FORM_INPUT_SUBMIT && f2->type != FORM_INPUT_HIDDEN && f2->type != FORM_INPUT_RESET) {
                 f2->value = f2->init_value;
                 f2->checked = f2->init_checked;
@@ -837,6 +852,7 @@ void _followForm(bool submit, struct FollowOption option)
             }
         }
         break;
+
     case FORM_INPUT_HIDDEN:
     default:
         break;
