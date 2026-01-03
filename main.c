@@ -2014,43 +2014,42 @@ DEFUN(reMark, REG_MARK, "Mark all occurences of a pattern")
     }
 }
 
-static void
-gotoLabel(const char* label)
+static struct FollowResult gotoLabel(const char* label)
 {
-    struct Buffer* buf;
-    struct Anchor* al;
-    int i;
-
-    al = searchURLLabel(Currentbuf, label);
-    if (al == NULL) {
-        /* FIXME: gettextize? */
+    struct FollowResult res = { 0 };
+    res.anchor = searchURLLabel(Currentbuf, label);
+    if (!res.anchor) {
         disp_message(Sprintf("%s is not found", label)->ptr, TRUE);
-        return;
+        return res;
     }
-    buf = newBuffer(Currentbuf->doc.width);
-    copyBuffer(buf, Currentbuf);
-    for (i = 0; i < MAX_LB; i++)
-        buf->linkBuffer[i] = NULL;
-    buf->content.url.label = allocStr(label, -1);
-    pushHashHist(getRuntime()->URLHist, parsedURL2Str(&buf->content.url)->ptr);
-    (*buf->clone)++;
-    tab_push_buffer(getRuntime()->CurrentTab, buf);
-    doc_gotoLine(&Currentbuf->doc, al->start.line);
+
+    res.new_buf = newBuffer(Currentbuf->doc.width);
+    copyBuffer(res.new_buf, Currentbuf);
+    for (int i = 0; i < MAX_LB; i++)
+        res.new_buf->linkBuffer[i] = NULL;
+    res.new_buf->content.url.label = allocStr(label, -1);
+    pushHashHist(getRuntime()->URLHist, parsedURL2Str(&res.new_buf->content.url)->ptr);
+    (*res.new_buf->clone)++;
+    // tab_push_buffer(getRuntime()->CurrentTab, buf);
+    doc_gotoLine(&Currentbuf->doc, res.anchor->start.line);
     if (getRuntime()->label_topline)
         Currentbuf->doc.topLine = doc_lineSkip(&Currentbuf->doc, Currentbuf->doc.topLine,
             Currentbuf->doc.currentLine->linenumber
                 - Currentbuf->doc.topLine->linenumber);
-    Currentbuf->doc.pos = al->start.pos;
+    Currentbuf->doc.pos = res.anchor->start.pos;
     doc_arrangeCursor(&Currentbuf->doc);
-    return;
+    return res;
 }
 
-void _followA(struct FollowOption option)
+struct FollowResult _followA(struct FollowOption option)
 {
+    if (Currentbuf->doc.firstLine == NULL) {
+        return (struct FollowResult) { 0 };
+    }
+
     struct Anchor* a = retrieveCurrentImg(Currentbuf);
     if (a && a->image && a->image->map) {
-        _followForm(FALSE, option);
-        return;
+        return _followForm(FALSE, option);
     }
 
     int x = 0, y = 0, map = 0;
@@ -2061,12 +2060,10 @@ void _followA(struct FollowOption option)
 
     a = retrieveCurrentAnchor(Currentbuf);
     if (a == NULL) {
-        _followForm(FALSE, option);
-        return;
+        return _followForm(FALSE, option);
     }
     if (*a->url == '#') { /* index within this buffer */
-        gotoLabel(a->url + 1);
-        return;
+        return gotoLabel(a->url + 1);
     }
 
     struct Url u;
@@ -2074,41 +2071,46 @@ void _followA(struct FollowOption option)
     if (Strcmp(parsedURL2Str(&u), parsedURL2Str(&Currentbuf->content.url)) == 0) {
         /* index within this buffer */
         if (u.label) {
-            gotoLabel(u.label);
-            return;
+            return gotoLabel(u.label);
         }
     }
     if (handleMailto(a->url))
-        return;
+        return (struct FollowResult) { 0 };
 
     const char* url = a->url;
     if (map)
         url = Sprintf("%s?%d,%d", a->url, x, y)->ptr;
 
-    if (check_target && getRuntime()->open_tab_blank && a->target && (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
-        // struct Buffer* buf;
+    return (struct FollowResult) {
+        .anchor = a,
+        .new_buf = loadLink(url, NULL, a->target, a->referer, option),
+    };
+}
 
+DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
+{
+    struct FollowResult res = _followA((struct FollowOption) { .on_target = true, .do_download = false });
+    if (!res.new_buf) {
+        return;
+    }
+
+    if (check_target
+        && getRuntime()->open_tab_blank
+        && res.anchor->target
+        && (!strcasecmp(res.anchor->target, "_new") || !strcasecmp(res.anchor->target, "_blank"))) {
         _newT();
         // buf = Currentbuf;
-        struct Buffer* new_buf = loadLink(url, NULL, a->target, a->referer, option);
-        tab_push_buffer(getRuntime()->CurrentTab, new_buf);
+        // struct Buffer* new_buf = loadLink(url, NULL, a->target, a->referer, option);
+        tab_push_buffer(getRuntime()->CurrentTab, res.new_buf);
         // if (buf != Currentbuf)
         //     delBuffer(buf);
         // else
         //     deleteTab(CurrentTab());
         // return;
     } else {
-        struct Buffer* new_buf = loadLink(url, NULL, a->target, a->referer, option);
-        tab_push_buffer(getRuntime()->CurrentTab, new_buf);
+        // struct Buffer* new_buf = loadLink(url, NULL, a->target, a->referer, option);
+        tab_push_buffer(getRuntime()->CurrentTab, res.new_buf);
     }
-}
-
-/* follow HREF link */
-DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
-{
-    if (Currentbuf->doc.firstLine == NULL)
-        return;
-    _followA((struct FollowOption) { .on_target = true, .do_download = false });
 }
 
 /* follow HREF link in the buffer */

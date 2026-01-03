@@ -149,10 +149,14 @@ struct FollowOption {
     bool on_target;
     bool do_download;
 };
-void _followForm(bool submit, struct FollowOption option);
+struct FollowResult {
+    struct Anchor* anchor;
+    struct Buffer* new_buf;
+};
+struct FollowResult _followForm(bool submit, struct FollowOption option);
 struct FormList;
-struct Buffer* loadLink(const char* url, struct FormList* request, 
-        const char* target, const char* referer, struct FollowOption option);
+struct Buffer* loadLink(const char* url, struct FormList* request,
+    const char* target, const char* referer, struct FollowOption option);
 struct FormItemList;
 void query_from_followform(Str* query, struct FormItemList* fi, int multipart);
 void pushEvent(int cmd, void* data);

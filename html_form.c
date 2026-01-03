@@ -25,7 +25,7 @@
 
 /* *INDENT-OFF* */
 struct {
-    char* action;
+    const char* action;
     void (*rout)(struct parsed_tagarg*);
 } internal_action[] = {
     { "map", follow_map },
@@ -407,8 +407,7 @@ void formUpdateBuffer(struct Anchor* a, struct Buffer* buf, struct FormItemList*
         if (form->type == FORM_SELECT) {
             p = form->label->ptr;
             updateSelectOption(form, form->select_option);
-        } else
-        {
+        } else {
             if (!form->value)
                 break;
             p = form->value->ptr;
@@ -573,7 +572,7 @@ input_end:
     unlink(tmpf);
 }
 
-void do_internal(char* action, char* data)
+void do_internal(const char* action, const char* data)
 {
     int i;
 
@@ -970,4 +969,3 @@ void preFormUpdateBuffer(struct Buffer* buf)
         }
     }
 }
-
