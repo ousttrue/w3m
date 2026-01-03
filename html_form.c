@@ -8,7 +8,6 @@
 #include "message.h"
 #include "w3m_rc.h"
 #include "display.h"
-#include "download.h"
 #include "buffer.h"
 #include "anchor.h"
 #include "parsetag.h"
@@ -32,7 +31,6 @@ struct {
     { "map", follow_map },
     { "option", panel_set_option },
     { "cookie", set_cookie_flag },
-    { "download", download_action },
     { "charset", change_charset },
     { "none", NULL },
     { NULL, NULL },

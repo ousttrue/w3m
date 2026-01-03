@@ -26,7 +26,6 @@ const w3m_srcs = [_][]const u8{
     "termcap_util.c",
     "tab.c",
     "buffer.c",
-    "download.c",
     "keybind.c",
     "html_form.c",
     "line.c",

@@ -3,7 +3,6 @@ pub const c = @cImport({
     @cInclude("termcap.h");
     @cInclude("image.h");
     @cInclude("screen.h");
-    @cInclude("download.h");
     @cInclude("myctype.h");
     @cInclude("stdlib.h");
     @cInclude("linein.h");

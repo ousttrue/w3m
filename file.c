@@ -23,7 +23,6 @@
 #include "buffer.h"
 #include "anchor.h"
 #include "maparea.h"
-#include "download.h"
 #include "etc.h"
 #include "image.h"
 #include "html_table.h"
@@ -5070,7 +5069,6 @@ int _doFileCopy(const char* tmpf, const char* defstr, bool download)
     pid_t pid;
     char* lock;
     struct stat st;
-    int64_t size = 0;
     int is_pipe = FALSE;
 
     if (fmInitialized()) {
@@ -5120,9 +5118,6 @@ int _doFileCopy(const char* tmpf, const char* defstr, bool download)
             unlink(lock);
             exit(0);
         }
-        if (!stat(tmpf, &st))
-            size = st.st_size;
-        addDownloadList(pid, conv_from_system(tmpf), p, lock, size);
     } else {
         q = searchKeyData();
         if (q == NULL || *q == '\0') {
@@ -5210,8 +5205,6 @@ int doFileSave(struct Url url, struct input_stream* stream,
                 exit(1);
             exit(0);
         }
-        addDownloadList(
-            pid, parsedURL2RefererStr(&url)->ptr, p, lock, 0);
     } else {
         char* q = searchKeyData();
         if (q == NULL || *q == '\0') {

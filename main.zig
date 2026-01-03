@@ -26,8 +26,6 @@ pub fn main() !void {
     }
 
     while (true) {
-        c.download_update();
-
         if (c.currentBufferSubmit()) {
             continue;
         }

@@ -23,7 +23,6 @@
 #include "siteconf.h"
 #include "anchor.h"
 #include "w3m_rc.h"
-#include "download.h"
 #include "tab.h"
 #include "buffer.h"
 #include "image.h"
@@ -217,20 +216,6 @@ wrap_GC_warn_proc(char* msg, GC_word arg)
         orig_GC_warn_proc(msg, arg);
     else
         fprintf(stderr, msg, (unsigned long)arg);
-}
-
-static void
-sig_chld(int signo)
-{
-    int p_stat;
-    pid_t pid;
-    while ((pid = waitpid(-1, &p_stat, WNOHANG)) > 0) {
-        if (WIFEXITED(p_stat)) {
-            sig_child_downloadlist(pid, p_stat);
-        }
-    }
-    mySignal(SIGCHLD, sig_chld);
-    return;
 }
 
 static Str
@@ -569,7 +554,6 @@ bool w3m_args(int argc, char** argv)
 
     initCookie();
 
-    mySignal(SIGCHLD, sig_chld);
     mySignal(SIGPIPE, SigPipe);
 
     orig_GC_warn_proc = GC_get_warn_proc();
@@ -702,10 +686,7 @@ bool w3m_args(int argc, char** argv)
         Currentbuf = newbuf;
     }
 
-    if (hasDownloadList()) {
-    } else {
-        getRuntime()->CurrentTab = FirstTab();
-    }
+    getRuntime()->CurrentTab = FirstTab();
 
     if (!FirstTab() || !Firstbuf) {
         if (fmInitialized())
@@ -1705,11 +1686,7 @@ static void
 _quitfm(int confirm)
 {
     const char* ans = "y";
-    if (download_checkList())
-        /* FIXME: gettextize? */
-        ans = inputChar("Download process retains. "
-                        "Do you want to exit w3m? (y/n)");
-    else if (confirm)
+    if (confirm)
         /* FIXME: gettextize? */
         ans = inputChar("Do you want to exit w3m? (y/n)");
     if (!(ans && TOLOWER(*ans) == 'y')) {
@@ -3270,11 +3247,6 @@ DEFUN(reload, RELOAD, "Load current document anew")
     int multipart;
 
     if (Currentbuf->bufferprop & BP_INTERNAL) {
-        if (!strcmp(Currentbuf->doc.title, DOWNLOAD_LIST_TITLE)) {
-            ldDL();
-            return;
-        }
-        /* FIXME: gettextize? */
         disp_err_message("Can't reload...", TRUE);
         return;
     }
@@ -3748,7 +3720,6 @@ void deleteFiles()
 
 void w3m_exit(int i)
 {
-    stopDownload();
     deleteFiles();
     free_ssl_ctx();
     disconnectFTP();
@@ -4173,7 +4144,8 @@ DEFUN(tabL, TAB_LEFT, "Move left along the tab bar")
 /* download panel */
 DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
 {
-    download_panel();
+    assert(false);
+    // download_panel();
 }
 
 static void
