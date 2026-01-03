@@ -527,7 +527,6 @@ struct Buffer* loadLink(const char* url, struct FormList* request,
         disp_err_message(emsg, FALSE);
         return NULL;
     }
-    pushBuffer(buf);
 
     // struct Url pu;
     // parseURL2(url, &pu, base);
@@ -795,9 +794,9 @@ void _followForm(bool submit, struct FollowOption option)
                 Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
             Strcat_charp(tmp2, "?");
             Strcat(tmp2, tmp);
-            loadLink(tmp2->ptr, NULL, a->target, NULL, option);
+            struct Buffer* new_buf = loadLink(tmp2->ptr, NULL, a->target, NULL, option);
+            tab_push_buffer(getRuntime()->CurrentTab, new_buf);
         } else if (fi->parent->method == FORM_METHOD_POST) {
-            struct Buffer* buf;
             if (multipart) {
                 struct stat st;
                 stat(fi->parent->body, &st);
@@ -806,16 +805,17 @@ void _followForm(bool submit, struct FollowOption option)
                 fi->parent->body = tmp->ptr;
                 fi->parent->length = tmp->length;
             }
-            buf = loadLink(tmp2->ptr, fi->parent, a->target, NULL, option);
+            struct Buffer* new_buf = loadLink(tmp2->ptr, fi->parent, a->target, NULL, option);
+            tab_push_buffer(getRuntime()->CurrentTab, new_buf);
             if (multipart) {
                 unlink(fi->parent->body);
             }
-            if (buf && !(buf->bufferprop & BP_REDIRECTED)) { /* buf must be Currentbuf */
+            if (new_buf && !(new_buf->bufferprop & BP_REDIRECTED)) { /* buf must be Currentbuf */
                 /* BP_REDIRECTED means that the buffer is obtained through
                  * Location: header. In this case, buf->form_submit must not be set
                  * because the page is not loaded by POST method but GET method.
                  */
-                buf->doc.form_submit = save_submit_formlist(fi);
+                new_buf->doc.form_submit = save_submit_formlist(fi);
             }
         } else if ((fi->parent->method == FORM_METHOD_INTERNAL && (!Strcmp_charp(fi->parent->action, "map") || !Strcmp_charp(fi->parent->action, "none"))) || Currentbuf->bufferprop & BP_INTERNAL) { /* internal */
             do_internal(tmp2->ptr, tmp->ptr);

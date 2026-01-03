@@ -1344,7 +1344,7 @@ DEFUN(readsh, READ_SHELL, "Execute shell command and display output")
         buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
         if (buf->content.content_type == NULL)
             buf->content.content_type = "text/plain";
-        pushBuffer(buf);
+        tab_push_buffer(getRuntime()->CurrentTab, buf);
     }
 }
 
@@ -1428,7 +1428,7 @@ cmd_loadURL(const char* url, struct FormList* request, struct LoadOption option)
         char* emsg = Sprintf("Can't load %s", conv_from_system(url))->ptr;
         disp_err_message(emsg, FALSE);
     } else {
-        pushBuffer(buf);
+        tab_push_buffer(getRuntime()->CurrentTab, buf);
         if (getRuntime()->RenderFrame && Currentbuf->doc.frameset != NULL)
             rFrame();
     }
@@ -1457,13 +1457,13 @@ cmd_loadfile(char* fn)
     struct Buffer* buf = newBuffer(INIT_BUFFER_WIDTH);
     buf->content = content;
     if (buf == NULL) {
-        /* FIXME: gettextize? */
         char* emsg = Sprintf("%s not found", conv_from_system(fn))->ptr;
         disp_err_message(emsg, FALSE);
-    } else {
-        pushBuffer(buf);
-        if (getRuntime()->RenderFrame && Currentbuf->doc.frameset != NULL)
-            rFrame();
+        return;
+    }
+    tab_push_buffer(getRuntime()->CurrentTab, buf);
+    if (getRuntime()->RenderFrame && Currentbuf->doc.frameset != NULL) {
+        rFrame();
     }
 }
 
@@ -2034,7 +2034,7 @@ gotoLabel(const char* label)
     buf->content.url.label = allocStr(label, -1);
     pushHashHist(getRuntime()->URLHist, parsedURL2Str(&buf->content.url)->ptr);
     (*buf->clone)++;
-    pushBuffer(buf);
+    tab_push_buffer(getRuntime()->CurrentTab, buf);
     doc_gotoLine(&Currentbuf->doc, al->start.line);
     if (getRuntime()->label_topline)
         Currentbuf->doc.topLine = doc_lineSkip(&Currentbuf->doc, Currentbuf->doc.topLine,
@@ -2086,18 +2086,21 @@ void _followA(struct FollowOption option)
         url = Sprintf("%s?%d,%d", a->url, x, y)->ptr;
 
     if (check_target && getRuntime()->open_tab_blank && a->target && (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
-        struct Buffer* buf;
+        // struct Buffer* buf;
 
         _newT();
-        buf = Currentbuf;
-        loadLink(url, NULL, a->target, a->referer, option);
-        if (buf != Currentbuf)
-            delBuffer(buf);
-        else
-            deleteTab(CurrentTab());
-        return;
+        // buf = Currentbuf;
+        struct Buffer* new_buf = loadLink(url, NULL, a->target, a->referer, option);
+        tab_push_buffer(getRuntime()->CurrentTab, new_buf);
+        // if (buf != Currentbuf)
+        //     delBuffer(buf);
+        // else
+        //     deleteTab(CurrentTab());
+        // return;
+    } else {
+        struct Buffer* new_buf = loadLink(url, NULL, a->target, a->referer, option);
+        tab_push_buffer(getRuntime()->CurrentTab, new_buf);
     }
-    loadLink(url, NULL, a->target, a->referer, option);
 }
 
 /* follow HREF link */
@@ -2132,7 +2135,7 @@ void _followI(bool do_download)
         char* emsg = Sprintf("Can't load %s", a->url)->ptr;
         disp_err_message(emsg, FALSE);
     } else {
-        pushBuffer(buf);
+        tab_push_buffer(getRuntime()->CurrentTab, buf);
     }
 }
 
@@ -3234,7 +3237,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
     buf->clone = Currentbuf->clone;
     (*buf->clone)++;
     reshapeBuffer(buf);
-    pushBuffer(buf);
+    tab_push_buffer(getRuntime()->CurrentTab, buf);
 }
 
 /* reload */
@@ -3273,7 +3276,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
         }
         fbuf->linkBuffer[LB_FRAME] = buf;
         buf->linkBuffer[LB_N_FRAME] = fbuf;
-        pushBuffer(buf);
+        tab_push_buffer(getRuntime()->CurrentTab, buf);
         Currentbuf = buf;
         if (Currentbuf->doc.firstLine) {
             COPY_BUFROOT(Currentbuf, &sbuf);
@@ -3458,7 +3461,7 @@ DEFUN(rFrame, FRAME, "Toggle rendering HTML frames")
     }
     buf->linkBuffer[LB_N_FRAME] = Currentbuf;
     Currentbuf->linkBuffer[LB_FRAME] = buf;
-    pushBuffer(buf);
+    tab_push_buffer(getRuntime()->CurrentTab, buf);
 }
 
 /* spawn external browser */
@@ -3653,7 +3656,7 @@ execdict(char* word)
         buf->doc.title = Sprintf("%s %s", DICTBUFFERNAME, word)->ptr;
         if (buf->content.content_type == NULL)
             buf->content.content_type = "text/plain";
-        pushBuffer(buf);
+        tab_push_buffer(getRuntime()->CurrentTab, buf);
     }
 }
 
@@ -4030,7 +4033,7 @@ followTab(struct TabBuffer* tab)
         getRuntime()->CurrentTab = tab;
         for (buf = p; buf; buf = p) {
             p = prevBuffer(c, buf);
-            pushBuffer(buf);
+            tab_push_buffer(tab, buf);
         }
     }
 }
@@ -4069,7 +4072,7 @@ tabURL0(struct TabBuffer* tab, char* prompt, int relative)
         getRuntime()->CurrentTab = tab;
         for (buf = p; buf; buf = p) {
             p = prevBuffer(c, buf);
-            pushBuffer(buf);
+            tab_push_buffer(tab, buf);
         }
     }
 }

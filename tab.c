@@ -15,7 +15,7 @@ struct TabBuffer* newTab(void)
     return n;
 }
 
-void pushBuffer(struct Buffer* buf)
+void tab_push_buffer(struct TabBuffer*tab, struct Buffer* buf)
 {
     deleteImage(Currentbuf);
     if (getRuntime()->clear_buffer)

@@ -54,7 +54,7 @@ void cmd_loadBuffer(struct Buffer* buf, int prop, enum LinkBufferID linkid)
             buf->linkBuffer[REV_LB[linkid]] = Currentbuf;
             Currentbuf->linkBuffer[linkid] = buf;
         }
-        pushBuffer(buf);
+        tab_push_buffer(getRuntime()->CurrentTab, buf);
     }
 }
 
