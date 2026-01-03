@@ -1,4 +1,5 @@
 #pragma once
+#include "menu_keybind.h"
 #include <stdbool.h>
 
 #define MENU_END 0
@@ -6,12 +7,6 @@
 #define MENU_VALUE 2
 #define MENU_FUNC 4
 #define MENU_POPUP 8
-
-enum MenuResult {
-    MENU_NOTHING = -1,
-    MENU_CANCEL = -2,
-    MENU_CLOSE = -3,
-};
 
 struct MenuItem {
     int type;
@@ -24,7 +19,6 @@ struct MenuItem {
     const char* data;
 };
 
-typedef enum MenuResult (*MenuKeyFunc)(char ch);
 
 struct Menu {
     struct Menu* parent;

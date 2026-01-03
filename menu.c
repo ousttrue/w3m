@@ -35,590 +35,6 @@ static bool graph_mode = false;
             screen_graphend(); \
     }
 
-static enum MenuResult mEsc(char c);
-static enum MenuResult mEscB(char c);
-static enum MenuResult mEscD(char c);
-static enum MenuResult mNull(char c);
-static enum MenuResult mSelect(char c);
-static enum MenuResult mDown(char c);
-static enum MenuResult mUp(char c);
-static enum MenuResult mLast(char c);
-static enum MenuResult mTop(char c);
-static enum MenuResult mNext(char c);
-static enum MenuResult mPrev(char c);
-static enum MenuResult mFore(char c);
-static enum MenuResult mBack(char c);
-static enum MenuResult mLineU(char c);
-static enum MenuResult mLineD(char c);
-static enum MenuResult mOk(char c);
-static enum MenuResult mCancel(char c);
-static enum MenuResult mClose(char c);
-static enum MenuResult mSusp(char c);
-static enum MenuResult mMouse(char c);
-static enum MenuResult mSgrMouse(char c);
-static enum MenuResult mSrchF(char c);
-static enum MenuResult mSrchB(char c);
-static enum MenuResult mSrchN(char c);
-static enum MenuResult mSrchP(char c);
-
-/* *INDENT-OFF* */
-static MenuKeyFunc MenuKeymap[128] = {
-    /*  C-@     C-a     C-b     C-c     C-d     C-e     C-f     C-g      */
-    mNull,
-    mTop,
-    mPrev,
-    mClose,
-    mNull,
-    mLast,
-    mNext,
-    mNull,
-    /*  C-h     C-i     C-j     C-k     C-l     C-m     C-n     C-o      */
-    mCancel,
-    mNull,
-    mOk,
-    mNull,
-    mNull,
-    mOk,
-    mDown,
-    mNull,
-    /*  C-p     C-q     C-r     C-s     C-t     C-u     C-v     C-w      */
-    mUp,
-    mNull,
-    mSrchB,
-    mSrchF,
-    mNull,
-    mNull,
-    mNext,
-    mNull,
-    /*  C-x     C-y     C-z     C-[     C-\     C-]     C-^     C-_      */
-    mNull,
-    mNull,
-    mSusp,
-    mEsc,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    /*  SPC     !       "       #       $       %       &       '        */
-    mOk,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    /*  (       )       *       +       ,       -       .       /        */
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mSrchF,
-    /*  0       1       2       3       4       5       6       7        */
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    /*  8       9       :       ;       <       =       >       ?        */
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mSrchB,
-    /*  @       A       B       C       D       E       F       G        */
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    /*  H       I       J       K       L       M       N       O        */
-    mNull,
-    mNull,
-    mLineU,
-    mLineD,
-    mNull,
-    mNull,
-    mSrchP,
-    mNull,
-    /*  P       Q       R       S       T       U       V       W        */
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    /*  X       Y       Z       [       \       ]       ^       _        */
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    /*  `       a       b       c       d       e       f       g        */
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    /*  h       i       j       k       l       m       n       o        */
-    mCancel,
-    mNull,
-    mDown,
-    mUp,
-    mOk,
-    mNull,
-    mSrchN,
-    mNull,
-    /*  p       q       r       s       t       u       v       w        */
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    /*  x       y       z       {       |       }       ~       DEL      */
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mCancel,
-};
-static int (*MenuEscKeymap[128])(char c) = {
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    /*                                                          O     */
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mEscB,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    /*                          [                                     */
-    mNull,
-    mNull,
-    mNull,
-    mEscB,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    /*                                                  v             */
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mPrev,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-};
-static int (*MenuEscBKeymap[128])(char c) = {
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    /*  8       9       :       ;       <       =       >       ?     */
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mSgrMouse,
-    mNull,
-    mNull,
-    mNull,
-    /*          A       B       C       D       E                     */
-    mNull,
-    mUp,
-    mDown,
-    mOk,
-    mCancel,
-    mClose,
-    mNull,
-    mNull,
-    /*                                  L       M                     */
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mClose,
-    mMouse,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-};
-static int (*MenuEscDKeymap[128])(char c) = {
-    /*  0       1       INS     3       4       PgUp,   PgDn    7     */
-    mNull,
-    mNull,
-    mClose,
-    mNull,
-    mNull,
-    mBack,
-    mFore,
-    mNull,
-    /*  8       9       10      F1      F2      F3      F4      F5       */
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    /*  16      F6      F7      F8      F9      F10     22      23       */
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    /*  24      25      26      27      HELP    29      30      31       */
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mClose,
-    mNull,
-    mNull,
-    mNull,
-
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-    mNull,
-};
-
-/* *INDENT-ON* */
-/* --- SelectMenu --- */
 
 static struct Menu SelectMenu;
 static int SelectV = 0;
@@ -1050,15 +466,13 @@ set_menu_frame(void)
 
 /* --- MenuFunctions --- */
 
-static int
-mEsc(char c)
+int mEsc(char c)
 {
     c = getch();
     return (MenuEscKeymap[(int)c](c));
 }
 
-static int
-mEscB(char c)
+int mEscB(char c)
 {
     c = getch();
     if (IS_DIGIT(c))
@@ -1067,8 +481,7 @@ mEscB(char c)
         return (MenuEscBKeymap[(int)c](c));
 }
 
-static int
-mEscD(char c)
+int mEscD(char c)
 {
     int d;
 
@@ -1084,12 +497,12 @@ mEscD(char c)
         return (MENU_NOTHING);
 }
 
-static enum MenuResult mNull(char c)
+enum MenuResult mNull(char c)
 {
     return (MENU_NOTHING);
 }
 
-static enum MenuResult mSelect(char c)
+enum MenuResult mSelect(char c)
 {
     if (IS_ASCII(c))
         return (select_menu(CurrentMenu, CurrentMenu->keyselect[(int)c]));
@@ -1097,7 +510,7 @@ static enum MenuResult mSelect(char c)
         return (MENU_NOTHING);
 }
 
-static enum MenuResult mDown(char c)
+enum MenuResult mDown(char c)
 {
     if (CurrentMenu->select >= CurrentMenu->nitem - 1)
         return (MENU_NOTHING);
@@ -1105,8 +518,7 @@ static enum MenuResult mDown(char c)
     return (MENU_NOTHING);
 }
 
-static int
-mUp(char c)
+int mUp(char c)
 {
     if (CurrentMenu->select <= 0)
         return (MENU_NOTHING);
@@ -1114,22 +526,19 @@ mUp(char c)
     return (MENU_NOTHING);
 }
 
-static int
-mLast(char c)
+int mLast(char c)
 {
     goto_menu(CurrentMenu, CurrentMenu->nitem - 1, -1);
     return (MENU_NOTHING);
 }
 
-static int
-mTop(char c)
+int mTop(char c)
 {
     goto_menu(CurrentMenu, 0, 1);
     return (MENU_NOTHING);
 }
 
-static int
-mNext(char c)
+int mNext(char c)
 {
     int mselect = CurrentMenu->select + CurrentMenu->height;
 
@@ -1140,8 +549,7 @@ mNext(char c)
     return (MENU_NOTHING);
 }
 
-static int
-mPrev(char c)
+int mPrev(char c)
 {
     int mselect = CurrentMenu->select - CurrentMenu->height;
 
@@ -1152,8 +560,7 @@ mPrev(char c)
     return (MENU_NOTHING);
 }
 
-static int
-mFore(char c)
+int mFore(char c)
 {
     if (CurrentMenu->select >= CurrentMenu->nitem - 1)
         return (MENU_NOTHING);
@@ -1162,8 +569,7 @@ mFore(char c)
     return (MENU_NOTHING);
 }
 
-static int
-mBack(char c)
+int mBack(char c)
 {
     if (CurrentMenu->select <= 0)
         return (MENU_NOTHING);
@@ -1172,8 +578,7 @@ mBack(char c)
     return (MENU_NOTHING);
 }
 
-static int
-mLineU(char c)
+int mLineU(char c)
 {
     int mselect = CurrentMenu->select;
 
@@ -1190,8 +595,7 @@ mLineU(char c)
     return (MENU_NOTHING);
 }
 
-static int
-mLineD(char c)
+int mLineD(char c)
 {
     int mselect = CurrentMenu->select;
 
@@ -1208,8 +612,7 @@ mLineD(char c)
     return (MENU_NOTHING);
 }
 
-static int
-mOk(char c)
+int mOk(char c)
 {
     int mselect = CurrentMenu->select;
 
@@ -1218,20 +621,17 @@ mOk(char c)
     return (mselect);
 }
 
-static int
-mCancel(char c)
+int mCancel(char c)
 {
     return (MENU_CANCEL);
 }
 
-static int
-mClose(char c)
+int mClose(char c)
 {
     return (MENU_CLOSE);
 }
 
-static int
-mSusp(char c)
+int mSusp(char c)
 {
     susp();
     draw_all_menu(CurrentMenu);
@@ -1280,8 +680,7 @@ menu_search_forward(struct Menu* menu, int from)
     return -1;
 }
 
-static int
-mSrchF(char c)
+int mSrchF(char c)
 {
     int mselect;
     mselect = menu_search_forward(CurrentMenu, CurrentMenu->select);
@@ -1327,8 +726,7 @@ menu_search_backward(struct Menu* menu, int from)
     return -1;
 }
 
-static int
-mSrchB(char c)
+int mSrchB(char c)
 {
     int mselect;
     mselect = menu_search_backward(CurrentMenu, CurrentMenu->select);
@@ -1363,8 +761,7 @@ menu_search_next_previous(struct Menu* menu, int from, int reverse)
     return -1;
 }
 
-static int
-mSrchN(char c)
+int mSrchN(char c)
 {
     int mselect;
     mselect = menu_search_next_previous(CurrentMenu, CurrentMenu->select, 0);
@@ -1373,8 +770,7 @@ mSrchN(char c)
     return (MENU_NOTHING);
 }
 
-static int
-mSrchP(char c)
+int mSrchP(char c)
 {
     int mselect;
     mselect = menu_search_next_previous(CurrentMenu, CurrentMenu->select, 1);
@@ -1383,14 +779,12 @@ mSrchP(char c)
     return (MENU_NOTHING);
 }
 
-static int
-mMouse(char c)
+int mMouse(char c)
 {
     return (MENU_NOTHING);
 }
 
-static int
-mSgrMouse(char c)
+int mSgrMouse(char c)
 {
     return (MENU_NOTHING);
 }

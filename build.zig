@@ -2,10 +2,9 @@ const std = @import("std");
 const zcc = @import("compile_commands");
 
 const system_libs = [_][]const u8{
-    "gc", "ssl", "crypto",
+    "gc",      "ssl", "crypto",
 
     "ncurses",
-    // "termcap",
 };
 
 const w3m_srcs = [_][]const u8{
@@ -45,6 +44,7 @@ const w3m_srcs = [_][]const u8{
     "maparea.c",
     "frame.c",
     "menu.c",
+    "menu_keybind.c",
     "mailcap.c",
     "image.c",
     "symbol.c",
