@@ -575,7 +575,7 @@ fn ins_char(this: *@This(), str: c.Str) void {
         len -= 1;
         if (len != 0) {
             ctype = (ctype & ~c.PC_WCHAR1) | c.PC_WCHAR2;
-            while (len != 0) : (len -= 0) {
+            while (len != 0) : (len -= 1) {
                 this.insC();
                 this.strBuf.*.ptr[this.CPos] = p[0];
                 p += 1;
