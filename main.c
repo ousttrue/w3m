@@ -1430,7 +1430,7 @@ cmd_loadURL(const char* url, struct FormList* request, struct LoadOption option)
     } else {
         tab_push_buffer(getRuntime()->CurrentTab, buf);
         if (getRuntime()->RenderFrame && Currentbuf->doc.frameset != NULL)
-            rFrame();
+            rFrame((struct DefunContext) { 0 });
     }
 }
 
@@ -1463,7 +1463,7 @@ cmd_loadfile(char* fn)
     }
     tab_push_buffer(getRuntime()->CurrentTab, buf);
     if (getRuntime()->RenderFrame && Currentbuf->doc.frameset != NULL) {
-        rFrame();
+        rFrame((struct DefunContext) { 0 });
     }
 }
 
@@ -1745,10 +1745,10 @@ DEFUN(selBuf, SELECT, "Display buffer-stack panel")
             }
             break;
         case 'q':
-            qquitfm();
+            qquitfm(ctx);
             break;
         case 'Q':
-            quitfm();
+            quitfm(ctx);
             break;
         }
     } while (!ok);
@@ -1879,7 +1879,7 @@ DEFUN(editBf, EDIT, "Edit local source")
     blockChild(cmd->ptr);
 
     // buffer is modified. so reload
-    reload();
+    reload(ctx);
 }
 
 /* Run editor on the current screen */
@@ -2663,7 +2663,7 @@ DEFUN(backBf, BACK, "Close current buffer and return to the one below in stack")
             buf->doc.frameset = fs;
 
             if (buf == Currentbuf) {
-                rFrame();
+                rFrame(ctx);
                 Currentbuf->doc.topLine = doc_lineSkip(&Currentbuf->doc,
                     Currentbuf->doc.firstLine, top - 1);
                 doc_gotoLine(&Currentbuf->doc, linenumber);
@@ -2928,7 +2928,7 @@ anchorMn(BufferMenuFunc menu_func, bool go)
     Currentbuf->doc.pos = po->pos;
     doc_arrangeCursor(&Currentbuf->doc);
     if (go)
-        followA();
+        followA((struct DefunContext) { 0 });
 }
 
 /* accesskey */
@@ -3325,7 +3325,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
         Firstbuf = deleteBuffer(Firstbuf, fbuf);
     repBuffer(Currentbuf, buf);
     if ((buf->content.content_type != NULL) && (sbuf.content.content_type != NULL) && ((!strcasecmp(buf->content.content_type, "text/plain") && is_html_type(sbuf.content.content_type)) || (is_html_type(buf->content.content_type) && !strcasecmp(sbuf.content.content_type, "text/plain")))) {
-        vwSrc();
+        vwSrc(ctx);
         if (Currentbuf != buf)
             Firstbuf = deleteBuffer(Firstbuf, buf);
     }
@@ -3757,7 +3757,7 @@ DEFUN(execCmd, COMMAND, "Invoke w3m function(s)")
         getRuntime()->CurrentKey = -1;
         getRuntime()->CurrentKeyData = NULL;
         getRuntime()->CurrentCmdData = *p ? p : NULL;
-        w3mFuncList[cmd].func();
+        w3mFuncList[cmd].func(ctx);
         getRuntime()->CurrentCmdData = NULL;
     }
 }
@@ -4005,14 +4005,14 @@ followTab(struct TabBuffer* tab)
 
     if (tab == CurrentTab()) {
         check_target = FALSE;
-        followA();
+        followA((struct DefunContext) { 0 });
         check_target = TRUE;
         return;
     }
     _newT();
     buf = Currentbuf;
     check_target = FALSE;
-    followA();
+    followA((struct DefunContext) { 0 });
     check_target = TRUE;
     if (tab == NULL) {
         if (buf != Currentbuf)

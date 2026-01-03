@@ -35,12 +35,10 @@ static bool graph_mode = false;
             screen_graphend(); \
     }
 
-
 static struct Menu SelectMenu;
 static int SelectV = 0;
 static void initSelectMenu(void);
 static void smChBuf(void);
-static int smDelBuf(char c);
 
 /* --- SelectMenu (END) --- */
 
@@ -50,7 +48,6 @@ static struct Menu SelTabMenu;
 static int SelTabV = 0;
 static void initSelTabMenu(void);
 static void smChTab(void);
-static int smDelTab(char c);
 
 /* --- SelTabMenu (END) --- */
 
@@ -341,7 +338,12 @@ bool action_menu(struct Menu* menu)
     while (1) {
         int ch = getch();
         if (IS_ASCII(ch)) { /* Ascii */
-            enum MenuResult mselect = (*menu->keymap[ch])(ch);
+            enum MenuResult mselect = (*menu->keymap[ch])(
+                (struct DefunContext) {
+                    .tab = getRuntime()->CurrentTab,
+                    .buf = getRuntime()->CurrentTab->currentBuffer,
+                },
+                ch);
             if (mselect != MENU_NOTHING) {
                 break;
             }
@@ -365,7 +367,10 @@ bool action_menu(struct Menu* menu)
             getRuntime()->CurrentKey = -1;
             getRuntime()->CurrentKeyData = NULL;
             getRuntime()->CurrentCmdData = item.data;
-            (*item.func)();
+            (*item.func)((struct DefunContext) {
+                .tab = getRuntime()->CurrentTab,
+                .buf = getRuntime()->CurrentTab->currentBuffer,
+            });
             getRuntime()->CurrentCmdData = NULL;
         }
     } else if (mselect == MENU_CLOSE) {
@@ -466,22 +471,22 @@ set_menu_frame(void)
 
 /* --- MenuFunctions --- */
 
-int mEsc(char c)
+int mEsc(struct DefunContext ctx, char c)
 {
     c = getch();
-    return (MenuEscKeymap[(int)c](c));
+    return (MenuEscKeymap[(int)c](ctx, c));
 }
 
-int mEscB(char c)
+int mEscB(struct DefunContext ctx, char c)
 {
     c = getch();
     if (IS_DIGIT(c))
-        return (mEscD(c));
+        return (mEscD(ctx, c));
     else
-        return (MenuEscBKeymap[(int)c](c));
+        return (MenuEscBKeymap[(int)c](ctx, c));
 }
 
-int mEscD(char c)
+int mEscD(struct DefunContext ctx, char c)
 {
     int d;
 
@@ -492,17 +497,17 @@ int mEscD(char c)
         c = getch();
     }
     if (c == '~')
-        return (MenuEscDKeymap[d](c));
+        return (MenuEscDKeymap[d](ctx, c));
     else
         return (MENU_NOTHING);
 }
 
-enum MenuResult mNull(char c)
+enum MenuResult mNull(struct DefunContext ctx, char c)
 {
     return (MENU_NOTHING);
 }
 
-enum MenuResult mSelect(char c)
+enum MenuResult mSelect(struct DefunContext ctx, char c)
 {
     if (IS_ASCII(c))
         return (select_menu(CurrentMenu, CurrentMenu->keyselect[(int)c]));
@@ -510,7 +515,7 @@ enum MenuResult mSelect(char c)
         return (MENU_NOTHING);
 }
 
-enum MenuResult mDown(char c)
+enum MenuResult mDown(struct DefunContext ctx, char c)
 {
     if (CurrentMenu->select >= CurrentMenu->nitem - 1)
         return (MENU_NOTHING);
@@ -518,7 +523,7 @@ enum MenuResult mDown(char c)
     return (MENU_NOTHING);
 }
 
-int mUp(char c)
+int mUp(struct DefunContext ctx, char c)
 {
     if (CurrentMenu->select <= 0)
         return (MENU_NOTHING);
@@ -526,41 +531,41 @@ int mUp(char c)
     return (MENU_NOTHING);
 }
 
-int mLast(char c)
+int mLast(struct DefunContext ctx, char c)
 {
     goto_menu(CurrentMenu, CurrentMenu->nitem - 1, -1);
     return (MENU_NOTHING);
 }
 
-int mTop(char c)
+int mTop(struct DefunContext ctx, char c)
 {
     goto_menu(CurrentMenu, 0, 1);
     return (MENU_NOTHING);
 }
 
-int mNext(char c)
+int mNext(struct DefunContext ctx, char c)
 {
     int mselect = CurrentMenu->select + CurrentMenu->height;
 
     if (mselect >= CurrentMenu->nitem)
-        return mLast(c);
+        return mLast(ctx, c);
     down_menu(CurrentMenu, CurrentMenu->height);
     goto_menu(CurrentMenu, mselect, -1);
     return (MENU_NOTHING);
 }
 
-int mPrev(char c)
+int mPrev(struct DefunContext ctx, char c)
 {
     int mselect = CurrentMenu->select - CurrentMenu->height;
 
     if (mselect < 0)
-        return mTop(c);
+        return mTop(ctx, c);
     up_menu(CurrentMenu, CurrentMenu->height);
     goto_menu(CurrentMenu, mselect, 1);
     return (MENU_NOTHING);
 }
 
-int mFore(char c)
+int mFore(struct DefunContext ctx, char c)
 {
     if (CurrentMenu->select >= CurrentMenu->nitem - 1)
         return (MENU_NOTHING);
@@ -569,7 +574,7 @@ int mFore(char c)
     return (MENU_NOTHING);
 }
 
-int mBack(char c)
+int mBack(struct DefunContext ctx, char c)
 {
     if (CurrentMenu->select <= 0)
         return (MENU_NOTHING);
@@ -578,12 +583,12 @@ int mBack(char c)
     return (MENU_NOTHING);
 }
 
-int mLineU(char c)
+int mLineU(struct DefunContext ctx, char c)
 {
     int mselect = CurrentMenu->select;
 
     if (mselect >= CurrentMenu->nitem)
-        return mLast(c);
+        return mLast(ctx, c);
     if (CurrentMenu->offset + CurrentMenu->height >= CurrentMenu->nitem)
         mselect++;
     else {
@@ -595,12 +600,12 @@ int mLineU(char c)
     return (MENU_NOTHING);
 }
 
-int mLineD(char c)
+int mLineD(struct DefunContext ctx, char c)
 {
     int mselect = CurrentMenu->select;
 
     if (mselect <= 0)
-        return mTop(c);
+        return mTop(ctx, c);
     if (CurrentMenu->offset <= 0)
         mselect--;
     else {
@@ -612,7 +617,7 @@ int mLineD(char c)
     return (MENU_NOTHING);
 }
 
-int mOk(char c)
+int mOk(struct DefunContext ctx, char c)
 {
     int mselect = CurrentMenu->select;
 
@@ -621,19 +626,19 @@ int mOk(char c)
     return (mselect);
 }
 
-int mCancel(char c)
+int mCancel(struct DefunContext ctx, char c)
 {
     return (MENU_CANCEL);
 }
 
-int mClose(char c)
+int mClose(struct DefunContext ctx, char c)
 {
     return (MENU_CLOSE);
 }
 
-int mSusp(char c)
+int mSusp(struct DefunContext ctx, char c)
 {
-    susp();
+    susp(ctx);
     draw_all_menu(CurrentMenu);
     select_menu(CurrentMenu, CurrentMenu->select);
     return (MENU_NOTHING);
@@ -680,7 +685,7 @@ menu_search_forward(struct Menu* menu, int from)
     return -1;
 }
 
-int mSrchF(char c)
+int mSrchF(struct DefunContext ctx, char c)
 {
     int mselect;
     mselect = menu_search_forward(CurrentMenu, CurrentMenu->select);
@@ -726,7 +731,7 @@ menu_search_backward(struct Menu* menu, int from)
     return -1;
 }
 
-int mSrchB(char c)
+int mSrchB(struct DefunContext ctx, char c)
 {
     int mselect;
     mselect = menu_search_backward(CurrentMenu, CurrentMenu->select);
@@ -761,7 +766,7 @@ menu_search_next_previous(struct Menu* menu, int from, int reverse)
     return -1;
 }
 
-int mSrchN(char c)
+int mSrchN(struct DefunContext ctx, char c)
 {
     int mselect;
     mselect = menu_search_next_previous(CurrentMenu, CurrentMenu->select, 0);
@@ -770,7 +775,7 @@ int mSrchN(char c)
     return (MENU_NOTHING);
 }
 
-int mSrchP(char c)
+int mSrchP(struct DefunContext ctx, char c)
 {
     int mselect;
     mselect = menu_search_next_previous(CurrentMenu, CurrentMenu->select, 1);
@@ -779,12 +784,12 @@ int mSrchP(char c)
     return (MENU_NOTHING);
 }
 
-int mMouse(char c)
+int mMouse(struct DefunContext ctx, char c)
 {
     return (MENU_NOTHING);
 }
 
-int mSgrMouse(char c)
+int mSgrMouse(struct DefunContext ctx, char c)
 {
     return (MENU_NOTHING);
 }
@@ -841,6 +846,47 @@ DEFUN(selMn, SELECT_MENU, "Pop up buffer-stack menu")
         y = Currentbuf->doc.cursorY + Currentbuf->doc.rootY;
 
     popupMenu(x, y, &SelectMenu);
+}
+
+// typedef enum MenuResult (*MenuKeyFunc)(struct DefunContext ctx, char ch);
+static enum MenuResult
+smDelBuf(struct DefunContext ctx, char c)
+{
+    int i, x, y, mselect;
+    struct Buffer* buf;
+
+    if (CurrentMenu->select < 0 || CurrentMenu->select >= SelectMenu.nitem)
+        return (MENU_NOTHING);
+    for (i = 0, buf = Firstbuf; i < CurrentMenu->select;
+        i++, buf = buf->nextBuffer)
+        ;
+    if (Currentbuf == buf)
+        Currentbuf = buf->nextBuffer;
+    Firstbuf = deleteBuffer(Firstbuf, buf);
+    if (!Currentbuf)
+        Currentbuf = nthBuffer(Firstbuf, i - 1);
+    ;
+    if (Firstbuf == NULL) {
+        Firstbuf = nullBuffer();
+        Currentbuf = Firstbuf;
+    }
+
+    x = CurrentMenu->x;
+    y = CurrentMenu->y;
+    mselect = CurrentMenu->select;
+
+    initSelectMenu();
+
+    CurrentMenu->x = x;
+    CurrentMenu->y = y;
+
+    geom_menu(CurrentMenu, x, y, 0);
+
+    CurrentMenu->select = (mselect <= CurrentMenu->nitem - 2) ? mselect
+                                                              : (CurrentMenu->nitem - 2);
+    draw_all_menu(CurrentMenu);
+    select_menu(CurrentMenu, CurrentMenu->select);
+    return (MENU_NOTHING);
 }
 
 static void
@@ -929,46 +975,6 @@ smChBuf(void)
     }
 }
 
-static int
-smDelBuf(char c)
-{
-    int i, x, y, mselect;
-    struct Buffer* buf;
-
-    if (CurrentMenu->select < 0 || CurrentMenu->select >= SelectMenu.nitem)
-        return (MENU_NOTHING);
-    for (i = 0, buf = Firstbuf; i < CurrentMenu->select;
-        i++, buf = buf->nextBuffer)
-        ;
-    if (Currentbuf == buf)
-        Currentbuf = buf->nextBuffer;
-    Firstbuf = deleteBuffer(Firstbuf, buf);
-    if (!Currentbuf)
-        Currentbuf = nthBuffer(Firstbuf, i - 1);
-    ;
-    if (Firstbuf == NULL) {
-        Firstbuf = nullBuffer();
-        Currentbuf = Firstbuf;
-    }
-
-    x = CurrentMenu->x;
-    y = CurrentMenu->y;
-    mselect = CurrentMenu->select;
-
-    initSelectMenu();
-
-    CurrentMenu->x = x;
-    CurrentMenu->y = y;
-
-    geom_menu(CurrentMenu, x, y, 0);
-
-    CurrentMenu->select = (mselect <= CurrentMenu->nitem - 2) ? mselect
-                                                              : (CurrentMenu->nitem - 2);
-    draw_all_menu(CurrentMenu);
-    select_menu(CurrentMenu, CurrentMenu->select);
-    return (MENU_NOTHING);
-}
-
 /* --- SelectMenu (END) --- */
 
 /* --- SelTabMenu --- */
@@ -979,6 +985,38 @@ DEFUN(tabMn, TAB_MENU, "Pop up tab selection menu")
         y = Currentbuf->doc.cursorY + Currentbuf->doc.rootY;
 
     popupMenu(x, y, &SelTabMenu);
+}
+
+static int
+smDelTab(struct DefunContext ctx, char c)
+{
+    int i, x, y, mselect;
+    struct TabBuffer* tab;
+
+    if (CurrentMenu->select < 0 || CurrentMenu->select >= SelTabMenu.nitem)
+        return (MENU_NOTHING);
+    for (i = 0, tab = LastTab(); i < CurrentMenu->select && tab != NULL;
+        i++, tab = tab->prevTab)
+        ;
+    deleteTab(tab);
+
+    x = CurrentMenu->x;
+    y = CurrentMenu->y;
+    mselect = CurrentMenu->select;
+
+    initSelTabMenu();
+
+    CurrentMenu->x = x;
+    CurrentMenu->y = y;
+
+    geom_menu(CurrentMenu, x, y, 0);
+
+    CurrentMenu->select = (mselect <= CurrentMenu->nitem - 2) ? mselect
+                                                              : (CurrentMenu->nitem - 2);
+
+    draw_all_menu(CurrentMenu);
+    select_menu(CurrentMenu, CurrentMenu->select);
+    return (MENU_NOTHING);
 }
 
 static void
@@ -1066,38 +1104,6 @@ smChTab(void)
         if (getRuntime()->clear_buffer)
             tmpClearBuffer(buf);
     }
-}
-
-static int
-smDelTab(char c)
-{
-    int i, x, y, mselect;
-    struct TabBuffer* tab;
-
-    if (CurrentMenu->select < 0 || CurrentMenu->select >= SelTabMenu.nitem)
-        return (MENU_NOTHING);
-    for (i = 0, tab = LastTab(); i < CurrentMenu->select && tab != NULL;
-        i++, tab = tab->prevTab)
-        ;
-    deleteTab(tab);
-
-    x = CurrentMenu->x;
-    y = CurrentMenu->y;
-    mselect = CurrentMenu->select;
-
-    initSelTabMenu();
-
-    CurrentMenu->x = x;
-    CurrentMenu->y = y;
-
-    geom_menu(CurrentMenu, x, y, 0);
-
-    CurrentMenu->select = (mselect <= CurrentMenu->nitem - 2) ? mselect
-                                                              : (CurrentMenu->nitem - 2);
-
-    draw_all_menu(CurrentMenu);
-    select_menu(CurrentMenu, CurrentMenu->select);
-    return (MENU_NOTHING);
 }
 
 /* --- SelectMenu (END) --- */
@@ -1443,7 +1449,7 @@ static char lmKeys2[] = "1234567890ABCDEFGHILMOPQRSTUVWXYZ";
 #define nlmKeys2 (sizeof(lmKeys2) - 1)
 
 static int
-lmGoto(char c)
+lmGoto(struct DefunContext ctx, char c)
 {
     if (IS_ASCII(c) && CurrentMenu->keyselect[(int)c] >= 0) {
         goto_menu(CurrentMenu, CurrentMenu->nitem - 1, -1);
@@ -1453,7 +1459,7 @@ lmGoto(char c)
 }
 
 static int
-lmSelect(char c)
+lmSelect(struct DefunContext ctx, char c)
 {
     if (IS_ASCII(c))
         return select_menu(CurrentMenu, (CurrentMenu->select / nlmKeys) * nlmKeys + CurrentMenu->keyselect[(int)c]);

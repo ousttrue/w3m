@@ -54,7 +54,6 @@ extern int add_cookie(struct Url* pu, Str name, Str value, time_t expires,
 extern void save_cookies(void);
 extern void load_cookies(void);
 extern void initCookie(void);
-extern void cooLst(void);
 extern struct Buffer* cookie_list_panel(void);
 struct parsed_tagarg;
 extern void set_cookie_flag(struct parsed_tagarg* arg);

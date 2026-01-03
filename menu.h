@@ -69,9 +69,6 @@ int addMenuList(MenuList** list, const char* id);
 int getMenuN(MenuList* list, const char* id);
 void popupMenu(int x, int y, struct Menu* menu);
 void mainMenu(int x, int y);
-void mainMn(void);
-void selMn(void);
-void tabMn(void);
 void optionMenu(int x, int y, const char** label, int* variable, int initial,
     void (*func)());
 void initMenu(void);

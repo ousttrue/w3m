@@ -36,7 +36,10 @@ bool eventUpdate()
     g->CurrentKey = -1;
     g->CurrentKeyData = NULL;
     g->CurrentCmdData = (char*)g->CurrentEvent->data;
-    w3mFuncList[g->CurrentEvent->cmd].func();
+    w3mFuncList[g->CurrentEvent->cmd].func((struct DefunContext) {
+        .tab = g_runtime.CurrentTab,
+        .buf = g_runtime.CurrentTab->currentBuffer,
+    });
     g->CurrentCmdData = NULL;
     g->CurrentEvent = g->CurrentEvent->next;
     return true;
@@ -45,7 +48,10 @@ bool eventUpdate()
 void keyPressEventProc(int c)
 {
     g_runtime.CurrentKey = c;
-    w3mFuncList[(int)GlobalKeymap[c]].func();
+    w3mFuncList[(int)GlobalKeymap[c]].func((struct DefunContext) {
+        .tab = g_runtime.CurrentTab,
+        .buf = g_runtime.CurrentTab->currentBuffer,
+    });
 }
 
 void escKeyProc(int c, int esc, unsigned char* map)
@@ -73,7 +79,10 @@ void escKeyProc(int c, int esc, unsigned char* map)
     }
     g_runtime.CurrentKey = esc | c;
     if (map)
-        w3mFuncList[(int)map[c]].func();
+        w3mFuncList[(int)map[c]].func((struct DefunContext) {
+            .tab = g_runtime.CurrentTab,
+            .buf = g_runtime.CurrentTab->currentBuffer,
+        });
 }
 
 #define PREC_LIMIT 10000

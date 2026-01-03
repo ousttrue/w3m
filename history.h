@@ -28,5 +28,4 @@ extern char* prevHist(struct Hist* hist);
 
 extern int loadHistory(struct Hist* hist);
 extern void saveHistory(struct Hist* hist, size_t size);
-extern void ldHist(void);
 extern struct Buffer* historyBuffer(struct Hist* hist);

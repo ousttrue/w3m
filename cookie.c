@@ -45,7 +45,7 @@ static int is_saved = 1;
 #define contain_no_dots(p, ep) (total_dot_number((p), (ep), 1) == 0)
 
 static unsigned int
-total_dot_number(char* p, char* ep, unsigned int max_count)
+total_dot_number(const char* p, const char* ep, unsigned int max_count)
 {
     unsigned int count = 0;
     if (!ep)
@@ -58,8 +58,8 @@ total_dot_number(char* p, char* ep, unsigned int max_count)
     return count;
 }
 
-static char*
-domain_match(char* host, char* domain)
+static const char*
+domain_match(const char* host, const char* domain)
 {
     int m0, m1;
 
@@ -73,15 +73,13 @@ domain_match(char* host, char* domain)
         if (strcasecmp(host, domain) == 0)
             return host;
     } else if (!m0 && !m1) {
-        int offset;
-        char* domain_p;
         /*
          * "." match all domains (w3m only),
          * and ".local" match local domains ([DRAFT 12] s. 2)
          */
         if (strcasecmp(domain, ".") == 0 || strcasecmp(domain, ".local") == 0) {
-            offset = strlen(host);
-            domain_p = &host[offset];
+            int offset = strlen(host);
+            const char* domain_p = &host[offset];
             if (domain[1] == '\0' || contain_no_dots(host, domain_p))
                 return domain_p;
         }
@@ -94,8 +92,8 @@ domain_match(char* host, char* domain)
         }
         /* [RFC 2109] s. 2, cases 2, 3 */
         else {
-            offset = (domain[0] != '.') ? 0 : strlen(host) - strlen(domain);
-            domain_p = &host[offset];
+            int offset = (domain[0] != '.') ? 0 : strlen(host) - strlen(domain);
+            const char* domain_p = &host[offset];
             if (offset >= 0 && strcasecmp(domain_p, domain) == 0)
                 return domain_p;
         }
@@ -188,7 +186,7 @@ make_cookie(struct cookie* cookie)
 }
 
 static int
-match_cookie(struct Url* pu, struct cookie* cookie, char* domainname)
+match_cookie(struct Url* pu, struct cookie* cookie, const char* domainname)
 {
     if (!domainname)
         return 0;
@@ -227,12 +225,11 @@ Str find_cookie(struct Url* pu)
     Str tmp;
     struct cookie *p, *p1, *fco = NULL;
     int version = 0;
-    char *fq_domainname, *domainname;
 
-    fq_domainname = FQDN(pu->host);
+    const char* fq_domainname = FQDN(pu->host);
     check_expired_cookies();
     for (p = First_cookie; p; p = p->next) {
-        domainname = (p->version == 0) ? fq_domainname : pu->host;
+        const char* domainname = (p->version == 0) ? fq_domainname : pu->host;
         if (p->flag & COO_USE && match_cookie(pu, p, domainname)) {
             for (p1 = fco; p1 && Strcasecmp(p1->name, p->name);
                 p1 = p1->next)
@@ -300,7 +297,7 @@ int add_cookie(struct Url* pu, Str name, Str value,
     int flag, Str comment, int version, Str port, Str commentURL)
 {
     struct cookie* p;
-    char* domainname = (version == 0) ? FQDN(pu->host) : pu->host;
+    const char* domainname = (version == 0) ? FQDN(pu->host) : pu->host;
     Str odomain = domain, opath = path;
     struct portlist* portlist = NULL;
     int use_security = !(flag & COO_OVERRIDE);
@@ -326,7 +323,6 @@ int add_cookie(struct Url* pu, Str name, Str value,
         return COO_ENODOT;
 
     if (domain) {
-        char* dp;
         /* [DRAFT 12] s. 4.2.2 (does not apply in the case that
          * host name is the same as domain attribute for version 0
          * cookie)
@@ -353,6 +349,7 @@ int add_cookie(struct Url* pu, Str name, Str value,
         }
 
         /* [RFC 2109] s. 4.3.2 case 3 */
+        const char* dp;
         if (!(dp = domain_match(domainname, domain->ptr)))
             COOKIE_ERROR(COO_EDOM);
         /* [RFC 2409] s. 4.3.2 case 4 */
@@ -696,7 +693,7 @@ void set_cookie_flag(struct parsed_tagarg* arg)
         }
         arg = arg->next;
     }
-    backBf();
+    backBf((struct DefunContext) { 0 });
 }
 
 int check_cookie_accept_domain(char* domain)

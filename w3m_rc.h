@@ -138,8 +138,6 @@ void tty_write_screen(void);
 // void term_cbreak(void);
 
 void term_title(const char* s);
-void bell(void);
-void quitfm(void);
 
 bool get_pixel_per_cell(int* ppc, int* ppl);
 

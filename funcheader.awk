@@ -1,14 +1,12 @@
 BEGIN {
-  # print "struct FuncList w3mFuncList[] = {";
-  # n = 0;
+  print "#include \"defun.h\""
 }
 /^#/ { next }
 {
-  # print "/*" n "*/ {\"" $1 "\"," $2 "},";
-  # n++;
-  print "extern void " $2 "();"
+  if (cmd[$2] == "") {
+    print "extern void " $2 "(struct DefunContext ctx);"
+    cmd[$2] = $2;
+  }
 } 
 END {
-  # print "{ NULL, NULL }"
-  # print "};"
 }

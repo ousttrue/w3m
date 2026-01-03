@@ -2336,7 +2336,7 @@ void panel_set_option(struct parsed_tagarg* arg)
         fclose(f);
     }
     sync_with_option();
-    backBf();
+    backBf((struct DefunContext) { 0 });
 }
 
 char* rcFile(const char* base)

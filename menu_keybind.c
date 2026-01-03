@@ -147,7 +147,7 @@ MenuKeyFunc MenuKeymap[128] = {
     mCancel,
 };
 
-int (*MenuEscKeymap[128])(char c) = {
+MenuKeyFunc MenuEscKeymap[128] = {
     mNull,
     mNull,
     mNull,
@@ -284,7 +284,7 @@ int (*MenuEscKeymap[128])(char c) = {
     mNull,
 };
 
-int (*MenuEscBKeymap[128])(char c) = {
+MenuKeyFunc MenuEscBKeymap[128] = {
     mNull,
     mNull,
     mNull,
@@ -420,7 +420,7 @@ int (*MenuEscBKeymap[128])(char c) = {
     mNull,
 };
 
-int (*MenuEscDKeymap[128])(char c) = {
+MenuKeyFunc MenuEscDKeymap[128] = {
     /*  0       1       INS     3       4       PgUp,   PgDn    7     */
     mNull,
     mNull,
