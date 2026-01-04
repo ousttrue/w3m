@@ -782,21 +782,6 @@ cmd_loadURL(const char* url, struct FormList* request, struct LoadOption option)
     }
 }
 
-/* Load help file */
-DEFUN(ldhelp, HELP, "Show help panel")
-{
-    char* lang;
-    int n;
-    Str tmp;
-
-    lang = getRuntime()->AcceptLang;
-    n = strcspn(lang, ";, \t");
-    tmp = Sprintf("file:///$LIB/" HELP_CGI CGI_EXTENSION "?version=%s&lang=%s",
-        Str_form_quote(Strnew_charp(w3m_version))->ptr,
-        Str_form_quote(Strnew_charp_n(lang, n))->ptr);
-    cmd_loadURL(tmp->ptr, NULL, (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER, 0 });
-}
-
 /* Move cursor left */
 static void
 _movL(int n)

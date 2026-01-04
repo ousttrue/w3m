@@ -1,4 +1,5 @@
 #include "defun.h"
+#include "indep.h"
 #include "message.h"
 #include "mysignal.h"
 #include "local_cgi.h"
@@ -11,7 +12,7 @@
 #include "document.h"
 #include "screen.h"
 #include "search.h"
-#include "file.h"
+// #include "file.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -366,6 +367,30 @@ DEFUN(ldfile, LOAD, "Open local file in a new buffer")
     if (content.content_type == NULL) {
         char* emsg = Sprintf("%s not found", conv_from_system(fn))->ptr;
         disp_err_message(emsg, FALSE);
+        return;
+    }
+    struct Buffer* buf = newBuffer(INIT_BUFFER_WIDTH);
+    buf->content = content;
+    tab_push_buffer(getRuntime()->CurrentTab, buf);
+}
+
+/* Load help file */
+DEFUN(ldhelp, HELP, "Show help panel")
+{
+    const char* lang = getRuntime()->AcceptLang;
+    int n = strcspn(lang, ";, \t");
+    Str tmp = Sprintf("file:///$LIB/" HELP_CGI CGI_EXTENSION "?version=%s&lang=%s",
+        Str_form_quote(Strnew_charp(w3m_version))->ptr,
+        Str_form_quote(Strnew_charp_n(lang, n))->ptr);
+    struct Content content = get_content_cache(tmp->ptr, NULL,
+        (struct LoadOption) {
+            .base_url = NULL,
+            .referer = NO_REFERER,
+            0,
+        });
+    if (!content.content_type) {
+        Str emsg = Sprintf("Can't load %s", conv_from_system(tmp->ptr));
+        disp_err_message(emsg->ptr, false);
         return;
     }
     struct Buffer* buf = newBuffer(INIT_BUFFER_WIDTH);
