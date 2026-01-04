@@ -653,22 +653,21 @@ int (*menuSearchRoutine)(struct Menu*, const char*, int);
 static int
 menuForwardSearch(struct Menu* menu, const char* str, int from)
 {
-    int i;
-    char* p;
-    if ((p = regexCompile(str, getRuntime()->IgnoreCase)) != NULL) {
+    const char* p = regexCompile(str, getRuntime()->IgnoreCase);
+    if (p) {
         message(p);
         return -1;
     }
     if (from < 0)
         from = 0;
-    for (i = from; i < menu->nitem; i++)
+    for (int i = from; i < menu->nitem; i++)
         if (menu->item[i].type != MENU_NOP && regexMatch(menu->item[i].label, -1, 1) == 1)
             return i;
     return -1;
 }
 
 static int
-menu_search_forward(struct Menu* menu, int from)
+menu_search_forward(struct Document* doc, struct Menu* menu, int from)
 {
     const char* str = inputStrHist("Forward: ", NULL, getRuntime()->TextHist);
     if (str != NULL && *str == '\0')
@@ -676,7 +675,7 @@ menu_search_forward(struct Menu* menu, int from)
     if (str == NULL || *str == '\0')
         return -1;
     SearchString = str;
-    str = conv_search_string(str, getRuntime()->DisplayCharset);
+    str = conv_search_string(str, getRuntime()->DisplayCharset, doc->charset);
     menuSearchRoutine = menuForwardSearch;
     int found = menuForwardSearch(menu, str, from + 1);
     if (getRuntime()->WrapSearch && found == -1)
@@ -689,8 +688,7 @@ menu_search_forward(struct Menu* menu, int from)
 
 int mSrchF(struct DefunContext ctx, char c)
 {
-    int mselect;
-    mselect = menu_search_forward(CurrentMenu, CurrentMenu->select);
+    int mselect = menu_search_forward(&ctx.buf->doc, CurrentMenu, CurrentMenu->select);
     if (mselect >= 0)
         goto_menu(CurrentMenu, mselect, 1);
     return (MENU_NOTHING);
@@ -699,22 +697,21 @@ int mSrchF(struct DefunContext ctx, char c)
 static int
 menuBackwardSearch(struct Menu* menu, const char* str, int from)
 {
-    int i;
-    char* p;
-    if ((p = regexCompile(str, getRuntime()->IgnoreCase)) != NULL) {
+    const char* p = regexCompile(str, getRuntime()->IgnoreCase);
+    if (p) {
         message(p);
         return -1;
     }
     if (from >= menu->nitem)
         from = menu->nitem - 1;
-    for (i = from; i >= 0; i--)
+    for (int i = from; i >= 0; i--)
         if (menu->item[i].type != MENU_NOP && regexMatch(menu->item[i].label, -1, 1) == 1)
             return i;
     return -1;
 }
 
 static int
-menu_search_backward(struct Menu* menu, int from)
+menu_search_backward(struct Document *doc, struct Menu* menu, int from)
 {
     const char* str = inputStrHist("Backward: ", NULL, getRuntime()->TextHist);
     if (str != NULL && *str == '\0')
@@ -722,7 +719,7 @@ menu_search_backward(struct Menu* menu, int from)
     if (str == NULL || *str == '\0')
         return -1;
     SearchString = str;
-    str = conv_search_string(str, getRuntime()->DisplayCharset);
+    str = conv_search_string(str, getRuntime()->DisplayCharset, doc->charset);
     menuSearchRoutine = menuBackwardSearch;
     int found = menuBackwardSearch(menu, str, from - 1);
     if (getRuntime()->WrapSearch && found == -1)
@@ -735,15 +732,14 @@ menu_search_backward(struct Menu* menu, int from)
 
 int mSrchB(struct DefunContext ctx, char c)
 {
-    int mselect;
-    mselect = menu_search_backward(CurrentMenu, CurrentMenu->select);
+    int mselect = menu_search_backward(&ctx.buf->doc, CurrentMenu, CurrentMenu->select);
     if (mselect >= 0)
         goto_menu(CurrentMenu, mselect, -1);
     return (MENU_NOTHING);
 }
 
 static int
-menu_search_next_previous(struct Menu* menu, int from, int reverse)
+menu_search_next_previous(struct Document *doc, struct Menu* menu, int from, int reverse)
 {
     static int (*routine[2])(struct Menu*, const char*, int) = {
         menuForwardSearch, menuBackwardSearch
@@ -753,7 +749,7 @@ menu_search_next_previous(struct Menu* menu, int from, int reverse)
         disp_message("No previous regular expression", TRUE);
         return -1;
     }
-    const char* str = conv_search_string(SearchString, getRuntime()->DisplayCharset);
+    const char* str = conv_search_string(SearchString, getRuntime()->DisplayCharset, doc->charset);
     if (reverse != 0)
         reverse = 1;
     if (menuSearchRoutine == menuBackwardSearch)
@@ -770,8 +766,7 @@ menu_search_next_previous(struct Menu* menu, int from, int reverse)
 
 int mSrchN(struct DefunContext ctx, char c)
 {
-    int mselect;
-    mselect = menu_search_next_previous(CurrentMenu, CurrentMenu->select, 0);
+    int mselect = menu_search_next_previous(&ctx.buf->doc, CurrentMenu, CurrentMenu->select, 0);
     if (mselect >= 0)
         goto_menu(CurrentMenu, mselect, 1);
     return (MENU_NOTHING);
@@ -779,8 +774,7 @@ int mSrchN(struct DefunContext ctx, char c)
 
 int mSrchP(struct DefunContext ctx, char c)
 {
-    int mselect;
-    mselect = menu_search_next_previous(CurrentMenu, CurrentMenu->select, 1);
+    int mselect = menu_search_next_previous(&ctx.buf->doc, CurrentMenu, CurrentMenu->select, 1);
     if (mselect >= 0)
         goto_menu(CurrentMenu, mselect, -1);
     return (MENU_NOTHING);

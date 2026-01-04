@@ -1,12 +1,12 @@
 #include "search.h"
+#include "linein.h"
 #include "document.h"
 #include "message.h"
-#include "tab.h"
 #include "buffer.h"
 #include "w3m_rc.h"
 #include "regex.h"
+#include "mysignal.h"
 #include <signal.h>
-#include <errno.h>
 #include <unistd.h>
 #include <libwc/status.h>
 
@@ -86,57 +86,56 @@ err:
 #endif /* USE_MIGEMO */
 
 /* normalize search string */
-const char* conv_search_string(const char* str, enum wc_ces f_ces)
+const char* conv_search_string(const char* str, enum wc_ces f_ces, enum wc_ces doc_charset)
 {
-    if (getRuntime()->SearchConv && !WcOption.pre_conv && Currentbuf->doc.charset != f_ces)
-        str = wtf_conv_fit(str, Currentbuf->doc.charset);
+    if (getRuntime()->SearchConv && !WcOption.pre_conv && doc_charset != f_ces)
+        str = wtf_conv_fit(str, doc_charset);
     return str;
 }
 
-enum SearchResult forwardSearch(struct Buffer* buf, const char* str)
+enum SearchResult forwardSearch(struct Document* doc, const char* str)
 {
-    char *p, *first, *last;
-    struct Line *l, *begin;
-    int wrapped = FALSE;
-    int pos;
+    bool wrapped = false;
 
-    if ((p = regexCompile(str, getRuntime()->IgnoreCase)) != NULL) {
+    const char* p = regexCompile(str, getRuntime()->IgnoreCase);
+    if (p) {
         message(p);
         return SR_NOTFOUND;
     }
-    l = buf->doc.currentLine;
+
+    struct Line* l = doc->currentLine;
     if (l == NULL) {
         return SR_NOTFOUND;
     }
-    pos = buf->doc.pos;
+
+    int pos = doc->pos;
     if (l->bpos) {
         pos += l->bpos;
         while (l->bpos && l->prev)
             l = l->prev;
     }
-    begin = l;
-#ifdef USE_M17N
+    struct Line* begin = l;
     while (pos < l->size && l->propBuf[pos] & PC_WCHAR2)
         pos++;
-#endif
     if (pos < l->size && regexMatch(&l->lineBuf[pos], l->size - pos, 0) == 1) {
+        const char *first, *last;
         matchedPosition(&first, &last);
         pos = first - l->lineBuf;
         while (pos >= l->len && l->next && l->next->bpos) {
             pos -= l->len;
             l = l->next;
         }
-        buf->doc.pos = pos;
-        if (l != buf->doc.currentLine)
-            doc_gotoLine(&buf->doc, l->linenumber);
-        doc_arrangeCursor(&buf->doc);
+        doc->pos = pos;
+        if (l != doc->currentLine)
+            doc_gotoLine(doc, l->linenumber);
+        doc_arrangeCursor(doc);
         set_mark(l, pos, pos + last - first);
         return SR_FOUND;
     }
     for (l = l->next;; l = l->next) {
         if (l == NULL) {
             if (getRuntime()->WrapSearch) {
-                l = buf->doc.firstLine;
+                l = doc->firstLine;
                 wrapped = TRUE;
             } else {
                 break;
@@ -145,16 +144,17 @@ enum SearchResult forwardSearch(struct Buffer* buf, const char* str)
         if (l->bpos)
             continue;
         if (regexMatch(l->lineBuf, l->size, 1) == 1) {
+            const char *first, *last;
             matchedPosition(&first, &last);
             pos = first - l->lineBuf;
             while (pos >= l->len && l->next && l->next->bpos) {
                 pos -= l->len;
                 l = l->next;
             }
-            buf->doc.pos = pos;
-            buf->doc.currentLine = l;
-            doc_gotoLine(&buf->doc, l->linenumber);
-            doc_arrangeCursor(&buf->doc);
+            doc->pos = pos;
+            doc->currentLine = l;
+            doc_gotoLine(doc, l->linenumber);
+            doc_arrangeCursor(doc);
             set_mark(l, pos, pos + last - first);
             return SR_FOUND | (wrapped ? SR_WRAPPED : 0);
         }
@@ -164,39 +164,38 @@ enum SearchResult forwardSearch(struct Buffer* buf, const char* str)
     return SR_NOTFOUND;
 }
 
-enum SearchResult backwardSearch(struct Buffer* buf, const char* str)
+enum SearchResult backwardSearch(struct Document* doc, const char* str)
 {
-    char *p, *q, *found, *found_last, *first, *last;
-    struct Line *l, *begin;
-    int wrapped = FALSE;
-    int pos;
-
-    if ((p = regexCompile(str, getRuntime()->IgnoreCase)) != NULL) {
+    const char* p = regexCompile(str, getRuntime()->IgnoreCase);
+    if (p) {
         message(p);
         return SR_NOTFOUND;
     }
-    l = buf->doc.currentLine;
+
+    struct Line* l = doc->currentLine;
     if (l == NULL) {
         return SR_NOTFOUND;
     }
-    pos = buf->doc.pos;
+
+    int pos = doc->pos;
     if (l->bpos) {
         pos += l->bpos;
         while (l->bpos && l->prev)
             l = l->prev;
     }
-    begin = l;
+    struct Line* begin = l;
+
+    // char *p, *q, *found, *found_last, *first, *last;
     if (pos > 0) {
         pos--;
-#ifdef USE_M17N
         while (pos > 0 && l->propBuf[pos] & PC_WCHAR2)
             pos--;
-#endif
         p = &l->lineBuf[pos];
-        found = NULL;
-        found_last = NULL;
-        q = l->lineBuf;
+        const char* found = NULL;
+        const char* found_last = NULL;
+        const char* q = l->lineBuf;
         while (regexMatch(q, &l->lineBuf[l->size] - q, q == l->lineBuf) == 1) {
+            const char *first, *last;
             matchedPosition(&first, &last);
             if (first <= p) {
                 found = first;
@@ -205,11 +204,9 @@ enum SearchResult backwardSearch(struct Buffer* buf, const char* str)
             if (q - l->lineBuf >= l->size)
                 break;
             q++;
-#ifdef USE_M17N
             while (q - l->lineBuf < l->size
                 && l->propBuf[q - l->lineBuf] & PC_WCHAR2)
                 q++;
-#endif
             if (q > p)
                 break;
         }
@@ -219,38 +216,39 @@ enum SearchResult backwardSearch(struct Buffer* buf, const char* str)
                 pos -= l->len;
                 l = l->next;
             }
-            buf->doc.pos = pos;
-            if (l != buf->doc.currentLine)
-                doc_gotoLine(&buf->doc, l->linenumber);
-            doc_arrangeCursor(&buf->doc);
+            doc->pos = pos;
+            if (l != doc->currentLine)
+                doc_gotoLine(doc, l->linenumber);
+            doc_arrangeCursor(doc);
             set_mark(l, pos, pos + found_last - found);
             return SR_FOUND;
         }
     }
+
+    bool wrapped = false;
     for (l = l->prev;; l = l->prev) {
         if (l == NULL) {
             if (getRuntime()->WrapSearch) {
-                l = buf->doc.lastLine;
+                l = doc->lastLine;
                 wrapped = TRUE;
             } else {
                 break;
             }
         }
-        found = NULL;
-        found_last = NULL;
-        q = l->lineBuf;
+        const char* found = NULL;
+        const char* found_last = NULL;
+        const char* q = l->lineBuf;
         while (regexMatch(q, &l->lineBuf[l->size] - q, q == l->lineBuf) == 1) {
+            const char *first, *last;
             matchedPosition(&first, &last);
             found = first;
             found_last = last;
             if (q - l->lineBuf >= l->size)
                 break;
             q++;
-#ifdef USE_M17N
             while (q - l->lineBuf < l->size
                 && l->propBuf[q - l->lineBuf] & PC_WCHAR2)
                 q++;
-#endif
         }
         if (found) {
             pos = found - l->lineBuf;
@@ -258,9 +256,9 @@ enum SearchResult backwardSearch(struct Buffer* buf, const char* str)
                 pos -= l->len;
                 l = l->next;
             }
-            buf->doc.pos = pos;
-            doc_gotoLine(&buf->doc, l->linenumber);
-            doc_arrangeCursor(&buf->doc);
+            doc->pos = pos;
+            doc_gotoLine(doc, l->linenumber);
+            doc_arrangeCursor(doc);
             set_mark(l, pos, pos + found_last - found);
             return SR_FOUND | (wrapped ? SR_WRAPPED : 0);
         }
@@ -268,4 +266,178 @@ enum SearchResult backwardSearch(struct Buffer* buf, const char* str)
             break;
     }
     return SR_NOTFOUND;
+}
+
+static void
+clear_mark(struct Line* l)
+{
+    if (!l)
+        return;
+    int pos;
+    for (pos = 0; pos < l->size; pos++)
+        l->propBuf[pos] &= ~PE_MARK;
+}
+
+/* search by regular expression */
+static int
+srchcore(struct Document* doc, const char* str, SearchFunc func)
+{
+    volatile int i, result = SR_NOTFOUND;
+
+    if (str != NULL && str != getRuntime()->SearchString)
+        getRuntime()->SearchString = str;
+    if (getRuntime()->SearchString == NULL || *getRuntime()->SearchString == '\0')
+        return SR_NOTFOUND;
+
+    str = conv_search_string(getRuntime()->SearchString, getRuntime()->DisplayCharset, doc->charset);
+    auto prevtrap = mySignal(SIGINT, intTrap);
+    tty_cbreak(true);
+    static JMP_BUF IntReturn;
+    if (SETJMP(IntReturn) == 0) {
+        for (i = 0; i < PREC_NUM; i++) {
+            result = func(doc, str);
+            if (i < PREC_NUM - 1 && result & SR_FOUND)
+                clear_mark(doc->currentLine);
+        }
+    }
+    mySignal(SIGINT, prevtrap);
+    tty_cbreak(false);
+    return result;
+}
+
+static void
+disp_srchresult(int result, const char* prompt, const char* str)
+{
+    if (str == NULL)
+        str = "";
+    if (result & SR_NOTFOUND)
+        disp_message(Sprintf("Not found: %s", str)->ptr, TRUE);
+    else if (result & SR_WRAPPED)
+        disp_message(Sprintf("Search wrapped: %s", str)->ptr, TRUE);
+    else if (getRuntime()->show_srch_str)
+        disp_message(Sprintf("%s%s", prompt, str)->ptr, TRUE);
+}
+
+SearchFunc searchRoutine = NULL;
+
+void srch(struct Document* doc, SearchFunc func, const char* prompt)
+{
+    int disp = FALSE;
+
+    const char* str = searchKeyData();
+    if (str == NULL || *str == '\0') {
+        str = inputStrHist(prompt, NULL, getRuntime()->TextHist);
+        if (str != NULL && *str == '\0')
+            str = getRuntime()->SearchString;
+        if (str == NULL) {
+            return;
+        }
+        disp = TRUE;
+    }
+    int pos = doc->pos;
+    if (func == forwardSearch)
+        doc->pos += 1;
+    int result = srchcore(doc, str, func);
+    if (result & SR_FOUND)
+        clear_mark(doc->currentLine);
+    else
+        doc->pos = pos;
+    if (disp)
+        disp_srchresult(result, prompt, str);
+    searchRoutine = func;
+}
+
+static int
+dispincsrch(struct Document* doc, int ch, Str buf, Lineprop* prop)
+{
+    static struct Document sbuf;
+    if (ch == 0 && buf == NULL) {
+        COPY_BUFPOSITION(&sbuf, doc); /* search starting point */
+        return -1;
+    }
+
+    char* str = buf->ptr;
+    bool do_next_search = false;
+    switch (ch) {
+    case 022: /* C-r */
+        searchRoutine = backwardSearch;
+        do_next_search = TRUE;
+        break;
+    case 023: /* C-s */
+        searchRoutine = forwardSearch;
+        do_next_search = TRUE;
+        break;
+
+    default:
+        if (ch >= 0)
+            return ch; /* use InputKeymap */
+    }
+
+    if (do_next_search) {
+        if (*str) {
+            if (searchRoutine == forwardSearch)
+                doc->pos += 1;
+            COPY_BUFPOSITION(&sbuf, doc);
+            if (srchcore(doc, str, searchRoutine) == SR_NOTFOUND
+                && searchRoutine == forwardSearch) {
+                doc->pos -= 1;
+                COPY_BUFPOSITION(&sbuf, doc);
+            }
+            doc_arrangeCursor(doc);
+            clear_mark(doc->currentLine);
+            return -1;
+        } else
+            return 020; /* _prev completion for C-s C-s */
+    } else if (*str) {
+        COPY_BUFPOSITION(doc, &sbuf);
+        doc_arrangeCursor(doc);
+        srchcore(doc, str, searchRoutine);
+        doc_arrangeCursor(doc);
+    }
+    clear_mark(doc->currentLine);
+    return -1;
+}
+
+void isrch(struct Document* doc, SearchFunc func, const char* prompt)
+{
+    struct Document sbuf;
+    COPY_BUFPOSITION(&sbuf, doc);
+    dispincsrch(doc, 0, NULL, NULL); /* initialize incremental search state */
+
+    searchRoutine = func;
+    const char* str = inputLineHistSearch(prompt, NULL, IN_STRING, getRuntime()->TextHist, dispincsrch, doc);
+    if (str == NULL) {
+        COPY_BUFPOSITION(doc, &sbuf);
+    }
+}
+
+void srch_nxtprv(struct Document* doc, int reverse)
+{
+    int result;
+    /* *INDENT-OFF* */
+    static SearchFunc routine[2] = {
+        forwardSearch, backwardSearch
+    };
+    /* *INDENT-ON* */
+
+    if (searchRoutine == NULL) {
+        /* FIXME: gettextize? */
+        disp_message("No previous regular expression", TRUE);
+        return;
+    }
+    if (reverse != 0)
+        reverse = 1;
+    if (searchRoutine == backwardSearch)
+        reverse ^= 1;
+    if (reverse == 0)
+        doc->pos += 1;
+    result = srchcore(doc, getRuntime()->SearchString, routine[reverse]);
+    if (result & SR_FOUND)
+        clear_mark(doc->currentLine);
+    else {
+        if (reverse == 0)
+            doc->pos -= 1;
+    }
+    disp_srchresult(result, (reverse ? "Backward: " : "Forward: "),
+        getRuntime()->SearchString);
 }

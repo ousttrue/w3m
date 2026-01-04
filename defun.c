@@ -5,6 +5,7 @@
 #include "buffer.h"
 #include "document.h"
 #include "screen.h"
+#include "search.h"
 
 DEFUN(nulcmd, NOTHING NULL @ @ @, "Do nothing")
 {
@@ -103,4 +104,38 @@ DEFUN(ctrCsrH, CENTER_H, "Center on cursor column")
         doc_columnSkip(&ctx.buf->doc, offsetx);
         doc_arrangeCursor(&ctx.buf->doc);
     }
+}
+
+//
+// search
+//
+
+DEFUN(srchfor, SEARCH SEARCH_FORE WHEREIS, "Search forward")
+{
+    srch(&ctx.buf->doc, forwardSearch, "Forward: ");
+}
+
+DEFUN(srchbak, SEARCH_BACK, "Search backward")
+{
+    srch(&ctx.buf->doc, backwardSearch, "Backward: ");
+}
+
+DEFUN(isrchfor, ISEARCH, "Incremental search forward")
+{
+    isrch(&ctx.buf->doc, forwardSearch, "I-search: ");
+}
+
+DEFUN(isrchbak, ISEARCH_BACK, "Incremental search backward")
+{
+    isrch(&ctx.buf->doc, backwardSearch, "I-search backward: ");
+}
+
+DEFUN(srchnxt, SEARCH_NEXT, "Continue search forward")
+{
+    srch_nxtprv(&ctx.buf->doc, 0);
+}
+
+DEFUN(srchprv, SEARCH_PREV, "Continue search backward")
+{
+    srch_nxtprv(&ctx.buf->doc, 1);
 }

@@ -60,8 +60,6 @@
 #define DSTR_LEN 256
 
 static const char* MarkString = NULL;
-static const char* SearchString = NULL;
-SearchFunc searchRoutine = NULL;
 
 static void cmd_loadfile(char* path);
 
@@ -739,219 +737,6 @@ repBuffer(struct Buffer* oldbuf, struct Buffer* buf)
 /*
  * Command functions: These functions are called with a keystroke.
  */
-
-static void
-clear_mark(struct Line* l)
-{
-    int pos;
-    if (!l)
-        return;
-    for (pos = 0; pos < l->size; pos++)
-        l->propBuf[pos] &= ~PE_MARK;
-}
-
-static JMP_BUF IntReturn;
-
-/* search by regular expression */
-static int
-srchcore(const char* str, SearchFunc func)
-{
-    volatile int i, result = SR_NOTFOUND;
-
-    if (str != NULL && str != SearchString)
-        SearchString = str;
-    if (SearchString == NULL || *SearchString == '\0')
-        return SR_NOTFOUND;
-
-    str = conv_search_string(SearchString, getRuntime()->DisplayCharset);
-    auto prevtrap = mySignal(SIGINT, intTrap);
-    tty_cbreak(true);
-    if (SETJMP(IntReturn) == 0) {
-        for (i = 0; i < PREC_NUM; i++) {
-            result = func(Currentbuf, str);
-            if (i < PREC_NUM - 1 && result & SR_FOUND)
-                clear_mark(Currentbuf->doc.currentLine);
-        }
-    }
-    mySignal(SIGINT, prevtrap);
-    tty_cbreak(false);
-    return result;
-}
-
-static void
-disp_srchresult(int result, char* prompt, const char* str)
-{
-    if (str == NULL)
-        str = "";
-    if (result & SR_NOTFOUND)
-        disp_message(Sprintf("Not found: %s", str)->ptr, TRUE);
-    else if (result & SR_WRAPPED)
-        disp_message(Sprintf("Search wrapped: %s", str)->ptr, TRUE);
-    else if (getRuntime()->show_srch_str)
-        disp_message(Sprintf("%s%s", prompt, str)->ptr, TRUE);
-}
-
-static int
-dispincsrch(struct Document *doc, int ch, Str buf, Lineprop* prop)
-{
-    static struct Buffer sbuf;
-    char* str;
-    int do_next_search = FALSE;
-
-    if (ch == 0 && buf == NULL) {
-        SAVE_BUFPOSITION(&sbuf); /* search starting point */
-        return -1;
-    }
-
-    str = buf->ptr;
-    switch (ch) {
-    case 022: /* C-r */
-        searchRoutine = backwardSearch;
-        do_next_search = TRUE;
-        break;
-    case 023: /* C-s */
-        searchRoutine = forwardSearch;
-        do_next_search = TRUE;
-        break;
-
-    default:
-        if (ch >= 0)
-            return ch; /* use InputKeymap */
-    }
-
-    if (do_next_search) {
-        if (*str) {
-            if (searchRoutine == forwardSearch)
-                Currentbuf->doc.pos += 1;
-            SAVE_BUFPOSITION(&sbuf);
-            if (srchcore(str, searchRoutine) == SR_NOTFOUND
-                && searchRoutine == forwardSearch) {
-                Currentbuf->doc.pos -= 1;
-                SAVE_BUFPOSITION(&sbuf);
-            }
-            doc_arrangeCursor(&Currentbuf->doc);
-            clear_mark(Currentbuf->doc.currentLine);
-            return -1;
-        } else
-            return 020; /* _prev completion for C-s C-s */
-    } else if (*str) {
-        RESTORE_BUFPOSITION(&sbuf);
-        doc_arrangeCursor(&Currentbuf->doc);
-        srchcore(str, searchRoutine);
-        doc_arrangeCursor(&Currentbuf->doc);
-    }
-    clear_mark(Currentbuf->doc.currentLine);
-    return -1;
-}
-
-static void
-isrch(struct Document *doc, SearchFunc func, const char* prompt)
-{
-    struct Buffer sbuf;
-    SAVE_BUFPOSITION(&sbuf);
-    dispincsrch(doc, 0, NULL, NULL); /* initialize incremental search state */
-
-    searchRoutine = func;
-    const char* str = inputLineHistSearch(prompt, NULL, IN_STRING, getRuntime()->TextHist, dispincsrch, doc);
-    if (str == NULL) {
-        RESTORE_BUFPOSITION(&sbuf);
-    }
-}
-
-static void
-srch(SearchFunc func, char* prompt)
-{
-    const char* str;
-    int result;
-    int disp = FALSE;
-    int pos;
-
-    str = searchKeyData();
-    if (str == NULL || *str == '\0') {
-        str = inputStrHist(prompt, NULL, getRuntime()->TextHist);
-        if (str != NULL && *str == '\0')
-            str = SearchString;
-        if (str == NULL) {
-            return;
-        }
-        disp = TRUE;
-    }
-    pos = Currentbuf->doc.pos;
-    if (func == forwardSearch)
-        Currentbuf->doc.pos += 1;
-    result = srchcore(str, func);
-    if (result & SR_FOUND)
-        clear_mark(Currentbuf->doc.currentLine);
-    else
-        Currentbuf->doc.pos = pos;
-    if (disp)
-        disp_srchresult(result, prompt, str);
-    searchRoutine = func;
-}
-
-DEFUN(srchfor, SEARCH SEARCH_FORE WHEREIS, "Search forward")
-{
-    srch(forwardSearch, "Forward: ");
-}
-
-DEFUN(srchbak, SEARCH_BACK, "Search backward")
-{
-    srch(backwardSearch, "Backward: ");
-}
-
-DEFUN(isrchfor, ISEARCH, "Incremental search forward")
-{
-    isrch(&ctx.buf->doc, forwardSearch, "I-search: ");
-}
-
-DEFUN(isrchbak, ISEARCH_BACK, "Incremental search backward")
-{
-    isrch(&ctx.buf->doc, backwardSearch, "I-search backward: ");
-}
-
-static void
-srch_nxtprv(int reverse)
-{
-    int result;
-    /* *INDENT-OFF* */
-    static SearchFunc routine[2] = {
-        forwardSearch, backwardSearch
-    };
-    /* *INDENT-ON* */
-
-    if (searchRoutine == NULL) {
-        /* FIXME: gettextize? */
-        disp_message("No previous regular expression", TRUE);
-        return;
-    }
-    if (reverse != 0)
-        reverse = 1;
-    if (searchRoutine == backwardSearch)
-        reverse ^= 1;
-    if (reverse == 0)
-        Currentbuf->doc.pos += 1;
-    result = srchcore(SearchString, routine[reverse]);
-    if (result & SR_FOUND)
-        clear_mark(Currentbuf->doc.currentLine);
-    else {
-        if (reverse == 0)
-            Currentbuf->doc.pos -= 1;
-    }
-    disp_srchresult(result, (reverse ? "Backward: " : "Forward: "),
-        SearchString);
-}
-
-/* Search next matching */
-DEFUN(srchnxt, SEARCH_NEXT, "Continue search forward")
-{
-    srch_nxtprv(0);
-}
-
-/* Search previous matching */
-DEFUN(srchprv, SEARCH_PREV, "Continue search backward")
-{
-    srch_nxtprv(1);
-}
 
 static void
 shiftvisualpos(struct Buffer* buf, int shift)
@@ -1784,7 +1569,7 @@ DEFUN(reMark, REG_MARK, "Mark all occurences of a pattern")
 {
     struct Line* l;
     const char* str;
-    char *p, *p1, *p2;
+    const char *p, *p1, *p2;
 
     if (!getRuntime()->use_mark)
         return;
@@ -1795,7 +1580,7 @@ DEFUN(reMark, REG_MARK, "Mark all occurences of a pattern")
             return;
         }
     }
-    str = conv_search_string(str, getRuntime()->DisplayCharset);
+    str = conv_search_string(str, getRuntime()->DisplayCharset, ctx.buf->doc.charset);
     if ((str = regexCompile(str, 1)) != NULL) {
         disp_message(str, TRUE);
         return;
@@ -3042,7 +2827,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
 /* reload */
 DEFUN(reload, RELOAD, "Load current document anew")
 {
-    struct Buffer *buf, *fbuf = NULL, sbuf;
+    struct Buffer *buf, *fbuf = NULL;
     enum wc_ces old_charset;
     Str url;
     struct FormList* request;
@@ -3058,6 +2843,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
         disp_err_message("Can't reload stdin", TRUE);
         return;
     }
+    struct Buffer sbuf;
     copyBuffer(&sbuf, Currentbuf);
     if (Currentbuf->bufferprop & BP_FRAME && (fbuf = Currentbuf->linkBuffer[LB_N_FRAME])) {
         if (fmInitialized()) {
@@ -3078,7 +2864,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
         tab_push_buffer(getRuntime()->CurrentTab, buf);
         Currentbuf = buf;
         if (Currentbuf->doc.firstLine) {
-            COPY_BUFROOT(Currentbuf, &sbuf);
+            COPY_BUFROOT(&ctx.buf->doc, &sbuf.doc);
             doc_restorePosition(&Currentbuf->doc, &sbuf.doc);
         }
         return;
@@ -3132,7 +2918,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
     // Currentbuf->search_header = sbuf.search_header;
     Currentbuf->doc.form_submit = sbuf.doc.form_submit;
     if (Currentbuf->doc.firstLine) {
-        COPY_BUFROOT(Currentbuf, &sbuf);
+        COPY_BUFROOT(&ctx.buf->doc, &sbuf.doc);
         doc_restorePosition(&Currentbuf->doc, &sbuf.doc);
     }
 }
@@ -3593,8 +3379,6 @@ DEFUN(setAlarm, ALARM, "Set alarm")
     }
     set_alarm(data);
 }
-
-
 
 DEFUN(reinit, REINIT, "Reload configuration file")
 {

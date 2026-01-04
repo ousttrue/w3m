@@ -31,6 +31,7 @@
 
 struct Runtime {
     struct TextList* NO_proxy_domains;
+    const char* SearchString;
 
     char* CurrentDir;
     int CurrentPid;

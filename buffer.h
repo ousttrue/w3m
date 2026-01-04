@@ -67,27 +67,6 @@ struct Buffer {
     struct _AlarmEvent* event;
 };
 
-#define COPY_BUFROOT(dstbuf, srcbuf)               \
-    {                                              \
-        (dstbuf)->doc.rootX = (srcbuf)->doc.rootX; \
-        (dstbuf)->doc.rootY = (srcbuf)->doc.rootY; \
-        (dstbuf)->doc.COLS = (srcbuf)->doc.COLS;   \
-        (dstbuf)->doc.LINES = (srcbuf)->doc.LINES; \
-    }
-
-#define COPY_BUFPOSITION(dstbuf, srcbuf)                           \
-    {                                                              \
-        (dstbuf)->doc.topLine = (srcbuf)->doc.topLine;             \
-        (dstbuf)->doc.currentLine = (srcbuf)->doc.currentLine;     \
-        (dstbuf)->doc.pos = (srcbuf)->doc.pos;                     \
-        (dstbuf)->doc.cursorX = (srcbuf)->doc.cursorX;             \
-        (dstbuf)->doc.cursorY = (srcbuf)->doc.cursorY;             \
-        (dstbuf)->doc.visualpos = (srcbuf)->doc.visualpos;         \
-        (dstbuf)->doc.currentColumn = (srcbuf)->doc.currentColumn; \
-    }
-#define SAVE_BUFPOSITION(sbufp) COPY_BUFPOSITION(sbufp, Currentbuf)
-#define RESTORE_BUFPOSITION(sbufp) COPY_BUFPOSITION(Currentbuf, sbufp)
-
 struct Url* baseURL(struct Buffer* buf);
 char* url_decode2(const char* url, const struct Buffer* buf);
 void delBuffer(struct Buffer* buf);
