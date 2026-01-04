@@ -7,6 +7,7 @@
 #include "message.h"
 #include "linein.h"
 #include "myctype.h"
+#include "mysignal.h"
 
 #include <Str.h>
 #include <libwc/ces.h>
@@ -34,15 +35,6 @@ typedef struct _FTP {
 static struct _FTP current_ftp = {
     NULL, 0, NULL, NULL, NULL, NULL, NULL
 };
-
-static JMP_BUF AbortLoading;
-
-static MySignalHandler
-KeyAbort(SIGNAL_ARG)
-{
-    LONGJMP(AbortLoading, 1);
-    SIGNAL_RETURN;
-}
 
 static Str
 ftp_command(FTP ftp, const char* cmd, const char* arg, int* status)
@@ -461,6 +453,8 @@ ftp_dir:
     return (struct FtpFile) { 0 };
 }
 
+static JMP_BUF AbortLoading;
+
 Str loadFTPDir(struct Url* pu, enum wc_ces* charset)
 {
     Str FTPDIRtmp;
@@ -470,7 +464,7 @@ Str loadFTPDir(struct Url* pu, enum wc_ces* charset)
     char *realpathname, *fn, *q;
     char** flist;
     int i, nfile, nfile_max;
-    MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
+    PrevTrapFunc prevtrap = NULL;
 
     enum wc_ces doc_charset = getRuntime()->DocumentCharset;
 

@@ -1,4 +1,5 @@
 #include "w3m_rc.h"
+#include "mysignal.h"
 #include "document.h"
 #include "func.h"
 #include "maparea.h"
@@ -72,14 +73,6 @@ struct Runtime* getRuntime()
     return &g_runtime;
 }
 
-static JMP_BUF AbortLoading;
-static MySignalHandler
-KeyAbort(SIGNAL_ARG)
-{
-    LONGJMP(AbortLoading, 1);
-    SIGNAL_RETURN;
-}
-
 void parse_proxy(void)
 {
     if (non_null(g_runtime.HTTP_proxy))
@@ -143,67 +136,28 @@ void tty_set_cols(int cols)
     }
 }
 
-static MySignalHandler reset_exit_with_value(SIGNAL_ARG, int rval)
-{
-    exitRawMode();
-    w3m_exit(rval);
-    SIGNAL_RETURN;
-}
-
-MySignalHandler reset_error_exit(SIGNAL_ARG)
-{
-    reset_exit_with_value(SIGNAL_ARGLIST, 1);
-}
-
-MySignalHandler
-reset_exit(SIGNAL_ARG)
-{
-    reset_exit_with_value(SIGNAL_ARGLIST, 0);
-}
-
-MySignalHandler
-error_dump(SIGNAL_ARG)
-{
-    mySignal(SIGIOT, SIG_DFL);
-    exitRawMode();
-    abort();
-    SIGNAL_RETURN;
-}
-
-void set_int(void)
-{
-    mySignal(SIGHUP, reset_exit);
-    mySignal(SIGINT, reset_exit);
-    mySignal(SIGQUIT, reset_exit);
-    mySignal(SIGTERM, reset_exit);
-    mySignal(SIGILL, error_dump);
-    mySignal(SIGIOT, error_dump);
-    mySignal(SIGFPE, error_dump);
-#ifdef SIGBUS
-    mySignal(SIGBUS, error_dump);
-#endif /* SIGBUS */
-    /* mySignal(SIGSEGV, error_dump); */
-}
-
 char graphchar(char c)
 {
     return (((unsigned)(c) >= ' ' && (unsigned)(c) < 128) ? g_runtime.termcap.gcmap[(c) - ' '] : (c));
 }
 
-void tty_init_termcap(void)
+bool tty_init_termcap(void)
 {
     const char* ent = getenv("TERM") ? getenv("TERM") : DEFAULT_TERM;
     if (ent == NULL) {
         fprintf(stderr, "TERM is not set\n");
-        reset_error_exit(SIGNAL_ARGLIST);
+        // reset_error_exit(SIGNAL_ARGLIST);
+        return false;
     }
 
     if (!termcap_read(&g_runtime.termcap, ent)) {
         fprintf(stderr, "fail to init: %s\n", ent);
-        reset_error_exit(SIGNAL_ARGLIST);
+        // reset_error_exit(SIGNAL_ARGLIST);
+        return false;
     }
 
     setlinescols();
+    return true;
 }
 
 char* ttyname_tty(void)

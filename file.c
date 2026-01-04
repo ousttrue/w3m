@@ -1,5 +1,7 @@
 #include "file.h"
+#include "alarm.h"
 #include "http_auth.h"
+#include "mysignal.h"
 #include "url.h"
 #include "input_stream.h"
 #include "frame.h"
@@ -65,13 +67,6 @@
 
 static int frame_source = 0;
 static int need_number = 0;
-
-static JMP_BUF AbortLoading;
-static MySignalHandler KeyAbort(SIGNAL_ARG)
-{
-    LONGJMP(AbortLoading, 1);
-    SIGNAL_RETURN;
-}
 
 struct link_stack {
     int cmd;
@@ -4537,6 +4532,8 @@ print_internal_information(struct HtmlBuilder* hb, struct html_feed_environ* hen
         appendTextLineList(henv->buf, tl);
 }
 
+static JMP_BUF AbortLoading;
+
 void loadHTMLstream(struct input_stream* stream,
     struct Buffer* newBuf, bool internal)
 {
@@ -4553,7 +4550,7 @@ void loadHTMLstream(struct input_stream* stream,
     Str lineBuf2 = Strnew();
     struct html_feed_environ htmlenv1;
     struct readbuffer obuf;
-    MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
+    PrevTrapFunc prevtrap = NULL;
 
     if (fmInitialized() && graph_ok()) {
         symbol_width = symbol_width0 = 1;

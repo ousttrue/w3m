@@ -11,22 +11,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#ifdef HAVE_SIGSETJMP
-#ifdef __MINGW32_VERSION
-#define SETJMP(env) setjmp(env)
-#define LONGJMP(env, val) longjmp(env, val)
-#define JMP_BUF jmp_buf
-#else
-#define SETJMP(env) sigsetjmp(env, 1)
-#define LONGJMP(env, val) siglongjmp(env, val)
-#define JMP_BUF sigjmp_buf
-#endif /* __MINGW32_VERSION */
-#else
-#define SETJMP(env) setjmp(env)
-#define LONGJMP(env, val) longjmp(env, val)
-#define JMP_BUF jmp_buf
-#endif
-
 #define RELATIVE_WIDTH(w) (((w) >= 0) ? (int)((w) / getRuntime()->pixel_per_char) : (w))
 #define REAL_WIDTH(w, limit) (((w) >= 0) ? (int)((w) / getRuntime()->pixel_per_char) : -(w) * (limit) / 100)
 
@@ -97,7 +81,7 @@ char graphchar(char c);
 void writestr(const char* s);
 int write1(int c);
 bool fmInitialized(void);
-void tty_init_termcap(void);
+bool tty_init_termcap(void);
 // input
 int getch(void);
 // int sleep_till_anykey(int sec, bool purge);
@@ -172,21 +156,6 @@ int exec_cmd(const char* cmd);
 uint8_t blockChild(const char* cmd);
 
 void showProgress(int64_t* linelen, int64_t* trbyte, size_t current_content_length);
-#define AL_UNSET 0
-#define AL_EXPLICIT 1
-#define AL_IMPLICIT 2
-#define AL_IMPLICIT_ONCE 3
-
-typedef struct _AlarmEvent {
-    int sec;
-    short status;
-    int cmd;
-    const void* data;
-} AlarmEvent;
-
-AlarmEvent* setAlarmEvent(AlarmEvent* event, int sec, short status,
-    int cmd, const void* data);
-
 struct parsed_tagarg;
 extern void panel_set_option(struct parsed_tagarg*);
 char* rcFile(const char* base);

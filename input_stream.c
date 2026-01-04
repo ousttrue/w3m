@@ -1,4 +1,5 @@
 #include "input_stream.h"
+#include "mysignal.h"
 #include "textlist.h"
 #include "tcp_socket.h"
 #include "file.h"
@@ -12,9 +13,7 @@
 #include "alloc.h"
 #include "w3m_rc.h"
 #include <fcntl.h>
-#include <setjmp.h>
 #include <stdint.h>
-#include <signal.h>
 #include <string.h>
 #include <strings.h>
 #include <sys/stat.h>
@@ -363,13 +362,6 @@ struct input_stream* decompress_stream(struct input_stream* stream, const char* 
     return uncompress_stream(stream, d->type, NULL);
 }
 
-static JMP_BUF AbortLoading;
-static MySignalHandler KeyAbort(SIGNAL_ARG)
-{
-    LONGJMP(AbortLoading, 1);
-    SIGNAL_RETURN;
-}
-
 bool is_save2tmp(struct input_stream* stream, const char* tmpf)
 {
     FILE* ff = fopen(tmpf, "wb");
@@ -377,6 +369,7 @@ bool is_save2tmp(struct input_stream* stream, const char* tmpf)
         return false;
     }
     static JMP_BUF env_bak;
+    static JMP_BUF AbortLoading;
     memcpy(env_bak, AbortLoading, sizeof(JMP_BUF));
     if (SETJMP(AbortLoading) != 0) {
         goto _end;

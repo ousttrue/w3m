@@ -12,6 +12,7 @@
 #include "tab.h"
 #include "etc.h"
 #include "w3m_rc.h"
+#include "mysignal.h"
 #include <fcntl.h>
 #include <string.h>
 #include <sys/types.h>
@@ -294,9 +295,9 @@ static void put_image_sixel(const char* url, int x, int y, int w, int h, int sx,
 {
     pid_t pid;
     int do_anim;
-    MySignalHandler (*volatile previntr)(SIGNAL_ARG);
-    MySignalHandler (*volatile prevquit)(SIGNAL_ARG);
-    MySignalHandler (*volatile prevstop)(SIGNAL_ARG);
+    PrevTrapFunc previntr = NULL;
+    PrevTrapFunc prevquit = NULL;
+    PrevTrapFunc prevstop = NULL;
 
     tty_MOVE(y, x);
     flush_tty();

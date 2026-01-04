@@ -15,19 +15,10 @@
 #include "etc.h"
 #include "indep.h"
 #include "myctype.h"
+#include "mysignal.h"
 #include <string.h>
 #include <libwc/charset.h>
 #include <sys/stat.h>
-
-#include <signal.h>
-#include <setjmp.h>
-
-static JMP_BUF AbortLoading;
-static MySignalHandler KeyAbort(SIGNAL_ARG)
-{
-    LONGJMP(AbortLoading, 1);
-    SIGNAL_RETURN;
-}
 
 bool matchattr(const char* p, const char* attr, int len, Str* value)
 {
@@ -484,7 +475,7 @@ struct ContentData get_content(const char* path,
         parseURL2(u, &url, option.base_url);
     }
 
-    MySignalHandler (*prevtrap)(SIGNAL_ARG) = NULL;
+    PrevTrapFunc prevtrap = NULL;
     TRAP_ON
     struct ContentAndStream s = openURL(url, request, option, connection);
     if (!s.stream && getRuntime()->retryAsHttp && s.content.url_str[0] != '/') {
@@ -572,6 +563,7 @@ struct ContentData get_content(const char* path,
     }
 
     // openURL() succeeded
+    static JMP_BUF AbortLoading;
     if (SETJMP(AbortLoading) != 0) {
         /* transfer interrupted */
         TRAP_OFF;

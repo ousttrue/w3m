@@ -5,8 +5,7 @@
 #include "Str.h"
 #include "message.h"
 #include "regex.h"
-#include <signal.h>
-#include <setjmp.h>
+#include "mysignal.h"
 #include <string.h>
 #include <unistd.h>
 
@@ -14,14 +13,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-
-static JMP_BUF AbortLoading;
-static MySignalHandler
-KeyAbort(SIGNAL_ARG)
-{
-    LONGJMP(AbortLoading, 1);
-    SIGNAL_RETURN;
-}
 
 /* see rc.c, "dns_order" and dnsorders[] */
 static int ai_family_order_table[7][3] = {
@@ -107,6 +98,8 @@ static bool domain_match(const char* pat, const char* domain)
     }
 }
 
+static JMP_BUF AbortLoading;
+
 int check_no_proxy(const char* domain)
 {
     if (!getRuntime()->NO_proxy_domains) {
@@ -115,7 +108,7 @@ int check_no_proxy(const char* domain)
 
     TextListItem* tl;
     volatile int ret = 0;
-    MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
+    PrevTrapFunc prevtrap = NULL;
 
     if (getRuntime()->NO_proxy_domains == NULL || getRuntime()->NO_proxy_domains->nitem == 0 || domain == NULL)
         return 0;

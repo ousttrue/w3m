@@ -10,6 +10,8 @@ const system_libs = [_][]const u8{
 const w3m_srcs = [_][]const u8{
     "w3m_rc.c",
     "w3m_types.c",
+    "alarm.c",
+    "mysignal.c",
     "tcp_socket.c",
     "http_auth.c",
     "html_builder.c",

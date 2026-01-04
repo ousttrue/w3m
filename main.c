@@ -46,6 +46,7 @@
 #include "myctype.h"
 #include "regex.h"
 #include "funcname1.h"
+#include "mysignal.h"
 
 #include <libwc/wtf.h>
 #include <libwc/ucs.h>
@@ -58,21 +59,9 @@
 
 #define DSTR_LEN 256
 
-extern MySignalHandler intTrap(SIGNAL_ARG);
-
-static AlarmEvent DefaultAlarm = {
-    0, AL_UNSET, FUNCNAME_nulcmd, NULL
-};
-static AlarmEvent* CurrentAlarm = &DefaultAlarm;
-static MySignalHandler SigAlarm(SIGNAL_ARG);
-
-static MySignalHandler SigPipe(SIGNAL_ARG);
-
 static const char* MarkString = NULL;
 static const char* SearchString = NULL;
 SearchFunc searchRoutine = NULL;
-
-JMP_BUF IntReturn;
 
 static void cmd_loadfile(char* path);
 
@@ -257,7 +246,9 @@ die_oom(size_t bytes)
 /// return ture if enter main loop
 bool w3m_args(int argc, char** argv)
 {
-    tty_init_termcap();
+    if (!tty_init_termcap()) {
+        return false;
+    }
 
     struct Buffer* newbuf = NULL;
     char* p;
@@ -551,7 +542,7 @@ bool w3m_args(int argc, char** argv)
 
     initCookie();
 
-    mySignal(SIGPIPE, SigPipe);
+    // mySignal(SIGPIPE, SigPipe);
 
     orig_GC_warn_proc = GC_get_warn_proc();
     GC_set_warn_proc(wrap_GC_warn_proc);
@@ -745,25 +736,9 @@ repBuffer(struct Buffer* oldbuf, struct Buffer* buf)
     Currentbuf = buf;
 }
 
-MySignalHandler
-intTrap(SIGNAL_ARG)
-{ /* Interrupt catcher */
-    LONGJMP(IntReturn, 0);
-    SIGNAL_RETURN;
-}
-
-static MySignalHandler
-SigPipe(SIGNAL_ARG)
-{
-    mySignal(SIGPIPE, SigPipe);
-    SIGNAL_RETURN;
-}
-
 /*
  * Command functions: These functions are called with a keystroke.
  */
-
-
 
 /* move cursor position to the center of screen */
 DEFUN(ctrCsrV, CENTER_V, "Center on cursor line")
@@ -806,6 +781,8 @@ clear_mark(struct Line* l)
     for (pos = 0; pos < l->size; pos++)
         l->propBuf[pos] &= ~PE_MARK;
 }
+
+static JMP_BUF IntReturn;
 
 /* search by regular expression */
 static int
@@ -3545,8 +3522,6 @@ char* searchKeyData(void)
     return allocStr(data, -1);
 }
 
-
-
 void deleteFiles()
 {
     struct Buffer* buf;
@@ -3653,35 +3628,10 @@ DEFUN(setAlarm, ALARM, "Set alarm")
             return;
         }
     }
-    int sec = 0, cmd = -1;
-    if (*data != '\0') {
-        sec = atoi(getWord(&data));
-        if (sec > 0)
-            cmd = getFuncList(getWord(&data));
-    }
-    if (cmd >= 0) {
-        data = getQWord(&data);
-        setAlarmEvent(&DefaultAlarm, sec, AL_EXPLICIT, cmd, data);
-        disp_message_nsec(Sprintf("%dsec %s %s", sec, w3mFuncList[cmd].id,
-                              data)
-                              ->ptr,
-            FALSE, 1, FALSE, TRUE);
-    } else {
-        setAlarmEvent(&DefaultAlarm, 0, AL_UNSET, FUNCNAME_nulcmd, NULL);
-    }
+    set_alarm(data);
 }
 
-AlarmEvent*
-setAlarmEvent(AlarmEvent* event, int sec, short status, int cmd, const void* data)
-{
-    if (event == NULL)
-        event = New(AlarmEvent);
-    event->sec = sec;
-    event->status = status;
-    event->cmd = cmd;
-    event->data = data;
-    return event;
-}
+
 
 DEFUN(reinit, REINIT, "Reload configuration file")
 {

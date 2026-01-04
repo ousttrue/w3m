@@ -11,20 +11,12 @@
 #include "buffer.h"
 #include "html_tag.h"
 #include "myctype.h"
+#include "mysignal.h"
 #include <libwc/ces.h>
 #include <charset.h>
-#include <signal.h>
-#include <setjmp.h>
 #include <string.h>
 
-static JMP_BUF AbortLoading;
 struct frameset* renderFrameSet = NULL;
-
-static MySignalHandler
-KeyAbort(SIGNAL_ARG)
-{
-    LONGJMP(AbortLoading, 1);
-}
 
 static int
 parseFrameSetLength(char* s, char*** ret)
@@ -409,6 +401,8 @@ frame_download_source(struct frame_body* b, struct Url* currentURL,
     case HTML_N_COLGROUP: \
     case HTML_COL
 
+static JMP_BUF AbortLoading;
+
 static int
 createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
     int force_reload)
@@ -417,7 +411,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
     enum wc_ces charset, doc_charset;
     char *d_target, *p_target, *s_target, *t_target;
     struct Url *currentURL, base;
-    MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
+    PrevTrapFunc prevtrap = NULL;
     int flag;
 
     if (f == NULL)
