@@ -290,6 +290,7 @@ listBuffer(struct Buffer* top, struct Buffer* current)
     /*
      * move(LASTLINE(), COLS - 1); */
     screen_move((struct Vec2) { .y = c, .x = 0 });
+    tty_write_screen();
     return buf->nextBuffer;
 }
 
@@ -299,21 +300,18 @@ listBuffer(struct Buffer* top, struct Buffer* current)
 struct Buffer*
 selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectchar)
 {
-    int i, cpoint, /* Current Buffer Number */
-        spoint, /* Current Line on Screen */
-        maxbuf, sclimit = LASTLINE(); /* Upper limit of line * number in
-                                       * the * screen */
-    struct Buffer *buf, *topbuf;
-    char c;
-
-    i = cpoint = 0;
-    for (buf = firstbuf; buf != NULL; buf = buf->nextBuffer) {
+    int i = 0;
+    int cpoint = 0;
+    for (struct Buffer* buf = firstbuf; buf != NULL; buf = buf->nextBuffer) {
         if (buf == currentbuf)
             cpoint = i;
         i++;
     }
-    maxbuf = i;
+    int maxbuf = i;
 
+    int sclimit = LASTLINE();
+    int spoint;
+    struct Buffer* topbuf;
     if (cpoint >= sclimit) {
         spoint = sclimit / 2;
         topbuf = nthBuffer(firstbuf, cpoint - spoint);
@@ -324,6 +322,7 @@ selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectcha
     listBuffer(topbuf, currentbuf);
 
     for (;;) {
+        char c;
         if ((c = getch()) == ESC_CODE) {
             if ((c = getch()) == '[' || c == 'O') {
                 switch (c = getch()) {
@@ -342,22 +341,6 @@ selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectcha
                 }
             }
         }
-#ifdef __EMX__
-        else if (!c)
-            switch (getch()) {
-            case K_UP:
-                c = 'k';
-                break;
-            case K_DOWN:
-                c = 'j';
-                break;
-            case K_RIGHT:
-                c = ' ';
-                break;
-            case K_LEFT:
-                c = 'B';
-            }
-#endif
         switch (c) {
         case CTRL_N:
         case 'j':

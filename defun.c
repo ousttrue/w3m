@@ -30,6 +30,20 @@ DEFUN(qquitfm, QUIT, "Quit with confirmation request")
     _quitfm(getRuntime()->confirm_on_quit);
 }
 
+DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background")
+{
+    screen_move((struct Vec2) { .y = LASTLINE(), .x = 0 });
+    screen_clrtoeolx();
+    tty_write_screen();
+    exitRawMode();
+    const char* shell = getenv("SHELL");
+    if (!shell) {
+        shell = "/bin/sh";
+    }
+    system(shell);
+    enterRawMode();
+}
+
 DEFUN(rdrwSc, REDRAW, "Draw the screen anew")
 {
     tty_clear();
@@ -253,6 +267,27 @@ DEFUN(movR, MOVE_RIGHT, "Cursor right")
 DEFUN(movR1, MOVE_RIGHT1, "Cursor right. With edge touched, slide")
 {
     doc_movR(&ctx.buf->doc, 1);
+}
+
+DEFUN(goLine, GOTO_LINE, "Go to the specified line")
+{
+    const char* str = searchKeyData();
+    if (getRuntime()->prec_num)
+        doc_goLine(&ctx.buf->doc, "^");
+    else if (str)
+        doc_goLine(&ctx.buf->doc, str);
+    else
+        doc_goLine(&ctx.buf->doc, inputStr("Goto line: ", ""));
+}
+
+DEFUN(goLineF, BEGIN, "Go to the first line")
+{
+    doc_goLine(&ctx.buf->doc, "^");
+}
+
+DEFUN(goLineL, END, "Go to the last line")
+{
+    doc_goLine(&ctx.buf->doc, "$");
 }
 
 DEFUN(movLW, PREV_WORD, "Move to the previous word")
@@ -538,4 +573,45 @@ DEFUN(ldhelp, HELP, "Show help panel")
     struct Buffer* buf = newBuffer(INIT_BUFFER_WIDTH);
     buf->content = content;
     tab_push_buffer(getRuntime()->CurrentTab, buf);
+}
+
+DEFUN(selBuf, SELECT, "Display buffer-stack panel")
+{
+    bool ok = FALSE;
+    do {
+        char cmd;
+        struct Buffer* buf = selectBuffer(ctx.tab->firstBuffer, ctx.buf, &cmd);
+        switch (cmd) {
+        case 'B':
+            ok = TRUE;
+            break;
+        case '\n':
+        case ' ':
+            Currentbuf = buf;
+            ok = TRUE;
+            break;
+        case 'D':
+            delBuffer(buf);
+            if (Firstbuf == NULL) {
+                /* No more buffer */
+                Firstbuf = nullBuffer();
+                Currentbuf = Firstbuf;
+            }
+            break;
+        case 'q':
+            qquitfm(ctx);
+            break;
+        case 'Q':
+            quitfm(ctx);
+            break;
+        }
+    } while (!ok);
+
+    for (struct Buffer* buf = Firstbuf; buf != NULL; buf = buf->nextBuffer) {
+        if (buf == Currentbuf)
+            continue;
+        deleteImage(buf);
+        if (getRuntime()->clear_buffer)
+            tmpClearBuffer(buf);
+    }
 }

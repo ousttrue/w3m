@@ -664,3 +664,22 @@ bool doc_next_nonnull_line(struct Document *doc, struct Line* line)
         doc->pos = 0;
     return true;
 }
+
+void doc_goLine(struct Document *doc, const char* l)
+{
+    if (l == NULL || *l == '\0' || doc->currentLine == NULL) {
+        return;
+    }
+    doc->pos = 0;
+    if (((*l == '^') || (*l == '$')) && getRuntime()->prec_num) {
+        doc_gotoRealLine(doc, getRuntime()->prec_num);
+    } else if (*l == '^') {
+        doc->topLine = doc->currentLine = doc->firstLine;
+    } else if (*l == '$') {
+        doc->topLine = doc_lineSkip(doc, doc->lastLine, -(doc->LINES + 1) / 2);
+        doc->currentLine = doc->lastLine;
+    } else {
+        doc_gotoRealLine(doc, atoi(l));
+    }
+    doc_arrangeCursor(doc);
+}

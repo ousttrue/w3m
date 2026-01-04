@@ -64,7 +64,6 @@ static const char* MarkString = NULL;
 int show_params_p = 0;
 void show_params(FILE* fp);
 
-static void _goLine(char*);
 static void followTab(struct TabBuffer* tab);
 static void moveTab(struct TabBuffer* t, struct TabBuffer* t2, int right);
 static void _nextA(int);
@@ -691,7 +690,7 @@ bool w3m_args(int argc, char** argv)
     Currentbuf = Firstbuf;
     screen_from_lines(&Currentbuf->doc, baseURL(Currentbuf));
     if (line_str) {
-        _goLine(line_str);
+        doc_goLine(&Currentbuf->doc, line_str);
     }
 
     return true;
@@ -780,110 +779,6 @@ cmd_loadURL(const char* url, struct FormList* request, struct LoadOption option)
         // if (getRuntime()->RenderFrame && Currentbuf->doc.frameset != NULL)
         //     rFrame(ctx);
     }
-}
-
-
-
-/* Select buffer */
-DEFUN(selBuf, SELECT, "Display buffer-stack panel")
-{
-    struct Buffer* buf;
-    int ok;
-    char cmd;
-
-    ok = FALSE;
-    do {
-        buf = selectBuffer(Firstbuf, Currentbuf, &cmd);
-        switch (cmd) {
-        case 'B':
-            ok = TRUE;
-            break;
-        case '\n':
-        case ' ':
-            Currentbuf = buf;
-            ok = TRUE;
-            break;
-        case 'D':
-            delBuffer(buf);
-            if (Firstbuf == NULL) {
-                /* No more buffer */
-                Firstbuf = nullBuffer();
-                Currentbuf = Firstbuf;
-            }
-            break;
-        case 'q':
-            qquitfm(ctx);
-            break;
-        case 'Q':
-            quitfm(ctx);
-            break;
-        }
-    } while (!ok);
-
-    for (buf = Firstbuf; buf != NULL; buf = buf->nextBuffer) {
-        if (buf == Currentbuf)
-            continue;
-        deleteImage(buf);
-        if (getRuntime()->clear_buffer)
-            tmpClearBuffer(buf);
-    }
-}
-
-/* Suspend (on BSD), or run interactive shell (on SysV) */
-DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background")
-{
-    screen_move((struct Vec2) { .y = LASTLINE(), .x = 0 });
-    screen_clrtoeolx();
-    tty_write_screen();
-    exitRawMode();
-    char* shell = getenv("SHELL");
-    if (shell == NULL)
-        shell = "/bin/sh";
-    system(shell);
-    enterRawMode();
-}
-
-/* Go to specified line */
-static void
-_goLine(char* l)
-{
-    if (l == NULL || *l == '\0' || Currentbuf->doc.currentLine == NULL) {
-        return;
-    }
-    Currentbuf->doc.pos = 0;
-    if (((*l == '^') || (*l == '$')) && getRuntime()->prec_num) {
-        doc_gotoRealLine(&Currentbuf->doc, getRuntime()->prec_num);
-    } else if (*l == '^') {
-        Currentbuf->doc.topLine = Currentbuf->doc.currentLine = Currentbuf->doc.firstLine;
-    } else if (*l == '$') {
-        Currentbuf->doc.topLine = doc_lineSkip(&Currentbuf->doc, Currentbuf->doc.lastLine,
-            -(Currentbuf->doc.LINES + 1) / 2);
-        Currentbuf->doc.currentLine = Currentbuf->doc.lastLine;
-    } else
-        doc_gotoRealLine(&Currentbuf->doc, atoi(l));
-    doc_arrangeCursor(&Currentbuf->doc);
-}
-
-DEFUN(goLine, GOTO_LINE, "Go to the specified line")
-{
-    char* str = searchKeyData();
-    if (getRuntime()->prec_num)
-        _goLine("^");
-    else if (str)
-        _goLine(str);
-    else
-        /* FIXME: gettextize? */
-        _goLine(inputStr("Goto line: ", ""));
-}
-
-DEFUN(goLineF, BEGIN, "Go to the first line")
-{
-    _goLine("^");
-}
-
-DEFUN(goLineL, END, "Go to the last line")
-{
-    _goLine("$");
 }
 
 /* Go to the beginning of the line */
