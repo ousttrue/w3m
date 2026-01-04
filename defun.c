@@ -1,4 +1,5 @@
 #include "defun.h"
+#include "regex.h"
 #include "funcheader.h"
 #include "etc.h"
 #include "mailcap.h"
@@ -580,6 +581,106 @@ DEFUN(srchnxt, SEARCH_NEXT, "Continue search forward")
 DEFUN(srchprv, SEARCH_PREV, "Continue search backward")
 {
     srch_nxtprv(&ctx.buf->doc, 1);
+}
+
+DEFUN(_mark, MARK, "Set/unset mark")
+{
+    if (!getRuntime()->use_mark)
+        return;
+    if (Currentbuf->doc.firstLine == NULL)
+        return;
+    struct Line* l = Currentbuf->doc.currentLine;
+    l->propBuf[Currentbuf->doc.pos] ^= PE_MARK;
+}
+
+DEFUN(nextMk, NEXT_MARK, "Go to the next mark")
+{
+    if (!getRuntime()->use_mark)
+        return;
+    if (Currentbuf->doc.firstLine == NULL)
+        return;
+    int i = Currentbuf->doc.pos + 1;
+    struct Line* l = Currentbuf->doc.currentLine;
+    if (i >= l->len) {
+        i = 0;
+        l = l->next;
+    }
+    while (l != NULL) {
+        for (; i < l->len; i++) {
+            if (l->propBuf[i] & PE_MARK) {
+                Currentbuf->doc.currentLine = l;
+                Currentbuf->doc.pos = i;
+                doc_arrangeCursor(&Currentbuf->doc);
+                return;
+            }
+        }
+        l = l->next;
+        i = 0;
+    }
+    disp_message("No mark exist after here", TRUE);
+}
+
+DEFUN(prevMk, PREV_MARK, "Go to the previous mark")
+{
+    if (!getRuntime()->use_mark)
+        return;
+    if (Currentbuf->doc.firstLine == NULL)
+        return;
+    int i = Currentbuf->doc.pos - 1;
+    struct Line* l = Currentbuf->doc.currentLine;
+    if (i < 0) {
+        l = l->prev;
+        if (l != NULL)
+            i = l->len - 1;
+    }
+    while (l != NULL) {
+        for (; i >= 0; i--) {
+            if (l->propBuf[i] & PE_MARK) {
+                Currentbuf->doc.currentLine = l;
+                Currentbuf->doc.pos = i;
+                doc_arrangeCursor(&Currentbuf->doc);
+                return;
+            }
+        }
+        l = l->prev;
+        if (l != NULL)
+            i = l->len - 1;
+    }
+    disp_message("No mark exist before here", TRUE);
+}
+
+DEFUN(reMark, REG_MARK, "Mark all occurences of a pattern")
+{
+    static const char* MarkString = NULL;
+
+    if (!getRuntime()->use_mark)
+        return;
+    const char* str = searchKeyData();
+    if (str == NULL || *str == '\0') {
+        str = inputStrHist("(Mark)Regexp: ", MarkString, getRuntime()->TextHist);
+        if (str == NULL || *str == '\0') {
+            return;
+        }
+    }
+    str = conv_search_string(str, getRuntime()->DisplayCharset, ctx.buf->doc.charset);
+
+    if ((str = regexCompile(str, 1)) != NULL) {
+        disp_message(str, TRUE);
+        return;
+    }
+    MarkString = str;
+    for (struct Line* l = Currentbuf->doc.firstLine; l != NULL; l = l->next) {
+        const char* p = l->lineBuf;
+        for (;;) {
+            if (regexMatch(p, &l->lineBuf[l->len] - p, p == l->lineBuf) == 1) {
+                const char *p1, *p2;
+                matchedPosition(&p1, &p2);
+                l->propBuf[p1 - l->lineBuf] |= PE_MARK;
+                p = p2;
+            } else
+                break;
+        }
+    }
 }
 
 //

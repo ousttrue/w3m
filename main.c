@@ -56,7 +56,6 @@
 
 #define DSTR_LEN 256
 
-static const char* MarkString = NULL;
 
 int show_params_p = 0;
 void show_params(FILE* fp);
@@ -775,117 +774,6 @@ cmd_loadURL(const char* url, struct FormList* request, struct LoadOption option)
         tab_push_buffer(getRuntime()->CurrentTab, buf);
         // if (getRuntime()->RenderFrame && Currentbuf->doc.frameset != NULL)
         //     rFrame(ctx);
-    }
-}
-
-/* Set / unset mark */
-DEFUN(_mark, MARK, "Set/unset mark")
-{
-    struct Line* l;
-    if (!getRuntime()->use_mark)
-        return;
-    if (Currentbuf->doc.firstLine == NULL)
-        return;
-    l = Currentbuf->doc.currentLine;
-    l->propBuf[Currentbuf->doc.pos] ^= PE_MARK;
-}
-
-/* Go to next mark */
-DEFUN(nextMk, NEXT_MARK, "Go to the next mark")
-{
-    struct Line* l;
-    int i;
-
-    if (!getRuntime()->use_mark)
-        return;
-    if (Currentbuf->doc.firstLine == NULL)
-        return;
-    i = Currentbuf->doc.pos + 1;
-    l = Currentbuf->doc.currentLine;
-    if (i >= l->len) {
-        i = 0;
-        l = l->next;
-    }
-    while (l != NULL) {
-        for (; i < l->len; i++) {
-            if (l->propBuf[i] & PE_MARK) {
-                Currentbuf->doc.currentLine = l;
-                Currentbuf->doc.pos = i;
-                doc_arrangeCursor(&Currentbuf->doc);
-                return;
-            }
-        }
-        l = l->next;
-        i = 0;
-    }
-    disp_message("No mark exist after here", TRUE);
-}
-
-/* Go to previous mark */
-DEFUN(prevMk, PREV_MARK, "Go to the previous mark")
-{
-    struct Line* l;
-    int i;
-
-    if (!getRuntime()->use_mark)
-        return;
-    if (Currentbuf->doc.firstLine == NULL)
-        return;
-    i = Currentbuf->doc.pos - 1;
-    l = Currentbuf->doc.currentLine;
-    if (i < 0) {
-        l = l->prev;
-        if (l != NULL)
-            i = l->len - 1;
-    }
-    while (l != NULL) {
-        for (; i >= 0; i--) {
-            if (l->propBuf[i] & PE_MARK) {
-                Currentbuf->doc.currentLine = l;
-                Currentbuf->doc.pos = i;
-                doc_arrangeCursor(&Currentbuf->doc);
-                return;
-            }
-        }
-        l = l->prev;
-        if (l != NULL)
-            i = l->len - 1;
-    }
-    disp_message("No mark exist before here", TRUE);
-}
-
-/* Mark place to which the regular expression matches */
-DEFUN(reMark, REG_MARK, "Mark all occurences of a pattern")
-{
-    struct Line* l;
-    const char* str;
-    const char *p, *p1, *p2;
-
-    if (!getRuntime()->use_mark)
-        return;
-    str = searchKeyData();
-    if (str == NULL || *str == '\0') {
-        str = inputStrHist("(Mark)Regexp: ", MarkString, getRuntime()->TextHist);
-        if (str == NULL || *str == '\0') {
-            return;
-        }
-    }
-    str = conv_search_string(str, getRuntime()->DisplayCharset, ctx.buf->doc.charset);
-    if ((str = regexCompile(str, 1)) != NULL) {
-        disp_message(str, TRUE);
-        return;
-    }
-    MarkString = str;
-    for (l = Currentbuf->doc.firstLine; l != NULL; l = l->next) {
-        p = l->lineBuf;
-        for (;;) {
-            if (regexMatch(p, &l->lineBuf[l->len] - p, p == l->lineBuf) == 1) {
-                matchedPosition(&p1, &p2);
-                l->propBuf[p1 - l->lineBuf] |= PE_MARK;
-                p = p2;
-            } else
-                break;
-        }
     }
 }
 
