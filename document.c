@@ -539,3 +539,51 @@ void doc_gotoRealLine(struct Document* doc, int n)
         }
     }
 }
+
+void doc_nscroll(struct Document* doc, int n)
+{
+    if (doc->firstLine == NULL)
+        return;
+
+    struct Line* top = doc->topLine;
+    struct Line* cur = doc->currentLine;
+
+    int lnum = cur->linenumber;
+    doc->topLine = doc_lineSkip(doc, top, n);
+    if (doc->topLine == top) {
+        lnum += n;
+        if (lnum < doc->topLine->linenumber)
+            lnum = doc->topLine->linenumber;
+        else if (lnum > doc->lastLine->linenumber)
+            lnum = doc->lastLine->linenumber;
+    } else {
+        int tlnum = doc->topLine->linenumber;
+        int llnum = doc->topLine->linenumber + doc->LINES - 1;
+        int diff_n;
+        if (getRuntime()->nextpage_topline)
+            diff_n = 0;
+        else
+            diff_n = n - (tlnum - top->linenumber);
+        if (lnum < tlnum)
+            lnum = tlnum + diff_n;
+        if (lnum > llnum)
+            lnum = llnum + diff_n;
+    }
+    doc_gotoLine(doc, lnum);
+    doc_arrangeLine(doc);
+    if (n > 0) {
+        if (doc->currentLine->bpos && doc->currentLine->bwidth >= doc->currentColumn + doc->visualpos)
+            doc_cursorDown(doc, 1);
+        else {
+            while (doc->currentLine->next && doc->currentLine->next->bpos && doc->currentLine->bwidth + doc->currentLine->width < doc->currentColumn + doc->visualpos)
+                doc_cursorDown0(doc, 1);
+        }
+    } else {
+        if (doc->currentLine->bwidth + doc->currentLine->width < doc->currentColumn + doc->visualpos)
+            doc_cursorUp(doc, 1);
+        else {
+            while (doc->currentLine->prev && doc->currentLine->bpos && doc->currentLine->bwidth >= doc->currentColumn + doc->visualpos)
+                doc_cursorUp0(doc, 1);
+        }
+    }
+}

@@ -2456,3 +2456,14 @@ void showProgress(int64_t* linelen, int64_t* trbyte, size_t current_content_leng
         message(messages->ptr);
     }
 }
+
+int searchKeyNum(void)
+{
+    char* d;
+    int n = 1;
+
+    d = searchKeyData();
+    if (d != NULL)
+        n = atoi(d);
+    return n * PREC_NUM;
+}

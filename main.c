@@ -85,8 +85,6 @@ static void moveTab(struct TabBuffer* t, struct TabBuffer* t2, int right);
 static void _nextA(int);
 static void _prevA(int);
 static int check_target = TRUE;
-#define PREC_NUM (getRuntime()->prec_num ? getRuntime()->prec_num : 1)
-static int searchKeyNum(void);
 
 #define help() fusage(stdout, 0)
 #define usage() fusage(stderr, 1)
@@ -765,94 +763,7 @@ SigPipe(SIGNAL_ARG)
  * Command functions: These functions are called with a keystroke.
  */
 
-static void nscroll(int n)
-{
-    struct Buffer* buf = Currentbuf;
-    struct Line *top = buf->doc.topLine, *cur = buf->doc.currentLine;
-    int lnum, tlnum, llnum, diff_n;
 
-    if (buf->doc.firstLine == NULL)
-        return;
-    lnum = cur->linenumber;
-    buf->doc.topLine = doc_lineSkip(&buf->doc, top, n);
-    if (buf->doc.topLine == top) {
-        lnum += n;
-        if (lnum < buf->doc.topLine->linenumber)
-            lnum = buf->doc.topLine->linenumber;
-        else if (lnum > buf->doc.lastLine->linenumber)
-            lnum = buf->doc.lastLine->linenumber;
-    } else {
-        tlnum = buf->doc.topLine->linenumber;
-        llnum = buf->doc.topLine->linenumber + buf->doc.LINES - 1;
-        if (getRuntime()->nextpage_topline)
-            diff_n = 0;
-        else
-            diff_n = n - (tlnum - top->linenumber);
-        if (lnum < tlnum)
-            lnum = tlnum + diff_n;
-        if (lnum > llnum)
-            lnum = llnum + diff_n;
-    }
-    doc_gotoLine(&buf->doc, lnum);
-    doc_arrangeLine(&buf->doc);
-    if (n > 0) {
-        if (buf->doc.currentLine->bpos && buf->doc.currentLine->bwidth >= buf->doc.currentColumn + buf->doc.visualpos)
-            doc_cursorDown(&buf->doc, 1);
-        else {
-            while (buf->doc.currentLine->next && buf->doc.currentLine->next->bpos && buf->doc.currentLine->bwidth + buf->doc.currentLine->width < buf->doc.currentColumn + buf->doc.visualpos)
-                doc_cursorDown0(&buf->doc, 1);
-        }
-    } else {
-        if (buf->doc.currentLine->bwidth + buf->doc.currentLine->width < buf->doc.currentColumn + buf->doc.visualpos)
-            doc_cursorUp(&buf->doc, 1);
-        else {
-            while (buf->doc.currentLine->prev && buf->doc.currentLine->bpos && buf->doc.currentLine->bwidth >= buf->doc.currentColumn + buf->doc.visualpos)
-                doc_cursorUp0(&buf->doc, 1);
-        }
-    }
-}
-
-/* Move page forward */
-DEFUN(pgFore, NEXT_PAGE, "Scroll down one page")
-{
-    if (getRuntime()->vi_prec_num)
-        nscroll(searchKeyNum() * (Currentbuf->doc.LINES - 1));
-    else
-        nscroll(getRuntime()->prec_num ? searchKeyNum() : searchKeyNum() * (Currentbuf->doc.LINES - 1));
-}
-
-/* Move page backward */
-DEFUN(pgBack, PREV_PAGE, "Scroll up one page")
-{
-    if (getRuntime()->vi_prec_num)
-        nscroll(-searchKeyNum() * (Currentbuf->doc.LINES - 1));
-    else
-        nscroll(-(getRuntime()->prec_num ? searchKeyNum() : searchKeyNum() * (Currentbuf->doc.LINES - 1)));
-}
-
-/* Move half page forward */
-DEFUN(hpgFore, NEXT_HALF_PAGE, "Scroll down half a page")
-{
-    nscroll(searchKeyNum() * (Currentbuf->doc.LINES / 2 - 1));
-}
-
-/* Move half page backward */
-DEFUN(hpgBack, PREV_HALF_PAGE, "Scroll up half a page")
-{
-    nscroll(-searchKeyNum() * (Currentbuf->doc.LINES / 2 - 1));
-}
-
-/* 1 line up */
-DEFUN(lup1, UP, "Scroll the screen up one line")
-{
-    nscroll(searchKeyNum());
-}
-
-/* 1 line down */
-DEFUN(ldown1, DOWN, "Scroll the screen down one line")
-{
-    nscroll(-searchKeyNum());
-}
 
 /* move cursor position to the center of screen */
 DEFUN(ctrCsrV, CENTER_V, "Center on cursor line")
@@ -3634,17 +3545,7 @@ char* searchKeyData(void)
     return allocStr(data, -1);
 }
 
-static int
-searchKeyNum(void)
-{
-    char* d;
-    int n = 1;
 
-    d = searchKeyData();
-    if (d != NULL)
-        n = atoi(d);
-    return n * PREC_NUM;
-}
 
 void deleteFiles()
 {

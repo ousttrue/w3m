@@ -71,6 +71,8 @@ struct Event {
 };
 
 struct Runtime* getRuntime(void);
+#define PREC_NUM (getRuntime()->prec_num ? getRuntime()->prec_num : 1)
+
 struct TabBuffer* CurrentTab();
 struct TabBuffer* FirstTab();
 struct TabBuffer* LastTab();
@@ -202,3 +204,4 @@ extern void init_tmp(void);
 extern struct Buffer* load_option_panel(void);
 extern void sync_with_option(void);
 extern char* searchKeyData(void);
+int searchKeyNum(void);

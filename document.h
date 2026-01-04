@@ -95,3 +95,4 @@ void doc_cursorUp(struct Document* doc, int n);
 void doc_cursorXY(struct Document* doc, int x, int y);
 void doc_restorePosition(struct Document* doc, struct Document* orig);
 void doc_gotoRealLine(struct Document* doc, int n);
+void doc_nscroll(struct Document* doc, int n);
