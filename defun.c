@@ -551,6 +551,122 @@ DEFUN(col1L, LEFT, "Shift screen one column left")
 }
 
 //
+// anchor
+//
+DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink")
+{
+    if (ctx.buf->doc.firstLine == NULL)
+        return;
+
+    struct HmarkerList* hl = ctx.buf->doc.hmarklist;
+    if (!hl || hl->nmark == 0)
+        return;
+
+    int hseq = 0;
+    if (getRuntime()->prec_num > hl->nmark)
+        hseq = hl->nmark - 1;
+    else if (getRuntime()->prec_num > 0)
+        hseq = getRuntime()->prec_num - 1;
+
+    struct BufferPoint* po;
+    struct Anchor* an;
+    do {
+        if (hseq >= hl->nmark)
+            return;
+        po = hl->marks + hseq;
+        an = retrieveAnchor(ctx.buf->doc.href, po->line, po->pos);
+        if (an == NULL)
+            an = retrieveAnchor(ctx.buf->doc.formitem, po->line, po->pos);
+        hseq++;
+    } while (an == NULL);
+
+    doc_gotoLine(&ctx.buf->doc, po->line);
+    ctx.buf->doc.pos = po->pos;
+    doc_arrangeCursor(&ctx.buf->doc);
+}
+
+DEFUN(lastA, LINK_END, "Move to the last hyperlink")
+{
+    if (ctx.buf->doc.firstLine == NULL)
+        return;
+
+    struct HmarkerList* hl = ctx.buf->doc.hmarklist;
+    if (!hl || hl->nmark == 0)
+        return;
+
+    int hseq;
+    if (getRuntime()->prec_num >= hl->nmark)
+        hseq = 0;
+    else if (getRuntime()->prec_num > 0)
+        hseq = hl->nmark - getRuntime()->prec_num;
+    else
+        hseq = hl->nmark - 1;
+
+    struct BufferPoint* po;
+    struct Anchor* an;
+    do {
+        if (hseq < 0)
+            return;
+        po = hl->marks + hseq;
+        an = retrieveAnchor(ctx.buf->doc.href, po->line, po->pos);
+        if (an == NULL)
+            an = retrieveAnchor(ctx.buf->doc.formitem, po->line, po->pos);
+        hseq--;
+    } while (an == NULL);
+
+    doc_gotoLine(&ctx.buf->doc, po->line);
+    ctx.buf->doc.pos = po->pos;
+    doc_arrangeCursor(&ctx.buf->doc);
+}
+
+DEFUN(nthA, LINK_N, "Go to the nth link")
+{
+    struct HmarkerList* hl = Currentbuf->doc.hmarklist;
+    struct BufferPoint* po;
+    struct Anchor* an;
+
+    int n = searchKeyNum();
+    if (n < 0 || n > hl->nmark)
+        return;
+
+    if (Currentbuf->doc.firstLine == NULL)
+        return;
+    if (!hl || hl->nmark == 0)
+        return;
+
+    po = hl->marks + n - 1;
+    an = retrieveAnchor(Currentbuf->doc.href, po->line, po->pos);
+    if (an == NULL)
+        an = retrieveAnchor(Currentbuf->doc.formitem, po->line, po->pos);
+    if (an == NULL)
+        return;
+
+    doc_gotoLine(&Currentbuf->doc, po->line);
+    Currentbuf->doc.pos = po->pos;
+    doc_arrangeCursor(&Currentbuf->doc);
+}
+
+DEFUN(nextA, NEXT_LINK, "Move to the next hyperlink")
+{
+    doc_nextA(&ctx.buf->doc, false, baseURL(ctx.buf));
+}
+
+DEFUN(prevA, PREV_LINK, "Move to the previous hyperlink")
+{
+    doc_prevA(&ctx.buf->doc, false, baseURL(ctx.buf));
+}
+
+DEFUN(nextVA, NEXT_VISITED, "Move to the next visited hyperlink")
+{
+    doc_nextA(&ctx.buf->doc, true, baseURL(ctx.buf));
+}
+
+DEFUN(prevVA, PREV_VISITED, "Move to the previous visited hyperlink")
+{
+    doc_prevA(&ctx.buf->doc, true, baseURL(ctx.buf));
+}
+
+//
 // search
 //
 
@@ -685,6 +801,20 @@ DEFUN(reMark, REG_MARK, "Mark all occurences of a pattern")
 }
 
 //
+// image
+//
+DEFUN(followI, VIEW_IMAGE, "Display image in viewer")
+{
+    _followI(false);
+}
+
+DEFUN(svI, SAVE_IMAGE, "Save inline image")
+{
+    getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
+    _followI(true);
+}
+
+//
 // load
 //
 DEFUN(ldfile, LOAD, "Open local file in a new buffer")
@@ -806,4 +936,14 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
     }
 }
 
+DEFUN(submitForm, SUBMIT, "Submit form")
+{
+    _followForm(Currentbuf,
+        (struct FollowOption) { .on_target = true, .do_download = false }, true);
+}
 
+void followForm(void)
+{
+    _followForm(Currentbuf,
+        (struct FollowOption) { .on_target = true, .do_download = false }, false);
+}

@@ -711,7 +711,7 @@ menuBackwardSearch(struct Menu* menu, const char* str, int from)
 }
 
 static int
-menu_search_backward(struct Document *doc, struct Menu* menu, int from)
+menu_search_backward(struct Document* doc, struct Menu* menu, int from)
 {
     const char* str = inputStrHist("Backward: ", NULL, getRuntime()->TextHist);
     if (str != NULL && *str == '\0')
@@ -739,7 +739,7 @@ int mSrchB(struct DefunContext ctx, char c)
 }
 
 static int
-menu_search_next_previous(struct Document *doc, struct Menu* menu, int from, int reverse)
+menu_search_next_previous(struct Document* doc, struct Menu* menu, int from, int reverse)
 {
     static int (*routine[2])(struct Menu*, const char*, int) = {
         menuForwardSearch, menuBackwardSearch
@@ -1424,7 +1424,7 @@ accesskey_menu(struct Buffer* buf)
         menu.keyselect[(int)c] = i;
     }
 
-    a = retrieveCurrentAnchor(buf);
+    a = doc_retrieveCurrentAnchor(&buf->doc);
     if (a && a->accesskey && IS_ASCII(a->accesskey)) {
         for (i = 0; i < nitem; i++) {
             if (a->hseq == ap[i]->hseq) {
@@ -1536,7 +1536,7 @@ list_menu(struct Buffer* buf)
         }
     }
 
-    struct Anchor* a = retrieveCurrentAnchor(buf);
+    struct Anchor* a = doc_retrieveCurrentAnchor(&buf->doc);
     if (a) {
         for (int i = 0; i < nitem; i++) {
             if (a->hseq == ap[i]->hseq) {

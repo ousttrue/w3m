@@ -150,16 +150,16 @@ make_lastline_message(struct Buffer* buf)
     int sl = 0;
 
     if (getRuntime()->displayLink) {
-        struct MapArea* a = retrieveCurrentMapArea(buf);
+        struct MapArea* a = doc_retrieveCurrentMapArea(&buf->doc);
         if (a)
             s = make_lastline_link(buf, a->alt, a->url);
         else {
-            struct Anchor* a = retrieveCurrentAnchor(buf);
+            struct Anchor* a = doc_retrieveCurrentAnchor(&buf->doc);
             const char* p = NULL;
             if (a && a->title && *a->title)
                 p = a->title;
             else {
-                struct Anchor* a_img = retrieveCurrentImg(buf);
+                struct Anchor* a_img = doc_retrieveCurrentImg(&buf->doc);
                 if (a_img && a_img->title && *a_img->title)
                     p = a_img->title;
             }

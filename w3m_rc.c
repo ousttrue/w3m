@@ -383,7 +383,7 @@ Str query_from_followform(struct Buffer* buf, struct FormItemList* fi, bool mult
         if (multipart) {
             if (f2->type == FORM_INPUT_IMAGE) {
                 int x = 0, y = 0;
-                getMapXY(buf, retrieveCurrentImg(buf), &x, &y);
+                getMapXY(buf, doc_retrieveCurrentImg(&buf->doc), &x, &y);
                 query = Strdup(conv_form_encoding(f2->name, fi, buf));
                 Strcat_charp(query, ".x");
                 form_write_data(body, fi->parent->boundary, query->ptr,
@@ -409,7 +409,7 @@ Str query_from_followform(struct Buffer* buf, struct FormItemList* fi, bool mult
             /* not multipart */
             if (f2->type == FORM_INPUT_IMAGE) {
                 int x = 0, y = 0;
-                getMapXY(buf, retrieveCurrentImg(buf), &x, &y);
+                getMapXY(buf, doc_retrieveCurrentImg(&buf->doc), &x, &y);
                 Strcat(query,
                     Str_form_quote(conv_form_encoding(f2->name, fi, buf)));
                 Strcat(query, Sprintf(".x=%d&", x));
@@ -677,7 +677,7 @@ struct FollowResult _followForm(struct Buffer* buf, struct FollowOption option, 
     if (!Currentbuf->doc.firstLine)
         return (struct FollowResult) { 0 };
 
-    struct Anchor* a = retrieveCurrentForm(Currentbuf);
+    struct Anchor* a = doc_retrieveCurrentForm(&Currentbuf->doc);
     if (!a)
         return (struct FollowResult) { 0 };
 
@@ -2455,7 +2455,7 @@ struct FollowResult _followA(struct Buffer* buf, struct FollowOption option)
         return (struct FollowResult) { 0 };
     }
 
-    struct Anchor* a = retrieveCurrentImg(Currentbuf);
+    struct Anchor* a = doc_retrieveCurrentImg(&Currentbuf->doc);
     if (a && a->image && a->image->map) {
         return _followForm(buf, option, false);
     }
@@ -2466,7 +2466,7 @@ struct FollowResult _followA(struct Buffer* buf, struct FollowOption option)
         map = 1;
     }
 
-    a = retrieveCurrentAnchor(Currentbuf);
+    a = doc_retrieveCurrentAnchor(&Currentbuf->doc);
     if (a == NULL) {
         return _followForm(buf, option, false);
     }
@@ -2546,4 +2546,32 @@ int handleMailto(const char* url)
     exec_cmd(myExtCommand(getRuntime()->Mailer, shell_quote(file_unquote(to->ptr)), FALSE)->ptr);
     pushHashHist(getRuntime()->URLHist, url);
     return 1;
+}
+
+void _followI(bool do_download)
+{
+    if (Currentbuf->doc.firstLine == NULL)
+        return;
+
+    struct Anchor* a = doc_retrieveCurrentImg(&Currentbuf->doc);
+    if (a == NULL)
+        return;
+    message(Sprintf("loading %s", a->url)->ptr);
+    if (do_download) {
+        download_content(a->url, NULL,
+            (struct LoadOption) { .base_url = baseURL(Currentbuf), .referer = NULL, .flag = 0 });
+        return;
+    }
+
+    struct Content content = get_content_cache(a->url, NULL,
+        (struct LoadOption) { .base_url = baseURL(Currentbuf), .referer = NULL, .flag = 0 });
+    struct Buffer* buf = newBuffer(INIT_BUFFER_WIDTH);
+    buf->content = content;
+    if (buf == NULL) {
+        /* FIXME: gettextize? */
+        char* emsg = Sprintf("Can't load %s", a->url)->ptr;
+        disp_err_message(emsg, FALSE);
+    } else {
+        tab_push_buffer(getRuntime()->CurrentTab, buf);
+    }
 }

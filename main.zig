@@ -130,7 +130,7 @@ export fn onFrame() void {
     c.displayMsg(buf);
 
     const pos = screen_position();
-    c.drawAnchorCursor(buf);
+    c.drawAnchorCursor(&buf.*.doc, c.baseURL(buf));
 
     if (buf.doc.img != null) {
         // && buf->image_loaded

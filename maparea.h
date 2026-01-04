@@ -39,3 +39,4 @@ extern struct MapArea* follow_map_menu(struct Buffer* buf, char* name, struct An
     int y);
 extern struct Buffer* follow_map_panel(struct Buffer* buf, char* name);
 extern struct Buffer* page_info_panel(struct Buffer* buf);
+int searchMapArea(struct Buffer* buf, struct MapList* ml, struct Anchor* a_img);

@@ -137,6 +137,7 @@ struct FollowResult {
 struct FollowResult _followForm(struct Buffer* buf, struct FollowOption option, bool submit);
 struct FollowResult _followA(struct Buffer* buf, struct FollowOption option);
 struct FollowResult gotoLabel(struct Buffer* buf, const char* label);
+void _followI(bool do_download);
 
 struct FormList;
 struct Buffer* loadLink(const char* url, struct FormList* request,

@@ -110,19 +110,19 @@ static void set_buffer_environ(struct Buffer* buf)
         struct Url pu;
         char* s = GetWord(buf);
         set_environ("W3M_CURRENT_WORD", s ? s : "");
-        a = retrieveCurrentAnchor(buf);
+        a = doc_retrieveCurrentAnchor(&buf->doc);
         if (a) {
             parseURL2(a->url, &pu, baseURL(buf));
             set_environ("W3M_CURRENT_LINK", parsedURL2Str(&pu)->ptr);
         } else
             set_environ("W3M_CURRENT_LINK", "");
-        a = retrieveCurrentImg(buf);
+        a = doc_retrieveCurrentImg(&buf->doc);
         if (a) {
             parseURL2(a->url, &pu, baseURL(buf));
             set_environ("W3M_CURRENT_IMG", parsedURL2Str(&pu)->ptr);
         } else
             set_environ("W3M_CURRENT_IMG", "");
-        a = retrieveCurrentForm(buf);
+        a = doc_retrieveCurrentForm(&buf->doc);
         if (a)
             set_environ("W3M_CURRENT_FORM", form2str((struct FormItemList*)a->url));
         else

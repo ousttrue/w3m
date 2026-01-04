@@ -152,31 +152,6 @@ retrieveAnchor(struct AnchorList* al, int line, int pos)
 }
 
 struct Anchor*
-retrieveCurrentAnchor(struct Buffer* buf)
-{
-    if (buf->doc.currentLine == NULL)
-        return NULL;
-    return retrieveAnchor(buf->doc.href, buf->doc.currentLine->linenumber, buf->doc.pos);
-}
-
-struct Anchor*
-retrieveCurrentImg(struct Buffer* buf)
-{
-    if (buf->doc.currentLine == NULL)
-        return NULL;
-    return retrieveAnchor(buf->doc.img, buf->doc.currentLine->linenumber, buf->doc.pos);
-}
-
-struct Anchor*
-retrieveCurrentForm(struct Buffer* buf)
-{
-    if (buf->doc.currentLine == NULL)
-        return NULL;
-    return retrieveAnchor(buf->doc.formitem,
-        buf->doc.currentLine->linenumber, buf->doc.pos);
-}
-
-struct Anchor*
 searchAnchor(struct AnchorList* al, const char* str)
 {
     int i;

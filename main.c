@@ -61,8 +61,6 @@ void show_params(FILE* fp);
 
 static void followTab(struct TabBuffer* tab);
 static void moveTab(struct TabBuffer* t, struct TabBuffer* t2, int right);
-static void _nextA(int);
-static void _prevA(int);
 
 #define help() fusage(stdout, 0)
 #define usage() fusage(stderr, 1)
@@ -748,360 +746,26 @@ cmd_loadURL(const char* url, struct FormList* request, struct LoadOption option)
     }
 }
 
-void _followI(bool do_download)
-{
-    if (Currentbuf->doc.firstLine == NULL)
-        return;
-
-    struct Anchor* a = retrieveCurrentImg(Currentbuf);
-    if (a == NULL)
-        return;
-    message(Sprintf("loading %s", a->url)->ptr);
-    if (do_download) {
-        download_content(a->url, NULL,
-            (struct LoadOption) { .base_url = baseURL(Currentbuf), .referer = NULL, .flag = 0 });
-        return;
-    }
-
-    struct Content content = get_content_cache(a->url, NULL,
-        (struct LoadOption) { .base_url = baseURL(Currentbuf), .referer = NULL, .flag = 0 });
-    struct Buffer* buf = newBuffer(INIT_BUFFER_WIDTH);
-    buf->content = content;
-    if (buf == NULL) {
-        /* FIXME: gettextize? */
-        char* emsg = Sprintf("Can't load %s", a->url)->ptr;
-        disp_err_message(emsg, FALSE);
-    } else {
-        tab_push_buffer(getRuntime()->CurrentTab, buf);
-    }
-}
-
-/* view inline image */
-DEFUN(followI, VIEW_IMAGE, "Display image in viewer")
-{
-    _followI(false);
-}
-
-/* submit form */
-DEFUN(submitForm, SUBMIT, "Submit form")
-{
-    _followForm(Currentbuf,
-        (struct FollowOption) { .on_target = true, .do_download = false }, true);
-}
-
-/* process form */
-void followForm(void)
-{
-    _followForm(Currentbuf,
-        (struct FollowOption) { .on_target = true, .do_download = false }, false);
-}
-
-/* go to the top anchor */
-DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink")
-{
-    struct HmarkerList* hl = Currentbuf->doc.hmarklist;
-    struct BufferPoint* po;
-    struct Anchor* an;
-    int hseq = 0;
-
-    if (Currentbuf->doc.firstLine == NULL)
-        return;
-    if (!hl || hl->nmark == 0)
-        return;
-
-    if (getRuntime()->prec_num > hl->nmark)
-        hseq = hl->nmark - 1;
-    else if (getRuntime()->prec_num > 0)
-        hseq = getRuntime()->prec_num - 1;
-    do {
-        if (hseq >= hl->nmark)
-            return;
-        po = hl->marks + hseq;
-        an = retrieveAnchor(Currentbuf->doc.href, po->line, po->pos);
-        if (an == NULL)
-            an = retrieveAnchor(Currentbuf->doc.formitem, po->line, po->pos);
-        hseq++;
-    } while (an == NULL);
-
-    doc_gotoLine(&Currentbuf->doc, po->line);
-    Currentbuf->doc.pos = po->pos;
-    doc_arrangeCursor(&Currentbuf->doc);
-}
-
-/* go to the last anchor */
-DEFUN(lastA, LINK_END, "Move to the last hyperlink")
-{
-    if (Currentbuf->doc.firstLine == NULL)
-        return;
-
-    struct HmarkerList* hl = Currentbuf->doc.hmarklist;
-    if (!hl || hl->nmark == 0)
-        return;
-
-    int hseq;
-    if (getRuntime()->prec_num >= hl->nmark)
-        hseq = 0;
-    else if (getRuntime()->prec_num > 0)
-        hseq = hl->nmark - getRuntime()->prec_num;
-    else
-        hseq = hl->nmark - 1;
-
-    struct BufferPoint* po;
-    struct Anchor* an;
-    do {
-        if (hseq < 0)
-            return;
-        po = hl->marks + hseq;
-        an = retrieveAnchor(Currentbuf->doc.href, po->line, po->pos);
-        if (an == NULL)
-            an = retrieveAnchor(Currentbuf->doc.formitem, po->line, po->pos);
-        hseq--;
-    } while (an == NULL);
-
-    doc_gotoLine(&Currentbuf->doc, po->line);
-    Currentbuf->doc.pos = po->pos;
-    doc_arrangeCursor(&Currentbuf->doc);
-}
-
-/* go to the nth anchor */
-DEFUN(nthA, LINK_N, "Go to the nth link")
-{
-    struct HmarkerList* hl = Currentbuf->doc.hmarklist;
-    struct BufferPoint* po;
-    struct Anchor* an;
-
-    int n = searchKeyNum();
-    if (n < 0 || n > hl->nmark)
-        return;
-
-    if (Currentbuf->doc.firstLine == NULL)
-        return;
-    if (!hl || hl->nmark == 0)
-        return;
-
-    po = hl->marks + n - 1;
-    an = retrieveAnchor(Currentbuf->doc.href, po->line, po->pos);
-    if (an == NULL)
-        an = retrieveAnchor(Currentbuf->doc.formitem, po->line, po->pos);
-    if (an == NULL)
-        return;
-
-    doc_gotoLine(&Currentbuf->doc, po->line);
-    Currentbuf->doc.pos = po->pos;
-    doc_arrangeCursor(&Currentbuf->doc);
-}
-
-/* go to the next anchor */
-DEFUN(nextA, NEXT_LINK, "Move to the next hyperlink")
-{
-    _nextA(FALSE);
-}
-
-/* go to the previous anchor */
-DEFUN(prevA, PREV_LINK, "Move to the previous hyperlink")
-{
-    _prevA(FALSE);
-}
-
-/* go to the next visited anchor */
-DEFUN(nextVA, NEXT_VISITED, "Move to the next visited hyperlink")
-{
-    _nextA(TRUE);
-}
-
-/* go to the previous visited anchor */
-DEFUN(prevVA, PREV_VISITED, "Move to the previous visited hyperlink")
-{
-    _prevA(TRUE);
-}
-
-/* go to the next [visited] anchor */
-static void
-_nextA(int visited)
-{
-    struct HmarkerList* hl = Currentbuf->doc.hmarklist;
-    struct BufferPoint* po;
-    struct Anchor *an, *pan;
-    int i, x, y, n = searchKeyNum();
-    struct Url url;
-
-    if (Currentbuf->doc.firstLine == NULL)
-        return;
-    if (!hl || hl->nmark == 0)
-        return;
-
-    an = retrieveCurrentAnchor(Currentbuf);
-    if (visited != TRUE && an == NULL)
-        an = retrieveCurrentForm(Currentbuf);
-
-    y = Currentbuf->doc.currentLine->linenumber;
-    x = Currentbuf->doc.pos;
-
-    if (visited == TRUE) {
-        n = hl->nmark;
-    }
-
-    for (i = 0; i < n; i++) {
-        pan = an;
-        if (an && an->hseq >= 0) {
-            int hseq = an->hseq + 1;
-            do {
-                if (hseq >= hl->nmark) {
-                    if (visited == TRUE)
-                        return;
-                    an = pan;
-                    goto _end;
-                }
-                po = &hl->marks[hseq];
-                an = retrieveAnchor(Currentbuf->doc.href, po->line, po->pos);
-                if (visited != TRUE && an == NULL)
-                    an = retrieveAnchor(Currentbuf->doc.formitem, po->line,
-                        po->pos);
-                hseq++;
-                if (visited == TRUE && an) {
-                    parseURL2(an->url, &url, baseURL(Currentbuf));
-                    if (getHashHist(getRuntime()->URLHist, parsedURL2Str(&url)->ptr)) {
-                        goto _end;
-                    }
-                }
-            } while (an == NULL || an == pan);
-        } else {
-            an = closest_next_anchor(Currentbuf->doc.href, NULL, x, y);
-            if (visited != TRUE)
-                an = closest_next_anchor(Currentbuf->doc.formitem, an, x, y);
-            if (an == NULL) {
-                if (visited == TRUE)
-                    return;
-                an = pan;
-                break;
-            }
-            x = an->start.pos;
-            y = an->start.line;
-            if (visited == TRUE) {
-                parseURL2(an->url, &url, baseURL(Currentbuf));
-                if (getHashHist(getRuntime()->URLHist, parsedURL2Str(&url)->ptr)) {
-                    goto _end;
-                }
-            }
-        }
-    }
-    if (visited == TRUE)
-        return;
-
-_end:
-    if (an == NULL || an->hseq < 0)
-        return;
-    po = &hl->marks[an->hseq];
-    doc_gotoLine(&Currentbuf->doc, po->line);
-    Currentbuf->doc.pos = po->pos;
-    doc_arrangeCursor(&Currentbuf->doc);
-}
-
-/* go to the previous anchor */
-static void
-_prevA(int visited)
-{
-    struct HmarkerList* hl = Currentbuf->doc.hmarklist;
-    struct BufferPoint* po;
-    struct Anchor *an, *pan;
-    int i, x, y, n = searchKeyNum();
-    struct Url url;
-
-    if (Currentbuf->doc.firstLine == NULL)
-        return;
-    if (!hl || hl->nmark == 0)
-        return;
-
-    an = retrieveCurrentAnchor(Currentbuf);
-    if (visited != TRUE && an == NULL)
-        an = retrieveCurrentForm(Currentbuf);
-
-    y = Currentbuf->doc.currentLine->linenumber;
-    x = Currentbuf->doc.pos;
-
-    if (visited == TRUE) {
-        n = hl->nmark;
-    }
-
-    for (i = 0; i < n; i++) {
-        pan = an;
-        if (an && an->hseq >= 0) {
-            int hseq = an->hseq - 1;
-            do {
-                if (hseq < 0) {
-                    if (visited == TRUE)
-                        return;
-                    an = pan;
-                    goto _end;
-                }
-                po = hl->marks + hseq;
-                an = retrieveAnchor(Currentbuf->doc.href, po->line, po->pos);
-                if (visited != TRUE && an == NULL)
-                    an = retrieveAnchor(Currentbuf->doc.formitem, po->line,
-                        po->pos);
-                hseq--;
-                if (visited == TRUE && an) {
-                    parseURL2(an->url, &url, baseURL(Currentbuf));
-                    if (getHashHist(getRuntime()->URLHist, parsedURL2Str(&url)->ptr)) {
-                        goto _end;
-                    }
-                }
-            } while (an == NULL || an == pan);
-        } else {
-            an = closest_prev_anchor(Currentbuf->doc.href, NULL, x, y);
-            if (visited != TRUE)
-                an = closest_prev_anchor(Currentbuf->doc.formitem, an, x, y);
-            if (an == NULL) {
-                if (visited == TRUE)
-                    return;
-                an = pan;
-                break;
-            }
-            x = an->start.pos;
-            y = an->start.line;
-            if (visited == TRUE && an) {
-                parseURL2(an->url, &url, baseURL(Currentbuf));
-                if (getHashHist(getRuntime()->URLHist, parsedURL2Str(&url)->ptr)) {
-                    goto _end;
-                }
-            }
-        }
-    }
-    if (visited == TRUE)
-        return;
-
-_end:
-    if (an == NULL || an->hseq < 0)
-        return;
-    po = hl->marks + an->hseq;
-    doc_gotoLine(&Currentbuf->doc, po->line);
-    Currentbuf->doc.pos = po->pos;
-    doc_arrangeCursor(&Currentbuf->doc);
-}
-
 /* go to the next left/right anchor */
 static void
 nextX(int d, int dy)
 {
-    struct HmarkerList* hl = Currentbuf->doc.hmarklist;
-    struct Anchor *an, *pan;
-    struct Line* l;
-    int i, x, y, n = searchKeyNum();
-
     if (Currentbuf->doc.firstLine == NULL)
         return;
+    struct HmarkerList* hl = Currentbuf->doc.hmarklist;
     if (!hl || hl->nmark == 0)
         return;
 
-    an = retrieveCurrentAnchor(Currentbuf);
+    struct Anchor* an = doc_retrieveCurrentAnchor(&Currentbuf->doc);
     if (an == NULL)
-        an = retrieveCurrentForm(Currentbuf);
+        an = doc_retrieveCurrentForm(&Currentbuf->doc);
 
-    l = Currentbuf->doc.currentLine;
-    x = Currentbuf->doc.pos;
-    y = l->linenumber;
-    pan = NULL;
-    for (i = 0; i < n; i++) {
+    int n = searchKeyNum();
+    struct Line* l = Currentbuf->doc.currentLine;
+    int x = Currentbuf->doc.pos;
+    int y = l->linenumber;
+    struct Anchor* pan = NULL;
+    for (int i = 0; i < n; i++) {
         if (an)
             x = (d > 0) ? an->end.pos : an->start.pos - 1;
         an = NULL;
@@ -1148,9 +812,9 @@ nextY(int d)
     if (!hl || hl->nmark == 0)
         return;
 
-    an = retrieveCurrentAnchor(Currentbuf);
+    an = doc_retrieveCurrentAnchor(&Currentbuf->doc);
     if (an == NULL)
-        an = retrieveCurrentForm(Currentbuf);
+        an = doc_retrieveCurrentForm(&Currentbuf->doc);
 
     x = Currentbuf->doc.pos;
     y = Currentbuf->doc.currentLine->linenumber + d;
@@ -1347,7 +1011,7 @@ goURL0(const char* prompt, int relative)
             else
                 pushHist(hist, c_url);
         }
-        a = retrieveCurrentAnchor(Currentbuf);
+        a = doc_retrieveCurrentAnchor(&Currentbuf->doc);
         if (a) {
             char* a_url;
             parseURL2(a->url, &p_url, current);
@@ -1495,11 +1159,10 @@ DEFUN(pginfo, INFO, "Display information about the current document")
 void follow_map(struct parsed_tagarg* arg)
 {
     char* name = tag_get_value(arg, "link");
-    struct Anchor* an;
     int x, y;
     struct Url p_url;
 
-    an = retrieveCurrentImg(Currentbuf);
+    struct Anchor* an = doc_retrieveCurrentImg(&Currentbuf->doc);
     x = Currentbuf->doc.cursorX + Currentbuf->doc.rootX;
     y = Currentbuf->doc.cursorY + Currentbuf->doc.rootY;
     struct MapArea* a = follow_map_menu(Currentbuf, name, an, x, y);
@@ -1624,13 +1287,6 @@ DEFUN(svA, SAVE_LINK, "Save hyperlink target")
     _followA(Currentbuf, (struct FollowOption) { .on_target = true, .do_download = false });
 }
 
-/* download IMG link */
-DEFUN(svI, SAVE_IMAGE, "Save inline image")
-{
-    getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    _followI(true);
-}
-
 /* save buffer */
 DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document")
 {
@@ -1719,11 +1375,11 @@ _peekURL(int only_img)
         offset = 0;
     }
     s = NULL;
-    a = (only_img ? NULL : retrieveCurrentAnchor(Currentbuf));
+    a = (only_img ? NULL : doc_retrieveCurrentAnchor(&Currentbuf->doc));
     if (a == NULL) {
-        a = (only_img ? NULL : retrieveCurrentForm(Currentbuf));
+        a = (only_img ? NULL : doc_retrieveCurrentForm(&Currentbuf->doc));
         if (a == NULL) {
-            a = retrieveCurrentImg(Currentbuf);
+            a = doc_retrieveCurrentImg(&Currentbuf->doc);
             if (a == NULL)
                 return;
         } else
@@ -2182,15 +1838,13 @@ DEFUN(extbrz, EXTERN, "Display using an external browser")
 
 DEFUN(linkbrz, EXTERN_LINK, "Display target using an external browser")
 {
-    struct Anchor* a;
-    struct Url pu;
-
-    if (Currentbuf->doc.firstLine == NULL)
+    if (ctx.buf->doc.firstLine == NULL)
         return;
-    a = retrieveCurrentAnchor(Currentbuf);
+    struct Anchor* a = doc_retrieveCurrentAnchor(&ctx.buf->doc);
     if (a == NULL)
         return;
-    parseURL2(a->url, &pu, baseURL(Currentbuf));
+    struct Url pu;
+    parseURL2(a->url, &pu, baseURL(ctx.buf));
     invoke_browser(parsedURL2Str(&pu)->ptr);
 }
 
@@ -2594,9 +2248,9 @@ DEFUN(prevT, PREV_TAB, "Switch to the previous tab")
 static void
 followTab(struct TabBuffer* tab)
 {
-    struct Anchor* a = retrieveCurrentImg(Currentbuf);
+    struct Anchor* a = doc_retrieveCurrentImg(&Currentbuf->doc);
     if (!(a && a->image && a->image->map))
-        a = retrieveCurrentAnchor(Currentbuf);
+        a = doc_retrieveCurrentAnchor(&Currentbuf->doc);
     if (a == NULL)
         return;
 

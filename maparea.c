@@ -98,8 +98,7 @@ nearestMapArea(struct MapList* ml, int x, int y)
     return n;
 }
 
-static int
-searchMapArea(struct Buffer* buf, struct MapList* ml, struct Anchor* a_img)
+int searchMapArea(struct Buffer* buf, struct MapList* ml, struct Anchor* a_img)
 {
     ListItem* al;
     struct MapArea* a;
@@ -130,40 +129,6 @@ searchMapArea(struct Buffer* buf, struct MapList* ml, struct Anchor* a_img)
     return n;
 }
 
-struct MapArea*
-retrieveCurrentMapArea(struct Buffer* buf)
-{
-    struct Anchor *a_img, *a_form;
-    struct FormItemList* fi;
-    struct MapList* ml;
-    ListItem* al;
-    struct MapArea* a;
-    int i, n;
-
-    a_img = retrieveCurrentImg(buf);
-    if (!(a_img && a_img->image && a_img->image->map))
-        return NULL;
-    a_form = retrieveCurrentForm(buf);
-    if (!(a_form && a_form->url))
-        return NULL;
-    fi = (struct FormItemList*)a_form->url;
-    if (!(fi && fi->parent && fi->parent->item))
-        return NULL;
-    fi = fi->parent->item;
-    ml = searchMapList(buf, fi->value ? fi->value->ptr : NULL);
-    if (!ml)
-        return NULL;
-    n = searchMapArea(buf, ml, a_img);
-    if (n < 0)
-        return NULL;
-    for (i = 0, al = ml->area->first; al != NULL; i++, al = al->next) {
-        a = (struct MapArea*)al->ptr;
-        if (a && i == n)
-            return a;
-    }
-    return NULL;
-}
-
 int getMapXY(struct Buffer* buf, struct Anchor* a, int* x, int* y)
 {
     if (!buf || !a || !a->image || !x || !y)
@@ -180,21 +145,6 @@ int getMapXY(struct Buffer* buf, struct Anchor* a, int* x, int* y)
     if (*y <= 0)
         *y = 1;
     return 1;
-}
-
-struct Anchor*
-retrieveCurrentMap(struct Buffer* buf)
-{
-    struct Anchor* a;
-    struct FormItemList* fi;
-
-    a = retrieveCurrentForm(buf);
-    if (!a || !a->url)
-        return NULL;
-    fi = (struct FormItemList*)a->url;
-    if (fi->parent->method == FORM_METHOD_INTERNAL && !Strcmp_charp(fi->parent->action, "map"))
-        return a;
-    return NULL;
 }
 
 struct MapArea*
@@ -457,7 +407,6 @@ struct Buffer*
 page_info_panel(struct Buffer* buf)
 {
     Str tmp = Strnew_size(1024);
-    struct Anchor* a;
     struct Url pu;
     struct frameset* f_set = NULL;
     int all;
@@ -509,7 +458,7 @@ page_info_panel(struct Buffer* buf)
         "<tr valign=top><td nowrap>Transferred bytes<td>",
         Sprintf("%lu", (unsigned long)buf->doc.trbyte)->ptr, NULL);
 
-    a = retrieveCurrentAnchor(buf);
+    struct Anchor* a = doc_retrieveCurrentAnchor(&buf->doc);
     if (a != NULL) {
         parseURL2(a->url, &pu, baseURL(buf));
         p = parsedURL2Str(&pu)->ptr;
@@ -522,7 +471,7 @@ page_info_panel(struct Buffer* buf)
             "<tr valign=top><td nowrap>URL of current anchor<td><a href=\"",
             q, "\">", p, "</a>", NULL);
     }
-    a = retrieveCurrentImg(buf);
+    a = doc_retrieveCurrentImg(&buf->doc);
     if (a != NULL) {
         parseURL2(a->url, &pu, baseURL(buf));
         p = parsedURL2Str(&pu)->ptr;
@@ -535,7 +484,7 @@ page_info_panel(struct Buffer* buf)
             "<tr valign=top><td nowrap>URL of current image<td><a href=\"",
             q, "\">", p, "</a>", NULL);
     }
-    a = retrieveCurrentForm(buf);
+    a = doc_retrieveCurrentForm(&buf->doc);
     if (a != NULL) {
         struct FormItemList* fi = (struct FormItemList*)a->url;
         p = form2str(fi);

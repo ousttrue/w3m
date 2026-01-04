@@ -1,4 +1,6 @@
 #include "document.h"
+#include "maparea.h"
+#include "html_form.h"
 #include "message.h"
 #include "w3m_rc.h"
 #include "history.h"
@@ -696,3 +698,223 @@ int doc_cur_real_linenumber(struct Document* doc)
     }
     return n;
 }
+
+void doc_nextA(struct Document* doc, bool visited, struct Url* base_url)
+{
+    int n = searchKeyNum();
+
+    if (doc->firstLine == NULL)
+        return;
+    struct HmarkerList* hl = doc->hmarklist;
+    if (!hl || hl->nmark == 0)
+        return;
+
+    struct Anchor* an = doc_retrieveCurrentAnchor(doc);
+    if (visited != TRUE && an == NULL)
+        an = doc_retrieveCurrentForm(doc);
+
+    struct BufferPoint* po;
+
+    int y = doc->currentLine->linenumber;
+    int x = doc->pos;
+
+    if (visited == TRUE) {
+        n = hl->nmark;
+    }
+
+    for (int i = 0; i < n; i++) {
+        struct Anchor* pan = an;
+        if (an && an->hseq >= 0) {
+            int hseq = an->hseq + 1;
+            do {
+                if (hseq >= hl->nmark) {
+                    if (visited == TRUE)
+                        return;
+                    an = pan;
+                    goto _end;
+                }
+                po = &hl->marks[hseq];
+                an = retrieveAnchor(doc->href, po->line, po->pos);
+                if (visited != TRUE && an == NULL)
+                    an = retrieveAnchor(doc->formitem, po->line,
+                        po->pos);
+                hseq++;
+                if (visited == TRUE && an) {
+                    struct Url url;
+                    parseURL2(an->url, &url, base_url);
+                    if (getHashHist(getRuntime()->URLHist, parsedURL2Str(&url)->ptr)) {
+                        goto _end;
+                    }
+                }
+            } while (an == NULL || an == pan);
+        } else {
+            an = closest_next_anchor(doc->href, NULL, x, y);
+            if (visited != TRUE)
+                an = closest_next_anchor(doc->formitem, an, x, y);
+            if (an == NULL) {
+                if (visited == TRUE)
+                    return;
+                an = pan;
+                break;
+            }
+            x = an->start.pos;
+            y = an->start.line;
+            if (visited == TRUE) {
+                struct Url url;
+                parseURL2(an->url, &url, base_url);
+                if (getHashHist(getRuntime()->URLHist, parsedURL2Str(&url)->ptr)) {
+                    goto _end;
+                }
+            }
+        }
+    }
+    if (visited == TRUE)
+        return;
+
+_end:
+    if (an == NULL || an->hseq < 0)
+        return;
+    po = &hl->marks[an->hseq];
+    doc_gotoLine(doc, po->line);
+    doc->pos = po->pos;
+    doc_arrangeCursor(doc);
+}
+
+void doc_prevA(struct Document* doc, bool visited, struct Url* base_url)
+{
+    if (doc->firstLine == NULL)
+        return;
+
+    struct HmarkerList* hl = doc->hmarklist;
+    if (!hl || hl->nmark == 0)
+        return;
+
+    struct Anchor* an = doc_retrieveCurrentAnchor(doc);
+    if (visited != TRUE && an == NULL)
+        an = doc_retrieveCurrentForm(doc);
+
+    int n = searchKeyNum();
+    int y = doc->currentLine->linenumber;
+    int x = doc->pos;
+
+    if (visited == TRUE) {
+        n = hl->nmark;
+    }
+
+    for (int i = 0; i < n; i++) {
+        struct Anchor* pan = an;
+        if (an && an->hseq >= 0) {
+            int hseq = an->hseq - 1;
+            do {
+                if (hseq < 0) {
+                    if (visited == TRUE)
+                        return;
+                    an = pan;
+                    goto _end;
+                }
+                struct BufferPoint* po = hl->marks + hseq;
+                an = retrieveAnchor(doc->href, po->line, po->pos);
+                if (visited != TRUE && an == NULL)
+                    an = retrieveAnchor(doc->formitem, po->line, po->pos);
+                hseq--;
+                if (visited == TRUE && an) {
+                    struct Url url;
+                    parseURL2(an->url, &url, base_url);
+                    if (getHashHist(getRuntime()->URLHist, parsedURL2Str(&url)->ptr)) {
+                        goto _end;
+                    }
+                }
+            } while (an == NULL || an == pan);
+        } else {
+            struct Anchor* an = closest_prev_anchor(doc->href, NULL, x, y);
+            if (visited != TRUE)
+                an = closest_prev_anchor(doc->formitem, an, x, y);
+            if (an == NULL) {
+                if (visited == TRUE)
+                    return;
+                an = pan;
+                break;
+            }
+            x = an->start.pos;
+            y = an->start.line;
+            if (visited == TRUE && an) {
+                struct Url url;
+                parseURL2(an->url, &url, base_url);
+                if (getHashHist(getRuntime()->URLHist, parsedURL2Str(&url)->ptr)) {
+                    goto _end;
+                }
+            }
+        }
+    }
+    if (visited == TRUE)
+        return;
+
+_end:
+    if (an == NULL || an->hseq < 0)
+        return;
+    struct BufferPoint* po = hl->marks + an->hseq;
+    doc_gotoLine(doc, po->line);
+    doc->pos = po->pos;
+    doc_arrangeCursor(doc);
+}
+
+struct Anchor* doc_retrieveCurrentAnchor(struct Document* doc)
+{
+    if (doc->currentLine == NULL)
+        return NULL;
+    return retrieveAnchor(doc->href, doc->currentLine->linenumber, doc->pos);
+}
+
+struct Anchor* doc_retrieveCurrentImg(struct Document* doc)
+{
+    if (doc->currentLine == NULL)
+        return NULL;
+    return retrieveAnchor(doc->img, doc->currentLine->linenumber, doc->pos);
+}
+
+struct Anchor* doc_retrieveCurrentForm(struct Document* doc)
+{
+    if (doc->currentLine == NULL)
+        return NULL;
+    return retrieveAnchor(doc->formitem, doc->currentLine->linenumber, doc->pos);
+}
+
+struct Anchor* doc_retrieveCurrentMap(struct Document* doc)
+{
+    struct Anchor* a = doc_retrieveCurrentForm(doc);
+    if (!a || !a->url)
+        return NULL;
+    struct FormItemList* fi = (struct FormItemList*)a->url;
+    if (fi->parent->method == FORM_METHOD_INTERNAL && !Strcmp_charp(fi->parent->action, "map"))
+        return a;
+    return NULL;
+}
+
+struct MapArea* doc_retrieveCurrentMapArea(struct Document *doc)
+{
+    struct Anchor* a_img = doc_retrieveCurrentImg(doc);
+    if (!(a_img && a_img->image && a_img->image->map))
+        return NULL;
+    struct Anchor* a_form = doc_retrieveCurrentForm(doc);
+    if (!(a_form && a_form->url))
+        return NULL;
+    struct FormItemList* fi = (struct FormItemList*)a_form->url;
+    if (!(fi && fi->parent && fi->parent->item))
+        return NULL;
+    fi = fi->parent->item;
+    struct MapList* ml = searchMapList(doc, fi->value ? fi->value->ptr : NULL);
+    if (!ml)
+        return NULL;
+    int n = searchMapArea(doc, ml, a_img);
+    if (n < 0)
+        return NULL;
+    int i = 0;
+    for (ListItem* al = ml->area->first; al != NULL; i++, al = al->next) {
+        struct MapArea* a = (struct MapArea*)al->ptr;
+        if (a && i == n)
+            return a;
+    }
+    return NULL;
+}
+
+
