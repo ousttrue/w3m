@@ -5,7 +5,7 @@
 #include "parsetag.h"
 #include <string.h>
 
-char* tag_get_value(struct parsed_tagarg* t, char* arg)
+char* tag_get_value(struct parsed_tagarg* t, const char* arg)
 {
     for (; t; t = t->next) {
         if (!strcasecmp(t->arg, arg))
@@ -14,7 +14,7 @@ char* tag_get_value(struct parsed_tagarg* t, char* arg)
     return NULL;
 }
 
-int tag_exists(struct parsed_tagarg* t, char* arg)
+int tag_exists(struct parsed_tagarg* t, const char* arg)
 {
     for (; t; t = t->next) {
         if (!strcasecmp(t->arg, arg))
@@ -24,7 +24,7 @@ int tag_exists(struct parsed_tagarg* t, char* arg)
 }
 
 struct parsed_tagarg*
-cgistr2tagarg(char* cgistr)
+cgistr2tagarg(const char* cgistr)
 {
     Str tag;
     Str value;

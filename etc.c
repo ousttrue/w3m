@@ -39,8 +39,6 @@ struct auth_pass {
 
 struct auth_pass* passwords = NULL;
 
-
-
 #define MAX_CMD_LEN 128
 
 int gethtmlcmd(const char** s)
@@ -1031,8 +1029,6 @@ mymktime(const char* timestr)
     return (time_t)((day * 60 * 60 * 24) + (hour * 60 * 60) + (min * 60) + sec);
 }
 
-
-
 static char Base64Table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 Str base64_encode(const char* src, size_t len)
@@ -1119,10 +1115,9 @@ Str unescape_spaces(Str s)
 char* getQWord(const char** str)
 {
     Str tmp = Strnew();
-    char* p;
     int in_q = 0, in_dq = 0, esc = 0;
 
-    p = *str;
+    const char* p = *str;
     p = skip_blanks(p);
     for (; *p; p++) {
         if (esc) {
@@ -1185,9 +1180,8 @@ char* getWord(const char** str)
  *
  * XXX: Actually this is unrelated to func.c.
  */
-char* getRegexWord(const char** str, Regex** regex_ret)
+const char* getRegexWord(const char** str, struct Regex** regex_ret)
 {
-    char* word = NULL;
     const char *p, *headp, *bodyp, *tailp;
     char delimiter;
     int esc;
@@ -1237,7 +1231,7 @@ char* getRegexWord(const char** str, Regex** regex_ret)
     }
 
     /* Save the expression */
-    word = allocStr(headp, p - headp);
+    char* word = allocStr(headp, p - headp);
 
     /* Compile */
     if (regex_ret) {
@@ -1280,5 +1274,3 @@ Str qstr_unquote(Str s)
     } else
         return s;
 }
-
-

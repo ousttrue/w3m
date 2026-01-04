@@ -46,7 +46,7 @@ Str unescape_spaces(Str s);
 
 char* getQWord(const char** str);
 char* getWord(const char** str);
-struct regex;
-char* getRegexWord(const char** str, struct regex** regex_ret);
+struct Regex;
+const char* getRegexWord(const char** str, struct Regex** regex_ret);
 extern void loadPasswd(void);
 Str qstr_unquote(Str s);

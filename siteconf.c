@@ -28,7 +28,7 @@ const char* siteconf_file = (SITECONF_FILE);
 struct siteconf_rec {
     struct siteconf_rec* next;
     char* url;
-    Regex* re_url;
+    struct Regex* re_url;
     int url_exact;
     unsigned char mask[(SCONF_N_FIELD + 7) >> 3];
 

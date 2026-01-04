@@ -1,4 +1,3 @@
-/* $Id: regex.c,v 1.23 2010/08/24 10:11:51 htrb Exp $ */
 /*
  * regex: Regular expression pattern match library
  *
@@ -10,11 +9,8 @@
 #include <sys/types.h>
 #include <malloc.h>
 #endif /* REGEX_DEBUG */
-// #include <stdio.h>
-// #include <stdlib.h>
 #include <string.h>
 #include <gc.h>
-#include "config.h"
 
 #include <libwc/wtf.h>
 #include <libwc/wtf_len.h>
@@ -22,28 +18,9 @@
 #include <libwc/ccs.h>
 
 #include "regex.h"
-#include "config.h"
 #include "myctype.h"
 
-#ifndef NULL
-#define NULL 0
-#endif /* not NULL */
-
 #define RE_ITER_LIMIT 65535
-
-#define RE_MATCHMODE 0x07
-#define RE_NORMAL 0x00
-#define RE_ANY 0x01
-#define RE_WHICH 0x02
-#define RE_EXCEPT 0x03
-#define RE_SUBREGEX 0x04
-#define RE_BEGIN 0x05
-#define RE_END 0x06
-#define RE_ENDMARK 0x07
-
-#define RE_OPT 0x08
-#define RE_ANYTIME 0x10
-#define RE_IGNCASE 0x40
 
 #define RE_MODE(x) ((x)->mode & RE_MATCHMODE)
 #define RE_SET_MODE(x, v) ((x)->mode = (((x)->mode & ~RE_MATCHMODE) | ((v) & RE_MATCHMODE)))
@@ -54,11 +31,7 @@ char* lc2c(longchar*, int);
 int verbose;
 #endif /* REGEX_DEBUG */
 
-#ifdef USE_M17N
 #define get_mclen(c) wtf_len1((wc_uchar*)(c))
-#else
-#define get_mclen(c) 1
-#endif
 
 #ifndef TOLOWER
 #include <ctype.h>
@@ -72,11 +45,11 @@ int verbose;
 #define RE_WHICH_RANGE 3
 #define RE_TYPE_SYMBOL 4
 
-static longchar
+static struct longchar
 set_longchar(const char* str)
 {
     unsigned char* p = (unsigned char*)str;
-    longchar r = {};
+    struct longchar r = {};
 
     if (*p & 0x80) {
         r.wch = wtf_parse1(&p);
@@ -98,15 +71,9 @@ set_longchar(const char* str)
     return r;
 }
 
-static Regex DefaultRegex;
+static struct Regex DefaultRegex;
 #define CompiledRegex DefaultRegex.re
 #define Cstorage DefaultRegex.storage
-
-static int regmatch(regexchar*, char*, char*, int, char**);
-static int regmatch1(regexchar*, longchar*);
-static int matchWhich(longchar*, longchar*, int);
-static int match_longchar(longchar*, longchar*, int);
-static int match_range_longchar(longchar*, longchar*, longchar*, int);
 
 /*
  * regexCompile: compile regular expression
@@ -118,17 +85,17 @@ const char* regexCompile(const char* ex, int igncase)
     return msg;
 }
 
-static Regex*
-newRegex0(const char** ex, int igncase, Regex* regex, const char** msg, int level)
+static struct Regex*
+newRegex0(const char** ex, int igncase, struct Regex* regex, const char** msg, int level)
 {
     const char* p;
-    longchar* r;
-    regexchar* re;
+    struct longchar* r;
+    struct regexchar* re;
     int m;
-    longchar* st_ptr;
+    struct longchar* st_ptr;
 
     if (regex == NULL)
-        regex = (Regex*)GC_malloc(sizeof(Regex));
+        regex = (struct Regex*)GC_malloc(sizeof(struct Regex));
     regex->alt_regex = NULL;
     re = regex->re;
     st_ptr = regex->storage;
@@ -266,8 +233,8 @@ newRegex0(const char** ex, int igncase, Regex* regex, const char** msg, int leve
     return regex;
 }
 
-Regex*
-newRegex(const char* ex, int igncase, Regex* regex, const char** msg)
+struct Regex*
+newRegex(const char* ex, int igncase, struct Regex* regex, const char** msg)
 {
     return newRegex0(&ex, igncase, regex, msg, 0);
 }
@@ -280,82 +247,27 @@ int regexMatch(const char* str, int len, int firstp)
     return RegexMatch(&DefaultRegex, str, len, firstp);
 }
 
-int RegexMatch(Regex* re, char* str, int len, int firstp)
-{
-    char *p, *ep;
-    char* lpos;
-    Regex* r;
-
-    if (str == NULL)
-        return 0;
-    if (len < 0)
-        len = strlen(str);
-    re->position = NULL;
-    ep = str + len;
-    for (p = str; p <= ep; p++) {
-        lpos = NULL;
-        re->lposition = NULL;
-        for (r = re; r != NULL; r = r->alt_regex) {
-            switch (regmatch(r->re, p, ep, firstp && (p == str), &lpos)) {
-            case 1: /* matched */
-                re->position = p;
-                if (re->lposition == NULL || re->lposition < lpos)
-                    re->lposition = lpos;
-                break;
-            case -1: /* error */
-                re->position = NULL;
-                return -1;
-            }
-        }
-        if (re->lposition != NULL) {
-            /* matched */
-            return 1;
-        }
-        p += get_mclen(p) - 1;
-    }
-    return 0;
-}
-
-/*
- * matchedPosition: last matched position
- */
-void MatchedPosition(Regex* re, char** first, char** last)
-{
-    *first = re->position;
-    *last = re->lposition;
-}
-
-void matchedPosition(char** first, char** last)
-{
-    *first = DefaultRegex.position;
-    *last = DefaultRegex.lposition;
-}
-
-/*
- * Intermal routines
- */
-
 struct MatchingContext1 {
     int label;
-    regexchar* re;
-    char* lastpos;
-    char* str;
+    struct regexchar* re;
+    const char* lastpos;
+    const char* str;
     int iter_limit;
     int n_any;
     int firstp;
-    char* end_p;
-    Regex* sub_regex;
+    const char* end_p;
+    struct Regex* sub_regex;
     struct MatchingContext1* sub_ctx;
     struct MatchingContext2* ctx2;
 };
 
 struct MatchingContext2 {
     int label;
-    Regex* regex;
-    char* lastpos;
+    struct Regex* regex;
+    const char* lastpos;
     struct MatchingContext1* ctx;
     struct MatchingContext2* ctx2;
-    char* str;
+    const char* str;
     int n_any;
     int firstp;
 };
@@ -365,13 +277,39 @@ struct MatchingContext2 {
     return (retval);                 \
     label##lnum:
 
-static int regmatch_iter(struct MatchingContext1*,
-    regexchar*, char*, char*, int);
+static int
+regmatch_iter(struct MatchingContext1* c,
+    struct regexchar* re, const char* str, const char* end_p, int firstp);
 
 static int
-regmatch_sub_anytime(struct MatchingContext2* c, Regex* regex,
-    regexchar* pat2,
-    char* str, char* end_p, int iter_limit, int firstp)
+regmatch(struct regexchar* re, const char* str, const char* end_p, int firstp, const char** lastpos)
+{
+    *lastpos = NULL;
+
+    struct MatchingContext1 contx;
+    contx.label = 0;
+    while (regmatch_iter(&contx, re, str, end_p, firstp)) {
+#ifdef REGEX_DEBUG
+        char* p;
+        if (verbose) {
+            printf("regmatch: matched <");
+            for (p = str; p < contx.lastpos; p++)
+                putchar(*p);
+            printf(">\n");
+        }
+#endif
+        if (*lastpos == NULL || *lastpos < contx.lastpos)
+            *lastpos = contx.lastpos;
+    }
+    if (*lastpos == NULL)
+        return 0;
+    return 1;
+}
+
+static int
+regmatch_sub_anytime(struct MatchingContext2* c, struct Regex* regex,
+    struct regexchar* pat2,
+    const char* str, const char* end_p, int iter_limit, int firstp)
 {
     switch (c->label) {
     case 1:
@@ -422,8 +360,119 @@ regmatch_sub_anytime(struct MatchingContext2* c, Regex* regex,
 }
 
 static int
+match_longchar(struct longchar* a, struct longchar* b, int ignore)
+{
+    if (a->type != b->type)
+        return 0;
+    if (a->type == RE_TYPE_WCHAR_T) {
+        if (ignore) {
+            wc_uint32 ua = wc_any_to_ucs(a->wch), ub = wc_any_to_ucs(b->wch);
+            return (ua == ub || ua == wc_ucs_tolower(ub) || ua == wc_ucs_toupper(ub) || ua == wc_ucs_totitle(ub));
+        }
+        return (a->wch.ccs == b->wch.ccs) && (a->wch.code == b->wch.code);
+    }
+    if (ignore && IS_ALPHA(b->ch))
+        return (a->ch == TOLOWER(b->ch) || a->ch == TOUPPER(b->ch));
+    else
+        return a->ch == b->ch;
+}
+
+static int
+match_range_longchar(struct longchar* a, struct longchar* b, struct longchar* c, int ignore)
+{
+    if (a->type != b->type || a->type != c->type)
+        return 0;
+    if (a->type == RE_TYPE_WCHAR_T) {
+        if (a->wch.ccs != c->wch.ccs || c->wch.ccs != b->wch.ccs)
+            return 0;
+        if (ignore) {
+            wc_uint32 uc = wc_any_to_ucs(c->wch);
+
+            if (wc_is_ucs_alpha(uc)) {
+                wc_uint32 ua = wc_any_to_ucs(a->wch);
+                wc_uint32 ub = wc_any_to_ucs(b->wch);
+                wc_uint32 upper = wc_ucs_toupper(uc);
+                wc_uint32 lower = wc_ucs_tolower(uc);
+                wc_uint32 title = wc_ucs_totitle(uc);
+
+                return ((ua <= upper && upper <= ub) || (ua <= lower && lower <= ub) || (ua <= title && title <= ub));
+            }
+        }
+        return (a->wch.code <= c->wch.code && c->wch.code <= b->wch.code);
+    }
+    if (ignore && IS_ALPHA(c->ch))
+        return ((a->ch <= TOLOWER(c->ch) && TOLOWER(c->ch) <= b->ch) || (a->ch <= TOUPPER(c->ch) && TOUPPER(c->ch) <= b->ch));
+    else
+        return (a->ch <= c->ch && c->ch <= b->ch);
+}
+
+static int
+matchWhich(struct longchar* pattern, struct longchar* c, int igncase)
+{
+    struct longchar* p = pattern;
+    int ans = 0;
+
+#ifdef REGEX_DEBUG
+    if (verbose)
+        printf("RE pattern = %s char=%s", lc2c(pattern, 10000), lc2c(c, 1));
+#endif /* REGEX_DEBUG */
+    while (p->type != RE_TYPE_END) {
+        if ((p + 1)->type == RE_WHICH_RANGE && (p + 2)->type != RE_TYPE_END) {
+            if (match_range_longchar(p, p + 2, c, igncase)) {
+                ans = 1;
+                break;
+            }
+            p += 3;
+        } else {
+            if (match_longchar(p, c, igncase)) {
+                ans = 1;
+                break;
+            }
+            p++;
+        }
+    }
+#ifdef REGEX_DEBUG
+    if (verbose)
+        printf(" -> %d\n", ans);
+#endif /* REGEX_DEBUG */
+    return ans;
+}
+
+/*
+ * Intermal routines
+ */
+static int regmatch1(struct regexchar* re, struct longchar* c)
+{
+    int ans;
+
+    if (c->type == RE_TYPE_SYMBOL)
+        return 0;
+    switch (RE_MODE(re)) {
+    case RE_ANY:
+#ifdef REGEX_DEBUG
+        if (verbose)
+            printf("%s vs any. -> 1\n", lc2c(c, 1));
+#endif /* REGEX_DEBUG */
+        return 1;
+    case RE_NORMAL:
+        ans = match_longchar(re->p.pattern, c, re->mode & RE_IGNCASE);
+#ifdef REGEX_DEBUG
+        if (verbose)
+            printf("RE=%s vs %s -> %d\n", lc2c(re->p.pattern, 1), lc2c(c, 1),
+                ans);
+#endif /* REGEX_DEBUG */
+        return ans;
+    case RE_WHICH:
+        return matchWhich(re->p.pattern, c, re->mode & RE_IGNCASE);
+    case RE_EXCEPT:
+        return !matchWhich(re->p.pattern, c, re->mode & RE_IGNCASE);
+    }
+    return 0;
+}
+
+static int
 regmatch_iter(struct MatchingContext1* c,
-    regexchar* re, char* str, char* end_p, int firstp)
+    struct regexchar* re, const char* str, const char* end_p, int firstp)
 {
     switch (c->label) {
     case 1:
@@ -477,7 +526,7 @@ regmatch_iter(struct MatchingContext1* c,
                         }
                         return 0;
                     } else {
-                        longchar k;
+                        struct longchar k;
                         k = set_longchar(c->str + c->n_any);
                         if (regmatch1(c->re, &k)) {
                             c->n_any += get_mclen(c->str + c->n_any);
@@ -542,7 +591,7 @@ regmatch_iter(struct MatchingContext1* c,
             }
             return 0;
         default: {
-            longchar k;
+            struct longchar k;
             k = set_longchar(c->str);
             c->str += get_mclen(c->str);
             if (!regmatch1(c->re, &k))
@@ -564,149 +613,53 @@ regmatch_iter(struct MatchingContext1* c,
     return 0;
 }
 
-static int
-regmatch(regexchar* re, char* str, char* end_p, int firstp, char** lastpos)
+int RegexMatch(struct Regex* re, const char* str, int len, int firstp)
 {
-    struct MatchingContext1 contx;
 
-    *lastpos = NULL;
+    if (str == NULL)
+        return 0;
+    if (len < 0)
+        len = strlen(str);
+    re->position = NULL;
+    const char* ep = str + len;
 
-    contx.label = 0;
-    while (regmatch_iter(&contx, re, str, end_p, firstp)) {
-#ifdef REGEX_DEBUG
-        char* p;
-        if (verbose) {
-            printf("regmatch: matched <");
-            for (p = str; p < contx.lastpos; p++)
-                putchar(*p);
-            printf(">\n");
+    for (const char* p = str; p <= ep; p++) {
+        const char* lpos = NULL;
+        re->lposition = NULL;
+        for (struct Regex* r = re; r != NULL; r = r->alt_regex) {
+            switch (regmatch(r->re, p, ep, firstp && (p == str), &lpos)) {
+            case 1: /* matched */
+                re->position = p;
+                if (re->lposition == NULL || re->lposition < lpos)
+                    re->lposition = lpos;
+                break;
+            case -1: /* error */
+                re->position = NULL;
+                return -1;
+            }
         }
-#endif
-        if (*lastpos == NULL || *lastpos < contx.lastpos)
-            *lastpos = contx.lastpos;
-    }
-    if (*lastpos == NULL)
-        return 0;
-    return 1;
-}
-
-static int
-regmatch1(regexchar* re, longchar* c)
-{
-    int ans;
-
-#ifdef USE_M17N
-    if (c->type == RE_TYPE_SYMBOL)
-        return 0;
-#endif
-    switch (RE_MODE(re)) {
-    case RE_ANY:
-#ifdef REGEX_DEBUG
-        if (verbose)
-            printf("%s vs any. -> 1\n", lc2c(c, 1));
-#endif /* REGEX_DEBUG */
-        return 1;
-    case RE_NORMAL:
-        ans = match_longchar(re->p.pattern, c, re->mode & RE_IGNCASE);
-#ifdef REGEX_DEBUG
-        if (verbose)
-            printf("RE=%s vs %s -> %d\n", lc2c(re->p.pattern, 1), lc2c(c, 1),
-                ans);
-#endif /* REGEX_DEBUG */
-        return ans;
-    case RE_WHICH:
-        return matchWhich(re->p.pattern, c, re->mode & RE_IGNCASE);
-    case RE_EXCEPT:
-        return !matchWhich(re->p.pattern, c, re->mode & RE_IGNCASE);
+        if (re->lposition != NULL) {
+            /* matched */
+            return 1;
+        }
+        p += get_mclen(p) - 1;
     }
     return 0;
 }
 
-static int
-matchWhich(longchar* pattern, longchar* c, int igncase)
+/*
+ * matchedPosition: last matched position
+ */
+void MatchedPosition(struct Regex* re, const char** first, const char** last)
 {
-    longchar* p = pattern;
-    int ans = 0;
-
-#ifdef REGEX_DEBUG
-    if (verbose)
-        printf("RE pattern = %s char=%s", lc2c(pattern, 10000), lc2c(c, 1));
-#endif /* REGEX_DEBUG */
-    while (p->type != RE_TYPE_END) {
-        if ((p + 1)->type == RE_WHICH_RANGE && (p + 2)->type != RE_TYPE_END) {
-            if (match_range_longchar(p, p + 2, c, igncase)) {
-                ans = 1;
-                break;
-            }
-            p += 3;
-        } else {
-            if (match_longchar(p, c, igncase)) {
-                ans = 1;
-                break;
-            }
-            p++;
-        }
-    }
-#ifdef REGEX_DEBUG
-    if (verbose)
-        printf(" -> %d\n", ans);
-#endif /* REGEX_DEBUG */
-    return ans;
+    *first = re->position;
+    *last = re->lposition;
 }
 
-static int
-match_longchar(longchar* a, longchar* b, int ignore)
+void matchedPosition(const char** first, const char** last)
 {
-#ifdef USE_M17N
-    if (a->type != b->type)
-        return 0;
-    if (a->type == RE_TYPE_WCHAR_T) {
-#ifdef USE_UNICODE
-        if (ignore) {
-            wc_uint32 ua = wc_any_to_ucs(a->wch), ub = wc_any_to_ucs(b->wch);
-            return (ua == ub || ua == wc_ucs_tolower(ub) || ua == wc_ucs_toupper(ub) || ua == wc_ucs_totitle(ub));
-        }
-#endif
-        return (a->wch.ccs == b->wch.ccs) && (a->wch.code == b->wch.code);
-    }
-#endif
-    if (ignore && IS_ALPHA(b->ch))
-        return (a->ch == TOLOWER(b->ch) || a->ch == TOUPPER(b->ch));
-    else
-        return a->ch == b->ch;
-}
-
-static int
-match_range_longchar(longchar* a, longchar* b, longchar* c, int ignore)
-{
-#ifdef USE_M17N
-    if (a->type != b->type || a->type != c->type)
-        return 0;
-    if (a->type == RE_TYPE_WCHAR_T) {
-        if (a->wch.ccs != c->wch.ccs || c->wch.ccs != b->wch.ccs)
-            return 0;
-#ifdef USE_UNICODE
-        if (ignore) {
-            wc_uint32 uc = wc_any_to_ucs(c->wch);
-
-            if (wc_is_ucs_alpha(uc)) {
-                wc_uint32 ua = wc_any_to_ucs(a->wch);
-                wc_uint32 ub = wc_any_to_ucs(b->wch);
-                wc_uint32 upper = wc_ucs_toupper(uc);
-                wc_uint32 lower = wc_ucs_tolower(uc);
-                wc_uint32 title = wc_ucs_totitle(uc);
-
-                return ((ua <= upper && upper <= ub) || (ua <= lower && lower <= ub) || (ua <= title && title <= ub));
-            }
-        }
-#endif
-        return (a->wch.code <= c->wch.code && c->wch.code <= b->wch.code);
-    }
-#endif
-    if (ignore && IS_ALPHA(c->ch))
-        return ((a->ch <= TOLOWER(c->ch) && TOLOWER(c->ch) <= b->ch) || (a->ch <= TOUPPER(c->ch) && TOUPPER(c->ch) <= b->ch));
-    else
-        return (a->ch <= c->ch && c->ch <= b->ch);
+    *first = DefaultRegex.position;
+    *last = DefaultRegex.lposition;
 }
 
 #ifdef REGEX_DEBUG
@@ -719,15 +672,12 @@ char* lc2c(longchar* x, int len)
     while (j < len && x[j].type != RE_TYPE_END) {
         if (x[j].type == RE_WHICH_RANGE)
             y[i++] = '-';
-#ifdef USE_M17N
         else if (x[j].type == RE_TYPE_WCHAR_T) {
             char buf[20];
             sprintf(buf, "[%x-%x]", x[j].wch.ccs, x[j].wch.code);
             strcpy(&y[i], buf);
             i += strlen(buf);
-        }
-#endif
-        else
+        } else
             y[i++] = x[j].ch;
         j++;
     }
@@ -796,9 +746,7 @@ int main(int argc, char** argv)
     FILE* f = stdin;
     int i = 1;
 
-#ifdef USE_M17N
     wtf_init(WC_CES_EUC_JP, WC_CES_EUC_JP);
-#endif
 #ifdef REGEX_DEBUG
     for (i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-v") == 0)

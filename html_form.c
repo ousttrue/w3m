@@ -722,7 +722,7 @@ struct pre_form_item {
 
 struct pre_form {
     const char* url;
-    Regex* re_url;
+    struct Regex* re_url;
     const char* name;
     const char* action;
     struct pre_form_item* item;
@@ -732,7 +732,7 @@ struct pre_form {
 static struct pre_form* PreForm = NULL;
 
 static struct pre_form*
-add_pre_form(struct pre_form* prev, const char* url, Regex* re_url, const char* name, const char* action)
+add_pre_form(struct pre_form* prev, const char* url, struct Regex* re_url, const char* name, const char* action)
 {
     struct Url pu;
     struct pre_form* new;
@@ -808,7 +808,7 @@ void loadPreForm(void)
         return;
     while (1) {
         const char *p, *s, *arg;
-        Regex* re_arg;
+        struct Regex* re_arg;
 
         line = Strfgets(fp);
         if (line->length == 0)
