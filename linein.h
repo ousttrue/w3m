@@ -10,13 +10,14 @@ enum LineInputFlags {
     IN_CHAR = 0x200,
 };
 
-typedef int (*IncFunc)(int ch, Str buf, Lineprop* prop);
+struct Document;
+typedef int (*IncrFunc)(struct Document *doc, int ch, Str buf, Lineprop* prop);
 
 struct Hist;
-char* inputLineHistSearch(const char* prompt, const char* def_str, enum LineInputFlags flag, struct Hist* hist, IncFunc incfunc);
+char* inputLineHistSearch(const char* prompt, const char* def_str, enum LineInputFlags flag, struct Hist* hist, IncrFunc incfunc, struct Document* doc);
 inline static char* inputLineHist(const char* p, const char* d, enum LineInputFlags f, struct Hist* h)
 {
-    return inputLineHistSearch(p, d, f, h, NULL);
+    return inputLineHistSearch(p, d, f, h, NULL, NULL);
 }
 inline static char* inputLine(const char* p, const char* d, enum LineInputFlags f)
 {

@@ -792,7 +792,7 @@ disp_srchresult(int result, char* prompt, const char* str)
 }
 
 static int
-dispincsrch(int ch, Str buf, Lineprop* prop)
+dispincsrch(struct Document *doc, int ch, Str buf, Lineprop* prop)
 {
     static struct Buffer sbuf;
     char* str;
@@ -845,15 +845,14 @@ dispincsrch(int ch, Str buf, Lineprop* prop)
 }
 
 static void
-isrch(SearchFunc func, char* prompt)
+isrch(struct Document *doc, SearchFunc func, const char* prompt)
 {
-    char* str;
     struct Buffer sbuf;
     SAVE_BUFPOSITION(&sbuf);
-    dispincsrch(0, NULL, NULL); /* initialize incremental search state */
+    dispincsrch(doc, 0, NULL, NULL); /* initialize incremental search state */
 
     searchRoutine = func;
-    str = inputLineHistSearch(prompt, NULL, IN_STRING, getRuntime()->TextHist, dispincsrch);
+    const char* str = inputLineHistSearch(prompt, NULL, IN_STRING, getRuntime()->TextHist, dispincsrch, doc);
     if (str == NULL) {
         RESTORE_BUFPOSITION(&sbuf);
     }
@@ -890,28 +889,24 @@ srch(SearchFunc func, char* prompt)
     searchRoutine = func;
 }
 
-/* Search regular expression forward */
-
 DEFUN(srchfor, SEARCH SEARCH_FORE WHEREIS, "Search forward")
 {
     srch(forwardSearch, "Forward: ");
 }
-
-DEFUN(isrchfor, ISEARCH, "Incremental search forward")
-{
-    isrch(forwardSearch, "I-search: ");
-}
-
-/* Search regular expression backward */
 
 DEFUN(srchbak, SEARCH_BACK, "Search backward")
 {
     srch(backwardSearch, "Backward: ");
 }
 
+DEFUN(isrchfor, ISEARCH, "Incremental search forward")
+{
+    isrch(&ctx.buf->doc, forwardSearch, "I-search: ");
+}
+
 DEFUN(isrchbak, ISEARCH_BACK, "Incremental search backward")
 {
-    isrch(backwardSearch, "I-search backward: ");
+    isrch(&ctx.buf->doc, backwardSearch, "I-search backward: ");
 }
 
 static void
