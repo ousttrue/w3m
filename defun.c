@@ -205,6 +205,46 @@ DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output")
 //
 // cursor, scroll
 //
+DEFUN(movL, MOVE_LEFT, "Cursor left")
+{
+    doc_movL(&ctx.buf->doc, ctx.buf->doc.COLS / 2);
+}
+
+DEFUN(movL1, MOVE_LEFT1, "Cursor left. With edge touched, slide")
+{
+    doc_movL(&ctx.buf->doc, 1);
+}
+
+DEFUN(movD, MOVE_DOWN, "Cursor down")
+{
+    doc_movD(&ctx.buf->doc, (ctx.buf->doc.LINES + 1) / 2);
+}
+
+DEFUN(movD1, MOVE_DOWN1, "Cursor down. With edge touched, slide")
+{
+    doc_movD(&ctx.buf->doc, 1);
+}
+
+DEFUN(movU, MOVE_UP, "Cursor up")
+{
+    doc_movU(&ctx.buf->doc, (ctx.buf->doc.LINES + 1) / 2);
+}
+
+DEFUN(movU1, MOVE_UP1, "Cursor up. With edge touched, slide")
+{
+    doc_movU(&ctx.buf->doc, 1);
+}
+
+DEFUN(movR, MOVE_RIGHT, "Cursor right")
+{
+    doc_movR(&ctx.buf->doc, ctx.buf->doc.COLS / 2);
+}
+
+DEFUN(movR1, MOVE_RIGHT1, "Cursor right. With edge touched, slide")
+{
+    doc_movR(&ctx.buf->doc, 1);
+}
+
 DEFUN(pgFore, NEXT_PAGE, "Scroll down one page")
 {
     if (getRuntime()->vi_prec_num)

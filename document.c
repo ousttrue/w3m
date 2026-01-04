@@ -600,3 +600,39 @@ void doc_shiftvisualpos(struct Document* doc, int shift)
     if (doc->visualpos - l->bwidth == -shift && doc->cursorX == 0)
         doc->visualpos = l->bwidth;
 }
+
+void doc_movL(struct Document* doc, int n)
+{
+    if (doc->firstLine == NULL)
+        return;
+    int m = searchKeyNum();
+    for (int i = 0; i < m; i++)
+        doc_cursorLeft(doc, n);
+}
+
+void doc_movR(struct Document* doc, int n)
+{
+    if (doc->firstLine == NULL)
+        return;
+    int m = searchKeyNum();
+    for (int i = 0; i < m; i++)
+        doc_cursorRight(doc, n);
+}
+
+void doc_movD(struct Document* doc, int n)
+{
+    if (doc->firstLine == NULL)
+        return;
+    int m = searchKeyNum();
+    for (int i = 0; i < m; i++)
+        doc_cursorDown(doc, n);
+}
+
+void doc_movU(struct Document* doc, int n)
+{
+    if (doc->firstLine == NULL)
+        return;
+    int m = searchKeyNum();
+    for (int i = 0; i < m; i++)
+        doc_cursorUp(doc, n);
+}

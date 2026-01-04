@@ -118,3 +118,7 @@ void doc_restorePosition(struct Document* doc, struct Document* orig);
 void doc_gotoRealLine(struct Document* doc, int n);
 void doc_nscroll(struct Document* doc, int n);
 void doc_shiftvisualpos(struct Document* doc, int shift);
+void doc_movL(struct Document* doc, int n);
+void doc_movR(struct Document* doc, int n);
+void doc_movD(struct Document* doc, int n);
+void doc_movU(struct Document* doc, int n);
