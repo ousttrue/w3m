@@ -106,6 +106,53 @@ DEFUN(ctrCsrH, CENTER_H, "Center on cursor column")
     }
 }
 
+DEFUN(shiftl, SHIFT_LEFT, "Shift screen left")
+{
+    if (!ctx.buf->doc.firstLine)
+        return;
+    int column = ctx.buf->doc.currentColumn;
+    doc_columnSkip(&ctx.buf->doc, searchKeyNum() * (-ctx.buf->doc.COLS + 1) + 1);
+    doc_shiftvisualpos(&ctx.buf->doc, ctx.buf->doc.currentColumn - column);
+}
+
+DEFUN(shiftr, SHIFT_RIGHT, "Shift screen right")
+{
+    if (ctx.buf->doc.firstLine == NULL)
+        return;
+    int column = ctx.buf->doc.currentColumn;
+    doc_columnSkip(&ctx.buf->doc, searchKeyNum() * (ctx.buf->doc.COLS - 1) - 1);
+    doc_shiftvisualpos(&ctx.buf->doc, ctx.buf->doc.currentColumn - column);
+}
+
+DEFUN(col1R, RIGHT, "Shift screen one column right")
+{
+    struct Line* l = ctx.buf->doc.currentLine;
+    if (l == NULL)
+        return;
+    int n = searchKeyNum();
+    for (int j = 0; j < n; j++) {
+        int column = ctx.buf->doc.currentColumn;
+        doc_columnSkip(&ctx.buf->doc, 1);
+        if (column == ctx.buf->doc.currentColumn)
+            break;
+        doc_shiftvisualpos(&ctx.buf->doc, 1);
+    }
+}
+
+DEFUN(col1L, LEFT, "Shift screen one column left")
+{
+    struct Line* l = ctx.buf->doc.currentLine;
+    if (l == NULL)
+        return;
+    int n = searchKeyNum();
+    for (int j = 0; j < n; j++) {
+        if (ctx.buf->doc.currentColumn == 0)
+            break;
+        doc_columnSkip(&ctx.buf->doc, -1);
+        doc_shiftvisualpos(&ctx.buf->doc, -1);
+    }
+}
+
 //
 // search
 //

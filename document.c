@@ -587,3 +587,16 @@ void doc_nscroll(struct Document* doc, int n)
         }
     }
 }
+
+void doc_shiftvisualpos(struct Document* doc, int shift)
+{
+    struct Line* l = doc->currentLine;
+    doc->visualpos -= shift;
+    if (doc->visualpos - l->bwidth >= doc->COLS)
+        doc->visualpos = l->bwidth + doc->COLS - 1;
+    else if (doc->visualpos - l->bwidth < 0)
+        doc->visualpos = l->bwidth;
+    doc_arrangeLine(doc);
+    if (doc->visualpos - l->bwidth == -shift && doc->cursorX == 0)
+        doc->visualpos = l->bwidth;
+}
