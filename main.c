@@ -740,38 +740,6 @@ repBuffer(struct Buffer* oldbuf, struct Buffer* buf)
  * Command functions: These functions are called with a keystroke.
  */
 
-/* move cursor position to the center of screen */
-DEFUN(ctrCsrV, CENTER_V, "Center on cursor line")
-{
-    if (Currentbuf->doc.firstLine == NULL)
-        return;
-    int offsety = /*Currentbuf->doc.LINES / 2*/ -Currentbuf->doc.cursorY;
-    if (offsety != 0) {
-        Currentbuf->doc.topLine = doc_lineSkip(&Currentbuf->doc, Currentbuf->doc.topLine, -offsety);
-        doc_arrangeLine(&Currentbuf->doc);
-    }
-}
-
-DEFUN(ctrCsrH, CENTER_H, "Center on cursor column")
-{
-    int offsetx;
-    if (Currentbuf->doc.firstLine == NULL)
-        return;
-    offsetx = Currentbuf->doc.cursorX - Currentbuf->doc.COLS / 2;
-    if (offsetx != 0) {
-        doc_columnSkip(&Currentbuf->doc, offsetx);
-        doc_arrangeCursor(&Currentbuf->doc);
-    }
-}
-
-/* Redraw screen */
-DEFUN(rdrwSc, REDRAW, "Draw the screen anew")
-{
-    tty_clear();
-    screen_clear();
-    doc_arrangeCursor(&Currentbuf->doc);
-}
-
 static void
 clear_mark(struct Line* l)
 {

@@ -4,9 +4,17 @@
 #include "func.h"
 #include "buffer.h"
 #include "document.h"
+#include "screen.h"
 
 DEFUN(nulcmd, NOTHING NULL @ @ @, "Do nothing")
 {
+}
+
+DEFUN(rdrwSc, REDRAW, "Draw the screen anew")
+{
+    tty_clear();
+    screen_clear();
+    doc_arrangeCursor(&ctx.buf->doc);
 }
 
 DEFUN(escmap, ESCMAP, "ESC map")
@@ -73,4 +81,26 @@ DEFUN(lup1, UP, "Scroll the screen up one line")
 DEFUN(ldown1, DOWN, "Scroll the screen down one line")
 {
     doc_nscroll(&ctx.buf->doc, -searchKeyNum());
+}
+
+DEFUN(ctrCsrV, CENTER_V, "Center on cursor line")
+{
+    if (!ctx.buf->doc.firstLine)
+        return;
+    int offsety = /*ctx.buf->doc.LINES / 2*/ -ctx.buf->doc.cursorY;
+    if (offsety != 0) {
+        ctx.buf->doc.topLine = doc_lineSkip(&ctx.buf->doc, ctx.buf->doc.topLine, -offsety);
+        doc_arrangeLine(&ctx.buf->doc);
+    }
+}
+
+DEFUN(ctrCsrH, CENTER_H, "Center on cursor column")
+{
+    if (!ctx.buf->doc.firstLine)
+        return;
+    int offsetx = ctx.buf->doc.cursorX - ctx.buf->doc.COLS / 2;
+    if (offsetx != 0) {
+        doc_columnSkip(&ctx.buf->doc, offsetx);
+        doc_arrangeCursor(&ctx.buf->doc);
+    }
 }
