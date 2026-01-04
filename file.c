@@ -1,4 +1,5 @@
 #include "file.h"
+#include "tab.h"
 #include "alarm.h"
 #include "http_auth.h"
 #include "mysignal.h"
@@ -195,96 +196,6 @@ lessopen_stream(const char* path)
 Str getLinkNumberStr(struct HtmlBuilder* hb, int correction)
 {
     return Sprintf("[%d]", hb->cur_hseq + correction);
-}
-
-struct Content
-loadGeneralFile(const char* path, struct FormList* request, struct LoadOption option, bool do_download)
-{
-    checkRedirection(NULL);
-    struct ContentData data = get_content(path, request,
-        option,
-        (struct AuthInfo) {
-            .realm = NULL,
-            .uname = NULL,
-            .pwd = NULL,
-        },
-        NULL);
-
-    if (!data.page) {
-        return data.content;
-    }
-
-    if (do_download) {
-        const char* file = guess_filename(data.content.url.file);
-        FILE* fp = fopen(file, "w");
-        if (fp) {
-            fwrite(data.page->ptr, data.page->length, 1, fp);
-            fclose(fp);
-        }
-        return data.content;
-    }
-
-    // write page to tmpfile
-    Str tmp = tmpfname(TMPF_SRC, ".html");
-    struct CompressionDecoder* d = compression_from_type(data.content.compression);
-    if (d) {
-        Strcat_charp(tmp, d->ext);
-    }
-    FILE* fp = fopen(tmp->ptr, "w");
-    if (fp) {
-        fwrite(data.page->ptr, data.page->length, 1, fp);
-        fclose(fp);
-        data.content.sourcefile = tmp->ptr;
-    }
-
-    return data.content;
-
-    // struct Buffer* b = newBuffer(INIT_BUFFER_WIDTH);
-    // b->content = data.content;
-    // return b;
-
-    // case CONTENT_DATA_STREAM:
-    //     // return make_buffer(data.content, data.stream, flag, do_download);
-    //     if (do_download) {
-    //         const char* file;
-    //         if (data.content.url.scheme == SCM_LOCAL) {
-    //             // struct stat st;
-    //             // if (getRuntime()->PreserveTimestamp && !stat(url.real_file, &st)) {
-    //             //     f.modtime = st.st_mtime;
-    //             // }
-    //             file = conv_from_system(guess_save_name(NULL, data.content.url.real_file));
-    //         } else {
-    //             file = guess_save_name(&data.content, data.content.url.file);
-    //         }
-    //         if (doFileSave(data.content.url, data.stream, file, data.content.compression) == 0)
-    //             UFhalfclose(data.stream, data.content.url.scheme);
-    //         else
-    //             is_close(data.stream);
-    //         return NULL;
-    //     } else {
-    //         Str tmp = tmpfname(TMPF_SRC, ".html");
-    //         struct CompressionDecoder* d = compression_from_type(data.content.compression);
-    //         if (d) {
-    //             Strcat_charp(tmp, d->ext);
-    //         }
-    //         FILE* src = fopen(tmp->ptr, "w");
-    //         if (src) {
-    //             // assert(src);
-    //             data.content.sourcefile = tmp->ptr;
-    //             // is_readall_to_file(data.stream, src);
-    //             Str s = is_readall(data.stream);
-    //             // fwrite(s->ptr, s->length, 1, src);
-    //             fwrite(s->ptr, 1, s->length, src);
-    //             fclose(src);
-    //         }
-    //
-    //         struct Buffer* b = newBuffer(INIT_BUFFER_WIDTH);
-    //         b->content = data.content;
-    //
-    //         // TRAP_OFF;
-    //         return b;
-    //     }
-    // }
 }
 
 #define TAG_IS(s, tag, len) \

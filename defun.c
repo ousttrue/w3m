@@ -11,6 +11,7 @@
 #include "document.h"
 #include "screen.h"
 #include "search.h"
+#include "file.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -340,4 +341,34 @@ DEFUN(srchnxt, SEARCH_NEXT, "Continue search forward")
 DEFUN(srchprv, SEARCH_PREV, "Continue search backward")
 {
     srch_nxtprv(&ctx.buf->doc, 1);
+}
+
+//
+// load
+//
+DEFUN(ldfile, LOAD, "Open local file in a new buffer")
+{
+    const char* fn = searchKeyData();
+    if (fn == NULL || *fn == '\0') {
+        fn = inputFilenameHist("(Load)Filename? ", NULL, getRuntime()->LoadHist);
+    }
+    if (fn == NULL || *fn == '\0') {
+        return;
+    }
+    fn = conv_to_system(fn);
+
+    struct Content content = get_content_cache(file_to_url(fn), NULL,
+        (struct LoadOption) {
+            .base_url = NULL,
+            .referer = NO_REFERER,
+            .flag = 0,
+        });
+    if (content.content_type == NULL) {
+        char* emsg = Sprintf("%s not found", conv_from_system(fn))->ptr;
+        disp_err_message(emsg, FALSE);
+        return;
+    }
+    struct Buffer* buf = newBuffer(INIT_BUFFER_WIDTH);
+    buf->content = content;
+    tab_push_buffer(getRuntime()->CurrentTab, buf);
 }

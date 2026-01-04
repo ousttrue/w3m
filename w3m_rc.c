@@ -467,8 +467,14 @@ struct Buffer* loadLink(const char* url, struct FormList* request,
         referer = NO_REFERER;
     if (referer == NULL)
         referer = parsedURL2RefererStr(&Currentbuf->content.url)->ptr;
-    struct Content content = loadGeneralFile(url, request,
-        (struct LoadOption) { .base_url = baseURL(Currentbuf), .referer = referer, .flag = 0 }, option.do_download);
+    if (option.do_download) {
+        download_content(url, request,
+            (struct LoadOption) { .base_url = baseURL(Currentbuf), .referer = referer, .flag = 0 });
+        return NULL;
+    }
+
+    struct Content content = get_content_cache(url, request,
+        (struct LoadOption) { .base_url = baseURL(Currentbuf), .referer = referer, .flag = 0 });
     struct Buffer* buf = newBuffer(INIT_BUFFER_WIDTH);
     buf->content = content;
     if (buf == NULL) {

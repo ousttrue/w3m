@@ -77,7 +77,8 @@ const char* checkContentType(struct Content* content);
 const char* guess_filename(const char* file);
 const char* guess_save_name(struct Content* content, const char* file);
 
+int checkRedirection(struct Url* pu);
 struct ContentData get_content(const char* path, struct FormList* request,
     struct LoadOption option, struct AuthInfo auth, struct input_stream* connection);
-
-int checkRedirection(struct Url* pu);
+struct Content get_content_cache(const char* path, struct FormList* request, struct LoadOption option);
+void download_content(const char* path, struct FormList* request, struct LoadOption option);

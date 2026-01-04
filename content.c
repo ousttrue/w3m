@@ -732,3 +732,59 @@ struct ContentData get_content(const char* path,
         .page = is_readall(s.stream),
     };
 }
+
+struct Content
+get_content_cache(const char* path, struct FormList* request, struct LoadOption option)
+{
+    checkRedirection(NULL);
+    struct ContentData data = get_content(path, request,
+        option,
+        (struct AuthInfo) {
+            .realm = NULL,
+            .uname = NULL,
+            .pwd = NULL,
+        },
+        NULL);
+
+    if (!data.page) {
+        return data.content;
+    }
+
+    // write page to tmpfile
+    Str tmp = tmpfname(TMPF_SRC, ".html");
+    struct CompressionDecoder* d = compression_from_type(data.content.compression);
+    if (d) {
+        Strcat_charp(tmp, d->ext);
+    }
+    FILE* fp = fopen(tmp->ptr, "w");
+    if (fp) {
+        fwrite(data.page->ptr, data.page->length, 1, fp);
+        fclose(fp);
+        data.content.sourcefile = tmp->ptr;
+    }
+    return data.content;
+}
+
+void download_content(const char* path, struct FormList* request, struct LoadOption option)
+{
+    checkRedirection(NULL);
+    struct ContentData data = get_content(path, request,
+        option,
+        (struct AuthInfo) {
+            .realm = NULL,
+            .uname = NULL,
+            .pwd = NULL,
+        },
+        NULL);
+    if (!data.page) {
+        return;
+    }
+
+    // write to download
+    const char* file = guess_filename(data.content.url.file);
+    FILE* fp = fopen(file, "w");
+    if (fp) {
+        fwrite(data.page->ptr, data.page->length, 1, fp);
+        fclose(fp);
+    }
+}
