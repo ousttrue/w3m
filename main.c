@@ -56,7 +56,6 @@
 
 #define DSTR_LEN 256
 
-
 int show_params_p = 0;
 void show_params(FILE* fp);
 
@@ -64,7 +63,6 @@ static void followTab(struct TabBuffer* tab);
 static void moveTab(struct TabBuffer* t, struct TabBuffer* t2, int right);
 static void _nextA(int);
 static void _prevA(int);
-static int check_target = TRUE;
 
 #define help() fusage(stdout, 0)
 #define usage() fusage(stderr, 1)
@@ -731,33 +729,6 @@ repBuffer(struct Buffer* oldbuf, struct Buffer* buf)
  * Command functions: These functions are called with a keystroke.
  */
 
-static int
-handleMailto(const char* url)
-{
-    Str to;
-    char* pos;
-
-    if (strncasecmp(url, "mailto:", 7))
-        return 0;
-    if (!non_null(getRuntime()->Mailer)) {
-        /* FIXME: gettextize? */
-        disp_err_message("no mailer is specified", TRUE);
-        return 1;
-    }
-
-    /* invoke external mailer */
-    if (getRuntime()->MailtoOptions == MAILTO_OPTIONS_USE_MAILTO_URL) {
-        to = Strnew_charp(html_unquote(url));
-    } else {
-        to = Strnew_charp(url + 7);
-        if ((pos = strchr(to->ptr, '?')) != NULL)
-            Strtruncate(to, pos - to->ptr);
-    }
-    exec_cmd(myExtCommand(getRuntime()->Mailer, shell_quote(file_unquote(to->ptr)), FALSE)->ptr);
-    pushHashHist(getRuntime()->URLHist, url);
-    return 1;
-}
-
 static void
 cmd_loadURL(const char* url, struct FormList* request, struct LoadOption option)
 {
@@ -774,106 +745,6 @@ cmd_loadURL(const char* url, struct FormList* request, struct LoadOption option)
         tab_push_buffer(getRuntime()->CurrentTab, buf);
         // if (getRuntime()->RenderFrame && Currentbuf->doc.frameset != NULL)
         //     rFrame(ctx);
-    }
-}
-
-static struct FollowResult gotoLabel(const char* label)
-{
-    struct FollowResult res = { 0 };
-    res.anchor = searchURLLabel(Currentbuf, label);
-    if (!res.anchor) {
-        disp_message(Sprintf("%s is not found", label)->ptr, TRUE);
-        return res;
-    }
-
-    res.new_buf = newBuffer(Currentbuf->doc.width);
-    copyBuffer(res.new_buf, Currentbuf);
-    for (int i = 0; i < MAX_LB; i++)
-        res.new_buf->linkBuffer[i] = NULL;
-    res.new_buf->content.url.label = allocStr(label, -1);
-    pushHashHist(getRuntime()->URLHist, parsedURL2Str(&res.new_buf->content.url)->ptr);
-    (*res.new_buf->clone)++;
-    // tab_push_buffer(getRuntime()->CurrentTab, buf);
-    doc_gotoLine(&Currentbuf->doc, res.anchor->start.line);
-    if (getRuntime()->label_topline)
-        Currentbuf->doc.topLine = doc_lineSkip(&Currentbuf->doc, Currentbuf->doc.topLine,
-            Currentbuf->doc.currentLine->linenumber
-                - Currentbuf->doc.topLine->linenumber);
-    Currentbuf->doc.pos = res.anchor->start.pos;
-    doc_arrangeCursor(&Currentbuf->doc);
-    return res;
-}
-
-static struct FollowResult _followA(struct Buffer* buf, struct FollowOption option)
-{
-    if (Currentbuf->doc.firstLine == NULL) {
-        return (struct FollowResult) { 0 };
-    }
-
-    struct Anchor* a = retrieveCurrentImg(Currentbuf);
-    if (a && a->image && a->image->map) {
-        return _followForm(buf, option, false);
-    }
-
-    int x = 0, y = 0, map = 0;
-    if (a && a->image && a->image->ismap) {
-        getMapXY(Currentbuf, a, &x, &y);
-        map = 1;
-    }
-
-    a = retrieveCurrentAnchor(Currentbuf);
-    if (a == NULL) {
-        return _followForm(buf, option, false);
-    }
-    if (*a->url == '#') { /* index within this buffer */
-        return gotoLabel(a->url + 1);
-    }
-
-    struct Url u;
-    parseURL2(a->url, &u, baseURL(Currentbuf));
-    if (Strcmp(parsedURL2Str(&u), parsedURL2Str(&Currentbuf->content.url)) == 0) {
-        /* index within this buffer */
-        if (u.label) {
-            return gotoLabel(u.label);
-        }
-    }
-    if (handleMailto(a->url))
-        return (struct FollowResult) { 0 };
-
-    const char* url = a->url;
-    if (map)
-        url = Sprintf("%s?%d,%d", a->url, x, y)->ptr;
-
-    return (struct FollowResult) {
-        .anchor = a,
-        .new_buf = loadLink(url, NULL, a->target, a->referer, option),
-    };
-}
-
-DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
-{
-    struct FollowResult res = _followA(Currentbuf,
-        (struct FollowOption) { .on_target = true, .do_download = false });
-    if (!res.new_buf) {
-        return;
-    }
-
-    if (check_target
-        && getRuntime()->open_tab_blank
-        && res.anchor->target
-        && (!strcasecmp(res.anchor->target, "_new") || !strcasecmp(res.anchor->target, "_blank"))) {
-        _newT();
-        // buf = Currentbuf;
-        // struct Buffer* new_buf = loadLink(url, NULL, a->target, a->referer, option);
-        tab_push_buffer(getRuntime()->CurrentTab, res.new_buf);
-        // if (buf != Currentbuf)
-        //     delBuffer(buf);
-        // else
-        //     deleteTab(CurrentTab());
-        // return;
-    } else {
-        // struct Buffer* new_buf = loadLink(url, NULL, a->target, a->referer, option);
-        tab_push_buffer(getRuntime()->CurrentTab, res.new_buf);
     }
 }
 
@@ -1507,7 +1378,7 @@ goURL0(const char* prompt, int relative)
         return;
     }
     if (*url == '#') {
-        gotoLabel(url + 1);
+        gotoLabel(Currentbuf, url + 1);
         return;
     }
     parseURL2(url, &p_url, current);
@@ -1636,16 +1507,17 @@ void follow_map(struct parsed_tagarg* arg)
         return;
     }
     if (*(a->url) == '#') {
-        gotoLabel(a->url + 1);
+        gotoLabel(Currentbuf, a->url + 1);
         return;
     }
     parseURL2(a->url, &p_url, baseURL(Currentbuf));
     pushHashHist(getRuntime()->URLHist, parsedURL2Str(&p_url)->ptr);
-    if (check_target && getRuntime()->open_tab_blank && a->target && (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
-        struct Buffer* buf;
-
+    if (getRuntime()->check_target
+        && getRuntime()->open_tab_blank
+        && a->target
+        && (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
         _newT();
-        buf = Currentbuf;
+        struct Buffer* buf = Currentbuf;
         cmd_loadURL(a->url, NULL,
             (struct LoadOption) {
                 .base_url = baseURL(Currentbuf),
@@ -1671,7 +1543,7 @@ DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
     if (!l || !l->url)
         return;
     if (*(l->url) == '#') {
-        gotoLabel(l->url + 1);
+        gotoLabel(Currentbuf, l->url + 1);
         return;
     }
     parseURL2(l->url, &p_url, baseURL(Currentbuf));
@@ -2722,26 +2594,24 @@ DEFUN(prevT, PREV_TAB, "Switch to the previous tab")
 static void
 followTab(struct TabBuffer* tab)
 {
-    struct Buffer* buf;
-    struct Anchor* a;
-
-    a = retrieveCurrentImg(Currentbuf);
+    struct Anchor* a = retrieveCurrentImg(Currentbuf);
     if (!(a && a->image && a->image->map))
         a = retrieveCurrentAnchor(Currentbuf);
     if (a == NULL)
         return;
 
     if (tab == CurrentTab()) {
-        check_target = FALSE;
+        getRuntime()->check_target = FALSE;
         followA((struct DefunContext) { 0 });
-        check_target = TRUE;
+        getRuntime()->check_target = TRUE;
         return;
     }
+
     _newT();
-    buf = Currentbuf;
-    check_target = FALSE;
+    struct Buffer* buf = Currentbuf;
+    getRuntime()->check_target = FALSE;
     followA((struct DefunContext) { 0 });
-    check_target = TRUE;
+    getRuntime()->check_target = TRUE;
     if (tab == NULL) {
         if (buf != Currentbuf)
             delBuffer(buf);

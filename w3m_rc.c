@@ -2448,3 +2448,102 @@ void _quitfm(bool confirm)
 
     w3m_exit(0);
 }
+
+struct FollowResult _followA(struct Buffer* buf, struct FollowOption option)
+{
+    if (Currentbuf->doc.firstLine == NULL) {
+        return (struct FollowResult) { 0 };
+    }
+
+    struct Anchor* a = retrieveCurrentImg(Currentbuf);
+    if (a && a->image && a->image->map) {
+        return _followForm(buf, option, false);
+    }
+
+    int x = 0, y = 0, map = 0;
+    if (a && a->image && a->image->ismap) {
+        getMapXY(Currentbuf, a, &x, &y);
+        map = 1;
+    }
+
+    a = retrieveCurrentAnchor(Currentbuf);
+    if (a == NULL) {
+        return _followForm(buf, option, false);
+    }
+    if (*a->url == '#') { /* index within this buffer */
+        return gotoLabel(Currentbuf, a->url + 1);
+    }
+
+    struct Url u;
+    parseURL2(a->url, &u, baseURL(Currentbuf));
+    if (Strcmp(parsedURL2Str(&u), parsedURL2Str(&Currentbuf->content.url)) == 0) {
+        /* index within this buffer */
+        if (u.label) {
+            return gotoLabel(Currentbuf, u.label);
+        }
+    }
+    if (handleMailto(a->url))
+        return (struct FollowResult) { 0 };
+
+    const char* url = a->url;
+    if (map)
+        url = Sprintf("%s?%d,%d", a->url, x, y)->ptr;
+
+    return (struct FollowResult) {
+        .anchor = a,
+        .new_buf = loadLink(url, NULL, a->target, a->referer, option),
+    };
+}
+
+struct FollowResult gotoLabel(struct Buffer* buf, const char* label)
+{
+    struct FollowResult res = { 0 };
+    res.anchor = searchURLLabel(buf, label);
+    if (!res.anchor) {
+        disp_message(Sprintf("%s is not found", label)->ptr, TRUE);
+        return res;
+    }
+
+    res.new_buf = newBuffer(buf->doc.width);
+    copyBuffer(res.new_buf, buf);
+    for (int i = 0; i < MAX_LB; i++)
+        res.new_buf->linkBuffer[i] = NULL;
+    res.new_buf->content.url.label = allocStr(label, -1);
+    pushHashHist(getRuntime()->URLHist, parsedURL2Str(&res.new_buf->content.url)->ptr);
+    (*res.new_buf->clone)++;
+    // tab_push_buffer(getRuntime()->CurrentTab, buf);
+    doc_gotoLine(&buf->doc, res.anchor->start.line);
+    if (getRuntime()->label_topline)
+        buf->doc.topLine = doc_lineSkip(&buf->doc, buf->doc.topLine,
+            buf->doc.currentLine->linenumber
+                - buf->doc.topLine->linenumber);
+    buf->doc.pos = res.anchor->start.pos;
+    doc_arrangeCursor(&buf->doc);
+    return res;
+}
+
+int handleMailto(const char* url)
+{
+    Str to;
+    char* pos;
+
+    if (strncasecmp(url, "mailto:", 7))
+        return 0;
+    if (!non_null(getRuntime()->Mailer)) {
+        /* FIXME: gettextize? */
+        disp_err_message("no mailer is specified", TRUE);
+        return 1;
+    }
+
+    /* invoke external mailer */
+    if (getRuntime()->MailtoOptions == MAILTO_OPTIONS_USE_MAILTO_URL) {
+        to = Strnew_charp(html_unquote(url));
+    } else {
+        to = Strnew_charp(url + 7);
+        if ((pos = strchr(to->ptr, '?')) != NULL)
+            Strtruncate(to, pos - to->ptr);
+    }
+    exec_cmd(myExtCommand(getRuntime()->Mailer, shell_quote(file_unquote(to->ptr)), FALSE)->ptr);
+    pushHashHist(getRuntime()->URLHist, url);
+    return 1;
+}

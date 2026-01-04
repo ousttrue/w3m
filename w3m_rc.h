@@ -135,6 +135,9 @@ struct FollowResult {
     struct Buffer* new_buf;
 };
 struct FollowResult _followForm(struct Buffer* buf, struct FollowOption option, bool submit);
+struct FollowResult _followA(struct Buffer* buf, struct FollowOption option);
+struct FollowResult gotoLabel(struct Buffer* buf, const char* label);
+
 struct FormList;
 struct Buffer* loadLink(const char* url, struct FormList* request,
     const char* target, const char* referer, struct FollowOption option);
@@ -175,3 +178,4 @@ extern void sync_with_option(void);
 extern char* searchKeyData(void);
 int searchKeyNum(void);
 void _quitfm(bool confirm);
+int handleMailto(const char* url);

@@ -14,6 +14,7 @@
 #include "tab.h"
 #include "buffer.h"
 #include "document.h"
+#include "anchor.h"
 #include "screen.h"
 #include "search.h"
 #include <stdlib.h>
@@ -777,3 +778,32 @@ DEFUN(selBuf, SELECT, "Display buffer-stack panel")
             tmpClearBuffer(buf);
     }
 }
+
+DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
+{
+    struct FollowResult res = _followA(Currentbuf,
+        (struct FollowOption) { .on_target = true, .do_download = false });
+    if (!res.new_buf) {
+        return;
+    }
+
+    if (getRuntime()->check_target
+        && getRuntime()->open_tab_blank
+        && res.anchor->target
+        && (!strcasecmp(res.anchor->target, "_new") || !strcasecmp(res.anchor->target, "_blank"))) {
+        _newT();
+        // buf = Currentbuf;
+        // struct Buffer* new_buf = loadLink(url, NULL, a->target, a->referer, option);
+        tab_push_buffer(getRuntime()->CurrentTab, res.new_buf);
+        // if (buf != Currentbuf)
+        //     delBuffer(buf);
+        // else
+        //     deleteTab(CurrentTab());
+        // return;
+    } else {
+        // struct Buffer* new_buf = loadLink(url, NULL, a->target, a->referer, option);
+        tab_push_buffer(getRuntime()->CurrentTab, res.new_buf);
+    }
+}
+
+

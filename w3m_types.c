@@ -7,6 +7,7 @@
 struct Runtime g_runtime = {
     .NO_proxy_domains = NULL,
     .SearchString = NULL,
+    .check_target = TRUE,
 
     .CurrentDir = 0,
     .CurrentPid = 0,
