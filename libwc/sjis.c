@@ -4,6 +4,7 @@
 #include "jis.h"
 #include "wtf.h"
 #include "ucs.h"
+#include "status.h"
 
 #include "map/jisx02132_sjis.map"
 wc_uchar *wc_jisx0212_jisx02132_map = jisx02132_sjis_map;

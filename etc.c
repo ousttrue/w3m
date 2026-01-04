@@ -12,6 +12,7 @@
 #include "hash.h"
 
 #include <libwc/ces.h>
+#include <libwc/status.h>
 
 #include <pwd.h>
 #include <fcntl.h>

@@ -2,6 +2,7 @@
 #include "ctrlcode.h"
 #include "alloc.h"
 #include "w3m_rc.h"
+#include <libwc/status.h>
 #include <string.h>
 
 struct Line* currentLineSkip(struct Line* l, int offset)

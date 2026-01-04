@@ -4,6 +4,7 @@
 #include "iso2022.h"
 #include "wtf.h"
 #include "ucs.h"
+#include "status.h"
 
 Str
 wc_conv_from_hz(Str is, enum wc_ces ces)

@@ -1,4 +1,5 @@
 #include "wtf.h"
+#include "wtf_type.h"
 #include "ccs.h"
 #include "ces.h"
 #include "status.h"
@@ -537,266 +538,6 @@ wc_uint8 WTF_LEN_MAP[0x100] = {
     1,
 };
 
-wc_uint8 WTF_TYPE_MAP[0x100] = {
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    1,
-
-    2,
-    0xA,
-    2,
-    0xA,
-    2,
-    0x12,
-    2,
-    0xA,
-    2,
-    0xA,
-    2,
-    0xA,
-    0x20,
-    0x20,
-    0x20,
-    0x20,
-    4,
-    0xC,
-    4,
-    0xC,
-    4,
-    0x20,
-    4,
-    0xC,
-    4,
-    0xC,
-    4,
-    0xC,
-    0x20,
-    0x20,
-    0x20,
-    0x20,
-    0x20,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-};
-
 static wc_uint16 CCS_MAP[33] = {
     WC_CCS_A_CS94 >> 8,
     WC_CCS_A_CS94W >> 8,
@@ -839,41 +580,37 @@ static struct wc_status wtf_major_st;
 
 void wtf_init(enum wc_ces ces1, enum wc_ces ces2)
 {
-    int i;
-    wc_gset* gset;
-
     if (wc_check_ces(ces2))
         wtf_major_ces = ces2;
 
     if (!wc_check_ces(ces1))
         return;
-    gset = WcCesInfo[WC_CES_INDEX(ces1)].gset;
+
+    wc_gset* gset = WcCesInfo[WC_CES_INDEX(ces1)].gset;
     if (gset == NULL || gset[1].ccs == 0 || gset[1].ccs & (WC_CCS_A_WCS16 | WC_CCS_A_WCS32))
         return;
     wtf_gr_ccs = gset[1].ccs;
 
     if (WC_CCS_IS_WIDE(wtf_gr_ccs)) {
-        for (i = 0xa1; i <= 0xff; i++) {
+        for (int i = 0xa1; i <= 0xff; i++) {
             WTF_WIDTH_MAP[i] = 2;
             WTF_LEN_MAP[i] = 2;
-            WTF_TYPE_MAP[i] = WTF_TYPE_WCHAR1W;
+            wtf_type_set(i, WTF_TYPE_WCHAR1W);
         }
     } else {
-        for (i = 0xa1; i <= 0xff; i++) {
+        for (int i = 0xa1; i <= 0xff; i++) {
             WTF_WIDTH_MAP[i] = 1;
             WTF_LEN_MAP[i] = 1;
-            WTF_TYPE_MAP[i] = WTF_TYPE_WCHAR1;
+            wtf_type_set(i, WTF_TYPE_WCHAR1);
         }
     }
 }
 
-/*
-int
-wtf_width(wc_uchar *p)
+size_t wtf_width(const char* p)
 {
-    return (int)WTF_WIDTH_MAP[*p];
+    return WcOption.use_wide ? (int)WTF_WIDTH_MAP[*(wc_uchar*)(p)]
+                             : ((int)WTF_WIDTH_MAP[*(wc_uchar*)(p)] ? 1 : 0);
 }
-*/
 
 int wtf_strwidth(wc_uchar* p)
 {
@@ -910,14 +647,6 @@ wtf_len(const wc_uchar* p)
         q += WTF_LEN_MAP[*q];
     return q - p;
 }
-
-/*
-int
-wtf_type(wc_uchar *p)
-{
-    return (int)WTF_TYPE_MAP[*p];
-}
-*/
 
 #define wcs16_to_wtf(c, p)                     \
     ((p)[0] = (((c) >> 14) & 0x03) | 0x80),    \

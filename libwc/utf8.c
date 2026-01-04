@@ -3,6 +3,7 @@
 #include "ccs.h"
 #include "ucs.h"
 #include "wtf.h"
+#include "status.h"
 
 wc_uint8 WC_UTF8_MAP[ 0x100 ] = {
    8, 8, 8, 8, 8, 8, 8, 8,  8, 8, 8, 8, 8, 8, 8, 8,

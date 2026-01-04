@@ -3,6 +3,7 @@
 #include "w3m_rc.h"
 #include "symbol.h"
 #include "ctrlcode.h"
+#include <libwc/status.h>
 
 #define EFFECT_ANCHOR_START effect_anchor_start()
 #define EFFECT_ANCHOR_END effect_anchor_end()

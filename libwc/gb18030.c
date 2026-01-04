@@ -5,6 +5,7 @@
 #include "wtf.h"
 #include "ucs.h"
 #include "map/gb18030_ucs.map"
+#include "status.h"
 
 #define C0 WC_GB18030_MAP_C0
 #define GL WC_GB18030_MAP_GL

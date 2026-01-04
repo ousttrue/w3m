@@ -14,6 +14,7 @@
 #include "tab.h"
 #include "w3m_rc.h"
 #include "image.h"
+#include <libwc/status.h>
 #include <string.h>
 #include <unistd.h>
 #include <assert.h>

@@ -19,6 +19,7 @@
 #include "maparea.h"
 #include <libwc/charset.h>
 #include <libwc/conv.h>
+#include <libwc/status.h>
 #include <string.h>
 #include <strings.h>
 #include <unistd.h>
@@ -551,10 +552,10 @@ void input_textarea(struct FormItemList* fi)
         goto input_end;
     }
     fi->value = Strnew();
-#ifdef USE_M17N
+
     auto_detect = WcOption.auto_detect;
     WcOption.auto_detect = WC_OPT_DETECT_ON;
-#endif
+
     while (tmp = Strfgets(f), tmp->length > 0) {
         if (tmp->length == 1 && tmp->ptr[tmp->length - 1] == '\n') {
             /* null line with bare LF */

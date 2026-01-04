@@ -93,6 +93,7 @@ const libwc_srcs = [_][]const u8{
     "utf8.c",
     "viet.c",
     "wtf.c",
+    "wtf_type.c",
 };
 
 pub fn build(b: *std.Build) void {

@@ -3,6 +3,7 @@
 #include "ccs.h"
 #include "wtf.h"
 #include "ucs.h"
+#include "status.h"
 
 #define C0 WC_UHC_MAP_C0
 #define GL WC_UHC_MAP_GL

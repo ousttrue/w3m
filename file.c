@@ -1,7 +1,6 @@
 #include "file.h"
 #include "http_auth.h"
 #include "url.h"
-#include "tcp_socket.h"
 #include "input_stream.h"
 #include "frame.h"
 #include "html_builder.h"
@@ -15,6 +14,7 @@
 #include "message.h"
 #include "w3m_rc.h"
 #include <libwc/conv.h>
+#include <libwc/status.h>
 #include "linein.h"
 #include "ctrlcode.h"
 #include "html_form.h"

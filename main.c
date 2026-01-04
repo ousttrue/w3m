@@ -11,7 +11,6 @@
 #include "etc.h"
 #include "content.h"
 #include "local_cgi.h"
-#include "readbuffer.h"
 #include "mailcap.h"
 #include "file.h"
 #include "message.h"
@@ -28,6 +27,7 @@
 #include "image.h"
 #include <libwc/conv.h>
 #include <libwc/ces.h>
+#include <libwc/status.h>
 #include <string.h>
 #include <locale.h>
 #include <assert.h>

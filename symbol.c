@@ -1,11 +1,11 @@
 #include "symbol.h"
 #include "alloc.h"
 #include "w3m_rc.h"
-// #include "indep.h"
 #include "ctrlcode.h"
 #include <libwc/conv.h>
 #include <libwc/ccs.h>
 #include <libwc/ces.h>
+#include <libwc/status.h>
 
 #include "Symbols/alt.sym"
 #include "Symbols/graph.sym"

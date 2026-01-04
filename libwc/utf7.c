@@ -3,6 +3,7 @@
 #include "ccs.h"
 #include "ucs.h"
 #include "wtf.h"
+#include "status.h"
 
 #define SD WC_UTF7_MAP_SET_D
 #define SO WC_UTF7_MAP_SET_O

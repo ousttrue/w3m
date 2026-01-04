@@ -8,6 +8,7 @@
 #include <signal.h>
 #include <errno.h>
 #include <unistd.h>
+#include <libwc/status.h>
 
 static void
 set_mark(struct Line* l, int pos, int epos)

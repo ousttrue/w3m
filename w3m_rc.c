@@ -43,6 +43,7 @@
 #include <libwc/ucs.h>
 #include <libwc/charset.h>
 #include <libwc/ces.h>
+#include <libwc/status.h>
 
 #include <netdb.h>
 #include <stdio.h>

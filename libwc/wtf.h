@@ -1,6 +1,6 @@
 #pragma once
 #include "wc_types.h"
-#include "status.h"
+#include "ces.h"
 
 #define WTF_C_CS94 0x80
 #define WTF_C_CS94W 0x81
@@ -38,54 +38,35 @@
 #define WTF_C_UNDEF7 0x9F
 #define WTF_C_NBSP 0xA0
 
-#define WTF_TYPE_ASCII 0x0
-#define WTF_TYPE_CTRL 0x1
-#define WTF_TYPE_WCHAR1 0x2
-#define WTF_TYPE_WCHAR2 0x4
-#define WTF_TYPE_WIDE 0x8
-#define WTF_TYPE_UNKNOWN 0x10
-#define WTF_TYPE_UNDEF 0x20
-#define WTF_TYPE_WCHAR1W (WTF_TYPE_WCHAR1 | WTF_TYPE_WIDE)
-#define WTF_TYPE_WCHAR2W (WTF_TYPE_WCHAR2 | WTF_TYPE_WIDE)
-
-extern wc_uint8 WTF_WIDTH_MAP[];
 extern wc_uint8 WTF_LEN_MAP[];
-extern wc_uint8 WTF_TYPE_MAP[];
 extern wc_ccs wtf_gr_ccs;
 
-extern void wtf_init(enum wc_ces ces1, enum wc_ces ces2);
+void wtf_init(enum wc_ces ces1, enum wc_ces ces2);
 
-/* extern int     wtf_width(wc_uchar *p); */
-inline static size_t wtf_width(const char* p)
-{
-    return WcOption.use_wide ? (int)WTF_WIDTH_MAP[*(wc_uchar*)(p)]
-                             : ((int)WTF_WIDTH_MAP[*(wc_uchar*)(p)] ? 1 : 0);
-}
+size_t wtf_width(const char* p);
+
 inline static int get_mcwidth(const char* c)
 {
     return wtf_width(c);
 }
-extern int wtf_strwidth(wc_uchar* p);
+int wtf_strwidth(wc_uchar* p);
 
-extern size_t wtf_len1(wc_uchar* p);
+size_t wtf_len1(wc_uchar* p);
 inline static size_t get_mclen(const char* c)
 {
     return wtf_len1((wc_uchar*)(c));
 }
 
-extern size_t wtf_len(const wc_uchar* p);
+size_t wtf_len(const wc_uchar* p);
 
-/* extern int     wtf_type(wc_uchar *p); */
-#define wtf_type(p) WTF_TYPE_MAP[(wc_uchar) * (p)]
+void wtf_push(Str os, wc_ccs ccs, wc_uint32 code);
+void wtf_push_unknown(Str os, wc_uchar* p, size_t len);
+wc_wchar_t wtf_parse(wc_uchar** p);
+wc_wchar_t wtf_parse1(wc_uchar** p);
 
-extern void wtf_push(Str os, wc_ccs ccs, wc_uint32 code);
-extern void wtf_push_unknown(Str os, wc_uchar* p, size_t len);
-extern wc_wchar_t wtf_parse(wc_uchar** p);
-extern wc_wchar_t wtf_parse1(wc_uchar** p);
+wc_ccs wtf_get_ccs(wc_uchar* p);
+wc_uint32 wtf_get_code(wc_uchar* p);
 
-extern wc_ccs wtf_get_ccs(wc_uchar* p);
-extern wc_uint32 wtf_get_code(wc_uchar* p);
+wc_bool wtf_is_hangul(wc_uchar* p);
 
-extern wc_bool wtf_is_hangul(wc_uchar* p);
-
-extern char* wtf_conv_fit(const char* s, enum wc_ces ces);
+char* wtf_conv_fit(const char* s, enum wc_ces ces);

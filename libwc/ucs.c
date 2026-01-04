@@ -1,6 +1,7 @@
 #include "ucs.h"
 #include "ccs.h"
 #include "ces.h"
+#include "status.h"
 #include "wc_search.h"
 #include "big5.h"
 #include "hkscs.h"

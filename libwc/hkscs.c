@@ -4,6 +4,7 @@
 #include "big5.h"
 #include "wtf.h"
 #include "ucs.h"
+#include "status.h"
 
 #define C0 WC_HKSCS_MAP_C0
 #define GL WC_HKSCS_MAP_GL

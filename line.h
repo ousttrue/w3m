@@ -1,12 +1,13 @@
 #pragma once
-#include <libwc/wtf.h>
+#include <libwc/wtf_type.h>
 #include <libwc/conv.h>
 
 typedef unsigned short Lineprop;
 typedef unsigned char Linecolor;
 inline static Lineprop get_mctype(const char* c)
 {
-    return ((Lineprop)wtf_type((wc_uchar*)(c)) << 8);
+    enum WtfType t = wtf_type((const wc_uchar*)(c));
+    return (Lineprop)t << 8;
 }
 
 #define LINELEN 256 /* Initial line length */
