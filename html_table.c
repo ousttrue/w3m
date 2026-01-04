@@ -6,6 +6,7 @@
 #include "symbol.h"
 #include "anchor.h"
 #include "w3m_rc.h"
+#include <libwc/wtf_width.h>
 #include <sys/types.h>
 #include <stdio.h>
 #include <string.h>

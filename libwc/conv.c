@@ -3,6 +3,7 @@
 #include "detect.h"
 #include "ces.h"
 #include "wtf.h"
+#include "wtf_width.h"
 #include "iso2022.h"
 #include "hz.h"
 #include "utf8.h"

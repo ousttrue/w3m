@@ -2,13 +2,13 @@
 #include "anchor.h"
 #include "maparea.h"
 #include "myctype.h"
-#include "tab.h"
 #include "buffer.h"
 #include "screen.h"
 #include "file.h"
 #include "w3m_rc.h"
 #include "textlist.h"
 #include "indep.h"
+#include <libwc/wtf_width.h>
 
 static GeneralList* message_list = NULL;
 static char* delayed_msg = NULL;

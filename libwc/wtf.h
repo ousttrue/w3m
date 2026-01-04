@@ -38,17 +38,9 @@
 #define WTF_C_UNDEF7 0x9F
 #define WTF_C_NBSP 0xA0
 
-extern wc_uint8 WTF_LEN_MAP[];
-extern wc_ccs wtf_gr_ccs;
-
 void wtf_init(enum wc_ces ces1, enum wc_ces ces2);
 
-size_t wtf_width(const char* p);
 
-inline static int get_mcwidth(const char* c)
-{
-    return wtf_width(c);
-}
 int wtf_strwidth(wc_uchar* p);
 
 size_t wtf_len1(wc_uchar* p);

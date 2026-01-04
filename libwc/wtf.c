@@ -1,5 +1,6 @@
 #include "wtf.h"
 #include "wtf_type.h"
+#include "wtf_width.h"
 #include "ccs.h"
 #include "ces.h"
 #include "status.h"
@@ -15,268 +16,7 @@
 #include "gb18030.h"
 #include "uhc.h"
 #include "ucs.h"
-// #include "utf8.h"
 #include <string.h>
-
-wc_uint8 WTF_WIDTH_MAP[0x100] = {
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-
-    1,
-    2,
-    1,
-    2,
-    1,
-    1,
-    1,
-    2,
-    1,
-    2,
-    1,
-    2,
-    1,
-    1,
-    1,
-    1,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-};
 
 wc_uint8 WTF_LEN_MAP[0x100] = {
     1,
@@ -589,27 +329,22 @@ void wtf_init(enum wc_ces ces1, enum wc_ces ces2)
     wc_gset* gset = WcCesInfo[WC_CES_INDEX(ces1)].gset;
     if (gset == NULL || gset[1].ccs == 0 || gset[1].ccs & (WC_CCS_A_WCS16 | WC_CCS_A_WCS32))
         return;
+
     wtf_gr_ccs = gset[1].ccs;
 
     if (WC_CCS_IS_WIDE(wtf_gr_ccs)) {
         for (int i = 0xa1; i <= 0xff; i++) {
-            WTF_WIDTH_MAP[i] = 2;
+            wtf_width_set(i, 2);
             WTF_LEN_MAP[i] = 2;
             wtf_type_set(i, WTF_TYPE_WCHAR1W);
         }
     } else {
         for (int i = 0xa1; i <= 0xff; i++) {
-            WTF_WIDTH_MAP[i] = 1;
+            wtf_width_set(i, 1);
             WTF_LEN_MAP[i] = 1;
             wtf_type_set(i, WTF_TYPE_WCHAR1);
         }
     }
-}
-
-size_t wtf_width(const char* p)
-{
-    return WcOption.use_wide ? (int)WTF_WIDTH_MAP[*(wc_uchar*)(p)]
-                             : ((int)WTF_WIDTH_MAP[*(wc_uchar*)(p)] ? 1 : 0);
 }
 
 int wtf_strwidth(wc_uchar* p)
@@ -639,11 +374,11 @@ wtf_len1(wc_uchar* p)
 size_t
 wtf_len(const wc_uchar* p)
 {
-    wc_uchar* q = p;
-    wc_uchar* strz = p + strlen((char*)p);
+    const wc_uchar* q = p;
+    const wc_uchar* strz = p + strlen((char*)p);
 
     q += WTF_LEN_MAP[*q];
-    while (q < strz && !WTF_WIDTH_MAP[*q])
+    while (q < strz && wtf_width(q) == 0)
         q += WTF_LEN_MAP[*q];
     return q - p;
 }
@@ -969,7 +704,7 @@ wtf_parse(wc_uchar** p)
         cc.code = *((*p)++);
     } else
         cc = wtf_parse1(p);
-    if ((!WcOption.use_combining) || WTF_WIDTH_MAP[**p])
+    if ((!WcOption.use_combining) || wtf_width(*p))
         return cc;
 
     q = *p;
@@ -1008,7 +743,7 @@ wtf_parse(wc_uchar** p)
                 cc.code = ucs;
             }
             *p = q;
-            if (!WTF_WIDTH_MAP[*q])
+            if (!wtf_width(q))
                 break;
             cc2 = wtf_parse1(&q);
             if (!WC_CCS_IS_UNICODE(cc2.ccs))

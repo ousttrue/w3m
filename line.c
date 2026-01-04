@@ -3,6 +3,7 @@
 #include "alloc.h"
 #include "w3m_rc.h"
 #include <libwc/status.h>
+#include <libwc/wtf_width.h>
 #include <string.h>
 
 struct Line* currentLineSkip(struct Line* l, int offset)

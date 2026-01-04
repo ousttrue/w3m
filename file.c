@@ -15,6 +15,7 @@
 #include "w3m_rc.h"
 #include <libwc/conv.h>
 #include <libwc/status.h>
+#include <libwc/wtf_width.h>
 #include "linein.h"
 #include "ctrlcode.h"
 #include "html_form.h"

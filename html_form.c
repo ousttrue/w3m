@@ -20,6 +20,7 @@
 #include <libwc/charset.h>
 #include <libwc/conv.h>
 #include <libwc/status.h>
+#include <libwc/wtf_width.h>
 #include <string.h>
 #include <strings.h>
 #include <unistd.h>
