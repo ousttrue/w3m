@@ -651,7 +651,7 @@ bool doc_prev_nonnull_line(struct Document* doc, struct Line* line)
     return true;
 }
 
-bool doc_next_nonnull_line(struct Document *doc, struct Line* line)
+bool doc_next_nonnull_line(struct Document* doc, struct Line* line)
 {
     struct Line* l;
     for (l = line; l != NULL && l->len == 0; l = l->next)
@@ -665,7 +665,7 @@ bool doc_next_nonnull_line(struct Document *doc, struct Line* line)
     return true;
 }
 
-void doc_goLine(struct Document *doc, const char* l)
+void doc_goLine(struct Document* doc, const char* l)
 {
     if (l == NULL || *l == '\0' || doc->currentLine == NULL) {
         return;
@@ -682,4 +682,17 @@ void doc_goLine(struct Document *doc, const char* l)
         doc_gotoRealLine(doc, atoi(l));
     }
     doc_arrangeCursor(doc);
+}
+
+int doc_cur_real_linenumber(struct Document* doc)
+{
+    struct Line* cur = doc->currentLine;
+    if (!cur)
+        return 1;
+    int n = cur->real_linenumber ? cur->real_linenumber : 1;
+    for (struct Line* l = doc->firstLine; l && l != cur && l->real_linenumber == 0; l = l->next) { /* header */
+        if (l->bpos == 0)
+            n++;
+    }
+    return n;
 }

@@ -125,3 +125,4 @@ void doc_movU(struct Document* doc, int n);
 bool doc_prev_nonnull_line(struct Document* doc, struct Line* line);
 bool doc_next_nonnull_line(struct Document *doc, struct Line* line);
 void doc_goLine(struct Document *doc, const char* l);
+int doc_cur_real_linenumber(struct Document* doc);

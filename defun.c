@@ -1,4 +1,7 @@
 #include "defun.h"
+#include "funcheader.h"
+#include "etc.h"
+#include "mailcap.h"
 #include "indep.h"
 #include "message.h"
 #include "mysignal.h"
@@ -12,9 +15,9 @@
 #include "document.h"
 #include "screen.h"
 #include "search.h"
-// #include "file.h"
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 DEFUN(nulcmd, NOTHING NULL @ @ @, "Do nothing")
 {
@@ -70,6 +73,43 @@ DEFUN(setEnv, SETENV, "Set environment variable")
         value++;
         set_environ(var, value);
     }
+}
+
+DEFUN(editBf, EDIT, "Edit local source")
+{
+    const char* fn = ctx.buf->content.filename;
+    // if (fn == NULL || ctx.buf->pagerSource != NULL || /* Behaving as a pager */
+    //     (ctx.buf->type == NULL && ctx.buf->edit == NULL) || /* Reading shell */
+    //     ctx.buf->real_scheme != SCM_LOCAL || !strcmp(ctx.buf->currentURL.file, "-") || /* file is std input  */
+    //     ctx.buf->bufferprop & BP_FRAME) { /* Frame */
+    //     disp_err_message("Can't edit other than local file", TRUE);
+    //     return;
+    // }
+
+    Str cmd;
+    if (ctx.buf->edit)
+        cmd = unquote_mailcap(ctx.buf->edit, ctx.buf->content.content_type, fn,
+            checkHeader(&ctx.buf->content, "Content-Type:"), NULL);
+    else
+        cmd = myEditor(getRuntime()->Editor, shell_quote(fn), doc_cur_real_linenumber(&ctx.buf->doc));
+    blockChild(cmd->ptr);
+
+    // buffer is modified. so reload
+    reload(ctx);
+}
+
+DEFUN(editScr, EDIT_SCREEN, "Edit rendered copy of document")
+{
+    const char* tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
+    FILE* f = fopen(tmpf, "w");
+    if (!f) {
+        disp_err_message(Sprintf("Can't open %s", tmpf)->ptr, TRUE);
+        return;
+    }
+    saveBuffer(ctx.buf, f, TRUE);
+    fclose(f);
+    exec_cmd(myEditor(getRuntime()->Editor, shell_quote(tmpf), doc_cur_real_linenumber(&ctx.buf->doc))->ptr);
+    unlink(tmpf);
 }
 
 DEFUN(escmap, ESCMAP, "ESC map")
@@ -130,7 +170,7 @@ DEFUN(pipeBuf, PIPE_BUF, "Pipe current buffer through a shell command and displa
     //     disp_message(Sprintf("Can't save buffer to %s", cmd)->ptr, TRUE);
     //     return;
     // }
-    // saveBuffer(Currentbuf, f, TRUE);
+    // saveBuffer(ctx.buf, f, TRUE);
     // fclose(f);
     // struct Buffer* buf = getpipe(myExtCommand(cmd, shell_quote(tmpf), TRUE)->ptr);
     // if (buf == NULL) {
@@ -267,6 +307,27 @@ DEFUN(movR, MOVE_RIGHT, "Cursor right")
 DEFUN(movR1, MOVE_RIGHT1, "Cursor right. With edge touched, slide")
 {
     doc_movR(&ctx.buf->doc, 1);
+}
+
+DEFUN(linbeg, LINE_BEGIN, "Go to the beginning of the line")
+{
+    if (ctx.buf->doc.firstLine == NULL)
+        return;
+    while (ctx.buf->doc.currentLine->prev && ctx.buf->doc.currentLine->bpos)
+        doc_cursorUp0(&ctx.buf->doc, 1);
+    ctx.buf->doc.pos = 0;
+    doc_arrangeCursor(&ctx.buf->doc);
+}
+
+DEFUN(linend, LINE_END, "Go to the end of the line")
+{
+    if (ctx.buf->doc.firstLine == NULL)
+        return;
+    while (ctx.buf->doc.currentLine->next
+        && ctx.buf->doc.currentLine->next->bpos)
+        doc_cursorDown0(&ctx.buf->doc, 1);
+    ctx.buf->doc.pos = ctx.buf->doc.currentLine->len - 1;
+    doc_arrangeCursor(&ctx.buf->doc);
 }
 
 DEFUN(goLine, GOTO_LINE, "Go to the specified line")

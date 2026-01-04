@@ -33,8 +33,6 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include <signal.h>
-#include <setjmp.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -42,7 +40,6 @@
 #include <sys/wait.h>
 #include <time.h>
 #include "display.h"
-#include "screen.h"
 #include "myctype.h"
 #include "regex.h"
 #include "funcname1.h"
@@ -779,90 +776,6 @@ cmd_loadURL(const char* url, struct FormList* request, struct LoadOption option)
         // if (getRuntime()->RenderFrame && Currentbuf->doc.frameset != NULL)
         //     rFrame(ctx);
     }
-}
-
-/* Go to the beginning of the line */
-DEFUN(linbeg, LINE_BEGIN, "Go to the beginning of the line")
-{
-    if (Currentbuf->doc.firstLine == NULL)
-        return;
-    while (Currentbuf->doc.currentLine->prev && Currentbuf->doc.currentLine->bpos)
-        doc_cursorUp0(&Currentbuf->doc, 1);
-    Currentbuf->doc.pos = 0;
-    doc_arrangeCursor(&Currentbuf->doc);
-}
-
-/* Go to the bottom of the line */
-DEFUN(linend, LINE_END, "Go to the end of the line")
-{
-    if (Currentbuf->doc.firstLine == NULL)
-        return;
-    while (Currentbuf->doc.currentLine->next
-        && Currentbuf->doc.currentLine->next->bpos)
-        doc_cursorDown0(&Currentbuf->doc, 1);
-    Currentbuf->doc.pos = Currentbuf->doc.currentLine->len - 1;
-    doc_arrangeCursor(&Currentbuf->doc);
-}
-
-static int
-cur_real_linenumber(struct Buffer* buf)
-{
-    struct Line *l, *cur = buf->doc.currentLine;
-    int n;
-
-    if (!cur)
-        return 1;
-    n = cur->real_linenumber ? cur->real_linenumber : 1;
-    for (l = buf->doc.firstLine; l && l != cur && l->real_linenumber == 0; l = l->next) { /* header */
-        if (l->bpos == 0)
-            n++;
-    }
-    return n;
-}
-
-/* Run editor on the current buffer */
-DEFUN(editBf, EDIT, "Edit local source")
-{
-    const char* fn = Currentbuf->content.filename;
-    // if (fn == NULL || Currentbuf->pagerSource != NULL || /* Behaving as a pager */
-    //     (Currentbuf->type == NULL && Currentbuf->edit == NULL) || /* Reading shell */
-    //     Currentbuf->real_scheme != SCM_LOCAL || !strcmp(Currentbuf->currentURL.file, "-") || /* file is std input  */
-    //     Currentbuf->bufferprop & BP_FRAME) { /* Frame */
-    //     disp_err_message("Can't edit other than local file", TRUE);
-    //     return;
-    // }
-
-    Str cmd;
-    if (Currentbuf->edit)
-        cmd = unquote_mailcap(Currentbuf->edit, Currentbuf->content.content_type, fn,
-            checkHeader(&Currentbuf->content, "Content-Type:"), NULL);
-    else
-        cmd = myEditor(getRuntime()->Editor, shell_quote(fn), cur_real_linenumber(Currentbuf));
-    blockChild(cmd->ptr);
-
-    // buffer is modified. so reload
-    reload(ctx);
-}
-
-/* Run editor on the current screen */
-DEFUN(editScr, EDIT_SCREEN, "Edit rendered copy of document")
-{
-    char* tmpf;
-    FILE* f;
-
-    tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
-    f = fopen(tmpf, "w");
-    if (f == NULL) {
-        /* FIXME: gettextize? */
-        disp_err_message(Sprintf("Can't open %s", tmpf)->ptr, TRUE);
-        return;
-    }
-    saveBuffer(Currentbuf, f, TRUE);
-    fclose(f);
-    exec_cmd(myEditor(getRuntime()->Editor, shell_quote(tmpf),
-        cur_real_linenumber(Currentbuf))
-            ->ptr);
-    unlink(tmpf);
 }
 
 /* Set / unset mark */
