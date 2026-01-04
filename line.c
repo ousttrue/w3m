@@ -4,6 +4,7 @@
 #include "w3m_rc.h"
 #include <libwc/status.h>
 #include <libwc/wtf_width.h>
+#include <libwc/wtf_len.h>
 #include <string.h>
 
 struct Line* currentLineSkip(struct Line* l, int offset)
@@ -32,7 +33,7 @@ nextColumn(int n, const char* p, Lineprop* pr, int Tabstop)
     }
     if (*pr & PC_UNKNOWN)
         return n + 4;
-    return n + wtf_width(p);
+    return n + wtf_width((const wc_uchar*)p);
 }
 
 size_t calcPosition(char* l, Lineprop* pr, int len, int pos, int bpos, enum CalcPositionMode mode)

@@ -19,5 +19,6 @@ pub const c = @cImport({
     @cInclude("char_conv.h");
     @cInclude("charset.h");
     @cInclude("wtf_width.h");
+    @cInclude("wtf_len.h");
 });
 

@@ -10,6 +10,7 @@
 
 #include <Str.h>
 #include <libwc/ces.h>
+#include <libwc/wtf_len.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -591,7 +592,7 @@ Str loadFTPDir(struct Url* pu, enum wc_ces* charset)
                 Strcat_char(tmp, '@');
             Strcat_m_charp(FTPDIRtmp, "<a href=\"", html_quote(file_quote(fn)),
                 "\">", html_quote(tmp->ptr), "</a>", NULL);
-            for (i = get_Str_strwidth(tmp); i <= max_len; i++) {
+            for (i = get_strwidth(tmp->ptr); i <= max_len; i++) {
                 if ((max_len % 2 + i) % 2)
                     Strcat_char(FTPDIRtmp, '.');
                 else

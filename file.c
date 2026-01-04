@@ -16,6 +16,7 @@
 #include <libwc/conv.h>
 #include <libwc/status.h>
 #include <libwc/wtf_width.h>
+#include <libwc/wtf_len.h>
 #include "linein.h"
 #include "ctrlcode.h"
 #include "html_form.h"
@@ -1772,7 +1773,7 @@ void process_option(struct HtmlBuilder* hb)
         hb->cur_option_label = hb->cur_option;
     int len;
     if (!hb->select_is_multiple) {
-        len = get_Str_strwidth(hb->cur_option_label);
+        len = get_strwidth(hb->cur_option_label->ptr);
         if (len > hb->cur_option_maxwidth)
             hb->cur_option_maxwidth = len;
         addSelectOption(&hb->select_option[hb->n_select],

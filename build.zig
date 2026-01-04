@@ -95,6 +95,7 @@ const libwc_srcs = [_][]const u8{
     "wtf.c",
     "wtf_type.c",
     "wtf_width.c",
+    "wtf_len.c",
 };
 
 pub fn build(b: *std.Build) void {

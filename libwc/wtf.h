@@ -40,17 +40,6 @@
 
 void wtf_init(enum wc_ces ces1, enum wc_ces ces2);
 
-
-int wtf_strwidth(wc_uchar* p);
-
-size_t wtf_len1(wc_uchar* p);
-inline static size_t get_mclen(const char* c)
-{
-    return wtf_len1((wc_uchar*)(c));
-}
-
-size_t wtf_len(const wc_uchar* p);
-
 void wtf_push(Str os, wc_ccs ccs, wc_uint32 code);
 void wtf_push_unknown(Str os, wc_uchar* p, size_t len);
 wc_wchar_t wtf_parse(wc_uchar** p);

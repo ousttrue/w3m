@@ -9,6 +9,7 @@
 #include "textlist.h"
 #include "indep.h"
 #include <libwc/wtf_width.h>
+#include <libwc/wtf_len.h>
 
 static GeneralList* message_list = NULL;
 static char* delayed_msg = NULL;
@@ -111,7 +112,7 @@ make_lastline_link(struct Buffer* buf, const char* title, const char* url)
         }
         if (url)
             Strcat_charp(s, " ");
-        l -= get_Str_strwidth(s);
+        l -= get_strwidth(s->ptr);
         if (l <= 0)
             return s;
     }
@@ -122,7 +123,7 @@ make_lastline_link(struct Buffer* buf, const char* title, const char* url)
     if (getRuntime()->DecodeURL)
         u = Strnew_charp(url_decode2(u->ptr, buf));
     u = checkType(u, &pr, NULL);
-    if (l <= 4 || l >= get_Str_strwidth(u)) {
+    if (l <= 4 || l >= get_strwidth(u->ptr)) {
         if (!s)
             return u;
         Strcat(s, u);
@@ -135,7 +136,7 @@ make_lastline_link(struct Buffer* buf, const char* title, const char* url)
         i--;
     Strcat_charp_n(s, u->ptr, i);
     Strcat_charp(s, "..");
-    i = get_Str_strwidth(u) - (TTY_COLS() - 1 - get_Str_strwidth(s));
+    i = get_strwidth(u->ptr) - (TTY_COLS() - 1 - get_strwidth(s->ptr));
     while (i < u->length && pr[i] & PC_WCHAR2)
         i++;
     Strcat_charp(s, &u->ptr[i]);
@@ -166,7 +167,7 @@ make_lastline_message(struct Buffer* buf)
                 s = make_lastline_link(buf, p, a ? a->url : NULL);
         }
         if (s) {
-            sl = get_Str_strwidth(s);
+            sl = get_strwidth(s->ptr);
             if (sl >= TTY_COLS() - 3)
                 return s;
         }
@@ -189,7 +190,7 @@ make_lastline_message(struct Buffer* buf)
 
     if (s) {
         int l = TTY_COLS() - 3 - sl;
-        if (get_Str_strwidth(msg) > l) {
+        if (get_strwidth(msg->ptr) > l) {
 
             const char* p;
             for (p = msg->ptr; *p; p += get_mclen(p)) {

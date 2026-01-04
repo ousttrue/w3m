@@ -20,6 +20,7 @@
 #include <libwc/ces.h>
 #include <libwc/charset.h>
 #include <libwc/status.h>
+#include <libwc/wtf_len.h>
 #include <string.h>
 
 static char** FRAME;

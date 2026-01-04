@@ -12,6 +12,7 @@
 #include "ctrlcode.h"
 #include "LineWriter.h"
 #include <math.h>
+#include <libwc/wtf_len.h>
 
 static int image_touch = 0;
 static bool draw_image_flag = false;

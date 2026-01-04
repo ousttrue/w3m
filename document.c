@@ -9,6 +9,7 @@
 #include "screen.h"
 #include <math.h>
 #include <string.h>
+#include <libwc/wtf_len.h>
 
 extern char* NullLine;
 extern Lineprop NullProp[];

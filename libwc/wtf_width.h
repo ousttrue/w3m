@@ -8,3 +8,4 @@ inline static wc_uint8 get_mcwidth(const char* c)
 {
     return wtf_width((const wc_uchar*)c);
 }
+

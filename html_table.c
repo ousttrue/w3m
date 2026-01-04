@@ -7,6 +7,7 @@
 #include "anchor.h"
 #include "w3m_rc.h"
 #include <libwc/wtf_width.h>
+#include <libwc/wtf_len.h>
 #include <sys/types.h>
 #include <stdio.h>
 #include <string.h>

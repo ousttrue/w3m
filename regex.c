@@ -10,13 +10,14 @@
 #include <sys/types.h>
 #include <malloc.h>
 #endif /* REGEX_DEBUG */
-#include <stdio.h>
-#include <stdlib.h>
+// #include <stdio.h>
+// #include <stdlib.h>
 #include <string.h>
 #include <gc.h>
 #include "config.h"
 
 #include <libwc/wtf.h>
+#include <libwc/wtf_len.h>
 #include <libwc/ucs.h>
 #include <libwc/ccs.h>
 
@@ -72,30 +73,26 @@ int verbose;
 #define RE_TYPE_SYMBOL 4
 
 static longchar
-set_longchar(char* str)
+set_longchar(const char* str)
 {
     unsigned char* p = (unsigned char*)str;
     longchar r = {};
 
-#ifdef USE_M17N
     if (*p & 0x80) {
         r.wch = wtf_parse1(&p);
         if (r.wch.ccs == WC_CCS_SPECIAL || r.wch.ccs == WC_CCS_SPECIAL_W) {
             r.type = RE_TYPE_SYMBOL;
             return r;
         }
-#ifdef USE_UNICODE
         if (WC_CCS_IS_UNICODE(r.wch.ccs)) {
             if (WC_CCS_SET(r.wch.ccs) == WC_CCS_UCS_TAG)
                 r.wch.code = wc_ucs_tag_to_ucs(r.wch.code);
             r.wch.ccs = WC_CCS_UCS4;
         } else
-#endif
             r.wch.ccs = WC_CCS_SET(r.wch.ccs);
         r.type = RE_TYPE_WCHAR_T;
         return r;
     }
-#endif
     r.ch = *p;
     r.type = RE_TYPE_CHAR;
     return r;
@@ -114,17 +111,17 @@ static int match_range_longchar(longchar*, longchar*, longchar*, int);
 /*
  * regexCompile: compile regular expression
  */
-char* regexCompile(const char* ex, int igncase)
+const char* regexCompile(const char* ex, int igncase)
 {
-    char* msg;
+    const char* msg;
     newRegex(ex, igncase, &DefaultRegex, &msg);
     return msg;
 }
 
 static Regex*
-newRegex0(char** ex, int igncase, Regex* regex, char** msg, int level)
+newRegex0(const char** ex, int igncase, Regex* regex, const char** msg, int level)
 {
-    char* p;
+    const char* p;
     longchar* r;
     regexchar* re;
     int m;
@@ -270,7 +267,7 @@ newRegex0(char** ex, int igncase, Regex* regex, char** msg, int level)
 }
 
 Regex*
-newRegex(char* ex, int igncase, Regex* regex, char** msg)
+newRegex(const char* ex, int igncase, Regex* regex, const char** msg)
 {
     return newRegex0(&ex, igncase, regex, msg, 0);
 }

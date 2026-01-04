@@ -86,9 +86,6 @@ Str Str_conv_from_system(Str x);
 #define INIT_BUFFER_WIDTH ((_INIT_BUFFER_WIDTH > 0) ? _INIT_BUFFER_WIDTH : 0)
 #define FOLD_BUFFER_WIDTH (getRuntime()->FoldLine ? (INIT_BUFFER_WIDTH + 1) : -1)
 
-#define get_strwidth(c) wtf_strwidth((wc_uchar*)(c))
-#define get_Str_strwidth(c) wtf_strwidth((wc_uchar*)((c)->ptr))
-
 #define Currentbuf (getRuntime()->CurrentTab->currentBuffer)
 #define Firstbuf (getRuntime()->CurrentTab->firstBuffer)
 
