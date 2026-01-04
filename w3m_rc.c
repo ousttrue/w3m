@@ -889,7 +889,7 @@ int is_wordchar(wc_uint32 c)
     return wc_is_ucs_alnum(c);
 }
 
-wc_uint32 getChar(char* p)
+wc_uint32 getChar(const char* p)
 {
     return wc_any_to_ucs(wtf_parse1((wc_uchar**)&p));
 }
@@ -2426,4 +2426,25 @@ int searchKeyNum(void)
     if (d != NULL)
         n = atoi(d);
     return n * PREC_NUM;
+}
+
+void _quitfm(bool confirm)
+{
+    const char* ans = "y";
+    if (confirm)
+        ans = inputChar("Do you want to exit w3m? (y/n)");
+    if (!(ans && TOLOWER(*ans) == 'y')) {
+        return;
+    }
+
+    term_title(""); /* XXX */
+    if (getRuntime()->activeImage)
+        termImage();
+    exitRawMode();
+    save_cookies();
+
+    if (getRuntime()->UseHistory && getRuntime()->SaveURLHist)
+        saveHistory(getRuntime()->URLHist, getRuntime()->URLHistSize);
+
+    w3m_exit(0);
 }

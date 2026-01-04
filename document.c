@@ -636,3 +636,31 @@ void doc_movU(struct Document* doc, int n)
     for (int i = 0; i < m; i++)
         doc_cursorUp(doc, n);
 }
+
+bool doc_prev_nonnull_line(struct Document* doc, struct Line* line)
+{
+    struct Line* l;
+    for (l = line; l != NULL && l->len == 0; l = l->prev)
+        ;
+    if (l == NULL || l->len == 0)
+        return false;
+
+    doc->currentLine = l;
+    if (l != line)
+        doc->pos = doc->currentLine->len;
+    return true;
+}
+
+bool doc_next_nonnull_line(struct Document *doc, struct Line* line)
+{
+    struct Line* l;
+    for (l = line; l != NULL && l->len == 0; l = l->next)
+        ;
+    if (l == NULL || l->len == 0)
+        return false;
+
+    doc->currentLine = l;
+    if (l != line)
+        doc->pos = 0;
+    return true;
+}

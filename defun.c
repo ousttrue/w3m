@@ -20,6 +20,16 @@ DEFUN(nulcmd, NOTHING NULL @ @ @, "Do nothing")
 {
 }
 
+DEFUN(quitfm, ABORT EXIT, "Quit without confirmation")
+{
+    _quitfm(FALSE);
+}
+
+DEFUN(qquitfm, QUIT, "Quit with confirmation request")
+{
+    _quitfm(getRuntime()->confirm_on_quit);
+}
+
 DEFUN(rdrwSc, REDRAW, "Draw the screen anew")
 {
     tty_clear();
@@ -243,6 +253,98 @@ DEFUN(movR, MOVE_RIGHT, "Cursor right")
 DEFUN(movR1, MOVE_RIGHT1, "Cursor right. With edge touched, slide")
 {
     doc_movR(&ctx.buf->doc, 1);
+}
+
+DEFUN(movLW, PREV_WORD, "Move to the previous word")
+{
+    if (ctx.buf->doc.firstLine == NULL)
+        return;
+
+    // char* lb;
+    // struct Line *pline, *l;
+    // int ppos;
+
+    int n = searchKeyNum();
+    for (int i = 0; i < n; i++) {
+        struct Line* pline = ctx.buf->doc.currentLine;
+        int ppos = ctx.buf->doc.pos;
+
+        if (!doc_prev_nonnull_line(&ctx.buf->doc, ctx.buf->doc.currentLine))
+            goto end;
+
+        while (1) {
+            struct Line* l = ctx.buf->doc.currentLine;
+            const char* lb = l->lineBuf;
+            while (ctx.buf->doc.pos > 0) {
+                int tmp = ctx.buf->doc.pos;
+                prevChar(tmp, l);
+                if (is_wordchar(getChar(&lb[tmp])))
+                    break;
+                ctx.buf->doc.pos = tmp;
+            }
+            if (ctx.buf->doc.pos > 0)
+                break;
+            if (!doc_prev_nonnull_line(&ctx.buf->doc, ctx.buf->doc.currentLine->prev)) {
+                ctx.buf->doc.currentLine = pline;
+                ctx.buf->doc.pos = ppos;
+                goto end;
+            }
+            ctx.buf->doc.pos = ctx.buf->doc.currentLine->len;
+        }
+
+        struct Line* l = ctx.buf->doc.currentLine;
+        const char* lb = l->lineBuf;
+        while (ctx.buf->doc.pos > 0) {
+            int tmp = ctx.buf->doc.pos;
+            prevChar(tmp, l);
+            if (!is_wordchar(getChar(&lb[tmp])))
+                break;
+            ctx.buf->doc.pos = tmp;
+        }
+    }
+end:
+    doc_arrangeCursor(&ctx.buf->doc);
+}
+
+DEFUN(movRW, NEXT_WORD, "Move to the next word")
+{
+    char* lb;
+    struct Line *pline, *l;
+    int ppos;
+    int i, n = searchKeyNum();
+
+    if (ctx.buf->doc.firstLine == NULL)
+        return;
+
+    for (i = 0; i < n; i++) {
+        pline = ctx.buf->doc.currentLine;
+        ppos = ctx.buf->doc.pos;
+
+        if (!doc_next_nonnull_line(&ctx.buf->doc, ctx.buf->doc.currentLine))
+            goto end;
+
+        l = ctx.buf->doc.currentLine;
+        lb = l->lineBuf;
+        while (ctx.buf->doc.pos < l->len && is_wordchar(getChar(&lb[ctx.buf->doc.pos])))
+            nextChar(ctx.buf->doc.pos, l);
+
+        while (1) {
+            while (ctx.buf->doc.pos < l->len && !is_wordchar(getChar(&lb[ctx.buf->doc.pos])))
+                nextChar(ctx.buf->doc.pos, l);
+            if (ctx.buf->doc.pos < l->len)
+                break;
+            if (!doc_next_nonnull_line(&ctx.buf->doc, ctx.buf->doc.currentLine->next)) {
+                ctx.buf->doc.currentLine = pline;
+                ctx.buf->doc.pos = ppos;
+                goto end;
+            }
+            ctx.buf->doc.pos = 0;
+            l = ctx.buf->doc.currentLine;
+            lb = l->lineBuf;
+        }
+    }
+end:
+    doc_arrangeCursor(&ctx.buf->doc);
 }
 
 DEFUN(pgFore, NEXT_PAGE, "Scroll down one page")

@@ -149,7 +149,7 @@ void w3m_on_key(uint8_t ch);
 char* getCurWord(struct Buffer* buf, int* spos, int* epos);
 char* GetWord(struct Buffer* buf);
 int is_wordchar(wc_uint32 c);
-wc_uint32 getChar(char* p);
+wc_uint32 getChar(const char* p);
 
 void show_params(FILE* fp);
 int exec_cmd(const char* cmd);
@@ -174,3 +174,4 @@ extern struct Buffer* load_option_panel(void);
 extern void sync_with_option(void);
 extern char* searchKeyData(void);
 int searchKeyNum(void);
+void _quitfm(bool confirm);

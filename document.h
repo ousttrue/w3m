@@ -122,3 +122,5 @@ void doc_movL(struct Document* doc, int n);
 void doc_movR(struct Document* doc, int n);
 void doc_movD(struct Document* doc, int n);
 void doc_movU(struct Document* doc, int n);
+bool doc_prev_nonnull_line(struct Document* doc, struct Line* line);
+bool doc_next_nonnull_line(struct Document *doc, struct Line* line);
