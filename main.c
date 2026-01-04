@@ -59,7 +59,6 @@
 #define DSTR_LEN 256
 
 extern MySignalHandler intTrap(SIGNAL_ARG);
-extern void escdmap(char c);
 
 static AlarmEvent DefaultAlarm = {
     0, AL_UNSET, FUNCNAME_nulcmd, NULL
@@ -727,56 +726,6 @@ dump_source(struct Buffer* buf)
         putchar(c);
     }
     fclose(f);
-}
-
-DEFUN(nulcmd, NOTHING NULL @ @ @, "Do nothing")
-{ /* do nothing */
-}
-
-void pcmap(void)
-{
-}
-
-DEFUN(escmap, ESCMAP, "ESC map")
-{
-    char c;
-    c = getch();
-    if (IS_ASCII(c))
-        escKeyProc((int)c, K_ESC, EscKeymap);
-}
-
-DEFUN(escbmap, ESCBMAP, "ESC [ map")
-{
-    char c;
-    c = getch();
-    if (IS_DIGIT(c)) {
-        escdmap(c);
-        return;
-    }
-    if (IS_ASCII(c))
-        escKeyProc((int)c, K_ESCB, EscBKeymap);
-}
-
-void escdmap(char c)
-{
-    int d;
-    d = (int)c - (int)'0';
-    c = getch();
-    if (IS_DIGIT(c)) {
-        d = d * 10 + (int)c - (int)'0';
-        c = getch();
-    }
-    if (c == '~')
-        escKeyProc((int)d, K_ESCD, EscDKeymap);
-}
-
-DEFUN(multimap, MULTIMAP, "multimap")
-{
-    char c = getch();
-    if (IS_ASCII(c)) {
-        getRuntime()->CurrentKey = K_MULTI | (getRuntime()->CurrentKey << 16) | c;
-        escKeyProc((int)c, 0, NULL);
-    }
 }
 
 void tmpClearBuffer(struct Buffer* buf)

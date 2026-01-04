@@ -25,3 +25,4 @@ int getFuncList(const char* id);
 void initKeymap(int force);
 int getKey(char* s);
 char* getKeyData(int key);
+void escdmap(char c);
