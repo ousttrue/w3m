@@ -890,7 +890,7 @@ struct Anchor* doc_retrieveCurrentMap(struct Document* doc)
     return NULL;
 }
 
-struct MapArea* doc_retrieveCurrentMapArea(struct Document *doc)
+struct MapArea* doc_retrieveCurrentMapArea(struct Document* doc)
 {
     struct Anchor* a_img = doc_retrieveCurrentImg(doc);
     if (!(a_img && a_img->image && a_img->image->map))
@@ -917,4 +917,95 @@ struct MapArea* doc_retrieveCurrentMapArea(struct Document *doc)
     return NULL;
 }
 
+void doc_nextX(struct Document* doc, int d, int dy)
+{
+    if (doc->firstLine == NULL)
+        return;
+    struct HmarkerList* hl = doc->hmarklist;
+    if (!hl || hl->nmark == 0)
+        return;
 
+    struct Anchor* an = doc_retrieveCurrentAnchor(doc);
+    if (an == NULL)
+        an = doc_retrieveCurrentForm(doc);
+
+    int n = searchKeyNum();
+    struct Line* l = doc->currentLine;
+    int x = doc->pos;
+    int y = l->linenumber;
+    struct Anchor* pan = NULL;
+    for (int i = 0; i < n; i++) {
+        if (an)
+            x = (d > 0) ? an->end.pos : an->start.pos - 1;
+        an = NULL;
+        while (1) {
+            for (; x >= 0 && x < l->len; x += d) {
+                an = retrieveAnchor(doc->href, y, x);
+                if (!an)
+                    an = retrieveAnchor(doc->formitem, y, x);
+                if (an) {
+                    pan = an;
+                    break;
+                }
+            }
+            if (!dy || an)
+                break;
+            l = (dy > 0) ? l->next : l->prev;
+            if (!l)
+                break;
+            x = (d > 0) ? 0 : l->len - 1;
+            y = l->linenumber;
+        }
+        if (!an)
+            break;
+    }
+
+    if (pan == NULL)
+        return;
+    doc_gotoLine(doc, y);
+    doc->pos = pan->start.pos;
+    doc_arrangeCursor(doc);
+}
+
+void doc_nextY(struct Document* doc, int d)
+{
+    struct HmarkerList* hl = doc->hmarklist;
+    struct Anchor *an, *pan;
+    int i, x, y, n = searchKeyNum();
+    int hseq;
+
+    if (doc->firstLine == NULL)
+        return;
+    if (!hl || hl->nmark == 0)
+        return;
+
+    an = doc_retrieveCurrentAnchor(doc);
+    if (an == NULL)
+        an = doc_retrieveCurrentForm(doc);
+
+    x = doc->pos;
+    y = doc->currentLine->linenumber + d;
+    pan = NULL;
+    hseq = -1;
+    for (i = 0; i < n; i++) {
+        if (an)
+            hseq = abs(an->hseq);
+        an = NULL;
+        for (; y >= 0 && y <= doc->lastLine->linenumber; y += d) {
+            an = retrieveAnchor(doc->href, y, x);
+            if (!an)
+                an = retrieveAnchor(doc->formitem, y, x);
+            if (an && hseq != abs(an->hseq)) {
+                pan = an;
+                break;
+            }
+        }
+        if (!an)
+            break;
+    }
+
+    if (pan == NULL)
+        return;
+    doc_gotoLine(doc, pan->start.line);
+    doc_arrangeLine(doc);
+}

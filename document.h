@@ -126,10 +126,14 @@ bool doc_prev_nonnull_line(struct Document* doc, struct Line* line);
 bool doc_next_nonnull_line(struct Document* doc, struct Line* line);
 void doc_goLine(struct Document* doc, const char* l);
 int doc_cur_real_linenumber(struct Document* doc);
-void doc_nextA(struct Document* doc, bool visited, struct Url *base_url);
-void doc_prevA(struct Document* doc, bool visited, struct Url *base_url);
+void doc_nextA(struct Document* doc, bool visited, struct Url* base_url);
+void doc_prevA(struct Document* doc, bool visited, struct Url* base_url);
 struct Anchor* doc_retrieveCurrentAnchor(struct Document* doc);
 struct Anchor* doc_retrieveCurrentImg(struct Document* doc);
 struct Anchor* doc_retrieveCurrentForm(struct Document* doc);
 struct Anchor* doc_retrieveCurrentMap(struct Document* doc);
 struct MapArea* doc_retrieveCurrentMapArea(struct Document* doc);
+/// go to the next left/right anchor
+void doc_nextX(struct Document* doc, int d, int dy);
+/// go to the next downward/upward anchor
+void doc_nextY(struct Document* doc, int d);

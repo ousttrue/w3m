@@ -666,6 +666,36 @@ DEFUN(prevVA, PREV_VISITED, "Move to the previous visited hyperlink")
     doc_prevA(&ctx.buf->doc, true, baseURL(ctx.buf));
 }
 
+DEFUN(nextL, NEXT_LEFT, "Move left to the next hyperlink")
+{
+    doc_nextX(&ctx.buf->doc, -1, 0);
+}
+
+DEFUN(nextLU, NEXT_LEFT_UP, "Move left or upward to the next hyperlink")
+{
+    doc_nextX(&ctx.buf->doc, -1, -1);
+}
+
+DEFUN(nextR, NEXT_RIGHT, "Move right to the next hyperlink")
+{
+    doc_nextX(&ctx.buf->doc, 1, 0);
+}
+
+DEFUN(nextRD, NEXT_RIGHT_DOWN, "Move right or downward to the next hyperlink")
+{
+    doc_nextX(&ctx.buf->doc, 1, 1);
+}
+
+DEFUN(nextD, NEXT_DOWN, "Move downward to the next hyperlink")
+{
+    doc_nextY(&ctx.buf->doc, 1);
+}
+
+DEFUN(nextU, NEXT_UP, "Move upward to the next hyperlink")
+{
+    doc_nextY(&ctx.buf->doc, -1);
+}
+
 //
 // search
 //
