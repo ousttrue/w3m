@@ -150,8 +150,7 @@ void escKeyProc(int c, int esc, unsigned char* map);
 bool eventUpdate();
 void w3m_end_frame();
 void w3m_on_key(uint8_t ch);
-char* getCurWord(struct Buffer* buf, int* spos, int* epos);
-char* GetWord(struct Buffer* buf);
+const char* GetWord(struct Buffer* buf);
 int is_wordchar(wc_uint32 c);
 wc_uint32 getChar(const char* p);
 

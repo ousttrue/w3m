@@ -1013,11 +1013,10 @@ DEFUN(movlistMn, MOVE_LIST_MENU, "Pop up menu to navigate between hyperlinks")
 /* link,anchor,image list */
 DEFUN(linkLst, LIST, "Show all URLs referenced")
 {
-    struct Buffer* buf;
-
-    buf = link_list_panel(Currentbuf);
-    if (buf != NULL) {
-        buf->doc.charset = Currentbuf->doc.charset;
+    Str page = link_list_panel(baseURL(ctx.buf), &ctx.buf->doc);
+    if (page) {
+        struct Buffer* buf = loadHTMLString(page);
+        // buf->doc.charset = Currentbuf->doc.charset;
         cmd_loadBuffer(buf, BP_NORMAL, LB_NOLINK);
     }
 }
@@ -1467,9 +1466,8 @@ void chkURLBuffer(struct Buffer* buf)
         "ftp://[a-zA-Z0-9:%\\-\\./_@]*\\[[a-fA-F0-9:][a-fA-F0-9:\\.]*\\][a-zA-Z0-9:%\\-\\./=_+@#,\\$]*",
         NULL
     };
-    int i;
-    for (i = 0; url_like_pat[i]; i++) {
-        reAnchor(buf, url_like_pat[i]);
+    for (int i = 0; url_like_pat[i]; i++) {
+        reAnchor(baseURL(buf), &buf->doc, url_like_pat[i]);
     }
     chkExternalURIBuffer(buf);
     buf->check_url |= CHK_URL;
@@ -1482,12 +1480,11 @@ DEFUN(chkURL, MARK_URL, "Turn URL-like strings into hyperlinks")
 
 DEFUN(chkWORD, MARK_WORD, "Turn current word into hyperlink")
 {
-    char* p;
     int spos, epos;
-    p = getCurWord(Currentbuf, &spos, &epos);
+    const char* p = doc_getCurWord(&ctx.buf->doc, &spos, &epos);
     if (p == NULL)
         return;
-    reAnchorWord(Currentbuf, Currentbuf->doc.currentLine, spos, epos);
+    reAnchorWord(baseURL(ctx.buf), &ctx.buf->doc, ctx.buf->doc.currentLine, spos, epos);
 }
 
 /* render frames */

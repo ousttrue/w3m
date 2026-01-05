@@ -473,7 +473,7 @@ struct Buffer* loadLink(const char* url, struct FormList* request,
         return NULL;
     }
 
-    struct Content *content = get_content_cache(url, request,
+    struct Content* content = get_content_cache(url, request,
         (struct LoadOption) { .base_url = baseURL(Currentbuf), .referer = referer, .flag = 0 });
     struct Buffer* buf = newBuffer(INIT_BUFFER_WIDTH);
     buf->content = content;
@@ -531,7 +531,7 @@ struct Buffer* loadLink(const char* url, struct FormList* request,
     //     }
     //     if (!al) {
     //         label = Strnew_m_charp("_", target, NULL)->ptr;
-    //         al = searchURLLabel(Currentbuf, label);
+    //         al = searchURLLabel(Currentbuf->doc, label);
     //     }
     //     if (al) {
     //         doc_gotoLine(&Currentbuf->doc, al->start.line);
@@ -894,42 +894,11 @@ wc_uint32 getChar(const char* p)
     return wc_any_to_ucs(wtf_parse1((wc_uchar**)&p));
 }
 
-char* getCurWord(struct Buffer* buf, int* spos, int* epos)
-{
-    char* p;
-    struct Line* l = buf->doc.currentLine;
-    int b, e;
-
-    *spos = 0;
-    *epos = 0;
-    if (l == NULL)
-        return NULL;
-    p = l->lineBuf;
-    e = buf->doc.pos;
-    while (e > 0 && !is_wordchar(getChar(&p[e])))
-        prevChar(e, l);
-    if (!is_wordchar(getChar(&p[e])))
-        return NULL;
-    b = e;
-    while (b > 0) {
-        int tmp = b;
-        prevChar(tmp, l);
-        if (!is_wordchar(getChar(&p[tmp])))
-            break;
-        b = tmp;
-    }
-    while (e < l->len && is_wordchar(getChar(&p[e])))
-        nextChar(e, l);
-    *spos = b;
-    *epos = e;
-    return &p[b];
-}
-
-char* GetWord(struct Buffer* buf)
+const char* GetWord(struct Buffer* buf)
 {
     int b, e;
-    char* p;
-    if ((p = getCurWord(buf, &b, &e)) != NULL) {
+    const char* p = doc_getCurWord(&buf->doc, &b, &e);
+    if (p) {
         return Strnew_charp_n(p, e - b)->ptr;
     }
     return NULL;
@@ -2497,8 +2466,10 @@ struct FollowResult _followA(struct Buffer* buf, struct FollowOption option)
 
 struct FollowResult gotoLabel(struct Buffer* buf, const char* label)
 {
-    struct FollowResult res = { 0 };
-    res.anchor = searchURLLabel(buf, label);
+    struct FollowResult res = {
+        .anchor = searchURLLabel(&buf->doc, label),
+        0
+    };
     if (!res.anchor) {
         disp_message(Sprintf("%s is not found", label)->ptr, TRUE);
         return res;
@@ -2563,7 +2534,7 @@ void _followI(bool do_download)
         return;
     }
 
-    struct Content *content = get_content_cache(a->url, NULL,
+    struct Content* content = get_content_cache(a->url, NULL,
         (struct LoadOption) { .base_url = baseURL(Currentbuf), .referer = NULL, .flag = 0 });
     struct Buffer* buf = newBuffer(INIT_BUFFER_WIDTH);
     buf->content = content;

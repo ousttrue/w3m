@@ -16,6 +16,17 @@
 #define bpcmp(a, b) \
     (((a).line - (b).line) ? ((a).line - (b).line) : ((a).pos - (b).pos))
 
+typedef struct Anchor* (*AnchorProc)(struct Url* base_url, struct Document* doc, const char*, const char*, int, int);
+
+static struct Anchor*
+_put_anchor_all(struct Url* base_url, struct Document* doc, const char* p1, const char* p2, int line, int pos)
+{
+    Str tmp = Strnew_charp_n(p1, p2 - p1);
+    return registerHref(doc, url_encode(tmp->ptr, base_url, doc->charset),
+        NULL, NO_REFERER, NULL,
+        '\0', line, pos);
+}
+
 struct AnchorList*
 putAnchor(struct AnchorList* al, const char* url, const char* target, struct Anchor** anchor_return,
     const char* referer, const char* title, unsigned char key, int line, int pos)
@@ -67,36 +78,35 @@ putAnchor(struct AnchorList* al, const char* url, const char* target, struct Anc
 }
 
 struct Anchor*
-registerHref(struct Buffer* buf, const char* url, const char* target, const char* referer, const char* title,
+registerHref(struct Document* doc, const char* url, const char* target, const char* referer, const char* title,
     unsigned char key, int line, int pos)
 {
     struct Anchor* a;
-    buf->doc.href = putAnchor(buf->doc.href, url, target, &a, referer, title, key,
+    doc->href = putAnchor(doc->href, url, target, &a, referer, title, key,
         line, pos);
     return a;
 }
 
 struct Anchor*
-registerName(struct Buffer* buf, const char* url, int line, int pos)
+registerName(struct Document* doc, const char* url, int line, int pos)
 {
     struct Anchor* a;
-    buf->doc.name = putAnchor(buf->doc.name, url, NULL, &a, NULL, NULL, '\0', line,
-        pos);
+    doc->name = putAnchor(doc->name, url, NULL, &a, NULL, NULL, '\0', line, pos);
     return a;
 }
 
 struct Anchor*
-registerImg(struct Buffer* buf,
+registerImg(struct Document* doc,
     const char* url, const char* title, int line, int pos)
 {
     struct Anchor* a;
-    buf->doc.img = putAnchor(buf->doc.img, url, NULL, &a, NULL, title, '\0', line,
+    doc->img = putAnchor(doc->img, url, NULL, &a, NULL, title, '\0', line,
         pos);
     return a;
 }
 
 struct Anchor*
-registerForm(struct HtmlBuilder* hb, struct Buffer* buf,
+registerForm(struct HtmlBuilder* hb, struct Document* doc,
     struct FormList* flist, struct HtmlTag* tag, int line,
     int pos)
 {
@@ -105,7 +115,7 @@ registerForm(struct HtmlBuilder* hb, struct Buffer* buf,
         return NULL;
 
     struct Anchor* a;
-    buf->doc.formitem = putAnchor(buf->doc.formitem, (char*)fi, flist->target, &a,
+    doc->formitem = putAnchor(doc->formitem, (char*)fi, flist->target, &a,
         NULL, NULL, '\0', line, pos);
     return a;
 }
@@ -169,20 +179,9 @@ searchAnchor(struct AnchorList* al, const char* str)
 }
 
 struct Anchor*
-searchURLLabel(struct Buffer* buf, const char* url)
+searchURLLabel(struct Document* doc, const char* url)
 {
-    return searchAnchor(buf->doc.name, url);
-}
-
-static struct Anchor*
-_put_anchor_all(struct Buffer* buf, const char* p1, const char* p2, int line, int pos)
-{
-    Str tmp;
-
-    tmp = Strnew_charp_n(p1, p2 - p1);
-    return registerHref(buf, url_encode(tmp->ptr, baseURL(buf), buf->doc.charset),
-        NULL, NO_REFERER, NULL,
-        '\0', line, pos);
+    return searchAnchor(doc->name, url);
 }
 
 static void
@@ -204,19 +203,19 @@ reseq_anchor0(struct AnchorList* al, short* seqmap)
 
 /* renumber anchor */
 static void
-reseq_anchor(struct Buffer* buf)
+reseq_anchor(struct Document* doc)
 {
-    int i, j, n, nmark = (buf->doc.hmarklist) ? buf->doc.hmarklist->nmark : 0;
+    int i, j, n, nmark = (doc->hmarklist) ? doc->hmarklist->nmark : 0;
     short* seqmap;
     struct Anchor *a, *a1;
     struct HmarkerList* ml = NULL;
 
-    if (!buf->doc.href)
+    if (!doc->href)
         return;
 
     n = nmark;
-    for (i = 0; i < buf->doc.href->nanchor; i++) {
-        a = &buf->doc.href->anchors[i];
+    for (i = 0; i < doc->href->nanchor; i++) {
+        a = &doc->href->anchors[i];
         if (a->hseq == -2)
             n++;
     }
@@ -230,13 +229,13 @@ reseq_anchor(struct Buffer* buf)
         seqmap[i] = i;
 
     n = nmark;
-    for (i = 0; i < buf->doc.href->nanchor; i++) {
-        a = &buf->doc.href->anchors[i];
+    for (i = 0; i < doc->href->nanchor; i++) {
+        a = &doc->href->anchors[i];
         if (a->hseq == -2) {
             a->hseq = n;
-            a1 = closest_next_anchor(buf->doc.href, NULL, a->start.pos,
+            a1 = closest_next_anchor(doc->href, NULL, a->start.pos,
                 a->start.line);
-            a1 = closest_next_anchor(buf->doc.formitem, a1, a->start.pos,
+            a1 = closest_next_anchor(doc->formitem, a1, a->start.pos,
                 a->start.line);
             if (a1 && a1->hseq >= 0) {
                 seqmap[n] = seqmap[a1->hseq];
@@ -249,41 +248,39 @@ reseq_anchor(struct Buffer* buf)
     }
 
     for (i = 0; i < nmark; i++) {
-        ml = putHmarker(ml, buf->doc.hmarklist->marks[i].line,
-            buf->doc.hmarklist->marks[i].pos, seqmap[i]);
+        ml = putHmarker(ml, doc->hmarklist->marks[i].line,
+            doc->hmarklist->marks[i].pos, seqmap[i]);
     }
-    buf->doc.hmarklist = ml;
+    doc->hmarklist = ml;
 
-    reseq_anchor0(buf->doc.href, seqmap);
-    reseq_anchor0(buf->doc.formitem, seqmap);
+    reseq_anchor0(doc->href, seqmap);
+    reseq_anchor0(doc->formitem, seqmap);
 }
 
 static const char*
-reAnchorPos(struct Buffer* buf, struct Line* l, const char* p1, const char* p2,
-    struct Anchor* (*anchorproc)(struct Buffer*, const char*, const char*, int, int))
+reAnchorPos(struct Url* base_url,
+    struct Document* doc, struct Line* l, const char* p1, const char* p2, AnchorProc anchorproc)
 {
-    struct Anchor* a;
-    int spos, epos;
-    int i, hseq = -2;
-
-    spos = p1 - l->lineBuf;
-    epos = p2 - l->lineBuf;
-    for (i = spos; i < epos; i++) {
+    int spos = p1 - l->lineBuf;
+    int epos = p2 - l->lineBuf;
+    for (int i = spos; i < epos; i++) {
         if (l->propBuf[i] & (PE_ANCHOR | PE_FORM))
             return p2;
     }
-    for (i = spos; i < epos; i++)
+    for (int i = spos; i < epos; i++)
         l->propBuf[i] |= PE_ANCHOR;
     while (spos > l->len && l->next && l->next->bpos) {
         spos -= l->len;
         epos -= l->len;
         l = l->next;
     }
+
+    int hseq = -2;
     while (1) {
-        a = anchorproc(buf, p1, p2, l->linenumber, spos);
+        struct Anchor* a = anchorproc(base_url, doc, p1, p2, l->linenumber, spos);
         a->hseq = hseq;
         if (hseq == -2) {
-            reseq_anchor(buf);
+            reseq_anchor(doc);
             hseq = a->hseq;
         }
         a->end.line = l->linenumber;
@@ -300,16 +297,15 @@ reAnchorPos(struct Buffer* buf, struct Line* l, const char* p1, const char* p2,
     return p2;
 }
 
-void reAnchorWord(struct Buffer* buf, struct Line* l, int spos, int epos)
+void reAnchorWord(struct Url* base_url, struct Document* doc, struct Line* l, int spos, int epos)
 {
-    reAnchorPos(buf, l, &l->lineBuf[spos], &l->lineBuf[epos], _put_anchor_all);
+    reAnchorPos(base_url, doc, l, &l->lineBuf[spos], &l->lineBuf[epos], _put_anchor_all);
 }
 
 /* search regexp and register them as anchors */
 /* returns error message if any               */
 static const char*
-reAnchorAny(struct Buffer* buf, const char* re,
-    struct Anchor* (*anchorproc)(struct Buffer*, const char*, const char*, int, int))
+reAnchorAny(struct Url* base_url, struct Document* doc, const char* re, AnchorProc anchorproc)
 {
     if (re == NULL || *re == '\0') {
         return NULL;
@@ -319,7 +315,8 @@ reAnchorAny(struct Buffer* buf, const char* re,
     }
 
     const char* p = NULL;
-    for (struct Line* l = getRuntime()->MarkAllPages ? buf->doc.firstLine : buf->doc.topLine; l != NULL && (getRuntime()->MarkAllPages || l->linenumber < buf->doc.topLine->linenumber + LASTLINE());
+    for (struct Line* l = getRuntime()->MarkAllPages ? doc->firstLine : doc->topLine;
+        l != NULL && (getRuntime()->MarkAllPages || l->linenumber < doc->topLine->linenumber + LASTLINE());
         l = l->next) {
         if (p && l->bpos)
             break;
@@ -328,7 +325,7 @@ reAnchorAny(struct Buffer* buf, const char* re,
             if (regexMatch(p, &l->lineBuf[l->size] - p, p == l->lineBuf) == 1) {
                 const char *p1, *p2;
                 matchedPosition(&p1, &p2);
-                p = reAnchorPos(buf, l, p1, p2, anchorproc);
+                p = reAnchorPos(base_url, doc, l, p1, p2, anchorproc);
             } else
                 break;
         }
@@ -336,9 +333,9 @@ reAnchorAny(struct Buffer* buf, const char* re,
     return NULL;
 }
 
-const char* reAnchor(struct Buffer* buf, const char* re)
+const char* reAnchor(struct Url* base_url, struct Document* doc, const char* re)
 {
-    return reAnchorAny(buf, re, _put_anchor_all);
+    return reAnchorAny(base_url, doc, re, _put_anchor_all);
 }
 
 #define FIRST_MARKER_SIZE 30
@@ -442,27 +439,24 @@ void shiftAnchorPosition(struct AnchorList* al, struct HmarkerList* hl, int line
     }
 }
 
-#ifdef USE_IMAGE
-void addMultirowsImg(struct Buffer* buf, struct AnchorList* al)
+void addMultirowsImg(struct Document* doc, struct AnchorList* al)
 {
-    int i, j, k, col, ecol, pos;
-    struct Image* img;
-    struct Anchor a_img, a_href, a_form, *a;
-    struct Line *l, *ls;
-
     if (al == NULL || al->nanchor == 0)
         return;
-    for (i = 0; i < al->nanchor; i++) {
-        a_img = al->anchors[i];
-        img = a_img.image;
+    for (int i = 0; i < al->nanchor; i++) {
+        struct Anchor a_img = al->anchors[i];
+        struct Image* img = a_img.image;
         if (a_img.hseq < 0 || !img || img->rows <= 1)
             continue;
-        for (l = buf->doc.firstLine; l != NULL; l = l->next) {
+        struct Line* l = doc->firstLine;
+        for (; l != NULL; l = l->next) {
             if (l->linenumber == img->y)
                 break;
         }
         if (!l)
             continue;
+
+        struct Line* ls;
         if (a_img.y == a_img.start.line)
             ls = l;
         else {
@@ -474,41 +468,43 @@ void addMultirowsImg(struct Buffer* buf, struct AnchorList* al)
             if (!ls)
                 continue;
         }
-        a = retrieveAnchor(buf->doc.href, a_img.start.line, a_img.start.pos);
+        struct Anchor* a = retrieveAnchor(doc->href, a_img.start.line, a_img.start.pos);
+        struct Anchor a_href;
         if (a)
             a_href = *a;
         else
             a_href.url = NULL;
-        a = retrieveAnchor(buf->doc.formitem, a_img.start.line, a_img.start.pos);
+        a = retrieveAnchor(doc->formitem, a_img.start.line, a_img.start.pos);
+        struct Anchor a_form;
         if (a)
             a_form = *a;
         else
             a_form.url = NULL;
-        col = COLPOS(ls, a_img.start.pos);
-        ecol = COLPOS(ls, a_img.end.pos);
-        for (j = 0; l && j < img->rows; l = l->next, j++) {
+        int col = COLPOS(ls, a_img.start.pos);
+        int ecol = COLPOS(ls, a_img.end.pos);
+        for (int j = 0; l && j < img->rows; l = l->next, j++) {
             if (a_img.start.line == l->linenumber)
                 continue;
-            pos = columnPos(l, col);
-            a = registerImg(buf, a_img.url, a_img.title, l->linenumber, pos);
+            int pos = columnPos(l, col);
+            a = registerImg(doc, a_img.url, a_img.title, l->linenumber, pos);
             a->hseq = -a_img.hseq;
             a->slave = TRUE;
             a->image = img;
             a->end.pos = pos + ecol - col;
-            for (k = pos; k < a->end.pos; k++)
+            for (int k = pos; k < a->end.pos; k++)
                 l->propBuf[k] |= PE_IMAGE;
             if (a_href.url) {
-                a = registerHref(buf, a_href.url, a_href.target,
+                a = registerHref(doc, a_href.url, a_href.target,
                     a_href.referer, a_href.title,
                     a_href.accesskey, l->linenumber, pos);
                 a->hseq = a_href.hseq;
                 a->slave = TRUE;
                 a->end.pos = pos + ecol - col;
-                for (k = pos; k < a->end.pos; k++)
+                for (int k = pos; k < a->end.pos; k++)
                     l->propBuf[k] |= PE_ANCHOR;
             }
             if (a_form.url) {
-                buf->doc.formitem = putAnchor(buf->doc.formitem, a_form.url,
+                doc->formitem = putAnchor(doc->formitem, a_form.url,
                     a_form.target, &a, NULL, NULL, '\0',
                     l->linenumber, pos);
                 a->hseq = a_form.hseq;
@@ -518,27 +514,25 @@ void addMultirowsImg(struct Buffer* buf, struct AnchorList* al)
         img->rows = 0;
     }
 }
-#endif
 
-void addMultirowsForm(struct Buffer* buf, struct AnchorList* al)
+void addMultirowsForm(struct Document* doc, struct AnchorList* al)
 {
-    int i, j, k, col, ecol, pos;
-    struct Anchor a_form, *a;
-    struct Line *l, *ls;
-
     if (al == NULL || al->nanchor == 0)
         return;
-    for (i = 0; i < al->nanchor; i++) {
-        a_form = al->anchors[i];
+
+    for (int i = 0; i < al->nanchor; i++) {
+        struct Anchor a_form = al->anchors[i];
         al->anchors[i].rows = 1;
         if (a_form.hseq < 0 || a_form.rows <= 1)
             continue;
-        for (l = buf->doc.firstLine; l != NULL; l = l->next) {
+        struct Line* l = doc->firstLine;
+        for (; l != NULL; l = l->next) {
             if (l->linenumber == a_form.y)
                 break;
         }
         if (!l)
             continue;
+        struct Line* ls;
         if (a_form.y == a_form.start.line)
             ls = l;
         else {
@@ -550,17 +544,18 @@ void addMultirowsForm(struct Buffer* buf, struct AnchorList* al)
             if (!ls)
                 continue;
         }
-        col = COLPOS(ls, a_form.start.pos);
-        ecol = COLPOS(ls, a_form.end.pos);
-        for (j = 0; l && j < a_form.rows; l = l->next, j++) {
-            pos = columnPos(l, col);
+        int col = COLPOS(ls, a_form.start.pos);
+        int ecol = COLPOS(ls, a_form.end.pos);
+        for (int j = 0; l && j < a_form.rows; l = l->next, j++) {
+            int pos = columnPos(l, col);
             if (j == 0) {
-                buf->doc.hmarklist->marks[a_form.hseq].line = l->linenumber;
-                buf->doc.hmarklist->marks[a_form.hseq].pos = pos;
+                doc->hmarklist->marks[a_form.hseq].line = l->linenumber;
+                doc->hmarklist->marks[a_form.hseq].pos = pos;
             }
             if (a_form.start.line == l->linenumber)
                 continue;
-            buf->doc.formitem = putAnchor(buf->doc.formitem, a_form.url,
+            struct Anchor* a;
+            doc->formitem = putAnchor(doc->formitem, a_form.url,
                 a_form.target, &a, NULL, NULL, '\0',
                 l->linenumber, pos);
             a->hseq = a_form.hseq;
@@ -570,24 +565,20 @@ void addMultirowsForm(struct Buffer* buf, struct AnchorList* al)
                 continue;
             l->lineBuf[pos - 1] = '[';
             l->lineBuf[a->end.pos] = ']';
-            for (k = pos; k < a->end.pos; k++)
+            for (int k = pos; k < a->end.pos; k++)
                 l->propBuf[k] |= PE_FORM;
         }
     }
 }
 
-char* getAnchorText(struct Buffer* buf, struct AnchorList* al, struct Anchor* a)
+const char* getAnchorText(struct Document* doc, struct AnchorList* al, struct Anchor* a)
 {
-    int hseq, i;
-    struct Line* l;
     Str tmp = NULL;
-    char *p, *ep;
-
     if (!a || a->hseq < 0)
         return NULL;
-    hseq = a->hseq;
-    l = buf->doc.firstLine;
-    for (i = 0; i < al->nanchor; i++) {
+    int hseq = a->hseq;
+    struct Line* l = doc->firstLine;
+    for (int i = 0; i < al->nanchor; i++) {
         a = &al->anchors[i];
         if (a->hseq != hseq)
             continue;
@@ -597,8 +588,8 @@ char* getAnchorText(struct Buffer* buf, struct AnchorList* al, struct Anchor* a)
         }
         if (!l)
             break;
-        p = l->lineBuf + a->start.pos;
-        ep = l->lineBuf + a->end.pos;
+        const char* p = l->lineBuf + a->start.pos;
+        const char* ep = l->lineBuf + a->end.pos;
         for (; p < ep && IS_SPACE(*p); p++)
             ;
         if (p == ep)
@@ -612,37 +603,40 @@ char* getAnchorText(struct Buffer* buf, struct AnchorList* al, struct Anchor* a)
     return tmp ? tmp->ptr : NULL;
 }
 
-struct Buffer*
-link_list_panel(struct Buffer* buf)
+Str link_list_panel(struct Url* base_url, struct Document* doc)
 {
-    struct LinkList* l;
-    struct AnchorList* al;
-    struct Anchor* a;
-    struct FormItemList* fi;
-    int i;
-    char *t, *u, *p;
-    struct Url pu;
-    /* FIXME: gettextize? */
+    // struct LinkList* l;
+    // struct AnchorList* al;
+    // struct Anchor* a;
+    // struct FormItemList* fi;
+    // int i;
+    // const char *t, *u, *p;
     Str tmp = Strnew_charp("<title>Link List</title>\
 <h1 align=center>Link List</h1>\n");
 
-    if (buf->bufferprop & BP_INTERNAL || (buf->doc.linklist == NULL && buf->doc.href == NULL && buf->doc.img == NULL)) {
+    if (
+        // buf->bufferprop & BP_INTERNAL ||
+        (doc->linklist == NULL && doc->href == NULL && doc->img == NULL)) {
         return NULL;
     }
 
-    if (buf->doc.linklist) {
+    if (doc->linklist) {
         Strcat_charp(tmp, "<hr><h2>Links</h2>\n<ol>\n");
-        for (l = buf->doc.linklist; l; l = l->next) {
+        for (struct LinkList* l = doc->linklist; l; l = l->next) {
+            const char* p;
+            const char* u;
             if (l->url) {
-                parseURL2(l->url, &pu, baseURL(buf));
+                struct Url pu;
+                parseURL2(l->url, &pu, base_url);
                 p = parsedURL2Str(&pu)->ptr;
                 u = html_quote(p);
                 if (getRuntime()->DecodeURL)
-                    p = html_quote(url_decode2(baseURL(buf), &buf->doc, p));
+                    p = html_quote(url_decode2(base_url, doc, p));
                 else
                     p = u;
             } else
                 u = p = "";
+            const char* t;
             if (l->type == LINK_TYPE_REL)
                 t = " [Rel]";
             else if (l->type == LINK_TYPE_REV)
@@ -657,21 +651,22 @@ link_list_panel(struct Buffer* buf)
         Strcat_charp(tmp, "</ol>\n");
     }
 
-    if (buf->doc.href) {
+    if (doc->href) {
         Strcat_charp(tmp, "<hr><h2>Anchors</h2>\n<ol>\n");
-        al = buf->doc.href;
-        for (i = 0; i < al->nanchor; i++) {
-            a = &al->anchors[i];
+        struct AnchorList* al = doc->href;
+        for (int i = 0; i < al->nanchor; i++) {
+            struct Anchor* a = &al->anchors[i];
             if (a->hseq < 0 || a->slave)
                 continue;
-            parseURL2(a->url, &pu, baseURL(buf));
-            p = parsedURL2Str(&pu)->ptr;
-            u = html_quote(p);
+            struct Url pu;
+            parseURL2(a->url, &pu, base_url);
+            const char* p = parsedURL2Str(&pu)->ptr;
+            const char* u = html_quote(p);
             if (getRuntime()->DecodeURL)
-                p = html_quote(url_decode2(baseURL(buf), &buf->doc, p));
+                p = html_quote(url_decode2(base_url, doc, p));
             else
                 p = u;
-            t = getAnchorText(buf, al, a);
+            const char* t = getAnchorText(doc, al, a);
             t = t ? html_quote(t) : "";
             Strcat_m_charp(tmp, "<li><a href=\"", u, "\">", t, "</a><br>", p,
                 "\n", NULL);
@@ -679,33 +674,35 @@ link_list_panel(struct Buffer* buf)
         Strcat_charp(tmp, "</ol>\n");
     }
 
-    if (buf->doc.img) {
+    if (doc->img) {
         Strcat_charp(tmp, "<hr><h2>Images</h2>\n<ol>\n");
-        al = buf->doc.img;
-        for (i = 0; i < al->nanchor; i++) {
-            a = &al->anchors[i];
+        struct AnchorList* al = doc->img;
+        for (int i = 0; i < al->nanchor; i++) {
+            struct Anchor* a = &al->anchors[i];
             if (a->slave)
                 continue;
-            parseURL2(a->url, &pu, baseURL(buf));
-            p = parsedURL2Str(&pu)->ptr;
-            u = html_quote(p);
+            struct Url pu;
+            parseURL2(a->url, &pu, base_url);
+            const char* p = parsedURL2Str(&pu)->ptr;
+            const char* u = html_quote(p);
             if (getRuntime()->DecodeURL)
-                p = html_quote(url_decode2(baseURL(buf), &buf->doc, p));
+                p = html_quote(url_decode2(base_url, doc, p));
             else
                 p = u;
+            const char* t;
             if (a->title && *a->title)
                 t = html_quote(a->title);
             else
-                t = html_quote(url_decode2(baseURL(buf), &buf->doc, a->url));
+                t = html_quote(url_decode2(base_url, doc, a->url));
             Strcat_m_charp(tmp, "<li><a href=\"", u, "\">", t, "</a><br>", p,
                 "\n", NULL);
-            a = retrieveAnchor(buf->doc.formitem, a->start.line, a->start.pos);
+            a = retrieveAnchor(doc->formitem, a->start.line, a->start.pos);
             if (!a)
                 continue;
-            fi = (struct FormItemList*)a->url;
+            struct FormItemList* fi = (struct FormItemList*)a->url;
             fi = fi->parent->item;
             if (fi->parent->method == FORM_METHOD_INTERNAL && !Strcmp_charp(fi->parent->action, "map") && fi->value) {
-                struct MapList* ml = searchMapList(&buf->doc, fi->value->ptr);
+                struct MapList* ml = searchMapList(doc, fi->value->ptr);
                 ListItem* mi;
                 struct MapArea* m;
                 if (!ml)
@@ -715,17 +712,17 @@ link_list_panel(struct Buffer* buf)
                     m = (struct MapArea*)mi->ptr;
                     if (!m)
                         continue;
-                    parseURL2(m->url, &pu, baseURL(buf));
+                    parseURL2(m->url, &pu, base_url);
                     p = parsedURL2Str(&pu)->ptr;
                     u = html_quote(p);
                     if (getRuntime()->DecodeURL)
-                        p = html_quote(url_decode2(baseURL(buf), &buf->doc, p));
+                        p = html_quote(url_decode2(base_url, doc, p));
                     else
                         p = u;
                     if (m->alt && *m->alt)
                         t = html_quote(m->alt);
                     else
-                        t = html_quote(url_decode2(baseURL(buf), &buf->doc, m->url));
+                        t = html_quote(url_decode2(base_url, doc, m->url));
                     Strcat_m_charp(tmp, "<li><a href=\"", u, "\">", t,
                         "</a><br>", p, "\n", NULL);
                 }
@@ -734,6 +731,5 @@ link_list_panel(struct Buffer* buf)
         }
         Strcat_charp(tmp, "</ol>\n");
     }
-
-    return loadHTMLString(tmp);
+    return tmp;
 }

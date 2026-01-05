@@ -1069,3 +1069,34 @@ const char* url_decode2(const struct Url* base_url, const struct Document* doc, 
         : url_to_charset(url, NULL, 0);
     return url_unquote_conv(url, url_charset);
 }
+
+const char* doc_getCurWord(struct Document* doc, int* spos, int* epos)
+{
+    *spos = 0;
+    *epos = 0;
+    struct Line* l = doc->currentLine;
+    if (l == NULL)
+        return NULL;
+
+    const char* p = l->lineBuf;
+    int e = doc->pos;
+    while (e > 0 && !is_wordchar(getChar(&p[e])))
+        prevChar(e, l);
+    if (!is_wordchar(getChar(&p[e]))) {
+        return NULL;
+    }
+
+    int b = e;
+    while (b > 0) {
+        int tmp = b;
+        prevChar(tmp, l);
+        if (!is_wordchar(getChar(&p[tmp])))
+            break;
+        b = tmp;
+    }
+    while (e < l->len && is_wordchar(getChar(&p[e])))
+        nextChar(e, l);
+    *spos = b;
+    *epos = e;
+    return &p[b];
+}

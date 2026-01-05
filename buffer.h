@@ -50,7 +50,6 @@ void delBuffer(struct Buffer* buf);
 void cmd_loadBuffer(struct Buffer* buf, int prop, enum LinkBufferID linkid);
 bool readBufferCache(struct Buffer* buf);
 extern void reshapeBuffer(struct Buffer* buf);
-void reAnchorWord(struct Buffer* buf, struct Line* l, int spos, int epos);
 extern void saveBuffer(struct Buffer* buf, FILE* f, int cont);
 extern void saveBufferBody(struct Buffer* buf, FILE* f, int cont);
 extern struct Buffer* getshell(char* cmd);

@@ -3398,7 +3398,7 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                     id = NULL;
                     if (parsedtag_get_value(tag, ATTR_NAME, &id)) {
                         id = url_quote_conv(id, name_charset);
-                        registerName(buf, id, currentLn(buf), pos);
+                        registerName(&buf->doc, id, currentLn(buf), pos);
                     }
                     if (parsedtag_get_value(tag, ATTR_HREF, &p))
                         p = url_encode(remove_space(p), base,
@@ -3429,7 +3429,7 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                             currentLn(buf), pos);
                     if (p) {
                         effect |= PE_ANCHOR;
-                        a_href = registerHref(buf, p, q, r, s,
+                        a_href = registerHref(&buf->doc, p, q, r, s,
                             *t, currentLn(buf), pos);
                         a_href->hseq = ((hseq > 0) ? hseq : -hseq) - 1;
                         a_href->slave = (hseq > 0) ? FALSE : TRUE;
@@ -3478,7 +3478,7 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                         parsedtag_get_value(tag, ATTR_TITLE, &s);
                         p = url_quote_conv(remove_space(p),
                             buf->doc.charset);
-                        a_img = registerImg(buf, p, s, currentLn(buf), pos);
+                        a_img = registerImg(&buf->doc, p, s, currentLn(buf), pos);
                         a_img->hseq = iseq;
                         a_img->image = NULL;
                         if (iseq > 0) {
@@ -3583,7 +3583,7 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                         }
                     }
 
-                    a_form = registerForm(hb, buf, form, tag, currentLn(buf), pos);
+                    a_form = registerForm(hb, &buf->doc, form, tag, currentLn(buf), pos);
                     if (a_textarea && textareanumber >= 0)
                         a_textarea[textareanumber] = a_form;
                     if (a_select && selectnumber >= 0)
@@ -3773,7 +3773,7 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                 id = NULL;
                 if (parsedtag_get_value(tag, ATTR_ID, &id)) {
                     id = url_quote_conv(id, name_charset);
-                    registerName(buf, id, currentLn(buf), pos);
+                    registerName(&buf->doc, id, currentLn(buf), pos);
                 }
                 if (renderFrameSet && parsedtag_get_value(tag, ATTR_FRAMENAME, &p)) {
                     p = url_quote_conv(p, buf->doc.charset);
@@ -3804,8 +3804,8 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
             hb->forms[form_id]->next = hb->forms[form_id - 1];
     buf->doc.formlist = (hb->form_max >= 0) ? hb->forms[hb->form_max] : NULL;
     if (hb->n_textarea)
-        addMultirowsForm(buf, buf->doc.formitem);
-    addMultirowsImg(buf, buf->doc.img);
+        addMultirowsForm(&buf->doc, buf->doc.formitem);
+    addMultirowsImg(&buf->doc, buf->doc.img);
 }
 
 void HTMLlineproc2(struct HtmlBuilder* hb,

@@ -1306,7 +1306,7 @@ pub const defuns = []Defun{
     //     struct Anchor* al;
     //     int i;
     //
-    //     al = searchURLLabel(Currentbuf, label);
+    //     al = searchURLLabel(Currentbuf->doc, label);
     //     if (al == NULL) {
     //         /* FIXME: gettextize? */
     //         disp_message(Sprintf("%s is not found", label)->ptr, TRUE);

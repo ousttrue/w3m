@@ -182,7 +182,7 @@ copyPath(const char* orgpath, int length, int option)
     return tmp->ptr;
 }
 
-void parseURL(const char* url, struct Url* p_url, struct Url* current)
+void parseURL(const char* url, struct Url* p_url, const struct Url* current)
 {
     const char* q;
     const char* qq;
@@ -860,16 +860,14 @@ Str searchURIMethods(struct Url* pu)
 #define URI_PATTERN "([-;/?:@&=+$,a-zA-Z0-9_.!~*'()]|%[0-9A-Fa-f][0-9A-Fa-f])*"
 void chkExternalURIBuffer(struct Buffer* buf)
 {
-    int i;
     struct KeyValue* ump;
-
-    for (i = 0; (ump = urimethods[i]) != NULL; i++) {
+    for (int i = 0; (ump = urimethods[i]) != NULL; i++) {
         for (; ump->item1 != NULL; ump++) {
-            reAnchor(buf, Sprintf("%s:%s", ump->item1, URI_PATTERN)->ptr);
+            reAnchor(baseURL(buf), &buf->doc, Sprintf("%s:%s", ump->item1, URI_PATTERN)->ptr);
         }
     }
     for (ump = default_urimethods; ump->item1 != NULL; ump++) {
-        reAnchor(buf, Sprintf("%s:%s", ump->item1, URI_PATTERN)->ptr);
+        reAnchor(baseURL(buf), &buf->doc, Sprintf("%s:%s", ump->item1, URI_PATTERN)->ptr);
     }
 }
 #endif

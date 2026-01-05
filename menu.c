@@ -1371,7 +1371,7 @@ accesskey_menu(struct Buffer* buf)
     struct Anchor** ap;
     int i, n, nitem = 0, key = -1;
     const char** label;
-    char* t;
+    const char* t;
     unsigned char c;
 
     if (!al)
@@ -1389,7 +1389,7 @@ accesskey_menu(struct Buffer* buf)
     for (i = 0, n = 0; i < al->nanchor; i++) {
         a = &al->anchors[i];
         if (!a->slave && a->accesskey && IS_ASCII(a->accesskey)) {
-            t = getAnchorText(buf, al, a);
+            t = getAnchorText(&buf->doc, al, a);
             label[n] = Sprintf("%c: %s", a->accesskey, t ? t : "")->ptr;
             ap[n] = a;
             n++;
@@ -1488,7 +1488,7 @@ list_menu(struct Buffer* buf)
     for (int i = 0, n = 0; i < al->nanchor; i++) {
         struct Anchor* a = &al->anchors[i];
         if (!a->slave) {
-            const char* t = getAnchorText(buf, al, a);
+            const char* t = getAnchorText(&buf->doc, al, a);
             if (!t)
                 t = "";
             if (two && n >= nlmKeys2 * nlmKeys)
