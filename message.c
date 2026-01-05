@@ -121,7 +121,7 @@ make_lastline_link(struct Buffer* buf, const char* title, const char* url)
     parseURL2(url, &pu, baseURL(buf));
     u = parsedURL2Str(&pu);
     if (getRuntime()->DecodeURL)
-        u = Strnew_charp(url_decode2(baseURL(buf), &buf->doc, u->ptr));
+        u = Strnew_charp(url_decode2(baseURL(buf), buf->doc, u->ptr));
     u = checkType(u, &pr, NULL);
     if (l <= 4 || l >= get_strwidth(u->ptr)) {
         if (!s)
@@ -150,16 +150,16 @@ make_lastline_message(struct Buffer* buf)
     int sl = 0;
 
     if (getRuntime()->displayLink) {
-        struct MapArea* a = doc_retrieveCurrentMapArea(&buf->doc);
+        struct MapArea* a = doc_retrieveCurrentMapArea(buf->doc);
         if (a)
             s = make_lastline_link(buf, a->alt, a->url);
         else {
-            struct Anchor* a = doc_retrieveCurrentAnchor(&buf->doc);
+            struct Anchor* a = doc_retrieveCurrentAnchor(buf->doc);
             const char* p = NULL;
             if (a && a->title && *a->title)
                 p = a->title;
             else {
-                struct Anchor* a_img = doc_retrieveCurrentImg(&buf->doc);
+                struct Anchor* a_img = doc_retrieveCurrentImg(buf->doc);
                 if (a_img && a_img->title && *a_img->title)
                     p = a_img->title;
             }
@@ -174,9 +174,9 @@ make_lastline_message(struct Buffer* buf)
     }
 
     msg = Strnew();
-    if (getRuntime()->displayLineInfo && buf->doc.currentLine != NULL && buf->doc.lastLine != NULL) {
-        int cl = buf->doc.currentLine->real_linenumber;
-        int ll = buf->doc.lastLine->real_linenumber;
+    if (getRuntime()->displayLineInfo && buf->doc->currentLine != NULL && buf->doc->lastLine != NULL) {
+        int cl = buf->doc->currentLine->real_linenumber;
+        int ll = buf->doc->lastLine->real_linenumber;
         int r = (int)((double)cl * 100.0 / (double)(ll ? ll : 1) + 0.5);
         Strcat(msg, Sprintf("%d/%d (%d%%)", cl, ll, r));
     } else {
@@ -186,7 +186,7 @@ make_lastline_message(struct Buffer* buf)
     if (buf->content->ssl_certificate)
         Strcat_charp(msg, "[SSL]");
     Strcat_charp(msg, " <");
-    Strcat_charp(msg, buf->doc.title);
+    Strcat_charp(msg, buf->doc->title);
 
     if (s) {
         int l = TTY_COLS() - 3 - sl;
@@ -213,13 +213,13 @@ make_lastline_message(struct Buffer* buf)
 void displayMsg(struct Buffer* buf)
 {
     Str msg = make_lastline_message(buf);
-    if (buf->doc.firstLine == NULL) {
+    if (buf->doc->firstLine == NULL) {
         Strcat_charp(msg, "\tNo Line");
     }
     displayDelayedMessage();
     screen_standout();
     message(msg->ptr);
-    screen_move((struct Vec2) { .y = buf->doc.cursorY + buf->doc.rootY, .x = buf->doc.cursorX + buf->doc.rootX });
+    screen_move((struct Vec2) { .y = buf->doc->cursorY + buf->doc->rootY, .x = buf->doc->cursorX + buf->doc->rootX });
     screen_standend();
-    term_title(conv_to_system(buf->doc.title));
+    term_title(conv_to_system(buf->doc->title));
 }

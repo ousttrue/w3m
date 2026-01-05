@@ -100,35 +100,35 @@ static void set_buffer_environ(struct Buffer* buf)
         set_environ("W3M_SOURCEFILE", buf->content->sourcefile);
         set_environ("W3M_FILENAME", buf->content->filename);
         set_environ("W3M_URL", parsedURL2Str(&buf->content->url)->ptr);
-        set_environ("W3M_TITLE", buf->doc.title);
-        set_environ("W3M_CHARSET", wc_ces_to_charset(buf->doc.charset));
+        set_environ("W3M_TITLE", buf->doc->title);
+        set_environ("W3M_CHARSET", wc_ces_to_charset(buf->doc->charset));
         set_environ("W3M_TYPE", "unknown");
     }
-    struct Line* l = buf->doc.currentLine;
-    if (l && (buf != prev_buf || l != prev_line || buf->doc.pos != prev_pos)) {
+    struct Line* l = buf->doc->currentLine;
+    if (l && (buf != prev_buf || l != prev_line || buf->doc->pos != prev_pos)) {
         struct Anchor* a;
         struct Url pu;
-        char* s = GetWord(buf);
+        const char* s = GetWord(buf);
         set_environ("W3M_CURRENT_WORD", s ? s : "");
-        a = doc_retrieveCurrentAnchor(&buf->doc);
+        a = doc_retrieveCurrentAnchor(buf->doc);
         if (a) {
             parseURL2(a->url, &pu, baseURL(buf));
             set_environ("W3M_CURRENT_LINK", parsedURL2Str(&pu)->ptr);
         } else
             set_environ("W3M_CURRENT_LINK", "");
-        a = doc_retrieveCurrentImg(&buf->doc);
+        a = doc_retrieveCurrentImg(buf->doc);
         if (a) {
             parseURL2(a->url, &pu, baseURL(buf));
             set_environ("W3M_CURRENT_IMG", parsedURL2Str(&pu)->ptr);
         } else
             set_environ("W3M_CURRENT_IMG", "");
-        a = doc_retrieveCurrentForm(&buf->doc);
+        a = doc_retrieveCurrentForm(buf->doc);
         if (a)
             set_environ("W3M_CURRENT_FORM", form2str((struct FormItemList*)a->url));
         else
             set_environ("W3M_CURRENT_FORM", "");
         set_environ("W3M_CURRENT_LINE", Sprintf("%ld", l->real_linenumber)->ptr);
-        set_environ("W3M_CURRENT_COLUMN", Sprintf("%d", buf->doc.currentColumn + buf->doc.cursorX + 1)->ptr);
+        set_environ("W3M_CURRENT_COLUMN", Sprintf("%d", buf->doc->currentColumn + buf->doc->cursorX + 1)->ptr);
     } else if (!l) {
         set_environ("W3M_CURRENT_WORD", "");
         set_environ("W3M_CURRENT_LINK", "");
@@ -139,7 +139,7 @@ static void set_buffer_environ(struct Buffer* buf)
     }
     prev_buf = buf;
     prev_line = l;
-    prev_pos = buf->doc.pos;
+    prev_pos = buf->doc->pos;
 }
 
 void w3m_on_key(uint8_t ch)

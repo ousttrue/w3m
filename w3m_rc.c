@@ -22,7 +22,6 @@
 #include "myctype.h"
 #include "funcheader.h"
 #include "parsetag.h"
-#include "regex.h"
 #include "funcname1.h"
 
 #include "html_form.h"
@@ -51,7 +50,6 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <stddef.h>
-#include <signal.h>
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/select.h>
@@ -60,10 +58,7 @@
 #include <termios.h>
 #include <unistd.h>
 
-#include <signal.h>
-#include <setjmp.h>
-
-static struct termios d_ioval;
+// static struct termios d_ioval;
 
 // rc
 char UseGraphicChar = GRAPHIC_CHAR_CHARSET;
@@ -166,16 +161,16 @@ char* ttyname_tty(void)
     // g_runtime.tty_input);
 }
 
-static void
-skip_escseq(void)
-{
-    int c = getch();
-    if (c == '[' || c == 'O') {
-        c = getch();
-        while (IS_DIGIT(c))
-            c = getch();
-    }
-}
+// static void
+// skip_escseq(void)
+// {
+//     int c = getch();
+//     if (c == '[' || c == 'O') {
+//         c = getch();
+//         while (IS_DIGIT(c))
+//             c = getch();
+//     }
+// }
 
 // int sleep_till_anykey(int sec, bool purge)
 // {
@@ -256,7 +251,7 @@ void _newT(void)
     if (!tag)
         return;
 
-    struct Buffer* buf = newBuffer(Currentbuf->doc.width);
+    struct Buffer* buf = newBuffer(Currentbuf->doc->width);
     copyBuffer(buf, Currentbuf);
     buf->nextBuffer = NULL;
     for (int i = 0; i < MAX_LB; i++)
@@ -337,8 +332,8 @@ conv_form_encoding(Str val, struct FormItemList* fi, struct Buffer* buf)
     enum wc_ces charset = g_runtime.SystemCharset;
     if (fi->parent->charset)
         charset = fi->parent->charset;
-    else if (buf->doc.charset && buf->doc.charset != WC_CES_US_ASCII)
-        charset = buf->doc.charset;
+    else if (buf->doc->charset && buf->doc->charset != WC_CES_US_ASCII)
+        charset = buf->doc->charset;
     return wc_Str_conv_strict(val, g_runtime.InnerCharset, charset);
 }
 
@@ -383,7 +378,7 @@ Str query_from_followform(struct Buffer* buf, struct FormItemList* fi, bool mult
         if (multipart) {
             if (f2->type == FORM_INPUT_IMAGE) {
                 int x = 0, y = 0;
-                getMapXY(&buf->doc, doc_retrieveCurrentImg(&buf->doc), &x, &y);
+                getMapXY(buf->doc, doc_retrieveCurrentImg(buf->doc), &x, &y);
                 query = Strdup(conv_form_encoding(f2->name, fi, buf));
                 Strcat_charp(query, ".x");
                 form_write_data(body, fi->parent->boundary, query->ptr,
@@ -409,7 +404,7 @@ Str query_from_followform(struct Buffer* buf, struct FormItemList* fi, bool mult
             /* not multipart */
             if (f2->type == FORM_INPUT_IMAGE) {
                 int x = 0, y = 0;
-                getMapXY(&buf->doc, doc_retrieveCurrentImg(&buf->doc), &x, &y);
+                getMapXY(buf->doc, doc_retrieveCurrentImg(buf->doc), &x, &y);
                 Strcat(query,
                     Str_form_quote(conv_form_encoding(f2->name, fi, buf)));
                 Strcat(query, Sprintf(".x=%d&", x));
@@ -658,7 +653,7 @@ static struct Buffer* do_submit(struct Buffer* buf, struct Anchor* a, struct For
              * Location: header. In this case, buf->form_submit must not be set
              * because the page is not loaded by POST method but GET method.
              */
-            new_buf->doc.form_submit = save_submit_formlist(fi);
+            new_buf->doc->form_submit = save_submit_formlist(fi);
         }
         return new_buf;
     } else if ((fi->parent->method == FORM_METHOD_INTERNAL
@@ -674,10 +669,10 @@ static struct Buffer* do_submit(struct Buffer* buf, struct Anchor* a, struct For
 
 struct FollowResult _followForm(struct Buffer* buf, struct FollowOption option, bool submit)
 {
-    if (!buf->doc.firstLine)
+    if (!buf->doc->firstLine)
         return (struct FollowResult) { 0 };
 
-    struct Anchor* a = doc_retrieveCurrentForm(&buf->doc);
+    struct Anchor* a = doc_retrieveCurrentForm(buf->doc);
     if (!a)
         return (struct FollowResult) { 0 };
 
@@ -697,14 +692,14 @@ struct FollowResult _followForm(struct Buffer* buf, struct FollowOption option, 
         if (p == NULL || fi->readonly)
             break;
         fi->value = Strnew_charp(p);
-        doc_formUpdateBuffer(&buf->doc, a, fi);
+        doc_formUpdateBuffer(buf->doc, a, fi);
         if (fi->accept || fi->parent->nitems == 1) {
             return (struct FollowResult) {
                 .anchor = a,
                 .new_buf = do_submit(buf, a, fi, p, option),
             };
         }
-        buf->doc.lineUpdated = true;
+        buf->doc->lineUpdated = true;
         break;
     }
     case FORM_INPUT_FILE: {
@@ -720,7 +715,7 @@ struct FollowResult _followForm(struct Buffer* buf, struct FollowOption option, 
         if (p == NULL || fi->readonly)
             break;
         fi->value = Strnew_charp(p);
-        doc_formUpdateBuffer(&buf->doc, a, fi);
+        doc_formUpdateBuffer(buf->doc, a, fi);
         if (fi->accept || fi->parent->nitems == 1) {
             return (struct FollowResult) {
                 .anchor = a,
@@ -744,7 +739,7 @@ struct FollowResult _followForm(struct Buffer* buf, struct FollowOption option, 
         if (p == NULL)
             break;
         fi->value = Strnew_charp(p);
-        doc_formUpdateBuffer(&buf->doc, a, fi);
+        doc_formUpdateBuffer(buf->doc, a, fi);
         if (fi->accept) {
             return (struct FollowResult) {
                 .anchor = a,
@@ -763,7 +758,7 @@ struct FollowResult _followForm(struct Buffer* buf, struct FollowOption option, 
         if (fi->readonly)
             disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
         input_textarea(fi);
-        doc_formUpdateBuffer(&buf->doc, a, fi);
+        doc_formUpdateBuffer(buf->doc, a, fi);
         break;
 
     case FORM_INPUT_RADIO:
@@ -792,7 +787,7 @@ struct FollowResult _followForm(struct Buffer* buf, struct FollowOption option, 
             break;
         }
         fi->checked = !fi->checked;
-        doc_formUpdateBuffer(&buf->doc, a, fi);
+        doc_formUpdateBuffer(buf->doc, a, fi);
         break;
 
     case FORM_SELECT:
@@ -803,10 +798,10 @@ struct FollowResult _followForm(struct Buffer* buf, struct FollowOption option, 
             };
         }
         if (!formChooseOptionByMenu(fi,
-                buf->doc.cursorX - buf->doc.pos + a->start.pos + buf->doc.rootX,
-                buf->doc.cursorY + buf->doc.rootY))
+                buf->doc->cursorX - buf->doc->pos + a->start.pos + buf->doc->rootX,
+                buf->doc->cursorY + buf->doc->rootY))
             break;
-        doc_formUpdateBuffer(&buf->doc, a, fi);
+        doc_formUpdateBuffer(buf->doc, a, fi);
         if (fi->parent->nitems == 1) {
             return (struct FollowResult) {
                 .anchor = a,
@@ -824,15 +819,15 @@ struct FollowResult _followForm(struct Buffer* buf, struct FollowOption option, 
         };
 
     case FORM_INPUT_RESET:
-        for (int i = 0; i < buf->doc.formitem->nanchor; i++) {
-            struct Anchor* a2 = &buf->doc.formitem->anchors[i];
+        for (int i = 0; i < buf->doc->formitem->nanchor; i++) {
+            struct Anchor* a2 = &buf->doc->formitem->anchors[i];
             struct FormItemList* f2 = (struct FormItemList*)a2->url;
             if (f2->parent == fi->parent && f2->name && f2->value && f2->type != FORM_INPUT_SUBMIT && f2->type != FORM_INPUT_HIDDEN && f2->type != FORM_INPUT_RESET) {
                 f2->value = f2->init_value;
                 f2->checked = f2->init_checked;
                 f2->label = f2->init_label;
                 f2->selected = f2->init_selected;
-                doc_formUpdateBuffer(&buf->doc, a2, f2);
+                doc_formUpdateBuffer(buf->doc, a2, f2);
             }
         }
         break;
@@ -847,13 +842,17 @@ struct FollowResult _followForm(struct Buffer* buf, struct FollowOption option, 
 
 bool currentBufferSubmit()
 {
-    struct Anchor* a = Currentbuf->doc.submit;
+    if(!Currentbuf->doc){
+        return false;
+    }
+
+    struct Anchor* a = Currentbuf->doc->submit;
     if (!a) {
         return false;
     }
-    Currentbuf->doc.submit = NULL;
-    doc_gotoLine(&Currentbuf->doc, a->start.line);
-    Currentbuf->doc.pos = a->start.pos;
+    Currentbuf->doc->submit = NULL;
+    doc_gotoLine(Currentbuf->doc, a->start.line);
+    Currentbuf->doc->pos = a->start.pos;
     struct FollowResult result = _followForm(Currentbuf,
         (struct FollowOption) { .on_target = true, .do_download = false }, true);
     if (result.new_buf) {
@@ -897,7 +896,7 @@ wc_uint32 getChar(const char* p)
 const char* GetWord(struct Buffer* buf)
 {
     int b, e;
-    const char* p = doc_getCurWord(&buf->doc, &b, &e);
+    const char* p = doc_getCurWord(buf->doc, &b, &e);
     if (p) {
         return Strnew_charp_n(p, e - b)->ptr;
     }
@@ -2231,7 +2230,7 @@ load_option_panel(void)
     Strcat_charp(src, "</table></form></body></html>");
     buf = loadHTMLString(src);
     if (buf)
-        buf->doc.charset = g_runtime.OptionCharset;
+        buf->doc->charset = g_runtime.OptionCharset;
     return buf;
 }
 
@@ -2420,22 +2419,22 @@ void _quitfm(bool confirm)
 
 struct FollowResult _followA(struct Buffer* buf, struct FollowOption option)
 {
-    if (Currentbuf->doc.firstLine == NULL) {
+    if (Currentbuf->doc->firstLine == NULL) {
         return (struct FollowResult) { 0 };
     }
 
-    struct Anchor* a = doc_retrieveCurrentImg(&Currentbuf->doc);
+    struct Anchor* a = doc_retrieveCurrentImg(Currentbuf->doc);
     if (a && a->image && a->image->map) {
         return _followForm(buf, option, false);
     }
 
     int x = 0, y = 0, map = 0;
     if (a && a->image && a->image->ismap) {
-        getMapXY(&Currentbuf->doc, a, &x, &y);
+        getMapXY(Currentbuf->doc, a, &x, &y);
         map = 1;
     }
 
-    a = doc_retrieveCurrentAnchor(&Currentbuf->doc);
+    a = doc_retrieveCurrentAnchor(Currentbuf->doc);
     if (a == NULL) {
         return _followForm(buf, option, false);
     }
@@ -2467,7 +2466,7 @@ struct FollowResult _followA(struct Buffer* buf, struct FollowOption option)
 struct FollowResult gotoLabel(struct Buffer* buf, const char* label)
 {
     struct FollowResult res = {
-        .anchor = searchURLLabel(&buf->doc, label),
+        .anchor = searchURLLabel(buf->doc, label),
         0
     };
     if (!res.anchor) {
@@ -2475,7 +2474,7 @@ struct FollowResult gotoLabel(struct Buffer* buf, const char* label)
         return res;
     }
 
-    res.new_buf = newBuffer(buf->doc.width);
+    res.new_buf = newBuffer(buf->doc->width);
     copyBuffer(res.new_buf, buf);
     for (int i = 0; i < MAX_LB; i++)
         res.new_buf->linkBuffer[i] = NULL;
@@ -2483,13 +2482,13 @@ struct FollowResult gotoLabel(struct Buffer* buf, const char* label)
     pushHashHist(getRuntime()->URLHist, parsedURL2Str(&res.new_buf->content->url)->ptr);
     (*res.new_buf->clone)++;
     // tab_push_buffer(getRuntime()->CurrentTab, buf);
-    doc_gotoLine(&buf->doc, res.anchor->start.line);
+    doc_gotoLine(buf->doc, res.anchor->start.line);
     if (getRuntime()->label_topline)
-        buf->doc.topLine = doc_lineSkip(&buf->doc, buf->doc.topLine,
-            buf->doc.currentLine->linenumber
-                - buf->doc.topLine->linenumber);
-    buf->doc.pos = res.anchor->start.pos;
-    doc_arrangeCursor(&buf->doc);
+        buf->doc->topLine = doc_lineSkip(buf->doc, buf->doc->topLine,
+            buf->doc->currentLine->linenumber
+                - buf->doc->topLine->linenumber);
+    buf->doc->pos = res.anchor->start.pos;
+    doc_arrangeCursor(buf->doc);
     return res;
 }
 
@@ -2521,10 +2520,10 @@ int handleMailto(const char* url)
 
 void _followI(bool do_download)
 {
-    if (Currentbuf->doc.firstLine == NULL)
+    if (Currentbuf->doc->firstLine == NULL)
         return;
 
-    struct Anchor* a = doc_retrieveCurrentImg(&Currentbuf->doc);
+    struct Anchor* a = doc_retrieveCurrentImg(Currentbuf->doc);
     if (a == NULL)
         return;
     message(Sprintf("loading %s", a->url)->ptr);

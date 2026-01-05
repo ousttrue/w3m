@@ -107,32 +107,32 @@ export fn onFrame() void {
 
     const buf: *c.Buffer = c.getRuntime().*.CurrentTab.*.currentBuffer;
 
-    if (buf.doc.topLine == null) {
+    if (buf.doc == null) {
         c.reshapeBuffer(buf);
     }
 
     c.bufferPosition(buf);
 
     // check viewport ?
-    if (buf.*.doc.lineUpdated //
-    or cline != buf.*.doc.topLine or ccolumn != buf.doc.currentColumn) {
-        cline = buf.doc.topLine;
-        ccolumn = buf.doc.currentColumn;
+    if (buf.*.doc.*.lineUpdated //
+    or cline != buf.*.doc.*.topLine or ccolumn != buf.doc.*.currentColumn) {
+        cline = buf.doc.*.topLine;
+        ccolumn = buf.doc.*.currentColumn;
 
         // render
-        c.screen_from_lines(&buf.doc, c.baseURL(buf));
+        c.screen_from_lines(buf.doc, c.baseURL(buf));
         tty_write_screen();
 
         c.loadImage(c.IMG_FLAG_NEXT);
     }
-    buf.*.doc.lineUpdated = false;
+    buf.*.doc.*.lineUpdated = false;
 
     c.displayMsg(buf);
 
     const pos = screen_position();
-    c.drawAnchorCursor(&buf.*.doc, c.baseURL(buf));
+    c.drawAnchorCursor(buf.*.doc, c.baseURL(buf));
 
-    if (buf.doc.img != null) {
+    if (buf.doc.*.img != null) {
         // && buf->image_loaded
         c.drawImage(buf);
     }

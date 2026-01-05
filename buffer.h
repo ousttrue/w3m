@@ -33,7 +33,7 @@ enum LinkBufferID {
 
 struct Buffer {
     struct Content* content;
-    struct Document doc;
+    struct Document* doc;
     struct Buffer* nextBuffer;
     struct Buffer* linkBuffer[MAX_LB];
     short bufferprop;

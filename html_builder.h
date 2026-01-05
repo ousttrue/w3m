@@ -60,11 +60,12 @@ struct html_feed_environ;
 struct HtmlTag;
 struct readbuffer;
 struct _textlinelist;
-struct Buffer;
+struct Doucmemt;
 
 int HTMLtagproc1(struct HtmlBuilder* hb,
     struct HtmlTag* tag, struct html_feed_environ* h_env);
-void HTMLlineproc2(struct HtmlBuilder* hb, struct Buffer* buf, struct _textlinelist* tl);
+
+void HTMLlineproc2(struct HtmlBuilder* hb, struct Url *base_url, struct Document *doc, struct _textlinelist* tl);
 void HTMLlineproc0(struct HtmlBuilder* hb,
     const char* istr, struct html_feed_environ* h_env, bool internal);
 void completeHTMLstream(struct HtmlBuilder* hb,

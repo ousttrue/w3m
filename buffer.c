@@ -34,21 +34,18 @@ struct Url*
 baseURL(struct Buffer* buf)
 {
     if (buf->bufferprop & BP_NO_URL) {
-        /* no URL is defined for the buffer */
+        // no URL is defined for the buffer
         return NULL;
     }
-    if (buf->doc.baseURL != NULL) {
-        /* <BASE> tag is defined in the document */
-        return buf->doc.baseURL;
+    if (buf->doc && buf->doc->baseURL) {
+        // <BASE> tag is defined in the document
+        return buf->doc->baseURL;
     }
-    if (!buf->content) {
-        return NULL;
+    if (buf->content && !IS_EMPTY_PARSED_URL(&buf->content->url)) {
+        // content URL
+        return &buf->content->url;
     }
-    if (IS_EMPTY_PARSED_URL(&buf->content->url)) {
-        return NULL;
-    }
-
-    return &buf->content->url;
+    return NULL;
 }
 
 void cmd_loadBuffer(struct Buffer* buf, int prop, enum LinkBufferID linkid)
@@ -81,16 +78,17 @@ struct Buffer* newBuffer(int width)
 
     *n = (struct Buffer) {
         .content = NULL,
-        .doc = {
-            .width = width,
-            .COLS = TTY_COLS(),
-            .LINES = LASTLINE(),
-            .baseURL = NULL,
-            .baseTarget = NULL,
-            .title = "",
-            .trbyte = 0,
-            .auto_detect = WcOption.auto_detect,
-        },
+        .doc = NULL,
+        // {
+        //     .width = width,
+        //     .COLS = TTY_COLS(),
+        //     .LINES = LASTLINE(),
+        //     .baseURL = NULL,
+        //     .baseTarget = NULL,
+        //     .title = "",
+        //     .trbyte = 0,
+        //     .auto_detect = WcOption.auto_detect,
+        // },
         .bufferprop = BP_NORMAL,
         .clone = New(int),
         .check_url = getRuntime()->MarkAllPages, /* use default from -o mark_all_pages */
@@ -106,7 +104,7 @@ struct Buffer*
 nullBuffer(void)
 {
     struct Buffer* b = newBuffer(TTY_COLS());
-    b->doc.title = "*Null*";
+    b->doc->title = "*Null*";
     return b;
 }
 
@@ -115,8 +113,8 @@ nullBuffer(void)
  */
 void clearBuffer(struct Buffer* buf)
 {
-    buf->doc.firstLine = buf->doc.topLine = buf->doc.currentLine = buf->doc.lastLine = NULL;
-    buf->doc.allLine = 0;
+    buf->doc->firstLine = buf->doc->topLine = buf->doc->currentLine = buf->doc->lastLine = NULL;
+    buf->doc->allLine = 0;
 }
 
 /*
@@ -149,9 +147,9 @@ void discardBuffer(struct Buffer* buf)
         unlink(buf->content->header_source);
     if (buf->content->mailcap_source)
         unlink(buf->content->mailcap_source);
-    while (buf->doc.frameset) {
-        deleteFrameSet(buf->doc.frameset);
-        buf->doc.frameset = popFrameTree(&(buf->doc.frameQ));
+    while (buf->doc->frameset) {
+        deleteFrameSet(buf->doc->frameset);
+        buf->doc->frameset = popFrameTree(&(buf->doc->frameQ));
     }
 }
 
@@ -163,11 +161,11 @@ namedBuffer(struct Buffer* first, char* name)
 {
     struct Buffer* buf;
 
-    if (!strcmp(first->doc.title, name)) {
+    if (!strcmp(first->doc->title, name)) {
         return first;
     }
     for (buf = first; buf->nextBuffer != NULL; buf = buf->nextBuffer) {
-        if (!strcmp(buf->nextBuffer->doc.title, name)) {
+        if (!strcmp(buf->nextBuffer->doc->title, name)) {
             return buf->nextBuffer;
         }
     }
@@ -241,11 +239,11 @@ nthBuffer(struct Buffer* firstbuf, int n)
 static void
 writeBufferName(struct Buffer* buf, int n)
 {
-    int all = buf->doc.allLine;
-    if (all == 0 && buf->doc.lastLine != NULL)
-        all = buf->doc.lastLine->linenumber;
+    int all = buf->doc->allLine;
+    if (all == 0 && buf->doc->lastLine != NULL)
+        all = buf->doc->lastLine->linenumber;
     screen_move((struct Vec2) { .y = n, .x = 0 });
-    Str msg = Sprintf("<%s> [%d lines]", buf->doc.title, all);
+    Str msg = Sprintf("<%s> [%d lines]", buf->doc->title, all);
     if (buf->content->filename != NULL) {
         switch (buf->content->url.scheme) {
         case SCM_LOCAL:
@@ -414,8 +412,6 @@ selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectcha
 
 void reshapeBuffer(struct Buffer* buf)
 {
-    buf->doc.width = INIT_BUFFER_WIDTH;
-
     struct input_stream* stream = NULL;
     if (buf->content->mailcap_source) {
         stream = decompress_stream(examineFile(buf->content->mailcap_source), buf->content->mailcap_source);
@@ -427,23 +423,22 @@ void reshapeBuffer(struct Buffer* buf)
 
     struct Buffer sbuf;
     copyBuffer(&sbuf, buf);
-    clearBuffer(buf);
-    while (buf->doc.frameset) {
-        deleteFrameSet(buf->doc.frameset);
-        buf->doc.frameset = popFrameTree(&(buf->doc.frameQ));
-    }
-
-    buf->doc.href = NULL;
-    buf->doc.name = NULL;
-    buf->doc.img = NULL;
-    buf->doc.formitem = NULL;
-    buf->doc.formlist = NULL;
-    buf->doc.linklist = NULL;
-    buf->doc.maplist = NULL;
-    if (buf->doc.hmarklist)
-        buf->doc.hmarklist->nmark = 0;
-    if (buf->doc.imarklist)
-        buf->doc.imarklist->nmark = 0;
+    // clearBuffer(buf);
+    // while (buf->doc->frameset) {
+    //     deleteFrameSet(buf->doc->frameset);
+    //     buf->doc->frameset = popFrameTree(&(buf->doc->frameQ));
+    // }
+    // buf->doc->href = NULL;
+    // buf->doc->name = NULL;
+    // buf->doc->img = NULL;
+    // buf->doc->formitem = NULL;
+    // buf->doc->formlist = NULL;
+    // buf->doc->linklist = NULL;
+    // buf->doc->maplist = NULL;
+    // if (buf->doc->hmarklist)
+    //     buf->doc->hmarklist->nmark = 0;
+    // if (buf->doc->imarklist)
+    //     buf->doc->imarklist->nmark = 0;
 
     if (buf->content->header_source) {
         if (buf->content->url.scheme != SCM_LOCAL || buf->content->mailcap_source || !strcmp(buf->content->url.file, "-")) {
@@ -470,38 +465,40 @@ void reshapeBuffer(struct Buffer* buf)
         getRuntime()->UseContentCharset = TRUE;
     }
 
-    if (buf->doc.firstLine && sbuf.doc.firstLine) {
-        struct Line* cur = sbuf.doc.currentLine;
+    if (buf->doc && sbuf.doc) {
+        struct Line* cur = sbuf.doc->currentLine;
         int n;
 
-        buf->doc.pos = sbuf.doc.pos + cur->bpos;
+        buf->doc->pos = sbuf.doc->pos + cur->bpos;
         while (cur->bpos && cur->prev)
             cur = cur->prev;
         if (cur->real_linenumber > 0)
-            doc_gotoRealLine(&buf->doc, cur->real_linenumber);
+            doc_gotoRealLine(buf->doc, cur->real_linenumber);
         else
-            doc_gotoLine(&buf->doc, cur->linenumber);
-        n = (buf->doc.currentLine->linenumber - buf->doc.topLine->linenumber)
-            - (cur->linenumber - sbuf.doc.topLine->linenumber);
+            doc_gotoLine(buf->doc, cur->linenumber);
+        n = (buf->doc->currentLine->linenumber - buf->doc->topLine->linenumber)
+            - (cur->linenumber - sbuf.doc->topLine->linenumber);
         if (n) {
-            buf->doc.topLine = doc_lineSkip(&buf->doc, buf->doc.topLine, n);
+            buf->doc->topLine = doc_lineSkip(buf->doc, buf->doc->topLine, n);
             if (cur->real_linenumber > 0)
-                doc_gotoRealLine(&buf->doc, cur->real_linenumber);
+                doc_gotoRealLine(buf->doc, cur->real_linenumber);
             else
-                doc_gotoLine(&buf->doc, cur->linenumber);
+                doc_gotoLine(buf->doc, cur->linenumber);
         }
-        buf->doc.pos -= buf->doc.currentLine->bpos;
+        buf->doc->pos -= buf->doc->currentLine->bpos;
         if (getRuntime()->FoldLine && !is_html_type(buf->content->content_type))
-            buf->doc.currentColumn = 0;
+            buf->doc->currentColumn = 0;
         else
-            buf->doc.currentColumn = sbuf.doc.currentColumn;
-        doc_arrangeCursor(&buf->doc);
+            buf->doc->currentColumn = sbuf.doc->currentColumn;
+        doc_arrangeCursor(buf->doc);
     }
     if (buf->check_url & CHK_URL)
         chkURLBuffer(buf);
     // if (buf->check_url & CHK_NMID)
     //     chkNMIDBuffer(buf);
-    formResetBuffer(buf, sbuf.doc.formitem);
+    if (sbuf.doc) {
+        formResetBuffer(buf, sbuf.doc->formitem);
+    }
 }
 
 /* shallow copy */
@@ -533,7 +530,7 @@ int writeBufferCache(struct Buffer* buf)
     if (buf->savecache)
         return -1;
 
-    if (buf->doc.firstLine == NULL)
+    if (buf->doc->firstLine == NULL)
         goto _error1;
 
     Str tmp = tmpfname(TMPF_CACHE, NULL);
@@ -542,10 +539,10 @@ int writeBufferCache(struct Buffer* buf)
     if (!cache)
         goto _error1;
 
-    if (fwrite1(buf->doc.currentLine->linenumber, cache) || fwrite1(buf->doc.topLine->linenumber, cache))
+    if (fwrite1(buf->doc->currentLine->linenumber, cache) || fwrite1(buf->doc->topLine->linenumber, cache))
         goto _error;
 
-    for (l = buf->doc.firstLine; l; l = l->next) {
+    for (l = buf->doc->firstLine; l; l = l->next) {
         if (fwrite1(l->real_linenumber, cache) || fwrite1(l->usrflags, cache) || fwrite1(l->width, cache) || fwrite1(l->len, cache) || fwrite1(l->size, cache) || fwrite1(l->bpos, cache) || fwrite1(l->bwidth, cache))
             goto _error;
         if (l->bpos == 0) {
@@ -603,12 +600,12 @@ bool readBufferCache(struct Buffer* buf)
         if (prevl)
             prevl->next = l;
         else
-            buf->doc.firstLine = l;
+            buf->doc->firstLine = l;
         l->linenumber = lnum;
         if (lnum == clnum)
-            buf->doc.currentLine = l;
+            buf->doc->currentLine = l;
         if (lnum == tlnum)
-            buf->doc.topLine = l;
+            buf->doc->topLine = l;
         if (fread1(l->real_linenumber, cache) || fread1(l->usrflags, cache) || fread1(l->width, cache) || fread1(l->len, cache) || fread1(l->size, cache) || fread1(l->bpos, cache) || fread1(l->bwidth, cache))
             break;
         if (l->bpos == 0) {
@@ -638,8 +635,8 @@ bool readBufferCache(struct Buffer* buf)
         }
     }
     if (prevl) {
-        buf->doc.lastLine = prevl;
-        buf->doc.lastLine->next = NULL;
+        buf->doc->lastLine = prevl;
+        buf->doc->lastLine->next = NULL;
     }
     fclose(cache);
     unlink(buf->savecache);
@@ -663,7 +660,7 @@ bool checkBackBuffer(struct Buffer* buf)
     struct Buffer* fbuf = buf->linkBuffer[LB_N_FRAME];
 
     if (fbuf) {
-        if (fbuf->doc.frameQ)
+        if (fbuf->doc->frameQ)
             return TRUE; /* Currentbuf has stacked frames */
         /* when no frames stacked and next is frame source, try next's
          * nextBuffer */
@@ -690,14 +687,14 @@ Str page_info_panel(struct Buffer* buf)
 <h1>Information about current page</h1>\n");
     if (buf == NULL)
         goto end;
-    int all = buf->doc.allLine;
-    if (all == 0 && buf->doc.lastLine)
-        all = buf->doc.lastLine->linenumber;
+    int all = buf->doc->allLine;
+    if (all == 0 && buf->doc->lastLine)
+        all = buf->doc->lastLine->linenumber;
     Strcat_charp(tmp, "<form method=internal action=charset>");
-    const char* p = url_decode2(baseURL(buf), &buf->doc, parsedURL2Str(&buf->content->url)->ptr);
+    const char* p = url_decode2(baseURL(buf), buf->doc, parsedURL2Str(&buf->content->url)->ptr);
     Strcat_m_charp(tmp, "<table cellpadding=0>",
         "<tr valign=top><td nowrap>Title<td>",
-        html_quote(buf->doc.title),
+        html_quote(buf->doc->title),
         "<tr valign=top><td nowrap>Current URL<td>",
         html_quote(p),
         "<tr valign=top><td nowrap>Document Type<td>",
@@ -705,7 +702,7 @@ Str page_info_panel(struct Buffer* buf)
         "<tr valign=top><td nowrap>Last Modified<td>",
         html_quote(last_modified(buf)), NULL);
 
-    if (buf->doc.charset != getRuntime()->InnerCharset) {
+    if (buf->doc->charset != getRuntime()->InnerCharset) {
         wc_ces_list* list = wc_get_ces_list();
         Strcat_charp(tmp,
             "<tr><td nowrap>Document Charset<td><select name=charset>");
@@ -713,8 +710,8 @@ Str page_info_panel(struct Buffer* buf)
             char charset[16];
             sprintf(charset, "%d", (unsigned int)list->id);
             Strcat_m_charp(tmp, "<option value=", charset,
-                (buf->doc.charset == list->id) ? " selected>"
-                                               : ">",
+                (buf->doc->charset == list->id) ? " selected>"
+                                                : ">",
                 list->desc, NULL);
         }
         Strcat_charp(tmp, "</select>");
@@ -725,52 +722,52 @@ Str page_info_panel(struct Buffer* buf)
         "<tr valign=top><td nowrap>Number of lines<td>",
         Sprintf("%d", all)->ptr,
         "<tr valign=top><td nowrap>Transferred bytes<td>",
-        Sprintf("%lu", (unsigned long)buf->doc.trbyte)->ptr, NULL);
+        Sprintf("%lu", (unsigned long)buf->doc->trbyte)->ptr, NULL);
 
-    struct Anchor* a = doc_retrieveCurrentAnchor(&buf->doc);
+    struct Anchor* a = doc_retrieveCurrentAnchor(buf->doc);
     if (a != NULL) {
         struct Url pu;
         parseURL2(a->url, &pu, baseURL(buf));
         p = parsedURL2Str(&pu)->ptr;
         const char* q = html_quote(p);
         if (getRuntime()->DecodeURL)
-            p = html_quote(url_decode2(baseURL(buf), &buf->doc, p));
+            p = html_quote(url_decode2(baseURL(buf), buf->doc, p));
         else
             p = q;
         Strcat_m_charp(tmp,
             "<tr valign=top><td nowrap>URL of current anchor<td><a href=\"",
             q, "\">", p, "</a>", NULL);
     }
-    a = doc_retrieveCurrentImg(&buf->doc);
+    a = doc_retrieveCurrentImg(buf->doc);
     if (a != NULL) {
         struct Url pu;
         parseURL2(a->url, &pu, baseURL(buf));
         p = parsedURL2Str(&pu)->ptr;
         const char* q = html_quote(p);
         if (getRuntime()->DecodeURL)
-            p = html_quote(url_decode2(baseURL(buf), &buf->doc, p));
+            p = html_quote(url_decode2(baseURL(buf), buf->doc, p));
         else
             p = q;
         Strcat_m_charp(tmp,
             "<tr valign=top><td nowrap>URL of current image<td><a href=\"",
             q, "\">", p, "</a>", NULL);
     }
-    a = doc_retrieveCurrentForm(&buf->doc);
+    a = doc_retrieveCurrentForm(buf->doc);
     if (a != NULL) {
         struct FormItemList* fi = (struct FormItemList*)a->url;
         p = form2str(fi);
-        p = html_quote(url_decode2(baseURL(buf), &buf->doc, p));
+        p = html_quote(url_decode2(baseURL(buf), buf->doc, p));
         Strcat_m_charp(tmp,
             "<tr valign=top><td nowrap>Method/type of current form&nbsp;<td>",
             p, NULL);
         if (fi->parent->method == FORM_METHOD_INTERNAL
             && !Strcmp_charp(fi->parent->action, "map"))
-            append_map_info(baseURL(buf), &buf->doc, tmp, fi->parent->item);
+            append_map_info(baseURL(buf), buf->doc, tmp, fi->parent->item);
     }
     Strcat_charp(tmp, "</table>\n");
     Strcat_charp(tmp, "</form>");
 
-    append_link_info(baseURL(buf), &buf->doc, tmp, buf->doc.linklist);
+    append_link_info(baseURL(buf), buf->doc, tmp, buf->doc->linklist);
 
     if (buf->content->document_header != NULL) {
         Strcat_charp(tmp, "<hr width=50%><h1>Header information</h1><pre>\n");
@@ -781,14 +778,14 @@ Str page_info_panel(struct Buffer* buf)
     }
 
     struct frameset* f_set = NULL;
-    if (buf->doc.frameset != NULL)
-        f_set = buf->doc.frameset;
-    else if (buf->bufferprop & BP_FRAME && buf->nextBuffer != NULL && buf->nextBuffer->doc.frameset != NULL)
-        f_set = buf->nextBuffer->doc.frameset;
+    if (buf->doc->frameset != NULL)
+        f_set = buf->doc->frameset;
+    else if (buf->bufferprop & BP_FRAME && buf->nextBuffer != NULL && buf->nextBuffer->doc->frameset != NULL)
+        f_set = buf->nextBuffer->doc->frameset;
 
     if (f_set) {
         Strcat_charp(tmp, "<hr width=50%><h1>Frame information</h1>\n");
-        append_frame_info(baseURL(buf), &buf->doc, tmp, f_set, 0);
+        append_frame_info(baseURL(buf), buf->doc, tmp, f_set, 0);
     }
     if (buf->content->ssl_certificate)
         Strcat_m_charp(tmp, "<h1>SSL certificate</h1><pre>\n",

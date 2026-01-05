@@ -38,8 +38,9 @@ Str getLinkNumberStr(struct HtmlBuilder* hb, int correction);
 int checkOverWrite(const char* path);
 struct input_stream;
 int checkSaveFile(struct input_stream* stream, const char* path);
-void loadHTMLstream(struct input_stream* stream,
-    struct Buffer* newBuf, bool internal);
+
+struct Document* loadHTMLstream(int width,
+    struct Url* base_url, struct Content* content, struct input_stream* stream, bool internal);
 
 struct Buffer* doExternal(struct Url url, struct input_stream* stream,
     const char* type, struct Buffer* defaultbuf, bool internal);
@@ -52,6 +53,6 @@ struct Buffer* loadImageBuffer(struct Url url, struct input_stream* stream,
 extern int getMetaRefreshParam(const char* q, Str* refresh_uri);
 extern int is_boundary(unsigned char*, unsigned char*);
 extern Str process_n_button(void);
-extern int currentLn(struct Buffer* buf);
+extern int currentLn(struct Document *doc);
 extern char* convert_size(int64_t size, int usefloat);
 extern char* convert_size2(int64_t size1, int64_t size2, int usefloat);

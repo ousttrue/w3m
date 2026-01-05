@@ -679,37 +679,37 @@ bool w3m_args(int argc, char** argv)
     WcOption.auto_detect = auto_detect;
 
     Currentbuf = Firstbuf;
-    screen_from_lines(&Currentbuf->doc, baseURL(Currentbuf));
+    screen_from_lines(Currentbuf->doc, baseURL(Currentbuf));
     if (line_str) {
-        doc_goLine(&Currentbuf->doc, line_str);
+        doc_goLine(Currentbuf->doc, line_str);
     }
 
     return true;
 }
 
-static void
-dump_source(struct Buffer* buf)
-{
-    FILE* f;
-    int c;
-    if (buf->content->sourcefile == NULL)
-        return;
-    f = fopen(buf->content->sourcefile, "r");
-    if (f == NULL)
-        return;
-    while ((c = fgetc(f)) != EOF) {
-        putchar(c);
-    }
-    fclose(f);
-}
+// static void
+// dump_source(struct Buffer* buf)
+// {
+//     FILE* f;
+//     int c;
+//     if (buf->content->sourcefile == NULL)
+//         return;
+//     f = fopen(buf->content->sourcefile, "r");
+//     if (f == NULL)
+//         return;
+//     while ((c = fgetc(f)) != EOF) {
+//         putchar(c);
+//     }
+//     fclose(f);
+// }
 
 void tmpClearBuffer(struct Buffer* buf)
 {
     if (writeBufferCache(buf) == 0) {
-        buf->doc.firstLine = NULL;
-        buf->doc.topLine = NULL;
-        buf->doc.currentLine = NULL;
-        buf->doc.lastLine = NULL;
+        buf->doc->firstLine = NULL;
+        buf->doc->topLine = NULL;
+        buf->doc->currentLine = NULL;
+        buf->doc->lastLine = NULL;
     }
 }
 
@@ -767,13 +767,13 @@ goURL0(const char* prompt, int relative)
             else
                 pushHist(hist, c_url);
         }
-        a = doc_retrieveCurrentAnchor(&Currentbuf->doc);
+        a = doc_retrieveCurrentAnchor(Currentbuf->doc);
         if (a) {
             char* a_url;
             parseURL2(a->url, &p_url, current);
             a_url = parsedURL2Str(&p_url)->ptr;
             if (getRuntime()->DefaultURLString == DEFAULT_URL_LINK)
-                url = url_decode2(baseURL(Currentbuf), &Currentbuf->doc, a_url);
+                url = url_decode2(baseURL(Currentbuf), Currentbuf->doc, a_url);
             else
                 pushHist(hist, a_url);
         }
@@ -788,7 +788,7 @@ goURL0(const char* prompt, int relative)
             referer = NO_REFERER;
         else
             referer = parsedURL2RefererStr(&Currentbuf->content->url)->ptr;
-        url = url_encode(url, current, Currentbuf->doc.charset);
+        url = url_encode(url, current, Currentbuf->doc->charset);
     } else {
         current = NULL;
         referer = NULL;
@@ -853,7 +853,7 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
         (Str_form_quote(Strnew_charp(getRuntime()->BookmarkFile)))->ptr,
         (Str_form_quote(parsedURL2Str(&Currentbuf->content->url)))->ptr,
 
-        (Str_form_quote(wc_conv_strict(Currentbuf->doc.title,
+        (Str_form_quote(wc_conv_strict(Currentbuf->doc->title,
              getRuntime()->InnerCharset,
              getRuntime()->BookmarkCharset)))
             ->ptr,
@@ -920,10 +920,10 @@ void follow_map(struct parsed_tagarg* arg)
     int x, y;
     struct Url p_url;
 
-    struct Anchor* an = doc_retrieveCurrentImg(&Currentbuf->doc);
-    x = Currentbuf->doc.cursorX + Currentbuf->doc.rootX;
-    y = Currentbuf->doc.cursorY + Currentbuf->doc.rootY;
-    struct MapArea* a = follow_map_menu(&Currentbuf->doc, name, an, x, y);
+    struct Anchor* an = doc_retrieveCurrentImg(Currentbuf->doc);
+    x = Currentbuf->doc->cursorX + Currentbuf->doc->rootX;
+    y = Currentbuf->doc->cursorY + Currentbuf->doc->rootY;
+    struct MapArea* a = follow_map_menu(Currentbuf->doc, name, an, x, y);
     if (a == NULL || a->url == NULL || *(a->url) == '\0') {
         return;
     }
@@ -978,17 +978,17 @@ DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
 static void
 anchorMn(BufferMenuFunc menu_func, bool go)
 {
-    if (!Currentbuf->doc.href || !Currentbuf->doc.hmarklist)
+    if (!Currentbuf->doc->href || !Currentbuf->doc->hmarklist)
         return;
 
     struct Anchor* a = menu_func(Currentbuf);
     if (!a || a->hseq < 0)
         return;
 
-    struct BufferPoint* po = &Currentbuf->doc.hmarklist->marks[a->hseq];
-    doc_gotoLine(&Currentbuf->doc, po->line);
-    Currentbuf->doc.pos = po->pos;
-    doc_arrangeCursor(&Currentbuf->doc);
+    struct BufferPoint* po = &Currentbuf->doc->hmarklist->marks[a->hseq];
+    doc_gotoLine(Currentbuf->doc, po->line);
+    Currentbuf->doc->pos = po->pos;
+    doc_arrangeCursor(Currentbuf->doc);
     if (go)
         followA((struct DefunContext) { 0 });
 }
@@ -1013,7 +1013,7 @@ DEFUN(movlistMn, MOVE_LIST_MENU, "Pop up menu to navigate between hyperlinks")
 /* link,anchor,image list */
 DEFUN(linkLst, LIST, "Show all URLs referenced")
 {
-    Str page = link_list_panel(baseURL(ctx.buf), &ctx.buf->doc);
+    Str page = link_list_panel(baseURL(ctx.buf), ctx.buf->doc);
     if (page) {
         struct Buffer* buf = loadHTMLString(page);
         // buf->doc.charset = Currentbuf->doc.charset;
@@ -1119,7 +1119,7 @@ _peekURL(int only_img)
 
     static int offset = 0, n;
 
-    if (Currentbuf->doc.firstLine == NULL)
+    if (Currentbuf->doc->firstLine == NULL)
         return;
 
     if (getRuntime()->CurrentKey == getRuntime()->prev_key && s != NULL) {
@@ -1132,11 +1132,11 @@ _peekURL(int only_img)
         offset = 0;
     }
     s = NULL;
-    a = (only_img ? NULL : doc_retrieveCurrentAnchor(&Currentbuf->doc));
+    a = (only_img ? NULL : doc_retrieveCurrentAnchor(Currentbuf->doc));
     if (a == NULL) {
-        a = (only_img ? NULL : doc_retrieveCurrentForm(&Currentbuf->doc));
+        a = (only_img ? NULL : doc_retrieveCurrentForm(Currentbuf->doc));
         if (a == NULL) {
-            a = doc_retrieveCurrentImg(&Currentbuf->doc);
+            a = doc_retrieveCurrentImg(Currentbuf->doc);
             if (a == NULL)
                 return;
         } else
@@ -1147,7 +1147,7 @@ _peekURL(int only_img)
         s = parsedURL2Str(&pu);
     }
     if (getRuntime()->DecodeURL)
-        s = Strnew_charp(url_decode2(baseURL(Currentbuf), &Currentbuf->doc, s->ptr));
+        s = Strnew_charp(url_decode2(baseURL(Currentbuf), Currentbuf->doc, s->ptr));
     s = checkType(s, &pp, NULL);
     p = NewAtom_N(Lineprop, s->length);
     bcopy((void*)pp, (void*)p, s->length * sizeof(Lineprop));
@@ -1264,7 +1264,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
             buf->content->content_type = "text/plain";
         else
             buf->content->content_type = Currentbuf->content->content_type;
-        buf->doc.title = Sprintf("source of %s", Currentbuf->doc.title)->ptr;
+        buf->doc->title = Sprintf("source of %s", Currentbuf->doc->title)->ptr;
         buf->linkBuffer[LB_N_SOURCE] = Currentbuf;
         Currentbuf->linkBuffer[LB_SOURCE] = buf;
     } else if (!strcasecmp(Currentbuf->content->content_type, "text/plain")) {
@@ -1273,8 +1273,8 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
             buf->content->content_type = "text/html";
         else
             buf->content->content_type = Currentbuf->content->content_type;
-        buf->doc.title = Sprintf("HTML view of %s",
-            Currentbuf->doc.title)
+        buf->doc->title = Sprintf("HTML view of %s",
+            Currentbuf->doc->title)
                              ->ptr;
         buf->linkBuffer[LB_SOURCE] = Currentbuf;
         Currentbuf->linkBuffer[LB_N_SOURCE] = buf;
@@ -1286,7 +1286,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
     buf->content->sourcefile = Currentbuf->content->sourcefile;
     buf->content->header_source = Currentbuf->content->header_source;
     // buf->search_header = Currentbuf->search_header;
-    buf->doc.charset = Currentbuf->doc.charset;
+    buf->doc->charset = Currentbuf->doc->charset;
     buf->clone = Currentbuf->clone;
     (*buf->clone)++;
     reshapeBuffer(buf);
@@ -1332,21 +1332,21 @@ DEFUN(reload, RELOAD, "Load current document anew")
         buf->linkBuffer[LB_N_FRAME] = fbuf;
         tab_push_buffer(getRuntime()->CurrentTab, buf);
         Currentbuf = buf;
-        if (Currentbuf->doc.firstLine) {
-            COPY_BUFROOT(&ctx.buf->doc, &sbuf.doc);
-            doc_restorePosition(&Currentbuf->doc, &sbuf.doc);
+        if (Currentbuf->doc->firstLine) {
+            COPY_BUFROOT(ctx.buf->doc, sbuf.doc);
+            doc_restorePosition(Currentbuf->doc, sbuf.doc);
         }
         return;
-    } else if (Currentbuf->doc.frameset != NULL)
+    } else if (Currentbuf->doc->frameset != NULL)
         fbuf = Currentbuf->linkBuffer[LB_FRAME];
     multipart = 0;
-    if (Currentbuf->doc.form_submit) {
-        request = Currentbuf->doc.form_submit->parent;
+    if (Currentbuf->doc->form_submit) {
+        request = Currentbuf->doc->form_submit->parent;
         if (request->method == FORM_METHOD_POST
             && request->enctype == FORM_ENCTYPE_MULTIPART) {
             struct stat st;
             multipart = 1;
-            query_from_followform(Currentbuf, Currentbuf->doc.form_submit, multipart);
+            query_from_followform(Currentbuf, Currentbuf->doc->form_submit, multipart);
             stat(request->body, &st);
             request->length = st.st_size;
         }
@@ -1356,8 +1356,8 @@ DEFUN(reload, RELOAD, "Load current document anew")
     url = parsedURL2Str(&Currentbuf->content->url);
     message("Reloading...");
     old_charset = getRuntime()->DocumentCharset;
-    if (Currentbuf->doc.charset != WC_CES_US_ASCII)
-        getRuntime()->DocumentCharset = Currentbuf->doc.charset;
+    if (Currentbuf->doc->charset != WC_CES_US_ASCII)
+        getRuntime()->DocumentCharset = Currentbuf->doc->charset;
     // SearchHeader = Currentbuf->search_header;
     getRuntime()->DefaultType = Currentbuf->content->content_type;
     struct Content* content = get_content_cache(url->ptr, request,
@@ -1384,10 +1384,10 @@ DEFUN(reload, RELOAD, "Load current document anew")
             Firstbuf = deleteBuffer(Firstbuf, buf);
     }
     // Currentbuf->search_header = sbuf.search_header;
-    Currentbuf->doc.form_submit = sbuf.doc.form_submit;
-    if (Currentbuf->doc.firstLine) {
-        COPY_BUFROOT(&ctx.buf->doc, &sbuf.doc);
-        doc_restorePosition(&Currentbuf->doc, &sbuf.doc);
+    Currentbuf->doc->form_submit = sbuf.doc->form_submit;
+    if (Currentbuf->doc->firstLine) {
+        COPY_BUFROOT(ctx.buf->doc, sbuf.doc);
+        doc_restorePosition(Currentbuf->doc, sbuf.doc);
     }
 }
 
@@ -1406,7 +1406,7 @@ _docCSet(enum wc_ces charset)
         disp_message("Can't reload...", FALSE);
         return;
     }
-    Currentbuf->doc.charset = charset;
+    Currentbuf->doc->charset = charset;
 }
 
 void change_charset(struct parsed_tagarg* arg)
@@ -1420,7 +1420,7 @@ void change_charset(struct parsed_tagarg* arg)
     Currentbuf = buf;
     if (Currentbuf->bufferprop & BP_INTERNAL)
         return;
-    charset = Currentbuf->doc.charset;
+    charset = Currentbuf->doc->charset;
     for (; arg; arg = arg->next) {
         if (!strcmp(arg->arg, "charset"))
             charset = atoi(arg->value);
@@ -1434,7 +1434,7 @@ DEFUN(docCSet, CHARSET, "Change the character encoding for the current document"
     if (cs == NULL || *cs == '\0')
         /* FIXME: gettextize? */
         cs = inputStr("Document charset: ",
-            wc_ces_to_charset(Currentbuf->doc.charset));
+            wc_ces_to_charset(Currentbuf->doc->charset));
 
     enum wc_ces charset = wc_guess_charset_short(cs, 0);
     if (charset == 0) {
@@ -1467,7 +1467,7 @@ void chkURLBuffer(struct Buffer* buf)
         NULL
     };
     for (int i = 0; url_like_pat[i]; i++) {
-        reAnchor(baseURL(buf), &buf->doc, url_like_pat[i]);
+        reAnchor(baseURL(buf), buf->doc, url_like_pat[i]);
     }
     chkExternalURIBuffer(buf);
     buf->check_url |= CHK_URL;
@@ -1481,10 +1481,10 @@ DEFUN(chkURL, MARK_URL, "Turn URL-like strings into hyperlinks")
 DEFUN(chkWORD, MARK_WORD, "Turn current word into hyperlink")
 {
     int spos, epos;
-    const char* p = doc_getCurWord(&ctx.buf->doc, &spos, &epos);
+    const char* p = doc_getCurWord(ctx.buf->doc, &spos, &epos);
     if (p == NULL)
         return;
-    reAnchorWord(baseURL(ctx.buf), &ctx.buf->doc, ctx.buf->doc.currentLine, spos, epos);
+    reAnchorWord(baseURL(ctx.buf), ctx.buf->doc, ctx.buf->doc->currentLine, spos, epos);
 }
 
 /* render frames */
@@ -1496,7 +1496,7 @@ DEFUN(rFrame, FRAME, "Toggle rendering HTML frames")
         Currentbuf = buf;
         return;
     }
-    if (Currentbuf->doc.frameset == NULL) {
+    if (Currentbuf->doc->frameset == NULL) {
         if ((buf = Currentbuf->linkBuffer[LB_N_FRAME]) != NULL) {
             Currentbuf = buf;
         }
@@ -1593,9 +1593,9 @@ DEFUN(extbrz, EXTERN, "Display using an external browser")
 
 DEFUN(linkbrz, EXTERN_LINK, "Display target using an external browser")
 {
-    if (ctx.buf->doc.firstLine == NULL)
+    if (ctx.buf->doc->firstLine == NULL)
         return;
-    struct Anchor* a = doc_retrieveCurrentAnchor(&ctx.buf->doc);
+    struct Anchor* a = doc_retrieveCurrentAnchor(ctx.buf->doc);
     if (a == NULL)
         return;
     struct Url pu;
@@ -1606,21 +1606,21 @@ DEFUN(linkbrz, EXTERN_LINK, "Display target using an external browser")
 /* show current line number and number of lines in the entire document */
 DEFUN(curlno, LINE_INFO, "Display current position in document")
 {
-    struct Line* l = Currentbuf->doc.currentLine;
+    struct Line* l = Currentbuf->doc->currentLine;
     Str tmp;
     int cur = 0, all = 0, col = 0, len = 0;
 
     if (l != NULL) {
         cur = l->real_linenumber;
-        col = l->bwidth + Currentbuf->doc.currentColumn + Currentbuf->doc.cursorX + 1;
+        col = l->bwidth + Currentbuf->doc->currentColumn + Currentbuf->doc->cursorX + 1;
         while (l->next && l->next->bpos)
             l = l->next;
         if (l->width < 0)
             l->width = COLPOS(l, l->len);
         len = l->bwidth + l->width;
     }
-    if (Currentbuf->doc.lastLine)
-        all = Currentbuf->doc.lastLine->real_linenumber;
+    if (Currentbuf->doc->lastLine)
+        all = Currentbuf->doc->lastLine->real_linenumber;
     // if (Currentbuf->pagerSource && !(Currentbuf->bufferprop & BP_CLOSE))
     //     tmp = Sprintf("line %d col %d/%d", cur, col, len);
     // else
@@ -1629,7 +1629,7 @@ DEFUN(curlno, LINE_INFO, "Display current position in document")
             + 0.5),
         col, len);
     Strcat_charp(tmp, "  ");
-    Strcat_charp(tmp, wc_ces_to_charset_desc(Currentbuf->doc.charset));
+    Strcat_charp(tmp, wc_ces_to_charset_desc(Currentbuf->doc->charset));
 
     disp_message(tmp->ptr, FALSE);
 }
@@ -1645,7 +1645,7 @@ DEFUN(dispI, DISPLAY_IMAGE, "Restart loading and drawing of images")
      * if (!(Currentbuf->type && is_html_type(Currentbuf->type)))
      * return;
      */
-    Currentbuf->doc.image_flag = IMG_FLAG_AUTO;
+    Currentbuf->doc->image_flag = IMG_FLAG_AUTO;
 }
 
 DEFUN(stopI, STOP_IMAGE, "Stop loading and drawing of images")
@@ -1656,7 +1656,7 @@ DEFUN(stopI, STOP_IMAGE, "Stop loading and drawing of images")
      * if (!(Currentbuf->type && is_html_type(Currentbuf->type)))
      * return;
      */
-    Currentbuf->doc.image_flag = IMG_FLAG_SKIP;
+    Currentbuf->doc->image_flag = IMG_FLAG_SKIP;
 }
 
 DEFUN(dispVer, VERSION, "Display the version of w3m")
@@ -1678,7 +1678,7 @@ DEFUN(wrapToggle, WRAP_TOGGLE, "Toggle wrapping mode in searches")
 }
 
 static void
-execdict(char* word)
+execdict(const char* word)
 {
     if (!getRuntime()->UseDictCommand || word == NULL || *word == '\0') {
         return;
@@ -1699,7 +1699,7 @@ execdict(char* word)
         return;
     } else {
         buf->content->filename = w;
-        buf->doc.title = Sprintf("%s %s", DICTBUFFERNAME, word)->ptr;
+        buf->doc->title = Sprintf("%s %s", DICTBUFFERNAME, word)->ptr;
         if (buf->content->content_type == NULL)
             buf->content->content_type = "text/plain";
         tab_push_buffer(getRuntime()->CurrentTab, buf);
@@ -2003,9 +2003,9 @@ DEFUN(prevT, PREV_TAB, "Switch to the previous tab")
 static void
 followTab(struct TabBuffer* tab)
 {
-    struct Anchor* a = doc_retrieveCurrentImg(&Currentbuf->doc);
+    struct Anchor* a = doc_retrieveCurrentImg(Currentbuf->doc);
     if (!(a && a->image && a->image->map))
-        a = doc_retrieveCurrentAnchor(&Currentbuf->doc);
+        a = doc_retrieveCurrentAnchor(Currentbuf->doc);
     if (a == NULL)
         return;
 
@@ -2158,50 +2158,50 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
 
 DEFUN(undoPos, UNDO, "Cancel the last cursor movement")
 {
-    if (!Currentbuf->doc.firstLine)
+    if (!Currentbuf->doc->firstLine)
         return;
-    struct DocumentPos* pos = ctx.buf->doc.undo;
+    struct DocumentPos* pos = ctx.buf->doc->undo;
     if (!pos || !pos->prev)
         return;
     for (int i = 0; i < PREC_NUM && pos->prev; i++, pos = pos->prev)
         ;
-    doc_resetPos(&ctx.buf->doc, pos);
+    doc_resetPos(ctx.buf->doc, pos);
 }
 
 DEFUN(redoPos, REDO, "Cancel the last undo")
 {
-    if (!Currentbuf->doc.firstLine)
+    if (!Currentbuf->doc->firstLine)
         return;
-    struct DocumentPos* pos = ctx.buf->doc.undo;
+    struct DocumentPos* pos = ctx.buf->doc->undo;
     if (!pos || !pos->next)
         return;
     for (int i = 0; i < PREC_NUM && pos->next; i++, pos = pos->next)
         ;
-    doc_resetPos(&ctx.buf->doc, pos);
+    doc_resetPos(ctx.buf->doc, pos);
 }
 
 DEFUN(cursorTop, CURSOR_TOP, "Move cursor to the top of the screen")
 {
-    if (Currentbuf->doc.firstLine == NULL)
+    if (Currentbuf->doc->firstLine == NULL)
         return;
-    Currentbuf->doc.currentLine = doc_lineSkip(&Currentbuf->doc, Currentbuf->doc.topLine, 0);
-    doc_arrangeLine(&Currentbuf->doc);
+    Currentbuf->doc->currentLine = doc_lineSkip(Currentbuf->doc, Currentbuf->doc->topLine, 0);
+    doc_arrangeLine(Currentbuf->doc);
 }
 
 DEFUN(cursorMiddle, CURSOR_MIDDLE, "Move cursor to the middle of the screen")
 {
-    if (Currentbuf->doc.firstLine == NULL)
+    if (Currentbuf->doc->firstLine == NULL)
         return;
-    int offsety = (Currentbuf->doc.LINES - 1) / 2;
-    Currentbuf->doc.currentLine = currentLineSkip(Currentbuf->doc.topLine, offsety);
-    doc_arrangeLine(&Currentbuf->doc);
+    int offsety = (Currentbuf->doc->LINES - 1) / 2;
+    Currentbuf->doc->currentLine = currentLineSkip(Currentbuf->doc->topLine, offsety);
+    doc_arrangeLine(Currentbuf->doc);
 }
 
 DEFUN(cursorBottom, CURSOR_BOTTOM, "Move cursor to the bottom of the screen")
 {
-    if (Currentbuf->doc.firstLine == NULL)
+    if (Currentbuf->doc->firstLine == NULL)
         return;
-    int offsety = Currentbuf->doc.LINES - 1;
-    Currentbuf->doc.currentLine = currentLineSkip(Currentbuf->doc.topLine, offsety);
-    doc_arrangeLine(&Currentbuf->doc);
+    int offsety = Currentbuf->doc->LINES - 1;
+    Currentbuf->doc->currentLine = currentLineSkip(Currentbuf->doc->topLine, offsety);
+    doc_arrangeLine(Currentbuf->doc);
 }

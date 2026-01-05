@@ -98,9 +98,9 @@ newFrame(struct HtmlTag* tag, struct Buffer* buf)
     if (tag) {
         if (parsedtag_get_value(tag, ATTR_SRC, &p))
             body->url = url_encode(remove_space(p), body->baseURL,
-                buf->doc.charset);
+                buf->doc->charset);
         if (parsedtag_get_value(tag, ATTR_NAME, &p) && *p != '_')
-            body->name = url_quote_conv(p, buf->doc.charset);
+            body->name = url_quote_conv(p, buf->doc->charset);
     }
     return body;
 }
@@ -245,14 +245,13 @@ void pushFrameTree(struct frameset_queue** fqpp, struct frameset* fs, struct Buf
         return;
 
     rfq = New(struct frameset_queue);
-    rfq->linenumber = (buf
-                          && buf->doc.currentLine)
-        ? buf->doc.currentLine->linenumber
+    rfq->linenumber = (buf && buf->doc->currentLine)
+        ? buf->doc->currentLine->linenumber
         : 1;
-    rfq->top_linenumber = (buf && buf->doc.topLine) ? buf->doc.topLine->linenumber : 1;
-    rfq->pos = buf ? buf->doc.pos : 0;
-    rfq->currentColumn = buf ? buf->doc.currentColumn : 0;
-    rfq->formitem = buf ? buf->doc.formitem : NULL;
+    rfq->top_linenumber = (buf && buf->doc->topLine) ? buf->doc->topLine->linenumber : 1;
+    rfq->pos = buf ? buf->doc->pos : 0;
+    rfq->currentColumn = buf ? buf->doc->currentColumn : 0;
+    rfq->formitem = buf ? buf->doc->formitem : NULL;
 
     rfq->back = cfq;
     if (cfq) {
@@ -295,13 +294,13 @@ void resetFrameElement(union frameset_element* f_element,
     struct frame_body* f_body;
 
     f_name = f_element->element->name;
-    if (buf->doc.frameset) {
+    if (buf->doc->frameset) {
         /* frame cascade */
         deleteFrameSetElement(*f_element);
-        f_element->set = buf->doc.frameset;
+        f_element->set = buf->doc->frameset;
         f_element->set->currentURL = New(struct Url);
         copyParsedURL(f_element->set->currentURL, &buf->content->url);
-        buf->doc.frameset = popFrameTree(&(buf->doc.frameQ));
+        buf->doc->frameset = popFrameTree(&(buf->doc->frameQ));
         f_element->set->name = f_name;
     } else {
         f_body = newFrame(NULL, buf);
@@ -372,12 +371,12 @@ frame_download_source(struct frame_body* b, struct Url* currentURL,
         buf->content->mailcap_source = NULL;
     }
     b->attr = F_BODY;
-    if (buf->doc.frameset) {
-        ret_frameset = buf->doc.frameset;
+    if (buf->doc->frameset) {
+        ret_frameset = buf->doc->frameset;
         ret_frameset->name = b->name;
         ret_frameset->currentURL = New(struct Url);
         copyParsedURL(ret_frameset->currentURL, &buf->content->url);
-        buf->doc.frameset = popFrameTree(&(buf->doc.frameQ));
+        buf->doc->frameset = popFrameTree(&(buf->doc->frameQ));
     }
     discardBuffer(buf);
     return ret_frameset;
@@ -432,7 +431,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
 
     if (level == 0) {
         fprintf(f1, "<html><head><title>%s</title></head><body>\n",
-            html_quote(current->doc.title));
+            html_quote(current->doc->title));
         fputs("<table hborder width=\"100%\">\n", f1);
     } else
         fputs("<table hborder>\n", f1);
@@ -483,7 +482,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
                 fflush(f1);
                 f_frameset = frame_download_source(frame.body,
                     currentURL,
-                    current->doc.baseURL, flag);
+                    current->doc->baseURL, flag);
                 if (f_frameset) {
                     deleteFrame(frame.body);
                     f->frame[i].set = frame.set = f_frameset;
@@ -521,8 +520,8 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
                 d_target = getRuntime()->TargetSelf ? s_target : t_target;
 
                 charset = WC_CES_US_ASCII;
-                if (current->doc.charset != WC_CES_US_ASCII)
-                    doc_charset = current->doc.charset;
+                if (current->doc->charset != WC_CES_US_ASCII)
+                    doc_charset = current->doc->charset;
                 else
                     doc_charset = getRuntime()->DocumentCharset;
 
@@ -868,7 +867,7 @@ renderFrame(struct Buffer* Cbuf, int force_reload)
     /*
      * if (Cbuf->frameQ != NULL) fset = Cbuf->frameQ->frameset; else */
     struct frameset* fset;
-    fset = Cbuf->doc.frameset;
+    fset = Cbuf->doc->frameset;
     if (fset == NULL || createFrameFile(fset, f, Cbuf, 0, force_reload) < 0) {
         fclose(f);
         return NULL;
@@ -878,7 +877,7 @@ renderFrame(struct Buffer* Cbuf, int force_reload)
     int flag = RG_FRAME;
     if ((Cbuf->content->url).is_nocache)
         flag |= RG_NOCACHE;
-    renderFrameSet = Cbuf->doc.frameset;
+    renderFrameSet = Cbuf->doc->frameset;
     flushFrameSet(renderFrameSet);
 
     getRuntime()->DocumentCharset = getRuntime()->InnerCharset;
@@ -894,7 +893,7 @@ renderFrame(struct Buffer* Cbuf, int force_reload)
     if (buf == NULL)
         return NULL;
     buf->content->sourcefile = tmp->ptr;
-    buf->doc.charset = Cbuf->doc.charset;
+    buf->doc->charset = Cbuf->doc->charset;
     copyParsedURL(&buf->content->url, &Cbuf->content->url);
     preFormUpdateBuffer(buf);
     return buf;

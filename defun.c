@@ -55,7 +55,7 @@ DEFUN(rdrwSc, REDRAW, "Draw the screen anew")
 {
     tty_clear();
     screen_clear();
-    doc_arrangeCursor(&ctx.buf->doc);
+    doc_arrangeCursor(ctx.buf->doc);
 }
 
 DEFUN(setEnv, SETENV, "Set environment variable")
@@ -95,7 +95,7 @@ DEFUN(editBf, EDIT, "Edit local source")
         cmd = unquote_mailcap(ctx.buf->edit, ctx.buf->content->content_type, fn,
             checkHeader(ctx.buf->content, "Content-Type:"), NULL);
     else
-        cmd = myEditor(getRuntime()->Editor, shell_quote(fn), doc_cur_real_linenumber(&ctx.buf->doc));
+        cmd = myEditor(getRuntime()->Editor, shell_quote(fn), doc_cur_real_linenumber(ctx.buf->doc));
     blockChild(cmd->ptr);
 
     // buffer is modified. so reload
@@ -112,7 +112,7 @@ DEFUN(editScr, EDIT_SCREEN, "Edit rendered copy of document")
     }
     saveBuffer(ctx.buf, f, TRUE);
     fclose(f);
-    exec_cmd(myEditor(getRuntime()->Editor, shell_quote(tmpf), doc_cur_real_linenumber(&ctx.buf->doc))->ptr);
+    exec_cmd(myEditor(getRuntime()->Editor, shell_quote(tmpf), doc_cur_real_linenumber(ctx.buf->doc))->ptr);
     unlink(tmpf);
 }
 
@@ -275,89 +275,89 @@ DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output")
 //
 DEFUN(movL, MOVE_LEFT, "Cursor left")
 {
-    doc_movL(&ctx.buf->doc, ctx.buf->doc.COLS / 2);
+    doc_movL(ctx.buf->doc, ctx.buf->doc->COLS / 2);
 }
 
 DEFUN(movL1, MOVE_LEFT1, "Cursor left. With edge touched, slide")
 {
-    doc_movL(&ctx.buf->doc, 1);
+    doc_movL(ctx.buf->doc, 1);
 }
 
 DEFUN(movD, MOVE_DOWN, "Cursor down")
 {
-    doc_movD(&ctx.buf->doc, (ctx.buf->doc.LINES + 1) / 2);
+    doc_movD(ctx.buf->doc, (ctx.buf->doc->LINES + 1) / 2);
 }
 
 DEFUN(movD1, MOVE_DOWN1, "Cursor down. With edge touched, slide")
 {
-    doc_movD(&ctx.buf->doc, 1);
+    doc_movD(ctx.buf->doc, 1);
 }
 
 DEFUN(movU, MOVE_UP, "Cursor up")
 {
-    doc_movU(&ctx.buf->doc, (ctx.buf->doc.LINES + 1) / 2);
+    doc_movU(ctx.buf->doc, (ctx.buf->doc->LINES + 1) / 2);
 }
 
 DEFUN(movU1, MOVE_UP1, "Cursor up. With edge touched, slide")
 {
-    doc_movU(&ctx.buf->doc, 1);
+    doc_movU(ctx.buf->doc, 1);
 }
 
 DEFUN(movR, MOVE_RIGHT, "Cursor right")
 {
-    doc_movR(&ctx.buf->doc, ctx.buf->doc.COLS / 2);
+    doc_movR(ctx.buf->doc, ctx.buf->doc->COLS / 2);
 }
 
 DEFUN(movR1, MOVE_RIGHT1, "Cursor right. With edge touched, slide")
 {
-    doc_movR(&ctx.buf->doc, 1);
+    doc_movR(ctx.buf->doc, 1);
 }
 
 DEFUN(linbeg, LINE_BEGIN, "Go to the beginning of the line")
 {
-    if (ctx.buf->doc.firstLine == NULL)
+    if (ctx.buf->doc->firstLine == NULL)
         return;
-    while (ctx.buf->doc.currentLine->prev && ctx.buf->doc.currentLine->bpos)
-        doc_cursorUp0(&ctx.buf->doc, 1);
-    ctx.buf->doc.pos = 0;
-    doc_arrangeCursor(&ctx.buf->doc);
+    while (ctx.buf->doc->currentLine->prev && ctx.buf->doc->currentLine->bpos)
+        doc_cursorUp0(ctx.buf->doc, 1);
+    ctx.buf->doc->pos = 0;
+    doc_arrangeCursor(ctx.buf->doc);
 }
 
 DEFUN(linend, LINE_END, "Go to the end of the line")
 {
-    if (ctx.buf->doc.firstLine == NULL)
+    if (ctx.buf->doc->firstLine == NULL)
         return;
-    while (ctx.buf->doc.currentLine->next
-        && ctx.buf->doc.currentLine->next->bpos)
-        doc_cursorDown0(&ctx.buf->doc, 1);
-    ctx.buf->doc.pos = ctx.buf->doc.currentLine->len - 1;
-    doc_arrangeCursor(&ctx.buf->doc);
+    while (ctx.buf->doc->currentLine->next
+        && ctx.buf->doc->currentLine->next->bpos)
+        doc_cursorDown0(ctx.buf->doc, 1);
+    ctx.buf->doc->pos = ctx.buf->doc->currentLine->len - 1;
+    doc_arrangeCursor(ctx.buf->doc);
 }
 
 DEFUN(goLine, GOTO_LINE, "Go to the specified line")
 {
     const char* str = searchKeyData();
     if (getRuntime()->prec_num)
-        doc_goLine(&ctx.buf->doc, "^");
+        doc_goLine(ctx.buf->doc, "^");
     else if (str)
-        doc_goLine(&ctx.buf->doc, str);
+        doc_goLine(ctx.buf->doc, str);
     else
-        doc_goLine(&ctx.buf->doc, inputStr("Goto line: ", ""));
+        doc_goLine(ctx.buf->doc, inputStr("Goto line: ", ""));
 }
 
 DEFUN(goLineF, BEGIN, "Go to the first line")
 {
-    doc_goLine(&ctx.buf->doc, "^");
+    doc_goLine(ctx.buf->doc, "^");
 }
 
 DEFUN(goLineL, END, "Go to the last line")
 {
-    doc_goLine(&ctx.buf->doc, "$");
+    doc_goLine(ctx.buf->doc, "$");
 }
 
 DEFUN(movLW, PREV_WORD, "Move to the previous word")
 {
-    if (ctx.buf->doc.firstLine == NULL)
+    if (ctx.buf->doc->firstLine == NULL)
         return;
 
     // char* lb;
@@ -366,44 +366,44 @@ DEFUN(movLW, PREV_WORD, "Move to the previous word")
 
     int n = searchKeyNum();
     for (int i = 0; i < n; i++) {
-        struct Line* pline = ctx.buf->doc.currentLine;
-        int ppos = ctx.buf->doc.pos;
+        struct Line* pline = ctx.buf->doc->currentLine;
+        int ppos = ctx.buf->doc->pos;
 
-        if (!doc_prev_nonnull_line(&ctx.buf->doc, ctx.buf->doc.currentLine))
+        if (!doc_prev_nonnull_line(ctx.buf->doc, ctx.buf->doc->currentLine))
             goto end;
 
         while (1) {
-            struct Line* l = ctx.buf->doc.currentLine;
+            struct Line* l = ctx.buf->doc->currentLine;
             const char* lb = l->lineBuf;
-            while (ctx.buf->doc.pos > 0) {
-                int tmp = ctx.buf->doc.pos;
+            while (ctx.buf->doc->pos > 0) {
+                int tmp = ctx.buf->doc->pos;
                 prevChar(tmp, l);
                 if (is_wordchar(getChar(&lb[tmp])))
                     break;
-                ctx.buf->doc.pos = tmp;
+                ctx.buf->doc->pos = tmp;
             }
-            if (ctx.buf->doc.pos > 0)
+            if (ctx.buf->doc->pos > 0)
                 break;
-            if (!doc_prev_nonnull_line(&ctx.buf->doc, ctx.buf->doc.currentLine->prev)) {
-                ctx.buf->doc.currentLine = pline;
-                ctx.buf->doc.pos = ppos;
+            if (!doc_prev_nonnull_line(ctx.buf->doc, ctx.buf->doc->currentLine->prev)) {
+                ctx.buf->doc->currentLine = pline;
+                ctx.buf->doc->pos = ppos;
                 goto end;
             }
-            ctx.buf->doc.pos = ctx.buf->doc.currentLine->len;
+            ctx.buf->doc->pos = ctx.buf->doc->currentLine->len;
         }
 
-        struct Line* l = ctx.buf->doc.currentLine;
+        struct Line* l = ctx.buf->doc->currentLine;
         const char* lb = l->lineBuf;
-        while (ctx.buf->doc.pos > 0) {
-            int tmp = ctx.buf->doc.pos;
+        while (ctx.buf->doc->pos > 0) {
+            int tmp = ctx.buf->doc->pos;
             prevChar(tmp, l);
             if (!is_wordchar(getChar(&lb[tmp])))
                 break;
-            ctx.buf->doc.pos = tmp;
+            ctx.buf->doc->pos = tmp;
         }
     }
 end:
-    doc_arrangeCursor(&ctx.buf->doc);
+    doc_arrangeCursor(ctx.buf->doc);
 }
 
 DEFUN(movRW, NEXT_WORD, "Move to the next word")
@@ -413,142 +413,142 @@ DEFUN(movRW, NEXT_WORD, "Move to the next word")
     int ppos;
     int i, n = searchKeyNum();
 
-    if (ctx.buf->doc.firstLine == NULL)
+    if (ctx.buf->doc->firstLine == NULL)
         return;
 
     for (i = 0; i < n; i++) {
-        pline = ctx.buf->doc.currentLine;
-        ppos = ctx.buf->doc.pos;
+        pline = ctx.buf->doc->currentLine;
+        ppos = ctx.buf->doc->pos;
 
-        if (!doc_next_nonnull_line(&ctx.buf->doc, ctx.buf->doc.currentLine))
+        if (!doc_next_nonnull_line(ctx.buf->doc, ctx.buf->doc->currentLine))
             goto end;
 
-        l = ctx.buf->doc.currentLine;
+        l = ctx.buf->doc->currentLine;
         lb = l->lineBuf;
-        while (ctx.buf->doc.pos < l->len && is_wordchar(getChar(&lb[ctx.buf->doc.pos])))
-            nextChar(ctx.buf->doc.pos, l);
+        while (ctx.buf->doc->pos < l->len && is_wordchar(getChar(&lb[ctx.buf->doc->pos])))
+            nextChar(ctx.buf->doc->pos, l);
 
         while (1) {
-            while (ctx.buf->doc.pos < l->len && !is_wordchar(getChar(&lb[ctx.buf->doc.pos])))
-                nextChar(ctx.buf->doc.pos, l);
-            if (ctx.buf->doc.pos < l->len)
+            while (ctx.buf->doc->pos < l->len && !is_wordchar(getChar(&lb[ctx.buf->doc->pos])))
+                nextChar(ctx.buf->doc->pos, l);
+            if (ctx.buf->doc->pos < l->len)
                 break;
-            if (!doc_next_nonnull_line(&ctx.buf->doc, ctx.buf->doc.currentLine->next)) {
-                ctx.buf->doc.currentLine = pline;
-                ctx.buf->doc.pos = ppos;
+            if (!doc_next_nonnull_line(ctx.buf->doc, ctx.buf->doc->currentLine->next)) {
+                ctx.buf->doc->currentLine = pline;
+                ctx.buf->doc->pos = ppos;
                 goto end;
             }
-            ctx.buf->doc.pos = 0;
-            l = ctx.buf->doc.currentLine;
+            ctx.buf->doc->pos = 0;
+            l = ctx.buf->doc->currentLine;
             lb = l->lineBuf;
         }
     }
 end:
-    doc_arrangeCursor(&ctx.buf->doc);
+    doc_arrangeCursor(ctx.buf->doc);
 }
 
 DEFUN(pgFore, NEXT_PAGE, "Scroll down one page")
 {
     if (getRuntime()->vi_prec_num)
-        doc_nscroll(&ctx.buf->doc, searchKeyNum() * (ctx.buf->doc.LINES - 1));
+        doc_nscroll(ctx.buf->doc, searchKeyNum() * (ctx.buf->doc->LINES - 1));
     else
-        doc_nscroll(&ctx.buf->doc, getRuntime()->prec_num ? searchKeyNum() : searchKeyNum() * (ctx.buf->doc.LINES - 1));
+        doc_nscroll(ctx.buf->doc, getRuntime()->prec_num ? searchKeyNum() : searchKeyNum() * (ctx.buf->doc->LINES - 1));
 }
 
 DEFUN(pgBack, PREV_PAGE, "Scroll up one page")
 {
     if (getRuntime()->vi_prec_num)
-        doc_nscroll(&ctx.buf->doc, -searchKeyNum() * (ctx.buf->doc.LINES - 1));
+        doc_nscroll(ctx.buf->doc, -searchKeyNum() * (ctx.buf->doc->LINES - 1));
     else
-        doc_nscroll(&ctx.buf->doc, -(getRuntime()->prec_num ? searchKeyNum() : searchKeyNum() * (ctx.buf->doc.LINES - 1)));
+        doc_nscroll(ctx.buf->doc, -(getRuntime()->prec_num ? searchKeyNum() : searchKeyNum() * (ctx.buf->doc->LINES - 1)));
 }
 
 DEFUN(hpgFore, NEXT_HALF_PAGE, "Scroll down half a page")
 {
-    doc_nscroll(&ctx.buf->doc, searchKeyNum() * (ctx.buf->doc.LINES / 2 - 1));
+    doc_nscroll(ctx.buf->doc, searchKeyNum() * (ctx.buf->doc->LINES / 2 - 1));
 }
 
 DEFUN(hpgBack, PREV_HALF_PAGE, "Scroll up half a page")
 {
-    doc_nscroll(&ctx.buf->doc, -searchKeyNum() * (ctx.buf->doc.LINES / 2 - 1));
+    doc_nscroll(ctx.buf->doc, -searchKeyNum() * (ctx.buf->doc->LINES / 2 - 1));
 }
 
 DEFUN(lup1, UP, "Scroll the screen up one line")
 {
-    doc_nscroll(&ctx.buf->doc, searchKeyNum());
+    doc_nscroll(ctx.buf->doc, searchKeyNum());
 }
 
 DEFUN(ldown1, DOWN, "Scroll the screen down one line")
 {
-    doc_nscroll(&ctx.buf->doc, -searchKeyNum());
+    doc_nscroll(ctx.buf->doc, -searchKeyNum());
 }
 
 DEFUN(ctrCsrV, CENTER_V, "Center on cursor line")
 {
-    if (!ctx.buf->doc.firstLine)
+    if (!ctx.buf->doc->firstLine)
         return;
-    int offsety = /*ctx.buf->doc.LINES / 2*/ -ctx.buf->doc.cursorY;
+    int offsety = /*ctx.buf->doc.LINES / 2*/ -ctx.buf->doc->cursorY;
     if (offsety != 0) {
-        ctx.buf->doc.topLine = doc_lineSkip(&ctx.buf->doc, ctx.buf->doc.topLine, -offsety);
-        doc_arrangeLine(&ctx.buf->doc);
+        ctx.buf->doc->topLine = doc_lineSkip(ctx.buf->doc, ctx.buf->doc->topLine, -offsety);
+        doc_arrangeLine(ctx.buf->doc);
     }
 }
 
 DEFUN(ctrCsrH, CENTER_H, "Center on cursor column")
 {
-    if (!ctx.buf->doc.firstLine)
+    if (!ctx.buf->doc->firstLine)
         return;
-    int offsetx = ctx.buf->doc.cursorX - ctx.buf->doc.COLS / 2;
+    int offsetx = ctx.buf->doc->cursorX - ctx.buf->doc->COLS / 2;
     if (offsetx != 0) {
-        doc_columnSkip(&ctx.buf->doc, offsetx);
-        doc_arrangeCursor(&ctx.buf->doc);
+        doc_columnSkip(ctx.buf->doc, offsetx);
+        doc_arrangeCursor(ctx.buf->doc);
     }
 }
 
 DEFUN(shiftl, SHIFT_LEFT, "Shift screen left")
 {
-    if (!ctx.buf->doc.firstLine)
+    if (!ctx.buf->doc->firstLine)
         return;
-    int column = ctx.buf->doc.currentColumn;
-    doc_columnSkip(&ctx.buf->doc, searchKeyNum() * (-ctx.buf->doc.COLS + 1) + 1);
-    doc_shiftvisualpos(&ctx.buf->doc, ctx.buf->doc.currentColumn - column);
+    int column = ctx.buf->doc->currentColumn;
+    doc_columnSkip(ctx.buf->doc, searchKeyNum() * (-ctx.buf->doc->COLS + 1) + 1);
+    doc_shiftvisualpos(ctx.buf->doc, ctx.buf->doc->currentColumn - column);
 }
 
 DEFUN(shiftr, SHIFT_RIGHT, "Shift screen right")
 {
-    if (ctx.buf->doc.firstLine == NULL)
+    if (ctx.buf->doc->firstLine == NULL)
         return;
-    int column = ctx.buf->doc.currentColumn;
-    doc_columnSkip(&ctx.buf->doc, searchKeyNum() * (ctx.buf->doc.COLS - 1) - 1);
-    doc_shiftvisualpos(&ctx.buf->doc, ctx.buf->doc.currentColumn - column);
+    int column = ctx.buf->doc->currentColumn;
+    doc_columnSkip(ctx.buf->doc, searchKeyNum() * (ctx.buf->doc->COLS - 1) - 1);
+    doc_shiftvisualpos(ctx.buf->doc, ctx.buf->doc->currentColumn - column);
 }
 
 DEFUN(col1R, RIGHT, "Shift screen one column right")
 {
-    struct Line* l = ctx.buf->doc.currentLine;
+    struct Line* l = ctx.buf->doc->currentLine;
     if (l == NULL)
         return;
     int n = searchKeyNum();
     for (int j = 0; j < n; j++) {
-        int column = ctx.buf->doc.currentColumn;
-        doc_columnSkip(&ctx.buf->doc, 1);
-        if (column == ctx.buf->doc.currentColumn)
+        int column = ctx.buf->doc->currentColumn;
+        doc_columnSkip(ctx.buf->doc, 1);
+        if (column == ctx.buf->doc->currentColumn)
             break;
-        doc_shiftvisualpos(&ctx.buf->doc, 1);
+        doc_shiftvisualpos(ctx.buf->doc, 1);
     }
 }
 
 DEFUN(col1L, LEFT, "Shift screen one column left")
 {
-    struct Line* l = ctx.buf->doc.currentLine;
+    struct Line* l = ctx.buf->doc->currentLine;
     if (l == NULL)
         return;
     int n = searchKeyNum();
     for (int j = 0; j < n; j++) {
-        if (ctx.buf->doc.currentColumn == 0)
+        if (ctx.buf->doc->currentColumn == 0)
             break;
-        doc_columnSkip(&ctx.buf->doc, -1);
-        doc_shiftvisualpos(&ctx.buf->doc, -1);
+        doc_columnSkip(ctx.buf->doc, -1);
+        doc_shiftvisualpos(ctx.buf->doc, -1);
     }
 }
 
@@ -557,10 +557,10 @@ DEFUN(col1L, LEFT, "Shift screen one column left")
 //
 DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink")
 {
-    if (ctx.buf->doc.firstLine == NULL)
+    if (ctx.buf->doc->firstLine == NULL)
         return;
 
-    struct HmarkerList* hl = ctx.buf->doc.hmarklist;
+    struct HmarkerList* hl = ctx.buf->doc->hmarklist;
     if (!hl || hl->nmark == 0)
         return;
 
@@ -576,23 +576,23 @@ DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink")
         if (hseq >= hl->nmark)
             return;
         po = hl->marks + hseq;
-        an = retrieveAnchor(ctx.buf->doc.href, po->line, po->pos);
+        an = retrieveAnchor(ctx.buf->doc->href, po->line, po->pos);
         if (an == NULL)
-            an = retrieveAnchor(ctx.buf->doc.formitem, po->line, po->pos);
+            an = retrieveAnchor(ctx.buf->doc->formitem, po->line, po->pos);
         hseq++;
     } while (an == NULL);
 
-    doc_gotoLine(&ctx.buf->doc, po->line);
-    ctx.buf->doc.pos = po->pos;
-    doc_arrangeCursor(&ctx.buf->doc);
+    doc_gotoLine(ctx.buf->doc, po->line);
+    ctx.buf->doc->pos = po->pos;
+    doc_arrangeCursor(ctx.buf->doc);
 }
 
 DEFUN(lastA, LINK_END, "Move to the last hyperlink")
 {
-    if (ctx.buf->doc.firstLine == NULL)
+    if (ctx.buf->doc->firstLine == NULL)
         return;
 
-    struct HmarkerList* hl = ctx.buf->doc.hmarklist;
+    struct HmarkerList* hl = ctx.buf->doc->hmarklist;
     if (!hl || hl->nmark == 0)
         return;
 
@@ -610,20 +610,20 @@ DEFUN(lastA, LINK_END, "Move to the last hyperlink")
         if (hseq < 0)
             return;
         po = hl->marks + hseq;
-        an = retrieveAnchor(ctx.buf->doc.href, po->line, po->pos);
+        an = retrieveAnchor(ctx.buf->doc->href, po->line, po->pos);
         if (an == NULL)
-            an = retrieveAnchor(ctx.buf->doc.formitem, po->line, po->pos);
+            an = retrieveAnchor(ctx.buf->doc->formitem, po->line, po->pos);
         hseq--;
     } while (an == NULL);
 
-    doc_gotoLine(&ctx.buf->doc, po->line);
-    ctx.buf->doc.pos = po->pos;
-    doc_arrangeCursor(&ctx.buf->doc);
+    doc_gotoLine(ctx.buf->doc, po->line);
+    ctx.buf->doc->pos = po->pos;
+    doc_arrangeCursor(ctx.buf->doc);
 }
 
 DEFUN(nthA, LINK_N, "Go to the nth link")
 {
-    struct HmarkerList* hl = Currentbuf->doc.hmarklist;
+    struct HmarkerList* hl = Currentbuf->doc->hmarklist;
     struct BufferPoint* po;
     struct Anchor* an;
 
@@ -631,71 +631,71 @@ DEFUN(nthA, LINK_N, "Go to the nth link")
     if (n < 0 || n > hl->nmark)
         return;
 
-    if (Currentbuf->doc.firstLine == NULL)
+    if (Currentbuf->doc->firstLine == NULL)
         return;
     if (!hl || hl->nmark == 0)
         return;
 
     po = hl->marks + n - 1;
-    an = retrieveAnchor(Currentbuf->doc.href, po->line, po->pos);
+    an = retrieveAnchor(Currentbuf->doc->href, po->line, po->pos);
     if (an == NULL)
-        an = retrieveAnchor(Currentbuf->doc.formitem, po->line, po->pos);
+        an = retrieveAnchor(Currentbuf->doc->formitem, po->line, po->pos);
     if (an == NULL)
         return;
 
-    doc_gotoLine(&Currentbuf->doc, po->line);
-    Currentbuf->doc.pos = po->pos;
-    doc_arrangeCursor(&Currentbuf->doc);
+    doc_gotoLine(Currentbuf->doc, po->line);
+    Currentbuf->doc->pos = po->pos;
+    doc_arrangeCursor(Currentbuf->doc);
 }
 
 DEFUN(nextA, NEXT_LINK, "Move to the next hyperlink")
 {
-    doc_nextA(&ctx.buf->doc, false, baseURL(ctx.buf));
+    doc_nextA(ctx.buf->doc, false, baseURL(ctx.buf));
 }
 
 DEFUN(prevA, PREV_LINK, "Move to the previous hyperlink")
 {
-    doc_prevA(&ctx.buf->doc, false, baseURL(ctx.buf));
+    doc_prevA(ctx.buf->doc, false, baseURL(ctx.buf));
 }
 
 DEFUN(nextVA, NEXT_VISITED, "Move to the next visited hyperlink")
 {
-    doc_nextA(&ctx.buf->doc, true, baseURL(ctx.buf));
+    doc_nextA(ctx.buf->doc, true, baseURL(ctx.buf));
 }
 
 DEFUN(prevVA, PREV_VISITED, "Move to the previous visited hyperlink")
 {
-    doc_prevA(&ctx.buf->doc, true, baseURL(ctx.buf));
+    doc_prevA(ctx.buf->doc, true, baseURL(ctx.buf));
 }
 
 DEFUN(nextL, NEXT_LEFT, "Move left to the next hyperlink")
 {
-    doc_nextX(&ctx.buf->doc, -1, 0);
+    doc_nextX(ctx.buf->doc, -1, 0);
 }
 
 DEFUN(nextLU, NEXT_LEFT_UP, "Move left or upward to the next hyperlink")
 {
-    doc_nextX(&ctx.buf->doc, -1, -1);
+    doc_nextX(ctx.buf->doc, -1, -1);
 }
 
 DEFUN(nextR, NEXT_RIGHT, "Move right to the next hyperlink")
 {
-    doc_nextX(&ctx.buf->doc, 1, 0);
+    doc_nextX(ctx.buf->doc, 1, 0);
 }
 
 DEFUN(nextRD, NEXT_RIGHT_DOWN, "Move right or downward to the next hyperlink")
 {
-    doc_nextX(&ctx.buf->doc, 1, 1);
+    doc_nextX(ctx.buf->doc, 1, 1);
 }
 
 DEFUN(nextD, NEXT_DOWN, "Move downward to the next hyperlink")
 {
-    doc_nextY(&ctx.buf->doc, 1);
+    doc_nextY(ctx.buf->doc, 1);
 }
 
 DEFUN(nextU, NEXT_UP, "Move upward to the next hyperlink")
 {
-    doc_nextY(&ctx.buf->doc, -1);
+    doc_nextY(ctx.buf->doc, -1);
 }
 
 //
@@ -704,52 +704,52 @@ DEFUN(nextU, NEXT_UP, "Move upward to the next hyperlink")
 
 DEFUN(srchfor, SEARCH SEARCH_FORE WHEREIS, "Search forward")
 {
-    srch(&ctx.buf->doc, forwardSearch, "Forward: ");
+    srch(ctx.buf->doc, forwardSearch, "Forward: ");
 }
 
 DEFUN(srchbak, SEARCH_BACK, "Search backward")
 {
-    srch(&ctx.buf->doc, backwardSearch, "Backward: ");
+    srch(ctx.buf->doc, backwardSearch, "Backward: ");
 }
 
 DEFUN(isrchfor, ISEARCH, "Incremental search forward")
 {
-    isrch(&ctx.buf->doc, forwardSearch, "I-search: ");
+    isrch(ctx.buf->doc, forwardSearch, "I-search: ");
 }
 
 DEFUN(isrchbak, ISEARCH_BACK, "Incremental search backward")
 {
-    isrch(&ctx.buf->doc, backwardSearch, "I-search backward: ");
+    isrch(ctx.buf->doc, backwardSearch, "I-search backward: ");
 }
 
 DEFUN(srchnxt, SEARCH_NEXT, "Continue search forward")
 {
-    srch_nxtprv(&ctx.buf->doc, 0);
+    srch_nxtprv(ctx.buf->doc, 0);
 }
 
 DEFUN(srchprv, SEARCH_PREV, "Continue search backward")
 {
-    srch_nxtprv(&ctx.buf->doc, 1);
+    srch_nxtprv(ctx.buf->doc, 1);
 }
 
 DEFUN(_mark, MARK, "Set/unset mark")
 {
     if (!getRuntime()->use_mark)
         return;
-    if (Currentbuf->doc.firstLine == NULL)
+    if (Currentbuf->doc->firstLine == NULL)
         return;
-    struct Line* l = Currentbuf->doc.currentLine;
-    l->propBuf[Currentbuf->doc.pos] ^= PE_MARK;
+    struct Line* l = Currentbuf->doc->currentLine;
+    l->propBuf[Currentbuf->doc->pos] ^= PE_MARK;
 }
 
 DEFUN(nextMk, NEXT_MARK, "Go to the next mark")
 {
     if (!getRuntime()->use_mark)
         return;
-    if (Currentbuf->doc.firstLine == NULL)
+    if (Currentbuf->doc->firstLine == NULL)
         return;
-    int i = Currentbuf->doc.pos + 1;
-    struct Line* l = Currentbuf->doc.currentLine;
+    int i = Currentbuf->doc->pos + 1;
+    struct Line* l = Currentbuf->doc->currentLine;
     if (i >= l->len) {
         i = 0;
         l = l->next;
@@ -757,9 +757,9 @@ DEFUN(nextMk, NEXT_MARK, "Go to the next mark")
     while (l != NULL) {
         for (; i < l->len; i++) {
             if (l->propBuf[i] & PE_MARK) {
-                Currentbuf->doc.currentLine = l;
-                Currentbuf->doc.pos = i;
-                doc_arrangeCursor(&Currentbuf->doc);
+                Currentbuf->doc->currentLine = l;
+                Currentbuf->doc->pos = i;
+                doc_arrangeCursor(Currentbuf->doc);
                 return;
             }
         }
@@ -773,10 +773,10 @@ DEFUN(prevMk, PREV_MARK, "Go to the previous mark")
 {
     if (!getRuntime()->use_mark)
         return;
-    if (Currentbuf->doc.firstLine == NULL)
+    if (Currentbuf->doc->firstLine == NULL)
         return;
-    int i = Currentbuf->doc.pos - 1;
-    struct Line* l = Currentbuf->doc.currentLine;
+    int i = Currentbuf->doc->pos - 1;
+    struct Line* l = Currentbuf->doc->currentLine;
     if (i < 0) {
         l = l->prev;
         if (l != NULL)
@@ -785,9 +785,9 @@ DEFUN(prevMk, PREV_MARK, "Go to the previous mark")
     while (l != NULL) {
         for (; i >= 0; i--) {
             if (l->propBuf[i] & PE_MARK) {
-                Currentbuf->doc.currentLine = l;
-                Currentbuf->doc.pos = i;
-                doc_arrangeCursor(&Currentbuf->doc);
+                Currentbuf->doc->currentLine = l;
+                Currentbuf->doc->pos = i;
+                doc_arrangeCursor(Currentbuf->doc);
                 return;
             }
         }
@@ -811,14 +811,14 @@ DEFUN(reMark, REG_MARK, "Mark all occurences of a pattern")
             return;
         }
     }
-    str = conv_search_string(str, getRuntime()->DisplayCharset, ctx.buf->doc.charset);
+    str = conv_search_string(str, getRuntime()->DisplayCharset, ctx.buf->doc->charset);
 
     if ((str = regexCompile(str, 1)) != NULL) {
         disp_message(str, TRUE);
         return;
     }
     MarkString = str;
-    for (struct Line* l = Currentbuf->doc.firstLine; l != NULL; l = l->next) {
+    for (struct Line* l = Currentbuf->doc->firstLine; l != NULL; l = l->next) {
         const char* p = l->lineBuf;
         for (;;) {
             if (regexMatch(p, &l->lineBuf[l->len] - p, p == l->lineBuf) == 1) {
@@ -860,7 +860,7 @@ DEFUN(ldfile, LOAD, "Open local file in a new buffer")
     }
     fn = conv_to_system(fn);
 
-    struct Content *content = get_content_cache(file_to_url(fn), NULL,
+    struct Content* content = get_content_cache(file_to_url(fn), NULL,
         (struct LoadOption) {
             .base_url = NULL,
             .referer = NO_REFERER,
@@ -884,7 +884,7 @@ DEFUN(ldhelp, HELP, "Show help panel")
     Str tmp = Sprintf("file:///$LIB/" HELP_CGI CGI_EXTENSION "?version=%s&lang=%s",
         Str_form_quote(Strnew_charp(w3m_version))->ptr,
         Str_form_quote(Strnew_charp_n(lang, n))->ptr);
-    struct Content *content = get_content_cache(tmp->ptr, NULL,
+    struct Content* content = get_content_cache(tmp->ptr, NULL,
         (struct LoadOption) {
             .base_url = NULL,
             .referer = NO_REFERER,
@@ -1016,26 +1016,26 @@ DEFUN(backBf, BACK, "Close current buffer and return to the one below in stack")
     delBuffer(Currentbuf);
 
     if (buf) {
-        if (buf->doc.frameQ) {
+        if (buf->doc->frameQ) {
             struct frameset* fs;
-            long linenumber = buf->doc.frameQ->linenumber;
-            long top = buf->doc.frameQ->top_linenumber;
-            int pos = buf->doc.frameQ->pos;
-            int currentColumn = buf->doc.frameQ->currentColumn;
-            struct AnchorList* formitem = buf->doc.frameQ->formitem;
+            long linenumber = buf->doc->frameQ->linenumber;
+            long top = buf->doc->frameQ->top_linenumber;
+            int pos = buf->doc->frameQ->pos;
+            int currentColumn = buf->doc->frameQ->currentColumn;
+            struct AnchorList* formitem = buf->doc->frameQ->formitem;
 
-            fs = popFrameTree(&(buf->doc.frameQ));
-            deleteFrameSet(buf->doc.frameset);
-            buf->doc.frameset = fs;
+            fs = popFrameTree(&(buf->doc->frameQ));
+            deleteFrameSet(buf->doc->frameset);
+            buf->doc->frameset = fs;
 
             if (buf == Currentbuf) {
                 rFrame(ctx);
-                Currentbuf->doc.topLine = doc_lineSkip(&Currentbuf->doc,
-                    Currentbuf->doc.firstLine, top - 1);
-                doc_gotoLine(&Currentbuf->doc, linenumber);
-                Currentbuf->doc.pos = pos;
-                Currentbuf->doc.currentColumn = currentColumn;
-                doc_arrangeCursor(&Currentbuf->doc);
+                Currentbuf->doc->topLine = doc_lineSkip(Currentbuf->doc,
+                    Currentbuf->doc->firstLine, top - 1);
+                doc_gotoLine(Currentbuf->doc, linenumber);
+                Currentbuf->doc->pos = pos;
+                Currentbuf->doc->currentColumn = currentColumn;
+                doc_arrangeCursor(Currentbuf->doc);
                 formResetBuffer(Currentbuf, formitem);
             }
         } else if (getRuntime()->RenderFrame && buf == Currentbuf) {

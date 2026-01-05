@@ -194,16 +194,16 @@ void formRecheckRadio(struct Buffer* buf, struct Anchor* a, struct FormItemList*
     struct Anchor* a2;
     struct FormItemList* f2;
 
-    for (i = 0; i < buf->doc.formitem->nanchor; i++) {
-        a2 = &buf->doc.formitem->anchors[i];
+    for (i = 0; i < buf->doc->formitem->nanchor; i++) {
+        a2 = &buf->doc->formitem->anchors[i];
         f2 = (struct FormItemList*)a2->url;
         if (f2->parent == fi->parent && f2 != fi && f2->type == FORM_INPUT_RADIO && Strcmp(f2->name, fi->name) == 0) {
             f2->checked = 0;
-            doc_formUpdateBuffer(&buf->doc, a2, f2);
+            doc_formUpdateBuffer(buf->doc, a2, f2);
         }
     }
     fi->checked = 1;
-    doc_formUpdateBuffer(&buf->doc, a, fi);
+    doc_formUpdateBuffer(buf->doc, a, fi);
 }
 
 void formResetBuffer(struct Buffer* buf, struct AnchorList* formitem)
@@ -212,10 +212,10 @@ void formResetBuffer(struct Buffer* buf, struct AnchorList* formitem)
     struct Anchor* a;
     struct FormItemList *f1, *f2;
 
-    if (buf == NULL || buf->doc.formitem == NULL || formitem == NULL)
+    if (buf == NULL || buf->doc->formitem == NULL || formitem == NULL)
         return;
-    for (i = 0; i < buf->doc.formitem->nanchor && i < formitem->nanchor; i++) {
-        a = &buf->doc.formitem->anchors[i];
+    for (i = 0; i < buf->doc->formitem->nanchor && i < formitem->nanchor; i++) {
+        a = &buf->doc->formitem->anchors[i];
         if (a->y != a->start.line)
             continue;
         f1 = (struct FormItemList*)a->url;
@@ -247,7 +247,7 @@ void formResetBuffer(struct Buffer* buf, struct AnchorList* formitem)
         default:
             continue;
         }
-        doc_formUpdateBuffer(&buf->doc, a, f1);
+        doc_formUpdateBuffer(buf->doc, a, f1);
     }
 }
 
@@ -910,7 +910,7 @@ void preFormUpdateBuffer(struct Buffer* buf)
     struct FormSelectOptionItem* opt;
     int j;
 
-    if (!buf || !buf->doc.formitem || !PreForm)
+    if (!buf || !buf->doc->formitem || !PreForm)
         return;
 
     for (pf = PreForm; pf; pf = pf->next) {
@@ -923,8 +923,8 @@ void preFormUpdateBuffer(struct Buffer* buf)
                 continue;
         } else
             continue;
-        for (i = 0; i < buf->doc.formitem->nanchor; i++) {
-            a = &buf->doc.formitem->anchors[i];
+        for (i = 0; i < buf->doc->formitem->nanchor; i++) {
+            a = &buf->doc->formitem->anchors[i];
             fi = (struct FormItemList*)a->url;
             fl = fi->parent;
             if (pf->name && (!fl->name || strcmp(fl->name, pf->name)))
@@ -937,7 +937,7 @@ void preFormUpdateBuffer(struct Buffer* buf)
                     continue;
                 if (pi->type == FORM_INPUT_SUBMIT || pi->type == FORM_INPUT_IMAGE) {
                     if ((!pi->name || !*pi->name || (fi->name && !Strcmp_charp(fi->name, pi->name))) && (!pi->value || !*pi->value || (fi->value && !Strcmp_charp(fi->value, pi->value))))
-                        buf->doc.submit = a;
+                        buf->doc->submit = a;
                     continue;
                 }
                 if (!pi->name || !fi->name || Strcmp_charp(fi->name, pi->name))
@@ -948,12 +948,12 @@ void preFormUpdateBuffer(struct Buffer* buf)
                 case FORM_INPUT_PASSWORD:
                 case FORM_TEXTAREA:
                     fi->value = Strnew_charp(pi->value);
-                    doc_formUpdateBuffer(&buf->doc, a, fi);
+                    doc_formUpdateBuffer(buf->doc, a, fi);
                     break;
                 case FORM_INPUT_CHECKBOX:
                     if (pi->value && fi->value && !Strcmp_charp(fi->value, pi->value)) {
                         fi->checked = pi->checked;
-                        doc_formUpdateBuffer(&buf->doc, a, fi);
+                        doc_formUpdateBuffer(buf->doc, a, fi);
                     }
                     break;
                 case FORM_INPUT_RADIO:
@@ -968,7 +968,7 @@ void preFormUpdateBuffer(struct Buffer* buf)
                             fi->value = opt->value;
                             fi->label = opt->label;
                             updateSelectOption(fi, fi->select_option);
-                            doc_formUpdateBuffer(&buf->doc, a, fi);
+                            doc_formUpdateBuffer(buf->doc, a, fi);
                             break;
                         }
                     }

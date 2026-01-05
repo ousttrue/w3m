@@ -688,7 +688,7 @@ menu_search_forward(struct Document* doc, struct Menu* menu, int from)
 
 int mSrchF(struct DefunContext ctx, char c)
 {
-    int mselect = menu_search_forward(&ctx.buf->doc, CurrentMenu, CurrentMenu->select);
+    int mselect = menu_search_forward(ctx.buf->doc, CurrentMenu, CurrentMenu->select);
     if (mselect >= 0)
         goto_menu(CurrentMenu, mselect, 1);
     return (MENU_NOTHING);
@@ -732,7 +732,7 @@ menu_search_backward(struct Document* doc, struct Menu* menu, int from)
 
 int mSrchB(struct DefunContext ctx, char c)
 {
-    int mselect = menu_search_backward(&ctx.buf->doc, CurrentMenu, CurrentMenu->select);
+    int mselect = menu_search_backward(ctx.buf->doc, CurrentMenu, CurrentMenu->select);
     if (mselect >= 0)
         goto_menu(CurrentMenu, mselect, -1);
     return (MENU_NOTHING);
@@ -766,7 +766,7 @@ menu_search_next_previous(struct Document* doc, struct Menu* menu, int from, int
 
 int mSrchN(struct DefunContext ctx, char c)
 {
-    int mselect = menu_search_next_previous(&ctx.buf->doc, CurrentMenu, CurrentMenu->select, 0);
+    int mselect = menu_search_next_previous(ctx.buf->doc, CurrentMenu, CurrentMenu->select, 0);
     if (mselect >= 0)
         goto_menu(CurrentMenu, mselect, 1);
     return (MENU_NOTHING);
@@ -774,7 +774,7 @@ int mSrchN(struct DefunContext ctx, char c)
 
 int mSrchP(struct DefunContext ctx, char c)
 {
-    int mselect = menu_search_next_previous(&ctx.buf->doc, CurrentMenu, CurrentMenu->select, 1);
+    int mselect = menu_search_next_previous(ctx.buf->doc, CurrentMenu, CurrentMenu->select, 1);
     if (mselect >= 0)
         goto_menu(CurrentMenu, mselect, -1);
     return (MENU_NOTHING);
@@ -801,8 +801,8 @@ void popupMenu(int x, int y, struct Menu* menu)
     initSelectMenu();
     initSelTabMenu();
 
-    menu->cursorX = Currentbuf->doc.cursorX + Currentbuf->doc.rootX;
-    menu->cursorY = Currentbuf->doc.cursorY + Currentbuf->doc.rootY;
+    menu->cursorX = Currentbuf->doc->cursorX + Currentbuf->doc->rootX;
+    menu->cursorY = Currentbuf->doc->cursorY + Currentbuf->doc->rootY;
     menu->x = x + FRAME_WIDTH + 1;
     menu->y = y + 2;
 
@@ -819,8 +819,8 @@ DEFUN(mainMn, MAIN_MENU MENU, "Pop up menu")
     struct Menu* menu = &MainMenu;
     char* data;
     int n;
-    int x = Currentbuf->doc.cursorX + Currentbuf->doc.rootX,
-        y = Currentbuf->doc.cursorY + Currentbuf->doc.rootY;
+    int x = Currentbuf->doc->cursorX + Currentbuf->doc->rootX,
+        y = Currentbuf->doc->cursorY + Currentbuf->doc->rootY;
 
     data = searchKeyData();
     if (data != NULL) {
@@ -838,8 +838,8 @@ DEFUN(mainMn, MAIN_MENU MENU, "Pop up menu")
 
 DEFUN(selMn, SELECT_MENU, "Pop up buffer-stack menu")
 {
-    int x = Currentbuf->doc.cursorX + Currentbuf->doc.rootX,
-        y = Currentbuf->doc.cursorY + Currentbuf->doc.rootY;
+    int x = Currentbuf->doc->cursorX + Currentbuf->doc->rootX,
+        y = Currentbuf->doc->cursorY + Currentbuf->doc->rootY;
 
     popupMenu(x, y, &SelectMenu);
 }
@@ -904,7 +904,7 @@ initSelectMenu(void)
 
     label = New_N(char*, nitem + 2);
     for (i = 0, buf = Firstbuf; i < nitem; i++, buf = buf->nextBuffer) {
-        str = Sprintf("<%s>", buf->doc.title);
+        str = Sprintf("<%s>", buf->doc->title);
         if (buf->content->filename != NULL) {
             switch (buf->content->url.scheme) {
             case SCM_LOCAL:
@@ -945,8 +945,8 @@ initSelectMenu(void)
 
     new_option_menu(&SelectMenu, label, &SelectV, smChBuf);
     SelectMenu.initial = SelectV;
-    SelectMenu.cursorX = Currentbuf->doc.cursorX + Currentbuf->doc.rootX;
-    SelectMenu.cursorY = Currentbuf->doc.cursorY + Currentbuf->doc.rootY;
+    SelectMenu.cursorX = Currentbuf->doc->cursorX + Currentbuf->doc->rootX;
+    SelectMenu.cursorY = Currentbuf->doc->cursorY + Currentbuf->doc->rootY;
     SelectMenu.keymap['D'] = smDelBuf;
     SelectMenu.item[nitem].type = MENU_NOP;
 }
@@ -977,8 +977,8 @@ smChBuf(void)
 
 DEFUN(tabMn, TAB_MENU, "Pop up tab selection menu")
 {
-    int x = Currentbuf->doc.cursorX + Currentbuf->doc.rootX,
-        y = Currentbuf->doc.cursorY + Currentbuf->doc.rootY;
+    int x = Currentbuf->doc->cursorX + Currentbuf->doc->rootX,
+        y = Currentbuf->doc->cursorY + Currentbuf->doc->rootY;
 
     popupMenu(x, y, &SelTabMenu);
 }
@@ -1032,7 +1032,7 @@ initSelTabMenu(void)
     i = 0;
     for (struct TabBuffer* tab = LastTab(); i < nitem; i++, tab = tab->prevTab) {
         struct Buffer* buf = tab->currentBuffer;
-        Str str = Sprintf("<%s>", buf->doc.title);
+        Str str = Sprintf("<%s>", buf->doc->title);
         if (buf->content->filename != NULL) {
             switch (buf->content->url.scheme) {
             case SCM_LOCAL:
@@ -1073,8 +1073,8 @@ initSelTabMenu(void)
 
     new_option_menu(&SelTabMenu, label, &SelTabV, smChTab);
     SelTabMenu.initial = SelTabV;
-    SelTabMenu.cursorX = Currentbuf->doc.cursorX + Currentbuf->doc.rootX;
-    SelTabMenu.cursorY = Currentbuf->doc.cursorY + Currentbuf->doc.rootY;
+    SelTabMenu.cursorX = Currentbuf->doc->cursorX + Currentbuf->doc->rootX;
+    SelTabMenu.cursorY = Currentbuf->doc->cursorY + Currentbuf->doc->rootY;
     SelTabMenu.keymap['D'] = smDelTab;
     SelTabMenu.item[nitem].type = MENU_NOP;
 }
@@ -1311,17 +1311,17 @@ link_menu(struct Buffer* buf)
     int i, nitem, len = 0, linkV = -1;
     const char** label;
     Str str;
-    char* p;
+    const char* p;
 
-    if (!buf->doc.linklist)
+    if (!buf->doc->linklist)
         return NULL;
 
-    for (i = 0, l = buf->doc.linklist; l; i++, l = l->next)
+    for (i = 0, l = buf->doc->linklist; l; i++, l = l->next)
         ;
     nitem = i;
 
     label = New_N(char*, nitem + 1);
-    for (i = 0, l = buf->doc.linklist; l; i++, l = l->next) {
+    for (i = 0, l = buf->doc->linklist; l; i++, l = l->next) {
         str = Strnew_charp(l->title ? l->title : "(empty)");
         if (l->type == LINK_TYPE_REL)
             Strcat_charp(str, " [Rel] ");
@@ -1332,7 +1332,7 @@ link_menu(struct Buffer* buf)
         if (!l->url)
             p = "";
         else
-            p = url_decode2(baseURL(buf), &buf->doc, l->url);
+            p = url_decode2(baseURL(buf), buf->doc, l->url);
         Strcat_charp(str, p);
         label[i] = str->ptr;
         if (len < str->length)
@@ -1344,8 +1344,8 @@ link_menu(struct Buffer* buf)
     new_option_menu(&menu, label, &linkV, NULL);
 
     menu.initial = 0;
-    menu.cursorX = buf->doc.cursorX + buf->doc.rootX;
-    menu.cursorY = buf->doc.cursorY + buf->doc.rootY;
+    menu.cursorX = buf->doc->cursorX + buf->doc->rootX;
+    menu.cursorY = buf->doc->cursorY + buf->doc->rootY;
     menu.x = menu.cursorX + FRAME_WIDTH + 1;
     menu.y = menu.cursorY + 2;
 
@@ -1353,7 +1353,7 @@ link_menu(struct Buffer* buf)
 
     if (linkV < 0)
         return NULL;
-    for (i = 0, l = buf->doc.linklist; l; i++, l = l->next) {
+    for (i = 0, l = buf->doc->linklist; l; i++, l = l->next) {
         if (i == linkV)
             return l;
     }
@@ -1366,7 +1366,7 @@ struct Anchor*
 accesskey_menu(struct Buffer* buf)
 {
     struct Menu menu;
-    struct AnchorList* al = buf->doc.href;
+    struct AnchorList* al = buf->doc->href;
     struct Anchor* a;
     struct Anchor** ap;
     int i, n, nitem = 0, key = -1;
@@ -1389,7 +1389,7 @@ accesskey_menu(struct Buffer* buf)
     for (i = 0, n = 0; i < al->nanchor; i++) {
         a = &al->anchors[i];
         if (!a->slave && a->accesskey && IS_ASCII(a->accesskey)) {
-            t = getAnchorText(&buf->doc, al, a);
+            t = getAnchorText(buf->doc, al, a);
             label[n] = Sprintf("%c: %s", a->accesskey, t ? t : "")->ptr;
             ap[n] = a;
             n++;
@@ -1401,8 +1401,8 @@ accesskey_menu(struct Buffer* buf)
     new_option_menu(&menu, label, &key, NULL);
 
     menu.initial = 0;
-    menu.cursorX = buf->doc.cursorX + buf->doc.rootX;
-    menu.cursorY = buf->doc.cursorY + buf->doc.rootY;
+    menu.cursorX = buf->doc->cursorX + buf->doc->rootX;
+    menu.cursorY = buf->doc->cursorY + buf->doc->rootY;
     menu.x = menu.cursorX + FRAME_WIDTH + 1;
     menu.y = menu.cursorY + 2;
     for (i = 0; i < 128; i++)
@@ -1424,7 +1424,7 @@ accesskey_menu(struct Buffer* buf)
         menu.keyselect[(int)c] = i;
     }
 
-    a = doc_retrieveCurrentAnchor(&buf->doc);
+    a = doc_retrieveCurrentAnchor(buf->doc);
     if (a && a->accesskey && IS_ASCII(a->accesskey)) {
         for (i = 0; i < nitem; i++) {
             if (a->hseq == ap[i]->hseq) {
@@ -1466,7 +1466,7 @@ lmSelect(struct DefunContext ctx, char c)
 struct Anchor*
 list_menu(struct Buffer* buf)
 {
-    struct AnchorList* al = buf->doc.href;
+    struct AnchorList* al = buf->doc->href;
     if (!al)
         return NULL;
 
@@ -1488,7 +1488,7 @@ list_menu(struct Buffer* buf)
     for (int i = 0, n = 0; i < al->nanchor; i++) {
         struct Anchor* a = &al->anchors[i];
         if (!a->slave) {
-            const char* t = getAnchorText(&buf->doc, al, a);
+            const char* t = getAnchorText(buf->doc, al, a);
             if (!t)
                 t = "";
             if (two && n >= nlmKeys2 * nlmKeys)
@@ -1511,8 +1511,8 @@ list_menu(struct Buffer* buf)
     new_option_menu(&menu, label, &key, NULL);
 
     menu.initial = 0;
-    menu.cursorX = buf->doc.cursorX + buf->doc.rootX;
-    menu.cursorY = buf->doc.cursorY + buf->doc.rootY;
+    menu.cursorX = buf->doc->cursorX + buf->doc->rootX;
+    menu.cursorY = buf->doc->cursorY + buf->doc->rootY;
     menu.x = menu.cursorX + FRAME_WIDTH + 1;
     menu.y = menu.cursorY + 2;
     for (int i = 0; i < 128; i++)
@@ -1536,7 +1536,7 @@ list_menu(struct Buffer* buf)
         }
     }
 
-    struct Anchor* a = doc_retrieveCurrentAnchor(&buf->doc);
+    struct Anchor* a = doc_retrieveCurrentAnchor(buf->doc);
     if (a) {
         for (int i = 0; i < nitem; i++) {
             if (a->hseq == ap[i]->hseq) {
