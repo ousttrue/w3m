@@ -674,10 +674,10 @@ static struct Buffer* do_submit(struct Buffer* buf, struct Anchor* a, struct For
 
 struct FollowResult _followForm(struct Buffer* buf, struct FollowOption option, bool submit)
 {
-    if (!Currentbuf->doc.firstLine)
+    if (!buf->doc.firstLine)
         return (struct FollowResult) { 0 };
 
-    struct Anchor* a = doc_retrieveCurrentForm(&Currentbuf->doc);
+    struct Anchor* a = doc_retrieveCurrentForm(&buf->doc);
     if (!a)
         return (struct FollowResult) { 0 };
 
@@ -687,7 +687,7 @@ struct FollowResult _followForm(struct Buffer* buf, struct FollowOption option, 
         if (submit) {
             return (struct FollowResult) {
                 .anchor = a,
-                .new_buf = do_submit(Currentbuf, a, fi, NULL, option),
+                .new_buf = do_submit(buf, a, fi, NULL, option),
             };
         }
         if (fi->readonly) {
@@ -697,21 +697,21 @@ struct FollowResult _followForm(struct Buffer* buf, struct FollowOption option, 
         if (p == NULL || fi->readonly)
             break;
         fi->value = Strnew_charp(p);
-        formUpdateBuffer(a, Currentbuf, fi);
+        formUpdateBuffer(buf, a, fi);
         if (fi->accept || fi->parent->nitems == 1) {
             return (struct FollowResult) {
                 .anchor = a,
-                .new_buf = do_submit(Currentbuf, a, fi, p, option),
+                .new_buf = do_submit(buf, a, fi, p, option),
             };
         }
-        Currentbuf->doc.lineUpdated = true;
+        buf->doc.lineUpdated = true;
         break;
     }
     case FORM_INPUT_FILE: {
         if (submit) {
             return (struct FollowResult) {
                 .anchor = a,
-                .new_buf = do_submit(Currentbuf, a, fi, NULL, option),
+                .new_buf = do_submit(buf, a, fi, NULL, option),
             };
         }
         if (fi->readonly)
@@ -720,11 +720,11 @@ struct FollowResult _followForm(struct Buffer* buf, struct FollowOption option, 
         if (p == NULL || fi->readonly)
             break;
         fi->value = Strnew_charp(p);
-        formUpdateBuffer(a, Currentbuf, fi);
+        formUpdateBuffer(buf, a, fi);
         if (fi->accept || fi->parent->nitems == 1) {
             return (struct FollowResult) {
                 .anchor = a,
-                .new_buf = do_submit(Currentbuf, a, fi, p, option),
+                .new_buf = do_submit(buf, a, fi, p, option),
             };
         }
         break;
@@ -733,7 +733,7 @@ struct FollowResult _followForm(struct Buffer* buf, struct FollowOption option, 
         if (submit) {
             return (struct FollowResult) {
                 .anchor = a,
-                .new_buf = do_submit(Currentbuf, a, fi, NULL, option),
+                .new_buf = do_submit(buf, a, fi, NULL, option),
             };
         }
         if (fi->readonly) {
@@ -744,11 +744,11 @@ struct FollowResult _followForm(struct Buffer* buf, struct FollowOption option, 
         if (p == NULL)
             break;
         fi->value = Strnew_charp(p);
-        formUpdateBuffer(a, Currentbuf, fi);
+        formUpdateBuffer(buf, a, fi);
         if (fi->accept) {
             return (struct FollowResult) {
                 .anchor = a,
-                .new_buf = do_submit(Currentbuf, a, fi, p, option),
+                .new_buf = do_submit(buf, a, fi, p, option),
             };
         }
         break;
@@ -757,34 +757,34 @@ struct FollowResult _followForm(struct Buffer* buf, struct FollowOption option, 
         if (submit) {
             return (struct FollowResult) {
                 .anchor = a,
-                .new_buf = do_submit(Currentbuf, a, fi, NULL, option),
+                .new_buf = do_submit(buf, a, fi, NULL, option),
             };
         }
         if (fi->readonly)
             disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
         input_textarea(fi);
-        formUpdateBuffer(a, Currentbuf, fi);
+        formUpdateBuffer(buf, a, fi);
         break;
 
     case FORM_INPUT_RADIO:
         if (submit) {
             return (struct FollowResult) {
                 .anchor = a,
-                .new_buf = do_submit(Currentbuf, a, fi, NULL, option),
+                .new_buf = do_submit(buf, a, fi, NULL, option),
             };
         }
         if (fi->readonly) {
             disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
             break;
         }
-        formRecheckRadio(a, Currentbuf, fi);
+        formRecheckRadio(buf, a, fi);
         break;
 
     case FORM_INPUT_CHECKBOX:
         if (submit) {
             return (struct FollowResult) {
                 .anchor = a,
-                .new_buf = do_submit(Currentbuf, a, fi, NULL, option),
+                .new_buf = do_submit(buf, a, fi, NULL, option),
             };
         }
         if (fi->readonly) {
@@ -792,25 +792,25 @@ struct FollowResult _followForm(struct Buffer* buf, struct FollowOption option, 
             break;
         }
         fi->checked = !fi->checked;
-        formUpdateBuffer(a, Currentbuf, fi);
+        formUpdateBuffer(buf, a, fi);
         break;
 
     case FORM_SELECT:
         if (submit) {
             return (struct FollowResult) {
                 .anchor = a,
-                .new_buf = do_submit(Currentbuf, a, fi, NULL, option),
+                .new_buf = do_submit(buf, a, fi, NULL, option),
             };
         }
         if (!formChooseOptionByMenu(fi,
-                Currentbuf->doc.cursorX - Currentbuf->doc.pos + a->start.pos + Currentbuf->doc.rootX,
-                Currentbuf->doc.cursorY + Currentbuf->doc.rootY))
+                buf->doc.cursorX - buf->doc.pos + a->start.pos + buf->doc.rootX,
+                buf->doc.cursorY + buf->doc.rootY))
             break;
-        formUpdateBuffer(a, Currentbuf, fi);
+        formUpdateBuffer(buf, a, fi);
         if (fi->parent->nitems == 1) {
             return (struct FollowResult) {
                 .anchor = a,
-                .new_buf = do_submit(Currentbuf, a, fi, NULL, option),
+                .new_buf = do_submit(buf, a, fi, NULL, option),
             };
         }
         break;
@@ -820,19 +820,19 @@ struct FollowResult _followForm(struct Buffer* buf, struct FollowOption option, 
     case FORM_INPUT_BUTTON:
         return (struct FollowResult) {
             .anchor = a,
-            .new_buf = do_submit(Currentbuf, a, fi, NULL, option),
+            .new_buf = do_submit(buf, a, fi, NULL, option),
         };
 
     case FORM_INPUT_RESET:
-        for (int i = 0; i < Currentbuf->doc.formitem->nanchor; i++) {
-            struct Anchor* a2 = &Currentbuf->doc.formitem->anchors[i];
+        for (int i = 0; i < buf->doc.formitem->nanchor; i++) {
+            struct Anchor* a2 = &buf->doc.formitem->anchors[i];
             struct FormItemList* f2 = (struct FormItemList*)a2->url;
             if (f2->parent == fi->parent && f2->name && f2->value && f2->type != FORM_INPUT_SUBMIT && f2->type != FORM_INPUT_HIDDEN && f2->type != FORM_INPUT_RESET) {
                 f2->value = f2->init_value;
                 f2->checked = f2->init_checked;
                 f2->label = f2->init_label;
                 f2->selected = f2->init_selected;
-                formUpdateBuffer(a2, Currentbuf, f2);
+                formUpdateBuffer(buf, a2, f2);
             }
         }
         break;

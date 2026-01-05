@@ -188,7 +188,7 @@ int formtype(const char* typestr)
     return FORM_INPUT_TEXT;
 }
 
-void formRecheckRadio(struct Anchor* a, struct Buffer* buf, struct FormItemList* fi)
+void formRecheckRadio(struct Buffer* buf, struct Anchor* a, struct FormItemList* fi)
 {
     int i;
     struct Anchor* a2;
@@ -199,11 +199,11 @@ void formRecheckRadio(struct Anchor* a, struct Buffer* buf, struct FormItemList*
         f2 = (struct FormItemList*)a2->url;
         if (f2->parent == fi->parent && f2 != fi && f2->type == FORM_INPUT_RADIO && Strcmp(f2->name, fi->name) == 0) {
             f2->checked = 0;
-            formUpdateBuffer(a2, buf, f2);
+            formUpdateBuffer(buf, a2, f2);
         }
     }
     fi->checked = 1;
-    formUpdateBuffer(a, buf, fi);
+    formUpdateBuffer(buf, a, fi);
 }
 
 void formResetBuffer(struct Buffer* buf, struct AnchorList* formitem)
@@ -247,7 +247,7 @@ void formResetBuffer(struct Buffer* buf, struct AnchorList* formitem)
         default:
             continue;
         }
-        formUpdateBuffer(a, buf, f1);
+        formUpdateBuffer(buf, a, f1);
     }
 }
 
@@ -368,15 +368,12 @@ form_update_line(struct Line* line, char** str, int spos, int epos, int width,
     return pos;
 }
 
-void formUpdateBuffer(struct Anchor* a, struct Buffer* buf, struct FormItemList* form)
+static void _formUpdateBuffer(struct Document* doc, struct Anchor* a, struct FormItemList* form)
 {
-    struct Buffer save;
-    char* p;
-    int spos, epos, rows, c_rows, pos, col = 0;
-    struct Line* l;
+    doc_gotoLine(doc, a->start.line);
 
-    copyBuffer(&save, buf);
-    doc_gotoLine(&buf->doc, a->start.line);
+    int spos, epos;
+    char* p;
     switch (form->type) {
     case FORM_TEXTAREA:
     case FORM_INPUT_TEXT:
@@ -395,18 +392,18 @@ void formUpdateBuffer(struct Anchor* a, struct Buffer* buf, struct FormItemList*
     switch (form->type) {
     case FORM_INPUT_CHECKBOX:
     case FORM_INPUT_RADIO:
-        if (buf->doc.currentLine == NULL || spos >= buf->doc.currentLine->len || spos < 0)
+        if (doc->currentLine == NULL || spos >= doc->currentLine->len || spos < 0)
             break;
         if (form->checked)
-            buf->doc.currentLine->lineBuf[spos] = '*';
+            doc->currentLine->lineBuf[spos] = '*';
         else
-            buf->doc.currentLine->lineBuf[spos] = ' ';
+            doc->currentLine->lineBuf[spos] = ' ';
         break;
     case FORM_INPUT_TEXT:
     case FORM_INPUT_FILE:
     case FORM_INPUT_PASSWORD:
     case FORM_TEXTAREA:
-    case FORM_SELECT:
+    case FORM_SELECT: {
         if (form->type == FORM_SELECT) {
             p = form->label->ptr;
             updateSelectOption(form, form->select_option);
@@ -415,11 +412,11 @@ void formUpdateBuffer(struct Anchor* a, struct Buffer* buf, struct FormItemList*
                 break;
             p = form->value->ptr;
         }
-        l = buf->doc.currentLine;
+        struct Line* l = doc->currentLine;
         if (!l)
             break;
         if (form->type == FORM_TEXTAREA) {
-            int n = a->y - buf->doc.currentLine->linenumber;
+            int n = a->y - doc->currentLine->linenumber;
             if (n > 0)
                 for (; l && n; l = l->prev, n--)
                     ;
@@ -429,14 +426,14 @@ void formUpdateBuffer(struct Anchor* a, struct Buffer* buf, struct FormItemList*
             if (!l)
                 break;
         }
-        rows = form->rows ? form->rows : 1;
-        col = COLPOS(l, a->start.pos);
-        for (c_rows = 0; c_rows < rows; c_rows++, l = l->next) {
+        int rows = form->rows ? form->rows : 1;
+        int col = COLPOS(l, a->start.pos);
+        for (int c_rows = 0; c_rows < rows; c_rows++, l = l->next) {
             if (l == NULL)
                 break;
             if (rows > 1) {
-                pos = columnPos(l, col);
-                a = retrieveAnchor(buf->doc.formitem, l->linenumber, pos);
+                int pos = columnPos(l, col);
+                a = retrieveAnchor(doc->formitem, l->linenumber, pos);
                 if (a == NULL)
                     break;
                 spos = a->start.pos;
@@ -444,22 +441,30 @@ void formUpdateBuffer(struct Anchor* a, struct Buffer* buf, struct FormItemList*
             }
             if (a->start.line != a->end.line || spos > epos || epos >= l->len || spos < 0 || epos < 0 || COLPOS(l, epos) < col)
                 break;
-            pos = form_update_line(l, &p, spos, epos, COLPOS(l, epos) - col,
+            int pos = form_update_line(l, &p, spos, epos, COLPOS(l, epos) - col,
                 rows > 1,
                 form->type == FORM_INPUT_PASSWORD);
             if (pos != epos) {
-                shiftAnchorPosition(buf->doc.href, buf->doc.hmarklist,
+                shiftAnchorPosition(doc->href, doc->hmarklist,
                     a->start.line, spos, pos - epos);
-                shiftAnchorPosition(buf->doc.name, buf->doc.hmarklist,
+                shiftAnchorPosition(doc->name, doc->hmarklist,
                     a->start.line, spos, pos - epos);
-                shiftAnchorPosition(buf->doc.img, buf->doc.hmarklist,
+                shiftAnchorPosition(doc->img, doc->hmarklist,
                     a->start.line, spos, pos - epos);
-                shiftAnchorPosition(buf->doc.formitem, buf->doc.hmarklist,
+                shiftAnchorPosition(doc->formitem, doc->hmarklist,
                     a->start.line, spos, pos - epos);
             }
         }
         break;
     }
+    }
+}
+
+void formUpdateBuffer(struct Buffer* buf, struct Anchor* a, struct FormItemList* form)
+{
+    struct Buffer save;
+    copyBuffer(&save, buf);
+    _formUpdateBuffer(&buf->doc, a, form);
     copyBuffer(buf, &save);
     doc_arrangeLine(&buf->doc);
 }
@@ -942,17 +947,17 @@ void preFormUpdateBuffer(struct Buffer* buf)
                 case FORM_INPUT_PASSWORD:
                 case FORM_TEXTAREA:
                     fi->value = Strnew_charp(pi->value);
-                    formUpdateBuffer(a, buf, fi);
+                    formUpdateBuffer(buf, a, fi);
                     break;
                 case FORM_INPUT_CHECKBOX:
                     if (pi->value && fi->value && !Strcmp_charp(fi->value, pi->value)) {
                         fi->checked = pi->checked;
-                        formUpdateBuffer(a, buf, fi);
+                        formUpdateBuffer(buf, a, fi);
                     }
                     break;
                 case FORM_INPUT_RADIO:
                     if (pi->value && fi->value && !Strcmp_charp(fi->value, pi->value))
-                        formRecheckRadio(a, buf, fi);
+                        formRecheckRadio(buf, a, fi);
                     break;
                 case FORM_SELECT:
                     for (j = 0, opt = fi->select_option; opt != NULL;
@@ -962,7 +967,7 @@ void preFormUpdateBuffer(struct Buffer* buf)
                             fi->value = opt->value;
                             fi->label = opt->label;
                             updateSelectOption(fi, fi->select_option);
-                            formUpdateBuffer(a, buf, fi);
+                            formUpdateBuffer(buf, a, fi);
                             break;
                         }
                     }
