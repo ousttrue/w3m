@@ -22,7 +22,6 @@ enum TmpFileTypes {
 
 Str tmpfname(enum TmpFileTypes type, const char* ext);
 void setup_child(int child, int i, int f);
-int gethtmlcmd(const char** s);
 struct Url;
 int find_auth_user_passwd(struct Url* pu, char* realm,
     Str* uname, Str* pwd, int is_proxy);
@@ -38,8 +37,6 @@ Str myEditor(const char* cmd, const char* file, int line);
 int is_localhost(const char* host);
 char* expandName(const char* name);
 FILE* openSecretFile(const char* fname);
-Str romanNumeral(int n);
-Str romanAlphabet(int n);
 void mySystem(const char* command, int background);
 Str myExtCommand(const char* cmd, const char* arg, int redirect);
 Str unescape_spaces(Str s);

@@ -18,22 +18,7 @@ inline static int doFileCopy(const char* tmpf, const char* defstr)
 }
 int doFileMove(const char* tmpf, const char* defstr);
 int checkCopyFile(const char* path1, const char* path2);
-struct HtmlBuilder;
-struct HtmlTag;
-Str process_img(struct HtmlBuilder* hb, struct HtmlTag* tag, int width);
-Str process_form(struct HtmlBuilder* hb, struct HtmlTag* tag);
-Str process_input(struct HtmlBuilder* hb, struct HtmlTag* tag);
-Str process_button(struct HtmlBuilder* hb, struct HtmlTag* tag);
-Str process_select(struct HtmlBuilder* hb, struct HtmlTag* tag);
-Str process_textarea(struct HtmlBuilder* hb, struct HtmlTag* tag, int width);
-Str process_n_select(struct HtmlBuilder* hb);
-void feed_select(struct HtmlBuilder* hb, const char* str);
-void process_option(struct HtmlBuilder* hb);
-Str process_n_textarea(struct HtmlBuilder* hb);
-void feed_textarea(struct HtmlBuilder* hb, const char* str);
-Str process_anchor(struct HtmlBuilder* hb, struct HtmlTag* tag, const char* tagbuf);
-Str process_n_form(struct HtmlBuilder* hb);
-Str getLinkNumberStr(struct HtmlBuilder* hb, int correction);
+
 int checkOverWrite(const char* path);
 struct input_stream;
 int checkSaveFile(struct input_stream* stream, const char* path);
