@@ -4214,7 +4214,7 @@ loadHTMLBuffer(struct Url url, struct input_stream* stream, const char* t,
     struct Buffer* newBuf, bool internal)
 {
     if (newBuf == NULL)
-        newBuf = newBuffer(INIT_BUFFER_WIDTH);
+        newBuf = buf_new(NULL);
 
     if (newBuf->content->sourcefile == NULL
         && (url.scheme != SCM_LOCAL || newBuf->content->mailcap)) {
@@ -4552,7 +4552,7 @@ loadHTMLString(Str page)
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
 
     struct input_stream* stream = is_from_str(page);
-    struct Buffer* newBuf = newBuffer(INIT_BUFFER_WIDTH);
+    struct Buffer* newBuf = buf_new(NULL);
     if (SETJMP(AbortLoading) != 0) {
         TRAP_OFF;
         discardBuffer(newBuf);
@@ -4591,7 +4591,7 @@ loadBuffer(struct Url url, struct input_stream* stream,
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
 
     if (newBuf == NULL)
-        newBuf = newBuffer(INIT_BUFFER_WIDTH);
+        newBuf = buf_new(INIT_BUFFER_WIDTH);
 
     if (SETJMP(AbortLoading) != 0) {
         goto _end;
@@ -4678,7 +4678,7 @@ loadImageBuffer(struct Url url, struct input_stream* stream,
 
 image_buffer:
     if (newBuf == NULL)
-        newBuf = newBuffer(INIT_BUFFER_WIDTH);
+        newBuf = buf_new(NULL);
     cache->loaded |= IMG_FLAG_DONT_REMOVE;
     if (newBuf->content->sourcefile == NULL && url.scheme != SCM_LOCAL)
         newBuf->content->sourcefile = cache->file;
@@ -4869,8 +4869,8 @@ doExternal(struct Url url, struct input_stream* stream,
     }
     if (mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)) {
         if (defaultbuf == NULL)
-            defaultbuf = newBuffer(INIT_BUFFER_WIDTH);
-        if (defaultbuf->content->sourcefile)
+            defaultbuf = buf_new(NULL);
+        if (defaultbuf->content && defaultbuf->content->sourcefile)
             src = defaultbuf->content->sourcefile;
         else
             src = tmpf->ptr;

@@ -346,8 +346,7 @@ frame_download_source(struct frame_body* b, struct Url* currentURL,
                 .referer = b->referer,
                 .flag = flag | RG_FRAME_SRC,
             });
-        buf = newBuffer(INIT_BUFFER_WIDTH);
-        buf->content = content;
+        buf = buf_new(content);
         /* XXX certificate? */
         if (content)
             b->ssl_certificate = content->ssl_certificate;
@@ -884,8 +883,7 @@ renderFrame(struct Buffer* Cbuf, int force_reload)
 
     struct Content* content = get_content_cache(tmp->ptr, NULL,
         (struct LoadOption) { .base_url = NULL, .referer = NULL, .flag = flag });
-    struct Buffer* buf = newBuffer(INIT_BUFFER_WIDTH);
-    buf->content = content;
+    struct Buffer* buf = buf_new(content);
 
     getRuntime()->DocumentCharset = doc_charset;
 

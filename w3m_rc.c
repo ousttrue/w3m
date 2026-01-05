@@ -251,7 +251,7 @@ void _newT(void)
     if (!tag)
         return;
 
-    struct Buffer* buf = newBuffer(Currentbuf->doc->width);
+    struct Buffer* buf = buf_new(NULL);
     copyBuffer(buf, Currentbuf);
     buf->nextBuffer = NULL;
     for (int i = 0; i < MAX_LB; i++)
@@ -470,13 +470,12 @@ struct Buffer* loadLink(const char* url, struct FormList* request,
 
     struct Content* content = get_content_cache(url, request,
         (struct LoadOption) { .base_url = baseURL(Currentbuf), .referer = referer, .flag = 0 });
-    struct Buffer* buf = newBuffer(INIT_BUFFER_WIDTH);
-    buf->content = content;
-    if (buf == NULL) {
+    if (!content) {
         char* emsg = Sprintf("Can't load %s", url)->ptr;
         disp_err_message(emsg, FALSE);
         return NULL;
     }
+    struct Buffer* buf = buf_new(content);
 
     // struct Url pu;
     // parseURL2(url, &pu, base);
@@ -842,7 +841,7 @@ struct FollowResult _followForm(struct Buffer* buf, struct FollowOption option, 
 
 bool currentBufferSubmit()
 {
-    if(!Currentbuf->doc){
+    if (!Currentbuf->doc) {
         return false;
     }
 
@@ -2474,7 +2473,7 @@ struct FollowResult gotoLabel(struct Buffer* buf, const char* label)
         return res;
     }
 
-    res.new_buf = newBuffer(buf->doc->width);
+    res.new_buf = buf_new(NULL);
     copyBuffer(res.new_buf, buf);
     for (int i = 0; i < MAX_LB; i++)
         res.new_buf->linkBuffer[i] = NULL;
@@ -2535,13 +2534,12 @@ void _followI(bool do_download)
 
     struct Content* content = get_content_cache(a->url, NULL,
         (struct LoadOption) { .base_url = baseURL(Currentbuf), .referer = NULL, .flag = 0 });
-    struct Buffer* buf = newBuffer(INIT_BUFFER_WIDTH);
-    buf->content = content;
-    if (buf == NULL) {
-        /* FIXME: gettextize? */
+    if (!content) {
         char* emsg = Sprintf("Can't load %s", a->url)->ptr;
         disp_err_message(emsg, FALSE);
-    } else {
-        tab_push_buffer(getRuntime()->CurrentTab, buf);
+        return;
     }
+
+    struct Buffer* buf = buf_new(content);
+    tab_push_buffer(getRuntime()->CurrentTab, buf);
 }

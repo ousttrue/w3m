@@ -863,7 +863,7 @@ smDelBuf(struct DefunContext ctx, char c)
         Currentbuf = nthBuffer(Firstbuf, i - 1);
     ;
     if (Firstbuf == NULL) {
-        Firstbuf = nullBuffer();
+        Firstbuf = buf_new(NULL);
         Currentbuf = Firstbuf;
     }
 

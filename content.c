@@ -20,6 +20,9 @@
 #include <libwc/charset.h>
 #include <sys/stat.h>
 
+// n->content.url.scheme = SCM_UNKNOWN;
+// n->content.ssl_certificate = NULL;
+
 bool matchattr(const char* p, const char* attr, int len, Str* value)
 {
     int quoted;

@@ -14,6 +14,17 @@
 #include <string.h>
 #include <libwc/wtf_len.h>
 
+// {
+//     .width = width,
+//     .COLS = TTY_COLS(),
+//     .LINES = LASTLINE(),
+//     .baseURL = NULL,
+//     .baseTarget = NULL,
+//     .title = "",
+//     .trbyte = 0,
+//     .auto_detect = WcOption.auto_detect,
+// },
+
 extern char* NullLine;
 extern Lineprop NullProp[];
 

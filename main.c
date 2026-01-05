@@ -544,10 +544,9 @@ bool w3m_args(int argc, char** argv)
         } else if (load_bookmark) {
             struct Content* content = get_content_cache(getRuntime()->BookmarkFile, NULL,
                 (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER, .flag = 0 });
-            newbuf = newBuffer(INIT_BUFFER_WIDTH);
-            newbuf->content = content;
-            if (newbuf == NULL)
+            if (!content)
                 Strcat_charp(err_msg, "w3m: Can't load bookmark.\n");
+            newbuf = buf_new(content);
         } else if (visual_start) {
             Str s_page;
             s_page = Strnew_charp("<title>W3M startup page</title><center><b>Welcome to ");
@@ -565,9 +564,8 @@ bool w3m_args(int argc, char** argv)
         } else if ((p = getenv("HTTP_HOME")) != NULL || (p = getenv("WWW_HOME")) != NULL) {
             struct Content* content = get_content_cache(p, NULL,
                 (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER, .flag = 0 });
-            newbuf = newBuffer(INIT_BUFFER_WIDTH);
-            newbuf->content = content;
-            if (newbuf == NULL)
+            newbuf = buf_new(content);
+            if (!content)
                 Strcat(err_msg, Sprintf("w3m: Can't load %s.\n", p));
             else
                 pushHashHist(getRuntime()->URLHist, parsedURL2Str(&newbuf->content->url)->ptr);
@@ -624,8 +622,7 @@ bool w3m_args(int argc, char** argv)
                 }
                 struct Content* content = get_content_cache(url, request,
                     (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER, .flag = 0 });
-                newbuf = newBuffer(INIT_BUFFER_WIDTH);
-                newbuf->content = content;
+                newbuf = buf_new(content);
             }
             if (newbuf == NULL) {
                 if (getRuntime()->ArgvIsURL && !retry) {
@@ -733,16 +730,16 @@ cmd_loadURL(const char* url, struct FormList* request, struct LoadOption option)
         return;
 
     struct Content* content = get_content_cache(url, request, option);
-    struct Buffer* buf = newBuffer(INIT_BUFFER_WIDTH);
-    buf->content = content;
-    if (buf == NULL) {
+    if (!content) {
         char* emsg = Sprintf("Can't load %s", conv_from_system(url))->ptr;
         disp_err_message(emsg, FALSE);
-    } else {
-        tab_push_buffer(getRuntime()->CurrentTab, buf);
-        // if (getRuntime()->RenderFrame && Currentbuf->doc.frameset != NULL)
-        //     rFrame(ctx);
+        return;
     }
+
+    struct Buffer* buf = buf_new(content);
+    tab_push_buffer(getRuntime()->CurrentTab, buf);
+    // if (getRuntime()->RenderFrame && Currentbuf->doc.frameset != NULL)
+    //     rFrame(ctx);
 }
 
 /* go to specified URL */
@@ -1256,7 +1253,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
         }
     }
 
-    buf = newBuffer(INIT_BUFFER_WIDTH);
+    buf = buf_new(NULL);
 
     if (is_html_type(Currentbuf->content->content_type)) {
         buf->content->content_type = "text/plain";
@@ -1275,7 +1272,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
             buf->content->content_type = Currentbuf->content->content_type;
         buf->doc->title = Sprintf("HTML view of %s",
             Currentbuf->doc->title)
-                             ->ptr;
+                              ->ptr;
         buf->linkBuffer[LB_SOURCE] = Currentbuf;
         Currentbuf->linkBuffer[LB_N_SOURCE] = buf;
     } else {
@@ -1362,8 +1359,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
     getRuntime()->DefaultType = Currentbuf->content->content_type;
     struct Content* content = get_content_cache(url->ptr, request,
         (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER, .flag = RG_NOCACHE });
-    buf = newBuffer(INIT_BUFFER_WIDTH);
-    buf->content = content;
+    buf = buf_new(content);
     getRuntime()->DocumentCharset = old_charset;
     // SearchHeader = FALSE;
     getRuntime()->DefaultType = NULL;
@@ -1692,18 +1688,16 @@ execdict(const char* word)
 
     struct Content* content = get_content_cache(dictcmd, NULL,
         (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER, .flag = 0 });
-    struct Buffer* buf = newBuffer(INIT_BUFFER_WIDTH);
-    buf->content = content;
-    if (buf == NULL) {
+    if (!content) {
         disp_message("Execution failed", TRUE);
         return;
-    } else {
-        buf->content->filename = w;
-        buf->doc->title = Sprintf("%s %s", DICTBUFFERNAME, word)->ptr;
-        if (buf->content->content_type == NULL)
-            buf->content->content_type = "text/plain";
-        tab_push_buffer(getRuntime()->CurrentTab, buf);
     }
+    struct Buffer* buf = buf_new(content);
+    buf->content->filename = w;
+    buf->doc->title = Sprintf("%s %s", DICTBUFFERNAME, word)->ptr;
+    if (buf->content->content_type == NULL)
+        buf->content->content_type = "text/plain";
+    tab_push_buffer(getRuntime()->CurrentTab, buf);
 }
 
 DEFUN(dictword, DICT_WORD, "Execute dictionary command (see README.dict)")

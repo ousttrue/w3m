@@ -1,9 +1,10 @@
 #pragma once
 #include "url.h"
+#include "content.h"
+#include "document.h"
 #include <stddef.h>
 #include <libwc/wc_types.h>
 
-/* Link Buffer */
 enum LinkBufferID {
     LB_NOLINK = -1,
     LB_FRAME = 0, /* rFrame() */
@@ -15,56 +16,53 @@ enum LinkBufferID {
     MAX_LB = 5,
 };
 
-/* Buffer Property */
-#define BP_NORMAL 0x0
-#define BP_PIPE 0x1
-#define BP_FRAME 0x2
-#define BP_INTERNAL 0x8
-#define BP_NO_URL 0x10
-#define BP_REDIRECTED 0x20
-#define BP_CLOSE 0x40
+enum BufferPropertyFlags : uint16_t {
+    BP_NORMAL = 0x0,
+    BP_PIPE = 0x1,
+    BP_FRAME = 0x2,
+    BP_INTERNAL = 0x8,
+    BP_NO_URL = 0x10,
+    BP_REDIRECTED = 0x20,
+    BP_CLOSE = 0x40,
+};
 
-/* mark URL, Message-ID */
-#define CHK_URL 1
-#define CHK_NMID 2
-
-#include "content.h"
-#include "document.h"
+enum CheckUrlFlags : uint8_t {
+    CHK_URL = 1,
+    CHK_NMID = 2,
+};
 
 struct Buffer {
     struct Content* content;
     struct Document* doc;
     struct Buffer* nextBuffer;
     struct Buffer* linkBuffer[MAX_LB];
-    short bufferprop;
+    enum BufferPropertyFlags bufferprop;
 
     int* clone;
-    char check_url;
-    char* savecache;
-    char* edit;
+    enum CheckUrlFlags check_url;
+    const char* savecache;
+    const char* edit;
     struct _AlarmEvent* event;
 };
 
+struct Buffer* buf_new(struct Content *content);
 struct Url* baseURL(struct Buffer* buf);
 void delBuffer(struct Buffer* buf);
 void cmd_loadBuffer(struct Buffer* buf, int prop, enum LinkBufferID linkid);
 bool readBufferCache(struct Buffer* buf);
-extern void reshapeBuffer(struct Buffer* buf);
-extern void saveBuffer(struct Buffer* buf, FILE* f, int cont);
-extern void saveBufferBody(struct Buffer* buf, FILE* f, int cont);
-extern struct Buffer* getshell(char* cmd);
-extern struct Buffer* newBuffer(int width);
-extern struct Buffer* nullBuffer(void);
-extern void clearBuffer(struct Buffer* buf);
-extern void discardBuffer(struct Buffer* buf);
-extern struct Buffer* namedBuffer(struct Buffer* first, char* name);
-extern struct Buffer* deleteBuffer(struct Buffer* first, struct Buffer* delbuf);
-extern struct Buffer* replaceBuffer(struct Buffer* first, struct Buffer* delbuf, struct Buffer* newbuf);
-extern struct Buffer* nthBuffer(struct Buffer* firstbuf, int n);
-extern struct Buffer* selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf,
-    char* selectchar);
-extern void copyBuffer(struct Buffer* a, struct Buffer* b);
-extern struct Buffer* prevBuffer(struct Buffer* first, struct Buffer* buf);
-extern int writeBufferCache(struct Buffer* buf);
+void reshapeBuffer(struct Buffer* buf);
+void saveBuffer(struct Buffer* buf, FILE* f, int cont);
+void saveBufferBody(struct Buffer* buf, FILE* f, int cont);
+struct Buffer* getshell(char* cmd);
+void clearBuffer(struct Buffer* buf);
+void discardBuffer(struct Buffer* buf);
+struct Buffer* namedBuffer(struct Buffer* first, char* name);
+struct Buffer* deleteBuffer(struct Buffer* first, struct Buffer* delbuf);
+struct Buffer* replaceBuffer(struct Buffer* first, struct Buffer* delbuf, struct Buffer* newbuf);
+struct Buffer* nthBuffer(struct Buffer* firstbuf, int n);
+struct Buffer* selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectchar);
+void copyBuffer(struct Buffer* a, struct Buffer* b);
+struct Buffer* prevBuffer(struct Buffer* first, struct Buffer* buf);
+int writeBufferCache(struct Buffer* buf);
 bool checkBackBuffer(struct Buffer* buf);
 Str page_info_panel(struct Buffer* buf);

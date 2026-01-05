@@ -22,6 +22,9 @@
 #include <unistd.h>
 #include <assert.h>
 
+char* NullLine = "";
+Lineprop NullProp[] = { 0 };
+
 int REV_LB[MAX_LB] = {
     LB_N_FRAME,
     LB_FRAME,
@@ -29,6 +32,25 @@ int REV_LB[MAX_LB] = {
     LB_INFO,
     LB_N_SOURCE,
 };
+
+struct Buffer* buf_new(struct Content* content)
+{
+    struct Buffer* buf = New(struct Buffer);
+    *buf = (struct Buffer) {
+        .content = content,
+        .doc = NULL,
+        .nextBuffer = NULL,
+        .linkBuffer = { 0 },
+        .bufferprop = BP_NORMAL,
+        .clone = New(int),
+        .check_url = getRuntime()->MarkAllPages, /* use default from -o mark_all_pages */
+        .savecache = NULL,
+        .edit = NULL,
+        .event = NULL,
+    };
+    *buf->clone = 1;
+    return buf;
+}
 
 struct Url*
 baseURL(struct Buffer* buf)
@@ -62,50 +84,6 @@ void cmd_loadBuffer(struct Buffer* buf, int prop, enum LinkBufferID linkid)
         }
         tab_push_buffer(getRuntime()->CurrentTab, buf);
     }
-}
-
-char* NullLine = "";
-Lineprop NullProp[] = { 0 };
-
-struct Buffer* newBuffer(int width)
-{
-    struct Buffer* n = New(struct Buffer);
-    assert(n);
-    memset(n, 0, sizeof(struct Buffer));
-
-    // n->content.url.scheme = SCM_UNKNOWN;
-    // n->content.ssl_certificate = NULL;
-
-    *n = (struct Buffer) {
-        .content = NULL,
-        .doc = NULL,
-        // {
-        //     .width = width,
-        //     .COLS = TTY_COLS(),
-        //     .LINES = LASTLINE(),
-        //     .baseURL = NULL,
-        //     .baseTarget = NULL,
-        //     .title = "",
-        //     .trbyte = 0,
-        //     .auto_detect = WcOption.auto_detect,
-        // },
-        .bufferprop = BP_NORMAL,
-        .clone = New(int),
-        .check_url = getRuntime()->MarkAllPages, /* use default from -o mark_all_pages */
-    };
-    *n->clone = 1;
-    return n;
-}
-
-/*
- * Create null buffer
- */
-struct Buffer*
-nullBuffer(void)
-{
-    struct Buffer* b = newBuffer(TTY_COLS());
-    b->doc->title = "*Null*";
-    return b;
 }
 
 /*

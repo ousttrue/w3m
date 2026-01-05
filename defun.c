@@ -871,8 +871,7 @@ DEFUN(ldfile, LOAD, "Open local file in a new buffer")
         disp_err_message(emsg, FALSE);
         return;
     }
-    struct Buffer* buf = newBuffer(INIT_BUFFER_WIDTH);
-    buf->content = content;
+    struct Buffer* buf = buf_new(content);
     tab_push_buffer(getRuntime()->CurrentTab, buf);
 }
 
@@ -895,8 +894,7 @@ DEFUN(ldhelp, HELP, "Show help panel")
         disp_err_message(emsg->ptr, false);
         return;
     }
-    struct Buffer* buf = newBuffer(INIT_BUFFER_WIDTH);
-    buf->content = content;
+    struct Buffer* buf = buf_new(content);
     tab_push_buffer(getRuntime()->CurrentTab, buf);
 }
 
@@ -918,8 +916,8 @@ DEFUN(selBuf, SELECT, "Display buffer-stack panel")
         case 'D':
             delBuffer(buf);
             if (Firstbuf == NULL) {
-                /* No more buffer */
-                Firstbuf = nullBuffer();
+                // No more buffer
+                Firstbuf = buf_new(NULL);
                 Currentbuf = Firstbuf;
             }
             break;
