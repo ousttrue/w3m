@@ -461,39 +461,40 @@ struct ContentAndStream openURL(struct Url url, struct FormList* request,
     struct LoadOption option, struct input_stream* ouf)
 {
     struct ContentAndStream us = {
-        .content = {
-            .url = url,
-            .hr = (struct HttpRequest) {
-                .command = HR_COMMAND_GET,
-                .flag = 0,
-                .referer = option.referer,
-                .request = request,
-            },
-            .content_type = "text/plain",
-            0,
-        },
+        .content = New(struct Content),
         .stream = ouf,
     };
+    *us.content = (struct Content) {
+        .url = url,
+        .hr = (struct HttpRequest) {
+            .command = HR_COMMAND_GET,
+            .flag = 0,
+            .referer = option.referer,
+            .request = request,
+        },
+        .content_type = "text/plain",
+        0,
+    };
 
-    if (us.content.url.scheme == SCM_LOCAL && !us.content.url.file) {
-        if (us.content.url.label) {
+    if (us.content->url.scheme == SCM_LOCAL && !us.content->url.file) {
+        if (us.content->url.label) {
             /* #hogege is not a label but a filename */
             Str tmp2 = Strnew_charp("#");
-            Strcat_charp(tmp2, us.content.url.label);
-            us.content.url.file = tmp2->ptr;
-            us.content.url.real_file = cleanupName(file_unquote(us.content.url.file));
-            us.content.url.label = NULL;
+            Strcat_charp(tmp2, us.content->url.label);
+            us.content->url.file = tmp2->ptr;
+            us.content->url.real_file = cleanupName(file_unquote(us.content->url.file));
+            us.content->url.label = NULL;
         } else {
             /* given URL must be null string */
             return us;
         }
     }
 
-    if (getRuntime()->LocalhostOnly && us.content.url.host && !is_localhost(us.content.url.host))
-        us.content.url.host = NULL;
+    if (getRuntime()->LocalhostOnly && us.content->url.host && !is_localhost(us.content->url.host))
+        us.content->url.host = NULL;
 
-    us.content.url_str = parsedURL2Str(&us.content.url)->ptr;
-    us.content.url.is_nocache = (option.flag & RG_NOCACHE);
+    us.content->url_str = parsedURL2Str(&us.content->url)->ptr;
+    us.content->url.is_nocache = (option.flag & RG_NOCACHE);
     // uf.ext = filename_extension(pu->file, 1);
 
     Str tmp;
@@ -501,44 +502,44 @@ struct ContentAndStream openURL(struct Url url, struct FormList* request,
     char *p, *q;
     SSL* sslh = NULL;
 
-    switch (us.content.url.scheme) {
+    switch (us.content->url.scheme) {
     case SCM_LOCAL:
     case SCM_LOCAL_CGI:
         if (request && request->body)
             /* local CGI: POST */
             us.stream = is_from_file(
-                localcgi_post(us.content.url.real_file, us.content.url.query,
+                localcgi_post(us.content->url.real_file, us.content->url.query,
                     request, option.referer),
                 fclose);
         else
             /* lodal CGI: GET */
             us.stream = is_from_file(
-                localcgi_get(us.content.url.real_file, us.content.url.query,
+                localcgi_get(us.content->url.real_file, us.content->url.query,
                     option.referer),
                 fclose);
         if (us.stream) {
-            us.content.url.scheme = SCM_LOCAL_CGI;
-            us.content.is_cgi = true;
+            us.content->url.scheme = SCM_LOCAL_CGI;
+            us.content->is_cgi = true;
             return us;
         }
-        us.stream = decompress_stream(examineFile(us.content.url.real_file), us.content.url.real_file);
+        us.stream = decompress_stream(examineFile(us.content->url.real_file), us.content->url.real_file);
         if (us.stream == NULL) {
-            if (dir_exist(us.content.url.real_file)) {
-                us.stream = add_index_file(&us.content.url, us.stream);
+            if (dir_exist(us.content->url.real_file)) {
+                us.stream = add_index_file(&us.content->url, us.stream);
                 if (us.stream == NULL) {
                     return us;
                 }
             } else if (getRuntime()->document_root != NULL) {
                 tmp = Strnew_charp(getRuntime()->document_root);
-                if (Strlastchar(tmp) != '/' && us.content.url.file[0] != '/')
+                if (Strlastchar(tmp) != '/' && us.content->url.file[0] != '/')
                     Strcat_char(tmp, '/');
-                Strcat_charp(tmp, us.content.url.file);
+                Strcat_charp(tmp, us.content->url.file);
                 p = cleanupName(tmp->ptr);
                 q = cleanupName(file_unquote(p));
                 if (dir_exist(q)) {
-                    us.content.url.file = p;
-                    us.content.url.real_file = q;
-                    us.stream = add_index_file(&us.content.url, us.stream);
+                    us.content->url.file = p;
+                    us.content->url.real_file = q;
+                    us.stream = add_index_file(&us.content->url, us.stream);
                     if (us.stream == NULL) {
                         return us;
                     }
@@ -546,8 +547,8 @@ struct ContentAndStream openURL(struct Url url, struct FormList* request,
                     us.stream = examineFile(q);
                     us.stream = decompress_stream(us.stream, q);
                     if (us.stream) {
-                        us.content.url.file = p;
-                        us.content.url.real_file = q;
+                        us.content->url.file = p;
+                        us.content->url.real_file = q;
                     }
                 }
             }
@@ -555,47 +556,47 @@ struct ContentAndStream openURL(struct Url url, struct FormList* request,
         return us;
     case SCM_FTP:
     case SCM_FTPDIR:
-        if (us.content.url.file == NULL)
-            us.content.url.file = allocStr("/", -1);
-        if (non_null(getRuntime()->FTP_proxy) && getRuntime()->use_proxy && us.content.url.host != NULL && !check_no_proxy(us.content.url.host)) {
-            us.content.hr.flag |= HR_FLAG_PROXY;
+        if (us.content->url.file == NULL)
+            us.content->url.file = allocStr("/", -1);
+        if (non_null(getRuntime()->FTP_proxy) && getRuntime()->use_proxy && us.content->url.host != NULL && !check_no_proxy(us.content->url.host)) {
+            us.content->hr.flag |= HR_FLAG_PROXY;
             sock = tcp_open(FTP_proxy_parsed.host,
                 schemeNumToName(FTP_proxy_parsed.scheme),
                 FTP_proxy_parsed.port);
             if (sock < 0) {
                 return us;
             }
-            us.content.url.scheme = SCM_HTTP;
-            tmp = HTTPrequest(&us.content.url, option.base_url, &us.content.hr, option.extra_header);
+            us.content->url.scheme = SCM_HTTP;
+            tmp = HTTPrequest(&us.content->url, option.base_url, &us.content->hr, option.extra_header);
             write(sock, tmp->ptr, tmp->length);
         } else {
-            struct FtpFile file = openFTPStream(&us.content.url);
+            struct FtpFile file = openFTPStream(&us.content->url);
             us.stream = file.is;
-            us.content.modtime = file.modtime;
+            us.content->modtime = file.modtime;
             return us;
         }
         break;
     case SCM_HTTP:
     case SCM_HTTPS:
-        if (us.content.url.file == NULL)
-            us.content.url.file = allocStr("/", -1);
+        if (us.content->url.file == NULL)
+            us.content->url.file = allocStr("/", -1);
         if (request && request->method == FORM_METHOD_POST && request->body)
-            us.content.hr.command = HR_COMMAND_POST;
+            us.content->hr.command = HR_COMMAND_POST;
         if (request && request->method == FORM_METHOD_HEAD)
-            us.content.hr.command = HR_COMMAND_HEAD;
+            us.content->hr.command = HR_COMMAND_HEAD;
         if ((
-                (us.content.url.scheme == SCM_HTTPS) ? non_null(getRuntime()->HTTPS_proxy) : non_null(getRuntime()->HTTP_proxy))
-            && getRuntime()->use_proxy && us.content.url.host != NULL && !check_no_proxy(us.content.url.host)) {
-            us.content.hr.flag |= HR_FLAG_PROXY;
-            if (us.content.url.scheme == SCM_HTTPS && us.status == HTST_CONNECT) {
+                (us.content->url.scheme == SCM_HTTPS) ? non_null(getRuntime()->HTTPS_proxy) : non_null(getRuntime()->HTTP_proxy))
+            && getRuntime()->use_proxy && us.content->url.host != NULL && !check_no_proxy(us.content->url.host)) {
+            us.content->hr.flag |= HR_FLAG_PROXY;
+            if (us.content->url.scheme == SCM_HTTPS && us.status == HTST_CONNECT) {
                 sock = ouf->ssl.sock;
 
-                if (!(sslh = openSSLHandle(sock, us.content.url.host,
-                          &us.content.ssl_certificate))) {
+                if (!(sslh = openSSLHandle(sock, us.content->url.host,
+                          &us.content->ssl_certificate))) {
                     us.status = HTST_MISSING;
                     return us;
                 }
-            } else if (us.content.url.scheme == SCM_HTTPS) {
+            } else if (us.content->url.scheme == SCM_HTTPS) {
                 sock = tcp_open(HTTPS_proxy_parsed.host,
                     schemeNumToName(HTTPS_proxy_parsed.scheme),
                     HTTPS_proxy_parsed.port);
@@ -609,38 +610,38 @@ struct ContentAndStream openURL(struct Url url, struct FormList* request,
             if (sock < 0) {
                 return us;
             }
-            if (us.content.url.scheme == SCM_HTTPS) {
+            if (us.content->url.scheme == SCM_HTTPS) {
                 if (us.status == HTST_NORMAL) {
-                    us.content.hr.command = HR_COMMAND_CONNECT;
-                    tmp = HTTPrequest(&us.content.url, option.base_url, &us.content.hr, option.extra_header);
+                    us.content->hr.command = HR_COMMAND_CONNECT;
+                    tmp = HTTPrequest(&us.content->url, option.base_url, &us.content->hr, option.extra_header);
                     us.status = HTST_CONNECT;
                 } else {
-                    us.content.hr.flag |= HR_FLAG_LOCAL;
-                    tmp = HTTPrequest(&us.content.url, option.base_url, &us.content.hr, option.extra_header);
+                    us.content->hr.flag |= HR_FLAG_LOCAL;
+                    tmp = HTTPrequest(&us.content->url, option.base_url, &us.content->hr, option.extra_header);
                     us.status = HTST_NORMAL;
                 }
             } else {
-                tmp = HTTPrequest(&us.content.url, option.base_url, &us.content.hr, option.extra_header);
+                tmp = HTTPrequest(&us.content->url, option.base_url, &us.content->hr, option.extra_header);
                 us.status = HTST_NORMAL;
             }
         } else {
-            sock = tcp_open(us.content.url.host, schemeNumToName(us.content.url.scheme), us.content.url.port);
+            sock = tcp_open(us.content->url.host, schemeNumToName(us.content->url.scheme), us.content->url.port);
             if (sock < 0) {
                 us.status = HTST_MISSING;
                 return us;
             }
-            if (us.content.url.scheme == SCM_HTTPS) {
-                if (!(sslh = openSSLHandle(sock, us.content.url.host,
-                          &us.content.ssl_certificate))) {
+            if (us.content->url.scheme == SCM_HTTPS) {
+                if (!(sslh = openSSLHandle(sock, us.content->url.host,
+                          &us.content->ssl_certificate))) {
                     us.status = HTST_MISSING;
                     return us;
                 }
             }
-            us.content.hr.flag |= HR_FLAG_LOCAL;
-            tmp = HTTPrequest(&us.content.url, option.base_url, &us.content.hr, option.extra_header);
+            us.content->hr.flag |= HR_FLAG_LOCAL;
+            tmp = HTTPrequest(&us.content->url, option.base_url, &us.content->hr, option.extra_header);
             us.status = HTST_NORMAL;
         }
-        if (us.content.url.scheme == SCM_HTTPS) {
+        if (us.content->url.scheme == SCM_HTTPS) {
             us.stream = is_from_ssl(sslh, sock);
             if (sslh)
                 SSL_write(sslh, tmp->ptr, tmp->length);
@@ -657,7 +658,7 @@ struct ContentAndStream openURL(struct Url url, struct FormList* request,
             //     fwrite(tmp->ptr, sizeof(char), tmp->length, ff);
             //     fclose(ff);
             // }
-            if (us.content.hr.command == HR_COMMAND_POST && request->enctype == FORM_ENCTYPE_MULTIPART) {
+            if (us.content->hr.command == HR_COMMAND_POST && request->enctype == FORM_ENCTYPE_MULTIPART) {
                 if (sslh)
                     SSL_write_from_file(sslh, request->body);
                 else
@@ -673,7 +674,7 @@ struct ContentAndStream openURL(struct Url url, struct FormList* request,
             //     fwrite(tmp->ptr, sizeof(char), tmp->length, ff);
             //     fclose(ff);
             // }
-            if (us.content.hr.command == HR_COMMAND_POST && request->enctype == FORM_ENCTYPE_MULTIPART)
+            if (us.content->hr.command == HR_COMMAND_POST && request->enctype == FORM_ENCTYPE_MULTIPART)
                 write_from_file(sock, request->body);
         }
         break;

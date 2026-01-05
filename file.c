@@ -1,5 +1,4 @@
 #include "file.h"
-#include "tab.h"
 #include "alarm.h"
 #include "http_auth.h"
 #include "mysignal.h"
@@ -3246,7 +3245,7 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
 
     struct Url* base = baseURL(buf);
 
-    enum wc_ces name_charset = url_to_charset(NULL, &buf->content.url,
+    enum wc_ces name_charset = url_to_charset(NULL, &buf->content->url,
         buf->doc.charset);
 
     if (out_size == 0) {
@@ -3674,7 +3673,7 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
                             buf->doc.charset);
                         if (!buf->doc.baseURL)
                             buf->doc.baseURL = New(struct Url);
-                        parseURL2(p, buf->doc.baseURL, &buf->content.url);
+                        parseURL2(p, buf->doc.baseURL, &buf->content->url);
                         base = buf->doc.baseURL;
                     }
                     if (parsedtag_get_value(tag, ATTR_TARGET, &p))
@@ -4232,12 +4231,12 @@ loadHTMLBuffer(struct Url url, struct input_stream* stream, const char* t,
     if (newBuf == NULL)
         newBuf = newBuffer(INIT_BUFFER_WIDTH);
 
-    if (newBuf->content.sourcefile == NULL
-        && (url.scheme != SCM_LOCAL || newBuf->content.mailcap)) {
+    if (newBuf->content->sourcefile == NULL
+        && (url.scheme != SCM_LOCAL || newBuf->content->mailcap)) {
         Str tmp = tmpfname(TMPF_SRC, ".html");
         FILE* src = fopen(tmp->ptr, "w");
         if (src) {
-            newBuf->content.sourcefile = tmp->ptr;
+            newBuf->content->sourcefile = tmp->ptr;
             is_readall_to_file(stream, src);
             fclose(src);
         }
@@ -4507,21 +4506,21 @@ void loadHTMLstream(struct input_stream* stream,
         else if (newBuf->doc.charset)
             detected_charset = doc_charset = newBuf->doc.charset;
     }
-    if (newBuf->content.charset && getRuntime()->UseContentCharset)
-        doc_charset = newBuf->content.charset;
+    if (newBuf->content->charset && getRuntime()->UseContentCharset)
+        doc_charset = newBuf->content->charset;
     hb->meta_charset = 0;
 
     while ((lineBuf2 = is_get_str(stream, true)) && lineBuf2->length) {
 
         linelen += lineBuf2->length;
-        showProgress(&linelen, &trbyte, newBuf->content.current_content_length);
+        showProgress(&linelen, &trbyte, newBuf->content->current_content_length);
         /*
          * if (frame_source)
          * continue;
          */
 
         if (hb->meta_charset) { /* <META> */
-            if (newBuf->content.charset == 0 && getRuntime()->UseContentCharset) {
+            if (newBuf->content->charset == 0 && getRuntime()->UseContentCharset) {
                 doc_charset = hb->meta_charset;
                 detected_charset = WC_CES_US_ASCII;
             }
@@ -4555,7 +4554,7 @@ phase2:
     newBuf->doc.topLine = newBuf->doc.firstLine;
     newBuf->doc.lastLine = newBuf->doc.currentLine;
     newBuf->doc.currentLine = newBuf->doc.firstLine;
-    newBuf->content.content_type = "text/html";
+    newBuf->content->content_type = "text/html";
     if (hb->n_textarea)
         formResetBuffer(newBuf, newBuf->doc.formitem);
 }
@@ -4616,23 +4615,23 @@ loadBuffer(struct Url url, struct input_stream* stream,
     }
     TRAP_ON;
 
-    if (newBuf->content.sourcefile == NULL && (url.scheme != SCM_LOCAL || newBuf->content.mailcap)) {
+    if (newBuf->content->sourcefile == NULL && (url.scheme != SCM_LOCAL || newBuf->content->mailcap)) {
         tmpf = tmpfname(TMPF_SRC, NULL);
         src = fopen(tmpf->ptr, "w");
         if (src)
-            newBuf->content.sourcefile = tmpf->ptr;
+            newBuf->content->sourcefile = tmpf->ptr;
     }
     if (newBuf->doc.charset)
         charset = doc_charset = newBuf->doc.charset;
-    if (newBuf->content.charset && getRuntime()->UseContentCharset)
-        doc_charset = newBuf->content.charset;
+    if (newBuf->content->charset && getRuntime()->UseContentCharset)
+        doc_charset = newBuf->content->charset;
 
     nlines = 0;
     while ((lineBuf2 = is_get_str(stream, true)) && lineBuf2->length) {
         if (src)
             Strfputs(lineBuf2, src);
         linelen += lineBuf2->length;
-        showProgress(&linelen, &trbyte, newBuf->content.current_content_length);
+        showProgress(&linelen, &trbyte, newBuf->content->current_content_length);
         if (frame_source)
             continue;
         lineBuf2 = convertLine(lineBuf2, PAGER_MODE, &charset, doc_charset);
@@ -4672,7 +4671,7 @@ loadImageBuffer(struct Url url, struct input_stream* stream,
     FILE* src = NULL;
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
     struct stat st;
-    const struct Url* pu = newBuf ? &newBuf->content.url : NULL;
+    const struct Url* pu = newBuf ? &newBuf->content->url : NULL;
 
     loadImage(IMG_FLAG_STOP);
     image.url = parsedURL2Str(&url)->ptr;
@@ -4698,8 +4697,8 @@ image_buffer:
     if (newBuf == NULL)
         newBuf = newBuffer(INIT_BUFFER_WIDTH);
     cache->loaded |= IMG_FLAG_DONT_REMOVE;
-    if (newBuf->content.sourcefile == NULL && url.scheme != SCM_LOCAL)
-        newBuf->content.sourcefile = cache->file;
+    if (newBuf->content->sourcefile == NULL && url.scheme != SCM_LOCAL)
+        newBuf->content->sourcefile = cache->file;
 
     tmp = Sprintf("<img src=\"%s\"><br><br>", html_quote(image.url));
     tmpf = tmpfname(TMPF_SRC, ".html");
@@ -4707,7 +4706,7 @@ image_buffer:
     if (!src)
         return NULL;
 
-    newBuf->content.mailcap_source = tmpf->ptr;
+    newBuf->content->mailcap_source = tmpf->ptr;
     struct input_stream* tmp_stream = is_from_str(tmp);
     is_readall_to_file(tmp_stream, src);
 
@@ -4768,7 +4767,7 @@ _saveBuffer(struct Buffer* buf, struct Line* l, FILE* f, int cont)
     enum wc_ces charset = getRuntime()->DisplayCharset
         ? getRuntime()->DisplayCharset
         : WC_CES_US_ASCII;
-    is_html = is_html_type(buf->content.content_type);
+    is_html = is_html_type(buf->content->content_type);
 
     // pager_next:
     for (; l != NULL; l = l->next) {
@@ -4837,7 +4836,7 @@ getshell(char* cmd)
     buf = loadcmdout(cmd, loadBuffer, NULL);
     if (buf == NULL)
         return NULL;
-    buf->content.filename = cmd;
+    buf->content->filename = cmd;
     buf->doc.title = Sprintf("%s %s", SHELLBUFFERNAME,
         conv_from_system(cmd))
                          ->ptr;
@@ -4865,7 +4864,7 @@ doExternal(struct Url url, struct input_stream* stream,
     }
 
     Str tmpf = tmpfname(TMPF_DFL, (ext && *ext) ? ext : NULL);
-    const char* header = checkHeader(&defaultbuf->content, "Content-Type:");
+    const char* header = checkHeader(defaultbuf->content, "Content-Type:");
     if (header)
         header = conv_to_system(header);
     command = unquote_mailcap(mcap->viewer, type, tmpf->ptr, header, &mc_stat);
@@ -4892,26 +4891,26 @@ doExternal(struct Url url, struct input_stream* stream,
     if (mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)) {
         if (defaultbuf == NULL)
             defaultbuf = newBuffer(INIT_BUFFER_WIDTH);
-        if (defaultbuf->content.sourcefile)
-            src = defaultbuf->content.sourcefile;
+        if (defaultbuf->content->sourcefile)
+            src = defaultbuf->content->sourcefile;
         else
             src = tmpf->ptr;
-        defaultbuf->content.sourcefile = NULL;
-        defaultbuf->content.mailcap = mcap;
+        defaultbuf->content->sourcefile = NULL;
+        defaultbuf->content->mailcap = mcap;
     }
     if (mcap->flags & MAILCAP_HTMLOUTPUT) {
         buf = loadcmdout(command->ptr, loadHTMLBuffer, defaultbuf);
         if (buf) {
-            buf->content.content_type = "text/html";
-            buf->content.mailcap_source = buf->content.sourcefile;
-            buf->content.sourcefile = src;
+            buf->content->content_type = "text/html";
+            buf->content->mailcap_source = buf->content->sourcefile;
+            buf->content->sourcefile = src;
         }
     } else if (mcap->flags & MAILCAP_COPIOUSOUTPUT) {
         buf = loadcmdout(command->ptr, loadBuffer, defaultbuf);
         if (buf) {
-            buf->content.content_type = "text/plain";
-            buf->content.mailcap_source = buf->content.sourcefile;
-            buf->content.sourcefile = src;
+            buf->content->content_type = "text/plain";
+            buf->content->mailcap_source = buf->content->sourcefile;
+            buf->content->sourcefile = src;
         }
     } else {
         if (mcap->flags & MAILCAP_NEEDSTERMINAL || !getRuntime()->BackgroundExtViewer) {
@@ -4924,10 +4923,10 @@ doExternal(struct Url url, struct input_stream* stream,
         buf = NULL;
     }
     if (buf) {
-        if ((buf->doc.title == NULL || buf->doc.title[0] == '\0') && buf->content.filename)
-            buf->doc.title = conv_from_system(lastFileName(buf->content.filename));
+        if ((buf->doc.title == NULL || buf->doc.title[0] == '\0') && buf->content->filename)
+            buf->doc.title = conv_from_system(lastFileName(buf->content->filename));
         buf->edit = mcap->edit;
-        buf->content.mailcap = mcap;
+        buf->content->mailcap = mcap;
     }
     return buf;
 }

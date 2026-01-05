@@ -89,22 +89,22 @@ void escKeyProc(int c, int esc, unsigned char* map)
 
 static void set_buffer_environ(struct Buffer* buf)
 {
+    if (buf == NULL)
+        return;
+
     static struct Buffer* prev_buf = NULL;
     static struct Line* prev_line = NULL;
     static int prev_pos = -1;
-    struct Line* l;
 
-    if (buf == NULL)
-        return;
     if (buf != prev_buf) {
-        set_environ("W3M_SOURCEFILE", buf->content.sourcefile);
-        set_environ("W3M_FILENAME", buf->content.filename);
+        set_environ("W3M_SOURCEFILE", buf->content->sourcefile);
+        set_environ("W3M_FILENAME", buf->content->filename);
+        set_environ("W3M_URL", parsedURL2Str(&buf->content->url)->ptr);
         set_environ("W3M_TITLE", buf->doc.title);
-        set_environ("W3M_URL", parsedURL2Str(&buf->content.url)->ptr);
-        set_environ("W3M_TYPE", "unknown");
         set_environ("W3M_CHARSET", wc_ces_to_charset(buf->doc.charset));
+        set_environ("W3M_TYPE", "unknown");
     }
-    l = buf->doc.currentLine;
+    struct Line* l = buf->doc.currentLine;
     if (l && (buf != prev_buf || l != prev_line || buf->doc.pos != prev_pos)) {
         struct Anchor* a;
         struct Url pu;

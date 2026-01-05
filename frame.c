@@ -300,21 +300,21 @@ void resetFrameElement(union frameset_element* f_element,
         deleteFrameSetElement(*f_element);
         f_element->set = buf->doc.frameset;
         f_element->set->currentURL = New(struct Url);
-        copyParsedURL(f_element->set->currentURL, &buf->content.url);
+        copyParsedURL(f_element->set->currentURL, &buf->content->url);
         buf->doc.frameset = popFrameTree(&(buf->doc.frameQ));
         f_element->set->name = f_name;
     } else {
         f_body = newFrame(NULL, buf);
         f_body->attr = F_BODY;
         f_body->name = f_name;
-        f_body->url = parsedURL2Str(&buf->content.url)->ptr;
-        f_body->source = buf->content.sourcefile;
-        buf->content.sourcefile = NULL;
-        if (buf->content.mailcap_source) {
-            f_body->source = buf->content.mailcap_source;
-            buf->content.mailcap_source = NULL;
+        f_body->url = parsedURL2Str(&buf->content->url)->ptr;
+        f_body->source = buf->content->sourcefile;
+        buf->content->sourcefile = NULL;
+        if (buf->content->mailcap_source) {
+            f_body->source = buf->content->mailcap_source;
+            buf->content->mailcap_source = NULL;
         }
-        f_body->type = buf->content.content_type;
+        f_body->type = buf->content->content_type;
         f_body->referer = referer;
         f_body->request = request;
         deleteFrameSetElement(*f_element);
@@ -341,7 +341,7 @@ frame_download_source(struct frame_body* b, struct Url* currentURL,
     default: {
         getRuntime()->is_redisplay = TRUE;
         // getRuntime()->w3m_dump |= DUMP_FRAME;
-        struct Content content = get_content_cache(b->url, b->request,
+        struct Content* content = get_content_cache(b->url, b->request,
             (struct LoadOption) {
                 .base_url = baseURL ? baseURL : currentURL,
                 .referer = b->referer,
@@ -350,8 +350,8 @@ frame_download_source(struct frame_body* b, struct Url* currentURL,
         buf = newBuffer(INIT_BUFFER_WIDTH);
         buf->content = content;
         /* XXX certificate? */
-        if (buf)
-            b->ssl_certificate = buf->content.ssl_certificate;
+        if (content)
+            b->ssl_certificate = content->ssl_certificate;
         // getRuntime()->w3m_dump &= ~DUMP_FRAME;
         getRuntime()->is_redisplay = FALSE;
         break;
@@ -363,20 +363,20 @@ frame_download_source(struct frame_body* b, struct Url* currentURL,
         b->flags = 0;
         return NULL;
     }
-    b->url = parsedURL2Str(&buf->content.url)->ptr;
-    b->type = buf->content.content_type;
-    b->source = buf->content.sourcefile;
-    buf->content.sourcefile = NULL;
-    if (buf->content.mailcap_source) {
-        b->source = buf->content.mailcap_source;
-        buf->content.mailcap_source = NULL;
+    b->url = parsedURL2Str(&buf->content->url)->ptr;
+    b->type = buf->content->content_type;
+    b->source = buf->content->sourcefile;
+    buf->content->sourcefile = NULL;
+    if (buf->content->mailcap_source) {
+        b->source = buf->content->mailcap_source;
+        buf->content->mailcap_source = NULL;
     }
     b->attr = F_BODY;
     if (buf->doc.frameset) {
         ret_frameset = buf->doc.frameset;
         ret_frameset->name = b->name;
         ret_frameset->currentURL = New(struct Url);
-        copyParsedURL(ret_frameset->currentURL, &buf->content.url);
+        copyParsedURL(ret_frameset->currentURL, &buf->content->url);
         buf->doc.frameset = popFrameTree(&(buf->doc.frameQ));
     }
     discardBuffer(buf);
@@ -437,7 +437,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
     } else
         fputs("<table hborder>\n", f1);
 
-    currentURL = f->currentURL ? f->currentURL : &current->content.url;
+    currentURL = f->currentURL ? f->currentURL : &current->content->url;
     for (r = 0; r < f->row; r++) {
         fputs("<tr valign=top>\n", f1);
         for (c = 0; c < f->col; c++) {
@@ -876,14 +876,14 @@ renderFrame(struct Buffer* Cbuf, int force_reload)
     fclose(f);
 
     int flag = RG_FRAME;
-    if ((Cbuf->content.url).is_nocache)
+    if ((Cbuf->content->url).is_nocache)
         flag |= RG_NOCACHE;
     renderFrameSet = Cbuf->doc.frameset;
     flushFrameSet(renderFrameSet);
 
     getRuntime()->DocumentCharset = getRuntime()->InnerCharset;
 
-    struct Content content = get_content_cache(tmp->ptr, NULL,
+    struct Content* content = get_content_cache(tmp->ptr, NULL,
         (struct LoadOption) { .base_url = NULL, .referer = NULL, .flag = flag });
     struct Buffer* buf = newBuffer(INIT_BUFFER_WIDTH);
     buf->content = content;
@@ -893,9 +893,9 @@ renderFrame(struct Buffer* Cbuf, int force_reload)
     renderFrameSet = NULL;
     if (buf == NULL)
         return NULL;
-    buf->content.sourcefile = tmp->ptr;
+    buf->content->sourcefile = tmp->ptr;
     buf->doc.charset = Cbuf->doc.charset;
-    copyParsedURL(&buf->content.url, &Cbuf->content.url);
+    copyParsedURL(&buf->content->url, &Cbuf->content->url);
     preFormUpdateBuffer(buf);
     return buf;
 }

@@ -62,7 +62,7 @@ struct AuthInfo {
 };
 
 struct ContentData {
-    struct Content content;
+    struct Content* content;
     Str page;
 };
 
@@ -80,5 +80,5 @@ const char* guess_save_name(struct Content* content, const char* file);
 int checkRedirection(struct Url* pu);
 struct ContentData get_content(const char* path, struct FormList* request,
     struct LoadOption option, struct AuthInfo auth, struct input_stream* connection);
-struct Content get_content_cache(const char* path, struct FormList* request, struct LoadOption option);
+struct Content* get_content_cache(const char* path, struct FormList* request, struct LoadOption option);
 void download_content(const char* path, struct FormList* request, struct LoadOption option);

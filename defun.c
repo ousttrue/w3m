@@ -81,7 +81,7 @@ DEFUN(setEnv, SETENV, "Set environment variable")
 
 DEFUN(editBf, EDIT, "Edit local source")
 {
-    const char* fn = ctx.buf->content.filename;
+    const char* fn = ctx.buf->content->filename;
     // if (fn == NULL || ctx.buf->pagerSource != NULL || /* Behaving as a pager */
     //     (ctx.buf->type == NULL && ctx.buf->edit == NULL) || /* Reading shell */
     //     ctx.buf->real_scheme != SCM_LOCAL || !strcmp(ctx.buf->currentURL.file, "-") || /* file is std input  */
@@ -92,8 +92,8 @@ DEFUN(editBf, EDIT, "Edit local source")
 
     Str cmd;
     if (ctx.buf->edit)
-        cmd = unquote_mailcap(ctx.buf->edit, ctx.buf->content.content_type, fn,
-            checkHeader(&ctx.buf->content, "Content-Type:"), NULL);
+        cmd = unquote_mailcap(ctx.buf->edit, ctx.buf->content->content_type, fn,
+            checkHeader(ctx.buf->content, "Content-Type:"), NULL);
     else
         cmd = myEditor(getRuntime()->Editor, shell_quote(fn), doc_cur_real_linenumber(&ctx.buf->doc));
     blockChild(cmd->ptr);
@@ -242,8 +242,8 @@ DEFUN(readsh, READ_SHELL, "Execute shell command and display output")
         return;
     } else {
         buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
-        if (buf->content.content_type == NULL)
-            buf->content.content_type = "text/plain";
+        if (buf->content->content_type == NULL)
+            buf->content->content_type = "text/plain";
         tab_push_buffer(getRuntime()->CurrentTab, buf);
     }
 }
@@ -860,13 +860,13 @@ DEFUN(ldfile, LOAD, "Open local file in a new buffer")
     }
     fn = conv_to_system(fn);
 
-    struct Content content = get_content_cache(file_to_url(fn), NULL,
+    struct Content *content = get_content_cache(file_to_url(fn), NULL,
         (struct LoadOption) {
             .base_url = NULL,
             .referer = NO_REFERER,
             .flag = 0,
         });
-    if (content.content_type == NULL) {
+    if (content->content_type == NULL) {
         char* emsg = Sprintf("%s not found", conv_from_system(fn))->ptr;
         disp_err_message(emsg, FALSE);
         return;
@@ -884,13 +884,13 @@ DEFUN(ldhelp, HELP, "Show help panel")
     Str tmp = Sprintf("file:///$LIB/" HELP_CGI CGI_EXTENSION "?version=%s&lang=%s",
         Str_form_quote(Strnew_charp(w3m_version))->ptr,
         Str_form_quote(Strnew_charp_n(lang, n))->ptr);
-    struct Content content = get_content_cache(tmp->ptr, NULL,
+    struct Content *content = get_content_cache(tmp->ptr, NULL,
         (struct LoadOption) {
             .base_url = NULL,
             .referer = NO_REFERER,
             0,
         });
-    if (!content.content_type) {
+    if (!content->content_type) {
         Str emsg = Sprintf("Can't load %s", conv_from_system(tmp->ptr));
         disp_err_message(emsg->ptr, false);
         return;

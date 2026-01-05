@@ -414,17 +414,16 @@ void loadPasswd(void)
 /* get last modified time */
 char* last_modified(struct Buffer* buf)
 {
-    if (buf->content.document_header) {
-        TextListItem* ti;
-        for (ti = buf->content.document_header->first; ti; ti = ti->next) {
+    if (buf->content->document_header) {
+        for (TextListItem* ti = buf->content->document_header->first; ti; ti = ti->next) {
             if (strncasecmp(ti->ptr, "Last-modified: ", 15) == 0) {
                 return ti->ptr + 15;
             }
         }
         return "unknown";
-    } else if (buf->content.url.scheme == SCM_LOCAL) {
+    } else if (buf->content->url.scheme == SCM_LOCAL) {
         struct stat st;
-        if (stat(buf->content.url.file, &st) < 0)
+        if (stat(buf->content->url.file, &st) < 0)
             return "unknown";
         return ctime(&st.st_mtime);
     }

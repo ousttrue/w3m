@@ -37,10 +37,10 @@ baseURL(struct Buffer* buf)
     if (buf->doc.baseURL != NULL) {
         /* <BASE> tag is defined in the document */
         return buf->doc.baseURL;
-    } else if (IS_EMPTY_PARSED_URL(&buf->content.url))
+    } else if (IS_EMPTY_PARSED_URL(&buf->content->url))
         return NULL;
     else
-        return &buf->content.url;
+        return &buf->content->url;
 }
 
 void cmd_loadBuffer(struct Buffer* buf, int prop, enum LinkBufferID linkid)
@@ -50,7 +50,7 @@ void cmd_loadBuffer(struct Buffer* buf, int prop, enum LinkBufferID linkid)
     } else {
         buf->bufferprop |= (BP_INTERNAL | prop);
         if (!(buf->bufferprop & BP_NO_URL))
-            copyParsedURL(&buf->content.url, &Currentbuf->content.url);
+            copyParsedURL(&buf->content->url, &Currentbuf->content->url);
         if (linkid != LB_NOLINK) {
             buf->linkBuffer[REV_LB[linkid]] = Currentbuf;
             Currentbuf->linkBuffer[linkid] = buf;
@@ -67,20 +67,27 @@ struct Buffer* newBuffer(int width)
     struct Buffer* n = New(struct Buffer);
     assert(n);
     memset(n, 0, sizeof(struct Buffer));
-    n->doc.width = width;
-    n->doc.COLS = TTY_COLS();
-    n->doc.LINES = LASTLINE();
-    n->content.url.scheme = SCM_UNKNOWN;
-    n->doc.baseURL = NULL;
-    n->doc.baseTarget = NULL;
-    n->doc.title = "";
-    n->bufferprop = BP_NORMAL;
-    n->clone = New(int);
+
+    // n->content.url.scheme = SCM_UNKNOWN;
+    // n->content.ssl_certificate = NULL;
+
+    *n = (struct Buffer) {
+        .content = NULL,
+        .doc = {
+            .width = width,
+            .COLS = TTY_COLS(),
+            .LINES = LASTLINE(),
+            .baseURL = NULL,
+            .baseTarget = NULL,
+            .title = "",
+            .trbyte = 0,
+            .auto_detect = WcOption.auto_detect,
+        },
+        .bufferprop = BP_NORMAL,
+        .clone = New(int),
+        .check_url = getRuntime()->MarkAllPages, /* use default from -o mark_all_pages */
+    };
     *n->clone = 1;
-    n->doc.trbyte = 0;
-    n->content.ssl_certificate = NULL;
-    n->doc.auto_detect = WcOption.auto_detect;
-    n->check_url = getRuntime()->MarkAllPages; /* use default from -o mark_all_pages */
     return n;
 }
 
@@ -127,13 +134,13 @@ void discardBuffer(struct Buffer* buf)
         unlink(buf->savecache);
     if (--(*buf->clone))
         return;
-    if (buf->content.sourcefile) {
-        unlink(buf->content.sourcefile);
+    if (buf->content->sourcefile) {
+        unlink(buf->content->sourcefile);
     }
-    if (buf->content.header_source)
-        unlink(buf->content.header_source);
-    if (buf->content.mailcap_source)
-        unlink(buf->content.mailcap_source);
+    if (buf->content->header_source)
+        unlink(buf->content->header_source);
+    if (buf->content->mailcap_source)
+        unlink(buf->content->mailcap_source);
     while (buf->doc.frameset) {
         deleteFrameSet(buf->doc.frameset);
         buf->doc.frameset = popFrameTree(&(buf->doc.frameQ));
@@ -231,13 +238,13 @@ writeBufferName(struct Buffer* buf, int n)
         all = buf->doc.lastLine->linenumber;
     screen_move((struct Vec2) { .y = n, .x = 0 });
     Str msg = Sprintf("<%s> [%d lines]", buf->doc.title, all);
-    if (buf->content.filename != NULL) {
-        switch (buf->content.url.scheme) {
+    if (buf->content->filename != NULL) {
+        switch (buf->content->url.scheme) {
         case SCM_LOCAL:
         case SCM_LOCAL_CGI:
-            if (strcmp(buf->content.url.file, "-")) {
+            if (strcmp(buf->content->url.file, "-")) {
                 Strcat_char(msg, ' ');
-                Strcat_charp(msg, conv_from_system(buf->content.url.real_file));
+                Strcat_charp(msg, conv_from_system(buf->content->url.real_file));
             }
             break;
         case SCM_UNKNOWN:
@@ -245,7 +252,7 @@ writeBufferName(struct Buffer* buf, int n)
             break;
         default:
             Strcat_char(msg, ' ');
-            Strcat(msg, parsedURL2Str(&buf->content.url));
+            Strcat(msg, parsedURL2Str(&buf->content->url));
             break;
         }
     }
@@ -402,10 +409,10 @@ void reshapeBuffer(struct Buffer* buf)
     buf->doc.width = INIT_BUFFER_WIDTH;
 
     struct input_stream* stream = NULL;
-    if (buf->content.mailcap_source) {
-        stream = decompress_stream(examineFile(buf->content.mailcap_source), buf->content.mailcap_source);
-    } else if (buf->content.sourcefile) {
-        stream = decompress_stream(examineFile(buf->content.sourcefile), buf->content.sourcefile);
+    if (buf->content->mailcap_source) {
+        stream = decompress_stream(examineFile(buf->content->mailcap_source), buf->content->mailcap_source);
+    } else if (buf->content->sourcefile) {
+        stream = decompress_stream(examineFile(buf->content->sourcefile), buf->content->sourcefile);
     }
     if (!stream)
         return;
@@ -430,11 +437,11 @@ void reshapeBuffer(struct Buffer* buf)
     if (buf->doc.imarklist)
         buf->doc.imarklist->nmark = 0;
 
-    if (buf->content.header_source) {
-        if (buf->content.url.scheme != SCM_LOCAL || buf->content.mailcap_source || !strcmp(buf->content.url.file, "-")) {
-            struct input_stream* stream = decompress_stream(examineFile(buf->content.header_source), buf->content.header_source);
+    if (buf->content->header_source) {
+        if (buf->content->url.scheme != SCM_LOCAL || buf->content->mailcap_source || !strcmp(buf->content->url.file, "-")) {
+            struct input_stream* stream = decompress_stream(examineFile(buf->content->header_source), buf->content->header_source);
             if (stream) {
-                getHttpResponseHeader(&buf->content, buf->content.url, stream);
+                getHttpResponseHeader(buf->content, buf->content->url, stream);
                 is_close(stream);
             }
         }
@@ -444,11 +451,11 @@ void reshapeBuffer(struct Buffer* buf)
         wc_uint8 old_auto_detect = WcOption.auto_detect;
         WcOption.auto_detect = WC_OPT_DETECT_OFF;
         getRuntime()->UseContentCharset = FALSE;
-        if (is_html_type(buf->content.content_type))
-            loadHTMLBuffer(buf->content.url, stream,
+        if (is_html_type(buf->content->content_type))
+            loadHTMLBuffer(buf->content->url, stream,
                 NULL, buf, buf->bufferprop & BP_FRAME);
         else
-            loadBuffer(buf->content.url, stream,
+            loadBuffer(buf->content->url, stream,
                 NULL, buf, buf->bufferprop & BP_FRAME);
         is_close(stream);
         WcOption.auto_detect = old_auto_detect;
@@ -476,7 +483,7 @@ void reshapeBuffer(struct Buffer* buf)
                 doc_gotoLine(&buf->doc, cur->linenumber);
         }
         buf->doc.pos -= buf->doc.currentLine->bpos;
-        if (getRuntime()->FoldLine && !is_html_type(buf->content.content_type))
+        if (getRuntime()->FoldLine && !is_html_type(buf->content->content_type))
             buf->doc.currentColumn = 0;
         else
             buf->doc.currentColumn = sbuf.doc.currentColumn;

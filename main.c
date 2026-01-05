@@ -41,7 +41,6 @@
 #include <time.h>
 #include "display.h"
 #include "myctype.h"
-#include "regex.h"
 #include "funcname1.h"
 #include "mysignal.h"
 
@@ -543,7 +542,7 @@ bool w3m_args(int argc, char** argv)
             // newbuf = openGeneralPagerBuffer(redin);
             // dup2(1, 0);
         } else if (load_bookmark) {
-            struct Content content = get_content_cache(getRuntime()->BookmarkFile, NULL,
+            struct Content *content = get_content_cache(getRuntime()->BookmarkFile, NULL,
                 (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER, .flag = 0 });
             newbuf = newBuffer(INIT_BUFFER_WIDTH);
             newbuf->content = content;
@@ -564,14 +563,14 @@ bool w3m_args(int argc, char** argv)
             else
                 newbuf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
         } else if ((p = getenv("HTTP_HOME")) != NULL || (p = getenv("WWW_HOME")) != NULL) {
-            struct Content content = get_content_cache(p, NULL,
+            struct Content *content = get_content_cache(p, NULL,
                 (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER, .flag = 0 });
             newbuf = newBuffer(INIT_BUFFER_WIDTH);
             newbuf->content = content;
             if (newbuf == NULL)
                 Strcat(err_msg, Sprintf("w3m: Can't load %s.\n", p));
             else
-                pushHashHist(getRuntime()->URLHist, parsedURL2Str(&newbuf->content.url)->ptr);
+                pushHashHist(getRuntime()->URLHist, parsedURL2Str(&newbuf->content->url)->ptr);
         } else {
             if (fmInitialized())
                 exitRawMode();
@@ -623,7 +622,7 @@ bool w3m_args(int argc, char** argv)
                 } else {
                     request = NULL;
                 }
-                struct Content content = get_content_cache(url, request,
+                struct Content *content = get_content_cache(url, request,
                     (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER, .flag = 0 });
                 newbuf = newBuffer(INIT_BUFFER_WIDTH);
                 newbuf->content = content;
@@ -693,9 +692,9 @@ dump_source(struct Buffer* buf)
 {
     FILE* f;
     int c;
-    if (buf->content.sourcefile == NULL)
+    if (buf->content->sourcefile == NULL)
         return;
-    f = fopen(buf->content.sourcefile, "r");
+    f = fopen(buf->content->sourcefile, "r");
     if (f == NULL)
         return;
     while ((c = fgetc(f)) != EOF) {
@@ -733,7 +732,7 @@ cmd_loadURL(const char* url, struct FormList* request, struct LoadOption option)
     if (handleMailto(url))
         return;
 
-    struct Content content = get_content_cache(url, request, option);
+    struct Content *content = get_content_cache(url, request, option);
     struct Buffer* buf = newBuffer(INIT_BUFFER_WIDTH);
     buf->content = content;
     if (buf == NULL) {
@@ -783,12 +782,12 @@ goURL0(const char* prompt, int relative)
             url = skip_blanks(url);
     }
     if (relative) {
-        no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->content.url);
+        no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->content->url);
         current = baseURL(Currentbuf);
         if ((no_referer_ptr && *no_referer_ptr) || current == NULL || current->scheme == SCM_LOCAL || current->scheme == SCM_LOCAL_CGI)
             referer = NO_REFERER;
         else
-            referer = parsedURL2RefererStr(&Currentbuf->content.url)->ptr;
+            referer = parsedURL2RefererStr(&Currentbuf->content->url)->ptr;
         url = url_encode(url, current, Currentbuf->doc.charset);
     } else {
         current = NULL;
@@ -806,7 +805,7 @@ goURL0(const char* prompt, int relative)
     pushHashHist(getRuntime()->URLHist, parsedURL2Str(&p_url)->ptr);
     cmd_loadURL(url, NULL, (struct LoadOption) { .base_url = current, .referer = referer });
     if (Currentbuf != cur_buf) /* success */
-        pushHashHist(getRuntime()->URLHist, parsedURL2Str(&Currentbuf->content.url)->ptr);
+        pushHashHist(getRuntime()->URLHist, parsedURL2Str(&Currentbuf->content->url)->ptr);
 }
 
 DEFUN(goURL, GOTO, "Open specified document in a new buffer")
@@ -826,7 +825,7 @@ DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer")
         pushHashHist(getRuntime()->URLHist, parsedURL2Str(&p_url)->ptr);
         cmd_loadURL(url, NULL, (struct LoadOption) { .base_url = NULL, .referer = NULL });
         if (Currentbuf != cur_buf) /* success */
-            pushHashHist(getRuntime()->URLHist, parsedURL2Str(&Currentbuf->content.url)->ptr);
+            pushHashHist(getRuntime()->URLHist, parsedURL2Str(&Currentbuf->content->url)->ptr);
     }
 }
 
@@ -852,7 +851,7 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
                   "&charset=%s",
         (Str_form_quote(localCookie()))->ptr,
         (Str_form_quote(Strnew_charp(getRuntime()->BookmarkFile)))->ptr,
-        (Str_form_quote(parsedURL2Str(&Currentbuf->content.url)))->ptr,
+        (Str_form_quote(parsedURL2Str(&Currentbuf->content->url)))->ptr,
 
         (Str_form_quote(wc_conv_strict(Currentbuf->doc.title,
              getRuntime()->InnerCharset,
@@ -941,7 +940,7 @@ void follow_map(struct parsed_tagarg* arg)
         cmd_loadURL(a->url, NULL,
             (struct LoadOption) {
                 .base_url = baseURL(Currentbuf),
-                .referer = parsedURL2Str(&Currentbuf->content.url)->ptr });
+                .referer = parsedURL2Str(&Currentbuf->content->url)->ptr });
         if (buf != Currentbuf)
             delBuffer(buf);
         else
@@ -951,7 +950,7 @@ void follow_map(struct parsed_tagarg* arg)
     cmd_loadURL(a->url, NULL,
         (struct LoadOption) {
             .base_url = baseURL(Currentbuf),
-            .referer = parsedURL2Str(&Currentbuf->content.url)->ptr });
+            .referer = parsedURL2Str(&Currentbuf->content->url)->ptr });
 }
 
 /* link menu */
@@ -971,7 +970,7 @@ DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
     cmd_loadURL(l->url, NULL,
         (struct LoadOption) {
             .base_url = baseURL(Currentbuf),
-            .referer = parsedURL2Str(&Currentbuf->content.url)->ptr });
+            .referer = parsedURL2Str(&Currentbuf->content->url)->ptr });
 }
 
 static void
@@ -1093,17 +1092,17 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document")
 /* save source */
 DEFUN(svSrc, DOWNLOAD SAVE, "Save document source")
 {
-    if (Currentbuf->content.sourcefile == NULL)
+    if (Currentbuf->content->sourcefile == NULL)
         return;
     getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
     getRuntime()->PermitSaveToPipe = TRUE;
     const char* file;
-    if (Currentbuf->content.url.scheme == SCM_LOCAL)
+    if (Currentbuf->content->url.scheme == SCM_LOCAL)
         file = conv_from_system(guess_save_name(NULL,
-            Currentbuf->content.url.real_file));
+            Currentbuf->content->url.real_file));
     else
-        file = guess_save_name(&Currentbuf->content, Currentbuf->content.url.file);
-    doFileCopy(Currentbuf->content.sourcefile, file);
+        file = guess_save_name(Currentbuf->content, Currentbuf->content->url.file);
+    doFileCopy(Currentbuf->content->sourcefile, file);
     getRuntime()->PermitSaveToPipe = FALSE;
 }
 
@@ -1178,7 +1177,7 @@ currentURL(void)
 {
     if (Currentbuf->bufferprop & BP_INTERNAL)
         return Strnew_size(0);
-    return parsedURL2Str(&Currentbuf->content.url);
+    return parsedURL2Str(&Currentbuf->content->url);
 }
 
 DEFUN(curURL, PEEK, "Show current address")
@@ -1218,13 +1217,13 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
 {
     struct Buffer* buf;
 
-    if (Currentbuf->content.content_type == NULL || Currentbuf->bufferprop & BP_FRAME)
+    if (Currentbuf->content->content_type == NULL || Currentbuf->bufferprop & BP_FRAME)
         return;
     if ((buf = Currentbuf->linkBuffer[LB_SOURCE]) != NULL || (buf = Currentbuf->linkBuffer[LB_N_SOURCE]) != NULL) {
         Currentbuf = buf;
         return;
     }
-    if (Currentbuf->content.sourcefile == NULL) {
+    if (Currentbuf->content->sourcefile == NULL) {
         // if (Currentbuf->pagerSource && !strcasecmp(Currentbuf->type, "text/plain")) {
         //     wc_ces old_charset;
         //     wc_bool old_fix_width_conv;
@@ -1258,21 +1257,21 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
 
     buf = newBuffer(INIT_BUFFER_WIDTH);
 
-    if (is_html_type(Currentbuf->content.content_type)) {
-        buf->content.content_type = "text/plain";
-        if (Currentbuf->content.content_type && is_html_type(Currentbuf->content.content_type))
-            buf->content.content_type = "text/plain";
+    if (is_html_type(Currentbuf->content->content_type)) {
+        buf->content->content_type = "text/plain";
+        if (Currentbuf->content->content_type && is_html_type(Currentbuf->content->content_type))
+            buf->content->content_type = "text/plain";
         else
-            buf->content.content_type = Currentbuf->content.content_type;
+            buf->content->content_type = Currentbuf->content->content_type;
         buf->doc.title = Sprintf("source of %s", Currentbuf->doc.title)->ptr;
         buf->linkBuffer[LB_N_SOURCE] = Currentbuf;
         Currentbuf->linkBuffer[LB_SOURCE] = buf;
-    } else if (!strcasecmp(Currentbuf->content.content_type, "text/plain")) {
-        buf->content.content_type = "text/html";
-        if (Currentbuf->content.content_type && !strcasecmp(Currentbuf->content.content_type, "text/plain"))
-            buf->content.content_type = "text/html";
+    } else if (!strcasecmp(Currentbuf->content->content_type, "text/plain")) {
+        buf->content->content_type = "text/html";
+        if (Currentbuf->content->content_type && !strcasecmp(Currentbuf->content->content_type, "text/plain"))
+            buf->content->content_type = "text/html";
         else
-            buf->content.content_type = Currentbuf->content.content_type;
+            buf->content->content_type = Currentbuf->content->content_type;
         buf->doc.title = Sprintf("HTML view of %s",
             Currentbuf->doc.title)
                              ->ptr;
@@ -1281,10 +1280,10 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
     } else {
         return;
     }
-    buf->content.url = Currentbuf->content.url;
-    buf->content.filename = Currentbuf->content.filename;
-    buf->content.sourcefile = Currentbuf->content.sourcefile;
-    buf->content.header_source = Currentbuf->content.header_source;
+    buf->content->url = Currentbuf->content->url;
+    buf->content->filename = Currentbuf->content->filename;
+    buf->content->sourcefile = Currentbuf->content->sourcefile;
+    buf->content->header_source = Currentbuf->content->header_source;
     // buf->search_header = Currentbuf->search_header;
     buf->doc.charset = Currentbuf->doc.charset;
     buf->clone = Currentbuf->clone;
@@ -1306,7 +1305,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
         disp_err_message("Can't reload...", TRUE);
         return;
     }
-    if (Currentbuf->content.url.scheme == SCM_LOCAL && !strcmp(Currentbuf->content.url.file, "-")) {
+    if (Currentbuf->content->url.scheme == SCM_LOCAL && !strcmp(Currentbuf->content->url.file, "-")) {
         /* file is std input */
         /* FIXME: gettextize? */
         disp_err_message("Can't reload stdin", TRUE);
@@ -1322,10 +1321,10 @@ DEFUN(reload, RELOAD, "Load current document anew")
             return;
         }
         if (fbuf->linkBuffer[LB_FRAME]) {
-            if (buf->content.sourcefile
-                && fbuf->linkBuffer[LB_FRAME]->content.sourcefile
-                && !strcmp(buf->content.sourcefile, fbuf->linkBuffer[LB_FRAME]->content.sourcefile))
-                fbuf->linkBuffer[LB_FRAME]->content.sourcefile = NULL;
+            if (buf->content->sourcefile
+                && fbuf->linkBuffer[LB_FRAME]->content->sourcefile
+                && !strcmp(buf->content->sourcefile, fbuf->linkBuffer[LB_FRAME]->content->sourcefile))
+                fbuf->linkBuffer[LB_FRAME]->content->sourcefile = NULL;
             delBuffer(fbuf->linkBuffer[LB_FRAME]);
         }
         fbuf->linkBuffer[LB_FRAME] = buf;
@@ -1353,14 +1352,14 @@ DEFUN(reload, RELOAD, "Load current document anew")
     } else {
         request = NULL;
     }
-    url = parsedURL2Str(&Currentbuf->content.url);
+    url = parsedURL2Str(&Currentbuf->content->url);
     message("Reloading...");
     old_charset = getRuntime()->DocumentCharset;
     if (Currentbuf->doc.charset != WC_CES_US_ASCII)
         getRuntime()->DocumentCharset = Currentbuf->doc.charset;
     // SearchHeader = Currentbuf->search_header;
-    getRuntime()->DefaultType = Currentbuf->content.content_type;
-    struct Content content = get_content_cache(url->ptr, request,
+    getRuntime()->DefaultType = Currentbuf->content->content_type;
+    struct Content *content = get_content_cache(url->ptr, request,
         (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER, .flag = RG_NOCACHE });
     buf = newBuffer(INIT_BUFFER_WIDTH);
     buf->content = content;
@@ -1378,7 +1377,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
     if (fbuf != NULL)
         Firstbuf = deleteBuffer(Firstbuf, fbuf);
     repBuffer(Currentbuf, buf);
-    if ((buf->content.content_type != NULL) && (sbuf.content.content_type != NULL) && ((!strcasecmp(buf->content.content_type, "text/plain") && is_html_type(sbuf.content.content_type)) || (is_html_type(buf->content.content_type) && !strcasecmp(sbuf.content.content_type, "text/plain")))) {
+    if ((buf->content->content_type != NULL) && (sbuf.content->content_type != NULL) && ((!strcasecmp(buf->content->content_type, "text/plain") && is_html_type(sbuf.content->content_type)) || (is_html_type(buf->content->content_type) && !strcasecmp(sbuf.content->content_type, "text/plain")))) {
         vwSrc(ctx);
         if (Currentbuf != buf)
             Firstbuf = deleteBuffer(Firstbuf, buf);
@@ -1402,7 +1401,7 @@ _docCSet(enum wc_ces charset)
 {
     if (Currentbuf->bufferprop & BP_INTERNAL)
         return;
-    if (Currentbuf->content.sourcefile == NULL) {
+    if (Currentbuf->content->sourcefile == NULL) {
         disp_message("Can't reload...", FALSE);
         return;
     }
@@ -1584,13 +1583,13 @@ DEFUN(extbrz, EXTERN, "Display using an external browser")
         disp_err_message("Can't browse...", TRUE);
         return;
     }
-    if (Currentbuf->content.url.scheme == SCM_LOCAL && !strcmp(Currentbuf->content.url.file, "-")) {
+    if (Currentbuf->content->url.scheme == SCM_LOCAL && !strcmp(Currentbuf->content->url.file, "-")) {
         /* file is std input */
         /* FIXME: gettextize? */
         disp_err_message("Can't browse stdin", TRUE);
         return;
     }
-    invoke_browser(parsedURL2Str(&Currentbuf->content.url)->ptr);
+    invoke_browser(parsedURL2Str(&Currentbuf->content->url)->ptr);
 }
 
 DEFUN(linkbrz, EXTERN_LINK, "Display target using an external browser")
@@ -1692,7 +1691,7 @@ execdict(char* word)
 
     char* dictcmd = Sprintf("%s?%s", getRuntime()->DictCommand, Str_form_quote(Strnew_charp(w))->ptr)->ptr;
 
-    struct Content content = get_content_cache(dictcmd, NULL,
+    struct Content *content = get_content_cache(dictcmd, NULL,
         (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER, .flag = 0 });
     struct Buffer* buf = newBuffer(INIT_BUFFER_WIDTH);
     buf->content = content;
@@ -1700,10 +1699,10 @@ execdict(char* word)
         disp_message("Execution failed", TRUE);
         return;
     } else {
-        buf->content.filename = w;
+        buf->content->filename = w;
         buf->doc.title = Sprintf("%s %s", DICTBUFFERNAME, word)->ptr;
-        if (buf->content.content_type == NULL)
-            buf->content.content_type = "text/plain";
+        if (buf->content->content_type == NULL)
+            buf->content->content_type = "text/plain";
         tab_push_buffer(getRuntime()->CurrentTab, buf);
     }
 }

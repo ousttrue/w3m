@@ -427,7 +427,7 @@ page_info_panel(struct Buffer* buf)
 #ifdef USE_M17N
     Strcat_charp(tmp, "<form method=internal action=charset>");
 #endif
-    p = url_decode2(parsedURL2Str(&buf->content.url)->ptr, NULL);
+    p = url_decode2(parsedURL2Str(&buf->content->url)->ptr, NULL);
     Strcat_m_charp(tmp, "<table cellpadding=0>",
         "<tr valign=top><td nowrap>Title<td>",
         html_quote(buf->doc.title),
@@ -501,10 +501,9 @@ page_info_panel(struct Buffer* buf)
 
     append_link_info(buf, tmp, buf->doc.linklist);
 
-    if (buf->content.document_header != NULL) {
+    if (buf->content->document_header != NULL) {
         Strcat_charp(tmp, "<hr width=50%><h1>Header information</h1><pre>\n");
-        TextListItem* ti;
-        for (ti = buf->content.document_header->first; ti != NULL; ti = ti->next)
+        for (TextListItem* ti = buf->content->document_header->first; ti != NULL; ti = ti->next)
             Strcat_m_charp(tmp, "<pre_int>", html_quote(ti->ptr),
                 "</pre_int>\n", NULL);
         Strcat_charp(tmp, "</pre>\n");
@@ -519,9 +518,9 @@ page_info_panel(struct Buffer* buf)
         Strcat_charp(tmp, "<hr width=50%><h1>Frame information</h1>\n");
         append_frame_info(buf, tmp, f_set, 0);
     }
-    if (buf->content.ssl_certificate)
+    if (buf->content->ssl_certificate)
         Strcat_m_charp(tmp, "<h1>SSL certificate</h1><pre>\n",
-            html_quote(buf->content.ssl_certificate), "</pre>\n", NULL);
+            html_quote(buf->content->ssl_certificate), "</pre>\n", NULL);
 end:
     Strcat_charp(tmp, "</body></html>");
     newbuf = loadHTMLString(tmp);

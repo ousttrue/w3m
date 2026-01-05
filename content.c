@@ -478,8 +478,8 @@ struct ContentData get_content(const char* path,
     PrevTrapFunc prevtrap = NULL;
     TRAP_ON
     struct ContentAndStream s = openURL(url, request, option, connection);
-    if (!s.stream && getRuntime()->retryAsHttp && s.content.url_str[0] != '/') {
-        if (s.content.url.scheme == SCM_MISSING || s.content.url.scheme == SCM_UNKNOWN) {
+    if (!s.stream && getRuntime()->retryAsHttp && s.content->url_str[0] != '/') {
+        if (s.content->url.scheme == SCM_MISSING || s.content->url.scheme == SCM_UNKNOWN) {
             // retry it as "http://"
             const char* u = Strnew_m_charp("http://", path, NULL)->ptr;
             parseURL2(u, &url, option.base_url);
@@ -489,49 +489,49 @@ struct ContentData get_content(const char* path,
 
     if (!s.stream) {
         // non stream(file or socket) content.
-        s.content.charset = WC_CES_US_ASCII;
+        s.content->charset = WC_CES_US_ASCII;
         Str page = NULL;
-        switch (s.content.url.scheme) {
+        switch (s.content->url.scheme) {
         case SCM_LOCAL: {
             struct stat st;
-            if (stat(s.content.url.real_file, &st) < 0)
+            if (stat(s.content->url.real_file, &st) < 0)
                 return (struct ContentData) { 0 };
             if (S_ISDIR(st.st_mode)) {
                 if (getRuntime()->UseExternalDirBuffer) {
                     Str cmd = Sprintf("%s?dir=%s#current",
-                        getRuntime()->DirBufferCommand, s.content.url.file);
+                        getRuntime()->DirBufferCommand, s.content->url.file);
                     struct ContentData data = get_content(cmd->ptr, NULL,
                         (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER, .flag = 0, .extra_header = NULL },
                         (struct AuthInfo) { 0 }, NULL);
                     // if (b != NULL) {
-                    copyParsedURL(&data.content.url, &s.content.url);
-                    data.content.filename = data.content.url.real_file;
+                    copyParsedURL(&data.content->url, &s.content->url);
+                    data.content->filename = data.content->url.real_file;
                     // }
                     return data;
                 } else {
-                    page = loadLocalDir(s.content.url.real_file);
-                    s.content.charset = getRuntime()->SystemCharset;
+                    page = loadLocalDir(s.content->url.real_file);
+                    s.content->charset = getRuntime()->SystemCharset;
                 }
             }
         } break;
 
         case SCM_FTPDIR:
-            page = loadFTPDir(&s.content.url, &s.content.charset);
+            page = loadFTPDir(&s.content->url, &s.content->charset);
             break;
 
         case SCM_UNKNOWN: {
             // ?
-            Str tmp = searchURIMethods(&s.content.url);
+            Str tmp = searchURIMethods(&s.content->url);
             if (tmp != NULL) {
                 struct ContentData data = get_content(tmp->ptr, request,
                     option, (struct AuthInfo) { 0 }, connection);
                 // if (b != NULL)
-                copyParsedURL(&data.content.url, &s.content.url);
+                copyParsedURL(&data.content->url, &s.content->url);
                 return data;
             }
 
             disp_err_message(Sprintf("Unknown URI: %s",
-                                 parsedURL2Str(&s.content.url)->ptr)
+                                 parsedURL2Str(&s.content->url)->ptr)
                                  ->ptr,
                 FALSE);
             break;
@@ -573,7 +573,7 @@ struct ContentData get_content(const char* path,
         return (struct ContentData) { 0 };
     }
 
-    if (s.content.is_cgi) {
+    if (s.content->is_cgi) {
         /* local CGI */
         // searchHeader = TRUE;
         // searchHeader_through = FALSE;
@@ -582,23 +582,23 @@ struct ContentData get_content(const char* path,
         getRuntime()->header_string = NULL;
     }
 
-    if (s.content.url.scheme == SCM_HTTP
-        || s.content.url.scheme == SCM_HTTPS
-        || (((s.content.url.scheme == SCM_FTP && non_null(getRuntime()->FTP_proxy)))
+    if (s.content->url.scheme == SCM_HTTP
+        || s.content->url.scheme == SCM_HTTPS
+        || (((s.content->url.scheme == SCM_FTP && non_null(getRuntime()->FTP_proxy)))
             && getRuntime()->use_proxy
-            && !check_no_proxy(s.content.url.host))) {
+            && !check_no_proxy(s.content->url.host))) {
 
         if (fmInitialized()) {
             exitRawMode();
-            message(Sprintf("%s contacted. Waiting for reply...", s.content.url.host)->ptr);
+            message(Sprintf("%s contacted. Waiting for reply...", s.content->url.host)->ptr);
         }
-        getHttpResponseHeader(&s.content, s.content.url, s.stream);
+        getHttpResponseHeader(s.content, s.content->url, s.stream);
         const char* p;
-        if (((s.content.http_response_code >= 301 //
-                 && s.content.http_response_code <= 303)
-                || s.content.http_response_code == 307)
-            && (p = checkHeader(&s.content, "Location:")) != NULL
-            && checkRedirection(&s.content.url)) {
+        if (((s.content->http_response_code >= 301 //
+                 && s.content->http_response_code <= 303)
+                || s.content->http_response_code == 307)
+            && (p = checkHeader(s.content, "Location:")) != NULL
+            && checkRedirection(&s.content->url)) {
             // document moved
             // 301: Moved Permanently
             // 302: Found
@@ -608,40 +608,40 @@ struct ContentData get_content(const char* path,
             is_close(s.stream);
             // struct Url* new_current = New(struct Url);
             // copyParsedURL(new_current, &s.content.url);
-            option.base_url = &s.content.url;
+            option.base_url = &s.content->url;
             // t_buf->bufferprop |= BP_REDIRECTED;
             return get_content(tpath,
                 NULL, option, auth, NULL);
         }
 
-        s.content.content_type = checkContentType(&s.content);
-        if (s.content.content_type == NULL && s.content.url.file != NULL) {
-            if (!((s.content.http_response_code >= 400 //
-                      && s.content.http_response_code <= 407) //
-                    || (s.content.http_response_code >= 500 //
-                        && s.content.http_response_code <= 505)))
-                s.content.content_type = guessContentType(s.content.url.file);
+        s.content->content_type = checkContentType(s.content);
+        if (s.content->content_type == NULL && s.content->url.file != NULL) {
+            if (!((s.content->http_response_code >= 400 //
+                      && s.content->http_response_code <= 407) //
+                    || (s.content->http_response_code >= 500 //
+                        && s.content->http_response_code <= 505)))
+                s.content->content_type = guessContentType(s.content->url.file);
         }
-        if (s.content.content_type == NULL)
-            s.content.content_type = "text/plain";
+        if (s.content->content_type == NULL)
+            s.content->content_type = "text/plain";
         if (auth.add_auth_cookie_flag
             && auth.realm && auth.uname && auth.pwd) {
             /* If authorization is required and passed */
-            add_auth_user_passwd(&s.content.url, qstr_unquote(auth.realm)->ptr,
+            add_auth_user_passwd(&s.content->url, qstr_unquote(auth.realm)->ptr,
                 auth.uname,
                 auth.pwd,
                 0);
             auth.add_auth_cookie_flag = 0;
         }
-        if ((p = checkHeader(&s.content, "WWW-Authenticate:")) != NULL //
-            && s.content.http_response_code == 401) {
+        if ((p = checkHeader(s.content, "WWW-Authenticate:")) != NULL //
+            && s.content->http_response_code == 401) {
             /* Authentication needed */
             struct http_auth hauth;
-            if (findAuthentication(&hauth, s.content.document_header, "WWW-Authenticate:") != NULL
+            if (findAuthentication(&hauth, s.content->document_header, "WWW-Authenticate:") != NULL
                 && (auth.realm = get_auth_param(hauth.param, "realm")) != NULL) {
-                struct Url* auth_pu = &s.content.url;
+                struct Url* auth_pu = &s.content->url;
                 getAuthCookie(&hauth, "Authorization:", option.extra_header,
-                    auth_pu, &s.content.hr, request, &auth.uname, &auth.pwd);
+                    auth_pu, &s.content->hr, request, &auth.uname, &auth.pwd);
                 if (auth.uname == NULL) {
                     /* abort */
                     TRAP_OFF;
@@ -655,16 +655,16 @@ struct ContentData get_content(const char* path,
                 return get_content(path, request, option, auth, connection);
             }
         }
-        if ((p = checkHeader(&s.content, "Proxy-Authenticate:")) != NULL //
-            && s.content.http_response_code == 407) {
+        if ((p = checkHeader(s.content, "Proxy-Authenticate:")) != NULL //
+            && s.content->http_response_code == 407) {
             // Authentication needed
             struct http_auth hauth;
-            if (findAuthentication(&hauth, s.content.document_header, "Proxy-Authenticate:")
+            if (findAuthentication(&hauth, s.content->document_header, "Proxy-Authenticate:")
                     != NULL
                 && (auth.realm = get_auth_param(hauth.param, "realm")) != NULL) {
-                struct Url* auth_pu = schemeToProxy(s.content.url.scheme);
+                struct Url* auth_pu = schemeToProxy(s.content->url.scheme);
                 getAuthCookie(&hauth, "Proxy-Authorization:",
-                    option.extra_header, auth_pu, &s.content.hr, request,
+                    option.extra_header, auth_pu, &s.content->hr, request,
                     &auth.uname, &auth.pwd);
                 if (auth.uname == NULL) {
                     /* abort */
@@ -687,19 +687,19 @@ struct ContentData get_content(const char* path,
             return get_content(path, request, option, auth, s.stream);
         }
 
-        s.content.modtime = mymktime(checkHeader(&s.content, "Last-Modified:"));
-    } else if (s.content.url.scheme == SCM_FTP) {
+        s.content->modtime = mymktime(checkHeader(s.content, "Last-Modified:"));
+    } else if (s.content->url.scheme == SCM_FTP) {
         struct CompressionDecoder* d = compression_from_path(path);
         if (d) {
-            s.content.content_type = uncompressed_file_type(s.content.url.file, NULL);
+            s.content->content_type = uncompressed_file_type(s.content->url.file, NULL);
         } else {
-            s.content.content_type = guessContentType(s.content.url.file);
+            s.content->content_type = guessContentType(s.content->url.file);
         }
-    } else if (s.content.is_cgi) {
+    } else if (s.content->is_cgi) {
         // searchHeader = SearchHeader = FALSE;
-        getHttpResponseHeader(&s.content, s.content.url, s.stream);
+        getHttpResponseHeader(s.content, s.content->url, s.stream);
         const char* p;
-        if ((p = checkHeader(&s.content, "Location:")) != NULL && checkRedirection(&s.content.url)) {
+        if ((p = checkHeader(s.content, "Location:")) != NULL && checkRedirection(&s.content->url)) {
             //
             // document moved
             //
@@ -709,22 +709,22 @@ struct ContentData get_content(const char* path,
             // struct Url* new_current = New(struct Url);
             // copyParsedURL(new_current, &s.content.url);
             // t_buf->bufferprop |= BP_REDIRECTED;
-            option.base_url = &s.content.url;
+            option.base_url = &s.content->url;
             return get_content(tpath, NULL, option, auth, NULL);
         }
-        s.content.content_type = checkContentType(&s.content);
-        if (s.content.content_type == NULL)
-            s.content.content_type = "text/plain";
+        s.content->content_type = checkContentType(s.content);
+        if (s.content->content_type == NULL)
+            s.content->content_type = "text/plain";
     } else if (getRuntime()->DefaultType) {
-        s.content.content_type = getRuntime()->DefaultType;
+        s.content->content_type = getRuntime()->DefaultType;
         getRuntime()->DefaultType = NULL;
     } else {
-        s.content.content_type = guessContentType(s.content.url.file);
+        s.content->content_type = guessContentType(s.content->url.file);
     }
 
-    const char* p = checkHeader(&s.content, "Content-Length:");
+    const char* p = checkHeader(s.content, "Content-Length:");
     if (p)
-        s.content.current_content_length = strtoclen(p);
+        s.content->current_content_length = strtoclen(p);
 
     TRAP_OFF
     return (struct ContentData) {
@@ -733,7 +733,7 @@ struct ContentData get_content(const char* path,
     };
 }
 
-struct Content
+struct Content*
 get_content_cache(const char* path, struct FormList* request, struct LoadOption option)
 {
     checkRedirection(NULL);
@@ -752,7 +752,7 @@ get_content_cache(const char* path, struct FormList* request, struct LoadOption 
 
     // write page to tmpfile
     Str tmp = tmpfname(TMPF_SRC, ".html");
-    struct CompressionDecoder* d = compression_from_type(data.content.compression);
+    struct CompressionDecoder* d = compression_from_type(data.content->compression);
     if (d) {
         Strcat_charp(tmp, d->ext);
     }
@@ -760,7 +760,7 @@ get_content_cache(const char* path, struct FormList* request, struct LoadOption 
     if (fp) {
         fwrite(data.page->ptr, data.page->length, 1, fp);
         fclose(fp);
-        data.content.sourcefile = tmp->ptr;
+        data.content->sourcefile = tmp->ptr;
     }
     return data.content;
 }
@@ -781,7 +781,7 @@ void download_content(const char* path, struct FormList* request, struct LoadOpt
     }
 
     // write to download
-    const char* file = guess_filename(data.content.url.file);
+    const char* file = guess_filename(data.content->url.file);
     FILE* fp = fopen(file, "w");
     if (fp) {
         fwrite(data.page->ptr, data.page->length, 1, fp);

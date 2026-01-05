@@ -915,11 +915,11 @@ void preFormUpdateBuffer(struct Buffer* buf)
 
     for (pf = PreForm; pf; pf = pf->next) {
         if (pf->re_url) {
-            Str url = parsedURL2Str(&buf->content.url);
+            Str url = parsedURL2Str(&buf->content->url);
             if (!RegexMatch(pf->re_url, url->ptr, url->length, 1))
                 continue;
         } else if (pf->url) {
-            if (Strcmp_charp(parsedURL2Str(&buf->content.url), pf->url))
+            if (Strcmp_charp(parsedURL2Str(&buf->content->url), pf->url))
                 continue;
         } else
             continue;

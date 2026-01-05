@@ -461,19 +461,19 @@ struct Buffer* loadLink(const char* url, struct FormList* request,
 {
     message(Sprintf("loading %s", url)->ptr);
 
-    const int* no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->content.url);
+    const int* no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->content->url);
     struct Url* base = baseURL(Currentbuf);
     if ((no_referer_ptr && *no_referer_ptr) || base == NULL || base->scheme == SCM_LOCAL || base->scheme == SCM_LOCAL_CGI)
         referer = NO_REFERER;
     if (referer == NULL)
-        referer = parsedURL2RefererStr(&Currentbuf->content.url)->ptr;
+        referer = parsedURL2RefererStr(&Currentbuf->content->url)->ptr;
     if (option.do_download) {
         download_content(url, request,
             (struct LoadOption) { .base_url = baseURL(Currentbuf), .referer = referer, .flag = 0 });
         return NULL;
     }
 
-    struct Content content = get_content_cache(url, request,
+    struct Content *content = get_content_cache(url, request,
         (struct LoadOption) { .base_url = baseURL(Currentbuf), .referer = referer, .flag = 0 });
     struct Buffer* buf = newBuffer(INIT_BUFFER_WIDTH);
     buf->content = content;
@@ -628,7 +628,7 @@ static struct Buffer* do_submit(struct Buffer* buf, struct Anchor* a, struct For
     Str tmp2 = Strdup(fi->parent->action);
     if (!Strcmp_charp(tmp2, "!CURRENT_URL!")) {
         /* It means "current URL" */
-        tmp2 = parsedURL2Str(&buf->content.url);
+        tmp2 = parsedURL2Str(&buf->content->url);
         if ((p = strchr(tmp2->ptr, '?')) != NULL)
             Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
     }
@@ -2476,7 +2476,7 @@ struct FollowResult _followA(struct Buffer* buf, struct FollowOption option)
 
     struct Url u;
     parseURL2(a->url, &u, baseURL(Currentbuf));
-    if (Strcmp(parsedURL2Str(&u), parsedURL2Str(&Currentbuf->content.url)) == 0) {
+    if (Strcmp(parsedURL2Str(&u), parsedURL2Str(&Currentbuf->content->url)) == 0) {
         /* index within this buffer */
         if (u.label) {
             return gotoLabel(Currentbuf, u.label);
@@ -2508,8 +2508,8 @@ struct FollowResult gotoLabel(struct Buffer* buf, const char* label)
     copyBuffer(res.new_buf, buf);
     for (int i = 0; i < MAX_LB; i++)
         res.new_buf->linkBuffer[i] = NULL;
-    res.new_buf->content.url.label = allocStr(label, -1);
-    pushHashHist(getRuntime()->URLHist, parsedURL2Str(&res.new_buf->content.url)->ptr);
+    res.new_buf->content->url.label = allocStr(label, -1);
+    pushHashHist(getRuntime()->URLHist, parsedURL2Str(&res.new_buf->content->url)->ptr);
     (*res.new_buf->clone)++;
     // tab_push_buffer(getRuntime()->CurrentTab, buf);
     doc_gotoLine(&buf->doc, res.anchor->start.line);
@@ -2563,7 +2563,7 @@ void _followI(bool do_download)
         return;
     }
 
-    struct Content content = get_content_cache(a->url, NULL,
+    struct Content *content = get_content_cache(a->url, NULL,
         (struct LoadOption) { .base_url = baseURL(Currentbuf), .referer = NULL, .flag = 0 });
     struct Buffer* buf = newBuffer(INIT_BUFFER_WIDTH);
     buf->content = content;

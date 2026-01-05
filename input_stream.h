@@ -33,7 +33,7 @@ int doFileSave(struct Url url, struct input_stream* stream,
     const char* defstr, enum CompressionType compression);
 
 struct ContentAndStream {
-    struct Content content;
+    struct Content* content;
     enum StreamStatus status;
     struct input_stream* stream;
 };
