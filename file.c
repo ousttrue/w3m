@@ -1,57 +1,25 @@
 #include "file.h"
-#include "content.h"
-#include "http_auth.h"
+#include "w3m_rc.h"
+#include "buffer.h"
 #include "mysignal.h"
-#include "url.h"
 #include "input_stream.h"
-#include "frame.h"
 #include "html_builder.h"
 #include "indep.h"
-#include "alloc.h"
-#include "ftp.h"
-#include "compression.h"
 #include "mailcap.h"
-#include "readbuffer.h"
 #include "symbol.h"
 #include "message.h"
-#include "w3m_rc.h"
-#include <libwc/conv.h>
-#include <libwc/status.h>
-#include <libwc/wtf_width.h>
-#include <libwc/wtf_len.h>
 #include "linein.h"
-#include "ctrlcode.h"
-#include "html_form.h"
-#include "siteconf.h"
-#include "http_request.h"
-#include "buffer.h"
-#include "anchor.h"
-#include "maparea.h"
 #include "etc.h"
-#include "image.h"
-#include "html_table.h"
-#include "display.h"
-#include "html.h"
-#include "html_tag.h"
-#include "local_cgi.h"
 #include "myctype.h"
-#include "funcname1.h"
-
-#include <libwc/ces.h>
-
-#include <sys/types.h>
+#include <libwc/wtf_len.h>
 #include <unistd.h>
-#include <sys/wait.h>
-#include <stdio.h>
-#include <time.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 #include <utime.h>
-#include <assert.h>
-
-#include <libwc/charset.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 
 #define SHELLBUFFERNAME "*Shellout*"
+
+static JMP_BUF AbortLoading;
 
 /*
  * loadHTMLBuffer: read file and make new buffer
@@ -116,56 +84,6 @@ char* convert_size2(int64_t size1, int64_t size2, int usefloat)
         ->ptr;
 }
 
-static void
-print_internal_information(struct HtmlBuilder* hb, struct html_feed_environ* henv)
-{
-    int i;
-    Str s;
-    TextLineList* tl = newTextLineList();
-
-    s = Strnew_charp("<internal>");
-    pushTextLine(tl, newTextLine(s, 0));
-    if (henv->title) {
-        s = Strnew_m_charp("<title_alt title=\"",
-            html_quote(henv->title), "\">", NULL);
-        pushTextLine(tl, newTextLine(s, 0));
-    }
-
-    if (hb->n_select > 0) {
-        struct FormSelectOptionItem* ip;
-        for (i = 0; i < hb->n_select; i++) {
-            s = Sprintf("<select_int selectnumber=%d>", i);
-            pushTextLine(tl, newTextLine(s, 0));
-            for (ip = hb->select_option[i].first; ip; ip = ip->next) {
-                s = Sprintf("<option_int value=\"%s\" label=\"%s\"%s>",
-                    html_quote(ip->value ? ip->value->ptr : ip->label->ptr),
-                    html_quote(ip->label->ptr),
-                    ip->checked ? " selected" : "");
-                pushTextLine(tl, newTextLine(s, 0));
-            }
-            s = Strnew_charp("</select_int>");
-            pushTextLine(tl, newTextLine(s, 0));
-        }
-    }
-
-    if (hb->n_textarea > 0) {
-        for (i = 0; i < hb->n_textarea; i++) {
-            s = Sprintf("<textarea_int textareanumber=%d>", i);
-            pushTextLine(tl, newTextLine(s, 0));
-            s = Strnew_charp(html_quote(hb->textarea_str[i]->ptr));
-            Strcat_charp(s, "</textarea_int>");
-            pushTextLine(tl, newTextLine(s, 0));
-        }
-    }
-    s = Strnew_charp("</internal>");
-    pushTextLine(tl, newTextLine(s, 0));
-
-    if (henv->buf)
-        appendTextLineList(henv->buf, tl);
-}
-
-static JMP_BUF AbortLoading;
-
 /*
  * loadHTMLString: read string and make new buffer
  */
@@ -201,7 +119,6 @@ loadImageBuffer(struct Url url, struct input_stream* stream,
     Str tmp, tmpf;
     FILE* src = NULL;
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
-    struct stat st;
     const struct Url* pu = newBuf ? &newBuf->content->url : NULL;
 
     loadImage(IMG_FLAG_STOP);
@@ -211,6 +128,7 @@ loadImageBuffer(struct Url url, struct input_stream* stream,
     image.height = -1;
     image.cache = NULL;
     cache = getImage(&image, (struct Url*)pu, IMG_FLAG_AUTO);
+    struct stat st;
     if (!(pu && pu->is_nocache) && cache->loaded & IMG_FLAG_LOADED && !stat(cache->file, &st))
         goto image_buffer;
 
@@ -521,57 +439,54 @@ int is_html_type(const char* type)
     return (type && (strcasecmp(type, "text/html") == 0 || strcasecmp(type, "application/xhtml+xml") == 0));
 }
 
-static FILE*
-lessopen_stream(const char* path)
-{
-    const char* lessopen = getenv("LESSOPEN");
-    if (!lessopen || lessopen[0] == '\0')
-        return NULL;
-    if (lessopen[0] != '|') /* content.filename mode, not supported m(__)m */
-        return NULL;
-
-    /* pipe mode */
-    ++lessopen;
-
-    /* LESSOPEN must contain one conversion specifier for strings ('%s'). */
-    int n = 0;
-    for (const char* f = lessopen; *f; f++) {
-        if (*f == '%') {
-            if (f[1] == '%') /* Literal % */
-                f++;
-            else if (*++f == 's') {
-                if (n)
-                    return NULL;
-                n++;
-            } else
-                return NULL;
-        }
-    }
-    if (!n)
-        return NULL;
-
-    Str tmpf = Sprintf(lessopen, shell_quote(path));
-    FILE* fp = popen(tmpf->ptr, "r");
-    if (fp == NULL) {
-        return NULL;
-    }
-    int c = getc(fp);
-    if (c == EOF) {
-        pclose(fp);
-        return NULL;
-    }
-    ungetc(c, fp);
-    return fp;
-}
-
-
+// static FILE*
+// lessopen_stream(const char* path)
+// {
+//     const char* lessopen = getenv("LESSOPEN");
+//     if (!lessopen || lessopen[0] == '\0')
+//         return NULL;
+//     if (lessopen[0] != '|') /* content.filename mode, not supported m(__)m */
+//         return NULL;
+//
+//     /* pipe mode */
+//     ++lessopen;
+//
+//     /* LESSOPEN must contain one conversion specifier for strings ('%s'). */
+//     int n = 0;
+//     for (const char* f = lessopen; *f; f++) {
+//         if (*f == '%') {
+//             if (f[1] == '%') /* Literal % */
+//                 f++;
+//             else if (*++f == 's') {
+//                 if (n)
+//                     return NULL;
+//                 n++;
+//             } else
+//                 return NULL;
+//         }
+//     }
+//     if (!n)
+//         return NULL;
+//
+//     Str tmpf = Sprintf(lessopen, shell_quote(path));
+//     FILE* fp = popen(tmpf->ptr, "r");
+//     if (fp == NULL) {
+//         return NULL;
+//     }
+//     int c = getc(fp);
+//     if (c == EOF) {
+//         pclose(fp);
+//         return NULL;
+//     }
+//     ungetc(c, fp);
+//     return fp;
+// }
 
 static int
 setModtime(const char* path, time_t modtime)
 {
     struct utimbuf t;
     struct stat st;
-
     if (stat(path, &st) == 0)
         t.actime = st.st_atime;
     else
@@ -763,7 +678,6 @@ int doFileSave(struct Url url, struct input_stream* stream,
 int checkCopyFile(const char* path1, const char* path2)
 {
     struct stat st1, st2;
-
     if (*path2 == '|' && getRuntime()->PermitSaveToPipe)
         return 0;
     if ((stat(path1, &st1) == 0) && (stat(path2, &st2) == 0))
@@ -774,13 +688,12 @@ int checkCopyFile(const char* path1, const char* path2)
 
 int checkSaveFile(struct input_stream* stream, const char* path2)
 {
-    struct stat st1, st2;
     int des = is_file_no(stream);
-
     if (des < 0)
         return 0;
     if (*path2 == '|' && getRuntime()->PermitSaveToPipe)
         return 0;
+    struct stat st1, st2;
     if ((fstat(des, &st1) == 0) && (stat(path2, &st2) == 0))
         if (st1.st_ino == st2.st_ino)
             return -1;
@@ -790,12 +703,10 @@ int checkSaveFile(struct input_stream* stream, const char* path2)
 int checkOverWrite(const char* path)
 {
     struct stat st;
-    char* ans;
-
     if (stat(path, &st) < 0)
         return 0;
-    /* FIXME: gettextize? */
-    ans = inputAnswer("File exists. Overwrite? (y/n)");
+
+    const char* ans = inputAnswer("File exists. Overwrite? (y/n)");
     if (ans && TOLOWER(*ans) == 'y')
         return 0;
     else

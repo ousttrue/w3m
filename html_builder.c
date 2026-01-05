@@ -4536,3 +4536,51 @@ _end:
 
     return newBuf;
 }
+
+static void
+print_internal_information(struct HtmlBuilder* hb, struct html_feed_environ* henv)
+{
+    int i;
+    Str s;
+    TextLineList* tl = newTextLineList();
+
+    s = Strnew_charp("<internal>");
+    pushTextLine(tl, newTextLine(s, 0));
+    if (henv->title) {
+        s = Strnew_m_charp("<title_alt title=\"",
+            html_quote(henv->title), "\">", NULL);
+        pushTextLine(tl, newTextLine(s, 0));
+    }
+
+    if (hb->n_select > 0) {
+        struct FormSelectOptionItem* ip;
+        for (i = 0; i < hb->n_select; i++) {
+            s = Sprintf("<select_int selectnumber=%d>", i);
+            pushTextLine(tl, newTextLine(s, 0));
+            for (ip = hb->select_option[i].first; ip; ip = ip->next) {
+                s = Sprintf("<option_int value=\"%s\" label=\"%s\"%s>",
+                    html_quote(ip->value ? ip->value->ptr : ip->label->ptr),
+                    html_quote(ip->label->ptr),
+                    ip->checked ? " selected" : "");
+                pushTextLine(tl, newTextLine(s, 0));
+            }
+            s = Strnew_charp("</select_int>");
+            pushTextLine(tl, newTextLine(s, 0));
+        }
+    }
+
+    if (hb->n_textarea > 0) {
+        for (i = 0; i < hb->n_textarea; i++) {
+            s = Sprintf("<textarea_int textareanumber=%d>", i);
+            pushTextLine(tl, newTextLine(s, 0));
+            s = Strnew_charp(html_quote(hb->textarea_str[i]->ptr));
+            Strcat_charp(s, "</textarea_int>");
+            pushTextLine(tl, newTextLine(s, 0));
+        }
+    }
+    s = Strnew_charp("</internal>");
+    pushTextLine(tl, newTextLine(s, 0));
+
+    if (henv->buf)
+        appendTextLineList(henv->buf, tl);
+}

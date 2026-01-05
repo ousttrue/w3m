@@ -4,8 +4,10 @@
 /// config
 /// process
 /// signal
+/// tmpfile
 #include "w3m_types.h"
 #include "geometry.h"
+#include "Str.h"
 #include <libwc/wtf.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -179,3 +181,15 @@ extern char* searchKeyData(void);
 int searchKeyNum(void);
 void _quitfm(bool confirm);
 int handleMailto(const char* url);
+
+enum TmpFileTypes {
+    TMPF_DFL = 0,
+    TMPF_SRC = 1,
+    TMPF_FRAME = 2,
+    TMPF_CACHE = 3,
+    TMPF_COOKIE = 4,
+    TMPF_HIST = 5,
+    MAX_TMPF_TYPE = 6,
+};
+
+Str tmpfname(enum TmpFileTypes type, const char* ext);
