@@ -1,4 +1,6 @@
 #include "defun.h"
+#include "frame.h"
+#include "html_form.h"
 #include "regex.h"
 #include "funcheader.h"
 #include "etc.h"
@@ -972,8 +974,79 @@ DEFUN(submitForm, SUBMIT, "Submit form")
         (struct FollowOption) { .on_target = true, .do_download = false }, true);
 }
 
-void followForm(void)
+DEFUN(nextBf, NEXT, "Switch to the next buffer")
 {
-    _followForm(Currentbuf,
-        (struct FollowOption) { .on_target = true, .do_download = false }, false);
+    for (int i = 0; i < PREC_NUM; i++) {
+        struct Buffer* buf = prevBuffer(Firstbuf, Currentbuf);
+        if (!buf) {
+            if (i == 0)
+                return;
+            break;
+        }
+        Currentbuf = buf;
+    }
+}
+
+DEFUN(prevBf, PREV, "Switch to the previous buffer")
+{
+    for (int i = 0; i < PREC_NUM; i++) {
+        struct Buffer* buf = Currentbuf->nextBuffer;
+        if (!buf) {
+            if (i == 0)
+                return;
+            break;
+        }
+        Currentbuf = buf;
+    }
+}
+
+DEFUN(backBf, BACK, "Close current buffer and return to the one below in stack")
+{
+    struct Buffer* buf = Currentbuf->linkBuffer[LB_N_FRAME];
+
+    if (!checkBackBuffer(Currentbuf)) {
+        if (getRuntime()->close_tab_back && nTab() >= 1) {
+            deleteTab(CurrentTab());
+        } else
+            /* FIXME: gettextize? */
+            disp_message("Can't go back...", TRUE);
+        return;
+    }
+
+    delBuffer(Currentbuf);
+
+    if (buf) {
+        if (buf->doc.frameQ) {
+            struct frameset* fs;
+            long linenumber = buf->doc.frameQ->linenumber;
+            long top = buf->doc.frameQ->top_linenumber;
+            int pos = buf->doc.frameQ->pos;
+            int currentColumn = buf->doc.frameQ->currentColumn;
+            struct AnchorList* formitem = buf->doc.frameQ->formitem;
+
+            fs = popFrameTree(&(buf->doc.frameQ));
+            deleteFrameSet(buf->doc.frameset);
+            buf->doc.frameset = fs;
+
+            if (buf == Currentbuf) {
+                rFrame(ctx);
+                Currentbuf->doc.topLine = doc_lineSkip(&Currentbuf->doc,
+                    Currentbuf->doc.firstLine, top - 1);
+                doc_gotoLine(&Currentbuf->doc, linenumber);
+                Currentbuf->doc.pos = pos;
+                Currentbuf->doc.currentColumn = currentColumn;
+                doc_arrangeCursor(&Currentbuf->doc);
+                formResetBuffer(Currentbuf, formitem);
+            }
+        } else if (getRuntime()->RenderFrame && buf == Currentbuf) {
+            delBuffer(Currentbuf);
+        }
+    }
+}
+
+DEFUN(deletePrevBuf, DELETE_PREVBUF, "Delete previous buffer (mainly for local CGI-scripts)")
+{
+    struct Buffer* buf = Currentbuf->nextBuffer;
+    if (buf)
+        delBuffer(buf);
 }

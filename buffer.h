@@ -91,3 +91,4 @@ extern struct Buffer* selectBuffer(struct Buffer* firstbuf, struct Buffer* curre
 extern void copyBuffer(struct Buffer* a, struct Buffer* b);
 extern struct Buffer* prevBuffer(struct Buffer* first, struct Buffer* buf);
 extern int writeBufferCache(struct Buffer* buf);
+bool checkBackBuffer(struct Buffer* buf);

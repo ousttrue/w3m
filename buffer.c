@@ -642,3 +642,26 @@ void delBuffer(struct Buffer* buf)
     if (!Currentbuf)
         Currentbuf = Firstbuf;
 }
+
+bool checkBackBuffer(struct Buffer* buf)
+{
+    struct Buffer* fbuf = buf->linkBuffer[LB_N_FRAME];
+
+    if (fbuf) {
+        if (fbuf->doc.frameQ)
+            return TRUE; /* Currentbuf has stacked frames */
+        /* when no frames stacked and next is frame source, try next's
+         * nextBuffer */
+        if (getRuntime()->RenderFrame && fbuf == buf->nextBuffer) {
+            if (fbuf->nextBuffer != NULL)
+                return TRUE;
+            else
+                return FALSE;
+        }
+    }
+
+    if (buf->nextBuffer)
+        return TRUE;
+
+    return FALSE;
+}
