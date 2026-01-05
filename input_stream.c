@@ -1,4 +1,5 @@
 #include "input_stream.h"
+#include "fileutil.h"
 #include "mysignal.h"
 #include "textlist.h"
 #include "tcp_socket.h"

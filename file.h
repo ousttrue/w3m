@@ -17,7 +17,6 @@ inline static int doFileCopy(const char* tmpf, const char* defstr)
     return _doFileCopy(tmpf, defstr, false);
 }
 int doFileMove(const char* tmpf, const char* defstr);
-int dir_exist(const char* path);
 int checkCopyFile(const char* path1, const char* path2);
 struct HtmlBuilder;
 struct HtmlTag;
@@ -39,9 +38,6 @@ int checkOverWrite(const char* path);
 struct input_stream;
 int checkSaveFile(struct input_stream* stream, const char* path);
 
-struct Document* loadHTMLstream(int width,
-    struct Url* base_url, struct Content* content, struct input_stream* stream, bool internal);
-
 struct Buffer* doExternal(struct Url url, struct input_stream* stream,
     const char* type, struct Buffer* defaultbuf, bool internal);
 struct Buffer* loadHTMLBuffer(struct Url url, struct input_stream* stream,
@@ -53,6 +49,6 @@ struct Buffer* loadImageBuffer(struct Url url, struct input_stream* stream,
 extern int getMetaRefreshParam(const char* q, Str* refresh_uri);
 extern int is_boundary(unsigned char*, unsigned char*);
 extern Str process_n_button(void);
-extern int currentLn(struct Document *doc);
+struct Document;
 extern char* convert_size(int64_t size, int usefloat);
 extern char* convert_size2(int64_t size1, int64_t size2, int usefloat);

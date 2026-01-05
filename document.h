@@ -153,3 +153,4 @@ void doc_save_buffer_position(struct Document* doc);
 void doc_resetPos(struct Document* doc, struct DocumentPos* pos);
 const char* url_decode2(const struct Url* base_url, const struct Document* doc, const char* url);
 const char* doc_getCurWord(struct Document* doc, int* spos, int* epos);
+int currentLn(struct Document *doc);

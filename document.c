@@ -1111,3 +1111,12 @@ const char* doc_getCurWord(struct Document* doc, int* spos, int* epos)
     *epos = e;
     return &p[b];
 }
+
+int currentLn(struct Document* doc)
+{
+    if (doc->currentLine)
+        /*     return buf->doc.currentLine->real_linenumber + 1;      */
+        return doc->currentLine->linenumber + 1;
+    else
+        return 1;
+}

@@ -60,12 +60,11 @@ struct html_feed_environ;
 struct HtmlTag;
 struct readbuffer;
 struct _textlinelist;
-struct Doucmemt;
+struct Document;
 
 int HTMLtagproc1(struct HtmlBuilder* hb,
     struct HtmlTag* tag, struct html_feed_environ* h_env);
-
-void HTMLlineproc2(struct HtmlBuilder* hb, struct Url *base_url, struct Document *doc, struct _textlinelist* tl);
+void HTMLlineproc2(struct HtmlBuilder* hb, struct Url* base_url, struct Document* doc, struct _textlinelist* tl);
 void HTMLlineproc0(struct HtmlBuilder* hb,
     const char* istr, struct html_feed_environ* h_env, bool internal);
 void completeHTMLstream(struct HtmlBuilder* hb,
@@ -74,3 +73,7 @@ void completeHTMLstream(struct HtmlBuilder* hb,
 Str process_title(struct HtmlBuilder* hb, struct HtmlTag* tag);
 Str process_n_title(struct HtmlBuilder* hb, struct HtmlTag* tag);
 void feed_title(struct HtmlBuilder* hb, const char* str);
+struct Content;
+struct input_stream;
+struct Document* loadHTMLstream(int width,
+    struct Url* base_url, struct Content* content, struct input_stream* stream, bool internal);
