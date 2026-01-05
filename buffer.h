@@ -27,16 +27,6 @@ enum LinkBufferID {
     MAX_LB = 5,
 };
 
-struct BufferPos {
-    long top_linenumber;
-    long cur_linenumber;
-    int currentColumn;
-    int pos;
-    int bpos;
-    struct BufferPos* next;
-    struct BufferPos* prev;
-};
-
 /* Buffer Property */
 #define BP_NORMAL 0x0
 #define BP_PIPE 0x1

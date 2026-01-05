@@ -142,28 +142,6 @@ static void set_buffer_environ(struct Buffer* buf)
     prev_pos = buf->doc.pos;
 }
 
-static void
-save_buffer_position(struct Buffer* buf)
-{
-    struct BufferPos* b = buf->doc.undo;
-
-    if (!buf->doc.firstLine)
-        return;
-    if (b && b->top_linenumber == TOP_LINENUMBER(&buf->doc) && b->cur_linenumber == CUR_LINENUMBER(&buf->doc) && b->currentColumn == buf->doc.currentColumn && b->pos == buf->doc.pos)
-        return;
-    b = New(struct BufferPos);
-    b->top_linenumber = TOP_LINENUMBER(&buf->doc);
-    b->cur_linenumber = CUR_LINENUMBER(&buf->doc);
-    b->currentColumn = buf->doc.currentColumn;
-    b->pos = buf->doc.pos;
-    b->bpos = buf->doc.currentLine ? buf->doc.currentLine->bpos : 0;
-    b->next = NULL;
-    b->prev = buf->doc.undo;
-    if (buf->doc.undo)
-        buf->doc.undo->next = b;
-    buf->doc.undo = b;
-}
-
 void w3m_on_key(uint8_t ch)
 {
     if (IS_ASCII(ch)) {
@@ -173,7 +151,7 @@ void w3m_on_key(uint8_t ch)
                 g_runtime.prec_num = PREC_LIMIT;
         } else {
             set_buffer_environ(Currentbuf);
-            save_buffer_position(Currentbuf);
+            doc_save_buffer_position(&Currentbuf->doc);
             keyPressEventProc(ch);
             g_runtime.prec_num = 0;
         }

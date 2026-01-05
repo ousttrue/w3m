@@ -1009,3 +1009,52 @@ void doc_nextY(struct Document* doc, int d)
     doc_gotoLine(doc, pan->start.line);
     doc_arrangeLine(doc);
 }
+
+void doc_save_buffer_position(struct Document* doc)
+{
+    if (!doc->firstLine)
+        return;
+
+    struct DocumentPos* pos = doc->undo;
+    if (pos
+        && pos->top_linenumber == TOP_LINENUMBER(doc)
+        && pos->cur_linenumber == CUR_LINENUMBER(doc)
+        && pos->currentColumn == doc->currentColumn
+        && pos->pos == doc->pos)
+        return;
+
+    pos = New(struct DocumentPos);
+    *pos = (struct DocumentPos) {
+        .top_linenumber = TOP_LINENUMBER(doc),
+        .cur_linenumber = CUR_LINENUMBER(doc),
+        .currentColumn = doc->currentColumn,
+        .pos = doc->pos,
+        .bpos = doc->currentLine ? doc->currentLine->bpos : 0,
+        .next = NULL,
+        .prev = doc->undo,
+    };
+
+    if (doc->undo)
+        doc->undo->next = pos;
+    else
+        doc->undo = pos;
+}
+
+void doc_resetPos(struct Document* doc, struct DocumentPos* pos)
+{
+    struct Line top = {
+        .linenumber = pos->top_linenumber,
+    };
+    struct Line cur = {
+        .linenumber = pos->cur_linenumber,
+        .bpos = pos->bpos,
+    };
+    struct Document tmp_doc = {
+        .topLine = &top,
+        .currentLine = &cur,
+        .pos = pos->pos,
+        .currentColumn = pos->currentColumn,
+    };
+    doc_restorePosition(doc, &tmp_doc);
+    doc->undo = pos;
+}

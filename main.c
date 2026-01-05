@@ -2158,49 +2158,28 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
     // download_panel();
 }
 
-static void
-resetPos(struct BufferPos* b)
-{
-    struct Buffer buf;
-    struct Line top, cur;
-
-    top.linenumber = b->top_linenumber;
-    cur.linenumber = b->cur_linenumber;
-    cur.bpos = b->bpos;
-    buf.doc.topLine = &top;
-    buf.doc.currentLine = &cur;
-    buf.doc.pos = b->pos;
-    buf.doc.currentColumn = b->currentColumn;
-    doc_restorePosition(&Currentbuf->doc, &buf.doc);
-    Currentbuf->doc.undo = b;
-}
-
 DEFUN(undoPos, UNDO, "Cancel the last cursor movement")
 {
-    struct BufferPos* b = Currentbuf->doc.undo;
-    int i;
-
     if (!Currentbuf->doc.firstLine)
         return;
-    if (!b || !b->prev)
+    struct DocumentPos* pos = ctx.buf->doc.undo;
+    if (!pos || !pos->prev)
         return;
-    for (i = 0; i < PREC_NUM && b->prev; i++, b = b->prev)
+    for (int i = 0; i < PREC_NUM && pos->prev; i++, pos = pos->prev)
         ;
-    resetPos(b);
+    doc_resetPos(&ctx.buf->doc, pos);
 }
 
 DEFUN(redoPos, REDO, "Cancel the last undo")
 {
-    struct BufferPos* b = Currentbuf->doc.undo;
-    int i;
-
     if (!Currentbuf->doc.firstLine)
         return;
-    if (!b || !b->next)
+    struct DocumentPos* pos = ctx.buf->doc.undo;
+    if (!pos || !pos->next)
         return;
-    for (i = 0; i < PREC_NUM && b->next; i++, b = b->next)
+    for (int i = 0; i < PREC_NUM && pos->next; i++, pos = pos->next)
         ;
-    resetPos(b);
+    doc_resetPos(&ctx.buf->doc, pos);
 }
 
 DEFUN(cursorTop, CURSOR_TOP, "Move cursor to the top of the screen")

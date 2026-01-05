@@ -1,6 +1,7 @@
 #pragma once
 #include "line.h"
 #include "image.h"
+#include "geometry.h"
 #include <stdbool.h>
 
 struct AnchorList;
@@ -9,7 +10,7 @@ struct Document {
     const char* title;
     enum wc_ces charset;
     wc_uint8 auto_detect;
-    struct BufferPos* undo;
+    struct DocumentPos* undo;
 
     //
     // lines
@@ -137,3 +138,5 @@ struct MapArea* doc_retrieveCurrentMapArea(struct Document* doc);
 void doc_nextX(struct Document* doc, int d, int dy);
 /// go to the next downward/upward anchor
 void doc_nextY(struct Document* doc, int d);
+void doc_save_buffer_position(struct Document* doc);
+void doc_resetPos(struct Document* doc, struct DocumentPos* pos);
