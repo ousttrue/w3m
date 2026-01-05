@@ -37,10 +37,15 @@ baseURL(struct Buffer* buf)
     if (buf->doc.baseURL != NULL) {
         /* <BASE> tag is defined in the document */
         return buf->doc.baseURL;
-    } else if (IS_EMPTY_PARSED_URL(&buf->content->url))
+    }
+    if (!buf->content) {
         return NULL;
-    else
-        return &buf->content->url;
+    }
+    if (IS_EMPTY_PARSED_URL(&buf->content->url)) {
+        return NULL;
+    }
+
+    return &buf->content->url;
 }
 
 void cmd_loadBuffer(struct Buffer* buf, int prop, enum LinkBufferID linkid)

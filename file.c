@@ -1,5 +1,6 @@
 #include "file.h"
 #include "alarm.h"
+#include "content.h"
 #include "http_auth.h"
 #include "mysignal.h"
 #include "url.h"
@@ -3245,8 +3246,7 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Buffer* buf, Str (*feed)(), int
 
     struct Url* base = baseURL(buf);
 
-    enum wc_ces name_charset = url_to_charset(NULL, &buf->content->url,
-        buf->doc.charset);
+    enum wc_ces name_charset = url_to_charset(NULL, base, buf->doc.charset);
 
     if (out_size == 0) {
         out_size = LINELEN;
@@ -4506,14 +4506,16 @@ void loadHTMLstream(struct input_stream* stream,
         else if (newBuf->doc.charset)
             detected_charset = doc_charset = newBuf->doc.charset;
     }
-    if (newBuf->content->charset && getRuntime()->UseContentCharset)
+    if (newBuf->content && newBuf->content->charset && getRuntime()->UseContentCharset)
         doc_charset = newBuf->content->charset;
     hb->meta_charset = 0;
 
     while ((lineBuf2 = is_get_str(stream, true)) && lineBuf2->length) {
 
         linelen += lineBuf2->length;
-        showProgress(&linelen, &trbyte, newBuf->content->current_content_length);
+        if (newBuf->content) {
+            showProgress(&linelen, &trbyte, newBuf->content->current_content_length);
+        }
         /*
          * if (frame_source)
          * continue;
@@ -4553,6 +4555,9 @@ phase2:
 
     newBuf->doc.topLine = newBuf->doc.firstLine;
     newBuf->doc.lastLine = newBuf->doc.currentLine;
+    if(!newBuf->content){
+        newBuf->content = New(struct Content);
+    }
     newBuf->doc.currentLine = newBuf->doc.firstLine;
     newBuf->content->content_type = "text/html";
     if (hb->n_textarea)

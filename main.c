@@ -542,7 +542,7 @@ bool w3m_args(int argc, char** argv)
             // newbuf = openGeneralPagerBuffer(redin);
             // dup2(1, 0);
         } else if (load_bookmark) {
-            struct Content *content = get_content_cache(getRuntime()->BookmarkFile, NULL,
+            struct Content* content = get_content_cache(getRuntime()->BookmarkFile, NULL,
                 (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER, .flag = 0 });
             newbuf = newBuffer(INIT_BUFFER_WIDTH);
             newbuf->content = content;
@@ -563,7 +563,7 @@ bool w3m_args(int argc, char** argv)
             else
                 newbuf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
         } else if ((p = getenv("HTTP_HOME")) != NULL || (p = getenv("WWW_HOME")) != NULL) {
-            struct Content *content = get_content_cache(p, NULL,
+            struct Content* content = get_content_cache(p, NULL,
                 (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER, .flag = 0 });
             newbuf = newBuffer(INIT_BUFFER_WIDTH);
             newbuf->content = content;
@@ -622,7 +622,7 @@ bool w3m_args(int argc, char** argv)
                 } else {
                     request = NULL;
                 }
-                struct Content *content = get_content_cache(url, request,
+                struct Content* content = get_content_cache(url, request,
                     (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER, .flag = 0 });
                 newbuf = newBuffer(INIT_BUFFER_WIDTH);
                 newbuf->content = content;
@@ -732,7 +732,7 @@ cmd_loadURL(const char* url, struct FormList* request, struct LoadOption option)
     if (handleMailto(url))
         return;
 
-    struct Content *content = get_content_cache(url, request, option);
+    struct Content* content = get_content_cache(url, request, option);
     struct Buffer* buf = newBuffer(INIT_BUFFER_WIDTH);
     buf->content = content;
     if (buf == NULL) {
@@ -897,19 +897,21 @@ DEFUN(msgs, MSGS, "Display error messages")
     cmd_loadBuffer(message_list_panel(), BP_NO_URL, LB_NOLINK);
 }
 
-/* page info */
 DEFUN(pginfo, INFO, "Display information about the current document")
 {
-    struct Buffer* buf;
-
-    if ((buf = Currentbuf->linkBuffer[LB_N_INFO]) != NULL) {
+    struct Buffer* buf = Currentbuf->linkBuffer[LB_N_INFO];
+    if (buf) {
         Currentbuf = buf;
         return;
     }
-    if ((buf = Currentbuf->linkBuffer[LB_INFO]) != NULL)
+
+    buf = Currentbuf->linkBuffer[LB_INFO];
+    if (buf)
         delBuffer(buf);
-    buf = page_info_panel(Currentbuf);
-    cmd_loadBuffer(buf, BP_NORMAL, LB_INFO);
+
+    Str tmp = page_info_panel(Currentbuf);
+    struct Buffer* newbuf = loadHTMLString(tmp);
+    cmd_loadBuffer(newbuf, BP_NORMAL, LB_INFO);
 }
 
 void follow_map(struct parsed_tagarg* arg)
@@ -1359,7 +1361,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
         getRuntime()->DocumentCharset = Currentbuf->doc.charset;
     // SearchHeader = Currentbuf->search_header;
     getRuntime()->DefaultType = Currentbuf->content->content_type;
-    struct Content *content = get_content_cache(url->ptr, request,
+    struct Content* content = get_content_cache(url->ptr, request,
         (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER, .flag = RG_NOCACHE });
     buf = newBuffer(INIT_BUFFER_WIDTH);
     buf->content = content;
@@ -1691,7 +1693,7 @@ execdict(char* word)
 
     char* dictcmd = Sprintf("%s?%s", getRuntime()->DictCommand, Str_form_quote(Strnew_charp(w))->ptr)->ptr;
 
-    struct Content *content = get_content_cache(dictcmd, NULL,
+    struct Content* content = get_content_cache(dictcmd, NULL,
         (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER, .flag = 0 });
     struct Buffer* buf = newBuffer(INIT_BUFFER_WIDTH);
     buf->content = content;
