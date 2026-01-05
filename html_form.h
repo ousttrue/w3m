@@ -101,7 +101,9 @@ struct Buffer;
 extern void formRecheckRadio(struct Buffer* buf, struct Anchor* a, struct FormItemList* form);
 struct AnchorList;
 extern void formResetBuffer(struct Buffer* buf, struct AnchorList* formitem);
-extern void formUpdateBuffer(struct Buffer* buf, struct Anchor* a, struct FormItemList* form);
+struct Document;
+/// update Line by form value
+extern void doc_formUpdateBuffer(struct Document* doc, struct Anchor* a, struct FormItemList* form);
 extern void preFormUpdateBuffer(struct Buffer* buf);
 extern Str textfieldrep(Str s, int width);
 extern void do_internal(const char* action, const char* data);

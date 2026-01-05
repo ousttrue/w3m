@@ -1,6 +1,5 @@
 #pragma once
 #include "url.h"
-#include "textlist.h"
 #include <stddef.h>
 #include <libwc/wc_types.h>
 

@@ -697,7 +697,7 @@ struct FollowResult _followForm(struct Buffer* buf, struct FollowOption option, 
         if (p == NULL || fi->readonly)
             break;
         fi->value = Strnew_charp(p);
-        formUpdateBuffer(buf, a, fi);
+        doc_formUpdateBuffer(&buf->doc, a, fi);
         if (fi->accept || fi->parent->nitems == 1) {
             return (struct FollowResult) {
                 .anchor = a,
@@ -720,7 +720,7 @@ struct FollowResult _followForm(struct Buffer* buf, struct FollowOption option, 
         if (p == NULL || fi->readonly)
             break;
         fi->value = Strnew_charp(p);
-        formUpdateBuffer(buf, a, fi);
+        doc_formUpdateBuffer(&buf->doc, a, fi);
         if (fi->accept || fi->parent->nitems == 1) {
             return (struct FollowResult) {
                 .anchor = a,
@@ -744,7 +744,7 @@ struct FollowResult _followForm(struct Buffer* buf, struct FollowOption option, 
         if (p == NULL)
             break;
         fi->value = Strnew_charp(p);
-        formUpdateBuffer(buf, a, fi);
+        doc_formUpdateBuffer(&buf->doc, a, fi);
         if (fi->accept) {
             return (struct FollowResult) {
                 .anchor = a,
@@ -763,7 +763,7 @@ struct FollowResult _followForm(struct Buffer* buf, struct FollowOption option, 
         if (fi->readonly)
             disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
         input_textarea(fi);
-        formUpdateBuffer(buf, a, fi);
+        doc_formUpdateBuffer(&buf->doc, a, fi);
         break;
 
     case FORM_INPUT_RADIO:
@@ -792,7 +792,7 @@ struct FollowResult _followForm(struct Buffer* buf, struct FollowOption option, 
             break;
         }
         fi->checked = !fi->checked;
-        formUpdateBuffer(buf, a, fi);
+        doc_formUpdateBuffer(&buf->doc, a, fi);
         break;
 
     case FORM_SELECT:
@@ -806,7 +806,7 @@ struct FollowResult _followForm(struct Buffer* buf, struct FollowOption option, 
                 buf->doc.cursorX - buf->doc.pos + a->start.pos + buf->doc.rootX,
                 buf->doc.cursorY + buf->doc.rootY))
             break;
-        formUpdateBuffer(buf, a, fi);
+        doc_formUpdateBuffer(&buf->doc, a, fi);
         if (fi->parent->nitems == 1) {
             return (struct FollowResult) {
                 .anchor = a,
@@ -832,7 +832,7 @@ struct FollowResult _followForm(struct Buffer* buf, struct FollowOption option, 
                 f2->checked = f2->init_checked;
                 f2->label = f2->init_label;
                 f2->selected = f2->init_selected;
-                formUpdateBuffer(buf, a2, f2);
+                doc_formUpdateBuffer(&buf->doc, a2, f2);
             }
         }
         break;

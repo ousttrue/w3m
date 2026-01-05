@@ -199,11 +199,11 @@ void formRecheckRadio(struct Buffer* buf, struct Anchor* a, struct FormItemList*
         f2 = (struct FormItemList*)a2->url;
         if (f2->parent == fi->parent && f2 != fi && f2->type == FORM_INPUT_RADIO && Strcmp(f2->name, fi->name) == 0) {
             f2->checked = 0;
-            formUpdateBuffer(buf, a2, f2);
+            doc_formUpdateBuffer(&buf->doc, a2, f2);
         }
     }
     fi->checked = 1;
-    formUpdateBuffer(buf, a, fi);
+    doc_formUpdateBuffer(&buf->doc, a, fi);
 }
 
 void formResetBuffer(struct Buffer* buf, struct AnchorList* formitem)
@@ -247,7 +247,7 @@ void formResetBuffer(struct Buffer* buf, struct AnchorList* formitem)
         default:
             continue;
         }
-        formUpdateBuffer(buf, a, f1);
+        doc_formUpdateBuffer(&buf->doc, a, f1);
     }
 }
 
@@ -373,7 +373,6 @@ static void _formUpdateBuffer(struct Document* doc, struct Anchor* a, struct For
     doc_gotoLine(doc, a->start.line);
 
     int spos, epos;
-    char* p;
     switch (form->type) {
     case FORM_TEXTAREA:
     case FORM_INPUT_TEXT:
@@ -389,6 +388,8 @@ static void _formUpdateBuffer(struct Document* doc, struct Anchor* a, struct For
         spos = a->start.pos + 1;
         epos = a->end.pos - 1;
     }
+
+    char* p;
     switch (form->type) {
     case FORM_INPUT_CHECKBOX:
     case FORM_INPUT_RADIO:
@@ -460,13 +461,13 @@ static void _formUpdateBuffer(struct Document* doc, struct Anchor* a, struct For
     }
 }
 
-void formUpdateBuffer(struct Buffer* buf, struct Anchor* a, struct FormItemList* form)
+void doc_formUpdateBuffer(struct Document* doc, struct Anchor* a, struct FormItemList* form)
 {
-    struct Buffer save;
-    copyBuffer(&save, buf);
-    _formUpdateBuffer(&buf->doc, a, form);
-    copyBuffer(buf, &save);
-    doc_arrangeLine(&buf->doc);
+    struct Document save;
+    COPY_BUFPOSITION(&save, doc);
+    _formUpdateBuffer(doc, a, form);
+    COPY_BUFPOSITION(doc, &save);
+    doc_arrangeLine(doc);
 }
 
 Str textfieldrep(Str s, int width)
@@ -947,12 +948,12 @@ void preFormUpdateBuffer(struct Buffer* buf)
                 case FORM_INPUT_PASSWORD:
                 case FORM_TEXTAREA:
                     fi->value = Strnew_charp(pi->value);
-                    formUpdateBuffer(buf, a, fi);
+                    doc_formUpdateBuffer(&buf->doc, a, fi);
                     break;
                 case FORM_INPUT_CHECKBOX:
                     if (pi->value && fi->value && !Strcmp_charp(fi->value, pi->value)) {
                         fi->checked = pi->checked;
-                        formUpdateBuffer(buf, a, fi);
+                        doc_formUpdateBuffer(&buf->doc, a, fi);
                     }
                     break;
                 case FORM_INPUT_RADIO:
@@ -967,7 +968,7 @@ void preFormUpdateBuffer(struct Buffer* buf)
                             fi->value = opt->value;
                             fi->label = opt->label;
                             updateSelectOption(fi, fi->select_option);
-                            formUpdateBuffer(buf, a, fi);
+                            doc_formUpdateBuffer(&buf->doc, a, fi);
                             break;
                         }
                     }
