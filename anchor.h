@@ -58,7 +58,7 @@ struct Anchor* registerForm(struct HtmlBuilder* hb,
     struct HtmlTag* tag, int line, int pos);
 extern struct Anchor* registerName(struct Buffer* buf, const char* url, int line, int pos);
 extern int onAnchor(struct Anchor* a, int line, int pos);
-extern char* reAnchor(struct Buffer* buf, char* re);
+extern const char* reAnchor(struct Buffer* buf, const char* re);
 extern void addMultirowsForm(struct Buffer* buf, struct AnchorList* al);
 extern struct Anchor* closest_next_anchor(struct AnchorList* a, struct Anchor* an, int x, int y);
 extern struct Anchor* closest_prev_anchor(struct AnchorList* a, struct Anchor* an, int x, int y);

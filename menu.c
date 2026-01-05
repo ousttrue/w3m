@@ -892,7 +892,7 @@ initSelectMenu(void)
     struct Buffer* buf;
     Str str;
     const char** label;
-    char* p;
+    const char* p;
     static char* comment = " SPC for select / D for delete buffer ";
 
     SelectV = -1;
@@ -919,7 +919,7 @@ initSelectMenu(void)
                 break;
             default:
                 Strcat_char(str, ' ');
-                p = url_decode2(parsedURL2Str(&buf->content->url)->ptr, NULL);
+                p = url_decode2(NULL, NULL, parsedURL2Str(&buf->content->url)->ptr);
                 Strcat_charp(str, p);
                 break;
             }
@@ -1046,7 +1046,7 @@ initSelTabMenu(void)
             case SCM_MISSING:
                 break;
             default: {
-                char* p = url_decode2(parsedURL2Str(&buf->content->url)->ptr, NULL);
+                const char* p = url_decode2(NULL, NULL, parsedURL2Str(&buf->content->url)->ptr);
                 Strcat_charp(str, p);
                 break;
             }
@@ -1332,7 +1332,7 @@ link_menu(struct Buffer* buf)
         if (!l->url)
             p = "";
         else
-            p = url_decode2(l->url, buf);
+            p = url_decode2(baseURL(buf), &buf->doc, l->url);
         Strcat_charp(str, p);
         label[i] = str->ptr;
         if (len < str->length)

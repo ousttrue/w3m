@@ -383,7 +383,7 @@ Str query_from_followform(struct Buffer* buf, struct FormItemList* fi, bool mult
         if (multipart) {
             if (f2->type == FORM_INPUT_IMAGE) {
                 int x = 0, y = 0;
-                getMapXY(buf, doc_retrieveCurrentImg(&buf->doc), &x, &y);
+                getMapXY(&buf->doc, doc_retrieveCurrentImg(&buf->doc), &x, &y);
                 query = Strdup(conv_form_encoding(f2->name, fi, buf));
                 Strcat_charp(query, ".x");
                 form_write_data(body, fi->parent->boundary, query->ptr,
@@ -409,7 +409,7 @@ Str query_from_followform(struct Buffer* buf, struct FormItemList* fi, bool mult
             /* not multipart */
             if (f2->type == FORM_INPUT_IMAGE) {
                 int x = 0, y = 0;
-                getMapXY(buf, doc_retrieveCurrentImg(&buf->doc), &x, &y);
+                getMapXY(&buf->doc, doc_retrieveCurrentImg(&buf->doc), &x, &y);
                 Strcat(query,
                     Str_form_quote(conv_form_encoding(f2->name, fi, buf)));
                 Strcat(query, Sprintf(".x=%d&", x));
@@ -2462,7 +2462,7 @@ struct FollowResult _followA(struct Buffer* buf, struct FollowOption option)
 
     int x = 0, y = 0, map = 0;
     if (a && a->image && a->image->ismap) {
-        getMapXY(Currentbuf, a, &x, &y);
+        getMapXY(&Currentbuf->doc, a, &x, &y);
         map = 1;
     }
 

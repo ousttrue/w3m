@@ -3,17 +3,6 @@
 #include <stddef.h>
 #include <libwc/wc_types.h>
 
-#define LINK_TYPE_NONE 0
-#define LINK_TYPE_REL 1
-#define LINK_TYPE_REV 2
-struct LinkList {
-    char* url;
-    char* title; /* Next, Contents, ... */
-    char* ctype; /* Content-Type */
-    char type; /* Rel, Rev */
-    struct LinkList* next;
-};
-
 /* Link Buffer */
 enum LinkBufferID {
     LB_NOLINK = -1,
@@ -43,7 +32,7 @@ enum LinkBufferID {
 #include "document.h"
 
 struct Buffer {
-    struct Content *content;
+    struct Content* content;
     struct Document doc;
     struct Buffer* nextBuffer;
     struct Buffer* linkBuffer[MAX_LB];
@@ -57,11 +46,9 @@ struct Buffer {
 };
 
 struct Url* baseURL(struct Buffer* buf);
-char* url_decode2(const char* url, const struct Buffer* buf);
 void delBuffer(struct Buffer* buf);
 void cmd_loadBuffer(struct Buffer* buf, int prop, enum LinkBufferID linkid);
 bool readBufferCache(struct Buffer* buf);
-int getMapXY(struct Buffer* buf, struct Anchor* a, int* x, int* y);
 extern void reshapeBuffer(struct Buffer* buf);
 void reAnchorWord(struct Buffer* buf, struct Line* l, int spos, int epos);
 extern void saveBuffer(struct Buffer* buf, FILE* f, int cont);
@@ -81,3 +68,4 @@ extern void copyBuffer(struct Buffer* a, struct Buffer* b);
 extern struct Buffer* prevBuffer(struct Buffer* first, struct Buffer* buf);
 extern int writeBufferCache(struct Buffer* buf);
 bool checkBackBuffer(struct Buffer* buf);
+Str page_info_panel(struct Buffer* buf);

@@ -30,16 +30,23 @@ struct MapList {
 };
 
 struct parsed_tagarg;
-struct Buffer;
+struct Content;
+struct Document;
 struct Anchor;
-
+struct Url;
+struct FormItemList;
+struct LinkList;
+struct frameset;
 struct MapArea* newMapArea(const char* url,
     const char* target, const char* alt,
     const char* shape, const char* coords);
 
 void follow_map(struct parsed_tagarg* arg);
-struct MapList* searchMapList(struct Buffer* buf, char* name);
-struct MapArea* follow_map_menu(struct Buffer* buf, char* name, struct Anchor* a_img, int x, int y);
+struct MapList* searchMapList(struct Document* doc, const char* name);
+struct MapArea* follow_map_menu(struct Document* doc, const char* name, struct Anchor* a_img, int x, int y);
 /// information of current page and link
-Str page_info_panel(struct Buffer* buf);
-int searchMapArea(struct Buffer* buf, struct MapList* ml, struct Anchor* a_img);
+int searchMapArea(struct Document *doc, struct MapList* ml, struct Anchor* a_img);
+int getMapXY(struct Document *doc, struct Anchor* a, int* x, int* y);
+void append_map_info(struct Url* base_url, struct Document* doc, Str tmp, struct FormItemList* fi);
+void append_link_info(struct Url* base_url, struct Document* doc, Str html, struct LinkList* link);
+void append_frame_info(struct Url* base_url, struct Document* doc, Str html, struct frameset* set, int level);

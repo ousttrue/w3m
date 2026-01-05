@@ -352,9 +352,9 @@ fn _next(this: *@This(), _: u8) void {
         return;
     const _p = c.nextHist(this.CurrentHist);
     if (_p) |x| {
-        var p = x;
+        var p: [*c]const u8 = x;
         if (c.getRuntime().*.DecodeURL != 0 and (this.cm_mode.contains(.CPL_URL)))
-            p = c.url_decode2(p, null);
+            p = c.url_decode2(null, null, p);
         this.strBuf = c.Strnew_charp(p);
     } else {
         //     strBuf = strCurrentBuf;
@@ -405,7 +405,7 @@ fn _prev(this: *@This(), _: u8) void {
         this.strCurrentBuf = this.strBuf;
     }
     if (c.getRuntime().*.DecodeURL != 0 and (this.cm_mode.contains(.CPL_URL)))
-        p = c.url_decode2(p, null);
+        p = c.url_decode2(null, null, p);
     this.strBuf = c.Strnew_charp(p);
     this.CPos = this.setStrType(this.strBuf, &this.strProp);
     this.CLen = this.CPos;

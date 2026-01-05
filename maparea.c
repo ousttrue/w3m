@@ -1,28 +1,25 @@
 #include "maparea.h"
 #include "menu.h"
-#include "frame.h"
 #include "alloc.h"
 #include "etc.h"
-#include "file.h"
 #include "indep.h"
 #include "w3m_rc.h"
-#include "ctrlcode.h"
-#include "html_form.h"
-#include "buffer.h"
+#include "url.h"
+#include "document.h"
 #include "anchor.h"
-#include "image.h"
+#include "html_form.h"
+#include "frame.h"
+#include "myctype.h"
 #include <libwc/charset.h>
 #include <math.h>
 #include <strings.h>
 
-struct MapList*
-searchMapList(struct Buffer* buf, char* name)
+struct MapList* searchMapList(struct Document* doc, const char* name)
 {
-    struct MapList* ml;
-
     if (name == NULL)
         return NULL;
-    for (ml = buf->doc.maplist; ml != NULL; ml = ml->next) {
+    struct MapList* ml = doc->maplist;
+    for (; ml != NULL; ml = ml->next) {
         if (!Strcmp_charp(ml->name, name))
             break;
     }
@@ -36,17 +33,17 @@ inMapArea(struct MapArea* a, int x, int y)
     double r1, r2, s, c, t;
 
     if (!a)
-        return FALSE;
+        return false;
     switch (a->shape) {
     case SHAPE_RECT:
         if (x >= a->coords[0] && y >= a->coords[1] && x <= a->coords[2] && y <= a->coords[3])
-            return TRUE;
+            return true;
         break;
     case SHAPE_CIRCLE:
         if ((x - a->coords[0]) * (x - a->coords[0])
                 + (y - a->coords[1]) * (y - a->coords[1])
             <= a->coords[2] * a->coords[2])
-            return TRUE;
+            return true;
         break;
     case SHAPE_POLY:
         for (t = 0, i = 0; i < a->ncoords; i += 2) {
@@ -55,7 +52,7 @@ inMapArea(struct MapArea* a, int x, int y)
             r2 = sqrt((double)(x - a->coords[i + 2]) * (x - a->coords[i + 2])
                 + (double)(y - a->coords[i + 3]) * (y - a->coords[i + 3]));
             if (r1 == 0 || r2 == 0)
-                return TRUE;
+                return true;
             s = ((double)(x - a->coords[i]) * (y - a->coords[i + 3])
                     - (double)(x - a->coords[i + 2]) * (y - a->coords[i + 1]))
                 / r1 / r2;
@@ -65,14 +62,14 @@ inMapArea(struct MapArea* a, int x, int y)
             t += atan2(s, c);
         }
         if (fabs(t) > 2 * 3.14)
-            return TRUE;
+            return true;
         break;
     case SHAPE_DEFAULT:
-        return TRUE;
+        return true;
     default:
         break;
     }
-    return FALSE;
+    return false;
 }
 
 static int
@@ -98,20 +95,18 @@ nearestMapArea(struct MapList* ml, int x, int y)
     return n;
 }
 
-int searchMapArea(struct Buffer* buf, struct MapList* ml, struct Anchor* a_img)
+int searchMapArea(struct Document* doc, struct MapList* ml, struct Anchor* a_img)
 {
-    ListItem* al;
-    struct MapArea* a;
-    int i, n;
-    int px, py;
-
     if (!(ml && ml->area && ml->area->nitem))
         return -1;
-    if (!getMapXY(buf, a_img, &px, &py))
+    int px, py;
+    if (!getMapXY(doc, a_img, &px, &py))
         return -1;
-    n = -ml->area->nitem;
-    for (i = 0, al = ml->area->first; al != NULL; i++, al = al->next) {
-        a = (struct MapArea*)al->ptr;
+
+    int n = -ml->area->nitem;
+    int i = 0;
+    for (ListItem* al = ml->area->first; al != NULL; i++, al = al->next) {
+        struct MapArea* a = (struct MapArea*)al->ptr;
         if (!a)
             continue;
         if (n < 0 && inMapArea(a, px, py)) {
@@ -129,15 +124,15 @@ int searchMapArea(struct Buffer* buf, struct MapList* ml, struct Anchor* a_img)
     return n;
 }
 
-int getMapXY(struct Buffer* buf, struct Anchor* a, int* x, int* y)
+int getMapXY(struct Document* doc, struct Anchor* a, int* x, int* y)
 {
-    if (!buf || !a || !a->image || !x || !y)
+    if (!doc || !a || !a->image || !x || !y)
         return 0;
-    *x = (int)((buf->doc.currentColumn + buf->doc.cursorX
-                   - COLPOS(buf->doc.currentLine, a->start.pos) + 0.5)
+    *x = (int)((doc->currentColumn + doc->cursorX
+                   - COLPOS(doc->currentLine, a->start.pos) + 0.5)
              * getRuntime()->pixel_per_char)
         - a->image->xoffset;
-    *y = (int)((buf->doc.currentLine->linenumber - a->image->y + 0.5)
+    *y = (int)((doc->currentLine->linenumber - a->image->y + 0.5)
              * getRuntime()->pixel_per_line)
         - a->image->yoffset;
     if (*x <= 0)
@@ -148,20 +143,14 @@ int getMapXY(struct Buffer* buf, struct Anchor* a, int* x, int* y)
 }
 
 struct MapArea*
-follow_map_menu(struct Buffer* buf, char* name, struct Anchor* a_img, int x, int y)
+follow_map_menu(struct Document* doc, const char* name, struct Anchor* a_img, int x, int y)
 {
-    struct MapList* ml;
-    ListItem* al;
-    int i, selected = -1;
-    int initial = 0;
-    struct MapArea* a;
-    const char** label;
-
-    ml = searchMapList(buf, name);
+    struct MapList* ml = searchMapList(doc, name);
     if (ml == NULL || ml->area == NULL || ml->area->nitem == 0)
         return NULL;
 
-    initial = searchMapArea(buf, ml, a_img);
+    int selected = -1;
+    int initial = searchMapArea(doc, ml, a_img);
     if (initial < 0)
         initial = 0;
     else if (!getRuntime()->image_map_list) {
@@ -169,9 +158,10 @@ follow_map_menu(struct Buffer* buf, char* name, struct Anchor* a_img, int x, int
         goto map_end;
     }
 
-    label = New_N(char*, ml->area->nitem + 1);
-    for (i = 0, al = ml->area->first; al != NULL; i++, al = al->next) {
-        a = (struct MapArea*)al->ptr;
+    const char** label = New_N(char*, ml->area->nitem + 1);
+    int i = 0;
+    for (ListItem* al = ml->area->first; al != NULL; i++, al = al->next) {
+        struct MapArea* a = (struct MapArea*)al->ptr;
         if (a)
             label[i] = *a->alt ? a->alt : a->url;
         else
@@ -183,7 +173,8 @@ follow_map_menu(struct Buffer* buf, char* name, struct Anchor* a_img, int x, int
 
 map_end:
     if (selected >= 0) {
-        for (i = 0, al = ml->area->first; al != NULL; i++, al = al->next) {
+        i = 0;
+        for (ListItem* al = ml->area->first; al != NULL; i++, al = al->next) {
             if (al->ptr && i == selected)
                 return (struct MapArea*)al->ptr;
         }
@@ -283,29 +274,24 @@ newMapArea(const char* url, const char* target, const char* alt, const char* sha
 }
 
 /* append image map links */
-static void
-append_map_info(struct Buffer* buf, Str tmp, struct FormItemList* fi)
+void append_map_info(struct Url* base_url, struct Document* doc, Str tmp, struct FormItemList* fi)
 {
-    struct MapList* ml;
-    ListItem* al;
-    struct MapArea* a;
-    struct Url pu;
-    char *p, *q;
-
-    ml = searchMapList(buf, fi->value ? fi->value->ptr : NULL);
+    struct MapList* ml = searchMapList(doc, fi->value ? fi->value->ptr : NULL);
     if (ml == NULL)
         return;
 
     Strcat_m_charp(tmp,
         "<tr valign=top><td colspan=2>Links of current image map",
         "<tr valign=top><td colspan=2><table>", NULL);
-    for (al = ml->area->first; al != NULL; al = al->next) {
-        a = (struct MapArea*)al->ptr;
+
+    for (ListItem* al = ml->area->first; al != NULL; al = al->next) {
+        struct MapArea* a = (struct MapArea*)al->ptr;
         if (!a)
             continue;
-        parseURL2(a->url, &pu, baseURL(buf));
-        q = html_quote(parsedURL2Str(&pu)->ptr);
-        p = html_quote(url_decode2(a->url, buf));
+        struct Url pu;
+        parseURL2(a->url, &pu, base_url);
+        const char* q = html_quote(parsedURL2Str(&pu)->ptr);
+        const char* p = html_quote(url_decode2(base_url, doc, a->url));
         Strcat_m_charp(tmp, "<tr valign=top><td>&nbsp;&nbsp;<td><a href=\"",
             q, "\">",
             html_quote(*a->alt ? a->alt : mybasename(a->url)),
@@ -315,20 +301,17 @@ append_map_info(struct Buffer* buf, Str tmp, struct FormItemList* fi)
 }
 
 /* append links */
-static void
-append_link_info(struct Buffer* buf, Str html, struct LinkList* link)
+void append_link_info(struct Url* base_url, struct Document* doc, Str html, struct LinkList* link)
 {
-    struct LinkList* l;
-    struct Url pu;
-    char* url;
-
     if (!link)
         return;
 
     Strcat_charp(html, "<hr width=50%><h1>Link information</h1><table>\n");
-    for (l = link; l; l = l->next) {
+    for (struct LinkList* l = link; l; l = l->next) {
+        char* url;
         if (l->url) {
-            parseURL2(l->url, &pu, baseURL(buf));
+            struct Url pu;
+            parseURL2(l->url, &pu, base_url);
             url = html_quote(parsedURL2Str(&pu)->ptr);
         } else
             url = "(empty)";
@@ -342,7 +325,7 @@ append_link_info(struct Buffer* buf, Str html, struct LinkList* link)
         if (!l->url)
             url = "(empty)";
         else
-            url = html_quote(url_decode2(l->url, buf));
+            url = html_quote(url_decode2(base_url, doc, l->url));
         Strcat_m_charp(html, "<td>", url, NULL);
         if (l->ctype)
             Strcat_m_charp(html, " (", html_quote(l->ctype), ")", NULL);
@@ -352,16 +335,13 @@ append_link_info(struct Buffer* buf, Str html, struct LinkList* link)
 }
 
 /* append frame URL */
-static void
-append_frame_info(struct Buffer* buf, Str html, struct frameset* set, int level)
+void append_frame_info(struct Url* base_url, struct Document* doc, Str html, struct frameset* set, int level)
 {
-    char *p, *q;
-    int i, j;
-
     if (!set)
         return;
 
-    for (i = 0; i < set->col * set->row; i++) {
+    char *p, *q;
+    for (int i = 0; i < set->col * set->row; i++) {
         union frameset_element frame = set->frame[i];
         if (frame.element != NULL) {
             switch (frame.element->attr) {
@@ -370,149 +350,29 @@ append_frame_info(struct Buffer* buf, Str html, struct frameset* set, int level)
                 if (frame.body->url == NULL)
                     break;
                 Strcat_charp(html, "<pre_int>");
-                for (j = 0; j < level; j++)
+                for (int j = 0; j < level; j++)
                     Strcat_charp(html, "   ");
                 q = html_quote(frame.body->url);
                 Strcat_m_charp(html, "<a href=\"", q, "\">", NULL);
                 if (frame.body->name) {
-                    p = html_quote(url_unquote_conv(frame.body->name,
-                        buf->doc.charset));
+                    p = html_quote(url_unquote_conv(frame.body->name, doc->charset));
                     Strcat_charp(html, p);
                 }
                 if (getRuntime()->DecodeURL)
-                    p = html_quote(url_decode2(frame.body->url, buf));
+                    p = html_quote(url_decode2(base_url, doc, frame.body->url));
                 else
                     p = q;
                 Strcat_m_charp(html, " ", p, "</a></pre_int><br>\n", NULL);
-#ifdef USE_SSL
                 if (frame.body->ssl_certificate)
                     Strcat_m_charp(html,
                         "<blockquote><h2>SSL certificate</h2><pre>\n",
                         html_quote(frame.body->ssl_certificate),
                         "</pre></blockquote>\n", NULL);
-#endif
                 break;
             case F_FRAMESET:
-                append_frame_info(buf, html, frame.set, level + 1);
+                append_frame_info(base_url, doc, html, frame.set, level + 1);
                 break;
             }
         }
     }
-}
-
-Str page_info_panel(struct Buffer* buf)
-{
-    Str tmp = Strnew_size(1024);
-    Strcat_charp(tmp, "<html><head>\
-<title>Information about current page</title>\
-</head><body>\
-<h1>Information about current page</h1>\n");
-    if (buf == NULL)
-        goto end;
-    int all = buf->doc.allLine;
-    if (all == 0 && buf->doc.lastLine)
-        all = buf->doc.lastLine->linenumber;
-    Strcat_charp(tmp, "<form method=internal action=charset>");
-    const char* p = url_decode2(parsedURL2Str(&buf->content->url)->ptr, NULL);
-    Strcat_m_charp(tmp, "<table cellpadding=0>",
-        "<tr valign=top><td nowrap>Title<td>",
-        html_quote(buf->doc.title),
-        "<tr valign=top><td nowrap>Current URL<td>",
-        html_quote(p),
-        "<tr valign=top><td nowrap>Document Type<td>",
-        "unknown",
-        "<tr valign=top><td nowrap>Last Modified<td>",
-        html_quote(last_modified(buf)), NULL);
-
-    if (buf->doc.charset != getRuntime()->InnerCharset) {
-        wc_ces_list* list = wc_get_ces_list();
-        Strcat_charp(tmp,
-            "<tr><td nowrap>Document Charset<td><select name=charset>");
-        for (; list->name != NULL; list++) {
-            char charset[16];
-            sprintf(charset, "%d", (unsigned int)list->id);
-            Strcat_m_charp(tmp, "<option value=", charset,
-                (buf->doc.charset == list->id) ? " selected>"
-                                               : ">",
-                list->desc, NULL);
-        }
-        Strcat_charp(tmp, "</select>");
-        Strcat_charp(tmp, "<tr><td><td><input type=submit value=Change>");
-    }
-
-    Strcat_m_charp(tmp,
-        "<tr valign=top><td nowrap>Number of lines<td>",
-        Sprintf("%d", all)->ptr,
-        "<tr valign=top><td nowrap>Transferred bytes<td>",
-        Sprintf("%lu", (unsigned long)buf->doc.trbyte)->ptr, NULL);
-
-    struct Anchor* a = doc_retrieveCurrentAnchor(&buf->doc);
-    if (a != NULL) {
-        struct Url pu;
-        parseURL2(a->url, &pu, baseURL(buf));
-        p = parsedURL2Str(&pu)->ptr;
-        const char* q = html_quote(p);
-        if (getRuntime()->DecodeURL)
-            p = html_quote(url_decode2(p, buf));
-        else
-            p = q;
-        Strcat_m_charp(tmp,
-            "<tr valign=top><td nowrap>URL of current anchor<td><a href=\"",
-            q, "\">", p, "</a>", NULL);
-    }
-    a = doc_retrieveCurrentImg(&buf->doc);
-    if (a != NULL) {
-        struct Url pu;
-        parseURL2(a->url, &pu, baseURL(buf));
-        p = parsedURL2Str(&pu)->ptr;
-        const char* q = html_quote(p);
-        if (getRuntime()->DecodeURL)
-            p = html_quote(url_decode2(p, buf));
-        else
-            p = q;
-        Strcat_m_charp(tmp,
-            "<tr valign=top><td nowrap>URL of current image<td><a href=\"",
-            q, "\">", p, "</a>", NULL);
-    }
-    a = doc_retrieveCurrentForm(&buf->doc);
-    if (a != NULL) {
-        struct FormItemList* fi = (struct FormItemList*)a->url;
-        p = form2str(fi);
-        p = html_quote(url_decode2(p, buf));
-        Strcat_m_charp(tmp,
-            "<tr valign=top><td nowrap>Method/type of current form&nbsp;<td>",
-            p, NULL);
-        if (fi->parent->method == FORM_METHOD_INTERNAL
-            && !Strcmp_charp(fi->parent->action, "map"))
-            append_map_info(buf, tmp, fi->parent->item);
-    }
-    Strcat_charp(tmp, "</table>\n");
-    Strcat_charp(tmp, "</form>");
-
-    append_link_info(buf, tmp, buf->doc.linklist);
-
-    if (buf->content->document_header != NULL) {
-        Strcat_charp(tmp, "<hr width=50%><h1>Header information</h1><pre>\n");
-        for (TextListItem* ti = buf->content->document_header->first; ti != NULL; ti = ti->next)
-            Strcat_m_charp(tmp, "<pre_int>", html_quote(ti->ptr),
-                "</pre_int>\n", NULL);
-        Strcat_charp(tmp, "</pre>\n");
-    }
-
-    struct frameset* f_set = NULL;
-    if (buf->doc.frameset != NULL)
-        f_set = buf->doc.frameset;
-    else if (buf->bufferprop & BP_FRAME && buf->nextBuffer != NULL && buf->nextBuffer->doc.frameset != NULL)
-        f_set = buf->nextBuffer->doc.frameset;
-
-    if (f_set) {
-        Strcat_charp(tmp, "<hr width=50%><h1>Frame information</h1>\n");
-        append_frame_info(buf, tmp, f_set, 0);
-    }
-    if (buf->content->ssl_certificate)
-        Strcat_m_charp(tmp, "<h1>SSL certificate</h1><pre>\n",
-            html_quote(buf->content->ssl_certificate), "</pre>\n", NULL);
-end:
-    Strcat_charp(tmp, "</body></html>");
-    return tmp;
 }

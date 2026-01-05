@@ -918,16 +918,6 @@ char* url_encode(const char* url, const struct Url* base, enum wc_ces doc_charse
         url_to_charset(url, base, doc_charset));
 }
 
-char* url_decode2(const char* url, const struct Buffer* buf)
-{
-    if (!getRuntime()->DecodeURL)
-        return (char*)url;
-    enum wc_ces url_charset = buf
-        ? url_to_charset(url, baseURL((struct Buffer*)buf), buf->doc.charset)
-        : url_to_charset(url, NULL, 0);
-    return url_unquote_conv((char*)url, url_charset);
-}
-
 char* file_to_url(const char* file)
 {
     Str tmp;

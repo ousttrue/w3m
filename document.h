@@ -4,6 +4,17 @@
 #include "geometry.h"
 #include <stdbool.h>
 
+#define LINK_TYPE_NONE 0
+#define LINK_TYPE_REL 1
+#define LINK_TYPE_REV 2
+struct LinkList {
+    char* url;
+    char* title; /* Next, Contents, ... */
+    char* ctype; /* Content-Type */
+    char type; /* Rel, Rev */
+    struct LinkList* next;
+};
+
 struct AnchorList;
 struct Document {
     short width;
@@ -140,3 +151,4 @@ void doc_nextX(struct Document* doc, int d, int dy);
 void doc_nextY(struct Document* doc, int d);
 void doc_save_buffer_position(struct Document* doc);
 void doc_resetPos(struct Document* doc, struct DocumentPos* pos);
+const char* url_decode2(const struct Url* base_url, const struct Document* doc, const char* url);

@@ -1,4 +1,5 @@
 #include "document.h"
+#include "etc.h"
 #include "maparea.h"
 #include "html_form.h"
 #include "message.h"
@@ -1057,4 +1058,14 @@ void doc_resetPos(struct Document* doc, struct DocumentPos* pos)
     };
     doc_restorePosition(doc, &tmp_doc);
     doc->undo = pos;
+}
+
+const char* url_decode2(const struct Url* base_url, const struct Document* doc, const char* url)
+{
+    if (!getRuntime()->DecodeURL)
+        return url;
+    enum wc_ces url_charset = doc
+        ? url_to_charset(url, base_url, doc->charset)
+        : url_to_charset(url, NULL, 0);
+    return url_unquote_conv(url, url_charset);
 }

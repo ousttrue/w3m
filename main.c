@@ -763,7 +763,7 @@ goURL0(const char* prompt, int relative)
         if (current) {
             char* c_url = parsedURL2Str(current)->ptr;
             if (getRuntime()->DefaultURLString == DEFAULT_URL_CURRENT)
-                url = url_decode2(c_url, NULL);
+                url = url_decode2(NULL, NULL, c_url);
             else
                 pushHist(hist, c_url);
         }
@@ -773,7 +773,7 @@ goURL0(const char* prompt, int relative)
             parseURL2(a->url, &p_url, current);
             a_url = parsedURL2Str(&p_url)->ptr;
             if (getRuntime()->DefaultURLString == DEFAULT_URL_LINK)
-                url = url_decode2(a_url, Currentbuf);
+                url = url_decode2(baseURL(Currentbuf), &Currentbuf->doc, a_url);
             else
                 pushHist(hist, a_url);
         }
@@ -923,7 +923,7 @@ void follow_map(struct parsed_tagarg* arg)
     struct Anchor* an = doc_retrieveCurrentImg(&Currentbuf->doc);
     x = Currentbuf->doc.cursorX + Currentbuf->doc.rootX;
     y = Currentbuf->doc.cursorY + Currentbuf->doc.rootY;
-    struct MapArea* a = follow_map_menu(Currentbuf, name, an, x, y);
+    struct MapArea* a = follow_map_menu(&Currentbuf->doc, name, an, x, y);
     if (a == NULL || a->url == NULL || *(a->url) == '\0') {
         return;
     }
@@ -1148,7 +1148,7 @@ _peekURL(int only_img)
         s = parsedURL2Str(&pu);
     }
     if (getRuntime()->DecodeURL)
-        s = Strnew_charp(url_decode2(s->ptr, Currentbuf));
+        s = Strnew_charp(url_decode2(baseURL(Currentbuf), &Currentbuf->doc, s->ptr));
     s = checkType(s, &pp, NULL);
     p = NewAtom_N(Lineprop, s->length);
     bcopy((void*)pp, (void*)p, s->length * sizeof(Lineprop));
@@ -1201,7 +1201,7 @@ DEFUN(curURL, PEEK, "Show current address")
         offset = 0;
         s = currentURL();
         if (getRuntime()->DecodeURL)
-            s = Strnew_charp(url_decode2(s->ptr, NULL));
+            s = Strnew_charp(url_decode2(NULL, NULL, s->ptr));
         s = checkType(s, &pp, NULL);
         p = NewAtom_N(Lineprop, s->length);
         bcopy((void*)pp, (void*)p, s->length * sizeof(Lineprop));

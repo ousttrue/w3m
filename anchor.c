@@ -174,27 +174,8 @@ searchURLLabel(struct Buffer* buf, const char* url)
     return searchAnchor(buf->doc.name, url);
 }
 
-#ifdef USE_NNTP
 static struct Anchor*
-_put_anchor_news(struct Buffer* buf, char* p1, char* p2, int line, int pos)
-{
-    Str tmp;
-
-    if (*p1 == '<') {
-        p1++;
-        if (*(p2 - 1) == '>')
-            p2--;
-    }
-    tmp = Strnew_charp("news:");
-    Strcat_charp_n(tmp, p1, p2 - p1);
-    return registerHref(buf, url_encode(tmp->ptr, baseURL(buf), buf->doc.charset),
-        NULL, NO_REFERER, NULL, '\0', line,
-        pos);
-}
-#endif /* USE_NNTP */
-
-static struct Anchor*
-_put_anchor_all(struct Buffer* buf, char* p1, char* p2, int line, int pos)
+_put_anchor_all(struct Buffer* buf, const char* p1, const char* p2, int line, int pos)
 {
     Str tmp;
 
@@ -277,9 +258,9 @@ reseq_anchor(struct Buffer* buf)
     reseq_anchor0(buf->doc.formitem, seqmap);
 }
 
-static char*
-reAnchorPos(struct Buffer* buf, struct Line* l, char* p1, char* p2,
-    struct Anchor* (*anchorproc)(struct Buffer*, char*, char*, int, int))
+static const char*
+reAnchorPos(struct Buffer* buf, struct Line* l, const char* p1, const char* p2,
+    struct Anchor* (*anchorproc)(struct Buffer*, const char*, const char*, int, int))
 {
     struct Anchor* a;
     int spos, epos;
@@ -326,26 +307,26 @@ void reAnchorWord(struct Buffer* buf, struct Line* l, int spos, int epos)
 
 /* search regexp and register them as anchors */
 /* returns error message if any               */
-static char*
-reAnchorAny(struct Buffer* buf, char* re,
-    struct Anchor* (*anchorproc)(struct Buffer*, char*, char*, int, int))
+static const char*
+reAnchorAny(struct Buffer* buf, const char* re,
+    struct Anchor* (*anchorproc)(struct Buffer*, const char*, const char*, int, int))
 {
-    struct Line* l;
-    char *p = NULL, *p1, *p2;
-
     if (re == NULL || *re == '\0') {
         return NULL;
     }
     if ((re = regexCompile(re, 1)) != NULL) {
         return re;
     }
-    for (l = getRuntime()->MarkAllPages ? buf->doc.firstLine : buf->doc.topLine; l != NULL && (getRuntime()->MarkAllPages || l->linenumber < buf->doc.topLine->linenumber + LASTLINE());
+
+    const char* p = NULL;
+    for (struct Line* l = getRuntime()->MarkAllPages ? buf->doc.firstLine : buf->doc.topLine; l != NULL && (getRuntime()->MarkAllPages || l->linenumber < buf->doc.topLine->linenumber + LASTLINE());
         l = l->next) {
         if (p && l->bpos)
             break;
         p = l->lineBuf;
         for (;;) {
             if (regexMatch(p, &l->lineBuf[l->size] - p, p == l->lineBuf) == 1) {
+                const char *p1, *p2;
                 matchedPosition(&p1, &p2);
                 p = reAnchorPos(buf, l, p1, p2, anchorproc);
             } else
@@ -355,71 +336,10 @@ reAnchorAny(struct Buffer* buf, char* re,
     return NULL;
 }
 
-char* reAnchor(struct Buffer* buf, char* re)
+const char* reAnchor(struct Buffer* buf, const char* re)
 {
     return reAnchorAny(buf, re, _put_anchor_all);
 }
-
-#ifdef USE_NNTP
-char* reAnchorNews(struct Buffer* buf, char* re)
-{
-    return reAnchorAny(buf, re, _put_anchor_news);
-}
-
-char* reAnchorNewsheader(struct Buffer* buf)
-{
-    struct Line* l;
-    char *p, *p1, *p2;
-    static char* header_mid[] = {
-        "Message-Id:", "References:", "In-Reply-To:", NULL
-    };
-    static char* header_group[] = {
-        "Newsgroups:", NULL
-    };
-    char **header, **q;
-    int i, search = FALSE;
-
-    if (!buf || !buf->doc.firstLine)
-        return NULL;
-    for (i = 0; i <= 1; i++) {
-        if (i == 0) {
-            regexCompile("<[!-;=?-~]+@[a-zA-Z0-9\\.\\-_]+>", 1);
-            header = header_mid;
-        } else {
-            regexCompile("[a-zA-Z0-9\\.\\-_]+", 1);
-            header = header_group;
-        }
-        for (l = buf->doc.firstLine; l != NULL && l->real_linenumber == 0;
-            l = l->next) {
-            if (l->bpos)
-                continue;
-            p = l->lineBuf;
-            if (!IS_SPACE(*p)) {
-                search = FALSE;
-                for (q = header; *q; q++) {
-                    if (!strncasecmp(p, *q, strlen(*q))) {
-                        search = TRUE;
-                        p = strchr(p, ':') + 1;
-                        break;
-                    }
-                }
-            }
-            if (!search)
-                continue;
-            for (;;) {
-                if (regexMatch(p, &l->lineBuf[l->size] - p, p == l->lineBuf)
-                    == 1) {
-                    matchedPosition(&p1, &p2);
-                    p = reAnchorPos(buf, l, p1, p2, _put_anchor_news);
-                } else
-                    break;
-            }
-        }
-    }
-    reseq_anchor(buf);
-    return NULL;
-}
-#endif /* USE_NNTP */
 
 #define FIRST_MARKER_SIZE 30
 struct HmarkerList*
@@ -718,7 +638,7 @@ link_list_panel(struct Buffer* buf)
                 p = parsedURL2Str(&pu)->ptr;
                 u = html_quote(p);
                 if (getRuntime()->DecodeURL)
-                    p = html_quote(url_decode2(p, buf));
+                    p = html_quote(url_decode2(baseURL(buf), &buf->doc, p));
                 else
                     p = u;
             } else
@@ -748,7 +668,7 @@ link_list_panel(struct Buffer* buf)
             p = parsedURL2Str(&pu)->ptr;
             u = html_quote(p);
             if (getRuntime()->DecodeURL)
-                p = html_quote(url_decode2(p, buf));
+                p = html_quote(url_decode2(baseURL(buf), &buf->doc, p));
             else
                 p = u;
             t = getAnchorText(buf, al, a);
@@ -770,13 +690,13 @@ link_list_panel(struct Buffer* buf)
             p = parsedURL2Str(&pu)->ptr;
             u = html_quote(p);
             if (getRuntime()->DecodeURL)
-                p = html_quote(url_decode2(p, buf));
+                p = html_quote(url_decode2(baseURL(buf), &buf->doc, p));
             else
                 p = u;
             if (a->title && *a->title)
                 t = html_quote(a->title);
             else
-                t = html_quote(url_decode2(a->url, buf));
+                t = html_quote(url_decode2(baseURL(buf), &buf->doc, a->url));
             Strcat_m_charp(tmp, "<li><a href=\"", u, "\">", t, "</a><br>", p,
                 "\n", NULL);
             a = retrieveAnchor(buf->doc.formitem, a->start.line, a->start.pos);
@@ -785,7 +705,7 @@ link_list_panel(struct Buffer* buf)
             fi = (struct FormItemList*)a->url;
             fi = fi->parent->item;
             if (fi->parent->method == FORM_METHOD_INTERNAL && !Strcmp_charp(fi->parent->action, "map") && fi->value) {
-                struct MapList* ml = searchMapList(buf, fi->value->ptr);
+                struct MapList* ml = searchMapList(&buf->doc, fi->value->ptr);
                 ListItem* mi;
                 struct MapArea* m;
                 if (!ml)
@@ -799,13 +719,13 @@ link_list_panel(struct Buffer* buf)
                     p = parsedURL2Str(&pu)->ptr;
                     u = html_quote(p);
                     if (getRuntime()->DecodeURL)
-                        p = html_quote(url_decode2(p, buf));
+                        p = html_quote(url_decode2(baseURL(buf), &buf->doc, p));
                     else
                         p = u;
                     if (m->alt && *m->alt)
                         t = html_quote(m->alt);
                     else
-                        t = html_quote(url_decode2(m->url, buf));
+                        t = html_quote(url_decode2(baseURL(buf), &buf->doc, m->url));
                     Strcat_m_charp(tmp, "<li><a href=\"", u, "\">", t,
                         "</a><br>", p, "\n", NULL);
                 }
