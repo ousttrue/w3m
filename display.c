@@ -1,4 +1,6 @@
 #include "display.h"
+#include "anchor_list.h"
+#include "hmarker.h"
 #include "document.h"
 #include "file.h"
 #include "screen.h"
@@ -47,7 +49,8 @@ redrawLineRegion(struct Document* doc, struct Line* l, int i, int bpos, int epos
 
     for (j = 0; rcol - column < doc->COLS && pos + j < l->len; j += delta) {
         if (getRuntime()->useVisitedColor && vpos <= pos + j && !(pr[j] & PE_VISITED)) {
-            a = retrieveAnchor(doc->href, l->linenumber, pos + j);
+            a = al_retrieve(&doc->href,
+                (struct BufferPoint) { .line = l->linenumber, .pos = pos + j });
             if (a) {
                 parseURL2(a->url, &url, base_url);
                 if (getHashHist(getRuntime()->URLHist, parsedURL2Str(&url)->ptr)) {
@@ -132,7 +135,7 @@ void drawAnchorCursor(struct Document* doc, struct Url* base_url)
 {
     if (!doc->firstLine || !doc->hmarklist)
         return;
-    if (!doc->href && !doc->formitem)
+    if (doc->href.nanchor == 0 && doc->formitem.nanchor == 0)
         return;
 
     struct Anchor* an = doc_retrieveCurrentAnchor(doc);
@@ -149,13 +152,13 @@ void drawAnchorCursor(struct Document* doc, struct Url* base_url)
     int eline = tline + doc->LINES;
     int prevhseq = doc->hmarklist->prevhseq;
 
-    if (doc->href) {
-        drawAnchorCursor0(doc, doc->href, hseq, prevhseq, tline, eline, 1, base_url);
-        drawAnchorCursor0(doc, doc->href, hseq, -1, tline, eline, 0, base_url);
+    if (doc->href.nanchor > 0) {
+        drawAnchorCursor0(doc, &doc->href, hseq, prevhseq, tline, eline, 1, base_url);
+        drawAnchorCursor0(doc, &doc->href, hseq, -1, tline, eline, 0, base_url);
     }
-    if (doc->formitem) {
-        drawAnchorCursor0(doc, doc->formitem, hseq, prevhseq, tline, eline, 1, base_url);
-        drawAnchorCursor0(doc, doc->formitem, hseq, -1, tline, eline, 0, base_url);
+    if (doc->formitem.nanchor > 0) {
+        drawAnchorCursor0(doc, &doc->formitem, hseq, prevhseq, tline, eline, 1, base_url);
+        drawAnchorCursor0(doc, &doc->formitem, hseq, -1, tline, eline, 0, base_url);
     }
     doc->hmarklist->prevhseq = hseq;
 }
@@ -181,7 +184,8 @@ redrawLineImage(struct Document* doc, struct Line* l, int i, struct Url* base_ur
             rcol = COLPOS(l, pos + j + 1);
             continue;
         }
-        a = retrieveAnchor(doc->img, l->linenumber, pos + j);
+        a = al_retrieve(&doc->img,
+            (struct BufferPoint) { .line = l->linenumber, .pos = pos + j });
         if (a && a->image && a->image->touch < image_touch) {
             struct Image* image = a->image;
             image->cache = getImage(image, base_url, doc->image_flag);
@@ -230,7 +234,7 @@ redrawLineImage(struct Document* doc, struct Line* l, int i, struct Url* base_ur
 static void
 redrawNLine(struct Document* doc, int n, struct Url* base_url)
 {
-    if(!doc){
+    if (!doc) {
         return;
     }
     beginLine();
@@ -276,7 +280,7 @@ redrawNLine(struct Document* doc, int n, struct Url* base_url)
         screen_clrtobotx();
     }
 
-    if (!(getRuntime()->activeImage && getRuntime()->displayImage && doc->img))
+    if (!(getRuntime()->activeImage && getRuntime()->displayImage && doc->img.nanchor > 0))
         return;
     screen_move((struct Vec2) { .y = doc->cursorY + doc->rootY, .x = doc->cursorX + doc->rootX });
 

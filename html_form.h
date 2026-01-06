@@ -111,3 +111,8 @@ extern void form_write_data(FILE* f, char* boundary, char* name, char* value);
 extern void form_write_from_file(FILE* f, char* boundary, char* name,
     char* filename, char* file);
 extern void loadPreForm(void);
+
+struct AnchorList;
+struct HmarkerList;
+void shiftAnchorPosition(struct AnchorList* a, struct HmarkerList* hl, int line,
+    int pos, int shift);

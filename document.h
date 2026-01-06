@@ -1,7 +1,7 @@
 #pragma once
 #include "line.h"
 #include "image.h"
-#include "geometry.h"
+#include "anchor_list.h"
 #include <stdbool.h>
 
 #define LINK_TYPE_NONE 0
@@ -15,7 +15,6 @@ struct LinkList {
     struct LinkList* next;
 };
 
-struct AnchorList;
 struct Document {
     short width;
     const char* title;
@@ -44,10 +43,10 @@ struct Document {
     //
     struct Url* baseURL;
     char* baseTarget;
-    struct AnchorList* href;
-    struct AnchorList* img;
-    struct AnchorList* name;
-    struct AnchorList* formitem;
+    struct AnchorList href;
+    struct AnchorList img;
+    struct AnchorList name;
+    struct AnchorList formitem;
     struct LinkList* linklist;
     struct FormList* formlist;
     struct MapList* maplist;
@@ -153,4 +152,31 @@ void doc_save_buffer_position(struct Document* doc);
 void doc_resetPos(struct Document* doc, struct DocumentPos* pos);
 const char* url_decode2(const struct Url* base_url, const struct Document* doc, const char* url);
 const char* doc_getCurWord(struct Document* doc, int* spos, int* epos);
-int currentLn(struct Document *doc);
+int currentLn(struct Document* doc);
+
+inline static struct Anchor*
+doc_registerHref(struct Document* doc, struct BufferPoint bp,
+    const char* url, const char* target, const char* referer, const char* title, unsigned char key)
+{
+    return al_put(&doc->href, url, target, referer, title, key, bp);
+}
+
+inline static struct Anchor*
+doc_registerName(struct Document* doc, struct BufferPoint bp,
+    const char* url)
+{
+    return al_put(&doc->name, url, NULL, NULL, NULL, '\0', bp);
+}
+
+inline static struct Anchor*
+doc_registerImg(struct Document* doc, struct BufferPoint bp,
+    const char* url, const char* title)
+{
+    return al_put(&doc->img, url, NULL, NULL, title, '\0', bp);
+}
+
+void doc_addMultirowsForm(struct Document* doc, struct AnchorList* al);
+void doc_addMultirowsImg(struct Document* doc, struct AnchorList* al);
+struct Anchor* doc_searchURLLabel(struct Document* doc, const char* url);
+Str link_list_panel(struct Url* base_url, struct Document* doc);
+const char* doc_getAnchorText(struct Document* doc, struct AnchorList* al, struct Anchor* a);

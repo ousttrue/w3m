@@ -1,11 +1,7 @@
 #pragma once
 #include "Str.h"
-
-struct BufferPoint {
-    int line;
-    int pos;
-    int invalid;
-};
+#include "geometry.h"
+#include <stdbool.h>
 
 struct Anchor {
     const char* url;
@@ -16,25 +12,19 @@ struct Anchor {
     struct BufferPoint start;
     struct BufferPoint end;
     int hseq;
-    char slave;
+    bool slave;
     short y;
     short rows;
     struct Image* image;
 };
-
-struct AnchorList {
-    struct Anchor* anchors;
-    int nanchor;
-    int anchormax;
-    int acache;
-};
-
-struct HmarkerList {
-    struct BufferPoint* marks;
-    int nmark;
-    int markmax;
-    int prevhseq;
-};
+inline static int onAnchor(struct Anchor* a, struct BufferPoint bp)
+{
+    if (bpcmp(bp, a->start) < 0)
+        return -1;
+    if (bpcmp(a->end, bp) <= 0)
+        return 1;
+    return 0;
+}
 
 struct Document;
 struct HtmlBuilder;
@@ -42,35 +32,10 @@ struct FormList;
 struct Line;
 struct Url;
 
-struct Anchor* searchURLLabel(struct Document* doc, const char* url);
-struct Anchor* searchAnchor(struct AnchorList* al, const char* str);
-struct Anchor* registerHref(struct Document *doc,
-    const char* url, const char* target,
-    const char* referer, const char* title,
-    unsigned char key, int line, int pos);
-struct Anchor* registerImg(struct Document *doc,
-    const char* url, const char* title,
-    int line, int pos);
-struct AnchorList* putAnchor(struct AnchorList* al,
-    const char* url, const char* target,
-    struct Anchor** anchor_return, const char* referer,
-    const char* title, unsigned char key, int line,
-    int pos);
 struct HtmlTag;
-struct Anchor* registerForm(struct HtmlBuilder* hb,
-    struct Document *doc, struct FormList* flist,
-    struct HtmlTag* tag, int line, int pos);
-struct Anchor* registerName(struct Document *doc, const char* url, int line, int pos);
-int onAnchor(struct Anchor* a, int line, int pos);
-const char* reAnchor(struct Url *base_url, struct Document *doc, const char* re);
-void reAnchorWord(struct Url *base_url, struct Document *doc, struct Line* l, int spos, int epos);
-void addMultirowsForm(struct Document *doc, struct AnchorList* al);
-struct Anchor* closest_next_anchor(struct AnchorList* a, struct Anchor* an, int x, int y);
-struct Anchor* closest_prev_anchor(struct AnchorList* a, struct Anchor* an, int x, int y);
-void addMultirowsImg(struct Document *doc, struct AnchorList* al);
-struct HmarkerList* putHmarker(struct HmarkerList* ml, int line, int pos, int seq);
-void shiftAnchorPosition(struct AnchorList* a, struct HmarkerList* hl, int line,
-    int pos, int shift);
-const char* getAnchorText(struct Document *doc, struct AnchorList* al, struct Anchor* a);
-Str link_list_panel(struct Url *base_url, struct Document* doc);
-struct Anchor* retrieveAnchor(struct AnchorList* al, int line, int pos);
+struct Anchor* registerForm(struct HtmlBuilder* hb, struct Document* doc, struct BufferPoint bp,
+    struct FormList* flist, struct HtmlTag* tag);
+
+const char* reAnchor(struct Url* base_url, struct Document* doc, const char* re);
+void reAnchorWord(struct Url* base_url, struct Document* doc, struct Line* l, int spos, int epos);
+

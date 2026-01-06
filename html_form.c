@@ -1,7 +1,8 @@
 #include "html_form.h"
+#include "hmarker.h"
+#include "anchor_list.h"
 #include "html.h"
 #include "html_builder.h"
-#include "func.h"
 #include "cookie.h"
 #include "alloc.h"
 #include "etc.h"
@@ -190,13 +191,9 @@ int formtype(const char* typestr)
 
 void formRecheckRadio(struct Buffer* buf, struct Anchor* a, struct FormItemList* fi)
 {
-    int i;
-    struct Anchor* a2;
-    struct FormItemList* f2;
-
-    for (i = 0; i < buf->doc->formitem->nanchor; i++) {
-        a2 = &buf->doc->formitem->anchors[i];
-        f2 = (struct FormItemList*)a2->url;
+    for (int i = 0; i < buf->doc->formitem.nanchor; i++) {
+        struct Anchor* a2 = &buf->doc->formitem.anchors[i];
+        struct FormItemList* f2 = (struct FormItemList*)a2->url;
         if (f2->parent == fi->parent && f2 != fi && f2->type == FORM_INPUT_RADIO && Strcmp(f2->name, fi->name) == 0) {
             f2->checked = 0;
             doc_formUpdateBuffer(buf->doc, a2, f2);
@@ -208,18 +205,15 @@ void formRecheckRadio(struct Buffer* buf, struct Anchor* a, struct FormItemList*
 
 void formResetBuffer(struct Buffer* buf, struct AnchorList* formitem)
 {
-    int i;
-    struct Anchor* a;
-    struct FormItemList *f1, *f2;
-
-    if (buf == NULL || buf->doc->formitem == NULL || formitem == NULL)
+    if (buf == NULL || buf->doc->formitem.nanchor == 0 || formitem == NULL)
         return;
-    for (i = 0; i < buf->doc->formitem->nanchor && i < formitem->nanchor; i++) {
-        a = &buf->doc->formitem->anchors[i];
+
+    for (int i = 0; i < buf->doc->formitem.nanchor && i < formitem->nanchor; i++) {
+        struct Anchor* a = &buf->doc->formitem.anchors[i];
         if (a->y != a->start.line)
             continue;
-        f1 = (struct FormItemList*)a->url;
-        f2 = (struct FormItemList*)formitem->anchors[i].url;
+        struct FormItemList* f1 = (struct FormItemList*)a->url;
+        struct FormItemList* f2 = (struct FormItemList*)formitem->anchors[i].url;
         if (f1->type != f2->type || strcmp(((f1->name == NULL) ? "" : f1->name->ptr), ((f2->name == NULL) ? "" : f2->name->ptr)))
             break; /* What's happening */
         switch (f1->type) {
@@ -434,7 +428,8 @@ static void _formUpdateBuffer(struct Document* doc, struct Anchor* a, struct For
                 break;
             if (rows > 1) {
                 int pos = columnPos(l, col);
-                a = retrieveAnchor(doc->formitem, l->linenumber, pos);
+                a = al_retrieve(&doc->formitem,
+                    (struct BufferPoint) { .line = l->linenumber, .pos = pos });
                 if (a == NULL)
                     break;
                 spos = a->start.pos;
@@ -446,13 +441,13 @@ static void _formUpdateBuffer(struct Document* doc, struct Anchor* a, struct For
                 rows > 1,
                 form->type == FORM_INPUT_PASSWORD);
             if (pos != epos) {
-                shiftAnchorPosition(doc->href, doc->hmarklist,
+                shiftAnchorPosition(&doc->href, doc->hmarklist,
                     a->start.line, spos, pos - epos);
-                shiftAnchorPosition(doc->name, doc->hmarklist,
+                shiftAnchorPosition(&doc->name, doc->hmarklist,
                     a->start.line, spos, pos - epos);
-                shiftAnchorPosition(doc->img, doc->hmarklist,
+                shiftAnchorPosition(&doc->img, doc->hmarklist,
                     a->start.line, spos, pos - epos);
-                shiftAnchorPosition(doc->formitem, doc->hmarklist,
+                shiftAnchorPosition(&doc->formitem, doc->hmarklist,
                     a->start.line, spos, pos - epos);
             }
         }
@@ -910,7 +905,7 @@ void preFormUpdateBuffer(struct Buffer* buf)
     struct FormSelectOptionItem* opt;
     int j;
 
-    if (!buf || !buf->doc->formitem || !PreForm)
+    if (!buf || buf->doc->formitem.nanchor == 0 || !PreForm)
         return;
 
     for (pf = PreForm; pf; pf = pf->next) {
@@ -923,8 +918,8 @@ void preFormUpdateBuffer(struct Buffer* buf)
                 continue;
         } else
             continue;
-        for (i = 0; i < buf->doc->formitem->nanchor; i++) {
-            a = &buf->doc->formitem->anchors[i];
+        for (i = 0; i < buf->doc->formitem.nanchor; i++) {
+            a = &buf->doc->formitem.anchors[i];
             fi = (struct FormItemList*)a->url;
             fl = fi->parent;
             if (pf->name && (!fl->name || strcmp(fl->name, pf->name)))
@@ -976,5 +971,39 @@ void preFormUpdateBuffer(struct Buffer* buf)
                 }
             }
         }
+    }
+}
+
+void shiftAnchorPosition(struct AnchorList* al, struct HmarkerList* hl, int line, int pos,
+    int shift)
+{
+    if (al == NULL || al->nanchor == 0)
+        return;
+
+    size_t b, e = 0;
+    int s = al->nanchor / 2;
+    for (b = 0, e = al->nanchor - 1; b <= e; s = (b + e + 1) / 2) {
+        struct Anchor* a = &al->anchors[s];
+        int cmp = onAnchor(a, (struct BufferPoint) { .line = line, .pos = pos });
+        if (cmp == 0)
+            break;
+        else if (cmp > 0)
+            b = s + 1;
+        else if (s == 0)
+            break;
+        else
+            e = s - 1;
+    }
+    for (; s < al->nanchor; s++) {
+        struct Anchor* a = &al->anchors[s];
+        if (a->start.line > line)
+            break;
+        if (a->start.pos > pos) {
+            a->start.pos += shift;
+            if (hl && hl->marks && a->hseq >= 0 && hl->marks[a->hseq].line == line)
+                hl->marks[a->hseq].pos = a->start.pos;
+        }
+        if (a->end.pos >= pos)
+            a->end.pos += shift;
     }
 }

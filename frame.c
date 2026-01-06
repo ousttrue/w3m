@@ -224,7 +224,7 @@ flushFrameSet(struct frameset* fs)
         switch (fs->frame[n].element->attr) {
         case F_UNLOADED:
         case F_BODY:
-            fs->frame[n].body->nameList = NULL;
+            fs->frame[n].body->nameList.nanchor = 0;
             break;
         case F_FRAMESET:
             flushFrameSet(fs->frame[n].set);
@@ -251,7 +251,7 @@ void pushFrameTree(struct frameset_queue** fqpp, struct frameset* fs, struct Buf
     rfq->top_linenumber = (buf && buf->doc->topLine) ? buf->doc->topLine->linenumber : 1;
     rfq->pos = buf ? buf->doc->pos : 0;
     rfq->currentColumn = buf ? buf->doc->currentColumn : 0;
-    rfq->formitem = buf ? buf->doc->formitem : NULL;
+    rfq->formitem = buf ? &buf->doc->formitem : NULL;
 
     rfq->back = cfq;
     if (cfq) {

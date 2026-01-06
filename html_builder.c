@@ -1,4 +1,6 @@
 #include "html_builder.h"
+#include "hmarker.h"
+#include "anchor_list.h"
 #include "html_tag.h"
 #include "html_form.h"
 #include "html_table.h"
@@ -3537,7 +3539,7 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Url* base_url, struct Document*
                     id = NULL;
                     if (parsedtag_get_value(tag, ATTR_NAME, &id)) {
                         id = url_quote_conv(id, name_charset);
-                        registerName(doc, id, currentLn(doc), pos);
+                        doc_registerName(doc, (struct BufferPoint) { .line = currentLn(doc), .pos = pos }, id);
                     }
                     if (parsedtag_get_value(tag, ATTR_HREF, &p))
                         p = url_encode(remove_space(p), base_url, doc->charset);
@@ -3549,7 +3551,8 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Url* base_url, struct Document*
                     parsedtag_get_value(tag, ATTR_ACCESSKEY, &t);
                     parsedtag_get_value(tag, ATTR_HSEQ, &hseq);
                     if (hseq > 0)
-                        doc->hmarklist = putHmarker(doc->hmarklist, currentLn(doc), pos, hseq - 1);
+                        doc->hmarklist = hm_put(doc->hmarklist,
+                            (struct BufferPoint) { .line = currentLn(doc), .pos = pos }, hseq - 1);
                     else if (hseq < 0) {
                         int h = -hseq - 1;
                         if (doc->hmarklist && h < doc->hmarklist->nmark && doc->hmarklist->marks[h].invalid) {
@@ -3560,13 +3563,14 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Url* base_url, struct Document*
                         }
                     }
                     if (id && idFrame)
-                        idFrame->body->nameList = putAnchor(idFrame->body->nameList, id, NULL,
-                            (struct Anchor**)NULL, NULL, NULL, '\0',
-                            currentLn(doc), pos);
+                        al_put(&idFrame->body->nameList, id, NULL,
+                            NULL, NULL, '\0',
+                            (struct BufferPoint) { .line = currentLn(doc), .pos = pos });
                     if (p) {
                         effect |= PE_ANCHOR;
-                        a_href = registerHref(doc, p, q, r, s,
-                            *t, currentLn(doc), pos);
+                        a_href = doc_registerHref(doc, (struct BufferPoint) { .line = currentLn(doc), .pos = pos },
+                            p, q, r, s,
+                            *t);
                         a_href->hseq = ((hseq > 0) ? hseq : -hseq) - 1;
                         a_href->slave = (hseq > 0) ? FALSE : TRUE;
                     }
@@ -3605,13 +3609,15 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Url* base_url, struct Document*
                         q = NULL;
                         parsedtag_get_value(tag, ATTR_USEMAP, &q);
                         if (iseq > 0) {
-                            doc->imarklist = putHmarker(doc->imarklist, currentLn(doc), pos, iseq - 1);
+                            doc->imarklist = hm_put(doc->imarklist,
+                                (struct BufferPoint) { .line = currentLn(doc), .pos = pos }, iseq - 1);
                         }
 
                         s = NULL;
                         parsedtag_get_value(tag, ATTR_TITLE, &s);
                         p = url_quote_conv(remove_space(p), doc->charset);
-                        a_img = registerImg(doc, p, s, currentLn(doc), pos);
+                        a_img = doc_registerImg(doc, (struct BufferPoint) { .line = currentLn(doc), .pos = pos },
+                            p, s);
                         a_img->hseq = iseq;
                         a_img->image = NULL;
                         if (iseq > 0) {
@@ -3640,7 +3646,7 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Url* base_url, struct Document*
                             image->cache = getImage(image, base_url, IMG_FLAG_SKIP);
                         } else if (iseq < 0) {
                             struct BufferPoint* po = doc->imarklist->marks - iseq - 1;
-                            struct Anchor* a = retrieveAnchor(doc->img, po->line, po->pos);
+                            struct Anchor* a = al_retrieve(&doc->img, *po);
                             if (a) {
                                 a_img->url = a->url;
                                 a_img->image = a->image;
@@ -3676,7 +3682,8 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Url* base_url, struct Document*
                         int hpos = pos;
                         if (*str == '[')
                             hpos++;
-                        doc->hmarklist = putHmarker(doc->hmarklist, currentLn(doc), hpos, hseq - 1);
+                        doc->hmarklist = hm_put(doc->hmarklist,
+                            (struct BufferPoint) { .line = currentLn(doc), .pos = hpos }, hseq - 1);
                     } else if (hseq < 0) {
                         int h = -hseq - 1;
                         int hpos = pos;
@@ -3713,7 +3720,8 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Url* base_url, struct Document*
                         }
                     }
 
-                    a_form = registerForm(hb, doc, form, tag, currentLn(doc), pos);
+                    a_form = registerForm(hb, doc, (struct BufferPoint) { .line = currentLn(doc), .pos = pos },
+                        form, tag);
                     if (a_textarea && textareanumber >= 0)
                         a_textarea[textareanumber] = a_form;
                     if (a_select && selectnumber >= 0)
@@ -3902,7 +3910,8 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Url* base_url, struct Document*
                 id = NULL;
                 if (parsedtag_get_value(tag, ATTR_ID, &id)) {
                     id = url_quote_conv(id, name_charset);
-                    registerName(doc, id, currentLn(doc), pos);
+                    doc_registerName(doc, (struct BufferPoint) { .line = currentLn(doc), .pos = pos },
+                        id);
                 }
                 if (renderFrameSet && parsedtag_get_value(tag, ATTR_FRAMENAME, &p)) {
                     p = url_quote_conv(p, doc->charset);
@@ -3912,10 +3921,11 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Url* base_url, struct Document*
                             idFrame = NULL;
                     }
                 }
-                if (id && idFrame)
-                    idFrame->body->nameList = putAnchor(idFrame->body->nameList, id, NULL,
-                        (struct Anchor**)NULL, NULL, NULL, '\0',
-                        currentLn(doc), pos);
+                if (id && idFrame) {
+                    al_put(&idFrame->body->nameList, id, NULL,
+                        NULL, NULL, '\0',
+                        (struct BufferPoint) { .line = currentLn(doc), .pos = pos });
+                }
             }
         }
         /* end of processing for one line */
@@ -3933,8 +3943,8 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Url* base_url, struct Document*
             hb->forms[form_id]->next = hb->forms[form_id - 1];
     doc->formlist = (hb->form_max >= 0) ? hb->forms[hb->form_max] : NULL;
     if (hb->n_textarea)
-        addMultirowsForm(doc, doc->formitem);
-    addMultirowsImg(doc, doc->img);
+        doc_addMultirowsForm(doc, &doc->formitem);
+    doc_addMultirowsImg(doc, &doc->img);
 }
 
 void HTMLlineproc2(struct HtmlBuilder* hb,

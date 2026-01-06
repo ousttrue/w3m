@@ -1,8 +1,10 @@
 #include "document.h"
+#include "hmarker.h"
 #include "etc.h"
 #include "maparea.h"
 #include "html_form.h"
 #include "message.h"
+#include "myctype.h"
 #include "w3m_rc.h"
 #include "history.h"
 #include "anchor.h"
@@ -171,7 +173,8 @@ struct Line* doc_redrawLine(struct Document* doc, struct Line* l, int i, struct 
 
     for (j = 0; rcol - column < doc->COLS && pos + j < l->len; j += delta) {
         if (getRuntime()->useVisitedColor && vpos <= pos + j && !(pr[j] & PE_VISITED)) {
-            a = retrieveAnchor(doc->href, l->linenumber, pos + j);
+            a = al_retrieve(&doc->href,
+                (struct BufferPoint) { .line = l->linenumber, .pos = pos + j });
             if (a) {
                 parseURL2(a->url, &url, base_url);
                 if (getHashHist(getRuntime()->URLHist, parsedURL2Str(&url)->ptr)) {
@@ -746,10 +749,11 @@ void doc_nextA(struct Document* doc, bool visited, struct Url* base_url)
                     goto _end;
                 }
                 po = &hl->marks[hseq];
-                an = retrieveAnchor(doc->href, po->line, po->pos);
+                an = al_retrieve(&doc->href,
+                    (struct BufferPoint) { .line = po->line, .pos = po->pos });
                 if (visited != TRUE && an == NULL)
-                    an = retrieveAnchor(doc->formitem, po->line,
-                        po->pos);
+                    an = al_retrieve(&doc->formitem,
+                        (struct BufferPoint) { .line = po->line, .pos = po->pos });
                 hseq++;
                 if (visited == TRUE && an) {
                     struct Url url;
@@ -760,9 +764,9 @@ void doc_nextA(struct Document* doc, bool visited, struct Url* base_url)
                 }
             } while (an == NULL || an == pan);
         } else {
-            an = closest_next_anchor(doc->href, NULL, x, y);
+            an = al_closestNext(&doc->href, NULL, (struct BufferPoint) { .pos = x, .line = y });
             if (visited != TRUE)
-                an = closest_next_anchor(doc->formitem, an, x, y);
+                an = al_closestNext(&doc->formitem, an, (struct BufferPoint) { .pos = x, .line = y });
             if (an == NULL) {
                 if (visited == TRUE)
                     return;
@@ -825,9 +829,9 @@ void doc_prevA(struct Document* doc, bool visited, struct Url* base_url)
                     goto _end;
                 }
                 struct BufferPoint* po = hl->marks + hseq;
-                an = retrieveAnchor(doc->href, po->line, po->pos);
+                an = al_retrieve(&doc->href, (struct BufferPoint) { .line = po->line, .pos = po->pos });
                 if (visited != TRUE && an == NULL)
-                    an = retrieveAnchor(doc->formitem, po->line, po->pos);
+                    an = al_retrieve(&doc->formitem, (struct BufferPoint) { .line = po->line, .pos = po->pos });
                 hseq--;
                 if (visited == TRUE && an) {
                     struct Url url;
@@ -838,9 +842,9 @@ void doc_prevA(struct Document* doc, bool visited, struct Url* base_url)
                 }
             } while (an == NULL || an == pan);
         } else {
-            struct Anchor* an = closest_prev_anchor(doc->href, NULL, x, y);
+            struct Anchor* an = al_closestPrev(&doc->href, NULL, (struct BufferPoint) { .pos = x, .line = y });
             if (visited != TRUE)
-                an = closest_prev_anchor(doc->formitem, an, x, y);
+                an = al_closestPrev(&doc->formitem, an, (struct BufferPoint) { .pos = x, .line = y });
             if (an == NULL) {
                 if (visited == TRUE)
                     return;
@@ -874,21 +878,21 @@ struct Anchor* doc_retrieveCurrentAnchor(struct Document* doc)
 {
     if (doc->currentLine == NULL)
         return NULL;
-    return retrieveAnchor(doc->href, doc->currentLine->linenumber, doc->pos);
+    return al_retrieve(&doc->href, (struct BufferPoint) { .line = doc->currentLine->linenumber, .pos = doc->pos });
 }
 
 struct Anchor* doc_retrieveCurrentImg(struct Document* doc)
 {
     if (doc->currentLine == NULL)
         return NULL;
-    return retrieveAnchor(doc->img, doc->currentLine->linenumber, doc->pos);
+    return al_retrieve(&doc->img, (struct BufferPoint) { .line = doc->currentLine->linenumber, .pos = doc->pos });
 }
 
 struct Anchor* doc_retrieveCurrentForm(struct Document* doc)
 {
     if (doc->currentLine == NULL)
         return NULL;
-    return retrieveAnchor(doc->formitem, doc->currentLine->linenumber, doc->pos);
+    return al_retrieve(&doc->formitem, (struct BufferPoint) { .line = doc->currentLine->linenumber, .pos = doc->pos });
 }
 
 struct Anchor* doc_retrieveCurrentMap(struct Document* doc)
@@ -952,9 +956,9 @@ void doc_nextX(struct Document* doc, int d, int dy)
         an = NULL;
         while (1) {
             for (; x >= 0 && x < l->len; x += d) {
-                an = retrieveAnchor(doc->href, y, x);
+                an = al_retrieve(&doc->href, (struct BufferPoint) { .line = y, .pos = x });
                 if (!an)
-                    an = retrieveAnchor(doc->formitem, y, x);
+                    an = al_retrieve(&doc->formitem, (struct BufferPoint) { .line = y, .pos = x });
                 if (an) {
                     pan = an;
                     break;
@@ -1004,9 +1008,9 @@ void doc_nextY(struct Document* doc, int d)
             hseq = abs(an->hseq);
         an = NULL;
         for (; y >= 0 && y <= doc->lastLine->linenumber; y += d) {
-            an = retrieveAnchor(doc->href, y, x);
+            an = al_retrieve(&doc->href, (struct BufferPoint) { .line = y, .pos = x });
             if (!an)
-                an = retrieveAnchor(doc->formitem, y, x);
+                an = al_retrieve(&doc->formitem, (struct BufferPoint) { .line = y, .pos = x });
             if (an && hseq != abs(an->hseq)) {
                 pan = an;
                 break;
@@ -1119,4 +1123,176 @@ int currentLn(struct Document* doc)
         return doc->currentLine->linenumber + 1;
     else
         return 1;
+}
+
+void doc_addMultirowsImg(struct Document* doc, struct AnchorList* al)
+{
+    if (al == NULL || al->nanchor == 0)
+        return;
+    for (int i = 0; i < al->nanchor; i++) {
+        struct Anchor a_img = al->anchors[i];
+        struct Image* img = a_img.image;
+        if (a_img.hseq < 0 || !img || img->rows <= 1)
+            continue;
+        struct Line* l = doc->firstLine;
+        for (; l != NULL; l = l->next) {
+            if (l->linenumber == img->y)
+                break;
+        }
+        if (!l)
+            continue;
+
+        struct Line* ls;
+        if (a_img.y == a_img.start.line)
+            ls = l;
+        else {
+            for (ls = l; ls != NULL;
+                ls = (a_img.y < a_img.start.line) ? ls->next : ls->prev) {
+                if (ls->linenumber == a_img.start.line)
+                    break;
+            }
+            if (!ls)
+                continue;
+        }
+        struct Anchor* a = al_retrieve(&doc->href,
+            (struct BufferPoint) { .line = a_img.start.line, .pos = a_img.start.pos });
+        struct Anchor a_href;
+        if (a)
+            a_href = *a;
+        else
+            a_href.url = NULL;
+        a = al_retrieve(&doc->formitem,
+            (struct BufferPoint) { .line = a_img.start.line, .pos = a_img.start.pos });
+        struct Anchor a_form;
+        if (a)
+            a_form = *a;
+        else
+            a_form.url = NULL;
+        int col = COLPOS(ls, a_img.start.pos);
+        int ecol = COLPOS(ls, a_img.end.pos);
+        for (int j = 0; l && j < img->rows; l = l->next, j++) {
+            if (a_img.start.line == l->linenumber)
+                continue;
+            int pos = columnPos(l, col);
+            a = doc_registerImg(doc, (struct BufferPoint) { .line = l->linenumber, .pos = pos },
+                a_img.url, a_img.title);
+            a->hseq = -a_img.hseq;
+            a->slave = TRUE;
+            a->image = img;
+            a->end.pos = pos + ecol - col;
+            for (int k = pos; k < a->end.pos; k++)
+                l->propBuf[k] |= PE_IMAGE;
+            if (a_href.url) {
+                a = doc_registerHref(doc, (struct BufferPoint) { .line = l->linenumber, .pos = pos },
+                    a_href.url, a_href.target,
+                    a_href.referer, a_href.title,
+                    a_href.accesskey);
+                a->hseq = a_href.hseq;
+                a->slave = TRUE;
+                a->end.pos = pos + ecol - col;
+                for (int k = pos; k < a->end.pos; k++)
+                    l->propBuf[k] |= PE_ANCHOR;
+            }
+            if (a_form.url) {
+                a = al_put(&doc->formitem, a_form.url,
+                    a_form.target, NULL, NULL, '\0',
+                    (struct BufferPoint) { .line = l->linenumber, .pos = pos });
+                a->hseq = a_form.hseq;
+                a->end.pos = pos + ecol - col;
+            }
+        }
+        img->rows = 0;
+    }
+}
+
+void doc_addMultirowsForm(struct Document* doc, struct AnchorList* al)
+{
+    if (al == NULL || al->nanchor == 0)
+        return;
+
+    for (int i = 0; i < al->nanchor; i++) {
+        struct Anchor a_form = al->anchors[i];
+        al->anchors[i].rows = 1;
+        if (a_form.hseq < 0 || a_form.rows <= 1)
+            continue;
+        struct Line* l = doc->firstLine;
+        for (; l != NULL; l = l->next) {
+            if (l->linenumber == a_form.y)
+                break;
+        }
+        if (!l)
+            continue;
+        struct Line* ls;
+        if (a_form.y == a_form.start.line)
+            ls = l;
+        else {
+            for (ls = l; ls != NULL;
+                ls = (a_form.y < a_form.start.line) ? ls->next : ls->prev) {
+                if (ls->linenumber == a_form.start.line)
+                    break;
+            }
+            if (!ls)
+                continue;
+        }
+        int col = COLPOS(ls, a_form.start.pos);
+        int ecol = COLPOS(ls, a_form.end.pos);
+        for (int j = 0; l && j < a_form.rows; l = l->next, j++) {
+            int pos = columnPos(l, col);
+            if (j == 0) {
+                doc->hmarklist->marks[a_form.hseq].line = l->linenumber;
+                doc->hmarklist->marks[a_form.hseq].pos = pos;
+            }
+            if (a_form.start.line == l->linenumber)
+                continue;
+            struct Anchor* a = al_put(&doc->formitem,
+                a_form.url, a_form.target, NULL, NULL, '\0', (struct BufferPoint) { .line = l->linenumber, .pos = pos });
+            a->hseq = a_form.hseq;
+            a->y = a_form.y;
+            a->end.pos = pos + ecol - col;
+            if (pos < 1 || a->end.pos >= l->size)
+                continue;
+            l->lineBuf[pos - 1] = '[';
+            l->lineBuf[a->end.pos] = ']';
+            for (int k = pos; k < a->end.pos; k++)
+                l->propBuf[k] |= PE_FORM;
+        }
+    }
+}
+
+struct Anchor*
+doc_searchURLLabel(struct Document* doc, const char* url)
+{
+    return al_find(&doc->name, url);
+}
+
+const char* doc_getAnchorText(struct Document* doc, struct AnchorList* al, struct Anchor* a)
+{
+    Str tmp = NULL;
+    if (!a || a->hseq < 0)
+        return NULL;
+    int hseq = a->hseq;
+    struct Line* l = doc->firstLine;
+    for (int i = 0; i < al->nanchor; i++) {
+        a = &al->anchors[i];
+        if (a->hseq != hseq)
+            continue;
+        for (; l; l = l->next) {
+            if (l->linenumber == a->start.line)
+                break;
+        }
+        if (!l)
+            break;
+        const char* p = l->lineBuf + a->start.pos;
+        const char* ep = l->lineBuf + a->end.pos;
+        for (; p < ep && IS_SPACE(*p); p++)
+            ;
+        if (p == ep)
+            continue;
+        if (!tmp)
+            tmp = Strnew_size(ep - p);
+        else
+            Strcat_char(tmp, ' ');
+        Strcat_charp_n(tmp, p, ep - p);
+    }
+    return tmp ? tmp->ptr : NULL;
 }

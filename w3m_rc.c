@@ -1,4 +1,5 @@
 #include "w3m_rc.h"
+#include "anchor_list.h"
 #include "mysignal.h"
 #include "document.h"
 #include "func.h"
@@ -818,10 +819,15 @@ struct FollowResult _followForm(struct Buffer* buf, struct FollowOption option, 
         };
 
     case FORM_INPUT_RESET:
-        for (int i = 0; i < buf->doc->formitem->nanchor; i++) {
-            struct Anchor* a2 = &buf->doc->formitem->anchors[i];
+        for (int i = 0; i < buf->doc->formitem.nanchor; i++) {
+            struct Anchor* a2 = &buf->doc->formitem.anchors[i];
             struct FormItemList* f2 = (struct FormItemList*)a2->url;
-            if (f2->parent == fi->parent && f2->name && f2->value && f2->type != FORM_INPUT_SUBMIT && f2->type != FORM_INPUT_HIDDEN && f2->type != FORM_INPUT_RESET) {
+            if (f2->parent == fi->parent
+                && f2->name
+                && f2->value
+                && f2->type != FORM_INPUT_SUBMIT
+                && f2->type != FORM_INPUT_HIDDEN
+                && f2->type != FORM_INPUT_RESET) {
                 f2->value = f2->init_value;
                 f2->checked = f2->init_checked;
                 f2->label = f2->init_label;
@@ -2465,7 +2471,7 @@ struct FollowResult _followA(struct Buffer* buf, struct FollowOption option)
 struct FollowResult gotoLabel(struct Buffer* buf, const char* label)
 {
     struct FollowResult res = {
-        .anchor = searchURLLabel(buf->doc, label),
+        .anchor = doc_searchURLLabel(buf->doc, label),
         0
     };
     if (!res.anchor) {
@@ -2579,5 +2585,3 @@ Str tmpfname(enum TmpFileTypes type, const char* ext)
     pushText(getRuntime()->fileToDelete, tmpf->ptr);
     return tmpf;
 }
-
-

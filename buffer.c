@@ -475,7 +475,7 @@ void reshapeBuffer(struct Buffer* buf)
     // if (buf->check_url & CHK_NMID)
     //     chkNMIDBuffer(buf);
     if (sbuf.doc) {
-        formResetBuffer(buf, sbuf.doc->formitem);
+        formResetBuffer(buf, &sbuf.doc->formitem);
     }
 }
 

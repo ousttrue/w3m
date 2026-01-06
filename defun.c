@@ -1,4 +1,5 @@
 #include "defun.h"
+#include "hmarker.h"
 #include "frame.h"
 #include "html_form.h"
 #include "regex.h"
@@ -576,9 +577,9 @@ DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink")
         if (hseq >= hl->nmark)
             return;
         po = hl->marks + hseq;
-        an = retrieveAnchor(ctx.buf->doc->href, po->line, po->pos);
+        an = al_retrieve(&ctx.buf->doc->href, (struct BufferPoint) { .line = po->line, .pos = po->pos });
         if (an == NULL)
-            an = retrieveAnchor(ctx.buf->doc->formitem, po->line, po->pos);
+            an = al_retrieve(&ctx.buf->doc->formitem, (struct BufferPoint) { .line = po->line, .pos = po->pos });
         hseq++;
     } while (an == NULL);
 
@@ -610,9 +611,9 @@ DEFUN(lastA, LINK_END, "Move to the last hyperlink")
         if (hseq < 0)
             return;
         po = hl->marks + hseq;
-        an = retrieveAnchor(ctx.buf->doc->href, po->line, po->pos);
+        an = al_retrieve(&ctx.buf->doc->href, (struct BufferPoint) { .line = po->line, .pos = po->pos });
         if (an == NULL)
-            an = retrieveAnchor(ctx.buf->doc->formitem, po->line, po->pos);
+            an = al_retrieve(&ctx.buf->doc->formitem, (struct BufferPoint) { .line = po->line, .pos = po->pos });
         hseq--;
     } while (an == NULL);
 
@@ -637,9 +638,9 @@ DEFUN(nthA, LINK_N, "Go to the nth link")
         return;
 
     po = hl->marks + n - 1;
-    an = retrieveAnchor(Currentbuf->doc->href, po->line, po->pos);
+    an = al_retrieve(&Currentbuf->doc->href, (struct BufferPoint) { .line = po->line, .pos = po->pos });
     if (an == NULL)
-        an = retrieveAnchor(Currentbuf->doc->formitem, po->line, po->pos);
+        an = al_retrieve(&Currentbuf->doc->formitem, (struct BufferPoint) { .line = po->line, .pos = po->pos });
     if (an == NULL)
         return;
 

@@ -1,4 +1,5 @@
 #include "maparea.h"
+#include "hmarker.h"
 #include "func.h"
 #include "menu.h"
 #include "parsetag.h"
@@ -975,7 +976,7 @@ DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
 static void
 anchorMn(BufferMenuFunc menu_func, bool go)
 {
-    if (!Currentbuf->doc->href || !Currentbuf->doc->hmarklist)
+    if (Currentbuf->doc->href.nanchor==0 || !Currentbuf->doc->hmarklist)
         return;
 
     struct Anchor* a = menu_func(Currentbuf);

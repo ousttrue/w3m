@@ -1,4 +1,5 @@
 #include "image.h"
+#include "anchor_list.h"
 #include "input_stream.h"
 #include "hash.h"
 // #include "screen.h"
@@ -696,17 +697,20 @@ static struct ImageCache** image_cache = NULL;
 
 void deleteImage(struct Buffer* buf)
 {
-    struct AnchorList* al;
-    struct Anchor* a;
-    int i;
-
     if (!buf)
         return;
-    al = buf->doc->img;
+
+    struct AnchorList* al = &buf->doc->img;
     if (!al)
         return;
-    for (i = 0, a = al->anchors; i < al->nanchor; i++, a++) {
-        if (a->image && a->image->cache && a->image->cache->loaded != IMG_FLAG_UNLOADED && !(a->image->cache->loaded & IMG_FLAG_DONT_REMOVE) && a->image->cache->index < 0)
+
+    int i = 0;
+    for (struct Anchor* a = al->anchors; i < al->nanchor; i++, a++) {
+        if (a->image
+            && a->image->cache
+            && a->image->cache->loaded != IMG_FLAG_UNLOADED
+            && !(a->image->cache->loaded & IMG_FLAG_DONT_REMOVE)
+            && a->image->cache->index < 0)
             unlink(a->image->cache->file);
     }
     loadImage(IMG_FLAG_STOP);
@@ -736,31 +740,32 @@ void deleteImage(struct Buffer* buf)
 //     }
 // }
 
-static void
-showImageProgress(struct Buffer* buf)
-{
-    struct AnchorList* al;
-    struct Anchor* a;
-    int i, l, n;
-
-    if (!buf)
-        return;
-    al = buf->doc->img;
-    if (!al)
-        return;
-    for (i = 0, l = 0, n = 0, a = al->anchors; i < al->nanchor; i++, a++) {
-        if (a->image && a->hseq >= 0) {
-            n++;
-            if (a->image->cache && a->image->cache->loaded & IMG_FLAG_LOADED)
-                l++;
-        }
-    }
-    if (n) {
-        if (getRuntime()->enable_inline_image && n == l)
-            drawImage(buf);
-        message(Sprintf("%d/%d images loaded", l, n)->ptr);
-    }
-}
+// static void
+// showImageProgress(struct Buffer* buf)
+// {
+//     if (!buf)
+//         return;
+//
+//     struct AnchorList* al = &buf->doc->img;
+//     if (!al)
+//         return;
+//
+//     int i = 0;
+//     int l = 0;
+//     int n = 0;
+//     for (struct Anchor* a = al->anchors; i < al->nanchor; i++, a++) {
+//         if (a->image && a->hseq >= 0) {
+//             n++;
+//             if (a->image->cache && a->image->cache->loaded & IMG_FLAG_LOADED)
+//                 l++;
+//         }
+//     }
+//     if (n) {
+//         if (getRuntime()->enable_inline_image && n == l)
+//             drawImage(buf);
+//         message(Sprintf("%d/%d images loaded", l, n)->ptr);
+//     }
+// }
 
 void loadImage(enum ImageLoadFlags flag)
 {

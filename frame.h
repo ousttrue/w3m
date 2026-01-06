@@ -1,4 +1,5 @@
 #pragma once
+#include "anchor_list.h"
 /*
  * frame support
  */
@@ -22,7 +23,7 @@ struct frame_body {
     const char* source;
     const char* type;
     const char* referer;
-    struct AnchorList* nameList;
+    struct AnchorList nameList;
     struct FormList* request;
     const char* ssl_certificate;
 };

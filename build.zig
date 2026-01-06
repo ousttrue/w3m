@@ -61,6 +61,8 @@ const w3m_srcs = [_][]const u8{
     "history.c",
 
     "anchor.c",
+    "anchor_list.c",
+    "hmarker.c",
     "tagtable.c",
 
     "indep.c",
