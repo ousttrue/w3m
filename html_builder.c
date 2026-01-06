@@ -4594,3 +4594,14 @@ print_internal_information(struct HtmlBuilder* hb, struct html_feed_environ* hen
     if (henv->buf)
         appendTextLineList(henv->buf, tl);
 }
+
+struct Anchor*
+registerForm(struct HtmlBuilder* hb, struct Document* doc, struct BufferPoint bp,
+    struct FormList* flist, struct HtmlTag* tag)
+{
+    struct FormItemList* fi = formList_addInput(hb, flist, tag);
+    if (fi == NULL)
+        return NULL;
+
+    return al_put(&doc->formitem, (char*)fi, flist->target, NULL, NULL, '\0', bp);
+}

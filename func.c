@@ -6,7 +6,6 @@
 #include "etc.h"
 #include "tab.h"
 #include "buffer.h"
-#include "anchor.h"
 #include "local_cgi.h"
 #include "html_form.h"
 #include "message.h"

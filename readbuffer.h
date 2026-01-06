@@ -1,8 +1,8 @@
 #pragma once
 #include "textlist.h"
-#include "anchor.h"
 #include "Str.h"
 #include "line.h"
+#include "geometry.h"
 
 #define FONTSTAT_MAX 127
 

@@ -1,16 +1,13 @@
 #include "image.h"
 #include "anchor_list.h"
+#include "tab.h"
 #include "input_stream.h"
 #include "hash.h"
-// #include "screen.h"
 #include "file.h"
 #include "indep.h"
 #include "local_cgi.h"
-#include "message.h"
 #include "buffer.h"
-#include "anchor.h"
 #include "display.h"
-#include "tab.h"
 #include "etc.h"
 #include "w3m_rc.h"
 #include "mysignal.h"
@@ -19,7 +16,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <signal.h>
-#include <errno.h>
 #include <termios.h>
 #include <unistd.h>
 #include <sys/wait.h>

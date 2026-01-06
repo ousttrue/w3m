@@ -6,7 +6,6 @@
 #include "w3m_rc.h"
 #include "url.h"
 #include "document.h"
-#include "anchor.h"
 #include "html_form.h"
 #include "frame.h"
 #include "myctype.h"

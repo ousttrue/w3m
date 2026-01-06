@@ -12,7 +12,6 @@
 #include "message.h"
 #include "display.h"
 #include "ctrlcode.h"
-#include "anchor.h"
 #include "tab.h"
 #include "w3m_rc.h"
 #include "image.h"

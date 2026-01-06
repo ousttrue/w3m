@@ -17,7 +17,6 @@
 #include "tab.h"
 #include "buffer.h"
 #include "document.h"
-#include "anchor.h"
 #include "screen.h"
 #include "search.h"
 #include <stdlib.h>

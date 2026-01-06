@@ -9,7 +9,6 @@
 #include "linein.h"
 #include "search.h"
 #include "buffer.h"
-#include "anchor.h"
 #include "w3m_rc.h"
 #include "tab.h"
 #include "image.h"

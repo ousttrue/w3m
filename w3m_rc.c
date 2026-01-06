@@ -27,7 +27,6 @@
 
 #include "html_form.h"
 #include "siteconf.h"
-#include "anchor.h"
 #include "frame.h"
 #include "tab.h"
 #include "buffer.h"

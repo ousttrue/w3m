@@ -6,7 +6,6 @@
 #include "screen.h"
 #include "history.h"
 #include "buffer.h"
-#include "anchor.h"
 #include "maparea.h"
 #include "tab.h"
 #include "image.h"

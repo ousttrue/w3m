@@ -1,5 +1,4 @@
 #include "message.h"
-#include "anchor.h"
 #include "maparea.h"
 #include "myctype.h"
 #include "buffer.h"

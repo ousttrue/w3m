@@ -10,7 +10,6 @@
 #include "w3m_rc.h"
 #include "display.h"
 #include "buffer.h"
-#include "anchor.h"
 #include "parsetag.h"
 #include "html_tag.h"
 #include "myctype.h"

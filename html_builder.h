@@ -2,6 +2,7 @@
 #include "Str.h"
 #include "url.h"
 #include "html_table.h"
+#include "geometry.h"
 #include <libwc/ces.h>
 #include <stdbool.h>
 
@@ -95,3 +96,6 @@ struct Content;
 struct input_stream;
 struct Document* loadHTMLstream(int width,
     struct Url* base_url, struct Content* content, struct input_stream* stream, bool internal);
+
+struct Anchor* registerForm(struct HtmlBuilder* hb, struct Document* doc, struct BufferPoint bp,
+    struct FormList* flist, struct HtmlTag* tag);

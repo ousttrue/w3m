@@ -21,7 +21,6 @@
 #include "search.h"
 #include "html_form.h"
 #include "siteconf.h"
-#include "anchor.h"
 #include "w3m_rc.h"
 #include "tab.h"
 #include "buffer.h"
@@ -1464,7 +1463,7 @@ void chkURLBuffer(struct Buffer* buf)
         NULL
     };
     for (int i = 0; url_like_pat[i]; i++) {
-        reAnchor(baseURL(buf), buf->doc, url_like_pat[i]);
+        doc_reAnchor(baseURL(buf), buf->doc, url_like_pat[i]);
     }
     chkExternalURIBuffer(buf);
     buf->check_url |= CHK_URL;
@@ -1481,7 +1480,7 @@ DEFUN(chkWORD, MARK_WORD, "Turn current word into hyperlink")
     const char* p = doc_getCurWord(ctx.buf->doc, &spos, &epos);
     if (p == NULL)
         return;
-    reAnchorWord(baseURL(ctx.buf), ctx.buf->doc, ctx.buf->doc->currentLine, spos, epos);
+    doc_reAnchorWord(baseURL(ctx.buf), ctx.buf->doc, ctx.buf->doc->currentLine, spos, epos);
 }
 
 /* render frames */

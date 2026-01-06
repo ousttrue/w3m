@@ -100,6 +100,9 @@ struct Document {
 #define TOP_LINENUMBER(doc) ((doc)->topLine ? (doc)->topLine->linenumber : 1)
 #define CUR_LINENUMBER(doc) ((doc)->currentLine ? (doc)->currentLine->linenumber : 1)
 
+typedef struct Anchor* (*AnchorProc)(struct Url* base_url, struct Document* doc,
+    const char* b, const char* e, struct BufferPoint bp);
+
 struct Url;
 
 void doc_addnewline(struct Document* doc, const char* line, Lineprop* prop, Linecolor* color, int pos, int width, int nlines);
@@ -161,6 +164,9 @@ doc_registerHref(struct Document* doc, struct BufferPoint bp,
     return al_put(&doc->href, url, target, referer, title, key, bp);
 }
 
+struct Anchor*
+doc_put_anchor_all(struct Url* base_url, struct Document* doc, const char* b, const char* e, struct BufferPoint bp);
+
 inline static struct Anchor*
 doc_registerName(struct Document* doc, struct BufferPoint bp,
     const char* url)
@@ -180,3 +186,5 @@ void doc_addMultirowsImg(struct Document* doc, struct AnchorList* al);
 struct Anchor* doc_searchURLLabel(struct Document* doc, const char* url);
 Str link_list_panel(struct Url* base_url, struct Document* doc);
 const char* doc_getAnchorText(struct Document* doc, struct AnchorList* al, struct Anchor* a);
+void doc_reAnchorWord(struct Url* base_url, struct Document* doc, struct Line* l, int spos, int epos);
+const char* doc_reAnchor(struct Url* base_url, struct Document* doc, const char* re);

@@ -1,7 +1,6 @@
 #include "url.h"
 #include "w3m_rc.h"
 #include "textlist.h"
-#include "anchor.h"
 #include "alloc.h"
 #include "indep.h"
 #include "etc.h"
@@ -730,7 +729,6 @@ const char* filename_extension(const char* path, int is_url)
         return last_dot;
 }
 
-#ifdef USE_EXTERNAL_URI_LOADER
 static struct KeyValue** urimethods;
 static struct KeyValue default_urimethods[] = {
     { "mailto", "file:///$LIB/w3mmail.cgi?%s" },
@@ -863,14 +861,13 @@ void chkExternalURIBuffer(struct Buffer* buf)
     struct KeyValue* ump;
     for (int i = 0; (ump = urimethods[i]) != NULL; i++) {
         for (; ump->item1 != NULL; ump++) {
-            reAnchor(baseURL(buf), &buf->doc, Sprintf("%s:%s", ump->item1, URI_PATTERN)->ptr);
+            doc_reAnchor(baseURL(buf), buf->doc, Sprintf("%s:%s", ump->item1, URI_PATTERN)->ptr);
         }
     }
     for (ump = default_urimethods; ump->item1 != NULL; ump++) {
-        reAnchor(baseURL(buf), &buf->doc, Sprintf("%s:%s", ump->item1, URI_PATTERN)->ptr);
+        doc_reAnchor(baseURL(buf), buf->doc, Sprintf("%s:%s", ump->item1, URI_PATTERN)->ptr);
     }
 }
-#endif
 
 struct Url*
 schemeToProxy(int scheme)

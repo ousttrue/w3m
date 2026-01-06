@@ -1,5 +1,4 @@
 #include "anchor_list.h"
-#include "anchor.h"
 #include "alloc.h"
 #include <assert.h>
 #include <string.h>
