@@ -51,7 +51,6 @@
 #define PIPEBUFFERNAME "*stream*"
 #define CPIPEBUFFERNAME "*stream(closed)*"
 #define DICTBUFFERNAME "*dictionary*"
-#define NO_TABBUFFER ((struct TabBuffer*)1)
 
 #define DSTR_LEN 256
 
@@ -59,7 +58,6 @@ int show_params_p = 0;
 void show_params(FILE* fp);
 
 static void followTab(struct TabBuffer* tab);
-static void moveTab(struct TabBuffer* t, struct TabBuffer* t2, int right);
 
 #define help() fusage(stdout, 0)
 #define usage() fusage(stderr, 1)
@@ -2088,114 +2086,5 @@ DEFUN(tabrURL, TAB_GOTO_RELATIVE, "Open relative address in a new tab")
         "Goto relative URL on new tab: ", TRUE);
 }
 
-static void
-moveTab(struct TabBuffer* t, struct TabBuffer* t2, int right)
-{
-    if (t2 == NO_TABBUFFER)
-        t2 = FirstTab();
-    if (!t || !t2 || t == t2 || t == NO_TABBUFFER)
-        return;
-    if (t->prevTab) {
-        if (t->nextTab)
-            t->nextTab->prevTab = t->prevTab;
-        else
-            getRuntime()->LastTab = t->prevTab;
-        t->prevTab->nextTab = t->nextTab;
-    } else {
-        t->nextTab->prevTab = NULL;
-        getRuntime()->FirstTab = t->nextTab;
-    }
-    if (right) {
-        t->nextTab = t2->nextTab;
-        t->prevTab = t2;
-        if (t2->nextTab)
-            t2->nextTab->prevTab = t;
-        else
-            getRuntime()->LastTab = t;
-        t2->nextTab = t;
-    } else {
-        t->prevTab = t2->prevTab;
-        t->nextTab = t2;
-        if (t2->prevTab)
-            t2->prevTab->nextTab = t;
-        else
-            getRuntime()->FirstTab = t;
-        t2->prevTab = t;
-    }
-}
 
-DEFUN(tabR, TAB_RIGHT, "Move right along the tab bar")
-{
-    int i = 0;
-    struct TabBuffer* tab = CurrentTab();
-    for (; tab && i < PREC_NUM; tab = tab->nextTab, i++)
-        ;
-    moveTab(CurrentTab(), tab ? tab : LastTab(), TRUE);
-}
 
-DEFUN(tabL, TAB_LEFT, "Move left along the tab bar")
-{
-    struct TabBuffer* tab = CurrentTab();
-    int i = 0;
-    for (; tab && i < PREC_NUM;
-        tab = tab->prevTab, i++)
-        ;
-    moveTab(CurrentTab(), tab ? tab : FirstTab(), FALSE);
-}
-
-/* download panel */
-DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
-{
-    assert(false);
-    // download_panel();
-}
-
-DEFUN(undoPos, UNDO, "Cancel the last cursor movement")
-{
-    if (!Currentbuf->doc->firstLine)
-        return;
-    struct DocumentPos* pos = ctx.buf->doc->undo;
-    if (!pos || !pos->prev)
-        return;
-    for (int i = 0; i < PREC_NUM && pos->prev; i++, pos = pos->prev)
-        ;
-    doc_resetPos(ctx.buf->doc, pos);
-}
-
-DEFUN(redoPos, REDO, "Cancel the last undo")
-{
-    if (!Currentbuf->doc->firstLine)
-        return;
-    struct DocumentPos* pos = ctx.buf->doc->undo;
-    if (!pos || !pos->next)
-        return;
-    for (int i = 0; i < PREC_NUM && pos->next; i++, pos = pos->next)
-        ;
-    doc_resetPos(ctx.buf->doc, pos);
-}
-
-DEFUN(cursorTop, CURSOR_TOP, "Move cursor to the top of the screen")
-{
-    if (Currentbuf->doc->firstLine == NULL)
-        return;
-    Currentbuf->doc->currentLine = doc_lineSkip(Currentbuf->doc, Currentbuf->doc->topLine, 0);
-    doc_arrangeLine(Currentbuf->doc);
-}
-
-DEFUN(cursorMiddle, CURSOR_MIDDLE, "Move cursor to the middle of the screen")
-{
-    if (Currentbuf->doc->firstLine == NULL)
-        return;
-    int offsety = (Currentbuf->doc->LINES - 1) / 2;
-    Currentbuf->doc->currentLine = currentLineSkip(Currentbuf->doc->topLine, offsety);
-    doc_arrangeLine(Currentbuf->doc);
-}
-
-DEFUN(cursorBottom, CURSOR_BOTTOM, "Move cursor to the bottom of the screen")
-{
-    if (Currentbuf->doc->firstLine == NULL)
-        return;
-    int offsety = Currentbuf->doc->LINES - 1;
-    Currentbuf->doc->currentLine = currentLineSkip(Currentbuf->doc->topLine, offsety);
-    doc_arrangeLine(Currentbuf->doc);
-}

@@ -2584,3 +2584,40 @@ Str tmpfname(enum TmpFileTypes type, const char* ext)
     pushText(getRuntime()->fileToDelete, tmpf->ptr);
     return tmpf;
 }
+
+#define NO_TABBUFFER ((struct TabBuffer*)1)
+
+void moveTab(struct TabBuffer* t, struct TabBuffer* t2, int right)
+{
+    if (t2 == NO_TABBUFFER)
+        t2 = FirstTab();
+    if (!t || !t2 || t == t2 || t == NO_TABBUFFER)
+        return;
+    if (t->prevTab) {
+        if (t->nextTab)
+            t->nextTab->prevTab = t->prevTab;
+        else
+            getRuntime()->LastTab = t->prevTab;
+        t->prevTab->nextTab = t->nextTab;
+    } else {
+        t->nextTab->prevTab = NULL;
+        getRuntime()->FirstTab = t->nextTab;
+    }
+    if (right) {
+        t->nextTab = t2->nextTab;
+        t->prevTab = t2;
+        if (t2->nextTab)
+            t2->nextTab->prevTab = t;
+        else
+            getRuntime()->LastTab = t;
+        t2->nextTab = t;
+    } else {
+        t->prevTab = t2->prevTab;
+        t->nextTab = t2;
+        if (t2->prevTab)
+            t2->prevTab->nextTab = t;
+        else
+            getRuntime()->FirstTab = t;
+        t2->prevTab = t;
+    }
+}

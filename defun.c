@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <assert.h>
 
 DEFUN(nulcmd, NOTHING NULL @ @ @, "Do nothing")
 {
@@ -1047,4 +1048,80 @@ DEFUN(deletePrevBuf, DELETE_PREVBUF, "Delete previous buffer (mainly for local C
     struct Buffer* buf = Currentbuf->nextBuffer;
     if (buf)
         delBuffer(buf);
+}
+
+DEFUN(tabR, TAB_RIGHT, "Move right along the tab bar")
+{
+    int i = 0;
+    struct TabBuffer* tab = CurrentTab();
+    for (; tab && i < PREC_NUM; tab = tab->nextTab, i++)
+        ;
+    moveTab(CurrentTab(), tab ? tab : LastTab(), TRUE);
+}
+
+DEFUN(tabL, TAB_LEFT, "Move left along the tab bar")
+{
+    struct TabBuffer* tab = CurrentTab();
+    int i = 0;
+    for (; tab && i < PREC_NUM;
+        tab = tab->prevTab, i++)
+        ;
+    moveTab(CurrentTab(), tab ? tab : FirstTab(), FALSE);
+}
+
+/* download panel */
+DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
+{
+    assert(false);
+    // download_panel();
+}
+
+DEFUN(undoPos, UNDO, "Cancel the last cursor movement")
+{
+    if (!Currentbuf->doc->firstLine)
+        return;
+    struct DocumentPos* pos = ctx.buf->doc->undo;
+    if (!pos || !pos->prev)
+        return;
+    for (int i = 0; i < PREC_NUM && pos->prev; i++, pos = pos->prev)
+        ;
+    doc_resetPos(ctx.buf->doc, pos);
+}
+
+DEFUN(redoPos, REDO, "Cancel the last undo")
+{
+    if (!Currentbuf->doc->firstLine)
+        return;
+    struct DocumentPos* pos = ctx.buf->doc->undo;
+    if (!pos || !pos->next)
+        return;
+    for (int i = 0; i < PREC_NUM && pos->next; i++, pos = pos->next)
+        ;
+    doc_resetPos(ctx.buf->doc, pos);
+}
+
+DEFUN(cursorTop, CURSOR_TOP, "Move cursor to the top of the screen")
+{
+    if (Currentbuf->doc->firstLine == NULL)
+        return;
+    Currentbuf->doc->currentLine = doc_lineSkip(Currentbuf->doc, Currentbuf->doc->topLine, 0);
+    doc_arrangeLine(Currentbuf->doc);
+}
+
+DEFUN(cursorMiddle, CURSOR_MIDDLE, "Move cursor to the middle of the screen")
+{
+    if (Currentbuf->doc->firstLine == NULL)
+        return;
+    int offsety = (Currentbuf->doc->LINES - 1) / 2;
+    Currentbuf->doc->currentLine = currentLineSkip(Currentbuf->doc->topLine, offsety);
+    doc_arrangeLine(Currentbuf->doc);
+}
+
+DEFUN(cursorBottom, CURSOR_BOTTOM, "Move cursor to the bottom of the screen")
+{
+    if (Currentbuf->doc->firstLine == NULL)
+        return;
+    int offsety = Currentbuf->doc->LINES - 1;
+    Currentbuf->doc->currentLine = currentLineSkip(Currentbuf->doc->topLine, offsety);
+    doc_arrangeLine(Currentbuf->doc);
 }

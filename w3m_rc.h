@@ -193,3 +193,4 @@ enum TmpFileTypes {
 };
 
 Str tmpfname(enum TmpFileTypes type, const char* ext);
+void moveTab(struct TabBuffer* t, struct TabBuffer* t2, int right);
