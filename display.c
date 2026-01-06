@@ -240,31 +240,34 @@ redrawNLine(struct Document* doc, int n, struct Url* base_url)
     beginLine();
 
     if (nTab() > 1) {
+        struct TabPosList tabpos = tabs_calcPos(TTY_COLS());
         screen_move((struct Vec2) { 0 });
         screen_clrtoeolx();
-        for (struct TabBuffer* t = FirstTab(); t; t = t->nextTab) {
-            screen_move((struct Vec2) { .y = t->y, .x = t->x1 });
-            if (t == CurrentTab())
+        for (int i = 0; i < tabpos.len; ++i) {
+            struct TabPos* p = &tabpos.data[i];
+            struct TabBuffer* t = tabs_tab(i);
+            screen_move((struct Vec2) { .y = p->y, .x = p->x1 });
+            if (i == tabs_current())
                 screen_bold();
             screen_addch('[', 1);
-            int l = t->x2 - t->x1 - 1 - get_strwidth(t->currentBuffer->doc->title);
+            int l = p->x2 - p->x1 - 1 - get_strwidth(t->currentBuffer->doc->title);
             if (l < 0)
                 l = 0;
             if (l / 2 > 0)
                 screen_wc_addnstr_sup(" ", l / 2);
             // if (t == CurrentTab())
             //     EFFECT_ACTIVE_START;
-            screen_wc_addstr_width(t->currentBuffer->doc->title, t->x2 - t->x1 - l);
+            screen_wc_addstr_width(t->currentBuffer->doc->title, p->x2 - p->x1 - l);
             // if (t == CurrentTab())
             //     EFFECT_ACTIVE_END;
             if ((l + 1) / 2 > 0)
                 screen_wc_addnstr_sup(" ", (l + 1) / 2);
-            screen_move((struct Vec2) { .y = t->y, .x = t->x2 });
+            screen_move((struct Vec2) { .y = p->y, .x = p->x2 });
             screen_addch(']', 1);
             if (t == CurrentTab())
                 screen_boldend();
         }
-        screen_move((struct Vec2) { .y = LastTab()->y + 1, .x = 0 });
+        screen_move((struct Vec2) { .y = tabpos.data[tabpos.len - 1].y + 1, .x = 0 });
         for (int i = 0; i < TTY_COLS(); i++)
             screen_addch('~', 1);
     }
@@ -326,8 +329,8 @@ void bufferPosition(struct Buffer* buf)
     // doc.rootY
     int ny = 0;
     if (nTab() > 1) {
-        tabs_calcPos(TTY_COLS());
-        ny = LastTab()->y + 2;
+        struct TabPosList tabpos = tabs_calcPos(TTY_COLS());
+        ny = tabpos.data[tabpos.len - 1].y + 2;
         if (ny > LASTLINE())
             ny = LASTLINE();
     }

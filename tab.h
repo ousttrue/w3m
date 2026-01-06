@@ -5,9 +5,6 @@ struct TabBuffer {
     struct TabBuffer* prevTab;
     struct Buffer* currentBuffer;
     struct Buffer* firstBuffer;
-    short x1;
-    short x2;
-    short y;
 };
 
 struct TabBuffer* tab_new(void);

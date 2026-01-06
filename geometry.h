@@ -51,3 +51,12 @@ inline static int onAnchor(struct Anchor* a, struct BufferPoint bp)
     return 0;
 }
 
+struct TabPos {
+    short x1;
+    short x2;
+    short y;
+};
+struct TabPosList {
+    struct TabPos* data;
+    size_t len;
+};

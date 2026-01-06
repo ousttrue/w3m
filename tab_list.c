@@ -1,6 +1,7 @@
 #include "tab_list.h"
 #include "tab.h"
 #include "buffer.h"
+#include "alloc.h"
 
 static struct TabBuffer* g_CurrentTab = NULL;
 static struct TabBuffer* g_FirstTab = NULL;
@@ -17,6 +18,7 @@ struct TabBuffer* FirstTab()
     return g_FirstTab;
 }
 struct TabBuffer* LastTab()
+
 {
     return g_LastTab;
 }
@@ -33,6 +35,28 @@ int nTab()
 //         g_runtime.nTab = 1;
 //     }
 // }
+
+size_t tabs_current()
+{
+    int i = 0;
+    for (struct TabBuffer* tab = g_FirstTab; tab; tab = tab->nextTab, ++i) {
+        if (tab == g_CurrentTab) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+struct TabBuffer* tabs_tab(size_t index)
+{
+    int i = 0;
+    for (struct TabBuffer* tab = g_FirstTab; tab; tab = tab->nextTab, ++i) {
+        if (i == index) {
+            return tab;
+        }
+    }
+    return NULL;
+}
 
 struct TabBuffer* tabs_append(struct Buffer* buf)
 {
@@ -87,10 +111,10 @@ tabs_delete(struct TabBuffer* tab)
     return g_FirstTab;
 }
 
-void tabs_calcPos(int cols)
+struct TabPosList tabs_calcPos(int cols)
 {
     if (g_nTab <= 0)
-        return;
+        return (struct TabPosList) { 0 };
 
     int lcol = 0, rcol = 0;
     int n1 = (cols - rcol - lcol) / g_TabCols;
@@ -113,7 +137,12 @@ void tabs_calcPos(int cols)
         n1 = 0;
     na = n1 + n2 * (ny - 1);
 
+    struct TabPosList tabpos = {
+        .data = New_N(struct TabPos, g_nTab),
+        .len = g_nTab,
+    };
     struct TabBuffer* tab = g_FirstTab;
+    int i = 0;
     for (int iy = 0; iy < ny && tab; iy++) {
         int nx;
         int col;
@@ -124,16 +153,18 @@ void tabs_calcPos(int cols)
             nx = n2 - (na - g_nTab + (iy - 1)) / (ny - 1);
             col = cols;
         }
-        for (int ix = 0; ix < nx && tab; ix++, tab = tab->nextTab) {
-            tab->x1 = col * ix / nx;
-            tab->x2 = col * (ix + 1) / nx - 1;
-            tab->y = iy;
+        for (int ix = 0; ix < nx && tab; ix++, tab = tab->nextTab, ++i) {
+            struct TabPos* p = &tabpos.data[i];
+            p->x1 = col * ix / nx;
+            p->x2 = col * (ix + 1) / nx - 1;
+            p->y = iy;
             if (iy == 0) {
-                tab->x1 += lcol;
-                tab->x2 += lcol;
+                p->x1 += lcol;
+                p->x2 += lcol;
             }
         }
     }
+    return tabpos;
 }
 
 #define NO_TABBUFFER ((struct TabBuffer*)1)
