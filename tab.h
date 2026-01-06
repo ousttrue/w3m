@@ -11,7 +11,7 @@ struct TabBuffer {
 };
 
 // tablist
-void _newT(void);
+struct TabBuffer* _newT(void);
 struct TabBuffer* newTab(void);
 void calcTabPos(void);
 struct TabBuffer* deleteTab(struct TabBuffer* tab);

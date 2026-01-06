@@ -245,11 +245,11 @@ void bell(void)
 //
 // tab
 //
-void _newT(void)
+struct TabBuffer* _newT(void)
 {
     struct TabBuffer* tag = newTab();
     if (!tag)
-        return;
+        return NULL;
 
     struct Buffer* buf = buf_new(NULL);
     copyBuffer(buf, Currentbuf);
@@ -268,6 +268,8 @@ void _newT(void)
     g_runtime.CurrentTab->nextTab = tag;
     g_runtime.CurrentTab = tag;
     g_runtime.nTab++;
+
+    return tag;
 }
 
 void tabs_prepare()

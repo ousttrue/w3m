@@ -721,32 +721,12 @@ repBuffer(struct Buffer* oldbuf, struct Buffer* buf)
  * Command functions: These functions are called with a keystroke.
  */
 
-static void
-cmd_loadURL(const char* url, struct FormList* request, struct LoadOption option)
-{
-    if (handleMailto(url))
-        return;
-
-    struct Content* content = get_content_cache(url, request, option);
-    if (!content) {
-        char* emsg = Sprintf("Can't load %s", conv_from_system(url))->ptr;
-        disp_err_message(emsg, FALSE);
-        return;
-    }
-
-    struct Buffer* buf = buf_new(content);
-    tab_push_buffer(getRuntime()->CurrentTab, buf);
-    // if (getRuntime()->RenderFrame && Currentbuf->doc.frameset != NULL)
-    //     rFrame(ctx);
-}
-
 /* go to specified URL */
 static void
 goURL0(const char* prompt, int relative)
 {
     const char *url, *referer;
     struct Url p_url, *current;
-    struct Buffer* cur_buf = Currentbuf;
     const int* no_referer_ptr;
 
     url = searchKeyData();
@@ -798,9 +778,13 @@ goURL0(const char* prompt, int relative)
     }
     parseURL2(url, &p_url, current);
     pushHashHist(getRuntime()->URLHist, parsedURL2Str(&p_url)->ptr);
-    cmd_loadURL(url, NULL, (struct LoadOption) { .base_url = current, .referer = referer });
-    if (Currentbuf != cur_buf) /* success */
+    struct Content* content = get_content_cache(url, NULL,
+        (struct LoadOption) { .base_url = current, .referer = referer });
+    if (content) {
+        struct Buffer* buf = buf_new(content);
+        tab_push_buffer(getRuntime()->CurrentTab, buf);
         pushHashHist(getRuntime()->URLHist, parsedURL2Str(&Currentbuf->content->url)->ptr);
+    }
 }
 
 DEFUN(goURL, GOTO, "Open specified document in a new buffer")
@@ -812,15 +796,17 @@ DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer")
 {
     const char* url;
     if ((url = getenv("HTTP_HOME")) != NULL || (url = getenv("WWW_HOME")) != NULL) {
-        struct Url p_url;
-        struct Buffer* cur_buf = Currentbuf;
         url = skip_blanks(url);
         url = url_encode(url, NULL, 0);
+        struct Url p_url;
         parseURL2(url, &p_url, NULL);
         pushHashHist(getRuntime()->URLHist, parsedURL2Str(&p_url)->ptr);
-        cmd_loadURL(url, NULL, (struct LoadOption) { .base_url = NULL, .referer = NULL });
-        if (Currentbuf != cur_buf) /* success */
+        struct Content* content = get_content_cache(url, NULL, (struct LoadOption) { .base_url = NULL, .referer = NULL });
+        if (content) {
+            struct Buffer* buf = buf_new(content);
+            tab_push_buffer(ctx.tab, buf);
             pushHashHist(getRuntime()->URLHist, parsedURL2Str(&Currentbuf->content->url)->ptr);
+        }
     }
 }
 
@@ -832,8 +818,12 @@ DEFUN(gorURL, GOTO_RELATIVE, "Go to relative address")
 /* load bookmark */
 DEFUN(ldBmark, BOOKMARK VIEW_BOOKMARK, "View bookmarks")
 {
-    cmd_loadURL(getRuntime()->BookmarkFile, NULL,
+    struct Content* content = get_content_cache(getRuntime()->BookmarkFile, NULL,
         (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER });
+    if (content) {
+        struct Buffer* buf = buf_new(content);
+        tab_push_buffer(ctx.tab, buf);
+    }
 }
 
 /* Add current to bookmark */
@@ -857,8 +847,12 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
     request = newFormList(NULL, "post", NULL, NULL, NULL, NULL, NULL);
     request->body = tmp->ptr;
     request->length = tmp->length;
-    cmd_loadURL("file:///$LIB/" W3MBOOKMARK_CMDNAME, request,
+    struct Content* content = get_content_cache("file:///$LIB/" W3MBOOKMARK_CMDNAME, request,
         (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER });
+    if (content) {
+        struct Buffer* buf = buf_new(content);
+        tab_push_buffer(ctx.tab, buf);
+    }
 }
 
 /* option setting */
@@ -928,26 +922,24 @@ void follow_map(struct parsed_tagarg* arg)
     }
     parseURL2(a->url, &p_url, baseURL(Currentbuf));
     pushHashHist(getRuntime()->URLHist, parsedURL2Str(&p_url)->ptr);
+    struct Content* content = get_content_cache(a->url, NULL,
+        (struct LoadOption) {
+            .base_url = baseURL(Currentbuf),
+            .referer = parsedURL2Str(&Currentbuf->content->url)->ptr });
+    if (!content) {
+        return;
+    }
+    struct TabBuffer* tab = _newT();
+    struct Buffer* buf = buf_new(content);
+
     if (getRuntime()->check_target
         && getRuntime()->open_tab_blank
         && a->target
         && (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
-        _newT();
-        struct Buffer* buf = Currentbuf;
-        cmd_loadURL(a->url, NULL,
-            (struct LoadOption) {
-                .base_url = baseURL(Currentbuf),
-                .referer = parsedURL2Str(&Currentbuf->content->url)->ptr });
-        if (buf != Currentbuf)
-            delBuffer(buf);
-        else
-            deleteTab(CurrentTab());
-        return;
+        tab_push_buffer(tab, buf);
+    } else {
+        tab_push_buffer(getRuntime()->CurrentTab, buf);
     }
-    cmd_loadURL(a->url, NULL,
-        (struct LoadOption) {
-            .base_url = baseURL(Currentbuf),
-            .referer = parsedURL2Str(&Currentbuf->content->url)->ptr });
 }
 
 /* link menu */
@@ -964,16 +956,20 @@ DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
     }
     parseURL2(l->url, &p_url, baseURL(Currentbuf));
     pushHashHist(getRuntime()->URLHist, parsedURL2Str(&p_url)->ptr);
-    cmd_loadURL(l->url, NULL,
+    struct Content* content = get_content_cache(l->url, NULL,
         (struct LoadOption) {
             .base_url = baseURL(Currentbuf),
             .referer = parsedURL2Str(&Currentbuf->content->url)->ptr });
+    if (content) {
+        struct Buffer* buf = buf_new(content);
+        tab_push_buffer(ctx.tab, buf);
+    }
 }
 
 static void
 anchorMn(BufferMenuFunc menu_func, bool go)
 {
-    if (Currentbuf->doc->href.nanchor==0 || !Currentbuf->doc->hmarklist)
+    if (Currentbuf->doc->href.nanchor == 0 || !Currentbuf->doc->hmarklist)
         return;
 
     struct Anchor* a = menu_func(Currentbuf);
@@ -2085,6 +2081,3 @@ DEFUN(tabrURL, TAB_GOTO_RELATIVE, "Open relative address in a new tab")
     tabURL0(getRuntime()->prec_num ? numTab(PREC_NUM) : NULL,
         "Goto relative URL on new tab: ", TRUE);
 }
-
-
-
