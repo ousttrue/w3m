@@ -343,8 +343,8 @@ bool action_menu(struct Menu* menu)
         if (IS_ASCII(ch)) { /* Ascii */
             enum MenuResult mselect = (*menu->keymap[ch])(
                 (struct DefunContext) {
-                    .tab = getRuntime()->CurrentTab,
-                    .buf = getRuntime()->CurrentTab->currentBuffer,
+                    .tab = CurrentTab(),
+                    .buf = CurrentTab()->currentBuffer,
                 },
                 ch);
             if (mselect != MENU_NOTHING) {
@@ -371,8 +371,8 @@ bool action_menu(struct Menu* menu)
             getRuntime()->CurrentKeyData = NULL;
             getRuntime()->CurrentCmdData = item.data;
             (*item.func)((struct DefunContext) {
-                .tab = getRuntime()->CurrentTab,
-                .buf = getRuntime()->CurrentTab->currentBuffer,
+                .tab = CurrentTab(),
+                .buf = CurrentTab()->currentBuffer,
             });
             getRuntime()->CurrentCmdData = NULL;
         }
@@ -1083,24 +1083,15 @@ initSelTabMenu(void)
 static void
 smChTab(void)
 {
-    int i;
-    struct TabBuffer* tab;
-    struct Buffer* buf;
-
     if (SelTabV < 0 || SelTabV >= SelTabMenu.nitem)
         return;
-    for (i = 0, tab = LastTab(); i < SelTabV && tab != NULL;
+
+    struct TabBuffer* tab = LastTab();
+    for (int i = 0;
+        i < SelTabV && tab != NULL;
         i++, tab = tab->prevTab)
         ;
-    getRuntime()->CurrentTab = tab;
-    for (tab = LastTab(); tab != NULL; tab = tab->prevTab) {
-        if (tab == CurrentTab())
-            continue;
-        buf = tab->currentBuffer;
-        deleteImage(buf);
-        if (getRuntime()->clear_buffer)
-            tmpClearBuffer(buf);
-    }
+    tabs_set_current(tab);
 }
 
 /* --- SelectMenu (END) --- */

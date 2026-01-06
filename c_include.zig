@@ -15,6 +15,7 @@ pub const c = @cImport({
     @cInclude("tab.h");
     @cInclude("display.h");
     @cInclude("message.h");
+    @cInclude("tab_list.h");
     // wc
     @cInclude("char_conv.h");
     @cInclude("charset.h");

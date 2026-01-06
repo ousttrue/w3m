@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "tab_list.h"
 #include "maparea.h"
 #include "indep.h"
 #include "input_stream.h"
@@ -76,12 +77,12 @@ void cmd_loadBuffer(struct Buffer* buf, int prop, enum LinkBufferID linkid)
     } else {
         buf->bufferprop |= (BP_INTERNAL | prop);
         if (!(buf->bufferprop & BP_NO_URL))
-            copyParsedURL(&buf->content->url, &Currentbuf->content->url);
+            copyParsedURL(&buf->content->url, &CurrentTab()->currentBuffer->content->url);
         if (linkid != LB_NOLINK) {
             buf->linkBuffer[REV_LB[linkid]] = Currentbuf;
             Currentbuf->linkBuffer[linkid] = buf;
         }
-        tab_push_buffer(getRuntime()->CurrentTab, buf);
+        tab_push_buffer(CurrentTab(), buf);
     }
 }
 

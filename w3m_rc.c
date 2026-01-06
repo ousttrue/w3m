@@ -1,4 +1,5 @@
 #include "w3m_rc.h"
+#include "tab_list.h"
 #include "anchor_list.h"
 #include "mysignal.h"
 #include "document.h"
@@ -104,23 +105,6 @@ Str Str_conv_to_system(Str x)
 Str Str_conv_from_system(Str x)
 {
     return wc_Str_conv((x), g_runtime.SystemCharset, g_runtime.InnerCharset);
-}
-
-struct TabBuffer* CurrentTab()
-{
-    return g_runtime.CurrentTab;
-}
-struct TabBuffer* FirstTab()
-{
-    return g_runtime.FirstTab;
-}
-struct TabBuffer* LastTab()
-{
-    return g_runtime.LastTab;
-}
-int nTab()
-{
-    return g_runtime.nTab;
 }
 
 #define MAXIMUM_COLS 1024
@@ -242,20 +226,6 @@ void bell(void)
 {
     write1(7);
 }
-
-//
-// tab
-//
-void tabs_prepare()
-{
-    g_runtime.CurrentTab = g_runtime.LastTab;
-    if (!g_runtime.FirstTab) {
-        g_runtime.FirstTab = g_runtime.LastTab = g_runtime.CurrentTab = tab_new();
-        g_runtime.nTab = 1;
-    }
-}
-
-
 
 static Str
 conv_form_encoding(Str val, struct FormItemList* fi, struct Buffer* buf)
@@ -387,7 +357,7 @@ struct Buffer* loadLink(const char* url, struct FormList* request,
 {
     message(Sprintf("loading %s", url)->ptr);
 
-    const int* no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->content->url);
+    const int* no_referer_ptr = query_SCONF_NO_REFERER_FROM(&CurrentTab()->currentBuffer->content->url);
     struct Url* base = baseURL(Currentbuf);
     if ((no_referer_ptr && *no_referer_ptr) || base == NULL || base->scheme == SCM_LOCAL || base->scheme == SCM_LOCAL_CGI)
         referer = NO_REFERER;
@@ -574,7 +544,7 @@ static struct Buffer* do_submit(struct Buffer* buf, struct Anchor* a, struct For
             fi->parent->length = tmp->length;
         }
         struct Buffer* new_buf = loadLink(tmp2->ptr, fi->parent, a->target, NULL, option);
-        tab_push_buffer(getRuntime()->CurrentTab, new_buf);
+        tab_push_buffer(CurrentTab(), new_buf);
         if (multipart) {
             unlink(fi->parent->body);
         }
@@ -791,7 +761,7 @@ bool currentBufferSubmit()
     struct FollowResult result = _followForm(Currentbuf,
         (struct FollowOption) { .on_target = true, .do_download = false }, true);
     if (result.new_buf) {
-        tab_push_buffer(getRuntime()->CurrentTab, result.new_buf);
+        tab_push_buffer(CurrentTab(), result.new_buf);
     }
     return true;
 }
@@ -2477,7 +2447,7 @@ void _followI(bool do_download)
     }
 
     struct Buffer* buf = buf_new(content);
-    tab_push_buffer(getRuntime()->CurrentTab, buf);
+    tab_push_buffer(CurrentTab(), buf);
 }
 
 static char* tmpf_base[MAX_TMPF_TYPE] = {
@@ -2516,41 +2486,5 @@ Str tmpfname(enum TmpFileTypes type, const char* ext)
     return tmpf;
 }
 
-#define NO_TABBUFFER ((struct TabBuffer*)1)
-
-void moveTab(struct TabBuffer* t, struct TabBuffer* t2, int right)
-{
-    if (t2 == NO_TABBUFFER)
-        t2 = FirstTab();
-    if (!t || !t2 || t == t2 || t == NO_TABBUFFER)
-        return;
-    if (t->prevTab) {
-        if (t->nextTab)
-            t->nextTab->prevTab = t->prevTab;
-        else
-            getRuntime()->LastTab = t->prevTab;
-        t->prevTab->nextTab = t->nextTab;
-    } else {
-        t->nextTab->prevTab = NULL;
-        getRuntime()->FirstTab = t->nextTab;
-    }
-    if (right) {
-        t->nextTab = t2->nextTab;
-        t->prevTab = t2;
-        if (t2->nextTab)
-            t2->nextTab->prevTab = t;
-        else
-            getRuntime()->LastTab = t;
-        t2->nextTab = t;
-    } else {
-        t->prevTab = t2->prevTab;
-        t->nextTab = t2;
-        if (t2->prevTab)
-            t2->prevTab->nextTab = t;
-        else
-            getRuntime()->FirstTab = t;
-        t2->prevTab = t;
-    }
-}
 
 

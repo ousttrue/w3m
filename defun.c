@@ -246,7 +246,7 @@ DEFUN(readsh, READ_SHELL, "Execute shell command and display output")
         buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
         if (buf->content->content_type == NULL)
             buf->content->content_type = "text/plain";
-        tab_push_buffer(getRuntime()->CurrentTab, buf);
+        tab_push_buffer(CurrentTab(), buf);
     }
 }
 
@@ -874,7 +874,7 @@ DEFUN(ldfile, LOAD, "Open local file in a new buffer")
         return;
     }
     struct Buffer* buf = buf_new(content);
-    tab_push_buffer(getRuntime()->CurrentTab, buf);
+    tab_push_buffer(CurrentTab(), buf);
 }
 
 /* Load help file */
@@ -897,7 +897,7 @@ DEFUN(ldhelp, HELP, "Show help panel")
         return;
     }
     struct Buffer* buf = buf_new(content);
-    tab_push_buffer(getRuntime()->CurrentTab, buf);
+    tab_push_buffer(CurrentTab(), buf);
 }
 
 DEFUN(selBuf, SELECT, "Display buffer-stack panel")
@@ -955,7 +955,7 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
         && (!strcasecmp(res.anchor->target, "_new") || !strcasecmp(res.anchor->target, "_blank"))) {
         tabs_append(res.new_buf);
     } else {
-        tab_push_buffer(getRuntime()->CurrentTab, res.new_buf);
+        tab_push_buffer(ctx.tab, res.new_buf);
     }
 }
 
@@ -1099,6 +1099,7 @@ DEFUN(cursorTop, CURSOR_TOP, "Move cursor to the top of the screen")
     Currentbuf->doc->currentLine = doc_lineSkip(Currentbuf->doc, Currentbuf->doc->topLine, 0);
     doc_arrangeLine(Currentbuf->doc);
 }
+
 
 DEFUN(cursorMiddle, CURSOR_MIDDLE, "Move cursor to the middle of the screen")
 {

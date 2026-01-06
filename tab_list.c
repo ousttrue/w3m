@@ -1,51 +1,82 @@
 #include "tab_list.h"
 #include "tab.h"
 #include "buffer.h"
-#include "w3m_rc.h"
+
+static struct TabBuffer* g_CurrentTab = NULL;
+static struct TabBuffer* g_FirstTab = NULL;
+static struct TabBuffer* g_LastTab = NULL;
+static int g_nTab = 0;
+static int g_TabCols = 10;
+
+struct TabBuffer* CurrentTab()
+{
+    return g_CurrentTab;
+}
+struct TabBuffer* FirstTab()
+{
+    return g_FirstTab;
+}
+struct TabBuffer* LastTab()
+{
+    return g_LastTab;
+}
+int nTab()
+{
+    return g_nTab;
+}
+
+// void tabs_prepare()
+// {
+//     g_runtime.CurrentTab = g_runtime.LastTab;
+//     if (!g_runtime.FirstTab) {
+//         g_runtime.FirstTab = g_runtime.LastTab = g_runtime.CurrentTab = tab_new();
+//         g_runtime.nTab = 1;
+//     }
+// }
 
 struct TabBuffer* tabs_append(struct Buffer* buf)
 {
     struct TabBuffer* tab = tab_new();
     tab->firstBuffer = tab->currentBuffer = buf;
-    if (g_runtime.CurrentTab) {
-        tab->nextTab = g_runtime.CurrentTab->nextTab;
-        tab->prevTab = g_runtime.CurrentTab;
-        if (g_runtime.CurrentTab->nextTab)
-            g_runtime.CurrentTab->nextTab->prevTab = tab;
+    if (g_CurrentTab) {
+        tab->nextTab = g_CurrentTab->nextTab;
+        tab->prevTab = g_CurrentTab;
+        if (g_CurrentTab->nextTab)
+            g_CurrentTab->nextTab->prevTab = tab;
         else
-            g_runtime.LastTab = tab;
-        g_runtime.CurrentTab->nextTab = tab;
-        g_runtime.CurrentTab = tab;
+            g_LastTab = tab;
+        g_CurrentTab->nextTab = tab;
+        g_CurrentTab = tab;
     } else {
-        g_runtime.CurrentTab = tab;
-        g_runtime.FirstTab = tab;
-        g_runtime.LastTab = tab;
+        g_CurrentTab = tab;
+        g_FirstTab = tab;
+        g_LastTab = tab;
     }
-    g_runtime.nTab++;
+    g_nTab++;
     return tab;
 }
 
 struct TabBuffer*
 tabs_delete(struct TabBuffer* tab)
 {
-    if (nTab() <= 1)
-        return FirstTab();
+    if (g_nTab <= 1)
+        return g_FirstTab;
 
     if (tab->prevTab) {
         if (tab->nextTab)
             tab->nextTab->prevTab = tab->prevTab;
         else
-            getRuntime()->LastTab = tab->prevTab;
+            g_LastTab = tab->prevTab;
         tab->prevTab->nextTab = tab->nextTab;
-        if (tab == CurrentTab())
-            getRuntime()->CurrentTab = tab->prevTab;
+        if (tab == g_CurrentTab)
+            g_CurrentTab = tab->prevTab;
     } else { /* tab == FirstTab */
         tab->nextTab->prevTab = NULL;
-        getRuntime()->FirstTab = tab->nextTab;
-        if (tab == CurrentTab())
-            getRuntime()->CurrentTab = tab->nextTab;
+        g_FirstTab = tab->nextTab;
+        if (tab == g_CurrentTab)
+            g_CurrentTab = tab->nextTab;
     }
-    getRuntime()->nTab--;
+    g_nTab--;
 
     struct Buffer* buf = tab->firstBuffer;
     while (buf) {
@@ -53,44 +84,45 @@ tabs_delete(struct TabBuffer* tab)
         discardBuffer(buf);
         buf = next;
     }
-    return FirstTab();
+    return g_FirstTab;
 }
+
 void tabs_calcPos(int cols)
 {
-    if (nTab <= 0)
+    if (g_nTab <= 0)
         return;
 
     int lcol = 0, rcol = 0;
-    int n1 = (cols - rcol - lcol) / g_runtime.TabCols;
+    int n1 = (cols - rcol - lcol) / g_TabCols;
     int n2, ny;
-    if (n1 >= g_runtime.nTab) {
+    if (n1 >= g_nTab) {
         n2 = 1;
         ny = 1;
     } else {
         if (n1 < 0)
             n1 = 0;
-        n2 = cols / g_runtime.TabCols;
+        n2 = cols / g_TabCols;
         if (n2 == 0)
             n2 = 1;
-        ny = (g_runtime.nTab - n1 - 1) / n2 + 2;
+        ny = (g_nTab - n1 - 1) / n2 + 2;
     }
 
     int na = n1 + n2 * (ny - 1);
-    n1 -= (na - g_runtime.nTab) / ny;
+    n1 -= (na - g_nTab) / ny;
     if (n1 < 0)
         n1 = 0;
     na = n1 + n2 * (ny - 1);
 
-    struct TabBuffer* tab = g_runtime.FirstTab;
+    struct TabBuffer* tab = g_FirstTab;
     for (int iy = 0; iy < ny && tab; iy++) {
         int nx;
         int col;
         if (iy == 0) {
             nx = n1;
-            col = TTY_COLS() - rcol - lcol;
+            col = cols - rcol - lcol;
         } else {
-            nx = n2 - (na - g_runtime.nTab + (iy - 1)) / (ny - 1);
-            col = TTY_COLS();
+            nx = n2 - (na - g_nTab + (iy - 1)) / (ny - 1);
+            col = cols;
         }
         for (int ix = 0; ix < nx && tab; ix++, tab = tab->nextTab) {
             tab->x1 = col * ix / nx;
@@ -101,5 +133,79 @@ void tabs_calcPos(int cols)
                 tab->x2 += lcol;
             }
         }
+    }
+}
+
+#define NO_TABBUFFER ((struct TabBuffer*)1)
+
+void moveTab(struct TabBuffer* t, struct TabBuffer* t2, int right)
+{
+    if (t2 == NO_TABBUFFER)
+        t2 = g_FirstTab;
+    if (!t || !t2 || t == t2 || t == NO_TABBUFFER)
+        return;
+    if (t->prevTab) {
+        if (t->nextTab)
+            t->nextTab->prevTab = t->prevTab;
+        else
+            g_LastTab = t->prevTab;
+        t->prevTab->nextTab = t->nextTab;
+    } else {
+        t->nextTab->prevTab = NULL;
+        g_FirstTab = t->nextTab;
+    }
+    if (right) {
+        t->nextTab = t2->nextTab;
+        t->prevTab = t2;
+        if (t2->nextTab)
+            t2->nextTab->prevTab = t;
+        else
+            g_LastTab = t;
+        t2->nextTab = t;
+    } else {
+        t->prevTab = t2->prevTab;
+        t->nextTab = t2;
+        if (t2->prevTab)
+            t2->prevTab->nextTab = t;
+        else
+            g_FirstTab = t;
+        t2->prevTab = t;
+    }
+}
+
+void tabs_set_current(struct TabBuffer* tab)
+{
+    g_CurrentTab = tab;
+    for (tab = g_LastTab; tab != NULL; tab = tab->prevTab) {
+        if (tab == g_CurrentTab)
+            continue;
+        struct Buffer* buf = tab->currentBuffer;
+        deleteImage(buf);
+        // if (getRuntime()->clear_buffer)
+        //     tmpClearBuffer(buf);
+    }
+}
+
+void tabs_next(int n)
+{
+    if (g_nTab <= 1)
+        return;
+    for (int i = 0; i < n; i++) {
+        if (g_CurrentTab->nextTab)
+            g_CurrentTab = g_CurrentTab->nextTab;
+        else
+            g_CurrentTab = g_FirstTab;
+    }
+}
+
+void tabs_prev(int n)
+{
+    if (g_nTab <= 1)
+        return;
+    for (int i = 0; i < n; i++) {
+        if (g_CurrentTab->prevTab)
+            g_CurrentTab = g_CurrentTab->prevTab;
+        else
+            g_CurrentTab = g_LastTab;
     }
 }

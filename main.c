@@ -1,4 +1,5 @@
 #include "maparea.h"
+#include "tab.h"
 #include "tab_list.h"
 #include "hmarker.h"
 #include "func.h"
@@ -646,15 +647,13 @@ bool w3m_args(int argc, char** argv)
         } else if (open_new_tab) {
             tabs_append(newbuf);
         } else {
-            tab_push_buffer(getRuntime()->CurrentTab, newbuf);
+            tab_push_buffer(CurrentTab(), newbuf);
         }
         assert(Currentbuf);
         assert(Firstbuf);
 
         Currentbuf = newbuf;
     }
-
-    getRuntime()->CurrentTab = FirstTab();
 
     if (!FirstTab() || !Firstbuf) {
         if (fmInitialized())
@@ -934,7 +933,7 @@ void follow_map(struct parsed_tagarg* arg)
         && (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
         tabs_append(buf);
     } else {
-        tab_push_buffer(getRuntime()->CurrentTab, buf);
+        tab_push_buffer(CurrentTab(), buf);
     }
 }
 
@@ -1277,7 +1276,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
     buf->clone = Currentbuf->clone;
     (*buf->clone)++;
     reshapeBuffer(buf);
-    tab_push_buffer(getRuntime()->CurrentTab, buf);
+    tab_push_buffer(CurrentTab(), buf);
 }
 
 /* reload */
@@ -1317,7 +1316,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
         }
         fbuf->linkBuffer[LB_FRAME] = buf;
         buf->linkBuffer[LB_N_FRAME] = fbuf;
-        tab_push_buffer(getRuntime()->CurrentTab, buf);
+        tab_push_buffer(CurrentTab(), buf);
         Currentbuf = buf;
         if (Currentbuf->doc->firstLine) {
             COPY_BUFROOT(ctx.buf->doc, sbuf.doc);
@@ -1497,7 +1496,7 @@ DEFUN(rFrame, FRAME, "Toggle rendering HTML frames")
     }
     buf->linkBuffer[LB_N_FRAME] = Currentbuf;
     Currentbuf->linkBuffer[LB_FRAME] = buf;
-    tab_push_buffer(getRuntime()->CurrentTab, buf);
+    tab_push_buffer(CurrentTab(), buf);
 }
 
 /* spawn external browser */
@@ -1687,7 +1686,7 @@ execdict(const char* word)
     buf->doc->title = Sprintf("%s %s", DICTBUFFERNAME, word)->ptr;
     if (buf->content->content_type == NULL)
         buf->content->content_type = "text/plain";
-    tab_push_buffer(getRuntime()->CurrentTab, buf);
+    tab_push_buffer(CurrentTab(), buf);
 }
 
 DEFUN(dictword, DICT_WORD, "Execute dictionary command (see README.dict)")
@@ -1723,10 +1722,10 @@ void deleteFiles()
     char* f;
 
     for (struct TabBuffer* CurrentTab = FirstTab(); CurrentTab; CurrentTab = CurrentTab->nextTab) {
-        while (Firstbuf) {
-            buf = Firstbuf->nextBuffer;
-            discardBuffer(Firstbuf);
-            Firstbuf = buf;
+        while (CurrentTab->firstBuffer) {
+            buf = CurrentTab->firstBuffer->nextBuffer;
+            discardBuffer(CurrentTab->firstBuffer);
+            CurrentTab->firstBuffer = buf;
         }
     }
     while ((f = popText(getRuntime()->fileToDelete)) != NULL) {
@@ -1911,8 +1910,6 @@ numTab(int n)
     return tab;
 }
 
-
-
 DEFUN(closeT, CLOSE_TAB, "Close tab")
 {
     if (nTab() <= 1)
@@ -1928,30 +1925,12 @@ DEFUN(closeT, CLOSE_TAB, "Close tab")
 
 DEFUN(nextT, NEXT_TAB, "Switch to the next tab")
 {
-    int i;
-
-    if (nTab() <= 1)
-        return;
-    for (i = 0; i < PREC_NUM; i++) {
-        if (CurrentTab()->nextTab)
-            getRuntime()->CurrentTab = CurrentTab()->nextTab;
-        else
-            getRuntime()->CurrentTab = FirstTab();
-    }
+    tabs_next(PREC_NUM);
 }
 
 DEFUN(prevT, PREV_TAB, "Switch to the previous tab")
 {
-    int i;
-
-    if (nTab() <= 1)
-        return;
-    for (i = 0; i < PREC_NUM; i++) {
-        if (CurrentTab()->prevTab)
-            getRuntime()->CurrentTab = CurrentTab()->prevTab;
-        else
-            getRuntime()->CurrentTab = LastTab();
-    }
+    tabs_prev(PREC_NUM);
 }
 
 static void

@@ -106,7 +106,6 @@ struct Runtime g_runtime = {
     .open_tab_blank = (false),
     .open_tab_dl_list = (false),
     .close_tab_back = (false),
-    .TabCols = (10),
     .DNS_order = (DNS_ORDER_UNSPEC),
     .NoCache = (false),
     .use_proxy = (true),
@@ -198,11 +197,6 @@ struct Runtime g_runtime = {
 
     .showLineNum = (false),
     .FoldLine = (false),
-
-    .CurrentTab = 0,
-    .FirstTab = 0,
-    .LastTab = 0,
-    .nTab = 0,
 
     .CurrentKey = -1,
     .CurrentKeyData = 0,

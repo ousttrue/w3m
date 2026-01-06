@@ -105,7 +105,7 @@ export fn onFrame() void {
     //     chkURLBuffer(buf);
     // }
 
-    const buf: *c.Buffer = c.getRuntime().*.CurrentTab.*.currentBuffer;
+    const buf: *c.Buffer = c.CurrentTab().*.currentBuffer;
 
     if (buf.doc == null) {
         c.reshapeBuffer(buf);

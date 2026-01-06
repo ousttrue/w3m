@@ -22,12 +22,12 @@ void tab_push_buffer(struct TabBuffer* tab, struct Buffer* buf)
         tmpClearBuffer(tab->currentBuffer);
 
     struct Buffer* b;
-    if (Firstbuf == Currentbuf) {
+    if (tab->firstBuffer == tab->currentBuffer) {
         buf->nextBuffer = tab->firstBuffer;
-        Firstbuf = Currentbuf = buf;
-    } else if ((b = prevBuffer(Firstbuf, Currentbuf)) != NULL) {
+        tab->firstBuffer = tab->currentBuffer = buf;
+    } else if ((b = prevBuffer(tab->firstBuffer, tab->currentBuffer)) != NULL) {
         b->nextBuffer = buf;
-        buf->nextBuffer = Currentbuf;
-        Currentbuf = buf;
+        buf->nextBuffer = tab->currentBuffer;
+        tab->currentBuffer = buf;
     }
 }

@@ -1,4 +1,5 @@
 #include "func.h"
+#include "tab_list.h"
 #include "w3m_rc.h"
 #include "alloc.h"
 #include "ctrlcode.h"
@@ -36,8 +37,8 @@ bool eventUpdate()
     g->CurrentKeyData = NULL;
     g->CurrentCmdData = (char*)g->CurrentEvent->data;
     w3mFuncList[g->CurrentEvent->cmd].func((struct DefunContext) {
-        .tab = g_runtime.CurrentTab,
-        .buf = g_runtime.CurrentTab->currentBuffer,
+        .tab = CurrentTab(),
+        .buf = CurrentTab()->currentBuffer,
     });
     g->CurrentCmdData = NULL;
     g->CurrentEvent = g->CurrentEvent->next;
@@ -48,8 +49,8 @@ void keyPressEventProc(int c)
 {
     g_runtime.CurrentKey = c;
     w3mFuncList[(int)GlobalKeymap[c]].func((struct DefunContext) {
-        .tab = g_runtime.CurrentTab,
-        .buf = g_runtime.CurrentTab->currentBuffer,
+        .tab = CurrentTab(),
+        .buf = CurrentTab()->currentBuffer,
     });
 }
 
@@ -79,8 +80,8 @@ void escKeyProc(int c, int esc, unsigned char* map)
     g_runtime.CurrentKey = esc | c;
     if (map)
         w3mFuncList[(int)map[c]].func((struct DefunContext) {
-            .tab = g_runtime.CurrentTab,
-            .buf = g_runtime.CurrentTab->currentBuffer,
+            .tab = CurrentTab(),
+            .buf = CurrentTab()->currentBuffer,
         });
 }
 

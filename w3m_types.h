@@ -128,7 +128,6 @@ struct Runtime {
     int open_tab_blank;
     int open_tab_dl_list;
     int close_tab_back;
-    int TabCols;
     int DNS_order;
     char NoCache;
     char use_proxy;
@@ -224,11 +223,6 @@ struct Runtime {
     struct Hist* URLHist;
     struct Hist* ShellHist;
     struct Hist* TextHist;
-
-    struct TabBuffer* CurrentTab;
-    struct TabBuffer* FirstTab;
-    struct TabBuffer* LastTab;
-    int nTab;
 
     int CurrentKey;
     int prec_num;

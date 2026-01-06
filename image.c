@@ -1,4 +1,5 @@
 #include "image.h"
+#include "tab_list.h"
 #include "anchor_list.h"
 #include "tab.h"
 #include "input_stream.h"
@@ -430,7 +431,7 @@ static void put_image_iterm2(const char* url, int x, int y, int w, int h)
 cleanup:
     fclose(fp);
     writestr("\a");
-    tty_MOVE(Currentbuf->doc->cursorY, Currentbuf->doc->cursorX);
+    tty_MOVE(CurrentTab()->currentBuffer->doc->cursorY, CurrentTab()->currentBuffer->doc->cursorX);
 }
 
 static void put_image_kitty(const char* url, int x, int y, int w, int h, int sx, int sy, int sw,

@@ -59,11 +59,6 @@ struct Event {
 struct Runtime* getRuntime(void);
 #define PREC_NUM (getRuntime()->prec_num ? getRuntime()->prec_num : 1)
 
-struct TabBuffer* CurrentTab();
-struct TabBuffer* FirstTab();
-struct TabBuffer* LastTab();
-int nTab();
-
 char* conv_from_system(const char* x);
 char* conv_to_system(const char* x);
 char* url_quote_conv(const char* x, enum wc_ces c);
@@ -74,8 +69,8 @@ Str Str_conv_from_system(Str x);
 #define INIT_BUFFER_WIDTH ((_INIT_BUFFER_WIDTH > 0) ? _INIT_BUFFER_WIDTH : 0)
 #define FOLD_BUFFER_WIDTH (getRuntime()->FoldLine ? (INIT_BUFFER_WIDTH + 1) : -1)
 
-#define Currentbuf (getRuntime()->CurrentTab->currentBuffer)
-#define Firstbuf (getRuntime()->CurrentTab->firstBuffer)
+#define Currentbuf (CurrentTab()->currentBuffer)
+#define Firstbuf (CurrentTab()->firstBuffer)
 
 int getOutputHandle();
 void reset_error_exit(int);
@@ -193,4 +188,3 @@ enum TmpFileTypes {
 };
 
 Str tmpfname(enum TmpFileTypes type, const char* ext);
-void moveTab(struct TabBuffer* t, struct TabBuffer* t2, int right);
