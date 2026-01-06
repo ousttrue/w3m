@@ -1,4 +1,5 @@
 #include "maparea.h"
+#include "tab_list.h"
 #include "hmarker.h"
 #include "func.h"
 #include "menu.h"
@@ -634,20 +635,18 @@ bool w3m_args(int argc, char** argv)
             }
         }
         if (CurrentTab() == NULL) {
-            getRuntime()->FirstTab = getRuntime()->LastTab = getRuntime()->CurrentTab = newTab();
-            if (!FirstTab()) {
-                fprintf(stderr, "%s\n", "Can't allocated memory");
-                exit(1);
-            }
-            getRuntime()->nTab = 1;
-            Firstbuf = Currentbuf = newbuf;
+            tabs_append(newbuf);
+            // getRuntime()->FirstTab = getRuntime()->LastTab = getRuntime()->CurrentTab = tab_new();
+            // if (!FirstTab()) {
+            //     fprintf(stderr, "%s\n", "Can't allocated memory");
+            //     exit(1);
+            // }
+            // getRuntime()->nTab = 1;
+            // Firstbuf = Currentbuf = newbuf;
         } else if (open_new_tab) {
-            _newT();
-            Currentbuf->nextBuffer = newbuf;
-            delBuffer(Currentbuf);
+            tabs_append(newbuf);
         } else {
-            Currentbuf->nextBuffer = newbuf;
-            Currentbuf = newbuf;
+            tab_push_buffer(getRuntime()->CurrentTab, newbuf);
         }
         assert(Currentbuf);
         assert(Firstbuf);
@@ -722,19 +721,14 @@ repBuffer(struct Buffer* oldbuf, struct Buffer* buf)
  */
 
 /* go to specified URL */
-static void
-goURL0(const char* prompt, int relative)
+static struct Content* goURL0(const char* prompt, int relative)
 {
-    const char *url, *referer;
-    struct Url p_url, *current;
-    const int* no_referer_ptr;
-
-    url = searchKeyData();
+    const char* url = searchKeyData();
     if (url == NULL) {
         struct Hist* hist = copyHist(getRuntime()->URLHist);
         struct Anchor* a;
 
-        current = baseURL(Currentbuf);
+        struct Url* current = baseURL(Currentbuf);
         if (current) {
             char* c_url = parsedURL2Str(current)->ptr;
             if (getRuntime()->DefaultURLString == DEFAULT_URL_CURRENT)
@@ -744,9 +738,9 @@ goURL0(const char* prompt, int relative)
         }
         a = doc_retrieveCurrentAnchor(Currentbuf->doc);
         if (a) {
-            char* a_url;
+            struct Url p_url;
             parseURL2(a->url, &p_url, current);
-            a_url = parsedURL2Str(&p_url)->ptr;
+            const char* a_url = parsedURL2Str(&p_url)->ptr;
             if (getRuntime()->DefaultURLString == DEFAULT_URL_LINK)
                 url = url_decode2(baseURL(Currentbuf), Currentbuf->doc, a_url);
             else
@@ -756,8 +750,11 @@ goURL0(const char* prompt, int relative)
         if (url != NULL)
             url = skip_blanks(url);
     }
+
+    struct Url* current;
+    const char* referer;
     if (relative) {
-        no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->content->url);
+        const int* no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->content->url);
         current = baseURL(Currentbuf);
         if ((no_referer_ptr && *no_referer_ptr) || current == NULL || current->scheme == SCM_LOCAL || current->scheme == SCM_LOCAL_CGI)
             referer = NO_REFERER;
@@ -770,21 +767,21 @@ goURL0(const char* prompt, int relative)
         url = url_encode(url, NULL, 0);
     }
     if (url == NULL || *url == '\0') {
-        return;
+        return NULL;
     }
     if (*url == '#') {
-        gotoLabel(Currentbuf, url + 1);
-        return;
+        return gotoLabel(Currentbuf, url + 1).new_buf->content;
     }
+    struct Url p_url;
     parseURL2(url, &p_url, current);
     pushHashHist(getRuntime()->URLHist, parsedURL2Str(&p_url)->ptr);
-    struct Content* content = get_content_cache(url, NULL,
+    return get_content_cache(url, NULL,
         (struct LoadOption) { .base_url = current, .referer = referer });
-    if (content) {
-        struct Buffer* buf = buf_new(content);
-        tab_push_buffer(getRuntime()->CurrentTab, buf);
-        pushHashHist(getRuntime()->URLHist, parsedURL2Str(&Currentbuf->content->url)->ptr);
-    }
+    // if (content) {
+    //     struct Buffer* buf = buf_new(content);
+    //     tab_push_buffer(getRuntime()->CurrentTab, buf);
+    //     pushHashHist(getRuntime()->URLHist, parsedURL2Str(&Currentbuf->content->url)->ptr);
+    // }
 }
 
 DEFUN(goURL, GOTO, "Open specified document in a new buffer")
@@ -929,14 +926,13 @@ void follow_map(struct parsed_tagarg* arg)
     if (!content) {
         return;
     }
-    struct TabBuffer* tab = _newT();
     struct Buffer* buf = buf_new(content);
 
     if (getRuntime()->check_target
         && getRuntime()->open_tab_blank
         && a->target
         && (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
-        tab_push_buffer(tab, buf);
+        tabs_append(buf);
     } else {
         tab_push_buffer(getRuntime()->CurrentTab, buf);
     }
@@ -1895,7 +1891,7 @@ DEFUN(defKey, DEFINE_KEY, "Define a binding between a key stroke combination and
 
 DEFUN(newT, NEW_TAB, "Open a new tab (with current document)")
 {
-    _newT();
+    tabs_append(NULL);
 }
 
 static struct TabBuffer*
@@ -1915,49 +1911,19 @@ numTab(int n)
     return tab;
 }
 
-struct TabBuffer*
-deleteTab(struct TabBuffer* tab)
-{
-    struct Buffer *buf, *next;
 
-    if (nTab() <= 1)
-        return FirstTab();
-    if (tab->prevTab) {
-        if (tab->nextTab)
-            tab->nextTab->prevTab = tab->prevTab;
-        else
-            getRuntime()->LastTab = tab->prevTab;
-        tab->prevTab->nextTab = tab->nextTab;
-        if (tab == CurrentTab())
-            getRuntime()->CurrentTab = tab->prevTab;
-    } else { /* tab == FirstTab */
-        tab->nextTab->prevTab = NULL;
-        getRuntime()->FirstTab = tab->nextTab;
-        if (tab == CurrentTab())
-            getRuntime()->CurrentTab = tab->nextTab;
-    }
-    getRuntime()->nTab--;
-    buf = tab->firstBuffer;
-    while (buf) {
-        next = buf->nextBuffer;
-        discardBuffer(buf);
-        buf = next;
-    }
-    return FirstTab();
-}
 
 DEFUN(closeT, CLOSE_TAB, "Close tab")
 {
-    struct TabBuffer* tab;
-
     if (nTab() <= 1)
         return;
+    struct TabBuffer* tab;
     if (getRuntime()->prec_num)
         tab = numTab(PREC_NUM);
     else
         tab = CurrentTab();
     if (tab)
-        deleteTab(tab);
+        tabs_delete(tab);
 }
 
 DEFUN(nextT, NEXT_TAB, "Switch to the next tab")
@@ -2004,31 +1970,33 @@ followTab(struct TabBuffer* tab)
         return;
     }
 
-    _newT();
-    struct Buffer* buf = Currentbuf;
+    // struct Buffer* buf = Currentbuf;
     getRuntime()->check_target = FALSE;
-    followA((struct DefunContext) { 0 });
+    // followA((struct DefunContext) { 0 });
+    struct FollowResult res = _followA(Currentbuf,
+        (struct FollowOption) { .on_target = true, .do_download = false });
+    tabs_append(res.new_buf);
     getRuntime()->check_target = TRUE;
-    if (tab == NULL) {
-        if (buf != Currentbuf)
-            delBuffer(buf);
-        else
-            deleteTab(CurrentTab());
-    } else if (buf != Currentbuf) {
-        /* buf <- p <- ... <- Currentbuf = c */
-        struct Buffer *c, *p;
-
-        c = Currentbuf;
-        if ((p = prevBuffer(c, buf)))
-            p->nextBuffer = NULL;
-        Firstbuf = buf;
-        deleteTab(CurrentTab());
-        getRuntime()->CurrentTab = tab;
-        for (buf = p; buf; buf = p) {
-            p = prevBuffer(c, buf);
-            tab_push_buffer(tab, buf);
-        }
-    }
+    // if (tab == NULL) {
+    //     if (buf != Currentbuf)
+    //         delBuffer(buf);
+    //     else
+    //         deleteTab(CurrentTab());
+    // } else if (buf != Currentbuf) {
+    //     /* buf <- p <- ... <- Currentbuf = c */
+    //     struct Buffer *c, *p;
+    //
+    //     c = Currentbuf;
+    //     if ((p = prevBuffer(c, buf)))
+    //         p->nextBuffer = NULL;
+    //     Firstbuf = buf;
+    //     deleteTab(CurrentTab());
+    //     getRuntime()->CurrentTab = tab;
+    //     for (buf = p; buf; buf = p) {
+    //         p = prevBuffer(c, buf);
+    //         tab_push_buffer(tab, buf);
+    //     }
+    // }
 }
 
 DEFUN(tabA, TAB_LINK, "Follow current hyperlink in a new tab")
@@ -2039,34 +2007,10 @@ DEFUN(tabA, TAB_LINK, "Follow current hyperlink in a new tab")
 static void
 tabURL0(struct TabBuffer* tab, char* prompt, int relative)
 {
-    struct Buffer* buf;
-
-    if (tab == CurrentTab()) {
-        goURL0(prompt, relative);
-        return;
-    }
-    _newT();
-    buf = Currentbuf;
-    goURL0(prompt, relative);
-    if (tab == NULL) {
-        if (buf != Currentbuf)
-            delBuffer(buf);
-        else
-            deleteTab(CurrentTab());
-    } else if (buf != Currentbuf) {
-        /* buf <- p <- ... <- Currentbuf = c */
-        struct Buffer *c, *p;
-
-        c = Currentbuf;
-        if ((p = prevBuffer(c, buf)))
-            p->nextBuffer = NULL;
-        Firstbuf = buf;
-        deleteTab(CurrentTab());
-        getRuntime()->CurrentTab = tab;
-        for (buf = p; buf; buf = p) {
-            p = prevBuffer(c, buf);
-            tab_push_buffer(tab, buf);
-        }
+    struct Content* content = goURL0(prompt, relative);
+    if (content) {
+        struct Buffer* buf = buf_new(content);
+        tabs_append(buf);
     }
 }
 

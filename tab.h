@@ -10,11 +10,5 @@ struct TabBuffer {
     short y;
 };
 
-// tablist
-struct TabBuffer* _newT(void);
-struct TabBuffer* newTab(void);
-void calcTabPos(void);
-struct TabBuffer* deleteTab(struct TabBuffer* tab);
-
-// a tab
-void tab_push_buffer(struct TabBuffer*tab, struct Buffer* buf);
+struct TabBuffer* tab_new(void);
+void tab_push_buffer(struct TabBuffer* tab, struct Buffer* buf);

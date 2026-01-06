@@ -1,4 +1,5 @@
 #include "display.h"
+#include "tab_list.h"
 #include "anchor_list.h"
 #include "hmarker.h"
 #include "document.h"
@@ -325,7 +326,7 @@ void bufferPosition(struct Buffer* buf)
     // doc.rootY
     int ny = 0;
     if (nTab() > 1) {
-        calcTabPos();
+        tabs_calcPos(TTY_COLS());
         ny = LastTab()->y + 2;
         if (ny > LASTLINE())
             ny = LASTLINE();

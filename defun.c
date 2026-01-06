@@ -1,4 +1,5 @@
 #include "defun.h"
+#include "tab_list.h"
 #include "hmarker.h"
 #include "frame.h"
 #include "html_form.h"
@@ -952,17 +953,8 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
         && getRuntime()->open_tab_blank
         && res.anchor->target
         && (!strcasecmp(res.anchor->target, "_new") || !strcasecmp(res.anchor->target, "_blank"))) {
-        _newT();
-        // buf = Currentbuf;
-        // struct Buffer* new_buf = loadLink(url, NULL, a->target, a->referer, option);
-        tab_push_buffer(getRuntime()->CurrentTab, res.new_buf);
-        // if (buf != Currentbuf)
-        //     delBuffer(buf);
-        // else
-        //     deleteTab(CurrentTab());
-        // return;
+        tabs_append(res.new_buf);
     } else {
-        // struct Buffer* new_buf = loadLink(url, NULL, a->target, a->referer, option);
         tab_push_buffer(getRuntime()->CurrentTab, res.new_buf);
     }
 }
@@ -1001,11 +993,11 @@ DEFUN(prevBf, PREV, "Switch to the previous buffer")
 
 DEFUN(backBf, BACK, "Close current buffer and return to the one below in stack")
 {
-    struct Buffer* buf = Currentbuf->linkBuffer[LB_N_FRAME];
+    struct Buffer* buf = ctx.buf->linkBuffer[LB_N_FRAME];
 
     if (!checkBackBuffer(Currentbuf)) {
         if (getRuntime()->close_tab_back && nTab() >= 1) {
-            deleteTab(CurrentTab());
+            tabs_delete(ctx.tab);
         } else
             /* FIXME: gettextize? */
             disp_message("Can't go back...", TRUE);

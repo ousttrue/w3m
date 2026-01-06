@@ -1,4 +1,5 @@
 #include "menu.h"
+#include "tab_list.h"
 #include "anchor_list.h"
 #include "etc.h"
 #include "func.h"
@@ -986,19 +987,19 @@ DEFUN(tabMn, TAB_MENU, "Pop up tab selection menu")
 static int
 smDelTab(struct DefunContext ctx, char c)
 {
-    int i, x, y, mselect;
-    struct TabBuffer* tab;
-
     if (CurrentMenu->select < 0 || CurrentMenu->select >= SelTabMenu.nitem)
         return (MENU_NOTHING);
-    for (i = 0, tab = LastTab(); i < CurrentMenu->select && tab != NULL;
+
+    int i = 0;
+    struct TabBuffer* tab = LastTab();
+    for (; i < CurrentMenu->select && tab != NULL;
         i++, tab = tab->prevTab)
         ;
-    deleteTab(tab);
+    tabs_delete(tab);
 
-    x = CurrentMenu->x;
-    y = CurrentMenu->y;
-    mselect = CurrentMenu->select;
+    int x = CurrentMenu->x;
+    int y = CurrentMenu->y;
+    int mselect = CurrentMenu->select;
 
     initSelTabMenu();
 

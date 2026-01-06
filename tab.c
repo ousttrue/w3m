@@ -4,33 +4,30 @@
 #include "w3m_rc.h"
 #include "image.h"
 
-struct TabBuffer* newTab(void)
+struct TabBuffer* tab_new(void)
 {
-    struct TabBuffer* n = New(struct TabBuffer);
-    if (n == NULL)
-        return NULL;
-    n->nextTab = NULL;
-    n->currentBuffer = NULL;
-    n->firstBuffer = NULL;
-    return n;
+    struct TabBuffer* tab = New(struct TabBuffer);
+    *tab = (struct TabBuffer) {
+        .nextTab = NULL,
+        .currentBuffer = NULL,
+        .firstBuffer = NULL,
+    };
+    return tab;
 }
 
-void tab_push_buffer(struct TabBuffer*tab, struct Buffer* buf)
+void tab_push_buffer(struct TabBuffer* tab, struct Buffer* buf)
 {
-    deleteImage(Currentbuf);
+    deleteImage(tab->currentBuffer);
     if (getRuntime()->clear_buffer)
-        tmpClearBuffer(Currentbuf);
+        tmpClearBuffer(tab->currentBuffer);
 
     struct Buffer* b;
     if (Firstbuf == Currentbuf) {
-        buf->nextBuffer = Firstbuf;
+        buf->nextBuffer = tab->firstBuffer;
         Firstbuf = Currentbuf = buf;
     } else if ((b = prevBuffer(Firstbuf, Currentbuf)) != NULL) {
         b->nextBuffer = buf;
         buf->nextBuffer = Currentbuf;
         Currentbuf = buf;
     }
-#ifdef USE_BUFINFO
-    saveBufferInfo();
-#endif
 }

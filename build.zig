@@ -28,6 +28,7 @@ const w3m_srcs = [_][]const u8{
     "message.c",
     "termcap_util.c",
     "tab.c",
+    "tab_list.c",
     "buffer.c",
     "keybind.c",
     "html_form.c",
