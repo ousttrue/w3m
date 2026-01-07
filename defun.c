@@ -1710,3 +1710,151 @@ DEFUN(dictwordat, DICT_WORD_AT,
 {
     execdict(GetWord(Currentbuf));
 }
+
+DEFUN(docCSet, CHARSET, "Change the character encoding for the current document")
+{
+    char* cs = searchKeyData();
+    if (cs == NULL || *cs == '\0')
+        /* FIXME: gettextize? */
+        cs = inputStr("Document charset: ",
+            wc_ces_to_charset(Currentbuf->doc->charset));
+
+    enum wc_ces charset = wc_guess_charset_short(cs, 0);
+    if (charset == 0) {
+        return;
+    }
+    _docCSet(charset);
+}
+
+DEFUN(defCSet, DEFAULT_CHARSET, "Change the default character encoding")
+{
+    char* cs = searchKeyData();
+    if (cs == NULL || *cs == '\0')
+        /* FIXME: gettextize? */
+        cs = inputStr("Default document charset: ",
+            wc_ces_to_charset(getRuntime()->DocumentCharset));
+    enum wc_ces charset = wc_guess_charset_short(cs, 0);
+    if (charset != 0)
+        getRuntime()->DocumentCharset = charset;
+}
+
+DEFUN(chkURL, MARK_URL, "Turn URL-like strings into hyperlinks")
+{
+    chkURLBuffer(Currentbuf);
+}
+
+DEFUN(chkWORD, MARK_WORD, "Turn current word into hyperlink")
+{
+    int spos, epos;
+    const char* p = doc_getCurWord(ctx.buf->doc, &spos, &epos);
+    if (p == NULL)
+        return;
+    doc_reAnchorWord(baseURL(ctx.buf), ctx.buf->doc, ctx.buf->doc->currentLine, spos, epos);
+}
+
+/* render frames */
+DEFUN(rFrame, FRAME, "Toggle rendering HTML frames")
+{
+}
+
+DEFUN(extbrz, EXTERN, "Display using an external browser")
+{
+    if (Currentbuf->bufferprop & BP_INTERNAL) {
+        /* FIXME: gettextize? */
+        disp_err_message("Can't browse...", TRUE);
+        return;
+    }
+    if (Currentbuf->content->url.scheme == SCM_LOCAL && !strcmp(Currentbuf->content->url.file, "-")) {
+        /* file is std input */
+        /* FIXME: gettextize? */
+        disp_err_message("Can't browse stdin", TRUE);
+        return;
+    }
+    invoke_browser(parsedURL2Str(&Currentbuf->content->url)->ptr);
+}
+
+DEFUN(linkbrz, EXTERN_LINK, "Display target using an external browser")
+{
+    if (ctx.buf->doc->firstLine == NULL)
+        return;
+    struct Anchor* a = doc_retrieveCurrentAnchor(ctx.buf->doc);
+    if (a == NULL)
+        return;
+    struct Url pu;
+    parseURL2(a->url, &pu, baseURL(ctx.buf));
+    invoke_browser(parsedURL2Str(&pu)->ptr);
+}
+
+/* show current line number and number of lines in the entire document */
+DEFUN(curlno, LINE_INFO, "Display current position in document")
+{
+    struct Line* l = Currentbuf->doc->currentLine;
+    Str tmp;
+    int cur = 0, all = 0, col = 0, len = 0;
+
+    if (l != NULL) {
+        cur = l->real_linenumber;
+        col = l->bwidth + Currentbuf->doc->currentColumn + Currentbuf->doc->cursorX + 1;
+        while (l->next && l->next->bpos)
+            l = l->next;
+        if (l->width < 0)
+            l->width = COLPOS(l, l->len);
+        len = l->bwidth + l->width;
+    }
+    if (Currentbuf->doc->lastLine)
+        all = Currentbuf->doc->lastLine->real_linenumber;
+    // if (Currentbuf->pagerSource && !(Currentbuf->bufferprop & BP_CLOSE))
+    //     tmp = Sprintf("line %d col %d/%d", cur, col, len);
+    // else
+    tmp = Sprintf("line %d/%d (%d%%) col %d/%d", cur, all,
+        (int)((double)cur * 100.0 / (double)(all ? all : 1)
+            + 0.5),
+        col, len);
+    Strcat_charp(tmp, "  ");
+    Strcat_charp(tmp, wc_ces_to_charset_desc(Currentbuf->doc->charset));
+
+    disp_message(tmp->ptr, FALSE);
+}
+
+DEFUN(dispI, DISPLAY_IMAGE, "Restart loading and drawing of images")
+{
+    if (!getRuntime()->displayImage)
+        initImage();
+    if (!getRuntime()->activeImage)
+        return;
+    getRuntime()->displayImage = true;
+    /*
+     * if (!(Currentbuf->type && is_html_type(Currentbuf->type)))
+     * return;
+     */
+    Currentbuf->doc->image_flag = IMG_FLAG_AUTO;
+}
+
+DEFUN(stopI, STOP_IMAGE, "Stop loading and drawing of images")
+{
+    if (!getRuntime()->activeImage)
+        return;
+    /*
+     * if (!(Currentbuf->type && is_html_type(Currentbuf->type)))
+     * return;
+     */
+    Currentbuf->doc->image_flag = IMG_FLAG_SKIP;
+}
+
+DEFUN(dispVer, VERSION, "Display the version of w3m")
+{
+    disp_message(Sprintf("w3m version %s", w3m_version)->ptr, TRUE);
+}
+
+DEFUN(wrapToggle, WRAP_TOGGLE, "Toggle wrapping mode in searches")
+{
+    if (getRuntime()->WrapSearch) {
+        getRuntime()->WrapSearch = FALSE;
+        /* FIXME: gettextize? */
+        disp_message("Wrap search off", TRUE);
+    } else {
+        getRuntime()->WrapSearch = TRUE;
+        /* FIXME: gettextize? */
+        disp_message("Wrap search on", TRUE);
+    }
+}

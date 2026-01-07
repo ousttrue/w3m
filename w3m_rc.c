@@ -2652,3 +2652,159 @@ char* searchKeyData(void)
         return NULL;
     return allocStr(data, -1);
 }
+
+void _docCSet(enum wc_ces charset)
+{
+    if (Currentbuf->bufferprop & BP_INTERNAL)
+        return;
+    if (Currentbuf->content->sourcefile == NULL) {
+        disp_message("Can't reload...", FALSE);
+        return;
+    }
+    Currentbuf->doc->charset = charset;
+}
+
+/* spawn external browser */
+void invoke_browser(const char* url)
+{
+    getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
+    char* browser = searchKeyData();
+    if (browser == NULL || *browser == '\0') {
+        switch (getRuntime()->prec_num) {
+        case 0:
+        case 1:
+            browser = getRuntime()->ExtBrowser;
+            break;
+        case 2:
+            browser = getRuntime()->ExtBrowser2;
+            break;
+        case 3:
+            browser = getRuntime()->ExtBrowser3;
+            break;
+        case 4:
+            browser = getRuntime()->ExtBrowser4;
+            break;
+        case 5:
+            browser = getRuntime()->ExtBrowser5;
+            break;
+        case 6:
+            browser = getRuntime()->ExtBrowser6;
+            break;
+        case 7:
+            browser = getRuntime()->ExtBrowser7;
+            break;
+        case 8:
+            browser = getRuntime()->ExtBrowser8;
+            break;
+        case 9:
+            browser = getRuntime()->ExtBrowser9;
+            break;
+        }
+        if (browser == NULL || *browser == '\0') {
+            browser = inputStr("Browse command: ", NULL);
+            if (browser != NULL)
+                browser = conv_to_system(browser);
+        }
+    } else {
+        browser = conv_to_system(browser);
+    }
+    if (browser == NULL || *browser == '\0') {
+        return;
+    }
+
+    int bg = 0, len;
+    if ((len = strlen(browser)) >= 2 && browser[len - 1] == '&' && browser[len - 2] != '\\') {
+        browser = allocStr(browser, len - 2);
+        bg = 1;
+    }
+    Str cmd = myExtCommand(browser, shell_quote(url), FALSE);
+    Strremovetrailingspaces(cmd);
+    exitRawMode();
+    mySystem(cmd->ptr, bg);
+    enterRawMode();
+}
+
+void follow_map(struct parsed_tagarg* arg)
+{
+    char* name = tag_get_value(arg, "link");
+    int x, y;
+    struct Url p_url;
+
+    struct Anchor* an = doc_retrieveCurrentImg(Currentbuf->doc);
+    x = Currentbuf->doc->cursorX + Currentbuf->doc->rootX;
+    y = Currentbuf->doc->cursorY + Currentbuf->doc->rootY;
+    struct MapArea* a = follow_map_menu(Currentbuf->doc, name, an, x, y);
+    if (a == NULL || a->url == NULL || *(a->url) == '\0') {
+        return;
+    }
+    if (*(a->url) == '#') {
+        gotoLabel(Currentbuf, a->url + 1);
+        return;
+    }
+    parseURL2(a->url, &p_url, baseURL(Currentbuf));
+    pushHashHist(getRuntime()->URLHist, parsedURL2Str(&p_url)->ptr);
+    struct Content* content = get_content_cache(a->url, NULL,
+        (struct LoadOption) {
+            .base_url = baseURL(Currentbuf),
+            .referer = parsedURL2Str(&Currentbuf->content->url)->ptr });
+    if (!content) {
+        return;
+    }
+    struct Buffer* buf = buf_new(content);
+
+    if (getRuntime()->check_target
+        && getRuntime()->open_tab_blank
+        && a->target
+        && (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
+        tabs_append(buf);
+    } else {
+        tab_push_buffer(CurrentTab(), buf);
+    }
+}
+
+void change_charset(struct parsed_tagarg* arg)
+{
+    struct Buffer* buf = Currentbuf->linkBuffer[LB_N_INFO];
+    enum wc_ces charset;
+
+    if (buf == NULL)
+        return;
+    delBuffer(Currentbuf);
+    Currentbuf = buf;
+    if (Currentbuf->bufferprop & BP_INTERNAL)
+        return;
+    charset = Currentbuf->doc->charset;
+    for (; arg; arg = arg->next) {
+        if (!strcmp(arg->arg, "charset"))
+            charset = atoi(arg->value);
+    }
+    _docCSet(charset);
+}
+
+/* mark URL-like patterns as anchors */
+void chkURLBuffer(struct Buffer* buf)
+{
+    static char* url_like_pat[] = {
+        "https?://[a-zA-Z0-9][a-zA-Z0-9:%\\-\\./?=~_\\&+@#,\\$;]*[a-zA-Z0-9_/=\\-]",
+        "file:/[a-zA-Z0-9:%\\-\\./=_\\+@#,\\$;]*",
+        "ftp://[a-zA-Z0-9][a-zA-Z0-9:%\\-\\./=_+@#,\\$]*[a-zA-Z0-9_/]",
+        "https?://[a-zA-Z0-9:%\\-\\./_@]*\\[[a-fA-F0-9:][a-fA-F0-9:\\.]*\\][a-zA-Z0-9:%\\-\\./?=~_\\&+@#,\\$;]*",
+        "ftp://[a-zA-Z0-9:%\\-\\./_@]*\\[[a-fA-F0-9:][a-fA-F0-9:\\.]*\\][a-zA-Z0-9:%\\-\\./=_+@#,\\$]*",
+        NULL
+    };
+    for (int i = 0; url_like_pat[i]; i++) {
+        doc_reAnchor(baseURL(buf), buf->doc, url_like_pat[i]);
+    }
+    chkExternalURIBuffer(buf);
+    buf->check_url |= CHK_URL;
+}
+
+void tmpClearBuffer(struct Buffer* buf)
+{
+    if (writeBufferCache(buf) == 0) {
+        buf->doc->firstLine = NULL;
+        buf->doc->topLine = NULL;
+        buf->doc->currentLine = NULL;
+        buf->doc->lastLine = NULL;
+    }
+}
