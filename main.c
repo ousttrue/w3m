@@ -718,73 +718,13 @@ repBuffer(struct TabBuffer* tab, struct Buffer* oldbuf, struct Buffer* buf)
  * Command functions: These functions are called with a keystroke.
  */
 
-/* go to specified URL */
-static struct Content* goURL0(const char* prompt, int relative)
-{
-    const char* url = searchKeyData();
-    if (url == NULL) {
-        struct Hist* hist = copyHist(getRuntime()->URLHist);
-        struct Anchor* a;
-
-        struct Url* current = baseURL(Currentbuf);
-        if (current) {
-            char* c_url = parsedURL2Str(current)->ptr;
-            if (getRuntime()->DefaultURLString == DEFAULT_URL_CURRENT)
-                url = url_decode2(NULL, NULL, c_url);
-            else
-                pushHist(hist, c_url);
-        }
-        a = doc_retrieveCurrentAnchor(Currentbuf->doc);
-        if (a) {
-            struct Url p_url;
-            parseURL2(a->url, &p_url, current);
-            const char* a_url = parsedURL2Str(&p_url)->ptr;
-            if (getRuntime()->DefaultURLString == DEFAULT_URL_LINK)
-                url = url_decode2(baseURL(Currentbuf), Currentbuf->doc, a_url);
-            else
-                pushHist(hist, a_url);
-        }
-        url = inputLineHist(prompt, url, IN_URL, hist);
-        if (url != NULL)
-            url = skip_blanks(url);
-    }
-
-    struct Url* current;
-    const char* referer;
-    if (relative) {
-        const int* no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->content->url);
-        current = baseURL(Currentbuf);
-        if ((no_referer_ptr && *no_referer_ptr) || current == NULL || current->scheme == SCM_LOCAL || current->scheme == SCM_LOCAL_CGI)
-            referer = NO_REFERER;
-        else
-            referer = parsedURL2RefererStr(&Currentbuf->content->url)->ptr;
-        url = url_encode(url, current, Currentbuf->doc->charset);
-    } else {
-        current = NULL;
-        referer = NULL;
-        url = url_encode(url, NULL, 0);
-    }
-    if (url == NULL || *url == '\0') {
-        return NULL;
-    }
-    if (*url == '#') {
-        return gotoLabel(Currentbuf, url + 1).new_buf->content;
-    }
-    struct Url p_url;
-    parseURL2(url, &p_url, current);
-    pushHashHist(getRuntime()->URLHist, parsedURL2Str(&p_url)->ptr);
-    return get_content_cache(url, NULL,
-        (struct LoadOption) { .base_url = current, .referer = referer });
-    // if (content) {
-    //     struct Buffer* buf = buf_new(content);
-    //     tab_push_buffer(getRuntime()->CurrentTab, buf);
-    //     pushHashHist(getRuntime()->URLHist, parsedURL2Str(&Currentbuf->content->url)->ptr);
-    // }
-}
-
 DEFUN(goURL, GOTO, "Open specified document in a new buffer")
 {
-    goURL0("Goto URL: ", FALSE);
+    struct Content* content = goURL0(ctx.buf, "Goto URL: ", FALSE);
+    if (content) {
+        struct Buffer* new_buf = buf_new(content);
+        tab_push_buffer(ctx.tab, new_buf);
+    }
 }
 
 DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer")
@@ -807,10 +747,13 @@ DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer")
 
 DEFUN(gorURL, GOTO_RELATIVE, "Go to relative address")
 {
-    goURL0("Goto relative URL: ", TRUE);
+    struct Content* content = goURL0(ctx.buf, "Goto relative URL: ", TRUE);
+    if (content) {
+        struct Buffer* new_buf = buf_new(content);
+        tab_push_buffer(ctx.tab, new_buf);
+    }
 }
 
-/* load bookmark */
 DEFUN(ldBmark, BOOKMARK VIEW_BOOKMARK, "View bookmarks")
 {
     struct Content* content = get_content_cache(getRuntime()->BookmarkFile, NULL,
@@ -824,11 +767,8 @@ DEFUN(ldBmark, BOOKMARK VIEW_BOOKMARK, "View bookmarks")
 /* Add current to bookmark */
 DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
 {
-    Str tmp;
-    struct FormList* request;
-
-    tmp = Sprintf("mode=panel&cookie=%s&bmark=%s&url=%s&title=%s"
-                  "&charset=%s",
+    Str tmp = Sprintf("mode=panel&cookie=%s&bmark=%s&url=%s&title=%s"
+                      "&charset=%s",
         (Str_form_quote(localCookie()))->ptr,
         (Str_form_quote(Strnew_charp(getRuntime()->BookmarkFile)))->ptr,
         (Str_form_quote(parsedURL2Str(&Currentbuf->content->url)))->ptr,
@@ -839,9 +779,11 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
             ->ptr,
         wc_ces_to_charset(getRuntime()->BookmarkCharset));
 
-    request = newFormList(NULL, "post", NULL, NULL, NULL, NULL, NULL);
-    request->body = tmp->ptr;
-    request->length = tmp->length;
+    struct FormList* request = newFormList(NULL, "post", NULL, NULL, NULL, NULL, NULL);
+    *request = (struct FormList) {
+        .body = tmp->ptr,
+        .length = tmp->length,
+    };
     struct Content* content = get_content_cache("file:///$LIB/" W3MBOOKMARK_CMDNAME, request,
         (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER });
     if (content) {
@@ -850,7 +792,6 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
     }
 }
 
-/* option setting */
 DEFUN(ldOpt, OPTIONS, "Display options setting panel")
 {
     cmd_loadBuffer(load_option_panel(), BP_NO_URL, LB_NOLINK);
@@ -1924,24 +1865,3 @@ DEFUN(tabA, TAB_LINK, "Follow current hyperlink in a new tab")
     followTab(getRuntime()->prec_num ? numTab(PREC_NUM) : NULL);
 }
 
-static void
-tabURL0(struct TabBuffer* tab, char* prompt, int relative)
-{
-    struct Content* content = goURL0(prompt, relative);
-    if (content) {
-        struct Buffer* buf = buf_new(content);
-        tabs_append(buf);
-    }
-}
-
-DEFUN(tabURL, TAB_GOTO, "Open specified document in a new tab")
-{
-    tabURL0(getRuntime()->prec_num ? numTab(PREC_NUM) : NULL,
-        "Goto URL on new tab: ", FALSE);
-}
-
-DEFUN(tabrURL, TAB_GOTO_RELATIVE, "Open relative address in a new tab")
-{
-    tabURL0(getRuntime()->prec_num ? numTab(PREC_NUM) : NULL,
-        "Goto relative URL on new tab: ", TRUE);
-}

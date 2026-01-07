@@ -2484,5 +2484,60 @@ Str tmpfname(enum TmpFileTypes type, const char* ext)
     return tmpf;
 }
 
+struct Content* goURL0(struct Buffer* buf, const char* prompt, bool relative)
+{
+    const char* url = searchKeyData();
+    if (!url) {
+        struct Hist* hist = copyHist(getRuntime()->URLHist);
+        struct Anchor* a;
 
+        struct Url* current = baseURL(buf);
+        if (current) {
+            char* c_url = parsedURL2Str(current)->ptr;
+            if (getRuntime()->DefaultURLString == DEFAULT_URL_CURRENT)
+                url = url_decode2(NULL, NULL, c_url);
+            else
+                pushHist(hist, c_url);
+        }
+        a = doc_retrieveCurrentAnchor(buf->doc);
+        if (a) {
+            struct Url p_url;
+            parseURL2(a->url, &p_url, current);
+            const char* a_url = parsedURL2Str(&p_url)->ptr;
+            if (getRuntime()->DefaultURLString == DEFAULT_URL_LINK)
+                url = url_decode2(baseURL(buf), buf->doc, a_url);
+            else
+                pushHist(hist, a_url);
+        }
+        url = inputLineHist(prompt, url, IN_URL, hist);
+        if (url != NULL)
+            url = skip_blanks(url);
+    }
 
+    struct Url* current;
+    const char* referer;
+    if (relative) {
+        const int* no_referer_ptr = query_SCONF_NO_REFERER_FROM(&buf->content->url);
+        current = baseURL(buf);
+        if ((no_referer_ptr && *no_referer_ptr) || current == NULL || current->scheme == SCM_LOCAL || current->scheme == SCM_LOCAL_CGI)
+            referer = NO_REFERER;
+        else
+            referer = parsedURL2RefererStr(&buf->content->url)->ptr;
+        url = url_encode(url, current, buf->doc->charset);
+    } else {
+        current = NULL;
+        referer = NULL;
+        url = url_encode(url, NULL, 0);
+    }
+    if (url == NULL || *url == '\0') {
+        return NULL;
+    }
+    if (*url == '#') {
+        return gotoLabel(buf, url + 1).new_buf->content;
+    }
+    struct Url p_url;
+    parseURL2(url, &p_url, current);
+    pushHashHist(getRuntime()->URLHist, parsedURL2Str(&p_url)->ptr);
+    return get_content_cache(url, NULL,
+        (struct LoadOption) { .base_url = current, .referer = referer });
+}

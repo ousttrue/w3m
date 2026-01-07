@@ -1069,7 +1069,6 @@ DEFUN(cursorTop, CURSOR_TOP, "Move cursor to the top of the screen")
     doc_arrangeLine(Currentbuf->doc);
 }
 
-
 DEFUN(cursorMiddle, CURSOR_MIDDLE, "Move cursor to the middle of the screen")
 {
     if (Currentbuf->doc->firstLine == NULL)
@@ -1086,4 +1085,22 @@ DEFUN(cursorBottom, CURSOR_BOTTOM, "Move cursor to the bottom of the screen")
     int offsety = Currentbuf->doc->LINES - 1;
     Currentbuf->doc->currentLine = currentLineSkip(Currentbuf->doc->topLine, offsety);
     doc_arrangeLine(Currentbuf->doc);
+}
+
+DEFUN(tabURL, TAB_GOTO, "Open specified document in a new tab")
+{
+    struct Content* content = goURL0(ctx.buf, "Goto relative URL on new tab: ", true);
+    if (content) {
+        struct Buffer* buf = buf_new(content);
+        tabs_append(buf);
+    }
+}
+
+DEFUN(tabrURL, TAB_GOTO_RELATIVE, "Open relative address in a new tab")
+{
+    struct Content* content = goURL0(ctx.buf, "Goto relative URL on new tab: ", false);
+    if (content) {
+        struct Buffer* buf = buf_new(content);
+        tabs_append(buf);
+    }
 }
