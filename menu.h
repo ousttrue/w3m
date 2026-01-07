@@ -75,3 +75,4 @@ void initMenu(void);
 struct LinkList* link_menu(struct Buffer* buf);
 struct Anchor* accesskey_menu(struct Buffer* buf);
 struct Anchor* list_menu(struct Buffer* buf);
+void anchorMn(BufferMenuFunc menu_func, bool go);

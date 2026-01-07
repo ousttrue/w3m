@@ -1,4 +1,5 @@
 #include "menu.h"
+#include "hmarker.h"
 #include "tab_list.h"
 #include "anchor_list.h"
 #include "etc.h"
@@ -1537,4 +1538,21 @@ list_menu(struct Buffer* buf)
     popup_menu(NULL, &menu);
 
     return (key >= 0) ? ap[key] : NULL;
+}
+
+void anchorMn(BufferMenuFunc menu_func, bool go)
+{
+    if (Currentbuf->doc->href.nanchor == 0 || !Currentbuf->doc->hmarklist)
+        return;
+
+    struct Anchor* a = menu_func(Currentbuf);
+    if (!a || a->hseq < 0)
+        return;
+
+    struct BufferPoint* po = &Currentbuf->doc->hmarklist->marks[a->hseq];
+    doc_gotoLine(Currentbuf->doc, po->line);
+    Currentbuf->doc->pos = po->pos;
+    doc_arrangeCursor(Currentbuf->doc);
+    if (go)
+        followA((struct DefunContext) { 0 });
 }
