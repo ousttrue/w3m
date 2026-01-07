@@ -1,4 +1,5 @@
 #include "defun.h"
+#include "dict.h"
 #include "cookie.h"
 #include "menu.h"
 #include "file.h"
@@ -1591,4 +1592,121 @@ DEFUN(reload, RELOAD, "Load current document anew")
 DEFUN(reshape, RESHAPE, "Re-render document")
 {
     reshapeBuffer(Currentbuf);
+}
+
+DEFUN(setAlarm, ALARM, "Set alarm")
+{
+    getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
+    const char* data = searchKeyData();
+    if (data == NULL || *data == '\0') {
+        data = inputStrHist("(Alarm)sec command: ", "", getRuntime()->TextHist);
+        if (data == NULL) {
+            return;
+        }
+    }
+    set_alarm(data);
+}
+
+DEFUN(reinit, REINIT, "Reload configuration file")
+{
+    char* resource = searchKeyData();
+
+    if (resource == NULL) {
+        init_rc();
+        sync_with_option();
+        initCookie();
+        return;
+    }
+
+    if (!strcasecmp(resource, "CONFIG") || !strcasecmp(resource, "RC")) {
+        init_rc();
+        sync_with_option();
+        return;
+    }
+
+    if (!strcasecmp(resource, "COOKIE")) {
+        initCookie();
+        return;
+    }
+
+    if (!strcasecmp(resource, "KEYMAP")) {
+        initKeymap(TRUE);
+        return;
+    }
+
+    if (!strcasecmp(resource, "MAILCAP")) {
+        initMailcap();
+        return;
+    }
+
+    if (!strcasecmp(resource, "MENU")) {
+        initMenu();
+        return;
+    }
+
+    if (!strcasecmp(resource, "MIMETYPES")) {
+        initMimeTypes();
+        return;
+    }
+
+    if (!strcasecmp(resource, "URIMETHODS")) {
+        initURIMethods();
+        return;
+    }
+
+    disp_err_message(Sprintf("Don't know how to reinitialize '%s'", resource)->ptr, FALSE);
+}
+
+DEFUN(defKey, DEFINE_KEY, "Define a binding between a key stroke combination and a command")
+{
+    getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
+    char* data = searchKeyData();
+    if (data == NULL || *data == '\0') {
+        data = inputStrHist("Key definition: ", "", getRuntime()->TextHist);
+        if (data == NULL || *data == '\0') {
+            return;
+        }
+    }
+    setKeymap(allocStr(data, -1), -1, TRUE);
+}
+
+DEFUN(execCmd, COMMAND, "Invoke w3m function(s)")
+{
+    getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
+    const char* data = searchKeyData();
+    if (data == NULL || *data == '\0') {
+        data = inputStrHist("command [; ...]: ", "", getRuntime()->TextHist);
+        if (data == NULL) {
+            return;
+        }
+    }
+    /* data: FUNC [DATA] [; FUNC [DATA] ...] */
+    while (*data) {
+        data = skip_blanks(data);
+        if (*data == ';') {
+            data++;
+            continue;
+        }
+        char* p = getWord(&data);
+        int cmd = getFuncList(p);
+        if (cmd < 0)
+            break;
+        p = getQWord(&data);
+        getRuntime()->CurrentKey = -1;
+        getRuntime()->CurrentKeyData = NULL;
+        getRuntime()->CurrentCmdData = *p ? p : NULL;
+        w3mFuncList[cmd].func(ctx);
+        getRuntime()->CurrentCmdData = NULL;
+    }
+}
+
+DEFUN(dictword, DICT_WORD, "Execute dictionary command (see README.dict)")
+{
+    execdict(inputStr("(dictionary)!", ""));
+}
+
+DEFUN(dictwordat, DICT_WORD_AT,
+    "Execute dictionary command for word at cursor")
+{
+    execdict(GetWord(Currentbuf));
 }

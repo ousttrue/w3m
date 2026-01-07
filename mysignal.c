@@ -135,3 +135,35 @@ void set_alarm(const char *data)
     //     setAlarmEvent(&DefaultAlarm, 0, AL_UNSET, FUNCNAME_nulcmd, NULL);
     // }
 }
+
+// static MySignalHandler
+// SigAlarm(SIGNAL_ARG)
+// {
+//     char* data;
+//
+//     if (CurrentAlarm->sec > 0) {
+//         getRuntime()->CurrentKey = -1;
+//         getRuntime()->CurrentKeyData = NULL;
+//         getRuntime()->CurrentCmdData = data = (char*)CurrentAlarm->data;
+//         w3mFuncList[CurrentAlarm->cmd].func();
+//         getRuntime()->CurrentCmdData = NULL;
+//         if (CurrentAlarm->status == AL_IMPLICIT_ONCE) {
+//             CurrentAlarm->sec = 0;
+//             CurrentAlarm->status = AL_UNSET;
+//         }
+//         if (Currentbuf->event) {
+//             if (Currentbuf->event->status != AL_UNSET)
+//                 CurrentAlarm = Currentbuf->event;
+//             else
+//                 Currentbuf->event = NULL;
+//         }
+//         if (!Currentbuf->event)
+//             CurrentAlarm = &DefaultAlarm;
+//         if (CurrentAlarm->sec > 0) {
+//             mySignal(SIGALRM, SigAlarm);
+//             alarm(CurrentAlarm->sec);
+//         }
+//     }
+//     SIGNAL_RETURN;
+// }
+

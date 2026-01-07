@@ -1,4 +1,6 @@
 #include "w3m_rc.h"
+#include "ftp.h"
+#include "ssl_stream.h"
 #include "tab_list.h"
 #include "anchor_list.h"
 #include "mysignal.h"
@@ -2598,4 +2600,55 @@ Str currentURL(struct Buffer* buf)
     if (buf->bufferprop & BP_INTERNAL)
         return Strnew_size(0);
     return parsedURL2Str(&buf->content->url);
+}
+
+static void deleteFiles()
+{
+    struct Buffer* buf;
+    char* f;
+
+    for (struct TabBuffer* CurrentTab = FirstTab(); CurrentTab; CurrentTab = CurrentTab->nextTab) {
+        while (CurrentTab->firstBuffer) {
+            buf = CurrentTab->firstBuffer->nextBuffer;
+            discardBuffer(CurrentTab->firstBuffer);
+            CurrentTab->firstBuffer = buf;
+        }
+    }
+    while ((f = popText(getRuntime()->fileToDelete)) != NULL) {
+        unlink(f);
+        if (getRuntime()->enable_inline_image == INLINE_IMG_SIXEL && strcmp(f + strlen(f) - 4, ".gif") == 0) {
+            Str firstframe = Strnew_charp(f);
+            Strcat_charp(firstframe, "-1");
+            unlink(firstframe->ptr);
+        }
+    }
+}
+
+void w3m_exit(int i)
+{
+    deleteFiles();
+    free_ssl_ctx();
+    disconnectFTP();
+    if (getRuntime()->mkd_tmp_dir)
+        if (rmdir(getRuntime()->mkd_tmp_dir) != 0) {
+            fprintf(stderr, "Can't remove temporary directory (%s)!\n", getRuntime()->mkd_tmp_dir);
+            exit(1);
+        }
+    exit(i);
+}
+
+char* searchKeyData(void)
+{
+    const char* data = NULL;
+    if (getRuntime()->CurrentKeyData != NULL && *getRuntime()->CurrentKeyData != '\0')
+        data = getRuntime()->CurrentKeyData;
+    else if (getRuntime()->CurrentCmdData != NULL && *getRuntime()->CurrentCmdData != '\0')
+        data = getRuntime()->CurrentCmdData;
+    else if (getRuntime()->CurrentKey >= 0)
+        data = getKeyData(getRuntime()->CurrentKey);
+    getRuntime()->CurrentKeyData = NULL;
+    getRuntime()->CurrentCmdData = NULL;
+    if (data == NULL || *data == '\0')
+        return NULL;
+    return allocStr(data, -1);
 }
