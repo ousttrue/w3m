@@ -1,4 +1,5 @@
 #include "image.h"
+#include "sh.h"
 #include "tab_list.h"
 #include "anchor_list.h"
 #include "tab.h"
@@ -395,14 +396,14 @@ static void put_image_iterm2(const char* url, int x, int y, int w, int h)
         return;
 
     Str s = Sprintf("\x1b]1337;"
-                  "File="
-                  "name=%s;"
-                  "size=%d;"
-                  "width=%d;"
-                  "height=%d;"
-                  "preserveAspectRatio=0;"
-                  "inline=1"
-                  ":",
+                    "File="
+                    "name=%s;"
+                    "size=%d;"
+                    "width=%d;"
+                    "height=%d;"
+                    "preserveAspectRatio=0;"
+                    "inline=1"
+                    ":",
         url, st.st_size, w, h);
 
     tty_MOVE(y, x);
@@ -441,7 +442,6 @@ static void put_image_kitty(const char* url, int x, int y, int w, int h, int sx,
     char* argv[4];
     FILE* fp;
     int c, i, j, m, t, is_anim;
-    struct stat st;
     pid_t pid;
     MySignalHandler (*volatile previntr)(SIGNAL_ARG);
     MySignalHandler (*volatile prevquit)(SIGNAL_ARG);
@@ -462,11 +462,8 @@ static void put_image_kitty(const char* url, int x, int y, int w, int h, int sx,
             is_anim = 0;
         }
 
-        /* convert only if png doesn't exist yet. */
-
-        if (stat(tmpf, &st)) {
-            if (stat(url, &st))
-                return;
+        if (!sh_exists(tmpf)) {
+            // convert only if png doesn't exist yet.
 
             flush_tty();
 
@@ -509,7 +506,7 @@ static void put_image_kitty(const char* url, int x, int y, int w, int h, int sx,
         url = tmpf;
     }
 
-    if (stat(url, &st))
+    if (!sh_exists(url))
         return;
 
     fp = fopen(url, "r");
@@ -533,7 +530,7 @@ static void put_image_kitty(const char* url, int x, int y, int w, int h, int sx,
     else
         m = 1;
     s = Sprintf("\x1b_Gf=%d,s=%d,v=%d,a=T,m=%d,x=%d,y=%d,w=%d,h=%d,c=%d,r=%d;"
-                  "%s\x1b\\",
+                "%s\x1b\\",
         t, w, h, m, sx, sy, sw, sh, cols, rows, base64->ptr);
     writestr(s->ptr);
 
