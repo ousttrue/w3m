@@ -382,7 +382,6 @@ static Str get_image_osc5379(const char* url, int x, int y, int w, int h, int sx
 
 static void put_image_iterm2(const char* url, int x, int y, int w, int h)
 {
-    Str buf;
     char* cbuf;
     FILE* fp;
     int c, i;
@@ -395,7 +394,7 @@ static void put_image_iterm2(const char* url, int x, int y, int w, int h)
     if (!fp)
         return;
 
-    buf = Sprintf("\x1b]1337;"
+    Str s = Sprintf("\x1b]1337;"
                   "File="
                   "name=%s;"
                   "size=%d;"
@@ -408,7 +407,7 @@ static void put_image_iterm2(const char* url, int x, int y, int w, int h)
 
     tty_MOVE(y, x);
 
-    writestr(buf->ptr);
+    writestr(s->ptr);
 
     cbuf = GC_MALLOC_ATOMIC(3072);
     if (!cbuf)
@@ -417,15 +416,15 @@ static void put_image_iterm2(const char* url, int x, int y, int w, int h)
     while ((c = fgetc(fp)) != EOF) {
         cbuf[i++] = c;
         if (i == 3072) {
-            buf = base64_encode(cbuf, i);
-            writestr(buf->ptr);
+            s = base64_encode(cbuf, i);
+            writestr(s->ptr);
             i = 0;
         }
     }
 
     if (i) {
-        buf = base64_encode(cbuf, i);
-        writestr(buf->ptr);
+        s = base64_encode(cbuf, i);
+        writestr(s->ptr);
     }
 
 cleanup:
@@ -437,7 +436,7 @@ cleanup:
 static void put_image_kitty(const char* url, int x, int y, int w, int h, int sx, int sy, int sw,
     int sh, int cols, int rows)
 {
-    Str buf, base64;
+    Str s, base64;
     char *cbuf, *tmpf;
     char* argv[4];
     FILE* fp;
@@ -487,9 +486,9 @@ static void put_image_kitty(const char* url, int x, int y, int w, int h, int sx,
                     argv[i++] = "convert";
 
                 if (is_anim) {
-                    buf = Strnew_charp(url);
-                    Strcat_charp(buf, "[0]");
-                    argv[i++] = buf->ptr;
+                    s = Strnew_charp(url);
+                    Strcat_charp(s, "[0]");
+                    argv[i++] = s->ptr;
                 } else {
                     argv[i++] = (char*)url;
                 }
@@ -533,10 +532,10 @@ static void put_image_kitty(const char* url, int x, int y, int w, int h, int sx,
         m = 0;
     else
         m = 1;
-    buf = Sprintf("\x1b_Gf=%d,s=%d,v=%d,a=T,m=%d,x=%d,y=%d,w=%d,h=%d,c=%d,r=%d;"
+    s = Sprintf("\x1b_Gf=%d,s=%d,v=%d,a=T,m=%d,x=%d,y=%d,w=%d,h=%d,c=%d,r=%d;"
                   "%s\x1b\\",
         t, w, h, m, sx, sy, sw, sh, cols, rows, base64->ptr);
-    writestr(buf->ptr);
+    writestr(s->ptr);
 
     if (m) {
         i = 0;
@@ -544,8 +543,8 @@ static void put_image_kitty(const char* url, int x, int y, int w, int h, int sx,
         while ((c = fgetc(fp)) != EOF) {
             if (j) {
                 base64 = base64_encode(cbuf, i);
-                buf = Sprintf("\x1b_Gm=1;%s\x1b\\", base64->ptr);
-                writestr(buf->ptr);
+                s = Sprintf("\x1b_Gm=1;%s\x1b\\", base64->ptr);
+                writestr(s->ptr);
                 i = 0;
                 j = 0;
             }
@@ -556,8 +555,8 @@ static void put_image_kitty(const char* url, int x, int y, int w, int h, int sx,
 
         if (i) {
             base64 = base64_encode(cbuf, i);
-            buf = Sprintf("\x1b_Gm=0;%s\x1b\\", base64->ptr);
-            writestr(buf->ptr);
+            s = Sprintf("\x1b_Gm=0;%s\x1b\\", base64->ptr);
+            writestr(s->ptr);
         }
     }
 cleanup:
@@ -608,9 +607,9 @@ void drawImage(struct Buffer* currentbuf)
                 put_image_sixel(url, x, y, w, h, i->sx, i->sy, sw * rt->pixel_per_char, sh * rt->pixel_per_line_i, n_terminal_image);
                 tty_MOVE(Currentbuf->doc->cursorY, Currentbuf->doc->cursorX);
             } else if (rt->enable_inline_image == INLINE_IMG_OSC5379) {
-                Str buf = get_image_osc5379(url, x, y, w, h, sx, sy, sw, sh);
+                Str s = get_image_osc5379(url, x, y, w, h, sx, sy, sw, sh);
                 tty_MOVE(y, x);
-                writestr(buf->ptr);
+                writestr(s->ptr);
                 tty_MOVE(Currentbuf->doc->cursorY, Currentbuf->doc->cursorX);
             } else if (rt->enable_inline_image == INLINE_IMG_ITERM2) {
                 put_image_iterm2(url, x, y, sw, sh);
