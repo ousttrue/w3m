@@ -7,6 +7,7 @@
 #include "func.h"
 #include "input_stream.h"
 #include "linein.h"
+#include "urlscheme.h"
 #include "w3m_rc.h"
 #include "cookie.h"
 #include "message.h"
@@ -447,7 +448,6 @@ int checkRedirection(struct Url* pu)
     return TRUE;
 }
 
-// TODO return Str
 struct ContentData get_content(const char* path,
     struct FormList* request,
     struct LoadOption option,
@@ -723,6 +723,10 @@ struct ContentData get_content(const char* path,
         getRuntime()->DefaultType = NULL;
     } else {
         s.content->content_type = guessContentType(s.content->url.file);
+    }
+
+    if (s.content->url.scheme == SCM_LOCAL) {
+        s.content->filename = s.content->url.real_file;
     }
 
     const char* p = checkHeader(s.content, "Content-Length:");

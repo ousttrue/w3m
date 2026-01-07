@@ -708,7 +708,7 @@ void tmpClearBuffer(struct Buffer* buf)
 static Str currentURL(void);
 
 static void
-repBuffer(struct Buffer* oldbuf, struct Buffer* buf)
+repBuffer(struct TabBuffer* tab, struct Buffer* oldbuf, struct Buffer* buf)
 {
     Firstbuf = replaceBuffer(Firstbuf, oldbuf, buf);
     Currentbuf = buf;
@@ -1278,75 +1278,64 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
     tab_push_buffer(CurrentTab(), buf);
 }
 
-/* reload */
 DEFUN(reload, RELOAD, "Load current document anew")
 {
-    struct Buffer *buf, *fbuf = NULL;
-    enum wc_ces old_charset;
-    Str url;
-    struct FormList* request;
-    int multipart;
-
-    if (Currentbuf->bufferprop & BP_INTERNAL) {
+    if (ctx.buf->bufferprop & BP_INTERNAL) {
         disp_err_message("Can't reload...", TRUE);
         return;
     }
-    if (Currentbuf->content->url.scheme == SCM_LOCAL && !strcmp(Currentbuf->content->url.file, "-")) {
-        /* file is std input */
-        /* FIXME: gettextize? */
+    if (ctx.buf->content->url.scheme == SCM_LOCAL && !strcmp(ctx.buf->content->url.file, "-")) {
+        // file is std input
         disp_err_message("Can't reload stdin", TRUE);
         return;
     }
     struct Buffer sbuf;
-    copyBuffer(&sbuf, Currentbuf);
-    multipart = 0;
-    if (Currentbuf->doc->form_submit) {
-        request = Currentbuf->doc->form_submit->parent;
+    copyBuffer(&sbuf, ctx.buf);
+    int multipart = 0;
+    struct FormList* request;
+    if (ctx.buf->doc->form_submit) {
+        request = ctx.buf->doc->form_submit->parent;
         if (request->method == FORM_METHOD_POST
             && request->enctype == FORM_ENCTYPE_MULTIPART) {
             struct stat st;
             multipart = 1;
-            query_from_followform(Currentbuf, Currentbuf->doc->form_submit, multipart);
+            query_from_followform(ctx.buf, ctx.buf->doc->form_submit, multipart);
             stat(request->body, &st);
             request->length = st.st_size;
         }
     } else {
         request = NULL;
     }
-    url = parsedURL2Str(&Currentbuf->content->url);
+    Str url = parsedURL2Str(&ctx.buf->content->url);
     message("Reloading...");
-    old_charset = getRuntime()->DocumentCharset;
-    if (Currentbuf->doc->charset != WC_CES_US_ASCII)
-        getRuntime()->DocumentCharset = Currentbuf->doc->charset;
-    // SearchHeader = Currentbuf->search_header;
-    getRuntime()->DefaultType = Currentbuf->content->content_type;
+    enum wc_ces old_charset = getRuntime()->DocumentCharset;
+    if (ctx.buf->doc->charset != WC_CES_US_ASCII)
+        getRuntime()->DocumentCharset = ctx.buf->doc->charset;
+    // SearchHeader = ctx.buf->search_header;
+    getRuntime()->DefaultType = ctx.buf->content->content_type;
     struct Content* content = get_content_cache(url->ptr, request,
         (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER, .flag = RG_NOCACHE });
-    buf = buf_new(content);
+    if (!content) {
+        disp_err_message("Can't reload...", TRUE);
+        return;
+    }
+    struct Buffer* new_buf = buf_new(content);
     getRuntime()->DocumentCharset = old_charset;
     // SearchHeader = FALSE;
     getRuntime()->DefaultType = NULL;
 
     if (multipart)
         unlink(request->body);
-    if (buf == NULL) {
-        /* FIXME: gettextize? */
-        disp_err_message("Can't reload...", TRUE);
-        return;
-    }
-    if (fbuf != NULL)
-        Firstbuf = deleteBuffer(Firstbuf, fbuf);
-    repBuffer(Currentbuf, buf);
-    if ((buf->content->content_type != NULL) && (sbuf.content->content_type != NULL) && ((!strcasecmp(buf->content->content_type, "text/plain") && is_html_type(sbuf.content->content_type)) || (is_html_type(buf->content->content_type) && !strcasecmp(sbuf.content->content_type, "text/plain")))) {
+    repBuffer(ctx.tab, ctx.buf, new_buf);
+    if ((new_buf->content->content_type != NULL) && (sbuf.content->content_type != NULL) && ((!strcasecmp(new_buf->content->content_type, "text/plain") && is_html_type(sbuf.content->content_type)) || (is_html_type(new_buf->content->content_type) && !strcasecmp(sbuf.content->content_type, "text/plain")))) {
         vwSrc(ctx);
-        if (Currentbuf != buf)
-            Firstbuf = deleteBuffer(Firstbuf, buf);
+        ctx.tab->firstBuffer = deleteBuffer(ctx.tab->firstBuffer, new_buf);
     }
     // Currentbuf->search_header = sbuf.search_header;
-    Currentbuf->doc->form_submit = sbuf.doc->form_submit;
-    if (Currentbuf->doc->firstLine) {
+    ctx.buf->doc->form_submit = sbuf.doc->form_submit;
+    if (ctx.buf->doc->firstLine) {
         COPY_BUFROOT(ctx.buf->doc, sbuf.doc);
-        doc_restorePosition(Currentbuf->doc, sbuf.doc);
+        doc_restorePosition(ctx.buf->doc, sbuf.doc);
     }
 }
 
