@@ -7,13 +7,11 @@
 
 enum LinkBufferID {
     LB_NOLINK = -1,
-    LB_FRAME = 0, /* rFrame() */
-    LB_N_FRAME = 1,
-    LB_INFO = 2, /* pginfo() */
-    LB_N_INFO = 3,
-    LB_SOURCE = 4, /* vwSrc() */
+    LB_INFO = 0, /* pginfo() */
+    LB_N_INFO = 1,
+    LB_SOURCE = 2, /* vwSrc() */
     LB_N_SOURCE = LB_SOURCE,
-    MAX_LB = 5,
+    MAX_LB = 3,
 };
 
 enum BufferPropertyFlags : uint16_t {

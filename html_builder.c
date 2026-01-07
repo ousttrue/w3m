@@ -6,7 +6,6 @@
 #include "html_table.h"
 #include "html.h"
 #include "etc.h"
-#include "frame.h"
 #include "content.h"
 #include "document.h"
 #include "line.h"
@@ -3524,14 +3523,6 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Url* base_url, struct Document*
                     ex_effect &= ~PE_EX_STRIKE;
                     break;
                 case HTML_A:
-                    if (renderFrameSet && parsedtag_get_value(tag, ATTR_FRAMENAME, &p)) {
-                        p = url_quote_conv(p, doc->charset);
-                        if (!idFrame || strcmp(idFrame->body->name, p)) {
-                            idFrame = search_frame(renderFrameSet, p);
-                            if (idFrame && idFrame->body->attr != F_BODY)
-                                idFrame = NULL;
-                        }
-                    }
                     p = r = s = NULL;
                     q = doc->baseTarget;
                     t = "";
@@ -3562,10 +3553,6 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Url* base_url, struct Document*
                             hseq = -hseq;
                         }
                     }
-                    if (id && idFrame)
-                        al_put(&idFrame->body->nameList, id, NULL,
-                            NULL, NULL, '\0',
-                            (struct BufferPoint) { .line = currentLn(doc), .pos = pos });
                     if (p) {
                         effect |= PE_ANCHOR;
                         a_href = doc_registerHref(doc, (struct BufferPoint) { .line = currentLn(doc), .pos = pos },
@@ -3776,33 +3763,11 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Url* base_url, struct Document*
                     }
                     break;
                 case HTML_FRAMESET:
-                    frameset_sp++;
-                    if (frameset_sp >= FRAMESTACK_SIZE)
-                        break;
-                    frameset_s[frameset_sp] = newFrameSet(tag);
-                    if (frameset_s[frameset_sp] == NULL)
-                        break;
-                    if (frameset_sp == 0) {
-                        if (doc->frameset == NULL) {
-                            doc->frameset = frameset_s[frameset_sp];
-                        } else
-                            pushFrameTree(&(doc->frameQ),
-                                frameset_s[frameset_sp], NULL);
-                    } else
-                        addFrameSetElement(frameset_s[frameset_sp - 1],
-                            *(union frameset_element*)&frameset_s[frameset_sp]);
+                    // 
                     break;
                 case HTML_N_FRAMESET:
-                    if (frameset_sp >= 0)
-                        frameset_sp--;
                     break;
                 case HTML_FRAME:
-                    if (frameset_sp >= 0 && frameset_sp < FRAMESTACK_SIZE) {
-                        union frameset_element element = { 0 };
-
-                        // element.body = newFrame(tag, buf);
-                        addFrameSetElement(frameset_s[frameset_sp], element);
-                    }
                     break;
                 case HTML_BASE:
                     // if (parsedtag_get_value(tag, ATTR_HREF, &p)) {
@@ -3912,19 +3877,6 @@ HTMLlineproc2body(struct HtmlBuilder* hb, struct Url* base_url, struct Document*
                     id = url_quote_conv(id, name_charset);
                     doc_registerName(doc, (struct BufferPoint) { .line = currentLn(doc), .pos = pos },
                         id);
-                }
-                if (renderFrameSet && parsedtag_get_value(tag, ATTR_FRAMENAME, &p)) {
-                    p = url_quote_conv(p, doc->charset);
-                    if (!idFrame || strcmp(idFrame->body->name, p)) {
-                        idFrame = search_frame(renderFrameSet, p);
-                        if (idFrame && idFrame->body->attr != F_BODY)
-                            idFrame = NULL;
-                    }
-                }
-                if (id && idFrame) {
-                    al_put(&idFrame->body->nameList, id, NULL,
-                        NULL, NULL, '\0',
-                        (struct BufferPoint) { .line = currentLn(doc), .pos = pos });
                 }
             }
         }

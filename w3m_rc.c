@@ -25,10 +25,8 @@
 #include "funcheader.h"
 #include "parsetag.h"
 #include "funcname1.h"
-
 #include "html_form.h"
 #include "siteconf.h"
-#include "frame.h"
 #include "tab.h"
 #include "buffer.h"
 #include "image.h"

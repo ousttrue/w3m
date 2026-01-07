@@ -7,7 +7,6 @@
 #include "url.h"
 #include "document.h"
 #include "html_form.h"
-#include "frame.h"
 #include "myctype.h"
 #include <libwc/charset.h>
 #include <math.h>
@@ -333,45 +332,4 @@ void append_link_info(struct Url* base_url, struct Document* doc, Str html, stru
     Strcat_charp(html, "</table>\n");
 }
 
-/* append frame URL */
-void append_frame_info(struct Url* base_url, struct Document* doc, Str html, struct frameset* set, int level)
-{
-    if (!set)
-        return;
 
-    char *p, *q;
-    for (int i = 0; i < set->col * set->row; i++) {
-        union frameset_element frame = set->frame[i];
-        if (frame.element != NULL) {
-            switch (frame.element->attr) {
-            case F_UNLOADED:
-            case F_BODY:
-                if (frame.body->url == NULL)
-                    break;
-                Strcat_charp(html, "<pre_int>");
-                for (int j = 0; j < level; j++)
-                    Strcat_charp(html, "   ");
-                q = html_quote(frame.body->url);
-                Strcat_m_charp(html, "<a href=\"", q, "\">", NULL);
-                if (frame.body->name) {
-                    p = html_quote(url_unquote_conv(frame.body->name, doc->charset));
-                    Strcat_charp(html, p);
-                }
-                if (getRuntime()->DecodeURL)
-                    p = html_quote(url_decode2(base_url, doc, frame.body->url));
-                else
-                    p = q;
-                Strcat_m_charp(html, " ", p, "</a></pre_int><br>\n", NULL);
-                if (frame.body->ssl_certificate)
-                    Strcat_m_charp(html,
-                        "<blockquote><h2>SSL certificate</h2><pre>\n",
-                        html_quote(frame.body->ssl_certificate),
-                        "</pre></blockquote>\n", NULL);
-                break;
-            case F_FRAMESET:
-                append_frame_info(base_url, doc, html, frame.set, level + 1);
-                break;
-            }
-        }
-    }
-}

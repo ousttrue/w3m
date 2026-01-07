@@ -5,7 +5,6 @@
 #include "func.h"
 #include "menu.h"
 #include "parsetag.h"
-#include "frame.h"
 #include "cookie.h"
 #include "indep.h"
 #include "alloc.h"
@@ -1300,31 +1299,6 @@ DEFUN(reload, RELOAD, "Load current document anew")
     }
     struct Buffer sbuf;
     copyBuffer(&sbuf, Currentbuf);
-    if (Currentbuf->bufferprop & BP_FRAME && (fbuf = Currentbuf->linkBuffer[LB_N_FRAME])) {
-        if (fmInitialized()) {
-            message("Rendering frame");
-        }
-        if (!(buf = renderFrame(fbuf, 1))) {
-            return;
-        }
-        if (fbuf->linkBuffer[LB_FRAME]) {
-            if (buf->content->sourcefile
-                && fbuf->linkBuffer[LB_FRAME]->content->sourcefile
-                && !strcmp(buf->content->sourcefile, fbuf->linkBuffer[LB_FRAME]->content->sourcefile))
-                fbuf->linkBuffer[LB_FRAME]->content->sourcefile = NULL;
-            delBuffer(fbuf->linkBuffer[LB_FRAME]);
-        }
-        fbuf->linkBuffer[LB_FRAME] = buf;
-        buf->linkBuffer[LB_N_FRAME] = fbuf;
-        tab_push_buffer(CurrentTab(), buf);
-        Currentbuf = buf;
-        if (Currentbuf->doc->firstLine) {
-            COPY_BUFROOT(ctx.buf->doc, sbuf.doc);
-            doc_restorePosition(Currentbuf->doc, sbuf.doc);
-        }
-        return;
-    } else if (Currentbuf->doc->frameset != NULL)
-        fbuf = Currentbuf->linkBuffer[LB_FRAME];
     multipart = 0;
     if (Currentbuf->doc->form_submit) {
         request = Currentbuf->doc->form_submit->parent;
@@ -1475,28 +1449,6 @@ DEFUN(chkWORD, MARK_WORD, "Turn current word into hyperlink")
 /* render frames */
 DEFUN(rFrame, FRAME, "Toggle rendering HTML frames")
 {
-    struct Buffer* buf;
-
-    if ((buf = Currentbuf->linkBuffer[LB_FRAME]) != NULL) {
-        Currentbuf = buf;
-        return;
-    }
-    if (Currentbuf->doc->frameset == NULL) {
-        if ((buf = Currentbuf->linkBuffer[LB_N_FRAME]) != NULL) {
-            Currentbuf = buf;
-        }
-        return;
-    }
-    if (fmInitialized()) {
-        message("Rendering frame");
-    }
-    buf = renderFrame(Currentbuf, 0);
-    if (buf == NULL) {
-        return;
-    }
-    buf->linkBuffer[LB_N_FRAME] = Currentbuf;
-    Currentbuf->linkBuffer[LB_FRAME] = buf;
-    tab_push_buffer(CurrentTab(), buf);
 }
 
 /* spawn external browser */

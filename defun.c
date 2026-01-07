@@ -1,7 +1,6 @@
 #include "defun.h"
 #include "tab_list.h"
 #include "hmarker.h"
-#include "frame.h"
 #include "html_form.h"
 #include "regex.h"
 #include "funcheader.h"
@@ -993,8 +992,6 @@ DEFUN(prevBf, PREV, "Switch to the previous buffer")
 
 DEFUN(backBf, BACK, "Close current buffer and return to the one below in stack")
 {
-    struct Buffer* buf = ctx.buf->linkBuffer[LB_N_FRAME];
-
     if (!checkBackBuffer(Currentbuf)) {
         if (getRuntime()->close_tab_back && nTab() >= 1) {
             tabs_delete(ctx.tab);
@@ -1005,34 +1002,6 @@ DEFUN(backBf, BACK, "Close current buffer and return to the one below in stack")
     }
 
     delBuffer(Currentbuf);
-
-    if (buf) {
-        if (buf->doc->frameQ) {
-            struct frameset* fs;
-            long linenumber = buf->doc->frameQ->linenumber;
-            long top = buf->doc->frameQ->top_linenumber;
-            int pos = buf->doc->frameQ->pos;
-            int currentColumn = buf->doc->frameQ->currentColumn;
-            struct AnchorList* formitem = buf->doc->frameQ->formitem;
-
-            fs = popFrameTree(&(buf->doc->frameQ));
-            deleteFrameSet(buf->doc->frameset);
-            buf->doc->frameset = fs;
-
-            if (buf == Currentbuf) {
-                rFrame(ctx);
-                Currentbuf->doc->topLine = doc_lineSkip(Currentbuf->doc,
-                    Currentbuf->doc->firstLine, top - 1);
-                doc_gotoLine(Currentbuf->doc, linenumber);
-                Currentbuf->doc->pos = pos;
-                Currentbuf->doc->currentColumn = currentColumn;
-                doc_arrangeCursor(Currentbuf->doc);
-                formResetBuffer(Currentbuf, formitem);
-            }
-        } else if (getRuntime()->RenderFrame && buf == Currentbuf) {
-            delBuffer(Currentbuf);
-        }
-    }
 }
 
 DEFUN(deletePrevBuf, DELETE_PREVBUF, "Delete previous buffer (mainly for local CGI-scripts)")

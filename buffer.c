@@ -5,7 +5,6 @@
 #include "input_stream.h"
 #include "screen.h"
 #include "html_form.h"
-#include "frame.h"
 #include "alloc.h"
 #include "line.h"
 #include "etc.h"
@@ -26,8 +25,6 @@ char* NullLine = "";
 Lineprop NullProp[] = { 0 };
 
 int REV_LB[MAX_LB] = {
-    LB_N_FRAME,
-    LB_FRAME,
     LB_N_INFO,
     LB_INFO,
     LB_N_SOURCE,
@@ -125,10 +122,6 @@ void discardBuffer(struct Buffer* buf)
         unlink(buf->content->header_source);
     if (buf->content->mailcap_source)
         unlink(buf->content->mailcap_source);
-    while (buf->doc->frameset) {
-        deleteFrameSet(buf->doc->frameset);
-        buf->doc->frameset = popFrameTree(&(buf->doc->frameQ));
-    }
 }
 
 /*
@@ -635,21 +628,6 @@ void delBuffer(struct Buffer* buf)
 
 bool checkBackBuffer(struct Buffer* buf)
 {
-    struct Buffer* fbuf = buf->linkBuffer[LB_N_FRAME];
-
-    if (fbuf) {
-        if (fbuf->doc->frameQ)
-            return TRUE; /* Currentbuf has stacked frames */
-        /* when no frames stacked and next is frame source, try next's
-         * nextBuffer */
-        if (getRuntime()->RenderFrame && fbuf == buf->nextBuffer) {
-            if (fbuf->nextBuffer != NULL)
-                return TRUE;
-            else
-                return FALSE;
-        }
-    }
-
     if (buf->nextBuffer)
         return TRUE;
 
@@ -755,16 +733,6 @@ Str page_info_panel(struct Buffer* buf)
         Strcat_charp(tmp, "</pre>\n");
     }
 
-    struct frameset* f_set = NULL;
-    if (buf->doc->frameset != NULL)
-        f_set = buf->doc->frameset;
-    else if (buf->bufferprop & BP_FRAME && buf->nextBuffer != NULL && buf->nextBuffer->doc->frameset != NULL)
-        f_set = buf->nextBuffer->doc->frameset;
-
-    if (f_set) {
-        Strcat_charp(tmp, "<hr width=50%><h1>Frame information</h1>\n");
-        append_frame_info(baseURL(buf), buf->doc, tmp, f_set, 0);
-    }
     if (buf->content->ssl_certificate)
         Strcat_m_charp(tmp, "<h1>SSL certificate</h1><pre>\n",
             html_quote(buf->content->ssl_certificate), "</pre>\n", NULL);

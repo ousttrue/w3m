@@ -46,7 +46,6 @@ const w3m_srcs = [_][]const u8{
     "html_table.c",
     "local_cgi.c",
     "maparea.c",
-    "frame.c",
     "menu.c",
     "menu_keybind.c",
     "mailcap.c",
