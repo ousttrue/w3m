@@ -189,3 +189,5 @@ enum TmpFileTypes {
 
 Str tmpfname(enum TmpFileTypes type, const char* ext);
 struct Content* goURL0(struct Buffer* buf, const char* prompt, bool relative);
+void _peekURL(struct Buffer* buf, bool only_img);
+Str currentURL(struct Buffer* buf);

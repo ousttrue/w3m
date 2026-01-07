@@ -2541,3 +2541,61 @@ struct Content* goURL0(struct Buffer* buf, const char* prompt, bool relative)
     return get_content_cache(url, NULL,
         (struct LoadOption) { .base_url = current, .referer = referer });
 }
+
+void _peekURL(struct Buffer* buf, bool only_img)
+{
+    struct Anchor* a;
+    struct Url pu;
+    static Str s = NULL;
+    static Lineprop* p = NULL;
+    Lineprop* pp;
+
+    static int offset = 0, n;
+
+    if (buf->doc->firstLine == NULL)
+        return;
+
+    if (getRuntime()->CurrentKey == getRuntime()->prev_key && s != NULL) {
+        if (s->length - offset >= TTY_COLS())
+            offset++;
+        else if (s->length <= offset) /* bug ? */
+            offset = 0;
+        goto disp;
+    } else {
+        offset = 0;
+    }
+    s = NULL;
+    a = (only_img ? NULL : doc_retrieveCurrentAnchor(buf->doc));
+    if (a == NULL) {
+        a = (only_img ? NULL : doc_retrieveCurrentForm(buf->doc));
+        if (a == NULL) {
+            a = doc_retrieveCurrentImg(buf->doc);
+            if (a == NULL)
+                return;
+        } else
+            s = Strnew_charp(form2str((struct FormItemList*)a->url));
+    }
+    if (s == NULL) {
+        parseURL2(a->url, &pu, baseURL(buf));
+        s = parsedURL2Str(&pu);
+    }
+    if (getRuntime()->DecodeURL)
+        s = Strnew_charp(url_decode2(baseURL(buf), buf->doc, s->ptr));
+    s = checkType(s, &pp, NULL);
+    p = NewAtom_N(Lineprop, s->length);
+    bcopy((void*)pp, (void*)p, s->length * sizeof(Lineprop));
+disp:
+    n = searchKeyNum();
+    if (n > 1 && s->length > (n - 1) * (TTY_COLS() - 1))
+        offset = (n - 1) * (TTY_COLS() - 1);
+    while (offset < s->length && p[offset] & PC_WCHAR2)
+        offset++;
+    disp_message(&s->ptr[offset], TRUE);
+}
+
+Str currentURL(struct Buffer* buf)
+{
+    if (buf->bufferprop & BP_INTERNAL)
+        return Strnew_size(0);
+    return parsedURL2Str(&buf->content->url);
+}

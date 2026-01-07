@@ -31,3 +31,9 @@ void tab_push_buffer(struct TabBuffer* tab, struct Buffer* buf)
         tab->currentBuffer = buf;
     }
 }
+
+void tab_repBuffer(struct TabBuffer* tab, struct Buffer* oldbuf, struct Buffer* buf)
+{
+    tab->firstBuffer = replaceBuffer(tab->firstBuffer, oldbuf, buf);
+    tab->currentBuffer = buf;
+}
