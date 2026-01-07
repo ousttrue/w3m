@@ -7,6 +7,7 @@ struct Buffer;
 struct TabBuffer* CurrentTab();
 struct TabBuffer* FirstTab();
 struct TabBuffer* LastTab();
+struct TabBuffer* numTab(int n);
 int nTab();
 
 size_t tabs_current();

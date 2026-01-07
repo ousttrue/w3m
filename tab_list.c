@@ -22,6 +22,20 @@ struct TabBuffer* LastTab()
 {
     return g_LastTab;
 }
+struct TabBuffer* numTab(int n)
+{
+    if (n == 0)
+        return CurrentTab();
+    if (n == 1)
+        return FirstTab();
+    if (nTab() <= 1)
+        return NULL;
+    struct TabBuffer* tab = FirstTab();
+    for (int i = 1; tab && i < n; tab = tab->nextTab, i++)
+        ;
+    return tab;
+}
+
 int nTab()
 {
     return g_nTab;

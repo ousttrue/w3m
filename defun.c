@@ -1,4 +1,6 @@
 #include "defun.h"
+#include "file.h"
+#include "history.h"
 #include "tab_list.h"
 #include "hmarker.h"
 #include "html_form.h"
@@ -19,6 +21,7 @@
 #include "document.h"
 #include "screen.h"
 #include "search.h"
+#include <libwc/charset.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -1104,3 +1107,162 @@ DEFUN(tabrURL, TAB_GOTO_RELATIVE, "Open relative address in a new tab")
         tabs_append(buf);
     }
 }
+
+DEFUN(tabA, TAB_LINK, "Follow current hyperlink in a new tab")
+{
+    struct FollowResult res = _followA(ctx.buf, (struct FollowOption) { 0 });
+    if (res.new_buf) {
+        tabs_append(res.new_buf);
+    }
+}
+
+DEFUN(nextT, NEXT_TAB, "Switch to the next tab")
+{
+    tabs_next(PREC_NUM);
+}
+
+DEFUN(prevT, PREV_TAB, "Switch to the previous tab")
+{
+    tabs_prev(PREC_NUM);
+}
+
+DEFUN(closeT, CLOSE_TAB, "Close tab")
+{
+    if (nTab() <= 1)
+        return;
+    struct TabBuffer* tab;
+    if (getRuntime()->prec_num)
+        tab = numTab(PREC_NUM);
+    else
+        tab = CurrentTab();
+    if (tab)
+        tabs_delete(tab);
+}
+
+DEFUN(newT, NEW_TAB, "Open a new tab (with current document)")
+{
+    tabs_append(NULL);
+}
+
+DEFUN(goURL, GOTO, "Open specified document in a new buffer")
+{
+    struct Content* content = goURL0(ctx.buf, "Goto URL: ", FALSE);
+    if (content) {
+        struct Buffer* new_buf = buf_new(content);
+        tab_push_buffer(ctx.tab, new_buf);
+    }
+}
+
+DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer")
+{
+    const char* url;
+    if ((url = getenv("HTTP_HOME")) != NULL || (url = getenv("WWW_HOME")) != NULL) {
+        url = skip_blanks(url);
+        url = url_encode(url, NULL, 0);
+        struct Url p_url;
+        parseURL2(url, &p_url, NULL);
+        pushHashHist(getRuntime()->URLHist, parsedURL2Str(&p_url)->ptr);
+        struct Content* content = get_content_cache(url, NULL, (struct LoadOption) { .base_url = NULL, .referer = NULL });
+        if (content) {
+            struct Buffer* buf = buf_new(content);
+            tab_push_buffer(ctx.tab, buf);
+            pushHashHist(getRuntime()->URLHist, parsedURL2Str(&Currentbuf->content->url)->ptr);
+        }
+    }
+}
+
+DEFUN(gorURL, GOTO_RELATIVE, "Go to relative address")
+{
+    struct Content* content = goURL0(ctx.buf, "Goto relative URL: ", TRUE);
+    if (content) {
+        struct Buffer* new_buf = buf_new(content);
+        tab_push_buffer(ctx.tab, new_buf);
+    }
+}
+
+DEFUN(ldBmark, BOOKMARK VIEW_BOOKMARK, "View bookmarks")
+{
+    struct Content* content = get_content_cache(getRuntime()->BookmarkFile, NULL,
+        (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER });
+    if (content) {
+        struct Buffer* buf = buf_new(content);
+        tab_push_buffer(ctx.tab, buf);
+    }
+}
+
+/* Add current to bookmark */
+DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
+{
+    Str tmp = Sprintf("mode=panel&cookie=%s&bmark=%s&url=%s&title=%s"
+                      "&charset=%s",
+        (Str_form_quote(localCookie()))->ptr,
+        (Str_form_quote(Strnew_charp(getRuntime()->BookmarkFile)))->ptr,
+        (Str_form_quote(parsedURL2Str(&Currentbuf->content->url)))->ptr,
+
+        (Str_form_quote(wc_conv_strict(Currentbuf->doc->title,
+             getRuntime()->InnerCharset,
+             getRuntime()->BookmarkCharset)))
+            ->ptr,
+        wc_ces_to_charset(getRuntime()->BookmarkCharset));
+
+    struct FormList* request = newFormList(NULL, "post", NULL, NULL, NULL, NULL, NULL);
+    *request = (struct FormList) {
+        .body = tmp->ptr,
+        .length = tmp->length,
+    };
+    struct Content* content = get_content_cache("file:///$LIB/" W3MBOOKMARK_CMDNAME, request,
+        (struct LoadOption) { .base_url = NULL, .referer = NO_REFERER });
+    if (content) {
+        struct Buffer* buf = buf_new(content);
+        tab_push_buffer(ctx.tab, buf);
+    }
+}
+
+DEFUN(ldOpt, OPTIONS, "Display options setting panel")
+{
+    cmd_loadBuffer(load_option_panel(), BP_NO_URL, LB_NOLINK);
+}
+
+/* set an option */
+DEFUN(setOpt, SET_OPTION, "Set option")
+{
+    getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
+    char* opt = searchKeyData();
+    if (opt == NULL || *opt == '\0' || strchr(opt, '=') == NULL) {
+        if (opt != NULL && *opt != '\0') {
+            char* v = get_param_option(opt);
+            opt = Sprintf("%s=%s", opt, v ? v : "")->ptr;
+        }
+        opt = inputStrHist("Set option: ", opt, getRuntime()->TextHist);
+        if (opt == NULL || *opt == '\0') {
+            return;
+        }
+    }
+    if (set_param_option(opt))
+        sync_with_option();
+}
+
+/* error message list */
+DEFUN(msgs, MSGS, "Display error messages")
+{
+    cmd_loadBuffer(message_list_panel(), BP_NO_URL, LB_NOLINK);
+}
+
+DEFUN(pginfo, INFO, "Display information about the current document")
+{
+    struct Buffer* buf = Currentbuf->linkBuffer[LB_N_INFO];
+    if (buf) {
+        Currentbuf = buf;
+        return;
+    }
+
+    buf = Currentbuf->linkBuffer[LB_INFO];
+    if (buf)
+        delBuffer(buf);
+
+    Str tmp = page_info_panel(Currentbuf);
+    struct Buffer* newbuf = loadHTMLString(tmp);
+    cmd_loadBuffer(newbuf, BP_NORMAL, LB_INFO);
+}
+
+
