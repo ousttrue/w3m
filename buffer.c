@@ -392,25 +392,6 @@ void reshapeBuffer(struct Buffer* buf)
     if (!stream)
         return;
 
-    struct Buffer sbuf;
-    copyBuffer(&sbuf, buf);
-    // clearBuffer(buf);
-    // while (buf->doc->frameset) {
-    //     deleteFrameSet(buf->doc->frameset);
-    //     buf->doc->frameset = popFrameTree(&(buf->doc->frameQ));
-    // }
-    // buf->doc->href = NULL;
-    // buf->doc->name = NULL;
-    // buf->doc->img = NULL;
-    // buf->doc->formitem = NULL;
-    // buf->doc->formlist = NULL;
-    // buf->doc->linklist = NULL;
-    // buf->doc->maplist = NULL;
-    // if (buf->doc->hmarklist)
-    //     buf->doc->hmarklist->nmark = 0;
-    // if (buf->doc->imarklist)
-    //     buf->doc->imarklist->nmark = 0;
-
     if (buf->content->header_source) {
         if (buf->content->url.scheme != SCM_LOCAL || buf->content->mailcap_source || !strcmp(buf->content->url.file, "-")) {
             struct input_stream* stream = decompress_stream(examineFile(buf->content->header_source), buf->content->header_source);
@@ -421,55 +402,13 @@ void reshapeBuffer(struct Buffer* buf)
         }
     }
 
-    {
-        wc_uint8 old_auto_detect = WcOption.auto_detect;
-        WcOption.auto_detect = WC_OPT_DETECT_OFF;
-        getRuntime()->UseContentCharset = FALSE;
-        if (is_html_type(buf->content->content_type))
-            loadHTMLBuffer(buf->content->url, stream,
-                NULL, buf, buf->bufferprop & BP_FRAME);
-        else
-            loadBuffer(buf->content->url, stream,
-                NULL, buf, buf->bufferprop & BP_FRAME);
-        is_close(stream);
-        WcOption.auto_detect = old_auto_detect;
-        getRuntime()->UseContentCharset = TRUE;
-    }
-
-    if (buf->doc && sbuf.doc) {
-        struct Line* cur = sbuf.doc->currentLine;
-        int n;
-
-        buf->doc->pos = sbuf.doc->pos + cur->bpos;
-        while (cur->bpos && cur->prev)
-            cur = cur->prev;
-        if (cur->real_linenumber > 0)
-            doc_gotoRealLine(buf->doc, cur->real_linenumber);
-        else
-            doc_gotoLine(buf->doc, cur->linenumber);
-        n = (buf->doc->currentLine->linenumber - buf->doc->topLine->linenumber)
-            - (cur->linenumber - sbuf.doc->topLine->linenumber);
-        if (n) {
-            buf->doc->topLine = doc_lineSkip(buf->doc, buf->doc->topLine, n);
-            if (cur->real_linenumber > 0)
-                doc_gotoRealLine(buf->doc, cur->real_linenumber);
-            else
-                doc_gotoLine(buf->doc, cur->linenumber);
-        }
-        buf->doc->pos -= buf->doc->currentLine->bpos;
-        if (getRuntime()->FoldLine && !is_html_type(buf->content->content_type))
-            buf->doc->currentColumn = 0;
-        else
-            buf->doc->currentColumn = sbuf.doc->currentColumn;
-        doc_arrangeCursor(buf->doc);
-    }
-    if (buf->check_url & CHK_URL)
-        chkURLBuffer(buf);
-    // if (buf->check_url & CHK_NMID)
-    //     chkNMIDBuffer(buf);
-    if (sbuf.doc) {
-        formResetBuffer(buf, &sbuf.doc->formitem);
-    }
+    if (is_html_type(buf->content->content_type))
+        loadHTMLBuffer(buf->content->url, stream,
+            NULL, buf, buf->bufferprop & BP_FRAME);
+    else
+        loadBuffer(buf->content->url, stream,
+            NULL, buf, buf->bufferprop & BP_FRAME);
+    is_close(stream);
 }
 
 /* shallow copy */
