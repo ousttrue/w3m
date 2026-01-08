@@ -1,10 +1,10 @@
 pub const c = @cImport({
     @cInclude("w3m_rc.h");
+    @cInclude("cookie.h");
     @cInclude("termcap.h");
     @cInclude("image.h");
     @cInclude("screen.h");
     @cInclude("myctype.h");
-    @cInclude("stdlib.h");
     @cInclude("linein.h");
     @cInclude("history.h");
     @cInclude("indep.h");
@@ -21,5 +21,9 @@ pub const c = @cImport({
     @cInclude("charset.h");
     @cInclude("wtf_width.h");
     @cInclude("wtf_len.h");
+    @cInclude("status.h");
+    //
+    @cInclude("unistd.h");
+    @cInclude("stdlib.h");
 });
 

@@ -57,7 +57,7 @@ struct Runtime {
     char* rc_dir;
     char* param_tmp_dir;
     char* mkd_tmp_dir;
-    char* config_file;
+    const char* config_file;
     int default_use_cookie;
     int use_cookie;
     int show_cookie;

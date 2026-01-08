@@ -38,7 +38,6 @@ const w3m_srcs = [_][]const u8{
     "urlscheme.c",
     "siteconf.c",
     "http_request.c",
-    "main.c",
     "defun.c",
     "file.c",
     "display.c",

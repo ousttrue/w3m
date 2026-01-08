@@ -16,7 +16,6 @@
 #define IMGDISPLAY   "w3mimgdisplay"
 #define XFACE2XPM    "xface2xpm"
 
-#define BOOKMARK     "bookmark.html"
 #define CONFIG_FILE  "config"
 #define KEYMAP_FILE  "keymap"
 #define MENU_FILE    "menu"

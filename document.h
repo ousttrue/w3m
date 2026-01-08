@@ -68,6 +68,12 @@ struct Document {
     short cursorY;
     int pos;
     int visualpos;
+
+    // Currentbuf = Firstbuf;
+    // screen_from_lines(Currentbuf->doc, baseURL(Currentbuf));
+    // if (line_str) {
+    //     doc_goLine(Currentbuf->doc, line_str);
+    // }
 };
 
 #define COPY_BUFROOT(dstbuf, srcbuf)       \
