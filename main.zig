@@ -129,6 +129,7 @@ const Args = struct {
 
         // initializations
         c.init_rc();
+        c.open_rc();
 
         if (Locale) |locale| {
             if (c.getRuntime().*.FollowLocale != 0) {

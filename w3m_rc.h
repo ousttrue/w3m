@@ -193,3 +193,4 @@ void _peekURL(struct Buffer* buf, bool only_img);
 Str currentURL(struct Buffer* buf);
 void _docCSet(enum wc_ces charset);
 void invoke_browser(const char* url);
+void open_rc();

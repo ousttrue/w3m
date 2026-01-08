@@ -1223,7 +1223,9 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
 
 DEFUN(ldOpt, OPTIONS, "Display options setting panel")
 {
-    cmd_loadBuffer(load_option_panel(), BP_NO_URL, LB_NOLINK);
+    struct Buffer* new_buf = load_option_panel();
+    tab_push_buffer(ctx.tab, new_buf);
+    buf_set_link(ctx.buf, new_buf, BP_NO_URL, LB_NOLINK);
 }
 
 /* set an option */
@@ -1248,24 +1250,17 @@ DEFUN(setOpt, SET_OPTION, "Set option")
 /* error message list */
 DEFUN(msgs, MSGS, "Display error messages")
 {
-    cmd_loadBuffer(message_list_panel(), BP_NO_URL, LB_NOLINK);
+    struct Buffer* new_buf = message_list_panel();
+    buf_set_link(ctx.buf, new_buf, BP_NO_URL, LB_NOLINK);
+    tab_push_buffer(ctx.tab, new_buf);
 }
 
 DEFUN(pginfo, INFO, "Display information about the current document")
 {
-    struct Buffer* buf = Currentbuf->linkBuffer[LB_N_INFO];
-    if (buf) {
-        Currentbuf = buf;
-        return;
-    }
-
-    buf = Currentbuf->linkBuffer[LB_INFO];
-    if (buf)
-        delBuffer(buf);
-
-    Str tmp = page_info_panel(Currentbuf);
-    struct Buffer* newbuf = loadHTMLString(tmp);
-    cmd_loadBuffer(newbuf, BP_NORMAL, LB_INFO);
+    Str tmp = page_info_panel(ctx.buf);
+    struct Buffer* new_buf = loadHTMLString(tmp);
+    buf_set_link(ctx.buf, new_buf, BP_NORMAL, LB_INFO);
+    tab_push_buffer(ctx.tab, new_buf);
 }
 
 DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
@@ -1308,29 +1303,30 @@ DEFUN(movlistMn, MOVE_LIST_MENU, "Pop up menu to navigate between hyperlinks")
     anchorMn(list_menu, FALSE);
 }
 
-/* link,anchor,image list */
 DEFUN(linkLst, LIST, "Show all URLs referenced")
 {
     Str page = link_list_panel(baseURL(ctx.buf), ctx.buf->doc);
     if (page) {
-        struct Buffer* buf = loadHTMLString(page);
-        // buf->doc.charset = Currentbuf->doc.charset;
-        cmd_loadBuffer(buf, BP_NORMAL, LB_NOLINK);
+        struct Buffer* new_buf = loadHTMLString(page);
+        buf_set_link(ctx.buf, new_buf, BP_NORMAL, LB_NOLINK);
+        tab_push_buffer(ctx.tab, new_buf);
     }
 }
 
-/* cookie list */
 DEFUN(cooLst, COOKIE, "View cookie list")
 {
-    struct Buffer* buf = cookie_list_panel();
-    if (buf != NULL)
-        cmd_loadBuffer(buf, BP_NO_URL, LB_NOLINK);
+    struct Buffer* new_buf = cookie_list_panel();
+    if (new_buf) {
+        buf_set_link(ctx.buf, new_buf, BP_NO_URL, LB_NOLINK);
+        tab_push_buffer(ctx.tab, new_buf);
+    }
 }
 
-/* History page */
 DEFUN(ldHist, HISTORY, "Show browsing history")
 {
-    cmd_loadBuffer(historyBuffer(getRuntime()->URLHist), BP_NO_URL, LB_NOLINK);
+    struct Buffer* new_buf = historyBuffer(getRuntime()->URLHist);
+    buf_set_link(ctx.buf, new_buf, BP_NO_URL, LB_NOLINK);
+    tab_push_buffer(ctx.tab, new_buf);
 }
 
 /* download HREF link */

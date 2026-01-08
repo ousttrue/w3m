@@ -67,19 +67,16 @@ baseURL(struct Buffer* buf)
     return NULL;
 }
 
-void cmd_loadBuffer(struct Buffer* buf, int prop, enum LinkBufferID linkid)
+void buf_set_link(struct Buffer* buf,
+    struct Buffer* link_buf, enum BufferPropertyFlags prop, enum LinkBufferID linkid)
 {
-    if (buf == NULL) {
-        disp_err_message("Can't load string", FALSE);
-    } else {
-        buf->bufferprop |= (BP_INTERNAL | prop);
-        if (!(buf->bufferprop & BP_NO_URL))
-            copyParsedURL(&buf->content->url, &CurrentTab()->currentBuffer->content->url);
-        if (linkid != LB_NOLINK) {
-            buf->linkBuffer[REV_LB[linkid]] = Currentbuf;
-            Currentbuf->linkBuffer[linkid] = buf;
-        }
-        tab_push_buffer(CurrentTab(), buf);
+    link_buf->bufferprop |= (BP_INTERNAL | prop);
+    if (!(link_buf->bufferprop & BP_NO_URL)) {
+        copyParsedURL(&link_buf->content->url, &buf->content->url);
+    }
+    if (linkid != LB_NOLINK) {
+        link_buf->linkBuffer[REV_LB[linkid]] = buf;
+        buf->linkBuffer[linkid] = link_buf;
     }
 }
 
@@ -115,13 +112,14 @@ void discardBuffer(struct Buffer* buf)
         unlink(buf->savecache);
     if (--(*buf->clone))
         return;
-    if (buf->content->sourcefile) {
-        unlink(buf->content->sourcefile);
+    if (buf->content) {
+        if (buf->content->sourcefile)
+            unlink(buf->content->sourcefile);
+        if (buf->content->header_source)
+            unlink(buf->content->header_source);
+        if (buf->content->mailcap_source)
+            unlink(buf->content->mailcap_source);
     }
-    if (buf->content->header_source)
-        unlink(buf->content->header_source);
-    if (buf->content->mailcap_source)
-        unlink(buf->content->mailcap_source);
 }
 
 /*

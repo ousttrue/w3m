@@ -182,7 +182,7 @@ make_lastline_message(struct Buffer* buf)
         msg = Sprintf("%s", msg->ptr);
     }
     Strcat_charp(msg, "Viewing");
-    if (buf->content->ssl_certificate)
+    if (buf->content && buf->content->ssl_certificate)
         Strcat_charp(msg, "[SSL]");
     Strcat_charp(msg, " <");
     Strcat_charp(msg, buf->doc->title);
@@ -212,8 +212,11 @@ make_lastline_message(struct Buffer* buf)
 void displayMsg(struct Buffer* buf)
 {
     Str msg = make_lastline_message(buf);
-    if (buf->doc->firstLine == NULL) {
-        Strcat_charp(msg, "\tNo Line");
+    if (!buf) {
+        Strcat_charp(msg, "\tNo buf");
+    }
+    if (!buf->doc) {
+        Strcat_charp(msg, "\tNo doc");
     }
     displayDelayedMessage();
     screen_standout();

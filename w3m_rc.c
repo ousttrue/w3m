@@ -1761,22 +1761,15 @@ char* get_param_option(const char* name)
 static void
 interpret_rc(FILE* f)
 {
-    Str line;
-    Str tmp;
-    char* p;
-
-    for (;;) {
-        line = Strfgets(f);
-        if (line->length == 0) /* end of file */
-            break;
+    for (Str line = Strfgets(f); line->length; line = Strfgets(f)) {
         Strchop(line);
         if (line->length == 0) /* blank line */
             continue;
         Strremovefirstspaces(line);
         if (line->ptr[0] == '#') /* comment */
             continue;
-        tmp = Strnew();
-        p = line->ptr;
+        Str tmp = Strnew();
+        char* p = line->ptr;
         while (*p && !IS_SPACE(*p))
             Strcat_char(tmp, *p++);
         while (*p && IS_SPACE(*p))
@@ -1881,7 +1874,7 @@ void sync_with_option(void)
 }
 
 /// open config file
-static void open_rc()
+void open_rc()
 {
     FILE* f;
     if ((f = fopen(etcFile(W3MCONFIG), "rt")) != NULL) {
@@ -1898,13 +1891,6 @@ static void open_rc()
     }
 }
 
-static void rc_dir_err()
-{
-    g_runtime.no_rc_dir = TRUE;
-    create_option_search_table();
-    return open_rc();
-}
-
 void init_rc(void)
 {
     g_runtime.LoadHist = newHist();
@@ -1916,14 +1902,17 @@ void init_rc(void)
         loadHistory(g_runtime.URLHist);
 
     if (g_runtime.rc_dir != NULL) {
-        return open_rc();
+        return;
     }
 
     g_runtime.rc_dir = allocStr(getenv("W3M_DIR"), -1);
     if (g_runtime.rc_dir == NULL || *g_runtime.rc_dir == '\0')
         g_runtime.rc_dir = allocStr(RC_DIR, -1);
-    if (g_runtime.rc_dir == NULL || *g_runtime.rc_dir == '\0')
-        return rc_dir_err();
+    if (g_runtime.rc_dir == NULL || *g_runtime.rc_dir == '\0') {
+        g_runtime.no_rc_dir = TRUE;
+        create_option_search_table();
+        return;
+    }
     g_runtime.rc_dir = expandPath(g_runtime.rc_dir);
 
     int i = strlen(g_runtime.rc_dir);
@@ -1936,8 +1925,11 @@ void init_rc(void)
 
     getRuntime()->tmp_dir = g_runtime.rc_dir;
 
-    if (do_recursive_mkdir(g_runtime.rc_dir) == -1)
-        return rc_dir_err();
+    if (do_recursive_mkdir(g_runtime.rc_dir) == -1) {
+        g_runtime.no_rc_dir = TRUE;
+        create_option_search_table();
+        return;
+    }
 
     g_runtime.no_rc_dir = FALSE;
 
@@ -1945,8 +1937,6 @@ void init_rc(void)
         g_runtime.config_file = rcFile(CONFIG_FILE);
 
     create_option_search_table();
-
-    return open_rc();
 }
 
 void init_tmp(void)

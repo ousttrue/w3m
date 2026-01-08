@@ -43,10 +43,13 @@ struct Buffer {
     struct _AlarmEvent* event;
 };
 
-struct Buffer* buf_new(struct Content *content);
+struct Buffer* buf_new(struct Content* content);
 struct Url* baseURL(struct Buffer* buf);
 void delBuffer(struct Buffer* buf);
-void cmd_loadBuffer(struct Buffer* buf, int prop, enum LinkBufferID linkid);
+
+void buf_set_link(struct Buffer* buf,
+    struct Buffer* link_buf, enum BufferPropertyFlags bp, enum LinkBufferID linkid);
+
 bool readBufferCache(struct Buffer* buf);
 void reshapeBuffer(struct Buffer* buf);
 void saveBuffer(struct Buffer* buf, FILE* f, int cont);
