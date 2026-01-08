@@ -32,7 +32,7 @@ static Str Strgrow_n(Str s, int n);
 Str
 Strnew(void)
 {
-    return Strnew_size(INITIAL_STR_SIZE);
+    return Strnew_size(INITIAL_STR_SIZE - 1);
 }
 
 Str
@@ -40,14 +40,15 @@ Strnew_size(int n)
 {
     Str x;
 
-    if (!(x = GC_MALLOC(sizeof(struct _Str))))
-	exit(1);
-
     if (n < 0 || n > STR_LEN_MAX)
 	n = STR_SIZE_MAX;
-    else if (n < INITIAL_STR_SIZE)
+    else if (n + 1 < INITIAL_STR_SIZE)
 	n = INITIAL_STR_SIZE;
-    if (!(x->ptr = GC_MALLOC_ATOMIC(n)))
+    else
+	n++;
+
+    if (!(x = GC_MALLOC(sizeof(struct _Str)))
+	|| !(x->ptr = GC_MALLOC_ATOMIC(n)))
 	exit(1);
     x->area_size = n;
     x->length = 0;

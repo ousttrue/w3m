@@ -39,6 +39,13 @@ exit
 static Str t;
 static char *char10 = "0123456789";
 
+struct inout_int {
+	int in;
+	int out;
+};
+
+#define ARRSZ(arr) (sizeof(arr) / sizeof(arr[0]))
+
 void
 test_Strnew(void)
 {
@@ -56,15 +63,21 @@ void
 test_Strnew_size()
 {
 	Str s;
-	int n = 2 * INITIAL_STR_SIZE;
+	struct inout_int io[] = {
+		{-1, STR_SIZE_MAX},
+		{STR_LEN_MAX + 10, STR_SIZE_MAX},
+		{9, INITIAL_STR_SIZE},
+		{INITIAL_STR_SIZE + 9, INITIAL_STR_SIZE + 9 + 1}
+	};
 
-	s = Strnew_size(n);
-
-	assert(s);
-	assert(s->ptr);
-	assert(s->length == 0);
-	ASSERT_int(s->area_size, n);
-	assert(s->ptr[0] == '\0');
+	for (int i = 0; i < ARRSZ(io); i++) {
+		s = Strnew_size(io[i].in);
+		assert(s);
+		assert(s->ptr);
+		assert(s->length == 0);
+		ASSERT_int(s->area_size, io[i].out);
+		assert(s->ptr[0] == '\0');
+	}
 }
 
 void
