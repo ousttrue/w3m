@@ -1880,51 +1880,10 @@ void sync_with_option(void)
     }
 }
 
-void init_rc(void)
+/// open config file
+static void open_rc()
 {
-    g_runtime.LoadHist = newHist();
-    g_runtime.SaveHist = newHist();
-    g_runtime.ShellHist = newHist();
-    g_runtime.TextHist = newHist();
-    g_runtime.URLHist = newHist();
-    if (g_runtime.UseHistory)
-        loadHistory(g_runtime.URLHist);
-
-    int i;
     FILE* f;
-
-    if (g_runtime.rc_dir != NULL)
-        goto open_rc;
-
-    g_runtime.rc_dir = allocStr(getenv("W3M_DIR"), -1);
-    if (g_runtime.rc_dir == NULL || *g_runtime.rc_dir == '\0')
-        g_runtime.rc_dir = allocStr(RC_DIR, -1);
-    if (g_runtime.rc_dir == NULL || *g_runtime.rc_dir == '\0')
-        goto rc_dir_err;
-    g_runtime.rc_dir = expandPath(g_runtime.rc_dir);
-
-    i = strlen(g_runtime.rc_dir);
-    if (i > 1 && g_runtime.rc_dir[i - 1] == '/')
-        g_runtime.rc_dir[i - 1] = '\0';
-
-    display_charset_str = wc_get_ces_list();
-    document_charset_str = display_charset_str;
-    system_charset_str = display_charset_str;
-
-    getRuntime()->tmp_dir = g_runtime.rc_dir;
-
-    if (do_recursive_mkdir(g_runtime.rc_dir) == -1)
-        goto rc_dir_err;
-
-    g_runtime.no_rc_dir = FALSE;
-
-    if (g_runtime.config_file == NULL)
-        g_runtime.config_file = rcFile(CONFIG_FILE);
-
-    create_option_search_table();
-
-open_rc:
-    /* open config file */
     if ((f = fopen(etcFile(W3MCONFIG), "rt")) != NULL) {
         interpret_rc(f);
         fclose(f);
@@ -1937,12 +1896,57 @@ open_rc:
         interpret_rc(f);
         fclose(f);
     }
-    return;
+}
 
-rc_dir_err:
+static void rc_dir_err()
+{
     g_runtime.no_rc_dir = TRUE;
     create_option_search_table();
-    goto open_rc;
+    return open_rc();
+}
+
+void init_rc(void)
+{
+    g_runtime.LoadHist = newHist();
+    g_runtime.SaveHist = newHist();
+    g_runtime.ShellHist = newHist();
+    g_runtime.TextHist = newHist();
+    g_runtime.URLHist = newHist();
+    if (g_runtime.UseHistory)
+        loadHistory(g_runtime.URLHist);
+
+    if (g_runtime.rc_dir != NULL) {
+        return open_rc();
+    }
+
+    g_runtime.rc_dir = allocStr(getenv("W3M_DIR"), -1);
+    if (g_runtime.rc_dir == NULL || *g_runtime.rc_dir == '\0')
+        g_runtime.rc_dir = allocStr(RC_DIR, -1);
+    if (g_runtime.rc_dir == NULL || *g_runtime.rc_dir == '\0')
+        return rc_dir_err();
+    g_runtime.rc_dir = expandPath(g_runtime.rc_dir);
+
+    int i = strlen(g_runtime.rc_dir);
+    if (i > 1 && g_runtime.rc_dir[i - 1] == '/')
+        g_runtime.rc_dir[i - 1] = '\0';
+
+    display_charset_str = wc_get_ces_list();
+    document_charset_str = display_charset_str;
+    system_charset_str = display_charset_str;
+
+    getRuntime()->tmp_dir = g_runtime.rc_dir;
+
+    if (do_recursive_mkdir(g_runtime.rc_dir) == -1)
+        return rc_dir_err();
+
+    g_runtime.no_rc_dir = FALSE;
+
+    if (g_runtime.config_file == NULL)
+        g_runtime.config_file = rcFile(CONFIG_FILE);
+
+    create_option_search_table();
+
+    return open_rc();
 }
 
 void init_tmp(void)
