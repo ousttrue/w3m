@@ -44,12 +44,6 @@ extern char* w3m_version;
             mySignal(SIGINT, prevtrap); \
     }
 
-#define GRAPHIC_CHAR_ASCII 2
-#define GRAPHIC_CHAR_DEC 1
-#define GRAPHIC_CHAR_CHARSET 0
-
-extern char UseGraphicChar;
-
 struct Event {
     int cmd;
     void* data;
@@ -151,7 +145,6 @@ const char* GetWord(struct Buffer* buf);
 int is_wordchar(wc_uint32 c);
 wc_uint32 getChar(const char* p);
 
-void show_params(FILE* fp);
 int exec_cmd(const char* cmd);
 uint8_t blockChild(const char* cmd);
 
@@ -167,10 +160,7 @@ void init_rc(void);
 extern void change_charset(struct parsed_tagarg* arg);
 extern void tmpClearBuffer(struct Buffer* buf);
 extern void chkURLBuffer(struct Buffer* buf);
-extern int set_param_option(const char* option);
-extern char* get_param_option(const char* name);
 extern void init_tmp(void);
-extern struct Buffer* load_option_panel(void);
 extern void sync_with_option(void);
 extern char* searchKeyData(void);
 int searchKeyNum(void);
@@ -194,5 +184,4 @@ Str currentURL(struct Buffer* buf);
 void _docCSet(enum wc_ces charset);
 void invoke_browser(const char* url);
 void open_rc();
-void create_option_search_table();
 int do_recursive_mkdir(const char* dir);

@@ -1,4 +1,5 @@
 #include "html_table.h"
+#include "option.h"
 #include "file.h"
 #include "html_builder.h"
 #include "indep.h"

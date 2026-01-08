@@ -1,4 +1,5 @@
 #include "defun.h"
+#include "option.h"
 #include "dict.h"
 #include "cookie.h"
 #include "menu.h"
@@ -1223,7 +1224,8 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
 
 DEFUN(ldOpt, OPTIONS, "Display options setting panel")
 {
-    struct Buffer* new_buf = load_option_panel();
+    Str str = opt_load_panel();
+    struct Buffer* new_buf = loadHTMLString(str);
     tab_push_buffer(ctx.tab, new_buf);
     buf_set_link(ctx.buf, new_buf, BP_NO_URL, LB_NOLINK);
 }
@@ -1235,7 +1237,7 @@ DEFUN(setOpt, SET_OPTION, "Set option")
     char* opt = searchKeyData();
     if (opt == NULL || *opt == '\0' || strchr(opt, '=') == NULL) {
         if (opt != NULL && *opt != '\0') {
-            char* v = get_param_option(opt);
+            char* v = opt_get_param_option(opt);
             opt = Sprintf("%s=%s", opt, v ? v : "")->ptr;
         }
         opt = inputStrHist("Set option: ", opt, getRuntime()->TextHist);
@@ -1243,7 +1245,7 @@ DEFUN(setOpt, SET_OPTION, "Set option")
             return;
         }
     }
-    if (set_param_option(opt))
+    if (opt_set_param_option(opt))
         sync_with_option();
 }
 

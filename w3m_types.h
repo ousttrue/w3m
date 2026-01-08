@@ -19,10 +19,6 @@
 #define DISPLAY_INS_DEL_NORMAL 1
 #define DISPLAY_INS_DEL_FONTIFY 2
 
-#define DEFAULT_URL_EMPTY 0
-#define DEFAULT_URL_CURRENT 1
-#define DEFAULT_URL_LINK 2
-
 #define DNS_ORDER_UNSPEC 0
 #define DNS_ORDER_INET_INET6 1
 #define DNS_ORDER_INET6_INET 2
@@ -30,6 +26,8 @@
 #define DNS_ORDER_INET6_ONLY 6
 
 struct Runtime {
+    char UseGraphicChar;
+
     struct TextList* NO_proxy_domains;
     const char* SearchString;
     bool check_target;
@@ -233,48 +231,3 @@ struct Runtime {
     struct Event* LastEvent;
 };
 extern struct Runtime g_runtime;
-
-//
-// params
-//
-struct sel_c {
-    int value;
-    const char* cvalue;
-    const char* text;
-};
-
-enum ParamTypes {
-    P_INT = 0,
-    P_SHORT = 1,
-    P_CHARINT = 2,
-    P_CHAR = 3,
-    P_STRING = 4,
-    P_SSLPATH = 5,
-    P_COLOR = 6,
-    P_CODE = 7,
-    P_PIXELS = 8,
-    P_NZINT = 9,
-    P_SCALE = 10,
-};
-
-enum ParamInputTypes {
-    PI_TEXT = 0,
-    PI_ONOFF = 1,
-    PI_SEL_C = 2,
-    PI_CODE = 3,
-};
-
-struct param_ptr {
-    const char* name;
-    enum ParamTypes type;
-    enum ParamInputTypes inputtype;
-    /// pointer to global variable
-    void* varptr;
-    const char* comment;
-    void* select;
-};
-
-struct param_section {
-    const char* name;
-    struct param_ptr* params;
-};

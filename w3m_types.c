@@ -1,10 +1,13 @@
 #include "w3m_types.h"
+#include "option.h"
 #include "cookie.h"
 #include "image.h"
+#include "symbol.h"
 
 #define PAGER_MAX_LINE 10000 /* Maximum line kept as pager */
 
 struct Runtime g_runtime = {
+    .UseGraphicChar = GRAPHIC_CHAR_CHARSET,
     .NO_proxy_domains = NULL,
     .SearchString = NULL,
     .check_target = TRUE,

@@ -447,7 +447,7 @@ export fn init_rc() void {
         c.getRuntime().*.rc_dir = c.allocStr(RC_DIR, -1);
     if (c.getRuntime().*.rc_dir == null or c.getRuntime().*.rc_dir[0] == 0) {
         c.getRuntime().*.no_rc_dir = 1;
-        c.create_option_search_table();
+        c.opt_create_search_table();
         return;
     }
     c.getRuntime().*.rc_dir = c.expandPath(c.getRuntime().*.rc_dir);
@@ -460,7 +460,7 @@ export fn init_rc() void {
 
     if (c.do_recursive_mkdir(c.getRuntime().*.rc_dir) == -1) {
         c.getRuntime().*.no_rc_dir = 1;
-        c.create_option_search_table();
+        c.opt_create_search_table();
         return;
     }
 
@@ -469,7 +469,7 @@ export fn init_rc() void {
     if (c.getRuntime().*.config_file == null)
         c.getRuntime().*.config_file = c.rcFile(c.CONFIG_FILE);
 
-    c.create_option_search_table();
+    c.opt_create_search_table();
 }
 
 const GC_WARN_KEEP_MAX = (20);
