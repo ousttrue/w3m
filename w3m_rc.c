@@ -1455,8 +1455,7 @@ compare_table(struct rc_search_table* a, struct rc_search_table* b)
     return strcmp(a->param->name, b->param->name);
 }
 
-static void
-create_option_search_table()
+void create_option_search_table()
 {
     int i, j, k;
     int diff1, diff2;
@@ -1504,14 +1503,10 @@ create_option_search_table()
 static struct param_ptr*
 search_param(const char* name)
 {
-    size_t b, e, i;
-    int cmp;
-    int len = strlen(name);
-
-    for (b = 0, e = RC_table_size - 1; b <= e;) {
-        i = (b + e) / 2;
-        cmp = strncmp(name, RC_search_table[i].param->name, len);
-
+    size_t len = strlen(name);
+    for (size_t b = 0, e = RC_table_size - 1; b <= e;) {
+        size_t i = (b + e) / 2;
+        int cmp = strncmp(name, RC_search_table[i].param->name, len);
         if (!cmp) {
             if (len >= RC_search_table[i].uniq_pos) {
                 return RC_search_table[i].param;
@@ -1530,8 +1525,9 @@ search_param(const char* name)
             if (i == 0)
                 return NULL;
             e = i - 1;
-        } else
+        } else {
             b = i + 1;
+        }
     }
     return NULL;
 }
@@ -1648,15 +1644,13 @@ str_to_color(const char* value)
     return 8; /* terminal */
 }
 
-static int
+static bool
 set_param(const char* name, const char* value)
 {
-    struct param_ptr* p;
-    double ppc;
-
-    if (value == NULL)
+    if (!value)
         return 0;
-    p = search_param(name);
+
+    struct param_ptr* p = search_param(name);
     if (p == NULL)
         return 0;
     switch (p->type) {
@@ -1703,16 +1697,18 @@ set_param(const char* name, const char* value)
         *(enum wc_ces*)p->varptr = wc_guess_charset_short(value, *(enum wc_ces*)p->varptr);
         break;
 
-    case P_PIXELS:
-        ppc = atof(value);
+    case P_PIXELS: {
+        double ppc = atof(value);
         if (ppc >= MINIMUM_PIXEL_PER_CHAR && ppc <= MAXIMUM_PIXEL_PER_CHAR * 2)
             *(double*)p->varptr = ppc;
         break;
-    case P_SCALE:
-        ppc = atof(value);
+    }
+    case P_SCALE: {
+        double ppc = atof(value);
         if (ppc >= 10 && ppc <= 1000)
             *(double*)p->varptr = ppc;
         break;
+    }
     }
     return 1;
 }
@@ -1785,8 +1781,7 @@ interpret_rc(FILE* f)
 #define do_mkdir(dir, mode) mkdir(dir, mode)
 #endif /* not __MINW32_VERSION */
 
-static int
-do_recursive_mkdir(const char* dir)
+int do_recursive_mkdir(const char* dir)
 {
     char *ch, *dircpy, tmp;
     struct stat st;
@@ -1876,6 +1871,10 @@ void sync_with_option(void)
 /// open config file
 void open_rc()
 {
+    display_charset_str = wc_get_ces_list();
+    document_charset_str = display_charset_str;
+    system_charset_str = display_charset_str;
+
     FILE* f;
     if ((f = fopen(etcFile(W3MCONFIG), "rt")) != NULL) {
         interpret_rc(f);
@@ -1889,54 +1888,6 @@ void open_rc()
         interpret_rc(f);
         fclose(f);
     }
-}
-
-void init_rc(void)
-{
-    g_runtime.LoadHist = newHist();
-    g_runtime.SaveHist = newHist();
-    g_runtime.ShellHist = newHist();
-    g_runtime.TextHist = newHist();
-    g_runtime.URLHist = newHist();
-    if (g_runtime.UseHistory)
-        loadHistory(g_runtime.URLHist);
-
-    if (g_runtime.rc_dir != NULL) {
-        return;
-    }
-
-    g_runtime.rc_dir = allocStr(getenv("W3M_DIR"), -1);
-    if (g_runtime.rc_dir == NULL || *g_runtime.rc_dir == '\0')
-        g_runtime.rc_dir = allocStr(RC_DIR, -1);
-    if (g_runtime.rc_dir == NULL || *g_runtime.rc_dir == '\0') {
-        g_runtime.no_rc_dir = TRUE;
-        create_option_search_table();
-        return;
-    }
-    g_runtime.rc_dir = expandPath(g_runtime.rc_dir);
-
-    int i = strlen(g_runtime.rc_dir);
-    if (i > 1 && g_runtime.rc_dir[i - 1] == '/')
-        g_runtime.rc_dir[i - 1] = '\0';
-
-    display_charset_str = wc_get_ces_list();
-    document_charset_str = display_charset_str;
-    system_charset_str = display_charset_str;
-
-    getRuntime()->tmp_dir = g_runtime.rc_dir;
-
-    if (do_recursive_mkdir(g_runtime.rc_dir) == -1) {
-        g_runtime.no_rc_dir = TRUE;
-        create_option_search_table();
-        return;
-    }
-
-    g_runtime.no_rc_dir = FALSE;
-
-    if (g_runtime.config_file == NULL)
-        g_runtime.config_file = rcFile(CONFIG_FILE);
-
-    create_option_search_table();
 }
 
 void init_tmp(void)

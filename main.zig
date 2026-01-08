@@ -4,6 +4,7 @@ const PutcStatus = @import("PutcStatus.zig");
 const defuns = @import("defun.zig");
 
 const BOOKMARK = "bookmark.html";
+const RC_DIR = "~/.w3m";
 
 const Term = @import("Term.zig");
 var g_allocator: std.mem.Allocator = undefined;
@@ -128,7 +129,7 @@ const Args = struct {
         }
 
         // initializations
-        c.init_rc();
+        init_rc();
         c.open_rc();
 
         if (Locale) |locale| {
@@ -426,6 +427,50 @@ const Args = struct {
         // exit(err);
     }
 };
+
+export fn init_rc() void {
+    c.getRuntime().*.LoadHist = c.newHist();
+    c.getRuntime().*.SaveHist = c.newHist();
+    c.getRuntime().*.ShellHist = c.newHist();
+    c.getRuntime().*.TextHist = c.newHist();
+    c.getRuntime().*.URLHist = c.newHist();
+    if (c.getRuntime().*.UseHistory != 0) {
+        _ = c.loadHistory(c.getRuntime().*.URLHist);
+    }
+
+    if (c.getRuntime().*.rc_dir != null) {
+        return;
+    }
+
+    c.getRuntime().*.rc_dir = c.allocStr(c.getenv("W3M_DIR"), -1);
+    if (c.getRuntime().*.rc_dir == null or c.getRuntime().*.rc_dir[0] == 0)
+        c.getRuntime().*.rc_dir = c.allocStr(RC_DIR, -1);
+    if (c.getRuntime().*.rc_dir == null or c.getRuntime().*.rc_dir[0] == 0) {
+        c.getRuntime().*.no_rc_dir = 1;
+        c.create_option_search_table();
+        return;
+    }
+    c.getRuntime().*.rc_dir = c.expandPath(c.getRuntime().*.rc_dir);
+
+    const i = std.mem.span(c.getRuntime().*.rc_dir).len;
+    if (i > 1 and c.getRuntime().*.rc_dir[i - 1] == '/')
+        c.getRuntime().*.rc_dir[i - 1] = 0;
+
+    c.getRuntime().*.tmp_dir = c.getRuntime().*.rc_dir;
+
+    if (c.do_recursive_mkdir(c.getRuntime().*.rc_dir) == -1) {
+        c.getRuntime().*.no_rc_dir = 1;
+        c.create_option_search_table();
+        return;
+    }
+
+    c.getRuntime().*.no_rc_dir = 0;
+
+    if (c.getRuntime().*.config_file == null)
+        c.getRuntime().*.config_file = c.rcFile(c.CONFIG_FILE);
+
+    c.create_option_search_table();
+}
 
 const GC_WARN_KEEP_MAX = (20);
 var orig_GC_warn_proc: c.GC_warn_proc = null;
