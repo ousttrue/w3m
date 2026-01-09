@@ -41,7 +41,7 @@ struct param_ptr {
     /// pointer to global variable
     void* varptr;
     const char* comment;
-    void* select;
+    struct sel_c* select;
 };
 
 struct param_section {
