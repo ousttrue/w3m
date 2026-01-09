@@ -48,7 +48,8 @@ inline static const char* skip_blanks(const char* p)
 inline static bool IS_ENDL(uint8_t c) { return ((c) == '\0' || (c) == '\r' || (c) == '\n'); }
 inline static bool IS_ENDT(uint8_t c) { return (IS_ENDL(c) || (c) == ';'); }
 
-int str_to_bool(const char* value, int old);
+// src: "true", "false", "toggle"
+bool str_to_bool(const char* src, bool old);
 
 #define SP_NORMAL 0
 #define SP_PREC 1

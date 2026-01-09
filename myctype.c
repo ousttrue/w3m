@@ -540,30 +540,38 @@ unsigned char MYCTYPE_DIGITMAP[0x100] = {
 };
 uint8_t GET_MYCDIGIT(uint8_t x) { return (MYCTYPE_DIGITMAP[(int)(unsigned char)(x)]); }
 
-int str_to_bool(const char* value, int old)
+bool str_to_bool(const char* value, bool old)
 {
     if (value == 0)
-        return 1;
-    switch (TOLOWER(*value)) {
+        return true;
+
+    switch (TOLOWER(value[0])) {
     case '0':
-    case 'f': /* false */
-    case 'n': /* no */
-    case 'u': /* undef */
-        return 0;
+    case 'f': // false
+    case 'n': // no
+    case 'u': // undef
+        return false;
+
     case 'o':
-        if (TOLOWER(value[1]) == 'f') /* off */
-            return 0;
-        return 1; /* on */
+        if (TOLOWER(value[1]) == 'f')
+            // off
+            return false;
+        // on
+        return true;
+
     case 't':
-        if (TOLOWER(value[1]) == 'o') /* toggle */
+        if (TOLOWER(value[1]) == 'o')
+            // toggle
             return !old;
-        return 1; /* true */
+        // true
+        return true;
+
     case '!':
-    case 'r': /* reverse */
-    case 'x': /* exchange */
+    case 'r': // reverse
+    case 'x': // exchange
         return !old;
     }
-    return 1;
+    return true;
 }
 
 int vscpf(const char* fmt, va_list ap)
@@ -648,7 +656,3 @@ int vscpf(const char* fmt, va_list ap)
 
     return len;
 }
-
-
-
-

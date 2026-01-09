@@ -17,12 +17,13 @@ pub const c = @cImport({
     @cInclude("message.h");
     @cInclude("tab_list.h");
     @cInclude("option.h");
+    @cInclude("local_cgi.h");
     // wc
-    @cInclude("char_conv.h");
-    @cInclude("charset.h");
-    @cInclude("wtf_width.h");
-    @cInclude("wtf_len.h");
-    @cInclude("status.h");
+    @cInclude("libwc/char_conv.h");
+    @cInclude("libwc/charset.h");
+    @cInclude("libwc/wtf_width.h");
+    @cInclude("libwc/wtf_len.h");
+    @cInclude("libwc/status.h");
     //
     @cInclude("unistd.h");
     @cInclude("stdlib.h");

@@ -153,7 +153,7 @@ void w3m_on_key(uint8_t ch)
                 g_runtime.prec_num = PREC_LIMIT;
         } else {
             set_buffer_environ(Currentbuf);
-            doc_save_buffer_position(&Currentbuf->doc);
+            doc_save_buffer_position(Currentbuf->doc);
             keyPressEventProc(ch);
             g_runtime.prec_num = 0;
         }
@@ -264,7 +264,6 @@ interpret_keymap(FILE* kf, struct stat* current, int force)
     enum wc_ces charset = getRuntime()->SystemCharset;
 
     int verbose = 1;
-    extern int str_to_bool(const char* value, int old);
 
     if ((fd = fileno(kf)) < 0 || fstat(fd, &kstat) || (!force && kstat.st_mtime == current->st_mtime && kstat.st_dev == current->st_dev && kstat.st_ino == current->st_ino && kstat.st_size == current->st_size))
         return;

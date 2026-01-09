@@ -200,15 +200,32 @@ pub fn build(b: *std.Build) void {
         exe.linkSystemLibrary(lib);
     }
 
-    const sh = b.addLibrary(.{
-        .name = "sh",
-        .root_module = b.addModule("sh", .{
-            .target = target,
-            .optimize = optimize,
-            .root_source_file = b.path("sh.zig"),
-        }),
-    });
-    exe.linkLibrary(sh);
+    {
+        const name = "sh";
+        const lib = b.addLibrary(.{
+            .name = name,
+            .root_module = b.addModule(name, .{
+                .target = target,
+                .optimize = optimize,
+                .root_source_file = b.path(name ++ ".zig"),
+            }),
+        });
+        exe.linkLibrary(lib);
+    }
+    {
+        const name = "option";
+        const lib = b.addLibrary(.{
+            .name = name,
+            .root_module = b.addModule(name, .{
+                .target = target,
+                .optimize = optimize,
+                .root_source_file = b.path(name ++ ".zig"),
+                .link_libc = true,
+            }),
+        });
+        lib.addIncludePath(b.path(""));
+        exe.linkLibrary(lib);
+    }
 
     const wf = gen_functable(b);
     {
