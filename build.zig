@@ -222,6 +222,7 @@ pub fn build(b: *std.Build) void {
                 .root_source_file = b.path(name ++ ".zig"),
                 .link_libc = true,
             }),
+            .linkage = .dynamic,
         });
         lib.addIncludePath(b.path(""));
         exe.linkLibrary(lib);

@@ -49,10 +49,26 @@ struct param_section {
     struct param_ptr* params;
 };
 
-void opt_create_search_table();
+enum SettingsSections {
+    SETTINGS_DISPLAY,
+    SETTINGS_COLOR,
+    SETTINGS_MISCELLANEOUS,
+    SETTINGS_DIRECTORY,
+    SETTINGS_EXTERNALPROGRAM,
+    SETTINGS_NETWORK,
+    SETTINGS_PROXY,
+    SETTINGS_SSL,
+    SETTINGS_COOKIE,
+    SETTINGS_CHARSET,
+    SETTINGS_MAX,
+};
+
+void opt_init();
 // show parameter with bad options invokation
 void opt_show_params(FILE* fp);
 bool opt_set_param(const char* name, const char* value);
 bool opt_set_param_option(const char* option);
 char* opt_get_param_option(const char* name);
+struct param_ptr* opt_get_param(const char* name);
 Str opt_load_panel(void);
+void opt_register(enum SettingsSections section, struct param_ptr* p);

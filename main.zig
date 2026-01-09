@@ -2,6 +2,7 @@ const std = @import("std");
 const c = @import("c_include.zig").c;
 const PutcStatus = @import("PutcStatus.zig");
 const defuns = @import("defun.zig");
+const option = @import("option.zig");
 
 const BOOKMARK = "bookmark.html";
 const RC_DIR = "~/.w3m";
@@ -129,7 +130,9 @@ const Args = struct {
         }
 
         // initializations
+        option.opt_init_alloc(g_allocator);
         init_rc();
+        c.opt_init();
         c.open_rc();
 
         if (Locale) |locale| {
@@ -447,7 +450,6 @@ export fn init_rc() void {
         c.getRuntime().*.rc_dir = c.allocStr(RC_DIR, -1);
     if (c.getRuntime().*.rc_dir == null or c.getRuntime().*.rc_dir[0] == 0) {
         c.getRuntime().*.no_rc_dir = 1;
-        c.opt_create_search_table();
         return;
     }
     c.getRuntime().*.rc_dir = c.expandPath(c.getRuntime().*.rc_dir);
@@ -460,7 +462,6 @@ export fn init_rc() void {
 
     if (c.do_recursive_mkdir(c.getRuntime().*.rc_dir) == -1) {
         c.getRuntime().*.no_rc_dir = 1;
-        c.opt_create_search_table();
         return;
     }
 
@@ -468,8 +469,6 @@ export fn init_rc() void {
 
     if (c.getRuntime().*.config_file == null)
         c.getRuntime().*.config_file = c.rcFile(c.CONFIG_FILE);
-
-    c.opt_create_search_table();
 }
 
 const GC_WARN_KEEP_MAX = (20);
