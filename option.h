@@ -71,4 +71,12 @@ bool opt_set_param_option(const char* option);
 char* opt_get_param_option(const char* name);
 struct param_ptr* opt_get_param(const char* name);
 Str opt_load_panel(void);
-void opt_register(enum SettingsSections section, struct param_ptr* p);
+void opt_register(
+    enum SettingsSections section,
+    // struct param_ptr* p
+    const char* name,
+    const char* comment,
+    void* ptr,
+    enum ParamTypes param_type,
+    enum ParamInputTypes input_type,
+    struct sel_c* select);

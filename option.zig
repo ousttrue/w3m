@@ -215,78 +215,84 @@ const Option = struct {
         .{ .name = "Charset Settings" },
     },
 
-    param_map_c: std.StringHashMap(*c.param_ptr) = undefined,
     param_map_zig: std.StringHashMap(SectionRef) = undefined,
     display_charset_str: [*c]c.wc_ces_list,
 
     fn init(allocator: std.mem.Allocator) @This() {
         return .{
             .allocator = allocator,
-            .param_map_c = .init(allocator),
             .param_map_zig = .init(allocator),
             .display_charset_str = c.wc_get_ces_list(),
         };
     }
 
     fn deinit(this: *@This()) void {
-        this.param_map_c.deinit();
         this.param_map_zig.deinit();
     }
 
-    fn register(this: *@This(), section: c.SettingsSections, p: *c.param_ptr) void {
+    fn register(
+        this: *@This(),
+        section: c.SettingsSections,
+        name: [:0]const u8,
+        comment: [:0]const u8,
+        ptr: *anyopaque,
+        param_type: c.ParamTypes,
+        input_type: c.ParamInputTypes,
+        select: [*c]c.sel_c,
+    ) void {
         var param = Param{
-            .name = std.mem.span(p.name),
-            .comment = std.mem.span(p.comment),
-            .input_type = p.inputtype,
+            .name = name,
+            .comment = comment,
+            .input_type = input_type,
             .getset = undefined,
         };
-        switch (p.type) {
+        switch (param_type) {
             c.P_INT => {
-                param.getset = .{ .P_INT = .{ .ptr = p.varptr.? } };
+                param.getset = .{ .P_INT = .{ .ptr = ptr } };
             },
             c.P_SHORT => {
-                param.getset = .{ .P_SHORT = .{ .ptr = p.varptr.? } };
+                param.getset = .{ .P_SHORT = .{ .ptr = ptr } };
             },
             c.P_CHARINT => {
-                param.getset = .{ .P_CHARINT = .{ .ptr = p.varptr.? } };
+                param.getset = .{ .P_CHARINT = .{ .ptr = ptr } };
             },
             c.P_CHAR => {
-                param.getset = .{ .P_CHAR = .{ .ptr = p.varptr.? } };
+                param.getset = .{ .P_CHAR = .{ .ptr = ptr } };
             },
             c.P_STRING => {
-                param.getset = .{ .P_STRING = .{ .ptr = p.varptr.? } };
+                param.getset = .{ .P_STRING = .{ .ptr = ptr } };
             },
             c.P_SSLPATH => {
-                param.getset = .{ .P_SSLPATH = .{ .ptr = p.varptr.? } };
+                param.getset = .{ .P_SSLPATH = .{ .ptr = ptr } };
             },
             c.P_COLOR => {
-                param.getset = .{ .P_COLOR = .{ .ptr = p.varptr.? } };
+                param.getset = .{ .P_COLOR = .{ .ptr = ptr } };
             },
             c.P_CODE => {
-                param.getset = .{ .P_CODE = .{ .ptr = p.varptr.? } };
+                param.getset = .{ .P_CODE = .{ .ptr = ptr } };
             },
             c.P_PIXELS => {
-                param.getset = .{ .P_PIXELS = .{ .ptr = p.varptr.? } };
+                param.getset = .{ .P_PIXELS = .{ .ptr = ptr } };
             },
             c.P_NZINT => {
-                param.getset = .{ .P_NZINT = .{ .ptr = p.varptr.? } };
+                param.getset = .{ .P_NZINT = .{ .ptr = ptr } };
             },
             c.P_SCALE => {
-                param.getset = .{ .P_SCALE = .{ .ptr = p.varptr.? } };
+                param.getset = .{ .P_SCALE = .{ .ptr = ptr } };
             },
             else => @panic("unknown"),
         }
-        if (p.select != null) {
+        if (select != null) {
             {
-                var s: [*c]c.sel_c = p.select;
+                var s: [*c]c.sel_c = select;
                 var i: usize = 0;
                 while (s.*.text != null) : (i += 1) {
                     s += 1;
                 }
                 param.select = this.allocator.alloc(SelectItem, i) catch @panic("OOM");
             }
-            if (p.inputtype != c.PI_CODE) {
-                var s: [*c]c.sel_c = p.select;
+            if (input_type != c.PI_CODE) {
+                var s: [*c]c.sel_c = select;
                 var i: usize = 0;
                 while (s.*.text != null) : (i += 1) {
                     param.select[i] = .{
@@ -296,25 +302,13 @@ const Option = struct {
                     };
                     s += 1;
                 }
-            } else {
-                var s: [*c]c.wc_ces_list = @ptrCast(p.select);
-                var i: usize = 0;
-                while (s.*.name != null) : (i += 1) {
-                    param.select[i] = .{
-                        .value = s.*.id,
-                        .cvalue = std.mem.span(s.*.name),
-                        .text = std.mem.span(s.*.desc),
-                    };
-                    s += 1;
-                }
             }
         }
-        this.param_map_zig.put(std.mem.span(p.name), .{
+        this.param_map_zig.put(param.name, .{
             .section = section,
             .index = this.sections[section].params.items.len,
         }) catch {};
         this.sections[section].params.append(this.allocator, param) catch {};
-        this.param_map_c.put(std.mem.span(p.name), p) catch {};
     }
 
     fn panel(this: @This()) c.Str {
@@ -447,7 +441,16 @@ pub fn opt_deinit() void {
     g_opts.deinit();
 }
 
-export fn opt_register(section: c.SettingsSections, _p: [*c]c.param_ptr) void {
+export fn opt_register(
+    section: c.SettingsSections,
+    // _p: [*c]c.param_ptr,
+    name: [*c]const u8,
+    comment: [*c]const u8,
+    ptr: *anyopaque,
+    param_type: c.ParamTypes,
+    input_type: c.ParamInputTypes,
+    select: [*c]c.sel_c,
+) void {
     //     if (!g_runtime.OptionEncode) {
     //         optionpanel_str = wc_Str_conv(optionpanel_str, g_runtime.OptionCharset, g_runtime.InnerCharset);
     //         for (int i = 0; sections[i].name != NULL; i++) {
@@ -475,10 +478,18 @@ export fn opt_register(section: c.SettingsSections, _p: [*c]c.param_ptr) void {
     //         g_runtime.OptionEncode = TRUE;
     //     }
 
-    const p: *c.param_ptr = _p orelse {
-        return;
-    };
-    g_opts.register(section, p);
+    // const p: *c.param_ptr = _p orelse {
+    //     return;
+    // };
+    g_opts.register(
+        section,
+        std.mem.span(name),
+        std.mem.span(comment),
+        ptr,
+        param_type,
+        input_type,
+        select,
+    );
 }
 
 export fn opt_load_panel() c.Str {
@@ -568,8 +579,7 @@ export fn show_params(_fp: ?*c.FILE) void {
             _ = c.fprintf(fp, "  section[%d]: %s\n", j, c.conv_to_system(cmt));
         }
 
-        for (section.params.items) |*p|
-        {
+        for (section.params.items) |*p| {
             const t: []const u8 = switch (p.getset) {
                 .P_INT, .P_SHORT, .P_CHARINT, .P_NZINT => if (p.input_type == c.PI_ONOFF)
                     "bool"
