@@ -2,6 +2,7 @@
 
 static JMP_BUF IntReturn;
 
+
 static JMP_BUF AbortLoading;
 
 MySignalHandler intTrap(SIGNAL_ARG)

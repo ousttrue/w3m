@@ -9,7 +9,6 @@ const system_libs = [_][]const u8{
 
 const w3m_srcs = [_][]const u8{
     "w3m_rc.c",
-    "option.c",
     "w3m_types.c",
     "dict.c",
     "fileutil.c",

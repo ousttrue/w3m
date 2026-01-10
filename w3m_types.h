@@ -25,6 +25,12 @@
 #define DNS_ORDER_INET_ONLY 4
 #define DNS_ORDER_INET6_ONLY 6
 
+enum DefaultUrlModes {
+    DEFAULT_URL_EMPTY = 0,
+    DEFAULT_URL_CURRENT = 1,
+    DEFAULT_URL_LINK = 2,
+};
+
 struct Runtime {
     char UseGraphicChar;
 

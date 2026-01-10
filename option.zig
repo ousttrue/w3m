@@ -1,5 +1,8 @@
 const std = @import("std");
 const c = @import("c_include.zig").c;
+const cmts = @cImport({
+    @cInclude("option_cmt.h");
+});
 
 const CMT_HELPER = "External Viewer Setup";
 
@@ -20,8 +23,42 @@ fn GetSet(T: type) type {
     };
 }
 
+const SettingsSections = enum(u8) {
+    SETTINGS_DISPLAY,
+    SETTINGS_COLOR,
+    SETTINGS_MISCELLANEOUS,
+    SETTINGS_DIRECTORY,
+    SETTINGS_EXTERNALPROGRAM,
+    SETTINGS_NETWORK,
+    SETTINGS_PROXY,
+    SETTINGS_SSL,
+    SETTINGS_COOKIE,
+    SETTINGS_CHARSET,
+};
+
 const GetSetText = struct {
     ptr: *anyopaque,
+};
+
+const ParamInputTypes = enum {
+    PI_TEXT,
+    PI_ONOFF,
+    PI_SEL_C,
+    PI_CODE,
+};
+
+const ParamTypes = enum {
+    P_INT,
+    P_SHORT,
+    P_CHARINT,
+    P_CHAR,
+    P_STRING,
+    P_SSLPATH,
+    P_COLOR,
+    P_CODE,
+    P_PIXELS,
+    P_NZINT,
+    P_SCALE,
 };
 
 const TypedGetSet = union(enum) {
@@ -47,15 +84,15 @@ const SelectItem = struct {
 const Param = struct {
     name: [:0]const u8,
     comment: [:0]const u8,
-    input_type: c.ParamInputTypes,
+    input_type: ParamInputTypes,
     getset: TypedGetSet,
-    select: []SelectItem = &.{},
+    select: []const SelectItem,
 
     fn set(this: *@This(), value: [:0]const u8) void {
         switch (this.getset) {
             .P_INT => |getset| {
                 const ptr: *i32 = @ptrCast(@alignCast(getset.ptr));
-                if (this.input_type == c.PI_ONOFF) {
+                if (this.input_type == .PI_ONOFF) {
                     ptr.* = if (c.str_to_bool(value.ptr, ptr.* != 0)) 1 else 0;
                 } else {
                     if (std.fmt.parseInt(i32, value, 10)) |n| {
@@ -73,7 +110,7 @@ const Param = struct {
             },
             .P_SHORT => |getset| {
                 const ptr: *i16 = @ptrCast(@alignCast(getset.ptr));
-                if (this.input_type == c.PI_ONOFF) {
+                if (this.input_type == .PI_ONOFF) {
                     ptr.* = if (c.str_to_bool(value.ptr, ptr.* != 0)) 1 else 0;
                 } else {
                     if (std.fmt.parseInt(i16, value, 10)) |n| {
@@ -83,7 +120,7 @@ const Param = struct {
             },
             .P_CHARINT => |getset| {
                 const ptr: *i8 = @ptrCast(@alignCast(getset.ptr));
-                if (this.input_type == c.PI_ONOFF) {
+                if (this.input_type == .PI_ONOFF) {
                     ptr.* = if (c.str_to_bool(value.ptr, ptr.* != 0)) 1 else 0;
                 } else {
                     if (std.fmt.parseInt(i8, value, 10)) |n| {
@@ -196,13 +233,13 @@ const Section = struct {
 };
 
 const SectionRef = struct {
-    section: c.SettingsSections,
+    section: SettingsSections,
     index: usize,
 };
 
 const Option = struct {
     allocator: std.mem.Allocator,
-    sections: [c.SETTINGS_MAX]Section = .{
+    sections: [@typeInfo(SettingsSections).@"enum".fields.len]Section = .{
         .{ .name = "Display Settings" },
         .{ .name = "Color Settings" },
         .{ .name = "Miscellaneous Settings" },
@@ -232,83 +269,61 @@ const Option = struct {
 
     fn register(
         this: *@This(),
-        section: c.SettingsSections,
+        section: SettingsSections,
         name: [:0]const u8,
         comment: [:0]const u8,
         ptr: *anyopaque,
-        param_type: c.ParamTypes,
-        input_type: c.ParamInputTypes,
-        select: [*c]c.sel_c,
+        param_type: ParamTypes,
+        input_type: ParamInputTypes,
+        select: []const SelectItem,
     ) void {
         var param = Param{
             .name = name,
             .comment = comment,
             .input_type = input_type,
             .getset = undefined,
+            .select = select,
         };
         switch (param_type) {
-            c.P_INT => {
+            .P_INT => {
                 param.getset = .{ .P_INT = .{ .ptr = ptr } };
             },
-            c.P_SHORT => {
+            .P_SHORT => {
                 param.getset = .{ .P_SHORT = .{ .ptr = ptr } };
             },
-            c.P_CHARINT => {
+            .P_CHARINT => {
                 param.getset = .{ .P_CHARINT = .{ .ptr = ptr } };
             },
-            c.P_CHAR => {
+            .P_CHAR => {
                 param.getset = .{ .P_CHAR = .{ .ptr = ptr } };
             },
-            c.P_STRING => {
+            .P_STRING => {
                 param.getset = .{ .P_STRING = .{ .ptr = ptr } };
             },
-            c.P_SSLPATH => {
+            .P_SSLPATH => {
                 param.getset = .{ .P_SSLPATH = .{ .ptr = ptr } };
             },
-            c.P_COLOR => {
+            .P_COLOR => {
                 param.getset = .{ .P_COLOR = .{ .ptr = ptr } };
             },
-            c.P_CODE => {
+            .P_CODE => {
                 param.getset = .{ .P_CODE = .{ .ptr = ptr } };
             },
-            c.P_PIXELS => {
+            .P_PIXELS => {
                 param.getset = .{ .P_PIXELS = .{ .ptr = ptr } };
             },
-            c.P_NZINT => {
+            .P_NZINT => {
                 param.getset = .{ .P_NZINT = .{ .ptr = ptr } };
             },
-            c.P_SCALE => {
+            .P_SCALE => {
                 param.getset = .{ .P_SCALE = .{ .ptr = ptr } };
             },
-            else => @panic("unknown"),
-        }
-        if (select != null) {
-            {
-                var s: [*c]c.sel_c = select;
-                var i: usize = 0;
-                while (s.*.text != null) : (i += 1) {
-                    s += 1;
-                }
-                param.select = this.allocator.alloc(SelectItem, i) catch @panic("OOM");
-            }
-            if (input_type != c.PI_CODE) {
-                var s: [*c]c.sel_c = select;
-                var i: usize = 0;
-                while (s.*.text != null) : (i += 1) {
-                    param.select[i] = .{
-                        .value = @intCast(s.*.value),
-                        .cvalue = std.mem.span(s.*.cvalue),
-                        .text = std.mem.span(s.*.text),
-                    };
-                    s += 1;
-                }
-            }
         }
         this.param_map_zig.put(param.name, .{
             .section = section,
-            .index = this.sections[section].params.items.len,
+            .index = this.sections[@intFromEnum(section)].params.items.len,
         }) catch {};
-        this.sections[section].params.append(this.allocator, param) catch {};
+        this.sections[@intFromEnum(section)].params.append(this.allocator, param) catch {};
     }
 
     fn panel(this: @This()) c.Str {
@@ -341,7 +356,7 @@ const Option = struct {
                 c.Strcat_m_charp(src, "<tr><td>", p.comment.ptr, NULL);
                 c.Strcat(src, c.Sprintf("</td><td width=%d>", 28 * c.getRuntime().*.pixel_per_char));
                 switch (p.input_type) {
-                    c.PI_TEXT => {
+                    .PI_TEXT => {
                         c.Strcat_m_charp(
                             src,
                             "<input type=text name=",
@@ -352,7 +367,7 @@ const Option = struct {
                             NULL,
                         );
                     },
-                    c.PI_ONOFF => {
+                    .PI_ONOFF => {
                         const x = std.fmt.parseInt(i32, std.mem.span(p.to_str()), 10) catch
                             @panic("parseInt");
                         c.Strcat_m_charp(
@@ -369,10 +384,10 @@ const Option = struct {
                             NULL,
                         );
                     },
-                    c.PI_SEL_C => {
+                    .PI_SEL_C => {
                         const tmp = p.to_str();
                         c.Strcat_m_charp(src, "<select name=", p.name.ptr, ">", NULL);
-                        //                 for (struct sel_c* s = (struct sel_c*)p->select; s->text != NULL; s++) {
+                        //                 for (struct SelectItem* s = (struct SelectItem*)p->select; s->text != NULL; s++) {
                         for (p.select) |s| {
                             c.Strcat_charp(src, "<option value=");
                             c.Strcat(src, c.Sprintf("%s\n", s.cvalue.ptr));
@@ -395,7 +410,7 @@ const Option = struct {
                         }
                         c.Strcat_charp(src, "</select>");
                     },
-                    c.PI_CODE => {
+                    .PI_CODE => {
                         const tmp = p.to_str();
                         c.Strcat_m_charp(src, "<select name=", p.name.ptr, ">", NULL);
                         var s = this.display_charset_str;
@@ -412,7 +427,6 @@ const Option = struct {
                         }
                         c.Strcat_charp(src, "</select>");
                     },
-                    else => {},
                 }
                 c.Strcat_charp(src, "</td></tr>\n");
             }
@@ -425,7 +439,7 @@ const Option = struct {
 
     fn get_param(this: *@This(), name: []const u8) ?*Param {
         if (this.param_map_zig.get(name)) |section_index| {
-            return &this.sections[section_index.section].params.items[section_index.index];
+            return &this.sections[@intFromEnum(section_index.section)].params.items[section_index.index];
         } else {
             return null;
         }
@@ -441,64 +455,13 @@ pub fn opt_deinit() void {
     g_opts.deinit();
 }
 
-export fn opt_register(
-    section: c.SettingsSections,
-    // _p: [*c]c.param_ptr,
-    name: [*c]const u8,
-    comment: [*c]const u8,
-    ptr: *anyopaque,
-    param_type: c.ParamTypes,
-    input_type: c.ParamInputTypes,
-    select: [*c]c.sel_c,
-) void {
-    //     if (!g_runtime.OptionEncode) {
-    //         optionpanel_str = wc_Str_conv(optionpanel_str, g_runtime.OptionCharset, g_runtime.InnerCharset);
-    //         for (int i = 0; sections[i].name != NULL; i++) {
-    //             sections[i].name = wc_conv(_(sections[i].name), g_runtime.OptionCharset, g_runtime.InnerCharset)->ptr;
-    //             for (struct param_ptr* p = sections[i].params; p->name; p++) {
-    //                 p->comment = wc_conv(_(p->comment), g_runtime.OptionCharset,
-    //                     g_runtime.InnerCharset)
-    //                                  ->ptr;
-    //                 if (p->inputtype == PI_SEL_C
-    //                     && p->select != colorstr) {
-    //                     for (struct sel_c* s = (struct sel_c*)p->select; s->text != NULL; s++) {
-    //                         s->text = wc_conv(_(s->text), g_runtime.OptionCharset,
-    //                             g_runtime.InnerCharset)
-    //                                       ->ptr;
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //
-    //         for (struct sel_c* s = colorstr; s->text; s++)
-    //             s->text = wc_conv(_(s->text), g_runtime.OptionCharset,
-    //                 g_runtime.InnerCharset)
-    //                           ->ptr;
-    //
-    //         g_runtime.OptionEncode = TRUE;
-    //     }
-
-    // const p: *c.param_ptr = _p orelse {
-    //     return;
-    // };
-    g_opts.register(
-        section,
-        std.mem.span(name),
-        std.mem.span(comment),
-        ptr,
-        param_type,
-        input_type,
-        select,
-    );
-}
-
 export fn opt_load_panel() c.Str {
     return g_opts.panel();
 }
 
 export fn opt_get_param_option(name: [*c]const u8) [*c]const u8 {
     if (g_opts.param_map_zig.get(std.mem.span(name))) |section_index| {
-        const p = &g_opts.sections[section_index.section].params.items[section_index.index];
+        const p = &g_opts.sections[@intFromEnum(section_index.section)].params.items[section_index.index];
         return p.to_str();
     } else {
         return null;
@@ -581,7 +544,7 @@ export fn show_params(_fp: ?*c.FILE) void {
 
         for (section.params.items) |*p| {
             const t: []const u8 = switch (p.getset) {
-                .P_INT, .P_SHORT, .P_CHARINT, .P_NZINT => if (p.input_type == c.PI_ONOFF)
+                .P_INT, .P_SHORT, .P_CHARINT, .P_NZINT => if (p.input_type == .PI_ONOFF)
                     "bool"
                 else
                     "number",
@@ -613,4 +576,283 @@ export fn show_params(_fp: ?*c.FILE) void {
             );
         }
     }
+}
+
+fn opt_register(
+    section: SettingsSections,
+    // _p: [*c]c.param_ptr,
+    name: [*c]const u8,
+    comment: [*c]const u8,
+    ptr: *anyopaque,
+    param_type: ParamTypes,
+    input_type: ParamInputTypes,
+    select: []SelectItem,
+) void {
+    //     if (!g_runtime.OptionEncode) {
+    //         optionpanel_str = wc_Str_conv(optionpanel_str, g_runtime.OptionCharset, g_runtime.InnerCharset);
+    //         for (int i = 0; sections[i].name != NULL; i++) {
+    //             sections[i].name = wc_conv(_(sections[i].name), g_runtime.OptionCharset, g_runtime.InnerCharset)->ptr;
+    //             for (struct param_ptr* p = sections[i].params; p->name; p++) {
+    //                 p->comment = wc_conv(_(p->comment), g_runtime.OptionCharset,
+    //                     g_runtime.InnerCharset)
+    //                                  ->ptr;
+    //                 if (p->inputtype == PI_SEL_C
+    //                     && p->select != colorstr) {
+    //                     for (struct SelectItem* s = (struct SelectItem*)p->select; s->text != NULL; s++) {
+    //                         s->text = wc_conv(_(s->text), g_runtime.OptionCharset,
+    //                             g_runtime.InnerCharset)
+    //                                       ->ptr;
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //
+    //         for (struct SelectItem* s = colorstr; s->text; s++)
+    //             s->text = wc_conv(_(s->text), g_runtime.OptionCharset,
+    //                 g_runtime.InnerCharset)
+    //                           ->ptr;
+    //
+    //         g_runtime.OptionEncode = TRUE;
+    //     }
+
+    // const p: *c.param_ptr = _p orelse {
+    //     return;
+    // };
+    g_opts.register(
+        section,
+        std.mem.span(name),
+        std.mem.span(comment),
+        ptr,
+        param_type,
+        input_type,
+        select,
+    );
+}
+
+const colorstr = [_]SelectItem{
+    .{ .value = 0, .cvalue = "black", .text = "black" },
+    .{ .value = 1, .cvalue = "red", .text = "red" },
+    .{ .value = 2, .cvalue = "green", .text = "green" },
+    .{ .value = 3, .cvalue = "yellow", .text = "yellow" },
+    .{ .value = 4, .cvalue = "blue", .text = "blue" },
+    .{ .value = 5, .cvalue = "magenta", .text = "magenta" },
+    .{ .value = 6, .cvalue = "cyan", .text = "cyan" },
+    .{ .value = 7, .cvalue = "white", .text = "white" },
+    .{ .value = 8, .cvalue = "terminal", .text = "terminal" },
+};
+
+const defaulturls = [_]SelectItem{
+    .{ .value = c.DEFAULT_URL_EMPTY, .cvalue = "DEFAULT_URL_EMPTY", .text = "none" },
+    .{ .value = c.DEFAULT_URL_CURRENT, .cvalue = "DEFAULT_URL_CURRENT", .text = "current URL" },
+    .{ .value = c.DEFAULT_URL_LINK, .cvalue = "DEFAULT_URL_LINK", .text = "link URL" },
+};
+
+const displayinsdel = [_]SelectItem{
+    .{ .value = c.DISPLAY_INS_DEL_SIMPLE, .cvalue = "DISPLAY_INS_DEL_SIMPLE", .text = "simple" },
+    .{ .value = c.DISPLAY_INS_DEL_NORMAL, .cvalue = "DISPLAY_INS_DEL_NORMAL", .text = "use tag" },
+    .{ .value = c.DISPLAY_INS_DEL_FONTIFY, .cvalue = "DISPLAY_INS_DEL_FONTIFY", .text = "fontify" },
+};
+
+const dnsorders = [_]SelectItem{
+    .{ .value = c.DNS_ORDER_UNSPEC, .cvalue = "DNS_ORDER_UNSPEC", .text = "unspecified" },
+    .{ .value = c.DNS_ORDER_INET_INET6, .cvalue = "DNS_ORDER_INET_INET6", .text = "inet inet6" },
+    .{ .value = c.DNS_ORDER_INET6_INET, .cvalue = "DNS_ORDER_INET6_INET", .text = "inet6 inet" },
+    .{ .value = c.DNS_ORDER_INET_ONLY, .cvalue = "DNS_ORDER_INET_ONLY", .text = "inet only" },
+    .{ .value = c.DNS_ORDER_INET6_ONLY, .cvalue = "DNS_ORDER_INET6_ONLY", .text = "inet6 only" },
+};
+
+const badcookiestr = [_]SelectItem{
+    .{ .value = c.ACCEPT_BAD_COOKIE_DISCARD, .cvalue = "ACCEPT_BAD_COOKIE_DISCARD", .text = "discard" },
+    .{ .value = c.ACCEPT_BAD_COOKIE_ASK, .cvalue = "ACCEPT_BAD_COOKIE_ASK", .text = "ask" },
+};
+
+const mailtooptionsstr = [_]SelectItem{
+    .{ .value = c.MAILTO_OPTIONS_IGNORE, .cvalue = "MAILTO_OPTIONS_IGNORE", .text = "ignore options and use only the address" },
+    .{ .value = c.MAILTO_OPTIONS_USE_MAILTO_URL, .cvalue = "MAILTO_OPTIONS_USE_MAILTO_URL", .text = "use full mailto URL" },
+};
+
+const auto_detect_str = [_]SelectItem{
+    .{ .value = c.WC_OPT_DETECT_OFF, .cvalue = "WC_OPT_DETECT_OFF", .text = "OFF" },
+    .{ .value = c.WC_OPT_DETECT_ISO_2022, .cvalue = "WC_OPT_DETECT_ISO_2022", .text = "Only ISO 2022" },
+    .{ .value = c.WC_OPT_DETECT_ON, .cvalue = "WC_OPT_DETECT_ON", .text = "ON" },
+};
+
+const graphic_char_str = [_]SelectItem{
+    .{ .value = c.GRAPHIC_CHAR_ASCII, .cvalue = "GRAPHIC_CHAR_ASCII", .text = "ASCII" },
+    .{ .value = c.GRAPHIC_CHAR_CHARSET, .cvalue = "GRAPHIC_CHAR_CHARSET", .text = "charset specific" },
+    .{ .value = c.GRAPHIC_CHAR_DEC, .cvalue = "GRAPHIC_CHAR_DEC", .text = "DEC special graphics" },
+};
+
+const inlineimgstr = [_]SelectItem{
+    .{ .value = c.INLINE_IMG_NONE, .cvalue = "INLINE_IMG_NONE", .text = "external command" },
+    .{ .value = c.INLINE_IMG_OSC5379, .cvalue = "INLINE_IMG_OSC5379", .text = "OSC 5379 (mlterm)" },
+    .{ .value = c.INLINE_IMG_SIXEL, .cvalue = "INLINE_IMG_SIXEL", .text = "sixel (img2sixel)" },
+    .{ .value = c.INLINE_IMG_ITERM2, .cvalue = "INLINE_IMG_ITERM2", .text = "OSC 1337 (iTerm2)" },
+    .{ .value = c.INLINE_IMG_KITTY, .cvalue = "INLINE_IMG_KITTY", .text = "kitty (ImageMagick)" },
+};
+
+pub fn opt_init() void {
+    const g_runtime: *c.Runtime = c.getRuntime().?;
+    g_opts.register(.SETTINGS_DISPLAY, "tabstop", cmts.CMT_TABSTOP, &g_runtime.Tabstop, .P_NZINT, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_DISPLAY, "indent_incr", cmts.CMT_INDENT_INCR, &g_runtime.IndentIncr, .P_NZINT, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_DISPLAY, "pixel_per_char", cmts.CMT_PIXEL_PER_CHAR, &g_runtime.pixel_per_char, .P_PIXELS, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_DISPLAY, "pixel_per_line", cmts.CMT_PIXEL_PER_LINE, &g_runtime.pixel_per_line, .P_PIXELS, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_DISPLAY, "frame", cmts.CMT_FRAME, &g_runtime.RenderFrame, .P_CHARINT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_DISPLAY, "target_self", cmts.CMT_TSELF, &g_runtime.TargetSelf, .P_CHARINT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_DISPLAY, "open_tab_blank", cmts.CMT_OPEN_TAB_BLANK, &g_runtime.open_tab_blank, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_DISPLAY, "open_tab_dl_list", cmts.CMT_OPEN_TAB_DL_LIST, &g_runtime.open_tab_dl_list, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_DISPLAY, "display_link", cmts.CMT_DISPLINK, &g_runtime.displayLink, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_DISPLAY, "display_link_number", cmts.CMT_DISPLINKNUMBER, &g_runtime.displayLinkNumber, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_DISPLAY, "decode_url", cmts.CMT_DECODE_URL, &g_runtime.DecodeURL, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_DISPLAY, "display_lineinfo", cmts.CMT_DISPLINEINFO, &g_runtime.displayLineInfo, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_DISPLAY, "ext_dirlist", cmts.CMT_EXT_DIRLIST, &g_runtime.UseExternalDirBuffer, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_DISPLAY, "dirlist_cmd", cmts.CMT_DIRLIST_CMD, @ptrCast(&g_runtime.DirBufferCommand), .P_STRING, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_DISPLAY, "use_dictcommand", cmts.CMT_USE_DICTCOMMAND, &g_runtime.UseDictCommand, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_DISPLAY, "dictcommand", cmts.CMT_DICTCOMMAND, @ptrCast(&g_runtime.DictCommand), .P_STRING, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_DISPLAY, "multicol", cmts.CMT_MULTICOL, &g_runtime.multicolList, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_DISPLAY, "alt_entity", cmts.CMT_ALT_ENTITY, &g_runtime.UseAltEntity, .P_CHARINT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_DISPLAY, "graphic_char", cmts.CMT_GRAPHIC_CHAR, &g_runtime.UseGraphicChar, .P_CHARINT, .PI_SEL_C, &graphic_char_str);
+    g_opts.register(.SETTINGS_DISPLAY, "display_borders", cmts.CMT_DISP_BORDERS, &g_runtime.DisplayBorders, .P_CHARINT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_DISPLAY, "disable_center", cmts.CMT_DISABLE_CENTER, &g_runtime.DisableCenter, .P_CHARINT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_DISPLAY, "fold_textarea", cmts.CMT_FOLD_TEXTAREA, &g_runtime.FoldTextarea, .P_CHARINT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_DISPLAY, "display_ins_del", cmts.CMT_DISP_INS_DEL, &g_runtime.displayInsDel, .P_INT, .PI_SEL_C, &displayinsdel);
+    g_opts.register(.SETTINGS_DISPLAY, "ignore_null_img_alt", cmts.CMT_IGNORE_NULL_IMG_ALT, &g_runtime.ignore_null_img_alt, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_DISPLAY, "view_unseenobject", cmts.CMT_VIEW_UNSEENOBJECTS, &g_runtime.view_unseenobject, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_DISPLAY, "display_image", cmts.CMT_DISP_IMAGE, &g_runtime.displayImage, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_DISPLAY, "pseudo_inlines", cmts.CMT_PSEUDO_INLINES, &g_runtime.pseudoInlines, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_DISPLAY, "auto_image", cmts.CMT_AUTO_IMAGE, &g_runtime.autoImage, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_DISPLAY, "max_load_image", cmts.CMT_MAX_LOAD_IMAGE, &g_runtime.maxLoadImage, .P_INT, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_DISPLAY, "ext_image_viewer", cmts.CMT_EXT_IMAGE_VIEWER, &g_runtime.useExtImageViewer, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_DISPLAY, "image_scale", cmts.CMT_IMAGE_SCALE, &g_runtime.image_scale, .P_SCALE, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_DISPLAY, "inline_img_protocol", cmts.CMT_INLINE_IMG_PROTOCOL, &g_runtime.enable_inline_image, .P_INT, .PI_SEL_C, &inlineimgstr);
+    g_opts.register(.SETTINGS_DISPLAY, "imgdisplay", cmts.CMT_IMGDISPLAY, @ptrCast(&g_runtime.Imgdisplay), .P_STRING, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_DISPLAY, "image_map_list", cmts.CMT_IMAGE_MAP_LIST, &g_runtime.image_map_list, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_DISPLAY, "fold_line", cmts.CMT_FOLD_LINE, &g_runtime.FoldLine, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_DISPLAY, "show_lnum", cmts.CMT_SHOW_NUM, &g_runtime.showLineNum, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_DISPLAY, "show_srch_str", cmts.CMT_SHOW_SRCH_STR, &g_runtime.show_srch_str, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_DISPLAY, "label_topline", cmts.CMT_LABEL_TOPLINE, &g_runtime.label_topline, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_DISPLAY, "nextpage_topline", cmts.CMT_NEXTPAGE_TOPLINE, &g_runtime.nextpage_topline, .P_INT, .PI_ONOFF, &.{});
+
+    g_opts.register(.SETTINGS_COLOR, "color", cmts.CMT_COLOR, &g_runtime.useColor, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_COLOR, "high-intensity", cmts.CMT_HINTENSITY_COLOR, &g_runtime.highIntensityColors, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_COLOR, "basic_color", cmts.CMT_B_COLOR, &g_runtime.basic_color, .P_COLOR, .PI_SEL_C, &colorstr);
+    g_opts.register(.SETTINGS_COLOR, "anchor_color", cmts.CMT_A_COLOR, &g_runtime.anchor_color, .P_COLOR, .PI_SEL_C, &colorstr);
+    g_opts.register(.SETTINGS_COLOR, "image_color", cmts.CMT_I_COLOR, &g_runtime.image_color, .P_COLOR, .PI_SEL_C, &colorstr);
+    g_opts.register(.SETTINGS_COLOR, "form_color", cmts.CMT_F_COLOR, &g_runtime.form_color, .P_COLOR, .PI_SEL_C, &colorstr);
+    g_opts.register(.SETTINGS_COLOR, "mark_color", cmts.CMT_MARK_COLOR, &g_runtime.mark_color, .P_COLOR, .PI_SEL_C, &colorstr);
+    g_opts.register(.SETTINGS_COLOR, "bg_color", cmts.CMT_BG_COLOR, &g_runtime.bg_color, .P_COLOR, .PI_SEL_C, &colorstr);
+    g_opts.register(.SETTINGS_COLOR, "active_style", cmts.CMT_ACTIVE_STYLE, &g_runtime.useActiveColor, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_COLOR, "active_color", cmts.CMT_C_COLOR, &g_runtime.active_color, .P_COLOR, .PI_SEL_C, &colorstr);
+    g_opts.register(.SETTINGS_COLOR, "visited_anchor", cmts.CMT_VISITED_ANCHOR, &g_runtime.useVisitedColor, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_COLOR, "visited_color", cmts.CMT_V_COLOR, &g_runtime.visited_color, .P_COLOR, .PI_SEL_C, &colorstr);
+
+    g_opts.register(.SETTINGS_DIRECTORY, "document_root", cmts.CMT_DROOT, @ptrCast(&g_runtime.document_root), .P_STRING, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_DIRECTORY, "personal_document_root", cmts.CMT_PDROOT, @ptrCast(&g_runtime.personal_document_root), .P_STRING, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_DIRECTORY, "cgi_bin", cmts.CMT_CGIBIN, @ptrCast(&g_runtime.cgi_bin), .P_STRING, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_DIRECTORY, "index_file", cmts.CMT_IFILE, @ptrCast(&g_runtime.index_file), .P_STRING, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_DIRECTORY, "tmp_dir", cmts.CMT_TMP, @ptrCast(&g_runtime.param_tmp_dir), .P_STRING, .PI_TEXT, &.{});
+
+    g_opts.register(.SETTINGS_MISCELLANEOUS, "pagerline", cmts.CMT_PAGERLINE, &g_runtime.PagerMax, .P_NZINT, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_MISCELLANEOUS, "use_history", cmts.CMT_HISTORY, &g_runtime.UseHistory, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_MISCELLANEOUS, "history", cmts.CMT_HISTSIZE, &g_runtime.URLHistSize, .P_INT, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_MISCELLANEOUS, "save_hist", cmts.CMT_SAVEHIST, &g_runtime.SaveURLHist, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_MISCELLANEOUS, "confirm_qq", cmts.CMT_CONFIRM_QQ, &g_runtime.confirm_on_quit, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_MISCELLANEOUS, "close_tab_back", cmts.CMT_CLOSE_TAB_BACK, &g_runtime.close_tab_back, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_MISCELLANEOUS, "mark", cmts.CMT_USE_MARK, &g_runtime.use_mark, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_MISCELLANEOUS, "emacs_like_lineedit", cmts.CMT_EMACS_LIKE_LINEEDIT, &g_runtime.emacs_like_lineedit, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_MISCELLANEOUS, "space_autocomplete", cmts.CMT_SPACE_AUTOCOMPLETE, &g_runtime.space_autocomplete, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_MISCELLANEOUS, "vi_prec_num", cmts.CMT_VI_PREC_NUM, &g_runtime.vi_prec_num, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_MISCELLANEOUS, "mark_all_pages", cmts.CMT_MARK_ALL_PAGES, &g_runtime.MarkAllPages, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_MISCELLANEOUS, "wrap_search", cmts.CMT_WRAP, &g_runtime.WrapDefault, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_MISCELLANEOUS, "ignorecase_search", cmts.CMT_IGNORE_CASE, &g_runtime.IgnoreCase, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_MISCELLANEOUS, "clear_buffer", cmts.CMT_CLEAR_BUF, &g_runtime.clear_buffer, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_MISCELLANEOUS, "auto_uncompress", cmts.CMT_AUTO_UNCOMPRESS, &g_runtime.AutoUncompress, .P_CHARINT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_MISCELLANEOUS, "preserve_timestamp", cmts.CMT_PRESERVE_TIMESTAMP, &g_runtime.PreserveTimestamp, .P_CHARINT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_MISCELLANEOUS, "keymap_file", cmts.CMT_KEYMAP_FILE, @ptrCast(&g_runtime.keymap_file), .P_STRING, .PI_TEXT, &.{});
+
+    g_opts.register(.SETTINGS_EXTERNALPROGRAM, "mime_types", cmts.CMT_MIMETYPES, @ptrCast(&g_runtime.mimetypes_files), .P_STRING, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_EXTERNALPROGRAM, "mailcap", cmts.CMT_MAILCAP, @ptrCast(&g_runtime.mailcap_files), .P_STRING, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_EXTERNALPROGRAM, "urimethodmap", cmts.CMT_URIMETHODMAP, @ptrCast(&g_runtime.urimethodmap_files), .P_STRING, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_EXTERNALPROGRAM, "editor", cmts.CMT_EDITOR, @ptrCast(&g_runtime.Editor), .P_STRING, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_EXTERNALPROGRAM, "mailto_options", cmts.CMT_MAILTO_OPTIONS, &g_runtime.MailtoOptions, .P_INT, .PI_SEL_C, &mailtooptionsstr);
+    g_opts.register(.SETTINGS_EXTERNALPROGRAM, "mailer", cmts.CMT_MAILER, @ptrCast(&g_runtime.Mailer), .P_STRING, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_EXTERNALPROGRAM, "extbrowser", cmts.CMT_EXTBRZ, @ptrCast(&g_runtime.ExtBrowser), .P_STRING, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_EXTERNALPROGRAM, "extbrowser2", cmts.CMT_EXTBRZ2, @ptrCast(&g_runtime.ExtBrowser2), .P_STRING, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_EXTERNALPROGRAM, "extbrowser3", cmts.CMT_EXTBRZ3, @ptrCast(&g_runtime.ExtBrowser3), .P_STRING, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_EXTERNALPROGRAM, "extbrowser4", cmts.CMT_EXTBRZ4, @ptrCast(&g_runtime.ExtBrowser4), .P_STRING, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_EXTERNALPROGRAM, "extbrowser5", cmts.CMT_EXTBRZ5, @ptrCast(&g_runtime.ExtBrowser5), .P_STRING, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_EXTERNALPROGRAM, "extbrowser6", cmts.CMT_EXTBRZ6, @ptrCast(&g_runtime.ExtBrowser6), .P_STRING, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_EXTERNALPROGRAM, "extbrowser7", cmts.CMT_EXTBRZ7, @ptrCast(&g_runtime.ExtBrowser7), .P_STRING, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_EXTERNALPROGRAM, "extbrowser8", cmts.CMT_EXTBRZ8, @ptrCast(&g_runtime.ExtBrowser8), .P_STRING, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_EXTERNALPROGRAM, "extbrowser9", cmts.CMT_EXTBRZ9, @ptrCast(&g_runtime.ExtBrowser9), .P_STRING, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_EXTERNALPROGRAM, "bgextviewer", cmts.CMT_BGEXTVIEW, &g_runtime.BackgroundExtViewer, .P_INT, .PI_ONOFF, &.{});
+
+    g_opts.register(.SETTINGS_PROXY, "use_proxy", cmts.CMT_USE_PROXY, &g_runtime.use_proxy, .P_CHARINT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_PROXY, "http_proxy", cmts.CMT_HTTP_PROXY, @ptrCast(&g_runtime.HTTP_proxy), .P_STRING, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_PROXY, "https_proxy", cmts.CMT_HTTPS_PROXY, @ptrCast(&g_runtime.HTTPS_proxy), .P_STRING, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_PROXY, "ftp_proxy", cmts.CMT_FTP_PROXY, @ptrCast(&g_runtime.FTP_proxy), .P_STRING, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_PROXY, "no_proxy", cmts.CMT_NO_PROXY, @ptrCast(&g_runtime.NO_proxy), .P_STRING, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_PROXY, "noproxy_netaddr", cmts.CMT_NOPROXY_NETADDR, &g_runtime.NOproxy_netaddr, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_PROXY, "no_cache", cmts.CMT_NO_CACHE, &g_runtime.NoCache, .P_CHARINT, .PI_ONOFF, &.{});
+
+    g_opts.register(.SETTINGS_NETWORK, "passwd_file", cmts.CMT_PASSWDFILE, @ptrCast(&g_runtime.passwd_file), .P_STRING, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_NETWORK, "disable_secret_security_check", cmts.CMT_DISABLE_SECRET_SECURITY_CHECK, &g_runtime.disable_secret_security_check, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_NETWORK, "ftppasswd", cmts.CMT_FTPPASS, @ptrCast(&g_runtime.ftppasswd), .P_STRING, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_NETWORK, "ftppass_hostnamegen", cmts.CMT_FTPPASS_HOSTNAMEGEN, &g_runtime.ftppass_hostnamegen, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_NETWORK, "pre_form_file", cmts.CMT_PRE_FORM_FILE, @ptrCast(&g_runtime.pre_form_file), .P_STRING, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_NETWORK, "siteconf_file", cmts.CMT_SITECONF_FILE, @ptrCast(&c.siteconf_file), .P_STRING, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_NETWORK, "user_agent", cmts.CMT_USERAGENT, @ptrCast(&g_runtime.UserAgent), .P_STRING, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_NETWORK, "no_referer", cmts.CMT_NOSENDREFERER, &g_runtime.NoSendReferer, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_NETWORK, "cross_origin_referer", cmts.CMT_CROSSORIGINREFERER, &g_runtime.CrossOriginReferer, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_NETWORK, "accept_language", cmts.CMT_ACCEPTLANG, @ptrCast(&g_runtime.AcceptLang), .P_STRING, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_NETWORK, "accept_encoding", cmts.CMT_ACCEPTENCODING, @ptrCast(&g_runtime.AcceptEncoding), .P_STRING, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_NETWORK, "accept_media", cmts.CMT_ACCEPTMEDIA, @ptrCast(&g_runtime.AcceptMedia), .P_STRING, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_NETWORK, "argv_is_url", cmts.CMT_ARGV_IS_URL, &g_runtime.ArgvIsURL, .P_CHARINT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_NETWORK, "retry_http", cmts.CMT_RETRY_HTTP, &g_runtime.retryAsHttp, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_NETWORK, "default_url", cmts.CMT_DEFAULT_URL, &g_runtime.DefaultURLString, .P_INT, .PI_SEL_C, &defaulturls);
+    g_opts.register(.SETTINGS_NETWORK, "follow_redirection", cmts.CMT_FOLLOW_REDIRECTION, &g_runtime.FollowRedirection, .P_INT, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_NETWORK, "meta_refresh", cmts.CMT_META_REFRESH, &g_runtime.MetaRefresh, .P_CHARINT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_NETWORK, "localhost_only", cmts.CMT_LOCALHOST_ONLY, &g_runtime.LocalhostOnly, .P_CHARINT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_NETWORK, "dns_order", cmts.CMT_DNS_ORDER, &g_runtime.DNS_order, .P_INT, .PI_SEL_C, &dnsorders);
+
+    g_opts.register(.SETTINGS_COOKIE, "use_cookie", cmts.CMT_USECOOKIE, &g_runtime.use_cookie, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_COOKIE, "show_cookie", cmts.CMT_SHOWCOOKIE, &g_runtime.show_cookie, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_COOKIE, "accept_cookie", cmts.CMT_ACCEPTCOOKIE, &g_runtime.accept_cookie, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_COOKIE, "accept_bad_cookie", cmts.CMT_ACCEPTBADCOOKIE, &g_runtime.accept_bad_cookie, .P_INT, .PI_SEL_C, &badcookiestr);
+    g_opts.register(.SETTINGS_COOKIE, "cookie_reject_domains", cmts.CMT_COOKIE_REJECT_DOMAINS, @ptrCast(&g_runtime.cookie_reject_domains), .P_STRING, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_COOKIE, "cookie_accept_domains", cmts.CMT_COOKIE_ACCEPT_DOMAINS, @ptrCast(&g_runtime.cookie_accept_domains), .P_STRING, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_COOKIE, "cookie_avoid_wrong_number_of_dots", cmts.CMT_COOKIE_AVOID_WONG_NUMBER_OF_DOTS, @ptrCast(&g_runtime.cookie_avoid_wrong_number_of_dots), .P_STRING, .PI_TEXT, &.{});
+
+    g_opts.register(.SETTINGS_SSL, "ssl_forbid_method", cmts.CMT_SSL_FORBID_METHOD, @ptrCast(&g_runtime.ssl_forbid_method), .P_STRING, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_SSL, "ssl_min_version", cmts.CMT_SSL_MIN_VERSION, @ptrCast(&g_runtime.ssl_min_version), .P_STRING, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_SSL, "ssl_cipher", cmts.CMT_SSL_CIPHER, @ptrCast(&g_runtime.ssl_cipher), .P_STRING, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_SSL, "ssl_verify_server", cmts.CMT_SSL_VERIFY_SERVER, &g_runtime.ssl_verify_server, .P_INT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_SSL, "ssl_cert_file", cmts.CMT_SSL_CERT_FILE, @ptrCast(&g_runtime.ssl_cert_file), .P_SSLPATH, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_SSL, "ssl_key_file", cmts.CMT_SSL_KEY_FILE, @ptrCast(&g_runtime.ssl_key_file), .P_SSLPATH, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_SSL, "ssl_ca_path", cmts.CMT_SSL_CA_PATH, @ptrCast(&g_runtime.ssl_ca_path), .P_SSLPATH, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_SSL, "ssl_ca_file", cmts.CMT_SSL_CA_FILE, @ptrCast(&g_runtime.ssl_ca_file), .P_SSLPATH, .PI_TEXT, &.{});
+    g_opts.register(.SETTINGS_SSL, "ssl_ca_default", cmts.CMT_SSL_CA_DEFAULT, &g_runtime.ssl_ca_default, .P_INT, .PI_ONOFF, &.{});
+
+    g_opts.register(.SETTINGS_CHARSET, "display_charset", cmts.CMT_DISPLAY_CHARSET, &g_runtime.DisplayCharset, .P_CODE, .PI_CODE, &.{});
+    g_opts.register(.SETTINGS_CHARSET, "document_charset", cmts.CMT_DOCUMENT_CHARSET, &g_runtime.DocumentCharset, .P_CODE, .PI_CODE, &.{});
+    g_opts.register(.SETTINGS_CHARSET, "auto_detect", cmts.CMT_AUTO_DETECT, &c.WcOption.auto_detect, .P_CHARINT, .PI_SEL_C, &auto_detect_str);
+    g_opts.register(.SETTINGS_CHARSET, "system_charset", cmts.CMT_SYSTEM_CHARSET, &g_runtime.SystemCharset, .P_CODE, .PI_CODE, &.{});
+    g_opts.register(.SETTINGS_CHARSET, "follow_locale", cmts.CMT_FOLLOW_LOCALE, &g_runtime.FollowLocale, .P_CHARINT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_CHARSET, "use_wide", cmts.CMT_USE_WIDE, &c.WcOption.use_wide, .P_CHARINT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_CHARSET, "use_combining", cmts.CMT_USE_COMBINING, &c.WcOption.use_combining, .P_CHARINT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_CHARSET, "east_asian_width", cmts.CMT_EAST_ASIAN_WIDTH, &c.WcOption.east_asian_width, .P_CHARINT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_CHARSET, "use_language_tag", cmts.CMT_USE_LANGUAGE_TAG, &c.WcOption.use_language_tag, .P_CHARINT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_CHARSET, "ucs_conv", cmts.CMT_UCS_CONV, &c.WcOption.ucs_conv, .P_CHARINT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_CHARSET, "pre_conv", cmts.CMT_PRE_CONV, &c.WcOption.pre_conv, .P_CHARINT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_CHARSET, "search_conv", cmts.CMT_SEARCH_CONV, &g_runtime.SearchConv, .P_CHARINT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_CHARSET, "fix_width_conv", cmts.CMT_FIX_WIDTH_CONV, &c.WcOption.fix_width_conv, .P_CHARINT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_CHARSET, "use_gb12345_map", cmts.CMT_USE_GB12345_MAP, &c.WcOption.use_gb12345_map, .P_CHARINT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_CHARSET, "use_jisx0201", cmts.CMT_USE_JISX0201, &c.WcOption.use_jisx0201, .P_CHARINT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_CHARSET, "use_jisc6226", cmts.CMT_USE_JISC6226, &c.WcOption.use_jisc6226, .P_CHARINT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_CHARSET, "use_jisx0201k", cmts.CMT_USE_JISX0201K, &c.WcOption.use_jisx0201k, .P_CHARINT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_CHARSET, "use_jisx0212", cmts.CMT_USE_JISX0212, &c.WcOption.use_jisx0212, .P_CHARINT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_CHARSET, "use_jisx0213", cmts.CMT_USE_JISX0213, &c.WcOption.use_jisx0213, .P_CHARINT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_CHARSET, "strict_iso2022", cmts.CMT_STRICT_ISO2022, &c.WcOption.strict_iso2022, .P_CHARINT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_CHARSET, "gb18030_as_ucs", cmts.CMT_GB18030_AS_UCS, &c.WcOption.gb18030_as_ucs, .P_CHARINT, .PI_ONOFF, &.{});
+    g_opts.register(.SETTINGS_CHARSET, "simple_preserve_space", cmts.CMT_SIMPLE_PRESERVE_SPACE, &g_runtime.SimplePreserveSpace, .P_CHARINT, .PI_ONOFF, &.{});
 }

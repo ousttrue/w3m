@@ -132,7 +132,7 @@ const Args = struct {
         // initializations
         option.opt_init_alloc(g_allocator);
         init_rc();
-        c.opt_init();
+        option.opt_init();
         c.open_rc();
 
         if (Locale) |locale| {

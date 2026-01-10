@@ -19,7 +19,6 @@
 #define CMT_DISPLINEINFO N_("Display current line number")
 #define CMT_DISP_IMAGE N_("Display inline images")
 #define CMT_PSEUDO_INLINES N_("Display pseudo-ALTs for inline images with no ALT or TITLE string")
-#ifdef USE_IMAGE
 #define CMT_AUTO_IMAGE N_("Load inline images automatically")
 #define CMT_MAX_LOAD_IMAGE N_("Maximum processes for parallel image loading")
 #define CMT_EXT_IMAGE_VIEWER N_("Use external image viewer")
@@ -27,7 +26,7 @@
 #define CMT_IMGDISPLAY N_("External command to display image")
 #define CMT_IMAGE_MAP_LIST N_("Use link list of image map")
 #define CMT_INLINE_IMG_PROTOCOL N_("Inline image display method")
-#endif
+
 #define CMT_MULTICOL N_("Display file names in multi-column format")
 #define CMT_ALT_ENTITY N_("Use ASCII equivalents to display entities")
 #define CMT_GRAPHIC_CHAR N_("Character type for border of table and menu")
@@ -49,21 +48,14 @@
 #define CMT_MARK_COLOR N_("Color of mark")
 #define CMT_USE_PROXY N_("Use proxy")
 #define CMT_HTTP_PROXY N_("URL of HTTP proxy host")
-#ifdef USE_SSL
+
 #define CMT_HTTPS_PROXY N_("URL of HTTPS proxy host")
-#endif /* USE_SSL */
-#ifdef USE_GOPHER
-#define CMT_GOPHER_PROXY N_("URL of GOPHER proxy host")
-#endif /* USE_GOPHER */
+
 #define CMT_FTP_PROXY N_("URL of FTP proxy host")
 #define CMT_NO_PROXY N_("Domains to be accessed directly (no proxy)")
 #define CMT_NOPROXY_NETADDR N_("Check noproxy by network address")
 #define CMT_NO_CACHE N_("Disable cache")
-#ifdef USE_NNTP
-#define CMT_NNTP_SERVER N_("News server")
-#define CMT_NNTP_MODE N_("Mode of news server")
-#define CMT_MAX_NEWS N_("Number of news messages")
-#endif
+
 #define CMT_DNS_ORDER N_("Order of name resolution")
 #define CMT_DROOT N_("Directory corresponding to / (document root)")
 #define CMT_PDROOT N_("Directory corresponding to /~user")
@@ -71,9 +63,9 @@
 #define CMT_TMP N_("Directory for temporary files")
 #define CMT_CONFIRM_QQ N_("Confirm when quitting with q")
 #define CMT_CLOSE_TAB_BACK N_("Close tab if buffer is last when back")
-#ifdef USE_MARK
+
 #define CMT_USE_MARK N_("Enable mark operations")
-#endif
+
 #define CMT_EMACS_LIKE_LINEEDIT N_("Enable Emacs-style line editing")
 #define CMT_SPACE_AUTOCOMPLETE N_("Space key triggers file completion while editing URLs")
 #define CMT_VI_PREC_NUM N_("Enable vi-like numeric prefix")
@@ -111,49 +103,32 @@
 #define CMT_WRAP N_("Wrap search")
 #define CMT_VIEW_UNSEENOBJECTS N_("Display unseen objects (e.g. bgimage tag)")
 #define CMT_AUTO_UNCOMPRESS N_("Uncompress compressed data automatically when downloading")
-#ifdef __EMX__
-#define CMT_BGEXTVIEW N_("Run external viewer in a separate session")
-#else
 #define CMT_BGEXTVIEW N_("Run external viewer in the background")
-#endif
 #define CMT_EXT_DIRLIST N_("Use external program for directory listing")
 #define CMT_DIRLIST_CMD N_("URL of directory listing command")
-#ifdef USE_DICT
 #define CMT_USE_DICTCOMMAND N_("Enable dictionary lookup through CGI")
 #define CMT_DICTCOMMAND N_("URL of dictionary lookup command")
-#endif /* USE_DICT */
 #define CMT_IGNORE_NULL_IMG_ALT N_("Display link name for images lacking ALT")
 #define CMT_IFILE N_("Index file for directories")
 #define CMT_RETRY_HTTP N_("Prepend http:// to URL automatically")
 #define CMT_DEFAULT_URL N_("Default value for open-URL command")
 #define CMT_DECODE_CTE N_("Decode Content-Transfer-Encoding when saving")
 #define CMT_PRESERVE_TIMESTAMP N_("Preserve timestamp when saving")
-#ifdef USE_MOUSE
-#define CMT_MOUSE N_("Enable mouse")
-#define CMT_REVERSE_MOUSE N_("Scroll in reverse direction of mouse drag")
-#define CMT_RELATIVE_WHEEL_SCROLL N_("Behavior of wheel scroll speed")
-#define CMT_RELATIVE_WHEEL_SCROLL_RATIO N_("(A only)Scroll by # (%) of screen")
-#define CMT_FIXED_WHEEL_SCROLL_COUNT N_("(B only)Scroll by # lines")
-#endif /* USE_MOUSE */
 #define CMT_CLEAR_BUF N_("Free memory of undisplayed buffers")
 #define CMT_NOSENDREFERER N_("Suppress `Referer:' header")
 #define CMT_CROSSORIGINREFERER N_("Exclude pathname and query string from `Referer:' header when cross domain communication")
 #define CMT_IGNORE_CASE N_("Search case-insensitively")
 #define CMT_USE_LESSOPEN N_("Use LESSOPEN")
-#ifdef USE_SSL
-#ifdef USE_SSL_VERIFY
 #define CMT_SSL_VERIFY_SERVER N_("Perform SSL server verification")
 #define CMT_SSL_CERT_FILE N_("PEM encoded certificate file of client")
 #define CMT_SSL_KEY_FILE N_("PEM encoded private key file of client")
 #define CMT_SSL_CA_PATH N_("Path to directory for PEM encoded certificates of CAs")
 #define CMT_SSL_CA_FILE N_("File consisting of PEM encoded certificates of CAs")
 #define CMT_SSL_CA_DEFAULT N_("Use default locations for PEM encoded certificates of CAs")
-#endif /* USE_SSL_VERIFY */
 #define CMT_SSL_FORBID_METHOD N_("List of forbidden SSL methods (2: SSLv2, 3: SSLv3, t: TLSv1.0, 5: TLSv1.1, 6: TLSv1.2, 7: TLSv1.3)")
 #define CMT_SSL_MIN_VERSION N_("Minimum SSL version (all, TLSv1.0, TLSv1.1, TLSv1.2, or TLSv1.3)")
 #define CMT_SSL_CIPHER N_("SSL ciphers for TLSv1.2 and below (e.g. DEFAULT:@SECLEVEL=2)")
-#endif /* USE_SSL */
-#ifdef USE_COOKIE
+
 #define CMT_USECOOKIE N_("Enable cookie processing")
 #define CMT_SHOWCOOKIE N_("Print a message when receiving a cookie")
 #define CMT_ACCEPTCOOKIE N_("Accept cookies")
@@ -161,17 +136,11 @@
 #define CMT_COOKIE_REJECT_DOMAINS N_("Domains to reject cookies from")
 #define CMT_COOKIE_ACCEPT_DOMAINS N_("Domains to accept cookies from")
 #define CMT_COOKIE_AVOID_WONG_NUMBER_OF_DOTS N_("Domains to avoid [wrong number of dots]")
-#endif
+
 #define CMT_FOLLOW_REDIRECTION N_("Number of redirections to follow")
 #define CMT_META_REFRESH N_("Enable processing of meta-refresh tag")
 #define CMT_LOCALHOST_ONLY N_("Restrict connections only to localhost")
 
-#ifdef USE_MIGEMO
-#define CMT_USE_MIGEMO N_("Enable Migemo (Roma-ji search)")
-#define CMT_MIGEMO_COMMAND N_("Migemo command")
-#endif /* USE_MIGEMO */
-
-#ifdef USE_M17N
 #define CMT_DISPLAY_CHARSET N_("Display charset")
 #define CMT_DOCUMENT_CHARSET N_("Default document charset")
 #define CMT_AUTO_DETECT N_("Automatic charset detection when loading")
@@ -195,7 +164,6 @@
 #define CMT_STRICT_ISO2022 N_("Strict ISO-2022-JP/KR/CN")
 #define CMT_GB18030_AS_UCS N_("Treat 4 bytes char. of GB18030 as Unicode")
 #define CMT_SIMPLE_PRESERVE_SPACE N_("Simple Preserve space")
-#endif
 
 #define CMT_KEYMAP_FILE N_("keymap file")
 

@@ -1,5 +1,6 @@
 pub const c = @cImport({
     @cInclude("w3m_rc.h");
+    @cInclude("w3m_types.h");
     @cInclude("cookie.h");
     @cInclude("termcap.h");
     @cInclude("image.h");
@@ -18,6 +19,8 @@ pub const c = @cImport({
     @cInclude("tab_list.h");
     @cInclude("option.h");
     @cInclude("local_cgi.h");
+    @cInclude("symbol.h");
+    @cInclude("siteconf.h");
     // wc
     @cInclude("libwc/char_conv.h");
     @cInclude("libwc/charset.h");
