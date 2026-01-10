@@ -548,3 +548,59 @@ export fn opt_set_param_option(option: [*c]const u8) bool {
     }
     return true;
 }
+
+/// show parameter with bad options invokation
+export fn show_params(_fp: ?*c.FILE) void {
+    const fp = _fp orelse {
+        return;
+    };
+
+    const g_runtime: *c.Runtime = c.getRuntime().?;
+    g_runtime.OptionCharset = g_runtime.SystemCharset; // FIXME
+
+    _ = c.fputs("\nconfiguration parameters\n", fp);
+    for (g_opts.sections, 0..) |section, j| {
+        {
+            const cmt = if (0 == g_runtime.OptionEncode)
+                c.wc_conv(section.name.ptr, g_runtime.OptionCharset, g_runtime.InnerCharset).*.ptr
+            else
+                section.name.ptr;
+            _ = c.fprintf(fp, "  section[%d]: %s\n", j, c.conv_to_system(cmt));
+        }
+
+        for (section.params.items) |*p|
+        {
+            const t: []const u8 = switch (p.getset) {
+                .P_INT, .P_SHORT, .P_CHARINT, .P_NZINT => if (p.input_type == c.PI_ONOFF)
+                    "bool"
+                else
+                    "number",
+                .P_CHAR => "char",
+                .P_STRING => "string",
+                .P_SSLPATH => "path",
+                .P_COLOR => "color",
+                .P_CODE => "charset",
+                .P_PIXELS => "number",
+                .P_SCALE => "percent",
+            };
+
+            const cmt = if (0 == g_runtime.OptionEncode)
+                c.wc_conv(p.comment.ptr, g_runtime.OptionCharset, g_runtime.InnerCharset).*.ptr
+            else
+                p.comment.ptr;
+
+            var l: i32 = 30 - @as(i32, @intCast(p.name.len)) + @as(i32, @intCast(t.len));
+            if (l < 0)
+                l = 1;
+            _ = c.fprintf(
+                fp,
+                "    -o %s=<%s>%*s%s\n",
+                p.name.ptr,
+                t.ptr,
+                l,
+                " ",
+                c.conv_to_system(cmt),
+            );
+        }
+    }
+}

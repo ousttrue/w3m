@@ -1,6 +1,4 @@
 #include "option.h"
-#include "myctype.h"
-#include "w3m_rc.h"
 #include "w3m_types.h"
 #include "symbol.h"
 #include "cookie.h"
@@ -9,7 +7,6 @@
 #include <libwc/charset.h>
 #include <libwc/conv.h>
 #include <libwc/status.h>
-#include <stdlib.h>
 #include <string.h>
 #include "option_cmt.h"
 
@@ -17,9 +14,6 @@ struct rc_search_table {
     struct param_ptr* param;
     short uniq_pos;
 };
-
-static struct rc_search_table* RC_search_table;
-static int RC_table_size;
 
 static struct sel_c colorstr[] = {
     { 0, "black", N_("black") },
@@ -214,12 +208,6 @@ struct param_ptr params3[] = {
     { "wrap_search", P_INT, PI_ONOFF, (void*)&g_runtime.WrapDefault, CMT_WRAP, NULL },
     { "ignorecase_search", P_INT, PI_ONOFF, (void*)&g_runtime.IgnoreCase,
         CMT_IGNORE_CASE, NULL },
-#ifdef USE_MIGEMO
-    { "use_migemo", P_INT, PI_ONOFF, (void*)&use_migemo, CMT_USE_MIGEMO,
-        NULL },
-    { "migemo_command", P_STRING, PI_TEXT, (void*)&migemo_command,
-        CMT_MIGEMO_COMMAND, NULL },
-#endif /* USE_MIGEMO */
     { "clear_buffer", P_INT, PI_ONOFF, (void*)&g_runtime.clear_buffer, CMT_CLEAR_BUF,
         NULL },
     { "auto_uncompress", P_CHARINT, PI_ONOFF, (void*)&g_runtime.AutoUncompress,
@@ -440,128 +428,11 @@ struct param_section sections[] = {
     { .name = NULL, NULL }
 };
 
-static int
-compare_table(struct rc_search_table* a, struct rc_search_table* b)
-{
-    return strcmp(a->param->name, b->param->name);
-}
-
 void opt_init()
 {
-    // /* count table size */
-    // RC_table_size = 0;
-    // for (int j = 0; sections[j].name != NULL; j++) {
-    //     int i = 0;
-    //     while (sections[j].params[i].name) {
-    //         i++;
-    //         RC_table_size++;
-    //     }
-    // }
-    //
-    // RC_search_table = New_N(struct rc_search_table, RC_table_size);
-    // int k = 0;
-    // for (int j = 0; sections[j].name != NULL; j++) {
-    //     int i = 0;
-    //     while (sections[j].params[i].name) {
-    //         RC_search_table[k].param = &sections[j].params[i];
-    //         k++;
-    //         i++;
-    //     }
-    // }
-    //
-    // qsort(RC_search_table, RC_table_size, sizeof(struct rc_search_table),
-    //     (int (*)(const void*, const void*))compare_table);
-    //
-    // int diff2 = 0;
-    // for (int i = 0; i < RC_table_size - 1; i++) {
-    //     const char* p = RC_search_table[i].param->name;
-    //     const char* q = RC_search_table[i + 1].param->name;
-    //     int j = 0;
-    //     for (; p[j] != '\0' && q[j] != '\0' && p[j] == q[j]; j++)
-    //         ;
-    //     int diff1 = j;
-    //     if (diff1 > diff2)
-    //         RC_search_table[i].uniq_pos = diff1 + 1;
-    //     else
-    //         RC_search_table[i].uniq_pos = diff2 + 1;
-    //     diff2 = diff1;
-    // }
-
     for (int j = 0; sections[j].name; j++) {
         for (int i = 0; sections[j].params[i].name; ++i) {
             opt_register(j, &sections[j].params[i]);
-        }
-    }
-}
-
-/// show parameter with bad options invokation
-void show_params(FILE* fp)
-{
-    int i, j, l;
-    const char* t = "";
-    const char* cmt;
-
-    g_runtime.OptionCharset = g_runtime.SystemCharset; /* FIXME */
-
-    fputs("\nconfiguration parameters\n", fp);
-    for (j = 0; sections[j].name != NULL; j++) {
-        if (!g_runtime.OptionEncode)
-            cmt = wc_conv(_(sections[j].name), g_runtime.OptionCharset,
-                g_runtime.InnerCharset)
-                      ->ptr;
-        else
-            cmt = sections[j].name;
-        fprintf(fp, "  section[%d]: %s\n", j, conv_to_system(cmt));
-        i = 0;
-        while (sections[j].params[i].name) {
-            switch (sections[j].params[i].type) {
-            case P_INT:
-            case P_SHORT:
-            case P_CHARINT:
-            case P_NZINT:
-                t = (sections[j].params[i].inputtype == PI_ONOFF) ? "bool" : "number";
-                break;
-            case P_CHAR:
-                t = "char";
-                break;
-            case P_STRING:
-                t = "string";
-                break;
-
-            case P_SSLPATH:
-                t = "path";
-                break;
-
-            case P_COLOR:
-                t = "color";
-                break;
-
-            case P_CODE:
-                t = "charset";
-                break;
-
-            case P_PIXELS:
-                t = "number";
-                break;
-            case P_SCALE:
-                t = "percent";
-                break;
-            }
-
-            if (!g_runtime.OptionEncode)
-                cmt = wc_conv(_(sections[j].params[i].comment),
-                    g_runtime.OptionCharset, g_runtime.InnerCharset)
-                          ->ptr;
-            else
-
-                cmt = sections[j].params[i].comment;
-            l = 30 - (strlen(sections[j].params[i].name) + strlen(t));
-            if (l < 0)
-                l = 1;
-            fprintf(fp, "    -o %s=<%s>%*s%s\n",
-                sections[j].params[i].name, t, l, " ",
-                conv_to_system(cmt));
-            i++;
         }
     }
 }
