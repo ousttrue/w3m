@@ -72,7 +72,9 @@ void buf_set_link(struct Buffer* buf,
 {
     link_buf->bufferprop |= (BP_INTERNAL | prop);
     if (!(link_buf->bufferprop & BP_NO_URL)) {
-        copyParsedURL(&link_buf->content->url, &buf->content->url);
+        if (link_buf->content && buf->content && link_buf->content != buf->content) {
+            copyParsedURL(&link_buf->content->url, &buf->content->url);
+        }
     }
     if (linkid != LB_NOLINK) {
         link_buf->linkBuffer[REV_LB[linkid]] = buf;
