@@ -224,6 +224,7 @@ pub fn build(b: *std.Build) void {
             .linkage = .dynamic,
         });
         lib.addIncludePath(b.path(""));
+        lib.addIncludePath(b.path("zig-out/include"));
         exe.linkLibrary(lib);
     }
 

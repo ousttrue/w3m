@@ -806,27 +806,6 @@ const char* GetWord(struct Buffer* buf)
     return NULL;
 }
 
-static void
-interpret_rc(FILE* f)
-{
-    for (Str line = Strfgets(f); line->length; line = Strfgets(f)) {
-        Strchop(line);
-        if (line->length == 0) /* blank line */
-            continue;
-        Strremovefirstspaces(line);
-        if (line->ptr[0] == '#') /* comment */
-            continue;
-        Str tmp = Strnew();
-        char* p = line->ptr;
-        while (*p && !IS_SPACE(*p))
-            Strcat_char(tmp, *p++);
-        while (*p && IS_SPACE(*p))
-            p++;
-        Strlower(tmp);
-        opt_set_param(tmp->ptr, p);
-    }
-}
-
 #ifdef __MINGW32_VERSION
 #define do_mkdir(dir, mode) mkdir(dir)
 #else
@@ -925,15 +904,15 @@ void open_rc()
 {
     FILE* f;
     if ((f = fopen(etcFile(W3MCONFIG), "rt")) != NULL) {
-        interpret_rc(f);
+        opt_load(fileno(f));
         fclose(f);
     }
     if ((f = fopen(confFile(CONFIG_FILE), "rt")) != NULL) {
-        interpret_rc(f);
+        opt_load(fileno(f));
         fclose(f);
     }
     if (g_runtime.config_file && (f = fopen(g_runtime.config_file, "rt")) != NULL) {
-        interpret_rc(f);
+        opt_load(fileno(f));
         fclose(f);
     }
 }
@@ -978,40 +957,6 @@ tmp_dir_err:
         getRuntime()->tmp_dir = g_runtime.rc_dir;
 #endif
     return;
-}
-
-void panel_set_option(struct parsed_tagarg* arg)
-{
-    FILE* f = NULL;
-    char* p;
-    Str s = Strnew(), tmp;
-
-    if (g_runtime.config_file == NULL) {
-        disp_message("There's no config file... config not saved", FALSE);
-    } else {
-        f = fopen(g_runtime.config_file, "wt");
-        if (f == NULL) {
-            disp_message("Can't write option!", FALSE);
-        }
-    }
-    while (arg) {
-        /*  InnerCharset -> SystemCharset */
-        if (arg->value) {
-            p = conv_to_system(arg->value);
-            if (opt_set_param(arg->arg, p)) {
-                tmp = Sprintf("%s %s\n", arg->arg, p);
-                Strcat(tmp, s);
-                s = tmp;
-            }
-        }
-        arg = arg->next;
-    }
-    if (f) {
-        fputs(s->ptr, f);
-        fclose(f);
-    }
-    sync_with_option();
-    backBf((struct DefunContext) { 0 });
 }
 
 char* rcFile(const char* base)

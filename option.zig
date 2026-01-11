@@ -88,12 +88,12 @@ const Param = struct {
     getset: TypedGetSet,
     select: []const SelectItem,
 
-    fn set(this: *@This(), value: [:0]const u8) void {
+    fn set(this: *@This(), value: []const u8) void {
         switch (this.getset) {
             .P_INT => |getset| {
                 const ptr: *i32 = @ptrCast(@alignCast(getset.ptr));
                 if (this.input_type == .PI_ONOFF) {
-                    ptr.* = if (c.str_to_bool(value.ptr, ptr.* != 0)) 1 else 0;
+                    ptr.* = if (str_to_bool(value, ptr.* != 0)) 1 else 0;
                 } else {
                     if (std.fmt.parseInt(i32, value, 10)) |n| {
                         ptr.* = n;
@@ -111,7 +111,7 @@ const Param = struct {
             .P_SHORT => |getset| {
                 const ptr: *i16 = @ptrCast(@alignCast(getset.ptr));
                 if (this.input_type == .PI_ONOFF) {
-                    ptr.* = if (c.str_to_bool(value.ptr, ptr.* != 0)) 1 else 0;
+                    ptr.* = if (str_to_bool(value, ptr.* != 0)) 1 else 0;
                 } else {
                     if (std.fmt.parseInt(i16, value, 10)) |n| {
                         ptr.* = n;
@@ -121,7 +121,7 @@ const Param = struct {
             .P_CHARINT => |getset| {
                 const ptr: *i8 = @ptrCast(@alignCast(getset.ptr));
                 if (this.input_type == .PI_ONOFF) {
-                    ptr.* = if (c.str_to_bool(value.ptr, ptr.* != 0)) 1 else 0;
+                    ptr.* = if (str_to_bool(value, ptr.* != 0)) 1 else 0;
                 } else {
                     if (std.fmt.parseInt(i8, value, 10)) |n| {
                         ptr.* = n;
@@ -172,8 +172,43 @@ const Param = struct {
         }
     }
 
+    fn str_to_bool(value: []const u8, old: bool) bool {
+        if (value.len == 0)
+            return true;
+
+        return switch (std.ascii.toLower(value[0])) {
+            '0',
+            'f', // false
+            'n', // no
+            'u',
+            => // undef
+            false,
+
+            'o' => if (std.ascii.toLower(value[1]) == 'f')
+                // off
+                false
+            else
+                // on
+                true,
+
+            't' => if (std.ascii.toLower(value[1]) == 'o')
+                // toggle
+                !old
+            else
+                // true
+                true,
+
+            '!',
+            'r', // reverse
+            'x',
+            => // exchange
+            !old,
+            else => true,
+        };
+    }
+
     // str to ansi color code
-    fn str_to_color(value: [:0]const u8) u8 {
+    fn str_to_color(value: []const u8) u8 {
         return switch (std.ascii.toLower(value[0])) {
             '0' => 0, // black
             '1', 'r' => 1, // red
@@ -468,25 +503,21 @@ export fn opt_get_param_option(name: [*c]const u8) [*c]const u8 {
     }
 }
 
-export fn opt_set_param(_name: [*c]const u8, _value: [*c]const u8) bool {
-    const name: [*:0]const u8 = _name orelse {
-        return false;
-    };
-    const value: [*:0]const u8 = _value orelse {
-        return false;
-    };
-
-    const p = g_opts.get_param(std.mem.span(name)) orelse {
-        return false;
-    };
-    p.set(std.mem.span(value));
-
-    return true;
+fn opt_set_param(name: []const u8, value: []const u8) bool {
+    if (g_opts.get_param(name)) |p| {
+        if (std.mem.eql(u8, "tabstop", name)) {
+            const a = 0;
+            _ = a;
+        }
+        p.set(value);
+        return true;
+    }
+    return false;
 }
 
 export fn opt_set_param_option(option: [*c]const u8) bool {
     const tmp = c.Strnew();
-    var p = option;
+    var p: [*:0]const u8 = option;
     // , *q;
 
     while (p[0] != 0 and !c.IS_SPACE(p[0]) and p[0] != '=') : (p += 1) {
@@ -500,7 +531,7 @@ export fn opt_set_param_option(option: [*c]const u8) bool {
         }
     }
     c.Strlower(tmp);
-    if (opt_set_param(tmp.*.ptr, p)) {
+    if (opt_set_param(std.mem.span(tmp.*.ptr), std.mem.span(p))) {
         // goto option_assigned;
     } else {
         var q = tmp.*.ptr;
@@ -514,7 +545,7 @@ export fn opt_set_param_option(option: [*c]const u8) bool {
             return false;
         }
 
-        if (opt_set_param(q, "0")) {
+        if (opt_set_param(std.mem.span(q), "0")) {
             // goto option_assigned;
         } else {
             return false;
@@ -690,6 +721,68 @@ const inlineimgstr = [_]SelectItem{
     .{ .value = c.INLINE_IMG_ITERM2, .cvalue = "INLINE_IMG_ITERM2", .text = "OSC 1337 (iTerm2)" },
     .{ .value = c.INLINE_IMG_KITTY, .cvalue = "INLINE_IMG_KITTY", .text = "kitty (ImageMagick)" },
 };
+
+/// parse key value line
+///
+/// example:
+/// ```
+/// # tab stop space
+/// tabstop 8
+/// ```
+export fn opt_load(handle: std.fs.File.Handle) void {
+    const file: std.fs.File = .{
+        .handle = handle,
+    };
+    var buf: [128]u8 = undefined;
+    var r = file.reader(&buf);
+    while (r.interface.takeDelimiter('\n') catch null) |_line| {
+        const line = std.mem.trim(u8, _line, &std.ascii.whitespace);
+        if (line.len == 0)
+            continue;
+        if (line[0] == '#')
+            // comment
+            continue;
+
+        if (std.mem.indexOfAny(u8, line, &.{ ' ', '\t' })) |b| {
+            const key = line[0..b];
+            var e = b + 1;
+            while (e < line.len and c.IS_SPACE(line[e])) {
+                e += 1;
+            }
+            _ = opt_set_param(key, line[e..]);
+        }
+    }
+}
+
+export fn panel_set_option(_arg: [*c]c.parsed_tagarg) void {
+    var s: c.Str = c.Strnew();
+    var arg: ?*c.parsed_tagarg = _arg;
+    while (arg) |a| : (arg = a.next orelse null) {
+        //  InnerCharset -> ystemCharset
+        if (a.value) |value| {
+            const p = c.conv_to_system(value);
+            if (opt_set_param(std.mem.span(a.arg), std.mem.span(p))) {
+                const tmp = c.Sprintf("%s %s\n", a.arg, p);
+                _ = c.Strcat(tmp, s);
+                s = tmp;
+            }
+        }
+    }
+
+    if (c.getRuntime().*.config_file) |config_file| {
+        if (std.fs.cwd().openFile(std.mem.span(config_file), .{ .mode = .write_only })) |f| {
+            _ = f.write(s.*.ptr[0..s.*.length]) catch {};
+            f.close();
+        } else |_| {
+            c.disp_message("Can't write option!", false);
+        }
+    } else {
+        c.disp_message("There's no config file... config not saved", false);
+    }
+
+    c.sync_with_option();
+    c.backBf(.{});
+}
 
 pub fn opt_init() void {
     const g_runtime: *c.Runtime = c.getRuntime().?;

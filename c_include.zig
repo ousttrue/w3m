@@ -21,6 +21,8 @@ pub const c = @cImport({
     @cInclude("local_cgi.h");
     @cInclude("symbol.h");
     @cInclude("siteconf.h");
+    @cInclude("parsetag.h");
+    @cInclude("mailcap.h");
     // wc
     @cInclude("libwc/char_conv.h");
     @cInclude("libwc/charset.h");
@@ -30,5 +32,7 @@ pub const c = @cImport({
     //
     @cInclude("unistd.h");
     @cInclude("stdlib.h");
+    // generated
+    @cInclude("funcheader.h");
 });
 

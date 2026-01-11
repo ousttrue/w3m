@@ -84,7 +84,7 @@ void disp_message_nsec(const char* s, int redraw_current, int sec, int purge, in
     screen_move((struct Vec2) { .y = LASTLINE(), .x = 0 });
 }
 
-void disp_message(const char* s, int redraw_current)
+void disp_message(const char* s, bool redraw_current)
 {
     disp_message_nsec(s, redraw_current, 10, FALSE, TRUE);
 }

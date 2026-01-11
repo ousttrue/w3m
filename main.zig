@@ -540,8 +540,9 @@ pub fn main() !void {
 
     // init
     enterRawMode();
-    c.sync_with_option();
+    c.initMailcap();
     c.initCookie();
+    c.sync_with_option();
     // mySignal(SIGPIPE, SigPipe);
     orig_GC_warn_proc = c.GC_get_warn_proc();
     c.GC_set_warn_proc(wrap_GC_warn_proc);
