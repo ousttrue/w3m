@@ -388,12 +388,12 @@ void getHttpResponseHeader(struct Content* content, struct Url url,
             while (*p && !IS_SPACE(*p))
                 Strcat_char(funcname, *(p++));
             p = skip_blanks(p);
-            int f = getFuncList(funcname->ptr);
-            if (f >= 0) {
-                Str data = Strnew_charp(p);
-                Strchop(data);
-                pushEvent(f, data->ptr);
-            }
+            // int f = getFuncList(funcname->ptr);
+            // if (f >= 0) {
+            //     Str data = Strnew_charp(p);
+            //     Strchop(data);
+            //     pushEvent(f, data->ptr);
+            // }
         }
         pushText(content->document_header, lineBuf2->ptr);
         Strfree(lineBuf2);

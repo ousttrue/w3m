@@ -528,6 +528,9 @@ pub fn main() !void {
     defer _ = gpa.detectLeaks();
     g_allocator = gpa.allocator();
 
+    g_keymap = .init(g_allocator);
+    defer g_keymap.deinit();
+
     Term.g_term = Term.init(g_allocator, std.fs.File.stdin()) catch
         @panic("Term.init");
     defer Term.g_term.deinit();
@@ -690,9 +693,9 @@ pub fn main() !void {
             continue;
         }
 
-        if (c.eventUpdate()) {
-            continue;
-        }
+        // if (c.eventUpdate()) {
+        //     continue;
+        // }
 
         if (Term.g_term.getch()) |ch| {
             c.w3m_on_key(ch);
@@ -1927,3 +1930,20 @@ export fn inputAnswer(prompt: [*c]const u8) [*c]const u8 {
 //      */
 //     return NULL;
 // }
+
+//
+// keymap
+//
+var g_keymap: std.AutoHashMap(u32, c.KeyRegister) = undefined;
+
+export fn keymap_register(key: u32, reg: c.KeyRegister) void {
+    g_keymap.put(key, reg) catch {};
+}
+
+export fn keymap_fromKey(key: u32) c.KeyRegister {
+    if (g_keymap.get(key)) |val| {
+        return val;
+    } else {
+        return .{};
+    }
+}

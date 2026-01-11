@@ -126,29 +126,28 @@ DEFUN(editScr, EDIT_SCREEN, "Edit rendered copy of document")
 
 DEFUN(escmap, ESCMAP, "ESC map")
 {
-    int c = getch();
-    if (IS_ASCII(c))
-        escKeyProc((int)c, K_ESC, EscKeymap);
+    // int c = getch();
+    // if (IS_ASCII(c))
+    //     escKeyProc((int)c, K_ESC, EscKeymap);
 }
 
 DEFUN(escbmap, ESCBMAP, "ESC [ map")
 {
-    int c = getch();
-    if (IS_DIGIT(c)) {
-        escdmap(c);
-        return;
-    }
-    if (IS_ASCII(c))
-        escKeyProc((int)c, K_ESCB, EscBKeymap);
+    // int c = getch();
+    // if (IS_DIGIT(c)) {
+    //     return;
+    // }
+    // if (IS_ASCII(c))
+    //     escKeyProc((int)c, K_ESCB, EscBKeymap);
 }
 
 DEFUN(multimap, MULTIMAP, "multimap")
 {
-    char c = getch();
-    if (IS_ASCII(c)) {
-        getRuntime()->CurrentKey = K_MULTI | (getRuntime()->CurrentKey << 16) | c;
-        escKeyProc((int)c, 0, NULL);
-    }
+    // char c = getch();
+    // if (IS_ASCII(c)) {
+    //     getRuntime()->CurrentKey = K_MULTI | (getRuntime()->CurrentKey << 16) | c;
+    //     escKeyProc((int)c, 0, NULL);
+    // }
 }
 
 //
@@ -1628,7 +1627,7 @@ DEFUN(reinit, REINIT, "Reload configuration file")
     }
 
     if (!strcasecmp(resource, "KEYMAP")) {
-        initKeymap(TRUE);
+        keymap_init(true);
         return;
     }
 
@@ -1665,7 +1664,7 @@ DEFUN(defKey, DEFINE_KEY, "Define a binding between a key stroke combination and
             return;
         }
     }
-    setKeymap(allocStr(data, -1), -1, TRUE);
+    keymap_parseLine(allocStr(data, -1), -1, TRUE);
 }
 
 DEFUN(execCmd, COMMAND, "Invoke w3m function(s)")
@@ -1686,14 +1685,14 @@ DEFUN(execCmd, COMMAND, "Invoke w3m function(s)")
             continue;
         }
         char* p = getWord(&data);
-        int cmd = getFuncList(p);
-        if (cmd < 0)
+        DefunFunc func = keymap_fromName(p);
+        if (!func)
             break;
         p = getQWord(&data);
         getRuntime()->CurrentKey = -1;
         getRuntime()->CurrentKeyData = NULL;
         getRuntime()->CurrentCmdData = *p ? p : NULL;
-        w3mFuncList[cmd].func(ctx);
+        func(ctx);
         getRuntime()->CurrentCmdData = NULL;
     }
 }

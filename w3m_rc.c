@@ -894,7 +894,7 @@ void sync_with_option(void)
     wtf_init(g_runtime.DocumentCharset, g_runtime.DisplayCharset);
 
     if (fmInitialized()) {
-        initKeymap(FALSE);
+        keymap_init(false);
         initMenu();
     }
 }
@@ -1423,22 +1423,6 @@ void w3m_exit(int i)
     exit(i);
 }
 
-char* searchKeyData(void)
-{
-    const char* data = NULL;
-    if (getRuntime()->CurrentKeyData != NULL && *getRuntime()->CurrentKeyData != '\0')
-        data = getRuntime()->CurrentKeyData;
-    else if (getRuntime()->CurrentCmdData != NULL && *getRuntime()->CurrentCmdData != '\0')
-        data = getRuntime()->CurrentCmdData;
-    else if (getRuntime()->CurrentKey >= 0)
-        data = getKeyData(getRuntime()->CurrentKey);
-    getRuntime()->CurrentKeyData = NULL;
-    getRuntime()->CurrentCmdData = NULL;
-    if (data == NULL || *data == '\0')
-        return NULL;
-    return allocStr(data, -1);
-}
-
 void _docCSet(enum wc_ces charset)
 {
     if (Currentbuf->bufferprop & BP_INTERNAL)
@@ -1594,3 +1578,23 @@ void tmpClearBuffer(struct Buffer* buf)
         buf->doc->lastLine = NULL;
     }
 }
+
+bool eventUpdate()
+{
+    struct Runtime* g = getRuntime();
+    if (!g->CurrentEvent) {
+        return false;
+    }
+    g->CurrentKey = -1;
+    g->CurrentKeyData = NULL;
+    g->CurrentCmdData = (char*)g->CurrentEvent->data;
+    DefunFunc func = keymap_fromName(g->CurrentEvent->cmd);
+    func((struct DefunContext) {
+        .tab = CurrentTab(),
+        .buf = CurrentTab()->currentBuffer,
+    });
+    g->CurrentCmdData = NULL;
+    g->CurrentEvent = g->CurrentEvent->next;
+    return true;
+}
+

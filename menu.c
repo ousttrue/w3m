@@ -1245,10 +1245,10 @@ int setMenuItem(struct MenuItem* item, const char* type, const char* line)
             return -1;
         item->type = MENU_FUNC;
         item->label = label;
-        f = getFuncList(func);
-        item->func = w3mFuncList[(f >= 0) ? f : FUNCNAME_nulcmd].func;
-        item->keys = keys;
-        item->data = data;
+        // f = getFuncList(func);
+        // item->func = w3mFuncList[(f >= 0) ? f : FUNCNAME_nulcmd].func;
+        // item->keys = keys;
+        // item->data = data;
         return MENU_FUNC;
     } else if (strcmp(type, "popup") == 0) {
         label = getQWord(&line);

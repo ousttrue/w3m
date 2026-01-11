@@ -23,6 +23,7 @@ pub const c = @cImport({
     @cInclude("siteconf.h");
     @cInclude("parsetag.h");
     @cInclude("mailcap.h");
+    @cInclude("func.h");
     // wc
     @cInclude("libwc/char_conv.h");
     @cInclude("libwc/charset.h");
