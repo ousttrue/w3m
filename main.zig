@@ -1947,3 +1947,119 @@ export fn keymap_fromKey(key: u32) c.KeyRegister {
         return .{};
     }
 }
+
+export fn getKey2(_s: [*c]const u8) c_int {
+    if (_s == null or _s[0] == 0)
+        return -1;
+
+    var s = std.mem.span(_s);
+    if (std.ascii.eqlIgnoreCase(s, "UP")) { // ^[[A
+        return c.K_ESCB | 'A';
+    } else if (std.ascii.eqlIgnoreCase(s, "DOWN")) { // ^[[B
+        return c.K_ESCB | 'B';
+    } else if (std.ascii.eqlIgnoreCase(s, "RIGHT")) { // ^[[C
+        return c.K_ESCB | 'C';
+    } else if (std.ascii.eqlIgnoreCase(s, "LEFT")) { // ^[[D
+        return c.K_ESCB | 'D';
+    }
+
+    var esc: c.KeyMapFlags = 0;
+    if (std.ascii.startsWithIgnoreCase(s, "ESC-") or
+        std.ascii.startsWithIgnoreCase(s, "ESC "))
+    { // ^[
+        s = s[4..];
+        esc = c.K_ESC;
+    } else if (std.ascii.startsWithIgnoreCase(s, "M-") or
+        std.ascii.startsWithIgnoreCase(s, "\\E"))
+    { // ^[
+        s = s[2..];
+        esc = c.K_ESC;
+    } else if (s[0] == c.ESC_CODE) { // ^[
+        s = s[1..];
+        esc = c.K_ESC;
+    }
+
+    var ctrl = false;
+    if (std.ascii.startsWithIgnoreCase(s, "C-")) { // ^, ^[^
+        s = s[2..];
+        ctrl = true;
+    } else if (s[0] == '^' and s[1] != 0) { // ^, ^[^
+        s = s[1..];
+        ctrl = true;
+    }
+
+    if (esc == 0 and ctrl and s[0] == '[') { // ^[
+        s = s[1..];
+        ctrl = false;
+        esc = c.K_ESC;
+    }
+    if (esc != 0 and !ctrl) {
+        if (s[0] == '[' or s[0] == 'O') { // ^[[, ^[O
+            s = s[1..];
+            esc = c.K_ESCB;
+        }
+        if (std.ascii.startsWithIgnoreCase(s, "C-")) { // ^[^, ^[[^
+            s = s[2..];
+            ctrl = true;
+        } else if (s[0] == '^' and s[1] != 0) { // ^[^, ^[[^
+            s = s[1..];
+            ctrl = true;
+        }
+    }
+
+    if (ctrl) {
+        return @intCast(if (s[0] >= '@' and s[0] <= '_') // ^@ .. ^_
+            esc | (s[0] - '@')
+        else if (s[0] >= 'a' and s[0] <= 'z') // ^a .. ^z
+            esc | (s[0] - 'a' + 1)
+        else if (s[0] == '?') // ^?
+            esc | c.DEL_CODE
+        else
+            return -1);
+    }
+
+    if (esc == c.K_ESCB and c.IS_DIGIT(s[0])) {
+        var n: c_int = s[0] - '0';
+        s = s[1..];
+        if (c.IS_DIGIT(s[0])) {
+            n = n * 10 + (s[0] - '0');
+            s = s[1..];
+        }
+        return -1;
+    }
+
+    if (std.ascii.startsWithIgnoreCase(s, "SPC")) { // ' '
+        return @intCast(esc | ' ');
+    } else if (std.ascii.startsWithIgnoreCase(s, "TAB")) { // ^i
+        return @intCast(esc | '\t');
+    } else if (std.ascii.startsWithIgnoreCase(s, "DEL")) { // ^?
+        return @intCast(esc | c.DEL_CODE);
+    }
+
+    if (s[0] == '\\' and s[1] != 0) {
+        s = s[1..];
+        return switch (s[0]) {
+            'a' => // ^g
+            @intCast(esc | c.CTRL_G),
+            'b' => // ^h
+            @intCast(esc | c.CTRL_H),
+            't' => // ^i
+            @intCast(esc | c.CTRL_I),
+            'n' => // ^j
+            @intCast(esc | c.CTRL_J),
+            'r' => // ^m
+            @intCast(esc | c.CTRL_M),
+            'e' => // ^[
+            @intCast(esc | c.ESC_CODE),
+            '^' => // ^
+            @intCast(esc | '^'),
+            '\\' => @intCast(esc | '\\'),
+            else => -1,
+        };
+    }
+    if (c.IS_ASCII(s[0])) { // Ascii
+        return @intCast(esc | s[0]);
+    } else {
+        return -1;
+    }
+}

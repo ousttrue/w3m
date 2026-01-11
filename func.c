@@ -21,11 +21,6 @@
 #include "functable.c"
 #include "funcname.c"
 
-enum KeyMapFlags : uint32_t {
-    K_ESC = 0x100,
-    K_ESCB = 0x200,
-};
-
 DefunFunc keymap_fromName(const char* name)
 {
     for (struct FuncList* f = &w3mFuncList[0]; f; ++f) {
@@ -152,118 +147,6 @@ void w3m_on_key(uint8_t ch)
             g_runtime.prec_num = 0;
         }
     }
-}
-
-static int
-getKey2(const char* s)
-{
-    if (!s || !s[0])
-        return -1;
-
-    if (strcasecmp(s, "UP") == 0) { // ^[[A
-        return K_ESCB | 'A';
-    } else if (strcasecmp(s, "DOWN") == 0) { // ^[[B
-        return K_ESCB | 'B';
-    } else if (strcasecmp(s, "RIGHT") == 0) { // ^[[C
-        return K_ESCB | 'C';
-    } else if (strcasecmp(s, "LEFT") == 0) { // ^[[D
-        return K_ESCB | 'D';
-    }
-
-    enum KeyMapFlags esc = 0;
-    bool ctrl = false;
-    if (strncasecmp(s, "ESC-", 4) == 0 || strncasecmp(s, "ESC ", 4) == 0) { // ^[
-        s += 4;
-        esc = K_ESC;
-    } else if (strncasecmp(s, "M-", 2) == 0 || strncasecmp(s, "\\E", 2) == 0) { // ^[
-        s += 2;
-        esc = K_ESC;
-    } else if (*s == ESC_CODE) { // ^[
-        s++;
-        esc = K_ESC;
-    }
-    if (strncasecmp(s, "C-", 2) == 0) { // ^, ^[^
-        s += 2;
-        ctrl = true;
-    } else if (*s == '^' && *(s + 1)) { // ^, ^[^
-        s++;
-        ctrl = true;
-    }
-    if (!esc && ctrl && *s == '[') { // ^[
-        s++;
-        ctrl = false;
-        esc = K_ESC;
-    }
-    if (esc && !ctrl) {
-        if (*s == '[' || *s == 'O') { // ^[[, ^[O
-            s++;
-            esc = K_ESCB;
-        }
-        if (strncasecmp(s, "C-", 2) == 0) { // ^[^, ^[[^
-            s += 2;
-            ctrl = true;
-        } else if (*s == '^' && *(s + 1)) { // ^[^, ^[[^
-            s++;
-            ctrl = true;
-        }
-    }
-
-    if (ctrl) {
-        if (*s >= '@' && *s <= '_') // ^@ .. ^_
-            return esc | (*s - '@');
-        else if (*s >= 'a' && *s <= 'z') // ^a .. ^z
-            return esc | (*s - 'a' + 1);
-        else if (*s == '?') // ^?
-            return esc | DEL_CODE;
-        else
-            return -1;
-    }
-
-    if (esc == K_ESCB && IS_DIGIT(*s)) {
-        int n = (int)(*s - '0');
-        s++;
-        if (IS_DIGIT(*s)) {
-            n = n * 10 + (int)(*s - '0');
-            s++;
-        }
-        return -1;
-    }
-
-    if (strncasecmp(s, "SPC", 3) == 0) { // ' '
-        return esc | ' ';
-    } else if (strncasecmp(s, "TAB", 3) == 0) { // ^i
-        return esc | '\t';
-    } else if (strncasecmp(s, "DEL", 3) == 0) { // ^?
-        return esc | DEL_CODE;
-    }
-
-    if (*s == '\\' && *(s + 1) != '\0') {
-        s++;
-        switch (*s) {
-        case 'a': // ^g
-            return esc | CTRL_G;
-        case 'b': // ^h
-            return esc | CTRL_H;
-        case 't': // ^i
-            return esc | CTRL_I;
-        case 'n': // ^j
-            return esc | CTRL_J;
-        case 'r': // ^m
-            return esc | CTRL_M;
-        case 'e': // ^[
-            return esc | ESC_CODE;
-        case '^': // ^
-            return esc | '^';
-        case '\\':
-            return esc | '\\';
-        default:
-            return -1;
-        }
-    }
-    if (IS_ASCII(*s)) // Ascii
-        return esc | *s;
-    else
-        return -1;
 }
 
 void keymap_parseLine(const char* p, int lineno, bool verbose)
