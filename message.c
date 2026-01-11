@@ -66,13 +66,13 @@ void message(const char* s)
     screen_move((struct Vec2) { .y = pos.y, .x = pos.x });
 }
 
-void disp_err_message(const char* s, int redraw_current)
+void disp_err_message(const char* s, bool redraw_current)
 {
     record_err_message(s);
     disp_message(s, redraw_current);
 }
 
-void disp_message_nsec(const char* s, int redraw_current, int sec, int purge, int mouse)
+void disp_message_nsec(const char* s, bool redraw_current, int sec, bool purge, bool mouse)
 {
     if (getRuntime()->QuietMessage)
         return;

@@ -1948,20 +1948,19 @@ export fn keymap_fromKey(key: u32) c.KeyRegister {
     }
 }
 
-export fn getKey2(_s: [*c]const u8) c_int {
+fn getKey2(_s: [*c]const u8) ?u32 {
     if (_s == null or _s[0] == 0)
-        return -1;
+        return null;
 
     var s = std.mem.span(_s);
-    if (std.ascii.eqlIgnoreCase(s, "UP")) { // ^[[A
-        return c.K_ESCB | 'A';
-    } else if (std.ascii.eqlIgnoreCase(s, "DOWN")) { // ^[[B
-        return c.K_ESCB | 'B';
-    } else if (std.ascii.eqlIgnoreCase(s, "RIGHT")) { // ^[[C
-        return c.K_ESCB | 'C';
-    } else if (std.ascii.eqlIgnoreCase(s, "LEFT")) { // ^[[D
+    if (std.ascii.eqlIgnoreCase(s, "UP")) // ^[[A
+        return c.K_ESCB | 'A'
+    else if (std.ascii.eqlIgnoreCase(s, "DOWN")) // ^[[B
+        return c.K_ESCB | 'B'
+    else if (std.ascii.eqlIgnoreCase(s, "RIGHT")) // ^[[C
+        return c.K_ESCB | 'C'
+    else if (std.ascii.eqlIgnoreCase(s, "LEFT")) // ^[[D
         return c.K_ESCB | 'D';
-    }
 
     var esc: c.KeyMapFlags = 0;
     if (std.ascii.startsWithIgnoreCase(s, "ESC-") or
@@ -2008,14 +2007,14 @@ export fn getKey2(_s: [*c]const u8) c_int {
     }
 
     if (ctrl) {
-        return @intCast(if (s[0] >= '@' and s[0] <= '_') // ^@ .. ^_
+        return if (s[0] >= '@' and s[0] <= '_') // ^@ .. ^_
             esc | (s[0] - '@')
         else if (s[0] >= 'a' and s[0] <= 'z') // ^a .. ^z
             esc | (s[0] - 'a' + 1)
         else if (s[0] == '?') // ^?
             esc | c.DEL_CODE
         else
-            return -1);
+            null;
     }
 
     if (esc == c.K_ESCB and c.IS_DIGIT(s[0])) {
@@ -2025,41 +2024,87 @@ export fn getKey2(_s: [*c]const u8) c_int {
             n = n * 10 + (s[0] - '0');
             s = s[1..];
         }
-        return -1;
+        return null;
     }
 
     if (std.ascii.startsWithIgnoreCase(s, "SPC")) { // ' '
-        return @intCast(esc | ' ');
+        return esc | ' ';
     } else if (std.ascii.startsWithIgnoreCase(s, "TAB")) { // ^i
-        return @intCast(esc | '\t');
+        return esc | '\t';
     } else if (std.ascii.startsWithIgnoreCase(s, "DEL")) { // ^?
-        return @intCast(esc | c.DEL_CODE);
+        return esc | c.DEL_CODE;
     }
 
     if (s[0] == '\\' and s[1] != 0) {
         s = s[1..];
         return switch (s[0]) {
             'a' => // ^g
-            @intCast(esc | c.CTRL_G),
+            esc | c.CTRL_G,
             'b' => // ^h
-            @intCast(esc | c.CTRL_H),
+            esc | c.CTRL_H,
             't' => // ^i
-            @intCast(esc | c.CTRL_I),
+            esc | c.CTRL_I,
             'n' => // ^j
-            @intCast(esc | c.CTRL_J),
+            esc | c.CTRL_J,
             'r' => // ^m
-            @intCast(esc | c.CTRL_M),
+            esc | c.CTRL_M,
             'e' => // ^[
-            @intCast(esc | c.ESC_CODE),
+            esc | c.ESC_CODE,
             '^' => // ^
-            @intCast(esc | '^'),
-            '\\' => @intCast(esc | '\\'),
-            else => -1,
+            esc | '^',
+            '\\' => esc | '\\',
+            else => null,
         };
     }
-    if (c.IS_ASCII(s[0])) { // Ascii
-        return @intCast(esc | s[0]);
-    } else {
-        return -1;
+
+    if (!c.IS_ASCII(s[0])) { // Ascii
+        return null;
     }
+
+    return esc | s[0];
+}
+
+export fn keymap_parseLine(p: [*c]const u8, lineno: c_int, verbose: bool) void {
+    var s = c.getQWord(@constCast(&p));
+    const key = getKey2(s) orelse {
+        const emsg = if (lineno > 0)
+            c.Sprintf("line %d: unknown key '%s'", lineno, s)
+        else
+            c.Sprintf("defkey: unknown key '%s'", s);
+        c.record_err_message(emsg.*.ptr);
+        if (verbose)
+            c.disp_message_nsec(emsg.*.ptr, false, 1, true, false);
+        return;
+    };
+    const name = c.getWord(@constCast(&p));
+
+    // int f = getFuncList(s);
+    // if (f < 0) {
+    //     const char* emsg;
+    //     if (lineno > 0)
+    //         emsg = Sprintf("line %d: invalid command '%s'", lineno, s)->ptr;
+    //     else
+    //         emsg = Sprintf("defkey: invalid command '%s'", s)->ptr;
+    //     record_err_message(emsg);
+    //     if (verbose)
+    //         disp_message_nsec(emsg, FALSE, 1, TRUE, FALSE);
+    //     return;
+    // }
+
+    // map[c & 0x7F] = f;
+    s = c.getQWord(@constCast(&p));
+    const data: [:0]const u8 =
+        if (s[0] != 0)
+            // if (keyData == NULL)
+            //     keyData = newHash_iv(KEYDATA_HASH_SIZE);
+            // putHash_iv(keyData, c, (void*)s);
+            std.mem.span(s)
+        else
+            // putHash_iv(keyData, c, NULL);
+            "";
+
+    keymap_register(@intCast(key), .{
+        .func = c.keymap_fromName(name),
+        .data = data,
+    });
 }

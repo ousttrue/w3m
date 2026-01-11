@@ -19,5 +19,3 @@ enum KeyMapFlags : uint32_t {
     K_ESC = 0x100,
     K_ESCB = 0x200,
 };
-
-int getKey2(const char* s);

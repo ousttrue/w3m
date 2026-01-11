@@ -149,56 +149,6 @@ void w3m_on_key(uint8_t ch)
     }
 }
 
-void keymap_parseLine(const char* p, int lineno, bool verbose)
-{
-    const char* s = getQWord(&p);
-    int c = getKey2(s);
-    if (c < 0) { /* error */
-        const char* emsg;
-        if (lineno > 0)
-            emsg = Sprintf("line %d: unknown key '%s'", lineno, s)->ptr;
-        else
-            emsg = Sprintf("defkey: unknown key '%s'", s)->ptr;
-        record_err_message(emsg);
-        if (verbose)
-            disp_message_nsec(emsg, FALSE, 1, TRUE, FALSE);
-        return;
-    }
-    const char* name = getWord(&p);
-
-    // int f = getFuncList(s);
-    // if (f < 0) {
-    //     const char* emsg;
-    //     if (lineno > 0)
-    //         emsg = Sprintf("line %d: invalid command '%s'", lineno, s)->ptr;
-    //     else
-    //         emsg = Sprintf("defkey: invalid command '%s'", s)->ptr;
-    //     record_err_message(emsg);
-    //     if (verbose)
-    //         disp_message_nsec(emsg, FALSE, 1, TRUE, FALSE);
-    //     return;
-    // }
-
-    // map[c & 0x7F] = f;
-    s = getQWord(&p);
-    const char* data = 0;
-    if (*s) {
-        if (keyData == NULL)
-            keyData = newHash_iv(KEYDATA_HASH_SIZE);
-        // putHash_iv(keyData, c, (void*)s);
-        data = s;
-    } else if (getKeyData(c)) {
-        // putHash_iv(keyData, c, NULL);
-        data = 0;
-    }
-
-    keymap_register(c,
-        (struct KeyRegister) {
-            .func = keymap_fromName(name),
-            .data = data,
-        });
-}
-
 static void
 keymap_load(FILE* kf, struct stat* current, int force)
 {
@@ -300,10 +250,10 @@ void keymap_init(bool force)
     keymap_initialized = TRUE;
 }
 
-int getFuncList(const char* id)
-{
-    return getHash_si(&functable, id, -1);
-}
+// int getFuncList(const char* id)
+// {
+//     return getHash_si(&functable, id, -1);
+// }
 
 char* getKeyData(int key)
 {
