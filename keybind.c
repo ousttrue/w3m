@@ -3,16 +3,6 @@
 
 unsigned char GlobalKeymap[128] = {
 /*  C-@     C-a     C-b     C-c     C-d     C-e     C-f     C-g      */
-#ifdef __EMX__
-    pcmap,
-    linbeg,
-    movL,
-    nulcmd,
-    nulcmd,
-    linend,
-    movR,
-    curlno,
-#else
     _mark,
     linbeg,
     movL,
@@ -21,7 +11,6 @@ unsigned char GlobalKeymap[128] = {
     linend,
     movR,
     curlno,
-#endif
     /*  C-h     C-i     C-j     C-k     C-l     C-m     C-n     C-o      */
     ldHist,
     nextA,

@@ -7,6 +7,18 @@
 #include "message.h"
 #include <sys/stat.h>
 
+#include "hash.h"
+
+#define HIST_LIST_MAX GENERAL_LIST_MAX
+#define HIST_HASH_SIZE 127
+
+struct Hist {
+    HistList* list;
+    HistItem* current;
+    Hash_sv* hash;
+    long long mtime;
+};
+
 /* Merge entries from their history into ours */
 static int
 mergeHistory(struct Hist* ours, struct Hist* theirs)
