@@ -272,6 +272,9 @@ interpret_keymap(FILE* kf, struct stat* current, int force)
     lineno = 0;
     while (!feof(kf)) {
         line = Strfgets(kf);
+        if(line->length==0){
+            break;
+        }
         lineno++;
         Strchop(line);
         Strremovefirstspaces(line);
