@@ -711,32 +711,32 @@ DEFUN(nextU, NEXT_UP, "Move upward to the next hyperlink")
 
 DEFUN(srchfor, SEARCH SEARCH_FORE WHEREIS, "Search forward")
 {
-    srch(ctx.buf->doc, forwardSearch, "Forward: ");
+    srch(ctx, forwardSearch, "Forward: ");
 }
 
 DEFUN(srchbak, SEARCH_BACK, "Search backward")
 {
-    srch(ctx.buf->doc, backwardSearch, "Backward: ");
+    srch(ctx, backwardSearch, "Backward: ");
 }
 
 DEFUN(isrchfor, ISEARCH, "Incremental search forward")
 {
-    isrch(ctx.buf->doc, forwardSearch, "I-search: ");
+    isrch(ctx, forwardSearch, "I-search: ");
 }
 
 DEFUN(isrchbak, ISEARCH_BACK, "Incremental search backward")
 {
-    isrch(ctx.buf->doc, backwardSearch, "I-search backward: ");
+    isrch(ctx, backwardSearch, "I-search backward: ");
 }
 
 DEFUN(srchnxt, SEARCH_NEXT, "Continue search forward")
 {
-    srch_nxtprv(ctx.buf->doc, 0);
+    srch_nxtprv(ctx, 0);
 }
 
 DEFUN(srchprv, SEARCH_PREV, "Continue search backward")
 {
-    srch_nxtprv(ctx.buf->doc, 1);
+    srch_nxtprv(ctx, 1);
 }
 
 DEFUN(_mark, MARK, "Set/unset mark")

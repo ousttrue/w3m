@@ -1869,7 +1869,7 @@ export fn inputLineHistSearch(
     flag: c.LineInputFlags,
     hist: ?*c.Hist,
     incrfunc: c.IncrFunc,
-    doc: *c.Document,
+    ctx: c.DefunContext,
 ) [*c]const u8 {
     return g_linein.input(.{
         .prompt = prompt,
@@ -1877,7 +1877,7 @@ export fn inputLineHistSearch(
         .flag = flag,
         .hist = hist,
         .incrfunc = incrfunc,
-        .doc = doc,
+        .ctx = ctx,
     });
 }
 

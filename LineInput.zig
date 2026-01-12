@@ -7,7 +7,7 @@ const Options = struct {
     flag: c.LineInputFlags,
     hist: ?*c.Hist,
     incrfunc: c.IncrFunc,
-    doc: *c.Document,
+    ctx: c.DefunContext,
 };
 
 const CPL_MODE = enum {
@@ -203,12 +203,12 @@ pub fn input(this: *@This(), opts: Options) [*c]const u8 {
             } else if (!this.i_quote and ch < 0x20) {
                 // Control code
                 if (opts.incrfunc) |incrfunc| {
-                    const incr_ch = incrfunc(opts.doc, ch, this.strBuf, (&this.strProp).ptr);
+                    const incr_ch = incrfunc(opts.ctx, ch, this.strBuf, (&this.strProp).ptr);
                     if (incr_ch < 0x20) {
                         this.InputKeymap[@intCast(incr_ch)](this, @intCast(incr_ch));
                     }
                     if (incr_ch != -1 and incr_ch != c.CTRL_J) {
-                        _ = incrfunc(opts.doc, -1, this.strBuf, (&this.strProp).ptr);
+                        _ = incrfunc(opts.ctx, -1, this.strBuf, (&this.strProp).ptr);
                     }
                 } else {
                     this.InputKeymap[@intCast(ch)](this, ch);
@@ -233,7 +233,7 @@ pub fn input(this: *@This(), opts: Options) [*c]const u8 {
                 }
                 this.ins_char(tmp);
                 if (opts.incrfunc) |incrfunc| {
-                    _ = incrfunc(opts.doc, -1, this.strBuf, (&this.strProp).ptr);
+                    _ = incrfunc(opts.ctx, -1, this.strBuf, (&this.strProp).ptr);
                 }
             }
             break;

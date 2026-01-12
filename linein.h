@@ -1,4 +1,5 @@
 #pragma once
+#include "defun.h"
 #include "line.h"
 
 enum LineInputFlags {
@@ -10,14 +11,13 @@ enum LineInputFlags {
     IN_CHAR = 0x200,
 };
 
-struct Document;
-typedef int (*IncrFunc)(struct Document *doc, int ch, Str buf, Lineprop* prop);
+typedef int (*IncrFunc)(struct DefunContext ctx, int ch, Str buf, Lineprop* prop);
 
 struct Hist;
-char* inputLineHistSearch(const char* prompt, const char* def_str, enum LineInputFlags flag, struct Hist* hist, IncrFunc incfunc, struct Document* doc);
+char* inputLineHistSearch(const char* prompt, const char* def_str, enum LineInputFlags flag, struct Hist* hist, IncrFunc incfunc, struct DefunContext ctx);
 inline static char* inputLineHist(const char* p, const char* d, enum LineInputFlags f, struct Hist* h)
 {
-    return inputLineHistSearch(p, d, f, h, NULL, NULL);
+    return inputLineHistSearch(p, d, f, h, NULL, (struct DefunContext) { 0 });
 }
 inline static char* inputLine(const char* p, const char* d, enum LineInputFlags f)
 {
