@@ -3,6 +3,7 @@ const c = @import("c_include.zig").c;
 const PutcStatus = @import("PutcStatus.zig");
 const defuns = @import("defun.zig");
 const option = @import("option.zig");
+const keybind = @import("keybind.zig");
 
 const BOOKMARK = "bookmark.html";
 const RC_DIR = "~/.w3m";
@@ -2133,21 +2134,21 @@ fn keymap_load(r: *std.Io.Reader, force: bool) !void {
     _ = force;
     var charset = c.getRuntime().*.SystemCharset;
 
-    for (0..128) |i| {
+    for (keybind.GlobalKeymap, 0..) |f, i| {
         keymap_register(@intCast(i), .{
-            .func = c.GlobalKeymap[i],
+            .func = f,
             .data = &.{},
         });
     }
-    for (0..128) |i| {
-        keymap_register(@intCast(i), .{
-            .func = c.EscKeymap[i],
+    for (keybind.EscKeymap, 0..) |f, i| {
+        keymap_register(@intCast(i | K_ESC), .{
+            .func = f,
             .data = &.{},
         });
     }
-    for (0..128) |i| {
-        keymap_register(@intCast(i), .{
-            .func = c.EscBKeymap[i],
+    for (keybind.EscBKeymap, 0..) |f, i| {
+        keymap_register(@intCast(i | K_ESCB), .{
+            .func = f,
             .data = &.{},
         });
     }
@@ -2221,7 +2222,7 @@ fn keymap_on_key(ch: u8, ctx: c.DefunContext) void {
     if (c.IS_ASCII(ch)) {
         if (('0' <= ch) and (ch <= '9') and
             (g_runtime.prec_num != 0 or
-                (c.GlobalKeymap[ch] == c.nulcmd)))
+                (keybind.GlobalKeymap[ch] == c.nulcmd)))
         {
             g_runtime.prec_num = g_runtime.prec_num * 10 + (ch - '0');
             if (g_runtime.prec_num > PREC_LIMIT)

@@ -31,7 +31,6 @@ const w3m_srcs = [_][]const u8{
     "tab.c",
     "tab_list.c",
     "buffer.c",
-    "keybind.c",
     "html_form.c",
     "line.c",
 
@@ -56,7 +55,6 @@ const w3m_srcs = [_][]const u8{
     "ftp.c",
     "mimehead.c",
     "regex.c",
-    "func.c",
     "cookie.c",
     "history.c",
 

@@ -36,5 +36,6 @@ pub const c = @cImport({
     @cInclude("stdlib.h");
     // generated
     @cInclude("funcheader.h");
+    @cInclude("func_define.h");
 });
 

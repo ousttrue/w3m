@@ -63,6 +63,29 @@
 
 // static struct termios d_ioval;
 
+// static char* getKeyData(int key)
+// {
+//     if (keyData == NULL)
+//         return NULL;
+//     return (char*)getHash_iv(keyData, key, NULL);
+// }
+
+char* searchKeyData(void)
+{
+    const char* data = NULL;
+    if (getRuntime()->CurrentKeyData != NULL && *getRuntime()->CurrentKeyData != '\0')
+        data = getRuntime()->CurrentKeyData;
+    else if (getRuntime()->CurrentCmdData != NULL && *getRuntime()->CurrentCmdData != '\0')
+        data = getRuntime()->CurrentCmdData;
+    // else if (getRuntime()->CurrentKey >= 0)
+    //     data = getKeyData(getRuntime()->CurrentKey);
+    getRuntime()->CurrentKeyData = NULL;
+    getRuntime()->CurrentCmdData = NULL;
+    if (data == NULL || *data == '\0')
+        return NULL;
+    return allocStr(data, -1);
+}
+
 struct DefunContext defunContext()
 {
     return (struct DefunContext) {
