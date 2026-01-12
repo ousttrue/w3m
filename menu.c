@@ -850,28 +850,27 @@ DEFUN(selMn, SELECT_MENU, "Pop up buffer-stack menu")
 static enum MenuResult
 smDelBuf(struct DefunContext ctx, char c)
 {
-    int i, x, y, mselect;
-    struct Buffer* buf;
-
     if (CurrentMenu->select < 0 || CurrentMenu->select >= SelectMenu.nitem)
         return (MENU_NOTHING);
-    for (i = 0, buf = Firstbuf; i < CurrentMenu->select;
-        i++, buf = buf->nextBuffer)
+
+    struct Buffer* buf = ctx.tab->firstBuffer;
+    int i = 0;
+    for (; i < CurrentMenu->select; i++, buf = buf->nextBuffer)
         ;
     if (Currentbuf == buf)
         Currentbuf = buf->nextBuffer;
-    Firstbuf = deleteBuffer(Firstbuf, buf);
+    ctx.tab->firstBuffer = deleteBuffer(ctx.tab->firstBuffer, buf);
     if (!Currentbuf)
-        Currentbuf = nthBuffer(Firstbuf, i - 1);
+        Currentbuf = nthBuffer(ctx.tab->firstBuffer, i - 1);
     ;
-    if (Firstbuf == NULL) {
-        Firstbuf = buf_new(NULL);
-        Currentbuf = Firstbuf;
+    if (ctx.tab->firstBuffer == NULL) {
+        ctx.tab->firstBuffer = buf_new(NULL);
+        Currentbuf = ctx.tab->firstBuffer;
     }
 
-    x = CurrentMenu->x;
-    y = CurrentMenu->y;
-    mselect = CurrentMenu->select;
+    int x = CurrentMenu->x;
+    int y = CurrentMenu->y;
+    int mselect = CurrentMenu->select;
 
     initSelectMenu();
 
@@ -898,14 +897,14 @@ initSelectMenu(void)
     static char* comment = " SPC for select / D for delete buffer ";
 
     SelectV = -1;
-    for (i = 0, buf = Firstbuf; buf != NULL; i++, buf = buf->nextBuffer) {
+    for (i = 0, buf = CurrentTab()->firstBuffer; buf != NULL; i++, buf = buf->nextBuffer) {
         if (buf == Currentbuf)
             SelectV = i;
     }
     nitem = i;
 
     label = New_N(char*, nitem + 2);
-    for (i = 0, buf = Firstbuf; i < nitem; i++, buf = buf->nextBuffer) {
+    for (i = 0, buf = CurrentTab()->firstBuffer; i < nitem; i++, buf = buf->nextBuffer) {
         str = Sprintf("<%s>", buf->doc->title);
         if (buf->content->filename != NULL) {
             switch (buf->content->url.scheme) {
@@ -956,15 +955,13 @@ initSelectMenu(void)
 static void
 smChBuf(void)
 {
-    int i;
-    struct Buffer* buf;
-
     if (SelectV < 0 || SelectV >= SelectMenu.nitem)
         return;
-    for (i = 0, buf = Firstbuf; i < SelectV; i++, buf = buf->nextBuffer)
+    struct Buffer* buf = CurrentTab()->firstBuffer;
+    for (int i = 0; i < SelectV; i++, buf = buf->nextBuffer)
         ;
     Currentbuf = buf;
-    for (buf = Firstbuf; buf != NULL; buf = buf->nextBuffer) {
+    for (buf = CurrentTab()->firstBuffer; buf != NULL; buf = buf->nextBuffer) {
         if (buf == Currentbuf)
             continue;
         deleteImage(buf);

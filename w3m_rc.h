@@ -67,7 +67,6 @@ Str Str_conv_from_system(Str x);
 #define FOLD_BUFFER_WIDTH (getRuntime()->FoldLine ? (INIT_BUFFER_WIDTH + 1) : -1)
 
 #define Currentbuf (CurrentTab()->currentBuffer)
-#define Firstbuf (CurrentTab()->firstBuffer)
 
 int getOutputHandle();
 void reset_error_exit(int);

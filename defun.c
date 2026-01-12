@@ -37,7 +37,7 @@ DEFUN(nulcmd, NOTHING NULL @ @ @, "Do nothing")
 
 DEFUN(quitfm, ABORT EXIT, "Quit without confirmation")
 {
-    _quitfm(FALSE);
+    _quitfm(false);
 }
 
 DEFUN(qquitfm, QUIT, "Quit with confirmation request")
