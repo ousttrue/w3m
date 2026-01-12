@@ -2,7 +2,6 @@
 #include "tab.h"
 #include "tab_list.h"
 #include "w3m_rc.h"
-#include "alloc.h"
 #include "ctrlcode.h"
 #include "myctype.h"
 #include "etc.h"
@@ -19,17 +18,6 @@
 
 #include "funcheader.h"
 #include "functable.c"
-#include "funcname.c"
-
-DefunFunc keymap_fromName(const char* name)
-{
-    for (struct FuncList* f = &w3mFuncList[0]; f; ++f) {
-        if (0 == strcmp(name, f->name)) {
-            return f->func;
-        }
-    }
-    return 0;
-}
 
 // keybind.c
 extern DefunFunc GlobalKeymap[];
@@ -249,11 +237,6 @@ void keymap_init(bool force)
     }
     keymap_initialized = TRUE;
 }
-
-// int getFuncList(const char* id)
-// {
-//     return getHash_si(&functable, id, -1);
-// }
 
 char* getKeyData(int key)
 {

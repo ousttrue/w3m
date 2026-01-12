@@ -2108,3 +2108,14 @@ export fn keymap_parseLine(p: [*c]const u8, lineno: c_int, verbose: bool) void {
         .data = data,
     });
 }
+
+export fn keymap_fromName(_name: [*c]const u8) c.DefunFunc {
+    const funcname = @import("zig-out/include/funcname.zig");
+    const name = std.mem.span(_name);
+    for (funcname.w3mFuncList) |f| {
+        if (std.mem.eql(u8, name, f.name)) {
+            return f.func;
+        }
+    }
+    return null;
+}
