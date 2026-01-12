@@ -554,17 +554,6 @@ bool readBufferCache(struct Buffer* buf)
     return true;
 }
 
-void delBuffer(struct Buffer* buf)
-{
-    if (buf == NULL)
-        return;
-    if (Currentbuf == buf)
-        Currentbuf = buf->nextBuffer;
-    Firstbuf = deleteBuffer(Firstbuf, buf);
-    if (!Currentbuf)
-        Currentbuf = Firstbuf;
-}
-
 bool checkBackBuffer(struct Buffer* buf)
 {
     if (buf->nextBuffer)

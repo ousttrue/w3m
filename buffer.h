@@ -45,7 +45,6 @@ struct Buffer {
 
 struct Buffer* buf_new(struct Content* content);
 struct Url* baseURL(struct Buffer* buf);
-void delBuffer(struct Buffer* buf);
 
 void buf_set_link(struct Buffer* buf,
     struct Buffer* link_buf, enum BufferPropertyFlags bp, enum LinkBufferID linkid);

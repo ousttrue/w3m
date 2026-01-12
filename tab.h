@@ -10,3 +10,4 @@ struct TabBuffer {
 struct TabBuffer* tab_new(void);
 void tab_push_buffer(struct TabBuffer* tab, struct Buffer* buf);
 void tab_repBuffer(struct TabBuffer* tab, struct Buffer* oldbuf, struct Buffer* buf);
+void tab_delBuffer(struct TabBuffer* tab, struct Buffer* buf);

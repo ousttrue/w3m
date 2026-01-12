@@ -1566,15 +1566,15 @@ void follow_map(struct parsed_tagarg* arg)
 void change_charset(struct parsed_tagarg* arg)
 {
     struct Buffer* buf = Currentbuf->linkBuffer[LB_N_INFO];
-    enum wc_ces charset;
-
     if (buf == NULL)
         return;
-    delBuffer(Currentbuf);
+
+    tab_delBuffer(CurrentTab(), Currentbuf);
     Currentbuf = buf;
     if (Currentbuf->bufferprop & BP_INTERNAL)
         return;
-    charset = Currentbuf->doc->charset;
+
+    enum wc_ces charset = Currentbuf->doc->charset;
     for (; arg; arg = arg->next) {
         if (!strcmp(arg->arg, "charset"))
             charset = atoi(arg->value);

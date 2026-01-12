@@ -37,3 +37,18 @@ void tab_repBuffer(struct TabBuffer* tab, struct Buffer* oldbuf, struct Buffer* 
     tab->firstBuffer = replaceBuffer(tab->firstBuffer, oldbuf, buf);
     tab->currentBuffer = buf;
 }
+
+void tab_delBuffer(struct TabBuffer* tab, struct Buffer* buf)
+{
+    if (!tab)
+        return;
+    if (!buf)
+        return;
+    if (tab->currentBuffer == buf) {
+        tab->currentBuffer = buf->nextBuffer;
+    }
+    tab->firstBuffer = deleteBuffer(tab->firstBuffer, buf);
+    if (!tab->currentBuffer) {
+        tab->currentBuffer = tab->firstBuffer;
+    }
+}

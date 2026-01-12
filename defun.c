@@ -630,7 +630,7 @@ DEFUN(lastA, LINK_END, "Move to the last hyperlink")
 
 DEFUN(nthA, LINK_N, "Go to the nth link")
 {
-    struct HmarkerList* hl = Currentbuf->doc->hmarklist;
+    struct HmarkerList* hl = ctx.buf->doc->hmarklist;
     struct BufferPoint* po;
     struct Anchor* an;
 
@@ -638,21 +638,21 @@ DEFUN(nthA, LINK_N, "Go to the nth link")
     if (n < 0 || n > hl->nmark)
         return;
 
-    if (Currentbuf->doc->firstLine == NULL)
+    if (ctx.buf->doc->firstLine == NULL)
         return;
     if (!hl || hl->nmark == 0)
         return;
 
     po = hl->marks + n - 1;
-    an = al_retrieve(&Currentbuf->doc->href, (struct BufferPoint) { .line = po->line, .pos = po->pos });
+    an = al_retrieve(&ctx.buf->doc->href, (struct BufferPoint) { .line = po->line, .pos = po->pos });
     if (an == NULL)
-        an = al_retrieve(&Currentbuf->doc->formitem, (struct BufferPoint) { .line = po->line, .pos = po->pos });
+        an = al_retrieve(&ctx.buf->doc->formitem, (struct BufferPoint) { .line = po->line, .pos = po->pos });
     if (an == NULL)
         return;
 
-    doc_gotoLine(Currentbuf->doc, po->line);
-    Currentbuf->doc->pos = po->pos;
-    doc_arrangeCursor(Currentbuf->doc);
+    doc_gotoLine(ctx.buf->doc, po->line);
+    ctx.buf->doc->pos = po->pos;
+    doc_arrangeCursor(ctx.buf->doc);
 }
 
 DEFUN(nextA, NEXT_LINK, "Move to the next hyperlink")
@@ -921,11 +921,11 @@ DEFUN(selBuf, SELECT, "Display buffer-stack panel")
             ok = TRUE;
             break;
         case 'D':
-            delBuffer(buf);
-            if (Firstbuf == NULL) {
+            tab_delBuffer(ctx.tab, buf);
+            if (ctx.tab->firstBuffer == NULL) {
                 // No more buffer
-                Firstbuf = buf_new(NULL);
-                Currentbuf = Firstbuf;
+                ctx.tab->firstBuffer = buf_new(NULL);
+                Currentbuf = ctx.tab->firstBuffer;
             }
             break;
         case 'q':
@@ -937,7 +937,7 @@ DEFUN(selBuf, SELECT, "Display buffer-stack panel")
         }
     } while (!ok);
 
-    for (struct Buffer* buf = Firstbuf; buf != NULL; buf = buf->nextBuffer) {
+    for (struct Buffer* buf = ctx.tab->firstBuffer; buf != NULL; buf = buf->nextBuffer) {
         if (buf == Currentbuf)
             continue;
         deleteImage(buf);
@@ -973,7 +973,7 @@ DEFUN(submitForm, SUBMIT, "Submit form")
 DEFUN(nextBf, NEXT, "Switch to the next buffer")
 {
     for (int i = 0; i < PREC_NUM; i++) {
-        struct Buffer* buf = prevBuffer(Firstbuf, Currentbuf);
+        struct Buffer* buf = prevBuffer(ctx.tab->firstBuffer, Currentbuf);
         if (!buf) {
             if (i == 0)
                 return;
@@ -998,7 +998,7 @@ DEFUN(prevBf, PREV, "Switch to the previous buffer")
 
 DEFUN(backBf, BACK, "Close current buffer and return to the one below in stack")
 {
-    if (!checkBackBuffer(Currentbuf)) {
+    if (!checkBackBuffer(ctx.buf)) {
         if (getRuntime()->close_tab_back && nTab() >= 1) {
             tabs_delete(ctx.tab);
         } else
@@ -1007,14 +1007,12 @@ DEFUN(backBf, BACK, "Close current buffer and return to the one below in stack")
         return;
     }
 
-    delBuffer(Currentbuf);
+    tab_delBuffer(ctx.tab, ctx.buf);
 }
 
 DEFUN(deletePrevBuf, DELETE_PREVBUF, "Delete previous buffer (mainly for local CGI-scripts)")
 {
-    struct Buffer* buf = Currentbuf->nextBuffer;
-    if (buf)
-        delBuffer(buf);
+    tab_delBuffer(ctx.tab, ctx.buf);
 }
 
 DEFUN(tabR, TAB_RIGHT, "Move right along the tab bar")
