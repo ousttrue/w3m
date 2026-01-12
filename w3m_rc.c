@@ -1139,37 +1139,37 @@ void _quitfm(bool confirm)
     w3m_exit(0);
 }
 
-struct FollowResult _followA(struct Buffer* buf, struct FollowOption option)
+struct FollowResult _followA(struct DefunContext ctx, struct FollowOption option)
 {
-    if (Currentbuf->doc->firstLine == NULL) {
+    if (ctx.buf->doc->firstLine == NULL) {
         return (struct FollowResult) { 0 };
     }
 
-    struct Anchor* a = doc_retrieveCurrentImg(Currentbuf->doc);
+    struct Anchor* a = doc_retrieveCurrentImg(ctx.buf->doc);
     if (a && a->image && a->image->map) {
-        return _followForm(buf, option, false);
+        return _followForm(ctx.buf, option, false);
     }
 
     int x = 0, y = 0, map = 0;
     if (a && a->image && a->image->ismap) {
-        getMapXY(Currentbuf->doc, a, &x, &y);
+        getMapXY(ctx.buf->doc, a, &x, &y);
         map = 1;
     }
 
-    a = doc_retrieveCurrentAnchor(Currentbuf->doc);
+    a = doc_retrieveCurrentAnchor(ctx.buf->doc);
     if (a == NULL) {
-        return _followForm(buf, option, false);
+        return _followForm(ctx.buf, option, false);
     }
     if (*a->url == '#') { /* index within this buffer */
-        return gotoLabel(Currentbuf, a->url + 1);
+        return gotoLabel(ctx.buf, a->url + 1);
     }
 
     struct Url u;
-    parseURL2(a->url, &u, baseURL(Currentbuf));
-    if (Strcmp(parsedURL2Str(&u), parsedURL2Str(&Currentbuf->content->url)) == 0) {
+    parseURL2(a->url, &u, baseURL(ctx.buf));
+    if (Strcmp(parsedURL2Str(&u), parsedURL2Str(&ctx.buf->content->url)) == 0) {
         /* index within this buffer */
         if (u.label) {
-            return gotoLabel(Currentbuf, u.label);
+            return gotoLabel(ctx.buf, u.label);
         }
     }
     if (handleMailto(a->url))

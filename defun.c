@@ -743,20 +743,20 @@ DEFUN(_mark, MARK, "Set/unset mark")
 {
     if (!getRuntime()->use_mark)
         return;
-    if (Currentbuf->doc->firstLine == NULL)
+    if (ctx.buf->doc->firstLine == NULL)
         return;
-    struct Line* l = Currentbuf->doc->currentLine;
-    l->propBuf[Currentbuf->doc->pos] ^= PE_MARK;
+    struct Line* l = ctx.buf->doc->currentLine;
+    l->propBuf[ctx.buf->doc->pos] ^= PE_MARK;
 }
 
 DEFUN(nextMk, NEXT_MARK, "Go to the next mark")
 {
     if (!getRuntime()->use_mark)
         return;
-    if (Currentbuf->doc->firstLine == NULL)
+    if (ctx.buf->doc->firstLine == NULL)
         return;
-    int i = Currentbuf->doc->pos + 1;
-    struct Line* l = Currentbuf->doc->currentLine;
+    int i = ctx.buf->doc->pos + 1;
+    struct Line* l = ctx.buf->doc->currentLine;
     if (i >= l->len) {
         i = 0;
         l = l->next;
@@ -764,9 +764,9 @@ DEFUN(nextMk, NEXT_MARK, "Go to the next mark")
     while (l != NULL) {
         for (; i < l->len; i++) {
             if (l->propBuf[i] & PE_MARK) {
-                Currentbuf->doc->currentLine = l;
-                Currentbuf->doc->pos = i;
-                doc_arrangeCursor(Currentbuf->doc);
+                ctx.buf->doc->currentLine = l;
+                ctx.buf->doc->pos = i;
+                doc_arrangeCursor(ctx.buf->doc);
                 return;
             }
         }
@@ -780,10 +780,10 @@ DEFUN(prevMk, PREV_MARK, "Go to the previous mark")
 {
     if (!getRuntime()->use_mark)
         return;
-    if (Currentbuf->doc->firstLine == NULL)
+    if (ctx.buf->doc->firstLine == NULL)
         return;
-    int i = Currentbuf->doc->pos - 1;
-    struct Line* l = Currentbuf->doc->currentLine;
+    int i = ctx.buf->doc->pos - 1;
+    struct Line* l = ctx.buf->doc->currentLine;
     if (i < 0) {
         l = l->prev;
         if (l != NULL)
@@ -792,9 +792,9 @@ DEFUN(prevMk, PREV_MARK, "Go to the previous mark")
     while (l != NULL) {
         for (; i >= 0; i--) {
             if (l->propBuf[i] & PE_MARK) {
-                Currentbuf->doc->currentLine = l;
-                Currentbuf->doc->pos = i;
-                doc_arrangeCursor(Currentbuf->doc);
+                ctx.buf->doc->currentLine = l;
+                ctx.buf->doc->pos = i;
+                doc_arrangeCursor(ctx.buf->doc);
                 return;
             }
         }
@@ -825,7 +825,7 @@ DEFUN(reMark, REG_MARK, "Mark all occurences of a pattern")
         return;
     }
     MarkString = str;
-    for (struct Line* l = Currentbuf->doc->firstLine; l != NULL; l = l->next) {
+    for (struct Line* l = ctx.buf->doc->firstLine; l != NULL; l = l->next) {
         const char* p = l->lineBuf;
         for (;;) {
             if (regexMatch(p, &l->lineBuf[l->len] - p, p == l->lineBuf) == 1) {
@@ -917,7 +917,7 @@ DEFUN(selBuf, SELECT, "Display buffer-stack panel")
             break;
         case '\n':
         case ' ':
-            Currentbuf = buf;
+            ctx.tab->currentBuffer = buf;
             ok = TRUE;
             break;
         case 'D':
@@ -925,7 +925,7 @@ DEFUN(selBuf, SELECT, "Display buffer-stack panel")
             if (ctx.tab->firstBuffer == NULL) {
                 // No more buffer
                 ctx.tab->firstBuffer = buf_new(NULL);
-                Currentbuf = ctx.tab->firstBuffer;
+                ctx.tab->currentBuffer = ctx.tab->firstBuffer;
             }
             break;
         case 'q':
@@ -938,7 +938,7 @@ DEFUN(selBuf, SELECT, "Display buffer-stack panel")
     } while (!ok);
 
     for (struct Buffer* buf = ctx.tab->firstBuffer; buf != NULL; buf = buf->nextBuffer) {
-        if (buf == Currentbuf)
+        if (buf == ctx.tab->currentBuffer)
             continue;
         deleteImage(buf);
         if (getRuntime()->clear_buffer)
@@ -948,7 +948,7 @@ DEFUN(selBuf, SELECT, "Display buffer-stack panel")
 
 DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
 {
-    struct FollowResult res = _followA(Currentbuf,
+    struct FollowResult res = _followA(ctx,
         (struct FollowOption) { .on_target = true, .do_download = false });
     if (!res.new_buf) {
         return;
@@ -1111,7 +1111,7 @@ DEFUN(tabrURL, TAB_GOTO_RELATIVE, "Open relative address in a new tab")
 
 DEFUN(tabA, TAB_LINK, "Follow current hyperlink in a new tab")
 {
-    struct FollowResult res = _followA(ctx.buf, (struct FollowOption) { 0 });
+    struct FollowResult res = _followA(ctx, (struct FollowOption) { 0 });
     if (res.new_buf) {
         tabs_append(res.new_buf);
     }
@@ -1285,21 +1285,39 @@ DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
     }
 }
 
-/* accesskey */
-DEFUN(accessKey, ACCESSKEY, "Pop up accesskey menu")
+typedef struct Anchor* (*BufferMenuFunc)(struct Buffer*);
+
+void anchorMn(struct DefunContext ctx, BufferMenuFunc menu_func, bool go)
 {
-    anchorMn(accesskey_menu, TRUE);
+    if (ctx.buf->doc->href.nanchor == 0 || !ctx.buf->doc->hmarklist)
+        return;
+
+    struct Anchor* a = menu_func(ctx.buf);
+    if (!a || a->hseq < 0)
+        return;
+
+    struct BufferPoint* po = &ctx.buf->doc->hmarklist->marks[a->hseq];
+    doc_gotoLine(ctx.buf->doc, po->line);
+    ctx.buf->doc->pos = po->pos;
+    doc_arrangeCursor(ctx.buf->doc);
+    if (go) {
+        followA(ctx);
+    }
 }
 
-/* list menu */
+DEFUN(accessKey, ACCESSKEY, "Pop up accesskey menu")
+{
+    anchorMn(ctx, accesskey_menu, TRUE);
+}
+
 DEFUN(listMn, LIST_MENU, "Pop up menu for hyperlinks to browse to")
 {
-    anchorMn(list_menu, TRUE);
+    anchorMn(ctx, list_menu, true);
 }
 
 DEFUN(movlistMn, MOVE_LIST_MENU, "Pop up menu to navigate between hyperlinks")
 {
-    anchorMn(list_menu, FALSE);
+    anchorMn(ctx, list_menu, false);
 }
 
 DEFUN(linkLst, LIST, "Show all URLs referenced")
@@ -1332,7 +1350,7 @@ DEFUN(ldHist, HISTORY, "Show browsing history")
 DEFUN(svA, SAVE_LINK, "Save hyperlink target")
 {
     getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    _followA(Currentbuf, (struct FollowOption) { .on_target = true, .do_download = false });
+    _followA(ctx, (struct FollowOption) { .on_target = true, .do_download = false });
 }
 
 /* save buffer */

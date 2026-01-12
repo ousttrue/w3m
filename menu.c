@@ -44,18 +44,10 @@ static int SelectV = 0;
 static void initSelectMenu(void);
 static void smChBuf(void);
 
-/* --- SelectMenu (END) --- */
-
-/* --- SelTabMenu --- */
-
 static struct Menu SelTabMenu;
 static int SelTabV = 0;
 static void initSelTabMenu(void);
 static void smChTab(void);
-
-/* --- SelTabMenu (END) --- */
-
-/* --- MainMenu --- */
 
 static struct Menu MainMenu;
 static enum wc_ces MainMenuCharset = WC_CES_US_ASCII; /* FIXME: charset of source code */
@@ -94,11 +86,11 @@ static struct MenuItem MainMenuItem[] = {
 
 /* --- MainMenu (END) --- */
 
-static MenuList* w3mMenuList;
+static struct MenuList* w3mMenuList;
 
 static struct Menu* CurrentMenu = NULL;
 
-void new_menu(struct Menu* menu, struct MenuItem* item)
+void menu_new(struct Menu* menu, struct MenuItem* item)
 {
     int i, l;
 
@@ -177,14 +169,13 @@ void geom_menu(struct Menu* menu, int x, int y, int mselect)
     menu->y = win_y + 1;
 }
 
-void draw_all_menu(struct Menu* menu)
+static void menu_draw_item(struct Menu* menu, int mselect)
 {
-    if (menu->parent != NULL)
-        draw_all_menu(menu->parent);
-    draw_menu(menu);
+    mvaddnstr((struct Vec2) { .y = menu->y + mselect - menu->offset, .x = menu->x },
+        menu->item[mselect].label, menu->width);
 }
 
-void draw_menu(struct Menu* menu)
+static void menu_draw(struct Menu* menu)
 {
     int x = menu->x - FRAME_WIDTH;
     int w = menu->width + 2 * FRAME_WIDTH;
@@ -217,7 +208,7 @@ void draw_menu(struct Menu* menu)
         G_start;
         mvaddstr((struct Vec2) { .y = y, .x = x }, FRAME[5]);
         G_end;
-        draw_menu_item(menu, menu->offset + j);
+        menu_draw_item(menu, menu->offset + j);
         G_start;
         mvaddstr((struct Vec2) { .y = y, .x = x + w - FRAME_WIDTH }, FRAME[5]);
         G_end;
@@ -246,10 +237,33 @@ void draw_menu(struct Menu* menu)
     }
 }
 
-void draw_menu_item(struct Menu* menu, int mselect)
+void draw_all_menu(struct Menu* menu)
 {
-    mvaddnstr((struct Vec2) { .y = menu->y + mselect - menu->offset, .x = menu->x },
-        menu->item[mselect].label, menu->width);
+    if (menu->parent != NULL)
+        draw_all_menu(menu->parent);
+    menu_draw(menu);
+}
+
+static void up_menu(struct Menu* menu, int n)
+{
+    if (n < 0 || menu->offset == 0)
+        return;
+    menu->offset -= n;
+    if (menu->offset < 0)
+        menu->offset = 0;
+
+    menu_draw(menu);
+}
+
+static void menu_down(struct Menu* menu, int n)
+{
+    if (n < 0 || menu->offset + menu->height == menu->nitem)
+        return;
+    menu->offset += n;
+    if (menu->offset + menu->height > menu->nitem)
+        menu->offset = menu->nitem - menu->height;
+
+    menu_draw(menu);
 }
 
 int select_menu(struct Menu* menu, int mselect)
@@ -259,13 +273,13 @@ int select_menu(struct Menu* menu, int mselect)
     if (mselect < menu->offset)
         up_menu(menu, menu->offset - mselect);
     else if (mselect >= menu->offset + menu->height)
-        down_menu(menu, mselect - menu->offset - menu->height + 1);
+        menu_down(menu, mselect - menu->offset - menu->height + 1);
 
     if (menu->select >= menu->offset && menu->select < menu->offset + menu->height)
-        draw_menu_item(menu, menu->select);
+        menu_draw_item(menu, menu->select);
     menu->select = mselect;
     screen_standout();
-    draw_menu_item(menu, menu->select);
+    menu_draw_item(menu, menu->select);
     screen_standend();
     /*
      * move(menu->cursorY, menu->doc.cursorX); */
@@ -287,7 +301,7 @@ void goto_menu(struct Menu* menu, int mselect, int down)
     while (menu->item[mselect].type == MENU_NOP) {
         if (down > 0) {
             if (++mselect >= menu->nitem) {
-                down_menu(menu, select_in - menu->select);
+                menu_down(menu, select_in - menu->select);
                 mselect = menu->select;
                 break;
             }
@@ -304,29 +318,48 @@ void goto_menu(struct Menu* menu, int mselect, int down)
     select_menu(menu, mselect);
 }
 
-void up_menu(struct Menu* menu, int n)
+static void guess_menu_xy(struct Menu* parent, int width, int* x, int* y)
 {
-    if (n < 0 || menu->offset == 0)
-        return;
-    menu->offset -= n;
-    if (menu->offset < 0)
-        menu->offset = 0;
-
-    draw_menu(menu);
+    *x = parent->x + parent->width + FRAME_WIDTH - 1;
+    if (*x + width + FRAME_WIDTH > TTY_COLS()) {
+        *x = TTY_COLS() - width - FRAME_WIDTH;
+        if ((parent->x + parent->width / 2 > *x) && (parent->x + parent->width / 2 > TTY_COLS() / 2))
+            *x = parent->x - width - FRAME_WIDTH + 1;
+    }
+    *y = parent->y + parent->select - parent->offset;
 }
 
-void down_menu(struct Menu* menu, int n)
-{
-    if (n < 0 || menu->offset + menu->height == menu->nitem)
-        return;
-    menu->offset += n;
-    if (menu->offset + menu->height > menu->nitem)
-        menu->offset = menu->nitem - menu->height;
+static bool menu_action(struct Menu* menu);
 
-    draw_menu(menu);
+static void menu_popup(struct Menu* parent, struct Menu* menu)
+{
+    if (menu->item == NULL || menu->nitem == 0)
+        return;
+    if (menu->active)
+        return;
+
+    menu->parent = parent;
+    menu->select = menu->initial;
+    menu->offset = 0;
+    menu->active = 1;
+    if (parent != NULL) {
+        menu->cursorX = parent->cursorX;
+        menu->cursorY = parent->cursorY;
+        guess_menu_xy(parent, menu->width, &menu->x, &menu->y);
+    }
+    geom_menu(menu, menu->x, menu->y, menu->select);
+
+    CurrentMenu = menu;
+
+    for (bool active = 1; active; active = menu_action(CurrentMenu)) {
+        ;
+    }
+
+    menu->active = 0;
+    CurrentMenu = parent;
 }
 
-bool action_menu(struct Menu* menu)
+static bool menu_action(struct Menu* menu)
 {
     if (!menu->active) {
         if (menu->parent) {
@@ -360,7 +393,7 @@ bool action_menu(struct Menu* menu)
     if (mselect >= 0 && mselect < menu->nitem) {
         struct MenuItem item = menu->item[mselect];
         if (item.type & MENU_POPUP) {
-            popup_menu(menu, item.popup);
+            menu_popup(menu, item.popup);
             return (1);
         }
         if (menu->parent != NULL)
@@ -384,62 +417,21 @@ bool action_menu(struct Menu* menu)
     return (0);
 }
 
-void popup_menu(struct Menu* parent, struct Menu* menu)
-{
-    if (menu->item == NULL || menu->nitem == 0)
-        return;
-    if (menu->active)
-        return;
-
-    menu->parent = parent;
-    menu->select = menu->initial;
-    menu->offset = 0;
-    menu->active = 1;
-    if (parent != NULL) {
-        menu->cursorX = parent->cursorX;
-        menu->cursorY = parent->cursorY;
-        guess_menu_xy(parent, menu->width, &menu->x, &menu->y);
-    }
-    geom_menu(menu, menu->x, menu->y, menu->select);
-
-    CurrentMenu = menu;
-
-    for (bool active = 1; active; active = action_menu(CurrentMenu)) {
-        ;
-    }
-
-    menu->active = 0;
-    CurrentMenu = parent;
-}
-
-void guess_menu_xy(struct Menu* parent, int width, int* x, int* y)
-{
-    *x = parent->x + parent->width + FRAME_WIDTH - 1;
-    if (*x + width + FRAME_WIDTH > TTY_COLS()) {
-        *x = TTY_COLS() - width - FRAME_WIDTH;
-        if ((parent->x + parent->width / 2 > *x) && (parent->x + parent->width / 2 > TTY_COLS() / 2))
-            *x = parent->x - width - FRAME_WIDTH + 1;
-    }
-    *y = parent->y + parent->select - parent->offset;
-}
-
-void new_option_menu(struct Menu* menu,
+static void menu_new_option_menu(struct Menu* menu,
     const char** label, int* variable, void (*func)())
 {
-    int i, nitem;
-    const char** p;
-    struct MenuItem* item;
-
     if (label == NULL || *label == NULL)
         return;
 
-    for (i = 0, p = label; *p != NULL; i++, p++)
+    int i = 0;
+    for (const char** p = label; *p != NULL; i++, p++)
         ;
-    nitem = i;
+    int nitem = i;
 
-    item = New_N(struct MenuItem, nitem + 1);
+    struct MenuItem* item = New_N(struct MenuItem, nitem + 1);
 
-    for (i = 0, p = label; i < nitem; i++, p++) {
+    i = 0;
+    for (const char** p = label; i < nitem; i++, p++) {
         if (func != NULL)
             item[i].type = MENU_VALUE | MENU_FUNC;
         else
@@ -453,11 +445,11 @@ void new_option_menu(struct Menu* menu,
     }
     item[nitem].type = MENU_END;
 
-    new_menu(menu, item);
+    menu_new(menu, item);
 }
 
 static void
-set_menu_frame(void)
+menu_set_frame(void)
 {
     if (graph_ok()) {
         graph_mode = TRUE;
@@ -553,7 +545,7 @@ int mNext(struct DefunContext ctx, char c)
 
     if (mselect >= CurrentMenu->nitem)
         return mLast(ctx, c);
-    down_menu(CurrentMenu, CurrentMenu->height);
+    menu_down(CurrentMenu, CurrentMenu->height);
     goto_menu(CurrentMenu, mselect, -1);
     return (MENU_NOTHING);
 }
@@ -596,7 +588,7 @@ int mLineU(struct DefunContext ctx, char c)
     if (CurrentMenu->offset + CurrentMenu->height >= CurrentMenu->nitem)
         mselect++;
     else {
-        down_menu(CurrentMenu, 1);
+        menu_down(CurrentMenu, 1);
         if (mselect < CurrentMenu->offset)
             mselect++;
     }
@@ -798,7 +790,7 @@ int mSgrMouse(struct DefunContext ctx, char c)
 
 void popupMenu(int x, int y, struct Menu* menu)
 {
-    set_menu_frame();
+    menu_set_frame();
 
     initSelectMenu();
     initSelTabMenu();
@@ -808,7 +800,16 @@ void popupMenu(int x, int y, struct Menu* menu)
     menu->x = x + FRAME_WIDTH + 1;
     menu->y = y + 2;
 
-    popup_menu(NULL, menu);
+    menu_popup(NULL, menu);
+}
+
+static int getMenuN(struct MenuList* list, const char* id)
+{
+    for (int n = 0; list->id != NULL; list++, n++) {
+        if (strcmp(id, list->id) == 0)
+            return n;
+    }
+    return -1;
 }
 
 void mainMenu(int x, int y)
@@ -944,7 +945,7 @@ initSelectMenu(void)
     label[nitem] = str->ptr;
     label[nitem + 1] = NULL;
 
-    new_option_menu(&SelectMenu, label, &SelectV, smChBuf);
+    menu_new_option_menu(&SelectMenu, label, &SelectV, smChBuf);
     SelectMenu.initial = SelectV;
     SelectMenu.cursorX = Currentbuf->doc->cursorX + Currentbuf->doc->rootX;
     SelectMenu.cursorY = Currentbuf->doc->cursorY + Currentbuf->doc->rootY;
@@ -1070,7 +1071,7 @@ initSelTabMenu(void)
     label[nitem] = str->ptr;
     label[nitem + 1] = NULL;
 
-    new_option_menu(&SelTabMenu, label, &SelTabV, smChTab);
+    menu_new_option_menu(&SelTabMenu, label, &SelTabV, smChTab);
     SelTabMenu.initial = SelTabV;
     SelTabMenu.cursorX = Currentbuf->doc->cursorX + Currentbuf->doc->rootX;
     SelTabMenu.cursorY = Currentbuf->doc->cursorY + Currentbuf->doc->rootY;
@@ -1092,30 +1093,84 @@ smChTab(void)
     tabs_set_current(tab);
 }
 
-/* --- SelectMenu (END) --- */
-
-/* --- OptionMenu --- */
-
 void optionMenu(int x, int y, const char** label, int* variable, int initial,
     void (*func)())
 {
+
+    menu_set_frame();
+
     struct Menu menu;
-
-    set_menu_frame();
-
-    new_option_menu(&menu, label, variable, func);
+    menu_new_option_menu(&menu, label, variable, func);
     menu.cursorX = TTY_COLS() - 1;
     menu.cursorY = LASTLINE();
     menu.x = x;
     menu.y = y;
     menu.initial = initial;
 
-    popup_menu(NULL, &menu);
+    menu_popup(NULL, &menu);
 }
 
-/* --- OptionMenu (END) --- */
+static int addMenuList(struct MenuList** mlist, const char* id)
+{
+    int n;
+    struct MenuList* list = *mlist;
 
-/* --- InitMenu --- */
+    for (n = 0; list->id != NULL; list++, n++)
+        ;
+    *mlist = New_Reuse(struct MenuList, *mlist, (n + 2));
+    list = *mlist + n;
+    list->id = id;
+    list->menu = New(struct Menu);
+    list->item = New(struct MenuItem);
+    (list + 1)->id = NULL;
+    return n;
+}
+
+static int setMenuItem(struct MenuItem* item, const char* type, const char* line)
+{
+    const char *label, *func, *popup, *keys;
+    // int f;
+    int n;
+
+    if (type == NULL || *type == '\0') /* error */
+        return -1;
+    if (strcmp(type, "end") == 0) {
+        item->type = MENU_END;
+        return MENU_END;
+    } else if (strcmp(type, "nop") == 0) {
+        item->type = MENU_NOP;
+        item->label = getQWord(&line);
+        return MENU_NOP;
+    } else if (strcmp(type, "func") == 0) {
+        label = getQWord(&line);
+        func = getWord(&line);
+        keys = getQWord(&line);
+        // data = getQWord(&line);
+        if (*func == '\0') /* error */
+            return -1;
+        item->type = MENU_FUNC;
+        item->label = label;
+        // f = getFuncList(func);
+        // item->func = w3mFuncList[(f >= 0) ? f : FUNCNAME_nulcmd].func;
+        // item->keys = keys;
+        // item->data = data;
+        return MENU_FUNC;
+    } else if (strcmp(type, "popup") == 0) {
+        label = getQWord(&line);
+        popup = getQWord(&line);
+        keys = getQWord(&line);
+        if (*popup == '\0') /* error */
+            return -1;
+        item->type = MENU_POPUP;
+        item->label = label;
+        if ((n = getMenuN(w3mMenuList, popup)) == -1)
+            n = addMenuList(&w3mMenuList, popup);
+        item->popup = w3mMenuList[n].menu;
+        item->keys = keys;
+        return MENU_POPUP;
+    }
+    return -1; /* error */
+}
 
 static void
 interpret_menu(FILE* mf)
@@ -1175,9 +1230,8 @@ interpret_menu(FILE* mf)
 void initMenu(void)
 {
     FILE* mf;
-    MenuList* list;
 
-    w3mMenuList = New_N(MenuList, 4);
+    w3mMenuList = New_N(struct MenuList, 4);
     w3mMenuList[0].id = "Main";
     w3mMenuList[0].menu = &MainMenu;
     w3mMenuList[0].item = MainMenuItem;
@@ -1211,84 +1265,11 @@ void initMenu(void)
         fclose(mf);
     }
 
-    for (list = w3mMenuList; list->id != NULL; list++) {
+    for (struct MenuList* list = w3mMenuList; list->id != NULL; list++) {
         if (list->item == NULL)
             continue;
-        new_menu(list->menu, list->item);
+        menu_new(list->menu, list->item);
     }
-}
-
-int setMenuItem(struct MenuItem* item, const char* type, const char* line)
-{
-    char *label, *func, *popup, *keys, *data;
-    int f;
-    int n;
-
-    if (type == NULL || *type == '\0') /* error */
-        return -1;
-    if (strcmp(type, "end") == 0) {
-        item->type = MENU_END;
-        return MENU_END;
-    } else if (strcmp(type, "nop") == 0) {
-        item->type = MENU_NOP;
-        item->label = getQWord(&line);
-        return MENU_NOP;
-    } else if (strcmp(type, "func") == 0) {
-        label = getQWord(&line);
-        func = getWord(&line);
-        keys = getQWord(&line);
-        data = getQWord(&line);
-        if (*func == '\0') /* error */
-            return -1;
-        item->type = MENU_FUNC;
-        item->label = label;
-        // f = getFuncList(func);
-        // item->func = w3mFuncList[(f >= 0) ? f : FUNCNAME_nulcmd].func;
-        // item->keys = keys;
-        // item->data = data;
-        return MENU_FUNC;
-    } else if (strcmp(type, "popup") == 0) {
-        label = getQWord(&line);
-        popup = getQWord(&line);
-        keys = getQWord(&line);
-        if (*popup == '\0') /* error */
-            return -1;
-        item->type = MENU_POPUP;
-        item->label = label;
-        if ((n = getMenuN(w3mMenuList, popup)) == -1)
-            n = addMenuList(&w3mMenuList, popup);
-        item->popup = w3mMenuList[n].menu;
-        item->keys = keys;
-        return MENU_POPUP;
-    }
-    return -1; /* error */
-}
-
-int addMenuList(MenuList** mlist, const char* id)
-{
-    int n;
-    MenuList* list = *mlist;
-
-    for (n = 0; list->id != NULL; list++, n++)
-        ;
-    *mlist = New_Reuse(MenuList, *mlist, (n + 2));
-    list = *mlist + n;
-    list->id = id;
-    list->menu = New(struct Menu);
-    list->item = New(struct MenuItem);
-    (list + 1)->id = NULL;
-    return n;
-}
-
-int getMenuN(MenuList* list, const char* id)
-{
-    int n;
-
-    for (n = 0; list->id != NULL; list++, n++) {
-        if (strcmp(id, list->id) == 0)
-            return n;
-    }
-    return -1;
 }
 
 /* --- InitMenu (END) --- */
@@ -1330,8 +1311,8 @@ link_menu(struct Buffer* buf)
     }
     label[nitem] = NULL;
 
-    set_menu_frame();
-    new_option_menu(&menu, label, &linkV, NULL);
+    menu_set_frame();
+    menu_new_option_menu(&menu, label, &linkV, NULL);
 
     menu.initial = 0;
     menu.cursorX = buf->doc->cursorX + buf->doc->rootX;
@@ -1339,7 +1320,7 @@ link_menu(struct Buffer* buf)
     menu.x = menu.cursorX + FRAME_WIDTH + 1;
     menu.y = menu.cursorY + 2;
 
-    popup_menu(NULL, &menu);
+    menu_popup(NULL, &menu);
 
     if (linkV < 0)
         return NULL;
@@ -1382,10 +1363,10 @@ accesskey_menu(struct Buffer* buf)
     }
     label[nitem] = NULL;
 
-    set_menu_frame();
+    menu_set_frame();
     int key = -1;
     struct Menu menu;
-    new_option_menu(&menu, label, &key, NULL);
+    menu_new_option_menu(&menu, label, &key, NULL);
     menu.initial = 0;
     menu.cursorX = buf->doc->cursorX + buf->doc->rootX;
     menu.cursorY = buf->doc->cursorY + buf->doc->rootY;
@@ -1420,7 +1401,7 @@ accesskey_menu(struct Buffer* buf)
         }
     }
 
-    popup_menu(NULL, &menu);
+    menu_popup(NULL, &menu);
 
     return (key >= 0) ? ap[key] : NULL;
 }
@@ -1491,10 +1472,10 @@ list_menu(struct Buffer* buf)
     }
     label[nitem] = NULL;
 
-    set_menu_frame();
+    menu_set_frame();
     struct Menu menu;
     int key = -1;
-    new_option_menu(&menu, label, &key, NULL);
+    menu_new_option_menu(&menu, label, &key, NULL);
 
     menu.initial = 0;
     menu.cursorX = buf->doc->cursorX + buf->doc->rootX;
@@ -1532,24 +1513,7 @@ list_menu(struct Buffer* buf)
         }
     }
 
-    popup_menu(NULL, &menu);
+    menu_popup(NULL, &menu);
 
     return (key >= 0) ? ap[key] : NULL;
-}
-
-void anchorMn(BufferMenuFunc menu_func, bool go)
-{
-    if (Currentbuf->doc->href.nanchor == 0 || !Currentbuf->doc->hmarklist)
-        return;
-
-    struct Anchor* a = menu_func(Currentbuf);
-    if (!a || a->hseq < 0)
-        return;
-
-    struct BufferPoint* po = &Currentbuf->doc->hmarklist->marks[a->hseq];
-    doc_gotoLine(Currentbuf->doc, po->line);
-    Currentbuf->doc->pos = po->pos;
-    doc_arrangeCursor(Currentbuf->doc);
-    if (go)
-        followA((struct DefunContext) { 0 });
 }
