@@ -63,6 +63,14 @@
 
 // static struct termios d_ioval;
 
+struct DefunContext defunContext()
+{
+    return (struct DefunContext) {
+        .tab = CurrentTab(),
+        .buf = CurrentTab()->currentBuffer,
+    };
+}
+
 struct Runtime* getRuntime()
 {
     return &g_runtime;
@@ -1597,4 +1605,3 @@ bool eventUpdate()
     g->CurrentEvent = g->CurrentEvent->next;
     return true;
 }
-

@@ -5,6 +5,7 @@
 /// process
 /// signal
 /// tmpfile
+#include "defun.h"
 #include "w3m_types.h"
 #include "geometry.h"
 #include "Str.h"
@@ -49,6 +50,8 @@ struct Event {
     void* data;
     struct Event* next;
 };
+
+struct DefunContext defunContext();
 
 struct Runtime* getRuntime(void);
 #define PREC_NUM (getRuntime()->prec_num ? getRuntime()->prec_num : 1)
@@ -136,9 +139,7 @@ struct Buffer* loadLink(const char* url, struct FormList* request,
 struct FormItemList;
 Str query_from_followform(struct Buffer* buf, struct FormItemList* fi, bool multipart);
 void pushEvent(int cmd, void* data);
-void keyPressEventProc(int c);
 void w3m_end_frame();
-void w3m_on_key(uint8_t ch);
 const char* GetWord(struct Buffer* buf);
 int is_wordchar(wc_uint32 c);
 wc_uint32 getChar(const char* p);

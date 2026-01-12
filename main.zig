@@ -10,6 +10,8 @@ const RC_DIR = "~/.w3m";
 const Term = @import("Term.zig");
 var g_allocator: std.mem.Allocator = undefined;
 
+const funclist = @import("zig-out/include/funcname.zig").w3mFuncList;
+
 fn get_locale() ?[*c]const u8 {
     const keys = [_][*:0]const u8{ "LC_ALL", "LC_CTYPE", "LANG" };
     for (keys) |key| {
@@ -698,7 +700,7 @@ pub fn main() !void {
         // }
 
         if (Term.g_term.getch()) |ch| {
-            c.w3m_on_key(ch);
+            keymap_on_key(ch, c.defunContext());
             c.w3m_end_frame();
         }
         onFrame();
@@ -1934,13 +1936,18 @@ export fn inputAnswer(prompt: [*c]const u8) [*c]const u8 {
 //
 // keymap
 //
-var g_keymap: std.AutoHashMap(u32, c.KeyRegister) = undefined;
+const KeyRegister = struct {
+    func: c.DefunFunc = null,
+    data: []const u8 = &.{},
+};
 
-export fn keymap_register(key: u32, reg: c.KeyRegister) void {
+var g_keymap: std.AutoHashMap(u32, KeyRegister) = undefined;
+
+fn keymap_register(key: u32, reg: KeyRegister) void {
     g_keymap.put(key, reg) catch {};
 }
 
-export fn keymap_fromKey(key: u32) c.KeyRegister {
+fn keymap_fromKey(key: u32) KeyRegister {
     if (g_keymap.get(key)) |val| {
         return val;
     } else {
@@ -1948,34 +1955,37 @@ export fn keymap_fromKey(key: u32) c.KeyRegister {
     }
 }
 
+const K_ESC = 0x100;
+const K_ESCB = 0x200;
+
 fn getKey2(_s: [*c]const u8) ?u32 {
     if (_s == null or _s[0] == 0)
         return null;
 
     var s = std.mem.span(_s);
     if (std.ascii.eqlIgnoreCase(s, "UP")) // ^[[A
-        return c.K_ESCB | 'A'
+        return K_ESCB | 'A'
     else if (std.ascii.eqlIgnoreCase(s, "DOWN")) // ^[[B
-        return c.K_ESCB | 'B'
+        return K_ESCB | 'B'
     else if (std.ascii.eqlIgnoreCase(s, "RIGHT")) // ^[[C
-        return c.K_ESCB | 'C'
+        return K_ESCB | 'C'
     else if (std.ascii.eqlIgnoreCase(s, "LEFT")) // ^[[D
-        return c.K_ESCB | 'D';
+        return K_ESCB | 'D';
 
-    var esc: c.KeyMapFlags = 0;
+    var esc: u32 = 0;
     if (std.ascii.startsWithIgnoreCase(s, "ESC-") or
         std.ascii.startsWithIgnoreCase(s, "ESC "))
     { // ^[
         s = s[4..];
-        esc = c.K_ESC;
+        esc = K_ESC;
     } else if (std.ascii.startsWithIgnoreCase(s, "M-") or
         std.ascii.startsWithIgnoreCase(s, "\\E"))
     { // ^[
         s = s[2..];
-        esc = c.K_ESC;
+        esc = K_ESC;
     } else if (s[0] == c.ESC_CODE) { // ^[
         s = s[1..];
-        esc = c.K_ESC;
+        esc = K_ESC;
     }
 
     var ctrl = false;
@@ -1990,12 +2000,12 @@ fn getKey2(_s: [*c]const u8) ?u32 {
     if (esc == 0 and ctrl and s[0] == '[') { // ^[
         s = s[1..];
         ctrl = false;
-        esc = c.K_ESC;
+        esc = K_ESC;
     }
     if (esc != 0 and !ctrl) {
         if (s[0] == '[' or s[0] == 'O') { // ^[[, ^[O
             s = s[1..];
-            esc = c.K_ESCB;
+            esc = K_ESCB;
         }
         if (std.ascii.startsWithIgnoreCase(s, "C-")) { // ^[^, ^[[^
             s = s[2..];
@@ -2017,7 +2027,7 @@ fn getKey2(_s: [*c]const u8) ?u32 {
             null;
     }
 
-    if (esc == c.K_ESCB and c.IS_DIGIT(s[0])) {
+    if (esc == K_ESCB and c.IS_DIGIT(s[0])) {
         var n: c_int = s[0] - '0';
         s = s[1..];
         if (c.IS_DIGIT(s[0])) {
@@ -2110,12 +2120,185 @@ export fn keymap_parseLine(p: [*c]const u8, lineno: c_int, verbose: bool) void {
 }
 
 export fn keymap_fromName(_name: [*c]const u8) c.DefunFunc {
-    const funcname = @import("zig-out/include/funcname.zig");
     const name = std.mem.span(_name);
-    for (funcname.w3mFuncList) |f| {
+    for (funclist) |f| {
         if (std.mem.eql(u8, name, f.name)) {
             return f.func;
         }
     }
     return null;
+}
+
+fn keymap_load(r: *std.Io.Reader, force: bool) !void {
+    _ = force;
+    var charset = c.getRuntime().*.SystemCharset;
+
+    for (0..128) |i| {
+        keymap_register(@intCast(i), .{
+            .func = c.GlobalKeymap[i],
+            .data = &.{},
+        });
+    }
+    for (0..128) |i| {
+        keymap_register(@intCast(i), .{
+            .func = c.EscKeymap[i],
+            .data = &.{},
+        });
+    }
+    for (0..128) |i| {
+        keymap_register(@intCast(i), .{
+            .func = c.EscBKeymap[i],
+            .data = &.{},
+        });
+    }
+
+    var lineno: usize = 0;
+    while (try r.takeDelimiter('\n')) |_line| : (lineno += 1) {
+        const l = std.mem.trim(u8, _line, &std.ascii.whitespace);
+        if (l.len == 0)
+            continue;
+
+        const line = c.wc_conv(l.ptr, charset, c.getRuntime().*.InnerCharset);
+
+        var p: [*c]const u8 = line.*.ptr;
+        var s = std.mem.span(@as([*c]const u8, c.getWord(@ptrCast(&p))));
+        var verbose = true;
+        if (s.len == 0 or s[0] == '#') {
+            // comment
+            continue;
+        }
+
+        if (std.mem.eql(u8, s, "keymap")) {
+            keymap_parseLine(p, @intCast(lineno), verbose);
+        } else if (std.mem.eql(u8, s, "charset") or std.mem.eql(u8, s, "encoding")) {
+            s = std.mem.span(@as([*c]const u8, c.getQWord(&p)));
+            if (s.len > 0) {
+                charset = c.wc_guess_charset(s.ptr, charset);
+            }
+        } else if (std.mem.eql(u8, s, "verbose")) {
+            s = std.mem.span(c.getWord(&p));
+            if (s.len > 0) {
+                verbose = c.str_to_bool(s, verbose);
+            }
+        } else { // error
+            const emsg = c.Sprintf("line %d: syntax error '%s'", lineno, s.ptr);
+            c.record_err_message(emsg.*.ptr);
+            if (verbose) {
+                c.disp_message_nsec(emsg.*.ptr, false, 1, true, false);
+            }
+        }
+    }
+}
+
+var g_keymap_initialized = false;
+
+export fn keymap_init(force: bool) void {
+    const conf_file = std.mem.span(c.confFile(c.KEYMAP_FILE));
+    if (std.fs.cwd().openFile(conf_file, .{})) |file| {
+        defer file.close();
+        var buf: [1024]u8 = undefined;
+        var reader = file.reader(&buf);
+        _ = keymap_load(&reader.interface, force or !g_keymap_initialized) catch {};
+    } else |_| {}
+
+    const rc_file = std.mem.span(c.rcFile(c.getRuntime().*.keymap_file));
+    if (std.fs.cwd().openFile(rc_file, .{})) |file| {
+        defer file.close();
+        var buf: [1024]u8 = undefined;
+        var reader = file.reader(&buf);
+        _ = keymap_load(&reader.interface, force or !g_keymap_initialized) catch {};
+    } else |_| {}
+
+    g_keymap_initialized = true;
+}
+
+const PREC_LIMIT = 10000;
+
+fn keymap_on_key(ch: u8, ctx: c.DefunContext) void {
+    // TODO alt- key
+
+    const g_runtime: *c.Runtime = c.getRuntime().?;
+    if (c.IS_ASCII(ch)) {
+        if (('0' <= ch) and (ch <= '9') and
+            (g_runtime.prec_num != 0 or
+                (c.GlobalKeymap[ch] == c.nulcmd)))
+        {
+            g_runtime.prec_num = g_runtime.prec_num * 10 + (ch - '0');
+            if (g_runtime.prec_num > PREC_LIMIT)
+                g_runtime.prec_num = PREC_LIMIT;
+        } else {
+            set_buffer_environ(ctx.buf);
+            c.doc_save_buffer_position(ctx.buf.*.doc);
+            // keyPressEventProc(ch);
+            {
+                g_runtime.CurrentKey = ch;
+                const f = keymap_fromKey(ch);
+                (f.func.?)(ctx);
+            }
+            g_runtime.prec_num = 0;
+        }
+    }
+}
+
+var prev_buf: ?*c.Buffer = null;
+var prev_line: ?*c.Line = null;
+var prev_pos: c_int = -1;
+
+fn set_buffer_environ(buf: *c.Buffer) void {
+    if (buf != prev_buf) {
+        if (buf.content) |content| {
+            c.set_environ("W3M_SOURCEFILE", content.*.sourcefile);
+            c.set_environ("W3M_FILENAME", content.*.filename);
+            c.set_environ("W3M_URL", c.parsedURL2Str(&content.*.url).*.ptr);
+        }
+        c.set_environ("W3M_TITLE", buf.doc.*.title);
+        c.set_environ("W3M_CHARSET", c.wc_ces_to_charset(buf.doc.*.charset));
+        c.set_environ("W3M_TYPE", "unknown");
+    }
+    const l = buf.doc.*.currentLine;
+    if (l != null and (buf != prev_buf or l != prev_line or buf.doc.*.pos != prev_pos)) {
+        // struct Anchor* a;
+        const s = c.GetWord(buf);
+        c.set_environ("W3M_CURRENT_WORD", if (s != null) s else "");
+        {
+            const a = c.doc_retrieveCurrentAnchor(buf.doc);
+            if (a != null) {
+                var pu: c.Url = undefined;
+                c.parseURL2(a.*.url, &pu, c.baseURL(buf));
+                c.set_environ("W3M_CURRENT_LINK", c.parsedURL2Str(&pu).*.ptr);
+            } else {
+                c.set_environ("W3M_CURRENT_LINK", "");
+            }
+        }
+        {
+            const a = c.doc_retrieveCurrentImg(buf.doc);
+            if (a != null) {
+                var pu: c.Url = undefined;
+                c.parseURL2(a.*.url, &pu, c.baseURL(buf));
+                c.set_environ("W3M_CURRENT_IMG", c.parsedURL2Str(&pu).*.ptr);
+            } else {
+                c.set_environ("W3M_CURRENT_IMG", "");
+            }
+        }
+        {
+            const a = c.doc_retrieveCurrentForm(buf.doc);
+            if (a != null) {
+                c.set_environ("W3M_CURRENT_FORM", c.form2str(@ptrCast(@alignCast(@constCast(a.*.url)))));
+            } else {
+                c.set_environ("W3M_CURRENT_FORM", "");
+            }
+        }
+        c.set_environ("W3M_CURRENT_LINE", c.Sprintf("%ld", l.*.real_linenumber).*.ptr);
+        c.set_environ("W3M_CURRENT_COLUMN", c.Sprintf("%d", buf.doc.*.currentColumn + buf.doc.*.cursorX + 1).*.ptr);
+    } else if (l == null) {
+        c.set_environ("W3M_CURRENT_WORD", "");
+        c.set_environ("W3M_CURRENT_LINK", "");
+        c.set_environ("W3M_CURRENT_IMG", "");
+        c.set_environ("W3M_CURRENT_FORM", "");
+        c.set_environ("W3M_CURRENT_LINE", "0");
+        c.set_environ("W3M_CURRENT_COLUMN", "0");
+    }
+    prev_buf = buf;
+    prev_line = l;
+    prev_pos = buf.doc.*.pos;
 }
