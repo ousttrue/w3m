@@ -14,5 +14,6 @@ void tab_repBuffer(struct TabBuffer* tab, struct Buffer* oldbuf, struct Buffer* 
 void tab_delBuffer(struct TabBuffer* tab, struct Buffer* buf);
 bool tab_currentBufferSubmit(struct TabBuffer* tab);
 void tab_back(struct TabBuffer* tab);
-// delete buffer
 void tab_deleteBuffer(struct TabBuffer* tab, struct Buffer* delbuf);
+struct Buffer* tab_replaceBuffer(struct TabBuffer* tab, struct Buffer* delbuf, struct Buffer* newbuf);
+struct Buffer* tab_nthBuffer(struct TabBuffer* tab, int n);

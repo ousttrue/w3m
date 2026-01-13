@@ -911,7 +911,7 @@ DEFUN(selBuf, SELECT, "Display buffer-stack panel")
     bool ok = FALSE;
     do {
         char cmd;
-        struct Buffer* buf = selectBuffer(ctx.tab->firstBuffer, ctx.buf, &cmd);
+        struct Buffer* buf = tab_selectBuffer(ctx.tab, ctx.buf, &cmd);
         switch (cmd) {
         case 'B':
             ok = TRUE;

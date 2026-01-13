@@ -55,8 +55,6 @@ void saveBuffer(struct Buffer* buf, FILE* f, int cont);
 void saveBufferBody(struct Buffer* buf, FILE* f, int cont);
 struct Buffer* getshell(char* cmd);
 void buf_discard(struct Buffer* buf);
-struct Buffer* replaceBuffer(struct Buffer* first, struct Buffer* delbuf, struct Buffer* newbuf);
-struct Buffer* nthBuffer(struct Buffer* firstbuf, int n);
 void copyBuffer(struct Buffer* a, struct Buffer* b);
 struct Buffer* prevBuffer(struct Buffer* first, struct Buffer* buf);
 int writeBufferCache(struct Buffer* buf);

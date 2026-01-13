@@ -1,3 +1,4 @@
 #pragma once
 
-struct Buffer* selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectchar);
+struct TabBuffer;
+struct Buffer* tab_selectBuffer(struct TabBuffer* tab, struct Buffer* currentbuf, char* selectchar);

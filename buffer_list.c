@@ -1,4 +1,5 @@
 #include "buffer_list.h"
+#include "tab.h"
 #include "buffer.h"
 #include "message.h"
 #include "screen.h"
@@ -81,11 +82,11 @@ listBuffer(struct Buffer* top, struct Buffer* current)
  * Select buffer visually
  */
 struct Buffer*
-selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectchar)
+tab_selectBuffer(struct TabBuffer* tab, struct Buffer* currentbuf, char* selectchar)
 {
     int i = 0;
     int cpoint = 0;
-    for (struct Buffer* buf = firstbuf; buf != NULL; buf = buf->nextBuffer) {
+    for (struct Buffer* buf = tab->firstBuffer; buf != NULL; buf = buf->nextBuffer) {
         if (buf == currentbuf)
             cpoint = i;
         i++;
@@ -97,9 +98,9 @@ selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectcha
     struct Buffer* topbuf;
     if (cpoint >= sclimit) {
         spoint = sclimit / 2;
-        topbuf = nthBuffer(firstbuf, cpoint - spoint);
+        topbuf = tab_nthBuffer(tab, cpoint - spoint);
     } else {
-        topbuf = firstbuf;
+        topbuf = tab->firstBuffer;
         spoint = cpoint;
     }
     listBuffer(topbuf, currentbuf);
@@ -151,7 +152,7 @@ selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectcha
         case 'k':
             if (spoint > 0) {
                 writeBufferName(currentbuf, spoint);
-                currentbuf = nthBuffer(topbuf, --spoint);
+                currentbuf = tab_nthBuffer(tab, --spoint);
                 cpoint--;
                 screen_standout();
                 writeBufferName(currentbuf, spoint);
@@ -164,8 +165,8 @@ selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectcha
                     i = 0;
                 cpoint--;
                 spoint = cpoint - i;
-                currentbuf = nthBuffer(firstbuf, cpoint);
-                topbuf = nthBuffer(firstbuf, i);
+                currentbuf = tab_nthBuffer(tab, cpoint);
+                topbuf = tab_nthBuffer(tab, i);
                 listBuffer(topbuf, currentbuf);
             }
             break;

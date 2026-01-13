@@ -32,9 +32,36 @@ void tab_push_buffer(struct TabBuffer* tab, struct Buffer* buf)
     }
 }
 
+/*
+ * replaceBuffer: replace buffer
+ */
+struct Buffer*
+tab_replaceBuffer(struct TabBuffer* tab, struct Buffer* delbuf, struct Buffer* newbuf)
+{
+    struct Buffer* buf;
+
+    if (delbuf == NULL) {
+        newbuf->nextBuffer = tab->firstBuffer;
+        return newbuf;
+    }
+    if (tab->firstBuffer == delbuf) {
+        newbuf->nextBuffer = delbuf->nextBuffer;
+        buf_discard(delbuf);
+        return newbuf;
+    }
+    if (delbuf && (buf = prevBuffer(tab->firstBuffer, delbuf))) {
+        buf->nextBuffer = newbuf;
+        newbuf->nextBuffer = delbuf->nextBuffer;
+        buf_discard(delbuf);
+        return tab->firstBuffer;
+    }
+    newbuf->nextBuffer = tab->firstBuffer;
+    return newbuf;
+}
+
 void tab_repBuffer(struct TabBuffer* tab, struct Buffer* oldbuf, struct Buffer* buf)
 {
-    tab->firstBuffer = replaceBuffer(tab->firstBuffer, oldbuf, buf);
+    tab->firstBuffer = tab_replaceBuffer(tab, oldbuf, buf);
     tab->currentBuffer = buf;
 }
 
@@ -103,4 +130,18 @@ void tab_deleteBuffer(struct TabBuffer* tab, struct Buffer* delbuf)
         buf->nextBuffer = b->nextBuffer;
         buf_discard(b);
     }
+}
+
+struct Buffer*
+tab_nthBuffer(struct TabBuffer* tab, int n)
+{
+    if (n < 0)
+        return tab->firstBuffer;
+    struct Buffer* buf = tab->firstBuffer;
+    for (int i = 0; i < n; i++) {
+        if (buf == NULL)
+            return NULL;
+        buf = buf->nextBuffer;
+    }
+    return buf;
 }

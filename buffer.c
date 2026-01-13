@@ -112,49 +112,6 @@ void buf_discard(struct Buffer* buf)
     }
 }
 
-/*
- * replaceBuffer: replace buffer
- */
-struct Buffer*
-replaceBuffer(struct Buffer* first, struct Buffer* delbuf, struct Buffer* newbuf)
-{
-    struct Buffer* buf;
-
-    if (delbuf == NULL) {
-        newbuf->nextBuffer = first;
-        return newbuf;
-    }
-    if (first == delbuf) {
-        newbuf->nextBuffer = delbuf->nextBuffer;
-        buf_discard(delbuf);
-        return newbuf;
-    }
-    if (delbuf && (buf = prevBuffer(first, delbuf))) {
-        buf->nextBuffer = newbuf;
-        newbuf->nextBuffer = delbuf->nextBuffer;
-        buf_discard(delbuf);
-        return first;
-    }
-    newbuf->nextBuffer = first;
-    return newbuf;
-}
-
-struct Buffer*
-nthBuffer(struct Buffer* firstbuf, int n)
-{
-    int i;
-    struct Buffer* buf = firstbuf;
-
-    if (n < 0)
-        return firstbuf;
-    for (i = 0; i < n; i++) {
-        if (buf == NULL)
-            return NULL;
-        buf = buf->nextBuffer;
-    }
-    return buf;
-}
-
 void reshapeBuffer(struct Buffer* buf)
 {
     struct input_stream* stream = NULL;
