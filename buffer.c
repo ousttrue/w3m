@@ -1,4 +1,6 @@
 #include "buffer.h"
+#include "linein.h"
+#include "siteconf.h"
 #include "tab_list.h"
 #include "maparea.h"
 #include "indep.h"
@@ -18,6 +20,7 @@
 #include <libwc/status.h>
 #include <libwc/charset.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <assert.h>
 
@@ -50,7 +53,7 @@ struct Buffer* buf_new(struct Content* content)
 }
 
 struct Url*
-baseURL(struct Buffer* buf)
+buf_baseUrl(struct Buffer* buf)
 {
     if (buf->bufferprop & BP_NO_URL) {
         // no URL is defined for the buffer
@@ -83,15 +86,6 @@ void buf_set_link(struct Buffer* buf,
 }
 
 /*
- * clearBuffer: clear buffer content
- */
-void clearBuffer(struct Buffer* buf)
-{
-    buf->doc->firstLine = buf->doc->topLine = buf->doc->currentLine = buf->doc->lastLine = NULL;
-    buf->doc->allLine = 0;
-}
-
-/*
  * discardBuffer: free buffer structure
  */
 
@@ -100,10 +94,7 @@ void discardBuffer(struct Buffer* buf)
     int i;
     struct Buffer* b;
 
-#ifdef USE_IMAGE
     deleteImage(buf);
-#endif
-    clearBuffer(buf);
     for (i = 0; i < MAX_LB; i++) {
         b = buf->linkBuffer[i];
         if (b == NULL)
@@ -575,7 +566,7 @@ Str page_info_panel(struct Buffer* buf)
     if (all == 0 && buf->doc->lastLine)
         all = buf->doc->lastLine->linenumber;
     Strcat_charp(tmp, "<form method=internal action=charset>");
-    const char* p = url_decode2(baseURL(buf), buf->doc, parsedURL2Str(&buf->content->url)->ptr);
+    const char* p = url_decode2(buf_baseUrl(buf), buf->doc, parsedURL2Str(&buf->content->url)->ptr);
     Strcat_m_charp(tmp, "<table cellpadding=0>",
         "<tr valign=top><td nowrap>Title<td>",
         html_quote(buf->doc->title),
@@ -611,11 +602,11 @@ Str page_info_panel(struct Buffer* buf)
     struct Anchor* a = doc_retrieveCurrentAnchor(buf->doc);
     if (a != NULL) {
         struct Url pu;
-        parseURL2(a->url, &pu, baseURL(buf));
+        parseURL2(a->url, &pu, buf_baseUrl(buf));
         p = parsedURL2Str(&pu)->ptr;
         const char* q = html_quote(p);
         if (getRuntime()->DecodeURL)
-            p = html_quote(url_decode2(baseURL(buf), buf->doc, p));
+            p = html_quote(url_decode2(buf_baseUrl(buf), buf->doc, p));
         else
             p = q;
         Strcat_m_charp(tmp,
@@ -625,11 +616,11 @@ Str page_info_panel(struct Buffer* buf)
     a = doc_retrieveCurrentImg(buf->doc);
     if (a != NULL) {
         struct Url pu;
-        parseURL2(a->url, &pu, baseURL(buf));
+        parseURL2(a->url, &pu, buf_baseUrl(buf));
         p = parsedURL2Str(&pu)->ptr;
         const char* q = html_quote(p);
         if (getRuntime()->DecodeURL)
-            p = html_quote(url_decode2(baseURL(buf), buf->doc, p));
+            p = html_quote(url_decode2(buf_baseUrl(buf), buf->doc, p));
         else
             p = q;
         Strcat_m_charp(tmp,
@@ -640,18 +631,18 @@ Str page_info_panel(struct Buffer* buf)
     if (a != NULL) {
         struct FormItemList* fi = (struct FormItemList*)a->url;
         p = form2str(fi);
-        p = html_quote(url_decode2(baseURL(buf), buf->doc, p));
+        p = html_quote(url_decode2(buf_baseUrl(buf), buf->doc, p));
         Strcat_m_charp(tmp,
             "<tr valign=top><td nowrap>Method/type of current form&nbsp;<td>",
             p, NULL);
         if (fi->parent->method == FORM_METHOD_INTERNAL
             && !Strcmp_charp(fi->parent->action, "map"))
-            append_map_info(baseURL(buf), buf->doc, tmp, fi->parent->item);
+            append_map_info(buf_baseUrl(buf), buf->doc, tmp, fi->parent->item);
     }
     Strcat_charp(tmp, "</table>\n");
     Strcat_charp(tmp, "</form>");
 
-    append_link_info(baseURL(buf), buf->doc, tmp, buf->doc->linklist);
+    append_link_info(buf_baseUrl(buf), buf->doc, tmp, buf->doc->linklist);
 
     if (buf->content->document_header != NULL) {
         Strcat_charp(tmp, "<hr width=50%><h1>Header information</h1><pre>\n");
@@ -667,4 +658,421 @@ Str page_info_panel(struct Buffer* buf)
 end:
     Strcat_charp(tmp, "</body></html>");
     return tmp;
+}
+
+static struct FormItemList*
+save_submit_formlist(struct FormItemList* src)
+{
+    struct FormList* list;
+    struct FormList* srclist;
+    struct FormItemList* srcitem;
+    struct FormItemList* item;
+    struct FormItemList* ret = NULL;
+    struct FormSelectOptionItem* opt;
+    struct FormSelectOptionItem* curopt;
+    struct FormSelectOptionItem* srcopt;
+
+    if (src == NULL)
+        return NULL;
+    srclist = src->parent;
+    list = New(struct FormList);
+    list->method = srclist->method;
+    list->action = Strdup(srclist->action);
+    list->charset = srclist->charset;
+    list->enctype = srclist->enctype;
+    list->nitems = srclist->nitems;
+    list->body = srclist->body;
+    list->boundary = srclist->boundary;
+    list->length = srclist->length;
+
+    for (srcitem = srclist->item; srcitem; srcitem = srcitem->next) {
+        item = New(struct FormItemList);
+        item->type = srcitem->type;
+        item->name = Strdup(srcitem->name);
+        item->value = Strdup(srcitem->value);
+        item->checked = srcitem->checked;
+        item->accept = srcitem->accept;
+        item->size = srcitem->size;
+        item->rows = srcitem->rows;
+        item->maxlength = srcitem->maxlength;
+        item->readonly = srcitem->readonly;
+
+        opt = curopt = NULL;
+        for (srcopt = srcitem->select_option; srcopt; srcopt = srcopt->next) {
+            if (!srcopt->checked)
+                continue;
+            opt = New(struct FormSelectOptionItem);
+            opt->value = Strdup(srcopt->value);
+            opt->label = Strdup(srcopt->label);
+            opt->checked = srcopt->checked;
+            if (item->select_option == NULL) {
+                item->select_option = curopt = opt;
+            } else {
+                curopt->next = opt;
+                curopt = curopt->next;
+            }
+        }
+        item->select_option = opt;
+        if (srcitem->label)
+            item->label = Strdup(srcitem->label);
+
+        item->parent = list;
+        item->next = NULL;
+
+        if (list->lastitem == NULL) {
+            list->item = list->lastitem = item;
+        } else {
+            list->lastitem->next = item;
+            list->lastitem = item;
+        }
+
+        if (srcitem == src)
+            ret = item;
+    }
+
+    return ret;
+}
+
+static struct Buffer* do_submit(struct Buffer* buf, struct Anchor* a, struct FormItemList* fi,
+    const char* p,
+    struct FollowOption option)
+{
+    int multipart = (fi->parent->method == FORM_METHOD_POST && fi->parent->enctype == FORM_ENCTYPE_MULTIPART);
+    Str tmp = query_from_followform(buf, fi, multipart);
+
+    Str tmp2 = Strdup(fi->parent->action);
+    if (!Strcmp_charp(tmp2, "!CURRENT_URL!")) {
+        /* It means "current URL" */
+        tmp2 = parsedURL2Str(&buf->content->url);
+        if ((p = strchr(tmp2->ptr, '?')) != NULL)
+            Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
+    }
+
+    if (fi->parent->method == FORM_METHOD_GET) {
+        if ((p = strchr(tmp2->ptr, '?')) != NULL)
+            Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
+        Strcat_charp(tmp2, "?");
+        Strcat(tmp2, tmp);
+        return loadLink(tmp2->ptr, NULL, a->target, NULL, option);
+    } else if (fi->parent->method == FORM_METHOD_POST) {
+        if (multipart) {
+            struct stat st;
+            stat(fi->parent->body, &st);
+            fi->parent->length = st.st_size;
+        } else {
+            fi->parent->body = tmp->ptr;
+            fi->parent->length = tmp->length;
+        }
+        struct Buffer* new_buf = loadLink(tmp2->ptr, fi->parent, a->target, NULL, option);
+        tab_push_buffer(CurrentTab(), new_buf);
+        if (multipart) {
+            unlink(fi->parent->body);
+        }
+        if (new_buf && !(new_buf->bufferprop & BP_REDIRECTED)) { /* buf must be Currentbuf */
+            /* BP_REDIRECTED means that the buffer is obtained through
+             * Location: header. In this case, buf->form_submit must not be set
+             * because the page is not loaded by POST method but GET method.
+             */
+            new_buf->doc->form_submit = save_submit_formlist(fi);
+        }
+        return new_buf;
+    } else if ((fi->parent->method == FORM_METHOD_INTERNAL
+                   && (!Strcmp_charp(fi->parent->action, "map")
+                       || !Strcmp_charp(fi->parent->action, "none")))
+        || buf->bufferprop & BP_INTERNAL) { /* internal */
+        do_internal(tmp2->ptr, tmp->ptr);
+    } else {
+        disp_err_message("Can't send form because of illegal method.", false);
+    }
+    return NULL;
+}
+
+static struct Buffer* form_follow(struct Buffer* buf, struct Anchor* a, struct FormItemList* fi, struct FollowOption option, bool submit)
+{
+    switch (fi->type) {
+    case FORM_INPUT_TEXT: {
+        if (submit) {
+            return do_submit(buf, a, fi, NULL, option);
+        }
+        if (fi->readonly) {
+            disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
+        }
+        const char* p = inputStrHist("TEXT:", fi->value ? fi->value->ptr : NULL, g_runtime.TextHist);
+        if (!p || fi->readonly)
+            break;
+        fi->value = Strnew_charp(p);
+        doc_formUpdateBuffer(buf->doc, a, fi);
+        if (fi->accept || fi->parent->nitems == 1) {
+            return do_submit(buf, a, fi, p, option);
+        }
+        break;
+    }
+
+    case FORM_INPUT_FILE: {
+        if (submit) {
+            return do_submit(buf, a, fi, NULL, option);
+        }
+        if (fi->readonly)
+            disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
+        const char* p = inputFilenameHist("Filename:", fi->value ? fi->value->ptr : NULL, NULL);
+        if (!p || fi->readonly)
+            break;
+        fi->value = Strnew_charp(p);
+        doc_formUpdateBuffer(buf->doc, a, fi);
+        if (fi->accept || fi->parent->nitems == 1) {
+            return do_submit(buf, a, fi, p, option);
+        }
+        break;
+    }
+
+    case FORM_INPUT_PASSWORD: {
+        if (submit) {
+            return do_submit(buf, a, fi, NULL, option);
+        }
+        if (fi->readonly) {
+            disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
+            break;
+        }
+        const char* p = inputLine("Password:", fi->value ? fi->value->ptr : NULL, IN_PASSWORD);
+        if (!p)
+            break;
+        fi->value = Strnew_charp(p);
+        doc_formUpdateBuffer(buf->doc, a, fi);
+        if (fi->accept) {
+            return do_submit(buf, a, fi, p, option);
+        }
+        break;
+    }
+
+    case FORM_TEXTAREA:
+        if (submit) {
+            return do_submit(buf, a, fi, NULL, option);
+        }
+        if (fi->readonly) {
+            disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
+            break;
+        }
+        input_textarea(fi);
+        doc_formUpdateBuffer(buf->doc, a, fi);
+        break;
+
+    case FORM_INPUT_RADIO:
+        if (submit) {
+            return do_submit(buf, a, fi, NULL, option);
+        }
+        if (fi->readonly) {
+            disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
+            break;
+        }
+        formRecheckRadio(buf, a, fi);
+        break;
+
+    case FORM_INPUT_CHECKBOX:
+        if (submit) {
+            return do_submit(buf, a, fi, NULL, option);
+        }
+        if (fi->readonly) {
+            disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
+            break;
+        }
+        fi->checked = !fi->checked;
+        doc_formUpdateBuffer(buf->doc, a, fi);
+        break;
+
+    case FORM_SELECT:
+        if (submit) {
+            return do_submit(buf, a, fi, NULL, option);
+        }
+        if (!formChooseOptionByMenu(fi,
+                buf->doc->cursorX - buf->doc->pos + a->start.pos + buf->doc->rootX,
+                buf->doc->cursorY + buf->doc->rootY))
+            break;
+        doc_formUpdateBuffer(buf->doc, a, fi);
+        if (fi->parent->nitems == 1) {
+            return do_submit(buf, a, fi, NULL, option);
+        }
+        break;
+
+    case FORM_INPUT_IMAGE:
+    case FORM_INPUT_SUBMIT:
+    case FORM_INPUT_BUTTON:
+        return do_submit(buf, a, fi, NULL, option);
+
+    case FORM_INPUT_RESET:
+        for (int i = 0; i < buf->doc->formitem.nanchor; i++) {
+            struct Anchor* a2 = &buf->doc->formitem.anchors[i];
+            struct FormItemList* f2 = (struct FormItemList*)a2->url;
+            if (f2->parent == fi->parent
+                && f2->name
+                && f2->value
+                && f2->type != FORM_INPUT_SUBMIT
+                && f2->type != FORM_INPUT_HIDDEN
+                && f2->type != FORM_INPUT_RESET) {
+                f2->value = f2->init_value;
+                f2->checked = f2->init_checked;
+                f2->label = f2->init_label;
+                f2->selected = f2->init_selected;
+                doc_formUpdateBuffer(buf->doc, a2, f2);
+            }
+        }
+        break;
+
+    case FORM_INPUT_HIDDEN:
+    default:
+        break;
+    }
+
+    return 0;
+}
+
+struct FollowResult buf_followForm(struct Buffer* buf, struct FollowOption option, bool submit)
+{
+    if (!buf->doc->firstLine)
+        return (struct FollowResult) { 0 };
+
+    struct Anchor* a = doc_retrieveCurrentForm(buf->doc);
+    if (!a)
+        return (struct FollowResult) { 0 };
+
+    struct FormItemList* fi = (struct FormItemList*)a->url;
+
+    struct Buffer* new_buf = form_follow(buf, a, fi, option, submit);
+    return (struct FollowResult) {
+        .anchor = a,
+        .new_buf = new_buf,
+    };
+}
+
+struct FollowResult buf_followA(struct Buffer* buf, struct FollowOption option)
+{
+    if (buf->doc->firstLine == NULL) {
+        return (struct FollowResult) { 0 };
+    }
+
+    struct Anchor* a = doc_retrieveCurrentImg(buf->doc);
+    if (a && a->image && a->image->map) {
+        return buf_followForm(buf, option, false);
+    }
+
+    int x = 0, y = 0, map = 0;
+    if (a && a->image && a->image->ismap) {
+        getMapXY(buf->doc, a, &x, &y);
+        map = 1;
+    }
+
+    a = doc_retrieveCurrentAnchor(buf->doc);
+    if (a == NULL) {
+        return buf_followForm(buf, option, false);
+    }
+    if (*a->url == '#') { /* index within this buffer */
+        return gotoLabel(buf, a->url + 1);
+    }
+
+    struct Url u;
+    parseURL2(a->url, &u, buf_baseUrl(buf));
+    if (Strcmp(parsedURL2Str(&u), parsedURL2Str(&buf->content->url)) == 0) {
+        /* index within this buffer */
+        if (u.label) {
+            return gotoLabel(buf, u.label);
+        }
+    }
+    if (handleMailto(a->url))
+        return (struct FollowResult) { 0 };
+
+    const char* url = a->url;
+    if (map)
+        url = Sprintf("%s?%d,%d", a->url, x, y)->ptr;
+
+    return (struct FollowResult) {
+        .anchor = a,
+        .new_buf = loadLink(url, NULL, a->target, a->referer, option),
+    };
+}
+
+struct Buffer* loadLink(const char* url, struct FormList* request,
+    const char* target, const char* referer, struct FollowOption option)
+{
+    message(Sprintf("loading %s", url)->ptr);
+
+    const int* no_referer_ptr = query_SCONF_NO_REFERER_FROM(&CurrentTab()->currentBuffer->content->url);
+    struct Url* base = buf_baseUrl(Currentbuf);
+    if ((no_referer_ptr && *no_referer_ptr) || base == NULL || base->scheme == SCM_LOCAL || base->scheme == SCM_LOCAL_CGI)
+        referer = NO_REFERER;
+    if (referer == NULL)
+        referer = parsedURL2RefererStr(&Currentbuf->content->url)->ptr;
+    if (option.do_download) {
+        download_content(url, request,
+            (struct LoadOption) { .base_url = buf_baseUrl(Currentbuf), .referer = referer, .flag = 0 });
+        return NULL;
+    }
+
+    struct Content* content = get_content_cache(url, request,
+        (struct LoadOption) { .base_url = buf_baseUrl(Currentbuf), .referer = referer, .flag = 0 });
+    if (!content) {
+        char* emsg = Sprintf("Can't load %s", url)->ptr;
+        disp_err_message(emsg, FALSE);
+        return NULL;
+    }
+    struct Buffer* buf = buf_new(content);
+
+    // struct Url pu;
+    // parseURL2(url, &pu, base);
+    // pushHashHist(g_runtime.URLHist, parsedURL2Str(&pu)->ptr);
+    //
+    // if (!option.on_target) /* open link as an indivisual page */
+    //     return loadNormalBuf(buf, TRUE);
+    //
+    // if (option.do_download) /* download (thus no need to render frames) */
+    //     return loadNormalBuf(buf, FALSE);
+    //
+    // if (target == NULL || /* no target specified (that means this page is not a frame page) */
+    //     !strcmp(target, "_top") || /* this link is specified to be opened as an indivisual * page */
+    //     !(Currentbuf->bufferprop & BP_FRAME) /* This page is not a frame page */
+    // ) {
+    //     return loadNormalBuf(buf, TRUE);
+    // }
+    // struct Buffer* nfbuf = Currentbuf->linkBuffer[LB_N_FRAME];
+    // if (nfbuf == NULL) {
+    //     /* original page (that contains <frameset> tag) doesn't exist */
+    //     return loadNormalBuf(buf, TRUE);
+    // }
+    //
+    // union frameset_element* f_element = search_frame(nfbuf->doc.frameset, target);
+    // if (f_element == NULL) {
+    //     /* specified target doesn't exist in this frameset */
+    //     return loadNormalBuf(buf, TRUE);
+    // }
+    //
+    // /* frame page */
+    //
+    // /* stack current frameset */
+    // pushFrameTree(&(nfbuf->doc.frameQ), copyFrameSet(nfbuf->doc.frameset), Currentbuf);
+    // /* delete frame view buffer */
+    // delBuffer(Currentbuf);
+    // Currentbuf = nfbuf;
+    // /* nfbuf->frameset = copyFrameSet(nfbuf->frameset); */
+    // resetFrameElement(f_element, buf, referer, request);
+    // discardBuffer(buf);
+    // rFrame();
+    // {
+    //     struct Anchor* al = NULL;
+    //     char* label = pu.label;
+    //
+    //     if (label && f_element->element->attr == F_BODY) {
+    //         al = searchAnchor(f_element->body->nameList, label);
+    //     }
+    //     if (!al) {
+    //         label = Strnew_m_charp("_", target, NULL)->ptr;
+    //         al = searchURLLabel(Currentbuf->doc, label);
+    //     }
+    //     if (al) {
+    //         doc_gotoLine(&Currentbuf->doc, al->start.line);
+    //         if (g_runtime.label_topline)
+    //             Currentbuf->doc.topLine = doc_lineSkip(&Currentbuf->doc, Currentbuf->doc.topLine,
+    //                 Currentbuf->doc.currentLine->linenumber - Currentbuf->doc.topLine->linenumber);
+    //         Currentbuf->doc.pos = al->start.pos;
+    //         doc_arrangeCursor(&Currentbuf->doc);
+    //     }
+    // }
+    return buf;
 }

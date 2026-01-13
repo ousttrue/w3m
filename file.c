@@ -43,7 +43,7 @@ loadHTMLBuffer(struct Url url, struct input_stream* stream, const char* t,
         return newBuf;
     }
 
-    newBuf->doc = loadHTMLstream(INIT_BUFFER_WIDTH, baseURL(newBuf), newBuf->content, stream, internal);
+    newBuf->doc = loadHTMLstream(INIT_BUFFER_WIDTH, buf_baseUrl(newBuf), newBuf->content, stream, internal);
     return newBuf;
 }
 
@@ -103,7 +103,7 @@ loadHTMLString(Str page)
     TRAP_ON;
 
     // newBuf->doc->charset = getRuntime()->InnerCharset;
-    newBuf->doc = loadHTMLstream(INIT_BUFFER_WIDTH, baseURL(newBuf), newBuf->content, stream, TRUE);
+    newBuf->doc = loadHTMLstream(INIT_BUFFER_WIDTH, buf_baseUrl(newBuf), newBuf->content, stream, TRUE);
 
     TRAP_OFF;
     is_close(stream);

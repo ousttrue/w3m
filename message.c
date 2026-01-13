@@ -117,10 +117,10 @@ make_lastline_link(struct Buffer* buf, const char* title, const char* url)
     }
     if (!url)
         return s;
-    parseURL2(url, &pu, baseURL(buf));
+    parseURL2(url, &pu, buf_baseUrl(buf));
     u = parsedURL2Str(&pu);
     if (getRuntime()->DecodeURL)
-        u = Strnew_charp(url_decode2(baseURL(buf), buf->doc, u->ptr));
+        u = Strnew_charp(url_decode2(buf_baseUrl(buf), buf->doc, u->ptr));
     u = checkType(u, &pr, NULL);
     if (l <= 4 || l >= get_strwidth(u->ptr)) {
         if (!s)

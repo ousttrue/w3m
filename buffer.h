@@ -44,7 +44,7 @@ struct Buffer {
 };
 
 struct Buffer* buf_new(struct Content* content);
-struct Url* baseURL(struct Buffer* buf);
+struct Url* buf_baseUrl(struct Buffer* buf);
 
 void buf_set_link(struct Buffer* buf,
     struct Buffer* link_buf, enum BufferPropertyFlags bp, enum LinkBufferID linkid);
@@ -54,7 +54,6 @@ void reshapeBuffer(struct Buffer* buf);
 void saveBuffer(struct Buffer* buf, FILE* f, int cont);
 void saveBufferBody(struct Buffer* buf, FILE* f, int cont);
 struct Buffer* getshell(char* cmd);
-void clearBuffer(struct Buffer* buf);
 void discardBuffer(struct Buffer* buf);
 struct Buffer* namedBuffer(struct Buffer* first, char* name);
 struct Buffer* deleteBuffer(struct Buffer* first, struct Buffer* delbuf);
@@ -66,3 +65,18 @@ struct Buffer* prevBuffer(struct Buffer* first, struct Buffer* buf);
 int writeBufferCache(struct Buffer* buf);
 bool checkBackBuffer(struct Buffer* buf);
 Str page_info_panel(struct Buffer* buf);
+
+struct FollowOption {
+    bool on_target;
+    bool do_download;
+};
+struct FollowResult {
+    struct Anchor* anchor;
+    struct Buffer* new_buf;
+};
+struct FollowResult buf_followForm(struct Buffer* buf, struct FollowOption option, bool submit);
+struct FollowResult buf_followA(struct Buffer* buf, struct FollowOption option);
+struct FollowResult gotoLabel(struct Buffer* buf, const char* label);
+void _followI(bool do_download);
+struct Buffer* loadLink(const char* url, struct FormList* request,
+    const char* target, const char* referer, struct FollowOption option);

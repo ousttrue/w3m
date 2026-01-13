@@ -118,23 +118,8 @@ void term_title(const char* s);
 bool get_pixel_per_cell(int* ppc, int* ppl);
 
 void tabs_prepare();
-bool currentBufferSubmit();
-struct FollowOption {
-    bool on_target;
-    bool do_download;
-};
-struct FollowResult {
-    struct Anchor* anchor;
-    struct Buffer* new_buf;
-};
-struct FollowResult _followForm(struct Buffer* buf, struct FollowOption option, bool submit);
-struct FollowResult _followA(struct DefunContext ctx, struct FollowOption option);
-struct FollowResult gotoLabel(struct Buffer* buf, const char* label);
-void _followI(bool do_download);
 
 struct FormList;
-struct Buffer* loadLink(const char* url, struct FormList* request,
-    const char* target, const char* referer, struct FollowOption option);
 struct FormItemList;
 Str query_from_followform(struct Buffer* buf, struct FormItemList* fi, bool multipart);
 void pushEvent(int cmd, void* data);

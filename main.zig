@@ -692,7 +692,7 @@ pub fn main() !void {
     // main loop
     //
     while (true) {
-        if (c.currentBufferSubmit()) {
+        if (c.tab_currentBufferSubmit(c.CurrentTab())) {
             continue;
         }
 
@@ -786,7 +786,7 @@ export fn onFrame() void {
         ccolumn = buf.doc.*.currentColumn;
 
         // render
-        c.screen_from_lines(buf.doc, c.baseURL(buf));
+        c.screen_from_lines(buf.doc, c.buf_baseUrl(buf));
         tty_write_screen();
 
         c.loadImage(c.IMG_FLAG_NEXT);
@@ -796,7 +796,7 @@ export fn onFrame() void {
     c.displayMsg(buf);
 
     const pos = screen_position();
-    c.drawAnchorCursor(buf.*.doc, c.baseURL(buf));
+    c.drawAnchorCursor(buf.*.doc, c.buf_baseUrl(buf));
 
     if (buf.doc.*.img.nanchor > 0) {
         // && buf->image_loaded
@@ -2234,7 +2234,9 @@ fn keymap_on_key(ch: u8, ctx: c.DefunContext) void {
             {
                 g_runtime.CurrentKey = ch;
                 const f = keymap_fromKey(ch);
-                (f.func.?)(ctx);
+                if (f.func) |func| {
+                    func(ctx);
+                }
             }
             g_runtime.prec_num = 0;
         }
@@ -2265,7 +2267,7 @@ fn set_buffer_environ(buf: *c.Buffer) void {
             const a = c.doc_retrieveCurrentAnchor(buf.doc);
             if (a != null) {
                 var pu: c.Url = undefined;
-                c.parseURL2(a.*.url, &pu, c.baseURL(buf));
+                c.parseURL2(a.*.url, &pu, c.buf_baseUrl(buf));
                 c.set_environ("W3M_CURRENT_LINK", c.parsedURL2Str(&pu).*.ptr);
             } else {
                 c.set_environ("W3M_CURRENT_LINK", "");
@@ -2275,7 +2277,7 @@ fn set_buffer_environ(buf: *c.Buffer) void {
             const a = c.doc_retrieveCurrentImg(buf.doc);
             if (a != null) {
                 var pu: c.Url = undefined;
-                c.parseURL2(a.*.url, &pu, c.baseURL(buf));
+                c.parseURL2(a.*.url, &pu, c.buf_baseUrl(buf));
                 c.set_environ("W3M_CURRENT_IMG", c.parsedURL2Str(&pu).*.ptr);
             } else {
                 c.set_environ("W3M_CURRENT_IMG", "");

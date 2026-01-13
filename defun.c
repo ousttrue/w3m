@@ -657,22 +657,22 @@ DEFUN(nthA, LINK_N, "Go to the nth link")
 
 DEFUN(nextA, NEXT_LINK, "Move to the next hyperlink")
 {
-    doc_nextA(ctx.buf->doc, false, baseURL(ctx.buf));
+    doc_nextA(ctx.buf->doc, false, buf_baseUrl(ctx.buf));
 }
 
 DEFUN(prevA, PREV_LINK, "Move to the previous hyperlink")
 {
-    doc_prevA(ctx.buf->doc, false, baseURL(ctx.buf));
+    doc_prevA(ctx.buf->doc, false, buf_baseUrl(ctx.buf));
 }
 
 DEFUN(nextVA, NEXT_VISITED, "Move to the next visited hyperlink")
 {
-    doc_nextA(ctx.buf->doc, true, baseURL(ctx.buf));
+    doc_nextA(ctx.buf->doc, true, buf_baseUrl(ctx.buf));
 }
 
 DEFUN(prevVA, PREV_VISITED, "Move to the previous visited hyperlink")
 {
-    doc_prevA(ctx.buf->doc, true, baseURL(ctx.buf));
+    doc_prevA(ctx.buf->doc, true, buf_baseUrl(ctx.buf));
 }
 
 DEFUN(nextL, NEXT_LEFT, "Move left to the next hyperlink")
@@ -948,7 +948,7 @@ DEFUN(selBuf, SELECT, "Display buffer-stack panel")
 
 DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
 {
-    struct FollowResult res = _followA(ctx,
+    struct FollowResult res = buf_followA(ctx.buf,
         (struct FollowOption) { .on_target = true, .do_download = false });
     if (!res.new_buf) {
         return;
@@ -966,7 +966,7 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
 
 DEFUN(submitForm, SUBMIT, "Submit form")
 {
-    _followForm(Currentbuf,
+    buf_followForm(ctx.buf,
         (struct FollowOption) { .on_target = true, .do_download = false }, true);
 }
 
@@ -998,16 +998,7 @@ DEFUN(prevBf, PREV, "Switch to the previous buffer")
 
 DEFUN(backBf, BACK, "Close current buffer and return to the one below in stack")
 {
-    if (!checkBackBuffer(ctx.buf)) {
-        if (getRuntime()->close_tab_back && nTab() >= 1) {
-            tabs_delete(ctx.tab);
-        } else
-            /* FIXME: gettextize? */
-            disp_message("Can't go back...", TRUE);
-        return;
-    }
-
-    tab_delBuffer(ctx.tab, ctx.buf);
+    tab_back(ctx.tab);
 }
 
 DEFUN(deletePrevBuf, DELETE_PREVBUF, "Delete previous buffer (mainly for local CGI-scripts)")
@@ -1111,7 +1102,7 @@ DEFUN(tabrURL, TAB_GOTO_RELATIVE, "Open relative address in a new tab")
 
 DEFUN(tabA, TAB_LINK, "Follow current hyperlink in a new tab")
 {
-    struct FollowResult res = _followA(ctx, (struct FollowOption) { 0 });
+    struct FollowResult res = buf_followA(ctx.buf, (struct FollowOption) { 0 });
     if (res.new_buf) {
         tabs_append(res.new_buf);
     }
@@ -1273,11 +1264,11 @@ DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
         gotoLabel(Currentbuf, l->url + 1);
         return;
     }
-    parseURL2(l->url, &p_url, baseURL(Currentbuf));
+    parseURL2(l->url, &p_url, buf_baseUrl(Currentbuf));
     pushHashHist(getRuntime()->URLHist, parsedURL2Str(&p_url)->ptr);
     struct Content* content = get_content_cache(l->url, NULL,
         (struct LoadOption) {
-            .base_url = baseURL(Currentbuf),
+            .base_url = buf_baseUrl(Currentbuf),
             .referer = parsedURL2Str(&Currentbuf->content->url)->ptr });
     if (content) {
         struct Buffer* buf = buf_new(content);
@@ -1322,7 +1313,7 @@ DEFUN(movlistMn, MOVE_LIST_MENU, "Pop up menu to navigate between hyperlinks")
 
 DEFUN(linkLst, LIST, "Show all URLs referenced")
 {
-    Str page = link_list_panel(baseURL(ctx.buf), ctx.buf->doc);
+    Str page = link_list_panel(buf_baseUrl(ctx.buf), ctx.buf->doc);
     if (page) {
         struct Buffer* new_buf = loadHTMLString(page);
         buf_set_link(ctx.buf, new_buf, BP_NORMAL, LB_NOLINK);
@@ -1350,7 +1341,7 @@ DEFUN(ldHist, HISTORY, "Show browsing history")
 DEFUN(svA, SAVE_LINK, "Save hyperlink target")
 {
     getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    _followA(ctx, (struct FollowOption) { .on_target = true, .do_download = false });
+    buf_followA(ctx.buf, (struct FollowOption) { .on_target = true, .do_download = false });
 }
 
 /* save buffer */
@@ -1762,7 +1753,7 @@ DEFUN(chkWORD, MARK_WORD, "Turn current word into hyperlink")
     const char* p = doc_getCurWord(ctx.buf->doc, &spos, &epos);
     if (p == NULL)
         return;
-    doc_reAnchorWord(baseURL(ctx.buf), ctx.buf->doc, ctx.buf->doc->currentLine, spos, epos);
+    doc_reAnchorWord(buf_baseUrl(ctx.buf), ctx.buf->doc, ctx.buf->doc->currentLine, spos, epos);
 }
 
 /* render frames */
@@ -1794,7 +1785,7 @@ DEFUN(linkbrz, EXTERN_LINK, "Display target using an external browser")
     if (a == NULL)
         return;
     struct Url pu;
-    parseURL2(a->url, &pu, baseURL(ctx.buf));
+    parseURL2(a->url, &pu, buf_baseUrl(ctx.buf));
     invoke_browser(parsedURL2Str(&pu)->ptr);
 }
 

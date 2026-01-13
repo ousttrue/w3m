@@ -52,3 +52,38 @@ void tab_delBuffer(struct TabBuffer* tab, struct Buffer* buf)
         tab->currentBuffer = tab->firstBuffer;
     }
 }
+
+bool tab_currentBufferSubmit(struct TabBuffer* tab)
+{
+    if (!tab->currentBuffer->doc) {
+        return false;
+    }
+    struct Anchor* a = tab->currentBuffer->doc->submit;
+    if (!a) {
+        return false;
+    }
+    tab->currentBuffer->doc->submit = NULL;
+    doc_gotoLine(tab->currentBuffer->doc, a->start.line);
+    tab->currentBuffer->doc->pos = a->start.pos;
+    struct FollowResult result = buf_followForm(
+        tab->currentBuffer,
+        (struct FollowOption) { .on_target = true, .do_download = false }, true);
+    if (result.new_buf) {
+        tab_push_buffer(tab, result.new_buf);
+    }
+    return true;
+}
+
+void tab_back(struct TabBuffer* tab)
+{
+    if (!checkBackBuffer(tab->currentBuffer)) {
+        // if (getRuntime()->close_tab_back && nTab() >= 1) {
+        //     tabs_delete(ctx.tab);
+        // } else {
+        // disp_message("Can't go back...", TRUE);
+        // }
+        return;
+    }
+
+    tab_delBuffer(tab, tab->currentBuffer);
+}

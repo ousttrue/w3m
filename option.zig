@@ -770,7 +770,7 @@ export fn panel_set_option(_arg: [*c]c.parsed_tagarg) void {
     }
 
     if (c.getRuntime().*.config_file) |config_file| {
-        if (std.fs.cwd().openFile(std.mem.span(config_file), .{ .mode = .write_only })) |f| {
+        if (std.fs.cwd().createFile(std.mem.span(config_file), .{})) |f| {
             _ = f.write(s.*.ptr[0..s.*.length]) catch {};
             f.close();
         } else |_| {
@@ -781,7 +781,7 @@ export fn panel_set_option(_arg: [*c]c.parsed_tagarg) void {
     }
 
     c.sync_with_option();
-    c.backBf(.{});
+    c.tab_back(c.CurrentTab());
 }
 
 pub fn opt_init() void {

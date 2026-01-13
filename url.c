@@ -861,11 +861,11 @@ void chkExternalURIBuffer(struct Buffer* buf)
     struct KeyValue* ump;
     for (int i = 0; (ump = urimethods[i]) != NULL; i++) {
         for (; ump->item1 != NULL; ump++) {
-            doc_reAnchor(baseURL(buf), buf->doc, Sprintf("%s:%s", ump->item1, URI_PATTERN)->ptr);
+            doc_reAnchor(buf_baseUrl(buf), buf->doc, Sprintf("%s:%s", ump->item1, URI_PATTERN)->ptr);
         }
     }
     for (ump = default_urimethods; ump->item1 != NULL; ump++) {
-        doc_reAnchor(baseURL(buf), buf->doc, Sprintf("%s:%s", ump->item1, URI_PATTERN)->ptr);
+        doc_reAnchor(buf_baseUrl(buf), buf->doc, Sprintf("%s:%s", ump->item1, URI_PATTERN)->ptr);
     }
 }
 

@@ -1303,7 +1303,7 @@ link_menu(struct Buffer* buf)
         if (!l->url)
             p = "";
         else
-            p = url_decode2(baseURL(buf), buf->doc, l->url);
+            p = url_decode2(buf_baseUrl(buf), buf->doc, l->url);
         Strcat_charp(str, p);
         label[i] = str->ptr;
         if (len < str->length)
