@@ -38,7 +38,6 @@ struct Buffer {
 
     int* clone;
     enum CheckUrlFlags check_url;
-    const char* savecache;
     const char* edit;
     struct _AlarmEvent* event;
 };
@@ -49,7 +48,6 @@ struct Url* buf_baseUrl(struct Buffer* buf);
 void buf_set_link(struct Buffer* buf,
     struct Buffer* link_buf, enum BufferPropertyFlags bp, enum LinkBufferID linkid);
 
-bool readBufferCache(struct Buffer* buf);
 void buf_reshape(struct Buffer* buf);
 void saveBuffer(struct Buffer* buf, FILE* f, int cont);
 void saveBufferBody(struct Buffer* buf, FILE* f, int cont);
@@ -59,7 +57,6 @@ void buf_discard(struct Buffer* buf);
 // shallow copy
 void buf_copy(struct Buffer* to, struct Buffer* from);
 
-int writeBufferCache(struct Buffer* buf);
 Str page_info_panel(struct Buffer* buf);
 
 struct FollowOption {

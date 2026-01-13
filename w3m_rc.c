@@ -1142,12 +1142,6 @@ void chkURLBuffer(struct Buffer* buf)
 
 void tmpClearBuffer(struct Buffer* buf)
 {
-    if (writeBufferCache(buf) == 0) {
-        buf->doc->firstLine = NULL;
-        buf->doc->topLine = NULL;
-        buf->doc->currentLine = NULL;
-        buf->doc->lastLine = NULL;
-    }
 }
 
 bool eventUpdate()

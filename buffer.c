@@ -43,7 +43,6 @@ struct Buffer* buf_new(struct Content* content)
         .bufferprop = BP_NORMAL,
         .clone = New(int),
         .check_url = getRuntime()->MarkAllPages, /* use default from -o mark_all_pages */
-        .savecache = NULL,
         .edit = NULL,
         .event = NULL,
     };
@@ -95,10 +94,6 @@ void buf_discard(struct Buffer* buf)
         }
     }
 
-    if (buf->savecache) {
-        unlink(buf->savecache);
-    }
-
     if (--(*buf->clone))
         return;
 
@@ -144,134 +139,7 @@ void buf_reshape(struct Buffer* buf)
 
 void buf_copy(struct Buffer* to, struct Buffer* from)
 {
-    readBufferCache(from);
     memcpy(to, from, sizeof(struct Buffer));
-}
-
-#define fwrite1(d, f) (fwrite(&d, sizeof(d), 1, f) == 0)
-#define fread1(d, f) (fread(&d, sizeof(d), 1, f) == 0)
-
-int writeBufferCache(struct Buffer* buf)
-{
-    FILE* cache = NULL;
-    struct Line* l;
-    int colorflag;
-
-    if (buf->savecache)
-        return -1;
-
-    if (buf->doc->firstLine == NULL)
-        goto _error1;
-
-    Str tmp = tmpfname(TMPF_CACHE, NULL);
-    buf->savecache = tmp->ptr;
-    cache = fopen(buf->savecache, "w");
-    if (!cache)
-        goto _error1;
-
-    if (fwrite1(buf->doc->currentLine->linenumber, cache) || fwrite1(buf->doc->topLine->linenumber, cache))
-        goto _error;
-
-    for (l = buf->doc->firstLine; l; l = l->next) {
-        if (fwrite1(l->real_linenumber, cache) || fwrite1(l->usrflags, cache) || fwrite1(l->width, cache) || fwrite1(l->len, cache) || fwrite1(l->size, cache) || fwrite1(l->bpos, cache) || fwrite1(l->bwidth, cache))
-            goto _error;
-        if (l->bpos == 0) {
-            if (fwrite(l->lineBuf, 1, l->size, cache) < l->size || fwrite(l->propBuf, sizeof(Lineprop), l->size, cache) < l->size)
-                goto _error;
-        }
-#ifdef USE_ANSI_COLOR
-        colorflag = l->colorBuf ? 1 : 0;
-        if (fwrite1(colorflag, cache))
-            goto _error;
-        if (colorflag) {
-            if (l->bpos == 0) {
-                if (fwrite(l->colorBuf, sizeof(Linecolor), l->size, cache) < l->size)
-                    goto _error;
-            }
-        }
-#endif
-    }
-
-    fclose(cache);
-    return 0;
-_error:
-    fclose(cache);
-    unlink(buf->savecache);
-_error1:
-    buf->savecache = NULL;
-    return -1;
-}
-
-bool readBufferCache(struct Buffer* buf)
-{
-    if (!buf->savecache) {
-        return false;
-    }
-
-    long clnum, tlnum;
-    FILE* cache = fopen(buf->savecache, "r");
-    if (!cache || fread1(clnum, cache) || fread1(tlnum, cache)) {
-        if (cache) {
-            fclose(cache);
-        }
-        buf->savecache = NULL;
-        return false;
-    }
-
-    struct Line* l = NULL;
-    struct Line* prevl = NULL;
-    struct Line* basel = NULL;
-    int lnum = 0;
-    while (!feof(cache)) {
-        lnum++;
-        prevl = l;
-        l = New(struct Line);
-        l->prev = prevl;
-        if (prevl)
-            prevl->next = l;
-        else
-            buf->doc->firstLine = l;
-        l->linenumber = lnum;
-        if (lnum == clnum)
-            buf->doc->currentLine = l;
-        if (lnum == tlnum)
-            buf->doc->topLine = l;
-        if (fread1(l->real_linenumber, cache) || fread1(l->usrflags, cache) || fread1(l->width, cache) || fread1(l->len, cache) || fread1(l->size, cache) || fread1(l->bpos, cache) || fread1(l->bwidth, cache))
-            break;
-        if (l->bpos == 0) {
-            basel = l;
-            l->lineBuf = NewAtom_N(char, l->size + 1);
-            fread(l->lineBuf, 1, l->size, cache);
-            l->lineBuf[l->size] = '\0';
-            l->propBuf = NewAtom_N(Lineprop, l->size);
-            fread(l->propBuf, sizeof(Lineprop), l->size, cache);
-        } else if (basel) {
-            l->lineBuf = basel->lineBuf + l->bpos;
-            l->propBuf = basel->propBuf + l->bpos;
-        } else
-            break;
-
-        int colorflag;
-        if (fread1(colorflag, cache))
-            break;
-        if (colorflag) {
-            if (l->bpos == 0) {
-                l->colorBuf = NewAtom_N(Linecolor, l->size);
-                fread(l->colorBuf, sizeof(Linecolor), l->size, cache);
-            } else
-                l->colorBuf = basel->colorBuf + l->bpos;
-        } else {
-            l->colorBuf = NULL;
-        }
-    }
-    if (prevl) {
-        buf->doc->lastLine = prevl;
-        buf->doc->lastLine->next = NULL;
-    }
-    fclose(cache);
-    unlink(buf->savecache);
-    buf->savecache = NULL;
-    return true;
 }
 
 Str page_info_panel(struct Buffer* buf)
