@@ -1,4 +1,5 @@
 #include "defun.h"
+#include "buffer_list.h"
 #include "option.h"
 #include "dict.h"
 #include "cookie.h"
