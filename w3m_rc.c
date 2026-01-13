@@ -967,7 +967,7 @@ static void deleteFiles()
     for (struct TabBuffer* CurrentTab = FirstTab(); CurrentTab; CurrentTab = CurrentTab->nextTab) {
         while (CurrentTab->firstBuffer) {
             buf = CurrentTab->firstBuffer->nextBuffer;
-            discardBuffer(CurrentTab->firstBuffer);
+            buf_discard(CurrentTab->firstBuffer);
             CurrentTab->firstBuffer = buf;
         }
     }

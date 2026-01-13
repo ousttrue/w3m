@@ -96,7 +96,7 @@ loadHTMLString(Str page)
     struct Buffer* newBuf = buf_new(NULL);
     if (SETJMP(AbortLoading) != 0) {
         TRAP_OFF;
-        discardBuffer(newBuf);
+        buf_discard(newBuf);
         is_close(stream);
         return NULL;
     }

@@ -85,26 +85,24 @@ void buf_set_link(struct Buffer* buf,
     }
 }
 
-/*
- * discardBuffer: free buffer structure
- */
-
-void discardBuffer(struct Buffer* buf)
+void buf_discard(struct Buffer* buf)
 {
-    int i;
-    struct Buffer* b;
-
     deleteImage(buf);
-    for (i = 0; i < MAX_LB; i++) {
-        b = buf->linkBuffer[i];
-        if (b == NULL)
-            continue;
-        b->linkBuffer[REV_LB[i]] = NULL;
+
+    for (int i = 0; i < MAX_LB; i++) {
+        struct Buffer* b = buf->linkBuffer[i];
+        if (b) {
+            b->linkBuffer[REV_LB[i]] = NULL;
+        }
     }
-    if (buf->savecache)
+
+    if (buf->savecache) {
         unlink(buf->savecache);
+    }
+
     if (--(*buf->clone))
         return;
+
     if (buf->content) {
         if (buf->content->sourcefile)
             unlink(buf->content->sourcefile);
@@ -115,45 +113,7 @@ void discardBuffer(struct Buffer* buf)
     }
 }
 
-/*
- * namedBuffer: Select buffer which have specified name
- */
-struct Buffer*
-namedBuffer(struct Buffer* first, char* name)
-{
-    struct Buffer* buf;
 
-    if (!strcmp(first->doc->title, name)) {
-        return first;
-    }
-    for (buf = first; buf->nextBuffer != NULL; buf = buf->nextBuffer) {
-        if (!strcmp(buf->nextBuffer->doc->title, name)) {
-            return buf->nextBuffer;
-        }
-    }
-    return NULL;
-}
-
-/*
- * deleteBuffer: delete buffer
- */
-struct Buffer*
-deleteBuffer(struct Buffer* first, struct Buffer* delbuf)
-{
-    struct Buffer *buf, *b;
-
-    if (first == delbuf && first->nextBuffer != NULL) {
-        buf = first->nextBuffer;
-        discardBuffer(first);
-        return buf;
-    }
-    if ((buf = prevBuffer(first, delbuf)) != NULL) {
-        b = buf->nextBuffer;
-        buf->nextBuffer = b->nextBuffer;
-        discardBuffer(b);
-    }
-    return first;
-}
 
 /*
  * replaceBuffer: replace buffer
@@ -169,13 +129,13 @@ replaceBuffer(struct Buffer* first, struct Buffer* delbuf, struct Buffer* newbuf
     }
     if (first == delbuf) {
         newbuf->nextBuffer = delbuf->nextBuffer;
-        discardBuffer(delbuf);
+        buf_discard(delbuf);
         return newbuf;
     }
     if (delbuf && (buf = prevBuffer(first, delbuf))) {
         buf->nextBuffer = newbuf;
         newbuf->nextBuffer = delbuf->nextBuffer;
-        discardBuffer(delbuf);
+        buf_discard(delbuf);
         return first;
     }
     newbuf->nextBuffer = first;

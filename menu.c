@@ -860,7 +860,7 @@ smDelBuf(struct DefunContext ctx, char c)
         ;
     if (Currentbuf == buf)
         Currentbuf = buf->nextBuffer;
-    ctx.tab->firstBuffer = deleteBuffer(ctx.tab->firstBuffer, buf);
+    tab_deleteBuffer(ctx.tab, buf);
     if (!Currentbuf)
         Currentbuf = nthBuffer(ctx.tab->firstBuffer, i - 1);
     ;

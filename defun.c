@@ -1582,7 +1582,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
     tab_repBuffer(ctx.tab, ctx.buf, new_buf);
     if ((new_buf->content->content_type != NULL) && (sbuf.content->content_type != NULL) && ((!strcasecmp(new_buf->content->content_type, "text/plain") && is_html_type(sbuf.content->content_type)) || (is_html_type(new_buf->content->content_type) && !strcasecmp(sbuf.content->content_type, "text/plain")))) {
         vwSrc(ctx);
-        ctx.tab->firstBuffer = deleteBuffer(ctx.tab->firstBuffer, new_buf);
+        tab_deleteBuffer(ctx.tab, new_buf);
     }
     // Currentbuf->search_header = sbuf.search_header;
     ctx.buf->doc->form_submit = sbuf.doc->form_submit;

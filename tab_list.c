@@ -119,7 +119,7 @@ tabs_delete(struct TabBuffer* tab)
     struct Buffer* buf = tab->firstBuffer;
     while (buf) {
         struct Buffer* next = buf->nextBuffer;
-        discardBuffer(buf);
+        buf_discard(buf);
         buf = next;
     }
     return g_FirstTab;
