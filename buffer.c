@@ -112,7 +112,7 @@ void buf_discard(struct Buffer* buf)
     }
 }
 
-void reshapeBuffer(struct Buffer* buf)
+void buf_reshape(struct Buffer* buf)
 {
     struct input_stream* stream = NULL;
     if (buf->content->mailcap_source) {

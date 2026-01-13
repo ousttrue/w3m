@@ -774,7 +774,7 @@ export fn onFrame() void {
     const buf: *c.Buffer = c.CurrentTab().*.currentBuffer;
 
     if (buf.doc == null) {
-        c.reshapeBuffer(buf);
+        c.buf_reshape(buf);
     }
 
     c.bufferPosition(buf);

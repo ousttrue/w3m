@@ -50,7 +50,7 @@ void buf_set_link(struct Buffer* buf,
     struct Buffer* link_buf, enum BufferPropertyFlags bp, enum LinkBufferID linkid);
 
 bool readBufferCache(struct Buffer* buf);
-void reshapeBuffer(struct Buffer* buf);
+void buf_reshape(struct Buffer* buf);
 void saveBuffer(struct Buffer* buf, FILE* f, int cont);
 void saveBufferBody(struct Buffer* buf, FILE* f, int cont);
 struct Buffer* getshell(char* cmd);

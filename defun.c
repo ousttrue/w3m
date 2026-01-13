@@ -974,26 +974,26 @@ DEFUN(submitForm, SUBMIT, "Submit form")
 DEFUN(nextBf, NEXT, "Switch to the next buffer")
 {
     for (int i = 0; i < PREC_NUM; i++) {
-        struct Buffer* buf = tab_prevBuffer(ctx.tab, Currentbuf);
+        struct Buffer* buf = tab_prevBuffer(ctx.tab, ctx.buf);
         if (!buf) {
             if (i == 0)
                 return;
             break;
         }
-        Currentbuf = buf;
+        CurrentTab()->currentBuffer = buf;
     }
 }
 
 DEFUN(prevBf, PREV, "Switch to the previous buffer")
 {
     for (int i = 0; i < PREC_NUM; i++) {
-        struct Buffer* buf = Currentbuf->back;
+        struct Buffer* buf = ctx.buf->back;
         if (!buf) {
             if (i == 0)
                 return;
             break;
         }
-        Currentbuf = buf;
+        CurrentTab()->currentBuffer = buf;
     }
 }
 
@@ -1035,7 +1035,7 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
 
 DEFUN(undoPos, UNDO, "Cancel the last cursor movement")
 {
-    if (!Currentbuf->doc->firstLine)
+    if (!ctx.buf->doc->firstLine)
         return;
     struct DocumentPos* pos = ctx.buf->doc->undo;
     if (!pos || !pos->prev)
@@ -1047,7 +1047,7 @@ DEFUN(undoPos, UNDO, "Cancel the last cursor movement")
 
 DEFUN(redoPos, REDO, "Cancel the last undo")
 {
-    if (!Currentbuf->doc->firstLine)
+    if (!ctx.buf->doc->firstLine)
         return;
     struct DocumentPos* pos = ctx.buf->doc->undo;
     if (!pos || !pos->next)
@@ -1059,28 +1059,28 @@ DEFUN(redoPos, REDO, "Cancel the last undo")
 
 DEFUN(cursorTop, CURSOR_TOP, "Move cursor to the top of the screen")
 {
-    if (Currentbuf->doc->firstLine == NULL)
+    if (ctx.buf->doc->firstLine == NULL)
         return;
-    Currentbuf->doc->currentLine = doc_lineSkip(Currentbuf->doc, Currentbuf->doc->topLine, 0);
-    doc_arrangeLine(Currentbuf->doc);
+    ctx.buf->doc->currentLine = doc_lineSkip(ctx.buf->doc, ctx.buf->doc->topLine, 0);
+    doc_arrangeLine(ctx.buf->doc);
 }
 
 DEFUN(cursorMiddle, CURSOR_MIDDLE, "Move cursor to the middle of the screen")
 {
-    if (Currentbuf->doc->firstLine == NULL)
+    if (ctx.buf->doc->firstLine == NULL)
         return;
-    int offsety = (Currentbuf->doc->LINES - 1) / 2;
-    Currentbuf->doc->currentLine = currentLineSkip(Currentbuf->doc->topLine, offsety);
-    doc_arrangeLine(Currentbuf->doc);
+    int offsety = (ctx.buf->doc->LINES - 1) / 2;
+    ctx.buf->doc->currentLine = currentLineSkip(ctx.buf->doc->topLine, offsety);
+    doc_arrangeLine(ctx.buf->doc);
 }
 
 DEFUN(cursorBottom, CURSOR_BOTTOM, "Move cursor to the bottom of the screen")
 {
-    if (Currentbuf->doc->firstLine == NULL)
+    if (ctx.buf->doc->firstLine == NULL)
         return;
-    int offsety = Currentbuf->doc->LINES - 1;
-    Currentbuf->doc->currentLine = currentLineSkip(Currentbuf->doc->topLine, offsety);
-    doc_arrangeLine(Currentbuf->doc);
+    int offsety = ctx.buf->doc->LINES - 1;
+    ctx.buf->doc->currentLine = currentLineSkip(ctx.buf->doc->topLine, offsety);
+    doc_arrangeLine(ctx.buf->doc);
 }
 
 DEFUN(tabURL, TAB_GOTO, "Open specified document in a new tab")
@@ -1159,7 +1159,7 @@ DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer")
         if (content) {
             struct Buffer* buf = buf_new(content);
             tab_push_buffer(ctx.tab, buf);
-            pushHashHist(getRuntime()->URLHist, parsedURL2Str(&Currentbuf->content->url)->ptr);
+            pushHashHist(getRuntime()->URLHist, parsedURL2Str(&ctx.buf->content->url)->ptr);
         }
     }
 }
@@ -1190,9 +1190,9 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
                       "&charset=%s",
         (Str_form_quote(localCookie()))->ptr,
         (Str_form_quote(Strnew_charp(getRuntime()->BookmarkFile)))->ptr,
-        (Str_form_quote(parsedURL2Str(&Currentbuf->content->url)))->ptr,
+        (Str_form_quote(parsedURL2Str(&ctx.buf->content->url)))->ptr,
 
-        (Str_form_quote(wc_conv_strict(Currentbuf->doc->title,
+        (Str_form_quote(wc_conv_strict(ctx.buf->doc->title,
              getRuntime()->InnerCharset,
              getRuntime()->BookmarkCharset)))
             ->ptr,
@@ -1262,15 +1262,15 @@ DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
     if (!l || !l->url)
         return;
     if (*(l->url) == '#') {
-        gotoLabel(Currentbuf, l->url + 1);
+        gotoLabel(ctx.buf, l->url + 1);
         return;
     }
-    parseURL2(l->url, &p_url, buf_baseUrl(Currentbuf));
+    parseURL2(l->url, &p_url, buf_baseUrl(ctx.buf));
     pushHashHist(getRuntime()->URLHist, parsedURL2Str(&p_url)->ptr);
     struct Content* content = get_content_cache(l->url, NULL,
         (struct LoadOption) {
-            .base_url = buf_baseUrl(Currentbuf),
-            .referer = parsedURL2Str(&Currentbuf->content->url)->ptr });
+            .base_url = buf_baseUrl(ctx.buf),
+            .referer = parsedURL2Str(&ctx.buf->content->url)->ptr });
     if (content) {
         struct Buffer* buf = buf_new(content);
         tab_push_buffer(ctx.tab, buf);
@@ -1379,12 +1379,11 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document")
         is_pipe = FALSE;
     }
     if (f == NULL) {
-        /* FIXME: gettextize? */
         char* emsg = Sprintf("Can't open %s", conv_from_system(file))->ptr;
         disp_err_message(emsg, TRUE);
         return;
     }
-    saveBuffer(Currentbuf, f, TRUE);
+    saveBuffer(ctx.buf, f, TRUE);
     if (is_pipe)
         pclose(f);
     else
@@ -1394,17 +1393,17 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document")
 /* save source */
 DEFUN(svSrc, DOWNLOAD SAVE, "Save document source")
 {
-    if (Currentbuf->content->sourcefile == NULL)
+    if (ctx.buf->content->sourcefile == NULL)
         return;
     getRuntime()->CurrentKeyData = NULL; /* not allowed in w3m-control: */
     getRuntime()->PermitSaveToPipe = TRUE;
     const char* file;
-    if (Currentbuf->content->url.scheme == SCM_LOCAL)
+    if (ctx.buf->content->url.scheme == SCM_LOCAL)
         file = conv_from_system(guess_save_name(NULL,
-            Currentbuf->content->url.real_file));
+            ctx.buf->content->url.real_file));
     else
-        file = guess_save_name(Currentbuf->content, Currentbuf->content->url.file);
-    doFileCopy(Currentbuf->content->sourcefile, file);
+        file = guess_save_name(ctx.buf->content, ctx.buf->content->url.file);
+    doFileCopy(ctx.buf->content->sourcefile, file);
     getRuntime()->PermitSaveToPipe = FALSE;
 }
 
@@ -1428,7 +1427,7 @@ DEFUN(curURL, PEEK, "Show current address")
 
     static int offset = 0, n;
 
-    if (Currentbuf->bufferprop & BP_INTERNAL)
+    if (ctx.buf->bufferprop & BP_INTERNAL)
         return;
     if (getRuntime()->CurrentKey == getRuntime()->prev_key && s != NULL) {
         if (s->length - offset >= TTY_COLS())
@@ -1457,14 +1456,14 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
 {
     struct Buffer* buf;
 
-    if (Currentbuf->content->content_type == NULL || Currentbuf->bufferprop & BP_FRAME)
+    if (ctx.buf->content->content_type == NULL || ctx.buf->bufferprop & BP_FRAME)
         return;
-    if ((buf = Currentbuf->linkBuffer[LB_SOURCE]) != NULL || (buf = Currentbuf->linkBuffer[LB_N_SOURCE]) != NULL) {
-        Currentbuf = buf;
+    if ((buf = ctx.buf->linkBuffer[LB_SOURCE]) != NULL || (buf = ctx.buf->linkBuffer[LB_N_SOURCE]) != NULL) {
+        CurrentTab()->currentBuffer = buf;
         return;
     }
-    if (Currentbuf->content->sourcefile == NULL) {
-        // if (Currentbuf->pagerSource && !strcasecmp(Currentbuf->type, "text/plain")) {
+    if (ctx.buf->content->sourcefile == NULL) {
+        // if (ctx.buf->pagerSource && !strcasecmp(ctx.buf->type, "text/plain")) {
         //     wc_ces old_charset;
         //     wc_bool old_fix_width_conv;
         //
@@ -1476,18 +1475,18 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
         //
         //     old_charset = getRuntime()->DisplayCharset;
         //     old_fix_width_conv = WcOption.fix_width_conv;
-        //     getRuntime()->DisplayCharset = (Currentbuf->document_charset != WC_CES_US_ASCII)
-        //         ? Currentbuf->document_charset
+        //     getRuntime()->DisplayCharset = (ctx.buf->document_charset != WC_CES_US_ASCII)
+        //         ? ctx.buf->document_charset
         //         : 0;
         //     WcOption.fix_width_conv = WC_FALSE;
         //
-        //     saveBufferBody(Currentbuf, f, TRUE);
+        //     saveBufferBody(ctx.buf, f, TRUE);
         //
         //     getRuntime()->DisplayCharset = old_charset;
         //     WcOption.fix_width_conv = old_fix_width_conv;
         //
         //     fclose(f);
-        //     Currentbuf->sourcefile = tmpf->ptr;
+        //     ctx.buf->sourcefile = tmpf->ptr;
         // }
         // else
         {
@@ -1497,38 +1496,38 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
 
     buf = buf_new(NULL);
 
-    if (is_html_type(Currentbuf->content->content_type)) {
+    if (is_html_type(ctx.buf->content->content_type)) {
         buf->content->content_type = "text/plain";
-        if (Currentbuf->content->content_type && is_html_type(Currentbuf->content->content_type))
+        if (ctx.buf->content->content_type && is_html_type(ctx.buf->content->content_type))
             buf->content->content_type = "text/plain";
         else
-            buf->content->content_type = Currentbuf->content->content_type;
-        buf->doc->title = Sprintf("source of %s", Currentbuf->doc->title)->ptr;
-        buf->linkBuffer[LB_N_SOURCE] = Currentbuf;
-        Currentbuf->linkBuffer[LB_SOURCE] = buf;
-    } else if (!strcasecmp(Currentbuf->content->content_type, "text/plain")) {
+            buf->content->content_type = ctx.buf->content->content_type;
+        buf->doc->title = Sprintf("source of %s", ctx.buf->doc->title)->ptr;
+        buf->linkBuffer[LB_N_SOURCE] = ctx.buf;
+        ctx.buf->linkBuffer[LB_SOURCE] = buf;
+    } else if (!strcasecmp(ctx.buf->content->content_type, "text/plain")) {
         buf->content->content_type = "text/html";
-        if (Currentbuf->content->content_type && !strcasecmp(Currentbuf->content->content_type, "text/plain"))
+        if (ctx.buf->content->content_type && !strcasecmp(ctx.buf->content->content_type, "text/plain"))
             buf->content->content_type = "text/html";
         else
-            buf->content->content_type = Currentbuf->content->content_type;
+            buf->content->content_type = ctx.buf->content->content_type;
         buf->doc->title = Sprintf("HTML view of %s",
-            Currentbuf->doc->title)
+            ctx.buf->doc->title)
                               ->ptr;
-        buf->linkBuffer[LB_SOURCE] = Currentbuf;
-        Currentbuf->linkBuffer[LB_N_SOURCE] = buf;
+        buf->linkBuffer[LB_SOURCE] = ctx.buf;
+        ctx.buf->linkBuffer[LB_N_SOURCE] = buf;
     } else {
         return;
     }
-    buf->content->url = Currentbuf->content->url;
-    buf->content->filename = Currentbuf->content->filename;
-    buf->content->sourcefile = Currentbuf->content->sourcefile;
-    buf->content->header_source = Currentbuf->content->header_source;
-    // buf->search_header = Currentbuf->search_header;
-    buf->doc->charset = Currentbuf->doc->charset;
-    buf->clone = Currentbuf->clone;
+    buf->content->url = ctx.buf->content->url;
+    buf->content->filename = ctx.buf->content->filename;
+    buf->content->sourcefile = ctx.buf->content->sourcefile;
+    buf->content->header_source = ctx.buf->content->header_source;
+    // buf->search_header = ctx.buf->search_header;
+    buf->doc->charset = ctx.buf->doc->charset;
+    buf->clone = ctx.buf->clone;
     (*buf->clone)++;
-    reshapeBuffer(buf);
+    buf_reshape(buf);
     tab_push_buffer(CurrentTab(), buf);
 }
 
@@ -1585,7 +1584,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
         vwSrc(ctx);
         tab_deleteBuffer(ctx.tab, new_buf);
     }
-    // Currentbuf->search_header = sbuf.search_header;
+    // ctx.buf->search_header = sbuf.search_header;
     ctx.buf->doc->form_submit = sbuf.doc->form_submit;
     if (ctx.buf->doc->firstLine) {
         COPY_BUFROOT(ctx.buf->doc, sbuf.doc);
@@ -1596,7 +1595,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
 /* reshape */
 DEFUN(reshape, RESHAPE, "Re-render document")
 {
-    reshapeBuffer(Currentbuf);
+    buf_reshape(ctx.buf);
 }
 
 DEFUN(setAlarm, ALARM, "Set alarm")
