@@ -99,6 +99,13 @@ const Param = struct {
                         ptr.* = n;
                     } else |_| {}
                 }
+
+                for (this.select) |s| {
+                    if (std.mem.eql(u8, s.cvalue, value)) {
+                        ptr.* = @intCast(s.value);
+                        break;
+                    }
+                }
             },
             .P_NZINT => |getset| {
                 const ptr: *i32 = @ptrCast(@alignCast(getset.ptr));
@@ -504,11 +511,13 @@ export fn opt_get_param_option(name: [*c]const u8) [*c]const u8 {
 }
 
 fn opt_set_param(name: []const u8, value: []const u8) bool {
+    if (std.mem.eql(u8, name, "inline_img_protocol")) {
+        // DEBUG
+        const a = 0;
+        _ = a;
+    }
+
     if (g_opts.get_param(name)) |p| {
-        if (std.mem.eql(u8, "tabstop", name)) {
-            const a = 0;
-            _ = a;
-        }
         p.set(value);
         return true;
     }
@@ -758,7 +767,6 @@ export fn panel_set_option(_arg: [*c]c.parsed_tagarg) void {
     var s: c.Str = c.Strnew();
     var arg: ?*c.parsed_tagarg = _arg;
     while (arg) |a| : (arg = a.next orelse null) {
-        //  InnerCharset -> ystemCharset
         if (a.value) |value| {
             const p = c.conv_to_system(value);
             if (opt_set_param(std.mem.span(a.arg), std.mem.span(p))) {

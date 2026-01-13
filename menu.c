@@ -374,8 +374,9 @@ static bool menu_action(struct Menu* menu)
     enum MenuResult mselect = MENU_NOTHING;
     while (1) {
         int ch = getch();
-        if (IS_ASCII(ch)) { /* Ascii */
-            enum MenuResult mselect = (*menu->keymap[ch])(
+        if (ch != 0 && IS_ASCII(ch)) {
+            MenuKeyFunc func = menu->keymap[ch];
+            mselect = func(
                 (struct DefunContext) {
                     .tab = CurrentTab(),
                     .buf = CurrentTab()->currentBuffer,
@@ -1229,7 +1230,6 @@ interpret_menu(FILE* mf)
 
 void initMenu(void)
 {
-    FILE* mf;
 
     w3mMenuList = New_N(struct MenuList, 4);
     w3mMenuList[0].id = "Main";
@@ -1256,6 +1256,7 @@ void initMenu(void)
         MainMenuEncode = TRUE;
     }
 
+    FILE* mf;
     if ((mf = fopen(confFile(MENU_FILE), "rt")) != NULL) {
         interpret_menu(mf);
         fclose(mf);
