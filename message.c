@@ -59,6 +59,9 @@ void message(const char* s)
 {
     if (!fmInitialized())
         return;
+    if (TTY_COLS() == 0) {
+        return;
+    }
     struct Vec2 pos = screen_position();
     screen_move((struct Vec2) { .y = LASTLINE(), .x = 0 });
     screen_wc_addstr_width(s, TTY_COLS() - 1);

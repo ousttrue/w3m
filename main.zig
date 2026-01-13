@@ -2134,25 +2134,6 @@ fn keymap_load(r: *std.Io.Reader, force: bool) !void {
     _ = force;
     var charset = c.getRuntime().*.SystemCharset;
 
-    for (keybind.GlobalKeymap, 0..) |f, i| {
-        keymap_register(@intCast(i), .{
-            .func = f,
-            .data = &.{},
-        });
-    }
-    for (keybind.EscKeymap, 0..) |f, i| {
-        keymap_register(@intCast(i | K_ESC), .{
-            .func = f,
-            .data = &.{},
-        });
-    }
-    for (keybind.EscBKeymap, 0..) |f, i| {
-        keymap_register(@intCast(i | K_ESCB), .{
-            .func = f,
-            .data = &.{},
-        });
-    }
-
     var lineno: usize = 0;
     while (try r.takeDelimiter('\n')) |_line| : (lineno += 1) {
         const l = std.mem.trim(u8, _line, &std.ascii.whitespace);
@@ -2194,6 +2175,25 @@ fn keymap_load(r: *std.Io.Reader, force: bool) !void {
 var g_keymap_initialized = false;
 
 export fn keymap_init(force: bool) void {
+    for (keybind.GlobalKeymap, 0..) |f, i| {
+        keymap_register(@intCast(i), .{
+            .func = f,
+            .data = &.{},
+        });
+    }
+    for (keybind.EscKeymap, 0..) |f, i| {
+        keymap_register(@intCast(i | K_ESC), .{
+            .func = f,
+            .data = &.{},
+        });
+    }
+    for (keybind.EscBKeymap, 0..) |f, i| {
+        keymap_register(@intCast(i | K_ESCB), .{
+            .func = f,
+            .data = &.{},
+        });
+    }
+
     const conf_file = std.mem.span(c.confFile(c.KEYMAP_FILE));
     if (std.fs.cwd().openFile(conf_file, .{})) |file| {
         defer file.close();
