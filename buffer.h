@@ -32,7 +32,7 @@ enum CheckUrlFlags : uint8_t {
 struct Buffer {
     struct Content* content;
     struct Document* doc;
-    struct Buffer* nextBuffer;
+    struct Buffer* back;
     struct Buffer* linkBuffer[MAX_LB];
     enum BufferPropertyFlags bufferprop;
 
@@ -55,10 +55,11 @@ void saveBuffer(struct Buffer* buf, FILE* f, int cont);
 void saveBufferBody(struct Buffer* buf, FILE* f, int cont);
 struct Buffer* getshell(char* cmd);
 void buf_discard(struct Buffer* buf);
-void copyBuffer(struct Buffer* a, struct Buffer* b);
-struct Buffer* prevBuffer(struct Buffer* first, struct Buffer* buf);
+
+// shallow copy
+void buf_copy(struct Buffer* to, struct Buffer* from);
+
 int writeBufferCache(struct Buffer* buf);
-bool checkBackBuffer(struct Buffer* buf);
 Str page_info_panel(struct Buffer* buf);
 
 struct FollowOption {

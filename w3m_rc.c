@@ -737,7 +737,7 @@ struct FollowResult gotoLabel(struct Buffer* buf, const char* label)
     }
 
     res.new_buf = buf_new(NULL);
-    copyBuffer(res.new_buf, buf);
+    buf_copy(res.new_buf, buf);
     for (int i = 0; i < MAX_LB; i++)
         res.new_buf->linkBuffer[i] = NULL;
     res.new_buf->content->url.label = allocStr(label, -1);
@@ -966,7 +966,7 @@ static void deleteFiles()
 
     for (struct TabBuffer* CurrentTab = FirstTab(); CurrentTab; CurrentTab = CurrentTab->nextTab) {
         while (CurrentTab->firstBuffer) {
-            buf = CurrentTab->firstBuffer->nextBuffer;
+            buf = CurrentTab->firstBuffer->back;
             buf_discard(CurrentTab->firstBuffer);
             CurrentTab->firstBuffer = buf;
         }

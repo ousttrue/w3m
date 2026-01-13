@@ -61,12 +61,12 @@ listBuffer(struct Buffer* top, struct Buffer* current)
             screen_toggle_stand();
         } else
             screen_clrtoeolx();
-        if (buf->nextBuffer == NULL) {
+        if (buf->back == NULL) {
             screen_move((struct Vec2) { .y = i + 1, .x = 0 });
             screen_clrtobotx();
             break;
         }
-        buf = buf->nextBuffer;
+        buf = buf->back;
     }
     screen_standout();
     message("Buffer selection mode: SPC for select / D for delete buffer");
@@ -75,7 +75,7 @@ listBuffer(struct Buffer* top, struct Buffer* current)
      * move(LASTLINE(), COLS - 1); */
     screen_move((struct Vec2) { .y = c, .x = 0 });
     tty_write_screen();
-    return buf->nextBuffer;
+    return buf->back;
 }
 
 /*
@@ -86,7 +86,7 @@ tab_selectBuffer(struct TabBuffer* tab, struct Buffer* currentbuf, char* selectc
 {
     int i = 0;
     int cpoint = 0;
-    for (struct Buffer* buf = tab->firstBuffer; buf != NULL; buf = buf->nextBuffer) {
+    for (struct Buffer* buf = tab->firstBuffer; buf != NULL; buf = buf->back) {
         if (buf == currentbuf)
             cpoint = i;
         i++;
@@ -129,10 +129,10 @@ tab_selectBuffer(struct TabBuffer* tab, struct Buffer* currentbuf, char* selectc
         case CTRL_N:
         case 'j':
             if (spoint < sclimit - 1) {
-                if (currentbuf->nextBuffer == NULL)
+                if (currentbuf->back == NULL)
                     continue;
                 writeBufferName(currentbuf, spoint);
-                currentbuf = currentbuf->nextBuffer;
+                currentbuf = currentbuf->back;
                 cpoint++;
                 spoint++;
                 screen_standout();
@@ -142,7 +142,7 @@ tab_selectBuffer(struct TabBuffer* tab, struct Buffer* currentbuf, char* selectc
                 screen_toggle_stand();
             } else if (cpoint < maxbuf - 1) {
                 topbuf = currentbuf;
-                currentbuf = currentbuf->nextBuffer;
+                currentbuf = currentbuf->back;
                 cpoint++;
                 spoint = 1;
                 listBuffer(topbuf, currentbuf);

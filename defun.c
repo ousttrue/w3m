@@ -938,7 +938,7 @@ DEFUN(selBuf, SELECT, "Display buffer-stack panel")
         }
     } while (!ok);
 
-    for (struct Buffer* buf = ctx.tab->firstBuffer; buf != NULL; buf = buf->nextBuffer) {
+    for (struct Buffer* buf = ctx.tab->firstBuffer; buf != NULL; buf = buf->back) {
         if (buf == ctx.tab->currentBuffer)
             continue;
         deleteImage(buf);
@@ -974,7 +974,7 @@ DEFUN(submitForm, SUBMIT, "Submit form")
 DEFUN(nextBf, NEXT, "Switch to the next buffer")
 {
     for (int i = 0; i < PREC_NUM; i++) {
-        struct Buffer* buf = prevBuffer(ctx.tab->firstBuffer, Currentbuf);
+        struct Buffer* buf = tab_prevBuffer(ctx.tab, Currentbuf);
         if (!buf) {
             if (i == 0)
                 return;
@@ -987,7 +987,7 @@ DEFUN(nextBf, NEXT, "Switch to the next buffer")
 DEFUN(prevBf, PREV, "Switch to the previous buffer")
 {
     for (int i = 0; i < PREC_NUM; i++) {
-        struct Buffer* buf = Currentbuf->nextBuffer;
+        struct Buffer* buf = Currentbuf->back;
         if (!buf) {
             if (i == 0)
                 return;
@@ -1544,7 +1544,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
         return;
     }
     struct Buffer sbuf;
-    copyBuffer(&sbuf, ctx.buf);
+    buf_copy(&sbuf, ctx.buf);
     int multipart = 0;
     struct FormList* request;
     if (ctx.buf->doc->form_submit) {

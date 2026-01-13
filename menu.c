@@ -856,10 +856,10 @@ smDelBuf(struct DefunContext ctx, char c)
 
     struct Buffer* buf = ctx.tab->firstBuffer;
     int i = 0;
-    for (; i < CurrentMenu->select; i++, buf = buf->nextBuffer)
+    for (; i < CurrentMenu->select; i++, buf = buf->back)
         ;
     if (Currentbuf == buf)
-        Currentbuf = buf->nextBuffer;
+        Currentbuf = buf->back;
     tab_deleteBuffer(ctx.tab, buf);
     if (!Currentbuf)
         Currentbuf = tab_nthBuffer(ctx.tab, i - 1);
@@ -898,14 +898,14 @@ initSelectMenu(void)
     static char* comment = " SPC for select / D for delete buffer ";
 
     SelectV = -1;
-    for (i = 0, buf = CurrentTab()->firstBuffer; buf != NULL; i++, buf = buf->nextBuffer) {
+    for (i = 0, buf = CurrentTab()->firstBuffer; buf != NULL; i++, buf = buf->back) {
         if (buf == Currentbuf)
             SelectV = i;
     }
     nitem = i;
 
     label = New_N(char*, nitem + 2);
-    for (i = 0, buf = CurrentTab()->firstBuffer; i < nitem; i++, buf = buf->nextBuffer) {
+    for (i = 0, buf = CurrentTab()->firstBuffer; i < nitem; i++, buf = buf->back) {
         str = Sprintf("<%s>", buf->doc->title);
         if (buf->content->filename != NULL) {
             switch (buf->content->url.scheme) {
@@ -959,10 +959,10 @@ smChBuf(void)
     if (SelectV < 0 || SelectV >= SelectMenu.nitem)
         return;
     struct Buffer* buf = CurrentTab()->firstBuffer;
-    for (int i = 0; i < SelectV; i++, buf = buf->nextBuffer)
+    for (int i = 0; i < SelectV; i++, buf = buf->back)
         ;
     Currentbuf = buf;
-    for (buf = CurrentTab()->firstBuffer; buf != NULL; buf = buf->nextBuffer) {
+    for (buf = CurrentTab()->firstBuffer; buf != NULL; buf = buf->back) {
         if (buf == Currentbuf)
             continue;
         deleteImage(buf);

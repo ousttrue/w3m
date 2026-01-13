@@ -38,7 +38,7 @@ struct Buffer* buf_new(struct Content* content)
     *buf = (struct Buffer) {
         .content = content,
         .doc = NULL,
-        .nextBuffer = NULL,
+        .back = NULL,
         .linkBuffer = { 0 },
         .bufferprop = BP_NORMAL,
         .clone = New(int),
@@ -142,21 +142,10 @@ void reshapeBuffer(struct Buffer* buf)
     is_close(stream);
 }
 
-/* shallow copy */
-void copyBuffer(struct Buffer* a, struct Buffer* b)
+void buf_copy(struct Buffer* to, struct Buffer* from)
 {
-    readBufferCache(b);
-    bcopy((void*)b, (void*)a, sizeof(struct Buffer));
-}
-
-struct Buffer*
-prevBuffer(struct Buffer* first, struct Buffer* buf)
-{
-    struct Buffer* b;
-
-    for (b = first; b != NULL && b->nextBuffer != buf; b = b->nextBuffer)
-        ;
-    return b;
+    readBufferCache(from);
+    memcpy(to, from, sizeof(struct Buffer));
 }
 
 #define fwrite1(d, f) (fwrite(&d, sizeof(d), 1, f) == 0)
@@ -283,14 +272,6 @@ bool readBufferCache(struct Buffer* buf)
     unlink(buf->savecache);
     buf->savecache = NULL;
     return true;
-}
-
-bool checkBackBuffer(struct Buffer* buf)
-{
-    if (buf->nextBuffer)
-        return TRUE;
-
-    return FALSE;
 }
 
 Str page_info_panel(struct Buffer* buf)
