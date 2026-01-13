@@ -26,19 +26,19 @@
 #include <strings.h>
 #include <unistd.h>
 
-/* *INDENT-OFF* */
+typedef void (*ActionFunc)(struct Buffer* buf, struct parsed_tagarg*);
+
 struct {
     const char* action;
-    void (*rout)(struct parsed_tagarg*);
+    ActionFunc func;
 } internal_action[] = {
-    { "map", follow_map },
-    { "option", panel_set_option },
-    { "cookie", set_cookie_flag },
-    { "charset", change_charset },
-    { "none", NULL },
-    { NULL, NULL },
+    { .action = "map", .func = follow_map },
+    { .action = "option", .func = panel_set_option },
+    { .action = "cookie", .func = set_cookie_flag },
+    { .action = "charset", .func = change_charset },
+    { .action = "none", .func = NULL },
+    { .action = NULL, .func = NULL },
 };
-/* *INDENT-ON* */
 
 struct FormList*
 newFormList(char* action, char* method, char* charset, char* enctype,
@@ -575,14 +575,13 @@ input_end:
     unlink(tmpf);
 }
 
-void do_internal(const char* action, const char* data)
+void do_internal(struct Buffer* buf, const char* action, const char* data)
 {
-    int i;
-
-    for (i = 0; internal_action[i].action; i++) {
+    for (int i = 0; internal_action[i].action; i++) {
         if (strcasecmp(internal_action[i].action, action) == 0) {
-            if (internal_action[i].rout)
-                internal_action[i].rout(cgistr2tagarg(data));
+            if (internal_action[i].func) {
+                internal_action[i].func(buf, cgistr2tagarg(data));
+            }
             return;
         }
     }

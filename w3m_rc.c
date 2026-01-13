@@ -1065,7 +1065,7 @@ void invoke_browser(const char* url)
     enterRawMode();
 }
 
-void follow_map(struct parsed_tagarg* arg)
+void follow_map(struct Buffer* buf, struct parsed_tagarg* arg)
 {
     char* name = tag_get_value(arg, "link");
     int x, y;
@@ -1091,21 +1091,23 @@ void follow_map(struct parsed_tagarg* arg)
     if (!content) {
         return;
     }
-    struct Buffer* buf = buf_new(content);
 
-    if (getRuntime()->check_target
-        && getRuntime()->open_tab_blank
-        && a->target
-        && (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
-        tabs_append(buf);
-    } else {
-        tab_push_buffer(CurrentTab(), buf);
+    {
+        struct Buffer* new_buf = buf_new(content);
+        if (getRuntime()->check_target
+            && getRuntime()->open_tab_blank
+            && a->target
+            && (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
+            tabs_append(new_buf);
+        } else {
+            tab_push_buffer(CurrentTab(), new_buf);
+        }
     }
 }
 
-void change_charset(struct parsed_tagarg* arg)
+void change_charset(struct Buffer* _buf, struct parsed_tagarg* arg)
 {
-    struct Buffer* buf = Currentbuf->linkBuffer[LB_N_INFO];
+    struct Buffer* buf = _buf->linkBuffer[LB_N_INFO];
     if (buf == NULL)
         return;
 

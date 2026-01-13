@@ -47,15 +47,15 @@ struct cookie {
 #define COO_EPORT (9) /* Port match failed (version 1' case 5) */
 #define COO_EMAX COO_EPORT
 
-extern Str find_cookie(struct Url* pu);
-extern int add_cookie(struct Url* pu, Str name, Str value, time_t expires,
+Str find_cookie(struct Url* pu);
+int add_cookie(struct Url* pu, Str name, Str value, time_t expires,
     Str domain, Str path, int flag, Str comment, int version,
     Str port, Str commentURL);
-extern void save_cookies(void);
-extern void load_cookies(void);
-extern void initCookie(void);
-extern struct Buffer* cookie_list_panel(void);
+void save_cookies(void);
+void load_cookies(void);
+void initCookie(void);
+struct Buffer* cookie_list_panel(void);
 struct parsed_tagarg;
-extern void set_cookie_flag(struct parsed_tagarg* arg);
-extern int check_cookie_accept_domain(char* domain);
+void set_cookie_flag(struct Buffer* buf, struct parsed_tagarg* arg);
+int check_cookie_accept_domain(char* domain);
 void parse_cookie(void);

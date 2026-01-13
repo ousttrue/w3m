@@ -763,7 +763,8 @@ export fn opt_load(handle: std.fs.File.Handle) void {
     }
 }
 
-export fn panel_set_option(_arg: [*c]c.parsed_tagarg) void {
+export fn panel_set_option(buf: ?*c.Buffer, _arg: [*c]c.parsed_tagarg) void {
+    _ = buf;
     var s: c.Str = c.Strnew();
     var arg: ?*c.parsed_tagarg = _arg;
     while (arg) |a| : (arg = a.next orelse null) {

@@ -369,7 +369,7 @@ static struct Buffer* do_submit(struct Buffer* buf, struct Anchor* a, struct For
                    && (!Strcmp_charp(fi->parent->action, "map")
                        || !Strcmp_charp(fi->parent->action, "none")))
         || buf->bufferprop & BP_INTERNAL) { /* internal */
-        do_internal(tmp2->ptr, tmp->ptr);
+        do_internal(buf, tmp2->ptr, tmp->ptr);
     } else {
         disp_err_message("Can't send form because of illegal method.", false);
     }

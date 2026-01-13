@@ -673,7 +673,7 @@ cookie_list_panel(void)
     return loadHTMLString(src);
 }
 
-void set_cookie_flag(struct parsed_tagarg* arg)
+void set_cookie_flag(struct Buffer* buf, struct parsed_tagarg* arg)
 {
     int n, v;
     struct cookie* p;

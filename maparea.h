@@ -41,7 +41,6 @@ struct MapArea* newMapArea(const char* url,
     const char* target, const char* alt,
     const char* shape, const char* coords);
 
-void follow_map(struct parsed_tagarg* arg);
 struct MapList* searchMapList(struct Document* doc, const char* name);
 struct MapArea* follow_map_menu(struct Document* doc, const char* name, struct Anchor* a_img, int x, int y);
 /// information of current page and link

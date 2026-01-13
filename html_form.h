@@ -106,7 +106,7 @@ struct Document;
 extern void doc_formUpdateBuffer(struct Document* doc, struct Anchor* a, struct FormItemList* form);
 extern void preFormUpdateBuffer(struct Buffer* buf);
 extern Str textfieldrep(Str s, int width);
-extern void do_internal(const char* action, const char* data);
+extern void do_internal(struct Buffer* buf, const char* action, const char* data);
 extern void form_write_data(FILE* f, char* boundary, char* name, char* value);
 extern void form_write_from_file(FILE* f, char* boundary, char* name,
     char* filename, char* file);
