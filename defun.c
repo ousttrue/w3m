@@ -1712,16 +1712,15 @@ DEFUN(dictword, DICT_WORD, "Execute dictionary command (see README.dict)")
 DEFUN(dictwordat, DICT_WORD_AT,
     "Execute dictionary command for word at cursor")
 {
-    execdict(GetWord(Currentbuf));
+    execdict(GetWord(ctx.buf));
 }
 
 DEFUN(docCSet, CHARSET, "Change the character encoding for the current document")
 {
     char* cs = searchKeyData();
     if (cs == NULL || *cs == '\0')
-        /* FIXME: gettextize? */
         cs = inputStr("Document charset: ",
-            wc_ces_to_charset(Currentbuf->doc->charset));
+            wc_ces_to_charset(ctx.buf->doc->charset));
 
     enum wc_ces charset = wc_guess_charset_short(cs, 0);
     if (charset == 0) {
@@ -1734,7 +1733,6 @@ DEFUN(defCSet, DEFAULT_CHARSET, "Change the default character encoding")
 {
     char* cs = searchKeyData();
     if (cs == NULL || *cs == '\0')
-        /* FIXME: gettextize? */
         cs = inputStr("Default document charset: ",
             wc_ces_to_charset(getRuntime()->DocumentCharset));
     enum wc_ces charset = wc_guess_charset_short(cs, 0);
@@ -1744,7 +1742,7 @@ DEFUN(defCSet, DEFAULT_CHARSET, "Change the default character encoding")
 
 DEFUN(chkURL, MARK_URL, "Turn URL-like strings into hyperlinks")
 {
-    chkURLBuffer(Currentbuf);
+    chkURLBuffer(ctx.buf);
 }
 
 DEFUN(chkWORD, MARK_WORD, "Turn current word into hyperlink")
@@ -1763,18 +1761,16 @@ DEFUN(rFrame, FRAME, "Toggle rendering HTML frames")
 
 DEFUN(extbrz, EXTERN, "Display using an external browser")
 {
-    if (Currentbuf->bufferprop & BP_INTERNAL) {
-        /* FIXME: gettextize? */
+    if (ctx.buf->bufferprop & BP_INTERNAL) {
         disp_err_message("Can't browse...", TRUE);
         return;
     }
-    if (Currentbuf->content->url.scheme == SCM_LOCAL && !strcmp(Currentbuf->content->url.file, "-")) {
+    if (ctx.buf->content->url.scheme == SCM_LOCAL && !strcmp(ctx.buf->content->url.file, "-")) {
         /* file is std input */
-        /* FIXME: gettextize? */
         disp_err_message("Can't browse stdin", TRUE);
         return;
     }
-    invoke_browser(parsedURL2Str(&Currentbuf->content->url)->ptr);
+    invoke_browser(parsedURL2Str(&ctx.buf->content->url)->ptr);
 }
 
 DEFUN(linkbrz, EXTERN_LINK, "Display target using an external browser")
@@ -1792,22 +1788,22 @@ DEFUN(linkbrz, EXTERN_LINK, "Display target using an external browser")
 /* show current line number and number of lines in the entire document */
 DEFUN(curlno, LINE_INFO, "Display current position in document")
 {
-    struct Line* l = Currentbuf->doc->currentLine;
+    struct Line* l = ctx.buf->doc->currentLine;
     Str tmp;
     int cur = 0, all = 0, col = 0, len = 0;
 
     if (l != NULL) {
         cur = l->real_linenumber;
-        col = l->bwidth + Currentbuf->doc->currentColumn + Currentbuf->doc->cursorX + 1;
+        col = l->bwidth + ctx.buf->doc->currentColumn + ctx.buf->doc->cursorX + 1;
         while (l->next && l->next->bpos)
             l = l->next;
         if (l->width < 0)
             l->width = COLPOS(l, l->len);
         len = l->bwidth + l->width;
     }
-    if (Currentbuf->doc->lastLine)
-        all = Currentbuf->doc->lastLine->real_linenumber;
-    // if (Currentbuf->pagerSource && !(Currentbuf->bufferprop & BP_CLOSE))
+    if (ctx.buf->doc->lastLine)
+        all = ctx.buf->doc->lastLine->real_linenumber;
+    // if (ctx.buf->pagerSource && !(ctx.buf->bufferprop & BP_CLOSE))
     //     tmp = Sprintf("line %d col %d/%d", cur, col, len);
     // else
     tmp = Sprintf("line %d/%d (%d%%) col %d/%d", cur, all,
@@ -1815,7 +1811,7 @@ DEFUN(curlno, LINE_INFO, "Display current position in document")
             + 0.5),
         col, len);
     Strcat_charp(tmp, "  ");
-    Strcat_charp(tmp, wc_ces_to_charset_desc(Currentbuf->doc->charset));
+    Strcat_charp(tmp, wc_ces_to_charset_desc(ctx.buf->doc->charset));
 
     disp_message(tmp->ptr, FALSE);
 }
@@ -1828,10 +1824,10 @@ DEFUN(dispI, DISPLAY_IMAGE, "Restart loading and drawing of images")
         return;
     getRuntime()->displayImage = true;
     /*
-     * if (!(Currentbuf->type && is_html_type(Currentbuf->type)))
+     * if (!(ctx.buf->type && is_html_type(ctx.buf->type)))
      * return;
      */
-    Currentbuf->doc->image_flag = IMG_FLAG_AUTO;
+    ctx.buf->doc->image_flag = IMG_FLAG_AUTO;
 }
 
 DEFUN(stopI, STOP_IMAGE, "Stop loading and drawing of images")
@@ -1839,10 +1835,10 @@ DEFUN(stopI, STOP_IMAGE, "Stop loading and drawing of images")
     if (!getRuntime()->activeImage)
         return;
     /*
-     * if (!(Currentbuf->type && is_html_type(Currentbuf->type)))
+     * if (!(ctx.buf->type && is_html_type(ctx.buf->type)))
      * return;
      */
-    Currentbuf->doc->image_flag = IMG_FLAG_SKIP;
+    ctx.buf->doc->image_flag = IMG_FLAG_SKIP;
 }
 
 DEFUN(dispVer, VERSION, "Display the version of w3m")
@@ -1854,11 +1850,9 @@ DEFUN(wrapToggle, WRAP_TOGGLE, "Toggle wrapping mode in searches")
 {
     if (getRuntime()->WrapSearch) {
         getRuntime()->WrapSearch = FALSE;
-        /* FIXME: gettextize? */
         disp_message("Wrap search off", TRUE);
     } else {
         getRuntime()->WrapSearch = TRUE;
-        /* FIXME: gettextize? */
         disp_message("Wrap search on", TRUE);
     }
 }
