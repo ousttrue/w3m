@@ -22,6 +22,8 @@
 #include "local.h"
 #include "regex.h"
 
+#include <strings.h>
+
 #ifndef max
 #define max(a,b)        ((a) > (b) ? (a) : (b))
 #endif				/* not max */

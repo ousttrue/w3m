@@ -15,6 +15,7 @@
 #include <sys/wait.h>
 #endif
 #include <signal.h>
+#include <strings.h>
 
 #ifdef	__WATT32__
 #define	read(a,b,c)	read_s(a,b,c)

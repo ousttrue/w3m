@@ -13,6 +13,7 @@
 #include <unistd.h>
 #include "config.h"
 #include <string.h>
+#include <strings.h>
 #include <sys/wait.h>
 #ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>

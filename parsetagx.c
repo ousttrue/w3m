@@ -8,6 +8,8 @@
 
 #include "html.c"
 
+#include <strings.h>
+
 /* parse HTML tag */
 
 static int noConv(char *, void *);

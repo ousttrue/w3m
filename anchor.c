@@ -3,6 +3,8 @@
 #include "myctype.h"
 #include "regex.h"
 
+#include <strings.h>
+
 #define FIRST_ANCHOR_SIZE 30
 
 AnchorList *

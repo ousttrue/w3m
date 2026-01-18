@@ -5,6 +5,7 @@
 #include "myctype.h"
 #include <signal.h>
 #include <setjmp.h>
+#include <strings.h>
 
 static JMP_BUF AbortLoading;
 struct frameset *renderFrameSet = NULL;

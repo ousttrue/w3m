@@ -16,6 +16,7 @@
 #include <signal.h>
 #include <setjmp.h>
 #include <errno.h>
+#include <strings.h>
 
 #include <sys/stat.h>
 #ifdef __EMX__

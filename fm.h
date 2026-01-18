@@ -77,10 +77,6 @@
 #include "terms.h"
 #include "istream.h"
 
-#ifdef __EMX__
-#include <strings.h>		/* for bzero() and bcopy() */
-#endif
-
 #ifdef MAINPROGRAM
 #define global
 #define init(x) =(x)
