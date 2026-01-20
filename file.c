@@ -17,6 +17,7 @@
 
 #include "buffer.h"
 #include "cookie.h"
+#include "funcname1.h"
 #include "html.h"
 #include "parsetagx.h"
 #include "local.h"

@@ -6,6 +6,7 @@
 #include "buffer.h"
 #include "fm.h"
 #include "func.h"
+#include "funcname1.h"
 #include "menu.h"
 #include "myctype.h"
 #include "regex.h"
