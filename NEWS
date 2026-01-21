@@ -2,19 +2,19 @@ Unreleased
 
 * new features
   - Add commands to scroll current line to top/bottom (LINE_BOTTOM, LINE_TOP)
-
-* new features
   - Add command to change directory (CD)
   - Add keybinding to insert word under cursor when inserting text (C-])
   - Add vim-like smartcase option for search
   - Add keybinding to insert current search term (C-\)
   - Add option for CTRL Y to insert deleted text (rl_paste)
+  - Recognize aria-label for buttons
 
 * bug fixes
   - Fix version number in some place, e.g. make dist
   - Ignore C-i, C-l, C-s, C-z, C-\, C-], C-^ and C-_ key presses when
     inserting text
   - Show all link numbers
+  - Fix display of images in kitty terminal
 
 w3m 0.5.5 - 2025-08-20
 
