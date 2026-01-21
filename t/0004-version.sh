@@ -60,4 +60,9 @@ do
 	grep $Q -i "w3m $exp" $f || report $f
 done
 
+for f in NEWS
+do
+	grep $Q "w3m $exp" NEWS || report $f
+done
+
 exit ${err:-0}
