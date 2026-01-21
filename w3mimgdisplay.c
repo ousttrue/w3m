@@ -83,7 +83,7 @@ main(int argc, char **argv)
     w_op->set_background(w_op, background);
 
     while (fgets(buf, sizeof(buf), stdin) != NULL) {
-	if (!(isdigit(buf[0]) && buf[1] == ';')) {
+	if (!(isdigit((unsigned char)buf[0]) && buf[1] == ';')) {
 	    fputc('\n', stdout);
 	    fflush(stdout);
 	    continue;
@@ -220,7 +220,7 @@ GetOption(int argc, char **argv)
 void
 DrawImage(char *buf, int redraw)
 {
-    char *p = buf;
+    unsigned char *p = (unsigned char *)buf;
     int n = 0, x = 0, y = 0, w = 0, h = 0, sx = 0, sy = 0, sw = 0, sh = 0;
 
     if (!p)
@@ -292,7 +292,7 @@ DrawImage(char *buf, int redraw)
 	imageBuf[n].pixmap = NULL;
     }
 
-    if (w_op->load_image(w_op, &imageBuf[n], p, w, h) == 0)
+    if (w_op->load_image(w_op, &imageBuf[n], (char *)p, w, h) == 0)
 	imageBuf[n].pixmap = NULL;
 
   draw_image:
@@ -318,7 +318,7 @@ TermImage(void)
 void
 ClearImage(char *buf)
 {
-    char *p = buf;
+    unsigned char *p = (unsigned char *)buf;
     int x = 0, y = 0, w = 0, h = 0;
 
     if (!p)

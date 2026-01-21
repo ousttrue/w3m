@@ -99,12 +99,12 @@ conv_search_string(const char *str, wc_ces f_ces)
 static int
 ignorecase(const char *str)
 {
-    const char *c;
+    const unsigned char *c;
 
     if (!SmartCase)
 	return IgnoreCase;
 
-    for (c = str; *c; c++)
+    for (c = (const unsigned char *)str; *c; c++)
 	if (isupper(*c)) return 0;
     return 1;
 }
