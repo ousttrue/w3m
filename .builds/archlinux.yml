@@ -42,7 +42,6 @@ tasks:
         --enable-sslverify \
         --enable-unicode \
         --enable-w3mmailer \
-        --with-gc \
         --with-imagelib=imlib2 \
         --with-migemo="cmigemo -q -d /usr/share/cmigemo/utf-8/migemo-dict" \
         --with-ssl
@@ -71,7 +70,6 @@ tasks:
         --enable-sslverify \
         --enable-unicode \
         --enable-w3mmailer \
-        --with-gc \
         --with-imagelib=gdk-pixbuf \
         --with-migemo="cmigemo -q -d /usr/share/cmigemo/utf-8/migemo-dict" \
         --with-ssl
@@ -136,7 +134,6 @@ tasks:
         --enable-xface \
         --with-browser \
         --with-editor \
-        --with-gc \
         --with-imagelib=imlib2 \
         --with-mailer \
         --with-migemo="cmigemo -q -d /usr/share/cmigemo/utf-8/migemo-dict" \

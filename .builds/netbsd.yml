@@ -1,4 +1,4 @@
-image: openbsd/latest
+image: netbsd/latest
 sources:
   - https://git.sr.ht/~rkta/w3m
 packages:
@@ -9,40 +9,32 @@ triggers:
     condition: always
     to: mail@rkta.de
 environment:
-  OPTS: '-Werror -Wno-invalid-source-encoding'
+  OPTS: '-Werror'
+  LD_LIBRARY_PATH: '/usr/pkg/lib'
 tasks:
   - default: |
       cd w3m
       make distclean || :
-      ./configure
+      ./configure --with-gc=/usr/pkg
       make -j4
       test -x w3m
       cd t
       sh run
 
-  - debian: |
+  - netbsd: |
       cd w3m
       make distclean || :
-      ./configure \
-        --enable-alarm \
-        --enable-ansi_color \
+      ./configure --with-gc=/usr/pkg \
+        --disable-messagel10n \
+        --disable-help_cgi \
         --enable-color \
         --enable-cookie \
-        --enable-external_uri_loader \
-        --enable-gopher \
-        --enable-image \
-        --enable-ipv6 \
         --enable-m17n \
-        --enable-menu \
         --enable-mouse \
-        --enable-nls \
-        --enable-nntp \
-        --enable-sslverify \
         --enable-unicode \
-        --enable-w3mmailer \
-        --with-imagelib=imlib2 \
-        --with-migemo="cmigemo -q -d /usr/share/cmigemo/utf-8/migemo-dict" \
-        --with-ssl
+        --with-browser= \
+        --with-termlib \
+        --with-editor=vi
       make -j4
       test -x w3m
       cd t
@@ -51,26 +43,18 @@ tasks:
   - gdk-pixbuf: |
       cd w3m
       make distclean || :
-      ./configure \
-        --enable-alarm \
-        --enable-ansi_color \
+      ./configure --with-gc=/usr/pkg \
+        --disable-messagel10n \
+        --disable-help_cgi \
         --enable-color \
         --enable-cookie \
-        --enable-external_uri_loader \
-        --enable-gopher \
-        --enable-image \
-        --enable-ipv6 \
         --enable-m17n \
-        --enable-menu \
         --enable-mouse \
-        --enable-nls \
-        --enable-nntp \
-        --enable-sslverify \
         --enable-unicode \
-        --enable-w3mmailer \
-        --with-imagelib=gdk-pixbuf \
-        --with-migemo="cmigemo -q -d /usr/share/cmigemo/utf-8/migemo-dict" \
-        --with-ssl
+        --with-browser= \
+        --with-termlib \
+        --with-editor=vi \
+        --with-imagelib=gdk-pixbuf
       make -j4
       test -x w3m
       cd t
@@ -79,7 +63,7 @@ tasks:
   - disable: |
       cd w3m
       make distclean || :
-      ./configure \
+      ./configure --with-gc=/usr/pkg \
         --disable-alarm \
         --disable-color\
         --disable-cookie \
@@ -100,13 +84,3 @@ tasks:
         --without-ssl
       make -j4
       test -x w3m
-
-  - lto: |
-      export OPTS='-flto -Werror -Wno-invalid-source-encoding'
-      cd w3m
-      make distclean || :
-      ./configure
-      make -j4
-      test -x w3m
-      cd t
-      sh run

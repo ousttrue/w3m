@@ -3,8 +3,8 @@
 test ${PWD##*/} = "t" || cd t || exit 2
 make -C .. libwc/libwc.a myctype.o >/dev/null
 cc -Werror -g -O0 ${0##*/} ../myctype.o \
-	   -I.. -I../libwc -I/usr/local/include \
-	   -L.. -L../libwc -L/usr/local/lib -lwc -lgc ||
+	   -I.. -I../libwc -I/usr/local/include -I/usr/pkg/include \
+	   -L.. -L../libwc -L/usr/local/lib -L/usr/pkg/lib -lwc -lgc ||
 	exit $?
 ./a.out "$@" || exit $?
 rm -f ./a.out
