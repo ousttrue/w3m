@@ -9,8 +9,7 @@ triggers:
     condition: always
     to: mail@rkta.de
 environment:
-  OPTS: '-Werror'
-  LD_LIBRARY_PATH: '/usr/pkg/lib'
+  OPTS: '-Werror -Wl,-R/usr/pkg/lib'
 tasks:
   - default: |
       cd w3m
