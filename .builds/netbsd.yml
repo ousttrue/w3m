@@ -15,7 +15,7 @@ tasks:
   - default: |
       cd w3m
       make distclean || :
-      ./configure --with-gc=/usr/pkg
+      ./configure
       make -j4
       test -x w3m
       cd t
@@ -24,7 +24,7 @@ tasks:
   - netbsd: |
       cd w3m
       make distclean || :
-      ./configure --with-gc=/usr/pkg \
+      ./configure \
         --disable-messagel10n \
         --disable-help_cgi \
         --enable-color \
@@ -43,7 +43,7 @@ tasks:
   - gdk-pixbuf: |
       cd w3m
       make distclean || :
-      ./configure --with-gc=/usr/pkg \
+      ./configure \
         --disable-messagel10n \
         --disable-help_cgi \
         --enable-color \
@@ -63,7 +63,7 @@ tasks:
   - disable: |
       cd w3m
       make distclean || :
-      ./configure --with-gc=/usr/pkg \
+      ./configure \
         --disable-alarm \
         --disable-color\
         --disable-cookie \

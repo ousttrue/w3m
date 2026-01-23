@@ -10286,7 +10286,7 @@ fi
 
  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $with_gc" >&5
 printf "%s\n" "$with_gc" >&6; }
- test x"$with_gc" = xyes && with_gc="/usr /usr/local ${HOME}"
+ test x"$with_gc" = xyes && with_gc="/usr /usr/local /usr/pkg ${HOME}"
  unset ac_cv_header_gc_h
  ac_fn_c_check_header_compile "$LINENO" "gc.h" "ac_cv_header_gc_h" "$ac_includes_default"
 if test "x$ac_cv_header_gc_h" = xyes
