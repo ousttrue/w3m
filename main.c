@@ -1485,7 +1485,7 @@ do_dump(Buffer *buf)
 		    continue;
 		parseURL2(in_order[i]->url, &pu, baseURL(buf));
 		url = url_decode2(parsedURL2Str(&pu)->ptr, Currentbuf);
-		printf("[%d] %s\n", in_order[i]->hseq + 1, url);
+		printf("[%d] %s\n", in_order[i]->hseq + 1 - !!zeroBasedLinkNo, url);
 	    }
 	}
     }
