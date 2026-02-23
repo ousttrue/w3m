@@ -107,18 +107,19 @@ Hist *URLHist;
 extern int opt_cols;
 int enable_inline_image;
 int fold_pre;
-int on_target = 1;
-int prec_num = 0;
-int prev_key = -1;
-int show_params_p = 0;
 static char *session_bak;
 static char *session_file;
 static int add_download_list = FALSE;
 static int check_target = TRUE;
 static int deprecated;
 static int display_ok = FALSE;
+static int on_target = 1;
+static int prec_num = 0;
+static int prev_key = -1;
+static int show_params_p = 0;
 
 static int _strSession(char *sf);
+static int checkDownloadList(void);
 static int searchKeyNum(void);
 static void _followForm(int);
 static void _goLine(const char *);
@@ -136,7 +137,7 @@ static void intTrap(SIGNAL_ARG);
 static void keyPressEventProc(int c);
 static void moveTab(TabBuffer * t, TabBuffer * t2, int right);
 static void save_buffer_position(Buffer *buf);
-void set_buffer_environ(Buffer *);
+static void set_buffer_environ(Buffer *);
 
 static void
 fversion(FILE * f)
