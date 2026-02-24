@@ -298,9 +298,11 @@ If the \fBW3M_DIR\fP environment variable is set to a directory
 name, \fIw3m\fP will store its user files there instead of
 under the ~/.w3m directory.
 .SH FILES
-The default locations of some files are listed below. These
-locations can be altered via the \fBW3M_DIR\fP environment
-variable.
+The default locations of some files are listed below.
+If the environment variable
+\fBW3M_DIR\fP
+is set its value will be used instead of
+\f(CW~/.w3m\fP.
 .TP
 \f(CW~/.w3m/bookmark.html\fP
 default bookmark file
@@ -323,9 +325,6 @@ external viewer configuration file
 \f(CW~/.w3m/menu\fP
 user defined menu; overrides default menu
 .TP
-\f(CW~/.w3m/mime.types\fP
-MIME types file
-.TP
 \f(CW~/.w3m/mouse\fP
 user defined mouse settings
 .TP
@@ -334,6 +333,9 @@ password and username file
 .TP
 \f(CW~/.w3m/pre_form\fP
 contains predefined values to fill recurrent HTML forms
+.TP
+\f(CW~/.mime.types\fP
+MIME types file
 .\" .TP
 .\" .I $~/.w3m/urimethodmap
 .\" ???

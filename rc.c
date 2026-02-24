@@ -1365,16 +1365,16 @@ sync_with_option(void)
 void
 init_rc(void)
 {
-    char *rc;
+    const char *w3m_dir;
     int i;
     FILE *f;
 
     if (rc_dir != NULL)
 	goto open_rc;
 
-    if (!(rc =  getenv("W3M_DIR")) || !*rc)
-	rc = RC_DIR;
-    rc_dir = expandPath(allocStr(rc, -1));
+    if (!(w3m_dir =  getenv("W3M_DIR")) || !*w3m_dir)
+	w3m_dir = RC_DIR;
+    rc_dir = expandPath(allocStr(w3m_dir, -1));
 
     i = strlen(rc_dir);
     if (i > 1 && rc_dir[i - 1] == '/')
@@ -1392,6 +1392,23 @@ init_rc(void)
 
     if (!config_file)
 	config_file = rcFile(CONFIG_FILE);
+    if (!passwd_file)
+	passwd_file = Strnew_m_charp(w3m_dir,"/","passwd", NULL)->ptr;
+    if (!pre_form_file)
+	pre_form_file = Strnew_m_charp(w3m_dir,"/","pre_form", NULL)->ptr;
+    if (!siteconf_file)
+	siteconf_file = Strnew_m_charp(w3m_dir,"/","siteconf", NULL)->ptr;
+    if (!mailcap_files)
+	mailcap_files = Strnew_m_charp(w3m_dir,"/","mailcap", ",",
+				       SYS_MAILCAP, NULL)->ptr;
+    if (!mimetypes_files)
+	mimetypes_files = Strnew_m_charp("~/.mime.types", ",",
+					 SYS_MIMETYPES, NULL)->ptr;
+#ifdef USE_EXTERNAL_URI_LOADER
+    if (!urimethodmap_files)
+	urimethodmap_files = Strnew_m_charp(w3m_dir,"/","urimethodmap", ",",
+					    SYS_URIMETHODMAP, NULL)->ptr;
+#endif
 
     create_option_search_table();
 

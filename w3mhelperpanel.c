@@ -205,7 +205,10 @@ main(void)
     }
 
     mode = tag_get_value(cgiarg, "mode");
-    mailcapfile = Strnew_charp(expandPath(USER_MAILCAP));
+    if (!(p = getenv("W3M_DIR")))
+	p = "~/.w3m";
+    mailcapfile = Strnew_charp(expandPath(Strnew_m_charp(p, "/mailcap",
+							 NULL)->ptr));
     if (mode && !strcmp(mode, "edit")) {
 	char *referer;
 	/* check if I can edit my mailcap */

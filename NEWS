@@ -1,3 +1,8 @@
+Unreleased
+
+* bug fixes
+  - Respect W3M_DIR when initializing the w3m config
+
 w3m 0.5.6 - 2026-01-23
 
 * new features

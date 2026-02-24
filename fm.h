@@ -960,9 +960,9 @@ global char *ExtBrowser8 init(NULL);
 global char *ExtBrowser9 init(NULL);
 global int BackgroundExtViewer init(TRUE);
 global int disable_secret_security_check init(FALSE);
-global char *passwd_file init(PASSWD_FILE);
-global char *pre_form_file init(PRE_FORM_FILE);
-global char *siteconf_file init(SITECONF_FILE);
+global char *passwd_file init(NULL);
+global char *pre_form_file init(NULL);
+global char *siteconf_file init(NULL);
 global char *ftppasswd init(NULL);
 global int ftppass_hostnamegen init(TRUE);
 global int do_download init(FALSE);
@@ -1008,10 +1008,10 @@ global int migemo_active init(0);
 global char *migemo_command init(DEF_MIGEMO_COMMAND);
 #endif				/* USE_MIGEMO */
 
-global char *mailcap_files init(USER_MAILCAP ", " SYS_MAILCAP);
-global char *mimetypes_files init(USER_MIMETYPES ", " SYS_MIMETYPES);
+global char *mailcap_files init(NULL);
+global char *mimetypes_files init(NULL);
 #ifdef USE_EXTERNAL_URI_LOADER
-global char *urimethodmap_files init(USER_URIMETHODMAP ", " SYS_URIMETHODMAP);
+global char *urimethodmap_files init(NULL);
 #endif
 
 global TextList *fileToDelete;
