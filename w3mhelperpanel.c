@@ -13,13 +13,13 @@
 
 #if LANG == JA
 /* FIXME: gettextize here */
-#define MSG_TITLE		"Ё╟иТ╔с╔Е║╪╔╒╓нйт╫╦"
-#define MSG_NEW_ENTRY		"©╥╣╛епо©"
-#define MSG_TYPE		"╔г║╪╔©╔©╔╓╔в"
-#define MSG_COMMAND		"Ё╟иТ╔Ё╔ч╔С╔и"
-#define MSG_REGISTER		"епо©"
-#define MSG_DELETE		"╨О╫Э"
-#define MSG_DOIT		"╪б╧т"
+#define MSG_TITLE		"бЁб╟ц┴ц╢б╔ц⌠б╔ц╔б║б╪б╔б╒б╓ц▌ц┼ц■б╫б╦"
+#define MSG_NEW_ENTRY		"б©б╥б╣б╛ц┘ц░ц▐б©"
+#define MSG_TYPE		"б╔ц┤б║б╪б╔б©б╔б©б╔б╓б╔ц≈"
+#define MSG_COMMAND		"бЁб╟ц┴ц╢б╔бЁб╔ц·б╔цЁб╔ц┴"
+#define MSG_REGISTER		"ц┘ц░ц▐б©"
+#define MSG_DELETE		"б╨ц╞б╫ц╪"
+#define MSG_DOIT		"б╪ц┌б╧ц■"
 #else				/* LANG != JA */
 #define MSG_TITLE		"External Viewers Setup"
 #define MSG_NEW_ENTRY		"New Entry"
