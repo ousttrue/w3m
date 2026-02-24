@@ -1414,46 +1414,36 @@ init_rc(void)
 void
 init_tmp(void)
 {
-    int i;
+    int n;
 
-    if (param_tmp_dir)
+    if (param_tmp_dir && *param_tmp_dir)
 	tmp_dir = param_tmp_dir;
-    if (*tmp_dir == '\0')
+    else
 	tmp_dir = rc_dir;
 
-    if (strcmp(tmp_dir, rc_dir) == 0) {
-	if (no_rc_dir)
-	    goto tmp_dir_err;
-	return;
-    }
-
     tmp_dir = expandPath(tmp_dir);
-    i = strlen(tmp_dir);
-    if (i > 1 && tmp_dir[i - 1] == '/')
-	tmp_dir[i - 1] = '\0';
-    if (do_recursive_mkdir(tmp_dir) == -1)
-	goto tmp_dir_err;
+    if ((n = strlen(tmp_dir)) && tmp_dir[n - 1] == '/')
+	tmp_dir[n - 1] = '\0';
+    if (do_recursive_mkdir(tmp_dir))
+	goto err;
     return;
 
-  tmp_dir_err:
-#ifdef HAVE_MKDTEMP
-    if (mkd_tmp_dir) {
-	tmp_dir = mkd_tmp_dir;
-	return;
-    }
-#endif
+err:
     if (((tmp_dir = getenv("TMPDIR")) == NULL || *tmp_dir == '\0') &&
 	((tmp_dir = getenv("TMP")) == NULL || *tmp_dir == '\0') &&
 	((tmp_dir = getenv("TEMP")) == NULL || *tmp_dir == '\0'))
 	tmp_dir = "/tmp";
 #ifdef HAVE_MKDTEMP
+    if (mkd_tmp_dir) {	/* init_tmp is called when the user changes options */
+	tmp_dir = mkd_tmp_dir;
+	return;
+    }
     tmp_dir = mkdtemp(Strnew_m_charp(tmp_dir, "/w3m-XXXXXX", NULL)->ptr);
     if (tmp_dir)
 	mkd_tmp_dir = tmp_dir;
     else
 	tmp_dir = rc_dir;
 #endif
-    return;
 }
 
 
