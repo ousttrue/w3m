@@ -1365,18 +1365,16 @@ sync_with_option(void)
 void
 init_rc(void)
 {
+    char *rc;
     int i;
     FILE *f;
 
     if (rc_dir != NULL)
 	goto open_rc;
 
-    rc_dir = allocStr(getenv("W3M_DIR"), -1);
-    if (rc_dir == NULL || *rc_dir == '\0')
-	rc_dir = allocStr(RC_DIR, -1);
-    if (rc_dir == NULL || *rc_dir == '\0')
-	goto rc_dir_err;
-    rc_dir = expandPath(rc_dir);
+    if (!(rc =  getenv("W3M_DIR")) || !*rc)
+	rc = RC_DIR;
+    rc_dir = expandPath(allocStr(rc, -1));
 
     i = strlen(rc_dir);
     if (i > 1 && rc_dir[i - 1] == '/')
@@ -1390,12 +1388,9 @@ init_rc(void)
 
     tmp_dir = rc_dir;
 
-    if (do_recursive_mkdir(rc_dir) == -1)
-	goto rc_dir_err;
+    no_rc_dir = !!do_recursive_mkdir(rc_dir);
 
-    no_rc_dir = FALSE;
-
-    if (config_file == NULL)
+    if (!config_file)
 	config_file = rcFile(CONFIG_FILE);
 
     create_option_search_table();
@@ -1414,12 +1409,6 @@ init_rc(void)
 	interpret_rc(f);
 	fclose(f);
     }
-    return;
-
-  rc_dir_err:
-    no_rc_dir = TRUE;
-    create_option_search_table();
-    goto open_rc;
 }
 
 void
