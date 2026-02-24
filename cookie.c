@@ -640,9 +640,6 @@ save_cookies(void)
     struct cookie *p;
     FILE *fp;
 
-    if (no_rc_dir)
-	return;
-
     check_expired_cookies();
     sync_cookies();
 

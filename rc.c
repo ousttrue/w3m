@@ -1388,7 +1388,7 @@ init_rc(void)
 
     tmp_dir = rc_dir;
 
-    no_rc_dir = !!do_recursive_mkdir(rc_dir);
+    do_recursive_mkdir(rc_dir);
 
     if (!config_file)
 	config_file = rcFile(CONFIG_FILE);

@@ -1069,7 +1069,6 @@ extern int symbol_width0;
 #define N_GRAPH_SYMBOL 32
 #define N_SYMBOL (N_GRAPH_SYMBOL + 14)
 #define SYMBOL_BASE 0x20
-global int no_rc_dir init(FALSE);
 global char *rc_dir init(NULL);
 global char *tmp_dir;
 global char *param_tmp_dir init(NULL);
