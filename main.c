@@ -54,13 +54,6 @@ WSADATA WSAData;
 
 #define DSTR_LEN	256
 
-Hist *LoadHist;
-Hist *SaveHist;
-Hist *URLHist;
-Hist *ShellHist;
-Hist *TextHist;
-Hist *DictHist;
-
 typedef struct _Event {
     int cmd;
     void *data;
@@ -99,48 +92,51 @@ JMP_BUF IntReturn;
 _JBTYPE IntReturn[_JBLEN];
 #endif /* __MINGW32_VERSION */
 
-static void delBuffer(Buffer *buf);
-static void cmd_loadfile(char *path);
-static void cmd_loadURL(char *url, ParsedURL *current, char *referer,
-			FormList *request);
-static void cmd_loadBuffer(Buffer *buf, int prop, int linkid);
-static void keyPressEventProc(int c);
-int show_params_p = 0;
-
-static int display_ok = FALSE;
-static void do_dump(Buffer *);
-int prec_num = 0;
-int prev_key = -1;
-int on_target = 1;
-static int add_download_list = FALSE;
-static char *session_file;
-static char *session_bak;
-static int _strSession(char *sf);
-
-void set_buffer_environ(Buffer *);
-static void save_buffer_position(Buffer *buf);
-
-static void _followForm(int);
-static void _goLine(const char *);
-static void _newT(void);
-static void followTab(TabBuffer * tab);
-static void moveTab(TabBuffer * t, TabBuffer * t2, int right);
-static void _nextA(int);
-static void _prevA(int);
-static int check_target = TRUE;
 #define PREC_NUM (prec_num ? prec_num : 1)
 #define PREC_LIMIT 10000
-static int searchKeyNum(void);
-
-static void intTrap(SIGNAL_ARG);
 
 #define help() fusage(stdout, 0)
 #define usage() fusage(stderr, 1)
 
-int enable_inline_image;
+Hist *DictHist;
+Hist *LoadHist;
+Hist *SaveHist;
+Hist *ShellHist;
+Hist *TextHist;
+Hist *URLHist;
 extern int opt_cols;
+int enable_inline_image;
 int fold_pre;
+int on_target = 1;
+int prec_num = 0;
+int prev_key = -1;
+int show_params_p = 0;
+static char *session_bak;
+static char *session_file;
+static int add_download_list = FALSE;
+static int check_target = TRUE;
 static int deprecated;
+static int display_ok = FALSE;
+
+static int _strSession(char *sf);
+static int searchKeyNum(void);
+static void _followForm(int);
+static void _goLine(const char *);
+static void _newT(void);
+static void _nextA(int);
+static void _prevA(int);
+static void cmd_loadBuffer(Buffer *buf, int prop, int linkid);
+static void cmd_loadURL(char *url, ParsedURL *current, char *referer,
+			FormList *request);
+static void cmd_loadfile(char *path);
+static void delBuffer(Buffer *buf);
+static void do_dump(Buffer *);
+static void followTab(TabBuffer * tab);
+static void intTrap(SIGNAL_ARG);
+static void keyPressEventProc(int c);
+static void moveTab(TabBuffer * t, TabBuffer * t2, int right);
+static void save_buffer_position(Buffer *buf);
+void set_buffer_environ(Buffer *);
 
 static void
 fversion(FILE * f)
