@@ -132,6 +132,7 @@ static void cmd_loadURL(char *url, ParsedURL *current, char *referer,
 static void cmd_loadfile(char *path);
 static void delBuffer(Buffer *buf);
 static void do_dump(Buffer *);
+static void escdmap(char c);
 static void followTab(TabBuffer * tab);
 static void intTrap(SIGNAL_ARG);
 static void keyPressEventProc(int c);
@@ -1564,7 +1565,7 @@ DEFUN(escbmap, ESCBMAP, "ESC [ map")
 	escKeyProc(c, K_ESCB, EscBKeymap);
 }
 
-void
+static void
 escdmap(char c)
 {
     int d;
@@ -1662,7 +1663,7 @@ repBuffer(Buffer *oldbuf, Buffer *buf)
 }
 
 
-void
+static void
 intTrap(SIGNAL_ARG)
 {				/* Interrupt catcher */
     LONGJMP(IntReturn, 0);

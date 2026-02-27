@@ -360,7 +360,6 @@ extern int backwardSearch(Buffer *buf, const char *str);
 extern void pcmap(void);
 extern void escmap(void);
 extern void escbmap(void);
-extern void escdmap(char c);
 extern void multimap(void);
 extern Str unescape_spaces(Str s);
 #ifdef USE_HISTORY
