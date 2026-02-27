@@ -20,7 +20,6 @@ do
 		pass=$((pass + 1))
 	else
 		fail=$((fail + 1))
-		exit 1
 	fi
 	total=$((total + 1))
 done
