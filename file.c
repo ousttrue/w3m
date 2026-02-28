@@ -9,6 +9,7 @@
 #include "local.h"
 #include "myctype.h"
 #include "parsetagx.h"
+#include "rc.h"
 
 #include <fcntl.h>
 #include <math.h>

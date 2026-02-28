@@ -829,6 +829,21 @@ struct param_section sections[] = {
 };
 
 static Str to_str(struct param_ptr *p);
+static char * etcFile(const char *base);
+static int compare_table(struct rc_search_table *a, struct rc_search_table *b);
+static int do_recursive_mkdir(const char *dir);
+static int set_param(const char *name, char *value);
+static struct param_ptr * search_param(const char *name);
+static struct siteconf_rec *newSiteconfRec(void);
+static void create_option_search_table(void);
+static void init_tmp(void);
+static void interpret_rc(FILE * f);
+static void loadSiteconf(void);
+static void parse_proxy(void);
+
+#ifdef USE_COLOR
+static int str_to_color(const char *value);
+#endif	/* USE_COLOR */
 
 static int
 compare_table(struct rc_search_table *a, struct rc_search_table *b)
@@ -1303,8 +1318,6 @@ do_recursive_mkdir(const char *dir)
     return 0;
 }
 
-static void loadSiteconf(void);
-
 void
 sync_with_option(void)
 {
@@ -1744,7 +1757,6 @@ struct siteconf_rec {
 #define SCONF_CLEAR(ent, f) ((ent)->mask[(f)>>3] &= ~(1U<<((f)&7)))
 
 static struct siteconf_rec *siteconf_head = NULL;
-static struct siteconf_rec *newSiteconfRec(void);
 
 static struct siteconf_rec *
 newSiteconfRec(void)

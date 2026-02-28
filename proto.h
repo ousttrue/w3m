@@ -574,19 +574,6 @@ extern Str decodeMIME0(Str orgstr);
 #define decodeWord(ow,charset) decodeWord0(ow)
 #define decodeMIME(orgstr,charset) decodeMIME0(orgstr)
 #endif
-extern int set_param_option(char *option);
-extern char *get_param_option(char *name);
-extern void init_rc(void);
-extern void init_tmp(void);
-extern Buffer *load_option_panel(void);
-extern void panel_set_option(struct parsed_tagarg *);
-extern void sync_with_option(void);
-extern char *rcFile(char *base);
-extern char *etcFile(const char *base);
-extern char *confFile(const char *base);
-extern char *auxbinFile(const char *base);
-extern char *helpFile(const char *base);
-extern void *querySiteconf(ParsedURL *query_pu, int field);
 extern Str localCookie(void);
 extern Str loadLocalDir(char *dirname);
 extern void set_environ(const char *var, const char *value);

@@ -5,6 +5,7 @@
 #include "fm.h"
 #include "html.h"
 #include "myctype.h"
+#include "rc.h"
 #include "regex.h"
 #include "version.h"
 

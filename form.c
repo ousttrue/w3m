@@ -8,6 +8,7 @@
 #include "myctype.h"
 #include "parsetag.h"
 #include "parsetagx.h"
+#include "rc.h"
 #include "regex.h"
 #include "util.h"
 
