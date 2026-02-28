@@ -945,7 +945,7 @@ mSusp(char c)
     return (MENU_NOTHING);
 }
 
-static const char *SearchString = NULL;
+static const char *prev_search = NULL;
 
 int (*menuSearchRoutine) (Menu *, const char *, int);
 
@@ -974,10 +974,10 @@ menu_search_forward(Menu *menu, int from)
     int found;
     str = inputStrHist("Forward: ", NULL, TextHist);
     if (str != NULL && *str == '\0')
-	str = SearchString;
+	str = prev_search;
     if (str == NULL || *str == '\0')
 	return -1;
-    SearchString = str;
+    prev_search = str;
     str = conv_search_string(str, DisplayCharset);
     menuSearchRoutine = menuForwardSearch;
     found = menuForwardSearch(menu, str, from + 1);
@@ -1024,10 +1024,10 @@ menu_search_backward(Menu *menu, int from)
     int found;
     str = inputStrHist("Backward: ", NULL, TextHist);
     if (str != NULL && *str == '\0')
-	str = SearchString;
+	str = prev_search;
     if (str == NULL || *str == '\0')
 	return -1;
-    SearchString = str;
+    prev_search = str;
     str = conv_search_string(str, DisplayCharset);
     menuSearchRoutine = menuBackwardSearch;
     found = menuBackwardSearch(menu, str, from - 1);
@@ -1061,7 +1061,7 @@ menu_search_next_previous(Menu *menu, int from, int reverse)
 	disp_message("No previous regular expression", TRUE);
 	return -1;
     }
-    str = conv_search_string(SearchString, DisplayCharset);
+    str = conv_search_string(prev_search, DisplayCharset);
     if (reverse != 0)
 	reverse = 1;
     if (menuSearchRoutine == menuBackwardSearch)
