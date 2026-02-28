@@ -52,8 +52,6 @@ extern int do_getch(void);
 WSADATA WSAData;
 #endif
 
-#define DSTR_LEN	256
-
 typedef struct _Event {
     int cmd;
     void *data;
