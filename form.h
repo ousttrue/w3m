@@ -1,11 +1,16 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 /*
- * HTML forms 
+ * HTML forms
  */
 #ifndef FORM_H
 #define FORM_H
 
 #include "Str.h"
+#include "config.h"
+
+#ifdef USE_M17N
+#include "wc_types.h"
+#endif
 
 #define FORM_UNKNOWN        -1
 #define FORM_INPUT_TEXT     0

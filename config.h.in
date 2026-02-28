@@ -1,5 +1,8 @@
 #ifndef CONFIG_H_SEEN
 #define CONFIG_H_SEEN
+
+#include <setjmp.h>
+
 /*
  * Configuration for w3m
  */

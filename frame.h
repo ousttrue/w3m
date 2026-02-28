@@ -3,6 +3,8 @@
  * frame support
  */
 
+#include "html.h"
+
 struct frame_element {
     char attr;
 #define	F_UNLOADED	0x00

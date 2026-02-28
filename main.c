@@ -2,6 +2,7 @@
 #define MAINPROGRAM
 #include <errno.h>
 #include "fm.h"
+#include "form.h"
 #include "version.h"
 #include <stdio.h>
 #include <signal.h>

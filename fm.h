@@ -15,6 +15,7 @@
 #define _GNU_SOURCE		/* strcasestr() */
 #endif
 
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
