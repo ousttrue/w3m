@@ -1,10 +1,21 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
+#include "search.h"
+
 #include "buffer.h"
+#include "config.h"
 #include "fm.h"
 #include "regex.h"
 
+#ifdef USE_M17N
+#include "wc.h"
+#include "wc_types.h"
+#include "wtf.h"
+#endif
+
 #include <ctype.h>
 #include <errno.h>
+
+const char *SearchString;
 
 static void
 set_mark(Line *l, int pos, int epos)

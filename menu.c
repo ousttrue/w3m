@@ -11,6 +11,7 @@
 #include "myctype.h"
 #include "linein.h"
 #include "regex.h"
+#include "search.h"
 
 #include <stdio.h>
 

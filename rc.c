@@ -9,6 +9,7 @@
 #include "myctype.h"
 #include "parsetag.h"
 #include "regex.h"
+#include "search.h"
 #include "version.h"
 
 #include <errno.h>

@@ -10,6 +10,7 @@
 #include "myctype.h"
 #include "rc.h"
 #include "regex.h"
+#include "search.h"
 #include "terms.h"
 #include "util.h"
 #include "version.h"
@@ -103,7 +104,6 @@ Hist *SaveHist;
 Hist *ShellHist;
 Hist *TextHist;
 Hist *URLHist;
-const char *SearchString = NULL;
 extern int opt_cols;
 int (*searchRoutine) (Buffer *, const char *);
 int enable_inline_image;

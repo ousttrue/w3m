@@ -8,6 +8,7 @@
 #include "fm.h"
 #include "indep.h"
 #include "local.h"
+#include "search.h"
 #include "terms.h"
 
 #ifdef USE_M17N
@@ -679,8 +680,7 @@ _noop(void)
     return;
 }
 
-extern const char *SearchString; /* TODO(rkta): No forward decl here, but menu.c has it also as static. */
-void
+static void
 _isrch(void)
 {
     ins_char(Strnew_charp(SearchString));
