@@ -10,25 +10,14 @@
 #ifndef FM_H
 #define FM_H
 
-
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE		/* strcasestr() */
 #endif
 
-#include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <limits.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include "config.h"
-#include "history.h"
+#include "config.h"	/* At top for defines below */
 
 #ifdef USE_MENU
-#define MENU_SELECT
+#define MENU_SELECT	/* XXX: Why not just USE_MENU? */
 #define MENU_MAP
 #endif				/* USE_MENU */
 
@@ -37,18 +26,39 @@
 #undef USE_BG_COLOR
 #endif
 
-#include "ctrlcode.h"
-#include "html.h"
-#include <gc/gc.h>
 #include "Str.h"
+#include "ctrlcode.h"
+#include "form.h"
+#include "frame.h"
+#include "func.h"
+#include "history.h"
+#include "html.h"
+#include "istream.h"
+#include "menu.h"
+#include "parsetag.h"
+#include "parsetagx.h"
+#include "terms.h"
+#include "textlist.h"
+
+#include <gc/gc.h>
+#include <limits.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+#ifdef HAVE_LOCALE_H
+#include <locale.h>
+#endif
+
 #ifdef USE_M17N
 #include "wc.h"
 #include "wtf.h"
 #endif
 
-#ifdef HAVE_LOCALE_H
-#include <locale.h>
-#endif
 #if !HAVE_SETLOCALE
 #define setlocale(category, locale)	/* empty */
 #endif
@@ -66,16 +76,6 @@
 # define N_(Text) Text
 # define gettext(Text) Text
 #endif
-
-#include "form.h"
-#include "frame.h"
-#include "parsetag.h"
-#include "parsetagx.h"
-#include "func.h"
-#include "menu.h"
-#include "textlist.h"
-#include "terms.h"
-#include "istream.h"
 
 #ifdef MAINPROGRAM
 #define global
