@@ -3,15 +3,17 @@
 #define IO_STREAM_H
 
 #include "indep.h"
+
+#include <fcntl.h>
 #include <stdio.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
 #ifdef USE_SSL
 #include <openssl/bio.h>
 #include <openssl/x509.h>
 #include <openssl/ssl.h>
 #endif
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 
 struct stream_buffer {
     unsigned char *buf;

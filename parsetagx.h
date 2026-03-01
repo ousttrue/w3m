@@ -2,8 +2,8 @@
 #ifndef PARSETAGX_H
 #define PARSETAGX_H
 
-#include "html.h"
 #include "Str.h"
+#include "html.h"
 
 /* Parsed Tag structure */
 

@@ -1,8 +1,8 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #ifndef INDEP_H
 #define INDEP_H
-#include "alloc.h"
 #include "Str.h"
+#include "alloc.h"
 #include "config.h"
 
 #ifndef TRUE

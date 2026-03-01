@@ -1,12 +1,13 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
-
 #include "fm.h"
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <signal.h>
 #include <errno.h>
 #include <strings.h>
 #include <unistd.h>
+
 #ifdef HAVE_WAITPID
 #include <sys/wait.h>
 #endif

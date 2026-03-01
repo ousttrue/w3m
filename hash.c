@@ -1,7 +1,8 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
-#include <string.h>
 #include "hash.h"
+
 #include <gc/gc.h>
+#include <string.h>
 
 static unsigned int
 hashfunc(const char *s)

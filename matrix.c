@@ -32,9 +32,10 @@
 **
 ***************************************************************************/
 
-#include "config.h"
 #include "matrix.h"
+
 #include "alloc.h"
+#include "config.h"
 
 /* 
  * Macros from "fm.h".

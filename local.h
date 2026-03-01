@@ -6,7 +6,9 @@
 #ifndef LOCAL_H
 #define LOCAL_H
 
+#include <sys/stat.h>
 #include <sys/types.h>
+
 #ifdef HAVE_DIRENT_H
 #include <dirent.h>
 typedef struct dirent Directory;
@@ -14,7 +16,6 @@ typedef struct dirent Directory;
 #include <sys/dir.h>
 typedef struct direct Directory;
 #endif				/* not HAVE_DIRENT_H */
-#include <sys/stat.h>
 
 #ifndef S_IFMT
 #define S_IFMT  0170000

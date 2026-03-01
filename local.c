@@ -1,22 +1,25 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
+#include "local.h"
+
 #include "fm.h"
+#include "hash.h"
 #include "version.h"
 
-#include <string.h>
+#include <errno.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/types.h>
+#include <string.h>
 #include <sys/stat.h>
-#include <signal.h>
-#include <errno.h>
+#include <sys/types.h>
+
 #ifdef HAVE_READLINK
 #include <unistd.h>
 #endif				/* HAVE_READLINK */
+
 #ifdef __EMX__
 #include <limits.h>		/* _MAX_PATH ? */
 #endif				/* __EMX__ */
-#include "local.h"
-#include "hash.h"
 
 #ifdef __MINGW32_VERSION
 #include <winsock.h>

@@ -2,6 +2,8 @@
 #ifndef TERMS_H
 #define TERMS_H
 
+#include "config.h"
+
 extern int LINES, COLS;
 #if defined(__CYGWIN__)
 extern int LASTLINE;

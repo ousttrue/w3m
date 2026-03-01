@@ -1,30 +1,29 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
-#include "display.h"
-#include "fm.h"
-#include <sys/types.h>
-#include "myctype.h"
-#include <signal.h>
-#include <setjmp.h>
-#if defined(HAVE_WAITPID)
-#include <sys/wait.h>
-#endif
-#include <stdio.h>
-#include <time.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <utime.h>
-/* foo */
-
 #include "buffer.h"
 #include "cookie.h"
+#include "display.h"
+#include "fm.h"
 #include "funcname1.h"
 #include "html.h"
 #include "linein.h"
 #include "local.h"
+#include "myctype.h"
 #include "parsetagx.h"
 #include "regex.h"
 
+#include <fcntl.h>
+#include <setjmp.h>
+#include <signal.h>
+#include <stdio.h>
 #include <strings.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <time.h>
+#include <utime.h>
+
+#if defined(HAVE_WAITPID)
+#include <sys/wait.h>
+#endif
 
 #ifndef max
 #define max(a,b)        ((a) > (b) ? (a) : (b))

@@ -1,17 +1,20 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
-#include "fm.h"
+#include "fm.h"	/* At top for strcasestr() */
+#include "indep.h"
+
+#include "Str.h"
+#include "entity.h"
+#include "myctype.h"
+
+#include <gc/gc.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <sys/param.h>
+#include <sys/types.h>
+
 #ifndef __MINGW32_VERSION
 #include <pwd.h>
 #endif /* __MINGW32_VERSION */
-#include <sys/param.h>
-#include <sys/types.h>
-#include <stdlib.h>
-#include "indep.h"
-#include "Str.h"
-#include <gc/gc.h>
-#include "myctype.h"
-#include "entity.h"
 
 unsigned char QUOTE_MAP[0x100] = {
     /* NUL SOH STX ETX EOT ENQ ACK BEL  BS  HT  LF  VT  FF  CR  SO  SI */
@@ -286,7 +289,7 @@ strcasestr(const char *s1, const char *s2)
     }
     return 0;
 }
-#endif
+#endif		/* HAVE_STRCASESTR */
 
 int
 strmatchlen(const char *s1, const char *s2, int maxlen)

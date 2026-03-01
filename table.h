@@ -1,4 +1,6 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
+#include "Str.h"
+
 #if (defined(MESCHACH) && !defined(MATRIX))
 #define MATRIX
 #endif				/* (defined(MESCHACH) && !defined(MATRIX)) */
@@ -10,8 +12,6 @@
 #include "matrix.h"
 #endif				/* not MESCHACH */
 #endif				/* MATRIX */
-
-#include "Str.h"
 
 #define MAX_TABLE 20		/* maximum nest level of table */
 #define MAX_TABLE_N_LIMIT 2000

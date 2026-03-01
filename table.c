@@ -2,17 +2,17 @@
 /* 
  * HTML table
  */
-#include <sys/types.h>
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
+#include "Str.h"
 #include "fm.h"
 #include "html.h"
-#include "parsetagx.h"
-#include "Str.h"
 #include "myctype.h"
+#include "parsetagx.h"
 
+#include <math.h>
+#include <stdio.h>
+#include <string.h>
 #include <strings.h>
+#include <sys/types.h>
 
 int symbol_width = 0;
 int symbol_width0 = 0;

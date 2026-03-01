@@ -1,12 +1,12 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
-#include "fm.h"
-#include "myctype.h"
-#include "indep.h"
-#include "Str.h"
 #include "parsetagx.h"
-#include "hash.h"
 
+#include "Str.h"
+#include "fm.h"
+#include "hash.h"
 #include "html.c"
+#include "indep.h"
+#include "myctype.h"
 
 #include <strings.h>
 

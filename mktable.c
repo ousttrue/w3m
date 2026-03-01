@@ -1,12 +1,12 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
-#include <stdio.h>
-#include <stdlib.h>
-#include "myctype.h"
+#include "Str.h"
 #include "config.h"
 #include "hash.h"
 #include "myctype.h"
-#include "Str.h"
+
 #include <gc/gc.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 /* *INDENT-OFF* */
 defhash(HashItem_ss *, int, hss_i)

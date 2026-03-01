@@ -13,16 +13,18 @@
  * limited to warranty of fitness of purpose, or merchantability, or
  * results obtained from use of this software.
  */
-#include <stdio.h>
-#include <stdlib.h>
+#include "Str.h"
+#include "myctype.h"
+
 #include <gc/gc.h>
 #include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+
 #ifdef __EMX__			/* or include "fm.h" for HAVE_BCOPY? */
 #include <strings.h>
 #endif
-#include "Str.h"
-#include "myctype.h"
 
 #define INITIAL_STR_SIZE 32
 #define STR_SIZE_MAX (STR_LEN_MAX + 1)

@@ -2,13 +2,14 @@
 #ifndef _HTML_H
 #define _HTML_H
 #include "config.h"
+
+#include <time.h>
+
 #ifdef USE_SSL
 #include <openssl/bio.h>
 #include <openssl/x509.h>
 #include <openssl/ssl.h>
 #endif				/* USE_SSL */
-
-#include <time.h>
 
 #define StrUFgets(f) StrISgets((f)->stream)
 #define StrmyUFgets(f) StrmyISgets((f)->stream)

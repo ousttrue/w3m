@@ -2,16 +2,16 @@
 /*
  * w3m func.c
  */
-
-#include <stdio.h>
+#include "func.h"
 
 #include "config.h"
 #include "cookie.h"
 #include "fm.h"
-#include "func.h"
 #include "myctype.h"
-#include "regex.h"
 #include "rc.h"
+#include "regex.h"
+
+#include <stdio.h>
 
 #ifndef USE_COOKIE
 #define cooLst nulcmd

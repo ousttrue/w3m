@@ -2,7 +2,9 @@
 #ifndef TEXTLIST_H
 #define TEXTLIST_H
 #include "Str.h"
+
 #include <limits.h>
+
 #define GENERAL_LIST_MAX (INT_MAX / 32)
 
 /* General doubly linked list */

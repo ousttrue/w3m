@@ -3,26 +3,33 @@
  * An original curses library for EUC-kanji by Akinori ITO,     December 1989
  * revised by Akinori ITO, January 1995
  */
-#include <stdio.h>
-#include <signal.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
+#include "terms.h"
+
+#include "fm.h"
+#include "myctype.h"
+
 #include <errno.h>
-#include <sys/time.h>
-#include <unistd.h>
-#include "config.h"
+#include <fcntl.h>
+#include <signal.h>
+#include <stdio.h>
 #include <string.h>
 #include <strings.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/types.h>
 #include <sys/wait.h>
+#include <unistd.h>
+
 #ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+
 #ifndef __MINGW32_VERSION
 #include <sys/ioctl.h>
 #else
 #include <winsock.h>
 #endif /* __MINGW32_VERSION */
+
 #ifdef USE_MOUSE
 #ifdef USE_GPM
 #include <gpm.h>
@@ -40,7 +47,6 @@ int (*sysm_handler) (int x, int y, int nbs, int obs);
 static int cwidth = 8, cheight = 16;
 static int xpix, ypix, nbs, obs = 0;
 #endif				/* use_SYSMOUSE */
-
 static void mouse_init(void);
 int mouseActive = 0;
 #endif				/* USE_MOUSE */
@@ -48,10 +54,6 @@ int mouseActive = 0;
 static const char *title_str;
 
 static int tty;
-
-#include "terms.h"
-#include "fm.h"
-#include "myctype.h"
 
 #ifdef __EMX__
 #define INCL_DOSNLS

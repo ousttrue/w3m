@@ -1,14 +1,15 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
-#include <errno.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include "config.h"
 #include "Str.h"
+#include "config.h"
 #include "indep.h"
-#include "textlist.h"
-#include "parsetag.h"
 #include "myctype.h"
+#include "parsetag.h"
+#include "textlist.h"
+
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #if LANG == JA
 /* FIXME: gettextize here */

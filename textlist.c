@@ -1,7 +1,9 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "textlist.h"
-#include "indep.h"
+
 #include "Str.h"
+#include "indep.h"
+
 #include <gc/gc.h>
 
 /* General doubly linked list */

@@ -2,6 +2,12 @@
 #define REGEX_MAX	64
 #define STORAGE_MAX	256
 
+#include "config.h"
+
+#ifdef USE_M17N
+#include "wc_types.h"
+#endif
+
 typedef struct {
     char type;
 #ifdef USE_M17N

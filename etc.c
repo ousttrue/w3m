@@ -1,21 +1,23 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "fm.h"
-#ifndef __MINGW32_VERSION
-#include <pwd.h>
-#endif
-#include "myctype.h"
+#include "hash.h"
 #include "html.h"
 #include "local.h"
-#include "hash.h"
+#include "myctype.h"
 
 #include <fcntl.h>
 #include <sys/types.h>
 #include <time.h>
-#if defined(HAVE_WAITPID)
-#include <sys/wait.h>
-#endif
 #include <signal.h>
 #include <strings.h>
+
+#ifdef HAVE_WAITPID
+#include <sys/wait.h>
+#endif
+
+#ifndef __MINGW32_VERSION
+#include <pwd.h>
+#endif
 
 #ifdef	__WATT32__
 #define	read(a,b,c)	read_s(a,b,c)

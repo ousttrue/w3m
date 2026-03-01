@@ -1,11 +1,15 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
+#include "istream.h"
+
 #include "fm.h"
 #include "myctype.h"
-#include "istream.h"
+
 #include <signal.h>
+
 #ifdef USE_SSL
 #include <openssl/x509v3.h>
 #endif
+
 #ifdef __MINGW32_VERSION
 #include <winsock.h>
 #endif

@@ -1,17 +1,18 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
-#include <stdio.h>
-#ifndef __MINGW32_VERSION
-#include <pwd.h>
-#endif /* __MINGW32_VERSION */
-#include <Str.h>
-#include <signal.h>
-#include <setjmp.h>
-#include <time.h>
-
+#include "Str.h"
 #include "fm.h"
 #include "html.h"
 #include "linein.h"
 #include "myctype.h"
+
+#include <setjmp.h>
+#include <signal.h>
+#include <stdio.h>
+#include <time.h>
+
+#ifndef __MINGW32_VERSION
+#include <pwd.h>
+#endif /* __MINGW32_VERSION */
 
 #ifdef DEBUG
 #include <malloc.h>

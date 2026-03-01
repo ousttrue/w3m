@@ -1,33 +1,32 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
+#include "Str.h"
+#include "cookie.h"
 #include "fm.h"
+#include "html.h"
+#include "myctype.h"
+#include "regex.h"
 #include "version.h"
 
+#include <errno.h>
+#include <setjmp.h>
+#include <signal.h>
+#include <strings.h>
+
 #ifndef __MINGW32_VERSION
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <unistd.h>
 #else
 #include <winsock.h>
 #endif /* __MINGW32_VERSION */
-
-#include <signal.h>
-#include <setjmp.h>
-#include <errno.h>
-#include <strings.h>
 
 #include <sys/stat.h>
 #ifdef __EMX__
 #include <io.h>			/* ?? */
 #endif				/* __EMX__ */
-
-#include "cookie.h"
-#include "html.h"
-#include "Str.h"
-#include "myctype.h"
-#include "regex.h"
 
 #ifdef USE_SSL
 #ifndef SSLEAY_VERSION_NUMBER

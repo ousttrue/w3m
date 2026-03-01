@@ -6,20 +6,21 @@
 #include "cookie.h"
 #include "display.h"
 #include "fm.h"
+#include "local.h"
+#include "myctype.h"
 #include "parsetag.h"
 #include "parsetagx.h"
-#include "myctype.h"
-#include "local.h"
 #include "regex.h"
 #include "util.h"
 
-extern Str *textarea_str;
-extern int max_textarea;
 #ifdef MENU_SELECT
+#include "menu.h"
 extern FormSelectOption *select_option;
 extern int max_select;
-#include "menu.h"
 #endif				/* MENU_SELECT */
+
+extern Str *textarea_str;
+extern int max_textarea;
 
 /* *INDENT-OFF* */
 struct {

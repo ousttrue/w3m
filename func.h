@@ -6,8 +6,8 @@
 #ifndef FUNC_H
 #define FUNC_H
 
-#include "textlist.h"
 #include "hash.h"
+#include "textlist.h"
 
 #define KEY_HASH_SIZE 127
 

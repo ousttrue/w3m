@@ -2,20 +2,21 @@
 /* 
  * Initialization file etc.
  */
+#include "rc.h"
+
+#include "cookie.h"
 #include "fm.h"
+#include "local.h"
 #include "myctype.h"
+#include "parsetag.h"
 #include "proto.h"
+#include "regex.h"
 #include "version.h"
 
-#include <stdio.h>
 #include <errno.h>
-#include "parsetag.h"
-#include "local.h"
-#include "regex.h"
-#include <stdlib.h>
 #include <stddef.h>
-#include "rc.h"
-#include "cookie.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 struct param_ptr {
     char *name;

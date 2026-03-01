@@ -15,9 +15,10 @@
  */
 #ifndef GC_STR_H
 #define GC_STR_H
+#include <limits.h>
 #include <stdio.h>
 #include <string.h>
-#include <limits.h>
+
 #ifdef __EMX__
 #define strcasecmp	stricmp
 #define strncasecmp	strnicmp

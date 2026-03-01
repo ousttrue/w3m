@@ -1,8 +1,9 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
-#include "myctype.h"
-#include "indep.h"
-#include "Str.h"
 #include "parsetag.h"
+
+#include "Str.h"
+#include "indep.h"
+#include "myctype.h"
 
 char *
 tag_get_value(struct parsed_tagarg *t, const char *arg)
