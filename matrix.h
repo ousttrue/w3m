@@ -7,7 +7,8 @@
  * You can use,copy,modify and distribute this program without any permission.
  */
 
-#ifndef _MATRIX_H
+#ifndef MATRIX_H_
+#define MATRIX_H_
 #include <math.h>
 #include <string.h>
 
@@ -65,5 +66,4 @@ extern int Usolve(Matrix, Vector, Vector, double);
 extern Matrix new_matrix(int);
 extern Vector new_vector(int);
 
-#define _MATRIX_H
 #endif				/* _MATRIX_H */
