@@ -4,13 +4,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <signal.h>
-#include <errno.h>
 #include <strings.h>
 #include <unistd.h>
-
-#ifdef HAVE_WAITPID
-#include <sys/wait.h>
-#endif
 
 #ifdef USE_IMAGE
 

@@ -1,6 +1,5 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "Str.h"
-#include "config.h"
 #include "hash.h"
 #include "myctype.h"
 

@@ -5,7 +5,7 @@
 #include "func.h"
 
 #include "config.h"
-#include "cookie.h"
+#include "cookie.h"	/* For funcname.c */
 #include "fm.h"
 #include "myctype.h"
 #include "rc.h"

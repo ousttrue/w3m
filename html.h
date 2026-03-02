@@ -63,7 +63,6 @@ typedef struct _ParsedURL {
     int is_nocache;
 } ParsedURL;
 
-union input_stream;
 typedef struct {
     unsigned char scheme;
     char is_cgi;

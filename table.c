@@ -12,7 +12,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <strings.h>
-#include <sys/types.h>
 
 int symbol_width = 0;
 int symbol_width0 = 0;

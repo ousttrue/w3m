@@ -2,7 +2,6 @@
 #include "istream.h"
 
 #include "fm.h"
-#include "myctype.h"
 
 #include <signal.h>
 

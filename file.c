@@ -9,21 +9,13 @@
 #include "local.h"
 #include "myctype.h"
 #include "parsetagx.h"
-#include "regex.h"
 
 #include <fcntl.h>
-#include <setjmp.h>
-#include <signal.h>
 #include <stdio.h>
 #include <strings.h>
 #include <sys/stat.h>
-#include <sys/types.h>
 #include <time.h>
 #include <utime.h>
-
-#if defined(HAVE_WAITPID)
-#include <sys/wait.h>
-#endif
 
 #ifndef max
 #define max(a,b)        ((a) > (b) ? (a) : (b))

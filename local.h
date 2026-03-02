@@ -7,7 +7,6 @@
 #define LOCAL_H
 
 #include <sys/stat.h>
-#include <sys/types.h>
 
 #ifdef HAVE_DIRENT_H
 #include <dirent.h>

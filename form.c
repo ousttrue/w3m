@@ -4,9 +4,7 @@
  */
 #include "buffer.h"
 #include "cookie.h"
-#include "display.h"
 #include "fm.h"
-#include "local.h"
 #include "myctype.h"
 #include "parsetag.h"
 #include "parsetagx.h"
@@ -14,7 +12,6 @@
 #include "util.h"
 
 #ifdef MENU_SELECT
-#include "menu.h"
 extern FormSelectOption *select_option;
 extern int max_select;
 #endif				/* MENU_SELECT */

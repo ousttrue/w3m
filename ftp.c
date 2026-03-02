@@ -5,8 +5,6 @@
 #include "linein.h"
 #include "myctype.h"
 
-#include <setjmp.h>
-#include <signal.h>
 #include <stdio.h>
 #include <time.h>
 

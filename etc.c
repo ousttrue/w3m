@@ -2,18 +2,12 @@
 #include "fm.h"
 #include "hash.h"
 #include "html.h"
-#include "local.h"
 #include "myctype.h"
 
 #include <fcntl.h>
-#include <sys/types.h>
 #include <time.h>
 #include <signal.h>
 #include <strings.h>
-
-#ifdef HAVE_WAITPID
-#include <sys/wait.h>
-#endif
 
 #ifndef __MINGW32_VERSION
 #include <pwd.h>

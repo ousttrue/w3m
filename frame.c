@@ -1,11 +1,8 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "buffer.h"
 #include "fm.h"
-#include "myctype.h"
 #include "parsetagx.h"
 
-#include <setjmp.h>
-#include <signal.h>
 #include <strings.h>
 
 static JMP_BUF AbortLoading;

@@ -6,15 +6,12 @@
 
 #include "cookie.h"
 #include "fm.h"
-#include "local.h"
 #include "myctype.h"
 #include "parsetag.h"
-#include "proto.h"
 #include "regex.h"
 #include "version.h"
 
 #include <errno.h>
-#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 

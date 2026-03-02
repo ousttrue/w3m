@@ -7,9 +7,6 @@
 #include "regex.h"
 #include "version.h"
 
-#include <errno.h>
-#include <setjmp.h>
-#include <signal.h>
 #include <strings.h>
 
 #ifndef __MINGW32_VERSION
@@ -17,13 +14,11 @@
 #include <netdb.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
-#include <sys/types.h>
 #include <unistd.h>
 #else
 #include <winsock.h>
 #endif /* __MINGW32_VERSION */
 
-#include <sys/stat.h>
 #ifdef __EMX__
 #include <io.h>			/* ?? */
 #endif				/* __EMX__ */

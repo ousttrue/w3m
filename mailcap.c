@@ -1,10 +1,7 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "fm.h"
-#include "local.h"
 #include "myctype.h"
-#include "parsetag.h"
 
-#include <errno.h>
 #include <stdio.h>
 #include <strings.h>
 

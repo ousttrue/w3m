@@ -4,8 +4,6 @@
 #include "Str.h"
 #include "indep.h"
 
-#include <gc/gc.h>
-
 /* General doubly linked list */
 
 ListItem *

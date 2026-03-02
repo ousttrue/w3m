@@ -6,12 +6,8 @@
 
 #include <fcntl.h>
 #include <stdio.h>
-#include <sys/stat.h>
-#include <sys/types.h>
 
 #ifdef USE_SSL
-#include <openssl/bio.h>
-#include <openssl/x509.h>
 #include <openssl/ssl.h>
 #endif
 
@@ -28,8 +24,6 @@ struct ssl_handle {
     int sock;
 };
 #endif
-
-union input_stream;
 
 struct ens_handle {
     union input_stream *is;

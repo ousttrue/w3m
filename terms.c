@@ -15,10 +15,8 @@
 #include <string.h>
 #include <strings.h>
 #include <sys/stat.h>
-#include <sys/time.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <unistd.h>
 
 #ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>
