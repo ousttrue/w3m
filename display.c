@@ -4,6 +4,7 @@
 #include "buffer.h"
 #include "fm.h"
 
+#include <math.h>
 #include <signal.h>
 
 /* *INDENT-OFF* */

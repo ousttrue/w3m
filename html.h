@@ -5,12 +5,6 @@
 
 #include <time.h>
 
-#ifdef USE_SSL
-#include <openssl/bio.h>
-#include <openssl/x509.h>
-#include <openssl/ssl.h>
-#endif				/* USE_SSL */
-
 #define StrUFgets(f) StrISgets((f)->stream)
 #define StrmyUFgets(f) StrmyISgets((f)->stream)
 #define UFgetc(f) ISgetc((f)->stream)

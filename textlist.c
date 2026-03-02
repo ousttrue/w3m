@@ -2,7 +2,7 @@
 #include "textlist.h"
 
 #include "Str.h"
-#include "indep.h"
+#include "alloc.h"
 
 /* General doubly linked list */
 

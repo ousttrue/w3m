@@ -4,6 +4,9 @@
 
 /* hash table */
 
+#include <gc/gc.h>
+#include <stddef.h>
+
 #define defhash(keytype,type,sym) \
 typedef struct HashItem_##sym { \
   keytype key; \

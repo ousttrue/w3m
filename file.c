@@ -11,6 +11,7 @@
 #include "parsetagx.h"
 
 #include <fcntl.h>
+#include <math.h>
 #include <stdio.h>
 #include <strings.h>
 #include <sys/stat.h>

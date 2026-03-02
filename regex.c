@@ -15,7 +15,7 @@
 #include <string.h>
 
 #ifdef USE_M17N
-#include "wc.h"
+#include "ccs.h"
 #include "wtf.h"
 #ifdef USE_UNICODE
 #include "ucs.h"

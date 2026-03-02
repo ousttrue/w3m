@@ -1,7 +1,6 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "hash.h"
 
-#include <gc/gc.h>
 #include <string.h>
 
 static unsigned int

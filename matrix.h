@@ -9,7 +9,8 @@
 
 #ifndef MATRIX_H_
 #define MATRIX_H_
-#include <math.h>
+#include "alloc.h"
+
 #include <string.h>
 
 /* 

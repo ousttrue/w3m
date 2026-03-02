@@ -4,6 +4,7 @@
 #include "Str.h"
 #include "fm.h"
 #include "html.h"
+#include "parsetagx.h"
 
 #include <time.h>
 
@@ -43,8 +44,6 @@
 #define ACCEPT_BAD_COOKIE_DISCARD	0
 #define ACCEPT_BAD_COOKIE_ACCEPT	1
 #define ACCEPT_BAD_COOKIE_ASK		2
-
-struct parsed_tagarg;
 
 Buffer *cookie_list_panel(void);
 Str find_cookie(ParsedURL *pu);

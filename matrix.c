@@ -31,11 +31,12 @@
 **      distribution fee considered a charge.
 **
 ***************************************************************************/
-
 #include "matrix.h"
 
 #include "alloc.h"
 #include "config.h"
+
+#include <math.h>
 
 /* 
  * Macros from "fm.h".
