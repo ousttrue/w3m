@@ -1156,7 +1156,6 @@ global int w3m_backend init(FALSE);
 global TextLineList *backend_halfdump_buf;
 global TextList *backend_batch_commands init(NULL);
 int backend(void);
-extern void deleteFiles(void);
 void w3m_exit(int i);
 
 #ifdef USE_ALARM
@@ -1177,7 +1176,6 @@ typedef struct _AlarmEvent {
  * Externals
  */
 
-#include "table.h"
 #include "proto.h"
 
 #endif				/* not FM_H */

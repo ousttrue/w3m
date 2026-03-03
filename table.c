@@ -2,6 +2,8 @@
 /* 
  * HTML table
  */
+#include "table.h"
+
 #include "Str.h"
 #include "fm.h"
 #include "html.h"
@@ -54,6 +56,13 @@ int symbol_width0 = 0;
 
 #define set_prevchar(x,y,n) Strcopy_charp_n((x),(y),(n))
 #define set_space_to_prevchar(x) Strcopy_charp_n((x)," ",1)
+
+static struct table * newTable(void);
+static void pushdata(struct table *t, int row, int col, char *data);
+static void print_item(struct table *t, int row, int col, int width, Str buf);
+static void print_sep(struct table *t, int row, int type, int maxcol, Str buf);
+static void do_refill(struct table *tbl, int row, int col, int maxlimit);
+static void feed_table1(struct table *tbl, Str tok, struct table_mode *mode, int width);
 
 #ifdef MATRIX
 #ifndef MESCHACH

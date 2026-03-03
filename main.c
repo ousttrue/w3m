@@ -139,6 +139,7 @@ static void cmd_loadURL(char *url, ParsedURL *current, char *referer,
 			FormList *request);
 static void cmd_loadfile(char *path);
 static void delBuffer(Buffer *buf);
+static void deleteFiles(void);
 static void do_dump(Buffer *);
 static void escdmap(char c);
 static void followTab(TabBuffer * tab);

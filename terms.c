@@ -50,8 +50,11 @@ int mouseActive = 0;
 #endif				/* USE_MOUSE */
 
 static const char *title_str;
-
 static int tty;
+
+static int set_tty(void);
+static void set_int(void);
+static void getTCstr(void);
 
 #ifdef __EMX__
 #define INCL_DOSNLS
@@ -910,7 +913,7 @@ ttymode_reset(int mode, int imode)
 }
 
 #ifndef HAVE_SGTTY_H
-void
+static void
 set_cc(int spec, int val)
 {
     TerminalMode ioval;

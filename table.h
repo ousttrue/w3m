@@ -1,5 +1,7 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "Str.h"
+#include "fm.h"
+#include "textlist.h"
 
 #if (defined(MESCHACH) && !defined(MATRIX))
 #define MATRIX
@@ -137,6 +139,16 @@ struct table_mode {
     short anchor_offset;
     unsigned char end_tag;
 };
+
+int feed_table(struct table *tbl, char *line, struct table_mode *mode, int width, int internal);
+int visible_length(const char *str);
+struct table *begin_table(int border, int spacing, int padding, int vspace);
+void align(TextLine *lbuf, int width, int mode);
+void check_rowcol(struct table *tbl, struct table_mode *mode);
+void end_table(struct table *tbl);
+void initRenderTable(void);
+void pushTable(struct table *, struct table *);
+void renderTable(struct table *t, int max_width, struct html_feed_environ *h_env);
 
 /* Local Variables:    */
 /* c-basic-offset: 4   */

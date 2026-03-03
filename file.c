@@ -10,6 +10,7 @@
 #include "myctype.h"
 #include "parsetagx.h"
 #include "rc.h"
+#include "table.h"
 
 #include <fcntl.h>
 #include <math.h>

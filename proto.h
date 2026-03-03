@@ -355,25 +355,8 @@ extern Str unescape_spaces(Str s);
 #ifdef USE_HISTORY
 extern Buffer *historyBuffer(Hist *hist);
 #endif				/* not USE_HISTORY */
-extern struct table *newTable(void);
-extern void pushdata(struct table *t, int row, int col, char *data);
-extern int visible_length(const char *str);
-extern void align(TextLine *lbuf, int width, int mode);
-extern void print_item(struct table *t, int row, int col, int width, Str buf);
-extern void print_sep(struct table *t, int row, int type, int maxcol, Str buf);
-extern void do_refill(struct table *tbl, int row, int col, int maxlimit);
-extern void initRenderTable(void);
-extern void renderTable(struct table *t, int max_width,
-			struct html_feed_environ *h_env);
-extern struct table *begin_table(int border, int spacing, int padding,
-				 int vspace);
-extern void end_table(struct table *tbl);
-extern void check_rowcol(struct table *tbl, struct table_mode *mode);
-extern int feed_table(struct table *tbl, char *line, struct table_mode *mode,
-		      int width, int internal);
-extern void feed_table1(struct table *tbl, Str tok, struct table_mode *mode,
-			int width);
-extern void pushTable(struct table *, struct table *);
+
+/* XXX: Should be form.h, can't be due to circular deps */
 extern struct form_list *newFormList(char *action, char *method, char *charset,
 				     char *enctype, char *target, char *name,
 				     struct form_list *_next);
@@ -423,14 +406,6 @@ extern void resetFrameElement(union frameset_element *f_element, Buffer *buf,
 			      char *referer, FormList *request);
 extern Buffer *renderFrame(Buffer *Cbuf, int force_reload);
 extern union frameset_element *search_frame(struct frameset *fset, char *name);
-extern int set_tty(void);
-extern void set_cc(int spec, int val);
-extern void close_tty(void);
-extern char *ttyname_tty(void);
-extern void reset_tty(void);
-extern void set_int(void);
-extern void getTCstr(void);
-extern void setupscreen(void);
 extern pid_t open_pipe_rw(FILE ** fr, FILE ** fw);
 extern int initscr(void);
 extern void move(int line, int column);
