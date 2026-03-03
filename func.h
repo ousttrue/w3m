@@ -19,4 +19,6 @@ typedef struct _FuncList {
     void (*func) (void);
 } FuncList;
 
+extern FuncList w3mFuncList[]; /* Generated in funcname.c */
+
 #endif				/* not FUNC_H */

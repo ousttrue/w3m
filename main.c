@@ -1,28 +1,75 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #define MAINPROGRAM
-#include <errno.h>
+#include "buffer.h"
+#include "cookie.h"
+#include "display.h"
 #include "fm.h"
 #include "form.h"
+#include "funcname1.h"
+#include "linein.h"
+#include "myctype.h"
+#include "rc.h"
+#include "regex.h"
+#include "terms.h"
+#include "util.h"
 #include "version.h"
-#include <stdio.h>
-#include <signal.h>
+
+#include <errno.h>
 #include <setjmp.h>
+#include <signal.h>
+#include <stdio.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <fcntl.h>
-#if defined(HAVE_WAITPID)
+
+#ifdef HAVE_WAITPID
 #include <sys/wait.h>
 #endif
 #include <time.h>
 #if defined(__CYGWIN__) && defined(USE_BINMODE_STREAM)
 #include <io.h>
 #endif
-#include "display.h"
-#include "terms.h"
-#include "myctype.h"
-#include "regex.h"
-#include "rc.h"
+
+#ifdef __MINGW32_VERSION
+#include <winsock.h>
+#endif
+
+#ifdef __MINGW32_VERSION
+WSADATA WSAData;
+#endif
+
+#ifndef __MINGW32_VERSION
+JMP_BUF IntReturn;
+#else
+_JBTYPE IntReturn[_JBLEN];
+#endif /* __MINGW32_VERSION */
+
+#ifdef SIGCHLD
+static void sig_chld(int signo);
+#endif
+
+#ifdef SIGPIPE
+static void SigPipe(SIGNAL_ARG);
+#endif
+
+#ifdef SIGWINCH
+static int need_resize_screen = FALSE;
+static void resize_hook(SIGNAL_ARG);
+static void resize_screen(void);
+#endif
+
+#ifdef USE_ALARM
+static AlarmEvent DefaultAlarm = {
+    0, AL_UNSET, FUNCNAME_nulcmd, NULL
+};
+static AlarmEvent *CurrentAlarm = &DefaultAlarm;
+static void SigAlarm(SIGNAL_ARG);
+#endif
+
+#ifdef USE_MARK
+static const char *MarkString = NULL;
+#endif
+
 #ifdef USE_M17N
 #include "wc.h"
 #include "wtf.h"
@@ -40,61 +87,15 @@ extern int do_getch(void);
 #endif				/* defined(USE_GPM) || defined(USE_SYSMOUSE) */
 #endif
 
-#include "buffer.h"
-#include "cookie.h"
-#include "funcname1.h"
-#include "linein.h"
-#include "util.h"
-
-#ifdef __MINGW32_VERSION
-#include <winsock.h>
-
-WSADATA WSAData;
-#endif
-
 typedef struct _Event {
     int cmd;
     void *data;
     struct _Event *next;
 } Event;
-static Event *CurrentEvent = NULL;
-static Event *LastEvent = NULL;
 
-#ifdef USE_ALARM
-static AlarmEvent DefaultAlarm = {
-    0, AL_UNSET, FUNCNAME_nulcmd, NULL
-};
-static AlarmEvent *CurrentAlarm = &DefaultAlarm;
-static void SigAlarm(SIGNAL_ARG);
-#endif
-
-#ifdef SIGWINCH
-static int need_resize_screen = FALSE;
-static void resize_hook(SIGNAL_ARG);
-static void resize_screen(void);
-#endif
-
-#ifdef SIGPIPE
-static void SigPipe(SIGNAL_ARG);
-#endif
-
-#ifdef USE_MARK
-static const char *MarkString = NULL;
-#endif
-const char *SearchString = NULL;
-int (*searchRoutine) (Buffer *, const char *);
-
-#ifndef __MINGW32_VERSION
-JMP_BUF IntReturn;
-#else
-_JBTYPE IntReturn[_JBLEN];
-#endif /* __MINGW32_VERSION */
-
+#define GC_WARN_KEEP_MAX (20)
 #define PREC_NUM (prec_num ? prec_num : 1)
 #define PREC_LIMIT 10000
-
-#define help() fusage(stdout, 0)
-#define usage() fusage(stderr, 1)
 
 Hist *DictHist;
 Hist *LoadHist;
@@ -102,9 +103,15 @@ Hist *SaveHist;
 Hist *ShellHist;
 Hist *TextHist;
 Hist *URLHist;
+const char *SearchString = NULL;
 extern int opt_cols;
+int (*searchRoutine) (Buffer *, const char *);
 int enable_inline_image;
 int fold_pre;
+
+static Event *CurrentEvent = NULL;
+static Event *LastEvent = NULL;
+static GC_warn_proc orig_GC_warn_proc = NULL;
 static char *session_bak;
 static char *session_file;
 static int add_download_list = FALSE;
@@ -116,9 +123,12 @@ static int prec_num = 0;
 static int prev_key = -1;
 static int show_params_p = 0;
 
+static Str currentURL(void);
+static Str make_optional_header_string(char *s);
 static int _strSession(char *sf);
 static int checkDownloadList(void);
 static int searchKeyNum(void);
+static void *die_oom(size_t bytes);
 static void _followForm(int);
 static void _goLine(const char *);
 static void _newT(void);
@@ -132,280 +142,17 @@ static void delBuffer(Buffer *buf);
 static void do_dump(Buffer *);
 static void escdmap(char c);
 static void followTab(TabBuffer * tab);
+static void fusage(FILE * f, int err);
+static void fversion(FILE * f);
 static void intTrap(SIGNAL_ARG);
 static void keyPressEventProc(int c);
 static void moveTab(TabBuffer * t, TabBuffer * t2, int right);
 static void save_buffer_position(Buffer *buf);
 static void set_buffer_environ(Buffer *);
+static void wrap_GC_warn_proc(char *msg, GC_word arg);
 
-static void
-fversion(FILE * f)
-{
-    fprintf(f, "w3m version %s, options %s\n", W3M_VERSION,
-#if LANG == JA
-	    "lang=ja"
-#else
-	    "lang=en"
-#endif
-#ifdef USE_M17N
-	    ",m17n"
-#endif
-#ifdef USE_IMAGE
-	    ",image"
-#endif
-#ifdef USE_COLOR
-	    ",color"
-#ifdef USE_ANSI_COLOR
-	    ",ansi-color"
-#endif
-#endif
-#ifdef USE_MOUSE
-	    ",mouse"
-#ifdef USE_GPM
-	    ",gpm"
-#endif
-#ifdef USE_SYSMOUSE
-	    ",sysmouse"
-#endif
-#endif
-#ifdef USE_MENU
-	    ",menu"
-#endif
-#ifdef USE_COOKIE
-	    ",cookie"
-#endif
-#ifdef USE_SSL
-	    ",ssl"
-#ifdef USE_SSL_VERIFY
-	    ",ssl-verify"
-#endif
-#endif
-#ifdef USE_EXTERNAL_URI_LOADER
-	    ",external-uri-loader"
-#endif
-#ifdef USE_W3MMAILER
-	    ",w3mmailer"
-#endif
-#ifdef USE_NNTP
-	    ",nntp"
-#endif
-#ifdef USE_GOPHER
-	    ",gopher"
-#endif
-#ifdef INET6
-	    ",ipv6"
-#endif
-#ifdef USE_ALARM
-	    ",alarm"
-#endif
-#ifdef USE_MARK
-	    ",mark"
-#endif
-#ifdef USE_MIGEMO
-	    ",migemo"
-#endif
-#ifdef USE_HISTORY
-	    ",history"
-#endif
-#ifdef USE_DICT
-	    ",dict"
-#endif
-	);
-}
-
-#define PUT(a,b) fprintf(f, "    %-16s %s\n", a, b)
-static void
-fusage(FILE * f, int err)
-{
-    fversion(f);
-    /* FIXME: gettextize? */
-    fprintf(f, "usage: w3m [options] [URL or filename]\noptions:\n");
-    PUT("-t tab", "set tab width");
-    PUT("-r", "ignore backspace effect");
-    PUT("-l line", "# of preserved line (default 10000)");
-#ifdef USE_M17N
-    PUT("-I charset", "document charset");
-    PUT("-O charset", "display/output charset");
-#endif
-    PUT("-B", "load bookmark");
-    PUT("-bookmark file", "specify bookmark file");
-    PUT("-R", "restore from session file");
-    PUT("-session file", "specify session file");
-    PUT("-T type", "specify content-type");
-    PUT("-m", "internet message mode");
-    PUT("-v", "visual startup mode");
-#ifdef USE_COLOR
-    PUT("-M", "monochrome display");
-    PUT("-H Deprecated!", "Do not use! Use -o high-intensity=true instead");
-#endif				/* USE_COLOR */
-    PUT("-N", "open URL of command line on each new tab");
-    PUT("-F", "automatically render frames");
-    PUT("-cols width", "specify column width (used with -dump)");
-    PUT("-ppc count", "specify the number of pixels per character (4.0...32.0)");
-#ifdef USE_IMAGE
-    PUT("-ppl count", "specify the number of pixels per line (4.0...64.0)");
-#endif
-    PUT("-dump", "dump formatted page into stdout");
-    PUT("-dump_head", "dump response of HEAD request into stdout");
-    PUT("-dump_source", "dump page source into stdout");
-    PUT("-dump_both", "dump HEAD and source into stdout");
-    PUT("-dump_extra", "dump HEAD, source, and extra information into stdout");
-    PUT("-post file", "use POST method with file content");
-    PUT("-header string", "insert string as a header");
-    PUT("+<num>", "goto <num> line");
-    PUT("-num", "show line number");
-    PUT("-no-proxy", "don't use proxy");
-#ifdef INET6
-    PUT("-4", "IPv4 only (-o dns_order=4)");
-    PUT("-6", "IPv6 only (-o dns_order=6)");
-#endif
-#ifdef USE_SSL
-    PUT("-insecure", "use insecure SSL config options");
-#endif
-#ifdef USE_MOUSE
-    PUT("-no-mouse", "don't use mouse");
-#endif				/* USE_MOUSE */
-#ifdef USE_COOKIE
-    PUT("-cookie", "use cookie (-no-cookie: don't use cookie)");
-    PUT("-cookie-jar file", "use file instead of default cookie file");
-#endif				/* USE_COOKIE */
-    PUT("-graph", "use DEC special graphics for border of table and menu");
-    PUT("-no-graph", "use ASCII character for border of table and menu");
-    PUT("-s", "squeeze multiple blank lines");
-    PUT("-W", "toggle search wrap mode");
-    PUT("-X", "don't use termcap init/deinit");
-    PUT("-title[=TERM]", "set buffer name to terminal title string");
-    PUT("-o opt=value", "assign value to config option");
-    PUT("-show-option", "print all config options");
-    PUT("-config file", "specify config file");
-    PUT("-debug", "use debug mode (only for debugging)");
-    PUT("-reqlog", "write request logfile");
-    PUT("-help", "print this usage message");
-    PUT("-version", "print w3m version");
-    if (show_params_p)
-	show_params(f);
-    exit(err);
-}
-#undef PUT
-
-#ifdef USE_M17N
-#ifdef __EMX__
-static char *getCodePage(void);
-#endif
-#endif
-
-static GC_warn_proc orig_GC_warn_proc = NULL;
-#define GC_WARN_KEEP_MAX (20)
-
-static void
-wrap_GC_warn_proc(char *msg, GC_word arg)
-{
-    if (fmInitialized) {
-	/* *INDENT-OFF* */
-	static struct {
-	    char *msg;
-	    GC_word arg;
-	} msg_ring[GC_WARN_KEEP_MAX];
-	/* *INDENT-ON* */
-	static int i = 0;
-	static int n = 0;
-	static int lock = 0;
-	int j;
-
-	j = (i + n) % (sizeof(msg_ring) / sizeof(msg_ring[0]));
-	msg_ring[j].msg = msg;
-	msg_ring[j].arg = arg;
-
-	if (n < sizeof(msg_ring) / sizeof(msg_ring[0]))
-	    ++n;
-	else
-	    ++i;
-
-	if (!lock) {
-	    lock = 1;
-
-	    for (; n > 0; --n, ++i) {
-		i %= sizeof(msg_ring) / sizeof(msg_ring[0]);
-
-		printf(msg_ring[i].msg,	(unsigned long)msg_ring[i].arg);
-		sleep_till_anykey(1, 1);
-	    }
-
-	    lock = 0;
-	}
-    }
-    else if (orig_GC_warn_proc)
-	orig_GC_warn_proc(msg, arg);
-    else
-	fprintf(stderr, msg, (unsigned long)arg);
-}
-
-#ifdef SIGCHLD
-static void
-sig_chld(int signo)
-{
-    int p_stat;
-    pid_t pid;
-
-#ifdef HAVE_WAITPID
-    while ((pid = waitpid(-1, &p_stat, WNOHANG)) > 0)
-#else
-    if ((pid = wait(&p_stat)) > 0)
-#endif
-    {
-	DownloadList *d;
-
-	if (WIFEXITED(p_stat)) {
-	    for (d = FirstDL; d != NULL; d = d->next) {
-		if (d->pid == pid) {
-		    d->err = WEXITSTATUS(p_stat);
-		    break;
-		}
-	    }
-	}
-    }
-    mySignal(SIGCHLD, sig_chld);
-    return;
-}
-#endif
-
-static Str
-make_optional_header_string(char *s)
-{
-    char *p;
-    Str hs;
-
-    if (strchr(s, '\n') || strchr(s, '\r'))
-	return NULL;
-    for (p = s; *p && *p != ':'; p++) ;
-    if (*p != ':' || p == s)
-	return NULL;
-    hs = Strnew_size(strlen(s) + 3);
-    Strcopy_charp_n(hs, s, p - s);
-    if (!Strcasecmp_charp(hs, "content-type"))
-	override_content_type = TRUE;
-    if (!Strcasecmp_charp(hs, "user-agent"))
-	override_user_agent = TRUE;
-    Strcat_charp(hs, ": ");
-    if (*(++p)) {		/* not null header */
-	SKIP_BLANKS(p);		/* skip white spaces */
-	Strcat_charp(hs, p);
-    }
-    Strcat_charp(hs, "\r\n");
-    return hs;
-}
-
-static void *
-die_oom(size_t bytes)
-{
-    fprintf(stderr, "Out of memory: %zu bytes unavailable!\n", bytes);
-    exit(1);
-    /*
-     * Suppress compiler warning: function might return no value
-     * This code is never reached.
-     */
-    return NULL;
-}
+#define help() fusage(stdout, 0)
+#define usage() fusage(stderr, 1)
 
 int
 main(int argc, char **argv)
@@ -1355,6 +1102,273 @@ main(int argc, char **argv)
 }
 
 static void
+fversion(FILE * f)
+{
+    fprintf(f, "w3m version %s, options %s\n", W3M_VERSION,
+#if LANG == JA
+	    "lang=ja"
+#else
+	    "lang=en"
+#endif
+#ifdef USE_M17N
+	    ",m17n"
+#endif
+#ifdef USE_IMAGE
+	    ",image"
+#endif
+#ifdef USE_COLOR
+	    ",color"
+#ifdef USE_ANSI_COLOR
+	    ",ansi-color"
+#endif
+#endif
+#ifdef USE_MOUSE
+	    ",mouse"
+#ifdef USE_GPM
+	    ",gpm"
+#endif
+#ifdef USE_SYSMOUSE
+	    ",sysmouse"
+#endif
+#endif
+#ifdef USE_MENU
+	    ",menu"
+#endif
+#ifdef USE_COOKIE
+	    ",cookie"
+#endif
+#ifdef USE_SSL
+	    ",ssl"
+#ifdef USE_SSL_VERIFY
+	    ",ssl-verify"
+#endif
+#endif
+#ifdef USE_EXTERNAL_URI_LOADER
+	    ",external-uri-loader"
+#endif
+#ifdef USE_W3MMAILER
+	    ",w3mmailer"
+#endif
+#ifdef USE_NNTP
+	    ",nntp"
+#endif
+#ifdef USE_GOPHER
+	    ",gopher"
+#endif
+#ifdef INET6
+	    ",ipv6"
+#endif
+#ifdef USE_ALARM
+	    ",alarm"
+#endif
+#ifdef USE_MARK
+	    ",mark"
+#endif
+#ifdef USE_MIGEMO
+	    ",migemo"
+#endif
+#ifdef USE_HISTORY
+	    ",history"
+#endif
+#ifdef USE_DICT
+	    ",dict"
+#endif
+	);
+}
+
+#define PUT(a,b) fprintf(f, "    %-16s %s\n", a, b)
+static void
+fusage(FILE * f, int err)
+{
+    fversion(f);
+    /* FIXME: gettextize? */
+    fprintf(f, "usage: w3m [options] [URL or filename]\noptions:\n");
+    PUT("-t tab", "set tab width");
+    PUT("-r", "ignore backspace effect");
+    PUT("-l line", "# of preserved line (default 10000)");
+#ifdef USE_M17N
+    PUT("-I charset", "document charset");
+    PUT("-O charset", "display/output charset");
+#endif
+    PUT("-B", "load bookmark");
+    PUT("-bookmark file", "specify bookmark file");
+    PUT("-R", "restore from session file");
+    PUT("-session file", "specify session file");
+    PUT("-T type", "specify content-type");
+    PUT("-m", "internet message mode");
+    PUT("-v", "visual startup mode");
+#ifdef USE_COLOR
+    PUT("-M", "monochrome display");
+    PUT("-H Deprecated!", "Do not use! Use -o high-intensity=true instead");
+#endif				/* USE_COLOR */
+    PUT("-N", "open URL of command line on each new tab");
+    PUT("-F", "automatically render frames");
+    PUT("-cols width", "specify column width (used with -dump)");
+    PUT("-ppc count", "specify the number of pixels per character (4.0...32.0)");
+#ifdef USE_IMAGE
+    PUT("-ppl count", "specify the number of pixels per line (4.0...64.0)");
+#endif
+    PUT("-dump", "dump formatted page into stdout");
+    PUT("-dump_head", "dump response of HEAD request into stdout");
+    PUT("-dump_source", "dump page source into stdout");
+    PUT("-dump_both", "dump HEAD and source into stdout");
+    PUT("-dump_extra", "dump HEAD, source, and extra information into stdout");
+    PUT("-post file", "use POST method with file content");
+    PUT("-header string", "insert string as a header");
+    PUT("+<num>", "goto <num> line");
+    PUT("-num", "show line number");
+    PUT("-no-proxy", "don't use proxy");
+#ifdef INET6
+    PUT("-4", "IPv4 only (-o dns_order=4)");
+    PUT("-6", "IPv6 only (-o dns_order=6)");
+#endif
+#ifdef USE_SSL
+    PUT("-insecure", "use insecure SSL config options");
+#endif
+#ifdef USE_MOUSE
+    PUT("-no-mouse", "don't use mouse");
+#endif				/* USE_MOUSE */
+#ifdef USE_COOKIE
+    PUT("-cookie", "use cookie (-no-cookie: don't use cookie)");
+    PUT("-cookie-jar file", "use file instead of default cookie file");
+#endif				/* USE_COOKIE */
+    PUT("-graph", "use DEC special graphics for border of table and menu");
+    PUT("-no-graph", "use ASCII character for border of table and menu");
+    PUT("-s", "squeeze multiple blank lines");
+    PUT("-W", "toggle search wrap mode");
+    PUT("-X", "don't use termcap init/deinit");
+    PUT("-title[=TERM]", "set buffer name to terminal title string");
+    PUT("-o opt=value", "assign value to config option");
+    PUT("-show-option", "print all config options");
+    PUT("-config file", "specify config file");
+    PUT("-debug", "use debug mode (only for debugging)");
+    PUT("-reqlog", "write request logfile");
+    PUT("-help", "print this usage message");
+    PUT("-version", "print w3m version");
+    if (show_params_p)
+	show_params(f);
+    exit(err);
+}
+#undef PUT
+
+#ifdef USE_M17N
+#ifdef __EMX__
+static char *getCodePage(void);
+#endif
+#endif
+
+static void
+wrap_GC_warn_proc(char *msg, GC_word arg)
+{
+    if (fmInitialized) {
+	/* *INDENT-OFF* */
+	static struct {
+	    char *msg;
+	    GC_word arg;
+	} msg_ring[GC_WARN_KEEP_MAX];
+	/* *INDENT-ON* */
+	static int i = 0;
+	static int n = 0;
+	static int lock = 0;
+	int j;
+
+	j = (i + n) % (sizeof(msg_ring) / sizeof(msg_ring[0]));
+	msg_ring[j].msg = msg;
+	msg_ring[j].arg = arg;
+
+	if (n < sizeof(msg_ring) / sizeof(msg_ring[0]))
+	    ++n;
+	else
+	    ++i;
+
+	if (!lock) {
+	    lock = 1;
+
+	    for (; n > 0; --n, ++i) {
+		i %= sizeof(msg_ring) / sizeof(msg_ring[0]);
+
+		printf(msg_ring[i].msg,	(unsigned long)msg_ring[i].arg);
+		sleep_till_anykey(1, 1);
+	    }
+
+	    lock = 0;
+	}
+    }
+    else if (orig_GC_warn_proc)
+	orig_GC_warn_proc(msg, arg);
+    else
+	fprintf(stderr, msg, (unsigned long)arg);
+}
+
+#ifdef SIGCHLD
+static void
+sig_chld(int signo)
+{
+    int p_stat;
+    pid_t pid;
+
+#ifdef HAVE_WAITPID
+    while ((pid = waitpid(-1, &p_stat, WNOHANG)) > 0)
+#else	/* HAVE_WAITPID */
+    if ((pid = wait(&p_stat)) > 0)
+#endif	/* HAVE_WAITPID */
+    {
+	DownloadList *d;
+
+	if (WIFEXITED(p_stat)) {
+	    for (d = FirstDL; d != NULL; d = d->next) {
+		if (d->pid == pid) {
+		    d->err = WEXITSTATUS(p_stat);
+		    break;
+		}
+	    }
+	}
+    }
+    mySignal(SIGCHLD, sig_chld);
+    return;
+}
+#endif	/* SIGCHLD */
+
+static Str
+make_optional_header_string(char *s)
+{
+    char *p;
+    Str hs;
+
+    if (strchr(s, '\n') || strchr(s, '\r'))
+	return NULL;
+    for (p = s; *p && *p != ':'; p++) ;
+    if (*p != ':' || p == s)
+	return NULL;
+    hs = Strnew_size(strlen(s) + 3);
+    Strcopy_charp_n(hs, s, p - s);
+    if (!Strcasecmp_charp(hs, "content-type"))
+	override_content_type = TRUE;
+    if (!Strcasecmp_charp(hs, "user-agent"))
+	override_user_agent = TRUE;
+    Strcat_charp(hs, ": ");
+    if (*(++p)) {		/* not null header */
+	SKIP_BLANKS(p);		/* skip white spaces */
+	Strcat_charp(hs, p);
+    }
+    Strcat_charp(hs, "\r\n");
+    return hs;
+}
+
+static void *
+die_oom(size_t bytes)
+{
+    fprintf(stderr, "Out of memory: %zu bytes unavailable!\n", bytes);
+    exit(1);
+    /*
+     * Suppress compiler warning: function might return no value
+     * This code is never reached.
+     */
+    return NULL;
+}
+
+
+static void
 keyPressEventProc(int c)
 {
     CurrentKey = c;
@@ -1598,8 +1612,6 @@ tmpClearBuffer(Buffer *buf)
     }
 }
 
-static Str currentURL(void);
-
 #ifdef USE_BUFINFO
 void
 saveBufferInfo(void)
@@ -1659,7 +1671,6 @@ repBuffer(Buffer *oldbuf, Buffer *buf)
     Firstbuf = replaceBuffer(Firstbuf, oldbuf, buf);
     Currentbuf = buf;
 }
-
 
 static void
 intTrap(SIGNAL_ARG)
