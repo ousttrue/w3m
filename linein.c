@@ -6,6 +6,7 @@
 #include "config.h"
 #include "ctrlcode.h"
 #include "fm.h"
+#include "form.h"
 #include "indep.h"
 #include "local.h"
 #include "search.h"
