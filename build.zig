@@ -1,5 +1,5 @@
 const std = @import("std");
-const zcc = @import("compile_commands");
+// const zcc = @import("compile_commands");
 
 const system_libs = [_][]const u8{
     "gc", "gpm", "ssl", "ncurses", "crypto",
@@ -82,7 +82,7 @@ const libwc_srcs = [_][]const u8{
 };
 
 pub fn build(b: *std.Build) void {
-    var targets = std.ArrayListUnmanaged(*std.Build.Step.Compile){};
+    var targets: std.ArrayList(*std.Build.Step.Compile) = .initBuffer(&.{});
 
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
@@ -116,6 +116,7 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
         .root_source_file = b.path("main.zig"),
+        .link_libc = true,
     });
     const exe = b.addExecutable(.{
         .name = "w3m",
@@ -123,9 +124,8 @@ pub fn build(b: *std.Build) void {
     });
     targets.append(b.allocator, exe) catch @panic("OOM");
     b.installArtifact(exe);
-    exe.linkLibC();
-    exe.addIncludePath(b.path("libwc"));
-    exe.addIncludePath(b.path("."));
+    exe.root_module.addIncludePath(b.path("libwc"));
+    exe.root_module.addIncludePath(b.path("."));
 
     const flags = [_][]const u8{
         "-Wno-implicit-int",
@@ -139,11 +139,11 @@ pub fn build(b: *std.Build) void {
         b.fmt("-DRC_DIR=\"{s}\"", .{RC_DIR}),
         b.fmt("-DLOCALEDIR=\"{s}\"", .{localedir}),
     };
-    exe.addCSourceFiles(.{
+    exe.root_module.addCSourceFiles(.{
         .files = &w3m_srcs,
         .flags = &flags,
     });
-    exe.addCSourceFiles(.{
+    exe.root_module.addCSourceFiles(.{
         .root = b.path("libwc"),
         .files = &libwc_srcs,
         .flags = &.{
@@ -152,7 +152,7 @@ pub fn build(b: *std.Build) void {
         },
     });
     for (system_libs) |lib| {
-        exe.linkSystemLibrary(lib);
+        exe.root_module.linkSystemLibrary(lib, .{});
     }
 
     const wf = gen_functable(b);
@@ -165,7 +165,7 @@ pub fn build(b: *std.Build) void {
         b.getInstallStep().dependOn(&install.step);
 
         exe.step.dependOn(&install.step);
-        exe.addIncludePath(b.path("zig-out/include"));
+        exe.root_module.addIncludePath(b.path("zig-out/include"));
     }
 
     {
@@ -178,13 +178,13 @@ pub fn build(b: *std.Build) void {
         run_mktable.addArg("100");
         // run_mktable.addFileArg(functable_tab.output);
         run_mktable.addArg("functable.tab");
-        const install = b.addInstallFile(run_mktable.captureStdOut(), "include/functable.c");
+        const install = b.addInstallFile(run_mktable.captureStdOut(.{}), "include/functable.c");
         b.getInstallStep().dependOn(&install.step);
 
         exe.step.dependOn(&install.step);
     }
 
-    _ = zcc.createStep(b, "cdb", targets.toOwnedSlice(b.allocator) catch @panic("OOM"));
+    // _ = zcc.createStep(b, "cdb", targets.toOwnedSlice(b.allocator) catch @panic("OOM"));
 }
 
 fn gen_functable(b: *std.Build) *std.Build.Step.WriteFile {
@@ -217,12 +217,13 @@ fn build_mktable(
     const mod = b.addModule("mktable", .{
         .target = target,
         .optimize = optimize,
+        .link_libc = true,
     });
     const exe = b.addExecutable(.{
         .name = "mktable",
         .root_module = mod,
     });
-    exe.addCSourceFiles(.{
+    exe.root_module.addCSourceFiles(.{
         .files = &.{
             "mktable.c", "entity.c", "Str.c", "hash.c", "myctype.c",
         },
@@ -230,9 +231,8 @@ fn build_mktable(
             "-DDUMMY",
         },
     });
-    exe.linkLibC();
     for (libs) |lib| {
-        exe.linkSystemLibrary(lib);
+        exe.root_module.linkSystemLibrary(lib, .{});
     }
     return exe;
 }
@@ -251,12 +251,12 @@ fn gen_funcname(
     var awk = b.addSystemCommand(&.{ "awk", "-f" });
     awk.addFileArg(awk_script);
     awk.setStdIn(.{
-        .lazy_path = sort.captureStdOut(),
+        .lazy_path = sort.captureStdOut(.{}),
     });
 
     return .{
         .step = awk,
-        .output = awk.captureStdOut(),
+        .output = awk.captureStdOut(.{}),
     };
 }
 
@@ -280,7 +280,7 @@ fn gen_funcname_tab(b: *std.Build) struct {
 
     var cpp = b.addSystemCommand(&.{ "gcc", "-E", "-" });
     cpp.setStdIn(.{
-        .lazy_path = sed.captureStdOut(),
+        .lazy_path = sed.captureStdOut(.{}),
     });
     // {
     //     const install = b.addInstallFile(cpp.captureStdOut(), "02_gcc_e.txt");
@@ -292,11 +292,11 @@ fn gen_funcname_tab(b: *std.Build) struct {
         "$1 ~ /^[_A-Za-z]/ { for (i=2;i<=NF;i++) { print $i, $1} }",
     });
     awk.setStdIn(.{
-        .lazy_path = cpp.captureStdOut(),
+        .lazy_path = cpp.captureStdOut(.{}),
     });
 
     return .{
         .step = awk,
-        .output = awk.captureStdOut(),
+        .output = awk.captureStdOut(.{}),
     };
 }
