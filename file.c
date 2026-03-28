@@ -3410,7 +3410,11 @@ process_img(struct parsed_tag *tag, int width)
 	}
 	else
 #endif
-	    Strcat_charp(tmp, html_quote(q));
+	    /* Add alt text, mark as such when dumping */
+	    Strcat_charp(tmp,
+			 html_quote(w3m_dump ?
+				    Strnew_m_charp("[Img: ", q, "]", NULL)->ptr :
+				    q));
 	goto img_end;
     }
     if (w > 0 && i > 0) {

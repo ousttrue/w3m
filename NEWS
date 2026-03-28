@@ -1,5 +1,8 @@
 Unreleased
 
+* new features
+  - Mark image alt text by wrapping it in '[Img: ... ]' when dumping
+
 * bug fixes
   - Respect W3M_DIR when initializing the w3m config
 
