@@ -1,5 +1,5 @@
 const std = @import("std");
-// const zcc = @import("compile_commands");
+const zcc = @import("compile_commands");
 
 const system_libs = [_][]const u8{
     "gc", "gpm", "ssl", "ncurses", "crypto",
@@ -184,7 +184,8 @@ pub fn build(b: *std.Build) void {
         exe.step.dependOn(&install.step);
     }
 
-    // _ = zcc.createStep(b, "cdb", targets.toOwnedSlice(b.allocator) catch @panic("OOM"));
+    const cdb = zcc.createStep(b, targets.toOwnedSlice(b.allocator) catch @panic("OOM"));
+    b.getInstallStep().dependOn(&cdb.step);
 }
 
 fn gen_functable(b: *std.Build) *std.Build.Step.WriteFile {
