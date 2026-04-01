@@ -1280,12 +1280,6 @@ void w3m_exit(int i);
 #define AL_IMPLICIT 2
 #define AL_IMPLICIT_ONCE 3
 
-typedef struct _AlarmEvent {
-    int sec;
-    short status;
-    int cmd;
-    void* data;
-} AlarmEvent;
 #endif
 
 /*

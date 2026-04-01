@@ -45,10 +45,16 @@ typedef struct _Menu {
     int keyselect[128];
 } Menu;
 
+extern Menu MainMenu;
+extern Menu SelectMenu;
+extern Menu SelTabMenu;
+
 typedef struct _MenuList {
     char* id;
     Menu* menu;
     MenuItem* item;
 } MenuList;
+
+extern MenuList* w3mMenuList;
 
 #endif /* not MENU_H */

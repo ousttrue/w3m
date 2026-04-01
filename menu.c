@@ -700,7 +700,7 @@ static int (*MenuPcKeymap[256])(char c) = {
 /* *INDENT-ON* */
 /* --- SelectMenu --- */
 
-static Menu SelectMenu;
+Menu SelectMenu;
 static int SelectV = 0;
 static void initSelectMenu(void);
 static void smChBuf(void);
@@ -710,7 +710,7 @@ static int smDelBuf(char c);
 
 /* --- SelTabMenu --- */
 
-static Menu SelTabMenu;
+Menu SelTabMenu;
 static int SelTabV = 0;
 static void initSelTabMenu(void);
 static void smChTab(void);
@@ -720,7 +720,7 @@ static int smDelTab(char c);
 
 /* --- MainMenu --- */
 
-static Menu MainMenu;
+Menu MainMenu;
 #ifdef USE_M17N
 /* FIXME: gettextize here */
 static wc_ces MainMenuCharset = WC_CES_US_ASCII; /* FIXME: charset of source code */
@@ -756,7 +756,7 @@ static MenuItem MainMenuItem[] = {
 
 /* --- MainMenu (END) --- */
 
-static MenuList* w3mMenuList;
+MenuList* w3mMenuList;
 
 static Menu* CurrentMenu = NULL;
 
@@ -1760,47 +1760,9 @@ void mainMenu(int x, int y)
     popupMenu(x, y, &MainMenu);
 }
 
-DEFUN(mainMn, MAIN_MENU MENU, "Pop up menu")
-{
-    Menu* menu = &MainMenu;
-    char* data;
-    int n;
-    int x = Currentbuf->cursorX + Currentbuf->rootX,
-        y = Currentbuf->cursorY + Currentbuf->rootY;
-
-    data = searchKeyData();
-    if (data != NULL) {
-        n = getMenuN(w3mMenuList, data);
-        if (n < 0)
-            return;
-        menu = w3mMenuList[n].menu;
-    }
-#ifdef USE_MOUSE
-    if (mouse_action.in_action) {
-        x = mouse_action.cursorX;
-        y = mouse_action.cursorY;
-    }
-#endif
-    popupMenu(x, y, menu);
-}
-
 /* --- MainMenu (END) --- */
 
 /* --- SelectMenu --- */
-
-DEFUN(selMn, SELECT_MENU, "Pop up buffer-stack menu")
-{
-    int x = Currentbuf->cursorX + Currentbuf->rootX,
-        y = Currentbuf->cursorY + Currentbuf->rootY;
-
-#ifdef USE_MOUSE
-    if (mouse_action.in_action) {
-        x = mouse_action.cursorX;
-        y = mouse_action.cursorY;
-    }
-#endif
-    popupMenu(x, y, &SelectMenu);
-}
 
 static void
 initSelectMenu(void)
@@ -1935,20 +1897,6 @@ smDelBuf(char c)
 /* --- SelectMenu (END) --- */
 
 /* --- SelTabMenu --- */
-
-DEFUN(tabMn, TAB_MENU, "Pop up tab selection menu")
-{
-    int x = Currentbuf->cursorX + Currentbuf->rootX,
-        y = Currentbuf->cursorY + Currentbuf->rootY;
-
-#ifdef USE_MOUSE
-    if (mouse_action.in_action) {
-        x = mouse_action.cursorX;
-        y = mouse_action.cursorY;
-    }
-#endif
-    popupMenu(x, y, &SelTabMenu);
-}
 
 static void
 initSelTabMenu(void)

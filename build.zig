@@ -6,6 +6,7 @@ const system_libs = [_][]const u8{
 };
 
 const w3m_srcs = [_][]const u8{
+    "defun.c",
     "keybind.c",
     "util.c",
 
@@ -272,8 +273,7 @@ fn gen_funcname_tab(b: *std.Build) struct {
         "-ne",
         "/^DEFUN/{p;n;/^[ \t]/p;}",
     });
-    sed.addFileArg(b.path("main.c"));
-    sed.addFileArg(b.path("menu.c"));
+    sed.addFileArg(b.path("defun.c"));
     // {
     //     const install = b.addInstallFile(sed.captureStdOut(), "01_sed.txt");
     //     b.getInstallStep().dependOn(&install.step);

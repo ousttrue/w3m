@@ -122,7 +122,7 @@ extern void stopI(void);
 #endif
 #ifdef USE_ALARM
 extern void setAlarm(void);
-extern AlarmEvent* setAlarmEvent(AlarmEvent* event, int sec, short status,
+extern struct _AlarmEvent* setAlarmEvent(struct _AlarmEvent* event, int sec, short status,
     int cmd, void* data);
 #else
 #define setAlarm nulcmd
