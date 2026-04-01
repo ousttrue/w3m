@@ -94,8 +94,6 @@ void bzero(void*, int);
 #define init(x)
 #endif /* not MAINPROGRAM */
 
-#define DEFUN(funcname, macroname, docstring) void funcname(void)
-
 /*
  * Constants.
  */
