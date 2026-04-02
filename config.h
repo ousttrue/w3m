@@ -152,14 +152,10 @@ typedef long clen_t;
 #define HAVE_LANGINFO_CODESET 1
 
 #define SETPGRP_VOID 1
-#ifdef HAVE_SETPGRP
 #ifdef SETPGRP_VOID
 #define SETPGRP() setpgrp()
 #else
 #define SETPGRP() setpgrp(0, 0)
-#endif
-#else /* no HAVE_SETPGRP; OS/2 EMX */
-#define SETPGRP() setpgid(0, 0)
 #endif
 #define HAVE_FLOAT_H 1
 #define HAVE_SYS_SELECT_H 1
@@ -173,15 +169,9 @@ typedef RETSIGTYPE MySignalHandler;
 #define SIGNAL_RETURN return
 
 #ifdef HAVE_SIGSETJMP
-#ifdef __MINGW32_VERSION
-#define SETJMP(env) setjmp(env)
-#define LONGJMP(env, val) longjmp(env, val)
-#define JMP_BUF jmp_buf
-#else
 #define SETJMP(env) sigsetjmp(env, 1)
 #define LONGJMP(env, val) siglongjmp(env, val)
 #define JMP_BUF sigjmp_buf
-#endif /* __MINGW32_VERSION */
 #else
 #define SETJMP(env) setjmp(env)
 #define LONGJMP(env, val) longjmp(env, val)
@@ -252,12 +242,5 @@ typedef RETSIGTYPE MySignalHandler;
 #define INFLATE_NAME "inflate"
 #define BROTLI_NAME "brotli"
 
-#ifdef __MINGW32_VERSION
-#define SIGKILL SIGTERM
-#define S_IXGRP 0
-#define S_IXOTH 0
-#define S_IRWXG 0
-#define S_IRWXO 0
-#endif /* __MINGW32_VERSION */
 
 #endif /* CONFIG_H_SEEN */

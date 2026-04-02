@@ -145,28 +145,7 @@ w3mfb_get_image_size(w3mimg_op * self, W3MImage * img,
     return 1;
 }
 
-#ifdef W3MIMGDISPLAY_SETUID
-static int
-check_tty_console(char *tty)
-{
-    if (tty == NULL || *tty == '\0')
-	return 0;
-    if (strncmp(tty, "/dev/", 5) == 0)
-	tty += 5;
-#if defined(__linux__)
-    if (strncmp(tty, "tty", 3) == 0 && isdigit(*(tty + 3)))
-	return 1;
-    if (strncmp(tty, "vc/", 3) == 0 && isdigit(*(tty + 3)))
-	return 1;
-#elif defined(__FreeBSD__)
-    if (strncmp(tty, "ttyv", 4) == 0 && isxdigit(*(tty + 4)))
-	return 1;
-#endif
-    return 0;
-}
-#else
 #define check_tty_console(tty)	1
-#endif
 
 w3mimg_op *
 w3mimg_fbopen()

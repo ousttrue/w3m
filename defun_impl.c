@@ -573,9 +573,7 @@ void selBuf(struct CmdArgs args)
     for (buf = Firstbuf; buf != NULL; buf = buf->nextBuffer) {
         if (buf == Currentbuf)
             continue;
-#ifdef USE_IMAGE
         deleteImage(buf);
-#endif
         if (clear_buffer)
             tmpClearBuffer(buf);
     }
@@ -830,15 +828,12 @@ void followA(struct CmdArgs args)
 {
     Anchor* a;
     ParsedURL u;
-#ifdef USE_IMAGE
     int x = 0, y = 0, map = 0;
-#endif
     char* url;
 
     if (Currentbuf->firstLine == NULL)
         return;
 
-#ifdef USE_IMAGE
     a = retrieveCurrentImg(Currentbuf);
     if (a && a->image && a->image->map) {
         _followForm(FALSE);
@@ -848,13 +843,6 @@ void followA(struct CmdArgs args)
         getMapXY(Currentbuf, a, &x, &y);
         map = 1;
     }
-#else
-    a = retrieveCurrentMap(Currentbuf);
-    if (a) {
-        _followForm(FALSE);
-        return;
-    }
-#endif
     a = retrieveCurrentAnchor(Currentbuf);
     if (a == NULL) {
         _followForm(FALSE);
@@ -874,19 +862,9 @@ void followA(struct CmdArgs args)
     }
     if (handleMailto(a->url))
         return;
-#if 0
-    else if (!strncasecmp(a->url, "news:", 5) && strchr(a->url, '@') == NULL) {
-	/* news:newsgroup is not supported */
-	/* FIXME: gettextize? */
-	disp_err_message("news:newsgroup_name is not supported", TRUE);
-	return;
-    }
-#endif /* USE_NNTP */
     url = a->url;
-#ifdef USE_IMAGE
     if (map)
         url = Sprintf("%s?%d,%d", a->url, x, y)->ptr;
-#endif
 
     if (check_target && open_tab_blank && a->target && (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
         Buffer* buf;
@@ -1224,22 +1202,15 @@ void adBmark(struct CmdArgs args)
     FormList* request;
 
     tmp = Sprintf("mode=panel&cookie=%s&bmark=%s&url=%s&title=%s"
-#ifdef USE_M17N
-                  "&charset=%s"
-#endif
-        ,
+                  "&charset=%s",
         (Str_form_quote(localCookie()))->ptr,
         (Str_form_quote(Strnew_charp(BookmarkFile)))->ptr,
         (Str_form_quote(parsedURL2Str(&Currentbuf->currentURL)))->ptr,
-#ifdef USE_M17N
         (Str_form_quote(wc_conv_strict(Currentbuf->buffername,
              InnerCharset,
              BookmarkCharset)))
             ->ptr,
         wc_ces_to_charset(BookmarkCharset));
-#else
-        (Str_form_quote(Strnew_charp(Currentbuf->buffername)))->ptr);
-#endif
     request = newFormList(NULL, "post", NULL, NULL, NULL, NULL, NULL);
     request->body = tmp->ptr;
     request->length = tmp->length;
@@ -1340,9 +1311,7 @@ void linkLst(struct CmdArgs args)
 
     buf = link_list_panel(Currentbuf);
     if (buf != NULL) {
-#ifdef USE_M17N
         buf->document_charset = Currentbuf->document_charset;
-#endif
         cmd_loadBuffer(buf, BP_NORMAL, LB_NOLINK);
     }
 }
@@ -1463,10 +1432,8 @@ void peekIMG(struct CmdArgs args)
 void curURL(struct CmdArgs args)
 {
     static Str s = NULL;
-#ifdef USE_M17N
     static Lineprop* p = NULL;
     Lineprop* pp;
-#endif
     static int offset = 0, n;
 
     if (Currentbuf->bufferprop & BP_INTERNAL)
@@ -1481,19 +1448,15 @@ void curURL(struct CmdArgs args)
         s = currentURL();
         if (DecodeURL)
             s = Strnew_charp(url_decode2(s->ptr, NULL));
-#ifdef USE_M17N
         s = checkType(s, &pp, NULL);
         p = NewAtom_N(Lineprop, s->length);
         bcopy((void*)pp, (void*)p, s->length * sizeof(Lineprop));
-#endif
     }
     n = searchKeyNum();
     if (n > 1 && s->length > (n - 1) * (COLS - 1))
         offset = (n - 1) * (COLS - 1);
-#ifdef USE_M17N
     while (offset < s->length && p[offset] & PC_WCHAR2)
         offset++;
-#endif
     disp_message_nomouse(&s->ptr[offset], TRUE);
 }
 /* view HTML source */
@@ -1511,28 +1474,22 @@ void vwSrc(struct CmdArgs args)
     }
     if (Currentbuf->sourcefile == NULL) {
         if (Currentbuf->pagerSource && !strcasecmp(Currentbuf->type, "text/plain")) {
-#ifdef USE_M17N
             wc_ces old_charset;
             wc_bool old_fix_width_conv;
-#endif
             FILE* f;
             Str tmpf = tmpfname(TMPF_SRC, NULL);
             f = fopen(tmpf->ptr, "w");
             if (f == NULL)
                 return;
-#ifdef USE_M17N
             old_charset = DisplayCharset;
             old_fix_width_conv = WcOption.fix_width_conv;
             DisplayCharset = (Currentbuf->document_charset != WC_CES_US_ASCII)
                 ? Currentbuf->document_charset
                 : 0;
             WcOption.fix_width_conv = WC_FALSE;
-#endif
             saveBufferBody(Currentbuf, f, TRUE);
-#ifdef USE_M17N
             DisplayCharset = old_charset;
             WcOption.fix_width_conv = old_fix_width_conv;
-#endif
             fclose(f);
             Currentbuf->sourcefile = tmpf->ptr;
         } else {
@@ -1571,9 +1528,7 @@ void vwSrc(struct CmdArgs args)
     buf->sourcefile = Currentbuf->sourcefile;
     buf->header_source = Currentbuf->header_source;
     buf->search_header = Currentbuf->search_header;
-#ifdef USE_M17N
     buf->document_charset = Currentbuf->document_charset;
-#endif
     buf->clone = Currentbuf->clone;
     (*buf->clone)++;
 
@@ -1587,9 +1542,7 @@ void vwSrc(struct CmdArgs args)
 void reload(struct CmdArgs args)
 {
     Buffer *buf, *fbuf = NULL, sbuf;
-#ifdef USE_M17N
     wc_ces old_charset;
-#endif
     Str url;
     FormList* request;
     int multipart;
@@ -1655,17 +1608,13 @@ void reload(struct CmdArgs args)
     /* FIXME: gettextize? */
     message("Reloading...", 0, 0);
     refresh();
-#ifdef USE_M17N
     old_charset = DocumentCharset;
     if (Currentbuf->document_charset != WC_CES_US_ASCII)
         DocumentCharset = Currentbuf->document_charset;
-#endif
     SearchHeader = Currentbuf->search_header;
     DefaultType = Currentbuf->real_type;
     buf = loadGeneralFile(url->ptr, NULL, NO_REFERER, RG_NOCACHE, request);
-#ifdef USE_M17N
     DocumentCharset = old_charset;
-#endif
     SearchHeader = FALSE;
     DefaultType = NULL;
 
@@ -1849,10 +1798,8 @@ void curlno(struct CmdArgs args)
             (int)((double)cur * 100.0 / (double)(all ? all : 1)
                 + 0.5),
             col, len);
-#ifdef USE_M17N
     Strcat_charp(tmp, "  ");
     Strcat_charp(tmp, wc_ces_to_charset_desc(Currentbuf->document_charset));
-#endif
 
     disp_message(tmp->ptr, FALSE);
 }
@@ -1883,150 +1830,6 @@ void stopI(struct CmdArgs args)
      */
     Currentbuf->image_flag = IMG_FLAG_SKIP;
     displayBuffer(Currentbuf, B_REDRAW_IMAGE);
-}
-
-void msToggle(struct CmdArgs args)
-{
-    if (use_mouse) {
-        use_mouse = FALSE;
-    } else {
-        use_mouse = TRUE;
-    }
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
-}
-
-void mouse(struct CmdArgs args)
-{
-    int btn, x, y;
-
-    btn = (unsigned char)getch() - 32;
-#if defined(__CYGWIN__) && CYGWIN_VERSION_DLL_MAJOR < 1005
-    if (cygwin_mouse_btn_swapped) {
-        if (btn == MOUSE_BTN2_DOWN)
-            btn = MOUSE_BTN3_DOWN;
-        else if (btn == MOUSE_BTN3_DOWN)
-            btn = MOUSE_BTN2_DOWN;
-    }
-#endif
-    x = (unsigned char)getch() - 33;
-    if (x < 0)
-        x += 0x100;
-    y = (unsigned char)getch() - 33;
-    if (y < 0)
-        y += 0x100;
-
-    if (x < 0 || x >= COLS || y < 0 || y > LASTLINE)
-        return;
-    process_mouse(btn, x, y);
-}
-
-void sgrmouse(struct CmdArgs args)
-{
-    int btn = 0, x = 0, y = 0;
-    unsigned char c;
-
-    do {
-        c = getch();
-        if (IS_DIGIT(c))
-            btn = btn * 10 + c - '0';
-        else if (c == ';')
-            break;
-        else
-            return;
-    } while (1);
-
-#if defined(__CYGWIN__) && CYGWIN_VERSION_DLL_MAJOR < 1005
-    if (cygwin_mouse_btn_swapped) {
-        if (btn == MOUSE_BTN2_DOWN)
-            btn = MOUSE_BTN3_DOWN;
-        else if (btn == MOUSE_BTN3_DOWN)
-            btn = MOUSE_BTN2_DOWN;
-    };
-#endif
-
-    do {
-        c = getch();
-        if (IS_DIGIT(c))
-            x = x * 10 + c - '0';
-        else if (c == ';')
-            break;
-        else
-            return;
-    } while (1);
-    if (x > 0)
-        x--;
-
-    do {
-        c = getch();
-        if (IS_DIGIT(c))
-            y = y * 10 + c - '0';
-        else if (c == 'M')
-            break;
-        else if (c == 'm') {
-            btn |= 3;
-            break;
-        } else
-            return;
-    } while (1);
-    if (y > 0)
-        y--;
-
-    if (x < 0 || x >= COLS || y < 0 || y > LASTLINE)
-        return;
-    process_mouse(btn, x, y);
-}
-
-void movMs(struct CmdArgs args)
-{
-    if (!mouse_action.in_action)
-        return;
-    if ((nTab > 1 || mouse_action.menu_str) && mouse_action.cursorY < LastTab->y + 1)
-        return;
-    else if (mouse_action.cursorX >= Currentbuf->rootX && mouse_action.cursorY < LASTLINE) {
-        cursorXY(Currentbuf, mouse_action.cursorX - Currentbuf->rootX,
-            mouse_action.cursorY - Currentbuf->rootY);
-    }
-    displayBuffer(Currentbuf, B_NORMAL);
-}
-
-void menuMs(struct CmdArgs args)
-{
-    if (!mouse_action.in_action)
-        return;
-    if ((nTab > 1 || mouse_action.menu_str) && mouse_action.cursorY < LastTab->y + 1)
-        mouse_action.cursorX -= FRAME_WIDTH + 1;
-    else if (mouse_action.cursorX >= Currentbuf->rootX && mouse_action.cursorY < LASTLINE) {
-        cursorXY(Currentbuf, mouse_action.cursorX - Currentbuf->rootX,
-            mouse_action.cursorY - Currentbuf->rootY);
-        displayBuffer(Currentbuf, B_NORMAL);
-    }
-    mainMn((struct CmdArgs) { 0 });
-}
-
-void tabMs(struct CmdArgs args)
-{
-    TabBuffer* tab;
-
-    if (!mouse_action.in_action)
-        return;
-    tab = posTab(mouse_action.cursorX, mouse_action.cursorY);
-    if (!tab || tab == NO_TABBUFFER)
-        return;
-    CurrentTab = tab;
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
-}
-
-void closeTMs(struct CmdArgs args)
-{
-    TabBuffer* tab;
-
-    if (!mouse_action.in_action)
-        return;
-    tab = posTab(mouse_action.cursorX, mouse_action.cursorY);
-    if (!tab || tab == NO_TABBUFFER)
-        return;
-    deleteTab(tab);
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
 void dispVer(struct CmdArgs args)
@@ -2060,7 +1863,7 @@ void dictwordat(struct CmdArgs args)
 void execCmd(struct CmdArgs args)
 {
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    char *data = searchKeyData();
+    char* data = searchKeyData();
     if (data == NULL || *data == '\0') {
         data = inputStrHist("command [; ...]: ", "", TextHist);
         if (data == NULL) {
@@ -2079,19 +1882,11 @@ void execCmd(struct CmdArgs args)
         const char* cmd = getWord(&data);
         if (!cmd)
             break;
-        char *p = getQWord(&data);
+        char* p = getQWord(&data);
         CurrentKey = -1;
         CurrentKeyData = NULL;
         CurrentCmdData = *p ? p : NULL;
-#ifdef USE_MOUSE
-        if (use_mouse)
-            mouse_inactive();
-#endif
         w3mFunc(cmd);
-#ifdef USE_MOUSE
-        if (use_mouse)
-            mouse_active();
-#endif
         CurrentCmdData = NULL;
     }
     displayBuffer(Currentbuf, B_NORMAL);
@@ -2136,9 +1931,7 @@ void reinit(struct CmdArgs args)
     if (resource == NULL) {
         init_rc();
         sync_with_option();
-#ifdef USE_COOKIE
         initCookie();
-#endif
         displayBuffer(Currentbuf, B_REDRAW_IMAGE);
         return;
     }
@@ -2150,12 +1943,10 @@ void reinit(struct CmdArgs args)
         return;
     }
 
-#ifdef USE_COOKIE
     if (!strcasecmp(resource, "COOKIE")) {
         initCookie();
         return;
     }
-#endif
 
     if (!strcasecmp(resource, "KEYMAP")) {
         initKeymap(TRUE);
@@ -2167,32 +1958,15 @@ void reinit(struct CmdArgs args)
         return;
     }
 
-#ifdef USE_MOUSE
-    if (!strcasecmp(resource, "MOUSE")) {
-        initMouseAction();
-        displayBuffer(Currentbuf, B_REDRAW_IMAGE);
-        return;
-    }
-#endif
-
-#ifdef USE_MENU
     if (!strcasecmp(resource, "MENU")) {
         initMenu();
         return;
     }
-#endif
 
     if (!strcasecmp(resource, "MIMETYPES")) {
         initMimeTypes();
         return;
     }
-
-#ifdef USE_EXTERNAL_URI_LOADER
-    if (!strcasecmp(resource, "URIMETHODS")) {
-        initURIMethods();
-        return;
-    }
-#endif
 
     disp_err_message(Sprintf("Don't know how to reinitialize '%s'", resource)->ptr, FALSE);
 }
@@ -2308,9 +2082,7 @@ void ldDL(struct CmdArgs args)
 {
     Buffer* buf;
     int replace = FALSE, new_tab = FALSE;
-#ifdef USE_ALARM
     int reload;
-#endif
 
     if (Currentbuf->bufferprop & BP_INTERNAL && !strcmp(Currentbuf->buffername, DOWNLOAD_LIST_TITLE))
         replace = TRUE;
@@ -2325,9 +2097,7 @@ void ldDL(struct CmdArgs args)
         }
         return;
     }
-#ifdef USE_ALARM
     reload = checkDownloadList();
-#endif
     buf = DownloadListBuffer();
     if (!buf) {
         displayBuffer(Currentbuf, B_NORMAL);
@@ -2345,11 +2115,9 @@ void ldDL(struct CmdArgs args)
     pushBuffer(buf);
     if (replace || new_tab)
         deletePrevBuf((struct CmdArgs) { 0 });
-#ifdef USE_ALARM
     if (reload)
         Currentbuf->event = setAlarmEvent(Currentbuf->event, 1, AL_IMPLICIT,
             "RELOAD", NULL);
-#endif
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
@@ -2430,12 +2198,6 @@ void mainMn(struct CmdArgs args)
             return;
         menu = w3mMenuList[n].menu;
     }
-#ifdef USE_MOUSE
-    if (mouse_action.in_action) {
-        x = mouse_action.cursorX;
-        y = mouse_action.cursorY;
-    }
-#endif
     popupMenu(x, y, menu);
 }
 
@@ -2444,12 +2206,6 @@ void selMn(struct CmdArgs args)
     int x = Currentbuf->cursorX + Currentbuf->rootX,
         y = Currentbuf->cursorY + Currentbuf->rootY;
 
-#ifdef USE_MOUSE
-    if (mouse_action.in_action) {
-        x = mouse_action.cursorX;
-        y = mouse_action.cursorY;
-    }
-#endif
     popupMenu(x, y, &SelectMenu);
 }
 
@@ -2458,11 +2214,5 @@ void tabMn(struct CmdArgs args)
     int x = Currentbuf->cursorX + Currentbuf->rootX,
         y = Currentbuf->cursorY + Currentbuf->rootY;
 
-#ifdef USE_MOUSE
-    if (mouse_action.in_action) {
-        x = mouse_action.cursorX;
-        y = mouse_action.cursorY;
-    }
-#endif
     popupMenu(x, y, &SelTabMenu);
 }

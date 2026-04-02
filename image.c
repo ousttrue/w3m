@@ -6,11 +6,8 @@
 #include <signal.h>
 #include <errno.h>
 #include <unistd.h>
-#ifdef HAVE_WAITPID
 #include <sys/wait.h>
-#endif
 
-#ifdef USE_IMAGE
 
 static int image_index = 0;
 
@@ -231,12 +228,6 @@ void drawImage(void)
             int sw = (i->width + i->sx % pixel_per_char_i + pixel_per_char_i - 1) / pixel_per_char_i;
             int sh = (i->height + i->sy % pixel_per_line_i + pixel_per_line_i - 1) / pixel_per_line_i;
 
-#if 0
-	    fprintf(stderr,"file %s x %d y %d w %d h %d sx %d sy %d sw %d sh %d (ppc %d ppl %d)\n",
-		i->cache->file,
-		x, y, w, h, sx, sy, sw, sh,
-		pixel_per_char_i, pixel_per_line_i);
-#endif
 
             if (enable_inline_image == INLINE_IMG_SIXEL) {
                 w = i->cache->a_width > 0 ? i->width : 0;
@@ -756,4 +747,3 @@ got_image_size:
     putHash_sv(image_hash, tmp->ptr, (void*)cache);
     return TRUE;
 }
-#endif

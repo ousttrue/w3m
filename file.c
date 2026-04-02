@@ -40,9 +40,6 @@ static FILE* lessopen_stream(char* path);
 static Buffer* loadcmdout(char* cmd,
     Buffer* (*loadproc)(URLFile*, Buffer*),
     Buffer* defaultbuf);
-#ifndef USE_ANSI_COLOR
-#define addnewline(a, b, c, d, e, f, g) _addnewline(a, b, c, e, f, g)
-#endif
 static void addnewline(Buffer* buf, char* line, Lineprop* prop,
     Linecolor* color, int pos, int width, int nlines);
 static void addLink(Buffer* buf, struct parsed_tag* tag);
@@ -55,9 +52,7 @@ static struct table_mode table_mode[MAX_TABLE];
 #if defined(USE_M17N) || defined(USE_IMAGE)
 static ParsedURL* cur_baseURL = NULL;
 #endif
-#ifdef USE_M17N
 static wc_ces cur_document_charset = 0;
-#endif
 
 static Str cur_title;
 static Str pre_title;
@@ -70,13 +65,11 @@ static Str cur_option_value;
 static Str cur_option_label;
 static int cur_option_selected;
 static int cur_status;
-#ifdef MENU_SELECT
 /* menu based <select>  */
 FormSelectOption* select_option;
 int max_select = MAX_SELECT;
 static int n_select;
 static int cur_option_maxwidth;
-#endif /* MENU_SELECT */
 
 static Str cur_textarea;
 Str* textarea_str;
@@ -89,12 +82,10 @@ int max_textarea = MAX_TEXTAREA;
 
 static int http_response_code;
 
-#ifdef USE_M17N
 static wc_ces content_charset = 0;
 static wc_ces meta_charset = 0;
 static char* check_charset(char* p);
 static char* check_accept_charset(char* p);
-#endif
 
 #define set_prevchar(x, y, n) Strcopy_charp_n((x), (y), (n))
 #define set_space_to_prevchar(x) Strcopy_charp_n((x), " ", 1)
@@ -111,9 +102,7 @@ static struct link_stack* link_stack = NULL;
 #define FORMSTACK_SIZE 10
 #define FRAMESTACK_SIZE 10
 
-#ifdef USE_NNTP
 #define Str_news_endline(s) ((s)->ptr[0] == '.' && ((s)->ptr[1] == '\n' || (s)->ptr[1] == '\r' || (s)->ptr[1] == '\0'))
-#endif /* USE_NNTP */
 
 #define INITIAL_FORM_SIZE 10
 static FormList** forms;
@@ -126,9 +115,7 @@ static int form_sp = 0;
 static clen_t current_content_length;
 
 static int cur_hseq;
-#ifdef USE_IMAGE
 static int cur_iseq;
-#endif
 
 #define MAX_UL_LEVEL 9
 #define UL_SYMBOL(x) (N_GRAPH_SYMBOL + (x))
@@ -138,7 +125,6 @@ static int cur_iseq;
 #define IMG_SYMBOL UL_SYMBOL(12)
 #define HR_SYMBOL 26
 
-#ifdef USE_COOKIE
 /* This array should be somewhere else */
 /* FIXME: gettextize? */
 char* violations[COO_EMAX] = {
@@ -152,7 +138,6 @@ char* violations[COO_EMAX] = {
     "RFC 2109 4.3.2 rule 4",
     "RFC XXXX 4.3.2 rule 5"
 };
-#endif
 
 /* *INDENT-OFF* */
 static struct compression_decoder {
@@ -201,12 +186,10 @@ UFhalfclose(URLFile* f)
     case SCM_FTP:
         closeFTP();
         break;
-#ifdef USE_NNTP
     case SCM_NEWS:
     case SCM_NNTP:
         closeNews();
         break;
-#endif
     default:
         UFclose(f);
         break;
@@ -241,9 +224,7 @@ loadSomething(URLFile* f,
     if (f->scheme == SCM_LOCAL && buf->sourcefile == NULL)
         buf->sourcefile = buf->filename;
     if (loadproc == loadHTMLBuffer
-#ifdef USE_IMAGE
         || loadproc == loadImageBuffer
-#endif
     )
         buf->type = "text/html";
     else
@@ -465,22 +446,14 @@ char* acceptableEncoding(void)
 /*
  * convert line
  */
-#ifdef USE_M17N
 Str convertLine(URLFile* uf, Str line, int mode, wc_ces* charset,
     wc_ces doc_charset)
-#else
-Str convertLine0(URLFile* uf, Str line, int mode)
-#endif
 {
-#ifdef USE_M17N
     line = wc_Str_conv_with_detect(line, charset, doc_charset, InnerCharset);
-#endif
     if (mode != RAW_MODE)
         cleanup_line(line, mode);
-#ifdef USE_NNTP
     if (uf && uf->scheme == SCM_NEWS)
         Strchop(line);
-#endif /* USE_NNTP */
     return line;
 }
 
@@ -520,75 +493,30 @@ int matchattr(char* p, char* attr, int len, Str* value)
     return 0;
 }
 
-#ifdef USE_IMAGE
-#ifdef USE_XFACE
-static char*
-xface2xpm(char* xface)
-{
-    Image image;
-    ImageCache* cache;
-    FILE* f;
-    struct stat st;
-
-    SKIP_BLANKS(xface);
-    image.url = xface;
-    image.ext = ".xpm";
-    image.width = 48;
-    image.height = 48;
-    image.cache = NULL;
-    cache = getImage(&image, NULL, IMG_FLAG_AUTO);
-    if (cache->loaded & IMG_FLAG_LOADED && !stat(cache->file, &st))
-        return cache->file;
-    cache->loaded = IMG_FLAG_ERROR;
-
-    f = popen(Sprintf("%s > %s", shell_quote(auxbinFile(XFACE2XPM)),
-                  shell_quote(cache->file))
-                  ->ptr,
-        "w");
-    if (!f)
-        return NULL;
-    fputs(xface, f);
-    pclose(f);
-    if (stat(cache->file, &st) || !st.st_size)
-        return NULL;
-    cache->loaded = IMG_FLAG_LOADED | IMG_FLAG_DONT_REMOVE;
-    cache->index = 0;
-    return cache->file;
-}
-#endif
-#endif
 
 void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
 {
     char *p, *q;
-#ifdef USE_COOKIE
     char* emsg;
-#endif
     char c;
     Str lineBuf2 = NULL;
     Str tmp;
     TextList* headerlist;
-#ifdef USE_M17N
     wc_ces charset = WC_CES_US_ASCII, mime_charset;
-#endif
     char* tmpf;
     FILE* src = NULL;
     Lineprop* propBuffer;
 
     headerlist = newBuf->document_header = newTextList();
     if (uf->scheme == SCM_HTTP
-#ifdef USE_SSL
         || uf->scheme == SCM_HTTPS
-#endif /* USE_SSL */
     )
         http_response_code = -1;
     else
         http_response_code = 0;
 
     if (thru && !newBuf->header_source
-#ifdef USE_IMAGE
         && !image_source
-#endif
     ) {
         tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
         src = fopen(tmpf, "w");
@@ -596,10 +524,8 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
             newBuf->header_source = tmpf;
     }
     while ((tmp = StrmyUFgets(uf)) && tmp->length) {
-#ifdef USE_NNTP
         if (uf->scheme == SCM_NEWS && tmp->ptr[0] == '.')
             Strshrinkfirst(tmp, 1);
-#endif
         if (w3m_reqlog) {
             FILE* ff;
             ff = fopen(w3m_reqlog, "a");
@@ -646,7 +572,6 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
                 for (; *q && (*q == '\r' || *q == '\n'); q++)
                     ;
             }
-#ifdef USE_IMAGE
             if (thru && activeImage && displayImage) {
                 Str src = NULL;
                 if (!strncasecmp(tmp->ptr, "X-Image-URL:", 12)) {
@@ -655,42 +580,25 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
                     src = Strnew_m_charp("<img src=\"", html_quote(tmpf),
                         "\" alt=\"X-Image-URL\">", NULL);
                 }
-#ifdef USE_XFACE
-                else if (!strncasecmp(tmp->ptr, "X-Face:", 7)) {
-                    tmpf = xface2xpm(&tmp->ptr[7]);
-                    if (tmpf)
-                        src = Strnew_m_charp("<img src=\"file:",
-                            html_quote(tmpf),
-                            "\" alt=\"X-Face\"",
-                            " width=48 height=48>", NULL);
-                }
-#endif
                 if (src) {
                     URLFile f;
                     Line* l;
-#ifdef USE_M17N
                     wc_ces old_charset = newBuf->document_charset;
-#endif
                     init_stream(&f, SCM_LOCAL, newStrStream(src));
                     loadHTMLstream(&f, newBuf, NULL, TRUE);
                     UFclose(&f);
                     for (l = newBuf->lastLine; l && l->real_linenumber;
                         l = l->prev)
                         l->real_linenumber = 0;
-#ifdef USE_M17N
                     newBuf->document_charset = old_charset;
-#endif
                 }
             }
-#endif
             lineBuf2 = tmp;
         } else {
             lineBuf2 = tmp;
         }
         if ((uf->scheme == SCM_HTTP
-#ifdef USE_SSL
                 || uf->scheme == SCM_HTTPS
-#endif /* USE_SSL */
                 )
             && http_response_code == -1) {
             p = lineBuf2->ptr;
@@ -735,7 +643,6 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
             }
             uf->content_encoding = uf->compression;
         }
-#ifdef USE_COOKIE
         else if (use_cookie && accept_cookie && pu && check_cookie_accept_domain(pu->host) && (!strncasecmp(lineBuf2->ptr, "Set-Cookie:", 11) || !strncasecmp(lineBuf2->ptr, "Set-Cookie2:", 12))) {
             Str name = Strnew(), value = Strnew(), domain = NULL, path = NULL,
                 comment = NULL, commentURL = NULL, port = NULL, tmp2;
@@ -857,7 +764,6 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
                 }
             }
         }
-#endif /* USE_COOKIE */
         else if (!strncasecmp(lineBuf2->ptr, "w3m-control:", 12) && uf->scheme == SCM_LOCAL_CGI) {
             Str funcname = Strnew();
 
@@ -912,7 +818,6 @@ checkContentType(Buffer* buf)
     r = Strnew();
     while (*p && *p != ';' && !IS_SPACE(*p))
         Strcat_char(r, *p++);
-#ifdef USE_M17N
     if ((p = strcasestr(p, "charset")) != NULL) {
         p += 7;
         SKIP_BLANKS(p);
@@ -924,7 +829,6 @@ checkContentType(Buffer* buf)
             content_charset = wc_guess_charset(p, 0);
         }
     }
-#endif
     return r->ptr;
 }
 
@@ -1141,7 +1045,6 @@ AuthBasicCred(struct http_auth* ha, Str uname, Str pw, ParsedURL* pu,
     return Strnew_m_charp("Basic ", base64_encode(s->ptr, s->length)->ptr, NULL);
 }
 
-#ifdef USE_DIGEST_AUTH
 #include <openssl/md5.h>
 
 /* RFC2617: 3.2.2 The Authorization Request Header
@@ -1360,7 +1263,6 @@ AuthDigestCred(struct http_auth* ha, Str uname, Str pw, ParsedURL* pu,
 
     return tmp;
 }
-#endif
 
 /* *INDENT-OFF* */
 struct auth_param none_auth_param[] = {
@@ -1372,7 +1274,6 @@ struct auth_param basic_auth_param[] = {
     { NULL, NULL }
 };
 
-#ifdef USE_DIGEST_AUTH
 /* RFC2617: 3.2.1 The WWW-Authenticate Response Header
  * challenge        =  "Digest" digest-challenge
  *
@@ -1401,13 +1302,10 @@ struct auth_param digest_auth_param[] = {
     { "qop", NULL },
     { NULL, NULL }
 };
-#endif
 /* for RFC2617: HTTP Authentication */
 struct http_auth www_auth[] = {
     { 1, "Basic ", basic_auth_param, AuthBasicCred },
-#ifdef USE_DIGEST_AUTH
     { 10, "Digest ", digest_auth_param, AuthDigestCred },
-#endif
     {
         0,
         NULL,
@@ -1556,15 +1454,8 @@ getAuthCookie(struct http_auth* hauth, char* auth_header,
             *pwd = Strnew_charp((char*)
                     getpassphrase(proxy ? "Proxy Password: " : "Password: "));
 #else
-#ifndef __MINGW32_VERSION
             *pwd = Strnew_charp((char*)
                     getpass(proxy ? "Proxy Password: " : "Password: "));
-#else
-            term_raw();
-            *pwd = Strnew_charp((char*)
-                    inputLine(proxy ? "Proxy Password: " : "Password: ", NULL, IN_PASSWORD));
-            term_cbreak();
-#endif /* __MINGW32_VERSION */
 #endif
         }
     }
@@ -1656,12 +1547,8 @@ loadGeneralFile(char* path, ParsedURL* volatile current, char* referer,
     URLOption url_option;
     Str tmp;
     Str volatile page = NULL;
-#ifdef USE_GOPHER
     int gopher_download = FALSE;
-#endif
-#ifdef USE_M17N
     wc_ces charset = WC_CES_US_ASCII;
-#endif
     HRequest hr;
     ParsedURL* volatile auth_pu;
 
@@ -1691,9 +1578,7 @@ load_doc: {
     f = openURL(tpath, &pu, current, &url_option, request, extra_header, of,
         &hr, &status);
     of = NULL;
-#ifdef USE_M17N
     content_charset = 0;
-#endif
     if (f.stream == NULL) {
         switch (f.scheme) {
         case SCM_LOCAL: {
@@ -1714,9 +1599,7 @@ load_doc: {
                 } else {
                     page = loadLocalDir(pu.real_file);
                     t = "local:directory";
-#ifdef USE_M17N
                     charset = SystemCharset;
-#endif
                 }
             }
         } break;
@@ -1724,22 +1607,11 @@ load_doc: {
             page = loadFTPDir(&pu, &charset);
             t = "ftp:directory";
             break;
-#ifdef USE_NNTP
         case SCM_NEWS_GROUP:
             page = loadNewsgroup(&pu, &charset);
             t = "news:group";
             break;
-#endif
         case SCM_UNKNOWN:
-#ifdef USE_EXTERNAL_URI_LOADER
-            tmp = searchURIMethods(&pu);
-            if (tmp != NULL) {
-                b = loadGeneralFile(tmp->ptr, current, referer, flag, request);
-                if (b != NULL && b != NO_BUFFER)
-                    copyParsedURL(&b->currentURL, &pu);
-                return b;
-            }
-#endif
             /* FIXME: gettextize? */
             disp_err_message(Sprintf("Unknown URI: %s",
                                  parsedURL2Str(&pu)->ptr)
@@ -1778,13 +1650,9 @@ load_doc: {
         header_string = NULL;
     TRAP_ON;
     if (pu.scheme == SCM_HTTP ||
-#ifdef USE_SSL
         pu.scheme == SCM_HTTPS ||
-#endif /* USE_SSL */
         ((
-#ifdef USE_GOPHER
              (pu.scheme == SCM_GOPHER && non_null(GOPHER_proxy)) ||
-#endif /* USE_GOPHER */
              (pu.scheme == SCM_FTP && non_null(FTP_proxy)))
             && !Do_not_use_proxy && !check_no_proxy(pu.host))) {
 
@@ -1888,7 +1756,6 @@ load_doc: {
 
         f.modtime = mymktime(checkHeader(t_buf, "Last-Modified:"));
     }
-#ifdef USE_NNTP
     else if (pu.scheme == SCM_NEWS || pu.scheme == SCM_NNTP) {
         if (t_buf == NULL)
             t_buf = newBuffer(INIT_BUFFER_WIDTH);
@@ -1897,8 +1764,6 @@ load_doc: {
         if (t == NULL)
             t = "text/plain";
     }
-#endif /* USE_NNTP */
-#ifdef USE_GOPHER
     else if (pu.scheme == SCM_GOPHER) {
         p = pu.file;
         while (*p == '/')
@@ -1944,19 +1809,11 @@ load_doc: {
             break;
         }
     }
-#endif /* USE_GOPHER */
     else if (pu.scheme == SCM_FTP) {
         check_compression(path, &f);
         if (f.compression != CMP_NOCOMPRESS) {
             char* t1 = uncompressed_file_type(pu.file, NULL);
             real_type = f.guess_type;
-#if 0
-	    if (t1 && strncasecmp(t1, "application/", 12) == 0) {
-		f.compression = CMP_NOCOMPRESS;
-		t = real_type;
-	    }
-	    else
-#endif
             if (t1)
                 t = t1;
             else
@@ -1967,20 +1824,6 @@ load_doc: {
                 real_type = "text/plain";
             t = real_type;
         }
-#if 0
-	if (!strncasecmp(t, "application/", 12)) {
-	    char *tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
-	    current_content_length = 0;
-	    if (save2tmp(f, tmpf) < 0)
-		UFclose(&f);
-	    else {
-		UFclose(&f);
-		TRAP_OFF;
-		doFileMove(tmpf, guess_save_name(t_buf, pu.file));
-	    }
-	    return NO_BUFFER;
-	}
-#endif
     } else if (pu.scheme == SCM_DATA) {
         t = f.guess_type;
     } else if (searchHeader) {
@@ -2044,10 +1887,8 @@ load_doc: {
 page_loaded:
     if (page) {
         FILE* src;
-#ifdef USE_IMAGE
         if (image_source)
             return NULL;
-#endif
         tmp = tmpfname(TMPF_SRC, ".html");
         src = fopen(tmp->ptr, "w");
         if (src) {
@@ -2056,23 +1897,15 @@ page_loaded:
             Strfputs(s, src);
             fclose(src);
         }
-#ifdef USE_GOPHER
         if (do_download || gopher_download) {
-#else
-        if (do_download) {
-#endif
             char* file;
             if (!src)
                 return NULL;
             file = guess_filename(pu.file);
-#ifdef USE_GOPHER
             if (f.scheme == SCM_GOPHER)
                 file = Sprintf("%s.html", file)->ptr;
-#endif
-#ifdef USE_NNTP
             if (f.scheme == SCM_NEWS_GROUP)
                 file = Sprintf("%s.html", file)->ptr;
-#endif
             doFileMove(tmp->ptr, file);
             return NO_BUFFER;
         }
@@ -2083,9 +1916,7 @@ page_loaded:
             b->real_type = t;
             if (src)
                 b->sourcefile = tmp->ptr;
-#ifdef USE_M17N
             b->document_charset = charset;
-#endif
         }
         return b;
     }
@@ -2097,11 +1928,7 @@ page_loaded:
     current_content_length = 0;
     if ((p = checkHeader(t_buf, "Content-Length:")) != NULL)
         current_content_length = strtoclen(p);
-#ifdef USE_GOPHER
     if (do_download || gopher_download) {
-#else
-    if (do_download) {
-#endif
         /* download only */
         char* file;
         TRAP_OFF;
@@ -2135,7 +1962,6 @@ page_loaded:
             f.compression = CMP_NOCOMPRESS;
         }
     }
-#ifdef USE_IMAGE
     if (image_source) {
         Buffer* b = NULL;
         if (IStype(f.stream) != IST_ENCODED)
@@ -2149,23 +1975,18 @@ page_loaded:
         TRAP_OFF;
         return b;
     }
-#endif
 
     if (is_html_type(t))
         proc = loadHTMLBuffer;
     else if (is_plain_text_type(t))
         proc = loadBuffer;
-#ifdef USE_IMAGE
     else if (activeImage && displayImage && !useExtImageViewer && !(w3m_dump & ~DUMP_FRAME) && !strncasecmp(t, "image/", 6))
         proc = loadImageBuffer;
-#endif
     else if (w3m_backend)
         ;
     else if (!(w3m_dump & ~DUMP_FRAME) || is_dump_text_type(t)) {
         if (!do_download &&
-#ifdef USE_GOPHER
             !gopher_download &&
-#endif
             searchExtViewer(t) != NULL) {
             proc = DO_EXTERNAL;
         } else {
@@ -2195,9 +2016,7 @@ page_loaded:
     if (flag & RG_FRAME) {
         t_buf->bufferprop |= BP_FRAME;
     }
-#ifdef USE_SSL
     t_buf->ssl_certificate = f.ssl_certificate;
-#endif
     frame_source = flag & RG_FRAME_SRC;
     if (proc == DO_EXTERNAL) {
         b = doExternal(f, t, t_buf);
@@ -2235,10 +2054,8 @@ page_loaded:
     }
     if (header_string)
         header_string = NULL;
-#ifdef USE_NNTP
     if (b && b != NO_BUFFER && (f.scheme == SCM_NNTP || f.scheme == SCM_NEWS))
         reAnchorNewsheader(b);
-#endif
     if (b && b != NO_BUFFER)
         preFormUpdateBuffer(b);
     TRAP_OFF;
@@ -2325,15 +2142,10 @@ is_word_char(unsigned char* ch)
 {
     Lineprop ctype = get_mctype(ch);
 
-#ifdef USE_M17N
     if (ctype & (PC_CTRL | PC_KANJI | PC_UNKNOWN))
         return 0;
     if (ctype & (PC_WCHAR1 | PC_WCHAR2))
         return 1;
-#else
-    if (ctype == PC_CTRL)
-        return 0;
-#endif
 
     if (IS_ALNUM(*ch))
         return 1;
@@ -2354,19 +2166,11 @@ is_word_char(unsigned char* ch)
     case '_':
         return 1;
     }
-#ifdef USE_M17N
     if (*ch == NBSP_CODE)
         return 1;
-#else
-    if (*ch == TIMES_CODE || *ch == DIVIDE_CODE || *ch == ANSP_CODE)
-        return 0;
-    if (*ch >= AGRAVE_CODE || *ch == NBSP_CODE)
-        return 1;
-#endif
     return 0;
 }
 
-#ifdef USE_M17N
 static int
 is_combining_char(unsigned char* ch)
 {
@@ -2376,7 +2180,6 @@ is_combining_char(unsigned char* ch)
         return 1;
     return 0;
 }
-#endif
 
 int is_boundary(unsigned char* ch1, unsigned char* ch2)
 {
@@ -2392,10 +2195,8 @@ int is_boundary(unsigned char* ch1, unsigned char* ch2)
     if (*ch2 != ' ' && is_beginning_char(ch1))
         return 0;
 
-#ifdef USE_M17N
     if (is_combining_char(ch2))
         return 0;
-#endif
     if (is_word_char(ch1) && is_word_char(ch2))
         return 0;
 
@@ -2409,9 +2210,7 @@ set_breakpoint(struct readbuffer* obuf, int tag_length)
     obuf->bp.pos = obuf->pos;
     obuf->bp.tlen = tag_length;
     obuf->bp.flag = obuf->flag;
-#ifdef FORMAT_NICE
     obuf->bp.flag &= ~RB_FILL;
-#endif /* FORMAT_NICE */
     obuf->bp.top_margin = obuf->top_margin;
     obuf->bp.bottom_margin = obuf->bottom_margin;
 
@@ -2643,25 +2442,6 @@ passthrough(struct readbuffer* obuf, char* str, int back)
     }
 }
 
-#if 0
-int
-is_blank_line(char *line, int indent)
-{
-    int i, is_blank = 0;
-
-    for (i = 0; i < indent; i++) {
-	if (line[i] == '\0') {
-	    is_blank = 1;
-	}
-	else if (line[i] != ' ') {
-	    break;
-	}
-    }
-    if (i == indent && line[i] == '\0')
-	is_blank = 1;
-    return is_blank;
-}
-#endif
 
 static void
 fillline(struct readbuffer* obuf, int indent)
@@ -2808,7 +2588,6 @@ void flushline(struct html_feed_environ* h_env, struct readbuffer* obuf, int ind
         } else if (RB_GET_ALIGN(obuf) == RB_LEFT && obuf->flag & RB_INTABLE) {
             align(lbuf, width, ALIGN_LEFT);
         }
-#ifdef FORMAT_NICE
         else if (obuf->flag & RB_FILL) {
             char* p;
             int rest, rrest;
@@ -2848,7 +2627,6 @@ void flushline(struct html_feed_environ* h_env, struct readbuffer* obuf, int ind
                 }
             }
         }
-#endif /* FORMAT_NICE */
 #ifdef TABLE_DEBUG
         if (w3m_debug) {
             FILE* f = fopen("zzzproc1", "a");
@@ -3181,13 +2959,9 @@ feed_title(char* str)
 Str process_img(struct parsed_tag* tag, int width)
 {
     char *p, *q, *r, *r2 = NULL, *s, *t;
-#ifdef USE_IMAGE
     int w, i, nw, ni = 1, n, w0 = -1, i0 = -1;
     int align, xoffset, yoffset, top, bottom, ismap = 0;
     int use_image = activeImage && displayImage;
-#else
-    int w, i, nw, n;
-#endif
     int pre_int = FALSE, ext_pre_int = FALSE;
     Str tmp = Strnew();
 
@@ -3208,7 +2982,6 @@ Str process_img(struct parsed_tag* tag, int width)
             else
                 w = -1;
         }
-#ifdef USE_IMAGE
         if (use_image) {
             if (w > 0) {
                 w = (int)(w * image_scale / 100 + 0.5);
@@ -3218,10 +2991,8 @@ Str process_img(struct parsed_tag* tag, int width)
                     w = MAX_IMAGE_SIZE;
             }
         }
-#endif
     }
     i = -1;
-#ifdef USE_IMAGE
     if (use_image) {
         if (parsedtag_get_value(tag, ATTR_HEIGHT, &i)) {
             if (i > 0) {
@@ -3240,7 +3011,6 @@ Str process_img(struct parsed_tag* tag, int width)
         if (parsedtag_exists(tag, ATTR_ISMAP))
             ismap = 1;
     } else
-#endif
         parsedtag_get_value(tag, ATTR_HEIGHT, &i);
     r = NULL;
     parsedtag_get_value(tag, ATTR_USEMAP, &r);
@@ -3248,7 +3018,6 @@ Str process_img(struct parsed_tag* tag, int width)
         ext_pre_int = TRUE;
 
     tmp = Strnew_size(128);
-#ifdef USE_IMAGE
     if (use_image) {
         switch (align) {
         case ALIGN_LEFT:
@@ -3262,7 +3031,6 @@ Str process_img(struct parsed_tag* tag, int width)
             break;
         }
     }
-#endif
     if (r) {
         Str tmp2;
         r2 = strchr(r, '#');
@@ -3278,7 +3046,6 @@ Str process_img(struct parsed_tag* tag, int width)
                             "type=submit no_effect=true>",
                         cur_hseq++, cur_form_id));
     }
-#ifdef USE_IMAGE
     if (use_image) {
         w0 = w;
         i0 = i;
@@ -3315,7 +3082,6 @@ Str process_img(struct parsed_tag* tag, int width)
             Sprintf("<pre_int><img_alt hseq=\"%d\" src=\"", cur_iseq++));
         pre_int = TRUE;
     } else
-#endif
     {
         if (w < 0)
             w = 12 * pixel_per_char;
@@ -3333,7 +3099,6 @@ Str process_img(struct parsed_tag* tag, int width)
         Strcat_charp(tmp, html_quote(t));
         Strcat_charp(tmp, "\"");
     }
-#ifdef USE_IMAGE
     if (use_image) {
         if (w0 >= 0)
             Strcat(tmp, Sprintf(" width=%d", w0));
@@ -3394,13 +3159,11 @@ Str process_img(struct parsed_tag* tag, int width)
         if (ismap)
             Strcat_charp(tmp, " ismap");
     }
-#endif
     Strcat_charp(tmp, ">");
     if (q != NULL && *q == '\0' && ignore_null_img_alt)
         q = NULL;
     if (q != NULL) {
         n = get_strwidth(q);
-#ifdef USE_IMAGE
         if (use_image) {
             if (n > nw) {
                 char* r;
@@ -3412,7 +3175,6 @@ Str process_img(struct parsed_tag* tag, int width)
             } else
                 Strcat_charp(tmp, html_quote(q));
         } else
-#endif
             Strcat_charp(tmp, html_quote(q));
         goto img_end;
     }
@@ -3472,12 +3234,10 @@ Str process_img(struct parsed_tag* tag, int width)
     Strcat_char(tmp, ']');
     n++;
 img_end:
-#ifdef USE_IMAGE
     if (use_image) {
         for (; n < nw; n++)
             Strcat_char(tmp, ' ');
     }
-#endif
     Strcat_charp(tmp, "</img_alt>");
     if (pre_int && !ext_pre_int)
         Strcat_charp(tmp, "</pre_int>");
@@ -3485,7 +3245,6 @@ img_end:
         Strcat_charp(tmp, "</input_alt>");
         process_n_form();
     }
-#ifdef USE_IMAGE
     if (use_image) {
         switch (align) {
         case ALIGN_RIGHT:
@@ -3495,7 +3254,6 @@ img_end:
             break;
         }
     }
-#endif
     return tmp;
 }
 
@@ -3776,7 +3534,6 @@ Str process_select(struct parsed_tag* tag)
     cur_select = Strnew_charp(p);
     select_is_multiple = parsedtag_exists(tag, ATTR_MULTIPLE);
 
-#ifdef MENU_SELECT
     if (!select_is_multiple) {
         select_str = Strnew_charp("<pre_int>");
         if (displayLinkNumber)
@@ -3793,7 +3550,6 @@ Str process_select(struct parsed_tag* tag)
         select_option[n_select].last = NULL;
         cur_option_maxwidth = 0;
     } else
-#endif /* MENU_SELECT */
         select_str = Strnew();
     cur_option = NULL;
     cur_status = R_ST_NORMAL;
@@ -3806,7 +3562,6 @@ Str process_n_select(void)
     if (cur_select == NULL)
         return NULL;
     process_option();
-#ifdef MENU_SELECT
     if (!select_is_multiple) {
         if (select_option[n_select].first) {
             FormItemList sitem;
@@ -3816,7 +3571,6 @@ Str process_n_select(void)
         Strcat_charp(select_str, "</input_alt>]</pre_int>");
         n_select++;
     } else
-#endif /* MENU_SELECT */
         Strcat_charp(select_str, "<br>");
     cur_select = NULL;
     n_selectitem = 0;
@@ -3896,7 +3650,6 @@ void process_option(void)
         cur_option_value = cur_option;
     if (cur_option_label == NULL)
         cur_option_label = cur_option;
-#ifdef MENU_SELECT
     int len;
     if (!select_is_multiple) {
         len = get_Str_strwidth(cur_option_label);
@@ -3907,7 +3660,6 @@ void process_option(void)
             cur_option_label, cur_option_selected);
         return;
     }
-#endif /* MENU_SELECT */
     if (!select_is_multiple) {
         begin_char = '(';
         end_char = ')';
@@ -4060,7 +3812,6 @@ process_hr(struct parsed_tag* tag, int width, int indent_width)
     return tmp;
 }
 
-#ifdef USE_M17N
 static char*
 check_charset(char* p)
 {
@@ -4086,7 +3837,6 @@ check_accept_charset(char* ac)
     }
     return NULL;
 }
-#endif
 
 static Str
 process_form_int(struct parsed_tag* tag, int fid)
@@ -4099,12 +3849,10 @@ process_form_int(struct parsed_tag* tag, int fid)
     parsedtag_get_value(tag, ATTR_ACTION, &q);
     q = url_encode(remove_space(q), cur_baseURL, cur_document_charset);
     r = NULL;
-#ifdef USE_M17N
     if (parsedtag_get_value(tag, ATTR_ACCEPT_CHARSET, &r))
         r = check_accept_charset(r);
     if (!r && parsedtag_get_value(tag, ATTR_CHARSET, &r))
         r = check_charset(r);
-#endif
     s = NULL;
     parsedtag_get_value(tag, ATTR_ENCTYPE, &s);
     tg = NULL;
@@ -4142,10 +3890,8 @@ process_form_int(struct parsed_tag* tag, int fid)
             Strcat(tmp, Sprintf(" target=\"%s\"", html_quote(tg)));
         if (n)
             Strcat(tmp, Sprintf(" name=\"%s\"", html_quote(n)));
-#ifdef USE_M17N
         if (r)
             Strcat(tmp, Sprintf(" accept-charset=\"%s\"", html_quote(r)));
-#endif
         Strcat_charp(tmp, ">");
         return tmp;
     }
@@ -4209,7 +3955,6 @@ set_alignment(struct readbuffer* obuf, struct parsed_tag* tag)
     }
 }
 
-#ifdef ID_EXT
 static void
 process_idattr(struct readbuffer* obuf, int cmd, struct parsed_tag* tag)
 {
@@ -4233,7 +3978,6 @@ process_idattr(struct readbuffer* obuf, int cmd, struct parsed_tag* tag)
         idtag = Sprintf("<_id id=\"%s\">", html_quote(id));
     push_tag(obuf, idtag->ptr, HTML_NOP);
 }
-#endif /* ID_EXT */
 
 #define CLOSE_P                                                            \
     if (obuf->flag & RB_P) {                                               \
@@ -4351,9 +4095,7 @@ int HTMLtagproc1(struct parsed_tag* tag, struct html_feed_environ* h_env)
     Str tmp;
     int hseq;
     int cmd;
-#ifdef ID_EXT
     char* id = NULL;
-#endif /* ID_EXT */
 
     cmd = tag->tagid;
 
@@ -4426,25 +4168,17 @@ int HTMLtagproc1(struct parsed_tag* tag, struct html_feed_environ* h_env)
         HTMLlineproc1("</b>", h_env);
         return 1;
     case HTML_Q:
-#ifdef USE_M17N
-#ifdef USE_UNICODE
         if (DisplayCharset != WC_CES_US_ASCII) {
             HTMLlineproc1((obuf->q_level & 1 ? "&lsquo;" : "&ldquo;"), h_env);
             obuf->q_level += 1;
         } else
-#endif
-#endif
             HTMLlineproc1("`", h_env);
         return 1;
     case HTML_N_Q:
-#ifdef USE_M17N
-#ifdef USE_UNICODE
         if (DisplayCharset != WC_CES_US_ASCII) {
             obuf->q_level -= 1;
             HTMLlineproc1((obuf->q_level & 1 ? "&rsquo;" : "&rdquo;"), h_env);
         } else
-#endif
-#endif
             HTMLlineproc1("'", h_env);
         return 1;
     case HTML_FIGURE:
@@ -4896,7 +4630,6 @@ int HTMLtagproc1(struct parsed_tag* tag, struct html_feed_environ* h_env)
     case HTML_IMG_ALT:
         if (parsedtag_get_value(tag, ATTR_SRC, &p))
             obuf->img_alt = Strnew_charp(p);
-#ifdef USE_IMAGE
         i = 0;
         if (parsedtag_get_value(tag, ATTR_TOP_MARGIN, &i)) {
             if ((short)i > obuf->top_margin)
@@ -4907,7 +4640,6 @@ int HTMLtagproc1(struct parsed_tag* tag, struct html_feed_environ* h_env)
             if ((short)i > obuf->bottom_margin)
                 obuf->bottom_margin = (short)i;
         }
-#endif
         return 0;
     case HTML_N_IMG_ALT:
         if (obuf->img_alt) {
@@ -5005,25 +4737,16 @@ int HTMLtagproc1(struct parsed_tag* tag, struct html_feed_environ* h_env)
             y = MAX_CELLPADDING;
         if (z > MAX_VSPACE)
             z = MAX_VSPACE;
-#ifdef ID_EXT
         parsedtag_get_value(tag, ATTR_ID, &id);
-#endif /* ID_EXT */
         tables[obuf->table_level] = begin_table(w, x, y, z);
-#ifdef ID_EXT
         if (id != NULL)
             tables[obuf->table_level]->id = Strnew_charp(id);
-#endif /* ID_EXT */
         table_mode[obuf->table_level].pre_mode = 0;
         table_mode[obuf->table_level].indent_level = 0;
         table_mode[obuf->table_level].nobr_level = 0;
         table_mode[obuf->table_level].caption = 0;
         table_mode[obuf->table_level].end_tag = 0; /* HTML_UNKNOWN */
-#ifndef TABLE_EXPAND
         tables[obuf->table_level]->total_width = width;
-#else
-        tables[obuf->table_level]->real_width = width;
-        tables[obuf->table_level]->total_width = 0;
-#endif
         return 1;
     case HTML_N_TABLE:
         /* should be processed in HTMLlineproc() */
@@ -5152,7 +4875,6 @@ int HTMLtagproc1(struct parsed_tag* tag, struct html_feed_environ* h_env)
         p = q = r = NULL;
         parsedtag_get_value(tag, ATTR_HTTP_EQUIV, &p);
         parsedtag_get_value(tag, ATTR_CONTENT, &q);
-#ifdef USE_M17N
         parsedtag_get_value(tag, ATTR_CHARSET, &r);
         if (r) {
             /* <meta charset=""> */
@@ -5167,7 +4889,6 @@ int HTMLtagproc1(struct parsed_tag* tag, struct html_feed_environ* h_env)
                 meta_charset = wc_guess_charset(q, 0);
             }
         } else
-#endif
             if (p && q && !strcasecmp(p, "refresh")) {
             int refresh_interval;
             tmp = NULL;
@@ -5457,16 +5178,12 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
     char symbol = '\0';
     int internal = 0;
     Anchor** a_textarea = NULL;
-#ifdef MENU_SELECT
     Anchor** a_select = NULL;
-#endif
 #if defined(USE_M17N) || defined(USE_IMAGE)
     ParsedURL* base = baseURL(buf);
 #endif
-#ifdef USE_M17N
     wc_ces name_charset = url_to_charset(NULL, &buf->currentURL,
         buf->document_charset);
-#endif
 
     if (out_size == 0) {
         out_size = LINELEN;
@@ -5480,14 +5197,12 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
         textarea_str = New_N(Str, max_textarea);
         a_textarea = New_N(Anchor*, max_textarea);
     }
-#ifdef MENU_SELECT
     n_select = -1;
     if (!max_select) { /* halfload */
         max_select = MAX_SELECT;
         select_option = New_N(FormSelectOption, max_select);
         a_select = New_N(Anchor*, max_select);
     }
-#endif
 
 #ifdef DEBUG
     if (w3m_debug)
@@ -5512,16 +5227,13 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
         if (++nlines == llimit)
             break;
         pos = 0;
-#ifdef ENABLE_REMOVE_TRAILINGSPACES
         Strremovetrailingspaces(line);
-#endif
         str = line->ptr;
         endp = str + line->length;
         while (str < endp) {
             PSIZE;
             mode = get_mctype(str);
             if ((effect | ex_efct(ex_effect)) & PC_SYMBOL && *str != '<') {
-#ifdef USE_M17N
                 char** buf = set_symbol(symbol_width0);
                 int len;
 
@@ -5536,31 +5248,19 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                         PPUSH(mode | effect | ex_efct(ex_effect), *(p++));
                     }
                 }
-#else
-                PPUSH(PC_ASCII | effect | ex_efct(ex_effect), SYMBOL_BASE + symbol);
-#endif
                 str += symbol_width;
             }
-#ifdef USE_M17N
             else if (mode == PC_CTRL || mode == PC_UNDEF) {
-#else
-            else if (mode == PC_CTRL || IS_INTSPACE(*str)) {
-#endif
                 PPUSH(PC_ASCII | effect | ex_efct(ex_effect), ' ');
                 str++;
             }
-#ifdef USE_M17N
             else if (mode & PC_UNKNOWN) {
                 PPUSH(PC_ASCII | effect | ex_efct(ex_effect), ' ');
                 str += get_mclen(str);
             }
-#endif
             else if (*str != '<' && *str != '&') {
-#ifdef USE_M17N
                 int len = get_mclen(str);
-#endif
                 PPUSH(mode | effect | ex_efct(ex_effect), *(str++));
-#ifdef USE_M17N
                 if (--len) {
                     mode = (mode & ~PC_WCHAR1) | PC_WCHAR2;
                     while (len--) {
@@ -5568,7 +5268,6 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                         PPUSH(mode | effect | ex_efct(ex_effect), *(str++));
                     }
                 }
-#endif
             } else if (*str == '&') {
                 /*
                  * & escape processing
@@ -5577,26 +5276,17 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                 while (*p) {
                     PSIZE;
                     mode = get_mctype((unsigned char*)p);
-#ifdef USE_M17N
                     if (mode == PC_CTRL || mode == PC_UNDEF) {
-#else
-                    if (mode == PC_CTRL || IS_INTSPACE(*str)) {
-#endif
                         PPUSH(PC_ASCII | effect | ex_efct(ex_effect), ' ');
                         p++;
                     }
-#ifdef USE_M17N
                     else if (mode & PC_UNKNOWN) {
                         PPUSH(PC_ASCII | effect | ex_efct(ex_effect), ' ');
                         p += get_mclen(p);
                     }
-#endif
                     else {
-#ifdef USE_M17N
                         int len = get_mclen(p);
-#endif
                         PPUSH(mode | effect | ex_efct(ex_effect), *(p++));
-#ifdef USE_M17N
                         if (--len) {
                             mode = (mode & ~PC_WCHAR1) | PC_WCHAR2;
                             while (len--) {
@@ -5604,7 +5294,6 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                                 PPUSH(mode | effect | ex_efct(ex_effect), *(p++));
                             }
                         }
-#endif
                     }
                 }
             } else {
@@ -5716,7 +5405,6 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
 
                 case HTML_IMG_ALT:
                     if (parsedtag_get_value(tag, ATTR_SRC, &p)) {
-#ifdef USE_IMAGE
                         int w = -1, h = -1, iseq = 0, ismap = 0;
                         int xoffset = 0, yoffset = 0, top = 0, bottom = 0;
                         parsedtag_get_value(tag, ATTR_HSEQ, &iseq);
@@ -5735,13 +5423,11 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                                 currentLn(buf), pos,
                                 iseq - 1);
                         }
-#endif
                         s = NULL;
                         parsedtag_get_value(tag, ATTR_TITLE, &s);
                         p = url_quote_conv(remove_space(p),
                             buf->document_charset);
                         a_img = registerImg(buf, p, s, currentLn(buf), pos);
-#ifdef USE_IMAGE
                         a_img->hseq = iseq;
                         a_img->image = NULL;
                         if (iseq > 0) {
@@ -5778,7 +5464,6 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                                 a_img->image = a->image;
                             }
                         }
-#endif
                     }
                     effect |= PE_IMAGE;
                     break;
@@ -5794,9 +5479,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                     FormList* form;
                     int top = 0, bottom = 0;
                     int textareanumber = -1;
-#ifdef MENU_SELECT
                     int selectnumber = -1;
-#endif
                     hseq = 0;
                     form_id = -1;
 
@@ -5837,7 +5520,6 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                                 max_textarea);
                         }
                     }
-#ifdef MENU_SELECT
                     if (a_select && parsedtag_get_value(tag, ATTR_SELECTNUMBER, &selectnumber)) {
                         if (selectnumber >= max_select) {
                             max_select = 2 * selectnumber;
@@ -5848,14 +5530,11 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                                 max_select);
                         }
                     }
-#endif
                     a_form = registerForm(buf, form, tag, currentLn(buf), pos);
                     if (a_textarea && textareanumber >= 0)
                         a_textarea[textareanumber] = a_form;
-#ifdef MENU_SELECT
                     if (a_select && selectnumber >= 0)
                         a_select[selectnumber] = a_form;
-#endif
                     if (a_form) {
                         a_form->hseq = hseq - 1;
                         a_form->y = currentLn(buf) - top;
@@ -5900,10 +5579,8 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                         parsedtag_get_value(tag, ATTR_ALT, &q);
                         r = NULL;
                         s = NULL;
-#ifdef USE_IMAGE
                         parsedtag_get_value(tag, ATTR_SHAPE, &r);
                         parsedtag_get_value(tag, ATTR_COORDS, &s);
-#endif
                         a = newMapArea(p, t, q, r, s);
                         pushValue(buf->maplist->area, (void*)a);
                     }
@@ -5958,7 +5635,6 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                     if (p && q && !strcasecmp(p, "refresh") && MetaRefresh) {
                         Str tmp = NULL;
                         int refresh_interval = getMetaRefreshParam(q, &tmp);
-#ifdef USE_ALARM
                         if (tmp) {
                             p = url_encode(remove_space(tmp->ptr), base,
                                 buf->document_charset);
@@ -5971,13 +5647,6 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                                 refresh_interval,
                                 AL_IMPLICIT,
                                 "RELOAD", NULL);
-#else
-                        if (tmp && refresh_interval == 0) {
-                            p = url_encode(remove_space(tmp->ptr), base,
-                                buf->document_charset);
-                            pushEvent("GOTO_RELATIVE", p);
-                        }
-#endif
                     }
                     break;
                 case HTML_INTERNAL:
@@ -6004,7 +5673,6 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                         item->init_value = item->value = textarea_str[n_textarea];
                     }
                     break;
-#ifdef MENU_SELECT
                 case HTML_SELECT_INT:
                     if (parsedtag_get_value(tag, ATTR_SELECTNUMBER, &n_select)
                         && n_select >= 0 && n_select < max_select) {
@@ -6036,7 +5704,6 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                             selected);
                     }
                     break;
-#endif
                 case HTML_TITLE_ALT:
                     if (parsedtag_get_value(tag, ATTR_TITLE, &p))
                         buf->buffername = html_unquote(p);
@@ -6050,7 +5717,6 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                     effect &= ~PC_SYMBOL;
                     break;
                 }
-#ifdef ID_EXT
                 id = NULL;
                 if (parsedtag_get_value(tag, ATTR_ID, &id)) {
                     id = url_quote_conv(id, name_charset);
@@ -6068,7 +5734,6 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                     idFrame->body->nameList = putAnchor(idFrame->body->nameList, id, NULL,
                         (Anchor**)NULL, NULL, NULL, '\0',
                         currentLn(buf), pos);
-#endif /* ID_EXT */
             }
         }
         /* end of processing for one line */
@@ -6091,9 +5756,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
     buf->formlist = (form_max >= 0) ? forms[form_max] : NULL;
     if (n_textarea)
         addMultirowsForm(buf, buf->formitem);
-#ifdef USE_IMAGE
     addMultirowsImg(buf, buf->img);
-#endif
 }
 
 static void
@@ -6242,9 +5905,7 @@ void HTMLlineproc0(char* line, struct html_feed_environ* h_env, int internal)
     struct table* tbl = NULL;
     struct table_mode* tbl_mode = NULL;
     int tbl_width = 0;
-#ifdef USE_M17N
     int is_hangul, prev_is_hangul = 0;
-#endif
 
 #ifdef DEBUG
     if (w3m_debug) {
@@ -6424,11 +6085,9 @@ table_start:
                     h_env->tagbuf = parsedtag2str(tag);
                 push_tag(obuf, h_env->tagbuf->ptr, cmd);
             }
-#ifdef ID_EXT
             else {
                 process_idattr(obuf, cmd, tag);
             }
-#endif /* ID_EXT */
             obuf->bp.init_flag = 1;
             clear_ignore_p_flag(cmd, obuf);
             if (cmd == HTML_TABLE)
@@ -6504,7 +6163,6 @@ table_start:
                     }
                     str++;
                 } else {
-#ifdef USE_M17N
                     if (mode == PC_KANJI1)
                         is_hangul = wtf_is_hangul((wc_uchar*)str);
                     else
@@ -6521,7 +6179,6 @@ table_start:
                         }
                     }
                     prev_is_hangul = is_hangul;
-#endif
                     if (*str == '&')
                         proc_escape(obuf, &str);
                     else
@@ -6544,15 +6201,11 @@ table_start:
                     bp = obuf->line->ptr + obuf->bp.len;
                     line = Strnew_charp(bp);
                     Strshrink(obuf->line, obuf->line->length - obuf->bp.len);
-#ifdef FORMAT_NICE
                     if (obuf->pos - i > h_env->limit)
                         obuf->flag |= RB_FILL;
-#endif /* FORMAT_NICE */
                     back_to_breakpoint(obuf);
                     flushline(h_env, obuf, indent, 0, h_env->limit);
-#ifdef FORMAT_NICE
                     obuf->flag &= ~RB_FILL;
-#endif /* FORMAT_NICE */
                     HTMLlineproc1(line->ptr, h_env);
                 }
             }
@@ -6572,13 +6225,9 @@ table_start:
             i = 1;
         indent = h_env->envs[h_env->envc].indent;
         if (obuf->pos - i > h_env->limit) {
-#ifdef FORMAT_NICE
             obuf->flag |= RB_FILL;
-#endif /* FORMAT_NICE */
             flushline(h_env, obuf, indent, 0, h_env->limit);
-#ifdef FORMAT_NICE
             obuf->flag &= ~RB_FILL;
-#endif /* FORMAT_NICE */
         }
     }
 }
@@ -6586,9 +6235,6 @@ table_start:
 extern char* NullLine;
 extern Lineprop NullProp[];
 
-#ifndef USE_ANSI_COLOR
-#define addnewline2(a, b, c, d, e, f) _addnewline2(a, b, c, e, f)
-#endif
 static void
 addnewline2(Buffer* buf, char* line, Lineprop* prop, Linecolor* color, int pos,
     int nlines)
@@ -6598,9 +6244,7 @@ addnewline2(Buffer* buf, char* line, Lineprop* prop, Linecolor* color, int pos,
     l->next = NULL;
     l->lineBuf = line;
     l->propBuf = prop;
-#ifdef USE_ANSI_COLOR
     l->colorBuf = color;
-#endif
     l->len = pos;
     l->width = -1;
     l->size = pos;
@@ -6633,9 +6277,7 @@ addnewline(Buffer* buf, char* line, Lineprop* prop, Linecolor* color, int pos,
 {
     char* s;
     Lineprop* p;
-#ifdef USE_ANSI_COLOR
     Linecolor* c;
-#endif
     Line* l;
     int i, bpos, bwidth;
 
@@ -6647,14 +6289,12 @@ addnewline(Buffer* buf, char* line, Lineprop* prop, Linecolor* color, int pos,
         s = NullLine;
         p = NullProp;
     }
-#ifdef USE_ANSI_COLOR
     if (pos > 0 && color) {
         c = NewAtom_N(Linecolor, pos);
         bcopy((void*)color, (void*)c, pos * sizeof(Linecolor));
     } else {
         c = NULL;
     }
-#endif
     addnewline2(buf, s, p, c, pos, nlines);
     if (pos <= 0 || width <= 0)
         return;
@@ -6667,10 +6307,8 @@ addnewline(Buffer* buf, char* line, Lineprop* prop, Linecolor* color, int pos,
         i = columnLen(l, width);
         if (i == 0) {
             i++;
-#ifdef USE_M17N
             while (i < l->len && p[i] & PC_WCHAR2)
                 i++;
-#endif
         }
         l->len = i;
         l->width = COLPOS(l, l->len);
@@ -6680,10 +6318,8 @@ addnewline(Buffer* buf, char* line, Lineprop* prop, Linecolor* color, int pos,
         bwidth += l->width;
         s += i;
         p += i;
-#ifdef USE_ANSI_COLOR
         if (c)
             c += i;
-#endif
         pos -= i;
         addnewline2(buf, s, p, c, pos, nlines);
     }
@@ -6962,33 +6598,6 @@ print_internal_information(struct html_feed_environ* henv)
             html_quote(henv->title), "\">", NULL);
         pushTextLine(tl, newTextLine(s, 0));
     }
-#if 0
-    if (form_max >= 0) {
-	FormList *fp;
-	for (i = 0; i <= form_max; i++) {
-	    if (forms[i] == NULL)
-		continue;
-	    fp = forms[i];
-	    s = Sprintf("<form_int fid=\"%d\" action=\"%s\" method=\"%s\"",
-			i, html_quote(fp->action->ptr),
-			(fp->method == FORM_METHOD_POST) ? "post"
-			: ((fp->method ==
-			    FORM_METHOD_INTERNAL) ? "internal" : "get"));
-	    if (fp->target)
-		Strcat(s, Sprintf(" target=\"%s\"", html_quote(fp->target)));
-	    if (fp->enctype == FORM_ENCTYPE_MULTIPART)
-		Strcat_charp(s, " enctype=\"multipart/form-data\"");
-#ifdef USE_M17N
-	    if (fp->charset)
-		Strcat(s, Sprintf(" accept-charset=\"%s\"",
-				  html_quote(fp->charset)));
-#endif
-	    Strcat_charp(s, ">");
-	    pushTextLine(tl, newTextLine(s, 0));
-	}
-    }
-#endif
-#ifdef MENU_SELECT
     if (n_select > 0) {
         FormSelectOptionItem* ip;
         for (i = 0; i < n_select; i++) {
@@ -7005,7 +6614,6 @@ print_internal_information(struct html_feed_environ* henv)
             pushTextLine(tl, newTextLine(s, 0));
         }
     }
-#endif /* MENU_SELECT */
     if (n_textarea > 0) {
         for (i = 0; i < n_textarea; i++) {
             s = Sprintf("<textarea_int textareanumber=%d>", i);
@@ -7033,18 +6641,13 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
     clen_t linelen = 0;
     clen_t trbyte = 0;
     Str lineBuf2 = Strnew();
-#ifdef USE_M17N
     wc_ces charset = WC_CES_US_ASCII;
     wc_ces volatile doc_charset = DocumentCharset;
-#endif
     struct html_feed_environ htmlenv1;
     struct readbuffer obuf;
-#ifdef USE_IMAGE
     int volatile image_flag;
-#endif
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
 
-#ifdef USE_M17N
     if (fmInitialized && graph_ok()) {
         symbol_width = symbol_width0 = 1;
     } else {
@@ -7052,9 +6655,6 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
         get_symbol(DisplayCharset, &symbol_width0);
         symbol_width = WcOption.use_wide ? symbol_width0 : 1;
     }
-#else
-    symbol_width = symbol_width0 = 1;
-#endif
 
     cur_title = NULL;
     pre_title = NULL;
@@ -7062,18 +6662,15 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
     cur_textarea = NULL;
     max_textarea = MAX_TEXTAREA;
     textarea_str = New_N(Str, max_textarea);
-#ifdef MENU_SELECT
     n_select = 0;
     max_select = MAX_SELECT;
     select_option = New_N(FormSelectOption, max_select);
-#endif /* MENU_SELECT */
     cur_select = NULL;
     form_sp = -1;
     form_max = -1;
     forms_size = 0;
     forms = NULL;
     cur_hseq = 1;
-#ifdef USE_IMAGE
     cur_iseq = 1;
     if (newBuf->image_flag)
         image_flag = newBuf->image_flag;
@@ -7081,17 +6678,12 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
         image_flag = IMG_FLAG_AUTO;
     else
         image_flag = IMG_FLAG_SKIP;
-#endif
 
     if (w3m_halfload) {
         newBuf->buffername = "---";
-#ifdef USE_M17N
         newBuf->document_charset = InnerCharset;
-#endif
         max_textarea = 0;
-#ifdef MENU_SELECT
         max_select = 0;
-#endif
         HTMLlineproc3(newBuf, f->stream);
         w3m_halfload = FALSE;
         return;
@@ -7113,7 +6705,6 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
     }
     TRAP_ON;
 
-#ifdef USE_M17N
     if (newBuf != NULL) {
         if (newBuf->bufferprop & BP_FRAME)
             charset = InnerCharset;
@@ -7125,15 +6716,9 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
     else if (f->guess_type && !strcasecmp(f->guess_type, "application/xhtml+xml"))
         doc_charset = WC_CES_UTF_8;
     meta_charset = 0;
-#endif
-#if 0
-    do_blankline(&htmlenv1, &obuf, 0, 0, htmlenv1.limit);
-    obuf.flag = RB_IGNORE_P;
-#endif
     if (IStype(f->stream) != IST_ENCODED)
         f->stream = newEncodedStream(f->stream, f->encoding);
     while ((lineBuf2 = StrmyUFgets(f)) && lineBuf2->length) {
-#ifdef USE_NNTP
         if (f->scheme == SCM_NEWS && lineBuf2->ptr[0] == '.') {
             Strshrinkfirst(lineBuf2, 1);
             if (lineBuf2->ptr[0] == '\n' || lineBuf2->ptr[0] == '\r' || lineBuf2->ptr[0] == '\0') {
@@ -7143,7 +6728,6 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
                 break;
             }
         }
-#endif /* USE_NNTP */
         if (src)
             Strfputs(lineBuf2, src);
         linelen += lineBuf2->length;
@@ -7156,7 +6740,6 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
          * if (frame_source)
          * continue;
          */
-#ifdef USE_M17N
         if (meta_charset) { /* <META> */
             if (content_charset == 0 && UseContentCharset) {
                 doc_charset = meta_charset;
@@ -7164,11 +6747,8 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
             }
             meta_charset = 0;
         }
-#endif
         lineBuf2 = convertLine(f, lineBuf2, HTML_MODE, &charset, doc_charset);
-#ifdef USE_M17N
         cur_document_charset = charset;
-#endif
         HTMLlineproc0(lineBuf2->ptr, &htmlenv1, internal);
     }
     if (obuf.status != R_ST_NORMAL) {
@@ -7180,9 +6760,7 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
 #if defined(USE_M17N) || defined(USE_IMAGE)
     cur_baseURL = NULL;
 #endif
-#ifdef USE_M17N
     cur_document_charset = 0;
-#endif
     if (htmlenv1.title)
         newBuf->buffername = htmlenv1.title;
     if (w3m_halfdump) {
@@ -7199,13 +6777,9 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
 phase2:
     newBuf->trbyte = trbyte + linelen;
     TRAP_OFF;
-#ifdef USE_M17N
     if (!(newBuf->bufferprop & BP_FRAME))
         newBuf->document_charset = charset;
-#endif
-#ifdef USE_IMAGE
     newBuf->image_flag = image_flag;
-#endif
     HTMLlineproc2(newBuf, htmlenv1.buf);
 }
 
@@ -7230,13 +6804,9 @@ loadHTMLString(Str page)
     }
     TRAP_ON;
 
-#ifdef USE_M17N
     newBuf->document_charset = InnerCharset;
-#endif
     loadHTMLstream(&f, newBuf, NULL, TRUE);
-#ifdef USE_M17N
     newBuf->document_charset = WC_CES_US_ASCII;
-#endif
 
     TRAP_OFF;
     UFclose(&f);
@@ -7250,25 +6820,18 @@ loadHTMLString(Str page)
     return newBuf;
 }
 
-#ifdef USE_GOPHER
 
 /*
  * loadGopherDir: get gopher directory
  */
-#ifdef USE_M17N
 Str loadGopherDir(URLFile* uf, ParsedURL* pu, wc_ces* charset)
-#else
-Str loadGopherDir0(URLFile* uf, ParsedURL* pu)
-#endif
 {
     Str volatile tmp;
     Str lbuf, name, file, host, port, type;
     char* volatile p, * volatile q;
     int link, pre;
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
-#ifdef USE_M17N
     wc_ces doc_charset = DocumentCharset;
-#endif
 
     tmp = parsedURL2Str(pu);
     p = html_quote(tmp->ptr);
@@ -7381,17 +6944,11 @@ gopher_end:
     return tmp;
 }
 
-#ifdef USE_M17N
 Str loadGopherSearch(URLFile* uf, ParsedURL* pu, wc_ces* charset)
-#else
-Str loadGopherSearch0(URLFile* uf, ParsedURL* pu)
-#endif
 {
     Str tmp;
     char* volatile p, * volatile q;
-#ifdef USE_M17N
     wc_ces doc_charset = DocumentCharset;
-#endif
 
     tmp = parsedURL2Str(pu);
     p = html_quote(tmp->ptr);
@@ -7407,7 +6964,6 @@ Str loadGopherSearch0(URLFile* uf, ParsedURL* pu)
 
     return tmp;
 }
-#endif /* USE_GOPHER */
 
 /*
  * loadBuffer: read file and make new buffer
@@ -7416,19 +6972,15 @@ Buffer*
 loadBuffer(URLFile* uf, Buffer* volatile newBuf)
 {
     FILE* volatile src = NULL;
-#ifdef USE_M17N
     wc_ces charset = WC_CES_US_ASCII;
     wc_ces volatile doc_charset = DocumentCharset;
-#endif
     Str lineBuf2;
     volatile char pre_lbuf = '\0';
     int nlines;
     Str tmpf;
     clen_t linelen = 0, trbyte = 0;
     Lineprop* propBuffer = NULL;
-#ifdef USE_ANSI_COLOR
     Linecolor* colorBuffer = NULL;
-#endif
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
 
     if (newBuf == NULL)
@@ -7445,18 +6997,15 @@ loadBuffer(URLFile* uf, Buffer* volatile newBuf)
         if (src)
             newBuf->sourcefile = tmpf->ptr;
     }
-#ifdef USE_M17N
     if (newBuf->document_charset)
         charset = doc_charset = newBuf->document_charset;
     if (content_charset && UseContentCharset)
         doc_charset = content_charset;
-#endif
 
     nlines = 0;
     if (IStype(uf->stream) != IST_ENCODED)
         uf->stream = newEncodedStream(uf->stream, uf->encoding);
     while ((lineBuf2 = StrmyISgets(uf->stream)) && lineBuf2->length) {
-#ifdef USE_NNTP
         if (uf->scheme == SCM_NEWS && lineBuf2->ptr[0] == '.') {
             Strshrinkfirst(lineBuf2, 1);
             if (lineBuf2->ptr[0] == '\n' || lineBuf2->ptr[0] == '\r' || lineBuf2->ptr[0] == '\0') {
@@ -7466,7 +7015,6 @@ loadBuffer(URLFile* uf, Buffer* volatile newBuf)
                 break;
             }
         }
-#endif /* USE_NNTP */
         if (src)
             Strfputs(lineBuf2, src);
         linelen += lineBuf2->length;
@@ -7497,16 +7045,13 @@ _end:
     newBuf->lastLine = newBuf->currentLine;
     newBuf->currentLine = newBuf->firstLine;
     newBuf->trbyte = trbyte + linelen;
-#ifdef USE_M17N
     newBuf->document_charset = charset;
-#endif
     if (src)
         fclose(src);
 
     return newBuf;
 }
 
-#ifdef USE_IMAGE
 Buffer*
 loadImageBuffer(URLFile* uf, Buffer* newBuf)
 {
@@ -7567,7 +7112,6 @@ image_buffer:
     newBuf->image_flag = IMG_FLAG_AUTO;
     return newBuf;
 }
-#endif
 
 static Str
 conv_symbol(Line* l)
@@ -7575,34 +7119,22 @@ conv_symbol(Line* l)
     Str tmp = NULL;
     char *p = l->lineBuf, *ep = p + l->len;
     Lineprop* pr = l->propBuf;
-#ifdef USE_M17N
     int w;
     char** symbol = NULL;
-#else
-    char** symbol = get_symbol();
-#endif
 
     for (; p < ep; p++, pr++) {
         if (*pr & PC_SYMBOL) {
-#ifdef USE_M17N
             char c = ((char)wtf_get_code((wc_uchar*)p) & 0x7f) - SYMBOL_BASE;
             int len = get_mclen(p);
-#else
-            char c = *p - SYMBOL_BASE;
-#endif
             if (tmp == NULL) {
                 tmp = Strnew_size(l->len);
                 Strcopy_charp_n(tmp, l->lineBuf, p - l->lineBuf);
-#ifdef USE_M17N
                 w = (*pr & PC_KANJI) ? 2 : 1;
                 symbol = get_symbol(DisplayCharset, &w);
-#endif
             }
             Strcat_charp(tmp, symbol[(unsigned char)c % N_SYMBOL]);
-#ifdef USE_M17N
             p += len - 1;
             pr += len - 1;
-#endif
         } else if (tmp != NULL)
             Strcat_char(tmp, *p);
     }
@@ -7620,10 +7152,8 @@ _saveBuffer(Buffer* buf, Line* l, FILE* f, int cont)
 {
     Str tmp;
     int is_html = FALSE;
-#ifdef USE_M17N
     int set_charset = !DisplayCharset;
     wc_ces charset = DisplayCharset ? DisplayCharset : WC_CES_US_ASCII;
-#endif
 
     is_html = is_html_type(buf->type);
 
@@ -7640,10 +7170,8 @@ pager_next:
     }
     if (buf->pagerSource && !(buf->bufferprop & BP_CLOSE)) {
         l = getNextPage(buf, PagerMax);
-#ifdef USE_M17N
         if (set_charset)
             charset = buf->document_charset;
-#endif
         goto pager_next;
     }
 }
@@ -7720,9 +7248,7 @@ getpipe(char* cmd)
         conv_from_system(cmd))
                           ->ptr;
     buf->bufferprop |= BP_PIPE;
-#ifdef USE_M17N
     buf->document_charset = WC_CES_US_ASCII;
-#endif
     return buf;
 }
 
@@ -7742,12 +7268,10 @@ openPagerBuffer(InputStream stream, Buffer* buf)
     else
         buf->buffername = conv_from_system(buf->buffername);
     buf->bufferprop |= BP_PIPE;
-#ifdef USE_M17N
     if (content_charset && UseContentCharset)
         buf->document_charset = content_charset;
     else
         buf->document_charset = WC_CES_US_ASCII;
-#endif
     buf->currentLine = buf->firstLine;
 
     return buf;
@@ -7763,9 +7287,7 @@ openGeneralPagerBuffer(InputStream stream)
 
     init_stream(&uf, SCM_UNKNOWN, stream);
 
-#ifdef USE_M17N
     content_charset = 0;
-#endif
     t_buf = newBuffer(INIT_BUFFER_WIDTH);
     copyParsedURL(&t_buf->currentURL, NULL);
     t_buf->currentURL.scheme = SCM_LOCAL;
@@ -7793,12 +7315,10 @@ openGeneralPagerBuffer(InputStream stream)
         buf = openPagerBuffer(stream, t_buf);
         buf->type = "text/plain";
     }
-#ifdef USE_IMAGE
     else if (activeImage && displayImage && !useExtImageViewer && !(w3m_dump & ~DUMP_FRAME) && !strncasecmp(t, "image/", 6)) {
         buf = loadImageBuffer(&uf, t_buf);
         buf->type = "text/html";
     }
-#endif
     else {
         if (searchExtViewer(t)) {
             buf = doExternal(uf, t, t_buf);
@@ -7825,17 +7345,13 @@ Line* getNextPage(Buffer* buf, int plen)
     Str lineBuf2;
     char volatile pre_lbuf = '\0';
     URLFile uf;
-#ifdef USE_M17N
     wc_ces charset;
     wc_ces volatile doc_charset = DocumentCharset;
     wc_uint8 old_auto_detect = WcOption.auto_detect;
-#endif
     int volatile squeeze_flag = FALSE;
     Lineprop* propBuffer = NULL;
 
-#ifdef USE_ANSI_COLOR
     Linecolor* colorBuffer = NULL;
-#endif
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
 
     if (buf->pagerSource == NULL)
@@ -7849,7 +7365,6 @@ Line* getNextPage(Buffer* buf, int plen)
         buf->currentLine = last;
     }
 
-#ifdef USE_M17N
     charset = buf->document_charset;
     if (buf->document_charset != WC_CES_US_ASCII)
         doc_charset = buf->document_charset;
@@ -7860,7 +7375,6 @@ Line* getNextPage(Buffer* buf, int plen)
             doc_charset = content_charset;
     }
     WcOption.auto_detect = buf->auto_detect;
-#endif
 
     if (SETJMP(AbortLoading) != 0) {
         goto pager_end;
@@ -7926,10 +7440,8 @@ pager_end:
     TRAP_OFF;
 
     buf->trbyte = trbyte + linelen;
-#ifdef USE_M17N
     buf->document_charset = charset;
     WcOption.auto_detect = old_auto_detect;
-#endif
     buf->topLine = top;
     buf->currentLine = cur;
     if (!last)
@@ -7958,7 +7470,6 @@ int save2tmp(URLFile uf, char* tmpf)
         goto _end;
     }
     TRAP_ON;
-#ifdef USE_NNTP
     int check = 0;
     if (uf.scheme == SCM_NEWS) {
         char c;
@@ -7981,7 +7492,6 @@ int save2tmp(URLFile uf, char* tmpf)
             showProgress(&linelen, &trbyte);
         }
     } else
-#endif /* USE_NNTP */
     {
         int count;
 
@@ -8029,14 +7539,11 @@ doExternal(URLFile uf, char* type, Buffer* defaultbuf)
     if (header)
         header = conv_to_system(header);
     command = unquote_mailcap(mcap->viewer, type, tmpf->ptr, header, &mc_stat);
-#ifndef __EMX__
     if (!(mc_stat & MCSTAT_REPNAME)) {
         Str tmp = Sprintf("(%s) < %s", command->ptr, shell_quote(tmpf->ptr));
         command = tmp;
     }
-#endif
 
-#ifdef HAVE_SETPGRP
     if (!(mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)) && !(mcap->flags & MAILCAP_NEEDSTERMINAL) && BackgroundExtViewer) {
         flush_tty();
         if (!fork()) {
@@ -8048,7 +7555,6 @@ doExternal(URLFile uf, char* type, Buffer* defaultbuf)
         }
         return NO_BUFFER;
     } else
-#endif
     {
         if (save2tmp(uf, tmpf->ptr) < 0) {
             return NULL;
@@ -8141,7 +7647,6 @@ _MoveFile(char* path1, char* path2)
 
 int _doFileCopy(char* tmpf, char* defstr, int download)
 {
-#ifndef __MINGW32_VERSION
     Str msg;
     Str filen;
     char *p, *q = NULL;
@@ -8247,7 +7752,6 @@ int _doFileCopy(char* tmpf, char* defstr, int download)
         if (PreserveTimestamp && !is_pipe && !stat(tmpf, &st))
             setModtime(p, st.st_mtime);
     }
-#endif /* __MINGW32_VERSION */
     return 0;
 }
 
@@ -8260,7 +7764,6 @@ int doFileMove(char* tmpf, char* defstr)
 
 int doFileSave(URLFile uf, char* defstr)
 {
-#ifndef __MINGW32_VERSION
     Str msg;
     Str filen;
     char *p, *q;
@@ -8361,7 +7864,6 @@ int doFileSave(URLFile uf, char* defstr)
         if (PreserveTimestamp && uf.modtime != -1)
             setModtime(p, uf.modtime);
     }
-#endif /* __MINGW32_VERSION */
     return 0;
 }
 
@@ -8427,7 +7929,6 @@ char* inputAnswer(char* prompt)
 static void
 uncompress_stream(URLFile* uf, char** src)
 {
-#ifndef __MINGW32_VERSION
     pid_t pid1;
     FILE* f1;
     char* expand_cmd = GUNZIP_CMDNAME;
@@ -8456,9 +7957,7 @@ uncompress_stream(URLFile* uf, char** src)
     uf->compression = CMP_NOCOMPRESS;
 
     if (uf->scheme != SCM_LOCAL
-#ifdef USE_IMAGE
         && !image_source
-#endif
     ) {
         tmpf = tmpfname(TMPF_DFL, ext)->ptr;
     }
@@ -8518,7 +8017,6 @@ uncompress_stream(URLFile* uf, char** src)
     }
     UFhalfclose(uf);
     uf->stream = newFileStream(f1, (void (*)())fclose);
-#endif /* __MINGW32_VERSION */
 }
 
 static FILE*
@@ -8569,39 +8067,6 @@ lessopen_stream(char* path)
     return fp;
 }
 
-#if 0
-void
-reloadBuffer(Buffer *buf)
-{
-    URLFile uf;
-
-    if (buf->sourcefile == NULL || buf->pagerSource != NULL)
-	return;
-    init_stream(&uf, SCM_UNKNOWN, NULL);
-    examineFile(buf->mailcap_source ? buf->mailcap_source : buf->sourcefile,
-		&uf);
-    if (uf.stream == NULL)
-	return;
-    is_redisplay = TRUE;
-    buf->allLine = 0;
-    buf->href = NULL;
-    buf->name = NULL;
-    buf->img = NULL;
-    buf->formitem = NULL;
-    buf->linklist = NULL;
-    buf->maplist = NULL;
-    if (buf->hmarklist)
-	buf->hmarklist->nmark = 0;
-    if (buf->imarklist)
-	buf->imarklist->nmark = 0;
-    if (is_html_type(buf->type))
-	loadHTMLBuffer(&uf, buf);
-    else
-	loadBuffer(&uf, buf);
-    UFclose(&uf);
-    is_redisplay = FALSE;
-}
-#endif
 
 static char*
 guess_filename(char* file)

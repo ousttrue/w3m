@@ -187,7 +187,6 @@ searchURLLabel(Buffer* buf, char* url)
     return searchAnchor(buf->name, url);
 }
 
-#ifdef USE_NNTP
 static Anchor*
 _put_anchor_news(Buffer* buf, char* p1, char* p2, int line, int pos)
 {
@@ -204,7 +203,6 @@ _put_anchor_news(Buffer* buf, char* p1, char* p2, int line, int pos)
         NULL, NO_REFERER, NULL, '\0', line,
         pos);
 }
-#endif /* USE_NNTP */
 
 static Anchor*
 _put_anchor_all(Buffer* buf, char* p1, char* p2, int line, int pos)
@@ -376,7 +374,6 @@ char* reAnchor(Buffer* buf, char* re)
     return reAnchorAny(buf, re, _put_anchor_all);
 }
 
-#ifdef USE_NNTP
 char* reAnchorNews(Buffer* buf, char* re)
 {
     return reAnchorAny(buf, re, _put_anchor_news);
@@ -435,7 +432,6 @@ char* reAnchorNewsheader(Buffer* buf)
     reseq_anchor(buf);
     return NULL;
 }
-#endif /* USE_NNTP */
 
 #define FIRST_MARKER_SIZE 30
 HmarkerList*
@@ -538,7 +534,6 @@ void shiftAnchorPosition(AnchorList* al, HmarkerList* hl, int line, int pos,
     }
 }
 
-#ifdef USE_IMAGE
 void addMultirowsImg(Buffer* buf, AnchorList* al)
 {
     int i, j, k, col, ecol, pos;
@@ -614,7 +609,6 @@ void addMultirowsImg(Buffer* buf, AnchorList* al)
         img->rows = 0;
     }
 }
-#endif
 
 void addMultirowsForm(Buffer* buf, AnchorList* al)
 {

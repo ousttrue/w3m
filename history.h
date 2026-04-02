@@ -29,11 +29,7 @@ extern char* lastHist(Hist* hist);
 extern char* nextHist(Hist* hist);
 extern char* prevHist(Hist* hist);
 
-#ifdef USE_HISTORY
 extern int loadHistory(Hist* hist);
 extern void saveHistory(Hist* hist, size_t size);
-#else /* not USE_HISTORY */
-#define ldHist nulcmd
-#endif /* not USE_HISTORY */
 
 #endif /* HISTORY_H */

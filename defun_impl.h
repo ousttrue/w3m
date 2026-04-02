@@ -119,7 +119,7 @@ void curlno(struct CmdArgs args);
 void dispI(struct CmdArgs args);
 void stopI(struct CmdArgs args);
 void msToggle(struct CmdArgs args);
-void mouse(struct CmdArgs args);
+// void mouse(struct CmdArgs args);
 void sgrmouse(struct CmdArgs args);
 void movMs(struct CmdArgs args);
 void menuMs(struct CmdArgs args);

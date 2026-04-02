@@ -1,8 +1,6 @@
 /* $Id: ftp.c,v 1.42 2010/12/15 10:50:24 htrb Exp $ */
 #include <stdio.h>
-#ifndef __MINGW32_VERSION
 #include <pwd.h>
-#endif /* __MINGW32_VERSION */
 #include <Str.h>
 #include <signal.h>
 #include <setjmp.h>
@@ -16,14 +14,10 @@
 #include <malloc.h>
 #endif /* DEBUG */
 
-#ifndef __MINGW32_VERSION
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
 #include <arpa/inet.h>
-#else
-#include <winsock.h>
-#endif /* __MINGW32_VERSION */
 
 #ifndef HAVE_SOCKLEN_T
 typedef int socklen_t;
@@ -132,16 +126,11 @@ ftp_login(FTP ftp)
         size_t n = strlen(ftp->pass);
 
         if (n > 0 && ftp->pass[n - 1] == '@') {
-#ifdef INET6
             struct sockaddr_storage sockname;
-#else
-            struct sockaddr_in sockname;
-#endif
             socklen_t socknamelen = sizeof(sockname);
 
             if (!getsockname(sock, (struct sockaddr*)&sockname, &socknamelen)) {
                 Str tmp = Strnew_charp(ftp->pass);
-#ifdef INET6
                 char hostbuf[NI_MAXHOST];
 
                 if (getnameinfo((struct sockaddr*)&sockname, socknamelen,
@@ -154,17 +143,6 @@ ftp_login(FTP ftp)
                     Strcat_m_charp(tmp, "[", hostbuf, "]", NULL);
                 else
                     Strcat_charp(tmp, "unknown");
-#else
-
-                struct hostent* sockent;
-                if ((sockent = gethostbyaddr((char*)&sockname.sin_addr,
-                         sizeof(sockname.sin_addr),
-                         sockname.sin_family)))
-                    Strcat_charp(tmp, sockent->h_name);
-                else
-                    Strcat_m_charp(tmp, "[", inet_ntoa(sockname.sin_addr),
-                        "]", NULL);
-#endif
                 ftp->pass = tmp->ptr;
             }
         }
@@ -218,15 +196,12 @@ ftp_pasv(FTP ftp)
     char* p;
     Str tmp;
     int family;
-#ifdef INET6
     struct sockaddr_storage sockaddr;
     int port;
     socklen_t sockaddrlen;
     unsigned char d1, d2, d3, d4;
     char abuf[INET6_ADDRSTRLEN];
-#endif
 
-#ifdef INET6
     sockaddrlen = sizeof(sockaddr);
     if (getpeername(fileno(ftp->wf),
             (struct sockaddr*)&sockaddr, &sockaddrlen)
@@ -237,11 +212,7 @@ ftp_pasv(FTP ftp)
 #else
     family = sockaddr.ss_family;
 #endif
-#else
-    family = AF_INET;
-#endif
     switch (family) {
-#ifdef INET6
     case AF_INET6:
         tmp = ftp_command(ftp, "EPSV", NULL, &status);
         if (status != 229)
@@ -259,7 +230,6 @@ ftp_pasv(FTP ftp)
             return -1;
         data = openSocket(abuf, "", port);
         break;
-#endif
     case AF_INET:
         tmp = ftp_command(ftp, "PASV", NULL, &status);
         if (status != 227)
@@ -408,14 +378,7 @@ openFTPStream(ParsedURL* pu, URLFile* uf)
                 pwd = Str_conv_to_system(pwd);
                 term_cbreak();
             } else {
-#ifndef __MINGW32_VERSION
                 pwd = Strnew_charp((char*)getpass("Password: "));
-#else
-                term_raw();
-                pwd = Strnew_charp(inputLine("Password: ", NULL, IN_PASSWORD));
-                pwd = Str_conv_to_system(pwd);
-                term_cbreak();
-#endif /* __MINGW32_VERSION */
             }
             add_auth_cookie_flag = TRUE;
         }
@@ -423,12 +386,8 @@ openFTPStream(ParsedURL* pu, URLFile* uf)
     } else if (ftppasswd != NULL && *ftppasswd != '\0')
         pass = ftppasswd;
     else {
-#ifndef __MINGW32_VERSION
         struct passwd* mypw = getpwuid(getuid());
         tmp = Strnew_charp(mypw ? mypw->pw_name : "anonymous");
-#else
-        tmp = Strnew_charp("anonymous");
-#endif /* __MINGW32_VERSION */
         Strcat_char(tmp, '@');
         pass = tmp->ptr;
     }
@@ -467,11 +426,7 @@ ftp_dir:
     return NULL;
 }
 
-#ifdef USE_M17N
 Str loadFTPDir(ParsedURL* pu, wc_ces* charset)
-#else
-Str loadFTPDir0(ParsedURL* pu)
-#endif
 {
     Str FTPDIRtmp;
     Str tmp;
@@ -481,11 +436,9 @@ Str loadFTPDir0(ParsedURL* pu)
     char** flist;
     int i, nfile, nfile_max;
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
-#ifdef USE_M17N
     wc_ces doc_charset = DocumentCharset;
 
     *charset = WC_CES_US_ASCII;
-#endif
     if (current_ftp.data == NULL)
         return NULL;
     tmp = ftp_command(&current_ftp, "SYST", NULL, &status);

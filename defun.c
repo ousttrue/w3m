@@ -572,9 +572,7 @@ DEFUN(selBuf, SELECT, "Display buffer-stack panel")
     for (buf = Firstbuf; buf != NULL; buf = buf->nextBuffer) {
         if (buf == Currentbuf)
             continue;
-#ifdef USE_IMAGE
         deleteImage(buf);
-#endif
         if (clear_buffer)
             tmpClearBuffer(buf);
     }
@@ -832,15 +830,12 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
 {
     Anchor* a;
     ParsedURL u;
-#ifdef USE_IMAGE
     int x = 0, y = 0, map = 0;
-#endif
     char* url;
 
     if (Currentbuf->firstLine == NULL)
         return;
 
-#ifdef USE_IMAGE
     a = retrieveCurrentImg(Currentbuf);
     if (a && a->image && a->image->map) {
         _followForm(FALSE);
@@ -850,13 +845,6 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
         getMapXY(Currentbuf, a, &x, &y);
         map = 1;
     }
-#else
-    a = retrieveCurrentMap(Currentbuf);
-    if (a) {
-        _followForm(FALSE);
-        return;
-    }
-#endif
     a = retrieveCurrentAnchor(Currentbuf);
     if (a == NULL) {
         _followForm(FALSE);
@@ -876,19 +864,9 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
     }
     if (handleMailto(a->url))
         return;
-#if 0
-    else if (!strncasecmp(a->url, "news:", 5) && strchr(a->url, '@') == NULL) {
-	/* news:newsgroup is not supported */
-	/* FIXME: gettextize? */
-	disp_err_message("news:newsgroup_name is not supported", TRUE);
-	return;
-    }
-#endif /* USE_NNTP */
     url = a->url;
-#ifdef USE_IMAGE
     if (map)
         url = Sprintf("%s?%d,%d", a->url, x, y)->ptr;
-#endif
 
     if (check_target && open_tab_blank && a->target && (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
         Buffer* buf;
@@ -1226,22 +1204,16 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
     FormList* request;
 
     tmp = Sprintf("mode=panel&cookie=%s&bmark=%s&url=%s&title=%s"
-#ifdef USE_M17N
                   "&charset=%s"
-#endif
         ,
         (Str_form_quote(localCookie()))->ptr,
         (Str_form_quote(Strnew_charp(BookmarkFile)))->ptr,
         (Str_form_quote(parsedURL2Str(&Currentbuf->currentURL)))->ptr,
-#ifdef USE_M17N
         (Str_form_quote(wc_conv_strict(Currentbuf->buffername,
              InnerCharset,
              BookmarkCharset)))
             ->ptr,
         wc_ces_to_charset(BookmarkCharset));
-#else
-        (Str_form_quote(Strnew_charp(Currentbuf->buffername)))->ptr);
-#endif
     request = newFormList(NULL, "post", NULL, NULL, NULL, NULL, NULL);
     request->body = tmp->ptr;
     request->length = tmp->length;
@@ -1342,9 +1314,7 @@ DEFUN(linkLst, LIST, "Show all URLs referenced")
 
     buf = link_list_panel(Currentbuf);
     if (buf != NULL) {
-#ifdef USE_M17N
         buf->document_charset = Currentbuf->document_charset;
-#endif
         cmd_loadBuffer(buf, BP_NORMAL, LB_NOLINK);
     }
 }
@@ -1465,10 +1435,8 @@ DEFUN(peekIMG, PEEK_IMG, "Show image address")
 DEFUN(curURL, PEEK, "Show current address")
 {
     static Str s = NULL;
-#ifdef USE_M17N
     static Lineprop* p = NULL;
     Lineprop* pp;
-#endif
     static int offset = 0, n;
 
     if (Currentbuf->bufferprop & BP_INTERNAL)
@@ -1483,19 +1451,15 @@ DEFUN(curURL, PEEK, "Show current address")
         s = currentURL();
         if (DecodeURL)
             s = Strnew_charp(url_decode2(s->ptr, NULL));
-#ifdef USE_M17N
         s = checkType(s, &pp, NULL);
         p = NewAtom_N(Lineprop, s->length);
         bcopy((void*)pp, (void*)p, s->length * sizeof(Lineprop));
-#endif
     }
     n = searchKeyNum();
     if (n > 1 && s->length > (n - 1) * (COLS - 1))
         offset = (n - 1) * (COLS - 1);
-#ifdef USE_M17N
     while (offset < s->length && p[offset] & PC_WCHAR2)
         offset++;
-#endif
     disp_message_nomouse(&s->ptr[offset], TRUE);
 }
 /* view HTML source */
@@ -1513,28 +1477,22 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
     }
     if (Currentbuf->sourcefile == NULL) {
         if (Currentbuf->pagerSource && !strcasecmp(Currentbuf->type, "text/plain")) {
-#ifdef USE_M17N
             wc_ces old_charset;
             wc_bool old_fix_width_conv;
-#endif
             FILE* f;
             Str tmpf = tmpfname(TMPF_SRC, NULL);
             f = fopen(tmpf->ptr, "w");
             if (f == NULL)
                 return;
-#ifdef USE_M17N
             old_charset = DisplayCharset;
             old_fix_width_conv = WcOption.fix_width_conv;
             DisplayCharset = (Currentbuf->document_charset != WC_CES_US_ASCII)
                 ? Currentbuf->document_charset
                 : 0;
             WcOption.fix_width_conv = WC_FALSE;
-#endif
             saveBufferBody(Currentbuf, f, TRUE);
-#ifdef USE_M17N
             DisplayCharset = old_charset;
             WcOption.fix_width_conv = old_fix_width_conv;
-#endif
             fclose(f);
             Currentbuf->sourcefile = tmpf->ptr;
         } else {
@@ -1573,9 +1531,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
     buf->sourcefile = Currentbuf->sourcefile;
     buf->header_source = Currentbuf->header_source;
     buf->search_header = Currentbuf->search_header;
-#ifdef USE_M17N
     buf->document_charset = Currentbuf->document_charset;
-#endif
     buf->clone = Currentbuf->clone;
     (*buf->clone)++;
 
@@ -1589,9 +1545,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
 DEFUN(reload, RELOAD, "Load current document anew")
 {
     Buffer *buf, *fbuf = NULL, sbuf;
-#ifdef USE_M17N
     wc_ces old_charset;
-#endif
     Str url;
     FormList* request;
     int multipart;
@@ -1657,17 +1611,13 @@ DEFUN(reload, RELOAD, "Load current document anew")
     /* FIXME: gettextize? */
     message("Reloading...", 0, 0);
     refresh();
-#ifdef USE_M17N
     old_charset = DocumentCharset;
     if (Currentbuf->document_charset != WC_CES_US_ASCII)
         DocumentCharset = Currentbuf->document_charset;
-#endif
     SearchHeader = Currentbuf->search_header;
     DefaultType = Currentbuf->real_type;
     buf = loadGeneralFile(url->ptr, NULL, NO_REFERER, RG_NOCACHE, request);
-#ifdef USE_M17N
     DocumentCharset = old_charset;
-#endif
     SearchHeader = FALSE;
     DefaultType = NULL;
 
@@ -1851,10 +1801,8 @@ DEFUN(curlno, LINE_INFO, "Display current position in document")
             (int)((double)cur * 100.0 / (double)(all ? all : 1)
                 + 0.5),
             col, len);
-#ifdef USE_M17N
     Strcat_charp(tmp, "  ");
     Strcat_charp(tmp, wc_ces_to_charset_desc(Currentbuf->document_charset));
-#endif
 
     disp_message(tmp->ptr, FALSE);
 }
@@ -2088,15 +2036,7 @@ DEFUN(execCmd, COMMAND, "Invoke w3m function(s)")
         CurrentKey = -1;
         CurrentKeyData = NULL;
         CurrentCmdData = *p ? p : NULL;
-#ifdef USE_MOUSE
-        if (use_mouse)
-            mouse_inactive();
-#endif
         w3mFuncList[cmd].func();
-#ifdef USE_MOUSE
-        if (use_mouse)
-            mouse_active();
-#endif
         CurrentCmdData = NULL;
     }
     displayBuffer(Currentbuf, B_NORMAL);
@@ -2141,9 +2081,7 @@ DEFUN(reinit, REINIT, "Reload configuration file")
     if (resource == NULL) {
         init_rc();
         sync_with_option();
-#ifdef USE_COOKIE
         initCookie();
-#endif
         displayBuffer(Currentbuf, B_REDRAW_IMAGE);
         return;
     }
@@ -2155,12 +2093,10 @@ DEFUN(reinit, REINIT, "Reload configuration file")
         return;
     }
 
-#ifdef USE_COOKIE
     if (!strcasecmp(resource, "COOKIE")) {
         initCookie();
         return;
     }
-#endif
 
     if (!strcasecmp(resource, "KEYMAP")) {
         initKeymap(TRUE);
@@ -2172,32 +2108,17 @@ DEFUN(reinit, REINIT, "Reload configuration file")
         return;
     }
 
-#ifdef USE_MOUSE
-    if (!strcasecmp(resource, "MOUSE")) {
-        initMouseAction();
-        displayBuffer(Currentbuf, B_REDRAW_IMAGE);
-        return;
-    }
-#endif
 
-#ifdef USE_MENU
     if (!strcasecmp(resource, "MENU")) {
         initMenu();
         return;
     }
-#endif
 
     if (!strcasecmp(resource, "MIMETYPES")) {
         initMimeTypes();
         return;
     }
 
-#ifdef USE_EXTERNAL_URI_LOADER
-    if (!strcasecmp(resource, "URIMETHODS")) {
-        initURIMethods();
-        return;
-    }
-#endif
 
     disp_err_message(Sprintf("Don't know how to reinitialize '%s'", resource)->ptr, FALSE);
 }
@@ -2313,9 +2234,7 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
 {
     Buffer* buf;
     int replace = FALSE, new_tab = FALSE;
-#ifdef USE_ALARM
     int reload;
-#endif
 
     if (Currentbuf->bufferprop & BP_INTERNAL && !strcmp(Currentbuf->buffername, DOWNLOAD_LIST_TITLE))
         replace = TRUE;
@@ -2330,9 +2249,7 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
         }
         return;
     }
-#ifdef USE_ALARM
     reload = checkDownloadList();
-#endif
     buf = DownloadListBuffer();
     if (!buf) {
         displayBuffer(Currentbuf, B_NORMAL);
@@ -2350,11 +2267,9 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
     pushBuffer(buf);
     if (replace || new_tab)
         deletePrevBuf();
-#ifdef USE_ALARM
     if (reload)
         Currentbuf->event = setAlarmEvent(Currentbuf->event, 1, AL_IMPLICIT,
             FUNCNAME_reload, NULL);
-#endif
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
@@ -2435,12 +2350,6 @@ DEFUN(mainMn, MAIN_MENU MENU, "Pop up menu")
             return;
         menu = w3mMenuList[n].menu;
     }
-#ifdef USE_MOUSE
-    if (mouse_action.in_action) {
-        x = mouse_action.cursorX;
-        y = mouse_action.cursorY;
-    }
-#endif
     popupMenu(x, y, menu);
 }
 
@@ -2449,12 +2358,6 @@ DEFUN(selMn, SELECT_MENU, "Pop up buffer-stack menu")
     int x = Currentbuf->cursorX + Currentbuf->rootX,
         y = Currentbuf->cursorY + Currentbuf->rootY;
 
-#ifdef USE_MOUSE
-    if (mouse_action.in_action) {
-        x = mouse_action.cursorX;
-        y = mouse_action.cursorY;
-    }
-#endif
     popupMenu(x, y, &SelectMenu);
 }
 
@@ -2463,11 +2366,5 @@ DEFUN(tabMn, TAB_MENU, "Pop up tab selection menu")
     int x = Currentbuf->cursorX + Currentbuf->rootX,
         y = Currentbuf->cursorY + Currentbuf->rootY;
 
-#ifdef USE_MOUSE
-    if (mouse_action.in_action) {
-        x = mouse_action.cursorX;
-        y = mouse_action.cursorY;
-    }
-#endif
     popupMenu(x, y, &SelTabMenu);
 }
