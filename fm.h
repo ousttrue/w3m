@@ -74,7 +74,6 @@ typedef int wc_ces; /* XXX: not used */
 #include "func.h"
 #include "menu.h"
 #include "textlist.h"
-#include "funcname1.h"
 #include "terms.h"
 #include "istream.h"
 
@@ -878,14 +877,7 @@ global char TrapSignal init(TRUE);
             mySignal(SIGINT, prevtrap); \
     }
 
-extern unsigned char GlobalKeymap[];
-extern unsigned char EscKeymap[];
-extern unsigned char EscBKeymap[];
-extern unsigned char EscDKeymap[];
-#ifdef __EMX__
-extern unsigned char PcKeymap[];
-#endif
-extern FuncList w3mFuncList[];
+extern void w3mFunc(const char* cmd);
 
 global char* HTTP_proxy init(NULL);
 #ifdef USE_SSL
@@ -1169,7 +1161,7 @@ global int relative_wheel_scroll init(FALSE);
 global int fixed_wheel_scroll_count init(5);
 global int relative_wheel_scroll_ratio init(30);
 typedef struct _MouseActionMap {
-    void (*func)();
+    const char *cmd;
     char* data;
 } MouseActionMap;
 typedef struct _MouseAction {

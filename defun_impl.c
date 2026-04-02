@@ -1,4 +1,5 @@
-#include "defun.h"
+#include "defun_impl.h"
+#include "keybind.h"
 #include "fm.h"
 #include "main.h"
 #include "proto.h"
@@ -7,11 +8,11 @@
 #include "regex.h"
 #include <signal.h>
 
-DEFUN(nulcmd, NOTHING NULL @ @ @, "Do nothing")
+void nulcmd(struct CmdArgs args)
 { /* do nothing */
 }
 
-DEFUN(escmap, ESCMAP, "ESC map")
+void escmap(struct CmdArgs args)
 {
     char c;
     c = getch();
@@ -19,7 +20,7 @@ DEFUN(escmap, ESCMAP, "ESC map")
         escKeyProc((int)c, K_ESC, EscKeymap);
 }
 
-DEFUN(escbmap, ESCBMAP, "ESC [ map")
+void escbmap(struct CmdArgs args)
 {
     char c;
     c = getch();
@@ -31,7 +32,7 @@ DEFUN(escbmap, ESCBMAP, "ESC [ map")
         escKeyProc((int)c, K_ESCB, EscBKeymap);
 }
 
-DEFUN(multimap, MULTIMAP, "multimap")
+void multimap(struct CmdArgs args)
 {
     char c;
     c = getch();
@@ -41,7 +42,7 @@ DEFUN(multimap, MULTIMAP, "multimap")
     }
 }
 
-DEFUN(pgFore, NEXT_PAGE, "Scroll down one page")
+void pgFore(struct CmdArgs args)
 {
     if (vi_prec_num)
         nscroll(searchKeyNum() * (Currentbuf->LINES - 1), B_NORMAL);
@@ -49,7 +50,7 @@ DEFUN(pgFore, NEXT_PAGE, "Scroll down one page")
         nscroll(prec_num ? searchKeyNum() : searchKeyNum() * (Currentbuf->LINES - 1), prec_num ? B_SCROLL : B_NORMAL);
 }
 
-DEFUN(pgBack, PREV_PAGE, "Scroll up one page")
+void pgBack(struct CmdArgs args)
 {
     if (vi_prec_num)
         nscroll(-searchKeyNum() * (Currentbuf->LINES - 1), B_NORMAL);
@@ -57,27 +58,27 @@ DEFUN(pgBack, PREV_PAGE, "Scroll up one page")
         nscroll(-(prec_num ? searchKeyNum() : searchKeyNum() * (Currentbuf->LINES - 1)), prec_num ? B_SCROLL : B_NORMAL);
 }
 
-DEFUN(hpgFore, NEXT_HALF_PAGE, "Scroll down half a page")
+void hpgFore(struct CmdArgs args)
 {
     nscroll(searchKeyNum() * (Currentbuf->LINES / 2 - 1), B_NORMAL);
 }
 
-DEFUN(hpgBack, PREV_HALF_PAGE, "Scroll up half a page")
+void hpgBack(struct CmdArgs args)
 {
     nscroll(-searchKeyNum() * (Currentbuf->LINES / 2 - 1), B_NORMAL);
 }
 
-DEFUN(lup1, UP, "Scroll the screen up one line")
+void lup1(struct CmdArgs args)
 {
     nscroll(searchKeyNum(), B_SCROLL);
 }
 
-DEFUN(ldown1, DOWN, "Scroll the screen down one line")
+void ldown1(struct CmdArgs args)
 {
     nscroll(-searchKeyNum(), B_SCROLL);
 }
 
-DEFUN(ctrCsrV, CENTER_V, "Center on cursor line")
+void ctrCsrV(struct CmdArgs args)
 {
     int offsety;
     if (Currentbuf->firstLine == NULL)
@@ -90,7 +91,7 @@ DEFUN(ctrCsrV, CENTER_V, "Center on cursor line")
     }
 }
 
-DEFUN(ctrCsrH, CENTER_H, "Center on cursor column")
+void ctrCsrH(struct CmdArgs args)
 {
     int offsetx;
     if (Currentbuf->firstLine == NULL)
@@ -103,44 +104,44 @@ DEFUN(ctrCsrH, CENTER_H, "Center on cursor column")
     }
 }
 
-DEFUN(rdrwSc, REDRAW, "Draw the screen anew")
+void rdrwSc(struct CmdArgs args)
 {
     clear();
     arrangeCursor(Currentbuf);
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-DEFUN(srchfor, SEARCH SEARCH_FORE WHEREIS, "Search forward")
+void srchfor(struct CmdArgs args)
 {
     srch(forwardSearch, "Forward: ");
 }
 
-DEFUN(isrchfor, ISEARCH, "Incremental search forward")
+void isrchfor(struct CmdArgs args)
 {
     isrch(forwardSearch, "I-search: ");
 }
 
-DEFUN(srchbak, SEARCH_BACK, "Search backward")
+void srchbak(struct CmdArgs args)
 {
     srch(backwardSearch, "Backward: ");
 }
 
-DEFUN(isrchbak, ISEARCH_BACK, "Incremental search backward")
+void isrchbak(struct CmdArgs args)
 {
     isrch(backwardSearch, "I-search backward: ");
 }
 
-DEFUN(srchnxt, SEARCH_NEXT, "Continue search forward")
+void srchnxt(struct CmdArgs args)
 {
     srch_nxtprv(0);
 }
 
-DEFUN(srchprv, SEARCH_PREV, "Continue search backward")
+void srchprv(struct CmdArgs args)
 {
     srch_nxtprv(1);
 }
 
-DEFUN(shiftl, SHIFT_LEFT, "Shift screen left")
+void shiftl(struct CmdArgs args)
 {
     int column;
 
@@ -152,7 +153,7 @@ DEFUN(shiftl, SHIFT_LEFT, "Shift screen left")
     displayBuffer(Currentbuf, B_NORMAL);
 }
 
-DEFUN(shiftr, SHIFT_RIGHT, "Shift screen right")
+void shiftr(struct CmdArgs args)
 {
     int column;
 
@@ -164,7 +165,7 @@ DEFUN(shiftr, SHIFT_RIGHT, "Shift screen right")
     displayBuffer(Currentbuf, B_NORMAL);
 }
 
-DEFUN(col1R, RIGHT, "Shift screen one column right")
+void col1R(struct CmdArgs args)
 {
     Buffer* buf = Currentbuf;
     Line* l = buf->currentLine;
@@ -182,7 +183,7 @@ DEFUN(col1R, RIGHT, "Shift screen one column right")
     displayBuffer(Currentbuf, B_NORMAL);
 }
 
-DEFUN(col1L, LEFT, "Shift screen one column left")
+void col1L(struct CmdArgs args)
 {
     Buffer* buf = Currentbuf;
     Line* l = buf->currentLine;
@@ -199,7 +200,7 @@ DEFUN(col1L, LEFT, "Shift screen one column left")
     displayBuffer(Currentbuf, B_NORMAL);
 }
 
-DEFUN(setEnv, SETENV, "Set environment variable")
+void setEnv(struct CmdArgs args)
 {
     char* env;
     char *var, *value;
@@ -223,7 +224,7 @@ DEFUN(setEnv, SETENV, "Set environment variable")
     displayBuffer(Currentbuf, B_NORMAL);
 }
 
-DEFUN(pipeBuf, PIPE_BUF, "Pipe current buffer through a shell command and display output")
+void pipeBuf(struct CmdArgs args)
 {
     Buffer* buf;
     char *cmd, *tmpf;
@@ -268,7 +269,7 @@ DEFUN(pipeBuf, PIPE_BUF, "Pipe current buffer through a shell command and displa
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-DEFUN(pipesh, PIPE_SHELL, "Execute shell command and display output")
+void pipesh(struct CmdArgs args)
 {
     Buffer* buf;
     char* cmd;
@@ -297,7 +298,7 @@ DEFUN(pipesh, PIPE_SHELL, "Execute shell command and display output")
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-DEFUN(readsh, READ_SHELL, "Execute shell command and display output")
+void readsh(struct CmdArgs args)
 {
     Buffer* buf;
     char* cmd;
@@ -331,7 +332,7 @@ DEFUN(readsh, READ_SHELL, "Execute shell command and display output")
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output")
+void execsh(struct CmdArgs args)
 {
     char* cmd;
 
@@ -355,7 +356,7 @@ DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output")
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-DEFUN(ldfile, LOAD, "Open local file in a new buffer")
+void ldfile(struct CmdArgs args)
 {
     char* fn;
 
@@ -373,7 +374,7 @@ DEFUN(ldfile, LOAD, "Open local file in a new buffer")
     cmd_loadfile(fn);
 }
 
-DEFUN(ldhelp, HELP, "Show help panel")
+void ldhelp(struct CmdArgs args)
 {
     char* lang;
     int n;
@@ -387,47 +388,47 @@ DEFUN(ldhelp, HELP, "Show help panel")
     cmd_loadURL(tmp->ptr, NULL, NO_REFERER, NULL);
 }
 
-DEFUN(movL, MOVE_LEFT, "Cursor left")
+void movL(struct CmdArgs args)
 {
     _movL(Currentbuf->COLS / 2);
 }
 
-DEFUN(movL1, MOVE_LEFT1, "Cursor left. With edge touched, slide")
+void movL1(struct CmdArgs args)
 {
     _movL(1);
 }
 
-DEFUN(movD, MOVE_DOWN, "Cursor down")
+void movD(struct CmdArgs args)
 {
     _movD((Currentbuf->LINES + 1) / 2);
 }
 
-DEFUN(movD1, MOVE_DOWN1, "Cursor down. With edge touched, slide")
+void movD1(struct CmdArgs args)
 {
     _movD(1);
 }
 
-DEFUN(movU, MOVE_UP, "Cursor up")
+void movU(struct CmdArgs args)
 {
     _movU((Currentbuf->LINES + 1) / 2);
 }
 
-DEFUN(movU1, MOVE_UP1, "Cursor up. With edge touched, slide")
+void movU1(struct CmdArgs args)
 {
     _movU(1);
 }
 
-DEFUN(movR, MOVE_RIGHT, "Cursor right")
+void movR(struct CmdArgs args)
 {
     _movR(Currentbuf->COLS / 2);
 }
 
-DEFUN(movR1, MOVE_RIGHT1, "Cursor right. With edge touched, slide")
+void movR1(struct CmdArgs args)
 {
     _movR(1);
 }
 
-DEFUN(movLW, PREV_WORD, "Move to the previous word")
+void movLW(struct CmdArgs args)
 {
     char* lb;
     Line *pline, *l;
@@ -479,7 +480,7 @@ end:
     displayBuffer(Currentbuf, B_NORMAL);
 }
 
-DEFUN(movRW, NEXT_WORD, "Move to the next word")
+void movRW(struct CmdArgs args)
 {
     char* lb;
     Line *pline, *l;
@@ -522,19 +523,19 @@ end:
 }
 
 /* Quit */
-DEFUN(quitfm, ABORT EXIT, "Quit without confirmation")
+void quitfm(struct CmdArgs args)
 {
     _quitfm(FALSE);
 }
 
 /* Question and Quit */
-DEFUN(qquitfm, QUIT, "Quit with confirmation request")
+void qquitfm(struct CmdArgs args)
 {
     _quitfm(confirm_on_quit);
 }
 
 /* Select buffer */
-DEFUN(selBuf, SELECT, "Display buffer-stack panel")
+void selBuf(struct CmdArgs args)
 {
     Buffer* buf;
     int ok;
@@ -561,10 +562,10 @@ DEFUN(selBuf, SELECT, "Display buffer-stack panel")
             }
             break;
         case 'q':
-            qquitfm();
+            qquitfm((struct CmdArgs) { 0 });
             break;
         case 'Q':
-            quitfm();
+            quitfm((struct CmdArgs) { 0 });
             break;
         }
     } while (!ok);
@@ -582,7 +583,7 @@ DEFUN(selBuf, SELECT, "Display buffer-stack panel")
 }
 
 /* Suspend (on BSD), or run interactive shell (on SysV) */
-DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background")
+void susp(struct CmdArgs args)
 {
 #ifndef SIGSTOP
     char* shell;
@@ -613,7 +614,7 @@ DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background")
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-DEFUN(goLine, GOTO_LINE, "Go to the specified line")
+void goLine(struct CmdArgs args)
 {
 
     char* str = searchKeyData();
@@ -626,18 +627,18 @@ DEFUN(goLine, GOTO_LINE, "Go to the specified line")
         _goLine(inputStr("Goto line: ", ""));
 }
 
-DEFUN(goLineF, BEGIN, "Go to the first line")
+void goLineF(struct CmdArgs args)
 {
     _goLine("^");
 }
 
-DEFUN(goLineL, END, "Go to the last line")
+void goLineL(struct CmdArgs args)
 {
     _goLine("$");
 }
 
 /* Go to the beginning of the line */
-DEFUN(linbeg, LINE_BEGIN, "Go to the beginning of the line")
+void linbeg(struct CmdArgs args)
 {
     if (Currentbuf->firstLine == NULL)
         return;
@@ -649,7 +650,7 @@ DEFUN(linbeg, LINE_BEGIN, "Go to the beginning of the line")
 }
 
 /* Go to the bottom of the line */
-DEFUN(linend, LINE_END, "Go to the end of the line")
+void linend(struct CmdArgs args)
 {
     if (Currentbuf->firstLine == NULL)
         return;
@@ -662,7 +663,7 @@ DEFUN(linend, LINE_END, "Go to the end of the line")
 }
 
 /* Run editor on the current buffer */
-DEFUN(editBf, EDIT, "Edit local source")
+void editBf(struct CmdArgs args)
 {
     char* fn = Currentbuf->filename;
     Str cmd;
@@ -683,17 +684,14 @@ DEFUN(editBf, EDIT, "Edit local source")
     exec_cmd(cmd->ptr);
 
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
-    reload();
+    reload((struct CmdArgs) { 0 });
 }
 
 /* Run editor on the current screen */
-DEFUN(editScr, EDIT_SCREEN, "Edit rendered copy of document")
+void editScr(struct CmdArgs args)
 {
-    char* tmpf;
-    FILE* f;
-
-    tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
-    f = fopen(tmpf, "w");
+    const char* tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
+    FILE* f = fopen(tmpf, "w");
     if (f == NULL) {
         /* FIXME: gettextize? */
         disp_err_message(Sprintf("Can't open %s", tmpf)->ptr, TRUE);
@@ -709,7 +707,7 @@ DEFUN(editScr, EDIT_SCREEN, "Edit rendered copy of document")
 }
 
 /* Set / unset mark */
-DEFUN(_mark, MARK, "Set/unset mark")
+void _mark(struct CmdArgs args)
 {
     Line* l;
     if (!use_mark)
@@ -722,7 +720,7 @@ DEFUN(_mark, MARK, "Set/unset mark")
 }
 
 /* Go to next mark */
-DEFUN(nextMk, NEXT_MARK, "Go to the next mark")
+void nextMk(struct CmdArgs args)
 {
     Line* l;
     int i;
@@ -755,7 +753,7 @@ DEFUN(nextMk, NEXT_MARK, "Go to the next mark")
 }
 
 /* Go to previous mark */
-DEFUN(prevMk, PREV_MARK, "Go to the previous mark")
+void prevMk(struct CmdArgs args)
 {
     Line* l;
     int i;
@@ -790,7 +788,7 @@ DEFUN(prevMk, PREV_MARK, "Go to the previous mark")
 }
 
 /* Mark place to which the regular expression matches */
-DEFUN(reMark, REG_MARK, "Mark all occurences of a pattern")
+void reMark(struct CmdArgs args)
 {
     Line* l;
     char* str;
@@ -828,7 +826,7 @@ DEFUN(reMark, REG_MARK, "Mark all occurences of a pattern")
 }
 
 /* follow HREF link */
-DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
+void followA(struct CmdArgs args)
 {
     Anchor* a;
     ParsedURL u;
@@ -908,7 +906,7 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
 }
 
 /* view inline image */
-DEFUN(followI, VIEW_IMAGE, "Display image in viewer")
+void followI(struct CmdArgs args)
 {
     Anchor* a;
     Buffer* buf;
@@ -934,13 +932,13 @@ DEFUN(followI, VIEW_IMAGE, "Display image in viewer")
 }
 
 /* submit form */
-DEFUN(submitForm, SUBMIT, "Submit form")
+void submitForm(struct CmdArgs args)
 {
     _followForm(TRUE);
 }
 
 /* go to the top anchor */
-DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink")
+void topA(struct CmdArgs args)
 {
     HmarkerList* hl = Currentbuf->hmarklist;
     BufferPoint* po;
@@ -973,7 +971,7 @@ DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink")
 }
 
 /* go to the last anchor */
-DEFUN(lastA, LINK_END, "Move to the last hyperlink")
+void lastA(struct CmdArgs args)
 {
     HmarkerList* hl = Currentbuf->hmarklist;
     BufferPoint* po;
@@ -1008,7 +1006,7 @@ DEFUN(lastA, LINK_END, "Move to the last hyperlink")
 }
 
 /* go to the nth anchor */
-DEFUN(nthA, LINK_N, "Go to the nth link")
+void nthA(struct CmdArgs args)
 {
     HmarkerList* hl = Currentbuf->hmarklist;
     BufferPoint* po;
@@ -1037,67 +1035,67 @@ DEFUN(nthA, LINK_N, "Go to the nth link")
 }
 
 /* go to the next anchor */
-DEFUN(nextA, NEXT_LINK, "Move to the next hyperlink")
+void nextA(struct CmdArgs args)
 {
     _nextA(FALSE);
 }
 
 /* go to the previous anchor */
-DEFUN(prevA, PREV_LINK, "Move to the previous hyperlink")
+void prevA(struct CmdArgs args)
 {
     _prevA(FALSE);
 }
 
 /* go to the next visited anchor */
-DEFUN(nextVA, NEXT_VISITED, "Move to the next visited hyperlink")
+void nextVA(struct CmdArgs args)
 {
     _nextA(TRUE);
 }
 
 /* go to the previous visited anchor */
-DEFUN(prevVA, PREV_VISITED, "Move to the previous visited hyperlink")
+void prevVA(struct CmdArgs args)
 {
     _prevA(TRUE);
 }
 
 /* go to the next left anchor */
-DEFUN(nextL, NEXT_LEFT, "Move left to the next hyperlink")
+void nextL(struct CmdArgs args)
 {
     nextX(-1, 0);
 }
 
 /* go to the next left-up anchor */
-DEFUN(nextLU, NEXT_LEFT_UP, "Move left or upward to the next hyperlink")
+void nextLU(struct CmdArgs args)
 {
     nextX(-1, -1);
 }
 
 /* go to the next right anchor */
-DEFUN(nextR, NEXT_RIGHT, "Move right to the next hyperlink")
+void nextR(struct CmdArgs args)
 {
     nextX(1, 0);
 }
 
 /* go to the next right-down anchor */
-DEFUN(nextRD, NEXT_RIGHT_DOWN, "Move right or downward to the next hyperlink")
+void nextRD(struct CmdArgs args)
 {
     nextX(1, 1);
 }
 
 /* go to the next downward anchor */
-DEFUN(nextD, NEXT_DOWN, "Move downward to the next hyperlink")
+void nextD(struct CmdArgs args)
 {
     nextY(1);
 }
 
 /* go to the next upward anchor */
-DEFUN(nextU, NEXT_UP, "Move upward to the next hyperlink")
+void nextU(struct CmdArgs args)
 {
     nextY(-1);
 }
 
 /* go to the next bufferr */
-DEFUN(nextBf, NEXT, "Switch to the next buffer")
+void nextBf(struct CmdArgs args)
 {
     Buffer* buf;
     int i;
@@ -1115,7 +1113,7 @@ DEFUN(nextBf, NEXT, "Switch to the next buffer")
 }
 
 /* go to the previous bufferr */
-DEFUN(prevBf, PREV, "Switch to the previous buffer")
+void prevBf(struct CmdArgs args)
 {
     Buffer* buf;
     int i;
@@ -1133,7 +1131,7 @@ DEFUN(prevBf, PREV, "Switch to the previous buffer")
 }
 
 /* delete current buffer and back to the previous buffer */
-DEFUN(backBf, BACK, "Close current buffer and return to the one below in stack")
+void backBf(struct CmdArgs args)
 {
     Buffer* buf = Currentbuf->linkBuffer[LB_N_FRAME];
 
@@ -1163,7 +1161,7 @@ DEFUN(backBf, BACK, "Close current buffer and return to the one below in stack")
             buf->frameset = fs;
 
             if (buf == Currentbuf) {
-                rFrame();
+                rFrame((struct CmdArgs) { 0 });
                 Currentbuf->topLine = lineSkip(Currentbuf,
                     Currentbuf->firstLine, top - 1,
                     FALSE);
@@ -1180,19 +1178,19 @@ DEFUN(backBf, BACK, "Close current buffer and return to the one below in stack")
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-DEFUN(deletePrevBuf, DELETE_PREVBUF, "Delete previous buffer (mainly for local CGI-scripts)")
+void deletePrevBuf(struct CmdArgs args)
 {
     Buffer* buf = Currentbuf->nextBuffer;
     if (buf)
         delBuffer(buf);
 }
 
-DEFUN(goURL, GOTO, "Open specified document in a new buffer")
+void goURL(struct CmdArgs args)
 {
     goURL0("Goto URL: ", FALSE);
 }
 
-DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer")
+void goHome(struct CmdArgs args)
 {
     char* url;
     if ((url = getenv("HTTP_HOME")) != NULL || (url = getenv("WWW_HOME")) != NULL) {
@@ -1208,19 +1206,19 @@ DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer")
     }
 }
 
-DEFUN(gorURL, GOTO_RELATIVE, "Go to relative address")
+void gorURL(struct CmdArgs args)
 {
     goURL0("Goto relative URL: ", TRUE);
 }
 
 /* load bookmark */
-DEFUN(ldBmark, BOOKMARK VIEW_BOOKMARK, "View bookmarks")
+void ldBmark(struct CmdArgs args)
 {
     cmd_loadURL(BookmarkFile, NULL, NO_REFERER, NULL);
 }
 
 /* Add current to bookmark */
-DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
+void adBmark(struct CmdArgs args)
 {
     Str tmp;
     FormList* request;
@@ -1250,13 +1248,13 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
 }
 
 /* option setting */
-DEFUN(ldOpt, OPTIONS, "Display options setting panel")
+void ldOpt(struct CmdArgs args)
 {
     cmd_loadBuffer(load_option_panel(), BP_NO_URL, LB_NOLINK);
 }
 
 /* set an option */
-DEFUN(setOpt, SET_OPTION, "Set option")
+void setOpt(struct CmdArgs args)
 {
     char* opt;
 
@@ -1279,13 +1277,13 @@ DEFUN(setOpt, SET_OPTION, "Set option")
 }
 
 /* error message list */
-DEFUN(msgs, MSGS, "Display error messages")
+void msgs(struct CmdArgs args)
 {
     cmd_loadBuffer(message_list_panel(), BP_NO_URL, LB_NOLINK);
 }
 
 /* page info */
-DEFUN(pginfo, INFO, "Display information about the current document")
+void pginfo(struct CmdArgs args)
 {
     Buffer* buf;
 
@@ -1301,7 +1299,7 @@ DEFUN(pginfo, INFO, "Display information about the current document")
 }
 
 /* link menu */
-DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
+void linkMn(struct CmdArgs args)
 {
     LinkList* l = link_menu(Currentbuf);
     ParsedURL p_url;
@@ -1319,24 +1317,24 @@ DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
 }
 
 /* accesskey */
-DEFUN(accessKey, ACCESSKEY, "Pop up accesskey menu")
+void accessKey(struct CmdArgs args)
 {
     anchorMn(accesskey_menu, TRUE);
 }
 
 /* list menu */
-DEFUN(listMn, LIST_MENU, "Pop up menu for hyperlinks to browse to")
+void listMn(struct CmdArgs args)
 {
     anchorMn(list_menu, TRUE);
 }
 
-DEFUN(movlistMn, MOVE_LIST_MENU, "Pop up menu to navigate between hyperlinks")
+void movlistMn(struct CmdArgs args)
 {
     anchorMn(list_menu, FALSE);
 }
 
 /* link,anchor,image list */
-DEFUN(linkLst, LIST, "Show all URLs referenced")
+void linkLst(struct CmdArgs args)
 {
     Buffer* buf;
 
@@ -1350,7 +1348,7 @@ DEFUN(linkLst, LIST, "Show all URLs referenced")
 }
 
 /* cookie list */
-DEFUN(cooLst, COOKIE, "View cookie list")
+void cooLst(struct CmdArgs args)
 {
     Buffer* buf;
 
@@ -1360,31 +1358,31 @@ DEFUN(cooLst, COOKIE, "View cookie list")
 }
 
 /* History page */
-DEFUN(ldHist, HISTORY, "Show browsing history")
+void ldHist(struct CmdArgs args)
 {
     cmd_loadBuffer(historyBuffer(URLHist), BP_NO_URL, LB_NOLINK);
 }
 
 /* download HREF link */
-DEFUN(svA, SAVE_LINK, "Save hyperlink target")
+void svA(struct CmdArgs args)
 {
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
     do_download = TRUE;
-    followA();
+    followA((struct CmdArgs) { 0 });
     do_download = FALSE;
 }
 
 /* download IMG link */
-DEFUN(svI, SAVE_IMAGE, "Save inline image")
+void svI(struct CmdArgs args)
 {
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
     do_download = TRUE;
-    followI();
+    followI((struct CmdArgs) { 0 });
     do_download = FALSE;
 }
 
 /* save buffer */
-DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document")
+void svBuf(struct CmdArgs args)
 {
     char *qfile = NULL, *file;
     FILE* f;
@@ -1432,7 +1430,7 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document")
 }
 
 /* save source */
-DEFUN(svSrc, DOWNLOAD SAVE, "Save document source")
+void svSrc(struct CmdArgs args)
 {
     char* file;
 
@@ -1451,18 +1449,18 @@ DEFUN(svSrc, DOWNLOAD SAVE, "Save document source")
 }
 
 /* peek URL */
-DEFUN(peekURL, PEEK_LINK, "Show target address")
+void peekURL(struct CmdArgs args)
 {
     _peekURL(0);
 }
 
 /* peek URL of image */
-DEFUN(peekIMG, PEEK_IMG, "Show image address")
+void peekIMG(struct CmdArgs args)
 {
     _peekURL(1);
 }
 
-DEFUN(curURL, PEEK, "Show current address")
+void curURL(struct CmdArgs args)
 {
     static Str s = NULL;
 #ifdef USE_M17N
@@ -1500,7 +1498,7 @@ DEFUN(curURL, PEEK, "Show current address")
 }
 /* view HTML source */
 
-DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
+void vwSrc(struct CmdArgs args)
 {
     Buffer* buf;
 
@@ -1586,7 +1584,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
 }
 
 /* reload */
-DEFUN(reload, RELOAD, "Load current document anew")
+void reload(struct CmdArgs args)
 {
     Buffer *buf, *fbuf = NULL, sbuf;
 #ifdef USE_M17N
@@ -1598,7 +1596,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
 
     if (Currentbuf->bufferprop & BP_INTERNAL) {
         if (!strcmp(Currentbuf->buffername, DOWNLOAD_LIST_TITLE)) {
-            ldDL();
+            ldDL((struct CmdArgs) { 0 });
             return;
         }
         /* FIXME: gettextize? */
@@ -1685,7 +1683,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
         Firstbuf = deleteBuffer(Firstbuf, fbuf);
     repBuffer(Currentbuf, buf);
     if ((buf->type != NULL) && (sbuf.type != NULL) && ((!strcasecmp(buf->type, "text/plain") && is_html_type(sbuf.type)) || (is_html_type(buf->type) && !strcasecmp(sbuf.type, "text/plain")))) {
-        vwSrc();
+        vwSrc((struct CmdArgs) { 0 });
         if (Currentbuf != buf)
             Firstbuf = deleteBuffer(Firstbuf, buf);
     }
@@ -1699,14 +1697,14 @@ DEFUN(reload, RELOAD, "Load current document anew")
 }
 
 /* reshape */
-DEFUN(reshape, RESHAPE, "Re-render document")
+void reshape(struct CmdArgs args)
 {
     Currentbuf->need_reshape = TRUE;
     reshapeBuffer(Currentbuf);
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-DEFUN(docCSet, CHARSET, "Change the character encoding for the current document")
+void docCSet(struct CmdArgs args)
 {
     char* cs;
     wc_ces charset;
@@ -1724,7 +1722,7 @@ DEFUN(docCSet, CHARSET, "Change the character encoding for the current document"
     _docCSet(charset);
 }
 
-DEFUN(defCSet, DEFAULT_CHARSET, "Change the default character encoding")
+void defCSet(struct CmdArgs args)
 {
     char* cs;
     wc_ces charset;
@@ -1740,13 +1738,13 @@ DEFUN(defCSet, DEFAULT_CHARSET, "Change the default character encoding")
     displayBuffer(Currentbuf, B_NORMAL);
 }
 
-DEFUN(chkURL, MARK_URL, "Turn URL-like strings into hyperlinks")
+void chkURL(struct CmdArgs args)
 {
     chkURLBuffer(Currentbuf);
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-DEFUN(chkWORD, MARK_WORD, "Turn current word into hyperlink")
+void chkWORD(struct CmdArgs args)
 {
     char* p;
     int spos, epos;
@@ -1757,14 +1755,14 @@ DEFUN(chkWORD, MARK_WORD, "Turn current word into hyperlink")
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-DEFUN(chkNMID, MARK_MID, "Turn Message-ID-like strings into hyperlinks")
+void chkNMID(struct CmdArgs args)
 {
     chkNMIDBuffer(Currentbuf);
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
 /* render frames */
-DEFUN(rFrame, FRAME, "Toggle rendering HTML frames")
+void rFrame(struct CmdArgs args)
 {
     Buffer* buf;
 
@@ -1796,7 +1794,7 @@ DEFUN(rFrame, FRAME, "Toggle rendering HTML frames")
         displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-DEFUN(extbrz, EXTERN, "Display using an external browser")
+void extbrz(struct CmdArgs args)
 {
     if (Currentbuf->bufferprop & BP_INTERNAL) {
         /* FIXME: gettextize? */
@@ -1812,7 +1810,7 @@ DEFUN(extbrz, EXTERN, "Display using an external browser")
     invoke_browser(parsedURL2Str(&Currentbuf->currentURL)->ptr);
 }
 
-DEFUN(linkbrz, EXTERN_LINK, "Display target using an external browser")
+void linkbrz(struct CmdArgs args)
 {
     Anchor* a;
     ParsedURL pu;
@@ -1827,7 +1825,7 @@ DEFUN(linkbrz, EXTERN_LINK, "Display target using an external browser")
 }
 
 /* show current line number and number of lines in the entire document */
-DEFUN(curlno, LINE_INFO, "Display current position in document")
+void curlno(struct CmdArgs args)
 {
     Line* l = Currentbuf->currentLine;
     Str tmp;
@@ -1859,7 +1857,7 @@ DEFUN(curlno, LINE_INFO, "Display current position in document")
     disp_message(tmp->ptr, FALSE);
 }
 
-DEFUN(dispI, DISPLAY_IMAGE, "Restart loading and drawing of images")
+void dispI(struct CmdArgs args)
 {
     if (!displayImage)
         initImage();
@@ -1875,7 +1873,7 @@ DEFUN(dispI, DISPLAY_IMAGE, "Restart loading and drawing of images")
     displayBuffer(Currentbuf, B_REDRAW_IMAGE);
 }
 
-DEFUN(stopI, STOP_IMAGE, "Stop loading and drawing of images")
+void stopI(struct CmdArgs args)
 {
     if (!activeImage)
         return;
@@ -1887,7 +1885,7 @@ DEFUN(stopI, STOP_IMAGE, "Stop loading and drawing of images")
     displayBuffer(Currentbuf, B_REDRAW_IMAGE);
 }
 
-DEFUN(msToggle, MOUSE_TOGGLE, "Toggle mouse support")
+void msToggle(struct CmdArgs args)
 {
     if (use_mouse) {
         use_mouse = FALSE;
@@ -1897,7 +1895,7 @@ DEFUN(msToggle, MOUSE_TOGGLE, "Toggle mouse support")
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-DEFUN(mouse, MOUSE, "mouse operation")
+void mouse(struct CmdArgs args)
 {
     int btn, x, y;
 
@@ -1922,7 +1920,7 @@ DEFUN(mouse, MOUSE, "mouse operation")
     process_mouse(btn, x, y);
 }
 
-DEFUN(sgrmouse, SGRMOUSE, "SGR 1006 mouse operation")
+void sgrmouse(struct CmdArgs args)
 {
     int btn = 0, x = 0, y = 0;
     unsigned char c;
@@ -1978,7 +1976,7 @@ DEFUN(sgrmouse, SGRMOUSE, "SGR 1006 mouse operation")
     process_mouse(btn, x, y);
 }
 
-DEFUN(movMs, MOVE_MOUSE, "Move cursor to mouse pointer")
+void movMs(struct CmdArgs args)
 {
     if (!mouse_action.in_action)
         return;
@@ -1991,7 +1989,7 @@ DEFUN(movMs, MOVE_MOUSE, "Move cursor to mouse pointer")
     displayBuffer(Currentbuf, B_NORMAL);
 }
 
-DEFUN(menuMs, MENU_MOUSE, "Pop up menu at mouse pointer")
+void menuMs(struct CmdArgs args)
 {
     if (!mouse_action.in_action)
         return;
@@ -2002,10 +2000,10 @@ DEFUN(menuMs, MENU_MOUSE, "Pop up menu at mouse pointer")
             mouse_action.cursorY - Currentbuf->rootY);
         displayBuffer(Currentbuf, B_NORMAL);
     }
-    mainMn();
+    mainMn((struct CmdArgs) { 0 });
 }
 
-DEFUN(tabMs, TAB_MOUSE, "Select tab by mouse action")
+void tabMs(struct CmdArgs args)
 {
     TabBuffer* tab;
 
@@ -2018,7 +2016,7 @@ DEFUN(tabMs, TAB_MOUSE, "Select tab by mouse action")
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-DEFUN(closeTMs, CLOSE_TAB_MOUSE, "Close tab at mouse pointer")
+void closeTMs(struct CmdArgs args)
 {
     TabBuffer* tab;
 
@@ -2031,12 +2029,12 @@ DEFUN(closeTMs, CLOSE_TAB_MOUSE, "Close tab at mouse pointer")
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-DEFUN(dispVer, VERSION, "Display the version of w3m")
+void dispVer(struct CmdArgs args)
 {
     disp_message(Sprintf("w3m version %s", w3m_version)->ptr, TRUE);
 }
 
-DEFUN(wrapToggle, WRAP_TOGGLE, "Toggle wrapping mode in searches")
+void wrapToggle(struct CmdArgs args)
 {
     if (WrapSearch) {
         WrapSearch = FALSE;
@@ -2049,23 +2047,20 @@ DEFUN(wrapToggle, WRAP_TOGGLE, "Toggle wrapping mode in searches")
     }
 }
 
-DEFUN(dictword, DICT_WORD, "Execute dictionary command (see README.dict)")
+void dictword(struct CmdArgs args)
 {
     execdict(inputStr("(dictionary)!", ""));
 }
 
-DEFUN(dictwordat, DICT_WORD_AT, "Execute dictionary command for word at cursor")
+void dictwordat(struct CmdArgs args)
 {
     execdict(GetWord(Currentbuf));
 }
 
-DEFUN(execCmd, COMMAND, "Invoke w3m function(s)")
+void execCmd(struct CmdArgs args)
 {
-    char *data, *p;
-    int cmd;
-
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    data = searchKeyData();
+    char *data = searchKeyData();
     if (data == NULL || *data == '\0') {
         data = inputStrHist("command [; ...]: ", "", TextHist);
         if (data == NULL) {
@@ -2073,6 +2068,7 @@ DEFUN(execCmd, COMMAND, "Invoke w3m function(s)")
             return;
         }
     }
+
     /* data: FUNC [DATA] [; FUNC [DATA] ...] */
     while (*data) {
         SKIP_BLANKS(data);
@@ -2080,11 +2076,10 @@ DEFUN(execCmd, COMMAND, "Invoke w3m function(s)")
             data++;
             continue;
         }
-        p = getWord(&data);
-        cmd = getFuncList(p);
-        if (cmd < 0)
+        const char* cmd = getWord(&data);
+        if (!cmd)
             break;
-        p = getQWord(&data);
+        char *p = getQWord(&data);
         CurrentKey = -1;
         CurrentKeyData = NULL;
         CurrentCmdData = *p ? p : NULL;
@@ -2092,7 +2087,7 @@ DEFUN(execCmd, COMMAND, "Invoke w3m function(s)")
         if (use_mouse)
             mouse_inactive();
 #endif
-        w3mFuncList[cmd].func();
+        w3mFunc(cmd);
 #ifdef USE_MOUSE
         if (use_mouse)
             mouse_active();
@@ -2102,7 +2097,7 @@ DEFUN(execCmd, COMMAND, "Invoke w3m function(s)")
     displayBuffer(Currentbuf, B_NORMAL);
 }
 
-DEFUN(setAlarm, ALARM, "Set alarm")
+void setAlarm(struct CmdArgs args)
 {
     char* data;
     int sec = 0, cmd = -1;
@@ -2119,12 +2114,12 @@ DEFUN(setAlarm, ALARM, "Set alarm")
     if (*data != '\0') {
         sec = atoi(getWord(&data));
         if (sec > 0)
-            cmd = getFuncList(getWord(&data));
+            cmd = getWord(&data);
     }
     if (cmd >= 0) {
         data = getQWord(&data);
         setAlarmEvent(&DefaultAlarm, sec, AL_EXPLICIT, cmd, data);
-        disp_message_nsec(Sprintf("%dsec %s %s", sec, w3mFuncList[cmd].id,
+        disp_message_nsec(Sprintf("%dsec %s %s", sec, cmd,
                               data)
                               ->ptr,
             FALSE, 1, FALSE, TRUE);
@@ -2134,7 +2129,7 @@ DEFUN(setAlarm, ALARM, "Set alarm")
     displayBuffer(Currentbuf, B_NORMAL);
 }
 
-DEFUN(reinit, REINIT, "Reload configuration file")
+void reinit(struct CmdArgs args)
 {
     char* resource = searchKeyData();
 
@@ -2202,7 +2197,7 @@ DEFUN(reinit, REINIT, "Reload configuration file")
     disp_err_message(Sprintf("Don't know how to reinitialize '%s'", resource)->ptr, FALSE);
 }
 
-DEFUN(defKey, DEFINE_KEY, "Define a binding between a key stroke combination and a command")
+void defKey(struct CmdArgs args)
 {
     char* data;
 
@@ -2219,13 +2214,13 @@ DEFUN(defKey, DEFINE_KEY, "Define a binding between a key stroke combination and
     displayBuffer(Currentbuf, B_NORMAL);
 }
 
-DEFUN(newT, NEW_TAB, "Open a new tab (with current document)")
+void newT(struct CmdArgs args)
 {
     _newT();
     displayBuffer(Currentbuf, B_REDRAW_IMAGE);
 }
 
-DEFUN(closeT, CLOSE_TAB, "Close tab")
+void closeT(struct CmdArgs args)
 {
     TabBuffer* tab;
 
@@ -2240,7 +2235,7 @@ DEFUN(closeT, CLOSE_TAB, "Close tab")
     displayBuffer(Currentbuf, B_REDRAW_IMAGE);
 }
 
-DEFUN(nextT, NEXT_TAB, "Switch to the next tab")
+void nextT(struct CmdArgs args)
 {
     int i;
 
@@ -2255,7 +2250,7 @@ DEFUN(nextT, NEXT_TAB, "Switch to the next tab")
     displayBuffer(Currentbuf, B_REDRAW_IMAGE);
 }
 
-DEFUN(prevT, PREV_TAB, "Switch to the previous tab")
+void prevT(struct CmdArgs args)
 {
     int i;
 
@@ -2270,24 +2265,24 @@ DEFUN(prevT, PREV_TAB, "Switch to the previous tab")
     displayBuffer(Currentbuf, B_REDRAW_IMAGE);
 }
 
-DEFUN(tabA, TAB_LINK, "Follow current hyperlink in a new tab")
+void tabA(struct CmdArgs args)
 {
     followTab(prec_num ? numTab(PREC_NUM) : NULL);
 }
 
-DEFUN(tabURL, TAB_GOTO, "Open specified document in a new tab")
+void tabURL(struct CmdArgs args)
 {
     tabURL0(prec_num ? numTab(PREC_NUM) : NULL,
         "Goto URL on new tab: ", FALSE);
 }
 
-DEFUN(tabrURL, TAB_GOTO_RELATIVE, "Open relative address in a new tab")
+void tabrURL(struct CmdArgs args)
 {
     tabURL0(prec_num ? numTab(PREC_NUM) : NULL,
         "Goto relative URL on new tab: ", TRUE);
 }
 
-DEFUN(tabR, TAB_RIGHT, "Move right along the tab bar")
+void tabR(struct CmdArgs args)
 {
     TabBuffer* tab;
     int i;
@@ -2298,7 +2293,7 @@ DEFUN(tabR, TAB_RIGHT, "Move right along the tab bar")
     moveTab(CurrentTab, tab ? tab : LastTab, TRUE);
 }
 
-DEFUN(tabL, TAB_LEFT, "Move left along the tab bar")
+void tabL(struct CmdArgs args)
 {
     TabBuffer* tab;
     int i;
@@ -2309,7 +2304,7 @@ DEFUN(tabL, TAB_LEFT, "Move left along the tab bar")
     moveTab(CurrentTab, tab ? tab : FirstTab, FALSE);
 }
 
-DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
+void ldDL(struct CmdArgs args)
 {
     Buffer* buf;
     int replace = FALSE, new_tab = FALSE;
@@ -2349,16 +2344,16 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
     }
     pushBuffer(buf);
     if (replace || new_tab)
-        deletePrevBuf();
+        deletePrevBuf((struct CmdArgs) { 0 });
 #ifdef USE_ALARM
     if (reload)
         Currentbuf->event = setAlarmEvent(Currentbuf->event, 1, AL_IMPLICIT,
-            FUNCNAME_reload, NULL);
+            "RELOAD", NULL);
 #endif
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-DEFUN(undoPos, UNDO, "Cancel the last cursor movement")
+void undoPos(struct CmdArgs args)
 {
     BufferPos* b = Currentbuf->undo;
     int i;
@@ -2372,7 +2367,7 @@ DEFUN(undoPos, UNDO, "Cancel the last cursor movement")
     resetPos(b);
 }
 
-DEFUN(redoPos, REDO, "Cancel the last undo")
+void redoPos(struct CmdArgs args)
 {
     BufferPos* b = Currentbuf->undo;
     int i;
@@ -2386,7 +2381,7 @@ DEFUN(redoPos, REDO, "Cancel the last undo")
     resetPos(b);
 }
 
-DEFUN(cursorTop, CURSOR_TOP, "Move cursor to the top of the screen")
+void cursorTop(struct CmdArgs args)
 {
     if (Currentbuf->firstLine == NULL)
         return;
@@ -2396,7 +2391,7 @@ DEFUN(cursorTop, CURSOR_TOP, "Move cursor to the top of the screen")
     displayBuffer(Currentbuf, B_NORMAL);
 }
 
-DEFUN(cursorMiddle, CURSOR_MIDDLE, "Move cursor to the middle of the screen")
+void cursorMiddle(struct CmdArgs args)
 {
     int offsety;
     if (Currentbuf->firstLine == NULL)
@@ -2408,7 +2403,7 @@ DEFUN(cursorMiddle, CURSOR_MIDDLE, "Move cursor to the middle of the screen")
     displayBuffer(Currentbuf, B_NORMAL);
 }
 
-DEFUN(cursorBottom, CURSOR_BOTTOM, "Move cursor to the bottom of the screen")
+void cursorBottom(struct CmdArgs args)
 {
     int offsety;
     if (Currentbuf->firstLine == NULL)
@@ -2420,7 +2415,7 @@ DEFUN(cursorBottom, CURSOR_BOTTOM, "Move cursor to the bottom of the screen")
     displayBuffer(Currentbuf, B_NORMAL);
 }
 
-DEFUN(mainMn, MAIN_MENU MENU, "Pop up menu")
+void mainMn(struct CmdArgs args)
 {
     Menu* menu = &MainMenu;
     char* data;
@@ -2444,7 +2439,7 @@ DEFUN(mainMn, MAIN_MENU MENU, "Pop up menu")
     popupMenu(x, y, menu);
 }
 
-DEFUN(selMn, SELECT_MENU, "Pop up buffer-stack menu")
+void selMn(struct CmdArgs args)
 {
     int x = Currentbuf->cursorX + Currentbuf->rootX,
         y = Currentbuf->cursorY + Currentbuf->rootY;
@@ -2458,7 +2453,7 @@ DEFUN(selMn, SELECT_MENU, "Pop up buffer-stack menu")
     popupMenu(x, y, &SelectMenu);
 }
 
-DEFUN(tabMn, TAB_MENU, "Pop up tab selection menu")
+void tabMn(struct CmdArgs args)
 {
     int x = Currentbuf->cursorX + Currentbuf->rootX,
         y = Currentbuf->cursorY + Currentbuf->rootY;

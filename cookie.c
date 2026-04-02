@@ -11,7 +11,7 @@
 
 #include "fm.h"
 #include "html.h"
-
+#include "defun_impl.h"
 #ifdef USE_COOKIE
 #include <time.h>
 #include "local.h"
@@ -674,7 +674,7 @@ void set_cookie_flag(struct parsed_tagarg* arg)
         }
         arg = arg->next;
     }
-    backBf();
+    backBf((struct CmdArgs) { 0 });
 }
 
 int check_cookie_accept_domain(char* domain)

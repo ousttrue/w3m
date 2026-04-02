@@ -17,9 +17,4 @@
 #define K_MULTI 0x10000000
 #define MULTI_KEY(c) (((c) >> 16) & 0x77F)
 
-typedef struct _FuncList {
-    char* id;
-    void (*func)();
-} FuncList;
-
 #endif /* not FUNC_H */

@@ -6,8 +6,9 @@ const system_libs = [_][]const u8{
 };
 
 const w3m_srcs = [_][]const u8{
-    "defun.c",
-    "keybind.c",
+    "keybind_mod.c",
+    // "keybind.c",
+    "defun_impl.c",
     "util.c",
 
     "main.c",
@@ -122,13 +123,28 @@ pub fn build(b: *std.Build) void {
     const exe = b.addExecutable(.{
         .name = "w3m",
         .root_module = mod,
+        .use_llvm = true,
     });
     targets.append(b.allocator, exe) catch @panic("OOM");
     b.installArtifact(exe);
     exe.root_module.addIncludePath(b.path("libwc"));
     exe.root_module.addIncludePath(b.path("."));
 
+    const defun_mod = b.addModule("defun", .{
+        .target = target,
+        .optimize = optimize,
+        .root_source_file = b.path("defun.zig"),
+        .link_libc = true,
+    });
+    defun_mod.addIncludePath(b.path(""));
+    const defun_lib = b.addLibrary(.{
+        .name = "defun",
+        .root_module = defun_mod,
+    });
+    exe.root_module.linkLibrary(defun_lib);
+
     const flags = [_][]const u8{
+        "-DOPENSSL_API_COMPAT=0x010101000L",
         "-Wno-implicit-int",
         "-Wno-int-conversion",
         "-DHAVE_CONFIG_H",
@@ -156,34 +172,34 @@ pub fn build(b: *std.Build) void {
         exe.root_module.linkSystemLibrary(lib, .{});
     }
 
-    const wf = gen_functable(b);
-    {
-        const install = b.addInstallDirectory(.{
-            .source_dir = wf.getDirectory(),
-            .install_dir = .header,
-            .install_subdir = "",
-        });
-        b.getInstallStep().dependOn(&install.step);
+    // const wf = gen_functable(b);
+    // {
+    //     const install = b.addInstallDirectory(.{
+    //         .source_dir = wf.getDirectory(),
+    //         .install_dir = .header,
+    //         .install_subdir = "",
+    //     });
+    //     b.getInstallStep().dependOn(&install.step);
+    //
+    //     exe.step.dependOn(&install.step);
+    //     exe.root_module.addIncludePath(b.path("zig-out/include"));
+    // }
 
-        exe.step.dependOn(&install.step);
-        exe.root_module.addIncludePath(b.path("zig-out/include"));
-    }
-
-    {
-        const mktable = build_mktable(b, b.graph.host, .ReleaseSafe, &.{"gc"});
-        // {
-        //     b.installArtifact(mktable);
-        // }
-        var run_mktable = b.addRunArtifact(mktable);
-        run_mktable.setCwd(wf.getDirectory());
-        run_mktable.addArg("100");
-        // run_mktable.addFileArg(functable_tab.output);
-        run_mktable.addArg("functable.tab");
-        const install = b.addInstallFile(run_mktable.captureStdOut(.{}), "include/functable.c");
-        b.getInstallStep().dependOn(&install.step);
-
-        exe.step.dependOn(&install.step);
-    }
+    // {
+    //     const mktable = build_mktable(b, b.graph.host, .ReleaseSafe, &.{"gc"});
+    //     // {
+    //     //     b.installArtifact(mktable);
+    //     // }
+    //     var run_mktable = b.addRunArtifact(mktable);
+    //     run_mktable.setCwd(wf.getDirectory());
+    //     run_mktable.addArg("100");
+    //     // run_mktable.addFileArg(functable_tab.output);
+    //     run_mktable.addArg("functable.tab");
+    //     const install = b.addInstallFile(run_mktable.captureStdOut(.{}), "include/functable.c");
+    //     b.getInstallStep().dependOn(&install.step);
+    //
+    //     exe.step.dependOn(&install.step);
+    // }
 
     const cdb = zcc.createStep(b, targets.toOwnedSlice(b.allocator) catch @panic("OOM"));
     b.getInstallStep().dependOn(&cdb.step);

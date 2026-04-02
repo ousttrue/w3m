@@ -4,15 +4,12 @@
  */
 
 #include <stdio.h>
-
+#include "keybind.h"
 #include "fm.h"
 #include "func.h"
 #include "myctype.h"
 #include "regex.h"
 #include "rc.h"
-
-#include "funcname.c"
-#include "functable.c"
 
 #define KEYDATA_HASH_SIZE 16
 static Hash_iv* keyData = NULL;
@@ -22,9 +19,9 @@ static struct stat current_keymap_file;
 
 void setKeymap(char* p, int lineno, int verbose)
 {
-    unsigned char* map = NULL;
+    const char** map = NULL;
     char *s, *emsg;
-    int c, f;
+    int c;
 
     s = getQWord(&p);
     c = getKey(s);
@@ -40,9 +37,8 @@ void setKeymap(char* p, int lineno, int verbose)
             disp_message_nsec(emsg, FALSE, 1, TRUE, FALSE);
         return;
     }
-    s = getWord(&p);
-    f = getFuncList(s);
-    if (f < 0) {
+    const char *cmd = getWord(&p);
+    if (!cmd) {
         if (lineno > 0)
             /* FIXME: gettextize? */
             emsg = Sprintf("line %d: invalid command '%s'", lineno, s)->ptr;
@@ -55,7 +51,7 @@ void setKeymap(char* p, int lineno, int verbose)
         return;
     }
     if (c & K_MULTI) {
-        unsigned char** mmap = NULL;
+        const char*** mmap = NULL;
         int i, j, m = MULTI_KEY(c);
 
         if (m & K_ESCD)
@@ -66,20 +62,20 @@ void setKeymap(char* p, int lineno, int verbose)
             map = EscKeymap;
         else
             map = GlobalKeymap;
-        if (map[m & 0x7F] == FUNCNAME_multimap)
-            mmap = (unsigned char**)getKeyData(m);
+        if (0 == strcmp(map[m & 0x7F], "MULTIMAP"))
+            mmap = (const char***)getKeyData(m);
         else
-            map[m & 0x7F] = FUNCNAME_multimap;
+            map[m & 0x7F] = "MULTIMAP";
         if (!mmap) {
             mmap = New_N(unsigned char*, 4);
             for (i = 0; i < 4; i++) {
                 mmap[i] = New_N(unsigned char, 128);
                 for (j = 0; j < 128; j++)
-                    mmap[i][j] = FUNCNAME_nulcmd;
+                    mmap[i][j] = "NOTHING";
             }
-            mmap[0][ESC_CODE] = FUNCNAME_escmap;
-            mmap[1]['['] = FUNCNAME_escbmap;
-            mmap[1]['O'] = FUNCNAME_escbmap;
+            mmap[0][ESC_CODE] = "ESCMAP";
+            mmap[1]['['] = "ESCBMAP";
+            mmap[1]['O'] = "ESCBMAP";
         }
         if (keyData == NULL)
             keyData = newHash_iv(KEYDATA_HASH_SIZE);
@@ -102,7 +98,7 @@ void setKeymap(char* p, int lineno, int verbose)
         else
             map = GlobalKeymap;
     }
-    map[c & 0x7F] = f;
+    map[c & 0x7F] = cmd;
     s = getQWord(&p);
     if (*s) {
         if (keyData == NULL)
@@ -188,10 +184,10 @@ void initKeymap(int force)
     keymap_initialized = TRUE;
 }
 
-int getFuncList(char* id)
-{
-    return getHash_si(&functable, id, -1);
-}
+// int getFuncList(char* id)
+// {
+//     return getHash_si(&functable, id, -1);
+// }
 
 char* getKeyData(int key)
 {
@@ -495,20 +491,20 @@ static MouseAction default_mouse_action = {
     NULL,
     "<=UpDn",
     0, 6, FALSE, 0, 0,
-    { { movMs, NULL }, { backBf, NULL }, { menuMs, NULL } }, /* default */
+    { { "MOVE_MOUSE", NULL }, { "BACK", NULL }, { "MENU_MOUSE", NULL } }, /* default */
     { { NULL, NULL }, { NULL, NULL }, { NULL, NULL } }, /* anchor */
-    { { followA, NULL }, { NULL, NULL }, { NULL, NULL } }, /* active */
-    { { tabMs, NULL }, { closeTMs, NULL }, { NULL, NULL } }, /* tab */
+    { { "GOTO_LINK", NULL }, { NULL, NULL }, { NULL, NULL } }, /* active */
+    { { "TAB_MOUSE", NULL }, { "CLOSE_TAB_MOUSE", NULL }, { NULL, NULL } }, /* tab */
     { NULL, NULL, NULL }, /* menu */
     { NULL, NULL, NULL } /* lastline */
 };
 static MouseActionMap default_lastline_action[6] = {
-    { backBf, NULL },
-    { backBf, NULL },
-    { pgBack, NULL },
-    { pgBack, NULL },
-    { pgFore, NULL },
-    { pgFore, NULL }
+    { "BACK", NULL },
+    { "BACK", NULL },
+    { "PREV_PAGE", NULL },
+    { "PREV_PAGE", NULL },
+    { "NEXT_PAGE", NULL },
+    { "NEXT_PAGE", NULL }
 };
 
 static void
@@ -537,7 +533,7 @@ setMouseAction0(char** str, int* width, MouseActionMap** map, char* p)
             continue;
         map[b] = New_Reuse(MouseActionMap, map[b], *width);
         for (x = w + 1; x < *width; x++) {
-            map[b][x].func = NULL;
+            map[b][x].cmd = NULL;
             map[b][x].data = NULL;
         }
     }
@@ -547,12 +543,12 @@ static void
 setMouseAction1(MouseActionMap** map, int width, char* p)
 {
     char* s;
-    int x, x2, f;
+    int x, x2;
 
     if (!*map) {
         *map = New_N(MouseActionMap, width);
         for (x = 0; x < width; x++) {
-            (*map)[x].func = NULL;
+            (*map)[x].cmd = NULL;
             (*map)[x].data = NULL;
         }
     }
@@ -564,13 +560,12 @@ setMouseAction1(MouseActionMap** map, int width, char* p)
     x2 = atoi(s);
     if (!(IS_DIGIT(*s) && x2 >= 0 && x2 < width))
         return; /* error */
-    s = getWord(&p);
-    f = getFuncList(s);
+    const char *cmd = getWord(&p);
     s = getQWord(&p);
     if (!*s)
         s = NULL;
     for (; x <= x2; x++) {
-        (*map)[x].func = (f >= 0) ? w3mFuncList[f].func : NULL;
+        (*map)[x].cmd = cmd;
         (*map)[x].data = s;
     }
 }
@@ -578,15 +573,11 @@ setMouseAction1(MouseActionMap** map, int width, char* p)
 static void
 setMouseAction2(MouseActionMap* map, char* p)
 {
-    char* s;
-    int f;
-
-    s = getWord(&p);
-    f = getFuncList(s);
-    s = getQWord(&p);
+    const char* cmd = getWord(&p);
+    char* s = getQWord(&p);
     if (!*s)
         s = NULL;
-    map->func = (f >= 0) ? w3mFuncList[f].func : NULL;
+    map->cmd = cmd;
     map->data = s;
 }
 

@@ -3,7 +3,7 @@
  * w3m menu.c
  */
 #include <stdio.h>
-
+#include "defun_impl.h"
 #include "fm.h"
 #include "menu.h"
 #include "func.h"
@@ -729,29 +729,29 @@ static int MainMenuEncode = FALSE;
 
 static MenuItem MainMenuItem[] = {
     /* type        label           variable value func     popup keys data  */
-    { MENU_FUNC, N_(" Back         (b) "), NULL, 0, backBf, NULL, "b", NULL },
+    { MENU_FUNC, N_(" Back         (b) "), NULL, 0, "BACK", NULL, "b", NULL },
     { MENU_POPUP, N_(" Select Buffer(s) "), NULL, 0, NULL, &SelectMenu, "s",
         NULL },
     { MENU_POPUP, N_(" Select Tab   (t) "), NULL, 0, NULL, &SelTabMenu, "tT",
         NULL },
-    { MENU_FUNC, N_(" View Source  (v) "), NULL, 0, vwSrc, NULL, "vV", NULL },
-    { MENU_FUNC, N_(" Edit Source  (e) "), NULL, 0, editBf, NULL, "eE", NULL },
-    { MENU_FUNC, N_(" Save Source  (S) "), NULL, 0, svSrc, NULL, "S", NULL },
-    { MENU_FUNC, N_(" Reload       (r) "), NULL, 0, reload, NULL, "rR", NULL },
-    { MENU_NOP, N_(" ---------------- "), NULL, 0, nulcmd, NULL, "", NULL },
-    { MENU_FUNC, N_(" Go Link      (a) "), NULL, 0, followA, NULL, "a", NULL },
-    { MENU_FUNC, N_("   on New Tab (n) "), NULL, 0, tabA, NULL, "nN", NULL },
-    { MENU_FUNC, N_(" Save Link    (A) "), NULL, 0, svA, NULL, "A", NULL },
-    { MENU_FUNC, N_(" View Image   (i) "), NULL, 0, followI, NULL, "i", NULL },
-    { MENU_FUNC, N_(" Save Image   (I) "), NULL, 0, svI, NULL, "I", NULL },
-    { MENU_FUNC, N_(" View Frame   (f) "), NULL, 0, rFrame, NULL, "fF", NULL },
-    { MENU_NOP, N_(" ---------------- "), NULL, 0, nulcmd, NULL, "", NULL },
-    { MENU_FUNC, N_(" Bookmark     (B) "), NULL, 0, ldBmark, NULL, "B", NULL },
-    { MENU_FUNC, N_(" Help         (h) "), NULL, 0, ldhelp, NULL, "hH", NULL },
-    { MENU_FUNC, N_(" Option       (o) "), NULL, 0, ldOpt, NULL, "oO", NULL },
-    { MENU_NOP, N_(" ---------------- "), NULL, 0, nulcmd, NULL, "", NULL },
-    { MENU_FUNC, N_(" Quit         (q) "), NULL, 0, qquitfm, NULL, "qQ", NULL },
-    { MENU_END, "", NULL, 0, nulcmd, NULL, "", NULL },
+    { MENU_FUNC, N_(" View Source  (v) "), NULL, 0, "SOURCE", NULL, "vV", NULL },
+    { MENU_FUNC, N_(" Edit Source  (e) "), NULL, 0, "EDIT", NULL, "eE", NULL },
+    { MENU_FUNC, N_(" Save Source  (S) "), NULL, 0, "SOURCE", NULL, "S", NULL },
+    { MENU_FUNC, N_(" Reload       (r) "), NULL, 0, "RELOAD", NULL, "rR", NULL },
+    { MENU_NOP, N_(" ---------------- "), NULL, 0, "NOTHING", NULL, "", NULL },
+    { MENU_FUNC, N_(" Go Link      (a) "), NULL, 0, "GOTO_LINK", NULL, "a", NULL },
+    { MENU_FUNC, N_("   on New Tab (n) "), NULL, 0, "TAB_LINK", NULL, "nN", NULL },
+    { MENU_FUNC, N_(" Save Link    (A) "), NULL, 0, "SAVE_LINK", NULL, "A", NULL },
+    { MENU_FUNC, N_(" View Image   (i) "), NULL, 0, "VIEW_IMAGE", NULL, "i", NULL },
+    { MENU_FUNC, N_(" Save Image   (I) "), NULL, 0, "SAVE_IMAGE", NULL, "I", NULL },
+    { MENU_FUNC, N_(" View Frame   (f) "), NULL, 0, "FRAME", NULL, "fF", NULL },
+    { MENU_NOP, N_(" ---------------- "), NULL, 0, "NOTHING", NULL, "", NULL },
+    { MENU_FUNC, N_(" Bookmark     (B) "), NULL, 0, "BOOKMARK", NULL, "B", NULL },
+    { MENU_FUNC, N_(" Help         (h) "), NULL, 0, "HELP", NULL, "hH", NULL },
+    { MENU_FUNC, N_(" Option       (o) "), NULL, 0, "OPTIONS", NULL, "oO", NULL },
+    { MENU_NOP, N_(" ---------------- "), NULL, 0, "NOTHING", NULL, "", NULL },
+    { MENU_FUNC, N_(" Quit         (q) "), NULL, 0, "QUIT", NULL, "qQ", NULL },
+    { MENU_END, "", NULL, 0, "NOTHING", NULL, "", NULL },
 };
 
 /* --- MainMenu (END) --- */
@@ -1042,7 +1042,7 @@ int action_menu(Menu* menu)
             CurrentKey = -1;
             CurrentKeyData = NULL;
             CurrentCmdData = item.data;
-            (*item.func)();
+            w3mFunc(item.cmd);
             CurrentCmdData = NULL;
         }
     } else if (mselect == MENU_CLOSE) {
@@ -1110,7 +1110,7 @@ void guess_menu_xy(Menu* parent, int width, int* x, int* y)
     *y = parent->y + parent->select - parent->offset;
 }
 
-void new_option_menu(Menu* menu, char** label, int* variable, void (*func)())
+void new_option_menu(Menu* menu, char** label, int* variable, const char* cmd)
 {
     int i, nitem;
     char** p;
@@ -1126,14 +1126,14 @@ void new_option_menu(Menu* menu, char** label, int* variable, void (*func)())
     item = New_N(MenuItem, nitem + 1);
 
     for (i = 0, p = label; i < nitem; i++, p++) {
-        if (func != NULL)
+        if (cmd != NULL)
             item[i].type = MENU_VALUE | MENU_FUNC;
         else
             item[i].type = MENU_VALUE;
         item[i].label = *p;
         item[i].variable = variable;
         item[i].value = i;
-        item[i].func = func;
+        item[i].cmd = cmd;
         item[i].popup = NULL;
         item[i].keys = "";
     }
@@ -1360,7 +1360,7 @@ mClose(char c)
 static int
 mSusp(char c)
 {
-    susp();
+    susp((struct CmdArgs) { 0 });
     draw_all_menu(CurrentMenu);
     select_menu(CurrentMenu, CurrentMenu->select);
     return (MENU_NOTHING);
@@ -1822,7 +1822,7 @@ initSelectMenu(void)
     label[nitem] = str->ptr;
     label[nitem + 1] = NULL;
 
-    new_option_menu(&SelectMenu, label, &SelectV, smChBuf);
+    // new_option_menu(&SelectMenu, label, &SelectV, smChBuf);
     SelectMenu.initial = SelectV;
     SelectMenu.cursorX = Currentbuf->cursorX + Currentbuf->rootX;
     SelectMenu.cursorY = Currentbuf->cursorY + Currentbuf->rootY;
@@ -1957,7 +1957,7 @@ initSelTabMenu(void)
     label[nitem] = str->ptr;
     label[nitem + 1] = NULL;
 
-    new_option_menu(&SelTabMenu, label, &SelTabV, smChTab);
+    // new_option_menu(&SelTabMenu, label, &SelTabV, smChTab);
     SelTabMenu.initial = SelTabV;
     SelTabMenu.cursorX = Currentbuf->cursorX + Currentbuf->rootX;
     SelTabMenu.cursorY = Currentbuf->cursorY + Currentbuf->rootY;
@@ -2027,14 +2027,13 @@ smDelTab(char c)
 
 /* --- OptionMenu --- */
 
-void optionMenu(int x, int y, char** label, int* variable, int initial,
-    void (*func)())
+void optionMenu(int x, int y, char** label, int* variable, int initial, const char* cmd)
 {
     Menu menu;
 
     set_menu_frame();
 
-    new_option_menu(&menu, label, variable, func);
+    new_option_menu(&menu, label, variable, cmd);
     menu.cursorX = COLS - 1;
     menu.cursorY = LASTLINE;
     menu.x = x;
@@ -2179,8 +2178,7 @@ int setMenuItem(MenuItem* item, char* type, char* line)
             return -1;
         item->type = MENU_FUNC;
         item->label = label;
-        f = getFuncList(func);
-        item->func = w3mFuncList[(f >= 0) ? f : FUNCNAME_nulcmd].func;
+        item->cmd = func;
         item->keys = keys;
         item->data = data;
         return MENU_FUNC;

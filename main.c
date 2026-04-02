@@ -1,6 +1,9 @@
 /* $Id: main.c,v 1.270 2010/08/24 10:11:51 htrb Exp $ */
 #define MAINPROGRAM
 #include "main.h"
+#include "terms.h"
+#include "defun_impl.h"
+#include "keybind.h"
 #include "fm.h"
 #include <stdio.h>
 #include <signal.h>
@@ -57,7 +60,7 @@ Hist* ShellHist;
 Hist* TextHist;
 
 typedef struct _Event {
-    int cmd;
+    const char* cmd;
     void* data;
     struct _Event* next;
 } Event;
@@ -66,7 +69,7 @@ static Event* LastEvent = NULL;
 
 #ifdef USE_ALARM
 AlarmEvent DefaultAlarm = {
-    0, AL_UNSET, FUNCNAME_nulcmd, NULL
+    0, AL_UNSET, "NOTHING", NULL
 };
 static AlarmEvent* CurrentAlarm = &DefaultAlarm;
 static MySignalHandler SigAlarm(SIGNAL_ARG);
@@ -1040,7 +1043,7 @@ int w3m_main(int argc, char** argv)
         }
         if (!w3m_dump || w3m_dump == DUMP_BUFFER) {
             if (Currentbuf->frameset != NULL && RenderFrame)
-                rFrame();
+                rFrame((struct CmdArgs) { 0 });
         }
         if (w3m_dump)
             do_dump(Currentbuf);
@@ -1073,7 +1076,7 @@ int w3m_main(int argc, char** argv)
             Currentbuf->buffername = DOWNLOAD_LIST_TITLE;
         } else
             Currentbuf = Firstbuf;
-        ldDL();
+        ldDL((struct CmdArgs) { 0 });
     } else
         CurrentTab = FirstTab;
     if (!FirstTab || !Firstbuf || Firstbuf == NO_BUFFER) {
@@ -1113,7 +1116,7 @@ int w3m_main(int argc, char** argv)
     for (;;) {
         if (add_download_list) {
             add_download_list = FALSE;
-            ldDL();
+            ldDL((struct CmdArgs) { 0 });
         }
         if (Currentbuf->submit) {
             Anchor* a = Currentbuf->submit;
@@ -1128,7 +1131,7 @@ int w3m_main(int argc, char** argv)
             CurrentKey = -1;
             CurrentKeyData = NULL;
             CurrentCmdData = (char*)CurrentEvent->data;
-            w3mFuncList[CurrentEvent->cmd].func();
+            w3mFunc(CurrentEvent->cmd);
             CurrentCmdData = NULL;
             CurrentEvent = CurrentEvent->next;
             continue;
@@ -1143,7 +1146,7 @@ int w3m_main(int argc, char** argv)
                     CurrentKey = -1;
                     CurrentKeyData = NULL;
                     CurrentCmdData = (char*)CurrentAlarm->data;
-                    w3mFuncList[CurrentAlarm->cmd].func();
+                    w3mFunc(CurrentAlarm->cmd);
                     CurrentCmdData = NULL;
                     continue;
                 }
@@ -1201,7 +1204,7 @@ int w3m_main(int argc, char** argv)
             mouse_inactive();
 #endif /* USE_MOUSE */
         if (IS_ASCII(c)) { /* Ascii */
-            if (('0' <= c) && (c <= '9') && (prec_num || (GlobalKeymap[c] == FUNCNAME_nulcmd))) {
+            if (('0' <= c) && (c <= '9') && (prec_num || 0 == strcmp(GlobalKeymap[c], "NOTHING"))) {
                 prec_num = prec_num * 10 + (int)(c - '0');
                 if (prec_num > PREC_LIMIT)
                     prec_num = PREC_LIMIT;
@@ -1222,10 +1225,10 @@ static void
 keyPressEventProc(int c)
 {
     CurrentKey = c;
-    w3mFuncList[(int)GlobalKeymap[c]].func();
+    w3mFunc(GlobalKeymap[c]);
 }
 
-void pushEvent(int cmd, void* data)
+void pushEvent(const char* cmd, void* data)
 {
     Event* event;
 
@@ -1359,11 +1362,10 @@ void pcmap(void)
 {
 }
 
-void escKeyProc(int c, int esc, unsigned char* map)
+void escKeyProc(int c, int esc, const char* map[128])
 {
     if (CurrentKey >= 0 && CurrentKey & K_MULTI) {
-        unsigned char** mmap;
-        mmap = (unsigned char**)getKeyData(MULTI_KEY(CurrentKey));
+        const char*** mmap = (const char***)getKeyData(MULTI_KEY(CurrentKey));
         if (!mmap)
             return;
         switch (esc) {
@@ -1384,7 +1386,7 @@ void escKeyProc(int c, int esc, unsigned char* map)
     }
     CurrentKey = esc | c;
     if (map)
-        w3mFuncList[(int)map[c]].func();
+        w3mFunc(map[c]);
 }
 
 void escdmap(char c)
@@ -1778,7 +1780,7 @@ void cmd_loadfile(char* fn)
     } else if (buf != NO_BUFFER) {
         pushBuffer(buf);
         if (RenderFrame && Currentbuf->frameset != NULL)
-            rFrame();
+            rFrame((struct CmdArgs) { 0 });
     }
     displayBuffer(Currentbuf, B_NORMAL);
 }
@@ -1948,7 +1950,7 @@ loadNormalBuf(Buffer* buf, int renderframe)
 {
     pushBuffer(buf);
     if (renderframe && RenderFrame && Currentbuf->frameset != NULL)
-        rFrame();
+        rFrame((struct CmdArgs) { 0 });
     return buf;
 }
 
@@ -2016,7 +2018,7 @@ Buffer* loadLink(char* url, char* target, char* referer, FormList* request)
     /* nfbuf->frameset = copyFrameSet(nfbuf->frameset); */
     resetFrameElement(f_element, buf, referer, request);
     discardBuffer(buf);
-    rFrame();
+    rFrame((struct CmdArgs) { 0 });
     {
         Anchor* al = NULL;
         char* label = pu.label;
@@ -2112,7 +2114,7 @@ int handleMailto(char* url)
 void bufferA(void)
 {
     on_target = FALSE;
-    followA();
+    followA((struct CmdArgs) { 0 });
     on_target = TRUE;
 }
 
@@ -2817,7 +2819,7 @@ void cmd_loadURL(char* url, ParsedURL* current, char* referer, FormList* request
     } else if (buf != NO_BUFFER) {
         pushBuffer(buf);
         if (RenderFrame && Currentbuf->frameset != NULL)
-            rFrame();
+            rFrame((struct CmdArgs) { 0 });
     }
     displayBuffer(Currentbuf, B_NORMAL);
 }
@@ -2967,7 +2969,7 @@ void anchorMn(Anchor* (*menu_func)(Buffer*), int go)
     arrangeCursor(Currentbuf);
     displayBuffer(Currentbuf, B_NORMAL);
     if (go)
-        followA();
+        followA((struct CmdArgs) { 0 });
 }
 
 void _peekURL(int only_img)
@@ -3211,6 +3213,19 @@ TabBuffer* posTab(int x, int y)
     return NULL;
 }
 
+#ifdef USE_MOUSE
+/* Addition:mouse event */
+#define MOUSE_BTN1_DOWN 0
+#define MOUSE_BTN2_DOWN 1
+#define MOUSE_BTN3_DOWN 2
+#define MOUSE_BTN4_DOWN_RXVT 3
+#define MOUSE_BTN5_DOWN_RXVT 4
+#define MOUSE_BTN4_DOWN_XTERM 64
+#define MOUSE_BTN5_DOWN_XTERM 65
+#define MOUSE_BTN_UP 3
+#define MOUSE_BTN_RESET -1
+#endif
+
 static void
 do_mouse_action(int btn, int x, int y)
 {
@@ -3252,7 +3267,7 @@ do_mouse_action(int btn, int x, int y)
                     )) {
             if (retrieveCurrentAnchor(Currentbuf) || retrieveCurrentForm(Currentbuf)) {
                 map = &mouse_action.active_map[btn];
-                if (!(map && map->func))
+                if (!(map && map->cmd))
                     map = &mouse_action.anchor_map[btn];
             }
         } else {
@@ -3270,16 +3285,16 @@ do_mouse_action(int btn, int x, int y)
     } else {
         return;
     }
-    if (!(map && map->func))
+    if (!(map && map->cmd))
         map = &mouse_action.default_map[btn];
-    if (map && map->func) {
+    if (map && map->cmd) {
         mouse_action.in_action = TRUE;
         mouse_action.cursorX = x;
         mouse_action.cursorY = y;
         CurrentKey = -1;
         CurrentKeyData = NULL;
         CurrentCmdData = map->data;
-        (*map->func)();
+        w3mFunc(map->cmd);
         CurrentCmdData = NULL;
     }
 }
@@ -3340,17 +3355,17 @@ void process_mouse(int btn, int x, int y)
                 }
                 if (delta_y > 0) {
                     prec_num = delta_y;
-                    ldown1();
+                    ldown1((struct CmdArgs) { 0 });
                 } else if (delta_y < 0) {
                     prec_num = -delta_y;
-                    lup1();
+                    lup1((struct CmdArgs) { 0 });
                 }
                 if (delta_x > 0) {
                     prec_num = delta_x;
-                    col1L();
+                    col1L((struct CmdArgs) { 0 });
                 } else if (delta_x < 0) {
                     prec_num = -delta_x;
-                    col1R();
+                    col1R((struct CmdArgs) { 0 });
                 }
             }
             break;
@@ -3361,19 +3376,19 @@ void process_mouse(int btn, int x, int y)
             break;
         case MOUSE_BTN4_DOWN_RXVT:
             for (i = 0; i < mouse_scroll_line(); i++)
-                ldown1();
+                ldown1((struct CmdArgs) { 0 });
             break;
         case MOUSE_BTN5_DOWN_RXVT:
             for (i = 0; i < mouse_scroll_line(); i++)
-                lup1();
+                lup1((struct CmdArgs) { 0 });
             break;
         }
     } else if (btn == MOUSE_BTN4_DOWN_XTERM) {
         for (i = 0; i < mouse_scroll_line(); i++)
-            ldown1();
+            ldown1((struct CmdArgs) { 0 });
     } else if (btn == MOUSE_BTN5_DOWN_XTERM) {
         for (i = 0; i < mouse_scroll_line(); i++)
-            lup1();
+            lup1((struct CmdArgs) { 0 });
     }
 
     if (btn != MOUSE_BTN4_DOWN_RXVT || press_btn == MOUSE_BTN_RESET) {
@@ -3669,7 +3684,7 @@ SigAlarm(SIGNAL_ARG)
         if (use_mouse)
             mouse_inactive();
 #endif
-        w3mFuncList[CurrentAlarm->cmd].func();
+        w3mFunc(CurrentAlarm->cmd);
 #ifdef USE_MOUSE
         if (use_mouse)
             mouse_active();
@@ -3867,14 +3882,14 @@ void followTab(TabBuffer* tab)
 
     if (tab == CurrentTab) {
         check_target = FALSE;
-        followA();
+        followA((struct CmdArgs) { 0 });
         check_target = TRUE;
         return;
     }
     _newT();
     buf = Currentbuf;
     check_target = FALSE;
-    followA();
+    followA((struct CmdArgs) { 0 });
     check_target = TRUE;
     if (tab == NULL) {
         if (buf != Currentbuf)
@@ -4135,7 +4150,7 @@ void download_action(struct parsed_tagarg* arg)
             }
         }
     }
-    ldDL();
+    ldDL((struct CmdArgs) { 0 });
 }
 
 void stopDownload(void)

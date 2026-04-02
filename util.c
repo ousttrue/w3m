@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int exec_cmd(char* cmd)
+int exec_cmd(const char* cmd)
 {
     int rv;
 

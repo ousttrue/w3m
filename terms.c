@@ -3,6 +3,7 @@
  * An original curses library for EUC-kanji by Akinori ITO,     December 1989
  * revised by Akinori ITO, January 1995
  */
+#include "defun_impl.h"
 #include <stdio.h>
 #include <signal.h>
 #include <sys/types.h>
@@ -2246,7 +2247,7 @@ char getch(void)
         if (errno == EINTR || errno == EAGAIN)
             continue;
         /* error happend on read(2) */
-        quitfm();
+        quitfm((struct CmdArgs) { 0 });
         break; /* unreachable */
     }
     return c;
@@ -2263,7 +2264,7 @@ char wgetch(void* p)
         if (errno == EINTR || errno == EAGAIN)
             continue;
         /* error happend on read(2) */
-        quitfm();
+        quitfm((struct CmdArgs) { 0 });
         break; /* unreachable */
     }
     return c;

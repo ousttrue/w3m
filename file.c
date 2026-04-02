@@ -860,18 +860,16 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
 #endif /* USE_COOKIE */
         else if (!strncasecmp(lineBuf2->ptr, "w3m-control:", 12) && uf->scheme == SCM_LOCAL_CGI) {
             Str funcname = Strnew();
-            int f;
 
             p = lineBuf2->ptr + 12;
             SKIP_BLANKS(p);
             while (*p && !IS_SPACE(*p))
                 Strcat_char(funcname, *(p++));
             SKIP_BLANKS(p);
-            f = getFuncList(funcname->ptr);
-            if (f >= 0) {
+            if (funcname->length) {
                 tmp = Strnew_charp(p);
                 Strchop(tmp);
-                pushEvent(f, tmp->ptr);
+                pushEvent(funcname->ptr, tmp->ptr);
             }
         }
         if (headerlist)
@@ -5967,17 +5965,17 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                             buf->event = setAlarmEvent(buf->event,
                                 refresh_interval,
                                 AL_IMPLICIT_ONCE,
-                                FUNCNAME_gorURL, p);
+                                "GOTO_RELATIVE", p);
                         } else if (refresh_interval > 0)
                             buf->event = setAlarmEvent(buf->event,
                                 refresh_interval,
                                 AL_IMPLICIT,
-                                FUNCNAME_reload, NULL);
+                                "RELOAD", NULL);
 #else
                         if (tmp && refresh_interval == 0) {
                             p = url_encode(remove_space(tmp->ptr), base,
                                 buf->document_charset);
-                            pushEvent(FUNCNAME_gorURL, p);
+                            pushEvent("GOTO_RELATIVE", p);
                         }
 #endif
                     }

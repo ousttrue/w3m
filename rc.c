@@ -4,6 +4,7 @@
  */
 #include "fm.h"
 #include "myctype.h"
+#include "defun_impl.h"
 #include "proto.h"
 #include <stdio.h>
 #include <errno.h>
@@ -1643,7 +1644,7 @@ void panel_set_option(struct parsed_tagarg* arg)
         fclose(f);
     }
     sync_with_option();
-    backBf();
+    backBf((struct CmdArgs) { 0 });
 }
 
 char* rcFile(char* base)

@@ -7,7 +7,7 @@
 typedef struct _AlarmEvent {
     int sec;
     short status;
-    int cmd;
+    const char* cmd;
     void* data;
 } AlarmEvent;
 
@@ -32,7 +32,7 @@ extern int display_ok;
 
 extern int prec_num;
 
-void escKeyProc(int c, int esc, unsigned char* map);
+void escKeyProc(int c, int esc, const char* map[128]);
 void nscroll(int n, int mode);
 int searchKeyNum(void);
 typedef struct _Buffer Buffer;

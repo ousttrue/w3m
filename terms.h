@@ -39,5 +39,8 @@ extern int get_pixel_per_cell(int* ppc, int* ppl);
 #endif
 
 char getch(void);
+void mouse_active();
+void mouse_inactive();
+void mouse_end();
 
 #endif /* not TERMS_H */

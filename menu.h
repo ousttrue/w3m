@@ -21,7 +21,7 @@ typedef struct _MenuItem {
     char* label;
     int* variable;
     int value;
-    void (*func)();
+    const char *cmd;
     struct _Menu* popup;
     char* keys;
     char* data;
