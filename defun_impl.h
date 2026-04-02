@@ -1,5 +1,9 @@
 #pragma once
 
+#define CGI_EXTENSION ".cgi"
+#define W3MBOOKMARK_CMDNAME "w3mbookmark"
+#define HELP_CGI "w3mhelp"
+
 struct CmdArgs {
     void* p;
 };

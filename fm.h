@@ -14,6 +14,9 @@
 #define _GNU_SOURCE /* strcasestr() */
 #endif
 
+#define W3M_LANG EN
+#define LANG W3M_LANG
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -28,7 +31,6 @@
 #define MENU_SELECT
 #define MENU_MAP
 
-
 #include "ctrlcode.h"
 #include "html.h"
 #include <gc.h>
@@ -38,9 +40,6 @@
 
 #ifdef HAVE_LOCALE_H
 #include <locale.h>
-#endif
-#if !HAVE_SETLOCALE
-#define setlocale(category, locale) /* empty */
 #endif
 
 #undef bindtextdomain
@@ -60,11 +59,6 @@
 #include "textlist.h"
 #include "terms.h"
 #include "istream.h"
-
-#ifndef HAVE_BCOPY
-void bcopy(const void*, void*, int);
-void bzero(void*, int);
-#endif /* HAVE_BCOPY */
 
 #ifdef MAINPROGRAM
 #define global
@@ -264,7 +258,6 @@ extern int REV_LB[];
 #define inputFilename(p, d) inputLine(p, d, IN_FILENAME)
 #define inputFilenameHist(p, d, h) inputLineHist(p, d, IN_FILENAME, h)
 #define inputChar(p) inputLine(p, "", IN_CHAR)
-
 
 #define SKIP_BLANKS(p)                 \
     {                                  \
@@ -499,7 +492,7 @@ typedef struct _DownloadList {
     char* url;
     char* save;
     char* lock;
-    clen_t size;
+    int64_t size;
     time_t time;
     int running;
     int err;
@@ -925,6 +918,7 @@ global int DecodeURL init(FALSE);
 global int retryAsHttp init(TRUE);
 global int showLineNum init(FALSE);
 global int show_srch_str init(TRUE);
+#define IMGDISPLAY "w3mimgdisplay"
 global char* Imgdisplay init(IMGDISPLAY);
 global int activeImage init(FALSE);
 global int displayImage init(TRUE);
@@ -933,11 +927,14 @@ global int useExtImageViewer init(TRUE);
 global int maxLoadImage init(4);
 global int image_map_list init(TRUE);
 global int pseudoInlines init(TRUE);
+#define DEF_EDITOR "/usr/bin/vi"
 global char* Editor init(DEF_EDITOR);
+#define DEF_MAILER "/usr/bin/mail"
 global char* Mailer init(DEF_MAILER);
 #define MAILTO_OPTIONS_IGNORE 1
 #define MAILTO_OPTIONS_USE_MAILTO_URL 2
 global int MailtoOptions init(MAILTO_OPTIONS_IGNORE);
+#define DEF_EXT_BROWSER "/usr/bin/firefox"
 global char* ExtBrowser init(DEF_EXT_BROWSER);
 global char* ExtBrowser2 init(NULL);
 global char* ExtBrowser3 init(NULL);
@@ -949,8 +946,11 @@ global char* ExtBrowser8 init(NULL);
 global char* ExtBrowser9 init(NULL);
 global int BackgroundExtViewer init(TRUE);
 global int disable_secret_security_check init(FALSE);
+#define PASSWD_FILE RC_DIR "/passwd"
 global char* passwd_file init(PASSWD_FILE);
+#define PRE_FORM_FILE RC_DIR "/pre_form"
 global char* pre_form_file init(PRE_FORM_FILE);
+#define SITECONF_FILE RC_DIR "/siteconf"
 global char* siteconf_file init(SITECONF_FILE);
 global char* ftppasswd init(NULL);
 global int ftppass_hostnamegen init(TRUE);
@@ -984,11 +984,14 @@ global int FoldLine init(FALSE);
 global int DefaultURLString init(DEFAULT_URL_CURRENT);
 global int MarkAllPages init(FALSE);
 
-
 global struct auth_cookie* Auth_cookie init(NULL);
 global struct cookie* First_cookie init(NULL);
 
+#define USER_MAILCAP RC_DIR "/mailcap"
+#define SYS_MAILCAP CONF_DIR "/mailcap"
 global char* mailcap_files init(USER_MAILCAP ", " SYS_MAILCAP);
+#define USER_MIMETYPES "~/.mime.types"
+#define SYS_MIMETYPES ETC_DIR "/mime.types"
 global char* mimetypes_files init(USER_MIMETYPES ", " SYS_MIMETYPES);
 
 global TextList* fileToDelete;
@@ -1004,8 +1007,11 @@ global int SaveURLHist init(TRUE);
 global int multicolList init(FALSE);
 
 global wc_ces InnerCharset init(WC_CES_WTF); /* Don't change */
+#define DISPLAY_CHARSET WC_CES_UTF_8
 global wc_ces DisplayCharset init(DISPLAY_CHARSET);
+#define DOCUMENT_CHARSET WC_CES_UTF_8
 global wc_ces DocumentCharset init(DOCUMENT_CHARSET);
+#define SYSTEM_CHARSET WC_CES_UTF_8
 global wc_ces SystemCharset init(SYSTEM_CHARSET);
 global wc_ces BookmarkCharset init(SYSTEM_CHARSET);
 global char ExtHalfdump init(FALSE);
@@ -1040,7 +1046,6 @@ global char* param_tmp_dir init(NULL);
 global char* mkd_tmp_dir init(NULL);
 global char* config_file init(NULL);
 
-
 global int default_use_cookie init(TRUE);
 global int use_cookie init(TRUE);
 global int show_cookie init(FALSE);
@@ -1063,6 +1068,7 @@ global int ssl_verify_server init(TRUE);
 global char* ssl_cert_file init(NULL);
 global char* ssl_key_file init(NULL);
 global char* ssl_ca_path init(NULL);
+#define DEF_CAFILE ""
 global char* ssl_ca_file init(DEF_CAFILE);
 global int ssl_ca_default init(TRUE);
 global int ssl_path_modified init(FALSE);
@@ -1089,6 +1095,7 @@ global int set_pixel_per_line init(FALSE);
 global double image_scale init(100);
 global int use_lessopen init(FALSE);
 
+#define KEYMAP_FILE "keymap"
 global char* keymap_file init(KEYMAP_FILE);
 
 #define get_mctype(c) ((Lineprop)wtf_type((wc_uchar*)(c)) << 8)
@@ -1110,7 +1117,6 @@ void w3m_exit(int i);
 #define AL_EXPLICIT 1
 #define AL_IMPLICIT 2
 #define AL_IMPLICIT_ONCE 3
-
 
 /*
  * Externals

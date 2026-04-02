@@ -1,6 +1,8 @@
 /* $Id: history.c,v 1.11 2003/09/26 17:59:51 ukai Exp $ */
 #include "fm.h"
 
+#define HISTORY_FILE "history"
+
 /* Merge entries from their history into ours */
 static int
 mergeHistory(Hist* ours, Hist* theirs)

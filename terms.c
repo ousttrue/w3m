@@ -20,6 +20,10 @@
 #endif
 #include <sys/ioctl.h>
 
+#define DEV_TTY_PATH "/dev/tty"
+#define DEFAULT_TERM 0 /* XXX */
+#define HAVE_SYS_SELECT_H 1
+
 static char* title_str = NULL;
 
 static int tty;
@@ -1479,10 +1483,6 @@ void refresh(void)
                  * avoid the scroll, I prohibit to draw character on
                  * (COLS-1,LINES-1).
                  */
-#if !defined(USE_BG_COLOR) || defined(__CYGWIN__)
-                if (line == LINES - 1 && col == COLS - 1)
-                    break;
-#endif /* !defined(USE_BG_COLOR) || defined(__CYGWIN__) */
                 if ((!(pr[col] & S_STANDOUT) && (mode & S_STANDOUT)) || (!(pr[col] & S_UNDERLINE) && (mode & S_UNDERLINE)) || (!(pr[col] & S_BOLD) && (mode & S_BOLD)) || (!(pr[col] & S_COLORED) && (mode & S_COLORED))
                     || (!(pr[col] & S_BCOLORED) && (mode & S_BCOLORED))
                     || (!(pr[col] & S_GRAPHICS) && (mode & S_GRAPHICS))) {

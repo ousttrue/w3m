@@ -195,7 +195,6 @@ static int OptionEncode = FALSE;
 #define CMT_META_REFRESH N_("Enable processing of meta-refresh tag")
 #define CMT_LOCALHOST_ONLY N_("Restrict connections only to localhost")
 
-
 #define CMT_DISPLAY_CHARSET N_("Display charset")
 #define CMT_DOCUMENT_CHARSET N_("Default document charset")
 #define CMT_AUTO_DETECT N_("Automatic charset detection when loading")
@@ -271,7 +270,6 @@ static struct sel_c displayinsdel[] = {
     { N_S(DISPLAY_INS_DEL_FONTIFY), N_("fontify") },
     { 0, NULL, NULL }
 };
-
 
 static struct sel_c dnsorders[] = {
     { N_S(DNS_ORDER_UNSPEC), N_("unspecified") },
@@ -764,7 +762,6 @@ void show_params(FILE* fp)
     const char* t = "";
     char* cmt;
 
-
     fputs("\nconfiguration parameters\n", fp);
     for (j = 0; sections[j].name != NULL; j++) {
         if (!OptionEncode)
@@ -1094,11 +1091,10 @@ do_recursive_mkdir(const char* dir)
         *ch = tmp;
 
     } while (*ch++ != '\0');
-#ifdef HAVE_FACCESSAT
+
     if (faccessat(AT_FDCWD, dir, W_OK | X_OK, AT_EACCESS) < 0) {
         return -1;
     }
-#endif
 
     return 0;
 }
@@ -1141,6 +1137,8 @@ void sync_with_option(void)
     }
 }
 
+#define CONFIG_FILE "config"
+#define W3MCONFIG "w3mconfig"
 void init_rc(void)
 {
     int i;
@@ -1302,8 +1300,7 @@ load_option_panel(void)
                     InnerCharset)
                                  ->ptr;
                 if (p->inputtype == PI_SEL_C
-                    && p->select != colorstr
-                ) {
+                    && p->select != colorstr) {
                     for (s = (struct sel_c*)p->select; s->text != NULL; s++) {
                         s->text = wc_conv(_(s->text), OptionCharset,
                             InnerCharset)
@@ -1451,7 +1448,6 @@ char* confFile(char* base)
     return expandPath(Strnew_m_charp(w3m_conf_dir(), "/", base, NULL)->ptr);
 }
 
-
 /* siteconf */
 /*
  * url "<url>"|/<re-url>/|m@<re-url>@i [exact]
@@ -1576,13 +1572,11 @@ loadSiteconf(void)
         if (strcmp(s, "user_agent") == 0) {
             ent->user_agent = getQWord(&p);
             SCONF_SET(ent, SCONF_USER_AGENT);
-        }
-        else if (strcmp(s, "url_charset") == 0) {
+        } else if (strcmp(s, "url_charset") == 0) {
             char* charset = getWord(&p);
             ent->url_charset = (charset && *charset) ? wc_charset_to_ces(charset) : 0;
             SCONF_SET(ent, SCONF_URL_CHARSET);
-        }
-        else if (strcmp(s, "no_referer_from") == 0) {
+        } else if (strcmp(s, "no_referer_from") == 0) {
             ent->no_referer_from = str_to_bool(getWord(&p), 0);
             SCONF_SET(ent, SCONF_NO_REFERER_FROM);
         } else if (strcmp(s, "no_referer_to") == 0) {

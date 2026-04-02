@@ -1,4 +1,4 @@
-/* $Id: etc.c,v 1.81 2007/05/23 15:06:05 inu Exp $ */
+#include "etc.h"
 #include "fm.h"
 #include <pwd.h>
 #include "myctype.h"
@@ -9,9 +9,9 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <time.h>
-#if defined(HAVE_WAITPID) || defined(HAVE_WAIT3)
+
 #include <sys/wait.h>
-#endif
+
 #include <signal.h>
 
 
@@ -549,6 +549,7 @@ char* mydirname(char* s)
     return allocStr(s, strlen(s) - strlen(p) + 1);
 }
 
+#define HAVE_STRERROR 1
 #ifndef HAVE_STRERROR
 char* strerror(int errno)
 {
@@ -1251,7 +1252,7 @@ void setup_child(int child, int i, int f)
     reset_signals();
     mySignal(SIGINT, SIG_IGN);
     if (!child)
-        SETPGRP();
+        setpgrp();
     /*
      * I don't know why but close_tty() sometimes interrupts loadGeneralFile() in loadImage()
      * and corrupt image data can be cached in ~/.w3m.

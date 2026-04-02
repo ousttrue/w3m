@@ -12,6 +12,12 @@
 #define FALSE 0
 #endif /* FALSE */
 
+#define HAVE_STRTOLL 1
+#define HAVE_ATOLL 1
+#define HAVE_STRCASECMP 1
+#define HAVE_STRCASESTR 1
+#define HAVE_STRCHR 1
+
 struct growbuf {
     char* ptr;
     int length;
@@ -40,7 +46,7 @@ extern char* HTML_QUOTE_MAP[];
 #define is_url_unsafe(c) (GET_QUOTE_TYPE(c) & URL_UNSAFE_MASK)
 #define html_quote_char(c) HTML_QUOTE_MAP[(int)is_html_quote(c)]
 
-extern clen_t strtoclen(const char* s);
+extern int64_t strtoclen(const char* s);
 extern char* conv_entity(unsigned int ch);
 extern int getescapechar(char** s);
 extern char* getescapecmd(char** s);

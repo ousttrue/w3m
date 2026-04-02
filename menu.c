@@ -10,7 +10,7 @@
 #include "myctype.h"
 #include "regex.h"
 
-
+#define MENU_FILE "menu"
 
 static char** FRAME;
 static int FRAME_WIDTH;
@@ -54,7 +54,7 @@ static int mSrchP(char c);
 
 /* *INDENT-OFF* */
 static int (*MenuKeymap[128])(char c) = {
-/*  C-@     C-a     C-b     C-c     C-d     C-e     C-f     C-g      */
+    /*  C-@     C-a     C-b     C-c     C-d     C-e     C-f     C-g      */
     mNull,
     mTop,
     mPrev,
@@ -1036,7 +1036,6 @@ set_menu_frame(void)
 
 /* --- MenuFunctions --- */
 
-
 static int
 mEsc(char c)
 {
@@ -1742,8 +1741,7 @@ interpret_menu(FILE* mf)
             item = w3mMenuList[nmenu].item;
             nitem = 0;
             item[nitem].type = MENU_END;
-        }
-        else if (!strcmp(s, "charset") || !strcmp(s, "encoding")) {
+        } else if (!strcmp(s, "charset") || !strcmp(s, "encoding")) {
             s = getQWord(&p);
             if (*s == '\0') /* error */
                 continue;
@@ -2116,4 +2114,3 @@ list_menu(Buffer* buf)
 
     return (key >= 0) ? ap[key] : NULL;
 }
-

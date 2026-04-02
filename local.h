@@ -6,7 +6,11 @@
 #ifndef LOCAL_H
 #define LOCAL_H
 
+#define HAVE_LSTAT 1
+#define HAVE_READLINK 1
+
 #include <sys/types.h>
+#define HAVE_DIRENT_H 1
 #ifdef HAVE_DIRENT_H
 #include <dirent.h>
 typedef struct dirent Directory;

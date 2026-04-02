@@ -6,9 +6,9 @@
 #include "myctype.h"
 #include <signal.h>
 #include <setjmp.h>
-#if defined(HAVE_WAITPID) || defined(HAVE_WAIT3)
+
 #include <sys/wait.h>
-#endif
+
 #include <stdio.h>
 #include <time.h>
 #include <sys/stat.h>
@@ -20,6 +20,17 @@
 #include "parsetagx.h"
 #include "local.h"
 #include "regex.h"
+
+#define PATH_SEPARATOR ':'
+#define GUNZIP_NAME "gunzip"
+#define BUNZIP2_NAME "bunzip2"
+#define INFLATE_NAME "inflate"
+#define BROTLI_NAME "brotli"
+
+#define GUNZIP_CMDNAME "gunzip"
+#define BUNZIP2_CMDNAME "bunzip2"
+#define INFLATE_CMDNAME "inflate"
+#define BROTLI_CMDNAME "brotli"
 
 #ifndef max
 #define max(a, b) ((a) > (b) ? (a) : (b))
@@ -49,9 +60,8 @@ static JMP_BUF AbortLoading;
 static struct table* tables[MAX_TABLE];
 static struct table_mode table_mode[MAX_TABLE];
 
-#if defined(USE_M17N) || defined(USE_IMAGE)
 static ParsedURL* cur_baseURL = NULL;
-#endif
+
 static wc_ces cur_document_charset = 0;
 
 static Str cur_title;
@@ -112,7 +122,7 @@ static int forms_size = 0;
 #define cur_form_id ((form_sp >= 0) ? form_stack[form_sp] : -1)
 static int form_sp = 0;
 
-static clen_t current_content_length;
+static int64_t current_content_length;
 
 static int cur_hseq;
 static int cur_iseq;
@@ -224,8 +234,7 @@ loadSomething(URLFile* f,
     if (f->scheme == SCM_LOCAL && buf->sourcefile == NULL)
         buf->sourcefile = buf->filename;
     if (loadproc == loadHTMLBuffer
-        || loadproc == loadImageBuffer
-    )
+        || loadproc == loadImageBuffer)
         buf->type = "text/html";
     else
         buf->type = "text/plain";
@@ -493,7 +502,6 @@ int matchattr(char* p, char* attr, int len, Str* value)
     return 0;
 }
 
-
 void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
 {
     char *p, *q;
@@ -509,15 +517,13 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
 
     headerlist = newBuf->document_header = newTextList();
     if (uf->scheme == SCM_HTTP
-        || uf->scheme == SCM_HTTPS
-    )
+        || uf->scheme == SCM_HTTPS)
         http_response_code = -1;
     else
         http_response_code = 0;
 
     if (thru && !newBuf->header_source
-        && !image_source
-    ) {
+        && !image_source) {
         tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
         src = fopen(tmpf, "w");
         if (src)
@@ -598,8 +604,7 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
             lineBuf2 = tmp;
         }
         if ((uf->scheme == SCM_HTTP
-                || uf->scheme == SCM_HTTPS
-                )
+                || uf->scheme == SCM_HTTPS)
             && http_response_code == -1) {
             p = lineBuf2->ptr;
             while (*p && !IS_SPACE(*p))
@@ -642,8 +647,7 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
                     break;
             }
             uf->content_encoding = uf->compression;
-        }
-        else if (use_cookie && accept_cookie && pu && check_cookie_accept_domain(pu->host) && (!strncasecmp(lineBuf2->ptr, "Set-Cookie:", 11) || !strncasecmp(lineBuf2->ptr, "Set-Cookie2:", 12))) {
+        } else if (use_cookie && accept_cookie && pu && check_cookie_accept_domain(pu->host) && (!strncasecmp(lineBuf2->ptr, "Set-Cookie:", 11) || !strncasecmp(lineBuf2->ptr, "Set-Cookie2:", 12))) {
             Str name = Strnew(), value = Strnew(), domain = NULL, path = NULL,
                 comment = NULL, commentURL = NULL, port = NULL, tmp2;
             int version, quoted, flag = 0;
@@ -763,8 +767,7 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
                             1, TRUE, FALSE);
                 }
             }
-        }
-        else if (!strncasecmp(lineBuf2->ptr, "w3m-control:", 12) && uf->scheme == SCM_LOCAL_CGI) {
+        } else if (!strncasecmp(lineBuf2->ptr, "w3m-control:", 12) && uf->scheme == SCM_LOCAL_CGI) {
             Str funcname = Strnew();
 
             p = lineBuf2->ptr + 12;
@@ -1649,12 +1652,7 @@ load_doc: {
     if (header_string)
         header_string = NULL;
     TRAP_ON;
-    if (pu.scheme == SCM_HTTP ||
-        pu.scheme == SCM_HTTPS ||
-        ((
-             (pu.scheme == SCM_GOPHER && non_null(GOPHER_proxy)) ||
-             (pu.scheme == SCM_FTP && non_null(FTP_proxy)))
-            && !Do_not_use_proxy && !check_no_proxy(pu.host))) {
+    if (pu.scheme == SCM_HTTP || pu.scheme == SCM_HTTPS || (((pu.scheme == SCM_GOPHER && non_null(GOPHER_proxy)) || (pu.scheme == SCM_FTP && non_null(FTP_proxy))) && !Do_not_use_proxy && !check_no_proxy(pu.host))) {
 
         if (fmInitialized) {
             term_cbreak();
@@ -1755,16 +1753,14 @@ load_doc: {
         }
 
         f.modtime = mymktime(checkHeader(t_buf, "Last-Modified:"));
-    }
-    else if (pu.scheme == SCM_NEWS || pu.scheme == SCM_NNTP) {
+    } else if (pu.scheme == SCM_NEWS || pu.scheme == SCM_NNTP) {
         if (t_buf == NULL)
             t_buf = newBuffer(INIT_BUFFER_WIDTH);
         readHeader(&f, t_buf, TRUE, &pu);
         t = checkContentType(t_buf);
         if (t == NULL)
             t = "text/plain";
-    }
-    else if (pu.scheme == SCM_GOPHER) {
+    } else if (pu.scheme == SCM_GOPHER) {
         p = pu.file;
         while (*p == '/')
             ++p;
@@ -1808,8 +1804,7 @@ load_doc: {
             gopher_download = TRUE;
             break;
         }
-    }
-    else if (pu.scheme == SCM_FTP) {
+    } else if (pu.scheme == SCM_FTP) {
         check_compression(path, &f);
         if (f.compression != CMP_NOCOMPRESS) {
             char* t1 = uncompressed_file_type(pu.file, NULL);
@@ -1985,9 +1980,7 @@ page_loaded:
     else if (w3m_backend)
         ;
     else if (!(w3m_dump & ~DUMP_FRAME) || is_dump_text_type(t)) {
-        if (!do_download &&
-            !gopher_download &&
-            searchExtViewer(t) != NULL) {
+        if (!do_download && !gopher_download && searchExtViewer(t) != NULL) {
             proc = DO_EXTERNAL;
         } else {
             TRAP_OFF;
@@ -2442,7 +2435,6 @@ passthrough(struct readbuffer* obuf, char* str, int back)
     }
 }
 
-
 static void
 fillline(struct readbuffer* obuf, int indent)
 {
@@ -2587,8 +2579,7 @@ void flushline(struct html_feed_environ* h_env, struct readbuffer* obuf, int ind
             align(lbuf, width, ALIGN_RIGHT);
         } else if (RB_GET_ALIGN(obuf) == RB_LEFT && obuf->flag & RB_INTABLE) {
             align(lbuf, width, ALIGN_LEFT);
-        }
-        else if (obuf->flag & RB_FILL) {
+        } else if (obuf->flag & RB_FILL) {
             char* p;
             int rest, rrest;
             int nspace, d, i;
@@ -3081,8 +3072,7 @@ Str process_img(struct parsed_tag* tag, int width)
         Strcat(tmp,
             Sprintf("<pre_int><img_alt hseq=\"%d\" src=\"", cur_iseq++));
         pre_int = TRUE;
-    } else
-    {
+    } else {
         if (w < 0)
             w = 12 * pixel_per_char;
         nw = w ? (int)((w - 1) / pixel_per_char + 1) : 1;
@@ -4888,8 +4878,7 @@ int HTMLtagproc1(struct parsed_tag* tag, struct html_feed_environ* h_env)
                 SKIP_BLANKS(q);
                 meta_charset = wc_guess_charset(q, 0);
             }
-        } else
-            if (p && q && !strcasecmp(p, "refresh")) {
+        } else if (p && q && !strcasecmp(p, "refresh")) {
             int refresh_interval;
             tmp = NULL;
             refresh_interval = getMetaRefreshParam(q, &tmp);
@@ -4911,13 +4900,13 @@ int HTMLtagproc1(struct parsed_tag* tag, struct html_feed_environ* h_env)
         }
         return 1;
     case HTML_BASE:
-#if defined(USE_M17N) || defined(USE_IMAGE)
+
         p = NULL;
         if (parsedtag_get_value(tag, ATTR_HREF, &p)) {
             cur_baseURL = New(ParsedURL);
             parseURL(p, cur_baseURL, NULL);
         }
-#endif
+
     case HTML_MAP:
     case HTML_N_MAP:
     case HTML_AREA:
@@ -5179,9 +5168,9 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
     int internal = 0;
     Anchor** a_textarea = NULL;
     Anchor** a_select = NULL;
-#if defined(USE_M17N) || defined(USE_IMAGE)
+
     ParsedURL* base = baseURL(buf);
-#endif
+
     wc_ces name_charset = url_to_charset(NULL, &buf->currentURL,
         buf->document_charset);
 
@@ -5249,16 +5238,13 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                     }
                 }
                 str += symbol_width;
-            }
-            else if (mode == PC_CTRL || mode == PC_UNDEF) {
+            } else if (mode == PC_CTRL || mode == PC_UNDEF) {
                 PPUSH(PC_ASCII | effect | ex_efct(ex_effect), ' ');
                 str++;
-            }
-            else if (mode & PC_UNKNOWN) {
+            } else if (mode & PC_UNKNOWN) {
                 PPUSH(PC_ASCII | effect | ex_efct(ex_effect), ' ');
                 str += get_mclen(str);
-            }
-            else if (*str != '<' && *str != '&') {
+            } else if (*str != '<' && *str != '&') {
                 int len = get_mclen(str);
                 PPUSH(mode | effect | ex_efct(ex_effect), *(str++));
                 if (--len) {
@@ -5279,12 +5265,10 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                     if (mode == PC_CTRL || mode == PC_UNDEF) {
                         PPUSH(PC_ASCII | effect | ex_efct(ex_effect), ' ');
                         p++;
-                    }
-                    else if (mode & PC_UNKNOWN) {
+                    } else if (mode & PC_UNKNOWN) {
                         PPUSH(PC_ASCII | effect | ex_efct(ex_effect), ' ');
                         p += get_mclen(p);
-                    }
-                    else {
+                    } else {
                         int len = get_mclen(p);
                         PPUSH(mode | effect | ex_efct(ex_effect), *(p++));
                         if (--len) {
@@ -5621,9 +5605,9 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                         if (!buf->baseURL)
                             buf->baseURL = New(ParsedURL);
                         parseURL2(p, buf->baseURL, &buf->currentURL);
-#if defined(USE_M17N) || defined(USE_IMAGE)
+
                         base = buf->baseURL;
-#endif
+
                     }
                     if (parsedtag_get_value(tag, ATTR_TARGET, &p))
                         buf->baseTarget = url_quote_conv(p, buf->document_charset);
@@ -6084,8 +6068,7 @@ table_start:
                 if (parsedtag_need_reconstruct(tag))
                     h_env->tagbuf = parsedtag2str(tag);
                 push_tag(obuf, h_env->tagbuf->ptr, cmd);
-            }
-            else {
+            } else {
                 process_idattr(obuf, cmd, tag);
             }
             obuf->bp.init_flag = 1;
@@ -6359,7 +6342,7 @@ loadHTMLBuffer(URLFile* f, Buffer* newBuf)
 static char* _size_unit[] = { "b", "kb", "Mb", "Gb", "Tb",
     "Pb", "Eb", "Zb", "Bb", "Yb", NULL };
 
-char* convert_size(clen_t size, int usefloat)
+char* convert_size(int64_t size, int usefloat)
 {
     float csize;
     int sizepos = 0;
@@ -6375,7 +6358,7 @@ char* convert_size(clen_t size, int usefloat)
         ->ptr;
 }
 
-char* convert_size2(clen_t size1, clen_t size2, int usefloat)
+char* convert_size2(int64_t size1, int64_t size2, int usefloat)
 {
     char** sizes = _size_unit;
     float csize, factor = 1;
@@ -6393,7 +6376,7 @@ char* convert_size2(clen_t size1, clen_t size2, int usefloat)
         ->ptr;
 }
 
-void showProgress(clen_t* linelen, clen_t* trbyte)
+void showProgress(int64_t* linelen, int64_t* trbyte)
 {
     int i, j, rate, duration, eta, pos;
     static time_t last_time, start_time;
@@ -6638,8 +6621,8 @@ print_internal_information(struct html_feed_environ* henv)
 void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
 {
     struct environment envs[MAX_ENV_LEVEL];
-    clen_t linelen = 0;
-    clen_t trbyte = 0;
+    int64_t linelen = 0;
+    int64_t trbyte = 0;
     Str lineBuf2 = Strnew();
     wc_ces charset = WC_CES_US_ASCII;
     wc_ces volatile doc_charset = DocumentCharset;
@@ -6695,9 +6678,9 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
         htmlenv1.f = stdout;
     else
         htmlenv1.buf = newTextLineList();
-#if defined(USE_M17N) || defined(USE_IMAGE)
+
     cur_baseURL = baseURL(newBuf);
-#endif
+
 
     if (SETJMP(AbortLoading) != 0) {
         HTMLlineproc1("<br>Transfer Interrupted!<br>", &htmlenv1);
@@ -6757,9 +6740,9 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
     obuf.status = R_ST_NORMAL;
     completeHTMLstream(&htmlenv1, &obuf);
     flushline(&htmlenv1, &obuf, 0, 2, htmlenv1.limit);
-#if defined(USE_M17N) || defined(USE_IMAGE)
+
     cur_baseURL = NULL;
-#endif
+
     cur_document_charset = 0;
     if (htmlenv1.title)
         newBuf->buffername = htmlenv1.title;
@@ -6819,7 +6802,6 @@ loadHTMLString(Str page)
         formResetBuffer(newBuf, newBuf->formitem);
     return newBuf;
 }
-
 
 /*
  * loadGopherDir: get gopher directory
@@ -6978,7 +6960,7 @@ loadBuffer(URLFile* uf, Buffer* volatile newBuf)
     volatile char pre_lbuf = '\0';
     int nlines;
     Str tmpf;
-    clen_t linelen = 0, trbyte = 0;
+    int64_t linelen = 0, trbyte = 0;
     Lineprop* propBuffer = NULL;
     Linecolor* colorBuffer = NULL;
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
@@ -7314,12 +7296,10 @@ openGeneralPagerBuffer(InputStream stream)
             stream = newEncodedStream(stream, uf.encoding);
         buf = openPagerBuffer(stream, t_buf);
         buf->type = "text/plain";
-    }
-    else if (activeImage && displayImage && !useExtImageViewer && !(w3m_dump & ~DUMP_FRAME) && !strncasecmp(t, "image/", 6)) {
+    } else if (activeImage && displayImage && !useExtImageViewer && !(w3m_dump & ~DUMP_FRAME) && !strncasecmp(t, "image/", 6)) {
         buf = loadImageBuffer(&uf, t_buf);
         buf->type = "text/html";
-    }
-    else {
+    } else {
         if (searchExtViewer(t)) {
             buf = doExternal(uf, t, t_buf);
             UFclose(&uf);
@@ -7341,7 +7321,7 @@ Line* getNextPage(Buffer* buf, int plen)
     Line* volatile top = buf->topLine, * volatile last = buf->lastLine, * volatile cur = buf->currentLine;
     int i;
     int volatile nlines = 0;
-    clen_t linelen = 0, trbyte = buf->trbyte;
+    int64_t linelen = 0, trbyte = buf->trbyte;
     Str lineBuf2;
     char volatile pre_lbuf = '\0';
     URLFile uf;
@@ -7454,7 +7434,7 @@ pager_end:
 int save2tmp(URLFile uf, char* tmpf)
 {
     FILE* ff;
-    clen_t linelen = 0, trbyte = 0;
+    int64_t linelen = 0, trbyte = 0;
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
     static JMP_BUF env_bak;
     volatile int retval = 0;
@@ -7491,8 +7471,7 @@ int save2tmp(URLFile uf, char* tmpf)
             linelen += sizeof(c);
             showProgress(&linelen, &trbyte);
         }
-    } else
-    {
+    } else {
         int count;
 
         buf = NewWithoutGC_N(char, SAVE_BUF_SIZE);
@@ -7554,8 +7533,7 @@ doExternal(URLFile uf, char* type, Buffer* defaultbuf)
             myExec(command->ptr);
         }
         return NO_BUFFER;
-    } else
-    {
+    } else {
         if (save2tmp(uf, tmpf->ptr) < 0) {
             return NULL;
         }
@@ -7611,7 +7589,7 @@ _MoveFile(char* path1, char* path2)
     InputStream f1;
     FILE* f2;
     int is_pipe;
-    clen_t linelen = 0, trbyte = 0;
+    int64_t linelen = 0, trbyte = 0;
     char* buf = NULL;
     int count;
 
@@ -7652,11 +7630,8 @@ int _doFileCopy(char* tmpf, char* defstr, int download)
     char *p, *q = NULL;
     pid_t pid;
     char* lock;
-#if !(defined(HAVE_SYMLINK) && defined(HAVE_LSTAT))
-    FILE* f;
-#endif
     struct stat st;
-    clen_t size = 0;
+    int64_t size = 0;
     int is_pipe = FALSE;
 
     if (fmInitialized) {
@@ -7696,13 +7671,7 @@ int _doFileCopy(char* tmpf, char* defstr, int download)
             return -1;
         }
         lock = tmpfname(TMPF_DFL, ".lock")->ptr;
-#if defined(HAVE_SYMLINK) && defined(HAVE_LSTAT)
         symlink(p, lock);
-#else
-        f = fopen(lock, "w");
-        if (f)
-            fclose(f);
-#endif
         flush_tty();
         pid = fork();
         if (!pid) {
@@ -7770,9 +7739,6 @@ int doFileSave(URLFile uf, char* defstr)
     pid_t pid;
     char* lock;
     char* tmpf = NULL;
-#if !(defined(HAVE_SYMLINK) && defined(HAVE_LSTAT))
-    FILE* f;
-#endif
 
     if (fmInitialized) {
         p = searchKeyData();
@@ -7800,13 +7766,8 @@ int doFileSave(URLFile uf, char* defstr)
          * }
          */
         lock = tmpfname(TMPF_DFL, ".lock")->ptr;
-#if defined(HAVE_SYMLINK) && defined(HAVE_LSTAT)
+
         symlink(p, lock);
-#else
-        f = fopen(lock, "w");
-        if (f)
-            fclose(f);
-#endif
         flush_tty();
         pid = fork();
         if (!pid) {
@@ -7957,8 +7918,7 @@ uncompress_stream(URLFile* uf, char** src)
     uf->compression = CMP_NOCOMPRESS;
 
     if (uf->scheme != SCM_LOCAL
-        && !image_source
-    ) {
+        && !image_source) {
         tmpf = tmpfname(TMPF_DFL, ext)->ptr;
     }
 
@@ -8067,6 +8027,7 @@ lessopen_stream(char* path)
     return fp;
 }
 
+#define DEF_SAVE_FILE "index.html"
 
 static char*
 guess_filename(char* file)

@@ -8,6 +8,8 @@
  * Meschach Library Version 1.2b.
  */
 
+#define HAVE_FLOAT_H 1
+
 /**************************************************************************
 **
 ** Copyright (C) 1993 David E. Steward & Zbigniew Leyk, all rights reserved.

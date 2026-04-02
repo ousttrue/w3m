@@ -290,7 +290,7 @@ char* HTML_QUOTE_MAP[] = {
     NULL,
 };
 
-clen_t
+int64_t
 strtoclen(const char* s)
 {
 #ifdef HAVE_STRTOLL
@@ -305,30 +305,6 @@ strtoclen(const char* s)
     return atoi(s);
 #endif
 }
-
-#ifndef HAVE_BCOPY
-void bcopy(const void* src, void* dest, int len)
-{
-    int i;
-    if (src == dest)
-        return;
-    if (src < dest) {
-        for (i = len - 1; i >= 0; i--)
-            ((char*)dest)[i] = ((const char*)src)[i];
-    } else { /* src > dest */
-        for (i = 0; i < len; i++)
-            ((char*)dest)[i] = ((const char*)src)[i];
-    }
-}
-
-void bzero(void* ptr, int len)
-{
-    int i;
-    char* p = ptr;
-    for (i = 0; i < len; i++)
-        *(p++) = 0;
-}
-#endif /* not HAVE_BCOPY */
 
 char* allocStr(const char* s, int len)
 {
@@ -355,6 +331,8 @@ int strCmp(const void* s1, const void* s2)
     return strcmp(*(const char**)s1, *(const char**)s2);
 }
 
+#define HAVE_GETCWD 1
+#define HAVE_GETWD 1
 char* currentdir()
 {
     char* path;

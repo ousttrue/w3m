@@ -5,6 +5,7 @@
 
 #include "wc.h"
 
+#define HAVE_LANGINFO_CODESET 1
 #ifdef HAVE_LANGINFO_CODESET
 #include <langinfo.h>
 #endif

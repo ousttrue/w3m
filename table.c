@@ -12,6 +12,8 @@
 #include "Str.h"
 #include "myctype.h"
 
+#define NOWRAP
+
 int symbol_width = 0;
 int symbol_width0 = 0;
 

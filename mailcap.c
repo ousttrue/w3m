@@ -6,6 +6,10 @@
 #include "parsetag.h"
 #include "local.h"
 
+/* fallback viewer. mailcap override these configuration */
+#define DEF_IMAGE_VIEWER "display"
+#define DEF_AUDIO_PLAYER "showaudio"
+
 static struct mailcap DefaultMailcap[] = {
     { "image/*", DEF_IMAGE_VIEWER " %s", 0, NULL, NULL, NULL }, /* */
     { "audio/basic", DEF_AUDIO_PLAYER " %s", 0, NULL, NULL, NULL },

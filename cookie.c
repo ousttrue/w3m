@@ -17,6 +17,9 @@
 #include "regex.h"
 #include "myctype.h"
 
+#define HAVE_STRFTIME 1
+#define COOKIE_FILE "cookie"
+
 static int is_saved = 1;
 
 #define contain_no_dots(p, ep) (total_dot_number((p), (ep), 1) == 0)

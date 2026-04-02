@@ -5,20 +5,6 @@
 #include "defun_impl.h"
 #include "keybind.h"
 #include "fm.h"
-#include <stdio.h>
-#include <signal.h>
-#include <setjmp.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <fcntl.h>
-#if defined(HAVE_WAITPID) || defined(HAVE_WAIT3)
-#include <sys/wait.h>
-#endif
-#include <time.h>
-#if defined(__CYGWIN__) && defined(USE_BINMODE_STREAM)
-#include <io.h>
-#endif
 #include "display.h"
 #include "terms.h"
 #include "myctype.h"
@@ -27,12 +13,23 @@
 #include "wc.h"
 #include "wtf.h"
 #include "ucs.h"
+#include <stdio.h>
+#include <signal.h>
+#include <setjmp.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <locale.h>
+#include <sys/wait.h>
+#include <time.h>
 
 unsigned char last_key = 0;
 
 #include "util.h"
 
 #define DSTR_LEN 256
+#define BOOKMARK "bookmark.html"
 
 Hist* LoadHist;
 Hist* SaveHist;
@@ -320,9 +317,8 @@ int w3m_main(int argc, char** argv)
 #else
     GC_oom_fn = die_oom;
 #endif
-#if defined(ENABLE_NLS) || (defined(USE_M17N) && defined(HAVE_LANGINFO_CODESET))
+
     setlocale(LC_ALL, "");
-#endif
 
     NO_proxy_domains = newTextList();
     fileToDelete = newTextList();
@@ -688,15 +684,7 @@ int w3m_main(int argc, char** argv)
         newbuf = loadGeneralFile(image_url, &base_pu, NULL, 0, NULL);
         if (!newbuf || !newbuf->real_type || strncasecmp(newbuf->real_type, "image/", 6))
             unlink(getimage_args[2]);
-#if defined(HAVE_SYMLINK) && defined(HAVE_LSTAT)
         symlink(getimage_args[2], getimage_args[3]);
-#else
-        {
-            FILE* f = fopen(getimage_args[3], "w");
-            if (f)
-                fclose(f);
-        }
-#endif
         w3m_exit(0);
     }
 #endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
@@ -2747,9 +2735,7 @@ void chkURLBuffer(Buffer* buf)
         "ftp://[a-zA-Z0-9][a-zA-Z0-9:%\\-\\./=_+@#,\\$]*[a-zA-Z0-9_/]",
         "news:[^<> 	][^<> 	]*",
         "nntp://[a-zA-Z0-9][a-zA-Z0-9:%\\-\\./_]*",
-#ifndef USE_W3MMAILER /* see also chkExternalURIBuffer() */
         "mailto:[^<> 	][^<> 	]*@[a-zA-Z0-9][a-zA-Z0-9\\-\\._]*[a-zA-Z0-9]",
-#endif
         "https?://[a-zA-Z0-9:%\\-\\./_@]*\\[[a-fA-F0-9:][a-fA-F0-9:\\.]*\\][a-zA-Z0-9:%\\-\\./?=~_\\&+@#,\\$;]*",
         "ftp://[a-zA-Z0-9:%\\-\\./_@]*\\[[a-fA-F0-9:][a-fA-F0-9:\\.]*\\][a-zA-Z0-9:%\\-\\./=_+@#,\\$]*",
         NULL
@@ -3327,7 +3313,7 @@ void moveTab(TabBuffer* t, TabBuffer* t2, int right)
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-void addDownloadList(pid_t pid, char* url, char* save, char* lock, clen_t size)
+void addDownloadList(pid_t pid, char* url, char* save, char* lock, int64_t size)
 {
     DownloadList* d;
 
@@ -3367,7 +3353,7 @@ int checkDownloadList(void)
 }
 
 static char*
-convert_size3(clen_t size)
+convert_size3(int64_t size)
 {
     Str tmp = Strnew();
     int n;
