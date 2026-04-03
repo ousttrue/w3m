@@ -2,6 +2,7 @@
 #define MAINPROGRAM
 #include "main.h"
 #include "history.h"
+#include "line_input.h"
 #include "terms.h"
 #include "defun_impl.h"
 #include "keybind.h"

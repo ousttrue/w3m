@@ -1,23 +1,19 @@
-/* $Id: ftp.c,v 1.42 2010/12/15 10:50:24 htrb Exp $ */
-#include <stdio.h>
-#include <pwd.h>
-#include <Str.h>
-#include <signal.h>
-#include <setjmp.h>
-#include <time.h>
-
+#include "Str.h"
 #include "fm.h"
 #include "html.h"
 #include "myctype.h"
+#include "line_input.h"
 
-#ifdef DEBUG
 #include <malloc.h>
-#endif /* DEBUG */
-
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
 #include <arpa/inet.h>
+#include <stdio.h>
+#include <pwd.h>
+#include <signal.h>
+#include <setjmp.h>
+#include <time.h>
 
 #define HAVE_SOCKLEN_T 1
 #ifndef HAVE_SOCKLEN_T

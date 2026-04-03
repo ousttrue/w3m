@@ -1,5 +1,6 @@
 #include "display.h"
 #include "history.h"
+#include "line_input.h"
 #include "fm.h"
 #include <sys/types.h>
 #include "myctype.h"

@@ -250,14 +250,6 @@ extern int REV_LB[];
  * Macros.
  */
 
-#define inputLineHist(p, d, f, h) inputLineHistSearch(p, d, f, h, NULL)
-#define inputLine(p, d, f) inputLineHist(p, d, f, NULL)
-#define inputStr(p, d) inputLine(p, d, IN_STRING)
-#define inputStrHist(p, d, h) inputLineHist(p, d, IN_STRING, h)
-#define inputFilename(p, d) inputLine(p, d, IN_FILENAME)
-#define inputFilenameHist(p, d, h) inputLineHist(p, d, IN_FILENAME, h)
-#define inputChar(p) inputLine(p, "", IN_CHAR)
-
 #define SKIP_BLANKS(p)                 \
     {                                  \
         while (*(p) && IS_SPACE(*(p))) \
@@ -290,9 +282,6 @@ extern int REV_LB[];
  * Types.
  */
 
-typedef unsigned short Lineprop;
-typedef unsigned char Linecolor;
-
 typedef struct _MapArea {
     char* url;
     char* target;
@@ -309,22 +298,6 @@ typedef struct _MapList {
     GeneralList* area;
     struct _MapList* next;
 } MapList;
-
-typedef struct _Line {
-    char* lineBuf;
-    Lineprop* propBuf;
-    Linecolor* colorBuf;
-    struct _Line* next;
-    struct _Line* prev;
-    int len;
-    int width;
-    long linenumber; /* on buffer */
-    long real_linenumber; /* on file */
-    unsigned short usrflags;
-    int size;
-    int bpos;
-    int bwidth;
-} Line;
 
 typedef struct {
     int line;
@@ -402,6 +375,8 @@ typedef struct _LinkList {
     char type; /* Rel, Rev */
     struct _LinkList* next;
 } LinkList;
+
+#include "line.h"
 
 typedef struct _Buffer {
     char* filename;

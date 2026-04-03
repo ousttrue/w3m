@@ -180,8 +180,6 @@ extern char* conv_search_string(char* str, wc_ces f_ces);
 extern int forwardSearch(Buffer* buf, char* str);
 extern int backwardSearch(Buffer* buf, char* str);
 extern void escdmap(char c);
-extern char* inputLineHistSearch(char* prompt, char* def_str, int flag,
-    struct Hist* hist, int (*incfunc)(int ch, Str buf, Lineprop* prop));
 extern Str unescape_spaces(Str s);
 extern double log_like(int x);
 extern struct table* newTable(void);

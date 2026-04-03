@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "defun_impl.h"
 #include "history.h"
+#include "line_input.h"
 #include "fm.h"
 #include "menu.h"
 #include "func.h"
