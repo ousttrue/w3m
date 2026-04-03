@@ -4,6 +4,7 @@
  *
  *   Created: Wed Feb 10 12:47:03 1999
  */
+struct Hist;
 extern int main(int argc, char** argv);
 extern void pushEvent(const char* cmd, void* data);
 extern MySignalHandler intTrap(SIGNAL_ARG);
@@ -180,9 +181,8 @@ extern int forwardSearch(Buffer* buf, char* str);
 extern int backwardSearch(Buffer* buf, char* str);
 extern void escdmap(char c);
 extern char* inputLineHistSearch(char* prompt, char* def_str, int flag,
-    Hist* hist, int (*incfunc)(int ch, Str buf, Lineprop* prop));
+    struct Hist* hist, int (*incfunc)(int ch, Str buf, Lineprop* prop));
 extern Str unescape_spaces(Str s);
-extern Buffer* historyBuffer(Hist* hist);
 extern double log_like(int x);
 extern struct table* newTable(void);
 extern void pushdata(struct table* t, int row, int col, char* data);

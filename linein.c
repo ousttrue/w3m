@@ -1,9 +1,7 @@
-/* $Id: linein.c,v 1.35 2007/05/23 12:14:24 inu Exp $ */
 #include "fm.h"
 #include "local.h"
 #include "myctype.h"
-
-
+#include "history.h"
 
 #define STR_LEN 1024
 #define CLEN (COLS - 2)
@@ -85,12 +83,12 @@ static int cm_mode, cm_next, cm_clear, cm_disp_next, cm_disp_clear;
 static int need_redraw, is_passwd;
 static int move_word;
 
-static Hist* CurrentHist;
+static struct Hist* CurrentHist;
 static Str strCurrentBuf;
 static int use_hist;
 static void ins_char(Str str);
 
-char* inputLineHistSearch(char* prompt, char* def_str, int flag, Hist* hist,
+char* inputLineHistSearch(char* prompt, char* def_str, int flag, struct Hist* hist,
     int (*incrfunc)(int ch, Str str, Lineprop* prop))
 {
     int opos, x, y, lpos, rpos, epos;
@@ -199,8 +197,7 @@ char* inputLineHistSearch(char* prompt, char* def_str, int flag, Hist* hist,
                 cm_next = FALSE;
             if (cm_disp_clear)
                 cm_disp_next = -1;
-        }
-        else {
+        } else {
             tmp = wc_char_conv(c);
             if (tmp == NULL) {
                 i_quote = TRUE;
@@ -224,7 +221,6 @@ char* inputLineHistSearch(char* prompt, char* def_str, int flag, Hist* hist,
             displayBuffer(Currentbuf, B_FORCE_REDRAW);
     }
 
-
     if (i_broken)
         return NULL;
 
@@ -244,7 +240,6 @@ char* inputLineHistSearch(char* prompt, char* def_str, int flag, Hist* hist,
     else
         return allocStr(p, -1);
 }
-
 
 static void
 addPasswd(char* p, Lineprop* pr, int len, int offset, int limit)
@@ -901,7 +896,7 @@ doComplete(Str ifn, int* status, int next)
 static void
 _prev(void)
 {
-    Hist* hist = CurrentHist;
+    struct Hist* hist = CurrentHist;
     char* p;
 
     if (!use_hist)
@@ -926,7 +921,7 @@ _prev(void)
 static void
 _next(void)
 {
-    Hist* hist = CurrentHist;
+    struct Hist* hist = CurrentHist;
     char* p;
 
     if (!use_hist)

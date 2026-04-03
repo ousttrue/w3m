@@ -26,7 +26,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include "config.h"
-#include "history.h"
 
 #define MENU_SELECT
 #define MENU_MAP
@@ -996,11 +995,6 @@ global char* mimetypes_files init(USER_MIMETYPES ", " SYS_MIMETYPES);
 
 global TextList* fileToDelete;
 
-extern Hist* LoadHist;
-extern Hist* SaveHist;
-extern Hist* URLHist;
-extern Hist* ShellHist;
-extern Hist* TextHist;
 global int UseHistory init(TRUE);
 global int URLHistSize init(100);
 global int SaveURLHist init(TRUE);

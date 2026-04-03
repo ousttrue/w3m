@@ -442,11 +442,10 @@ char* expandPath(char* name)
             if (!passent)
                 goto rest;
             extpath = Strnew_charp(passent->pw_dir);
+        } else if (*p == '/' || *p == '\0') { /* ~/dir... or ~ */
+            extpath = Strnew_charp(getenv("HOME"));
         } else
-            if (*p == '/' || *p == '\0') { /* ~/dir... or ~ */
-                extpath = Strnew_charp(getenv("HOME"));
-            } else
-                goto rest;
+            goto rest;
         if (Strcmp_charp(extpath, "/") == 0 && *p == '/')
             p++;
         Strcat_charp(extpath, p);
@@ -870,12 +869,10 @@ Str Str_url_unquote(Str x, int is_form, int safe)
     return x;
 }
 
-char* shell_quote(char* str)
+char* shell_quote(const char* str)
 {
     Str tmp = NULL;
-    char* p;
-
-    for (p = str; *p; p++) {
+    for (const char* p = str; *p; p++) {
         if (is_shell_unsafe(*p)) {
             if (tmp == NULL)
                 tmp = Strnew_charp_n(str, (int)(p - str));
@@ -888,7 +885,7 @@ char* shell_quote(char* str)
     }
     if (tmp)
         return tmp->ptr;
-    return str;
+    return allocStr(str, -1);
 }
 
 void* xrealloc(void* ptr, size_t size)

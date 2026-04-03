@@ -1,4 +1,5 @@
 #include "defun_impl.h"
+#include "history.h"
 #include "keybind.h"
 #include "fm.h"
 #include "main.h"
@@ -1329,7 +1330,8 @@ void cooLst(struct CmdArgs args)
 /* History page */
 void ldHist(struct CmdArgs args)
 {
-    cmd_loadBuffer(historyBuffer(URLHist), BP_NO_URL, LB_NOLINK);
+    Str html = historyBuffer(URLHist);
+    cmd_loadBuffer(loadHTMLString(html), BP_NO_URL, LB_NOLINK);
 }
 
 /* download HREF link */

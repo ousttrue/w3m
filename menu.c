@@ -1,9 +1,6 @@
-/* $Id: menu.c,v 1.46 2007/05/23 12:34:20 inu Exp $ */
-/*
- * w3m menu.c
- */
 #include <stdio.h>
 #include "defun_impl.h"
+#include "history.h"
 #include "fm.h"
 #include "menu.h"
 #include "func.h"

@@ -1,6 +1,7 @@
 /* $Id: main.c,v 1.270 2010/08/24 10:11:51 htrb Exp $ */
 #define MAINPROGRAM
 #include "main.h"
+#include "history.h"
 #include "terms.h"
 #include "defun_impl.h"
 #include "keybind.h"
@@ -30,12 +31,6 @@ unsigned char last_key = 0;
 
 #define DSTR_LEN 256
 #define BOOKMARK "bookmark.html"
-
-Hist* LoadHist;
-Hist* SaveHist;
-Hist* URLHist;
-Hist* ShellHist;
-Hist* TextHist;
 
 typedef struct _Event {
     const char* cmd;
@@ -374,11 +369,7 @@ int w3m_main(int argc, char** argv)
     /* initializations */
     init_rc();
 
-    LoadHist = newHist();
-    SaveHist = newHist();
-    ShellHist = newHist();
-    TextHist = newHist();
-    URLHist = newHist();
+    initHist();
 
     if (FollowLocale && Locale) {
         DisplayCharset = wc_guess_locale_charset(Locale, DisplayCharset);
@@ -2503,7 +2494,7 @@ void goURL0(char* prompt, int relative)
 
     url = searchKeyData();
     if (url == NULL) {
-        Hist* hist = copyHist(URLHist);
+        struct Hist* hist = copyHist(URLHist);
         Anchor* a;
 
         current = baseURL(Currentbuf);
