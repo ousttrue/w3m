@@ -67,7 +67,7 @@ extern char* strcasestr(const char* s1, const char* s2);
 #endif
 extern int strcasemstr(char* str, char* srch[], char** ret_ptr);
 int strmatchlen(const char* s1, const char* s2, int maxlen);
-extern char* remove_space(char* str);
+extern char* remove_space(const char* str);
 extern bool non_null(const char* s);
 extern void cleanup_line(Str s, int mode);
 extern char* html_quote(char* str);

@@ -1,4 +1,5 @@
 #include "global.h"
+#include "image.h"
 #include "fm.h"
 #include <unistd.h>
 

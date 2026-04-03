@@ -35,7 +35,7 @@ extern Str convertLine(URLFile* uf, Str line, int mode, wc_ces* charset,
     wc_ces doc_charset);
 extern void push_symbol(Str str, char symbol, int width, int n);
 extern void update_utf8_symbol(void);
-extern Buffer* loadGeneralFile(char* path, ParsedURL* current, char* referer,
+extern Buffer* loadGeneralFile(const char* path, ParsedURL* current, char* referer,
     int flag, FormList* request);
 extern int is_boundary(unsigned char*, unsigned char*);
 extern int is_blank_line(char* line, int indent);
@@ -51,11 +51,7 @@ extern void save_fonteffect(struct html_feed_environ* h_env,
     struct readbuffer* obuf);
 extern void restore_fonteffect(struct html_feed_environ* h_env,
     struct readbuffer* obuf);
-extern void deleteImage(Buffer* buf);
-extern void getAllImage(Buffer* buf);
-extern void loadImage(Buffer* buf, int flag);
-extern ImageCache* getImage(Image* image, ParsedURL* current, int flag);
-extern int getImageSize(ImageCache* cache);
+
 extern Str process_img(struct parsed_tag* tag, int width);
 extern Str process_anchor(struct parsed_tag* tag, char* tagbuf);
 extern Str process_input(struct parsed_tag* tag);
@@ -305,14 +301,14 @@ extern int openSocket(char* hostname, char* remoteport_name,
     unsigned short remoteport_num);
 extern void parseURL(const char* url, ParsedURL* p_url, ParsedURL* current);
 extern void copyParsedURL(ParsedURL* p, const ParsedURL* q);
-extern void parseURL2(char* url, ParsedURL* pu, ParsedURL* current);
+extern void parseURL2(const char* url, ParsedURL* pu, ParsedURL* current);
 extern Str parsedURL2Str(ParsedURL* pu);
 extern Str parsedURL2RefererStr(ParsedURL* pu);
 extern int getURLScheme(char** url);
 extern void init_stream(URLFile* uf, int scheme, InputStream stream);
 Str HTTPrequestMethod(HRequest* hr);
 Str HTTPrequestURI(ParsedURL* pu, HRequest* hr);
-extern URLFile openURL(char* url, ParsedURL* pu, ParsedURL* current,
+extern URLFile openURL(const char* url, ParsedURL* pu, ParsedURL* current,
     URLOption* option, FormList* request,
     TextList* extra_header, URLFile* ouf,
     HRequest* hr, unsigned char* status);
@@ -320,7 +316,7 @@ extern int mailcapMatch(struct mailcap* mcap, char* type);
 extern struct mailcap* searchMailcap(struct mailcap* table, char* type);
 extern void initMailcap(void);
 extern char* acceptableMimeTypes(void);
-extern struct mailcap* searchExtViewer(char* type);
+extern struct mailcap* searchExtViewer(const char* type);
 extern Str unquote_mailcap(char* qstr, char* type, char* name, char* attr,
     int* mc_stat);
 extern char* guessContentType(char* filename);

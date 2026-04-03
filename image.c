@@ -1,3 +1,4 @@
+#include "image.h"
 #include "global.h"
 #include "fm.h"
 #include <sys/types.h>

@@ -1,4 +1,5 @@
 #include "display.h"
+#include "image.h"
 #include "symbol.h"
 #include "constants.h"
 #include "history.h"
@@ -262,7 +263,7 @@ is_dump_text_type(char* type)
 }
 
 static int
-is_text_type(char* type)
+is_text_type(const char* type)
 {
     return (type == NULL || type[0] == '\0' || strncasecmp(type, "text/", 5) == 0 || (strncasecmp(type, "application/", 12) == 0 && strstr(type, "xhtml") != NULL) || strncasecmp(type, "message/", sizeof("message/") - 1) == 0);
 }
@@ -279,7 +280,7 @@ int is_html_type(char* type)
 }
 
 static void
-check_compression(char* path, URLFile* uf)
+check_compression(const char* path, URLFile* uf)
 {
     int len;
     struct compression_decoder* d;
@@ -1530,15 +1531,14 @@ Str getLinkNumberStr(int correction)
  */
 #define DO_EXTERNAL ((Buffer * (*)(URLFile*, Buffer*)) doExternal)
 Buffer*
-loadGeneralFile(char* path, ParsedURL* volatile current, char* referer,
+loadGeneralFile(const char* path, ParsedURL* volatile current, char* referer,
     int flag, FormList* volatile request)
 {
     URLFile f, *volatile of = NULL;
     ParsedURL pu;
     Buffer* b = NULL;
     Buffer* (*volatile proc)(URLFile*, Buffer*) = loadBuffer;
-    char* volatile tpath;
-    char* volatile t = "text/plain", *p, * volatile real_type = NULL;
+    const char* volatile t = "text/plain", *p, * volatile real_type = NULL;
     Buffer* volatile t_buf = NULL;
     int volatile searchHeader = SearchHeader;
     int volatile searchHeader_through = TRUE;
@@ -1557,7 +1557,7 @@ loadGeneralFile(char* path, ParsedURL* volatile current, char* referer,
     HRequest hr;
     ParsedURL* volatile auth_pu;
 
-    tpath = path;
+    const char* volatile tpath = path;
     prevtrap = NULL;
     add_auth_cookie_flag = 0;
 
@@ -1870,7 +1870,7 @@ load_doc: {
 
     /* XXX: can we use guess_type to give the type to loadHTMLstream
      *      to support default utf8 encoding for XHTML here? */
-    f.guess_type = t;
+    f.guess_type = (char*)t;
 
 page_loaded:
     if (page) {
@@ -1901,7 +1901,7 @@ page_loaded:
         if (b) {
             copyParsedURL(&b->currentURL, &pu);
             b->real_scheme = pu.scheme;
-            b->real_type = t;
+            b->real_type = (char*)t;
             if (src)
                 b->sourcefile = tmp->ptr;
             b->document_charset = charset;

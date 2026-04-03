@@ -1,4 +1,5 @@
 #include "defun_impl.h"
+#include "image.h"
 #include "global.h"
 #include "history.h"
 #include "line_input.h"
@@ -380,13 +381,9 @@ void ldfile(struct CmdArgs args)
 
 void ldhelp(struct CmdArgs args)
 {
-    char* lang;
-    int n;
-    Str tmp;
-
-    lang = AcceptLang;
-    n = strcspn(lang, ";, \t");
-    tmp = Sprintf("file:///$LIB/" HELP_CGI CGI_EXTENSION "?version=%s&lang=%s",
+    const char* lang = AcceptLang;
+    int n = strcspn(lang, ";, \t");
+    Str tmp = Sprintf("file:///$LIB/" HELP_CGI CGI_EXTENSION "?version=%s&lang=%s",
         Str_form_quote(Strnew_charp(w3m_version))->ptr,
         Str_form_quote(Strnew_charp_n(lang, n))->ptr);
     cmd_loadURL(tmp->ptr, NULL, NO_REFERER, NULL);

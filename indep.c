@@ -564,10 +564,9 @@ int strmatchlen(const char* s1, const char* s2, int maxlen)
     return i;
 }
 
-char* remove_space(char* str)
+char* remove_space(const char* str)
 {
-    char *p, *q;
-
+    const char *p, *q;
     for (p = str; *p && IS_SPACE(*p); p++)
         ;
     for (q = p; *q; q++)
@@ -576,7 +575,7 @@ char* remove_space(char* str)
         ;
     if (*q != '\0')
         return Strnew_charp_n(p, q - p)->ptr;
-    return p;
+    return allocStr(p, -1);
 }
 
 bool non_null(const char* s)

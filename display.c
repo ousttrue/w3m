@@ -1,4 +1,5 @@
 #include "display.h"
+#include "image.h"
 #include "symbol.h"
 #include "global.h"
 #include "history.h"
