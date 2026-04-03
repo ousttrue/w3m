@@ -11,7 +11,7 @@ extern MySignalHandler intTrap(SIGNAL_ARG);
 extern void chkURLBuffer(Buffer* buf);
 extern void chkNMIDBuffer(Buffer* buf);
 extern struct _AlarmEvent* setAlarmEvent(struct _AlarmEvent* event, int sec, short status,
-    int cmd, void* data);
+    const char* cmd, void* data);
 extern LinkList* link_menu(Buffer* buf);
 extern Anchor* accesskey_menu(Buffer* buf);
 extern Anchor* list_menu(Buffer* buf);
@@ -21,8 +21,8 @@ extern void tmpClearBuffer(Buffer* buf);
 
 extern void examineFile(char* path, struct URLFile* uf);
 extern char* acceptableEncoding(void);
-extern int dir_exist(char* path);
-extern int is_html_type(char* type);
+extern int dir_exist(const char* path);
+extern int is_html_type(const char* type);
 extern Str convertLine(struct URLFile* uf, Str line, int mode, wc_ces* charset,
     wc_ces doc_charset);
 extern Buffer* loadGeneralFile(const char* path, ParsedURL* current, char* referer,
@@ -77,7 +77,7 @@ extern Buffer* loadHTMLString(Str page);
 extern Str loadGopherDir(struct URLFile* uf, ParsedURL* pu, wc_ces* charset);
 extern Str loadGopherSearch(struct URLFile* uf, ParsedURL* pu, wc_ces* charset);
 
-extern int save2tmp(struct URLFile uf, char* tmpf);
+extern int save2tmp(struct URLFile uf, const char* tmpf);
 extern int _doFileCopy(char* tmpf, char* defstr, int download);
 #define doFileCopy(tmpf, defstr) _doFileCopy(tmpf, defstr, FALSE);
 extern int doFileMove(char* tmpf, char* defstr);
@@ -86,7 +86,7 @@ extern int checkCopyFile(char* path1, char* path2);
 extern int checkSaveFile(InputStream stream, char* path);
 extern int checkOverWrite(char* path);
 extern char* inputAnswer(char* prompt);
-extern int matchattr(char* p, char* attr, int len, Str* value);
+extern int matchattr(const char* p, const char* attr, int len, Str* value);
 extern void readHeader(struct URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu);
 extern char* checkHeader(Buffer* buf, char* field);
 extern TabBuffer* newTab(void);
@@ -100,7 +100,6 @@ extern void download_action(struct parsed_tagarg* arg);
 
 extern int read_token(Str buf, char** instr, int* status, int pre, int append);
 extern Str correct_irrtag(int status);
-extern char* conv_search_string(char* str, wc_ces f_ces);
 extern int forwardSearch(Buffer* buf, char* str);
 extern int backwardSearch(Buffer* buf, char* str);
 extern void escdmap(char c);

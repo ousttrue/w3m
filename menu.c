@@ -1,4 +1,6 @@
 #include "global.h"
+#include "search.h"
+#include "wc_util.h"
 #include "rc.h"
 #include "buffer.h"
 #include "url.h"
@@ -14,6 +16,9 @@
 #include "func.h"
 #include "myctype.h"
 #include "regex.h"
+
+#include <libwc/charset.h>
+
 #include <stdio.h>
 
 #define MENU_FILE "menu"
@@ -715,7 +720,7 @@ void new_menu(Menu* menu, MenuItem* item)
                 p++;
             }
         }
-        l = get_strwidth(item[i].label);
+        l = get_strwidth(WcOption, item[i].label);
         if (l > menu->width)
             menu->width = l;
     }
@@ -1467,7 +1472,7 @@ initSelectMenu(void)
         if (len < str->length)
             len = str->length;
     }
-    l = get_strwidth(comment);
+    l = get_strwidth(WcOption, comment);
     if (len < l + 4)
         len = l + 4;
     if (len > COLS - 2 * FRAME_WIDTH)
@@ -1718,7 +1723,7 @@ interpret_menu(FILE* mf)
         Strremovefirstspaces(line);
         if (line->length == 0)
             continue;
-        line = wc_Str_conv(line, charset, InnerCharset);
+        line = Strnew_wc_output(wc_Str_conv(WcOption, line->ptr, line->length, charset, InnerCharset));
         p = line->ptr;
         s = getWord(&p);
         if (*s == '#') /* comment */
@@ -1776,9 +1781,7 @@ void initMenu(void)
     if (!MainMenuEncode) {
         MenuItem* item;
         for (item = MainMenuItem; item->type != MENU_END; item++)
-            item->label = wc_conv(item->label, MainMenuCharset,
-                InnerCharset)
-                              ->ptr;
+            item->label = Strnew_wc_output(wc_conv(WcOption, item->label, MainMenuCharset, InnerCharset))->ptr;
         MainMenuEncode = TRUE;
     }
     if ((mf = fopen(confFile(MENU_FILE), "rt")) != NULL) {

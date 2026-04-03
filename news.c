@@ -1,4 +1,5 @@
 #include "fm.h"
+#include "wc_util.h"
 #include "buffer.h"
 #include "mimehead.h"
 #include "display.h"

@@ -1,4 +1,5 @@
 #include "global.h"
+#include "wc_util.h"
 #include "url.h"
 #include "etc.h"
 #include "buffer.h"
@@ -15,6 +16,10 @@
 #include "regex.h"
 #include "util.h"
 #include "menu.h"
+
+#include <libwc/charset.h>
+#include <libwc/conv.h>
+
 #include <unistd.h>
 
 extern Str* textarea_str;
@@ -517,7 +522,7 @@ form_fputs_decode(Str s, FILE* f)
             break;
         }
     }
-    z = wc_Str_conv_strict(z, InnerCharset, DisplayCharset);
+    z = Strnew_wc_output(wc_Str_conv_strict(WcOption, z->ptr, z->length, InnerCharset, DisplayCharset));
     Strfputs(z, f);
 }
 

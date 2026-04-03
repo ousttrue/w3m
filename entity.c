@@ -1,14 +1,9 @@
 #include "global.h"
-#ifdef DUMMY
-#include "Str.h"
-#define NBSP " "
-#define UseAltEntity 1
-#undef USE_M17N
-#else /* DUMMY */
+#include "wc_util.h"
 #include "fm.h"
-#include "ucs.h"
-#include "utf8.h"
-#endif /* DUMMY */
+
+#include <libwc/ucs.h>
+#include <libwc/utf8.h>
 
 extern char* conv_entity(unsigned int c);
 
@@ -46,16 +41,15 @@ char* conv_entity(unsigned int c)
     if (c < 0x100) { /* Latin1 (ISO 8859-1) */
         if (UseAltEntity)
             return alt_latin1[c - 0xa0];
-        return wc_conv_n(&b, 1, WC_CES_ISO_8859_1, InnerCharset)->ptr;
+        return Strnew_wc_output(wc_conv_n(WcOption, &b, 1, WC_CES_ISO_8859_1, InnerCharset))->ptr;
     }
     if (c <= WC_C_UCS4_END) { /* Unicode */
-        char* chk;
         wc_uchar utf8[7];
         wc_ucs_to_utf8(c, utf8);
         /* we eventually need to display it so check DisplayCharset */
-        chk = wc_conv((char*)utf8, WC_CES_UTF_8, DisplayCharset ? DisplayCharset : WC_CES_US_ASCII)->ptr;
+        char* chk = Strnew_wc_output(wc_conv(WcOption, (const char*)utf8, WC_CES_UTF_8, DisplayCharset ? DisplayCharset : WC_CES_US_ASCII))->ptr;
         if (strcmp(chk, "?") != 0)
-            return wc_conv((char*)utf8, WC_CES_UTF_8, InnerCharset)->ptr;
+            return Strnew_wc_output(wc_conv(WcOption, (const char*)utf8, WC_CES_UTF_8, InnerCharset))->ptr;
     }
     if (c == 0x201c || c == 0x201f || c == 0x201d || c == 0x2033)
         return "\"";

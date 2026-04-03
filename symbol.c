@@ -3,6 +3,10 @@
 #include "constants.h"
 #include "fm.h"
 
+#include "wc_util.h"
+#include <libwc/ces.h>
+#include <libwc/conv.h>
+
 #include "Symbols/alt.sym"
 #include "Symbols/graph.sym"
 #include "Symbols/eucjp.sym"
@@ -73,7 +77,7 @@ encode_symbol(symbol_set* s)
     s->conved_item = New_N(char*, i);
     for (i = 0; s->item[i]; i++) {
         if (*(s->item[i]))
-            s->conved_item[i] = wc_conv(s->item[i], s->ces, InnerCharset)->ptr;
+            s->conved_item[i] = Strnew_wc_output(wc_conv(WcOption, s->item[i], s->ces, InnerCharset))->ptr;
     }
 }
 
@@ -129,10 +133,11 @@ set_symbol(int width)
     }
     for (i = 0; s->item[i]; i++) {
         tmp = Strnew_size(4);
+        struct wc_output os = StrBuffer_from_str(tmp);
         if (width == 2)
-            wtf_push(tmp, WC_CCS_SPECIAL_W, (wc_uint32)(SYMBOL_BASE + i));
+            wtf_push(WcOption, &os, WC_CCS_SPECIAL_W, (wc_uint32)(SYMBOL_BASE + i));
         else
-            wtf_push(tmp, WC_CCS_SPECIAL, (wc_uint32)(SYMBOL_BASE + i));
+            wtf_push(WcOption, &os, WC_CCS_SPECIAL, (wc_uint32)(SYMBOL_BASE + i));
         symbol_buf[i] = tmp->ptr;
     }
     save_width = width;
@@ -150,7 +155,6 @@ void update_utf8_symbol(void)
         }
     }
 }
-
 
 void push_symbol(Str str, char symbol, int width, int n)
 {

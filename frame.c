@@ -1,4 +1,5 @@
 #include "frame.h"
+#include "wc_util.h"
 #include "etc.h"
 #include "buffer.h"
 #include "url.h"
@@ -8,6 +9,9 @@
 #include "parsetagx.h"
 #include "myctype.h"
 #include "setjmp_util.h"
+
+#include <libwc/charset.h>
+
 #include <signal.h>
 
 static JMP_BUF AbortLoading;

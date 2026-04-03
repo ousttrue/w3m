@@ -1,4 +1,5 @@
 #include "table.h"
+#include "wc_util.h"
 #include "etc.h"
 #include "symbol.h"
 #include "global.h"
@@ -375,7 +376,7 @@ int visible_length(char* str)
                     max_len = len;
                 len = 0;
             } else
-                len += get_strwidth(t) + get_strwidth(r2);
+                len += get_strwidth(WcOption, t) + get_strwidth(WcOption, r2);
         } else if (status == R_ST_NORMAL && ST_IS_REAL_TAG(prev_status)) {
             ;
         } else if (*str == '\t') {
@@ -395,7 +396,7 @@ int visible_length(char* str)
         r2 = tagbuf->ptr;
         t = getescapecmd(&r2);
         if (*t != '\r' && *t != '\n')
-            len += get_strwidth(t) + get_strwidth(r2);
+            len += get_strwidth(WcOption, t) + get_strwidth(WcOption, r2);
     }
     return len > max_len ? len : max_len;
 }
@@ -2021,7 +2022,7 @@ skip_space(struct table* t, char* line, struct table_linfo* linfo,
                 if (ec >= 0) {
                     c = conv_entity(ec);
                     ctype = get_mctype(c);
-                    len = get_strwidth(c);
+                    len = get_strwidth(WcOption, c);
                     wlen = line - save;
                     plen = get_mclen(c);
                 }

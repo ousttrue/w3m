@@ -11,6 +11,10 @@
 #include "myctype.h"
 #include "regex.h"
 #include "rc.h"
+
+#include "wc_util.h"
+#include <libwc/charset.h>
+
 #include <stdio.h>
 
 #define KEYDATA_HASH_SIZE 16
@@ -39,7 +43,7 @@ void setKeymap(char* p, int lineno, int verbose)
             disp_message_nsec(emsg, FALSE, 1, TRUE, FALSE);
         return;
     }
-    const char *cmd = getWord(&p);
+    const char* cmd = getWord(&p);
     if (!cmd) {
         if (lineno > 0)
             /* FIXME: gettextize? */
@@ -120,7 +124,6 @@ interpret_keymap(FILE* kf, struct stat* current, int force)
     int lineno;
     wc_ces charset = SystemCharset;
     int verbose = 1;
-    extern int str_to_bool(char* value, int old);
 
     if ((fd = fileno(kf)) < 0 || fstat(fd, &kstat) || (!force && kstat.st_mtime == current->st_mtime && kstat.st_dev == current->st_dev && kstat.st_ino == current->st_ino && kstat.st_size == current->st_size))
         return;
@@ -134,7 +137,7 @@ interpret_keymap(FILE* kf, struct stat* current, int force)
         Strremovefirstspaces(line);
         if (line->length == 0)
             continue;
-        line = wc_Str_conv(line, charset, InnerCharset);
+        line = Strnew_wc_output(wc_Str_conv(WcOption, line->ptr, line->length, charset, InnerCharset));
         p = line->ptr;
         s = getWord(&p);
         if (*s == '#') /* comment */
@@ -146,8 +149,7 @@ interpret_keymap(FILE* kf, struct stat* current, int force)
             if (*s)
                 charset = wc_guess_charset(s, charset);
             continue;
-        }
-        else if (!strcmp(s, "verbose")) {
+        } else if (!strcmp(s, "verbose")) {
             s = getWord(&p);
             if (*s)
                 verbose = str_to_bool(s, verbose);
@@ -481,4 +483,3 @@ last:
     *str = p;
     return word;
 }
-

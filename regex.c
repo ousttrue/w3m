@@ -5,22 +5,21 @@
  * by A.ITO, December 1989
  * Revised by A.ITO, January 2002
  */
-
-#ifdef REGEX_DEBUG
 #include <sys/types.h>
 #include <malloc.h>
-#endif /* REGEX_DEBUG */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <gc.h>
 #include "config.h"
-#include "wc.h"
-#include "wtf.h"
-#include "ucs.h"
 #include "regex.h"
 #include "config.h"
 #include "myctype.h"
+
+#include "wc_util.h"
+#include <libwc/wtf.h>
+#include <libwc/ccs.h>
+#include <libwc/ucs.h>
 
 #ifndef NULL
 #define NULL 0
@@ -652,7 +651,7 @@ match_longchar(longchar* a, longchar* b, int ignore)
         return 0;
     if (a->type == RE_TYPE_WCHAR_T) {
         if (ignore) {
-            wc_uint32 ua = wc_any_to_ucs(a->wch), ub = wc_any_to_ucs(b->wch);
+            wc_uint32 ua = wc_any_to_ucs(WcOption, a->wch), ub = wc_any_to_ucs(WcOption, b->wch);
             return (ua == ub || ua == wc_ucs_tolower(ub) || ua == wc_ucs_toupper(ub) || ua == wc_ucs_totitle(ub));
         }
         return (a->wch.ccs == b->wch.ccs) && (a->wch.code == b->wch.code);
@@ -672,11 +671,11 @@ match_range_longchar(longchar* a, longchar* b, longchar* c, int ignore)
         if (a->wch.ccs != c->wch.ccs || c->wch.ccs != b->wch.ccs)
             return 0;
         if (ignore) {
-            wc_uint32 uc = wc_any_to_ucs(c->wch);
+            wc_uint32 uc = wc_any_to_ucs(WcOption, c->wch);
 
             if (wc_is_ucs_alpha(uc)) {
-                wc_uint32 ua = wc_any_to_ucs(a->wch);
-                wc_uint32 ub = wc_any_to_ucs(b->wch);
+                wc_uint32 ua = wc_any_to_ucs(WcOption, a->wch);
+                wc_uint32 ub = wc_any_to_ucs(WcOption, b->wch);
                 wc_uint32 upper = wc_ucs_toupper(uc);
                 wc_uint32 lower = wc_ucs_tolower(uc);
                 wc_uint32 title = wc_ucs_totitle(uc);

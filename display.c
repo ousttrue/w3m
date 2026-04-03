@@ -1,4 +1,6 @@
 #include "display.h"
+
+#include "wc_util.h"
 #include "maparea.h"
 #include "buffer.h"
 #include "image.h"
@@ -188,7 +190,6 @@ static int anch_mode = 0, emph_mode = 0, imag_mode = 0, form_mode = 0,
            active_mode = 0, visited_mode = 0, mark_mode = 0, graph_mode = 0;
 static Linecolor color_mode = 0;
 
-
 static char* delayed_msg = NULL;
 
 static void drawAnchorCursor(Buffer* buf);
@@ -260,8 +261,7 @@ make_lastline_message(Buffer* buf)
         MapArea* a = retrieveCurrentMapArea(buf);
         if (a)
             s = make_lastline_link(buf, a->alt, a->url);
-        else
-        {
+        else {
             Anchor* a = retrieveCurrentAnchor(buf);
             char* p = NULL;
             if (a && a->title && *a->title)
@@ -281,7 +281,7 @@ make_lastline_message(Buffer* buf)
         }
     }
 
-        msg = Strnew();
+    msg = Strnew();
     if (displayLineInfo && buf->currentLine != NULL && buf->lastLine != NULL) {
         int cl = buf->currentLine->real_linenumber;
         int ll = buf->lastLine->real_linenumber;
@@ -290,7 +290,7 @@ make_lastline_message(Buffer* buf)
     } else
         /* FIXME: gettextize? */
         msg = Sprintf("%s: code 0x%02x ", msg->ptr, last_key);
-        Strcat_charp(msg, "Viewing");
+    Strcat_charp(msg, "Viewing");
     if (buf->ssl_certificate)
         Strcat_charp(msg, "[SSL]");
     Strcat_charp(msg, " <");
@@ -348,8 +348,7 @@ void displayBuffer(Buffer* buf, int mode)
     } else
         buf->rootX = 0;
     buf->COLS = COLS - buf->rootX;
-    if (nTab > 1
-    ) {
+    if (nTab > 1) {
         if (mode == B_FORCE_REDRAW || mode == B_REDRAW_IMAGE)
             calcTabPos();
         ny = LastTab->y + 2;
@@ -504,8 +503,7 @@ redrawNLine(Buffer* buf, int n)
         EFFECT_ANCHOR_END_C;
         setbcolor(bg_color);
     }
-    if (nTab > 1
-    ) {
+    if (nTab > 1) {
         TabBuffer* t;
         int l;
 
@@ -516,7 +514,7 @@ redrawNLine(Buffer* buf, int n)
             if (t == CurrentTab)
                 bold();
             addch('[');
-            l = t->x2 - t->x1 - 1 - get_strwidth(t->currentBuffer->buffername);
+            l = t->x2 - t->x1 - 1 - get_strwidth(WcOption, t->currentBuffer->buffername);
             if (l < 0)
                 l = 0;
             if (l / 2 > 0)
@@ -989,8 +987,7 @@ void addMChar(char* p, Lineprop mode, size_t len)
             addch(c + '@');
             break;
         }
-    }
-    else if (mode & PC_UNKNOWN) {
+    } else if (mode & PC_UNKNOWN) {
         char buf[5];
         sprintf(buf, "[%.2X]",
             (unsigned char)wtf_get_code((wc_uchar*)p) | 0x80);

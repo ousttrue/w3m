@@ -1,4 +1,6 @@
 #include "defun_impl.h"
+#include "search.h"
+#include "wc_util.h"
 #include "mailcap.h"
 #include "maparea.h"
 #include "cookie.h"
@@ -18,6 +20,9 @@
 #include "display.h"
 #include "util.h"
 #include "regex.h"
+
+#include <libwc/charset.h>
+
 #include <signal.h>
 #include <unistd.h>
 
@@ -239,14 +244,9 @@ void setEnv(struct CmdArgs args)
 
 void pipeBuf(struct CmdArgs args)
 {
-    Buffer* buf;
-    char *cmd, *tmpf;
-    FILE* f;
-
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    cmd = searchKeyData();
+    char* cmd = searchKeyData();
     if (cmd == NULL || *cmd == '\0') {
-        /* FIXME: gettextize? */
         cmd = inputLineHist("Pipe buffer to: ", "", IN_COMMAND, ShellHist);
     }
     if (cmd != NULL)
@@ -255,24 +255,21 @@ void pipeBuf(struct CmdArgs args)
         displayBuffer(Currentbuf, B_NORMAL);
         return;
     }
-    tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
-    f = fopen(tmpf, "w");
+    char* tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
+    FILE* f = fopen(tmpf, "w");
     if (f == NULL) {
-        /* FIXME: gettextize? */
         disp_message(Sprintf("Can't save buffer to %s", cmd)->ptr, TRUE);
         return;
     }
     saveBuffer(Currentbuf, f, TRUE);
     fclose(f);
-    buf = getpipe(myExtCommand(cmd, shell_quote(tmpf), TRUE)->ptr);
+    Buffer* buf = getpipe(myExtCommand(cmd, shell_quote(tmpf), TRUE)->ptr);
     if (buf == NULL) {
         disp_message("Execution failed", TRUE);
         return;
     } else {
         buf->filename = cmd;
-        buf->buffername = Sprintf("%s %s", PIPEBUFFERNAME,
-            conv_from_system(cmd))
-                              ->ptr;
+        buf->buffername = Sprintf("%s %s", PIPEBUFFERNAME, conv_from_system(cmd))->ptr;
         buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
         if (buf->type == NULL)
             buf->type = "text/plain";
@@ -1215,10 +1212,7 @@ void adBmark(struct CmdArgs args)
         (Str_form_quote(localCookie()))->ptr,
         (Str_form_quote(Strnew_charp(BookmarkFile)))->ptr,
         (Str_form_quote(parsedURL2Str(&Currentbuf->currentURL)))->ptr,
-        (Str_form_quote(wc_conv_strict(Currentbuf->buffername,
-             InnerCharset,
-             BookmarkCharset)))
-            ->ptr,
+        (Str_form_quote(Strnew_wc_output(wc_conv_strict(WcOption, Currentbuf->buffername, InnerCharset, BookmarkCharset))))->ptr,
         wc_ces_to_charset(BookmarkCharset));
     request = newFormList(NULL, "post", NULL, NULL, NULL, NULL, NULL);
     request->body = tmp->ptr;
@@ -1905,7 +1899,8 @@ void execCmd(struct CmdArgs args)
 void setAlarm(struct CmdArgs args)
 {
     char* data;
-    int sec = 0, cmd = -1;
+    int sec = 0;
+    const char* cmd = 0;
 
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
     data = searchKeyData();

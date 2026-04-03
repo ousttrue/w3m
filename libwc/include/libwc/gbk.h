@@ -1,0 +1,34 @@
+#pragma once
+#include "wc_types.h"
+
+#define WC_GBK_NOSTATE 0
+#define WC_GBK_MBYTE1 1 /* 0x81 - 0xA0, 0xA1 - 0xFE */
+
+#define WC_GBK_MAP_C0 0x0
+#define WC_GBK_MAP_GL 0x1
+#define WC_GBK_MAP_C1 0x2
+#define WC_GBK_MAP_LB 0x4
+#define WC_GBK_MAP_UB (0x8 | WC_GBK_MAP_LB)
+#define WC_GBK_MAP_80 (0x10 | WC_GBK_MAP_LB)
+
+#define WC_GBKUL_N(U, L) (((U) - 0x81) * 0xBE + (L) - (((L) < 0x80) ? 0x40 : 0x41))
+#define WC_GBK_N(c) WC_GBKUL_N(((c) >> 8) & 0xFF, (c) & 0xFF)
+#define WC_N_GBKU(c) ((c) / 0xBE + 0x81)
+#define WC_N_GBKL(c) ((c) % 0xBE + (((c) % 0xBE < 0x3F) ? 0x40 : 0x41))
+#define WC_N_GBK(c) ((WC_N_GBKU(c) << 8) + WC_N_GBKL(c))
+#ifndef WC_CS128W_N
+#define WC_CS128WUL_N(U, L) ((U) * 0x80 + (L))
+#define WC_CS128W_N(c) WC_CS128WUL_N(((c) >> 8) & 0x7F, (c) & 0x7F)
+#define WC_N_CS128WU(c) ((c) / 0x80)
+#define WC_N_CS128WL(c) ((c) % 0x80)
+#define WC_N_CS128W(c) ((WC_N_CS128WU(c) << 8) + WC_N_CS128WL(c))
+#endif
+
+wc_ccs wc_gb2312_or_gbk(wc_uint16 code);
+struct wc_wchar wc_gbk_to_cs128w(struct wc_wchar cc);
+struct wc_wchar wc_cs128w_to_gbk(struct wc_wchar cc);
+wc_uint32 wc_gbk_to_N(wc_uint32 c);
+struct wc_output wc_conv_from_gbk(struct wc_option opts, const char* is, int len, wc_ces ces);
+struct wc_status;
+void wc_push_to_gbk(struct wc_option opts, struct wc_output* os, struct wc_wchar cc, struct wc_status* st);
+struct wc_output wc_char_conv_from_gbk(struct wc_option opts, wc_uchar c, struct wc_status* st);

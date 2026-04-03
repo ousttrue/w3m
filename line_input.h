@@ -3,7 +3,7 @@
 #include "line.h"
 
 struct Hist;
-char* inputLineHistSearch(char* prompt, char* def_str, int flag, struct Hist* hist, int (*incfunc)(int ch, Str buf, Lineprop* prop));
+char* inputLineHistSearch(const char* prompt, const char* def_str, int flag, struct Hist* hist, int (*incfunc)(int ch, Str buf, Lineprop* prop));
 
 #define inputLineHist(p, d, f, h) inputLineHistSearch(p, d, f, h, NULL)
 #define inputLine(p, d, f) inputLineHist(p, d, f, NULL)

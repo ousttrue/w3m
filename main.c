@@ -1,5 +1,7 @@
 #define MAINPROGRAM
 #include "main.h"
+#include "search.h"
+#include "wc_util.h"
 #include "maparea.h"
 #include "etc.h"
 #include "ftp.h"
@@ -25,12 +27,13 @@
 #include "myctype.h"
 #include "regex.h"
 #include "rc.h"
-#include "wc.h"
-#include "wtf.h"
-#include "ucs.h"
+#include "setjmp_util.h"
+
+#include <libwc/charset.h>
+#include <libwc/ucs.h>
+
 #include <stdio.h>
 #include <signal.h>
-#include "setjmp_util.h"
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -1019,18 +1022,13 @@ dump_source(Buffer* buf)
 static void
 dump_head(Buffer* buf)
 {
-    TextListItem* ti;
-
     if (buf->document_header == NULL) {
         if (w3m_dump & DUMP_EXTRA)
             printf("\n");
         return;
     }
-    for (ti = buf->document_header->first; ti; ti = ti->next) {
-        printf("%s",
-            wc_conv_strict(ti->ptr, InnerCharset,
-                buf->document_charset)
-                ->ptr);
+    for (TextListItem* ti = buf->document_header->first; ti; ti = ti->next) {
+        printf("%s", Strnew_wc_output(wc_conv_strict(WcOption, ti->ptr, InnerCharset, buf->document_charset))->ptr);
     }
     puts("");
 }
@@ -1544,7 +1542,7 @@ void _movR(int n)
 
 wc_uint32 getChar(char* p)
 {
-    return wc_any_to_ucs(wtf_parse1((wc_uchar**)&p));
+    return wc_any_to_ucs(WcOption, wtf_parse1((wc_uchar**)&p));
 }
 
 int is_wordchar(wc_uint32 c)
@@ -1889,12 +1887,11 @@ static Str
 conv_form_encoding(Str val, FormItemList* fi, Buffer* buf)
 {
     wc_ces charset = SystemCharset;
-
     if (fi->parent->charset)
         charset = fi->parent->charset;
     else if (buf->document_charset && buf->document_charset != WC_CES_US_ASCII)
         charset = buf->document_charset;
-    return wc_Str_conv_strict(val, InnerCharset, charset);
+    return Strnew_wc_output(wc_Str_conv_strict(WcOption, val->ptr, val->length, InnerCharset, charset));
 }
 
 void query_from_followform(Str* query, FormItemList* fi, int multipart)
@@ -1951,11 +1948,9 @@ void query_from_followform(Str* query, FormItemList* fi, int multipart)
                 *query = conv_form_encoding(f2->value, fi, Currentbuf);
                 if (f2->type == FORM_INPUT_FILE)
                     form_write_from_file(body, fi->parent->boundary,
-                        conv_form_encoding(f2->name, fi,
-                            Currentbuf)
-                            ->ptr,
+                        conv_form_encoding(f2->name, fi, Currentbuf) ->ptr,
                         (*query)->ptr,
-                        Str_conv_to_system(f2->value)->ptr);
+                        Str_conv_to_system(f2->value->ptr, f2->value->length)->ptr);
                 else
                     form_write_data(body, fi->parent->boundary,
                         conv_form_encoding(f2->name, fi,
@@ -2473,15 +2468,13 @@ int checkBackBuffer(Buffer* buf)
     return FALSE;
 }
 
-void cmd_loadURL(char* url, ParsedURL* current, char* referer, FormList* request)
+void cmd_loadURL(const char* url, ParsedURL* current, char* referer, FormList* request)
 {
-    Buffer* buf;
-
     if (handleMailto(url))
         return;
 
     refresh();
-    buf = loadGeneralFile(url, current, referer, 0, request);
+    Buffer* buf = loadGeneralFile(url, current, referer, 0, request);
     if (buf == NULL) {
         /* FIXME: gettextize? */
         char* emsg = Sprintf("Can't load %s", conv_from_system(url))->ptr;
@@ -3049,7 +3042,7 @@ SigAlarm(SIGNAL_ARG)
 }
 
 AlarmEvent*
-setAlarmEvent(AlarmEvent* event, int sec, short status, int cmd, void* data)
+setAlarmEvent(AlarmEvent* event, int sec, short status, const char* cmd, void* data)
 {
     if (event == NULL)
         event = New(AlarmEvent);

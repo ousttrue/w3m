@@ -4,6 +4,10 @@
 #include "global.h"
 #include "fm.h"
 #include "proto.h"
+
+#include <libwc/ces.h>
+#include <libwc/charset.h>
+
 #include <math.h>
 
 MapList*
@@ -452,7 +456,7 @@ page_info_panel(Buffer* buf)
     struct frameset* f_set = NULL;
     int all;
     char *p, *q;
-    wc_ces_list* list;
+    struct wc_ces_list* list;
     char charset[16];
     Buffer* newbuf;
 

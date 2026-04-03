@@ -14,6 +14,8 @@
 #include "regex.h"
 #include "setjmp_util.h"
 
+#include "wc_util.h"
+
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -28,8 +30,6 @@
 #include <openssl/crypto.h> /* SSLEAY_VERSION_NUMBER may be here */
 #endif
 #include <openssl/err.h>
-
-
 
 /* see rc.c, "dns_order" and dnsorders[] */
 int ai_family_order_table[7][3] = {
@@ -392,7 +392,7 @@ openSSLHandle(int sock, char* hostname, char** p_cert)
             int ng = 1;
             if (SSL_CTX_use_certificate_file(ssl_ctx, ssl_cert_file, SSL_FILETYPE_PEM) > 0) {
                 const char* key_file = (ssl_key_file == NULL
-                                     || *ssl_key_file == '\0')
+                                           || *ssl_key_file == '\0')
                     ? ssl_cert_file
                     : ssl_key_file;
                 if (SSL_CTX_use_PrivateKey_file(ssl_ctx, key_file, SSL_FILETYPE_PEM) > 0)
@@ -465,7 +465,6 @@ SSL_write_from_file(SSL* ssl, char* file)
         fclose(fd);
     }
 }
-
 
 static void
 write_from_file(int sock, char* file)
@@ -628,12 +627,9 @@ copyPath(char* orgpath, int length, int option)
 
 void parseURL(const char* url, ParsedURL* p_url, ParsedURL* current)
 {
-    char *p, *q, *qq;
-    Str tmp;
-
     url = url_quote(url); /* quote 0x01-0x20, 0x7F-0xFF */
 
-    p = url;
+    const char* p = url;
     copyParsedURL(p_url, NULL);
     p_url->scheme = SCM_MISSING;
 
@@ -645,17 +641,11 @@ void parseURL(const char* url, ParsedURL* p_url, ParsedURL* current)
             copyParsedURL(p_url, current);
         goto do_label;
     }
-#if defined(__EMX__) || defined(__CYGWIN__)
-    if (!strncasecmp(url, "file://localhost/", 17)) {
-        p_url->scheme = SCM_LOCAL;
-        p += 17 - 1;
-        url += 17 - 1;
-    }
-#endif
     if (IS_ALPHA(*p) && (p[1] == ':' || p[1] == '|')) {
         p_url->scheme = SCM_LOCAL;
         goto analyze_file;
     }
+
     /* search for scheme */
     p_url->scheme = getURLScheme(&p);
     if (p_url->scheme == SCM_MISSING) {
@@ -714,9 +704,9 @@ void parseURL(const char* url, ParsedURL* p_url, ParsedURL* current)
     /* after here, p begins with // */
     if (p_url->scheme == SCM_LOCAL) { /* file://foo           */
         if (p[2] == '/' || p[2] == '~'
-        /* <A HREF="file:///foo">file:///foo</A>  or <A HREF="file://~user">file://~user</A> */
+            /* <A HREF="file:///foo">file:///foo</A>  or <A HREF="file://~user">file://~user</A> */
             || (IS_ALPHA(p[2]) && (p[3] == ':' || p[3] == '|'))
-        /* <A HREF="file://DRIVE/foo">file://DRIVE/foo</A> */
+            /* <A HREF="file://DRIVE/foo">file://DRIVE/foo</A> */
         ) {
             p += 2;
             goto analyze_file;
@@ -724,6 +714,10 @@ void parseURL(const char* url, ParsedURL* p_url, ParsedURL* current)
     }
     p += 2; /* scheme://foo         */
     /*          ^p is here  */
+
+    char *q, *qq;
+    Str tmp;
+
 analyze_url:
     q = p;
     if (*q == '[') { /* rfc2732,rfc2373 compliance */
@@ -802,7 +796,7 @@ analyze_file:
         if (IS_ALPHA(q[0]) && (q[1] == ':' || q[1] == '|')) {
             if (q[1] == '|') {
                 p = allocStr(q, -1);
-                p[1] = ':';
+                ((char*)p)[1] = ':';
             } else
                 p = q;
         }
@@ -834,8 +828,7 @@ analyze_file:
         while (*p)
             p++;
         p_url->file = copyPath(tmp->ptr, -1, COPYPATH_SPC_IGNORE);
-    } else
-    {
+    } else {
         char* cgi = strchr(p, '?');
     again:
         while (*p && *p != '#' && p != cgi)
@@ -961,12 +954,10 @@ void parseURL2(const char* url, ParsedURL* pu, ParsedURL* current)
         pu->host = current->host;
         pu->port = current->port;
         if (pu->file && *pu->file) {
-                if (
-                    pu->scheme != SCM_GOPHER &&
-                    pu->file[0] != '/'
-                    && !(pu->scheme == SCM_LOCAL && IS_ALPHA(pu->file[0])
-                        && pu->file[1] == ':')
-                ) {
+            if (
+                pu->scheme != SCM_GOPHER && pu->file[0] != '/'
+                && !(pu->scheme == SCM_LOCAL && IS_ALPHA(pu->file[0])
+                    && pu->file[1] == ':')) {
                 /* file is relative [process 1] */
                 p = pu->file;
                 if (current->file) {
@@ -980,8 +971,7 @@ void parseURL2(const char* url, ParsedURL* pu, ParsedURL* current)
                     pu->file = tmp->ptr;
                     relative_uri = TRUE;
                 }
-            }
-            else if (pu->scheme == SCM_GOPHER && pu->file[0] == '/') {
+            } else if (pu->scheme == SCM_GOPHER && pu->file[0] == '/') {
                 p = pu->file;
                 pu->file = allocStr(p + 1, -1);
             }
@@ -1005,10 +995,8 @@ void parseURL2(const char* url, ParsedURL* pu, ParsedURL* current)
                 Strcat_char(tmp, '/');
             Strcat_charp(tmp, file_unquote(pu->file));
             pu->file = file_quote(cleanupName(tmp->ptr));
-        }
-        else if (pu->scheme == SCM_HTTP
-            || pu->scheme == SCM_HTTPS
-        ) {
+        } else if (pu->scheme == SCM_HTTP
+            || pu->scheme == SCM_HTTPS) {
             if (relative_uri) {
                 /* In this case, pu->file is created by [process 1] above.
                  * pu->file may contain relative path (for example,
@@ -1020,8 +1008,7 @@ void parseURL2(const char* url, ParsedURL* pu, ParsedURL* current)
                 pu->file = cleanupName(pu->file);
             }
         } else if (
-            pu->scheme != SCM_GOPHER &&
-            pu->file[0] == '/') {
+            pu->scheme != SCM_GOPHER && pu->file[0] == '/') {
             /*
              * this happens on the following conditions:
              * (1) ftp scheme (2) local, looks like absolute path.
@@ -1031,7 +1018,7 @@ void parseURL2(const char* url, ParsedURL* pu, ParsedURL* current)
             pu->file = cleanupName(pu->file);
         }
         if (pu->scheme == SCM_LOCAL) {
-                pu->real_file = cleanupName(file_unquote(pu->file));
+            pu->real_file = cleanupName(file_unquote(pu->file));
         }
     }
 }
@@ -1088,8 +1075,7 @@ _parsedURL2Str(ParsedURL* pu, int pass, int user, int label)
         Strcat_charp(tmp, pu->file);
         return tmp;
     }
-    if (pu->scheme != SCM_NEWS && pu->scheme != SCM_NEWS_GROUP)
-    {
+    if (pu->scheme != SCM_NEWS && pu->scheme != SCM_NEWS_GROUP) {
         Strcat_charp(tmp, "//");
     }
     if (user && pu->user) {
@@ -1108,10 +1094,7 @@ _parsedURL2Str(ParsedURL* pu, int pass, int user, int label)
         }
     }
     if (
-        pu->scheme != SCM_NEWS && pu->scheme != SCM_NEWS_GROUP &&
-        (pu->file == NULL || (pu->file[0] != '/'
-             && !(IS_ALPHA(pu->file[0]) && pu->file[1] == ':' && pu->host == NULL)
-                 )))
+        pu->scheme != SCM_NEWS && pu->scheme != SCM_NEWS_GROUP && (pu->file == NULL || (pu->file[0] != '/' && !(IS_ALPHA(pu->file[0]) && pu->file[1] == ':' && pu->host == NULL))))
         Strcat_char(tmp, '/');
     Strcat_charp(tmp, pu->file);
     if (pu->scheme == SCM_FTPDIR && Strlastchar(tmp) != '/')
@@ -1231,8 +1214,7 @@ otherinfo(ParsedURL* target, ParsedURL* current, char* referer)
             cross_origin = TRUE;
         if (current && current->scheme == SCM_HTTPS && target->scheme != SCM_HTTPS) {
             /* Don't send Referer: if https:// -> http:// */
-        } else
-            if (referer == NULL && current && current->scheme != SCM_LOCAL && current->scheme != SCM_LOCAL_CGI && current->scheme != SCM_DATA && (current->scheme != SCM_FTP || (current->user == NULL && current->pass == NULL))) {
+        } else if (referer == NULL && current && current->scheme != SCM_LOCAL && current->scheme != SCM_LOCAL_CGI && current->scheme != SCM_DATA && (current->scheme != SCM_FTP || (current->user == NULL && current->pass == NULL))) {
             Strcat_charp(s, "Referer: ");
             if (cross_origin)
                 Strcat(s, parsedURL2RefererOriginStr(current));
@@ -1518,8 +1500,7 @@ retry:
         if (request && request->method == FORM_METHOD_HEAD)
             hr->command = HR_COMMAND_HEAD;
         if ((
-                (pu->scheme == SCM_HTTPS) ? non_null(HTTPS_proxy) :
-                                          non_null(HTTP_proxy))
+                (pu->scheme == SCM_HTTPS) ? non_null(HTTPS_proxy) : non_null(HTTP_proxy))
             && !Do_not_use_proxy && pu->host != NULL && !check_no_proxy(pu->host)) {
             hr->flag |= HR_FLAG_PROXY;
             if (pu->scheme == SCM_HTTPS && *status == HTST_CONNECT) {
@@ -1556,8 +1537,7 @@ retry:
                     tmp = HTTPrequest(pu, current, hr, extra_header);
                     *status = HTST_NORMAL;
                 }
-            } else
-            {
+            } else {
                 tmp = HTTPrequest(pu, current, hr, extra_header);
                 *status = HTST_NORMAL;
             }
@@ -1602,8 +1582,7 @@ retry:
                     write_from_file(sock, request->body);
             }
             return uf;
-        } else
-        {
+        } else {
             write(sock, tmp->ptr, tmp->length);
             if (w3m_reqlog) {
                 FILE* ff = fopen(w3m_reqlog, "a");
@@ -1783,8 +1762,6 @@ no_user_mimetypes:
     return guessContentTypeFromTable(DefaultGuess, filename);
 }
 
-
-
 static int
 domain_match(char* pat, char* domain)
 {
@@ -1902,7 +1879,6 @@ char* filename_extension(char* path, int is_url)
         return last_dot;
 }
 
-
 ParsedURL*
 schemeToProxy(int scheme)
 {
@@ -1974,4 +1950,3 @@ char* url_decode2(const char* url, const Buffer* buf)
     url_charset = buf ? url_to_charset(url, baseURL((Buffer*)buf), buf->document_charset) : url_to_charset(url, NULL, 0);
     return url_unquote_conv((char*)url, url_charset);
 }
-

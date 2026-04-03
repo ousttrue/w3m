@@ -1,8 +1,13 @@
+#include "search.h"
 #include "global.h"
+#include "wc_util.h"
 #include "buffer.h"
 #include "fm.h"
 #include "display.h"
 #include "regex.h"
+
+#include <libwc/wtf.h>
+
 #include <signal.h>
 #include <errno.h>
 #include <unistd.h>
@@ -16,10 +21,10 @@ set_mark(Line* l, int pos, int epos)
 
 
 /* normalize search string */
-char* conv_search_string(char* str, wc_ces f_ces)
+char* conv_search_string(const char* str, wc_ces f_ces)
 {
     if (SearchConv && !WcOption.pre_conv && Currentbuf->document_charset != f_ces)
-        str = wtf_conv_fit(str, Currentbuf->document_charset);
+        str = wtf_conv_fit(WcOption, str, Currentbuf->document_charset);
     return str;
 }
 

@@ -1,4 +1,5 @@
 #include "display.h"
+#include "wc_util.h"
 #include "mimehead.h"
 #include "mailcap.h"
 #include "maparea.h"
@@ -21,6 +22,9 @@
 #include "proto.h"
 #include "myctype.h"
 #include "setjmp_util.h"
+
+#include <libwc/charset.h>
+
 #include <sys/types.h>
 #include <signal.h>
 #include <sys/wait.h>
@@ -257,7 +261,7 @@ loadSomething(struct URLFile* f,
     return buf;
 }
 
-int dir_exist(char* path)
+int dir_exist(const char* path)
 {
     struct stat stbuf;
 
@@ -269,7 +273,7 @@ int dir_exist(char* path)
 }
 
 static int
-is_dump_text_type(char* type)
+is_dump_text_type(const char* type)
 {
     struct mailcap* mcap;
     return (type && (mcap = searchExtViewer(type)) && (mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)));
@@ -282,12 +286,12 @@ is_text_type(const char* type)
 }
 
 static int
-is_plain_text_type(char* type)
+is_plain_text_type(const char* type)
 {
     return ((type && strcasecmp(type, "text/plain") == 0) || (is_text_type(type) && !is_dump_text_type(type)));
 }
 
-int is_html_type(char* type)
+int is_html_type(const char* type)
 {
     return (type && (strcasecmp(type, "text/html") == 0 || strcasecmp(type, "application/xhtml+xml") == 0));
 }
@@ -474,7 +478,7 @@ char* acceptableEncoding(void)
 Str convertLine(struct URLFile* uf, Str line, int mode, wc_ces* charset,
     wc_ces doc_charset)
 {
-    line = wc_Str_conv_with_detect(line, charset, doc_charset, InnerCharset);
+    line = Strnew_wc_output(wc_Str_conv_with_detect(WcOption, line->ptr, line->length, charset, doc_charset, InnerCharset));
     if (mode != RAW_MODE)
         cleanup_line(line, mode);
     if (uf && uf->scheme == SCM_NEWS)
@@ -482,7 +486,7 @@ Str convertLine(struct URLFile* uf, Str line, int mode, wc_ces* charset,
     return line;
 }
 
-int matchattr(char* p, char* attr, int len, Str* value)
+int matchattr(const char* p, const char* attr, int len, Str* value)
 {
     int quoted;
     char* q = NULL;
@@ -1432,21 +1436,21 @@ getAuthCookie(struct http_auth* hauth, char* auth_header,
         /* input username and password */
         sleep(2);
         if (fmInitialized) {
-            char* pp;
+            const char* pp;
             term_raw();
             /* FIXME: gettextize? */
             if ((pp = inputStr(Sprintf("Username for %s: ", realm)->ptr,
                      NULL))
                 == NULL)
                 return;
-            *uname = Str_conv_to_system(Strnew_charp(pp));
+            *uname = Strnew_charp(Str_conv_to_system(pp, strlen(pp)));
             if ((pp = inputLine(Sprintf("Password for %s: ", realm)->ptr, NULL,
                      IN_PASSWORD))
                 == NULL) {
                 *uname = NULL;
                 return;
             }
-            *pwd = Str_conv_to_system(Strnew_charp(pp));
+            *pwd = Strnew_charp(Str_conv_to_system(pp, strlen(pp)));
             term_cbreak();
         } else {
             /*
@@ -1893,8 +1897,7 @@ page_loaded:
         tmp = tmpfname(TMPF_SRC, ".html");
         src = fopen(tmp->ptr, "w");
         if (src) {
-            Str s;
-            s = wc_Str_conv_strict(page, InnerCharset, charset);
+            Str s = Strnew_wc_output(wc_Str_conv_strict(WcOption, page->ptr, page->length, InnerCharset, charset));
             Strfputs(s, src);
             fclose(src);
         }
@@ -2638,7 +2641,7 @@ void flushline(struct html_feed_environ* h_env, struct readbuffer* obuf, int ind
         if (buf)
             pushTextLine(buf, lbuf);
         else if (f) {
-            Strfputs(Str_conv_to_halfdump(lbuf->line), f);
+            Strfputs(Str_conv_to_halfdump(WcOption, lbuf->line), f);
             fputc('\n', f);
         }
         if (obuf->flag & RB_SPECIAL || obuf->flag & RB_NFLUSHED)
@@ -3159,7 +3162,7 @@ Str process_img(struct parsed_tag* tag, int width)
     if (q != NULL && *q == '\0' && ignore_null_img_alt)
         q = NULL;
     if (q != NULL) {
-        n = get_strwidth(q);
+        n = get_strwidth(WcOption, q);
         if (use_image) {
             if (n > nw) {
                 char* r;
@@ -3324,7 +3327,7 @@ Str process_input(struct parsed_tag* tag)
         q = NULL;
     if (q) {
         qq = html_quote(q);
-        qlen = get_strwidth(q);
+        qlen = get_strwidth(WcOption, q);
     }
 
     Strcat_charp(tmp, "<pre_int>");
@@ -4454,7 +4457,7 @@ int HTMLtagproc1(struct parsed_tag* tag, struct html_feed_environ* h_env)
             push_tag(obuf, Sprintf("<a hseq=\"%d\" href=\"%s\">", cur_hseq++, q)->ptr, HTML_A);
             if (r)
                 q = html_quote(r);
-            push_charp(obuf, get_strwidth(q), q, PC_ASCII);
+            push_charp(obuf, get_strwidth(WcOption, q), q, PC_ASCII);
             push_tag(obuf, "</a>", HTML_N_A);
         }
         flushline(h_env, obuf, envs[h_env->envc].indent, 0, h_env->limit);
@@ -5613,7 +5616,6 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                         parseURL2(p, buf->baseURL, &buf->currentURL);
 
                         base = buf->baseURL;
-
                     }
                     if (parsedtag_get_value(tag, ATTR_TARGET, &p))
                         buf->baseTarget = url_quote_conv(p, buf->document_charset);
@@ -5836,7 +5838,7 @@ proc_escape(struct readbuffer* obuf, char** str_return)
 
     estr = conv_entity(ech);
     check_breakpoint(obuf, obuf->flag & RB_SPECIAL, estr);
-    width = get_strwidth(estr);
+    width = get_strwidth(WcOption, estr);
     if (width == 1 && ech == (unsigned char)*estr && ech != '&' && ech != '<' && ech != '>') {
         if (IS_CNTRL(ech))
             mode = PC_CTRL;
@@ -6620,7 +6622,7 @@ print_internal_information(struct html_feed_environ* henv)
     else if (henv->f) {
         TextLineListItem* p;
         for (p = tl->first; p; p = p->next)
-            fprintf(henv->f, "%s\n", Str_conv_to_halfdump(p->ptr->line)->ptr);
+            fprintf(henv->f, "%s\n", Str_conv_to_halfdump(WcOption, p->ptr->line)->ptr);
     }
 }
 
@@ -6686,7 +6688,6 @@ void loadHTMLstream(struct URLFile* f, Buffer* newBuf, FILE* src, int internal)
         htmlenv1.buf = newTextLineList();
 
     cur_baseURL = baseURL(newBuf);
-
 
     if (SETJMP(AbortLoading) != 0) {
         HTMLlineproc1("<br>Transfer Interrupted!<br>", &htmlenv1);
@@ -7151,7 +7152,7 @@ pager_next:
             tmp = conv_symbol(l);
         else
             tmp = Strnew_charp_n(l->lineBuf, l->len);
-        tmp = wc_Str_conv(tmp, InnerCharset, charset);
+        tmp = Strnew_wc_output(wc_Str_conv(WcOption, tmp->ptr, tmp->length, InnerCharset, charset));
         Strfputs(tmp, f);
         if (Strlastchar(tmp) != '\n' && !(cont && l->next && l->next->bpos))
             putc('\n', f);
@@ -7439,7 +7440,7 @@ pager_end:
     return last;
 }
 
-int save2tmp(struct URLFile uf, char* tmpf)
+int save2tmp(struct URLFile uf, const char* tmpf)
 {
     FILE* ff;
     int64_t linelen = 0, trbyte = 0;
@@ -7502,7 +7503,7 @@ _end:
 }
 
 Buffer*
-doExternal(struct URLFile uf, char* type, Buffer* defaultbuf)
+doExternal(struct URLFile uf, const char* type, Buffer* defaultbuf)
 {
     Str tmpf, command;
     struct mailcap* mcap;

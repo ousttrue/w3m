@@ -1,4 +1,7 @@
+#include "local.h"
+#include "hash.h"
 #include "fm.h"
+#include "wc_util.h"
 #include "global.h"
 #include "etc.h"
 #include <string.h>
@@ -9,8 +12,6 @@
 #include <signal.h>
 #include <errno.h>
 #include <unistd.h>
-#include "local.h"
-#include "hash.h"
 
 #define CGIFN_NORMAL 0
 #define CGIFN_LIBDIR 1
@@ -72,7 +73,7 @@ Str loadLocalDir(char* dname)
     dirname = Strnew_charp(dname);
     if (Strlastchar(dirname) != '/')
         Strcat_char(dirname, '/');
-    qdir = html_quote(Str_conv_from_system(dirname)->ptr);
+    qdir = html_quote(Str_conv_from_system(dirname->ptr, dirname->length)->ptr);
     /* FIXME: gettextize? */
     tmp = Strnew_m_charp("<HTML>\n<HEAD>\n<BASE HREF=\"file://",
         html_quote(file_quote(dirname->ptr)),

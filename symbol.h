@@ -1,5 +1,6 @@
 #pragma once
-#include <wc.h>
+#include <libwc/wc_types.h>
+#include "Str.h"
 
 #define N_GRAPH_SYMBOL 32
 #define N_SYMBOL (N_GRAPH_SYMBOL + 14)

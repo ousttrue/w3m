@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "wc_util.h"
 #include "url.h"
 #include "etc.h"
 #include "display.h"

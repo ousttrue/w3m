@@ -5,6 +5,10 @@
 #include "terms.h"
 #include "fm.h"
 #include "proto.h"
+
+#include "wc_util.h"
+#include <libwc/charset.h>
+
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
@@ -76,8 +80,7 @@ print_headers(Buffer* buf, int len)
         printf("w3m-base-url: %s\n", parsedURL2Str(buf->baseURL)->ptr);
     printf("w3m-content-type: %s\n", buf->type);
     if (buf->document_charset)
-        printf("w3m-content-charset: %s\n",
-            wc_ces_to_charset(buf->document_charset));
+        printf("w3m-content-charset: %s\n", wc_ces_to_charset(buf->document_charset));
     if (len > 0)
         printf("w3m-content-length: %d\n", len);
 }
@@ -97,7 +100,7 @@ internal_get(char* url, int flag, FormList* request)
             Str first, last;
             int len = 0;
             for (p = backend_halfdump_buf->first; p; p = p->next) {
-                p->ptr->line = Str_conv_to_halfdump(p->ptr->line);
+                p->ptr->line = Str_conv_to_halfdump(WcOption, p->ptr->line);
                 len += p->ptr->line->length + 1;
             }
             first = Strnew_charp("<pre>\n");

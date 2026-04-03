@@ -15,8 +15,6 @@
 #include "html.h"
 #include <gc.h>
 #include "Str.h"
-#include "wc.h"
-#include "wtf.h"
 #include "form.h"
 #include "frame.h"
 #include "parsetag.h"
@@ -65,47 +63,6 @@
 /*
  * Line Property
  */
-
-#define P_CHARTYPE 0x3f00
-#define PC_ASCII (WTF_TYPE_ASCII << 8)
-#define PC_CTRL (WTF_TYPE_CTRL << 8)
-#define PC_WCHAR1 (WTF_TYPE_WCHAR1 << 8)
-#define PC_WCHAR2 (WTF_TYPE_WCHAR2 << 8)
-#define PC_KANJI (WTF_TYPE_WIDE << 8)
-#define PC_KANJI1 (PC_WCHAR1 | PC_KANJI)
-#define PC_KANJI2 (PC_WCHAR2 | PC_KANJI)
-#define PC_UNKNOWN (WTF_TYPE_UNKNOWN << 8)
-#define PC_UNDEF (WTF_TYPE_UNDEF << 8)
-#define PC_SYMBOL 0x8000
-
-/* Effect ( standout/underline ) */
-#define P_EFFECT 0x40ff
-#define PE_NORMAL 0x00
-#define PE_MARK 0x01
-#define PE_UNDER 0x02
-#define PE_STAND 0x04
-#define PE_BOLD 0x08
-#define PE_ANCHOR 0x10
-#define PE_EMPH 0x08
-#define PE_IMAGE 0x20
-#define PE_FORM 0x40
-#define PE_ACTIVE 0x80
-#define PE_VISITED 0x4000
-
-/* Extra effect */
-#define PE_EX_ITALIC 0x01
-#define PE_EX_INSERT 0x02
-#define PE_EX_STRIKE 0x04
-
-#define PE_EX_ITALIC_E PE_UNDER
-#define PE_EX_INSERT_E PE_UNDER
-#define PE_EX_STRIKE_E PE_STAND
-
-#define CharType(c) ((c) & P_CHARTYPE)
-#define CharEffect(c) ((c) & (P_EFFECT | PC_SYMBOL))
-#define SetCharType(v, c) ((v) = (((v) & ~P_CHARTYPE) | (c)))
-
-#define COLPOS(l, c) calcPosition(l->lineBuf, l->propBuf, l->len, c, 0, CP_AUTO)
 
 /* Buffer Property */
 #define BP_NORMAL 0x0
@@ -740,13 +697,6 @@ global wc_ces DocumentCharset init(DOCUMENT_CHARSET);
 global wc_ces SystemCharset init(SYSTEM_CHARSET);
 global wc_ces BookmarkCharset init(SYSTEM_CHARSET);
 
-#define Str_conv_from_system(x) wc_Str_conv((x), SystemCharset, InnerCharset)
-#define Str_conv_to_system(x) wc_Str_conv_strict((x), InnerCharset, SystemCharset)
-#define Str_conv_to_halfdump(x) (ExtHalfdump ? wc_Str_conv((x), InnerCharset, DisplayCharset) : (x))
-#define conv_from_system(x) wc_conv((x), SystemCharset, InnerCharset)->ptr
-#define conv_to_system(x) wc_conv_strict((x), InnerCharset, SystemCharset)->ptr
-#define url_quote_conv(x, c) url_quote(wc_conv_strict((x), InnerCharset, (c))->ptr)
-
 global TextList* Cookie_reject_domains;
 global TextList* Cookie_accept_domains;
 global TextList* Cookie_avoid_wrong_number_of_dots_domains;
@@ -756,12 +706,6 @@ global char* ssl_cipher init("DEFAULT:!LOW:!RC4:!EXP");
 #else
 global char* ssl_cipher init(NULL);
 #endif
-
-#define get_mctype(c) ((Lineprop)wtf_type((wc_uchar*)(c)) << 8)
-#define get_mclen(c) wtf_len1((wc_uchar*)(c))
-#define get_mcwidth(c) wtf_width((wc_uchar*)(c))
-#define get_strwidth(c) wtf_strwidth((wc_uchar*)(c))
-#define get_Str_strwidth(c) wtf_strwidth((wc_uchar*)((c)->ptr))
 
 global TextLineList* backend_halfdump_buf;
 global TextList* backend_batch_commands init(NULL);

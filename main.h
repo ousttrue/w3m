@@ -45,7 +45,7 @@ void pushBuffer(Buffer* buf);
 void cmd_loadfile(char* fn);
 struct _ParsedURL;
 struct form_list;
-void cmd_loadURL(char* url, struct _ParsedURL* current, char* referer, struct form_list* request);
+void cmd_loadURL(const char* url, struct _ParsedURL* current, char* referer, struct form_list* request);
 void _movL(int n);
 void _movD(int n);
 void _movU(int n);

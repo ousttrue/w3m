@@ -1,0 +1,15 @@
+.{
+    .name = .libwc,
+    .version = "0.0.1",
+    .dependencies = .{
+        .zcc = .{
+            .path = "../zcc",
+        },
+        .gcstr = .{
+            .path = "../gcstr",
+        },
+    },
+    .minimum_zig_version = "0.16.0-dev.3013+abd131e33",
+    .paths = .{""},
+    .fingerprint = 0x23581545eef425d8,
+}

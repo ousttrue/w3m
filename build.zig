@@ -6,6 +6,7 @@ const system_libs = [_][]const u8{
 };
 
 const w3m_srcs = [_][]const u8{
+    "wc_util.c",
     "keybind_mod.c",
     // "keybind.c",
     "defun_impl.c",
@@ -17,7 +18,7 @@ const w3m_srcs = [_][]const u8{
     "display.c",
     "etc.c",
     "search.c",
-    "linein.c",
+    "line_input.c",
     "table.c",
     "local.c",
     "form.c",
@@ -52,33 +53,13 @@ const w3m_srcs = [_][]const u8{
     "myctype.c",
     "hash.c",
 };
-
-const libwc_srcs = [_][]const u8{
-    "big5.c",
-    "ces.c",
-    "char_conv.c",
-    "charset.c",
-    "combining.c",
-    "conv.c",
-    "detect.c",
-    "gb18030.c",
-    "gbk.c",
-    "hkscs.c",
-    "hz.c",
-    "iso2022.c",
-    "jis.c",
-    "johab.c",
-    "priv.c",
-    "putc.c",
-    "search.c",
-    "sjis.c",
-    "status.c",
-    "ucs.c",
-    "uhc.c",
-    "utf7.c",
-    "utf8.c",
-    "viet.c",
-    "wtf.c",
+const flags = [_][]const u8{
+    "-DOPENSSL_API_COMPAT=0x010101000L",
+    // "-Wno-implicit-int",
+    // "-Wno-int-conversion",
+    // "-DHAVE_CONFIG_H",
+    // "-Wall",
+    "-std=c23",
 };
 
 pub fn build(b: *std.Build) void {
@@ -101,7 +82,6 @@ pub fn build(b: *std.Build) void {
     });
     targets.append(b.allocator, exe) catch @panic("OOM");
     b.installArtifact(exe);
-    exe.root_module.addIncludePath(b.path("libwc"));
     exe.root_module.addIncludePath(b.path("."));
 
     const defun_mod = b.addModule("defun", .{
@@ -131,56 +111,21 @@ pub fn build(b: *std.Build) void {
     // exe.root_module.addIncludePath(w3m_lib.getEmittedIncludeTree());
     // exe.root_module.linkLibrary(w3m_lib);
 
-    const flags = [_][]const u8{
-        "-DOPENSSL_API_COMPAT=0x010101000L",
-        "-Wno-implicit-int",
-        "-Wno-int-conversion",
-        "-DHAVE_CONFIG_H",
-    };
     exe.root_module.addCSourceFiles(.{
         .files = &w3m_srcs,
         .flags = &flags,
     });
-    exe.root_module.addCSourceFiles(.{
-        .root = b.path("libwc"),
-        .files = &libwc_srcs,
-        .flags = &.{
-            "-DHAVE_CONFIG_H",
-            "-DUSE_UNICODE",
-        },
+
+    const wc_dep = b.dependency("wc", .{
+        .target = target,
+        .optimize = optimize,
     });
+    const libwc = wc_dep.artifact("wc");
+    exe.root_module.linkLibrary(libwc);
+
     for (system_libs) |lib| {
         exe.root_module.linkSystemLibrary(lib, .{});
     }
-
-    // const wf = gen_functable(b);
-    // {
-    //     const install = b.addInstallDirectory(.{
-    //         .source_dir = wf.getDirectory(),
-    //         .install_dir = .header,
-    //         .install_subdir = "",
-    //     });
-    //     b.getInstallStep().dependOn(&install.step);
-    //
-    //     exe.step.dependOn(&install.step);
-    //     exe.root_module.addIncludePath(b.path("zig-out/include"));
-    // }
-
-    // {
-    //     const mktable = build_mktable(b, b.graph.host, .ReleaseSafe, &.{"gc"});
-    //     // {
-    //     //     b.installArtifact(mktable);
-    //     // }
-    //     var run_mktable = b.addRunArtifact(mktable);
-    //     run_mktable.setCwd(wf.getDirectory());
-    //     run_mktable.addArg("100");
-    //     // run_mktable.addFileArg(functable_tab.output);
-    //     run_mktable.addArg("functable.tab");
-    //     const install = b.addInstallFile(run_mktable.captureStdOut(.{}), "include/functable.c");
-    //     b.getInstallStep().dependOn(&install.step);
-    //
-    //     exe.step.dependOn(&install.step);
-    // }
 
     const cdb = zcc.createStep(b, targets.toOwnedSlice(b.allocator) catch @panic("OOM"));
     b.getInstallStep().dependOn(&cdb.step);

@@ -1,6 +1,6 @@
 #pragma once
 #include "Str.h"
-#include <wc.h>
+#include <libwc/ces.h>
 
 typedef struct _Buffer Buffer;
 

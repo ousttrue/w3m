@@ -1,4 +1,5 @@
 #include "etc.h"
+#include "wc_util.h"
 #include "display.h"
 #include "fm.h"
 #include "proto.h"
@@ -442,7 +443,7 @@ nextColumn(int n, char* p, Lineprop* pr)
     }
     if (*pr & PC_UNKNOWN)
         return n + 4;
-    return n + wtf_width((wc_uchar*)p);
+    return n + wtf_width(WcOption, *(const wc_uchar*)p);
 }
 
 int calcPosition(char* l, Lineprop* pr, int len, int pos, int bpos, int mode)
@@ -1332,10 +1333,8 @@ void mySystem(char* command, int background)
 Str myExtCommand(const char* cmd, const char* arg, int redirect)
 {
     Str tmp = NULL;
-    char* p;
     int set_arg = FALSE;
-
-    for (p = cmd; *p; p++) {
+    for (const char*p = cmd; *p; p++) {
         if (*p == '%' && *(p + 1) == 's' && !set_arg) {
             if (tmp == NULL)
                 tmp = Strnew_charp_n(cmd, (int)(p - cmd));
@@ -1359,10 +1358,8 @@ Str myExtCommand(const char* cmd, const char* arg, int redirect)
 Str myEditor(const char* cmd, const char* file, int line)
 {
     Str tmp = NULL;
-    char* p;
     int set_file = FALSE, set_line = FALSE;
-
-    for (p = cmd; *p; p++) {
+    for (const char*p = cmd; *p; p++) {
         if (*p == '%' && *(p + 1) == 's' && !set_file) {
             if (tmp == NULL)
                 tmp = Strnew_charp_n(cmd, (int)(p - cmd));
@@ -1485,9 +1482,7 @@ static unsigned int tmpf_seq[MAX_TMPF_TYPE];
 
 Str tmpfname(int type, const char* ext)
 {
-    Str tmpf;
-    char* dir;
-
+    const char* dir;
     switch (type) {
     case TMPF_HIST:
         dir = rc_dir;
@@ -1501,7 +1496,7 @@ Str tmpfname(int type, const char* ext)
         dir = tmp_dir;
     }
 
-    tmpf = Sprintf("%s/w3m%s%d-%d%s",
+    Str tmpf = Sprintf("%s/w3m%s%d-%d%s",
         dir,
         tmpf_base[type],
         CurrentPid, tmpf_seq[type]++, (ext) ? ext : "");
@@ -1515,11 +1510,11 @@ static char* monthtbl[] = {
 };
 
 static int
-get_day(char** s)
+get_day(const char** s)
 {
     Str tmp = Strnew();
     int day;
-    char* ss = *s;
+    const char* ss = *s;
 
     if (!**s)
         return -1;
@@ -1537,11 +1532,11 @@ get_day(char** s)
 }
 
 static int
-get_month(char** s)
+get_month(const char** s)
 {
     Str tmp = Strnew();
     int mon;
-    char* ss = *s;
+    const char* ss = *s;
 
     if (!**s)
         return -1;
@@ -1566,11 +1561,11 @@ get_month(char** s)
 }
 
 static int
-get_year(char** s)
+get_year(const char** s)
 {
     Str tmp = Strnew();
     int year;
-    char* ss = *s;
+    const char* ss = *s;
 
     if (!**s)
         return -1;
@@ -1593,10 +1588,10 @@ get_year(char** s)
 }
 
 static int
-get_time(char** s, int* hour, int* min, int* sec)
+get_time(const char** s, int* hour, int* min, int* sec)
 {
     Str tmp = Strnew();
-    char* ss = *s;
+    const char* ss = *s;
 
     if (!**s)
         return -1;
@@ -1633,11 +1628,11 @@ get_time(char** s, int* hour, int* min, int* sec)
 }
 
 static int
-get_zone(char** s, int* z_hour, int* z_min)
+get_zone(const char** s, int* z_hour, int* z_min)
 {
     Str tmp = Strnew();
     int zone;
-    char* ss = *s;
+    const char* ss = *s;
 
     if (!**s)
         return -1;

@@ -11,6 +11,8 @@
 #include "line_input.h"
 #include "setjmp_util.h"
 
+#include "wc_util.h"
+
 #include <malloc.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -379,7 +381,7 @@ openFTPStream(ParsedURL* pu, struct URLFile* uf)
             if (fmInitialized) {
                 term_raw();
                 pwd = Strnew_charp(inputLine("Password: ", NULL, IN_PASSWORD));
-                pwd = Str_conv_to_system(pwd);
+                pwd = Strnew_charp(Str_conv_to_system(pwd->ptr, pwd->length));
                 term_cbreak();
             } else {
                 pwd = Strnew_charp((char*)getpass("Password: "));

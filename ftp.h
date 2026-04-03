@@ -1,6 +1,6 @@
 #pragma once
 #include "Str.h"
-#include <wc.h>
+#include <libwc/wc_types.h>
 
 typedef union input_stream* InputStream;
 struct _ParsedURL;

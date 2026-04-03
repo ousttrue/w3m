@@ -12,6 +12,9 @@
 #include "proto.h"
 #include "myctype.h"
 
+#include "wc_util.h"
+#include <libwc/putc.h>
+
 #include <stdio.h>
 #include <signal.h>
 #include <sys/types.h>
@@ -1118,6 +1121,11 @@ int initscr(void)
     return 0;
 }
 
+static void writer(const wc_uchar* str, size_t len)
+{
+    fwrite(str, 1, len, ttyf);
+}
+
 static int
 write1(char c)
 {
@@ -1168,7 +1176,7 @@ void addmch(char* pc, size_t len)
     static Str tmp = NULL;
     char** p;
     char c = *pc;
-    int width = wtf_width((wc_uchar*)pc);
+    int width = wtf_width(WcOption, *(const wc_uchar*)pc);
 
     if (tmp == NULL)
         tmp = Strnew();
@@ -1419,7 +1427,7 @@ void refresh(void)
     l_prop bcolor = COL_BTERM;
     short* dirty;
 
-    wc_putc_init(InnerCharset, DisplayCharset);
+    wc_putc_init(WcOption, InnerCharset, DisplayCharset);
     for (line = 0; line <= LASTLINE; line++) {
         dirty = &ScreenImage[line]->isdirty;
         if (*dirty & L_DIRTY) {
@@ -1526,7 +1534,7 @@ void refresh(void)
                         writestr(bcolor_seq(bcolor));
                     }
                     if ((pr[col] & S_GRAPHICS) && !(mode & S_GRAPHICS)) {
-                        wc_putc_end(ttyf);
+                        wc_putc_end(&writer);
                         if (!graph_enabled) {
                             graph_enabled = 1;
                             writestr(T_eA);
@@ -1537,7 +1545,7 @@ void refresh(void)
                     if (pr[col] & S_GRAPHICS)
                         write1(graphchar(*pc[col]));
                     else if (CHMODE(pr[col]) != C_WCHAR2)
-                        wc_putc(pc[col], ttyf);
+                        wc_putc(WcOption, pc[col], &writer);
                     pcol = col + 1;
                 }
             }
@@ -1558,7 +1566,7 @@ void refresh(void)
             mode &= ~M_MEND;
         }
     }
-    wc_putc_end(ttyf);
+    wc_putc_end(writer);
     MOVE(CurLine, CurColumn);
     flush_tty();
 }
@@ -1666,10 +1674,10 @@ void addnstr(char* s, int n)
     int len, width;
 
     for (i = 0; *s != '\0';) {
-        width = wtf_width((wc_uchar*)s);
+        width = wtf_width(WcOption, *(const wc_uchar*)s);
         if (i + width > n)
             break;
-        len = wtf_len((wc_uchar*)s);
+        len = wtf_len((const wc_uchar*)s);
         addmch(s, len);
         s += len;
         i += width;
@@ -1682,10 +1690,10 @@ void addnstr_sup(char* s, int n)
     int len, width;
 
     for (i = 0; *s != '\0';) {
-        width = wtf_width((wc_uchar*)s);
+        width = wtf_width(WcOption, *(const wc_uchar*)s);
         if (i + width > n)
             break;
-        len = wtf_len((wc_uchar*)s);
+        len = wtf_len((const wc_uchar*)s);
         addmch(s, len);
         s += len;
         i += width;

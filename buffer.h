@@ -30,7 +30,7 @@ typedef union input_stream* InputStream;
 extern Buffer* openPagerBuffer(InputStream stream, Buffer* buf);
 extern Buffer* openGeneralPagerBuffer(InputStream stream);
 extern struct _Line* getNextPage(Buffer* buf, int plen);
-extern Buffer* doExternal(struct URLFile uf, char* type, Buffer* defaultbuf);
+extern Buffer* doExternal(struct URLFile uf, const char* type, Buffer* defaultbuf);
 extern void cursorUp0(Buffer* buf, int n);
 extern void cursorUp(Buffer* buf, int n);
 extern void cursorDown0(Buffer* buf, int n);
