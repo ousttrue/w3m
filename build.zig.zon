@@ -6,6 +6,9 @@
             .url = "git+https://github.com/ousttrue/zig-compile-commands.git",
             .hash = "zig_compile_commands-0.0.1-OZg5-W7CAAD0eS5Z8YOyhveKnNjUdQvncShnVD31bRn6",
         },
+        .w3m = .{
+            .path = "./w3m",
+        },
     },
     .paths = .{""},
     .fingerprint = 0x6997df12af4d1950,

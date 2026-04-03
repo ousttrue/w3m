@@ -124,6 +124,7 @@ pub fn build(b: *std.Build) void {
         .name = "w3m",
         .root_module = mod,
         .use_llvm = true,
+        .use_lld = true,
     });
     targets.append(b.allocator, exe) catch @panic("OOM");
     b.installArtifact(exe);
@@ -142,6 +143,20 @@ pub fn build(b: *std.Build) void {
         .root_module = defun_mod,
     });
     exe.root_module.linkLibrary(defun_lib);
+
+    const w3m_dep = b.dependency("w3m", .{
+        .target = target,
+        .optimize = optimize,
+    });
+    const gen_run = b.addRunArtifact(w3m_dep.artifact("global_gen"));
+    exe.step.dependOn(&gen_run.step);
+    exe.root_module.addIncludePath(b.path("."));
+    exe.root_module.addIncludePath(b.path("w3m"));
+
+    const w3m_lib = w3m_dep.artifact("w3m");
+    exe.root_module.addImport("w3m", w3m_lib.root_module);
+    // exe.root_module.addIncludePath(w3m_lib.getEmittedIncludeTree());
+    // exe.root_module.linkLibrary(w3m_lib);
 
     const flags = [_][]const u8{
         "-DOPENSSL_API_COMPAT=0x010101000L",

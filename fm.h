@@ -39,7 +39,6 @@
  * Constants.
  */
 #define LINELEN 256 /* Initial line length */
-#define PAGER_MAX_LINE 10000 /* Maximum line kept as pager */
 
 #define MAXIMUM_COLS 1024
 #define DEFAULT_COLS 80
@@ -63,14 +62,7 @@
 #define FALSE 0
 #define TRUE 1
 
-#define SHELLBUFFERNAME "*Shellout*"
 #define PIPEBUFFERNAME "*stream*"
-#define CPIPEBUFFERNAME "*stream(closed)*"
-#define DICTBUFFERNAME "*dictionary*"
-
-#ifndef HOST_NAME_MAX
-#define HOST_NAME_MAX 255
-#endif
 
 /*
  * Line Property
@@ -721,11 +713,6 @@ extern int LASTLINE;
 #else /* not defined(__CYGWIN__) */
 #define LASTLINE (LINES - 1)
 #endif /* not defined(__CYGWIN__) */
-
-global int Tabstop init(8);
-global int IndentIncr init(4);
-global int ShowEffect init(TRUE);
-global int PagerMax init(PAGER_MAX_LINE);
 
 global char SearchHeader init(FALSE);
 global char* DefaultType init(NULL);

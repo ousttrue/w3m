@@ -1,5 +1,6 @@
 #include "display.h"
 #include "history.h"
+#include "global.h"
 #include "line_input.h"
 #include "fm.h"
 #include "myctype.h"
@@ -7184,6 +7185,7 @@ loadcmdout(char* cmd,
 /*
  * getshell: execute shell command and get the result into a buffer
  */
+#define SHELLBUFFERNAME "*Shellout*"
 Buffer*
 getshell(char* cmd)
 {
@@ -7306,6 +7308,7 @@ openGeneralPagerBuffer(InputStream stream)
     return buf;
 }
 
+#define CPIPEBUFFERNAME "*stream(closed)*"
 Line* getNextPage(Buffer* buf, int plen)
 {
     Line* volatile top = buf->topLine, * volatile last = buf->lastLine, * volatile cur = buf->currentLine;

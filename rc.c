@@ -1,4 +1,5 @@
 #include "fm.h"
+#include "global.h"
 #include "history.h"
 #include "myctype.h"
 #include "defun_impl.h"

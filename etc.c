@@ -1,5 +1,6 @@
 #include "etc.h"
 #include "fm.h"
+#include "global.h"
 #include <pwd.h>
 #include "myctype.h"
 #include "html.h"

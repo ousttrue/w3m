@@ -1,6 +1,7 @@
 /* $Id: main.c,v 1.270 2010/08/24 10:11:51 htrb Exp $ */
 #define MAINPROGRAM
 #include "main.h"
+#include "global.h"
 #include "history.h"
 #include "line_input.h"
 #include "terms.h"
@@ -2857,6 +2858,7 @@ char* GetWord(Buffer* buf)
     return NULL;
 }
 
+#define DICTBUFFERNAME "*dictionary*"
 void execdict(char* word)
 {
     char *w, *dictcmd;
