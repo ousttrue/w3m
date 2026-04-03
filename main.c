@@ -2568,7 +2568,6 @@ void cmd_loadBuffer(Buffer* buf, int prop, int linkid)
 void follow_map(struct parsed_tagarg* arg)
 {
     char* name = tag_get_value(arg, "link");
-#if defined(MENU_MAP) || defined(USE_IMAGE)
     Anchor* an;
     MapArea* a;
     int x, y;
@@ -2579,8 +2578,6 @@ void follow_map(struct parsed_tagarg* arg)
     y = Currentbuf->cursorY + Currentbuf->rootY;
     a = follow_map_menu(Currentbuf, name, an, x, y);
     if (a == NULL || a->url == NULL || *(a->url) == '\0') {
-#endif
-#if defined(MENU_MAP) || defined(USE_IMAGE)
         return;
     }
     if (*(a->url) == '#') {
@@ -2605,7 +2602,6 @@ void follow_map(struct parsed_tagarg* arg)
     }
     cmd_loadURL(a->url, baseURL(Currentbuf),
         parsedURL2Str(&Currentbuf->currentURL)->ptr, NULL);
-#endif
 }
 
 void anchorMn(Anchor* (*menu_func)(Buffer*), int go)

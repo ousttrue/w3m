@@ -1,4 +1,3 @@
-/* $Id: fm.h,v 1.149 2010/08/20 09:47:09 htrb Exp $ */
 /*
  * w3m: WWW wo Miru utility
  *
@@ -6,17 +5,11 @@
  *
  * You can use,copy,modify and distribute this program without any permission.
  */
-
-#ifndef FM_H
-#define FM_H
-
+#pragma once
 #define W3M_LANG EN
 #define LANG W3M_LANG
 
 #include "config.h"
-
-#define MENU_SELECT
-#define MENU_MAP
 
 #include "ctrlcode.h"
 #include "html.h"
@@ -24,19 +17,6 @@
 #include "Str.h"
 #include "wc.h"
 #include "wtf.h"
-
-#ifdef HAVE_LOCALE_H
-#include <locale.h>
-#endif
-
-#undef bindtextdomain
-#define bindtextdomain(Domain, Directory) /* empty */
-#undef textdomain
-#define textdomain(Domain) /* empty */
-#define _(Text) Text
-#define N_(Text) Text
-#define gettext(Text) Text
-
 #include "form.h"
 #include "frame.h"
 #include "parsetag.h"
@@ -1081,5 +1061,3 @@ void w3m_exit(int i);
 
 #include "table.h"
 #include "proto.h"
-
-#endif /* not FM_H */

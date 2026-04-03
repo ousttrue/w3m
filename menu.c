@@ -636,28 +636,28 @@ static int MainMenuEncode = FALSE;
 
 static MenuItem MainMenuItem[] = {
     /* type        label           variable value func     popup keys data  */
-    { MENU_FUNC, N_(" Back         (b) "), NULL, 0, "BACK", NULL, "b", NULL },
-    { MENU_POPUP, N_(" Select Buffer(s) "), NULL, 0, NULL, &SelectMenu, "s",
+    { MENU_FUNC, " Back         (b) ", NULL, 0, "BACK", NULL, "b", NULL },
+    { MENU_POPUP, " Select Buffer(s) ", NULL, 0, NULL, &SelectMenu, "s",
         NULL },
-    { MENU_POPUP, N_(" Select Tab   (t) "), NULL, 0, NULL, &SelTabMenu, "tT",
+    { MENU_POPUP, " Select Tab   (t) ", NULL, 0, NULL, &SelTabMenu, "tT",
         NULL },
-    { MENU_FUNC, N_(" View Source  (v) "), NULL, 0, "SOURCE", NULL, "vV", NULL },
-    { MENU_FUNC, N_(" Edit Source  (e) "), NULL, 0, "EDIT", NULL, "eE", NULL },
-    { MENU_FUNC, N_(" Save Source  (S) "), NULL, 0, "SOURCE", NULL, "S", NULL },
-    { MENU_FUNC, N_(" Reload       (r) "), NULL, 0, "RELOAD", NULL, "rR", NULL },
-    { MENU_NOP, N_(" ---------------- "), NULL, 0, "NOTHING", NULL, "", NULL },
-    { MENU_FUNC, N_(" Go Link      (a) "), NULL, 0, "GOTO_LINK", NULL, "a", NULL },
-    { MENU_FUNC, N_("   on New Tab (n) "), NULL, 0, "TAB_LINK", NULL, "nN", NULL },
-    { MENU_FUNC, N_(" Save Link    (A) "), NULL, 0, "SAVE_LINK", NULL, "A", NULL },
-    { MENU_FUNC, N_(" View Image   (i) "), NULL, 0, "VIEW_IMAGE", NULL, "i", NULL },
-    { MENU_FUNC, N_(" Save Image   (I) "), NULL, 0, "SAVE_IMAGE", NULL, "I", NULL },
-    { MENU_FUNC, N_(" View Frame   (f) "), NULL, 0, "FRAME", NULL, "fF", NULL },
-    { MENU_NOP, N_(" ---------------- "), NULL, 0, "NOTHING", NULL, "", NULL },
-    { MENU_FUNC, N_(" Bookmark     (B) "), NULL, 0, "BOOKMARK", NULL, "B", NULL },
-    { MENU_FUNC, N_(" Help         (h) "), NULL, 0, "HELP", NULL, "hH", NULL },
-    { MENU_FUNC, N_(" Option       (o) "), NULL, 0, "OPTIONS", NULL, "oO", NULL },
-    { MENU_NOP, N_(" ---------------- "), NULL, 0, "NOTHING", NULL, "", NULL },
-    { MENU_FUNC, N_(" Quit         (q) "), NULL, 0, "QUIT", NULL, "qQ", NULL },
+    { MENU_FUNC, " View Source  (v) ", NULL, 0, "SOURCE", NULL, "vV", NULL },
+    { MENU_FUNC, " Edit Source  (e) ", NULL, 0, "EDIT", NULL, "eE", NULL },
+    { MENU_FUNC, " Save Source  (S) ", NULL, 0, "SOURCE", NULL, "S", NULL },
+    { MENU_FUNC, " Reload       (r) ", NULL, 0, "RELOAD", NULL, "rR", NULL },
+    { MENU_NOP, " ---------------- ", NULL, 0, "NOTHING", NULL, "", NULL },
+    { MENU_FUNC, " Go Link      (a) ", NULL, 0, "GOTO_LINK", NULL, "a", NULL },
+    { MENU_FUNC, "   on New Tab (n) ", NULL, 0, "TAB_LINK", NULL, "nN", NULL },
+    { MENU_FUNC, " Save Link    (A) ", NULL, 0, "SAVE_LINK", NULL, "A", NULL },
+    { MENU_FUNC, " View Image   (i) ", NULL, 0, "VIEW_IMAGE", NULL, "i", NULL },
+    { MENU_FUNC, " Save Image   (I) ", NULL, 0, "SAVE_IMAGE", NULL, "I", NULL },
+    { MENU_FUNC, " View Frame   (f) ", NULL, 0, "FRAME", NULL, "fF", NULL },
+    { MENU_NOP, " ---------------- ", NULL, 0, "NOTHING", NULL, "", NULL },
+    { MENU_FUNC, " Bookmark     (B) ", NULL, 0, "BOOKMARK", NULL, "B", NULL },
+    { MENU_FUNC, " Help         (h) ", NULL, 0, "HELP", NULL, "hH", NULL },
+    { MENU_FUNC, " Option       (o) ", NULL, 0, "OPTIONS", NULL, "oO", NULL },
+    { MENU_NOP, " ---------------- ", NULL, 0, "NOTHING", NULL, "", NULL },
+    { MENU_FUNC, " Quit         (q) ", NULL, 0, "QUIT", NULL, "qQ", NULL },
     { MENU_END, "", NULL, 0, "NOTHING", NULL, "", NULL },
 };
 
@@ -1768,7 +1768,7 @@ void initMenu(void)
     if (!MainMenuEncode) {
         MenuItem* item;
         for (item = MainMenuItem; item->type != MENU_END; item++)
-            item->label = wc_conv(_(item->label), MainMenuCharset,
+            item->label = wc_conv(item->label, MainMenuCharset,
                 InnerCharset)
                               ->ptr;
         MainMenuEncode = TRUE;
