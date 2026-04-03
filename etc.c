@@ -1,5 +1,8 @@
 #include "etc.h"
+#include "display.h"
 #include "fm.h"
+#include "proto.h"
+#include "buffer.h"
 #include "global.h"
 #include <pwd.h>
 #include "myctype.h"
@@ -15,7 +18,6 @@
 
 #include <signal.h>
 #include <unistd.h>
-
 
 struct auth_pass {
     int bad;
@@ -270,8 +272,7 @@ Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor)
             }
         }
         if ((bs != NULL)
-            || (es != NULL)
-        ) {
+            || (es != NULL)) {
             char *sp = str, *ep;
             s = Strnew_size(s->length);
             do_copy = TRUE;
@@ -308,8 +309,7 @@ Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor)
                 if (str < endp)
                     bs = memchr(str, '\b', endp - str);
                 continue;
-            } else
-                if (str == bs - 1 && *str == '_') {
+            } else if (str == bs - 1 && *str == '_') {
                 str += 2;
                 effect = PE_UNDER;
                 if (str < endp)
@@ -324,8 +324,7 @@ Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor)
                     } else {
                         str++;
                     }
-                }
-                else if (!strncmp(str + 1, "\b__", 3)) {
+                } else if (!strncmp(str + 1, "\b__", 3)) {
                     if (s->length) {
                         str += (plen == 1) ? 3 : 4;
                         for (i = 1; i <= plen; i++)
@@ -354,8 +353,7 @@ Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor)
                     } else {
                         str += 2;
                     }
-                }
-                else {
+                } else {
                     if (s->length) {
                         clen = get_mclen(str + 1);
                         if (plen == clen && !strncmp(str - plen, str + 1, plen)) {
@@ -380,8 +378,7 @@ Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor)
                 if (str < endp)
                     bs = memchr(str, '\b', endp - str);
                 continue;
-            }
-            else if (str > bs)
+            } else if (str > bs)
                 bs = memchr(str, '\b', endp - str);
         }
         if (es != NULL) {
@@ -418,8 +415,7 @@ Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor)
             if (do_copy)
                 Strcat_charp_n(s, (char*)str, plen);
             str += plen;
-        } else
-        {
+        } else {
             if (do_copy)
                 Strcat_char(s, (char)*str);
             str++;
@@ -504,24 +500,21 @@ int columnLen(Line* line, int column)
     return line->len;
 }
 
-char* lastFileName(char* path)
+char* lastFileName(const char* path)
 {
-    char *p, *q;
-
+    const char *p, *q;
     p = q = path;
     while (*p != '\0') {
         if (*p == '/')
             q = p + 1;
         p++;
     }
-
     return allocStr(q, -1);
 }
 
-
-char* mybasename(char* s)
+char* mybasename(const char* s)
 {
-    char* p = s;
+    const char* p = s;
     while (*p)
         p++;
     while (s <= p && *p != '/')
@@ -533,9 +526,9 @@ char* mybasename(char* s)
     return allocStr(p, -1);
 }
 
-char* mydirname(char* s)
+char* mydirname(const char* s)
 {
-    char* p = s;
+    const char* p = s;
     while (*p)
         p++;
     if (s != p)
@@ -1039,14 +1032,12 @@ parsePasswd(FILE* fp, int netrc)
 /* FIXME: gettextize? */
 #define FILE_IS_READABLE_MSG "SECURITY NOTE: file %s must not be accessible by others"
 
-FILE* openSecretFile(char* fname)
+FILE* openSecretFile(const char* fname)
 {
-    char* efname;
-    struct stat st;
-
     if (fname == NULL)
         return NULL;
-    efname = expandPath(fname);
+    const char* efname = expandPath(fname);
+    struct stat st;
     if (stat(efname, &st) < 0)
         return NULL;
 
@@ -1078,10 +1069,8 @@ FILE* openSecretFile(char* fname)
 
 void loadPasswd(void)
 {
-    FILE* fp;
-
     passwords = NULL;
-    fp = openSecretFile(passwd_file);
+    FILE* fp = openSecretFile(passwd_file);
     if (fp != NULL) {
         parsePasswd(fp, 0);
         fclose(fp);
@@ -1321,7 +1310,7 @@ err0:
     return (pid_t)-1;
 }
 
-void myExec(char* command)
+void myExec(const char* command)
 {
     mySignal(SIGINT, SIG_DFL);
     execl("/bin/sh", "sh", "-c", command, NULL);
@@ -1340,7 +1329,7 @@ void mySystem(char* command, int background)
         system(command);
 }
 
-Str myExtCommand(char* cmd, char* arg, int redirect)
+Str myExtCommand(const char* cmd, const char* arg, int redirect)
 {
     Str tmp = NULL;
     char* p;
@@ -1367,7 +1356,7 @@ Str myExtCommand(char* cmd, char* arg, int redirect)
     return tmp;
 }
 
-Str myEditor(char* cmd, char* file, int line)
+Str myEditor(const char* cmd, const char* file, int line)
 {
     Str tmp = NULL;
     char* p;
@@ -1458,8 +1447,7 @@ char* file_to_url(char* file)
     if (IS_ALPHA(file[0]) && file[1] == ':') {
         drive = allocStr(file, 2);
         file += 2;
-    } else
-        if (file[0] != '/') {
+    } else if (file[0] != '/') {
         tmp = Strnew_charp(CurrentDir);
         if (Strlastchar(tmp) != '/')
             Strcat_char(tmp, '/');
@@ -1476,8 +1464,7 @@ char* file_to_url(char* file)
 char* url_unquote_conv(char* url, wc_ces charset)
 {
     wc_uint8 old_auto_detect = WcOption.auto_detect;
-    Str tmp;
-    tmp = Str_url_unquote(Strnew_charp(url), FALSE, TRUE);
+    Str tmp = Str_url_unquote(Strnew_charp(url), FALSE, TRUE);
     if (!charset || charset == WC_CES_US_ASCII)
         charset = SystemCharset;
     WcOption.auto_detect = WC_OPT_DETECT_ON;
@@ -1496,7 +1483,7 @@ static char* tmpf_base[MAX_TMPF_TYPE] = {
 };
 static unsigned int tmpf_seq[MAX_TMPF_TYPE];
 
-Str tmpfname(int type, char* ext)
+Str tmpfname(int type, const char* ext)
 {
     Str tmpf;
     char* dir;
@@ -1672,14 +1659,13 @@ get_zone(char** s, int* z_hour, int* z_min)
 
 /* RFC 1123 or RFC 850 or ANSI C asctime() format string -> time_t */
 time_t
-mymktime(char* timestr)
+mymktime(const char* timestr)
 {
-    char* s;
     int day, mon, year, hour, min, sec, z_hour = 0, z_min = 0;
 
     if (!(timestr && *timestr))
         return -1;
-    s = timestr;
+    const char* s = timestr;
 
 #ifdef DEBUG
     fprintf(stderr, "mktime: %s\n", timestr);
@@ -1812,7 +1798,6 @@ char* FQDN(char* host)
     /* all failed */
     return NULL;
 }
-
 
 void (*mySignal(int signal_number, void (*action)(int)))(int)
 {

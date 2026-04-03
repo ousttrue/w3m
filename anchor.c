@@ -1,4 +1,8 @@
 #include "fm.h"
+#include "maparea.h"
+#include "buffer.h"
+#include "url.h"
+#include "proto.h"
 #include "global.h"
 #include "myctype.h"
 #include "regex.h"

@@ -1,5 +1,7 @@
+#include "mailcap.h"
 #include "global.h"
 #include "fm.h"
+#include "proto.h"
 #include "myctype.h"
 #include <stdio.h>
 #include <errno.h>
@@ -274,8 +276,7 @@ char* acceptableMimeTypes(void)
     return types->ptr;
 }
 
-struct mailcap*
-searchExtViewer(const char* type)
+struct mailcap* searchExtViewer(const char* type)
 {
     struct mailcap* p;
     int i;

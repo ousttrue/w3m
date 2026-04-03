@@ -1,15 +1,18 @@
 #include "table.h"
+#include "etc.h"
+#include "symbol.h"
 #include "global.h"
 #include "constants.h"
-#include <sys/types.h>
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
 #include "fm.h"
+#include "proto.h"
 #include "html.h"
 #include "parsetagx.h"
 #include "Str.h"
 #include "myctype.h"
+#include <sys/types.h>
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
 
 #define NOWRAP
 

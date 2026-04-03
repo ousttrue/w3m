@@ -2,9 +2,11 @@
  * w3m func.c
  */
 #include "global.h"
+#include "display.h"
 #include "constants.h"
 #include "keybind.h"
 #include "fm.h"
+#include "proto.h"
 #include "func.h"
 #include "myctype.h"
 #include "regex.h"

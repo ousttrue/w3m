@@ -1,0 +1,18 @@
+#pragma once
+#include "Str.h"
+
+struct mailcap {
+    char* type;
+    char* viewer;
+    int flags;
+    char* test;
+    char* nametemplate;
+    char* edit;
+};
+
+int mailcapMatch(struct mailcap* mcap, char* type);
+struct mailcap* searchMailcap(struct mailcap* table, char* type);
+void initMailcap(void);
+char* acceptableMimeTypes(void);
+struct mailcap* searchExtViewer(const char* type);
+Str unquote_mailcap(char* qstr, char* type, char* name, char* attr, int* mc_stat);

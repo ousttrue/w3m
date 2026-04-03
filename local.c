@@ -185,7 +185,7 @@ check_local_cgi(char* file, int status)
     return -1;
 }
 
-void set_environ(char* var, char* value)
+void set_environ(const char* var, const char* value)
 {
     if (var != NULL && value != NULL)
         setenv(var, value, 1);
@@ -208,7 +208,7 @@ set_cgi_environ(char* name, char* fn, char* req_uri)
 }
 
 static Str
-checkPath(char* fn, char* path)
+checkPath(const char* fn, const char* path)
 {
     char* p;
     Str tmp;

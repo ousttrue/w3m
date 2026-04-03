@@ -1,6 +1,15 @@
-/* $Id: main.c,v 1.270 2010/08/24 10:11:51 htrb Exp $ */
 #define MAINPROGRAM
 #include "main.h"
+#include "maparea.h"
+#include "etc.h"
+#include "ftp.h"
+#include "news.h"
+#include "url.h"
+#include "buffer.h"
+#include "cookie.h"
+#include "rc.h"
+#include "local.h"
+#include "config.h"
 #include "image.h"
 #include "global.h"
 #include "constants.h"
@@ -10,6 +19,7 @@
 #include "defun_impl.h"
 #include "keybind.h"
 #include "fm.h"
+#include "proto.h"
 #include "display.h"
 #include "terms.h"
 #include "myctype.h"
@@ -304,9 +314,6 @@ int w3m_main(int argc, char** argv)
     Str err_msg;
     char* Locale = NULL;
     wc_uint8 auto_detect;
-#if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
-    char** getimage_args = NULL;
-#endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
     if (!getenv("GC_LARGE_ALLOC_WARN_INTERVAL"))
         set_environ("GC_LARGE_ALLOC_WARN_INTERVAL", "30000");
     GC_INIT();
@@ -2755,7 +2762,7 @@ void chkNMIDBuffer(Buffer* buf)
 void invoke_browser(char* url)
 {
     Str cmd;
-    char* browser = NULL;
+    const char* browser = NULL;
     int bg = 0, len;
 
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
@@ -2947,7 +2954,7 @@ void set_buffer_environ(Buffer* buf)
 
 char* searchKeyData(void)
 {
-    char* data = NULL;
+    const char* data = NULL;
 
     if (CurrentKeyData != NULL && *CurrentKeyData != '\0')
         data = CurrentKeyData;

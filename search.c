@@ -1,5 +1,7 @@
 #include "global.h"
+#include "buffer.h"
 #include "fm.h"
+#include "display.h"
 #include "regex.h"
 #include <signal.h>
 #include <errno.h>

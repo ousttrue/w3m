@@ -1,6 +1,11 @@
+#include "ftp.h"
+#include "etc.h"
+#include "url.h"
+#include "display.h"
 #include "Str.h"
 #include "global.h"
 #include "fm.h"
+#include "proto.h"
 #include "html.h"
 #include "myctype.h"
 #include "line_input.h"
@@ -323,7 +328,7 @@ void closeFTP(void)
 }
 
 InputStream
-openFTPStream(ParsedURL* pu, URLFile* uf)
+openFTPStream(ParsedURL* pu, struct URLFile* uf)
 {
     Str tmp;
     int status;

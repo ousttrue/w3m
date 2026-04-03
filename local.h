@@ -1,10 +1,5 @@
-/* $Id: local.h,v 1.3 2001/11/20 17:49:23 ukai Exp $ */
-/*
- * w3m local.h
- */
-
-#ifndef LOCAL_H
-#define LOCAL_H
+#pragma once
+#include "Str.h"
 
 #define HAVE_LSTAT 1
 #define HAVE_READLINK 1
@@ -46,4 +41,9 @@ typedef struct direct Directory;
 #endif /* not S_ISLNK */
 #endif /* not HAVE_READLINK */
 
-#endif /* not LOCAL_H */
+void set_environ(const char* var, const char* value);
+Str localCookie(void);
+Str loadLocalDir(char* dirname);
+struct form_list;
+FILE* localcgi_post(char*, char*, struct form_list*, char*);
+#define localcgi_get(u, q, r) localcgi_post((u), (q), NULL, (r))

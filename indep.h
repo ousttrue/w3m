@@ -54,7 +54,7 @@ extern char* allocStr(const char* s, int len);
 extern int strCmp(const void* s1, const void* s2);
 extern char* currentdir(void);
 extern char* cleanupName(char* name);
-extern char* expandPath(char* name);
+extern char* expandPath(const char* name);
 #ifndef HAVE_STRCHR
 extern char* strchr(const char* s, int c);
 #endif /* not HAVE_STRCHR */

@@ -1,4 +1,8 @@
 #include "global.h"
+#include "etc.h"
+#include "display.h"
+#include "rc.h"
+#include "url.h"
 #include "history.h"
 #include "alloc.h"
 #include "indep.h"

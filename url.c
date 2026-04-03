@@ -1,6 +1,13 @@
-/* $Id: url.c,v 1.100 2010/12/15 10:50:24 htrb Exp $ */
+#include "url.h"
+#include "news.h"
+#include "ftp.h"
+#include "local.h"
+#include "cookie.h"
+#include "etc.h"
 #include "global.h"
+#include "display.h"
 #include "fm.h"
+#include "proto.h"
 #include "html.h"
 #include "Str.h"
 #include "myctype.h"
@@ -97,7 +104,7 @@ static struct table2 DefaultGuess[] = {
     { NULL, NULL }
 };
 
-static void add_index_file(ParsedURL* pu, URLFile* uf);
+static void add_index_file(ParsedURL* pu, struct URLFile* uf);
 static char* schemeNumToName(int scheme);
 
 /* #define HTTP_DEFAULT_FILE    "/index.html" */
@@ -384,7 +391,7 @@ openSSLHandle(int sock, char* hostname, char** p_cert)
         if (ssl_cert_file != NULL && *ssl_cert_file != '\0') {
             int ng = 1;
             if (SSL_CTX_use_certificate_file(ssl_ctx, ssl_cert_file, SSL_FILETYPE_PEM) > 0) {
-                char* key_file = (ssl_key_file == NULL
+                const char* key_file = (ssl_key_file == NULL
                                      || *ssl_key_file == '\0')
                     ? ssl_cert_file
                     : ssl_key_file;
@@ -398,7 +405,7 @@ openSSLHandle(int sock, char* hostname, char** p_cert)
             }
         }
         if (ssl_verify_server) {
-            char *file = NULL, *path = NULL;
+            const char *file = NULL, *path = NULL;
             if (ssl_ca_file && *ssl_ca_file != '\0')
                 file = ssl_ca_file;
             if (ssl_ca_path && *ssl_ca_path != '\0')
@@ -1351,9 +1358,9 @@ HTTPrequest(ParsedURL* pu, ParsedURL* current, HRequest* hr, TextList* extra)
     return tmp;
 }
 
-void init_stream(URLFile* uf, int scheme, InputStream stream)
+void init_stream(struct URLFile* uf, int scheme, InputStream stream)
 {
-    memset(uf, 0, sizeof(URLFile));
+    memset(uf, 0, sizeof(struct URLFile));
     uf->stream = stream;
     uf->scheme = scheme;
     uf->encoding = ENC_7BIT;
@@ -1365,10 +1372,10 @@ void init_stream(URLFile* uf, int scheme, InputStream stream)
     uf->modtime = -1;
 }
 
-URLFile
+struct URLFile
 openURL(const char* url, ParsedURL* pu, ParsedURL* current,
     URLOption* option, FormList* request, TextList* extra_header,
-    URLFile* ouf, HRequest* hr, unsigned char* status)
+    struct URLFile* ouf, HRequest* hr, unsigned char* status)
 {
     Str tmp;
     int sock, scheme;
@@ -1376,7 +1383,7 @@ openURL(const char* url, ParsedURL* pu, ParsedURL* current,
     Str gophertmp;
     char type;
     int n;
-    URLFile uf;
+    struct URLFile uf;
     HRequest hr0;
     SSL* sslh = NULL;
 
@@ -1708,7 +1715,7 @@ retry:
 
 /* add index_file if exists */
 static void
-add_index_file(ParsedURL* pu, URLFile* uf)
+add_index_file(ParsedURL* pu, struct URLFile* uf)
 {
     char *p, *q;
     TextList* index_file_list = NULL;
@@ -1776,33 +1783,7 @@ no_user_mimetypes:
     return guessContentTypeFromTable(DefaultGuess, filename);
 }
 
-TextList*
-make_domain_list(char* domain_list)
-{
-    char* p;
-    Str tmp;
-    TextList* domains = NULL;
 
-    p = domain_list;
-    tmp = Strnew_size(64);
-    while (*p) {
-        while (*p && IS_SPACE(*p))
-            p++;
-        Strclear(tmp);
-        while (*p && !IS_SPACE(*p) && *p != ',')
-            Strcat_char(tmp, *p++);
-        if (tmp->length > 0) {
-            if (domains == NULL)
-                domains = newTextList();
-            pushText(domains, tmp->ptr);
-        }
-        while (*p && IS_SPACE(*p))
-            p++;
-        if (*p == ',')
-            p++;
-    }
-    return domains;
-}
 
 static int
 domain_match(char* pat, char* domain)

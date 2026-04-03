@@ -1,19 +1,26 @@
 #include "global.h"
+#include "url.h"
+#include "etc.h"
+#include "buffer.h"
+#include "maparea.h"
+#include "cookie.h"
+#include "rc.h"
 #include "display.h"
 #include "fm.h"
+#include "proto.h"
 #include "parsetag.h"
 #include "parsetagx.h"
 #include "myctype.h"
 #include "local.h"
 #include "regex.h"
 #include "util.h"
+#include "menu.h"
 #include <unistd.h>
 
 extern Str* textarea_str;
 extern int max_textarea;
 extern FormSelectOption* select_option;
 extern int max_select;
-#include "menu.h"
 
 /* *INDENT-OFF* */
 struct {

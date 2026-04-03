@@ -1,6 +1,11 @@
 #include "image.h"
+#include "display.h"
+#include "url.h"
+#include "etc.h"
+#include "local.h"
 #include "global.h"
 #include "fm.h"
+#include "proto.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <signal.h>
@@ -103,8 +108,7 @@ void termImage()
 static int
 openImgdisplay()
 {
-    char* cmd;
-
+    const char* cmd;
     if (!strchr(Imgdisplay, '/'))
         cmd = Strnew_m_charp(w3m_auxbin_dir(), "/", Imgdisplay, NULL)->ptr;
     else

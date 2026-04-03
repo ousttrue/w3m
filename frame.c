@@ -1,4 +1,9 @@
+#include "frame.h"
+#include "etc.h"
+#include "buffer.h"
+#include "url.h"
 #include "fm.h"
+#include "proto.h"
 #include "global.h"
 #include "parsetagx.h"
 #include "myctype.h"
@@ -393,7 +398,7 @@ createFrameFile(struct frameset* f, FILE* f1, Buffer* current, int level,
     int force_reload)
 {
     int r, c, t_stack;
-    URLFile f2;
+    struct URLFile f2;
     wc_ces charset, doc_charset;
     char *d_target, *p_target, *s_target, *t_target;
     ParsedURL *currentURL, base;

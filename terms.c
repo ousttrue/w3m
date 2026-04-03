@@ -2,9 +2,16 @@
  * An original curses library for EUC-kanji by Akinori ITO,     December 1989
  * revised by Akinori ITO, January 1995
  */
+#include "terms.h"
 #include "defun_impl.h"
+#include "etc.h"
 #include "constants.h"
 #include "global.h"
+#include "config.h"
+#include "fm.h"
+#include "proto.h"
+#include "myctype.h"
+
 #include <stdio.h>
 #include <signal.h>
 #include <sys/types.h>
@@ -13,25 +20,17 @@
 #include <errno.h>
 #include <sys/time.h>
 #include <unistd.h>
-#include "config.h"
 #include <string.h>
 #include <sys/wait.h>
-#ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>
-#endif
 #include <sys/ioctl.h>
 
 #define DEV_TTY_PATH "/dev/tty"
 #define DEFAULT_TERM 0 /* XXX */
-#define HAVE_SYS_SELECT_H 1
 
 static char* title_str = NULL;
 
 static int tty;
-
-#include "terms.h"
-#include "fm.h"
-#include "myctype.h"
 
 #if defined(__CYGWIN__)
 #include <windows.h>

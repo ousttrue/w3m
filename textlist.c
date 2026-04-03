@@ -1,6 +1,7 @@
 #include "textlist.h"
 #include "indep.h"
 #include "Str.h"
+#include "myctype.h"
 #include <gc.h>
 
 /* General doubly linked list */
@@ -141,4 +142,32 @@ void appendTextLine(TextLineList* tl, Str line, int pos)
             lbuf->line = line;
         lbuf->pos += pos;
     }
+}
+
+TextList*
+make_domain_list(const char* domain_list)
+{
+    char* p;
+    Str tmp;
+    TextList* domains = NULL;
+
+    p = domain_list;
+    tmp = Strnew_size(64);
+    while (*p) {
+        while (*p && IS_SPACE(*p))
+            p++;
+        Strclear(tmp);
+        while (*p && !IS_SPACE(*p) && *p != ',')
+            Strcat_char(tmp, *p++);
+        if (tmp->length > 0) {
+            if (domains == NULL)
+                domains = newTextList();
+            pushText(domains, tmp->ptr);
+        }
+        while (*p && IS_SPACE(*p))
+            p++;
+        if (*p == ',')
+            p++;
+    }
+    return domains;
 }

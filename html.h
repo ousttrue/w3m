@@ -23,15 +23,6 @@ struct cmdtable {
     int cmd;
 };
 
-struct mailcap {
-    char* type;
-    char* viewer;
-    int flags;
-    char* test;
-    char* nametemplate;
-    char* edit;
-};
-
 #define MAILCAP_NEEDSTERMINAL 0x01
 #define MAILCAP_COPIOUSOUTPUT 0x02
 #define MAILCAP_HTMLOUTPUT 0x04
@@ -44,11 +35,6 @@ struct table2 {
     char* item1;
     char* item2;
 };
-
-typedef struct {
-    char* referer;
-    int flag;
-} URLOption;
 
 typedef struct _ParsedURL {
     int scheme;
@@ -64,7 +50,7 @@ typedef struct _ParsedURL {
 } ParsedURL;
 
 union input_stream;
-typedef struct {
+struct URLFile {
     unsigned char scheme;
     char is_cgi;
     char encoding;
@@ -76,7 +62,7 @@ typedef struct {
     char* ssl_certificate;
     char* url;
     time_t modtime;
-} URLFile;
+};
 
 #define CMP_NOCOMPRESS 0
 #define CMP_COMPRESS 1

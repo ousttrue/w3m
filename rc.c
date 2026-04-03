@@ -1,3 +1,9 @@
+#include "rc.h"
+#include "display.h"
+#include "symbol.h"
+#include "mailcap.h"
+#include "image.h"
+#include "url.h"
 #include "fm.h"
 #include "w3m/constants.h"
 #include "global.h"
@@ -13,7 +19,6 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <unistd.h>
-#include "rc.h"
 
 struct param_ptr {
     char* name;

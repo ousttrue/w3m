@@ -1,4 +1,14 @@
 #include "display.h"
+#include "mimehead.h"
+#include "mailcap.h"
+#include "maparea.h"
+#include "etc.h"
+#include "ftp.h"
+#include "rc.h"
+#include "cookie.h"
+#include "url.h"
+#include "buffer.h"
+#include "news.h"
 #include "textlist.h"
 #include "table.h"
 #include "image.h"
@@ -8,6 +18,7 @@
 #include "global.h"
 #include "line_input.h"
 #include "fm.h"
+#include "proto.h"
 #include "myctype.h"
 #include "setjmp_util.h"
 #include <sys/types.h>
@@ -51,10 +62,10 @@ static int need_number = 0;
 
 static char* guess_filename(char* file);
 static int _MoveFile(char* path1, char* path2);
-static void uncompress_stream(URLFile* uf, char** src);
+static void uncompress_stream(struct URLFile* uf, char** src);
 static FILE* lessopen_stream(char* path);
 static Buffer* loadcmdout(char* cmd,
-    Buffer* (*loadproc)(URLFile*, Buffer*),
+    Buffer* (*loadproc)(struct URLFile*, Buffer*),
     Buffer* defaultbuf);
 static void addnewline(Buffer* buf, char* line, Lineprop* prop,
     Linecolor* color, int pos, int width, int nlines);
@@ -195,7 +206,7 @@ KeyAbort(SIGNAL_ARG)
 }
 
 static void
-UFhalfclose(URLFile* f)
+UFhalfclose(struct URLFile* f)
 {
     switch (f->scheme) {
     case SCM_FTP:
@@ -221,8 +232,8 @@ int currentLn(Buffer* buf)
 }
 
 static Buffer*
-loadSomething(URLFile* f,
-    Buffer* (*loadproc)(URLFile*, Buffer*), Buffer* defaultbuf)
+loadSomething(struct URLFile* f,
+    Buffer* (*loadproc)(struct URLFile*, Buffer*), Buffer* defaultbuf)
 {
     Buffer* buf;
 
@@ -282,7 +293,7 @@ int is_html_type(char* type)
 }
 
 static void
-check_compression(const char* path, URLFile* uf)
+check_compression(const char* path, struct URLFile* uf)
 {
     int len;
     struct compression_decoder* d;
@@ -364,7 +375,7 @@ setModtime(char* path, time_t modtime)
     return utime(path, &t);
 }
 
-void examineFile(char* path, URLFile* uf)
+void examineFile(char* path, struct URLFile* uf)
 {
     struct stat stbuf;
 
@@ -460,7 +471,7 @@ char* acceptableEncoding(void)
 /*
  * convert line
  */
-Str convertLine(URLFile* uf, Str line, int mode, wc_ces* charset,
+Str convertLine(struct URLFile* uf, Str line, int mode, wc_ces* charset,
     wc_ces doc_charset)
 {
     line = wc_Str_conv_with_detect(line, charset, doc_charset, InnerCharset);
@@ -507,7 +518,7 @@ int matchattr(char* p, char* attr, int len, Str* value)
     return 0;
 }
 
-void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
+void readHeader(struct URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
 {
     char *p, *q;
     char* emsg;
@@ -592,7 +603,7 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
                         "\" alt=\"X-Image-URL\">", NULL);
                 }
                 if (src) {
-                    URLFile f;
+                    struct URLFile f;
                     Line* l;
                     wc_ces old_charset = newBuf->document_charset;
                     init_stream(&f, SCM_LOCAL, newStrStream(src));
@@ -1531,15 +1542,15 @@ Str getLinkNumberStr(int correction)
 /*
  * loadGeneralFile: load file to buffer
  */
-#define DO_EXTERNAL ((Buffer * (*)(URLFile*, Buffer*)) doExternal)
+#define DO_EXTERNAL ((Buffer * (*)(struct URLFile*, Buffer*)) doExternal)
 Buffer*
 loadGeneralFile(const char* path, ParsedURL* volatile current, char* referer,
     int flag, FormList* volatile request)
 {
-    URLFile f, *volatile of = NULL;
+    struct URLFile f, *volatile of = NULL;
     ParsedURL pu;
     Buffer* b = NULL;
-    Buffer* (*volatile proc)(URLFile*, Buffer*) = loadBuffer;
+    Buffer* (*volatile proc)(struct URLFile*, Buffer*) = loadBuffer;
     const char* volatile t = "text/plain", *p, * volatile real_type = NULL;
     Buffer* volatile t_buf = NULL;
     int volatile searchHeader = SearchHeader;
@@ -6307,7 +6318,7 @@ addnewline(Buffer* buf, char* line, Lineprop* prop, Linecolor* color, int pos,
  * loadHTMLBuffer: read file and make new buffer
  */
 Buffer*
-loadHTMLBuffer(URLFile* f, Buffer* newBuf)
+loadHTMLBuffer(struct URLFile* f, Buffer* newBuf)
 {
     FILE* src = NULL;
     Str tmp;
@@ -6613,7 +6624,7 @@ print_internal_information(struct html_feed_environ* henv)
     }
 }
 
-void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
+void loadHTMLstream(struct URLFile* f, Buffer* newBuf, FILE* src, int internal)
 {
     struct environment envs[MAX_ENV_LEVEL];
     int64_t linelen = 0;
@@ -6767,7 +6778,7 @@ phase2:
 Buffer*
 loadHTMLString(Str page)
 {
-    URLFile f;
+    struct URLFile f;
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
     Buffer* newBuf;
 
@@ -6801,7 +6812,7 @@ loadHTMLString(Str page)
 /*
  * loadGopherDir: get gopher directory
  */
-Str loadGopherDir(URLFile* uf, ParsedURL* pu, wc_ces* charset)
+Str loadGopherDir(struct URLFile* uf, ParsedURL* pu, wc_ces* charset)
 {
     Str volatile tmp;
     Str lbuf, name, file, host, port, type;
@@ -6921,7 +6932,7 @@ gopher_end:
     return tmp;
 }
 
-Str loadGopherSearch(URLFile* uf, ParsedURL* pu, wc_ces* charset)
+Str loadGopherSearch(struct URLFile* uf, ParsedURL* pu, wc_ces* charset)
 {
     Str tmp;
     char* volatile p, * volatile q;
@@ -6946,7 +6957,7 @@ Str loadGopherSearch(URLFile* uf, ParsedURL* pu, wc_ces* charset)
  * loadBuffer: read file and make new buffer
  */
 Buffer*
-loadBuffer(URLFile* uf, Buffer* volatile newBuf)
+loadBuffer(struct URLFile* uf, Buffer* volatile newBuf)
 {
     FILE* volatile src = NULL;
     wc_ces charset = WC_CES_US_ASCII;
@@ -7030,13 +7041,13 @@ _end:
 }
 
 Buffer*
-loadImageBuffer(URLFile* uf, Buffer* newBuf)
+loadImageBuffer(struct URLFile* uf, Buffer* newBuf)
 {
     Image image;
     ImageCache* cache;
     Str tmp, tmpf;
     FILE* src = NULL;
-    URLFile f;
+    struct URLFile f;
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
     struct stat st;
     const ParsedURL* pu = newBuf ? &newBuf->currentURL : NULL;
@@ -7169,11 +7180,11 @@ void saveBufferBody(Buffer* buf, FILE* f, int cont)
 
 static Buffer*
 loadcmdout(char* cmd,
-    Buffer* (*loadproc)(URLFile*, Buffer*), Buffer* defaultbuf)
+    Buffer* (*loadproc)(struct URLFile*, Buffer*), Buffer* defaultbuf)
 {
     FILE *f, *popen(const char*, const char*);
     Buffer* buf;
-    URLFile uf;
+    struct URLFile uf;
 
     if (cmd == NULL || *cmd == '\0')
         return NULL;
@@ -7261,7 +7272,7 @@ openGeneralPagerBuffer(InputStream stream)
     Buffer* buf;
     char* t = "text/plain";
     Buffer* t_buf = NULL;
-    URLFile uf;
+    struct URLFile uf;
 
     init_stream(&uf, SCM_UNKNOWN, stream);
 
@@ -7321,7 +7332,7 @@ Line* getNextPage(Buffer* buf, int plen)
     int64_t linelen = 0, trbyte = buf->trbyte;
     Str lineBuf2;
     char volatile pre_lbuf = '\0';
-    URLFile uf;
+    struct URLFile uf;
     wc_ces charset;
     wc_ces volatile doc_charset = DocumentCharset;
     wc_uint8 old_auto_detect = WcOption.auto_detect;
@@ -7428,7 +7439,7 @@ pager_end:
     return last;
 }
 
-int save2tmp(URLFile uf, char* tmpf)
+int save2tmp(struct URLFile uf, char* tmpf)
 {
     FILE* ff;
     int64_t linelen = 0, trbyte = 0;
@@ -7491,7 +7502,7 @@ _end:
 }
 
 Buffer*
-doExternal(URLFile uf, char* type, Buffer* defaultbuf)
+doExternal(struct URLFile uf, char* type, Buffer* defaultbuf)
 {
     Str tmpf, command;
     struct mailcap* mcap;
@@ -7728,7 +7739,7 @@ int doFileMove(char* tmpf, char* defstr)
     return ret;
 }
 
-int doFileSave(URLFile uf, char* defstr)
+int doFileSave(struct URLFile uf, char* defstr)
 {
     Str msg;
     Str filen;
@@ -7885,7 +7896,7 @@ char* inputAnswer(char* prompt)
 }
 
 static void
-uncompress_stream(URLFile* uf, char** src)
+uncompress_stream(struct URLFile* uf, char** src)
 {
     pid_t pid1;
     FILE* f1;

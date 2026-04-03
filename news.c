@@ -1,7 +1,13 @@
 #include "fm.h"
+#include "buffer.h"
+#include "mimehead.h"
+#include "display.h"
+#include "etc.h"
+#include "url.h"
 #include "global.h"
 #include "myctype.h"
 #include "setjmp_util.h"
+#include "proto.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -295,7 +301,7 @@ Str loadNewsgroup(ParsedURL* pu, wc_ces* charset)
 {
     volatile Str page;
     Str tmp;
-    URLFile f;
+    struct URLFile f;
     Buffer* buf;
     char *qgroup, *p, *q, *s, *t, *n;
     char* volatile scheme, * volatile group, * volatile list;

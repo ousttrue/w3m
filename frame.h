@@ -1,7 +1,4 @@
-/* $Id: frame.h,v 1.6 2003/01/25 17:42:17 ukai Exp $ */
-/*
- * frame support
- */
+#pragma once
 
 struct frame_element {
     char attr;
@@ -18,12 +15,12 @@ struct frame_body {
 #define FB_NO_BUFFER 0x01
     char* name;
     char* url;
-    ParsedURL* baseURL;
+    struct _ParsedURL* baseURL;
     char* source;
     char* type;
     char* referer;
     struct _anchorList* nameList;
-    FormList* request;
+    struct form_list* request;
     char* ssl_certificate;
 };
 
@@ -37,7 +34,7 @@ struct frameset {
     char attr;
     char dummy;
     char* name;
-    ParsedURL* currentURL;
+    struct _ParsedURL* currentURL;
     char** width;
     char** height;
     int col;
@@ -58,3 +55,19 @@ struct frameset_queue {
 };
 
 extern struct frameset* renderFrameSet;
+
+struct parsed_tag;
+struct _Buffer;
+struct frame_body* newFrame(struct parsed_tag* tag, struct _Buffer* buf);
+struct frameset* newFrameSet(struct parsed_tag* tag);
+void addFrameSetElement(struct frameset* f, union frameset_element element);
+void deleteFrame(struct frame_body* b);
+void deleteFrameSet(struct frameset* f);
+void deleteFrameSetElement(union frameset_element e);
+struct frameset* copyFrameSet(struct frameset* of);
+void pushFrameTree(struct frameset_queue** fqpp, struct frameset* fs, struct _Buffer* buf);
+struct frameset* popFrameTree(struct frameset_queue** fqpp);
+struct form_list;
+void resetFrameElement(union frameset_element* f_element, struct _Buffer* buf, char* referer, struct form_list* request);
+struct _Buffer* renderFrame(struct _Buffer* Cbuf, int force_reload);
+union frameset_element* search_frame(struct frameset* fset, char* name);

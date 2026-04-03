@@ -1,5 +1,9 @@
+#include "maparea.h"
+#include "etc.h"
+#include "url.h"
 #include "global.h"
 #include "fm.h"
+#include "proto.h"
 #include <math.h>
 
 MapList*

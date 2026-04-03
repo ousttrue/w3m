@@ -18,23 +18,13 @@ extern Anchor* list_menu(Buffer* buf);
 
 extern int currentLn(Buffer* buf);
 extern void tmpClearBuffer(Buffer* buf);
-extern char* filename_extension(char* patch, int is_url);
-extern ParsedURL* schemeToProxy(int scheme);
-extern wc_ces url_to_charset(const char* url, const ParsedURL* base,
-    wc_ces doc_charset);
-extern char* url_encode(const char* url, const ParsedURL* base,
-    wc_ces doc_charset);
-extern char* url_decode2(const char* url, const Buffer* buf);
-extern void examineFile(char* path, URLFile* uf);
+
+extern void examineFile(char* path, struct URLFile* uf);
 extern char* acceptableEncoding(void);
 extern int dir_exist(char* path);
 extern int is_html_type(char* type);
-extern char** get_symbol(wc_ces charset, int* width);
-extern char** set_symbol(int width);
-extern Str convertLine(URLFile* uf, Str line, int mode, wc_ces* charset,
+extern Str convertLine(struct URLFile* uf, Str line, int mode, wc_ces* charset,
     wc_ces doc_charset);
-extern void push_symbol(Str str, char symbol, int width, int n);
-extern void update_utf8_symbol(void);
 extern Buffer* loadGeneralFile(const char* path, ParsedURL* current, char* referer,
     int flag, FormList* request);
 extern int is_boundary(unsigned char*, unsigned char*);
@@ -73,7 +63,7 @@ extern void HTMLlineproc2(Buffer* buf, TextLineList* tl);
 extern void HTMLlineproc0(char* istr, struct html_feed_environ* h_env,
     int internal);
 #define HTMLlineproc1(x, y) HTMLlineproc0(x, y, TRUE)
-extern Buffer* loadHTMLBuffer(URLFile* f, Buffer* newBuf);
+extern Buffer* loadHTMLBuffer(struct URLFile* f, Buffer* newBuf);
 extern char* convert_size(int64_t size, int usefloat);
 extern char* convert_size2(int64_t size1, int64_t size2, int usefloat);
 extern void showProgress(int64_t* linelen, int64_t* trbyte);
@@ -81,32 +71,23 @@ extern void init_henv(struct html_feed_environ*, struct readbuffer*,
     struct environment*, int, TextLineList*, int, int);
 extern void completeHTMLstream(struct html_feed_environ*,
     struct readbuffer*);
-extern void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src,
+extern void loadHTMLstream(struct URLFile* f, Buffer* newBuf, FILE* src,
     int internal);
 extern Buffer* loadHTMLString(Str page);
-extern Str loadGopherDir(URLFile* uf, ParsedURL* pu, wc_ces* charset);
-extern Str loadGopherSearch(URLFile* uf, ParsedURL* pu, wc_ces* charset);
-extern Buffer* loadBuffer(URLFile* uf, Buffer* newBuf);
-extern Buffer* loadImageBuffer(URLFile* uf, Buffer* newBuf);
-extern void saveBuffer(Buffer* buf, FILE* f, int cont);
-extern void saveBufferBody(Buffer* buf, FILE* f, int cont);
-extern Buffer* getshell(char* cmd);
-extern Buffer* getpipe(char* cmd);
-extern Buffer* openPagerBuffer(InputStream stream, Buffer* buf);
-extern Buffer* openGeneralPagerBuffer(InputStream stream);
-extern Line* getNextPage(Buffer* buf, int plen);
-extern int save2tmp(URLFile uf, char* tmpf);
-extern Buffer* doExternal(URLFile uf, char* type, Buffer* defaultbuf);
+extern Str loadGopherDir(struct URLFile* uf, ParsedURL* pu, wc_ces* charset);
+extern Str loadGopherSearch(struct URLFile* uf, ParsedURL* pu, wc_ces* charset);
+
+extern int save2tmp(struct URLFile uf, char* tmpf);
 extern int _doFileCopy(char* tmpf, char* defstr, int download);
 #define doFileCopy(tmpf, defstr) _doFileCopy(tmpf, defstr, FALSE);
 extern int doFileMove(char* tmpf, char* defstr);
-extern int doFileSave(URLFile uf, char* defstr);
+extern int doFileSave(struct URLFile uf, char* defstr);
 extern int checkCopyFile(char* path1, char* path2);
 extern int checkSaveFile(InputStream stream, char* path);
 extern int checkOverWrite(char* path);
 extern char* inputAnswer(char* prompt);
 extern int matchattr(char* p, char* attr, int len, Str* value);
-extern void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu);
+extern void readHeader(struct URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu);
 extern char* checkHeader(Buffer* buf, char* field);
 extern TabBuffer* newTab(void);
 extern void calcTabPos(void);
@@ -116,60 +97,7 @@ extern void addDownloadList(pid_t pid, char* url, char* save, char* lock,
 extern void stopDownload(void);
 extern int checkDownloadList(void);
 extern void download_action(struct parsed_tagarg* arg);
-extern Buffer* newBuffer(int width);
-extern Buffer* nullBuffer(void);
-extern void clearBuffer(Buffer* buf);
-extern void discardBuffer(Buffer* buf);
-extern Buffer* namedBuffer(Buffer* first, char* name);
-extern Buffer* deleteBuffer(Buffer* first, Buffer* delbuf);
-extern Buffer* replaceBuffer(Buffer* first, Buffer* delbuf, Buffer* newbuf);
-extern Buffer* nthBuffer(Buffer* firstbuf, int n);
-extern void gotoRealLine(Buffer* buf, int n);
-extern void gotoLine(Buffer* buf, int n);
-extern Buffer* selectBuffer(Buffer* firstbuf, Buffer* currentbuf,
-    char* selectchar);
-extern void reshapeBuffer(Buffer* buf);
-extern void copyBuffer(Buffer* a, Buffer* b);
-extern Buffer* prevBuffer(Buffer* first, Buffer* buf);
-extern int writeBufferCache(Buffer* buf);
-extern int readBufferCache(Buffer* buf);
-extern void displayBuffer(Buffer* buf, int mode);
-extern void addChar(char c, Lineprop mode);
-extern void addMChar(char* c, Lineprop mode, size_t len);
-extern void record_err_message(char* s);
-extern Buffer* message_list_panel(void);
-extern void message(char* s, int return_x, int return_y);
-extern void disp_err_message(char* s, int redraw_current);
-extern void disp_message_nsec(char* s, int redraw_current, int sec, int purge,
-    int mouse);
-extern void disp_message(char* s, int redraw_current);
-#define disp_message_nomouse disp_message
-extern void set_delayed_message(char* s);
-extern void cursorUp0(Buffer* buf, int n);
-extern void cursorUp(Buffer* buf, int n);
-extern void cursorDown0(Buffer* buf, int n);
-extern void cursorDown(Buffer* buf, int n);
-extern void cursorUpDown(Buffer* buf, int n);
-extern void cursorRight(Buffer* buf, int n);
-extern void cursorLeft(Buffer* buf, int n);
-extern void cursorHome(Buffer* buf);
-extern void arrangeCursor(Buffer* buf);
-extern void arrangeLine(Buffer* buf);
-extern void cursorXY(Buffer* buf, int x, int y);
-extern void restorePosition(Buffer* buf, Buffer* orig);
-extern int columnSkip(Buffer* buf, int offset);
-extern int columnPos(Line* line, int column);
-extern int columnLen(Line* line, int column);
-extern Line* lineSkip(Buffer* buf, Line* line, int offset, int last);
-extern Line* currentLineSkip(Buffer* buf, Line* line, int offset, int last);
-extern int gethtmlcmd(char** s);
-extern Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor);
-extern int calcPosition(char* l, Lineprop* pr, int len, int pos, int bpos,
-    int mode);
-extern char* lastFileName(char* path);
-extern char* mybasename(char* s);
-extern char* mydirname(char* s);
-extern int next_status(char c, int* status);
+
 extern int read_token(Str buf, char** instr, int* status, int pre, int append);
 extern Str correct_irrtag(int status);
 extern char* conv_search_string(char* str, wc_ces f_ces);
@@ -200,121 +128,16 @@ extern void do_internal(char* action, char* data);
 extern void form_write_data(FILE* f, char* boundary, char* name, char* value);
 extern void form_write_from_file(FILE* f, char* boundary, char* name,
     char* filename, char* file);
-extern MapList* searchMapList(Buffer* buf, char* name);
-extern void follow_map(struct parsed_tagarg* arg);
 
-extern MapArea* follow_map_menu(Buffer* buf, char* name, Anchor* a_img, int x,
-    int y);
-
-extern int getMapXY(Buffer* buf, Anchor* a, int* x, int* y);
-extern MapArea* retrieveCurrentMapArea(Buffer* buf);
-extern Anchor* retrieveCurrentMap(Buffer* buf);
-extern MapArea* newMapArea(char* url, char* target, char* alt, char* shape,
-    char* coords);
 extern Buffer* page_info_panel(Buffer* buf);
-extern struct frame_body* newFrame(struct parsed_tag* tag, Buffer* buf);
-extern struct frameset* newFrameSet(struct parsed_tag* tag);
-extern void addFrameSetElement(struct frameset* f,
-    union frameset_element element);
-extern void deleteFrame(struct frame_body* b);
-extern void deleteFrameSet(struct frameset* f);
-extern void deleteFrameSetElement(union frameset_element e);
-extern struct frameset* copyFrameSet(struct frameset* of);
-extern void pushFrameTree(struct frameset_queue** fqpp, struct frameset* fs,
-    Buffer* buf);
-extern struct frameset* popFrameTree(struct frameset_queue** fqpp);
-extern void resetFrameElement(union frameset_element* f_element, Buffer* buf,
-    char* referer, FormList* request);
-extern Buffer* renderFrame(Buffer* Cbuf, int force_reload);
-extern union frameset_element* search_frame(struct frameset* fset, char* name);
-extern int set_tty(void);
-extern void set_cc(int spec, int val);
-extern void close_tty(void);
-extern char* ttyname_tty(void);
-extern void reset_tty(void);
-extern MySignalHandler reset_exit(SIGNAL_ARG);
-extern MySignalHandler error_dump(SIGNAL_ARG);
-extern void set_int(void);
-extern void getTCstr(void);
-extern void setlinescols(void);
-extern void setupscreen(void);
-extern pid_t open_pipe_rw(FILE** fr, FILE** fw);
-extern int initscr(void);
-extern void move(int line, int column);
-extern void addmch(char* p, size_t len);
-extern void addch(char c);
-extern void wrap(void);
-extern void touch_line(void);
-extern void standout(void);
-extern void standend(void);
-extern void bold(void);
-extern void boldend(void);
-extern void underline(void);
-extern void underlineend(void);
-extern void graphstart(void);
-extern void graphend(void);
-extern int graph_ok(void);
-extern void setfcolor(int color);
-extern void setbcolor(int color);
-extern void refresh(void);
-extern void clear(void);
-extern void clrtoeol(void);
-extern void clrtoeolx(void);
-extern void clrtobot(void);
-extern void clrtobotx(void);
-extern void no_clrtoeol(void);
-extern void addstr(char* s);
-extern void addnstr(char* s, int n);
-extern void addnstr_sup(char* s, int n);
-extern void crmode(void);
-extern void nocrmode(void);
-extern void term_echo(void);
-extern void term_noecho(void);
-extern void term_raw(void);
-extern void term_cooked(void);
-extern void term_cbreak(void);
-extern void term_title(char* s);
-extern void flush_tty(void);
-extern void toggle_stand(void);
-extern void bell(void);
-extern int sleep_till_anykey(int sec, int purge);
-extern void touch_cursor(void);
+
+
 extern void initMimeTypes(void);
 extern void free_ssl_ctx(void);
-extern ParsedURL* baseURL(Buffer* buf);
-extern int openSocket(char* hostname, char* remoteport_name,
-    unsigned short remoteport_num);
-extern void parseURL(const char* url, ParsedURL* p_url, ParsedURL* current);
-extern void copyParsedURL(ParsedURL* p, const ParsedURL* q);
-extern void parseURL2(const char* url, ParsedURL* pu, ParsedURL* current);
-extern Str parsedURL2Str(ParsedURL* pu);
-extern Str parsedURL2RefererStr(ParsedURL* pu);
-extern int getURLScheme(char** url);
-extern void init_stream(URLFile* uf, int scheme, InputStream stream);
-Str HTTPrequestMethod(HRequest* hr);
-Str HTTPrequestURI(ParsedURL* pu, HRequest* hr);
-extern URLFile openURL(const char* url, ParsedURL* pu, ParsedURL* current,
-    URLOption* option, FormList* request,
-    TextList* extra_header, URLFile* ouf,
-    HRequest* hr, unsigned char* status);
-extern int mailcapMatch(struct mailcap* mcap, char* type);
-extern struct mailcap* searchMailcap(struct mailcap* table, char* type);
-extern void initMailcap(void);
-extern char* acceptableMimeTypes(void);
-extern struct mailcap* searchExtViewer(const char* type);
-extern Str unquote_mailcap(char* qstr, char* type, char* name, char* attr,
-    int* mc_stat);
+
 extern char* guessContentType(char* filename);
-extern TextList* make_domain_list(char* domain_list);
 extern int check_no_proxy(char* domain);
-extern InputStream openFTPStream(ParsedURL* pu, URLFile* uf);
-extern Str loadFTPDir(ParsedURL* pu, wc_ces* charset);
-extern void closeFTP(void);
-extern void disconnectFTP(void);
-extern InputStream openNewsStream(ParsedURL* pu);
-extern Str loadNewsgroup(ParsedURL* pu, wc_ces* charset);
-extern void closeNews(void);
-extern void disconnectNews(void);
+
 extern AnchorList* putAnchor(AnchorList* al, char* url, char* target,
     Anchor** anchor_return, char* referer,
     char* title, unsigned char key, int line,
@@ -348,35 +171,8 @@ extern void shiftAnchorPosition(AnchorList* a, HmarkerList* hl, int line,
 extern char* getAnchorText(Buffer* buf, AnchorList* al, Anchor* a);
 extern Buffer* link_list_panel(Buffer* buf);
 
-extern Str decodeB(char** ww);
-extern void decodeB_to_growbuf(struct growbuf* gb, char** ww);
-extern Str decodeQ(char** ww);
-extern Str decodeQP(char** ww);
-extern void decodeQP_to_growbuf(struct growbuf* gb, char** ww);
-extern Str decodeU(char** ww);
-extern void decodeU_to_growbuf(struct growbuf* gb, char** ww);
-extern Str decodeWord(char** ow, wc_ces* charset);
-extern Str decodeMIME(Str orgstr, wc_ces* charset);
-extern int set_param_option(char* option);
-extern char* get_param_option(char* name);
-extern void init_rc(void);
-extern void init_tmp(void);
-extern Buffer* load_option_panel(void);
-extern void panel_set_option(struct parsed_tagarg*);
-extern void sync_with_option(void);
-extern char* rcFile(char* base);
-extern char* etcFile(char* base);
-extern char* confFile(char* base);
-extern char* auxbinFile(char* base);
-extern char* libFile(char* base);
-extern char* helpFile(char* base);
 extern const void* querySiteconf(const ParsedURL* query_pu, int field);
-extern Str localCookie(void);
-extern Str loadLocalDir(char* dirname);
-extern void set_environ(char* var, char* value);
-extern FILE* localcgi_post(char*, char*, FormList*, char*);
-#define localcgi_get(u, q, r) localcgi_post((u), (q), NULL, (r))
-extern FILE* openSecretFile(char* fname);
+
 extern void loadPasswd(void);
 extern void loadPreForm(void);
 extern int find_auth_user_passwd(ParsedURL* pu, char* realm,
@@ -388,37 +184,12 @@ extern void invalidate_auth_user_passwd(ParsedURL* pu, char* realm,
 extern char* last_modified(Buffer* buf);
 extern Str romanNumeral(int n);
 extern Str romanAlphabet(int n);
-extern void setup_child(int child, int i, int f);
-extern void myExec(char* command);
 extern void mySystem(char* command, int background);
-extern Str myExtCommand(char* cmd, char* arg, int redirect);
-extern Str myEditor(char* cmd, char* file, int line);
-extern int is_localhost(const char* host);
 extern char* file_to_url(char* file);
 extern char* url_unquote_conv(char* url, wc_ces charset);
 extern char* expandName(char* name);
-extern Str tmpfname(int type, char* ext);
-extern time_t mymktime(char* timestr);
-extern void (*mySignal(int signal_number, void (*action)(int)))(int);
-extern char* FQDN(char* host);
-extern Str find_cookie(ParsedURL* pu);
-extern int add_cookie(ParsedURL* pu, Str name, Str value, time_t expires,
-    Str domain, Str path, int flag, Str comment, int version,
-    Str port, Str commentURL);
-extern void save_cookies(void);
-extern void load_cookies(void);
-extern void initCookie(void);
-extern Buffer* cookie_list_panel(void);
-extern void set_cookie_flag(struct parsed_tagarg* arg);
-extern int check_cookie_accept_domain(char* domain);
-extern void change_charset(struct parsed_tagarg* arg);
 
-extern void initImage(void);
-extern void termImage(void);
-extern void addImage(ImageCache* cache, int x, int y, int sx, int sy, int w,
-    int h);
-extern void drawImage(void);
-extern void clearImage(void);
+extern void change_charset(struct parsed_tagarg* arg);
 
 extern char* searchKeyData(void);
 
@@ -430,20 +201,6 @@ extern char* getWord(char** str);
 extern char* getQWord(char** str);
 struct regex;
 extern char* getRegexWord(const char** str, struct regex** regex_ret);
-
-extern void new_menu(Menu* menu, MenuItem* item);
-extern void geom_menu(Menu* menu, int x, int y, int mselect);
-extern void draw_all_menu(Menu* menu);
-extern void draw_menu(Menu* menu);
-extern void draw_menu_item(Menu* menu, int mselect);
-extern int select_menu(Menu* menu, int mselect);
-extern void goto_menu(Menu* menu, int mselect, int down);
-extern void up_menu(Menu* menu, int n);
-extern void down_menu(Menu* menu, int n);
-extern int action_menu(Menu* menu);
-extern void popup_menu(Menu* parent, Menu* menu);
-extern void guess_menu_xy(Menu* menu, int width, int* x, int* y);
-extern void new_option_menu(Menu* menu, char** label, int* variable, const char* cmd);
 
 extern int setMenuItem(MenuItem* item, char* type, char* line);
 extern int addMenuList(MenuList** list, char* id);
@@ -458,4 +215,3 @@ extern char* guess_save_name(Buffer* buf, char* file);
 
 extern Str getLinkNumberStr(int correction);
 
-extern Str base64_encode(const char* src, size_t len);

@@ -1,12 +1,16 @@
 #include "display.h"
+#include "maparea.h"
+#include "buffer.h"
 #include "image.h"
+#include "url.h"
 #include "symbol.h"
 #include "global.h"
 #include "history.h"
 #include "defun_impl.h"
+#include "fm.h"
+#include "proto.h"
 #include <math.h>
 #include <signal.h>
-#include "fm.h"
 
 extern unsigned char last_key;
 

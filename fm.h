@@ -107,13 +107,6 @@
 
 #define COLPOS(l, c) calcPosition(l->lineBuf, l->propBuf, l->len, c, 0, CP_AUTO)
 
-/* Flags for displayBuffer() */
-#define B_NORMAL 0
-#define B_FORCE_REDRAW 1
-#define B_REDRAW 2
-#define B_SCROLL 3
-#define B_REDRAW_IMAGE 4
-
 /* Buffer Property */
 #define BP_NORMAL 0x0
 #define BP_PIPE 0x1
@@ -240,23 +233,6 @@ extern int REV_LB[];
  * Types.
  */
 
-typedef struct _MapArea {
-    char* url;
-    char* target;
-    char* alt;
-    char shape;
-    short* coords;
-    int ncoords;
-    short center_x;
-    short center_y;
-} MapArea;
-
-typedef struct _MapList {
-    Str name;
-    GeneralList* area;
-    struct _MapList* next;
-} MapList;
-
 typedef struct {
     int line;
     int pos;
@@ -367,7 +343,7 @@ typedef struct _Buffer {
     AnchorList* formitem;
     LinkList* linklist;
     FormList* formlist;
-    MapList* maplist;
+    struct _MapList* maplist;
     HmarkerList* hmarklist;
     HmarkerList* imarklist;
     ParsedURL currentURL;
@@ -691,14 +667,6 @@ typedef struct http_request {
 #define HTST_NORMAL 0
 #define HTST_CONNECT 1
 
-#define TMPF_DFL 0
-#define TMPF_SRC 1
-#define TMPF_FRAME 2
-#define TMPF_CACHE 3
-#define TMPF_COOKIE 4
-#define TMPF_HIST 5
-#define MAX_TMPF_TYPE 6
-
 #define set_no_proxy(domains) (NO_proxy_domains = make_domain_list(domains))
 
 /*
@@ -812,4 +780,4 @@ void w3m_exit(int i);
  * Externals
  */
 
-#include "proto.h"
+// #include "proto.h"

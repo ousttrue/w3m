@@ -1,6 +1,4 @@
-/* $Id: textlist.h,v 1.6 2003/01/20 15:30:22 ukai Exp $ */
-#ifndef TEXTLIST_H
-#define TEXTLIST_H
+#pragma once
 #include "Str.h"
 #include <limits.h>
 #define GENERAL_LIST_MAX (INT_MAX / 32)
@@ -75,4 +73,4 @@ extern void appendTextLine(TextLineList* tl, Str line, int pos);
 #define rpopTextLine(tl) ((TextLine*)rpopValue((GeneralList*)(tl)))
 #define appendTextLineList(tl, tl2) ((TextLineList*)appendGeneralList((GeneralList*)(tl), (GeneralList*)(tl2)))
 
-#endif /* not TEXTLIST_H */
+extern TextList* make_domain_list(const char* domain_list);
