@@ -3,6 +3,7 @@
 #include "html.h"
 #include "myctype.h"
 #include "line_input.h"
+#include "setjmp_util.h"
 
 #include <malloc.h>
 #include <sys/socket.h>
@@ -12,7 +13,6 @@
 #include <stdio.h>
 #include <pwd.h>
 #include <signal.h>
-#include <setjmp.h>
 #include <time.h>
 #include <unistd.h>
 

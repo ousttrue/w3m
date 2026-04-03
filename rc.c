@@ -40,9 +40,7 @@ static int RC_table_size;
 #define P_CHARINT 2
 #define P_CHAR 3
 #define P_STRING 4
-#if defined(USE_SSL) && defined(USE_SSL_VERIFY)
 #define P_SSLPATH 5
-#endif
 #define P_COLOR 6
 #define P_CODE 7
 #define P_PIXELS 8
@@ -784,11 +782,11 @@ void show_params(FILE* fp)
             case P_STRING:
                 t = "string";
                 break;
-#if defined(USE_SSL) && defined(USE_SSL_VERIFY)
+
             case P_SSLPATH:
                 t = "path";
                 break;
-#endif
+
             case P_COLOR:
                 t = "color";
                 break;
@@ -923,7 +921,6 @@ set_param(char* name, char* value)
     case P_STRING:
         *(char**)p->varptr = value;
         break;
-#if defined(USE_SSL) && defined(USE_SSL_VERIFY)
     case P_SSLPATH:
         if (value != NULL && value[0] != '\0')
             *(char**)p->varptr = rcFile(value);
@@ -931,7 +928,7 @@ set_param(char* name, char* value)
             *(char**)p->varptr = NULL;
         ssl_path_modified = 1;
         break;
-#endif
+
     case P_COLOR:
         *(int*)p->varptr = str_to_color(value);
         break;
@@ -1260,9 +1257,8 @@ to_str(struct param_ptr* p)
     case P_CHAR:
         return Sprintf("%c", *(char*)p->varptr);
     case P_STRING:
-#if defined(USE_SSL) && defined(USE_SSL_VERIFY)
+
     case P_SSLPATH:
-#endif
         /*  SystemCharset -> InnerCharset */
         return Strnew_charp(conv_from_system(*(char**)p->varptr));
     case P_PIXELS:

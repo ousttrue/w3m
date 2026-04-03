@@ -1,22 +1,20 @@
 /* $Id: url.c,v 1.100 2010/12/15 10:50:24 htrb Exp $ */
 #include "fm.h"
+#include "html.h"
+#include "Str.h"
+#include "myctype.h"
+#include "regex.h"
+#include "setjmp_util.h"
+
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-
 #include <signal.h>
-#include <setjmp.h>
 #include <errno.h>
-
 #include <sys/stat.h>
-
-#include "html.h"
-#include "Str.h"
-#include "myctype.h"
-#include "regex.h"
 
 #ifndef SSLEAY_VERSION_NUMBER
 #include <openssl/crypto.h> /* SSLEAY_VERSION_NUMBER may be here */

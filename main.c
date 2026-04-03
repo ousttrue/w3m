@@ -17,7 +17,7 @@
 #include "ucs.h"
 #include <stdio.h>
 #include <signal.h>
-#include <setjmp.h>
+#include "setjmp_util.h"
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -26,6 +26,7 @@
 #include <sys/wait.h>
 #include <time.h>
 
+#define USE_IMAGE 1
 unsigned char last_key = 0;
 
 #include "util.h"
