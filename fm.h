@@ -10,21 +10,9 @@
 #ifndef FM_H
 #define FM_H
 
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE /* strcasestr() */
-#endif
-
 #define W3M_LANG EN
 #define LANG W3M_LANG
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <limits.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
 #include "config.h"
 
 #define MENU_SELECT

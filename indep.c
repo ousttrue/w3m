@@ -8,6 +8,7 @@
 #include "indep.h"
 #include "Str.h"
 #include <gc.h>
+#include <unistd.h>
 #include "myctype.h"
 #include "entity.h"
 

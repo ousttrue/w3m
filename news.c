@@ -6,6 +6,7 @@
 #include <time.h>
 #include <signal.h>
 #include <setjmp.h>
+#include <unistd.h>
 
 
 #define NEWS_ENDLINE(p) \

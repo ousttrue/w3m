@@ -13,6 +13,7 @@
 #include <sys/wait.h>
 
 #include <signal.h>
+#include <unistd.h>
 
 
 struct auth_pass {

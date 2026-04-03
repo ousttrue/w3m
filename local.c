@@ -7,9 +7,7 @@
 #include <sys/stat.h>
 #include <signal.h>
 #include <errno.h>
-#ifdef HAVE_READLINK
 #include <unistd.h>
-#endif /* HAVE_READLINK */
 #include "local.h"
 #include "hash.h"
 
@@ -149,7 +147,6 @@ Str loadLocalDir(char* dname)
                 Strcat_charp(tmp, "<BR>\n");
             }
         } else {
-#if defined(HAVE_LSTAT) && defined(HAVE_READLINK)
             if (S_ISLNK(lst.st_mode)) {
                 if ((l = readlink(fbuf->ptr, lbuf, sizeof(lbuf) - 1)) > 0) {
                     lbuf[l] = '\0';
@@ -159,7 +156,7 @@ Str loadLocalDir(char* dname)
                         Strcat_char(tmp, '/');
                 }
             }
-#endif /* HAVE_LSTAT && HAVE_READLINK */
+
             Strcat_charp(tmp, "<br>\n");
         }
     }

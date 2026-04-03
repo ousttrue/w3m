@@ -9,6 +9,7 @@
 #include "util.h"
 #include "regex.h"
 #include <signal.h>
+#include <unistd.h>
 
 void nulcmd(struct CmdArgs args)
 { /* do nothing */

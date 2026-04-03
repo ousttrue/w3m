@@ -14,6 +14,7 @@
 #include <signal.h>
 #include <setjmp.h>
 #include <time.h>
+#include <unistd.h>
 
 #define HAVE_SOCKLEN_T 1
 #ifndef HAVE_SOCKLEN_T
