@@ -812,5 +812,4 @@ void w3m_exit(int i);
  * Externals
  */
 
-#include "table.h"
 #include "proto.h"

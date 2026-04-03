@@ -182,22 +182,7 @@ extern struct table* newTable(void);
 extern void pushdata(struct table* t, int row, int col, char* data);
 extern int visible_length(char* str);
 extern void align(TextLine* lbuf, int width, int mode);
-extern void print_item(struct table* t, int row, int col, int width, Str buf);
-extern void print_sep(struct table* t, int row, int type, int maxcol, Str buf);
-extern void do_refill(struct table* tbl, int row, int col, int maxlimit);
-extern void initRenderTable(void);
-extern void renderTable(struct table* t, int max_width,
-    struct html_feed_environ* h_env);
-extern struct table* begin_table(int border, int spacing, int padding,
-    int vspace);
-extern void end_table(struct table* tbl);
-extern void check_rowcol(struct table* tbl, struct table_mode* mode);
-extern int minimum_length(char* line);
-extern int feed_table(struct table* tbl, char* line, struct table_mode* mode,
-    int width, int internal);
-extern void feed_table1(struct table* tbl, Str tok, struct table_mode* mode,
-    int width);
-extern void pushTable(struct table*, struct table*);
+
 extern struct form_list* newFormList(char* action, char* method, char* charset,
     char* enctype, char* target, char* name,
     struct form_list* _next);

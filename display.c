@@ -4,6 +4,7 @@
 #include "global.h"
 #include "history.h"
 #include "defun_impl.h"
+#include <math.h>
 #include <signal.h>
 #include "fm.h"
 

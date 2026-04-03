@@ -1,4 +1,6 @@
-/* $Id: table.h,v 1.12 2003/09/22 21:02:21 ukai Exp $ */
+#pragma once
+#include "line.h"
+
 #define MATRIX
 #if (defined(MESCHACH) && !defined(MATRIX))
 #define MATRIX
@@ -53,7 +55,7 @@ struct table_in {
     short row;
     short cell;
     short indent;
-    TextLineList* buf;
+    struct _textlinelist* buf;
 };
 
 struct table_linfo {
@@ -81,7 +83,7 @@ struct table {
     int flag;
     Str caption;
     Str id;
-    GeneralList*** tabdata;
+    struct _generallist*** tabdata;
     table_attr** tabattr;
     table_attr trattr;
     Str** tabidvalue;
@@ -94,7 +96,7 @@ struct table {
     struct table_in* tables;
     short ntable;
     short tables_size;
-    TextList* suspended_data;
+    struct _textlist* suspended_data;
     /* use for counting skipped spaces */
     struct table_linfo linfo;
     MAT* matrix;
@@ -126,7 +128,19 @@ struct table_mode {
     unsigned char end_tag;
 };
 
-/* Local Variables:    */
-/* c-basic-offset: 4   */
-/* tab-width: 8        */
-/* End:                */
+extern void print_item(struct table* t, int row, int col, int width, Str buf);
+extern void print_sep(struct table* t, int row, int type, int maxcol, Str buf);
+extern void do_refill(struct table* tbl, int row, int col, int maxlimit);
+extern void initRenderTable(void);
+struct html_feed_environ;
+extern void renderTable(struct table* t, int max_width, struct html_feed_environ* h_env);
+extern struct table* begin_table(int border, int spacing, int padding,
+    int vspace);
+extern void end_table(struct table* tbl);
+extern void check_rowcol(struct table* tbl, struct table_mode* mode);
+extern int minimum_length(char* line);
+extern int feed_table(struct table* tbl, char* line, struct table_mode* mode,
+    int width, int internal);
+extern void feed_table1(struct table* tbl, Str tok, struct table_mode* mode,
+    int width);
+extern void pushTable(struct table*, struct table*);

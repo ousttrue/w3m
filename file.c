@@ -1,4 +1,6 @@
 #include "display.h"
+#include "textlist.h"
+#include "table.h"
 #include "image.h"
 #include "symbol.h"
 #include "constants.h"
