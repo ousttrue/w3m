@@ -1,4 +1,5 @@
-#include <stdio.h>
+#include "global.h"
+#include "symbol.h"
 #include "defun_impl.h"
 #include "history.h"
 #include "line_input.h"
@@ -7,6 +8,7 @@
 #include "func.h"
 #include "myctype.h"
 #include "regex.h"
+#include <stdio.h>
 
 #define MENU_FILE "menu"
 

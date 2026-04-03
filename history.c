@@ -1,3 +1,4 @@
+#include "global.h"
 #include "history.h"
 #include "alloc.h"
 #include "indep.h"

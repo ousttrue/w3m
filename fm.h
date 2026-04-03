@@ -46,8 +46,6 @@
 #define MAX_IMAGE 1000
 #define MAX_IMAGE_SIZE 2048
 
-#define DEFAULT_PIXEL_PER_CHAR 7.0 /* arbitrary */
-#define DEFAULT_PIXEL_PER_LINE 14.0 /* arbitrary */
 #define MINIMUM_PIXEL_PER_CHAR 4.0
 #define MAXIMUM_PIXEL_PER_CHAR 32.0
 
@@ -714,22 +712,6 @@ extern int LASTLINE;
 #define LASTLINE (LINES - 1)
 #endif /* not defined(__CYGWIN__) */
 
-global char SearchHeader init(FALSE);
-global char* DefaultType init(NULL);
-global char RenderFrame init(FALSE);
-global char TargetSelf init(FALSE);
-global char PermitSaveToPipe init(FALSE);
-global char DecodeCTE init(FALSE);
-global char AutoUncompress init(FALSE);
-global char PreserveTimestamp init(TRUE);
-global char ArgvIsURL init(TRUE);
-global char MetaRefresh init(FALSE);
-global char LocalhostOnly init(FALSE);
-global char* HostName init(NULL);
-
-global char fmInitialized init(FALSE);
-global char QuietMessage init(FALSE);
-global char TrapSignal init(TRUE);
 #define TRAP_ON                                \
     if (TrapSignal) {                          \
         prevtrap = mySignal(SIGINT, KeyAbort); \
@@ -746,42 +728,14 @@ global char TrapSignal init(TRUE);
 
 extern void w3mFunc(const char* cmd);
 
-global char* HTTP_proxy init(NULL);
-global char* HTTPS_proxy init(NULL);
-global char* GOPHER_proxy init(NULL);
-global char* FTP_proxy init(NULL);
 global ParsedURL HTTP_proxy_parsed;
 global ParsedURL HTTPS_proxy_parsed;
 global ParsedURL GOPHER_proxy_parsed;
 global ParsedURL FTP_proxy_parsed;
-global char* NO_proxy init(NULL);
-global int NOproxy_netaddr init(TRUE);
-#define DNS_ORDER_UNSPEC 0
-#define DNS_ORDER_INET_INET6 1
-#define DNS_ORDER_INET6_INET 2
-#define DNS_ORDER_INET_ONLY 4
-#define DNS_ORDER_INET6_ONLY 6
-global int DNS_order init(DNS_ORDER_UNSPEC);
 extern int ai_family_order_table[7][3]; /* XXX */
-global TextList* NO_proxy_domains;
-global char NoCache init(FALSE);
-global char use_proxy init(TRUE);
 #define Do_not_use_proxy (!use_proxy)
-global int Do_not_use_ti_te init(FALSE);
-global char* NNTP_server init(NULL);
-global char* NNTP_mode init(NULL);
-global int MaxNewsMessage init(50);
+global TextList* NO_proxy_domains;
 
-global char* document_root init(NULL);
-global char* personal_document_root init(NULL);
-global char* cgi_bin init(NULL);
-global char* index_file init(NULL);
-
-global char* CurrentDir;
-global int CurrentPid;
-#if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
-global char* MyProgramName init("w3m");
-#endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
 /*
  * global Buffer *Currentbuf;
  * global Buffer *Firstbuf;
@@ -789,22 +743,11 @@ global char* MyProgramName init("w3m");
 global TabBuffer* CurrentTab;
 global TabBuffer* FirstTab;
 global TabBuffer* LastTab;
-global int open_tab_blank init(FALSE);
-global int open_tab_dl_list init(FALSE);
-global int close_tab_back init(FALSE);
-global int nTab;
-global int TabCols init(10);
 #define NO_TABBUFFER ((TabBuffer*)1)
 #define Currentbuf (CurrentTab->currentBuffer)
 #define Firstbuf (CurrentTab->firstBuffer)
 global DownloadList* FirstDL init(NULL);
 global DownloadList* LastDL init(NULL);
-global int CurrentKey;
-global char* CurrentKeyData;
-global char* CurrentCmdData;
-global char* w3m_reqlog;
-extern char* w3m_version;
-extern int enable_inline_image;
 
 #define DUMP_BUFFER 0x01
 #define DUMP_HEAD 0x02
@@ -812,123 +755,13 @@ extern int enable_inline_image;
 #define DUMP_EXTRA 0x08
 #define DUMP_HALFDUMP 0x10
 #define DUMP_FRAME 0x20
-global int w3m_debug;
-global int w3m_dump init(0);
 #define w3m_halfdump (w3m_dump & DUMP_HALFDUMP)
-global int w3m_halfload init(FALSE);
 global Str header_string init(NULL);
-global int override_content_type init(FALSE);
-global int override_user_agent init(FALSE);
-
-global int useColor init(TRUE);
-global int highIntensityColors init(FALSE);
-global int basic_color init(8); /* don't change */
-global int anchor_color init(4); /* blue  */
-global int image_color init(2); /* green */
-global int form_color init(1); /* red   */
-global int bg_color init(8); /* don't change */
-global int mark_color init(6); /* cyan */
-global int useActiveColor init(FALSE);
-global int active_color init(6); /* cyan */
-global int useVisitedColor init(FALSE);
-global int visited_color init(5); /* magenta  */
-global int confirm_on_quit init(TRUE);
-global int use_mark init(FALSE);
-global int emacs_like_lineedit init(FALSE);
-global int space_autocomplete init(FALSE);
-global int vi_prec_num init(FALSE);
-global int label_topline init(FALSE);
-global int nextpage_topline init(FALSE);
-global char* displayTitleTerm init(NULL);
-global int displayLink init(FALSE);
-global int displayLinkNumber init(FALSE);
-global int displayLineInfo init(FALSE);
-global int DecodeURL init(FALSE);
-global int retryAsHttp init(TRUE);
-global int showLineNum init(FALSE);
-global int show_srch_str init(TRUE);
-#define IMGDISPLAY "w3mimgdisplay"
-global char* Imgdisplay init(IMGDISPLAY);
-global int activeImage init(FALSE);
-global int displayImage init(TRUE);
-global int autoImage init(TRUE);
-global int useExtImageViewer init(TRUE);
-global int maxLoadImage init(4);
-global int image_map_list init(TRUE);
-global int pseudoInlines init(TRUE);
-#define DEF_EDITOR "/usr/bin/vi"
-global char* Editor init(DEF_EDITOR);
-#define DEF_MAILER "/usr/bin/mail"
-global char* Mailer init(DEF_MAILER);
-#define MAILTO_OPTIONS_IGNORE 1
-#define MAILTO_OPTIONS_USE_MAILTO_URL 2
-global int MailtoOptions init(MAILTO_OPTIONS_IGNORE);
-#define DEF_EXT_BROWSER "/usr/bin/firefox"
-global char* ExtBrowser init(DEF_EXT_BROWSER);
-global char* ExtBrowser2 init(NULL);
-global char* ExtBrowser3 init(NULL);
-global char* ExtBrowser4 init(NULL);
-global char* ExtBrowser5 init(NULL);
-global char* ExtBrowser6 init(NULL);
-global char* ExtBrowser7 init(NULL);
-global char* ExtBrowser8 init(NULL);
-global char* ExtBrowser9 init(NULL);
-global int BackgroundExtViewer init(TRUE);
-global int disable_secret_security_check init(FALSE);
-#define PASSWD_FILE RC_DIR "/passwd"
-global char* passwd_file init(PASSWD_FILE);
-#define PRE_FORM_FILE RC_DIR "/pre_form"
-global char* pre_form_file init(PRE_FORM_FILE);
-#define SITECONF_FILE RC_DIR "/siteconf"
-global char* siteconf_file init(SITECONF_FILE);
-global char* ftppasswd init(NULL);
-global int ftppass_hostnamegen init(TRUE);
-global int do_download init(FALSE);
-global char* image_source init(NULL);
-global char* UserAgent init(NULL);
-global int NoSendReferer init(FALSE);
-global int CrossOriginReferer init(TRUE);
-global char* AcceptLang init(NULL);
-global char* AcceptEncoding init(NULL);
-global char* AcceptMedia init(NULL);
-global int WrapDefault init(FALSE);
-global int IgnoreCase init(TRUE);
-global int WrapSearch init(FALSE);
-global int squeezeBlankLine init(FALSE);
-global char* BookmarkFile init(NULL);
-global int UseExternalDirBuffer init(TRUE);
-global char* DirBufferCommand init("file:///$LIB/dirlist" CGI_EXTENSION);
-global int UseDictCommand init(TRUE);
-global char* DictCommand init("file:///$LIB/w3mdict" CGI_EXTENSION);
-global int ignore_null_img_alt init(TRUE);
-#define DISPLAY_INS_DEL_SIMPLE 0
-#define DISPLAY_INS_DEL_NORMAL 1
-#define DISPLAY_INS_DEL_FONTIFY 2
-global int displayInsDel init(DISPLAY_INS_DEL_NORMAL);
-global int FoldTextarea init(FALSE);
-global int FoldLine init(FALSE);
-#define DEFAULT_URL_EMPTY 0
-#define DEFAULT_URL_CURRENT 1
-#define DEFAULT_URL_LINK 2
-global int DefaultURLString init(DEFAULT_URL_CURRENT);
-global int MarkAllPages init(FALSE);
 
 global struct auth_cookie* Auth_cookie init(NULL);
 global struct cookie* First_cookie init(NULL);
 
-#define USER_MAILCAP RC_DIR "/mailcap"
-#define SYS_MAILCAP CONF_DIR "/mailcap"
-global char* mailcap_files init(USER_MAILCAP ", " SYS_MAILCAP);
-#define USER_MIMETYPES "~/.mime.types"
-#define SYS_MIMETYPES ETC_DIR "/mime.types"
-global char* mimetypes_files init(USER_MIMETYPES ", " SYS_MIMETYPES);
-
 global TextList* fileToDelete;
-
-global int UseHistory init(TRUE);
-global int URLHistSize init(100);
-global int SaveURLHist init(TRUE);
-global int multicolList init(FALSE);
 
 global wc_ces InnerCharset init(WC_CES_WTF); /* Don't change */
 #define DISPLAY_CHARSET WC_CES_UTF_8
@@ -938,67 +771,17 @@ global wc_ces DocumentCharset init(DOCUMENT_CHARSET);
 #define SYSTEM_CHARSET WC_CES_UTF_8
 global wc_ces SystemCharset init(SYSTEM_CHARSET);
 global wc_ces BookmarkCharset init(SYSTEM_CHARSET);
-global char ExtHalfdump init(FALSE);
-global char FollowLocale init(TRUE);
-global char UseContentCharset init(TRUE);
-global char SearchConv init(TRUE);
-global char SimplePreserveSpace init(FALSE);
+
 #define Str_conv_from_system(x) wc_Str_conv((x), SystemCharset, InnerCharset)
 #define Str_conv_to_system(x) wc_Str_conv_strict((x), InnerCharset, SystemCharset)
 #define Str_conv_to_halfdump(x) (ExtHalfdump ? wc_Str_conv((x), InnerCharset, DisplayCharset) : (x))
 #define conv_from_system(x) wc_conv((x), SystemCharset, InnerCharset)->ptr
 #define conv_to_system(x) wc_conv_strict((x), InnerCharset, SystemCharset)->ptr
 #define url_quote_conv(x, c) url_quote(wc_conv_strict((x), InnerCharset, (c))->ptr)
-global char UseAltEntity init(FALSE);
-#define GRAPHIC_CHAR_ASCII 2
-#define GRAPHIC_CHAR_DEC 1
-#define GRAPHIC_CHAR_CHARSET 0
-global char UseGraphicChar init(GRAPHIC_CHAR_CHARSET);
-global char DisplayBorders init(FALSE);
-global char DisableCenter init(FALSE);
-extern char* graph_symbol[];
-extern char* graph2_symbol[];
-extern int symbol_width;
-extern int symbol_width0;
-#define N_GRAPH_SYMBOL 32
-#define N_SYMBOL (N_GRAPH_SYMBOL + 14)
-#define SYMBOL_BASE 0x20
-global int no_rc_dir init(FALSE);
-global char* rc_dir init(NULL);
-global char* tmp_dir;
-global char* param_tmp_dir init(NULL);
-global char* mkd_tmp_dir init(NULL);
-global char* config_file init(NULL);
 
-global int default_use_cookie init(TRUE);
-global int use_cookie init(TRUE);
-global int show_cookie init(FALSE);
-global int accept_cookie init(TRUE);
-#define ACCEPT_BAD_COOKIE_DISCARD 0
-#define ACCEPT_BAD_COOKIE_ACCEPT 1
-#define ACCEPT_BAD_COOKIE_ASK 2
-global int accept_bad_cookie init(ACCEPT_BAD_COOKIE_DISCARD);
-global char* cookie_reject_domains init(NULL);
-global char* cookie_accept_domains init(NULL);
-global char* cookie_avoid_wrong_number_of_dots init(NULL);
 global TextList* Cookie_reject_domains;
 global TextList* Cookie_accept_domains;
 global TextList* Cookie_avoid_wrong_number_of_dots_domains;
-
-global int view_unseenobject init(FALSE);
-
-global int ssl_verify_server init(TRUE);
-global char* ssl_cert_file init(NULL);
-global char* ssl_key_file init(NULL);
-global char* ssl_ca_path init(NULL);
-#define DEF_CAFILE ""
-global char* ssl_ca_file init(DEF_CAFILE);
-global int ssl_ca_default init(TRUE);
-global int ssl_path_modified init(FALSE);
-
-global char* ssl_forbid_method init("2, 3, t, 5");
-
-global char* ssl_min_version init(NULL);
 
 #if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
 global char* ssl_cipher init("DEFAULT:!LOW:!RC4:!EXP");
@@ -1006,33 +789,18 @@ global char* ssl_cipher init("DEFAULT:!LOW:!RC4:!EXP");
 global char* ssl_cipher init(NULL);
 #endif
 
-global int is_redisplay init(FALSE);
-global int clear_buffer init(TRUE);
-global double pixel_per_char init(DEFAULT_PIXEL_PER_CHAR);
-global int pixel_per_char_i init(DEFAULT_PIXEL_PER_CHAR);
-global int set_pixel_per_char init(FALSE);
-global double pixel_per_line init(DEFAULT_PIXEL_PER_LINE);
-global int pixel_per_line_i init(DEFAULT_PIXEL_PER_LINE);
-global int set_pixel_per_line init(FALSE);
-global double image_scale init(100);
-global int use_lessopen init(FALSE);
-
-#define KEYMAP_FILE "keymap"
-global char* keymap_file init(KEYMAP_FILE);
-
 #define get_mctype(c) ((Lineprop)wtf_type((wc_uchar*)(c)) << 8)
 #define get_mclen(c) wtf_len1((wc_uchar*)(c))
 #define get_mcwidth(c) wtf_width((wc_uchar*)(c))
 #define get_strwidth(c) wtf_strwidth((wc_uchar*)(c))
 #define get_Str_strwidth(c) wtf_strwidth((wc_uchar*)((c)->ptr))
 
-global int FollowRedirection init(10);
-
-global int w3m_backend init(FALSE);
 global TextLineList* backend_halfdump_buf;
 global TextList* backend_batch_commands init(NULL);
+global char* ssl_forbid_method init("2, 3, t, 5");
+
 int backend(void);
-extern void deleteFiles(void);
+void deleteFiles(void);
 void w3m_exit(int i);
 
 #define AL_UNSET 0

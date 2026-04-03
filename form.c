@@ -1,7 +1,4 @@
-/* $Id: form.c,v 1.35 2010/07/18 13:48:48 htrb Exp $ */
-/*
- * HTML forms
- */
+#include "global.h"
 #include "display.h"
 #include "fm.h"
 #include "parsetag.h"

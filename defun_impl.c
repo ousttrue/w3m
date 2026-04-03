@@ -1,4 +1,5 @@
 #include "defun_impl.h"
+#include "global.h"
 #include "history.h"
 #include "line_input.h"
 #include "keybind.h"

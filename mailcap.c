@@ -1,4 +1,4 @@
-/* $Id: mailcap.c,v 1.13 2006/08/07 03:10:26 ukai Exp $ */
+#include "global.h"
 #include "fm.h"
 #include "myctype.h"
 #include <stdio.h>

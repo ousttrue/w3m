@@ -1,4 +1,5 @@
 #include "fm.h"
+#include "w3m/constants.h"
 #include "global.h"
 #include "history.h"
 #include "myctype.h"
@@ -1152,7 +1153,7 @@ void init_rc(void)
 
     i = strlen(rc_dir);
     if (i > 1 && rc_dir[i - 1] == '/')
-        rc_dir[i - 1] = '\0';
+        ((char*)rc_dir)[i - 1] = '\0';
 
     display_charset_str = wc_get_ces_list();
     document_charset_str = display_charset_str;
@@ -1210,7 +1211,7 @@ void init_tmp(void)
     tmp_dir = expandPath(tmp_dir);
     i = strlen(tmp_dir);
     if (i > 1 && tmp_dir[i - 1] == '/')
-        tmp_dir[i - 1] = '\0';
+        ((char*)tmp_dir)[i - 1] = '\0';
     if (do_recursive_mkdir(tmp_dir) == -1)
         goto tmp_dir_err;
     return;

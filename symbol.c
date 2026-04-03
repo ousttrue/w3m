@@ -1,4 +1,6 @@
-
+#include "symbol.h"
+#include "global.h"
+#include "constants.h"
 #include "fm.h"
 
 #include "Symbols/alt.sym"

@@ -1,9 +1,9 @@
-/* $Id: indep.h,v 1.16 2003/09/22 21:02:19 ukai Exp $ */
 #ifndef INDEP_H
 #define INDEP_H
 #include "alloc.h"
 #include "Str.h"
 #include "config.h"
+#include <stdbool.h>
 
 #ifndef TRUE
 #define TRUE 1
@@ -68,7 +68,7 @@ extern char* strcasestr(const char* s1, const char* s2);
 extern int strcasemstr(char* str, char* srch[], char** ret_ptr);
 int strmatchlen(const char* s1, const char* s2, int maxlen);
 extern char* remove_space(char* str);
-extern int non_null(char* s);
+extern bool non_null(const char* s);
 extern void cleanup_line(Str s, int mode);
 extern char* html_quote(char* str);
 extern char* html_unquote(char* str);

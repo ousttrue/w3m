@@ -1,4 +1,5 @@
 #include "fm.h"
+#include "global.h"
 #include "etc.h"
 #include <string.h>
 #include <stdio.h>

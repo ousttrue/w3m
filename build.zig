@@ -51,8 +51,6 @@ const w3m_srcs = [_][]const u8{
     "parsetag.c",
     "myctype.c",
     "hash.c",
-
-    "version.c",
 };
 
 const libwc_srcs = [_][]const u8{
@@ -88,31 +86,6 @@ pub fn build(b: *std.Build) void {
 
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
-    // const SHELL = "/bin/bash";
-    const PACKAGE = "w3m";
-    // const VERSION = "0.5.3";
-    const prefix = "/usr";
-    const exec_prefix = prefix;
-    const datarootdir = b.fmt("{s}/share", .{prefix});
-    // const bindir = b.fmt("{s}/bin", .{exec_prefix});
-    const datadir = datarootdir;
-    const localedir = b.fmt("{s}/locale", .{datadir});
-    // const libdir = b.fmt("{s}/lib", .{exec_prefix});
-    // const includedir = b.fmt("{s}/include", .{prefix});
-    // const infodir = b.fmt("{s}/info", .{datarootdir});
-    const libexecdir = b.fmt("{s}/libexec", .{exec_prefix});
-    // const localstatedir = b.fmt("{s}/var", .{prefix});
-    // const mandir = b.fmt("{s}/man", .{datarootdir});
-    // const oldincludedir = "/usr/include";
-    // const sbindir = b.fmt("{s}/sbin", .{exec_prefix});
-    // const sharedstatedir = b.fmt("{s}/com", .{prefix});
-    const sysconfdir = b.fmt("{s}/etc", .{prefix});
-    const CGIBIN_DIR = b.fmt("{s}/{s}/cgi-bin", .{ libexecdir, PACKAGE });
-    const AUXBIN_DIR = b.fmt("{s}/{s}", .{ libexecdir, PACKAGE });
-    const HELP_DIR = b.fmt("{s}/w3m", .{datarootdir});
-    const RC_DIR = "~/.w3m";
-    const ETC_DIR = sysconfdir;
-    const CONF_DIR = b.fmt("{s}/{s}", .{ sysconfdir, PACKAGE });
 
     const mod = b.addModule("w3m", .{
         .target = target,
@@ -163,13 +136,6 @@ pub fn build(b: *std.Build) void {
         "-Wno-implicit-int",
         "-Wno-int-conversion",
         "-DHAVE_CONFIG_H",
-        b.fmt("-DAUXBIN_DIR=\"{s}\"", .{AUXBIN_DIR}),
-        b.fmt("-DCGIBIN_DIR=\"{s}\"", .{CGIBIN_DIR}),
-        b.fmt("-DHELP_DIR=\"{s}\"", .{HELP_DIR}),
-        b.fmt("-DETC_DIR=\"{s}\"", .{ETC_DIR}),
-        b.fmt("-DCONF_DIR=\"{s}\"", .{CONF_DIR}),
-        b.fmt("-DRC_DIR=\"{s}\"", .{RC_DIR}),
-        b.fmt("-DLOCALEDIR=\"{s}\"", .{localedir}),
     };
     exe.root_module.addCSourceFiles(.{
         .files = &w3m_srcs,

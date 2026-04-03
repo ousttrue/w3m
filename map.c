@@ -1,7 +1,4 @@
-/* $Id: map.c,v 1.30 2003/09/24 18:49:00 ukai Exp $ */
-/*
- * client-side image maps
- */
+#include "global.h"
 #include "fm.h"
 #include <math.h>
 

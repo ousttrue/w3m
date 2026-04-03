@@ -1,4 +1,4 @@
-/* $Id: buffer.c,v 1.30 2010/07/18 14:10:09 htrb Exp $ */
+#include "global.h"
 #include "fm.h"
 #include <unistd.h>
 

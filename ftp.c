@@ -1,4 +1,5 @@
 #include "Str.h"
+#include "global.h"
 #include "fm.h"
 #include "html.h"
 #include "myctype.h"

@@ -1,4 +1,5 @@
 /* $Id: url.c,v 1.100 2010/12/15 10:50:24 htrb Exp $ */
+#include "global.h"
 #include "fm.h"
 #include "html.h"
 #include "Str.h"
@@ -618,7 +619,7 @@ copyPath(char* orgpath, int length, int option)
     return tmp->ptr;
 }
 
-void parseURL(char* url, ParsedURL* p_url, ParsedURL* current)
+void parseURL(const char* url, ParsedURL* p_url, ParsedURL* current)
 {
     char *p, *q, *qq;
     Str tmp;

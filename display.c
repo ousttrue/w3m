@@ -1,4 +1,6 @@
 #include "display.h"
+#include "symbol.h"
+#include "global.h"
 #include "history.h"
 #include "defun_impl.h"
 #include <signal.h>

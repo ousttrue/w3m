@@ -1,4 +1,4 @@
-/* $Id: entity.c,v 1.7 2003/09/24 18:48:59 ukai Exp $ */
+#include "global.h"
 #ifdef DUMMY
 #include "Str.h"
 #define NBSP " "

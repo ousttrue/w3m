@@ -2,6 +2,7 @@
 #define MAINPROGRAM
 #include "main.h"
 #include "global.h"
+#include "constants.h"
 #include "history.h"
 #include "line_input.h"
 #include "terms.h"
@@ -81,8 +82,6 @@ int check_target = TRUE;
 
 #define help() fusage(stdout, 0)
 #define usage() fusage(stderr, 1)
-
-int enable_inline_image;
 
 static void
 fversion(FILE* f)

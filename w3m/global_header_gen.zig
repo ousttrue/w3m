@@ -34,7 +34,7 @@ fn write_field(writer: *std.Io.Writer, comptime name: []const u8) !void {
         try writer.print("extern double {s};\n", .{name});
     // } else if (T == ?[*:0]const u8) {
     } else if (T == [*c]const u8) {
-        try writer.print("extern char* {s};\n", .{name});
+        try writer.print("extern const char* {s};\n", .{name});
     } else {
         @panic(@typeInfo(T).name);
     }

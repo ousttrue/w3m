@@ -1,4 +1,4 @@
-/* $Id: indep.c,v 1.38 2007/05/23 15:06:05 inu Exp $ */
+#include "global.h"
 #include "fm.h"
 #include <stdio.h>
 #include <pwd.h>
@@ -579,7 +579,7 @@ char* remove_space(char* str)
     return p;
 }
 
-int non_null(char* s)
+bool non_null(const char* s)
 {
     if (s == NULL)
         return FALSE;
@@ -984,15 +984,10 @@ void growbuf_append(struct growbuf* gb, const unsigned char* src, int len)
     gb->length += len;
 }
 
-static char*
-w3m_dir(const char* name, char* dft)
+static char* w3m_dir(const char* name, const char* dft)
 {
-#ifdef USE_PATH_ENVVAR
     char* value = getenv(name);
-    return value ? value : dft;
-#else
-    return dft;
-#endif
+    return value ? value : (char*)dft;
 }
 
 char* w3m_auxbin_dir(void)

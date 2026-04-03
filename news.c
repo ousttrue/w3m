@@ -1,4 +1,5 @@
 #include "fm.h"
+#include "global.h"
 #include "myctype.h"
 #include "setjmp_util.h"
 #include <stdio.h>

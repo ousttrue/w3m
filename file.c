@@ -1,4 +1,6 @@
 #include "display.h"
+#include "symbol.h"
+#include "constants.h"
 #include "history.h"
 #include "global.h"
 #include "line_input.h"

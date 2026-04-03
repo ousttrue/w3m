@@ -1,15 +1,15 @@
-/* $Id: func.c,v 1.27 2003/09/26 17:59:51 ukai Exp $ */
 /*
  * w3m func.c
  */
-
-#include <stdio.h>
+#include "global.h"
+#include "constants.h"
 #include "keybind.h"
 #include "fm.h"
 #include "func.h"
 #include "myctype.h"
 #include "regex.h"
 #include "rc.h"
+#include <stdio.h>
 
 #define KEYDATA_HASH_SIZE 16
 static Hash_iv* keyData = NULL;
