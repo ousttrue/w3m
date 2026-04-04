@@ -4,9 +4,6 @@
 #include "proto.h"
 #include "myctype.h"
 #include <stdio.h>
-#include <errno.h>
-#include "parsetag.h"
-#include "local.h"
 
 /* fallback viewer. mailcap override these configuration */
 #define DEF_IMAGE_VIEWER "display"
@@ -21,9 +18,9 @@ static struct mailcap DefaultMailcap[] = {
 static TextList* mailcap_list;
 static struct mailcap** UserMailcap;
 
-int mailcapMatch(struct mailcap* mcap, char* type)
+int mailcapMatch(struct mailcap* mcap, const char* type)
 {
-    char *cap = mcap->type, *p;
+    const char *cap = mcap->type, *p;
     int level;
     for (p = cap; *p != '/'; p++) {
         if (TOLOWER(*p) != TOLOWER(*type))
@@ -52,7 +49,7 @@ int mailcapMatch(struct mailcap* mcap, char* type)
 }
 
 struct mailcap*
-searchMailcap(struct mailcap* table, char* type)
+searchMailcap(struct mailcap* table, const char* type)
 {
     int level = 0;
     struct mailcap* mcap = NULL;
@@ -76,10 +73,10 @@ searchMailcap(struct mailcap* table, char* type)
 }
 
 static int
-matchMailcapAttr(char* p, char* attr, size_t len, Str* value)
+matchMailcapAttr(const char* p, const char* attr, size_t len, Str* value)
 {
     int quoted;
-    char* q = NULL;
+    const char* q = NULL;
 
     if (strncasecmp(p, attr, len) == 0) {
         p += len;
@@ -114,14 +111,14 @@ matchMailcapAttr(char* p, char* attr, size_t len, Str* value)
 }
 
 static int
-extractMailcapEntry(char* mcap_entry, struct mailcap* mcap)
+extractMailcapEntry(const char* mcap_entry, struct mailcap* mcap)
 {
     int j, k;
-    char* p;
+    const char* p;
     int quoted;
     Str tmp;
 
-    bzero(mcap, sizeof(struct mailcap));
+    memset(mcap, 0, sizeof(struct mailcap));
     p = mcap_entry;
     SKIP_BLANKS(p);
     k = -1;
@@ -177,7 +174,7 @@ extractMailcapEntry(char* mcap_entry, struct mailcap* mcap)
 }
 
 static struct mailcap*
-loadMailcap(char* filename)
+loadMailcap(const char* filename)
 {
     FILE* f;
     int i, n;
@@ -211,7 +208,7 @@ loadMailcap(char* filename)
         if (extractMailcapEntry(tmp->ptr, &mcap[i]))
             i++;
     }
-    bzero(&mcap[i], sizeof(struct mailcap));
+    memset(&mcap[i], 0, sizeof(struct mailcap));
     fclose(f);
     return mcap;
 }
@@ -232,7 +229,7 @@ void initMailcap(void)
         UserMailcap[i] = loadMailcap(tl->ptr);
 }
 
-char* acceptableMimeTypes(void)
+const char* acceptableMimeTypes(void)
 {
     static Str types = NULL;
     TextList* l;
@@ -302,7 +299,7 @@ no_user_mailcap:
 #define MCF_DQUOTED (1 << 1)
 
 static Str
-quote_mailcap(char* s, int flag)
+quote_mailcap(const char* s, int flag)
 {
     Str d;
 
@@ -341,7 +338,7 @@ end:
 }
 
 static Str
-unquote_mailcap_loop(char* qstr, char* type, char* name, char* attr,
+unquote_mailcap_loop(const char* qstr, const char* type, const char* name, const char* attr,
     int* mc_stat, int flag0)
 {
     Str str, tmp, test, then;
@@ -447,7 +444,7 @@ unquote_mailcap_loop(char* qstr, char* type, char* name, char* attr,
     return str;
 }
 
-Str unquote_mailcap(char* qstr, char* type, char* name, char* attr, int* mc_stat)
+Str unquote_mailcap(const char* qstr, const char* type, const char* name, const char* attr, int* mc_stat)
 {
     return unquote_mailcap_loop(qstr, type, name, attr, mc_stat, 0);
 }

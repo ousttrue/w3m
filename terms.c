@@ -1087,7 +1087,7 @@ void setupscreen(void)
         max_COLS = COLS + 1;
         for (i = 0; i < max_LINES; i++) {
             ScreenElem[i].lineimage = New_N(char*, max_COLS);
-            bzero((void*)ScreenElem[i].lineimage, max_COLS * sizeof(char*));
+            memset((void*)ScreenElem[i].lineimage, 0, max_COLS * sizeof(char*));
             ScreenElem[i].lineprop = New_N(l_prop, max_COLS);
         }
     }

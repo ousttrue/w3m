@@ -2,17 +2,17 @@
 #include "Str.h"
 
 struct mailcap {
-    char* type;
-    char* viewer;
+    const char* type;
+    const char* viewer;
     int flags;
-    char* test;
-    char* nametemplate;
-    char* edit;
+    const char* test;
+    const char* nametemplate;
+    const char* edit;
 };
 
-int mailcapMatch(struct mailcap* mcap, char* type);
-struct mailcap* searchMailcap(struct mailcap* table, char* type);
+int mailcapMatch(struct mailcap* mcap, const char* type);
+struct mailcap* searchMailcap(struct mailcap* table, const char* type);
 void initMailcap(void);
-char* acceptableMimeTypes(void);
+const char* acceptableMimeTypes(void);
 struct mailcap* searchExtViewer(const char* type);
-Str unquote_mailcap(char* qstr, char* type, char* name, char* attr, int* mc_stat);
+Str unquote_mailcap(const char* qstr, const char* type, const char* name, const char* attr, int* mc_stat);
