@@ -1,14 +1,9 @@
-/* $Id: parsetagx.c,v 1.18 2006/06/07 03:52:03 inu Exp $ */
-#include "fm.h"
+#include "html_tag.h"
 #include "myctype.h"
+#include "alloc.h"
 #include "indep.h"
-#include "Str.h"
-#include "parsetagx.h"
 #include "hash.h"
-
-#include "html.c"
-
-/* parse HTML tag */
+#include <stdlib.h>
 
 static int noConv(char*, void*);
 static int toNumber(char*, void*);
@@ -109,10 +104,10 @@ toVAlign(char* oval, void* valign)
 extern Hash_si tagtable;
 #define MAX_TAG_LEN 64
 
-struct parsed_tag*
+struct HtmlTag*
 parse_tag(char** s, int internal)
 {
-    struct parsed_tag* tag = NULL;
+    struct HtmlTag* tag = NULL;
     int tag_id;
     char tagname[MAX_TAG_LEN], attrname[MAX_TAG_LEN];
     char *p, *q;
@@ -139,8 +134,8 @@ parse_tag(char** s, int internal)
     if (tag_id == HTML_UNKNOWN || (!internal && TagMAP[tag_id].flag & TFLG_INT))
         goto skip_parse_tagarg;
 
-    tag = New(struct parsed_tag);
-    memset(tag, 0, sizeof(struct parsed_tag));
+    tag = New(struct HtmlTag);
+    memset(tag, 0, sizeof(struct HtmlTag));
     tag->tagid = tag_id;
 
     if ((nattr = TagMAP[tag_id].max_attribute) > 0) {
@@ -254,7 +249,7 @@ done_parse_tag:
     return tag;
 }
 
-int parsedtag_set_value(struct parsed_tag* tag, int id, char* value)
+int parsedtag_set_value(struct HtmlTag* tag, int id, char* value)
 {
     int i;
 
@@ -271,7 +266,7 @@ int parsedtag_set_value(struct parsed_tag* tag, int id, char* value)
     return 1;
 }
 
-int parsedtag_get_value(struct parsed_tag* tag, int id, void* value)
+int parsedtag_get_value(struct HtmlTag* tag, int id, void* value)
 {
     int i;
     if (!parsedtag_exists(tag, id) || !tag->value[i = tag->map[id]])
@@ -279,7 +274,7 @@ int parsedtag_get_value(struct parsed_tag* tag, int id, void* value)
     return toValFunc[AttrMAP[id].vtype](tag->value[i], value);
 }
 
-Str parsedtag2str(struct parsed_tag* tag)
+Str parsedtag2str(struct HtmlTag* tag)
 {
     int i;
     int tag_id = tag->tagid;

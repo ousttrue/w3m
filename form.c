@@ -15,7 +15,7 @@
 #include "fm.h"
 #include "proto.h"
 #include "parsetag.h"
-#include "parsetagx.h"
+#include "html_tag.h"
 #include "myctype.h"
 #include "local.h"
 #include "regex.h"
@@ -91,7 +91,7 @@ newFormList(char* action, char* method, char* charset, char* enctype,
  * add <input> element to form_list
  */
 struct form_item_list*
-formList_addInput(struct form_list* fl, struct parsed_tag* tag)
+formList_addInput(struct form_list* fl, struct HtmlTag* tag)
 {
     struct form_item_list* item;
     char* p;

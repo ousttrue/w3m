@@ -105,19 +105,6 @@
  * Macros.
  */
 
-#define SKIP_BLANKS(p)                 \
-    {                                  \
-        while (*(p) && IS_SPACE(*(p))) \
-            (p)++;                     \
-    }
-#define SKIP_NON_BLANKS(p)              \
-    {                                   \
-        while (*(p) && !IS_SPACE(*(p))) \
-            (p)++;                      \
-    }
-#define IS_ENDL(c) ((c) == '\0' || (c) == '\r' || (c) == '\n')
-#define IS_ENDT(c) (IS_ENDL(c) || (c) == ';')
-
 #define bpcmp(a, b) \
     (((a).line - (b).line) ? ((a).line - (b).line) : ((a).pos - (b).pos))
 
@@ -230,16 +217,5 @@
 #define RG_FRAME_SRC 4
 
 /* modes for align() */
-
-#define ALIGN_CENTER 0
-#define ALIGN_LEFT 1
-#define ALIGN_RIGHT 2
-#define ALIGN_MIDDLE 4
-#define ALIGN_TOP 5
-#define ALIGN_BOTTOM 6
-
-#define VALIGN_MIDDLE 0
-#define VALIGN_TOP 1
-#define VALIGN_BOTTOM 2
 
 extern void w3mFunc(const char* cmd);

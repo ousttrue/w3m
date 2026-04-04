@@ -94,7 +94,7 @@ registerImg(Buffer* buf, char* url, char* title, int line, int pos)
 }
 
 Anchor*
-registerForm(Buffer* buf, FormList* flist, struct parsed_tag* tag, int line,
+registerForm(Buffer* buf, FormList* flist, struct HtmlTag* tag, int line,
     int pos)
 {
     Anchor* a;

@@ -1,13 +1,19 @@
-/* $Id: parsetagx.h,v 1.4 2001/11/24 02:01:26 ukai Exp $ */
-#ifndef PARSETAGX_H
-#define PARSETAGX_H
-
+#pragma once
 #include "html.h"
 #include "Str.h"
 
-/* Parsed Tag structure */
+#define ALIGN_CENTER 0
+#define ALIGN_LEFT 1
+#define ALIGN_RIGHT 2
+#define ALIGN_MIDDLE 4
+#define ALIGN_TOP 5
+#define ALIGN_BOTTOM 6
 
-struct parsed_tag {
+#define VALIGN_MIDDLE 0
+#define VALIGN_TOP 1
+#define VALIGN_BOTTOM 2
+
+struct HtmlTag {
     unsigned char tagid;
     unsigned char* attrid;
     char** value;
@@ -21,8 +27,7 @@ struct parsed_tag {
 #define parsedtag_need_reconstruct(tag) ((tag)->need_reconstruct)
 #define parsedtag_attname(tag, i) (AttrMAP[(tag)->attrid[i]].name)
 
-extern struct parsed_tag* parse_tag(char** s, int internal);
-extern int parsedtag_get_value(struct parsed_tag* tag, int id, void* value);
-extern int parsedtag_set_value(struct parsed_tag* tag, int id, char* value);
-extern Str parsedtag2str(struct parsed_tag* tag);
-#endif
+extern struct HtmlTag* parse_tag(char** s, int internal);
+extern int parsedtag_get_value(struct HtmlTag* tag, int id, void* value);
+extern int parsedtag_set_value(struct HtmlTag* tag, int id, char* value);
+extern Str parsedtag2str(struct HtmlTag* tag);

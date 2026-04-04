@@ -46,10 +46,10 @@ Anchor* registerHref(Buffer* buf, char* url, char* target,
 Anchor* registerName(Buffer* buf, char* url, int line, int pos);
 Anchor* registerImg(Buffer* buf, char* url, char* title, int line,
     int pos);
-struct parsed_tag;
+struct HtmlTag;
 struct form_list;
 Anchor* registerForm(Buffer* buf, struct form_list* flist,
-    struct parsed_tag* tag, int line, int pos);
+    struct HtmlTag* tag, int line, int pos);
 int onAnchor(Anchor* a, int line, int pos);
 Anchor* retrieveAnchor(AnchorList* al, int line, int pos);
 Anchor* retrieveCurrentAnchor(Buffer* buf);

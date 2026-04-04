@@ -56,10 +56,10 @@ struct frameset_queue {
 
 extern struct frameset* renderFrameSet;
 
-struct parsed_tag;
+struct HtmlTag;
 struct _Buffer;
-struct frame_body* newFrame(struct parsed_tag* tag, struct _Buffer* buf);
-struct frameset* newFrameSet(struct parsed_tag* tag);
+struct frame_body* newFrame(struct HtmlTag* tag, struct _Buffer* buf);
+struct frameset* newFrameSet(struct HtmlTag* tag);
 void addFrameSetElement(struct frameset* f, union frameset_element element);
 void deleteFrame(struct frame_body* b);
 void deleteFrameSet(struct frameset* f);

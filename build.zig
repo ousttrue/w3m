@@ -17,6 +17,8 @@ const w3m_srcs = [_][]const u8{
     "setjmp_util.c",
     "http_request.c",
     "url_scheme.c",
+    "html.c",
+    "html_tag.c",
 
     "main.c",
     "file.c",
@@ -48,7 +50,6 @@ const w3m_srcs = [_][]const u8{
     "backend.c",
 
     "anchor.c",
-    "parsetagx.c",
     "tagtable.c",
     "istream.c",
 
