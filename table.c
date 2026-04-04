@@ -1,4 +1,5 @@
 #include "table.h"
+#include "html_token.h"
 #include "indep.h"
 #include "html_feed_environ.h"
 #include "wc_util.h"

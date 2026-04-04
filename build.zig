@@ -19,6 +19,7 @@ const w3m_srcs = [_][]const u8{
     "url_scheme.c",
     "html.c",
     "html_tag.c",
+    "html_token.c",
 
     "main.c",
     "file.c",

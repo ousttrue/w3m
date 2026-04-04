@@ -32,15 +32,21 @@ struct URLFile;
 typedef union input_stream* InputStream;
 void init_stream(struct URLFile* uf, int scheme, InputStream stream);
 
-typedef struct {
-    char* referer;
-    int flag;
-} URLOption;
 struct form_list;
 struct _textlist;
 struct HttpRequest;
+
+enum UrlOptionFlags {
+    RG_NOCACHE = 1,
+    RG_FRAME = 2,
+    RG_FRAME_SRC = 4,
+};
+struct URLOption {
+    const char* referer;
+    enum UrlOptionFlags flag;
+};
 struct URLFile openURL(const char* url, ParsedURL* pu, ParsedURL* current,
-    URLOption* option, struct form_list* request,
+    struct URLOption* option, struct form_list* request,
     struct _textlist* extra_header, struct URLFile* ouf,
     struct HttpRequest* hr, unsigned char* status);
 

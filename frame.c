@@ -1,4 +1,5 @@
 #include "frame.h"
+#include "html_token.h"
 #include "form.h"
 #include "terms.h"
 #include "istream.h"

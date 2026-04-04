@@ -42,3 +42,7 @@ extern unsigned char MYCTYPE_DIGITMAP[];
     }
 #define IS_ENDL(c) ((c) == '\0' || (c) == '\r' || (c) == '\n')
 #define IS_ENDT(c) (IS_ENDL(c) || (c) == ';')
+
+/* is this '<' really means the beginning of a tag? */
+#define REALLY_THE_BEGINNING_OF_A_TAG(p) \
+    (IS_ALPHA(p[1]) || p[1] == '/' || p[1] == '!' || p[1] == '?' || p[1] == '\0' || p[1] == '_')

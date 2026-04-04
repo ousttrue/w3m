@@ -18,7 +18,6 @@ char* lastFileName(const char* path);
 #define MAX_TMPF_TYPE 6
 
 Str tmpfname(int type, const char* ext);
-int next_status(char c, int* status);
 char* mydirname(const char* s);
 char* mybasename(const char* s);
 Str myEditor(const char* cmd, const char* file, int line);
