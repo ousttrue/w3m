@@ -12,7 +12,6 @@
 #include "display.h"
 #include "global.h"
 #include "image.h"
-#include "fm.h"
 #include "proto.h"
 #include <unistd.h>
 

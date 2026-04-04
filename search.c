@@ -8,7 +8,6 @@
 #include "global.h"
 #include "wc_util.h"
 #include "buffer.h"
-#include "fm.h"
 #include "display.h"
 #include "regex.h"
 

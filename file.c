@@ -35,7 +35,6 @@
 #include "history.h"
 #include "global.h"
 #include "line_input.h"
-#include "fm.h"
 #include "proto.h"
 #include "myctype.h"
 #include "setjmp_util.h"
@@ -7206,7 +7205,7 @@ loadcmdout(char* cmd,
  */
 #define SHELLBUFFERNAME "*Shellout*"
 Buffer*
-getshell(char* cmd)
+getshell(const char* cmd)
 {
     Buffer* buf;
 
@@ -7224,7 +7223,7 @@ getshell(char* cmd)
  * getpipe: execute shell command and connect pipe to the buffer
  */
 Buffer*
-getpipe(char* cmd)
+getpipe(const char* cmd)
 {
     FILE *f, *popen(const char*, const char*);
     Buffer* buf;
@@ -7867,7 +7866,7 @@ int checkSaveFile(InputStream stream, char* path2)
     return 0;
 }
 
-int checkOverWrite(char* path)
+int checkOverWrite(const char* path)
 {
     struct stat st;
     char* ans;

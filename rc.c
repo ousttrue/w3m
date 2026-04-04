@@ -11,7 +11,6 @@
 #include "mailcap.h"
 #include "image.h"
 #include "url.h"
-#include "fm.h"
 #include "w3m/constants.h"
 #include "global.h"
 #include "history.h"

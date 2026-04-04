@@ -1,6 +1,5 @@
 #include "mimehead.h"
 #include "indep.h"
-#include "fm.h"
 #include "myctype.h"
 #include "Str.h"
 

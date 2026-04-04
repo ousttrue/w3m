@@ -8,7 +8,6 @@
 #include "buffer.h"
 #include "url.h"
 #include "terms.h"
-#include "fm.h"
 #include "proto.h"
 
 #include "wc_util.h"

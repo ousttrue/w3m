@@ -13,7 +13,6 @@
 #include "rc.h"
 #include "url.h"
 #include "global.h"
-#include "fm.h"
 #include "proto.h"
 #include "html.h"
 #include "defun_impl.h"

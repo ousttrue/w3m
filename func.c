@@ -8,7 +8,6 @@
 #include "display.h"
 #include "constants.h"
 #include "keybind.h"
-#include "fm.h"
 #include "proto.h"
 #include "func.h"
 #include "myctype.h"
@@ -343,9 +342,9 @@ int getKey(char* s)
     return c;
 }
 
-char* getWord(char** str)
+char* getWord(const char** str)
 {
-    char *p, *s;
+    const char *p, *s;
 
     p = *str;
     SKIP_BLANKS(p);
@@ -355,7 +354,7 @@ char* getWord(char** str)
     return Strnew_charp_n(s, p - s)->ptr;
 }
 
-char* getQWord(char** str)
+char* getQWord(const char** str)
 {
     Str tmp = Strnew();
     char* p;

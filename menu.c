@@ -1,4 +1,5 @@
 #include "global.h"
+#include <w3m.h>
 #include "terms.h"
 #include "alloc.h"
 #include "anchor.h"
@@ -13,7 +14,6 @@
 #include "defun_impl.h"
 #include "history.h"
 #include "line_input.h"
-#include "fm.h"
 #include "proto.h"
 #include "menu.h"
 #include "func.h"

@@ -7,7 +7,6 @@
 #include "tab.h"
 #include "buffer.h"
 #include "wc_util.h"
-#include "fm.h"
 #include "url.h"
 #include "proto.h"
 #include "etc.h"

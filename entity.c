@@ -1,7 +1,6 @@
 #include "global.h"
 #include "ctrlcode.h"
 #include "wc_util.h"
-#include "fm.h"
 
 #include <libwc/ucs.h>
 #include <libwc/utf8.h>

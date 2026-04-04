@@ -249,3 +249,4 @@ pub export var ssl_cipher: [*c]const u8 = "DEFAULT:!LOW:!RC4:!EXP";
 // #endif
 
 pub export var SearchString: [*c]const u8 = null;
+pub export var MarkString: [*c]const u8 = null;

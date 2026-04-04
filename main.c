@@ -1,4 +1,5 @@
 #include "main.h"
+#include <w3m.h>
 #include "siteconf.h"
 #include "form.h"
 #include "frame.h"
@@ -32,7 +33,6 @@
 #include "terms.h"
 #include "defun_impl.h"
 #include "keybind.h"
-#include "fm.h"
 #include "proto.h"
 #include "display.h"
 #include "terms.h"
@@ -88,9 +88,6 @@ static MySignalHandler resize_hook(SIGNAL_ARG);
 static void resize_screen(void);
 
 static MySignalHandler SigPipe(SIGNAL_ARG);
-
-char* MarkString = NULL;
-
 
 static sigjmp_buf IntReturn;
 
@@ -1277,8 +1274,6 @@ void nscroll(int n, int mode)
     displayBuffer(buf, mode);
 }
 
-
-
 void shiftvisualpos(Buffer* buf, int shift)
 {
     Line* l = buf->currentLine;
@@ -1292,7 +1287,7 @@ void shiftvisualpos(Buffer* buf, int shift)
         buf->visualpos = l->bwidth;
 }
 
-void cmd_loadfile(char* fn)
+void cmd_loadfile(const char* fn)
 {
     Buffer* buf;
 
@@ -1427,7 +1422,7 @@ void _quitfm(int confirm)
 }
 
 /* Go to specified line */
-void _goLine(char* l)
+void _goLine(const char* l)
 {
     if (l == NULL || *l == '\0' || Currentbuf->currentLine == NULL) {
         displayBuffer(Currentbuf, B_FORCE_REDRAW);

@@ -4,7 +4,6 @@
 #include "indep.h"
 #include "alloc.h"
 #include "hash.h"
-#include "fm.h"
 #include "wc_util.h"
 #include "global.h"
 #include "etc.h"

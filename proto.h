@@ -59,7 +59,7 @@ extern int _doFileCopy(const char* tmpf, const char* defstr, int download);
 extern int doFileMove(const char* tmpf, const char* defstr);
 extern int doFileSave(struct URLFile uf, const char* defstr);
 extern int checkCopyFile(char* path1, char* path2);
-extern int checkOverWrite(char* path);
+extern int checkOverWrite(const char* path);
 extern char* inputAnswer(char* prompt);
 extern int matchattr(const char* p, const char* attr, int len, Str* value);
 extern void readHeader(struct URLFile* uf, Buffer* newBuf, int thru, struct _ParsedURL* pu);

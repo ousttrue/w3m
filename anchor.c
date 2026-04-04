@@ -4,7 +4,6 @@
 #include "indep.h"
 #include "alloc.h"
 #include "image.h"
-#include "fm.h"
 #include "maparea.h"
 #include "buffer.h"
 #include "url.h"

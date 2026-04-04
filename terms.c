@@ -12,7 +12,6 @@
 #include "etc.h"
 #include "constants.h"
 #include "global.h"
-#include "fm.h"
 #include "proto.h"
 #include "myctype.h"
 

@@ -10,7 +10,6 @@
 #include "main.h"
 #include "wc_util.h"
 #include "display.h"
-#include "fm.h"
 #include "proto.h"
 #include "buffer.h"
 #include "global.h"

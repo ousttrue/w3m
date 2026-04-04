@@ -3,7 +3,6 @@
 #include "hash.h"
 #include "indep.h"
 #include "global.h"
-#include "fm.h"
 #include "proto.h"
 #include "myctype.h"
 #include "textlist.h"

@@ -13,7 +13,6 @@
 #include "global.h"
 #include "history.h"
 #include "defun_impl.h"
-#include "fm.h"
 #include "proto.h"
 #include <math.h>
 #include <signal.h>
@@ -1071,7 +1070,7 @@ void disp_message_nsec(char* s, int redraw_current, int sec, int purge, int mous
         displayBuffer(Currentbuf, B_NORMAL);
 }
 
-void disp_message(char* s, int redraw_current)
+void disp_message(const char* s, int redraw_current)
 {
     disp_message_nsec(s, redraw_current, 10, FALSE, TRUE);
 }

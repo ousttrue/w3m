@@ -3,7 +3,6 @@
 #include "signal_util.h"
 #include "mimehead.h"
 #include "display.h"
-#include "fm.h"
 #include "proto.h"
 #include "myctype.h"
 #include "istream.h"

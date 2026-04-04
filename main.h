@@ -21,7 +21,6 @@ typedef struct _AlarmEvent {
 
 extern AlarmEvent DefaultAlarm;
 
-extern char* MarkString;
 extern int check_target;
 extern int prec_num;
 #define PREC_NUM (prec_num ? prec_num : 1)
@@ -46,7 +45,7 @@ int searchKeyNum(void);
 typedef struct _Buffer Buffer;
 void shiftvisualpos(Buffer* buf, int shift);
 void pushBuffer(Buffer* buf);
-void cmd_loadfile(char* fn);
+void cmd_loadfile(const char* fn);
 struct _ParsedURL;
 struct form_list;
 void cmd_loadURL(const char* url, struct _ParsedURL* current, char* referer, struct form_list* request);
@@ -61,7 +60,7 @@ uint32_t getChar(char* p);
 int next_nonnull_line(struct _Line* line);
 void _quitfm(int confirm);
 void delBuffer(Buffer* buf);
-void _goLine(char* l);
+void _goLine(const char* l);
 int cur_real_linenumber(Buffer* buf);
 void _followForm(int submit);
 void gotoLabel(const char* label);

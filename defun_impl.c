@@ -1,4 +1,5 @@
 #include "defun_impl.h"
+#include <w3m.h>
 #include "constants.h"
 #include "myctype.h"
 #include "form.h"
@@ -26,7 +27,6 @@
 #include "history.h"
 #include "line_input.h"
 #include "keybind.h"
-#include "fm.h"
 #include "main.h"
 #include "proto.h"
 #include "display.h"
@@ -231,11 +231,8 @@ void col1L(struct CmdArgs args)
 
 void setEnv(struct CmdArgs args)
 {
-    char* env;
-    char *var, *value;
-
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    env = searchKeyData();
+    const char* env = searchKeyData();
     if (env == NULL || *env == '\0' || strchr(env, '=') == NULL) {
         if (env != NULL && *env != '\0')
             env = Sprintf("%s=", env)->ptr;
@@ -245,8 +242,9 @@ void setEnv(struct CmdArgs args)
             return;
         }
     }
+    const char *value;
     if ((value = strchr(env, '=')) != NULL && value > env) {
-        var = allocStr(env, value - env);
+        const char *var = allocStr(env, value - env);
         value++;
         set_environ(var, value);
     }
@@ -256,7 +254,7 @@ void setEnv(struct CmdArgs args)
 void pipeBuf(struct CmdArgs args)
 {
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    char* cmd = searchKeyData();
+    const char* cmd = searchKeyData();
     if (cmd == NULL || *cmd == '\0') {
         cmd = inputLineHist("Pipe buffer to: ", "", IN_COMMAND, ShellHist);
     }
@@ -292,11 +290,8 @@ void pipeBuf(struct CmdArgs args)
 
 void pipesh(struct CmdArgs args)
 {
-    Buffer* buf;
-    char* cmd;
-
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    cmd = searchKeyData();
+    const char* cmd = searchKeyData();
     if (cmd == NULL || *cmd == '\0') {
         cmd = inputLineHist("(read shell[pipe])!", "", IN_COMMAND, ShellHist);
     }
@@ -306,7 +301,7 @@ void pipesh(struct CmdArgs args)
         displayBuffer(Currentbuf, B_NORMAL);
         return;
     }
-    buf = getpipe(cmd);
+    Buffer* buf = getpipe(cmd);
     if (buf == NULL) {
         disp_message("Execution failed", TRUE);
         return;
@@ -321,11 +316,8 @@ void pipesh(struct CmdArgs args)
 
 void readsh(struct CmdArgs args)
 {
-    Buffer* buf;
-    char* cmd;
-
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    cmd = searchKeyData();
+    const char* cmd = searchKeyData();
     if (cmd == NULL || *cmd == '\0') {
         cmd = inputLineHist("(read shell)!", "", IN_COMMAND, ShellHist);
     }
@@ -337,7 +329,7 @@ void readsh(struct CmdArgs args)
     }
     auto prevtrap = mySignal(SIGINT, intTrap);
     crmode();
-    buf = getshell(cmd);
+    Buffer* buf = getshell(cmd);
     mySignal(SIGINT, prevtrap);
     term_raw();
     if (buf == NULL) {
@@ -355,10 +347,8 @@ void readsh(struct CmdArgs args)
 
 void execsh(struct CmdArgs args)
 {
-    char* cmd;
-
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    cmd = searchKeyData();
+    const char* cmd = searchKeyData();
     if (cmd == NULL || *cmd == '\0') {
         cmd = inputLineHist("(exec shell)!", "", IN_COMMAND, ShellHist);
     }
@@ -379,9 +369,7 @@ void execsh(struct CmdArgs args)
 
 void ldfile(struct CmdArgs args)
 {
-    char* fn;
-
-    fn = searchKeyData();
+    const char* fn = searchKeyData();
     if (fn == NULL || *fn == '\0') {
         /* FIXME: gettextize? */
         fn = inputFilenameHist("(Load)Filename? ", NULL, LoadHist);
@@ -600,7 +588,7 @@ void selBuf(struct CmdArgs args)
 /* Suspend (on BSD), or run interactive shell (on SysV) */
 void susp(struct CmdArgs args)
 {
-    move((LINES-1), 0);
+    move((LINES - 1), 0);
     clrtoeolx();
     refresh();
     fmTerm();
@@ -618,8 +606,7 @@ void susp(struct CmdArgs args)
 
 void goLine(struct CmdArgs args)
 {
-
-    char* str = searchKeyData();
+    const char* str = searchKeyData();
     if (prec_num)
         _goLine("^");
     else if (str)
@@ -793,12 +780,11 @@ void prevMk(struct CmdArgs args)
 void reMark(struct CmdArgs args)
 {
     Line* l;
-    char* str;
-    char *p, *p1, *p2;
+    const char *p, *p1, *p2;
 
     if (!use_mark)
         return;
-    str = searchKeyData();
+    const char* str = searchKeyData();
     if (str == NULL || *str == '\0') {
         str = inputStrHist("(Mark)Regexp: ", MarkString, TextHist);
         if (str == NULL || *str == '\0') {
@@ -1227,10 +1213,8 @@ void ldOpt(struct CmdArgs args)
 /* set an option */
 void setOpt(struct CmdArgs args)
 {
-    char* opt;
-
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    opt = searchKeyData();
+    const char* opt = searchKeyData();
     if (opt == NULL || *opt == '\0' || strchr(opt, '=') == NULL) {
         if (opt != NULL && *opt != '\0') {
             char* v = get_param_option(opt);
@@ -1354,7 +1338,7 @@ void svI(struct CmdArgs args)
 /* save buffer */
 void svBuf(struct CmdArgs args)
 {
-    char *qfile = NULL, *file;
+    const char *qfile = NULL, *file;
     FILE* f;
     int is_pipe;
 
@@ -1402,12 +1386,11 @@ void svBuf(struct CmdArgs args)
 /* save source */
 void svSrc(struct CmdArgs args)
 {
-    char* file;
-
     if (Currentbuf->sourcefile == NULL)
         return;
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
     PermitSaveToPipe = TRUE;
+    const char* file;
     if (Currentbuf->real_scheme == SCM_LOCAL)
         file = conv_from_system(guess_save_name(NULL,
             Currentbuf->currentURL.real_file));
@@ -1656,15 +1639,12 @@ void reshape(struct CmdArgs args)
 
 void docCSet(struct CmdArgs args)
 {
-    char* cs;
-    wc_ces charset;
-
-    cs = searchKeyData();
+    const char* cs = searchKeyData();
     if (cs == NULL || *cs == '\0')
         /* FIXME: gettextize? */
         cs = inputStr("Document charset: ",
             wc_ces_to_charset(Currentbuf->document_charset));
-    charset = wc_guess_charset_short(cs, 0);
+    wc_ces charset = wc_guess_charset_short(cs, 0);
     if (charset == 0) {
         displayBuffer(Currentbuf, B_NORMAL);
         return;
@@ -1674,15 +1654,12 @@ void docCSet(struct CmdArgs args)
 
 void defCSet(struct CmdArgs args)
 {
-    char* cs;
-    wc_ces charset;
-
-    cs = searchKeyData();
+    const char* cs = searchKeyData();
     if (cs == NULL || *cs == '\0')
         /* FIXME: gettextize? */
         cs = inputStr("Default document charset: ",
             wc_ces_to_charset(DocumentCharset));
-    charset = wc_guess_charset_short(cs, 0);
+    wc_ces charset = wc_guess_charset_short(cs, 0);
     if (charset != 0)
         DocumentCharset = charset;
     displayBuffer(Currentbuf, B_NORMAL);
@@ -1864,7 +1841,7 @@ void dictwordat(struct CmdArgs args)
 void execCmd(struct CmdArgs args)
 {
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    char* data = searchKeyData();
+    const char* data = searchKeyData();
     if (data == NULL || *data == '\0') {
         data = inputStrHist("command [; ...]: ", "", TextHist);
         if (data == NULL) {
@@ -1883,7 +1860,7 @@ void execCmd(struct CmdArgs args)
         const char* cmd = getWord(&data);
         if (!cmd)
             break;
-        char* p = getQWord(&data);
+        const char* p = getQWord(&data);
         CurrentKey = -1;
         CurrentKeyData = NULL;
         CurrentCmdData = *p ? p : NULL;

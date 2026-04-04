@@ -14,7 +14,6 @@
 #include "cookie.h"
 #include "rc.h"
 #include "display.h"
-#include "fm.h"
 #include "proto.h"
 #include "parsetag.h"
 #include "html_tag.h"

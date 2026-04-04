@@ -4,7 +4,6 @@
 #include "global.h"
 #include "cookie.h"
 #include "url.h"
-#include "fm.h"
 #include "rc.h"
 #include <strings.h>
 
