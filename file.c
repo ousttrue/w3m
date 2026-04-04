@@ -1,4 +1,5 @@
 #include "display.h"
+#include "proxy.h"
 #include "signal_util.h"
 #include "downloadlist.h"
 #include "main.h"
@@ -79,8 +80,6 @@ static Buffer* loadcmdout(char* cmd,
 static void addnewline(Buffer* buf, char* line, Lineprop* prop,
     Linecolor* color, int pos, int width, int nlines);
 static void addLink(Buffer* buf, struct parsed_tag* tag);
-
-static JMP_BUF AbortLoading;
 
 static struct table* tables[MAX_TABLE];
 static struct table_mode table_mode[MAX_TABLE];
@@ -206,13 +205,6 @@ static struct compression_decoder {
 /* *INDENT-ON* */
 
 #define SAVE_BUF_SIZE 1536
-
-static MySignalHandler
-KeyAbort(SIGNAL_ARG)
-{
-    LONGJMP(AbortLoading, 1);
-    SIGNAL_RETURN;
-}
 
 static void
 UFhalfclose(struct URLFile* f)
@@ -1674,7 +1666,7 @@ load_doc: {
     if (header_string)
         header_string = NULL;
     TRAP_ON;
-    if (pu.scheme == SCM_HTTP || pu.scheme == SCM_HTTPS || (((pu.scheme == SCM_GOPHER && non_null(GOPHER_proxy)) || (pu.scheme == SCM_FTP && non_null(FTP_proxy))) && !Do_not_use_proxy && !check_no_proxy(pu.host))) {
+    if (pu.scheme == SCM_HTTP || pu.scheme == SCM_HTTPS || (((pu.scheme == SCM_GOPHER && non_null(GOPHER_proxy)) || (pu.scheme == SCM_FTP && non_null(FTP_proxy))) && use_proxy && !check_no_proxy(pu.host))) {
 
         if (fmInitialized) {
             term_cbreak();
@@ -7448,7 +7440,7 @@ int save2tmp(struct URLFile uf, const char* tmpf)
     FILE* ff;
     int64_t linelen = 0, trbyte = 0;
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
-    static JMP_BUF env_bak;
+    static sigjmp_buf env_bak;
     volatile int retval = 0;
     char* volatile buf = NULL;
 
@@ -7457,7 +7449,7 @@ int save2tmp(struct URLFile uf, const char* tmpf)
         /* fclose(f); */
         return -1;
     }
-    bcopy(AbortLoading, env_bak, sizeof(JMP_BUF));
+    bcopy(AbortLoading, env_bak, sizeof(sigjmp_buf));
     if (SETJMP(AbortLoading) != 0) {
         goto _end;
     }
@@ -7497,7 +7489,7 @@ int save2tmp(struct URLFile uf, const char* tmpf)
         }
     }
 _end:
-    bcopy(env_bak, AbortLoading, sizeof(JMP_BUF));
+    bcopy(env_bak, AbortLoading, sizeof(sigjmp_buf));
     TRAP_OFF;
     xfree(buf);
     fclose(ff);

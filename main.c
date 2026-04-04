@@ -1,5 +1,6 @@
 #define MAINPROGRAM
 #include "main.h"
+#include "proxy.h"
 #include "signal_util.h"
 #include "downloadlist.h"
 #include "alarm.h"
@@ -85,7 +86,7 @@ char* MarkString = NULL;
 static char* SearchString = NULL;
 int (*searchRoutine)(Buffer*, char*);
 
-JMP_BUF IntReturn;
+sigjmp_buf IntReturn;
 
 static void keyPressEventProc(int c);
 int show_params_p = 0;
@@ -324,7 +325,7 @@ int w3m_main(int argc, char** argv)
 
     setlocale(LC_ALL, "");
 
-    NO_proxy_domains = newTextList();
+    proxyInit();
     fileToDelete = newTextList();
 
     load_argv = New_N(char*, argc - 1);

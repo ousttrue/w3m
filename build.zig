@@ -13,6 +13,8 @@ const w3m_srcs = [_][]const u8{
     "util.c",
     "downloadlist.c",
     "tab.c",
+    "proxy.c",
+    "setjmp_util.c",
 
     "main.c",
     "file.c",

@@ -1,4 +1,5 @@
 #include "rc.h"
+#include "proxy.h"
 #include "display.h"
 #include "cookie.h"
 #include "symbol.h"
@@ -1024,21 +1025,6 @@ interpret_rc(FILE* f)
         Strlower(tmp);
         set_param(tmp->ptr, p);
     }
-}
-
-static void
-parse_proxy(void)
-{
-    if (non_null(HTTP_proxy))
-        parseURL(HTTP_proxy, &HTTP_proxy_parsed, NULL);
-    if (non_null(HTTPS_proxy))
-        parseURL(HTTPS_proxy, &HTTPS_proxy_parsed, NULL);
-    if (non_null(GOPHER_proxy))
-        parseURL(GOPHER_proxy, &GOPHER_proxy_parsed, NULL);
-    if (non_null(FTP_proxy))
-        parseURL(FTP_proxy, &FTP_proxy_parsed, NULL);
-    if (non_null(NO_proxy))
-        set_no_proxy(NO_proxy);
 }
 
 #define do_mkdir(dir, mode) mkdir(dir, mode)

@@ -1,4 +1,5 @@
 #include "url.h"
+#include "proxy.h"
 #include "signal_util.h"
 #include "news.h"
 #include "ftp.h"
@@ -44,8 +45,6 @@ int ai_family_order_table[7][3] = {
     { PF_UNSPEC, PF_UNSPEC, PF_UNSPEC }, /* 5: --- */
     { PF_INET6, PF_UNSPEC, PF_UNSPEC }, /* 6:inet6 */
 };
-
-static JMP_BUF AbortLoading;
 
 /* XXX: note html.h SCM_ */
 static int
@@ -219,13 +218,6 @@ DefaultFile(int scheme)
         return allocStr("/", -1);
     }
     return NULL;
-}
-
-static MySignalHandler
-KeyAbort(SIGNAL_ARG)
-{
-    LONGJMP(AbortLoading, 1);
-    SIGNAL_RETURN;
 }
 
 SSL_CTX* ssl_ctx = NULL;
@@ -1478,7 +1470,7 @@ retry:
     case SCM_FTPDIR:
         if (pu->file == NULL)
             pu->file = allocStr("/", -1);
-        if (non_null(FTP_proxy) && !Do_not_use_proxy && pu->host != NULL && !check_no_proxy(pu->host)) {
+        if (non_null(FTP_proxy) && use_proxy && pu->host != NULL && !check_no_proxy(pu->host)) {
             hr->flag |= HR_FLAG_PROXY;
             sock = openSocket(FTP_proxy_parsed.host,
                 schemeNumToName(FTP_proxy_parsed.scheme),
@@ -1504,7 +1496,7 @@ retry:
             hr->command = HR_COMMAND_HEAD;
         if ((
                 (pu->scheme == SCM_HTTPS) ? non_null(HTTPS_proxy) : non_null(HTTP_proxy))
-            && !Do_not_use_proxy && pu->host != NULL && !check_no_proxy(pu->host)) {
+            && use_proxy && pu->host != NULL && !check_no_proxy(pu->host)) {
             hr->flag |= HR_FLAG_PROXY;
             if (pu->scheme == SCM_HTTPS && *status == HTST_CONNECT) {
                 sock = ssl_socket_of(ouf->stream);
@@ -1636,7 +1628,7 @@ retry:
             Strcat_charp(tmp, pu->query);
             pu->file = tmp->ptr;
         }
-        if (non_null(GOPHER_proxy) && !Do_not_use_proxy && pu->host != NULL && !check_no_proxy(pu->host)) {
+        if (non_null(GOPHER_proxy) && use_proxy && pu->host != NULL && !check_no_proxy(pu->host)) {
             hr->flag |= HR_FLAG_PROXY;
             sock = openSocket(GOPHER_proxy_parsed.host,
                 schemeNumToName(GOPHER_proxy_parsed.scheme),
@@ -1765,97 +1757,7 @@ no_user_mimetypes:
     return guessContentTypeFromTable(DefaultGuess, filename);
 }
 
-static int
-domain_match(char* pat, char* domain)
-{
-    if (domain == NULL)
-        return 0;
-    if (*pat == '.')
-        pat++;
-    for (;;) {
-        if (!strcasecmp(pat, domain))
-            return 1;
-        domain = strchr(domain, '.');
-        if (domain == NULL)
-            return 0;
-        domain++;
-    }
-}
 
-int check_no_proxy(char* domain)
-{
-    TextListItem* tl;
-    volatile int ret = 0;
-    MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
-
-    if (NO_proxy_domains == NULL || NO_proxy_domains->nitem == 0 || domain == NULL)
-        return 0;
-    for (tl = NO_proxy_domains->first; tl != NULL; tl = tl->next) {
-        if (domain_match(tl->ptr, domain))
-            return 1;
-    }
-    if (!NOproxy_netaddr) {
-        return 0;
-    }
-    /*
-     * to check noproxy by network addr
-     */
-    if (SETJMP(AbortLoading) != 0) {
-        ret = 0;
-        goto end;
-    }
-    TRAP_ON;
-    {
-        int error;
-        struct addrinfo hints;
-        struct addrinfo *res, *res0;
-        char addr[4 * 16];
-        int* af;
-
-        for (af = ai_family_order_table[DNS_order];; af++) {
-            memset(&hints, 0, sizeof(hints));
-            hints.ai_family = *af;
-            error = getaddrinfo(domain, NULL, &hints, &res0);
-            if (error) {
-                if (*af == PF_UNSPEC) {
-                    break;
-                }
-                /* try next */
-                continue;
-            }
-            for (res = res0; res != NULL; res = res->ai_next) {
-                switch (res->ai_family) {
-                case AF_INET:
-                    inet_ntop(AF_INET,
-                        &((struct sockaddr_in*)res->ai_addr)->sin_addr,
-                        addr, sizeof(addr));
-                    break;
-                case AF_INET6:
-                    inet_ntop(AF_INET6,
-                        &((struct sockaddr_in6*)res->ai_addr)->sin6_addr, addr, sizeof(addr));
-                    break;
-                default:
-                    /* unknown */
-                    continue;
-                }
-                for (tl = NO_proxy_domains->first; tl != NULL; tl = tl->next) {
-                    if (strncmp(tl->ptr, addr, strlen(tl->ptr)) == 0) {
-                        freeaddrinfo(res0);
-                        ret = 1;
-                        goto end;
-                    }
-                }
-            }
-            freeaddrinfo(res0);
-            if (*af == PF_UNSPEC) {
-                break;
-            }
-        }
-    }
-end:
-    TRAP_OFF;
-    return ret;
-}
 
 char* filename_extension(char* path, int is_url)
 {

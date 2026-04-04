@@ -600,10 +600,3 @@ typedef struct http_request {
 
 extern void w3mFunc(const char* cmd);
 
-#define set_no_proxy(domains) (NO_proxy_domains = make_domain_list(domains))
-global ParsedURL HTTP_proxy_parsed;
-global ParsedURL HTTPS_proxy_parsed;
-global ParsedURL GOPHER_proxy_parsed;
-global ParsedURL FTP_proxy_parsed;
-#define Do_not_use_proxy (!use_proxy)
-global TextList* NO_proxy_domains;

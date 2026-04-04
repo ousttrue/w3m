@@ -16,14 +16,7 @@
 
 #include <signal.h>
 
-static JMP_BUF AbortLoading;
 struct frameset* renderFrameSet = NULL;
-
-static MySignalHandler
-KeyAbort(SIGNAL_ARG)
-{
-    LONGJMP(AbortLoading, 1);
-}
 
 static int
 parseFrameSetLength(char* s, char*** ret)

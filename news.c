@@ -16,7 +16,6 @@
 #include <signal.h>
 #include <unistd.h>
 
-
 #define NEWS_ENDLINE(p) \
     ((*(p) == '.' && ((p)[1] == '\n' || (p)[1] == '\r' || (p)[1] == '\0')) || *(p) == '\n' || *(p) == '\r' || *(p) == '\0')
 
@@ -29,15 +28,6 @@ typedef struct _News {
 } News;
 
 static News current_news = { NULL, 0, NULL, NULL, NULL };
-
-static JMP_BUF AbortLoading;
-
-static MySignalHandler
-KeyAbort(SIGNAL_ARG)
-{
-    LONGJMP(AbortLoading, 1);
-    SIGNAL_RETURN;
-}
 
 static Str
 news_command(News* news, char* cmd, char* arg, int* status)
@@ -502,4 +492,3 @@ void disconnectNews(void)
 {
     news_quit(&current_news);
 }
-
